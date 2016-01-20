@@ -1,0 +1,301 @@
+* Mutually recursive types through type synonyms. <<recursive-type-synonyms>>
+  For instance,
+  #+BEGIN_SRC haskell
+    data Expr b
+      = -- ...
+      | App   (Expr b) (Arg b)
+      -- ...            ^^^^^
+      | Case  (Expr b) b Type [Alt b]
+      -- ...                   ^^^^^
+    
+    -- ...
+    
+    type Arg b = Expr b
+    
+    -- ...
+    
+    type Alt b = (AltCon, [b], Expr b)
+  #+END_SRC
+  
+  These are both problems: ~Inductive~s can only be mutually recursive with
+  other ~Inductive~s in Coq, not with ~Definition~s (no induction-recursion).
+  (So mutually-recursive ~data~ types are fine.)
+
+  *Potential solutions:* Several.
+  
+  - /(Current favorite!)/  Per-synonym phantom types with explicit recursion.
+    Each type system is split into two pieces: a ~Definition~ which takes the
+    recursed-through ~Inductive~ type as an /argument/, and a ~Notation~ which
+    fixes that first argument to the common case.  In our running example, this
+    works as follows:
+    #+BEGIN_SRC coq
+      Definition ArgRec (Expr : Type -> Type) (b : Type) : Type := Expr b.
+      Definition AltRec (Expr : Type -> Type) (b : Type) : Type := (AltCon * seq b * Expr b)%type.
+       
+      Reserved Notation "'Arg'".
+      Reserved Notation "'Alt'".
+      Inductive
+        Expr (b : Type) : Type :=
+          (* ... *)
+          |  App   : Expr b -> Arg b -> Expr b
+          (* ...               ^^^ *)
+          |  Case  : Expr b -> b -> Type_ -> seq (Alt b) -> Expr b
+          (* ...                                  ^^^ *)
+      where
+        "'Arg'" := (ArgRec Expr)
+      and
+        "'Alt'" := (AltRec Expr).
+    #+END_SRC
+    
+    /Pros:/ Produces the right run-time structure.  Thanks to the ~Definition~,
+    the synonyms will be "sticky", and show up everywhere.  Thanks to the
+    ~Notation~, we won't have to see the implementation anywhere.
+    
+    /Cons:/ Mildly boilerplate-heavy: requires defining both ~SynRec~ and ~Syn~,
+    plus reserving ~Syn~.
+    
+  - Expand out all type synonyms; in our example, this would just give
+    #+BEGIN_SRC coq
+      Inductive
+        Expr (b : Type) : Type :=
+          (* ... *)
+          |  App   : Expr b -> Expr b -> Expr b
+          (* ...               ^^^^^^ *)
+          |  Case  : Expr b -> b -> Type_ -> seq (AltCon * seq b * Expr b) -> Expr b
+          (* ...                                  ^^^^^^^^^^^^^^^^^^^^^^^ *)
+    #+END_SRC
+    
+    /Pros:/ In some sense the simplest option.  The resulting types are
+    identical to the resulting Haskell types, since type synonyms are always
+    expanded.
+    
+    /Cons:/ All the documentation of the type synonym is gone!  If we later want
+    to attach invariants to type synonyms (however we plan to do that), we must
+    reconstruct them.  Type signatures may get very bulky.  The correspondence
+    between the Coq and the Haskell becomes less obvious.
+    
+  - Define a new type, ~newtype~-style, so in our example we would have
+    #+BEGIN_SRC coq
+      Inductive
+        Expr (b : Type) : Type :=
+          (* ... *)
+          |  App   : Expr b -> Arg b -> Expr b
+          (* ...               ^^^ *)
+          |  Case  : Expr b -> b -> Type_ -> seq (Alt b) -> Expr b
+          (* ...                                  ^^^ *)
+      with
+        Arg b :=
+          MkArg : Expr b -> Arg b
+      with
+        Alt b :=
+          MkAlt : AltCon * seq b * Expr b -> Alt b.
+    #+END_SRC
+    
+    Newtype wrappers around tuples could also become tuple types themselves (so
+    above we'd have ~MkAlt : AltCon -> seq b -> Expr b -> Alt b~).
+    
+    /Pros:/ Simple, direct, Haskelly.  The new type and the old are isomorphic.
+    
+    /Cons:/ Newtype wrappers everywhere.  Doesn't match the Haskell directly –
+    there are new data types, and the resulting structure has one more layer of
+    indirection.
+  
+  - Use ~Notation~s to hide this, since – being purely source-level – they can
+    be recursive with ~Inductive~s.  This would look something like the
+    following:
+    #+BEGIN_SRC coq
+      Reserved Notation "'Arg' b" (at level 100).
+      Reserved Notation "'Alt' b" (at level 100).
+      Inductive
+        Expr (b : Type) : Type :=
+          (* ... *)
+          |  App   : Expr b -> Arg b -> Expr b
+          (* ...               ^^^ *)
+          |  Case  : Expr b -> b -> Type_ -> seq (Alt b) -> Expr b
+          (* ...                                  ^^^ *)
+      where
+        "'Arg' b" := (Expr b)
+      where
+        "'Alt' b" := (AltCon * seq b * Expr b)%type.
+    #+END_SRC
+    
+    /Pros:/ The result is exactly right; Coq's ~Notation~s are sort of like
+    Haskell's type synonyms anyway (exactly equivalent to their RHS and can't be
+    partially applied).  The definition of the type looks correct.
+    
+    /Cons:/ You can't get Coq to print the notations correctly.  If specified as
+    above, then /every occurence/ of ~Expr~ will be replaced by ~Arg~ in printed
+    output, which is clearly wrong.  But ~only parsing~ isn't allowed in
+    ~Reserved Notation~, and can't be specified in the ~where~ clause.  You can
+    have the inverse problem by putting the notations in a different scope: this
+    will cause them to /never/ print out, so you can't tell when they were used.
+    (If you could use an ~Arguments~ directive to bind /types/ to scopes, that
+    might get you part of the way there, but you can't.)  Putting the
+    declarations in a different scope is as follows.  First, somewhere globally,
+    have the following scope declaration:
+    #+BEGIN_SRC coq
+    Delimit Scope synonym_scope with SYN.
+    #+END_SRC
+    Then, in the ~where~ clauses, write
+    #+BEGIN_SRC coq
+    (* ... *)
+      where
+        "'Arg' b" := (Expr b) : SYN
+      where
+        "'Alt' b" := (AltCon * seq b * Expr b)%type : SYN.
+    #+END_SRC
+    Lastly, there's a more minor problem: I have no idea if ~100~ is the right
+    level.
+
+* Names that collide with Coq reserved words. <<name-collision-reserved>>
+  For instance, the Haskell data type ~Type~ of Core types.  This is worse than
+  just conflicting with existing names, as those can be hidden.
+
+  Also, note that for whatever reason, fewer things get bitten by this than
+  expected: ~Let~, ~Coercion~, and ~Module~ are all apparently fine.
+  
+  *Potential solutions:* Systematically alter conflicting names (for our
+  example: ~CoreType~?  ~Type_~?); provide some sort of renaming dictionary
+  (=Type -> GHCType=).
+
+  /Questions:/ If one constructor conflicts, should all constructors of the typ
+  have their name altered?  Should we always rename things, just in case?
+
+* Type- and value-namespace collisions. <<name-collision-type-value>>
+  Haskell programs love to reuse type names for constructor names; you know,
+  this sort of thing:
+  #+BEGIN_SRC haskell
+    data Foo = Foo Bar Baz
+    --   ^^^   ^^^
+  #+END_SRC
+  Coq programs, on the other hand, choke.  And sometimes, it's no so direct; for
+  instance, Core has a ~Var~ type and the ~Expr~ type has a ~Var~ constructor.
+  
+  /Pros/ and /cons/ are as for [[name-collision-reserved][the previous case]], as is the question of when to
+  rename.
+
+* Multi-constructor types with record syntax. <<multi-constructor-records>>
+  Haskell supports record syntax with multi-constructor types, which produces
+  partial accessors.  Coq does not – record syntax is only for /records/.
+  What's the appropriate translation?  There are some very hard issues here,
+  including how to translate partial functions.
+  
+  Our running example for possible solutions will be the type
+  #+BEGIN_SRC haskell
+    data MR = C1 { name :: String, fieldA :: A, fieldB :: B }
+            | C2 { name :: String, fieldA :: A, fieldC :: C }
+            | C3 { name :: String }
+  #+END_SRC
+  
+  This has the following features:
+  - 1 field common to all the constructors (~name~)
+  - 1 field common to some of the constructors (~fieldA~)
+  - 2 fields unique to one constructor each (~fieldB~, ~fieldC~)
+  
+  *Possible solutions:* Nothing great
+
+  - Convert the field names to the names used for the parameters in the
+    ~Inductive~ definition:
+    #+BEGIN_SRC coq
+      Inductive MR := C1 (name : String) (fieldA : A) (fieldB : B)
+                   |  C2 (name : String) (fieldA : A) (fieldC : C)
+                   |  C3 (name : String).
+    #+END_SRC
+    
+    /Pros:/ The definition is as informative as the Haskell definition.  This
+    can be combined with the rest of the options to increase clarity by an extra
+    increment.
+    
+    /Cons:/ The definition is the /only/ thing that's informative.  These names
+    evaporate immediately, although they may reappear when using ~case~-like
+    tactics.  (But since SSReflect encourages you to name your variables
+    explicitly, this is less helpful.)
+  
+  - Convert the field names to accessor functions.
+    #+BEGIN_SRC coq
+      Inductive MR := C1 of String & A & B
+                   |  C2 of String & A & C
+                   |  C3 of String.
+      
+      Definition name (mr : MR) : String :=
+        match mr with
+          | C1 n _ _ => n
+          | C2 n _ _ => n
+          | C3 n     => n
+        end.
+      
+      Definition fieldA (mr : MR) : option A :=
+        match mr with
+          | C1 _ a _ => Some a
+          | C2 _ a _ => Some a
+          | C3 _     => None
+        end.
+      
+      Definition fieldB (mr : MR) : option B :=
+        match mr with
+          | C1 _ _ b => Some b
+          | C2 _ _ _ => None
+          | C3 _     => None
+        end.
+      
+      Definition fieldC (mr : MR) : option C :=
+        match mr with
+          | C1 _ _ _ => None
+          | C2 _ _ c => Some c
+          | C3 _     => None
+        end.
+    #+END_SRC
+    One could also generate setter functions, à la
+    #+BEGIN_SRC coq
+      Definition set_fieldA (mr : MR) (a : A) : option MR :=
+        match mr with
+          | C1 n _ b => Some (C1 n a b)
+          | C2 n _ c => Some (C2 n a c)
+          | C3 _     => None
+        end.
+    #+END_SRC
+    
+    /Pros:/ Gives us the field accessors that we expect from record syntax, if
+    not syntactically.
+    
+    /Cons:/ Doesn't help with pattern-matching, which I feel is likely (?) to be
+    the biggest use of these types.  Proliferates ~option~s, also commiting to
+    that as the approach to modeling partial functions.
+  
+  - Some ~Notation~ magic.  This may not be possible, but see if one can use
+    ~Notation~s to get named binders.  Even if the order needs to be fixed, this
+    may encapsulate the pattern we expect to see.
+    
+    /Pros:/ Gives us pattern-matching.
+    
+    /Cons:/ Might not be possible.
+
+* Definition ordering. <<definition-ordering>>
+  In Haskell, it's often common to define the big main type/value up front, and
+  the smaller subsidiary implementing type/values below.  (This is the style
+  exemplified in a more local way by the ~where~ clause.)  In Coq, definition
+  must precede use.
+  
+  *Solution:* Just re-order things as necessary.
+* Cyclic modules. <<cyclic-modules>>
+  In the GHC code base, there are some cyclic module dependencies.  Coq can't
+  handle this.
+  
+  *Possible solutions:*
+  
+  - Have translated Coq modules correspond to whole cycles of Haskell modules.
+    To keep the old names, shim modules could re-export the appropriate
+    contents.
+    
+    /Pros:/ Easy.
+    
+    /Cons:/ Loses structure.
+  
+  - Have mutually-recursive Haskell modules become Coq module /functors/:
+    =.hs-boot= files become signatures, and any cyclic dependency becomes a
+    parameter.  Then, under the original names, pick the correct instantiations.
+    
+    /Pros:/ Keeps the old structure.
+    
+    /Cons:/ Complicated; modules can be dangerous; it's not clear if this is
+    possible.

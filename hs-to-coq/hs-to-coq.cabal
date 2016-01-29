@@ -25,6 +25,7 @@ library
                      , HsToCoq.Util.GHC
                      , HsToCoq.Util.TempFiles
                      , HsToCoq.Util.Messages
+                     , HsToCoq.Coq.Gallina.Terms
                      , HsToCoq.DataDecl
                      , HsToCoq.ConvertData
                      , HsToCoq.ProcessFiles
@@ -40,6 +41,7 @@ library
                      , ghc              ==7.10.2
                      , ghc-paths        ==0.1.*
                      , mtl              ==2.2.*
+                     , semigroups ==0.18.*
                      , syb              ==0.6.*
                      , template-haskell ==2.10.*
                      , transformers     ==0.4.*

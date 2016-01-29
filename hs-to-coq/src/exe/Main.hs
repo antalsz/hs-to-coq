@@ -4,4 +4,4 @@ import HsToCoq.Util.GHC
 import HsToCoq.CLI
 
 main :: IO ()
-main = defaultRunGhc $ processFilesMain dumpDataDecls
+main = defaultRunGhc $ processFilesMain convertDataDecls

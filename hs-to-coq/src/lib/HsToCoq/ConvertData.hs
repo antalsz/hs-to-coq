@@ -26,6 +26,21 @@ readDataDecls dflags file =   processFile (pure . getDataDecls) dflags file
                                     . ProgramError $ file ++ ": no parse" )
                                     pure
 
+data Type' = Type
+          deriving (Eq, Ord, Show)
+
+data Binder = Plain { bName :: String }
+            | Typed { bName :: String, bType :: Type' }
+            deriving (Eq, Ord, Show)
+
+data Inductive = Inductive { iName   :: String
+                           , iParams :: [Binder]
+                           , iType   :: Type'
+                           , iCons   :: [Constructor] }
+
+data Constructor = Constructor { cName :: String
+                               , cType :: Type' }
+
 convert :: GhcMonad m => DataDecl' RdrName -> m String
 convert DataDecl'{tcdDataDefn' = HsDataDefn{..}, ..} = execWriterT $ do
   let lname = lift . showName . unLoc

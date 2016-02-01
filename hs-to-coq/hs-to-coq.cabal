@@ -25,7 +25,7 @@ library
                      , HsToCoq.Util.GHC
                      , HsToCoq.Util.TempFiles
                      , HsToCoq.Util.Messages
-                     , HsToCoq.Coq.Gallina.Terms
+                     , HsToCoq.Coq.Gallina
                      , HsToCoq.DataDecl
                      , HsToCoq.ConvertData
                      , HsToCoq.ProcessFiles

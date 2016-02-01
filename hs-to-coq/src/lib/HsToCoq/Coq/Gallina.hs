@@ -1,5 +1,5 @@
 {-|
-Module      : HsToCoq.Coq.Gallina.Terms
+Module      : HsToCoq.Coq.Gallina
 Description : An AST for Gallina, the surface language of Coq
 Copyright   : Copyright © 2016 Antal Spector-Zabusky, University of Pennsylvania
 License     : MIT
@@ -9,7 +9,7 @@ Stability   : experimental
 <https://coq.inria.fr/distrib/current/refman/Reference-Manual003. Chapter 1, \"The Gallina Specification Language\", in the Coq reference manual.>
 -}
 
-module HsToCoq.Coq.Gallina.Terms (
+module HsToCoq.Coq.Gallina (
   -- * Lexical structure
   -- $Lexical
   Ident,

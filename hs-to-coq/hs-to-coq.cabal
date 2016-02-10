@@ -22,29 +22,32 @@ source-repository head
 library
   exposed-modules:     OnOff
                      , DoCpp
+                     , HsToCoq.Util.Functor
                      , HsToCoq.Util.GHC
                      , HsToCoq.Util.TempFiles
                      , HsToCoq.Util.Messages
+                     , HsToCoq.PrettyPrint
                      , HsToCoq.Coq.Gallina
                      , HsToCoq.DataDecl
                      , HsToCoq.ConvertData
                      , HsToCoq.ProcessFiles
                      , HsToCoq.CLI
-  other-extensions:    LambdaCase, RecordWildCards,
-                       TypeSynonymInstances, FlexibleContexts, UndecidableInstances
+  other-extensions:    LambdaCase, RecordWildCards, OverloadedStrings
+                     , TypeSynonymInstances, FlexibleContexts, UndecidableInstances
                      , DeriveDataTypeable, StandaloneDeriving
                      , PatternSynonyms
                      , TemplateHaskell
   build-depends:       base             >=4.8 && <4.9
-                     , directory        ==1.2.*
+                     , template-haskell ==2.10.*
+                     , syb              ==0.6.*
+                     , transformers     ==0.4.*
+                     , mtl              ==2.2.*
+                     , semigroups       ==0.18.*
                      , filepath         ==1.4.*
+                     , directory        ==1.2.*
+                     , ansi-wl-pprint   ==0.6.*
                      , ghc              ==7.10.2
                      , ghc-paths        ==0.1.*
-                     , mtl              ==2.2.*
-                     , semigroups ==0.18.*
-                     , syb              ==0.6.*
-                     , template-haskell ==2.10.*
-                     , transformers     ==0.4.*
   hs-source-dirs:      src/lib
   default-language:    Haskell2010
   ghc-options:         -Wall -fno-warn-name-shadowing -O2

@@ -9,6 +9,8 @@ Stability   : experimental
 <https://coq.inria.fr/distrib/current/refman/Reference-Manual003. Chapter 1, \"The Gallina Specification Language\", in the Coq reference manual.>
 -}
 
+{-# LANGUAGE OverloadedStrings, LambdaCase, TemplateHaskell #-}
+
 module HsToCoq.Coq.Gallina (
   -- * Lexical structure
   -- $Lexical
@@ -52,16 +54,27 @@ module HsToCoq.Coq.Gallina (
   Assertion(..),
   AssertionKeyword(..),
   Tactics,
-  Proof(..)
+  Proof(..),
+
+  -- * Formatting
+  renderGallina,
+  Gallina(..),
+  renderIdent, renderAccessIdent,
+  renderLocality
   ) where
 
 import Prelude hiding (Num)
 import Numeric.Natural
-import Data.List.NonEmpty
+import Data.List.NonEmpty (NonEmpty(), (<|))
+
+import HsToCoq.Util.Functor
+import HsToCoq.PrettyPrint
+import Data.Traversable
+import Data.List (foldl')
+import qualified Language.Haskell.TH as TH
 
 -- $Lexical
--- §1.1, "Lexical conventions", in the Coq reference manual; available at
--- <https://coq.inria.fr/distrib/current/refman/Reference-Manual003.html#lexical>.
+-- <https://coq.inria.fr/distrib/current/refman/Reference-Manual003.html#lexical §1.1, \"Lexical conventions\", in the Coq reference manual.>
 --
 -- We don't model the lexical conventions.  Values are just strings or numbers
 -- or what have you.
@@ -217,11 +230,11 @@ data AssumptionKeyword = Axiom                                             -- ^@
 
 -- |@/assums/ ::=@
 data Assums = UnparenthesizedAssums (NonEmpty Ident) Term                  -- ^@/ident/ … /ident/ : /term/@
-            | ParethesizedAssums (NonEmpty (NonEmpty Ident, Term))         -- ^@( /ident/ … /ident/ : /term ) … ( /ident/ … /ident/ : /term)@
+            | ParenthesizedAssums (NonEmpty (NonEmpty Ident, Term))        -- ^@( /ident/ … /ident/ : /term ) … ( /ident/ … /ident/ : /term)@
             deriving (Eq, Ord, Show, Read)
 
 -- |@[Local] ::=@ – not a part of the grammar /per se/, but a common fragment
-data Locality = Global                                                     -- ^@@
+data Locality = Global                                                     -- ^@@ – (nothing)
               | Local                                                      -- ^@Local@
               deriving (Eq, Ord, Show, Read, Enum, Bounded)
 
@@ -241,7 +254,7 @@ data IndBody = IndBody Ident [Binder] Term [(Ident, [Binder], Maybe Term)] -- ^@
 
 -- |@/fixpoint/ ::=@
 data Fixpoint = Fixpoint   (NonEmpty FixBody)                              -- ^@Fixpoint /fix_body/ with … with /fix_body/ .@
-              | CoFixpoint (NonEmpty FixBody)                              -- ^@CoFixpoint /fix_body/ with … with /fix_body/ .@
+              | CoFixpoint (NonEmpty CofixBody)                            -- ^@CoFixpoint /fix_body/ with … with /fix_body/ .@
               deriving (Eq, Ord, Show, Read)
 
 -- |@/assertion/ ::=@
@@ -267,3 +280,242 @@ data Proof = ProofQed      Tactics                                         -- ^@
            | ProofDefined  Tactics                                         -- ^@Proof . … Defined .@
            | ProofAdmitted Tactics                                         -- ^@Proof . … Admitted .@
            deriving (Eq, Ord, Show, Read)
+
+
+-- Formatting
+----------------------------------------------------------------------
+
+class Gallina a where
+  renderGallina' :: Int -> a -> Doc
+
+renderGallina :: Gallina a => a -> Doc
+renderGallina = renderGallina' 0
+
+renderIdent :: Ident -> Doc
+renderIdent = text
+
+renderAccessIdent :: AccessIdent -> Doc
+renderAccessIdent = text . ('.':)
+
+renderNum :: Num -> Doc
+renderNum = integer . toInteger
+
+-- Module-local
+render_type :: Term -> Doc
+render_type ty = softline <> ":" <+> align (renderGallina ty)
+
+-- Module-local
+render_opt_type :: Maybe Term -> Doc
+render_opt_type = maybe mempty render_type
+
+-- Module-local
+render_args_and :: (Functor f, Foldable f, Gallina a) => (b -> Doc) -> f a -> b -> Doc
+render_args_and f args x =
+  align $ fillSep (renderGallina <$> args) <> f x
+
+-- Module-local
+render_args_ty :: (Functor f, Foldable f, Gallina a) => f a -> Term -> Doc
+render_args_ty = render_args_and $ nest 2 . render_type
+
+-- Module-local
+render_args_oty :: (Functor f, Foldable f, Gallina a) => f a -> Maybe Term -> Doc
+render_args_oty = render_args_and $ nest 2 . render_opt_type
+                        
+-- Module-local
+render_mutual_def :: Gallina a => Doc -> NonEmpty a -> Doc
+render_mutual_def def bodies =
+  def <+> foldr1 (\body doc -> body <!> "with" <+> doc) (renderGallina <$> bodies) <> "."
+                  
+instance Gallina Term where
+  renderGallina' _ (App f args)  = renderGallina f </> fillSep (renderGallina <$> args)
+  renderGallina' _ (Qualid qid)  = renderGallina qid
+  renderGallina' _ (Sort   sort) = renderGallina sort
+  renderGallina' _ (Num    num)  = renderNum num
+  renderGallina' _ Underscore    = char '_'
+  renderGallina' _ t = text $ "<<" ++ show t ++ ">>"
+
+instance Gallina Arg where
+  renderGallina' p (PosArg t) =
+    renderGallina' p t
+  renderGallina' _ (NamedArg name t) =
+    hang 2 . parens $ renderIdent name </> ":=" <+> align (renderGallina t)
+
+instance Gallina Binder where
+  renderGallina' _ (Inferred name)  =
+    renderGallina name
+  renderGallina' _ (Typed names ty) =
+    hang 2 . parens $ align (fillSep $ renderGallina <$> names) <> render_type ty
+  renderGallina' _ (BindLet name oty val) =
+    hang 2 . parens $ renderGallina name <> render_opt_type oty </> ":=" <+> align (renderGallina val)
+
+instance Gallina Name where
+  renderGallina' _ (Ident ident)  = renderIdent ident
+  renderGallina' _ UnderscoreName = char '_'
+
+instance Gallina Qualid where
+  renderGallina' _ (Bare ident)        = renderIdent ident
+  renderGallina' _ (Qualified qid aid) = renderGallina qid <> renderAccessIdent aid
+
+instance Gallina Sort where
+  renderGallina' _ Prop = "Prop"
+  renderGallina' _ Set  = "Set"
+  renderGallina' _ Type = "Type"
+
+instance Gallina FixBodies where
+  renderGallina' p (FixOne fb) =
+    renderGallina' p fb
+  renderGallina' p (FixMany fb fbs var) =
+   spacedSepPre "with" (align . renderGallina' p <$> fb <| fbs) </> "for" <+> renderIdent var
+
+instance Gallina CofixBodies where
+  renderGallina' p (CofixOne cb) =
+    renderGallina' p cb
+  renderGallina' p (CofixMany cb cbs var) =
+   spacedSepPre "with" (align . renderGallina' p <$> cb <| cbs) </> "for" <+> renderIdent var
+
+instance Gallina FixBody where
+  renderGallina' _ (FixBody f args oannot oty def) =
+    hang 2 $
+      renderIdent f </> align (    fillSep (renderGallina <$> args)
+                              </?> (renderGallina <$> oannot))
+                    <>  render_opt_type oty </> ":=" <+> align (renderGallina def)
+
+instance Gallina CofixBody where
+  renderGallina' _ (CofixBody f args oty def) =
+    hang 2 $
+      renderIdent f </> align (fillSep (renderGallina <$> args))
+                    <>  render_opt_type oty </> ":=" <+> align (renderGallina def)
+
+instance Gallina Annotation where
+  renderGallina' _ (Annotation var) = braces $ "struct" <+> renderIdent var
+
+instance Gallina MatchItem where
+  renderGallina' _ (MatchItem scrutinee oas oin) =
+    hang 2 $
+      renderGallina scrutinee
+        </?> (oas <&> \as         -> "as" <+> renderGallina as)
+        </?> (oin <&> \(qid,pats) -> "in" <+> renderGallina qid
+                                          <+> align (fillSep $ renderGallina <$> pats))
+
+instance Gallina DepRetType where
+  renderGallina' _ (DepRetType oname rty) =
+    maybe mempty (\name -> "as" <+> renderGallina name <> softline) oname <> renderGallina rty
+
+instance Gallina ReturnType where
+  renderGallina' _ (ReturnType ty) = "return" <+> align (renderGallina ty)
+
+instance Gallina Equation where
+  renderGallina' _ (Equation mps body) =
+    spacedSepPre "|" (align . renderGallina <$> mps) <+> nest 2 ("=>" </> align (renderGallina body))
+
+instance Gallina MultPattern where
+  renderGallina' _ (MultPattern pats) = spacedSepPost "," $ renderGallina <$> pats
+
+instance Gallina Pattern where
+  renderGallina' _ (ArgsPat con args) = renderGallina con </> fillSep (renderGallina <$> args)
+  renderGallina' _ UnderscorePat = char '_'
+  renderGallina' _ p = text $ "<<" ++ show p ++ ">>"
+
+instance Gallina OrPattern where
+  renderGallina' _ (OrPattern pats) = spacedSepPre "|" (align . renderGallina <$> pats)
+
+instance Gallina Sentence where
+  renderGallina' p (AssumptionSentence ass)    = renderGallina' p ass
+  renderGallina' p (DefinitionSentence def)    = renderGallina' p def
+  renderGallina' p (InductiveSentence  ind)    = renderGallina' p ind
+  renderGallina' p (FixpointSentence   fix)    = renderGallina' p fix
+  renderGallina' p (AssertionSentence  ass pf) = renderGallina' p ass <!> renderGallina' p pf
+
+instance Gallina Assumption where
+  renderGallina' p (Assumption kw ass) = renderGallina' p kw <+> align (renderGallina ass) <> "."
+
+instance Gallina AssumptionKeyword where
+  renderGallina' _ Axiom      = "Axiom"
+  renderGallina' _ Axioms     = "Axioms"
+  renderGallina' _ Conjecture = "Conjecture"
+  renderGallina' _ Parameter  = "Parameter"
+  renderGallina' _ Parameters = "Parameters"
+  renderGallina' _ Variable   = "Variable"
+  renderGallina' _ Variables  = "Variables"
+  renderGallina' _ Hypothesis = "Hypothesis"
+  renderGallina' _ Hypotheses = "Hypotheses"
+
+instance Gallina Assums where
+  renderGallina' _ = \case
+    UnparenthesizedAssums ids ty -> renderAss ids ty
+    ParenthesizedAssums   groups -> group . vsep $ parens . align . uncurry renderAss <$> groups
+    where
+      renderAss ids ty = fillSep (renderIdent <$> ids) <> nest 2 (render_type ty)
+
+instance Gallina Locality where
+  renderGallina' _ Global = "(*Global*)"
+  renderGallina' _ Local  = "Local"
+
+renderLocality :: Locality -> Doc
+renderLocality Global = empty
+renderLocality Local  = "Local" <> space
+                        
+instance Gallina Definition where
+  renderGallina' _ = \case
+    DefinitionDef loc name args oty body -> renderDef (renderLocality loc <> "Definition") name args oty body
+    LetDef            name args oty body -> renderDef "Let"                                name args oty body
+    where
+      renderDef def name args oty body =
+        def <+> renderIdent name
+            <>  spaceIf args <> render_args_oty args oty
+            <+> nest 2 (":=" </> align (renderGallina body))
+            <>  "."
+
+instance Gallina Inductive where
+  renderGallina' _ (Inductive   bodies) = render_mutual_def "Inductive"   bodies
+  renderGallina' _ (CoInductive bodies) = render_mutual_def "CoInductive" bodies
+
+instance Gallina IndBody where
+  renderGallina' _ (IndBody name params ty cons) =
+    renderIdent name <> spaceIf params <> render_args_ty params ty
+                     <> nest 2 (softline <> renderCons cons)
+    where
+      renderCons []         = ":="
+      renderCons (con:cons) = align $ foldl' (<!>) (renderCon ":=" con) (renderCon "| " <$> cons)
+      
+      renderCon delim (cname, cargs, coty) =
+        delim <+> renderIdent cname <> spaceIf cargs <> render_args_oty cargs coty
+
+instance Gallina Fixpoint where
+  renderGallina' _ (Fixpoint   bodies) = render_mutual_def "Fixpoint"   bodies
+  renderGallina' _ (CoFixpoint bodies) = render_mutual_def "CoFixpoint" bodies
+
+instance Gallina Assertion where
+  renderGallina' _ (Assertion kw name args ty) =
+    renderGallina kw <+> renderIdent name <> spaceIf args <> align (group (vsep (renderGallina <$> args)))
+                     <+> group (nest 2 $ ":" </> renderGallina ty)
+                     <>  "."
+
+instance Gallina AssertionKeyword where
+  renderGallina' _ Theorem      = "Theorem"
+  renderGallina' _ Lemma        = "Lemma"
+  renderGallina' _ Remark       = "Remark"
+  renderGallina' _ Fact         = "Fact"
+  renderGallina' _ Corollary    = "Corollary"
+  renderGallina' _ Proposition  = "Proposition"
+  renderGallina' _ Definition   = "Definition"
+  renderGallina' _ Example      = "Example"
+
+instance Gallina Proof where
+  renderGallina' _ = \case
+    ProofQed      body -> renderProof "Qed"      body
+    ProofDefined  body -> renderProof "Defined"  body
+    ProofAdmitted body -> renderProof "Admitted" body
+    where
+      renderProof end body = "Proof." <!> indent 2 (string body) <!> end <> "."
+
+-- Make all 'Gallina' types 'Pretty' types in the default way
+let abort = fail "Internal error: unexpected result from `reify'" in
+  TH.reify ''Gallina >>= \case
+    TH.ClassI _ is ->
+      fmap concat . for is $ \case
+        TH.InstanceD _ (TH.AppT (TH.ConT _gallina) ty) _ ->
+          [d|instance Pretty $(pure ty) where pretty = renderGallina|]
+        _ -> abort
+    _ -> abort
+

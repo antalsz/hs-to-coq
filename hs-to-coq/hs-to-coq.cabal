@@ -22,6 +22,7 @@ source-repository head
 library
   exposed-modules:     OnOff
                      , DoCpp
+                     , HsToCoq.Util.Patterns
                      , HsToCoq.Util.Functor
                      , HsToCoq.Util.GHC
                      , HsToCoq.Util.TempFiles
@@ -32,7 +33,7 @@ library
                      , HsToCoq.ConvertData
                      , HsToCoq.ProcessFiles
                      , HsToCoq.CLI
-  other-extensions:    LambdaCase, RecordWildCards, OverloadedStrings
+  other-extensions:    TupleSections, LambdaCase, RecordWildCards, OverloadedStrings
                      , TypeSynonymInstances, FlexibleContexts, UndecidableInstances
                      , DeriveDataTypeable, StandaloneDeriving
                      , PatternSynonyms

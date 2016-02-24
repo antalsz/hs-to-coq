@@ -90,28 +90,29 @@ type Num         = Natural
 -- <https://coq.inria.fr/distrib/current/refman/Reference-Manual003.html#term §1.2, \"Terms\", in the Coq reference manual.>
 
 -- |@/term/ ::=@
-data Term = Forall Binders Term                                            -- ^@forall /binders/, /term/@
-          | Fun Binders Term                                               -- ^@fun /binders/ => /term/@
-          | Fix FixBodies                                                  -- ^@fix /fix_bodies/@
-          | Cofix CofixBodies                                              -- ^@cofix /cofix_bodies/@
-          | Let Ident [Binder] (Maybe Term) Term Term                      -- ^@let /ident/ [/binders/] [: /term/] := /term/ in /term/@
-          | LetFix FixBody Term                                            -- ^@let fix /fix_body/ in /term/@
-          | LetCofix CofixBody Term                                        -- ^@let cofix /cofix_body/ in /term/@
-          | LetTuple [Name] DepRetType Term Term                           -- ^@let ( [/name/ , … , /name/] ) [/dep_ret_type/] := /term/ in /term/@
-          | LetTick Pattern (Maybe Term) Term (Maybe ReturnType) Term      -- ^@let ' /pattern/ [in /term/] := /term/ [/return_type/] in /term/@
-          | If Term (Maybe DepRetType) Term Term                           -- ^@if /term/ [/dep_ret_type/] then /term/ else /term/@
-          | HasType Term Term                                              -- ^@/term/ : /term/@
-          | CheckType Term Term                                            -- ^@/term/ <: /term/@
-          | ToSupportType Term                                             -- ^@/term/ :>@
-          | Arrow Term Term                                                -- ^@/term/ -> /term/@
-          | App Term (NonEmpty Arg)                                        -- ^@/term/ /arg/ … /arg/@
-          | ExplicitApp Qualid [Term]                                      -- ^@\@ /qualid/ [/term/ … /term/]@
-          | InScope Term Ident                                             -- ^@/term/ % /ident/@
-          | Match (NonEmpty MatchItem) (Maybe ReturnType) [Equation]       -- ^@match /match_item/ , … , /match_item/ [/return_type/] with [[|] /equation/ | … | /equation/] end@
-          | Qualid Qualid                                                  -- ^@/qualid/@
-          | Sort   Sort                                                    -- ^@/sort/@
-          | Num    Num                                                     -- ^@/num/@
-          | Underscore                                                     -- ^@_@
+data Term = Forall Binders Term                                       -- ^@forall /binders/, /term/@
+          | Fun Binders Term                                          -- ^@fun /binders/ => /term/@
+          | Fix FixBodies                                             -- ^@fix /fix_bodies/@
+          | Cofix CofixBodies                                         -- ^@cofix /cofix_bodies/@
+          | Let Ident [Binder] (Maybe Term) Term Term                 -- ^@let /ident/ [/binders/] [: /term/] := /term/ in /term/@
+          | LetFix FixBody Term                                       -- ^@let fix /fix_body/ in /term/@
+          | LetCofix CofixBody Term                                   -- ^@let cofix /cofix_body/ in /term/@
+          | LetTuple [Name] (Maybe DepRetType) Term Term              -- ^@let ( [/name/ , … , /name/] ) [/dep_ret_type/] := /term/ in /term/@
+          | LetTick Pattern (Maybe Term) Term (Maybe ReturnType) Term -- ^@let ' /pattern/ [in /term/] := /term/ [/return_type/] in /term/@
+          | If Term (Maybe DepRetType) Term Term                      -- ^@if /term/ [/dep_ret_type/] then /term/ else /term/@
+          | HasType Term Term                                         -- ^@/term/ : /term/@
+          | CheckType Term Term                                       -- ^@/term/ <: /term/@
+          | ToSupportType Term                                        -- ^@/term/ :>@
+          | Arrow Term Term                                           -- ^@/term/ -> /term/@
+          | App Term (NonEmpty Arg)                                   -- ^@/term/ /arg/ … /arg/@
+          | ExplicitApp Qualid [Term]                                 -- ^@\@ /qualid/ [/term/ … /term/]@
+          | InScope Term Ident                                        -- ^@/term/ % /ident/@
+          | Match (NonEmpty MatchItem) (Maybe ReturnType) [Equation]  -- ^@match /match_item/ , … , /match_item/ [/return_type/] with [[|] /equation/ | … | /equation/] end@
+          | Qualid Qualid                                             -- ^@/qualid/@
+          | Sort Sort                                                 -- ^@/sort/@
+          | Num  Num                                                  -- ^@/num/@
+          | Underscore                                                -- ^@_@
+          | Parens Term                                               -- ^@( /term/ )@
           deriving (Eq, Ord, Show, Read)
 
 -- |@/arg/ ::=@
@@ -193,7 +194,7 @@ data Pattern = ArgsPat Qualid (NonEmpty Pattern)                           -- ^@
              | InScopePat Pattern Ident                                    -- ^@/pattern/ % /ident/@
              | QualidPat Qualid                                            -- ^@/qualid/@
              | UnderscorePat                                               -- ^@_@
-             | NumPat Num                                                  -- ^@_@
+             | NumPat Num                                                  -- ^@/num/@
              | OrPats (NonEmpty OrPattern)                                 -- ^@( /or_pattern/ , … , /or_pattern/ )@
              deriving (Eq, Ord, Show, Read)
 
@@ -309,30 +310,128 @@ render_opt_type :: Maybe Term -> Doc
 render_opt_type = maybe mempty render_type
 
 -- Module-local
-render_args_and :: (Functor f, Foldable f, Gallina a) => (b -> Doc) -> f a -> b -> Doc
-render_args_and f args x =
-  align $ fillSep (renderGallina <$> args) <> f x
+render_opt_rtype :: Gallina a => Maybe a -> Doc
+render_opt_rtype = maybe mempty $ \rty -> nest 2 $ softline <> renderGallina rty
 
 -- Module-local
-render_args_ty :: (Functor f, Foldable f, Gallina a) => f a -> Term -> Doc
-render_args_ty = render_args_and $ nest 2 . render_type
+data Orientation = H | V
+                 deriving (Eq, Ord, Show, Read, Enum, Bounded)
+
+ocat :: Foldable f => Orientation -> f Doc -> Doc
+ocat H = fillSep
+ocat V = vcat
 
 -- Module-local
-render_args_oty :: (Functor f, Foldable f, Gallina a) => f a -> Maybe Term -> Doc
-render_args_oty = render_args_and $ nest 2 . render_opt_type
+render_args :: (Functor f, Foldable f, Gallina a) => Orientation -> f a -> Doc
+render_args o = align . ocat o . fmap renderGallina
+
+-- Module-local
+render_args_and :: (Functor f, Foldable f, Gallina a) => Orientation -> (b -> Doc) -> f a -> b -> Doc
+render_args_and o f args x = render_args o args <> f x
+
+-- Module-local
+render_args_ty :: (Functor f, Foldable f, Gallina a) => Orientation -> f a -> Term -> Doc
+render_args_ty o = render_args_and o $ nest 2 . render_type
+
+-- Module-local
+render_args_oty :: (Functor f, Foldable f, Gallina a) => Orientation -> f a -> Maybe Term -> Doc
+render_args_oty o = render_args_and o $ nest 2 . render_opt_type
                         
 -- Module-local
 render_mutual_def :: Gallina a => Doc -> NonEmpty a -> Doc
 render_mutual_def def bodies =
   def <+> foldr1 (\body doc -> body <!> "with" <+> doc) (renderGallina <$> bodies) <> "."
-                  
+
+-- TODO: Precedence!
 instance Gallina Term where
-  renderGallina' _ (App f args)  = renderGallina f </> fillSep (renderGallina <$> args)
-  renderGallina' _ (Qualid qid)  = renderGallina qid
-  renderGallina' _ (Sort   sort) = renderGallina sort
-  renderGallina' _ (Num    num)  = renderNum num
-  renderGallina' _ Underscore    = char '_'
-  renderGallina' _ t = text $ "<<" ++ show t ++ ">>"
+  renderGallina' p (Forall vars body) =
+    group $ "forall" <+> render_args V vars <> nest 2 ("," <!> renderGallina body)
+  
+  renderGallina' p (Fun vars body) =
+    group $ "fun" <+> render_args V vars <+> nest 2 ("=>" <!> renderGallina body)
+  
+  renderGallina' p (Fix fbs) =
+    "fix" <+> renderGallina fbs
+  
+  renderGallina' p (Cofix cbs) =
+    "cofix" <+> renderGallina cbs
+  
+  renderGallina' p (Let var args oty val body) =
+         "let" <+> group (   renderIdent var
+                         <>  spaceIf args <> render_args_oty V args oty
+                         <+> nest 2 (":=" <!> renderGallina val))
+    <!>  "in" <+> align (renderGallina body)
+  
+  renderGallina' p (LetFix def body) =
+    "let fix" <+> renderGallina def <!> "in" <+> align (renderGallina body)
+  
+  renderGallina' p (LetCofix def body) =
+    "let cofix" <+> renderGallina def <!> "in" <+> align (renderGallina body)
+  
+  renderGallina' p (LetTuple vars orty val body) =
+        "let" <+> group (   (parens . align . vsep . punctuate "," $ renderGallina <$> vars)
+                        <>  render_opt_rtype orty
+                        <+> nest 2 (":=" <!> renderGallina val))
+    <!> "in" <+> align (renderGallina body)
+  
+  renderGallina' p (LetTick pat oin val orty body) =
+        "let" <+> align (group $   "'" <> align (renderGallina pat)
+                               <>  maybe mempty (\inT -> softline <> "in" <+> renderGallina inT) oin
+                               <+> nest 2 (  ":=" <!> renderGallina val
+                                                  <>  render_opt_rtype orty))
+    <!> "in" <+> align (renderGallina body)
+
+  renderGallina' p (If c odrty t f) =
+        "if"   <+> align (renderGallina c <> render_opt_rtype odrty)
+    <!> "then" <+> align (renderGallina t)
+    <!> "else" <+> align (renderGallina f)
+  
+  renderGallina' p (HasType tm ty) =
+    renderGallina tm <+> ":" <+> renderGallina ty
+  
+  renderGallina' p (CheckType tm ty) =
+    renderGallina tm <+> "<:" <+> renderGallina ty
+  
+  renderGallina' p (ToSupportType tm) =
+    renderGallina tm <+> ":>"
+  
+  renderGallina' p (Arrow ty1 ty2) =
+    renderGallina ty1 <+> "->" <+> renderGallina ty2
+  
+  renderGallina' p (App f args) =
+    renderGallina f </> render_args H args
+  
+  renderGallina' p (ExplicitApp qid args) =
+    "@" <> renderGallina qid <> softlineIf args <> render_args H args
+  
+  renderGallina' p (InScope tm scope) =
+    renderGallina tm <+> "%" <+> renderIdent scope
+  
+  renderGallina' p (Match discriminees orty eqns) =
+       "match" <+> group (align . nest (-2)
+                           $ (sepWith (<!>) (<+>) "," $ renderGallina <$> discriminees)
+                           <> maybe mempty (\rty -> line <> renderGallina rty) orty)
+               <+> "with"
+    <> (case eqns of
+          [] -> space
+          _  -> nest 2 (line <> "| " <> sepWith (<!>) (<+>) "|" (renderGallina <$> eqns))
+             <> line)
+    <> "end"
+  
+  renderGallina' _ (Qualid qid) =
+    renderGallina qid
+  
+  renderGallina' _ (Sort sort) =
+    renderGallina sort
+  
+  renderGallina' _ (Num num) =
+    renderNum num
+  
+  renderGallina' _ Underscore =
+    char '_'
+  
+  renderGallina' _ (Parens t) =
+    parens $ renderGallina t
 
 instance Gallina Arg where
   renderGallina' p (PosArg t) =
@@ -344,7 +443,7 @@ instance Gallina Binder where
   renderGallina' _ (Inferred name)  =
     renderGallina name
   renderGallina' _ (Typed names ty) =
-    hang 2 . parens $ align (fillSep $ renderGallina <$> names) <> render_type ty
+    parens $ render_args_ty H names ty
   renderGallina' _ (BindLet name oty val) =
     hang 2 . parens $ renderGallina name <> render_opt_type oty </> ":=" <+> align (renderGallina val)
 
@@ -365,13 +464,13 @@ instance Gallina FixBodies where
   renderGallina' p (FixOne fb) =
     renderGallina' p fb
   renderGallina' p (FixMany fb fbs var) =
-   spacedSepPre "with" (align . renderGallina' p <$> fb <| fbs) </> "for" <+> renderIdent var
+    spacedSepPre "with" (align . renderGallina' p <$> fb <| fbs) </> "for" <+> renderIdent var
 
 instance Gallina CofixBodies where
   renderGallina' p (CofixOne cb) =
     renderGallina' p cb
   renderGallina' p (CofixMany cb cbs var) =
-   spacedSepPre "with" (align . renderGallina' p <$> cb <| cbs) </> "for" <+> renderIdent var
+    spacedSepPre "with" (align . renderGallina' p <$> cb <| cbs) </> "for" <+> renderIdent var
 
 instance Gallina FixBody where
   renderGallina' _ (FixBody f args oannot oty def) =
@@ -382,9 +481,8 @@ instance Gallina FixBody where
 
 instance Gallina CofixBody where
   renderGallina' _ (CofixBody f args oty def) =
-    hang 2 $
-      renderIdent f </> align (fillSep (renderGallina <$> args))
-                    <>  render_opt_type oty </> ":=" <+> align (renderGallina def)
+    renderIdent f </> render_args_oty H args oty
+                  </> ":=" <+> align (renderGallina def)
 
 instance Gallina Annotation where
   renderGallina' _ (Annotation var) = braces $ "struct" <+> renderIdent var
@@ -395,7 +493,7 @@ instance Gallina MatchItem where
       renderGallina scrutinee
         </?> (oas <&> \as         -> "as" <+> renderGallina as)
         </?> (oin <&> \(qid,pats) -> "in" <+> renderGallina qid
-                                          <+> align (fillSep $ renderGallina <$> pats))
+                                          <+> render_args H pats)
 
 instance Gallina DepRetType where
   renderGallina' _ (DepRetType oname rty) =
@@ -412,9 +510,29 @@ instance Gallina MultPattern where
   renderGallina' _ (MultPattern pats) = spacedSepPost "," $ renderGallina <$> pats
 
 instance Gallina Pattern where
-  renderGallina' _ (ArgsPat con args) = renderGallina con </> fillSep (renderGallina <$> args)
-  renderGallina' _ UnderscorePat = char '_'
-  renderGallina' _ p = text $ "<<" ++ show p ++ ">>"
+  renderGallina' p (ArgsPat qid args) =
+    renderGallina qid </> render_args H args
+  
+  renderGallina' p (ExplicitArgsPat qid args) =
+    "@" <> renderGallina qid <> softlineIf args <> render_args H args
+  
+  renderGallina' p (AsPat pat id) =
+    renderGallina pat <+> "as" <+> renderIdent id
+  
+  renderGallina' p (InScopePat pat scope) =
+    renderGallina pat <+> "%" <+> renderIdent scope
+  
+  renderGallina' p (QualidPat qid) =
+    renderGallina qid
+  
+  renderGallina' p (UnderscorePat) =
+    char '_'
+  
+  renderGallina' p (NumPat n) =
+    renderNum n
+  
+  renderGallina' p (OrPats orPats) =
+    parens . align . group $ sepWith (<>) (</>) "," (renderGallina <$> orPats)
 
 instance Gallina OrPattern where
   renderGallina' _ (OrPattern pats) = spacedSepPre "|" (align . renderGallina <$> pats)
@@ -462,7 +580,7 @@ instance Gallina Definition where
     where
       renderDef def name args oty body =
         def <+> renderIdent name
-            <>  spaceIf args <> render_args_oty args oty
+            <>  spaceIf args <> render_args_oty H args oty
             <+> nest 2 (":=" </> align (renderGallina body))
             <>  "."
 
@@ -472,14 +590,14 @@ instance Gallina Inductive where
 
 instance Gallina IndBody where
   renderGallina' _ (IndBody name params ty cons) =
-    renderIdent name <> spaceIf params <> render_args_ty params ty
+    renderIdent name <> spaceIf params <> render_args_ty H params ty
                      <> nest 2 (softline <> renderCons cons)
     where
       renderCons []         = ":="
       renderCons (con:cons) = align $ foldl' (<!>) (renderCon ":=" con) (renderCon "| " <$> cons)
       
       renderCon delim (cname, cargs, coty) =
-        delim <+> renderIdent cname <> spaceIf cargs <> render_args_oty cargs coty
+        delim <+> renderIdent cname <> spaceIf cargs <> render_args_oty H cargs coty
 
 instance Gallina Fixpoint where
   renderGallina' _ (Fixpoint   bodies) = render_mutual_def "Fixpoint"   bodies
@@ -487,7 +605,7 @@ instance Gallina Fixpoint where
 
 instance Gallina Assertion where
   renderGallina' _ (Assertion kw name args ty) =
-    renderGallina kw <+> renderIdent name <> spaceIf args <> align (group (vsep (renderGallina <$> args)))
+    renderGallina kw <+> renderIdent name <> spaceIf args <> group (render_args V args)
                      <+> group (nest 2 $ ":" </> renderGallina ty)
                      <>  "."
 

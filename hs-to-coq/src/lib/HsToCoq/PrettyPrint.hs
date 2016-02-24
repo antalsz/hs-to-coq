@@ -12,7 +12,10 @@ module HsToCoq.PrettyPrint (
   hcat, vcat, fillCat, cat,
   punctuate,
   -- * Utility functions
-  spacedSepPre, spacedSepPost, (</?>), spaceIf
+  -- ** Nicely smushing lists together
+  sepWith, spacedSepPre, spacedSepPost,
+  -- ** Dealing with possibly-empty documents
+  (</?>), docIf, spaceIf, softlineIf
   ) where
 
 import Text.PrettyPrint.ANSI.Leijen hiding ( (<>), (<$>)
@@ -94,25 +97,36 @@ punctuate :: Foldable f => Doc -> f Doc -> [Doc]
 punctuate p = T.punctuate p . toList
 {-# INLINABLE punctuate #-}
 
-generic_spaced_sep :: Foldable f
-                   => (Doc -> Doc -> Doc) -> (Doc -> Doc -> Doc)
-                   -> Doc -> f Doc -> Doc
-generic_spaced_sep (<&) (&>) sep docs
+sepWith :: Foldable f
+        => (Doc -> Doc -> Doc) -> (Doc -> Doc -> Doc)
+        -> Doc -> f Doc -> Doc
+sepWith (<&) (&>) sep docs
   | null docs = mempty
   | otherwise = foldr1 (\doc result -> doc <& sep &> result) docs
-{-# INLINABLE generic_spaced_sep #-}
+{-# INLINABLE sepWith #-}
                 
 spacedSepPre :: Foldable f => Doc -> f Doc -> Doc
-spacedSepPre = generic_spaced_sep (</>) (<+>)
-                
+spacedSepPre = sepWith (</>) (<+>)
+{-# INLINABLE spacedSepPre #-}
+
 spacedSepPost :: Foldable f => Doc -> f Doc -> Doc
-spacedSepPost = generic_spaced_sep (<+>) (</>)
+spacedSepPost = sepWith (<+>) (</>)
+{-# INLINABLE spacedSepPost #-}
 
 (</?>) :: Doc -> Maybe Doc -> Doc
 d1 </?> Nothing = d1
 d1 </?> Just d2 = d1 </> d2
 infixl 5 </?>
 
+docIf :: Foldable f => Doc -> f a -> Doc
+docIf d x | null x    = empty
+          | otherwise = d
+{-# INLINABLE docIf #-}
+  
 spaceIf :: Foldable f => f a -> Doc
-spaceIf x | null x    = empty
-          | otherwise = space
+spaceIf = docIf space
+{-# INLINABLE spaceIf #-}
+
+softlineIf :: Foldable f => f a -> Doc
+softlineIf = docIf softline
+{-# INLINABLE softlineIf #-}

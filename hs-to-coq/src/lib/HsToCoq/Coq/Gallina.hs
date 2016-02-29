@@ -344,70 +344,70 @@ render_mutual_def def bodies =
 
 -- TODO: Precedence!
 instance Gallina Term where
-  renderGallina' p (Forall vars body) =
+  renderGallina' _p (Forall vars body) = parens $
     group $ "forall" <+> render_args V vars <> nest 2 ("," <!> renderGallina body)
   
-  renderGallina' p (Fun vars body) =
+  renderGallina' _p (Fun vars body) = parens $
     group $ "fun" <+> render_args V vars <+> nest 2 ("=>" <!> renderGallina body)
   
-  renderGallina' p (Fix fbs) =
+  renderGallina' _p (Fix fbs) = parens $
     "fix" <+> renderGallina fbs
   
-  renderGallina' p (Cofix cbs) =
+  renderGallina' _p (Cofix cbs) = parens $
     "cofix" <+> renderGallina cbs
   
-  renderGallina' p (Let var args oty val body) =
+  renderGallina' _p (Let var args oty val body) = parens $
          "let" <+> group (   renderIdent var
                          <>  spaceIf args <> render_args_oty V args oty
                          <+> nest 2 (":=" <!> renderGallina val))
     <!>  "in" <+> align (renderGallina body)
   
-  renderGallina' p (LetFix def body) =
+  renderGallina' _p (LetFix def body) = parens $
     "let fix" <+> renderGallina def <!> "in" <+> align (renderGallina body)
   
-  renderGallina' p (LetCofix def body) =
+  renderGallina' _p (LetCofix def body) = parens $
     "let cofix" <+> renderGallina def <!> "in" <+> align (renderGallina body)
   
-  renderGallina' p (LetTuple vars orty val body) =
+  renderGallina' _p (LetTuple vars orty val body) = parens $
         "let" <+> group (   (parens . align . vsep . punctuate "," $ renderGallina <$> vars)
                         <>  render_opt_rtype orty
                         <+> nest 2 (":=" <!> renderGallina val))
     <!> "in" <+> align (renderGallina body)
   
-  renderGallina' p (LetTick pat oin val orty body) =
+  renderGallina' _p (LetTick pat oin val orty body) = parens $
         "let" <+> align (group $   "'" <> align (renderGallina pat)
                                <>  maybe mempty (\inT -> softline <> "in" <+> renderGallina inT) oin
                                <+> nest 2 (  ":=" <!> renderGallina val
                                                   <>  render_opt_rtype orty))
     <!> "in" <+> align (renderGallina body)
 
-  renderGallina' p (If c odrty t f) =
+  renderGallina' _p (If c odrty t f) = parens $
         "if"   <+> align (renderGallina c <> render_opt_rtype odrty)
     <!> "then" <+> align (renderGallina t)
     <!> "else" <+> align (renderGallina f)
   
-  renderGallina' p (HasType tm ty) =
+  renderGallina' _p (HasType tm ty) = parens $
     renderGallina tm <+> ":" <+> renderGallina ty
   
-  renderGallina' p (CheckType tm ty) =
+  renderGallina' _p (CheckType tm ty) = parens $
     renderGallina tm <+> "<:" <+> renderGallina ty
   
-  renderGallina' p (ToSupportType tm) =
+  renderGallina' _p (ToSupportType tm) = parens $
     renderGallina tm <+> ":>"
   
-  renderGallina' p (Arrow ty1 ty2) =
+  renderGallina' _p (Arrow ty1 ty2) = parens $
     renderGallina ty1 <+> "->" <+> renderGallina ty2
   
-  renderGallina' p (App f args) =
+  renderGallina' _p (App f args) = parens $
     renderGallina f </> render_args H args
   
-  renderGallina' p (ExplicitApp qid args) =
+  renderGallina' _p (ExplicitApp qid args) = parens $
     "@" <> renderGallina qid <> softlineIf args <> render_args H args
   
-  renderGallina' p (InScope tm scope) =
+  renderGallina' _p (InScope tm scope) = parens $
     renderGallina tm <+> "%" <+> renderIdent scope
   
-  renderGallina' p (Match discriminees orty eqns) =
+  renderGallina' _p (Match discriminees orty eqns) = parens $
        "match" <+> group (align . nest (-2)
                            $ (sepWith (<!>) (<+>) "," $ renderGallina <$> discriminees)
                            <> maybe mempty (\rty -> line <> renderGallina rty) orty)
@@ -510,28 +510,28 @@ instance Gallina MultPattern where
   renderGallina' _ (MultPattern pats) = spacedSepPost "," $ renderGallina <$> pats
 
 instance Gallina Pattern where
-  renderGallina' p (ArgsPat qid args) =
+  renderGallina' _p (ArgsPat qid args) = parens $
     renderGallina qid </> render_args H args
   
-  renderGallina' p (ExplicitArgsPat qid args) =
+  renderGallina' _p (ExplicitArgsPat qid args) = parens $
     "@" <> renderGallina qid <> softlineIf args <> render_args H args
   
-  renderGallina' p (AsPat pat id) =
+  renderGallina' _p (AsPat pat id) = parens $
     renderGallina pat <+> "as" <+> renderIdent id
   
-  renderGallina' p (InScopePat pat scope) =
+  renderGallina' _p (InScopePat pat scope) = parens $
     renderGallina pat <+> "%" <+> renderIdent scope
   
-  renderGallina' p (QualidPat qid) =
+  renderGallina' _p (QualidPat qid) =
     renderGallina qid
   
-  renderGallina' p (UnderscorePat) =
+  renderGallina' _ (UnderscorePat) =
     char '_'
   
-  renderGallina' p (NumPat n) =
+  renderGallina' _ (NumPat n) =
     renderNum n
   
-  renderGallina' p (OrPats orPats) =
+  renderGallina' _ (OrPats orPats) =
     parens . align . group $ sepWith (<>) (</>) "," (renderGallina <$> orPats)
 
 instance Gallina OrPattern where

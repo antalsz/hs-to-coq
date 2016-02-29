@@ -2,9 +2,11 @@
 
 module HsToCoq.PrettyPrint (
   -- * The base module
-  module Text.PrettyPrint.ANSI.Leijen,
+  module Text.PrettyPrint.Leijen.Text,
   -- * Don't use operators with existing meanings
   (<>), (<!>),
+  -- * Lazy 'TL.Text' to strict 'Text'
+  text, lazyText, string, lazyString,
   -- * '[]' -> 'Foldable'
   encloseSep,
   list, tupled, semiBraces,
@@ -18,7 +20,9 @@ module HsToCoq.PrettyPrint (
   (</?>), docIf, spaceIf, softlineIf
   ) where
 
-import Text.PrettyPrint.ANSI.Leijen hiding ( (<>), (<$>)
+import Text.PrettyPrint.Leijen.Text hiding ( (<>), (<$>)
+                                           , text
+                                           , string
                                            , encloseSep
                                            , list
                                            , tupled
@@ -32,18 +36,35 @@ import Text.PrettyPrint.ANSI.Leijen hiding ( (<>), (<$>)
                                            , fillCat
                                            , cat
                                            , punctuate )
-import qualified Text.PrettyPrint.ANSI.Leijen as T
-import qualified Data.Monoid as Monoid
+import qualified Text.PrettyPrint.Leijen.Text as T
+import Data.Text (Text)
+import qualified Data.Text.Lazy as TL
 import Data.Semigroup (Semigroup(..))
 import Data.Foldable
 
 instance Semigroup Doc where
-  (<>) = (Monoid.<>)
+  (<>) = (T.<>)
 
 (<!>) :: Doc -> Doc -> Doc
 (<!>) = (T.<$>)
 infixr 5 <!>
 {-# INLINABLE (<!>) #-}
+
+text :: Text -> Doc
+text = T.text . TL.fromStrict
+{-# INLINABLE text #-}
+
+lazyText :: TL.Text -> Doc
+lazyText = T.text
+{-# INLINABLE lazyText #-}
+
+string :: Text -> Doc
+string = T.string . TL.fromStrict
+{-# INLINABLE string #-}
+
+lazyString :: TL.Text -> Doc
+lazyString = T.string
+{-# INLINABLE lazyString #-}
 
 encloseSep :: Foldable f => Doc -> Doc -> Doc -> f Doc -> Doc
 encloseSep left right sep = T.encloseSep left right sep . toList

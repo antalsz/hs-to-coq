@@ -64,6 +64,8 @@ module HsToCoq.Coq.Gallina (
   ) where
 
 import Prelude hiding (Num)
+import Data.Text (Text)
+import qualified Data.Text as T
 import Numeric.Natural
 import Data.List.NonEmpty (NonEmpty(), (<|))
 
@@ -80,7 +82,7 @@ import qualified Language.Haskell.TH as TH
 -- or what have you.
 
 -- |@/ident/ ::= /first_letter/ [/subsequent_letter/ … /subsequent_letter/]@
-type Ident       = String
+type Ident       = Text
 -- |@/access_ident/ ::= . /ident/@
 type AccessIdent = Ident
 -- |@/num/ ::= /digit/ … /digit/@
@@ -274,7 +276,7 @@ data AssertionKeyword = Theorem                                            -- ^@
                       deriving (Eq, Ord, Show, Read, Enum, Bounded)
 
 -- |A \"representation\" of tactics; left as @…@ in the grammar
-type Tactics = String
+type Tactics = Text
 
 -- |@/proof/ ::=@
 data Proof = ProofQed      Tactics                                         -- ^@Proof . … Qed .@
@@ -296,7 +298,7 @@ renderIdent :: Ident -> Doc
 renderIdent = text
 
 renderAccessIdent :: AccessIdent -> Doc
-renderAccessIdent = text . ('.':)
+renderAccessIdent = text . T.cons ':'
 
 renderNum :: Num -> Doc
 renderNum = integer . toInteger

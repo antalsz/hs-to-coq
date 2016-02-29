@@ -1,4 +1,5 @@
-{-# LANGUAGE TupleSections, LambdaCase, PatternSynonyms, OverloadedLists #-}
+{-# LANGUAGE TupleSections, LambdaCase, PatternSynonyms,
+             OverloadedLists, OverloadedStrings #-}
 
 module HsToCoq.ConvertData (
   -- * Conversion
@@ -10,12 +11,13 @@ module HsToCoq.ConvertData (
   -- * Input
   readDataDecls,
   -- * Coq construction
-  pattern App1, pattern Var, appList
+  pattern Var, pattern App1, appList
   ) where
 
 import Data.Foldable
 import Data.Traversable
 import Data.List.NonEmpty (NonEmpty(..), nonEmpty)
+import Data.Text (Text)
 
 import Control.Monad
 import Control.Monad.IO.Class
@@ -32,10 +34,10 @@ import HsToCoq.Coq.Gallina
 import HsToCoq.DataDecl
 import HsToCoq.ProcessFiles
 
-showRdrName :: GhcMonad m => RdrName -> m String
+showRdrName :: GhcMonad m => RdrName -> m Text
 showRdrName = ghcSDoc . pprOccName . rdrNameOcc
 
-showName :: GhcMonad m => GHC.Name -> m String
+showName :: GhcMonad m => GHC.Name -> m Text
 showName = showRdrName . nameRdrName
 
 readDataDecls :: GhcMonad m => DynFlags -> FilePath -> m [DataDecl' RdrName]
@@ -48,8 +50,8 @@ readDataDecls dflags file =   processFile (pure . getDataDecls) dflags file
 conv_unsupported :: MonadIO m => String -> m a
 conv_unsupported what = liftIO . throwGhcExceptionIO . ProgramError $ what ++ " unsupported"
 
+pattern Var  x   = Qualid (Bare x)
 pattern App1 f x = App f (PosArg x :| Nil)
-pattern Var v    = Qualid (Bare v)
 
 appList :: Term -> [Arg] -> Term
 appList f xs = case nonEmpty xs of
@@ -175,8 +177,8 @@ convertDataDefn curType (HsDataDefn _nd lcxt _ctype ksig cons _derivs) = do
 
 convertDataDecl' :: GhcMonad m => DataDecl' RdrName -> m Inductive
 convertDataDecl' (DataDecl' name tvs defn _fvs) = do
-  coqName       <- ghcPpr $ unLoc name
-  params        <- convertLHsTyVarBndrs tvs
+  coqName <- ghcPpr $ unLoc name
+  params  <- convertLHsTyVarBndrs tvs
   let binderNames = foldMap $ \case
                       Inferred x    -> [x]
                       Typed xs _    -> toList xs

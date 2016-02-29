@@ -11,7 +11,7 @@ import GHC
 import HeaderInfo
 import DynFlags
 import Bag
-import DoCpp
+import HsToCoq.Util.GHC.DoCpp
 
 import HsToCoq.Util.TempFiles
 import HsToCoq.Util.Messages

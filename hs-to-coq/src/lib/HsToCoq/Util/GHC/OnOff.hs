@@ -1,7 +1,7 @@
 {-# LANGUAGE TypeSynonymInstances, PatternSynonyms, TemplateHaskell #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
-module OnOff (
+module HsToCoq.Util.GHC.OnOff (
   OnOff, pattern On, pattern Off,
   onOffToEither, eitherToOnOff
   ) where

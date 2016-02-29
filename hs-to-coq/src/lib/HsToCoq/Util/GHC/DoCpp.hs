@@ -5,7 +5,7 @@
 -- expanded; the module header and imports are not.                           --
 --------------------------------------------------------------------------------
 
-module DoCpp (doCpp) where
+module HsToCoq.Util.GHC.DoCpp (doCpp) where
 
 import Control.Monad
 

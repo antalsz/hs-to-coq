@@ -20,11 +20,11 @@ source-repository head
   subdir:   core-coq/hs-to-coq
 
 library
-  exposed-modules:     OnOff
-                     , DoCpp
+  exposed-modules:     HsToCoq.Util.GHC.OnOff
+                     , HsToCoq.Util.GHC.DoCpp
+                     , HsToCoq.Util.GHC
                      , HsToCoq.Util.Patterns
                      , HsToCoq.Util.Functor
-                     , HsToCoq.Util.GHC
                      , HsToCoq.Util.TempFiles
                      , HsToCoq.Util.Messages
                      , HsToCoq.PrettyPrint

@@ -40,15 +40,15 @@ library
                      , TemplateHaskell
   build-depends:       base             >=4.8 && <4.9
                      , template-haskell ==2.10.*
-                     , syb              ==0.6.*
+                     , ghc              ==7.10.2
+                     , ghc-paths        ==0.1.*
                      , transformers     ==0.4.*
                      , mtl              ==2.2.*
                      , semigroups       ==0.18.*
-                     , filepath         ==1.4.*
+                     , syb              ==0.6.*
                      , directory        ==1.2.*
+                     , filepath         ==1.4.*
                      , ansi-wl-pprint   ==0.6.*
-                     , ghc              ==7.10.2
-                     , ghc-paths        ==0.1.*
   hs-source-dirs:      src/lib
   default-language:    Haskell2010
   ghc-options:         -Wall -fno-warn-name-shadowing -O2

@@ -36,6 +36,7 @@ library
                      , Control.Monad.FreeVars
                      , HsToCoq.PrettyPrint
                      , HsToCoq.Coq.Gallina
+                     , HsToCoq.Coq.FreeVars
                      , HsToCoq.DataDecl
                      , HsToCoq.ConvertData
                      , HsToCoq.ProcessFiles

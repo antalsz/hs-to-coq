@@ -25,8 +25,15 @@ library
                      , HsToCoq.Util.GHC
                      , HsToCoq.Util.Patterns
                      , HsToCoq.Util.Functor
+                     , HsToCoq.Util.Monad
                      , HsToCoq.Util.TempFiles
                      , HsToCoq.Util.Messages
+                     , Control.Monad.Trans.FreeVars.Internal
+                     , Control.Monad.FreeVars.Class.Internal
+                     , Control.Monad.FreeVars.Internal
+                     , Control.Monad.Trans.FreeVars
+                     , Control.Monad.FreeVars.Class
+                     , Control.Monad.FreeVars
                      , HsToCoq.PrettyPrint
                      , HsToCoq.Coq.Gallina
                      , HsToCoq.DataDecl
@@ -34,8 +41,9 @@ library
                      , HsToCoq.ProcessFiles
                      , HsToCoq.CLI
   other-extensions:    TupleSections, LambdaCase, RecordWildCards, OverloadedStrings
-                     , TypeSynonymInstances, FlexibleContexts, UndecidableInstances
-                     , DeriveDataTypeable, StandaloneDeriving
+                     , MultiParamTypeClasses, FunctionalDependencies, FlexibleContexts
+                     , TypeSynonymInstances, FlexibleInstances, UndecidableInstances
+                     , DeriveDataTypeable, StandaloneDeriving, GeneralizedNewtypeDeriving
                      , PatternSynonyms
                      , TemplateHaskell
   build-depends:       base             >=4.8 && <4.9
@@ -47,6 +55,7 @@ library
                      , mtl              ==2.2.*
                      , semigroups       ==0.18.*
                      , syb              ==0.6.*
+                     , containers       ==0.5.*
                      , directory        ==1.2.*
                      , filepath         ==1.4.*
                      , wl-pprint-text   ==1.1.*

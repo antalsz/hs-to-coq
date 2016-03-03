@@ -26,6 +26,7 @@ library
                      , HsToCoq.Util.Patterns
                      , HsToCoq.Util.Functor
                      , HsToCoq.Util.Monad
+                     , HsToCoq.Util.Containers
                      , HsToCoq.Util.TempFiles
                      , HsToCoq.Util.Messages
                      , Control.Monad.Trans.FreeVars.Internal

@@ -10,6 +10,7 @@ module HsToCoq.CLI (
   ) where
 
 import Data.Foldable
+import Data.List (intersperse)
 
 import Control.Monad
 import Control.Monad.IO.Class
@@ -33,9 +34,6 @@ import HsToCoq.ConvertData
 prettyPrint :: MonadIO m => Doc -> m ()
 prettyPrint = liftIO . displayIO stdout . renderPretty 0.67 120
 
-prettyPrintLn :: MonadIO m => Doc -> m ()
-prettyPrintLn doc = prettyPrint doc *> liftIO (putStrLn "")
-
 processArgs :: GhcMonad m => m (DynFlags, [FilePath])
 processArgs = do
   (dflags, files, warnings) <- join $
@@ -50,13 +48,14 @@ dumpDataDecls :: (Data a, GhcMonad m) => a -> m ()
 dumpDataDecls lmod = case getDataDecls lmod :: [DataDecl' RdrName] of
   [] -> liftIO $ putStrLn "No data type declarations."
   ds -> do liftIO $ putStrLn "Data type declarations:"
-           mapM_ (ghcPutPpr . fromDataDecl') ds
+           traverse_ (ghcPutPpr . fromDataDecl') ds
 
 convertDataDecls :: (Data a, GhcMonad m) => a -> m ()
-convertDataDecls lmod = case getDataDecls lmod :: [DataDecl' RdrName] of
-  [] -> liftIO $ putStrLn "-- No data type declarations to convert."
-  ds -> do liftIO $ putStrLn "-- Converted data type declarations:"
-           mapM_ (prettyPrintLn . (<> line) . renderGallina <=< convertDataDecl') ds
+convertDataDecls lmod = convertDataDecls' (getDataDecls lmod) >>= liftIO . \case
+  [] -> putStrLn "(* No data type declarations to convert. *)"
+  ds -> do putStrLn "(* Converted data type declarations: *)"
+           traverse_ prettyPrint . intersperse line $
+             map ((<> line) . renderGallina) ds
 
 processFilesMain :: GhcMonad m => (Located (HsModule RdrName) -> m a) -> m ()
 processFilesMain f = uncurry (traverse_ . processFile f) =<< processArgs

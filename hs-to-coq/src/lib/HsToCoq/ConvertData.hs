@@ -3,7 +3,7 @@
 
 module HsToCoq.ConvertData (
   -- * Conversion
-  convertDataDecl', convertType, convertLType,
+  convertDataDecls', convertDataDecl', convertType, convertLType,
   -- ** Names
   showRdrName, showName,
   -- ** Internal
@@ -16,11 +16,15 @@ module HsToCoq.ConvertData (
 
 import Data.Foldable
 import Data.Traversable
+import Data.Maybe
 import Data.List.NonEmpty (NonEmpty(..), nonEmpty)
 import Data.Text (Text)
 
 import Control.Monad
 import Control.Monad.IO.Class
+
+import qualified Data.Set        as S
+import qualified Data.Map.Strict as M
 
 import GHC hiding (Name)
 import qualified GHC
@@ -28,9 +32,12 @@ import RdrName
 import OccName
 import Panic
 
+import HsToCoq.Util.Functor
+import HsToCoq.Util.Containers
 import HsToCoq.Util.Patterns
 import HsToCoq.Util.GHC
 import HsToCoq.Coq.Gallina
+import HsToCoq.Coq.FreeVars
 import HsToCoq.DataDecl
 import HsToCoq.ProcessFiles
 
@@ -175,7 +182,7 @@ convertDataDefn curType (HsDataDefn _nd lcxt _ctype ksig cons _derivs) = do
   (,) <$> maybe (pure $ Sort Type) convertLType ksig
       <*> (concat <$> traverse (convertConDecl curType . unLoc) cons)
 
-convertDataDecl' :: GhcMonad m => DataDecl' RdrName -> m Inductive
+convertDataDecl' :: GhcMonad m => DataDecl' RdrName -> m IndBody
 convertDataDecl' (DataDecl' name tvs defn _fvs) = do
   coqName <- ghcPpr $ unLoc name
   params  <- convertLHsTyVarBndrs tvs
@@ -188,4 +195,11 @@ convertDataDecl' (DataDecl' name tvs defn _fvs) = do
                       UnderscoreName -> Underscore
       curType     = appList (Var coqName) . nameArgs $ binderNames params
   (resTy, cons) <- convertDataDefn curType defn
-  pure $ Inductive [IndBody coqName params resTy cons]
+  pure $ IndBody coqName params resTy cons
+
+convertDataDecls' :: GhcMonad m => [DataDecl' RdrName] -> m [Inductive]
+convertDataDecls' decls = do
+  bodies <- fmap M.fromList $ traverse convertDataDecl' decls <&> map (\case
+              body@(IndBody tyName _ _ _) -> (tyName, body))
+  let mutuals = stronglyConnComp' . M.toList $ (S.toList . getFreeVars) <$> bodies
+  pure $ mapMaybe (fmap Inductive . nonEmpty . map (bodies M.!)) mutuals

@@ -1,4 +1,5 @@
-{-# LANGUAGE MultiParamTypeClasses, FlexibleContexts, TypeSynonymInstances,
+{-# LANGUAGE MultiParamTypeClasses, FlexibleContexts,
+             TypeSynonymInstances, FlexibleInstances,
              OverloadedStrings #-}
 
 module HsToCoq.Coq.FreeVars (
@@ -64,6 +65,12 @@ instance Binding Binder where
 instance Binding Annotation where
   binding (Annotation x) = binding x
 
+instance Binding MatchItem where
+  binding (MatchItem t oas oin) = (freeVars t *>) . binding oas . binding oin
+
+instance Binding MultPattern where
+  binding (MultPattern pats) = binding pats
+
 -- Note [Bound variables in patterns]
 -- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 -- We cannot quite capture /all/ the free variables that occur in patterns.  The
@@ -116,6 +123,11 @@ instance Binding Pattern where
 instance Binding OrPattern where
   binding (OrPattern pats) = binding pats
 
+-- An @in@-annotation, as found in 'LetTickDep' or 'MatchItem'.
+instance Binding (Qualid, [Pattern]) where
+  binding (con, pats) = (freeVars con *>) . binding pats
+
+-- TODO Not all sequences of bindings should be telescopes!
 bindingTelescope :: (MonadFreeVars Ident m, Binding b, Foldable f) => f b -> m a -> m a
 bindingTelescope = flip $ foldr binding
 
@@ -168,11 +180,14 @@ instance FreeVars Term where
     freeVars oret *> freeVars val
     binding xs $ freeVars body
   
-  -- freeVars (LetTick pat oin def oret body) = do
-  --   freeVars oin -- TODO ??? no?
-  --   freeVars def
-  --   freeVars oret -- TODO ???
-  --   binding pat $ freeVars body
+  freeVars (LetTick pat def body) = do
+    freeVars def
+    binding pat $ freeVars body
+  
+  freeVars (LetTickDep pat oin def ret body) = do
+    freeVars def
+    binding oin $ freeVars ret
+    binding pat $ freeVars body
 
   freeVars (If c oret t f) =
     freeVars c *> freeVars oret *> freeVars [t,f]
@@ -199,8 +214,9 @@ instance FreeVars Term where
     freeVars t
     -- The scope is a different sort of identifier, not a term-level variable.
 
-  -- freeVars (Match items oret eqns) =
-  --   -- TODO ???
+  freeVars (Match items oret eqns) = do
+    binding items $ freeVars oret
+    freeVars eqns
 
   freeVars (Qualid qid) =
     freeVars qid
@@ -264,6 +280,9 @@ instance FreeVars DepRetType where
 
 instance FreeVars ReturnType where
   freeVars (ReturnType ty) = freeVars ty
+
+instance FreeVars Equation where
+  freeVars (Equation mpats body) = binding mpats $ freeVars body
 
 foldableFreeVars :: (MonadFreeVars Ident m, FreeVars t, Foldable f) => f t -> m ()
 foldableFreeVars = traverse_ freeVars

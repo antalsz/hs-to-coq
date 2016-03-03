@@ -112,10 +112,9 @@ instance FreeVars Term where
     freeVars' cb
     binding (name cb) $ freeVars' body
 
-  -- freeVars' (LetTuple xs oret val body) = do
-  --   freeVars' oret -- TODO ???
-  --   freeVars' val
-  --   binding xs $ freeVars' body
+  freeVars' (LetTuple xs oret val body) = do
+    freeVars' oret *> freeVars' val
+    binding xs $ freeVars' body
   
   -- freeVars' (LetTick pat oin def oret body) = do
   --   freeVars' oin -- TODO ??? no?
@@ -123,9 +122,8 @@ instance FreeVars Term where
   --   freeVars' oret -- TODO ???
   --   binding pat $ freeVars' body
 
-  -- freeVars' (If c oret t f) =
-  --   freeVars' [c,t,f]
-  --   --freeVars' oret -- TODO ???
+  freeVars' (If c oret t f) =
+    freeVars' c *> freeVars' oret *> freeVars' [t,f]
 
   freeVars' (HasType tm ty) =
     freeVars' [tm, ty]
@@ -208,6 +206,12 @@ instance FreeVars CofixBody where
     binding f . binding args $ do
       freeVars' oty
       freeVars' def
+
+instance FreeVars DepRetType where
+  freeVars' (DepRetType oas ret) = binding oas $ freeVars' ret
+
+instance FreeVars ReturnType where
+  freeVars' (ReturnType ty) = freeVars' ty
 
 -- All variables in a pattern should be bound: either they are free, in which
 -- case are now bound; or they're constants, in which case they were already

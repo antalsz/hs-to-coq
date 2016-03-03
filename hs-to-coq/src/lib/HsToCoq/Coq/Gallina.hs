@@ -69,7 +69,6 @@ import qualified Data.Text as T
 import Numeric.Natural
 import Data.List.NonEmpty (NonEmpty(), (<|))
 
-import HsToCoq.Util.Functor
 import HsToCoq.PrettyPrint
 import Data.Traversable
 import Data.List (foldl')
@@ -91,30 +90,48 @@ type Num         = Natural
 -- $Terms
 -- <https://coq.inria.fr/distrib/current/refman/Reference-Manual003.html#term §1.2, \"Terms\", in the Coq reference manual.>
 
--- |@/term/ ::=@
-data Term = Forall Binders Term                                       -- ^@forall /binders/, /term/@
-          | Fun Binders Term                                          -- ^@fun /binders/ => /term/@
-          | Fix FixBodies                                             -- ^@fix /fix_bodies/@
-          | Cofix CofixBodies                                         -- ^@cofix /cofix_bodies/@
-          | Let Ident [Binder] (Maybe Term) Term Term                 -- ^@let /ident/ [/binders/] [: /term/] := /term/ in /term/@
-          | LetFix FixBody Term                                       -- ^@let fix /fix_body/ in /term/@
-          | LetCofix CofixBody Term                                   -- ^@let cofix /cofix_body/ in /term/@
-          | LetTuple [Name] (Maybe DepRetType) Term Term              -- ^@let ( [/name/ , … , /name/] ) [/dep_ret_type/] := /term/ in /term/@
-          | LetTick Pattern (Maybe Term) Term (Maybe ReturnType) Term -- ^@let ' /pattern/ [in /term/] := /term/ [/return_type/] in /term/@
-          | If Term (Maybe DepRetType) Term Term                      -- ^@if /term/ [/dep_ret_type/] then /term/ else /term/@
-          | HasType Term Term                                         -- ^@/term/ : /term/@
-          | CheckType Term Term                                       -- ^@/term/ <: /term/@
-          | ToSupportType Term                                        -- ^@/term/ :>@
-          | Arrow Term Term                                           -- ^@/term/ -> /term/@
-          | App Term (NonEmpty Arg)                                   -- ^@/term/ /arg/ … /arg/@
-          | ExplicitApp Qualid [Term]                                 -- ^@\@ /qualid/ [/term/ … /term/]@
-          | InScope Term Ident                                        -- ^@/term/ % /ident/@
-          | Match (NonEmpty MatchItem) (Maybe ReturnType) [Equation]  -- ^@match /match_item/ , … , /match_item/ [/return_type/] with [[|] /equation/ | … | /equation/] end@
-          | Qualid Qualid                                             -- ^@/qualid/@
-          | Sort Sort                                                 -- ^@/sort/@
-          | Num  Num                                                  -- ^@/num/@
-          | Underscore                                                -- ^@_@
-          | Parens Term                                               -- ^@( /term/ )@
+-- |NB: I believe there to be a bug in the Coq manual as regards the definition
+-- of destructuring pattern-@let@, i.e. with @let ' /pattern/ …@.  The
+-- definition is given as
+--
+-- @
+-- let ' /pattern/ [in /term/] := /term/ [/return_type/] in /term/
+-- @
+--
+-- However, I believe that:
+--
+-- 1. The @in@ annotation will only parse if the @/return_type/@ is present; and
+-- 2. The @in@ annotation should be @[in /qualid/ [/pattern/ … /pattern/]]@
+--    instead of simply @[in /term/]@, just as for @/match_item/@.
+--
+-- I have thus implemented this change in the AST that follows (the 'LetTick'
+-- and 'LetTickDep' cases).
+--
+-- @/term/ ::=@
+data Term = Forall Binders Term                                                 -- ^@forall /binders/, /term/@
+          | Fun Binders Term                                                    -- ^@fun /binders/ => /term/@
+          | Fix FixBodies                                                       -- ^@fix /fix_bodies/@
+          | Cofix CofixBodies                                                   -- ^@cofix /cofix_bodies/@
+          | Let Ident [Binder] (Maybe Term) Term Term                           -- ^@let /ident/ [/binders/] [: /term/] := /term/ in /term/@
+          | LetFix FixBody Term                                                 -- ^@let fix /fix_body/ in /term/@
+          | LetCofix CofixBody Term                                             -- ^@let cofix /cofix_body/ in /term/@
+          | LetTuple [Name] (Maybe DepRetType) Term Term                        -- ^@let ( [/name/ , … , /name/] ) [/dep_ret_type/] := /term/ in /term/@
+          | LetTick Pattern Term Term                                           -- ^@let ' /pattern/ := /term/ in /term/@
+          | LetTickDep Pattern (Maybe (Qualid, [Pattern])) Term ReturnType Term -- ^@let ' /pattern/ [in /qualid/ [/pattern/ … /pattern/]] := /term/ /return_type/ in /term/@
+          | If Term (Maybe DepRetType) Term Term                                -- ^@if /term/ [/dep_ret_type/] then /term/ else /term/@
+          | HasType Term Term                                                   -- ^@/term/ : /term/@
+          | CheckType Term Term                                                 -- ^@/term/ <: /term/@
+          | ToSupportType Term                                                  -- ^@/term/ :>@
+          | Arrow Term Term                                                     -- ^@/term/ -> /term/@
+          | App Term (NonEmpty Arg)                                             -- ^@/term/ /arg/ … /arg/@
+          | ExplicitApp Qualid [Term]                                           -- ^@\@ /qualid/ [/term/ … /term/]@
+          | InScope Term Ident                                                  -- ^@/term/ % /ident/@
+          | Match (NonEmpty MatchItem) (Maybe ReturnType) [Equation]            -- ^@match /match_item/ , … , /match_item/ [/return_type/] with [[|] /equation/ | … | /equation/] end@
+          | Qualid Qualid                                                       -- ^@/qualid/@
+          | Sort Sort                                                           -- ^@/sort/@
+          | Num  Num                                                            -- ^@/num/@
+          | Underscore                                                          -- ^@_@
+          | Parens Term                                                         -- ^@( /term/ )@
           deriving (Eq, Ord, Show, Read)
 
 -- |@/arg/ ::=@
@@ -312,13 +329,24 @@ render_opt_type :: Maybe Term -> Doc
 render_opt_type = maybe mempty render_type
 
 -- Module-local
+render_rtype :: Gallina a => a -> Doc
+render_rtype rty = nest 2 $ softline <> renderGallina rty
+
+-- Module-local
 render_opt_rtype :: Gallina a => Maybe a -> Doc
-render_opt_rtype = maybe mempty $ \rty -> nest 2 $ softline <> renderGallina rty
+render_opt_rtype = maybe mempty render_rtype
+
+-- Module-local
+render_in_annot :: Maybe (Qualid, [Pattern]) -> Doc
+render_in_annot Nothing           = mempty
+render_in_annot (Just (qid,pats)) = softline <> "in" <+> renderGallina qid
+                                                     <+> render_args H pats
 
 -- Module-local
 data Orientation = H | V
                  deriving (Eq, Ord, Show, Read, Enum, Bounded)
 
+-- Module-local
 ocat :: Foldable f => Orientation -> f Doc -> Doc
 ocat H = fillSep
 ocat V = vcat
@@ -376,11 +404,16 @@ instance Gallina Term where
                         <+> nest 2 (":=" <!> renderGallina val))
     <!> "in" <+> align (renderGallina body)
   
-  renderGallina' _p (LetTick pat oin val orty body) = parens $
+  renderGallina' _p (LetTick pat val body) = parens $
         "let" <+> align (group $   "'" <> align (renderGallina pat)
-                               <>  maybe mempty (\inT -> softline <> "in" <+> renderGallina inT) oin
-                               <+> nest 2 (  ":=" <!> renderGallina val
-                                                  <>  render_opt_rtype orty))
+                               <+> nest 2 (":=" <!> renderGallina val))
+    <!> "in" <+> align (renderGallina body)
+  
+  renderGallina' _p (LetTickDep pat oin val rty body) = parens $
+        "let" <+> align (group $   "'" <> align (renderGallina pat)
+                               <>  render_in_annot oin
+                               <+> nest 2 (":=" <!> renderGallina val
+                                                <>  render_rtype  rty))
     <!> "in" <+> align (renderGallina body)
 
   renderGallina' _p (If c odrty t f) = parens $
@@ -493,9 +526,8 @@ instance Gallina MatchItem where
   renderGallina' _ (MatchItem scrutinee oas oin) =
     hang 2 $
       renderGallina scrutinee
-        </?> (oas <&> \as         -> "as" <+> renderGallina as)
-        </?> (oin <&> \(qid,pats) -> "in" <+> renderGallina qid
-                                          <+> render_args H pats)
+        <> maybe mempty (\as -> softline <> "as" <+> renderGallina as) oas
+        <> render_in_annot oin
 
 instance Gallina DepRetType where
   renderGallina' _ (DepRetType oname rty) =

@@ -7,9 +7,9 @@ module HsToCoq.Coq.FreeVars (
   -- * Binders
   Binding(..),
   -- * Things that contain free variables
-  freeVars, FreeVars(..),
+  getFreeVars, FreeVars(..),
   -- * Default type class method definitions
-  bindingTelescope, foldableFreeVars'
+  bindingTelescope, foldableFreeVars
   ) where
 
 import Prelude hiding (Num)
@@ -54,11 +54,11 @@ instance Binding Binder where
   binding (Inferred x) getFVs =
     binding x getFVs
   binding (Typed xs ty) getFVs = do
-    freeVars' ty
+    freeVars ty
     foldr binding getFVs xs
   binding (BindLet x oty val) getFVs = do
-    freeVars' oty
-    freeVars' val
+    freeVars oty
+    freeVars val
     binding x getFVs
 
 instance Binding Annotation where
@@ -78,153 +78,153 @@ instance Binding b => Binding (NonEmpty b) where
 
 ----------------------------------------------------------------------------------------------------
 
-freeVars :: FreeVars t => t -> Set Ident
-freeVars = FV.execFreeVars . freeVars'
+getFreeVars :: FreeVars t => t -> Set Ident
+getFreeVars = FV.execFreeVars . freeVars
 
 class FreeVars t where
-  freeVars' :: MonadFreeVars Ident m => t -> m ()
+  freeVars :: MonadFreeVars Ident m => t -> m ()
 
 instance FreeVars Num where
-  freeVars' _ = pure ()
+  freeVars _ = pure ()
 
 instance FreeVars Term where
-  freeVars' (Forall xs t) =
-    binding xs $ freeVars' t
+  freeVars (Forall xs t) =
+    binding xs $ freeVars t
   
-  freeVars' (Fun xs t) =
-    binding xs $ freeVars' t
+  freeVars (Fun xs t) =
+    binding xs $ freeVars t
   
-  freeVars' (Fix fbs) =
-    freeVars' fbs
+  freeVars (Fix fbs) =
+    freeVars fbs
   
-  freeVars' (Cofix cbs) =
-    freeVars' cbs
+  freeVars (Cofix cbs) =
+    freeVars cbs
 
-  freeVars' (Let x args oty val body) = do
-    binding args $ freeVars' oty *> freeVars' val
-    binding x    $ freeVars' body
+  freeVars (Let x args oty val body) = do
+    binding args $ freeVars oty *> freeVars val
+    binding x    $ freeVars body
   
-  freeVars' (LetFix fb body) = do
-    freeVars' fb
-    binding (name fb) $ freeVars' body
+  freeVars (LetFix fb body) = do
+    freeVars fb
+    binding (name fb) $ freeVars body
 
-  freeVars' (LetCofix cb body) = do
-    freeVars' cb
-    binding (name cb) $ freeVars' body
+  freeVars (LetCofix cb body) = do
+    freeVars cb
+    binding (name cb) $ freeVars body
 
-  freeVars' (LetTuple xs oret val body) = do
-    freeVars' oret *> freeVars' val
-    binding xs $ freeVars' body
+  freeVars (LetTuple xs oret val body) = do
+    freeVars oret *> freeVars val
+    binding xs $ freeVars body
   
-  -- freeVars' (LetTick pat oin def oret body) = do
-  --   freeVars' oin -- TODO ??? no?
-  --   freeVars' def
-  --   freeVars' oret -- TODO ???
-  --   binding pat $ freeVars' body
+  -- freeVars (LetTick pat oin def oret body) = do
+  --   freeVars oin -- TODO ??? no?
+  --   freeVars def
+  --   freeVars oret -- TODO ???
+  --   binding pat $ freeVars body
 
-  freeVars' (If c oret t f) =
-    freeVars' c *> freeVars' oret *> freeVars' [t,f]
+  freeVars (If c oret t f) =
+    freeVars c *> freeVars oret *> freeVars [t,f]
 
-  freeVars' (HasType tm ty) =
-    freeVars' [tm, ty]
+  freeVars (HasType tm ty) =
+    freeVars [tm, ty]
 
-  freeVars' (CheckType tm ty) =
-    freeVars' [tm, ty]
+  freeVars (CheckType tm ty) =
+    freeVars [tm, ty]
 
-  freeVars' (ToSupportType tm) =
-    freeVars' tm
+  freeVars (ToSupportType tm) =
+    freeVars tm
 
-  freeVars' (Arrow ty1 ty2) =
-    freeVars' [ty1, ty2]
+  freeVars (Arrow ty1 ty2) =
+    freeVars [ty1, ty2]
 
-  freeVars' (App f xs) =
-    freeVars' f *> freeVars' xs
+  freeVars (App f xs) =
+    freeVars f *> freeVars xs
 
-  freeVars' (ExplicitApp qid xs) =
-    freeVars' qid *> freeVars' xs
+  freeVars (ExplicitApp qid xs) =
+    freeVars qid *> freeVars xs
   
-  freeVars' (InScope t _scope) =
-    freeVars' t
+  freeVars (InScope t _scope) =
+    freeVars t
     -- The scope is a different sort of identifier, not a term-level variable.
 
-  -- freeVars' (Match items oret eqns) =
+  -- freeVars (Match items oret eqns) =
   --   -- TODO ???
 
-  freeVars' (Qualid qid) =
-    freeVars' qid
+  freeVars (Qualid qid) =
+    freeVars qid
 
-  freeVars' (Sort sort) =
-    freeVars' sort -- Pro forma – there are none.
+  freeVars (Sort sort) =
+    freeVars sort -- Pro forma – there are none.
 
-  freeVars' (Num num) =
-    freeVars' num -- Pro forma – there are none.
+  freeVars (Num num) =
+    freeVars num -- Pro forma – there are none.
 
-  freeVars' Underscore =
+  freeVars Underscore =
     pure ()
 
-  freeVars' (Parens t) =
-    freeVars' t
+  freeVars (Parens t) =
+    freeVars t
 
 instance FreeVars Arg where
-  freeVars' (PosArg      t) = freeVars' t
-  freeVars' (NamedArg _x t) = freeVars' t
+  freeVars (PosArg      t) = freeVars t
+  freeVars (NamedArg _x t) = freeVars t
     -- The name here is the name of a function parameter; it's not an occurrence
     -- of a Gallina-level variable.
 
 instance FreeVars Qualid where
-  freeVars' = occurrence . toIdent where
+  freeVars = occurrence . toIdent where
     toIdent (Bare x)          = x
     toIdent (Qualified mod x) = toIdent mod <> "." <> x
 
 instance FreeVars Sort where
-  freeVars' Prop = pure ()
-  freeVars' Set  = pure ()
-  freeVars' Type = pure ()
+  freeVars Prop = pure ()
+  freeVars Set  = pure ()
+  freeVars Type = pure ()
 
 instance FreeVars FixBodies where
-  freeVars' (FixOne fb) =
-    freeVars' fb
-  freeVars' (FixMany fb' fbs' x) =
+  freeVars (FixOne fb) =
+    freeVars fb
+  freeVars (FixMany fb' fbs' x) =
     let fbs = fb' <| fbs'
-    in binding (x <| (name <$> fbs)) $ freeVars' fbs
+    in binding (x <| (name <$> fbs)) $ freeVars fbs
 
 instance FreeVars CofixBodies where
-  freeVars' (CofixOne cb) =
-    freeVars' cb
-  freeVars' (CofixMany cb' cbs' x) =
+  freeVars (CofixOne cb) =
+    freeVars cb
+  freeVars (CofixMany cb' cbs' x) =
     let cbs = cb' <| cbs'
-    in binding (x <| (name <$> cbs)) $ freeVars' cbs
+    in binding (x <| (name <$> cbs)) $ freeVars cbs
 
 instance FreeVars FixBody where
-  freeVars' (FixBody f args annot oty def) =
+  freeVars (FixBody f args annot oty def) =
     binding f . binding args . binding annot $ do
-      freeVars' oty
-      freeVars' def
+      freeVars oty
+      freeVars def
 
 instance FreeVars CofixBody where
-  freeVars' (CofixBody f args oty def) =
+  freeVars (CofixBody f args oty def) =
     binding f . binding args $ do
-      freeVars' oty
-      freeVars' def
+      freeVars oty
+      freeVars def
 
 instance FreeVars DepRetType where
-  freeVars' (DepRetType oas ret) = binding oas $ freeVars' ret
+  freeVars (DepRetType oas ret) = binding oas $ freeVars ret
 
 instance FreeVars ReturnType where
-  freeVars' (ReturnType ty) = freeVars' ty
+  freeVars (ReturnType ty) = freeVars ty
 
 -- All variables in a pattern should be bound: either they are free, in which
 -- case are now bound; or they're constants, in which case they were already
 -- bound.  It does mean we can't record free-ness, though.
 
-foldableFreeVars' :: (MonadFreeVars Ident m, FreeVars t, Foldable f) => f t -> m ()
-foldableFreeVars' = traverse_ freeVars'
+foldableFreeVars :: (MonadFreeVars Ident m, FreeVars t, Foldable f) => f t -> m ()
+foldableFreeVars = traverse_ freeVars
 
 instance FreeVars t => FreeVars (Maybe t) where
-  freeVars' = foldableFreeVars'
+  freeVars = foldableFreeVars
 
 instance FreeVars t => FreeVars [t] where
-  freeVars' = foldableFreeVars'
+  freeVars = foldableFreeVars
 
 instance FreeVars t => FreeVars (NonEmpty t) where
-  freeVars' = foldableFreeVars'
+  freeVars = foldableFreeVars

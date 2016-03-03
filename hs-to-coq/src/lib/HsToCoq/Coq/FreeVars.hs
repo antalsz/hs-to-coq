@@ -64,6 +64,58 @@ instance Binding Binder where
 instance Binding Annotation where
   binding (Annotation x) = binding x
 
+-- Note [Bound variables in patterns]
+-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-- We cannot quite capture /all/ the free variables that occur in patterns.  The
+-- ambiguous case is that a zero-ary constructor used unqualified looks exactly
+-- like a variable used as a binder in a pattern.  So what do we do?  The answer
+-- is that we treat is as a binder.  This is the right behavior: Coq has the
+-- same problem, and it manages because it treats all unknown variables as
+-- binders, as otherwise they'd be in scope.  What's more, treating all
+-- variables as binders gives the right result in the body: even if it /wasn't/
+-- a binder, it must have been bound already, so at least it will be bound in
+-- the body!
+--
+-- We don't have to worry about module-qualified names, as they must be
+-- references to existing terms; and we don't have to worry about constructors
+-- /applied/ to arguments, as binders cannot be so applied.
+
+-- See Note [Bound variables in patterns]
+instance Binding Pattern where
+  binding (ArgsPat con xs) =
+    (freeVars con *>) . binding xs
+  
+  binding (ExplicitArgsPat con xs) =
+    (freeVars con *>) . binding xs
+  
+  binding (AsPat pat x) =
+    binding pat . binding x
+    -- This correctly binds @x@ as the innermost binding
+  
+  binding (InScopePat pat _scope) =
+    binding pat
+    -- The scope is a different sort of identifier, not a term-level variable.
+
+  binding (QualidPat (Bare x)) =
+    binding x
+    -- See [Note Bound variables in patterns]
+  
+  binding (QualidPat qid@(Qualified _ _)) =
+    (freeVars qid *>)
+  
+  binding UnderscorePat =
+    id
+  
+  binding (NumPat _num) =
+    id
+  
+  binding (OrPats ors) =
+    binding ors
+    -- We don't check that all the or-patterns bind the same variables
+
+instance Binding OrPattern where
+  binding (OrPattern pats) = binding pats
+
 bindingTelescope :: (MonadFreeVars Ident m, Binding b, Foldable f) => f b -> m a -> m a
 bindingTelescope = flip $ foldr binding
 
@@ -212,10 +264,6 @@ instance FreeVars DepRetType where
 
 instance FreeVars ReturnType where
   freeVars (ReturnType ty) = freeVars ty
-
--- All variables in a pattern should be bound: either they are free, in which
--- case are now bound; or they're constants, in which case they were already
--- bound.  It does mean we can't record free-ness, though.
 
 foldableFreeVars :: (MonadFreeVars Ident m, FreeVars t, Foldable f) => f t -> m ()
 foldableFreeVars = traverse_ freeVars

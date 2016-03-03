@@ -3,12 +3,13 @@
              OverloadedStrings #-}
 
 module HsToCoq.Coq.FreeVars (
-  -- * Named things
-  Named(..),
-  -- * Binders
-  Binding(..),
   -- * Things that contain free variables
   getFreeVars, FreeVars(..),
+  -- * Binders
+  Binding(..),
+  -- * Fragments that contain name(s) to bind, but which aren't themselves
+  -- 'Binders'
+  Names(..),
   -- * Default type class method definitions
   bindingTelescope, foldableFreeVars
   ) where
@@ -22,22 +23,24 @@ import qualified Control.Monad.Trans.FreeVars as FV
 
 import Data.List.NonEmpty (NonEmpty(), (<|))
 import Data.Set (Set)
+import qualified Data.Set as S
 
 import HsToCoq.Coq.Gallina
 
 ----------------------------------------------------------------------------------------------------
 
-class Named t where
-  name :: t -> Ident
+class Names t where
+  names :: t -> Set Ident
 
-instance Named Ident where
-  name = id
+instance Names FixBody where
+  names (FixBody f _ _ _ _) = S.singleton f
 
-instance Named FixBody where
-  name (FixBody f _ _ _ _) = f
+instance Names CofixBody where
+  names (CofixBody f _ _ _) = S.singleton f
 
-instance Named CofixBody where
-  name (CofixBody f _ _ _) = f
+instance Names IndBody where
+  names (IndBody tyName _ _ cons) =
+    S.insert tyName $ S.fromList [conName | (conName, _, _) <- cons]
 
 ----------------------------------------------------------------------------------------------------
 
@@ -127,9 +130,56 @@ instance Binding OrPattern where
 instance Binding (Qualid, [Pattern]) where
   binding (con, pats) = (freeVars con *>) . binding pats
 
+instance Binding Sentence where
+  binding (AssumptionSentence assum)     = binding assum
+  binding (DefinitionSentence def)       = binding def
+  binding (InductiveSentence  ind)       = binding ind
+  binding (FixpointSentence   fix)       = binding fix
+  binding (AssertionSentence  assert pf) = binding assert . (freeVars pf *>)
+
+instance Binding Assumption where
+  binding (Assumption kwd assumptions) =
+    (freeVars kwd *>) . binding assumptions
+    -- The @kwd@ part is pro forma – there are no free variables there
+
+instance Binding Assums where
+  binding (UnparenthesizedAssums xs ty) =
+    (freeVars ty *>) . binding xs
+  binding (ParenthesizedAssums xsTys) = \body ->
+    foldr (\(xs,ty) -> (freeVars ty *>) . binding xs) body xsTys
+
+instance Binding Definition where
+  binding (DefinitionDef isLocal x args oty def) =
+    (freeVars isLocal *>)               . -- Pro forma – there are none
+    binding args                        .
+      (freeVars oty *> freeVars def *>) .
+      binding x
+  
+  binding (LetDef x args oty def) =
+    binding args                        .
+      (freeVars oty *> freeVars def *>) .
+      binding x
+
+instance Binding Inductive where
+  binding (Inductive   ibs) = binding (foldMap names ibs) . (freeVars ibs *>)
+  binding (CoInductive cbs) = binding (foldMap names cbs) . (freeVars cbs *>)
+
+instance Binding Fixpoint where
+  binding (Fixpoint   fbs) = binding (foldMap names fbs) . (freeVars fbs *>)
+  binding (CoFixpoint cbs) = binding (foldMap names cbs) . (freeVars cbs *>)
+
+instance Binding Assertion where
+  binding (Assertion kwd name args ty) =
+    (freeVars kwd *> binding args (freeVars ty) *>) .
+    binding name
+    -- The @kwd@ part is pro forma – there are no free variables there
+
 -- TODO Not all sequences of bindings should be telescopes!
 bindingTelescope :: (MonadFreeVars Ident m, Binding b, Foldable f) => f b -> m a -> m a
 bindingTelescope = flip $ foldr binding
+
+instance Binding (Set Ident) where
+  binding = bindAll
 
 instance Binding b => Binding (Maybe b) where
   binding = bindingTelescope
@@ -170,11 +220,11 @@ instance FreeVars Term where
   
   freeVars (LetFix fb body) = do
     freeVars fb
-    binding (name fb) $ freeVars body
+    binding (names fb) $ freeVars body
 
   freeVars (LetCofix cb body) = do
     freeVars cb
-    binding (name cb) $ freeVars body
+    binding (names cb) $ freeVars body
 
   freeVars (LetTuple xs oret val body) = do
     freeVars oret *> freeVars val
@@ -254,14 +304,14 @@ instance FreeVars FixBodies where
     freeVars fb
   freeVars (FixMany fb' fbs' x) =
     let fbs = fb' <| fbs'
-    in binding (x <| (name <$> fbs)) $ freeVars fbs
+    in binding (x `S.insert` foldMap names fbs) $ freeVars fbs
 
 instance FreeVars CofixBodies where
   freeVars (CofixOne cb) =
     freeVars cb
   freeVars (CofixMany cb' cbs' x) =
     let cbs = cb' <| cbs'
-    in binding (x <| (name <$> cbs)) $ freeVars cbs
+    in binding (x `S.insert` foldMap names cbs) $ freeVars cbs
 
 instance FreeVars FixBody where
   freeVars (FixBody f args annot oty def) =
@@ -283,6 +333,43 @@ instance FreeVars ReturnType where
 
 instance FreeVars Equation where
   freeVars (Equation mpats body) = binding mpats $ freeVars body
+
+instance FreeVars AssumptionKeyword where
+  freeVars Axiom      = pure ()
+  freeVars Axioms     = pure ()
+  freeVars Conjecture = pure ()
+  freeVars Parameter  = pure ()
+  freeVars Parameters = pure ()
+  freeVars Variable   = pure ()
+  freeVars Variables  = pure ()
+  freeVars Hypothesis = pure ()
+  freeVars Hypotheses = pure ()
+
+instance FreeVars Locality where
+  freeVars Global = pure ()
+  freeVars Local  = pure ()
+
+instance FreeVars IndBody where
+  freeVars (IndBody tyName params indicesUniverse cons) =
+    binding params $ do
+      freeVars indicesUniverse
+      binding tyName $ sequence_ [binding args $ freeVars oty | (_,args,oty) <- cons]
+
+instance FreeVars AssertionKeyword where
+  freeVars Theorem     = pure ()
+  freeVars Lemma       = pure ()
+  freeVars Remark      = pure ()
+  freeVars Fact        = pure ()
+  freeVars Corollary   = pure ()
+  freeVars Proposition = pure ()
+  freeVars Definition  = pure ()
+  freeVars Example     = pure ()
+
+instance FreeVars Proof where
+  -- We don't model proofs.
+  freeVars (ProofQed      _tactics) = pure ()
+  freeVars (ProofDefined  _tactics) = pure ()
+  freeVars (ProofAdmitted _tactics) = pure ()
 
 foldableFreeVars :: (MonadFreeVars Ident m, FreeVars t, Foldable f) => f t -> m ()
 foldableFreeVars = traverse_ freeVars

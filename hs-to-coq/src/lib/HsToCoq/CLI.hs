@@ -26,7 +26,7 @@ import HsToCoq.Util.Messages
 import HsToCoq.PrettyPrint
 import HsToCoq.Coq.Gallina
 import HsToCoq.ProcessFiles
-import HsToCoq.ConvertData
+import HsToCoq.ConvertHaskell
 
 prettyPrint :: MonadIO m => Doc -> m ()
 prettyPrint = liftIO . displayIO stdout . renderPretty 0.67 120

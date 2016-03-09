@@ -1,7 +1,7 @@
 {-# LANGUAGE TupleSections, LambdaCase, RecordWildCards, PatternSynonyms,
              OverloadedLists, OverloadedStrings #-}
 
-module HsToCoq.ConvertData (
+module HsToCoq.ConvertHaskell (
   -- * Conversion
   -- ** Declarations
   convertTyClDecls, convertTyClDecl, convertDataDecl, convertSynDecl,

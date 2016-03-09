@@ -39,7 +39,7 @@ library
                      , HsToCoq.PrettyPrint
                      , HsToCoq.Coq.Gallina
                      , HsToCoq.Coq.FreeVars
-                     , HsToCoq.ConvertData
+                     , HsToCoq.ConvertHaskell
                      , HsToCoq.ProcessFiles
                      , HsToCoq.CLI
   other-extensions:    TupleSections, LambdaCase, RecordWildCards, OverloadedStrings

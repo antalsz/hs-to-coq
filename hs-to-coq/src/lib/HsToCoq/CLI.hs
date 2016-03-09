@@ -1,10 +1,8 @@
-{-# LANGUAGE LambdaCase, RecordWildCards,
-             FlexibleContexts, UndecidableInstances,
-             DeriveDataTypeable, StandaloneDeriving #-}
+{-# LANGUAGE LambdaCase #-}
 
 module HsToCoq.CLI (
   processFilesMain,
-  dumpDataDecls, convertDataDecls,
+  convertDecls,
   processArgs,
   prettyPrint
   ) where
@@ -23,11 +21,10 @@ import System.Environment
 import GHC
 import DynFlags
 
-import HsToCoq.Util.GHC
+import HsToCoq.Util.Generics
 import HsToCoq.Util.Messages
 import HsToCoq.PrettyPrint
 import HsToCoq.Coq.Gallina
-import HsToCoq.DataDecl
 import HsToCoq.ProcessFiles
 import HsToCoq.ConvertData
 
@@ -44,18 +41,12 @@ processArgs = do
   void $ setSessionDynFlags dflags
   pure (dflags, map unLoc files)
 
-dumpDataDecls :: (Data a, GhcMonad m) => a -> m ()
-dumpDataDecls lmod = case getDataDecls lmod :: [DataDecl' RdrName] of
-  [] -> liftIO $ putStrLn "No data type declarations."
-  ds -> do liftIO $ putStrLn "Data type declarations:"
-           traverse_ (ghcPutPpr . fromDataDecl') ds
-
-convertDataDecls :: (Data a, GhcMonad m) => a -> m ()
-convertDataDecls lmod = convertDataDecls' (getDataDecls lmod) >>= liftIO . \case
+convertDecls :: (Data a, GhcMonad m) => a -> m ()
+convertDecls lmod = convertTyClDecls (everythingOfType_ lmod) >>= liftIO . \case
   [] -> putStrLn "(* No data type declarations to convert. *)"
   ds -> do putStrLn "(* Converted data type declarations: *)"
            traverse_ prettyPrint . intersperse line $
              map ((<> line) . renderGallina) ds
 
-processFilesMain :: GhcMonad m => (Located (HsModule RdrName) -> m a) -> m ()
-processFilesMain f = uncurry (traverse_ . processFile f) =<< processArgs
+processFilesMain :: GhcMonad m => ([Located (HsModule RdrName)] -> m a) -> m ()
+processFilesMain f = traverse_ f =<< uncurry processFiles =<< processArgs

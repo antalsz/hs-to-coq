@@ -4,6 +4,8 @@ module HsToCoq.Util.Containers (
   stronglyConnComp', connectedComponents'
   ) where
 
+import Data.List.NonEmpty (NonEmpty(..))
+
 import           Data.Set (Set)
 import qualified Data.Set as S
 
@@ -22,13 +24,16 @@ connectedComponents graph =
   in stronglyConnComp [(n, k, S.toList $ edges ! k) | (n,k,_) <- graph]
 
 -- Module-local
-simple_ccs :: Ord vertex
-           => ([(vertex, vertex, [vertex])] -> [SCC vertex])
-           -> [(vertex, [vertex])] -> [[vertex]]
-simple_ccs makeCCs graph = map flattenSCC $ makeCCs [(v,v,es) | (v,es) <- graph]
+simple_sccs :: Ord vertex
+            => ([(vertex, vertex, [vertex])] -> [SCC vertex])
+            -> [(vertex, [vertex])] -> [NonEmpty vertex]
+simple_sccs makeCCs graph = map nonEmptySCC $ makeCCs [(v,v,es) | (v,es) <- graph] where
+  nonEmptySCC (AcyclicSCC v)      = v :| []
+  nonEmptySCC (CyclicSCC  (v:vs)) = v :| vs
+  nonEmptySCC (CyclicSCC  [])     = error "[internal] simple_sccs: empty connected component!"
 
-stronglyConnComp' :: Ord vertex => [(vertex, [vertex])] -> [[vertex]]
-stronglyConnComp' = simple_ccs stronglyConnComp
+stronglyConnComp' :: Ord vertex => [(vertex, [vertex])] -> [NonEmpty vertex]
+stronglyConnComp' = simple_sccs stronglyConnComp
 
-connectedComponents' :: Ord vertex => [(vertex, [vertex])] -> [[vertex]]
-connectedComponents' = simple_ccs connectedComponents
+connectedComponents' :: Ord vertex => [(vertex, [vertex])] -> [NonEmpty vertex]
+connectedComponents' = simple_sccs connectedComponents

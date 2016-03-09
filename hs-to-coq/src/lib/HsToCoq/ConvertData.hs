@@ -1,25 +1,33 @@
-{-# LANGUAGE TupleSections, LambdaCase, PatternSynonyms,
+{-# LANGUAGE TupleSections, LambdaCase, RecordWildCards, PatternSynonyms,
              OverloadedLists, OverloadedStrings #-}
 
 module HsToCoq.ConvertData (
   -- * Conversion
-  convertDataDecls', convertDataDecl', convertType, convertLType,
+  -- ** Declarations
+  convertTyClDecls, convertTyClDecl, convertDataDecl, convertSynDecl,
+  -- ** Terms
+  convertType, convertLType,
+  convertLHsTyVarBndrs,
   -- ** Names
   showRdrName, showName,
+  -- ** Declaration groups
+  DeclarationGroup(..), addDeclaration,
+  groupConvDecls, groupTyClDecls, convertDeclarationGroup,
+  -- ** Backing types
+  SynBody(..), ConvertedDeclaration(..),
   -- ** Internal
-  convertDataDefn, convertConDecl, convertLHsTyVarBndrs,
-  -- * Input
-  readDataDecls,
+  convertDataDefn, convertConDecl,
   -- * Coq construction
   pattern Var, pattern App1, appList
   ) where
 
+import Data.Semigroup ((<>))
 import Data.Foldable
 import Data.Traversable
-import Data.Maybe
-import Data.List.NonEmpty (NonEmpty(..), nonEmpty)
+import Data.List.NonEmpty (NonEmpty(..), (<|), nonEmpty)
 import Data.Text (Text)
 
+import Control.Arrow ((&&&))
 import Control.Monad
 import Control.Monad.IO.Class
 
@@ -38,20 +46,14 @@ import HsToCoq.Util.Patterns
 import HsToCoq.Util.GHC
 import HsToCoq.Coq.Gallina
 import HsToCoq.Coq.FreeVars
-import HsToCoq.DataDecl
-import HsToCoq.ProcessFiles
+
+import Data.Generics
 
 showRdrName :: GhcMonad m => RdrName -> m Text
 showRdrName = ghcSDoc . pprOccName . rdrNameOcc
 
 showName :: GhcMonad m => GHC.Name -> m Text
 showName = showRdrName . nameRdrName
-
-readDataDecls :: GhcMonad m => DynFlags -> FilePath -> m [DataDecl' RdrName]
-readDataDecls dflags file =   processFile (pure . getDataDecls) dflags file
-                          >>= maybe ( liftIO . throwGhcExceptionIO
-                                    . ProgramError $ file ++ ": no parse" )
-                                    pure
 
 -- Module-local
 conv_unsupported :: MonadIO m => String -> m a
@@ -62,8 +64,8 @@ pattern App1 f x = App f (PosArg x :| Nil)
 
 appList :: Term -> [Arg] -> Term
 appList f xs = case nonEmpty xs of
-                Nothing  -> f
-                Just xs' -> App f xs'
+                 Nothing  -> f
+                 Just xs' -> App f xs'
 
 convertType :: GhcMonad m => HsType RdrName -> m Term
 convertType (HsForAllTy _explicit _ _tvs _ctx _ty) =
@@ -174,7 +176,7 @@ convertConDecl curType (ConDecl lnames _explicit lqvs lcxt ldetails lres _doc _o
               ResTyH98       -> pure curType
               ResTyGADT _ ty -> convertLType ty
   args   <- traverse convertLType $ hsConDeclArgTys ldetails
-  pure $ map (, params, Just $ foldr Arrow resTy args) names
+  pure $ map ((, params, Just $ foldr Arrow resTy args) . ("Mk_" <>)) names
   
 convertDataDefn :: GhcMonad m => Term -> HsDataDefn RdrName -> m (Term, [Constructor])
 convertDataDefn curType (HsDataDefn _nd lcxt _ctype ksig cons _derivs) = do
@@ -182,24 +184,120 @@ convertDataDefn curType (HsDataDefn _nd lcxt _ctype ksig cons _derivs) = do
   (,) <$> maybe (pure $ Sort Type) convertLType ksig
       <*> (concat <$> traverse (convertConDecl curType . unLoc) cons)
 
-convertDataDecl' :: GhcMonad m => DataDecl' RdrName -> m IndBody
-convertDataDecl' (DataDecl' name tvs defn _fvs) = do
+convertDataDecl :: GhcMonad m
+                => Located RdrName -> LHsTyVarBndrs RdrName -> HsDataDefn RdrName
+                -> m IndBody
+convertDataDecl name tvs defn = do
   coqName <- ghcPpr $ unLoc name
   params  <- convertLHsTyVarBndrs tvs
-  let binderNames = foldMap $ \case
-                      Inferred x    -> [x]
-                      Typed xs _    -> toList xs
-                      BindLet _ _ _ -> []
-      nameArgs    = map $ PosArg . \case
+  let nameArgs    = map $ PosArg . \case
                       Ident x        -> Var x
                       UnderscoreName -> Underscore
-      curType     = appList (Var coqName) . nameArgs $ binderNames params
+      curType     = appList (Var coqName) . nameArgs $ foldMap binderNames params
   (resTy, cons) <- convertDataDefn curType defn
   pure $ IndBody coqName params resTy cons
 
-convertDataDecls' :: GhcMonad m => [DataDecl' RdrName] -> m [Inductive]
-convertDataDecls' decls = do
-  bodies <- fmap M.fromList $ traverse convertDataDecl' decls <&> map (\case
-              body@(IndBody tyName _ _ _) -> (tyName, body))
+data SynBody = SynBody Ident [Binder] (Maybe Term) Term
+             deriving (Eq, Ord, Read, Show)
+
+convertSynDecl :: GhcMonad m
+               => Located RdrName -> LHsTyVarBndrs RdrName -> LHsType RdrName
+               -> m SynBody
+convertSynDecl name args def  = SynBody <$> ghcPpr (unLoc name)
+                                        <*> convertLHsTyVarBndrs args
+                                        <*> pure Nothing
+                                        <*> convertLType def
+
+instance FreeVars SynBody where
+  freeVars (SynBody _name args oty def) = binding args $ freeVars oty *> freeVars def
+       
+data ConvertedDeclaration = ConvData IndBody
+                          | ConvSyn  SynBody
+                          deriving (Eq, Ord, Show, Read)
+
+instance FreeVars ConvertedDeclaration where
+  freeVars (ConvData ind) = freeVars ind
+  freeVars (ConvSyn  syn) = freeVars syn
+
+convDeclName :: ConvertedDeclaration -> Ident
+convDeclName (ConvData (IndBody tyName  _ _ _)) = tyName
+convDeclName (ConvSyn  (SynBody synName _ _ _)) = synName
+
+convertTyClDecl :: GhcMonad m => TyClDecl RdrName -> m ConvertedDeclaration
+convertTyClDecl FamDecl{}    = conv_unsupported "type/data families"
+convertTyClDecl SynDecl{..}  = ConvSyn  <$> convertSynDecl  tcdLName tcdTyVars tcdRhs
+convertTyClDecl DataDecl{..} = ConvData <$> convertDataDecl tcdLName tcdTyVars tcdDataDefn
+convertTyClDecl ClassDecl{}  = conv_unsupported "type classes"
+
+data DeclarationGroup = Inductives (NonEmpty IndBody)
+                      | Synonym    SynBody
+                      | Synonyms   SynBody (NonEmpty SynBody)
+                      | Mixed      (NonEmpty IndBody) (NonEmpty SynBody)
+                      deriving (Eq, Ord, Show, Read)
+
+addDeclaration :: ConvertedDeclaration -> DeclarationGroup -> DeclarationGroup
+---------------------------------------------------------------------------------------------
+addDeclaration (ConvData ind) (Inductives inds)      = Inductives (ind <| inds)
+addDeclaration (ConvData ind) (Synonym    syn)       = Mixed      (ind :| [])   (syn :| [])
+addDeclaration (ConvData ind) (Synonyms   syn syns)  = Mixed      (ind :| [])   (syn <| syns)
+addDeclaration (ConvData ind) (Mixed      inds syns) = Mixed      (ind <| inds) syns
+---------------------------------------------------------------------------------------------
+addDeclaration (ConvSyn  syn) (Inductives inds)      = Mixed      inds          (syn :| [])
+addDeclaration (ConvSyn  syn) (Synonym    syn')      = Synonyms                 syn (syn' :| [])
+addDeclaration (ConvSyn  syn) (Synonyms   syn' syns) = Synonyms                 syn (syn' <| syns)
+addDeclaration (ConvSyn  syn) (Mixed      inds syns) = Mixed      inds          (syn <| syns)
+
+groupConvDecls :: NonEmpty ConvertedDeclaration -> DeclarationGroup
+groupConvDecls (cd :| cds) = flip (foldr addDeclaration) cds $ case cd of
+                               ConvData ind -> Inductives (ind :| [])
+                               ConvSyn  syn -> Synonym    syn
+
+groupTyClDecls :: GhcMonad m => [TyClDecl RdrName] -> m [DeclarationGroup]
+groupTyClDecls decls = do
+  bodies <- traverse convertTyClDecl decls <&>
+              M.fromList . map (convDeclName &&& id)
+  -- The order is correct – later declarationss refer only to previous ones –
+  -- since 'stronglyConnComp'' returns its outputs in topologically sorted
+  -- order.
   let mutuals = stronglyConnComp' . M.toList $ (S.toList . getFreeVars) <$> bodies
-  pure $ mapMaybe (fmap Inductive . nonEmpty . map (bodies M.!)) mutuals
+  pure $ map (groupConvDecls . fmap (bodies M.!)) mutuals
+
+convertDeclarationGroup :: DeclarationGroup -> Either String [Sentence]
+convertDeclarationGroup = \case
+  Inductives ind ->
+    Right [InductiveSentence $ Inductive ind []]
+  
+  Synonym (SynBody name args oty def) ->
+    Right [DefinitionSentence $ DefinitionDef Global name args oty def]
+  
+  Synonyms _ _ ->
+    Left "mutually-recursive type synonyms"
+  
+  Mixed inds syns ->
+    Right $  foldMap recSynType syns
+          ++ [InductiveSentence $ Inductive inds (map (recSynDef $ foldMap indParams inds) $ toList syns)]
+  
+  where
+    synName = (<> "__raw")
+    
+    recSynType :: SynBody -> [Sentence] -- Otherwise GHC infers a type containing @~@.
+    recSynType (SynBody name _ _ _) =
+      [ InductiveSentence $ Inductive [IndBody (synName name) [] (Sort Type) []] []
+      , NotationSentence $ ReservedNotationIdent name ]
+    
+    indParams (IndBody _ params _ _) = S.fromList $ foldMap binderIdents params
+
+    avoidParams params = until (`S.notMember` params) (<> "_")
+    
+    recSynDef params (SynBody name args oty def) =
+      let mkFun    = maybe id Fun . nonEmpty
+          withType = maybe id (flip HasType)
+      in NotationIdentBinding name . App (Var "Synonym")
+                                   $ fmap PosArg [ Var (synName name)
+                                                 , everywhere (mkT $ avoidParams params) . -- FIXME use real substitution
+                                                     mkFun args $ withType oty def ]
+
+convertTyClDecls :: GhcMonad m => [TyClDecl RdrName] -> m [Sentence]
+convertTyClDecls =   either conv_unsupported (pure . fold)
+                 .   traverse convertDeclarationGroup
+                 <=< groupTyClDecls

@@ -17,7 +17,7 @@ module HsToCoq.PrettyPrint (
   -- ** Nicely smushing lists together
   sepWith, spacedSepPre, spacedSepPost,
   -- ** Dealing with possibly-empty documents
-  (</?>), docIf, spaceIf, softlineIf
+  (</?>), docIf, spaceIf, lineIf, softlineIf
   ) where
 
 import Text.PrettyPrint.Leijen.Text hiding ( (<>), (<$>)
@@ -147,6 +147,10 @@ docIf d x | null x    = empty
 spaceIf :: Foldable f => f a -> Doc
 spaceIf = docIf space
 {-# INLINABLE spaceIf #-}
+
+lineIf :: Foldable f => f a -> Doc
+lineIf = docIf line
+{-# INLINABLE lineIf #-}
 
 softlineIf :: Foldable f => f a -> Doc
 softlineIf = docIf softline

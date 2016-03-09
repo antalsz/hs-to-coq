@@ -27,6 +27,7 @@ library
                      , HsToCoq.Util.Functor
                      , HsToCoq.Util.Monad
                      , HsToCoq.Util.Containers
+                     , HsToCoq.Util.Generics
                      , HsToCoq.Util.TempFiles
                      , HsToCoq.Util.Messages
                      , Control.Monad.Trans.FreeVars.Internal
@@ -38,7 +39,6 @@ library
                      , HsToCoq.PrettyPrint
                      , HsToCoq.Coq.Gallina
                      , HsToCoq.Coq.FreeVars
-                     , HsToCoq.DataDecl
                      , HsToCoq.ConvertData
                      , HsToCoq.ProcessFiles
                      , HsToCoq.CLI

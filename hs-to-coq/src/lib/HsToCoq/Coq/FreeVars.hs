@@ -136,6 +136,7 @@ instance Binding Sentence where
   binding (InductiveSentence  ind)       = binding ind
   binding (FixpointSentence   fix)       = binding fix
   binding (AssertionSentence  assert pf) = binding assert . (freeVars pf *>)
+  binding (NotationSentence   not)       = binding not
 
 instance Binding Assumption where
   binding (Assumption kwd assumptions) =
@@ -161,18 +162,22 @@ instance Binding Definition where
       binding x
 
 instance Binding Inductive where
-  binding (Inductive   ibs) = binding (foldMap names ibs) . (freeVars ibs *>)
-  binding (CoInductive cbs) = binding (foldMap names cbs) . (freeVars cbs *>)
+  binding (Inductive   ibs nots) = binding (foldMap names ibs) . (freeVars ibs *> freeVars nots *>)
+  binding (CoInductive cbs nots) = binding (foldMap names cbs) . (freeVars cbs *> freeVars nots *>)
 
 instance Binding Fixpoint where
-  binding (Fixpoint   fbs) = binding (foldMap names fbs) . (freeVars fbs *>)
-  binding (CoFixpoint cbs) = binding (foldMap names cbs) . (freeVars cbs *>)
+  binding (Fixpoint   fbs nots) = binding (foldMap names fbs) . (freeVars fbs *> freeVars nots *>)
+  binding (CoFixpoint cbs nots) = binding (foldMap names cbs) . (freeVars cbs *> freeVars nots *>)
 
 instance Binding Assertion where
   binding (Assertion kwd name args ty) =
     (freeVars kwd *> binding args (freeVars ty) *>) .
     binding name
     -- The @kwd@ part is pro forma – there are no free variables there
+
+instance Binding Notation where
+  binding (ReservedNotationIdent x) = binding x
+    -- We treat reserved single-identifier notations as bound variables
 
 -- TODO Not all sequences of bindings should be telescopes!
 bindingTelescope :: (MonadFreeVars Ident m, Binding b, Foldable f) => f b -> m a -> m a
@@ -370,6 +375,9 @@ instance FreeVars Proof where
   freeVars (ProofQed      _tactics) = pure ()
   freeVars (ProofDefined  _tactics) = pure ()
   freeVars (ProofAdmitted _tactics) = pure ()
+
+instance FreeVars NotationBinding where
+  freeVars (NotationIdentBinding _x def) = freeVars def -- The notation itself is already in scope
 
 foldableFreeVars :: (MonadFreeVars Ident m, FreeVars t, Foldable f) => f t -> m ()
 foldableFreeVars = traverse_ freeVars

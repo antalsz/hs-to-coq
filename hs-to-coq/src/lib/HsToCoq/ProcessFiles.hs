@@ -1,9 +1,10 @@
 {-# LANGUAGE LambdaCase #-}
 
-module HsToCoq.ProcessFiles (processFile, processFileFlags) where
+module HsToCoq.ProcessFiles (processFile, processFiles, processFileFlags, parseFileFlags) where
 
 import Control.Monad
 import Control.Monad.IO.Class
+import Control.Monad.Trans.Maybe
 
 import System.FilePath
 
@@ -32,9 +33,8 @@ processFileFlags = parseFileFlags $ \restOpts optWarns -> do
   printAllIfPresent unLoc "Leftover option" restOpts
   printAllIfPresent unLoc "Option warning"  optWarns
 
-processFile :: GhcMonad m
-            => (Located (HsModule RdrName) -> m a) -> DynFlags -> FilePath -> m (Maybe a)
-processFile process dflags file = do
+processFile :: GhcMonad m => DynFlags -> FilePath -> m (Maybe (Located (HsModule RdrName)))
+processFile dflags file = do
   withSrcFile <- do
     dflags' <- processFileFlags dflags file
     pure $ if not $ xopt Opt_Cpp dflags'
@@ -46,13 +46,14 @@ processFile process dflags file = do
   
   withSrcFile $ \fileDflags srcFile ->
     parser <$> liftIO (readFile srcFile) <*> pure fileDflags <*> pure file >>= \case
-      Left  errs          -> Nothing <$ printMessages "failed" "error" errs
-      Right (warns, lmod) -> do
-        printMessages "succeeded" "warning" warns
-        Just <$> process lmod
+      Left  errs          -> Nothing   <$ printMessages "failed" "error" errs
+      Right (warns, lmod) -> Just lmod <$ printMessages "succeeded" "warning" warns
   where
     printMessages result msgType =
       printAll' show
                 ("Parsing `" ++ file ++ "' " ++ result)
                 (" with " ++ msgType)
       . bagToList
+
+processFiles :: GhcMonad m => DynFlags -> [FilePath] -> m (Maybe [Located (HsModule RdrName)])
+processFiles dflags = runMaybeT . traverse (MaybeT . processFile dflags)

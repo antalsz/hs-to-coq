@@ -18,7 +18,8 @@ module HsToCoq.ConvertHaskell (
   -- ** Internal
   convertDataDefn, convertConDecl,
   -- * Coq construction
-  pattern Var, pattern App1, appList
+  pattern Var, pattern App1, appList,
+  pattern CoqVarPat
   ) where
 
 import Data.Semigroup ((<>))
@@ -45,6 +46,7 @@ import HsToCoq.Util.Containers
 import HsToCoq.Util.Patterns
 import HsToCoq.Util.GHC
 import HsToCoq.Coq.Gallina
+import qualified HsToCoq.Coq.Gallina as Coq
 import HsToCoq.Coq.FreeVars
 
 import Data.Generics
@@ -66,6 +68,245 @@ appList :: Term -> [Arg] -> Term
 appList f xs = case nonEmpty xs of
                  Nothing  -> f
                  Just xs' -> App f xs'
+
+pattern CoqVarPat x = QualidPat (Bare x)
+
+convertExpr :: GhcMonad m => HsExpr RdrName -> m Term
+convertExpr (HsVar x) =
+  Var <$> ghcPpr x
+
+convertExpr (HsIPVar _) =
+  conv_unsupported "implicit parameters"
+
+convertExpr (HsOverLit _) =
+  conv_unsupported "overloaded literals"
+
+convertExpr (HsLit _) =
+  conv_unsupported "literals"
+
+convertExpr (HsLam _) =
+  conv_unsupported "lambdas"
+
+convertExpr (HsLamCase _ _) =
+  conv_unsupported "case lambdas"
+
+convertExpr (HsApp e1 e2) =
+  App1 <$> convertLExpr e1 <*> convertLExpr e2
+
+convertExpr (OpApp _ _ _ _) =
+  conv_unsupported "binary operators"
+
+convertExpr (NegApp _ _) =
+  conv_unsupported "negation"
+
+convertExpr (HsPar e) =
+  Parens <$> convertLExpr e
+
+convertExpr (SectionL _ _) =
+  conv_unsupported "(left) operator sections"
+
+convertExpr (SectionR _ _) =
+  conv_unsupported "(right) operator sections"
+
+convertExpr (ExplicitTuple _ _) =
+  conv_unsupported "tuples"
+
+convertExpr (HsCase e mg) =
+  let toEqns = traverse $ \(pats, oty, rhs) -> do
+                 pats' <- nonEmpty pats
+                 pure . Equation [MultPattern pats'] $ maybe id (flip HasType) oty rhs
+  in Coq.Match <$> (fmap pure $ MatchItem <$> convertLExpr e <*> pure Nothing <*> pure Nothing)
+               <*> pure Nothing
+               <*> (maybe (conv_unsupported "multi-pattern case arms") pure . toEqns =<< convertMatchGroup mg)
+
+convertExpr (HsIf overloaded c t f) =
+  case overloaded of
+    Nothing -> If <$> convertLExpr c <*> pure Nothing <*> convertLExpr t <*> convertLExpr f
+    Just _  -> conv_unsupported "overloaded if-then-else"
+
+convertExpr (HsMultiIf _ _) =
+  conv_unsupported "multi-way if"
+
+convertExpr (HsLet _ _) =
+  conv_unsupported "`let' expressions"
+
+convertExpr (HsDo _ _ _) =
+  conv_unsupported "`do' expressions"
+
+convertExpr (ExplicitList _ _ _) =
+  conv_unsupported "explicit lists"
+
+convertExpr (ExplicitPArr _ _) =
+  conv_unsupported "explicit parallel arrays"
+
+convertExpr (RecordCon _ _ _) =
+  conv_unsupported "record constructors"
+
+convertExpr (RecordUpd _ _ _ _ _) =
+  conv_unsupported "record updates"
+
+convertExpr (ExprWithTySig e ty PlaceHolder) =
+  HasType <$> convertLExpr e <*> convertLType ty
+
+convertExpr (ExprWithTySigOut _ _) =
+  conv_unsupported "`ExprWithTySigOut' constructor"
+
+convertExpr (ArithSeq _ _ _) =
+  conv_unsupported "arithmetic sequences"
+
+convertExpr (PArrSeq _ _) =
+  conv_unsupported "parallel array arithmetic sequences"
+
+convertExpr (HsSCC _ _ e) =
+  convertLExpr e
+
+convertExpr (HsCoreAnn _ _ e) =
+  convertLExpr e
+
+convertExpr (HsBracket _) =
+  conv_unsupported "Template Haskell brackets"
+
+convertExpr (HsRnBracketOut _ _) =
+  conv_unsupported "`HsRnBracketOut' constructor"
+
+convertExpr (HsTcBracketOut _ _) =
+  conv_unsupported "`HsTcBracketOut' constructor"
+
+convertExpr (HsSpliceE _ _) =
+  conv_unsupported "Template Haskell expression splices"
+
+convertExpr (HsQuasiQuoteE _) =
+  conv_unsupported "expression quasiquoters"
+
+convertExpr (HsProc _ _) =
+  conv_unsupported "`proc' expressions"
+
+convertExpr (HsStatic _) =
+  conv_unsupported "static pointers"
+
+convertExpr (HsArrApp _ _ _ _ _) =
+  conv_unsupported "arrow application command"
+
+convertExpr (HsArrForm _ _ _) =
+  conv_unsupported "arrow command formation"
+
+convertExpr (HsTick _ e) =
+  convertLExpr e
+
+convertExpr (HsBinTick _ _ e) =
+  convertLExpr e
+
+convertExpr (HsTickPragma _ _ e) =
+  convertLExpr e
+
+convertExpr EWildPat =
+  conv_unsupported "wildcard pattern in expression"
+
+convertExpr (EAsPat _ _) =
+  conv_unsupported "as-pattern in expression"
+
+convertExpr (EViewPat _ _) =
+  conv_unsupported "view-pattern in expression"
+
+convertExpr (ELazyPat _) =
+  conv_unsupported "lazy pattern in expression"
+
+convertExpr (HsType ty) =
+  convertLType ty
+
+convertExpr (HsWrap _ _) =
+  conv_unsupported "`HsWrap' constructor"
+
+convertExpr (HsUnboundVar x) =
+  Var <$> ghcPpr x
+
+convertPat :: GhcMonad m => Pat RdrName -> m Pattern
+convertPat (WildPat PlaceHolder) =
+  pure UnderscorePat
+
+convertPat (GHC.VarPat x) =
+  CoqVarPat <$> ghcPpr x
+
+convertPat (LazyPat p) =
+  convertLPat p
+
+convertPat (GHC.AsPat x p) =
+  Coq.AsPat <$> convertLPat p <*> ghcPpr x
+
+convertPat (ParPat p) =
+  convertLPat p
+
+convertPat (BangPat p) =
+  convertLPat p
+
+convertPat (ListPat _ _ _) =
+  conv_unsupported "list patterns"
+
+convertPat (TuplePat _ _ _) =
+  conv_unsupported "tuple patterns"
+
+convertPat (PArrPat _ _) =
+  conv_unsupported "parallel array patterns"
+
+convertPat (ConPatIn _ _) =
+  conv_unsupported "record constructor patterns"
+
+convertPat (ConPatOut{}) =
+  conv_unsupported "constructor patterns"
+
+convertPat (ViewPat _ _ _) =
+  conv_unsupported "view patterns"
+
+convertPat (SplicePat _) =
+  conv_unsupported "pattern splices"
+
+convertPat (QuasiQuotePat _) =
+  conv_unsupported "pattern quasiquoters"
+
+convertPat (LitPat _) =
+  conv_unsupported "literal patterns"
+
+convertPat (NPat _ _ _) =
+  conv_unsupported "numeric patterns"
+
+convertPat (NPlusKPat _ _ _ _) =
+  conv_unsupported "n+k-patterns"
+
+convertPat (SigPatIn _ _) =
+  conv_unsupported "`SigPatIn' constructor"
+
+convertPat (SigPatOut _ _) =
+  conv_unsupported "`SigPatOut' constructor"
+
+convertPat (CoPat _ _ _) =
+  conv_unsupported "coercion patterns"
+
+convertLPat :: GhcMonad m => LPat RdrName -> m Pattern
+convertLPat = convertPat . unLoc
+
+convertLExpr :: GhcMonad m => LHsExpr RdrName -> m Term
+convertLExpr = convertExpr . unLoc
+
+convertMatchGroup :: GhcMonad m => MatchGroup RdrName (LHsExpr RdrName) -> m [([Pattern], Maybe Term, Term)]
+convertMatchGroup (MG alts _ _ _) = traverse (convertMatch . unLoc) alts
+
+convertMatch :: GhcMonad m => Match RdrName (LHsExpr RdrName) -> m ([Pattern], Maybe Term, Term)
+convertMatch GHC.Match{..} = do
+  pats <- traverse convertLPat  m_pats
+  ty   <- traverse convertLType m_type
+  rhss <- convertGRHSs          m_grhss
+  case rhss of
+    [rhs] -> pure (pats, ty, rhs)
+    _     -> conv_unsupported "multi-way match RHSs"
+
+convertGRHSs :: GhcMonad m => GRHSs RdrName (LHsExpr RdrName) -> m [Term]
+convertGRHSs GRHSs{..} = case grhssLocalBinds of
+                           EmptyLocalBinds -> traverse (convertGRHS . unLoc) grhssGRHSs
+                           _               -> conv_unsupported "`where' clauses"
+
+convertGRHS :: GhcMonad m => GRHS RdrName (LHsExpr RdrName) -> m Term
+convertGRHS (GRHS []    body) = convertLExpr body
+convertGRHS (GRHS (_:_) _)    = conv_unsupported "guards"
 
 convertType :: GhcMonad m => HsType RdrName -> m Term
 convertType (HsForAllTy _explicit _ _tvs _ctx _ty) =
@@ -113,10 +354,10 @@ convertType (HsKindSig ty k) =
   HasType <$> convertLType ty <*> convertLType k
 
 convertType (HsQuasiQuoteTy _) =
-  conv_unsupported "quasiquoters"
+  conv_unsupported "type quasiquoters"
 
 convertType (HsSpliceTy _ _) =
-  conv_unsupported "Template Haskell"
+  conv_unsupported "Template Haskell type splices"
 
 convertType (HsDocTy ty _doc) =
   convertLType ty
@@ -301,3 +542,5 @@ convertTyClDecls :: GhcMonad m => [TyClDecl RdrName] -> m [Sentence]
 convertTyClDecls =   either conv_unsupported (pure . fold)
                  .   traverse convertDeclarationGroup
                  <=< groupTyClDecls
+
+

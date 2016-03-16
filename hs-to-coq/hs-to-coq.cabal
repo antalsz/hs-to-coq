@@ -30,12 +30,12 @@ library
                      , HsToCoq.Util.Generics
                      , HsToCoq.Util.TempFiles
                      , HsToCoq.Util.Messages
-                     , Control.Monad.Trans.FreeVars.Internal
-                     , Control.Monad.FreeVars.Class.Internal
-                     , Control.Monad.FreeVars.Internal
-                     , Control.Monad.Trans.FreeVars
-                     , Control.Monad.FreeVars.Class
-                     , Control.Monad.FreeVars
+                     , Control.Monad.Trans.Variables.Internal
+                     , Control.Monad.Variables.Class.Internal
+                     , Control.Monad.Variables.Internal
+                     , Control.Monad.Trans.Variables
+                     , Control.Monad.Variables.Class
+                     , Control.Monad.Variables
                      , HsToCoq.PrettyPrint
                      , HsToCoq.Coq.Gallina
                      , HsToCoq.Coq.FreeVars

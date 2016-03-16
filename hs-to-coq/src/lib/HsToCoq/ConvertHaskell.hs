@@ -450,7 +450,7 @@ convertSynDecl name args def  = SynBody <$> ghcPpr (unLoc name)
                                         <*> convertLType def
 
 instance FreeVars SynBody where
-  freeVars (SynBody _name args oty def) = binding args $ freeVars oty *> freeVars def
+  freeVars (SynBody _name args oty def) = binding' args $ freeVars oty *> freeVars def
        
 data ConvertedDeclaration = ConvData IndBody
                           | ConvSyn  SynBody

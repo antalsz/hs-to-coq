@@ -6,7 +6,7 @@ module HsToCoq.Coq.FreeVars (
   -- * Things that contain free variables
   getFreeVars, FreeVars(..),
   -- * Binders
-  Binding(..),
+  Binding(..), binding',
   -- * Fragments that contain name(s) to bind, but which aren't themselves
   -- 'Binders'
   Names(..),
@@ -18,12 +18,12 @@ import Prelude hiding (Num)
 
 import Data.Semigroup ((<>))
 import Data.Foldable
-import Control.Monad.FreeVars.Class
-import qualified Control.Monad.Trans.FreeVars as FV
+import Control.Monad.Variables
 
 import Data.List.NonEmpty (NonEmpty(), (<|))
 import Data.Set (Set)
 import qualified Data.Set as S
+import qualified Data.Map.Strict as M
 
 import HsToCoq.Coq.Gallina
 
@@ -45,34 +45,37 @@ instance Names IndBody where
 ----------------------------------------------------------------------------------------------------
 
 class Binding b where
-  binding :: MonadFreeVars Ident m => b -> m a -> m a
+  binding :: (MonadVariables Ident d m, Monoid d) => (Ident -> d) -> b -> m a -> m a
+
+binding' :: (Binding b, MonadVariables Ident d m, Monoid d) => b -> m a -> m a
+binding' = binding $ const mempty
 
 instance Binding Ident where
-  binding = bind
+  binding f x = bind x (f x)
 
 instance Binding Name where
-  binding (Ident x)      = binding x
-  binding UnderscoreName = id
+  binding f (Ident x)      = binding f x
+  binding _ UnderscoreName = id
 
 instance Binding Binder where
-  binding (Inferred x) getFVs =
-    binding x getFVs
-  binding (Typed xs ty) getFVs = do
+  binding f (Inferred x) getFVs =
+    binding f x getFVs
+  binding f (Typed xs ty) getFVs = do
     freeVars ty
-    foldr binding getFVs xs
-  binding (BindLet x oty val) getFVs = do
+    foldr (binding f) getFVs xs
+  binding f (BindLet x oty val) getFVs = do
     freeVars oty
     freeVars val
-    binding x getFVs
+    binding f x getFVs
 
 instance Binding Annotation where
-  binding (Annotation x) = binding x
+  binding f (Annotation x) = binding f x
 
 instance Binding MatchItem where
-  binding (MatchItem t oas oin) = (freeVars t *>) . binding oas . binding oin
+  binding f (MatchItem t oas oin) = (freeVars t *>) . binding f oas . binding f oin
 
 instance Binding MultPattern where
-  binding (MultPattern pats) = binding pats
+  binding f (MultPattern pats) = binding f pats
 
 -- Note [Bound variables in patterns]
 -- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -92,99 +95,100 @@ instance Binding MultPattern where
 
 -- See Note [Bound variables in patterns]
 instance Binding Pattern where
-  binding (ArgsPat con xs) =
-    (freeVars con *>) . binding xs
+  binding f (ArgsPat con xs) =
+    (freeVars con *>) . binding f xs
   
-  binding (ExplicitArgsPat con xs) =
-    (freeVars con *>) . binding xs
+  binding f (ExplicitArgsPat con xs) =
+    (freeVars con *>) . binding f xs
   
-  binding (AsPat pat x) =
-    binding pat . binding x
-    -- This correctly binds @x@ as the innermost binding
+  binding f (AsPat pat x) =
+    binding f pat . binding f x
+    -- This correctly binds @x@ as the innermost binding f
   
-  binding (InScopePat pat _scope) =
-    binding pat
+  binding f (InScopePat pat _scope) =
+    binding f pat
     -- The scope is a different sort of identifier, not a term-level variable.
 
-  binding (QualidPat (Bare x)) =
-    binding x
+  binding f (QualidPat (Bare x)) =
+    binding f x
     -- See [Note Bound variables in patterns]
   
-  binding (QualidPat qid@(Qualified _ _)) =
+  binding _ (QualidPat qid@(Qualified _ _)) =
     (freeVars qid *>)
   
-  binding UnderscorePat =
+  binding _ UnderscorePat =
     id
   
-  binding (NumPat _num) =
+  binding _ (NumPat _num) =
     id
   
-  binding (OrPats ors) =
-    binding ors
+  binding f (OrPats ors) =
+    binding f ors
     -- We don't check that all the or-patterns bind the same variables
 
 instance Binding OrPattern where
-  binding (OrPattern pats) = binding pats
+  binding f (OrPattern pats) = binding f pats
 
 -- An @in@-annotation, as found in 'LetTickDep' or 'MatchItem'.
 instance Binding (Qualid, [Pattern]) where
-  binding (con, pats) = (freeVars con *>) . binding pats
+  binding f (con, pats) = (freeVars con *>) . binding f pats
 
 instance Binding Sentence where
-  binding (AssumptionSentence assum)     = binding assum
-  binding (DefinitionSentence def)       = binding def
-  binding (InductiveSentence  ind)       = binding ind
-  binding (FixpointSentence   fix)       = binding fix
-  binding (AssertionSentence  assert pf) = binding assert . (freeVars pf *>)
-  binding (NotationSentence   not)       = binding not
+  binding f (AssumptionSentence assum)     = binding f assum
+  binding f (DefinitionSentence def)       = binding f def
+  binding f (InductiveSentence  ind)       = binding f ind
+  binding f (FixpointSentence   fix)       = binding f fix
+  binding f (AssertionSentence  assert pf) = binding f assert . (freeVars pf *>)
+  binding f (NotationSentence   not)       = binding f not
 
 instance Binding Assumption where
-  binding (Assumption kwd assumptions) =
-    (freeVars kwd *>) . binding assumptions
+  binding f (Assumption kwd assumptions) =
+    (freeVars kwd *>) . binding f assumptions
     -- The @kwd@ part is pro forma – there are no free variables there
 
 instance Binding Assums where
-  binding (UnparenthesizedAssums xs ty) =
-    (freeVars ty *>) . binding xs
-  binding (ParenthesizedAssums xsTys) = \body ->
-    foldr (\(xs,ty) -> (freeVars ty *>) . binding xs) body xsTys
+  binding f (UnparenthesizedAssums xs ty) =
+    (freeVars ty *>) . binding f xs
+  binding f (ParenthesizedAssums xsTys) = \body ->
+    foldr (\(xs,ty) -> (freeVars ty *>) . binding f xs) body xsTys
 
 instance Binding Definition where
-  binding (DefinitionDef isLocal x args oty def) =
+  binding f (DefinitionDef isLocal x args oty def) =
     (freeVars isLocal *>)               . -- Pro forma – there are none
-    binding args                        .
+    binding f args                        .
       (freeVars oty *> freeVars def *>) .
-      binding x
+      binding f x
   
-  binding (LetDef x args oty def) =
-    binding args                        .
+  binding f (LetDef x args oty def) =
+    binding f args                        .
       (freeVars oty *> freeVars def *>) .
-      binding x
+      binding f x
 
 instance Binding Inductive where
-  binding (Inductive   ibs nots) = binding (foldMap names ibs) . (freeVars ibs *> freeVars nots *>)
-  binding (CoInductive cbs nots) = binding (foldMap names cbs) . (freeVars cbs *> freeVars nots *>)
+  binding f (Inductive   ibs nots) = binding f (foldMap names ibs) . (freeVars ibs *> freeVars nots *>)
+  binding f (CoInductive cbs nots) = binding f (foldMap names cbs) . (freeVars cbs *> freeVars nots *>)
 
 instance Binding Fixpoint where
-  binding (Fixpoint   fbs nots) = binding (foldMap names fbs) . (freeVars fbs *> freeVars nots *>)
-  binding (CoFixpoint cbs nots) = binding (foldMap names cbs) . (freeVars cbs *> freeVars nots *>)
+  binding f (Fixpoint   fbs nots) = binding f (foldMap names fbs) . (freeVars fbs *> freeVars nots *>)
+  binding f (CoFixpoint cbs nots) = binding f (foldMap names cbs) . (freeVars cbs *> freeVars nots *>)
 
 instance Binding Assertion where
-  binding (Assertion kwd name args ty) =
-    (freeVars kwd *> binding args (freeVars ty) *>) .
-    binding name
+  binding f (Assertion kwd name args ty) =
+    (freeVars kwd *> binding f args (freeVars ty) *>) .
+    binding f name
     -- The @kwd@ part is pro forma – there are no free variables there
 
 instance Binding Notation where
-  binding (ReservedNotationIdent x) = binding x
+  binding f (ReservedNotationIdent x) = binding f x
     -- We treat reserved single-identifier notations as bound variables
 
 -- TODO Not all sequences of bindings should be telescopes!
-bindingTelescope :: (MonadFreeVars Ident m, Binding b, Foldable f) => f b -> m a -> m a
-bindingTelescope = flip $ foldr binding
+bindingTelescope :: (Binding b, MonadVariables Ident d m, Monoid d, Foldable f)
+                 => (Ident -> d) -> f b -> m a -> m a
+bindingTelescope = flip . foldr . binding
 
 instance Binding (Set Ident) where
-  binding = bindAll
+  binding = (bindAll .) . M.fromSet
 
 instance Binding b => Binding (Maybe b) where
   binding = bindingTelescope
@@ -198,20 +202,20 @@ instance Binding b => Binding (NonEmpty b) where
 ----------------------------------------------------------------------------------------------------
 
 getFreeVars :: FreeVars t => t -> Set Ident
-getFreeVars = FV.execFreeVars . freeVars
+getFreeVars = execVariables . (freeVars :: FreeVars t => t -> Variables Ident () ())
 
 class FreeVars t where
-  freeVars :: MonadFreeVars Ident m => t -> m ()
+  freeVars :: (MonadVariables Ident d m, Monoid d) => t -> m ()
 
 instance FreeVars Num where
   freeVars _ = pure ()
 
 instance FreeVars Term where
   freeVars (Forall xs t) =
-    binding xs $ freeVars t
+    binding' xs $ freeVars t
   
   freeVars (Fun xs t) =
-    binding xs $ freeVars t
+    binding' xs $ freeVars t
   
   freeVars (Fix fbs) =
     freeVars fbs
@@ -220,29 +224,29 @@ instance FreeVars Term where
     freeVars cbs
 
   freeVars (Let x args oty val body) = do
-    binding args $ freeVars oty *> freeVars val
-    binding x    $ freeVars body
+    binding' args $ freeVars oty *> freeVars val
+    binding' x    $ freeVars body
   
   freeVars (LetFix fb body) = do
     freeVars fb
-    binding (names fb) $ freeVars body
+    binding' (names fb) $ freeVars body
 
   freeVars (LetCofix cb body) = do
     freeVars cb
-    binding (names cb) $ freeVars body
+    binding' (names cb) $ freeVars body
 
   freeVars (LetTuple xs oret val body) = do
     freeVars oret *> freeVars val
-    binding xs $ freeVars body
+    binding' xs $ freeVars body
   
   freeVars (LetTick pat def body) = do
     freeVars def
-    binding pat $ freeVars body
+    binding' pat $ freeVars body
   
   freeVars (LetTickDep pat oin def ret body) = do
     freeVars def
-    binding oin $ freeVars ret
-    binding pat $ freeVars body
+    binding' oin $ freeVars ret
+    binding' pat $ freeVars body
 
   freeVars (If c oret t f) =
     freeVars c *> freeVars oret *> freeVars [t,f]
@@ -270,7 +274,7 @@ instance FreeVars Term where
     -- The scope is a different sort of identifier, not a term-level variable.
 
   freeVars (Match items oret eqns) = do
-    binding items $ freeVars oret
+    binding' items $ freeVars oret
     freeVars eqns
 
   freeVars (Qualid qid) =
@@ -309,35 +313,35 @@ instance FreeVars FixBodies where
     freeVars fb
   freeVars (FixMany fb' fbs' x) =
     let fbs = fb' <| fbs'
-    in binding (x `S.insert` foldMap names fbs) $ freeVars fbs
+    in binding' (x `S.insert` foldMap names fbs) $ freeVars fbs
 
 instance FreeVars CofixBodies where
   freeVars (CofixOne cb) =
     freeVars cb
   freeVars (CofixMany cb' cbs' x) =
     let cbs = cb' <| cbs'
-    in binding (x `S.insert` foldMap names cbs) $ freeVars cbs
+    in binding' (x `S.insert` foldMap names cbs) $ freeVars cbs
 
 instance FreeVars FixBody where
   freeVars (FixBody f args annot oty def) =
-    binding f . binding args . binding annot $ do
+    binding' f . binding' args . binding' annot $ do
       freeVars oty
       freeVars def
 
 instance FreeVars CofixBody where
   freeVars (CofixBody f args oty def) =
-    binding f . binding args $ do
+    binding' f . binding' args $ do
       freeVars oty
       freeVars def
 
 instance FreeVars DepRetType where
-  freeVars (DepRetType oas ret) = binding oas $ freeVars ret
+  freeVars (DepRetType oas ret) = binding' oas $ freeVars ret
 
 instance FreeVars ReturnType where
   freeVars (ReturnType ty) = freeVars ty
 
 instance FreeVars Equation where
-  freeVars (Equation mpats body) = binding mpats $ freeVars body
+  freeVars (Equation mpats body) = binding' mpats $ freeVars body
 
 instance FreeVars AssumptionKeyword where
   freeVars Axiom      = pure ()
@@ -356,9 +360,9 @@ instance FreeVars Locality where
 
 instance FreeVars IndBody where
   freeVars (IndBody tyName params indicesUniverse cons) =
-    binding params $ do
+    binding' params $ do
       freeVars indicesUniverse
-      binding tyName $ sequence_ [binding args $ freeVars oty | (_,args,oty) <- cons]
+      binding' tyName $ sequence_ [binding' args $ freeVars oty | (_,args,oty) <- cons]
 
 instance FreeVars AssertionKeyword where
   freeVars Theorem     = pure ()
@@ -379,7 +383,7 @@ instance FreeVars Proof where
 instance FreeVars NotationBinding where
   freeVars (NotationIdentBinding _x def) = freeVars def -- The notation itself is already in scope
 
-foldableFreeVars :: (MonadFreeVars Ident m, FreeVars t, Foldable f) => f t -> m ()
+foldableFreeVars :: (FreeVars t, MonadVariables Ident d m, Monoid d, Foldable f) => f t -> m ()
 foldableFreeVars = traverse_ freeVars
 
 instance FreeVars t => FreeVars (Maybe t) where

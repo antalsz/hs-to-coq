@@ -27,6 +27,7 @@ import Control.Monad.Writer.Strict
 import Control.Monad.State  (MonadState(..))
 import Control.Monad.Except (MonadError(..))
 import Control.Monad.Cont   (MonadCont(..))
+import Exception            (ExceptionMonad(..))
 
 import Data.Map.Strict (Map)
 import qualified Data.Map.Strict as M
@@ -62,6 +63,15 @@ instance (MonadWriter w m, Ord i) => MonadWriter w (VariablesT i d m) where
   {-# INLINABLE tell   #-}
   {-# INLINABLE listen #-}
   {-# INLINABLE pass   #-}
+
+instance (ExceptionMonad m, Ord i) => ExceptionMonad (VariablesT i d m) where
+  m `gcatch` h = VariablesT . ReaderT $ \env -> WriterT $
+    let unwrap m = runWriterT $ runReaderT (getVariablesT m) env
+    in unwrap m `gcatch` (unwrap . h)
+
+  gmask f = VariablesT . ReaderT $ \env -> WriterT $
+    let unwrap m = runWriterT $ runReaderT (getVariablesT m) env
+    in gmask $ unwrap . f . mapVariablesT
 
 runVariablesT :: VariablesT i d m a -> m (a, Set i)
 runVariablesT = runWriterT . flip runReaderT M.empty . getVariablesT

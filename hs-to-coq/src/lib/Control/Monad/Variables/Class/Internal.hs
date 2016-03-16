@@ -31,6 +31,7 @@ import qualified Control.Monad.Trans.Maybe              as M
 import qualified Control.Monad.Trans.Except             as E
 import qualified Control.Monad.Trans.List               as L
 import qualified Control.Monad.Trans.Cont               as C
+import qualified HsToCoq.Util.GHC.Monad                 as GHC
 
 class (Monad m, Ord i) => MonadVariables i d m | m -> i d where
   bind     :: i -> d  -> m a -> m a
@@ -151,5 +152,12 @@ instance MonadVariables i d m => MonadVariables i d (C.ContT r m) where
   bind     = (C.mapContT .) . bind
   bindAll  = C.mapContT     . bindAll
   bound    = lift           . bound
-  free     = lift           . free 
+  free     = lift           . free
   frees    = lift           . frees
+
+instance MonadVariables i d m => MonadVariables i d (GHC.GhcT m) where
+  bind     = (GHC.mapGhcT .) . bind
+  bindAll  = GHC.mapGhcT     . bindAll
+  bound    = lift            . bound
+  free     = lift            . free
+  frees    = lift            . frees

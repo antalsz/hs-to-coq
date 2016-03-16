@@ -23,6 +23,7 @@ library
   exposed-modules:     HsToCoq.Util.GHC.OnOff
                      , HsToCoq.Util.GHC.DoCpp
                      , HsToCoq.Util.GHC
+                     , HsToCoq.Util.GHC.Monad
                      , HsToCoq.Util.Patterns
                      , HsToCoq.Util.Functor
                      , HsToCoq.Util.Monad

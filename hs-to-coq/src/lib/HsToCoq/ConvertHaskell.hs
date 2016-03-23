@@ -41,6 +41,7 @@ import Data.Foldable
 import Data.Traversable
 import Data.Maybe
 import Data.Either
+import Data.Char
 import Data.List.NonEmpty (NonEmpty(..), (<|), nonEmpty)
 import qualified Data.List.NonEmpty as NEL
 import qualified Data.Text as T
@@ -294,7 +295,7 @@ convertPat (LazyPat p) =
   convertLPat p
 
 convertPat (GHC.AsPat x p) =
-  Coq.AsPat <$> convertLPat p <*> ghcPpr x
+  Coq.AsPat <$> convertLPat p <*> freeVar (unLoc x)
 
 convertPat (ParPat p) =
   convertLPat p
@@ -311,11 +312,20 @@ convertPat (TuplePat _ _ _) =
 convertPat (PArrPat _ _) =
   conv_unsupported "parallel array patterns"
 
-convertPat (ConPatIn _ _) =
-  conv_unsupported "record constructor patterns"
+convertPat (ConPatIn con conVariety) =
+  case conVariety of
+    PrefixCon args' -> do
+      conVar <- Bare <$> var ExprNS (unLoc con)
+      case nonEmpty args' of
+        Just args -> ArgsPat conVar <$> traverse convertLPat args
+        Nothing   -> pure $ QualidPat conVar
+    RecCon    _    ->
+      conv_unsupported "record constructors"
+    InfixCon  _ _  ->
+      conv_unsupported "infix constructors"
 
 convertPat (ConPatOut{}) =
-  conv_unsupported "constructor patterns"
+  conv_unsupported "[internal?] `ConPatOut' constructor"
 
 convertPat (ViewPat _ _ _) =
   conv_unsupported "view patterns"
@@ -374,9 +384,21 @@ convertType (HsForAllTy explicitness _ tvs ctx ty) =
   case unLoc ctx of
     [] -> do explicitTVs <- convertLHsTyVarBndrs Coq.Implicit tvs
              tyBody      <- convertLType ty
-             let implicitTVs = case explicitness of
-                   GHC.Implicit -> map (Inferred Coq.Implicit . Ident) . S.toList $ getFreeVars tyBody
-                   _            -> []
+             implicitTVs <- case explicitness of
+               GHC.Implicit -> do
+                 -- We need to find all the unquantified type variables.  Since
+                 -- Haskell never introduces a type variable name beginning with
+                 -- an upper-case letter, we look for those; however, if we've
+                 -- renamed a Coq value into one, we need to exclude that too.
+                 -- (Also, we only keep "nonuppercase-first" names, not
+                 -- "lowercase-first" names, as names beginning with @_@ are
+                 -- also variables.)
+                 bindings <- gets $ S.fromList . foldMap toList . toList
+                 let fvs = S.filter (maybe False (not . isUpper . fst) . T.uncons) $
+                             getFreeVars tyBody S.\\ bindings
+                 pure . map (Inferred Coq.Implicit . Ident) $ S.toList fvs
+               _ ->
+                 pure []
              pure . maybe tyBody (flip Forall tyBody)
                   . nonEmpty $ explicitTVs ++ implicitTVs
     _ -> conv_unsupported "type class contexts"
@@ -520,7 +542,7 @@ data SynBody = SynBody Ident [Binder] (Maybe Term) Term
 convertSynDecl :: ConversionMonad m
                => Located RdrName -> LHsTyVarBndrs RdrName -> LHsType RdrName
                -> m SynBody
-convertSynDecl name args def  = SynBody <$> ghcPpr (unLoc name)
+convertSynDecl name args def  = SynBody <$> freeVar (unLoc name)
                                         <*> convertLHsTyVarBndrs Coq.Explicit args
                                         <*> pure Nothing
                                         <*> convertLType def

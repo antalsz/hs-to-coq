@@ -78,7 +78,24 @@ type Renaming = Map HsNamespace Ident
 type ConversionMonad m = (GhcMonad m, MonadState (Map Ident Renaming) m)
 
 evalConversion :: GhcMonad m => StateT (Map Ident Renaming) m a -> m a
-evalConversion = flip evalStateT M.empty
+evalConversion = flip evalStateT $ build
+                   [ typ "Int" ~> "Z"
+
+                   , typ "Bool"  ~> "bool"
+                   , val "True"  ~> "true"
+                   , val "false" ~> "true"
+
+                   , typ "String" ~> "string"
+
+                   , typ "Maybe"   ~> "option"
+                   , val "Just"    ~> "Some"
+                   , val "Nothing" ~> "None" ]
+  where
+    val hs = (hs,) . M.singleton ExprNS
+    typ hs = (hs,) . M.singleton TypeNS
+    (~>)   = ($)
+
+    build = M.fromListWith M.union
 
 rename :: ConversionMonad m => HsNamespace -> Ident -> Ident -> m ()
 rename ns x x' = modify' $ M.adjust (M.insert ns x') x

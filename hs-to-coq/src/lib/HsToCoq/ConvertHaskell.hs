@@ -109,7 +109,7 @@ tryEscapeReservedName reserved name = do
 escapeReservedNames :: Ident -> Ident
 escapeReservedNames x = fromMaybe x . getFirst
                       . foldMap (First . flip tryEscapeReservedName x)
-                      $ T.words "Set Type Prop"
+                      $ T.words "Set Type Prop fun fix forall"
 
 freeVar :: (GhcMonad m, OutputableBndr name) => name -> m Ident
 freeVar = fmap escapeReservedNames . ghcPpr

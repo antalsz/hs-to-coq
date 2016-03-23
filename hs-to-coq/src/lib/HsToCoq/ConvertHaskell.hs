@@ -99,7 +99,9 @@ evalConversion = flip evalStateT $ build
     build = M.fromListWith M.union
 
 rename :: ConversionMonad m => HsNamespace -> Ident -> Ident -> m ()
-rename ns x x' = modify' $ M.adjust (M.insert ns x') x
+rename ns x x' = modify' . flip M.alter x $ Just . \case
+                   Just m  -> M.insert    ns x' m
+                   Nothing -> M.singleton ns x'
 
 tryEscapeReservedName :: Ident -> Ident -> Maybe Ident
 tryEscapeReservedName reserved name = do

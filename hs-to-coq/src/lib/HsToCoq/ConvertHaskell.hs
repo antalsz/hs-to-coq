@@ -353,8 +353,16 @@ convertGRHS (GRHS [] body) = convertLExpr body
 convertGRHS (GRHS _  _)    = conv_unsupported "guards"
 
 convertType :: ConversionMonad m => HsType RdrName -> m Term
-convertType (HsForAllTy _explicit _ _tvs _ctx _ty) =
-  conv_unsupported "forall" -- FIXME
+convertType (HsForAllTy explicitness _ tvs ctx ty) =
+  case unLoc ctx of
+    [] -> do explicitTVs <- convertLHsTyVarBndrs tvs
+             tyBody      <- convertLType ty
+             let implicitTVs = case explicitness of
+                   Implicit -> map (Inferred . Ident) . S.toList $ getFreeVars tyBody
+                   _        -> []
+             pure . maybe tyBody (flip Forall tyBody)
+                  . nonEmpty $ explicitTVs ++ implicitTVs
+    _ -> conv_unsupported "type class contexts"
 
 convertType (HsTyVar tv) =
   Var <$> var TypeNS tv
@@ -613,8 +621,14 @@ convertTypedBinding  hsTy FunBind{..}  = do
       match = Coq.Match (args <&> \arg -> MatchItem (Var arg) Nothing Nothing) Nothing eqns
       defn | name `S.member` getFreeVars eqns = Fix . FixOne $ FixBody name argBinders Nothing Nothing match
            | otherwise                        = Fun argBinders match
+      
+      -- The @forall@ed arguments need to be brought into scope
+      peelForall (Forall tvs body) = first (NEL.toList tvs ++) $ peelForall body
+      peelForall ty                = ([], ty)
+
+      (tvs, mainTy) = maybe ([], Nothing) (second Just . peelForall) coqTy
   
-  pure . DefinitionSentence $ DefinitionDef Global name [] coqTy defn
+  pure . DefinitionSentence $ DefinitionDef Global name tvs mainTy defn
 
 convertValDecls :: ConversionMonad m => [HsDecl RdrName] -> m [Sentence]
 convertValDecls args =

@@ -23,6 +23,8 @@ library
   exposed-modules:     HsToCoq.Util.GHC.OnOff
                      , HsToCoq.Util.GHC.DoCpp
                      , HsToCoq.Util.GHC
+                     , HsToCoq.Util.GHC.DynFlags
+                     , HsToCoq.Util.GHC.Exception
                      , HsToCoq.Util.GHC.Monad
                      , HsToCoq.Util.Patterns
                      , HsToCoq.Util.Functor
@@ -44,6 +46,7 @@ library
                      , HsToCoq.ProcessFiles
                      , HsToCoq.CLI
   other-extensions:    TupleSections, LambdaCase, RecordWildCards, OverloadedStrings
+                     , ConstraintKinds
                      , MultiParamTypeClasses, FunctionalDependencies, FlexibleContexts
                      , TypeSynonymInstances, FlexibleInstances, UndecidableInstances
                      , DeriveDataTypeable, StandaloneDeriving, GeneralizedNewtypeDeriving

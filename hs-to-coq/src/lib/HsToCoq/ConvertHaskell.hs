@@ -1,15 +1,27 @@
 {-# LANGUAGE TupleSections, LambdaCase, RecordWildCards, PatternSynonyms,
-             OverloadedLists, OverloadedStrings #-}
+             OverloadedLists, OverloadedStrings,
+             ConstraintKinds, FlexibleContexts #-}
 
 module HsToCoq.ConvertHaskell (
   -- * Conversion
+  -- ** Types
+  ConversionMonad, Renaming, HsNamespace(..), evalConversion,
+  -- *** Variable renaming
+  rename, var, freeVar,
+  -- *** Utility
+  tryEscapeReservedName, escapeReservedNames,
   -- ** Declarations
-  convertTyClDecls, convertTyClDecl, convertDataDecl, convertSynDecl,
+  convertTyClDecls, convertValDecls,
+  convertTyClDecl, convertDataDecl, convertSynDecl,
+  convertTypedBinding,
   -- ** Terms
   convertType, convertLType,
+  convertExpr, convertLExpr,
+  convertPat,  convertLPat,
   convertLHsTyVarBndrs,
-  -- ** Names
-  showRdrName, showName,
+  -- ** Case/match bodies
+  convertMatchGroup, convertMatch,
+  convertGRHSs, convertGRHS,
   -- ** Declaration groups
   DeclarationGroup(..), addDeclaration,
   groupConvDecls, groupTyClDecls, convertDeclarationGroup,
@@ -18,51 +30,85 @@ module HsToCoq.ConvertHaskell (
   -- ** Internal
   convertDataDefn, convertConDecl,
   -- * Coq construction
-  pattern Var, pattern App1, appList,
+  pattern Var, pattern App1, pattern App2, appList,
   pattern CoqVarPat
   ) where
 
 import Data.Semigroup ((<>))
+import Data.Monoid hiding ((<>))
+import Data.Bifunctor
 import Data.Foldable
 import Data.Traversable
+import Data.Maybe
+import Data.Either
 import Data.List.NonEmpty (NonEmpty(..), (<|), nonEmpty)
-import Data.Text (Text)
+import qualified Data.List.NonEmpty as NEL
+import qualified Data.Text as T
 
 import Control.Arrow ((&&&))
 import Control.Monad
 import Control.Monad.IO.Class
+import Control.Monad.State
 
+import           Data.Map.Strict (Map)
 import qualified Data.Set        as S
 import qualified Data.Map.Strict as M
 
 import GHC hiding (Name)
-import qualified GHC
-import RdrName
-import OccName
+import FastString
+import Outputable (OutputableBndr)
 import Panic
 
 import HsToCoq.Util.Functor
 import HsToCoq.Util.Containers
 import HsToCoq.Util.Patterns
 import HsToCoq.Util.GHC
+import HsToCoq.Util.GHC.Exception ()
 import HsToCoq.Coq.Gallina
 import qualified HsToCoq.Coq.Gallina as Coq
 import HsToCoq.Coq.FreeVars
 
 import Data.Generics
 
-showRdrName :: GhcMonad m => RdrName -> m Text
-showRdrName = ghcSDoc . pprOccName . rdrNameOcc
+data HsNamespace = ExprNS | TypeNS
+                 deriving (Eq, Ord, Show, Read, Enum, Bounded)
 
-showName :: GhcMonad m => GHC.Name -> m Text
-showName = showRdrName . nameRdrName
+type Renaming = Map HsNamespace Ident
+
+type ConversionMonad m = (GhcMonad m, MonadState (Map Ident Renaming) m)
+
+evalConversion :: GhcMonad m => StateT (Map Ident Renaming) m a -> m a
+evalConversion = flip evalStateT M.empty
+
+rename :: ConversionMonad m => HsNamespace -> Ident -> Ident -> m ()
+rename ns x x' = modify' $ M.adjust (M.insert ns x') x
+
+tryEscapeReservedName :: Ident -> Ident -> Maybe Ident
+tryEscapeReservedName reserved name = do
+  suffix <- T.stripPrefix reserved name
+  guard $ T.all (== '_') suffix
+  pure $ name <> "_"
+
+escapeReservedNames :: Ident -> Ident
+escapeReservedNames x = fromMaybe x . getFirst
+                      . foldMap (First . flip tryEscapeReservedName x)
+                      $ T.words "Set Type Prop"
+
+freeVar :: (GhcMonad m, OutputableBndr name) => name -> m Ident
+freeVar = fmap escapeReservedNames . ghcPpr
+                                        
+var :: (ConversionMonad m, OutputableBndr name) => HsNamespace -> name -> m Ident
+var ns x = do
+  x' <- ghcPpr x -- TODO Check module part?
+  gets $ fromMaybe (escapeReservedNames x') . (M.lookup ns <=< M.lookup x')
 
 -- Module-local
 conv_unsupported :: MonadIO m => String -> m a
 conv_unsupported what = liftIO . throwGhcExceptionIO . ProgramError $ what ++ " unsupported"
 
-pattern Var  x   = Qualid (Bare x)
-pattern App1 f x = App f (PosArg x :| Nil)
+pattern Var  x       = Qualid (Bare x)
+pattern App1 f x     = App f (PosArg x :| Nil)
+pattern App2 f x1 x2 = App f (PosArg x1 :| PosArg x2 : Nil)
 
 appList :: Term -> [Arg] -> Term
 appList f xs = case nonEmpty xs of
@@ -71,9 +117,9 @@ appList f xs = case nonEmpty xs of
 
 pattern CoqVarPat x = QualidPat (Bare x)
 
-convertExpr :: GhcMonad m => HsExpr RdrName -> m Term
+convertExpr :: ConversionMonad m => HsExpr RdrName -> m Term
 convertExpr (HsVar x) =
-  Var <$> ghcPpr x
+  Var <$> var ExprNS x
 
 convertExpr (HsIPVar _) =
   conv_unsupported "implicit parameters"
@@ -112,12 +158,9 @@ convertExpr (ExplicitTuple _ _) =
   conv_unsupported "tuples"
 
 convertExpr (HsCase e mg) =
-  let toEqns = traverse $ \(pats, oty, rhs) -> do
-                 pats' <- nonEmpty pats
-                 pure . Equation [MultPattern pats'] $ maybe id (flip HasType) oty rhs
-  in Coq.Match <$> (fmap pure $ MatchItem <$> convertLExpr e <*> pure Nothing <*> pure Nothing)
-               <*> pure Nothing
-               <*> (maybe (conv_unsupported "multi-pattern case arms") pure . toEqns =<< convertMatchGroup mg)
+  Coq.Match <$> (fmap pure $ MatchItem <$> convertLExpr e <*> pure Nothing <*> pure Nothing)
+            <*> pure Nothing
+            <*> convertMatchGroup mg
 
 convertExpr (HsIf overloaded c t f) =
   case overloaded of
@@ -218,14 +261,17 @@ convertExpr (HsWrap _ _) =
   conv_unsupported "`HsWrap' constructor"
 
 convertExpr (HsUnboundVar x) =
-  Var <$> ghcPpr x
+  Var <$> freeVar x
 
-convertPat :: GhcMonad m => Pat RdrName -> m Pattern
+convertLExpr :: ConversionMonad m => LHsExpr RdrName -> m Term
+convertLExpr = convertExpr . unLoc
+
+convertPat :: ConversionMonad m => Pat RdrName -> m Pattern
 convertPat (WildPat PlaceHolder) =
   pure UnderscorePat
 
 convertPat (GHC.VarPat x) =
-  CoqVarPat <$> ghcPpr x
+  CoqVarPat <$> freeVar x
 
 convertPat (LazyPat p) =
   convertLPat p
@@ -281,39 +327,37 @@ convertPat (SigPatOut _ _) =
 convertPat (CoPat _ _ _) =
   conv_unsupported "coercion patterns"
 
-convertLPat :: GhcMonad m => LPat RdrName -> m Pattern
+convertLPat :: ConversionMonad m => LPat RdrName -> m Pattern
 convertLPat = convertPat . unLoc
 
-convertLExpr :: GhcMonad m => LHsExpr RdrName -> m Term
-convertLExpr = convertExpr . unLoc
+convertMatchGroup :: ConversionMonad m => MatchGroup RdrName (LHsExpr RdrName) -> m [Equation]
+convertMatchGroup (MG alts _ _ _) = traverse (convertMatch . unLoc) alts                                      
 
-convertMatchGroup :: GhcMonad m => MatchGroup RdrName (LHsExpr RdrName) -> m [([Pattern], Maybe Term, Term)]
-convertMatchGroup (MG alts _ _ _) = traverse (convertMatch . unLoc) alts
-
-convertMatch :: GhcMonad m => Match RdrName (LHsExpr RdrName) -> m ([Pattern], Maybe Term, Term)
+convertMatch :: ConversionMonad m => Match RdrName (LHsExpr RdrName) -> m Equation
 convertMatch GHC.Match{..} = do
-  pats <- traverse convertLPat  m_pats
-  ty   <- traverse convertLType m_type
-  rhss <- convertGRHSs          m_grhss
-  case rhss of
-    [rhs] -> pure (pats, ty, rhs)
-    _     -> conv_unsupported "multi-way match RHSs"
+  pats <- maybe (conv_unsupported "no-pattern case arms") pure . nonEmpty
+            =<< traverse convertLPat m_pats
+  oty  <- traverse convertLType m_type
+  rhs  <- convertGRHSs m_grhss >>= \case
+            [rhs] -> pure rhs
+            _     -> conv_unsupported "non-singleton match RHSs (i.e., with guards)"
+  pure . Equation [MultPattern pats] $ maybe id (flip HasType) oty rhs
 
-convertGRHSs :: GhcMonad m => GRHSs RdrName (LHsExpr RdrName) -> m [Term]
+convertGRHSs :: ConversionMonad m => GRHSs RdrName (LHsExpr RdrName) -> m [Term]
 convertGRHSs GRHSs{..} = case grhssLocalBinds of
                            EmptyLocalBinds -> traverse (convertGRHS . unLoc) grhssGRHSs
                            _               -> conv_unsupported "`where' clauses"
 
-convertGRHS :: GhcMonad m => GRHS RdrName (LHsExpr RdrName) -> m Term
-convertGRHS (GRHS []    body) = convertLExpr body
-convertGRHS (GRHS (_:_) _)    = conv_unsupported "guards"
+convertGRHS :: ConversionMonad m => GRHS RdrName (LHsExpr RdrName) -> m Term
+convertGRHS (GRHS [] body) = convertLExpr body
+convertGRHS (GRHS _  _)    = conv_unsupported "guards"
 
-convertType :: GhcMonad m => HsType RdrName -> m Term
+convertType :: ConversionMonad m => HsType RdrName -> m Term
 convertType (HsForAllTy _explicit _ _tvs _ctx _ty) =
   conv_unsupported "forall" -- FIXME
 
 convertType (HsTyVar tv) =
-  Var <$> ghcPpr tv -- TODO Check module part?
+  Var <$> var TypeNS tv
 
 convertType (HsAppTy ty1 ty2) =
   App1 <$> convertLType ty1 <*> convertLType ty2
@@ -336,7 +380,7 @@ convertType (HsTupleTy tupTy tys) = do
   case tys of
     []   -> pure $ Var "unit"
     [ty] -> convertLType ty
-    _    -> foldl1 (\x t -> App (Var "prod") [PosArg x, PosArg t]) <$> traverse convertLType tys
+    _    -> foldl1 (App2 $ Var "prod") <$> traverse convertLType tys
 
 convertType (HsOpTy _ty1 _op _ty2) =
   conv_unsupported "binary operators" -- FIXME
@@ -346,7 +390,7 @@ convertType (HsParTy ty) =
 
 convertType (HsIParamTy _ _) =
   conv_unsupported "implicit parameters"
-
+                   
 convertType (HsEqTy _ty1 _ty2) =
   conv_unsupported "type equality" -- FIXME
 
@@ -372,19 +416,19 @@ convertType (HsCoreTy _) =
   conv_unsupported "[internal] embedded core types"
 
 convertType (HsExplicitListTy PlaceHolder tys) =
-  foldr (\ty l -> App (Var "cons") [PosArg ty, PosArg l]) (Var "nil") <$> traverse convertLType tys
+  foldr (App2 $ Var "cons") (Var "nil") <$> traverse convertLType tys
 
 convertType (HsExplicitTupleTy _PlaceHolders tys) =
   case tys of
     []   -> pure $ Var "tt"
     [ty] -> convertLType ty
-    _    -> foldl1 (\x t -> App (Var "pair") [PosArg x, PosArg t]) <$> traverse convertLType tys
+    _    -> foldl1 (App2 $ Var "pair") <$> traverse convertLType tys
 
 convertType (HsTyLit lit) =
   case lit of
-    HsNumTy _ int | int >= 0  -> pure . Num $ fromInteger int
-                  | otherwise -> conv_unsupported "negative type-level integers"
-    HsStrTy _ _               -> conv_unsupported "type-level strings"
+    HsNumTy _src int | int >= 0  -> pure . Num $ fromInteger int
+                     | otherwise -> conv_unsupported "negative type-level integers"
+    HsStrTy _src str             -> pure . String . T.pack $ unpackFS str
 
 convertType (HsWrapTy _ _) =
   conv_unsupported "[internal] wrapped types" 
@@ -395,53 +439,60 @@ convertType HsWildcardTy =
 convertType (HsNamedWildcardTy _) =
   conv_unsupported "named wildcards"
 
-convertLType :: GhcMonad m => LHsType RdrName -> m Term
+convertLType :: ConversionMonad m => LHsType RdrName -> m Term
 convertLType = convertType . unLoc
 
 type Constructor = (Ident, [Binder], Maybe Term)
 
-convertLHsTyVarBndrs :: GhcMonad m => LHsTyVarBndrs RdrName -> m [Binder]
+convertLHsTyVarBndrs :: ConversionMonad m => LHsTyVarBndrs RdrName -> m [Binder]
 convertLHsTyVarBndrs (HsQTvs kvs tvs) = do
-  kinds <- traverse (fmap (Inferred . Ident) . ghcPpr) kvs
+  kinds <- traverse (fmap (Inferred . Ident) . freeVar) kvs
   types <- for (map unLoc tvs) $ \case
-             UserTyVar   tv   -> Inferred . Ident <$> ghcPpr tv
-             KindedTyVar tv k -> Typed <$> (pure . Ident <$> ghcPpr tv) <*> convertLType k
+             UserTyVar   tv   -> Inferred . Ident <$> freeVar tv
+             KindedTyVar tv k -> Typed <$> (pure . Ident <$> freeVar (unLoc tv)) <*> convertLType k
   pure $ kinds ++ types
 
-convertConDecl :: GhcMonad m => Term -> ConDecl RdrName -> m [Constructor]
+convertConDecl :: ConversionMonad m
+               => Term -> ConDecl RdrName -> m [Constructor]
 convertConDecl curType (ConDecl lnames _explicit lqvs lcxt ldetails lres _doc _old) = do
   unless (null $ unLoc lcxt) $ conv_unsupported "constructor contexts"
-  names  <- traverse (ghcPpr . unLoc) lnames
-  params <- convertLHsTyVarBndrs lqvs
-  resTy  <- case lres of
-              ResTyH98       -> pure curType
-              ResTyGADT _ ty -> convertLType ty
-  args   <- traverse convertLType $ hsConDeclArgTys ldetails
-  pure $ map ((, params, Just $ foldr Arrow resTy args) . ("Mk_" <>)) names
+  names   <- for lnames $ \lname -> do
+               name <- ghcPpr $ unLoc lname -- We use 'ghcPpr' because we munge the name here ourselves
+               let name' = "Mk_" <> name
+               name' <$ rename ExprNS name name'
+  params  <- convertLHsTyVarBndrs lqvs
+  resTy   <- case lres of
+               ResTyH98       -> pure curType
+               ResTyGADT _ ty -> convertLType ty
+  args    <- traverse convertLType $ hsConDeclArgTys ldetails
+  pure $ map (, params, Just $ foldr Arrow resTy args) names
   
-convertDataDefn :: GhcMonad m => Term -> HsDataDefn RdrName -> m (Term, [Constructor])
+convertDataDefn :: ConversionMonad m
+                => Term -> HsDataDefn RdrName
+                -> m (Term, [Constructor])
 convertDataDefn curType (HsDataDefn _nd lcxt _ctype ksig cons _derivs) = do
   unless (null $ unLoc lcxt) $ conv_unsupported "data type contexts"
   (,) <$> maybe (pure $ Sort Type) convertLType ksig
       <*> (concat <$> traverse (convertConDecl curType . unLoc) cons)
 
-convertDataDecl :: GhcMonad m
+
+convertDataDecl :: ConversionMonad m
                 => Located RdrName -> LHsTyVarBndrs RdrName -> HsDataDefn RdrName
                 -> m IndBody
 convertDataDecl name tvs defn = do
-  coqName <- ghcPpr $ unLoc name
+  coqName <- freeVar $ unLoc name
   params  <- convertLHsTyVarBndrs tvs
-  let nameArgs    = map $ PosArg . \case
-                      Ident x        -> Var x
-                      UnderscoreName -> Underscore
-      curType     = appList (Var coqName) . nameArgs $ foldMap binderNames params
+  let nameArgs = map $ PosArg . \case
+                   Ident x        -> Var x
+                   UnderscoreName -> Underscore
+      curType  = appList (Var coqName) . nameArgs $ foldMap binderNames params
   (resTy, cons) <- convertDataDefn curType defn
   pure $ IndBody coqName params resTy cons
 
 data SynBody = SynBody Ident [Binder] (Maybe Term) Term
              deriving (Eq, Ord, Read, Show)
 
-convertSynDecl :: GhcMonad m
+convertSynDecl :: ConversionMonad m
                => Located RdrName -> LHsTyVarBndrs RdrName -> LHsType RdrName
                -> m SynBody
 convertSynDecl name args def  = SynBody <$> ghcPpr (unLoc name)
@@ -464,7 +515,7 @@ convDeclName :: ConvertedDeclaration -> Ident
 convDeclName (ConvData (IndBody tyName  _ _ _)) = tyName
 convDeclName (ConvSyn  (SynBody synName _ _ _)) = synName
 
-convertTyClDecl :: GhcMonad m => TyClDecl RdrName -> m ConvertedDeclaration
+convertTyClDecl :: ConversionMonad m => TyClDecl RdrName -> m ConvertedDeclaration
 convertTyClDecl FamDecl{}    = conv_unsupported "type/data families"
 convertTyClDecl SynDecl{..}  = ConvSyn  <$> convertSynDecl  tcdLName tcdTyVars tcdRhs
 convertTyClDecl DataDecl{..} = ConvData <$> convertDataDecl tcdLName tcdTyVars tcdDataDefn
@@ -493,7 +544,7 @@ groupConvDecls (cd :| cds) = flip (foldr addDeclaration) cds $ case cd of
                                ConvData ind -> Inductives (ind :| [])
                                ConvSyn  syn -> Synonym    syn
 
-groupTyClDecls :: GhcMonad m => [TyClDecl RdrName] -> m [DeclarationGroup]
+groupTyClDecls :: ConversionMonad m => [TyClDecl RdrName] -> m [DeclarationGroup]
 groupTyClDecls decls = do
   bodies <- traverse convertTyClDecl decls <&>
               M.fromList . map (convDeclName &&& id)
@@ -538,9 +589,44 @@ convertDeclarationGroup = \case
                                                  , everywhere (mkT $ avoidParams params) . -- FIXME use real substitution
                                                      mkFun args $ withType oty def ]
 
-convertTyClDecls :: GhcMonad m => [TyClDecl RdrName] -> m [Sentence]
+convertTyClDecls :: ConversionMonad m => [TyClDecl RdrName] -> m [Sentence]
 convertTyClDecls =   either conv_unsupported (pure . fold)
                  .   traverse convertDeclarationGroup
                  <=< groupTyClDecls
 
+convertTypedBinding :: ConversionMonad m => Maybe (HsType RdrName) -> HsBind RdrName -> m Sentence
+convertTypedBinding _hsTy PatBind{}    = conv_unsupported "pattern bindings"
+convertTypedBinding _hsTy VarBind{}    = conv_unsupported "[internal] `VarBind'"
+convertTypedBinding _hsTy AbsBinds{}   = conv_unsupported "[internal?] `AbsBinds'"
+convertTypedBinding _hsTy PatSynBind{} = conv_unsupported "pattern synonym bindings"
+convertTypedBinding  hsTy FunBind{..}  = do
+  name  <- freeVar $ unLoc fun_id
+  coqTy <- traverse convertType hsTy
+  eqns  <- convertMatchGroup fun_matches
+  
+  let argCount   = case eqns of
+                     Equation (MultPattern args :| _) _ : _ -> length args
+                     _                                      -> 0
+      args       = NEL.fromList ["__arg_" <> T.pack (show n) <> "__" | n <- [1..argCount]]
+      argBinders = (Inferred . Ident) <$> args
 
+      match = Coq.Match (args <&> \arg -> MatchItem (Var arg) Nothing Nothing) Nothing eqns
+      defn | name `S.member` getFreeVars eqns = Fix . FixOne $ FixBody name argBinders Nothing Nothing match
+           | otherwise                        = Fun argBinders match
+  
+  pure . DefinitionSentence $ DefinitionDef Global name [] coqTy defn
+
+convertValDecls :: ConversionMonad m => [HsDecl RdrName] -> m [Sentence]
+convertValDecls args =
+  let (sigs, defns) = first (M.fromList . concat) . partitionEithers . flip mapMaybe args $ \case
+                        SigD (TypeSig lnames lty PlaceHolder) ->
+                          Just $ Left [(name, ty) | let ty = unLoc lty, name <- map unLoc lnames]
+                        ValD def ->
+                          Just $ Right def
+                        _ ->
+                          Nothing
+      
+      getType FunBind{..} = M.lookup (unLoc fun_id) sigs
+      getType _           = Nothing
+  
+  in traverse (\defn -> convertTypedBinding (getType defn) defn) defns

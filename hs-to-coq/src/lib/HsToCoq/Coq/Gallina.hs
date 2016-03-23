@@ -141,7 +141,8 @@ data Term = Forall Binders Term                                                 
           | Match (NonEmpty MatchItem) (Maybe ReturnType) [Equation]            -- ^@match /match_item/ , … , /match_item/ [/return_type/] with [[|] /equation/ | … | /equation/] end@
           | Qualid Qualid                                                       -- ^@/qualid/@
           | Sort Sort                                                           -- ^@/sort/@
-          | Num  Num                                                            -- ^@/num/@
+          | Num Num                                                             -- ^@/num/@
+          | String Text                                                         -- ^@/string/@ – extra (the value, not the source text)
           | Underscore                                                          -- ^@_@
           | Parens Term                                                         -- ^@( /term/ )@
           deriving (Eq, Ord, Show, Read, Typeable, Data)
@@ -492,6 +493,9 @@ instance Gallina Term where
   
   renderGallina' _ (Num num) =
     renderNum num
+  
+  renderGallina' _ (String str) =
+    renderString str
   
   renderGallina' _ Underscore =
     char '_'

@@ -1,4 +1,4 @@
-{-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE LambdaCase, FlexibleContexts #-}
 
 module HsToCoq.CLI (
   processFilesMain,
@@ -41,12 +41,17 @@ processArgs = do
   void $ setSessionDynFlags dflags
   pure (dflags, map unLoc files)
 
-convertDecls :: (Data a, GhcMonad m) => a -> m ()
-convertDecls lmod = convertTyClDecls (everythingOfType_ lmod) >>= liftIO . \case
-  [] -> putStrLn "(* No data type declarations to convert. *)"
-  ds -> do putStrLn "(* Converted data type declarations: *)"
-           traverse_ prettyPrint . intersperse line $
-             map ((<> line) . renderGallina) ds
+convertDecls :: (Data a, ConversionMonad m) => a -> m ()
+convertDecls lmod = do
+  let doConversion what convert =
+        convert (everythingOfType_ lmod) >>= liftIO . \case
+          [] -> putStrLn $ "(* No " ++ what ++ " to convert. *)"
+          ds -> do putStrLn $ "(* Converted " ++ what ++ ": *)"
+                   traverse_ prettyPrint . intersperse line $
+                     map ((<> line) . renderGallina) ds
+  doConversion "data type declarations" convertTyClDecls
+  liftIO $ putStrLn ""
+  doConversion "function declarations"  convertValDecls
 
 processFilesMain :: GhcMonad m => ([Located (HsModule RdrName)] -> m a) -> m ()
 processFilesMain f = traverse_ f =<< uncurry processFiles =<< processArgs

@@ -207,9 +207,6 @@ getFreeVars = execVariables . (freeVars :: FreeVars t => t -> Variables Ident ()
 class FreeVars t where
   freeVars :: (MonadVariables Ident d m, Monoid d) => t -> m ()
 
-instance FreeVars Num where
-  freeVars _ = pure ()
-
 instance FreeVars Term where
   freeVars (Forall xs t) =
     binding' xs $ freeVars t
@@ -283,8 +280,11 @@ instance FreeVars Term where
   freeVars (Sort sort) =
     freeVars sort -- Pro forma – there are none.
 
-  freeVars (Num num) =
-    freeVars num -- Pro forma – there are none.
+  freeVars (Num _num) =
+    pure () -- There are none.
+
+  freeVars (String _str) =
+    pure () -- There are none.
 
   freeVars Underscore =
     pure ()

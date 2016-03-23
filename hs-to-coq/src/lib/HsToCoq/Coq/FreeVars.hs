@@ -58,9 +58,11 @@ instance Binding Name where
   binding _ UnderscoreName = id
 
 instance Binding Binder where
-  binding f (Inferred x) getFVs =
+  binding f (Inferred ex x) getFVs = do
+    freeVars ex
     binding f x getFVs
-  binding f (Typed xs ty) getFVs = do
+  binding f (Typed ex xs ty) getFVs = do
+    freeVars ex
     freeVars ty
     foldr (binding f) getFVs xs
   binding f (BindLet x oty val) getFVs = do
@@ -297,6 +299,10 @@ instance FreeVars Arg where
   freeVars (NamedArg _x t) = freeVars t
     -- The name here is the name of a function parameter; it's not an occurrence
     -- of a Gallina-level variable.
+
+instance FreeVars Explicitness where
+  freeVars Explicit = pure ()
+  freeVars Implicit = pure ()
 
 instance FreeVars Qualid where
   freeVars = occurrence . toIdent where

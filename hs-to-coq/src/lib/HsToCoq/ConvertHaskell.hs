@@ -355,11 +355,11 @@ convertGRHS (GRHS _  _)    = conv_unsupported "guards"
 convertType :: ConversionMonad m => HsType RdrName -> m Term
 convertType (HsForAllTy explicitness _ tvs ctx ty) =
   case unLoc ctx of
-    [] -> do explicitTVs <- convertLHsTyVarBndrs tvs
+    [] -> do explicitTVs <- convertLHsTyVarBndrs Coq.Implicit tvs
              tyBody      <- convertLType ty
              let implicitTVs = case explicitness of
-                   Implicit -> map (Inferred . Ident) . S.toList $ getFreeVars tyBody
-                   _        -> []
+                   GHC.Implicit -> map (Inferred Coq.Implicit . Ident) . S.toList $ getFreeVars tyBody
+                   _            -> []
              pure . maybe tyBody (flip Forall tyBody)
                   . nonEmpty $ explicitTVs ++ implicitTVs
     _ -> conv_unsupported "type class contexts"
@@ -452,12 +452,12 @@ convertLType = convertType . unLoc
 
 type Constructor = (Ident, [Binder], Maybe Term)
 
-convertLHsTyVarBndrs :: ConversionMonad m => LHsTyVarBndrs RdrName -> m [Binder]
-convertLHsTyVarBndrs (HsQTvs kvs tvs) = do
-  kinds <- traverse (fmap (Inferred . Ident) . freeVar) kvs
+convertLHsTyVarBndrs :: ConversionMonad m => Explicitness -> LHsTyVarBndrs RdrName -> m [Binder]
+convertLHsTyVarBndrs ex (HsQTvs kvs tvs) = do
+  kinds <- traverse (fmap (Inferred ex . Ident) . freeVar) kvs
   types <- for (map unLoc tvs) $ \case
-             UserTyVar   tv   -> Inferred . Ident <$> freeVar tv
-             KindedTyVar tv k -> Typed <$> (pure . Ident <$> freeVar (unLoc tv)) <*> convertLType k
+             UserTyVar   tv   -> Inferred ex . Ident <$> freeVar tv
+             KindedTyVar tv k -> Typed ex <$> (pure . Ident <$> freeVar (unLoc tv)) <*> convertLType k
   pure $ kinds ++ types
 
 convertConDecl :: ConversionMonad m
@@ -468,7 +468,7 @@ convertConDecl curType (ConDecl lnames _explicit lqvs lcxt ldetails lres _doc _o
                name <- ghcPpr $ unLoc lname -- We use 'ghcPpr' because we munge the name here ourselves
                let name' = "Mk_" <> name
                name' <$ rename ExprNS name name'
-  params  <- convertLHsTyVarBndrs lqvs
+  params  <- convertLHsTyVarBndrs Coq.Implicit lqvs
   resTy   <- case lres of
                ResTyH98       -> pure curType
                ResTyGADT _ ty -> convertLType ty
@@ -489,7 +489,7 @@ convertDataDecl :: ConversionMonad m
                 -> m IndBody
 convertDataDecl name tvs defn = do
   coqName <- freeVar $ unLoc name
-  params  <- convertLHsTyVarBndrs tvs
+  params  <- convertLHsTyVarBndrs Coq.Explicit tvs
   let nameArgs = map $ PosArg . \case
                    Ident x        -> Var x
                    UnderscoreName -> Underscore
@@ -504,7 +504,7 @@ convertSynDecl :: ConversionMonad m
                => Located RdrName -> LHsTyVarBndrs RdrName -> LHsType RdrName
                -> m SynBody
 convertSynDecl name args def  = SynBody <$> ghcPpr (unLoc name)
-                                        <*> convertLHsTyVarBndrs args
+                                        <*> convertLHsTyVarBndrs Coq.Explicit args
                                         <*> pure Nothing
                                         <*> convertLType def
 
@@ -616,7 +616,7 @@ convertTypedBinding  hsTy FunBind{..}  = do
                      Equation (MultPattern args :| _) _ : _ -> length args
                      _                                      -> 0
       args       = NEL.fromList ["__arg_" <> T.pack (show n) <> "__" | n <- [1..argCount]]
-      argBinders = (Inferred . Ident) <$> args
+      argBinders = (Inferred Coq.Explicit . Ident) <$> args
 
       match = Coq.Match (args <&> \arg -> MatchItem (Var arg) Nothing Nothing) Nothing eqns
       defn | name `S.member` getFreeVars eqns = Fix . FixOne $ FixBody name argBinders Nothing Nothing match

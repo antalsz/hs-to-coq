@@ -84,7 +84,7 @@ evalConversion = flip evalStateT $ build
 
                    , typ "Bool"  ~> "bool"
                    , val "True"  ~> "true"
-                   , val "false" ~> "true"
+                   , val "False" ~> "false"
 
                    , typ "String" ~> "string"
 

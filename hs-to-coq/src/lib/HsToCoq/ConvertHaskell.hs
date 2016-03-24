@@ -683,5 +683,16 @@ convertValDecls args =
       
       getType FunBind{..} = M.lookup (unLoc fun_id) sigs
       getType _           = Nothing
+
+      axiomatize :: GhcMonad m => HsBind RdrName -> GhcException -> m [Sentence]
+      axiomatize FunBind{..} exn = do
+        name <- freeVar $ unLoc fun_id
+        pure [ CommentSentence . Comment
+                 $ "Translating `" <> name <> "' failed: " <> T.pack (show exn)
+             , AssumptionSentence . Assumption Axiom . UnparenthesizedAssums [name]
+                 $ Forall [Typed Coq.Implicit [Ident "A"] $ Sort Type] (Var "A") ]
+      axiomatize _ exn =
+        liftIO $ throwGhcExceptionIO exn
   
-  in traverse (\defn -> convertTypedBinding (getType defn) defn) defns
+  in fmap fold . for defns $ \defn ->
+       (pure <$> convertTypedBinding (getType defn) defn) `gcatch` axiomatize defn

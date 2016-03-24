@@ -1,4 +1,4 @@
-{-# LANGUAGE TupleSections, LambdaCase, RecordWildCards, PatternSynonyms,
+{-# LANGUAGE TupleSections, LambdaCase, RecordWildCards, PatternSynonyms, ViewPatterns,
              OverloadedLists, OverloadedStrings,
              ConstraintKinds, FlexibleContexts #-}
 
@@ -183,9 +183,11 @@ convertExpr (HsCase e mg) =
             <*> convertMatchGroup mg
 
 convertExpr (HsIf overloaded c t f) =
-  case overloaded of
-    Nothing -> If <$> convertLExpr c <*> pure Nothing <*> convertLExpr t <*> convertLExpr f
-    Just _  -> conv_unsupported "overloaded if-then-else"
+  let mkCoqIf = If <$> convertLExpr c <*> pure Nothing <*> convertLExpr t <*> convertLExpr f
+  in case overloaded of
+       Nothing                                                 -> mkCoqIf
+       Just (HsLit (HsString "" (unpackFS -> "noSyntaxExpr"))) -> mkCoqIf
+       Just _                                                  -> conv_unsupported "overloaded if-then-else"
 
 convertExpr (HsMultiIf _ _) =
   conv_unsupported "multi-way if"

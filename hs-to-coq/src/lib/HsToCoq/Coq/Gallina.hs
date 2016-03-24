@@ -40,6 +40,7 @@ module HsToCoq.Coq.Gallina (
   MultPattern(..),
   Pattern(..),
   OrPattern(..),
+  Comment(..),
   
   -- * The vernacular
   -- $Vernacular
@@ -240,6 +241,10 @@ data Pattern = ArgsPat Qualid (NonEmpty Pattern)                                
 newtype OrPattern = OrPattern (NonEmpty Pattern)                                -- ^@/pattern/ | … | /pattern/@
                   deriving (Eq, Ord, Show, Read, Typeable, Data)
 
+-- |@/comment/ ::=@ – extra
+newtype Comment = Comment Text                                                  -- ^@(* … *)@
+                deriving (Eq, Ord, Show, Read, Typeable, Data)
+
 -- $Vernacular
 -- <https://coq.inria.fr/distrib/current/refman/Reference-Manual003.html#Vernacular §1.3, \"The Vernacular\", in the Coq reference manual.>.
 --
@@ -252,6 +257,7 @@ data Sentence = AssumptionSentence Assumption                                   
               | FixpointSentence   Fixpoint                                     -- ^@/fixpoint/@
               | AssertionSentence  Assertion Proof                              -- ^@/assertion/ /proof/@
               | NotationSentence   Notation                                     -- ^@/notation/@ /(extra)/
+              | CommentSentence    Comment                                      -- ^@/comment/@ /(extra)/
               deriving (Eq, Ord, Show, Read, Typeable, Data)
 
 -- |@/assumption/ ::=@
@@ -616,6 +622,9 @@ instance Gallina Pattern where
 instance Gallina OrPattern where
   renderGallina' _ (OrPattern pats) = spacedSepPre "|" (align . renderGallina <$> pats)
 
+instance Gallina Comment where
+  renderGallina' _ (Comment com) = "(* " <> align (fillSep . map (text . T.replace "*)" "* )") $ T.words com) <> " *)"
+
 instance Gallina Sentence where
   renderGallina' p (AssumptionSentence ass)    = renderGallina' p ass
   renderGallina' p (DefinitionSentence def)    = renderGallina' p def
@@ -623,6 +632,7 @@ instance Gallina Sentence where
   renderGallina' p (FixpointSentence   fix)    = renderGallina' p fix
   renderGallina' p (AssertionSentence  ass pf) = renderGallina' p ass <!> renderGallina' p pf
   renderGallina' p (NotationSentence   not)    = renderGallina' p not
+  renderGallina' p (CommentSentence    com)    = renderGallina' p com
 
 instance Gallina Assumption where
   renderGallina' p (Assumption kw ass) = renderGallina' p kw <+> align (renderGallina ass) <> "."

@@ -142,6 +142,7 @@ instance Binding Sentence where
   binding f (FixpointSentence   fix)       = binding f fix
   binding f (AssertionSentence  assert pf) = binding f assert . (freeVars pf *>)
   binding f (NotationSentence   not)       = binding f not
+  binding _ (CommentSentence    com)       = (freeVars com *>)
 
 instance Binding Assumption where
   binding f (Assumption kwd assumptions) =
@@ -348,6 +349,9 @@ instance FreeVars ReturnType where
 
 instance FreeVars Equation where
   freeVars (Equation mpats body) = binding' mpats $ freeVars body
+
+instance FreeVars Comment where
+  freeVars (Comment _) = pure ()
 
 instance FreeVars AssumptionKeyword where
   freeVars Axiom      = pure ()

@@ -29,6 +29,7 @@ library
                      , HsToCoq.Util.Patterns
                      , HsToCoq.Util.Functor
                      , HsToCoq.Util.Monad
+                     , HsToCoq.Util.List
                      , HsToCoq.Util.Containers
                      , HsToCoq.Util.Generics
                      , HsToCoq.Util.TempFiles
@@ -50,7 +51,7 @@ library
                      , MultiParamTypeClasses, FunctionalDependencies, FlexibleContexts
                      , TypeSynonymInstances, FlexibleInstances, UndecidableInstances
                      , DeriveDataTypeable, StandaloneDeriving, GeneralizedNewtypeDeriving
-                     , PatternSynonyms, ViewPatterns
+                     , PatternSynonyms
                      , TemplateHaskell
   build-depends:       base             >=4.8 && <4.9
                      , template-haskell ==2.10.*

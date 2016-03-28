@@ -1,4 +1,4 @@
-{-# LANGUAGE TupleSections, LambdaCase, RecordWildCards, PatternSynonyms, ViewPatterns,
+{-# LANGUAGE TupleSections, LambdaCase, RecordWildCards, PatternSynonyms,
              OverloadedLists, OverloadedStrings,
              ConstraintKinds, FlexibleContexts #-}
 
@@ -22,6 +22,7 @@ module HsToCoq.ConvertHaskell (
   -- ** Case/match bodies
   convertMatchGroup, convertMatch,
   convertGRHSs, convertGRHS,
+  ConvertedGuard(..), convertGuards, convertGuard,
   -- ** Declaration groups
   DeclarationGroup(..), addDeclaration,
   groupConvDecls, groupTyClDecls, convertDeclarationGroup,
@@ -61,6 +62,7 @@ import Outputable (OutputableBndr)
 import Panic
 
 import HsToCoq.Util.Functor
+import HsToCoq.Util.List
 import HsToCoq.Util.Containers
 import HsToCoq.Util.Patterns
 import HsToCoq.Util.GHC
@@ -137,6 +139,11 @@ appList f xs = case nonEmpty xs of
 
 pattern CoqVarPat x = QualidPat (Bare x)
 
+-- Module-local
+is_noSyntaxExpr :: HsExpr id -> Bool
+is_noSyntaxExpr (HsLit (HsString "" str)) = str == fsLit "noSyntaxExpr"
+is_noSyntaxExpr _                         = False
+
 convertExpr :: ConversionMonad m => HsExpr RdrName -> m Term
 convertExpr (HsVar x) =
   Var <$> var ExprNS x
@@ -183,11 +190,9 @@ convertExpr (HsCase e mg) =
             <*> convertMatchGroup mg
 
 convertExpr (HsIf overloaded c t f) =
-  let mkCoqIf = If <$> convertLExpr c <*> pure Nothing <*> convertLExpr t <*> convertLExpr f
-  in case overloaded of
-       Nothing                                                 -> mkCoqIf
-       Just (HsLit (HsString "" (unpackFS -> "noSyntaxExpr"))) -> mkCoqIf
-       Just _                                                  -> conv_unsupported "overloaded if-then-else"
+  if maybe True is_noSyntaxExpr overloaded
+  then If <$> convertLExpr c <*> pure Nothing <*> convertLExpr t <*> convertLExpr f
+  else conv_unsupported "overloaded if-then-else"
 
 convertExpr (HsMultiIf _ _) =
   conv_unsupported "multi-way if"
@@ -362,26 +367,62 @@ convertLPat :: ConversionMonad m => LPat RdrName -> m Pattern
 convertLPat = convertPat . unLoc
 
 convertMatchGroup :: ConversionMonad m => MatchGroup RdrName (LHsExpr RdrName) -> m [Equation]
-convertMatchGroup (MG alts _ _ _) = traverse (convertMatch . unLoc) alts                                      
+convertMatchGroup (MG alts _ _ _) = traverse (convertMatch . unLoc) alts
 
 convertMatch :: ConversionMonad m => Match RdrName (LHsExpr RdrName) -> m Equation
 convertMatch GHC.Match{..} = do
   pats <- maybe (conv_unsupported "no-pattern case arms") pure . nonEmpty
             =<< traverse convertLPat m_pats
   oty  <- traverse convertLType m_type
-  rhs  <- convertGRHSs m_grhss >>= \case
-            [rhs] -> pure rhs
-            _     -> conv_unsupported "non-singleton match RHSs (i.e., with guards)"
+  rhs  <- convertGRHSs m_grhss
   pure . Equation [MultPattern pats] $ maybe id (flip HasType) oty rhs
 
-convertGRHSs :: ConversionMonad m => GRHSs RdrName (LHsExpr RdrName) -> m [Term]
-convertGRHSs GRHSs{..} = case grhssLocalBinds of
-                           EmptyLocalBinds -> traverse (convertGRHS . unLoc) grhssGRHSs
-                           _               -> conv_unsupported "`where' clauses"
+convertGRHSs :: ConversionMonad m => GRHSs RdrName (LHsExpr RdrName) -> m Term
+convertGRHSs GRHSs{..} =
+  case grhssLocalBinds of
+    EmptyLocalBinds -> convertGuards =<< traverse (convertGRHS . unLoc) grhssGRHSs
+    _               -> conv_unsupported "`where' clauses"
 
-convertGRHS :: ConversionMonad m => GRHS RdrName (LHsExpr RdrName) -> m Term
-convertGRHS (GRHS [] body) = convertLExpr body
-convertGRHS (GRHS _  _)    = conv_unsupported "guards"
+data ConvertedGuard = NoGuard
+                    | BoolGuard Term
+                    deriving (Eq, Ord, Show, Read)
+
+convertGuards :: ConversionMonad m => [(ConvertedGuard,Term)] -> m Term
+convertGuards []            = conv_unsupported "empty lists of guarded statements"
+convertGuards [(NoGuard,t)] = pure t
+convertGuards gts           = case traverse (\case (BoolGuard g,t) -> Just (g,t) ; _ -> Nothing) gts of
+  Just bts -> case assertUnsnoc bts of
+                (bts', (Var "true", lastTerm)) ->
+                  pure $ foldr (\(c,t) f -> If c Nothing t f) lastTerm bts'
+                _ ->
+                  conv_unsupported "possibly-incomplete guards"
+  Nothing  -> conv_unsupported "malformed guards"
+
+convertGuard :: ConversionMonad m => [GuardLStmt RdrName] -> m ConvertedGuard
+convertGuard [] = pure NoGuard
+convertGuard gs = BoolGuard . foldr1 (App2 $ Var "andb") <$> traverse toCond gs where
+  toCond (L _ (BodyStmt e _bind _guard _PlaceHolder)) =
+    is_True_expr e >>= \case
+      True  -> pure $ Var "true"
+      False -> convertLExpr e
+  toCond (L _ (LetStmt _)) =
+    conv_unsupported "`let' statements in guards"
+  toCond (L _ (BindStmt _ _ _ _)) =
+    conv_unsupported "pattern guards"
+  toCond _ =
+    conv_unsupported "impossibly fancy guards"
+
+convertGRHS :: ConversionMonad m => GRHS RdrName (LHsExpr RdrName) -> m (ConvertedGuard,Term)
+convertGRHS (GRHS gs rhs) = (,) <$> convertGuard gs <*> convertLExpr rhs
+
+-- Module-local
+-- Based on `DsGRHSs.isTrueLHsExpr'
+is_True_expr :: GhcMonad m => LHsExpr RdrName -> m Bool
+is_True_expr (L _ (HsVar x))         = ((||) <$> (== "otherwise") <*> (== "True")) <$> ghcPpr x
+is_True_expr (L _ (HsTick _ e))      = is_True_expr e
+is_True_expr (L _ (HsBinTick _ _ e)) = is_True_expr e
+is_True_expr (L _ (HsPar e))         = is_True_expr e
+is_True_expr le                      = liftIO (putStrLn $ "XXX _|_ " ++ gshow (unLoc le)) *> pure False
 
 convertType :: ConversionMonad m => HsType RdrName -> m Term
 convertType (HsForAllTy explicitness _ tvs ctx ty) =
@@ -651,27 +692,31 @@ convertTypedBinding _hsTy VarBind{}    = conv_unsupported "[internal] `VarBind'"
 convertTypedBinding _hsTy AbsBinds{}   = conv_unsupported "[internal?] `AbsBinds'"
 convertTypedBinding _hsTy PatSynBind{} = conv_unsupported "pattern synonym bindings"
 convertTypedBinding  hsTy FunBind{..}  = do
-  name  <- freeVar $ unLoc fun_id
-  coqTy <- traverse convertType hsTy
-  eqns  <- convertMatchGroup fun_matches
+  name <- freeVar $ unLoc fun_id
   
-  let argCount   = case eqns of
-                     Equation (MultPattern args :| _) _ : _ -> length args
-                     _                                      -> 0
-      args       = NEL.fromList ["__arg_" <> T.pack (show n) <> "__" | n <- [1..argCount]]
-      argBinders = (Inferred Coq.Explicit . Ident) <$> args
-
-      match = Coq.Match (args <&> \arg -> MatchItem (Var arg) Nothing Nothing) Nothing eqns
-      defn | name `S.member` getFreeVars eqns = Fix . FixOne $ FixBody name argBinders Nothing Nothing match
-           | otherwise                        = Fun argBinders match
-      
-      -- The @forall@ed arguments need to be brought into scope
-      peelForall (Forall tvs body) = first (NEL.toList tvs ++) $ peelForall body
-      peelForall ty                = ([], ty)
-
-      (tvs, mainTy) = maybe ([], Nothing) (second Just . peelForall) coqTy
+  (tvs, coqTy) <-
+    -- The @forall@ed arguments need to be brought into scope
+    let peelForall (Forall tvs body) = first (NEL.toList tvs ++) $ peelForall body
+        peelForall ty                = ([], ty)
+    in maybe ([], Nothing) (second Just . peelForall) <$> traverse convertType hsTy
   
-  pure . DefinitionSentence $ DefinitionDef Global name tvs mainTy defn
+  defn <-
+    if all (null . m_pats . unLoc) $ mg_alts fun_matches
+    then do
+      conv_unsupported "plain variable bindings"
+    else do
+      eqns <- convertMatchGroup fun_matches
+      let argCount   = case eqns of
+                         Equation (MultPattern args :| _) _ : _ -> length args
+                         _                                      -> 0
+          args       = NEL.fromList ["__arg_" <> T.pack (show n) <> "__" | n <- [1..argCount]]
+          argBinders = (Inferred Coq.Explicit . Ident) <$> args
+          match      = Coq.Match (args <&> \arg -> MatchItem (Var arg) Nothing Nothing) Nothing eqns
+      pure $ if name `S.member` getFreeVars eqns
+             then Fix . FixOne $ FixBody name argBinders Nothing Nothing match
+             else Fun argBinders match
+    
+  pure . DefinitionSentence $ DefinitionDef Global name tvs coqTy defn
 
 convertValDecls :: ConversionMonad m => [HsDecl RdrName] -> m [Sentence]
 convertValDecls args =
@@ -698,3 +743,43 @@ convertValDecls args =
   
   in fmap fold . for defns $ \defn ->
        (pure <$> convertTypedBinding (getType defn) defn) `gcatch` axiomatize defn
+
+{-
+
+`where' clauses         : 32
+plain variable bindings : 29
+record constructors     : 27
+binary operators        : 23
+guards                  : 15
+tuple patterns          : 6
+explicit lists          : 4
+`do' expressions        : 4
+lambdas                 : 4
+tuples                  : 4
+literals                : 3
+`let' expressions       : 2
+overloaded literals     : 2
+infix constructors      : 2
+record updates          : 1
+numeric patterns        : 1
+type class contexts     : 1
+
+`where' clauses         : tickishScopesLike, chooseOrphanAnchor, mkTyApps, collectBinders, collectTyAndValBinders, collectArgs, collectArgsTicks, collectAnnArgs, collectAnnArgsTicks, collectAnnBndrs, ppr_role, ppr_fun_co, coVarRole, mkAppCo, mkTransAppCo, mkHomoForAllCos_NoRefl, mkCoVarCo, mkAxInstCo, mkAxInstRHS, mkAxInstLHS, mkNthCoRole, mkHomoPhantomCo, toPhantomCo, promoteCoercion, instCoercion, instCoercions, mkCoCast, topNormaliseTypeX_maybe, ty_co_subst, liftCoSubstVarBndr, liftEnvSubst, coercionKind
+plain variable bindings : emptyRuleEnv, ruleName, ruleIdName, isLocalRule, needSaturated, unSaturatedOk, boringCxtOk, boringCxtNotOk, noUnfolding, evaldUnfolding, mkOtherCon, isRuntimeVar, isRuntimeArg, valBndrCount, valArgCount, coVarName, setCoVarUnique, setCoVarName, pprCoAxBranch, isReflexiveCo, mkRepReflCo, mkNomReflCo, mkCoVarCos, mkAxiomRuleCo, eqCoercion, swapLiftCoEnv, liftEnvSubstLeft, coercionKindRole, coercionRole
+record constructors     : tickishCounts, tickishScoped, tickishCanSplit, tickishIsCode, tickishPlace, notOrphan, isBuiltinRule, isAutoRule, ruleArity, ruleActivation, isValueUnfolding, isEvaldUnfolding, isConLikeUnfolding, isCheapUnfolding, isStableUnfolding, isClosedUnfolding, canUnfold, isTyCoArg, isTypeArg, pprCoAxiom, ppr_co_ax_branch, isReflCo, mkSymCo, mkTransCo, mkCoherenceCo, mkProofIrrelCo, composeSteppers
+binary operators        : tickishFloatable, ltAlt, cmpAltCon, mkConApp2, bindersOfBinds, coercionSize, ppr_co, ppr_axiom_rule_co, trans_co_list, ppr_forall_co, pprCoBndr, coVarKind, mkAxiomInstCo, mkSubCo, nthRole, castCoercionKind, eqCoercionX, liftCoSubstWith, mkLiftingContext, extendLiftingContext, isMappedByLC, seqCo, coercionKinds
+guards                  : mkNoCount, mkNoScope, varToCoreExpr, coVarTypes, coVarKindsTypesRole, mkTyConAppCo, mkForAllCo, mkUnivCo, mkKindCo, setNominalRole_maybe, mkPiCo, instNewTyCon_maybe, unwrapNewTypeStepper, liftCoSubst, liftCoSubstTyVar
+tuple patterns          : cmpAlt, deTagAlt, deAnnotate, deAnnotate', deAnnAlt, coercionType
+explicit lists          : bindersOf, rhssOfBind, mkFunCo, mkInstCo
+`do' expressions        : deTagBind, rhssOfAlts, decomposeCo, splitTyConAppCo_maybe
+lambdas                 : mkCoApps, mkVarApps, mkCoercionType, applyRoles
+tuples                  : splitAppCo_maybe, splitForAllCo_maybe, isReflCo_maybe, isReflexiveCo_maybe
+literals                : exprToType, mkHeteroCoercionType, downgradeRole
+`let' expressions       : mkForAllCos, liftCoSubstWithEx
+overloaded literals     : provSize, mkUnbranchedAxInstCo
+infix constructors      : flattenBinds, seqCos
+record updates          : setRuleIdName
+numeric patterns        : mkNthCo
+type class contexts     : tickishContains
+
+-}

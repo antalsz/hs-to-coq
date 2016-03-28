@@ -151,8 +151,12 @@ convertExpr (HsVar x) =
 convertExpr (HsIPVar _) =
   conv_unsupported "implicit parameters"
 
-convertExpr (HsOverLit _) =
-  conv_unsupported "overloaded literals"
+convertExpr (HsOverLit OverLit{..}) =
+  case ol_val of
+    HsIntegral   _src int | int >= 0  -> pure . Num $ fromInteger int
+                          | otherwise -> conv_unsupported "negative integer literals"
+    HsFractional _                    -> conv_unsupported "fractional literals"
+    HsIsString   _src str             -> pure . String . T.pack $ unpackFS str
 
 convertExpr (HsLit _) =
   conv_unsupported "literals"

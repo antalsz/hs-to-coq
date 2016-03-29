@@ -426,7 +426,7 @@ is_True_expr (L _ (HsVar x))         = ((||) <$> (== "otherwise") <*> (== "True"
 is_True_expr (L _ (HsTick _ e))      = is_True_expr e
 is_True_expr (L _ (HsBinTick _ _ e)) = is_True_expr e
 is_True_expr (L _ (HsPar e))         = is_True_expr e
-is_True_expr le                      = liftIO (putStrLn $ "XXX _|_ " ++ gshow (unLoc le)) *> pure False
+is_True_expr le                      = pure False
 
 convertType :: ConversionMonad m => HsType RdrName -> m Term
 convertType (HsForAllTy explicitness _ tvs ctx ty) =

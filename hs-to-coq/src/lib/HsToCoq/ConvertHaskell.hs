@@ -743,8 +743,11 @@ convertTypedBinding  hsTy FunBind{..}  = do
   
   defn <-
     if all (null . m_pats . unLoc) $ mg_alts fun_matches
-    then do
-      conv_unsupported "plain variable bindings"
+    then case mg_alts fun_matches of
+           [L _ (GHC.Match _ [] mty grhss)] ->
+             maybe (pure id) (fmap (flip HasType) . convertLType) mty <*> convertGRHSs grhss
+           _ ->
+             conv_unsupported "malformed multi-match variable definitions"
     else do
       (argBinders, match) <- convertFunction fun_matches
       pure $ if name `S.member` getFreeVars match

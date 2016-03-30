@@ -23,6 +23,10 @@ module HsToCoq.ConvertHaskell (
   convertMatchGroup, convertMatch,
   convertGRHSs, convertGRHS,
   ConvertedGuard(..), convertGuards, convertGuard,
+  -- ** Functions
+  convertFunction,
+  -- ** Literals
+  convertInteger, convertString, convertFastString,
   -- ** Declaration groups
   DeclarationGroup(..), addDeclaration,
   groupConvDecls, groupTyClDecls, convertDeclarationGroup,
@@ -144,6 +148,16 @@ is_noSyntaxExpr :: HsExpr id -> Bool
 is_noSyntaxExpr (HsLit (HsString "" str)) = str == fsLit "noSyntaxExpr"
 is_noSyntaxExpr _                         = False
 
+convertInteger :: MonadIO f => String -> Integer -> f Term
+convertInteger what int | int >= 0  = pure . Num $ fromInteger int
+                        | otherwise = conv_unsupported $ "negative " ++ what
+
+convertFastString :: FastString -> Term
+convertFastString = String . T.pack . unpackFS
+
+convertString :: String -> Term
+convertString = String . T.pack
+
 convertExpr :: ConversionMonad m => HsExpr RdrName -> m Term
 convertExpr (HsVar x) =
   Var <$> var ExprNS x
@@ -151,21 +165,34 @@ convertExpr (HsVar x) =
 convertExpr (HsIPVar _) =
   conv_unsupported "implicit parameters"
 
+-- FIXME actually handle overloading
 convertExpr (HsOverLit OverLit{..}) =
   case ol_val of
-    HsIntegral   _src int | int >= 0  -> pure . Num $ fromInteger int
-                          | otherwise -> conv_unsupported "negative integer literals"
-    HsFractional _                    -> conv_unsupported "fractional literals"
-    HsIsString   _src str             -> pure . String . T.pack $ unpackFS str
+    HsIntegral   _src int -> convertInteger "integer literals" int
+    HsFractional _        -> conv_unsupported "fractional literals"
+    HsIsString   _src str -> pure $ convertFastString str
 
-convertExpr (HsLit _) =
-  conv_unsupported "literals"
+convertExpr (HsLit lit) =
+  case lit of
+    HsChar       _ _       -> conv_unsupported "`Char' literals"
+    HsCharPrim   _ _       -> conv_unsupported "`Char#' literals"
+    HsString     _ fs      -> pure $ convertFastString fs
+    HsStringPrim _ _       -> conv_unsupported "`Addr#' literals"
+    HsInt        _ _       -> conv_unsupported "`Int' literals"
+    HsIntPrim    _ _       -> conv_unsupported "`Int#' literals"
+    HsWordPrim   _ _       -> conv_unsupported "`Word#' literals"
+    HsInt64Prim  _ _       -> conv_unsupported "`Int64#' literals"
+    HsWord64Prim _ _       -> conv_unsupported "`Word64#' literals"
+    HsInteger    _ int _ty -> convertInteger "`Integer' literals" int
+    HsRat        _ _       -> conv_unsupported "`Rational' literals"
+    HsFloatPrim  _         -> conv_unsupported "`Float#' literals"
+    HsDoublePrim _         -> conv_unsupported "`Double#' literals"
 
-convertExpr (HsLam _) =
-  conv_unsupported "lambdas"
+convertExpr (HsLam mg) =
+  uncurry Fun <$> convertFunction mg
 
-convertExpr (HsLamCase _ _) =
-  conv_unsupported "case lambdas"
+convertExpr (HsLamCase PlaceHolder mg) =
+  uncurry Fun <$> convertFunction mg
 
 convertExpr (HsApp e1 e2) =
   App1 <$> convertLExpr e1 <*> convertLExpr e2
@@ -381,6 +408,17 @@ convertMatch GHC.Match{..} = do
   rhs  <- convertGRHSs m_grhss
   pure . Equation [MultPattern pats] $ maybe id (flip HasType) oty rhs
 
+convertFunction :: ConversionMonad m => MatchGroup RdrName (LHsExpr RdrName) -> m (Binders, Term)
+convertFunction mg = do
+  eqns <- convertMatchGroup mg
+  let argCount   = case eqns of
+                     Equation (MultPattern args :| _) _ : _ -> length args
+                     _                                      -> 0
+      args       = NEL.fromList ["__arg_" <> T.pack (show n) <> "__" | n <- [1..argCount]]
+      argBinders = (Inferred Coq.Explicit . Ident) <$> args
+      match      = Coq.Match (args <&> \arg -> MatchItem (Var arg) Nothing Nothing) Nothing eqns
+  pure (argBinders, match)
+
 convertGRHSs :: ConversionMonad m => GRHSs RdrName (LHsExpr RdrName) -> m Term
 convertGRHSs GRHSs{..} =
   case grhssLocalBinds of
@@ -426,7 +464,7 @@ is_True_expr (L _ (HsVar x))         = ((||) <$> (== "otherwise") <*> (== "True"
 is_True_expr (L _ (HsTick _ e))      = is_True_expr e
 is_True_expr (L _ (HsBinTick _ _ e)) = is_True_expr e
 is_True_expr (L _ (HsPar e))         = is_True_expr e
-is_True_expr le                      = pure False
+is_True_expr _                       = pure False
 
 convertType :: ConversionMonad m => HsType RdrName -> m Term
 convertType (HsForAllTy explicitness _ tvs ctx ty) =
@@ -522,9 +560,8 @@ convertType (HsExplicitTupleTy _PlaceHolders tys) =
 
 convertType (HsTyLit lit) =
   case lit of
-    HsNumTy _src int | int >= 0  -> pure . Num $ fromInteger int
-                     | otherwise -> conv_unsupported "negative type-level integers"
-    HsStrTy _src str             -> pure . String . T.pack $ unpackFS str
+    HsNumTy _src int -> convertInteger "type-level integers" int
+    HsStrTy _src str -> pure $ convertFastString str
 
 convertType (HsWrapTy _ _) =
   conv_unsupported "[internal] wrapped types" 
@@ -709,14 +746,8 @@ convertTypedBinding  hsTy FunBind{..}  = do
     then do
       conv_unsupported "plain variable bindings"
     else do
-      eqns <- convertMatchGroup fun_matches
-      let argCount   = case eqns of
-                         Equation (MultPattern args :| _) _ : _ -> length args
-                         _                                      -> 0
-          args       = NEL.fromList ["__arg_" <> T.pack (show n) <> "__" | n <- [1..argCount]]
-          argBinders = (Inferred Coq.Explicit . Ident) <$> args
-          match      = Coq.Match (args <&> \arg -> MatchItem (Var arg) Nothing Nothing) Nothing eqns
-      pure $ if name `S.member` getFreeVars eqns
+      (argBinders, match) <- convertFunction fun_matches
+      pure $ if name `S.member` getFreeVars match
              then Fix . FixOne $ FixBody name argBinders Nothing Nothing match
              else Fun argBinders match
     

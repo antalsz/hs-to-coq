@@ -10,10 +10,14 @@ module HsToCoq.ConvertHaskell (
   rename, var, freeVar,
   -- *** Utility
   tryEscapeReservedName, escapeReservedNames,
+  -- ** Local bindings
+  convertLocalBinds,
   -- ** Declarations
   convertTyClDecls, convertValDecls,
   convertTyClDecl, convertDataDecl, convertSynDecl,
-  convertTypedBinding,
+  -- ** General bindings
+  convertTypedBindings, convertTypedBinding,
+  ConvertedDefinition(..), uncurryConvertedDefinition,
   -- ** Terms
   convertType, convertLType,
   convertExpr, convertLExpr,
@@ -61,6 +65,7 @@ import qualified Data.Set        as S
 import qualified Data.Map.Strict as M
 
 import GHC hiding (Name)
+import Bag
 import FastString
 import Outputable (OutputableBndr)
 import Panic
@@ -70,7 +75,7 @@ import HsToCoq.Util.List
 import HsToCoq.Util.Containers
 import HsToCoq.Util.Patterns
 import HsToCoq.Util.GHC
-import HsToCoq.Util.GHC.Exception ()
+import HsToCoq.Util.GHC.Exception
 import HsToCoq.Coq.Gallina
 import qualified HsToCoq.Coq.Gallina as Coq
 import HsToCoq.Coq.FreeVars
@@ -228,8 +233,8 @@ convertExpr (HsIf overloaded c t f) =
 convertExpr (HsMultiIf _ _) =
   conv_unsupported "multi-way if"
 
-convertExpr (HsLet _ _) =
-  conv_unsupported "`let' expressions"
+convertExpr (HsLet binds body) =
+  convertLocalBinds binds =<< convertLExpr body
 
 convertExpr (HsDo _ _ _) =
   conv_unsupported "`do' expressions"
@@ -397,6 +402,72 @@ convertPat (CoPat _ _ _) =
 convertLPat :: ConversionMonad m => LPat RdrName -> m Pattern
 convertLPat = convertPat . unLoc
 
+data ConvertedDefinition = ConvertedDefinition { convDefName :: !Ident
+                                               , convDefArgs :: ![Binder]
+                                               , convDefType :: !(Maybe Term)
+                                               , convDefBody :: !Term }
+                         deriving (Eq, Ord, Read, Show)
+
+uncurryConvertedDefinition :: (Ident -> [Binder] -> Maybe Term -> Term -> a) -> (ConvertedDefinition -> a)
+uncurryConvertedDefinition f ConvertedDefinition{..} = f convDefName convDefArgs convDefType convDefBody
+
+convertLocalBinds :: ConversionMonad m => HsLocalBinds RdrName -> Term -> m Term
+convertLocalBinds (HsValBinds (ValBindsIn binds sigs)) body =
+  foldr (uncurryConvertedDefinition Let) body
+    <$> convertTypedBindings (map unLoc . bagToList $ binds) (map unLoc sigs) pure Nothing
+convertLocalBinds (HsValBinds (ValBindsOut _ _)) _ =
+  conv_unsupported "post-renaming `ValBindsOut' bindings"
+convertLocalBinds (HsIPBinds _) _ =
+  conv_unsupported "local implicit parameter bindings"
+convertLocalBinds EmptyLocalBinds body =
+  pure body
+
+-- TODO mutual recursion :-(
+convertTypedBindings :: ConversionMonad m
+                     => [HsBind RdrName] -> [Sig RdrName]
+                     -> (ConvertedDefinition -> m a)
+                     -> Maybe (HsBind RdrName -> GhcException -> m a)
+                     -> m [a]
+convertTypedBindings defns allSigs build mhandler =
+  let sigs = M.fromList $ [(name,ty) | TypeSig lnames (L _ ty) PlaceHolder <- allSigs
+                                     , L _ name <- lnames ]
+      
+      getType FunBind{..} = M.lookup (unLoc fun_id) sigs
+      getType _           = Nothing
+
+      processed defn = maybe id (ghandle . ($ defn)) mhandler . (build =<<)
+      
+  in traverse (processed <*> (convertTypedBinding =<< getType)) defns
+
+convertTypedBinding :: ConversionMonad m => Maybe (HsType RdrName) -> HsBind RdrName -> m ConvertedDefinition
+convertTypedBinding _hsTy PatBind{}    = conv_unsupported "pattern bindings"
+convertTypedBinding _hsTy VarBind{}    = conv_unsupported "[internal] `VarBind'"
+convertTypedBinding _hsTy AbsBinds{}   = conv_unsupported "[internal?] `AbsBinds'"
+convertTypedBinding _hsTy PatSynBind{} = conv_unsupported "pattern synonym bindings"
+convertTypedBinding  hsTy FunBind{..}  = do
+  name <- freeVar $ unLoc fun_id
+  
+  (tvs, coqTy) <-
+    -- The @forall@ed arguments need to be brought into scope
+    let peelForall (Forall tvs body) = first (NEL.toList tvs ++) $ peelForall body
+        peelForall ty                = ([], ty)
+    in maybe ([], Nothing) (second Just . peelForall) <$> traverse convertType hsTy
+  
+  defn <-
+    if all (null . m_pats . unLoc) $ mg_alts fun_matches
+    then case mg_alts fun_matches of
+           [L _ (GHC.Match _ [] mty grhss)] ->
+             maybe (pure id) (fmap (flip HasType) . convertLType) mty <*> convertGRHSs grhss
+           _ ->
+             conv_unsupported "malformed multi-match variable definitions"
+    else do
+      (argBinders, match) <- convertFunction fun_matches
+      pure $ if name `S.member` getFreeVars match
+             then Fix . FixOne $ FixBody name argBinders Nothing Nothing match
+             else Fun argBinders match
+             
+  pure $ ConvertedDefinition name tvs coqTy defn
+
 convertMatchGroup :: ConversionMonad m => MatchGroup RdrName (LHsExpr RdrName) -> m [Equation]
 convertMatchGroup (MG alts _ _ _) = traverse (convertMatch . unLoc) alts
 
@@ -421,9 +492,8 @@ convertFunction mg = do
 
 convertGRHSs :: ConversionMonad m => GRHSs RdrName (LHsExpr RdrName) -> m Term
 convertGRHSs GRHSs{..} =
-  case grhssLocalBinds of
-    EmptyLocalBinds -> convertGuards =<< traverse (convertGRHS . unLoc) grhssGRHSs
-    _               -> conv_unsupported "`where' clauses"
+  convertLocalBinds grhssLocalBinds
+    =<< convertGuards =<< traverse (convertGRHS . unLoc) grhssGRHSs
 
 data ConvertedGuard = NoGuard
                     | BoolGuard Term
@@ -727,48 +797,16 @@ convertTyClDecls =   either conv_unsupported (pure . fold)
                  .   traverse convertDeclarationGroup
                  <=< groupTyClDecls
 
-convertTypedBinding :: ConversionMonad m => Maybe (HsType RdrName) -> HsBind RdrName -> m Sentence
-convertTypedBinding _hsTy PatBind{}    = conv_unsupported "pattern bindings"
-convertTypedBinding _hsTy VarBind{}    = conv_unsupported "[internal] `VarBind'"
-convertTypedBinding _hsTy AbsBinds{}   = conv_unsupported "[internal?] `AbsBinds'"
-convertTypedBinding _hsTy PatSynBind{} = conv_unsupported "pattern synonym bindings"
-convertTypedBinding  hsTy FunBind{..}  = do
-  name <- freeVar $ unLoc fun_id
-  
-  (tvs, coqTy) <-
-    -- The @forall@ed arguments need to be brought into scope
-    let peelForall (Forall tvs body) = first (NEL.toList tvs ++) $ peelForall body
-        peelForall ty                = ([], ty)
-    in maybe ([], Nothing) (second Just . peelForall) <$> traverse convertType hsTy
-  
-  defn <-
-    if all (null . m_pats . unLoc) $ mg_alts fun_matches
-    then case mg_alts fun_matches of
-           [L _ (GHC.Match _ [] mty grhss)] ->
-             maybe (pure id) (fmap (flip HasType) . convertLType) mty <*> convertGRHSs grhss
-           _ ->
-             conv_unsupported "malformed multi-match variable definitions"
-    else do
-      (argBinders, match) <- convertFunction fun_matches
-      pure $ if name `S.member` getFreeVars match
-             then Fix . FixOne $ FixBody name argBinders Nothing Nothing match
-             else Fun argBinders match
-    
-  pure . DefinitionSentence $ DefinitionDef Global name tvs coqTy defn
-
 convertValDecls :: ConversionMonad m => [HsDecl RdrName] -> m [Sentence]
 convertValDecls args =
-  let (sigs, defns) = first (M.fromList . concat) . partitionEithers . flip mapMaybe args $ \case
-                        SigD (TypeSig lnames lty PlaceHolder) ->
-                          Just $ Left [(name, ty) | let ty = unLoc lty, name <- map unLoc lnames]
+  let (defns, sigs) = partitionEithers . flip mapMaybe args $ \case
                         ValD def ->
-                          Just $ Right def
+                          Just $ Left def
+                        SigD sig@(TypeSig _ _ _) ->
+                          Just $ Right sig
                         _ ->
                           Nothing
       
-      getType FunBind{..} = M.lookup (unLoc fun_id) sigs
-      getType _           = Nothing
-
       axiomatize :: GhcMonad m => HsBind RdrName -> GhcException -> m [Sentence]
       axiomatize FunBind{..} exn = do
         name <- freeVar $ unLoc fun_id
@@ -778,9 +816,9 @@ convertValDecls args =
                  $ Forall [Typed Coq.Implicit [Ident "A"] $ Sort Type] (Var "A") ]
       axiomatize _ exn =
         liftIO $ throwGhcExceptionIO exn
-  
-  in fmap fold . for defns $ \defn ->
-       (pure <$> convertTypedBinding (getType defn) defn) `gcatch` axiomatize defn
+  in fold <$> convertTypedBindings defns sigs
+                                   (pure . pure . DefinitionSentence . uncurryConvertedDefinition (DefinitionDef Global))
+                                   (Just axiomatize)
 
 {-
 

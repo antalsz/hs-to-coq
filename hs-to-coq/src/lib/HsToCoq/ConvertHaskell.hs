@@ -399,7 +399,7 @@ convertPat (LitPat lit) =
     HsFloatPrim  _         -> conv_unsupported "`Float#' literal patterns"
     HsDoublePrim _         -> conv_unsupported "`Double#' literal patterns"
 
-convertPat (NPat (L _ OverLit{..}) _negate _eq) = -- And stirngs
+convertPat (NPat (L _ OverLit{..}) _negate _eq) = -- And strings
   case ol_val of
     HsIntegral   _src int -> NumPat <$> convertInteger "integer literal patterns" int
     HsFractional _        -> conv_unsupported "fractional literal patterns"

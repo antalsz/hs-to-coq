@@ -839,41 +839,17 @@ convertValDecls args =
                                    (Just axiomatize)
 
 {-
-
-`where' clauses         : 32
-plain variable bindings : 29
-record constructors     : 27
-binary operators        : 23
-guards                  : 15
-tuple patterns          : 6
-explicit lists          : 4
-`do' expressions        : 4
-lambdas                 : 4
-tuples                  : 4
-literals                : 3
-`let' expressions       : 2
-overloaded literals     : 2
-infix constructors      : 2
-record updates          : 1
-numeric patterns        : 1
-type class contexts     : 1
-
-`where' clauses         : tickishScopesLike, chooseOrphanAnchor, mkTyApps, collectBinders, collectTyAndValBinders, collectArgs, collectArgsTicks, collectAnnArgs, collectAnnArgsTicks, collectAnnBndrs, ppr_role, ppr_fun_co, coVarRole, mkAppCo, mkTransAppCo, mkHomoForAllCos_NoRefl, mkCoVarCo, mkAxInstCo, mkAxInstRHS, mkAxInstLHS, mkNthCoRole, mkHomoPhantomCo, toPhantomCo, promoteCoercion, instCoercion, instCoercions, mkCoCast, topNormaliseTypeX_maybe, ty_co_subst, liftCoSubstVarBndr, liftEnvSubst, coercionKind
-plain variable bindings : emptyRuleEnv, ruleName, ruleIdName, isLocalRule, needSaturated, unSaturatedOk, boringCxtOk, boringCxtNotOk, noUnfolding, evaldUnfolding, mkOtherCon, isRuntimeVar, isRuntimeArg, valBndrCount, valArgCount, coVarName, setCoVarUnique, setCoVarName, pprCoAxBranch, isReflexiveCo, mkRepReflCo, mkNomReflCo, mkCoVarCos, mkAxiomRuleCo, eqCoercion, swapLiftCoEnv, liftEnvSubstLeft, coercionKindRole, coercionRole
-record constructors     : tickishCounts, tickishScoped, tickishCanSplit, tickishIsCode, tickishPlace, notOrphan, isBuiltinRule, isAutoRule, ruleArity, ruleActivation, isValueUnfolding, isEvaldUnfolding, isConLikeUnfolding, isCheapUnfolding, isStableUnfolding, isClosedUnfolding, canUnfold, isTyCoArg, isTypeArg, pprCoAxiom, ppr_co_ax_branch, isReflCo, mkSymCo, mkTransCo, mkCoherenceCo, mkProofIrrelCo, composeSteppers
-binary operators        : tickishFloatable, ltAlt, cmpAltCon, mkConApp2, bindersOfBinds, coercionSize, ppr_co, ppr_axiom_rule_co, trans_co_list, ppr_forall_co, pprCoBndr, coVarKind, mkAxiomInstCo, mkSubCo, nthRole, castCoercionKind, eqCoercionX, liftCoSubstWith, mkLiftingContext, extendLiftingContext, isMappedByLC, seqCo, coercionKinds
-guards                  : mkNoCount, mkNoScope, varToCoreExpr, coVarTypes, coVarKindsTypesRole, mkTyConAppCo, mkForAllCo, mkUnivCo, mkKindCo, setNominalRole_maybe, mkPiCo, instNewTyCon_maybe, unwrapNewTypeStepper, liftCoSubst, liftCoSubstTyVar
-tuple patterns          : cmpAlt, deTagAlt, deAnnotate, deAnnotate', deAnnAlt, coercionType
-explicit lists          : bindersOf, rhssOfBind, mkFunCo, mkInstCo
-`do' expressions        : deTagBind, rhssOfAlts, decomposeCo, splitTyConAppCo_maybe
-lambdas                 : mkCoApps, mkVarApps, mkCoercionType, applyRoles
-tuples                  : splitAppCo_maybe, splitForAllCo_maybe, isReflCo_maybe, isReflexiveCo_maybe
-literals                : exprToType, mkHeteroCoercionType, downgradeRole
-`let' expressions       : mkForAllCos, liftCoSubstWithEx
-overloaded literals     : provSize, mkUnbranchedAxInstCo
-infix constructors      : flattenBinds, seqCos
-record updates          : setRuleIdName
-numeric patterns        : mkNthCo
-type class contexts     : tickishContains
-
+  51 binary operators
+  32 record constructor patterns
+  13 pattern guards
+  10 tuples
+   9 tuple patterns
+   6 explicit lists
+   4 `do' expressions
+   3 infix constructor patterns
+   2 possibly-incomplete guards
+   2 pattern bindings
+   1 type class contexts
+   1 record updates
+   1 list patterns
 -}

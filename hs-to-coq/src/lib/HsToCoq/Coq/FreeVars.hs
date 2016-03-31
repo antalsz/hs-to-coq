@@ -124,6 +124,9 @@ instance Binding Pattern where
   binding _ (NumPat _num) =
     id
   
+  binding _ (StringPat _str) =
+    id
+  
   binding f (OrPats ors) =
     binding f ors
     -- We don't check that all the or-patterns bind the same variables

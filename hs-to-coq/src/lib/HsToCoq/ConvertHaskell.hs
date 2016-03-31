@@ -43,6 +43,8 @@ module HsToCoq.ConvertHaskell (
   pattern CoqVarPat
   ) where
 
+import Prelude hiding (Num)
+
 import Data.Semigroup ((<>))
 import Data.Monoid hiding ((<>))
 import Data.Bifunctor
@@ -66,16 +68,16 @@ import qualified Data.Map.Strict as M
 
 import GHC hiding (Name)
 import Bag
-import FastString
+import HsToCoq.Util.GHC.FastString
 import Outputable (OutputableBndr)
 import Panic
+import HsToCoq.Util.GHC.Exception
 
 import HsToCoq.Util.Functor
 import HsToCoq.Util.List
 import HsToCoq.Util.Containers
 import HsToCoq.Util.Patterns
 import HsToCoq.Util.GHC
-import HsToCoq.Util.GHC.Exception
 import HsToCoq.Coq.Gallina
 import qualified HsToCoq.Coq.Gallina as Coq
 import HsToCoq.Coq.FreeVars
@@ -153,8 +155,8 @@ is_noSyntaxExpr :: HsExpr id -> Bool
 is_noSyntaxExpr (HsLit (HsString "" str)) = str == fsLit "noSyntaxExpr"
 is_noSyntaxExpr _                         = False
 
-convertInteger :: MonadIO f => String -> Integer -> f Term
-convertInteger what int | int >= 0  = pure . Num $ fromInteger int
+convertInteger :: MonadIO f => String -> Integer -> f Num
+convertInteger what int | int >= 0  = pure $ fromInteger int
                         | otherwise = conv_unsupported $ "negative " ++ what
 
 convertFastString :: FastString -> Term
@@ -173,22 +175,22 @@ convertExpr (HsIPVar _) =
 -- FIXME actually handle overloading
 convertExpr (HsOverLit OverLit{..}) =
   case ol_val of
-    HsIntegral   _src int -> convertInteger "integer literals" int
+    HsIntegral   _src int -> Num <$> convertInteger "integer literals" int
     HsFractional _        -> conv_unsupported "fractional literals"
-    HsIsString   _src str -> pure $ convertFastString str
+    HsIsString   _src str -> pure . String $ fsToText str
 
 convertExpr (HsLit lit) =
   case lit of
     HsChar       _ _       -> conv_unsupported "`Char' literals"
     HsCharPrim   _ _       -> conv_unsupported "`Char#' literals"
-    HsString     _ fs      -> pure $ convertFastString fs
+    HsString     _ fs      -> pure . String $ fsToText fs
     HsStringPrim _ _       -> conv_unsupported "`Addr#' literals"
     HsInt        _ _       -> conv_unsupported "`Int' literals"
     HsIntPrim    _ _       -> conv_unsupported "`Int#' literals"
     HsWordPrim   _ _       -> conv_unsupported "`Word#' literals"
     HsInt64Prim  _ _       -> conv_unsupported "`Int64#' literals"
     HsWord64Prim _ _       -> conv_unsupported "`Word64#' literals"
-    HsInteger    _ int _ty -> convertInteger "`Integer' literals" int
+    HsInteger    _ int _ty -> Num <$> convertInteger "`Integer' literals" int
     HsRat        _ _       -> conv_unsupported "`Rational' literals"
     HsFloatPrim  _         -> conv_unsupported "`Float#' literals"
     HsDoublePrim _         -> conv_unsupported "`Double#' literals"
@@ -365,9 +367,9 @@ convertPat (ConPatIn con conVariety) =
         Just args -> ArgsPat conVar <$> traverse convertLPat args
         Nothing   -> pure $ QualidPat conVar
     RecCon    _    ->
-      conv_unsupported "record constructors"
+      conv_unsupported "record constructor patterns"
     InfixCon  _ _  ->
-      conv_unsupported "infix constructors"
+      conv_unsupported "infix constructor patterns"
 
 convertPat (ConPatOut{}) =
   conv_unsupported "[internal?] `ConPatOut' constructor"
@@ -381,11 +383,27 @@ convertPat (SplicePat _) =
 convertPat (QuasiQuotePat _) =
   conv_unsupported "pattern quasiquoters"
 
-convertPat (LitPat _) =
-  conv_unsupported "literal patterns"
+convertPat (LitPat lit) =
+  case lit of
+    HsChar       _ _       -> conv_unsupported "`Char' literal patterns"
+    HsCharPrim   _ _       -> conv_unsupported "`Char#' literal patterns"
+    HsString     _ fs      -> pure . StringPat $ fsToText fs
+    HsStringPrim _ _       -> conv_unsupported "`Addr#' literal patterns"
+    HsInt        _ _       -> conv_unsupported "`Int' literal patterns"
+    HsIntPrim    _ _       -> conv_unsupported "`Int#' literal patterns"
+    HsWordPrim   _ _       -> conv_unsupported "`Word#' literal patterns"
+    HsInt64Prim  _ _       -> conv_unsupported "`Int64#' literal patterns"
+    HsWord64Prim _ _       -> conv_unsupported "`Word64#' literal patterns"
+    HsInteger    _ int _ty -> NumPat <$> convertInteger "`Integer' literal patterns" int
+    HsRat        _ _       -> conv_unsupported "`Rational' literal patterns"
+    HsFloatPrim  _         -> conv_unsupported "`Float#' literal patterns"
+    HsDoublePrim _         -> conv_unsupported "`Double#' literal patterns"
 
-convertPat (NPat _ _ _) =
-  conv_unsupported "numeric patterns"
+convertPat (NPat (L _ OverLit{..}) _negate _eq) = -- And stirngs
+  case ol_val of
+    HsIntegral   _src int -> NumPat <$> convertInteger "integer literal patterns" int
+    HsFractional _        -> conv_unsupported "fractional literal patterns"
+    HsIsString   _src str -> pure . StringPat $ fsToText str
 
 convertPat (NPlusKPat _ _ _ _) =
   conv_unsupported "n+k-patterns"
@@ -630,7 +648,7 @@ convertType (HsExplicitTupleTy _PlaceHolders tys) =
 
 convertType (HsTyLit lit) =
   case lit of
-    HsNumTy _src int -> convertInteger "type-level integers" int
+    HsNumTy _src int -> Num <$> convertInteger "type-level integers" int
     HsStrTy _src str -> pure $ convertFastString str
 
 convertType (HsWrapTy _ _) =

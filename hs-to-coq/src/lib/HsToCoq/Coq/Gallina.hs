@@ -144,7 +144,7 @@ data Term = Forall Binders Term                                                 
           | Qualid Qualid                                                       -- ^@/qualid/@
           | Sort Sort                                                           -- ^@/sort/@
           | Num Num                                                             -- ^@/num/@
-          | String Text                                                         -- ^@/string/@ – extra (the value, not the source text)
+          | String Text                                                         -- ^@/string/@ – extra (holds the value, not the source text)
           | Underscore                                                          -- ^@_@
           | Parens Term                                                         -- ^@( /term/ )@
           deriving (Eq, Ord, Show, Read, Typeable, Data)
@@ -234,6 +234,7 @@ data Pattern = ArgsPat Qualid (NonEmpty Pattern)                                
              | QualidPat Qualid                                                 -- ^@/qualid/@
              | UnderscorePat                                                    -- ^@_@
              | NumPat Num                                                       -- ^@/num/@
+             | StringPat Text                                                   -- ^@/string/@ – extra (holds the value, not the source text)
              | OrPats (NonEmpty OrPattern)                                      -- ^@( /or_pattern/ , … , /or_pattern/ )@
              deriving (Eq, Ord, Show, Read, Typeable, Data)
 
@@ -615,6 +616,9 @@ instance Gallina Pattern where
   
   renderGallina' _ (NumPat n) =
     renderNum n
+  
+  renderGallina' _ (StringPat s) =
+    renderString s
   
   renderGallina' _ (OrPats orPats) =
     parens . align . group $ sepWith (<>) (</>) "," (renderGallina <$> orPats)

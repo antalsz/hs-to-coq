@@ -7,7 +7,7 @@ module HsToCoq.ConvertHaskell (
   -- ** Types
   ConversionMonad, Renaming, HsNamespace(..), evalConversion,
   -- *** Variable renaming
-  rename, var, freeVar,
+  rename, var, freeVar, freeVar',
   -- *** Utility
   tryEscapeReservedName, escapeReservedNames,
   -- ** Local bindings
@@ -68,7 +68,9 @@ import qualified Data.Map.Strict as M
 
 import GHC hiding (Name)
 import Bag
+import Encoding (zEncodeString)
 import HsToCoq.Util.GHC.FastString
+import HsToCoq.Util.GHC.RdrName
 import Outputable (OutputableBndr)
 import Panic
 import HsToCoq.Util.GHC.Exception
@@ -82,7 +84,7 @@ import HsToCoq.Coq.Gallina
 import qualified HsToCoq.Coq.Gallina as Coq
 import HsToCoq.Coq.FreeVars
 
-import Data.Generics
+import Data.Generics hiding (Fixity(..))
 
 data HsNamespace = ExprNS | TypeNS
                  deriving (Eq, Ord, Show, Read, Enum, Bounded)
@@ -127,8 +129,11 @@ escapeReservedNames x = fromMaybe x . getFirst
                       . foldMap (First . flip tryEscapeReservedName x)
                       $ T.words "Set Type Prop fun fix forall"
 
+freeVar' :: Ident -> Ident
+freeVar' = escapeReservedNames
+
 freeVar :: (GhcMonad m, OutputableBndr name) => name -> m Ident
-freeVar = fmap escapeReservedNames . ghcPpr
+freeVar = fmap freeVar' . ghcPpr
                                         
 var :: (ConversionMonad m, OutputableBndr name) => HsNamespace -> name -> m Ident
 var ns x = do
@@ -204,8 +209,11 @@ convertExpr (HsLamCase PlaceHolder mg) =
 convertExpr (HsApp e1 e2) =
   App1 <$> convertLExpr e1 <*> convertLExpr e2
 
-convertExpr (OpApp _ _ _ _) =
-  conv_unsupported "binary operators"
+convertExpr (OpApp l opE PlaceHolder r) =
+  case opE of
+    L _ (HsVar op) | isOperator op -> Infix <$> convertLExpr l <*> var ExprNS op <*> convertLExpr r
+                   | otherwise     -> App2  <$> (Var <$> var ExprNS op) <*> convertLExpr l <*> convertLExpr r
+    _ -> conv_unsupported "non-variable infix operators"
 
 convertExpr (NegApp _ _) =
   conv_unsupported "negation"
@@ -213,11 +221,11 @@ convertExpr (NegApp _ _) =
 convertExpr (HsPar e) =
   Parens <$> convertLExpr e
 
-convertExpr (SectionL _ _) =
-  conv_unsupported "(left) operator sections"
+convertExpr (SectionL l opE) =
+  convert_section (Just l) opE Nothing
 
-convertExpr (SectionR _ _) =
-  conv_unsupported "(right) operator sections"
+convertExpr (SectionR opE r) =
+  convert_section Nothing opE (Just r)
 
 convertExpr (ExplicitTuple _ _) =
   conv_unsupported "tuples"
@@ -331,6 +339,17 @@ convertExpr (HsUnboundVar x) =
 convertLExpr :: ConversionMonad m => LHsExpr RdrName -> m Term
 convertLExpr = convertExpr . unLoc
 
+-- Module-local
+convert_section :: (ConversionMonad m) => Maybe (LHsExpr RdrName) -> LHsExpr RdrName -> Maybe (LHsExpr RdrName) -> m Term
+convert_section  ml opE mr =
+  let arg = "__arg__"
+      
+      hs  = HsVar . mkVarUnqual . fsLit
+      coq = Inferred Coq.Explicit . Ident . T.pack
+      
+      orArg = fromMaybe (noLoc $ hs arg)
+  in Fun [coq arg] <$> convertExpr (OpApp (orArg ml) opE PlaceHolder (orArg mr))
+
 convertPat :: ConversionMonad m => Pat RdrName -> m Pattern
 convertPat (WildPat PlaceHolder) =
   pure UnderscorePat
@@ -420,10 +439,11 @@ convertPat (CoPat _ _ _) =
 convertLPat :: ConversionMonad m => LPat RdrName -> m Pattern
 convertLPat = convertPat . unLoc
 
-data ConvertedDefinition = ConvertedDefinition { convDefName :: !Ident
-                                               , convDefArgs :: ![Binder]
-                                               , convDefType :: !(Maybe Term)
-                                               , convDefBody :: !Term }
+data ConvertedDefinition = ConvertedDefinition { convDefName  :: !Ident
+                                               , convDefArgs  :: ![Binder]
+                                               , convDefType  :: !(Maybe Term)
+                                               , convDefBody  :: !Term
+                                               , convDefInfix :: !(Maybe Op) }
                          deriving (Eq, Ord, Read, Show)
 
 uncurryConvertedDefinition :: (Ident -> [Binder] -> Maybe Term -> Term -> a) -> (ConvertedDefinition -> a)
@@ -463,7 +483,14 @@ convertTypedBinding _hsTy VarBind{}    = conv_unsupported "[internal] `VarBind'"
 convertTypedBinding _hsTy AbsBinds{}   = conv_unsupported "[internal?] `AbsBinds'"
 convertTypedBinding _hsTy PatSynBind{} = conv_unsupported "pattern synonym bindings"
 convertTypedBinding  hsTy FunBind{..}  = do
-  name <- freeVar $ unLoc fun_id
+  (name, opName) <- let hsName = unLoc fun_id
+                        
+                        opToPrefix op = "__op_" ++ zEncodeString op ++ "__"
+                        
+                        bothNames | isOperator hsName = T.pack . opToPrefix . T.unpack &&& Just
+                                  | otherwise         = id                             &&& const Nothing
+                    
+                    in bimap freeVar' (fmap freeVar') . bothNames <$> ghcPpr hsName
   
   (tvs, coqTy) <-
     -- The @forall@ed arguments need to be brought into scope
@@ -480,11 +507,12 @@ convertTypedBinding  hsTy FunBind{..}  = do
              conv_unsupported "malformed multi-match variable definitions"
     else do
       (argBinders, match) <- convertFunction fun_matches
-      pure $ if name `S.member` getFreeVars match
-             then Fix . FixOne $ FixBody name argBinders Nothing Nothing match
-             else Fun argBinders match
-             
-  pure $ ConvertedDefinition name tvs coqTy defn
+      pure $ let bodyVars = getFreeVars match
+             in if name `S.member` bodyVars || maybe False (`S.member` bodyVars) opName
+                then Fix . FixOne $ FixBody name argBinders Nothing Nothing match -- TODO recursion and binary operators
+                else Fun argBinders match
+  
+  pure $ ConvertedDefinition name tvs coqTy defn opName
 
 convertMatchGroup :: ConversionMonad m => MatchGroup RdrName (LHsExpr RdrName) -> m [Equation]
 convertMatchGroup (MG alts _ _ _) = traverse (convertMatch . unLoc) alts

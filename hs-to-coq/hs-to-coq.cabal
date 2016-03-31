@@ -25,6 +25,7 @@ library
                      , HsToCoq.Util.GHC
                      , HsToCoq.Util.GHC.FastString
                      , HsToCoq.Util.GHC.DynFlags
+                     , HsToCoq.Util.GHC.RdrName
                      , HsToCoq.Util.GHC.Exception
                      , HsToCoq.Util.GHC.Monad
                      , HsToCoq.Util.Patterns

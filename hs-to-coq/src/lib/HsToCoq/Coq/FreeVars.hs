@@ -187,6 +187,9 @@ instance Binding Assertion where
 instance Binding Notation where
   binding f (ReservedNotationIdent x) = binding f x
     -- We treat reserved single-identifier notations as bound variables
+  binding f (InfixDefinition op defn oassoc level) =
+    (freeVars defn *> freeVars oassoc *> freeVars level *>) . binding f op
+    -- We treat infix operators as bound variables
 
 -- TODO Not all sequences of bindings should be telescopes!
 bindingTelescope :: (Binding b, MonadVariables Ident d m, Monoid d, Foldable f)
@@ -271,6 +274,9 @@ instance FreeVars Term where
 
   freeVars (ExplicitApp qid xs) =
     freeVars qid *> freeVars xs
+
+  freeVars (Infix l op r) =
+    freeVars l *> occurrence op *> freeVars r
   
   freeVars (InScope t _scope) =
     freeVars t
@@ -392,6 +398,14 @@ instance FreeVars Proof where
   freeVars (ProofQed      _tactics) = pure ()
   freeVars (ProofDefined  _tactics) = pure ()
   freeVars (ProofAdmitted _tactics) = pure ()
+
+instance FreeVars Associativity where
+  freeVars LeftAssociativity  = pure ()
+  freeVars RightAssociativity = pure ()
+  freeVars NoAssociativity    = pure ()
+
+instance FreeVars Level where
+  freeVars (Level _) = pure ()
 
 instance FreeVars NotationBinding where
   freeVars (NotationIdentBinding _x def) = freeVars def -- The notation itself is already in scope

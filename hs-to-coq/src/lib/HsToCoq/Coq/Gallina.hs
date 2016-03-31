@@ -17,6 +17,7 @@ module HsToCoq.Coq.Gallina (
   Ident,
   AccessIdent,
   Num,
+  Op,
   
   -- * Terms
   -- $Terms
@@ -57,13 +58,15 @@ module HsToCoq.Coq.Gallina (
   AssertionKeyword(..),
   Tactics,
   Proof(..),
+  Associativity(..),
+  Level(..),
   Notation(..),
   NotationBinding(..),
 
   -- * Formatting
   renderGallina,
   Gallina(..),
-  renderIdent, renderAccessIdent, renderNum, renderString,
+  renderIdent, renderAccessIdent, renderNum, renderString, renderOp,
   renderLocality,
 
   -- * General utility functions
@@ -83,7 +86,7 @@ import Numeric.Natural
 import Data.List.NonEmpty (NonEmpty(), (<|), nonEmpty)
 
 import Data.Typeable
-import Data.Data
+import Data.Data (Data(..))
 
 import HsToCoq.PrettyPrint
 import qualified Language.Haskell.TH as TH
@@ -100,6 +103,9 @@ type Ident       = Text
 type AccessIdent = Ident
 -- |@/num/ ::= /digit/ … /digit/@
 type Num         = Natural
+
+-- |@/op/ ::= /symbol/ [/symbol/ … /symbol/] – Extra
+type Op          = Text
 
 -- $Terms
 -- <https://coq.inria.fr/distrib/current/refman/Reference-Manual003.html#term §1.2, \"Terms\", in the Coq reference manual.>
@@ -139,6 +145,7 @@ data Term = Forall Binders Term                                                 
           | Arrow Term Term                                                     -- ^@/term/ -> /term/@
           | App Term (NonEmpty Arg)                                             -- ^@/term/ /arg/ … /arg/@
           | ExplicitApp Qualid [Term]                                           -- ^@\@ /qualid/ [/term/ … /term/]@
+          | Infix Term Op Term                                                  -- ^@/term/ /op/ /term/@ – extra
           | InScope Term Ident                                                  -- ^@/term/ % /ident/@
           | Match (NonEmpty MatchItem) (Maybe ReturnType) [Equation]            -- ^@match /match_item/ , … , /match_item/ [/return_type/] with [[|] /equation/ | … | /equation/] end@
           | Qualid Qualid                                                       -- ^@/qualid/@
@@ -330,8 +337,19 @@ data Proof = ProofQed      Tactics                                              
            | ProofAdmitted Tactics                                              -- ^@Proof . … Admitted .@
            deriving (Eq, Ord, Show, Read, Typeable, Data)
 
+-- |@/associativity/ ::=@ – extra
+data Associativity = LeftAssociativity                                          -- ^@left@
+                   | RightAssociativity                                         -- ^@right@
+                   | NoAssociativity                                            -- ^@no@
+                   deriving (Eq, Ord, Show, Read, Typeable, Data)
+
+-- |@/level/ ::=@ – extra
+newtype Level = Level Num                                                       -- ^@at level /num/@
+              deriving (Eq, Ord, Show, Read, Typeable, Data)
+
 -- |@/notation/ ::=@ /(extra)/
 data Notation = ReservedNotationIdent Ident                                     -- ^@Reserved Notation "'/ident/'" .@
+              | InfixDefinition Op Term (Maybe Associativity) Level             -- ^@Infix "/op/" := ( /term/ ) ( [/associativity/ associativity ,] /level/ ) .@
               deriving (Eq, Ord, Show, Read, Typeable, Data)
 
 -- |@/notation_binding/ ::=@ /(extra)/
@@ -360,6 +378,9 @@ renderString :: Text -> Doc
 renderString = ((dquotes . string) .) . T.concatMap $ \case
                  '"' -> "\"\""
                  c   -> T.singleton c
+
+renderOp :: Op -> Doc
+renderOp = text
 
 -- Module-local
 render_type :: Term -> Doc
@@ -483,6 +504,9 @@ instance Gallina Term where
   
   renderGallina' _p (ExplicitApp qid args) = parens $
     "@" <> renderGallina qid <> softlineIf args <> render_args H args
+
+  renderGallina' _p (Infix l op r) = parens $ -- TODO precedence
+    renderGallina l </> renderOp op </> renderGallina r
   
   renderGallina' _p (InScope tm scope) = parens $
     renderGallina tm <+> "%" <+> renderIdent scope
@@ -721,9 +745,21 @@ instance Gallina Proof where
     where
       renderProof end body = "Proof." <!> indent 2 (string body) <!> end <> "."
 
+instance Gallina Associativity where
+  renderGallina' _ LeftAssociativity  = "left"
+  renderGallina' _ RightAssociativity = "right"
+  renderGallina' _ NoAssociativity    = "no"
+
+instance Gallina Level where
+  renderGallina' _ (Level n) = "at level" <+> renderNum n
+
 instance Gallina Notation where
   renderGallina' _ (ReservedNotationIdent x) =
     "Reserved" <+> "Notation" <+> dquotes (squotes $ renderIdent x) <> "."
+  renderGallina' _ (InfixDefinition op def oassoc level) =
+    "Infix" <+> dquotes (renderOp op) <+> ":="
+      </> nest 2 (parens (renderGallina def) </> parens (assoc <> renderGallina level) <> ".")
+    where assoc = maybe mempty (\assoc -> renderGallina assoc <+> "associativity," <> softline) oassoc
 
 instance Gallina NotationBinding where
   renderGallina' _ (NotationIdentBinding x def) =

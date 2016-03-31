@@ -2,9 +2,12 @@ module HsToCoq.Util.Monad (
   -- * Booleans
   andM, orM,
   -- * Conditionals
-  ifM, whenM, unlessM
+  ifM, whenM, unlessM,
+  -- * Kleisli arrow combinators
+  (<***>), (<&&&>), (<+++>), (<|||>)
   ) where
 
+import Control.Arrow
 import Data.Bool
 
 andM :: Monad m => m Bool -> m Bool -> m Bool
@@ -21,3 +24,24 @@ whenM c t = ifM c t (pure ())
 
 unlessM :: Monad m => m Bool -> m () -> m ()
 unlessM c f = ifM c (pure ()) f
+
+-- Module-local
+via_Kleisli :: (Kleisli m a a' -> Kleisli m b b' -> Kleisli m r r')
+            -> (a -> m a') -> (b -> m b') -> r -> m r'
+via_Kleisli (>><<) f g = runKleisli $ Kleisli f >><< Kleisli g
+
+(<***>) :: Monad m => (a -> m b) -> (a' -> m b') -> (a,a') -> m (b,b')
+(<***>) = via_Kleisli (***)
+infixr 3 <***>
+
+(<&&&>) :: Monad m => (a -> m b) -> (a -> m b') -> a -> m (b, b')
+(<&&&>) = via_Kleisli (&&&)
+infixr 3 <&&&>
+
+(<+++>) :: Monad m => (a -> m b) -> (a' -> m b') -> Either a a' -> m (Either b b')
+(<+++>) = via_Kleisli (+++)
+infixr 2 <+++>
+
+(<|||>) :: Monad m => (a -> m b) -> (a' -> m b) -> Either a a' -> m b
+(<|||>) = via_Kleisli (|||)
+infixr 2 <|||>

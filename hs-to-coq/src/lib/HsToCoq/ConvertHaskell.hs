@@ -106,7 +106,7 @@ evalConversion = flip evalStateT $ build
                    [ typ "()" ~> "unit" -- Probably unnecessary
                    , val "()" ~> "tt"
                      
-                   , typ "Int" ~> "Z"
+                   , typ "Integer" ~> "Z"
 
                    , typ "Bool"  ~> "bool"
                    , val "True"  ~> "true"
@@ -282,10 +282,11 @@ convertExpr (SectionL l opE) =
 convertExpr (SectionR opE r) =
   convert_section Nothing opE (Just r)
 
-convertExpr (ExplicitTuple args boxity) =
+convertExpr (ExplicitTuple exprs boxity) =
   case boxity of
     Boxed -> do
-      (tuple, numMissing) <- flip runStateT 0 . fmap (foldl1 . App2 $ Var "pair") . for args $ \case
+      -- TODO A tuple constructor in the Gallina grammar?
+      (tuple, numMissing) <- flip runStateT 0 . fmap (foldl1 . App2 $ Var "pair") . for exprs $ \case
         L _ (Present e)           -> lift $ convertLExpr e
         L _ (Missing PlaceHolder) -> modify (+ 1) *> gets (Var . anonymousArg)
       pure $ maybe id Fun
@@ -435,9 +436,9 @@ convertPat (BangPat p) =
 convertPat (ListPat _ _ _) =
   conv_unsupported "list patterns"
 
-convertPat (TuplePat args boxity _PlaceHolders) =
+convertPat (TuplePat pats boxity _PlaceHolders) =
   case boxity of
-    Boxed   -> foldl1 (App2Pat $ Bare "pair") <$> traverse convertLPat args
+    Boxed   -> foldl1 (App2Pat $ Bare "pair") <$> traverse convertLPat pats
     Unboxed -> conv_unsupported "unboxed tuple patterns"
 
 convertPat (PArrPat _ _) =
@@ -702,7 +703,7 @@ convertType (HsTupleTy tupTy tys) = do
   case tys of
     []   -> pure $ Var "unit"
     [ty] -> convertLType ty
-    _    -> foldl1 (App2 $ Var "prod") <$> traverse convertLType tys
+    _    -> foldl1 (flip Infix "*") <$> traverse convertLType tys
 
 convertType (HsOpTy _ty1 _op _ty2) =
   conv_unsupported "binary operators" -- FIXME

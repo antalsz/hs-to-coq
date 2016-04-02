@@ -105,7 +105,10 @@ evalConversion :: GhcMonad m => StateT (Map Ident Renaming) m a -> m a
 evalConversion = flip evalStateT $ build
                    [ typ "()" ~> "unit" -- Probably unnecessary
                    , val "()" ~> "tt"
-                     
+                   
+                   , typ "[]" ~> "list"
+                   , val "[]" ~> "nil"
+                   
                    , typ "Integer" ~> "Z"
 
                    , typ "Bool"  ~> "bool"
@@ -313,8 +316,10 @@ convertExpr (HsLet binds body) =
 convertExpr (HsDo _ _ _) =
   conv_unsupported "`do' expressions"
 
-convertExpr (ExplicitList _ _ _) =
-  conv_unsupported "explicit lists"
+convertExpr (ExplicitList PlaceHolder overloaded exprs) =
+  if maybe True is_noSyntaxExpr overloaded
+  then foldr (flip Infix "::") (Var "nil") <$> traverse convertLExpr exprs
+  else conv_unsupported "overloaded lists"
 
 convertExpr (ExplicitPArr _ _) =
   conv_unsupported "explicit parallel arrays"
@@ -433,8 +438,10 @@ convertPat (ParPat p) =
 convertPat (BangPat p) =
   convertLPat p
 
-convertPat (ListPat _ _ _) =
-  conv_unsupported "list patterns"
+convertPat (ListPat pats PlaceHolder overloaded) =
+  if maybe True (is_noSyntaxExpr . snd) overloaded
+  then foldr (flip InfixPat "::") (CoqVarPat "nil") <$> traverse convertLPat pats
+  else conv_unsupported "overloaded list patterns"
 
 convertPat (TuplePat pats boxity _PlaceHolders) =
   case boxity of
@@ -1000,12 +1007,12 @@ convertValDecls args = do
   32 record constructor patterns
   16 pattern bindings
   15 pattern guards
-   7 explicit lists
-   7 `do' expressions
-   6 possibly-incomplete guards
+   9 `do' expressions
+   8 possibly-incomplete guards
    4 infix constructor patterns
-   2 list patterns
-   1 type class contexts
-   1 record updates
    1 `Char' literals
+   1 record updates
+   1 type class contexts
+--------------------------------
+  87 TOTAL
 -}

@@ -48,7 +48,7 @@ library
                      , HsToCoq.ConvertHaskell
                      , HsToCoq.ProcessFiles
                      , HsToCoq.CLI
-  other-extensions:    TupleSections, LambdaCase, RecordWildCards, OverloadedStrings
+  other-extensions:    TupleSections, LambdaCase, MultiWayIf, RecordWildCards, OverloadedStrings
                      , ConstraintKinds
                      , MultiParamTypeClasses, FunctionalDependencies, FlexibleContexts
                      , TypeSynonymInstances, FlexibleInstances, UndecidableInstances
@@ -59,12 +59,13 @@ library
                      , template-haskell ==2.10.*
                      , ghc              ==7.10.2
                      , ghc-paths        ==0.1.*
-                     , text             ==1.2.*
+                     , bifunctors       ==5.*
+                     , semigroups       ==0.18.*
                      , transformers     ==0.4.*
                      , mtl              ==2.2.*
-                     , semigroups       ==0.18.*
-                     , syb              ==0.6.*
                      , containers       ==0.5.*
+                     , syb              ==0.6.*
+                     , text             ==1.2.*
                      , directory        ==1.2.*
                      , filepath         ==1.4.*
                      , wl-pprint-text   ==1.1.*

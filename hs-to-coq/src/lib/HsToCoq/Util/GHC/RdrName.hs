@@ -1,8 +1,8 @@
-module HsToCoq.Util.GHC.RdrName (module RdrName, isOperator) where
+module HsToCoq.Util.GHC.RdrName (module RdrName, isRdrOperator) where
 
 import OccName
 import RdrName
 
-isOperator :: RdrName -> Bool
-isOperator = isSymOcc . rdrNameOcc
-{-# INLINABLE isOperator #-}
+isRdrOperator :: RdrName -> Bool
+isRdrOperator = isSymOcc . rdrNameOcc
+{-# INLINABLE isRdrOperator #-}

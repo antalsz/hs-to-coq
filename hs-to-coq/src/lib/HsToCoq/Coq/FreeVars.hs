@@ -171,12 +171,16 @@ instance Binding Definition where
       binding f x
 
 instance Binding Inductive where
-  binding f (Inductive   ibs nots) = binding f (foldMap names ibs) . (freeVars ibs *> freeVars nots *>)
-  binding f (CoInductive cbs nots) = binding f (foldMap names cbs) . (freeVars cbs *> freeVars nots *>)
+  binding f (Inductive   ibs nots) = binding f (foldMap names ibs) . (freeVars ibs *> binding' nots (pure ()) *>)
+  binding f (CoInductive cbs nots) = binding f (foldMap names cbs) . (freeVars cbs *> binding' nots (pure ()) *>)
+  -- The notation bindings here can only rebind existing reserved names, so we
+  -- fake out @binding' nots@ to get the free variables.
 
 instance Binding Fixpoint where
-  binding f (Fixpoint   fbs nots) = binding f (foldMap names fbs) . (freeVars fbs *> freeVars nots *>)
-  binding f (CoFixpoint cbs nots) = binding f (foldMap names cbs) . (freeVars cbs *> freeVars nots *>)
+  binding f (Fixpoint   fbs nots) = binding f (foldMap names fbs) . (freeVars fbs *> binding' nots (pure ()) *>)
+  binding f (CoFixpoint cbs nots) = binding f (foldMap names cbs) . (freeVars cbs *> binding' nots (pure ()) *>)
+  -- The notation bindings here can only rebind existing reserved names, so we
+  -- fake out @binding' nots@ to get the free variables.
 
 instance Binding Assertion where
   binding f (Assertion kwd name args ty) =
@@ -187,9 +191,13 @@ instance Binding Assertion where
 instance Binding Notation where
   binding f (ReservedNotationIdent x) = binding f x
     -- We treat reserved single-identifier notations as bound variables
+  binding f (NotationBinding nb) = binding f nb
   binding f (InfixDefinition op defn oassoc level) =
     (freeVars defn *> freeVars oassoc *> freeVars level *>) . binding f op
     -- We treat infix operators as bound variables
+
+instance Binding NotationBinding where
+  binding f (NotationIdentBinding x def) = (freeVars def *>) . binding f x
 
 -- TODO Not all sequences of bindings should be telescopes!
 bindingTelescope :: (Binding b, MonadVariables Ident d m, Monoid d, Foldable f)
@@ -406,9 +414,6 @@ instance FreeVars Associativity where
 
 instance FreeVars Level where
   freeVars (Level _) = pure ()
-
-instance FreeVars NotationBinding where
-  freeVars (NotationIdentBinding _x def) = freeVars def -- The notation itself is already in scope
 
 foldableFreeVars :: (FreeVars t, MonadVariables Ident d m, Monoid d, Foldable f) => f t -> m ()
 foldableFreeVars = traverse_ freeVars

@@ -349,6 +349,7 @@ newtype Level = Level Num                                                       
 
 -- |@/notation/ ::=@ /(extra)/
 data Notation = ReservedNotationIdent Ident                                     -- ^@Reserved Notation "'/ident/'" .@
+              | NotationBinding NotationBinding                                 -- ^@Notation /notation_binding/ .@
               | InfixDefinition Op Term (Maybe Associativity) Level             -- ^@Infix "/op/" := ( /term/ ) ( [/associativity/ associativity ,] /level/ ) .@
               deriving (Eq, Ord, Show, Read, Typeable, Data)
 
@@ -756,6 +757,8 @@ instance Gallina Level where
 instance Gallina Notation where
   renderGallina' _ (ReservedNotationIdent x) =
     "Reserved" <+> "Notation" <+> dquotes (squotes $ renderIdent x) <> "."
+  renderGallina' _ (NotationBinding nb) =
+    "Notation" <+> renderGallina nb <> "."
   renderGallina' _ (InfixDefinition op def oassoc level) =
     "Infix" <+> dquotes (renderOp op) <+> ":="
       </> nest 2 (parens (renderGallina def) </> parens (assoc <> renderGallina level) <> ".")

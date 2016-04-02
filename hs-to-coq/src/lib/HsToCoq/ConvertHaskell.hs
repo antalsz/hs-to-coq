@@ -1,4 +1,4 @@
-{-# LANGUAGE TupleSections, LambdaCase, RecordWildCards, PatternSynonyms,
+{-# LANGUAGE TupleSections, LambdaCase, MultiWayIf, RecordWildCards, PatternSynonyms,
              OverloadedLists, OverloadedStrings,
              ConstraintKinds, FlexibleContexts #-}
 
@@ -8,8 +8,9 @@ module HsToCoq.ConvertHaskell (
   ConversionMonad, Renaming, HsNamespace(..), evalConversion,
   -- *** Variable renaming
   rename, var, freeVar, freeVar',
+  localRenamings,
   -- *** Utility
-  tryEscapeReservedName, escapeReservedNames,
+  tryEscapeReservedWord, escapeReservedNames,
   -- ** Local bindings
   convertLocalBinds,
   -- ** Declarations
@@ -17,7 +18,7 @@ module HsToCoq.ConvertHaskell (
   convertTyClDecl, convertDataDecl, convertSynDecl,
   -- ** General bindings
   convertTypedBindings, convertTypedBinding,
-  ConvertedDefinition(..), uncurryConvertedDefinition,
+  ConvertedDefinition(..), withConvertedDefinition, withConvertedDefinitionDef, withConvertedDefinitionOp,
   -- ** Terms
   convertType, convertLType,
   convertExpr, convertLExpr,
@@ -37,7 +38,8 @@ module HsToCoq.ConvertHaskell (
   -- ** Backing types
   SynBody(..), ConvertedDeclaration(..),
   -- ** Internal
-  convertDataDefn, convertConDecl,
+  convertDataDefn, convertConDecl, convertFixity,
+  identIsVariable, identIsOperator, infixToPrefix,
   -- * Coq construction
   pattern Var, pattern App1, pattern App2, appList,
   pattern CoqVarPat
@@ -48,6 +50,7 @@ import Prelude hiding (Num)
 import Data.Semigroup ((<>))
 import Data.Monoid hiding ((<>))
 import Data.Bifunctor
+import Data.Bitraversable
 import Data.Foldable
 import Data.Traversable
 import Data.Maybe
@@ -55,6 +58,7 @@ import Data.Either
 import Data.Char
 import Data.List.NonEmpty (NonEmpty(..), (<|), nonEmpty)
 import qualified Data.List.NonEmpty as NEL
+import Data.Text (Text)
 import qualified Data.Text as T
 
 import Control.Arrow ((&&&))
@@ -69,8 +73,9 @@ import qualified Data.Map.Strict as M
 import GHC hiding (Name)
 import Bag
 import Encoding (zEncodeString)
+import BasicTypes
 import HsToCoq.Util.GHC.FastString
-import HsToCoq.Util.GHC.RdrName
+import RdrName
 import Outputable (OutputableBndr)
 import Panic
 import HsToCoq.Util.GHC.Exception
@@ -118,16 +123,22 @@ rename ns x x' = modify' . flip M.alter x $ Just . \case
                    Just m  -> M.insert    ns x' m
                    Nothing -> M.singleton ns x'
 
-tryEscapeReservedName :: Ident -> Ident -> Maybe Ident
-tryEscapeReservedName reserved name = do
+localRenamings :: ConversionMonad m => m a -> m a
+localRenamings action = get >>= ((action <*) . put)
+
+tryEscapeReservedWord :: Ident -> Ident -> Maybe Ident
+tryEscapeReservedWord reserved name = do
   suffix <- T.stripPrefix reserved name
   guard $ T.all (== '_') suffix
   pure $ name <> "_"
 
 escapeReservedNames :: Ident -> Ident
-escapeReservedNames x = fromMaybe x . getFirst
-                      . foldMap (First . flip tryEscapeReservedName x)
-                      $ T.words "Set Type Prop fun fix forall"
+escapeReservedNames x =
+  fromMaybe x . getFirst $
+    foldMap (First . flip tryEscapeReservedWord x) (T.words "Set Type Prop fun fix forall") <>
+    if | T.all (== '.') x -> pure $ T.map (const '∘') x
+       | T.all (== '∘') x -> pure $ "⟨" <> x <> "⟩"
+       | otherwise        -> mempty
 
 freeVar' :: Ident -> Ident
 freeVar' = escapeReservedNames
@@ -139,6 +150,17 @@ var :: (ConversionMonad m, OutputableBndr name) => HsNamespace -> name -> m Iden
 var ns x = do
   x' <- ghcPpr x -- TODO Check module part?
   gets $ fromMaybe (escapeReservedNames x') . (M.lookup ns <=< M.lookup x')
+
+identIsVariable :: Text -> Bool
+identIsVariable = T.uncons <&> \case
+  Just (h,t) -> (isAlpha h || h == '_') && T.all (\c -> isAlphaNum c || c == '_' || c == '\'') t
+  Nothing    -> False
+
+identIsOperator :: Text -> Bool
+identIsOperator = not . identIsVariable
+
+infixToPrefix :: Op -> Ident
+infixToPrefix = ("_" <>) . (<> "_")
 
 -- Module-local
 conv_unsupported :: MonadIO m => String -> m a
@@ -171,8 +193,11 @@ convertString :: String -> Term
 convertString = String . T.pack
 
 convertExpr :: ConversionMonad m => HsExpr RdrName -> m Term
-convertExpr (HsVar x) =
-  Var <$> var ExprNS x
+convertExpr (HsVar hsX) = do
+  x <- var ExprNS hsX
+  pure . Var $ if identIsVariable x
+               then x
+               else infixToPrefix x
 
 convertExpr (HsIPVar _) =
   conv_unsupported "implicit parameters"
@@ -209,11 +234,17 @@ convertExpr (HsLamCase PlaceHolder mg) =
 convertExpr (HsApp e1 e2) =
   App1 <$> convertLExpr e1 <*> convertLExpr e2
 
-convertExpr (OpApp l opE PlaceHolder r) =
-  case opE of
-    L _ (HsVar op) | isOperator op -> Infix <$> convertLExpr l <*> var ExprNS op <*> convertLExpr r
-                   | otherwise     -> App2  <$> (Var <$> var ExprNS op) <*> convertLExpr l <*> convertLExpr r
-    _ -> conv_unsupported "non-variable infix operators"
+convertExpr (OpApp el eop PlaceHolder er) =
+  case eop of
+    L _ (HsVar hsOp) -> do
+      op <- var ExprNS hsOp
+      l  <- convertLExpr el
+      r  <- convertLExpr er
+      pure $ if identIsOperator op
+             then Infix l op r
+             else App2 (Var op) l r
+    _ ->
+      conv_unsupported "non-variable infix operators"
 
 convertExpr (NegApp _ _) =
   conv_unsupported "negation"
@@ -244,7 +275,7 @@ convertExpr (HsMultiIf _ _) =
   conv_unsupported "multi-way if"
 
 convertExpr (HsLet binds body) =
-  convertLocalBinds binds =<< convertLExpr body
+  convertLocalBinds binds $ convertLExpr body
 
 convertExpr (HsDo _ _ _) =
   conv_unsupported "`do' expressions"
@@ -446,19 +477,31 @@ data ConvertedDefinition = ConvertedDefinition { convDefName  :: !Ident
                                                , convDefInfix :: !(Maybe Op) }
                          deriving (Eq, Ord, Read, Show)
 
-uncurryConvertedDefinition :: (Ident -> [Binder] -> Maybe Term -> Term -> a) -> (ConvertedDefinition -> a)
-uncurryConvertedDefinition f ConvertedDefinition{..} = f convDefName convDefArgs convDefType convDefBody
+withConvertedDefinition :: Monoid m
+                        => (Ident -> [Binder] -> Maybe Term -> Term -> a) -> (a -> m)
+                        -> (Op -> Ident -> b)                             -> (b -> m)
+                        -> (ConvertedDefinition -> m)
+withConvertedDefinition withDef wrapDef withOp wrapOp ConvertedDefinition{..} =
+  mappend (wrapDef $ withDef convDefName convDefArgs convDefType convDefBody)
+          (maybe mempty (wrapOp . flip withOp convDefName) convDefInfix)
 
-convertLocalBinds :: ConversionMonad m => HsLocalBinds RdrName -> Term -> m Term
-convertLocalBinds (HsValBinds (ValBindsIn binds sigs)) body =
-  foldr (uncurryConvertedDefinition Let) body
-    <$> convertTypedBindings (map unLoc . bagToList $ binds) (map unLoc sigs) pure Nothing
+withConvertedDefinitionDef :: (Ident -> [Binder] -> Maybe Term -> Term -> a) -> (ConvertedDefinition -> a)
+withConvertedDefinitionDef f ConvertedDefinition{..} = f convDefName convDefArgs convDefType convDefBody
+
+withConvertedDefinitionOp :: (Op -> Ident -> a) -> (ConvertedDefinition -> Maybe a)
+withConvertedDefinitionOp f ConvertedDefinition{..} = fmap (flip f convDefName) convDefInfix
+
+convertLocalBinds :: ConversionMonad m => HsLocalBinds RdrName -> m Term -> m Term
+convertLocalBinds (HsValBinds (ValBindsIn binds sigs)) body = localRenamings $ do
+  convDefs <- convertTypedBindings (map unLoc . bagToList $ binds) (map unLoc sigs) pure Nothing
+  sequence_ $ mapMaybe (withConvertedDefinitionOp $ rename ExprNS) convDefs
+  flip (foldr $ withConvertedDefinitionDef Let) convDefs <$> body
 convertLocalBinds (HsValBinds (ValBindsOut _ _)) _ =
   conv_unsupported "post-renaming `ValBindsOut' bindings"
 convertLocalBinds (HsIPBinds _) _ =
   conv_unsupported "local implicit parameter bindings"
 convertLocalBinds EmptyLocalBinds body =
-  pure body
+  body
 
 -- TODO mutual recursion :-(
 convertTypedBindings :: ConversionMonad m
@@ -483,14 +526,9 @@ convertTypedBinding _hsTy VarBind{}    = conv_unsupported "[internal] `VarBind'"
 convertTypedBinding _hsTy AbsBinds{}   = conv_unsupported "[internal?] `AbsBinds'"
 convertTypedBinding _hsTy PatSynBind{} = conv_unsupported "pattern synonym bindings"
 convertTypedBinding  hsTy FunBind{..}  = do
-  (name, opName) <- let hsName = unLoc fun_id
-                        
-                        opToPrefix op = "__op_" ++ zEncodeString op ++ "__"
-                        
-                        bothNames | isOperator hsName = T.pack . opToPrefix . T.unpack &&& Just
-                                  | otherwise         = id                             &&& const Nothing
-                    
-                    in bimap freeVar' (fmap freeVar') . bothNames <$> ghcPpr hsName
+  (name, opName) <- freeVar (unLoc fun_id) <&> \case
+                      name | identIsVariable name -> (name, Nothing)
+                           | otherwise            -> ("__op_" <> T.pack (zEncodeString $ T.unpack name) <> "__", Just name)
   
   (tvs, coqTy) <-
     -- The @forall@ed arguments need to be brought into scope
@@ -539,7 +577,7 @@ convertFunction mg = do
 convertGRHSs :: ConversionMonad m => GRHSs RdrName (LHsExpr RdrName) -> m Term
 convertGRHSs GRHSs{..} =
   convertLocalBinds grhssLocalBinds
-    =<< convertGuards =<< traverse (convertGRHS . unLoc) grhssGRHSs
+    $ convertGuards =<< traverse (convertGRHS . unLoc) grhssGRHSs
 
 data ConvertedGuard = NoGuard
                     | BoolGuard Term
@@ -843,15 +881,70 @@ convertTyClDecls =   either conv_unsupported (pure . fold)
                  .   traverse convertDeclarationGroup
                  <=< groupTyClDecls
 
+convertFixity :: Fixity -> (Associativity, Level)
+convertFixity (Fixity hsLevel dir) = (assoc, coqLevel) where
+  assoc = case dir of
+            InfixL -> LeftAssociativity
+            InfixR -> RightAssociativity
+            InfixN -> NoAssociativity
+  
+  -- TODO These don't all line up between Coq and Haskell; for instance, Coq's
+  -- @_ || _@ is at level 50 (Haskell 6), whereas Haskell's @(||)@ is at level 2
+  -- (Coq 80).
+  coqLevel = Level $ case (hsLevel, dir) of
+               (0, InfixL) -> 90
+               (0, InfixR) -> 91
+               (0, InfixN) -> 92
+               
+               (1, InfixL) -> 86
+               (1, InfixR) -> 85
+               (1, InfixN) -> 87
+               
+               (2, InfixL) -> 81
+               (2, InfixR) -> 80
+               (2, InfixN) -> 82
+               
+               (3, InfixL) -> 76
+               (3, InfixR) -> 75
+               (3, InfixN) -> 77
+               
+               (4, InfixL) -> 71
+               (4, InfixR) -> 72
+               (4, InfixN) -> 70
+               
+               (5, InfixL) -> 60
+               (5, InfixR) -> 61
+               (5, InfixN) -> 62
+               
+               (6, InfixL) -> 50
+               (6, InfixR) -> 51
+               (6, InfixN) -> 52
+               
+               (7, InfixL) -> 40
+               (7, InfixR) -> 41
+               (7, InfixN) -> 42
+               
+               (8, InfixL) -> 31
+               (8, InfixR) -> 30
+               (8, InfixN) -> 32
+
+               (_, _)      -> 99
+
 convertValDecls :: ConversionMonad m => [HsDecl RdrName] -> m [Sentence]
-convertValDecls args =
+convertValDecls args = do
   let (defns, sigs) = partitionEithers . flip mapMaybe args $ \case
-                        ValD def ->
-                          Just $ Left def
-                        SigD sig@(TypeSig _ _ _) ->
-                          Just $ Right sig
-                        _ ->
-                          Nothing
+                        ValD def -> Just $ Left def
+                        SigD sig -> Just $ Right sig
+                        _        -> Nothing
+      
+  fixities <- M.fromList <$> traverse (bitraverse (var ExprNS) pure)
+                [(op, fixity) | FixSig (FixitySig lops fixity) <- sigs, L _ op <- lops]
+  
+  let toInfix :: Op -> Ident -> [Notation]
+      toInfix op def = [ uncurry (InfixDefinition op (Var def))
+                           . maybe (Nothing, Level 99) (first Just . convertFixity)
+                           $ M.lookup op fixities
+                       , NotationBinding $ NotationIdentBinding (infixToPrefix op) (Var def) ]
       
       axiomatize :: GhcMonad m => HsBind RdrName -> GhcException -> m [Sentence]
       axiomatize FunBind{..} exn = do
@@ -862,22 +955,24 @@ convertValDecls args =
                  $ Forall [Typed Coq.Implicit [Ident "A"] $ Sort Type] (Var "A") ]
       axiomatize _ exn =
         liftIO $ throwGhcExceptionIO exn
-  in fold <$> convertTypedBindings defns sigs
-                                   (pure . pure . DefinitionSentence . uncurryConvertedDefinition (DefinitionDef Global))
-                                   (Just axiomatize)
+  
+  fold <$> convertTypedBindings defns sigs
+             (pure . withConvertedDefinition (DefinitionDef Global) (pure . DefinitionSentence)
+                                             toInfix                (map    NotationSentence))
+             (Just axiomatize)
 
 {-
-  51 binary operators
   32 record constructor patterns
-  13 pattern guards
-  10 tuples
-   9 tuple patterns
-   6 explicit lists
+  14 pattern guards
+  13 pattern bindings
+  10 tuple patterns
+   9 tuples
+   7 explicit lists
+   5 possibly-incomplete guards
+   4 infix constructor patterns
    4 `do' expressions
-   3 infix constructor patterns
-   2 possibly-incomplete guards
-   2 pattern bindings
+   2 list patterns
    1 type class contexts
    1 record updates
-   1 list patterns
+   1 `Char' literals
 -}

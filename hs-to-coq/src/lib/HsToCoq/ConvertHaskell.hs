@@ -108,6 +108,7 @@ evalConversion = flip evalStateT $ build
                    
                    , typ "[]" ~> "list"
                    , val "[]" ~> "nil"
+                   , val ":"  ~> "::"
                    
                    , typ "Integer" ~> "Z"
 
@@ -458,10 +459,10 @@ convertPat (ConPatIn con conVariety) =
       case nonEmpty args' of
         Just args -> ArgsPat conVar <$> traverse convertLPat args
         Nothing   -> pure $ QualidPat conVar
-    RecCon    _    ->
+    RecCon _    ->
       conv_unsupported "record constructor patterns"
-    InfixCon  _ _  ->
-      conv_unsupported "infix constructor patterns"
+    InfixCon l r  ->
+      InfixPat <$> convertLPat l <*> var ExprNS (unLoc con) <*> convertLPat r
 
 convertPat (ConPatOut{}) =
   conv_unsupported "[internal?] `ConPatOut' constructor"
@@ -1006,13 +1007,12 @@ convertValDecls args = do
 {-
   32 record constructor patterns
   16 pattern bindings
-  15 pattern guards
+  16 pattern guards
    9 `do' expressions
    8 possibly-incomplete guards
-   4 infix constructor patterns
    1 `Char' literals
    1 record updates
    1 type class contexts
 --------------------------------
-  87 TOTAL
+  84 TOTAL
 -}

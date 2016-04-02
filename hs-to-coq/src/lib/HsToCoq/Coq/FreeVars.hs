@@ -103,6 +103,9 @@ instance Binding Pattern where
   binding f (ExplicitArgsPat con xs) =
     (freeVars con *>) . binding f xs
   
+  binding f (InfixPat l op r) =
+    (occurrence op *>) . binding f [l,r]
+  
   binding f (AsPat pat x) =
     binding f pat . binding f x
     -- This correctly binds @x@ as the innermost binding f

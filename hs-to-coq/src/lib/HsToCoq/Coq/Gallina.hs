@@ -236,6 +236,7 @@ newtype MultPattern = MultPattern (NonEmpty Pattern)                            
 -- |@/pattern/ ::=@
 data Pattern = ArgsPat Qualid (NonEmpty Pattern)                                -- ^@/qualid/ /pattern/ … /pattern/@
              | ExplicitArgsPat Qualid (NonEmpty Pattern)                        -- ^@\@ /qualid/ /pattern/ … /pattern/@
+             | InfixPat Pattern Op Pattern                                      -- ^@/pattern/ /op/ /pattern/@ – extra
              | AsPat Pattern Ident                                              -- ^@/pattern/ as /ident/@
              | InScopePat Pattern Ident                                         -- ^@/pattern/ % /ident/@
              | QualidPat Qualid                                                 -- ^@/qualid/@
@@ -626,6 +627,9 @@ instance Gallina Pattern where
   
   renderGallina' _p (ExplicitArgsPat qid args) = parens $
     "@" <> renderGallina qid <> softlineIf args <> render_args H args
+  
+  renderGallina' _p (InfixPat l op r) = parens $ -- TODO precedence
+    renderGallina l </> renderOp op </> renderGallina r
   
   renderGallina' _p (AsPat pat x) = parens $
     renderGallina pat <+> "as" <+> renderIdent x

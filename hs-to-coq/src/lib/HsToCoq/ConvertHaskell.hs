@@ -43,7 +43,7 @@ module HsToCoq.ConvertHaskell (
   identIsVariable, identIsOperator, infixToPrefix,
   -- * Coq construction
   pattern Var, pattern App1, pattern App2, appList,
-  pattern CoqVarPat
+  pattern CoqVarPat, pattern App1Pat, pattern App2Pat, appListPat,
   ) where
 
 import Prelude hiding (Num)
@@ -192,7 +192,14 @@ appList f xs = case nonEmpty xs of
                  Nothing  -> f
                  Just xs' -> App f xs'
 
-pattern CoqVarPat x = QualidPat (Bare x)
+pattern CoqVarPat x       = QualidPat (Bare x)
+pattern App1Pat   f x     = ArgsPat f (x :| Nil)
+pattern App2Pat   f x1 x2 = ArgsPat f (x1 :| x2 : Nil)
+
+appListPat :: Qualid -> [Pattern] -> Pattern
+appListPat c xs = case nonEmpty xs of
+                    Nothing  -> QualidPat c
+                    Just xs' -> ArgsPat c xs'
 
 -- Module-local
 is_noSyntaxExpr :: HsExpr id -> Bool
@@ -428,8 +435,10 @@ convertPat (BangPat p) =
 convertPat (ListPat _ _ _) =
   conv_unsupported "list patterns"
 
-convertPat (TuplePat _ _ _) =
-  conv_unsupported "tuple patterns"
+convertPat (TuplePat args boxity _PlaceHolders) =
+  case boxity of
+    Boxed   -> foldl1 (App2Pat $ Bare "pair") <$> traverse convertLPat args
+    Unboxed -> conv_unsupported "unboxed tuple patterns"
 
 convertPat (PArrPat _ _) =
   conv_unsupported "parallel array patterns"
@@ -990,11 +999,10 @@ convertValDecls args = do
   32 record constructor patterns
   16 pattern bindings
   15 pattern guards
-  10 tuple patterns
    7 explicit lists
-   5 possibly-incomplete guards
+   7 `do' expressions
+   6 possibly-incomplete guards
    4 infix constructor patterns
-   4 `do' expressions
    2 list patterns
    1 type class contexts
    1 record updates

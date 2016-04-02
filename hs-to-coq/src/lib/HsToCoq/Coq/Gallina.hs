@@ -511,7 +511,7 @@ instance Gallina Term where
     renderGallina l </> renderOp op </> renderGallina r
   
   renderGallina' _p (InScope tm scope) = parens $
-    renderGallina tm <+> "%" <+> renderIdent scope
+    renderGallina tm <> "%" <> renderIdent scope
   
   renderGallina' _p (Match discriminees orty eqns) = parens $
        "match" <+> group (align . nest (-2)
@@ -635,7 +635,7 @@ instance Gallina Pattern where
     renderGallina pat <+> "as" <+> renderIdent x
   
   renderGallina' _p (InScopePat pat scope) = parens $
-    renderGallina pat <+> "%" <+> renderIdent scope
+    renderGallina pat <> "%" <> renderIdent scope
   
   renderGallina' _p (QualidPat qid) =
     renderGallina qid

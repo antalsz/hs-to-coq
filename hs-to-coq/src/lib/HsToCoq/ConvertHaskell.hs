@@ -239,7 +239,7 @@ convertExpr (HsOverLit OverLit{..}) =
 
 convertExpr (HsLit lit) =
   case lit of
-    HsChar       _ _       -> conv_unsupported "`Char' literals"
+    HsChar       _ c       -> pure $ InScope (String $ T.singleton c) "char"
     HsCharPrim   _ _       -> conv_unsupported "`Char#' literals"
     HsString     _ fs      -> pure . String $ fsToText fs
     HsStringPrim _ _       -> conv_unsupported "`Addr#' literals"
@@ -478,7 +478,7 @@ convertPat (QuasiQuotePat _) =
 
 convertPat (LitPat lit) =
   case lit of
-    HsChar       _ _       -> conv_unsupported "`Char' literal patterns"
+    HsChar       _ c       -> pure $ InScopePat (StringPat $ T.singleton c) "char"
     HsCharPrim   _ _       -> conv_unsupported "`Char#' literal patterns"
     HsString     _ fs      -> pure . StringPat $ fsToText fs
     HsStringPrim _ _       -> conv_unsupported "`Addr#' literal patterns"
@@ -1010,9 +1010,8 @@ convertValDecls args = do
   16 pattern guards
    9 `do' expressions
    8 possibly-incomplete guards
-   1 `Char' literals
    1 record updates
    1 type class contexts
 --------------------------------
-  84 TOTAL
+  83 TOTAL
 -}

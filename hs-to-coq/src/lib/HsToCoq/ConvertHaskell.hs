@@ -100,7 +100,10 @@ type ConversionMonad m = (GhcMonad m, MonadState (Map Ident Renaming) m)
 
 evalConversion :: GhcMonad m => StateT (Map Ident Renaming) m a -> m a
 evalConversion = flip evalStateT $ build
-                   [ typ "Int" ~> "Z"
+                   [ typ "()" ~> "unit" -- Probably unnecessary
+                   , val "()" ~> "tt"
+                     
+                   , typ "Int" ~> "Z"
 
                    , typ "Bool"  ~> "bool"
                    , val "True"  ~> "true"

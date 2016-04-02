@@ -39,6 +39,7 @@ module HsToCoq.ConvertHaskell (
   SynBody(..), ConvertedDeclaration(..),
   -- ** Internal
   convertDataDefn, convertConDecl, convertFixity,
+  anonymousArg, anonymousArg',
   identIsVariable, identIsOperator, infixToPrefix,
   -- * Coq construction
   pattern Var, pattern App1, pattern App2, appList,
@@ -47,7 +48,7 @@ module HsToCoq.ConvertHaskell (
 
 import Prelude hiding (Num)
 
-import Data.Semigroup ((<>))
+import Data.Semigroup (Semigroup(..))
 import Data.Monoid hiding ((<>))
 import Data.Bifunctor
 import Data.Bitraversable
@@ -56,10 +57,12 @@ import Data.Traversable
 import Data.Maybe
 import Data.Either
 import Data.Char
+import Data.String
 import Data.List.NonEmpty (NonEmpty(..), (<|), nonEmpty)
 import qualified Data.List.NonEmpty as NEL
 import Data.Text (Text)
 import qualified Data.Text as T
+import Numeric.Natural
 
 import Control.Arrow ((&&&))
 import Control.Monad
@@ -165,6 +168,17 @@ identIsOperator = not . identIsVariable
 infixToPrefix :: Op -> Ident
 infixToPrefix = ("_" <>) . (<> "_")
 
+anonymousArg' :: (IsString s, Semigroup s) => Maybe Natural -> s
+anonymousArg' mn = "__arg" <> maybe "" (("_" <>) . fromString . show) mn <> "__"
+{-# SPECIALIZE anonymousArg' :: Maybe Natural -> String #-}
+{-# SPECIALIZE anonymousArg' :: Maybe Natural -> Text #-}
+
+anonymousArg :: (IsString s, Semigroup s) => Natural -> s
+anonymousArg = anonymousArg' . Just
+{-# INLINABLE anonymousArg #-}
+{-# SPECIALIZE anonymousArg :: Natural -> String #-}
+{-# SPECIALIZE anonymousArg :: Natural -> Text #-}
+
 -- Module-local
 conv_unsupported :: MonadIO m => String -> m a
 conv_unsupported what = liftIO . throwGhcExceptionIO . ProgramError $ what ++ " unsupported"
@@ -261,8 +275,16 @@ convertExpr (SectionL l opE) =
 convertExpr (SectionR opE r) =
   convert_section Nothing opE (Just r)
 
-convertExpr (ExplicitTuple _ _) =
-  conv_unsupported "tuples"
+convertExpr (ExplicitTuple args boxity) =
+  case boxity of
+    Boxed -> do
+      (tuple, numMissing) <- flip runStateT 0 . fmap (foldl1 . App2 $ Var "pair") . for args $ \case
+        L _ (Present e)           -> lift $ convertLExpr e
+        L _ (Missing PlaceHolder) -> modify (+ 1) *> gets (Var . anonymousArg)
+      pure $ maybe id Fun
+                   (nonEmpty $ map (Inferred Coq.Explicit . Ident . anonymousArg) [1..numMissing])
+                   tuple
+    Unboxed -> conv_unsupported "unboxed tuples"
 
 convertExpr (HsCase e mg) =
   Coq.Match <$> (fmap pure $ MatchItem <$> convertLExpr e <*> pure Nothing <*> pure Nothing)
@@ -376,7 +398,7 @@ convertLExpr = convertExpr . unLoc
 -- Module-local
 convert_section :: (ConversionMonad m) => Maybe (LHsExpr RdrName) -> LHsExpr RdrName -> Maybe (LHsExpr RdrName) -> m Term
 convert_section  ml opE mr =
-  let arg = "__arg__"
+  let arg = anonymousArg' Nothing
       
       hs  = HsVar . mkVarUnqual . fsLit
       coq = Inferred Coq.Explicit . Ident . T.pack
@@ -570,9 +592,9 @@ convertFunction :: ConversionMonad m => MatchGroup RdrName (LHsExpr RdrName) -> 
 convertFunction mg = do
   eqns <- convertMatchGroup mg
   let argCount   = case eqns of
-                     Equation (MultPattern args :| _) _ : _ -> length args
+                     Equation (MultPattern args :| _) _ : _ -> fromIntegral $ length args
                      _                                      -> 0
-      args       = NEL.fromList ["__arg_" <> T.pack (show n) <> "__" | n <- [1..argCount]]
+      args       = NEL.fromList $ map anonymousArg [1..argCount]
       argBinders = (Inferred Coq.Explicit . Ident) <$> args
       match      = Coq.Match (args <&> \arg -> MatchItem (Var arg) Nothing Nothing) Nothing eqns
   pure (argBinders, match)
@@ -966,10 +988,9 @@ convertValDecls args = do
 
 {-
   32 record constructor patterns
-  14 pattern guards
-  13 pattern bindings
+  16 pattern bindings
+  15 pattern guards
   10 tuple patterns
-   9 tuples
    7 explicit lists
    5 possibly-incomplete guards
    4 infix constructor patterns

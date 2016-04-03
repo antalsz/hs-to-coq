@@ -1005,16 +1005,17 @@ convertValDecls args = do
              (Just axiomatize)
 
 {-
-Translating `coreSyn/CoreSyn.hs' and `types/Coercion.hs':
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Translating `basicTypes/BasicTypes.hs`, `coreSyn/CoreSyn.hs', `types/Coercion.hs':
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-  32 record constructor patterns
+  41 record constructor patterns
   16 pattern bindings
   16 pattern guards
    9 `do' expressions
    8 possibly-incomplete guards
-   1 record updates
+   7 record updates
+   2 record constructors
    1 type class contexts
 --------------------------------
-  83 TOTAL
+ 100 TOTAL
 -}

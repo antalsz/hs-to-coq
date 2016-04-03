@@ -10,11 +10,12 @@ printAll :: MonadIO m
          -> [a]
          -> m ()
 printAll disp header noneEnd oneEnd manyEnd xs = liftIO $ do
-  putStrLn $ header ++ case xs of
-                         []  -> noneEnd
-                         [_] -> oneEnd
-                         _   -> manyEnd
-  mapM_ (putStrLn . disp) xs
+  let putCommentLn = putStrLn . ("(* " ++) . (++ " *)")
+  putCommentLn $ header ++ case xs of
+                             []  -> noneEnd
+                             [_] -> oneEnd
+                             _   -> manyEnd
+  mapM_ (putCommentLn . disp) xs
 
 printAll' :: MonadIO m => (a -> String) -> String -> String -> [a] -> m ()
 printAll' disp header what = printAll disp

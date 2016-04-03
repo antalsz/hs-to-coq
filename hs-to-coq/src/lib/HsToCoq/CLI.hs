@@ -1,4 +1,4 @@
-{-# LANGUAGE LambdaCase, FlexibleContexts #-}
+{-# LANGUAGE LambdaCase, FlexibleContexts, OverloadedStrings #-}
 
 module HsToCoq.CLI (
   processFilesMain,
@@ -21,10 +21,12 @@ import System.Environment
 import GHC
 import DynFlags
 
+import HsToCoq.Util.Functor
 import HsToCoq.Util.Generics
 import HsToCoq.Util.Messages
 import HsToCoq.PrettyPrint
 import HsToCoq.Coq.Gallina
+import HsToCoq.Coq.FreeVars
 import HsToCoq.ProcessFiles
 import HsToCoq.ConvertHaskell
 
@@ -44,14 +46,22 @@ processArgs = do
 convertDecls :: (Data a, ConversionMonad m) => a -> m ()
 convertDecls lmod = do
   let doConversion what convert =
-        convert (everythingOfType_ lmod) >>= liftIO . \case
+        convert (everythingOfType_ lmod) >>= liftIO .<$ \case
           [] -> putStrLn $ "(* No " ++ what ++ " to convert. *)"
           ds -> do putStrLn $ "(* Converted " ++ what ++ ": *)"
                    traverse_ prettyPrint . intersperse line $
                      map ((<> line) . renderGallina) ds
-  doConversion "data type declarations" convertTyClDecls
+  
+  types <- doConversion "data type declarations" convertTyClDecls
   liftIO $ putStrLn ""
-  doConversion "function declarations"  convertValDecls
+  funcs <- doConversion "function declarations"  convertValDecls
+  
+  case toList . getFreeVars . NoBinding $ types ++ funcs of
+    []  -> pure ()
+    fvs -> prettyPrint $
+             line <> "(*" <+> hang 2
+               ("Unbound variables:" <!> fillSep (map text fvs))
+             <!> "*)" <> line
 
 processFilesMain :: GhcMonad m => ([Located (HsModule RdrName)] -> m a) -> m ()
 processFilesMain f = traverse_ f =<< uncurry processFiles =<< processArgs

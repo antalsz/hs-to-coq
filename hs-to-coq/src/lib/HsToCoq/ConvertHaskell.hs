@@ -18,6 +18,7 @@ module HsToCoq.ConvertHaskell (
   convertTyClDecl, convertDataDecl, convertSynDecl,
   -- ** General bindings
   convertTypedBindings, convertTypedBinding,
+  ConvertedBinding(..),
   ConvertedDefinition(..), withConvertedDefinition, withConvertedDefinitionDef, withConvertedDefinitionOp,
   -- ** Terms
   convertType, convertLType,
@@ -513,12 +514,20 @@ convertPat (CoPat _ _ _) =
 convertLPat :: ConversionMonad m => LPat RdrName -> m Pattern
 convertLPat = convertPat . unLoc
 
+data ConvertedBinding = ConvertedDefinitionBinding ConvertedDefinition
+                      | ConvertedPatternBinding    Pattern Term
+                      deriving (Eq, Ord, Show, Read)
+
+withConvertedBinding :: (ConvertedDefinition -> a) -> (Pattern -> Term -> a) -> ConvertedBinding -> a
+withConvertedBinding  withDef _withPat (ConvertedDefinitionBinding cdef)    = withDef cdef
+withConvertedBinding _withDef  withPat (ConvertedPatternBinding    pat def) = withPat pat def
+
 data ConvertedDefinition = ConvertedDefinition { convDefName  :: !Ident
                                                , convDefArgs  :: ![Binder]
                                                , convDefType  :: !(Maybe Term)
                                                , convDefBody  :: !Term
                                                , convDefInfix :: !(Maybe Op) }
-                         deriving (Eq, Ord, Read, Show)
+                         deriving (Eq, Ord, Show, Read)
 
 withConvertedDefinition :: Monoid m
                         => (Ident -> [Binder] -> Maybe Term -> Term -> a) -> (a -> m)
@@ -537,8 +546,12 @@ withConvertedDefinitionOp f ConvertedDefinition{..} = fmap (flip f convDefName) 
 convertLocalBinds :: ConversionMonad m => HsLocalBinds RdrName -> m Term -> m Term
 convertLocalBinds (HsValBinds (ValBindsIn binds sigs)) body = localRenamings $ do
   convDefs <- convertTypedBindings (map unLoc . bagToList $ binds) (map unLoc sigs) pure Nothing
-  sequence_ $ mapMaybe (withConvertedDefinitionOp $ rename ExprNS) convDefs
-  flip (foldr $ withConvertedDefinitionDef Let) convDefs <$> body
+  sequence_ $ mapMaybe (withConvertedBinding (withConvertedDefinitionOp $ rename ExprNS)
+                                             (\_ _ -> Nothing))
+                       convDefs
+  let matchLet pat term body = Coq.Match [MatchItem term Nothing Nothing] Nothing
+                                         [Equation [MultPattern [pat]] body]
+  flip (foldr $ withConvertedBinding (withConvertedDefinitionDef Let) matchLet) convDefs <$> body
 convertLocalBinds (HsValBinds (ValBindsOut _ _)) _ =
   conv_unsupported "post-renaming `ValBindsOut' bindings"
 convertLocalBinds (HsIPBinds _) _ =
@@ -549,7 +562,7 @@ convertLocalBinds EmptyLocalBinds body =
 -- TODO mutual recursion :-(
 convertTypedBindings :: ConversionMonad m
                      => [HsBind RdrName] -> [Sig RdrName]
-                     -> (ConvertedDefinition -> m a)
+                     -> (ConvertedBinding -> m a)
                      -> Maybe (HsBind RdrName -> GhcException -> m a)
                      -> m [a]
 convertTypedBindings defns allSigs build mhandler =
@@ -563,11 +576,12 @@ convertTypedBindings defns allSigs build mhandler =
       
   in traverse (processed <*> (convertTypedBinding =<< getType)) defns
 
-convertTypedBinding :: ConversionMonad m => Maybe (HsType RdrName) -> HsBind RdrName -> m ConvertedDefinition
-convertTypedBinding _hsTy PatBind{}    = conv_unsupported "pattern bindings"
+convertTypedBinding :: ConversionMonad m => Maybe (HsType RdrName) -> HsBind RdrName -> m ConvertedBinding
 convertTypedBinding _hsTy VarBind{}    = conv_unsupported "[internal] `VarBind'"
 convertTypedBinding _hsTy AbsBinds{}   = conv_unsupported "[internal?] `AbsBinds'"
 convertTypedBinding _hsTy PatSynBind{} = conv_unsupported "pattern synonym bindings"
+convertTypedBinding _hsTy PatBind{..}  = -- TODO use `_hsTy`?
+  ConvertedPatternBinding <$> convertLPat pat_lhs <*> convertGRHSs pat_rhs
 convertTypedBinding  hsTy FunBind{..}  = do
   (name, opName) <- freeVar (unLoc fun_id) <&> \case
                       name | identIsVariable name -> (name, Nothing)
@@ -593,7 +607,7 @@ convertTypedBinding  hsTy FunBind{..}  = do
                 then Fix . FixOne $ FixBody name argBinders Nothing Nothing match -- TODO recursion and binary operators
                 else Fun argBinders match
   
-  pure $ ConvertedDefinition name tvs coqTy defn opName
+  pure . ConvertedDefinitionBinding $ ConvertedDefinition name tvs coqTy defn opName
 
 convertMatchGroup :: ConversionMonad m => MatchGroup RdrName (LHsExpr RdrName) -> m [Equation]
 convertMatchGroup (MG alts _ _ _) = traverse (convertMatch . unLoc) alts
@@ -1000,8 +1014,10 @@ convertValDecls args = do
         liftIO $ throwGhcExceptionIO exn
   
   fold <$> convertTypedBindings defns sigs
-             (pure . withConvertedDefinition (DefinitionDef Global) (pure . DefinitionSentence)
-                                             toInfix                (map    NotationSentence))
+             (withConvertedBinding
+               (pure . withConvertedDefinition (DefinitionDef Global) (pure . DefinitionSentence)
+                                               toInfix                (map    NotationSentence))
+               (\_ _ -> conv_unsupported "top-level pattern bindings"))
              (Just axiomatize)
 
 {-
@@ -1010,14 +1026,13 @@ Translating `basicTypes/{BasicTypes,Var,DataCon,ConLike,VarSet,VarEnv,SrcLoc}.hs
 `profiling/CostCentre.hs`:
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
- 187 record constructor patterns
-  35 pattern bindings
-  26 pattern guards
+ 189 record constructor patterns
+  30 pattern guards
   21 record constructors
   21 record updates
   17 type class contexts
+  15 possibly-incomplete guards
   14 `do' expressions
-  12 possibly-incomplete guards
 --------------------------------
- 333 TOTAL
+ 307 TOTAL
 -}

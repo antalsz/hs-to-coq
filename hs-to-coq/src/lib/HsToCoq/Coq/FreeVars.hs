@@ -7,6 +7,8 @@ module HsToCoq.Coq.FreeVars (
   getFreeVars, FreeVars(..),
   -- * Binders
   Binding(..), binding',
+  -- * Converting binders to things that contain free variables
+  NoBinding(..),
   -- * Fragments that contain name(s) to bind, but which aren't themselves
   -- 'Binders'
   Names(..),
@@ -174,14 +176,14 @@ instance Binding Definition where
       binding f x
 
 instance Binding Inductive where
-  binding f (Inductive   ibs nots) = binding f (foldMap names ibs) . (freeVars ibs *> binding' nots (pure ()) *>)
-  binding f (CoInductive cbs nots) = binding f (foldMap names cbs) . (freeVars cbs *> binding' nots (pure ()) *>)
+  binding f (Inductive   ibs nots) = binding f (foldMap names ibs) . (freeVars ibs *> freeVars (NoBinding nots) *>)
+  binding f (CoInductive cbs nots) = binding f (foldMap names cbs) . (freeVars cbs *> freeVars (NoBinding nots) *>)
   -- The notation bindings here can only rebind existing reserved names, so we
   -- fake out @binding' nots@ to get the free variables.
 
 instance Binding Fixpoint where
-  binding f (Fixpoint   fbs nots) = binding f (foldMap names fbs) . (freeVars fbs *> binding' nots (pure ()) *>)
-  binding f (CoFixpoint cbs nots) = binding f (foldMap names cbs) . (freeVars cbs *> binding' nots (pure ()) *>)
+  binding f (Fixpoint   fbs nots) = binding f (foldMap names fbs) . (freeVars fbs *> freeVars (NoBinding nots) *>)
+  binding f (CoFixpoint cbs nots) = binding f (foldMap names cbs) . (freeVars cbs *> freeVars (NoBinding nots) *>)
   -- The notation bindings here can only rebind existing reserved names, so we
   -- fake out @binding' nots@ to get the free variables.
 
@@ -429,3 +431,10 @@ instance FreeVars t => FreeVars [t] where
 
 instance FreeVars t => FreeVars (NonEmpty t) where
   freeVars = foldableFreeVars
+
+----------------------------------------------------------------------------------------------------
+
+newtype NoBinding b = NoBinding { getNoBinding :: b } deriving (Eq, Ord, Show, Read)
+
+instance Binding b => FreeVars (NoBinding b) where
+  freeVars (NoBinding b) = binding' b $ pure ()

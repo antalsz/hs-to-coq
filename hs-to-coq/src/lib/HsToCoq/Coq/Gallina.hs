@@ -58,6 +58,8 @@ module HsToCoq.Coq.Gallina (
   AssertionKeyword(..),
   Tactics,
   Proof(..),
+  ClassDefinition(..),
+  InstanceDefinition(..),
   Associativity(..),
   Level(..),
   Notation(..),
@@ -128,234 +130,246 @@ type Op          = Text
 -- and 'LetTickDep' cases).
 --
 -- @/term/ ::=@
-data Term = Forall Binders Term                                                 -- ^@forall /binders/, /term/@
-          | Fun Binders Term                                                    -- ^@fun /binders/ => /term/@
-          | Fix FixBodies                                                       -- ^@fix /fix_bodies/@
-          | Cofix CofixBodies                                                   -- ^@cofix /cofix_bodies/@
-          | Let Ident [Binder] (Maybe Term) Term Term                           -- ^@let /ident/ [/binders/] [: /term/] := /term/ in /term/@
-          | LetFix FixBody Term                                                 -- ^@let fix /fix_body/ in /term/@
-          | LetCofix CofixBody Term                                             -- ^@let cofix /cofix_body/ in /term/@
-          | LetTuple [Name] (Maybe DepRetType) Term Term                        -- ^@let ( [/name/ , … , /name/] ) [/dep_ret_type/] := /term/ in /term/@
-          | LetTick Pattern Term Term                                           -- ^@let ' /pattern/ := /term/ in /term/@
-          | LetTickDep Pattern (Maybe (Qualid, [Pattern])) Term ReturnType Term -- ^@let ' /pattern/ [in /qualid/ [/pattern/ … /pattern/]] := /term/ /return_type/ in /term/@
-          | If Term (Maybe DepRetType) Term Term                                -- ^@if /term/ [/dep_ret_type/] then /term/ else /term/@
-          | HasType Term Term                                                   -- ^@/term/ : /term/@
-          | CheckType Term Term                                                 -- ^@/term/ <: /term/@
-          | ToSupportType Term                                                  -- ^@/term/ :>@
-          | Arrow Term Term                                                     -- ^@/term/ -> /term/@
-          | App Term (NonEmpty Arg)                                             -- ^@/term/ /arg/ … /arg/@
-          | ExplicitApp Qualid [Term]                                           -- ^@\@ /qualid/ [/term/ … /term/]@
-          | Infix Term Op Term                                                  -- ^@/term/ /op/ /term/@ – extra
-          | InScope Term Ident                                                  -- ^@/term/ % /ident/@
-          | Match (NonEmpty MatchItem) (Maybe ReturnType) [Equation]            -- ^@match /match_item/ , … , /match_item/ [/return_type/] with [[|] /equation/ | … | /equation/] end@
-          | Qualid Qualid                                                       -- ^@/qualid/@
-          | Sort Sort                                                           -- ^@/sort/@
-          | Num Num                                                             -- ^@/num/@
-          | String Text                                                         -- ^@/string/@ – extra (holds the value, not the source text)
-          | Underscore                                                          -- ^@_@
-          | Parens Term                                                         -- ^@( /term/ )@
+data Term = Forall Binders Term                                                    -- ^@forall /binders/, /term/@
+          | Fun Binders Term                                                       -- ^@fun /binders/ => /term/@
+          | Fix FixBodies                                                          -- ^@fix /fix_bodies/@
+          | Cofix CofixBodies                                                      -- ^@cofix /cofix_bodies/@
+          | Let Ident [Binder] (Maybe Term) Term Term                              -- ^@let /ident/ [/binders/] [: /term/] := /term/ in /term/@
+          | LetFix FixBody Term                                                    -- ^@let fix /fix_body/ in /term/@
+          | LetCofix CofixBody Term                                                -- ^@let cofix /cofix_body/ in /term/@
+          | LetTuple [Name] (Maybe DepRetType) Term Term                           -- ^@let ( [/name/ , … , /name/] ) [/dep_ret_type/] := /term/ in /term/@
+          | LetTick Pattern Term Term                                              -- ^@let ' /pattern/ := /term/ in /term/@
+          | LetTickDep Pattern (Maybe (Qualid, [Pattern])) Term ReturnType Term    -- ^@let ' /pattern/ [in /qualid/ [/pattern/ … /pattern/]] := /term/ /return_type/ in /term/@
+          | If Term (Maybe DepRetType) Term Term                                   -- ^@if /term/ [/dep_ret_type/] then /term/ else /term/@
+          | HasType Term Term                                                      -- ^@/term/ : /term/@
+          | CheckType Term Term                                                    -- ^@/term/ <: /term/@
+          | ToSupportType Term                                                     -- ^@/term/ :>@
+          | Arrow Term Term                                                        -- ^@/term/ -> /term/@
+          | App Term (NonEmpty Arg)                                                -- ^@/term/ /arg/ … /arg/@
+          | ExplicitApp Qualid [Term]                                              -- ^@\@ /qualid/ [/term/ … /term/]@
+          | Infix Term Op Term                                                     -- ^@/term/ /op/ /term/@ – extra
+          | InScope Term Ident                                                     -- ^@/term/ % /ident/@
+          | Match (NonEmpty MatchItem) (Maybe ReturnType) [Equation]               -- ^@match /match_item/ , … , /match_item/ [/return_type/] with [[|] /equation/ | … | /equation/] end@
+          | Qualid Qualid                                                          -- ^@/qualid/@
+          | Sort Sort                                                              -- ^@/sort/@
+          | Num Num                                                                -- ^@/num/@
+          | String Text                                                            -- ^@/string/@ – extra (holds the value, not the source text)
+          | Underscore                                                             -- ^@_@
+          | Parens Term                                                            -- ^@( /term/ )@
           deriving (Eq, Ord, Show, Read, Typeable, Data)
 
 -- |@/arg/ ::=@
-data Arg = PosArg Term                                                          -- ^@/term/@
-         | NamedArg Ident Term                                                  -- ^@( /ident/ := /term/ )@
+data Arg = PosArg Term                                                             -- ^@/term/@
+         | NamedArg Ident Term                                                     -- ^@( /ident/ := /term/ )@
          deriving (Eq, Ord, Show, Read, Typeable, Data)
 
 -- |@/binders/ ::= /binder/ … /binder/@
 type Binders = NonEmpty Binder
 
 -- |@[ ::=@ – not a part of the grammar /per se/, but a common fragment
-data Explicitness = Explicit                                                    -- ^@( ⋯ )@ – wrap in parentheses
-                  | Implicit                                                    -- ^@{ ⋯ }@ – wrap in braces
+data Explicitness = Explicit                                                       -- ^@( ⋯ )@ – wrap in parentheses
+                  | Implicit                                                       -- ^@{ ⋯ }@ – wrap in braces
                   deriving (Eq, Ord, Show, Read, Enum, Bounded, Typeable, Data)
 
 -- |@/binder/ ::=@ – the @/explicitness/@ is extra
-data Binder = Inferred Explicitness Name                                        -- ^@/name/@ or @{ /name/ }@
-            | Typed Explicitness (NonEmpty Name) Term                           -- ^@( /name/ … /name/ : /term/ )@ or @{ /name/ … /name/ : /term/ }@
-            | BindLet Name (Maybe Term) Term                                    -- ^@( /name/ [: /term/] := /term/ )@
+data Binder = Inferred Explicitness Name                                           -- ^@/name/@ or @{ /name/ }@
+            | Typed Explicitness (NonEmpty Name) Term                              -- ^@( /name/ … /name/ : /term/ )@ or @{ /name/ … /name/ : /term/ }@
+            | BindLet Name (Maybe Term) Term                                       -- ^@( /name/ [: /term/] := /term/ )@
             deriving (Eq, Ord, Show, Read, Typeable, Data)
 
 -- |@/name/ ::=@
-data Name = Ident Ident                                                         -- ^@/ident/@
-          | UnderscoreName                                                      -- ^@_@
+data Name = Ident Ident                                                            -- ^@/ident/@
+          | UnderscoreName                                                         -- ^@_@
           deriving (Eq, Ord, Show, Read, Typeable, Data)
 
 -- |@/qualid/ ::=@
-data Qualid = Bare Ident                                                        -- ^@/ident/@
-            | Qualified Qualid AccessIdent                                      -- ^@/qualid/ /access_ident/@
+data Qualid = Bare Ident                                                           -- ^@/ident/@
+            | Qualified Qualid AccessIdent                                         -- ^@/qualid/ /access_ident/@
             deriving (Eq, Ord, Show, Read, Typeable, Data)
 
 -- |@/sort/ ::=@
-data Sort = Prop                                                                -- ^@Prop@
-          | Set                                                                 -- ^@Set@
-          | Type                                                                -- ^@Type@
+data Sort = Prop                                                                   -- ^@Prop@
+          | Set                                                                    -- ^@Set@
+          | Type                                                                   -- ^@Type@
           deriving (Eq, Ord, Show, Read, Enum, Bounded, Typeable, Data)
 
 -- |@/fix_bodies/ ::=@
-data FixBodies = FixOne FixBody                                                 -- ^@/fix_body/@
-               | FixMany FixBody (NonEmpty FixBody) Ident                       -- ^@/fix_body/ with /fix_body/ with … with /fix_body/ for /ident/@
+data FixBodies = FixOne FixBody                                                    -- ^@/fix_body/@
+               | FixMany FixBody (NonEmpty FixBody) Ident                          -- ^@/fix_body/ with /fix_body/ with … with /fix_body/ for /ident/@
                deriving (Eq, Ord, Show, Read, Typeable, Data)
 
 -- |@/cofix_bodies/ ::=@
-data CofixBodies = CofixOne CofixBody                                           -- ^@/cofix_body/@
-                 | CofixMany CofixBody (NonEmpty CofixBody) Ident               -- ^@/cofix_body/ with /cofix_body/ with … with /cofix_body/ for /ident/@
+data CofixBodies = CofixOne CofixBody                                              -- ^@/cofix_body/@
+                 | CofixMany CofixBody (NonEmpty CofixBody) Ident                  -- ^@/cofix_body/ with /cofix_body/ with … with /cofix_body/ for /ident/@
                  deriving (Eq, Ord, Show, Read, Typeable, Data)
 
 -- |@/fix_body/ ::=@
-data FixBody = FixBody Ident Binders (Maybe Annotation) (Maybe Term) Term       -- ^@/ident/ /binders/ [/annotation/] [: /term/] := /term/@
+data FixBody = FixBody Ident Binders (Maybe Annotation) (Maybe Term) Term          -- ^@/ident/ /binders/ [/annotation/] [: /term/] := /term/@
              deriving (Eq, Ord, Show, Read, Typeable, Data)
 
 -- |@/cofix_body/ ::=@
-data CofixBody = CofixBody Ident Binders (Maybe Term) Term                      -- ^@/ident/ /binders/ [: /term/] := /term/@
+data CofixBody = CofixBody Ident Binders (Maybe Term) Term                         -- ^@/ident/ /binders/ [: /term/] := /term/@
                deriving (Eq, Ord, Show, Read, Typeable, Data)
 
 -- |@/annotation/ ::=@
-newtype Annotation = Annotation Ident                                           -- ^@{ struct /ident/ }@
+newtype Annotation = Annotation Ident                                              -- ^@{ struct /ident/ }@
                    deriving (Eq, Ord, Show, Read, Typeable, Data)
 
 -- |@/match_item/ ::=@
-data MatchItem = MatchItem Term (Maybe Name) (Maybe (Qualid, [Pattern]))        -- ^@/term/ [as /name/] [in /qualid/ [/pattern/ … /pattern/]]@
+data MatchItem = MatchItem Term (Maybe Name) (Maybe (Qualid, [Pattern]))           -- ^@/term/ [as /name/] [in /qualid/ [/pattern/ … /pattern/]]@
                deriving (Eq, Ord, Show, Read, Typeable, Data)
 
 -- |@/dep_ret_type/ ::=@
-data DepRetType = DepRetType (Maybe Name) ReturnType                            -- ^@[as /name/] /return_type/@
+data DepRetType = DepRetType (Maybe Name) ReturnType                               -- ^@[as /name/] /return_type/@
                 deriving (Eq, Ord, Show, Read, Typeable, Data)
 
 -- |@/return_type/ ::=@
-newtype ReturnType = ReturnType Term                                            -- ^@return /term/@
+newtype ReturnType = ReturnType Term                                               -- ^@return /term/@
                    deriving (Eq, Ord, Show, Read, Typeable, Data)
 
 -- |@/equation/ ::=@
-data Equation = Equation (NonEmpty MultPattern) Term                            -- ^@/mult_pattern/ | … | /mult_pattern/ => /term/@
+data Equation = Equation (NonEmpty MultPattern) Term                               -- ^@/mult_pattern/ | … | /mult_pattern/ => /term/@
               deriving (Eq, Ord, Show, Read, Typeable, Data)
 
 -- |@/mult_pattern/ ::=@
-newtype MultPattern = MultPattern (NonEmpty Pattern)                            -- ^@/pattern/ , … , /pattern/@
+newtype MultPattern = MultPattern (NonEmpty Pattern)                               -- ^@/pattern/ , … , /pattern/@
                     deriving (Eq, Ord, Show, Read, Typeable, Data)
 
 -- |@/pattern/ ::=@
-data Pattern = ArgsPat Qualid (NonEmpty Pattern)                                -- ^@/qualid/ /pattern/ … /pattern/@
-             | ExplicitArgsPat Qualid (NonEmpty Pattern)                        -- ^@\@ /qualid/ /pattern/ … /pattern/@
-             | InfixPat Pattern Op Pattern                                      -- ^@/pattern/ /op/ /pattern/@ – extra
-             | AsPat Pattern Ident                                              -- ^@/pattern/ as /ident/@
-             | InScopePat Pattern Ident                                         -- ^@/pattern/ % /ident/@
-             | QualidPat Qualid                                                 -- ^@/qualid/@
-             | UnderscorePat                                                    -- ^@_@
-             | NumPat Num                                                       -- ^@/num/@
-             | StringPat Text                                                   -- ^@/string/@ – extra (holds the value, not the source text)
-             | OrPats (NonEmpty OrPattern)                                      -- ^@( /or_pattern/ , … , /or_pattern/ )@
+data Pattern = ArgsPat Qualid (NonEmpty Pattern)                                   -- ^@/qualid/ /pattern/ … /pattern/@
+             | ExplicitArgsPat Qualid (NonEmpty Pattern)                           -- ^@\@ /qualid/ /pattern/ … /pattern/@
+             | InfixPat Pattern Op Pattern                                         -- ^@/pattern/ /op/ /pattern/@ – extra
+             | AsPat Pattern Ident                                                 -- ^@/pattern/ as /ident/@
+             | InScopePat Pattern Ident                                            -- ^@/pattern/ % /ident/@
+             | QualidPat Qualid                                                    -- ^@/qualid/@
+             | UnderscorePat                                                       -- ^@_@
+             | NumPat Num                                                          -- ^@/num/@
+             | StringPat Text                                                      -- ^@/string/@ – extra (holds the value, not the source text)
+             | OrPats (NonEmpty OrPattern)                                         -- ^@( /or_pattern/ , … , /or_pattern/ )@
              deriving (Eq, Ord, Show, Read, Typeable, Data)
 
 -- |@/or_pattern/ ::=@
-newtype OrPattern = OrPattern (NonEmpty Pattern)                                -- ^@/pattern/ | … | /pattern/@
+newtype OrPattern = OrPattern (NonEmpty Pattern)                                   -- ^@/pattern/ | … | /pattern/@
                   deriving (Eq, Ord, Show, Read, Typeable, Data)
 
 -- |@/comment/ ::=@ – extra
-newtype Comment = Comment Text                                                  -- ^@(* … *)@
+newtype Comment = Comment Text                                                     -- ^@(* … *)@
                 deriving (Eq, Ord, Show, Read, Typeable, Data)
 
 -- $Vernacular
 -- <https://coq.inria.fr/distrib/current/refman/Reference-Manual003.html#Vernacular §1.3, \"The Vernacular\", in the Coq reference manual.>.
 --
--- We also add cases to deal with certain notation definitions.
+-- We also add cases to deal with certain notation definitions and similar.
 
 -- |@/sentence/ ::=@
-data Sentence = AssumptionSentence Assumption                                   -- ^@/assumption/@
-              | DefinitionSentence Definition                                   -- ^@/definition/@
-              | InductiveSentence  Inductive                                    -- ^@/inductive/@
-              | FixpointSentence   Fixpoint                                     -- ^@/fixpoint/@
-              | AssertionSentence  Assertion Proof                              -- ^@/assertion/ /proof/@
-              | NotationSentence   Notation                                     -- ^@/notation/@ /(extra)/
-              | CommentSentence    Comment                                      -- ^@/comment/@ /(extra)/
+data Sentence = AssumptionSentence Assumption                                      -- ^@/assumption/@
+              | DefinitionSentence Definition                                      -- ^@/definition/@
+              | InductiveSentence  Inductive                                       -- ^@/inductive/@
+              | FixpointSentence   Fixpoint                                        -- ^@/fixpoint/@
+              | AssertionSentence  Assertion Proof                                 -- ^@/assertion/ /proof/@
+              | ClassSentence      ClassDefinition                                 -- ^@/class_definition/@ /(extra)/
+              | InstanceSentence   InstanceDefinition                              -- ^@/instance_definition/@ /(extra)/
+              | NotationSentence   Notation                                        -- ^@/notation/@ /(extra)/
+              | CommentSentence    Comment                                         -- ^@/comment/@ /(extra)/
               deriving (Eq, Ord, Show, Read, Typeable, Data)
 
 -- |@/assumption/ ::=@
-data Assumption = Assumption AssumptionKeyword Assums                           -- ^@/assumption_keyword/ /assums/ .@
+data Assumption = Assumption AssumptionKeyword Assums                              -- ^@/assumption_keyword/ /assums/ .@
                 deriving (Eq, Ord, Show, Read, Typeable, Data)
 
 -- |@/assumption_keyword/ ::=@
-data AssumptionKeyword = Axiom                                                  -- ^@Axiom@
-                       | Axioms                                                 -- ^@Axioms@ – not in the grammar, but accepted.
-                       | Conjecture                                             -- ^@Conjecture@
-                       | Parameter                                              -- ^@Parameter@
-                       | Parameters                                             -- ^@Parameters@
-                       | Variable                                               -- ^@Variable@
-                       | Variables                                              -- ^@Variables@
-                       | Hypothesis                                             -- ^@Hypothesis@
-                       | Hypotheses                                             -- ^@Hypotheses@
+data AssumptionKeyword = Axiom                                                     -- ^@Axiom@
+                       | Axioms                                                    -- ^@Axioms@ – not in the grammar, but accepted.
+                       | Conjecture                                                -- ^@Conjecture@
+                       | Parameter                                                 -- ^@Parameter@
+                       | Parameters                                                -- ^@Parameters@
+                       | Variable                                                  -- ^@Variable@
+                       | Variables                                                 -- ^@Variables@
+                       | Hypothesis                                                -- ^@Hypothesis@
+                       | Hypotheses                                                -- ^@Hypotheses@
                        deriving (Eq, Ord, Show, Read, Enum, Bounded, Typeable, Data)
 
 -- |@/assums/ ::=@
-data Assums = UnparenthesizedAssums (NonEmpty Ident) Term                       -- ^@/ident/ … /ident/ : /term/@
-            | ParenthesizedAssums (NonEmpty (NonEmpty Ident, Term))             -- ^@( /ident/ … /ident/ : /term ) … ( /ident/ … /ident/ : /term)@
+data Assums = UnparenthesizedAssums (NonEmpty Ident) Term                          -- ^@/ident/ … /ident/ : /term/@
+            | ParenthesizedAssums (NonEmpty (NonEmpty Ident, Term))                -- ^@( /ident/ … /ident/ : /term ) … ( /ident/ … /ident/ : /term)@
             deriving (Eq, Ord, Show, Read, Typeable, Data)
 
 -- |@[Local] ::=@ – not a part of the grammar /per se/, but a common fragment
-data Locality = Global                                                          -- ^@@ – (nothing)
-              | Local                                                           -- ^@Local@
+data Locality = Global                                                             -- ^@@ – (nothing)
+              | Local                                                              -- ^@Local@
               deriving (Eq, Ord, Show, Read, Enum, Bounded, Typeable, Data)
 
 -- |@/definition/ ::=@
-data Definition = DefinitionDef Locality Ident [Binder] (Maybe Term) Term       -- ^@[Local] Definition /ident/ [/binders/] [: /term/] := /term/ .@
-                | LetDef Ident [Binder] (Maybe Term) Term                       -- ^@Let /ident/ [/binders/] [: /term/] := /term/ .@
+data Definition = DefinitionDef Locality Ident [Binder] (Maybe Term) Term          -- ^@[Local] Definition /ident/ [/binders/] [: /term/] := /term/ .@
+                | LetDef Ident [Binder] (Maybe Term) Term                          -- ^@Let /ident/ [/binders/] [: /term/] := /term/ .@
                 deriving (Eq, Ord, Show, Read, Typeable, Data)
 
 -- |@/inductive/ ::=@ – the @where@ notation bindings are extra
-data Inductive = Inductive   (NonEmpty IndBody) [NotationBinding]               -- ^@Inductive /ind_body/ with … with /ind_body/ [where /notation_binding/ and … and /notation_binding/] .@
-               | CoInductive (NonEmpty IndBody) [NotationBinding]               -- ^@CoInductive /ind_body/ with … with /ind_body/ [where /notation_binding/ and … and /notation_binding/] .@
+data Inductive = Inductive   (NonEmpty IndBody) [NotationBinding]                  -- ^@Inductive /ind_body/ with … with /ind_body/ [where /notation_binding/ and … and /notation_binding/] .@
+               | CoInductive (NonEmpty IndBody) [NotationBinding]                  -- ^@CoInductive /ind_body/ with … with /ind_body/ [where /notation_binding/ and … and /notation_binding/] .@
                deriving (Eq, Ord, Show, Read, Typeable, Data)
 
 -- |@/ind_body/ ::=@
-data IndBody = IndBody Ident [Binder] Term [(Ident, [Binder], Maybe Term)]      -- ^@/ident/ [/binders/] : /term/ := [[|] /ident/ [/binders/] [: /term/] | … | /ident/ [/binders/] [: /term/]]@
+data IndBody = IndBody Ident [Binder] Term [(Ident, [Binder], Maybe Term)]         -- ^@/ident/ [/binders/] : /term/ := [[|] /ident/ [/binders/] [: /term/] | … | /ident/ [/binders/] [: /term/]]@
              deriving (Eq, Ord, Show, Read, Typeable, Data)
 
 -- |@/fixpoint/ ::=@
-data Fixpoint = Fixpoint   (NonEmpty FixBody)   [NotationBinding]               -- ^@Fixpoint /fix_body/ with … with /fix_body/ [where /notation_binding/ and … and /notation_binding/] .@
-              | CoFixpoint (NonEmpty CofixBody) [NotationBinding]               -- ^@CoFixpoint /fix_body/ with … with /fix_body/ [where /notation_binding/ and … and /notation_binding/] .@
+data Fixpoint = Fixpoint   (NonEmpty FixBody)   [NotationBinding]                  -- ^@Fixpoint /fix_body/ with … with /fix_body/ [where /notation_binding/ and … and /notation_binding/] .@
+              | CoFixpoint (NonEmpty CofixBody) [NotationBinding]                  -- ^@CoFixpoint /fix_body/ with … with /fix_body/ [where /notation_binding/ and … and /notation_binding/] .@
               deriving (Eq, Ord, Show, Read, Typeable, Data)
 
 -- |@/assertion/ ::=@
-data Assertion = Assertion AssertionKeyword Ident [Binder] Term                 -- ^@/assertion_keyword/ /ident/ [/binders/] : /term/ .@
+data Assertion = Assertion AssertionKeyword Ident [Binder] Term                    -- ^@/assertion_keyword/ /ident/ [/binders/] : /term/ .@
                deriving (Eq, Ord, Show, Read, Typeable, Data)
 
 -- |@/assertion_keyword/ ::=@
-data AssertionKeyword = Theorem                                                 -- ^@Theorem@
-                      | Lemma                                                   -- ^@Lemma@
-                      | Remark                                                  -- ^@Remark@
-                      | Fact                                                    -- ^@Fact@
-                      | Corollary                                               -- ^@Corollary@
-                      | Proposition                                             -- ^@Proposition@
-                      | Definition                                              -- ^@Definition@
-                      | Example                                                 -- ^@Example@
+data AssertionKeyword = Theorem                                                    -- ^@Theorem@
+                      | Lemma                                                      -- ^@Lemma@
+                      | Remark                                                     -- ^@Remark@
+                      | Fact                                                       -- ^@Fact@
+                      | Corollary                                                  -- ^@Corollary@
+                      | Proposition                                                -- ^@Proposition@
+                      | Definition                                                 -- ^@Definition@
+                      | Example                                                    -- ^@Example@
                       deriving (Eq, Ord, Show, Read, Enum, Bounded, Typeable, Data)
 
 -- |A \"representation\" of tactics; left as @…@ in the grammar
 type Tactics = Text
 
 -- |@/proof/ ::=@
-data Proof = ProofQed      Tactics                                              -- ^@Proof . … Qed .@
-           | ProofDefined  Tactics                                              -- ^@Proof . … Defined .@
-           | ProofAdmitted Tactics                                              -- ^@Proof . … Admitted .@
+data Proof = ProofQed      Tactics                                                 -- ^@Proof . … Qed .@
+           | ProofDefined  Tactics                                                 -- ^@Proof . … Defined .@
+           | ProofAdmitted Tactics                                                 -- ^@Proof . … Admitted .@
            deriving (Eq, Ord, Show, Read, Typeable, Data)
 
+-- |@/class_definition/ ::=@ /(extra)/
+data ClassDefinition = ClassDefinition Ident [Binder] (Maybe Sort) [(Ident, Term)] -- ^@Class /ident/ [/binders/] [: /sort/] := { [/ident/ : /term/ ; … ; /ident/ : /term/] } .
+                     deriving (Eq, Ord, Show, Read, Typeable, Data)
+                     -- TODO: field arguments (which become @forall@ed)
+
+-- |@/instance_definition/ ::=@ /(extra)/
+data InstanceDefinition = InstanceDefinition Ident Ident [Term] [(Ident, Term)]    -- ^@Instance /ident/ : /ident/ [/term/ … /term/] := { [/ident/ := /term/ ; … ; /ident/ := /term/] } .
+                        deriving (Eq, Ord, Show, Read, Typeable, Data)
+                        -- TODO: field arguments (which become @fun@ arguments)
+
 -- |@/associativity/ ::=@ – extra
-data Associativity = LeftAssociativity                                          -- ^@left@
-                   | RightAssociativity                                         -- ^@right@
-                   | NoAssociativity                                            -- ^@no@
+data Associativity = LeftAssociativity                                             -- ^@left@
+                   | RightAssociativity                                            -- ^@right@
+                   | NoAssociativity                                               -- ^@no@
                    deriving (Eq, Ord, Show, Read, Typeable, Data)
 
 -- |@/level/ ::=@ – extra
-newtype Level = Level Num                                                       -- ^@at level /num/@
+newtype Level = Level Num                                                          -- ^@at level /num/@
               deriving (Eq, Ord, Show, Read, Typeable, Data)
 
 -- |@/notation/ ::=@ /(extra)/
-data Notation = ReservedNotationIdent Ident                                     -- ^@Reserved Notation "'/ident/'" .@
-              | NotationBinding NotationBinding                                 -- ^@Notation /notation_binding/ .@
-              | InfixDefinition Op Term (Maybe Associativity) Level             -- ^@Infix "/op/" := ( /term/ ) ( [/associativity/ associativity ,] /level/ ) .@
+data Notation = ReservedNotationIdent Ident                                        -- ^@Reserved Notation "'/ident/'" .@
+              | NotationBinding NotationBinding                                    -- ^@Notation /notation_binding/ .@
+              | InfixDefinition Op Term (Maybe Associativity) Level                -- ^@Infix "/op/" := ( /term/ ) ( [/associativity/ associativity ,] /level/ ) .@
               deriving (Eq, Ord, Show, Read, Typeable, Data)
 
 -- |@/notation_binding/ ::=@ /(extra)/
-data NotationBinding = NotationIdentBinding Ident Term                          -- ^@"'/ident/'" := (/term/) .@
+data NotationBinding = NotationIdentBinding Ident Term                             -- ^@"'/ident/'" := (/term/) .@
                      deriving (Eq, Ord, Show, Read, Typeable, Data)
 
 -- Formatting
@@ -664,6 +678,8 @@ instance Gallina Sentence where
   renderGallina' p (InductiveSentence  ind)    = renderGallina' p ind
   renderGallina' p (FixpointSentence   fix)    = renderGallina' p fix
   renderGallina' p (AssertionSentence  ass pf) = renderGallina' p ass <!> renderGallina' p pf
+  renderGallina' p (ClassSentence      cls)    = renderGallina' p cls
+  renderGallina' p (InstanceSentence   ins)    = renderGallina' p ins
   renderGallina' p (NotationSentence   not)    = renderGallina' p not
   renderGallina' p (CommentSentence    com)    = renderGallina' p com
 
@@ -749,6 +765,20 @@ instance Gallina Proof where
     ProofAdmitted body -> renderProof "Admitted" body
     where
       renderProof end body = "Proof." <!> indent 2 (string body) <!> end <> "."
+
+instance Gallina ClassDefinition where
+  renderGallina' _ (ClassDefinition cl params osort fields) =
+    "Class" <+> renderIdent cl <+> spaceIf params <> render_args_oty H params (Sort <$> osort)
+            <+> nest 2 (":=" </> "{" <> spaceIf fields
+                                     <> sepWith (<+>) (</>) ";" (map (\(f,ty) -> renderIdent f <+> ":" <+> renderGallina ty) fields)
+                                     <> spaceIf fields <> "}.")
+
+instance Gallina InstanceDefinition where
+  renderGallina' _ (InstanceDefinition inst cl args defns) =
+    "Instance" <+> renderIdent inst <+> ":" <+> renderIdent cl <> spaceIf args <> render_args H args
+               <+> nest 2 (":=" </> "{" <> spaceIf defns
+                                        <> sepWith (<+>) (</>) ";" (map (\(f,def) -> renderIdent f <+> ":=" <+> renderGallina def) defns)
+                                        <> spaceIf defns <> "}.")
 
 instance Gallina Associativity where
   renderGallina' _ LeftAssociativity  = "left"

@@ -149,6 +149,8 @@ instance Binding Sentence where
   binding f (InductiveSentence  ind)       = binding f ind
   binding f (FixpointSentence   fix)       = binding f fix
   binding f (AssertionSentence  assert pf) = binding f assert . (freeVars pf *>)
+  binding f (ClassSentence      cls)       = binding f cls
+  binding f (InstanceSentence   ins)       = binding f ins
   binding f (NotationSentence   not)       = binding f not
   binding _ (CommentSentence    com)       = (freeVars com *>)
 
@@ -192,6 +194,18 @@ instance Binding Assertion where
     (freeVars kwd *> binding f args (freeVars ty) *>) .
     binding f name
     -- The @kwd@ part is pro forma – there are no free variables there
+
+instance Binding ClassDefinition where
+  binding f (ClassDefinition cl params _ fields) =
+    (freeVars (NoBinding params) *>) .
+    binding f cl .
+    flip (foldr (\(field,ty) -> (binding f params (freeVars ty) *>) . binding f field)) fields
+
+instance Binding InstanceDefinition where
+  binding f (InstanceDefinition inst cl args defns) =
+    (freeVars args *> freeVars (map snd defns) *>) .
+    binding f inst .
+    binding f cl
 
 instance Binding Notation where
   binding f (ReservedNotationIdent x) = binding f x

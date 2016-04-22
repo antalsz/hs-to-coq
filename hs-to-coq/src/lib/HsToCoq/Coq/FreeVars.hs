@@ -63,7 +63,8 @@ instance Binding Binder where
   binding f (Inferred ex x) getFVs = do
     freeVars ex
     binding f x getFVs
-  binding f (Typed ex xs ty) getFVs = do
+  binding f (Typed gen ex xs ty) getFVs = do
+    freeVars gen
     freeVars ex
     freeVars ty
     foldr (binding f) getFVs xs
@@ -71,6 +72,10 @@ instance Binding Binder where
     freeVars oty
     freeVars val
     binding f x getFVs
+  binding _ (Generalized ex ty) getFVs = do
+    freeVars ex
+    freeVars ty
+    getFVs
 
 instance Binding Annotation where
   binding f (Annotation x) = binding f x
@@ -336,6 +341,10 @@ instance FreeVars Arg where
   freeVars (NamedArg _x t) = freeVars t
     -- The name here is the name of a function parameter; it's not an occurrence
     -- of a Gallina-level variable.
+
+instance FreeVars Generalizability where
+  freeVars Ungeneralizable = pure ()
+  freeVars Generalizable   = pure ()
 
 instance FreeVars Explicitness where
   freeVars Explicit = pure ()

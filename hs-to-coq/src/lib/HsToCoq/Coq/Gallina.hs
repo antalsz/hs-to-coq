@@ -24,6 +24,7 @@ module HsToCoq.Coq.Gallina (
   Term(..),
   Arg(..),
   Binders,
+  Generalizability(..),
   Explicitness(..),
   Binder(..),
   Name(..),
@@ -166,15 +167,21 @@ data Arg = PosArg Term                                                          
 -- |@/binders/ ::= /binder/ … /binder/@
 type Binders = NonEmpty Binder
 
--- |@[ ::=@ – not a part of the grammar /per se/, but a common fragment
+-- |@/generalizability/ ::=@ – not a part of the grammar /per se/, but a common fragment
+data Generalizability = Ungeneralizable                                            -- ^@@ – (nothing)
+                      | Generalizable                                              -- ^@`@
+                      deriving (Eq, Ord, Show, Read, Enum, Bounded, Typeable, Data)
+
+-- |@/explicitness/ ::=@ – not a part of the grammar /per se/, but a common fragment
 data Explicitness = Explicit                                                       -- ^@( ⋯ )@ – wrap in parentheses
                   | Implicit                                                       -- ^@{ ⋯ }@ – wrap in braces
                   deriving (Eq, Ord, Show, Read, Enum, Bounded, Typeable, Data)
 
 -- |@/binder/ ::=@ – the @/explicitness/@ is extra
 data Binder = Inferred Explicitness Name                                           -- ^@/name/@ or @{ /name/ }@
-            | Typed Explicitness (NonEmpty Name) Term                              -- ^@( /name/ … /name/ : /term/ )@ or @{ /name/ … /name/ : /term/ }@
+            | Typed Generalizability Explicitness (NonEmpty Name) Term             -- ^@/generalizability/@ @( /name/ … /name/ : /term/ )@ or @/generalizability/@ @{ /name/ … /name/ : /term/ }@
             | BindLet Name (Maybe Term) Term                                       -- ^@( /name/ [: /term/] := /term/ )@
+            | Generalized Explicitness Term                                        -- ^@` ( /term/ )@ or @` { /term/ }@
             deriving (Eq, Ord, Show, Read, Typeable, Data)
 
 -- |@/name/ ::=@
@@ -562,17 +569,26 @@ instance Gallina Arg where
   renderGallina' _ (NamedArg name t) =
     hang 2 . parens $ renderIdent name </> ":=" <+> align (renderGallina t)
 
-ifExplicit :: Explicitness -> (Doc -> Doc) -> Doc -> Doc
-ifExplicit Explicit = ($)
-ifExplicit Implicit = const braces
+-- Module-local
+if_explicit :: Explicitness -> (Doc -> Doc) -> Doc -> Doc
+if_explicit Explicit = ($)
+if_explicit Implicit = const braces
+
+-- Module-local
+-- The 'Bool' is 'True' if parentheses are always necessary and 'False' otherwise.
+binder_decoration :: Generalizability -> Explicitness -> Bool -> Doc -> Doc
+binder_decoration Ungeneralizable ex b = if_explicit ex (if b then parens else id)
+binder_decoration Generalizable   ex _ = ("`" <>) . if_explicit ex parens
 
 instance Gallina Binder where
   renderGallina' _ (Inferred ex name)  =
-    ifExplicit ex id $ renderGallina name
-  renderGallina' _ (Typed ex names ty) =
-    ifExplicit ex parens $ render_args_ty H names ty
+    binder_decoration Ungeneralizable ex False $ renderGallina name
+  renderGallina' _ (Typed gen ex names ty) =
+    binder_decoration gen ex True $ render_args_ty H names ty
   renderGallina' _ (BindLet name oty val) =
     hang 2 . parens $ renderGallina name <> render_opt_type oty </> ":=" <+> align (renderGallina val)
+  renderGallina' _ (Generalized ex ty)  =
+    binder_decoration Generalizable ex True $ renderGallina ty
 
 instance Gallina Name where
   renderGallina' _ (Ident ident)  = renderIdent ident
@@ -768,16 +784,16 @@ instance Gallina Proof where
 
 instance Gallina ClassDefinition where
   renderGallina' _ (ClassDefinition cl params osort fields) =
-    "Class" <+> renderIdent cl <+> spaceIf params <> render_args_oty H params (Sort <$> osort)
-            <+> nest 2 (":=" </> "{" <> spaceIf fields
-                                     <> sepWith (<+>) (</>) ";" (map (\(f,ty) -> renderIdent f <+> ":" <+> renderGallina ty) fields)
+    "Class" <+> renderIdent cl <> spaceIf params <> render_args_oty H params (Sort <$> osort)
+            <+> nest 2 (":=" </> "{" <> lineIf fields
+                                     <> sepWith (<+>) (<!>) ";" (map (\(f,ty) -> renderIdent f <+> ":" <+> renderGallina ty) fields)
                                      <> spaceIf fields <> "}.")
 
 instance Gallina InstanceDefinition where
   renderGallina' _ (InstanceDefinition inst cl args defns) =
     "Instance" <+> renderIdent inst <+> ":" <+> renderIdent cl <> spaceIf args <> render_args H args
-               <+> nest 2 (":=" </> "{" <> spaceIf defns
-                                        <> sepWith (<+>) (</>) ";" (map (\(f,def) -> renderIdent f <+> ":=" <+> renderGallina def) defns)
+               <+> nest 2 (":=" </> "{" <> lineIf defns
+                                        <> sepWith (<+>) (<!>) ";" (map (\(f,def) -> renderIdent f <+> ":=" <+> renderGallina def) defns)
                                         <> spaceIf defns <> "}.")
 
 instance Gallina Associativity where
@@ -813,9 +829,10 @@ let abort = fail "Internal error: unexpected result from `reify'" in
     _ -> abort
 
 binderNames :: Binder -> [Name]
-binderNames (Inferred _ x)  = [x]
-binderNames (Typed _ xs _)  = toList xs
-binderNames (BindLet _ _ _) = []
+binderNames (Inferred _ x)    = [x]
+binderNames (Typed _ _ xs _)  = toList xs
+binderNames (BindLet _ _ _)   = []
+binderNames (Generalized _ _) = []
 
 binderIdents :: Binder -> [Ident]
 binderIdents = mapMaybe (\case Ident x -> Just x ; UnderscoreName -> Nothing) . binderNames

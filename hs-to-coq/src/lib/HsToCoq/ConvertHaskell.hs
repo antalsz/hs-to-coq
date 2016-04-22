@@ -20,6 +20,9 @@ module HsToCoq.ConvertHaskell (
   convertTypedBindings, convertTypedBinding,
   ConvertedBinding(..),
   ConvertedDefinition(..), withConvertedDefinition, withConvertedDefinitionDef, withConvertedDefinitionOp,
+  -- ** Signatures
+  Signature(..), convertSigs, convertLSigs,
+  HsSignature(..), collectSigs, convertSignatures, convertSignature,
   -- ** Terms
   convertType, convertLType,
   convertExpr, convertLExpr,
@@ -34,14 +37,14 @@ module HsToCoq.ConvertHaskell (
   -- ** Literals
   convertInteger, convertString, convertFastString,
   -- ** Declaration groups
-  DeclarationGroup(..), addDeclaration,
-  groupConvDecls, groupTyClDecls, convertDeclarationGroup,
+  DeclarationGroup(..), groupTyClDecls, convertDeclarationGroup,
   -- ** Backing types
   SynBody(..), ConvertedDeclaration(..),
   -- ** Internal
   convertDataDefn, convertConDecl, convertFixity,
   anonymousArg, anonymousArg',
-  identIsVariable, identIsOperator, infixToPrefix,
+  identIsVariable, identIsOperator, infixToCoq, toCoqName, infixToPrefix, toPrefix,
+  buildInfixNotations,
   -- * Coq construction
   pattern Var, pattern App1, pattern App2, appList,
   pattern CoqVarPat, pattern App1Pat, pattern App2Pat, appListPat,
@@ -59,7 +62,7 @@ import Data.Maybe
 import Data.Either
 import Data.Char
 import Data.String
-import Data.List.NonEmpty (NonEmpty(..), (<|), nonEmpty)
+import Data.List.NonEmpty (NonEmpty(..), nonEmpty)
 import qualified Data.List.NonEmpty as NEL
 import Data.Text (Text)
 import qualified Data.Text as T
@@ -68,7 +71,10 @@ import Numeric.Natural
 import Control.Arrow ((&&&))
 import Control.Monad
 import Control.Monad.IO.Class
+import Control.Monad.Except
 import Control.Monad.State
+import HsToCoq.Util.Monad.ListT
+import Control.Monad.Variables
 
 import           Data.Map.Strict (Map)
 import qualified Data.Set        as S
@@ -83,12 +89,14 @@ import RdrName
 import Outputable (OutputableBndr)
 import Panic
 import HsToCoq.Util.GHC.Exception
+import Class
 
 import HsToCoq.Util.Functor
 import HsToCoq.Util.List
 import HsToCoq.Util.Containers
 import HsToCoq.Util.Patterns
 import HsToCoq.Util.GHC
+import HsToCoq.Util.GHC.RdrName
 import HsToCoq.Coq.Gallina
 import qualified HsToCoq.Coq.Gallina as Coq
 import HsToCoq.Coq.FreeVars
@@ -100,28 +108,28 @@ data HsNamespace = ExprNS | TypeNS
 
 type Renaming = Map HsNamespace Ident
 
-type ConversionMonad m = (GhcMonad m, MonadState (Map Ident Renaming) m)
+type ConversionMonad m = (GhcMonad m, MonadState (Map Ident Renaming) m, MonadVariables Ident () m)
 
-evalConversion :: GhcMonad m => StateT (Map Ident Renaming) m a -> m a
-evalConversion = flip evalStateT $ build
-                   [ typ "()" ~> "unit" -- Probably unnecessary
-                   , val "()" ~> "tt"
-                   
-                   , typ "[]" ~> "list"
-                   , val "[]" ~> "nil"
-                   , val ":"  ~> "::"
-                   
-                   , typ "Integer" ~> "Z"
-
-                   , typ "Bool"  ~> "bool"
-                   , val "True"  ~> "true"
-                   , val "False" ~> "false"
-
-                   , typ "String" ~> "string"
-
-                   , typ "Maybe"   ~> "option"
-                   , val "Just"    ~> "Some"
-                   , val "Nothing" ~> "None" ]
+evalConversion :: GhcMonad m => StateT (Map Ident Renaming) (VariablesT Ident () m) a -> m a
+evalConversion conv = evalVariablesT . evalStateT conv $ build
+                        [ typ "()" ~> "unit" -- Probably unnecessary
+                        , val "()" ~> "tt"
+                         
+                        , typ "[]" ~> "list"
+                        , val "[]" ~> "nil"
+                        , val ":"  ~> "::"
+                         
+                        , typ "Integer" ~> "Z"
+                         
+                        , typ "Bool"  ~> "bool"
+                        , val "True"  ~> "true"
+                        , val "False" ~> "false"
+                         
+                        , typ "String" ~> "string"
+                         
+                        , typ "Maybe"   ~> "option"
+                        , val "Just"    ~> "Some"
+                        , val "Nothing" ~> "None" ]
   where
     val hs = (hs,) . M.singleton ExprNS
     typ hs = (hs,) . M.singleton TypeNS
@@ -167,11 +175,22 @@ identIsVariable = T.uncons <&> \case
   Just (h,t) -> (isAlpha h || h == '_') && T.all (\c -> isAlphaNum c || c == '_' || c == '\'') t
   Nothing    -> False
 
+infixToCoq :: Op -> Ident
+infixToCoq name = "__op_" <> T.pack (zEncodeString $ T.unpack name) <> "__"
+
+toCoqName :: Op -> Ident
+toCoqName x | identIsVariable x = x
+            | otherwise         = infixToCoq x
+
 identIsOperator :: Text -> Bool
 identIsOperator = not . identIsVariable
 
 infixToPrefix :: Op -> Ident
 infixToPrefix = ("_" <>) . (<> "_")
+
+toPrefix :: Ident -> Ident
+toPrefix x | identIsVariable x = x
+           | otherwise         = infixToPrefix x
 
 anonymousArg' :: (IsString s, Semigroup s) => Maybe Natural -> s
 anonymousArg' mn = "__arg" <> maybe "" (("_" <>) . fromString . show) mn <> "__"
@@ -222,11 +241,8 @@ convertString :: String -> Term
 convertString = String . T.pack
 
 convertExpr :: ConversionMonad m => HsExpr RdrName -> m Term
-convertExpr (HsVar hsX) = do
-  x <- var ExprNS hsX
-  pure . Var $ if identIsVariable x
-               then x
-               else infixToPrefix x
+convertExpr (HsVar x) =
+  Var . toPrefix <$> var ExprNS x
 
 convertExpr (HsIPVar _) =
   conv_unsupported "implicit parameters"
@@ -544,8 +560,9 @@ withConvertedDefinitionOp :: (Op -> Ident -> a) -> (ConvertedDefinition -> Maybe
 withConvertedDefinitionOp f ConvertedDefinition{..} = fmap (flip f convDefName) convDefInfix
 
 convertLocalBinds :: ConversionMonad m => HsLocalBinds RdrName -> m Term -> m Term
-convertLocalBinds (HsValBinds (ValBindsIn binds sigs)) body = localRenamings $ do
-  convDefs <- convertTypedBindings (map unLoc . bagToList $ binds) (map unLoc sigs) pure Nothing
+convertLocalBinds (HsValBinds (ValBindsIn binds lsigs)) body = localRenamings $ do
+  sigs     <- convertLSigs lsigs
+  convDefs <- convertTypedBindings (map unLoc . bagToList $ binds) sigs pure Nothing
   sequence_ $ mapMaybe (withConvertedBinding (withConvertedDefinitionOp $ rename ExprNS)
                                              (\_ _ -> Nothing))
                        convDefs
@@ -559,39 +576,89 @@ convertLocalBinds (HsIPBinds _) _ =
 convertLocalBinds EmptyLocalBinds body =
   body
 
+buildInfixNotations :: Map Ident Signature -> Op -> Ident -> [Notation]
+buildInfixNotations sigs op def = [ uncurry (InfixDefinition op (Var def))
+                                      . maybe (Nothing, Level 99) (first Just)
+                                      $ sigFixity =<< M.lookup op sigs
+                                  , NotationBinding $ NotationIdentBinding (infixToPrefix op) (Var def) ]
+
+data HsSignature = HsSignature { hsSigType   :: HsType RdrName
+                               , hsSigFixity :: Maybe Fixity }
+
+data Signature = Signature { sigType   :: Term
+                           , sigFixity :: Maybe (Associativity, Level) }
+               deriving (Eq, Ord, Show, Read)
+
+collectSigs :: [Sig RdrName] -> Either String (Map RdrName HsSignature)
+collectSigs sigs = do
+  let asType   = (,Nil) . pure
+      asFixity = (Nil,) . pure
+             
+  multimap <- fmap (M.fromListWith (<>)) . runListT $ list sigs >>= \case
+                TypeSig lnames (L _ ty) PlaceHolder -> list $ map ((, asType ty) . unLoc) lnames
+                FixSig  (FixitySig lnames fixity)   -> list . map (, asFixity fixity) . filter isRdrOperator $ map unLoc lnames
+                
+                InlineSig   _ _   -> mempty
+                SpecSig     _ _ _ -> mempty
+                SpecInstSig _ _   -> mempty
+                MinimalSig  _ _   -> mempty
+                
+                GenericSig _ _       -> throwError "typeclass-based default method signatures"
+                PatSynSig  _ _ _ _ _ -> throwError "pattern synonym signatures"
+                IdSig      _         -> throwError "generated-code signatures"
+  
+  for multimap $ \case
+    ([ty], [fixity])  -> pure $ HsSignature ty (Just fixity)
+    ([ty], [])        -> pure $ HsSignature ty Nothing
+    ([],   [_fixity]) -> throwError $ "a fixity annotation without a type signature"
+    ([],   _)         -> throwError "multiple fixity annotations without a type signature"
+    (_,    [])        -> throwError "multiple type signatures for the same identifier"
+    (_,    _)         -> throwError "multiple type and fixity signatures for the same identifier"
+
+convertSignature :: ConversionMonad m => HsSignature -> m Signature
+convertSignature (HsSignature hsTy hsFix) = Signature <$> convertType hsTy <*> pure (convertFixity <$> hsFix)
+
+convertSignatures :: ConversionMonad m => Map RdrName HsSignature -> m (Map Ident Signature)
+convertSignatures = fmap M.fromList . traverse (bitraverse (var ExprNS) convertSignature) . M.toList
+
+convertSigs :: ConversionMonad m => [Sig RdrName] -> m (Map Ident Signature)
+convertSigs = either conv_unsupported convertSignatures . collectSigs
+
+convertLSigs :: ConversionMonad m => [LSig RdrName] -> m (Map Ident Signature)
+convertLSigs = convertSigs . map unLoc
+
 -- TODO mutual recursion :-(
 convertTypedBindings :: ConversionMonad m
-                     => [HsBind RdrName] -> [Sig RdrName]
+                     => [HsBind RdrName] -> Map Ident Signature
                      -> (ConvertedBinding -> m a)
                      -> Maybe (HsBind RdrName -> GhcException -> m a)
                      -> m [a]
-convertTypedBindings defns allSigs build mhandler =
-  let sigs = M.fromList $ [(name,ty) | TypeSig lnames (L _ ty) PlaceHolder <- allSigs
-                                     , L _ name <- lnames ]
-      
-      getType FunBind{..} = M.lookup (unLoc fun_id) sigs
-      getType _           = Nothing
+convertTypedBindings defns sigs build mhandler =
+  let processed defn = maybe id (ghandle . ($ defn)) mhandler . (build =<<)
+  in for defns $ \defn -> do
+       ty <- case defn of
+               FunBind{fun_id = L _ hsName} ->
+                 fmap sigType . (`M.lookup` sigs) <$> var ExprNS hsName
+               _ ->
+                 pure Nothing
+       processed defn $ convertTypedBinding ty defn
 
-      processed defn = maybe id (ghandle . ($ defn)) mhandler . (build =<<)
-      
-  in traverse (processed <*> (convertTypedBinding =<< getType)) defns
-
-convertTypedBinding :: ConversionMonad m => Maybe (HsType RdrName) -> HsBind RdrName -> m ConvertedBinding
-convertTypedBinding _hsTy VarBind{}    = conv_unsupported "[internal] `VarBind'"
-convertTypedBinding _hsTy AbsBinds{}   = conv_unsupported "[internal?] `AbsBinds'"
-convertTypedBinding _hsTy PatSynBind{} = conv_unsupported "pattern synonym bindings"
-convertTypedBinding _hsTy PatBind{..}  = -- TODO use `_hsTy`?
+convertTypedBinding :: ConversionMonad m => Maybe Term -> HsBind RdrName -> m ConvertedBinding
+convertTypedBinding _convHsTy VarBind{}    = conv_unsupported "[internal] `VarBind'"
+convertTypedBinding _convHsTy AbsBinds{}   = conv_unsupported "[internal?] `AbsBinds'"
+convertTypedBinding _convHsTy PatSynBind{} = conv_unsupported "pattern synonym bindings"
+convertTypedBinding _convHsTy PatBind{..}  = -- TODO use `_convHsTy`?
   ConvertedPatternBinding <$> convertLPat pat_lhs <*> convertGRHSs pat_rhs
-convertTypedBinding  hsTy FunBind{..}  = do
+convertTypedBinding  convHsTy FunBind{..}  = do
   (name, opName) <- freeVar (unLoc fun_id) <&> \case
-                      name | identIsVariable name -> (name, Nothing)
-                           | otherwise            -> ("__op_" <> T.pack (zEncodeString $ T.unpack name) <> "__", Just name)
+                      name | identIsVariable name -> (name,            Nothing)
+                           | otherwise            -> (infixToCoq name, Just name)
   
-  (tvs, coqTy) <-
-    -- The @forall@ed arguments need to be brought into scope
-    let peelForall (Forall tvs body) = first (NEL.toList tvs ++) $ peelForall body
-        peelForall ty                = ([], ty)
-    in maybe ([], Nothing) (second Just . peelForall) <$> traverse convertType hsTy
+  let (tvs, coqTy) =
+        -- The @forall@ed arguments need to be brought into scope
+        let peelForall (Forall tvs body) = first (NEL.toList tvs ++) $ peelForall body
+            peelForall ty                = ([], ty)
+        in maybe ([], Nothing) (second Just . peelForall) convHsTy
   
   defn <-
     if all (null . m_pats . unLoc) $ mg_alts fun_matches
@@ -678,28 +745,26 @@ is_True_expr (L _ (HsPar e))         = is_True_expr e
 is_True_expr _                       = pure False
 
 convertType :: ConversionMonad m => HsType RdrName -> m Term
-convertType (HsForAllTy explicitness _ tvs ctx ty) =
-  case unLoc ctx of
-    [] -> do explicitTVs <- convertLHsTyVarBndrs Coq.Implicit tvs
-             tyBody      <- convertLType ty
-             implicitTVs <- case explicitness of
-               GHC.Implicit -> do
-                 -- We need to find all the unquantified type variables.  Since
-                 -- Haskell never introduces a type variable name beginning with
-                 -- an upper-case letter, we look for those; however, if we've
-                 -- renamed a Coq value into one, we need to exclude that too.
-                 -- (Also, we only keep "nonuppercase-first" names, not
-                 -- "lowercase-first" names, as names beginning with @_@ are
-                 -- also variables.)
-                 bindings <- gets $ S.fromList . foldMap toList . toList
-                 let fvs = S.filter (maybe False (not . isUpper . fst) . T.uncons) $
-                             getFreeVars tyBody S.\\ bindings
-                 pure . map (Inferred Coq.Implicit . Ident) $ S.toList fvs
-               _ ->
-                 pure []
-             pure . maybe tyBody (flip Forall tyBody)
-                  . nonEmpty $ explicitTVs ++ implicitTVs
-    _ -> conv_unsupported "type class contexts"
+convertType (HsForAllTy explicitness _ tvs (L _ ctx) ty) = do
+  explicitTVs <- convertLHsTyVarBndrs Coq.Implicit tvs
+  classes     <- traverse (fmap (Generalized Coq.Implicit) . convertLType) ctx
+  tyBody      <- convertLType ty
+  implicitTVs <- case explicitness of
+    GHC.Implicit -> do
+      -- We need to find all the unquantified type variables.  Since Haskell
+      -- never introduces a type variable name beginning with an upper-case
+      -- letter, we look for those; however, if we've renamed a Coq value into
+      -- one, we need to exclude that too.  (We also exclude all symbolic names,
+      -- since Haskell now reserves those for constructors.)
+      bindings <- gets $ S.fromList . foldMap toList . toList
+      fvs      <- fmap (S.filter $ maybe False (((||) <$> isLower <*> (== '_')) . fst) . T.uncons)
+                . fmap S.fromDistinctAscList . filterM (fmap not . isBound) . S.toAscList
+                $ getFreeVars tyBody S.\\ bindings
+      pure . map (Inferred Coq.Implicit . Ident) $ S.toList fvs
+    _ ->
+      pure []
+  pure . maybe tyBody (flip Forall tyBody)
+       . nonEmpty $ explicitTVs ++ implicitTVs ++ classes
 
 convertType (HsTyVar tv) =
   Var <$> var TypeNS tv
@@ -793,7 +858,7 @@ convertLHsTyVarBndrs ex (HsQTvs kvs tvs) = do
   kinds <- traverse (fmap (Inferred ex . Ident) . freeVar) kvs
   types <- for (map unLoc tvs) $ \case
              UserTyVar   tv   -> Inferred ex . Ident <$> freeVar tv
-             KindedTyVar tv k -> Typed ex <$> (pure . Ident <$> freeVar (unLoc tv)) <*> convertLType k
+             KindedTyVar tv k -> Typed Ungeneralizable ex <$> (pure . Ident <$> freeVar (unLoc tv)) <*> convertLType k
   pure $ kinds ++ types
 
 convertConDecl :: ConversionMonad m
@@ -819,7 +884,6 @@ convertDataDefn curType (HsDataDefn _nd lcxt _ctype ksig cons _derivs) = do
   (,) <$> maybe (pure $ Sort Type) convertLType ksig
       <*> (concat <$> traverse (convertConDecl curType . unLoc) cons)
 
-
 convertDataDecl :: ConversionMonad m
                 => Located RdrName -> LHsTyVarBndrs RdrName -> HsDataDefn RdrName
                 -> m IndBody
@@ -836,6 +900,9 @@ convertDataDecl name tvs defn = do
 data SynBody = SynBody Ident [Binder] (Maybe Term) Term
              deriving (Eq, Ord, Read, Show)
 
+instance FreeVars SynBody where
+  freeVars (SynBody _name args oty def) = binding' args $ freeVars oty *> freeVars def
+
 convertSynDecl :: ConversionMonad m
                => Located RdrName -> LHsTyVarBndrs RdrName -> LHsType RdrName
                -> m SynBody
@@ -844,74 +911,108 @@ convertSynDecl name args def  = SynBody <$> freeVar (unLoc name)
                                         <*> pure Nothing
                                         <*> convertLType def
 
-instance FreeVars SynBody where
-  freeVars (SynBody _name args oty def) = binding' args $ freeVars oty *> freeVars def
-       
-data ConvertedDeclaration = ConvData IndBody
-                          | ConvSyn  SynBody
+data ClassBody = ClassBody ClassDefinition [Notation]
+               deriving (Eq, Ord, Read, Show)
+
+instance FreeVars ClassBody where
+  freeVars (ClassBody cls nots) = binding' cls $ freeVars (NoBinding nots)
+
+convertClassDecl :: ConversionMonad m
+                 => LHsContext RdrName                   -- ^@tcdCtxt@
+                 -> Located RdrName                      -- ^@tcdLName@
+                 -> LHsTyVarBndrs RdrName                -- ^@tcdTyVars@
+                 -> [Located (FunDep (Located RdrName))] -- ^@tcdFDs@
+                 -> [LSig RdrName]                       -- ^@tcdSigs@
+                 -> LHsBinds RdrName                     -- ^@tcdMeths@
+                 -> [LFamilyDecl RdrName]                -- ^@tcdATs@
+                 -> [LTyFamDefltEqn RdrName]             -- ^@tcdATDefs@
+                 -> m ClassBody
+convertClassDecl (L _ hsCtx) (L _ hsName) ltvs fds lsigs defaults types typeDefaults = do
+  unless (null       fds)          $ conv_unsupported "functional dependencies"
+  unless (isEmptyBag defaults)     $ conv_unsupported "default associated method definitions"
+  unless (null       types)        $ conv_unsupported "associated types"
+  unless (null       typeDefaults) $ conv_unsupported "default associated type definitions"
+  
+  name <- freeVar hsName
+  ctx  <- traverse (fmap (Generalized Coq.Explicit) . convertLType) hsCtx
+  args <- convertLHsTyVarBndrs Coq.Explicit ltvs
+  sigs <- binding' args $ convertLSigs lsigs
+  
+  pure $ ClassBody (ClassDefinition name (args ++ ctx) Nothing (bimap toCoqName sigType <$> M.toList sigs))
+                   (concatMap (buildInfixNotations sigs <*> infixToCoq) . filter identIsOperator $ M.keys sigs)
+
+data ConvertedDeclaration = ConvData  IndBody
+                          | ConvSyn   SynBody
+                          | ConvClass ClassBody
                           deriving (Eq, Ord, Show, Read)
 
 instance FreeVars ConvertedDeclaration where
-  freeVars (ConvData ind) = freeVars ind
-  freeVars (ConvSyn  syn) = freeVars syn
+  freeVars (ConvData  ind) = freeVars ind
+  freeVars (ConvSyn   syn) = freeVars syn
+  freeVars (ConvClass cls) = freeVars cls
 
 convDeclName :: ConvertedDeclaration -> Ident
-convDeclName (ConvData (IndBody tyName  _ _ _)) = tyName
-convDeclName (ConvSyn  (SynBody synName _ _ _)) = synName
+convDeclName (ConvData  (IndBody                    tyName  _ _ _))    = tyName
+convDeclName (ConvSyn   (SynBody                    synName _ _ _))    = synName
+convDeclName (ConvClass (ClassBody (ClassDefinition clsName _ _ _) _)) = clsName
 
 convertTyClDecl :: ConversionMonad m => TyClDecl RdrName -> m ConvertedDeclaration
-convertTyClDecl FamDecl{}    = conv_unsupported "type/data families"
-convertTyClDecl SynDecl{..}  = ConvSyn  <$> convertSynDecl  tcdLName tcdTyVars tcdRhs
-convertTyClDecl DataDecl{..} = ConvData <$> convertDataDecl tcdLName tcdTyVars tcdDataDefn
-convertTyClDecl ClassDecl{}  = conv_unsupported "type classes"
+convertTyClDecl FamDecl{}     = conv_unsupported "type/data families"
+convertTyClDecl SynDecl{..}   = ConvSyn   <$> convertSynDecl   tcdLName tcdTyVars tcdRhs
+convertTyClDecl DataDecl{..}  = ConvData  <$> convertDataDecl  tcdLName tcdTyVars tcdDataDefn
+convertTyClDecl ClassDecl{..} = ConvClass <$> convertClassDecl tcdCtxt  tcdLName  tcdTyVars   tcdFDs tcdSigs tcdMeths tcdATs tcdATDefs
 
-data DeclarationGroup = Inductives (NonEmpty IndBody)
-                      | Synonym    SynBody
-                      | Synonyms   SynBody (NonEmpty SynBody)
-                      | Mixed      (NonEmpty IndBody) (NonEmpty SynBody)
+data DeclarationGroup = DeclarationGroup { dgInductives :: [IndBody]
+                                         , dgSynonyms   :: [SynBody]
+                                         , dgClasses    :: [ClassBody] }
                       deriving (Eq, Ord, Show, Read)
 
-addDeclaration :: ConvertedDeclaration -> DeclarationGroup -> DeclarationGroup
----------------------------------------------------------------------------------------------
-addDeclaration (ConvData ind) (Inductives inds)      = Inductives (ind <| inds)
-addDeclaration (ConvData ind) (Synonym    syn)       = Mixed      (ind :| [])   (syn :| [])
-addDeclaration (ConvData ind) (Synonyms   syn syns)  = Mixed      (ind :| [])   (syn <| syns)
-addDeclaration (ConvData ind) (Mixed      inds syns) = Mixed      (ind <| inds) syns
----------------------------------------------------------------------------------------------
-addDeclaration (ConvSyn  syn) (Inductives inds)      = Mixed      inds          (syn :| [])
-addDeclaration (ConvSyn  syn) (Synonym    syn')      = Synonyms                 syn (syn' :| [])
-addDeclaration (ConvSyn  syn) (Synonyms   syn' syns) = Synonyms                 syn (syn' <| syns)
-addDeclaration (ConvSyn  syn) (Mixed      inds syns) = Mixed      inds          (syn <| syns)
+instance Semigroup DeclarationGroup where
+  DeclarationGroup ind1 syn1 cls1 <> DeclarationGroup ind2 syn2 cls2 = DeclarationGroup (ind1 <> ind2) (syn1 <> syn2) (cls1 <> cls2)
 
-groupConvDecls :: NonEmpty ConvertedDeclaration -> DeclarationGroup
-groupConvDecls (cd :| cds) = flip (foldr addDeclaration) cds $ case cd of
-                               ConvData ind -> Inductives (ind :| [])
-                               ConvSyn  syn -> Synonym    syn
+instance Monoid DeclarationGroup where
+  mempty  = DeclarationGroup [] [] []
+  mappend = (<>)
+
+singletonDeclarationGroup :: ConvertedDeclaration -> DeclarationGroup
+singletonDeclarationGroup (ConvData  ind) = DeclarationGroup [ind] []    []
+singletonDeclarationGroup (ConvSyn   syn) = DeclarationGroup []    [syn] []
+singletonDeclarationGroup (ConvClass cls) = DeclarationGroup []    []    [cls]
 
 groupTyClDecls :: ConversionMonad m => [TyClDecl RdrName] -> m [DeclarationGroup]
 groupTyClDecls decls = do
   bodies <- traverse convertTyClDecl decls <&>
               M.fromList . map (convDeclName &&& id)
-  -- The order is correct – later declarationss refer only to previous ones –
+  -- The order is correct – later declarations refer only to previous ones –
   -- since 'stronglyConnComp'' returns its outputs in topologically sorted
   -- order.
   let mutuals = stronglyConnComp' . M.toList $ (S.toList . getFreeVars) <$> bodies
-  pure $ map (groupConvDecls . fmap (bodies M.!)) mutuals
+  pure $ map (foldMap $ singletonDeclarationGroup . (bodies M.!)) mutuals
 
 convertDeclarationGroup :: DeclarationGroup -> Either String [Sentence]
-convertDeclarationGroup = \case
-  Inductives ind ->
-    Right [InductiveSentence $ Inductive ind []]
+convertDeclarationGroup DeclarationGroup{..} = case (nonEmpty dgInductives, nonEmpty dgSynonyms, nonEmpty dgClasses) of
+  (Just inds, Nothing, Nothing) ->
+    Right [InductiveSentence $ Inductive inds []]
   
-  Synonym (SynBody name args oty def) ->
+  (Nothing, Just (SynBody name args oty def :| []), Nothing) ->
     Right [DefinitionSentence $ DefinitionDef Global name args oty def]
   
-  Synonyms _ _ ->
-    Left "mutually-recursive type synonyms"
-  
-  Mixed inds syns ->
+  (Just inds, Just syns, Nothing) ->
     Right $  foldMap recSynType syns
           ++ [InductiveSentence $ Inductive inds (map (recSynDef $ foldMap indParams inds) $ toList syns)]
+
+  (Nothing, Nothing, Just (ClassBody cdef nots :| [])) ->
+    Right $ ClassSentence cdef : map NotationSentence nots
+  
+  (Nothing, Just (_ :| _ : _), Nothing)           -> Left "mutually-recursive type synonyms"
+  (Nothing, Nothing,           Just (_ :| _ : _)) -> Left "mutually-recursive type classes"
+  (Just _,  Nothing,           Just _)            -> Left "mutually-recursive type classes and data types"
+  (Nothing, Just _,            Just _)            -> Left "mutually-recursive type classes and type synonyms"
+  (Just _,  Just _,            Just _)            -> Left "mutually-recursive type classes, data types, and type synonyms"
+  (Nothing, Nothing,           Nothing)           -> Left "[internal] invalid empty declaration group"
+  
+  (Nothing, Just (_ :| _),     Nothing)           -> error "GHC BUG WORKAROUND: `OverloadedLists` confuses the exhaustiveness checker"
+  (Nothing, Nothing,           Just (_  :| _))    -> error "GHC BUG WORKAROUND: `OverloadedLists` confuses the exhaustiveness checker"
   
   where
     synName = (<> "__raw")
@@ -989,50 +1090,42 @@ convertFixity (Fixity hsLevel dir) = (assoc, coqLevel) where
 
 convertValDecls :: ConversionMonad m => [HsDecl RdrName] -> m [Sentence]
 convertValDecls args = do
-  let (defns, sigs) = partitionEithers . flip mapMaybe args $ \case
-                        ValD def -> Just $ Left def
-                        SigD sig -> Just $ Right sig
-                        _        -> Nothing
-      
-  fixities <- M.fromList <$> traverse (bitraverse (var ExprNS) pure)
-                [(op, fixity) | FixSig (FixitySig lops fixity) <- sigs, L _ op <- lops]
+  (defns, sigs) <- bitraverse pure convertSigs . partitionEithers . flip mapMaybe args $ \case
+                     ValD def -> Just $ Left def
+                     SigD sig -> Just $ Right sig
+                     _        -> Nothing
   
-  let toInfix :: Op -> Ident -> [Notation]
-      toInfix op def = [ uncurry (InfixDefinition op (Var def))
-                           . maybe (Nothing, Level 99) (first Just . convertFixity)
-                           $ M.lookup op fixities
-                       , NotationBinding $ NotationIdentBinding (infixToPrefix op) (Var def) ]
-      
-      axiomatize :: GhcMonad m => HsBind RdrName -> GhcException -> m [Sentence]
+  let axiomatize :: GhcMonad m => HsBind RdrName -> GhcException -> m [Sentence]
       axiomatize FunBind{..} exn = do
         name <- freeVar $ unLoc fun_id
         pure [ CommentSentence . Comment
                  $ "Translating `" <> name <> "' failed: " <> T.pack (show exn)
              , AssumptionSentence . Assumption Axiom . UnparenthesizedAssums [name]
-                 $ Forall [Typed Coq.Implicit [Ident "A"] $ Sort Type] (Var "A") ]
+                 $ Forall [Typed Ungeneralizable Coq.Implicit [Ident "A"] $ Sort Type] (Var "A") ]
       axiomatize _ exn =
         liftIO $ throwGhcExceptionIO exn
   
   fold <$> convertTypedBindings defns sigs
              (withConvertedBinding
-               (pure . withConvertedDefinition (DefinitionDef Global) (pure . DefinitionSentence)
-                                               toInfix                (map    NotationSentence))
+               (pure . withConvertedDefinition (DefinitionDef Global)     (pure . DefinitionSentence)
+                                               (buildInfixNotations sigs) (map    NotationSentence))
                (\_ _ -> conv_unsupported "top-level pattern bindings"))
              (Just axiomatize)
 
 {-
+TODO: `types/TyCoRep.hs` uses implicit parameters!
+
 Translating `basicTypes/{BasicTypes,Var,DataCon,ConLike,VarSet,VarEnv,SrcLoc}.hs`,
-`types/{TyCon,Class,Coercion,TyCoRep,CoAxiom}.hs`, coreSyn/CoreSyn.hs, and
+`types/{TyCon,Class,Coercion,CoAxiom}.hs`, coreSyn/CoreSyn.hs, and
 `profiling/CostCentre.hs`:
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
- 189 record constructor patterns
-  30 pattern guards
+ 181 record constructor patterns
+  22 pattern guards
   21 record constructors
   21 record updates
-  17 type class contexts
-  15 possibly-incomplete guards
   14 `do' expressions
+  11 possibly-incomplete guards
 --------------------------------
- 307 TOTAL
+ 270 TOTAL
 -}

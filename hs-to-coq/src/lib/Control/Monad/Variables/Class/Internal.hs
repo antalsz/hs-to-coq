@@ -29,7 +29,6 @@ import qualified Control.Monad.Trans.RWS.Strict         as RWSS
 import qualified Control.Monad.Trans.RWS.Lazy           as RWSL
 import qualified Control.Monad.Trans.Maybe              as M
 import qualified Control.Monad.Trans.Except             as E
-import qualified Control.Monad.Trans.List               as L
 import qualified Control.Monad.Trans.Cont               as C
 import qualified HsToCoq.Util.GHC.Monad                 as GHC
 
@@ -140,13 +139,6 @@ instance MonadVariables i d m => MonadVariables i d (E.ExceptT e m) where
   bound    = lift             . bound
   free     = lift             . free 
   frees    = lift             . frees
-
-instance MonadVariables i d m => MonadVariables i d (L.ListT m) where
-  bind     = (L.mapListT .) . bind
-  bindAll  = L.mapListT     . bindAll
-  bound    = lift           . bound
-  free     = lift           . free 
-  frees    = lift           . frees
 
 instance MonadVariables i d m => MonadVariables i d (C.ContT r m) where
   bind     = (C.mapContT .) . bind

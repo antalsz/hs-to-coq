@@ -30,6 +30,7 @@ library
                      , HsToCoq.Util.GHC.Monad
                      , HsToCoq.Util.Patterns
                      , HsToCoq.Util.Functor
+                     , HsToCoq.Util.Monad.ListT
                      , HsToCoq.Util.Monad
                      , HsToCoq.Util.List
                      , HsToCoq.Util.Containers
@@ -63,6 +64,7 @@ library
                      , semigroups       ==0.18.*
                      , transformers     ==0.4.*
                      , mtl              ==2.2.*
+                     , pipes            ==4.1.*
                      , containers       ==0.5.*
                      , syb              ==0.6.*
                      , text             ==1.2.*

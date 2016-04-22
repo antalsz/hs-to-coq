@@ -4,10 +4,10 @@ module Control.Monad.Variables (
   occurrence, occurrences,
   isBound, areBound,
   -- * The 'Variables' monad
-  Variables, runVariables, execVariables,
+  Variables, runVariables, execVariables, evalVariables,
   mapVariables,
   -- * The 'VariablesT' monad transformer
-  VariablesT(), runVariablesT, execVariablesT,
+  VariablesT(), runVariablesT, execVariablesT, evalVariablesT,
   mapVariablesT
   ) where
   

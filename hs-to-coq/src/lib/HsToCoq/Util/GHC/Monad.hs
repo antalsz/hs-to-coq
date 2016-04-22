@@ -19,6 +19,7 @@ import qualified Control.Monad.Trans.Identity     as I
 import qualified Control.Monad.Trans.Reader       as R
 import qualified Control.Monad.Trans.State.Strict as SS
 import qualified Control.Monad.Trans.State.Lazy   as SL
+import qualified Control.Monad.Trans.Variables    as V
 
 instance MonadTrans GhcT where
   lift = liftGhcT
@@ -62,6 +63,10 @@ instance GhcMonad m => GhcMonad (SS.StateT s m) where
   setSession = lift . setSession
 
 instance GhcMonad m => GhcMonad (SL.StateT s m) where
+  getSession = lift   getSession
+  setSession = lift . setSession
+
+instance (GhcMonad m, Ord i) => GhcMonad (V.VariablesT i d m) where
   getSession = lift   getSession
   setSession = lift . setSession
 

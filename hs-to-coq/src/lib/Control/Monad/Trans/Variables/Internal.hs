@@ -4,10 +4,10 @@
 
 module Control.Monad.Trans.Variables.Internal (
   -- * The 'Variables' monad
-  Variables, runVariables, execVariables,
+  Variables, runVariables, execVariables, evalVariables,
   mapVariables,
   -- * The 'VariablesT' monad transformer
-  VariablesT(..), runVariablesT, execVariablesT,
+  VariablesT(..), runVariablesT, execVariablesT, evalVariablesT,
   mapVariablesT,
   -- * 'Variables' operations
   bind, bindAll,
@@ -81,6 +81,10 @@ execVariablesT :: Monad m => VariablesT i d m () -> m (Set i)
 execVariablesT = execWriterT . flip runReaderT M.empty . getVariablesT
 {-# INLINABLE execVariablesT #-}
 
+evalVariablesT :: Monad m => VariablesT i d m a -> m a
+evalVariablesT = fmap fst . runVariablesT
+{-# INLINABLE evalVariablesT #-}
+
 mapVariablesT :: (m (a, Set i) -> n (b, Set i)) -> VariablesT i d m a -> VariablesT i d n b
 mapVariablesT f = VariablesT . mapReaderT (mapWriterT f) . getVariablesT
 {-# INLINABLE mapVariablesT #-}
@@ -94,6 +98,10 @@ runVariables = runIdentity . runVariablesT
 execVariables :: Variables i d () -> Set i
 execVariables = runIdentity . execVariablesT
 {-# INLINABLE execVariables #-}
+
+evalVariables :: Variables i d a -> a
+evalVariables = runIdentity . evalVariablesT
+{-# INLINABLE evalVariables #-}
 
 mapVariables :: ((a, Set i) -> (b, Set i)) -> Variables i d a -> Variables i d b
 mapVariables f = VariablesT . mapReaderT (mapWriter f) . getVariablesT

@@ -201,16 +201,16 @@ instance Binding Assertion where
     -- The @kwd@ part is pro forma – there are no free variables there
 
 instance Binding ClassDefinition where
-  binding f (ClassDefinition cl params _ fields) =
-    (freeVars (NoBinding params) *>) .
+  binding f (ClassDefinition cl params osort fields) =
+    (freeVars (NoBinding params) *> freeVars osort *>) .
     binding f cl .
     flip (foldr (\(field,ty) -> (binding f params (freeVars ty) *>) . binding f field)) fields
 
 instance Binding InstanceDefinition where
-  binding f (InstanceDefinition inst cl args defns) =
-    (freeVars args *> freeVars (map snd defns) *>) .
-    binding f inst .
-    binding f cl
+  binding f (InstanceDefinition inst params cl defns) =
+    binding f params .
+    (freeVars cl *> freeVars (map snd defns) *>) .
+    binding f inst
 
 instance Binding Notation where
   binding f (ReservedNotationIdent x) = binding f x

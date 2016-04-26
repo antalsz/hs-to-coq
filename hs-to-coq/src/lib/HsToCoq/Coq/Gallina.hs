@@ -355,7 +355,7 @@ data ClassDefinition = ClassDefinition Ident [Binder] (Maybe Sort) [(Ident, Term
                      -- TODO: field arguments (which become @forall@ed)
 
 -- |@/instance_definition/ ::=@ /(extra)/
-data InstanceDefinition = InstanceDefinition Ident Ident [Term] [(Ident, Term)]    -- ^@Instance /ident/ : /ident/ [/term/ … /term/] := { [/ident/ := /term/ ; … ; /ident/ := /term/] } .
+data InstanceDefinition = InstanceDefinition Ident [Binder] Term [(Ident, Term)]    -- ^@Instance /ident/ [/binders/] : /term/ := { [/ident/ := /term/ ; … ; /ident/ := /term/] } .
                         deriving (Eq, Ord, Show, Read, Typeable, Data)
                         -- TODO: field arguments (which become @fun@ arguments)
 
@@ -790,8 +790,8 @@ instance Gallina ClassDefinition where
                                      <> spaceIf fields <> "}.")
 
 instance Gallina InstanceDefinition where
-  renderGallina' _ (InstanceDefinition inst cl args defns) =
-    "Instance" <+> renderIdent inst <+> ":" <+> renderIdent cl <> spaceIf args <> render_args H args
+  renderGallina' _ (InstanceDefinition inst params cl defns) =
+    "Instance" <+> renderIdent inst <> spaceIf params <> render_args_ty H params cl
                <+> nest 2 (":=" </> "{" <> lineIf defns
                                         <> sepWith (<+>) (<!>) ";" (map (\(f,def) -> renderIdent f <+> ":=" <+> renderGallina def) defns)
                                         <> spaceIf defns <> "}.")

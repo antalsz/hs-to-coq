@@ -52,11 +52,11 @@ convertDecls lmod = do
                    traverse_ prettyPrint . intersperse line $
                      map ((<> line) . renderGallina) ds
   
-  types <- doConversion "data type declarations" convertTyClDecls
-  liftIO $ putStrLn ""
-  funcs <- doConversion "function declarations"  convertValDecls
+  types <- doConversion "data type declarations"           convertTyClDecls    <* liftIO (putStrLn "")
+  funcs <- doConversion "function declarations"            convertValDecls     <* liftIO (putStrLn "")
+  insts <- doConversion "type class instance declarations" convertClsInstDecls
   
-  case toList . getFreeVars . NoBinding $ types ++ funcs of
+  case toList . getFreeVars . NoBinding $ types ++ funcs ++ insts of
     []  -> pure ()
     fvs -> prettyPrint $
              line <> "(*" <+> hang 2

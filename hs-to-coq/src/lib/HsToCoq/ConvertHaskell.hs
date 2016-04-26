@@ -16,6 +16,9 @@ module HsToCoq.ConvertHaskell (
   -- ** Declarations
   convertTyClDecls, convertValDecls,
   convertTyClDecl, convertDataDecl, convertSynDecl,
+  -- ** Type classes and instances
+  ClassBody(..), convertClassDecl,
+  convertClsInstDecls, convertClsInstDecl,
   -- ** General bindings
   convertTypedBindings, convertTypedBinding,
   ConvertedBinding(..),
@@ -66,6 +69,7 @@ import Data.List.NonEmpty (NonEmpty(..), nonEmpty)
 import qualified Data.List.NonEmpty as NEL
 import Data.Text (Text)
 import qualified Data.Text as T
+import qualified Data.Text.Lazy as TL
 import Numeric.Natural
 
 import Control.Arrow ((&&&))
@@ -97,6 +101,7 @@ import HsToCoq.Util.Containers
 import HsToCoq.Util.Patterns
 import HsToCoq.Util.GHC
 import HsToCoq.Util.GHC.RdrName
+import HsToCoq.PrettyPrint (renderOneLine, displayT)
 import HsToCoq.Coq.Gallina
 import qualified HsToCoq.Coq.Gallina as Coq
 import HsToCoq.Coq.FreeVars
@@ -576,6 +581,55 @@ convertLocalBinds (HsIPBinds _) _ =
 convertLocalBinds EmptyLocalBinds body =
   body
 
+convertFixity :: Fixity -> (Associativity, Level)
+convertFixity (Fixity hsLevel dir) = (assoc, coqLevel) where
+  assoc = case dir of
+            InfixL -> LeftAssociativity
+            InfixR -> RightAssociativity
+            InfixN -> NoAssociativity
+  
+  -- TODO These don't all line up between Coq and Haskell; for instance, Coq's
+  -- @_ || _@ is at level 50 (Haskell 6), whereas Haskell's @(||)@ is at level 2
+  -- (Coq 80).
+  coqLevel = Level $ case (hsLevel, dir) of
+               (0, InfixL) -> 90
+               (0, InfixR) -> 91
+               (0, InfixN) -> 92
+               
+               (1, InfixL) -> 86
+               (1, InfixR) -> 85
+               (1, InfixN) -> 87
+               
+               (2, InfixL) -> 81
+               (2, InfixR) -> 80
+               (2, InfixN) -> 82
+               
+               (3, InfixL) -> 76
+               (3, InfixR) -> 75
+               (3, InfixN) -> 77
+               
+               (4, InfixL) -> 71
+               (4, InfixR) -> 72
+               (4, InfixN) -> 70
+               
+               (5, InfixL) -> 60
+               (5, InfixR) -> 61
+               (5, InfixN) -> 62
+               
+               (6, InfixL) -> 50
+               (6, InfixR) -> 51
+               (6, InfixN) -> 52
+               
+               (7, InfixL) -> 40
+               (7, InfixR) -> 41
+               (7, InfixN) -> 42
+               
+               (8, InfixL) -> 31
+               (8, InfixR) -> 30
+               (8, InfixN) -> 32
+
+               (_, _)      -> 99
+
 buildInfixNotations :: Map Ident Signature -> Op -> Ident -> [Notation]
 buildInfixNotations sigs op def = [ uncurry (InfixDefinition op (Var def))
                                       . maybe (Nothing, Level 99) (first Just)
@@ -934,7 +988,7 @@ convertClassDecl (L _ hsCtx) (L _ hsName) ltvs fds lsigs defaults types typeDefa
   unless (null       typeDefaults) $ conv_unsupported "default associated type definitions"
   
   name <- freeVar hsName
-  ctx  <- traverse (fmap (Generalized Coq.Explicit) . convertLType) hsCtx
+  ctx  <- traverse (fmap (Generalized Coq.Implicit) . convertLType) hsCtx
   args <- convertLHsTyVarBndrs Coq.Explicit ltvs
   sigs <- binding' args $ convertLSigs lsigs
   
@@ -1039,55 +1093,31 @@ convertTyClDecls =   either conv_unsupported (pure . fold)
                  .   traverse convertDeclarationGroup
                  <=< groupTyClDecls
 
-convertFixity :: Fixity -> (Associativity, Level)
-convertFixity (Fixity hsLevel dir) = (assoc, coqLevel) where
-  assoc = case dir of
-            InfixL -> LeftAssociativity
-            InfixR -> RightAssociativity
-            InfixN -> NoAssociativity
+convertClsInstDecl :: ConversionMonad m => ClsInstDecl RdrName -> m InstanceDefinition
+convertClsInstDecl ClsInstDecl{..} = do
+  cdefs <-   map (\ConvertedDefinition{..} -> (convDefName, maybe id Fun (nonEmpty convDefArgs) $ convDefBody))
+        <$> convertTypedBindings (map unLoc $ bagToList cid_binds) M.empty
+                                 (\case ConvertedDefinitionBinding cdef -> pure cdef
+                                        ConvertedPatternBinding    _ _  -> conv_unsupported "pattern bindings in instances")
+                                 Nothing
+  headType <- convertLType cid_poly_ty
   
-  -- TODO These don't all line up between Coq and Haskell; for instance, Coq's
-  -- @_ || _@ is at level 50 (Haskell 6), whereas Haskell's @(||)@ is at level 2
-  -- (Coq 80).
-  coqLevel = Level $ case (hsLevel, dir) of
-               (0, InfixL) -> 90
-               (0, InfixR) -> 91
-               (0, InfixN) -> 92
-               
-               (1, InfixL) -> 86
-               (1, InfixR) -> 85
-               (1, InfixN) -> 87
-               
-               (2, InfixL) -> 81
-               (2, InfixR) -> 80
-               (2, InfixN) -> 82
-               
-               (3, InfixL) -> 76
-               (3, InfixR) -> 75
-               (3, InfixN) -> 77
-               
-               (4, InfixL) -> 71
-               (4, InfixR) -> 72
-               (4, InfixN) -> 70
-               
-               (5, InfixL) -> 60
-               (5, InfixR) -> 61
-               (5, InfixN) -> 62
-               
-               (6, InfixL) -> 50
-               (6, InfixR) -> 51
-               (6, InfixN) -> 52
-               
-               (7, InfixL) -> 40
-               (7, InfixR) -> 41
-               (7, InfixN) -> 42
-               
-               (8, InfixL) -> 31
-               (8, InfixR) -> 30
-               (8, InfixN) -> 32
+  -- TODO add a unique
+  instanceNameCore <- fmap ( T.map (\c -> if isAlphaNum c || c == '\'' then c else '_')
+                           . TL.toStrict . displayT . renderOneLine . renderGallina )
+                   .  convertLType $ case cid_poly_ty of
+                         L _ (HsForAllTy _ _ _ _ head) -> head
+                         lty                           -> lty
+  
+  pure $ InstanceDefinition ("__instance_" <> instanceNameCore <> "__")
+                            []
+                            headType
+                            cdefs
 
-               (_, _)      -> 99
+convertClsInstDecls :: ConversionMonad m => [ClsInstDecl RdrName] -> m [Sentence]
+convertClsInstDecls = traverse $ fmap InstanceSentence . convertClsInstDecl
 
+                        
 convertValDecls :: ConversionMonad m => [HsDecl RdrName] -> m [Sentence]
 convertValDecls args = do
   (defns, sigs) <- bitraverse pure convertSigs . partitionEithers . flip mapMaybe args $ \case
@@ -1114,6 +1144,7 @@ convertValDecls args = do
 
 {-
 TODO: `types/TyCoRep.hs` uses implicit parameters!
+  -- Stub them out, they're only for `error`!
 
 Translating `basicTypes/{BasicTypes,Var,DataCon,ConLike,VarSet,VarEnv,SrcLoc}.hs`,
 `types/{TyCon,Class,Coercion,CoAxiom}.hs`, coreSyn/CoreSyn.hs, and

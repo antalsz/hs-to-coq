@@ -4,9 +4,12 @@
 
 module HsToCoq.ConvertHaskell.Declarations.Instances (convertClsInstDecl, convertClsInstDecls) where
 
+import Control.Lens
+
 import Data.Semigroup (Semigroup(..))
-import Data.Char
+import Data.Maybe
 import Data.List.NonEmpty (nonEmpty)
+import Data.Char
 import qualified Data.Text as T
 import qualified Data.Text.Lazy as TL
 
@@ -17,6 +20,7 @@ import Bag
 
 import HsToCoq.PrettyPrint (renderOneLine, displayT)
 import HsToCoq.Coq.Gallina
+import HsToCoq.Coq.Gallina.Util
 
 import HsToCoq.ConvertHaskell.Monad
 import HsToCoq.ConvertHaskell.Definitions
@@ -34,6 +38,14 @@ convertClsInstDecl ClsInstDecl{..} = do
                                  Nothing
   headType <- convertLType cid_poly_ty
   
+  let headName (Forall _ t)       = headName t
+      headName (App (Var name) _) = Just name
+      headName _                  = Nothing
+  defaults <- case headName headType of
+                Just name -> use (defaultMethods.at name.non M.empty)
+                               <&> M.toList . M.filterWithKey (\meth _ -> isNothing $ lookup meth cdefs)
+                Nothing   -> pure []
+  
   -- TODO add a unique
   instanceNameCore <- fmap ( T.map (\c -> if isAlphaNum c || c == '\'' then c else '_')
                            . TL.toStrict . displayT . renderOneLine . renderGallina )
@@ -44,7 +56,7 @@ convertClsInstDecl ClsInstDecl{..} = do
   pure $ InstanceDefinition ("__instance_" <> instanceNameCore <> "__")
                             []
                             headType
-                            cdefs
+                            (cdefs ++ defaults)
 
 --------------------------------------------------------------------------------
 

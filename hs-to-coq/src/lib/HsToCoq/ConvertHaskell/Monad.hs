@@ -30,6 +30,8 @@ import Panic
 import HsToCoq.Coq.Gallina as Coq
 import HsToCoq.Coq.Gallina.Util
 
+import HsToCoq.ConvertHaskell.InfixNames
+
 --------------------------------------------------------------------------------
 
 data HsNamespace = ExprNS | TypeNS
@@ -71,17 +73,17 @@ evalConversion = evalVariablesT . (evalStateT ?? NameInfos{..}) where
                           , typ "Maybe"   ~> "option"
                           , val "Just"    ~> "Some"
                           , val "Nothing" ~> "None" ]
-             where val = NamespacedIdent ExprNS
-                   typ = NamespacedIdent TypeNS
+             where val  = NamespacedIdent ExprNS
+                   typ  = NamespacedIdent TypeNS
+                   (~>) = (,)
 
   _nonterminating = ["error", "undefined", "panic"]
   
-  _defaultMethods = M.fromList ["Eq" ~>> [ "==" ~> Fun [arg "x", arg "y"] (Infix (Var "x") "/=" (Var "y"))
-                                         , "/=" ~> Fun [arg "x", arg "y"] (Infix (Var "x") "==" (Var "y")) ]]
+  _defaultMethods = M.fromList ["Eq" ~>> [ "==" ~> Fun [arg "x", arg "y"] (App1 (Var "negb") $ Infix (Var "x") "/=" (Var "y"))
+                                         , "/=" ~> Fun [arg "x", arg "y"] (App1 (Var "negb") $ Infix (Var "x") "==" (Var "y")) ]]
                   where cl ~>> ms = (cl, M.fromList ms)
+                        m  ~>  d  = (toCoqName m, d)
                         arg = Inferred Coq.Explicit . Ident
-  
-  (~>) = (,)
 
 rename :: ConversionMonad m => HsNamespace -> Ident -> Ident -> m ()
 rename ns x x' = renaming ns x ?= x'

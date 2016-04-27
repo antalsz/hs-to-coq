@@ -1,6 +1,4 @@
-{-# LANGUAGE LambdaCase, MultiWayIf,
-             OverloadedStrings,
-             FlexibleContexts #-}
+{-# LANGUAGE MultiWayIf, OverloadedStrings, FlexibleContexts #-}
 
 module HsToCoq.ConvertHaskell.Variables (
   -- * Generate variable names
@@ -8,10 +6,6 @@ module HsToCoq.ConvertHaskell.Variables (
   freeVar', freeVar,
   -- * Avoiding reserved words/names
   tryEscapeReservedWord, escapeReservedNames,
-  -- * Operators vs. variable names
-  identIsVariable, identIsOperator,
-  infixToPrefix, toPrefix,
-  infixToCoq, toCoqName,
   -- * Anonymous variables
   anonymousArg, anonymousArg'
   ) where
@@ -20,7 +14,6 @@ import Control.Lens
 import Data.Semigroup (Semigroup(..))
 import Data.Monoid hiding ((<>))
 import Data.Maybe
-import Data.Char
 import Data.String
 import Data.Text (Text)
 import qualified Data.Text as T
@@ -29,7 +22,6 @@ import Numeric.Natural
 import Control.Monad
 
 import GHC hiding (Name)
-import Encoding (zEncodeString)
 import Outputable (OutputableBndr)
 
 import HsToCoq.Util.GHC
@@ -65,32 +57,6 @@ var :: (ConversionMonad m, OutputableBndr name) => HsNamespace -> name -> m Iden
 var ns x = do
   x' <- ghcPpr x -- TODO Check module part?
   use $ renaming ns x' . non (escapeReservedNames x')
-
---------------------------------------------------------------------------------
-
-identIsVariable :: Text -> Bool
-identIsVariable = T.uncons <&> \case
-  Just (h,t) -> (isAlpha h || h == '_') && T.all (\c -> isAlphaNum c || c == '_' || c == '\'') t
-  Nothing    -> False
-
-identIsOperator :: Text -> Bool
-identIsOperator = not . identIsVariable
-
--- An operator's user-facing name in Coq (a notation)
-infixToPrefix :: Op -> Ident
-infixToPrefix = ("_" <>) . (<> "_")
-
-toPrefix :: Ident -> Ident
-toPrefix x | identIsVariable x = x
-           | otherwise         = infixToPrefix x
-
--- An operator's defined name in Coq (hidden by a notation)
-infixToCoq :: Op -> Ident
-infixToCoq name = "__op_" <> T.pack (zEncodeString $ T.unpack name) <> "__"
-
-toCoqName :: Op -> Ident
-toCoqName x | identIsVariable x = x
-            | otherwise         = infixToCoq x
 
 --------------------------------------------------------------------------------
 

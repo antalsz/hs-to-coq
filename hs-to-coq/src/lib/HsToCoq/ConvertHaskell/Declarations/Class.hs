@@ -1,8 +1,11 @@
-{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE RecordWildCards, LambdaCase, FlexibleContexts #-}
 
 module HsToCoq.ConvertHaskell.Declarations.Class (ClassBody(..), convertClassDecl) where
 
-import Data.Bifunctor
+import Control.Lens
+
+import Data.Traversable
+import Data.List.NonEmpty (nonEmpty)
 
 import Control.Monad
 
@@ -16,8 +19,11 @@ import HsToCoq.Coq.Gallina as Coq
 import HsToCoq.Coq.FreeVars
 
 import HsToCoq.ConvertHaskell.Monad
+import HsToCoq.ConvertHaskell.InfixNames
 import HsToCoq.ConvertHaskell.Variables
+import HsToCoq.ConvertHaskell.Definitions
 import HsToCoq.ConvertHaskell.Type
+import HsToCoq.ConvertHaskell.Expr
 import HsToCoq.ConvertHaskell.Sigs
 import HsToCoq.ConvertHaskell.Declarations.Notations
 
@@ -41,7 +47,6 @@ convertClassDecl :: ConversionMonad m
                  -> m ClassBody
 convertClassDecl (L _ hsCtx) (L _ hsName) ltvs fds lsigs defaults types typeDefaults = do
   unless (null       fds)          $ convUnsupported "functional dependencies"
-  unless (isEmptyBag defaults)     $ convUnsupported "default associated method definitions"
   unless (null       types)        $ convUnsupported "associated types"
   unless (null       typeDefaults) $ convUnsupported "default associated type definitions"
   
@@ -49,6 +54,11 @@ convertClassDecl (L _ hsCtx) (L _ hsName) ltvs fds lsigs defaults types typeDefa
   ctx  <- traverse (fmap (Generalized Coq.Implicit) . convertLType) hsCtx
   args <- convertLHsTyVarBndrs Coq.Explicit ltvs
   sigs <- binding' args $ convertLSigs lsigs
+  
+  defs <- fmap M.fromList $ for (bagToList defaults) $ convertTypedBinding Nothing . unLoc >=> \case
+            ConvertedDefinitionBinding ConvertedDefinition{..} -> pure (convDefName, maybe id Fun (nonEmpty convDefArgs) convDefBody)
+            ConvertedPatternBinding    _ _                     -> convUnsupported "pattern bindings in class declarations"
+  defaultMethods.at name ?= defs
   
   pure $ ClassBody (ClassDefinition name (args ++ ctx) Nothing (bimap toCoqName sigType <$> M.toList sigs))
                    (concatMap (buildInfixNotations sigs <*> infixToCoq) . filter identIsOperator $ M.keys sigs)

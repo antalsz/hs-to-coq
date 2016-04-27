@@ -49,6 +49,7 @@ import HsToCoq.Coq.Gallina.Util
 import HsToCoq.Coq.FreeVars
 
 import HsToCoq.ConvertHaskell.Monad
+import HsToCoq.ConvertHaskell.InfixNames
 import HsToCoq.ConvertHaskell.Variables
 import HsToCoq.ConvertHaskell.Definitions
 import HsToCoq.ConvertHaskell.Literals

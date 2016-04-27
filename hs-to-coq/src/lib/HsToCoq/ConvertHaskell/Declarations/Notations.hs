@@ -8,7 +8,7 @@ import qualified Data.Map.Strict as M
 import HsToCoq.Coq.Gallina
 import HsToCoq.Coq.Gallina.Util
 
-import HsToCoq.ConvertHaskell.Variables
+import HsToCoq.ConvertHaskell.InfixNames
 import HsToCoq.ConvertHaskell.Sigs
 
 --------------------------------------------------------------------------------

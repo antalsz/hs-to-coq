@@ -1,6 +1,7 @@
 module HsToCoq.ConvertHaskell (module ConvertHaskell) where
 
 import HsToCoq.ConvertHaskell.Monad                    as ConvertHaskell
+import HsToCoq.ConvertHaskell.InfixNames               as ConvertHaskell
 import HsToCoq.ConvertHaskell.Variables                as ConvertHaskell
 import HsToCoq.ConvertHaskell.Definitions              as ConvertHaskell
 import HsToCoq.ConvertHaskell.Literals                 as ConvertHaskell

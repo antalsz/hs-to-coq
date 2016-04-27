@@ -49,6 +49,7 @@ library
                      , HsToCoq.Coq.Gallina.Util
                      , HsToCoq.Coq.FreeVars
                      , HsToCoq.ConvertHaskell.Monad
+                     , HsToCoq.ConvertHaskell.InfixNames
                      , HsToCoq.ConvertHaskell.Variables
                      , HsToCoq.ConvertHaskell.Definitions
                      , HsToCoq.ConvertHaskell.Literals

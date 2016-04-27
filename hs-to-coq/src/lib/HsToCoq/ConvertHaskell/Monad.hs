@@ -1,15 +1,20 @@
-{-# LANGUAGE TupleSections, LambdaCase,
-             OverloadedStrings,
-             ConstraintKinds, FlexibleContexts #-}
+{-# LANGUAGE TupleSections, LambdaCase, RecordWildCards,
+             OverloadedLists, OverloadedStrings,
+             RankNTypes, ConstraintKinds, FlexibleContexts,
+             TemplateHaskell #-}
 
 module HsToCoq.ConvertHaskell.Monad (
   -- * Types
-  ConversionMonad, Renaming, HsNamespace(..), evalConversion,
+  ConversionMonad, evalConversion,
+  NameInfos(..), renamings, nonterminating, defaultMethods, renaming,
+  HsNamespace(..), NamespacedIdent(..),
   -- * Operations
   rename, localRenamings,
   -- * Unsupported features
   convUnsupported
   ) where
+
+import Control.Lens
 
 import Control.Monad.State
 import Control.Monad.Variables
@@ -17,51 +22,70 @@ import Control.Monad.Variables
 import           Data.Map.Strict (Map)
 import qualified Data.Map.Strict as M
 
+import Data.Set (Set)
+
 import GHC
 import Panic
 
-import HsToCoq.Coq.Gallina
+import HsToCoq.Coq.Gallina as Coq
+import HsToCoq.Coq.Gallina.Util
 
 --------------------------------------------------------------------------------
 
 data HsNamespace = ExprNS | TypeNS
                  deriving (Eq, Ord, Show, Read, Enum, Bounded)
 
-type Renaming = Map HsNamespace Ident
+data NamespacedIdent = NamespacedIdent { niNS :: !HsNamespace
+                                       , niId :: !Ident }
+                     deriving (Eq, Ord, Show, Read)
 
-type ConversionMonad m = (GhcMonad m, MonadState (Map Ident Renaming) m, MonadVariables Ident () m)
+data NameInfos = NameInfos { _renamings      :: !(Map NamespacedIdent Ident)
+                           , _nonterminating :: !(Set Ident)
+                           , _defaultMethods :: !(Map Ident (Map Ident Term)) }
+               deriving (Eq, Ord, Show, Read)
+makeLenses ''NameInfos
 
-evalConversion :: GhcMonad m => StateT (Map Ident Renaming) (VariablesT Ident () m) a -> m a
-evalConversion conv = evalVariablesT . evalStateT conv $ build
-                        [ typ "()" ~> "unit" -- Probably unnecessary
-                        , val "()" ~> "tt"
-                         
-                        , typ "[]" ~> "list"
-                        , val "[]" ~> "nil"
-                        , val ":"  ~> "::"
-                         
-                        , typ "Integer" ~> "Z"
-                         
-                        , typ "Bool"  ~> "bool"
-                        , val "True"  ~> "true"
-                        , val "False" ~> "false"
-                         
-                        , typ "String" ~> "string"
-                         
-                        , typ "Maybe"   ~> "option"
-                        , val "Just"    ~> "Some"
-                        , val "Nothing" ~> "None" ]
-  where
-    val hs = (hs,) . M.singleton ExprNS
-    typ hs = (hs,) . M.singleton TypeNS
-    (~>)   = ($)
+renaming :: HsNamespace -> Ident -> Lens' NameInfos (Maybe Ident)
+renaming ns x = renamings.at (NamespacedIdent ns x)
+{-# INLINABLE renaming #-}
 
-    build = M.fromListWith M.union
+type ConversionMonad m = (GhcMonad m, MonadState NameInfos m, MonadVariables Ident () m)
+
+evalConversion :: GhcMonad m => StateT NameInfos (VariablesT Ident () m) a -> m a
+evalConversion = evalVariablesT . (evalStateT ?? NameInfos{..}) where
+  _renamings = M.fromList [ typ "()" ~> "unit" -- Probably unnecessary
+                          , val "()" ~> "tt"
+                           
+                          , typ "[]" ~> "list"
+                          , val "[]" ~> "nil"
+                          , val ":"  ~> "::"
+                           
+                          , typ "Integer" ~> "Z"
+                           
+                          , typ "Bool"  ~> "bool"
+                          , val "True"  ~> "true"
+                          , val "False" ~> "false"
+                           
+                          , typ "String" ~> "string"
+                           
+                          , typ "Maybe"   ~> "option"
+                          , val "Just"    ~> "Some"
+                          , val "Nothing" ~> "None" ]
+             where val = NamespacedIdent ExprNS
+                   typ = NamespacedIdent TypeNS
+
+  _nonterminating = ["error", "undefined", "panic"]
+  
+  _defaultMethods = M.fromList ["Eq" ~>> [ "==" ~> Fun [arg "x", arg "y"] (Infix (Var "x") "/=" (Var "y"))
+                                         , "/=" ~> Fun [arg "x", arg "y"] (Infix (Var "x") "==" (Var "y")) ]]
+                  where cl ~>> ms = (cl, M.fromList ms)
+                        arg = Inferred Coq.Explicit . Ident
+  
+  (~>) = (,)
 
 rename :: ConversionMonad m => HsNamespace -> Ident -> Ident -> m ()
-rename ns x x' = modify' . flip M.alter x $ Just . \case
-                   Just m  -> M.insert    ns x' m
-                   Nothing -> M.singleton ns x'
+rename ns x x' = renaming ns x ?= x'
+{-# INLINABLE rename #-}
 
 localRenamings :: ConversionMonad m => m a -> m a
 localRenamings action = get >>= ((action <*) . put)

@@ -16,6 +16,7 @@ module HsToCoq.ConvertHaskell.Variables (
   anonymousArg, anonymousArg'
   ) where
 
+import Control.Lens
 import Data.Semigroup (Semigroup(..))
 import Data.Monoid hiding ((<>))
 import Data.Maybe
@@ -26,15 +27,11 @@ import qualified Data.Text as T
 import Numeric.Natural
 
 import Control.Monad
-import Control.Monad.State
-
-import qualified Data.Map.Strict as M
 
 import GHC hiding (Name)
 import Encoding (zEncodeString)
 import Outputable (OutputableBndr)
 
-import HsToCoq.Util.Functor
 import HsToCoq.Util.GHC
 
 import HsToCoq.Coq.Gallina
@@ -67,7 +64,7 @@ freeVar = fmap freeVar' . ghcPpr
 var :: (ConversionMonad m, OutputableBndr name) => HsNamespace -> name -> m Ident
 var ns x = do
   x' <- ghcPpr x -- TODO Check module part?
-  gets $ fromMaybe (escapeReservedNames x') . (M.lookup ns <=< M.lookup x')
+  use $ renaming ns x' . non (escapeReservedNames x')
 
 --------------------------------------------------------------------------------
 

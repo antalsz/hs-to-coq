@@ -1,9 +1,6 @@
-module HsToCoq.Util.Functor ((<&>), passThrough, (.<$)) where
+module HsToCoq.Util.Functor ((<&>), passThrough, (.<$), (??)) where
 
-(<&>) :: Functor f => f a -> (a -> b) -> f b
-(<&>) = flip (<$>)
-infixl 1 <&>
-{-# INLINABLE (<&>) #-}
+import Control.Lens ((<&>), (??))
 
 passThrough :: Functor f => (a -> f b) -> (a -> f a)
 passThrough f = \x -> x <$ f x

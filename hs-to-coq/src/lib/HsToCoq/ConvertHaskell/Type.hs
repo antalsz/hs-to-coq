@@ -4,6 +4,8 @@
 
 module HsToCoq.ConvertHaskell.Type (convertType, convertLType, convertLHsTyVarBndrs) where
 
+import Control.Lens
+
 import Data.Foldable
 import Data.Traversable
 import Data.Char
@@ -11,7 +13,6 @@ import Data.List.NonEmpty (nonEmpty)
 import qualified Data.Text as T
 
 import Control.Monad
-import Control.Monad.State
 import Control.Monad.Variables
 
 import qualified Data.Set as S
@@ -50,14 +51,14 @@ convertType (HsForAllTy explicitness _ tvs (L _ ctx) ty) = do
       -- letter, we look for those; however, if we've renamed a Coq value into
       -- one, we need to exclude that too.  (We also exclude all symbolic names,
       -- since Haskell now reserves those for constructors.)
-      bindings <- gets $ S.fromList . foldMap toList . toList
+      bindings <- S.fromList . toList <$> use renamings
       fvs      <- fmap (S.filter $ maybe False (((||) <$> isLower <*> (== '_')) . fst) . T.uncons)
                 . fmap S.fromDistinctAscList . filterM (fmap not . isBound) . S.toAscList
                 $ getFreeVars tyBody S.\\ bindings
       pure . map (Inferred Coq.Implicit . Ident) $ S.toList fvs
     _ ->
       pure []
-  pure . maybe tyBody (flip Forall tyBody)
+  pure . maybe tyBody (Forall ?? tyBody)
        . nonEmpty $ explicitTVs ++ implicitTVs ++ classes
 
 convertType (HsTyVar tv) =
@@ -84,7 +85,7 @@ convertType (HsTupleTy tupTy tys) = do
   case tys of
     []   -> pure $ Var "unit"
     [ty] -> convertLType ty
-    _    -> foldl1 (flip Infix "*") <$> traverse convertLType tys
+    _    -> foldl1 (Infix ?? "*") <$> traverse convertLType tys
 
 convertType (HsOpTy _ty1 _op _ty2) =
   convUnsupported "binary operators" -- FIXME

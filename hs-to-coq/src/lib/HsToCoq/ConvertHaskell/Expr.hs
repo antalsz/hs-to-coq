@@ -154,7 +154,7 @@ convertExpr (HsDo _ _ _) =
 
 convertExpr (ExplicitList PlaceHolder overloaded exprs) =
   if maybe True isNoSyntaxExpr overloaded
-  then foldr (flip Infix "::") (Var "nil") <$> traverse convertLExpr exprs
+  then foldr (Infix ?? "::") (Var "nil") <$> traverse convertLExpr exprs
   else convUnsupported "overloaded lists"
 
 convertExpr (ExplicitPArr _ _) =
@@ -396,7 +396,7 @@ convertLocalBinds (HsValBinds (ValBindsIn binds lsigs)) body = localRenamings $ 
                        convDefs
   let matchLet pat term body = Coq.Match [MatchItem term Nothing Nothing] Nothing
                                          [Equation [MultPattern [pat]] body]
-  flip (foldr $ withConvertedBinding (withConvertedDefinitionDef Let) matchLet) convDefs <$> body
+  (foldr (withConvertedBinding (withConvertedDefinitionDef Let) matchLet) ?? convDefs) <$> body
 convertLocalBinds (HsValBinds (ValBindsOut _ _)) _ =
   convUnsupported "post-renaming `ValBindsOut' bindings"
 convertLocalBinds (HsIPBinds _) _ =

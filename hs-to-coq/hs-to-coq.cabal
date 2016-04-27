@@ -67,7 +67,7 @@ library
                      , HsToCoq.ProcessFiles
                      , HsToCoq.CLI
   other-extensions:    TupleSections, LambdaCase, MultiWayIf, RecordWildCards, OverloadedStrings
-                     , ConstraintKinds
+                     , RankNTypes, ConstraintKinds
                      , MultiParamTypeClasses, FunctionalDependencies, FlexibleContexts
                      , TypeSynonymInstances, FlexibleInstances, UndecidableInstances
                      , DeriveDataTypeable, StandaloneDeriving, GeneralizedNewtypeDeriving
@@ -81,6 +81,7 @@ library
                      , semigroups       ==0.18.*
                      , transformers     ==0.4.*
                      , mtl              ==2.2.*
+                     , lens             ==4.13.*
                      , pipes            ==4.1.*
                      , containers       ==0.5.*
                      , syb              ==0.6.*

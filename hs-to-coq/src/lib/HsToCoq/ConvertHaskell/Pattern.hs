@@ -9,6 +9,7 @@ import GHC hiding (Name)
 import BasicTypes
 import HsToCoq.Util.GHC.FastString
 
+import HsToCoq.Util.Functor
 import HsToCoq.Util.GHC.HsExpr
 import HsToCoq.Coq.Gallina as Coq
 import HsToCoq.Coq.Gallina.Util
@@ -40,7 +41,7 @@ convertPat (BangPat p) =
 
 convertPat (ListPat pats PlaceHolder overloaded) =
   if maybe True (isNoSyntaxExpr . snd) overloaded
-  then foldr (flip InfixPat "::") (CoqVarPat "nil") <$> traverse convertLPat pats
+  then foldr (InfixPat ?? "::") (CoqVarPat "nil") <$> traverse convertLPat pats
   else convUnsupported "overloaded list patterns"
 
 convertPat (TuplePat pats boxity _PlaceHolders) =

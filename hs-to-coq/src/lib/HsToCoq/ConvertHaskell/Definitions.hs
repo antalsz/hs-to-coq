@@ -5,6 +5,7 @@ module HsToCoq.ConvertHaskell.Definitions (
   ConvertedBinding(..), withConvertedBinding
   ) where
 
+import HsToCoq.Util.Functor
 import HsToCoq.Coq.Gallina
 
 --------------------------------------------------------------------------------
@@ -28,7 +29,7 @@ withConvertedDefinitionDef :: (Ident -> [Binder] -> Maybe Term -> Term -> a) -> 
 withConvertedDefinitionDef f ConvertedDefinition{..} = f convDefName convDefArgs convDefType convDefBody
 
 withConvertedDefinitionOp :: (Op -> Ident -> a) -> (ConvertedDefinition -> Maybe a)
-withConvertedDefinitionOp f ConvertedDefinition{..} = fmap (flip f convDefName) convDefInfix
+withConvertedDefinitionOp f ConvertedDefinition{..} = (f ?? convDefName) <$> convDefInfix
 
 --------------------------------------------------------------------------------
 

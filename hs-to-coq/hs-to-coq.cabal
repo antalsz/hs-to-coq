@@ -26,6 +26,7 @@ library
                      , HsToCoq.Util.GHC.FastString
                      , HsToCoq.Util.GHC.DynFlags
                      , HsToCoq.Util.GHC.RdrName
+                     , HsToCoq.Util.GHC.HsExpr
                      , HsToCoq.Util.GHC.Exception
                      , HsToCoq.Util.GHC.Monad
                      , HsToCoq.Util.Patterns
@@ -45,7 +46,23 @@ library
                      , Control.Monad.Variables
                      , HsToCoq.PrettyPrint
                      , HsToCoq.Coq.Gallina
+                     , HsToCoq.Coq.Gallina.Util
                      , HsToCoq.Coq.FreeVars
+                     , HsToCoq.ConvertHaskell.Monad
+                     , HsToCoq.ConvertHaskell.Variables
+                     , HsToCoq.ConvertHaskell.Definitions
+                     , HsToCoq.ConvertHaskell.Literals
+                     , HsToCoq.ConvertHaskell.Type
+                     , HsToCoq.ConvertHaskell.Expr
+                     , HsToCoq.ConvertHaskell.Pattern
+                     , HsToCoq.ConvertHaskell.Sigs
+                     , HsToCoq.ConvertHaskell.Declarations.Notations
+                     , HsToCoq.ConvertHaskell.Declarations.TypeSynonym
+                     , HsToCoq.ConvertHaskell.Declarations.DataType
+                     , HsToCoq.ConvertHaskell.Declarations.Class
+                     , HsToCoq.ConvertHaskell.Declarations.Instances
+                     , HsToCoq.ConvertHaskell.Declarations.TyCl
+                     , HsToCoq.ConvertHaskell.Declarations.Value
                      , HsToCoq.ConvertHaskell
                      , HsToCoq.ProcessFiles
                      , HsToCoq.CLI

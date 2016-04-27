@@ -58,7 +58,7 @@ convertClassDecl (L _ hsCtx) (L _ hsName) ltvs fds lsigs defaults types typeDefa
   defs <- fmap M.fromList $ for (bagToList defaults) $ convertTypedBinding Nothing . unLoc >=> \case
             ConvertedDefinitionBinding ConvertedDefinition{..} -> pure (convDefName, maybe id Fun (nonEmpty convDefArgs) convDefBody)
             ConvertedPatternBinding    _ _                     -> convUnsupported "pattern bindings in class declarations"
-  defaultMethods.at name ?= defs
+  unless (null defs) $ defaultMethods.at name ?= defs
   
   pure $ ClassBody (ClassDefinition name (args ++ ctx) Nothing (bimap toCoqName sigType <$> M.toList sigs))
                    (concatMap (buildInfixNotations sigs <*> infixToCoq) . filter identIsOperator $ M.keys sigs)

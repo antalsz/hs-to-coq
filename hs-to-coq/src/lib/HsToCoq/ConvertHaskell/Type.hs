@@ -18,9 +18,8 @@ import qualified Data.Set as S
 
 import GHC hiding (Name)
 
-import HsToCoq.Coq.Gallina
+import HsToCoq.Coq.Gallina as Coq
 import HsToCoq.Coq.Gallina.Util
-import qualified HsToCoq.Coq.Gallina as Coq
 import HsToCoq.Coq.FreeVars
 
 import HsToCoq.ConvertHaskell.Monad

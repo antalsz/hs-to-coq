@@ -16,9 +16,8 @@ import Control.Monad.IO.Class
 import GHC hiding (Name)
 import Panic
 
-import HsToCoq.Coq.Gallina
+import HsToCoq.Coq.Gallina as Coq
 import HsToCoq.Coq.Gallina.Util
-import qualified HsToCoq.Coq.Gallina as Coq
 
 import HsToCoq.ConvertHaskell.Monad
 import HsToCoq.ConvertHaskell.Variables

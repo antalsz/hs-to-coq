@@ -44,9 +44,8 @@ import HsToCoq.Util.Functor
 import HsToCoq.Util.List
 import HsToCoq.Util.GHC
 import HsToCoq.Util.GHC.HsExpr
-import HsToCoq.Coq.Gallina
+import HsToCoq.Coq.Gallina as Coq
 import HsToCoq.Coq.Gallina.Util
-import qualified HsToCoq.Coq.Gallina as Coq
 import HsToCoq.Coq.FreeVars
 
 import HsToCoq.ConvertHaskell.Monad

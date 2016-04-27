@@ -15,9 +15,8 @@ import Control.Monad
 import GHC hiding (Name)
 
 import HsToCoq.Util.GHC
-import HsToCoq.Coq.Gallina
+import HsToCoq.Coq.Gallina as Coq
 import HsToCoq.Coq.Gallina.Util
-import qualified HsToCoq.Coq.Gallina as Coq
 
 import HsToCoq.ConvertHaskell.Monad
 import HsToCoq.ConvertHaskell.Variables

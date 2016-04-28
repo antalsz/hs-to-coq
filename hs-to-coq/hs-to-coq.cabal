@@ -64,6 +64,7 @@ library
                      , HsToCoq.ConvertHaskell.Declarations.Instances
                      , HsToCoq.ConvertHaskell.Declarations.TyCl
                      , HsToCoq.ConvertHaskell.Declarations.Value
+                     , HsToCoq.ConvertHaskell.Axiomatize
                      , HsToCoq.ConvertHaskell
                      , HsToCoq.ProcessFiles
                      , HsToCoq.CLI

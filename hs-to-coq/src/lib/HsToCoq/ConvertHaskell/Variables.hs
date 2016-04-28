@@ -5,19 +5,14 @@ module HsToCoq.ConvertHaskell.Variables (
   var,
   freeVar', freeVar,
   -- * Avoiding reserved words/names
-  tryEscapeReservedWord, escapeReservedNames,
-  -- * Anonymous variables
-  anonymousArg, anonymousArg'
+  tryEscapeReservedWord, escapeReservedNames
   ) where
 
 import Control.Lens
 import Data.Semigroup (Semigroup(..))
 import Data.Monoid hiding ((<>))
 import Data.Maybe
-import Data.String
-import Data.Text (Text)
 import qualified Data.Text as T
-import Numeric.Natural
 
 import Control.Monad
 
@@ -57,16 +52,3 @@ var :: (ConversionMonad m, OutputableBndr name) => HsNamespace -> name -> m Iden
 var ns x = do
   x' <- ghcPpr x -- TODO Check module part?
   use $ renamed ns x' . non (escapeReservedNames x')
-
---------------------------------------------------------------------------------
-
-anonymousArg' :: (IsString s, Semigroup s) => Maybe Natural -> s
-anonymousArg' mn = "__arg" <> maybe "" (("_" <>) . fromString . show) mn <> "__"
-{-# SPECIALIZE anonymousArg' :: Maybe Natural -> String #-}
-{-# SPECIALIZE anonymousArg' :: Maybe Natural -> Text #-}
-
-anonymousArg :: (IsString s, Semigroup s) => Natural -> s
-anonymousArg = anonymousArg' . Just
-{-# INLINABLE anonymousArg #-}
-{-# SPECIALIZE anonymousArg :: Natural -> String #-}
-{-# SPECIALIZE anonymousArg :: Natural -> Text #-}

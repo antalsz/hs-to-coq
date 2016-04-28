@@ -13,6 +13,8 @@ import Data.Char
 import qualified Data.Text as T
 import qualified Data.Text.Lazy as TL
 
+import Control.Monad
+
 import qualified Data.Map.Strict as M
 
 import GHC hiding (Name)
@@ -45,18 +47,18 @@ convertClsInstDecl ClsInstDecl{..} = do
                 Just name -> use (defaultMethods.at name.non M.empty)
                                <&> M.toList . M.filterWithKey (\meth _ -> isNothing $ lookup meth cdefs)
                 Nothing   -> pure []
+
+  -- Take the instance head and make it into a valid identifier by replacing
+  -- non-alphanumerics with underscores.  Then, prepend "instance_".
+  instanceName <-  gensym
+               .   ("instance_" <>)
+               .   T.map (\c -> if isAlphaNum c || c == '\'' then c else '_')
+               .   TL.toStrict . displayT . renderOneLine . renderGallina
+               <=< convertLType $ case cid_poly_ty of
+                      L _ (HsForAllTy _ _ _ _ head) -> head
+                      lty                           -> lty
   
-  -- TODO add a unique
-  instanceNameCore <- fmap ( T.map (\c -> if isAlphaNum c || c == '\'' then c else '_')
-                           . TL.toStrict . displayT . renderOneLine . renderGallina )
-                   .  convertLType $ case cid_poly_ty of
-                         L _ (HsForAllTy _ _ _ _ head) -> head
-                         lty                           -> lty
-  
-  pure $ InstanceDefinition ("__instance_" <> instanceNameCore <> "__")
-                            []
-                            headType
-                            (cdefs ++ defaults)
+  pure $ InstanceDefinition instanceName [] headType (cdefs ++ defaults)
 
 --------------------------------------------------------------------------------
 

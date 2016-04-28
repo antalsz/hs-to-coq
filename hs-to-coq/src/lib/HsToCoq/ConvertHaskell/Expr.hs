@@ -27,7 +27,7 @@ import qualified Data.List.NonEmpty as NEL
 import qualified Data.Text as T
 
 import Control.Monad.Except
-import Control.Monad.State
+import Control.Monad.Writer
 
 import           Data.Map.Strict (Map)
 import qualified Data.Set        as S
@@ -126,12 +126,13 @@ convertExpr (ExplicitTuple exprs boxity) =
   case boxity of
     Boxed -> do
       -- TODO A tuple constructor in the Gallina grammar?
-      (tuple, numMissing) <- flip runStateT 0 . fmap (foldl1 . App2 $ Var "pair") . for exprs $ \case
-        L _ (Present e)           -> lift $ convertLExpr e
-        L _ (Missing PlaceHolder) -> modify (+ 1) *> gets (Var . anonymousArg)
-      pure $ maybe id Fun
-                   (nonEmpty $ map (Inferred Coq.Explicit . Ident . anonymousArg) [1..numMissing])
-                   tuple
+      (tuple, args) <- runWriterT
+                    .  fmap (foldl1 . App2 $ Var "pair")
+                    .  for exprs $ unLoc <&> \case
+                         Present e           -> lift $ convertLExpr e
+                         Missing PlaceHolder -> do arg <- lift $ gensym "arg"
+                                                   Var arg <$ tell [arg]
+      pure $ maybe id Fun (nonEmpty $ map (Inferred Coq.Explicit . Ident) args) tuple
     Unboxed -> convUnsupported "unboxed tuples"
 
 convertExpr (HsCase e mg) =
@@ -246,14 +247,13 @@ convertExpr (HsUnboundVar x) =
 
 -- Module-local
 convert_section :: (ConversionMonad m) => Maybe (LHsExpr RdrName) -> LHsExpr RdrName -> Maybe (LHsExpr RdrName) -> m Term
-convert_section  ml opE mr =
-  let arg = anonymousArg' Nothing
-      
-      hs  = HsVar . mkVarUnqual . fsLit
-      coq = Inferred Coq.Explicit . Ident . T.pack
-      
-      orArg = fromMaybe (noLoc $ hs arg)
-  in Fun [coq arg] <$> convertExpr (OpApp (orArg ml) opE PlaceHolder (orArg mr))
+convert_section  ml opE mr = do
+  let hs  = HsVar . mkVarUnqual . fsLit . T.unpack
+      coq = Inferred Coq.Explicit . Ident
+  
+  arg <- gensym "arg"
+  let orArg = fromMaybe (noLoc $ hs arg)
+  Fun [coq arg] <$> convertExpr (OpApp (orArg ml) opE PlaceHolder (orArg mr))
 
 --------------------------------------------------------------------------------
 
@@ -265,11 +265,12 @@ convertLExpr = convertExpr . unLoc
 convertFunction :: ConversionMonad m => MatchGroup RdrName (LHsExpr RdrName) -> m (Binders, Term)
 convertFunction mg = do
   eqns <- convertMatchGroup mg
-  let argCount   = case eqns of
-                     Equation (MultPattern args :| _) _ : _ -> fromIntegral $ length args
-                     _                                      -> 0
-      args       = NEL.fromList $ map anonymousArg [1..argCount]
-      argBinders = (Inferred Coq.Explicit . Ident) <$> args
+  args <- case eqns of
+            Equation (MultPattern args :| _) _ : _ ->
+              traverse (const $ gensym "arg") args
+            _ ->
+              convUnsupported "empty `MatchGroup' in function"
+  let argBinders = (Inferred Coq.Explicit . Ident) <$> args
       match      = Coq.Match (args <&> \arg -> MatchItem (Var arg) Nothing Nothing) Nothing eqns
   pure (argBinders, match)
 
@@ -389,7 +390,7 @@ convertTypedBindings defns sigs build mhandler =
 --------------------------------------------------------------------------------
 
 convertLocalBinds :: ConversionMonad m => HsLocalBinds RdrName -> m Term -> m Term
-convertLocalBinds (HsValBinds (ValBindsIn binds lsigs)) body = localConversionInfo $ do
+convertLocalBinds (HsValBinds (ValBindsIn binds lsigs)) body = localizeConversionState $ do
   sigs     <- convertLSigs lsigs
   convDefs <- convertTypedBindings (map unLoc . bagToList $ binds) sigs pure Nothing
   sequence_ $ mapMaybe (withConvertedBinding (withConvertedDefinitionOp $ rename ExprNS)

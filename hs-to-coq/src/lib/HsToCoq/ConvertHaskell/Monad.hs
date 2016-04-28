@@ -6,15 +6,21 @@
 module HsToCoq.ConvertHaskell.Monad (
   -- * Types
   ConversionMonad, evalConversion,
-  NameInfos(..), renamings, nonterminating, defaultMethods, renamed,
+  -- * Types
+  ConversionState(), renamings, nonterminating, defaultMethods, renamed,
   HsNamespace(..), NamespacedIdent(..),
   -- * Operations
-  rename, localConversionInfo,
+  fresh, gensym, rename, localizeConversionState,
   -- * Unsupported features
   convUnsupported
   ) where
 
 import Control.Lens
+
+import Data.Semigroup (Semigroup(..))
+import Data.Text (Text)
+import qualified Data.Text as T
+import Numeric.Natural
 
 import Control.Monad.State
 import Control.Monad.Variables
@@ -41,20 +47,22 @@ data NamespacedIdent = NamespacedIdent { niNS :: !HsNamespace
                                        , niId :: !Ident }
                      deriving (Eq, Ord, Show, Read)
 
-data NameInfos = NameInfos { _renamings      :: !(Map NamespacedIdent Ident)
-                           , _nonterminating :: !(Set Ident)
-                           , _defaultMethods :: !(Map Ident (Map Ident Term)) }
+data ConversionState = ConversionState { _renamings      :: !(Map NamespacedIdent Ident)
+                                       , _nonterminating :: !(Set Ident)
+                                       , _defaultMethods :: !(Map Ident (Map Ident Term))
+                                       , __unique        :: !Natural }
                deriving (Eq, Ord, Show, Read)
-makeLenses ''NameInfos
+makeLenses ''ConversionState
+-- '_unique' is not exported
 
-renamed :: HsNamespace -> Ident -> Lens' NameInfos (Maybe Ident)
+renamed :: HsNamespace -> Ident -> Lens' ConversionState (Maybe Ident)
 renamed ns x = renamings.at (NamespacedIdent ns x)
 {-# INLINABLE renamed #-}
 
-type ConversionMonad m = (GhcMonad m, MonadState NameInfos m, MonadVariables Ident () m)
+type ConversionMonad m = (GhcMonad m, MonadState ConversionState m, MonadVariables Ident () m)
 
-evalConversion :: GhcMonad m => StateT NameInfos (VariablesT Ident () m) a -> m a
-evalConversion = evalVariablesT . (evalStateT ?? NameInfos{..}) where
+evalConversion :: GhcMonad m => StateT ConversionState (VariablesT Ident () m) a -> m a
+evalConversion = evalVariablesT . (evalStateT ?? ConversionState{..}) where
   _renamings = M.fromList [ typ "()" ~> "unit" -- Probably unnecessary
                           , val "()" ~> "tt"
                            
@@ -86,14 +94,31 @@ evalConversion = evalVariablesT . (evalStateT ?? NameInfos{..}) where
                   where cl ~>> ms = (cl, M.fromList ms)
                         m  ~>  d  = (toCoqName m, d)
                         arg       = Inferred Coq.Explicit . Ident
+  
+  __unique = 0
+
+fresh :: ConversionMonad m => m Natural
+fresh = _unique <<+= 1
+
+gensym :: ConversionMonad m => Text -> m Ident
+gensym name = do u <- fresh
+                 pure $ "__" <> name <> "_" <> T.pack (show u) <> "__"
 
 -- Mostly for point-free use these days
 rename :: ConversionMonad m => HsNamespace -> Ident -> Ident -> m ()
 rename ns x x' = renamed ns x ?= x'
 {-# INLINABLE rename #-}
 
-localConversionInfo :: ConversionMonad m => m a -> m a
-localConversionInfo action = get >>= ((action <*) . put)
+localizeConversionState :: ConversionMonad m => m a -> m a
+localizeConversionState action = do
+  ci <- get
+  
+  r <- action
+  
+  u <- use _unique
+  put (ci & _unique .~ u)
+      
+  pure r
 
 convUnsupported :: MonadIO m => String -> m a
 convUnsupported what = liftIO . throwGhcExceptionIO . ProgramError $ what ++ " unsupported"

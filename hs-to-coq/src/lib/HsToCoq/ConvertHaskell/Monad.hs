@@ -6,10 +6,10 @@
 module HsToCoq.ConvertHaskell.Monad (
   -- * Types
   ConversionMonad, evalConversion,
-  NameInfos(..), renamings, nonterminating, defaultMethods, renaming,
+  NameInfos(..), renamings, nonterminating, defaultMethods, renamed,
   HsNamespace(..), NamespacedIdent(..),
   -- * Operations
-  rename, localRenamings,
+  rename, localConversionInfo,
   -- * Unsupported features
   convUnsupported
   ) where
@@ -47,9 +47,9 @@ data NameInfos = NameInfos { _renamings      :: !(Map NamespacedIdent Ident)
                deriving (Eq, Ord, Show, Read)
 makeLenses ''NameInfos
 
-renaming :: HsNamespace -> Ident -> Lens' NameInfos (Maybe Ident)
-renaming ns x = renamings.at (NamespacedIdent ns x)
-{-# INLINABLE renaming #-}
+renamed :: HsNamespace -> Ident -> Lens' NameInfos (Maybe Ident)
+renamed ns x = renamings.at (NamespacedIdent ns x)
+{-# INLINABLE renamed #-}
 
 type ConversionMonad m = (GhcMonad m, MonadState NameInfos m, MonadVariables Ident () m)
 
@@ -87,12 +87,13 @@ evalConversion = evalVariablesT . (evalStateT ?? NameInfos{..}) where
                         m  ~>  d  = (toCoqName m, d)
                         arg       = Inferred Coq.Explicit . Ident
 
+-- Mostly for point-free use these days
 rename :: ConversionMonad m => HsNamespace -> Ident -> Ident -> m ()
-rename ns x x' = renaming ns x ?= x'
+rename ns x x' = renamed ns x ?= x'
 {-# INLINABLE rename #-}
 
-localRenamings :: ConversionMonad m => m a -> m a
-localRenamings action = get >>= ((action <*) . put)
+localConversionInfo :: ConversionMonad m => m a -> m a
+localConversionInfo action = get >>= ((action <*) . put)
 
 convUnsupported :: MonadIO m => String -> m a
 convUnsupported what = liftIO . throwGhcExceptionIO . ProgramError $ what ++ " unsupported"

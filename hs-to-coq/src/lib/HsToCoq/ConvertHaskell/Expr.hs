@@ -389,7 +389,7 @@ convertTypedBindings defns sigs build mhandler =
 --------------------------------------------------------------------------------
 
 convertLocalBinds :: ConversionMonad m => HsLocalBinds RdrName -> m Term -> m Term
-convertLocalBinds (HsValBinds (ValBindsIn binds lsigs)) body = localRenamings $ do
+convertLocalBinds (HsValBinds (ValBindsIn binds lsigs)) body = localConversionInfo $ do
   sigs     <- convertLSigs lsigs
   convDefs <- convertTypedBindings (map unLoc . bagToList $ binds) sigs pure Nothing
   sequence_ $ mapMaybe (withConvertedBinding (withConvertedDefinitionOp $ rename ExprNS)

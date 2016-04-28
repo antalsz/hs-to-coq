@@ -7,6 +7,8 @@ module HsToCoq.ConvertHaskell.Declarations.DataType (
   Constructor, convertConDecl
   ) where
 
+import Control.Lens
+
 import Data.Semigroup (Semigroup(..))
 import Data.Traversable
 
@@ -32,8 +34,7 @@ convertConDecl curType (ConDecl lnames _explicit lqvs lcxt ldetails lres _doc _o
   unless (null $ unLoc lcxt) $ convUnsupported "constructor contexts"
   names   <- for lnames $ \lname -> do
                name <- ghcPpr $ unLoc lname -- We use 'ghcPpr' because we munge the name here ourselves
-               let name' = "Mk_" <> name
-               name' <$ rename ExprNS name name'
+               renamed ExprNS name <?= "Mk_" <> name
   params  <- convertLHsTyVarBndrs Coq.Implicit lqvs
   resTy   <- case lres of
                ResTyH98       -> pure curType

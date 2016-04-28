@@ -56,7 +56,7 @@ freeVar = fmap freeVar' . ghcPpr
 var :: (ConversionMonad m, OutputableBndr name) => HsNamespace -> name -> m Ident
 var ns x = do
   x' <- ghcPpr x -- TODO Check module part?
-  use $ renaming ns x' . non (escapeReservedNames x')
+  use $ renamed ns x' . non (escapeReservedNames x')
 
 --------------------------------------------------------------------------------
 

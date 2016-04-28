@@ -28,6 +28,8 @@ import HsToCoq.ConvertHaskell.Type
 
 type Constructor = (Ident, [Binder], Maybe Term)
 
+--------------------------------------------------------------------------------
+
 convertConDecl :: ConversionMonad m
                => Term -> ConDecl RdrName -> m [Constructor]
 convertConDecl curType (ConDecl lnames _explicit lqvs lcxt ldetails lres _doc _old) = do

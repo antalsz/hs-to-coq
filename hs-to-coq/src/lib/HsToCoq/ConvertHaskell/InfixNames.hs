@@ -7,6 +7,7 @@ module HsToCoq.ConvertHaskell.InfixNames (
   ) where
 
 import Control.Lens
+
 import Data.Semigroup (Semigroup(..))
 import Data.Char
 import Data.Text (Text)

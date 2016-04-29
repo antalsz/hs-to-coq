@@ -47,21 +47,26 @@ convertDecls :: (Data a, ConversionMonad m) => a -> m ()
 convertDecls lmod = do
   let doConversion what convert =
         convert (everythingOfType_ lmod) >>= liftIO .<$ \case
-          [] -> putStrLn $ "(* No " ++ what ++ " to convert. *)"
+          [] -> do putStrLn $ "(* No " ++ what ++ " to convert. *)"
+                   liftIO $ hFlush stdout
           ds -> do putStrLn $ "(* Converted " ++ what ++ ": *)"
                    traverse_ prettyPrint . intersperse line $
                      map ((<> line) . renderGallina) ds
+      
+      flush    = liftIO $ hFlush stdout
+      printGap = liftIO $ putStrLn ""
   
-  types <- doConversion "data type declarations"           convertTyClDecls    <* liftIO (putStrLn "")
-  funcs <- doConversion "function declarations"            convertValDecls     <* liftIO (putStrLn "")
-  insts <- doConversion "type class instance declarations" convertClsInstDecls
+  types <- doConversion "data type declarations"           convertTyClDecls    <* printGap <* flush
+  funcs <- doConversion "function declarations"            convertValDecls     <* printGap <* flush
+  insts <- doConversion "type class instance declarations" convertClsInstDecls <*             flush
   
   case toList . getFreeVars . NoBinding $ types ++ funcs ++ insts of
     []  -> pure ()
-    fvs -> prettyPrint $
-             line <> "(*" <+> hang 2
-               ("Unbound variables:" <!> fillSep (map text fvs))
-             <!> "*)" <> line
+    fvs -> do prettyPrint $
+                line <> "(*" <+> hang 2
+                  ("Unbound variables:" <!> fillSep (map text fvs))
+                <!> "*)" <> line
+              flush
 
 processFilesMain :: GhcMonad m => ([Located (HsModule RdrName)] -> m a) -> m ()
 processFilesMain f = traverse_ f =<< uncurry processFiles =<< processArgs

@@ -19,20 +19,18 @@ import HsToCoq.ConvertHaskell.Declarations.Value       as ConvertHaskell
 import HsToCoq.ConvertHaskell.Axiomatize               as ConvertHaskell
 
 {-
-TODO: `types/TyCoRep.hs` uses implicit parameters!
-  -- Stub them out, they're only for `error`!
-
 Translating `basicTypes/{BasicTypes,Var,DataCon,ConLike,VarSet,VarEnv,SrcLoc}.hs`,
-`types/{TyCon,Class,Coercion,CoAxiom}.hs`, coreSyn/CoreSyn.hs, and
+`types/{TyCon,Class,Coercion,TyCoRep,CoAxiom}.hs`, coreSyn/CoreSyn.hs, and
 `profiling/CostCentre.hs`:
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
- 181 record constructor patterns
-  22 pattern guards
+ 193 record constructor patterns
+  30 pattern guards
+  25 `do' expressions
   21 record constructors
   21 record updates
-  14 `do' expressions
-  11 possibly-incomplete guards
+  15 possibly-incomplete guards
+   1 multi-way if
 --------------------------------
- 270 TOTAL
+ 306 TOTAL
 -}

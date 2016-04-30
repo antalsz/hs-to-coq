@@ -207,9 +207,9 @@ instance Binding ClassDefinition where
     flip (foldr (\(field,ty) -> (binding f params (freeVars ty) *>) . binding f field)) fields
 
 instance Binding InstanceDefinition where
-  binding f (InstanceDefinition inst params cl defns) =
+  binding f (InstanceDefinition inst params cl defns mpf) =
     binding f params .
-    (freeVars cl *> freeVars (map snd defns) *>) .
+    (freeVars cl *> freeVars (map snd defns) *> freeVars mpf *>) .
     binding f inst
 
 instance Binding Notation where

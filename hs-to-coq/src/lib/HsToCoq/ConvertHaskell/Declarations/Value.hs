@@ -1,3 +1,4 @@
+{-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE LambdaCase, FlexibleContexts #-}
 
 module HsToCoq.ConvertHaskell.Declarations.Value (convertValDecls) where
@@ -7,11 +8,15 @@ import Data.Foldable
 import Data.Maybe
 import Data.Either
 
+import Control.Monad.IO.Class
+
 import GHC hiding (Name)
+import Panic
 
 import HsToCoq.Coq.Gallina as Coq
 
 import HsToCoq.ConvertHaskell.Monad
+import HsToCoq.ConvertHaskell.Variables
 import HsToCoq.ConvertHaskell.Definitions
 import HsToCoq.ConvertHaskell.Expr
 import HsToCoq.ConvertHaskell.Sigs
@@ -33,3 +38,11 @@ convertValDecls args = do
                                                (buildInfixNotations sigs) (map    NotationSentence))
                (\_ _ -> convUnsupported "top-level pattern bindings"))
              (Just axiomatizeBinding)
+  
+  where axiomatizeBinding :: GhcMonad m => HsBind RdrName -> GhcException -> m [Sentence]
+        axiomatizeBinding FunBind{..} exn = do
+          name <- freeVar $ unLoc fun_id
+          pure [translationFailedComment name exn, axiom name]
+        axiomatizeBinding _ exn =
+          liftIO $ throwGhcExceptionIO exn
+

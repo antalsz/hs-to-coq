@@ -29,6 +29,7 @@ library
                      , HsToCoq.Util.GHC.HsExpr
                      , HsToCoq.Util.GHC.Exception
                      , HsToCoq.Util.GHC.Monad
+                     , HsToCoq.Util.Options.Applicative.Instances
                      , HsToCoq.Util.Patterns
                      , HsToCoq.Util.Functor
                      , HsToCoq.Util.Monad.ListT
@@ -75,22 +76,23 @@ library
                      , DeriveDataTypeable, StandaloneDeriving, GeneralizedNewtypeDeriving
                      , PatternSynonyms
                      , TemplateHaskell
-  build-depends:       base             >=4.8 && <4.9
-                     , template-haskell ==2.10.*
-                     , ghc              ==7.10.2
-                     , ghc-paths        ==0.1.*
-                     , bifunctors       ==5.*
-                     , semigroups       ==0.18.*
-                     , transformers     ==0.4.*
-                     , mtl              ==2.2.*
-                     , lens             ==4.13.*
-                     , pipes            ==4.1.*
-                     , containers       ==0.5.*
-                     , syb              ==0.6.*
-                     , text             ==1.2.*
-                     , directory        ==1.2.*
-                     , filepath         ==1.4.*
-                     , wl-pprint-text   ==1.1.*
+  build-depends:       base                 >=4.8 && <4.9
+                     , template-haskell     ==2.10.*
+                     , ghc                  ==7.10.2
+                     , ghc-paths            ==0.1.*
+                     , bifunctors           ==5.*
+                     , semigroups           ==0.18.*
+                     , transformers         ==0.4.*
+                     , mtl                  ==2.2.*
+                     , lens                 ==4.13.*
+                     , pipes                ==4.1.*
+                     , containers           ==0.5.*
+                     , syb                  ==0.6.*
+                     , text                 ==1.2.*
+                     , directory            ==1.2.*
+                     , filepath             ==1.4.*
+                     , wl-pprint-text       ==1.1.*
+                     , optparse-applicative ==0.12.*
   hs-source-dirs:      src/lib
   default-language:    Haskell2010
   ghc-options:         -Wall -fno-warn-name-shadowing -O2

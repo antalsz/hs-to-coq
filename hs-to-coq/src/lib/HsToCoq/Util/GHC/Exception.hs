@@ -1,6 +1,9 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
-module HsToCoq.Util.GHC.Exception (module Exception) where
+module HsToCoq.Util.GHC.Exception (module Exception, gWithFile) where
+
+import Control.Monad.IO.Class
+import System.IO
 
 import Exception
 
@@ -36,3 +39,6 @@ instance ExceptionMonad m => ExceptionMonad (SL.StateT s m) where
     gmask $ flip SL.runStateT s . f . SL.mapStateT
 
 -- Other MTL transformers will be added as necessary
+
+gWithFile :: ExceptionMonad m => FilePath -> IOMode -> (Handle -> m r) -> m r
+gWithFile file mode = gbracket (liftIO $ openFile file mode) (liftIO . hClose)

@@ -1,0 +1,16 @@
+{-# OPTIONS_GHC -fno-warn-orphans #-}
+
+module HsToCoq.Util.Options.Applicative (module Options.Applicative, Semigroup(..)) where
+
+import Data.Semigroup
+import Options.Applicative.Help
+import Options.Applicative hiding ((<>))
+
+instance Semigroup ParseError  where (<>) = mappend
+instance Semigroup (InfoMod a) where (<>) = mappend
+instance Semigroup PrefsMod    where (<>) = mappend
+instance Semigroup (Mod f a)   where (<>) = mappend
+instance Semigroup Completer   where (<>) = mappend
+instance Semigroup ParserHelp  where (<>) = mappend
+instance Semigroup DefaultProp where (<>) = mappend
+instance Monoid a => Semigroup (Chunk a) where (<>) = mappend

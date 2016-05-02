@@ -4,7 +4,6 @@ module HsToCoq.ConvertHaskell.Pattern (convertPat,  convertLPat) where
 
 import Control.Lens
 
-import Data.Semigroup (Semigroup(..))
 import Data.Maybe
 import Data.Traversable
 import qualified Data.Text as T
@@ -15,6 +14,7 @@ import GHC hiding (Name)
 import BasicTypes
 import HsToCoq.Util.GHC.FastString
 
+import HsToCoq.Util.GHC
 import HsToCoq.Util.GHC.HsExpr
 import HsToCoq.Coq.Gallina as Coq
 import HsToCoq.Coq.Gallina.Util as Coq
@@ -80,8 +80,9 @@ convertPat (ConPatIn (L _ hsCon) conVariety) = do
           pure . appListPat (Bare con)
              $ map (\field -> M.findWithDefault (defaultPat field) field patterns) fields
         
-        Nothing     ->
-          convUnsupported $ "pattern-matching on unknown record constructor `" <> T.unpack con <> "'"
+        Nothing -> do
+          hsConStr <- ghcPpr hsCon
+          convUnsupported $ "pattern matching on unknown record constructor `" ++ T.unpack hsConStr ++ "'"
     
     InfixCon l r ->
       InfixPat <$> convertLPat l <*> pure con <*> convertLPat r

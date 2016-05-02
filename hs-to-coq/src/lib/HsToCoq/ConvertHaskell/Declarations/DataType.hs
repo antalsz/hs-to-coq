@@ -46,12 +46,13 @@ convertConDecl curType (ConDecl lnames _explicit lqvs lcxt details lres _doc _ol
               ResTyGADT _ ty -> convertLType ty
   args   <- traverse convertLType $ hsConDeclArgTys details
   
-  case details of
-    RecCon (L _ fields) -> do
-      fieldNames <- traverse freeVar $ concatMap (map unLoc . cd_fld_names . unLoc) fields
-      for_ cons $ \con -> recordFields . at con ?= fieldNames
+  fieldInfo <- case details of
+    RecCon (L _ fields) ->
+      fmap RecordFields .  traverse freeVar
+        $ concatMap (map unLoc . cd_fld_names . unLoc) fields
     _ ->
-      pure ()
+      pure . NonRecordFields $ length args
+  for_ cons $ \con -> constructorFields . at con ?= fieldInfo
   
   pure $ map (, params, Just $ foldr Arrow resTy args) cons
   

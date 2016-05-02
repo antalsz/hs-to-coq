@@ -65,24 +65,33 @@ convertPat (ConPatIn (L _ hsCon) conVariety) = do
       appListPat (Bare con) <$> traverse convertLPat args
     
     RecCon HsRecFields{..} ->
-      use (recordFields . at con) >>= \case
-        Just fields -> do
-          patterns <- fmap M.fromList . for rec_flds $ \(L _ (HsRecField (L _ hsField) hsPat pun)) -> do
-                        field <- var ExprNS hsField
-                        pat   <- if pun
-                                 then pure $ Coq.VarPat field
-                                 else convertLPat hsPat
-                        pure (field, pat)
-          
-          let defaultPat field | isJust rec_dotdot = Coq.VarPat field
-                               | otherwise         = UnderscorePat
-          
-          pure . appListPat (Bare con)
-             $ map (\field -> M.findWithDefault (defaultPat field) field patterns) fields
-        
-        Nothing -> do
-          hsConStr <- ghcPpr hsCon
-          convUnsupported $ "pattern matching on unknown record constructor `" ++ T.unpack hsConStr ++ "'"
+      let recPatUnsupported what = do
+            hsConStr <- ghcPpr hsCon
+            convUnsupported $  "using a record pattern for the "
+                            ++ what ++ " constructor `" ++ T.unpack hsConStr ++ "'"
+      
+      in use (constructorFields . at con) >>= \case
+           Just (RecordFields conFields) -> do
+             let defaultPat field | isJust rec_dotdot = Coq.VarPat field
+                                  | otherwise         = UnderscorePat
+             
+             patterns <- fmap M.fromList . for rec_flds $ \(L _ (HsRecField (L _ hsField) hsPat pun)) -> do
+                           field <- var ExprNS hsField
+                           pat   <- if pun
+                                    then pure $ Coq.VarPat field
+                                    else convertLPat hsPat
+                           pure (field, pat)
+             pure . appListPat (Bare con)
+                  $ map (\field -> M.findWithDefault (defaultPat field) field patterns) conFields
+           
+           Just (NonRecordFields count)
+             | null rec_flds && isNothing rec_dotdot ->
+               pure . appListPat (Bare con) $ replicate count UnderscorePat
+             
+             | otherwise ->
+               recPatUnsupported "non-record"
+           
+           Nothing -> recPatUnsupported "unknown"
     
     InfixCon l r ->
       InfixPat <$> convertLPat l <*> pure con <*> convertLPat r

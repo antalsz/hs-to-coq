@@ -1,18 +1,23 @@
-{-# LANGUAGE RecordWildCards, OverloadedStrings, FlexibleContexts #-}
+{-# LANGUAGE LambdaCase, RecordWildCards, OverloadedStrings, FlexibleContexts #-}
 
 module HsToCoq.ConvertHaskell.Pattern (convertPat,  convertLPat) where
 
-import Data.List.NonEmpty (nonEmpty)
+import Control.Lens
+
+import Data.Semigroup (Semigroup(..))
+import Data.Maybe
+import Data.Traversable
 import qualified Data.Text as T
+
+import qualified Data.Map.Strict as M
 
 import GHC hiding (Name)
 import BasicTypes
 import HsToCoq.Util.GHC.FastString
 
-import HsToCoq.Util.Functor
 import HsToCoq.Util.GHC.HsExpr
 import HsToCoq.Coq.Gallina as Coq
-import HsToCoq.Coq.Gallina.Util
+import HsToCoq.Coq.Gallina.Util as Coq
 
 import HsToCoq.ConvertHaskell.Monad
 import HsToCoq.ConvertHaskell.Variables
@@ -25,7 +30,7 @@ convertPat (WildPat PlaceHolder) =
   pure UnderscorePat
 
 convertPat (GHC.VarPat x) =
-  CoqVarPat <$> freeVar x
+  Coq.VarPat <$> freeVar x
 
 convertPat (LazyPat p) =
   convertLPat p
@@ -41,7 +46,7 @@ convertPat (BangPat p) =
 
 convertPat (ListPat pats PlaceHolder overloaded) =
   if maybe True (isNoSyntaxExpr . snd) overloaded
-  then foldr (InfixPat ?? "::") (CoqVarPat "nil") <$> traverse convertLPat pats
+  then foldr (InfixPat ?? "::") (Coq.VarPat "nil") <$> traverse convertLPat pats
   else convUnsupported "overloaded list patterns"
 
 convertPat (TuplePat pats boxity _PlaceHolders) =
@@ -52,17 +57,34 @@ convertPat (TuplePat pats boxity _PlaceHolders) =
 convertPat (PArrPat _ _) =
   convUnsupported "parallel array patterns"
 
-convertPat (ConPatIn con conVariety) =
+convertPat (ConPatIn (L _ hsCon) conVariety) = do
+  con <- var ExprNS hsCon
+  
   case conVariety of
-    PrefixCon args' -> do
-      conVar <- Bare <$> var ExprNS (unLoc con)
-      case nonEmpty args' of
-        Just args -> ArgsPat conVar <$> traverse convertLPat args
-        Nothing   -> pure $ QualidPat conVar
-    RecCon _    ->
-      convUnsupported "record constructor patterns"
-    InfixCon l r  ->
-      InfixPat <$> convertLPat l <*> var ExprNS (unLoc con) <*> convertLPat r
+    PrefixCon args ->
+      appListPat (Bare con) <$> traverse convertLPat args
+    
+    RecCon HsRecFields{..} ->
+      use (recordFields . at con) >>= \case
+        Just fields -> do
+          patterns <- fmap M.fromList . for rec_flds $ \(L _ (HsRecField (L _ hsField) hsPat pun)) -> do
+                        field <- var ExprNS hsField
+                        pat   <- if pun
+                                 then pure $ Coq.VarPat field
+                                 else convertLPat hsPat
+                        pure (field, pat)
+          
+          let defaultPat field | isJust rec_dotdot = Coq.VarPat field
+                               | otherwise         = UnderscorePat
+          
+          pure . appListPat (Bare con)
+             $ map (\field -> M.findWithDefault (defaultPat field) field patterns) fields
+        
+        Nothing     ->
+          convUnsupported $ "pattern-matching on unknown record constructor `" <> T.unpack con <> "'"
+    
+    InfixCon l r ->
+      InfixPat <$> convertLPat l <*> pure con <*> convertLPat r
 
 convertPat (ConPatOut{}) =
   convUnsupported "[internal?] `ConPatOut' constructor"

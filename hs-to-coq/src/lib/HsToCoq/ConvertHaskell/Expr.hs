@@ -166,6 +166,7 @@ convertExpr (RecordCon _ _ _) =
   convUnsupported "record constructors"
 
 convertExpr (RecordUpd _ _ _ _ _) =
+  -- TODO: And record accessors!
   convUnsupported "record updates"
 
 convertExpr (ExprWithTySig e ty PlaceHolder) =

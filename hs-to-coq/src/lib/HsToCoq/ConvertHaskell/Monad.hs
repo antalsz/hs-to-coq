@@ -7,7 +7,7 @@ module HsToCoq.ConvertHaskell.Monad (
   -- * Types
   ConversionMonad, evalConversion,
   -- * Types
-  ConversionState(), renamings, nonterminating, defaultMethods, renamed,
+  ConversionState(), renamings, nonterminating, recordFields, defaultMethods, renamed,
   HsNamespace(..), NamespacedIdent(..),
   -- * Operations
   fresh, gensym, rename, localizeConversionState,
@@ -49,6 +49,7 @@ data NamespacedIdent = NamespacedIdent { niNS :: !HsNamespace
 
 data ConversionState = ConversionState { _renamings      :: !(Map NamespacedIdent Ident)
                                        , _nonterminating :: !(Set Ident)
+                                       , _recordFields   :: !(Map Ident [Ident])
                                        , _defaultMethods :: !(Map Ident (Map Ident Term))
                                        , __unique        :: !Natural }
                deriving (Eq, Ord, Show, Read)
@@ -87,6 +88,8 @@ evalConversion = evalVariablesT . (evalStateT ?? ConversionState{..}) where
                    (~>) = (,)
 
   _nonterminating = ["error", "undefined", "panic"]
+
+  _recordFields = M.empty
   
   _defaultMethods = M.fromList ["Eq" ~>> [ "==" ~> Fun [arg "x", arg "y"] (App1 (Var "negb") $ Infix (Var "x") "/=" (Var "y"))
                                          , "/=" ~> Fun [arg "x", arg "y"] (App1 (Var "negb") $ Infix (Var "x") "==" (Var "y")) ]]

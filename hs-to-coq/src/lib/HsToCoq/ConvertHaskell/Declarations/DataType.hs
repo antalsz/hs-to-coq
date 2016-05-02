@@ -10,6 +10,7 @@ module HsToCoq.ConvertHaskell.Declarations.DataType (
 import Control.Lens
 
 import Data.Semigroup (Semigroup(..))
+import Data.Foldable
 import Data.Traversable
 
 import Control.Monad
@@ -32,17 +33,27 @@ type Constructor = (Ident, [Binder], Maybe Term)
 
 convertConDecl :: ConversionMonad m
                => Term -> ConDecl RdrName -> m [Constructor]
-convertConDecl curType (ConDecl lnames _explicit lqvs lcxt ldetails lres _doc _old) = do
+convertConDecl curType (ConDecl lnames _explicit lqvs lcxt details lres _doc _old) = do
   unless (null $ unLoc lcxt) $ convUnsupported "constructor contexts"
-  names   <- for lnames $ \lname -> do
-               name <- ghcPpr $ unLoc lname -- We use 'ghcPpr' because we munge the name here ourselves
-               renamed ExprNS name <?= "Mk_" <> name
-  params  <- convertLHsTyVarBndrs Coq.Implicit lqvs
-  resTy   <- case lres of
-               ResTyH98       -> pure curType
-               ResTyGADT _ ty -> convertLType ty
-  args    <- traverse convertLType $ hsConDeclArgTys ldetails
-  pure $ map (, params, Just $ foldr Arrow resTy args) names
+  
+  cons <- for lnames $ \(L _ hsCon) -> do
+            con <- ghcPpr hsCon -- We use 'ghcPpr' because we munge the name here ourselves
+            renamed ExprNS con <?= "Mk_" <> con
+  
+  params <- convertLHsTyVarBndrs Coq.Implicit lqvs
+  resTy  <- case lres of
+              ResTyH98       -> pure curType
+              ResTyGADT _ ty -> convertLType ty
+  args   <- traverse convertLType $ hsConDeclArgTys details
+  
+  case details of
+    RecCon (L _ fields) -> do
+      fieldNames <- traverse freeVar $ concatMap (map unLoc . cd_fld_names . unLoc) fields
+      for_ cons $ \con -> recordFields . at con ?= fieldNames
+    _ ->
+      pure ()
+  
+  pure $ map (, params, Just $ foldr Arrow resTy args) cons
   
 --------------------------------------------------------------------------------
   

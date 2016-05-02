@@ -59,13 +59,11 @@ data InstanceInfo = InstanceInfo { instanceName  :: !Ident
 
 convertClsInstDeclInfo :: ConversionMonad m => ClsInstDecl RdrName -> m InstanceInfo
 convertClsInstDeclInfo ClsInstDecl{..} = do
-  let headName (Forall _ t)       = headName t
-      headName (App (Var name) _) = pure name
-      headName _                  = convUnsupported "strangely-formed instance heads"
-  
   instanceName  <- convertInstanceName cid_poly_ty
   instanceHead  <- convertLType        cid_poly_ty
-  instanceClass <- headName            instanceHead
+  instanceClass <- maybe (convUnsupported "strangely-formed instance heads")
+                         (pure . renderOneLineT . renderGallina)
+                    $ termHead instanceHead
   
   pure InstanceInfo{..}
 

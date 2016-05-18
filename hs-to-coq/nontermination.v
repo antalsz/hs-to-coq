@@ -242,15 +242,17 @@ Fixpoint stream'_rect {A : Type} (P : stream' A -> Type)
                                    -> P (scons a f))
                       (s : stream' A) : P s :=
   match s with
-    | snil => P_snil
-    | scons a fs' => P_scons a fs' (fun k => match fs' k as ans' return match ans' with
-                                                                          | Value s' => P s'
-                                                                          | _        => unit
-                                                                        end
-                                             with
-                                               | Value s' => stream'_rect P_snil P_scons s'
-                                               | _        => tt
-                                             end)
+    | snil        =>
+        P_snil
+    | scons a fs' =>
+        P_scons a fs' (fun k => match fs' k as ans' return match ans' with
+                                                             | Value s' => P s'
+                                                             | _        => unit
+                                                           end
+                                with
+                                  | Value s' => stream'_rect P_snil P_scons s'
+                                  | _        => tt
+                                end)
   end.
 
 Fixpoint stream'_wf (A : Type) (s : stream' A) {struct s} : Type :=
@@ -312,4 +314,3 @@ Definition stream_to_list {A : Type} (s : stream A) : HS (list A).
   refine ⟪|stream'_to_list s wf|⟫.
   exact (stream'_to_list_continuous wf).
 Qed.
-

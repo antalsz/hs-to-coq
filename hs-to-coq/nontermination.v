@@ -281,7 +281,7 @@ Fixpoint stream'_ind {A : Type} (P : stream' A -> Prop)
 Fixpoint stream'_rec {A : Type} (P : stream' A -> Set)
                      (P_snil  : P snil)
                      (P_scons : forall (a : A) (f : Fuel -> Answer (stream' A)),
-                                  (forall k, match f k return Type with
+                                  (forall k, match f k return Set with
                                                | Value s' => P s'
                                                | _        => unit
                                              end)
@@ -291,12 +291,12 @@ Fixpoint stream'_rec {A : Type} (P : stream' A -> Set)
     | snil        =>
         P_snil
     | scons a fs' =>
-        P_scons a fs' (fun k => match fs' k as ans' return match ans' return Type with
+        P_scons a fs' (fun k => match fs' k as ans' return match ans' return Set with
                                                              | Value s' => P s'
                                                              | _        => unit
                                                            end
                                 with
-                                  | Value s' => stream'_rect P_snil P_scons s'
+                                  | Value s' => stream'_rec P_snil P_scons s'
                                   | _        => tt
                                 end)
   end.

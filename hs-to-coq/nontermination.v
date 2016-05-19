@@ -235,7 +235,7 @@ Set Elimination Schemes.
 Fixpoint stream'_rect {A : Type} (P : stream' A -> Type)
                       (P_snil  : P snil)
                       (P_scons : forall (a : A) (f : Fuel -> Answer (stream' A)),
-                                   (forall k, match f k with
+                                   (forall k, match f k return Type with
                                                 | Value s' => P s'
                                                 | _        => unit
                                               end)
@@ -245,7 +245,53 @@ Fixpoint stream'_rect {A : Type} (P : stream' A -> Type)
     | snil        =>
         P_snil
     | scons a fs' =>
-        P_scons a fs' (fun k => match fs' k as ans' return match ans' with
+        P_scons a fs' (fun k => match fs' k as ans' return match ans' return Type with
+                                                             | Value s' => P s'
+                                                             | _        => unit
+                                                           end
+                                with
+                                  | Value s' => stream'_rect P_snil P_scons s'
+                                  | _        => tt
+                                end)
+  end.
+
+Fixpoint stream'_ind {A : Type} (P : stream' A -> Prop)
+                     (P_snil  : P snil)
+                     (P_scons : forall (a : A) (f : Fuel -> Answer (stream' A)),
+                                  (forall k, match f k return Prop with
+                                               | Value s' => P s'
+                                               | _        => True
+                                             end)
+                                  -> P (scons a f))
+                     (s : stream' A) : P s :=
+  match s with
+    | snil        =>
+        P_snil
+    | scons a fs' =>
+        P_scons a fs' (fun k => match fs' k as ans' return match ans' return Prop with
+                                                             | Value s' => P s'
+                                                             | _        => True
+                                                           end
+                                with
+                                  | Value s' => stream'_ind P_snil P_scons s'
+                                  | _        => I
+                                end)
+  end.
+
+Fixpoint stream'_rec {A : Type} (P : stream' A -> Set)
+                     (P_snil  : P snil)
+                     (P_scons : forall (a : A) (f : Fuel -> Answer (stream' A)),
+                                  (forall k, match f k return Type with
+                                               | Value s' => P s'
+                                               | _        => unit
+                                             end)
+                                  -> P (scons a f))
+                     (s : stream' A) : P s :=
+  match s with
+    | snil        =>
+        P_snil
+    | scons a fs' =>
+        P_scons a fs' (fun k => match fs' k as ans' return match ans' return Type with
                                                              | Value s' => P s'
                                                              | _        => unit
                                                            end
@@ -291,7 +337,7 @@ Arguments stream'_to_list {A} !s !wf / k.
 Lemma stream'_to_list_irrel {A : Type} (s : stream' A) (wf1 wf2 : stream'_wf s) :
   stream'_to_list s wf1 =1 stream'_to_list s wf2.
 Proof.
-  elim/(@stream'_rect A): s wf1 wf2 => //= a fs' IH [cont1 all_wf1'] [cont2 all_wf2'] /= k.
+  elim: s wf1 wf2 => //= a fs' IH [cont1 all_wf1'] [cont2 all_wf2'] /= k.
   move: (all_wf1' k) (all_wf2' k) (IH k).
   by case: (fs' k) => //= s' wf1' wf2' /(_ wf1' wf2').
 Qed.

@@ -94,6 +94,7 @@ Definition hs_pure {A : Type} (a : A) : HS A.
   abstract continuity.
 Defined.
 Arguments hs_pure {A} / a.
+Notation "⦃ a ⦄" := (hs_pure a) (at level 0, format "⦃ a ⦄").
 
 Definition hs_ap {A B : Type} (hf : HS (A -> B)) (ha : HS A) : HS B.
   refine ⟪k → match compute hf k with
@@ -124,11 +125,11 @@ Definition hs_bind {A B : Type} (ha : HS A) (f : A -> HS B) : HS B.
               end⟫;
   abstract continuity.
 Defined.
-Notation "h >>≈ f" := (hs_bind h f) (right associativity, at level 90).
+Notation "h >>≡ f" := (hs_bind h f) (right associativity, at level 90).
 Arguments hs_bind {A B} !ha f /.
 
-Definition hs_rbind {A B : Type} (f : A -> HS B) (ha : HS A) : HS B := ha >>≈ f.
-Notation "f ≈<< h" := (hs_rbind f h) (left associativity, at level 91).
+Definition hs_rbind {A B : Type} (f : A -> HS B) (ha : HS A) : HS B := ha >>≡ f.
+Notation "f ≡<< h" := (hs_rbind f h) (left associativity, at level 91).
 Arguments hs_rbind {A B} f !ha /.
 
 Theorem Compatible_refl {A : Type} (ans : Answer A) : ans ⊑ ans.
@@ -205,23 +206,23 @@ Proof. EqHS_solve. Qed.
 Lemma hs_map_eta {A B : Type} (f : A -> B) : hs_map ([eta f]) ≈1 hs_map f.
 Proof. EqHS_solve. Qed.
 
-Theorem hs_ap_id {A : Type} (v : HS A) : hs_pure id ⟪*⟫ v ≈ v.
+Theorem hs_ap_id {A : Type} (v : HS A) : ⦃id⦄ ⟪*⟫ v ≈ v.
 Proof. EqHS_solve. Qed.
 
 Theorem hs_ap_comp {A B C : Type} (u : HS (B -> C)) (v : HS (A -> B)) (w : HS A) :
-  hs_pure _∘_ ⟪*⟫ u ⟪*⟫ v ⟪*⟫ w ≈ u ⟪*⟫ (v ⟪*⟫ w).
+  ⦃_∘_⦄ ⟪*⟫ u ⟪*⟫ v ⟪*⟫ w ≈ u ⟪*⟫ (v ⟪*⟫ w).
 Proof. EqHS_solve. Qed.
 
 Theorem hs_ap_hom {A B : Type} (f : A -> B) (x : A) :
-  hs_pure f ⟪*⟫ hs_pure x ≈ hs_pure (f x).
+  ⦃f⦄ ⟪*⟫ hs_pure x ≈ ⦃f x⦄.
 Proof. EqHS_solve. Qed.
 
 Theorem hs_ap_interchange {A B : Type} (u : HS (A -> B)) (y : A) :
-  u ⟪*⟫ hs_pure y ≈ hs_pure (@^~ y) ⟪*⟫ u.
+  u ⟪*⟫ ⦃y⦄ ≈ ⦃@^~ y⦄ ⟪*⟫ u.
 Proof. EqHS_solve. Qed.
 
 Theorem hs_ap_fmap {A B C : Type} (f : A -> B) (ha : HS A) :
-  f ⟪$⟫ ha ≈ hs_pure f ⟪*⟫ ha.
+  f ⟪$⟫ ha ≈ ⦃f⦄ ⟪*⟫ ha.
 Proof. EqHS_solve. Qed.
 
 Unset Elimination Schemes.

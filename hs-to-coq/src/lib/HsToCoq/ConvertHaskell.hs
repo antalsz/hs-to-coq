@@ -33,3 +33,7 @@ Translating `basicTypes/{BasicTypes,Var,DataCon,ConLike,VarSet,VarEnv,SrcLoc}.hs
 -------------------------------
  140 TOTAL
 -}
+
+-- Check: Where do we use nontermination?  Both crashing AND looping.
+-- Check: How well does "primitive recursion" cover the recursive functions?
+-- `return` is a reserved word‽

@@ -15,11 +15,12 @@ module HsToCoq.ConvertHaskell.Expr (
   -- ** Matches
   convertMatchGroup, convertMatch,
   -- ** Guards
-  ConvertedGuard(..), convertGuard,
-  convertGRHSs, convertGRHS, convertGuards
+  ConvertedGuard(..), convertGuard, guardTerm,
+  convertLGRHSList, convertGRHSs, convertGRHS, convertGuards
   ) where
 
 import Data.Bifunctor
+import Data.Foldable
 import Data.Traversable
 import Data.Maybe
 import Data.List.NonEmpty (NonEmpty(..), nonEmpty)
@@ -41,7 +42,6 @@ import RdrName
 import HsToCoq.Util.GHC.Exception
 
 import HsToCoq.Util.Functor
-import HsToCoq.Util.List
 import HsToCoq.Util.GHC
 import HsToCoq.Util.GHC.HsExpr
 import HsToCoq.Coq.Gallina as Coq
@@ -145,8 +145,8 @@ convertExpr (HsIf overloaded c t f) =
   then If <$> convertLExpr c <*> pure Nothing <*> convertLExpr t <*> convertLExpr f
   else convUnsupported "overloaded if-then-else"
 
-convertExpr (HsMultiIf _ _) =
-  convUnsupported "multi-way if"
+convertExpr (HsMultiIf PlaceHolder lgrhsList) =
+  convertLGRHSList lgrhsList
 
 convertExpr (HsLet binds body) =
   convertLocalBinds binds $ convertLExpr body
@@ -290,50 +290,84 @@ convertMatch GHC.Match{..} = do
 
 --------------------------------------------------------------------------------
 
-data ConvertedGuard = NoGuard
-                    | BoolGuard Term
+-- TODO: include "statement" in name?
+data ConvertedGuard = OtherwiseGuard
+                    | BoolGuard      Term
+                    | PatternGuard   Pattern Term
                     deriving (Eq, Ord, Show, Read)
 
-convertGuard :: ConversionMonad m => [GuardLStmt RdrName] -> m ConvertedGuard
-convertGuard [] = pure NoGuard
-convertGuard gs = BoolGuard . foldr1 (App2 $ Var "andb") <$> traverse toCond gs where
+convertGuard :: ConversionMonad m => [GuardLStmt RdrName] -> m [ConvertedGuard]
+convertGuard [] = pure []
+convertGuard gs = collapseGuards <$> traverse toCond gs where
   toCond (L _ (BodyStmt e _bind _guard _PlaceHolder)) =
     isTrue e >>= \case
-      True  -> pure $ Var "true"
-      False -> convertLExpr e
+      True  -> pure OtherwiseGuard
+      False -> BoolGuard <$> convertLExpr e
   toCond (L _ (LetStmt _)) =
     convUnsupported "`let' statements in guards"
-  toCond (L _ (BindStmt _ _ _ _)) =
-    convUnsupported "pattern guards"
+  toCond (L _ (BindStmt pat exp _bind _fail)) =
+    PatternGuard <$> convertLPat pat <*> convertLExpr exp
   toCond _ =
     convUnsupported "impossibly fancy guards"
 
+  -- TODO: Add multi-pattern-guard case
+  addGuard g [] =
+    [g]
+  addGuard (BoolGuard cond') (BoolGuard cond : gs) =
+    BoolGuard (App2 (Var "andb") cond' cond) : gs
+  addGuard g' (g:gs) =
+    g':g:gs
+  addGuard _ _ =
+    error "GHC BUG WORKAROUND: `OverloadedLists` confuses the exhaustiveness checker"
+  
+  collapseGuards = foldr addGuard []
+  
   isTrue (L _ (HsVar x))         = ((||) <$> (== "otherwise") <*> (== "True")) <$> ghcPpr x
   isTrue (L _ (HsTick _ e))      = isTrue e
   isTrue (L _ (HsBinTick _ _ e)) = isTrue e
   isTrue (L _ (HsPar e))         = isTrue e
   isTrue _                       = pure False
 
+-- Returns a function waiting for the next guard
+guardTerm :: ConversionMonad m => [ConvertedGuard] -> Term -> (Term -> m Term)
+guardTerm gs guarded unguarded = go gs where
+  go [] =
+    pure guarded
+  go (OtherwiseGuard : []) =
+    pure guarded
+  go (OtherwiseGuard : (_:_)) =
+    convUnsupported "unused guards after an `otherwise' (or similar)"
+  go (BoolGuard cond : gs) =
+    If cond Nothing <$> go gs <*> pure unguarded
+  go (PatternGuard pat exp : gs) = do
+    guarded' <- go gs
+    pure $ Coq.Match [MatchItem exp Nothing Nothing] Nothing
+                     [ Equation [MultPattern [pat]] guarded'
+                     , Equation [MultPattern [UnderscorePat]] unguarded ]
+  go _ =
+    error "GHC BUG WORKAROUND: `OverloadedLists` confuses the exhaustiveness checker"
+
 --------------------------------------------------------------------------------
 
-convertGuards :: ConversionMonad m => [(ConvertedGuard,Term)] -> m Term
-convertGuards []            = convUnsupported "empty lists of guarded statements"
-convertGuards [(NoGuard,t)] = pure t
-convertGuards gts           = case traverse (\case (BoolGuard g,t) -> Just (g,t) ; _ -> Nothing) gts of
-  Just bts -> case assertUnsnoc bts of
-                (bts', (Var "true", lastTerm)) ->
-                  pure $ foldr (\(c,t) f -> If c Nothing t f) lastTerm bts'
-                _ ->
-                  convUnsupported "possibly-incomplete guards"
-  Nothing  -> convUnsupported "malformed guards"
+convertGuards :: ConversionMonad m => [([ConvertedGuard],Term)] -> m Term
+convertGuards [] = convUnsupported "empty lists of guarded statements"
+convertGuards gs = foldrM (uncurry guardTerm) MissingValue gs
+-- TODO: We could support enhanced fallthrough if we detected more
+-- `MissingValue` cases, e.g.
+--
+--     foo (Con1 x y) | rel x y = rhs1
+--     foo other                = rhs2
+--
+-- Right now, this doesn't catch the fallthrough.  Oh well!
 
-convertGRHS :: ConversionMonad m => GRHS RdrName (LHsExpr RdrName) -> m (ConvertedGuard,Term)
+convertGRHS :: ConversionMonad m => GRHS RdrName (LHsExpr RdrName) -> m ([ConvertedGuard],Term)
 convertGRHS (GRHS gs rhs) = (,) <$> convertGuard gs <*> convertLExpr rhs
 
+convertLGRHSList :: ConversionMonad m => [LGRHS RdrName (LHsExpr RdrName)] -> m Term
+convertLGRHSList = convertGuards <=< traverse (convertGRHS . unLoc)
+
 convertGRHSs :: ConversionMonad m => GRHSs RdrName (LHsExpr RdrName) -> m Term
-convertGRHSs GRHSs{..} =
-  convertLocalBinds grhssLocalBinds
-    $ convertGuards =<< traverse (convertGRHS . unLoc) grhssGRHSs
+convertGRHSs GRHSs{..} = convertLocalBinds grhssLocalBinds $ convertLGRHSList grhssGRHSs
 
 --------------------------------------------------------------------------------
 

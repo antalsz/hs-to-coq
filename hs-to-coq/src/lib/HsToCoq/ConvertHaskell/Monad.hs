@@ -85,7 +85,9 @@ evalConversion = evalVariablesT . (evalStateT ?? ConversionState{..}) where
                            
                           , typ "Maybe"   ~> "option"
                           , val "Just"    ~> "Some"
-                          , val "Nothing" ~> "None" ]
+                          , val "Nothing" ~> "None"
+                           
+                          , typ "FastString" ~> "string" ]
              
              where val  = NamespacedIdent ExprNS
                    typ  = NamespacedIdent TypeNS

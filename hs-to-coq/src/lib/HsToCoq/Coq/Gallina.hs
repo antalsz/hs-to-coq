@@ -157,6 +157,7 @@ data Term = Forall Binders Term                                                 
           | String Text                                                                        -- ^@/string/@ – extra (holds the value, not the source text)
           | Underscore                                                                         -- ^@_@
           | Parens Term                                                                        -- ^@( /term/ )@
+          | MissingValue                                                                       -- ^@_@ – extra (a value we don't know how to fill in)
           deriving (Eq, Ord, Show, Read, Typeable, Data)
 
 -- |@/arg/ ::=@
@@ -562,6 +563,9 @@ instance Gallina Term where
   
   renderGallina' _ (Parens t) =
     parens $ renderGallina t
+  
+  renderGallina' _ MissingValue =
+    string "_(*MissingValue*)"
 
 instance Gallina Arg where
   renderGallina' p (PosArg t) =

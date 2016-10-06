@@ -383,9 +383,48 @@ convertFunction mg = do
 
 convertDoBlock :: ConversionMonad m => [ExprLStmt RdrName] -> m Term
 convertDoBlock allStmts = case fmap unLoc <$> unsnoc allStmts of
-  Just (stmts, BodyStmt e _ _ _) -> convUnsupported "`do' blocks"
+  Just (stmts, BodyStmt e _ _ _) -> foldMap (Endo . toExpr . unLoc) stmts `appEndo` convertLExpr e
   Just _                         -> convUnsupported "invalid malformed `do' block"
   Nothing                        -> convUnsupported "invalid empty `do' block"
+  where
+    toExpr :: ConversionMonad m' => Stmt RdrName (LHsExpr RdrName) -> m' Term -> m' Term
+    toExpr (BodyStmt e _bind _guard _PlaceHolder) rest =
+      Infix <$> convertLExpr e <*> pure ">>" <*> rest
+    
+    toExpr (BindStmt pat exp _bind _fail) rest = do
+      pat' <- convertLPat  pat
+      refutability pat' >>= \case
+        Trivial tpat ->
+          Infix <$> convertLExpr exp
+                <*> pure ">>="
+                <*> (Fun [Inferred Coq.Explicit $ maybe UnderscoreName Ident tpat] <$> rest)
+          
+        nontrivial -> do
+          cont  <- gensym "cont"
+          arg   <- gensym "arg"
+          exp'  <- convertLExpr exp
+          rest' <- rest
+          -- TODO: Use SSReflect's `let:` in the `SoleConstructor` case?
+          -- (Involves adding a constructor to `Term`.)
+          let fallback
+                | SoleConstructor <- nontrivial = []
+                | otherwise                     =
+                  [ Equation [MultPattern [UnderscorePat]] $
+                             App1 (Var "fail") (String "Partial pattern match in `do' notation") ]
+          
+          pure . Let cont [Inferred Coq.Explicit $ Ident arg] Nothing
+                          (Coq.Match [MatchItem (Var arg) Nothing Nothing] Nothing $ 
+                                     Equation [MultPattern [pat']] rest' : fallback)
+                     $ Infix exp' ">>=" (Var cont)
+    
+    toExpr (LetStmt binds) rest =
+      convertLocalBinds binds rest
+    
+    toExpr (RecStmt{}) _ =
+      convUnsupported "`rec' statements in `do` blocks"
+    
+    toExpr _ _ =
+      convUnsupported "impossibly fancy `do' block statements"
 
 convertListComprehension :: ConversionMonad m => [ExprLStmt RdrName] -> m Term
 convertListComprehension _ = convUnsupported "list comprehension"

@@ -80,10 +80,12 @@ convertDataDecl name tvs defn = do
 
   let conNames = [con | (con,_,_) <- cons]
   constructors . at coqName ?= conNames
-  for_ conNames $ \ con -> use (constructorFields . at con) >>= \case
-    Just (RecordFields fields) ->
-      for_ fields $ \field -> recordFieldTypes . at field ?= coqName
-    _ ->
-      pure ()
+  for_ conNames $ \ con -> do
+    constructorTypes . at con ?= coqName
+    use (constructorFields . at con) >>= \case
+      Just (RecordFields fields) ->
+        for_ fields $ \field -> recordFieldTypes . at field ?= coqName
+      _ ->
+        pure ()
   
   pure $ IndBody coqName params resTy cons

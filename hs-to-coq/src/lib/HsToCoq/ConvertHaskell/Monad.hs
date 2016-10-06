@@ -8,7 +8,7 @@ module HsToCoq.ConvertHaskell.Monad (
   ConversionMonad, evalConversion,
   -- * Types
   ConversionState(),
-  renamings, constructors, constructorFields, recordFieldTypes, defaultMethods, renamed,
+  renamings, constructors, constructorTypes, constructorFields, recordFieldTypes, defaultMethods, renamed,
   HsNamespace(..), NamespacedIdent(..), ConstructorFields(..),
   -- * Operations
   fresh, gensym, rename, localizeConversionState,
@@ -52,6 +52,7 @@ data ConstructorFields = NonRecordFields !Int
 
 data ConversionState = ConversionState { _renamings         :: !(Map NamespacedIdent Ident)
                                        , _constructors      :: !(Map Ident [Ident])
+                                       , _constructorTypes  :: !(Map Ident Ident)
                                        , _constructorFields :: !(Map Ident ConstructorFields)
                                        , _recordFieldTypes  :: !(Map Ident Ident)
                                        , _defaultMethods    :: !(Map Ident (Map Ident Term))
@@ -94,6 +95,8 @@ evalConversion = evalVariablesT . (evalStateT ?? ConversionState{..}) where
                    (~>) = (,)
 
   _constructors      = M.empty -- TODO Add base types?
+  
+  _constructorTypes  = M.empty -- TODO Add base types?
   
   _constructorFields = M.empty -- TODO Add base types?
   

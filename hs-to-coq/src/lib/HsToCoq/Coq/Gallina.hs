@@ -73,7 +73,8 @@ module HsToCoq.Coq.Gallina (
   renderLocality,
 
   -- * General utility functions
-  binderNames, binderIdents
+  binderNames, binderIdents,
+  qualidToIdent
   ) where
 
 import Prelude hiding (Num)
@@ -841,3 +842,7 @@ binderNames (Generalized _ _) = []
 
 binderIdents :: Binder -> [Ident]
 binderIdents = mapMaybe (\case Ident x -> Just x ; UnderscoreName -> Nothing) . binderNames
+
+qualidToIdent :: Qualid -> Ident
+qualidToIdent (Bare      ident)   = ident
+qualidToIdent (Qualified qid aid) = qualidToIdent qid <> "." <> aid

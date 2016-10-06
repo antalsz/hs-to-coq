@@ -1,12 +1,19 @@
-{-# LANGUAGE LambdaCase, RecordWildCards, OverloadedStrings, FlexibleContexts #-}
+{-# LANGUAGE LambdaCase, RecordWildCards, OverloadedStrings, OverloadedLists, FlexibleContexts #-}
 
-module HsToCoq.ConvertHaskell.Pattern (convertPat,  convertLPat) where
+module HsToCoq.ConvertHaskell.Pattern (
+  convertPat,  convertLPat,
+  -- * Utility
+  Refutability(..), refutability, isSoleConstructor
+) where
 
 import Control.Lens
 
 import Data.Maybe
 import Data.Traversable
+import Data.List.NonEmpty (NonEmpty())
 import qualified Data.Text as T
+
+import Control.Monad.Trans.Maybe
 
 import qualified Data.Map.Strict as M
 
@@ -146,3 +153,43 @@ convertPat (CoPat _ _ _) =
 
 convertLPat :: ConversionMonad m => LPat RdrName -> m Pattern
 convertLPat = convertPat . unLoc
+
+--------------------------------------------------------------------------------
+
+-- Nothing:    Not a constructor
+-- Just True:  Sole constructor
+-- Just False: One of many constructors
+isSoleConstructor :: ConversionMonad m => Ident -> m (Maybe Bool)
+isSoleConstructor con = runMaybeT $ do
+  ty    <- MaybeT . use $ constructorTypes . at con
+  ctors <-          use $ constructors     . at ty
+  pure $ length (fromMaybe [] ctors) == 1
+
+data Refutability = Trivial (Maybe Ident) -- Variables (with `Just`), underscore (with `Nothing`)
+                  | SoleConstructor       -- (), (x,y)
+                  | Refutable             -- Nothing, Right x, (3,_)
+                  deriving (Eq, Ord, Show, Read)
+
+-- Module-local
+constructor_refutability :: ConversionMonad m => Qualid -> NonEmpty Pattern -> m Refutability
+constructor_refutability con args =
+  isSoleConstructor (qualidToIdent con) >>= \case
+    Nothing    -> pure Refutable -- Error
+    Just True  -> maximum . (SoleConstructor <|) <$> traverse refutability args
+    Just False -> pure Refutable
+
+refutability :: ConversionMonad m => Pattern -> m Refutability
+refutability (ArgsPat con args)         = constructor_refutability con args
+refutability (ExplicitArgsPat con args) = constructor_refutability con args
+refutability (InfixPat arg1 con arg2)   = constructor_refutability (Bare con) [arg1,arg2]
+refutability (Coq.AsPat pat _)          = refutability pat
+refutability (InScopePat _ _)           = pure Refutable -- TODO: Handle scopes
+refutability (QualidPat qid)            = let name = qualidToIdent qid
+                                          in isSoleConstructor name <&> \case
+                                               Nothing    -> Trivial $ Just name
+                                               Just True  -> SoleConstructor
+                                               Just False -> Refutable
+refutability UnderscorePat              = pure $ Trivial Nothing
+refutability (NumPat _)                 = pure Refutable
+refutability (StringPat _)              = pure Refutable
+refutability (OrPats _)                 = pure Refutable -- TODO: Handle or-patterns?

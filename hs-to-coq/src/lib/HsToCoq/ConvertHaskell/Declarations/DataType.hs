@@ -77,4 +77,13 @@ convertDataDecl name tvs defn = do
                    UnderscoreName -> Underscore
       curType  = appList (Var coqName) . nameArgs $ foldMap binderNames params
   (resTy, cons) <- convertDataDefn curType defn
+
+  let conNames = [con | (con,_,_) <- cons]
+  constructors . at coqName ?= conNames
+  for_ conNames $ \ con -> use (constructorFields . at con) >>= \case
+    Just (RecordFields fields) ->
+      for_ fields $ \field -> recordFieldTypes . at field ?= coqName
+    _ ->
+      pure ()
+  
   pure $ IndBody coqName params resTy cons

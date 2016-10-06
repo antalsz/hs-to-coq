@@ -1,4 +1,4 @@
-{-# LANGUAGE RecordWildCards,
+{-# LANGUAGE RecordWildCards, LambdaCase,
              OverloadedLists, OverloadedStrings,
              FlexibleContexts #-}
 
@@ -10,12 +10,18 @@ module HsToCoq.ConvertHaskell.Declarations.TyCl (
   -- * Mutually-recursive declaration groups
   DeclarationGroup(..), singletonDeclarationGroup,
   -- * Converting 'DeclarationGroup's
-  convertDeclarationGroup, groupTyClDecls
+  convertDeclarationGroup, groupTyClDecls,
+  -- * Record accessors
+  generateRecordAccessors, generateHsRecordAccessors
   ) where
+
+import Control.Lens
 
 import Data.Semigroup (Semigroup(..))
 import Data.Foldable
+import Data.Traversable
 import Data.List.NonEmpty (NonEmpty(..), nonEmpty)
+import qualified Data.Text as T
 
 import Control.Arrow ((&&&))
 import Control.Monad
@@ -24,8 +30,11 @@ import qualified Data.Set        as S
 import qualified Data.Map.Strict as M
 
 import GHC hiding (Name)
+import BasicTypes
+import RdrName
+import FastString
+import TcEvidence
 
-import HsToCoq.Util.Functor
 import HsToCoq.Util.Containers
 import HsToCoq.Coq.Gallina
 import HsToCoq.Coq.Gallina.Util
@@ -37,6 +46,7 @@ import HsToCoq.ConvertHaskell.Monad
 import HsToCoq.ConvertHaskell.Declarations.TypeSynonym
 import HsToCoq.ConvertHaskell.Declarations.DataType
 import HsToCoq.ConvertHaskell.Declarations.Class
+import HsToCoq.ConvertHaskell.Declarations.Value
 
 --------------------------------------------------------------------------------
 
@@ -129,6 +139,60 @@ convertDeclarationGroup DeclarationGroup{..} = case (nonEmpty dgInductives, nonE
 
 --------------------------------------------------------------------------------
 
+-- TODO: Add type signatures?
+generateHsRecordAccessors :: ConversionMonad m => IndBody -> m [HsDecl RdrName]
+generateHsRecordAccessors (IndBody _tyName _params _resTy cons) = do
+  allFields <- fmap fold . for cons $ \(con, _args, _resTy) -> do
+                 use (constructorFields . at con) <&> \case
+                   Just (RecordFields fields) -> S.fromList fields
+                   _                          -> []
+  
+  for (S.toAscList allFields) $ \field -> do
+    matches <- for cons $ \(con, _args, _resTy) -> do
+                 hasField <- use (constructorFields . at con) <&> \case
+                               Just (RecordFields conFields) -> field `elem` conFields
+                               _                             -> False
+                 pure $ buildMatch hasField con field
+    pure . ValD $ FunBind { fun_id      = loc $ toHs field
+                          , fun_infix   = False
+                          , fun_matches = MG { mg_alts    = matches
+                                             , mg_arg_tys = []
+                                             , mg_res_ty  = PlaceHolder
+                                             , mg_origin  = Generated }
+                          , fun_co_fn   = WpHole
+                          , bind_fvs    = PlaceHolder
+                          , fun_tick    = [] }
+  where
+    buildMatch hasField con field = loc $ GHC.Match
+      { m_fun_id_infix = Nothing
+      , m_pats         = [loc $ buildRec (\name -> ConPatIn name . RecCon) con []]
+      , m_type         = Nothing
+      , m_grhss        = GRHSs
+          { grhssGRHSs =
+              [ loc . GRHS [] . loc $
+                  if hasField
+                  then HsVar $ toHs field
+                  else -- TODO: A special variable which is special-cased to desugar to `MissingValue`?
+                       HsApp (loc . HsVar . mkVarUnqual $ fsLit "error")
+                             (loc . HsLit . HsString "" $ fsLit "Partial record selector") ]
+          , grhssLocalBinds = EmptyLocalBinds } }
+      where
+        buildRec useRec con fields = useRec (loc $ toHs con) $
+                                            HsRecFields { rec_flds   = map loc fields
+                                                        , rec_dotdot = if hasField
+                                                                       then Just 0
+                                                                       else Nothing }
+    
+    loc  = mkGeneralLocated "generated"
+    toHs = mkVarUnqual . fsLit . T.unpack
+
+generateRecordAccessors :: ConversionMonad m => DeclarationGroup -> m [Sentence]
+generateRecordAccessors =   convertValDecls
+                        <=< fmap fold . traverse generateHsRecordAccessors
+                        .   dgInductives
+
+--------------------------------------------------------------------------------
+
 groupTyClDecls :: ConversionMonad m => [TyClDecl RdrName] -> m [DeclarationGroup]
 groupTyClDecls decls = do
   bodies <- traverse convertTyClDecl decls <&>
@@ -140,6 +204,8 @@ groupTyClDecls decls = do
   pure $ map (foldMap $ singletonDeclarationGroup . (bodies M.!)) mutuals
 
 convertTyClDecls :: ConversionMonad m => [TyClDecl RdrName] -> m [Sentence]
-convertTyClDecls =   either convUnsupported (pure . fold)
-                 .   traverse convertDeclarationGroup
+convertTyClDecls =   forkM (either convUnsupported (pure . fold)
+                             . traverse convertDeclarationGroup)
+                           (fmap fold . traverse generateRecordAccessors)
                  <=< groupTyClDecls
+  where forkM l r i = (<>) <$> l i <*> r i

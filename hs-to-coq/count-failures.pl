@@ -27,10 +27,9 @@ sub format_result(_;$) {
   return sprintf '%4d %s', $count, $reason;
 }
 
-my $total = sum0(map { $_->[0] } @failures);
-my @lines = map format_result, @failures;
-my $rule  = '-' x max(map length, @lines);
+my $total      = sum0(map { $_->[0] } @failures);
+my @lines      = map format_result, @failures;
+my $total_line = format_result $total, 'TOTAL';
+my $rule       = '-' x max(map length, $total_line, @lines);
 
-say foreach @lines;
-say $rule;
-say (format_result $total, 'TOTAL');
+say foreach @lines, $rule, $total_line;

@@ -7,7 +7,8 @@ module HsToCoq.ConvertHaskell.Monad (
   -- * Types
   ConversionMonad, evalConversion,
   -- * Types
-  ConversionState(), renamings, nonterminating, constructorFields, defaultMethods, renamed,
+  ConversionState(),
+  renamings, constructors, constructorFields, recordFieldTypes, defaultMethods, renamed,
   HsNamespace(..), NamespacedIdent(..), ConstructorFields(..),
   -- * Operations
   fresh, gensym, rename, localizeConversionState,
@@ -27,8 +28,6 @@ import Control.Monad.Variables
 
 import           Data.Map.Strict (Map)
 import qualified Data.Map.Strict as M
-
-import Data.Set (Set)
 
 import GHC
 import Panic
@@ -52,11 +51,12 @@ data ConstructorFields = NonRecordFields !Int
                        deriving (Eq, Ord, Show, Read)
 
 data ConversionState = ConversionState { _renamings         :: !(Map NamespacedIdent Ident)
-                                       , _nonterminating    :: !(Set Ident)
+                                       , _constructors      :: !(Map Ident [Ident])
                                        , _constructorFields :: !(Map Ident ConstructorFields)
+                                       , _recordFieldTypes  :: !(Map Ident Ident)
                                        , _defaultMethods    :: !(Map Ident (Map Ident Term))
                                        , __unique           :: !Natural }
-               deriving (Eq, Ord, Show, Read)
+               deriving (Eq, Ord, Show)
 makeLenses ''ConversionState
 -- '_unique' is not exported
 
@@ -93,10 +93,11 @@ evalConversion = evalVariablesT . (evalStateT ?? ConversionState{..}) where
                    typ  = NamespacedIdent TypeNS
                    (~>) = (,)
 
-  _nonterminating = ["error", "undefined", "panic"]
-
-
+  _constructors      = M.empty -- TODO Add base types?
+  
   _constructorFields = M.empty -- TODO Add base types?
+  
+  _recordFieldTypes  = M.empty -- TODO Add base types?
   
   _defaultMethods = M.fromList ["Eq" ~>> [ "==" ~> Fun [arg "x", arg "y"] (App1 (Var "negb") $ Infix (Var "x") "/=" (Var "y"))
                                          , "/=" ~> Fun [arg "x", arg "y"] (App1 (Var "negb") $ Infix (Var "x") "==" (Var "y")) ]]

@@ -17,23 +17,3 @@ import HsToCoq.ConvertHaskell.Declarations.Instances   as ConvertHaskell
 import HsToCoq.ConvertHaskell.Declarations.TyCl        as ConvertHaskell
 import HsToCoq.ConvertHaskell.Declarations.Value       as ConvertHaskell
 import HsToCoq.ConvertHaskell.Axiomatize               as ConvertHaskell
-
-{-
-Translating `basicTypes/{BasicTypes,Var,DataCon,ConLike,VarSet,VarEnv,SrcLoc}.hs`,
-`types/{TyCon,Class,Coercion,TyCoRep,CoAxiom}.hs`, coreSyn/CoreSyn.hs, and
-`profiling/CostCentre.hs`:
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-  39 pattern guards
-  28 `do' expressions
-  28 record constructors
-  26 record updates
-  18 possibly-incomplete guards
-   1 multi-way if
--------------------------------
- 140 TOTAL
--}
-
--- Check: Where do we use nontermination?  Both crashing AND looping.
--- Check: How well does "primitive recursion" cover the recursive functions?
--- `return` is a reserved word‽

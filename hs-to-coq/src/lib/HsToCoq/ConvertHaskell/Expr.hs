@@ -280,8 +280,22 @@ convertExpr (ExprWithTySig e ty PlaceHolder) =
 convertExpr (ExprWithTySigOut _ _) =
   convUnsupported "`ExprWithTySigOut' constructor"
 
-convertExpr (ArithSeq _ _ _) =
-  convUnsupported "arithmetic sequences"
+convertExpr (ArithSeq _postTc _overloadedLists info) =
+  -- TODO: Special-case infinite lists?
+  -- TODO: `enumFrom{,Then}{,To}` is really…?
+  -- TODO: Add Coq syntax sugar?  Something like
+  --
+  --     Notation "[ :: from        '..' ]"    := (enumFrom       from).
+  --     Notation "[ :: from , next '..' ]"    := (enumFromThen   from next).
+  --     Notation "[ :: from        '..' to ]" := (enumFromTo     from      to).
+  --     Notation "[ :: from , next '..' to ]" := (enumFromThenTo from next to).
+  --
+  -- Only `'..'` doesn't work for some reason.
+  case info of
+    From       low           -> App1 (Var "enumFrom")       <$> convertLExpr low
+    FromThen   low next      -> App2 (Var "enumFromThen")   <$> convertLExpr low <*> convertLExpr next
+    FromTo     low      high -> App2 (Var "enumFromTo")     <$> convertLExpr low                       <*> convertLExpr high
+    FromThenTo low next high -> App3 (Var "enumFromThenTo") <$> convertLExpr low <*> convertLExpr next <*> convertLExpr high
 
 convertExpr (PArrSeq _ _) =
   convUnsupported "parallel array arithmetic sequences"

@@ -460,7 +460,8 @@ convertListComprehension allStmts = case fmap unLoc <$> unsnoc allStmts of
         False -> If <$> convertLExpr e <*> pure Nothing
                     <*> rest
                     <*> pure (Var "nil")
-    
+
+    -- TODO: `concatMap` is really…?
     toExpr (BindStmt pat exp _bind _fail) rest =
       convertPatternBinding
         pat exp

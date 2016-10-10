@@ -99,8 +99,8 @@ convertType (HsIParamTy (HsIPName ip) (L _ ty)) = do
   isTyCallStack <- case ty of
     HsTyVar tv -> (== "CallStack") <$> ghcPpr tv
     _          -> pure False
-  if ip == fsLit "callStack" && isTyCallStack
-    then pure $ Var "CallStack"
+  if isTyCallStack && ip == fsLit "callStack"
+    then Var <$> var' TypeNS "CallStack"
     else convUnsupported "implicit parameters"
 
 convertType (HsEqTy _ty1 _ty2) =

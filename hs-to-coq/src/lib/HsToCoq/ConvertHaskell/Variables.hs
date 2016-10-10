@@ -2,7 +2,7 @@
 
 module HsToCoq.ConvertHaskell.Variables (
   -- * Generate variable names
-  var,
+  var', var,
   freeVar', freeVar,
   -- * Avoiding reserved words/names
   tryEscapeReservedWord, escapeReservedNames
@@ -47,8 +47,9 @@ freeVar' = escapeReservedNames
 
 freeVar :: (GhcMonad m, OutputableBndr name) => name -> m Ident
 freeVar = fmap freeVar' . ghcPpr
-                                        
+
+var' :: ConversionMonad m => HsNamespace -> Ident -> m Ident
+var' ns x = use $ renamed ns x . non (escapeReservedNames x)
+
 var :: (ConversionMonad m, OutputableBndr name) => HsNamespace -> name -> m Ident
-var ns x = do
-  x' <- ghcPpr x -- TODO Check module part?
-  use $ renamed ns x' . non (escapeReservedNames x')
+var ns = var' ns <=< ghcPpr -- TODO Check module part?

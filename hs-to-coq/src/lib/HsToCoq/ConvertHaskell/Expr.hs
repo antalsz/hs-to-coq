@@ -16,6 +16,7 @@ module HsToCoq.ConvertHaskell.Expr (
   convertMatchGroup, convertMatch,
   -- ** `do' blocks and similar
   convertDoBlock, convertListComprehension,
+  convertPatternBinding,
   -- ** Guards
   ConvertedGuard(..), convertGuard, guardTerm,
   convertLGRHSList, convertGRHSs, convertGRHS, convertGuards
@@ -381,41 +382,61 @@ convertFunction mg = do
 
 --------------------------------------------------------------------------------
 
+isTrueLExpr :: GhcMonad m => LHsExpr RdrName -> m Bool
+isTrueLExpr (L _ (HsVar x))         = ((||) <$> (== "otherwise") <*> (== "True")) <$> ghcPpr x
+isTrueLExpr (L _ (HsTick _ e))      = isTrueLExpr e
+isTrueLExpr (L _ (HsBinTick _ _ e)) = isTrueLExpr e
+isTrueLExpr (L _ (HsPar e))         = isTrueLExpr e
+isTrueLExpr _                       = pure False
+
+--------------------------------------------------------------------------------
+
+-- TODO: Unify `buildTrivial` and `buildNontrivial`?
+convertPatternBinding :: ConversionMonad m
+                      => LPat RdrName -> LHsExpr RdrName
+                      -> (Term -> (Term -> Term) -> m a)
+                      -> (Term -> Ident -> (Term -> Term -> Term) -> m a)
+                      -> Term
+                      -> m a
+convertPatternBinding hsPat hsExp buildTrivial buildNontrivial fallback = do
+  pat <- convertLPat  hsPat
+  exp <- convertLExpr hsExp
+  
+  refutability pat >>= \case
+    Trivial tpat ->
+      buildTrivial exp $ Fun [Inferred Coq.Explicit $ maybe UnderscoreName Ident tpat]
+    
+    nontrivial -> do
+      cont <- gensym "cont"
+      arg  <- gensym "arg"
+      
+      -- TODO: Use SSReflect's `let:` in the `SoleConstructor` case?
+      -- (Involves adding a constructor to `Term`.)
+      let fallbackMatches
+            | SoleConstructor <- nontrivial = []
+            | otherwise                     = [ Equation [MultPattern [UnderscorePat]] fallback ]
+
+      buildNontrivial exp cont $ \body rest ->
+        Let cont [Inferred Coq.Explicit $ Ident arg] Nothing
+                 (Coq.Match [MatchItem (Var arg) Nothing Nothing] Nothing $ 
+                   Equation [MultPattern [pat]] rest : fallbackMatches)
+          body
+
 convertDoBlock :: ConversionMonad m => [ExprLStmt RdrName] -> m Term
 convertDoBlock allStmts = case fmap unLoc <$> unsnoc allStmts of
   Just (stmts, BodyStmt e _ _ _) -> foldMap (Endo . toExpr . unLoc) stmts `appEndo` convertLExpr e
   Just _                         -> convUnsupported "invalid malformed `do' block"
   Nothing                        -> convUnsupported "invalid empty `do' block"
   where
-    toExpr :: ConversionMonad m' => Stmt RdrName (LHsExpr RdrName) -> m' Term -> m' Term
     toExpr (BodyStmt e _bind _guard _PlaceHolder) rest =
       Infix <$> convertLExpr e <*> pure ">>" <*> rest
     
-    toExpr (BindStmt pat exp _bind _fail) rest = do
-      pat' <- convertLPat  pat
-      refutability pat' >>= \case
-        Trivial tpat ->
-          Infix <$> convertLExpr exp
-                <*> pure ">>="
-                <*> (Fun [Inferred Coq.Explicit $ maybe UnderscoreName Ident tpat] <$> rest)
-          
-        nontrivial -> do
-          cont  <- gensym "cont"
-          arg   <- gensym "arg"
-          exp'  <- convertLExpr exp
-          rest' <- rest
-          -- TODO: Use SSReflect's `let:` in the `SoleConstructor` case?
-          -- (Involves adding a constructor to `Term`.)
-          let fallback
-                | SoleConstructor <- nontrivial = []
-                | otherwise                     =
-                  [ Equation [MultPattern [UnderscorePat]] $
-                             App1 (Var "fail") (String "Partial pattern match in `do' notation") ]
-          
-          pure . Let cont [Inferred Coq.Explicit $ Ident arg] Nothing
-                          (Coq.Match [MatchItem (Var arg) Nothing Nothing] Nothing $ 
-                                     Equation [MultPattern [pat']] rest' : fallback)
-                     $ Infix exp' ">>=" (Var cont)
+    toExpr (BindStmt pat exp _bind _fail) rest =
+      convertPatternBinding
+        pat exp
+        (\exp' fun          -> Infix exp' ">>=" . fun <$> rest)
+        (\exp' cont letCont -> letCont (Infix exp' ">>=" (Var cont)) <$> rest)
+        (Var "fail" `App1` String "Partial pattern match in `do' notation")
     
     toExpr (LetStmt binds) rest =
       convertLocalBinds binds rest
@@ -427,7 +448,31 @@ convertDoBlock allStmts = case fmap unLoc <$> unsnoc allStmts of
       convUnsupported "impossibly fancy `do' block statements"
 
 convertListComprehension :: ConversionMonad m => [ExprLStmt RdrName] -> m Term
-convertListComprehension _ = convUnsupported "list comprehension"
+convertListComprehension allStmts = case fmap unLoc <$> unsnoc allStmts of
+  Just (stmts, LastStmt e _) -> foldMap (Endo . toExpr . unLoc) stmts `appEndo`
+                                  (Infix <$> (convertLExpr e) <*> pure "::" <*> pure (Var "nil"))
+  Just _                     -> convUnsupported "invalid malformed list comprehensions"
+  Nothing                    -> convUnsupported "invalid empty list comprehension"
+  where
+    toExpr (BodyStmt e _bind _guard _PlaceHolder) rest =
+      isTrueLExpr e >>= \case
+        True  -> rest
+        False -> If <$> convertLExpr e <*> pure Nothing
+                    <*> rest
+                    <*> pure (Var "nil")
+    
+    toExpr (BindStmt pat exp _bind _fail) rest =
+      convertPatternBinding
+        pat exp
+        (\exp' fun          -> App2 (Var "concatMap") <$> (fun <$> rest) <*> pure exp')
+        (\exp' cont letCont -> letCont (App2 (Var "concatMap") (Var cont) exp') <$> rest)
+        (Var "nil")
+    
+    toExpr (LetStmt binds) rest =
+      convertLocalBinds binds rest
+    
+    toExpr _ _ =
+      convUnsupported "impossibly fancy list comprehension conditions"
 
 --------------------------------------------------------------------------------
 
@@ -444,7 +489,6 @@ convertMatch GHC.Match{..} = do
 
 --------------------------------------------------------------------------------
 
--- TODO: include "statement" in name?
 data ConvertedGuard m = OtherwiseGuard
                       | BoolGuard      Term
                       | PatternGuard   Pattern Term
@@ -454,7 +498,7 @@ convertGuard :: ConversionMonad m => [GuardLStmt RdrName] -> m [ConvertedGuard m
 convertGuard [] = pure []
 convertGuard gs = collapseGuards <$> traverse (toCond . unLoc) gs where
   toCond (BodyStmt e _bind _guard _PlaceHolder) =
-    isTrue e >>= \case
+    isTrueLExpr e >>= \case
       True  -> pure OtherwiseGuard
       False -> BoolGuard <$> convertLExpr e
   toCond (LetStmt binds) =
@@ -475,12 +519,6 @@ convertGuard gs = collapseGuards <$> traverse (toCond . unLoc) gs where
     error "GHC BUG WORKAROUND: `OverloadedLists` confuses the exhaustiveness checker"
   
   collapseGuards = foldr addGuard []
-  
-  isTrue (L _ (HsVar x))         = ((||) <$> (== "otherwise") <*> (== "True")) <$> ghcPpr x
-  isTrue (L _ (HsTick _ e))      = isTrue e
-  isTrue (L _ (HsBinTick _ _ e)) = isTrue e
-  isTrue (L _ (HsPar e))         = isTrue e
-  isTrue _                       = pure False
 
 -- Returns a function waiting for the next guard
 guardTerm :: ConversionMonad m => [ConvertedGuard m] -> Term -> (Term -> m Term)

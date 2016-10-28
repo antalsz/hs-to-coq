@@ -155,6 +155,7 @@ data Term = Forall Binders Term                                                 
           | Qualid Qualid                                                                      -- ^@/qualid/@
           | Sort Sort                                                                          -- ^@/sort/@
           | Num Num                                                                            -- ^@/num/@
+          | PolyNum Num                                                                        -- ^@# /num/@ – extra (for polymorphic number literals)
           | String Text                                                                        -- ^@/string/@ – extra (holds the value, not the source text)
           | Underscore                                                                         -- ^@_@
           | Parens Term                                                                        -- ^@( /term/ )@
@@ -555,6 +556,9 @@ instance Gallina Term where
   
   renderGallina' _ (Num num) =
     renderNum num
+  
+  renderGallina' _ (PolyNum num) =
+    char '#' <> renderNum num
   
   renderGallina' _ (String str) =
     renderString str

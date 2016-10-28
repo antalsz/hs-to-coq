@@ -35,10 +35,11 @@ tryEscapeReservedWord reserved name = do
 escapeReservedNames :: Ident -> Ident
 escapeReservedNames x =
   fromMaybe x . getFirst $
-    foldMap (First . flip tryEscapeReservedWord x) (T.words "Set Type Prop fun fix forall") <>
-    if | T.all (== '.') x -> pure $ T.map (const '∘') x
-       | T.all (== '∘') x -> pure $ "⟨" <> x <> "⟩"
-       | otherwise        -> mempty
+    foldMap (First . flip tryEscapeReservedWord x)
+            (T.words "Set Type Prop fun fix forall return mod as")
+    <> if | T.all (== '.') x -> pure $ T.map (const '∘') x
+          | T.all (== '∘') x -> pure $ "⟨" <> x <> "⟩"
+          | otherwise        -> mempty
 
 --------------------------------------------------------------------------------
 

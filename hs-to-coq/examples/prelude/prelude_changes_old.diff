@@ -1,0 +1,1218 @@
+--- prelude_raw.v	2016-10-18 16:11:15.000000000 -0400
++++ prelude.v	2016-10-28 08:04:45.000000000 -0400
+@@ -1,4 +1,8 @@
+ (* Converted data type declarations: *)
++Require Import Ascii.
++Require Import String.
++Require Import ZArith.
++
+ Definition ShowS := (string -> string).
+ 
+ Definition ReadS a := (string -> (list (a * string))).
+@@ -39,7 +43,7 @@
+ 
+ Inductive IOError : Type :=.
+ 
+-Inductive IO a : Type :=.
++Inductive IO (a:Type) : Type :=.
+ 
+ Class Functor f := {
+   fmap : (forall {a} {b}, (((a -> b)) -> ((f a) -> (f b)))) }.
+@@ -69,24 +73,26 @@
+   negate : (a -> a) ;
+   signum : (a -> a) }.
+ 
+-Infix "*" := (__op_zt__) (at level 99).
++Infix "*" := (__op_zt__).
+ 
+ Notation "'_*_'" := (__op_zt__).
+ 
+-Infix "+" := (__op_zp__) (at level 99).
++Infix "+" := (__op_zp__).
+ 
+ Notation "'_+_'" := (__op_zp__).
+ 
+-Infix "-" := (__op_zm__) (at level 99).
++Infix "-" := (__op_zm__).
+ 
+ Notation "'_-_'" := (__op_zm__).
+ 
++Inductive Rational :=.
++
+ Class Fractional a `{((Num a))} := {
+   __op_zs__ : (a -> (a -> a)) ;
+   fromRational : (Rational -> a) ;
+   recip : (a -> a) }.
+ 
+-Infix "/" := (__op_zs__) (at level 99).
++Infix "/" := (__op_zs__).
+ 
+ Notation "'_/_'" := (__op_zs__).
+ 
+@@ -123,19 +129,19 @@
+   max : (a -> (a -> a)) ;
+   min : (a -> (a -> a)) }.
+ 
+-Infix "<" := (__op_zl__) (at level 99).
++Infix "<" := (__op_zl__).
+ 
+ Notation "'_<_'" := (__op_zl__).
+ 
+-Infix "<=" := (__op_zlze__) (at level 99).
++Infix "<=" := (__op_zlze__).
+ 
+ Notation "'_<=_'" := (__op_zlze__).
+ 
+-Infix ">" := (__op_zg__) (at level 99).
++Infix ">" := (__op_zg__).
+ 
+ Notation "'_>_'" := (__op_zg__).
+ 
+-Infix ">=" := (__op_zgze__) (at level 99).
++Infix ">=" := (__op_zgze__).
+ 
+ Notation "'_>=_'" := (__op_zgze__).
+ 
+@@ -187,9 +193,12 @@
+ Inductive Either a b : Type := Mk_Left : (a -> (Either a b))
+                             |  Mk_Right : (b -> (Either a b)).
+ 
++Arguments Mk_Left  {_ _} _.
++Arguments Mk_Right {_ _} _.
++
+ Inductive Double : Type :=.
+ 
+-Inductive Char : Type :=.
++Definition Char : Type := ascii.
+ 
+ Definition String := (list Char).
+ 
+@@ -201,6 +210,8 @@
+                       |  Mk_True : Bool.
+ 
+ (* Converted function declarations: *)
++Require Import List.
++
+ Definition zipWith3 {a} {b} {c} {d} : (((a -> (b -> (c -> d)))) -> ((list
+                                       a) -> ((list b) -> ((list c) -> (list d))))) := (fix zipWith3 __arg_209__
+                                                                                                     __arg_210__
+@@ -210,12 +221,12 @@
+                                                                                                      , __arg_210__
+                                                                                                      , __arg_211__
+                                                                                                      , __arg_212__ with
+-                                                                                                  | z , (a :: as) , (b
++                                                                                                  | z , (a :: as_) , (b
+                                                                                                     :: bs) , (c ::
+                                                                                                     cs) => ((((z a) b)
+                                                                                                            c) ::
+                                                                                                            ((((zipWith3
+-                                                                                                           z) as) bs)
++                                                                                                           z) as_) bs)
+                                                                                                            cs))
+                                                                                                   | _ , _ , _ , _ => nil
+                                                                                                 end)).
+@@ -223,11 +234,16 @@
+ Definition zipWith {a} {b} {c} : (((a -> (b -> c))) -> ((list a) -> ((list
+                                  b) -> (list c)))) := (fix zipWith __arg_206__ __arg_207__ __arg_208__
+                                                              := (match __arg_206__ , __arg_207__ , __arg_208__ with
+-                                                                  | z , (a :: as) , (b :: bs) => (((z a) b) ::
+-                                                                                                 (((zipWith z) as) bs))
++                                                                  | z , (a :: as_) , (b :: bs) => (((z a) b) ::
++                                                                                                 (((zipWith z) as_) bs))
+                                                                   | _ , _ , _ => nil
+                                                                 end)).
+ 
++Notation "_(,)_"  := (fun a b => (a,b)).
++Notation "_(,,)_" := (fun a b c => (a,b,c)).
++Axiom primWriteFile : (FilePath -> (string -> (IO unit))).
++Axiom primUserError : string -> IOError.
++
+ Definition zip3 {a} {b} {c} : ((list a) -> ((list b) -> ((list c) -> (list ((a *
+                                                                            b) * c))))) := (zipWith3 _(,,)_).
+ 
+@@ -238,16 +254,11 @@
+ 
+ Definition userError : (string -> IOError) := primUserError.
+ 
+-Definition until {a} : (((a -> bool)) -> (((a -> a)) -> (a -> a))) := (fix until
+-                                                                             __arg_131__ __arg_132__ __arg_133__
+-                                                                             := (match __arg_131__
+-                                                                                     , __arg_132__
+-                                                                                     , __arg_133__ with
+-                                                                                  | p , f , x => (if (p x)
+-                                                                                                 then x
+-                                                                                                 else (((until p) f) ((f
+-                                                                                                                     x))))
+-                                                                                end)).
++(* Definition until {a} : (a -> bool) -> (a -> a) -> (a -> a) := *)
++(*   fix until p f x := *)
++(*     if p x *)
++(*     then x *)
++(*     else until p f (f x). *)
+ 
+ Definition takeWhile {a} : (((a -> bool)) -> ((list a) -> (list a))) :=
+   (fix takeWhile __arg_182__ __arg_183__ := (match __arg_182__ , __arg_183__ with
+@@ -257,71 +268,134 @@
+                                                                  else nil)
+                                             end)).
+ 
++Definition not : (bool -> bool) := (fun __arg_105__ =>
++                                     (match __arg_105__ with
++                                       | true => false
++                                       | false => true
++                                     end)).
++
++Instance __instance__Eq_Int__245__ : (Eq Int) := {
++  __op_zeze__ := (fun __arg_2__
++                      __arg_3__ =>
++    (match __arg_2__ , __arg_3__ with
++      | x , y => true
++    end)) ;
++  __op_zsze__ := (fun __arg_0__
++                      __arg_1__ =>
++    (match __arg_0__ , __arg_1__ with
++      | x , y => false
++    end)) }.
++
++Instance __instance__Ord_Int__246__ : (Ord Int) := {
++  __op_zg__   := fun _ _ => false;
++  __op_zgze__ := fun _ _ => false;
++  __op_zl__   := fun _ _ => false;
++  __op_zlze__ := fun _ _ => false;
++  compare     := fun _ _ => Mk_EQ;
++  max         := fun x _ => x;
++  min         := fun x _ => x }.
++
++Axiom __axiom_instance__Show_Int__286__ : Show Int.
++Axiom __axiom_instance__Num_Int__247__ : Num Int.
++
++Instance  __instance__Show_Int__286__' : Show Int := __axiom_instance__Show_Int__286__.
++Instance  __instance__Num_Int__247__'  : Num  Int := __axiom_instance__Num_Int__247__.
++
+ Definition take {a} : (Int -> ((list a) -> (list a))) :=
+-  (fix take __arg_176__
+-       __arg_177__ := (match __arg_176__ , __arg_177__ with
+-                       | n , _ => (if (n <= 0)
+-                                   then nil
+-                                   else _(*MissingValue*))
+-                       | _ , nil => nil
+-                       | n , (x :: xs) => (x :: ((take ((n
+-                                                         -
+-                                                         1)))
+-                                                   xs))
+-                       end)).
++  fix take n __arg_177__ {struct __arg_177__} :=
++     if n <= fromInteger 0
++     then nil
++     else match __arg_177__ with
++          | nil     => nil
++          | x :: xs => x :: take (n - fromInteger 1) xs
++      end.
+ 
+ Definition span {a} : (((a -> bool)) -> ((list a) -> ((list a) * (list a)))) :=
+-  (fix span __arg_186__ __arg_187__ := (match __arg_186__ , __arg_187__ with
+-                                         | p , nil => (pair nil nil)
+-                                         | p , ((x :: xs') as xs) => (match ((span p) xs') with
+-                                                                       | (pair ys zs) => (if (p x)
+-                                                                                         then (pair (x :: ys) zs)
+-                                                                                         else (pair nil xs))
+-                                                                     end)
+-                                       end)).
++  (fix span __arg_186__ __arg_187__ :=
++     (match __arg_186__ , __arg_187__ with
++      | p , nil => (pair nil nil)
++      | p , ((x :: xs') as xs) => (match ((span p) xs') with
++                                   | (pair ys zs) => (if (p x)
++                                                      then (pair (x :: ys) zs)
++                                                      else (pair nil xs))
++                                   end)
++      end)).
+ 
+ Definition snd {a} {b} : ((a * b) -> b) := (fun __arg_125__ =>
+                                              (match __arg_125__ with
+                                                | (pair x y) => y
+                                              end)).
+ 
+-Definition shows {a} `{((Show a))} : (a -> ShowS) := (showsPrec 0).
++Definition shows {a} `{((Show a))} : (a -> ShowS) := (showsPrec (fromInteger 0)).
++
++Definition __op_zpzp__ {a} : ((list a) -> ((list a) -> (list a))) :=
++  (fix __op_zpzp__ __arg_136__ __arg_137__ := (match __arg_136__
++                                                   , __arg_137__ with
++                                                | nil , ys => ys
++                                                | (x :: xs) , ys => (x :: ((xs ++ ys)))
++                                              end)).
++
++Infix "++" := (__op_zpzp__).
+ 
+-Definition showString : (string -> ShowS) := _++_.
++Notation "'_++_'" := (__op_zpzp__).
++
++Definition showString : (string -> ShowS) := append.
++
++Axiom showChar : (Char -> ShowS).
++
++Definition __op_z2218U__ {a} {b} {c}
++  : (((b -> c)) -> (((a -> b)) -> (a -> c))) := (fun __arg_92__
++                                                     __arg_93__ =>
++                                                  (match __arg_92__ , __arg_93__ with
++                                                    | f , g => (fun __arg_91__ =>
++                                                                 (match __arg_91__ with
++                                                                   | x => (f ((g x)))
++                                                                 end))
++                                                  end)).
++
++Infix "∘" := (__op_z2218U__) (at level 99).
+ 
+-Definition showChar : (Char -> ShowS) := _::_.
++Notation "'_∘_'" := (__op_z2218U__).
++
++Axiom leftParen : Char.
++Axiom rightParen : Char.
+ 
+ Definition showParen : (bool -> (ShowS -> ShowS)) := (fun __arg_218__
+                                                           __arg_219__ =>
+                                                        (match __arg_218__ , __arg_219__ with
+                                                          | b , p => (if b
+-                                                                    then (((showChar ("("%char)) ∘ p) ∘ (showChar
+-                                                                         (")"%char)))
++                                                                    then (((showChar leftParen) ∘ p) ∘ (showChar
++                                                                         rightParen))
+                                                                     else p)
+                                                        end)).
+ 
++Axiom MissingValue : forall {A}, A.
++
+ Definition scanr1 {a} : (((a -> (a -> a))) -> ((list a) -> (list a))) :=
+-  (fix scanr1 __arg_168__ __arg_169__ := (match __arg_168__ , __arg_169__ with
+-                                           | f , nil => nil
+-                                           | f , (x :: nil) => (x :: nil)
+-                                           | f , (x :: xs) => (match ((scanr1 f) xs) with
+-                                                                | ((q :: _) as qs) => (((f x) q) :: qs)
+-                                                              end)
+-                                         end)).
++  (fix scanr1 __arg_168__ __arg_169__ :=
++     (match __arg_168__ , __arg_169__ with
++      | f , nil => nil
++      | f , (x :: nil) => (x :: nil)
++      | f , (x :: xs) => (match ((scanr1 f) xs) with
++                          | ((q :: _) as qs) => (((f x) q) :: qs)
++                          | _ => MissingValue
++                          end)
++      end)).
+ 
+ Definition scanr {a} {b} : (((a -> (b -> b))) -> (b -> ((list a) -> (list
+-                           b)))) := (fix scanr __arg_165__ __arg_166__ __arg_167__ := (match __arg_165__
+-                                                                                           , __arg_166__
+-                                                                                           , __arg_167__ with
+-                                                                                        | f , q0 , nil => (q0 :: nil)
+-                                                                                        | f , q0 , (x :: xs) =>
+-                                                                                          (match (((scanr f) q0)
+-                                                                                                   xs) with
+-                                                                                            | ((q :: _) as qs) => (((f
+-                                                                                                                  x) q)
+-                                                                                                                  :: qs)
+-                                                                                          end)
+-                                                                                      end)).
++                           b)))) :=
++  (fix scanr __arg_165__ __arg_166__ __arg_167__ :=
++     (match __arg_165__
++            , __arg_166__
++            , __arg_167__ with
++      | f , q0 , nil => (q0 :: nil)
++      | f , q0 , (x :: xs) =>
++        (match (((scanr f) q0)
++                  xs) with
++         | ((q :: _) as qs) => (((f x) q) :: qs)
++         | _ => MissingValue
++         end)
++      end)).
+ 
+ Definition scanl {a} {b} : (((a -> (b -> a))) -> (a -> ((list b) -> (list
+                            a)))) := (fix scanl __arg_155__ __arg_156__ __arg_157__ := (match __arg_155__
+@@ -345,11 +419,13 @@
+       | _ , nil => nil
+     end)).
+ 
+-Definition repeat {a} : (a -> (list a)) := (fun __arg_172__ =>
+-                                             (match __arg_172__ with
+-                                               | x => (let xs := (x :: xs)
+-                                                      in xs)
+-                                             end)).
++(* Definition repeat {a} : (a -> (list a)) := (fun __arg_172__ => *)
++(*                                              (match __arg_172__ with *)
++(*                                                | x => (let xs := (x :: xs) *)
++(*                                                       in xs) *)
++(*                                              end)). *)
++
++Axiom repeat : forall {a}, a -> list a.
+ 
+ Definition replicate {a} : (Int -> (a -> (list a))) := (fun __arg_173__
+                                                             __arg_174__ =>
+@@ -360,42 +436,41 @@
+ Definition realToFrac {a} {b} `{(Real a)} `{(Fractional b)} : (a -> b) :=
+   (fromRational ∘ toRational).
+ 
+-Definition reads {a} `{((Read a))} : (ReadS a) := (readsPrec 0).
++Definition reads {a} `{((Read a))} : (ReadS a) := (readsPrec (fromInteger 0)).
+ 
+-Definition readParen {a} : (bool -> ((ReadS a) -> (ReadS a))) :=
+-  (fun __arg_220__
+-       __arg_221__ =>
+-    (match __arg_220__ , __arg_221__ with
+-      | b , g => (if b
+-                 then mandatory
+-                 else optional)
+-    end)).
++(* Definition readParen {a} : (bool -> ((ReadS a) -> (ReadS a))) := *)
++(*   (fun __arg_220__ *)
++(*        __arg_221__ => *)
++(*     (match __arg_220__ , __arg_221__ with *)
++(*       | b , g => (if b *)
++(*                  then mandatory *)
++(*                  else optional) *)
++(*     end)). *)
++
++Axiom readParen : forall {a}, (bool -> ((ReadS a) -> (ReadS a))).
++
++Axiom primReadFile : FilePath -> IO string.
++Axiom primPutChar : Char -> IO unit.
+ 
+ Definition readFile : (FilePath -> (IO string)) := primReadFile.
+ 
+ Definition putChar : (Char -> (IO unit)) := primPutChar.
+ 
+-Definition otherwise : bool := Mk_True.
++Definition otherwise : bool := true.
+ 
+ Definition null {a} : ((list a) -> bool) := (fun __arg_146__ =>
+                                               (match __arg_146__ with
+-                                                | nil => Mk_True
+-                                                | (_ :: _) => Mk_False
++                                                | nil => true
++                                                | (_ :: _) => false
+                                               end)).
+ 
+-Definition not : (bool -> bool) := (fun __arg_105__ =>
+-                                     (match __arg_105__ with
+-                                       | Mk_True => Mk_False
+-                                       | Mk_False => Mk_True
+-                                     end)).
+-
+ Definition maybe {a} {b} : (b -> (((a -> b)) -> ((option a) -> b))) :=
+   (fun __arg_106__
+        __arg_107__
+        __arg_108__ =>
+     (match __arg_106__ , __arg_107__ , __arg_108__ with
+-      | n , f , Mk_Nothing => n
+-      | n , f , (Mk_Just x) => (f x)
++      | n , f , None => n
++      | n , f , (Some x) => (f x)
+     end)).
+ 
+ Definition map {a} {b} : (((a -> b)) -> ((list a) -> (list b))) := (fix map
+@@ -410,59 +485,62 @@
+ 
+ Definition lookup {a} {b} `{((Eq a))} : (a -> ((list (a * b)) -> (option b))) :=
+   (fix lookup __arg_202__ __arg_203__ := (match __arg_202__ , __arg_203__ with
+-                                           | key , nil => Mk_Nothing
++                                           | key , nil => None
+                                            | key , ((pair x y) :: xys) => (if (key == x)
+-                                                                          then (Mk_Just y)
++                                                                          then (Some y)
+                                                                           else ((lookup key) xys))
+                                          end)).
+ 
+ Definition length {a} : ((list a) -> Int) := (fix length __arg_147__
+                                                     := (match __arg_147__ with
+-                                                         | nil => 0
+-                                                         | (_ :: l) => (1 + (length l))
++                                                         | nil => fromInteger 0
++                                                         | (_ :: l) => (fromInteger 1 + (length l))
+                                                        end)).
+ 
+-Definition iterate {a} : (((a -> a)) -> (a -> (list a))) := (fix iterate
+-                                                                   __arg_170__ __arg_171__ := (match __arg_170__
+-                                                                                                   , __arg_171__ with
+-                                                                                                | f , x => (x ::
+-                                                                                                           ((iterate f)
+-                                                                                                           ((f x))))
+-                                                                                              end)).
+-
+-Definition numericEnumFrom {a} `{((Fractional a))} : (a -> (list a)) := (iterate
+-                                                                        ((fun __arg_112__ => (__arg_112__ + 1)))).
+-
+-Definition numericEnumFromTo {a} `{(Fractional a)} `{(Ord a)}
+-  : (a -> (a -> (list a))) := (fun __arg_117__
+-                                   __arg_118__ =>
+-                                (match __arg_117__ , __arg_118__ with
+-                                  | n , m => ((takeWhile ((fun __arg_116__ => (__arg_116__ <= ((m + 1) / 2)))))
+-                                             ((numericEnumFrom n)))
+-                                end)).
+-
+-Definition numericEnumFromThen {a} `{((Fractional a))} : (a -> (a -> (list
+-                                                         a))) := (fun __arg_114__
+-                                                                      __arg_115__ =>
+-                                                                   (match __arg_114__ , __arg_115__ with
+-                                                                     | n , m => ((iterate ((fun __arg_113__ =>
+-                                                                                            (__arg_113__ + ((m - n))))))
+-                                                                                n)
+-                                                                   end)).
+-
+-Definition numericEnumFromThenTo {a} `{(Fractional a)} `{(Ord a)}
+-  : (a -> (a -> (a -> (list a)))) := (fun __arg_121__
+-                                          __arg_122__
+-                                          __arg_123__ =>
+-                                       (match __arg_121__ , __arg_122__ , __arg_123__ with
+-                                         | n , n' , m => (let p :=
+-                                                           (if (n' >= n)
+-                                                           then ((fun __arg_119__ =>
+-                                                                  (__arg_119__ <= ((m + ((n' - n))) / 2))))
+-                                                           else ((fun __arg_120__ =>
+-                                                                  (__arg_120__ >= ((m + ((n' - n))) / 2)))))
+-                                                         in ((takeWhile p) (((numericEnumFromThen n) n'))))
+-                                       end)).
++(* Definition iterate {a} : (((a -> a)) -> (a -> (list a))) := *)
++(*   (fix iterate *)
++(*        __arg_170__ __arg_171__ := (match __arg_170__ *)
++(*                                          , __arg_171__ with *)
++(*                                    | f , x => (x :: *)
++(*                                                  ((iterate f) *)
++(*                                                     ((f x)))) *)
++(*                                    end)). *)
++
++(* Definition numericEnumFrom {a} `{((Fractional a))} : (a -> (list a)) := *)
++(*   (iterate ((fun __arg_112__ => (__arg_112__ + 1)))). *)
++
++(* Definition numericEnumFromTo {a} `{(Fractional a)} `{(Ord a)} *)
++(*   : (a -> (a -> (list a))) := (fun __arg_117__ *)
++(*                                    __arg_118__ => *)
++(*                                 (match __arg_117__ , __arg_118__ with *)
++(*                                   | n , m => ((takeWhile ((fun __arg_116__ => (__arg_116__ <= ((m + 1) / 2))))) *)
++(*                                              ((numericEnumFrom n))) *)
++(*                                 end)). *)
++
++(* Definition numericEnumFromThen {a} `{((Fractional a))} : (a -> (a -> (list *)
++(*                                                          a))) := (fun __arg_114__ *)
++(*                                                                       __arg_115__ => *)
++(*                                                                    (match __arg_114__ , __arg_115__ with *)
++(*                                                                      | n , m => ((iterate ((fun __arg_113__ => *)
++(*                                                                                             (__arg_113__ + ((m - n)))))) *)
++(*                                                                                 n) *)
++(*                                                                    end)). *)
++
++(* Definition numericEnumFromThenTo {a} `{(Fractional a)} `{(Ord a)} *)
++(*   : (a -> (a -> (a -> (list a)))) := (fun __arg_121__ *)
++(*                                           __arg_122__ *)
++(*                                           __arg_123__ => *)
++(*                                        (match __arg_121__ , __arg_122__ , __arg_123__ with *)
++(*                                          | n , n' , m => (let p := *)
++(*                                                            (if (n' >= n) *)
++(*                                                            then ((fun __arg_119__ => *)
++(*                                                                   (__arg_119__ <= ((m + ((n' - n))) / 2)))) *)
++(*                                                            else ((fun __arg_120__ => *)
++(*                                                                   (__arg_120__ >= ((m + ((n' - n))) / 2))))) *)
++(*                                                          in ((takeWhile p) (((numericEnumFromThen n) n')))) *)
++(*                                        end)). *)
++
++Axiom primIOError : forall {a}, IOError -> IO a.
+ 
+ Definition ioError {a} : (IOError -> (IO a)) := primIOError.
+ 
+@@ -471,6 +549,9 @@
+                                     | x => x
+                                   end)).
+ 
++Axiom primGetContents : IO string.
++Axiom primGetChar : IO Char.
++
+ Definition getContents : (IO string) := primGetContents.
+ 
+ Definition getChar : (IO Char) := primGetChar.
+@@ -498,7 +579,29 @@
+                                                       | f , z , (x :: xs) => ((f x) ((((foldr f) z) xs)))
+                                                     end)).
+ 
+-Definition or : ((list bool) -> bool) := ((foldr _||_) Mk_False).
++Definition __op_zbzb__ : (bool -> (bool -> bool)) := (fun __arg_103__
++                                                          __arg_104__ =>
++                                                       (match __arg_103__ , __arg_104__ with
++                                                         | true , _ => true
++                                                         | false , x => x
++                                                       end)).
++
++Infix "||" := (__op_zbzb__).
++
++Notation "'_||_'" := (__op_zbzb__).
++
++Definition __op_zaza__ : (bool -> (bool -> bool)) := (fun __arg_101__
++                                                          __arg_102__ =>
++                                                       (match __arg_101__ , __arg_102__ with
++                                                         | true , x => x
++                                                         | false , _ => false
++                                                       end)).
++
++Infix "&&" := (__op_zaza__).
++
++Notation "'_&&_'" := (__op_zaza__).
++
++Definition or : ((list bool) -> bool) := ((foldr _||_) false).
+ 
+ Definition sequence {a} {m} `{(Monad m)} : ((list (m a)) -> (m (list a))) :=
+   (let mcons :=
+@@ -519,7 +622,7 @@
+                                            (list b)))) := (fun __arg_82__
+                                                                __arg_83__ =>
+                                                             (match __arg_82__ , __arg_83__ with
+-                                                              | f , as => (sequence (((map f) as)))
++                                                              | f , as_ => (sequence (((map f) as_)))
+                                                             end)).
+ 
+ Definition sequence_ {a} {m} `{(Monad m)} : ((list (m a)) -> (m unit)) :=
+@@ -529,18 +632,50 @@
+                                             unit))) := (fun __arg_84__
+                                                             __arg_85__ =>
+                                                          (match __arg_84__ , __arg_85__ with
+-                                                           | f , as => (sequence_ (((map f) as)))
++                                                           | f , as_ => (sequence_ (((map f) as_)))
+                                                          end)).
+ 
+-Definition putStr : (string -> (IO unit)) := (fun __arg_222__ =>
++
++Axiom primIOReturn : forall {a},   a -> IO a.
++Axiom primIOBind   : forall {a b}, IO a -> (a -> IO b) -> IO b.
++
++Instance __instance__Functor_IO__240__ : (Functor IO) := {
++  fmap := (fun {__type_a__} {__type_b}
++               __arg_241__
++               __arg_242__ =>
++    (match __arg_241__ , __arg_242__ with
++      | f , x => primIOBind x (primIOReturn ∘ f)
++    end)) }.
++
++Instance __instance__Monad_IO__243__ : (Monad IO) := {
++  fail := (fun {__type__a} __arg_244__ =>
++    (match __arg_244__ with
++      | s => (ioError ((userError s)))
++    end)) ;
++  return_ := @primIOReturn ;
++  __op_zgzgze__ := @primIOBind ;
++  __op_zgzg__ := (fun {__type_a__} {__type_b__} __arg_53__
++                      __arg_54__ =>
++    (match __arg_53__ , __arg_54__ with
++      | m , k => (primIOBind m (fun __arg_52__ => (match __arg_52__ with | _ => k end)))
++    end)) }.
++
++Definition putStr : (String -> (IO unit)) := (fun __arg_222__ =>
+                                                (match __arg_222__ with
+                                                  | s => ((mapM_ putChar) s)
+                                                end)).
+ 
+-Definition putStrLn : (string -> (IO unit)) := (fun __arg_223__ =>
++Axiom __explode__ : string -> String.
++Coercion __explode__ : string >-> String.
++
++Axiom __implode__ : String -> string.
++Coercion __implode__ : String >-> string.
++
++Definition __nl__ := "010"%char.
++
++Definition putStrLn : (String -> (IO unit)) := (fun __arg_223__ =>
+                                                  (match __arg_223__ with
+-                                                   | s => ((putStr s) >> (putStr "
+-                                                                                 "))
++                                                   | s => ((putStr s) >> (putStr (__nl__ :: nil)))
+                                                  end)).
+ 
+ Definition print {a} `{(Show a)} : (a -> (IO unit)) := (fun __arg_224__ =>
+@@ -552,8 +687,8 @@
+                                                                         ((fun __arg_213__
+                                                                               __arg_214__ =>
+                                                                           (match __arg_213__ , __arg_214__ with
+-                                                                            | (pair a b) , (pair as bs) => (pair (a ::
+-                                                                                                                 as) (b
++                                                                            | (pair a b) , (pair as_ bs) => (pair (a ::
++                                                                                                                 as_) (b
+                                                                                                                  :: bs))
+                                                                           end)))) (pair nil nil)).
+ 
+@@ -561,10 +696,10 @@
+                                 * (list c))) := ((foldr ((fun __arg_215__
+                                                               __arg_216__ =>
+                                                           (match __arg_215__ , __arg_216__ with
+-                                                            | (pair (pair a b) c) , (pair (pair as bs) cs) => (pair
++                                                            | (pair (pair a b) c) , (pair (pair as_ bs) cs) => (pair
+                                                                                                               (pair (a
+                                                                                                                     ::
+-                                                                                                                    as)
++                                                                                                                    as_)
+                                                                                                                     (b
+                                                                                                                     ::
+                                                                                                                     bs))
+@@ -579,9 +714,9 @@
+                                                       | f , z , (x :: xs) => (((foldl f) (((f z) x))) xs)
+                                                     end)).
+ 
+-Definition product {a} `{((Num a))} : ((list a) -> a) := ((foldl _*_) 1).
++Definition product {a} `{((Num a))} : ((list a) -> a) := ((foldl _*_) (fromInteger 1)).
+ 
+-Definition sum {a} `{((Num a))} : ((list a) -> a) := ((foldl _+_) 0).
++Definition sum {a} `{((Num a))} : ((list a) -> a) := ((foldl _+_) (fromInteger 0)).
+ 
+ Definition flip {a} {b} {c} : (((a -> (b -> c))) -> (b -> (a -> c))) :=
+   (fun __arg_94__
+@@ -591,6 +726,9 @@
+       | f , x , y => ((f y) x)
+     end)).
+ 
++Definition __cons_wrap__ {A} := @cons A.
++Notation "'_::_'" := __cons_wrap__.
++
+ Definition reverse {a} : ((list a) -> (list a)) := ((foldl ((flip _::_))) nil).
+ 
+ Definition subtract {a} `{((Num a))} : (a -> (a -> a)) := (flip _-_).
+@@ -608,11 +746,12 @@
+ 
+ Definition even {a} `{((Integral a))} : (a -> bool) := (fun __arg_62__ =>
+                                                          (match __arg_62__ with
+-                                                           | n => ((rem n 2) == 0)
++                                                           | n => ((rem n (fromInteger 2)) == (fromInteger 0))
+                                                          end)).
+ 
+ Definition odd {a} `{((Integral a))} : (a -> bool) := (not ∘ even).
+ 
++Axiom primError : forall {a}, string -> a.
+ Definition error {a} : (string -> a) := primError.
+ 
+ Definition foldl1 {a} : (((a -> (a -> a))) -> ((list a) -> a)) :=
+@@ -636,36 +775,41 @@
+                                                                                                         "Prelude.foldr1: empty list")
+                                                                                                     end)).
+ 
+-Definition unwords : ((list string) -> string) := (fun __arg_195__ =>
+-                                                    (match __arg_195__ with
+-                                                      | nil => ""
+-                                                      | ws => ((foldr1 ((fun __arg_193__
+-                                                                             __arg_194__ =>
+-                                                                         (match __arg_193__ , __arg_194__ with
+-                                                                           | w , s => ((w ++ (" "%char)) :: s)
+-                                                                         end)))) ws)
+-                                                    end)).
+-
+-Definition gcd {a} `{((Integral a))} : (a -> (a -> a)) := (fun __arg_65__
+-                                                               __arg_66__ =>
+-                                                            (match __arg_65__ , __arg_66__ with
+-                                                              | 0 , 0 => (error "Prelude.gcd: gcd 0 0 is undefined")
+-                                                              | x , y => (let gcd' :=
+-                                                                           (fix gcd' __arg_63__ __arg_64__
+-                                                                                  := (match __arg_63__ , __arg_64__ with
+-                                                                                       | x , 0 => x
+-                                                                                       | x , y => ((gcd' y) ((rem x y)))
+-                                                                                     end))
+-                                                                         in ((gcd' ((abs x))) ((abs y))))
+-                                                            end)).
+-
+-Definition lcm {a} `{((Integral a))} : (a -> (a -> a)) := (fun __arg_67__
+-                                                               __arg_68__ =>
+-                                                            (match __arg_67__ , __arg_68__ with
+-                                                              | _ , 0 => 0
+-                                                              | 0 , _ => 0
+-                                                              | x , y => (abs ((((quot x (((gcd x) y)))) * y)))
+-                                                            end)).
++Definition unwords : ((list string) -> string) :=
++  fun __arg_195__ =>
++    __implode__ (match __arg_195__ with
++    | nil => ""%string
++    | ws => foldr1 (fun __arg_193__ __arg_194__ =>
++                      match __arg_193__ , __arg_194__ with
++                      | w , s => w ++ (" "%char :: s)
++                      end)
++                   (map __explode__ ws)
++    end).
++
++Axiom gcd : forall {a} `{Integral a}, a -> a -> a.
++
++(* Definition gcd {a} `{((Integral a))} : (a -> (a -> a)) := *)
++(*  (fun x y => *)
++(*     (if (x == fromInteger 0) && (y == fromInteger 0) *)
++(*      then error "Prelude.gcd: gcd 0 0 is undefined" *)
++(*      else let gcd' := *)
++(*               (fix gcd' __arg_63__ __arg_64__ *)
++(*                := (match __arg_63__ , __arg_64__ with *)
++(*                    | x , y => if y == fromInteger 0 then x *)
++(*                               else ((gcd' y) ((rem x y))) *)
++(*                    end)) *)
++(*           in ((gcd' ((abs x))) ((abs y))))). *)
++
++Definition lcm {a} `{((Integral a))} : (a -> (a -> a)) :=
++  (fun __arg_67__
++       __arg_68__ =>
++     if __arg_68__ == fromInteger 0
++     then fromInteger 0
++     else if __arg_67__ == fromInteger 0
++          then fromInteger 0
++          else match __arg_67__ , __arg_68__ with
++               | x , y => (abs ((((quot x (((gcd x) y)))) * y)))
++               end).
+ 
+ Definition head {a} : ((list a) -> a) := (fun __arg_142__ =>
+                                            (match __arg_142__ with
+@@ -729,15 +873,15 @@
+                                                                           else xs)
+                                             end)).
+ 
+-Definition drop {a} : (Int -> ((list a) -> (list a))) := (fix drop __arg_178__
+-                                                                   __arg_179__ := (match __arg_178__ , __arg_179__ with
+-                                                                                    | n , xs => (if (n <= 0)
+-                                                                                                then xs
+-                                                                                                else _(*MissingValue*))
+-                                                                                    | _ , nil => nil
+-                                                                                    | n , (_ :: xs) => ((drop ((n - 1)))
+-                                                                                                       xs)
+-                                                                                  end)).
++Definition drop {a} : (Int -> ((list a) -> (list a))) :=
++  (fix drop __arg_178__ __arg_179__ {struct __arg_179__} :=
++     if __arg_178__ <= fromInteger 0
++     then __arg_179__
++     else match __arg_178__ , __arg_179__ with
++          | _ , nil => nil
++          | n , (_ :: xs) => ((drop ((n - fromInteger 1)))
++                                xs)
++          end).
+ 
+ Definition splitAt {a} : (Int -> ((list a) -> ((list a) * (list a)))) :=
+   (fun __arg_180__
+@@ -746,12 +890,12 @@
+       | n , xs => (pair ((take n) xs) ((drop n) xs))
+     end)).
+ 
+-Definition cycle {a} : ((list a) -> (list a)) := (fun __arg_175__ =>
+-                                                   (match __arg_175__ with
+-                                                     | nil => (error "Prelude.cycle: empty list")
+-                                                     | xs => (let xs' := (xs ++ xs')
+-                                                             in xs')
+-                                                   end)).
++(* Definition cycle {a} : ((list a) -> (list a)) := (fun __arg_175__ => *)
++(*                                                    (match __arg_175__ with *)
++(*                                                      | nil => (error "Prelude.cycle: empty list") *)
++(*                                                      | xs => (let xs' := (xs ++ xs') *)
++(*                                                              in xs') *)
++(*                                                    end)). *)
+ 
+ Definition curry {a} {b} {c} : ((((a * b) -> c)) -> (a -> (b -> c))) :=
+   (fun __arg_126__
+@@ -777,8 +921,10 @@
+ Definition concatMap {a} {b} : (((a -> (list b))) -> ((list a) -> (list b))) :=
+   (fun __arg_141__ => (match __arg_141__ with | f => (concat ∘ (map f)) end)).
+ 
+-Definition unlines : ((list string) -> string) := (concatMap
+-                                                  ((fun __arg_192__ => (__arg_192__ ++ " ")))).
++Definition unlines : ((list string) -> string) :=
++  __implode__ ∘ (concatMap ((fun __arg_192__ => (__explode__ __arg_192__ ++ __explode__ " "%string)))).
++
++Axiom primCatch : forall {a}, IO a -> (IOError -> IO a) -> IO a.
+ 
+ Definition catch {a} : ((IO a) -> (((IOError -> (IO a))) -> (IO a))) :=
+   primCatch.
+@@ -786,31 +932,35 @@
+ Definition break {a} : (((a -> bool)) -> ((list a) -> ((list a) * (list a)))) :=
+   (fun __arg_188__ => (match __arg_188__ with | p => (span ((not ∘ p))) end)).
+ 
+-Definition lines : (string -> (list string)) := (fix lines __arg_190__
+-                                                       := (match __arg_190__ with
+-                                                            | "" => nil
+-                                                            | s => (match ((break ((fun __arg_189__ =>
+-                                                                                    (__arg_189__ == ("
+-                                                                                    "%char))))) s) with
+-                                                                     | (pair l s') => (l :: (match s' with
+-                                                                                        | nil => nil
+-                                                                                        | (_ :: s'') => (lines s'')
+-                                                                                      end))
+-                                                                   end)
+-                                                          end)).
+-
+-Definition words : (string -> (list string)) := (fix words __arg_191__
+-                                                       := (match __arg_191__ with
+-                                                            | s => (match ((dropWhile _Char.isSpace_) s) with
+-                                                                     | "" => nil
+-                                                                     | s' => (match ((break _Char.isSpace_) s') with
+-                                                                               | (pair w s'') => (w :: (words s''))
+-                                                                             end)
+-                                                                   end)
+-                                                          end)).
++(* Definition lines__ : (String -> (list String)) := *)
++(*   (fix lines __arg_190__ *)
++(*    := (match __arg_190__ with *)
++(*        | nil => nil *)
++(*        | s => (match break (fun __arg_189__ => __arg_189__ == __nl__) s with *)
++(*                | (pair l s') => (l :: (match s' with *)
++(*                                        | nil => nil *)
++(*                                        | (_ :: s'') => (lines s'') *)
++(*                                        end)) *)
++(*                end) *)
++(*        end)). *)
++
++Axiom lines : string -> list string.
++
++Axiom words : string -> list string.
++(* Definition words : (string -> (list string)) := *)
++(*   (fix words __arg_191__ *)
++(*    := (match __arg_191__ with *)
++(*        | s => (match ((dropWhile _Char.isSpace_) s) with *)
++(*                | "" => nil *)
++(*                | s' => (match ((break _Char.isSpace_) s') with *)
++(*                         | (pair w s'') => (w :: (words s'')) *)
++(*                         end) *)
++(*                end) *)
++(*        end)). *)
+ 
+ Definition asTypeOf {a} : (a -> (a -> a)) := const.
+ 
++Axiom primAppendFile : FilePath -> string -> IO unit.
+ Definition appendFile : (FilePath -> (string -> (IO unit))) := primAppendFile.
+ 
+ Definition any {a} : (((a -> bool)) -> ((list a) -> bool)) :=
+@@ -822,7 +972,7 @@
+       | x => (any ((fun __arg_198__ => (__arg_198__ == x))))
+     end)).
+ 
+-Definition and : ((list bool) -> bool) := ((foldr _&&_) Mk_True).
++Definition and : ((list bool) -> bool) := ((foldr _&&_) true).
+ 
+ Definition all {a} : (((a -> bool)) -> ((list a) -> bool)) :=
+   (fun __arg_197__ => (match __arg_197__ with | p => (and ∘ (map p)) end)).
+@@ -833,33 +983,18 @@
+       | x => (all ((fun __arg_200__ => (__arg_200__ /= x))))
+     end)).
+ 
+-Definition __op_zpzp__ {a} : ((list a) -> ((list a) -> (list a))) :=
+-  (fix __op_zpzp__ __arg_136__ __arg_137__ := (match __arg_136__
+-                                                   , __arg_137__ with
+-                                                | nil , ys => ys
+-                                                | (x :: xs) , ys => (x :: ((xs ++ ys)))
+-                                              end)).
+-
+-Infix "++" := (__op_zpzp__) (at level 99).
+-
+-Notation "'_++_'" := (__op_zpzp__).
+-
+-Definition __op_znzn__ {a} : ((list a) -> (Int -> a)) := (fix __op_znzn__
+-                                                                __arg_148__ __arg_149__ := (match __arg_148__
+-                                                                                                , __arg_149__ with
+-                                                                                             | xs , n => (if (n < 0)
+-                                                                                                         then (error
+-                                                                                                              "Prelude.!!: negative index")
+-                                                                                                         else _(*MissingValue*))
+-                                                                                             | nil , _ => (error
+-                                                                                                          "Prelude.!!: index too large")
+-                                                                                             | (x :: _) , 0 => x
+-                                                                                             | (_ :: xs) , n => (xs !!
+-                                                                                                                ((n -
+-                                                                                                                1)))
+-                                                                                           end)).
+-
+-Infix "!!" := (__op_znzn__) (at level 99).
++Reserved Notation "x !! y" (at level 99).
++Fixpoint __op_znzn__ {a} (__arg_148__ : list a) (__arg_149__ : Int) : a := 
++  if __arg_149__ < fromInteger 0 then error "Prelude.!!: negative index"
++  else match __arg_148__ , __arg_149__ with
++       | nil , _ => (error
++                       "Prelude.!!: index too large")
++       | (x :: xs) , n =>
++         if n == fromInteger 0
++         then x
++         else xs !! (n - fromInteger 1)
++       end
++where "x !! y" := (__op_znzn__ x y).
+ 
+ Notation "'_!!_'" := (__op_znzn__).
+ 
+@@ -894,102 +1029,84 @@
+ 
+ Notation "'_$_'" := (__op_zd__).
+ 
+-Definition __op_zczc__ {a} {b} `{(Fractional a)} `{(Integral b)}
+-  : (a -> (b -> a)) := (fun __arg_76__
+-                            __arg_77__ =>
+-                         (match __arg_76__ , __arg_77__ with
+-                           | x , n => (if (n >= 0)
+-                                      then (x ^ n)
+-                                      else (recip ((x ^ ((0 - n))))))
+-                         end)).
++Notation "# n" := (fromInteger n) (at level 0).
+ 
+-Infix "^^" := (__op_zczc__) (at level 99).
++(* Definition __op_zc__ {a} {b} `{(Num a)} `{(Integral b)} : (a -> (b -> a)) := *)
++(*   fun x n => *)
++(*     if n == #0 then #1 *)
++(*     else *)
++(*       if n < #0 then error "Prelude.^: negative exponent" *)
++(*       else *)
++(*         let fix f x n y := *)
++(*               if n == #0 then y *)
++(*               else let fix g x n := *)
++(*                          if even n *)
++(*                          then g (x * x) (quot n #2) *)
++(*                          else f x (n - #1) (x * y) *)
++(*                    in g x n *)
++(*         in f x (n - #1) x. *)
+ 
+-Notation "'_^^_'" := (__op_zczc__).
++Axiom __op_zc__ : forall {a b} `{Num a} `{Integral b}, a -> b -> a.
+ 
+-Definition __op_zc__ {a} {b} `{(Num a)} `{(Integral b)} : (a -> (b -> a)) :=
+-  (fun __arg_74__
+-       __arg_75__ =>
+-    (match __arg_74__ , __arg_75__ with
+-      | x , 0 => 1
+-      | x , n => (let f :=
+-                   (fix f __arg_71__ __arg_72__ __arg_73__ := (match __arg_71__
+-                                                                   , __arg_72__
+-                                                                   , __arg_73__ with
+-                                                                | _ , 0 , y => y
+-                                                                | x , n , y => (let g :=
+-                                                                                 (fix g __arg_69__ __arg_70__
+-                                                                                        := (match __arg_69__
+-                                                                                                , __arg_70__ with
+-                                                                                             | x , n => (if (even n)
+-                                                                                                        then ((g ((x *
+-                                                                                                                 x)))
+-                                                                                                             ((quot n
+-                                                                                                                    2)))
+-                                                                                                        else (((f x) ((n
+-                                                                                                                     -
+-                                                                                                                     1)))
+-                                                                                                             ((x * y))))
+-                                                                                           end))
+-                                                                               in ((g x) n))
+-                                                              end))
+-                 in (if (n > 0)
+-                    then (((f x) ((n - 1))) x)
+-                    else _(*MissingValue*)))
+-      | _ , _ => (error "Prelude.^: negative exponent")
+-    end)).
+-
+-Infix "^" := (__op_zc__) (at level 99).
++Infix "^" := (__op_zc__).
+ 
+ Notation "'_^_'" := (__op_zc__).
+ 
+-Definition __op_zbzb__ : (bool -> (bool -> bool)) := (fun __arg_103__
+-                                                          __arg_104__ =>
+-                                                       (match __arg_103__ , __arg_104__ with
+-                                                         | Mk_True , _ => Mk_True
+-                                                         | Mk_False , x => x
+-                                                       end)).
++Fixpoint __op_zczc__ {a} {b} `{(Fractional a)} `{(Integral b)} (x : a) (n : b) : a :=
++  if (n >= fromInteger 0)
++  then (x ^ n)
++  else (recip ((x ^ ((fromInteger 0 - n))))).
+ 
+-Infix "||" := (__op_zbzb__) (at level 99).
++Infix "^^" := (__op_zczc__) (at level 99).
+ 
+-Notation "'_||_'" := (__op_zbzb__).
++Notation "'_^^_'" := (__op_zczc__).
+ 
+-Definition __op_zaza__ : (bool -> (bool -> bool)) := (fun __arg_101__
+-                                                          __arg_102__ =>
+-                                                       (match __arg_101__ , __arg_102__ with
+-                                                         | Mk_True , x => x
+-                                                         | Mk_False , _ => Mk_False
+-                                                       end)).
++(* Converted type class instance declarations: *)
+ 
+-Infix "&&" := (__op_zaza__) (at level 99).
++Axiom primIntToChar : Int -> Char.
++Axiom primCharToInt : Char -> Int.
+ 
+-Notation "'_&&_'" := (__op_zaza__).
++Definition __Enum_Char__231__toEnum__   := primIntToChar.
++Definition __Enum_Char__231__fromEnum__ := primCharToInt.
++Definition __Enum_Char__231__pred__     :=
++  __Enum_Char__231__toEnum__ ∘ subtract #1 ∘ __Enum_Char__231__fromEnum__.
++Definition __Enum_Char__231__succ__     :=
++  __Enum_Char__231__toEnum__ ∘ (fun __arg_18__ => __arg_18__ + #1) ∘ __Enum_Char__231__fromEnum__.
+ 
+-Definition __op_z2218U__ {a} {b} {c}
+-  : (((b -> c)) -> (((a -> b)) -> (a -> c))) := (fun __arg_92__
+-                                                     __arg_93__ =>
+-                                                  (match __arg_92__ , __arg_93__ with
+-                                                    | f , g => (fun __arg_91__ =>
+-                                                                 (match __arg_91__ with
+-                                                                   | x => (f ((g x)))
+-                                                                 end))
+-                                                  end)).
++Axiom bottom : forall {a:Type}, a.
+ 
+-Infix "∘" := (__op_z2218U__) (at level 99).
++Instance __instance__Enum_Char__231__ : (Enum Char) := {
++  toEnum         := __Enum_Char__231__toEnum__ ;
++  fromEnum       := __Enum_Char__231__fromEnum__ ;
++  pred           := __Enum_Char__231__pred__ ;
++  succ           := __Enum_Char__231__succ__ ;
++  enumFrom       := bottom ;
++  enumFromTo     := bottom ;
++  enumFromThen   := bottom ;
++  enumFromThenTo := bottom }.
+ 
+-Notation "'_∘_'" := (__op_z2218U__).
++Axiom primUnicodeMaxChar : Char.
+ 
+-(* Converted type class instance declarations: *)
+-Instance __instance__Eq_Char__225__ : (Eq Char) := {
+-  __op_zeze__ := (fix __op_zeze__ __arg_226__ __arg_227__ := (match __arg_226__
+-                                                                  , __arg_227__ with
+-                                                               | c , c' => ((fromEnum c) == (fromEnum c'))
+-                                                             end)) ;
+-  __op_zsze__ := (fun __arg_0__
++Instance __instance__Bounded_Char__232__ : (Bounded Char) := {
++  minBound := (" "%char) ;
++  maxBound := primUnicodeMaxChar }.
++
++Definition __Eq_Char____op_zeze____ : Char -> Char -> bool :=
++  fun __arg_226__ __arg_227__ =>
++    match __arg_226__ , __arg_227__ with
++    | c , c' => ((fromEnum c) == (fromEnum c'))
++    end.
++
++Definition __Eq_Char____op_zsze____ : Char -> Char -> bool :=
++  (fun __arg_0__
+                       __arg_1__ =>
+     (match __arg_0__ , __arg_1__ with
+-      | x , y => (not ((x == y)))
+-    end)) }.
++      | x , y => (not ((__Eq_Char____op_zeze____ x y)))
++    end)).
++
++Instance __instance__Eq_Char__225__ : (Eq Char) := {
++  __op_zeze__ := __Eq_Char____op_zeze____ ;
++  __op_zsze__ := __Eq_Char____op_zsze____ }.
+ 
+ Instance __instance__Ord_Char__228__ : (Ord Char) := {
+   __op_zlze__ := (fix __op_zlze__ __arg_229__ __arg_230__ := (match __arg_229__
+@@ -1035,16 +1152,6 @@
+                  else y)
+     end)) }.
+ 
+-Instance __instance__Enum_Char__231__ : (Enum Char) := {
+-  toEnum := primIntToChar ;
+-  fromEnum := primCharToInt ;
+-  pred := ((toEnum ∘ ((subtract 1))) ∘ fromEnum) ;
+-  succ := ((toEnum ∘ ((fun __arg_18__ => (__arg_18__ + 1)))) ∘ fromEnum) }.
+-
+-Instance __instance__Bounded_Char__232__ : (Bounded Char) := {
+-  minBound := (" "%char) ;
+-  maxBound := primUnicodeMaxChar }.
+-
+ Instance __instance__Functor_option__233__ : (Functor option) := {
+   fmap := (fun __arg_234__
+                __arg_235__ =>
+@@ -1068,89 +1175,6 @@
+       | m , k => (m >>= (fun __arg_52__ => (match __arg_52__ with | _ => k end)))
+     end)) }.
+ 
+-Instance __instance__Functor_IO__240__ : (Functor IO) := {
+-  fmap := (fun __arg_241__
+-               __arg_242__ =>
+-    (match __arg_241__ , __arg_242__ with
+-      | f , x => (x >>= ((return_ ∘ f)))
+-    end)) }.
+-
+-Instance __instance__Monad_IO__243__ : (Monad IO) := {
+-  fail := (fun __arg_244__ =>
+-    (match __arg_244__ with
+-      | s => (ioError ((userError s)))
+-    end)) ;
+-  __op_zgzg__ := (fun __arg_53__
+-                      __arg_54__ =>
+-    (match __arg_53__ , __arg_54__ with
+-      | m , k => (m >>= (fun __arg_52__ => (match __arg_52__ with | _ => k end)))
+-    end)) }.
+-
+-Instance __instance__Eq_Int__245__ : (Eq Int) := {
+-  __op_zeze__ := (fun __arg_2__
+-                      __arg_3__ =>
+-    (match __arg_2__ , __arg_3__ with
+-      | x , y => (not ((x /= y)))
+-    end)) ;
+-  __op_zsze__ := (fun __arg_0__
+-                      __arg_1__ =>
+-    (match __arg_0__ , __arg_1__ with
+-      | x , y => (not ((x == y)))
+-    end)) }.
+-
+-Instance __instance__Ord_Int__246__ : (Ord Int) := {
+-  __op_zg__ := (fun __arg_12__
+-                    __arg_13__ =>
+-    (match __arg_12__ , __arg_13__ with
+-      | x , y => (((compare x) y) == GT)
+-    end)) ;
+-  __op_zgze__ := (fun __arg_10__
+-                      __arg_11__ =>
+-    (match __arg_10__ , __arg_11__ with
+-      | x , y => (((compare x) y) /= LT)
+-    end)) ;
+-  __op_zl__ := (fun __arg_8__
+-                    __arg_9__ =>
+-    (match __arg_8__ , __arg_9__ with
+-      | x , y => (((compare x) y) == LT)
+-    end)) ;
+-  __op_zlze__ := (fun __arg_6__
+-                      __arg_7__ =>
+-    (match __arg_6__ , __arg_7__ with
+-      | x , y => (((compare x) y) /= GT)
+-    end)) ;
+-  compare := (fun __arg_4__
+-                  __arg_5__ =>
+-    (match __arg_4__ , __arg_5__ with
+-      | x , y => (if (x == y)
+-                 then EQ
+-                 else (if (x <= y)
+-                      then LT
+-                      else GT))
+-    end)) ;
+-  max := (fun __arg_14__
+-              __arg_15__ =>
+-    (match __arg_14__ , __arg_15__ with
+-      | x , y => (if (x <= y)
+-                 then y
+-                 else x)
+-    end)) ;
+-  min := (fun __arg_16__
+-              __arg_17__ =>
+-    (match __arg_16__ , __arg_17__ with
+-      | x , y => (if (x <= y)
+-                 then x
+-                 else y)
+-    end)) }.
+-
+-Instance __instance__Num_Int__247__ : (Num Int) := {
+-  __op_zm__ := (fun __arg_19__
+-                    __arg_20__ =>
+-    (match __arg_19__ , __arg_20__ with
+-      | x , y => (x + (negate y))
+-    end)) ;
+-  negate := (fun __arg_21__ => (match __arg_21__ with | x => (0 - x) end)) }.
+-
+ Instance __instance__Real_Int__248__ : (Real Int) := {}.
+ 
+ Instance __instance__Integral_Int__249__ : (Integral Int) := {
+@@ -1165,7 +1189,7 @@
+                  __arg_31__ =>
+     (match __arg_30__ , __arg_31__ with
+       | n , d => (match ((quotRem n) d) with
+-                   | ((pair q r) as qr) => (if (((signum r) == 0) - (signum d))
++                   | ((pair q r) as_ qr) => (if (((signum r) == 0) - (signum d))
+                                            then (pair (q - 1) (r + d))
+                                            else qr)
+                  end)
+@@ -1277,7 +1301,7 @@
+                  __arg_31__ =>
+     (match __arg_30__ , __arg_31__ with
+       | n , d => (match ((quotRem n) d) with
+-                   | ((pair q r) as qr) => (if (((signum r) == 0) - (signum d))
++                   | ((pair q r) as_ qr) => (if (((signum r) == 0) - (signum d))
+                                            then (pair (q - 1) (r + d))
+                                            else qr)
+                  end)

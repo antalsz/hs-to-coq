@@ -4,11 +4,13 @@ module HsToCoq.ConvertHaskell.InfixNames (
   identIsVariable, identIsOperator,
   infixToPrefix, toPrefix,
   infixToCoq, toCoqName,
+  canonicalName
   ) where
 
 import Control.Lens
 
 import Data.Semigroup (Semigroup(..))
+import Data.Maybe
 import Data.Char
 import Data.Text (Text)
 import qualified Data.Text as T
@@ -42,3 +44,8 @@ infixToCoq name = "__op_" <> T.pack (zEncodeString $ T.unpack name) <> "__"
 toCoqName :: Op -> Ident
 toCoqName x | identIsVariable x = x
             | otherwise         = infixToCoq x
+
+canonicalName :: Op -> Ident
+canonicalName x
+  | identIsVariable x = x
+  | otherwise         = infixToCoq . fromMaybe x $ T.stripPrefix "_" =<< T.stripSuffix "_" x

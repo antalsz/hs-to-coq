@@ -35,7 +35,6 @@ import RdrName
 import FastString
 import TcEvidence
 
-import HsToCoq.Util.Containers
 import HsToCoq.Coq.Gallina
 import HsToCoq.Coq.Gallina.Util
 import HsToCoq.Coq.FreeVars
@@ -197,11 +196,9 @@ groupTyClDecls :: ConversionMonad m => [TyClDecl RdrName] -> m [DeclarationGroup
 groupTyClDecls decls = do
   bodies <- traverse convertTyClDecl decls <&>
               M.fromList . map (convDeclName &&& id)
-  -- The order is correct – later declarations refer only to previous ones –
-  -- since 'stronglyConnComp'' returns its outputs in topologically sorted
-  -- order.
-  let mutuals = stronglyConnComp' . M.toList $ (S.toList . getFreeVars) <$> bodies
-  pure $ map (foldMap $ singletonDeclarationGroup . (bodies M.!)) mutuals
+  
+  pure . map (foldMap $ singletonDeclarationGroup . (bodies M.!))
+       $ topoSortEnvironment bodies
 
 convertTyClDecls :: ConversionMonad m => [TyClDecl RdrName] -> m [Sentence]
 convertTyClDecls =   forkM (either convUnsupported (pure . fold)

@@ -5,8 +5,8 @@ import Numeric(showSigned, showInt, readSigned, readDec, showFloat,
                readFloat, lexDigits)
 import PreludeBuiltin
 --infixr 9  .  
---infixr 8  ^, ^^, ⋆⋆  
---infixl 7  ⋆, /, `quot`, `rem`, `div`, `mod`  
+--infixr 8  ^, ^^, **  
+--infixl 7  *, /, `quot`, `rem`, `div`, `mod`  
 --infixl 6  +, -
 
 -- The (:) operator is built-in syntax, and cannot legally be given  
@@ -85,7 +85,7 @@ class  Bounded a  where
 -- Numeric classes  
  
 class  (Eq a, Show a) => Num a  where  
-    (+), (-), (⋆)    :: a -> a -> a  
+    (+), (-), (*)    :: a -> a -> a  
     negate           :: a -> a  
     abs, signum      :: a -> a  
     fromInteger      :: Integer -> a  
@@ -118,11 +118,11 @@ class  (Num a) => Fractional a  where
         -- Minimal complete definition:  
         --      fromRational and (recip or (/))  
     recip x          =  1 / x  
-    x / y            =  x ⋆ recip y
+    x / y            =  x * recip y
 class  (Fractional a) => Floating a  where  
     pi                  :: a  
     exp, log, sqrt      :: a -> a  
-    (⋆⋆), logBase       :: a -> a -> a  
+    (**), logBase       :: a -> a -> a  
     sin, cos, tan       :: a -> a  
     asin, acos, atan    :: a -> a  
     sinh, cosh, tanh    :: a -> a  
@@ -132,9 +132,9 @@ class  (Fractional a) => Floating a  where
         --      pi, exp, log, sin, cos, sinh, cosh  
         --      asin, acos, atan  
         --      asinh, acosh, atanh  
-    x ⋆⋆ y           =  exp (log x ⋆ y)  
+    x ** y           =  exp (log x * y)  
     logBase x y      =  log y / log x  
-    sqrt x           =  x ⋆⋆ (1/2)
+    sqrt x           =  x ** (1/2)
     tan  x           =  sin  x / cos  x  
     tanh x           =  sinh x / cosh x
 class  (Real a, Fractional a) => RealFrac a  where  
@@ -213,15 +213,15 @@ gcd x y          =  gcd' (abs x) (abs y)
 lcm              :: (Integral a) => a -> a -> a  
 lcm _ 0          =  0  
 lcm 0 _          =  0  
-lcm x y          =  abs ((x `quot` (gcd x y)) ⋆ y)
+lcm x y          =  abs ((x `quot` (gcd x y)) * y)
 
 (^)              :: (Num a, Integral b) => a -> b -> a  
 x ^ 0            =  1  
 x ^ n | n > 0    =  f x (n-1) x  
                     where f _ 0 y = y  
                           f x n y = g x n  where  
-                                    g x n | even n  = g (x⋆x) (n `quot` 2)  
-                                          | otherwise = f x (n-1) (x⋆y)  
+                                    g x n | even n  = g (x*x) (n `quot` 2)  
+                                          | otherwise = f x (n-1) (x*y)  
 _ ^ _            = error "Prelude.^: negative exponent"
 
 (^^)             :: (Fractional a, Integral b) => a -> b -> a  
@@ -750,7 +750,7 @@ lookup key ((x,y):xys)
 -- sum and product compute the sum or product of a finite list of numbers.  
 sum, product     :: (Num a) => [a] -> a  
 sum              =  foldl (+) 0  
-product          =  foldl (⋆) 1
+product          =  foldl (*) 1
 
 -- maximum and minimum return the maximum or minimum value from a list,  
 -- which must be non-empty, finite, and of an ordered type.  
@@ -896,7 +896,7 @@ readParen b g    =  if b then mandatory else optional
 --           | otherwise  = []    -- bad character  
 --              where  
 --               isSingle c =  c `elem` ",;()[]{}_`"  
---               isSym c    =  c `elem` "!@#$%&⋆+./<=>?\\^|:-~"  
+--               isSym c    =  c `elem` "!@#$%&*+./<=>?\\^|:-~"  
 --               isIdChar c =  isAlphaNum c || c `elem` "_'"  
  
 --               lexFracExp ('.':c:cs) | isDigit c  

@@ -70,10 +70,9 @@ convertExpr (HsVar x) =
 convertExpr (HsIPVar _) =
   convUnsupported "implicit parameters"
 
--- FIXME actually handle overloading
 convertExpr (HsOverLit OverLit{..}) =
   case ol_val of
-    HsIntegral   _src int -> Num <$> convertInteger "integer literals" int
+    HsIntegral   _src int -> PolyNum <$> convertInteger "integer literals" int
     HsFractional _        -> convUnsupported "fractional literals"
     HsIsString   _src str -> pure . String $ fsToText str
 

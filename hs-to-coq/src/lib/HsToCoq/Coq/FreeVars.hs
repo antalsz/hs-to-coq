@@ -9,6 +9,8 @@ module HsToCoq.Coq.FreeVars (
   Binding(..), binding',
   -- * Converting binders to things that contain free variables
   NoBinding(..),
+  -- * Utility methods
+  topoSortEnvironment,
   -- * Fragments that contain name(s) to bind, but which aren't themselves
   -- 'Binders'
   Names(..),
@@ -20,14 +22,17 @@ import Prelude hiding (Num)
 
 import Data.Semigroup ((<>))
 import Data.Foldable
+import HsToCoq.Util.Containers
 import Control.Monad.Variables
 
 import Data.List.NonEmpty (NonEmpty(), (<|))
 import Data.Set (Set)
 import qualified Data.Set as S
+import Data.Map.Strict (Map)
 import qualified Data.Map.Strict as M
 
 import HsToCoq.Coq.Gallina
+import HsToCoq.ConvertHaskell.InfixNames
 
 ----------------------------------------------------------------------------------------------------
 
@@ -327,6 +332,9 @@ instance FreeVars Term where
   freeVars (Num _num) =
     pure () -- There are none.
 
+  freeVars (PolyNum _num) =
+    pure () -- There are none.
+
   freeVars (String _str) =
     pure () -- There are none.
 
@@ -464,3 +472,11 @@ newtype NoBinding b = NoBinding { getNoBinding :: b } deriving (Eq, Ord, Show, R
 
 instance Binding b => FreeVars (NoBinding b) where
   freeVars (NoBinding b) = binding' b $ pure ()
+
+----------------------------------------------------------------------------------------------------
+
+-- The order is correct – later identifiers refer only to previous ones – since
+-- 'stronglyConnComp'' returns its outputs in topologically sorted order.
+topoSortEnvironment :: FreeVars t => Map Ident t -> [NonEmpty Ident]
+topoSortEnvironment = stronglyConnComp' . M.toList
+                    . fmap (fmap canonicalName . S.toList . getFreeVars)

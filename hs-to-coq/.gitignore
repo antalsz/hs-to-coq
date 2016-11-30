@@ -1,1 +1,9 @@
 dist/
+
+# Scratch work files
+
+Test.hs
+test.v
+
+Example.hs
+example.v

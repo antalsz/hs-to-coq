@@ -1,0 +1,8 @@
+type synonym FunDep       :-> Type
+type synonym CollectedCCs :-> Type
+
+data type arguments CoAxiom  (indices: br)
+data type arguments Branches (indices: br)
+
+# Compute the transitive value dependency graph for
+# CallArity.callArityAnalProgram and only dump those converted functions.

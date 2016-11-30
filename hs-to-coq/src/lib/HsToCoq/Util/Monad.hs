@@ -1,8 +1,14 @@
+{-# LANGUAGE LambdaCase #-}
+
 module HsToCoq.Util.Monad (
   -- * Booleans
   andM, orM,
   -- * Conditionals
   ifM, whenM, unlessM,
+  -- * Lists
+  spanM,
+  -- * Looping
+  untilJustM,
   -- * Kleisli arrow combinators
   (<***>), (<&&&>), (<+++>), (<|||>)
   ) where
@@ -24,6 +30,16 @@ whenM c t = ifM c t (pure ())
 
 unlessM :: Monad m => m Bool -> m () -> m ()
 unlessM c f = ifM c (pure ()) f
+
+spanM :: Monad m => (a -> m Bool) -> [a] -> m ([a],[a])
+spanM p = go where
+  go []         = pure ([], [])
+  go xxs@(x:xs) = p x >>= \case
+                    True  -> first (x:) <$> go xs
+                    False -> pure ([], xxs)
+
+untilJustM :: Monad m => m (Maybe a) -> m a
+untilJustM act = maybe (untilJustM act) pure =<< act
 
 -- Module-local
 via_Kleisli :: (Kleisli m a a' -> Kleisli m b b' -> Kleisli m r r')

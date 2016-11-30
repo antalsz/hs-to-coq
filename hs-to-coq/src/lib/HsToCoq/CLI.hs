@@ -6,7 +6,7 @@
 module HsToCoq.CLI (
   processFilesMain,
   convertDecls,
-  Config(..), outputFile, inputFiles,
+  Config(..), outputFile, preambleFile, renamingsFile, editsFile, inputFiles,
   processArgs,
   ProgramArgs(..),
   argParser, argParserInfo,
@@ -23,11 +23,16 @@ import Control.Monad.IO.Class
 
 import Data.Data
 
+import qualified Data.Text.IO as T
 import System.IO
+import System.Exit
 
 import GHC hiding (outputFile)
 import DynFlags hiding (outputFile)
 import HsToCoq.Util.GHC.Exception
+
+import Control.Monad.Trans.Parse
+import HsToCoq.ConvertHaskell.Parameters.Parsers
 
 import HsToCoq.Util.Functor
 import HsToCoq.Util.Generics
@@ -37,6 +42,8 @@ import HsToCoq.Coq.Gallina
 import HsToCoq.Coq.FreeVars
 import HsToCoq.ProcessFiles
 import HsToCoq.ConvertHaskell
+import HsToCoq.ConvertHaskell.Parameters.Renamings
+import HsToCoq.ConvertHaskell.Parameters.Edits
 
 import Options.Applicative hiding ((<>))
 import HsToCoq.Util.Options.Applicative.Instances ()
@@ -47,10 +54,13 @@ hPrettyPrint h = liftIO . displayIO h . renderPretty 0.67 120
 prettyPrint :: MonadIO m => Doc -> m ()
 prettyPrint = hPrettyPrint stdout
 
-data ProgramArgs = ProgramArgs { outputFileArg   :: Maybe FilePath
-                               , includeDirsArgs :: [FilePath]
-                               , ghcOptionsArgs  :: [String]
-                               , inputFilesArgs  :: [FilePath] }
+data ProgramArgs = ProgramArgs { outputFileArg    :: Maybe FilePath
+                               , preambleFileArg  :: Maybe FilePath
+                               , renamingsFileArg :: Maybe FilePath
+                               , editsFileArg     :: Maybe FilePath
+                               , includeDirsArgs  :: [FilePath]
+                               , ghcOptionsArgs   :: [String]
+                               , inputFilesArgs   :: [FilePath] }
                  deriving (Eq, Ord, Show, Read)
 
 argParser :: Parser ProgramArgs
@@ -58,6 +68,21 @@ argParser = ProgramArgs <$> optional (strOption   $  long    "output"
                                                   <> short   'o'
                                                   <> metavar "FILE"
                                                   <> help    "File to write the translated Coq code to (defaults to stdout)")
+                        
+                        <*> optional (strOption   $  long    "preamble"
+                                                  <> short   'p'
+                                                  <> metavar "FILE"
+                                                  <> help    "File containing code that goes at the top of the Coq output")
+                        
+                        <*> optional (strOption   $  long    "renamings"
+                                                  <> short   'r'
+                                                  <> metavar "FILE"
+                                                  <> help    "File with Haskell -> Coq identifier renamings")
+                        
+                        <*> optional (strOption   $  long    "edits"
+                                                  <> short   'e'
+                                                  <> metavar "FILE"
+                                                  <> help    "File with extra Haskell -> Coq edits")
                         
                         <*> many     (strOption   $  long    "include-dir"
                                                   <> short   'I'
@@ -75,8 +100,11 @@ argParserInfo :: ParserInfo ProgramArgs
 argParserInfo = info (helper <*> argParser) $  fullDesc
                                             <> progDesc "Convert Haskell source files to Coq"
 
-data Config = Config { _outputFile :: Maybe FilePath
-                     , _inputFiles :: [FilePath] }
+data Config = Config { _outputFile    :: !(Maybe FilePath)
+                     , _preambleFile  :: !(Maybe FilePath)
+                     , _renamingsFile :: !(Maybe FilePath)
+                     , _editsFile     :: !(Maybe FilePath)
+                     , _inputFiles    :: ![FilePath] }
             deriving (Eq, Ord, Show, Read)
 makeLenses ''Config
 
@@ -94,10 +122,13 @@ processArgs = do
   
   void $ setSessionDynFlags dflags
   
-  pure (dflags, Config { _outputFile = if outputFileArg == Just "-"
-                                       then Nothing
-                                       else outputFileArg
-                       , _inputFiles = inputFilesArgs })
+  pure (dflags, Config { _outputFile    = if outputFileArg == Just "-"
+                                          then Nothing
+                                          else outputFileArg
+                       , _preambleFile  = preambleFileArg
+                       , _renamingsFile = renamingsFileArg
+                       , _editsFile     = editsFileArg
+                       , _inputFiles    = inputFilesArgs })
 
 convertDecls :: (Data a, ConversionMonad m) => Handle -> a -> m ()
 convertDecls out lmod = do
@@ -123,9 +154,30 @@ convertDecls out lmod = do
                 <!> "*)" <> line
               flush
 
-processFilesMain :: GhcMonad m => (Handle -> [Located (HsModule RdrName)] -> m ()) -> m ()
+processFilesMain :: GhcMonad m
+                 => (Handle -> [Located (HsModule RdrName)] -> ConversionT m ())
+                 -> m ()
 processFilesMain process = do
   (dflags, conf) <- processArgs
-  maybe ($ stdout) (flip gWithFile WriteMode) (conf^.outputFile) $ \hOut -> do
-    traverse_ (process hOut) =<< processFiles dflags (conf^.inputFiles)
-    liftIO $ hFlush hOut
+  
+  let die msg = hPutStrLn stderr msg *> exitFailure
+      
+      parseConfigFile file builder parser =
+        maybe (pure mempty) ?? (conf^.file) $ \filename -> liftIO $
+          (evalParse parser <$> T.readFile filename) >>= \case
+            Left  err -> die $ "Could not parse " ++ filename ++ ": " ++ err
+            Right res -> either die pure $ builder res
+  
+  renamings <- parseConfigFile renamingsFile buildRenamings parseRenamingList
+  edits     <- parseConfigFile editsFile     buildEdits     parseEditList
+  
+  evalConversion renamings edits .
+    maybe ($ stdout) (flip gWithFile WriteMode) (conf^.outputFile) $ \hOut -> do
+      for_ (conf^.preambleFile) $ \file -> liftIO $ do
+        hPutStrLn hOut "(* Preamble *)"
+        hPutStr   hOut =<< readFile file
+        hPutStrLn hOut ""
+        hFlush    hOut
+       
+      traverse_ (process hOut) =<< processFiles dflags (conf^.inputFiles)
+      liftIO $ hFlush hOut

@@ -28,6 +28,7 @@ import Control.Monad
 
 import qualified Data.Set        as S
 import qualified Data.Map.Strict as M
+import HsToCoq.Util.Containers
 
 import GHC hiding (Name)
 import BasicTypes
@@ -197,8 +198,13 @@ groupTyClDecls decls = do
   bodies <- traverse convertTyClDecl decls <&>
               M.fromList . map (convDeclName &&& id)
   
+  -- Might be overgenerous
+  ctypes <- use constructorTypes
+  
   pure . map (foldMap $ singletonDeclarationGroup . (bodies M.!))
-       $ topoSortEnvironment bodies
+       . flip topoSortEnvironmentWith bodies
+       $ \decl -> let vars = getFreeVars decl
+                  in vars <> setMapMaybe (M.lookup ?? ctypes) vars
 
 convertTyClDecls :: ConversionMonad m => [TyClDecl RdrName] -> m [Sentence]
 convertTyClDecls =   forkM (either convUnsupported (pure . fold)

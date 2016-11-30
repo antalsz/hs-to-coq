@@ -4,14 +4,18 @@ module HsToCoq.ConvertHaskell.Declarations.TypeSynonym (SynBody(..), convertSynD
 
 import Prelude hiding (Num)
 
+import Control.Lens
+
 import GHC hiding (Name)
 
 import HsToCoq.Coq.Gallina as Coq
+import HsToCoq.Coq.Gallina.Util
 import HsToCoq.Coq.FreeVars
 
 import HsToCoq.ConvertHaskell.Monad
 import HsToCoq.ConvertHaskell.Variables
 import HsToCoq.ConvertHaskell.Type
+import HsToCoq.ConvertHaskell.Parameters.Edits
 
 --------------------------------------------------------------------------------
 
@@ -24,7 +28,9 @@ instance FreeVars SynBody where
 convertSynDecl :: ConversionMonad m
                => Located RdrName -> LHsTyVarBndrs RdrName -> LHsType RdrName
                -> m SynBody
-convertSynDecl name args def  = SynBody <$> freeVar (unLoc name)
-                                        <*> convertLHsTyVarBndrs Coq.Explicit args
-                                        <*> pure Nothing
-                                        <*> convertLType def
+convertSynDecl name args def  = do
+  coqName <- freeVar $ unLoc name
+  SynBody <$> freeVar (unLoc name)
+          <*> convertLHsTyVarBndrs Coq.Explicit args
+          <*> use (edits.typeSynonymTypes . at coqName . to (fmap Var))
+          <*> convertLType def

@@ -26,9 +26,6 @@ import HsToCoq.ConvertHaskell.Sigs
 import HsToCoq.ConvertHaskell.Declarations.Notations
 import HsToCoq.ConvertHaskell.Axiomatize
 
-import HsToCoq.ConvertHaskell.InfixNames
-import qualified Data.Set as S
-
 --------------------------------------------------------------------------------
 
 convertValDecls :: ConversionMonad m => [HsDecl RdrName] -> m [Sentence]

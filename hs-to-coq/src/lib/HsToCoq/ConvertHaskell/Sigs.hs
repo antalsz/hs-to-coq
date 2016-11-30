@@ -24,6 +24,7 @@ import BasicTypes
 import HsToCoq.Util.GHC.RdrName
 import HsToCoq.Coq.Gallina
 
+import HsToCoq.ConvertHaskell.Parameters.Renamings
 import HsToCoq.ConvertHaskell.Monad
 import HsToCoq.ConvertHaskell.Variables
 import HsToCoq.ConvertHaskell.Type

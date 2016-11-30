@@ -10,7 +10,7 @@ module HsToCoq.Coq.FreeVars (
   -- * Converting binders to things that contain free variables
   NoBinding(..),
   -- * Utility methods
-  topoSortEnvironment,
+  topoSortEnvironment, topoSortEnvironmentWith,
   -- * Fragments that contain name(s) to bind, but which aren't themselves
   -- 'Binders'
   Names(..),
@@ -20,7 +20,6 @@ module HsToCoq.Coq.FreeVars (
 
 import Prelude hiding (Num)
 
-import Data.Semigroup ((<>))
 import Data.Foldable
 import HsToCoq.Util.Containers
 import Control.Monad.Variables
@@ -362,9 +361,7 @@ instance FreeVars Explicitness where
   freeVars Implicit = pure ()
 
 instance FreeVars Qualid where
-  freeVars = occurrence . toIdent where
-    toIdent (Bare x)          = x
-    toIdent (Qualified mod x) = toIdent mod <> "." <> x
+  freeVars = occurrence . qualidToIdent
 
 instance FreeVars Sort where
   freeVars Prop = pure ()
@@ -477,6 +474,11 @@ instance Binding b => FreeVars (NoBinding b) where
 
 -- The order is correct – later identifiers refer only to previous ones – since
 -- 'stronglyConnComp'' returns its outputs in topologically sorted order.
+topoSortEnvironmentWith :: Foldable f => (a -> f Ident) -> Map Ident a -> [NonEmpty Ident]
+topoSortEnvironmentWith fvs = stronglyConnComp' . M.toList
+                            . fmap (fmap canonicalName . toList . fvs)
+
+-- The order is correct – later identifiers refer only to previous ones – since
+-- 'stronglyConnComp'' returns its outputs in topologically sorted order.
 topoSortEnvironment :: FreeVars t => Map Ident t -> [NonEmpty Ident]
-topoSortEnvironment = stronglyConnComp' . M.toList
-                    . fmap (fmap canonicalName . S.toList . getFreeVars)
+topoSortEnvironment = topoSortEnvironmentWith getFreeVars

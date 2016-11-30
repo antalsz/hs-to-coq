@@ -18,10 +18,12 @@ import Control.Monad
 
 import GHC hiding (Name)
 import Outputable (OutputableBndr)
+import OccName
 
 import HsToCoq.Util.GHC
 
 import HsToCoq.Coq.Gallina
+import HsToCoq.ConvertHaskell.Parameters.Renamings
 import HsToCoq.ConvertHaskell.Monad
 
 --------------------------------------------------------------------------------
@@ -52,5 +54,8 @@ freeVar = fmap freeVar' . ghcPpr
 var' :: ConversionMonad m => HsNamespace -> Ident -> m Ident
 var' ns x = use $ renamed ns x . non (escapeReservedNames x)
 
-var :: (ConversionMonad m, OutputableBndr name) => HsNamespace -> name -> m Ident
-var ns = var' ns <=< ghcPpr -- TODO Check module part?
+var :: (ConversionMonad m, HasOccName name, OutputableBndr name) => HsNamespace -> name -> m Ident
+var ns name =
+  let ns' | ns == TypeNS && occNameSpace (occName name) `nameSpacesRelated` dataName = ExprNS
+          | otherwise                                                                = ns
+  in var' ns' =<< ghcPpr name -- TODO Check module part?

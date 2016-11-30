@@ -45,10 +45,15 @@ library
                      , Control.Monad.Trans.Variables
                      , Control.Monad.Variables.Class
                      , Control.Monad.Variables
+                     , Control.Monad.Trans.Parse
                      , HsToCoq.PrettyPrint
                      , HsToCoq.Coq.Gallina
                      , HsToCoq.Coq.Gallina.Util
                      , HsToCoq.Coq.FreeVars
+                     , HsToCoq.ConvertHaskell.Parameters.Renamings
+                     , HsToCoq.ConvertHaskell.Parameters.Edits
+                     , HsToCoq.ConvertHaskell.Parameters.Parsers
+                     , HsToCoq.ConvertHaskell.Parameters.Parsers.Lexing
                      , HsToCoq.ConvertHaskell.Monad
                      , HsToCoq.ConvertHaskell.InfixNames
                      , HsToCoq.ConvertHaskell.Variables
@@ -69,6 +74,9 @@ library
                      , HsToCoq.ConvertHaskell
                      , HsToCoq.ProcessFiles
                      , HsToCoq.CLI
+  
+  build-tools:         happy
+  
   other-extensions:    TupleSections, LambdaCase, MultiWayIf, RecordWildCards, OverloadedStrings
                      , RankNTypes, ConstraintKinds
                      , MultiParamTypeClasses, FunctionalDependencies, FlexibleContexts
@@ -76,6 +84,7 @@ library
                      , DeriveDataTypeable, StandaloneDeriving, GeneralizedNewtypeDeriving
                      , PatternSynonyms
                      , TemplateHaskell
+  
   build-depends:       base                 >=4.8 && <4.9
                      , template-haskell     ==2.10.*
                      , ghc                  ==7.10.2
@@ -84,15 +93,18 @@ library
                      , semigroups           ==0.18.*
                      , transformers         ==0.4.*
                      , mtl                  ==2.2.*
+                     , array                ==0.5.*
                      , lens                 ==4.13.*
                      , pipes                ==4.1.*
                      , containers           ==0.5.*
                      , syb                  ==0.6.*
+                     , validation           ==0.5.*
                      , text                 ==1.2.*
                      , directory            ==1.2.*
                      , filepath             ==1.4.*
                      , wl-pprint-text       ==1.1.*
                      , optparse-applicative ==0.12.*
+  
   hs-source-dirs:      src/lib
   default-language:    Haskell2010
   ghc-options:         -Wall -fno-warn-name-shadowing -O2

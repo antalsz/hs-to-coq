@@ -1,17 +1,23 @@
-{-# LANGUAGE TupleSections, LambdaCase,
+{-# LANGUAGE TupleSections, RecordWildCards, LambdaCase,
              OverloadedStrings,
              FlexibleContexts #-}
 
 module HsToCoq.ConvertHaskell.Declarations.DataType (
   convertDataDecl, convertDataDefn,
-  Constructor, convertConDecl
+  Constructor, convertConDecl,
+  rewriteDataTypeArguments
   ) where
 
 import Control.Lens
 
+import Data.Bifunctor
 import Data.Semigroup (Semigroup(..))
 import Data.Foldable
 import Data.Traversable
+import Data.List.NonEmpty (nonEmpty)
+
+import qualified Data.Set        as S
+import qualified Data.Map.Strict as M
 
 import Control.Monad
 
@@ -21,6 +27,8 @@ import HsToCoq.Util.GHC
 import HsToCoq.Coq.Gallina as Coq
 import HsToCoq.Coq.Gallina.Util
 
+import HsToCoq.ConvertHaskell.Parameters.Renamings
+import HsToCoq.ConvertHaskell.Parameters.Edits
 import HsToCoq.ConvertHaskell.Monad
 import HsToCoq.ConvertHaskell.Variables
 import HsToCoq.ConvertHaskell.Type
@@ -32,8 +40,8 @@ type Constructor = (Ident, [Binder], Maybe Term)
 --------------------------------------------------------------------------------
 
 convertConDecl :: ConversionMonad m
-               => Term -> ConDecl RdrName -> m [Constructor]
-convertConDecl curType (ConDecl lnames _explicit lqvs lcxt details lres _doc _old) = do
+               => Term -> [Binder] -> ConDecl RdrName -> m [Constructor]
+convertConDecl curType extraArgs (ConDecl lnames _explicit lqvs lcxt details lres _doc _old) = do
   unless (null $ unLoc lcxt) $ convUnsupported "constructor contexts"
   
   cons <- for lnames $ \(L _ hsCon) -> do
@@ -54,33 +62,88 @@ convertConDecl curType (ConDecl lnames _explicit lqvs lcxt details lres _doc _ol
       pure . NonRecordFields $ length args
   for_ cons $ \con -> constructorFields . at con ?= fieldInfo
   
-  pure $ map (, params, Just $ foldr Arrow resTy args) cons
+  pure $ map (, params, Just . maybe id Forall (nonEmpty extraArgs) $ foldr Arrow resTy args) cons
+
+--------------------------------------------------------------------------------
+
+rewriteDataTypeArguments :: ConversionMonad m => DataTypeArguments -> [Binder] -> m ([Binder], [Binder])
+rewriteDataTypeArguments dta bs = do
+  let dtaEditFailure what =
+        editFailure $ what ++ " when adjusting data type parameters and indices"
+  
+  let (ibs, ebs) = flip span bs $ (== Coq.Implicit) . \case
+                     Inferred ei _     -> ei
+                     Typed    _ ei _ _ -> ei
+                     _                 -> Coq.Explicit
+  
+  explicitMap <-
+    let extraImplicit  = "non-initial implicit arguments"
+        complexBinding = "complex (let/generalized) bindings"
+    in either dtaEditFailure (pure . M.fromList . concat) . for ebs $ \case
+         Inferred   Coq.Explicit x     -> Right [(x, Inferred Coq.Explicit x)]
+         Typed    g Coq.Explicit xs ty -> Right [(x, Typed g Coq.Explicit (pure x) ty) | x <- toList xs]
+         
+         Inferred   Coq.Implicit _   -> Left extraImplicit
+         Typed    _ Coq.Implicit _ _ -> Left extraImplicit
+         
+         BindLet     _ _ _ -> Left complexBinding
+         Generalized _ _   -> Left complexBinding
+  
+  let editIdents  = S.fromList $ dta^.dtParameters <> dta^.dtIndices
+      boundIdents = fmap S.fromList . traverse nameToIdent $ foldMap binderNames ebs
+                       -- Underscores are an automatic failure
+    in unless (boundIdents == Just editIdents) $
+         dtaEditFailure $ "mismatched names"
+  
+  let coalesceTypedBinders [] = []
+      coalesceTypedBinders (Typed g ei xs0 ty : bs) =
+        let (tbs, bs') = flip span bs $ \case
+                           Typed g' ei' _ ty' -> g == g' && ei == ei' && ty == ty'
+                           _                  -> False
+        in Typed g ei (foldl' (\xs (Typed _ _ xs' _) -> xs <> xs') xs0 tbs) ty : coalesceTypedBinders bs'
+      coalesceTypedBinders (b : bs) =
+        b : coalesceTypedBinders bs
+      
+      getBindersFor = coalesceTypedBinders . map ((explicitMap M.!) . Ident) . (dta^.)
+  
+  pure (ibs ++ getBindersFor dtParameters, getBindersFor dtIndices)
   
 --------------------------------------------------------------------------------
   
 convertDataDefn :: ConversionMonad m
-                => Term -> HsDataDefn RdrName
+                => Term -> [Binder] -> HsDataDefn RdrName
                 -> m (Term, [Constructor])
-convertDataDefn curType (HsDataDefn _nd lcxt _ctype ksig cons _derivs) = do
+convertDataDefn curType extraArgs (HsDataDefn _nd lcxt _ctype ksig cons _derivs) = do
   unless (null $ unLoc lcxt) $ convUnsupported "data type contexts"
   (,) <$> maybe (pure $ Sort Type) convertLType ksig
-      <*> (concat <$> traverse (convertConDecl curType . unLoc) cons)
+      <*> (concat <$> traverse (convertConDecl curType extraArgs . unLoc) cons)
 
 convertDataDecl :: ConversionMonad m
                 => Located RdrName -> LHsTyVarBndrs RdrName -> HsDataDefn RdrName
                 -> m IndBody
 convertDataDecl name tvs defn = do
-  coqName <- freeVar $ unLoc name
-  params  <- convertLHsTyVarBndrs Coq.Explicit tvs
+  coqName   <- freeVar $ unLoc name
+  rawParams <- convertLHsTyVarBndrs Coq.Explicit tvs
+  
+  (params, indices) <-
+    use (edits . dataTypeArguments . at coqName) >>= \case
+      Just dta -> rewriteDataTypeArguments dta rawParams
+      Nothing  -> pure (rawParams, [])
+  let conIndices = flip map indices $ \case
+                     Inferred   _ x     -> Inferred   Coq.Implicit x
+                     Typed    g _ xs ty -> Typed    g Coq.Implicit xs ty
+                     _                  -> error "[internal] convertDataDecl: stray complex binding!"
+  
   let nameArgs = map $ PosArg . \case
                    Ident x        -> Var x
                    UnderscoreName -> Underscore
-      curType  = appList (Var coqName) . nameArgs $ foldMap binderNames params
-  (resTy, cons) <- convertDataDefn curType defn
-
+      curType  = appList (Var coqName) . nameArgs . foldMap binderNames $ params ++ indices
+  (resTy, cons) <- first (maybe id Forall $ nonEmpty indices)
+                     <$> convertDataDefn curType conIndices defn
+  
   let conNames = [con | (con,_,_) <- cons]
   constructors . at coqName ?= conNames
-  for_ conNames $ \ con -> do
+  for_ conNames $ \con -> do
     constructorTypes . at con ?= coqName
     use (constructorFields . at con) >>= \case
       Just (RecordFields fields) ->

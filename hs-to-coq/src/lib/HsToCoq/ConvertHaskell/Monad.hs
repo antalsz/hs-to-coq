@@ -5,15 +5,15 @@
 
 module HsToCoq.ConvertHaskell.Monad (
   -- * Types
-  ConversionMonad, evalConversion,
+  ConversionMonad, ConversionT, evalConversion,
   -- * Types
   ConversionState(),
-  renamings, constructors, constructorTypes, constructorFields, recordFieldTypes, defaultMethods, renamed,
-  HsNamespace(..), NamespacedIdent(..), ConstructorFields(..),
+  renamings, edits, constructors, constructorTypes, constructorFields, recordFieldTypes, defaultMethods, renamed,
+  ConstructorFields(..),
   -- * Operations
   fresh, gensym, rename, localizeConversionState,
-  -- * Unsupported features
-  convUnsupported
+  -- * Errors
+  throwProgramError, convUnsupported, editFailure
   ) where
 
 import Control.Lens
@@ -36,21 +36,17 @@ import HsToCoq.Coq.Gallina as Coq
 import HsToCoq.Coq.Gallina.Util
 
 import HsToCoq.ConvertHaskell.InfixNames
+import HsToCoq.ConvertHaskell.Parameters.Renamings
+import HsToCoq.ConvertHaskell.Parameters.Edits
 
 --------------------------------------------------------------------------------
-
-data HsNamespace = ExprNS | TypeNS
-                 deriving (Eq, Ord, Show, Read, Enum, Bounded)
-
-data NamespacedIdent = NamespacedIdent { niNS :: !HsNamespace
-                                       , niId :: !Ident }
-                     deriving (Eq, Ord, Show, Read)
 
 data ConstructorFields = NonRecordFields !Int
                        | RecordFields    ![Ident]
                        deriving (Eq, Ord, Show, Read)
 
-data ConversionState = ConversionState { _renamings         :: !(Map NamespacedIdent Ident)
+data ConversionState = ConversionState { _renamings         :: !Renamings
+                                       , _edits             :: !Edits
                                        , _constructors      :: !(Map Ident [Ident])
                                        , _constructorTypes  :: !(Map Ident Ident)
                                        , _constructorFields :: !(Map Ident ConstructorFields)
@@ -66,41 +62,15 @@ renamed ns x = renamings.at (NamespacedIdent ns x)
 {-# INLINABLE renamed #-}
 
 type ConversionMonad m = (GhcMonad m, MonadState ConversionState m, MonadVariables Ident () m)
+type ConversionT m = StateT ConversionState (VariablesT Ident () m)
 
-evalConversion :: GhcMonad m => StateT ConversionState (VariablesT Ident () m) a -> m a
-evalConversion = evalVariablesT . (evalStateT ?? ConversionState{..}) where
-  _renamings = M.fromList [ typ "()" ~> "unit" -- Probably unnecessary
-                          , val "()" ~> "tt"
-                           
-                          , typ "[]" ~> "list"
-                          , val "[]" ~> "nil"
-                          , val ":"  ~> "::"
-                           
-                          , typ "Integer" ~> "Z"
-                           
-                          , typ "Bool"  ~> "bool"
-                          , val "True"  ~> "true"
-                          , val "False" ~> "false"
-                           
-                          , typ "String" ~> "string"
-                           
-                          , typ "Maybe"   ~> "option"
-                          , val "Just"    ~> "Some"
-                          , val "Nothing" ~> "None"
-                           
-                          , typ "FastString" ~> "string" ]
-             
-             where val  = NamespacedIdent ExprNS
-                   typ  = NamespacedIdent TypeNS
-                   (~>) = (,)
-
-  _constructors      = M.empty -- TODO Add base types?
-  
-  _constructorTypes  = M.empty -- TODO Add base types?
-  
-  _constructorFields = M.empty -- TODO Add base types?
-  
-  _recordFieldTypes  = M.empty -- TODO Add base types?
+evalConversion :: GhcMonad m => Renamings -> Edits -> ConversionT m a -> m a
+evalConversion _renamings _edits = evalVariablesT . (evalStateT ?? ConversionState{..}) where
+  -- TODO Add base types?
+  _constructors      = M.empty
+  _constructorTypes  = M.empty
+  _constructorFields = M.empty
+  _recordFieldTypes  = M.empty
   
   _defaultMethods = M.fromList ["Eq" ~>> [ "==" ~> Fun [arg "x", arg "y"] (App1 (Var "negb") $ Infix (Var "x") "/=" (Var "y"))
                                          , "/=" ~> Fun [arg "x", arg "y"] (App1 (Var "negb") $ Infix (Var "x") "==" (Var "y")) ]]
@@ -134,5 +104,11 @@ localizeConversionState action = do
       
   pure r
 
+throwProgramError :: MonadIO m => String -> m a
+throwProgramError = liftIO . throwGhcExceptionIO . ProgramError
+
 convUnsupported :: MonadIO m => String -> m a
-convUnsupported what = liftIO . throwGhcExceptionIO . ProgramError $ what ++ " unsupported"
+convUnsupported what = throwProgramError $ what ++ " unsupported"
+
+editFailure :: MonadIO m => String -> m a
+editFailure what = throwProgramError $ "Could not apply edit: " ++ what

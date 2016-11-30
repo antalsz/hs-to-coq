@@ -102,7 +102,7 @@ convertDeclarationGroup DeclarationGroup{..} = case (nonEmpty dgInductives, nonE
   
   (Just inds, Just syns, Nothing) ->
     Right $  foldMap recSynType syns
-          ++ [InductiveSentence $ Inductive inds (map (recSynDef $ foldMap indParams inds) $ toList syns)]
+          ++ [InductiveSentence $ Inductive inds (orderRecSynDefs $ recSynDefs inds syns)]
 
   (Nothing, Nothing, Just (ClassBody cdef nots :| [])) ->
     Right $ ClassSentence cdef : map NotationSentence nots
@@ -126,16 +126,23 @@ convertDeclarationGroup DeclarationGroup{..} = case (nonEmpty dgInductives, nonE
       , NotationSentence $ ReservedNotationIdent name ]
     
     indParams (IndBody _ params _ _) = S.fromList $ foldMap binderIdents params
-
+    
+    -- FIXME use real substitution
     avoidParams params = until (`S.notMember` params) (<> "_")
     
-    recSynDef params (SynBody name args oty def) =
+    recSynMapping params (SynBody name args oty def) =
       let mkFun    = maybe id Fun . nonEmpty
           withType = maybe id (flip HasType)
-      in NotationIdentBinding name . App (Var "Synonym")
-                                   $ fmap PosArg [ Var (synName name)
-                                                 , everywhere (mkT $ avoidParams params) . -- FIXME use real substitution
-                                                     mkFun args $ withType oty def ]
+      in (name, App (Var "Synonym")
+                  $ fmap PosArg [ Var (synName name)
+                                , everywhere (mkT $ avoidParams params) .
+                                    mkFun args $ withType oty def ])
+    
+    recSynDefs inds = M.fromList . toList . fmap (recSynMapping $ foldMap indParams inds)
+    
+    orderRecSynDefs synDefs =
+      [ NotationIdentBinding syn $ synDefs M.! syn
+      | syn <- foldMap toList $ topoSortEnvironment synDefs ]
 
 --------------------------------------------------------------------------------
 

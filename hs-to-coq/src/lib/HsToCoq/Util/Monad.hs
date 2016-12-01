@@ -10,10 +10,13 @@ module HsToCoq.Util.Monad (
   -- * Looping
   untilJustM,
   -- * Kleisli arrow combinators
-  (<***>), (<&&&>), (<+++>), (<|||>)
+  (<***>), (<&&&>), (<+++>), (<|||>),
+  -- * Errors
+  exceptEither
   ) where
 
 import Control.Arrow
+import Control.Monad.Except
 import Data.Bool
 
 andM :: Monad m => m Bool -> m Bool -> m Bool
@@ -61,3 +64,6 @@ infixr 2 <+++>
 (<|||>) :: Monad m => (a -> m b) -> (a' -> m b) -> Either a a' -> m b
 (<|||>) = via_Kleisli (|||)
 infixr 2 <|||>
+
+exceptEither :: MonadError e m => Either e a -> m a
+exceptEither = either throwError pure

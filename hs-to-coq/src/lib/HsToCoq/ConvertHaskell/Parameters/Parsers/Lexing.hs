@@ -13,29 +13,15 @@ import Control.Monad
 import HsToCoq.Util.Monad
 import Control.Monad.Trans.Parse
 import Data.Char
+import HsToCoq.Util.Char
 
 import qualified Data.Text as T
 
 import HsToCoq.Coq.Gallina
 
 --------------------------------------------------------------------------------
--- Character categories
+-- Lexing-specific character categories
 --------------------------------------------------------------------------------
-
-isHSpace :: Char -> Bool
-isHSpace '\t' = True
-isHSpace c    = generalCategory c == Space
-
-isVSpace :: Char -> Bool
-isVSpace '\n'   = True
-isVSpace '\v'   = True
-isVSpace '\f'   = True
-isVSpace '\r'   = True
-isVSpace '\x85' = True -- NEL
-isVSpace c      = case generalCategory c of
-                    LineSeparator      -> True
-                    ParagraphSeparator -> True
-                    _                  -> False
 
 isWordInit :: Char -> Bool
 isWordInit c = isAlpha c || c == '_'
@@ -48,12 +34,6 @@ isOperator c =
   c /= '_' && c /= '\'' &&
   generalCategory c `elem` [ ConnectorPunctuation, DashPunctuation, OtherPunctuation
                            , MathSymbol, CurrencySymbol, ModifierSymbol, OtherSymbol ]
-
-isOpen :: Char -> Bool
-isOpen c = generalCategory c == OpenPunctuation
-
-isClose :: Char -> Bool
-isClose c = generalCategory c == ClosePunctuation
 
 --------------------------------------------------------------------------------
 -- Tokens

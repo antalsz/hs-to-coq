@@ -1,0 +1,45 @@
+compiler/
+  
+  basicTypes/
+    BasicTypes
+    Unique
+    Module
+    Name
+    NameEnv
+    OccName
+    Var
+    MkId
+    IdInfo
+    FieldLabel
+    DataCon
+    ConLike
+    VarSet
+    VarEnv
+    PatSyn
+    SrcLoc
+  
+  utils/
+    Pair
+    BooleanFormula
+    UniqFM
+    UniqSet
+    UniqDFM
+  
+  prelude/
+    ForeignCall
+  
+  profiling/
+    CostCentre
+  
+  types/
+    TyCon
+    Class
+    Coercion
+    TyCoRep
+    CoAxiom
+  
+  typecheck/
+    TcType
+  
+  coreSyn/
+    CoreSyn

@@ -37,6 +37,8 @@ library
                      , HsToCoq.Util.List
                      , HsToCoq.Util.Containers
                      , HsToCoq.Util.Generics
+                     , HsToCoq.Util.Char
+                     , HsToCoq.Util.Parsec
                      , HsToCoq.Util.TempFiles
                      , HsToCoq.Util.Messages
                      , Control.Monad.Trans.Variables.Internal
@@ -73,6 +75,8 @@ library
                      , HsToCoq.ConvertHaskell.Axiomatize
                      , HsToCoq.ConvertHaskell
                      , HsToCoq.ProcessFiles
+                     , HsToCoq.CLI.FileTree
+                     , HsToCoq.CLI.FileTree.Parser
                      , HsToCoq.CLI
   
   build-tools:         happy
@@ -97,12 +101,14 @@ library
                      , lens                 ==4.13.*
                      , pipes                ==4.1.*
                      , containers           ==0.5.*
-                     , syb                  ==0.6.*
                      , validation           ==0.5.*
+                     , syb                  ==0.6.*
                      , text                 ==1.2.*
                      , directory            ==1.2.*
                      , filepath             ==1.4.*
                      , wl-pprint-text       ==1.1.*
+                     , parsec               ==3.1.*
+                     , indents              ==0.3.*
                      , optparse-applicative ==0.12.*
   
   hs-source-dirs:      src/lib

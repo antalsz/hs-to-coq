@@ -81,7 +81,7 @@ convertType (HsPArrTy _ty) =
 
 convertType (HsTupleTy tupTy tys) = do
   case tupTy of
-    HsUnboxedTuple           -> convUnsupported "unboxed tuples"
+    HsUnboxedTuple           -> pure () -- TODO: Mark converted unboxed tuples specially?
     HsBoxedTuple             -> pure ()
     HsConstraintTuple        -> convUnsupported "constraint tuples"
     HsBoxedOrConstraintTuple -> pure () -- Sure, it's boxed, why not

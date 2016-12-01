@@ -57,10 +57,9 @@ convertPat (ListPat pats PlaceHolder overloaded) =
   then foldr (InfixPat ?? "::") (Coq.VarPat "nil") <$> traverse convertLPat pats
   else convUnsupported "overloaded list patterns"
 
-convertPat (TuplePat pats boxity _PlaceHolders) =
-  case boxity of
-    Boxed   -> foldl1 (App2Pat $ Bare "pair") <$> traverse convertLPat pats
-    Unboxed -> convUnsupported "unboxed tuple patterns"
+-- TODO: Mark converted unboxed tuples specially?
+convertPat (TuplePat pats _boxity _PlaceHolders) =
+  foldl1 (App2Pat $ Bare "pair") <$> traverse convertLPat pats
 
 convertPat (PArrPat _ _) =
   convUnsupported "parallel array patterns"

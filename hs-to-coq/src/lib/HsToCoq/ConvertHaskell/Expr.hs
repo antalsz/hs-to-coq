@@ -126,18 +126,16 @@ convertExpr (SectionL l opE) =
 convertExpr (SectionR opE r) =
   convert_section Nothing opE (Just r)
 
-convertExpr (ExplicitTuple exprs boxity) =
-  case boxity of
-    Boxed -> do
-      -- TODO A tuple constructor in the Gallina grammar?
-      (tuple, args) <- runWriterT
-                    .  fmap (foldl1 . App2 $ Var "pair")
-                    .  for exprs $ unLoc <&> \case
-                         Present e           -> lift $ convertLExpr e
-                         Missing PlaceHolder -> do arg <- lift $ gensym "arg"
-                                                   Var arg <$ tell [arg]
-      pure $ maybe id Fun (nonEmpty $ map (Inferred Coq.Explicit . Ident) args) tuple
-    Unboxed -> convUnsupported "unboxed tuples"
+-- TODO: Mark converted unboxed tuples specially?
+convertExpr (ExplicitTuple exprs _boxity) = do
+  -- TODO A tuple constructor in the Gallina grammar?
+  (tuple, args) <- runWriterT
+                .  fmap (foldl1 . App2 $ Var "pair")
+                .  for exprs $ unLoc <&> \case
+                     Present e           -> lift $ convertLExpr e
+                     Missing PlaceHolder -> do arg <- lift $ gensym "arg"
+                                               Var arg <$ tell [arg]
+  pure $ maybe id Fun (nonEmpty $ map (Inferred Coq.Explicit . Ident) args) tuple
 
 convertExpr (HsCase e mg) =
   Coq.Match <$> (fmap pure $ MatchItem <$> convertLExpr e <*> pure Nothing <*> pure Nothing)

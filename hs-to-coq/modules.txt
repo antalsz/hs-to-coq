@@ -16,17 +16,26 @@ compiler/
     VarSet
     VarEnv
     PatSyn
+    Literal
     SrcLoc
-  
+    Demand
+    UniqSupply
+
   utils/
     Pair
     BooleanFormula
+    FastStringEnv
     UniqFM
-    UniqSet
     UniqDFM
+    UniqSet
+    UniqDSet
   
   prelude/
     ForeignCall
+    PrimOp
+  
+  cmm/
+    CmmType
   
   profiling/
     CostCentre

@@ -1,4 +1,4 @@
-{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE FlexibleContexts, OverloadedStrings #-}
 
 module HsToCoq.ConvertHaskell.Declarations.TypeSynonym (SynBody(..), convertSynDecl) where
 
@@ -33,4 +33,4 @@ convertSynDecl name args def  = do
   SynBody <$> freeVar (unLoc name)
           <*> convertLHsTyVarBndrs Coq.Explicit args
           <*> use (edits.typeSynonymTypes . at coqName . to (fmap Var))
-          <*> convertLType def
+          <*> ((`InScope` "type") <$> convertLType def)

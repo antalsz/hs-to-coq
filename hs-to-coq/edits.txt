@@ -6,5 +6,10 @@ data type arguments Branches (indices: br)
 data type arguments Bind     (indices: b)
 data type arguments Expr     (indices: b)
 
+redefine Inductive IdInfo           : Type := .
+redefine Inductive DataConBoxer     : Type := .
+redefine Inductive CoAxiomRule      : Type := .
+redefine Inductive BuiltInSynFamily : Type := .
+
 # Compute the transitive value dependency graph for
 # CallArity.callArityAnalProgram and only dump those converted functions.

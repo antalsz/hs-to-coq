@@ -61,21 +61,27 @@ tokenDescription TokEOF         = "end of file"
 -- Lexing
 --------------------------------------------------------------------------------
 
+-- We differentiate between two kinds of @.@: word-dot (as in @Lists.list@) and
+-- symbol-dot (as in @x .+. y@ or @Inductive unit : Type := tt.@).  This is a
+-- horrible hack.
+
 token' :: Monad m => ParseT m (Maybe Token)
 token' = asum $
-  [ parseToken (const Nothing)            (is '#')   (not . isVSpace)
-  , parseToken (const Nothing)            isHSpace   isHSpace
-  , parseToken (Just . const TokNewline)  isVSpace   none
-  , parseToken (Just . TokNat   . readT)  isDigit    isDigit
-  , parseToken (Just . TokOpen  . T.head) isOpen     none
-  , parseToken (Just . TokClose . T.head) isClose    none
-  , parseToken (Just . TokWord)           isWordInit isWord
-  , parseToken (Just . TokOp)             isOperator isOperator
+  [ parseToken              (const Nothing)            (is '#')   (not . isVSpace)
+  , parseToken              (const Nothing)            isHSpace   isHSpace
+  , parseToken              (Just . const TokNewline)  isVSpace   none
+  , parseToken              (Just . TokNat   . readT)  isDigit    isDigit
+  , parseToken              (Just . TokOpen  . T.head) isOpen     none
+  , parseToken              (Just . TokClose . T.head) isClose    none
+  , parseToken              (Just . TokWord)           isWordInit isWord
+  , parseCharTokenLookahead (Just . TokWord)           (is '.')   (exists isWordInit)
+  , parseToken              (Just . TokOp)             isOperator isOperator
   , Just TokEOF <$ (guard =<< atEOF) ]
   where
-    none  = const False
-    is    = (==)
-    readT = read . T.unpack
+    none   = const False
+    is     = (==)
+    exists = maybe False
+    readT  = read . T.unpack
 
 token :: Monad m => ParseT m Token
 token = untilJustM token'

@@ -7,7 +7,9 @@ module Control.Monad.Trans.Parse (
   ParseT(..), runParseT, evalParseT,
   -- * 'ParseT' operations
   parseWithM, parseWith,
-  atEOF, parseToken
+  atEOF, parseToken, parseCharTokenLookahead,
+  -- * Lower-level
+  parseChar, parseChars, peekChar
 ) where
 
 import Data.Functor.Identity
@@ -55,16 +57,35 @@ parseWithM' msg f = parseWithM $ note msg . f
 parseWith :: Applicative f => (Text -> (a, Text)) -> ParseT f a
 parseWith f = parseWithM $ Right . f
 
+peekChar :: Monad m => ParseT m (Maybe Char)
+peekChar = ParseT . gets $ fmap fst . T.uncons
+
 atEOF :: Monad m => ParseT m Bool
 atEOF = ParseT $ gets T.null
+
+parseChar :: Monad m => (Char -> Bool) -> ParseT m Char
+parseChar pred = do
+  c <- parseWithM' "unexpected EOF" T.uncons
+  guard $ pred c
+  pure c
+
+parseChars :: Monad m => (Char -> Bool) -> ParseT m Text
+parseChars pred = parseWith $ T.span pred
 
 parseToken :: Monad m
            => (Text -> a)
            -> (Char -> Bool)
            -> (Char -> Bool)
            -> ParseT m a
-parseToken build isFirst isRest = do
-  c  <- parseWithM' "unexpected EOF" T.uncons
-  guard $ isFirst c
-  cs <- parseWith $ T.span isRest
-  pure . build $ T.cons c cs
+parseToken build isFirst isRest =
+  (build .) . T.cons <$> parseChar isFirst <*> parseChars isRest
+
+parseCharTokenLookahead :: Monad m
+                        => (Text -> a)
+                        -> (Char -> Bool)
+                        -> (Maybe Char -> Bool)
+                        -> ParseT m a
+parseCharTokenLookahead build isFirst isNext = do
+  c <- parseChar isFirst
+  guard . isNext =<< peekChar
+  pure . build $ T.singleton c

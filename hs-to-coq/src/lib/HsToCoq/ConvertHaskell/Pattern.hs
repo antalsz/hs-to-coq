@@ -18,7 +18,6 @@ import Control.Monad.Trans.Maybe
 import qualified Data.Map.Strict as M
 
 import GHC hiding (Name)
-import BasicTypes
 import HsToCoq.Util.GHC.FastString
 
 import HsToCoq.Util.GHC

@@ -42,7 +42,9 @@ import HsToCoq.Coq.FreeVars
 
 import Data.Generics hiding (Fixity(..))
 
+import HsToCoq.ConvertHaskell.Parameters.Edits
 import HsToCoq.ConvertHaskell.Monad
+import HsToCoq.ConvertHaskell.Variables
 import HsToCoq.ConvertHaskell.Declarations.TypeSynonym
 import HsToCoq.ConvertHaskell.Declarations.DataType
 import HsToCoq.ConvertHaskell.Declarations.Class
@@ -66,10 +68,47 @@ convDeclName (ConvSyn   (SynBody                    synName _ _ _))    = synName
 convDeclName (ConvClass (ClassBody (ClassDefinition clsName _ _ _) _)) = clsName
 
 convertTyClDecl :: ConversionMonad m => TyClDecl RdrName -> m ConvertedDeclaration
-convertTyClDecl FamDecl{}     = convUnsupported "type/data families"
-convertTyClDecl SynDecl{..}   = ConvSyn   <$> convertSynDecl   tcdLName tcdTyVars tcdRhs
-convertTyClDecl DataDecl{..}  = ConvData  <$> convertDataDecl  tcdLName tcdTyVars tcdDataDefn
-convertTyClDecl ClassDecl{..} = ConvClass <$> convertClassDecl tcdCtxt  tcdLName  tcdTyVars   tcdFDs tcdSigs tcdMeths tcdATs tcdATDefs
+convertTyClDecl decl = do
+  coqName <- freeVar . unLoc $ tyClDeclLName decl
+  use (edits.redefinitions.at coqName) >>= \case
+    Nothing -> case decl of
+      FamDecl{}     -> convUnsupported "type/data families"
+      SynDecl{..}   -> ConvSyn   <$> convertSynDecl   tcdLName tcdTyVars tcdRhs
+      DataDecl{..}  -> ConvData  <$> convertDataDecl  tcdLName tcdTyVars tcdDataDefn
+      ClassDecl{..} -> ConvClass <$> convertClassDecl tcdCtxt  tcdLName  tcdTyVars   tcdFDs tcdSigs tcdMeths tcdATs tcdATDefs
+    
+    Just redef -> do
+      case (decl, redef) of
+        (SynDecl{},  CoqDefinitionDef def) ->
+          pure . ConvSyn $ case def of
+            DefinitionDef _ name args oty body -> SynBody name args oty body
+            LetDef          name args oty body -> SynBody name args oty body
+        
+        (DataDecl{}, CoqInductiveDef ind) ->
+          case ind of
+            Inductive   (body :| [])  []    -> pure $ ConvData body
+            Inductive   (_    :| _:_) _     -> editFailure $ "cannot redefine data type to mutually-recursive types"
+            Inductive   _             (_:_) -> editFailure $ "cannot redefine data type to include notations"
+            CoInductive _             _     -> editFailure $ "cannot redefine data type to be coinductive"
+            Inductive   _             _     -> error "GHC BUG WORKAROUND: `OverloadedLists` confuses the exhaustiveness checker"
+        
+        (FamDecl{}, _) ->
+          editFailure "cannot redefine type/data families"
+        
+        (ClassDecl{}, _) ->
+          editFailure "cannot redefine type class declarations"
+        
+        _ ->
+          let from = case decl of
+                       FamDecl{}   -> "a type/data family"
+                       SynDecl{}   -> "a type synonym"
+                       DataDecl{}  -> "a data type"
+                       ClassDecl{} -> "a type class"
+              to   = case redef of
+                       CoqDefinitionDef _ -> "a Definition"
+                       CoqFixpointDef   _ -> "a Fixpoint"
+                       CoqInductiveDef  _ -> "an Inductive"
+          in editFailure $ "cannot redefine " ++ from ++ " to be " ++ to
 
 --------------------------------------------------------------------------------
 

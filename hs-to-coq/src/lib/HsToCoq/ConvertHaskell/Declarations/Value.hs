@@ -1,9 +1,9 @@
-{-# LANGUAGE RecordWildCards, LambdaCase, FlexibleContexts #-}
+{-# LANGUAGE RecordWildCards, TupleSections, LambdaCase, FlexibleContexts #-}
 
 module HsToCoq.ConvertHaskell.Declarations.Value (convertValDecls) where
 
-import Control.Arrow ((&&&))
-import HsToCoq.Util.Functor
+import Control.Lens
+
 import Data.Bitraversable
 import Data.Maybe
 import Data.Either
@@ -18,6 +18,7 @@ import Panic
 import HsToCoq.Coq.FreeVars
 import HsToCoq.Coq.Gallina as Coq
 
+import HsToCoq.ConvertHaskell.Parameters.Edits
 import HsToCoq.ConvertHaskell.Monad
 import HsToCoq.ConvertHaskell.Variables
 import HsToCoq.ConvertHaskell.Definitions
@@ -35,11 +36,21 @@ convertValDecls args = do
                      SigD sig -> Just $ Right sig
                      _        -> Nothing
   
-  bindings <- fmap M.fromList . (convertTypedBindings defns sigs ?? Just axiomatizeBinding)
+  bindings <- (fmap M.fromList . (convertTypedBindings defns sigs ?? Just axiomatizeBinding))
            $  withConvertedBinding
-                ((pure .) $   convDefName
-                          &&& withConvertedDefinition (DefinitionDef Global)     (pure . DefinitionSentence)
-                                                      (buildInfixNotations sigs) (map    NotationSentence))
+                (\cdef@ConvertedDefinition{convDefName = name} ->
+                   use (edits.redefinitions.at name) >>= ((name,) <$>) . \case
+                     Nothing  ->
+                       pure $ withConvertedDefinition
+                         (DefinitionDef Global)     (pure . DefinitionSentence)
+                         (buildInfixNotations sigs) (map    NotationSentence)
+                         cdef
+                     
+                     Just def ->
+                       [definitionSentence def] <$ case def of
+                         CoqInductiveDef  _ -> editFailure "cannot redefine a value definition into an Inductive"
+                         CoqDefinitionDef _ -> pure ()
+                         CoqFixpointDef   _ -> pure ())
                 (\_ _ -> convUnsupported "top-level pattern bindings")
   
   -- TODO: Mutual recursion

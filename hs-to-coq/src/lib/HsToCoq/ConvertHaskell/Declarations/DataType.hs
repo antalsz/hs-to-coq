@@ -14,7 +14,6 @@ import Data.Bifunctor
 import Data.Semigroup (Semigroup(..))
 import Data.Foldable
 import Data.Traversable
-import Data.List.NonEmpty (nonEmpty)
 
 import qualified Data.Set        as S
 import qualified Data.Map.Strict as M
@@ -62,7 +61,7 @@ convertConDecl curType extraArgs (ConDecl lnames _explicit lqvs lcxt details lre
       pure . NonRecordFields $ length args
   for_ cons $ \con -> constructorFields . at con ?= fieldInfo
   
-  pure $ map (, params, Just . maybe id Forall (nonEmpty extraArgs) $ foldr Arrow resTy args) cons
+  pure $ map (, params, Just . maybeForall extraArgs $ foldr Arrow resTy args) cons
 
 --------------------------------------------------------------------------------
 
@@ -138,7 +137,7 @@ convertDataDecl name tvs defn = do
                    Ident x        -> Var x
                    UnderscoreName -> Underscore
       curType  = appList (Var coqName) . nameArgs . foldMap binderNames $ params ++ indices
-  (resTy, cons) <- first (maybe id Forall $ nonEmpty indices)
+  (resTy, cons) <- first (maybeForall indices)
                      <$> convertDataDefn curType conIndices defn
   
   let conNames = [con | (con,_,_) <- cons]

@@ -3,9 +3,11 @@
 module HsToCoq.Coq.Gallina.Util (
   pattern Var,    pattern App1,    pattern App2,    pattern App3,    appList,
   pattern VarPat, pattern App1Pat, pattern App2Pat, pattern App3Pat, appListPat,
-  termHead
+  termHead,
+  maybeForall
   ) where
 
+import Data.Foldable
 import Data.List.NonEmpty (NonEmpty(..), nonEmpty)
 import HsToCoq.Coq.Gallina
 
@@ -37,3 +39,9 @@ termHead (ExplicitApp name _) = Just name
 termHead (Infix _ op _)       = Just $ Bare op
 termHead (Qualid name)        = Just name
 termHead _                    = Nothing
+
+maybeForall :: Foldable f => f Binder -> Term -> Term
+maybeForall = maybe id Forall . nonEmpty . toList
+{-# INLINABLE  maybeForall #-}
+{-# SPECIALIZE maybeForall :: [Binder]        -> Term -> Term #-}
+{-# SPECIALIZE maybeForall :: NonEmpty Binder -> Term -> Term #-}

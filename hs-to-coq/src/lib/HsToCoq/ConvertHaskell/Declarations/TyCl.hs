@@ -12,12 +12,13 @@ module HsToCoq.ConvertHaskell.Declarations.TyCl (
   -- * Converting 'DeclarationGroup's
   convertDeclarationGroup, groupTyClDecls,
   -- * Record accessors
-  generateRecordAccessors, generateHsRecordAccessors
+  generateRecordAccessors, generateGroupRecordAccessors
   ) where
 
 import Control.Lens
 
 import Data.Semigroup (Semigroup(..))
+import Data.Bifunctor
 import Data.Foldable
 import Data.Traversable
 import Data.List.NonEmpty (NonEmpty(..), nonEmpty)
@@ -31,13 +32,9 @@ import qualified Data.Map.Strict as M
 import HsToCoq.Util.Containers
 
 import GHC hiding (Name)
-import BasicTypes
-import RdrName
-import FastString
-import TcEvidence
 
-import HsToCoq.Coq.Gallina
-import HsToCoq.Coq.Gallina.Util
+import HsToCoq.Coq.Gallina      as Coq
+import HsToCoq.Coq.Gallina.Util as Coq
 import HsToCoq.Coq.FreeVars
 
 import Data.Generics hiding (Fixity(..))
@@ -48,7 +45,6 @@ import HsToCoq.ConvertHaskell.Variables
 import HsToCoq.ConvertHaskell.Declarations.TypeSynonym
 import HsToCoq.ConvertHaskell.Declarations.DataType
 import HsToCoq.ConvertHaskell.Declarations.Class
-import HsToCoq.ConvertHaskell.Declarations.Value
 
 --------------------------------------------------------------------------------
 
@@ -185,57 +181,49 @@ convertDeclarationGroup DeclarationGroup{..} = case (nonEmpty dgInductives, nonE
 
 --------------------------------------------------------------------------------
 
--- TODO: Add type signatures?
-generateHsRecordAccessors :: ConversionMonad m => IndBody -> m [HsDecl RdrName]
-generateHsRecordAccessors (IndBody _tyName _params _resTy cons) = do
-  allFields <- fmap fold . for cons $ \(con, _args, _resTy) -> do
-                 use (constructorFields . at con) <&> \case
-                   Just (RecordFields fields) -> S.fromList fields
-                   _                          -> []
+generateRecordAccessors :: ConversionMonad m => IndBody -> m [Definition]
+generateRecordAccessors (IndBody tyName params _resTy cons) = do
+  let conNames = view _1 <$> cons
   
+  let restrict = M.filterWithKey $ \k _ -> k `elem` conNames
+  allFields <- uses (constructorFields.to restrict.folded._RecordFields) S.fromList
   for (S.toAscList allFields) $ \field -> do
-    matches <- for cons $ \(con, _args, _resTy) -> do
-                 hasField <- use (constructorFields . at con) <&> \case
-                               Just (RecordFields conFields) -> field `elem` conFields
-                               _                             -> False
-                 pure $ buildMatch hasField con field
-    pure . ValD $ FunBind { fun_id      = loc $ toHs field
-                          , fun_infix   = False
-                          , fun_matches = MG { mg_alts    = matches
-                                             , mg_arg_tys = []
-                                             , mg_res_ty  = PlaceHolder
-                                             , mg_origin  = Generated }
-                          , fun_co_fn   = WpHole
-                          , bind_fvs    = PlaceHolder
-                          , fun_tick    = [] }
-  where
-    buildMatch hasField con field = loc $ GHC.Match
-      { m_fun_id_infix = Nothing
-      , m_pats         = [loc $ buildRec (\name -> ConPatIn name . RecCon) con []]
-      , m_type         = Nothing
-      , m_grhss        = GRHSs
-          { grhssGRHSs =
-              [ loc . GRHS [] . loc $
-                  if hasField
-                  then HsVar $ toHs field
-                  else -- TODO: A special variable which is special-cased to desugar to `MissingValue`?
-                       HsApp (loc . HsVar . mkVarUnqual $ fsLit "error")
-                             (loc . HsLit . HsString "" $ fsLit "Partial record selector") ]
-          , grhssLocalBinds = EmptyLocalBinds } }
-      where
-        buildRec useRec con fields = useRec (loc $ toHs con) $
-                                            HsRecFields { rec_flds   = map loc fields
-                                                        , rec_dotdot = if hasField
-                                                                       then Just 0
-                                                                       else Nothing }
+    equations <- for conNames $ \con -> do
+      (args, hasField) <- use (constructorFields.at con) >>= \case
+        Just (NonRecordFields count) ->
+          pure (replicate count UnderscorePat, False)
+        Just (RecordFields conFields0) ->
+          pure $ go conFields0 where
+            go [] = ([], False)
+            go (conField : conFields)
+              | field == conField  = (Coq.VarPat field : map (const UnderscorePat) conFields, True)
+              | otherwise          = first (UnderscorePat :) $ go conFields
+            go _ =
+              error "GHC BUG WORKAROUND: `OverloadedLists` confuses the exhaustiveness checker"
+        Nothing -> throwProgramError $  "internal error: unknown constructor `"
+                                     <> T.unpack con <> "' for type `"
+                                     <> T.unpack tyName <> "'"
+      pure . Equation [MultPattern [appListPat (Bare con) args]] $
+                      if hasField
+                      then Var field
+                      else App1 (Var "error")
+                                (String $  "Partial record selector: field `"
+                                        <> field <> "' has no match in constructor `"
+                                        <> con <> "' of type `" <> tyName <> "'")
     
-    loc  = mkGeneralLocated "generated"
-    toHs = mkVarUnqual . fsLit . T.unpack
+    arg <- gensym "arg"
+    
+    let implicitParams = params & mapped.binderExplicitness .~ Coq.Implicit
+        argBinder      = Typed Ungeneralizable Coq.Explicit
+                               [Ident arg] (appList (Var tyName) $ binderArgs params)
+        
+    pure . DefinitionDef Global field (implicitParams ++ [argBinder]) Nothing $
+      Coq.Match [MatchItem (Var arg) Nothing Nothing] Nothing equations
 
-generateRecordAccessors :: ConversionMonad m => DeclarationGroup -> m [Sentence]
-generateRecordAccessors =   convertValDecls
-                        <=< fmap fold . traverse generateHsRecordAccessors
-                        .   dgInductives
+generateGroupRecordAccessors :: ConversionMonad m => DeclarationGroup -> m [Sentence]
+generateGroupRecordAccessors = fmap (fmap DefinitionSentence . fold)
+                             . traverse (generateRecordAccessors)
+                             . dgInductives
 
 --------------------------------------------------------------------------------
 
@@ -255,6 +243,6 @@ groupTyClDecls decls = do
 convertTyClDecls :: ConversionMonad m => [TyClDecl RdrName] -> m [Sentence]
 convertTyClDecls =   forkM (either convUnsupported (pure . fold)
                              . traverse convertDeclarationGroup)
-                           (fmap fold . traverse generateRecordAccessors)
+                           (fmap fold . traverse generateGroupRecordAccessors)
                  <=< groupTyClDecls
   where forkM l r i = (<>) <$> l i <*> r i

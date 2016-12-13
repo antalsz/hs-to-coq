@@ -89,7 +89,7 @@ rewriteDataTypeArguments dta bs = do
          Generalized _ _   -> Left complexBinding
   
   let editIdents  = S.fromList $ dta^.dtParameters <> dta^.dtIndices
-      boundIdents = fmap S.fromList . traverse nameToIdent $ foldMap binderNames ebs
+      boundIdents = fmap S.fromList . traverse (view nameToIdent) $ foldMap (toListOf binderNames) ebs
                        -- Underscores are an automatic failure
     in unless (boundIdents == Just editIdents) $
          dtaEditFailure $ "mismatched names"
@@ -128,15 +128,9 @@ convertDataDecl name tvs defn = do
     use (edits . dataTypeArguments . at coqName) >>= \case
       Just dta -> rewriteDataTypeArguments dta rawParams
       Nothing  -> pure (rawParams, [])
-  let conIndices = flip map indices $ \case
-                     Inferred   _ x     -> Inferred   Coq.Implicit x
-                     Typed    g _ xs ty -> Typed    g Coq.Implicit xs ty
-                     _                  -> error "[internal] convertDataDecl: stray complex binding!"
+  let conIndices = indices & mapped.binderExplicitness .~ Coq.Implicit
   
-  let nameArgs = map $ PosArg . \case
-                   Ident x        -> Var x
-                   UnderscoreName -> Underscore
-      curType  = appList (Var coqName) . nameArgs . foldMap binderNames $ params ++ indices
+  let curType  = appList (Var coqName) . binderArgs $ params ++ indices
   (resTy, cons) <- first (maybeForall indices)
                      <$> convertDataDefn curType conIndices defn
   

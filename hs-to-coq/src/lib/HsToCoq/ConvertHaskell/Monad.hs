@@ -9,7 +9,7 @@ module HsToCoq.ConvertHaskell.Monad (
   -- * Types
   ConversionState(),
   renamings, edits, constructors, constructorTypes, constructorFields, recordFieldTypes, defaultMethods, renamed,
-  ConstructorFields(..),
+  ConstructorFields(..), _NonRecordFields, _RecordFields,
   -- * Operations
   fresh, gensym, rename, localizeConversionState,
   -- * Errors
@@ -44,6 +44,7 @@ import HsToCoq.ConvertHaskell.Parameters.Edits
 data ConstructorFields = NonRecordFields !Int
                        | RecordFields    ![Ident]
                        deriving (Eq, Ord, Show, Read)
+makePrisms ''ConstructorFields
 
 data ConversionState = ConversionState { _renamings         :: !Renamings
                                        , _edits             :: !Edits

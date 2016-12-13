@@ -164,7 +164,7 @@ convertDeclarationGroup DeclarationGroup{..} = case (nonEmpty dgInductives, nonE
       [ InductiveSentence $ Inductive [IndBody (synName name) [] (Sort Type) []] []
       , NotationSentence $ ReservedNotationIdent name ]
     
-    indParams (IndBody _ params _ _) = S.fromList $ foldMap binderIdents params
+    indParams (IndBody _ params _ _) = S.fromList $ foldMap (toListOf binderIdents) params
     
     -- FIXME use real substitution
     avoidParams params = until (`S.notMember` params) (<> "_")

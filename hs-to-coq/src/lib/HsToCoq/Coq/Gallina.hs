@@ -70,16 +70,11 @@ module HsToCoq.Coq.Gallina (
   renderGallina,
   Gallina(..),
   renderIdent, renderAccessIdent, renderNum, renderString, renderOp,
-  renderLocality,
-
-  -- * General utility functions
-  binderNames, binderIdents,
-  nameToIdent, qualidToIdent
+  renderLocality
   ) where
 
 import Prelude hiding (Num)
 
-import Data.Maybe
 import Data.Foldable
 import Data.Traversable
 
@@ -837,20 +832,3 @@ let abort = fail "Internal error: unexpected result from `reify'" in
           [d|instance Pretty $(pure ty) where pretty = renderGallina|]
         _ -> abort
     _ -> abort
-
-binderNames :: Binder -> [Name]
-binderNames (Inferred _ x)    = [x]
-binderNames (Typed _ _ xs _)  = toList xs
-binderNames (BindLet _ _ _)   = []
-binderNames (Generalized _ _) = []
-
-binderIdents :: Binder -> [Ident]
-binderIdents = mapMaybe nameToIdent . binderNames
-
-nameToIdent :: Name -> Maybe Ident
-nameToIdent (Ident x)      = Just x
-nameToIdent UnderscoreName = Nothing
-
-qualidToIdent :: Qualid -> Ident
-qualidToIdent (Bare      ident)   = ident
-qualidToIdent (Qualified qid aid) = qualidToIdent qid <> "." <> aid

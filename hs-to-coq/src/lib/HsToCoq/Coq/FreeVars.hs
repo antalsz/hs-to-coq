@@ -31,6 +31,7 @@ import Data.Map.Strict (Map)
 import qualified Data.Map.Strict as M
 
 import HsToCoq.Coq.Gallina
+import HsToCoq.Coq.Gallina.Util
 import HsToCoq.ConvertHaskell.InfixNames
 
 ----------------------------------------------------------------------------------------------------

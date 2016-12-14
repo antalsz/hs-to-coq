@@ -3,13 +3,16 @@ type synonym CollectedCCs :-> Type
 
 data type arguments CoAxiom  (indices: br)
 data type arguments Branches (indices: br)
-data type arguments Bind     (indices: b)
-data type arguments Expr     (indices: b)
 
 redefine Inductive IdInfo           : Type := .
 redefine Inductive DataConBoxer     : Type := .
 redefine Inductive CoAxiomRule      : Type := .
 redefine Inductive BuiltInSynFamily : Type := .
 
-# Compute the transitive value dependency graph for
+# Without the `redefine`s breaking the data type cycles, we also need `Expr` and
+# `Bind` to have the binder type `b` be a parameter instead of an index;
+# however, with the cycles broken as they currently are, `Expr` and `Bind` form
+# a complete mutually-recursive group on their own.
+
+# TODO: Compute the transitive value dependency graph for
 # CallArity.callArityAnalProgram and only dump those converted functions.

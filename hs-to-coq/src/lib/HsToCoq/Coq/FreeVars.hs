@@ -162,6 +162,7 @@ instance Binding Sentence where
   binding f (ClassSentence      cls)       = binding f cls
   binding f (InstanceSentence   ins)       = binding f ins
   binding f (NotationSentence   not)       = binding f not
+  binding _ (ArgumentsSentence  arg)       = (freeVars arg *>)
   binding _ (CommentSentence    com)       = (freeVars com *>)
 
 instance Binding Assumption where
@@ -451,6 +452,21 @@ instance FreeVars Associativity where
 
 instance FreeVars Level where
   freeVars (Level _) = pure ()
+
+instance FreeVars Arguments where
+  freeVars (Arguments floc qid args) = freeVars floc *> freeVars qid *> freeVars args
+  -- The @floc@ and @args@ parts are pro forma – there are no free variables there
+
+instance FreeVars ArgumentSpec where
+  freeVars (ArgumentSpec eim _name _oscope) = freeVars eim
+  -- This is pro forma – there are no free variables here.  The name is neither
+  -- bound nor free because it's just an annotation for the function whose
+  -- arguments are being specified.
+
+instance FreeVars ArgumentExplicitness where
+  freeVars ArgExplicit = pure ()
+  freeVars ArgImplicit = pure ()
+  freeVars ArgMaximal  = pure ()
 
 foldableFreeVars :: (FreeVars t, MonadVariables Ident d m, Monoid d, Foldable f) => f t -> m ()
 foldableFreeVars = traverse_ freeVars

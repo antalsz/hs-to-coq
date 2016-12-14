@@ -65,12 +65,15 @@ module HsToCoq.Coq.Gallina (
   Level(..),
   Notation(..),
   NotationBinding(..),
-
+  Arguments(..),
+  ArgumentSpec(..),
+  ArgumentExplicitness(..),
+  
   -- * Formatting
   renderGallina,
   Gallina(..),
   renderIdent, renderAccessIdent, renderNum, renderString, renderOp,
-  renderLocality
+  renderLocality, renderFullLocality,
   ) where
 
 import Prelude hiding (Num)
@@ -103,7 +106,7 @@ type AccessIdent = Ident
 -- |@/num/ ::= /digit/ … /digit/@
 type Num         = Natural
 
--- |@/op/ ::= /symbol/ [/symbol/ … /symbol/] – Extra
+-- |@/op/ ::= /symbol/ [/symbol/ … /symbol/]@ /(extra)/
 type Op          = Text
 
 -- $Terms
@@ -257,7 +260,7 @@ data Pattern = ArgsPat Qualid (NonEmpty Pattern)                                
 newtype OrPattern = OrPattern (NonEmpty Pattern)                                               -- ^@/pattern/ | … | /pattern/@
                   deriving (Eq, Ord, Show, Read, Typeable, Data)
 
--- |@/comment/ ::=@ – extra
+-- |@/comment/ ::=@ /(extra)/
 newtype Comment = Comment Text                                                                 -- ^@(* … *)@
                 deriving (Eq, Ord, Show, Read, Typeable, Data)
 
@@ -272,10 +275,11 @@ data Sentence = AssumptionSentence Assumption                                   
               | InductiveSentence  Inductive                                                   -- ^@/inductive/@
               | FixpointSentence   Fixpoint                                                    -- ^@/fixpoint/@
               | AssertionSentence  Assertion Proof                                             -- ^@/assertion/ /proof/@
-              | ClassSentence      ClassDefinition                                             -- ^@/class_definition/@ /(extra)/
-              | InstanceSentence   InstanceDefinition                                          -- ^@/instance_definition/@ /(extra)/
-              | NotationSentence   Notation                                                    -- ^@/notation/@ /(extra)/
-              | CommentSentence    Comment                                                     -- ^@/comment/@ /(extra)/
+              | ClassSentence      ClassDefinition                                             -- ^@/class_definition/@ – extra
+              | InstanceSentence   InstanceDefinition                                          -- ^@/instance_definition/@ – extra
+              | NotationSentence   Notation                                                    -- ^@/notation/@ – extra
+              | ArgumentsSentence  Arguments                                                   -- ^@/arguments/@ – extra
+              | CommentSentence    Comment                                                     -- ^@/comment/@ – extra
               deriving (Eq, Ord, Show, Read, Typeable, Data)
 
 -- |@/assumption/ ::=@
@@ -300,7 +304,7 @@ data Assums = UnparenthesizedAssums (NonEmpty Ident) Term                       
             deriving (Eq, Ord, Show, Read, Typeable, Data)
 
 -- |@[Local] ::=@ – not a part of the grammar /per se/, but a common fragment
-data Locality = Global                                                                         -- ^@@ – (nothing)
+data Locality = Global                                                                         -- ^@@ – (nothing – but sometimes @Global@)
               | Local                                                                          -- ^@Local@
               deriving (Eq, Ord, Show, Read, Enum, Bounded, Typeable, Data)
 
@@ -357,13 +361,13 @@ data InstanceDefinition = InstanceDefinition Ident [Binder] Term [(Ident, Term)]
                         deriving (Eq, Ord, Show, Read, Typeable, Data)
                         -- TODO: field arguments (which become @fun@ arguments)
 
--- |@/associativity/ ::=@ – extra
+-- |@/associativity/ ::=@ /(extra)/
 data Associativity = LeftAssociativity                                                         -- ^@left@
                    | RightAssociativity                                                        -- ^@right@
                    | NoAssociativity                                                           -- ^@no@
                    deriving (Eq, Ord, Show, Read, Typeable, Data)
 
--- |@/level/ ::=@ – extra
+-- |@/level/ ::=@ /(extra)/
 newtype Level = Level Num                                                                      -- ^@at level /num/@
               deriving (Eq, Ord, Show, Read, Typeable, Data)
 
@@ -376,6 +380,20 @@ data Notation = ReservedNotationIdent Ident                                     
 -- |@/notation_binding/ ::=@ /(extra)/
 data NotationBinding = NotationIdentBinding Ident Term                                         -- ^@"'/ident/'" := (/term/) .@
                      deriving (Eq, Ord, Show, Read, Typeable, Data)
+
+-- |@/arguments/ ::=@ /(extra)/
+data Arguments = Arguments (Maybe Locality) Qualid [ArgumentSpec]                              -- ^@[Local|Global]@ Arguments /qualid/ [/argument_spec/ … /argument_spec/] .@
+               deriving (Eq, Ord, Show, Read, Typeable, Data)
+
+-- |@/argument_spec/ ::=@ /(extra)/
+data ArgumentSpec = ArgumentSpec ArgumentExplicitness Name (Maybe Ident)                       -- ^@/name/ [% /ident/]@ or @[ /name/ ] [% /ident/]@ or @{ /name/ } [% /ident/]@
+                  deriving (Eq, Ord, Show, Read, Typeable, Data)
+
+-- |@/argument_explicitness/ ::=@ /(extra)/ – not a part of the grammar /per se/, but a common fragment
+data ArgumentExplicitness = ArgExplicit                                                        -- ^@( ⋯ )@ – wrap in parentheses or nothing
+                          | ArgImplicit                                                        -- ^@[ ⋯ ]@ – wrap in square brackets
+                          | ArgMaximal                                                         -- ^@{ ⋯ }@ – wrap in braces
+                          deriving (Eq, Ord, Show, Read, Enum, Bounded, Typeable, Data)
 
 -- Formatting
 ----------------------------------------------------------------------
@@ -701,6 +719,7 @@ instance Gallina Sentence where
   renderGallina' p (ClassSentence      cls)    = renderGallina' p cls
   renderGallina' p (InstanceSentence   ins)    = renderGallina' p ins
   renderGallina' p (NotationSentence   not)    = renderGallina' p not
+  renderGallina' p (ArgumentsSentence  arg)    = renderGallina' p arg
   renderGallina' p (CommentSentence    com)    = renderGallina' p com
 
 instance Gallina Assumption where
@@ -731,6 +750,11 @@ instance Gallina Locality where
 renderLocality :: Locality -> Doc
 renderLocality Global = empty
 renderLocality Local  = "Local" <> space
+
+renderFullLocality :: Maybe Locality -> Doc
+renderFullLocality Nothing       = empty
+renderFullLocality (Just Global) = "Global" <> space
+renderFullLocality (Just Local)  = "Local"  <> space
                         
 instance Gallina Definition where
   renderGallina' _ = \case
@@ -822,6 +846,19 @@ instance Gallina Notation where
 instance Gallina NotationBinding where
   renderGallina' _ (NotationIdentBinding x def) =
     dquotes (squotes $ renderIdent x) <+> nest 2 (":=" </> parens (renderGallina def))
+
+-- TODO: Collapse successive arguments with the same spec?
+instance Gallina Arguments where
+  renderGallina' _ (Arguments floc qid args) =
+    renderFullLocality floc <> "Arguments" <+> renderGallina qid <> softlineIf args <> render_args H args <> "."
+
+instance Gallina ArgumentSpec where
+  renderGallina' _ (ArgumentSpec eim arg oscope) =
+    let wrap = case eim of
+                 ArgExplicit -> id
+                 ArgImplicit -> brackets
+                 ArgMaximal  -> braces
+    in wrap (renderGallina arg) <> maybe mempty (("%" <>) . renderIdent) oscope
 
 -- Make all 'Gallina' types 'Pretty' types in the default way
 let abort = fail "Internal error: unexpected result from `reify'" in

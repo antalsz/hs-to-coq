@@ -11,6 +11,8 @@ module HsToCoq.ConvertHaskell.Declarations.TyCl (
   DeclarationGroup(..), singletonDeclarationGroup,
   -- * Converting 'DeclarationGroup's
   convertDeclarationGroup, groupTyClDecls,
+  -- * Argument specifiers
+  generateArgumentSpecifiers, generateGroupArgumentSpecifiers,
   -- * Record accessors
   generateRecordAccessors, generateGroupRecordAccessors
   ) where
@@ -181,6 +183,43 @@ convertDeclarationGroup DeclarationGroup{..} = case (nonEmpty dgInductives, nonE
 
 --------------------------------------------------------------------------------
 
+-- We only generate argument specifiers for nullary constructors, as we expect
+-- to be in the presence of
+--
+-- @
+-- Set Implicit Arguments.
+-- Unset Strict Implicit.
+-- Unset Printing Implicit Defensive.
+-- @
+--
+-- which fixes things for the other constructors.  We also elide argument
+-- specifiers if there are no parameters.
+
+generateArgumentSpecifiers :: ConversionMonad m => IndBody -> m [Arguments]
+generateArgumentSpecifiers (IndBody tyName params _resTy cons)
+  | null params = pure []
+  | otherwise   = fmap (map setImplicits) . filterM isNullary $ map (view _1) cons
+  where
+    isNullary con = use (constructorFields.at con) >>= \case
+                      Just (NonRecordFields count)     -> pure $ count == 0
+                      Just (RecordFields    conFields) -> pure $ null conFields
+                      Nothing                          ->
+                        throwProgramError $  "internal error: unknown constructor `"
+                                          <> T.unpack con <> "' for type `"
+                                          <> T.unpack tyName <> "'"
+    
+    setImplicits con = Arguments Nothing (Bare con)
+                     $ replicate paramCount (ArgumentSpec ArgMaximal UnderscoreName Nothing)
+    
+    paramCount = length params
+
+generateGroupArgumentSpecifiers :: ConversionMonad m => DeclarationGroup -> m [Sentence]
+generateGroupArgumentSpecifiers = fmap (fmap ArgumentsSentence . fold)
+                                . traverse generateArgumentSpecifiers
+                                . dgInductives
+
+--------------------------------------------------------------------------------
+
 generateRecordAccessors :: ConversionMonad m => IndBody -> m [Definition]
 generateRecordAccessors (IndBody tyName params _resTy cons) = do
   let conNames = view _1 <$> cons
@@ -222,7 +261,7 @@ generateRecordAccessors (IndBody tyName params _resTy cons) = do
 
 generateGroupRecordAccessors :: ConversionMonad m => DeclarationGroup -> m [Sentence]
 generateGroupRecordAccessors = fmap (fmap DefinitionSentence . fold)
-                             . traverse (generateRecordAccessors)
+                             . traverse generateRecordAccessors
                              . dgInductives
 
 --------------------------------------------------------------------------------
@@ -241,8 +280,9 @@ groupTyClDecls decls = do
                   in vars <> setMapMaybe (M.lookup ?? ctypes) vars
 
 convertTyClDecls :: ConversionMonad m => [TyClDecl RdrName] -> m [Sentence]
-convertTyClDecls =   forkM (either convUnsupported (pure . fold)
-                             . traverse convertDeclarationGroup)
-                           (fmap fold . traverse generateGroupRecordAccessors)
+convertTyClDecls =   forkM3 (either convUnsupported (pure . fold)
+                              . traverse convertDeclarationGroup)
+                            (fmap fold . traverse generateGroupArgumentSpecifiers)
+                            (fmap fold . traverse generateGroupRecordAccessors)
                  <=< groupTyClDecls
-  where forkM l r i = (<>) <$> l i <*> r i
+  where forkM3 l m r i = (<>) <$> ((<>) <$> l i <*> m i) <*> r i

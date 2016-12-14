@@ -27,6 +27,14 @@ Axiom ByteString : Type.
 
 Generalizable All Variables.
 
+Set Implicit Arguments.
+Unset Strict Implicit.
+Unset Printing Implicit Defensive.
+
+(********************************************************************************)
+
+(* Haskell Prelude stuff *)
+
 Class Functor (f : Type -> Type) := {
   fmap : forall {a b}, (a -> b) -> f a -> f b;
   __op_zlzd__ : forall {a b}, a -> f b -> f a

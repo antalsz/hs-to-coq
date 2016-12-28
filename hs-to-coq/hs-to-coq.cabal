@@ -91,7 +91,7 @@ library
   
   build-depends:       base                 >=4.8 && <4.9
                      , template-haskell     ==2.10.*
-                     , ghc                  ==7.10.2
+                     , ghc                  ==7.10.3
                      , ghc-paths            ==0.1.*
                      , bifunctors           ==5.*
                      , semigroups           ==0.18.*

@@ -211,6 +211,6 @@ processFilesMain process = do
         hPutStr   hOut =<< readFile file
         hPutStrLn hOut ""
         hFlush    hOut
-       
+      
       traverse_ (process hOut) =<< processFiles dflags inputFiles
       liftIO $ hFlush hOut

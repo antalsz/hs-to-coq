@@ -13,6 +13,7 @@ copyright:           Copyright © 2016 Antal Spector-Zabusky, University of Penn
 category:            Language
 build-type:          Simple
 cabal-version:       >=1.10
+extra-source-files:  src/lib/HsToCoq/ConvertHaskell/Parameters/Parsers.y
 
 source-repository head
   type:     git

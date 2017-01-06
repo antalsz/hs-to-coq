@@ -11,7 +11,7 @@ redefine Inductive BuiltInSynFamily : Type := .
 
 # TODO With real module-checking, remove the `module` keyword and put this in
 # `renamings.txt`
-rename module PrimOp value Check = CheckOp
+rename module PrimOp value Check = Mk_CheckOp
 
 # Without the `redefine`s breaking the data type cycles, we also need `Expr` and
 # `Bind` to have the binder type `b` be a parameter instead of an index;

@@ -45,7 +45,9 @@ convertConDecl curType extraArgs (ConDecl lnames _explicit lqvs lcxt details lre
   
   cons <- for lnames $ \(L _ hsCon) -> do
             con <- ghcPpr hsCon -- We use 'ghcPpr' because we munge the name here ourselves
-            renamed ExprNS con <?= "Mk_" <> con
+            use (renamed ExprNS con) >>= \case
+              Nothing   -> renamed ExprNS con <?= "Mk_" <> con
+              Just con' -> pure con'
   
   params <- convertLHsTyVarBndrs Coq.Implicit lqvs
   resTy  <- case lres of

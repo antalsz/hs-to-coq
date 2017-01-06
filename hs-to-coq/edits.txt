@@ -9,9 +9,10 @@ redefine Inductive DataConBoxer     : Type := .
 redefine Inductive CoAxiomRule      : Type := .
 redefine Inductive BuiltInSynFamily : Type := .
 
-# TODO With real module-checking, remove the `module` keyword and put this in
+# TODO With real module-checking, remove the `module` keyword and put these in
 # `renamings.txt`
-rename module PrimOp value Check = Mk_CheckOp
+rename module PrimOp         value Check = Mk_CheckOp
+rename module BooleanFormula value Var   = Mk_BFVar
 
 # Without the `redefine`s breaking the data type cycles, we also need `Expr` and
 # `Bind` to have the binder type `b` be a parameter instead of an index;

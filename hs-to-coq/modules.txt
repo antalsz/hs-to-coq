@@ -46,6 +46,7 @@ compiler/
     Coercion
     TyCoRep
     CoAxiom
+    Type
   
   typecheck/
     TcType

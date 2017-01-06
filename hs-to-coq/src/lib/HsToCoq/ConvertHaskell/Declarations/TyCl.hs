@@ -254,7 +254,7 @@ generateGroupArgumentSpecifiers = fmap (fmap ArgumentsSentence . fold)
 --------------------------------------------------------------------------------
 
 generateRecordAccessors :: ConversionMonad m => IndBody -> m [Definition]
-generateRecordAccessors (IndBody tyName params _resTy cons) = do
+generateRecordAccessors (IndBody tyName params resTy cons) = do
   let conNames = view _1 <$> cons
   
   let restrict = M.filterWithKey $ \k _ -> k `elem` conNames
@@ -285,11 +285,23 @@ generateRecordAccessors (IndBody tyName params _resTy cons) = do
     
     arg <- gensym "arg"
     
-    let implicitParams = params & mapped.binderExplicitness .~ Coq.Implicit
-        argBinder      = Typed Ungeneralizable Coq.Explicit
-                               [Ident arg] (appList (Var tyName) $ binderArgs params)
+    let indices (Forall bs t)  = toList bs ++ indices t
+        indices (Arrow  t1 t2) = Typed Ungeneralizable Coq.Explicit [UnderscoreName] t1 : indices t2
+        indices _              = []
         
-    pure . DefinitionDef Global field (implicitParams ++ [argBinder]) Nothing $
+        deunderscore UnderscoreName = Ident <$> gensym "ty"
+        deunderscore name           = pure name
+    
+    typeArgs <- for (params ++ indices resTy) $ \case
+                  Inferred ei name           -> Inferred ei <$> deunderscore name
+                  Typed    gen ex names kind -> (Typed gen ex ?? kind) <$> traverse deunderscore names
+                  binder                     -> pure binder
+        
+    let implicitArgs = typeArgs & mapped.binderExplicitness .~ Coq.Implicit
+        argBinder    = Typed Ungeneralizable Coq.Explicit
+                               [Ident arg] (appList (Var tyName) $ binderArgs typeArgs)
+    
+    pure . DefinitionDef Global field (implicitArgs ++ [argBinder]) Nothing $
       Coq.Match [MatchItem (Var arg) Nothing Nothing] Nothing equations
 
 generateGroupRecordAccessors :: ConversionMonad m => DeclarationGroup -> m [Sentence]

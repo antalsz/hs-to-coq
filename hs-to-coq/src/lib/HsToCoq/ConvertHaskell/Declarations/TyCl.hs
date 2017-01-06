@@ -24,6 +24,7 @@ import Data.Bifunctor
 import Data.Foldable
 import Data.Traversable
 import HsToCoq.Util.Function
+import Data.Maybe
 import Data.List.NonEmpty (NonEmpty(..), nonEmpty)
 import qualified Data.Text as T
 
@@ -184,8 +185,7 @@ convertDeclarationGroup DeclarationGroup{..} = case (nonEmpty dgInductives, nonE
 
 --------------------------------------------------------------------------------
 
--- We only generate argument specifiers for nullary constructors, as we expect
--- to be in the presence of
+-- We expect to be in the presence of
 --
 -- @
 -- Set Implicit Arguments.
@@ -193,26 +193,58 @@ convertDeclarationGroup DeclarationGroup{..} = case (nonEmpty dgInductives, nonE
 -- Unset Printing Implicit Defensive.
 -- @
 --
--- which fixes things for the other constructors.  We also elide argument
--- specifiers if there are no parameters.
+-- which creates implicit arguments correctly for most constructors.  The
+-- exception are constructors which don't mention some parameters in their
+-- arguments; any missing parameters are not made implicit.  Thus, for those
+-- cases, we add the argument specifiers manually.
 
+-- TODO: May be buggy with mixed parameters/indices (which can only arise via
+-- edits).
+-- TODO: GADTs.
+-- TODO: Keep the argument specifiers with the data types.
 generateArgumentSpecifiers :: ConversionMonad m => IndBody -> m [Arguments]
 generateArgumentSpecifiers (IndBody tyName params _resTy cons)
   | null params = pure []
-  | otherwise   = fmap (map setImplicits) . filterM isNullary $ map (view _1) cons
+  | otherwise   = traverse setImplicits $ filter missingParameter cons
   where
-    isNullary con = use (constructorFields.at con) >>= \case
-                      Just (NonRecordFields count)     -> pure $ count == 0
-                      Just (RecordFields    conFields) -> pure $ null conFields
-                      Nothing                          ->
-                        throwProgramError $  "internal error: unknown constructor `"
-                                          <> T.unpack con <> "' for type `"
-                                          <> T.unpack tyName <> "'"
+    missingParameter (_,args,resTy) =
+      let fvs = getFreeVars (maybeForall args . fromMaybe Underscore $ snipResult =<< resTy)
+      in not $ allOf (each.binderIdents) (`S.member` fvs) params
+      -- Given a constructor @C : a -> b -> T a b c@, 'snipResult' changes the
+      -- type to @a -> b -> _@ before checking for free variables.  Otherwise,
+      -- we'll always see the free variables because they're in the result type!
+      -- See below.
     
-    setImplicits con = Arguments Nothing (Bare con)
-                     $ replicate paramCount (ArgumentSpec ArgMaximal UnderscoreName Nothing)
+    setImplicits (con,_,_) = do
+      fieldCount <- use (constructorFields.at con) >>= \case
+        Just (NonRecordFields count)     -> pure count
+        Just (RecordFields    conFields) -> pure $ length conFields
+        Nothing                          ->
+          throwProgramError $  "internal error: unknown constructor `"
+                            <> T.unpack con <> "' for type `"
+                            <> T.unpack tyName <> "'"
+      
+      pure . Arguments Nothing (Bare con)
+               $  replicate paramCount (underscoreArg ArgMaximal)
+               ++ replicate fieldCount (underscoreArg ArgExplicit)
     
     paramCount = length params
+    
+    underscoreArg eim = ArgumentSpec eim UnderscoreName Nothing
+    
+    -- 'snipResult' drills down to the result type of the constructor and
+    -- removes it if it's a type application of the type being defined
+    snipResult (Forall bs t)  = Forall bs <$> snipResult t
+    snipResult (Arrow  t1 t2) = Arrow  t1 <$> snipResult t2
+    snipResult ty             = snipTypeApp ty
+
+    -- 'snipTypeApp' checks if the result type is correctly an application of
+    -- the type being defined; if it is, we remove it, and if it's not, we
+    -- abandon the whole thing and definitely generate an @Arguments@
+    -- specification.
+    snipTypeApp (App f _) | f == Var tyName = Just Underscore
+                          | otherwise       = snipTypeApp f
+    snipTypeApp _                           = Nothing
 
 generateGroupArgumentSpecifiers :: ConversionMonad m => DeclarationGroup -> m [Sentence]
 generateGroupArgumentSpecifiers = fmap (fmap ArgumentsSentence . fold)

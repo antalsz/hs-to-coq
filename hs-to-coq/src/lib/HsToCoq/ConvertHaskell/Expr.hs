@@ -53,6 +53,7 @@ import HsToCoq.Coq.Gallina.Util
 import HsToCoq.Coq.FreeVars
 
 import HsToCoq.ConvertHaskell.Parameters.Renamings
+import HsToCoq.ConvertHaskell.Parameters.Edits
 import HsToCoq.ConvertHaskell.Monad
 import HsToCoq.ConvertHaskell.InfixNames
 import HsToCoq.ConvertHaskell.Variables
@@ -609,7 +610,9 @@ convertTypedBinding  convHsTy FunBind{..}  = do
                 then Fix . FixOne $ FixBody name argBinders Nothing Nothing match -- TODO recursion and binary operators
                 else Fun argBinders match
   
-  pure . ConvertedDefinitionBinding $ ConvertedDefinition name tvs coqTy defn opName
+  addScope <- maybe id (flip InScope) <$> use (edits.additionalScopes.at (SPValue, name))
+  
+  pure . ConvertedDefinitionBinding $ ConvertedDefinition name tvs coqTy (addScope defn) opName
 
 --------------------------------------------------------------------------------
 

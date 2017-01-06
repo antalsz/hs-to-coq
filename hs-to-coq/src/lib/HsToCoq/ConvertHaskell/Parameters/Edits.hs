@@ -1,9 +1,10 @@
 {-# LANGUAGE LambdaCase, TemplateHaskell #-}
 
 module HsToCoq.ConvertHaskell.Parameters.Edits (
-  Edits(..), typeSynonymTypes, dataTypeArguments, redefinitions, moduleRenamings,
+  Edits(..), typeSynonymTypes, dataTypeArguments, redefinitions, moduleRenamings, additionalScopes,
   DataTypeArguments(..), dtParameters, dtIndices,
   CoqDefinition(..), definitionSentence,
+  ScopePlace(..),
   Edit(..), addEdit, buildEdits,
   addFresh
 ) where
@@ -37,18 +38,23 @@ definitionSentence (CoqDefinitionDef def) = DefinitionSentence def
 definitionSentence (CoqFixpointDef   fix) = FixpointSentence   fix
 definitionSentence (CoqInductiveDef  ind) = InductiveSentence  ind
 
+-- Add more as needed
+data ScopePlace = SPValue | SPConstructor
+                deriving (Eq, Ord, Enum, Bounded, Show, Read)
+
 data Edit = TypeSynonymTypeEdit   Ident Ident
           | DataTypeArgumentsEdit Ident DataTypeArguments
           | RedefinitionEdit      CoqDefinition
           | ModuleRenamingEdit    Ident NamespacedIdent Ident
+          | AdditionalScopeEdit   ScopePlace Ident Ident
           deriving (Eq, Ord, Show, Read)
 
 addFresh :: At m
-          => LensLike (Either e) s t m m
-          -> (Index m -> e)
-          -> Index m
-          -> IxValue m
-          -> s -> Either e t
+         => LensLike (Either e) s t m m
+         -> (Index m -> e)
+         -> Index m
+         -> IxValue m
+         -> s -> Either e t
 addFresh lens err key val = lens.at key %%~ \case
                               Just  _ -> Left  $ err key
                               Nothing -> Right $ Just val
@@ -57,16 +63,17 @@ addFresh lens err key val = lens.at key %%~ \case
 data Edits = Edits { _typeSynonymTypes  :: !(Map Ident Ident)
                    , _dataTypeArguments :: !(Map Ident DataTypeArguments)
                    , _redefinitions     :: !(Map Ident CoqDefinition)
-                   , _moduleRenamings   :: !(Map Ident Renamings) }
+                   , _moduleRenamings   :: !(Map Ident Renamings)
+                   , _additionalScopes  :: !(Map (ScopePlace, Ident) Ident) }
            deriving (Eq, Ord, Show, Read)
 makeLenses ''Edits
 
 instance Semigroup Edits where
-  Edits tst1 dta1 rdf1 mrns1 <> Edits tst2 dta2 rdf2 mrns2 =
-    Edits (tst1 <> tst2) (dta1 <> dta2) (rdf1 <> rdf2) (mrns1 <> mrns2)
+  Edits tst1 dta1 rdf1 mrns1 ads1 <> Edits tst2 dta2 rdf2 mrns2 ads2 =
+    Edits (tst1 <> tst2) (dta1 <> dta2) (rdf1 <> rdf2) (mrns1 <> mrns2) (ads1 <> ads2)
 
 instance Monoid Edits where
-  mempty  = Edits mempty mempty mempty mempty
+  mempty  = Edits mempty mempty mempty mempty mempty
   mappend = (<>)
 
 -- Module-local'
@@ -79,10 +86,11 @@ duplicate_for what = duplicate_for' what T.unpack
 
 addEdit :: Edit -> Edits -> Either String Edits
 addEdit = \case -- To bring the `where' clause into scope everywhere
-  TypeSynonymTypeEdit   syn res    -> addFresh typeSynonymTypes                    (duplicate_for  "type synonym result types")                   syn        res
-  DataTypeArgumentsEdit ty  args   -> addFresh dataTypeArguments                   (duplicate_for  "data type argument specifications")           ty         args
-  RedefinitionEdit      def        -> addFresh redefinitions                       (duplicate_for  "redefinition")                                (name def) def
-  ModuleRenamingEdit    mod hs coq -> addFresh (moduleRenamings.at mod.non mempty) (duplicate_for' ("renaming in module " ++. mod) prettyNSIdent) hs         coq
+  TypeSynonymTypeEdit   syn        res    -> addFresh typeSynonymTypes                    (duplicate_for  "type synonym result types")                   syn          res
+  DataTypeArgumentsEdit ty         args   -> addFresh dataTypeArguments                   (duplicate_for  "data type argument specifications")           ty           args
+  RedefinitionEdit      def               -> addFresh redefinitions                       (duplicate_for  "redefinition")                                (name def)   def
+  ModuleRenamingEdit    mod        hs coq -> addFresh (moduleRenamings.at mod.non mempty) (duplicate_for' ("renaming in module " ++. mod) prettyNSIdent) hs           coq
+  AdditionalScopeEdit   place name scope  -> addFresh additionalScopes                    (duplicate_for' "addition of a scope"           prettyScoped)  (place,name) scope
   where
     name (CoqDefinitionDef (DefinitionDef _ x _ _ _))                = x
     name (CoqDefinitionDef (LetDef          x _ _ _))                = x
@@ -90,6 +98,11 @@ addEdit = \case -- To bring the `where' clause into scope everywhere
     name (CoqFixpointDef   (CoFixpoint  (CofixBody x _ _ _   :| _) _)) = x
     name (CoqInductiveDef  (Inductive   (IndBody   x _ _ _   :| _) _)) = x
     name (CoqInductiveDef  (CoInductive (IndBody   x _ _ _   :| _) _)) = x
+    
+    prettyScoped (place, name) = let pplace = case place of
+                                       SPValue       -> "value"
+                                       SPConstructor -> "constructor"
+                                 in pplace ++ ' ' : T.unpack name
     
     s ++. t = s ++ T.unpack t
     infixl 5 ++.

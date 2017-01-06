@@ -14,6 +14,8 @@ redefine Inductive BuiltInSynFamily : Type := .
 rename module PrimOp         value Check = Mk_CheckOp
 rename module BooleanFormula value Var   = Mk_BFVar
 
+add scope type for constructor Mk_TyCoMapper
+
 # Without the `redefine`s breaking the data type cycles, we also need `Expr` and
 # `Bind` to have the binder type `b` be a parameter instead of an index;
 # however, with the cycles broken as they currently are, `Expr` and `Bind` form

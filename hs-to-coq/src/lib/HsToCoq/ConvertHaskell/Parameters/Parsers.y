@@ -44,6 +44,9 @@ import HsToCoq.ConvertHaskell.Parameters.Parsers.Lexing
   redefine      { TokWord    "redefine"    }
   rename        { TokWord    "rename"      }
   module        { TokWord    "module"      }
+  add           { TokWord    "add"         }
+  scope         { TokWord    "scope"       }
+  constructor   { TokWord    "constructor" }
   fun           { TokWord    "fun"         }
   fix           { TokWord    "fix"         }
   cofix         { TokWord    "cofix"       }
@@ -189,11 +192,20 @@ CoqDefinition :: { CoqDefinition }
   | Definition   { CoqDefinitionDef  $1 }
   | Fixpoint     { CoqFixpointDef    $1 }
 
+ScopePlace :: { ScopePlace }
+  : constructor    { SPConstructor }
+  | value          { SPValue       }
+
+Scope :: { Ident }
+  : Word    { $1     }
+  | type    { "type" } -- This is so common, we have to special-case it
+
 Edit :: { Edit }
   : type synonym Word ':->' Word                  { TypeSynonymTypeEdit   $3 $5                }
   | data type arguments Word DataTypeArguments    { DataTypeArgumentsEdit $4 $5                }
   | redefine CoqDefinition Optional('.')          { RedefinitionEdit      $2                   }
   | rename module RawHsIdent Renaming             { ModuleRenamingEdit    $3 (fst $4) (snd $4) }
+  | add scope Scope for ScopePlace Word           { AdditionalScopeEdit   $5 $6 $3             }
 
 Edits :: { [Edit] }
   : Lines(Edit)    { $1 }

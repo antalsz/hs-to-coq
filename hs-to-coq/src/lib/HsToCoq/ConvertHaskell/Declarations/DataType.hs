@@ -5,7 +5,7 @@
 module HsToCoq.ConvertHaskell.Declarations.DataType (
   convertDataDecl, convertDataDefn,
   Constructor, convertConDecl,
-  rewriteDataTypeArguments
+  addAdditionalConstructorScope, rewriteDataTypeArguments
   ) where
 
 import Control.Lens
@@ -38,6 +38,16 @@ type Constructor = (Ident, [Binder], Maybe Term)
 
 --------------------------------------------------------------------------------
 
+addAdditionalConstructorScope :: ConversionMonad m => Constructor -> m Constructor
+addAdditionalConstructorScope ctor@(_, _, Nothing) =
+  pure ctor
+addAdditionalConstructorScope ctor@(name, bs, Just resTy) =
+  use (edits.additionalScopes.at (SPConstructor,name)) <&> \case
+    Just scope -> (name, bs, Just $ resTy `InScope` scope)
+    Nothing    -> ctor
+
+--------------------------------------------------------------------------------
+
 convertConDecl :: ConversionMonad m
                => Term -> [Binder] -> ConDecl RdrName -> m [Constructor]
 convertConDecl curType extraArgs (ConDecl lnames _explicit lqvs lcxt details lres _doc _old) = do
@@ -63,7 +73,8 @@ convertConDecl curType extraArgs (ConDecl lnames _explicit lqvs lcxt details lre
       pure . NonRecordFields $ length args
   for_ cons $ \con -> constructorFields . at con ?= fieldInfo
   
-  pure $ map (, params, Just . maybeForall extraArgs $ foldr Arrow resTy args) cons
+  traverse addAdditionalConstructorScope $
+    map (, params, Just . maybeForall extraArgs $ foldr Arrow resTy args) cons
 
 --------------------------------------------------------------------------------
 

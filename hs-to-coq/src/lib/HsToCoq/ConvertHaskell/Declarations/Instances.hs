@@ -1,15 +1,16 @@
-{-# LANGUAGE LambdaCase, RecordWildCards,
+{-# LANGUAGE TupleSections, LambdaCase, RecordWildCards,
              OverloadedStrings,
              FlexibleContexts #-}
 
 module HsToCoq.ConvertHaskell.Declarations.Instances (
-  convertClsInstDecl, convertClsInstDecls,
+  convertClsInstDecl, convertClsInstDecls, convertModuleClsInstDecls,
   convertInstanceName
   ) where
 
 import Control.Lens
 
 import Data.Semigroup (Semigroup(..))
+import HsToCoq.Util.Function
 import Data.Maybe
 import Data.List.NonEmpty (nonEmpty)
 import Data.Char
@@ -91,12 +92,16 @@ convertClsInstDecl cid@ClsInstDecl{..} rebuild mhandler = do
 
 --------------------------------------------------------------------------------
 
-convertClsInstDecls :: ConversionMonad m => [ClsInstDecl RdrName] -> m [Sentence]
-convertClsInstDecls = (fmap concat .) . traverse $ \cid ->
-                         convertClsInstDecl cid
-                                            (pure . pure . InstanceSentence)
-                                            (Just axiomatizeInstance)
+convertModuleClsInstDecls :: ConversionMonad m
+                          => [(Maybe ModuleName, ClsInstDecl RdrName)] -> m [Sentence]
+convertModuleClsInstDecls = (fmap concat .) . traverse $ maybeWithCurrentModule .*^ \cid ->
+                               convertClsInstDecl cid
+                                                  (pure . pure . InstanceSentence)
+                                                  (Just axiomatizeInstance)
   where axiomatizeInstance InstanceInfo{..} exn = pure
           [ translationFailedComment ("instance " <> renderOneLineT (renderGallina instanceHead)) exn
           , InstanceSentence $ InstanceDefinition
               instanceName [] instanceHead [] (Just $ ProofAdmitted "") ]
+
+convertClsInstDecls :: ConversionMonad m => [ClsInstDecl RdrName] -> m [Sentence]
+convertClsInstDecls = convertModuleClsInstDecls . map (Nothing,)

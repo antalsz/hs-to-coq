@@ -1,14 +1,17 @@
 {-# LANGUAGE TupleSections, LambdaCase, FlexibleContexts #-}
 
 module HsToCoq.ConvertHaskell.Sigs (
-  Signature(..), convertSigs, convertLSigs,
+  Signature(..), convertSigs, convertLSigs, convertModuleSigs, convertModuleLSigs,
   HsSignature(..), collectSigs, convertSignatures, convertSignature,
   convertFixity
   ) where
 
 import Prelude hiding (Num)
 
+import Control.Lens hiding (Level)
+
 import Data.Semigroup (Semigroup(..))
+import Data.Bifunctor
 import Data.Bitraversable
 import Data.Traversable
 
@@ -17,6 +20,8 @@ import HsToCoq.Util.Monad.ListT
 
 import           Data.Map.Strict (Map)
 import qualified Data.Map.Strict as M
+
+import qualified Data.Set as S
 
 import GHC hiding (Name)
 import BasicTypes
@@ -82,47 +87,57 @@ convertFixity (Fixity hsLevel dir) = (assoc, coqLevel) where
 
 --------------------------------------------------------------------------------
 
-data HsSignature = HsSignature { hsSigType   :: HsType RdrName
+data HsSignature = HsSignature { hsSigModule :: Maybe ModuleName
+                               , hsSigType   :: HsType RdrName
                                , hsSigFixity :: Maybe Fixity }
 
 data Signature = Signature { sigType   :: Term
                            , sigFixity :: Maybe (Associativity, Level) }
                deriving (Eq, Ord, Show, Read)
 
-collectSigs :: [Sig RdrName] -> Either String (Map RdrName HsSignature)
-collectSigs sigs = do
-  let asType   = (,[]) . pure
-      asFixity = ([],) . pure
-             
-  multimap <- fmap (M.fromListWith (<>)) . runListT $ list sigs >>= \case
-                TypeSig lnames (L _ ty) PlaceHolder -> list $ map ((, asType ty) . unLoc) lnames
-                FixSig  (FixitySig lnames fixity)   -> list . map (, asFixity fixity) . filter isRdrOperator $ map unLoc lnames
-                
-                InlineSig   _ _   -> mempty
-                SpecSig     _ _ _ -> mempty
-                SpecInstSig _ _   -> mempty
-                MinimalSig  _ _   -> mempty
-                
-                GenericSig _ _       -> throwError "typeclass-based default method signatures"
-                PatSynSig  _ _ _ _ _ -> throwError "pattern synonym signatures"
-                IdSig      _         -> throwError "generated-code signatures"
+collectSigs :: [(Maybe ModuleName, Sig RdrName)] -> Either String (Map RdrName HsSignature)
+collectSigs modSigs = do
+  let asType   mname = (S.singleton mname, , []) . pure
+      asFixity mname = (S.singleton mname, [], ) . pure
   
-  for multimap $ \case
-    ([ty], [fixity])  -> pure $ HsSignature ty (Just fixity)
-    ([ty], [])        -> pure $ HsSignature ty Nothing
-    ([],   [_fixity]) -> throwError $ "a fixity annotation without a type signature"
-    ([],   _)         -> throwError "multiple fixity annotations without a type signature"
-    (_,    [])        -> throwError "multiple type signatures for the same identifier"
-    (_,    _)         -> throwError "multiple type and fixity signatures for the same identifier"
+  multimap <-  fmap (M.fromListWith (<>)) . runListT $ list modSigs >>= \case
+                 (mname, TypeSig lnames (L _ ty) PlaceHolder) -> list $ map ((, asType mname ty) . unLoc) lnames
+                 (mname, FixSig  (FixitySig lnames fixity))   -> list . map (, asFixity mname fixity) . filter isRdrOperator $ map unLoc lnames
+                  
+                 (_, InlineSig   _ _)   -> mempty
+                 (_, SpecSig     _ _ _) -> mempty
+                 (_, SpecInstSig _ _)   -> mempty
+                 (_, MinimalSig  _ _)   -> mempty
+                 
+                 (_, GenericSig _ _)       -> throwError "typeclass-based default method signatures"
+                 (_, PatSynSig  _ _ _ _ _) -> throwError "pattern synonym signatures"
+                 (_, IdSig      _)         -> throwError "generated-code signatures"
+  
+  for (multimap & each._1 %~ S.toList) $ \case
+    ([mname], [ty],  [fixity])  -> pure $ HsSignature mname ty (Just fixity)
+    ([mname], [ty],  [])        -> pure $ HsSignature mname ty Nothing
+    (_,       [_ty], [_fixity]) -> throwError "type and fixity signatures split across modules"
+    (_,       [_ty], [])        -> throwError "duplicate type signatures across modules"
+    (_,       [],    [_fixity]) -> throwError "a fixity annotation without a type signature"
+    (_,       [],    _)         -> throwError "multiple fixity annotations without a type signature"
+    (_,       _,     [])        -> throwError "multiple type signatures for the same identifier"
+    (_,       _,     _)         -> throwError "multiple type and fixity signatures for the same identifier"
 
 convertSignature :: ConversionMonad m => HsSignature -> m Signature
-convertSignature (HsSignature hsTy hsFix) = Signature <$> convertType hsTy <*> pure (convertFixity <$> hsFix)
+convertSignature (HsSignature hsMod hsTy hsFix) = maybeWithCurrentModule hsMod
+                                                $ Signature <$> convertType hsTy <*> pure (convertFixity <$> hsFix)
 
 convertSignatures :: ConversionMonad m => Map RdrName HsSignature -> m (Map Ident Signature)
 convertSignatures = fmap M.fromList . traverse (bitraverse (var ExprNS) convertSignature) . M.toList
 
+convertModuleSigs :: ConversionMonad m => [(Maybe ModuleName, Sig RdrName)] -> m (Map Ident Signature)
+convertModuleSigs = either convUnsupported convertSignatures . collectSigs
+
+convertModuleLSigs :: ConversionMonad m => [(Maybe ModuleName, LSig RdrName)] -> m (Map Ident Signature)
+convertModuleLSigs = convertModuleSigs . map (second unLoc)
+
 convertSigs :: ConversionMonad m => [Sig RdrName] -> m (Map Ident Signature)
-convertSigs = either convUnsupported convertSignatures . collectSigs
+convertSigs = convertModuleSigs . map (Nothing,)
 
 convertLSigs :: ConversionMonad m => [LSig RdrName] -> m (Map Ident Signature)
-convertLSigs = convertSigs . map unLoc
+convertLSigs = convertModuleLSigs . map (Nothing,)

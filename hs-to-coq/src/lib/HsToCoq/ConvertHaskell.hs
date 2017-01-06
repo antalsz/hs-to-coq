@@ -16,4 +16,5 @@ import HsToCoq.ConvertHaskell.Declarations.Class       as ConvertHaskell
 import HsToCoq.ConvertHaskell.Declarations.Instances   as ConvertHaskell
 import HsToCoq.ConvertHaskell.Declarations.TyCl        as ConvertHaskell
 import HsToCoq.ConvertHaskell.Declarations.Value       as ConvertHaskell
+import HsToCoq.ConvertHaskell.Module                   as ConvertHaskell
 import HsToCoq.ConvertHaskell.Axiomatize               as ConvertHaskell

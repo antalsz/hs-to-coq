@@ -1,9 +1,9 @@
-{-# LANGUAGE RecordWildCards, LambdaCase,
+{-# LANGUAGE TupleSections, LambdaCase, RecordWildCards,
              OverloadedLists, OverloadedStrings,
              FlexibleContexts #-}
 
 module HsToCoq.ConvertHaskell.Declarations.TyCl (
-  convertTyClDecls,
+  convertTyClDecls, convertModuleTyClDecls,
   -- * Convert single declarations
   ConvertedDeclaration(..), convDeclName,
   convertTyClDecl,
@@ -23,6 +23,7 @@ import Data.Semigroup (Semigroup(..))
 import Data.Bifunctor
 import Data.Foldable
 import Data.Traversable
+import HsToCoq.Util.Function
 import Data.List.NonEmpty (NonEmpty(..), nonEmpty)
 import qualified Data.Text as T
 
@@ -266,9 +267,10 @@ generateGroupRecordAccessors = fmap (fmap DefinitionSentence . fold)
 
 --------------------------------------------------------------------------------
 
-groupTyClDecls :: ConversionMonad m => [TyClDecl RdrName] -> m [DeclarationGroup]
+groupTyClDecls :: ConversionMonad m
+               => [(Maybe ModuleName, TyClDecl RdrName)] -> m [DeclarationGroup]
 groupTyClDecls decls = do
-  bodies <- traverse convertTyClDecl decls <&>
+  bodies <- traverse (maybeWithCurrentModule .*^ convertTyClDecl) decls <&>
               M.fromList . map (convDeclName &&& id)
   
   -- Might be overgenerous
@@ -279,10 +281,14 @@ groupTyClDecls decls = do
        $ \decl -> let vars = getFreeVars decl
                   in vars <> setMapMaybe (M.lookup ?? ctypes) vars
 
-convertTyClDecls :: ConversionMonad m => [TyClDecl RdrName] -> m [Sentence]
-convertTyClDecls =   forkM3 (either convUnsupported (pure . fold)
-                              . traverse convertDeclarationGroup)
-                            (fmap fold . traverse generateGroupArgumentSpecifiers)
-                            (fmap fold . traverse generateGroupRecordAccessors)
-                 <=< groupTyClDecls
+convertModuleTyClDecls :: ConversionMonad m
+                       => [(Maybe ModuleName, TyClDecl RdrName)] -> m [Sentence]
+convertModuleTyClDecls =   forkM3 (either convUnsupported (pure . fold)
+                                    . traverse convertDeclarationGroup)
+                                  (fmap fold . traverse generateGroupArgumentSpecifiers)
+                                  (fmap fold . traverse generateGroupRecordAccessors)
+                       <=< groupTyClDecls
   where forkM3 l m r i = (<>) <$> ((<>) <$> l i <*> m i) <*> r i
+
+convertTyClDecls :: ConversionMonad m => [TyClDecl RdrName] -> m [Sentence]
+convertTyClDecls = convertModuleTyClDecls . map (Nothing,)

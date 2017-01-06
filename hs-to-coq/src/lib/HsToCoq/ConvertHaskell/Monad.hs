@@ -8,10 +8,13 @@ module HsToCoq.ConvertHaskell.Monad (
   ConversionMonad, ConversionT, evalConversion,
   -- * Types
   ConversionState(),
-  renamings, edits, constructors, constructorTypes, constructorFields, recordFieldTypes, defaultMethods, renamed,
+  currentModule, renamings, edits, constructors, constructorTypes, constructorFields, recordFieldTypes, defaultMethods, renamed,
   ConstructorFields(..), _NonRecordFields, _RecordFields,
   -- * Operations
-  fresh, gensym, rename, localizeConversionState,
+  maybeWithCurrentModule, withCurrentModule, withNoCurrentModule, withCurrentModuleOrNone,
+  fresh, gensym,
+  rename,
+  localizeConversionState,
   -- * Errors
   throwProgramError, convUnsupported, editFailure
   ) where
@@ -31,6 +34,7 @@ import qualified Data.Map.Strict as M
 
 import GHC
 import Panic
+import HsToCoq.Util.GHC.Module ()
 
 import HsToCoq.Coq.Gallina as Coq
 import HsToCoq.Coq.Gallina.Util
@@ -46,7 +50,8 @@ data ConstructorFields = NonRecordFields !Int
                        deriving (Eq, Ord, Show, Read)
 makePrisms ''ConstructorFields
 
-data ConversionState = ConversionState { _renamings         :: !Renamings
+data ConversionState = ConversionState { __currentModule    :: !(Maybe ModuleName)
+                                       , _renamings         :: !Renamings
                                        , _edits             :: !Edits
                                        , _constructors      :: !(Map Ident [Ident])
                                        , _constructorTypes  :: !(Map Ident Ident)
@@ -56,7 +61,11 @@ data ConversionState = ConversionState { _renamings         :: !Renamings
                                        , __unique           :: !Natural }
                deriving (Eq, Ord, Show)
 makeLenses ''ConversionState
--- '_unique' is not exported
+-- '_currentModule' and '_unique' are not exported
+
+currentModule :: Getter ConversionState (Maybe ModuleName)
+currentModule = _currentModule
+{-# INLINABLE currentModule #-}
 
 renamed :: HsNamespace -> Ident -> Lens' ConversionState (Maybe Ident)
 renamed ns x = renamings.at (NamespacedIdent ns x)
@@ -67,6 +76,8 @@ type ConversionT m = StateT ConversionState (VariablesT Ident () m)
 
 evalConversion :: GhcMonad m => Renamings -> Edits -> ConversionT m a -> m a
 evalConversion _renamings _edits = evalVariablesT . (evalStateT ?? ConversionState{..}) where
+  __currentModule = Nothing
+  
   -- TODO Add base types?
   _constructors      = M.empty
   _constructorTypes  = M.empty
@@ -82,6 +93,20 @@ evalConversion _renamings _edits = evalVariablesT . (evalStateT ?? ConversionSta
   
   __unique = 0
 
+withCurrentModuleOrNone :: ConversionMonad m => Maybe ModuleName -> m a -> m a
+withCurrentModuleOrNone newModule = gbracket (_currentModule <.= newModule)
+                                             (_currentModule  .=)
+                                  . const
+
+withNoCurrentModule :: ConversionMonad m => m a -> m a
+withNoCurrentModule = withCurrentModuleOrNone Nothing
+
+withCurrentModule :: ConversionMonad m => ModuleName -> m a -> m a
+withCurrentModule = withCurrentModuleOrNone . Just
+
+maybeWithCurrentModule :: ConversionMonad m => Maybe ModuleName -> m a -> m a
+maybeWithCurrentModule = maybe id withCurrentModule
+
 fresh :: ConversionMonad m => m Natural
 fresh = _unique <<+= 1
 
@@ -95,15 +120,10 @@ rename ns x x' = renamed ns x ?= x'
 {-# INLINABLE rename #-}
 
 localizeConversionState :: ConversionMonad m => m a -> m a
-localizeConversionState action = do
-  ci <- get
-  
-  r <- action
-  
-  u <- use _unique
-  put (ci & _unique .~ u)
-      
-  pure r
+localizeConversionState = gbracket get
+                                   (\cs -> do u <- use _unique
+                                              put $ cs & _unique .~ u)
+                        . const
 
 throwProgramError :: MonadIO m => String -> m a
 throwProgramError = liftIO . throwGhcExceptionIO . ProgramError

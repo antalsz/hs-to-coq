@@ -1,4 +1,4 @@
-{-# LANGUAGE LambdaCase, RecordWildCards,
+{-# LANGUAGE TupleSections, LambdaCase, RecordWildCards,
              OverloadedLists, OverloadedStrings,
              FlexibleContexts #-}
 
@@ -8,7 +8,7 @@ module HsToCoq.ConvertHaskell.Expr (
   -- * Bindings
   convertLocalBinds,
   -- ** Generic
-  convertTypedBindings, convertTypedBinding,
+  convertTypedBindings, convertTypedModuleBindings, convertTypedBinding,
   -- * Functions, matches, and guards
   -- ** Functions
   convertFunction,
@@ -614,20 +614,27 @@ convertTypedBinding  convHsTy FunBind{..}  = do
 --------------------------------------------------------------------------------
 
 -- TODO mutual recursion :-(
-convertTypedBindings :: ConversionMonad m
-                     => [HsBind RdrName] -> Map Ident Signature
-                     -> (ConvertedBinding -> m a)
-                     -> Maybe (HsBind RdrName -> GhcException -> m a)
-                     -> m [a]
-convertTypedBindings defns sigs build mhandler =
+convertTypedModuleBindings :: ConversionMonad m
+                           => [(Maybe ModuleName, HsBind RdrName)] -> Map Ident Signature
+                           -> (ConvertedBinding -> m a)
+                           -> Maybe (HsBind RdrName -> GhcException -> m a)
+                           -> m [a]
+convertTypedModuleBindings defns sigs build mhandler =
   let processed defn = maybe id (ghandle . ($ defn)) mhandler . (build =<<)
-  in for defns $ \defn -> do
+  in for defns $ \(mname, defn) -> maybeWithCurrentModule mname $ do
        ty <- case defn of
                FunBind{fun_id = L _ hsName} ->
                  fmap sigType . (`M.lookup` sigs) <$> var ExprNS hsName
                _ ->
                  pure Nothing
        processed defn $ convertTypedBinding ty defn
+
+convertTypedBindings :: ConversionMonad m
+                     => [HsBind RdrName] -> Map Ident Signature
+                     -> (ConvertedBinding -> m a)
+                     -> Maybe (HsBind RdrName -> GhcException -> m a)
+                     -> m [a]
+convertTypedBindings = convertTypedModuleBindings . map (Nothing,)
 
 --------------------------------------------------------------------------------
 

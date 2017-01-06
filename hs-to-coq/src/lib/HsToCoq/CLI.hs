@@ -4,12 +4,17 @@
              TemplateHaskell #-}
 
 module HsToCoq.CLI (
+  -- * General main-action creator
   processFilesMain,
-  convertDecls,
+  -- * Specific application processors
+  printConvertedModules,
+  convertAndPrintModules,
+  -- * CLI configuration, parameters, etc.
   Config(..), outputFile, preambleFile, renamingsFile, editsFile, modulesFiles, modulesRoot, directInputFiles,
   processArgs,
   ProgramArgs(..),
   argParser, argParserInfo,
+  -- * Utility functions
   prettyPrint, hPrettyPrint
   ) where
 
@@ -23,8 +28,6 @@ import Control.Monad
 import Control.Monad.IO.Class
 import Control.Monad.Except
 
-import Data.Data
-
 import System.FilePath
 import qualified Data.Text.IO as T
 import System.IO
@@ -37,9 +40,7 @@ import HsToCoq.Util.GHC.Exception
 import Control.Monad.Trans.Parse
 import HsToCoq.ConvertHaskell.Parameters.Parsers
 
-import HsToCoq.Util.Functor
 import HsToCoq.Util.Monad
-import HsToCoq.Util.Generics
 import HsToCoq.Util.Messages
 import HsToCoq.PrettyPrint hiding ((</>))
 import HsToCoq.Coq.Gallina
@@ -152,30 +153,6 @@ processArgs = do
                        , _modulesRoot      = modulesRootArg
                        , _directInputFiles = directInputFilesArgs })
 
-convertDecls :: (Data a, ConversionMonad m) => Handle -> a -> m ()
-convertDecls out lmod = do
-  let flush    = liftIO $ hFlush out
-      printGap = liftIO $ hPutStrLn out ""
-      
-      doConversion what convert =
-        convert (everythingOfType_ lmod) >>= liftIO .<$ \case
-          [] -> hPutStrLn out $ "(* No " ++ what ++ " to convert. *)"
-          ds -> do hPutStrLn out $ "(* Converted " ++ what ++ ": *)"
-                   traverse_ (hPrettyPrint out) . intersperse line $
-                     map ((<> line) . renderGallina) ds
-  
-  types <- doConversion "data type declarations"           convertTyClDecls    <* printGap <* flush
-  funcs <- doConversion "function declarations"            convertValDecls     <* printGap <* flush
-  insts <- doConversion "type class instance declarations" convertClsInstDecls <*             flush
-  
-  case toList . getFreeVars . NoBinding $ types ++ funcs ++ insts of
-    []  -> pure ()
-    fvs -> do hPrettyPrint out $
-                line <> "(*" <+> hang 2
-                  ("Unbound variables:" <!> fillSep (map text fvs))
-                <!> "*)" <> line
-              flush
-
 parseModulesFiles :: (MonadIO m, MonadError String m)
                   => FilePath -> [FilePath] -> m [FilePath]
 parseModulesFiles root files =
@@ -214,3 +191,29 @@ processFilesMain process = do
       
       traverse_ (process hOut) =<< processFiles dflags inputFiles
       liftIO $ hFlush hOut
+
+printConvertedModules :: MonadIO m => Handle -> ConvertedModules -> m ()
+printConvertedModules out ConvertedModules{..} = liftIO $ do
+  let flush    = hFlush out
+      printGap = hPutStrLn out ""
+      
+      printThe what [] = hPutStrLn out $ "(* No " ++ what ++ " to convert. *)"
+      printThe what ds = do hPutStrLn out $ "(* Converted " ++ what ++ ": *)"
+                            traverse_ (hPrettyPrint out) . intersperse line $
+                              map ((<> line) . renderGallina) ds
+  
+  printThe "data type declarations"           convertedTyClDecls    <* printGap <* flush
+  printThe "value declarations"               convertedValDecls     <* printGap <* flush
+  printThe "type class instance declarations" convertedClsInstDecls <*             flush
+  
+  case toList . getFreeVars . NoBinding $
+         (convertedTyClDecls ++ convertedValDecls ++ convertedClsInstDecls) of
+    []  -> pure ()
+    fvs -> do hPrettyPrint out $
+                line <> "(*" <+> hang 2
+                  ("Unbound variables:" <!> fillSep (map text fvs))
+                <!> "*)" <> line
+              flush
+
+convertAndPrintModules :: ConversionMonad m => Handle -> [Located (HsModule RdrName)] -> m ()
+convertAndPrintModules h = printConvertedModules h <=< convertLModules

@@ -1,6 +1,6 @@
 {-# LANGUAGE RecordWildCards, TupleSections, LambdaCase, FlexibleContexts #-}
 
-module HsToCoq.ConvertHaskell.Declarations.Value (convertValDecls) where
+module HsToCoq.ConvertHaskell.Declarations.Value (convertValDecls, convertModuleValDecls) where
 
 import Control.Lens
 
@@ -29,14 +29,16 @@ import HsToCoq.ConvertHaskell.Axiomatize
 
 --------------------------------------------------------------------------------
 
-convertValDecls :: ConversionMonad m => [HsDecl RdrName] -> m [Sentence]
-convertValDecls args = do
-  (defns, sigs) <- bitraverse pure convertSigs . partitionEithers . flip mapMaybe args $ \case
-                     ValD def -> Just $ Left def
-                     SigD sig -> Just $ Right sig
-                     _        -> Nothing
+convertModuleValDecls :: ConversionMonad m => [(Maybe ModuleName, HsDecl RdrName)] -> m [Sentence]
+convertModuleValDecls mdecls = do
+  (defns, sigs) <- bitraverse pure convertModuleSigs
+                .  partitionEithers
+                .  flip mapMaybe mdecls $ \case
+                     (mname, ValD def) -> Just $ Left  (mname, def)
+                     (mname, SigD sig) -> Just $ Right (mname, sig)
+                     _                 -> Nothing
   
-  bindings <- (fmap M.fromList . (convertTypedBindings defns sigs ?? Just axiomatizeBinding))
+  bindings <- (fmap M.fromList . (convertTypedModuleBindings defns sigs ?? Just axiomatizeBinding))
            $  withConvertedBinding
                 (\cdef@ConvertedDefinition{convDefName = name} ->
                    use (edits.redefinitions.at name) >>= ((name,) <$>) . \case
@@ -63,3 +65,5 @@ convertValDecls args = do
         axiomatizeBinding _ exn =
           liftIO $ throwGhcExceptionIO exn
 
+convertValDecls :: ConversionMonad m => [HsDecl RdrName] -> m [Sentence]
+convertValDecls = convertModuleValDecls . map (Nothing,)

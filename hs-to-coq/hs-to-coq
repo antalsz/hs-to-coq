@@ -1,1 +1,0 @@
-exec $(stack path --local-install-root)/bin/hs-to-coq "$@"

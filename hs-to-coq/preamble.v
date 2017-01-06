@@ -25,6 +25,11 @@ Axiom DynFlags : Type.
 (* Temporary – this probably needs to map directly to a Coq type *)
 Axiom ByteString : Type.
 
+(* Temporary – I need to handle strings better *)
+Require Coq.Strings.String.
+Open Scope string_scope.
+Axiom error : forall {A : Type}, String.string -> A.
+
 Generalizable All Variables.
 
 Set Implicit Arguments.

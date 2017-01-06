@@ -42,6 +42,8 @@ import HsToCoq.ConvertHaskell.Parameters.Parsers.Lexing
   parameters    { TokWord    "parameters"  }
   indices       { TokWord    "indices"     }
   redefine      { TokWord    "redefine"    }
+  rename        { TokWord    "rename"      }
+  module        { TokWord    "module"      }
   fun           { TokWord    "fun"         }
   fix           { TokWord    "fix"         }
   cofix         { TokWord    "cofix"       }
@@ -188,9 +190,10 @@ CoqDefinition :: { CoqDefinition }
   | Fixpoint     { CoqFixpointDef    $1 }
 
 Edit :: { Edit }
-  : type synonym Word ':->' Word                  { TypeSynonymTypeEdit   $3 $5 }
-  | data type arguments Word DataTypeArguments    { DataTypeArgumentsEdit $4 $5 }
-  | redefine CoqDefinition Optional('.')          { RedefinitionEdit      $2    }
+  : type synonym Word ':->' Word                  { TypeSynonymTypeEdit   $3 $5                }
+  | data type arguments Word DataTypeArguments    { DataTypeArgumentsEdit $4 $5                }
+  | redefine CoqDefinition Optional('.')          { RedefinitionEdit      $2                   }
+  | rename module RawHsIdent Renaming             { ModuleRenamingEdit    $3 (fst $4) (snd $4) }
 
 Edits :: { [Edit] }
   : Lines(Edit)    { $1 }

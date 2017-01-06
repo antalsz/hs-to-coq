@@ -2,7 +2,8 @@
 
 module HsToCoq.ConvertHaskell.Parameters.Renamings (
   Renamings ,HsNamespace(..), NamespacedIdent(..),
-  buildRenamings
+  buildRenamings,
+  prettyNSIdent,
 ) where
 
 import Data.Foldable
@@ -32,8 +33,9 @@ buildRenamings rns =
          $ fmap AccSuccess <$> toList rns
   of
     AccSuccess rs   -> Right rs
-    AccFailure dups -> Left $ "Duplicate renamings for " ++ intercalate ", " (map pretty dups)
-  where
-    pretty NamespacedIdent{..} = prettyNS niNS ++ " " ++ T.unpack niId
-    prettyNS ExprNS = "value"
-    prettyNS TypeNS = "type"
+    AccFailure dups -> Left $ "Duplicate renamings for " ++ intercalate ", " (map prettyNSIdent dups)
+
+prettyNSIdent :: NamespacedIdent -> String
+prettyNSIdent NamespacedIdent{..} = prettyNS niNS ++ " " ++ T.unpack niId where
+  prettyNS ExprNS = "value"
+  prettyNS TypeNS = "type"

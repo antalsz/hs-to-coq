@@ -22,6 +22,7 @@ module HsToCoq.ConvertHaskell.Monad (
 import Control.Lens
 
 import Data.Semigroup (Semigroup(..))
+import Data.Foldable
 import Data.Text (Text)
 import qualified Data.Text as T
 import Numeric.Natural
@@ -94,9 +95,26 @@ evalConversion _renamings _edits = evalVariablesT . (evalStateT ?? ConversionSta
   __unique = 0
 
 withCurrentModuleOrNone :: ConversionMonad m => Maybe ModuleName -> m a -> m a
-withCurrentModuleOrNone newModule = gbracket (_currentModule <.= newModule)
-                                             (_currentModule  .=)
-                                  . const
+withCurrentModuleOrNone newModule = gbracket setModuleAndRenamings restoreModuleAndRenamings . const where
+  setModuleAndRenamings = do
+    oldModule <- _currentModule <<.= newModule
+    newRenamings <- use $ edits.moduleRenamings
+                        . maybe (like Nothing)
+                                (at . T.pack . moduleNameString)
+                                newModule
+                        . non M.empty
+    oldRenamings <- renamings <<%= (newRenamings `M.union`) -- (2)
+    let overwrittenRenamings = oldRenamings `M.intersection` newRenamings
+    
+    pure (oldModule, overwrittenRenamings, newRenamings)
+  
+  restoreModuleAndRenamings (oldModule, overwrittenRenamings, newRenamings) = do
+    _currentModule .= oldModule
+  
+    finalRenamings <- use renamings
+    for_ (M.toList newRenamings) $ \(hs, coq) ->
+      when (M.lookup hs finalRenamings == Just coq) $
+        renamings.at hs .= M.lookup hs overwrittenRenamings
 
 withNoCurrentModule :: ConversionMonad m => m a -> m a
 withNoCurrentModule = withCurrentModuleOrNone Nothing

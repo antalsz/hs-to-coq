@@ -28,6 +28,8 @@ import Data.Bifunctor
 import Data.Foldable
 import Data.Traversable
 import Data.Maybe
+import Data.List (intercalate)
+import HsToCoq.Util.List hiding (unsnoc)
 import Data.List.NonEmpty (NonEmpty(..), nonEmpty)
 import qualified Data.List.NonEmpty as NEL
 import qualified Data.Text as T
@@ -218,10 +220,18 @@ convertExpr (RecordUpd recVal HsRecFields{..} _cons _PlaceHolders1 _PlaceHolders
                field <- var ExprNS $ unLoc hsRecFieldId
                pure (field, if hsRecPun then Nothing else Just hsRecFieldArg)
   
-  recType <- S.minView . S.fromList <$> traverse (\field -> use $ recordFieldTypes . at field) (M.keys updates) >>= \case
+  let updFields       = M.keys updates
+      prettyUpdFields what =
+        let quote f = "`" ++ T.unpack f ++ "'"
+        in what ++ case assertUnsnoc updFields of
+                     ([],   f)  -> " "  ++ quote f
+                     ([f1], f2) -> "s " ++ quote f1                        ++ " and "  ++ quote f2
+                     (fs,   f') -> "s " ++ intercalate ", " (map quote fs) ++ ", and " ++ quote f'
+  
+  recType <- S.minView . S.fromList <$> traverse (\field -> use $ recordFieldTypes . at field) updFields >>= \case
                Just (Just recType, []) -> pure recType
-               Just (Nothing,      []) -> convUnsupported "invalid non-record-field record updates"
-               _                       -> convUnsupported "invalid mixed-data-type record updates"
+               Just (Nothing,      []) -> convUnsupported $ "invalid record upate with " ++ prettyUpdFields "non-record-field"
+               _                       -> convUnsupported $ "invalid mixed-data-type record updates with " ++ prettyUpdFields "the given field"
   
   ctors   <- maybe (convUnsupported "invalid unknown record type") pure =<< use (constructors . at recType)
   

@@ -17,7 +17,8 @@ import Control.Monad.Trans.Maybe
 
 import qualified Data.Map.Strict as M
 
-import GHC hiding (Name)
+import GHC hiding (Name, HsChar, HsString)
+import qualified GHC
 import HsToCoq.Util.GHC.FastString
 
 import HsToCoq.Util.GHC
@@ -116,9 +117,9 @@ convertPat (QuasiQuotePat _) =
 
 convertPat (LitPat lit) =
   case lit of
-    HsChar       _ c       -> pure $ InScopePat (StringPat $ T.singleton c) "char"
+    GHC.HsChar   _ c       -> pure $ InScopePat (StringPat $ T.singleton c) "char"
     HsCharPrim   _ _       -> convUnsupported "`Char#' literal patterns"
-    HsString     _ fs      -> pure . StringPat $ fsToText fs
+    GHC.HsString _ fs      -> pure . StringPat $ fsToText fs
     HsStringPrim _ _       -> convUnsupported "`Addr#' literal patterns"
     HsInt        _ _       -> convUnsupported "`Int' literal patterns"
     HsIntPrim    _ _       -> convUnsupported "`Int#' literal patterns"

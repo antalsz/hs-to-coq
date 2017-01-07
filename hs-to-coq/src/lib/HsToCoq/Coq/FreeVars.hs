@@ -339,6 +339,12 @@ instance FreeVars Term where
   freeVars (String _str) =
     pure () -- There are none.
 
+  freeVars (HsString _str) =
+    pure () -- There are none.
+
+  freeVars (HsChar _char) =
+    pure () -- There are none.
+
   freeVars Underscore =
     pure ()
 

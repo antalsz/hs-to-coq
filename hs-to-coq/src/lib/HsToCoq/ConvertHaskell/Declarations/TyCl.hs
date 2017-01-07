@@ -35,7 +35,7 @@ import qualified Data.Set        as S
 import qualified Data.Map.Strict as M
 import HsToCoq.Util.Containers
 
-import GHC hiding (Name)
+import GHC hiding (Name, HsString)
 
 import HsToCoq.Coq.Gallina      as Coq
 import HsToCoq.Coq.Gallina.Util as Coq
@@ -279,9 +279,9 @@ generateRecordAccessors (IndBody tyName params resTy cons) = do
                       if hasField
                       then Var field
                       else App1 (Var "error")
-                                (String $  "Partial record selector: field `"
-                                        <> field <> "' has no match in constructor `"
-                                        <> con <> "' of type `" <> tyName <> "'")
+                                (HsString $  "Partial record selector: field `"
+                                          <> field <> "' has no match in constructor `"
+                                          <> con <> "' of type `" <> tyName <> "'")
     
     arg <- gensym "arg"
     

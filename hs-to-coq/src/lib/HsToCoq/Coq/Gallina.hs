@@ -155,6 +155,8 @@ data Term = Forall Binders Term                                                 
           | Num Num                                                                            -- ^@/num/@
           | PolyNum Num                                                                        -- ^@# /num/@ – extra (for polymorphic number literals)
           | String Text                                                                        -- ^@/string/@ – extra (holds the value, not the source text)
+          | HsString Text                                                                      -- ^@& /string/@ – extra (for Haskell string literals)
+          | HsChar Char                                                                        -- ^@&# /string/@ – extra (for Haskell character literals; /string/ is a single ASCII character)
           | Underscore                                                                         -- ^@_@
           | Parens Term                                                                        -- ^@( /term/ )@
           | MissingValue                                                                       -- ^@_@ – extra (a value we don't know how to fill in)
@@ -575,6 +577,12 @@ instance Gallina Term where
   
   renderGallina' _ (String str) =
     renderString str
+  
+  renderGallina' _ (HsString str) =
+    char '&' <> renderString str
+  
+  renderGallina' _ (HsChar str) =
+    string "&#" <> renderString (T.singleton str)
   
   renderGallina' _ Underscore =
     char '_'

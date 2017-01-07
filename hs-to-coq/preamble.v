@@ -16,19 +16,19 @@ Record Array  k v := ListToArray  { arrayToList  : list (k * v) }.
 Record Map    k v := ListToMap    { mapToList    : list (k * v) }.
 Record IntMap   v := ListToIntMap { intMapToList : list (Int * v) }.
 
+Axiom error : forall {A : Type}, String -> A.
+
 (* I've been assured that this is OK *)
 Inductive IORef (a : Type) : Type :=.
+
+(* List notation *)
+Require Import Coq.Lists.List.
 
 (* Temporary – but will probably need to be handled specially *)
 Axiom DynFlags : Type.
 
 (* Temporary – this probably needs to map directly to a Coq type *)
 Axiom ByteString : Type.
-
-(* Temporary – I need to handle strings better *)
-Require Coq.Strings.String.
-Open Scope string_scope.
-Axiom error : forall {A : Type}, String.string -> A.
 
 Generalizable All Variables.
 
@@ -75,3 +75,42 @@ Infix ">>"  := __op_zgzg__   (at level 99).
 
 Notation "'_>>=_'" := __op_zgzgze__.
 Notation "'_>>_'"  := __op_zgzg__.
+
+Class Num a := {
+  __op_zp__   : a -> a -> a ;
+  __op_zm__   : a -> a -> a ;
+  __op_zt__   : a -> a -> a ;
+  abs         : a -> a ;
+  fromInteger : Z -> a ;
+  negate      : a -> a ;
+  signum      : a -> a
+}.
+
+Infix    "+"     := __op_zp__ (at level 50, left associativity).
+Notation "'_+_'" := __op_zp__.
+
+Infix    "-"     := __op_zm__ (at level 50, left associativity).
+Notation "'_-_'" := __op_zm__.
+
+Infix    "*"     := __op_zt__ (at level 40, left associativity).
+Notation "'_*_'" := __op_zt__.
+
+(* Fancy notation *)
+
+Notation "'#' n" := (fromInteger n) (at level 1, format "'#' n").
+
+Require Coq.Strings.String.
+Require Coq.Strings.Ascii.
+
+Bind Scope string_scope with String.string.
+Bind Scope char_scope   with Ascii.ascii.
+
+Axiom __hs_char__ : Ascii.ascii -> Char.
+Notation "'&#' c" := (__hs_char__ c) (at level 1, format "'&#' c").
+
+Fixpoint __hs_string__ (s : String.string) : String :=
+  match s with
+  | String.EmptyString => nil
+  | String.String c s  => &#c :: __hs_string__ s
+  end.
+Notation "'&' s" := (__hs_string__ s) (at level 1, format "'&' s").

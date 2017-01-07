@@ -39,7 +39,8 @@ import           Data.Map.Strict (Map)
 import qualified Data.Set        as S
 import qualified Data.Map.Strict as M
 
-import GHC hiding (Name)
+import GHC hiding (Name, HsChar, HsString)
+import qualified GHC
 import Bag
 import BasicTypes
 import HsToCoq.Util.GHC.FastString
@@ -76,13 +77,13 @@ convertExpr (HsOverLit OverLit{..}) =
   case ol_val of
     HsIntegral   _src int -> PolyNum <$> convertInteger "integer literals" int
     HsFractional _        -> convUnsupported "fractional literals"
-    HsIsString   _src str -> pure . String $ fsToText str
+    HsIsString   _src str -> pure $ convertFastString str
 
 convertExpr (HsLit lit) =
   case lit of
-    HsChar       _ c       -> pure $ InScope (String $ T.singleton c) "char"
+    GHC.HsChar   _ c       -> pure $ HsChar c
     HsCharPrim   _ _       -> convUnsupported "`Char#' literals"
-    HsString     _ fs      -> pure . String $ fsToText fs
+    GHC.HsString _ fs      -> pure $ convertFastString fs
     HsStringPrim _ _       -> convUnsupported "`Addr#' literals"
     HsInt        _ _       -> convUnsupported "`Int' literals"
     HsIntPrim    _ _       -> convUnsupported "`Int#' literals"
@@ -236,7 +237,7 @@ convertExpr (RecordUpd recVal HsRecFields{..} _cons _PlaceHolders1 _PlaceHolders
                   , m_grhss        = GRHSs { grhssGRHSs = [ loc . GRHS [] . loc $
                                                             -- TODO: A special variable which is special-cased to desugar to `MissingValue`?
                                                             HsApp (loc . HsVar . mkVarUnqual $ fsLit "error")
-                                                                  (loc . HsLit . HsString "" $ fsLit "Partial record update") ]
+                                                                  (loc . HsLit . GHC.HsString "" $ fsLit "Partial record update") ]
                                            , grhssLocalBinds = EmptyLocalBinds } }
   
   matches <- for ctors $ \con ->
@@ -449,7 +450,7 @@ convertDoBlock allStmts = case fmap unLoc <$> unsnoc allStmts of
         pat exp
         (\exp' fun          -> Infix exp' ">>=" . fun <$> rest)
         (\exp' cont letCont -> letCont (Infix exp' ">>=" (Var cont)) <$> rest)
-        (Var "fail" `App1` String "Partial pattern match in `do' notation")
+        (Var "fail" `App1` HsString "Partial pattern match in `do' notation")
     
     toExpr (LetStmt binds) rest =
       convertLocalBinds binds rest

@@ -14,7 +14,7 @@ convertInteger what int | int >= 0  = pure $ fromInteger int
                         | otherwise = convUnsupported $ "negative " ++ what
 
 convertFastString :: FastString -> Term
-convertFastString = String . T.pack . unpackFS
+convertFastString = HsString . fsToText
 
 convertString :: String -> Term
-convertString = String . T.pack
+convertString = HsString . T.pack

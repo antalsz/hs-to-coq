@@ -1,0 +1,7 @@
+-- Haskell
+lazyApply Sunday (map not) [True, False, True]
+lazyApply Monday (map not) [True, False, True]
+
+(* Coq *)
+Eval vm_compute in lazyApply Mk_Sunday (map not) (true :: false :: true :: nil).
+Eval vm_compute in lazyApply Mk_Monday (map not) (true :: false :: true :: nil).

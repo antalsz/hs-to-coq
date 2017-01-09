@@ -4,10 +4,11 @@ type synonym CollectedCCs :-> Type
 data type arguments CoAxiom  (indices: br)
 data type arguments Branches (indices: br)
 
-redefine Inductive IdInfo           : Type := .
-redefine Inductive DataConBoxer     : Type := .
-redefine Inductive CoAxiomRule      : Type := .
-redefine Inductive BuiltInSynFamily : Type := .
+# See Notes [Strict positivity for IdInfo], [Strict positivity for real]
+redefine Inductive IdInfo           : Type := Mk_IdInfo_Dummy.
+redefine Inductive DataConBoxer     : Type := Mk_DataConBoxer_Dummy.
+redefine Inductive CoAxiomRule      : Type := Mk_CoAxiomRule_Dummy.
+redefine Inductive BuiltInSynFamily : Type := Mk_BuiltInSynFamily_Dummy.
 
 # TODO With real module-checking, remove the `module` keyword and put these in
 # `renamings.txt`
@@ -20,3 +21,49 @@ add scope type for constructor Mk_TyCoMapper
 # `Bind` to have the binder type `b` be a parameter instead of an index;
 # however, with the cycles broken as they currently are, `Expr` and `Bind` form
 # a complete mutually-recursive group on their own.
+
+data type arguments Expr (indices: b)
+data type arguments Bind (indices: b)
+
+# See Note [Strict positivity for IdInfo]
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# We can't have these data types because they produce non-strictly-positive
+# types.  For example,
+#
+#     Inductive IdInfo : Type := …
+#     …
+#     with CoreRule : Type := Mk_Rule :  RuleName
+#                                     -> Activation
+#                                     -> Name
+#                                     -> list (option Name)
+#                                     -> list CoreBndr
+#                                     -> list CoreExpr
+#                                     -> Synonym CoreExpr
+#                                     -> bool
+#                                     -> Module
+#                                     -> IsOrphan
+#                                     -> bool
+#                                     -> CoreRule
+#                          |  …
+#     …
+#     with Var : Type := …
+#     …
+#     with Expr : forall b, Type := …
+#     …
+#     .
+#
+# where `CoreBndr = Var` and `CoreExpr = Expr CoreBndr = Expr Var`.  The problem
+# is that we can't have an `Expr Var`, because:
+#
+#   1. `IdInfo` (and friends) make `Expr` mutually recursive with `CoreRule` and
+#      `IdInfo` and all these other types.
+#
+#   2. Types can't be arguments to other types in the same mutually recursive
+#      groups: here, `Var` is an argument to `Expr`, both of which are in the
+#      same mutually recursive group as `CoreRule`.
+
+# See Note [Strict positivity for real]
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# These other types (`DataConBoxer`, `CoAxiomRule`, `BuiltInSynFamily`) all
+# contain actual non-strictly-positive function members that e.g. take `Type`s
+# or `Pair`s of `Type`s as arguments.

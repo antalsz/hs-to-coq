@@ -192,7 +192,8 @@ Inductive SingleStep (Σ : Context) : CoreExpr → CoreExpr → Type :=
       Σ [op]⊢ e₁ @@ e₂ ⟶ e₁' @@ e₂
 
   | S_Beta : ∀ n e₁ e₂,
-      Σ [op]⊢ (ƛ n,  e₁) @@ e₂ ⟶ e₁$[n ↦ e₂]
+      Σ [op]⊢ (ƛ n, e₁) @@ e₂ ⟶ e₁$[n ↦ e₂]
+  (* TODO: Evaluate under *type* lambdas *)
 
   | S_Push : ∀ n e₁ γ e₂,
       let γ₀ := Mk_SymCo (Mk_NthCo #0 γ) in
@@ -211,7 +212,8 @@ Inductive SingleStep (Σ : Context) : CoreExpr → CoreExpr → Type :=
       let γ₂ := Mk_NthCo #1 γ
       in
       Σ [op]⊢ ((ƛ n, e) ▷ γ) @@ Mk_Coercion γ' ⟶ (ƛ n, e ▷ γ₂) @@ Mk_Coercion (γ₀ ⨾ γ' ⨾ γ₁)
-
+  
+  (* For determinism, may want to require `e` to be a value *)
   | S_Trans : ∀ e γ₁ γ₂,
       Σ [op]⊢ (e ▷ γ₁) ▷ γ₂ ⟶ e ▷ (γ₁ ⨾ γ₂)
 
@@ -219,7 +221,8 @@ Inductive SingleStep (Σ : Context) : CoreExpr → CoreExpr → Type :=
       Σ [op]⊢ e ⟶ e'
       →
       Σ [op]⊢ e ▷ γ ⟶ e' ▷ γ
-
+        
+  (* Or: `Mk_Tick tick e ⟶ e` *)
   | S_Tick : ∀ tick e e',
       Σ [op]⊢ e ⟶ e'
       →
@@ -264,6 +267,7 @@ Inductive SingleStep (Σ : Context) : CoreExpr → CoreExpr → Type :=
       →
       Σ [op]⊢ Mk_Case e n τ alts ⟶ u$[n ↦ e]
 
+(* Just use `Mk_InstCo`! *)
 (* Can't do the tricky `liftCoSubst` case – the `$*[*↦*]`s below are lies. *)
 (*
   | S_CasePush : ∀ K τs σs es γ n τ₂ alts T τs' αs αs_vars βs βs_vars τs₁,

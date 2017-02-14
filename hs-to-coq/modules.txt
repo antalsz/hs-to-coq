@@ -8,6 +8,7 @@ compiler/
     NameEnv
     OccName
     Var
+    # Id # `lazySetIdInfo' is both in `Id` and `Var`
     MkId
     IdInfo
     FieldLabel

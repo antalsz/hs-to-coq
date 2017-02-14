@@ -9,7 +9,6 @@ Axiom Rational : Type.
 
 Definition String     := list Char.
 Definition FilePath   := String.
-Definition FastString := String.
 
 (* Temporary *)
 Record Array  k v := ListToArray  { arrayToList  : list (k * v) }.
@@ -17,6 +16,15 @@ Record Map    k v := ListToMap    { mapToList    : list (k * v) }.
 Record IntMap   v := ListToIntMap { intMapToList : list (Int * v) }.
 
 Axiom error : forall {A : Type}, String -> A.
+
+(* Do we really need the definition of this?  It's a special error with
+   formatting. *)
+Axiom panic : forall {A : Type}, String -> A.
+
+(* Output code :-/ *)
+Axiom SDoc : Type.
+Axiom pprPanic : forall {A : Type}, String -> SDoc -> A.
+Axiom ppr      : forall {A : Type}, A -> SDoc.
 
 (* I've been assured that this is OK *)
 Inductive IORef (a : Type) : Type :=.
@@ -26,6 +34,9 @@ Require Import Coq.Lists.List.
 
 (* Temporary – but will probably need to be handled specially *)
 Axiom DynFlags : Type.
+Axiom wORD_SIZE       : DynFlags -> Int.
+Axiom tARGET_MAX_WORD : DynFlags -> Z.
+Axiom tARGET_MAX_INT  : DynFlags -> Z.
 
 (* Temporary – this probably needs to map directly to a Coq type *)
 Axiom ByteString : Type.
@@ -38,7 +49,45 @@ Unset Printing Implicit Defensive.
 
 (********************************************************************************)
 
-(* Haskell Prelude stuff *)
+(* Haskell Prelude stuff – this needs to be automated *)
+
+Inductive Ordering : Type := Mk_LT : Ordering
+                          |  Mk_EQ : Ordering
+                          |  Mk_GT : Ordering.
+
+Class Eq (a : Type) := {
+  __op_zeze__ : a -> a -> bool;
+  __op_zsze__ : a -> a -> bool
+}.
+
+Infix "==" := __op_zeze__ (at level 99).
+Infix "/=" := __op_zsze__ (at level 99).
+
+Notation "'_==_'" := __op_zeze__.
+Notation "'_/=_'" := __op_zsze__.
+
+Class Ord `{Eq a} := {
+  compare : a -> a -> Ordering;
+  
+  __op_zl__   : a -> a -> bool;
+  __op_zlze__ : a -> a -> bool;
+  __op_zg__   : a -> a -> bool;
+  __op_zgze__ : a -> a -> bool;
+  
+  max : a -> a -> a;
+  min : a -> a -> a
+}.
+Arguments Ord _ {_}.
+
+Infix "<"  := __op_zl__   (at level 70).
+Infix "<=" := __op_zlze__ (at level 70).
+Infix ">"  := __op_zg__   (at level 70).
+Infix ">=" := __op_zgze__ (at level 70).
+
+Notation "'_<_'"  := __op_zl__.
+Notation "'_<=_'" := __op_zlze__.
+Notation "'_>_'"  := __op_zg__.
+Notation "'_>=_'" := __op_zgze__.
 
 Class Functor (f : Type -> Type) := {
   fmap : forall {a b}, (a -> b) -> f a -> f b;
@@ -95,6 +144,22 @@ Notation "'_-_'" := __op_zm__.
 Infix    "*"     := __op_zt__ (at level 40, left associativity).
 Notation "'_*_'" := __op_zt__.
 
+(********************************************************************)
+
+(* FastString *)
+
+Record FastString := Mk_FS { unpackFS : String }.
+
+Definition __with_fs__ {A : Type} (f : String -> A) (fs : FastString) : A :=
+  match fs with Mk_FS s => f s end.
+ 
+Definition fsLit        : String -> FastString := Mk_FS.
+Definition mkFastString : String -> FastString := Mk_FS.
+
+(* Can add more *)
+
+(********************************************************************)
+
 (* Fancy notation *)
 
 Notation "'#' n" := (fromInteger n) (at level 1, format "'#' n").
@@ -114,3 +179,15 @@ Fixpoint __hs_string__ (s : String.string) : String :=
   | String.String c s  => &#c :: __hs_string__ s
   end.
 Notation "'&' s" := (__hs_string__ s) (at level 1, format "'&' s").
+
+(********************************************************************)
+
+(* Instances *)
+
+Instance __Eq_Int__  : Eq  Int. Admitted.
+Instance __Ord_Int__ : Ord Int. Admitted.
+Instance __Num_Int__ : Num Int. Admitted.
+
+Instance __Eq_Z__  : Eq  Z. Admitted.
+Instance __Ord_Z__ : Ord Z. Admitted.
+Instance __Num_Z__ : Num Z. Admitted.

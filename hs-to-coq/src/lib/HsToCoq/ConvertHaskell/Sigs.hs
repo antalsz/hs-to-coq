@@ -2,7 +2,7 @@
 
 module HsToCoq.ConvertHaskell.Sigs (
   Signature(..), convertSigs, convertLSigs, convertModuleSigs, convertModuleLSigs,
-  HsSignature(..), collectSigs, convertSignatures, convertSignature,
+  HsSignature(..), collectSigs, collectSigsWithErrors, convertSignatures, convertSignature,
   convertFixity
   ) where
 
@@ -13,7 +13,9 @@ import Control.Lens hiding (Level)
 import Data.Semigroup (Semigroup(..))
 import Data.Bifunctor
 import Data.Bitraversable
-import Data.Traversable
+import Data.Maybe
+import Data.List (intercalate)
+import qualified Data.Text as T
 
 import Control.Monad.Except
 import HsToCoq.Util.Monad.ListT
@@ -26,6 +28,7 @@ import qualified Data.Set as S
 import GHC hiding (Name)
 import BasicTypes
 
+import HsToCoq.Util.GHC
 import HsToCoq.Util.GHC.RdrName
 import HsToCoq.Coq.Gallina
 
@@ -95,7 +98,7 @@ data Signature = Signature { sigType   :: Term
                            , sigFixity :: Maybe (Associativity, Level) }
                deriving (Eq, Ord, Show, Read)
 
-collectSigs :: [(Maybe ModuleName, Sig RdrName)] -> Either String (Map RdrName HsSignature)
+collectSigs :: [(Maybe ModuleName, Sig RdrName)] -> Either String (Map RdrName (Either (String, [ModuleName]) HsSignature))
 collectSigs modSigs = do
   let asType   mname = (S.singleton mname, , []) . pure
       asFixity mname = (S.singleton mname, [], ) . pure
@@ -113,15 +116,32 @@ collectSigs modSigs = do
                  (_, PatSynSig  _ _ _ _ _) -> throwError "pattern synonym signatures"
                  (_, IdSig      _)         -> throwError "generated-code signatures"
   
-  for (multimap & each._1 %~ S.toList) $ \case
-    ([mname], [ty],  [fixity])  -> pure $ HsSignature mname ty (Just fixity)
-    ([mname], [ty],  [])        -> pure $ HsSignature mname ty Nothing
-    (_,       [_ty], [_fixity]) -> throwError "type and fixity signatures split across modules"
-    (_,       [_ty], [])        -> throwError "duplicate type signatures across modules"
-    (_,       [],    [_fixity]) -> throwError "a fixity annotation without a type signature"
-    (_,       [],    _)         -> throwError "multiple fixity annotations without a type signature"
-    (_,       _,     [])        -> throwError "multiple type signatures for the same identifier"
-    (_,       _,     _)         -> throwError "multiple type and fixity signatures for the same identifier"
+  pure $ (multimap & each._1 %~ S.toList) <&> \info@(mnames,_,_) ->
+    let multiplesError = Left . (,catMaybes mnames)
+    in case info of
+         ([mname], [ty],  [fixity])  -> Right $ HsSignature mname ty (Just fixity)
+         ([mname], [ty],  [])        -> Right $ HsSignature mname ty Nothing
+         (_,       [_ty], [_fixity]) -> multiplesError $ "type and fixity signatures split across modules"
+         (_,       [_ty], [])        -> multiplesError $ "duplicate type signatures across modules"
+         (_,       [],    [_fixity]) -> multiplesError $ "a fixity annotation without a type signature"
+         (_,       [],    _)         -> multiplesError $ "multiple fixity annotations without a type signature"
+         (_,       _,     [])        -> multiplesError $ "multiple type signatures for the same identifier"
+         (_,       _,     _)         -> multiplesError $ "multiple type and fixity signatures for the same identifier"
+
+collectSigsWithErrors :: ConversionMonad m => [(Maybe ModuleName, Sig RdrName)] -> m (Map RdrName HsSignature)
+collectSigsWithErrors =
+  either convUnsupported (M.traverseWithKey multiplesError) . collectSigs
+  where multiplesError name (Left (err, mnames)) = do
+          nameStr <- T.unpack <$> ghcPpr name
+          convUnsupported $ err
+                          ++ " for `" ++ nameStr ++ "'"
+                          ++ case unsnoc $ map (("`" ++) . (++ "'") . moduleNameString) mnames of
+                               Nothing              -> ""
+                               Just ([],name)       -> " in the module " ++ name
+                               Just ([name1],name2) -> " in the modules " ++ name1 ++ " and " ++ name2
+                               Just (names, name')  -> " in the modules " ++ intercalate ", " names  ++ " and " ++ name'
+        multiplesError _ (Right sig) =
+          pure sig
 
 convertSignature :: ConversionMonad m => HsSignature -> m Signature
 convertSignature (HsSignature hsMod hsTy hsFix) = maybeWithCurrentModule hsMod
@@ -131,7 +151,7 @@ convertSignatures :: ConversionMonad m => Map RdrName HsSignature -> m (Map Iden
 convertSignatures = fmap M.fromList . traverse (bitraverse (var ExprNS) convertSignature) . M.toList
 
 convertModuleSigs :: ConversionMonad m => [(Maybe ModuleName, Sig RdrName)] -> m (Map Ident Signature)
-convertModuleSigs = either convUnsupported convertSignatures . collectSigs
+convertModuleSigs = convertSignatures <=< collectSigsWithErrors
 
 convertModuleLSigs :: ConversionMonad m => [(Maybe ModuleName, LSig RdrName)] -> m (Map Ident Signature)
 convertModuleLSigs = convertModuleSigs . map (second unLoc)

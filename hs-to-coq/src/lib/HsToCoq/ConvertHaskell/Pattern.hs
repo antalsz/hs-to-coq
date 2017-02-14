@@ -126,14 +126,16 @@ convertPat (LitPat lit) =
     HsWordPrim   _ _       -> convUnsupported "`Word#' literal patterns"
     HsInt64Prim  _ _       -> convUnsupported "`Int64#' literal patterns"
     HsWord64Prim _ _       -> convUnsupported "`Word64#' literal patterns"
-    HsInteger    _ int _ty -> NumPat <$> convertInteger "`Integer' literal patterns" int
+    HsInteger    _ int _ty -> convUnsupported "`Integer' literal patterns"
+                              -- NumPat <$> convertInteger "`Integer' literal patterns" int
     HsRat        _ _       -> convUnsupported "`Rational' literal patterns"
     HsFloatPrim  _         -> convUnsupported "`Float#' literal patterns"
     HsDoublePrim _         -> convUnsupported "`Double#' literal patterns"
 
 convertPat (NPat (L _ OverLit{..}) _negate _eq) = -- And strings
   case ol_val of
-    HsIntegral   _src int -> NumPat <$> convertInteger "integer literal patterns" int
+    HsIntegral   _src int -> convUnsupported "integer literal patterns"
+                              -- NumPat <$> convertInteger "integer literal patterns" int
     HsFractional _        -> convUnsupported "fractional literal patterns"
     HsIsString   _src str -> pure . StringPat $ fsToText str
 

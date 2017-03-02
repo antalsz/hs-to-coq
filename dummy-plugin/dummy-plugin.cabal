@@ -1,0 +1,44 @@
+name:                dummy-plugin
+version:             0.0.0.0
+synopsis:            A dummy GHC plugin
+homepage:            
+license:             MIT
+license-file:        LICENSE
+author:              Antal Spector-Zabusky
+maintainer:          antal.b.sz@gmail.com
+copyright:           Copyright © 2017 Antal Spector-Zabusky, University of Pennsylvania
+category:            Language
+build-type:          Simple
+cabal-version:       >=1.10
+
+source-repository head
+  type:     git
+  location: https://github.com/DeepSpec/corespec
+  subdir:   core-coq/dummy-plugin
+
+library
+  exposed-modules:     DummyPlugin
+                     , CoqCoreBind
+                     , StructuralIsomorphism.TH.Util
+                     , StructuralIsomorphism.Util
+                     , StructuralIsomorphism.Class
+                     , StructuralIsomorphism.Declarations
+                     , StructuralIsomorphism.Isomorphizing
+                     , StructuralIsomorphism.Generate
+                     , Sandbox
+  
+  build-depends:       base             ==4.8.*
+                     , ghc              ==7.10.3
+                     , template-haskell ==2.10.*
+                     , syb              ==0.6.*
+                     , bytestring       ==0.10.*
+                     , array            ==0.5.*
+                     , containers       ==0.5.*
+                     , transformers     ==0.4.*
+                     , mtl              ==2.2.*
+  
+  other-extensions:    NamedFieldPuns
+  
+  hs-source-dirs:      src
+  default-language:    Haskell2010
+  ghc-options:         -Wall -fno-warn-name-shadowing -O2

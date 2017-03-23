@@ -25,21 +25,29 @@ import Data.Foldable
 import Data.List.NonEmpty (NonEmpty(..), nonEmpty)
 import HsToCoq.Coq.Gallina
 
+pattern Var  :: Ident                        -> Term
+pattern App1 :: Term -> Term                 -> Term
+pattern App2 :: Term -> Term -> Term         -> Term
+pattern App3 :: Term -> Term -> Term -> Term -> Term
+appList      :: Term -> [Arg]                -> Term
+
 pattern Var  x          = Qualid (Bare x)
 pattern App1 f x        = App f (PosArg x :| [])
 pattern App2 f x1 x2    = App f (PosArg x1 :| PosArg x2 : [])
 pattern App3 f x1 x2 x3 = App f (PosArg x1 :| PosArg x2 : PosArg x3 : [])
+appList      f          = maybe f (App f) . nonEmpty
 
-appList :: Term -> [Arg] -> Term
-appList f = maybe f (App f) . nonEmpty
+pattern VarPat  :: Ident                                   -> Pattern
+pattern App1Pat :: Qualid -> Pattern                       -> Pattern
+pattern App2Pat :: Qualid -> Pattern -> Pattern            -> Pattern
+pattern App3Pat :: Qualid -> Pattern -> Pattern -> Pattern -> Pattern
+appListPat      :: Qualid -> [Pattern]                     -> Pattern
 
 pattern VarPat  x          = QualidPat (Bare x)
-pattern App1Pat f x        = ArgsPat f (x :| [])
-pattern App2Pat f x1 x2    = ArgsPat f (x1 :| x2 : [])
-pattern App3Pat f x1 x2 x3 = ArgsPat f (x1 :| x2 : x3 : [])
-
-appListPat :: Qualid -> [Pattern] -> Pattern
-appListPat c = maybe (QualidPat c) (ArgsPat c) . nonEmpty
+pattern App1Pat c x        = ArgsPat c (x :| [])
+pattern App2Pat c x1 x2    = ArgsPat c (x1 :| x2 : [])
+pattern App3Pat c x1 x2 x3 = ArgsPat c (x1 :| x2 : x3 : [])
+appListPat      c          = maybe (QualidPat c) (ArgsPat c) . nonEmpty
 
 maybeForall :: Foldable f => f Binder -> Term -> Term
 maybeForall = maybe id Forall . nonEmpty . toList

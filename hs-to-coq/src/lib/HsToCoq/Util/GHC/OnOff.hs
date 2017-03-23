@@ -2,7 +2,7 @@
              TemplateHaskell, CPP #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
-module HsToCoq.Util.GHC.OnOff (
+module HsToCoq.Util.GHC.OnOff {-# WARNING "Do we really need `OnOff`?" #-} (
   OnOff, pattern On, pattern Off,
   onOffToEither, eitherToOnOff
   ) where

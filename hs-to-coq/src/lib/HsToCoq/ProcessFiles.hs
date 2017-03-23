@@ -11,6 +11,7 @@ import System.FilePath
 import GHC
 import HeaderInfo
 import DynFlags
+import qualified GHC.LanguageExtensions as LangExt
 import Bag
 import HsToCoq.Util.GHC.DoCpp
 
@@ -37,7 +38,7 @@ processFile :: GhcMonad m => DynFlags -> FilePath -> m (Maybe (Located (HsModule
 processFile dflags file = do
   withSrcFile <- do
     dflags' <- processFileFlags dflags file
-    pure $ if not $ xopt Opt_Cpp dflags'
+    pure $ if not $ xopt LangExt.Cpp dflags'
            then \fn -> fn dflags' file
            else \fn -> gWithSystemTempFile (takeFileName file) $ \temp _ -> do
                          liftIO $ doCpp dflags' True file temp

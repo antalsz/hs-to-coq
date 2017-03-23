@@ -6,14 +6,16 @@ module HsToCoq.Util.Parsec (
   hspace, hspaces, hspaces1,
   vspace, vspaces, vspaces1,
   -- * Working with indent parsers
-  IndentStream, runIndentParser
+  IndentStream, IndentStreamT, parseIndentParser
 ) where
 
 import Data.Functor
-import HsToCoq.Util.Char
+import Data.Functor.Identity
+
 import Text.Parsec hiding (State())
 import Text.Parsec.Indent
-import Control.Monad.Trans.State.Lazy (State())
+
+import HsToCoq.Util.Char
 
 eol :: Stream s m Char => ParsecT s u m ()
 eol = (void endOfLine <|> eof) <?> "end of line"
@@ -36,8 +38,9 @@ vspaces = skipMany vspace
 vspaces1 :: Stream s m Char => ParsecT s u m ()
 vspaces1 = skipMany1 vspace
 
-type IndentStream s t = Stream s (State SourcePos) t
+type IndentStreamT m s t = Stream s (IndentT m) t
+type IndentStream    s t = IndentStreamT Identity s t
 
-runIndentParser :: IndentStream s t
+parseIndentParser :: IndentStream s t
                 => IndentParser s () a -> SourceName -> s -> Either ParseError a
-runIndentParser p src = runIndent src . runParserT p () src
+parseIndentParser p = runIndentParser p ()

@@ -1,5 +1,3 @@
-{-# OPTIONS_GHC -fno-warn-orphans #-}
-
 module HsToCoq.PrettyPrint (
   -- * The base module
   module Text.PrettyPrint.Leijen.Text,
@@ -43,9 +41,6 @@ import Data.Text (Text)
 import qualified Data.Text.Lazy as TL
 import Data.Semigroup (Semigroup(..))
 import Data.Foldable
-
-instance Semigroup Doc where
-  (<>) = (T.<>)
 
 (<!>) :: Doc -> Doc -> Doc
 (<!>) = (T.<$>)

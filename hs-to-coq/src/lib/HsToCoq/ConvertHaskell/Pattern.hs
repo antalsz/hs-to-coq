@@ -6,11 +6,11 @@ module HsToCoq.ConvertHaskell.Pattern (
   Refutability(..), refutability, isSoleConstructor
 ) where
 
-import Control.Lens
+import Control.Lens hiding ((<|))
 
 import Data.Maybe
 import Data.Traversable
-import Data.List.NonEmpty (NonEmpty())
+import Data.List.NonEmpty (NonEmpty(), (<|))
 import qualified Data.Text as T
 
 import Control.Monad.Trans.Maybe
@@ -29,7 +29,6 @@ import HsToCoq.Coq.Gallina.Util as Coq
 import HsToCoq.ConvertHaskell.Parameters.Renamings
 import HsToCoq.ConvertHaskell.Monad
 import HsToCoq.ConvertHaskell.Variables
-import HsToCoq.ConvertHaskell.Literals
 
 --------------------------------------------------------------------------------
 
@@ -37,7 +36,7 @@ convertPat :: ConversionMonad m => Pat RdrName -> m Pattern
 convertPat (WildPat PlaceHolder) =
   pure UnderscorePat
 
-convertPat (GHC.VarPat x) =
+convertPat (GHC.VarPat (L _ x)) =
   Coq.VarPat <$> freeVar x
 
 convertPat (LazyPat p) =
@@ -53,7 +52,7 @@ convertPat (BangPat p) =
   convertLPat p
 
 convertPat (ListPat pats PlaceHolder overloaded) =
-  if maybe True (isNoSyntaxExpr . snd) overloaded
+  if maybe True (isNoSyntaxExpr . syn_expr . snd) overloaded
   then foldr (InfixPat ?? "::") (Coq.VarPat "nil") <$> traverse convertLPat pats
   else convUnsupported "overloaded list patterns"
 
@@ -82,7 +81,7 @@ convertPat (ConPatIn (L _ hsCon) conVariety) = do
              let defaultPat field | isJust rec_dotdot = Coq.VarPat field
                                   | otherwise         = UnderscorePat
              
-             patterns <- fmap M.fromList . for rec_flds $ \(L _ (HsRecField (L _ hsField) hsPat pun)) -> do
+             patterns <- fmap M.fromList . for rec_flds $ \(L _ (HsRecField (L _ (FieldOcc (L _ hsField) _)) hsPat pun)) -> do
                            field <- var ExprNS hsField
                            pat   <- if pun
                                     then pure $ Coq.VarPat field
@@ -112,9 +111,6 @@ convertPat (ViewPat _ _ _) =
 convertPat (SplicePat _) =
   convUnsupported "pattern splices"
 
-convertPat (QuasiQuotePat _) =
-  convUnsupported "pattern quasiquoters"
-
 convertPat (LitPat lit) =
   case lit of
     GHC.HsChar   _ c       -> pure $ InScopePat (StringPat $ T.singleton c) "char"
@@ -126,20 +122,20 @@ convertPat (LitPat lit) =
     HsWordPrim   _ _       -> convUnsupported "`Word#' literal patterns"
     HsInt64Prim  _ _       -> convUnsupported "`Int64#' literal patterns"
     HsWord64Prim _ _       -> convUnsupported "`Word64#' literal patterns"
-    HsInteger    _ int _ty -> convUnsupported "`Integer' literal patterns"
+    HsInteger    _ _int _ty -> convUnsupported "`Integer' literal patterns"
                               -- NumPat <$> convertInteger "`Integer' literal patterns" int
     HsRat        _ _       -> convUnsupported "`Rational' literal patterns"
     HsFloatPrim  _         -> convUnsupported "`Float#' literal patterns"
     HsDoublePrim _         -> convUnsupported "`Double#' literal patterns"
 
-convertPat (NPat (L _ OverLit{..}) _negate _eq) = -- And strings
+convertPat (NPat (L _ OverLit{..}) _negate _eq PlaceHolder) = -- And strings
   case ol_val of
-    HsIntegral   _src int -> convUnsupported "integer literal patterns"
+    HsIntegral   _src _int -> convUnsupported "integer literal patterns"
                               -- NumPat <$> convertInteger "integer literal patterns" int
     HsFractional _        -> convUnsupported "fractional literal patterns"
     HsIsString   _src str -> pure . StringPat $ fsToText str
 
-convertPat (NPlusKPat _ _ _ _) =
+convertPat (NPlusKPat _ _ _ _ _ _) =
   convUnsupported "n+k-patterns"
 
 convertPat (SigPatIn _ _) =

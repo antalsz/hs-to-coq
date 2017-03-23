@@ -1,4 +1,5 @@
-{-# LANGUAGE TypeSynonymInstances, PatternSynonyms, TemplateHaskell #-}
+{-# LANGUAGE TypeSynonymInstances, PatternSynonyms, ViewPatterns,
+             TemplateHaskell, CPP #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
 module HsToCoq.Util.GHC.OnOff (
@@ -11,18 +12,31 @@ import DynFlags
 import Language.Haskell.TH
 import Language.Haskell.TH.Syntax
 
-type OnOff = $(conT $ case ''DynFlags of Name _ nf -> Name (OccName "OnOff") nf)
-pattern On  a = $(conP (case 'DynFlags of Name _ nf -> Name (OccName "On")  nf) [varP $ mkName "a"])
-pattern Off a = $(conP (case 'DynFlags of Name _ nf -> Name (OccName "Off") nf) [varP $ mkName "a"])
+#define TYPE_QUOTES ''
+#define VAL_QUOTES  '
+
+#define NAME_DynFlags(con,q,name) \
+  (con $ case q DynFlags of Name _ nf -> Name (OccName name) nf)
+
+#define TYPE_DynFlags(name) NAME_DynFlags(conT, TYPE_QUOTES, name)
+#define PAT_DynFlags(name)  NAME_DynFlags(conP, VAL_QUOTES,  name)
+#define VAL_DynFlags(name)  NAME_DynFlags(conE, VAL_QUOTES,  name)
+
+type OnOff = $(TYPE_DynFlags("OnOff"))
+
+pattern On  :: a -> OnOff a
+pattern Off :: a -> OnOff a
+
+pattern On  a <- (onOffToEither -> Left  a) where On  a = eitherToOnOff (Left  a)
+pattern Off a <- (onOffToEither -> Right a) where Off a = eitherToOnOff (Right a)
 
 onOffToEither :: OnOff a -> Either a a
-onOffToEither (On  a) = Left  a
-onOffToEither (Off a) = Right a
-onOffToEither _       = error "impossible"
+onOffToEither $(PAT_DynFlags("On")  [varP $ mkName "a"]) = Left  a
+onOffToEither $(PAT_DynFlags("Off") [varP $ mkName "a"]) = Right a
 
 eitherToOnOff :: Either a a -> OnOff a
-eitherToOnOff (Left  a) = On  a
-eitherToOnOff (Right a) = Off a
+eitherToOnOff (Left  a) = $(VAL_DynFlags("On"))  a
+eitherToOnOff (Right a) = $(VAL_DynFlags("Off")) a
 
 instance Show a => Show (OnOff a) where
   show oo = case show (onOffToEither oo) of

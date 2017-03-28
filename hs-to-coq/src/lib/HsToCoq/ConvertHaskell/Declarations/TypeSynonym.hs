@@ -26,7 +26,7 @@ instance FreeVars SynBody where
   freeVars (SynBody _name args oty def) = binding' args $ freeVars oty *> freeVars def
 
 convertSynDecl :: ConversionMonad m
-               => Located RdrName -> LHsTyVarBndrs RdrName -> LHsType RdrName
+               => Located RdrName -> [LHsTyVarBndr RdrName] -> LHsType RdrName
                -> m SynBody
 convertSynDecl name args def  = do
   coqName <- freeVar $ unLoc name

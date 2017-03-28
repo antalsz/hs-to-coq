@@ -40,7 +40,7 @@ import HsToCoq.ConvertHaskell.Type
 --------------------------------------------------------------------------------
 
 convertFixity :: Fixity -> (Associativity, Level)
-convertFixity (Fixity hsLevel dir) = (assoc, coqLevel) where
+convertFixity (Fixity _srcText hsLevel dir) = (assoc, coqLevel) where
   assoc = case dir of
             InfixL -> LeftAssociativity
             InfixR -> RightAssociativity
@@ -102,19 +102,23 @@ collectSigs :: [(Maybe ModuleName, Sig RdrName)] -> Either String (Map RdrName (
 collectSigs modSigs = do
   let asType   mname = (S.singleton mname, , []) . pure
       asFixity mname = (S.singleton mname, [], ) . pure
+      
+      asTypes    mname lnames ty     = list $ map ((, asType mname ty) . unLoc) lnames
+      asFixities mname lnames fixity = list . map (, asFixity mname fixity) . filter isRdrOperator $ map unLoc lnames
   
   multimap <-  fmap (M.fromListWith (<>)) . runListT $ list modSigs >>= \case
-                 (mname, TypeSig lnames (L _ ty) PlaceHolder) -> list $ map ((, asType mname ty) . unLoc) lnames
-                 (mname, FixSig  (FixitySig lnames fixity))   -> list . map (, asFixity mname fixity) . filter isRdrOperator $ map unLoc lnames
-                  
+                 (mname, TypeSig          lnames (HsIB PlaceHolder (HsWC PlaceHolder _ss (L _ ty)))) -> asTypes    mname lnames ty
+                 (mname, ClassOpSig False lnames (HsIB PlaceHolder                       (L _ ty)))  -> asTypes    mname lnames ty
+                 (mname, FixSig           (FixitySig lnames fixity))                                 -> asFixities mname lnames fixity
+                 
                  (_, InlineSig   _ _)   -> mempty
                  (_, SpecSig     _ _ _) -> mempty
                  (_, SpecInstSig _ _)   -> mempty
                  (_, MinimalSig  _ _)   -> mempty
                  
-                 (_, GenericSig _ _)       -> throwError "typeclass-based default method signatures"
-                 (_, PatSynSig  _ _ _ _ _) -> throwError "pattern synonym signatures"
-                 (_, IdSig      _)         -> throwError "generated-code signatures"
+                 (_, ClassOpSig True _ _) -> throwError "typeclass-based default method signatures"
+                 (_, PatSynSig  _ _)      -> throwError "pattern synonym signatures"
+                 (_, IdSig      _)        -> throwError "generated-code signatures"
   
   pure $ (multimap & each._1 %~ S.toList) <&> \info@(mnames,_,_) ->
     let multiplesError = Left . (,catMaybes mnames)

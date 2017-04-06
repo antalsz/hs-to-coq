@@ -38,7 +38,7 @@ instance FreeVars ClassBody where
 convertClassDecl :: ConversionMonad m
                  => LHsContext RdrName                   -- ^@tcdCtxt@
                  -> Located RdrName                      -- ^@tcdLName@
-                 -> LHsTyVarBndrs RdrName                -- ^@tcdTyVars@
+                 -> [LHsTyVarBndr RdrName]               -- ^@tcdTyVars@
                  -> [Located (FunDep (Located RdrName))] -- ^@tcdFDs@
                  -> [LSig RdrName]                       -- ^@tcdSigs@
                  -> LHsBinds RdrName                     -- ^@tcdMeths@

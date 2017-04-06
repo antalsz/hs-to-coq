@@ -21,8 +21,7 @@ source-repository head
   subdir:   core-coq/hs-to-coq
 
 library
-  exposed-modules:     HsToCoq.Util.GHC.OnOff
-                     , HsToCoq.Util.GHC.DoCpp
+  exposed-modules:     HsToCoq.Util.GHC.DoCpp
                      , HsToCoq.Util.GHC
                      , HsToCoq.Util.GHC.Module
                      , HsToCoq.Util.GHC.FastString
@@ -31,7 +30,6 @@ library
                      , HsToCoq.Util.GHC.HsExpr
                      , HsToCoq.Util.GHC.Exception
                      , HsToCoq.Util.GHC.Monad
-                     , HsToCoq.Util.Options.Applicative.Instances
                      , HsToCoq.Util.Function
                      , HsToCoq.Util.Functor
                      , HsToCoq.Util.Monad.ListT

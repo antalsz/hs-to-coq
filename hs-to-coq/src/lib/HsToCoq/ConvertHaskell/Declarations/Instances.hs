@@ -46,8 +46,8 @@ convertInstanceName =   gensym
                     <=< ghandle (withGhcException $ const . pure $ Var "unknown_type")
                     .   convertLType
                     .   \case
-                          L _ (HsForAllTy _ _ _ _ head) -> head
-                          lty                           -> lty
+                          L _ (HsForAllTy _ head) -> head
+                          lty                     -> lty
   where withGhcException :: (GhcException -> a) -> (GhcException -> a)
         withGhcException = id
 
@@ -60,8 +60,8 @@ data InstanceInfo = InstanceInfo { instanceName  :: !Ident
 
 convertClsInstDeclInfo :: ConversionMonad m => ClsInstDecl RdrName -> m InstanceInfo
 convertClsInstDeclInfo ClsInstDecl{..} = do
-  instanceName  <- convertInstanceName cid_poly_ty
-  instanceHead  <- convertLType        cid_poly_ty
+  instanceName  <- convertInstanceName $ hsib_body cid_poly_ty
+  instanceHead  <- convertLType        $ hsib_body cid_poly_ty
   instanceClass <- maybe (convUnsupported "strangely-formed instance heads")
                          (pure . renderOneLineT . renderGallina)
                     $ termHead instanceHead

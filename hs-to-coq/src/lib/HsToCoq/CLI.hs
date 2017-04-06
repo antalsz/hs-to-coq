@@ -52,8 +52,7 @@ import HsToCoq.ConvertHaskell.Parameters.Edits
 import HsToCoq.CLI.FileTree
 import HsToCoq.CLI.FileTree.Parser
 
-import Options.Applicative hiding ((<>))
-import HsToCoq.Util.Options.Applicative.Instances ()
+import Options.Applicative
 
 hPrettyPrint :: MonadIO m => Handle -> Doc -> m ()
 hPrettyPrint h = liftIO . displayIO h . renderPretty 0.67 120

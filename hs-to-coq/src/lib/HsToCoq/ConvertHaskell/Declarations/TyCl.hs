@@ -73,9 +73,9 @@ convertTyClDecl decl = do
   use (edits.redefinitions.at coqName) >>= \case
     Nothing -> case decl of
       FamDecl{}     -> convUnsupported "type/data families"
-      SynDecl{..}   -> ConvSyn   <$> convertSynDecl   tcdLName tcdTyVars tcdRhs
-      DataDecl{..}  -> ConvData  <$> convertDataDecl  tcdLName tcdTyVars tcdDataDefn
-      ClassDecl{..} -> ConvClass <$> convertClassDecl tcdCtxt  tcdLName  tcdTyVars   tcdFDs tcdSigs tcdMeths tcdATs tcdATDefs
+      SynDecl{..}   -> ConvSyn   <$> convertSynDecl   tcdLName (hsq_explicit tcdTyVars) tcdRhs
+      DataDecl{..}  -> ConvData  <$> convertDataDecl  tcdLName (hsq_explicit tcdTyVars) tcdDataDefn
+      ClassDecl{..} -> ConvClass <$> convertClassDecl tcdCtxt  tcdLName (hsq_explicit tcdTyVars) tcdFDs tcdSigs tcdMeths tcdATs tcdATDefs
     
     Just redef -> do
       case (decl, redef) of
@@ -90,7 +90,6 @@ convertTyClDecl decl = do
             Inductive   (_    :| _:_) _     -> editFailure $ "cannot redefine data type to mutually-recursive types"
             Inductive   _             (_:_) -> editFailure $ "cannot redefine data type to include notations"
             CoInductive _             _     -> editFailure $ "cannot redefine data type to be coinductive"
-            Inductive   _             _     -> error "GHC BUG WORKAROUND: `OverloadedLists` confuses the exhaustiveness checker"
         
         (FamDecl{}, _) ->
           editFailure "cannot redefine type/data families"
@@ -152,9 +151,6 @@ convertDeclarationGroup DeclarationGroup{..} = case (nonEmpty dgInductives, nonE
   (Nothing, Just _,            Just _)            -> Left "mutually-recursive type classes and type synonyms"
   (Just _,  Just _,            Just _)            -> Left "mutually-recursive type classes, data types, and type synonyms"
   (Nothing, Nothing,           Nothing)           -> Left "[internal] invalid empty declaration group"
-  
-  (Nothing, Just (_ :| _),     Nothing)           -> error "GHC BUG WORKAROUND: `OverloadedLists` confuses the exhaustiveness checker"
-  (Nothing, Nothing,           Just (_  :| _))    -> error "GHC BUG WORKAROUND: `OverloadedLists` confuses the exhaustiveness checker"
   
   where
     synName = (<> "__raw")
@@ -270,8 +266,7 @@ generateRecordAccessors (IndBody tyName params resTy cons) = do
             go (conField : conFields)
               | field == conField  = (Coq.VarPat field : map (const UnderscorePat) conFields, True)
               | otherwise          = first (UnderscorePat :) $ go conFields
-            go _ =
-              error "GHC BUG WORKAROUND: `OverloadedLists` confuses the exhaustiveness checker"
+
         Nothing -> throwProgramError $  "internal error: unknown constructor `"
                                      <> T.unpack con <> "' for type `"
                                      <> T.unpack tyName <> "'"

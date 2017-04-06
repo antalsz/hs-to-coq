@@ -32,7 +32,6 @@ library
                      , HsToCoq.Util.GHC.Exception
                      , HsToCoq.Util.GHC.Monad
                      , HsToCoq.Util.Options.Applicative.Instances
-                     , HsToCoq.Util.Patterns
                      , HsToCoq.Util.Function
                      , HsToCoq.Util.Functor
                      , HsToCoq.Util.Monad.ListT

@@ -52,7 +52,7 @@ convertPat (BangPat p) =
   convertLPat p
 
 convertPat (ListPat pats PlaceHolder overloaded) =
-  if maybe True (isNoSyntaxExpr . syn_expr . snd) overloaded
+  if maybe True (isNoSyntaxExpr . snd) overloaded
   then foldr (InfixPat ?? "::") (Coq.VarPat "nil") <$> traverse convertLPat pats
   else convUnsupported "overloaded list patterns"
 

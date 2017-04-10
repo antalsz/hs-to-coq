@@ -58,7 +58,7 @@ convertConLName (L _ hsCon) = do
 convertConDecl :: ConversionMonad m
                => Term -> [Binder] -> ConDecl RdrName -> m [Constructor]
 convertConDecl curType extraArgs (ConDeclH98 lname mlqvs mlcxt details _doc) = do
-  unless (null $ mlcxt) $ convUnsupported "constructor contexts"
+  unless (maybe True (null . unLoc) mlcxt) $ convUnsupported "constructor contexts"
   
   con <- convertConLName lname
 
@@ -126,7 +126,7 @@ rewriteDataTypeArguments dta bs = do
   pure (ibs ++ getBindersFor dtParameters, getBindersFor dtIndices)
   
 --------------------------------------------------------------------------------
-  
+
 convertDataDefn :: ConversionMonad m
                 => Term -> [Binder] -> HsDataDefn RdrName
                 -> m (Term, [Constructor])

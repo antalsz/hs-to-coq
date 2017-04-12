@@ -148,8 +148,19 @@ collectSigsWithErrors =
           pure sig
 
 convertSignature :: ConversionMonad m => HsSignature -> m Signature
-convertSignature (HsSignature hsMod hsTy hsFix) = maybeWithCurrentModule hsMod
-                                                $ Signature <$> convertType hsTy <*> pure (convertFixity <$> hsFix)
+convertSignature (HsSignature hsMod hsTy hsFix) =
+  maybeWithCurrentModule hsMod $ Signature <$> convertType (addForAll hsTy)
+                                           <*> pure (convertFixity <$> hsFix)
+  where addForAll hsTy'@(HsForAllTy _ _) = hsTy'
+        addForAll hsTy'                  = HsForAllTy [] $ noLoc hsTy'
+  
+  -- The top-level 'HsForAllTy' was added implicitly in GHC 7.10; we add it
+  -- explicitly now.  Without it, we don't generate the implicit type variable
+  -- bindings.  I can't decide if adding it is a huge hack or not.
+  -- 
+  -- TODO: Should generating implicit type variables be its own thing?  Does
+  -- this same 'HsForAllTy' trick, however it's implemented, need to go
+  -- elsewhere?  Should it be part of 'convertType'?
 
 convertSignatures :: ConversionMonad m => Map RdrName HsSignature -> m (Map Ident Signature)
 convertSignatures = fmap M.fromList . traverse (bitraverse (var ExprNS) convertSignature) . M.toList

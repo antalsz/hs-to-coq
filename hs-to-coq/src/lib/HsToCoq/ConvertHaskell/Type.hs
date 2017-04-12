@@ -6,6 +6,7 @@ module HsToCoq.ConvertHaskell.Type (convertType, convertLType, convertLHsTyVarBn
 
 import Control.Lens
 
+import Data.Semigroup
 import Data.Foldable
 import Data.Traversable
 import Data.Char
@@ -53,7 +54,8 @@ convertType (HsForAllTy tvs ty) = do
     bindings <- S.fromList . toList <$> use renamings
     fvs      <- fmap (S.filter $ maybe False (((||) <$> isLower <*> (== '_')) . fst) . T.uncons)
               . fmap S.fromDistinctAscList . filterM (fmap not . isBound) . S.toAscList
-              $ getFreeVars tyBody S.\\ bindings
+              $ getFreeVars tyBody S.\\ (  bindings
+                                        <> foldMap (S.fromList . toListOf binderIdents) explicitTVs)
     pure . map (Inferred Coq.Implicit . Ident) $ S.toList fvs
   pure . maybe tyBody (Forall ?? tyBody)
        . nonEmpty $ explicitTVs ++ implicitTVs

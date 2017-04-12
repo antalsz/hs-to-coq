@@ -873,7 +873,7 @@ let abort = fail "Internal error: unexpected result from `reify'" in
   TH.reify ''Gallina >>= \case
     TH.ClassI _ is ->
       fmap concat . for is $ \case
-        TH.InstanceD _ (TH.AppT (TH.ConT _gallina) ty) _ ->
+        TH.InstanceD _ _ (TH.AppT (TH.ConT _gallina) ty) _ ->
           [d|instance Pretty $(pure ty) where pretty = renderGallina|]
         _ -> abort
     _ -> abort

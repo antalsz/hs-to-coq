@@ -6,6 +6,7 @@ module HsToCoq.ConvertHaskell.Type (convertType, convertLType, convertLHsTyVarBn
 
 import Control.Lens
 
+import Data.Semigroup
 import Data.Foldable
 import Data.Traversable
 import Data.Char
@@ -21,6 +22,7 @@ import GHC hiding (Name)
 import HsToCoq.Util.GHC.FastString
 
 import HsToCoq.Util.GHC
+import HsToCoq.Util.GHC.HsTypes
 import HsToCoq.Coq.Gallina as Coq
 import HsToCoq.Coq.Gallina.Util
 import HsToCoq.Coq.FreeVars
@@ -32,43 +34,55 @@ import HsToCoq.ConvertHaskell.Literals
 
 --------------------------------------------------------------------------------
 
-convertLHsTyVarBndrs :: ConversionMonad m => Explicitness -> LHsTyVarBndrs RdrName -> m [Binder]
-convertLHsTyVarBndrs ex (HsQTvs kvs tvs) = do
-  kinds <- traverse (fmap (Inferred ex . Ident) . freeVar) kvs
-  types <- for (map unLoc tvs) $ \case
-             UserTyVar   tv   -> Inferred ex . Ident <$> freeVar tv
-             KindedTyVar tv k -> Typed Ungeneralizable ex <$> (pure . Ident <$> freeVar (unLoc tv)) <*> convertLType k
-  pure $ kinds ++ types
+convertLHsTyVarBndrs :: ConversionMonad m => Explicitness -> [LHsTyVarBndr RdrName] -> m [Binder]
+convertLHsTyVarBndrs ex tvs = for (map unLoc tvs) $ \case
+  UserTyVar   tv   -> Inferred ex . Ident <$> freeVar (unLoc tv)
+  KindedTyVar tv k -> Typed Ungeneralizable ex <$> (pure . Ident <$> freeVar (unLoc tv)) <*> convertLType k
 
 --------------------------------------------------------------------------------
 
 convertType :: ConversionMonad m => HsType RdrName -> m Term
-convertType (HsForAllTy explicitness _ tvs (L _ ctx) ty) = do
+convertType (HsForAllTy tvs ty) = do
   explicitTVs <- convertLHsTyVarBndrs Coq.Implicit tvs
-  classes     <- traverse (fmap (Generalized Coq.Implicit) . convertLType) ctx
   tyBody      <- convertLType ty
-  implicitTVs <- case explicitness of
-    GHC.Implicit -> do
-      -- We need to find all the unquantified type variables.  Since Haskell
-      -- never introduces a type variable name beginning with an upper-case
-      -- letter, we look for those; however, if we've renamed a Coq value into
-      -- one, we need to exclude that too.  (We also exclude all symbolic names,
-      -- since Haskell now reserves those for constructors.)
-      bindings <- S.fromList . toList <$> use renamings
-      fvs      <- fmap (S.filter $ maybe False (((||) <$> isLower <*> (== '_')) . fst) . T.uncons)
-                . fmap S.fromDistinctAscList . filterM (fmap not . isBound) . S.toAscList
-                $ getFreeVars tyBody S.\\ bindings
-      pure . map (Inferred Coq.Implicit . Ident) $ S.toList fvs
-    _ ->
-      pure []
+  implicitTVs <- do
+    -- We need to find all the unquantified type variables.  Since Haskell
+    -- never introduces a type variable name beginning with an upper-case
+    -- letter, we look for those; however, if we've renamed a Coq value into
+    -- one, we need to exclude that too.  (We also exclude all symbolic names,
+    -- since Haskell now reserves those for constructors.)
+    bindings <- S.fromList . toList <$> use renamings
+    fvs      <- fmap (S.filter $ maybe False (((||) <$> isLower <*> (== '_')) . fst) . T.uncons)
+              . fmap S.fromDistinctAscList . filterM (fmap not . isBound) . S.toAscList
+              $ getFreeVars tyBody S.\\ (  bindings
+                                        <> foldMap (S.fromList . toListOf binderIdents) explicitTVs)
+    pure . map (Inferred Coq.Implicit . Ident) $ S.toList fvs
   pure . maybe tyBody (Forall ?? tyBody)
-       . nonEmpty $ explicitTVs ++ implicitTVs ++ classes
+       . nonEmpty $ explicitTVs ++ implicitTVs
+  -- TODO: We generate the TVs in lexicographic order, Haskell does it in source
+  -- code order.  Is this important?
 
-convertType (HsTyVar tv) =
+convertType (HsQualTy (L _ ctx) ty) = do
+  classes <- traverse (fmap (Generalized Coq.Implicit) . convertLType) ctx
+  tyBody  <- convertLType ty
+  pure . maybe tyBody (Forall ?? tyBody) $ nonEmpty classes
+
+convertType (HsTyVar (L _ tv)) =
   Var <$> var TypeNS tv
 
 convertType (HsAppTy ty1 ty2) =
   App1 <$> convertLType ty1 <*> convertLType ty2
+
+-- TODO: This constructor handles '*' and deparses it later.  I'm just gonna
+-- bank on never seeing any infix type things.
+convertType (HsAppsTy tys) =
+  let assertPrefix (L _ (HsAppPrefix lty)) = convertLType lty
+      assertPrefix (L _ (HsAppInfix _))    = convUnsupported "infix types in type application lists"
+  in traverse assertPrefix tys >>= \case
+       tyFun:tyArgs ->
+         pure $ appList tyFun $ map PosArg tyArgs
+       [] ->
+         convUnsupported "empty lists of type applications"
 
 convertType (HsFunTy ty1 ty2) =
   Arrow <$> convertLType ty1 <*> convertLType ty2
@@ -96,22 +110,17 @@ convertType (HsOpTy _ty1 _op _ty2) =
 convertType (HsParTy ty) =
   Parens <$> convertLType ty
 
-convertType (HsIParamTy (HsIPName ip) (L _ ty)) = do
-  isTyCallStack <- case ty of
-    HsTyVar tv -> (== "CallStack") <$> ghcPpr tv
-    _          -> pure False
+convertType (HsIParamTy (HsIPName ip) lty) = do
+  isTyCallStack <- maybe (pure False) (fmap (== "CallStack") . ghcPpr) $ viewLHsTyVar lty
   if isTyCallStack && ip == fsLit "callStack"
     then Var <$> var' TypeNS "CallStack"
-    else convUnsupported "implicit parameters"
+    else convUnsupported "implicit parameter constraints"
 
 convertType (HsEqTy _ty1 _ty2) =
   convUnsupported "type equality" -- FIXME
 
 convertType (HsKindSig ty k) =
   HasType <$> convertLType ty <*> convertLType k
-
-convertType (HsQuasiQuoteTy _) =
-  convUnsupported "type quasiquoters"
 
 convertType (HsSpliceTy _ _) =
   convUnsupported "Template Haskell type splices"
@@ -142,14 +151,8 @@ convertType (HsTyLit lit) =
     HsNumTy _src int -> Num <$> convertInteger "type-level integers" int
     HsStrTy _src str -> pure $ convertFastString str
 
-convertType (HsWrapTy _ _) =
-  convUnsupported "[internal] wrapped types" 
-
-convertType HsWildcardTy =
-  pure Underscore
-
-convertType (HsNamedWildcardTy _) =
-  convUnsupported "named wildcards"
+convertType (HsWildCardTy _) =
+  convUnsupported "wildcards"
 
 --------------------------------------------------------------------------------
 

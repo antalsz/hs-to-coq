@@ -68,4 +68,5 @@ fileTrees :: IndentStream s Char => IndentParser s u [FileTree]
 fileTrees = skipToBOL *> option [] (same *> block fileTree)
 
 parseFileTrees :: Maybe String -> String -> Either String [FileTree]
-parseFileTrees src = first show . runIndentParser (fileTrees <* eof) (fromMaybe "<input>" src)
+parseFileTrees src =
+  first show . parseIndentParser (fileTrees <* eof) (fromMaybe "<input>" src)

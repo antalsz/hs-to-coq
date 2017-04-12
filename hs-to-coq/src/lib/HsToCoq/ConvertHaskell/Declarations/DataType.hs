@@ -4,7 +4,7 @@
 
 module HsToCoq.ConvertHaskell.Declarations.DataType (
   convertDataDecl, convertDataDefn,
-  Constructor, convertConDecl,
+  Constructor, convertConDecl, convertConLName,
   addAdditionalConstructorScope, rewriteDataTypeArguments
   ) where
 
@@ -48,33 +48,38 @@ addAdditionalConstructorScope ctor@(name, bs, Just resTy) =
 
 --------------------------------------------------------------------------------
 
+convertConLName :: ConversionMonad m => Located RdrName -> m Ident
+convertConLName (L _ hsCon) = do
+  con <- ghcPpr hsCon -- We use 'ghcPpr' because we munge the name here ourselves
+  use (renamed ExprNS con) >>= \case
+    Nothing   -> renamed ExprNS con <?= "Mk_" <> con
+    Just con' -> pure con'
+
 convertConDecl :: ConversionMonad m
                => Term -> [Binder] -> ConDecl RdrName -> m [Constructor]
-convertConDecl curType extraArgs (ConDecl lnames _explicit lqvs lcxt details lres _doc _old) = do
-  unless (null $ unLoc lcxt) $ convUnsupported "constructor contexts"
+convertConDecl curType extraArgs (ConDeclH98 lname mlqvs mlcxt details _doc) = do
+  unless (maybe True (null . unLoc) mlcxt) $ convUnsupported "constructor contexts"
   
-  cons <- for lnames $ \(L _ hsCon) -> do
-            con <- ghcPpr hsCon -- We use 'ghcPpr' because we munge the name here ourselves
-            use (renamed ExprNS con) >>= \case
-              Nothing   -> renamed ExprNS con <?= "Mk_" <> con
-              Just con' -> pure con'
-  
-  params <- convertLHsTyVarBndrs Coq.Implicit lqvs
-  resTy  <- case lres of
-              ResTyH98       -> pure curType
-              ResTyGADT _ ty -> convertLType ty
+  con <- convertConLName lname
+
+  -- Only the explicit tyvars are available before renaming, so they're all we
+  -- need to consider
+  params <- maybe (pure []) (convertLHsTyVarBndrs Coq.Implicit . hsq_explicit) mlqvs
   args   <- traverse convertLType $ hsConDeclArgTys details
   
   fieldInfo <- case details of
     RecCon (L _ fields) ->
       fmap RecordFields .  traverse freeVar
-        $ concatMap (map unLoc . cd_fld_names . unLoc) fields
+        $ concatMap (map (unLoc . rdrNameFieldOcc . unLoc) . cd_fld_names . unLoc) fields
     _ ->
       pure . NonRecordFields $ length args
-  for_ cons $ \con -> constructorFields . at con ?= fieldInfo
+  constructorFields . at con ?= fieldInfo
   
-  traverse addAdditionalConstructorScope $
-    map (, params, Just . maybeForall extraArgs $ foldr Arrow resTy args) cons
+  pure [(con, params, Just . maybeForall extraArgs $ foldr Arrow curType args)]
+convertConDecl _curType extraArgs (ConDeclGADT lnames (HsIB PlaceHolder lty) _doc) = do
+  cons  <- traverse convertConLName lnames
+  conTy <- maybeForall extraArgs <$> convertLType lty
+  pure $ map (, [], Just conTy) cons
 
 --------------------------------------------------------------------------------
 
@@ -121,17 +126,18 @@ rewriteDataTypeArguments dta bs = do
   pure (ibs ++ getBindersFor dtParameters, getBindersFor dtIndices)
   
 --------------------------------------------------------------------------------
-  
+
 convertDataDefn :: ConversionMonad m
                 => Term -> [Binder] -> HsDataDefn RdrName
                 -> m (Term, [Constructor])
 convertDataDefn curType extraArgs (HsDataDefn _nd lcxt _ctype ksig cons _derivs) = do
   unless (null $ unLoc lcxt) $ convUnsupported "data type contexts"
   (,) <$> maybe (pure $ Sort Type) convertLType ksig
-      <*> (concat <$> traverse (convertConDecl curType extraArgs . unLoc) cons)
+      <*> (traverse addAdditionalConstructorScope . concat =<<
+           traverse (convertConDecl curType extraArgs . unLoc) cons)
 
 convertDataDecl :: ConversionMonad m
-                => Located RdrName -> LHsTyVarBndrs RdrName -> HsDataDefn RdrName
+                => Located RdrName -> [LHsTyVarBndr RdrName] -> HsDataDefn RdrName
                 -> m IndBody
 convertDataDecl name tvs defn = do
   coqName   <- freeVar $ unLoc name

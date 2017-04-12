@@ -46,8 +46,8 @@ convertInstanceName =   gensym
                     <=< ghandle (withGhcException $ const . pure $ Var "unknown_type")
                     .   convertLType
                     .   \case
-                          L _ (HsForAllTy _ _ _ _ head) -> head
-                          lty                           -> lty
+                          L _ (HsForAllTy _ head) -> head
+                          lty                     -> lty
   where withGhcException :: (GhcException -> a) -> (GhcException -> a)
         withGhcException = id
 
@@ -60,8 +60,8 @@ data InstanceInfo = InstanceInfo { instanceName  :: !Ident
 
 convertClsInstDeclInfo :: ConversionMonad m => ClsInstDecl RdrName -> m InstanceInfo
 convertClsInstDeclInfo ClsInstDecl{..} = do
-  instanceName  <- convertInstanceName cid_poly_ty
-  instanceHead  <- convertLType        cid_poly_ty
+  instanceName  <- convertInstanceName $ hsib_body cid_poly_ty
+  instanceHead  <- convertLType        $ hsib_body cid_poly_ty
   instanceClass <- maybe (convUnsupported "strangely-formed instance heads")
                          (pure . renderOneLineT . renderGallina)
                     $ termHead instanceHead
@@ -78,6 +78,8 @@ convertClsInstDecl :: ConversionMonad m
 convertClsInstDecl cid@ClsInstDecl{..} rebuild mhandler = do
   info@InstanceInfo{..} <- convertClsInstDeclInfo cid
   
+  -- TODO: Do we need the 'HsForAllTy' trick here to handle instance
+  -- superclasses?  Or is the generalization backtick enough?
   maybe id (ghandle . ($ info)) mhandler $ do
     cdefs <-   map (\ConvertedDefinition{..} -> (convDefName, maybe id Fun (nonEmpty convDefArgs) $ convDefBody))
           <$> convertTypedBindings (map unLoc $ bagToList cid_binds) M.empty

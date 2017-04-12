@@ -1,9 +1,12 @@
+# Stack
 .stack-work
 
-# Scratch work files
+# Coq
+*.vo
+*.glob
 
+# Scratch work files
 Test.hs
 test.v
-
 Example.hs
 example.v

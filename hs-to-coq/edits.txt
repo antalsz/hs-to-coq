@@ -4,8 +4,9 @@ type synonym CollectedCCs :-> Type
 data type arguments CoAxiom  (indices: br)
 data type arguments Branches (indices: br)
 
-# See Notes [Strict positivity for IdInfo], [Strict positivity for real]
+# See Note [Strict positivity for IdInfo/RuntimeRepInfo], [Strict positivity for real]
 redefine Inductive IdInfo           : Type := Mk_IdInfo_Dummy.
+redefine Inductive RuntimeRepInfo   : Type := Mk_RuntimeRepInfo_Dummy.
 redefine Inductive DataConBoxer     : Type := Mk_DataConBoxer_Dummy.
 redefine Inductive CoAxiomRule      : Type := Mk_CoAxiomRule_Dummy.
 redefine Inductive BuiltInSynFamily : Type := Mk_BuiltInSynFamily_Dummy.
@@ -64,6 +65,6 @@ data type arguments Bind (indices: b)
 
 # See Note [Strict positivity for real]
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# These other types (`DataConBoxer`, `CoAxiomRule`, `BuiltInSynFamily`) all
-# contain actual non-strictly-positive function members that e.g. take `Type`s
-# or `Pair`s of `Type`s as arguments.
+# These other types (`RuntimeRepInfo`, `DataConBoxer`, `CoAxiomRule`,
+# `BuiltInSynFamily`) all contain actual non-strictly-positive function members
+# that e.g. take `Type`s or `Pair`s of `Type`s or lists of `Type`s as arguments.

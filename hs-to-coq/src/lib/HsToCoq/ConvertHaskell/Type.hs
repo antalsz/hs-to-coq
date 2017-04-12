@@ -59,6 +59,8 @@ convertType (HsForAllTy tvs ty) = do
     pure . map (Inferred Coq.Implicit . Ident) $ S.toList fvs
   pure . maybe tyBody (Forall ?? tyBody)
        . nonEmpty $ explicitTVs ++ implicitTVs
+  -- TODO: We generate the TVs in lexicographic order, Haskell does it in source
+  -- code order.  Is this important?
 
 convertType (HsQualTy (L _ ctx) ty) = do
   classes <- traverse (fmap (Generalized Coq.Implicit) . convertLType) ctx

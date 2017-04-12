@@ -78,6 +78,8 @@ convertClsInstDecl :: ConversionMonad m
 convertClsInstDecl cid@ClsInstDecl{..} rebuild mhandler = do
   info@InstanceInfo{..} <- convertClsInstDeclInfo cid
   
+  -- TODO: Do we need the 'HsForAllTy' trick here to handle instance
+  -- superclasses?  Or is the generalization backtick enough?
   maybe id (ghandle . ($ info)) mhandler $ do
     cdefs <-   map (\ConvertedDefinition{..} -> (convDefName, maybe id Fun (nonEmpty convDefArgs) $ convDefBody))
           <$> convertTypedBindings (map unLoc $ bagToList cid_binds) M.empty

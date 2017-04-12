@@ -21,6 +21,7 @@ import GHC hiding (Name)
 import HsToCoq.Util.GHC.FastString
 
 import HsToCoq.Util.GHC
+import HsToCoq.Util.GHC.HsTypes
 import HsToCoq.Coq.Gallina as Coq
 import HsToCoq.Coq.Gallina.Util
 import HsToCoq.Coq.FreeVars
@@ -105,13 +106,11 @@ convertType (HsOpTy _ty1 _op _ty2) =
 convertType (HsParTy ty) =
   Parens <$> convertLType ty
 
-convertType (HsIParamTy (HsIPName ip) (L _ ty)) = do
-  isTyCallStack <- case ty of
-    HsTyVar tv -> (== "CallStack") <$> ghcPpr tv
-    _          -> pure False
+convertType (HsIParamTy (HsIPName ip) lty) = do
+  isTyCallStack <- maybe (pure False) (fmap (== "CallStack") . ghcPpr) $ viewLHsTyVar lty
   if isTyCallStack && ip == fsLit "callStack"
     then Var <$> var' TypeNS "CallStack"
-    else convUnsupported "implicit parameters"
+    else convUnsupported "implicit parameter constraints"
 
 convertType (HsEqTy _ty1 _ty2) =
   convUnsupported "type equality" -- FIXME

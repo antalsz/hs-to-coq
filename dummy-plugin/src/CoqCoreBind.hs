@@ -84,7 +84,8 @@ data RecFlag =
  | Mk_NonRecursive
 
 data RealSrcSpan =
-   Mk_RealSrcSpan' FastString.FastString Prelude.Int Prelude.Int Prelude.Int Prelude.Int
+   Mk_RealSrcSpan' FastString.FastString Prelude.Int Prelude.Int Prelude.Int 
+ Prelude.Int
 
 data SrcSpan =
    Mk_RealSrcSpan RealSrcSpan
@@ -94,30 +95,6 @@ data PrimOpVecCat =
    Mk_IntVec
  | Mk_WordVec
  | Mk_FloatVec
-
-data PrimElemRep =
-   Mk_Int8ElemRep
- | Mk_Int16ElemRep
- | Mk_Int32ElemRep
- | Mk_Int64ElemRep
- | Mk_Word8ElemRep
- | Mk_Word16ElemRep
- | Mk_Word32ElemRep
- | Mk_Word64ElemRep
- | Mk_FloatElemRep
- | Mk_DoubleElemRep
-
-data PrimRep =
-   Mk_VoidRep
- | Mk_PtrRep
- | Mk_IntRep
- | Mk_WordRep
- | Mk_Int64Rep
- | Mk_Word64Rep
- | Mk_AddrRep
- | Mk_FloatRep
- | Mk_DoubleRep
- | Mk_VecRep Prelude.Int PrimElemRep
 
 data NameSpace =
    Mk_VarName
@@ -537,6 +514,7 @@ data PrimOp =
  | Mk_GetApStackValOp
  | Mk_GetCCSOfOp
  | Mk_GetCurrentCCSOp
+ | Mk_ClearCCSOp
  | Mk_TraceEventOp
  | Mk_TraceMarkerOp
  | Mk_VecBroadcastOp PrimOpVecCat Length Width
@@ -642,7 +620,8 @@ data Tickish id =
  | Mk_SourceNote RealSrcSpan Prelude.String
 
 data CType =
-   Mk_CType SourceText (Prelude.Maybe Header) ((,) SourceText FastString.FastString)
+   Mk_CType SourceText (Prelude.Maybe Header) ((,) SourceText
+                                              FastString.FastString)
 
 type CLabelString = FastString.FastString
 
@@ -687,21 +666,28 @@ data AlgTyConFlav =
  | Mk_ClassTyCon Class Name
  | Mk_DataFamInstTyCon CoAxiom TyCon ([] Type_)
 data Class =
-   Mk_Class TyCon Name Unique ([] Var) ([] (FunDep Var)) ([] Type_) ([] Var) ([]
-                                                                             ClassATItem) 
- ([] ((,) Var (Prelude.Maybe ((,) Name (DefMethSpec Type_))))) (BooleanFormula Name)
+   Mk_Class TyCon Name Unique ([] Var) ([] (FunDep Var)) ([] Type_) ([] Var) 
+ ([] ClassATItem) ([]
+                  ((,) Var (Prelude.Maybe ((,) Name (DefMethSpec Type_))))) 
+ (BooleanFormula Name)
 data ClassATItem =
    Mk_ATI TyCon (Prelude.Maybe ((,) Type_ SrcSpan))
 data TyCon =
-   Mk_FunTyCon Unique Name Type_ Arity Name
- | Mk_AlgTyCon Unique Name Type_ Arity ([] Var) ([] Role) (Prelude.Maybe CType) Prelude.Bool 
- ([] Type_) AlgTyConRhs (FastStringEnv (FieldLbl Name)) RecFlag AlgTyConFlav
- | Mk_SynonymTyCon Unique Name Type_ Arity ([] Var) ([] Role) Type_
- | Mk_FamilyTyCon Unique Name Type_ Arity ([] Var) (Prelude.Maybe Name) FamTyConFlav 
- (Prelude.Maybe Class) Injectivity
- | Mk_PrimTyCon Unique Name Type_ Arity ([] Role) PrimRep Prelude.Bool (Prelude.Maybe Name)
- | Mk_PromotedDataCon Unique Name Arity Type_ ([] Role) DataCon Name
- | Mk_TcTyCon Unique Name Prelude.Bool Arity Type_
+   Mk_FunTyCon Unique Name ([] TyBinder) Type_ Type_ Arity Name
+ | Mk_AlgTyCon Unique Name ([] TyBinder) Type_ Type_ Arity ([] Var) ([] Role) 
+ (Prelude.Maybe CType) Prelude.Bool ([] Type_) AlgTyConRhs (FastStringEnv
+                                                           (FieldLbl Name)) 
+ RecFlag AlgTyConFlav
+ | Mk_SynonymTyCon Unique Name ([] TyBinder) Type_ Type_ Arity ([] Var) 
+ ([] Role) Type_
+ | Mk_FamilyTyCon Unique Name ([] TyBinder) Type_ Type_ Arity ([] Var) 
+ (Prelude.Maybe Name) FamTyConFlav (Prelude.Maybe Class) Injectivity
+ | Mk_PrimTyCon Unique Name ([] TyBinder) Type_ Type_ Arity ([] Role) 
+ Prelude.Bool (Prelude.Maybe Name)
+ | Mk_PromotedDataCon Unique Name Arity ([] TyBinder) Type_ Type_ ([] Role) 
+ DataCon Name
+ | Mk_TcTyCon Unique Name Prelude.Bool ([] Var) ([] TyBinder) Type_ Type_ 
+ Arity ([] Var)
 data AlgTyConRhs =
    Mk_AbstractTyCon Prelude.Bool
  | Mk_DataTyCon ([] DataCon) Prelude.Bool
@@ -712,7 +698,8 @@ data CoAxiom =
 data Branches =
    Mk_MkBranches BranchFlag (Data.Array.Array BranchIndex CoAxBranch)
 data CoAxBranch =
-   Mk_CoAxBranch SrcSpan ([] Var) ([] Var) ([] Role) ([] Type_) Type_ ([] CoAxBranch)
+   Mk_CoAxBranch SrcSpan ([] Var) ([] Var) ([] Role) ([] Type_) Type_ 
+ ([] CoAxBranch)
 data Var =
    Mk_TyVar Name Prelude.Int Type_
  | Mk_TcTyVar Name Prelude.Int Type_ TcTyVarDetails
@@ -729,9 +716,11 @@ data IdDetails =
  | Mk_DFunId Prelude.Bool
  | Mk_CoVarId
 data DataCon =
-   Mk_MkData Name Unique ConTag Prelude.Bool ([] Var) ([] Var) ([] EqSpec) ([] Type_) 
- ([] Type_) ([] Type_) Type_ ([] HsSrcBang) ([] (FieldLbl Name)) Var DataConRep Arity 
- Arity TyCon Type_ Prelude.Bool TyCon
+   Mk_MkData Name Unique ConTag Prelude.Bool ([] Var) ([] TyBinder) ([] Var) 
+ ([] TyBinder) ([] EqSpec) ([] Type_) ([] Type_) ([] Type_) Type_ ([]
+                                                                  HsSrcBang) 
+ ([] (FieldLbl Name)) Var DataConRep Arity Arity TyCon Type_ Prelude.Bool 
+ TyCon
 data DataConRep =
    Mk_NoDataConRep
  | Mk_DCR Var ([] Type_) ([] StrictnessMark) ([] HsImplBang)
@@ -793,9 +782,9 @@ data ConLike =
    Mk_RealDataCon DataCon
  | Mk_PatSynCon PatSyn
 data PatSyn =
-   Mk_MkPatSyn Name Unique ([] Type_) Arity Prelude.Bool ([] (FieldLbl Name)) ([] Var) 
- ([] Type_) ([] Var) ([] Type_) Type_ ((,) Var Prelude.Bool) (Prelude.Maybe
-                                                             ((,) Var Prelude.Bool))
+   Mk_MkPatSyn Name Unique ([] Type_) Arity Prelude.Bool ([] (FieldLbl Name)) 
+ ([] Var) ([] TyBinder) ([] Type_) ([] Var) ([] TyBinder) ([] Type_) 
+ Type_ ((,) Var Prelude.Bool) (Prelude.Maybe ((,) Var Prelude.Bool))
 data RecSelParent =
    Mk_RecSelData TyCon
  | Mk_RecSelPatSyn PatSyn
@@ -874,8 +863,6 @@ P.sequence
                   , (''RealSrcSpan      , 0)
                   , (''SrcSpan          , 0)
                   , (''PrimOpVecCat     , 0)
-                  , (''PrimElemRep      , 0)
-                  , (''PrimRep          , 0)
                   , (''NameSpace        , 0)
                   , (''OccName          , 0)
                   , (''ModuleName       , 0)

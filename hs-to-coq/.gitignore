@@ -4,6 +4,7 @@
 # Coq
 *.vo
 *.glob
+.*.aux
 
 # Scratch work files
 Test.hs

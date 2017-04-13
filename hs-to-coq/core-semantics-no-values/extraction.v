@@ -161,7 +161,11 @@ Extract Inlined Constant Rational   => "Prelude.Rational".
 Extract Inlined Constant ByteString => "Data.ByteString.ByteString".
 
 (* Synonyms/replacements from Haskell libraries *)
-Extract Inlined Constant FastString => "FastString.FastString".
+Extract Inductive FastString => "FastString.FastString"
+                                ["error ""FastString is abstract"" (constructor)"]
+                                "error ""FastString is abstract"" (case)".
+Extract Inlined Constant fsLit => "FastString.fsLit".
+Extract Inlined Constant mkFastString => "FastString.mkFastString".
 Extract Inlined Constant String => "Prelude.String".
 Extract Inductive IntMap => "Data.IntMap.IntMap"
                             ["error ""IntMap is abstract"" (constructor)"]

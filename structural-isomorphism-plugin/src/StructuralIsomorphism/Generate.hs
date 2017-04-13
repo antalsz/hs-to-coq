@@ -104,18 +104,17 @@ ensureIsomorphicDeclarations dt1 dt2 = do
                 (KindedTV a1 k1,  KindedTV a2 k2)  -> (a1,a2) <$ ensureIsomorphicTypes k1 k2
   
   withTypeVariables (M.fromList params) $
-    let constructors = map constructor . dtConstructors
-    in forBothWhatWith "constructors" constructors dt1 dt2 $ \con1 con2 ->
-         withCurrentConstructors (conName con1) (conName con2) $ do
-           conArgs <- fmap length
-                   .  forBothWhatWith "constructor arguments"
-                                      -- Coq loses strictness information
-                                      (map snd . conArguments) 
-                                      con1 con2
-                   $  ensureIsomorphicTypes
-           pure $ ConstructorEquivalence { srcCon = conName con1
-                                         , dstCon = conName con2
-                                         , conArgs }
+    forBothWhatWith "constructors" dtConstructors dt1 dt2 $ \con1 con2 ->
+      withCurrentConstructors (conName con1) (conName con2) $ do
+        conArgs <- fmap length
+                .  forBothWhatWith "constructor arguments"
+                                   -- Coq loses strictness information
+                                   (map snd . conArguments) 
+                                   con1 con2
+                $  ensureIsomorphicTypes
+        pure $ ConstructorEquivalence { srcCon = conName con1
+                                      , dstCon = conName con2
+                                      , conArgs }
 
 buildIsomorphismFunction :: Exp -> [ConstructorEquivalence] -> ExpQ
 buildIsomorphismFunction conv equivs = do
@@ -178,10 +177,11 @@ ensureIsomorphic n1 n2 =
           pure $ ValD (VarP fn) (NormalB lambda) []
         
         makeStructurallyIsomorphic n1 n2 equivs sviuqe = addDecQ $
-          InstanceD cxt (structurallyIsomorphicT (foldl' AppT (ConT n1) (map VarT args1))
-                                                 (foldl' AppT (ConT n2) (map VarT args2)))
-          <$> sequenceA [ defineIsomorphism 'to   equivs
-                        , defineIsomorphism 'from sviuqe ]
+          InstanceD Nothing cxt
+                    (structurallyIsomorphicT (foldl' AppT (ConT n1) (map VarT args1))
+                                             (foldl' AppT (ConT n2) (map VarT args2)))
+                    <$> sequenceA [ defineIsomorphism 'to   equivs
+                                  , defineIsomorphism 'from sviuqe ]
      
     makeStructurallyIsomorphic n1 n2 equivs sviuqe
     when (n1 /= n2) $ makeStructurallyIsomorphic n2 n1 sviuqe equivs

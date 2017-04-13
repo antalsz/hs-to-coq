@@ -1,6 +1,6 @@
-name:                dummy-plugin
+name:                structural-isomorphism-plugin
 version:             0.0.0.0
-synopsis:            A dummy GHC plugin
+synopsis:            GHC plugins using structural isomorphism to map between types
 homepage:            
 license:             MIT
 license-file:        LICENSE
@@ -14,11 +14,14 @@ cabal-version:       >=1.10
 source-repository head
   type:     git
   location: https://github.com/DeepSpec/corespec
-  subdir:   core-coq/dummy-plugin
+  subdir:   core-coq/structural-isomorphism-plugin
 
 library
-  exposed-modules:     DummyPlugin
+  exposed-modules:     Plugin.DumpModules
+                     , PrintModGuts
                      , CoqCoreBind
+                     , GhcPlugins.Util
+                     , Text.PrettyPrint.Util
                      , StructuralIsomorphism.TH.Util
                      , StructuralIsomorphism.Util
                      , StructuralIsomorphism.Class
@@ -27,14 +30,14 @@ library
                      , StructuralIsomorphism.Generate
                      , Sandbox
   
-  build-depends:       base             ==4.8.*
-                     , ghc              ==7.10.3
-                     , template-haskell ==2.10.*
+  build-depends:       base             ==4.9.*
+                     , ghc              ==8.0.2
+                     , template-haskell ==2.11.*
                      , syb              ==0.6.*
                      , bytestring       ==0.10.*
                      , array            ==0.5.*
                      , containers       ==0.5.*
-                     , transformers     ==0.4.*
+                     , transformers     ==0.5.*
                      , mtl              ==2.2.*
   
   other-extensions:    NamedFieldPuns

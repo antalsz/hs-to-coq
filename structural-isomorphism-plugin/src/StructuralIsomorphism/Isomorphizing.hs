@@ -35,6 +35,7 @@ import Control.Monad
 
 import Data.Functor.Identity
 import Control.Monad.Trans
+import Control.Monad.Fail
 import Control.Monad.RWS.Strict
 import Control.Monad.Except
 
@@ -114,7 +115,7 @@ newtype IsomorphizingT m a =
                                              a }
   deriving ( Functor, Applicative, Monad
            , Alternative, MonadPlus, MonadFix
-           , MonadIO
+           , MonadFail, MonadIO
            , MonadReader IsomorphizingEnvironment
            , MonadWriter (ApplicativeMonoid Q [Dec])
            , MonadState  (Set (Name,Name))
@@ -122,22 +123,26 @@ newtype IsomorphizingT m a =
 instance MonadTrans IsomorphizingT where lift = IsomorphizingT . lift . lift
 
 instance Quasi m => Quasi (IsomorphizingT m) where
-  qNewName          = lift . qNewName
-  qReport           = (lift .) . qReport
-  qRecover          = \_ _ -> throwError "Cannot `qRecover' in `IsomorphizingT'"
-  qLookupName       = (lift .) . qLookupName
-  qReify            = lift . qReify
-  qReifyInstances   = (lift .) . qReifyInstances
-  qReifyRoles       = lift . qReifyRoles
-  qReifyAnnotations = lift . qReifyAnnotations
-  qReifyModule      = lift . qReifyModule
-  qLocation         = lift qLocation
-  qRunIO            = lift . qRunIO
-  qAddDependentFile = lift . qAddDependentFile
-  qAddTopDecls      = lift . qAddTopDecls
-  qAddModFinalizer  = \_ -> throwError "Cannot `qAddModFinalizer' in `IsomorphizingT'"
-  qGetQ             = lift qGetQ
-  qPutQ             = lift . qPutQ
+  qNewName            = lift . qNewName
+  qReport             = (lift .) . qReport
+  qRecover            = \_ _ -> throwError "Cannot `qRecover' in `IsomorphizingT'"
+  qLookupName         = (lift .) . qLookupName
+  qReify              = lift . qReify
+  qReifyFixity        = lift . qReifyFixity
+  qReifyInstances     = (lift .) . qReifyInstances
+  qReifyRoles         = lift . qReifyRoles
+  qReifyAnnotations   = lift . qReifyAnnotations
+  qReifyModule        = lift . qReifyModule
+  qReifyConStrictness = lift . qReifyConStrictness
+  qLocation           = lift qLocation
+  qRunIO              = lift . qRunIO
+  qAddDependentFile   = lift . qAddDependentFile
+  qAddTopDecls        = lift . qAddTopDecls
+  qAddModFinalizer    = \_ -> throwError "Cannot `qAddModFinalizer' in `IsomorphizingT'"
+  qGetQ               = lift qGetQ
+  qPutQ               = lift . qPutQ
+  qIsExtEnabled       = lift . qIsExtEnabled
+  qExtsEnabled        = lift qExtsEnabled
 
 type Isomorphizing = IsomorphizingT Identity
 
@@ -161,7 +166,7 @@ existingIsomorphisms :: Quasi m => m [(Name,Name)]
 existingIsomorphisms = qReify ''StructurallyIsomorphic <&> \case
   ClassI _ instances ->
     [ (srcCon, dstCon)
-    | InstanceD _cxt (ConT si `AppT` src `AppT` dst) _body <- instances
+    | InstanceD _overlaps _cxt (ConT si `AppT` src `AppT` dst) _body <- instances
     , si == ''StructurallyIsomorphic
     , ConT srcCon <- [headType src]
     , ConT dstCon <- [headType dst] ]

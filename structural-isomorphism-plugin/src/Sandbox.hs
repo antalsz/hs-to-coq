@@ -42,25 +42,25 @@ instance StructurallyIsomorphic GHC.Unique Coq.Unique where
 instance StructurallyIsomorphic Coq.Unique GHC.Unique where to = from ; from = to
 
 $(structurallyIsomorphic ''GHC.OccName ''Coq.OccName)
-$(structurallyIsomorphic ''GHC.SrcSpan ''Coq.SrcSpan)
+-- $(structurallyIsomorphic ''GHC.SrcSpan ''Coq.SrcSpan)
 
-do ghcName <- TH.reify ''GHC.Name >>= \case
-                TH.TyConI (dataType ->
-                             Just DataType{dtConstructors =
-                                             [constructor -> Constructor{..}]}) ->
-                  pure conName
-                _ ->
-                  fail "Could not find `Name.Name' constructor"
-   sort <- TH.newName "sort"
-   occ  <- TH.newName "occ"
-   uniq <- TH.newName "uniq"
-   loc  <- TH.newName "loc"
-   [d| instance StructurallyIsomorphic GHC.Name Coq.Name where
-         to $(TH.conP ghcName $ map TH.varP [sort,occ,uniq,loc]) =
-           Coq.Mk_Name (to $(TH.varE sort))
-                       (to $(TH.varE occ))
-                       (I# $(TH.varE uniq))
-                       (to $(TH.varE loc))  |]
+-- do ghcName <- TH.reify ''GHC.Name >>= \case
+--                 TH.TyConI (dataType ->
+--                              Just DataType{dtConstructors =
+--                                              [constructor -> Constructor{..}]}) ->
+--                   pure conName
+--                 _ ->
+--                   fail "Could not find `Name.Name' constructor"
+--    sort <- TH.newName "sort"
+--    occ  <- TH.newName "occ"
+--    uniq <- TH.newName "uniq"
+--    loc  <- TH.newName "loc"
+--    [d| instance StructurallyIsomorphic GHC.Name Coq.Name where
+--          to $(TH.conP ghcName $ map TH.varP [sort,occ,uniq,loc]) =
+--            Coq.Mk_Name (to $(TH.varE sort))
+--                        (to $(TH.varE occ))
+--                        (I# $(TH.varE uniq))
+--                        (to $(TH.varE loc))  |]
 
 -- [d|instance StructurallyIsomorphic GHC.Name Coq.Name where
 --      to    = Coq.Mk_Name sort occ uniq loc

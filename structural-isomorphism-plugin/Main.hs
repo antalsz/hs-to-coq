@@ -1,5 +1,7 @@
 {-# LANGUAGE TypeFamilies, PatternSynonyms, DataKinds, UndecidableInstances #-}
 
+module Main where
+
 import Data.Type.Equality
 
 (+!) :: ()
@@ -32,6 +34,8 @@ pattern Y <- ~() where
 
 main :: IO ()
 main = pure ()
+{-# VECTORIZE main = main #-}
+{-# NOVECTORIZE (+!) #-}
   
 {-# RULES
 "map/map"    [2] forall f g xs.  map f (map g xs) = map (f.g) xs

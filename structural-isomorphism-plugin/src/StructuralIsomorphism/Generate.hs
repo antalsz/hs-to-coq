@@ -50,34 +50,36 @@ swapConstructorEquivalence equiv =
 -- were isomorphic and all the instances that proves this have been generated
 -- (hence "ensure").
 ensureIsomorphicTypes :: Quasi m => Type -> Type -> IsomorphizingT m ()
-ensureIsomorphicTypes uty1 uty2 = case (outerNormalizeType uty1, outerNormalizeType uty2) of
-  (VarT x1, VarT x2) -> do
-    x2' <- lookupTypeVariable x1
-    unless (x2' == Just x2) $
-      isomorphizingError "mismatched type variables"
-  
-  (ConT c1, ConT c2) -> do
-    ensureIsomorphic c1 c2
-  
-  (AppT lty1 rty1, AppT lty2 rty2) ->
-    ensureIsomorphicTypes lty1 lty2 *> ensureIsomorphicTypes rty1 rty2
-  
-  (ForallT _tvs1 _cxt1 _ty1, ForallT _tvs2 _cxt2 _ty2) ->
-    error "forall"
-
-  -- If the types aren't inhabitable, we don't worry about it and let GHC
-  -- complain later if there were any issues
-  (PromotedT _p1,      PromotedT _p2)      -> pure ()
-  (EqualityT,          EqualityT)          -> pure ()
-  (PromotedTupleT _n1, PromotedTupleT _n2) -> pure ()
-  (PromotedNilT,       PromotedNilT)       -> pure ()
-  (PromotedConsT,      PromotedConsT)      -> pure ()
-  (StarT,              StarT)              -> pure ()
-  (ConstraintT,        ConstraintT)        -> pure ()
-  (LitT _l1,           LitT _l2)           -> pure ()
-  
-  (ty1, ty2) ->
-    isomorphizingError $  "type mismatch: " ++ quoted ty1 ++ " <> " ++ quoted ty2
+ensureIsomorphicTypes origTy1 origTy2 =
+  let normalizeType = fmap outerNormalizeType . expandTypeSynonyms
+  in ((,) <$> normalizeType origTy1 <*> normalizeType origTy2) >>= \case
+       (VarT x1, VarT x2) -> do
+         x2' <- lookupTypeVariable x1
+         unless (x2' == Just x2) $
+           isomorphizingError "mismatched type variables"
+        
+       (ConT c1, ConT c2) -> do
+         ensureIsomorphic c1 c2
+        
+       (AppT lty1 rty1, AppT lty2 rty2) ->
+         ensureIsomorphicTypes lty1 lty2 *> ensureIsomorphicTypes rty1 rty2
+        
+       (ForallT _tvs1 _cxt1 _ty1, ForallT _tvs2 _cxt2 _ty2) ->
+         isomorphizingError "`forall'-types unsupported"
+        
+       -- If the types aren't inhabitable, we don't worry about it and let GHC
+       -- complain later if there were any issues
+       (PromotedT _p1,      PromotedT _p2)      -> pure ()
+       (EqualityT,          EqualityT)          -> pure ()
+       (PromotedTupleT _n1, PromotedTupleT _n2) -> pure ()
+       (PromotedNilT,       PromotedNilT)       -> pure ()
+       (PromotedConsT,      PromotedConsT)      -> pure ()
+       (StarT,              StarT)              -> pure ()
+       (ConstraintT,        ConstraintT)        -> pure ()
+       (LitT _l1,           LitT _l2)           -> pure ()
+        
+       (ty1, ty2) ->
+         isomorphizingError $  "type mismatch: " ++ quoted ty1 ++ " <> " ++ quoted ty2
 
 -- If @ensureIsomorphicDeclarations dt1 dt2@ returns successfully, then @dt1@
 -- and @dt2@ were isomorphic, all the necessary instances that prove this for
@@ -92,7 +94,13 @@ ensureIsomorphicDeclarations dt1 dt2 = do
   -- Let GHC error about data type contexts later if there's an issue
   -- Skip the name; that's what we're isomorphizing
   -- Skip the deriving clause; it's irrelevant
-
+  
+  -- Sanity check: do the kinds match?  We assume all inferred kinds match and
+  -- let GHC complain later if we're wrong
+  case (dtKind dt1, dtKind dt2) of
+    (Just k1, Just k2) -> ensureIsomorphicTypes k1 k2
+    _                  -> pure ()
+  
   -- That leaves only parameters and constructors!
   params <- forBothWhatWith "data type parameters" dtParameters dt1 dt2 $ \tvb1 tvb2 ->
               case (tvb1,tvb2) of
@@ -182,7 +190,7 @@ ensureIsomorphic n1 n2 =
                                              (foldl' AppT (ConT n2) (map VarT args2)))
                     <$> sequenceA [ defineIsomorphism 'to   equivs
                                   , defineIsomorphism 'from sviuqe ]
-     
+    
     makeStructurallyIsomorphic n1 n2 equivs sviuqe
     when (n1 /= n2) $ makeStructurallyIsomorphic n2 n1 sviuqe equivs
 

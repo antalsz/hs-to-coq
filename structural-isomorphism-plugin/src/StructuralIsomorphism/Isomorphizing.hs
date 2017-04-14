@@ -18,7 +18,7 @@ module StructuralIsomorphism.Isomorphizing (
   alreadyIsomorphic, learnIsomorphism,
   
   -- * Useful combinators
-  learnTypeSynonym, reifyDataType,
+  reifyDataType,
   forBothWhat, forBothWhatWith,
   
   -- * Work with existing isomorphism data
@@ -235,19 +235,9 @@ learnIsomorphism n1 n2 = modify' $ S.insert (n1,n2)
 
 --------------------------------------------------------------------------------
 
-learnTypeSynonym :: Monad m => Name -> [TyVarBndr] -> Type -> IsomorphizingT m Name
-learnTypeSynonym lhs = go . reverse where
-  go []         (ConT rhs) =
-    rhs <$ learnIsomorphism lhs rhs
-  go (tvb:tvbs) (tfn `AppT` VarT tv) | tyVarBndrName tvb == tv =
-    go tvbs tfn
-  go _ _ =
-    isomorphizingError $ quoted lhs ++ " is a complex type synonym"
-
 reifyDataType :: Quasi m => Name -> IsomorphizingT m DataType
 reifyDataType ty =
   qReify ty >>= \case
-    TyConI (TySynD _ty args def) -> reifyDataType =<< learnTypeSynonym ty args def
     TyConI dec                   -> maybe notAlgDT pure $ dataType dec
     _                            -> notAlgDT
   where notAlgDT = isomorphizingError $ quoted ty ++ " is not an algebraic data type"

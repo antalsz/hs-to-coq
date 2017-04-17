@@ -316,7 +316,7 @@ Inductive Safety : Type := Mk_PlaySafe : Safety
                         |  Mk_PlayInterruptible : Safety
                         |  Mk_PlayRisky : Safety.
 
-Inductive RuntimeRepInfo : Type := Mk_RuntimeRepInfo_Dummy.
+Inductive RuntimeRepInfo : Set := Mk_RuntimeRepInfo_Dummy.
 
 Definition RulesOnly := (bool%type).
 
@@ -915,7 +915,7 @@ Inductive InlineSpec : Type := Mk_Inline : InlineSpec
 Inductive Injectivity : Type := Mk_NotInjective : Injectivity
                              |  Mk_Injective : ((list bool) -> Injectivity).
 
-Inductive IdInfo : Type := Mk_IdInfo_Dummy.
+Inductive IdInfo : Set := Mk_IdInfo_Dummy.
 
 Definition IdEnv elt := ((VarEnv elt)%type).
 
@@ -987,7 +987,7 @@ Inductive EP a : Type := Mk_EP : (a -> (a -> (EP a))).
 Inductive DefMethSpec ty : Type := Mk_VanillaDM : (DefMethSpec ty)
                                 |  Mk_GenericDM : (ty -> (DefMethSpec ty)).
 
-Inductive DataConBoxer : Type := Mk_DataConBoxer_Dummy.
+Inductive DataConBoxer : Set := Mk_DataConBoxer_Dummy.
 
 Definition DVarEnv elt := ((UniqDFM elt)%type).
 
@@ -1015,7 +1015,7 @@ Inductive CompilerPhase : Type := Mk_Phase : (PhaseNum -> CompilerPhase)
 
 Definition CoVarEnv elt := ((VarEnv elt)%type).
 
-Inductive CoAxiomRule : Type := Mk_CoAxiomRule_Dummy.
+Inductive CoAxiomRule : Set := Mk_CoAxiomRule_Dummy.
 
 Inductive CmmCat : Type := Mk_GcPtrCat : CmmCat
                         |  Mk_BitsCat : CmmCat
@@ -1082,7 +1082,7 @@ Inductive CExportSpec : Type := Mk_CExportStatic
 Inductive BuiltInSyntax : Type := Mk_BuiltInSyntax : BuiltInSyntax
                                |  Mk_UserSyntax : BuiltInSyntax.
 
-Inductive BuiltInSynFamily : Type := Mk_BuiltInSynFamily_Dummy.
+Inductive BuiltInSynFamily : Set := Mk_BuiltInSynFamily_Dummy.
 
 Definition BranchIndex := (Int%type).
 

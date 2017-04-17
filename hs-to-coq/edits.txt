@@ -5,11 +5,11 @@ data type arguments CoAxiom  (indices: br)
 data type arguments Branches (indices: br)
 
 # See Note [Strict positivity for IdInfo/RuntimeRepInfo], [Strict positivity for real]
-redefine Inductive IdInfo           : Type := Mk_IdInfo_Dummy.
-redefine Inductive RuntimeRepInfo   : Type := Mk_RuntimeRepInfo_Dummy.
-redefine Inductive DataConBoxer     : Type := Mk_DataConBoxer_Dummy.
-redefine Inductive CoAxiomRule      : Type := Mk_CoAxiomRule_Dummy.
-redefine Inductive BuiltInSynFamily : Type := Mk_BuiltInSynFamily_Dummy.
+redefine Inductive IdInfo           : Set := Mk_IdInfo_Dummy.
+redefine Inductive RuntimeRepInfo   : Set := Mk_RuntimeRepInfo_Dummy.
+redefine Inductive DataConBoxer     : Set := Mk_DataConBoxer_Dummy.
+redefine Inductive CoAxiomRule      : Set := Mk_CoAxiomRule_Dummy.
+redefine Inductive BuiltInSynFamily : Set := Mk_BuiltInSynFamily_Dummy.
 
 # TODO With real module-checking, remove the `module` keyword and put these in
 # `renamings.txt`

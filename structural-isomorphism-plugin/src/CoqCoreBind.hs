@@ -74,6 +74,9 @@ data Safety =
  | Mk_PlayInterruptible
  | Mk_PlayRisky
 
+data RuntimeRepInfo =
+   Mk_RuntimeRepInfo_Dummy
+
 data Role =
    Mk_Nominal
  | Mk_Representational
@@ -569,6 +572,9 @@ data Injectivity =
    Mk_NotInjective
  | Mk_Injective ([] Prelude.Bool)
 
+data IdInfo =
+   Mk_IdInfo_Dummy
+
 data HsSrcBang =
    Mk_HsSrcBang (Prelude.Maybe SourceText) SrcUnpackedness SrcStrictness
 
@@ -605,7 +611,13 @@ data DefMethSpec ty =
    Mk_VanillaDM
  | Mk_GenericDM ty
 
+data DataConBoxer =
+   Mk_DataConBoxer_Dummy
+
 type ConTag = Prelude.Int
+
+data CoAxiomRule =
+   Mk_CoAxiomRule_Dummy
 
 type CcName = FastString.FastString
 
@@ -646,6 +658,9 @@ data BuiltInSyntax =
    Mk_BuiltInSyntax
  | Mk_UserSyntax
 
+data BuiltInSynFamily =
+   Mk_BuiltInSynFamily_Dummy
+
 type BranchIndex = Prelude.Int
 
 data BranchFlag =
@@ -685,7 +700,7 @@ data TyCon =
  | Mk_PrimTyCon Unique Name ([] TyBinder) Type_ Type_ Arity ([] Role) 
  Prelude.Bool (Prelude.Maybe Name)
  | Mk_PromotedDataCon Unique Name Arity ([] TyBinder) Type_ Type_ ([] Role) 
- DataCon Name
+ DataCon Name RuntimeRepInfo
  | Mk_TcTyCon Unique Name Prelude.Bool ([] Var) ([] TyBinder) Type_ Type_ 
  Arity ([] Var)
 data AlgTyConRhs =
@@ -703,7 +718,7 @@ data CoAxBranch =
 data Var =
    Mk_TyVar Name Prelude.Int Type_
  | Mk_TcTyVar Name Prelude.Int Type_ TcTyVarDetails
- | Mk_Id Name Prelude.Int Type_ IdScope IdDetails
+ | Mk_Id Name Prelude.Int Type_ IdScope IdDetails IdInfo
 data IdDetails =
    Mk_VanillaId
  | Mk_RecSelId RecSelParent Prelude.Bool
@@ -723,7 +738,7 @@ data DataCon =
  TyCon
 data DataConRep =
    Mk_NoDataConRep
- | Mk_DCR Var ([] Type_) ([] StrictnessMark) ([] HsImplBang)
+ | Mk_DCR Var DataConBoxer ([] Type_) ([] StrictnessMark) ([] HsImplBang)
 data HsImplBang =
    Mk_HsLazy
  | Mk_HsStrict
@@ -738,7 +753,7 @@ data Coercion =
  | Mk_UnivCo UnivCoProvenance Role Type_ Type_
  | Mk_SymCo Coercion
  | Mk_TransCo Coercion Coercion
- | Mk_AxiomRuleCo ([] Coercion)
+ | Mk_AxiomRuleCo CoAxiomRule ([] Coercion)
  | Mk_NthCo Prelude.Int Coercion
  | Mk_LRCo LeftOrRight Coercion
  | Mk_InstCo Coercion Coercion
@@ -801,7 +816,7 @@ data FamTyConFlav =
  | Mk_OpenSynFamilyTyCon
  | Mk_ClosedSynFamilyTyCon (Prelude.Maybe CoAxiom)
  | Mk_AbstractClosedSynFamilyTyCon
- | Mk_BuiltInSynFamTyCon
+ | Mk_BuiltInSynFamTyCon BuiltInSynFamily
 
 data Literal =
    Mk_MachChar Prelude.Char
@@ -858,6 +873,7 @@ P.sequence
                   , (''SrcUnpackedness  , 0)
                   , (''SrcStrictness    , 0)
                   , (''Safety           , 0)
+                  , (''RuntimeRepInfo   , 0)
                   , (''Role             , 0)
                   , (''RecFlag          , 0)
                   , (''RealSrcSpan      , 0)
@@ -873,6 +889,7 @@ P.sequence
                   , (''LeftOrRight      , 0)
                   , (''IsCafCC          , 0)
                   , (''Injectivity      , 0)
+                  , (''IdInfo           , 0)
                   , (''HsSrcBang        , 0)
                   , (''Header           , 0)
                   , (''GenLocated       , 2)
@@ -881,6 +898,8 @@ P.sequence
                   , (''ExportFlag       , 0)
                   , (''IdScope          , 0)
                   , (''DefMethSpec      , 1)
+                  , (''DataConBoxer     , 0)
+                  , (''CoAxiomRule      , 0)
                   , (''CostCentre       , 0)
                   , (''Tickish          , 1)
                   , (''CType            , 0)
@@ -889,6 +908,7 @@ P.sequence
                   , (''CCallSpec        , 0)
                   , (''ForeignCall      , 0)
                   , (''BuiltInSyntax    , 0)
+                  , (''BuiltInSynFamily , 0)
                   , (''BranchFlag       , 0)
                   , (''BooleanFormula   , 1)
                   , (''AlgTyConFlav     , 0)

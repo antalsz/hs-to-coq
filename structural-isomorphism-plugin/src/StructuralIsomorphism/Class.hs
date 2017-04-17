@@ -6,9 +6,16 @@ class StructurallyIsomorphic a b where
   to   :: a -> b
   from :: b -> a
 
-instance StructurallyIsomorphic a a where
+instance {-# INCOHERENT #-} StructurallyIsomorphic a a where
   to   = id
   from = id
+-- This needs to be INCOHERENT to support instances like
+-- @StructurallyIsomorphic a b => StructurallyIsomorphic [a] [b]@; I don't know
+-- why OVERLAPPABLE isn't enough
+
+instance StructurallyIsomorphic a b => StructurallyIsomorphic [a] [b] where
+  to = map to
+  from = map from
 
 instance (StructurallyIsomorphic a b, StructurallyIsomorphic a' b') =>
          StructurallyIsomorphic (a -> a') (b -> b') where

@@ -14,6 +14,7 @@ Definition FilePath   := String.
 Record Array  k v := ListToArray  { arrayToList  : list (k * v) }.
 Record Set_     a := ListToSet    { setToList    : list a }.
 Record Map    k v := ListToMap    { mapToList    : list (k * v) }.
+Record IntSet     := ListToIntSet { intSetToList : list Int }.
 Record IntMap   v := ListToIntMap { intMapToList : list (Int * v) }.
 
 Axiom error : forall {A : Type}, String -> A.

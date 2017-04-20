@@ -1,0 +1,63 @@
+compiler/
+  
+  basicTypes/
+    BasicTypes
+    Unique
+    Module
+    Name
+    NameEnv
+    OccName
+    Var
+    # Id # `lazySetIdInfo' is both in `Id` and `Var`
+    MkId
+    IdInfo
+    FieldLabel
+    DataCon
+    ConLike
+    VarSet
+    VarEnv
+    PatSyn
+    Literal
+    SrcLoc
+    Demand
+    UniqSupply
+
+  utils/
+    Pair
+    BooleanFormula
+    FastStringEnv
+    UniqFM
+    UniqDFM
+    UniqSet
+    UniqDSet
+    UnVarGraph
+    Bag
+  
+  prelude/
+    ForeignCall
+    PrimOp
+  
+  cmm/
+    CmmType
+  
+  profiling/
+    CostCentre
+  
+  types/
+    TyCon
+    Class
+    Coercion
+    TyCoRep
+    CoAxiom
+    Type
+  
+  typecheck/
+    TcType
+  
+  coreSyn/
+    CoreSyn
+    CoreArity
+    CoreUtils
+
+  simplCore/
+    CallArity

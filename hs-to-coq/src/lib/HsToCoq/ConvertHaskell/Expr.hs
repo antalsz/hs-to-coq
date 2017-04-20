@@ -167,7 +167,7 @@ convertExpr (HsIf overloaded c t f) =
   else convUnsupported "overloaded if-then-else"
 
 convertExpr (HsMultiIf PlaceHolder lgrhsList) =
-  convertLGRHSList lgrhsList
+  convertLGRHSList [] lgrhsList
 
 convertExpr (HsLet (L _ binds) body) =
   convertLocalBinds binds $ convertLExpr body
@@ -433,11 +433,11 @@ convertPatternBinding :: ConversionMonad m
                       -> Term
                       -> m a
 convertPatternBinding hsPat hsExp buildTrivial buildNontrivial fallback = do
-  pat <- convertLPat  hsPat
+  (pat, guards) <- runWriterT $ convertLPat hsPat
   exp <- convertLExpr hsExp
   
   refutability pat >>= \case
-    Trivial tpat ->
+    Trivial tpat | null guards ->
       buildTrivial exp $ Fun [Inferred Coq.Explicit $ maybe UnderscoreName Ident tpat]
     
     nontrivial -> do
@@ -449,11 +449,15 @@ convertPatternBinding hsPat hsExp buildTrivial buildNontrivial fallback = do
       let fallbackMatches
             | SoleConstructor <- nontrivial = []
             | otherwise                     = [ Equation [MultPattern [UnderscorePat]] fallback ]
-
+          guarded tm | null guards = tm
+                     | otherwise   = If (foldr1 (App2 $ Var "andb") guards) Nothing
+                                        tm
+                                        fallback
+      
       buildNontrivial exp cont $ \body rest ->
         Let cont [Inferred Coq.Explicit $ Ident arg] Nothing
                  (Coq.Match [MatchItem (Var arg) Nothing Nothing] Nothing $ 
-                   Equation [MultPattern [pat]] rest : fallbackMatches)
+                   Equation [MultPattern [pat]] (guarded rest) : fallbackMatches)
           body
 
 convertDoBlock :: ConversionMonad m => [ExprLStmt RdrName] -> m Term
@@ -519,10 +523,11 @@ convertMatchGroup (MG (L _ alts) _ _ _) = traverse (convertMatch . unLoc) alts
 
 convertMatch :: ConversionMonad m => Match RdrName (LHsExpr RdrName) -> m Equation
 convertMatch GHC.Match{..} = do
-  pats <- maybe (convUnsupported "no-pattern case arms") pure . nonEmpty
-            =<< traverse convertLPat m_pats
-  oty  <- traverse convertLType m_type
-  rhs  <- convertGRHSs m_grhss
+  (pats, guards) <- runWriterT $
+    maybe (convUnsupported "no-pattern case arms") pure . nonEmpty
+      =<< traverse convertLPat m_pats
+  oty <- traverse convertLType m_type
+  rhs <- convertGRHSs (map BoolGuard guards) m_grhss
   pure . Equation [MultPattern pats] $ maybe id (flip HasType) oty rhs
 
 --------------------------------------------------------------------------------
@@ -537,12 +542,14 @@ convertGuard [] = pure []
 convertGuard gs = collapseGuards <$> traverse (toCond . unLoc) gs where
   toCond (BodyStmt e _bind _guard _PlaceHolder) =
     isTrueLExpr e >>= \case
-      True  -> pure OtherwiseGuard
-      False -> BoolGuard <$> convertLExpr e
+      True  -> pure [OtherwiseGuard]
+      False -> (:[]) . BoolGuard <$> convertLExpr e
   toCond (LetStmt (L _ binds)) =
-    pure . LetGuard $ convertLocalBinds binds
-  toCond (BindStmt pat exp _bind _fail PlaceHolder) =
-    PatternGuard <$> convertLPat pat <*> convertLExpr exp
+    pure . (:[]) . LetGuard $ convertLocalBinds binds
+  toCond (BindStmt pat exp _bind _fail PlaceHolder) = do
+    (pat', guards) <- runWriterT $ convertLPat pat
+    exp'           <- convertLExpr exp
+    pure $ PatternGuard pat' exp' : map BoolGuard guards
   toCond _ =
     convUnsupported "impossibly fancy guards"
 
@@ -554,7 +561,7 @@ convertGuard gs = collapseGuards <$> traverse (toCond . unLoc) gs where
   addGuard g' (g:gs) =
     g':g:gs
   
-  collapseGuards = foldr addGuard []
+  collapseGuards = foldr addGuard [] . concat
 
 -- Returns a function waiting for the next guard
 guardTerm :: ConversionMonad m => [ConvertedGuard m] -> Term -> (Term -> m Term)
@@ -588,14 +595,22 @@ convertGuards gs = foldrM (uncurry guardTerm) MissingValue gs
 --
 -- Right now, this doesn't catch the fallthrough.  Oh well!
 
-convertGRHS :: ConversionMonad m => GRHS RdrName (LHsExpr RdrName) -> m ([ConvertedGuard m],Term)
-convertGRHS (GRHS gs rhs) = (,) <$> convertGuard gs <*> convertLExpr rhs
+convertGRHS :: ConversionMonad m
+            => [ConvertedGuard m] -> GRHS RdrName (LHsExpr RdrName)
+            -> m ([ConvertedGuard m],Term)
+convertGRHS extraGuards (GRHS gs rhs) = (,) <$> ((extraGuards ++) <$> convertGuard gs)
+                                            <*> convertLExpr rhs
 
-convertLGRHSList :: ConversionMonad m => [LGRHS RdrName (LHsExpr RdrName)] -> m Term
-convertLGRHSList = convertGuards <=< traverse (convertGRHS . unLoc)
+convertLGRHSList :: ConversionMonad m
+                 => [ConvertedGuard m] -> [LGRHS RdrName (LHsExpr RdrName)]
+                 -> m Term
+convertLGRHSList extraGuards = convertGuards <=< traverse (convertGRHS extraGuards . unLoc)
 
-convertGRHSs :: ConversionMonad m => GRHSs RdrName (LHsExpr RdrName) -> m Term
-convertGRHSs GRHSs{..} = convertLocalBinds (unLoc grhssLocalBinds) $ convertLGRHSList grhssGRHSs
+convertGRHSs :: ConversionMonad m
+             => [ConvertedGuard m] -> GRHSs RdrName (LHsExpr RdrName)
+             -> m Term
+convertGRHSs extraGuards GRHSs{..} = convertLocalBinds (unLoc grhssLocalBinds)
+                                   $ convertLGRHSList extraGuards grhssGRHSs
 
 --------------------------------------------------------------------------------
 
@@ -604,8 +619,9 @@ convertTypedBinding _convHsTy VarBind{}     = convUnsupported "[internal] `VarBi
 convertTypedBinding _convHsTy AbsBinds{}    = convUnsupported "[internal?] `AbsBinds'"
 convertTypedBinding _convHsTy AbsBindsSig{} = convUnsupported "[internal?] `AbsBindsSig'"
 convertTypedBinding _convHsTy PatSynBind{}  = convUnsupported "pattern synonym bindings"
-convertTypedBinding _convHsTy PatBind{..}   = -- TODO use `_convHsTy`?
-  ConvertedPatternBinding <$> convertLPat pat_lhs <*> convertGRHSs pat_rhs
+convertTypedBinding _convHsTy PatBind{..}   = do -- TODO use `_convHsTy`?
+  (pat, guards) <- runWriterT $ convertLPat pat_lhs
+  ConvertedPatternBinding pat <$> convertGRHSs (map BoolGuard guards) pat_rhs
 convertTypedBinding  convHsTy FunBind{..}   = do
   (name, opName) <- freeVar (unLoc fun_id) <&> \case
                       name | identIsVariable name -> (name,            Nothing)
@@ -621,7 +637,7 @@ convertTypedBinding  convHsTy FunBind{..}   = do
     if all (null . m_pats . unLoc) . unLoc $ mg_alts fun_matches
     then case unLoc $ mg_alts fun_matches of
            [L _ (GHC.Match _ [] mty grhss)] ->
-             maybe (pure id) (fmap (flip HasType) . convertLType) mty <*> convertGRHSs grhss
+             maybe (pure id) (fmap (flip HasType) . convertLType) mty <*> convertGRHSs [] grhss
            _ ->
              convUnsupported "malformed multi-match variable definitions"
     else do

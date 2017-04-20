@@ -14,6 +14,7 @@ import Data.List.NonEmpty (NonEmpty(), (<|))
 import qualified Data.Text as T
 
 import Control.Monad.Trans.Maybe
+import Control.Monad.Writer
 
 import qualified Data.Map.Strict as M
 
@@ -29,10 +30,11 @@ import HsToCoq.Coq.Gallina.Util as Coq
 import HsToCoq.ConvertHaskell.Parameters.Renamings
 import HsToCoq.ConvertHaskell.Monad
 import HsToCoq.ConvertHaskell.Variables
+import HsToCoq.ConvertHaskell.Literals
 
 --------------------------------------------------------------------------------
 
-convertPat :: ConversionMonad m => Pat RdrName -> m Pattern
+convertPat :: (ConversionMonad m, MonadWriter [Term] m) => Pat RdrName -> m Pattern
 convertPat (WildPat PlaceHolder) =
   pure UnderscorePat
 
@@ -58,7 +60,7 @@ convertPat (ListPat pats PlaceHolder overloaded) =
 
 -- TODO: Mark converted unboxed tuples specially?
 convertPat (TuplePat pats _boxity _PlaceHolders) =
-  foldl1 (App2Pat $ Bare "pair") <$> traverse convertLPat pats
+  foldl1 (App2Pat (Bare "pair")) <$> traverse convertLPat pats
 
 convertPat (PArrPat _ _) =
   convUnsupported "parallel array patterns"
@@ -99,7 +101,7 @@ convertPat (ConPatIn (L _ hsCon) conVariety) = do
            
            Nothing -> recPatUnsupported "unknown"
     
-    InfixCon l r ->
+    InfixCon l r -> do
       InfixPat <$> convertLPat l <*> pure con <*> convertLPat r
 
 convertPat (ConPatOut{}) =
@@ -122,16 +124,14 @@ convertPat (LitPat lit) =
     HsWordPrim   _ _       -> convUnsupported "`Word#' literal patterns"
     HsInt64Prim  _ _       -> convUnsupported "`Int64#' literal patterns"
     HsWord64Prim _ _       -> convUnsupported "`Word64#' literal patterns"
-    HsInteger    _ _int _ty -> convUnsupported "`Integer' literal patterns"
-                              -- NumPat <$> convertInteger "`Integer' literal patterns" int
+    HsInteger    _ int _ty -> convertIntegerPat "`Integer' literal patterns" int
     HsRat        _ _       -> convUnsupported "`Rational' literal patterns"
     HsFloatPrim  _         -> convUnsupported "`Float#' literal patterns"
     HsDoublePrim _         -> convUnsupported "`Double#' literal patterns"
 
 convertPat (NPat (L _ OverLit{..}) _negate _eq PlaceHolder) = -- And strings
   case ol_val of
-    HsIntegral   _src _int -> convUnsupported "integer literal patterns"
-                              -- NumPat <$> convertInteger "integer literal patterns" int
+    HsIntegral   _src int -> convertIntegerPat "integer literal patterns" int
     HsFractional _        -> convUnsupported "fractional literal patterns"
     HsIsString   _src str -> pure . StringPat $ fsToText str
 
@@ -149,10 +149,17 @@ convertPat (CoPat _ _ _) =
 
 --------------------------------------------------------------------------------
 
-convertLPat :: ConversionMonad m => LPat RdrName -> m Pattern
+convertLPat :: (ConversionMonad m, MonadWriter [Term] m) => LPat RdrName -> m Pattern
 convertLPat = convertPat . unLoc
 
 --------------------------------------------------------------------------------
+
+convertIntegerPat :: (ConversionMonad m, MonadWriter [Term] m)
+                  => String -> Integer -> m Pattern
+convertIntegerPat what hsInt = do
+  var <- gensym "num"
+  int <- convertInteger what hsInt
+  Coq.VarPat var <$ tell ([Infix (Var var) "==" (Num int)] :: [Term])
 
 -- Nothing:    Not a constructor
 -- Just True:  Sole constructor

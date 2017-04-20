@@ -80,6 +80,7 @@ import Prelude hiding (Num)
 
 import Data.Foldable
 import Data.Traversable
+import HsToCoq.Util.Function
 
 import Data.Text (Text)
 import qualified Data.Text as T
@@ -416,7 +417,7 @@ renderNum :: Num -> Doc
 renderNum = integer . toInteger
 
 renderString :: Text -> Doc
-renderString = ((dquotes . string) .) . T.concatMap $ \case
+renderString = dquotes . string .: T.concatMap $ \case
                  '"' -> "\"\""
                  c   -> T.singleton c
 

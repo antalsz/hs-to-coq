@@ -23,6 +23,7 @@ import Prelude hiding (Num)
 import Data.Foldable
 import HsToCoq.Util.Containers
 import Control.Monad.Variables
+import HsToCoq.Util.Function
 
 import Data.List.NonEmpty (NonEmpty(), (<|))
 import Data.Set (Set)
@@ -235,7 +236,7 @@ bindingTelescope :: (Binding b, MonadVariables Ident d m, Monoid d, Foldable f)
 bindingTelescope = flip . foldr . binding
 
 instance Binding (Set Ident) where
-  binding = (bindAll .) . M.fromSet
+  binding = bindAll .: M.fromSet
 
 instance Binding b => Binding (Maybe b) where
   binding = bindingTelescope

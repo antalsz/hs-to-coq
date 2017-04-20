@@ -96,7 +96,7 @@ convertClsInstDecl cid@ClsInstDecl{..} rebuild mhandler = do
 
 convertModuleClsInstDecls :: ConversionMonad m
                           => [(Maybe ModuleName, ClsInstDecl RdrName)] -> m [Sentence]
-convertModuleClsInstDecls = (fmap concat .) . traverse $ maybeWithCurrentModule .*^ \cid ->
+convertModuleClsInstDecls = fmap concat .: traverse $ maybeWithCurrentModule .*^ \cid ->
                                convertClsInstDecl cid
                                                   (pure . pure . InstanceSentence)
                                                   (Just axiomatizeInstance)

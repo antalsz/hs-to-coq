@@ -18,6 +18,7 @@ import Control.Monad
 import Control.Monad.Fix
 import Control.Monad.State
 import Control.Monad.Except
+import HsToCoq.Util.Function
 
 import Data.Text (Text)
 import qualified Data.Text as T
@@ -33,7 +34,7 @@ runParseT :: ParseT m a -> Text -> m (Either String (a, Text))
 runParseT (ParseT act) = runExceptT . runStateT act 
 
 runParse :: Parse a -> Text -> Either String (a, Text)
-runParse = (runIdentity .) . runParseT
+runParse = runIdentity .: runParseT
 
 evalParseT :: Monad m => ParseT m a -> Text -> m (Either String a)
 evalParseT (ParseT act) t = runExceptT $ do
@@ -43,7 +44,7 @@ evalParseT (ParseT act) t = runExceptT $ do
   else throwError "unused input"
 
 evalParse :: Parse a -> Text -> Either String a
-evalParse = (runIdentity .) . evalParseT
+evalParse = runIdentity .: evalParseT
 
 --------------------------------------------------------------------------------
 
@@ -78,7 +79,7 @@ parseToken :: Monad m
            -> (Char -> Bool)
            -> ParseT m a
 parseToken build isFirst isRest =
-  (build .) . T.cons <$> parseChar isFirst <*> parseChars isRest
+  build .: T.cons <$> parseChar isFirst <*> parseChars isRest
 
 parseCharTokenLookahead :: Monad m
                         => (Text -> a)

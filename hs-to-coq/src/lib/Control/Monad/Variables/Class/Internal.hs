@@ -10,6 +10,7 @@ module Control.Monad.Variables.Class.Internal (
 import Data.Foldable
 import Control.Monad.Trans
 import HsToCoq.Util.Monad
+import HsToCoq.Util.Function
 import Data.Maybe
 
 import Data.Set (Set)
@@ -67,89 +68,89 @@ instance (Monad m, Ord i) => MonadVariables i d (V.VariablesT i d m) where
   bindAll  = V.bindAll
   bound    = V.bound
   allBound = V.allBound
-  free     = V.free 
+  free     = V.free
   frees    = V.frees
 
 instance MonadVariables i d m => MonadVariables i d (I.IdentityT m) where
-  bind     = (I.mapIdentityT .) . bind
-  bindAll  = I.mapIdentityT     . bindAll
-  bound    = lift               . bound
-  free     = lift               . free 
-  frees    = lift               . frees
+  bind     = I.mapIdentityT .: bind
+  bindAll  = I.mapIdentityT .  bindAll
+  bound    = lift           .  bound
+  free     = lift           .  free
+  frees    = lift           .  frees
 
 instance MonadVariables i d m => MonadVariables i d (R.ReaderT r m) where
-  bind     = (R.mapReaderT .) . bind
-  bindAll  = R.mapReaderT     . bindAll
-  bound    = lift             . bound
-  free     = lift             . free 
-  frees    = lift             . frees
+  bind     = R.mapReaderT  .: bind
+  bindAll  = R.mapReaderT  .  bindAll
+  bound    = lift          .  bound
+  free     = lift          .  free
+  frees    = lift          .  frees
 
 instance (MonadVariables i d m, Monoid w) => MonadVariables i d (WS.WriterT w m) where
-  bind     = (WS.mapWriterT .) . bind
-  bindAll  = WS.mapWriterT     . bindAll
-  bound    = lift              . bound
-  free     = lift              . free 
-  frees    = lift              . frees
+  bind     = WS.mapWriterT  .: bind
+  bindAll  = WS.mapWriterT  .  bindAll
+  bound    = lift           .  bound
+  free     = lift           .  free
+  frees    = lift           .  frees
 
 instance (MonadVariables i d m, Monoid w) => MonadVariables i d (WL.WriterT w m) where
-  bind     = (WL.mapWriterT .) . bind
-  bindAll  = WL.mapWriterT     . bindAll
-  bound    = lift              . bound
-  free     = lift              . free 
-  frees    = lift              . frees
+  bind     = WL.mapWriterT  .: bind
+  bindAll  = WL.mapWriterT  .  bindAll
+  bound    = lift           .  bound
+  free     = lift           .  free
+  frees    = lift           .  frees
 
 instance MonadVariables i d m => MonadVariables i d (SS.StateT s m) where
-  bind     = (SS.mapStateT .) . bind
-  bindAll  = SS.mapStateT     . bindAll
-  bound    = lift             . bound
-  free     = lift             . free 
-  frees    = lift             . frees
+  bind     = SS.mapStateT  .: bind
+  bindAll  = SS.mapStateT  .  bindAll
+  bound    = lift          .  bound
+  free     = lift          .  free
+  frees    = lift          .  frees
 
 instance MonadVariables i d m => MonadVariables i d (SL.StateT s m) where
-  bind     = (SL.mapStateT .) . bind
-  bindAll  = SL.mapStateT     . bindAll
-  bound    = lift             . bound
-  free     = lift             . free 
-  frees    = lift             . frees
+  bind     = SL.mapStateT  .: bind
+  bindAll  = SL.mapStateT  .  bindAll
+  bound    = lift          .  bound
+  free     = lift          .  free
+  frees    = lift          .  frees
 
 instance (MonadVariables i d m, Monoid w) => MonadVariables i d (RWSS.RWST r w s m) where
-  bind     = (RWSS.mapRWST .) . bind
-  bindAll  = RWSS.mapRWST     . bindAll
-  bound    = lift             . bound
-  free     = lift             . free 
-  frees    = lift             . frees
+  bind     = RWSS.mapRWST  .: bind
+  bindAll  = RWSS.mapRWST  .  bindAll
+  bound    = lift          .  bound
+  free     = lift          .  free
+  frees    = lift          .  frees
 
 instance (MonadVariables i d m, Monoid w) => MonadVariables i d (RWSL.RWST r w s m) where
-  bind     = (RWSL.mapRWST .) . bind
-  bindAll  = RWSL.mapRWST     . bindAll
-  bound    = lift             . bound
-  free     = lift             . free 
-  frees    = lift             . frees
+  bind     = RWSL.mapRWST  .: bind
+  bindAll  = RWSL.mapRWST  .  bindAll
+  bound    = lift          .  bound
+  free     = lift          .  free
+  frees    = lift          .  frees
 
 instance MonadVariables i d m => MonadVariables i d (M.MaybeT m) where
-  bind     = (M.mapMaybeT .) . bind
-  bindAll  = M.mapMaybeT     . bindAll
-  bound    = lift            . bound
-  free     = lift            . free 
-  frees    = lift            . frees
+  bind     = M.mapMaybeT  .: bind
+  bindAll  = M.mapMaybeT  .  bindAll
+  bound    = lift         .  bound
+  free     = lift         .  free
+  frees    = lift         .  frees
 
 instance MonadVariables i d m => MonadVariables i d (E.ExceptT e m) where
-  bind     = (E.mapExceptT .) . bind
-  bindAll  = E.mapExceptT     . bindAll
-  bound    = lift             . bound
-  free     = lift             . free 
-  frees    = lift             . frees
+  bind     = E.mapExceptT  .: bind
+  bindAll  = E.mapExceptT  .  bindAll
+  bound    = lift          .  bound
+  free     = lift          .  free
+  frees    = lift          .  frees
 
 instance MonadVariables i d m => MonadVariables i d (C.ContT r m) where
-  bind     = (C.mapContT .) . bind
-  bindAll  = C.mapContT     . bindAll
-  bound    = lift           . bound
-  free     = lift           . free
-  frees    = lift           . frees
+  bind     = C.mapContT  .: bind
+  bindAll  = C.mapContT  .  bindAll
+  bound    = lift        .  bound
+  free     = lift        .  free
+  frees    = lift        .  frees
 
 instance MonadVariables i d m => MonadVariables i d (GHC.GhcT m) where
-  bind     = (GHC.mapGhcT .) . bind
-  bindAll  = GHC.mapGhcT     . bindAll
-  bound    = lift            . bound
-  free     = lift            . free
-  frees    = lift            . frees
+  bind     = GHC.mapGhcT  .: bind
+  bindAll  = GHC.mapGhcT  .  bindAll
+  bound    = lift         .  bound
+  free     = lift         .  free
+  frees    = lift         .  frees

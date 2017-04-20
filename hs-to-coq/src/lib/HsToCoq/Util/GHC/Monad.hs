@@ -15,11 +15,15 @@ import Control.Monad.RWS.Class
 import Control.Monad.Error.Class
 import Control.Monad.Cont.Class
 
-import qualified Control.Monad.Trans.Identity     as I
-import qualified Control.Monad.Trans.Reader       as R
-import qualified Control.Monad.Trans.State.Strict as SS
-import qualified Control.Monad.Trans.State.Lazy   as SL
-import qualified Control.Monad.Trans.Variables    as V
+import qualified Control.Monad.Trans.Identity      as I
+import qualified Control.Monad.Trans.Reader        as R
+import qualified Control.Monad.Trans.Writer.Strict as WS
+import qualified Control.Monad.Trans.Writer.Lazy   as WL
+import qualified Control.Monad.Trans.State.Strict  as SS
+import qualified Control.Monad.Trans.State.Lazy    as SL
+import qualified Control.Monad.Trans.RWS.Strict    as RWSS
+import qualified Control.Monad.Trans.RWS.Lazy      as RWSL
+import qualified Control.Monad.Trans.Variables     as V
 
 instance MonadTrans GhcT where
   lift = liftGhcT
@@ -58,11 +62,27 @@ instance GhcMonad m => GhcMonad (R.ReaderT r m) where
   getSession = lift   getSession
   setSession = lift . setSession
 
+instance (GhcMonad m, Monoid w) => GhcMonad (WS.WriterT w m) where
+  getSession = lift   getSession
+  setSession = lift . setSession
+
+instance (GhcMonad m, Monoid w) => GhcMonad (WL.WriterT w m) where
+  getSession = lift   getSession
+  setSession = lift . setSession
+
 instance GhcMonad m => GhcMonad (SS.StateT s m) where
   getSession = lift   getSession
   setSession = lift . setSession
 
 instance GhcMonad m => GhcMonad (SL.StateT s m) where
+  getSession = lift   getSession
+  setSession = lift . setSession
+
+instance (GhcMonad m, Monoid w) => GhcMonad (RWSS.RWST r w s m) where
+  getSession = lift   getSession
+  setSession = lift . setSession
+
+instance (GhcMonad m, Monoid w) => GhcMonad (RWSL.RWST r w s m) where
   getSession = lift   getSession
   setSession = lift . setSession
 

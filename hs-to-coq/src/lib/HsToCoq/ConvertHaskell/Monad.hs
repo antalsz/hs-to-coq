@@ -79,10 +79,10 @@ evalConversion :: GhcMonad m => Renamings -> Edits -> ConversionT m a -> m a
 evalConversion _renamings _edits = evalVariablesT . (evalStateT ?? ConversionState{..}) where
   __currentModule = Nothing
   
-  -- TODO Add base types?
-  _constructors      = M.empty
-  _constructorTypes  = M.empty
-  _constructorFields = M.empty
+  -- TODO Either convert the Prelude directly or add this to a configuration file.
+  _constructors      = M.fromList [ ("option", ["Some", "None"]) ]
+  _constructorTypes  = M.fromList [ ("None", "option"), ("Some", "option") ]
+  _constructorFields = M.fromList [ ("None", NonRecordFields 0), ("Some", NonRecordFields 1) ]
   _recordFieldTypes  = M.empty
   
   _defaultMethods = M.fromList ["Eq" ~>> [ "==" ~> Fun [arg "x", arg "y"] (App1 (Var "negb") $ Infix (Var "x") "/=" (Var "y"))

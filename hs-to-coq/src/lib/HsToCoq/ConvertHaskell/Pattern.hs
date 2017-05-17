@@ -159,7 +159,7 @@ convertIntegerPat :: (ConversionMonad m, MonadWriter [Term] m)
 convertIntegerPat what hsInt = do
   var <- gensym "num"
   int <- convertInteger what hsInt
-  Coq.VarPat var <$ tell ([Infix (Var var) "==" (Num int)] :: [Term])
+  Coq.VarPat var <$ tell ([Infix (Var var) "==" (PolyNum int)] :: [Term])
 
 -- Nothing:    Not a constructor
 -- Just True:  Sole constructor

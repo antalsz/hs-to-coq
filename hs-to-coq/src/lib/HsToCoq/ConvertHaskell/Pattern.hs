@@ -1,18 +1,21 @@
-{-# LANGUAGE LambdaCase, RecordWildCards, OverloadedStrings, OverloadedLists, FlexibleContexts #-}
+{-# LANGUAGE LambdaCase, TypeApplications, RecordWildCards, OverloadedStrings, OverloadedLists, FlexibleContexts #-}
 
 module HsToCoq.ConvertHaskell.Pattern (
   convertPat,  convertLPat,
   -- * Utility
-  Refutability(..), refutability, isSoleConstructor
+  Refutability(..), refutability, isSoleConstructor, compatible, compatibleSeqs
 ) where
 
 import Control.Lens hiding ((<|))
 
 import Data.Maybe
+import Data.Foldable
 import Data.Traversable
 import Data.List.NonEmpty (NonEmpty(), (<|))
 import qualified Data.Text as T
 
+import Control.Monad
+import HsToCoq.Util.Monad
 import Control.Monad.Trans.Maybe
 import Control.Monad.Writer
 
@@ -198,3 +201,39 @@ refutability UnderscorePat              = pure $ Trivial Nothing
 refutability (NumPat _)                 = pure Refutable
 refutability (StringPat _)              = pure Refutable
 refutability (OrPats _)                 = pure Refutable -- TODO: Handle or-patterns?
+
+
+-- Module-local
+to_ctor :: ConversionMonad m => Pattern -> MaybeT m (Qualid, [Pattern])
+to_ctor (ArgsPat              con args) = pure $ (     con, toList args)
+to_ctor (ExplicitArgsPat      con args) = pure $ (     con, toList args)
+to_ctor (InfixPat        argL con argR) = pure $ (Bare con, [argL, argR])
+to_ctor (Coq.AsPat            pat _)    = to_ctor pat
+to_ctor (QualidPat            qid)      = let id = qualidToIdent qid
+                                          in use (constructorTypes . at id) >>= \case
+                                               Just _  -> pure (qid, [])
+                                               Nothing -> mzero
+to_ctor _                               = mzero
+
+-- Module-local
+is_universal :: ConversionMonad m => Pattern -> m Bool
+is_universal (Coq.AsPat _ _) = pure True
+is_universal (QualidPat qid) = use $ constructorTypes . at (qualidToIdent qid) . to isNothing
+is_universal UnderscorePat   = pure True
+is_universal _               = pure False
+
+compatible :: ConversionMonad m => Pattern -> Pattern -> m Bool
+pat1 `compatible` pat2 = foldr @[] orM (pure False)
+  [ pure $ pat1 == pat2
+  , is_universal pat1
+  , is_universal pat2
+  , fmap (fromMaybe False) . runMaybeT $ do
+      (con1, args1) <- to_ctor pat1
+      (con2, args2) <- to_ctor pat2
+      lift $ (con1 == con2 &&) <$> (args1 `compatibleSeqs` args2) ]
+
+compatibleSeqs :: (ConversionMonad m, Foldable f) => f Pattern -> f Pattern -> m Bool
+compatibleSeqs fps fqs = go (toList fps) (toList fqs) where
+  go (p:ps) (q:qs) = (p `compatible` q) `andM` go ps qs
+  go []     []     = pure True
+  go _      _      = pure False

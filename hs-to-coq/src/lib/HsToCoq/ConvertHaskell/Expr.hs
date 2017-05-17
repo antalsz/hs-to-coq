@@ -27,6 +27,7 @@ import Control.Lens
 import Data.Bifunctor
 import Data.Foldable
 import Data.Traversable
+import Data.Function
 import HsToCoq.Util.Function
 import Data.Maybe
 import Data.List (intercalate)
@@ -169,7 +170,7 @@ convertExpr (HsIf overloaded c t f) =
   else convUnsupported "overloaded if-then-else"
 
 convertExpr (HsMultiIf PlaceHolder lgrhsList) =
-  convertLGRHSList [] lgrhsList
+  convertLGRHSList [] lgrhsList MissingValue
 
 convertExpr (HsLet (L _ binds) body) =
   convertLocalBinds binds $ convertLExpr body
@@ -247,7 +248,7 @@ convertExpr (RecordUpd recVal fields PlaceHolder PlaceHolder PlaceHolder PlaceHo
   
   recType <- S.minView . S.fromList <$> traverse (\field -> use $ recordFieldTypes . at field) updFields >>= \case
                Just (Just recType, []) -> pure recType
-               Just (Nothing,      []) -> convUnsupported $ "invalid record upate with " ++ prettyUpdFields "non-record-field"
+               Just (Nothing,      []) -> convUnsupported $ "invalid record update with " ++ prettyUpdFields "non-record-field"
                _                       -> convUnsupported $ "invalid mixed-data-type record updates with " ++ prettyUpdFields "the given field"
   
   ctors   <- maybe (convUnsupported "invalid unknown record type") pure =<< use (constructors . at recType)
@@ -529,8 +530,53 @@ convertMatch GHC.Match{..} = do
     maybe (convUnsupported "no-pattern case arms") pure . nonEmpty
       =<< traverse convertLPat m_pats
   oty <- traverse convertLType m_type
-  rhs <- convertGRHSs (map BoolGuard guards) m_grhss
+  rhs <- convertGRHSs (map BoolGuard guards) m_grhss placeholder
   pure . Equation [MultPattern pats] $ maybe id (flip HasType) oty rhs
+
+convertMatch' :: ConversionMonad m
+              => Match RdrName (LHsExpr RdrName)
+              -> m (NonEmpty Pattern, Term -> m Term)
+convertMatch' GHC.Match{..} = do
+  (pats, guards) <- runWriterT $
+    maybe (convUnsupported "no-pattern case arms") pure . nonEmpty
+      =<< traverse convertLPat m_pats
+  oty <- traverse convertLType m_type
+  pure ( pats
+       , fmap (maybe id (flip HasType) oty) . convertGRHSs (map BoolGuard guards) m_grhss )
+
+convertMatchGroup' :: (ConversionMonad m)
+                   => MatchGroup RdrName (LHsExpr RdrName)
+                   -> m [[(NonEmpty Pattern, Term -> m Term)]]
+convertMatchGroup' (MG (L _ alts) _ _ _) = do
+  groupByM (compatibleSeqs `on` fst) =<< traverse (convertMatch' . unLoc) alts
+
+buildMatch' :: ConversionMonad m
+            => [(NonEmpty Pattern, Term -> m Term)]
+            -> (NonEmpty Term -> m Term)
+buildMatch' eqns args = foldrM build MissingValue eqns where
+  build (pats,rhs) next = do
+    body <- rhs next
+    pure $ match args [Equation [MultPattern pats] body]
+
+match :: NonEmpty Term -> [Equation] -> Term
+match args = Coq.Match (args <&> \arg -> MatchItem arg Nothing Nothing) Nothing
+
+{-
+f x  | p  x  = y  x
+f x' | p' x' = y' x'
+
+====>
+
+match __arg_0__ with
+  | x => if p x
+         then y x
+         else match __arg_0__ with
+               | x' => if p' x'
+                       then y' x'
+                       else _
+              end
+end
+-}
 
 --------------------------------------------------------------------------------
 
@@ -586,9 +632,9 @@ guardTerm gs guarded unguarded = go gs where
 
 --------------------------------------------------------------------------------
 
-convertGuards :: ConversionMonad m => [([ConvertedGuard m],Term)] -> m Term
-convertGuards [] = convUnsupported "empty lists of guarded statements"
-convertGuards gs = foldrM (uncurry guardTerm) MissingValue gs
+convertGuards :: ConversionMonad m => [([ConvertedGuard m],Term)] -> (Term -> m Term)
+convertGuards [] = const $ convUnsupported "empty lists of guarded statements"
+convertGuards gs = foldrM (uncurry guardTerm) ?? gs
 -- TODO: We could support enhanced fallthrough if we detected more
 -- `MissingValue` cases, e.g.
 --
@@ -605,14 +651,19 @@ convertGRHS extraGuards (GRHS gs rhs) = (,) <$> ((extraGuards ++) <$> convertGua
 
 convertLGRHSList :: ConversionMonad m
                  => [ConvertedGuard m] -> [LGRHS RdrName (LHsExpr RdrName)]
-                 -> m Term
-convertLGRHSList extraGuards = convertGuards <=< traverse (convertGRHS extraGuards . unLoc)
+                 -> Term -> m Term
+convertLGRHSList extraGuards lgrhses terminal =
+  (convertGuards ?? terminal) =<< traverse (convertGRHS extraGuards . unLoc) lgrhses
 
 convertGRHSs :: ConversionMonad m
              => [ConvertedGuard m] -> GRHSs RdrName (LHsExpr RdrName)
-             -> m Term
+             -> Term -> m Term
 convertGRHSs extraGuards GRHSs{..} = convertLocalBinds (unLoc grhssLocalBinds)
-                                   $ convertLGRHSList extraGuards grhssGRHSs
+                                   . convertLGRHSList extraGuards grhssGRHSs
+
+placeholder :: a
+placeholder = error "placeholder"
+{-# WARNING placeholder "placeholder" #-}
 
 --------------------------------------------------------------------------------
 
@@ -641,7 +692,7 @@ convertTypedBinding  convHsTy FunBind{..}   = runMaybeT $ do
     if all (null . m_pats . unLoc) . unLoc $ mg_alts fun_matches
     then case unLoc $ mg_alts fun_matches of
            [L _ (GHC.Match _ [] mty grhss)] ->
-             maybe (pure id) (fmap (flip HasType) . convertLType) mty <*> convertGRHSs [] grhss
+             maybe (pure id) (fmap (flip HasType) . convertLType) mty <*> convertGRHSs [] grhss placeholder
            _ ->
              convUnsupported "malformed multi-match variable definitions"
     else do

@@ -5,11 +5,32 @@ data type arguments CoAxiom  (indices: br)
 data type arguments Branches (indices: br)
 
 # See Note [Strict positivity for IdInfo/RuntimeRepInfo], [Strict positivity for real]
-redefine Inductive IdInfo           : Set := Mk_IdInfo_Dummy.
+skip IdInfo
 redefine Inductive RuntimeRepInfo   : Set := Mk_RuntimeRepInfo_Dummy.
 redefine Inductive DataConBoxer     : Set := Mk_DataConBoxer_Dummy.
 redefine Inductive CoAxiomRule      : Set := Mk_CoAxiomRule_Dummy.
 redefine Inductive BuiltInSynFamily : Set := Mk_BuiltInSynFamily_Dummy.
+
+# Functionality that depends on the stubbed-out types' constructors
+skip zapLamInfo
+skip zapUsageInfo
+skip zapDemandInfo
+skip setUnfoldingInfoLazily
+skip setUnfoldingInfo
+skip setStrictnessInfo
+skip setRuleInfo
+skip setOneShotInfo
+skip setOccInfo
+skip setInlinePragInfo
+skip setDemandInfo
+skip setCallArityInfo
+skip setCafInfo
+skip setArityInfo
+skip vanillaIdInfo
+
+# TODO: Needs to be axiomatized, but refers to a type that isn't defined in the
+# preamble.  A new kind of edit, perhaps?
+skip trivialBuiltInFamily
 
 # TODO With real module-checking, remove the `module` keyword and put these in
 # `renamings.txt`

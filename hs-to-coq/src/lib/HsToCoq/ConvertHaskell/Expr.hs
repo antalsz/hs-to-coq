@@ -27,6 +27,7 @@ import Control.Lens
 import Data.Bifunctor
 import Data.Foldable
 import Data.Traversable
+import HsToCoq.Util.Function
 import Data.Maybe
 import Data.List (intercalate)
 import HsToCoq.Util.List hiding (unsnoc)
@@ -34,6 +35,7 @@ import Data.List.NonEmpty (NonEmpty(..), nonEmpty)
 import qualified Data.List.NonEmpty as NEL
 import qualified Data.Text as T
 
+import Control.Monad.Trans.Maybe
 import Control.Monad.Except
 import Control.Monad.Writer
 
@@ -614,18 +616,20 @@ convertGRHSs extraGuards GRHSs{..} = convertLocalBinds (unLoc grhssLocalBinds)
 
 --------------------------------------------------------------------------------
 
-convertTypedBinding :: ConversionMonad m => Maybe Term -> HsBind RdrName -> m ConvertedBinding
+convertTypedBinding :: ConversionMonad m => Maybe Term -> HsBind RdrName -> m (Maybe ConvertedBinding)
 convertTypedBinding _convHsTy VarBind{}     = convUnsupported "[internal] `VarBind'"
 convertTypedBinding _convHsTy AbsBinds{}    = convUnsupported "[internal?] `AbsBinds'"
 convertTypedBinding _convHsTy AbsBindsSig{} = convUnsupported "[internal?] `AbsBindsSig'"
 convertTypedBinding _convHsTy PatSynBind{}  = convUnsupported "pattern synonym bindings"
 convertTypedBinding _convHsTy PatBind{..}   = do -- TODO use `_convHsTy`?
+  -- TODO: Respect `skipped'?
   (pat, guards) <- runWriterT $ convertLPat pat_lhs
-  ConvertedPatternBinding pat <$> convertGRHSs (map BoolGuard guards) pat_rhs
-convertTypedBinding  convHsTy FunBind{..}   = do
+  Just . ConvertedPatternBinding pat <$> convertGRHSs (map BoolGuard guards) pat_rhs
+convertTypedBinding  convHsTy FunBind{..}   = runMaybeT $ do
   (name, opName) <- freeVar (unLoc fun_id) <&> \case
                       name | identIsVariable name -> (name,            Nothing)
                            | otherwise            -> (infixToCoq name, Just name)
+  guard . not =<< use (edits.skipped.contains name)
   
   let (tvs, coqTy) =
         -- The @forall@ed arguments need to be brought into scope
@@ -660,8 +664,10 @@ convertTypedModuleBindings :: ConversionMonad m
                            -> Maybe (HsBind RdrName -> GhcException -> m a)
                            -> m [a]
 convertTypedModuleBindings defns sigs build mhandler =
-  let processed defn = maybe id (ghandle . ($ defn)) mhandler . (build =<<)
-  in for defns $ \(mname, defn) -> maybeWithCurrentModule mname $ do
+  let processed defn = runMaybeT
+                     . maybe id (ghandle . (lift .: ($ defn))) mhandler . (lift . build =<<)
+                     . MaybeT
+  in fmap catMaybes . for defns $ \(mname, defn) -> maybeWithCurrentModule mname $ do
        ty <- case defn of
                FunBind{fun_id = L _ hsName} ->
                  fmap sigType . (`M.lookup` sigs) <$> var ExprNS hsName

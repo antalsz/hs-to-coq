@@ -42,6 +42,7 @@ import HsToCoq.ConvertHaskell.Parameters.Parsers.Lexing
   parameters    { TokWord    "parameters"  }
   indices       { TokWord    "indices"     }
   redefine      { TokWord    "redefine"    }
+  skip          { TokWord    "skip"        }
   rename        { TokWord    "rename"      }
   module        { TokWord    "module"      }
   add           { TokWord    "add"         }
@@ -204,6 +205,7 @@ Edit :: { Edit }
   : type synonym Word ':->' Word                  { TypeSynonymTypeEdit   $3 $5                }
   | data type arguments Word DataTypeArguments    { DataTypeArgumentsEdit $4 $5                }
   | redefine CoqDefinition Optional('.')          { RedefinitionEdit      $2                   }
+  | skip Word                                     { SkipEdit              $2                   }
   | rename module RawHsIdent Renaming             { ModuleRenamingEdit    $3 (fst $4) (snd $4) }
   | add scope Scope for ScopePlace Word           { AdditionalScopeEdit   $5 $6 $3             }
 

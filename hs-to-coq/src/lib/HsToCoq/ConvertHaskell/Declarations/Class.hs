@@ -56,8 +56,9 @@ convertClassDecl (L _ hsCtx) (L _ hsName) ltvs fds lsigs defaults types typeDefa
   sigs <- binding' args $ convertLSigs lsigs
   
   defs <- fmap M.fromList $ for (bagToList defaults) $ convertTypedBinding Nothing . unLoc >=> \case
-            ConvertedDefinitionBinding ConvertedDefinition{..} -> pure (convDefName, maybe id Fun (nonEmpty convDefArgs) convDefBody)
-            ConvertedPatternBinding    _ _                     -> convUnsupported "pattern bindings in class declarations"
+            Just (ConvertedDefinitionBinding ConvertedDefinition{..}) -> pure (convDefName, maybe id Fun (nonEmpty convDefArgs) convDefBody)
+            Just (ConvertedPatternBinding    _ _)                     -> convUnsupported "pattern bindings in class declarations"
+            Nothing                                                   -> convUnsupported "skipping a type class method"
   unless (null defs) $ defaultMethods.at name ?= defs
   
   pure $ ClassBody (ClassDefinition name (args ++ ctx) Nothing (bimap toCoqName sigType <$> M.toList sigs))

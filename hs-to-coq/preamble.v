@@ -43,6 +43,38 @@ Axiom tARGET_MAX_INT  : DynFlags -> Z.
 (* Temporary – this probably needs to map directly to a Coq type *)
 Axiom ByteString : Type.
 
+(* All we currently need from IdInfo. *)
+Module IdInfo.
+
+  Definition Arity     : Type := Int.
+  Definition ArityInfo : Type := Int.
+   
+  Parameter IdInfo : Type.
+  Parameter vanillaIdInfo : IdInfo.
+   
+  Parameter unknownArity  : Arity.
+   
+  Parameter arityInfo     : IdInfo -> ArityInfo.
+  Parameter callArityInfo : IdInfo -> ArityInfo.
+   
+  Parameter setArityInfo     : IdInfo -> ArityInfo -> IdInfo.
+  Parameter setCallArityInfo : IdInfo -> ArityInfo -> IdInfo.
+   
+  Axiom arityInfo_vanillaIdInfo : arityInfo vanillaIdInfo = unknownArity.
+  Axiom callArityInfo_vanillaIdInfo : callArityInfo vanillaIdInfo = unknownArity.
+   
+  Axiom arityInfo_read_write  : forall i a,    arityInfo (setArityInfo i a) = a.
+  Axiom arityInfo_write_read  : forall i,      setArityInfo i (arityInfo i) = i.
+  Axiom arityInfo_write_write : forall i a a', setArityInfo (setArityInfo i a) a' = setArityInfo i a'.
+   
+  Axiom callArityInfo_read_write  : forall i a,    callArityInfo (setArityInfo i a) = a.
+  Axiom callArityInfo_write_read  : forall i,      setArityInfo i (callArityInfo i) = i.
+  Axiom callArityInfo_write_write : forall i a a', setArityInfo (setArityInfo i a) a' = setArityInfo i a'.
+
+End IdInfo.
+
+Import IdInfo.
+
 Generalizable All Variables.
 
 Set Implicit Arguments.

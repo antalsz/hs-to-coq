@@ -31,23 +31,24 @@ import HsToCoq.ConvertHaskell.Axiomatize
 
 convertModuleValDecls :: ConversionMonad m => [(Maybe ModuleName, HsDecl RdrName)] -> m [Sentence]
 convertModuleValDecls mdecls = do
+  -- TODO: Don't even convert the signatures for `skipped' things here
   (defns, sigs) <- bitraverse pure convertModuleSigs
                 .  partitionEithers
                 .  flip mapMaybe mdecls $ \case
                      (mname, ValD def) -> Just $ Left  (mname, def)
                      (mname, SigD sig) -> Just $ Right (mname, sig)
                      _                 -> Nothing
-  
+
   bindings <- (fmap M.fromList . (convertTypedModuleBindings defns sigs ?? Just axiomatizeBinding))
            $  withConvertedBinding
-                (\cdef@ConvertedDefinition{convDefName = name} ->
+                (\cdef@ConvertedDefinition{convDefName = name} -> do
                    use (edits.redefinitions.at name) >>= ((name,) <$>) . \case
                      Nothing  ->
                        pure $ withConvertedDefinition
                          (DefinitionDef Global)     (pure . DefinitionSentence)
                          (buildInfixNotations sigs) (map    NotationSentence)
                          cdef
-                     
+                      
                      Just def ->
                        [definitionSentence def] <$ case def of
                          CoqInductiveDef  _ -> editFailure "cannot redefine a value definition into an Inductive"

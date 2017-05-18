@@ -24,3 +24,24 @@ stack exec hs-to-coq -- -I ~/prog/ghc/compiler -I ~/prog/ghc/compiler/stage2 -I 
 ```
 https://downloads.haskell.org/~ghc/8.0.2/docs/html/libraries/ghc-8.0.2/
 ```
+
+## GHC version
+
+* Use [GHC 8.0.2](https://www.haskell.org/ghc/download_ghc_8_0_2.html) for
+  compilation (handled by Stack) and translation
+
+## Files:
+
+* `preamble.v`: Coq code inserted at the start of the injected output
+
+* `renamings.txt`: Simple renamings from Haskell to Coq (e.g., Haskell `Bool` is
+  Coq `bool`)
+
+* `edits.txt`: Various ways the injected Coq code should be different than the
+  input Haskell code.  Documentation on the different kinds of edits is
+  forthcoming.
+
+* `modules.txt`/`call-arity-modules.txt`: Module file trees to be used when
+  translating GHC source code; `modules.txt` is in some sense the transitive
+  closure from `CoreSyn`, and `call-arity-modules.txt` is the transitive closure
+  from `CallArity`.

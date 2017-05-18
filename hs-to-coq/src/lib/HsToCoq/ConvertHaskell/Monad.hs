@@ -16,7 +16,9 @@ module HsToCoq.ConvertHaskell.Monad (
   rename,
   localizeConversionState,
   -- * Errors
-  throwProgramError, convUnsupported, editFailure
+  throwProgramError, convUnsupported, editFailure,
+  -- * Fixity
+  getFixity, recordFixity
   ) where
 
 import Control.Lens
@@ -44,6 +46,8 @@ import HsToCoq.ConvertHaskell.InfixNames
 import HsToCoq.ConvertHaskell.Parameters.Renamings
 import HsToCoq.ConvertHaskell.Parameters.Edits
 
+import Debug.Trace
+
 --------------------------------------------------------------------------------
 
 data ConstructorFields = NonRecordFields !Int
@@ -59,7 +63,9 @@ data ConversionState = ConversionState { __currentModule    :: !(Maybe ModuleNam
                                        , _constructorFields :: !(Map Ident ConstructorFields)
                                        , _recordFieldTypes  :: !(Map Ident Ident)
                                        , _defaultMethods    :: !(Map Ident (Map Ident Term))
-                                       , __unique           :: !Natural }
+                                       , _fixities          :: !(Map Ident (Coq.Associativity, Coq.Level))
+                                       , __unique           :: !Natural
+                                       }
                deriving (Eq, Ord, Show)
 makeLenses ''ConversionState
 -- '_currentModule' and '_unique' are not exported
@@ -78,20 +84,21 @@ type ConversionT m = StateT ConversionState (VariablesT Ident () m)
 evalConversion :: GhcMonad m => Renamings -> Edits -> ConversionT m a -> m a
 evalConversion _renamings _edits = evalVariablesT . (evalStateT ?? ConversionState{..}) where
   __currentModule = Nothing
-  
+
   -- TODO Add base types?
   _constructors      = M.empty
   _constructorTypes  = M.empty
   _constructorFields = M.empty
   _recordFieldTypes  = M.empty
-  
+
   _defaultMethods = M.fromList ["Eq" ~>> [ "==" ~> Fun [arg "x", arg "y"] (App1 (Var "negb") $ Infix (Var "x") "/=" (Var "y"))
                                          , "/=" ~> Fun [arg "x", arg "y"] (App1 (Var "negb") $ Infix (Var "x") "==" (Var "y")) ]]
-                  
+
                   where cl ~>> ms = (cl, M.fromList ms)
                         m  ~>  d  = (toCoqName m, d)
                         arg       = Inferred Coq.Explicit . Ident
-  
+
+  _fixities         = M.empty
   __unique = 0
 
 withCurrentModuleOrNone :: ConversionMonad m => Maybe ModuleName -> m a -> m a
@@ -105,12 +112,12 @@ withCurrentModuleOrNone newModule = gbracket setModuleAndRenamings restoreModule
                         . non M.empty
     oldRenamings <- renamings <<%= (newRenamings `M.union`) -- (2)
     let overwrittenRenamings = oldRenamings `M.intersection` newRenamings
-    
+
     pure (oldModule, overwrittenRenamings, newRenamings)
-  
+
   restoreModuleAndRenamings (oldModule, overwrittenRenamings, newRenamings) = do
     _currentModule .= oldModule
-  
+
     finalRenamings <- use renamings
     for_ (M.toList newRenamings) $ \(hs, coq) ->
       when (M.lookup hs finalRenamings == Just coq) $
@@ -130,7 +137,7 @@ fresh = _unique <<+= 1
 
 gensym :: ConversionMonad m => Text -> m Ident
 gensym name = do u <- fresh
-                 pure $ "__" <> name <> "_" <> T.pack (show u) <> "__"
+                 pure $ name <> "_" <> T.pack (show u) <> "__"
 
 -- Mostly for point-free use these days
 rename :: ConversionMonad m => HsNamespace -> Ident -> Ident -> m ()
@@ -151,3 +158,16 @@ convUnsupported what = throwProgramError $ what ++ " unsupported"
 
 editFailure :: MonadIO m => String -> m a
 editFailure what = throwProgramError $ "Could not apply edit: " ++ what
+
+getFixity :: ConversionMonad m => Ident -> m (Maybe (Coq.Associativity, Coq.Level))
+getFixity ident = do
+   state <- get
+   return $ M.lookup ident (_fixities state)
+
+recordFixity :: ConversionMonad m => Ident -> (Coq.Associativity, Coq.Level) -> m ()
+recordFixity id assoc = do
+   state <- get
+   let m = _fixities state
+   case M.lookup id m of
+      Just v  -> throwProgramError $ "Multiple fixities for " ++ show id
+      Nothing -> put (state { _fixities = (M.insert id assoc m) })

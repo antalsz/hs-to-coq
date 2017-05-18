@@ -7,6 +7,7 @@ module HsToCoq.ConvertHaskell.Module (
 ) where
 
 import Data.Semigroup
+import Data.Foldable (toList)
 
 import HsToCoq.Util.Generics
 
@@ -19,6 +20,7 @@ import HsToCoq.ConvertHaskell.Monad
 import HsToCoq.ConvertHaskell.Declarations.TyCl
 import HsToCoq.ConvertHaskell.Declarations.Value
 import HsToCoq.ConvertHaskell.Declarations.Instances
+import HsToCoq.ConvertHaskell.Sigs
 
 --------------------------------------------------------------------------------
 
@@ -39,13 +41,16 @@ instance Monoid ConvertedModules where
   mappend = (<>)
 
 convertModules :: (Foldable f, ConversionMonad m) => f (HsModule RdrName) -> m ConvertedModules
-convertModules mods =
+convertModules mods = do
+
   let forModules convert = convert $ foldMap (\mod -> map (Just $ hsModuleName mod,)
                                                           (everythingOfType_ mod))
                                              mods
-  in ConvertedModules <$> forModules convertModuleTyClDecls
-                      <*> forModules convertModuleValDecls
-                      <*> forModules convertModuleClsInstDecls
+  _ <- forModules recordFixitiesWithErrors
+
+  ConvertedModules <$> forModules convertModuleTyClDecls
+                   <*> forModules convertModuleValDecls
+                   <*> forModules convertModuleClsInstDecls
 
 convertLModules :: (Traversable f, ConversionMonad m)
                 => f (Located (HsModule RdrName)) -> m ConvertedModules

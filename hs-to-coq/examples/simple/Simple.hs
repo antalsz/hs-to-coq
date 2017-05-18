@@ -1,6 +1,6 @@
 import Prelude (Bool(..), otherwise, Show)
 
-data Maybe a = Nothing | Just a deriving Show
+--data Maybe a = Nothing | Just a deriving Show
 type Option = Maybe -- For ML programmers
 
 data Weekday = Monday   | Tuesday | Wednesday | Thursday | Friday

@@ -39,7 +39,7 @@ toPrefix x | identIsVariable x = x
 
 -- An operator's defined name in Coq (hidden by a notation)
 infixToCoq :: Op -> Ident
-infixToCoq name = "__op_" <> T.pack (zEncodeString $ T.unpack name) <> "__"
+infixToCoq name = "op_" <> T.pack (zEncodeString $ T.unpack name) <> "__"
 
 toCoqName :: Op -> Ident
 toCoqName x | identIsVariable x = x

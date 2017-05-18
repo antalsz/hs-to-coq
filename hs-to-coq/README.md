@@ -18,3 +18,9 @@ stack exec hs-to-coq -- -I $GHC_PATH/compiler -I $GHC_PATH/compiler/stage2 -I $G
 ```
 stack exec hs-to-coq -- -I ~/prog/ghc/compiler -I ~/prog/ghc/compiler/stage2 -I ~/prog/ghc/compiler/stage2/build -o test.v -p preamble.v -r renamings.txt -e edits.txt -m modules.txt -d ~/prog/ghc
 ```
+
+## GHC API
+
+```
+https://downloads.haskell.org/~ghc/8.0.2/docs/html/libraries/ghc-8.0.2/
+```

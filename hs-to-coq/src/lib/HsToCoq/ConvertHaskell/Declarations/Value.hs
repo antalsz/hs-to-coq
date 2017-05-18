@@ -48,17 +48,17 @@ convertModuleValDecls mdecls = do
                          (DefinitionDef Global)     (pure . DefinitionSentence)
                          (buildInfixNotations sigs) (map    NotationSentence)
                          cdef
-                      
+
                      Just def ->
                        [definitionSentence def] <$ case def of
                          CoqInductiveDef  _ -> editFailure "cannot redefine a value definition into an Inductive"
                          CoqDefinitionDef _ -> pure ()
                          CoqFixpointDef   _ -> pure ())
                 (\_ _ -> convUnsupported "top-level pattern bindings")
-  
+
   -- TODO: Mutual recursion
   pure . foldMap (foldMap (bindings M.!)) . topoSortEnvironment $ NoBinding <$> bindings
-  
+
   where axiomatizeBinding :: GhcMonad m => HsBind RdrName -> GhcException -> m (Ident, [Sentence])
         axiomatizeBinding FunBind{..} exn = do
           name <- freeVar $ unLoc fun_id

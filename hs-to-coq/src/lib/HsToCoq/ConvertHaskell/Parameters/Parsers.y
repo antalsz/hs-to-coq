@@ -32,7 +32,7 @@ import HsToCoq.ConvertHaskell.Parameters.Parsers.Lexing
 
 %monad { Parse }
 %lexer { (=<< token) } { TokEOF }
- 
+
 %token
   value         { TokWord    "value"       }
   type          { TokWord    "type"        }
@@ -206,6 +206,7 @@ Edit :: { Edit }
   | data type arguments Word DataTypeArguments    { DataTypeArgumentsEdit $4 $5                }
   | redefine CoqDefinition Optional('.')          { RedefinitionEdit      $2                   }
   | skip Word                                     { SkipEdit              $2                   }
+  | skip Op                                       { SkipEdit              $2                   }
   | rename module RawHsIdent Renaming             { ModuleRenamingEdit    $3 (fst $4) (snd $4) }
   | add scope Scope for ScopePlace Word           { AdditionalScopeEdit   $5 $6 $3             }
 

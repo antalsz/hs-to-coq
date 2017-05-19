@@ -1,11 +1,6 @@
 (* Preamble *)
-Definition Synonym {A : Type} (_uniq : Type) (x : A) : A := x.
-Arguments Synonym {A}%type _uniq%type x%type.
-
-(*********** numbers ********************************)
-
-Axiom Int : Type.
-Axiom lte_Int : Int -> Int -> bool.
+(* List notation *)
+Require Import Coq.Lists.List.
 
 (* Integers *)
 Require Import ZArith.
@@ -16,38 +11,82 @@ Require QArith.
 Module Q := Coq.QArith.QArith_base.
 Definition Rational := Q.Q.
 
+(* SSreflect library *)
+Require Import mathcomp.ssreflect.ssreflect.
+
+(****************************************************)
+
+Definition Synonym {A : Type} (_uniq : Type) (x : A) : A := x.
+Arguments Synonym {A}%type _uniq%type x%type.
+
+(****************************************************)
+
+Axiom primUserError : forall {A}, A.
+Axiom primIOError   : forall {A}, A.
+
+(*********** numbers ********************************)
+
+(* Just make this Z??? *)
+Axiom Int : Type.
+Axiom lte_Int : Int -> Int -> bool.
+
 
 Class Num a := {
-  __op_zp__   : a -> a -> a ;
-  __op_zm__   : a -> a -> a ;
-  __op_zt__   : a -> a -> a ;
+  op_zp__   : a -> a -> a ;
+  op_zm__   : a -> a -> a ;
+  op_zt__   : a -> a -> a ;
   abs         : a -> a ;
   fromInteger : Z -> a ;
   negate      : a -> a ;
   signum      : a -> a
 }.
 
-Infix    "+"     := __op_zp__ (at level 50, left associativity).
-Notation "'_+_'" := __op_zp__.
+Infix    "+"     := op_zp__ (at level 50, left associativity).
+Notation "'_+_'" := op_zp__.
 
-Infix    "-"     := __op_zm__ (at level 50, left associativity).
-Notation "'_-_'" := __op_zm__.
+Infix    "-"     := op_zm__ (at level 50, left associativity).
+Notation "'_-_'" := op_zm__.
 
-Infix    "*"     := __op_zt__ (at level 40, left associativity).
-Notation "'_*_'" := __op_zt__.
+Infix    "*"     := op_zt__ (at level 40, left associativity).
+Notation "'_*_'" := op_zt__.
 
 Notation "'#' n" := (fromInteger n) (at level 1, format "'#' n").
 
-Instance __Num_Int__ : Num Int. Admitted.
-Instance __Num_Z__ : Num Integer. Admitted.
-Instance __Num_Q__ : Num Rational. Admitted.
+Instance Num_Int__ : Num Int. Admitted.
+
+Instance Num_Z__ : Num Integer := {
+  op_zp__   := Z.add %Z;
+  op_zm__   := Z.sub %Z;
+  op_zt__   := Z.mul %Z;
+  abs         := Z.abs %Z;
+  fromInteger := fun x => x;
+  negate      := Z.opp %Z;
+  signum      := Z.sgn %Z; }.
+
+Definition Qabs (q : Rational) : Rational :=
+  match ((Q.Qnum q) ?= 0)%Z with
+    | Lt => Q.Qinv q
+    | _ => q
+  end.
+
+Definition Qsignum (q : Rational) : Rational :=
+  Q.Qmake (Z.sgn (Q.Qnum q)) (Q.Qden q).
+
+Instance Num_Q__ : Num Rational := {
+  op_zp__   := Q.Qplus;
+  op_zm__   := Q.Qminus;
+  op_zt__   := Q.Qmult;
+  abs         := Qabs;
+  fromInteger := fun x => Q.Qmake x 1;
+  negate      := Q.Qinv;
+  signum      := Qsignum; }.
 
 
+(* ********************************************************* *)
+(* Some Haskell functions we cannot translate                *)
 
-(* List notation *)
-Require Import Coq.Lists.List.
 
-
+(* Pattern guards, ugh. *)
 Fixpoint take {a:Type} (n:Int) (xs:list a) : list a :=
   match xs with
   | nil => nil
@@ -60,13 +99,34 @@ Fixpoint drop {a:Type} (n:Int) (xs:list a) : list a :=
   | y :: ys => if lte_Int n #0 then (y :: ys) else drop (n - #1) ys
   end.
 
-(* SSreflect library *)
-Require Import mathcomp.ssreflect.ssreflect.
+(* The inner nil case is impossible. So it is left out of the Haskell version. *)
+Fixpoint scanr {a b:Type} (f : a -> b -> b) (q0 : b) (xs : list a) : list b :=
+  match xs with
+  | nil => q0 :: nil
+  | y :: ys => match scanr f q0 ys with
+              | q :: qs =>  f y q :: (q :: qs)
+              | nil => nil
+              end
+end.
+
+(* The inner nil case is impossible. So it is left out of the Haskell version. *)
+Fixpoint scanr1 {a :Type} (f : a -> a -> a) (q0 : a) (xs : list a) : list a :=
+  match xs with
+  | nil => q0 :: nil
+  | y :: nil => y :: nil
+  | y :: ys => match scanr1 f q0 ys with
+              | q :: qs =>  f y q :: (q :: qs)
+              | nil => nil
+              end
+end.
+
 
 (*********************************************************************)
 
 Notation "'_(,)_'" := (fun x y => (x,y)).
 Notation "'_(,,)_'" := (fun x y z => (x, y, z)).
+Notation "'_++_'" := (fun x y => x ++ y).
+Notation "'_::_'" := (fun x y => x :: y).
 
 (********************************************************************)
 
@@ -91,10 +151,6 @@ Fixpoint hs_string__ (s : String.string) : String :=
   end.
 Notation "'&' s" := (hs_string__ s) (at level 1, format "'&' s").
 
-
-Notation "'_++_'" := (fun x y => x ++ y).
-Notation "'_::_'" := (fun x y => x :: y).
-
 (********************************************************************)
 
 Axiom error : forall {A : Type}, String -> A.
@@ -115,8 +171,6 @@ Axiom primUnicodeMaxChar : Char.
 Axiom primPutChar   : Char -> IO unit.
 Axiom primReadFile  : String -> IO String.
 Axiom primWriteFile : String -> String -> IO unit.
-Axiom primUserError : forall {A}, A.
-Axiom primIOError   : forall {A}, A.
 Axiom primGetContents : IO String.
 Axiom primGetChar     : IO Char.
 Axiom primCatch       : forall {a}, IO a -> (IOError -> IO a) -> IO a.
@@ -140,15 +194,9 @@ Instance Monad__IO__ : Monad IO. Admitted.
 
 (****************************************************************)
 
-Axiom showSigned : Z -> String.
+(* Axiom showSigned : showSigned :: Real a => (a -> ShowS) -> Int -> a -> ShowS. *)
 
-(*
-     !! * ++ :: Char EQ GT IO Int LT None Rational Some String Z _(,)_ _(,,)_ _::_
-     _Char.isSpace_ bool error list mandatory nil option optional pair primAppendFile
-     primCatch primCharToInt primGetChar primGetContents primIOError primIntToChar
-     primPutChar primReadFile primUnicodeMaxChar primUserError primWriteFile readDec
-     readFloat readSigned showFloat showInt showLitChar showSigned tt unit xs xs'
-*)
+(****************************************************************)
 
 Generalizable All Variables.
 

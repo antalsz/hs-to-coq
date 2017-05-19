@@ -1,3 +1,9 @@
+- pattern guards
+  take/drop
+
+- incomplete matches
+  scanr/scanr1
+
 - mutually recursive function definition
   readParen
 
@@ -23,3 +29,6 @@ Instance instance__Functor_option__169__ : (Functor option) := {
 - Show instances require *many* primitive terms
 
 - Need a way to skip instance declarations?
+
+- termination for int valued args
+  replicate

@@ -1,0 +1,46 @@
+skip Bool
+skip Integer
+skip Int
+skip Maybe
+skip IO
+skip Char
+skip error
+skip String
+skip FilePath
+
+skip Num
+skip Monad
+
+skip ++
+skip !!
+skip ||
+skip &&
+
+skip take
+skip drop
+
+skip scanr1
+skip scanr
+skip replicate
+
+skip takeWhile
+skip repeat
+skip until
+skip iterate
+skip cycle
+
+skip numericEnumFromThen
+skip numericEnumFromThenTo
+skip numericEnumFrom
+skip numericEnumFromTo
+
+skip gcd
+skip lcm
+
+skip ^
+skip ^^
+skip lines
+skip words
+
+skip readParen
+skip IOError

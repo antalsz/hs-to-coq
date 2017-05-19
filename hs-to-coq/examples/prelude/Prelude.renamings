@@ -1,0 +1,23 @@
+type  () = unit
+value () = tt
+
+type  [] = list
+value [] = nil
+value :  = ::
+
+type  Integer = Z
+
+type  Bool  = bool
+value True  = true
+value False = false
+
+type  Maybe   = option
+value Just    = Some
+value Nothing = None
+
+# TODO Modules
+type  M.IntMap = IntMap
+type  S.IntSet = IntSet
+
+value || = orb
+value && = andb

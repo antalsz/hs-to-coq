@@ -49,17 +49,17 @@ convertClassDecl (L _ hsCtx) (L _ hsName) ltvs fds lsigs defaults types typeDefa
   unless (null       fds)          $ convUnsupported "functional dependencies"
   unless (null       types)        $ convUnsupported "associated types"
   unless (null       typeDefaults) $ convUnsupported "default associated type definitions"
-  
+
   name <- freeVar hsName
   ctx  <- traverse (fmap (Generalized Coq.Implicit) . convertLType) hsCtx
   args <- convertLHsTyVarBndrs Coq.Explicit ltvs
   sigs <- binding' args $ convertLSigs lsigs
-  
+
   defs <- fmap M.fromList $ for (bagToList defaults) $ convertTypedBinding Nothing . unLoc >=> \case
             Just (ConvertedDefinitionBinding ConvertedDefinition{..}) -> pure (convDefName, maybe id Fun (nonEmpty convDefArgs) convDefBody)
             Just (ConvertedPatternBinding    _ _)                     -> convUnsupported "pattern bindings in class declarations"
-            Nothing                                                   -> convUnsupported "skipping a type class method"
+            Nothing                                                   -> convUnsupported $ "skipping a type class method in" ++ show name
   unless (null defs) $ defaultMethods.at name ?= defs
-  
+
   pure $ ClassBody (ClassDefinition name (args ++ ctx) Nothing (bimap toCoqName sigType <$> M.toList sigs))
                    (concatMap (buildInfixNotations sigs <*> infixToCoq) . filter identIsOperator $ M.keys sigs)

@@ -1,0 +1,25 @@
+- mutually recursive function definition
+  readParen
+
+- pattern match on ""
+  words / lines
+
+- polymorphic class members need explicit type arguments.
+  Functor/monad instance for
+    option, list
+
+See a & b arguments below:
+Instance instance__Functor_option__169__ : (Functor option) := {
+  fmap := (fun a b arg_170__  arg_171__ =>
+    (match arg_170__ , arg_171__ with
+      | f , None => None
+      | f , (Some x) => (Some ((f x)))
+    end)) }.
+
+- Eq instance for Char needs to not use fixpoint
+
+- Enum instance for Char should come before Eq instance
+
+- Show instances require *many* primitive terms
+
+- Need a way to skip instance declarations?

@@ -1,8 +1,8 @@
 top: Prelude.vo
 
-%.vo : %.hs %.renamings %.edits %.preamble.v
+%.vo : %.hs Prelude.renamings Prelude.edits Prelude.preamble.v
 	rm -f $*.v
-	stack exec hs-to-coq -- -e $*.edits -r $*.renamings  -o $*.v -p $*.preamble.v $*.hs
+	stack exec hs-to-coq -- -e Prelude.edits -r Prelude.renamings  -o $*.v -p Prelude.preamble.v $*.hs
 	coqc $*.v
 	chmod a-w $*.v
 

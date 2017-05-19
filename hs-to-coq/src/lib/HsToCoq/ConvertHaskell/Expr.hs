@@ -43,6 +43,8 @@ import           Data.Map.Strict (Map)
 import qualified Data.Set        as S
 import qualified Data.Map.Strict as M
 
+
+
 import GHC hiding (Name, HsChar, HsString)
 import qualified GHC
 import Bag
@@ -89,7 +91,7 @@ convertExpr (HsIPVar _) =
 convertExpr (HsOverLit OverLit{..}) =
   case ol_val of
     HsIntegral   _src int -> PolyNum <$> convertInteger "integer literals" int
-    HsFractional _        -> convUnsupported "fractional literals"
+    HsFractional fr  -> convertFractional fr
     HsIsString   _src str -> pure $ convertFastString str
 
 convertExpr (HsLit lit) =
@@ -136,8 +138,7 @@ convertExpr (OpApp el eop PlaceHolder er) =
       convUnsupported "non-variable infix operators"
 
 convertExpr (NegApp e1 _) =
-  convUnsupported "negation"
-  --App1 <$> Var "negate" <*> convertLExpr e2
+  App1 <$> pure (Var "negate") <*> convertLExpr e1
 
 convertExpr (HsPar e) =
   Parens <$> convertLExpr e
@@ -631,6 +632,8 @@ convertTypedBinding  convHsTy FunBind{..}   = runMaybeT $ do
                       name | identIsVariable name -> (name,            Nothing)
                            | otherwise            -> (infixToCoq name, Just name)
   guard . not =<< use (edits.skipped.contains name)
+  guard . not =<< (case opName of { Just n -> use (edits.skipped.contains n) ; Nothing -> return False })
+  -- TODO: what if we are skipping an operator?
 
   let (tvs, coqTy) =
         -- The @forall@ed arguments need to be brought into scope

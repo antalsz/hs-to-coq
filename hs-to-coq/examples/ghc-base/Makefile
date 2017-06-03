@@ -15,21 +15,15 @@ coq: Makefile.coq $(VFILES) GHC/Prim.v
 	$(MAKE) -f Makefile.coq OPT=$(COQFLAGS)
 
 
-%.v : %/edits renamings %/preamble.v %.hs
-	rm -f $*.v
-	stack exec hs-to-coq -- -e $*/edits -r renamings -o $*.v -p $*/preamble.v $*.hs
+%.v : %/edits renamings %/preamble.v
+	stack exec hs-to-coq -- -e $*/edits -r renamings -o $*.v -p $*/preamble.v $(LIB)/$*.hs
 
-Data/Tuple.v : Data/Tuple/edits renamings Data/Tuple/preamble.v $(LIB)/Data/Tuple.hs
-	stack exec hs-to-coq -- -e Data/Tuple/edits -r renamings -o Data/Tuple.v -p Data/Tuple/preamble.v $(LIB)/Data/Tuple.hs
 
-Data/Maybe.v : Data/Maybe/edits renamings Data/Maybe/preamble.v $(LIB)/Data/Maybe.hs
-	stack exec hs-to-coq -- -e Data/Maybe/edits -r renamings -o Data/Maybe.v -p Data/Maybe/preamble.v $(LIB)/Data/Maybe.hs
+GHC/Base.v : GHC/Base/edits renamings GHC/Base/preamble.v GHC/Base.hs
+	stack exec hs-to-coq -- -e GHC/Base/edits -r renamings -o GHC/Base.v -p GHC/Base/preamble.v GHC/Base.hs
 
-Data/Bool.v : renamings $(LIB)/Data/Bool.hs
-	stack exec hs-to-coq -- -r renamings -o Data/Bool.v $(LIB)/Data/Bool.hs
 
-Data/Function.v : renamings $(LIB)/Data/Function.hs
-	stack exec hs-to-coq -- -e Data/Function/edits -r renamings -o Data/Function.v $(LIB)/Data/Function.hs
+
 
 clean:
 	rm -f */*.vo */*.glob Makefile.coq $(VFILES)

@@ -1,15 +1,13 @@
-Base:
+
  - no unboxed ints
+
  - cannot skip names containing # (shiftL#)
 
  - bug in eqString output (precedence in parsing? or pp?)
      (eqString (andb (c1 == c2) cs1) cs2)
 	should be
 	  (andb (c1 == c2) (eqString cs1 cs2))
- - (->) as a type constructor
 
- - pair as a name of a variable (it's the tuple constructor)
-   similarly for "cons"
-	(see mapMaybeFB)
+ - (->) as a type constructor
 
  - (.*.) as a variable name in Data.Function (!!)

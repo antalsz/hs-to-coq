@@ -20,7 +20,6 @@ skip unsafeTake
 skip takeFB
 skip splitAt
 skip !!
-skip strictUncurryScanr  # pair as variable name
 
 skip negIndex # parsing/pp $ incorrectly
 

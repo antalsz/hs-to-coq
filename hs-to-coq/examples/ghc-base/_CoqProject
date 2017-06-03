@@ -1,0 +1,8 @@
+-R . HS
+GHC/Prim.v
+GHC/Base.v
+GHC/List.v
+Data/Tuple.v
+Data/Maybe.v
+Data/Bool.v
+Data/Function.v

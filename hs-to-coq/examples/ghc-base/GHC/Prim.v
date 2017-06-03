@@ -1,21 +1,22 @@
-Require Export Coq.Lists.List.
-
-Notation "'_(,)_'" := (fun x y => (x,y)).
-Notation "'_(,,)_'" := (fun x y z => (x, y, z)).
-Notation "'_++_'" := (fun x y => x ++ y).
-Notation "'_::_'" := (fun x y => x :: y).
-
-(* Integers *)
-Require Export ZArith.
-Definition Integer  := Z.
-
-(* Rational numbers *)
-Require QArith.
-Module Q := Coq.QArith.QArith_base.
-Definition Rational := Q.Q.
+(* This includes everything that should be defined in GHC/Base.hs, but is not. *)
 
 (* SSreflect library *)
 Require Export mathcomp.ssreflect.ssreflect.
+
+
+(* List notation *)
+Require Export Coq.Lists.List.
+
+Notation "'_(,)_'"  := (fun x y => (x,y)).
+Notation "'_(,,)_'" := (fun x y z => (x, y, z)).
+Notation "'_++_'"   := (fun x y => x ++ y).
+Notation "'_::_'"   := (fun x y => x :: y).
+
+(* Int and Integer types *)
+Require Export GHC.Num.
+(* Char type *)
+Require Export GHC.Char.
+
 
 (****************************************************)
 
@@ -29,7 +30,8 @@ Axiom primIOError   : forall {A}, A.
 
 (*********** built in classes ***********************)
 
-Class Eq a := {
+(* Don't clash with Eq constructor for the comparison type. *)
+Class Eq_ a := {
   op_zsze__ : (a -> (a -> bool)) ;
   op_zeze__ : (a -> (a -> bool)) }.
 
@@ -41,18 +43,13 @@ Infix "==" := (op_zeze__) (no associativity, at level 70).
 
 Notation "'_==_'" := (op_zeze__).
 
-Inductive Ordering :=
-| LT : Ordering
-| EQ : Ordering
-| GT : Ordering.
 
-
-Class Ord a `{((Eq a))} := {
+Class Ord a `{((Eq_ a))} := {
   op_zl__ : (a -> (a -> bool)) ;
   op_zlze__ : (a -> (a -> bool)) ;
   op_zg__ : (a -> (a -> bool)) ;
   op_zgze__ : (a -> (a -> bool)) ;
-  compare : (a -> (a -> Ordering)) ;
+  compare : (a -> (a -> comparison)) ;
   max : (a -> (a -> a)) ;
   min : (a -> (a -> a)) }.
 
@@ -72,45 +69,45 @@ Infix ">=" := (op_zgze__) (no associativity, at level 70).
 
 Notation "'_>=_'" := (op_zgze__).
 
+(*********** Eq/Ord for Int**************************)
+
+Instance Eq_Int___ : Eq_ Int := {
+                               op_zsze__ := fun x y => (x =? y)%Z;
+                               op_zeze__ := fun x y => negb (x =? y)%Z;
+                             }.
+
+Instance Ord_Int___ : Ord Int := {
+  op_zl__   := fun x y => (x <? y)%Z;
+  op_zlze__ := fun x y => (x <=? y)%Z;
+  op_zg__   := fun x y => (y <? x)%Z;
+  op_zgze__ := fun x y => (y <=? x)%Z;
+  compare   := Z.compare%Z ;
+  max       := Z.max%Z;
+  min       := Z.min%Z;
+}.
+
+Instance Eq_Integer___ : Eq_ Integer := {
+                               op_zsze__ := fun x y => (x =? y)%Z;
+                               op_zeze__ := fun x y => negb (x =? y)%Z;
+                             }.
+
+Instance Ord_Integer___ : Ord Int := {
+  op_zl__   := fun x y => (x <? y)%Z;
+  op_zlze__ := fun x y => (x <=? y)%Z;
+  op_zg__   := fun x y => (y <? x)%Z;
+  op_zgze__ := fun x y => (y <=? x)%Z;
+  compare   := Z.compare%Z ;
+  max       := Z.max%Z;
+  min       := Z.min%Z;
+}.
+
 
 (*********** numbers ********************************)
 
-(* Just make this Z??? *)
-Axiom Int : Type.
-Axiom lte_Int : Int -> Int -> bool.
-
-
-Class Num a := {
-  op_zp__   : a -> a -> a ;
-  op_zm__   : a -> a -> a ;
-  op_zt__   : a -> a -> a ;
-  abs         : a -> a ;
-  fromInteger : Z -> a ;
-  negate      : a -> a ;
-  signum      : a -> a
-}.
-
-Infix    "+"     := op_zp__ (at level 50, left associativity).
-Notation "'_+_'" := op_zp__.
-
-Infix    "-"     := op_zm__ (at level 50, left associativity).
-Notation "'_-_'" := op_zm__.
-
-Infix    "*"     := op_zt__ (at level 40, left associativity).
-Notation "'_*_'" := op_zt__.
-
-Notation "'#' n" := (fromInteger n) (at level 1, format "'#' n").
-
-Instance Num_Int__ : Num Int. Admitted.
-
-Instance Num_Z__ : Num Integer := {
-  op_zp__   := Z.add %Z;
-  op_zm__   := Z.sub %Z;
-  op_zt__   := Z.mul %Z;
-  abs         := Z.abs %Z;
-  fromInteger := fun x => x;
-  negate      := Z.opp %Z;
-  signum      := Z.sgn %Z; }.
+(* Rational numbers *)
+Require QArith.
+Module Q := Coq.QArith.QArith_base.
+Definition Rational := Q.Q.
 
 Definition Qabs (q : Rational) : Rational :=
   match ((Q.Qnum q) ?= 0)%Z with
@@ -139,13 +136,13 @@ Instance Num_Q__ : Num Rational := {
 Fixpoint take {a:Type} (n:Int) (xs:list a) : list a :=
   match xs with
   | nil => nil
-  | y :: ys => if lte_Int n #0 then nil else (y :: take (n - #1) ys)
+  | y :: ys => if Z.leb n #0 then nil else (y :: take (n - #1) ys)
   end.
 
 Fixpoint drop {a:Type} (n:Int) (xs:list a) : list a :=
   match xs with
   | nil => nil
-  | y :: ys => if lte_Int n #0 then (y :: ys) else drop (n - #1) ys
+  | y :: ys => if Z.leb n #0 then (y :: ys) else drop (n - #1) ys
   end.
 
 (* The inner nil case is impossible. So it is left out of the Haskell version. *)
@@ -169,11 +166,6 @@ Fixpoint scanr1 {a :Type} (f : a -> a -> a) (q0 : a) (xs : list a) : list a :=
               end
 end.
 
-(*
-foldl k z0 xs =
-  foldr (\(v::a) (fn::b->b) -> oneShot (\(z::b) -> fn (k z v))) (id :: b -> b) xs z0
-*)
-
 Fixpoint foldr {a}{b} (f: a -> b -> b) (z:b) (xs: list a) : b :=
   match xs with
   | nil => z
@@ -188,19 +180,13 @@ Definition foldl' {a}{b} k z0 xs :=
 
 (********************************************************************)
 
-(* Characters and Strings *)
+(* Strings *)
 
-Axiom Char     : Type.
 Definition String := list Char.
 
 Require Coq.Strings.String.
-Require Coq.Strings.Ascii.
 
 Bind Scope string_scope with String.string.
-Bind Scope char_scope   with Ascii.ascii.
-
-Axiom hs_char__ : Ascii.ascii -> Char.
-Notation "'&#' c" := (hs_char__ c) (at level 1, format "'&#' c").
 
 Fixpoint hs_string__ (s : String.string) : String :=
   match s with

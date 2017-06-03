@@ -5,13 +5,26 @@ type  [] = list
 value [] = nil
 value :  = ::
 
-# TODO: pairs???
+type Eq = Eq_
+
+type Ordering = comparison
+value EQ = Eq
+value LT = Lt
+value GT = Gt
+
+value :% = Mk_Ratio
+
+type Word = N
 
 type  Integer = Z
 
 type  Bool  = bool
 value True  = true
 value False = false
+value not   = negb
+value ||    = orb
+value &&    = andb
+
 
 type  Maybe   = option
 value Just    = Some
@@ -20,6 +33,3 @@ value Nothing = None
 # TODO Modules
 type  M.IntMap = IntMap
 type  S.IntSet = IntSet
-
-value || = orb
-value && = andb

@@ -1,6 +1,21 @@
 LIB = /Users/sweirich/github/hs-to-coq/ghc-8.0.2/libraries/base
 
-MODULES  = GHC/Base GHC/List Data/Tuple Data/Maybe Data/Bool Data/Function
+# Handwritten modules
+HANDMOD = GHC/Prim \
+          GHC/Num \
+	       GHC/Char \
+          Prelude
+
+# Generated modules
+MODULES  = GHC/Base \
+           GHC/List \
+	        GHC/Real \
+           GHC/Enum \
+           Data/Tuple \
+           Data/Maybe \
+           Data/Bool \
+           Data/Function \
+           Data/OldList
 
 VFILES   = $(addsuffix .v,$(MODULES))
 VOFILES  = $(patsubst %.v,%.vo,$(VFILES))
@@ -26,6 +41,6 @@ GHC/Base.v : GHC/Base/edits renamings GHC/Base/preamble.v GHC/Base.hs
 
 
 clean:
-	rm -f */*.vo */*.glob Makefile.coq $(VFILES)
+	rm -f */*.vo */*.glob */*.v.d *.vo *.v.d Makefile.coq $(VFILES)
 
 .SECONDARY: $(VFILES)

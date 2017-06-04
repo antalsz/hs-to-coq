@@ -132,6 +132,32 @@ Instance Ord_Char___ : Ord Char := {
   min       := N.min%N;
 }.
 
+Require Import Bool.Bool.
+
+Instance Eq_bool___ : Eq_ bool := {
+                               op_zsze__ := eqb;
+                               op_zeze__ := fun x y => negb (eqb x y);
+                             }.
+
+Definition compare_bool (b1:bool)(b2:bool) : comparison :=
+  match b1 , b2 with
+  | true , true => Eq
+  | false, false => Eq
+  | true , false => Lt
+  | false , true => Gt
+  end.
+
+
+Instance Ord_bool___ : Ord bool := {
+  op_zl__   := fun x y => andb (negb x) y;
+  op_zlze__ := fun x y => orb (negb x) y;
+  op_zg__   := fun x y => orb (negb y) x;
+  op_zgze__ := fun x y => andb (negb y) x;
+  compare   := compare_bool;
+  max       := orb;
+  min       := andb
+}.
+
 
 (* ********************************************************* *)
 (* Some Haskell functions we cannot translate                *)

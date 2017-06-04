@@ -1,23 +1,27 @@
 LIB = /Users/sweirich/github/hs-to-coq/ghc-8.0.2/libraries/base
 
+# GHC/Unicode needs precedence resolution, plus a few issues with unicode constants
+# Data/Char needs a show instance.  Also use of data cons separate from definition.
+
 # Handwritten modules
 HANDMOD = GHC/Prim \
           GHC/Num \
 	       GHC/Char \
           GHC/Enum \
           GHC/Real \
+          GHC/Unicode \
+          Data/Char \
+          Data/Bits \
           Prelude
 
 # Generated modules
 MODULES  = GHC/Base \
            GHC/List \
-           GHC/Unicode \
            Data/Tuple \
            Data/Maybe \
            Data/Bool \
-           Data/Function
-#           Data/Char
-#           Data/OldList
+           Data/Function \
+           Data/OldList
 
 VFILES   = $(addsuffix .v,$(MODULES))
 VOFILES  = $(patsubst %.v,%.vo,$(VFILES))

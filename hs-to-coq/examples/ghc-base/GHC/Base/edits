@@ -13,6 +13,10 @@ skip bindIO
 
 skip shiftRL#
 skip shiftL#
+skip iShiftL#
+skip iShiftRA#
+skip iShiftRL#
+skip divModInt#
 
 skip remInt
 skip quotRemInt

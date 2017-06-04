@@ -1163,7 +1163,7 @@ quotRemInt :: Int -> Int -> (Int, Int)
 divModInt :: Int -> Int -> (Int, Int)
 (I# x) `divModInt` (I# y) = case x `divModInt#` y of
                             (# q, r #) -> (I# q, I# r)
-{-
+
 divModInt# :: Int# -> Int# -> (# Int#, Int# #)
 x# `divModInt#` y#
  | isTrue# (x# ># 0#) && isTrue# (y# <# 0#) =
@@ -1174,7 +1174,7 @@ x# `divModInt#` y#
                                       (# q, r #) -> (# q -# 1#, r +# y# -# 1# #)
  | otherwise                                =
                                     x# `quotRemInt#` y#
--}
+
 
 -- Wrappers for the shift operations.  The uncheckedShift# family are
 -- undefined when the amount being shifted by is greater than the size
@@ -1186,17 +1186,17 @@ x# `divModInt#` y#
 
 -- | Shift the argument left by the specified number of bits
 -- (which must be non-negative).
-{-
+
 shiftL# :: Word# -> Int# -> Word#
 a `shiftL#` b   | isTrue# (b >=# WORD_SIZE_IN_BITS#) = 0##
                 | otherwise                          = a `uncheckedShiftL#` b
--}
+
 
 -- | Shift the argument right by the specified number of bits
 -- (which must be non-negative).
 -- The "RL" means "right, logical" (as opposed to RA for arithmetic)
 -- (although an arithmetic right shift wouldn't make sense for Word#)
-{-
+
 shiftRL# :: Word# -> Int# -> Word#
 a `shiftRL#` b  | isTrue# (b >=# WORD_SIZE_IN_BITS#) = 0##
                 | otherwise                          = a `uncheckedShiftRL#` b
@@ -1222,7 +1222,7 @@ a `iShiftRA#` b | isTrue# (b >=# WORD_SIZE_IN_BITS#) = if isTrue# (a <# 0#)
 iShiftRL# :: Int# -> Int# -> Int#
 a `iShiftRL#` b | isTrue# (b >=# WORD_SIZE_IN_BITS#) = 0#
                 | otherwise                          = a `uncheckedIShiftRL#` b
--}
+
 -- Rules for C strings (the functions themselves are now in GHC.CString)
 {-# RULES
 "unpack"       [~1] forall a   . unpackCString# a             = build (unpackFoldrCString# a)

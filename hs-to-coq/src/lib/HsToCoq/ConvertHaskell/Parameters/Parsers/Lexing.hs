@@ -27,7 +27,7 @@ isWordInit :: Char -> Bool
 isWordInit c = isAlpha c || c == '_'
 
 isWord :: Char -> Bool
-isWord c = isAlphaNum c || c == '_' || c == '\''
+isWord c = isAlphaNum c || c == '_' || c == '\'' || c == '#'
 
 isOperator :: Char -> Bool
 isOperator c =
@@ -64,6 +64,10 @@ tokenDescription TokEOF         = "end of file"
 -- We differentiate between two kinds of @.@: word-dot (as in @Lists.list@) and
 -- symbol-dot (as in @x .+. y@ or @Inductive unit : Type := tt.@).  This is a
 -- horrible hack.
+
+-- arguments from parseToken (from Control.Monad.Trans.Parse)
+-- parseToken :: Monad m => (Text -> a)  -> (Char -> Bool) -> (Char -> Bool) -> ParseT m a
+-- parseToken build isFirst isRest = ...
 
 token' :: Monad m => ParseT m (Maybe Token)
 token' = asum $

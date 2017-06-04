@@ -100,8 +100,8 @@ convertExpr (HsLit lit) =
     HsCharPrim   _ _       -> convUnsupported "`Char#' literals"
     GHC.HsString _ fs      -> pure $ convertFastString fs
     HsStringPrim _ _       -> convUnsupported "`Addr#' literals"
-    HsInt        _ _       -> convUnsupported "`Int' literals"
-    HsIntPrim    _ _       -> convUnsupported "`Int#' literals"
+    HsInt        _ int     -> Num <$> convertInteger "`Integer' literals" int
+    HsIntPrim    _ int     -> Num <$> convertInteger "`Integer' literals" int
     HsWordPrim   _ _       -> convUnsupported "`Word#' literals"
     HsInt64Prim  _ _       -> convUnsupported "`Int64#' literals"
     HsWord64Prim _ _       -> convUnsupported "`Word64#' literals"

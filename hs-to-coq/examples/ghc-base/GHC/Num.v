@@ -5,6 +5,19 @@ Definition Integer  := Z.
 
 Definition Int      := Z.   (* A lie. Sorta. But it is signed. *)
 
+(*
+-- TODO: support Int#
+Definition IntHash : Type := Z.
+Notation "Int#" := IntHash.
+
+Inductive Int := IHash : Int# -> Int.
+Notation "I#" := IHash.
+
+Definition TupleHash : Type -> Type -> Type := prod.
+Notation "(# a , b #)" := (TupleHash a b).
+*)
+
+
 Require Export NArith.
 Definition Word     := N.
 
@@ -55,6 +68,3 @@ Instance Num_Word__ : Num Word := {
   fromInteger := Z.to_N;
   negate      := fun x => x;
   signum      := fun x => match x with | N0 => N0 | _ => 1%N  end }.
-
-
-(* Axiom lte_Int : Int -> Int -> bool. *)

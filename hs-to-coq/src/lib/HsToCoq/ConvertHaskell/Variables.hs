@@ -34,14 +34,20 @@ tryEscapeReservedWord reserved name = do
   guard $ T.all (== '_') suffix
   pure $ name <> "_"
 
+-- convert a haskell identifier to a Gallina identifier.
+--   (a) avoiding certain Gallina reserved words and library definitions
+--   (b) converting some operators into Gallina ops (such as composition)
 escapeReservedNames :: Ident -> Ident
 escapeReservedNames x =
   fromMaybe x . getFirst $
     foldMap (First . flip tryEscapeReservedWord x)
             (T.words "Set Type Prop fun fix forall return mod as cons pair")
-    <> if | T.all (== '.') x -> pure $ T.map (const '∘') x
-          | T.all (== '∘') x -> pure $ "⟨" <> x <> "⟩"
-          | otherwise        -> mempty
+    <> if | T.all (== '.') x  -> pure $ T.map (const '∘') x
+          | T.all (== '∘') x  -> pure $ "⟨" <> x <> "⟩"
+-- Maybe add this as part of an Int# solution? But don't want to
+-- always replace these, if we make "Int#" a notation for "Int_h"
+--          | T.isInfixOf "#" x -> pure $ T.replace "#" "_h" x
+          | otherwise         -> mempty
 
 --------------------------------------------------------------------------------
 

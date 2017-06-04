@@ -16,7 +16,8 @@ skip shiftL#
 skip iShiftL#
 skip iShiftRA#
 skip iShiftRL#
-skip divModInt#
+
+-- skip divModInt#
 
 skip remInt
 skip quotRemInt

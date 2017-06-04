@@ -12,11 +12,12 @@ value EQ = Eq
 value LT = Lt
 value GT = Gt
 
+value <  = <?
+value <= = <=?
+value >  = >?
+value >= = >=?
+
 value :% = Mk_Ratio
-
-type Word = N
-
-type  Integer = Z
 
 type  Bool  = bool
 value True  = true

@@ -8,6 +8,17 @@
 	should be
 	  (andb (c1 == c2) (eqString cs1 cs2))
 
+- bug in precedence with $ and ++
+  Enum/succError Enum/predError
+
+- also precedence bug (orb & -) with Unicode/isString
+
  - (->) as a type constructor
 
  - (.*.) as a variable name in Data.Function (!!)
+
+- instance__forall____Bounded_a______Bounded_b_____Bounded__a___b____155__
+  doesn't generalize type variables at top
+
+- rename infix constructor to prefix constructor doesn't work for pattern
+  matching (still infix)

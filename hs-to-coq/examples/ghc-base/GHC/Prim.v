@@ -14,6 +14,7 @@ Notation "'_::_'"   := (fun x y => x :: y).
 
 (* Int and Integer types *)
 Require Export GHC.Num.
+
 (* Char type *)
 Require Export GHC.Char.
 
@@ -53,21 +54,21 @@ Class Ord a `{((Eq_ a))} := {
   max : (a -> (a -> a)) ;
   min : (a -> (a -> a)) }.
 
-Infix "<" := (op_zl__) (no associativity, at level 70).
+Infix "<?" := (op_zl__) (no associativity, at level 70).
 
-Notation "'_<_'" := (op_zl__).
+Notation "'_<?_'" := (op_zl__).
 
-Infix "<=" := (op_zlze__) (no associativity, at level 70).
+Infix "<=?" := (op_zlze__) (no associativity, at level 70).
 
-Notation "'_<=_'" := (op_zlze__).
+Notation "'_<=?_'" := (op_zlze__).
 
-Infix ">" := (op_zg__) (no associativity, at level 70).
+Infix ">?" := (op_zg__) (no associativity, at level 70).
 
-Notation "'_>_'" := (op_zg__).
+Notation "'_>?_'" := (op_zg__).
 
-Infix ">=" := (op_zgze__) (no associativity, at level 70).
+Infix ">=?" := (op_zgze__) (no associativity, at level 70).
 
-Notation "'_>=_'" := (op_zgze__).
+Notation "'_>=?_'" := (op_zgze__).
 
 (*********** Eq/Ord for Int**************************)
 
@@ -101,31 +102,35 @@ Instance Ord_Integer___ : Ord Int := {
   min       := Z.min%Z;
 }.
 
+Instance Eq_Word___ : Eq_ Word := {
+                               op_zsze__ := fun x y => (x =? y)%N;
+                               op_zeze__ := fun x y => negb (x =? y)%N;
+                             }.
 
-(*********** numbers ********************************)
+Instance Ord_Word___ : Ord Word := {
+  op_zl__   := fun x y => (x <? y)%N;
+  op_zlze__ := fun x y => (x <=? y)%N;
+  op_zg__   := fun x y => (y <? x)%N;
+  op_zgze__ := fun x y => (y <=? x)%N;
+  compare   := N.compare%N ;
+  max       := N.max%N;
+  min       := N.min%N;
+}.
 
-(* Rational numbers *)
-Require QArith.
-Module Q := Coq.QArith.QArith_base.
-Definition Rational := Q.Q.
+Instance Eq_Char___ : Eq_ Char := {
+                               op_zsze__ := fun x y => (x =? y)%N;
+                               op_zeze__ := fun x y => negb (x =? y)%N;
+                             }.
 
-Definition Qabs (q : Rational) : Rational :=
-  match ((Q.Qnum q) ?= 0)%Z with
-    | Lt => Q.Qinv q
-    | _ => q
-  end.
-
-Definition Qsignum (q : Rational) : Rational :=
-  Q.Qmake (Z.sgn (Q.Qnum q)) (Q.Qden q).
-
-Instance Num_Q__ : Num Rational := {
-  op_zp__   := Q.Qplus;
-  op_zm__   := Q.Qminus;
-  op_zt__   := Q.Qmult;
-  abs         := Qabs;
-  fromInteger := fun x => Q.Qmake x 1;
-  negate      := Q.Qinv;
-  signum      := Qsignum; }.
+Instance Ord_Char___ : Ord Char := {
+  op_zl__   := fun x y => (x <? y)%N;
+  op_zlze__ := fun x y => (x <=? y)%N;
+  op_zg__   := fun x y => (y <? x)%N;
+  op_zgze__ := fun x y => (y <=? x)%N;
+  compare   := N.compare%N ;
+  max       := N.max%N;
+  min       := N.min%N;
+}.
 
 
 (* ********************************************************* *)

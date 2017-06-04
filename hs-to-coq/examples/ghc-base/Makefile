@@ -4,24 +4,31 @@ LIB = /Users/sweirich/github/hs-to-coq/ghc-8.0.2/libraries/base
 HANDMOD = GHC/Prim \
           GHC/Num \
 	       GHC/Char \
+          GHC/Enum \
+          GHC/Real \
           Prelude
 
 # Generated modules
 MODULES  = GHC/Base \
            GHC/List \
-	        GHC/Real \
-           GHC/Enum \
+           GHC/Unicode \
            Data/Tuple \
            Data/Maybe \
            Data/Bool \
-           Data/Function \
-           Data/OldList
+           Data/Function
+#           Data/Char
+#           Data/OldList
 
 VFILES   = $(addsuffix .v,$(MODULES))
 VOFILES  = $(patsubst %.v,%.vo,$(VFILES))
 COQFLAGS = ""
 
 all:  $(VFILES) coq
+
+_CoqProject : Makefile
+	echo "-R . HS" > _CoqProject
+	echo $(addsuffix .v,$(HANDMOD)) >> _CoqProject
+	echo $(VFILES) >> _CoqProject
 
 Makefile.coq: _CoqProject
 	coq_makefile -f _CoqProject -o $@
@@ -38,9 +45,7 @@ GHC/Base.v : GHC/Base/edits renamings GHC/Base/preamble.v GHC/Base.hs
 	stack exec hs-to-coq -- -e GHC/Base/edits -r renamings -o GHC/Base.v -p GHC/Base/preamble.v GHC/Base.hs
 
 
-
-
 clean:
-	rm -f */*.vo */*.glob */*.v.d *.vo *.v.d Makefile.coq $(VFILES)
+	rm -f */*.vo */*.glob */*.v.d *.vo *.v.d  $(VFILES) _CoqProject Makefile.coq
 
 .SECONDARY: $(VFILES)

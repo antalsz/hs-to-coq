@@ -1,0 +1,11 @@
+skip isSpace    # parsing/pp precedence issue
+skip isHexDigit
+skip isAsciiUpper
+skip isAsciiLower
+
+skip generalCategory # precedence with $
+skip isPunctuation
+skip isSymbol
+
+skip isLatin1   # Coq can't parse all characters
+skip isAscii

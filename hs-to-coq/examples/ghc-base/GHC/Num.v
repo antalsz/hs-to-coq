@@ -3,7 +3,7 @@
 Require Export ZArith.
 Definition Integer  := Z.
 
-Definition Int      := Z.   (* A lie. *)
+Definition Int      := Z.   (* A lie. Sorta. But it is signed. *)
 
 Require Export NArith.
 Definition Word     := N.

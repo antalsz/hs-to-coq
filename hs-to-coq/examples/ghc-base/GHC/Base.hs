@@ -129,7 +129,7 @@ import {-# SOURCE #-} GHC.IO (failIO,mplusIO)
 import GHC.Tuple ()     -- Note [Depend on GHC.Tuple]
 import GHC.Integer ()   -- Note [Depend on GHC.Integer]
 
-infixr 9  .
+-- infixr 9  .
 infixr 5  ++
 infixl 4  <$
 infixl 1  >>, >>=
@@ -1041,8 +1041,8 @@ const x _               =  x
 {-# INLINE (.) #-}
 -- Make sure it has TWO args only on the left, so that it inlines
 -- when applied to two functions, even if there is no final argument
-(.)    :: (b -> c) -> (a -> b) -> a -> c
-(.) f g = \x -> f (g x)
+-- (.)    :: (b -> c) -> (a -> b) -> a -> c
+-- (.) f g = \x -> f (g x)
 
 -- | @'flip' f@ takes its (first) two arguments in the reverse order of @f@.
 flip                    :: (a -> b -> c) -> b -> a -> c

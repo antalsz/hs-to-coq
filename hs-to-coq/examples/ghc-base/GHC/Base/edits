@@ -36,3 +36,5 @@ skip getTag
 skip eqString # actual bug in output
 skip build    # something to do with _::_?
 skip augment  # same
+
+skip flip

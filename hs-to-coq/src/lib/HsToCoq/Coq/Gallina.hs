@@ -402,6 +402,7 @@ data ArgumentExplicitness = ArgExplicit                                         
 ----------------------------------------------------------------------
 
 -- https://coq.inria.fr/refman/Reference-Manual005.html#init-notations
+-- todo: make PP monadic and update this table with new declarations?
 precTable :: [ (Op, (Int, Associativity)) ]
 precTable =
     [ mkPrecEntry "<->" 95      NoAssociativity
@@ -429,6 +430,8 @@ arrowPrec :: Int
 arrowPrec = 100   -- right associative
 appPrec   :: Int
 appPrec   = 100   -- left associative
+scopePrec = 100    -- postfix, a%scope
+
 
 maybeParen :: Bool -> Doc -> Doc
 maybeParen True  = parens
@@ -601,8 +604,8 @@ instance Gallina Term where
         parens $
            renderGallina l </> renderOp op </> renderGallina r
 
-  renderGallina' _p (InScope tm scope) = parens $
-    renderGallina tm <> "%" <> renderIdent scope
+  renderGallina' p (InScope tm scope) = maybeParen (p > scopePrec) $
+    renderGallina' scopePrec tm <> "%" <> renderIdent scope
 
   renderGallina' _p (Match discriminees orty eqns) = parens $
        "match" <+> group (align . nest (-2)

@@ -8,9 +8,6 @@ The types defined in GHC.Base:
 are all mapped to corresponding Coq types. Therefore, the Eq/Ord classes must
 be defined in this module so that we can create instances for these types.
 
-GHC.Base        Classes: Eq, Ord, Functor, Monad
-                Types:
-
  *)
 
 (* SSreflect library *)
@@ -65,12 +62,20 @@ Axiom primAppendFile  : FilePath -> String -> IO unit.
 
 (****************************************************)
 
+(* function composition *)
+Require Export Coq.Program.Basics.
+Open Scope program_scope.
+Notation "'_∘_'" := (compose).
+
 Notation "'_(,)_'"  := (fun x y => (x,y)).
 Notation "'_(,,)_'" := (fun x y z => (x, y, z)).
 Notation "'_++_'"   := (fun x y => x ++ y).
 Notation "'_::_'"   := (fun x y => x :: y).
 
+Notation "'_(->)_'"  := (fun x y => x -> y).
+
 (****************************************************)
+
 
 Definition Synonym {A : Type} (_uniq : Type) (x : A) : A := x.
 Arguments Synonym {A}%type _uniq%type x%type.

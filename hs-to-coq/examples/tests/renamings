@@ -1,0 +1,36 @@
+type  () = unit
+value () = tt
+
+type  [] = list
+value [] = nil
+value :  = ::
+
+type Eq = Eq_
+
+type Ordering = comparison
+value EQ = Eq
+value LT = Lt
+value GT = Gt
+
+value <  = <?
+value <= = <=?
+value >  = >?
+value >= = >=?
+
+value :% = Mk_Ratio
+
+type  Bool  = bool
+value True  = true
+value False = false
+value not   = negb
+value ||    = orb
+value &&    = andb
+
+
+type  Maybe   = option
+value Just    = Some
+value Nothing = None
+
+# TODO Modules
+type  M.IntMap = IntMap
+type  S.IntSet = IntSet

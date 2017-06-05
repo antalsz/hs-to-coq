@@ -52,7 +52,21 @@ convertInstanceName =   gensym
         withGhcException = id
 
 --------------------------------------------------------------------------------
+{- Haskell:
+      instance Functor ((->) r)
+   InstanceInfo
+      Name = "Functor__arr_r___"
+      Head = "Functor (_(->)_ r)" as a Coq term, with free variable
+      Class = "Functor"
 
+   Haskell:
+      instance Eq a => Eq [a]
+   InstanceInfo
+      Name = "Eq_list____"
+      Head = "forall `{Eq a}, Eq (list a)"
+      Class = "Eq"
+
+-}
 data InstanceInfo = InstanceInfo { instanceName  :: !Ident
                                  , instanceHead  :: !Term
                                  , instanceClass :: !Ident }
@@ -65,31 +79,36 @@ convertClsInstDeclInfo ClsInstDecl{..} = do
   instanceClass <- maybe (convUnsupported "strangely-formed instance heads")
                          (pure . renderOneLineT . renderGallina)
                     $ termHead instanceHead
-  
+
   pure InstanceInfo{..}
 
 --------------------------------------------------------------------------------
 
 convertClsInstDecl :: ConversionMonad m
-                   => ClsInstDecl RdrName
-                   -> (InstanceDefinition -> m a)
-                   -> Maybe (InstanceInfo -> GhcException -> m a)
+                   => ClsInstDecl RdrName          -- Haskell Instance we are converting
+                   -> (InstanceDefinition -> m a)  --
+                   -> Maybe (InstanceInfo -> GhcException -> m a) -- error handling argument
                    -> m a
 convertClsInstDecl cid@ClsInstDecl{..} rebuild mhandler = do
   info@InstanceInfo{..} <- convertClsInstDeclInfo cid
-  
+
   -- TODO: Do we need the 'HsForAllTy' trick here to handle instance
   -- superclasses?  Or is the generalization backtick enough?
   maybe id (ghandle . ($ info)) mhandler $ do
+
+
     cdefs <-   map (\ConvertedDefinition{..} -> (convDefName, maybe id Fun (nonEmpty convDefArgs) $ convDefBody))
-          <$> convertTypedBindings (map unLoc $ bagToList cid_binds) M.empty
+          <$> convertTypedBindings (map unLoc $ bagToList cid_binds) M.empty -- the type signatures (note: no InstanceSigs)
                                    (\case ConvertedDefinitionBinding cdef -> pure cdef
                                           ConvertedPatternBinding    _ _  -> convUnsupported "pattern bindings in instances")
-                                   Nothing
-     
+                                   Nothing -- error handler
+
     defaults <-  use (defaultMethods.at instanceClass.non M.empty)
+                 -- lookup default methods in the global state, using the empty map if the class name is not found
+                 -- otherwise gives you a map
+                 -- <$> is flip fmap
              <&> M.toList . M.filterWithKey (\meth _ -> isNothing $ lookup meth cdefs)
-     
+
     rebuild $ InstanceDefinition instanceName [] instanceHead (cdefs ++ defaults) Nothing
 
 --------------------------------------------------------------------------------
@@ -100,6 +119,8 @@ convertModuleClsInstDecls = fmap concat .: traverse $ maybeWithCurrentModule .*^
                                convertClsInstDecl cid
                                                   (pure . pure . InstanceSentence)
                                                   (Just axiomatizeInstance)
+  -- what to do if instance conversion fails
+  -- make an axiom that admits the instance declaration
   where axiomatizeInstance InstanceInfo{..} exn = pure
           [ translationFailedComment ("instance " <> renderOneLineT (renderGallina instanceHead)) exn
           , InstanceSentence $ InstanceDefinition

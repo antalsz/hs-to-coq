@@ -1,9 +1,12 @@
 LIB = /Users/sweirich/github/hs-to-coq/ghc-8.0.2/libraries/base
 
+# Not all of these need to be handwritten. Eventually we should be able to
+# generate some of these modules as hs-to-coq is improved.
+
 # GHC/Unicode needs precedence resolution, plus a few issues with unicode constants
 # Data/Char needs a show instance.  Also use of data cons separate from definition.
 
-# Handwritten modules
+# Handwritten modules (usually by modification of generated version)
 HANDMOD = GHC/Prim \
           GHC/Num \
 	       GHC/Char \
@@ -15,13 +18,15 @@ HANDMOD = GHC/Prim \
           Prelude
 
 # Generated modules
+# All except Base are generated directly from GHC/libraries/base
 MODULES  = GHC/Base \
            GHC/List \
            Data/Tuple \
            Data/Maybe \
            Data/Bool \
-           Data/Function \
-           Data/OldList
+           Data/Function
+#           Data/Ord \
+#           Data/OldList
 
 VFILES   = $(addsuffix .v,$(MODULES))
 VOFILES  = $(patsubst %.v,%.vo,$(VFILES))

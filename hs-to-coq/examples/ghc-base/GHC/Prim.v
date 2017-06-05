@@ -1,16 +1,28 @@
-(* This includes everything that should be defined in GHC/Base.hs, but is not. *)
+(* This includes everything that should be defined in GHC/Base.hs, but cannot
+   be generated from Base.hs.
+
+The types defined in GHC.Base:
+
+  list, (), Int, Bool, Ordering, Char, String
+
+are all mapped to corresponding Coq types. Therefore, the Eq/Ord classes must
+be defined in this module so that we can create instances for these types.
+
+GHC.Base        Classes: Eq, Ord, Functor, Monad
+                Types:
+
+ *)
 
 (* SSreflect library *)
 Require Export mathcomp.ssreflect.ssreflect.
 
+(********************* Types ************************)
 
 (* List notation *)
 Require Export Coq.Lists.List.
 
-Notation "'_(,)_'"  := (fun x y => (x,y)).
-Notation "'_(,,)_'" := (fun x y z => (x, y, z)).
-Notation "'_++_'"   := (fun x y => x ++ y).
-Notation "'_::_'"   := (fun x y => x :: y).
+(* Booleans *)
+Require Export Bool.Bool.
 
 (* Int and Integer types *)
 Require Export GHC.Num.
@@ -18,6 +30,45 @@ Require Export GHC.Num.
 (* Char type *)
 Require Export GHC.Char.
 
+(* TODO: add appropriate definitions to GHC.Num and GHC.Char *)
+Axiom primIntToChar      : Int -> Char.
+Axiom primCharToInt      : Char -> Int.
+Axiom primUnicodeMaxChar : Char.
+
+(* Strings *)
+Require Coq.Strings.String.
+Definition String := list Char.
+
+Bind Scope string_scope with String.string.
+Fixpoint hs_string__ (s : String.string) : String :=
+  match s with
+  | String.EmptyString => nil
+  | String.String c s  => &#c :: hs_string__ s
+  end.
+Notation "'&' s" := (hs_string__ s) (at level 1, format "'&' s").
+
+(* IO --- PUNT *)
+Definition FilePath := String.
+
+(* ASZ: I've been assured that this is OK *)
+Inductive IO (a : Type) : Type :=.
+Inductive IORef (a : Type) : Type :=.
+Inductive IOError : Type :=.
+
+Axiom primPutChar   : Char -> IO unit.
+Axiom primReadFile  : String -> IO String.
+Axiom primWriteFile : String -> String -> IO unit.
+Axiom primGetContents : IO String.
+Axiom primGetChar     : IO Char.
+Axiom primCatch       : forall {a}, IO a -> (IOError -> IO a) -> IO a.
+Axiom primAppendFile  : FilePath -> String -> IO unit.
+
+(****************************************************)
+
+Notation "'_(,)_'"  := (fun x y => (x,y)).
+Notation "'_(,,)_'" := (fun x y z => (x, y, z)).
+Notation "'_++_'"   := (fun x y => x ++ y).
+Notation "'_::_'"   := (fun x y => x :: y).
 
 (****************************************************)
 
@@ -28,8 +79,10 @@ Arguments Synonym {A}%type _uniq%type x%type.
 
 Axiom primUserError : forall {A}, A.
 Axiom primIOError   : forall {A}, A.
+Axiom error         : forall {A : Type}, String -> A.
+Axiom errorWithoutStackTrace : forall {A : Type}, String -> A.
 
-(*********** built in classes ***********************)
+(*********** built in classes Eq & Ord **********************)
 
 (* Don't clash with Eq constructor for the comparison type. *)
 Class Eq_ a := {
@@ -54,6 +107,7 @@ Class Ord a `{((Eq_ a))} := {
   max : (a -> (a -> a)) ;
   min : (a -> (a -> a)) }.
 
+(* Don't clash with Coq's standard ordering predicates. *)
 Infix "<?" := (op_zl__) (no associativity, at level 70).
 
 Notation "'_<?_'" := (op_zl__).
@@ -70,7 +124,7 @@ Infix ">=?" := (op_zgze__) (no associativity, at level 70).
 
 Notation "'_>=?_'" := (op_zgze__).
 
-(*********** Eq/Ord for Int**************************)
+(*********** Eq/Ord for primitive types **************************)
 
 Instance Eq_Int___ : Eq_ Int := {
                                op_zsze__ := fun x y => (x =? y)%Z;
@@ -132,8 +186,6 @@ Instance Ord_Char___ : Ord Char := {
   min       := N.min%N;
 }.
 
-Require Import Bool.Bool.
-
 Instance Eq_bool___ : Eq_ bool := {
                                op_zsze__ := eqb;
                                op_zeze__ := fun x y => negb (eqb x y);
@@ -158,9 +210,97 @@ Instance Ord_bool___ : Ord bool := {
   min       := andb
 }.
 
+Instance Eq_unit___ : Eq_ unit := {
+                               op_zsze__ := fun x y => true;
+                               op_zeze__ := fun x y => false;
+                             }.
+
+Instance Ord_unit___ : Ord unit := {
+  op_zl__   := fun x y => false;
+  op_zlze__ := fun x y => true;
+  op_zg__   := fun x y => false;
+  op_zgze__ := fun x y => true;
+  compare   := fun x y => Eq ;
+  max       := fun x y => tt;
+  min       := fun x y => tt;
+}.
+
+Definition eq_comparison (x : comparison) (y: comparison) :=
+  match x , y with
+  | Eq, Eq => true
+  | Gt, Gt => true
+  | Lt, Lt => true
+  | _ , _  => false
+end.
+
+Instance Eq_comparison___ : Eq_ comparison :=
+{
+  op_zsze__ := eq_comparison;
+  op_zeze__ := fun x y => negb (eq_comparison x y);
+}.
+
+Definition compare_comparison  (x : comparison) (y: comparison) :=
+  match x , y with
+  | Eq, Eq => Eq
+  | _, Eq  => Gt
+  | Eq, _  => Lt
+  | Lt, Lt => Eq
+  | _, Lt  => Lt
+  | Lt, _  => Gt
+  | Gt, Gt => Eq
+end.
+
+Definition ord_default {a} (comp : a -> a -> comparison) `{Eq_ a} : Ord a :=
+  Build_Ord _ _
+  (fun x y => (comp x y) == Lt)
+  ( fun x y => negb ((comp x y) == Lt))
+  (fun x y => (comp y x) == Lt)
+  (fun x y => negb ((comp x y) == Lt))
+  comp
+  (fun x y =>
+     match comp x y with
+     | Lt => y
+     | _  => x
+     end)
+  (fun x y =>   match comp x y with
+             | Gt => y
+             | _  => x
+             end).
+
+Instance Ord_comparison___ : Ord comparison := ord_default compare_comparison.
+
+
+(* TODO: are these available in a library somewhere? *)
+Fixpoint eqlist {a} `{Eq_ a} (xs :  list a) (ys : list a) : bool :=
+    match xs , ys with
+    | nil , nil => true
+    | x :: xs' , y :: ys' => andb (x == y) (eqlist xs' ys')
+    | _ ,  _ => false
+    end.
+
+Fixpoint compare_list {a} `{Ord a} (xs :  list a) (ys : list a) : comparison :=
+    match xs , ys with
+    | nil , nil => Eq
+    | nil , _   => Lt
+    | _   , nil => Gt
+    | x :: xs' , y :: ys' =>
+      match compare x y with
+          | Lt => Lt
+          | Gt => Gt
+          | Eq => compare_list xs' ys'
+      end
+    end.
+
+Instance Eq_list {a} `{Eq_ a} : Eq_ (list a) :=
+  { op_zsze__ := fun x y => true;
+    op_zeze__ := fun x y => false;
+  }.
+
+Instance Ord_list {a} `{Ord a}: Ord (list a) :=
+  ord_default compare_list.
 
 (* ********************************************************* *)
-(* Some Haskell functions we cannot translate                *)
+(* Some Haskell functions we cannot translate (yet)          *)
 
 
 (* Pattern guards, ugh. *)
@@ -197,6 +337,7 @@ Fixpoint scanr1 {a :Type} (f : a -> a -> a) (q0 : a) (xs : list a) : list a :=
               end
 end.
 
+(* ?? why doesn't this work? the infix variable k ? *)
 Fixpoint foldr {a}{b} (f: a -> b -> b) (z:b) (xs: list a) : b :=
   match xs with
   | nil => z
@@ -210,47 +351,5 @@ Definition foldl' {a}{b} k z0 xs :=
   foldr (fun(v:a) (fn:b->b) => (fun(z:b) => fn (k z v))) (id : b -> b) xs z0.
 
 (********************************************************************)
-
-(* Strings *)
-
-Definition String := list Char.
-
-Require Coq.Strings.String.
-
-Bind Scope string_scope with String.string.
-
-Fixpoint hs_string__ (s : String.string) : String :=
-  match s with
-  | String.EmptyString => nil
-  | String.String c s  => &#c :: hs_string__ s
-  end.
-Notation "'&' s" := (hs_string__ s) (at level 1, format "'&' s").
-
-(********************************************************************)
-
-Axiom error : forall {A : Type}, String -> A.
-Axiom errorWithoutStackTrace : forall {A : Type}, String -> A.
-
-(********************************************************************)
-
-(* I've been assured that this is OK *)
-Inductive IO (a : Type) : Type :=.
-Inductive IORef (a : Type) : Type :=.
-Inductive IOError : Type :=.
-
-Definition FilePath := String.
-
-Axiom primIntToChar      : Int -> Char.
-Axiom primCharToInt      : Char -> Int.
-Axiom primUnicodeMaxChar : Char.
-
-Axiom primPutChar   : Char -> IO unit.
-Axiom primReadFile  : String -> IO String.
-Axiom primWriteFile : String -> String -> IO unit.
-Axiom primGetContents : IO String.
-Axiom primGetChar     : IO Char.
-Axiom primCatch       : forall {a}, IO a -> (IOError -> IO a) -> IO a.
-Axiom primAppendFile  : FilePath -> String -> IO unit.
-
 
 Definition oneShot {a} (x:a) := x.

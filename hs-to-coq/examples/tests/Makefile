@@ -5,9 +5,11 @@ PASS = Expr
 TODO_PASS  = EqList \
            Poly \
            Self \
-           Mutrec \
+           MutrecInst \
            \
-           DotName
+           Mutrec \
+           DotName \
+           PatternGuard
 
 MODULES = $(PASS) $(TODO_PASS)
 

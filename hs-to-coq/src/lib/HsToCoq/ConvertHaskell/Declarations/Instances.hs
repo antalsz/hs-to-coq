@@ -33,6 +33,7 @@ import HsToCoq.ConvertHaskell.Definitions
 import HsToCoq.ConvertHaskell.Type
 import HsToCoq.ConvertHaskell.Expr
 import HsToCoq.ConvertHaskell.Axiomatize
+import HsToCoq.ConvertHaskell.Declarations.Class
 
 --------------------------------------------------------------------------------
 
@@ -96,12 +97,14 @@ convertClsInstDecl cid@ClsInstDecl{..} rebuild mhandler = do
   -- superclasses?  Or is the generalization backtick enough?
   maybe id (ghandle . ($ info)) mhandler $ do
 
-
-    cdefs <-   map (\ConvertedDefinition{..} -> (convDefName, maybe id Fun (nonEmpty convDefArgs) $ convDefBody))
-          <$> convertTypedBindings (map unLoc $ bagToList cid_binds) M.empty -- the type signatures (note: no InstanceSigs)
+    cbinds   <- convertTypedBindings (map unLoc $ bagToList cid_binds) M.empty -- the type signatures (note: no InstanceSigs)
                                    (\case ConvertedDefinitionBinding cdef -> pure cdef
                                           ConvertedPatternBinding    _ _  -> convUnsupported "pattern bindings in instances")
                                    Nothing -- error handler
+
+    cdefs <-  mapM (\ConvertedDefinition{..} -> do
+                       typeArgs <- getImplicitBindersForClassMember instanceClass convDefName
+                       return (convDefName, maybe id Fun (nonEmpty (typeArgs ++ convDefArgs)) $ convDefBody)) cbinds
 
     defaults <-  use (defaultMethods.at instanceClass.non M.empty)
                  -- lookup default methods in the global state, using the empty map if the class name is not found

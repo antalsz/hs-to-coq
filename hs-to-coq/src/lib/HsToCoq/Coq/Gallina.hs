@@ -44,6 +44,9 @@ module HsToCoq.Coq.Gallina (
   OrPattern(..),
   Comment(..),
 
+  -- * Signatures
+  Signature(..),
+
   -- * The vernacular
   -- $Vernacular
   Sentence(..),
@@ -397,6 +400,13 @@ data ArgumentExplicitness = ArgExplicit                                         
                           | ArgImplicit                                                        -- ^@[ ⋯ ]@ – wrap in square brackets
                           | ArgMaximal                                                         -- ^@{ ⋯ }@ – wrap in braces
                           deriving (Eq, Ord, Show, Read, Enum, Bounded, Typeable, Data)
+
+
+-- A Coq signature
+data Signature = Signature { sigType   :: Term
+                           , sigFixity :: Maybe (Associativity, Level) }
+               deriving (Eq, Ord, Show, Read)
+
 
 -- Formatting
 ----------------------------------------------------------------------

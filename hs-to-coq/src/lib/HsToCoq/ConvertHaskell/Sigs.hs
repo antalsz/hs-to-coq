@@ -1,7 +1,7 @@
 {-# LANGUAGE TupleSections, LambdaCase, FlexibleContexts, FlexibleInstances #-}
 
 module HsToCoq.ConvertHaskell.Sigs (
-  Signature(..), convertSigs, convertLSigs, convertModuleSigs, convertModuleLSigs,
+  convertSigs, convertLSigs, convertModuleSigs, convertModuleLSigs,
   HsSignature(..), collectSigs, collectSigsWithErrors, convertSignatures, convertSignature,
   convertFixity,
   recordFixitiesWithErrors
@@ -97,10 +97,6 @@ data HsSignature = HsSignature { hsSigModule :: Maybe ModuleName
                                , hsSigType   :: HsType RdrName
                                , hsSigFixity :: Maybe Fixity }
 
--- To the Coq signature
-data Signature = Signature { sigType   :: Term
-                           , sigFixity :: Maybe (Associativity, Level) }
-               deriving (Eq, Ord, Show, Read)
 
 -- Only collect fixity declarations
 collectFixities :: [(Maybe ModuleName, Sig RdrName)] -> Map RdrName (Either (String, [ModuleName]) Fixity)

@@ -1,15 +1,15 @@
 # tests that should pass
-PASS = Expr
+PASS = Expr \
+       Poly
 
 # tests that *should* pass but currently fail
 TODO_PASS  = EqList \
-           Poly \
-           Self \
-           MutrecInst \
-           \
-           Mutrec \
-           DotName \
-           PatternGuard
+             Self \
+             MutrecInst \
+             \
+             Mutrec \
+             DotName \
+             PatternGuard
 
 MODULES = $(PASS) $(TODO_PASS)
 

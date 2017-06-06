@@ -6,5 +6,5 @@ data T = K
 
 -- Not actually recursive, just one function defined in terms of the others
 instance C T where
-   f1 = id
+   f1 = \x -> x
    f2 = f1

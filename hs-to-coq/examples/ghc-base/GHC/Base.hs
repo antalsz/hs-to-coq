@@ -237,7 +237,7 @@ class Monoid a where
 
         mconcat = foldr mappend mempty
 
-
+{-
 instance Monoid [a] where
         {-# INLINE mempty #-}
         mempty  = []
@@ -245,7 +245,7 @@ instance Monoid [a] where
         mappend = (++)
         {-# INLINE mconcat #-}
         mconcat xss = [x | xs <- xss, x <- xs]
-
+-}
 -- See Note: [List comprehensions and inlining]
 
 {-
@@ -300,14 +300,14 @@ instance (Monoid a, Monoid b, Monoid c, Monoid d, Monoid e) =>
         (a1,b1,c1,d1,e1) `mappend` (a2,b2,c2,d2,e2) =
                 (a1 `mappend` a2, b1 `mappend` b2, c1 `mappend` c2,
                  d1 `mappend` d2, e1 `mappend` e2)
-
+-}
 -- lexicographical ordering
 instance Monoid Ordering where
         mempty         = EQ
         LT `mappend` _ = LT
         EQ `mappend` y = y
         GT `mappend` _ = GT
-
+{-
 -- | Lift a semigroup into 'Maybe' forming a 'Monoid' according to
 -- <http://en.wikipedia.org/wiki/Monoid>: \"Any semigroup @S@ may be
 -- turned into a monoid simply by adjoining an element @e@ not in @S@
@@ -640,6 +640,7 @@ ap m1 m2          = do { x1 <- m1; x2 <- m2; return (x1 x2) }
 -- instances for Prelude types
 
 {-
+-- cannot handle (->) in the instance head
 instance Functor ((->) r) where
     fmap = (.)
 
@@ -654,7 +655,7 @@ instance Monad ((->) r) where
 -- cannot handle (,) in the instance head
 instance Functor ((,) a) where
     fmap f (x,y) = (x, f y)
-
+-}
 -- default definition of
 -- <$
 instance  Functor Maybe  where
@@ -677,7 +678,7 @@ instance  Monad Maybe  where
     (>>) = (*>)
 
     fail _              = Nothing
--}
+
 -- -----------------------------------------------------------------------------
 -- The Alternative class definition
 

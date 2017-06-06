@@ -85,5 +85,9 @@ convertClassDecl (L _ hsCtx) (L _ hsName) ltvs fds lsigs defaults types typeDefa
                 convUnsupported $ "skipping a type class method in " ++ show name
   unless (null defs) $ defaultMethods.at name ?= defs
 
-  pure $ ClassBody (ClassDefinition name (args ++ ctx) Nothing (bimap toCoqName sigType <$> M.toList sigs))
+  let classDefn = (ClassDefinition name (args ++ ctx) Nothing (bimap toCoqName sigType <$> M.toList sigs))
+
+  classDefns.at name ?= classDefn
+
+  pure $ ClassBody classDefn
                    (concatMap (buildInfixNotations sigs <*> infixToCoq) . filter identIsOperator $ M.keys sigs)

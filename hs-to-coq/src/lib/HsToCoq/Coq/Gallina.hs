@@ -163,7 +163,7 @@ data Term = Forall Binders Term                                                 
           | HsChar Char                                                                        -- ^@&# /string/@ – extra (for Haskell character literals; /string/ is a single ASCII character)
           | Underscore                                                                         -- ^@_@
           | Parens Term                                                                        -- ^@( /term/ )@
-          | Bang Term                                                                          -- ^@! term
+          | Bang Term                                                                          -- ^@! term - tmp suppress implicit arguments (for Instance decls)
           | MissingValue                                                                       -- ^@_@ – extra (a value we don't know how to fill in)
           deriving (Eq, Ord, Show, Read, Typeable, Data)
 

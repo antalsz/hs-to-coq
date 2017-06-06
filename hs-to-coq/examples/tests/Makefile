@@ -1,12 +1,13 @@
 # tests that should pass
 PASS = Expr \
+       Sub \
+       Self \
        Poly
 
 # tests that *should* pass but currently fail
 TODO_PASS  = EqList \
-             Self \
+             PolyInstance2 \
              MutrecInst \
-             Sub \
              \
              Mutrec \
              DotName \
@@ -24,6 +25,7 @@ TYPECHECK=coqc 1>/dev/null
 all:  $(VFILES) pass todo_pass
 
 pass: $(addsuffix .pass,$(PASS))
+	@echo -------- END PASS ------------
 
 todo_pass: $(foreach f,$(TODO_PASS),$(f).pass)
 	@echo

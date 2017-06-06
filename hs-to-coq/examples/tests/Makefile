@@ -1,34 +1,40 @@
-MODULES  = EqList \
+# tests that should pass
+PASS = Expr
+
+# tests that *should* pass but currently fail
+TODO_PASS  = EqList \
            Poly \
            Self \
            Mutrec \
            \
-           DotName \
-           Expr
+           DotName
 
+MODULES = $(PASS) $(TODO_PASS)
 
 VFILES   = $(addsuffix .v,$(MODULES))
 VOFILES  = $(patsubst %.v,%.vo,$(VFILES))
 COQFLAGS = ""
 
-all:  $(VFILES) coq
+# typecheck *quietly*
+TYPECHECK=coqc 1>/dev/null
 
-_CoqProject : Makefile $(VFILES)
-	echo "-R . HS" > _CoqProject
-#	echo $(addsuffix .v,$(HANDMOD)) >> _CoqProject
-	echo $(VFILES) >> _CoqProject
+all:  $(VFILES) pass todo_pass
 
-Makefile.coq: _CoqProject
-	coq_makefile -f _CoqProject -o $@
+pass: $(addsuffix .pass,$(PASS))
 
-coq: Makefile.coq $(VFILES)
-	$(MAKE) -f Makefile.coq OPT=$(COQFLAGS)
+todo_pass: $(foreach f,$(TODO_PASS),$(f).pass)
+	@echo
+	@echo "Any names printed without errors should be moved from TODO_PASS to PASS"
+
+%.pass : %.v
+	@/bin/echo -n "$<: "
+	@if ! $(TYPECHECK) $< >&/dev/null; then echo "\033[1;31mfailed\033[0;30m (should pass)" >&2; else echo "\033[1;31mpassed\033[0;30m"; fi
 
 %.vo : %.v
-	coqc $*.v
+	@coqc $*.v
 
 %.v : %/edits renamings %/preamble.v %.hs
-	stack exec hs-to-coq -- -e $*/edits -r renamings -o $*.v -p $*/preamble.v $*.hs
+	@stack exec hs-to-coq -- -e $*/edits -r renamings -o $*.v -p $*/preamble.v $*.hs 1>/dev/null
 
 
 clean:

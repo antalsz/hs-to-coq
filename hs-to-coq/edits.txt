@@ -28,6 +28,26 @@ skip setCafInfo
 skip setArityInfo
 skip vanillaIdInfo
 
+skip voidArgId
+skip validIfUnliftedFFITypes
+skip unliftedOnly
+
+# needs Monad instance for UniqSM
+skip unitUnboxer
+
+# needs pattern guards (only the first one)
+skip widthFromBytes
+skip vecElemType
+skip vec
+skip vec16
+skip vec2
+skip vec4
+skip vec8
+
+# needs mutual recursion
+skip zap_musg
+skip zap_usg
+
 # TODO: Needs to be axiomatized, but refers to a type that isn't defined in the
 # preamble.  A new kind of edit, perhaps?
 skip trivialBuiltInFamily

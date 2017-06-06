@@ -1,7 +1,11 @@
 MODULES  = EqList \
            Poly \
            Self \
-           Mutrec
+           Mutrec \
+           \
+           DotName \
+           Expr
+
 
 VFILES   = $(addsuffix .v,$(MODULES))
 VOFILES  = $(patsubst %.v,%.vo,$(VFILES))

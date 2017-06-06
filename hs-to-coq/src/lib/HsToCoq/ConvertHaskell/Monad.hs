@@ -171,5 +171,5 @@ recordFixity id assoc = do
    state <- get
    let m = _fixities state
    case M.lookup id m of
-      Just v  -> throwProgramError $ "Multiple fixities for " ++ show id
+      Just _v  -> throwProgramError $ "Multiple fixities for " ++ show id
       Nothing -> put (state { _fixities = (M.insert id assoc m) })

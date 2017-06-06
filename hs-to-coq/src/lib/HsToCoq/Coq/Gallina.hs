@@ -163,6 +163,7 @@ data Term = Forall Binders Term                                                 
           | HsChar Char                                                                        -- ^@&# /string/@ – extra (for Haskell character literals; /string/ is a single ASCII character)
           | Underscore                                                                         -- ^@_@
           | Parens Term                                                                        -- ^@( /term/ )@
+          | Bang Term                                                                          -- ^@! term
           | MissingValue                                                                       -- ^@_@ – extra (a value we don't know how to fill in)
           deriving (Eq, Ord, Show, Read, Typeable, Data)
 
@@ -694,6 +695,11 @@ instance Gallina Term where
   renderGallina' _ (Parens t) =
     parens $ renderGallina t
 
+  renderGallina' _ (Bang t) =
+    char '!' <>  renderGallina t
+
+
+
   renderGallina' _ MissingValue =
     string "_(*MissingValue*)"
 
@@ -931,7 +937,7 @@ instance Gallina ClassDefinition where
 
 instance Gallina InstanceDefinition where
   renderGallina' _ (InstanceDefinition inst params cl defns mpf) =
-    "Instance" <+> renderIdent inst <> spaceIf params <> render_args_ty H params cl
+    "Instance" <+> renderIdent inst <> spaceIf params <> render_args_ty H params (Bang cl)
                <+> nest 2 (":=" </> "{" <> lineIf defns
                                         <> sepWith (<+>) (<!>) ";" (map (\(f,def) -> renderIdent f <+> ":=" <+> renderGallina def) defns)
                                         <> spaceIf defns <> "}.")

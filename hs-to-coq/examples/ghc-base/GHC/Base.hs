@@ -237,7 +237,7 @@ class Monoid a where
 
         mconcat = foldr mappend mempty
 
-{-
+
 instance Monoid [a] where
         {-# INLINE mempty #-}
         mempty  = []
@@ -245,7 +245,7 @@ instance Monoid [a] where
         mappend = (++)
         {-# INLINE mconcat #-}
         mconcat xss = [x | xs <- xss, x <- xs]
--}
+
 -- See Note: [List comprehensions and inlining]
 
 {-
@@ -267,16 +267,16 @@ needed to make foldr/build forms efficient are turned off, we'll get reasonably
 efficient translations anyway.
 -}
 
-{-
-instance Monoid b => Monoid (a -> b) where
-        mempty _ = mempty
-        mappend f g x = f x `mappend` g x
-
 instance Monoid () where
         -- Should it be strict?
         mempty        = ()
         _ `mappend` _ = ()
         mconcat _     = ()
+
+{-
+instance Monoid b => Monoid (a -> b) where
+        mempty _ = mempty
+        mappend f g x = f x `mappend` g x
 
 instance (Monoid a, Monoid b) => Monoid (a,b) where
         mempty = (mempty, mempty)
@@ -638,6 +638,7 @@ ap m1 m2          = do { x1 <- m1; x2 <- m2; return (x1 x2) }
 {-# SPECIALISE ap :: Maybe (a -> b) -> Maybe a -> Maybe b #-}
 
 -- instances for Prelude types
+
 {-
 instance Functor ((->) r) where
     fmap = (.)
@@ -648,11 +649,14 @@ instance Applicative ((->) a) where
 
 instance Monad ((->) r) where
     f >>= k = \ r -> k (f r) r
-
+-}
+{-
+-- cannot handle (,) in the instance head
 instance Functor ((,) a) where
     fmap f (x,y) = (x, f y)
 
-
+-- default definition of
+-- <$
 instance  Functor Maybe  where
     fmap _ Nothing       = Nothing
     fmap f (Just a)      = Just (f a)
@@ -708,6 +712,7 @@ class Applicative f => Alternative f where
         some_v = (fmap (:) v) <*> many_v
 
 {-
+-- subclass
 instance Alternative Maybe where
     empty = Nothing
     Nothing <|> r = r
@@ -733,8 +738,8 @@ class (Alternative m, Monad m) => MonadPlus m where
 -- instance MonadPlus Maybe
 
 ----------------------------------------------
--- The list type
 {-
+-- The list type
 instance Functor [] where
     {-# INLINE fmap #-}
     fmap = map

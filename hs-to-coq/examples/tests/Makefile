@@ -6,6 +6,7 @@ PASS = Expr \
 TODO_PASS  = EqList \
              Self \
              MutrecInst \
+             Sub \
              \
              Mutrec \
              DotName \

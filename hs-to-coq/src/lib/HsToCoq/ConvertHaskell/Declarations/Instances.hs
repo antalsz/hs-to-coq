@@ -1,5 +1,6 @@
 {-# LANGUAGE TupleSections, LambdaCase, RecordWildCards,
              OverloadedStrings,
+             ScopedTypeVariables,
              FlexibleContexts #-}
 
 module HsToCoq.ConvertHaskell.Declarations.Instances (
@@ -116,15 +117,17 @@ convertClsInstDecl cid@ClsInstDecl{..} rebuild mhandler = do
 
 --------------------------------------------------------------------------------
 
-convertModuleClsInstDecls :: ConversionMonad m
+convertModuleClsInstDecls :: forall m. ConversionMonad m
                           => [(Maybe ModuleName, ClsInstDecl RdrName)] -> m [Sentence]
 convertModuleClsInstDecls = fmap concat .: traverse $ maybeWithCurrentModule .*^ \cid ->
-                               convertClsInstDecl cid
-                                                  (pure . pure . InstanceSentence)
+                               convertClsInstDecl cid rebuild
                                                   (Just axiomatizeInstance)
   -- what to do if instance conversion fails
   -- make an axiom that admits the instance declaration
-  where axiomatizeInstance InstanceInfo{..} exn = pure
+  where rebuild :: InstanceDefinition -> m [Sentence]
+        rebuild = (pure . pure . InstanceSentence)
+
+        axiomatizeInstance InstanceInfo{..} exn = pure
           [ translationFailedComment ("instance " <> renderOneLineT (renderGallina instanceHead)) exn
           , InstanceSentence $ InstanceDefinition
               instanceName [] instanceHead [] (Just $ ProofAdmitted "") ]

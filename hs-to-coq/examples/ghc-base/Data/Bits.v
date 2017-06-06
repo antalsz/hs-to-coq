@@ -6,6 +6,7 @@
      - .&. and .|. can't be used as Coq notations.
        (replaced with :&: and :|: )
      - pattern guards
+     - type (sub)class and implicit arguments
 *)
 Require Import Data.Maybe.
 Require Import GHC.Enum.
@@ -13,14 +14,12 @@ Require Import GHC.Num.
 Require Import GHC.Base.
 Require Import GHC.Real.
 
-(*
-Set Implicit Arguments.
-Generalizable All Variables.
 
 Set Implicit Arguments.
+Generalizable All Variables.
 Unset Strict Implicit.
 Unset Printing Implicit Defensive.
-*)
+
 (* Converted data type declarations: *)
 Class Bits a `{Eq_ a} := {
   op_zizazi__ : a -> a -> a ;
@@ -221,7 +220,7 @@ Definition clearBit_bool : bool -> Int -> bool :=
     end)).
 
 (* Converted type class instance declarations: *)
-Instance instance_Bits_bool_37__ : Bits bool := {
+Instance instance_Bits_bool_37__ : !Bits bool := {
   op_zizazi__ := andb ;
   op_zizbzi__ := orb ;
   xor := _/=_ ;
@@ -283,7 +282,7 @@ Instance instance_Bits_bool_37__ : Bits bool := {
     end)) ;
   zeroBits := clearBit_bool (bit_bool #0) #0 }.
 
-Instance instance_FiniteBits_bool_52__ : FiniteBits bool := {
+Instance instance_FiniteBits_bool_52__ : !FiniteBits bool := {
   finiteBitSize := (fun arg_53__ => (match arg_53__ with | _ => #1 end)) ;
   countTrailingZeros := (fun arg_54__ =>
     (match arg_54__ with

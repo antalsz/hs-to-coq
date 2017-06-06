@@ -342,7 +342,7 @@ Fixpoint scanr1 {a :Type} (f : a -> a -> a) (q0 : a) (xs : list a) : list a :=
               end
 end.
 
-(* ?? why doesn't this work? the infix variable k ? *)
+(* ?? why doesn't this work? the infix variable k ? Or needed for foldl and foldl' below *)
 Fixpoint foldr {a}{b} (f: a -> b -> b) (z:b) (xs: list a) : b :=
   match xs with
   | nil => z
@@ -354,6 +354,9 @@ Definition foldl {a}{b} k z0 xs :=
 
 Definition foldl' {a}{b} k z0 xs :=
   foldr (fun(v:a) (fn:b->b) => (fun(z:b) => fn (k z v))) (id : b -> b) xs z0.
+
+Definition concatMap {a}{b} (f : a -> list b) : list a -> list b :=
+  foldr (compose (_++_) f) nil.
 
 (********************************************************************)
 

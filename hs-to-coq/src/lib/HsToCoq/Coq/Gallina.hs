@@ -425,12 +425,51 @@ precTable =
    where mkPrecEntry sym level assoc = (sym, (level, assoc))
 
 -- precedence for various other expression forms
--- SCW: I just made these up
 arrowPrec :: Int
-arrowPrec = 100   -- right associative
+arrowPrec = 20    -- right associative
+
 appPrec   :: Int
-appPrec   = 100   -- left associative
-scopePrec = 100    -- postfix, a%scope
+appPrec   = 10    -- left associative
+
+scopePrec :: Int
+scopePrec = 200   -- postfix, a%scope
+
+funPrec   :: Int
+funPrec   = 200
+
+matchPrec :: Int
+matchPrec = 200
+
+letPrec :: Int
+letPrec = 200
+
+ifPrec  :: Int
+ifPrec  = 200
+
+fixPrec :: Int
+fixPrec = 200
+
+-- precedence levels from Coq sources
+-- https://github.com/coq/coq/blob/trunk/printing/ppconstr.ml
+{-
+latom = 0
+lprod = 200
+llambda = 200
+lif = 200
+lletin = 200
+lletpattern = 200
+lfix = 200
+lcast = 100
+larg = 9
+lapp = 10
+lposint = 0
+lnegint = 35 -- (* must be consistent with Notation "- x" *)
+ltop = 200
+lproj = 1
+ldelim = 1
+lsimpleconstr = 8
+lsimplepatt = 1
+-}
 
 
 maybeParen :: Bool -> Doc -> Doc
@@ -527,22 +566,22 @@ instance Gallina Term where
   renderGallina' _p (Forall vars body) = parens $
     group $ "forall" <+> render_args V vars <> nest 2 ("," <!> renderGallina body)
 
-  renderGallina' _p (Fun vars body) = parens $
-    group $ "fun" <+> render_args V vars <+> nest 2 ("=>" <!> renderGallina body)
+  renderGallina' p (Fun vars body) = maybeParen (p > funPrec) $
+    group $ "fun" <+> render_args V vars <+> nest 2 ("=>" <!> renderGallina' funPrec body)
 
-  renderGallina' _p (Fix fbs) = parens $
+  renderGallina' p (Fix fbs) = maybeParen (p > fixPrec) $
     "fix" <+> renderGallina fbs
 
   renderGallina' _p (Cofix cbs) = parens $
     "cofix" <+> renderGallina cbs
 
-  renderGallina' _p (Let var args oty val body) = parens $
+  renderGallina' p (Let var args oty val body) = maybeParen (p > letPrec) $
          "let" <+> group (   renderIdent var
                          <>  spaceIf args <> render_args_oty V args oty
                          <+> nest 2 (":=" <!> renderGallina val))
     <!>  "in" <+> align (renderGallina body)
 
-  renderGallina' _p (LetFix def body) = parens $
+  renderGallina' p (LetFix def body) = maybeParen (p > letPrec) $
     "let fix" <+> renderGallina def <!> "in" <+> align (renderGallina body)
 
   renderGallina' _p (LetCofix def body) = parens $
@@ -566,7 +605,7 @@ instance Gallina Term where
                                                 <>  render_rtype  rty))
     <!> "in" <+> align (renderGallina body)
 
-  renderGallina' _p (If c odrty t f) = parens $
+  renderGallina' p (If c odrty t f) = maybeParen (p > ifPrec) $
         "if"   <+> align (renderGallina c <> render_opt_rtype odrty)
     <!> "then" <+> align (renderGallina t)
     <!> "else" <+> align (renderGallina f)
@@ -581,10 +620,10 @@ instance Gallina Term where
     renderGallina tm <+> ":>"
 
   renderGallina' p (Arrow ty1 ty2) = maybeParen (p > arrowPrec)  $
-    renderGallina' (arrowPrec + 1) ty1 <+> "->" <+> renderGallina' arrowPrec ty2
+    renderGallina' (arrowPrec + 1) ty1 <+> "->" <+> renderGallina' 200 ty2
 
   renderGallina' p (App f args) =  maybeParen (p > appPrec) $
-    renderGallina' appPrec f </> render_args' (appPrec + 1) H args
+    renderGallina' appPrec f </> render_args' 201 H args
 
   renderGallina' _p (ExplicitApp qid args) = parens $
     "@" <> renderGallina qid <> softlineIf args <> render_args H args
@@ -607,7 +646,7 @@ instance Gallina Term where
   renderGallina' p (InScope tm scope) = maybeParen (p > scopePrec) $
     renderGallina' scopePrec tm <> "%" <> renderIdent scope
 
-  renderGallina' _p (Match discriminees orty eqns) = parens $
+  renderGallina' p (Match discriminees orty eqns) = maybeParen (p > matchPrec) $
        "match" <+> group (align . nest (-2)
                            $ (sepWith (<!>) (<+>) "," $ renderGallina <$> discriminees)
                            <> maybe mempty (\rty -> line <> renderGallina rty) orty)

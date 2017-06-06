@@ -44,8 +44,8 @@ add scope type for constructor Mk_TyCoMapper
 # however, with the cycles broken as they currently are, `Expr` and `Bind` form
 # a complete mutually-recursive group on their own.
 
-data type arguments Expr (indices: b)
-data type arguments Bind (indices: b)
+# data type arguments Expr (indices: b)
+# data type arguments Bind (indices: b)
 
 # See Note [Strict positivity for IdInfo]
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

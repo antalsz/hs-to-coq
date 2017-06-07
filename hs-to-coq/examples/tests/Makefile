@@ -2,19 +2,21 @@
 PASS = Expr \
        Sub \
        Self \
-       Poly
+       Poly \
+       Guard2 \
+       ExhaustGuard
 
 # tests that *should* pass but currently fail
 TODO_PASS  = EqList \
              PolyInstance2 \
              MutrecInst \
+				 InstCtx \
              \
              Mutrec \
              DotName \
              PatternGuard \
-             Guard2 \
              OpTyCon
-#				 InstCtx \
+
 
 MODULES = $(PASS) $(TODO_PASS)
 

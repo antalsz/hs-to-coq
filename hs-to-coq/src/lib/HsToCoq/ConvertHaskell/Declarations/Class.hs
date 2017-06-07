@@ -77,7 +77,7 @@ convertClassDecl (L _ hsCtx) (L _ hsName) ltvs fds lsigs defaults types typeDefa
   sigs <- binding' args $ convertLSigs lsigs
 
   -- ugh! doesnt work for operators
-  memberSigs.at name ?= sigs
+  -- memberSigs.at name ?= sigs
 
   defs <- fmap M.fromList $ for (bagToList defaults) $ convertTypedBinding Nothing . unLoc >=> \case
             Just (ConvertedDefinitionBinding ConvertedDefinition{..}) -> do

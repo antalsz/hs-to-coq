@@ -8,7 +8,7 @@ module HsToCoq.ConvertHaskell.Monad (
   ConversionMonad, ConversionT, evalConversion,
   -- * Types
   ConversionState(),
-  currentModule, renamings, edits, constructors, constructorTypes, constructorFields, recordFieldTypes, memberSigs, classDefns,
+  currentModule, renamings, edits, constructors, constructorTypes, constructorFields, recordFieldTypes, classDefns,
   defaultMethods, renamed,
   ConstructorFields(..), _NonRecordFields, _RecordFields,
   -- * Operations
@@ -63,7 +63,8 @@ data ConversionState = ConversionState { __currentModule    :: !(Maybe ModuleNam
                                        , _constructorFields :: !(Map Ident ConstructorFields)
                                        , _recordFieldTypes  :: !(Map Ident Ident)
                                        -- types of class members
-                                       , _memberSigs        :: !(Map Ident (Map Ident Signature))
+                                       -- , _memberSigs        :: !(Map Ident (Map Ident Signature))
+                                       -- translated classes
                                        , _classDefns        :: !(Map Ident ClassDefinition)
                                        , _defaultMethods    :: !(Map Ident (Map Ident Term))
                                        , _fixities          :: !(Map Ident (Coq.Associativity, Coq.Level))
@@ -94,7 +95,7 @@ evalConversion _renamings _edits = evalVariablesT . (evalStateT ?? ConversionSta
   _constructorFields = M.empty
   _recordFieldTypes  = M.empty
   _classDefns        = M.empty
-  _memberSigs        = M.empty
+--  _memberSigs        = M.empty
   _defaultMethods = M.fromList ["Eq" ~>> [ "==" ~> Fun [arg "x", arg "y"] (App1 (Var "negb") $ Infix (Var "x") "/=" (Var "y"))
                                          , "/=" ~> Fun [arg "x", arg "y"] (App1 (Var "negb") $ Infix (Var "x") "==" (Var "y")) ]]
 

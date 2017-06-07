@@ -11,7 +11,7 @@ module HsToCoq.ConvertHaskell.Declarations.Instances (
 
 import Control.Lens
 
-import Data.Semigroup (Semigroup(..))
+import Data.Semigroup (Semigroup(..), (<>))
 import HsToCoq.Util.Function
 import Data.Maybe
 import qualified Data.List.NonEmpty as NE
@@ -39,6 +39,10 @@ import HsToCoq.ConvertHaskell.Type
 import HsToCoq.ConvertHaskell.Expr
 import HsToCoq.ConvertHaskell.Axiomatize
 import HsToCoq.ConvertHaskell.Declarations.Class
+
+import qualified Data.Set as S
+import qualified Data.List.NonEmpty as NE
+
 
 import Debug.Trace
 
@@ -110,7 +114,6 @@ convertClsInstDecl cid@ClsInstDecl{..} rebuild mhandler = do
                                    Nothing -- error handler
 
     cdefs <-  mapM (\ConvertedDefinition{..} -> do
-                       -- typeArgs <- getImplicitBindersForClassMember instanceClass convDefName
                        return (convDefName, maybe id Fun (NE.nonEmpty (convDefArgs)) $ convDefBody)) cbinds
 
     defaults <-  use (defaultMethods.at instanceClass.non M.empty)
@@ -142,30 +145,53 @@ convertModuleClsInstDecls = fmap concat .: traverse $ maybeWithCurrentModule .*^
 
 --------------------------------------------------------------------------------
 
--- Topo sort the instance members and try to lift some of them outside of
+-- Topo sort the instance members and try to lift (some of) them outside of
 -- the instance declaration.
 
 topoSort :: forall m.  ConversionMonad m => InstanceDefinition -> m [Sentence]
 topoSort (InstanceDefinition instanceName params ty members mp) = go sorted M.empty where
 
+        m        = M.fromList members
+        sorted   = topoSortEnvironment m
+{-
+        getFreeVarsIdent :: Ident -> S.Set Ident
+        getFreeVarsIdent m = maybe S.empty getFreeVars (lookup m members)
+
+        getFreeVarsNE :: NE.NonEmpty Ident -> S.Set Ident
+        getFreeVarsNE ne = S.unions (map getFreeVarsIdent (NE.toList ne))
+
+        containsNE :: NE.NonEmpty Ident -> S.Set Ident -> Bool
+        containsNE ne s = any (\v -> S.member v s) ne
+
+        compressLast :: [ NE.NonEmpty Ident ] -> ([ NE.NonEmpty Ident ], S.Set Ident)
+        compressLast [ ]      = ([], S.empty)
+        compressLast (h : []) =
+            ([h], getFreeVarsNE h)
+        compressLast (h : tl) =
+            let extend set = S.union set (getFreeVarsNE h) in
+            case compressLast tl of
+              ([],s)         -> error "BUG: this case is impossible"
+              ((h':[]), set) ->
+                  if containsNE h set then
+                      ([h , h'], extend set)
+                  else
+                      ([h <> h'], extend set)
+              ((h':tl'), set) ->
+                          (h : h' : tl', S.empty) -- don't care anymore
+-}
+        -- go through the toposort of members, constructing the final sentences
         go :: [ NE.NonEmpty Ident ] -> M.Map Ident Term -> m [ Sentence ]
+
         go []      sub = mkID sub
         go (hd:tl) sub = do (s1,bnds) <- mkDefnGrp (NE.toList hd) sub
                             s2        <- go tl bnds
                             return (s1 ++ s2)
 
-        m        = M.fromList members
-        sorted   = topoSortEnvironment m
-
         -- TODO: multiparameter type classes
+        --       instances with contexts
         (className, instTy) = case ty of
                                 App (Qualid (Bare cn)) ((PosArg a) NE.:| []) -> (cn, a)
-                                _ -> error ("cannot deconstruct instance head" ++ (show ty))
-
-
-
-        -- TODO: figure out which members can actually stay in the instance declaration
-        keepable = M.empty
+                                _ -> error ("cannot deconstruct instance head: " ++ (show ty))
 
         -- lookup the type of the class member and then add extra quantifiers
         -- from the class & instance definitions
@@ -175,8 +201,10 @@ topoSort (InstanceDefinition instanceName params ty members mp) = go sorted M.em
                                (Just (ClassDefinition _ (Inferred Explicit (Ident var):_) _ sigs)) ->
                                    case (lookup memberName sigs) of
                                      Just sigType -> do
-                                       -- TODO: the insTy could have a free variables in it, should generalize those in the type
-                                       -- note: we don't keep track of inscope variables here, so currently this includes "list", for example
+                                       -- TODO: the insTy could have a free variables in it,
+                                       -- should generalize those in the type
+                                       -- note: we don't keep track of inscope variables here,
+                                       -- so currently this includes "list", for example
                                        -- let otherVars = getFreeVars instTy
                                        return $ Just (subst (M.singleton var instTy) sigType)
                                      Nothing ->
@@ -201,7 +229,7 @@ topoSort (InstanceDefinition instanceName params ty members mp) = go sorted M.em
            trace ("Giving up on mutual recursion" ++ show many) $
              return ([], sub)
 
-        mkID :: M.Map Ident Term -> m [ Sentence ]
+        mkID :: [(Ident, Term)] -> M.Map Ident Term -> m [ Sentence ]
         mkID mems = do
            let kept = M.toList (M.map (subst mems) keepable)
            mems' <- mapM (\(v,b) -> (v,) <$> quantify v b) (M.toList mems)

@@ -172,7 +172,7 @@ convertExpr (HsIf overloaded c t f) =
   else convUnsupported "overloaded if-then-else"
 
 convertExpr (HsMultiIf PlaceHolder lgrhsList) =
-  convertLGRHSList [] lgrhsList
+  convertLGRHSList [] MissingValue lgrhsList
 
 convertExpr (HsLet (L _ binds) body) =
   convertLocalBinds binds $ convertLExpr body
@@ -523,19 +523,85 @@ convertListComprehension allStmts = case fmap unLoc <$> unsnoc allStmts of
 
 --------------------------------------------------------------------------------
 
-convertMatchGroup :: ConversionMonad m => MatchGroup RdrName (LHsExpr RdrName) -> m [Equation]
-convertMatchGroup (MG (L _ alts) _ _ _) =
-   traverse (convertMatch . unLoc) alts
+-- foldrM :: (Monad m) => (a -> b -> m b) -> b -> [ a]  -> m b
+-- traverse :: (Monad m) => (a -> m b) -> [ a ] -> m [ b ]
 
-convertMatch :: ConversionMonad m => Match RdrName (LHsExpr RdrName) -> m Equation
-convertMatch GHC.Match{..} = do
+-- foo :: (Monad m) => (a -> b -> m b) -> b -> [a] -> m [b]
+
+convertMatchGroup :: ConversionMonad m => MatchGroup RdrName (LHsExpr RdrName) -> m [Equation]
+convertMatchGroup (MG (L _ alts) _ _ _) = reverse <$> go (reverse alts) where
+
+   go (m:l2:ls) | [lpat] <- m_pats (unLoc m), (WildPat _) <- unLoc lpat,
+                  [rhs] <- grhssGRHSs (m_grhss (unLoc m)),
+                      (GHC.GRHS [] lexpr) <- unLoc rhs = do
+      t  <- convertExpr (unLoc lexpr)
+      s1 <- convertMatch MissingValue (unLoc m)
+      s2 <- convertMatch t            (unLoc l2)
+      ss <- traverse (convertMatch MissingValue . unLoc) ls
+      return (s1:s2:ss)
+
+   go ls = traverse (convertMatch MissingValue . unLoc) ls
+
+{-
+convertMatchGroup (MG (L _ alts) _ _ _) = go MissingValue alts where
+    go :: [Match RdrName (LHsExpr RdrName)] -> Term -> m [Equation]
+    go [] t        = return []
+    go (lm:tail) t = do
+       eqns <- go tail t
+       convertMatch (unLoc lm)
+
+   foldrM (\ m b -> convertMatch (unLoc m) b) MissingValue alts where
+-}
+--
+
+-- Convert a match of a case statement,
+-- NOTE: this match itself could have several cases, due to guards
+--              i.e. pat | g1 -> expr1
+--                         gn -> expr2
+convertMatch :: ConversionMonad m =>   Term ->  Match RdrName (LHsExpr RdrName) -> m Equation
+convertMatch t GHC.Match{..} = do
   (pats, guards) <- runWriterT $
     maybe (convUnsupported "no-pattern case arms") pure . nonEmpty
       =<< traverse convertLPat m_pats
   oty <- traverse convertLType m_type
-  rhs <- convertGRHSs (map BoolGuard guards) m_grhss
-  trace ("Pats are " ++ show pats) $
-    pure . Equation [MultPattern pats] $ maybe id (flip HasType) oty rhs
+  rhs <- convertGRHSs (map BoolGuard guards) m_grhss t
+  pure . Equation [MultPattern pats] $ maybe id (flip HasType) oty rhs
+
+
+--------------------------------------------------------------------------------
+
+
+convertGuards :: ConversionMonad m => [([ConvertedGuard m],Term)] -> (Term -> m Term)
+convertGuards [] _ = convUnsupported "empty lists of guarded statements"
+convertGuards gs t = foldrM (uncurry guardTerm) t gs
+
+-- TODO: We could support enhanced fallthrough if we detected more
+-- `MissingValue` cases, e.g.
+--
+--     foo (Con1 x y) | rel x y = rhs1
+--     foo other                = rhs2
+--
+-- Right now, this doesn't catch the fallthrough.  Oh well!
+
+convertGRHS :: ConversionMonad m
+            => [ConvertedGuard m] -> GRHS RdrName (LHsExpr RdrName)
+            -> m ([ConvertedGuard m],Term)
+convertGRHS extraGuards (GRHS gs rhs) = (,) <$> ((extraGuards ++) <$> convertGuard gs)
+                                            <*> convertLExpr rhs
+
+convertLGRHSList :: ConversionMonad m
+                 => [ConvertedGuard m]
+                 -> Term
+                 -> [LGRHS RdrName (LHsExpr RdrName)]
+                 -> m Term
+convertLGRHSList extraGuards t = (\g -> convertGuards g t) <=< traverse (convertGRHS extraGuards . unLoc)
+
+convertGRHSs :: ConversionMonad m
+             => [ConvertedGuard m] -> GRHSs RdrName (LHsExpr RdrName)
+             -> Term
+             -> m Term
+convertGRHSs extraGuards GRHSs{..} t = convertLocalBinds (unLoc grhssLocalBinds)
+                                     $ convertLGRHSList extraGuards t grhssGRHSs
 
 --------------------------------------------------------------------------------
 
@@ -570,7 +636,7 @@ convertGuard gs = collapseGuards <$> traverse (toCond . unLoc) gs where
 
   collapseGuards = foldr addGuard [] . concat
 
--- Returns a function waiting for the next guard
+-- Returns a function waiting for the "else case"
 guardTerm :: ConversionMonad m => [ConvertedGuard m] -> Term -> (Term -> m Term)
 guardTerm gs guarded unguarded = go gs where
   go [] =
@@ -589,35 +655,6 @@ guardTerm gs guarded unguarded = go gs where
   go (LetGuard bind : gs) =
     bind $ go gs
 
---------------------------------------------------------------------------------
-
-convertGuards :: ConversionMonad m => [([ConvertedGuard m],Term)] -> m Term
-convertGuards [] = convUnsupported "empty lists of guarded statements"
-convertGuards gs = foldrM (uncurry guardTerm) MissingValue gs
--- TODO: We could support enhanced fallthrough if we detected more
--- `MissingValue` cases, e.g.
---
---     foo (Con1 x y) | rel x y = rhs1
---     foo other                = rhs2
---
--- Right now, this doesn't catch the fallthrough.  Oh well!
-
-convertGRHS :: ConversionMonad m
-            => [ConvertedGuard m] -> GRHS RdrName (LHsExpr RdrName)
-            -> m ([ConvertedGuard m],Term)
-convertGRHS extraGuards (GRHS gs rhs) = (,) <$> ((extraGuards ++) <$> convertGuard gs)
-                                            <*> convertLExpr rhs
-
-convertLGRHSList :: ConversionMonad m
-                 => [ConvertedGuard m] -> [LGRHS RdrName (LHsExpr RdrName)]
-                 -> m Term
-convertLGRHSList extraGuards = convertGuards <=< traverse (convertGRHS extraGuards . unLoc)
-
-convertGRHSs :: ConversionMonad m
-             => [ConvertedGuard m] -> GRHSs RdrName (LHsExpr RdrName)
-             -> m Term
-convertGRHSs extraGuards GRHSs{..} = convertLocalBinds (unLoc grhssLocalBinds)
-                                   $ convertLGRHSList extraGuards grhssGRHSs
 
 --------------------------------------------------------------------------------
 
@@ -629,7 +666,7 @@ convertTypedBinding _convHsTy PatSynBind{}  = convUnsupported "pattern synonym b
 convertTypedBinding _convHsTy PatBind{..}   = do -- TODO use `_convHsTy`?
   -- TODO: Respect `skipped'?
   (pat, guards) <- runWriterT $ convertLPat pat_lhs
-  Just . ConvertedPatternBinding pat <$> convertGRHSs (map BoolGuard guards) pat_rhs
+  Just . ConvertedPatternBinding pat <$> convertGRHSs (map BoolGuard guards) pat_rhs MissingValue
 convertTypedBinding  convHsTy FunBind{..}   = runMaybeT $ do
   (name, opName) <- freeVar (unLoc fun_id) <&> \case
                       name | identIsVariable name -> (name,            Nothing)
@@ -648,7 +685,7 @@ convertTypedBinding  convHsTy FunBind{..}   = runMaybeT $ do
     if all (null . m_pats . unLoc) . unLoc $ mg_alts fun_matches
     then case unLoc $ mg_alts fun_matches of
            [L _ (GHC.Match _ [] mty grhss)] ->
-             maybe (pure id) (fmap (flip HasType) . convertLType) mty <*> convertGRHSs [] grhss
+             maybe (pure id) (fmap (flip HasType) . convertLType) mty <*> convertGRHSs [] grhss MissingValue
            _ ->
              convUnsupported "malformed multi-match variable definitions"
     else do

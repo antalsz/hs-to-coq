@@ -11,8 +11,9 @@ TODO_PASS  = EqList \
              \
              Mutrec \
              DotName \
-             PatternGuard
-
+             PatternGuard \
+             Guard2 \
+             OpTyCon
 #				 InstCtx \
 
 MODULES = $(PASS) $(TODO_PASS)

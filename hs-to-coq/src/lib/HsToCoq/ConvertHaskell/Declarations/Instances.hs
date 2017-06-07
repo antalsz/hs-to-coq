@@ -132,11 +132,11 @@ convertModuleClsInstDecls = fmap concat .: traverse $ maybeWithCurrentModule .*^
                                convertClsInstDecl cid rebuild
                                                   (Just axiomatizeInstance)
   where rebuild :: InstanceDefinition -> m [Sentence]
-        rebuild = topoSort -- (pure . pure . InstanceSentence)
+        rebuild = topoSort
+        -- rebuild = pure . pure . InstanceSentence
 
         -- what to do if instance conversion fails
         -- make an axiom that admits the instance declaration
-
         axiomatizeInstance InstanceInfo{..} exn = pure
           [ translationFailedComment ("instance " <> renderOneLineT (renderGallina instanceHead)) exn
           , InstanceSentence $ InstanceDefinition
@@ -145,7 +145,7 @@ convertModuleClsInstDecls = fmap concat .: traverse $ maybeWithCurrentModule .*^
 
 --------------------------------------------------------------------------------
 
--- Topo sort the instance members and try to lift (some of) them outside of
+-- Topo sort the instance members and lift (some of) them outside of
 -- the instance declaration.
 
 topoSort :: forall m.  ConversionMonad m => InstanceDefinition -> m [Sentence]
@@ -187,37 +187,41 @@ topoSort (InstanceDefinition instanceName params ty members mp) = go sorted M.em
                             s2        <- go tl bnds
                             return (s1 ++ s2)
 
-        -- TODO: multiparameter type classes
-        --       instances with contexts
-        (className, instTy) = case ty of
-                                App (Qualid (Bare cn)) ((PosArg a) NE.:| []) -> (cn, a)
-                                _ -> error ("cannot deconstruct instance head: " ++ (show ty))
+        -- from "instance C ty where" access C and ty
+        -- TODO: multiparameter type classes   "instance C t1 t2 where"
+        --       instances with contexts       "instance C a => C (Maybe a) where"
+        decomposeTy = case ty of
+                        App (Qualid (Bare cn)) ((PosArg a) NE.:| []) -> return (cn, a)
+                        _ -> convUnsupported ("cannot deconstruct instance head: " ++ (show ty))
 
-        -- lookup the type of the class member and then add extra quantifiers
-        -- from the class & instance definitions
+        -- lookup the type of the class member
+        -- add extra quantifiers from the class & instance definitions
         mkTy :: Ident -> m (Maybe Term)
-        mkTy memberName = do classDef <- use (classDefns.at className)
+        mkTy memberName = do (className, instTy) <- decomposeTy
+                             classDef <- use (classDefns.at className)
                              case classDef of
                                (Just (ClassDefinition _ (Inferred Explicit (Ident var):_) _ sigs)) ->
                                    case (lookup memberName sigs) of
                                      Just sigType -> do
                                        -- TODO: the insTy could have a free variables in it,
                                        -- should generalize those in the type
-                                       -- note: we don't keep track of inscope variables here,
-                                       -- so currently this includes "list", for example
-                                       -- let otherVars = getFreeVars instTy
+                                       -- However, we don't keep track of inscope variables here,
+                                       -- so we cannot actually do this generalization. Ugh.
                                        return $ Just (subst (M.singleton var instTy) sigType)
                                      Nothing ->
-                                       trace ("Cannot find sig for" ++ show memberName) $ return Nothing
-                               _ -> trace ("OOPS! Cannot construct types for this class def: " ++ (show classDef) ++ "\n") $
-                                   return Nothing
+                                       convUnsupported ("Cannot find sig for " ++ show memberName)
+                               _ -> convUnsupported
+                                    ("OOPS! Cannot construct types for this class def: " ++ (show classDef) ++ "\n")
 
-        quantify v body = do typeArgs <- getImplicitBindersForClassMember className v
+
+        quantify v body = do (className, _) <- decomposeTy
+                             typeArgs <- getImplicitBindersForClassMember className v
                              case (NE.nonEmpty typeArgs) of
                                Nothing -> return body
                                Just args -> return $ Fun args body
 
-        -- given a group of identifiers turn them into
+        -- given a group of member ids turn them into lifted definitions, keeping track of the current
+        -- substitution
         mkDefnGrp :: [ Ident ] -> (M.Map Ident Term) -> m ([ Sentence ], M.Map Ident Term)
         mkDefnGrp [] sub = return ([], sub)
         mkDefnGrp [ v ] sub = do
@@ -225,10 +229,12 @@ topoSort (InstanceDefinition instanceName params ty members mp) = go sorted M.em
            mty  <- mkTy v
            body <- quantify v (subst sub (m M.! v))
            pure ([ DefinitionSentence (DefinitionDef Local v' [] mty body) ], (M.insert v (Qualid (Bare v')) sub))
-        mkDefnGrp many sub = -- TODO: mutual recursion (Now: give up)
-           trace ("Giving up on mutual recursion" ++ show many) $
-             return ([], sub)
+        mkDefnGrp many _sub =
+           -- TODO: mutual recursion
+           convUnsupported ("Giving up on mutual recursion" ++ show many)
 
+        -- make the final instance declaration, using the current substitution as the instance
+        -- TODO: some of the members can stay in the instance itself instead of being lifted
         mkID :: M.Map Ident Term -> m [ Sentence ]
         mkID mems = do
            let keepable = M.empty

@@ -8,6 +8,7 @@ PASS = Expr \
 TODO_PASS  = EqList \
              PolyInstance2 \
              MutrecInst \
+				 InstCtx \
              \
              Mutrec \
              DotName \

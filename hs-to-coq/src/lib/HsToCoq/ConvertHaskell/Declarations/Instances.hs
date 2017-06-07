@@ -229,8 +229,9 @@ topoSort (InstanceDefinition instanceName params ty members mp) = go sorted M.em
            trace ("Giving up on mutual recursion" ++ show many) $
              return ([], sub)
 
-        mkID :: [(Ident, Term)] -> M.Map Ident Term -> m [ Sentence ]
+        mkID :: M.Map Ident Term -> m [ Sentence ]
         mkID mems = do
+           let keepable = M.empty
            let kept = M.toList (M.map (subst mems) keepable)
            mems' <- mapM (\(v,b) -> (v,) <$> quantify v b) (M.toList mems)
 

@@ -8,11 +8,12 @@ PASS = Expr \
 TODO_PASS  = EqList \
              PolyInstance2 \
              MutrecInst \
-				 InstCtx \
              \
              Mutrec \
              DotName \
              PatternGuard
+
+#				 InstCtx \
 
 MODULES = $(PASS) $(TODO_PASS)
 

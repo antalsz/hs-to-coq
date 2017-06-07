@@ -70,6 +70,7 @@ import HsToCoq.ConvertHaskell.Type
 import HsToCoq.ConvertHaskell.Pattern
 import HsToCoq.ConvertHaskell.Sigs
 
+import Debug.Trace
 --------------------------------------------------------------------------------
 
 convertExpr :: ConversionMonad m => HsExpr RdrName -> m Term
@@ -523,7 +524,8 @@ convertListComprehension allStmts = case fmap unLoc <$> unsnoc allStmts of
 --------------------------------------------------------------------------------
 
 convertMatchGroup :: ConversionMonad m => MatchGroup RdrName (LHsExpr RdrName) -> m [Equation]
-convertMatchGroup (MG (L _ alts) _ _ _) = traverse (convertMatch . unLoc) alts
+convertMatchGroup (MG (L _ alts) _ _ _) =
+   traverse (convertMatch . unLoc) alts
 
 convertMatch :: ConversionMonad m => Match RdrName (LHsExpr RdrName) -> m Equation
 convertMatch GHC.Match{..} = do
@@ -532,7 +534,8 @@ convertMatch GHC.Match{..} = do
       =<< traverse convertLPat m_pats
   oty <- traverse convertLType m_type
   rhs <- convertGRHSs (map BoolGuard guards) m_grhss
-  pure . Equation [MultPattern pats] $ maybe id (flip HasType) oty rhs
+  trace ("Pats are " ++ show pats) $
+    pure . Equation [MultPattern pats] $ maybe id (flip HasType) oty rhs
 
 --------------------------------------------------------------------------------
 

@@ -410,7 +410,10 @@ class Functor f => Applicative f where
 
     -- | Sequence actions, discarding the value of the second argument.
     (<*) :: f a -> f b -> f a
-    (<*) = liftA2 const
+    --- XXXX: even this is difficult, we need to refer to the
+    --- specific version of <*> not the general one. But the
+    --- notation for the operator gets in the way
+    a <* b = fmap const a <*> b  -- liftA2 const
 
 -- | A variant of '<*>' with the arguments reversed.
 (<**>) :: Applicative f => f a -> f (a -> b) -> f b

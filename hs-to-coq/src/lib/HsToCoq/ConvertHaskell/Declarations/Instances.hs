@@ -110,8 +110,8 @@ convertClsInstDecl cid@ClsInstDecl{..} rebuild mhandler = do
                                    Nothing -- error handler
 
     cdefs <-  mapM (\ConvertedDefinition{..} -> do
-                       typeArgs <- getImplicitBindersForClassMember instanceClass convDefName
-                       return (convDefName, maybe id Fun (NE.nonEmpty (typeArgs ++ convDefArgs)) $ convDefBody)) cbinds
+                       -- typeArgs <- getImplicitBindersForClassMember instanceClass convDefName
+                       return (convDefName, maybe id Fun (NE.nonEmpty (convDefArgs)) $ convDefBody)) cbinds
 
     defaults <-  use (defaultMethods.at instanceClass.non M.empty)
                  -- lookup default methods in the global state, using the empty map if the class name is not found
@@ -170,26 +170,33 @@ topoSort (InstanceDefinition instanceName params ty members mp) = go sorted M.em
         -- lookup the type of the class member and then add extra quantifiers
         -- from the class & instance definitions
         mkTy :: Ident -> m (Maybe Term)
-        mkTy memberName = do sigs      <- use (memberSigs.at className.non M.empty)
-                             classDef  <- use (classDefns.at className)
-                             case (classDef, M.lookup memberName sigs) of
-                               (Just (ClassDefinition _ (Inferred Explicit (Ident var):_) _ _), Just Signature{..}) -> do
-                                   -- TODO: the insTy could have a free variables in it, should generalize those in the type
-                                   -- note: we don't keep track of inscope variables here, so currently this includes "list", for example
-                                   let otherVars = getFreeVars instTy
-                                   return $ Just (subst (M.singleton var instTy) sigType)
-                               (Just cd,  Nothing) ->
-                                  trace ("Cannot find sig for" ++ show memberName) $ return Nothing
+        mkTy memberName = do classDef <- use (classDefns.at className)
+                             case classDef of
+                               (Just (ClassDefinition _ (Inferred Explicit (Ident var):_) _ sigs)) ->
+                                   case (lookup memberName sigs) of
+                                     Just sigType -> do
+                                       -- TODO: the insTy could have a free variables in it, should generalize those in the type
+                                       -- note: we don't keep track of inscope variables here, so currently this includes "list", for example
+                                       -- let otherVars = getFreeVars instTy
+                                       return $ Just (subst (M.singleton var instTy) sigType)
+                                     Nothing ->
+                                       trace ("Cannot find sig for" ++ show memberName) $ return Nothing
                                _ -> trace ("OOPS! Cannot construct types for this class def: " ++ (show classDef) ++ "\n") $
                                    return Nothing
+
+        quantify v body = do typeArgs <- getImplicitBindersForClassMember className v
+                             case (NE.nonEmpty typeArgs) of
+                               Nothing -> return body
+                               Just args -> return $ Fun args body
 
         -- given a group of identifiers turn them into
         mkDefnGrp :: [ Ident ] -> (M.Map Ident Term) -> m ([ Sentence ], M.Map Ident Term)
         mkDefnGrp [] sub = return ([], sub)
         mkDefnGrp [ v ] sub = do
-           v'  <- gensym v
-           mty <- mkTy v
-           pure ([ DefinitionSentence (DefinitionDef Local v' [] mty (subst sub (m M.! v))) ], (M.insert v (Qualid (Bare v')) sub))
+           v'   <- gensym v
+           mty  <- mkTy v
+           body <- quantify v (subst sub (m M.! v))
+           pure ([ DefinitionSentence (DefinitionDef Local v' [] mty body) ], (M.insert v (Qualid (Bare v')) sub))
         mkDefnGrp many sub = -- TODO: mutual recursion (Now: give up)
            trace ("Giving up on mutual recursion" ++ show many) $
              return ([], sub)
@@ -197,12 +204,7 @@ topoSort (InstanceDefinition instanceName params ty members mp) = go sorted M.em
         mkID :: M.Map Ident Term -> m [ Sentence ]
         mkID mems = do
            let kept = M.toList (M.map (subst mems) keepable)
-           mems' <- mapM (\(v,b) -> do typeArgs <- getImplicitBindersForClassMember className v
-                                       case (NE.nonEmpty typeArgs) of
-                                         Nothing ->
-                                           return (v,b)
-                                         Just args ->
-                                           return (v, Fun args b)) (M.toList mems)
+           mems' <- mapM (\(v,b) -> (v,) <$> quantify v b) (M.toList mems)
 
            pure [InstanceSentence (InstanceDefinition instanceName params ty (kept ++ mems') mp)]
 

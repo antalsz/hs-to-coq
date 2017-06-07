@@ -39,10 +39,13 @@ instance FreeVars ClassBody where
 -- implicit binders
 getImplicitBindersForClassMember  :: ConversionMonad m => Ident -> Ident -> m [Binder]
 getImplicitBindersForClassMember className memberName = do
-    sigs <- use (memberSigs.at className.non M.empty)
-    case M.lookup memberName sigs of
-      Just Signature{..} -> return $ getImplicits sigType
-      Nothing -> return []
+  classDef <- use (classDefns.at className)
+  case classDef of
+    (Just (ClassDefinition _ _ _ sigs)) ->
+        case (lookup memberName sigs) of
+          Just sigType -> return $ getImplicits sigType
+          Nothing -> return []
+    Nothing -> return []
 
 -- strip off any implicit binders at the beginning of a (Coq) type
 getImplicits :: Term -> [Binder]
@@ -73,12 +76,13 @@ convertClassDecl (L _ hsCtx) (L _ hsName) ltvs fds lsigs defaults types typeDefa
   args <- convertLHsTyVarBndrs Coq.Explicit ltvs
   sigs <- binding' args $ convertLSigs lsigs
 
+  -- ugh! doesnt work for operators
   memberSigs.at name ?= sigs
 
   defs <- fmap M.fromList $ for (bagToList defaults) $ convertTypedBinding Nothing . unLoc >=> \case
             Just (ConvertedDefinitionBinding ConvertedDefinition{..}) -> do
-                typeArgs <- getImplicitBindersForClassMember name convDefName
-                pure (convDefName, maybe id Fun (NE.nonEmpty (typeArgs ++ convDefArgs)) convDefBody)
+--                typeArgs <- getImplicitBindersForClassMember name convDefName
+                pure (convDefName, maybe id Fun (NE.nonEmpty (convDefArgs)) convDefBody)
             Just (ConvertedPatternBinding    _ _)                     ->
                 convUnsupported "pattern bindings in class declarations"
             Nothing                                                   ->

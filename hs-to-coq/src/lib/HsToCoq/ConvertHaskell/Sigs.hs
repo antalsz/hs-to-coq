@@ -72,8 +72,8 @@ convertFixity (Fixity _srcText hsLevel dir) = (assoc, coqLevel) where
                (4, InfixR) -> 72
                (4, InfixN) -> 70
 
-               (5, InfixL) -> 60
-               (5, InfixR) -> 61
+               (5, InfixL) -> 61
+               (5, InfixR) -> 60
                (5, InfixN) -> 62
 
                (6, InfixL) -> 50

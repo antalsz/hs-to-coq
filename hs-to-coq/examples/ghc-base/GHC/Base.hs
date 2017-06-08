@@ -665,6 +665,7 @@ instance  Functor Maybe  where
     fmap _ Nothing       = Nothing
     fmap f (Just a)      = Just (f a)
 
+{-
 instance Applicative Maybe where
     pure = Just
 
@@ -681,7 +682,7 @@ instance  Monad Maybe  where
     (>>) = (*>)
 
     fail _              = Nothing
-
+-}
 -- -----------------------------------------------------------------------------
 -- The Alternative class definition
 

@@ -1,9 +1,9 @@
 (* Preamble *)
 Require Import GHC.Prim.
-Require Import GHC.Char.
+Require Export GHC.Char.
 Require Import GHC.Real.
 Require Import GHC.Num.
-Require Import GHC.Unicode.
+Require Export GHC.Unicode.
 
 Set Implicit Arguments.
 Generalizable All Variables.

@@ -34,3 +34,6 @@ value Nothing = None
 # TODO Modules
 type  M.IntMap = IntMap
 type  S.IntSet = IntSet
+
+value .&. = :&:
+value .|. = :|:

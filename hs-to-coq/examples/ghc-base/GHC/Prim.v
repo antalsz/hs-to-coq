@@ -68,7 +68,13 @@ Open Scope program_scope.
 Notation "'_∘_'" := (compose).
 
 Notation "'_(,)_'"  := (fun x y => (x,y)).
-Notation "'_(,,)_'" := (fun x y z => (x, y, z)).
+Notation "'_(,,)_'" := (fun x0 y1 z2 => (x0, y1, z2)).
+Notation "_(,,,)_" := (fun x0 x1 x2 x3 => (x0,x1,x2,x3)).
+Notation "_(,,,,)_" := (fun x0 x1 x2 x3 x4 => (x0,x1,x2,x3,x4)).
+Notation "_(,,,,,)_" := (fun x0 x1 x2 x3 x4 x5 => (x0,x1,x2,x3,x4,x5)).
+Notation "_(,,,,,,)_" := (fun x0 x1 x2 x3 x4 x5 x6 => (x0,x1,x2,x3,x4,x5,x6)).
+Notation "_(,,,,,,,)_" := (fun x0 x1 x2 x3 x4 x5 x6 x7 => (x0,x1,x2,x3,x4,x5,x6,x7)).
+
 Notation "'_++_'"   := (fun x y => x ++ y).
 Notation "'_::_'"   := (fun x y => x :: y).
 
@@ -358,6 +364,12 @@ Definition foldl' {a}{b} k z0 xs :=
 Definition concatMap {a}{b} (f : a -> list b) : list a -> list b :=
   foldr (compose (_++_) f) nil.
 
+Definition build {a} : (forall {b},(a -> b -> b) -> b -> b) -> list a :=
+  fun g => g _ (fun x y => x :: y) nil.
+
+
 (********************************************************************)
+
+Definition seq {A} {B} (a : A) (b:B) := b.
 
 Definition oneShot {a} (x:a) := x.

@@ -5,6 +5,7 @@ LIB = /Users/sweirich/github/hs-to-coq/ghc-8.0.2/libraries/base
 
 # GHC/Unicode needs precedence resolution, plus a few issues with unicode constants
 # Data/Char needs a show instance.  Also use of data cons separate from definition.
+# Data/Monoid redefines the notation "<>" (at a different level). Need to sort this out.
 
 # Handwritten modules (usually by modification of generated version)
 HANDMOD = GHC/Prim \
@@ -13,20 +14,24 @@ HANDMOD = GHC/Prim \
           GHC/Enum \
           GHC/Real \
           GHC/Unicode \
+          GHC/Base \
           Data/Char \
           Data/Bits \
+          Data/Eq \
           Prelude
 
 # Generated modules
-# All except Base are generated directly from GHC/libraries/base
-MODULES  = GHC/Base \
+# All except BaseGen are generated directly from GHC/libraries/base
+MODULES  = GHC/BaseGen \
            GHC/List \
            Data/Tuple \
            Data/Maybe \
            Data/Bool \
-           Data/Function
-#           Data/Ord \
-#           Data/OldList
+           Data/Function \
+           Data/Ord \
+           Data/OldList \
+           Data/Monoid
+
 
 VFILES   = $(addsuffix .v,$(MODULES))
 VOFILES  = $(patsubst %.v,%.vo,$(VFILES))
@@ -50,11 +55,12 @@ coq: Makefile.coq $(VFILES) GHC/Prim.v
 	stack exec hs-to-coq -- -e $*/edits -r renamings -o $*.v -p $*/preamble.v $(LIB)/$*.hs
 
 
-GHC/Base.v : GHC/Base/edits renamings GHC/Base/preamble.v GHC/Base.hs
-	stack exec hs-to-coq -- -e GHC/Base/edits -r renamings -o GHC/Base.v -p GHC/Base/preamble.v GHC/Base.hs
+GHC/BaseGen.v : GHC/Base/edits renamings GHC/Base/preamble.v GHC/Base.hs
+	stack exec hs-to-coq -- -e GHC/Base/edits -r renamings -o GHC/BaseGen.v -p GHC/Base/preamble.v GHC/Base.hs
 
 
 clean:
-	rm -f */*.vo */*.glob */*.v.d *.vo *.v.d  $(VFILES) _CoqProject Makefile.coq
+	rm -f */*.vo */*.glob */*.v.d *.vo *.v.d  $(VFILES) _CoqProject Makefile.coq  */*.v~
+
 
 .SECONDARY: $(VFILES)

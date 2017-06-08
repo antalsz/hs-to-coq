@@ -274,9 +274,11 @@ instance Monoid () where
         mconcat _     = ()
 
 {-
+-- Need to generalize a when lifted out of the definition.
 instance Monoid b => Monoid (a -> b) where
         mempty _ = mempty
         mappend f g x = f x `mappend` g x
+-}
 
 instance (Monoid a, Monoid b) => Monoid (a,b) where
         mempty = (mempty, mempty)
@@ -300,26 +302,29 @@ instance (Monoid a, Monoid b, Monoid c, Monoid d, Monoid e) =>
         (a1,b1,c1,d1,e1) `mappend` (a2,b2,c2,d2,e2) =
                 (a1 `mappend` a2, b1 `mappend` b2, c1 `mappend` c2,
                  d1 `mappend` d2, e1 `mappend` e2)
--}
+
 -- lexicographical ordering
 instance Monoid Ordering where
         mempty         = EQ
         LT `mappend` _ = LT
         EQ `mappend` y = y
         GT `mappend` _ = GT
-{-
+
 -- | Lift a semigroup into 'Maybe' forming a 'Monoid' according to
 -- <http://en.wikipedia.org/wiki/Monoid>: \"Any semigroup @S@ may be
 -- turned into a monoid simply by adjoining an element @e@ not in @S@
 -- and defining @e*e = e@ and @e*s = s = s*e@ for all @s ∈ S@.\" Since
 -- there is no \"Semigroup\" typeclass providing just 'mappend', we
 -- use 'Monoid' instead.
+
 instance Monoid a => Monoid (Maybe a) where
   mempty = Nothing
   Nothing `mappend` m = m
   m `mappend` Nothing = m
   Just m1 `mappend` Just m2 = Just (m1 `mappend` m2)
 
+{-
+-- Can't handle tycon (,)
 instance Monoid a => Applicative ((,) a) where
     pure x = (mempty, x)
     (u, f) <*> (v, x) = (u `mappend` v, f x)
@@ -743,12 +748,12 @@ class (Alternative m, Monad m) => MonadPlus m where
 -- instance MonadPlus Maybe
 
 ----------------------------------------------
-{-
+
 -- The list type
 instance Functor [] where
     {-# INLINE fmap #-}
     fmap = map
-
+{-
 -- See Note: [List comprehensions and inlining]
 instance Applicative [] where
     {-# INLINE pure #-}

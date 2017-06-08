@@ -40,11 +40,8 @@ import HsToCoq.ConvertHaskell.Expr
 import HsToCoq.ConvertHaskell.Axiomatize
 import HsToCoq.ConvertHaskell.Declarations.Class
 
-import qualified Data.Set as S
-import qualified Data.List.NonEmpty as NE
-
-
-import Debug.Trace
+-- import qualified Data.Set as S
+-- import Debug.Trace
 
 --------------------------------------------------------------------------------
 
@@ -190,14 +187,19 @@ topoSort (InstanceDefinition instanceName params ty members mp) = go sorted M.em
         -- from "instance C ty where" access C and ty
         -- TODO: multiparameter type classes   "instance C t1 t2 where"
         --       instances with contexts       "instance C a => C (Maybe a) where"
-        decomposeTy = case ty of
-                        App (Qualid (Bare cn)) ((PosArg a) NE.:| []) -> return (cn, a)
-                        _ -> convUnsupported ("cannot deconstruct instance head: " ++ (show ty))
+        decomposeTy ty = case ty of
+                           Forall bds ty' -> do
+                                   (bds', cn, a) <- decomposeTy ty'
+                                   return (NE.toList bds ++ bds', cn, a)
+                           App (Qualid (Bare cn)) ((PosArg a) NE.:| []) -> return ([], cn, a)
+                           _ -> convUnsupported ("cannot deconstruct instance head: " ++ (show ty))
 
         -- lookup the type of the class member
         -- add extra quantifiers from the class & instance definitions
-        mkTy :: Ident -> m (Maybe Term)
-        mkTy memberName = do (className, instTy) <- decomposeTy
+        mkTy :: Ident -> m ([Binder], Maybe Term)
+        mkTy memberName = do (bnds, className, instTy) <-
+
+                                        decomposeTy ty
                              classDef <- use (classDefns.at className)
                              case classDef of
                                (Just (ClassDefinition _ (Inferred Explicit (Ident var):_) _ sigs)) ->
@@ -207,14 +209,20 @@ topoSort (InstanceDefinition instanceName params ty members mp) = go sorted M.em
                                        -- should generalize those in the type
                                        -- However, we don't keep track of inscope variables here,
                                        -- so we cannot actually do this generalization. Ugh.
-                                       return $ Just (subst (M.singleton var instTy) sigType)
+                                       let sub = M.singleton var instTy
+                                       return $ (bnds, Just $ subst sub sigType)
                                      Nothing ->
                                        convUnsupported ("Cannot find sig for " ++ show memberName)
                                _ -> convUnsupported
                                     ("OOPS! Cannot construct types for this class def: " ++ (show classDef) ++ "\n")
 
+        unFix :: Term -> Term
+        unFix body = case body of
+                       Fix (FixOne (FixBody _ bnds _ _ body')) -> Fun bnds body'
+                       _ -> body
 
-        quantify v body = do (className, _) <- decomposeTy
+
+        quantify v body = do (_, className, _) <- decomposeTy ty
                              typeArgs <- getImplicitBindersForClassMember className v
                              case (NE.nonEmpty typeArgs) of
                                Nothing -> return body
@@ -226,9 +234,9 @@ topoSort (InstanceDefinition instanceName params ty members mp) = go sorted M.em
         mkDefnGrp [] sub = return ([], sub)
         mkDefnGrp [ v ] sub = do
            v'   <- gensym v
-           mty  <- mkTy v
+           (params, mty)  <- mkTy v
            body <- quantify v (subst sub (m M.! v))
-           pure ([ DefinitionSentence (DefinitionDef Local v' [] mty body) ], (M.insert v (Qualid (Bare v')) sub))
+           pure ([ DefinitionSentence (DefinitionDef Local v' params mty (unFix body)) ], (M.insert v (Qualid (Bare v')) sub))
         mkDefnGrp many _sub =
            -- TODO: mutual recursion
            convUnsupported ("Giving up on mutual recursion" ++ show many)

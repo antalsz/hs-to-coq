@@ -21,6 +21,7 @@ import Control.Monad
 import qualified Data.Map.Strict as M
 
 import GHC hiding (Name)
+import qualified GHC
 import Bag
 import HsToCoq.Util.GHC.Exception
 
@@ -38,7 +39,7 @@ import HsToCoq.ConvertHaskell.Axiomatize
 
 -- Take the instance head and make it into a valid identifier by replacing
 -- non-alphanumerics with underscores.  Then, prepend "instance_".
-convertInstanceName :: ConversionMonad m => LHsType RdrName -> m Ident
+convertInstanceName :: ConversionMonad m => LHsType GHC.Name -> m Ident
 convertInstanceName =   gensym
                     .   ("instance_" <>)
                     .   T.map (\c -> if isAlphaNum c || c == '\'' then c else '_')
@@ -58,7 +59,7 @@ data InstanceInfo = InstanceInfo { instanceName  :: !Ident
                                  , instanceClass :: !Ident }
                   deriving (Eq, Ord, Show, Read)
 
-convertClsInstDeclInfo :: ConversionMonad m => ClsInstDecl RdrName -> m InstanceInfo
+convertClsInstDeclInfo :: ConversionMonad m => ClsInstDecl GHC.Name -> m InstanceInfo
 convertClsInstDeclInfo ClsInstDecl{..} = do
   instanceName  <- convertInstanceName $ hsib_body cid_poly_ty
   instanceHead  <- convertLType        $ hsib_body cid_poly_ty
@@ -71,7 +72,7 @@ convertClsInstDeclInfo ClsInstDecl{..} = do
 --------------------------------------------------------------------------------
 
 convertClsInstDecl :: ConversionMonad m
-                   => ClsInstDecl RdrName
+                   => ClsInstDecl GHC.Name
                    -> (InstanceDefinition -> m a)
                    -> Maybe (InstanceInfo -> GhcException -> m a)
                    -> m a
@@ -95,7 +96,7 @@ convertClsInstDecl cid@ClsInstDecl{..} rebuild mhandler = do
 --------------------------------------------------------------------------------
 
 convertModuleClsInstDecls :: ConversionMonad m
-                          => [(Maybe ModuleName, ClsInstDecl RdrName)] -> m [Sentence]
+                          => [(Maybe ModuleName, ClsInstDecl GHC.Name)] -> m [Sentence]
 convertModuleClsInstDecls = fmap concat .: traverse $ maybeWithCurrentModule .*^ \cid ->
                                convertClsInstDecl cid
                                                   (pure . pure . InstanceSentence)
@@ -105,5 +106,5 @@ convertModuleClsInstDecls = fmap concat .: traverse $ maybeWithCurrentModule .*^
           , InstanceSentence $ InstanceDefinition
               instanceName [] instanceHead [] (Just $ ProofAdmitted "") ]
 
-convertClsInstDecls :: ConversionMonad m => [ClsInstDecl RdrName] -> m [Sentence]
+convertClsInstDecls :: ConversionMonad m => [ClsInstDecl GHC.Name] -> m [Sentence]
 convertClsInstDecls = convertModuleClsInstDecls . map (Nothing,)

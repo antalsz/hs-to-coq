@@ -8,7 +8,7 @@ module HsToCoq.ConvertHaskell.Monad (
   ConversionMonad, ConversionT, evalConversion,
   -- * Types
   ConversionState(),
-  currentModule, renamings, edits, constructors, constructorTypes, constructorFields, recordFieldTypes, defaultMethods, renamed,
+  currentModule, renamings, edits, constructors, constructorTypes, constructorFields, recordFieldTypes, defaultMethods, fixities, renamed,
   ConstructorFields(..), _NonRecordFields, _RecordFields,
   -- * Operations
   maybeWithCurrentModule, withCurrentModule, withNoCurrentModule, withCurrentModuleOrNone,
@@ -45,8 +45,6 @@ import HsToCoq.Coq.Gallina.Util
 import HsToCoq.ConvertHaskell.InfixNames
 import HsToCoq.ConvertHaskell.Parameters.Renamings
 import HsToCoq.ConvertHaskell.Parameters.Edits
-
-import Debug.Trace
 
 --------------------------------------------------------------------------------
 
@@ -169,5 +167,5 @@ recordFixity id assoc = do
    state <- get
    let m = _fixities state
    case M.lookup id m of
-      Just v  -> throwProgramError $ "Multiple fixities for " ++ show id
+      Just _  -> throwProgramError $ "Multiple fixities for " ++ show id
       Nothing -> put (state { _fixities = (M.insert id assoc m) })

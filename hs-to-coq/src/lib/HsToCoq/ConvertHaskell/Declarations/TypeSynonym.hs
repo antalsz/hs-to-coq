@@ -7,6 +7,7 @@ import Prelude hiding (Num)
 import Control.Lens
 
 import GHC hiding (Name)
+import qualified GHC
 
 import HsToCoq.Coq.Gallina as Coq
 import HsToCoq.Coq.Gallina.Util
@@ -26,7 +27,7 @@ instance FreeVars SynBody where
   freeVars (SynBody _name args oty def) = binding' args $ freeVars oty *> freeVars def
 
 convertSynDecl :: ConversionMonad m
-               => Located RdrName -> [LHsTyVarBndr RdrName] -> LHsType RdrName
+               => Located GHC.Name -> [LHsTyVarBndr GHC.Name] -> LHsType GHC.Name
                -> m SynBody
 convertSynDecl name args def  = do
   coqName <- freeVar $ unLoc name

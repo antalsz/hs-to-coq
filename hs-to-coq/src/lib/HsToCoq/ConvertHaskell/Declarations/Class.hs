@@ -12,6 +12,7 @@ import Control.Monad
 import qualified Data.Map.Strict as M
 
 import GHC hiding (Name)
+import qualified GHC
 import Bag
 import Class
 
@@ -36,14 +37,14 @@ instance FreeVars ClassBody where
   freeVars (ClassBody cls nots) = binding' cls $ freeVars (NoBinding nots)
 
 convertClassDecl :: ConversionMonad m
-                 => LHsContext RdrName                   -- ^@tcdCtxt@
-                 -> Located RdrName                      -- ^@tcdLName@
-                 -> [LHsTyVarBndr RdrName]               -- ^@tcdTyVars@
-                 -> [Located (FunDep (Located RdrName))] -- ^@tcdFDs@
-                 -> [LSig RdrName]                       -- ^@tcdSigs@
-                 -> LHsBinds RdrName                     -- ^@tcdMeths@
-                 -> [LFamilyDecl RdrName]                -- ^@tcdATs@
-                 -> [LTyFamDefltEqn RdrName]             -- ^@tcdATDefs@
+                 => LHsContext GHC.Name                   -- ^@tcdCtxt@
+                 -> Located GHC.Name                      -- ^@tcdLName@
+                 -> [LHsTyVarBndr GHC.Name]               -- ^@tcdTyVars@
+                 -> [Located (FunDep (Located GHC.Name))] -- ^@tcdFDs@
+                 -> [LSig GHC.Name]                       -- ^@tcdSigs@
+                 -> LHsBinds GHC.Name                     -- ^@tcdMeths@
+                 -> [LFamilyDecl GHC.Name]                -- ^@tcdATs@
+                 -> [LTyFamDefltEqn GHC.Name]             -- ^@tcdATDefs@
                  -> m ClassBody
 convertClassDecl (L _ hsCtx) (L _ hsName) ltvs fds lsigs defaults types typeDefaults = do
   unless (null       fds)          $ convUnsupported "functional dependencies"

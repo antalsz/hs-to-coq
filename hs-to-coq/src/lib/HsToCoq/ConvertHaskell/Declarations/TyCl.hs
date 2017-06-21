@@ -36,6 +36,7 @@ import qualified Data.Map.Strict as M
 import HsToCoq.Util.Containers
 
 import GHC hiding (Name, HsString)
+import qualified GHC
 
 import HsToCoq.Coq.Gallina      as Coq
 import HsToCoq.Coq.Gallina.Util as Coq
@@ -67,7 +68,7 @@ convDeclName (ConvData  (IndBody                    tyName  _ _ _))    = tyName
 convDeclName (ConvSyn   (SynBody                    synName _ _ _))    = synName
 convDeclName (ConvClass (ClassBody (ClassDefinition clsName _ _ _) _)) = clsName
 
-convertTyClDecl :: ConversionMonad m => TyClDecl RdrName -> m (Maybe ConvertedDeclaration)
+convertTyClDecl :: ConversionMonad m => TyClDecl GHC.Name -> m (Maybe ConvertedDeclaration)
 convertTyClDecl decl = do
   coqName <- freeVar . unLoc $ tyClDeclLName decl
   use (edits.skipped.contains coqName) >>= \case
@@ -309,7 +310,7 @@ generateGroupRecordAccessors = fmap (fmap DefinitionSentence . fold)
 --------------------------------------------------------------------------------
 
 groupTyClDecls :: ConversionMonad m
-               => [(Maybe ModuleName, TyClDecl RdrName)] -> m [DeclarationGroup]
+               => [(Maybe ModuleName, TyClDecl GHC.Name)] -> m [DeclarationGroup]
 groupTyClDecls decls = do
   bodies <- traverse (maybeWithCurrentModule .*^ convertTyClDecl) decls <&>
               M.fromList . map (convDeclName &&& id) . catMaybes
@@ -323,7 +324,7 @@ groupTyClDecls decls = do
                   in vars <> setMapMaybe (M.lookup ?? ctypes) vars
 
 convertModuleTyClDecls :: ConversionMonad m
-                       => [(Maybe ModuleName, TyClDecl RdrName)] -> m [Sentence]
+                       => [(Maybe ModuleName, TyClDecl GHC.Name)] -> m [Sentence]
 convertModuleTyClDecls =   forkM3 (either convUnsupported (pure . fold)
                                     . traverse convertDeclarationGroup)
                                   (fmap fold . traverse generateGroupArgumentSpecifiers)
@@ -331,5 +332,5 @@ convertModuleTyClDecls =   forkM3 (either convUnsupported (pure . fold)
                        <=< groupTyClDecls
   where forkM3 l m r i = (<>) <$> ((<>) <$> l i <*> m i) <*> r i
 
-convertTyClDecls :: ConversionMonad m => [TyClDecl RdrName] -> m [Sentence]
+convertTyClDecls :: ConversionMonad m => [TyClDecl GHC.Name] -> m [Sentence]
 convertTyClDecls = convertModuleTyClDecls . map (Nothing,)

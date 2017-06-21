@@ -34,7 +34,7 @@ import HsToCoq.ConvertHaskell.Literals
 
 --------------------------------------------------------------------------------
 
-convertPat :: (ConversionMonad m, MonadWriter [Term] m) => Pat RdrName -> m Pattern
+convertPat :: (ConversionMonad m, MonadWriter [Term] m) => Pat GHC.Name -> m Pattern
 convertPat (WildPat PlaceHolder) =
   pure UnderscorePat
 
@@ -149,7 +149,7 @@ convertPat (CoPat _ _ _) =
 
 --------------------------------------------------------------------------------
 
-convertLPat :: (ConversionMonad m, MonadWriter [Term] m) => LPat RdrName -> m Pattern
+convertLPat :: (ConversionMonad m, MonadWriter [Term] m) => LPat GHC.Name -> m Pattern
 convertLPat = convertPat . unLoc
 
 --------------------------------------------------------------------------------

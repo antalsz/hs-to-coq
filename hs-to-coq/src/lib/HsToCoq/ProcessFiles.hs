@@ -1,6 +1,15 @@
 {-# LANGUAGE LambdaCase #-}
 
-module HsToCoq.ProcessFiles (processFile, processFiles, processFileFlags, parseFileFlags) where
+module HsToCoq.ProcessFiles (
+  processFile, processFiles,
+  processFileFlags, parseFileFlags,
+  -- Renamer
+  tcRnFile, tcRnFiles
+) where
+
+import Control.Lens
+
+import Data.Foldable
 
 import Control.Monad
 import Control.Monad.IO.Class
@@ -58,3 +67,43 @@ processFile dflags file = do
 
 processFiles :: GhcMonad m => DynFlags -> [FilePath] -> m (Maybe [Located (HsModule RdrName)])
 processFiles dflags = runMaybeT . traverse (MaybeT . processFile dflags)
+
+tcRnFile :: GhcMonad m => DynFlags -> FilePath -> m (Maybe TypecheckedModule)
+tcRnFile dflags file = do
+  -- TODO RENAMER command-line argument
+  let ghcPaths = map ("/Users/antal/prog/ghc-8.0.2/compiler/" ++)
+               $ words "backpack basicTypes cmm codeGen coreSyn deSugar ghci \
+                       \hsSyn iface llvmGen main nativeGen parser prelude \
+                       \profiling rename simplCore simplStg specialise stgSyn \
+                       \stranal typecheck types utils vectorise stage2/build"
+  _ <- setSessionDynFlags $ dflags{ importPaths = ghcPaths ++ importPaths dflags
+                                  -- TODO: Do these go here or elsewhere?
+                                  , hscTarget   = HscNothing
+                                  , ghcLink     = NoLink }
+  addTarget =<< guessTarget file Nothing
+  load LoadAllTargets >>= \case
+    Succeeded ->
+      fmap Just $ typecheckModule =<< parseModule =<< getModSummary (mkModuleName $ takeBaseName file)
+    Failed ->
+      pure Nothing
+
+tcRnFiles :: GhcMonad m => DynFlags -> [FilePath] -> m (Maybe [TypecheckedModule])
+tcRnFiles dflags files = do
+  -- TODO RENAMER command-line argument
+  let ghcPaths = map ("/Users/antal/prog/ghc-8.0.2/compiler/" ++)
+               $ words "backpack basicTypes cmm codeGen coreSyn deSugar ghci \
+                       \hsSyn iface llvmGen main nativeGen parser prelude \
+                       \profiling rename simplCore simplStg specialise stgSyn \
+                       \stranal typecheck types utils vectorise stage2/build"
+  _ <- setSessionDynFlags $ dflags{ importPaths = ghcPaths ++ importPaths dflags
+                                  -- TODO: Do these go here or elsewhere?
+                                  , hscTarget   = HscNothing
+                                  , ghcLink     = NoLink }
+  traverse_ (addTarget <=< (guessTarget ?? Nothing)) files
+  load LoadAllTargets >>= \case
+    Succeeded ->
+      Just <$> traverse ( (typecheckModule <=< parseModule <=< getModSummary)
+                        . mkModuleName . takeBaseName )
+                 files
+    Failed ->
+      pure Nothing

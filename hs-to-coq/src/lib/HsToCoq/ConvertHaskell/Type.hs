@@ -19,6 +19,7 @@ import Control.Monad.Variables
 import qualified Data.Set as S
 
 import GHC hiding (Name)
+import qualified GHC as GHC
 import HsToCoq.Util.GHC.FastString
 
 import HsToCoq.Util.GHC
@@ -34,14 +35,14 @@ import HsToCoq.ConvertHaskell.Literals
 
 --------------------------------------------------------------------------------
 
-convertLHsTyVarBndrs :: ConversionMonad m => Explicitness -> [LHsTyVarBndr RdrName] -> m [Binder]
+convertLHsTyVarBndrs :: ConversionMonad m => Explicitness -> [LHsTyVarBndr GHC.Name] -> m [Binder]
 convertLHsTyVarBndrs ex tvs = for (map unLoc tvs) $ \case
   UserTyVar   tv   -> Inferred ex . Ident <$> freeVar (unLoc tv)
   KindedTyVar tv k -> Typed Ungeneralizable ex <$> (pure . Ident <$> freeVar (unLoc tv)) <*> convertLType k
 
 --------------------------------------------------------------------------------
 
-convertType :: ConversionMonad m => HsType RdrName -> m Term
+convertType :: ConversionMonad m => HsType GHC.Name -> m Term
 convertType (HsForAllTy tvs ty) = do
   explicitTVs <- convertLHsTyVarBndrs Coq.Implicit tvs
   tyBody      <- convertLType ty
@@ -156,5 +157,5 @@ convertType (HsWildCardTy _) =
 
 --------------------------------------------------------------------------------
 
-convertLType :: ConversionMonad m => LHsType RdrName -> m Term
+convertLType :: ConversionMonad m => LHsType GHC.Name -> m Term
 convertLType = convertType . unLoc

@@ -24,6 +24,7 @@ import qualified Data.Map.Strict as M
 
 
 import GHC hiding (Name)
+import qualified GHC
 import Bag
 import HsToCoq.Util.GHC.Exception
 
@@ -46,7 +47,7 @@ import Debug.Trace
 
 -- Take the instance head and make it into a valid identifier by replacing
 -- non-alphanumerics with underscores.  Then, prepend "instance_".
-convertInstanceName :: ConversionMonad m => LHsType RdrName -> m Ident
+convertInstanceName :: ConversionMonad m => LHsType GHC.Name -> m Ident
 convertInstanceName =   gensym
                     .   ("instance_" <>)
                     .   T.map (\c -> if isAlphaNum c || c == '\'' then c else '_')
@@ -80,7 +81,7 @@ data InstanceInfo = InstanceInfo { instanceName  :: !Ident
                                  , instanceClass :: !Ident }
                   deriving (Eq, Ord, Show, Read)
 
-convertClsInstDeclInfo :: ConversionMonad m => ClsInstDecl RdrName -> m InstanceInfo
+convertClsInstDeclInfo :: ConversionMonad m => ClsInstDecl GHC.Name -> m InstanceInfo
 convertClsInstDeclInfo ClsInstDecl{..} = do
   instanceName  <- convertInstanceName $ hsib_body cid_poly_ty
   instanceHead  <- convertLType        $ hsib_body cid_poly_ty
@@ -93,7 +94,7 @@ convertClsInstDeclInfo ClsInstDecl{..} = do
 --------------------------------------------------------------------------------
 
 convertClsInstDecl :: ConversionMonad m
-                   => ClsInstDecl RdrName          -- Haskell Instance we are converting
+                   => ClsInstDecl GHC.Name          -- Haskell Instance we are converting
                    -> (InstanceDefinition -> m a)  -- Final "rebuilding" pass
                    -> Maybe (InstanceInfo -> GhcException -> m a) -- error handling argument
                    -> m a
@@ -122,7 +123,7 @@ convertClsInstDecl cid@ClsInstDecl{..} rebuild mhandler = do
 --------------------------------------------------------------------------------
 
 convertModuleClsInstDecls :: forall m. ConversionMonad m
-                          => [(Maybe ModuleName, ClsInstDecl RdrName)] -> m [Sentence]
+                          => [(Maybe ModuleName, ClsInstDecl GHC.Name)] -> m [Sentence]
 convertModuleClsInstDecls = fmap concat .: traverse $ maybeWithCurrentModule .*^ \cid ->
                                convertClsInstDecl cid rebuild
                                                   (Just axiomatizeInstance)
@@ -136,7 +137,6 @@ convertModuleClsInstDecls = fmap concat .: traverse $ maybeWithCurrentModule .*^
           [ translationFailedComment ("instance " <> renderOneLineT (renderGallina instanceHead)) exn
           , InstanceSentence $ InstanceDefinition
               instanceName [] instanceHead [] (Just $ ProofAdmitted "") ]
-
 
 --------------------------------------------------------------------------------
 
@@ -197,6 +197,7 @@ topoSort (InstanceDefinition instanceName params ty members mp) = go sorted M.em
         mkTy :: Ident -> m ([Binder], Maybe Term)
         mkTy memberName = do (bnds, className, instTy) <- decomposeTy ty
                              classDef <- use (classDefns.at className)
+                             -- TODO: May be broken by switch away from 'RdrName's
                              case classDef of
                                (Just (ClassDefinition _ (Inferred Explicit (Ident var):_) _ sigs)) ->
                                    case (lookup memberName sigs) of
@@ -247,10 +248,7 @@ topoSort (InstanceDefinition instanceName params ty members mp) = go sorted M.em
 
            pure [InstanceSentence (InstanceDefinition instanceName params ty (kept ++ mems') mp)]
 
-
-
-
 --------------------------------------------------------------------------------
 
-convertClsInstDecls :: ConversionMonad m => [ClsInstDecl RdrName] -> m [Sentence]
+convertClsInstDecls :: ConversionMonad m => [ClsInstDecl GHC.Name] -> m [Sentence]
 convertClsInstDecls = convertModuleClsInstDecls . map (Nothing,)

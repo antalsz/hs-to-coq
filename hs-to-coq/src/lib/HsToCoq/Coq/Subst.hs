@@ -113,15 +113,15 @@ instance Subst Assertion where
 
 
 instance Subst ClassDefinition where
-  subst _f (ClassDefinition cl params osrt fields) = error "subst"
+  subst _f (ClassDefinition _cl _params _osrt _fields) = error "subst"
 
 instance Subst InstanceDefinition where
-  subst _f (InstanceDefinition inst params cl defns mpf) = error "subst"
+  subst _f (InstanceDefinition _inst _params _cl _defns _mpf) = error "subst"
 
 instance Subst Notation where
-  subst _f (ReservedNotationIdent x) = error "subst"
-  subst _f (NotationBinding nb) = error "subst"
-  subst _f (InfixDefinition op defn oassoc level) = error "subst"
+  subst _f (ReservedNotationIdent _x) = error "subst"
+  subst _f (NotationBinding _nb) = error "subst"
+  subst _f (InfixDefinition _op _defn _oassoc _level) = error "subst"
 
 instance Subst NotationBinding where
   subst _f _ = error "subst"
@@ -199,7 +199,7 @@ instance Subst Term where
   subst _f x@(Qualid (Qualified _ _)) = x
 
 
-  subst _f x@(Sort sort) = x
+  subst _f x@(Sort _sort) = x
 
   subst _f x@(Num _num) = x
 

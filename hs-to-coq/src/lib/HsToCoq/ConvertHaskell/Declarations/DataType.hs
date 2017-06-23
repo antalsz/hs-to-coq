@@ -21,6 +21,7 @@ import qualified Data.Map.Strict as M
 import Control.Monad
 
 import GHC hiding (Name)
+import qualified GHC
 
 import HsToCoq.Util.GHC
 import HsToCoq.Coq.Gallina as Coq
@@ -48,7 +49,7 @@ addAdditionalConstructorScope ctor@(name, bs, Just resTy) =
 
 --------------------------------------------------------------------------------
 
-convertConLName :: ConversionMonad m => Located RdrName -> m Ident
+convertConLName :: ConversionMonad m => Located GHC.Name -> m Ident
 convertConLName (L _ hsCon) = do
   con <- ghcPpr hsCon -- We use 'ghcPpr' because we munge the name here ourselves
   use (renamed ExprNS con) >>= \case
@@ -56,7 +57,7 @@ convertConLName (L _ hsCon) = do
     Just con' -> pure con'
 
 convertConDecl :: ConversionMonad m
-               => Term -> [Binder] -> ConDecl RdrName -> m [Constructor]
+               => Term -> [Binder] -> ConDecl GHC.Name -> m [Constructor]
 convertConDecl curType extraArgs (ConDeclH98 lname mlqvs mlcxt details _doc) = do
   unless (maybe True (null . unLoc) mlcxt) $ convUnsupported "constructor contexts"
   
@@ -76,7 +77,8 @@ convertConDecl curType extraArgs (ConDeclH98 lname mlqvs mlcxt details _doc) = d
   constructorFields . at con ?= fieldInfo
   
   pure [(con, params, Just . maybeForall extraArgs $ foldr Arrow curType args)]
-convertConDecl _curType extraArgs (ConDeclGADT lnames (HsIB PlaceHolder lty) _doc) = do
+convertConDecl _curType extraArgs (ConDeclGADT lnames (HsIB implicitTyVars lty) _doc) = do
+  -- TODO RENAMER implicitTyVars
   cons  <- traverse convertConLName lnames
   conTy <- maybeForall extraArgs <$> convertLType lty
   pure $ map (, [], Just conTy) cons
@@ -128,7 +130,7 @@ rewriteDataTypeArguments dta bs = do
 --------------------------------------------------------------------------------
 
 convertDataDefn :: ConversionMonad m
-                => Term -> [Binder] -> HsDataDefn RdrName
+                => Term -> [Binder] -> HsDataDefn GHC.Name
                 -> m (Term, [Constructor])
 convertDataDefn curType extraArgs (HsDataDefn _nd lcxt _ctype ksig cons _derivs) = do
   unless (null $ unLoc lcxt) $ convUnsupported "data type contexts"
@@ -137,7 +139,7 @@ convertDataDefn curType extraArgs (HsDataDefn _nd lcxt _ctype ksig cons _derivs)
            traverse (convertConDecl curType extraArgs . unLoc) cons)
 
 convertDataDecl :: ConversionMonad m
-                => Located RdrName -> [LHsTyVarBndr RdrName] -> HsDataDefn RdrName
+                => Located GHC.Name -> [LHsTyVarBndr GHC.Name] -> HsDataDefn GHC.Name
                 -> m IndBody
 convertDataDecl name tvs defn = do
   coqName   <- freeVar $ unLoc name

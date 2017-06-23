@@ -12,6 +12,7 @@ import Control.Monad
 import qualified Data.Map.Strict as M
 
 import GHC hiding (Name)
+import qualified GHC
 import Bag
 import Class
 
@@ -57,14 +58,14 @@ getImplicits (Forall bs t) = if length bs == length imps then imps ++ getImplici
 getImplicits _ = []
 
 convertClassDecl :: ConversionMonad m
-                 => LHsContext RdrName                   -- ^@tcdCtxt@    Context
-                 -> Located RdrName                      -- ^@tcdLName@   name of the class
-                 -> [LHsTyVarBndr RdrName]               -- ^@tcdTyVars@  class type variables
-                 -> [Located (FunDep (Located RdrName))] -- ^@tcdFDs@     functional dependencies
-                 -> [LSig RdrName]                       -- ^@tcdSigs@    method signatures
-                 -> LHsBinds RdrName                     -- ^@tcdMeths@   default methods
-                 -> [LFamilyDecl RdrName]                -- ^@tcdATs@     associated types
-                 -> [LTyFamDefltEqn RdrName]             -- ^@tcdATDefs@  associated types defaults
+                 => LHsContext GHC.Name                   -- ^@tcdCtxt@    Context
+                 -> Located GHC.Name                      -- ^@tcdLName@   name of the class
+                 -> [LHsTyVarBndr GHC.Name]               -- ^@tcdTyVars@  class type variables
+                 -> [Located (FunDep (Located GHC.Name))] -- ^@tcdFDs@     functional dependencies
+                 -> [LSig GHC.Name]                       -- ^@tcdSigs@    method signatures
+                 -> LHsBinds GHC.Name                     -- ^@tcdMeths@   default methods
+                 -> [LFamilyDecl GHC.Name]                -- ^@tcdATs@     associated types
+                 -> [LTyFamDefltEqn GHC.Name]             -- ^@tcdATDefs@  associated types defaults
                  -> m ClassBody
 convertClassDecl (L _ hsCtx) (L _ hsName) ltvs fds lsigs defaults types typeDefaults = do
   unless (null       fds)          $ convUnsupported "functional dependencies"

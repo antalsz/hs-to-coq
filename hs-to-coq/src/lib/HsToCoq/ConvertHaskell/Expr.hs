@@ -1,6 +1,7 @@
 {-# LANGUAGE TupleSections, LambdaCase, RecordWildCards,
              OverloadedLists, OverloadedStrings,
-             FlexibleContexts #-}
+             FlexibleContexts,
+             ViewPatterns #-}
 
 module HsToCoq.ConvertHaskell.Expr (
   -- * Expressions
@@ -33,6 +34,7 @@ import Data.List (intercalate)
 import HsToCoq.Util.List hiding (unsnoc)
 import Data.List.NonEmpty (NonEmpty(..), nonEmpty)
 import qualified Data.List.NonEmpty as NEL
+import Data.Text (Text)
 import qualified Data.Text as T
 
 import Control.Monad.Trans.Maybe
@@ -54,6 +56,7 @@ import RdrName
 import HsToCoq.Util.GHC.Exception
 
 import HsToCoq.Util.GHC
+import HsToCoq.Util.GHC.Name hiding (Name)
 import HsToCoq.Util.GHC.HsExpr
 import HsToCoq.Coq.Gallina as Coq
 import HsToCoq.Coq.Gallina.Util
@@ -70,10 +73,9 @@ import HsToCoq.ConvertHaskell.Type
 import HsToCoq.ConvertHaskell.Pattern
 import HsToCoq.ConvertHaskell.Sigs
 
-import Debug.Trace
 --------------------------------------------------------------------------------
 
-convertExpr :: ConversionMonad m => HsExpr RdrName -> m Term
+convertExpr :: ConversionMonad m => HsExpr GHC.Name -> m Term
 convertExpr (HsVar (L _ x)) =
   Var . toPrefix <$> var ExprNS x
 
@@ -126,7 +128,7 @@ convertExpr (HsAppType _ _) =
 convertExpr (HsAppTypeOut _ _) =
   convUnsupported "`HsAppTypeOut' constructor"
 
-convertExpr (OpApp el eop PlaceHolder er) =
+convertExpr (OpApp el eop _fixity er) =
   case eop of
     L _ (HsVar (L _ hsOp)) -> do
       op <- var ExprNS hsOp
@@ -217,7 +219,7 @@ convertExpr (RecordCon (L _ hsCon) PlaceHolder conExpr HsRecFields{..}) = do
       let defaultVal field | isJust rec_dotdot = Var field
                            | otherwise         = MissingValue
 
-      vals <- fmap M.fromList . for rec_flds $ \(L _ (HsRecField (L _ (FieldOcc (L _ hsField) PlaceHolder)) hsVal pun)) -> do
+      vals <- fmap M.fromList . for rec_flds $ \(L _ (HsRecField (L _ (FieldOcc _userField hsField)) hsVal pun)) -> do
                 field <- var ExprNS hsField
                 val   <- if pun
                          then pure $ Var field
@@ -256,49 +258,56 @@ convertExpr (RecordUpd recVal fields PlaceHolder PlaceHolder PlaceHolder PlaceHo
   ctors   <- maybe (convUnsupported "invalid unknown record type") pure =<< use (constructors . at recType)
 
   let loc  = mkGeneralLocated "generated"
-      toHs = mkVarUnqual . fsLit . T.unpack
+      toHs = freshInternalName . T.unpack
 
-  let partialUpdateError con =
-        GHC.Match { m_fixity = NonFunBindMatch
-                  , m_pats   = [ loc . ConPatIn (loc $ toHs con)
-                                     . RecCon $ HsRecFields { rec_flds = []
-                                                            , rec_dotdot = Nothing } ]
-                  , m_type   = Nothing
-                  , m_grhss  = GRHSs { grhssGRHSs = [ loc . GRHS [] . loc $
-                                                      -- TODO: A special variable which is special-cased to desugar to `MissingValue`?
-                                                      HsApp (loc . HsVar . loc . mkVarUnqual $ fsLit "error")
-                                                            (loc . HsLit . GHC.HsString "" $ fsLit "Partial record update") ]
-                                     , grhssLocalBinds = loc EmptyLocalBinds } }
+  let partialUpdateError con = do
+        hsCon   <- toHs con
+        hsError <- freshInternalName "error" -- TODO RENAMER this shouldn't be fresh
+        pure $ GHC.Match
+          { m_fixity = NonFunBindMatch
+          , m_pats   = [ loc . ConPatIn (loc hsCon)
+                             . RecCon $ HsRecFields { rec_flds = []
+                                                    , rec_dotdot = Nothing } ]
+          , m_type   = Nothing
+          , m_grhss  = GRHSs { grhssGRHSs = [ loc . GRHS [] . loc $
+                                              -- TODO: A special variable which is special-cased to desugar to `MissingValue`?
+                                              HsApp (loc . HsVar . loc $ hsError)
+                                                    (loc . HsLit . GHC.HsString "" $ fsLit "Partial record update") ]
+                             , grhssLocalBinds = loc EmptyLocalBinds } }
 
   matches <- for ctors $ \con ->
     use (constructorFields . at con) >>= \case
       Just (RecordFields fields) | all (`elem` fields) $ M.keysSet updates -> do
-        let addFieldOcc :: HsRecField' RdrName arg -> HsRecField RdrName arg
+        let addFieldOcc :: HsRecField' GHC.Name arg -> HsRecField GHC.Name arg
             addFieldOcc field@HsRecField{hsRecFieldLbl = L s lbl} =
-              field{hsRecFieldLbl = L s $ FieldOcc (L s lbl) PlaceHolder}
+              let rdrLbl     = mkOrig <$> nameModule <*> nameOccName $ lbl
+              in field{hsRecFieldLbl = L s $ FieldOcc (L s rdrLbl) lbl}
             useFields fields = HsRecFields { rec_flds   = map (fmap addFieldOcc) fields
                                            , rec_dotdot = Nothing }
         (fieldPats, fieldVals) <- fmap (bimap useFields useFields . unzip) . for fields $ \field -> do
-          fieldVar <- gensym field
-          let mkField arg = loc $ HsRecField { hsRecFieldLbl = loc $ toHs field
+          fieldVar   <- gensym field
+          hsField    <- toHs field
+          hsFieldVar <- toHs fieldVar
+          let mkField arg = loc $ HsRecField { hsRecFieldLbl = loc hsField
                                              , hsRecFieldArg = arg
                                              , hsRecPun      = False }
-          pure ( mkField . loc . GHC.VarPat . loc $ toHs fieldVar
-               , mkField . fromMaybe (loc . HsVar . loc $ toHs field) -- NOT `fieldVar` – this was punned
-                         $ M.findWithDefault (Just . loc . HsVar . loc $ toHs fieldVar) field updates )
+          pure ( mkField . loc . GHC.VarPat . loc $ hsFieldVar
+               , mkField . fromMaybe (loc . HsVar $ loc hsField) -- NOT `fieldVar` – this was punned
+                         $ M.findWithDefault (Just . loc . HsVar $ loc hsFieldVar) field updates )
 
+        hsCon <- toHs con
         pure GHC.Match { m_fixity = NonFunBindMatch
-                       , m_pats   = [ loc . ConPatIn (loc $ toHs con) $ RecCon fieldPats ]
+                       , m_pats   = [ loc . ConPatIn (loc hsCon) $ RecCon fieldPats ]
                        , m_type   = Nothing
                        , m_grhss  = GRHSs { grhssGRHSs = [ loc . GRHS [] . loc $
-                                                           RecordCon (loc $ toHs con)
+                                                           RecordCon (loc hsCon)
                                                                      PlaceHolder
                                                                      noPostTcExpr
                                                                      fieldVals ]
                                           , grhssLocalBinds = loc EmptyLocalBinds } }
 
       Just _ ->
-        pure $ partialUpdateError con
+        partialUpdateError con
       Nothing ->
         convUnsupported "invalid unknown constructor in record update"
 
@@ -308,11 +317,13 @@ convertExpr (RecordUpd recVal fields PlaceHolder PlaceHolder PlaceHolder PlaceHo
                                    , mg_origin  = Generated }
 
 
-convertExpr (ExprWithTySig e (HsIB PlaceHolder (HsWC PlaceHolder _ss ty))) =
-  HasType <$> convertLExpr e <*> convertLType ty
-
-convertExpr (ExprWithTySigOut _ _) =
-  convUnsupported "`ExprWithTySigOut' constructor"
+convertExpr (ExprWithTySig e (HsIB implicitTyVars (HsWC wcs _ss ty)))
+  | null wcs  = HasType <$> convertLExpr e <*> convertLType ty -- TODO implicitTyVars
+  | otherwise = convUnsupported "type wildcards"
+  
+convertExpr (ExprWithTySigOut e (HsIB implicitTyVars (HsWC wcs _ss ty)))
+  | null wcs  = HasType <$> convertLExpr e <*> convertLType ty -- TODO implicitTyVars
+  | otherwise = convUnsupported "type wildcards"
 
 convertExpr (ArithSeq _postTc _overloadedLists info) =
   -- TODO: Special-case infinite lists?
@@ -391,23 +402,29 @@ convertExpr (HsWrap _ _) =
 --------------------------------------------------------------------------------
 
 -- Module-local
-convert_section :: (ConversionMonad m) => Maybe (LHsExpr RdrName) -> LHsExpr RdrName -> Maybe (LHsExpr RdrName) -> m Term
+convert_section :: ConversionMonad m => Maybe (LHsExpr GHC.Name) -> LHsExpr GHC.Name -> Maybe (LHsExpr GHC.Name) -> m Term
 convert_section  ml opE mr = do
-  let hs  = HsVar . mkGeneralLocated "generated" . mkVarUnqual . fsLit . T.unpack
+  let -- We need this type signature, and I think it's because @let@ isn't being
+      -- generalized.
+      hs :: ConversionMonad m => Text -> m (HsExpr GHC.Name)
+      hs  = fmap (HsVar . mkGeneralLocated "generated") . freshInternalName . T.unpack
       coq = Inferred Coq.Explicit . Ident
 
   arg <- gensym "arg"
-  let orArg = fromMaybe (noLoc $ hs arg)
-  Fun [coq arg] <$> convertExpr (OpApp (orArg ml) opE PlaceHolder (orArg mr))
+  let orArg = maybe (fmap noLoc $ hs arg) pure
+  l <- orArg ml
+  r <- orArg mr
+  -- TODO RENAMER look up fixity?
+  Fun [coq arg] <$> convertExpr (OpApp l opE defaultFixity r)
 
 --------------------------------------------------------------------------------
 
-convertLExpr :: ConversionMonad m => LHsExpr RdrName -> m Term
+convertLExpr :: ConversionMonad m => LHsExpr GHC.Name -> m Term
 convertLExpr = convertExpr . unLoc
 
 --------------------------------------------------------------------------------
 
-convertFunction :: ConversionMonad m => MatchGroup RdrName (LHsExpr RdrName) -> m (Binders, Term)
+convertFunction :: ConversionMonad m => MatchGroup GHC.Name (LHsExpr GHC.Name) -> m (Binders, Term)
 convertFunction mg = do
   eqns <- convertMatchGroup mg
   args <- case eqns of
@@ -421,7 +438,7 @@ convertFunction mg = do
 
 --------------------------------------------------------------------------------
 
-isTrueLExpr :: GhcMonad m => LHsExpr RdrName -> m Bool
+isTrueLExpr :: GhcMonad m => LHsExpr GHC.Name -> m Bool
 isTrueLExpr (L _ (HsVar x))         = ((||) <$> (== "otherwise") <*> (== "True")) <$> ghcPpr x
 isTrueLExpr (L _ (HsTick _ e))      = isTrueLExpr e
 isTrueLExpr (L _ (HsBinTick _ _ e)) = isTrueLExpr e
@@ -432,7 +449,7 @@ isTrueLExpr _                       = pure False
 
 -- TODO: Unify `buildTrivial` and `buildNontrivial`?
 convertPatternBinding :: ConversionMonad m
-                      => LPat RdrName -> LHsExpr RdrName
+                      => LPat GHC.Name -> LHsExpr GHC.Name
                       -> (Term -> (Term -> Term) -> m a)
                       -> (Term -> Ident -> (Term -> Term -> Term) -> m a)
                       -> Term
@@ -465,12 +482,16 @@ convertPatternBinding hsPat hsExp buildTrivial buildNontrivial fallback = do
                    Equation [MultPattern [pat]] (guarded rest) : fallbackMatches)
           body
 
-convertDoBlock :: ConversionMonad m => [ExprLStmt RdrName] -> m Term
+convertDoBlock :: ConversionMonad m => [ExprLStmt GHC.Name] -> m Term
 convertDoBlock allStmts = case fmap unLoc <$> unsnoc allStmts of
-  Just (stmts, BodyStmt e _ _ _) -> foldMap (Endo . toExpr . unLoc) stmts `appEndo` convertLExpr e
-  Just _                         -> convUnsupported "invalid malformed `do' block"
-  Nothing                        -> convUnsupported "invalid empty `do' block"
+  Just (stmts, lastStmt -> Just e) -> foldMap (Endo . toExpr . unLoc) stmts `appEndo` convertLExpr e
+  Just _                           -> convUnsupported "invalid malformed `do' block"
+  Nothing                          -> convUnsupported "invalid empty `do' block"
   where
+    lastStmt (BodyStmt e _ _ _) = Just e
+    lastStmt (LastStmt e _ _)   = Just e
+    lastStmt _                  = Nothing
+    
     toExpr (BodyStmt e _bind _guard _PlaceHolder) rest =
       Infix <$> convertLExpr e <*> pure ">>" <*> rest
 
@@ -490,7 +511,7 @@ convertDoBlock allStmts = case fmap unLoc <$> unsnoc allStmts of
     toExpr _ _ =
       convUnsupported "impossibly fancy `do' block statements"
 
-convertListComprehension :: ConversionMonad m => [ExprLStmt RdrName] -> m Term
+convertListComprehension :: ConversionMonad m => [ExprLStmt GHC.Name] -> m Term
 convertListComprehension allStmts = case fmap unLoc <$> unsnoc allStmts of
   Just (stmts, LastStmt e _applicativeDoInfo _returnInfo) ->
     foldMap (Endo . toExpr . unLoc) stmts `appEndo`
@@ -524,7 +545,7 @@ convertListComprehension allStmts = case fmap unLoc <$> unsnoc allStmts of
 --------------------------------------------------------------------------------
 
 -- Could this pattern be considered a 'catch all' or exhaustive pattern?
-isWild :: GHC.Pat RdrName -> Bool
+isWild :: GHC.Pat GHC.Name -> Bool
 isWild (WildPat _)            = True
 isWild (GHC.VarPat _)         = True
 isWild (GHC.AsPat _ lp)       = isWild (unLoc lp)
@@ -552,7 +573,8 @@ isWildCoq _ = False
   | OrPats (NE.NonEmpty OrPattern)
 -}
 
-convertMatchGroup :: ConversionMonad m => MatchGroup RdrName (LHsExpr RdrName) -> m [Equation]
+
+convertMatchGroup :: ConversionMonad m => MatchGroup GHC.Name (LHsExpr GHC.Name) -> m [Equation]
 convertMatchGroup (MG (L _ alts) _ _ _) = reverse <$> go (reverse alts) where
    -- traverse the alts in reverse order for easy access to the last one.
 
@@ -574,7 +596,7 @@ convertMatchGroup (MG (L _ alts) _ _ _) = reverse <$> go (reverse alts) where
 -- NOTE: this match itself could have several cases, due to guards
 --              i.e. pat | g1 -> expr1
 --                         gn -> expr2
-convertMatch :: ConversionMonad m =>   Term ->  Match RdrName (LHsExpr RdrName) -> m Equation
+convertMatch :: ConversionMonad m =>   Term ->  Match GHC.Name (LHsExpr GHC.Name) -> m Equation
 convertMatch t GHC.Match{..} = do
   (pats, guards) <- runWriterT $
     maybe (convUnsupported "no-pattern case arms") pure . nonEmpty
@@ -583,17 +605,21 @@ convertMatch t GHC.Match{..} = do
   rhs <- convertGRHSs (map BoolGuard guards) m_grhss t
   pure . Equation [MultPattern pats] $ maybe id (flip HasType) oty rhs
 
-
 --------------------------------------------------------------------------------
-
 
 convertGuards :: ConversionMonad m => [([ConvertedGuard m],Term)] -> (Term -> m Term)
 convertGuards [] _ = convUnsupported "empty lists of guarded statements"
 convertGuards gs t = foldrM (uncurry guardTerm) t gs
-
+-- TODO: We could support enhanced fallthrough if we detected more
+-- `MissingValue` cases, e.g.
+--
+--     foo (Con1 x y) | rel x y = rhs1
+--     foo other                = rhs2
+--
+-- Right now, this doesn't catch the fallthrough.  Oh well!
 
 convertGRHS :: ConversionMonad m
-            => [ConvertedGuard m] -> GRHS RdrName (LHsExpr RdrName)
+            => [ConvertedGuard m] -> GRHS GHC.Name (LHsExpr GHC.Name)
             -> m ([ConvertedGuard m],Term)
 convertGRHS extraGuards (GRHS gs rhs) = (,) <$> ((extraGuards ++) <$> convertGuard gs)
                                             <*> convertLExpr rhs
@@ -601,12 +627,12 @@ convertGRHS extraGuards (GRHS gs rhs) = (,) <$> ((extraGuards ++) <$> convertGua
 convertLGRHSList :: ConversionMonad m
                  => [ConvertedGuard m]
                  -> Term
-                 -> [LGRHS RdrName (LHsExpr RdrName)]
+                 -> [LGRHS GHC.Name (LHsExpr GHC.Name)]
                  -> m Term
 convertLGRHSList extraGuards t = (\g -> convertGuards g t) <=< traverse (convertGRHS extraGuards . unLoc)
 
 convertGRHSs :: ConversionMonad m
-             => [ConvertedGuard m] -> GRHSs RdrName (LHsExpr RdrName)
+             => [ConvertedGuard m] -> GRHSs GHC.Name (LHsExpr GHC.Name)
              -> Term
              -> m Term
 convertGRHSs extraGuards GRHSs{..} t = convertLocalBinds (unLoc grhssLocalBinds)
@@ -619,7 +645,7 @@ data ConvertedGuard m = OtherwiseGuard
                       | PatternGuard   Pattern Term
                       | LetGuard       (m Term -> m Term)
 
-convertGuard :: ConversionMonad m => [GuardLStmt RdrName] -> m [ConvertedGuard m]
+convertGuard :: ConversionMonad m => [GuardLStmt GHC.Name] -> m [ConvertedGuard m]
 convertGuard [] = pure []
 convertGuard gs = collapseGuards <$> traverse (toCond . unLoc) gs where
   toCond (BodyStmt e _bind _guard _PlaceHolder) =
@@ -669,10 +695,9 @@ guardTerm gs guarded unguarded = go gs where
   go (LetGuard bind : gs) =
     bind $ go gs
 
-
 --------------------------------------------------------------------------------
 
-convertTypedBinding :: ConversionMonad m => Maybe Term -> HsBind RdrName -> m (Maybe ConvertedBinding)
+convertTypedBinding :: ConversionMonad m => Maybe Term -> HsBind GHC.Name -> m (Maybe ConvertedBinding)
 convertTypedBinding _convHsTy VarBind{}     = convUnsupported "[internal] `VarBind'"
 convertTypedBinding _convHsTy AbsBinds{}    = convUnsupported "[internal?] `AbsBinds'"
 convertTypedBinding _convHsTy AbsBindsSig{} = convUnsupported "[internal?] `AbsBindsSig'"
@@ -717,9 +742,9 @@ convertTypedBinding  convHsTy FunBind{..}   = runMaybeT $ do
 
 -- TODO mutual recursion :-(
 convertTypedModuleBindings :: ConversionMonad m
-                           => [(Maybe ModuleName, HsBind RdrName)] -> Map Ident Signature
+                           => [(Maybe ModuleName, HsBind GHC.Name)] -> Map Ident Signature
                            -> (ConvertedBinding -> m a)
-                           -> Maybe (HsBind RdrName -> GhcException -> m a)
+                           -> Maybe (HsBind GHC.Name -> GhcException -> m a)
                            -> m [a]
 convertTypedModuleBindings defns sigs build mhandler =
   let processed defn = runMaybeT
@@ -734,15 +759,15 @@ convertTypedModuleBindings defns sigs build mhandler =
        processed defn $ convertTypedBinding ty defn
 
 convertTypedBindings :: ConversionMonad m
-                     => [HsBind RdrName] -> Map Ident Signature
+                     => [HsBind GHC.Name] -> Map Ident Signature
                      -> (ConvertedBinding -> m a)
-                     -> Maybe (HsBind RdrName -> GhcException -> m a)
+                     -> Maybe (HsBind GHC.Name -> GhcException -> m a)
                      -> m [a]
 convertTypedBindings = convertTypedModuleBindings . map (Nothing,)
 
 --------------------------------------------------------------------------------
 
-convertLocalBinds :: ConversionMonad m => HsLocalBinds RdrName -> m Term -> m Term
+convertLocalBinds :: ConversionMonad m => HsLocalBinds GHC.Name -> m Term -> m Term
 convertLocalBinds (HsValBinds (ValBindsIn binds lsigs)) body = localizeConversionState $ do
   sigs     <- convertLSigs lsigs
   convDefs <- convertTypedBindings (map unLoc . bagToList $ binds) sigs pure Nothing
@@ -752,8 +777,9 @@ convertLocalBinds (HsValBinds (ValBindsIn binds lsigs)) body = localizeConversio
   let matchLet pat term body = Coq.Match [MatchItem term Nothing Nothing] Nothing
                                          [Equation [MultPattern [pat]] body]
   (foldr (withConvertedBinding (withConvertedDefinitionDef Let) matchLet) ?? convDefs) <$> body
-convertLocalBinds (HsValBinds (ValBindsOut _ _)) _ =
-  convUnsupported "post-renaming `ValBindsOut' bindings"
+convertLocalBinds (HsValBinds (ValBindsOut recBinds lsigs)) body =
+  -- TODO RENAMER use RecFlag info to do recursion stuff
+  convertLocalBinds (HsValBinds $ ValBindsIn (unionManyBags $ map snd recBinds) lsigs) body
 convertLocalBinds (HsIPBinds _) _ =
   convUnsupported "local implicit parameter bindings"
 convertLocalBinds EmptyLocalBinds body =

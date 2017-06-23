@@ -13,7 +13,6 @@ import Control.Lens hiding (Level)
 
 import Data.Semigroup (Semigroup(..))
 import Data.Bifunctor
-import Data.Bitraversable (bitraverse)
 import Data.Maybe
 import Data.List (intercalate)
 import qualified Data.Text as T
@@ -27,10 +26,11 @@ import qualified Data.Map.Strict as M
 import qualified Data.Set as S
 
 import GHC hiding (Name)
+import qualified GHC
 import BasicTypes
 
 import HsToCoq.Util.GHC
-import HsToCoq.Util.GHC.RdrName
+import HsToCoq.Util.GHC.Name (isOperator)
 import HsToCoq.Coq.Gallina
 
 import HsToCoq.ConvertHaskell.Parameters.Renamings
@@ -94,31 +94,31 @@ convertFixity (Fixity _srcText hsLevel dir) = (assoc, coqLevel) where
 
 -- From Haskell declaration
 data HsSignature = HsSignature { hsSigModule :: Maybe ModuleName
-                               , hsSigType   :: HsType RdrName
+                               , hsSigType   :: HsType GHC.Name
                                , hsSigFixity :: Maybe Fixity }
 
 
 -- Only collect fixity declarations
-collectFixities :: [(Maybe ModuleName, Sig RdrName)] -> Map RdrName (Either (String, [ModuleName]) Fixity)
+collectFixities :: [(Maybe ModuleName, Sig GHC.Name)] -> Map GHC.Name (Either (String, [ModuleName]) Fixity)
 collectFixities modSigs =
   let  asFixity :: Maybe ModuleName -> Fixity -> (S.Set ModuleName,[Fixity])
        asFixity mname f = (maybe S.empty S.singleton mname, [f] )
-       asFixities :: Maybe ModuleName -> [Located RdrName] -> Fixity -> Map RdrName (S.Set ModuleName, [Fixity])
-       asFixities mname lnames fixity = M.fromListWith (<>) . map (, asFixity mname fixity) . filter isRdrOperator $ map unLoc lnames
+       asFixities :: Maybe ModuleName -> [Located GHC.Name] -> Fixity -> Map GHC.Name (S.Set ModuleName, [Fixity])
+       asFixities mname lnames fixity = M.fromListWith (<>) . map (, asFixity mname fixity) . filter isOperator $ map unLoc lnames
 
-       processSig :: (Maybe ModuleName, Sig RdrName) -> Map RdrName (S.Set ModuleName, [Fixity])
+       processSig :: (Maybe ModuleName, Sig GHC.Name) -> Map GHC.Name (S.Set ModuleName, [Fixity])
        processSig (mname, FixSig  (FixitySig lnames fixity)) = asFixities mname lnames fixity
        processSig (_,_) = mempty
 
        processFixity :: (S.Set ModuleName, [Fixity]) -> Either (String, [ModuleName]) Fixity
        processFixity (_, [fixity]) = Right fixity
-       processFixity (mnames, fixities) = Left ("Multiple fixities", S.toList mnames)
+       processFixity (mnames, _fixities) = Left ("Multiple fixities", S.toList mnames)
    in
      fmap processFixity (foldMap processSig modSigs)
 
-recordFixitiesWithErrors :: ConversionMonad m => [(Maybe ModuleName, Sig RdrName)] -> m (Map RdrName ())
+recordFixitiesWithErrors :: ConversionMonad m => [(Maybe ModuleName, Sig GHC.Name)] -> m (Map GHC.Name ())
 recordFixitiesWithErrors modSigs = M.traverseWithKey multiplesError (collectFixities modSigs) where
-   multiplesError :: ConversionMonad m => RdrName -> Either (String, [ModuleName]) Fixity -> m ()
+   multiplesError :: ConversionMonad m => GHC.Name -> Either (String, [ModuleName]) Fixity -> m ()
    multiplesError name (Left (err,mnames)) = do
        nameStr <- T.unpack <$> ghcPpr name
        convUnsupported $ err
@@ -130,7 +130,7 @@ recordFixitiesWithErrors modSigs = M.traverseWithKey multiplesError (collectFixi
                                Just (names, name')  -> " in the modules " ++ intercalate ", " names  ++ " and " ++ name'
    multiplesError name (Right sig) = ghcPpr name >>= \n -> recordFixity n (convertFixity sig)
 
-collectSigs :: [(Maybe ModuleName, Sig RdrName)] -> Either String (Map RdrName (Either (String, [ModuleName]) HsSignature))
+collectSigs :: [(Maybe ModuleName, Sig GHC.Name)] -> Either String (Map GHC.Name (Either (String, [ModuleName]) HsSignature))
 collectSigs modSigs = do
   let asType   mname = (S.singleton mname, , []) . pure
       --asFixity mname = (S.singleton mname, [], ) . pure
@@ -139,23 +139,27 @@ collectSigs modSigs = do
       --asFixities mname lnames fixity = list . map (, asFixity mname fixity) . filter isRdrOperator $ map unLoc lnames
 
 
-
+  -- TODO RENAMER implicitTyVars
   multimap <-  fmap (M.fromListWith (<>)) . runListT $ list modSigs >>= \case
-                 (mname, TypeSig          lnames (HsIB PlaceHolder (HsWC PlaceHolder _ss (L _ ty)))) -> asTypes    mname lnames ty
-                 (mname, ClassOpSig False lnames (HsIB PlaceHolder                       (L _ ty)))  -> asTypes    mname lnames ty
-                 --(mname, FixSig           (FixitySig lnames fixity))                                 -> asFixities mname lnames fixity
-                 (_, FixSig _)          -> mempty
-                 (_, InlineSig   _ _)   -> mempty
-                 (_, SpecSig     _ _ _) -> mempty
-                 (_, SpecInstSig _ _)   -> mempty
-                 (_, MinimalSig  _ _)   -> mempty
+    (mname, TypeSig lnames (HsIB implicitTyVars (HsWC wcs _ss (L _ ty))))
+      | null wcs  -> asTypes mname lnames ty
+      | otherwise -> throwError "type wildcards found"
+    (mname, ClassOpSig False lnames (HsIB implicitTyVars (L _ ty)))  ->
+      asTypes mname lnames ty
+    --(mname, FixSig           (FixitySig lnames fixity))                                 -> asFixities mname lnames fixity
+    
+    (_, FixSig _)          -> mempty
+    (_, InlineSig   _ _)   -> mempty
+    (_, SpecSig     _ _ _) -> mempty
+    (_, SpecInstSig _ _)   -> mempty
+    (_, MinimalSig  _ _)   -> mempty
+    
+    (_, ClassOpSig True _ _) -> throwError "typeclass-based generic default method signatures"
+    (_, PatSynSig  _ _)      -> throwError "pattern synonym signatures"
+    (_, IdSig      _)        -> throwError "generated-code signatures"
 
-                 (_, ClassOpSig True _ _) -> throwError "typeclass-based generic default method signatures"
-                 (_, PatSynSig  _ _)      -> throwError "pattern synonym signatures"
-                 (_, IdSig      _)        -> throwError "generated-code signatures"
 
-
-  pure $ (flip M.mapWithKey (multimap & each._1 %~ S.toList) $ \key info@(mnames,_,_) ->
+  pure $ (flip M.mapWithKey (multimap & each._1 %~ S.toList) $ \_key info@(mnames,_,_) ->
 
     let multiplesError = Left . (,catMaybes mnames)
     in case info of
@@ -168,7 +172,7 @@ collectSigs modSigs = do
          (_,       _,     [])        -> multiplesError $ "multiple type signatures for the same identifier"
          (_,       _,     _)         -> multiplesError $ "multiple type and fixity signatures for the same identifier")
 
-collectSigsWithErrors :: ConversionMonad m => [(Maybe ModuleName, Sig RdrName)] -> m (Map RdrName HsSignature)
+collectSigsWithErrors :: ConversionMonad m => [(Maybe ModuleName, Sig GHC.Name)] -> m (Map GHC.Name HsSignature)
 collectSigsWithErrors =
   either convUnsupported (M.traverseWithKey multiplesError) . collectSigs
   where multiplesError name (Left (err, mnames)) = do
@@ -183,8 +187,8 @@ collectSigsWithErrors =
         multiplesError _ (Right sig) =
           pure sig
 
-convertSignature :: ConversionMonad m => RdrName -> HsSignature -> m Signature
-convertSignature rdrName (HsSignature hsMod hsTy hsFix) = do
+convertSignature :: ConversionMonad m => GHC.Name -> HsSignature -> m Signature
+convertSignature rdrName (HsSignature hsMod hsTy _hsFix) = do
   name <- ghcPpr rdrName
   maybeFix <- getFixity name
   maybeWithCurrentModule hsMod $ Signature <$> convertType (addForAll hsTy)
@@ -200,18 +204,18 @@ convertSignature rdrName (HsSignature hsMod hsTy hsFix) = do
   -- this same 'HsForAllTy' trick, however it's implemented, need to go
   -- elsewhere?  Should it be part of 'convertType'?
 
-convertSignatures :: ConversionMonad m => Map RdrName HsSignature -> m (Map Ident Signature)
+convertSignatures :: ConversionMonad m => Map GHC.Name HsSignature -> m (Map Ident Signature)
 convertSignatures = fmap M.fromList . traverse (\(r,hs) -> (,) <$> (var ExprNS r) <*> convertSignature r hs) . M.toList
 
-convertModuleSigs :: ConversionMonad m => [(Maybe ModuleName, Sig RdrName)] -> m (Map Ident Signature)
+convertModuleSigs :: ConversionMonad m => [(Maybe ModuleName, Sig GHC.Name)] -> m (Map Ident Signature)
 convertModuleSigs sigs =
   (convertSignatures <=< collectSigsWithErrors) sigs
 
-convertModuleLSigs :: ConversionMonad m => [(Maybe ModuleName, LSig RdrName)] -> m (Map Ident Signature)
+convertModuleLSigs :: ConversionMonad m => [(Maybe ModuleName, LSig GHC.Name)] -> m (Map Ident Signature)
 convertModuleLSigs = convertModuleSigs . map (second unLoc)
 
-convertSigs :: ConversionMonad m => [Sig RdrName] -> m (Map Ident Signature)
+convertSigs :: ConversionMonad m => [Sig GHC.Name] -> m (Map Ident Signature)
 convertSigs = convertModuleSigs . map (Nothing,)
 
-convertLSigs :: ConversionMonad m => [LSig RdrName] -> m (Map Ident Signature)
+convertLSigs :: ConversionMonad m => [LSig GHC.Name] -> m (Map Ident Signature)
 convertLSigs = convertModuleLSigs . map (Nothing,)

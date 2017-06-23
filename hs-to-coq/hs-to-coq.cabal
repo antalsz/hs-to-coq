@@ -27,6 +27,7 @@ library
                      , HsToCoq.Util.GHC.FastString
                      , HsToCoq.Util.GHC.DynFlags
                      , HsToCoq.Util.GHC.RdrName
+                     , HsToCoq.Util.GHC.Name
                      , HsToCoq.Util.GHC.HsTypes
                      , HsToCoq.Util.GHC.HsExpr
                      , HsToCoq.Util.GHC.Exception
@@ -89,7 +90,7 @@ library
                      , MultiParamTypeClasses, FunctionalDependencies, FlexibleContexts
                      , TypeSynonymInstances, FlexibleInstances, UndecidableInstances
                      , DeriveDataTypeable, StandaloneDeriving, GeneralizedNewtypeDeriving
-                     , PatternSynonyms
+                     , PatternSynonyms, ViewPatterns
                      , TemplateHaskell
                      , CPP
 
@@ -122,8 +123,7 @@ library
 
 executable hs-to-coq
   main-is:             Main.hs
-  build-depends:       base == 4.9.*
-                     , hs-to-coq
+  build-depends:       base == 4.9.*, hs-to-coq
   hs-source-dirs:      src/exe
   default-language:    Haskell2010
   ghc-options:         -Wall -fno-warn-name-shadowing -O2

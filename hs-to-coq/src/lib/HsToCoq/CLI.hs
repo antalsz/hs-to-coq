@@ -15,7 +15,9 @@ module HsToCoq.CLI (
   ProgramArgs(..),
   argParser, argParserInfo,
   -- * Utility functions
-  prettyPrint, hPrettyPrint
+  prettyPrint, hPrettyPrint,
+  -- * Renamer
+  processFilesMainRn, convertAndPrintModulesRn
   ) where
 
 import Control.Lens
@@ -191,6 +193,36 @@ processFilesMain process = do
       traverse_ (process hOut) =<< processFiles dflags inputFiles
       liftIO $ hFlush hOut
 
+processFilesMainRn :: GhcMonad m
+                   => (Handle -> [TypecheckedModule] -> ConversionT m ())
+                   -> m ()
+processFilesMainRn process = do
+  (dflags, conf) <- processArgs
+  
+  let parseConfigFile file builder parser =
+        maybe (pure mempty) ?? (conf^.file) $ \filename -> liftIO $
+          (evalParse parser <$> T.readFile filename) >>= \case
+            Left  err -> die $ "Could not parse " ++ filename ++ ": " ++ err
+            Right res -> either die pure $ builder res
+  
+  renamings  <- parseConfigFile renamingsFile buildRenamings parseRenamingList
+  edits      <- parseConfigFile editsFile     buildEdits     parseEditList
+  
+  inputFiles <- either (liftIO . die) pure <=< runExceptT $
+                  (++) <$> parseModulesFiles (conf^.modulesRoot.non "") (conf^.modulesFiles)
+                       <*> pure (conf^.directInputFiles)
+  
+  evalConversion renamings edits .
+    maybe ($ stdout) (flip gWithFile WriteMode) (conf^.outputFile) $ \hOut -> do
+      for_ (conf^.preambleFile) $ \file -> liftIO $ do
+        hPutStrLn hOut "(* Preamble *)"
+        hPutStr   hOut =<< readFile file
+        hPutStrLn hOut ""
+        hFlush    hOut
+      
+      traverse_ (process hOut) =<< tcRnFiles dflags inputFiles
+      liftIO $ hFlush hOut
+
 printConvertedModules :: MonadIO m => Handle -> ConvertedModules -> m ()
 printConvertedModules out ConvertedModules{..} = liftIO $ do
   let flush    = hFlush out
@@ -216,3 +248,14 @@ printConvertedModules out ConvertedModules{..} = liftIO $ do
 
 convertAndPrintModules :: ConversionMonad m => Handle -> [Located (HsModule RdrName)] -> m ()
 convertAndPrintModules h = printConvertedModules h <=< convertLModules
+
+convertAndPrintModulesRn :: ConversionMonad m => Handle -> [TypecheckedModule] -> m ()
+convertAndPrintModulesRn h =   printConvertedModules h
+                           <=< convertHsGroups
+                           <=< traverse toModGroup
+  where toModGroup tcm
+          | Just (grp,_,_,_) <- tm_renamed_source tcm = pure (mod, grp)
+          | otherwise = throwProgramError $  "Renamer failed for `"
+                                          ++ moduleNameString mod ++ "'"
+          where mod = moduleName . ms_mod . pm_mod_summary $ tm_parsed_module tcm
+              

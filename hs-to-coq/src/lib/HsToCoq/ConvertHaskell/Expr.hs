@@ -772,8 +772,9 @@ convertLocalBinds (HsValBinds (ValBindsIn binds lsigs)) body = localizeConversio
   let matchLet pat term body = Coq.Match [MatchItem term Nothing Nothing] Nothing
                                          [Equation [MultPattern [pat]] body]
   (foldr (withConvertedBinding (withConvertedDefinitionDef Let) matchLet) ?? convDefs) <$> body
-convertLocalBinds (HsValBinds (ValBindsOut _ _)) _ =
-  convUnsupported "post-renaming `ValBindsOut' bindings"
+convertLocalBinds (HsValBinds (ValBindsOut recBinds lsigs)) body =
+  -- TODO RENAMER use RecFlag info to do recursion stuff
+  convertLocalBinds (HsValBinds $ ValBindsIn (unionManyBags $ map snd recBinds) lsigs) body
 convertLocalBinds (HsIPBinds _) _ =
   convUnsupported "local implicit parameter bindings"
 convertLocalBinds EmptyLocalBinds body =

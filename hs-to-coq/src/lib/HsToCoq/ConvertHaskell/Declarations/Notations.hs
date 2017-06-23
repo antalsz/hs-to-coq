@@ -9,7 +9,6 @@ import HsToCoq.Coq.Gallina
 import HsToCoq.Coq.Gallina.Util
 
 import HsToCoq.ConvertHaskell.InfixNames
-import HsToCoq.ConvertHaskell.Sigs
 
 --------------------------------------------------------------------------------
 

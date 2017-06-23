@@ -13,7 +13,6 @@ import Control.Lens hiding (Level)
 
 import Data.Semigroup (Semigroup(..))
 import Data.Bifunctor
-import Data.Bitraversable (bitraverse)
 import Data.Maybe
 import Data.List (intercalate)
 import qualified Data.Text as T
@@ -113,7 +112,7 @@ collectFixities modSigs =
 
        processFixity :: (S.Set ModuleName, [Fixity]) -> Either (String, [ModuleName]) Fixity
        processFixity (_, [fixity]) = Right fixity
-       processFixity (mnames, fixities) = Left ("Multiple fixities", S.toList mnames)
+       processFixity (mnames, _fixities) = Left ("Multiple fixities", S.toList mnames)
    in
      fmap processFixity (foldMap processSig modSigs)
 
@@ -160,7 +159,7 @@ collectSigs modSigs = do
     (_, IdSig      _)        -> throwError "generated-code signatures"
 
 
-  pure $ (flip M.mapWithKey (multimap & each._1 %~ S.toList) $ \key info@(mnames,_,_) ->
+  pure $ (flip M.mapWithKey (multimap & each._1 %~ S.toList) $ \_key info@(mnames,_,_) ->
 
     let multiplesError = Left . (,catMaybes mnames)
     in case info of
@@ -189,7 +188,7 @@ collectSigsWithErrors =
           pure sig
 
 convertSignature :: ConversionMonad m => GHC.Name -> HsSignature -> m Signature
-convertSignature rdrName (HsSignature hsMod hsTy hsFix) = do
+convertSignature rdrName (HsSignature hsMod hsTy _hsFix) = do
   name <- ghcPpr rdrName
   maybeFix <- getFixity name
   maybeWithCurrentModule hsMod $ Signature <$> convertType (addForAll hsTy)

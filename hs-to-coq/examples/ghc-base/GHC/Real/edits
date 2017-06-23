@@ -1,0 +1,18 @@
+skip showSigned
+
+skip ratioZeroDenominatorError
+skip overflowError
+
+skip numericEnumFromThen
+skip numericEnumFromThenTo
+skip numericEnumFrom
+skip numericEnumFromTo
+
+skip ratioZeroDemoninatorError
+skip overflowError
+
+skip Ratio      # in preamble
+skip numerator  # issue with pattern matching
+skip gcd
+skip lcm
+skip reduce

@@ -1,0 +1,57 @@
+# precedence
+skip edits
+skip transpose
+skip prependToAll
+skip nonEmptySubsequences
+skip isSuffixOf
+
+# precedence, character constant
+skip unlines
+
+#pattern guard
+skip genericTake
+skip genericSplitAt
+skip genericIndex
+skip genericDrop
+
+# mutrec
+skip sortBy
+skip sortOn
+skip sort
+skip mapAccumR
+
+# is keyword used as variable, mutrec
+skip permutations
+
+# precedence, ???
+skip sb
+skip snocSB
+
+# "" pattern / not structually inductive
+skip wordsFB
+skip words
+skip lines
+
+# tricky metric
+skip groupBy
+
+# coinductive
+skip unfoldr
+
+# higher-rank (w/build)
+skip tails
+
+# unboxed types, build
+skip findIndices
+
+# needs one of the above
+skip isInfixOf
+skip subsequences
+skip intersperse
+skip group
+skip genericReplicate
+skip findIndex
+skip inits
+skip elemIndices
+skip elemIndex
+skip intercalate

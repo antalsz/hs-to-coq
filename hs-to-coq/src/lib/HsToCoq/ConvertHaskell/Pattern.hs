@@ -67,22 +67,22 @@ convertPat (PArrPat _ _) =
 
 convertPat (ConPatIn (L _ hsCon) conVariety) = do
   con <- var ExprNS hsCon
-  
+
   case conVariety of
     PrefixCon args ->
       appListPat (Bare con) <$> traverse convertLPat args
-    
+
     RecCon HsRecFields{..} ->
       let recPatUnsupported what = do
             hsConStr <- ghcPpr hsCon
             convUnsupported $  "using a record pattern for the "
                             ++ what ++ " constructor `" ++ T.unpack hsConStr ++ "'"
-      
+
       in use (constructorFields . at con) >>= \case
            Just (RecordFields conFields) -> do
              let defaultPat field | isJust rec_dotdot = Coq.VarPat field
                                   | otherwise         = UnderscorePat
-             
+
              patterns <- fmap M.fromList . for rec_flds $ \(L _ (HsRecField (L _ (FieldOcc (L _ hsField) _)) hsPat pun)) -> do
                            field <- var ExprNS hsField
                            pat   <- if pun
@@ -91,16 +91,16 @@ convertPat (ConPatIn (L _ hsCon) conVariety) = do
                            pure (field, pat)
              pure . appListPat (Bare con)
                   $ map (\field -> M.findWithDefault (defaultPat field) field patterns) conFields
-           
+
            Just (NonRecordFields count)
              | null rec_flds && isNothing rec_dotdot ->
                pure . appListPat (Bare con) $ replicate count UnderscorePat
-             
+
              | otherwise ->
                recPatUnsupported "non-record"
-           
+
            Nothing -> recPatUnsupported "unknown"
-    
+
     InfixCon l r -> do
       InfixPat <$> convertLPat l <*> pure con <*> convertLPat r
 
@@ -119,8 +119,8 @@ convertPat (LitPat lit) =
     HsCharPrim   _ _       -> convUnsupported "`Char#' literal patterns"
     GHC.HsString _ fs      -> pure . StringPat $ fsToText fs
     HsStringPrim _ _       -> convUnsupported "`Addr#' literal patterns"
-    HsInt        _ _       -> convUnsupported "`Int' literal patterns"
-    HsIntPrim    _ _       -> convUnsupported "`Int#' literal patterns"
+    HsInt        _ int     -> convertIntegerPat "`Integer' literal patterns" int
+    HsIntPrim    _ int     -> convertIntegerPat "`Integer' literal patterns" int
     HsWordPrim   _ _       -> convUnsupported "`Word#' literal patterns"
     HsInt64Prim  _ _       -> convUnsupported "`Int64#' literal patterns"
     HsWord64Prim _ _       -> convUnsupported "`Word64#' literal patterns"

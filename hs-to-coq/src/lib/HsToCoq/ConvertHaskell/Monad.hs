@@ -8,7 +8,7 @@ module HsToCoq.ConvertHaskell.Monad (
   ConversionMonad, ConversionT, evalConversion,
   -- * Types
   ConversionState(),
-  currentModule, renamings, edits, constructors, constructorTypes, constructorFields, recordFieldTypes, defaultMethods, fixities, renamed,
+  currentModule, renamings, edits, constructors, constructorTypes, constructorFields, recordFieldTypes, classDefns, defaultMethods, fixities, renamed,
   ConstructorFields(..), _NonRecordFields, _RecordFields,
   -- * Operations
   maybeWithCurrentModule, withCurrentModule, withNoCurrentModule, withCurrentModuleOrNone,
@@ -60,6 +60,10 @@ data ConversionState = ConversionState { __currentModule    :: !(Maybe ModuleNam
                                        , _constructorTypes  :: !(Map Ident Ident)
                                        , _constructorFields :: !(Map Ident ConstructorFields)
                                        , _recordFieldTypes  :: !(Map Ident Ident)
+                                       -- types of class members
+                                       -- , _memberSigs        :: !(Map Ident (Map Ident Signature))
+                                       -- translated classes
+                                       , _classDefns        :: !(Map Ident ClassDefinition)
                                        , _defaultMethods    :: !(Map Ident (Map Ident Term))
                                        , _fixities          :: !(Map Ident (Coq.Associativity, Coq.Level))
                                        , __unique           :: !Natural
@@ -88,7 +92,8 @@ evalConversion _renamings _edits = evalVariablesT . (evalStateT ?? ConversionSta
   _constructorTypes  = M.empty
   _constructorFields = M.empty
   _recordFieldTypes  = M.empty
-
+  _classDefns        = M.empty
+--  _memberSigs        = M.empty
   _defaultMethods = M.fromList ["Eq" ~>> [ "==" ~> Fun [arg "x", arg "y"] (App1 (Var "negb") $ Infix (Var "x") "/=" (Var "y"))
                                          , "/=" ~> Fun [arg "x", arg "y"] (App1 (Var "negb") $ Infix (Var "x") "==" (Var "y")) ]]
 
@@ -167,5 +172,5 @@ recordFixity id assoc = do
    state <- get
    let m = _fixities state
    case M.lookup id m of
-      Just _  -> throwProgramError $ "Multiple fixities for " ++ show id
-      Nothing -> put (state { _fixities = (M.insert id assoc m) })
+     Just _v  -> throwProgramError $ "Multiple fixities for " ++ show id
+     Nothing -> put (state { _fixities = (M.insert id assoc m) })

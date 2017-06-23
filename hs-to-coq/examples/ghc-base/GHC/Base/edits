@@ -1,0 +1,40 @@
+skip String
+skip Maybe
+
+skip Opaque   # can't handle existential
+
+skip until
+skip unsafeChr  # unboxed ints
+
+skip unIO       # State# RealWorld
+skip thenIO
+skip returnIO
+skip bindIO
+
+skip shiftRL#
+skip shiftL#
+skip iShiftL#
+skip iShiftRA#
+skip iShiftRL#
+skip divModInt#
+
+skip remInt
+skip quotRemInt
+skip divModInt
+skip divInt
+skip minInt
+skip maxInt
+
+skip quotInt
+skip ord
+
+skip ++
+skip modInt
+
+skip getTag
+
+skip eqString # actual bug in output
+skip build    # something to do with _::_?
+skip augment  # same
+
+skip flip

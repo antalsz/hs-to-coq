@@ -101,12 +101,12 @@ addEdit = \case -- To bring the `where' clause into scope everywhere
     name (CoqFixpointDef   (CoFixpoint  (CofixBody x _ _ _   :| _) _)) = x
     name (CoqInductiveDef  (Inductive   (IndBody   x _ _ _   :| _) _)) = x
     name (CoqInductiveDef  (CoInductive (IndBody   x _ _ _   :| _) _)) = x
-    
+
     prettyScoped (place, name) = let pplace = case place of
                                        SPValue       -> "value"
                                        SPConstructor -> "constructor"
                                  in pplace ++ ' ' : T.unpack name
-    
+
     s ++. t = s ++ T.unpack t
     infixl 5 ++.
 

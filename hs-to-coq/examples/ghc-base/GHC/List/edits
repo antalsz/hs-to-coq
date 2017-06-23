@@ -1,0 +1,27 @@
+skip head
+skip badHead
+
+skip take
+skip drop
+skip scanr1
+skip scanr
+skip replicate
+
+skip takeWhile
+skip repeat
+skip until
+skip iterate
+skip cycle
+skip repeatFB  # doesn't terminate
+skip iterateFB # doesn't terminate
+
+skip unsafeTake
+
+skip takeFB
+skip splitAt
+skip !!
+
+skip negIndex # parsing/pp $ incorrectly
+
+skip foldl'
+skip foldl

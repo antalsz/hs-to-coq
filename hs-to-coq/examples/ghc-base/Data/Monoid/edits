@@ -1,0 +1,3 @@
+redefine Inductive Alt (f : Type -> Type) a : Type := Mk_Alt : (f a) -> (Alt f a).
+# <> operator already defined
+skip op_zlzg__

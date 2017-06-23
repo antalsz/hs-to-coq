@@ -112,17 +112,17 @@ instance Binding MultPattern where
 instance Binding Pattern where
   binding f (ArgsPat con xs) =
     (freeVars con *>) . binding f xs
-  
+
   binding f (ExplicitArgsPat con xs) =
     (freeVars con *>) . binding f xs
-  
+
   binding f (InfixPat l op r) =
     (occurrence op *>) . binding f [l,r]
-  
+
   binding f (AsPat pat x) =
     binding f pat . binding f x
     -- This correctly binds @x@ as the innermost binding f
-  
+
   binding f (InScopePat pat _scope) =
     binding f pat
     -- The scope is a different sort of identifier, not a term-level variable.
@@ -130,19 +130,19 @@ instance Binding Pattern where
   binding f (QualidPat (Bare x)) =
     binding f x
     -- See [Note Bound variables in patterns]
-  
+
   binding _ (QualidPat qid@(Qualified _ _)) =
     (freeVars qid *>)
-  
+
   binding _ UnderscorePat =
     id
-  
+
   binding _ (NumPat _num) =
     id
-  
+
   binding _ (StringPat _str) =
     id
-  
+
   binding f (OrPats ors) =
     binding f ors
     -- We don't check that all the or-patterns bind the same variables
@@ -183,7 +183,7 @@ instance Binding Definition where
     binding f args                        .
       (freeVars oty *> freeVars def *>) .
       binding f x
-  
+
   binding f (LetDef x args oty def) =
     binding f args                        .
       (freeVars oty *> freeVars def *>) .
@@ -258,20 +258,20 @@ class FreeVars t where
 instance FreeVars Term where
   freeVars (Forall xs t) =
     binding' xs $ freeVars t
-  
+
   freeVars (Fun xs t) =
     binding' xs $ freeVars t
-  
+
   freeVars (Fix fbs) =
     freeVars fbs
-  
+
   freeVars (Cofix cbs) =
     freeVars cbs
 
   freeVars (Let x args oty val body) = do
     binding' args $ freeVars oty *> freeVars val
     binding' x    $ freeVars body
-  
+
   freeVars (LetFix fb body) = do
     freeVars fb
     binding' (names fb) $ freeVars body
@@ -283,11 +283,11 @@ instance FreeVars Term where
   freeVars (LetTuple xs oret val body) = do
     freeVars oret *> freeVars val
     binding' xs $ freeVars body
-  
+
   freeVars (LetTick pat def body) = do
     freeVars def
     binding' pat $ freeVars body
-  
+
   freeVars (LetTickDep pat oin def ret body) = do
     freeVars def
     binding' oin $ freeVars ret
@@ -316,7 +316,7 @@ instance FreeVars Term where
 
   freeVars (Infix l op r) =
     freeVars l *> occurrence op *> freeVars r
-  
+
   freeVars (InScope t _scope) =
     freeVars t
     -- The scope is a different sort of identifier, not a term-level variable.
@@ -350,6 +350,9 @@ instance FreeVars Term where
     pure ()
 
   freeVars (Parens t) =
+    freeVars t
+
+  freeVars (Bang t) =
     freeVars t
 
   freeVars MissingValue =

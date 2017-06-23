@@ -1,7 +1,12 @@
 module OpTyCon where
 
+{-# LANGUAGE FlexibleInstances #-}
+
+x :: ((->) Int Int)
+x = \y -> y
+
 class C t where
-   m :: t a -> t a
+   m :: a -> t a -> t a
 
 instance C ((->) Int) where
-   m = \x -> x
+   m = \_ x -> x

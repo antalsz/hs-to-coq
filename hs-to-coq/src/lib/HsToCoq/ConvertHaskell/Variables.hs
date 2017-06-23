@@ -41,9 +41,12 @@ escapeReservedNames :: Ident -> Ident
 escapeReservedNames x =
   fromMaybe x . getFirst $
     foldMap (First . flip tryEscapeReservedWord x)
-            (T.words "Set Type Prop fun fix forall return mod as cons pair")
+            (T.words "Set Type Prop fun fix forall return mod as cons pair nil")
     <> if | T.all (== '.') x  -> pure $ T.map (const '∘') x
           | T.all (== '∘') x  -> pure $ "⟨" <> x <> "⟩"
+-- these type operators aren't parsed by the renaming file
+          | x == "(->)"       -> pure $ ("[->]")
+          | x == "(,)"        -> pure $ ("[,]")
 -- Maybe add this as part of an Int# solution? But don't want to
 -- always replace these, if we make "Int#" a notation for "Int_h"
 --          | T.isInfixOf "#" x -> pure $ T.replace "#" "_h" x

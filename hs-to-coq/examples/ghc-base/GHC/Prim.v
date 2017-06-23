@@ -67,18 +67,18 @@ Require Export Coq.Program.Basics.
 Open Scope program_scope.
 Notation "'_∘_'" := (compose).
 
-Notation "'_(,)_'"  := (fun x y => (x,y)).
-Notation "'_(,,)_'" := (fun x0 y1 z2 => (x0, y1, z2)).
-Notation "_(,,,)_" := (fun x0 x1 x2 x3 => (x0,x1,x2,x3)).
-Notation "_(,,,,)_" := (fun x0 x1 x2 x3 x4 => (x0,x1,x2,x3,x4)).
-Notation "_(,,,,,)_" := (fun x0 x1 x2 x3 x4 x5 => (x0,x1,x2,x3,x4,x5)).
-Notation "_(,,,,,,)_" := (fun x0 x1 x2 x3 x4 x5 x6 => (x0,x1,x2,x3,x4,x5,x6)).
-Notation "_(,,,,,,,)_" := (fun x0 x1 x2 x3 x4 x5 x6 x7 => (x0,x1,x2,x3,x4,x5,x6,x7)).
+Notation "[,]"  := (fun x y => (x,y)).
+Notation "[,,]" := (fun x0 y1 z2 => (x0, y1, z2)).
+Notation "[,,,]" := (fun x0 x1 x2 x3 => (x0,x1,x2,x3)).
+Notation "[,,,,]" := (fun x0 x1 x2 x3 x4 => (x0,x1,x2,x3,x4)).
+Notation "[,,,,,]" := (fun x0 x1 x2 x3 x4 x5 => (x0,x1,x2,x3,x4,x5)).
+Notation "[,,,,,,]" := (fun x0 x1 x2 x3 x4 x5 x6 => (x0,x1,x2,x3,x4,x5,x6)).
+Notation "[,,,,,,,]" := (fun x0 x1 x2 x3 x4 x5 x6 x7 => (x0,x1,x2,x3,x4,x5,x6,x7)).
 
 Notation "'_++_'"   := (fun x y => x ++ y).
 Notation "'_::_'"   := (fun x y => x :: y).
 
-Notation "'_(->)_'"  := (fun x y => x -> y).
+Notation "[->]"  := (fun x y => x -> y).
 
 (****************************************************)
 

@@ -33,6 +33,7 @@ import HsToCoq.ConvertHaskell.Monad
 import HsToCoq.ConvertHaskell.Variables
 import HsToCoq.ConvertHaskell.Literals
 
+import Debug.Trace
 --------------------------------------------------------------------------------
 
 convertLHsTyVarBndrs :: ConversionMonad m => Explicitness -> [LHsTyVarBndr GHC.Name] -> m [Binder]
@@ -62,6 +63,7 @@ convertType (HsForAllTy tvs ty) = do
        . nonEmpty $ explicitTVs ++ implicitTVs
   -- TODO: We generate the TVs in lexicographic order, Haskell does it in source
   -- code order.  Is this important?
+  -- SCW: Important for explicit type applications.
 
 convertType (HsQualTy (L _ ctx) ty) = do
   classes <- traverse (fmap (Generalized Coq.Implicit) . convertLType) ctx

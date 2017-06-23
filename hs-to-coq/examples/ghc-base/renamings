@@ -26,7 +26,6 @@ value not   = negb
 value ||    = orb
 value &&    = andb
 
-
 type  Maybe   = option
 value Just    = Some
 value Nothing = None
@@ -37,3 +36,9 @@ type  S.IntSet = IntSet
 
 value .&. = :&:
 value .|. = :|:
+
+value Refl = eq_refl
+
+type State# = State_hash
+
+value bool  = mk_bool

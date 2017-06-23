@@ -18,6 +18,10 @@ HANDMOD = GHC/Prim \
           Data/Char \
           Data/Bits \
           Data/Eq \
+          Data/Type/Equality \
+          GHC/Word \
+          GHC/Int \
+          Data/Bool \
           Prelude
 
 # Generated modules
@@ -26,12 +30,11 @@ MODULES  = GHC/BaseGen \
            GHC/List \
            Data/Tuple \
            Data/Maybe \
-           Data/Bool \
            Data/Function \
            Data/Ord \
-           Data/OldList \
            Data/Monoid
 
+#           Data/OldList \
 
 VFILES   = $(addsuffix .v,$(MODULES))
 VOFILES  = $(patsubst %.v,%.vo,$(VFILES))
@@ -40,7 +43,7 @@ COQFLAGS = ""
 all:  $(VFILES) coq
 
 _CoqProject : Makefile
-	echo "-R . HS" > _CoqProject
+	echo "-R . Top" > _CoqProject
 	echo $(addsuffix .v,$(HANDMOD)) >> _CoqProject
 	echo $(VFILES) >> _CoqProject
 

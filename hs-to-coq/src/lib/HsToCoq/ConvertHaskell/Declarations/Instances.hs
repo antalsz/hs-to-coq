@@ -41,8 +41,7 @@ import HsToCoq.ConvertHaskell.Expr
 import HsToCoq.ConvertHaskell.Axiomatize
 import HsToCoq.ConvertHaskell.Declarations.Class
 
--- import qualified Data.Set as S
--- import Debug.Trace
+import Debug.Trace
 
 --------------------------------------------------------------------------------
 
@@ -96,7 +95,7 @@ convertClsInstDeclInfo ClsInstDecl{..} = do
 
 convertClsInstDecl :: ConversionMonad m
                    => ClsInstDecl GHC.Name          -- Haskell Instance we are converting
-                   -> (InstanceDefinition -> m a)  --
+                   -> (InstanceDefinition -> m a)  -- Final "rebuilding" pass
                    -> Maybe (InstanceInfo -> GhcException -> m a) -- error handling argument
                    -> m a
 convertClsInstDecl cid@ClsInstDecl{..} rebuild mhandler = do
@@ -119,7 +118,6 @@ convertClsInstDecl cid@ClsInstDecl{..} rebuild mhandler = do
                  -- otherwise gives you a map
                  -- <$> is flip fmap
              <&> M.toList . M.filterWithKey (\meth _ -> isNothing $ lookup meth cdefs)
-
     rebuild $ InstanceDefinition instanceName [] instanceHead (cdefs ++ defaults) Nothing
 
 --------------------------------------------------------------------------------
@@ -197,9 +195,7 @@ topoSort (InstanceDefinition instanceName params ty members mp) = go sorted M.em
         -- lookup the type of the class member
         -- add extra quantifiers from the class & instance definitions
         mkTy :: Ident -> m ([Binder], Maybe Term)
-        mkTy memberName = do (bnds, className, instTy) <-
-
-                                        decomposeTy ty
+        mkTy memberName = do (bnds, className, instTy) <- decomposeTy ty
                              classDef <- use (classDefns.at className)
                              -- TODO: May be broken by switch away from 'RdrName's
                              case classDef of

@@ -37,3 +37,5 @@ type  S.IntSet = IntSet
 
 value .&. = :&:
 value .|. = :|:
+
+type -> = arrow

@@ -48,6 +48,8 @@ skip vec8
 skip zap_musg
 skip zap_usg
 
+skip varName
+
 # TODO: Needs to be axiomatized, but refers to a type that isn't defined in the
 # preamble.  A new kind of edit, perhaps?
 skip trivialBuiltInFamily

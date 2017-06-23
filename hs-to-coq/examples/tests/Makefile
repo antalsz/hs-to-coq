@@ -4,6 +4,8 @@ PASS = Expr \
        Self \
        Poly \
        Guard2 \
+       InstCtx \
+       OpTyCon \
        ExhaustGuard
 
 
@@ -11,12 +13,10 @@ PASS = Expr \
 TODO_PASS  = EqList \
              PolyInstance2 \
              MutrecInst \
-				 InstCtx \
              \
              Mutrec \
              DotName \
              PatternGuard \
-             OpTyCon \
              MapAccumR \
              Bits
 

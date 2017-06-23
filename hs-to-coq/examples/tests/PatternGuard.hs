@@ -1,3 +1,5 @@
+module PatternGuard where
+
 checkNum :: Int -> Bool
 checkNum 2 = True
 checkNum _ = False

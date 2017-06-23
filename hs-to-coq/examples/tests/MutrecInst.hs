@@ -1,5 +1,7 @@
 {-# LANGUAGE FlexibleInstances #-}
 
+module MutrecInst where
+
 -- Two class member functions that are mutually recursive
 
 class C a where

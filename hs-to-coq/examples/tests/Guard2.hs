@@ -1,3 +1,5 @@
+module Guard2 where
+
 -- Pattern guards: need to fill in the case when the guard fails.
 
 data T = K { t :: T } | E

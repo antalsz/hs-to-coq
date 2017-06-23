@@ -1,3 +1,5 @@
+module MapAccumR where
+
 -- This test demonstrates a bug in lifting where clauses.
 -- we need to topo sort them even if they are not mutually recursive.
 

@@ -1,3 +1,5 @@
+module ExhaustGuard where
+
 
 f :: Bool -> (Bool, Bool)
 f t = (t,t)

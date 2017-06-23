@@ -1,4 +1,6 @@
 {-# LANGUAGE FlexibleInstances #-}
+module Bits where
+
 infixl 7 .&.
 infixl 5 .|.
 

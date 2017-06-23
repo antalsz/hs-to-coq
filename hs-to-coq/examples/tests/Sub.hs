@@ -1,3 +1,5 @@
+module Sub where
+
 -- Cannot create instances of subclasses
 -- How is this supposed to work in Coq
 
@@ -12,3 +14,6 @@ instance A () where
 
 instance B () where
   g = \x -> x
+
+-- TODO: This gets injected in the wrong order now, which means it fails to
+-- compile

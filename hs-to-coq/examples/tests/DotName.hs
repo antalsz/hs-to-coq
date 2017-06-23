@@ -1,3 +1,5 @@
+module DotName where
+
 -- Example from Data.Function
 -- uses an infix operator as a pattern variable
 

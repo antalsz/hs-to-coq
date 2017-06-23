@@ -1,3 +1,5 @@
+module EqList where
+
 -- This test demonstrates the problem with recursive functions in instances
 
 -- in the output, we don't know whether eqb is a member function or a recursive call

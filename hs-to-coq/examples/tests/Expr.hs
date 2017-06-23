@@ -1,3 +1,5 @@
+module Expr where
+
 -- simplified version of compiler/coreSyn/coreSyn.hs
 
 -- This file demonstrates the Coq 8.6 issue with universes.

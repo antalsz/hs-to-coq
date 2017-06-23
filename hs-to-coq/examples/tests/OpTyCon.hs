@@ -1,3 +1,5 @@
+module OpTyCon where
+
 class C t where
    m :: t a -> t a
 

@@ -1,3 +1,5 @@
+module Self where
+
 class C a where
    f1 :: a -> a
    f2 :: a -> a

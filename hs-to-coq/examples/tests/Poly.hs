@@ -1,3 +1,5 @@
+module Poly where
+
 -- This test demonstrates the problem with classes with
 -- polymorphic member functions.
 

@@ -1,3 +1,5 @@
+module InstCtx where
+
 class C a where
   f :: a
 

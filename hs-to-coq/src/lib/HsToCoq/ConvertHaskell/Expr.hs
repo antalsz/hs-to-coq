@@ -1,6 +1,7 @@
 {-# LANGUAGE TupleSections, LambdaCase, RecordWildCards,
              OverloadedLists, OverloadedStrings,
-             FlexibleContexts #-}
+             FlexibleContexts,
+             ViewPatterns #-}
 
 module HsToCoq.ConvertHaskell.Expr (
   -- * Expressions
@@ -483,10 +484,14 @@ convertPatternBinding hsPat hsExp buildTrivial buildNontrivial fallback = do
 
 convertDoBlock :: ConversionMonad m => [ExprLStmt GHC.Name] -> m Term
 convertDoBlock allStmts = case fmap unLoc <$> unsnoc allStmts of
-  Just (stmts, BodyStmt e _ _ _) -> foldMap (Endo . toExpr . unLoc) stmts `appEndo` convertLExpr e
-  Just _                         -> convUnsupported "invalid malformed `do' block"
-  Nothing                        -> convUnsupported "invalid empty `do' block"
+  Just (stmts, lastStmt -> Just e) -> foldMap (Endo . toExpr . unLoc) stmts `appEndo` convertLExpr e
+  Just _                           -> convUnsupported "invalid malformed `do' block"
+  Nothing                          -> convUnsupported "invalid empty `do' block"
   where
+    lastStmt (BodyStmt e _ _ _) = Just e
+    lastStmt (LastStmt e _ _)   = Just e
+    lastStmt _                  = Nothing
+    
     toExpr (BodyStmt e _bind _guard _PlaceHolder) rest =
       Infix <$> convertLExpr e <*> pure ">>" <*> rest
 

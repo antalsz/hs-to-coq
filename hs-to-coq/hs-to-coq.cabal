@@ -90,7 +90,7 @@ library
                      , MultiParamTypeClasses, FunctionalDependencies, FlexibleContexts
                      , TypeSynonymInstances, FlexibleInstances, UndecidableInstances
                      , DeriveDataTypeable, StandaloneDeriving, GeneralizedNewtypeDeriving
-                     , PatternSynonyms
+                     , PatternSynonyms, ViewPatterns
                      , TemplateHaskell
                      , CPP
 

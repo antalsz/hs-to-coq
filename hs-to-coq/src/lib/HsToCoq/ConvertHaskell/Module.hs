@@ -5,13 +5,20 @@ module HsToCoq.ConvertHaskell.Module (
   convertModules, convertLModules,
   hsModuleName,
   -- Renamer
-  ConvertedModule(..), convertHsGroup, convertHsGroups,
+  ConvertedModule(..), convertHsGroup, convertHsGroups, convertHsGroups',
+  Qualification(..), ImportSpec, ConvertedImportDecl(..), convertImportDecl,
+  convertRenamedSource, convertRenamedSources,
 ) where
 
 import Control.Lens
 
 import Data.Semigroup
+import Data.Traversable
+import Data.Maybe
+import Data.List.NonEmpty (NonEmpty(..))
+import HsToCoq.Util.Containers
 
+import Control.Monad
 import Control.Monad.IO.Class
 import qualified Data.Map as M
 
@@ -20,7 +27,8 @@ import HsToCoq.Util.Generics
 import HsToCoq.Coq.FreeVars
 import HsToCoq.Coq.Gallina
 
-import GHC
+import GHC hiding (Name)
+import qualified GHC
 import HsToCoq.Util.GHC.Module ()
 import Panic
 import Bag
@@ -36,6 +44,38 @@ import HsToCoq.ConvertHaskell.Declarations.Value
 import HsToCoq.ConvertHaskell.Declarations.Instances
 import HsToCoq.ConvertHaskell.Declarations.Notations
 import HsToCoq.ConvertHaskell.Axiomatize
+
+--------------------------------------------------------------------------------
+
+data Qualification = UnqualifiedImport
+                   | QualifiedImport
+                   deriving (Eq, Ord, Enum, Bounded, Show, Read)
+
+-- TODO
+data ImportSpec = ExplicitImports [()]
+                | ExplicitHiding  [()]
+                deriving (Eq, Ord, Show, Read)
+
+data ConvertedImportDecl =
+  ConvertedImportDecl { convImportedModule  :: !ModuleName -- TODO: 'Name'?
+                      , convImportQualified :: !Qualification
+                      , convImportAs        :: !(Maybe ModuleName)
+                      , convImportSpec      :: !(Maybe ImportSpec) }
+  deriving (Eq, Ord, Show)
+
+convertImportDecl :: ConversionMonad m => ImportDecl GHC.Name -> m ConvertedImportDecl
+convertImportDecl ImportDecl{..} = do
+  let convImportedModule  = unLoc ideclName
+      convImportQualified = if ideclQualified then QualifiedImport else UnqualifiedImport
+      convImportAs        = ideclAs
+  unless (isNothing ideclPkgQual) $
+    convUnsupported "package-qualified imports"
+  -- Ignore @{-# SOURCE #-}@, safety
+  -- Treat implicit Prelude import as explicit
+  convImportSpec <- for ideclHiding $ \(hiding, L _ spec) ->
+                      (if hiding then ExplicitHiding else ExplicitImports) <$>
+                        traverse (const $ pure ()) spec
+  pure ConvertedImportDecl{..}
 
 --------------------------------------------------------------------------------
 
@@ -71,12 +111,13 @@ convertLModules :: (Traversable f, ConversionMonad m)
                 => f (Located (HsModule RdrName)) -> m ConvertedModules
 convertLModules = convertModules . fmap unLoc
 
-data ConvertedModule = ConvertedModule { convertedTyClDecls'    :: ![Sentence]
-                                       , convertedValDecls'     :: ![Sentence]
-                                       , convertedClsInstDecls' :: ![Sentence] }
-                      deriving (Eq, Ord, Show)
+data ConvertedModuleDeclarations =
+  ConvertedModuleDeclarations { convertedTyClDecls'    :: ![Sentence]
+                              , convertedValDecls'     :: ![Sentence]
+                              , convertedClsInstDecls' :: ![Sentence] }
+  deriving (Eq, Ord, Show)
 
-convertHsGroup :: ConversionMonad m => ModuleName -> HsGroup GHC.Name -> m ConvertedModule
+convertHsGroup :: ConversionMonad m => ModuleName -> HsGroup GHC.Name -> m ConvertedModuleDeclarations
 convertHsGroup mod HsGroup{..} = do
   convertedTyClDecls' <- convertModuleTyClDecls
                       .  map ((Just mod,) . unLoc)
@@ -113,7 +154,7 @@ convertHsGroup mod HsGroup{..} = do
         -- TODO RENAMER use RecFlag info to do recursion stuff
         pure . foldMap (foldMap (defns M.!)) . topoSortEnvironment $ NoBinding <$> defns
   convertedClsInstDecls' <- convertModuleClsInstDecls [(Just mod, cid) | L _ (ClsInstD cid) <- hs_instds]
-  pure ConvertedModule{..}
+  pure ConvertedModuleDeclarations{..}
 
   where axiomatizeBinding :: GhcMonad m => HsBind GHC.Name -> GhcException -> m (Ident, [Sentence])
         axiomatizeBinding FunBind{..} exn = do
@@ -124,4 +165,30 @@ convertHsGroup mod HsGroup{..} = do
 
 convertHsGroups :: ConversionMonad m => [(ModuleName, HsGroup GHC.Name)] -> m ConvertedModules
 convertHsGroups = fmap (foldMap pluralize) . traverse (uncurry convertHsGroup) where
-  pluralize (ConvertedModule tcds vds cids) = ConvertedModules tcds vds cids
+  pluralize (ConvertedModuleDeclarations tcds vds cids) = ConvertedModules tcds vds cids
+
+convertHsGroups' :: ConversionMonad m => [(ModuleName, HsGroup GHC.Name)] -> m [(ModuleName, ConvertedModuleDeclarations)]
+convertHsGroups' = traverse $ \(m,g) -> (m,) <$> convertHsGroup m g
+
+data ConvertedModule =
+  ConvertedModule { convModName         :: !ModuleName
+                  , convModImports      :: ![ConvertedImportDecl]
+                  , convModTyClDecls    :: ![Sentence]
+                  , convModValDecls     :: ![Sentence]
+                  , convModClsInstDecls :: ![Sentence] }
+  deriving (Eq, Ord, Show)
+
+convertRenamedSource :: ConversionMonad m => ModuleName -> RenamedSource -> m ConvertedModule
+convertRenamedSource convModName (group, imports, _exports, _docstring) = do
+  ConvertedModuleDeclarations { convertedTyClDecls'    = convModTyClDecls
+                              , convertedValDecls'     = convModValDecls
+                              , convertedClsInstDecls' = convModClsInstDecls }
+    <- convertHsGroup convModName group
+  convModImports <- traverse (convertImportDecl . unLoc) imports
+  pure ConvertedModule{..}
+
+convertRenamedSources :: ConversionMonad m => [(ModuleName, RenamedSource)] -> m [NonEmpty ConvertedModule]
+convertRenamedSources sources = do
+  mods <- traverse (uncurry convertRenamedSource) sources
+  pure $ stronglyConnCompNE
+    [ (cm, convModName cm, map convImportedModule $ convModImports cm) | cm <- mods ]

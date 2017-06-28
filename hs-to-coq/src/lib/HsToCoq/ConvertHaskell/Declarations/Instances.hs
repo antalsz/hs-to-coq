@@ -41,8 +41,6 @@ import HsToCoq.ConvertHaskell.Expr
 import HsToCoq.ConvertHaskell.Axiomatize
 import HsToCoq.ConvertHaskell.Declarations.Class
 
-import Debug.Trace
-
 --------------------------------------------------------------------------------
 
 -- Take the instance head and make it into a valid identifier by replacing

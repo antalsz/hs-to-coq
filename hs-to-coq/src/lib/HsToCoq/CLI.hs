@@ -17,20 +17,25 @@ module HsToCoq.CLI (
   -- * Utility functions
   prettyPrint, hPrettyPrint,
   -- * Renamer
-  processFilesMainRn, convertAndPrintModulesRn
+  processFilesMainRn, convertAndPrintModulesRn,
+  -- * Renamer part two
+  processFilesMainRn', convertAndPrintModulesRn'
   ) where
 
-import Control.Lens
+import Control.Lens hiding ((<.>))
 
 import Data.Foldable
 import Data.Traversable
 import Data.List (intersperse, isSuffixOf)
+import Data.List.NonEmpty (NonEmpty(..))
 
+import Data.Functor
 import Control.Monad
 import Control.Monad.IO.Class
 import Control.Monad.Except
 
 import System.FilePath
+import System.Directory
 import qualified Data.Text.IO as T
 import System.IO
 import System.Exit
@@ -38,6 +43,7 @@ import System.Exit
 import GHC hiding (outputFile)
 import DynFlags hiding (outputFile)
 import HsToCoq.Util.GHC.Exception
+import Module
 
 import Control.Monad.Trans.Parse
 import HsToCoq.ConvertHaskell.Parameters.Parsers
@@ -159,7 +165,7 @@ parseModulesFiles :: (MonadIO m, MonadError String m)
 parseModulesFiles root files =
   let fullName name = root </> if ".hs" `isSuffixOf` name
                                then name
-                               else name ++ ".hs"
+                               else name <.> "hs"
   in fmap (map fullName . resolveFileTrees . concat) . for files $ \file ->
        exceptEither . parseFileTrees (Just file) =<< liftIO (readFile file)
 
@@ -249,8 +255,31 @@ printConvertedModules out ConvertedModules{..} = liftIO $ do
 convertAndPrintModules :: ConversionMonad m => Handle -> [Located (HsModule RdrName)] -> m ()
 convertAndPrintModules h = printConvertedModules h <=< convertLModules
 
+printConvertedModulesRn :: MonadIO m => Handle -> ConvertedModules -> m ()
+printConvertedModulesRn out ConvertedModules{..} = liftIO $ do
+  let flush    = hFlush out
+      printGap = hPutStrLn out ""
+      
+      printThe what [] = hPutStrLn out $ "(* No " ++ what ++ " to convert. *)"
+      printThe what ds = do hPutStrLn out $ "(* Converted " ++ what ++ ": *)"
+                            traverse_ (hPrettyPrint out) . intersperse line $
+                              map ((<> line) . renderGallina) ds
+  
+  printThe "data type declarations"           convertedTyClDecls    <* printGap <* flush
+  printThe "value declarations"               convertedValDecls     <* printGap <* flush
+  printThe "type class instance declarations" convertedClsInstDecls <*             flush
+  
+  case toList . getFreeVars . NoBinding $
+         (convertedTyClDecls ++ convertedValDecls ++ convertedClsInstDecls) of
+    []  -> pure ()
+    fvs -> do hPrettyPrint out $
+                line <> "(*" <+> hang 2
+                  ("Unbound variables:" <!> fillSep (map text fvs))
+                <!> "*)" <> line
+              flush
+
 convertAndPrintModulesRn :: ConversionMonad m => Handle -> [TypecheckedModule] -> m ()
-convertAndPrintModulesRn h =   printConvertedModules h
+convertAndPrintModulesRn h =   printConvertedModulesRn h
                            <=< convertHsGroups
                            <=< traverse toModGroup
   where toModGroup tcm
@@ -258,4 +287,92 @@ convertAndPrintModulesRn h =   printConvertedModules h
           | otherwise = throwProgramError $  "Renamer failed for `"
                                           ++ moduleNameString mod ++ "'"
           where mod = moduleName . ms_mod . pm_mod_summary $ tm_parsed_module tcm
-              
+
+--------------------------------------------------------------------------------
+
+type WithModulePrinter m a = ModuleName -> (Handle -> m a) -> m a
+
+processFilesMainRn' :: GhcMonad m
+                    => (WithModulePrinter (ConversionT m) () -> [TypecheckedModule] -> ConversionT m ())
+                    -> m ()
+processFilesMainRn' process = do
+  (dflags, conf) <- processArgs
+  
+  let parseConfigFile file builder parser =
+        maybe (pure mempty) ?? (conf^.file) $ \filename -> liftIO $
+          (evalParse parser <$> T.readFile filename) >>= \case
+            Left  err -> die $ "Could not parse " ++ filename ++ ": " ++ err
+            Right res -> either die pure $ builder res
+  
+  renamings  <- parseConfigFile renamingsFile buildRenamings parseRenamingList
+  edits      <- parseConfigFile editsFile     buildEdits     parseEditList
+  
+  inputFiles <- either (liftIO . die) pure <=< runExceptT $
+                  (++) <$> parseModulesFiles (conf^.modulesRoot.non "") (conf^.modulesFiles)
+                       <*> pure (conf^.directInputFiles)
+  
+  preamble <- liftIO $ traverse readFile (conf^.preambleFile)
+  let printPreamble hOut = liftIO . for_ preamble $ \contents -> do
+        hPutStrLn hOut "(* Preamble *)"
+        hPutStr   hOut contents
+        hPutStrLn hOut ""
+        hFlush    hOut
+  
+  withModulePrinter <- case conf^.outputFile of
+    Nothing  -> printPreamble stdout $> \mod act -> do
+        liftIO . putStrLn $ "(* " ++ moduleNameString mod ++ " *)"
+        liftIO $ putStrLn ""
+        act stdout
+    Just outDir -> pure $ \mod act -> do
+      let path = outDir </> moduleNameSlashes mod <.> "v"
+      liftIO . createDirectoryIfMissing True $ takeDirectory path
+      gWithFile path WriteMode $ \hOut -> do
+        printPreamble hOut
+        act hOut
+
+  evalConversion renamings edits $
+    traverse_ (process withModulePrinter) =<< tcRnFiles dflags inputFiles
+
+printConvertedModuleRn' :: MonadIO m
+                        => WithModulePrinter m ()
+                        -> ConvertedModule
+                        -> m ()
+printConvertedModuleRn' withModulePrinter ConvertedModule{..} =
+  withModulePrinter convModName $ \out -> liftIO $ do
+    let flush    = hFlush out
+        printGap = hPutStrLn out ""
+        
+        printThe what [] = hPutStrLn out $ "(* No " ++ what ++ " to convert. *)"
+        printThe what ds = do hPutStrLn out $ "(* Converted " ++ what ++ ": *)"
+                              traverse_ (hPrettyPrint out) . intersperse line $
+                                map ((<> line) . renderGallina) ds
+     
+    printThe "data type declarations"           convModTyClDecls    <* printGap <* flush
+    printThe "value declarations"               convModValDecls     <* printGap <* flush
+    printThe "type class instance declarations" convModClsInstDecls <*             flush
+     
+    case toList . getFreeVars . NoBinding $
+           (convModTyClDecls ++ convModValDecls ++ convModClsInstDecls) of
+      []  -> pure ()
+      fvs -> do hPrettyPrint out $
+                  line <> "(*" <+> hang 2
+                    ("Unbound variables:" <!> fillSep (map text fvs))
+                  <!> "*)" <> line
+                flush
+
+printConvertedModulesRn' :: MonadIO m
+                         => WithModulePrinter m ()
+                         -> [NonEmpty ConvertedModule]
+                         -> m ()
+printConvertedModulesRn' withModulePrinter =
+  traverse_ (printConvertedModuleRn' withModulePrinter) . foldMap toList
+
+convertAndPrintModulesRn' :: ConversionMonad m => WithModulePrinter m () -> [TypecheckedModule] -> m ()
+convertAndPrintModulesRn' p =   printConvertedModulesRn' p
+                            <=< convertRenamedSources
+                            <=< traverse toRenamed
+  where toRenamed tcm
+          | Just rn <- tm_renamed_source tcm = pure (mod, rn)
+          | otherwise = throwProgramError $  "Renamer failed for `"
+                                          ++ moduleNameString mod ++ "'"
+          where mod = moduleName . ms_mod . pm_mod_summary $ tm_parsed_module tcm

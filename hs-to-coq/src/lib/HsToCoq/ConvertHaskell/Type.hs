@@ -33,7 +33,6 @@ import HsToCoq.ConvertHaskell.Monad
 import HsToCoq.ConvertHaskell.Variables
 import HsToCoq.ConvertHaskell.Literals
 
-import Debug.Trace
 --------------------------------------------------------------------------------
 
 convertLHsTyVarBndrs :: ConversionMonad m => Explicitness -> [LHsTyVarBndr GHC.Name] -> m [Binder]

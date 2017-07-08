@@ -5,5 +5,3 @@ Generalizable All Variables.
 Set Implicit Arguments.
 Unset Strict Implicit.
 Unset Printing Implicit Defensive.
-
-Inductive Id : Type := .

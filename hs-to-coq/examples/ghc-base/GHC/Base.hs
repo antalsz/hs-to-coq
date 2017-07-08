@@ -83,6 +83,8 @@ Other Prelude modules are much easier with fewer complex dependencies.
            , UnboxedTuples
            , ExistentialQuantification
            , RankNTypes
+           , RebindableSyntax
+           , NegativeLiterals
   #-}
 -- -Wno-orphans is needed for things like:
 -- Orphan rule: "x# -# x#" ALWAYS forall x# :: Int# -# x# x# = 0
@@ -118,13 +120,14 @@ module GHC.Base
   )
         where
 
+import Prelude ((.))
 import GHC.Types
 import GHC.Classes
 import GHC.CString
 import GHC.Magic
 import GHC.Prim
 import GHC.Err
-import {-# SOURCE #-} GHC.IO (failIO,mplusIO)
+import GHC.IO (failIO,mplusIO)
 
 import GHC.Tuple ()     -- Note [Depend on GHC.Tuple]
 import GHC.Integer ()   -- Note [Depend on GHC.Integer]
@@ -139,6 +142,9 @@ infixr 0  $, $!
 infixl 4 <*>, <*, *>, <**>
 
 default ()              -- Double isn't available yet
+
+ifThenElse :: Bool -> a -> a -> a
+ifThenElse c t f = if c then t else f
 
 {-
 Note [Depend on GHC.Integer]
@@ -441,14 +447,14 @@ liftA3 f a b c = fmap f a <*> b <*> c
 
 
 {-# INLINEABLE liftA #-}
-{-# SPECIALISE liftA :: (a1->r) -> IO a1 -> IO r #-}
-{-# SPECIALISE liftA :: (a1->r) -> Maybe a1 -> Maybe r #-}
+{-. SPECIALIZE liftA :: (a1->r) -> IO a1 -> IO r #-}
+{-. SPECIALIZE liftA :: (a1->r) -> Maybe a1 -> Maybe r #-}
 {-# INLINEABLE liftA2 #-}
-{-# SPECIALISE liftA2 :: (a1->a2->r) -> IO a1 -> IO a2 -> IO r #-}
-{-# SPECIALISE liftA2 :: (a1->a2->r) -> Maybe a1 -> Maybe a2 -> Maybe r #-}
+{-. SPECIALIZE liftA2 :: (a1->a2->r) -> IO a1 -> IO a2 -> IO r #-}
+{-. SPECIALIZE liftA2 :: (a1->a2->r) -> Maybe a1 -> Maybe a2 -> Maybe r #-}
 {-# INLINEABLE liftA3 #-}
-{-# SPECIALISE liftA3 :: (a1->a2->a3->r) -> IO a1 -> IO a2 -> IO a3 -> IO r #-}
-{-# SPECIALISE liftA3 :: (a1->a2->a3->r) ->
+{-. SPECIALIZE liftA3 :: (a1->a2->a3->r) -> IO a1 -> IO a2 -> IO a3 -> IO r #-}
+{-. SPECIALIZE liftA3 :: (a1->a2->a3->r) ->
                                 Maybe a1 -> Maybe a2 -> Maybe a3 -> Maybe r #-}
 
 -- | The 'join' function is the conventional monad join operator. It
@@ -535,7 +541,7 @@ original default.
 -}
 
 -- | Same as '>>=', but with the arguments interchanged.
-{-# SPECIALISE (=<<) :: (a -> [b]) -> [a] -> [b] #-}
+{-. SPECIALIZE (=<<) :: (a -> [b]) -> [a] -> [b] #-}
 (=<<)           :: Monad m => (a -> m b) -> m a -> m b
 f =<< x         = x >>= f
 
@@ -547,8 +553,8 @@ f =<< x         = x >>= f
 -- is 'True', and otherwise do nothing.
 when      :: (Applicative f) => Bool -> f () -> f ()
 {-# INLINEABLE when #-}
-{-# SPECIALISE when :: Bool -> IO () -> IO () #-}
-{-# SPECIALISE when :: Bool -> Maybe () -> Maybe () #-}
+{-. SPECIALIZE when :: Bool -> IO () -> IO () #-}
+{-. SPECIALIZE when :: Bool -> Maybe () -> Maybe () #-}
 when p s  = if p then s else pure ()
 
 -- | Evaluate each action in the sequence from left to right,
@@ -611,20 +617,20 @@ liftM5  :: (Monad m) => (a1 -> a2 -> a3 -> a4 -> a5 -> r) -> m a1 -> m a2 -> m a
 liftM5 f m1 m2 m3 m4 m5 = do { x1 <- m1; x2 <- m2; x3 <- m3; x4 <- m4; x5 <- m5; return (f x1 x2 x3 x4 x5) }
 
 {-# INLINEABLE liftM #-}
-{-# SPECIALISE liftM :: (a1->r) -> IO a1 -> IO r #-}
-{-# SPECIALISE liftM :: (a1->r) -> Maybe a1 -> Maybe r #-}
+{-. SPECIALIZE liftM :: (a1->r) -> IO a1 -> IO r #-}
+{-. SPECIALIZE liftM :: (a1->r) -> Maybe a1 -> Maybe r #-}
 {-# INLINEABLE liftM2 #-}
-{-# SPECIALISE liftM2 :: (a1->a2->r) -> IO a1 -> IO a2 -> IO r #-}
-{-# SPECIALISE liftM2 :: (a1->a2->r) -> Maybe a1 -> Maybe a2 -> Maybe r #-}
+{-. SPECIALIZE liftM2 :: (a1->a2->r) -> IO a1 -> IO a2 -> IO r #-}
+{-. SPECIALIZE liftM2 :: (a1->a2->r) -> Maybe a1 -> Maybe a2 -> Maybe r #-}
 {-# INLINEABLE liftM3 #-}
-{-# SPECIALISE liftM3 :: (a1->a2->a3->r) -> IO a1 -> IO a2 -> IO a3 -> IO r #-}
-{-# SPECIALISE liftM3 :: (a1->a2->a3->r) -> Maybe a1 -> Maybe a2 -> Maybe a3 -> Maybe r #-}
+{-. SPECIALIZE liftM3 :: (a1->a2->a3->r) -> IO a1 -> IO a2 -> IO a3 -> IO r #-}
+{-. SPECIALIZE liftM3 :: (a1->a2->a3->r) -> Maybe a1 -> Maybe a2 -> Maybe a3 -> Maybe r #-}
 {-# INLINEABLE liftM4 #-}
-{-# SPECIALISE liftM4 :: (a1->a2->a3->a4->r) -> IO a1 -> IO a2 -> IO a3 -> IO a4 -> IO r #-}
-{-# SPECIALISE liftM4 :: (a1->a2->a3->a4->r) -> Maybe a1 -> Maybe a2 -> Maybe a3 -> Maybe a4 -> Maybe r #-}
+{-. SPECIALIZE liftM4 :: (a1->a2->a3->a4->r) -> IO a1 -> IO a2 -> IO a3 -> IO a4 -> IO r #-}
+{-. SPECIALIZE liftM4 :: (a1->a2->a3->a4->r) -> Maybe a1 -> Maybe a2 -> Maybe a3 -> Maybe a4 -> Maybe r #-}
 {-# INLINEABLE liftM5 #-}
-{-# SPECIALISE liftM5 :: (a1->a2->a3->a4->a5->r) -> IO a1 -> IO a2 -> IO a3 -> IO a4 -> IO a5 -> IO r #-}
-{-# SPECIALISE liftM5 :: (a1->a2->a3->a4->a5->r) -> Maybe a1 -> Maybe a2 -> Maybe a3 -> Maybe a4 -> Maybe a5 -> Maybe r #-}
+{-. SPECIALIZE liftM5 :: (a1->a2->a3->a4->a5->r) -> IO a1 -> IO a2 -> IO a3 -> IO a4 -> IO a5 -> IO r #-}
+{-. SPECIALIZE liftM5 :: (a1->a2->a3->a4->a5->r) -> Maybe a1 -> Maybe a2 -> Maybe a3 -> Maybe a4 -> Maybe a5 -> Maybe r #-}
 
 {- | In many situations, the 'liftM' operations can be replaced by uses of
 'ap', which promotes function application.
@@ -642,8 +648,8 @@ ap m1 m2          = do { x1 <- m1; x2 <- m2; return (x1 x2) }
 -- Since many Applicative instances define (<*>) = ap, we
 -- cannot define ap = (<*>)
 {-# INLINEABLE ap #-}
-{-# SPECIALISE ap :: IO (a -> b) -> IO a -> IO b #-}
-{-# SPECIALISE ap :: Maybe (a -> b) -> Maybe a -> Maybe b #-}
+{-. SPECIALIZE ap :: IO (a -> b) -> IO a -> IO b #-}
+{-. SPECIALIZE ap :: Maybe (a -> b) -> Maybe a -> Maybe b #-}
 
 -- instances for Prelude types
 
@@ -1053,7 +1059,7 @@ const                   :: a -> b -> a
 const x _               =  x
 
 -- | Function composition.
-{-# INLINE (.) #-}
+-- {-# INLINE (.) #-}
 -- Make sure it has TWO args only on the left, so that it inlines
 -- when applied to two functions, even if there is no final argument
 -- (.)    :: (b -> c) -> (a -> b) -> a -> c
@@ -1226,9 +1232,9 @@ a `iShiftL#` b  | isTrue# (b >=# WORD_SIZE_IN_BITS#) = 0#
 -- (which must be non-negative).
 -- The "RA" means "right, arithmetic" (as opposed to RL for logical)
 iShiftRA# :: Int# -> Int# -> Int#
-a `iShiftRA#` b | isTrue# (b >=# WORD_SIZE_IN_BITS#) = if isTrue# (a <# 0#)
-                                                          then (-1#)
-                                                          else 0#
+a `iShiftRA#` b | isTrue# (b >=# WORD_SIZE_IN_BITS#) = undefined-- if isTrue# (a <# 0#)
+                                                          -- then (-1#)
+                                                          -- else 0#
                 | otherwise                          = a `uncheckedIShiftRA#` b
 
 -- | Shift the argument right (unsigned) by the specified number of bits

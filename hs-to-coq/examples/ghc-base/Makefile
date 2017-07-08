@@ -55,15 +55,15 @@ coq: Makefile.coq $(VFILES) GHC/Prim.v
 
 
 %.v : %/edits renamings %/preamble.v
-	stack exec hs-to-coq -- -e $*/edits -r renamings -o $*.v -p $*/preamble.v $(LIB)/$*.hs
+	stack exec hs-to-coq -- -e $*/edits -r renamings -o . -p $*/preamble.v $(LIB)/$*.hs
 
 
 GHC/BaseGen.v : GHC/Base/edits renamings GHC/Base/preamble.v GHC/Base.hs
-	stack exec hs-to-coq -- -e GHC/Base/edits -r renamings -o GHC/BaseGen.v -p GHC/Base/preamble.v GHC/Base.hs
+	stack exec hs-to-coq -- -e GHC/Base/edits -r renamings -o . -p GHC/Base/preamble.v GHC/Base.hs
 
 
 clean:
-	rm -f */*.vo */*.glob */*.v.d *.vo *.v.d  $(VFILES) _CoqProject Makefile.coq  */*.v~
+	rm -rf */*.vo */*.glob */*.v.d *.vo *.v.d  $(VFILES) _CoqProject Makefile.coq  */*.v~
 
 
 .SECONDARY: $(VFILES)

@@ -46,10 +46,10 @@ todo_pass: $(foreach f,$(TODO_PASS),$(f).pass)
 	@coqc $*.v
 
 %.v : %/edits renamings %/preamble.v %.hs
-	@stack exec hs-to-coq -- -e $*/edits -r renamings -o $*.v -p $*/preamble.v $*.hs 1>/dev/null
+	@stack exec hs-to-coq -- -e $*/edits -r renamings -o . -p $*/preamble.v $*.hs 1>/dev/null
 
 
 clean:
-	rm -f */*.vo */*.glob */*.v.d *.vo *.v.d *.glob $(VFILES) _CoqProject Makefile.coq *~
+	rm -rf */*.vo */*.glob */*.v.d *.vo *.v.d *.glob $(VFILES) _CoqProject Makefile.coq *~
 
 .SECONDARY: $(VFILES)

@@ -21,8 +21,7 @@ source-repository head
   subdir:   core-coq/hs-to-coq
 
 library
-  exposed-modules:     HsToCoq.Util.GHC.DoCpp
-                     , HsToCoq.Util.GHC
+  exposed-modules:     HsToCoq.Util.GHC
                      , HsToCoq.Util.GHC.Module
                      , HsToCoq.Util.GHC.FastString
                      , HsToCoq.Util.GHC.DynFlags
@@ -38,7 +37,6 @@ library
                      , HsToCoq.Util.Monad
                      , HsToCoq.Util.List
                      , HsToCoq.Util.Containers
-                     , HsToCoq.Util.Generics
                      , HsToCoq.Util.Char
                      , HsToCoq.Util.Parsec
                      , HsToCoq.Util.TempFiles

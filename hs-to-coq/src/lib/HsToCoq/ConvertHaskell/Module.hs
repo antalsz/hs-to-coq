@@ -68,7 +68,7 @@ data ConvertedImportDecl =
 convertImportItem :: ConversionMonad m => IE GHC.Name -> m [Ident]
 convertImportItem (IEVar       (L _ x)) = pure <$> var ExprNS x
 convertImportItem (IEThingAbs  (L _ x)) = pure <$> var TypeNS x
-convertImportItem (IEThingAll  (L _ x)) = 
+convertImportItem (IEThingAll  (L _ x)) = undefined -- TODO
 convertImportItem (IEThingWith (L _ x) NoIEWildcard subitems []) =
   (:) <$> var TypeNS x <*> traverse (var ExprNS . unLoc) subitems
 convertImportItem (IEGroup          _ _)                  = pure [] -- Haddock

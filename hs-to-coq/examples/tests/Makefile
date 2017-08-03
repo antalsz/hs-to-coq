@@ -49,7 +49,7 @@ todo_pass: $(foreach f,$(TODO_PASS),$(f).pass)
 	@coqc $*.v
 
 %.v : %/edits renamings %/preamble.v %.hs
-	@$(HS_TO_COQ) -e $*/edits -r renamings -o . -p $*/preamble.v $*.hs 1>/dev/null
+	@$(HS_TO_COQ) -e $*/edits -r renamings -o $*.v -p $*/preamble.v $*.hs 1>/dev/null
 
 
 clean:

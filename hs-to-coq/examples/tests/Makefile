@@ -2,7 +2,8 @@ HS_TO_COQ = stack exec hs-to-coq --
 SHELL = bash
 
 # tests that should pass
-PASS = Expr \
+PASS = Simple \
+       Expr \
        Sub \
        Self \
        Poly \

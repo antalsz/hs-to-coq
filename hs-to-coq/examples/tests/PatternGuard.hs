@@ -1,5 +1,7 @@
 module PatternGuard where
 
+import Prelude hiding (take)
+
 checkNum :: Int -> Bool
 checkNum 2 = True
 checkNum _ = False

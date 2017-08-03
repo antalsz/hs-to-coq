@@ -9,18 +9,18 @@ PASS = Expr \
        Guard2 \
        InstCtx \
        OpTyCon \
-       ExhaustGuard
+       ExhaustGuard \
+       MapAccumR \
+       MutrecInst
 
 
 # tests that *should* pass but currently fail
 TODO_PASS  = EqList \
              PolyInstance2 \
-             MutrecInst \
              \
              Mutrec \
              DotName \
              PatternGuard \
-             MapAccumR \
              Bits
 
 MODULES = $(PASS) $(TODO_PASS)

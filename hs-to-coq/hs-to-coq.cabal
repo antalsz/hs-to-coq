@@ -33,6 +33,7 @@ library
                      , HsToCoq.Util.GHC.Monad
                      , HsToCoq.Util.Function
                      , HsToCoq.Util.Functor
+                     , HsToCoq.Util.Traversable
                      , HsToCoq.Util.Monad.ListT
                      , HsToCoq.Util.Monad
                      , HsToCoq.Util.List

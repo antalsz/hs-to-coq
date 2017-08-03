@@ -82,8 +82,8 @@ module HsToCoq.Coq.Gallina (
 import Prelude hiding (Num)
 
 import Data.Foldable
-import Data.Traversable
 import HsToCoq.Util.Function
+import HsToCoq.Util.Traversable
 
 import Data.Text (Text)
 import qualified Data.Text as T
@@ -982,7 +982,7 @@ instance Gallina ArgumentSpec where
 let abort = fail "Internal error: unexpected result from `reify'" in
   TH.reify ''Gallina >>= \case
     TH.ClassI _ is ->
-      fmap concat . for is $ \case
+      forFold is $ \case
         TH.InstanceD _ _ (TH.AppT (TH.ConT _gallina) ty) _ ->
           [d|instance Pretty $(pure ty) where pretty = renderGallina|]
         _ -> abort

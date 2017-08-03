@@ -22,11 +22,11 @@ module HsToCoq.CLI (
 import Control.Lens hiding ((<.>))
 
 import Data.Foldable
-import Data.Traversable
 import Data.List (intersperse, isSuffixOf)
 import Data.List.NonEmpty (NonEmpty(..))
 
 import Data.Functor
+import HsToCoq.Util.Traversable
 import Control.Monad
 import Control.Monad.IO.Class
 import Control.Monad.Except
@@ -163,7 +163,7 @@ parseModulesFiles root files =
   let fullName name = root </> if ".hs" `isSuffixOf` name
                                then name
                                else name <.> "hs"
-  in fmap (map fullName . resolveFileTrees . concat) . for files $ \file ->
+  in fmap (map fullName . resolveFileTrees) . forFold files $ \file ->
        exceptEither . parseFileTrees (Just file) =<< liftIO (readFile file)
 
 --------------------------------------------------------------------------------

@@ -13,6 +13,7 @@ import Control.Lens
 
 import Data.Semigroup (Semigroup(..), (<>))
 import HsToCoq.Util.Function
+import HsToCoq.Util.Traversable
 import Data.Maybe
 import qualified Data.List.NonEmpty as NE
 import Data.Char
@@ -122,7 +123,7 @@ convertClsInstDecl cid@ClsInstDecl{..} rebuild mhandler = do
 
 convertModuleClsInstDecls :: forall m. ConversionMonad m
                           => [(Maybe ModuleName, ClsInstDecl GHC.Name)] -> m [Sentence]
-convertModuleClsInstDecls = fmap concat .: traverse $ maybeWithCurrentModule .*^ \cid ->
+convertModuleClsInstDecls = foldTraverse $ maybeWithCurrentModule .*^ \cid ->
                                convertClsInstDecl cid rebuild
                                                   (Just axiomatizeInstance)
   where rebuild :: InstanceDefinition -> m [Sentence]

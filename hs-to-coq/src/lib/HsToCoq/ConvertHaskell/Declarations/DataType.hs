@@ -13,7 +13,7 @@ import Control.Lens
 import Data.Bifunctor
 import Data.Semigroup (Semigroup(..))
 import Data.Foldable
-import Data.Traversable
+import HsToCoq.Util.Traversable
 
 import qualified Data.Set        as S
 import qualified Data.Map.Strict as M
@@ -98,7 +98,7 @@ rewriteDataTypeArguments dta bs = do
   explicitMap <-
     let extraImplicit  = "non-initial implicit arguments"
         complexBinding = "complex (let/generalized) bindings"
-    in either dtaEditFailure (pure . M.fromList . concat) . for ebs $ \case
+    in either dtaEditFailure (pure . M.fromList) . forFold ebs $ \case
          Inferred   Coq.Explicit x     -> Right [(x, Inferred Coq.Explicit x)]
          Typed    g Coq.Explicit xs ty -> Right [(x, Typed g Coq.Explicit (pure x) ty) | x <- toList xs]
          
@@ -135,8 +135,8 @@ convertDataDefn :: ConversionMonad m
 convertDataDefn curType extraArgs (HsDataDefn _nd lcxt _ctype ksig cons _derivs) = do
   unless (null $ unLoc lcxt) $ convUnsupported "data type contexts"
   (,) <$> maybe (pure $ Sort Type) convertLType ksig
-      <*> (traverse addAdditionalConstructorScope . concat =<<
-           traverse (convertConDecl curType extraArgs . unLoc) cons)
+      <*> (traverse addAdditionalConstructorScope =<<
+           foldTraverse (convertConDecl curType extraArgs . unLoc) cons)
 
 convertDataDecl :: ConversionMonad m
                 => Located GHC.Name -> [LHsTyVarBndr GHC.Name] -> HsDataDefn GHC.Name

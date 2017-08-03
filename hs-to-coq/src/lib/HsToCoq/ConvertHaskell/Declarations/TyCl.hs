@@ -23,6 +23,7 @@ import Data.Semigroup (Semigroup(..))
 import Data.Bifunctor
 import Data.Foldable
 import Data.Traversable
+import HsToCoq.Util.Traversable
 import HsToCoq.Util.Function
 import Data.Maybe
 import Data.List.NonEmpty (NonEmpty(..), nonEmpty)
@@ -246,8 +247,8 @@ generateArgumentSpecifiers (IndBody tyName params _resTy cons)
     snipTypeApp _                           = Nothing
 
 generateGroupArgumentSpecifiers :: ConversionMonad m => DeclarationGroup -> m [Sentence]
-generateGroupArgumentSpecifiers = fmap (fmap ArgumentsSentence . fold)
-                                . traverse generateArgumentSpecifiers
+generateGroupArgumentSpecifiers = fmap (fmap ArgumentsSentence)
+                                . foldTraverse generateArgumentSpecifiers
                                 . dgInductives
 
 --------------------------------------------------------------------------------
@@ -303,8 +304,8 @@ generateRecordAccessors (IndBody tyName params resTy cons) = do
       Coq.Match [MatchItem (Var arg) Nothing Nothing] Nothing equations
 
 generateGroupRecordAccessors :: ConversionMonad m => DeclarationGroup -> m [Sentence]
-generateGroupRecordAccessors = fmap (fmap DefinitionSentence . fold)
-                             . traverse generateRecordAccessors
+generateGroupRecordAccessors = fmap (fmap DefinitionSentence)
+                             . foldTraverse generateRecordAccessors
                              . dgInductives
 
 --------------------------------------------------------------------------------
@@ -325,10 +326,10 @@ groupTyClDecls decls = do
 
 convertModuleTyClDecls :: ConversionMonad m
                        => [(Maybe ModuleName, TyClDecl GHC.Name)] -> m [Sentence]
-convertModuleTyClDecls =   forkM3 (either convUnsupported (pure . fold)
-                                    . traverse convertDeclarationGroup)
-                                  (fmap fold . traverse generateGroupArgumentSpecifiers)
-                                  (fmap fold . traverse generateGroupRecordAccessors)
+convertModuleTyClDecls =   forkM3 (either convUnsupported pure
+                                    . foldTraverse convertDeclarationGroup)
+                                  (foldTraverse generateGroupArgumentSpecifiers)
+                                  (foldTraverse generateGroupRecordAccessors)
                        <=< groupTyClDecls
   where forkM3 l m r i = (<>) <$> ((<>) <$> l i <*> m i) <*> r i
 

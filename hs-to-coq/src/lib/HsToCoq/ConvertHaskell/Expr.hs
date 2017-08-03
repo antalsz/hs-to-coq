@@ -32,7 +32,7 @@ import HsToCoq.Util.Function
 import Data.Maybe
 import Data.List (intercalate)
 import HsToCoq.Util.List hiding (unsnoc)
-import Data.List.NonEmpty (NonEmpty(..), nonEmpty)
+import Data.List.NonEmpty (nonEmpty)
 import qualified Data.List.NonEmpty as NEL
 import Data.Text (Text)
 import qualified Data.Text as T
@@ -426,15 +426,14 @@ convertLExpr = convertExpr . unLoc
 
 convertFunction :: ConversionMonad m => MatchGroup GHC.Name (LHsExpr GHC.Name) -> m (Binders, Term)
 convertFunction mg = do
+  let n_args = matchGroupArity mg
   eqns <- convertMatchGroup mg
-  args <- case eqns of
-            Equation (MultPattern args :| _) _ : _ ->
-              traverse (const $ gensym "arg") args
-            _ ->
-              convUnsupported "empty `MatchGroup' in function"
+  args <- replicateM n_args (gensym "arg") >>= maybe err pure . nonEmpty
   let argBinders = (Inferred Coq.Explicit . Ident) <$> args
       match      = Coq.Match (args <&> \arg -> MatchItem (Var arg) Nothing Nothing) Nothing eqns
   pure (argBinders, match)
+  where
+    err = convUnsupported "empty `MatchGroup' in function"
 
 --------------------------------------------------------------------------------
 

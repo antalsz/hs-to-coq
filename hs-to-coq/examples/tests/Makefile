@@ -44,7 +44,14 @@ todo_pass: $(foreach f,$(TODO_PASS),$(f).pass)
 
 %.pass : %.v
 	@/bin/echo -n "$<: "
-	@if ! $(TYPECHECK) $< >&/dev/null; then echo -e "\033[1;31mfailed\033[0m (should pass)" >&2; else echo -e "\033[1;31mpassed\033[0m"; fi
+	@if ! grep -q -F '(* Converted data type declarations: *)' $< && \
+	    ! grep -q -F '(* Converted type class instance declarations: *)' $< && \
+	    ! grep -q -F '(* Converted value declarations: *)' $< ; \
+	 then echo -e "\033[1;31mempty\033[0m (should pass)";\
+	 elif ! $(TYPECHECK) $< >&/dev/null; \
+	 then echo -e "\033[1;31mfailed\033[0m (should pass)" >&2; \
+	 else echo -e "\033[1;32mpassed\033[0m"; \
+	 fi
 
 %.vo : %.v
 	@coqc $*.v

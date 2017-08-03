@@ -1,4 +1,5 @@
 HS_TO_COQ = stack exec hs-to-coq --
+SHELL = bash
 
 top: Prelude.vo
 

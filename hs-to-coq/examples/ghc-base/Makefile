@@ -1,4 +1,5 @@
 HS_TO_COQ = stack exec hs-to-coq --
+SHELL = bash
 LIB = /Users/sweirich/github/hs-to-coq/ghc-8.0.2/libraries/base
 
 # Not all of these need to be handwritten. Eventually we should be able to

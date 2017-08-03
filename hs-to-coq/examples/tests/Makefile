@@ -1,3 +1,5 @@
+HS_TO_COQ = stack exec hs-to-coq --
+
 # tests that should pass
 PASS = Expr \
        Sub \
@@ -22,9 +24,9 @@ TODO_PASS  = EqList \
 
 MODULES = $(PASS) $(TODO_PASS)
 
-VFILES   = $(addsuffix .v,$(MODULES))
-VOFILES  = $(patsubst %.v,%.vo,$(VFILES))
-COQFLAGS = ""
+VFILES    = $(addsuffix .v,$(MODULES))
+VOFILES   = $(patsubst %.v,%.vo,$(VFILES))
+COQFLAGS  = ""
 
 # typecheck *quietly*
 TYPECHECK=coqc 1>/dev/null
@@ -46,7 +48,7 @@ todo_pass: $(foreach f,$(TODO_PASS),$(f).pass)
 	@coqc $*.v
 
 %.v : %/edits renamings %/preamble.v %.hs
-	@stack exec hs-to-coq -- -e $*/edits -r renamings -o $*.v -p $*/preamble.v $*.hs 1>/dev/null
+	@$(HS_TO_COQ) -e $*/edits -r renamings -o $*.v -p $*/preamble.v $*.hs 1>/dev/null
 
 
 clean:

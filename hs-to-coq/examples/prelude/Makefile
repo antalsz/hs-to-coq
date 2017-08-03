@@ -1,8 +1,10 @@
+HS_TO_COQ = stack exec hs-to-coq --
+
 top: Prelude.vo
 
 %.vo : %.hs Prelude.renamings Prelude.edits Prelude.preamble.v
 	rm -f $*.v
-	stack exec hs-to-coq -- -e Prelude.edits -r Prelude.renamings  -o $*.v -p Prelude.preamble.v $*.hs
+	$(HS_TO_COQ) -e Prelude.edits -r Prelude.renamings  -o $*.v -p Prelude.preamble.v $*.hs
 	coqc $*.v
 	chmod a-w $*.v
 

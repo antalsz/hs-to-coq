@@ -1,3 +1,4 @@
+HS_TO_COQ = stack exec hs-to-coq --
 LIB = /Users/sweirich/github/hs-to-coq/ghc-8.0.2/libraries/base
 
 # Not all of these need to be handwritten. Eventually we should be able to
@@ -55,11 +56,11 @@ coq: Makefile.coq $(VFILES) GHC/Prim.v
 
 
 %.v : %/edits renamings %/preamble.v
-	stack exec hs-to-coq -- -e $*/edits -r renamings -o $*.v -p $*/preamble.v $(LIB)/$*.hs
+	$(HS_TO_COQ) -e $*/edits -r renamings -o $*.v -p $*/preamble.v $(LIB)/$*.hs
 
 
 GHC/BaseGen.v : GHC/Base/edits renamings GHC/Base/preamble.v GHC/Base.hs
-	stack exec hs-to-coq -- -e GHC/Base/edits -r renamings -o GHC/BaseGen.v -p GHC/Base/preamble.v GHC/Base.hs
+	$(HS_TO_COQ) -e GHC/Base/edits -r renamings -o GHC/BaseGen.v -p GHC/Base/preamble.v GHC/Base.hs
 
 
 clean:

@@ -582,9 +582,16 @@ chainFallThroughs cases failure = go (reverse cases) failure where
       j <- gensym "j"
       previous_matches <- go ls (Qualid (Bare j))
       this_match <- m next_case
-      pure $ Let j [] Nothing this_match previous_matches
+      pure $ smartLet j this_match previous_matches
 
    go [] failure = pure failure
+
+   -- This prevents the pattern conversion code to create
+   -- `let j_24__ := false in j_24__`
+   smartLet :: Ident -> Term -> Term -> Term
+   smartLet ident rhs (Qualid (Bare v)) | ident == v = rhs
+   smartLet ident rhs body = Let ident [] Nothing rhs body
+
 
 convertMatchGroup :: ConversionMonad m =>
     NonEmpty Text ->

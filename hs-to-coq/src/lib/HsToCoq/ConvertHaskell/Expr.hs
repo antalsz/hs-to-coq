@@ -603,7 +603,7 @@ convertMatch binds GHC.Match{..} failure = do
   oty <- traverse convertLType m_type
 
   let extraGuards = map BoolGuard guards
-  rhs <- convertLGRHSList extraGuards (grhssGRHSs m_grhss) failure
+  rhs <- convertGRHSs extraGuards m_grhss failure
   let typed_rhs = maybe id (flip HasType) oty rhs
   let scrut = binds <&> \arg -> MatchItem arg Nothing Nothing
   buildSingleEquationMatch scrut pats typed_rhs failure

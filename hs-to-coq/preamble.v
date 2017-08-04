@@ -23,11 +23,6 @@ Axiom error : forall {A : Type}, String -> A.
    formatting. *)
 Axiom panic : forall {A : Type}, String -> A.
 
-(* Output code :-/ *)
-Axiom SDoc : Type.
-Axiom pprPanic : forall {A : Type}, String -> SDoc -> A.
-Axiom ppr      : forall {A : Type}, A -> SDoc.
-
 (* I've been assured that this is OK *)
 Inductive IORef (a : Type) : Type :=.
 
@@ -129,22 +124,25 @@ Class Functor (f : Type -> Type) := {
 }.
 
 Infix "<$"        := __op_zlzd__ (at level 99).
+
 Notation "'_<$_'" := __op_zlzd__.
+Infix "<$>"        := fmap (at level 99).
+Notation "'_<$>_'" := fmap.
 
 Class Applicative (f : Type -> Type) `{Functor f} := {
   pure          : forall {a},   a -> f a;
-  __op_zlztzg__ : forall {a b}, f (a -> b) -> f a -> f b;
-  __op_ztzg__   : forall {a b}, f a -> f b -> f b;
-  __op_zlzt__   : forall {a b}, f a -> f b -> f a
+  op_zlztzg__ : forall {a b}, f (a -> b) -> f a -> f b;
+  op_ztzg__   : forall {a b}, f a -> f b -> f b;
+  op_zlzt__   : forall {a b}, f a -> f b -> f a
 }.
 
-Infix "<*>" := __op_zlztzg__ (at level 99).
-Infix "*>"  := __op_ztzg__   (at level 99).
-Infix "<*"  := __op_zlzt__   (at level 99).
+Infix "<*>" := op_zlztzg__ (at level 99).
+Infix "*>"  := op_ztzg__   (at level 99).
+Infix "<*"  := op_zlzt__   (at level 99).
 
-Notation "'_<*>_'" := __op_zlztzg__.
-Notation "'_*>_'"  := __op_ztzg__.
-Notation "'_<*_'"  := __op_zlzt__.
+Notation "'_<*>_'" := op_zlztzg__.
+Notation "'_*>_'"  := op_ztzg__.
+Notation "'_<*_'"  := op_zlzt__.
 
 Class Monad (m : Type -> Type) `{Applicative m} := {
   __op_zgzgze__ : forall {a b}, m a -> (a -> m b) -> m b;
@@ -158,6 +156,20 @@ Infix ">>"  := __op_zgzg__   (at level 99).
 
 Notation "'_>>=_'" := __op_zgzgze__.
 Notation "'_>>_'"  := __op_zgzg__.
+
+Class Monoid (a : Type) := {
+  mempty   : a;
+  mappend  : a -> a -> a
+}.
+
+Class Foldable (t : Type -> Type) := {
+  foldMap : forall {a m} `{Monoid m}, (a -> m) -> t a -> m
+}.
+
+Class Traversable (t : Type -> Type) := {
+  traverse : forall {a b f} `{Applicative f}, (a -> f b) -> t a -> f (t b)
+}.
+
 
 Class Num a := {
   __op_zp__   : a -> a -> a ;

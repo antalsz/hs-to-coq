@@ -162,9 +162,7 @@ convertExpr (ExplicitTuple exprs _boxity) = do
 
 convertExpr (HsCase e mg) = do
   scrut <- convertLExpr e
-  scrut_var <- gensym "j"
-  match <- convertMatchGroup [scrut_var] mg
-  pure $ Let scrut_var [] Nothing scrut match
+  bindIn "scrut" scrut $ \scrut -> convertMatchGroup [scrut] mg
 
 convertExpr (HsIf overloaded c t f) =
   if maybe True isNoSyntaxExpr overloaded
@@ -425,7 +423,7 @@ convertFunction mg = do
   let n_args = matchGroupArity mg
   args <- replicateM n_args (gensym "arg") >>= maybe err pure . nonEmpty
   let argBinders = (Inferred Coq.Explicit . Ident) <$> args
-  match <- convertMatchGroup args mg
+  match <- convertMatchGroup (Var <$> args) mg
   pure (argBinders, match)
  where
    err = convUnsupported "convertFunction: Empty argument list"
@@ -581,29 +579,20 @@ chainFallThroughs :: ConversionMonad m =>
     m Term
 chainFallThroughs cases failure = go (reverse cases) failure where
    go (m:ls) next_case = do
-      j <- gensym "j"
-      previous_matches <- go ls (Qualid (Bare j))
       this_match <- m next_case
-      pure $ smartLet j this_match previous_matches
-
+      bindIn "j" this_match $ \failure -> go ls failure
    go [] failure = pure failure
-
-   -- This prevents the pattern conversion code to create
-   -- `let j_24__ := false in j_24__`
-   smartLet :: Ident -> Term -> Term -> Term
-   smartLet ident rhs (Qualid (Bare v)) | ident == v = rhs
-   smartLet ident rhs body = Let ident [] Nothing rhs body
 
 
 convertMatchGroup :: ConversionMonad m =>
-    NonEmpty Text ->
+    NonEmpty Term ->
     MatchGroup GHC.Name (LHsExpr GHC.Name) ->
     m Term
 convertMatchGroup args (MG (L _ alts) _ _ _) =
     chainFallThroughs (convertMatch args . unLoc <$> alts) MissingValue
 
 convertMatch :: ConversionMonad m =>
-    NonEmpty Text -> -- scrutinee(s)
+    NonEmpty Term -> -- scrutinee(s)
     Match GHC.Name (LHsExpr GHC.Name) -> -- the match
     Term -> -- the fallthrough
     m Term  -- the resulting term (a complete `match scrut with ...` expression)
@@ -616,7 +605,7 @@ convertMatch binds GHC.Match{..} failure = do
   let extraGuards = map BoolGuard guards
   rhs <- convertLGRHSList extraGuards (grhssGRHSs m_grhss) failure
   let typed_rhs = maybe id (flip HasType) oty rhs
-  let scrut = binds <&> \arg -> MatchItem (Var arg) Nothing Nothing
+  let scrut = binds <&> \arg -> MatchItem arg Nothing Nothing
   buildSingleEquationMatch scrut pats typed_rhs failure
 
 
@@ -817,3 +806,23 @@ convertLocalBinds (HsIPBinds _) _ =
   convUnsupported "local implicit parameter bindings"
 convertLocalBinds EmptyLocalBinds body =
   body
+
+
+--------------------------------------------------------------------------------
+
+-- Create `let x := rhs in genBody x`
+-- Unless the rhs is very small, in which case it creates `genBody rhs`
+bindIn :: ConversionMonad m => Text -> Term -> (Term -> m Term) -> m Term
+bindIn _ rhs@(Qualid _) genBody = genBody rhs
+bindIn tmpl rhs genBody = do
+  j <- gensym tmpl
+  body <- genBody (Qualid (Bare j))
+  pure $ smartLet j rhs body
+
+
+-- This prevents the pattern conversion code to create
+-- `let j_24__ := … in j_24__`
+smartLet :: Ident -> Term -> Term -> Term
+smartLet ident rhs (Qualid (Bare v)) | ident == v = rhs
+smartLet ident rhs body = Let ident [] Nothing rhs body
+

@@ -720,7 +720,7 @@ instance Gallina Term where
     char '!' <>  renderGallina t
 
   renderGallina' _ MissingValue =
-    string "missingValue"
+    string "patternFailure"
 
 instance Gallina Arg where
   renderGallina' p (PosArg t) =

@@ -95,6 +95,63 @@ builtInDataCons =
     ]
   where (=:) = (,)
 
+builtInClasses :: [ClassDefinition]
+builtInClasses =
+    [ ClassDefinition "Monoid" [Inferred Explicit (Ident "a")] Nothing
+        [ "mappend" =: Var "a" `Arrow` Var "a" `Arrow` Var "a"
+        , "mempty"  =: Var "a"
+        ]
+    , ClassDefinition "Functor" [Inferred Explicit (Ident "f")] Nothing
+        [ "fmap" =: (Forall [ Inferred Implicit (Ident "a")
+                            , Inferred Implicit (Ident "b")] $
+                     (Var "a" `Arrow` Var "b") `Arrow`
+                     App1 (Var "f") (Var "a") `Arrow`
+                     App1 (Var "f") (Var "b"))
+        ]
+    , ClassDefinition "Applicative"
+        [ Inferred Explicit (Ident "f")
+        , Generalized Implicit (App1 (Var "Functor") (Var "f"))
+        ]
+        Nothing
+        [ "pure"  =: (Forall [Inferred Implicit (Ident "a")]  $
+                      Var "a" `Arrow` App1 (Var "f") (Var "a"))
+        , "op_zlztzg__" =:
+            (Forall [ Inferred Implicit (Ident "a")
+                    , Inferred Implicit (Ident "b")] $
+                     App1 (Var "f") (Var "a" `Arrow` Var "b") `Arrow`
+                     App1 (Var "f") (Var "a") `Arrow`
+                     App1 (Var "f") (Var "b"))
+        ]
+    , ClassDefinition "Foldable"
+        [ Inferred Explicit (Ident "t")
+        ]
+        Nothing
+        ["foldMap" =:
+            (Forall [ Inferred Implicit (Ident "a")
+                    , Inferred Implicit (Ident "m")
+                    , Generalized Implicit (App1 (Var "Monoid") (Var "m")) ] $
+                     (Var "a" `Arrow` Var "m") `Arrow`
+                     App1 (Var "t") (Var "a") `Arrow`
+                     Var "m")
+        ]
+    , ClassDefinition "Traversable"
+        [ Inferred Explicit (Ident "t")
+        ]
+        Nothing
+        ["traverse" =:
+            (Forall [ Inferred Implicit (Ident "a")
+                    , Inferred Implicit (Ident "b")
+                    , Inferred Implicit (Ident "f")
+                    , Generalized Implicit (App1 (Var "Applicative") (Var "f")) ] $
+                     (Var "a" `Arrow` App1 (Var "f") (Var "b")) `Arrow`
+                     App1 (Var "t") (Var "a") `Arrow`
+                     App1 (Var "f") (App1 (Var "t") (Var "b")))
+        ]
+    ]
+  where
+   (=:) = (,)
+   infix 0 =:
+
 evalConversion :: GhcMonad m => Renamings -> Edits -> ConversionT m a -> m a
 evalConversion _renamings _edits = evalVariablesT . (evalStateT ?? ConversionState{..}) where
   __currentModule = Nothing
@@ -103,7 +160,7 @@ evalConversion _renamings _edits = evalVariablesT . (evalStateT ?? ConversionSta
   _constructorTypes  = M.fromList [ (d,t) | (t,ds) <- builtInDataCons, (d,_) <- ds ]
   _constructorFields = M.fromList [ (d, NonRecordFields n) | (_,ds) <- builtInDataCons, (d,n) <- ds ]
   _recordFieldTypes  = M.empty
-  _classDefns        = M.empty
+  _classDefns        = M.fromList [ (i, cls) | cls@(ClassDefinition i _ _ _) <- builtInClasses ]
 --  _memberSigs        = M.empty
   _defaultMethods = M.fromList ["Eq" ~>> [ "==" ~> Fun [arg "x", arg "y"] (App1 (Var "negb") $ Infix (Var "x") "/=" (Var "y"))
                                          , "/=" ~> Fun [arg "x", arg "y"] (App1 (Var "negb") $ Infix (Var "x") "==" (Var "y")) ]]

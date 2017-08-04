@@ -83,14 +83,25 @@ renamed ns x = renamings.at (NamespacedIdent ns x)
 type ConversionMonad m = (GhcMonad m, MonadState ConversionState m, MonadVariables Ident () m)
 type ConversionT m = StateT ConversionState (VariablesT Ident () m)
 
+-- HACK: Hard-code information about some data types here
+-- This needs to be solved proper, but for now this makes the test suite
+-- more useful
+builtInDataCons :: [(Ident,[(Ident,Int)])]
+builtInDataCons =
+    [ "option" =: [ "Some"  =: 1, "None"  =: 0 ]
+    , "pair"   =: [ "pair"  =: 2]
+    , "list"   =: [ "nil"   =: 1, "cons"  =: 2 ]
+    , "bool"   =: [ "true"  =: 0, "false" =: 0 ]
+    ]
+  where (=:) = (,)
+
 evalConversion :: GhcMonad m => Renamings -> Edits -> ConversionT m a -> m a
 evalConversion _renamings _edits = evalVariablesT . (evalStateT ?? ConversionState{..}) where
   __currentModule = Nothing
 
-  -- TODO Add base types?
-  _constructors      = M.empty
-  _constructorTypes  = M.empty
-  _constructorFields = M.empty
+  _constructors      = M.fromList [ (t, [d | (d,_) <- ds]) | (t,ds) <- builtInDataCons]
+  _constructorTypes  = M.fromList [ (d,t) | (t,ds) <- builtInDataCons, (d,_) <- ds ]
+  _constructorFields = M.fromList [ (d, NonRecordFields n) | (_,ds) <- builtInDataCons, (d,n) <- ds ]
   _recordFieldTypes  = M.empty
   _classDefns        = M.empty
 --  _memberSigs        = M.empty

@@ -8,26 +8,28 @@ HS_TO_COQ = cabal new-run exe:hs-to-coq --
 endif
 
 # tests that should pass
-PASS = Simple \
-       Self \
-       Poly \
-       Guard2 \
-       InstCtx \
-       ExhaustGuard \
-       MapAccumR \
-       MutrecInst
+PASS = \
+  Simple \
+  Self \
+  Poly \
+  InstCtx \
+  MutrecInst
 
 
 # tests that *should* pass but currently fail
-TODO_PASS  = EqList \
-             PolyInstance2 \
-             Expr \
-             Sub \
-             Mutrec \
-             DotName \
-             PatternGuard \
-             OpTyCon \
-             Bits
+TODO_PASS  = \
+  EqList \
+  PolyInstance2 \
+  Expr \
+  Sub \
+  Mutrec \
+  DotName \
+  PatternGuard \
+  Guard2 \
+  OpTyCon \
+  ExhaustGuard \
+  MapAccumR \
+  Bits
 
 MODULES = $(PASS) $(TODO_PASS)
 

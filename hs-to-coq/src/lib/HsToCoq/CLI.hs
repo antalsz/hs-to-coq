@@ -185,8 +185,8 @@ processFilesMain process = do
   edits      <- parseConfigFile editsFile     buildEdits     parseEditList
   
   inputFiles <- either (liftIO . die) pure <=< runExceptT $
-                  (++) <$> parseModulesFiles (conf^.modulesRoot.non "") (conf^.modulesFiles)
-                       <*> pure (conf^.directInputFiles)
+                  (++) <$> pure (conf^.directInputFiles)
+                       <*> parseModulesFiles (conf^.modulesRoot.non "") (conf^.modulesFiles)
   
   evalConversion renamings edits .
     maybe ($ stdout) (flip gWithFile WriteMode) (conf^.outputFile) $ \hOut -> do

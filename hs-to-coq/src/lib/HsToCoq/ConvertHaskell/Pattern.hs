@@ -3,7 +3,7 @@
 module HsToCoq.ConvertHaskell.Pattern (
   convertPat,  convertLPat,
   -- * Utility
-  Refutability(..), refutability, isSoleConstructor
+  Refutability(..), refutability, refutabilityMult, isRefutable, isSoleConstructor
 ) where
 
 import Control.Lens hiding ((<|))
@@ -175,6 +175,10 @@ data Refutability = Trivial (Maybe Ident) -- Variables (with `Just`), underscore
                   | Refutable             -- Nothing, Right x, (3,_)
                   deriving (Eq, Ord, Show, Read)
 
+isRefutable :: Refutability -> Bool
+isRefutable Refutable = True 
+isRefutable _ = False
+
 -- Module-local
 constructor_refutability :: ConversionMonad m => Qualid -> NonEmpty Pattern -> m Refutability
 constructor_refutability con args =
@@ -182,6 +186,10 @@ constructor_refutability con args =
     Nothing    -> pure Refutable -- Error
     Just True  -> maximum . (SoleConstructor <|) <$> traverse refutability args
     Just False -> pure Refutable
+
+refutabilityMult :: ConversionMonad m => MultPattern -> m Refutability
+refutabilityMult (MultPattern pats) =
+    maximum . (SoleConstructor <|) <$> traverse refutability pats
 
 refutability :: ConversionMonad m => Pattern -> m Refutability
 refutability (ArgsPat con args)         = constructor_refutability con args

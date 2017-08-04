@@ -546,6 +546,10 @@ isWild (GHC.AsPat _ lp)       = isWild (unLoc lp)
 isWild (GHC.TuplePat lps _ _) = all (isWild . unLoc) lps
 isWild _ = False
 
+isUnderscoreCoq :: Pattern -> Bool
+isUnderscoreCoq UnderscorePat = True
+isUnderscoreCoq _ = False
+
 isWildCoq :: Pattern -> Bool
 isWildCoq UnderscorePat     = True
 isWildCoq (QualidPat _)     = True
@@ -611,12 +615,24 @@ convertMatch binds GHC.Match{..} failure = do
 
   let extraGuards = map BoolGuard guards
   rhs <- convertLGRHSList extraGuards (grhssGRHSs m_grhss) failure
-
+  let typed_rhs = maybe id (flip HasType) oty rhs
   let scrut = binds <&> \arg -> MatchItem (Var arg) Nothing Nothing
-  pure $ Coq.Match scrut Nothing $
-        [ Equation [MultPattern pats] $ maybe id (flip HasType) oty rhs
-        , Equation [MultPattern (UnderscorePat <$ binds)] failure
-        ]
+  buildSingleEquationMatch scrut pats typed_rhs failure
+
+
+-- This short-cuts wildcard matches, and ensures that the failure case is only
+-- added if the pattern is refutable
+buildSingleEquationMatch :: ConversionMonad m =>
+    NonEmpty MatchItem -> NonEmpty Pattern -> Term -> Term -> m Term
+buildSingleEquationMatch scruts pats rhs failure
+    | all isUnderscoreCoq pats = pure rhs
+    | otherwise = do
+        ref <- refutabilityMult (MultPattern pats)
+        pure $ Coq.Match scruts Nothing $
+          [ Equation [MultPattern pats] rhs ] ++
+          [ Equation [MultPattern (UnderscorePat <$ scruts)] failure | isRefutable ref ]
+
+
 
 --------------------------------------------------------------------------------
 

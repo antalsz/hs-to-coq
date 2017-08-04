@@ -167,6 +167,9 @@ data Term = Forall Binders Term                                                 
           | MissingValue                                                                       -- ^@_@ – extra (a value we don't know how to fill in)
           deriving (Eq, Ord, Show, Read, Typeable, Data)
 
+infixr 7 `Arrow`
+infixl 8 `App`
+
 -- |@/arg/ ::=@
 data Arg = PosArg Term                                                                         -- ^@/term/@
          | NamedArg Ident Term                                                                 -- ^@( /ident/ := /term/ )@

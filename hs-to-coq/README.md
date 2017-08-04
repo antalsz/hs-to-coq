@@ -16,7 +16,7 @@ stack exec hs-to-coq -- -I $GHC_PATH/compiler -I $GHC_PATH/compiler/stage2 -I $G
 ## Example command line
 
 ```
-stack exec hs-to-coq -- -I ~/prog/ghc/compiler -I ~/prog/ghc/compiler/stage2 -I ~/prog/ghc/compiler/stage2/build -o test.v -p preamble.v -r renamings.txt -e edits.txt -m modules.txt -d ~/prog/ghc
+stack exec hs-to-coq -- -I ~/prog/ghc/compiler -I ~/prog/ghc/compiler/stage2 -I ~/prog/ghc/compiler/stage2/build -o test.v -p preamble.v -r renamings.txt -e edits.txt -m modules.txt -d ~/prog/ghc --ghc -DSTAGE=2
 ```
 
 ## GHC API

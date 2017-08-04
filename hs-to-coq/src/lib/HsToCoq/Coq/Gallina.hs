@@ -580,41 +580,42 @@ instance Gallina Term where
   renderGallina' p (Fun vars body) = maybeParen (p > funPrec) $
     group $ "fun" <+> render_args V vars <+> nest 2 ("=>" <!> renderGallina' funPrec body)
 
-  renderGallina' p (Fix fbs) = maybeParen (p > fixPrec) $
+  renderGallina' p (Fix fbs) = group $ maybeParen (p > fixPrec) $
     "fix" <+> renderGallina fbs
 
-  renderGallina' _p (Cofix cbs) = parens $
+  renderGallina' _p (Cofix cbs) = group $ parens $
     "cofix" <+> renderGallina cbs
 
-  renderGallina' p (Let var args oty val body) = maybeParen (p > letPrec) $
+  renderGallina' p (Let var args oty val body) = group $ maybeParen (p > letPrec) $
          "let" <+> group (   renderIdent var
                          <>  spaceIf args <> render_args_oty V args oty
                          <+> nest 2 (":=" <!> renderGallina val))
-    <!>  "in" <+> align (renderGallina body)
+               <+> "in"
+    <!>  align (renderGallina body)
 
-  renderGallina' p (LetFix def body) = maybeParen (p > letPrec) $
-    "let fix" <+> renderGallina def <!> "in" <+> align (renderGallina body)
+  renderGallina' p (LetFix def body) = group $ maybeParen (p > letPrec) $
+    "let fix" <+> renderGallina def <+> "in" <!> align (renderGallina body)
 
-  renderGallina' _p (LetCofix def body) = parens $
-    "let cofix" <+> renderGallina def <!> "in" <+> align (renderGallina body)
+  renderGallina' _p (LetCofix def body) = group $ parens $
+    "let cofix" <+> renderGallina def <+> "in" <!> align (renderGallina body)
 
-  renderGallina' _p (LetTuple vars orty val body) = parens $
+  renderGallina' _p (LetTuple vars orty val body) = group $ parens $
         "let" <+> group (   (parens . align . vsep . punctuate "," $ renderGallina <$> vars)
                         <>  render_opt_rtype orty
                         <+> nest 2 (":=" <!> renderGallina val))
-    <!> "in" <+> align (renderGallina body)
+    <+> "in" <!> align (renderGallina body)
 
-  renderGallina' _p (LetTick pat val body) = parens $
+  renderGallina' _p (LetTick pat val body) = group $ parens $
         "let" <+> align (group $   "'" <> align (renderGallina pat)
                                <+> nest 2 (":=" <!> renderGallina val))
-    <!> "in" <+> align (renderGallina body)
+    <+> "in" <!> align (renderGallina body)
 
-  renderGallina' _p (LetTickDep pat oin val rty body) = parens $
+  renderGallina' _p (LetTickDep pat oin val rty body) = group $ parens $
         "let" <+> align (group $   "'" <> align (renderGallina pat)
                                <>  render_in_annot oin
                                <+> nest 2 (":=" <!> renderGallina val
                                                 <>  render_rtype  rty))
-    <!> "in" <+> align (renderGallina body)
+    <+> "in" <!> align (renderGallina body)
 
   renderGallina' p (If c odrty t f) = maybeParen (p > ifPrec) $
         "if"   <+> align (renderGallina c <> render_opt_rtype odrty)
@@ -760,7 +761,7 @@ instance Gallina FixBody where
     hang 2 $
       renderIdent f </> align (    fillSep (renderGallina <$> args)
                               </?> (renderGallina <$> oannot))
-                    <>  render_opt_type oty </> ":=" <+> align (renderGallina def)
+                    <>  render_opt_type oty <!> ":=" <+> align (renderGallina def)
 
 instance Gallina CofixBody where
   renderGallina' _ (CofixBody f args oty def) =
@@ -880,10 +881,9 @@ instance Gallina Definition where
     LetDef            name args oty body -> renderDef "Let"                                name args oty body
     where
       renderDef def name args oty body =
-        hang 2 (def <+> renderIdent name
-                    <>  spaceIf args <> render_args_oty H args oty
-                    <+> (":=" </> renderGallina body)
-                    <>  ".")
+        hang 2 ((def <+> renderIdent name
+                     <>  spaceIf args <> render_args_oty H args oty
+                     <+> ":=") <$$> renderGallina body <>  ".")
 
 instance Gallina Inductive where
   renderGallina' _ (Inductive   bodies nots) = render_mutual_def "Inductive"   bodies nots

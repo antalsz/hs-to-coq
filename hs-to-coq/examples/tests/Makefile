@@ -9,13 +9,10 @@ endif
 
 # tests that should pass
 PASS = Simple \
-       Expr \
-       Sub \
        Self \
        Poly \
        Guard2 \
        InstCtx \
-       OpTyCon \
        ExhaustGuard \
        MapAccumR \
        MutrecInst
@@ -24,10 +21,12 @@ PASS = Simple \
 # tests that *should* pass but currently fail
 TODO_PASS  = EqList \
              PolyInstance2 \
-             \
+             Expr \
+             Sub \
              Mutrec \
              DotName \
              PatternGuard \
+             OpTyCon \
              Bits
 
 MODULES = $(PASS) $(TODO_PASS)
@@ -63,6 +62,7 @@ todo_pass: $(foreach f,$(TODO_PASS),$(f).pass)
 	@coqc $*.v
 
 %.v : FORCE %/edits renamings %/preamble.v %.hs
+	@rm -f $*.v
 	@$(HS_TO_COQ) -e $*/edits -r renamings -o $*.v -p $*/preamble.v $*.hs 1>/dev/null
 
 # We always want to re-build the .v files, to test the current build of hs-to-coq

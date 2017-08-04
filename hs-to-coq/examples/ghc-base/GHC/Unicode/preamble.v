@@ -1,3 +1,5 @@
+Axiom patternFailure : forall {a}, a.
+
 Require Import GHC.Prim.
 Require Import GHC.Char.
 Require Import GHC.Enum.

@@ -1,3 +1,5 @@
+Axiom patternFailure : forall {a}, a.
+
 
 Require Import Data.Maybe.
 Require Import GHC.Enum.

@@ -1,3 +1,5 @@
+Axiom patternFailure : forall {a}, a.
+
 Require Import Data.Maybe.
 Require Import Data.Bits.  (*       ( (.&.) )     *)
 Require Import Data.Char.  (*       ( isSpace )   *)

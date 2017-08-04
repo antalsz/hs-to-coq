@@ -1,3 +1,5 @@
+Axiom patternFailure : forall {a}, a.
+
 Require Export Prim.
 
 Set Implicit Arguments.

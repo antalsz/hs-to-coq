@@ -699,10 +699,8 @@ instance Gallina Term where
   renderGallina' _ (Bang t) =
     char '!' <>  renderGallina t
 
-
-
   renderGallina' _ MissingValue =
-    string "_(*MissingValue*)"
+    string "patternFailure"
 
 instance Gallina Arg where
   renderGallina' p (PosArg t) =

@@ -13,6 +13,9 @@ PASS = \
   Self \
   Poly \
   InstCtx \
+  Guard2 \
+  ExhaustGuard \
+  MapAccumR \
   MutrecInst
 
 
@@ -25,10 +28,7 @@ TODO_PASS  = \
   Mutrec \
   DotName \
   PatternGuard \
-  Guard2 \
   OpTyCon \
-  ExhaustGuard \
-  MapAccumR \
   Bits
 
 MODULES = $(PASS) $(TODO_PASS)

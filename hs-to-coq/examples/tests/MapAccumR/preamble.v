@@ -1,3 +1,5 @@
+Axiom patternFailure : forall {a}, a.
+
 Require Export Coq.Lists.List.
 
 Set Implicit Arguments.

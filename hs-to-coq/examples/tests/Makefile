@@ -29,6 +29,7 @@ TODO_PASS  = \
   Mutrec \
   DotName \
   OpTyCon \
+  FTP \
   Bits
 
 MODULES = $(PASS) $(TODO_PASS)

@@ -15,6 +15,7 @@ PASS = \
   InstCtx \
   Guard2 \
   ExhaustGuard \
+  PatternGuard \
   MapAccumR \
   MutrecInst
 
@@ -27,7 +28,6 @@ TODO_PASS  = \
   Sub \
   Mutrec \
   DotName \
-  PatternGuard \
   OpTyCon \
   Bits
 

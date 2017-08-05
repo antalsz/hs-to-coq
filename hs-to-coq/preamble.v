@@ -166,7 +166,7 @@ Class Foldable (t : Type -> Type) := {
   foldMap : forall {a m} `{Monoid m}, (a -> m) -> t a -> m
 }.
 
-Class Traversable (t : Type -> Type) := {
+Class Traversable (t : Type -> Type) `{Functor t} `{Foldable t}  := {
   traverse : forall {a b f} `{Applicative f}, (a -> f b) -> t a -> f (t b)
 }.
 

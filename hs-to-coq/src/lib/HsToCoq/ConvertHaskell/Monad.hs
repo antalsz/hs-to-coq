@@ -136,6 +136,8 @@ builtInClasses =
         ]
     , ClassDefinition "Traversable"
         [ Inferred Explicit (Ident "t")
+        , Generalized Implicit (App1 (Var "Functor") (Var "t"))
+        , Generalized Implicit (App1 (Var "Foldable") (Var "t"))
         ]
         Nothing
         ["traverse" =:

@@ -30,6 +30,7 @@ TODO_PASS  = \
   DotName \
   OpTyCon \
   FTP \
+  Successors \
   Bits
 
 MODULES = $(PASS) $(TODO_PASS)

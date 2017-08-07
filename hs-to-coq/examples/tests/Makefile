@@ -66,9 +66,12 @@ todo_pass: $(foreach f,$(TODO_PASS),$(f).pass)
 %.vo : %.v
 	@coqc $*.v
 
-%.v : FORCE %/edits renamings %/preamble.v %.hs
+.SECONDEXPANSION:
+%.v : FORCE $$(wildcard $*/edits) renamings $$(wildcard $*/preamble.v) %.hs
 	@rm -f $*.v
-	@$(HS_TO_COQ) -e $*/edits -r renamings -o $*.v -p $*/preamble.v $*.hs 1>/dev/null
+	@if [ -e $*/preamble.v ]; then P_ARG="-p $*/preamble.v"; else P_ARG=; fi;\
+	if [ -e $*/edits ]; then E_ARG="-e $*/edits"; else E_ARG=; fi;\
+	$(HS_TO_COQ) $${E_ARG} -r renamings -o $*.v $${P_ARG} $*.hs 1>/dev/null
 
 # We always want to re-build the .v files, to test the current build of hs-to-coq
 FORCE:

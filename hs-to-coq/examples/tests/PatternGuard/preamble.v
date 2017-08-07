@@ -1,15 +1,8 @@
-Axiom patternFailure : forall {a}, a.
-
 Require Export Coq.Lists.List.
 Require Export ZArith.
 
 Definition Int : Type := Z.
 
-
-Set Implicit Arguments.
-Generalizable All Variables.
-Unset Strict Implicit.
-Unset Printing Implicit Defensive.
 
 Inductive Ordering : Type := Mk_LT : Ordering
                           |  Mk_EQ : Ordering

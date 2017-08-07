@@ -1,5 +1,3 @@
-Axiom patternFailure : forall {a}, a.
-
 Require Export Coq.Lists.List.
 Axiom Char     : Type.
 Definition String := list Char.
@@ -21,7 +19,3 @@ Fixpoint hs_string__ (s : String.string) : String :=
 Notation "'&' s" := (hs_string__ s) (at level 1, format "'&' s").
 Axiom error : forall {A : Type}, String -> A.
 
-Set Implicit Arguments.
-Generalizable All Variables.
-Unset Strict Implicit.
-Unset Printing Implicit Defensive.

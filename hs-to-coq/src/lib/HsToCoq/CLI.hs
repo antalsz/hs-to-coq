@@ -53,6 +53,7 @@ import HsToCoq.Util.Messages
 import HsToCoq.PrettyPrint hiding ((</>))
 import HsToCoq.Coq.Gallina
 import HsToCoq.Coq.FreeVars
+import HsToCoq.Coq.Preamble
 import HsToCoq.ProcessFiles
 import HsToCoq.ConvertHaskell
 import HsToCoq.ConvertHaskell.Parameters.Renamings
@@ -234,12 +235,15 @@ processFilesMainRn process = do
   
   evalConversion renamings edits .
     maybe ($ stdout) (flip gWithFile WriteMode) (conf^.outputFile) $ \hOut -> do
+      liftIO $ do T.hPutStr hOut staticPreamble
+                  hFlush    hOut
+
       for_ (conf^.preambleFile) $ \file -> liftIO $ do
         hPutStrLn hOut "(* Preamble *)"
         hPutStr   hOut =<< readFile file
         hPutStrLn hOut ""
         hFlush    hOut
-      
+
       traverse_ (process hOut) =<< tcRnFiles dflags inputFiles
       liftIO $ hFlush hOut
 

@@ -51,6 +51,7 @@ library
                      , Control.Monad.Variables
                      , Control.Monad.Trans.Parse
                      , HsToCoq.PrettyPrint
+                     , HsToCoq.Coq.Preamble
                      , HsToCoq.Coq.Gallina
                      , HsToCoq.Coq.Gallina.Util
                      , HsToCoq.Coq.FreeVars

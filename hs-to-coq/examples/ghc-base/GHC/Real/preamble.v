@@ -1,5 +1,3 @@
-Axiom patternFailure : forall {a}, a.
-
 Require Import GHC.Base.
 Require Import GHC.Num.
 Require Import GHC.List.

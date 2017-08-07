@@ -1,12 +1,5 @@
-Axiom patternFailure : forall {a}, a.
-
 Require Import GHC.Base.
 Require Import GHC.Num.
-
-Set Implicit Arguments.
-Generalizable All Variables.
-Unset Strict Implicit.
-Unset Printing Implicit Defensive.
 
 (* Converted data type declarations: *)
 Inductive Down a : Type := Mk_Down : a -> Down a.

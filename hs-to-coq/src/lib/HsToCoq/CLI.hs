@@ -205,6 +205,9 @@ processFilesMain process = do
   
   evalConversion renamings edits .
     maybe ($ stdout) (flip gWithFile WriteMode) (conf^.outputFile) $ \hOut -> do
+      liftIO $ do T.hPutStr hOut staticPreamble
+                  hFlush    hOut
+
       for_ (conf^.preambleFile) $ \file -> liftIO $ do
         hPutStrLn hOut "(* Preamble *)"
         hPutStr   hOut =<< readFile file
@@ -330,11 +333,14 @@ processFilesMainRn' process = do
                        <*> pure (conf^.directInputFiles)
   
   preamble <- liftIO $ traverse readFile (conf^.preambleFile)
-  let printPreamble hOut = liftIO . for_ preamble $ \contents -> do
-        hPutStrLn hOut "(* Preamble *)"
-        hPutStr   hOut contents
-        hPutStrLn hOut ""
-        hFlush    hOut
+  let printPreamble hOut = liftIO $ do
+        liftIO $ do T.hPutStr hOut staticPreamble
+                    hFlush    hOut
+        for_ preamble $ \contents -> do
+            hPutStrLn hOut "(* Preamble *)"
+            hPutStr   hOut contents
+            hPutStrLn hOut ""
+            hFlush    hOut
   
   withModulePrinter <- case conf^.outputFile of
     Nothing  -> printPreamble stdout $> \mod act -> do

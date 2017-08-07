@@ -546,11 +546,11 @@ ocat V = vsep
 
 -- Module-local
 render_args :: (Functor f, Foldable f, Gallina a) => Orientation -> f a -> Doc
-render_args o = align . ocat o . fmap renderGallina
+render_args o = group . align . ocat o . fmap renderGallina
 
 -- Module-local
 render_args' :: (Functor f, Foldable f, Gallina a) => Int -> Orientation -> f a -> Doc
-render_args' p o = align . ocat o . fmap (renderGallina' p)
+render_args' p o = group . align . ocat o . fmap (renderGallina' p)
 
 
 

@@ -24,6 +24,7 @@ PASS = \
 TODO_PASS  = \
   EqList \
   PolyInstance2 \
+  PartialAppliedPolyDataCon \
   Expr \
   Sub \
   Mutrec \

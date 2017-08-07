@@ -75,6 +75,7 @@ data ProgramArgs = ProgramArgs { outputFileArg        :: Maybe FilePath
                                , modulesFilesArgs     :: [FilePath]
                                , modulesRootArg       :: Maybe FilePath
                                , includeDirsArgs      :: [FilePath]
+                               , ghcTreeDirArgs       :: [FilePath]
                                , ghcOptionsArgs       :: [String]
                                , directInputFilesArgs :: [FilePath] }
                  deriving (Eq, Ord, Show, Read)
@@ -115,6 +116,10 @@ argParser = ProgramArgs <$> optional (strOption   $  long    "output"
                                                   <> metavar "DIR"
                                                   <> help    "Directory to search for CPP `#include's")
                         
+                        <*> many     (strOption   $  long    "ghc-tree"
+                                                  <> metavar "DIR"
+                                                  <> help    "Add the usual ghc build tree subdirectories to the module search path")
+                        
                         <*> many     (strOption   $  long    "ghc"
                                                   <> metavar "ARGUMENT"
                                                   <> help    "Option to pass through to GHC")
@@ -136,13 +141,22 @@ data Config = Config { _outputFile       :: !(Maybe FilePath)
             deriving (Eq, Ord, Show, Read)
 makeLenses ''Config
 
+ghcInputDirs :: FilePath -> [FilePath]
+ghcInputDirs base = map ((base </> "compiler") </>) $ words
+    "backpack basicTypes cmm codeGen coreSyn deSugar ghci \
+    \hsSyn iface llvmGen main nativeGen parser prelude \
+    \profiling rename simplCore simplStg specialise stgSyn \
+    \stranal typecheck types utils vectorise stage2/build"
+
 processArgs :: GhcMonad m => m (DynFlags, Config)
 processArgs = do
   ProgramArgs{..} <- liftIO $ customExecParser defaultPrefs{prefMultiSuffix="..."} argParserInfo
   
-  let ghcArgs = let locate opt = mkGeneralLocated $ "command line (" ++ opt ++ ")"
-                in map (locate "-I" . ("-I" ++)) includeDirsArgs ++
-                   map (locate "--ghc")          ghcOptionsArgs
+  let ghcArgs = map (locate "-I" . ("-I" ++))          includeDirsArgs ++
+                map (locate "--ghc-tree" . ("-i" ++))  (concatMap ghcInputDirs ghcTreeDirArgs) ++
+                map (locate "--ghc")                   ghcOptionsArgs
+        where locate opt = mkGeneralLocated $ "command line (" ++ opt ++ ")"
+
   
   (dflags, ghcRest, warnings) <- (parseDynamicFlagsCmdLine ?? ghcArgs) =<< getSessionDynFlags
   printAllIfPresent unLoc "Command-line argument warning" warnings

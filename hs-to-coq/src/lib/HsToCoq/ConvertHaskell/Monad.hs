@@ -15,6 +15,9 @@ module HsToCoq.ConvertHaskell.Monad (
   fresh, gensym,
   rename,
   localizeConversionState,
+  -- * Access to the TcGblEnv
+  setTcGblEnv,
+  lookupTyThing,
   -- * Errors
   throwProgramError, convUnsupported, editFailure,
   -- * Fixity
@@ -36,6 +39,9 @@ import           Data.Map.Strict (Map)
 import qualified Data.Map.Strict as M
 
 import GHC
+import TcRnTypes (TcGblEnv, tcg_type_env)
+import NameEnv (lookupNameEnv)
+
 import Panic
 import HsToCoq.Util.GHC.Module ()
 
@@ -67,8 +73,8 @@ data ConversionState = ConversionState { __currentModule    :: !(Maybe ModuleNam
                                        , _defaultMethods    :: !(Map Ident (Map Ident Term))
                                        , _fixities          :: !(Map Ident (Coq.Associativity, Coq.Level))
                                        , __unique           :: !Natural
+                                       , _tcGblEnv          :: TcGblEnv
                                        }
-               deriving (Eq, Ord, Show)
 makeLenses ''ConversionState
 -- '_currentModule' and '_unique' are not exported
 
@@ -172,6 +178,7 @@ evalConversion _renamings _edits = evalVariablesT . (evalStateT ?? ConversionSta
                         arg       = Inferred Coq.Explicit . Ident
 
   _fixities         = M.empty
+  _tcGblEnv         = error "tcGblEnv not set yet"
   __unique = 0
 
 withCurrentModuleOrNone :: ConversionMonad m => Maybe ModuleName -> m a -> m a
@@ -244,3 +251,16 @@ recordFixity id assoc = do
    case M.lookup id m of
      Just _v  -> throwProgramError $ "Multiple fixities for " ++ show id
      Nothing -> put (state { _fixities = (M.insert id assoc m) })
+
+-- tcGblEnv stuff
+
+setTcGblEnv :: ConversionMonad m => TcGblEnv -> m ()
+setTcGblEnv = assign tcGblEnv
+
+lookupTyThing :: ConversionMonad m => GHC.Name -> m (Maybe GHC.TyThing)
+lookupTyThing name = do
+    env <- use tcGblEnv
+    -- Lookup in this module
+    case lookupNameEnv (tcg_type_env env) name of
+        Just thing -> return (Just thing)
+        Nothing    -> lookupName name

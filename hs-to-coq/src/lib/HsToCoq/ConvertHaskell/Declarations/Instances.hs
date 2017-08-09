@@ -58,6 +58,14 @@ convertInstanceName =   gensym
   where withGhcException :: (GhcException -> a) -> (GhcException -> a)
         withGhcException = id
 
+-- Looks up what GHC knows about this class (given by an instance head)
+findHsClass :: ConversionMonad m => LHsSigType GHC.Name -> m Class
+findHsClass insthead = case getLHsInstDeclClass_maybe insthead of
+    Just className -> lookupTyThing (unLoc className) >>= \case
+        Just (ATyCon tc) | Just cls <- tyConClass_maybe tc -> return cls
+        _  -> convUnsupported "Lookup did not yield a class"
+    Nothing -> convUnsupported "Cannot find class name in instance head"
+
 --------------------------------------------------------------------------------
 {- Haskell:
       instance Functor ((->) r)
@@ -76,8 +84,9 @@ convertInstanceName =   gensym
 -}
 data InstanceInfo = InstanceInfo { instanceName  :: !Ident
                                  , instanceHead  :: !Term
-                                 , instanceClass :: !Ident }
-                  deriving (Eq, Ord, Show, Read)
+                                 , instanceClass :: !Ident
+                                 , instanceHsClass :: Class}
+                  deriving (Eq, Ord)
 
 convertClsInstDeclInfo :: ConversionMonad m => ClsInstDecl GHC.Name -> m InstanceInfo
 convertClsInstDeclInfo ClsInstDecl{..} = do
@@ -86,6 +95,7 @@ convertClsInstDeclInfo ClsInstDecl{..} = do
   instanceClass <- maybe (convUnsupported "strangely-formed instance heads")
                          (pure . renderOneLineT . renderGallina)
                     $ termHead instanceHead
+  instanceHsClass <- findHsClass cid_poly_ty
 
   pure InstanceInfo{..}
 

@@ -497,7 +497,7 @@ renderIdent :: Ident -> Doc
 renderIdent = text
 
 renderAccessIdent :: AccessIdent -> Doc
-renderAccessIdent = text . T.cons ':'
+renderAccessIdent = text . T.cons '.'
 
 renderNum :: Num -> Doc
 renderNum = integer . toInteger

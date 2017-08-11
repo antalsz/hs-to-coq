@@ -1,7 +1,7 @@
 {-# LANGUAGE LambdaCase, TemplateHaskell #-}
 
 module HsToCoq.ConvertHaskell.Parameters.Edits (
-  Edits(..), typeSynonymTypes, dataTypeArguments, redefinitions, skipped, moduleRenamings, additionalScopes,
+  Edits(..), typeSynonymTypes, dataTypeArguments, redefinitions, skipped, moduleRenamings, additionalScopes, orders,
   DataTypeArguments(..), dtParameters, dtIndices,
   CoqDefinition(..), definitionSentence,
   ScopePlace(..),
@@ -9,15 +9,18 @@ module HsToCoq.ConvertHaskell.Parameters.Edits (
   addFresh
 ) where
 
+import Prelude hiding (tail)
+
 import Control.Lens
 
 import Control.Monad
 import Data.Semigroup
-import Data.List.NonEmpty (NonEmpty(..))
+import Data.List.NonEmpty (NonEmpty(..), toList, tail)
 import qualified Data.Text as T
 
-import Data.Map (Map)
-import Data.Set (Set)
+import Data.Map (Map, singleton, unionWith)
+import Data.Set (Set, singleton, union)
+import Data.Tuple
 
 import HsToCoq.Coq.Gallina
 import HsToCoq.ConvertHaskell.Parameters.Renamings
@@ -49,6 +52,7 @@ data Edit = TypeSynonymTypeEdit   Ident Ident
           | SkipEdit              Ident
           | ModuleRenamingEdit    Ident NamespacedIdent Ident
           | AdditionalScopeEdit   ScopePlace Ident Ident
+          | OrderEdit             (NonEmpty Ident)
           deriving (Eq, Ord, Show, Read)
 
 addFresh :: At m
@@ -61,21 +65,26 @@ addFresh lens err key val = lens.at key %%~ \case
                               Just  _ -> Left  $ err key
                               Nothing -> Right $ Just val
 
+addEdge :: (Ord k, Ord v) => ASetter' s (Map k (Set v)) -> (k, v) -> s -> s
+addEdge lens (from, to) = lens %~ unionWith union (Data.Map.singleton from (Data.Set.singleton to))
+
 data Edits = Edits { _typeSynonymTypes  :: !(Map Ident Ident)
                    , _dataTypeArguments :: !(Map Ident DataTypeArguments)
                    , _redefinitions     :: !(Map Ident CoqDefinition)
                    , _skipped           :: !(Set Ident)
                    , _moduleRenamings   :: !(Map Ident Renamings)
-                   , _additionalScopes  :: !(Map (ScopePlace, Ident) Ident) }
+                   , _additionalScopes  :: !(Map (ScopePlace, Ident) Ident)
+                   , _orders            :: !(Map Ident (Set Ident))
+                   }
            deriving (Eq, Ord, Show, Read)
 makeLenses ''Edits
 
 instance Semigroup Edits where
-  Edits tst1 dta1 rdf1 skp1 mrns1 ads1 <> Edits tst2 dta2 rdf2 skp2 mrns2 ads2 =
-    Edits (tst1 <> tst2) (dta1 <> dta2) (rdf1 <> rdf2) (skp1 <> skp2) (mrns1 <> mrns2) (ads1 <> ads2)
+  Edits tst1 dta1 rdf1 skp1 mrns1 ads1 o1 <> Edits tst2 dta2 rdf2 skp2 mrns2 ads2 o2 =
+    Edits (tst1 <> tst2) (dta1 <> dta2) (rdf1 <> rdf2) (skp1 <> skp2) (mrns1 <> mrns2) (ads1 <> ads2) (o1 <> o2)
 
 instance Monoid Edits where
-  mempty  = Edits mempty mempty mempty mempty mempty mempty
+  mempty  = Edits mempty mempty mempty mempty mempty mempty mempty
   mappend = (<>)
 
 -- Module-local'
@@ -94,6 +103,7 @@ addEdit = \case -- To bring the `where' clause into scope everywhere
   SkipEdit              what              -> addFresh skipped                             (duplicate_for  "skip requests")                               what         ()
   ModuleRenamingEdit    mod        hs coq -> addFresh (moduleRenamings.at mod.non mempty) (duplicate_for' ("renaming in module " ++. mod) prettyNSIdent) hs           coq
   AdditionalScopeEdit   place name scope  -> addFresh additionalScopes                    (duplicate_for' "addition of a scope"           prettyScoped)  (place,name) scope
+  OrderEdit             idents            -> Right . appEndo (foldMap (Endo . addEdge orders . swap) (adjacents idents))
   where
     name (CoqDefinitionDef (DefinitionDef _ x _ _ _))                = x
     name (CoqDefinitionDef (LetDef          x _ _ _))                = x
@@ -112,3 +122,6 @@ addEdit = \case -- To bring the `where' clause into scope everywhere
 
 buildEdits :: Foldable f => f Edit -> Either String Edits
 buildEdits = foldM (flip addEdit) mempty
+
+adjacents :: NonEmpty a -> [(a,a)]
+adjacents xs = zip (toList xs) (tail xs)

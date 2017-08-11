@@ -44,6 +44,7 @@ import HsToCoq.ConvertHaskell.Parameters.Parsers.Lexing
   redefine      { TokWord    "redefine"    }
   skip          { TokWord    "skip"        }
   rename        { TokWord    "rename"      }
+  order         { TokWord    "order"       }
   module        { TokWord    "module"      }
   add           { TokWord    "add"         }
   scope         { TokWord    "scope"       }
@@ -209,6 +210,7 @@ Edit :: { Edit }
   | skip Op                                       { SkipEdit              $2                   }
   | rename module RawHsIdent Renaming             { ModuleRenamingEdit    $3 (fst $4) (snd $4) }
   | add scope Scope for ScopePlace Word           { AdditionalScopeEdit   $5 $6 $3             }
+  | order Some(Word)                              { OrderEdit             $2  }
 
 Edits :: { [Edit] }
   : Lines(Edit)    { $1 }

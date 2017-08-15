@@ -71,7 +71,7 @@ convertImportItem :: ConversionMonad m => IE GHC.Name -> m [Ident]
 convertImportItem (IEVar       (L _ x)) = pure <$> var ExprNS x
 convertImportItem (IEThingAbs  (L _ x)) = pure <$> var TypeNS x
 convertImportItem (IEThingAll  (L _ _)) =
-  convUnsupported "(..)-exports"
+  pure [] -- FIXME convUnsupported "(..)-exports"
 convertImportItem (IEThingWith (L _ x) NoIEWildcard subitems []) =
   (:) <$> var TypeNS x <*> traverse (var ExprNS . unLoc) subitems
 convertImportItem (IEGroup          _ _)                  = pure [] -- Haddock
@@ -123,7 +123,7 @@ importDeclSentences ConvertedImportDecl{..} = do
                  NotationIdentBinding imp (Qualid $ Qualified mod imp)
              | imp <- importItems ]
     Just (ExplicitHiding _) ->
-      convUnsupported "import hiding"
+      pure [] -- FIXME convUnsupported "import hiding"
     Nothing ->
       pure []
 

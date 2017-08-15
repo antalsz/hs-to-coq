@@ -71,6 +71,7 @@ data ProgramArgs = ProgramArgs { outputFileArg        :: Maybe FilePath
                                , editsFileArg         :: Maybe FilePath
                                , modulesFilesArgs     :: [FilePath]
                                , modulesRootArg       :: Maybe FilePath
+                               , importDirsArgs       :: [FilePath]
                                , includeDirsArgs      :: [FilePath]
                                , ghcOptionsArgs       :: [String]
                                , directInputFilesArgs :: [FilePath] }
@@ -107,6 +108,11 @@ argParser = ProgramArgs <$> optional (strOption   $  long    "output"
                                                   <> metavar "DIR"
                                                   <> help    "The directory the module tree files' contents are rooted at")
                         
+                        <*> many     (strOption   $  long    "import-dir"
+                                                  <> short   'i'
+                                                  <> metavar "DIR"
+                                                  <> help    "Directory to search for Haskell modules")
+                        
                         <*> many     (strOption   $  long    "include-dir"
                                                   <> short   'I'
                                                   <> metavar "DIR"
@@ -133,12 +139,13 @@ data Config = Config { _outputFile       :: !(Maybe FilePath)
             deriving (Eq, Ord, Show, Read)
 makeLenses ''Config
 
-processArgs :: GhcMonad m => m (DynFlags, Config)
+processArgs :: GhcMonad m => m Config
 processArgs = do
   ProgramArgs{..} <- liftIO $ customExecParser defaultPrefs{prefMultiSuffix="..."} argParserInfo
   
   let ghcArgs = let locate opt = mkGeneralLocated $ "command line (" ++ opt ++ ")"
-                in map (locate "-I" . ("-I" ++)) includeDirsArgs ++
+                in map (locate "-i" . ("-i" ++)) importDirsArgs ++
+                   map (locate "-I" . ("-I" ++)) includeDirsArgs ++
                    map (locate "--ghc")          ghcOptionsArgs
   
   (dflags, ghcRest, warnings) <- (parseDynamicFlagsCmdLine ?? ghcArgs) =<< getSessionDynFlags
@@ -147,15 +154,15 @@ processArgs = do
   
   void $ setSessionDynFlags dflags
   
-  pure (dflags, Config { _outputFile       = if outputFileArg == Just "-"
-                                             then Nothing
-                                             else outputFileArg
-                       , _preambleFile     = preambleFileArg
-                       , _renamingsFile    = renamingsFileArg
-                       , _editsFile        = editsFileArg
-                       , _modulesFiles     = modulesFilesArgs
-                       , _modulesRoot      = modulesRootArg
-                       , _directInputFiles = directInputFilesArgs })
+  pure $ Config { _outputFile       = if outputFileArg == Just "-"
+                                      then Nothing
+                                      else outputFileArg
+                , _preambleFile     = preambleFileArg
+                , _renamingsFile    = renamingsFileArg
+                , _editsFile        = editsFileArg
+                , _modulesFiles     = modulesFilesArgs
+                , _modulesRoot      = modulesRootArg
+                , _directInputFiles = directInputFilesArgs }
 
 parseModulesFiles :: (MonadIO m, MonadError String m)
                   => FilePath -> [FilePath] -> m [FilePath]
@@ -174,7 +181,7 @@ processFilesMain :: GhcMonad m
                  => (WithModulePrinter (ConversionT m) () -> [TypecheckedModule] -> ConversionT m ())
                  -> m ()
 processFilesMain process = do
-  (dflags, conf) <- processArgs
+  conf <- processArgs
   
   let parseConfigFile file builder parser =
         maybe (pure mempty) ?? (conf^.file) $ \filename -> liftIO $
@@ -209,7 +216,7 @@ processFilesMain process = do
         act hOut
 
   evalConversion renamings edits $
-    traverse_ (process withModulePrinter) =<< processFiles dflags inputFiles
+    traverse_ (process withModulePrinter) =<< processFiles inputFiles
 
 printConvertedModule :: MonadIO m
                      => WithModulePrinter m ()

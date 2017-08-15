@@ -36,18 +36,8 @@ processFileFlags = parseFileFlags $ \restOpts optWarns -> do
   printAllIfPresent unLoc "Leftover option" restOpts
   printAllIfPresent unLoc "Option warning"  optWarns
 
-processFiles :: GhcMonad m => DynFlags -> [FilePath] -> m (Maybe [TypecheckedModule])
-processFiles dflags files = do
-  -- TODO RENAMER command-line argument
-  let ghcPaths = map ("/Users/antal/prog/ghc-8.0.2/compiler/" ++)
-               $ words "backpack basicTypes cmm codeGen coreSyn deSugar ghci \
-                       \hsSyn iface llvmGen main nativeGen parser prelude \
-                       \profiling rename simplCore simplStg specialise stgSyn \
-                       \stranal typecheck types utils vectorise stage2/build"
-  _ <- setSessionDynFlags $ dflags{ importPaths = ghcPaths ++ importPaths dflags
-                                  -- TODO: Do these go here or elsewhere?
-                                  , hscTarget   = HscNothing
-                                  , ghcLink     = NoLink }
+processFiles :: GhcMonad m => [FilePath] -> m (Maybe [TypecheckedModule])
+processFiles files = do
   traverse_ (addTarget <=< (guessTarget ?? Nothing)) files
   load LoadAllTargets >>= \case
     Succeeded ->

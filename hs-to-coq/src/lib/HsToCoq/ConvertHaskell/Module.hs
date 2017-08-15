@@ -9,12 +9,14 @@ module HsToCoq.ConvertHaskell.Module (
   ConvertedModuleDeclarations(..), convertHsGroup,
   -- * Convert import statements
   Qualification(..), ImportSpec(..), ConvertedImportDecl(..),
-  convertImportDecl
+  convertImportDecl, importDeclSentences,
 ) where
 
 import Control.Lens
 
+import HsToCoq.Util.Function
 import Data.Traversable
+import HsToCoq.Util.Traversable
 import Data.Maybe
 import Data.List.NonEmpty (NonEmpty(..))
 import HsToCoq.Util.Containers
@@ -23,8 +25,11 @@ import Control.Monad
 import Control.Monad.IO.Class
 import qualified Data.Map as M
 
+import qualified Data.Text as T
+
 import HsToCoq.Coq.FreeVars
 import HsToCoq.Coq.Gallina
+import HsToCoq.Coq.Gallina.Util
 
 import GHC hiding (Name)
 import qualified GHC
@@ -44,18 +49,14 @@ import HsToCoq.ConvertHaskell.Declarations.Instances
 import HsToCoq.ConvertHaskell.Declarations.Notations
 import HsToCoq.ConvertHaskell.Axiomatize
 
-import FieldLabel
-import HsToCoq.Util.GHC (ghcPpr, ghcPutPpr)
-
 --------------------------------------------------------------------------------
 
 data Qualification = UnqualifiedImport
                    | QualifiedImport
                    deriving (Eq, Ord, Enum, Bounded, Show, Read)
 
--- TODO
-data ImportSpec = ExplicitImports [()]
-                | ExplicitHiding  [()]
+data ImportSpec = ExplicitImports [Ident]
+                | ExplicitHiding  [Ident]
                 deriving (Eq, Ord, Show, Read)
 
 data ConvertedImportDecl =
@@ -65,10 +66,12 @@ data ConvertedImportDecl =
                       , convImportSpec      :: !(Maybe ImportSpec) }
   deriving (Eq, Ord, Show)
 
+-- TODO: Import all type class instances
 convertImportItem :: ConversionMonad m => IE GHC.Name -> m [Ident]
 convertImportItem (IEVar       (L _ x)) = pure <$> var ExprNS x
 convertImportItem (IEThingAbs  (L _ x)) = pure <$> var TypeNS x
-convertImportItem (IEThingAll  (L _ x)) = undefined -- TODO
+convertImportItem (IEThingAll  (L _ _)) =
+  convUnsupported "(..)-exports"
 convertImportItem (IEThingWith (L _ x) NoIEWildcard subitems []) =
   (:) <$> var TypeNS x <*> traverse (var ExprNS . unLoc) subitems
 convertImportItem (IEGroup          _ _)                  = pure [] -- Haddock
@@ -92,16 +95,41 @@ convertImportDecl ImportDecl{..} = do
   -- Also, don't treat the implicit Prelude import specially (@ideclImplicit@).
   convImportSpec <- for ideclHiding $ \(hiding, L _ spec) ->
                       (if hiding then ExplicitHiding else ExplicitImports) <$>
-                        traverse ((*>) <$> (liftIO . print <=< traverse (traverse ghcPpr))  <*> ghcPutPpr) spec
+                        foldTraverse (convertImportItem . unLoc) spec
   pure ConvertedImportDecl{..}
 
-deriving instance (Show l, Show e) => Show (GenLocated l e)
-deriving instance Show a => Show (FieldLbl a)
-deriving instance Show IEWildcard
-deriving instance Show name => Show (IE name)
-deriving instance Functor IE
-deriving instance Foldable IE
-deriving instance Traversable IE
+importDeclSentences :: ConversionMonad m => ConvertedImportDecl -> m [Sentence]
+importDeclSentences ConvertedImportDecl{..} = do
+  let moduleToQualid = maybe (throwProgramError "malformed module name") pure
+                     . identToQualid . T.pack . moduleNameString
+  
+  mod <- moduleToQualid convImportedModule
+  let importSentence = ModuleSentence $ Require Nothing
+                                                (case convImportQualified of
+                                                   UnqualifiedImport -> Just Import
+                                                   QualifiedImport   -> Nothing)
+                                                (mod :| [])
+  
+  asSentence <- case convImportAs of
+    Just short -> do
+      coqShort <- moduleToQualid short
+      pure [ModuleSentence $ ModuleAssignment coqShort mod]
+    Nothing    ->
+      pure []
+  
+  importItems <- case convImportSpec of
+    Just (ExplicitImports importItems) -> do
+      pure $ [ NotationSentence . NotationBinding $
+                 NotationIdentBinding imp (Qualid $ Qualified mod imp)
+             | imp <- importItems ]
+    Just (ExplicitHiding _) ->
+      convUnsupported "import hiding"
+    Nothing ->
+      pure []
+
+  pure $  importSentence
+       :  asSentence
+       ++ importItems
 
 --------------------------------------------------------------------------------
 
@@ -161,23 +189,30 @@ convertHsGroup mod HsGroup{..} = do
 
 data ConvertedModule =
   ConvertedModule { convModName         :: !ModuleName
-                  , convModImports      :: ![ConvertedImportDecl]
+                  , convModImports      :: ![Sentence]
                   , convModTyClDecls    :: ![Sentence]
                   , convModValDecls     :: ![Sentence]
                   , convModClsInstDecls :: ![Sentence] }
   deriving (Eq, Ord, Show)
 
-convertModule :: ConversionMonad m => ModuleName -> RenamedSource -> m ConvertedModule
-convertModule convModName (group, imports, _exports, _docstring) = do
+-- Module-local
+convert_module_with_imports :: ConversionMonad m
+                            => ModuleName -> RenamedSource ->
+                            m (ConvertedModule, [ConvertedImportDecl])
+convert_module_with_imports convModName (group, imports, _exports, _docstring) = do
   ConvertedModuleDeclarations { convertedTyClDecls    = convModTyClDecls
                               , convertedValDecls     = convModValDecls
                               , convertedClsInstDecls = convModClsInstDecls }
     <- convertHsGroup convModName group
-  convModImports <- traverse (convertImportDecl . unLoc) imports
-  pure ConvertedModule{..}
+  convImports    <- traverse (convertImportDecl . unLoc) imports
+  convModImports <- foldTraverse importDeclSentences convImports
+  pure (ConvertedModule{..}, convImports)
+
+convertModule :: ConversionMonad m => ModuleName -> RenamedSource -> m ConvertedModule
+convertModule = fmap fst .: convert_module_with_imports
 
 convertModules :: ConversionMonad m => [(ModuleName, RenamedSource)] -> m [NonEmpty ConvertedModule]
 convertModules sources = do
-  mods <- traverse (uncurry convertModule) sources
+  mods <- traverse (uncurry convert_module_with_imports) sources
   pure $ stronglyConnCompNE
-    [ (cm, convModName cm, map convImportedModule $ convModImports cm) | cm <- mods ]
+    [ (cmod, convModName cmod, map convImportedModule imps) | (cmod, imps) <- mods ]

@@ -62,6 +62,8 @@ module HsToCoq.Coq.Gallina (
   AssertionKeyword(..),
   Tactics,
   Proof(..),
+  ImportExport(..),
+  ModuleSentence(..),
   ClassDefinition(..),
   InstanceDefinition(..),
   Associativity(..),
@@ -273,7 +275,7 @@ newtype Comment = Comment Text                                                  
 
 -- $Vernacular
 -- <https://coq.inria.fr/distrib/current/refman/Reference-Manual003.html#Vernacular §1.3, \"The Vernacular\", in the Coq reference manual.>.
--- Module imports\/exports are from <https://coq.inria.fr/refman/Reference-Manual004.html#Import §2.5.8>,
+-- Module stuff is from <https://coq.inria.fr/refman/Reference-Manual004.html#Import §2.5, \"Module system\">,
 -- and @Require@ is from <https://coq.inria.fr/refman/Reference-Manual008.html#Require §6.5.1>.
 --
 -- We also add cases to deal with certain notation definitions and similar.
@@ -284,8 +286,7 @@ data Sentence = AssumptionSentence Assumption                                   
               | InductiveSentence  Inductive                                                   -- ^@/inductive/@
               | FixpointSentence   Fixpoint                                                    -- ^@/fixpoint/@
               | AssertionSentence  Assertion Proof                                             -- ^@/assertion/ /proof/@
-              | ImportSentence     Import                                                      -- ^@/import/@ – extra (inferred from §2.5.8)
-              | RequireSentence    Require                                                     -- ^@/require/@ – extra (inferred form §6.5.1)
+              | ModuleSentence     ModuleSentence                                              -- ^@/module_sentence/@ – extra (inferred from §2.5)
               | ClassSentence      ClassDefinition                                             -- ^@/class_definition/@ – extra
               | InstanceSentence   InstanceDefinition                                          -- ^@/instance_definition/@ – extra
               | NotationSentence   Notation                                                    -- ^@/notation/@ – extra
@@ -367,13 +368,11 @@ data ImportExport = Import                                                      
                   | Export                                                                     -- ^@Export@
                   deriving (Eq, Ord, Show, Read, Enum, Bounded, Typeable, Data)
 
--- |@/import/@ ::= – extra (inferred from §2.5.8)
-data Import = ModuleImport ImportExport (NonEmpty Qualid)                                      -- ^@/import_export/ /qualid/ … /qualid/ .@
-            deriving (Eq, Ord, Show, Read, Typeable, Data)
-
--- |@/require/@ ::= – extra (inferred from §6.5.1)
-data Require = Require (Maybe Qualid) (Maybe ImportExport) (NonEmpty Qualid)                   -- ^@[From /qualid/] Require [/import_export/] /qualid/ … /qualid/ .@
-             deriving (Eq, Ord, Show, Read, Typeable, Data)
+-- |@/module_sentence/@ ::= – extra (inferred from §2.5 and §6.5.1), and incomplete
+data ModuleSentence = ModuleImport ImportExport (NonEmpty Qualid)                              -- ^@/import_export/ /qualid/ … /qualid/ .@
+                    | Require (Maybe Qualid) (Maybe ImportExport) (NonEmpty Qualid)            -- ^@[From /qualid/] Require [/import_export/] /qualid/ … /qualid/ .@
+                    | ModuleAssignment Qualid Qualid                                           -- ^@Module /qualid/ := /qualid/ .@
+                    deriving (Eq, Ord, Show, Read, Typeable, Data)
 
 -- |@/class_definition/ ::=@ /(extra)/
 data ClassDefinition = ClassDefinition Ident [Binder] (Maybe Sort) [(Ident, Term)]             -- ^@Class /ident/ [/binders/] [: /sort/] := { [/ident/ : /term/ ; … ; /ident/ : /term/] } .
@@ -852,8 +851,7 @@ instance Gallina Sentence where
   renderGallina' p (InductiveSentence  ind)    = renderGallina' p ind
   renderGallina' p (FixpointSentence   fix)    = renderGallina' p fix
   renderGallina' p (AssertionSentence  ass pf) = renderGallina' p ass <!> renderGallina' p pf
-  renderGallina' p (ImportSentence     imp)    = renderGallina' p imp
-  renderGallina' p (RequireSentence    req)    = renderGallina' p req
+  renderGallina' p (ModuleSentence     mod)    = renderGallina' p mod
   renderGallina' p (ClassSentence      cls)    = renderGallina' p cls
   renderGallina' p (InstanceSentence   ins)    = renderGallina' p ins
   renderGallina' p (NotationSentence   not)    = renderGallina' p not
@@ -948,22 +946,21 @@ instance Gallina Proof where
     where
       renderProof end body = "Proof." <!> indent 2 (string body) <!> end <> "."
 
-
 instance Gallina ImportExport where
   renderGallina' _ Import = "Import"
   renderGallina' _ Export = "Export"
 
-instance Gallina Import where
+instance Gallina ModuleSentence where
   renderGallina' _ (ModuleImport ie mods) =
     renderGallina ie <+> align (fillSep $ renderGallina <$> mods) <> "."
-
-instance Gallina Require where
   renderGallina' _ (Require mfrom mie mods) =
        (("From" <+>) . renderGallina) ?? mfrom
     <> "Require" <+> renderGallina ?? mie
     <> align (fillSep $ renderGallina <$> mods) <> "."
     where render ?? mx = maybe mempty render mx <> spaceIf mx
           infix 9 ??
+  renderGallina' _ (ModuleAssignment modNew modOld) =
+    "Module" <+> renderGallina modNew <+> nest 2 (":=" </> renderGallina modOld <> ".")
 
 instance Gallina ClassDefinition where
   renderGallina' _ (ClassDefinition cl params osort fields) =

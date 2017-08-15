@@ -224,7 +224,8 @@ printConvertedModule withModulePrinter ConvertedModule{..} =
         printThe what ds = do hPutStrLn out $ "(* Converted " ++ what ++ ": *)"
                               traverse_ (hPrettyPrint out) . intersperse line $
                                 map ((<> line) . renderGallina) ds
-     
+    
+    printThe "imports"                          convModImports      <* printGap <* flush
     printThe "data type declarations"           convModTyClDecls    <* printGap <* flush
     printThe "value declarations"               convModValDecls     <* printGap <* flush
     printThe "type class instance declarations" convModClsInstDecls <*             flush

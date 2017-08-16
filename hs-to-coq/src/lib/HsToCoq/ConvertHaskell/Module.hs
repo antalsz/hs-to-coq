@@ -149,7 +149,9 @@ convertHsGroup mod HsGroup{..} = do
           liftIO $ throwGhcExceptionIO exn
 
 convertHsGroups :: ConversionMonad m => [(ModuleName, HsGroup GHC.Name)] -> m ConvertedModules
-convertHsGroups = fmap concat . mapM (uncurry convertHsGroup)
+convertHsGroups hsGroups = do
+    extraFVs <- use (edits.orders)
+    topoSortSentences extraFVs . concat <$> mapM (uncurry convertHsGroup) hsGroups
 
 convertHsGroups' :: ConversionMonad m => [(ModuleName, HsGroup GHC.Name)] -> m [(ModuleName, ConvertedModuleDeclarations)]
 convertHsGroups' = traverse $ \(m,g) -> (m,) <$> convertHsGroup m g

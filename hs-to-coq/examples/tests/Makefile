@@ -18,6 +18,7 @@ PASS = \
   PartialAppliedPolyDataCon \
   PatternGuard \
   MapAccumR \
+  FTP \
   MutrecInst
 
 
@@ -30,7 +31,6 @@ TODO_PASS  = \
   Mutrec \
   DotName \
   OpTyCon \
-  FTP \
   Successors \
   Bits
 

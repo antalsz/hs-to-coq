@@ -26,7 +26,7 @@ import Control.Lens hiding ((<.>))
 
 import Data.Foldable
 import Data.Traversable
-import Data.List (intersperse, isSuffixOf)
+import Data.List (isSuffixOf)
 import Data.List.NonEmpty (NonEmpty(..))
 
 import Data.Functor
@@ -251,53 +251,39 @@ processFilesMainRn process = do
       liftIO $ hFlush hOut
 
 printConvertedModules :: MonadIO m => Handle -> ConvertedModules -> m ()
-printConvertedModules out ConvertedModules{..} = liftIO $ do
-  let flush    = hFlush out
-      printGap = hPutStrLn out ""
-      
-      printThe what [] = hPutStrLn out $ "(* No " ++ what ++ " to convert. *)"
-      printThe what ds = do hPutStrLn out $ "(* Converted " ++ what ++ ": *)"
-                            traverse_ (hPrettyPrint out) . intersperse line $
-                              map ((<> line) . renderGallina) ds
-  
-  printThe "data type declarations"           convertedTyClDecls    <* printGap <* flush
-  printThe "value declarations"               convertedValDecls     <* printGap <* flush
-  printThe "type class instance declarations" convertedClsInstDecls <*             flush
-  
-  case toList . getFreeVars . NoBinding $
-         (convertedTyClDecls ++ convertedValDecls ++ convertedClsInstDecls) of
+printConvertedModules out [] = liftIO $ do
+  hPutStrLn out $ "(* Nothing to convert *)"
+  hFlush out
+printConvertedModules out sentences = liftIO $ do
+  hPutStrLn out $ "(* Successfully converted the following code: *)"
+  mapM_ (\s -> hPrettyPrint out $ renderGallina s <> line) sentences
+
+  case toList . getFreeVars . NoBinding $ sentences of
     []  -> pure ()
     fvs -> do hPrettyPrint out $
                 line <> "(*" <+> hang 2
                   ("Unbound variables:" <!> fillSep (map text fvs))
                 <!> "*)" <> line
-              flush
+              hFlush out
 
 convertAndPrintModules :: ConversionMonad m => Handle -> [Located (HsModule RdrName)] -> m ()
 convertAndPrintModules h = printConvertedModules h <=< convertLModules
 
 printConvertedModulesRn :: MonadIO m => Handle -> ConvertedModules -> m ()
-printConvertedModulesRn out ConvertedModules{..} = liftIO $ do
-  let flush    = hFlush out
-      printGap = hPutStrLn out ""
-      
-      printThe what [] = hPutStrLn out $ "(* No " ++ what ++ " to convert. *)"
-      printThe what ds = do hPutStrLn out $ "(* Converted " ++ what ++ ": *)"
-                            traverse_ (hPrettyPrint out) . intersperse line $
-                              map ((<> line) . renderGallina) ds
-  
-  printThe "data type declarations"           convertedTyClDecls    <* printGap <* flush
-  printThe "value declarations"               convertedValDecls     <* printGap <* flush
-  printThe "type class instance declarations" convertedClsInstDecls <*             flush
-  
-  case toList . getFreeVars . NoBinding $
-         (convertedTyClDecls ++ convertedValDecls ++ convertedClsInstDecls) of
+printConvertedModulesRn out [] = liftIO $ do
+  hPutStrLn out $ "(* Nothing to convert *)"
+  hFlush out
+printConvertedModulesRn out sentences = liftIO $ do
+  hPutStrLn out $ "(* Successfully converted the following code: *)"
+  mapM_ (\s -> hPrettyPrint out $ renderGallina s <> line) sentences
+
+  case toList . getFreeVars . NoBinding $ sentences of
     []  -> pure ()
     fvs -> do hPrettyPrint out $
                 line <> "(*" <+> hang 2
                   ("Unbound variables:" <!> fillSep (map text fvs))
                 <!> "*)" <> line
-              flush
+              hFlush out
 
 convertAndPrintModulesRn :: ConversionMonad m => Handle -> [TypecheckedModule] -> m ()
 convertAndPrintModulesRn h =   printConvertedModulesRn h
@@ -366,26 +352,20 @@ printConvertedModuleRn' :: MonadIO m
                         -> m ()
 printConvertedModuleRn' withModulePrinter ConvertedModule{..} =
   withModulePrinter convModName $ \out -> liftIO $ do
-    let flush    = hFlush out
-        printGap = hPutStrLn out ""
-        
-        printThe what [] = hPutStrLn out $ "(* No " ++ what ++ " to convert. *)"
-        printThe what ds = do hPutStrLn out $ "(* Converted " ++ what ++ ": *)"
-                              traverse_ (hPrettyPrint out) . intersperse line $
-                                map ((<> line) . renderGallina) ds
-     
-    printThe "data type declarations"           convModTyClDecls    <* printGap <* flush
-    printThe "value declarations"               convModValDecls     <* printGap <* flush
-    printThe "type class instance declarations" convModClsInstDecls <*             flush
-     
-    case toList . getFreeVars . NoBinding $
-           (convModTyClDecls ++ convModValDecls ++ convModClsInstDecls) of
+    case convModBody of
+        [] -> hPutStrLn out $ "(* Nothing to convert *)"
+        _ -> do
+            hPutStrLn out $ "(* Successfully converted the following code: *)"
+            mapM_ (\s -> hPrettyPrint out $ renderGallina s <> line) convModBody
+    hFlush out
+
+    case toList . getFreeVars . NoBinding $ convModBody of
       []  -> pure ()
       fvs -> do hPrettyPrint out $
                   line <> "(*" <+> hang 2
                     ("Unbound variables:" <!> fillSep (map text fvs))
                   <!> "*)" <> line
-                flush
+                hFlush out
 
 printConvertedModulesRn' :: MonadIO m
                          => WithModulePrinter m ()

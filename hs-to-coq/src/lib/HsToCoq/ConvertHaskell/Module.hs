@@ -1,7 +1,7 @@
 {-# LANGUAGE TupleSections, LambdaCase, RecordWildCards, FlexibleContexts #-}
 
 module HsToCoq.ConvertHaskell.Module (
-  ConvertedModules(..),
+  ConvertedModules,
   convertModules, convertLModules,
   hsModuleName,
   -- Renamer
@@ -12,7 +12,6 @@ module HsToCoq.ConvertHaskell.Module (
 
 import Control.Lens
 
-import Data.Semigroup
 import Data.Traversable
 import Data.Maybe
 import Data.List.NonEmpty (NonEmpty(..))
@@ -82,18 +81,7 @@ convertImportDecl ImportDecl{..} = do
 hsModuleName :: HsModule name -> ModuleName
 hsModuleName = maybe (mkModuleName "Main") unLoc . hsmodName
 
-data ConvertedModules = ConvertedModules { convertedTyClDecls    :: ![Sentence]
-                                         , convertedValDecls     :: ![Sentence]
-                                         , convertedClsInstDecls :: ![Sentence] }
-                      deriving (Eq, Ord, Show)
-
-instance Semigroup ConvertedModules where
-  ConvertedModules tcds1 vds1 cids1 <> ConvertedModules tcds2 vds2 cids2 =
-    ConvertedModules (tcds1 <> tcds2) (vds1 <> vds2) (cids1 <> cids2)
-
-instance Monoid ConvertedModules where
-  mempty  = ConvertedModules mempty mempty mempty
-  mappend = (<>)
+type ConvertedModules = [Sentence]
 
 convertModules :: (Foldable f, ConversionMonad m) => f (HsModule RdrName) -> m ConvertedModules
 convertModules mods = do
@@ -103,19 +91,16 @@ convertModules mods = do
                                              mods
   _ <- forModules recordFixitiesWithErrors
 
-  ConvertedModules <$> forModules convertModuleTyClDecls
-                   <*> forModules convertModuleValDecls
-                   <*> forModules convertModuleClsInstDecls
+  tyClsDecls <-   forModules convertModuleTyClDecls
+  valDecls   <-   forModules convertModuleValDecls
+  clsInstDecls <- forModules convertModuleClsInstDecls
+  return $ tyClsDecls ++ valDecls ++ clsInstDecls
 
 convertLModules :: (Traversable f, ConversionMonad m)
                 => f (Located (HsModule RdrName)) -> m ConvertedModules
 convertLModules = convertModules . fmap unLoc
 
-data ConvertedModuleDeclarations =
-  ConvertedModuleDeclarations { convertedTyClDecls'    :: ![Sentence]
-                              , convertedValDecls'     :: ![Sentence]
-                              , convertedClsInstDecls' :: ![Sentence] }
-  deriving (Eq, Ord, Show)
+type ConvertedModuleDeclarations = [Sentence]
 
 convertHsGroup :: ConversionMonad m => ModuleName -> HsGroup GHC.Name -> m ConvertedModuleDeclarations
 convertHsGroup mod HsGroup{..} = do
@@ -154,7 +139,7 @@ convertHsGroup mod HsGroup{..} = do
         -- TODO RENAMER use RecFlag info to do recursion stuff
         pure . foldMap (foldMap (defns M.!)) . topoSortEnvironment $ NoBinding <$> defns
   convertedClsInstDecls' <- convertModuleClsInstDecls [(Just mod, cid) | L _ (ClsInstD cid) <- hs_instds]
-  pure ConvertedModuleDeclarations{..}
+  pure $ convertedTyClDecls' ++ convertedValDecls' ++ convertedClsInstDecls'
 
   where axiomatizeBinding :: GhcMonad m => HsBind GHC.Name -> GhcException -> m (Ident, [Sentence])
         axiomatizeBinding FunBind{..} exn = do
@@ -164,28 +149,23 @@ convertHsGroup mod HsGroup{..} = do
           liftIO $ throwGhcExceptionIO exn
 
 convertHsGroups :: ConversionMonad m => [(ModuleName, HsGroup GHC.Name)] -> m ConvertedModules
-convertHsGroups = fmap (foldMap pluralize) . traverse (uncurry convertHsGroup) where
-  pluralize (ConvertedModuleDeclarations tcds vds cids) = ConvertedModules tcds vds cids
+convertHsGroups = fmap concat . mapM (uncurry convertHsGroup)
 
 convertHsGroups' :: ConversionMonad m => [(ModuleName, HsGroup GHC.Name)] -> m [(ModuleName, ConvertedModuleDeclarations)]
 convertHsGroups' = traverse $ \(m,g) -> (m,) <$> convertHsGroup m g
 
 data ConvertedModule =
-  ConvertedModule { convModName         :: !ModuleName
-                  , convModImports      :: ![ConvertedImportDecl]
-                  , convModTyClDecls    :: ![Sentence]
-                  , convModValDecls     :: ![Sentence]
-                  , convModClsInstDecls :: ![Sentence] }
+  ConvertedModule { convModName     :: !ModuleName
+                  , convModImports  :: ![ConvertedImportDecl]
+                  , convModBody     :: ![Sentence]
+                  }
   deriving (Eq, Ord, Show)
 
 convertRenamedSource :: ConversionMonad m => ModuleName -> RenamedSource -> m ConvertedModule
 convertRenamedSource convModName (group, imports, _exports, _docstring) = do
-  ConvertedModuleDeclarations { convertedTyClDecls'    = convModTyClDecls
-                              , convertedValDecls'     = convModValDecls
-                              , convertedClsInstDecls' = convModClsInstDecls }
-    <- convertHsGroup convModName group
+  convModBody <- convertHsGroup convModName group
   convModImports <- traverse (convertImportDecl . unLoc) imports
-  pure ConvertedModule{..}
+  pure $ ConvertedModule{..}
 
 convertRenamedSources :: ConversionMonad m => [(ModuleName, RenamedSource)] -> m [NonEmpty ConvertedModule]
 convertRenamedSources sources = do

@@ -54,9 +54,7 @@ todo_pass: $(foreach f,$(TODO_PASS),$(f).pass)
 
 %.pass : %.v
 	@/bin/echo -n "$<: "
-	@if ! grep -q -F '(* Converted data type declarations: *)' $< && \
-	    ! grep -q -F '(* Converted type class instance declarations: *)' $< && \
-	    ! grep -q -F '(* Converted value declarations: *)' $< ; \
+	@if ! grep -q -F '(* Successfully converted the following code: *)' $<; \
 	 then echo -e "\033[1;31mempty\033[0m (should pass)";\
 	 elif ! $(TYPECHECK) $< >&/dev/null; \
 	 then echo -e "\033[1;31mfailed\033[0m (should pass)" >&2; \

@@ -49,6 +49,7 @@ library
                      , Control.Monad.Trans.Variables
                      , Control.Monad.Variables.Class
                      , Control.Monad.Variables
+                     , Control.Monad.DefinedIdents
                      , Control.Monad.Trans.Parse
                      , HsToCoq.PrettyPrint
                      , HsToCoq.Coq.Preamble

@@ -10,7 +10,7 @@ module HsToCoq.Coq.FreeVars (
   -- * Converting binders to things that contain free variables
   NoBinding(..),
   -- * Utility methods
-  topoSortEnvironment, topoSortEnvironmentWith,
+  topoSortEnvironment, topoSortEnvironmentWith, topoSortSentences,
   -- * Fragments that contain name(s) to bind, but which aren't themselves
   -- 'Binders'
   Names(..),
@@ -23,6 +23,7 @@ import Prelude hiding (Num)
 import Data.Foldable
 import HsToCoq.Util.Containers
 import Control.Monad.Variables
+import Control.Monad.DefinedIdents
 import HsToCoq.Util.Function
 
 import Data.List.NonEmpty (NonEmpty(), (<|))
@@ -30,6 +31,8 @@ import Data.Set (Set)
 import qualified Data.Set as S
 import Data.Map.Strict (Map)
 import qualified Data.Map.Strict as M
+import Data.Maybe (fromMaybe)
+import Data.Monoid
 
 import HsToCoq.Coq.Gallina
 import HsToCoq.Coq.Gallina.Util
@@ -509,3 +512,34 @@ topoSortEnvironmentWith fvs = stronglyConnComp' . M.toList
 -- 'stronglyConnComp'' returns its outputs in topologically sorted order.
 topoSortEnvironment :: FreeVars t => Map Ident t -> [NonEmpty Ident]
 topoSortEnvironment = topoSortEnvironmentWith getFreeVars
+
+type ExtraFreeVars = M.Map Ident (S.Set Ident)
+
+definedBy :: Binding x => x -> [Ident]
+definedBy b = execDefinedIdents (binding' b startCollectingBinders)
+
+-- | Sort Sentences based on their free variables and the
+-- extra edges provided. Tries to keep sentences in order otherwise.
+topoSortSentences :: ExtraFreeVars -> [Sentence] -> [Sentence]
+topoSortSentences extraFVs sentences = sorted
+  where
+    numSentences = zip [0..] sentences
+    canonMap = M.fromList [ (i,n) | (n,s) <- numSentences, i <- definedBy s]
+
+    canon :: Ident -> Maybe Int
+    canon i =  M.lookup i canonMap
+
+    extras :: Ident -> S.Set Ident
+    extras i = fromMaybe S.empty $ M.lookup i extraFVs
+
+    graph = reverse $
+        -- The reverse makes the sorting “stable” when ther are edges missing
+        -- A bit of a hack, but hey.
+        [ (s, n, uses)
+        | (n,s) <- numSentences
+        , let uses = toList $ setMapMaybe canon $
+                getFreeVars (NoBinding s) <> foldMap extras (definedBy s)
+        ]
+    sorted = foldMap toList $ stronglyConnCompNE graph
+
+

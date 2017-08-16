@@ -49,7 +49,7 @@ class (Monad m, Ord i) => MonadVariables i d m | m -> i d where
   allBound = sequence . M.fromSet bound
   frees    = traverse_ free
 
-  {-# MINIMAL bind, bound, free | bindAll, allBound, frees #-}
+  {-# MINIMAL (bind | bindAll), (bound | allBound), (free | frees) #-}
 
 occurrence :: MonadVariables i d m => i -> m ()
 occurrence = unlessM <$> isBound <*> free

@@ -66,7 +66,7 @@ coq: Makefile.coq $(VFILES) GHC/Prim.v
 
 
 GHC/BaseGen.v : GHC/Base/edits renamings GHC/Base/preamble.v GHC/Base.hs
-	$(HS_TO_COQ) -e GHC/Base/edits -r renamings -o GHC/BaseGen.v -p GHC/Base/preamble.v GHC/Base.hs
+	$(HS_TO_COQ) -e GHC/Base/edits -r renamings -o GHC/BaseGen.v -p GHC/Base/preamble.v --ghc -i$(LIB) --ghc -i$(LIB)/dist-install/build -I$(LIB)/include --ghc -this-unit-id=base GHC/Base.hs
 
 
 clean:

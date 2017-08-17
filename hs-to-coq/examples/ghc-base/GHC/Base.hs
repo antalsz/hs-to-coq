@@ -670,7 +670,6 @@ instance  Functor Maybe  where
     fmap _ Nothing       = Nothing
     fmap f (Just a)      = Just (f a)
 
-{-
 instance Applicative Maybe where
     pure = Just
 
@@ -687,7 +686,7 @@ instance  Monad Maybe  where
     (>>) = (*>)
 
     fail _              = Nothing
--}
+
 -- -----------------------------------------------------------------------------
 -- The Alternative class definition
 
@@ -721,13 +720,12 @@ class Applicative f => Alternative f where
         many_v = some_v <|> pure []
         some_v = (fmap (:) v) <*> many_v
 
-{-
 -- subclass
 instance Alternative Maybe where
     empty = Nothing
     Nothing <|> r = r
     l       <|> _ = l
--}
+
 -- -----------------------------------------------------------------------------
 -- The MonadPlus class definition
 
@@ -745,7 +743,7 @@ class (Alternative m, Monad m) => MonadPlus m where
    mplus :: m a -> m a -> m a
    mplus = (<|>)
 
--- instance MonadPlus Maybe
+instance MonadPlus Maybe
 
 ----------------------------------------------
 
@@ -753,7 +751,7 @@ class (Alternative m, Monad m) => MonadPlus m where
 instance Functor [] where
     {-# INLINE fmap #-}
     fmap = map
-{-
+
 -- See Note: [List comprehensions and inlining]
 instance Applicative [] where
     {-# INLINE pure #-}
@@ -777,7 +775,7 @@ instance Alternative [] where
     (<|>) = (++)
 
 instance MonadPlus []
--}
+
 
 {-
 A few list functions that appear here because they are used here.
@@ -1056,8 +1054,8 @@ const x _               =  x
 {-# INLINE (.) #-}
 -- Make sure it has TWO args only on the left, so that it inlines
 -- when applied to two functions, even if there is no final argument
--- (.)    :: (b -> c) -> (a -> b) -> a -> c
--- (.) f g = \x -> f (g x)
+(.)    :: (b -> c) -> (a -> b) -> a -> c
+(.) f g = \x -> f (g x)
 
 -- | @'flip' f@ takes its (first) two arguments in the reverse order of @f@.
 flip                    :: (a -> b -> c) -> b -> a -> c
@@ -1100,7 +1098,6 @@ asTypeOf                =  const
 -- Functor/Applicative/Monad instances for IO
 ----------------------------------------------
 
-{-
 instance  Functor IO where
    fmap f x = x >>= (pure . f)
 
@@ -1123,7 +1120,6 @@ instance Alternative IO where
     (<|>) = mplusIO
 
 instance MonadPlus IO
--}
 
 returnIO :: a -> IO a
 returnIO x = IO (\ s -> (# s, x #))

@@ -27,6 +27,7 @@ TODO_PASS  = \
   EqList \
   PolyInstance2 \
   Expr \
+  FTPDefault \
   Sub \
   Mutrec \
   DotName \

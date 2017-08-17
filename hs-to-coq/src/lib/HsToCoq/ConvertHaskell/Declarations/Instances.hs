@@ -46,7 +46,7 @@ import HsToCoq.ConvertHaskell.Declarations.Class
 -- Take the instance head and make it into a valid identifier by replacing
 -- non-alphanumerics with underscores.  Then, prepend "instance_".
 convertInstanceName :: ConversionMonad m => LHsType GHC.Name -> m Ident
-convertInstanceName =   gensym
+convertInstanceName =   pure
                     .   ("instance_" <>)
                     .   T.map (\c -> if isAlphaNum c || c == '\'' then c else '_')
                     .   renderOneLineT . renderGallina

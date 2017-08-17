@@ -1,6 +1,6 @@
 {-# LANGUAGE MultiParamTypeClasses, FlexibleContexts,
              TypeSynonymInstances, FlexibleInstances,
-             OverloadedStrings #-}
+             OverloadedStrings, OverloadedLists #-}
 
 module HsToCoq.Coq.Subst (
   -- * Things that can be substituted
@@ -18,10 +18,15 @@ import qualified Data.Map.Strict as M
 
 import HsToCoq.Coq.Gallina
 
+import HsToCoq.ConvertHaskell.InfixNames
+
 ----------------------------------------------------------------------------------------------------
 
 -- Note: this is not capture avoiding substitution (yet!)
---       cannot substitute for operators
+--
+-- When it comes across an operator, it searches for its 'infixToCoq' name
+-- in the map, and turns the operator application into a term application
+-- if necessary.
 
 class Subst t where
   subst :: Map Ident Term -> t -> t
@@ -188,7 +193,11 @@ instance Subst Term where
 
   subst f  (ExplicitApp qid xs) = ExplicitApp qid (subst f  xs)
 
-  subst f  (Infix l op r) = Infix (subst f l) op (subst f  r)
+  subst f  (Infix l op r)
+    | Just t <- M.lookup (infixToCoq op) f
+    = App t [PosArg (subst f l), PosArg (subst f r)]
+    | otherwise
+    = Infix (subst f l) op (subst f  r)
 
   subst f  (InScope t scope) =  InScope (subst f  t) scope
     -- The scope is a different sort of identifier, not a term-level variable.

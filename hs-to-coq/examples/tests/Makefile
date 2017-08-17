@@ -19,6 +19,7 @@ PASS = \
   PatternGuard \
   MapAccumR \
   FTP \
+  FTPDefault \
   MutrecInst
 
 
@@ -27,7 +28,6 @@ TODO_PASS  = \
   EqList \
   PolyInstance2 \
   Expr \
-  FTPDefault \
   Sub \
   Mutrec \
   DotName \

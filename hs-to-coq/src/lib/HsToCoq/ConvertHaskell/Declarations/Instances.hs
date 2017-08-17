@@ -241,7 +241,8 @@ topoSort (InstanceDefinition instanceName params ty members mp) = go sorted M.em
            v'   <- gensym v
            (params, mty)  <- mkTy v
            body <- quantify v (subst sub (m M.! v))
-           pure ([ DefinitionSentence (DefinitionDef Local v' params mty (unFix body)) ], (M.insert v (Qualid (Bare v')) sub))
+           let sub' = M.insert v (Qualid (Bare v')) sub
+           pure ([ DefinitionSentence (DefinitionDef Local v' params mty (unFix body)) ], sub')
         mkDefnGrp many _sub =
            -- TODO: mutual recursion
            convUnsupported ("Giving up on mutual recursion" ++ show many)

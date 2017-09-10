@@ -98,6 +98,7 @@ builtInDataCons =
     , "pair"   =: [ "pair"  =: 2]
     , "list"   =: [ "nil"   =: 1, "cons"  =: 2 ]
     , "bool"   =: [ "true"  =: 0, "false" =: 0 ]
+    , "ordering" =: [ "Lt"  =: 1, "Eq" =: 1, "Gt" =: 1 ]
     ]
   where (=:) = (,)
 

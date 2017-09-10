@@ -5,7 +5,8 @@ else
 HS_TO_COQ = cabal new-run exe:hs-to-coq --
 endif
 SHELL = bash
-LIB = /Users/sweirich/github/hs-to-coq/ghc-8.0.2/libraries/base
+LIB = /home/jojo/build/haskell/ghc-8.0/libraries/base
+
 
 # Not all of these need to be handwritten. Eventually we should be able to
 # generate some of these modules as hs-to-coq is improved.
@@ -24,7 +25,6 @@ HANDMOD = GHC/Prim \
           GHC/Base \
           Data/Char \
           Data/Bits \
-          Data/Eq \
           Data/Type/Equality \
           GHC/Word \
           GHC/Int \
@@ -39,6 +39,7 @@ MODULES  = GHC/BaseGen \
            Data/Maybe \
            Data/Function \
            Data/Ord \
+           Data/Eq \
            Data/Monoid
 
 #           Data/OldList \

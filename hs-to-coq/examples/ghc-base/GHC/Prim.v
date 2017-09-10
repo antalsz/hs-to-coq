@@ -52,6 +52,11 @@ Inductive IO (a : Type) : Type :=.
 Inductive IORef (a : Type) : Type :=.
 Inductive IOError : Type :=.
 
+Axiom returnIO : forall {a}, a -> IO a.
+Axiom bindIO : forall {a b}, IO a -> (a -> IO b) -> IO b.
+Axiom failIO : forall {a b}, a -> IO b.
+Axiom mplusIO : forall {a}, IO a -> IO a -> IO a.
+
 Axiom primPutChar   : Char -> IO unit.
 Axiom primReadFile  : String -> IO String.
 Axiom primWriteFile : String -> String -> IO unit.
@@ -60,12 +65,15 @@ Axiom primGetChar     : IO Char.
 Axiom primCatch       : forall {a}, IO a -> (IOError -> IO a) -> IO a.
 Axiom primAppendFile  : FilePath -> String -> IO unit.
 
+
 (****************************************************)
 
 (* function composition *)
 Require Export Coq.Program.Basics.
+(*
 Open Scope program_scope.
 Notation "'_∘_'" := (compose).
+*)
 
 Notation "[,]"  := (fun x y => (x,y)).
 Notation "[,,]" := (fun x0 y1 z2 => (x0, y1, z2)).

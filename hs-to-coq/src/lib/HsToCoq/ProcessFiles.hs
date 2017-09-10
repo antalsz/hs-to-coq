@@ -20,10 +20,12 @@ import System.FilePath
 import GHC
 import HeaderInfo
 import DynFlags
-import qualified GHC.LanguageExtensions as LangExt
 import Bag
-import HsToCoq.Util.GHC.DoCpp
+import Digraph (flattenSCC)
+import Outputable
+import qualified GHC.LanguageExtensions as LangExt
 
+import HsToCoq.Util.GHC.DoCpp
 import HsToCoq.Util.TempFiles
 import HsToCoq.Util.Messages
 
@@ -75,8 +77,16 @@ tcRnFile dflags file = do
                                   , ghcLink     = NoLink }
   addTarget =<< guessTarget file Nothing
   load LoadAllTargets >>= \case
-    Succeeded ->
-      fmap Just $ typecheckModule =<< parseModule =<< getModSummary (mkModuleName $ takeBaseName file)
+    Succeeded -> do
+      -- Try to find the module name. Should be the last in the ModuleGraph?
+      mod_graph <- getModuleGraph
+      let mod_graph_sorted = concatMap flattenSCC $
+            topSortModuleGraph True mod_graph Nothing
+      let mod_summary = last mod_graph_sorted
+      pprTrace "processFiles" (ppr mod_summary) (return ())
+      parsed_mod <- parseModule mod_summary
+      typechecked_mod <- typecheckModule parsed_mod
+      return (Just typechecked_mod)
     Failed ->
       pure Nothing
 
@@ -87,9 +97,17 @@ tcRnFiles dflags files = do
                                   , ghcLink     = NoLink }
   traverse_ (addTarget <=< (guessTarget ?? Nothing)) files
   load LoadAllTargets >>= \case
-    Succeeded ->
-      Just <$> traverse ( (typecheckModule <=< parseModule <=< getModSummary)
-                        . mkModuleName . takeBaseName )
-                 files
+    Succeeded -> do
+      -- Try to find the modules.
+      -- Code smell: How likely is it that the filename in the mod_summary is
+      -- identical to the one on the command line (e.g. relative vs.
+      -- absolute)?
+      mod_graph <- getModuleGraph
+      let our_mods = [ mod_summary
+                     | mod_summary <- mod_graph
+                     , Just path <- return $ ml_hs_file $ ms_location mod_summary
+                     , path `elem` files
+                     ]
+      Just <$> traverse (typecheckModule <=< parseModule ) our_mods
     Failed ->
       pure Nothing

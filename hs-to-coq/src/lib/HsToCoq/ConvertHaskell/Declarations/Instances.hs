@@ -5,8 +5,7 @@
              FlexibleContexts #-}
 
 module HsToCoq.ConvertHaskell.Declarations.Instances (
-  convertClsInstDecl, convertClsInstDecls, convertModuleClsInstDecls,
-  convertInstanceName
+  convertModuleClsInstDecls
   ) where
 
 import Control.Lens
@@ -36,6 +35,7 @@ import HsToCoq.Coq.Gallina.Util
 
 import HsToCoq.ConvertHaskell.Monad
 import HsToCoq.ConvertHaskell.Definitions
+import HsToCoq.ConvertHaskell.Parameters.Edits
 import HsToCoq.ConvertHaskell.Type
 import HsToCoq.ConvertHaskell.Expr
 import HsToCoq.ConvertHaskell.Axiomatize
@@ -136,7 +136,13 @@ convertModuleClsInstDecls = fmap concat .: traverse $ maybeWithCurrentModule .*^
                                convertClsInstDecl cid rebuild
                                                   (Just axiomatizeInstance)
   where rebuild :: InstanceDefinition -> m [Sentence]
-        rebuild = topoSort
+        rebuild instdef = do
+            let InstanceDefinition coq_name _ _ _ _ = instdef
+            use (edits.skipped.contains coq_name) >>= \case
+                True -> do
+                    let t = "Skipping instance " <> coq_name
+                    return [CommentSentence (Comment t)]
+                False -> topoSort instdef
         -- rebuild = pure . pure . InstanceSentence
 
         -- what to do if instance conversion fails
@@ -238,7 +244,7 @@ topoSort (InstanceDefinition instanceName params ty members mp) = go sorted M.em
         mkDefnGrp :: [ Ident ] -> (M.Map Ident Term) -> m ([ Sentence ], M.Map Ident Term)
         mkDefnGrp [] sub = return ([], sub)
         mkDefnGrp [ v ] sub = do
-           v'   <- gensym v
+           let v' = instanceName <> "_" <> v
            (params, mty)  <- mkTy v
            body <- quantify v (subst sub (m M.! v))
            let sub' = M.insert v (Qualid (Bare v')) sub

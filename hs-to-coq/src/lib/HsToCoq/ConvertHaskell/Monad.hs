@@ -114,6 +114,11 @@ builtInClasses =
                      (Var "a" `Arrow` Var "b") `Arrow`
                      App1 (Var "f") (Var "a") `Arrow`
                      App1 (Var "f") (Var "b"))
+        , "op_zlzd__" =: (Forall [ Inferred Implicit (Ident "a")
+                            , Inferred Implicit (Ident "b")] $
+                     (Var "b") `Arrow`
+                     App1 (Var "f") (Var "a") `Arrow`
+                     App1 (Var "f") (Var "b"))
         ]
     , ClassDefinition "Applicative"
         [ Inferred Explicit (Ident "f")
@@ -128,6 +133,42 @@ builtInClasses =
                      App1 (Var "f") (Var "a" `Arrow` Var "b") `Arrow`
                      App1 (Var "f") (Var "a") `Arrow`
                      App1 (Var "f") (Var "b"))
+        , "op_ztzg__" =:
+            (Forall [ Inferred Implicit (Ident "a")
+                    , Inferred Implicit (Ident "b")] $
+                     App1 (Var "f") (Var "a") `Arrow`
+                     App1 (Var "f") (Var "b") `Arrow`
+                     App1 (Var "f") (Var "b"))
+        , "op_zlzt__" =:
+            (Forall [ Inferred Implicit (Ident "a")
+                    , Inferred Implicit (Ident "b")] $
+                     App1 (Var "f") (Var "a") `Arrow`
+                     App1 (Var "f") (Var "b") `Arrow`
+                     App1 (Var "f") (Var "a"))
+        ]
+    , ClassDefinition "Monad"
+        [ Inferred Explicit (Ident "f")
+        , Generalized Implicit (App1 (Var "Applicative") (Var "f"))
+        ]
+        Nothing
+        [ "return_"  =: (Forall [Inferred Implicit (Ident "a")]  $
+                      Var "a" `Arrow` App1 (Var "f") (Var "a"))
+        , "op_zgzgze__" =:
+            (Forall [ Inferred Implicit (Ident "a")
+                    , Inferred Implicit (Ident "b")] $
+                     App1 (Var "f") (Var "a") `Arrow`
+                     (Var "a" `Arrow` App1 (Var "f") (Var "b")) `Arrow`
+                     App1 (Var "f") (Var "b"))
+        , "op_zgzg__" =:
+           (Forall [ Inferred Implicit (Ident "a")
+                   , Inferred Implicit (Ident "b")] $
+                    App1 (Var "f") (Var "a") `Arrow`
+                    App1 (Var "f") (Var "b") `Arrow`
+                    App1 (Var "f") (Var "b"))
+        , "fail" =:
+           (Forall [ Inferred Implicit (Ident "a")] $
+                    Var "String" `Arrow`
+                    App1 (Var "f") (Var "a"))
         ]
     , ClassDefinition "Foldable"
         [ Inferred Explicit (Ident "t")
@@ -161,6 +202,35 @@ builtInClasses =
    (=:) = (,)
    infix 0 =:
 
+builtInDefaultMethods :: Map Ident (Map Ident Term)
+builtInDefaultMethods = fmap M.fromList $ M.fromList
+    [ "Eq" =:
+        [ "==" ~> Fun [arg "x", arg "y"] (App1 (Var "negb") $ Infix (Var "x") "/=" (Var "y"))
+        , "/=" ~> Fun [arg "x", arg "y"] (App1 (Var "negb") $ Infix (Var "x") "==" (Var "y")) 
+        ]
+    , "Functor" =:
+        [ "op_zlzd__" ~> Fun [arg "x"] (App1 (Var "fmap") (App1 (Var "const") (Var "x")))
+        ]
+    , "Applicative" =:
+        [ "op_ztzg__" ~> Fun [arg "x", arg "y"]
+            (let const_id = App1 (Var "const") (Var "id") in
+            App2 (Var "op_zlztzg__") (App2 (Var "fmap") const_id (Var "x")) (Var "y"))
+        , "op_zlzt__" ~> Fun [arg "x", arg "y"]
+            (let const    = Var "const" in
+            App2 (Var "op_zlztzg__") (App2 (Var "fmap") const    (Var "x")) (Var "y"))
+        ]
+    , "Monad" =:
+        [ "return_" ~> Var "pure"
+        , "op_zgzg__" ~> Var "op_ztzg__"
+        , "fail" ~> Fun [arg "x"] (Var "patternFailure")
+        ]
+    ]
+  where
+   (=:) = (,)
+   infix 0 =:
+   m ~> d  = (toCoqName m, d)
+   arg       = Inferred Coq.Explicit . Ident
+
 evalConversion :: GhcMonad m => Renamings -> Edits -> ConversionT m a -> m a
 evalConversion _renamings _edits = evalVariablesT . (evalStateT ?? ConversionState{..}) where
   __currentModule = Nothing
@@ -171,13 +241,7 @@ evalConversion _renamings _edits = evalVariablesT . (evalStateT ?? ConversionSta
   _recordFieldTypes  = M.empty
   _classDefns        = M.fromList [ (i, cls) | cls@(ClassDefinition i _ _ _) <- builtInClasses ]
 --  _memberSigs        = M.empty
-  _defaultMethods = M.fromList ["Eq" ~>> [ "==" ~> Fun [arg "x", arg "y"] (App1 (Var "negb") $ Infix (Var "x") "/=" (Var "y"))
-                                         , "/=" ~> Fun [arg "x", arg "y"] (App1 (Var "negb") $ Infix (Var "x") "==" (Var "y")) ]]
-
-                  where cl ~>> ms = (cl, M.fromList ms)
-                        m  ~>  d  = (toCoqName m, d)
-                        arg       = Inferred Coq.Explicit . Ident
-
+  _defaultMethods =   builtInDefaultMethods
   _fixities         = M.empty
   _tcGblEnv         = error "tcGblEnv not set yet"
   __unique = 0

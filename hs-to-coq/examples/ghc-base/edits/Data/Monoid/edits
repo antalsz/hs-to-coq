@@ -1,3 +1,9 @@
 redefine Inductive Alt (f : Type -> Type) a : Type := Mk_Alt : (f a) -> (Alt f a).
 # <> operator already defined
 skip op_zlzg__
+
+skip instance__forall___Alternative_f___Monoid__Alt_f_a__
+
+skip instance_Functor_Dual  # Uses coerce
+skip instance_Applicative_Dual  # Uses coerce
+skip instance_Monad_Dual

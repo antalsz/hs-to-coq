@@ -27,6 +27,7 @@ PASS = \
 TODO_PASS  = \
   EqList \
   PolyInstance2 \
+  Endo \
   Expr \
   Sub \
   Mutrec \

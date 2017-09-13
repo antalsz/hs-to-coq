@@ -12,9 +12,6 @@ Successors.v: Successors.hs edits preamble.v
 	$(HS_TO_COQ) -e edits -p preamble.v  Successors.hs -o Successors.v
 	sed -e 's,{list},,' -i Successors.v
 
-Successors.vo: Successors.v
-	coqc -R ../ghc-base/ 'Top' Successors.v
-
 Makefile.coq: _CoqProject
 	coq_makefile -f _CoqProject -o $@
 

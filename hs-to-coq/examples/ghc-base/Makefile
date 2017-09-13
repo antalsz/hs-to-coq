@@ -33,8 +33,7 @@ HANDMOD = GHC/Prim \
 
 # Generated modules
 # All except BaseGen are generated directly from GHC/libraries/base
-MODULES  = GHC/BaseGen \
-           GHC/List \
+MODULES  = GHC/List \
            Data/Tuple \
            Data/Maybe \
            Data/Function \
@@ -42,32 +41,54 @@ MODULES  = GHC/BaseGen \
            Data/Eq \
            Data/Monoid
 
-#           Data/OldList \
+# generated from drop-in/
+SPECIAL_MODULES = GHC/BaseGen
 
-VFILES   = $(addsuffix .v,$(MODULES))
-VOFILES  = $(patsubst %.v,%.vo,$(VFILES))
-COQFLAGS = ""
+VFILES_GEN = $(addprefix lib/,$(addsuffix .v,$(MODULES)))
+VFILES_MAN = $(addprefix lib/,$(addsuffix .v,$(HANDMOD)))
+VFILES_SPECIAL = $(addprefix lib/,$(addsuffix .v,$(SPECIAL_MODULES)))
+
+VFILES   = $(VFILES_GEN) $(VFILES_MAN)  $(VFILES_SPECIAL)
 
 all:  $(VFILES) coq
 
-_CoqProject : Makefile
-	echo "-R . Top" > _CoqProject
-	echo $(addsuffix .v,$(HANDMOD)) >> _CoqProject
-	echo $(VFILES) >> _CoqProject
+lib/_CoqProject : Makefile
+	mkdir -p lib
+	> $@
+	echo "-R . Top" >> $@
+	echo $(addsuffix .v,$(HANDMOD)) >> $@
+	echo $(addsuffix .v,$(MODULES)) >> $@
+	echo $(addsuffix .v,$(SPECIAL_MODULES)) >> $@
 
-Makefile.coq: _CoqProject
-	coq_makefile -f _CoqProject -o $@
+lib/Makefile.coq: lib/_CoqProject
+	cd lib; coq_makefile -f _CoqProject -o Makefile.coq
 
-coq: Makefile.coq $(VFILES) GHC/Prim.v
-	$(MAKE) -f Makefile.coq OPT=$(COQFLAGS)
-
-
-%.v : %/edits renamings %/preamble.v
-	$(HS_TO_COQ) -e $*/edits -r renamings -o $*.v -p $*/preamble.v $(LIB)/$*.hs
+coq: lib/Makefile.coq $(VFILES)
+	$(MAKE) -C lib -f Makefile.coq OPT=$(COQFLAGS)
 
 
-GHC/BaseGen.v : GHC/Base/edits renamings GHC/Base/preamble.v GHC/Base.hs
-	$(HS_TO_COQ) -e GHC/Base/edits -r renamings -o GHC/BaseGen.v -p GHC/Base/preamble.v --ghc -i$(LIB) --ghc -i$(LIB)/dist-install/build -I$(LIB)/include --ghc -this-unit-id=base GHC/Base.hs
+$(VFILES_GEN): lib/%.v : edits/%/edits renamings edits/%/preamble.v
+	mkdir -p "$$(dirname lib/$*.v)"
+	$(HS_TO_COQ) -e edits/$*/edits \
+	             -r renamings \
+		     -o lib/$*.v \
+		     -p edits/$*/preamble.v \
+		     $(LIB)/$*.hs
+
+$(VFILES_MAN): lib/%.v : manual/%.v
+	mkdir -p "$$(dirname lib/$*.v)"
+	cp -v $< $@
+
+lib/GHC/BaseGen.v : edits/GHC/Base/edits renamings edits/GHC/Base/preamble.v drop-in/GHC/Base.hs
+	$(HS_TO_COQ) -e edits/GHC/Base/edits \
+	             -r renamings \
+		     -o lib/GHC/Base.v \
+		     -p edits/GHC/Base/preamble.v \
+		     --ghc -i$(LIB) \
+		     --ghc -i$(LIB)/dist-install/build \
+		     -I$(LIB)/include \
+		     --ghc -this-unit-id=base \
+		     drop-in/GHC/Base.hs
 
 
 clean:

@@ -1,0 +1,36 @@
+HAVE_STACK := $(shell command -v stack 2> /dev/null)
+ifdef HAVE_STACK
+HS_TO_COQ = stack exec hs-to-coq --
+else
+HS_TO_COQ = cabal new-run exe:hs-to-coq --
+endif
+SHELL = bash
+
+MODULES=\
+	Common \
+	Size  \
+	Types
+VFILES_GEN = $(addsuffix .v,$(MODULES)) 
+VFILES = $(VFILES_GEN)
+
+all: $(VFILES) coq
+
+
+$(VFILES_GEN): %.v: orig/%.hs edits/%/edits edits/%/preamble.v ../ghc-base/renamings renamings
+	$(HS_TO_COQ) $< -r ../ghc-base/renamings -r renamings -e edits/$*/edits -p edits/$*/preamble.v -o $@
+	#sed -e 's,{list},,' -i Successors.v
+
+_CoqProject:
+	> $@
+	echo '-R ../ghc-base/lib/ Top' >> $@
+	echo '-R . Top' >> $@
+	echo $(VFILES) >> $@
+
+Makefile.coq: _CoqProject
+	coq_makefile -f _CoqProject -o $@
+
+coq: Makefile.coq $(VFILES)
+	$(MAKE) -f Makefile.coq OPT=$(COQFLAGS)
+
+clean:
+	rm -f */*.vo */*.glob */*.v.d *.glob *.vo *.v.d $(VFILES_GEN) _CoqProject Makefile.coq  */*.v~

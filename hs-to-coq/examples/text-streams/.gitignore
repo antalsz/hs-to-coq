@@ -1,0 +1,8 @@
+*.vo
+*.glob
+*.v.d
+_CoqProject
+Makefile.coq
+Common.v
+Size.v
+Types.v

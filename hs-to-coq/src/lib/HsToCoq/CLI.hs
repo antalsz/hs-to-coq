@@ -1,7 +1,8 @@
 {-# LANGUAGE LambdaCase, RecordWildCards,
              OverloadedStrings,
              FlexibleContexts,
-             TemplateHaskell #-}
+             TemplateHaskell,
+             ScopedTypeVariables #-}
 
 module HsToCoq.CLI (
   -- * General main-action creator
@@ -10,7 +11,7 @@ module HsToCoq.CLI (
   printConvertedModules,
   convertAndPrintModules,
   -- * CLI configuration, parameters, etc.
-  Config(..), outputFile, preambleFile, renamingsFile, editsFile, modulesFiles, modulesRoot, directInputFiles,
+  Config(..), outputFile, preambleFile, renamingsFiles, editsFiles, modulesFiles, modulesRoot, directInputFiles,
   processArgs,
   ProgramArgs(..),
   argParser, argParserInfo,
@@ -71,8 +72,8 @@ prettyPrint = hPrettyPrint stdout
 
 data ProgramArgs = ProgramArgs { outputFileArg        :: Maybe FilePath
                                , preambleFileArg      :: Maybe FilePath
-                               , renamingsFileArg     :: Maybe FilePath
-                               , editsFileArg         :: Maybe FilePath
+                               , renamingsFileArgs    :: [FilePath]
+                               , editsFileArgs        :: [FilePath]
                                , modulesFilesArgs     :: [FilePath]
                                , modulesRootArg       :: Maybe FilePath
                                , includeDirsArgs      :: [FilePath]
@@ -92,12 +93,12 @@ argParser = ProgramArgs <$> optional (strOption   $  long    "output"
                                                   <> metavar "FILE"
                                                   <> help    "File containing code that goes at the top of the Coq output")
                         
-                        <*> optional (strOption   $  long    "renamings"
+                        <*> many     (strOption   $  long    "renamings"
                                                   <> short   'r'
                                                   <> metavar "FILE"
                                                   <> help    "File with Haskell -> Coq identifier renamings")
                         
-                        <*> optional (strOption   $  long    "edits"
+                        <*> many     (strOption   $  long    "edits"
                                                   <> short   'e'
                                                   <> metavar "FILE"
                                                   <> help    "File with extra Haskell -> Coq edits")
@@ -134,8 +135,8 @@ argParserInfo = info (helper <*> argParser) $  fullDesc
 
 data Config = Config { _outputFile       :: !(Maybe FilePath)
                      , _preambleFile     :: !(Maybe FilePath)
-                     , _renamingsFile    :: !(Maybe FilePath)
-                     , _editsFile        :: !(Maybe FilePath)
+                     , _renamingsFiles   :: ![FilePath]
+                     , _editsFiles       :: ![FilePath]
                      , _modulesFiles     :: ![FilePath]
                      , _modulesRoot      :: !(Maybe FilePath)
                      , _directInputFiles :: ![FilePath] }
@@ -169,8 +170,8 @@ processArgs = do
                                              then Nothing
                                              else outputFileArg
                        , _preambleFile     = preambleFileArg
-                       , _renamingsFile    = renamingsFileArg
-                       , _editsFile        = editsFileArg
+                       , _renamingsFiles   = renamingsFileArgs
+                       , _editsFiles       = editsFileArgs
                        , _modulesFiles     = modulesFilesArgs
                        , _modulesRoot      = modulesRootArg
                        , _directInputFiles = directInputFilesArgs })
@@ -190,14 +191,15 @@ processFilesMain :: GhcMonad m
 processFilesMain process = do
   (dflags, conf) <- processArgs
   
-  let parseConfigFile file builder parser =
-        maybe (pure mempty) ?? (conf^.file) $ \filename -> liftIO $
+  let parseConfigFiles files builder parser = liftIO $ do
+        parsed <- forM (conf ^.files) $ \filename ->
           (evalParse parser <$> T.readFile filename) >>= \case
             Left  err -> die $ "Could not parse " ++ filename ++ ": " ++ err
-            Right res -> either die pure $ builder res
-  
-  renamings  <- parseConfigFile renamingsFile buildRenamings parseRenamingList
-  edits      <- parseConfigFile editsFile     buildEdits     parseEditList
+            Right res -> return res
+        either die pure $ builder (mconcat parsed)
+
+  renamings  <- parseConfigFiles renamingsFiles buildRenamings parseRenamingList
+  edits      <- parseConfigFiles editsFiles     buildEdits     parseEditList
   
   inputFiles <- either (liftIO . die) pure <=< runExceptT $
                   (++) <$> pure (conf^.directInputFiles)
@@ -217,20 +219,22 @@ processFilesMain process = do
       traverse_ (process hOut) =<< processFiles dflags inputFiles
       liftIO $ hFlush hOut
 
-processFilesMainRn :: GhcMonad m
+processFilesMainRn :: forall m. GhcMonad m
                    => (Handle -> [TypecheckedModule] -> ConversionT m ())
                    -> m ()
 processFilesMainRn process = do
   (dflags, conf) <- processArgs
   
-  let parseConfigFile file builder parser =
-        maybe (pure mempty) ?? (conf^.file) $ \filename -> liftIO $
+  let parseConfigFiles files builder parser = liftIO $ do
+        parseds <- forM (conf ^.files) $ \filename ->
           (evalParse parser <$> T.readFile filename) >>= \case
             Left  err -> die $ "Could not parse " ++ filename ++ ": " ++ err
-            Right res -> either die pure $ builder res
+            Right res -> return res
+        let parsed = mconcat parseds
+        either die pure $ builder parsed
   
-  renamings  <- parseConfigFile renamingsFile buildRenamings parseRenamingList
-  edits      <- parseConfigFile editsFile     buildEdits     parseEditList
+  renamings  <- parseConfigFiles renamingsFiles buildRenamings parseRenamingList
+  edits      <- parseConfigFiles editsFiles     buildEdits     parseEditList
   
   inputFiles <- either (liftIO . die) pure <=< runExceptT $
                   (++) <$> parseModulesFiles (conf^.modulesRoot.non "") (conf^.modulesFiles)
@@ -308,14 +312,15 @@ processFilesMainRn' :: GhcMonad m
 processFilesMainRn' process = do
   (dflags, conf) <- processArgs
   
-  let parseConfigFile file builder parser =
-        maybe (pure mempty) ?? (conf^.file) $ \filename -> liftIO $
+  let parseConfigFiles files builder parser = liftIO $ do
+        parsed <- forM (conf ^.files) $ \filename ->
           (evalParse parser <$> T.readFile filename) >>= \case
             Left  err -> die $ "Could not parse " ++ filename ++ ": " ++ err
-            Right res -> either die pure $ builder res
+            Right res -> return res
+        either die pure $ builder (mconcat parsed)
   
-  renamings  <- parseConfigFile renamingsFile buildRenamings parseRenamingList
-  edits      <- parseConfigFile editsFile     buildEdits     parseEditList
+  renamings  <- parseConfigFiles renamingsFiles buildRenamings parseRenamingList
+  edits      <- parseConfigFiles editsFiles     buildEdits     parseEditList
   
   inputFiles <- either (liftIO . die) pure <=< runExceptT $
                   (++) <$> parseModulesFiles (conf^.modulesRoot.non "") (conf^.modulesFiles)

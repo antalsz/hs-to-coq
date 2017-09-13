@@ -5,8 +5,10 @@ else
 HS_TO_COQ = cabal new-run exe:hs-to-coq --
 endif
 SHELL = bash
-LIB = /home/jojo/build/haskell/ghc-8.0/libraries/base
 
+ifeq (,$(wildcard base))
+$(error Please create a symlink base (see README.md))
+endif
 
 # Not all of these need to be handwritten. Eventually we should be able to
 # generate some of these modules as hs-to-coq is improved.
@@ -18,7 +20,7 @@ LIB = /home/jojo/build/haskell/ghc-8.0/libraries/base
 # Handwritten modules (usually by modification of generated version)
 HANDMOD = GHC/Prim \
           GHC/Num \
-	       GHC/Char \
+          GHC/Char \
           GHC/Enum \
           GHC/Real \
           GHC/Unicode \
@@ -73,7 +75,7 @@ $(VFILES_GEN): lib/%.v : edits/%/edits renamings edits/%/preamble.v
 	             -r renamings \
 		     -o lib/$*.v \
 		     -p edits/$*/preamble.v \
-		     $(LIB)/$*.hs
+		     base/$*.hs
 
 $(VFILES_MAN): lib/%.v : manual/%.v
 	mkdir -p "$$(dirname lib/$*.v)"
@@ -84,9 +86,9 @@ lib/GHC/BaseGen.v : edits/GHC/Base/edits renamings edits/GHC/Base/preamble.v dro
 	             -r renamings \
 		     -o lib/GHC/BaseGen.v \
 		     -p edits/GHC/Base/preamble.v \
-		     --ghc -i$(LIB) \
-		     --ghc -i$(LIB)/dist-install/build \
-		     -I$(LIB)/include \
+		     --ghc -ibase \
+		     --ghc -ibase/dist-install/build \
+		     -Ibase/include \
 		     --ghc -this-unit-id=base \
 		     drop-in/GHC/Base.hs
 

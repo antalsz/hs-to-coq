@@ -11,11 +11,6 @@
 \#*
 .\#*
 
-# generated test cases
-examples/ghc-base/*/*.v
-examples/ghc-base/_CoqProject
-examples/ghc-base/Makefile.coq
-
 # Scratch work files
 Test.hs
 test.v

@@ -82,7 +82,7 @@ $(VFILES_MAN): lib/%.v : manual/%.v
 lib/GHC/BaseGen.v : edits/GHC/Base/edits renamings edits/GHC/Base/preamble.v drop-in/GHC/Base.hs
 	$(HS_TO_COQ) -e edits/GHC/Base/edits \
 	             -r renamings \
-		     -o lib/GHC/Base.v \
+		     -o lib/GHC/BaseGen.v \
 		     -p edits/GHC/Base/preamble.v \
 		     --ghc -i$(LIB) \
 		     --ghc -i$(LIB)/dist-install/build \
@@ -94,5 +94,3 @@ lib/GHC/BaseGen.v : edits/GHC/Base/edits renamings edits/GHC/Base/preamble.v dro
 clean:
 	rm -f */*.vo */*.glob */*.v.d *.vo *.v.d  $(VFILES) _CoqProject Makefile.coq  */*.v~
 
-
-.SECONDARY: $(VFILES)

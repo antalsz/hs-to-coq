@@ -34,6 +34,7 @@ TODO_PASS  = \
   DotName \
   OpTyCon \
   Successors \
+  Existential \
   Bits
 
 MODULES = $(PASS) $(TODO_PASS)

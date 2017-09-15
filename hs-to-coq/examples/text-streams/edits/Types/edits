@@ -1,0 +1,4 @@
+skip eq # does not terminate
+skip cmp # does not terminate
+skip instance__forall____Eq__a____Eq___Stream_a__
+skip instance__forall____Ord_a____Ord__Stream_a__

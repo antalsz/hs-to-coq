@@ -18,7 +18,8 @@ all: $(VFILES) coq
 
 $(VFILES_GEN): %.v: orig/%.hs edits/%/edits edits/%/preamble.v ../ghc-base/renamings renamings
 	$(HS_TO_COQ) $< -r ../ghc-base/renamings -r renamings -e edits/$*/edits -p edits/$*/preamble.v -o $@
-	#sed -e 's,{list},,' -i Successors.v
+	# Work around https://github.com/antalsz/hs-to-coq/issues/12
+	if [ $* = 'Types' ]; then sed -e 's/Mk_Stream {s} :/Mk_Stream : forall {s},/' -i $@; fi
 
 _CoqProject:
 	> $@

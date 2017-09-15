@@ -53,7 +53,8 @@ convertType (HsForAllTy tvs ty) = do
     -- one, we need to exclude that too.  (We also exclude all symbolic names,
     -- since Haskell now reserves those for constructors.)
     bindings <- S.fromList . toList <$> use renamings
-    fvs      <- fmap (S.filter $ maybe False (((||) <$> isLower <*> (== '_')) . fst) . T.uncons)
+    fvs      <- fmap (S.filter $ (/= "list")) -- hard coded for now
+              . fmap (S.filter $ maybe False (((||) <$> isLower <*> (== '_')) . fst) . T.uncons)
               . fmap S.fromDistinctAscList . filterM (fmap not . isBound) . S.toAscList
               $ getFreeVars tyBody S.\\ (  bindings
                                         <> foldMap (S.fromList . toListOf binderIdents) explicitTVs)

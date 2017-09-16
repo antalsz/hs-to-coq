@@ -1,0 +1,63 @@
+# This is the simple Travis configuration, which is intended for use
+# on applications which do not require cross-platform and
+# multiple-GHC-version support. For more information and other
+# options, see:
+#
+# https://docs.haskellstack.org/en/stable/travis_ci/
+#
+# Copy these contents into the root directory of your Github project in a file
+# named .travis.yml
+
+# Use new container infrastructure to enable caching
+sudo: false
+
+# Do not choose a language; we provide our own build tools.
+language: generic
+
+# Caching so the next build will be fast too.
+cache:
+  directories:
+  - $HOME/.stack
+  - $HOME/ghc
+  - $HOME/.opam
+
+# Ensure necessary system libraries are present
+addons:
+  apt:
+    sources:
+      - avsm
+    packages:
+      - opam
+      - libgmp-dev
+
+before_install:
+ # Download and unpack the stack executable
+ - mkdir -p ~/.local/bin
+ - export PATH=$HOME/.local/bin:$PATH
+ - travis_retry curl -L https://www.stackage.org/stack/linux-x86_64 | tar xz --wildcards --strip-components=1 -C ~/.local/bin '*/stack'
+ # Skip this for now, I can't seem to get this to work with the caching
+ # Get GHC
+ # - mkdir -p ~/ghc
+ # - '[[ -n $(find ~/ghc -prune -empty) ]] && (cd ~/ghc; travis_retry curl https://codeload.github.com/ghc/ghc/tar.gz/ghc-8.0.2-release | tar xz --strip-components 1)'
+ # Install COQ
+ - if ! [ -e $HOME/.opam ]; then opam init -j 2 --compiler=system -n -y; fi
+ - opam repo add coq-released http://coq.inria.fr/opam/released || true
+ - opam list -i coq || { opam install -y  coq.8.6 && opam pin add coq 8.6 ; }
+ - opam list -i coq-mathcomp-ssreflect || opam install -y coq-mathcomp-ssreflect
+ - eval $(opam config env)
+
+ # Only build the `hs-to-coq` project
+ - cd hs-to-coq
+
+install:
+ # Build dependencies
+ - stack --no-terminal --install-ghc test --only-dependencies
+
+script:
+ - stack --no-terminal --install-ghc install
+ # Run test suite
+ - make -C examples/tests
+ # Build Coq’ified base (generated sources are in the repo)
+ - make -C examples/ghc-base/lib/ -f Makefile.coq
+ # Run successors example, which uses base
+ - make -C examples/successors

@@ -7,9 +7,10 @@ endif
 SHELL = bash
 
 MODULES=\
-	Common \
-	Size  \
-	Types
+	Combined
+	#Common \
+	#Size  \
+	#Types
 VFILES_GEN = $(addsuffix .v,$(MODULES)) 
 VFILES = $(VFILES_GEN)
 
@@ -19,7 +20,8 @@ all: $(VFILES) coq
 $(VFILES_GEN): %.v: orig/%.hs edits/%/edits edits/%/preamble.v ../ghc-base/renamings renamings
 	$(HS_TO_COQ) $< -r ../ghc-base/renamings -r renamings -e edits/$*/edits -p edits/$*/preamble.v -o $@
 	# Work around https://github.com/antalsz/hs-to-coq/issues/12
-	if [ $* = 'Types' ]; then sed -e 's/Mk_Stream {s} :/Mk_Stream : forall {s},/' -i $@; fi
+	if [ $* = 'Combined' ]; then sed -e 's/Mk_Stream {s} :/Mk_Stream : forall {s},/' -i $@; fi
+	if [ $* = 'Combined' ]; then sed -e 's/| (Mk_Stream /| (Mk_Stream _ /' -i $@; fi
 
 _CoqProject:
 	> $@

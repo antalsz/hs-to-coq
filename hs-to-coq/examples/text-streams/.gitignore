@@ -6,3 +6,4 @@ Makefile.coq
 Common.v
 Size.v
 Types.v
+Combined.v

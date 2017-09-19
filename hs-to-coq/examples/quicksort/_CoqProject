@@ -1,0 +1,4 @@
+-R ../ghc-base/lib/ Top
+-R . Top
+QuickSort.v
+Proofs.v

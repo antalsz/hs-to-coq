@@ -1,5 +1,5 @@
 {-# LANGUAGE TupleSections, LambdaCase, RecordWildCards, FlexibleContexts #-}
-{-# LANGUAGE StandaloneDeriving, DeriveFunctor, DeriveFoldable, DeriveTraversable #-}
+{-# LANGUAGE StandaloneDeriving, DeriveFunctor, DeriveFoldable, DeriveTraversable, DeriveDataTypeable #-}
 
 module HsToCoq.ConvertHaskell.Module (
   -- * Convert whole module graphs and modules
@@ -7,7 +7,9 @@ module HsToCoq.ConvertHaskell.Module (
   convertModules, convertModule,
   -- * Convert declaration groups
   ConvertedModuleDeclarations(..), convertHsGroup,
-  -- * Convert import statements
+  -- * Turn import statements into @Require@s, unconditionally
+  require,
+  -- * Convert import statements (INCOMPLETE -- TODO)
   Qualification(..), ImportSpec(..), ConvertedImportDecl(..),
   convertImportDecl, importDeclSentences,
 ) where
@@ -23,6 +25,7 @@ import HsToCoq.Util.Containers
 
 import Control.Monad
 import Control.Monad.IO.Class
+import qualified Data.Set as S
 import qualified Data.Map as M
 
 import qualified Data.Text as T
@@ -36,6 +39,8 @@ import qualified GHC
 import HsToCoq.Util.GHC.Module ()
 import Panic
 import Bag
+
+import Data.Generics
 
 import HsToCoq.ConvertHaskell.Parameters.Edits
 import HsToCoq.ConvertHaskell.Parameters.Renamings
@@ -140,7 +145,7 @@ data ConvertedModuleDeclarations =
   ConvertedModuleDeclarations { convertedTyClDecls    :: ![Sentence]
                               , convertedValDecls     :: ![Sentence]
                               , convertedClsInstDecls :: ![Sentence] }
-  deriving (Eq, Ord, Show)
+  deriving (Eq, Ord, Show, Data)
 
 convertHsGroup :: ConversionMonad m => ModuleName -> HsGroup GHC.Name -> m ConvertedModuleDeclarations
 convertHsGroup mod HsGroup{..} = do
@@ -190,6 +195,11 @@ convertHsGroup mod HsGroup{..} = do
 
 --------------------------------------------------------------------------------
 
+require :: ModuleName -> Maybe ModuleSentence
+require = fmap (Require Nothing Nothing . pure) . identToQualid . T.pack . moduleNameString
+
+--------------------------------------------------------------------------------
+
 data ConvertedModule =
   ConvertedModule { convModName         :: !ModuleName
                   , convModImports      :: ![Sentence]
@@ -199,6 +209,7 @@ data ConvertedModule =
   deriving (Eq, Ord, Show)
 
 -- Module-local
+{-
 convert_module_with_imports :: ConversionMonad m
                             => ModuleName -> RenamedSource ->
                             m (ConvertedModule, [ConvertedImportDecl])
@@ -211,12 +222,42 @@ convert_module_with_imports convModName (group, imports, _exports, _docstring) =
     convImports    <- traverse (convertImportDecl . unLoc) imports
     convModImports <- foldTraverse importDeclSentences convImports
     pure (ConvertedModule{..}, convImports)
+-}
+
+-- Module-local
+convert_module_with_requires :: ConversionMonad m
+                             => ModuleName -> RenamedSource ->
+                             m (ConvertedModule, [ModuleName])
+convert_module_with_requires convModName (group, imports, _exports, _docstring) =
+  withCurrentModule convModName $ do
+    decls@ConvertedModuleDeclarations { convertedTyClDecls    = convModTyClDecls
+                                      , convertedValDecls     = convModValDecls
+                                      , convertedClsInstDecls = convModClsInstDecls }
+      <- convertHsGroup convModName group
+    
+    let importedModules = map (unLoc . ideclName . unLoc) imports
+    -- TODO: Is this the best approach to the problem where instead of
+    -- 'Prelude.not', we get 'GHC.Classes.not'?
+    let extraModules = map (mkModuleName . T.unpack . qualidToIdent)
+                     . mapMaybe (\case Bare      x     -> qualidModule =<< identToQualid x
+                                       Qualified mod _ -> Just mod)
+                      $ listify (const True :: Qualid -> Bool) decls
+    
+    let modules =  importedModules
+                ++ S.toList (foldr S.delete (S.fromList extraModules) importedModules)
+    
+    convModImports <-
+      traverse
+        ( maybe (throwProgramError "malformed module name") (pure . ModuleSentence)
+        . require )
+        modules
+    pure (ConvertedModule{..}, modules)
 
 convertModule :: ConversionMonad m => ModuleName -> RenamedSource -> m ConvertedModule
-convertModule = fmap fst .: convert_module_with_imports
+convertModule = fmap fst .: convert_module_with_requires
 
 convertModules :: ConversionMonad m => [(ModuleName, RenamedSource)] -> m [NonEmpty ConvertedModule]
 convertModules sources = do
-  mods <- traverse (uncurry convert_module_with_imports) sources
+  mods <- traverse (uncurry convert_module_with_requires) sources
   pure $ stronglyConnCompNE
-    [ (cmod, convModName cmod, map convImportedModule imps) | (cmod, imps) <- mods ]
+    [(cmod, convModName cmod, imps) | (cmod, imps) <- mods]

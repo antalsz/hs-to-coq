@@ -14,6 +14,7 @@ module HsToCoq.Coq.Gallina.Util (
   _Ident, _UnderscoreName, nameToIdent,
   binderNames, binderIdents, binderExplicitness,
   -- ** Functions
+  qualidBase, qualidModule,
   qualidToIdent, identToQualid,
   nameToTerm, nameToPattern,
   binderArgs
@@ -94,6 +95,14 @@ binderExplicitness f (Typed       gen ei names ty) = f ei <&> \ei' -> Typed     
 binderExplicitness f (Generalized     ei       ty) = f ei <&> \ei' -> Generalized     ei'       ty
 binderExplicitness _ blet@BindLet{}                = pure blet
 {-# INLINEABLE binderExplicitness #-}
+
+qualidBase :: Qualid -> Ident
+qualidBase (Bare      ident) = ident
+qualidBase (Qualified _ aid) = aid
+
+qualidModule :: Qualid -> Maybe Qualid
+qualidModule (Bare      _)     = Nothing
+qualidModule (Qualified qid _) = Just qid
 
 qualidToIdent :: Qualid -> Ident
 qualidToIdent (Bare      ident)   = ident

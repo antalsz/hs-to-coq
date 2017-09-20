@@ -51,6 +51,9 @@ import HsToCoq.ConvertHaskell.Axiomatize
 
 --------------------------------------------------------------------------------
 
+-- TODO: We're just doing qualified imports for now, so the details here aren't
+-- fully finished
+
 data Qualification = UnqualifiedImport
                    | QualifiedImport
                    deriving (Eq, Ord, Enum, Bounded, Show, Read)
@@ -199,14 +202,15 @@ data ConvertedModule =
 convert_module_with_imports :: ConversionMonad m
                             => ModuleName -> RenamedSource ->
                             m (ConvertedModule, [ConvertedImportDecl])
-convert_module_with_imports convModName (group, imports, _exports, _docstring) = do
-  ConvertedModuleDeclarations { convertedTyClDecls    = convModTyClDecls
-                              , convertedValDecls     = convModValDecls
-                              , convertedClsInstDecls = convModClsInstDecls }
-    <- convertHsGroup convModName group
-  convImports    <- traverse (convertImportDecl . unLoc) imports
-  convModImports <- foldTraverse importDeclSentences convImports
-  pure (ConvertedModule{..}, convImports)
+convert_module_with_imports convModName (group, imports, _exports, _docstring) =
+  withCurrentModule convModName $ do
+    ConvertedModuleDeclarations { convertedTyClDecls    = convModTyClDecls
+                                , convertedValDecls     = convModValDecls
+                                , convertedClsInstDecls = convModClsInstDecls }
+      <- convertHsGroup convModName group
+    convImports    <- traverse (convertImportDecl . unLoc) imports
+    convModImports <- foldTraverse importDeclSentences convImports
+    pure (ConvertedModule{..}, convImports)
 
 convertModule :: ConversionMonad m => ModuleName -> RenamedSource -> m ConvertedModule
 convertModule = fmap fst .: convert_module_with_imports

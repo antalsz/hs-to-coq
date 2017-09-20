@@ -21,10 +21,13 @@ import HsToCoq.Coq.Gallina
 
 --------------------------------------------------------------------------------
 
-identIsVariable :: Text -> Bool
-identIsVariable = T.uncons <&> \case
+identIsVariable_ :: Text -> Bool
+identIsVariable_ = T.uncons <&> \case
   Just (h,t) -> (isAlpha h || h == '_') && T.all (\c -> isAlphaNum c || c == '_' || c == '\'') t
   Nothing    -> False
+
+identIsVariable :: Text -> Bool
+identIsVariable = all identIsVariable_ . T.splitOn "."
 
 identIsOperator :: Text -> Bool
 identIsOperator = not . identIsVariable

@@ -259,4 +259,4 @@ convertAndPrintModules p = printConvertedModules p <=< convertModules <=< traver
           | Just rn <- tm_renamed_source tcm = pure (mod, rn)
           | otherwise = throwProgramError $  "Renamer failed for `"
                                           ++ moduleNameString mod ++ "'"
-          where mod = moduleName . ms_mod . pm_mod_summary $ tm_parsed_module tcm
+          where mod = ms_mod_name . pm_mod_summary $ tm_parsed_module tcm

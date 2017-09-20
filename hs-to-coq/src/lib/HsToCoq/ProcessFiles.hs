@@ -20,6 +20,8 @@ import DynFlags
 
 import HsToCoq.Util.Messages
 
+import HsToCoq.Util.GHC
+
 parseFileFlags :: GhcMonad m
                => ([Located String] -> [Located String] -> m ())
                -> DynFlags -> FilePath

@@ -2,7 +2,7 @@
 
 module HsToCoq.ConvertHaskell.Variables (
   -- * Generate variable names
-  var', var,
+  var', var, var_,
   freeVar', freeVar,
   -- * Avoiding reserved words/names
   tryEscapeReservedWord, escapeReservedNames
@@ -17,8 +17,9 @@ import qualified Data.Text as T
 import Control.Monad
 
 import GHC hiding (Name)
+import qualified GHC
 import Outputable (OutputableBndr)
-import OccName
+import Name hiding (Name)
 
 import HsToCoq.Util.GHC
 
@@ -63,8 +64,23 @@ freeVar = fmap freeVar' . ghcPpr
 var' :: ConversionMonad m => HsNamespace -> Ident -> m Ident
 var' ns x = use $ renamed ns x . non (escapeReservedNames x)
 
-var :: (ConversionMonad m, HasOccName name, OutputableBndr name) => HsNamespace -> name -> m Ident
-var ns name =
+-- This is dishonest: it should return a Qualid for qualified names
+var :: ConversionMonad m => HsNamespace -> GHC.Name -> m Ident
+var _ns name = do
+  thisModM <- use currentModule
+  let nameModM = moduleName <$> nameModule_maybe name
+      mod | thisModM /= nameModM, Just nameMod <- nameModM
+            = T.snoc (T.pack $ moduleNameString nameMod) '.'
+          | otherwise
+            = ""
+  
+  let nameBase = T.pack . occNameString $ nameOccName name
+      base     = escapeReservedNames nameBase
+  
+  pure $ mod <> base
+  
+var_ :: (ConversionMonad m, HasOccName name, OutputableBndr name) => HsNamespace -> name -> m Ident
+var_ ns name =
   let ns' | ns == TypeNS && occNameSpace (occName name) `nameSpacesRelated` dataName = ExprNS
           | otherwise                                                                = ns
   in var' ns' =<< ghcPpr name -- TODO Check module part?

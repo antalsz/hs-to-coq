@@ -83,7 +83,7 @@ convertExpr (HsUnboundVar x) =
   Var <$> freeVar (unboundVarOcc x)
 
 convertExpr (HsRecFld fld) =
-  Var . toPrefix <$> var ExprNS (rdrNameAmbiguousFieldOcc fld)
+  Var . toPrefix <$> var_ ExprNS (rdrNameAmbiguousFieldOcc fld)
 
 convertExpr (HsOverLabel _) =
   convUnsupported "overloaded labels"
@@ -239,7 +239,7 @@ convertExpr (RecordCon (L _ hsCon) PlaceHolder conExpr HsRecFields{..}) = do
 
 convertExpr (RecordUpd recVal fields PlaceHolder PlaceHolder PlaceHolder PlaceHolder) = do
   updates <- fmap M.fromList . for fields $ \(L _ HsRecField{..}) -> do
-               field <- var ExprNS . rdrNameAmbiguousFieldOcc $ unLoc hsRecFieldLbl
+               field <- var_ ExprNS . rdrNameAmbiguousFieldOcc $ unLoc hsRecFieldLbl
                pure (field, if hsRecPun then Nothing else Just hsRecFieldArg)
 
   let updFields       = M.keys updates

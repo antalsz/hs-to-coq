@@ -84,7 +84,7 @@ convertPat (ConPatIn (L _ hsCon) conVariety) = do
                                   | otherwise         = UnderscorePat
 
              patterns <- fmap M.fromList . for rec_flds $ \(L _ (HsRecField (L _ (FieldOcc (L _ hsField) _)) hsPat pun)) -> do
-                           field <- var ExprNS hsField
+                           field <- var_ ExprNS hsField
                            pat   <- if pun
                                     then pure $ Coq.VarPat field
                                     else convertLPat hsPat

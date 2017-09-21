@@ -32,6 +32,7 @@ TODO_PASS  = \
   Sub \
   Mutrec \
   DotName \
+  PaperExamples \
   OpTyCon \
   Successors \
   Existential \

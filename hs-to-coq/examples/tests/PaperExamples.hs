@@ -13,3 +13,15 @@ takeMapMaybe f n (Cons x xs)
   | Just y <- f x = Cons y ys
   where ys = takeMapMaybe f (n-1) xs
 takeMapMaybe _ _ Nil = Nil
+
+class Pointed a where point :: a
+
+class Pointed a => PointedMagma a where
+    op :: a -> a -> a
+    op _ _ = point
+
+instance Pointed Bool where point = True
+instance Pointed () where point = ()
+
+instance PointedMagma Bool where op = (&&)
+instance PointedMagma ()

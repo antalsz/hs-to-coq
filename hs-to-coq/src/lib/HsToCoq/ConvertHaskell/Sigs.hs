@@ -94,7 +94,7 @@ convertFixity (Fixity _srcText hsLevel dir) = (assoc, coqLevel) where
 
 -- From Haskell declaration
 data HsSignature = HsSignature { hsSigModule :: Maybe ModuleName
-                               , hsSigType   :: HsType GHC.Name
+                               , hsSigType   :: LHsSigType GHC.Name
                                , hsSigFixity :: Maybe Fixity }
 
 
@@ -135,17 +135,15 @@ collectSigs modSigs = do
   let asType   mname = (S.singleton mname, , []) . pure
       --asFixity mname = (S.singleton mname, [], ) . pure
 
-      asTypes    mname lnames ty     = list $ map ((, asType mname ty) . unLoc) lnames
+      asTypes    mname lnames sigTy = list $ map ((, asType mname sigTy) . unLoc) lnames
       --asFixities mname lnames fixity = list . map (, asFixity mname fixity) . filter isRdrOperator $ map unLoc lnames
-
-
-  -- TODO RENAMER implicitTyVars
+      
   multimap <-  fmap (M.fromListWith (<>)) . runListT $ list modSigs >>= \case
-    (mname, TypeSig lnames (HsIB implicitTyVars (HsWC wcs _ss (L _ ty))))
-      | null wcs  -> asTypes mname lnames ty
+    (mname, TypeSig lnames (HsIB itvs (HsWC wcs _ss lty)))
+      | null wcs  -> asTypes mname lnames $ HsIB itvs lty
       | otherwise -> throwError "type wildcards found"
-    (mname, ClassOpSig False lnames (HsIB implicitTyVars (L _ ty)))  ->
-      asTypes mname lnames ty
+    (mname, ClassOpSig False lnames sigTy)  ->
+      asTypes mname lnames sigTy
     --(mname, FixSig           (FixitySig lnames fixity))                                 -> asFixities mname lnames fixity
     
     (_, FixSig _)          -> mempty
@@ -188,21 +186,11 @@ collectSigsWithErrors =
           pure sig
 
 convertSignature :: ConversionMonad m => GHC.Name -> HsSignature -> m Signature
-convertSignature rdrName (HsSignature hsMod hsTy _hsFix) = do
+convertSignature rdrName (HsSignature hsMod sigTy _hsFix) = do
   name <- ghcPpr rdrName
   maybeFix <- getFixity name
-  maybeWithCurrentModule hsMod $ Signature <$> convertType (addForAll hsTy)
+  maybeWithCurrentModule hsMod $ Signature <$> convertLHsSigType sigTy
                                            <*> pure maybeFix
-  where addForAll hsTy'@(HsForAllTy _ _) = hsTy'
-        addForAll hsTy'                  = HsForAllTy [] $ noLoc hsTy'
-
-  -- The top-level 'HsForAllTy' was added implicitly in GHC 7.10; we add it
-  -- explicitly now.  Without it, we don't generate the implicit type variable
-  -- bindings.  I can't decide if adding it is a huge hack or not.
-  --
-  -- TODO: Should generating implicit type variables be its own thing?  Does
-  -- this same 'HsForAllTy' trick, however it's implemented, need to go
-  -- elsewhere?  Should it be part of 'convertType'?
 
 convertSignatures :: ConversionMonad m => Map GHC.Name HsSignature -> m (Map Ident Signature)
 convertSignatures = fmap M.fromList . traverse (\(r,hs) -> (,) <$> (var ExprNS r) <*> convertSignature r hs) . M.toList

@@ -317,13 +317,11 @@ convertExpr (RecordUpd recVal fields PlaceHolder PlaceHolder PlaceHolder PlaceHo
                                    , mg_origin  = Generated }
 
 
-convertExpr (ExprWithTySig e (HsIB implicitTyVars (HsWC wcs _ss ty)))
-  | null wcs  = HasType <$> convertLExpr e <*> convertLType ty -- TODO implicitTyVars
-  | otherwise = convUnsupported "type wildcards"
-  
-convertExpr (ExprWithTySigOut e (HsIB implicitTyVars (HsWC wcs _ss ty)))
-  | null wcs  = HasType <$> convertLExpr e <*> convertLType ty -- TODO implicitTyVars
-  | otherwise = convUnsupported "type wildcards"
+convertExpr (ExprWithTySig e sigWcTy) =
+  HasType <$> convertLExpr e <*> convertLHsSigWcType sigWcTy
+
+convertExpr (ExprWithTySigOut e sigWcTy) =
+  HasType <$> convertLExpr e <*> convertLHsSigWcType sigWcTy
 
 convertExpr (ArithSeq _postTc _overloadedLists info) =
   -- TODO: Special-case infinite lists?

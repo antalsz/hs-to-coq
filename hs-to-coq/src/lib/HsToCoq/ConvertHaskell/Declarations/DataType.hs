@@ -77,10 +77,9 @@ convertConDecl curType extraArgs (ConDeclH98 lname mlqvs mlcxt details _doc) = d
   constructorFields . at con ?= fieldInfo
   
   pure [(con, params, Just . maybeForall extraArgs $ foldr Arrow curType args)]
-convertConDecl _curType extraArgs (ConDeclGADT lnames (HsIB implicitTyVars lty) _doc) = do
-  -- TODO RENAMER implicitTyVars
+convertConDecl _curType extraArgs (ConDeclGADT lnames sigTy _doc) = do
   cons  <- traverse convertConLName lnames
-  conTy <- maybeForall extraArgs <$> convertLType lty
+  conTy <- maybeForall extraArgs <$> convertLHsSigType sigTy
   pure $ map (, [], Just conTy) cons
 
 --------------------------------------------------------------------------------

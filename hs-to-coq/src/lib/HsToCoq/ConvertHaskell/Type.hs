@@ -2,21 +2,12 @@
              OverloadedStrings,
              FlexibleContexts #-}
 
-module HsToCoq.ConvertHaskell.Type (convertType, convertLType, convertLHsTyVarBndrs) where
+module HsToCoq.ConvertHaskell.Type (convertType, convertLType, convertLHsTyVarBndrs, convertLHsSigType, convertLHsSigWcType) where
 
 import Control.Lens
 
-import Data.Semigroup
-import Data.Foldable
 import Data.Traversable
-import Data.Char
 import Data.List.NonEmpty (nonEmpty)
-import qualified Data.Text as T
-
-import Control.Monad
-import Control.Monad.Variables
-
-import qualified Data.Set as S
 
 import GHC hiding (Name)
 import qualified GHC as GHC
@@ -26,7 +17,6 @@ import HsToCoq.Util.GHC
 import HsToCoq.Util.GHC.HsTypes
 import HsToCoq.Coq.Gallina as Coq
 import HsToCoq.Coq.Gallina.Util
-import HsToCoq.Coq.FreeVars
 
 import HsToCoq.ConvertHaskell.Parameters.Renamings
 import HsToCoq.ConvertHaskell.Monad
@@ -46,23 +36,7 @@ convertType :: ConversionMonad m => HsType GHC.Name -> m Term
 convertType (HsForAllTy tvs ty) = do
   explicitTVs <- convertLHsTyVarBndrs Coq.Implicit tvs
   tyBody      <- convertLType ty
-  implicitTVs <- do
-    -- We need to find all the unquantified type variables.  Since Haskell
-    -- never introduces a type variable name beginning with an upper-case
-    -- letter, we look for those; however, if we've renamed a Coq value into
-    -- one, we need to exclude that too.  (We also exclude all symbolic names,
-    -- since Haskell now reserves those for constructors.)
-    bindings <- S.fromList . toList <$> use renamings
-    fvs      <- fmap (S.filter $ maybe False (((||) <$> isLower <*> (== '_')) . fst) . T.uncons)
-              . fmap S.fromDistinctAscList . filterM (fmap not . isBound) . S.toAscList
-              $ getFreeVars tyBody S.\\ (  bindings
-                                        <> foldMap (S.fromList . toListOf binderIdents) explicitTVs)
-    pure . map (Inferred Coq.Implicit . Ident) $ S.toList fvs
-  pure . maybe tyBody (Forall ?? tyBody)
-       . nonEmpty $ explicitTVs ++ implicitTVs
-  -- TODO: We generate the TVs in lexicographic order, Haskell does it in source
-  -- code order.  Is this important?
-  -- SCW: Important for explicit type applications.
+  pure . maybe tyBody (Forall ?? tyBody) $ nonEmpty explicitTVs
 
 convertType (HsQualTy (L _ ctx) ty) = do
   classes <- traverse (fmap (Generalized Coq.Implicit) . convertLType) ctx
@@ -160,3 +134,15 @@ convertType (HsWildCardTy _) =
 
 convertLType :: ConversionMonad m => LHsType GHC.Name -> m Term
 convertLType = convertType . unLoc
+
+--------------------------------------------------------------------------------
+
+convertLHsSigType :: ConversionMonad m => LHsSigType GHC.Name -> m Term
+convertLHsSigType (HsIB itvs lty) =
+  maybeForall <$> (map (Inferred Coq.Implicit . Ident) <$> traverse (var TypeNS) itvs)
+              <*> convertLType lty
+
+convertLHsSigWcType :: ConversionMonad m => LHsSigWcType GHC.Name -> m Term
+convertLHsSigWcType (HsIB itvs (HsWC wcs _ss lty))
+  | null wcs  = convertLHsSigType (HsIB itvs lty)
+  | otherwise = convUnsupported "type wildcards"

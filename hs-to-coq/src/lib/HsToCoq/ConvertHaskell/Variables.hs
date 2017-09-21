@@ -2,7 +2,7 @@
 
 module HsToCoq.ConvertHaskell.Variables (
   -- * Generate variable names
-  var', var, var_,
+  var', var, recordField,
   freeVar', freeVar,
   -- * Avoiding reserved words/names
   tryEscapeReservedWord, escapeReservedNames
@@ -14,6 +14,7 @@ import Data.Monoid hiding ((<>))
 import Data.Maybe
 import qualified Data.Text as T
 
+import Control.Applicative
 import Control.Monad
 
 import GHC hiding (Name)
@@ -24,6 +25,7 @@ import Name hiding (Name)
 import HsToCoq.Util.GHC
 
 import HsToCoq.Coq.Gallina
+import HsToCoq.Coq.Gallina.Util
 import HsToCoq.ConvertHaskell.Parameters.Renamings
 import HsToCoq.ConvertHaskell.Monad
 
@@ -66,21 +68,29 @@ var' ns x = use $ renamed ns x . non (escapeReservedNames x)
 
 -- This is dishonest: it should return a Qualid for qualified names
 var :: ConversionMonad m => HsNamespace -> GHC.Name -> m Ident
-var _ns name = do
-  thisModM <- use currentModule
-  let nameModM = moduleName <$> nameModule_maybe name
-      mod | thisModM /= nameModM, Just nameMod <- nameModM
-            = T.snoc (T.pack $ moduleNameString nameMod) '.'
-          | otherwise
-            = ""
+var ns name = do
+  thisModM <- fmap (T.pack . moduleNameString) <$> use currentModule
+  let nameModM = T.pack . moduleNameString . moduleName <$> nameModule_maybe name
+      
+  let mod = nameModM
+
+      qual | thisModM == nameModM = ""
+           | otherwise            = fromMaybe "" mod
   
-  let nameBase = T.pack . occNameString $ nameOccName name
-      base     = escapeReservedNames nameBase
+      base = T.pack . occNameString $ nameOccName name
   
-  pure $ mod <> base
+  let localize q = case (identToQualid q, thisModM) of
+        (Just (Qualified m b), Just thisMod) | qualidToIdent m == thisMod -> b
+        _                                                                 -> q
+               
+      "" <.> b = b
+      q  <.> b = q <> "." <> b
+      tryRenamed = fmap (fmap localize) . use . renamed ns
+      (<<|>>) = liftA2 (<|>)
   
-var_ :: (ConversionMonad m, HasOccName name, OutputableBndr name) => HsNamespace -> name -> m Ident
-var_ ns name =
-  let ns' | ns == TypeNS && occNameSpace (occName name) `nameSpacesRelated` dataName = ExprNS
-          | otherwise                                                                = ns
-  in var' ns' =<< ghcPpr name -- TODO Check module part?
+  fmap (fromMaybe $ qual <.> escapeReservedNames base)
+    $     maybe (pure Nothing) (tryRenamed . (<.> base)) mod
+    <<|>> tryRenamed (qual <.> base)
+
+recordField :: (ConversionMonad m, HasOccName name, OutputableBndr name) => name -> m Ident
+recordField = var' ExprNS <=< ghcPpr -- TODO Check module part?

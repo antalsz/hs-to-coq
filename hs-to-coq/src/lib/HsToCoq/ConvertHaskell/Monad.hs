@@ -104,6 +104,8 @@ evalConversion _renamings _edits = evalVariablesT . (evalStateT ?? ConversionSta
   _fixities         = M.empty
   __unique = 0
 
+-- Currently, this checks the /per-module/ renamings _without_ a qualified name,
+-- and the /global/ renamings _with_ a qualified name.  I think that's ok.
 withCurrentModuleOrNone :: ConversionMonad m => Maybe ModuleName -> m a -> m a
 withCurrentModuleOrNone newModule = gbracket setModuleAndRenamings restoreModuleAndRenamings . const where
   setModuleAndRenamings = do

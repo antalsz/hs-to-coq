@@ -5,10 +5,10 @@ type  GHC.Types.[] = list
 value GHC.Types.[] = nil
 value GHC.Types.:  = ::
 
-value <  = <?
-value <= = <=?
-value >  = >?
-value >= = >=?
+value GHC.Classes.<  = <?
+value GHC.Classes.<= = <=?
+value GHC.Classes.>  = >?
+value GHC.Classes.>= = >=?
 
 type  GHC.Types.Bool  = bool
 value GHC.Types.True  = true
@@ -21,3 +21,7 @@ value GHC.Types.&&    = andb
 type  GHC.Base.Maybe   = option
 value GHC.Base.Just    = Some
 value GHC.Base.Nothing = None
+
+# This is mostly for PatternGuard, which has Int defined in its preamble.v
+type GHC.Types.Int    = Int
+value GHC.Num.-       = __op_zm__

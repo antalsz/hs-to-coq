@@ -8,20 +8,20 @@ module HsToCoq.ConvertHaskell.Monad (
   ConversionMonad, ConversionT, evalConversion,
   -- * Types
   ConversionState(),
-  currentModule, renamings, edits, constructors, constructorTypes, constructorFields, recordFieldTypes, classDefns, defaultMethods, fixities, renamed,
+  currentModule, renamings, edits, constructors, constructorTypes, constructorFields, recordFieldTypes, classDefns, defaultMethods, fixities, typecheckerEnvironment, renamed,
   ConstructorFields(..), _NonRecordFields, _RecordFields,
   -- * Operations
   maybeWithCurrentModule, withCurrentModule, withNoCurrentModule, withCurrentModuleOrNone,
   fresh, gensym,
   rename,
   localizeConversionState,
-  -- * Access to the TcGblEnv
-  setTcGblEnv,
+  -- * Access to the typechecker environment ('TcGblEnv')
   lookupTyThing,
   -- * Errors
   throwProgramError, convUnsupported, editFailure,
   -- * Fixity
-  getFixity, recordFixity
+  getFixity, recordFixity,
+  
   ) where
 
 import Control.Lens
@@ -43,7 +43,7 @@ import TcRnTypes (TcGblEnv, tcg_type_env)
 import NameEnv (lookupNameEnv)
 
 import Panic
-import HsToCoq.Util.GHC.Module ()
+import HsToCoq.Util.GHC.Module
 
 import HsToCoq.Coq.Gallina as Coq
 import HsToCoq.Coq.Gallina.Util
@@ -59,21 +59,21 @@ data ConstructorFields = NonRecordFields !Int
                        deriving (Eq, Ord, Show, Read)
 makePrisms ''ConstructorFields
 
-data ConversionState = ConversionState { __currentModule    :: !(Maybe ModuleName)
-                                       , _renamings         :: !Renamings
-                                       , _edits             :: !Edits
-                                       , _constructors      :: !(Map Ident [Ident])
-                                       , _constructorTypes  :: !(Map Ident Ident)
-                                       , _constructorFields :: !(Map Ident ConstructorFields)
-                                       , _recordFieldTypes  :: !(Map Ident Ident)
+data ConversionState = ConversionState { __currentModule         :: !(Maybe ModuleName)
+                                       , _renamings              :: !Renamings
+                                       , _edits                  :: !Edits
+                                       , _constructors           :: !(Map Ident [Ident])
+                                       , _constructorTypes       :: !(Map Ident Ident)
+                                       , _constructorFields      :: !(Map Ident ConstructorFields)
+                                       , _recordFieldTypes       :: !(Map Ident Ident)
                                        -- types of class members
-                                       -- , _memberSigs        :: !(Map Ident (Map Ident Signature))
+                                       -- , _memberSigs       :: !(Map Ident (Map Ident Signature))
                                        -- translated classes
-                                       , _classDefns        :: !(Map Ident ClassDefinition)
-                                       , _defaultMethods    :: !(Map Ident (Map Ident Term))
-                                       , _fixities          :: !(Map Ident (Coq.Associativity, Coq.Level))
-                                       , __unique           :: !Natural
-                                       , _tcGblEnv          :: TcGblEnv
+                                       , _classDefns             :: !(Map Ident ClassDefinition)
+                                       , _defaultMethods         :: !(Map Ident (Map Ident Term))
+                                       , _fixities               :: !(Map Ident (Coq.Associativity, Coq.Level))
+                                       , _typecheckerEnvironment :: !(Maybe TcGblEnv)
+                                       , __unique                :: !Natural
                                        }
 makeLenses ''ConversionState
 -- '_currentModule' and '_unique' are not exported
@@ -245,18 +245,22 @@ evalConversion _renamings _edits = evalVariablesT . (evalStateT ?? ConversionSta
   _recordFieldTypes  = M.empty
   _classDefns        = M.fromList [ (i, cls) | cls@(ClassDefinition i _ _ _) <- builtInClasses ]
 --  _memberSigs        = M.empty
-  _defaultMethods =   builtInDefaultMethods
-  _fixities         = M.empty
-  _tcGblEnv         = error "tcGblEnv not set yet"
+  _defaultMethods    =   builtInDefaultMethods
+  _fixities          = M.empty
+  
+  _typecheckerEnvironment = Nothing
+  
   __unique = 0
 
+-- Currently, this checks the /per-module/ renamings _without_ a qualified name,
+-- and the /global/ renamings _with_ a qualified name.  I think that's ok.
 withCurrentModuleOrNone :: ConversionMonad m => Maybe ModuleName -> m a -> m a
 withCurrentModuleOrNone newModule = gbracket setModuleAndRenamings restoreModuleAndRenamings . const where
   setModuleAndRenamings = do
     oldModule <- _currentModule <<.= newModule
     newRenamings <- use $ edits.moduleRenamings
                         . maybe (like Nothing)
-                                (at . T.pack . moduleNameString)
+                                (at . moduleNameText)
                                 newModule
                         . non M.empty
     oldRenamings <- renamings <<%= (newRenamings `M.union`) -- (2)
@@ -321,15 +325,10 @@ recordFixity id assoc = do
      Just _v  -> throwProgramError $ "Multiple fixities for " ++ show id
      Nothing -> put (state { _fixities = (M.insert id assoc m) })
 
--- tcGblEnv stuff
-
-setTcGblEnv :: ConversionMonad m => TcGblEnv -> m ()
-setTcGblEnv = assign tcGblEnv
-
-lookupTyThing :: ConversionMonad m => GHC.Name -> m (Maybe GHC.TyThing)
+lookupTyThing :: ConversionMonad m => GHC.Name -> m (Maybe TyThing)
 lookupTyThing name = do
-    env <- use tcGblEnv
+    env <- fmap tcg_type_env <$> use typecheckerEnvironment
     -- Lookup in this module
-    case lookupNameEnv (tcg_type_env env) name of
-        Just thing -> return (Just thing)
+    case (lookupNameEnv ?? name) =<< env of
+        Just thing -> pure $ Just thing
         Nothing    -> lookupName name

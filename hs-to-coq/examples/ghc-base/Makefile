@@ -73,7 +73,8 @@ $(VFILES_GEN): lib/%.v : edits/%/edits renamings edits/%/preamble.v
 	mkdir -p "$$(dirname lib/$*.v)"
 	$(HS_TO_COQ) -e edits/$*/edits \
 	             -r renamings \
-		     -o lib/$*.v \
+		     -N \
+		     -o $$(dirname lib/$*.v) \
 		     -p edits/$*/preamble.v \
 		     base/$*.hs
 
@@ -84,7 +85,8 @@ $(VFILES_MAN): lib/%.v : manual/%.v
 lib/GHC/BaseGen.v : edits/GHC/Base/edits renamings edits/GHC/Base/preamble.v drop-in/GHC/Base.hs
 	$(HS_TO_COQ) -e edits/GHC/Base/edits \
 	             -r renamings \
-		     -o lib/GHC/BaseGen.v \
+		     -o lib/GHC \
+		     -N \
 		     -p edits/GHC/Base/preamble.v \
 		     --ghc -ibase \
 		     --ghc -ibase/dist-install/build \

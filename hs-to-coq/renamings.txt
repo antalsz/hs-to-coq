@@ -1,22 +1,16 @@
-type  () = unit
-value () = tt
+type  GHC.Tuple.() = Coq.Init.Datatypes.unit
+value GHC.Tuple.() = Coq.Init.Datatypes.tt
 
-type  [] = list
-value [] = nil
-value :  = ::
+type  GHC.Types.[] = Coq.Init.Datatypes.list
+value GHC.Types.[] = Coq.Init.Datatypes.nil
+value GHC.Types.:  = Coq.Init.Datatypes.cons
 
-type  Integer = Z
+type  GHC.Integer.Type.Integer = Coq.Numbers.BinNums.Z
 
-type  Bool  = bool
-value True  = true
-value False = false
+type  GHC.Types.Bool  = Coq.Init.Datatypes.bool
+value GHC.Types.True  = Coq.Init.Datatypes.true
+value GHC.Types.False = Coq.Init.Datatypes.false
 
-type  Maybe   = option
-value Just    = Some
-value Nothing = None
-
-# TODO Modules
-type  M.IntMap = IntMap
-type  S.IntSet = IntSet
-
-value < = <
+type  GHC.Base.Maybe   = Coq.Init.Datatypes.option
+value GHC.Base.Just    = Coq.Init.Datatypes.Some
+value GHC.Base.Nothing = Coq.Init.Datatypes.None

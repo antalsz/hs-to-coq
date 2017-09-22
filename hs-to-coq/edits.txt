@@ -54,11 +54,6 @@ skip varName
 # preamble.  A new kind of edit, perhaps?
 skip trivialBuiltInFamily
 
-# TODO With real module-checking, remove the `module` keyword and put these in
-# `renamings.txt`
-rename module PrimOp         value Check = Mk_CheckOp
-rename module BooleanFormula value Var   = Mk_BFVar
-
 add scope type for constructor Mk_TyCoMapper
 
 # Without the `redefine`s breaking the data type cycles, we also need `Expr` and

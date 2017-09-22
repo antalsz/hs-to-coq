@@ -13,7 +13,8 @@ import Control.Lens
 import Data.Bifunctor
 import Data.Semigroup (Semigroup(..))
 import Data.Foldable
-import Data.Traversable
+import HsToCoq.Util.Traversable
+import qualified Data.Text as T
 
 import qualified Data.Set        as S
 import qualified Data.Map.Strict as M
@@ -22,8 +23,9 @@ import Control.Monad
 
 import GHC hiding (Name)
 import qualified GHC
-
 import HsToCoq.Util.GHC
+import HsToCoq.Util.GHC.Module
+
 import HsToCoq.Coq.Gallina as Coq
 import HsToCoq.Coq.Gallina.Util
 
@@ -53,8 +55,13 @@ convertConLName :: ConversionMonad m => Located GHC.Name -> m Ident
 convertConLName (L _ hsCon) = do
   con <- ghcPpr hsCon -- We use 'ghcPpr' because we munge the name here ourselves
   use (renamed ExprNS con) >>= \case
-    Nothing   -> renamed ExprNS con <?= "Mk_" <> con
-    Just con' -> pure con'
+    Nothing   -> do
+      let mk_con = "Mk_" <> con
+      qual <- maybe "" ((`T.snoc` '.') . moduleNameText) <$> use currentModule
+      renamed ExprNS (qual <> con) ?= qual <> mk_con
+      pure mk_con
+    Just con' ->
+      pure con'
 
 convertConDecl :: ConversionMonad m
                => Term -> [Binder] -> ConDecl GHC.Name -> m [Constructor]
@@ -77,10 +84,9 @@ convertConDecl curType extraArgs (ConDeclH98 lname mlqvs mlcxt details _doc) = d
   constructorFields . at con ?= fieldInfo
   
   pure [(con, params, Just . maybeForall extraArgs $ foldr Arrow curType args)]
-convertConDecl _curType extraArgs (ConDeclGADT lnames (HsIB implicitTyVars lty) _doc) = do
-  -- TODO RENAMER implicitTyVars
+convertConDecl _curType extraArgs (ConDeclGADT lnames sigTy _doc) = do
   cons  <- traverse convertConLName lnames
-  conTy <- maybeForall extraArgs <$> convertLType lty
+  conTy <- maybeForall extraArgs <$> convertLHsSigType sigTy
   pure $ map (, [], Just conTy) cons
 
 --------------------------------------------------------------------------------
@@ -98,7 +104,7 @@ rewriteDataTypeArguments dta bs = do
   explicitMap <-
     let extraImplicit  = "non-initial implicit arguments"
         complexBinding = "complex (let/generalized) bindings"
-    in either dtaEditFailure (pure . M.fromList . concat) . for ebs $ \case
+    in either dtaEditFailure (pure . M.fromList) . forFold ebs $ \case
          Inferred   Coq.Explicit x     -> Right [(x, Inferred Coq.Explicit x)]
          Typed    g Coq.Explicit xs ty -> Right [(x, Typed g Coq.Explicit (pure x) ty) | x <- toList xs]
          
@@ -135,8 +141,8 @@ convertDataDefn :: ConversionMonad m
 convertDataDefn curType extraArgs (HsDataDefn _nd lcxt _ctype ksig cons _derivs) = do
   unless (null $ unLoc lcxt) $ convUnsupported "data type contexts"
   (,) <$> maybe (pure $ Sort Type) convertLType ksig
-      <*> (traverse addAdditionalConstructorScope . concat =<<
-           traverse (convertConDecl curType extraArgs . unLoc) cons)
+      <*> (traverse addAdditionalConstructorScope =<<
+           foldTraverse (convertConDecl curType extraArgs . unLoc) cons)
 
 convertDataDecl :: ConversionMonad m
                 => Located GHC.Name -> [LHsTyVarBndr GHC.Name] -> HsDataDefn GHC.Name

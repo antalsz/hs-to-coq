@@ -18,6 +18,9 @@ module HsToCoq.ConvertHaskell.Expr (
   -- ** `do' blocks and similar
   convertDoBlock, convertListComprehension,
   convertPatternBinding,
+  -- ** Guards
+  ConvertedGuard(..), convertGuard, guardTerm,
+  convertLGRHSList, convertGRHSs, convertGRHS, convertGuards
   ) where
 
 import Control.Lens
@@ -29,7 +32,7 @@ import HsToCoq.Util.Function
 import Data.Maybe
 import Data.List (intercalate)
 import HsToCoq.Util.List hiding (unsnoc)
-import Data.List.NonEmpty (nonEmpty, NonEmpty)
+import Data.List.NonEmpty (NonEmpty(..), nonEmpty)
 import qualified Data.List.NonEmpty as NEL
 import Data.Text (Text)
 import qualified Data.Text as T
@@ -80,7 +83,7 @@ convertExpr (HsUnboundVar x) =
   Var <$> freeVar (unboundVarOcc x)
 
 convertExpr (HsRecFld fld) =
-  Var . toPrefix <$> var ExprNS (rdrNameAmbiguousFieldOcc fld)
+  Var . toPrefix <$> recordField (rdrNameAmbiguousFieldOcc fld)
 
 convertExpr (HsOverLabel _) =
   convUnsupported "overloaded labels"
@@ -160,9 +163,10 @@ convertExpr (ExplicitTuple exprs _boxity) = do
                                                Var arg <$ tell [arg]
   pure $ maybe id Fun (nonEmpty $ map (Inferred Coq.Explicit . Ident) args) tuple
 
-convertExpr (HsCase e mg) = do
-  scrut <- convertLExpr e
-  bindIn "scrut" scrut $ \scrut -> convertMatchGroup [scrut] mg
+convertExpr (HsCase e mg) =
+  Coq.Match <$> (fmap pure $ MatchItem <$> convertLExpr e <*> pure Nothing <*> pure Nothing)
+            <*> pure Nothing
+            <*> convertMatchGroup mg
 
 convertExpr (HsIf overloaded c t f) =
   if maybe True isNoSyntaxExpr overloaded
@@ -170,7 +174,7 @@ convertExpr (HsIf overloaded c t f) =
   else convUnsupported "overloaded if-then-else"
 
 convertExpr (HsMultiIf PlaceHolder lgrhsList) =
-  convertLGRHSList [] lgrhsList MissingValue
+  convertLGRHSList [] MissingValue lgrhsList
 
 convertExpr (HsLet (L _ binds) body) =
   convertLocalBinds binds $ convertLExpr body
@@ -235,7 +239,7 @@ convertExpr (RecordCon (L _ hsCon) PlaceHolder conExpr HsRecFields{..}) = do
 
 convertExpr (RecordUpd recVal fields PlaceHolder PlaceHolder PlaceHolder PlaceHolder) = do
   updates <- fmap M.fromList . for fields $ \(L _ HsRecField{..}) -> do
-               field <- var ExprNS . rdrNameAmbiguousFieldOcc $ unLoc hsRecFieldLbl
+               field <- recordField . rdrNameAmbiguousFieldOcc $ unLoc hsRecFieldLbl
                pure (field, if hsRecPun then Nothing else Just hsRecFieldArg)
 
   let updFields       = M.keys updates
@@ -313,13 +317,11 @@ convertExpr (RecordUpd recVal fields PlaceHolder PlaceHolder PlaceHolder PlaceHo
                                    , mg_origin  = Generated }
 
 
-convertExpr (ExprWithTySig e (HsIB implicitTyVars (HsWC wcs _ss ty)))
-  | null wcs  = HasType <$> convertLExpr e <*> convertLType ty -- TODO implicitTyVars
-  | otherwise = convUnsupported "type wildcards"
-  
-convertExpr (ExprWithTySigOut e (HsIB implicitTyVars (HsWC wcs _ss ty)))
-  | null wcs  = HasType <$> convertLExpr e <*> convertLType ty -- TODO implicitTyVars
-  | otherwise = convUnsupported "type wildcards"
+convertExpr (ExprWithTySig e sigWcTy) =
+  HasType <$> convertLExpr e <*> convertLHsSigWcType sigWcTy
+
+convertExpr (ExprWithTySigOut e sigWcTy) =
+  HasType <$> convertLExpr e <*> convertLHsSigWcType sigWcTy
 
 convertExpr (ArithSeq _postTc _overloadedLists info) =
   -- TODO: Special-case infinite lists?
@@ -422,13 +424,15 @@ convertLExpr = convertExpr . unLoc
 
 convertFunction :: ConversionMonad m => MatchGroup GHC.Name (LHsExpr GHC.Name) -> m (Binders, Term)
 convertFunction mg = do
-  let n_args = matchGroupArity mg
-  args <- replicateM n_args (gensym "arg") >>= maybe err pure . nonEmpty
+  eqns <- convertMatchGroup mg
+  args <- case eqns of
+            Equation (MultPattern args :| _) _ : _ ->
+              traverse (const $ gensym "arg") args
+            _ ->
+              convUnsupported "empty `MatchGroup' in function"
   let argBinders = (Inferred Coq.Explicit . Ident) <$> args
-  match <- convertMatchGroup (Var <$> args) mg
+      match      = Coq.Match (args <&> \arg -> MatchItem (Var arg) Nothing Nothing) Nothing eqns
   pure (argBinders, match)
-  where
-    err = convUnsupported "empty `MatchGroup' in function"
 
 --------------------------------------------------------------------------------
 
@@ -546,10 +550,6 @@ isWild (GHC.AsPat _ lp)       = isWild (unLoc lp)
 isWild (GHC.TuplePat lps _ _) = all (isWild . unLoc) lps
 isWild _ = False
 
-isUnderscoreCoq :: Pattern -> Bool
-isUnderscoreCoq UnderscorePat = True
-isUnderscoreCoq _ = False
-
 isWildCoq :: Pattern -> Bool
 isWildCoq UnderscorePat     = True
 isWildCoq (QualidPat _)     = True
@@ -571,89 +571,71 @@ isWildCoq _ = False
   | OrPats (NE.NonEmpty OrPattern)
 -}
 
--- This function, used by both convertMatchGroup for the various matches,
--- as well as in convertMatch for the various guarded RHS, implements
--- fall-though semantics, by binding each item to a jump point and passing
--- the right failure jump target to the prevoius item.
-chainFallThroughs :: ConversionMonad m =>
-    [Term -> m Term] -> -- The matches, in syntax order
-    Term -> -- The final failure value
-    m Term
-chainFallThroughs cases failure = go (reverse cases) failure where
-   go (m:ls) next_case = do
-      this_match <- m next_case
-      bindIn "j" this_match $ \failure -> go ls failure
-   go [] failure = pure failure
+
+convertMatchGroup :: ConversionMonad m => MatchGroup GHC.Name (LHsExpr GHC.Name) -> m [Equation]
+convertMatchGroup (MG (L _ alts) _ _ _) = reverse <$> go (reverse alts) where
+   -- traverse the alts in reverse order for easy access to the last one.
+
+   -- special case when *last* alternative is a wildcard. We use that
+   -- expr as the fallthru for every other branch
+   -- (This is not *quite* right, but MissingValue is an error too.)
+   go (m:ls) | lpats <- m_pats (unLoc m), all (isWild . unLoc) lpats,
+               [rhs] <- grhssGRHSs (m_grhss (unLoc m)),
+               (GHC.GRHS [] lexpr) <- unLoc rhs = do
+      t  <- convertExpr (unLoc lexpr)
+      s1 <- convertMatch MissingValue (unLoc m)
+      ss <- traverse (convertMatch t . unLoc) ls
+      return (s1:ss)
+
+   go ls = traverse (convertMatch MissingValue . unLoc) ls
 
 
-convertMatchGroup :: ConversionMonad m =>
-    NonEmpty Term ->
-    MatchGroup GHC.Name (LHsExpr GHC.Name) ->
-    m Term
-convertMatchGroup args (MG (L _ alts) _ _ _) =
-    chainFallThroughs (convertMatch args . unLoc <$> alts) MissingValue
-
-convertMatch :: ConversionMonad m =>
-    NonEmpty Term -> -- scrutinee(s)
-    Match GHC.Name (LHsExpr GHC.Name) -> -- the match
-    Term -> -- the fallthrough
-    m Term  -- the resulting term (a complete `match scrut with ...` expression)
-convertMatch binds GHC.Match{..} failure = do
+-- Convert a match of a case statement,
+-- NOTE: this match itself could have several cases, due to guards
+--              i.e. pat | g1 -> expr1
+--                         gn -> expr2
+convertMatch :: ConversionMonad m =>   Term ->  Match GHC.Name (LHsExpr GHC.Name) -> m Equation
+convertMatch t GHC.Match{..} = do
   (pats, guards) <- runWriterT $
     maybe (convUnsupported "no-pattern case arms") pure . nonEmpty
       =<< traverse convertLPat m_pats
   oty <- traverse convertLType m_type
-
-  let extraGuards = map BoolGuard guards
-  rhs <- convertGRHSs extraGuards m_grhss failure
-  let typed_rhs = maybe id (flip HasType) oty rhs
-  let scrut = binds <&> \arg -> MatchItem arg Nothing Nothing
-  buildSingleEquationMatch scrut pats typed_rhs failure
-
-
--- This short-cuts wildcard matches, and ensures that the failure case is only
--- added if the pattern is refutable
-buildSingleEquationMatch :: ConversionMonad m =>
-    NonEmpty MatchItem -> NonEmpty Pattern -> Term -> Term -> m Term
-buildSingleEquationMatch scruts pats rhs failure
-    | all isUnderscoreCoq pats = pure rhs
-    | otherwise = do
-        ref <- refutabilityMult (MultPattern pats)
-        pure $ Coq.Match scruts Nothing $
-          [ Equation [MultPattern pats] rhs ] ++
-          [ Equation [MultPattern (UnderscorePat <$ scruts)] failure | isRefutable ref ]
-
-
+  rhs <- convertGRHSs (map BoolGuard guards) m_grhss t
+  pure . Equation [MultPattern pats] $ maybe id (flip HasType) oty rhs
 
 --------------------------------------------------------------------------------
 
+convertGuards :: ConversionMonad m => [([ConvertedGuard m],Term)] -> (Term -> m Term)
+convertGuards [] _ = convUnsupported "empty lists of guarded statements"
+convertGuards gs t = foldrM (uncurry guardTerm) t gs
+-- TODO: We could support enhanced fallthrough if we detected more
+-- `MissingValue` cases, e.g.
+--
+--     foo (Con1 x y) | rel x y = rhs1
+--     foo other                = rhs2
+--
+-- Right now, this doesn't catch the fallthrough.  Oh well!
+
 convertGRHS :: ConversionMonad m
-            => [ConvertedGuard m]
-            -> GRHS GHC.Name (LHsExpr GHC.Name)
-            -> Term -- failure
-            -> m Term
-convertGRHS extraGuards (GRHS gs rhs) failure = do
-    convGuards <- (extraGuards ++) <$> convertGuard gs
-    rhs <- convertLExpr rhs
-    guardTerm convGuards rhs failure
+            => [ConvertedGuard m] -> GRHS GHC.Name (LHsExpr GHC.Name)
+            -> m ([ConvertedGuard m],Term)
+convertGRHS extraGuards (GRHS gs rhs) = (,) <$> ((extraGuards ++) <$> convertGuard gs)
+                                            <*> convertLExpr rhs
 
 convertLGRHSList :: ConversionMonad m
                  => [ConvertedGuard m]
-                 -> [LGRHS GHC.Name (LHsExpr GHC.Name)]
                  -> Term
+                 -> [LGRHS GHC.Name (LHsExpr GHC.Name)]
                  -> m Term
-convertLGRHSList extraGuards lgrhs failure  = do
-    let rhss = unLoc <$> lgrhs
-    chainFallThroughs (convertGRHS extraGuards <$> rhss) failure
+convertLGRHSList extraGuards t = (\g -> convertGuards g t) <=< traverse (convertGRHS extraGuards . unLoc)
 
 convertGRHSs :: ConversionMonad m
-             => [ConvertedGuard m]
-             -> GRHSs GHC.Name (LHsExpr GHC.Name)
+             => [ConvertedGuard m] -> GRHSs GHC.Name (LHsExpr GHC.Name)
              -> Term
              -> m Term
-convertGRHSs extraGuards GRHSs{..} failure =
-    convertLocalBinds (unLoc grhssLocalBinds) $
-      convertLGRHSList extraGuards grhssGRHSs failure
+convertGRHSs extraGuards GRHSs{..} t = convertLocalBinds (unLoc grhssLocalBinds)
+                                     $ convertLGRHSList extraGuards t grhssGRHSs
+
 --------------------------------------------------------------------------------
 
 data ConvertedGuard m = OtherwiseGuard
@@ -661,8 +643,7 @@ data ConvertedGuard m = OtherwiseGuard
                       | PatternGuard   Pattern Term
                       | LetGuard       (m Term -> m Term)
 
-convertGuard :: ConversionMonad m =>
-    [GuardLStmt GHC.Name] -> m [ConvertedGuard m]
+convertGuard :: ConversionMonad m => [GuardLStmt GHC.Name] -> m [ConvertedGuard m]
 convertGuard [] = pure []
 convertGuard gs = collapseGuards <$> traverse (toCond . unLoc) gs where
   toCond (BodyStmt e _bind _guard _PlaceHolder) =
@@ -678,10 +659,6 @@ convertGuard gs = collapseGuards <$> traverse (toCond . unLoc) gs where
   toCond _ =
     convUnsupported "impossibly fancy guards"
 
-  -- We optimize the code a bit, and combine
-  -- successive boolean guards with andb
-  collapseGuards = foldr addGuard [] . concat
-
   -- TODO: Add multi-pattern-guard case
   addGuard g [] =
     [g]
@@ -690,22 +667,19 @@ convertGuard gs = collapseGuards <$> traverse (toCond . unLoc) gs where
   addGuard g' (g:gs) =
     g':g:gs
 
+  collapseGuards = foldr addGuard [] . concat
 
 -- Returns a function waiting for the "else case"
-guardTerm :: ConversionMonad m =>
-    [ConvertedGuard m] ->
-    Term -> -- The guarded expression
-    Term -> -- the failure expression
-    m Term
-guardTerm gs rhs failure = go gs where
+guardTerm :: ConversionMonad m => [ConvertedGuard m] -> Term -> (Term -> m Term)
+guardTerm gs guarded unguarded = go gs where
   go [] =
-    pure rhs
+    pure guarded
   go (OtherwiseGuard : []) =
-    pure rhs
+    pure guarded
   go (OtherwiseGuard : (_:_)) =
     convUnsupported "unused guards after an `otherwise' (or similar)"
   go (BoolGuard cond : gs) =
-    If cond Nothing <$> go gs <*> pure failure
+    If cond Nothing <$> go gs <*> pure unguarded
   -- if the pattern is exhaustive, don't include an otherwise case
   go (PatternGuard pat exp : gs) | isWildCoq pat = do
     guarded' <- go gs
@@ -715,7 +689,7 @@ guardTerm gs rhs failure = go gs where
     guarded' <- go gs
     pure $ Coq.Match [MatchItem exp Nothing Nothing] Nothing
                      [ Equation [MultPattern [pat]] guarded'
-                     , Equation [MultPattern [UnderscorePat]] failure ]
+                     , Equation [MultPattern [UnderscorePat]] unguarded ]
   go (LetGuard bind : gs) =
     bind $ go gs
 
@@ -808,23 +782,3 @@ convertLocalBinds (HsIPBinds _) _ =
   convUnsupported "local implicit parameter bindings"
 convertLocalBinds EmptyLocalBinds body =
   body
-
-
---------------------------------------------------------------------------------
-
--- Create `let x := rhs in genBody x`
--- Unless the rhs is very small, in which case it creates `genBody rhs`
-bindIn :: ConversionMonad m => Text -> Term -> (Term -> m Term) -> m Term
-bindIn _ rhs@(Qualid _) genBody = genBody rhs
-bindIn tmpl rhs genBody = do
-  j <- gensym tmpl
-  body <- genBody (Qualid (Bare j))
-  pure $ smartLet j rhs body
-
-
--- This prevents the pattern conversion code to create
--- `let j_24__ := … in j_24__`
-smartLet :: Ident -> Term -> Term -> Term
-smartLet ident rhs (Qualid (Bare v)) | ident == v = rhs
-smartLet ident rhs body = Let ident [] Nothing rhs body
-

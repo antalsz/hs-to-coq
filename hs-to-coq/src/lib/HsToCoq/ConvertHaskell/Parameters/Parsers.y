@@ -77,12 +77,9 @@ import HsToCoq.ConvertHaskell.Parameters.Parsers.Lexing
   '\''          { TokOp      "'"           }
   '('           { TokOpen    '('           }
   ')'           { TokClose   ')'           }
-  '['           { TokOpen    '['           }
-  ']'           { TokClose   ']'           }
   '{'           { TokOpen    '{'           }
   '}'           { TokClose   '}'           }
   eol           { TokNewline               }
-  '.w'          { TokWord    "."           }
   Word          { TokWord    $$            }
   Op            { TokOp      $$            }
   Num           { TokNat     $$            }
@@ -152,6 +149,10 @@ OptionalList(p)
 Lines(p)
   : SkipMany(eol) EndBy(p, SkipSome(eol))    { $2 }
 
+WordOrOp :: { Ident }
+  : Word    { $1 }
+  | Op      { $1 }
+
 --------------------------------------------------------------------------------
 -- Renamings
 --------------------------------------------------------------------------------
@@ -160,19 +161,11 @@ Namespace :: { HsNamespace }
   : value    { ExprNS }
   | type     { TypeNS }
 
-RawHsIdent :: { Ident }
-  : Qualid     { qualidToIdent $1 }
-  | Op         { $1   }
-  | ':'        { ":"  } -- TODO: Remove special case here?
-  | '(' ')'    { "()" }
-  | '[' ']'    { "[]" }
-
 NamespacedIdent :: { NamespacedIdent }
-  : Namespace RawHsIdent { NamespacedIdent $1 $2 }
+  : Namespace WordOrOp    { NamespacedIdent $1 $2 }
 
 Renaming :: { (NamespacedIdent, Ident) }
-  : NamespacedIdent '=' Word    { ($1, $3) }
-  | NamespacedIdent '=' Op      { ($1, $3) }
+  : NamespacedIdent '=' WordOrOp    { ($1, $3) }
 
 Renamings :: { [(NamespacedIdent, Ident)] }
   : Lines(Renaming)    { $1 }
@@ -208,7 +201,7 @@ Edit :: { Edit }
   | redefine CoqDefinition Optional('.')          { RedefinitionEdit      $2                   }
   | skip Word                                     { SkipEdit              $2                   }
   | skip Op                                       { SkipEdit              $2                   }
-  | rename module RawHsIdent Renaming             { ModuleRenamingEdit    $3 (fst $4) (snd $4) }
+  | rename module WordOrOp Renaming               { ModuleRenamingEdit    $3 (fst $4) (snd $4) }
   | add scope Scope for ScopePlace Word           { AdditionalScopeEdit   $5 $6 $3             }
   | order Some(Word)                              { OrderEdit             $2  }
 
@@ -221,7 +214,8 @@ Edits :: { [Edit] }
 
 -- TODO: parse operator names à la _*_
 -- TODO: *sometimes* ignore \n (Coq)
--- TODO: *sometimes* parse () and [] (Haskell)
+-- TODO: *sometimes* parse () and [] (Haskell) (fixed?)
+-- TODO: split qualified and unqualified names
 
 Term :: { Term }
   : LargeTerm    { $1 }
@@ -235,20 +229,16 @@ LargeTerm :: { Term }
   | Atom Op Atom               { if $2 == "->" then Arrow $1 $3 else Infix $1 $2 $3 }
 
 App :: { Term }
-  :     Atom   Some(Arg)     { App $1 $2 }
-  | '@' Qualid Many(Atom)    { ExplicitApp $2 $3 }
+  :     Atom Some(Arg)     { App $1 $2 }
+  | '@' Word Many(Atom)    { ExplicitApp (forceIdentToQualid $2) $3 }
 
 Arg :: { Arg }
   : '(' Word ':=' Term ')'    { NamedArg $2 $4 }
   | Atom                      { PosArg   $1 }
 
-Qualid :: { Qualid }
-  : Word                { Bare $1 }
-  | Qualid '.w' Word    { Qualified $1 $3 }
-
 Atom :: { Term }
   : '(' Term ')'    { $2 }
-  | Qualid          { Qualid $1 }
+  | Word            { Qualid (forceIdentToQualid $1) }
   | Num             { Num $1 }
 
 TypeAnnotation :: { Term }
@@ -284,7 +274,7 @@ CofixBody :: { CofixBody }
 Annotation :: { Annotation }
   : '{' struct Word '}'    { Annotation $3 }
 
--- There's an ambiguity between @{implicitVar : ty}@ and @{struct x}@.  Our
+-- There is an ambiguity between @{implicitVar : ty}@ and @{struct x}@.  Our
 -- options are either (a) use right-recursion and incur stack space blowup, or
 -- (b) parse any mix of binders and annotations, then parse them out.  I chose
 -- option (b).
@@ -382,4 +372,7 @@ uncurry3 f = \(a,b,c) -> f a b c
 
 unexpected :: Monad m => Token -> ParseT m a
 unexpected tok = throwError $ "unexpected " ++ tokenDescription tok
+
+forceIdentToQualid :: Ident -> Qualid
+forceIdentToQualid = fromMaybe (error "internal error: lexer produced a malfored qualid!") . identToQualid
 }

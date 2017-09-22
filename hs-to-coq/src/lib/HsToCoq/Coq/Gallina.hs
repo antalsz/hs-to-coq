@@ -62,6 +62,8 @@ module HsToCoq.Coq.Gallina (
   AssertionKeyword(..),
   Tactics,
   Proof(..),
+  ImportExport(..),
+  ModuleSentence(..),
   ClassDefinition(..),
   InstanceDefinition(..),
   Associativity(..),
@@ -82,8 +84,8 @@ module HsToCoq.Coq.Gallina (
 import Prelude hiding (Num)
 
 import Data.Foldable
-import Data.Traversable
 import HsToCoq.Util.Function
+import HsToCoq.Util.Traversable
 
 import Data.Text (Text)
 import qualified Data.Text as T
@@ -276,6 +278,8 @@ newtype Comment = Comment Text                                                  
 
 -- $Vernacular
 -- <https://coq.inria.fr/distrib/current/refman/Reference-Manual003.html#Vernacular §1.3, \"The Vernacular\", in the Coq reference manual.>.
+-- Module stuff is from <https://coq.inria.fr/refman/Reference-Manual004.html#Import §2.5, \"Module system\">,
+-- and @Require@ is from <https://coq.inria.fr/refman/Reference-Manual008.html#Require §6.5.1>.
 --
 -- We also add cases to deal with certain notation definitions and similar.
 
@@ -285,6 +289,7 @@ data Sentence = AssumptionSentence Assumption                                   
               | InductiveSentence  Inductive                                                   -- ^@/inductive/@
               | FixpointSentence   Fixpoint                                                    -- ^@/fixpoint/@
               | AssertionSentence  Assertion Proof                                             -- ^@/assertion/ /proof/@
+              | ModuleSentence     ModuleSentence                                              -- ^@/module_sentence/@ – extra (inferred from §2.5)
               | ClassSentence      ClassDefinition                                             -- ^@/class_definition/@ – extra
               | InstanceSentence   InstanceDefinition                                          -- ^@/instance_definition/@ – extra
               | NotationSentence   Notation                                                    -- ^@/notation/@ – extra
@@ -361,6 +366,17 @@ data Proof = ProofQed      Tactics                                              
            | ProofAdmitted Tactics                                                             -- ^@Proof . … Admitted .@
            deriving (Eq, Ord, Show, Read, Typeable, Data)
 
+-- |@/import_export/@ ::= – extra (inferred from §2.5.8)
+data ImportExport = Import                                                                     -- ^@Import@
+                  | Export                                                                     -- ^@Export@
+                  deriving (Eq, Ord, Show, Read, Enum, Bounded, Typeable, Data)
+
+-- |@/module_sentence/@ ::= – extra (inferred from §2.5 and §6.5.1), and incomplete
+data ModuleSentence = ModuleImport ImportExport (NonEmpty Qualid)                              -- ^@/import_export/ /qualid/ … /qualid/ .@
+                    | Require (Maybe Qualid) (Maybe ImportExport) (NonEmpty Qualid)            -- ^@[From /qualid/] Require [/import_export/] /qualid/ … /qualid/ .@
+                    | ModuleAssignment Qualid Qualid                                           -- ^@Module /qualid/ := /qualid/ .@
+                    deriving (Eq, Ord, Show, Read, Typeable, Data)
+
 -- |@/class_definition/ ::=@ /(extra)/
 data ClassDefinition = ClassDefinition Ident [Binder] (Maybe Sort) [(Ident, Term)]             -- ^@Class /ident/ [/binders/] [: /sort/] := { [/ident/ : /term/ ; … ; /ident/ : /term/] } .
                      deriving (Eq, Ord, Show, Read, Typeable, Data)
@@ -407,6 +423,7 @@ data ArgumentExplicitness = ArgExplicit                                         
 
 
 -- A Coq signature
+-- TODO: Move this?
 data Signature = Signature { sigType   :: Term
                            , sigFixity :: Maybe (Associativity, Level) }
                deriving (Eq, Ord, Show, Read)
@@ -500,7 +517,7 @@ renderIdent :: Ident -> Doc
 renderIdent = text
 
 renderAccessIdent :: AccessIdent -> Doc
-renderAccessIdent = text . T.cons ':'
+renderAccessIdent = text . T.cons '.'
 
 renderNum :: Num -> Doc
 renderNum = integer . toInteger
@@ -836,6 +853,7 @@ instance Gallina Sentence where
   renderGallina' p (InductiveSentence  ind)    = renderGallina' p ind
   renderGallina' p (FixpointSentence   fix)    = renderGallina' p fix
   renderGallina' p (AssertionSentence  ass pf) = renderGallina' p ass <!> renderGallina' p pf
+  renderGallina' p (ModuleSentence     mod)    = renderGallina' p mod
   renderGallina' p (ClassSentence      cls)    = renderGallina' p cls
   renderGallina' p (InstanceSentence   ins)    = renderGallina' p ins
   renderGallina' p (NotationSentence   not)    = renderGallina' p not
@@ -929,6 +947,22 @@ instance Gallina Proof where
     where
       renderProof end body = "Proof." <!> indent 2 (string body) <!> end <> "."
 
+instance Gallina ImportExport where
+  renderGallina' _ Import = "Import"
+  renderGallina' _ Export = "Export"
+
+instance Gallina ModuleSentence where
+  renderGallina' _ (ModuleImport ie mods) =
+    renderGallina ie <+> align (fillSep $ renderGallina <$> mods) <> "."
+  renderGallina' _ (Require mfrom mie mods) =
+       (("From" <+>) . renderGallina) ?? mfrom
+    <> "Require" <+> renderGallina ?? mie
+    <> align (fillSep $ renderGallina <$> mods) <> "."
+    where render ?? mx = maybe mempty render mx <> spaceIf mx
+          infix 9 ??
+  renderGallina' _ (ModuleAssignment modNew modOld) =
+    "Module" <+> renderGallina modNew <+> nest 2 (":=" </> renderGallina modOld <> ".")
+
 instance Gallina ClassDefinition where
   renderGallina' _ (ClassDefinition cl params osort fields) =
     "Class" <+> renderIdent cl <> spaceIf params <> render_args_oty H params (Sort <$> osort)
@@ -983,7 +1017,7 @@ instance Gallina ArgumentSpec where
 let abort = fail "Internal error: unexpected result from `reify'" in
   TH.reify ''Gallina >>= \case
     TH.ClassI _ is ->
-      fmap concat . for is $ \case
+      forFold is $ \case
         TH.InstanceD _ _ (TH.AppT (TH.ConT _gallina) ty) _ ->
           [d|instance Pretty $(pure ty) where pretty = renderGallina|]
         _ -> abort

@@ -5,13 +5,21 @@
              FlexibleContexts #-}
 
 module HsToCoq.ConvertHaskell.Declarations.Instances (
-  convertModuleClsInstDecls
-  ) where
+  -- * Top-level entry point
+  convertModuleClsInstDecls,
+  -- * Conversion building blocks
+  convertClsInstDecl, convertClsInstDeclInfo, convertInstanceName,
+  -- ** Utility functions
+  findHsClass, topoSortInstance,
+  -- * Alternative entry points (you probably don't want to use these)
+  convertClsInstDecls
+) where
 
 import Control.Lens
 
 import Data.Semigroup (Semigroup(..), (<>))
 import HsToCoq.Util.Function
+import HsToCoq.Util.Traversable
 import Data.Maybe
 import qualified Data.List.NonEmpty as NE
 import Data.Char
@@ -132,7 +140,7 @@ convertClsInstDecl cid@ClsInstDecl{..} rebuild mhandler = do
 
 convertModuleClsInstDecls :: forall m. ConversionMonad m
                           => [(Maybe ModuleName, ClsInstDecl GHC.Name)] -> m [Sentence]
-convertModuleClsInstDecls = fmap concat .: traverse $ maybeWithCurrentModule .*^ \cid ->
+convertModuleClsInstDecls = foldTraverse $ maybeWithCurrentModule .*^ \cid ->
                                convertClsInstDecl cid rebuild
                                                   (Just axiomatizeInstance)
   where rebuild :: InstanceDefinition -> m [Sentence]
@@ -142,7 +150,7 @@ convertModuleClsInstDecls = fmap concat .: traverse $ maybeWithCurrentModule .*^
                 True -> do
                     let t = "Skipping instance " <> coq_name
                     return [CommentSentence (Comment t)]
-                False -> topoSort instdef
+                False -> topoSortInstance instdef
         -- rebuild = pure . pure . InstanceSentence
 
         -- what to do if instance conversion fails
@@ -157,8 +165,8 @@ convertModuleClsInstDecls = fmap concat .: traverse $ maybeWithCurrentModule .*^
 -- Topo sort the instance members and lift (some of) them outside of
 -- the instance declaration.
 
-topoSort :: forall m.  ConversionMonad m => InstanceDefinition -> m [Sentence]
-topoSort (InstanceDefinition instanceName params ty members mp) = go sorted M.empty where
+topoSortInstance :: forall m.  ConversionMonad m => InstanceDefinition -> m [Sentence]
+topoSortInstance (InstanceDefinition instanceName params ty members mp) = go sorted M.empty where
 
         m        = M.fromList members
         sorted   = topoSortEnvironment m

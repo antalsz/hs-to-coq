@@ -8,11 +8,12 @@ module Expr where
 -- http://coq.inria.fr/bugs/.
 --
 
+data Id
+
 data Expr b
   = Var   Id
   | App   (Expr b) (Arg b)
   | Lam   b (Expr b)
-  deriving Data
 
 -- | Type synonym for expressions that occur in function argument positions.
 -- Only 'Arg' should contain a 'Type' at top level, general 'Expr' should not

@@ -163,6 +163,7 @@ instance Binding Sentence where
   binding f (InductiveSentence  ind)       = binding f ind
   binding f (FixpointSentence   fix)       = binding f fix
   binding f (AssertionSentence  assert pf) = binding f assert . (freeVars pf *>)
+  binding _ (ModuleSentence     mod)       = (freeVars mod *>)
   binding f (ClassSentence      cls)       = binding f cls
   binding f (InstanceSentence   ins)       = binding f ins
   binding f (NotationSentence   not)       = binding f not
@@ -457,6 +458,16 @@ instance FreeVars Proof where
   freeVars (ProofQed      _tactics) = pure ()
   freeVars (ProofDefined  _tactics) = pure ()
   freeVars (ProofAdmitted _tactics) = pure ()
+
+instance FreeVars ImportExport where
+  freeVars Import = pure ()
+  freeVars Export = pure ()
+
+instance FreeVars ModuleSentence where
+  -- Module names aren't the sorts of identifiers we track
+  freeVars (ModuleImport             ie _mods) = freeVars ie
+  freeVars (Require          _mfrom mie _mods) = freeVars mie
+  freeVars (ModuleAssignment _new _old)        = pure ()
 
 instance FreeVars Associativity where
   freeVars LeftAssociativity  = pure ()

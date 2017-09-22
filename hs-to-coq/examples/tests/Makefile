@@ -73,12 +73,12 @@ todo_pass: $(foreach f,$(TODO_PASS),$(f).pass)
 	@rm -f $*.v
 	@if [ -e $*/preamble.v ]; then P_ARG="-p $*/preamble.v"; else P_ARG=; fi;\
 	if [ -e $*/edits ]; then E_ARG="-e $*/edits"; else E_ARG=; fi;\
-	$(HS_TO_COQ) $${E_ARG} -r renamings -o $*.v $${P_ARG} $*.hs 1>/dev/null
+	$(HS_TO_COQ) $${E_ARG} -r renamings -o . $${P_ARG} $*.hs 1>/dev/null
 
 # We always want to re-build the .v files, to test the current build of hs-to-coq
 FORCE:
 
 clean:
-	rm -f */*.vo */*.glob */*.v.d *.vo *.v.d *.glob $(VFILES) _CoqProject Makefile.coq *~
+	rm -rf */*.vo */*.glob */*.v.d *.vo *.v.d *.glob $(VFILES) _CoqProject Makefile.coq *~
 
 .SECONDARY: $(VFILES)

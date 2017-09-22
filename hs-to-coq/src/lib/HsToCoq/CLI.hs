@@ -10,27 +10,24 @@ module HsToCoq.CLI (
   -- * Specific application processors
   printConvertedModules,
   convertAndPrintModules,
+  WithModulePrinter,
   -- * CLI configuration, parameters, etc.
-  Config(..), outputFile, preambleFile, renamingsFiles, editsFiles, modulesFiles, modulesRoot, directInputFiles,
+  Config(..), outputFile, preambleFile, renamingsFiles, editsFiles, processingMode, modulesFiles, modulesRoot, directInputFiles,
   processArgs,
   ProgramArgs(..),
   argParser, argParserInfo,
   -- * Utility functions
-  prettyPrint, hPrettyPrint,
-  -- * Renamer
-  processFilesMainRn, convertAndPrintModulesRn,
-  -- * Renamer part two
-  processFilesMainRn', convertAndPrintModulesRn'
+  prettyPrint, hPrettyPrint
   ) where
 
 import Control.Lens hiding ((<.>))
 
 import Data.Foldable
-import Data.Traversable
-import Data.List (isSuffixOf)
+import Data.List (intersperse, isSuffixOf)
 import Data.List.NonEmpty (NonEmpty(..))
 
 import Data.Functor
+import HsToCoq.Util.Traversable
 import Control.Monad
 import Control.Monad.IO.Class
 import Control.Monad.Except
@@ -72,62 +69,77 @@ prettyPrint = hPrettyPrint stdout
 
 data ProgramArgs = ProgramArgs { outputFileArg        :: Maybe FilePath
                                , preambleFileArg      :: Maybe FilePath
-                               , renamingsFileArgs    :: [FilePath]
-                               , editsFileArgs        :: [FilePath]
+                               , renamingsFilesArgs   :: [FilePath]
+                               , editsFilesArgs       :: [FilePath]
+                               , processingModeArg    :: ProcessingMode
                                , modulesFilesArgs     :: [FilePath]
                                , modulesRootArg       :: Maybe FilePath
+                               , importDirsArgs       :: [FilePath]
                                , includeDirsArgs      :: [FilePath]
-                               , ghcTreeDirArgs       :: [FilePath]
+                               , ghcTreeDirsArgs      :: [FilePath]
                                , ghcOptionsArgs       :: [String]
                                , directInputFilesArgs :: [FilePath] }
                  deriving (Eq, Ord, Show, Read)
 
 argParser :: Parser ProgramArgs
-argParser = ProgramArgs <$> optional (strOption   $  long    "output"
-                                                  <> short   'o'
-                                                  <> metavar "FILE"
-                                                  <> help    "File to write the translated Coq code to (defaults to stdout)")
+argParser = ProgramArgs <$> optional (strOption       $  long    "output"
+                                                      <> short   'o'
+                                                      <> metavar "FILE"
+                                                      <> help    "File to write the translated Coq code to (defaults to stdout)")
                         
-                        <*> optional (strOption   $  long    "preamble"
-                                                  <> short   'p'
-                                                  <> metavar "FILE"
-                                                  <> help    "File containing code that goes at the top of the Coq output")
+                        <*> optional (strOption       $  long    "preamble"
+                                                      <> short   'p'
+                                                      <> metavar "FILE"
+                                                      <> help    "File containing code that goes at the top of the Coq output")
                         
-                        <*> many     (strOption   $  long    "renamings"
-                                                  <> short   'r'
-                                                  <> metavar "FILE"
-                                                  <> help    "File with Haskell -> Coq identifier renamings")
+                        <*> many     (strOption       $  long    "renamings"
+                                                      <> short   'r'
+                                                      <> metavar "FILE"
+                                                      <> help    "File with Haskell -> Coq identifier renamings")
                         
-                        <*> many     (strOption   $  long    "edits"
-                                                  <> short   'e'
-                                                  <> metavar "FILE"
-                                                  <> help    "File with extra Haskell -> Coq edits")
+                        <*> many     (strOption       $  long    "edits"
+                                                      <> short   'e'
+                                                      <> metavar "FILE"
+                                                      <> help    "File with extra Haskell -> Coq edits")
                         
-                        <*> many     (strOption   $  long    "modules"
-                                                  <> short   'm'
-                                                  <> metavar "FILE"
-                                                  <> help    "File listing Haskell files to translate into Coq, in an indented tree structure")
+                        <*> asum [ flag' Recursive    $  long    "recursive"
+                                                      <> short   'R'
+                                                      <> help    "Translate dependencies of the given modules (default)"
+                                 , flag' NonRecursive $  long    "nonrecursive"
+                                                      <> short   'N'
+                                                      <> help    "Only translate the given modules, and not their dependencies"
+                                 , pure  Recursive ]
                         
-                        <*> optional (strOption   $  long    "modules-dir"
-                                                  <> short   'd'
-                                                  <> metavar "DIR"
-                                                  <> help    "The directory the module tree files' contents are rooted at")
+                        <*> many     (strOption       $  long    "modules"
+                                                      <> short   'm'
+                                                      <> metavar "FILE"
+                                                      <> help    "File listing Haskell files to translate into Coq, in an indented tree structure")
                         
-                        <*> many     (strOption   $  long    "include-dir"
-                                                  <> short   'I'
-                                                  <> metavar "DIR"
-                                                  <> help    "Directory to search for CPP `#include's")
+                        <*> optional (strOption       $  long    "modules-dir"
+                                                      <> short   'd'
+                                                      <> metavar "DIR"
+                                                      <> help    "The directory the module tree files' contents are rooted at")
                         
-                        <*> many     (strOption   $  long    "ghc-tree"
-                                                  <> metavar "DIR"
-                                                  <> help    "Add the usual ghc build tree subdirectories to the module search path")
+                        <*> many     (strOption       $  long    "import-dir"
+                                                      <> short   'i'
+                                                      <> metavar "DIR"
+                                                      <> help    "Directory to search for Haskell modules")
                         
-                        <*> many     (strOption   $  long    "ghc"
-                                                  <> metavar "ARGUMENT"
-                                                  <> help    "Option to pass through to GHC")
+                        <*> many     (strOption       $  long    "include-dir"
+                                                      <> short   'I'
+                                                      <> metavar "DIR"
+                                                      <> help    "Directory to search for CPP `#include's")
                         
-                        <*> many     (strArgument $  metavar "FILES"
-                                                  <> help    "Haskell files to translate into Coq")
+                        <*> many     (strOption       $  long    "ghc-tree"
+                                                      <> metavar "DIR"
+                                                      <> help    "Add the usual ghc build tree subdirectories rooted atDIR to the module search path")
+                        
+                        <*> many     (strOption       $  long    "ghc"
+                                                      <> metavar "ARGUMENT"
+                                                      <> help    "Option to pass through to GHC")
+                        
+                        <*> many     (strArgument     $  metavar "FILES"
+                                                      <> help    "Haskell files to translate into Coq")
 
 argParserInfo :: ParserInfo ProgramArgs
 argParserInfo = info (helper <*> argParser) $  fullDesc
@@ -137,6 +149,7 @@ data Config = Config { _outputFile       :: !(Maybe FilePath)
                      , _preambleFile     :: !(Maybe FilePath)
                      , _renamingsFiles   :: ![FilePath]
                      , _editsFiles       :: ![FilePath]
+                     , _processingMode   :: !ProcessingMode
                      , _modulesFiles     :: ![FilePath]
                      , _modulesRoot      :: !(Maybe FilePath)
                      , _directInputFiles :: ![FilePath] }
@@ -150,15 +163,15 @@ ghcInputDirs base = map ((base </> "compiler") </>) $ words
     \profiling rename simplCore simplStg specialise stgSyn \
     \stranal typecheck types utils vectorise stage2/build"
 
-processArgs :: GhcMonad m => m (DynFlags, Config)
+processArgs :: GhcMonad m => m Config
 processArgs = do
   ProgramArgs{..} <- liftIO $ customExecParser defaultPrefs{prefMultiSuffix="..."} argParserInfo
   
-  let ghcArgs = map (locate "-I" . ("-I" ++))          includeDirsArgs ++
-                map (locate "--ghc-tree" . ("-i" ++))  (concatMap ghcInputDirs ghcTreeDirArgs) ++
-                map (locate "--ghc")                   ghcOptionsArgs
-        where locate opt = mkGeneralLocated $ "command line (" ++ opt ++ ")"
-
+  let ghcArgs = let locate opt = mkGeneralLocated $ "command line (" ++ opt ++ ")"
+                in map (locate "-i"         . ("-i" ++)) importDirsArgs ++
+                   map (locate "-I"         . ("-I" ++)) includeDirsArgs ++
+                   map (locate "--ghc-tree" . ("-i" ++)) (concatMap ghcInputDirs ghcTreeDirsArgs) ++
+                   map (locate "--ghc")                  ghcOptionsArgs
   
   (dflags, ghcRest, warnings) <- (parseDynamicFlagsCmdLine ?? ghcArgs) =<< getSessionDynFlags
   printAllIfPresent unLoc "Command-line argument warning" warnings
@@ -166,15 +179,16 @@ processArgs = do
   
   void $ setSessionDynFlags dflags
   
-  pure (dflags, Config { _outputFile       = if outputFileArg == Just "-"
-                                             then Nothing
-                                             else outputFileArg
-                       , _preambleFile     = preambleFileArg
-                       , _renamingsFiles   = renamingsFileArgs
-                       , _editsFiles       = editsFileArgs
-                       , _modulesFiles     = modulesFilesArgs
-                       , _modulesRoot      = modulesRootArg
-                       , _directInputFiles = directInputFilesArgs })
+  pure $ Config { _outputFile       = if outputFileArg == Just "-"
+                                      then Nothing
+                                      else outputFileArg
+                , _preambleFile     = preambleFileArg
+                , _renamingsFiles   = renamingsFilesArgs
+                , _editsFiles       = editsFilesArgs
+                , _processingMode   = processingModeArg
+                , _modulesFiles     = modulesFilesArgs
+                , _modulesRoot      = modulesRootArg
+                , _directInputFiles = directInputFilesArgs }
 
 parseModulesFiles :: (MonadIO m, MonadError String m)
                   => FilePath -> [FilePath] -> m [FilePath]
@@ -182,142 +196,24 @@ parseModulesFiles root files =
   let fullName name = root </> if ".hs" `isSuffixOf` name
                                then name
                                else name <.> "hs"
-  in fmap (map fullName . resolveFileTrees . concat) . for files $ \file ->
+  in fmap (map fullName . resolveFileTrees) . forFold files $ \file ->
        exceptEither . parseFileTrees (Just file) =<< liftIO (readFile file)
-
-processFilesMain :: GhcMonad m
-                 => (Handle -> [Located (HsModule RdrName)] -> ConversionT m ())
-                 -> m ()
-processFilesMain process = do
-  (dflags, conf) <- processArgs
-  
-  let parseConfigFiles files builder parser = liftIO $ do
-        parsed <- forM (conf ^.files) $ \filename ->
-          (evalParse parser <$> T.readFile filename) >>= \case
-            Left  err -> die $ "Could not parse " ++ filename ++ ": " ++ err
-            Right res -> return res
-        either die pure $ builder (mconcat parsed)
-
-  renamings  <- parseConfigFiles renamingsFiles buildRenamings parseRenamingList
-  edits      <- parseConfigFiles editsFiles     buildEdits     parseEditList
-  
-  inputFiles <- either (liftIO . die) pure <=< runExceptT $
-                  (++) <$> pure (conf^.directInputFiles)
-                       <*> parseModulesFiles (conf^.modulesRoot.non "") (conf^.modulesFiles)
-  
-  evalConversion renamings edits .
-    maybe ($ stdout) (flip gWithFile WriteMode) (conf^.outputFile) $ \hOut -> do
-      liftIO $ do T.hPutStr hOut staticPreamble
-                  hFlush    hOut
-
-      for_ (conf^.preambleFile) $ \file -> liftIO $ do
-        hPutStrLn hOut "(* Preamble *)"
-        hPutStr   hOut =<< readFile file
-        hPutStrLn hOut ""
-        hFlush    hOut
-      
-      traverse_ (process hOut) =<< processFiles dflags inputFiles
-      liftIO $ hFlush hOut
-
-processFilesMainRn :: forall m. GhcMonad m
-                   => (Handle -> [TypecheckedModule] -> ConversionT m ())
-                   -> m ()
-processFilesMainRn process = do
-  (dflags, conf) <- processArgs
-  
-  let parseConfigFiles files builder parser = liftIO $ do
-        parseds <- forM (conf ^.files) $ \filename ->
-          (evalParse parser <$> T.readFile filename) >>= \case
-            Left  err -> die $ "Could not parse " ++ filename ++ ": " ++ err
-            Right res -> return res
-        let parsed = mconcat parseds
-        either die pure $ builder parsed
-  
-  renamings  <- parseConfigFiles renamingsFiles buildRenamings parseRenamingList
-  edits      <- parseConfigFiles editsFiles     buildEdits     parseEditList
-  
-  inputFiles <- either (liftIO . die) pure <=< runExceptT $
-                  (++) <$> parseModulesFiles (conf^.modulesRoot.non "") (conf^.modulesFiles)
-                       <*> pure (conf^.directInputFiles)
-  
-  evalConversion renamings edits .
-    maybe ($ stdout) (flip gWithFile WriteMode) (conf^.outputFile) $ \hOut -> do
-      liftIO $ do T.hPutStr hOut staticPreamble
-                  hFlush    hOut
-
-      for_ (conf^.preambleFile) $ \file -> liftIO $ do
-        hPutStrLn hOut "(* Preamble *)"
-        hPutStr   hOut =<< readFile file
-        hPutStrLn hOut ""
-        hFlush    hOut
-
-      traverse_ (process hOut) =<< tcRnFiles dflags inputFiles
-      liftIO $ hFlush hOut
-
-printConvertedModules :: MonadIO m => Handle -> ConvertedModules -> m ()
-printConvertedModules out [] = liftIO $ do
-  hPutStrLn out $ "(* Nothing to convert *)"
-  hFlush out
-printConvertedModules out sentences = liftIO $ do
-  hPutStrLn out $ "(* Successfully converted the following code: *)"
-  mapM_ (\s -> hPrettyPrint out $ renderGallina s <> line) sentences
-
-  case toList . getFreeVars . NoBinding $ sentences of
-    []  -> pure ()
-    fvs -> do hPrettyPrint out $
-                line <> "(*" <+> hang 2
-                  ("Unbound variables:" <!> fillSep (map text fvs))
-                <!> "*)" <> line
-              hFlush out
-
-convertAndPrintModules :: ConversionMonad m => Handle -> [Located (HsModule RdrName)] -> m ()
-convertAndPrintModules h = printConvertedModules h <=< convertLModules
-
-printConvertedModulesRn :: MonadIO m => Handle -> ConvertedModules -> m ()
-printConvertedModulesRn out [] = liftIO $ do
-  hPutStrLn out $ "(* Nothing to convert *)"
-  hFlush out
-printConvertedModulesRn out sentences = liftIO $ do
-  hPutStrLn out $ "(* Successfully converted the following code: *)"
-  mapM_ (\s -> hPrettyPrint out $ renderGallina s <> line) sentences
-
-  case toList . getFreeVars . NoBinding $ sentences of
-    []  -> pure ()
-    fvs -> do hPrettyPrint out $
-                line <> "(*" <+> hang 2
-                  ("Unbound variables:" <!> fillSep (map text fvs))
-                <!> "*)" <> line
-              hFlush out
-
-convertAndPrintModulesRn :: ConversionMonad m => Handle -> [TypecheckedModule] -> m ()
-convertAndPrintModulesRn h =   printConvertedModulesRn h
-                           <=< convertHsGroups
-                           <=< traverse toModGroup
-  where toModGroup tcm
-          | Just (grp,_,_,_) <- tm_renamed_source tcm = do
-                -- or should we store and use the ModInfo instead?
-                setTcGblEnv (fst (tm_internals_ tcm))
-                pure (mod, grp)
-          | otherwise = throwProgramError $  "Renamer failed for `"
-                                          ++ moduleNameString mod ++ "'"
-          where mod = moduleName . ms_mod . pm_mod_summary $ tm_parsed_module tcm
 
 --------------------------------------------------------------------------------
 
 type WithModulePrinter m a = ModuleName -> (Handle -> m a) -> m a
 
-processFilesMainRn' :: GhcMonad m
-                    => (WithModulePrinter (ConversionT m) () -> [TypecheckedModule] -> ConversionT m ())
-                    -> m ()
-processFilesMainRn' process = do
-  (dflags, conf) <- processArgs
+processFilesMain :: GhcMonad m
+                 => (WithModulePrinter (ConversionT m) () -> [TypecheckedModule] -> ConversionT m ())
+                 -> m ()
+processFilesMain process = do
+  conf <- processArgs
   
-  let parseConfigFiles files builder parser = liftIO $ do
-        parsed <- forM (conf ^.files) $ \filename ->
+  let parseConfigFiles files builder parser =
+        liftIO . forFold (conf^.files) $ \filename ->
           (evalParse parser <$> T.readFile filename) >>= \case
             Left  err -> die $ "Could not parse " ++ filename ++ ": " ++ err
-            Right res -> return res
-        either die pure $ builder (mconcat parsed)
+            Right res -> either die pure $ builder res
   
   renamings  <- parseConfigFiles renamingsFiles buildRenamings parseRenamingList
   edits      <- parseConfigFiles editsFiles     buildEdits     parseEditList
@@ -349,42 +245,50 @@ processFilesMainRn' process = do
         act hOut
 
   evalConversion renamings edits $
-    traverse_ (process withModulePrinter) =<< tcRnFiles dflags inputFiles
+    traverse_ (process withModulePrinter) =<< processFiles (conf^.processingMode) inputFiles
 
-printConvertedModuleRn' :: MonadIO m
-                        => WithModulePrinter m ()
-                        -> ConvertedModule
-                        -> m ()
-printConvertedModuleRn' withModulePrinter ConvertedModule{..} =
-  withModulePrinter convModName $ \out -> liftIO $ do
-    case convModBody of
-        [] -> hPutStrLn out $ "(* Nothing to convert *)"
-        _ -> do
-            hPutStrLn out $ "(* Successfully converted the following code: *)"
-            mapM_ (\s -> hPrettyPrint out $ renderGallina s <> line) convModBody
-    hFlush out
+printConvertedModule :: ConversionMonad m
+                     => WithModulePrinter m ()
+                     -> ConvertedModule
+                     -> m ()
+printConvertedModule withModulePrinter cmod@ConvertedModule{..} =
+  withModulePrinter convModName $ \out -> do
+    convModDecls <- moduleDeclarations cmod
+    
+    liftIO $ do
+      let flush    = hFlush out
+          printGap = hPutStrLn out ""
+          
+          printThe what _   [] = hPutStrLn out $ "(* No " ++ what ++ " to convert. *)"
+          printThe what sep ds = do hPutStrLn out $ "(* Converted " ++ what ++ ": *)"
+                                    traverse_ (hPrettyPrint out) . intersperse sep $
+                                      map ((<> line) . renderGallina) ds
+        
+      printThe "imports"      mempty convModImports <* printGap <* flush
+      printThe "declarations" line   convModDecls   <*             flush
+        
+      case toList . getFreeVars $ NoBinding convModDecls of
+        []  -> pure ()
+        fvs -> do hPrettyPrint out $
+                    line <> "(*" <+> hang 2
+                      ("Unbound variables:" <!> fillSep (map text fvs))
+                    <!> "*)" <> line
+                  hFlush out
 
-    case toList . getFreeVars . NoBinding $ convModBody of
-      []  -> pure ()
-      fvs -> do hPrettyPrint out $
-                  line <> "(*" <+> hang 2
-                    ("Unbound variables:" <!> fillSep (map text fvs))
-                  <!> "*)" <> line
-                hFlush out
+printConvertedModules :: ConversionMonad m
+                      => WithModulePrinter m ()
+                      -> [NonEmpty ConvertedModule]
+                      -> m ()
+printConvertedModules withModulePrinter =
+  traverse_ (printConvertedModule withModulePrinter) . foldMap toList
 
-printConvertedModulesRn' :: MonadIO m
-                         => WithModulePrinter m ()
-                         -> [NonEmpty ConvertedModule]
-                         -> m ()
-printConvertedModulesRn' withModulePrinter =
-  traverse_ (printConvertedModuleRn' withModulePrinter) . foldMap toList
-
-convertAndPrintModulesRn' :: ConversionMonad m => WithModulePrinter m () -> [TypecheckedModule] -> m ()
-convertAndPrintModulesRn' p =   printConvertedModulesRn' p
-                            <=< convertRenamedSources
-                            <=< traverse toRenamed
+convertAndPrintModules :: ConversionMonad m => WithModulePrinter m () -> [TypecheckedModule] -> m ()
+convertAndPrintModules p = printConvertedModules p <=< convertModules <=< traverse toRenamed
   where toRenamed tcm
-          | Just rn <- tm_renamed_source tcm = pure (mod, rn)
+          | Just rn <- tm_renamed_source tcm = do
+                -- or should we store and use the ModInfo instead?
+                typecheckerEnvironment ?= fst (tm_internals_ tcm)
+                pure (mod, rn)
           | otherwise = throwProgramError $  "Renamer failed for `"
                                           ++ moduleNameString mod ++ "'"
-          where mod = moduleName . ms_mod . pm_mod_summary $ tm_parsed_module tcm
+          where mod = ms_mod_name . pm_mod_summary $ tm_parsed_module tcm

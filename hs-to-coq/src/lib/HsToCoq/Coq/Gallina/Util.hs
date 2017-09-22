@@ -14,7 +14,8 @@ module HsToCoq.Coq.Gallina.Util (
   _Ident, _UnderscoreName, nameToIdent,
   binderNames, binderIdents, binderExplicitness,
   -- ** Functions
-  qualidToIdent,
+  qualidBase, qualidModule,
+  qualidToIdent, identToQualid,
   nameToTerm, nameToPattern,
   binderArgs
   ) where
@@ -23,6 +24,7 @@ import Control.Lens
 import Data.Semigroup ((<>))
 import Data.Foldable
 import Data.List.NonEmpty (NonEmpty(..), nonEmpty)
+import qualified Data.Text as T
 import HsToCoq.Coq.Gallina
 
 pattern Var  :: Ident                        -> Term
@@ -94,9 +96,23 @@ binderExplicitness f (Generalized     ei       ty) = f ei <&> \ei' -> Generalize
 binderExplicitness _ blet@BindLet{}                = pure blet
 {-# INLINEABLE binderExplicitness #-}
 
+qualidBase :: Qualid -> Ident
+qualidBase (Bare      ident) = ident
+qualidBase (Qualified _ aid) = aid
+
+qualidModule :: Qualid -> Maybe Qualid
+qualidModule (Bare      _)     = Nothing
+qualidModule (Qualified qid _) = Just qid
+
 qualidToIdent :: Qualid -> Ident
 qualidToIdent (Bare      ident)   = ident
 qualidToIdent (Qualified qid aid) = qualidToIdent qid <> "." <> aid
+
+-- This doesn't handle all malformed 'Ident's
+identToQualid :: Ident -> Maybe Qualid
+identToQualid x = case T.splitOn "." x of
+                    root:rest -> Just $ foldl' Qualified (Bare root) rest
+                    []        -> Nothing
 
 nameToTerm :: Name -> Term
 nameToTerm (Ident x)      = Var x

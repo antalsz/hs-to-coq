@@ -80,6 +80,7 @@ instance Subst Sentence where
   subst f (InductiveSentence  ind)       = InductiveSentence  (subst f ind)
   subst f (FixpointSentence   fix)       = FixpointSentence   (subst f fix)
   subst f (AssertionSentence  assert pf) = AssertionSentence  (subst f assert) pf
+  subst f (ModuleSentence     mod)       = ModuleSentence     (subst f mod)
   subst f (ClassSentence      cls)       = ClassSentence      (subst f cls)
   subst f (InstanceSentence   ins)       = InstanceSentence   (subst f ins)
   subst f (NotationSentence   not)       = NotationSentence   (subst f not)
@@ -116,6 +117,8 @@ instance Subst Fixpoint where
 instance Subst Assertion where
   subst f (Assertion kwd name args ty) = Assertion kwd name (subst f args) (subst f ty)
 
+instance Subst ModuleSentence where
+  subst _ mod = mod
 
 instance Subst ClassDefinition where
   subst _f (ClassDefinition _cl _params _osrt _fields) = error "subst"

@@ -5,14 +5,18 @@ type  GHC.Types.[]  = list
 value GHC.Types.[]  = nil
 value GHC.Types.:   = cons
 
-value GHC.Base.foldr  = GHC.BaseGen.foldr
-value GHC.Base.const  = GHC.BaseGen.const
-value GHC.Base.id     = GHC.BaseGen.id
-type  GHC.Base.Monoid = GHC.BaseGen.Monoid
 type  GHC.Base.Alternative = GHC.BaseGen.Alternative
-type  GHC.Base.Monad = GHC.BaseGen.Monad
-value GHC.Base.++  = GHC.Prim.app
-value GHC.Base..  = compose
+type  GHC.Base.Applicative = GHC.BaseGen.Applicative
+type  GHC.Base.Functor = GHC.BaseGen.Functor
+type  GHC.Base.Monad  = GHC.BaseGen.Monad
+type  GHC.Base.Monoid = GHC.BaseGen.Monoid
+value GHC.Base.const  = GHC.BaseGen.const
+value GHC.Base.foldr  = GHC.BaseGen.foldr
+value GHC.Base.map    = GHC.BaseGen.map
+value GHC.Base.id     = GHC.BaseGen.id
+value GHC.Base.++     = GHC.Prim.app
+value GHC.Base..      = Coq.Program.Basics.compose
+value GHC.Base.$      = GHC.BaseGen.id
 value GHC.Magic.oneShot = GHC.Prim.oneShot
 
 type GHC.Types.Ordering = comparison

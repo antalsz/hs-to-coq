@@ -43,7 +43,7 @@ Proof.
 Qed.
 
 Lemma append_nil:
-  forall a (x : list a), x ++ nil = x.
+  forall a (x : list a), app x nil = x.
 Proof.
   intros.
   induction x.
@@ -53,7 +53,7 @@ Qed.
 
 Lemma append_assoc:
   forall a (x y z : list a),
-  (x ++ y) ++ z = x ++ (y ++ z).
+  app (app x y) z = app x (app y z).
 Proof.
   intros.
   induction x.
@@ -164,12 +164,12 @@ Proof.
   intros.
   destruct m.
   simpl.
-  unfold getCurrent, op_z2218U__, Successors.instance_Monad_Succs_op_zgzgze__.
+  unfold getCurrent, op_z2218U__, Successors.instance_GHC_BaseGen_Monad_Succs_op_zgzgze__, compose.
   destruct (k a0).
   destruct (h b0).
   f_equal.
   repeat (rewrite map_map || rewrite map_append || rewrite append_assoc ||
-    unfold getCurrent, op_z2218U__, Successors.instance_Monad_Succs_op_zgzgze__ 
+    unfold getCurrent, op_z2218U__, Successors.instance_GHC_BaseGen_Monad_Succs_op_zgzgze__ 
     ).
   f_equal.
   apply map_cong; intro.

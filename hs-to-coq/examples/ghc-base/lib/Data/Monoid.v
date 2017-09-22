@@ -35,9 +35,9 @@ Require GHC.BaseGen.
    (Dual a))' failed: OOPS! Cannot construct types for this class def: Nothing
    unsupported *)
 
-(* Skipping instance instance_GHC_Base_Functor_Dual *)
+(* Skipping instance instance_GHC_BaseGen_Functor_Dual *)
 
-(* Skipping instance instance_GHC_Base_Applicative_Dual *)
+(* Skipping instance instance_GHC_BaseGen_Applicative_Dual *)
 
 (* Skipping instance instance_GHC_BaseGen_Monad_Dual *)
 
@@ -53,9 +53,9 @@ Require GHC.BaseGen.
 (* Translating `instance (forall `{GHC.Num.Num a}, GHC.BaseGen.Monoid (Sum a))'
    failed: OOPS! Cannot construct types for this class def: Nothing unsupported *)
 
-(* Skipping instance instance_GHC_Base_Functor_Sum *)
+(* Skipping instance instance_GHC_BaseGen_Functor_Sum *)
 
-(* Skipping instance instance_GHC_Base_Applicative_Sum *)
+(* Skipping instance instance_GHC_BaseGen_Applicative_Sum *)
 
 (* Skipping instance instance_GHC_BaseGen_Monad_Sum *)
 
@@ -63,9 +63,9 @@ Require GHC.BaseGen.
    a))' failed: OOPS! Cannot construct types for this class def: Nothing
    unsupported *)
 
-(* Skipping instance instance_GHC_Base_Functor_Product *)
+(* Skipping instance instance_GHC_BaseGen_Functor_Product *)
 
-(* Skipping instance instance_GHC_Base_Applicative_Product *)
+(* Skipping instance instance_GHC_BaseGen_Applicative_Product *)
 
 (* Skipping instance instance_GHC_BaseGen_Monad_Product *)
 

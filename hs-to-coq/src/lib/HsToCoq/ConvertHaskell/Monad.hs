@@ -210,22 +210,22 @@ builtInDefaultMethods = fmap M.fromList $ M.fromList
         , "/=" ~> Fun [arg "x", arg "y"] (App1 (Var "negb") $ Infix (Var "x") "==" (Var "y")) 
         ]
     , "GHC.BaseGen.Functor" =:
-        [ "op_zlzd__" ~> Fun [arg "x"] (App1 (Var "fmap") (App1 (Var "const") (Var "x")))
+        [ "op_zlzd__" ~> Fun [arg "x"] (App1 (Var "fmap") (App1 (Var "GHC.BaseGen.const") (Var "x")))
         ]
     , "GHC.BaseGen.Applicative" =:
         [ "op_ztzg__" ~> Fun [arg "x", arg "y"]
-            (let const_id = App1 (Var "const") (Var "id") in
-            App2 (Var "op_zlztzg__") (App2 (Var "fmap") const_id (Var "x")) (Var "y"))
+            (let const_id = App1 (Var "GHC.BaseGen.const") (Var "GHC.BaseGen.id") in
+            App2 (Var "op_zlztzg__") (App2 (Var "GHC.BaseGen.fmap") const_id (Var "x")) (Var "y"))
         , "op_zlzt__" ~> Fun [arg "x", arg "y"]
-            (let const    = Var "const" in
-            App2 (Var "op_zlztzg__") (App2 (Var "fmap") const    (Var "x")) (Var "y"))
+            (let const    = Var "GHC.BaseGen.const" in
+            App2 (Var "op_zlztzg__") (App2 (Var "GHC.BaseGen.fmap") const    (Var "x")) (Var "y"))
         ]
     , "Monoid" =:
         [ "mconcat" ~> App2 (Var "foldr") (Var "mappend") (Var "mempty")
         ]
     , "GHC.BaseGen.Monad" =:
-        [ "return_" ~> Var "pure"
-        , "op_zgzg__" ~> Var "op_ztzg__"
+        [ "return_" ~> Var "GHC.BaseGen.pure"
+        , "op_zgzg__" ~> Var "GHC.BaseGen.op_ztzg__"
         , "fail" ~> Fun [arg "x"] (Var "missingValue")
         ]
     ]

@@ -8,8 +8,8 @@ SHELL = bash
 
 all: coq
 
-Successors.v: Successors.hs edits preamble.v
-	$(HS_TO_COQ) -e edits -p preamble.v  Successors.hs -o Successors.v
+Successors.v: Successors.hs edits preamble.v ../ghc-base/renamings
+	$(HS_TO_COQ) -e edits -p preamble.v -r ../ghc-base/renamings Successors.hs -o .
 
 Makefile.coq: _CoqProject
 	coq_makefile -f _CoqProject -o $@

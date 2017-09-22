@@ -168,7 +168,7 @@ convertExpr (HsIf overloaded c t f) =
   else convUnsupported "overloaded if-then-else"
 
 convertExpr (HsMultiIf PlaceHolder lgrhsList) =
-  convertLGRHSList [] lgrhsList MissingValue
+  convertLGRHSList [] lgrhsList PatternFailure
 
 convertExpr (HsLet (L _ binds) body) =
   convertLocalBinds binds $ convertLExpr body
@@ -587,7 +587,7 @@ convertMatchGroup :: ConversionMonad m =>
     MatchGroup GHC.Name (LHsExpr GHC.Name) ->
     m Term
 convertMatchGroup args (MG (L _ alts) _ _ _) =
-    chainFallThroughs (convertMatch args . unLoc <$> alts) MissingValue
+    chainFallThroughs (convertMatch args . unLoc <$> alts) PatternFailure
 
 convertMatch :: ConversionMonad m =>
     NonEmpty Term -> -- scrutinee(s)
@@ -725,7 +725,7 @@ convertTypedBinding _convHsTy PatSynBind{}  = convUnsupported "pattern synonym b
 convertTypedBinding _convHsTy PatBind{..}   = do -- TODO use `_convHsTy`?
   -- TODO: Respect `skipped'?
   (pat, guards) <- runWriterT $ convertLPat pat_lhs
-  Just . ConvertedPatternBinding pat <$> convertGRHSs (map BoolGuard guards) pat_rhs MissingValue
+  Just . ConvertedPatternBinding pat <$> convertGRHSs (map BoolGuard guards) pat_rhs PatternFailure
 convertTypedBinding  convHsTy FunBind{..}   = runMaybeT $ do
   (name, opName) <- freeVar (unLoc fun_id) <&> \case
                       name | identIsVariable name -> (name,            Nothing)
@@ -744,7 +744,7 @@ convertTypedBinding  convHsTy FunBind{..}   = runMaybeT $ do
     if all (null . m_pats . unLoc) . unLoc $ mg_alts fun_matches
     then case unLoc $ mg_alts fun_matches of
            [L _ (GHC.Match _ [] mty grhss)] ->
-             maybe (pure id) (fmap (flip HasType) . convertLType) mty <*> convertGRHSs [] grhss MissingValue
+             maybe (pure id) (fmap (flip HasType) . convertLType) mty <*> convertGRHSs [] grhss PatternFailure
            _ ->
              convUnsupported "malformed multi-match variable definitions"
     else do

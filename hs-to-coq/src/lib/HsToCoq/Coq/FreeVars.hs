@@ -362,6 +362,9 @@ instance FreeVars Term where
   freeVars MissingValue =
     pure ()
 
+  freeVars PatternFailure =
+    pure ()
+
 instance FreeVars Arg where
   freeVars (PosArg      t) = freeVars t
   freeVars (NamedArg _x t) = freeVars t

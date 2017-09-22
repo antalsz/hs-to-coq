@@ -109,7 +109,7 @@ builtInClasses =
         , "mempty"  =: Var "a"
         , "mconcat" =: (Var "list" `App1` Var "a") `Arrow` Var "a"
         ]
-    , ClassDefinition "Functor" [Inferred Explicit (Ident "f")] Nothing
+    , ClassDefinition "GHC.BaseGen.Functor" [Inferred Explicit (Ident "f")] Nothing
         [ "fmap" =: (Forall [ Inferred Implicit (Ident "a")
                             , Inferred Implicit (Ident "b")] $
                      (Var "a" `Arrow` Var "b") `Arrow`
@@ -121,7 +121,7 @@ builtInClasses =
                      App1 (Var "f") (Var "a") `Arrow`
                      App1 (Var "f") (Var "b"))
         ]
-    , ClassDefinition "Applicative"
+    , ClassDefinition "GHC.BaseGen.Applicative"
         [ Inferred Explicit (Ident "f")
         , Generalized Implicit (App1 (Var "Functor") (Var "f"))
         ]
@@ -147,9 +147,9 @@ builtInClasses =
                      App1 (Var "f") (Var "b") `Arrow`
                      App1 (Var "f") (Var "a"))
         ]
-    , ClassDefinition "Monad"
+    , ClassDefinition "GHC.BaseGen.Monad"
         [ Inferred Explicit (Ident "f")
-        , Generalized Implicit (App1 (Var "Applicative") (Var "f"))
+        , Generalized Implicit (App1 (Var "GHC.BaseGen.Applicative") (Var "f"))
         ]
         Nothing
         [ "return_"  =: (Forall [Inferred Implicit (Ident "a")]  $
@@ -168,7 +168,7 @@ builtInClasses =
                     App1 (Var "f") (Var "b"))
         , "fail" =:
            (Forall [ Inferred Implicit (Ident "a")] $
-                    Var "String" `Arrow`
+                    Var "GHC.Prim.String" `Arrow`
                     App1 (Var "f") (Var "a"))
         ]
     , ClassDefinition "Foldable"
@@ -209,23 +209,23 @@ builtInDefaultMethods = fmap M.fromList $ M.fromList
         [ "==" ~> Fun [arg "x", arg "y"] (App1 (Var "negb") $ Infix (Var "x") "/=" (Var "y"))
         , "/=" ~> Fun [arg "x", arg "y"] (App1 (Var "negb") $ Infix (Var "x") "==" (Var "y")) 
         ]
-    , "Functor" =:
-        [ "op_zlzd__" ~> Fun [arg "x"] (App1 (Var "fmap") (App1 (Var "const") (Var "x")))
+    , "GHC.BaseGen.Functor" =:
+        [ "op_zlzd__" ~> Fun [arg "x"] (App1 (Var "fmap") (App1 (Var "GHC.BaseGen.const") (Var "x")))
         ]
-    , "Applicative" =:
+    , "GHC.BaseGen.Applicative" =:
         [ "op_ztzg__" ~> Fun [arg "x", arg "y"]
-            (let const_id = App1 (Var "const") (Var "id") in
-            App2 (Var "op_zlztzg__") (App2 (Var "fmap") const_id (Var "x")) (Var "y"))
+            (let const_id = App1 (Var "GHC.BaseGen.const") (Var "GHC.BaseGen.id") in
+            App2 (Var "op_zlztzg__") (App2 (Var "GHC.BaseGen.fmap") const_id (Var "x")) (Var "y"))
         , "op_zlzt__" ~> Fun [arg "x", arg "y"]
-            (let const    = Var "const" in
-            App2 (Var "op_zlztzg__") (App2 (Var "fmap") const    (Var "x")) (Var "y"))
+            (let const    = Var "GHC.BaseGen.const" in
+            App2 (Var "op_zlztzg__") (App2 (Var "GHC.BaseGen.fmap") const    (Var "x")) (Var "y"))
         ]
     , "Monoid" =:
         [ "mconcat" ~> App2 (Var "foldr") (Var "mappend") (Var "mempty")
         ]
-    , "Monad" =:
-        [ "return_" ~> Var "pure"
-        , "op_zgzg__" ~> Var "op_ztzg__"
+    , "GHC.BaseGen.Monad" =:
+        [ "return_" ~> Var "GHC.BaseGen.pure"
+        , "op_zgzg__" ~> Var "GHC.BaseGen.op_ztzg__"
         , "fail" ~> Fun [arg "x"] (Var "missingValue")
         ]
     ]

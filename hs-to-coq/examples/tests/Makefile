@@ -47,22 +47,36 @@ COQFLAGS  = ""
 # typecheck *quietly*
 TYPECHECK=coqc 1>/dev/null
 
+main:
+	# Call ourselves with -k, so that we see all test outputs,
+	# even if some fail
+	$(MAKE) -k all
+
 all:  $(VFILES) pass todo_pass
 
 pass: $(addsuffix .pass,$(PASS))
 	@echo -------- END PASS ------------
 
-todo_pass: $(foreach f,$(TODO_PASS),$(f).pass)
+todo_pass: $(foreach f,$(TODO_PASS),$(f).fail)
 	@echo
 	@echo "Any names printed without errors should be moved from TODO_PASS to PASS"
 
 %.pass : %.v
 	@/bin/echo -n "$<: "
 	@if ! test -e $<; \
-	 then echo -e "\033[1;31mmissing\033[0m (should pass)";\
+	 then echo -e "\033[1;31mmissing\033[0m (should pass)"; exit 1;\
 	 elif ! $(TYPECHECK) $< >&/dev/null; \
-	 then echo -e "\033[1;31mfailed\033[0m (should pass)" >&2; \
+	 then echo -e "\033[1;31mfailed\033[0m (should pass)"; exit 1;  \
 	 else echo -e "\033[1;32mpassed\033[0m"; \
+	 fi
+
+%.fail : %.v
+	@/bin/echo -n "$<: "
+	@if ! test -e $<; \
+	 then echo -e "\033[1;31mmissing\033[0m"; \
+	 elif ! $(TYPECHECK) $< >&/dev/null; \
+	 then echo -e "\033[1;31mfailed\033[0m"; \
+	 else echo -e "\033[1;32mpassed\033[0m (unexpected)"; exit 1; \
 	 fi
 
 %.vo : %.v

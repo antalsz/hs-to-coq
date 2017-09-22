@@ -7,10 +7,7 @@ Set Maximal Implicit Insertion.
 Unset Strict Implicit.
 Unset Printing Implicit Defensive.
 
-(* Let us be a bit explicit by having multiple axoims around *)
-(* This one is for untranslatable expressions: *)
 Local Axiom missingValue : forall {a}, a.
-(* This one is for pattern match failures: *)
 Local Axiom patternFailure : forall {a}, a.
 
 (* Preamble *)
@@ -25,6 +22,7 @@ Require Data.Maybe.
 Require GHC.Base.
 Require GHC.Num.
 Require GHC.Integer.
+Require Coq.Program.Basics.
 Require GHC.BaseGen.
 Require GHC.Prim.
 
@@ -90,7 +88,7 @@ Definition concat {a} : (list (list a)) -> (list a) :=
 Definition concatMap {a} {b} : (a -> (list b)) -> ((list a) -> (list b)) :=
   fun arg_76__ =>
     match arg_76__ with
-      | f => GHC.BaseGen.foldr (compose GHC.Prim.app f) nil
+      | f => GHC.BaseGen.foldr (Coq.Program.Basics.compose GHC.Prim.app f) nil
     end.
 
 Definition constScanl {a} {b} : a -> (b -> a) :=
@@ -635,9 +633,10 @@ Definition zipWithFB {a} {b} {c} {d} {e}
     end.
 
 (* Unbound variables:
-     * :: GHC.BaseGen.const GHC.BaseGen.foldr GHC.BaseGen.id GHC.Num.Int GHC.Num.Num
-     GHC.Num.op_zp__ GHC.Num.op_zt__ GHC.Prim.Eq_ GHC.Prim.Ord GHC.Prim.String
-     GHC.Prim.app GHC.Prim.errorWithoutStackTrace GHC.Prim.max GHC.Prim.min
-     GHC.Prim.oneShot GHC.Prim.op_zeze__ GHC.Prim.op_zsze__ None Some andb bool
-     compose cons false foldl foldl' list nil option orb pair true
+     * :: Coq.Program.Basics.compose GHC.BaseGen.const GHC.BaseGen.foldr
+     GHC.BaseGen.id GHC.Num.Int GHC.Num.Num GHC.Num.op_zp__ GHC.Num.op_zt__
+     GHC.Prim.Eq_ GHC.Prim.Ord GHC.Prim.String GHC.Prim.app
+     GHC.Prim.errorWithoutStackTrace GHC.Prim.max GHC.Prim.min GHC.Prim.oneShot
+     GHC.Prim.op_zeze__ GHC.Prim.op_zsze__ None Some andb bool cons false foldl
+     foldl' list nil option orb pair true
 *)

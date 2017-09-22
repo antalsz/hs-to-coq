@@ -7,10 +7,7 @@ Set Maximal Implicit Insertion.
 Unset Strict Implicit.
 Unset Printing Implicit Defensive.
 
-(* Let us be a bit explicit by having multiple axoims around *)
-(* This one is for untranslatable expressions: *)
 Local Axiom missingValue : forall {a}, a.
-(* This one is for pattern match failures: *)
 Local Axiom patternFailure : forall {a}, a.
 
 (* Preamble *)
@@ -27,64 +24,57 @@ Require GHC.Num.
 Require GHC.Read.
 Require GHC.Show.
 Require GHC.Generics.
+Require GHC.BaseGen.
 
 (* Converted declarations: *)
 
-(* Translating `instance (forall `{GHC.Base.Monoid a}, GHC.Base.Monoid (Dual
+(* Translating `instance (forall `{GHC.BaseGen.Monoid a}, GHC.BaseGen.Monoid
+   (Dual a))' failed: OOPS! Cannot construct types for this class def: Nothing
+   unsupported *)
+
+(* Skipping instance instance_GHC_BaseGen_Functor_Dual *)
+
+(* Skipping instance instance_GHC_BaseGen_Applicative_Dual *)
+
+(* Skipping instance instance_GHC_BaseGen_Monad_Dual *)
+
+(* Translating `instance GHC.BaseGen.Monoid (Endo a)' failed: OOPS! Cannot
+   construct types for this class def: Nothing unsupported *)
+
+(* Translating `instance GHC.BaseGen.Monoid All' failed: OOPS! Cannot construct
+   types for this class def: Nothing unsupported *)
+
+(* Translating `instance GHC.BaseGen.Monoid Any' failed: OOPS! Cannot construct
+   types for this class def: Nothing unsupported *)
+
+(* Translating `instance (forall `{GHC.Num.Num a}, GHC.BaseGen.Monoid (Sum a))'
+   failed: OOPS! Cannot construct types for this class def: Nothing unsupported *)
+
+(* Skipping instance instance_GHC_BaseGen_Functor_Sum *)
+
+(* Skipping instance instance_GHC_BaseGen_Applicative_Sum *)
+
+(* Skipping instance instance_GHC_BaseGen_Monad_Sum *)
+
+(* Translating `instance (forall `{GHC.Num.Num a}, GHC.BaseGen.Monoid (Product
    a))' failed: OOPS! Cannot construct types for this class def: Nothing
    unsupported *)
 
-(* Translating `instance GHC.Base.Functor Dual' failed: OOPS! Cannot construct
-   types for this class def: Nothing unsupported *)
+(* Skipping instance instance_GHC_BaseGen_Functor_Product *)
 
-(* Translating `instance GHC.Base.Applicative Dual' failed: OOPS! Cannot
+(* Skipping instance instance_GHC_BaseGen_Applicative_Product *)
+
+(* Skipping instance instance_GHC_BaseGen_Monad_Product *)
+
+(* Translating `instance GHC.BaseGen.Monoid (First a)' failed: OOPS! Cannot
    construct types for this class def: Nothing unsupported *)
 
-(* Translating `instance GHC.Base.Monad Dual' failed: OOPS! Cannot construct
-   types for this class def: Nothing unsupported *)
-
-(* Translating `instance GHC.Base.Monoid (Endo a)' failed: OOPS! Cannot
+(* Translating `instance GHC.BaseGen.Monoid (Last a)' failed: OOPS! Cannot
    construct types for this class def: Nothing unsupported *)
 
-(* Translating `instance GHC.Base.Monoid All' failed: OOPS! Cannot construct
-   types for this class def: Nothing unsupported *)
-
-(* Translating `instance GHC.Base.Monoid Any' failed: OOPS! Cannot construct
-   types for this class def: Nothing unsupported *)
-
-(* Translating `instance (forall `{GHC.Num.Num a}, GHC.Base.Monoid (Sum a))'
-   failed: OOPS! Cannot construct types for this class def: Nothing unsupported *)
-
-(* Translating `instance GHC.Base.Functor Sum' failed: OOPS! Cannot construct
-   types for this class def: Nothing unsupported *)
-
-(* Translating `instance GHC.Base.Applicative Sum' failed: OOPS! Cannot
-   construct types for this class def: Nothing unsupported *)
-
-(* Translating `instance GHC.Base.Monad Sum' failed: OOPS! Cannot construct
-   types for this class def: Nothing unsupported *)
-
-(* Translating `instance (forall `{GHC.Num.Num a}, GHC.Base.Monoid (Product a))'
-   failed: OOPS! Cannot construct types for this class def: Nothing unsupported *)
-
-(* Translating `instance GHC.Base.Functor Product' failed: OOPS! Cannot
-   construct types for this class def: Nothing unsupported *)
-
-(* Translating `instance GHC.Base.Applicative Product' failed: OOPS! Cannot
-   construct types for this class def: Nothing unsupported *)
-
-(* Translating `instance GHC.Base.Monad Product' failed: OOPS! Cannot construct
-   types for this class def: Nothing unsupported *)
-
-(* Translating `instance GHC.Base.Monoid (First a)' failed: OOPS! Cannot
-   construct types for this class def: Nothing unsupported *)
-
-(* Translating `instance GHC.Base.Monoid (Last a)' failed: OOPS! Cannot
-   construct types for this class def: Nothing unsupported *)
-
-(* Translating `instance (forall `{GHC.Base.Alternative f}, GHC.Base.Monoid (Alt
-   f a))' failed: OOPS! Cannot construct types for this class def: Nothing
-   unsupported *)
+(* Translating `instance (forall `{GHC.BaseGen.Alternative f},
+   GHC.BaseGen.Monoid (Alt f a))' failed: OOPS! Cannot construct types for this
+   class def: Nothing unsupported *)
 
 Inductive All : Type := Mk_All : bool -> All.
 
@@ -93,7 +83,7 @@ Definition getAll (arg_7__ : All) :=
     | (Mk_All getAll) => getAll
   end.
 
-Instance instance_GHC_Base_Monoid_All : !GHC.Base.Monoid All := {}.
+Instance instance_GHC_BaseGen_Monoid_All : !GHC.BaseGen.Monoid All := {}.
 Proof.
 Admitted.
 
@@ -106,7 +96,7 @@ Definition getAny (arg_6__ : Any) :=
     | (Mk_Any getAny) => getAny
   end.
 
-Instance instance_GHC_Base_Monoid_Any : !GHC.Base.Monoid Any := {}.
+Instance instance_GHC_BaseGen_Monoid_Any : !GHC.BaseGen.Monoid Any := {}.
 Proof.
 Admitted.
 
@@ -117,25 +107,13 @@ Definition getDual {a} (arg_5__ : Dual a) :=
     | (Mk_Dual getDual) => getDual
   end.
 
-Instance instance__forall___GHC_Base_Alternative_f___GHC_Base_Monoid__Alt_f_a__
-  : !(forall `{GHC.Base.Alternative f}, GHC.Base.Monoid (Alt f a)) := {}.
+Instance instance__forall___GHC_BaseGen_Alternative_f___GHC_BaseGen_Monoid__Alt_f_a__
+  : !(forall `{GHC.BaseGen.Alternative f}, GHC.BaseGen.Monoid (Alt f a)) := {}.
 Proof.
 Admitted.
 
-Instance instance_GHC_Base_Monad_Dual : !GHC.Base.Monad Dual := {}.
-Proof.
-Admitted.
-
-Instance instance_GHC_Base_Applicative_Dual : !GHC.Base.Applicative Dual := {}.
-Proof.
-Admitted.
-
-Instance instance_GHC_Base_Functor_Dual : !GHC.Base.Functor Dual := {}.
-Proof.
-Admitted.
-
-Instance instance__forall___GHC_Base_Monoid_a___GHC_Base_Monoid__Dual_a__
-  : !(forall `{GHC.Base.Monoid a}, GHC.Base.Monoid (Dual a)) := {}.
+Instance instance__forall___GHC_BaseGen_Monoid_a___GHC_BaseGen_Monoid__Dual_a__
+  : !(forall `{GHC.BaseGen.Monoid a}, GHC.BaseGen.Monoid (Dual a)) := {}.
 Proof.
 Admitted.
 
@@ -146,7 +124,8 @@ Definition appEndo {a} (arg_4__ : Endo a) :=
     | (Mk_Endo appEndo) => appEndo
   end.
 
-Instance instance_GHC_Base_Monoid__Endo_a_ : !GHC.Base.Monoid (Endo a) := {}.
+Instance instance_GHC_BaseGen_Monoid__Endo_a_ : !GHC.BaseGen.Monoid (Endo a) :=
+  {}.
 Proof.
 Admitted.
 
@@ -157,7 +136,8 @@ Definition getFirst {a} (arg_3__ : First a) :=
     | (Mk_First getFirst) => getFirst
   end.
 
-Instance instance_GHC_Base_Monoid__First_a_ : !GHC.Base.Monoid (First a) := {}.
+Instance instance_GHC_BaseGen_Monoid__First_a_ : !GHC.BaseGen.Monoid (First
+                                                                     a) := {}.
 Proof.
 Admitted.
 
@@ -168,7 +148,8 @@ Definition getLast {a} (arg_2__ : Last a) :=
     | (Mk_Last getLast) => getLast
   end.
 
-Instance instance_GHC_Base_Monoid__Last_a_ : !GHC.Base.Monoid (Last a) := {}.
+Instance instance_GHC_BaseGen_Monoid__Last_a_ : !GHC.BaseGen.Monoid (Last a) :=
+  {}.
 Proof.
 Admitted.
 
@@ -179,21 +160,8 @@ Definition getProduct {a} (arg_1__ : Product a) :=
     | (Mk_Product getProduct) => getProduct
   end.
 
-Instance instance_GHC_Base_Monad_Product : !GHC.Base.Monad Product := {}.
-Proof.
-Admitted.
-
-Instance instance_GHC_Base_Applicative_Product : !GHC.Base.Applicative
-                                                 Product := {}.
-Proof.
-Admitted.
-
-Instance instance_GHC_Base_Functor_Product : !GHC.Base.Functor Product := {}.
-Proof.
-Admitted.
-
-Instance instance__forall___GHC_Num_Num_a___GHC_Base_Monoid__Product_a__
-  : !(forall `{GHC.Num.Num a}, GHC.Base.Monoid (Product a)) := {}.
+Instance instance__forall___GHC_Num_Num_a___GHC_BaseGen_Monoid__Product_a__
+  : !(forall `{GHC.Num.Num a}, GHC.BaseGen.Monoid (Product a)) := {}.
 Proof.
 Admitted.
 
@@ -204,24 +172,11 @@ Definition getSum {a} (arg_0__ : Sum a) :=
     | (Mk_Sum getSum) => getSum
   end.
 
-Instance instance_GHC_Base_Monad_Sum : !GHC.Base.Monad Sum := {}.
-Proof.
-Admitted.
-
-Instance instance_GHC_Base_Applicative_Sum : !GHC.Base.Applicative Sum := {}.
-Proof.
-Admitted.
-
-Instance instance_GHC_Base_Functor_Sum : !GHC.Base.Functor Sum := {}.
-Proof.
-Admitted.
-
-Instance instance__forall___GHC_Num_Num_a___GHC_Base_Monoid__Sum_a__
-  : !(forall `{GHC.Num.Num a}, GHC.Base.Monoid (Sum a)) := {}.
+Instance instance__forall___GHC_Num_Num_a___GHC_BaseGen_Monoid__Sum_a__
+  : !(forall `{GHC.Num.Num a}, GHC.BaseGen.Monoid (Sum a)) := {}.
 Proof.
 Admitted.
 
 (* Unbound variables:
-     GHC.Base.Alternative GHC.Base.Applicative GHC.Base.Functor GHC.Base.Monad
-     GHC.Base.Monoid GHC.Num.Num Type bool f option
+     GHC.BaseGen.Alternative GHC.BaseGen.Monoid GHC.Num.Num Type bool f option
 *)

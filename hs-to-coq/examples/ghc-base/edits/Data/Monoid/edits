@@ -5,16 +5,16 @@ skip op_zlzg__
 skip instance__forall___Alternative_f___Monoid__Alt_f_a__
 
 # A bunch of things using coerce
-skip instance_Functor_Dual
-skip instance_Applicative_Dual
-skip instance_Monad_Dual
-skip instance_Functor_Product
-skip instance_Applicative_Product
-skip instance_Monad_Product
+skip instance_GHC_BaseGen_Functor_Dual
+skip instance_GHC_BaseGen_Applicative_Dual
+skip instance_GHC_BaseGen_Monad_Dual
+skip instance_GHC_BaseGen_Functor_Product
+skip instance_GHC_BaseGen_Applicative_Product
+skip instance_GHC_BaseGen_Monad_Product
 skip instance__forall___Num_a___Monoid__Product_a__
-skip instance_Functor_Sum
-skip instance_Applicative_Sum
-skip instance_Monad_Sum
+skip instance_GHC_BaseGen_Functor_Sum
+skip instance_GHC_BaseGen_Applicative_Sum
+skip instance_GHC_BaseGen_Monad_Sum
 skip instance__forall___Num_a___Monoid__Sum_a__
 
 # https://github.com/antalsz/hs-to-coq/issues/9
@@ -22,7 +22,7 @@ skip instance_Monoid__Endo_a_
 skip instance_Monoid__First_a_
 skip instance_Monoid__Last_a_
 
-order instance_Functor_Product instance_Applicative_Product
-order instance_Applicative_Product instance_Monad_Product_return_
-order instance_Applicative_Product instance_Monad_Product_op_zgzg__
+order instance_GHC_BaseGen_Functor_Product instance_GHC_BaseGen_Applicative_Product
+order instance_GHC_BaseGen_Applicative_Product instance_GHC_BaseGen_Monad_Product_return_
+order instance_GHC_BaseGen_Applicative_Product instance_GHC_BaseGen_Monad_Product_op_zgzg__
 

@@ -67,7 +67,7 @@ Definition listToMaybe {a} : (list a) -> (option a) :=
   fun arg_25__ =>
     let j_27__ :=
       match arg_25__ with
-        | (a :: _) => Some a
+        | (cons a _) => Some a
         | _ => patternFailure
       end in
     match arg_25__ with
@@ -79,17 +79,17 @@ Definition mapMaybe {a} {b} : (a -> (option b)) -> ((list a) -> (list b)) :=
   fix mapMaybe arg_10__ arg_11__
         := let j_18__ :=
              match arg_10__ , arg_11__ with
-               | f , (x :: xs) => let rs := mapMaybe f xs in
-                                  let scrut_13__ := f x in
-                                  let j_15__ :=
+               | f , (cons x xs) => let rs := mapMaybe f xs in
+                                    let scrut_13__ := f x in
+                                    let j_15__ :=
+                                      match scrut_13__ with
+                                        | (Some r) => cons r rs
+                                        | _ => patternFailure
+                                      end in
                                     match scrut_13__ with
-                                      | (Some r) => (r :: rs)
-                                      | _ => patternFailure
-                                    end in
-                                  match scrut_13__ with
-                                    | None => rs
-                                    | _ => j_15__
-                                  end
+                                      | None => rs
+                                      | _ => j_15__
+                                    end
                | _ , _ => patternFailure
              end in
            match arg_10__ , arg_11__ with
@@ -138,6 +138,6 @@ Definition maybeToList {a} : (option a) -> (list a) :=
     end.
 
 (* Unbound variables:
-     :: GHC.Prim.errorWithoutStackTrace None Some bool concatMap false list nil
+     :: GHC.Prim.errorWithoutStackTrace None Some bool concatMap cons false list nil
      option true
 *)

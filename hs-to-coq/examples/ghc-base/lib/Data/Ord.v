@@ -45,26 +45,25 @@ Instance instance_Down_Eq {a} `(Eq_ a) : Eq_ (Down a) := {
 Require GHC.Base.
 Require GHC.Show.
 Require GHC.Read.
-Require GHC.Classes.
+Require GHC.Prim.
 
 (* Converted declarations: *)
 
-(* Translating `instance (forall `{GHC.Classes.Ord a}, GHC.Classes.Ord (Down
-   a))' failed: OOPS! Cannot construct types for this class def: Nothing
-   unsupported *)
+(* Translating `instance (forall `{GHC.Prim.Ord a}, GHC.Prim.Ord (Down a))'
+   failed: OOPS! Cannot construct types for this class def: Nothing unsupported *)
 
-Definition comparing {a} {b} `{(GHC.Classes.Ord a)}
+Definition comparing {a} {b} `{(GHC.Prim.Ord a)}
     : (b -> a) -> (b -> (b -> comparison)) :=
   fun arg_0__ arg_1__ arg_2__ =>
     match arg_0__ , arg_1__ , arg_2__ with
-      | p , x , y => GHC.Classes.compare (p x) (p y)
+      | p , x , y => GHC.Prim.compare (p x) (p y)
     end.
 
-Instance instance__forall___GHC_Classes_Ord_a___GHC_Classes_Ord__Down_a__
-  : !(forall `{GHC.Classes.Ord a}, GHC.Classes.Ord (Down a)) := {}.
+Instance instance__forall___GHC_Prim_Ord_a___GHC_Prim_Ord__Down_a__
+  : !(forall `{GHC.Prim.Ord a}, GHC.Prim.Ord (Down a)) := {}.
 Proof.
 Admitted.
 
 (* Unbound variables:
-     Down GHC.Classes.Ord GHC.Classes.compare comparison
+     Down GHC.Prim.Ord GHC.Prim.compare comparison
 *)

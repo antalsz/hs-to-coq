@@ -3,13 +3,14 @@ value GHC.Tuple.() = tt
 
 type  GHC.Types.[]  = list
 value GHC.Types.[]  = nil
-value GHC.Types.:   = ::
+value GHC.Types.:   = cons
 
 value GHC.Base.foldr  = GHC.BaseGen.foldr
 value GHC.Base.const  = GHC.BaseGen.const
 value GHC.Base.id     = GHC.BaseGen.id
-value GHC.Base.++  = ++
-value GHC.Base..  = ∘
+value GHC.Base.++  = GHC.Prim.app
+value GHC.Base..  = compose
+value GHC.Magic.oneShot = GHC.Prim.oneShot
 
 type GHC.Types.Ordering = comparison
 value GHC.Types.EQ = Eq
@@ -19,10 +20,15 @@ value GHC.Types.GT = Gt
 type  GHC.Classes.Eq = GHC.Prim.Eq_
 value GHC.Classes.== = GHC.Prim.op_zeze__
 value GHC.Classes./= = GHC.Prim.op_zsze__
+
+type  GHC.Classes.Ord = GHC.Prim.Ord
 value GHC.Classes.<  = <?
 value GHC.Classes.<= = <=?
 value GHC.Classes.>  = >?
 value GHC.Classes.>= = >=?
+value GHC.Classes.max = GHC.Prim.max
+value GHC.Classes.min = GHC.Prim.min
+value GHC.Classes.compare = GHC.Prim.compare
 
 type  GHC.Types.Int  = GHC.Num.Int
 
@@ -39,6 +45,8 @@ value GHC.Base.Nothing = None
 type  GHC.BaseGen.Maybe   = option
 value GHC.BaseGen.Just    = Some
 value GHC.BaseGen.Nothing = None
+
+type GHC.Base.String = GHC.Prim.String
 
 value GHC.Err.errorWithoutStackTrace = GHC.Prim.errorWithoutStackTrace
 

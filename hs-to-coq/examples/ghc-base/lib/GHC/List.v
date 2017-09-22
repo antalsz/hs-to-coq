@@ -26,10 +26,7 @@ Require GHC.Base.
 Require GHC.Num.
 Require GHC.Integer.
 Require GHC.BaseGen.
-Require GHC.Classes.
-Require GHC.Magic.
 Require GHC.Prim.
-Require _GHC.Num.
 
 (* Converted declarations: *)
 
@@ -37,7 +34,7 @@ Definition all {a} : (a -> bool) -> ((list a) -> bool) :=
   fix all arg_95__ arg_96__
         := let j_98__ :=
              match arg_95__ , arg_96__ with
-               | p , (x :: xs) => andb (p x) (all p xs)
+               | p , (cons x xs) => andb (p x) (all p xs)
                | _ , _ => patternFailure
              end in
            match arg_95__ , arg_96__ with
@@ -49,7 +46,7 @@ Definition and : (list bool) -> bool :=
   fix and arg_109__
         := let j_111__ :=
              match arg_109__ with
-               | (x :: xs) => andb x (and xs)
+               | (cons x xs) => andb x (and xs)
                | _ => patternFailure
              end in
            match arg_109__ with
@@ -61,7 +58,7 @@ Definition any {a} : (a -> bool) -> ((list a) -> bool) :=
   fix any arg_100__ arg_101__
         := let j_103__ :=
              match arg_100__ , arg_101__ with
-               | p , (x :: xs) => orb (p x) (any p xs)
+               | p , (cons x xs) => orb (p x) (any p xs)
                | _ , _ => patternFailure
              end in
            match arg_100__ , arg_101__ with
@@ -73,13 +70,13 @@ Definition break {a} : (a -> bool) -> ((list a) -> ((list a) * (list a))) :=
   fix break arg_121__ arg_122__
         := let j_126__ :=
              match arg_121__ , arg_122__ with
-               | p , ((x :: xs') as xs) => let j_124__ :=
-                                             match break p xs' with
-                                               | (pair ys zs) => pair (x :: ys) zs
-                                             end in
-                                           if p x
-                                           then pair nil xs
-                                           else j_124__
+               | p , ((cons x xs') as xs) => let j_124__ :=
+                                               match break p xs' with
+                                                 | (pair ys zs) => pair (cons x ys) zs
+                                               end in
+                                             if p x
+                                             then pair nil xs
+                                             else j_124__
                | _ , _ => patternFailure
              end in
            match arg_121__ , arg_122__ with
@@ -88,12 +85,12 @@ Definition break {a} : (a -> bool) -> ((list a) -> ((list a) * (list a))) :=
            end.
 
 Definition concat {a} : (list (list a)) -> (list a) :=
-  GHC.BaseGen.foldr _++_ nil.
+  GHC.BaseGen.foldr GHC.Prim.app nil.
 
 Definition concatMap {a} {b} : (a -> (list b)) -> ((list a) -> (list b)) :=
   fun arg_76__ =>
     match arg_76__ with
-      | f => GHC.BaseGen.foldr ((_++_ ∘ f)) nil
+      | f => GHC.BaseGen.foldr (compose GHC.Prim.app f) nil
     end.
 
 Definition constScanl {a} {b} : a -> (b -> a) :=
@@ -103,9 +100,9 @@ Definition dropWhile {a} : (a -> bool) -> ((list a) -> (list a)) :=
   fix dropWhile arg_140__ arg_141__
         := let j_143__ :=
              match arg_140__ , arg_141__ with
-               | p , ((x :: xs') as xs) => if p x
-                                           then dropWhile p xs'
-                                           else xs
+               | p , ((cons x xs') as xs) => if p x
+                                             then dropWhile p xs'
+                                             else xs
                | _ , _ => patternFailure
              end in
            match arg_140__ , arg_141__ with
@@ -117,7 +114,7 @@ Definition elem {a} `{(GHC.Prim.Eq_ a)} : a -> ((list a) -> bool) :=
   fix elem arg_90__ arg_91__
         := let j_93__ :=
              match arg_90__ , arg_91__ with
-               | x , (y :: ys) => orb (GHC.Prim.op_zeze__ x y) (elem x ys)
+               | x , (cons y ys) => orb (GHC.Prim.op_zeze__ x y) (elem x ys)
                | _ , _ => patternFailure
              end in
            match arg_90__ , arg_91__ with
@@ -129,10 +126,10 @@ Definition filter {a} : (a -> bool) -> ((list a) -> (list a)) :=
   fix filter arg_254__ arg_255__
         := let j_258__ :=
              match arg_254__ , arg_255__ with
-               | pred , (x :: xs) => let j_256__ := filter pred xs in
-                                     if pred x
-                                     then (x :: filter pred xs)
-                                     else j_256__
+               | pred , (cons x xs) => let j_256__ := filter pred xs in
+                                       if pred x
+                                       then cons x (filter pred xs)
+                                       else j_256__
                | _ , _ => patternFailure
              end in
            match arg_254__ , arg_255__ with
@@ -163,7 +160,7 @@ Definition foldr2 {a} {b} {c} : (a -> (b -> (c -> c))) -> (c -> ((list
                    fix go arg_65__ arg_66__
                          := let j_68__ :=
                               match arg_65__ , arg_66__ with
-                                | (x :: xs) , (y :: ys) => k x y (go xs ys)
+                                | (cons x xs) , (cons y ys) => k x y (go xs ys)
                                 | _ , _ => patternFailure
                               end in
                             let j_69__ :=
@@ -184,7 +181,7 @@ Definition foldr2_left {a} {b} {c} {d}
   fun arg_55__ arg_56__ arg_57__ arg_58__ arg_59__ =>
     let j_61__ :=
       match arg_55__ , arg_56__ , arg_57__ , arg_58__ , arg_59__ with
-        | k , _z , x , r , (y :: ys) => k x y (r ys)
+        | k , _z , x , r , (cons y ys) => k x y (r ys)
         | _ , _ , _ , _ , _ => patternFailure
       end in
     match arg_55__ , arg_56__ , arg_57__ , arg_58__ , arg_59__ with
@@ -199,7 +196,7 @@ Definition lenAcc {a} : (list a) -> (GHC.Num.Int -> GHC.Num.Int) :=
   fix lenAcc arg_267__ arg_268__
         := let j_270__ :=
              match arg_267__ , arg_268__ with
-               | (_ :: ys) , n => lenAcc ys ((n GHC.Num.+ #1))
+               | (cons _ ys) , n => lenAcc ys (GHC.Num.op_zp__ n #1)
                | _ , _ => patternFailure
              end in
            match arg_267__ , arg_268__ with
@@ -214,7 +211,10 @@ Definition lengthFB {x}
     : x -> ((GHC.Num.Int -> GHC.Num.Int) -> (GHC.Num.Int -> GHC.Num.Int)) :=
   fun arg_260__ arg_261__ =>
     match arg_260__ , arg_261__ with
-      | _ , r => fun arg_262__ => match arg_262__ with | a => r ((a GHC.Num.+ #1)) end
+      | _ , r => fun arg_262__ =>
+                   match arg_262__ with
+                     | a => r (GHC.Num.op_zp__ a #1)
+                   end
     end.
 
 Definition lookup {a} {b} `{(GHC.Prim.Eq_ a)} : a -> ((list (a * b)) -> (option
@@ -222,10 +222,10 @@ Definition lookup {a} {b} `{(GHC.Prim.Eq_ a)} : a -> ((list (a * b)) -> (option
   fix lookup arg_79__ arg_80__
         := let j_83__ :=
              match arg_79__ , arg_80__ with
-               | key , ((pair x y) :: xys) => let j_81__ := lookup key xys in
-                                              if GHC.Prim.op_zeze__ key x
-                                              then Some y
-                                              else j_81__
+               | key , (cons (pair x y) xys) => let j_81__ := lookup key xys in
+                                                if GHC.Prim.op_zeze__ key x
+                                                then Some y
+                                                else j_81__
                | _ , _ => patternFailure
              end in
            match arg_79__ , arg_80__ with
@@ -237,7 +237,7 @@ Definition notElem {a} `{(GHC.Prim.Eq_ a)} : a -> ((list a) -> bool) :=
   fix notElem arg_85__ arg_86__
         := let j_88__ :=
              match arg_85__ , arg_86__ with
-               | x , (y :: ys) => andb (GHC.Prim.op_zsze__ x y) (notElem x ys)
+               | x , (cons y ys) => andb (GHC.Prim.op_zsze__ x y) (notElem x ys)
                | _ , _ => patternFailure
              end in
            match arg_85__ , arg_86__ with
@@ -249,7 +249,7 @@ Definition null {a} : (list a) -> bool :=
   fun arg_275__ =>
     let j_276__ :=
       match arg_275__ with
-        | (_ :: _) => false
+        | (cons _ _) => false
         | _ => patternFailure
       end in
     match arg_275__ with
@@ -261,7 +261,7 @@ Definition or : (list bool) -> bool :=
   fix or arg_105__
         := let j_107__ :=
              match arg_105__ with
-               | (x :: xs) => orb x (or xs)
+               | (cons x xs) => orb x (or xs)
                | _ => patternFailure
              end in
            match arg_105__ with
@@ -269,18 +269,19 @@ Definition or : (list bool) -> bool :=
              | _ => j_107__
            end.
 
-Definition prel_list_str : GHC.Base.String :=
+Definition prel_list_str : GHC.Prim.String :=
   &"Prelude.".
 
 Definition tooLarge {a} : GHC.Num.Int -> a :=
   fun arg_72__ =>
-    (GHC.Prim.errorWithoutStackTrace ((prel_list_str ++ &"!!: index too large"))).
+    (GHC.Prim.errorWithoutStackTrace (GHC.Prim.app prel_list_str
+                                                   &"!!: index too large")).
 
-Definition errorEmptyList {a} : GHC.Base.String -> a :=
+Definition errorEmptyList {a} : GHC.Prim.String -> a :=
   fun arg_1__ =>
     match arg_1__ with
-      | fun_ => GHC.Prim.errorWithoutStackTrace ((prel_list_str ++ (fun_ ++
-                                                &": empty list")))
+      | fun_ => GHC.Prim.errorWithoutStackTrace (GHC.Prim.app prel_list_str
+                                                              (GHC.Prim.app fun_ &": empty list"))
     end.
 
 Definition foldl1 {a} : (a -> (a -> a)) -> ((list a) -> a) :=
@@ -291,7 +292,7 @@ Definition foldl1 {a} : (a -> (a -> a)) -> ((list a) -> a) :=
         | _ , _ => patternFailure
       end in
     match arg_230__ , arg_231__ with
-      | f , (x :: xs) => foldl f x xs
+      | f , (cons x xs) => foldl f x xs
       | _ , _ => j_233__
     end.
 
@@ -303,7 +304,7 @@ Definition foldl1' {a} : (a -> (a -> a)) -> ((list a) -> a) :=
         | _ , _ => patternFailure
       end in
     match arg_224__ , arg_225__ with
-      | f , (x :: xs) => foldl' f x xs
+      | f , (cons x xs) => foldl' f x xs
       | _ , _ => j_227__
     end.
 
@@ -319,7 +320,7 @@ Definition foldr1 {a} : (a -> (a -> a)) -> ((list a) -> a) :=
                           end in
                         let j_173__ :=
                           match arg_169__ with
-                            | (x :: xs) => f x (go xs)
+                            | (cons x xs) => f x (go xs)
                             | _ => j_171__
                           end in
                         match arg_169__ with
@@ -333,18 +334,18 @@ Definition init {a} : (list a) -> (list a) :=
   fun arg_278__ =>
     let j_285__ :=
       match arg_278__ with
-        | (x :: xs) => let init' :=
-                         fix init' arg_279__ arg_280__
-                               := let j_282__ :=
+        | (cons x xs) => let init' :=
+                           fix init' arg_279__ arg_280__
+                                 := let j_282__ :=
+                                      match arg_279__ , arg_280__ with
+                                        | y , (cons z zs) => cons y (init' z zs)
+                                        | _ , _ => patternFailure
+                                      end in
                                     match arg_279__ , arg_280__ with
-                                      | y , (z :: zs) => (y :: init' z zs)
-                                      | _ , _ => patternFailure
+                                      | _ , nil => nil
+                                      | _ , _ => j_282__
                                     end in
-                                  match arg_279__ , arg_280__ with
-                                    | _ , nil => nil
-                                    | _ , _ => j_282__
-                                  end in
-                       init' x xs
+                         init' x xs
         | _ => patternFailure
       end in
     match arg_278__ with
@@ -364,17 +365,17 @@ Definition last {a} : (list a) -> a :=
                       end) lastError xs
     end.
 
-Definition maximum {a} `{(GHC.Classes.Ord a)} : (list a) -> a :=
+Definition maximum {a} `{(GHC.Prim.Ord a)} : (list a) -> a :=
   fun arg_236__ =>
-    let j_238__ := match arg_236__ with | xs => foldl1 GHC.Classes.max xs end in
+    let j_238__ := match arg_236__ with | xs => foldl1 GHC.Prim.max xs end in
     match arg_236__ with
       | nil => errorEmptyList &"maximum"
       | _ => j_238__
     end.
 
-Definition minimum {a} `{(GHC.Classes.Ord a)} : (list a) -> a :=
+Definition minimum {a} `{(GHC.Prim.Ord a)} : (list a) -> a :=
   fun arg_241__ =>
-    let j_243__ := match arg_241__ with | xs => foldl1 GHC.Classes.min xs end in
+    let j_243__ := match arg_241__ with | xs => foldl1 GHC.Prim.min xs end in
     match arg_241__ with
       | nil => errorEmptyList &"minimum"
       | _ => j_243__
@@ -388,12 +389,12 @@ Definition tail {a} : (list a) -> (list a) :=
         | _ => patternFailure
       end in
     match arg_295__ with
-      | (_ :: xs) => xs
+      | (cons _ xs) => xs
       | _ => j_297__
     end.
 
 Definition product {a} `{(GHC.Num.Num a)} : (list a) -> a :=
-  foldl _GHC.Num.*_ #1.
+  foldl GHC.Num.op_zt__ #1.
 
 Definition reverse {a} : (list a) -> (list a) :=
   fun arg_113__ =>
@@ -402,7 +403,7 @@ Definition reverse {a} : (list a) -> (list a) :=
                fix rev arg_114__ arg_115__
                      := let j_117__ :=
                           match arg_114__ , arg_115__ with
-                            | (x :: xs) , a => rev xs ((x :: a))
+                            | (cons x xs) , a => rev xs (cons x a)
                             | _ , _ => patternFailure
                           end in
                         match arg_114__ , arg_115__ with
@@ -416,15 +417,15 @@ Definition scanl {b} {a} : (b -> (a -> b)) -> (b -> ((list a) -> (list b))) :=
   let scanlGo {b} {a} : (b -> (a -> b)) -> (b -> ((list a) -> (list b))) :=
     fix scanlGo arg_211__ arg_212__ arg_213__
           := match arg_211__ , arg_212__ , arg_213__ with
-               | f , q , ls => (q :: (let j_215__ :=
-                                 match ls with
-                                   | (x :: xs) => scanlGo f (f q x) xs
-                                   | _ => patternFailure
-                                 end in
-                               match ls with
-                                 | nil => nil
-                                 | _ => j_215__
-                               end))
+               | f , q , ls => cons q (let j_215__ :=
+                                      match ls with
+                                        | (cons x xs) => scanlGo f (f q x) xs
+                                        | _ => patternFailure
+                                      end in
+                                    match ls with
+                                      | nil => nil
+                                      | _ => j_215__
+                                    end)
              end in
   scanlGo.
 
@@ -436,7 +437,7 @@ Definition scanl1 {a} : (a -> (a -> a)) -> ((list a) -> (list a)) :=
         | _ , _ => patternFailure
       end in
     match arg_219__ , arg_220__ with
-      | f , (x :: xs) => scanl f x xs
+      | f , (cons x xs) => scanl f x xs
       | _ , _ => j_221__
     end.
 
@@ -444,15 +445,15 @@ Definition scanl' {b} {a} : (b -> (a -> b)) -> (b -> ((list a) -> (list b))) :=
   let scanlGo' {b} {a} : (b -> (a -> b)) -> (b -> ((list a) -> (list b))) :=
     fix scanlGo' arg_191__ arg_192__ arg_193__
           := match arg_191__ , arg_192__ , arg_193__ with
-               | f , q , ls => (q :: (let j_195__ :=
-                                 match ls with
-                                   | (x :: xs) => scanlGo' f (f q x) xs
-                                   | _ => patternFailure
-                                 end in
-                               match ls with
-                                 | nil => nil
-                                 | _ => j_195__
-                               end))
+               | f , q , ls => cons q (let j_195__ :=
+                                      match ls with
+                                        | (cons x xs) => scanlGo' f (f q x) xs
+                                        | _ => patternFailure
+                                      end in
+                                    match ls with
+                                      | nil => nil
+                                      | _ => j_195__
+                                    end)
              end in
   scanlGo'.
 
@@ -462,10 +463,10 @@ Definition scanlFB {b} {a} {c}
     match arg_199__ , arg_200__ with
       | f , c => fun arg_201__ arg_202__ =>
                    match arg_201__ , arg_202__ with
-                     | b , g => GHC.Magic.oneShot (fun arg_203__ =>
-                                                    match arg_203__ with
-                                                      | x => let b' := f x b in c b' (g b')
-                                                    end)
+                     | b , g => GHC.Prim.oneShot (fun arg_203__ =>
+                                                   match arg_203__ with
+                                                     | x => let b' := f x b in c b' (g b')
+                                                   end)
                    end
     end.
 
@@ -475,12 +476,12 @@ Definition scanlFB' {b} {a} {c}
     match arg_179__ , arg_180__ with
       | f , c => fun arg_181__ arg_182__ =>
                    match arg_181__ , arg_182__ with
-                     | b , g => GHC.Magic.oneShot (fun arg_183__ =>
-                                                    match arg_183__ with
-                                                      | x => match f x b with
-                                                               | b' => c b' (g b')
-                                                             end
-                                                    end)
+                     | b , g => GHC.Prim.oneShot (fun arg_183__ =>
+                                                   match arg_183__ with
+                                                     | x => match f x b with
+                                                              | b' => c b' (g b')
+                                                            end
+                                                   end)
                    end
     end.
 
@@ -498,12 +499,12 @@ Definition span {a} : (a -> bool) -> ((list a) -> ((list a) * (list a))) :=
   fix span arg_129__ arg_130__
         := let j_134__ :=
              match arg_129__ , arg_130__ with
-               | p , ((x :: xs') as xs) => let j_131__ := pair nil xs in
-                                           if p x
-                                           then match span p xs' with
-                                                  | (pair ys zs) => pair (x :: ys) zs
-                                                end
-                                           else j_131__
+               | p , ((cons x xs') as xs) => let j_131__ := pair nil xs in
+                                             if p x
+                                             then match span p xs' with
+                                                    | (pair ys zs) => pair (cons x ys) zs
+                                                  end
+                                             else j_131__
                | _ , _ => patternFailure
              end in
            match arg_129__ , arg_130__ with
@@ -520,7 +521,7 @@ Definition strictUncurryScanr {a} {b} {c} : (a -> (b -> c)) -> (a * b -> c) :=
     end.
 
 Definition sum {a} `{(GHC.Num.Num a)} : (list a) -> a :=
-  foldl _GHC.Num.+_ #0.
+  foldl GHC.Num.op_zp__ #0.
 
 Definition takeWhileFB {a} {b}
     : (a -> bool) -> ((a -> (b -> b)) -> (b -> (a -> (b -> b)))) :=
@@ -538,7 +539,7 @@ Definition uncons {a} : (list a) -> (option (a * (list a))) :=
   fun arg_299__ =>
     let j_301__ :=
       match arg_299__ with
-        | (x :: xs) => Some (pair x xs)
+        | (cons x xs) => Some (pair x xs)
         | _ => patternFailure
       end in
     match arg_299__ with
@@ -549,22 +550,22 @@ Definition uncons {a} : (list a) -> (option (a * (list a))) :=
 Definition unzip {a} {b} : (list (a * b)) -> ((list a) * (list b)) :=
   GHC.BaseGen.foldr (fun arg_9__ arg_10__ =>
                       match arg_9__ , arg_10__ with
-                        | (pair a b) , (pair as_ bs) => pair (a :: as_) (b :: bs)
+                        | (pair a b) , (pair as_ bs) => pair (cons a as_) (cons b bs)
                       end) (pair nil nil).
 
 Definition unzip3 {a} {b} {c} : (list (a * b * c)) -> ((list a) * (list b) *
                                 (list c)) :=
   GHC.BaseGen.foldr (fun arg_4__ arg_5__ =>
                       match arg_4__ , arg_5__ with
-                        | (pair (pair a b) c) , (pair (pair as_ bs) cs) => pair (pair (a :: as_) (b ::
-                                                                                      bs)) (c :: cs)
+                        | (pair (pair a b) c) , (pair (pair as_ bs) cs) => pair (pair (cons a as_) (cons
+                                                                                      b bs)) (cons c cs)
                       end) (pair (pair nil nil) nil).
 
 Definition zip {a} {b} : (list a) -> ((list b) -> (list (a * b))) :=
   fix zip arg_49__ arg_50__
         := let j_52__ :=
              match arg_49__ , arg_50__ with
-               | (a :: as_) , (b :: bs) => (pair a b :: zip as_ bs)
+               | (cons a as_) , (cons b bs) => cons (pair a b) (zip as_ bs)
                | _ , _ => patternFailure
              end in
            let j_53__ :=
@@ -581,7 +582,8 @@ Definition zip3 {a} {b} {c} : (list a) -> ((list b) -> ((list c) -> (list (a * b
                                                                           * c)))) :=
   fix zip3 arg_36__ arg_37__ arg_38__
         := match arg_36__ , arg_37__ , arg_38__ with
-             | (a :: as_) , (b :: bs) , (c :: cs) => (pair (pair a b) c :: zip3 as_ bs cs)
+             | (cons a as_) , (cons b bs) , (cons c cs) => cons (pair (pair a b) c) (zip3 as_
+                                                                bs cs)
              | _ , _ , _ => nil
            end.
 
@@ -600,7 +602,7 @@ Definition zipWith {a} {b} {c} : (a -> (b -> c)) -> ((list a) -> ((list
   fix zipWith arg_29__ arg_30__ arg_31__
         := let j_33__ :=
              match arg_29__ , arg_30__ , arg_31__ with
-               | f , (a :: as_) , (b :: bs) => (f a b :: zipWith f as_ bs)
+               | f , (cons a as_) , (cons b bs) => cons (f a b) (zipWith f as_ bs)
                | _ , _ , _ => patternFailure
              end in
            let j_34__ :=
@@ -617,7 +619,8 @@ Definition zipWith3 {a} {b} {c} {d} : (a -> (b -> (c -> d))) -> ((list
                                       a) -> ((list b) -> ((list c) -> (list d)))) :=
   fix zipWith3 arg_14__ arg_15__ arg_16__ arg_17__
         := match arg_14__ , arg_15__ , arg_16__ , arg_17__ with
-             | z , (a :: as_) , (b :: bs) , (c :: cs) => (z a b c :: zipWith3 z as_ bs cs)
+             | z , (cons a as_) , (cons b bs) , (cons c cs) => cons (z a b c) (zipWith3 z as_
+                                                                    bs cs)
              | _ , _ , _ , _ => nil
            end.
 
@@ -632,9 +635,9 @@ Definition zipWithFB {a} {b} {c} {d} {e}
     end.
 
 (* Unbound variables:
-     * ++ :: GHC.Base.String GHC.BaseGen.const GHC.BaseGen.foldr GHC.BaseGen.id
-     GHC.Classes.Ord GHC.Classes.max GHC.Classes.min GHC.Magic.oneShot GHC.Num.+
-     GHC.Num.Int GHC.Num.Num GHC.Prim.Eq_ GHC.Prim.errorWithoutStackTrace
-     GHC.Prim.op_zeze__ GHC.Prim.op_zsze__ None Some _++_ _GHC.Num.*_ _GHC.Num.+_
-     andb bool false foldl foldl' list nil option orb pair true ∘
+     * :: GHC.BaseGen.const GHC.BaseGen.foldr GHC.BaseGen.id GHC.Num.Int GHC.Num.Num
+     GHC.Num.op_zp__ GHC.Num.op_zt__ GHC.Prim.Eq_ GHC.Prim.Ord GHC.Prim.String
+     GHC.Prim.app GHC.Prim.errorWithoutStackTrace GHC.Prim.max GHC.Prim.min
+     GHC.Prim.oneShot GHC.Prim.op_zeze__ GHC.Prim.op_zsze__ None Some andb bool
+     compose cons false foldl foldl' list nil option orb pair true
 *)

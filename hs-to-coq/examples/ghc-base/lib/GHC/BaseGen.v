@@ -181,7 +181,7 @@ Definition foldr {a} {b} : (a -> (b -> b)) -> (b -> ((list a) -> b)) :=
                    fix go arg_69__
                          := let j_71__ :=
                               match arg_69__ with
-                                | (y :: ys) => k y (go ys)
+                                | (cons y ys) => k y (go ys)
                                 | _ => patternFailure
                               end in
                             match arg_69__ with
@@ -206,7 +206,7 @@ Definition map {a} {b} : (a -> b) -> ((list a) -> (list b)) :=
   fix map arg_62__ arg_63__
         := let j_65__ :=
              match arg_62__ , arg_63__ with
-               | f , (x :: xs) => (f x :: map f xs)
+               | f , (cons x xs) => cons (f x) (map f xs)
                | _ , _ => patternFailure
              end in
            match arg_62__ , arg_63__ with
@@ -236,15 +236,15 @@ Definition op_z2218U__ {b} {c} {a} : (b -> c) -> ((a -> b) -> (a -> c)) :=
 
 Infix "∘" := (op_z2218U__) (left associativity, at level 40).
 
+Notation "'_∘_'" := (op_z2218U__).
+
 Local Definition instance_Functor_list_op_zlzd__ : (forall {a} {b},
                                                      a -> ((list b) -> (list a))) :=
-  fun {a} {b} => (instance_Functor_list_fmap ∘ const).
+  fun {a} {b} => (op_z2218U__ instance_Functor_list_fmap const).
 
 Local Definition instance_Functor_option_op_zlzd__ : (forall {a} {b},
                                                        a -> ((option b) -> (option a))) :=
-  fun {a} {b} => (instance_Functor_option_fmap ∘ const).
-
-Notation "'_∘_'" := (op_z2218U__).
+  fun {a} {b} => (op_z2218U__ instance_Functor_option_fmap const).
 
 Definition op_zd__ {a} {b} : (a -> b) -> (a -> b) :=
   fun arg_30__ arg_31__ => match arg_30__ , arg_31__ with | f , x => f x end.
@@ -316,7 +316,7 @@ Definition op_zezlzl__ {m} {a} {b} `{Monad m} : (a -> (m b)) -> ((m a) -> (m
                                                 b)) :=
   fun arg_117__ arg_118__ =>
     match arg_117__ , arg_118__ with
-      | f , x => (x >>= f)
+      | f , x => op_zgzgze__ x f
     end.
 
 Infix "=<<" := (op_zezlzl__) (at level 99).
@@ -366,7 +366,7 @@ Definition liftM {m} {a1} {r} `{(Monad m)} : (a1 -> r) -> ((m a1) -> (m r)) :=
     end.
 
 Definition join {m} {a} `{(Monad m)} : (m (m a)) -> (m a) :=
-  fun arg_121__ => match arg_121__ with | x => (x >>= id) end.
+  fun arg_121__ => match arg_121__ with | x => op_zgzgze__ x id end.
 
 Definition mapM {m} {a} {b} `{Monad m} : (a -> (m b)) -> ((list a) -> (m (list
                                                                          b))) :=
@@ -375,7 +375,7 @@ Definition mapM {m} {a} {b} `{Monad m} : (a -> (m b)) -> ((list a) -> (m (list
       | f , as_ => let k :=
                      fun arg_110__ arg_111__ =>
                        match arg_110__ , arg_111__ with
-                         | a , r => (f a >>= fun x => (r >>= fun xs => (return_ ((x :: xs)))))
+                         | a , r => (f a >>= fun x => (r >>= fun xs => (return_ (cons x xs))))
                        end in
                    foldr k (return_ nil) as_
     end.
@@ -406,26 +406,26 @@ Class MonadPlus m `{Alternative m} `{Monad m} := {
 Definition liftA {f} {a} {b} `{Applicative f} : (a -> b) -> ((f a) -> (f b)) :=
   fun arg_135__ arg_136__ =>
     match arg_135__ , arg_136__ with
-      | f , a => (pure f <*> a)
+      | f , a => op_zlztzg__ (pure f) a
     end.
 
 Definition liftA3 {f} {a} {b} {c} {d} `{Applicative f}
     : (a -> (b -> (c -> d))) -> ((f a) -> ((f b) -> ((f c) -> (f d)))) :=
   fun arg_124__ arg_125__ arg_126__ arg_127__ =>
     match arg_124__ , arg_125__ , arg_126__ , arg_127__ with
-      | f , a , b , c => ((fmap f a <*> b) <*> c)
+      | f , a , b , c => op_zlztzg__ (op_zlztzg__ (fmap f a) b) c
     end.
 
 Definition liftA2 {f} {a} {b} {c} `{Applicative f} : (a -> (b -> c)) -> ((f
                                                      a) -> ((f b) -> (f c))) :=
   fun arg_130__ arg_131__ arg_132__ =>
     match arg_130__ , arg_131__ , arg_132__ with
-      | f , a , b => (fmap f a <*> b)
+      | f , a , b => op_zlztzg__ (fmap f a) b
     end.
 
 Definition op_zlztztzg__ {f} {a} {b} `{Applicative f} : (f a) -> ((f
                                                         (a -> b)) -> (f b)) :=
-  liftA2 (flip _$_).
+  liftA2 (flip op_zd__).
 
 Infix "<**>" := (op_zlztztzg__) (at level 99).
 
@@ -451,7 +451,7 @@ Instance instance_Applicative_list : !Applicative list := {
 
 Local Definition instance_Monad_list_op_zgzg__ : (forall {a} {b},
                                                    (list a) -> ((list b) -> (list b))) :=
-  fun {a} {b} => _*>_.
+  fun {a} {b} => op_ztzg__.
 
 Local Definition instance_Monad_list_return_ : (forall {a}, a -> (list a)) :=
   fun {a} => pure.
@@ -496,7 +496,7 @@ Instance instance_Applicative_option : !Applicative option := {
 
 Local Definition instance_Monad_option_op_zgzg__ : (forall {a} {b},
                                                      (option a) -> ((option b) -> (option b))) :=
-  fun {a} {b} => _*>_.
+  fun {a} {b} => op_ztzg__.
 
 Local Definition instance_Monad_option_return_ : (forall {a},
                                                    a -> (option a)) :=
@@ -732,6 +732,6 @@ Instance instance_Monoid_unit : !Monoid unit := {
   mempty := instance_Monoid_unit_mempty }.
 
 (* Unbound variables:
-     * :: Eq None Some String bool comparison concatMap e flip list nil option pair
-     true tt unit
+     * :: Eq None Some String bool comparison concatMap cons e flip list nil option
+     pair true tt unit
 *)

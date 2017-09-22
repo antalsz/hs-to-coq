@@ -1,6 +1,13 @@
 # Stack
 .stack-work
 
+# cabal
+dist-newstyle
+dist
+cabal.project.local
+.ghc.environment.*
+/hs-to-coq
+
 # Coq
 *.vo
 *.glob

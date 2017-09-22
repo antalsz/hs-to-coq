@@ -33,6 +33,28 @@ HANDMOD = GHC/Prim \
           Data/Bool \
           Prelude
 
+# GHC.Base imports modules without using anything from it (e.g. because
+# everything using there was renamed or skipped). For now, provide these empty
+# modules.
+# Ideally, hs-to-coq should be smarter, and maybe only import names that occur in
+# the code?
+EMPTY_MODS  =\
+	  GHC/Types \
+	  GHC/Classes \
+	  GHC/CString \
+	  GHC/Magic \
+	  GHC/Err \
+	  GHC/IO \
+	  GHC/Tuple \
+	  GHC/Integer \
+	  GHC/Read \
+	  GHC/Show \
+	  GHC/Generics \
+	  _GHC/Base \
+	  _GHC/BaseGen \
+	  _GHC/Num \
+
+
 # Generated modules
 # All except BaseGen are generated directly from GHC/libraries/base
 MODULES  = GHC/List \
@@ -48,9 +70,10 @@ SPECIAL_MODULES = GHC/BaseGen
 
 VFILES_GEN = $(addprefix lib/,$(addsuffix .v,$(MODULES)))
 VFILES_MAN = $(addprefix lib/,$(addsuffix .v,$(HANDMOD)))
+VFILES_EMPTY = $(addprefix lib/,$(addsuffix .v,$(EMPTY_MODS)))
 VFILES_SPECIAL = $(addprefix lib/,$(addsuffix .v,$(SPECIAL_MODULES)))
 
-VFILES   = $(VFILES_GEN) $(VFILES_MAN)  $(VFILES_SPECIAL)
+VFILES   = $(VFILES_GEN) $(VFILES_MAN) $(VFILES_EMPTY) $(VFILES_SPECIAL)
 
 all:  $(VFILES) coq
 
@@ -60,9 +83,10 @@ lib/_CoqProject : Makefile
 	echo "-R . Top" >> $@
 	echo $(addsuffix .v,$(HANDMOD)) >> $@
 	echo $(addsuffix .v,$(MODULES)) >> $@
+	echo $(addsuffix .v,$(EMPTY_MODS)) >> $@
 	echo $(addsuffix .v,$(SPECIAL_MODULES)) >> $@
 
-lib/Makefile.coq: lib/_CoqProject
+lib/Makefile.coq: lib/_CoqProject $(VFILES)
 	cd lib; coq_makefile -f _CoqProject -o Makefile.coq
 
 coq: lib/Makefile.coq $(VFILES)
@@ -70,11 +94,10 @@ coq: lib/Makefile.coq $(VFILES)
 
 
 $(VFILES_GEN): lib/%.v : edits/%/edits renamings edits/%/preamble.v
-	mkdir -p "$$(dirname lib/$*.v)"
 	$(HS_TO_COQ) -e edits/$*/edits \
 	             -r renamings \
 		     -N \
-		     -o $$(dirname lib/$*.v) \
+		     -o lib \
 		     -p edits/$*/preamble.v \
 		     base/$*.hs
 
@@ -82,17 +105,21 @@ $(VFILES_MAN): lib/%.v : manual/%.v
 	mkdir -p "$$(dirname lib/$*.v)"
 	cp -v $< $@
 
-lib/GHC/BaseGen.v : edits/GHC/Base/edits renamings edits/GHC/Base/preamble.v drop-in/GHC/Base.hs
+$(VFILES_EMPTY): lib/%.v :
+	mkdir -p "$$(dirname lib/$*.v)"
+	echo '(* Empty module, exists only to make Import statments not fail *)' > $@
+
+lib/GHC/BaseGen.v : edits/GHC/Base/edits renamings edits/GHC/Base/preamble.v drop-in/GHC/BaseGen.hs
 	$(HS_TO_COQ) -e edits/GHC/Base/edits \
 	             -r renamings \
-		     -o lib/GHC \
+		     -o lib \
 		     -N \
 		     -p edits/GHC/Base/preamble.v \
 		     --ghc -ibase \
 		     --ghc -ibase/dist-install/build \
 		     -Ibase/include \
 		     --ghc -this-unit-id=base \
-		     drop-in/GHC/Base.hs
+		     drop-in/GHC/BaseGen.hs
 
 
 clean:

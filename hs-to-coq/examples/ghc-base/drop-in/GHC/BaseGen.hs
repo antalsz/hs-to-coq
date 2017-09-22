@@ -107,9 +107,9 @@ Other Prelude modules are much easier with fewer complex dependencies.
 
 #include "MachDeps.h"
 
-module GHC.Base
+module GHC.BaseGen
         (
-        module GHC.Base,
+        module GHC.BaseGen,
         module GHC.Classes,
         module GHC.CString,
         module GHC.Magic,
@@ -120,7 +120,7 @@ module GHC.Base
   )
         where
 
-import Prelude ((.))
+-- import Prelude ((.))
 import GHC.Types
 import GHC.Classes
 import GHC.CString

@@ -1,4 +1,5 @@
 -R . Top
 GHC/Prim.v GHC/Num.v GHC/Char.v GHC/Enum.v GHC/Real.v GHC/Unicode.v GHC/Base.v Data/Char.v Data/Bits.v Data/Type/Equality.v GHC/Word.v GHC/Int.v Data/Bool.v Prelude.v
 GHC/List.v Data/Tuple.v Data/Maybe.v Data/Function.v Data/Ord.v Data/Eq.v Data/Monoid.v
+GHC/Types.v GHC/Classes.v GHC/CString.v GHC/Magic.v GHC/Err.v GHC/IO.v GHC/Tuple.v GHC/Integer.v GHC/Read.v GHC/Show.v GHC/Generics.v _GHC/Base.v _GHC/BaseGen.v _GHC/Num.v
 GHC/BaseGen.v

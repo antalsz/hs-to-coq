@@ -122,6 +122,20 @@ VFILES:=GHC/Prim.v\
   Data/Ord.v\
   Data/Eq.v\
   Data/Monoid.v\
+  GHC/Types.v\
+  GHC/Classes.v\
+  GHC/CString.v\
+  GHC/Magic.v\
+  GHC/Err.v\
+  GHC/IO.v\
+  GHC/Tuple.v\
+  GHC/Integer.v\
+  GHC/Read.v\
+  GHC/Show.v\
+  GHC/Generics.v\
+  _GHC/Base.v\
+  _GHC/BaseGen.v\
+  _GHC/Num.v\
   GHC/BaseGen.v
 
 ifneq ($(filter-out archclean clean cleanall printenv,$(MAKECMDGOALS)),)

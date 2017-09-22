@@ -1,18 +1,29 @@
 (* Default settings (from HsToCoq.Coq.Preamble) *)
 
+Generalizable All Variables.
+
 Set Implicit Arguments.
 Set Maximal Implicit Insertion.
-Generalizable All Variables.
 Unset Strict Implicit.
 Unset Printing Implicit Defensive.
 
-Axiom patternFailure : forall {a}, a.
+(* Let us be a bit explicit by having multiple axoims around *)
+(* This one is for untranslatable expressions: *)
+Local Axiom missingValue : forall {a}, a.
+(* This one is for pattern match failures: *)
+Local Axiom patternFailure : forall {a}, a.
 
 (* Preamble *)
-Require Export Base.
-Require Export List.
 
-(* Successfully converted the following code: *)
+Require Import GHC.Prim.
+
+(* Converted imports: *)
+
+Require GHC.Base.
+Require GHC.Prim.
+
+(* Converted declarations: *)
+
 Definition catMaybes {a} : (list (option a)) -> (list a) :=
   fun arg_20__ =>
     match arg_20__ with
@@ -23,13 +34,15 @@ Definition catMaybes {a} : (list (option a)) -> (list a) :=
                 end in
               concatMap cont_21__ ls
     end.
+
 Definition fromJust {a} : (option a) -> a :=
   fun arg_39__ =>
     let j_40__ := match arg_39__ with | (Some x) => x | _ => patternFailure end in
     match arg_39__ with
-      | None => errorWithoutStackTrace &"Maybe.fromJust: Nothing"
+      | None => GHC.Prim.errorWithoutStackTrace &"Maybe.fromJust: Nothing"
       | _ => j_40__
     end.
+
 Definition fromMaybe {a} : a -> ((option a) -> a) :=
   fun arg_33__ arg_34__ =>
     match arg_33__ , arg_34__ with
@@ -43,10 +56,13 @@ Definition fromMaybe {a} : a -> ((option a) -> a) :=
                    | _ => j_35__
                  end
     end.
+
 Definition isJust {a} : (option a) -> bool :=
   fun arg_45__ => match arg_45__ with | None => false | _ => true end.
+
 Definition isNothing {a} : (option a) -> bool :=
   fun arg_43__ => match arg_43__ with | None => true | _ => false end.
+
 Definition listToMaybe {a} : (list a) -> (option a) :=
   fun arg_25__ =>
     let j_27__ :=
@@ -58,6 +74,7 @@ Definition listToMaybe {a} : (list a) -> (option a) :=
       | nil => None
       | _ => j_27__
     end.
+
 Definition mapMaybe {a} {b} : (a -> (option b)) -> ((list a) -> (list b)) :=
   fix mapMaybe arg_10__ arg_11__
         := let j_18__ :=
@@ -79,7 +96,8 @@ Definition mapMaybe {a} {b} : (a -> (option b)) -> ((list a) -> (list b)) :=
              | _ , nil => nil
              | _ , _ => j_18__
            end.
-Definition mapMaybeFB {a} {b} {r} : (b -> (r -> r)) -> ((a -> (option
+
+Definition mapMaybeFB {b} {r} {a} : (b -> (r -> r)) -> ((a -> (option
                                     b)) -> (a -> (r -> r))) :=
   fun arg_0__ arg_1__ arg_2__ arg_3__ =>
     match arg_0__ , arg_1__ , arg_2__ , arg_3__ with
@@ -94,7 +112,8 @@ Definition mapMaybeFB {a} {b} {r} : (b -> (r -> r)) -> ((a -> (option
                                   | _ => j_6__
                                 end
     end.
-Definition maybe {a} {b} : b -> ((a -> b) -> ((option a) -> b)) :=
+
+Definition maybe {b} {a} : b -> ((a -> b) -> ((option a) -> b)) :=
   fun arg_47__ arg_48__ arg_49__ =>
     let j_51__ :=
       match arg_47__ , arg_48__ , arg_49__ with
@@ -105,6 +124,7 @@ Definition maybe {a} {b} : b -> ((a -> b) -> ((option a) -> b)) :=
       | n , _ , None => n
       | _ , _ , _ => j_51__
     end.
+
 Definition maybeToList {a} : (option a) -> (list a) :=
   fun arg_29__ =>
     let j_31__ :=
@@ -118,5 +138,6 @@ Definition maybeToList {a} : (option a) -> (list a) :=
     end.
 
 (* Unbound variables:
-     :: None Some bool concatMap errorWithoutStackTrace false list nil option true
+     :: GHC.Prim.errorWithoutStackTrace None Some bool concatMap false list nil
+     option true
 *)

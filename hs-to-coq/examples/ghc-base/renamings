@@ -1,44 +1,44 @@
-type  () = unit
-value () = tt
+type  GHC.Tuple.() = unit
+value GHC.Tuple.() = tt
 
-type  [] = list
-value [] = nil
-value :  = ::
+type  GHC.Types.[]  = list
+value GHC.Types.[]  = nil
+value GHC.Types.:   = ::
 
-type Eq = Eq_
+value GHC.Base.foldr  = GHC.BaseGen.foldr
+value GHC.Base.const  = GHC.BaseGen.const
+value GHC.Base.id     = GHC.BaseGen.id
+value GHC.Base.++  = ++
+value GHC.Base..  = ∘
 
-type Ordering = comparison
-value EQ = Eq
-value LT = Lt
-value GT = Gt
+type GHC.Types.Ordering = comparison
+value GHC.Types.EQ = Eq
+value GHC.Types.LT = Lt
+value GHC.Types.GT = Gt
 
-value <  = <?
-value <= = <=?
-value >  = >?
-value >= = >=?
+type  GHC.Classes.Eq = GHC.Prim.Eq_
+value GHC.Classes.== = GHC.Prim.op_zeze__
+value GHC.Classes./= = GHC.Prim.op_zsze__
+value GHC.Classes.<  = <?
+value GHC.Classes.<= = <=?
+value GHC.Classes.>  = >?
+value GHC.Classes.>= = >=?
 
-value :% = Mk_Ratio
+type  GHC.Types.Int  = GHC.Num.Int
 
-type  Bool  = bool
-value True  = true
-value False = false
-value not   = negb
-value ||    = orb
-value &&    = andb
+type  GHC.Types.Bool  = bool
+value GHC.Types.True  = true
+value GHC.Types.False = false
+value GHC.Classes.not   = negb
+value GHC.Classes.||    = orb
+value GHC.Classes.&&    = andb
 
-type  Maybe   = option
-value Just    = Some
-value Nothing = None
+type  GHC.Base.Maybe   = option
+value GHC.Base.Just    = Some
+value GHC.Base.Nothing = None
+type  GHC.BaseGen.Maybe   = option
+value GHC.BaseGen.Just    = Some
+value GHC.BaseGen.Nothing = None
 
-# TODO Modules
-type  M.IntMap = IntMap
-type  S.IntSet = IntSet
+value GHC.Err.errorWithoutStackTrace = GHC.Prim.errorWithoutStackTrace
 
-value .&. = :&:
-value .|. = :|:
-
-value Refl = eq_refl
-
-type State# = State_hash
-
-value bool  = mk_bool

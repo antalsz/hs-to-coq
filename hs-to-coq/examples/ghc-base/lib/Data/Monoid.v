@@ -1,120 +1,227 @@
 (* Default settings (from HsToCoq.Coq.Preamble) *)
 
+Generalizable All Variables.
+
 Set Implicit Arguments.
 Set Maximal Implicit Insertion.
-Generalizable All Variables.
 Unset Strict Implicit.
 Unset Printing Implicit Defensive.
 
-Axiom patternFailure : forall {a}, a.
+(* Let us be a bit explicit by having multiple axoims around *)
+(* This one is for untranslatable expressions: *)
+Local Axiom missingValue : forall {a}, a.
+(* This one is for pattern match failures: *)
+Local Axiom patternFailure : forall {a}, a.
 
 (* Preamble *)
+
 Require Import GHC.Base.
 Require Import GHC.Enum.
 Require Import GHC.Num.
 
-(* Successfully converted the following code: *)
-(* Skipping instance instance_Functor_Dual *)
-(* Skipping instance instance_Applicative_Dual *)
-(* Skipping instance instance_Monad_Dual *)
-(* Skipping instance instance_Monoid__Endo_a_ *)
-(* Skipping instance instance__forall___Num_a___Monoid__Sum_a__ *)
-(* Skipping instance instance_Functor_Sum *)
-(* Skipping instance instance_Applicative_Sum *)
-(* Skipping instance instance_Monad_Sum *)
-(* Skipping instance instance__forall___Num_a___Monoid__Product_a__ *)
-(* Skipping instance instance_Functor_Product *)
-(* Skipping instance instance_Applicative_Product *)
-(* Skipping instance instance_Monad_Product *)
-(* Skipping instance instance_Monoid__First_a_ *)
-(* Skipping instance instance_Monoid__Last_a_ *)
-(* Skipping instance instance__forall___Alternative_f___Monoid__Alt_f_a__ *)
+(* Converted imports: *)
+
+Require GHC.Base.
+Require GHC.Enum.
+Require GHC.Num.
+Require GHC.Read.
+Require GHC.Show.
+Require GHC.Generics.
+
+(* Converted declarations: *)
+
+(* Translating `instance (forall `{GHC.Base.Monoid a}, GHC.Base.Monoid (Dual
+   a))' failed: OOPS! Cannot construct types for this class def: Nothing
+   unsupported *)
+
+(* Translating `instance GHC.Base.Functor Dual' failed: OOPS! Cannot construct
+   types for this class def: Nothing unsupported *)
+
+(* Translating `instance GHC.Base.Applicative Dual' failed: OOPS! Cannot
+   construct types for this class def: Nothing unsupported *)
+
+(* Translating `instance GHC.Base.Monad Dual' failed: OOPS! Cannot construct
+   types for this class def: Nothing unsupported *)
+
+(* Translating `instance GHC.Base.Monoid (Endo a)' failed: OOPS! Cannot
+   construct types for this class def: Nothing unsupported *)
+
+(* Translating `instance GHC.Base.Monoid All' failed: OOPS! Cannot construct
+   types for this class def: Nothing unsupported *)
+
+(* Translating `instance GHC.Base.Monoid Any' failed: OOPS! Cannot construct
+   types for this class def: Nothing unsupported *)
+
+(* Translating `instance (forall `{GHC.Num.Num a}, GHC.Base.Monoid (Sum a))'
+   failed: OOPS! Cannot construct types for this class def: Nothing unsupported *)
+
+(* Translating `instance GHC.Base.Functor Sum' failed: OOPS! Cannot construct
+   types for this class def: Nothing unsupported *)
+
+(* Translating `instance GHC.Base.Applicative Sum' failed: OOPS! Cannot
+   construct types for this class def: Nothing unsupported *)
+
+(* Translating `instance GHC.Base.Monad Sum' failed: OOPS! Cannot construct
+   types for this class def: Nothing unsupported *)
+
+(* Translating `instance (forall `{GHC.Num.Num a}, GHC.Base.Monoid (Product a))'
+   failed: OOPS! Cannot construct types for this class def: Nothing unsupported *)
+
+(* Translating `instance GHC.Base.Functor Product' failed: OOPS! Cannot
+   construct types for this class def: Nothing unsupported *)
+
+(* Translating `instance GHC.Base.Applicative Product' failed: OOPS! Cannot
+   construct types for this class def: Nothing unsupported *)
+
+(* Translating `instance GHC.Base.Monad Product' failed: OOPS! Cannot construct
+   types for this class def: Nothing unsupported *)
+
+(* Translating `instance GHC.Base.Monoid (First a)' failed: OOPS! Cannot
+   construct types for this class def: Nothing unsupported *)
+
+(* Translating `instance GHC.Base.Monoid (Last a)' failed: OOPS! Cannot
+   construct types for this class def: Nothing unsupported *)
+
+(* Translating `instance (forall `{GHC.Base.Alternative f}, GHC.Base.Monoid (Alt
+   f a))' failed: OOPS! Cannot construct types for this class def: Nothing
+   unsupported *)
+
 Inductive All : Type := Mk_All : bool -> All.
+
 Definition getAll (arg_7__ : All) :=
   match arg_7__ with
     | (Mk_All getAll) => getAll
   end.
-Local Definition instance_Monoid_All_mempty : All :=
-  Mk_All true.
-Local Definition instance_Monoid_All_mappend : All -> (All -> All) :=
-  fun arg_38__ arg_39__ =>
-    match arg_38__ , arg_39__ with
-      | (Mk_All x) , (Mk_All y) => Mk_All (andb x y)
-    end.
-Local Definition instance_Monoid_All_mconcat : (list All) -> All :=
-  foldr instance_Monoid_All_mappend instance_Monoid_All_mempty.
-Instance instance_Monoid_All : !Monoid All := {
-  mappend := instance_Monoid_All_mappend ;
-  mconcat := instance_Monoid_All_mconcat ;
-  mempty := instance_Monoid_All_mempty }.
+
+Instance instance_GHC_Base_Monoid_All : !GHC.Base.Monoid All := {}.
+Proof.
+Admitted.
+
 Inductive Alt (f : Type -> Type) a : Type := Mk_Alt : (f a) -> (Alt f a).
+
 Inductive Any : Type := Mk_Any : bool -> Any.
+
 Definition getAny (arg_6__ : Any) :=
   match arg_6__ with
     | (Mk_Any getAny) => getAny
   end.
-Local Definition instance_Monoid_Any_mempty : Any :=
-  Mk_Any false.
-Local Definition instance_Monoid_Any_mappend : Any -> (Any -> Any) :=
-  fun arg_33__ arg_34__ =>
-    match arg_33__ , arg_34__ with
-      | (Mk_Any x) , (Mk_Any y) => Mk_Any (orb x y)
-    end.
-Local Definition instance_Monoid_Any_mconcat : (list Any) -> Any :=
-  foldr instance_Monoid_Any_mappend instance_Monoid_Any_mempty.
-Instance instance_Monoid_Any : !Monoid Any := {
-  mappend := instance_Monoid_Any_mappend ;
-  mconcat := instance_Monoid_Any_mconcat ;
-  mempty := instance_Monoid_Any_mempty }.
+
+Instance instance_GHC_Base_Monoid_Any : !GHC.Base.Monoid Any := {}.
+Proof.
+Admitted.
+
 Inductive Dual a : Type := Mk_Dual : a -> (Dual a).
+
 Definition getDual {a} (arg_5__ : Dual a) :=
   match arg_5__ with
     | (Mk_Dual getDual) => getDual
   end.
-Local Definition instance__forall___Monoid_a___Monoid__Dual_a___mempty `{Monoid
-                                                                       a} : (Dual a) :=
-  Mk_Dual mempty.
-Local Definition instance__forall___Monoid_a___Monoid__Dual_a___mappend `{Monoid
-                                                                        a} : (Dual a) -> ((Dual a) -> (Dual a)) :=
-  fun arg_52__ arg_53__ =>
-    match arg_52__ , arg_53__ with
-      | (Mk_Dual x) , (Mk_Dual y) => Mk_Dual (mappend y x)
-    end.
-Local Definition instance__forall___Monoid_a___Monoid__Dual_a___mconcat `{Monoid
-                                                                        a} : (list (Dual a)) -> (Dual a) :=
-  foldr instance__forall___Monoid_a___Monoid__Dual_a___mappend
-        instance__forall___Monoid_a___Monoid__Dual_a___mempty.
-Instance instance__forall___Monoid_a___Monoid__Dual_a__ : !(forall `{Monoid a},
-                                                            Monoid (Dual a)) := {
-  mappend := instance__forall___Monoid_a___Monoid__Dual_a___mappend ;
-  mconcat := instance__forall___Monoid_a___Monoid__Dual_a___mconcat ;
-  mempty := instance__forall___Monoid_a___Monoid__Dual_a___mempty }.
+
+Instance instance__forall___GHC_Base_Alternative_f___GHC_Base_Monoid__Alt_f_a__
+  : !(forall `{GHC.Base.Alternative f}, GHC.Base.Monoid (Alt f a)) := {}.
+Proof.
+Admitted.
+
+Instance instance_GHC_Base_Monad_Dual : !GHC.Base.Monad Dual := {}.
+Proof.
+Admitted.
+
+Instance instance_GHC_Base_Applicative_Dual : !GHC.Base.Applicative Dual := {}.
+Proof.
+Admitted.
+
+Instance instance_GHC_Base_Functor_Dual : !GHC.Base.Functor Dual := {}.
+Proof.
+Admitted.
+
+Instance instance__forall___GHC_Base_Monoid_a___GHC_Base_Monoid__Dual_a__
+  : !(forall `{GHC.Base.Monoid a}, GHC.Base.Monoid (Dual a)) := {}.
+Proof.
+Admitted.
+
 Inductive Endo a : Type := Mk_Endo : (a -> a) -> (Endo a).
+
 Definition appEndo {a} (arg_4__ : Endo a) :=
   match arg_4__ with
     | (Mk_Endo appEndo) => appEndo
   end.
+
+Instance instance_GHC_Base_Monoid__Endo_a_ : !GHC.Base.Monoid (Endo a) := {}.
+Proof.
+Admitted.
+
 Inductive First a : Type := Mk_First : (option a) -> (First a).
+
 Definition getFirst {a} (arg_3__ : First a) :=
   match arg_3__ with
     | (Mk_First getFirst) => getFirst
   end.
+
+Instance instance_GHC_Base_Monoid__First_a_ : !GHC.Base.Monoid (First a) := {}.
+Proof.
+Admitted.
+
 Inductive Last a : Type := Mk_Last : (option a) -> (Last a).
+
 Definition getLast {a} (arg_2__ : Last a) :=
   match arg_2__ with
     | (Mk_Last getLast) => getLast
   end.
+
+Instance instance_GHC_Base_Monoid__Last_a_ : !GHC.Base.Monoid (Last a) := {}.
+Proof.
+Admitted.
+
 Inductive Product a : Type := Mk_Product : a -> (Product a).
+
 Definition getProduct {a} (arg_1__ : Product a) :=
   match arg_1__ with
     | (Mk_Product getProduct) => getProduct
   end.
+
+Instance instance_GHC_Base_Monad_Product : !GHC.Base.Monad Product := {}.
+Proof.
+Admitted.
+
+Instance instance_GHC_Base_Applicative_Product : !GHC.Base.Applicative
+                                                 Product := {}.
+Proof.
+Admitted.
+
+Instance instance_GHC_Base_Functor_Product : !GHC.Base.Functor Product := {}.
+Proof.
+Admitted.
+
+Instance instance__forall___GHC_Num_Num_a___GHC_Base_Monoid__Product_a__
+  : !(forall `{GHC.Num.Num a}, GHC.Base.Monoid (Product a)) := {}.
+Proof.
+Admitted.
+
 Inductive Sum a : Type := Mk_Sum : a -> (Sum a).
+
 Definition getSum {a} (arg_0__ : Sum a) :=
   match arg_0__ with
     | (Mk_Sum getSum) => getSum
   end.
 
+Instance instance_GHC_Base_Monad_Sum : !GHC.Base.Monad Sum := {}.
+Proof.
+Admitted.
+
+Instance instance_GHC_Base_Applicative_Sum : !GHC.Base.Applicative Sum := {}.
+Proof.
+Admitted.
+
+Instance instance_GHC_Base_Functor_Sum : !GHC.Base.Functor Sum := {}.
+Proof.
+Admitted.
+
+Instance instance__forall___GHC_Num_Num_a___GHC_Base_Monoid__Sum_a__
+  : !(forall `{GHC.Num.Num a}, GHC.Base.Monoid (Sum a)) := {}.
+Proof.
+Admitted.
+
 (* Unbound variables:
-     Monoid Type andb bool false foldr list mappend mempty option orb true
+     GHC.Base.Alternative GHC.Base.Applicative GHC.Base.Functor GHC.Base.Monad
+     GHC.Base.Monoid GHC.Num.Num Type bool f option
 *)

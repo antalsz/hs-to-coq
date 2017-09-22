@@ -1,14 +1,20 @@
 (* Default settings (from HsToCoq.Coq.Preamble) *)
 
+Generalizable All Variables.
+
 Set Implicit Arguments.
 Set Maximal Implicit Insertion.
-Generalizable All Variables.
 Unset Strict Implicit.
 Unset Printing Implicit Defensive.
 
-Axiom patternFailure : forall {a}, a.
+(* Let us be a bit explicit by having multiple axoims around *)
+(* This one is for untranslatable expressions: *)
+Local Axiom missingValue : forall {a}, a.
+(* This one is for pattern match failures: *)
+Local Axiom patternFailure : forall {a}, a.
 
 (* Preamble *)
+
 Require Import GHC.Base.
 Require Import GHC.Num.
 
@@ -34,20 +40,31 @@ Instance instance_Down_Eq {a} `(Eq_ a) : Eq_ (Down a) := {
    , Monoid -- ^ @since 4.11.0.0
 *)
 
-(* Successfully converted the following code: *)
-(* Translating `instance (forall `{Ord a}, Ord (Down a))' failed: OOPS! Cannot
-   construct types for this class def: Nothing unsupported *)
-Definition comparing {a} {b} `{(Ord a)}
+(* Converted imports: *)
+
+Require GHC.Base.
+Require GHC.Show.
+Require GHC.Read.
+Require GHC.Classes.
+
+(* Converted declarations: *)
+
+(* Translating `instance (forall `{GHC.Classes.Ord a}, GHC.Classes.Ord (Down
+   a))' failed: OOPS! Cannot construct types for this class def: Nothing
+   unsupported *)
+
+Definition comparing {a} {b} `{(GHC.Classes.Ord a)}
     : (b -> a) -> (b -> (b -> comparison)) :=
   fun arg_0__ arg_1__ arg_2__ =>
     match arg_0__ , arg_1__ , arg_2__ with
-      | p , x , y => compare (p x) (p y)
+      | p , x , y => GHC.Classes.compare (p x) (p y)
     end.
-Instance instance__forall___Ord_a___Ord__Down_a__ : !(forall `{Ord a},
-                                                      Ord (Down a)) := {}.
+
+Instance instance__forall___GHC_Classes_Ord_a___GHC_Classes_Ord__Down_a__
+  : !(forall `{GHC.Classes.Ord a}, GHC.Classes.Ord (Down a)) := {}.
 Proof.
 Admitted.
 
 (* Unbound variables:
-     Down Ord compare comparison
+     Down GHC.Classes.Ord GHC.Classes.compare comparison
 *)

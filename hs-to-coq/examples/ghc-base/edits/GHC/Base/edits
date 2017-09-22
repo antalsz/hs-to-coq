@@ -10,11 +10,11 @@ skip unIO       # State# RealWorld
 skip thenIO
 skip returnIO
 skip bindIO
-skip instance_Functor_IO
-skip instance_Applicative_IO
-skip instance_Alternative_IO
-skip instance_Monad_IO
-skip instance_MonadPlus_IO
+skip instance_Functor_GHC_Types_IO
+skip instance_Applicative_GHC_Types_IO
+skip instance_Alternative_GHC_Types_IO
+skip instance_Monad_GHC_Types_IO
+skip instance_MonadPlus_GHC_Types_IO
 
 skip shiftRL#
 skip shiftL#

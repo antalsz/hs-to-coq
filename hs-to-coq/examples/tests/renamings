@@ -1,41 +1,23 @@
-type  () = unit
-value () = tt
+type  GHC.Tuple.() = unit
+value GHC.Tuple.() = tt
 
-type  [] = list
-value [] = nil
-value :  = ::
-
-type Eq = Eq_
-
-type Ordering = comparison
-value EQ = Eq
-value LT = Lt
-value GT = Gt
+type  GHC.Types.[] = list
+value GHC.Types.[] = nil
+value GHC.Types.:  = ::
 
 value <  = <?
 value <= = <=?
 value >  = >?
 value >= = >=?
 
-value :% = Mk_Ratio
-
-type  Bool  = bool
-value True  = true
-value False = false
-value not   = negb
-value ||    = orb
-value &&    = andb
+type  GHC.Types.Bool  = bool
+value GHC.Types.True  = true
+value GHC.Types.False = false
+value GHC.Types.not   = negb
+value GHC.Types.||    = orb
+value GHC.Types.&&    = andb
 
 
-type  Maybe   = option
-value Just    = Some
-value Nothing = None
-
-# TODO Modules
-type  M.IntMap = IntMap
-type  S.IntSet = IntSet
-
-value .&. = :&:
-value .|. = :|:
-
-type -> = arrow
+type  GHC.Base.Maybe   = option
+value GHC.Base.Just    = Some
+value GHC.Base.Nothing = None

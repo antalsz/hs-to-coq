@@ -58,8 +58,8 @@ todo_pass: $(foreach f,$(TODO_PASS),$(f).pass)
 
 %.pass : %.v
 	@/bin/echo -n "$<: "
-	@if ! grep -q -F '(* Successfully converted the following code: *)' $<; \
-	 then echo -e "\033[1;31mempty\033[0m (should pass)";\
+	@if ! test -e $<; \
+	 then echo -e "\033[1;31mmissing\033[0m (should pass)";\
 	 elif ! $(TYPECHECK) $< >&/dev/null; \
 	 then echo -e "\033[1;31mfailed\033[0m (should pass)" >&2; \
 	 else echo -e "\033[1;32mpassed\033[0m"; \

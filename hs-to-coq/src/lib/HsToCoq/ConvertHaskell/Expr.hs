@@ -189,7 +189,7 @@ convertExpr (HsDo sty (L _ stmts) PlaceHolder) =
 
 convertExpr (ExplicitList PlaceHolder overloaded exprs) =
   if maybe True isNoSyntaxExpr overloaded
-  then foldr (Infix ?? "::") (Var "nil") <$> traverse convertLExpr exprs
+  then foldr (App2 (Var "cons")) (Var "nil") <$> traverse convertLExpr exprs
   else convUnsupported "overloaded lists"
 
 convertExpr (ExplicitPArr _ _) =
@@ -505,7 +505,7 @@ convertListComprehension :: ConversionMonad m => [ExprLStmt GHC.Name] -> m Term
 convertListComprehension allStmts = case fmap unLoc <$> unsnoc allStmts of
   Just (stmts, LastStmt e _applicativeDoInfo _returnInfo) ->
     foldMap (Endo . toExpr . unLoc) stmts `appEndo`
-      (Infix <$> (convertLExpr e) <*> pure "::" <*> pure (Var "nil"))
+      (App2 (Var ("cons")) <$> convertLExpr e <*> pure (Var "nil"))
   Just _ ->
     convUnsupported "invalid malformed list comprehensions"
   Nothing ->

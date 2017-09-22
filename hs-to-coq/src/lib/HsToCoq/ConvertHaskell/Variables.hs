@@ -23,6 +23,7 @@ import Outputable (OutputableBndr)
 import Name hiding (Name)
 
 import HsToCoq.Util.GHC
+import HsToCoq.Util.GHC.Module
 
 import HsToCoq.Coq.Gallina
 import HsToCoq.Coq.Gallina.Util
@@ -69,8 +70,8 @@ var' ns x = use $ renamed ns x . non (escapeReservedNames x)
 -- This is dishonest: it should return a Qualid for qualified names
 var :: ConversionMonad m => HsNamespace -> GHC.Name -> m Ident
 var ns name = do
-  thisModM <- fmap (T.pack . moduleNameString) <$> use currentModule
-  let nameModM = T.pack . moduleNameString . moduleName <$> nameModule_maybe name
+  thisModM <- fmap moduleNameText <$> use currentModule
+  let nameModM = moduleNameText . moduleName <$> nameModule_maybe name
       
   let mod = nameModM
 

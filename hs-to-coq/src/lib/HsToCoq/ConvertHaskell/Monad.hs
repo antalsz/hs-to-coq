@@ -18,7 +18,8 @@ module HsToCoq.ConvertHaskell.Monad (
   -- * Errors
   throwProgramError, convUnsupported, editFailure,
   -- * Fixity
-  getFixity, recordFixity
+  getFixity, recordFixity,
+  
   ) where
 
 import Control.Lens
@@ -37,7 +38,7 @@ import qualified Data.Map.Strict as M
 
 import GHC
 import Panic
-import HsToCoq.Util.GHC.Module ()
+import HsToCoq.Util.GHC.Module
 
 import HsToCoq.Coq.Gallina as Coq
 import HsToCoq.Coq.Gallina.Util
@@ -112,7 +113,7 @@ withCurrentModuleOrNone newModule = gbracket setModuleAndRenamings restoreModule
     oldModule <- _currentModule <<.= newModule
     newRenamings <- use $ edits.moduleRenamings
                         . maybe (like Nothing)
-                                (at . T.pack . moduleNameString)
+                                (at . moduleNameText)
                                 newModule
                         . non M.empty
     oldRenamings <- renamings <<%= (newRenamings `M.union`) -- (2)

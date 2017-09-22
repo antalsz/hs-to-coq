@@ -36,7 +36,7 @@ import HsToCoq.Coq.Gallina.Util
 
 import GHC hiding (Name)
 import qualified GHC
-import HsToCoq.Util.GHC.Module ()
+import HsToCoq.Util.GHC.Module
 import Panic
 import Bag
 
@@ -109,7 +109,7 @@ convertImportDecl ImportDecl{..} = do
 importDeclSentences :: ConversionMonad m => ConvertedImportDecl -> m [Sentence]
 importDeclSentences ConvertedImportDecl{..} = do
   let moduleToQualid = maybe (throwProgramError "malformed module name") pure
-                     . identToQualid . T.pack . moduleNameString
+                     . identToQualid . moduleNameText
   
   mod <- moduleToQualid convImportedModule
   let importSentence = ModuleSentence $ Require Nothing
@@ -196,7 +196,7 @@ convertHsGroup mod HsGroup{..} = do
 --------------------------------------------------------------------------------
 
 require :: ModuleName -> Maybe ModuleSentence
-require = fmap (Require Nothing Nothing . pure) . identToQualid . T.pack . moduleNameString
+require = fmap (Require Nothing Nothing . pure) . identToQualid . moduleNameText
 
 --------------------------------------------------------------------------------
 

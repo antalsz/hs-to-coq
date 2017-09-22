@@ -14,6 +14,7 @@ import Data.Bifunctor
 import Data.Semigroup (Semigroup(..))
 import Data.Foldable
 import HsToCoq.Util.Traversable
+import qualified Data.Text as T
 
 import qualified Data.Set        as S
 import qualified Data.Map.Strict as M
@@ -22,8 +23,9 @@ import Control.Monad
 
 import GHC hiding (Name)
 import qualified GHC
-
 import HsToCoq.Util.GHC
+import HsToCoq.Util.GHC.Module
+
 import HsToCoq.Coq.Gallina as Coq
 import HsToCoq.Coq.Gallina.Util
 
@@ -53,8 +55,13 @@ convertConLName :: ConversionMonad m => Located GHC.Name -> m Ident
 convertConLName (L _ hsCon) = do
   con <- ghcPpr hsCon -- We use 'ghcPpr' because we munge the name here ourselves
   use (renamed ExprNS con) >>= \case
-    Nothing   -> renamed ExprNS con <?= "Mk_" <> con
-    Just con' -> pure con'
+    Nothing   -> do
+      let mk_con = "Mk_" <> con
+      qual <- maybe "" ((`T.snoc` '.') . moduleNameText) <$> use currentModule
+      renamed ExprNS (qual <> con) ?= qual <> mk_con
+      pure mk_con
+    Just con' ->
+      pure con'
 
 convertConDecl :: ConversionMonad m
                => Term -> [Binder] -> ConDecl GHC.Name -> m [Constructor]

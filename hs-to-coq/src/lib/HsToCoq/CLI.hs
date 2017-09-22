@@ -69,6 +69,7 @@ data ProgramArgs = ProgramArgs { outputFileArg        :: Maybe FilePath
                                , preambleFileArg      :: Maybe FilePath
                                , renamingsFileArg     :: Maybe FilePath
                                , editsFileArg         :: Maybe FilePath
+                               , processingModeArg    :: ProcessingMode
                                , modulesFilesArgs     :: [FilePath]
                                , modulesRootArg       :: Maybe FilePath
                                , importDirsArgs       :: [FilePath]
@@ -78,52 +79,60 @@ data ProgramArgs = ProgramArgs { outputFileArg        :: Maybe FilePath
                  deriving (Eq, Ord, Show, Read)
 
 argParser :: Parser ProgramArgs
-argParser = ProgramArgs <$> optional (strOption   $  long    "output"
-                                                  <> short   'o'
-                                                  <> metavar "FILE"
-                                                  <> help    "File to write the translated Coq code to (defaults to stdout)")
+argParser = ProgramArgs <$> optional (strOption       $  long    "output"
+                                                      <> short   'o'
+                                                      <> metavar "FILE"
+                                                      <> help    "File to write the translated Coq code to (defaults to stdout)")
                         
-                        <*> optional (strOption   $  long    "preamble"
-                                                  <> short   'p'
-                                                  <> metavar "FILE"
-                                                  <> help    "File containing code that goes at the top of the Coq output")
+                        <*> optional (strOption       $  long    "preamble"
+                                                      <> short   'p'
+                                                      <> metavar "FILE"
+                                                      <> help    "File containing code that goes at the top of the Coq output")
                         
-                        <*> optional (strOption   $  long    "renamings"
-                                                  <> short   'r'
-                                                  <> metavar "FILE"
-                                                  <> help    "File with Haskell -> Coq identifier renamings")
+                        <*> optional (strOption       $  long    "renamings"
+                                                      <> short   'r'
+                                                      <> metavar "FILE"
+                                                      <> help    "File with Haskell -> Coq identifier renamings")
                         
-                        <*> optional (strOption   $  long    "edits"
-                                                  <> short   'e'
-                                                  <> metavar "FILE"
-                                                  <> help    "File with extra Haskell -> Coq edits")
+                        <*> optional (strOption       $  long    "edits"
+                                                      <> short   'e'
+                                                      <> metavar "FILE"
+                                                      <> help    "File with extra Haskell -> Coq edits")
                         
-                        <*> many     (strOption   $  long    "modules"
-                                                  <> short   'm'
-                                                  <> metavar "FILE"
-                                                  <> help    "File listing Haskell files to translate into Coq, in an indented tree structure")
+                        <*> asum [ flag' Recursive    $  long    "recursive"
+                                                      <> short   'R'
+                                                      <> help    "Translate dependencies of the given modules (default)"
+                                 , flag' NonRecursive $  long    "nonrecursive"
+                                                      <> short   'N'
+                                                      <> help    "Only translate the given modules, and not their dependencies"
+                                 , pure  Recursive ]
                         
-                        <*> optional (strOption   $  long    "modules-dir"
-                                                  <> short   'd'
-                                                  <> metavar "DIR"
-                                                  <> help    "The directory the module tree files' contents are rooted at")
+                        <*> many     (strOption       $  long    "modules"
+                                                      <> short   'm'
+                                                      <> metavar "FILE"
+                                                      <> help    "File listing Haskell files to translate into Coq, in an indented tree structure")
                         
-                        <*> many     (strOption   $  long    "import-dir"
-                                                  <> short   'i'
-                                                  <> metavar "DIR"
-                                                  <> help    "Directory to search for Haskell modules")
+                        <*> optional (strOption       $  long    "modules-dir"
+                                                      <> short   'd'
+                                                      <> metavar "DIR"
+                                                      <> help    "The directory the module tree files' contents are rooted at")
                         
-                        <*> many     (strOption   $  long    "include-dir"
-                                                  <> short   'I'
-                                                  <> metavar "DIR"
-                                                  <> help    "Directory to search for CPP `#include's")
+                        <*> many     (strOption       $  long    "import-dir"
+                                                      <> short   'i'
+                                                      <> metavar "DIR"
+                                                      <> help    "Directory to search for Haskell modules")
                         
-                        <*> many     (strOption   $  long    "ghc"
-                                                  <> metavar "ARGUMENT"
-                                                  <> help    "Option to pass through to GHC")
+                        <*> many     (strOption       $  long    "include-dir"
+                                                      <> short   'I'
+                                                      <> metavar "DIR"
+                                                      <> help    "Directory to search for CPP `#include's")
                         
-                        <*> many     (strArgument $  metavar "FILES"
-                                                  <> help    "Haskell files to translate into Coq")
+                        <*> many     (strOption       $  long    "ghc"
+                                                      <> metavar "ARGUMENT"
+                                                      <> help    "Option to pass through to GHC")
+                        
+                        <*> many     (strArgument     $  metavar "FILES"
+                                                      <> help    "Haskell files to translate into Coq")
 
 argParserInfo :: ParserInfo ProgramArgs
 argParserInfo = info (helper <*> argParser) $  fullDesc
@@ -133,6 +142,7 @@ data Config = Config { _outputFile       :: !(Maybe FilePath)
                      , _preambleFile     :: !(Maybe FilePath)
                      , _renamingsFile    :: !(Maybe FilePath)
                      , _editsFile        :: !(Maybe FilePath)
+                     , _processingMode   :: !ProcessingMode
                      , _modulesFiles     :: ![FilePath]
                      , _modulesRoot      :: !(Maybe FilePath)
                      , _directInputFiles :: ![FilePath] }
@@ -160,6 +170,7 @@ processArgs = do
                 , _preambleFile     = preambleFileArg
                 , _renamingsFile    = renamingsFileArg
                 , _editsFile        = editsFileArg
+                , _processingMode   = processingModeArg
                 , _modulesFiles     = modulesFilesArgs
                 , _modulesRoot      = modulesRootArg
                 , _directInputFiles = directInputFilesArgs }
@@ -216,7 +227,7 @@ processFilesMain process = do
         act hOut
 
   evalConversion renamings edits $
-    traverse_ (process withModulePrinter) =<< processFiles inputFiles
+    traverse_ (process withModulePrinter) =<< processFiles (conf^.processingMode) inputFiles
 
 printConvertedModule :: MonadIO m
                      => WithModulePrinter m ()

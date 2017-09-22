@@ -11,18 +11,20 @@ Stability   : experimental
 
 module HsToCoq.Coq.Preamble (staticPreamble) where
 
-import Data.Text (Text, unlines)
+import Data.Text (Text)
+import qualified Data.Text as T
 
 staticPreamble :: Text
-staticPreamble = Data.Text.unlines
+staticPreamble = T.unlines
  [ "(* Default settings (from HsToCoq.Coq.Preamble) *)"
+ , ""
+ , "Generalizable All Variables."
  , ""
  , "Set Implicit Arguments."
  , "Set Maximal Implicit Insertion."
- , "Generalizable All Variables."
  , "Unset Strict Implicit."
  , "Unset Printing Implicit Defensive."
  , ""
- , "Axiom patternFailure : forall {a}, a."
- , ""
+ -- TODO: Shouldn't be duplicated in every file
+ , "Axiom missingValue : forall {a}, a."
  ]

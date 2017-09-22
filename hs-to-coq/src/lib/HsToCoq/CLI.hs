@@ -224,10 +224,12 @@ processFilesMain process = do
   
   preamble <- liftIO $ traverse readFile (conf^.preambleFile)
   let printPreamble hOut = liftIO $ do
-        liftIO $ do T.hPutStr hOut staticPreamble
-                    hFlush    hOut
+        T.hPutStr hOut staticPreamble
+        hPutStrLn hOut ""
+        unless (null preamble) $ do
+          hPutStrLn hOut "(* Preamble *)"
+          hPutStrLn hOut ""
         for_ preamble $ \contents -> do
-            hPutStrLn hOut "(* Preamble *)"
             hPutStr   hOut contents
             hPutStrLn hOut ""
             hFlush    hOut
@@ -261,6 +263,7 @@ printConvertedModule withModulePrinter cmod@ConvertedModule{..} =
           
           printThe what _   [] = hPutStrLn out $ "(* No " ++ what ++ " to convert. *)"
           printThe what sep ds = do hPutStrLn out $ "(* Converted " ++ what ++ ": *)"
+                                    printGap
                                     traverse_ (hPrettyPrint out) . intersperse sep $
                                       map ((<> line) . renderGallina) ds
         

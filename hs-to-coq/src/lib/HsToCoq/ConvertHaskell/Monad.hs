@@ -226,7 +226,7 @@ builtInDefaultMethods = fmap M.fromList $ M.fromList
     , "Monad" =:
         [ "return_" ~> Var "pure"
         , "op_zgzg__" ~> Var "op_ztzg__"
-        , "fail" ~> Fun [arg "x"] (Var "patternFailure")
+        , "fail" ~> Fun [arg "x"] (Var "missingValue")
         ]
     ]
   where

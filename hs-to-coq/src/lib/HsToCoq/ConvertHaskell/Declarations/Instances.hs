@@ -48,6 +48,7 @@ import HsToCoq.ConvertHaskell.Type
 import HsToCoq.ConvertHaskell.Expr
 import HsToCoq.ConvertHaskell.Axiomatize
 import HsToCoq.ConvertHaskell.Declarations.Class
+import HsToCoq.ConvertHaskell.InfixNames
 
 --------------------------------------------------------------------------------
 
@@ -254,7 +255,7 @@ topoSortInstance (InstanceDefinition instanceName params ty members mp) = go sor
         mkDefnGrp [ v ] sub = do
            let v' = instanceName <> "_" <> v
            (params, mty)  <- mkTy v
-           body <- quantify v (subst sub (m M.! v))
+           body <- quantify  (toPrefix v) (subst sub (m M.! v))
            let sub' = M.insert v (Qualid (Bare v')) sub
            pure ([ DefinitionSentence (DefinitionDef Local v' params mty (unFix body)) ], sub')
         mkDefnGrp many _sub =

@@ -131,9 +131,7 @@ convertExpr (OpApp el eop _fixity er) =
       op <- var ExprNS hsOp
       l  <- convertLExpr el
       r  <- convertLExpr er
-      pure $ if identIsOperator op
-             then Infix l op r
-             else App2 (Var op) l r
+      pure $ App2 (Var (toPrefix op)) l r
     _ ->
       convUnsupported "non-variable infix operators"
 

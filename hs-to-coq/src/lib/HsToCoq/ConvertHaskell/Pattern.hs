@@ -31,6 +31,7 @@ import HsToCoq.ConvertHaskell.Parameters.Renamings
 import HsToCoq.ConvertHaskell.Monad
 import HsToCoq.ConvertHaskell.Variables
 import HsToCoq.ConvertHaskell.Literals
+import HsToCoq.ConvertHaskell.InfixNames
 
 --------------------------------------------------------------------------------
 
@@ -102,7 +103,7 @@ convertPat (ConPatIn (L _ hsCon) conVariety) = do
            Nothing -> recPatUnsupported "unknown"
 
     InfixCon l r -> do
-      InfixPat <$> convertLPat l <*> pure con <*> convertLPat r
+      App2Pat (Bare (toPrefix con)) <$> convertLPat l <*> convertLPat r
 
 convertPat (ConPatOut{}) =
   convUnsupported "[internal?] `ConPatOut' constructor"

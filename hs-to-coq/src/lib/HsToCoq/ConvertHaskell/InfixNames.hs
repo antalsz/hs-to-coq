@@ -38,11 +38,15 @@ infixToPrefix = ("_" <>) . (<> "_")
 
 toPrefix :: Ident -> Ident
 toPrefix x | identIsVariable x = x
-           | otherwise         = infixToPrefix x
+           | otherwise         = infixToCoq x
 
 -- An operator's defined name in Coq (hidden by a notation)
+infixToCoq_ :: Op -> Ident
+infixToCoq_ name = "op_" <> T.pack (zEncodeString $ T.unpack name) <> "__"
+
 infixToCoq :: Op -> Ident
-infixToCoq name = "op_" <> T.pack (zEncodeString $ T.unpack name) <> "__"
+infixToCoq op = T.intercalate "." (init parts ++ [infixToCoq_ (last parts)])
+  where parts = T.splitOn "." op
 
 toCoqName :: Op -> Ident
 toCoqName x | identIsVariable x = x

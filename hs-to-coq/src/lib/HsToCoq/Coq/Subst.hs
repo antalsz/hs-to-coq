@@ -231,5 +231,7 @@ instance Subst Term where
 
   subst _f x@MissingValue = x
 
+  subst _f x@PatternFailure = x
+
 instance (Subst a, Functor f) => Subst (f a) where
   subst f = fmap (subst f)

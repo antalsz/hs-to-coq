@@ -167,6 +167,7 @@ data Term = Forall Binders Term                                                 
           | Parens Term                                                                        -- ^@( /term/ )@
           | Bang Term                                                                          -- ^@! term - tmp suppress implicit arguments (for Instance decls)
           | MissingValue                                                                       -- ^@_@ – extra (a value we don't know how to fill in)
+          | PatternFailure                                                                     -- ^@_@ – extra (returned from a pattern match value)
           deriving (Eq, Ord, Show, Read, Typeable, Data)
 
 infixr 7 `Arrow`
@@ -721,6 +722,9 @@ instance Gallina Term where
 
   renderGallina' _ MissingValue =
     string "missingValue"
+
+  renderGallina' _ PatternFailure =
+    string "patternFailure"
 
 instance Gallina Arg where
   renderGallina' p (PosArg t) =

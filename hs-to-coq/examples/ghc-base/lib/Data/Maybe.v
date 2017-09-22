@@ -26,7 +26,7 @@ Definition catMaybes {a} : (list (option a)) -> (list a) :=
     match arg_20__ with
       | ls => let cont_21__ arg_22__ :=
                 match arg_22__ with
-                  | (Some x) => (x :: nil)
+                  | (Some x) => cons x nil
                   | _ => nil
                 end in
               concatMap cont_21__ ls
@@ -126,7 +126,7 @@ Definition maybeToList {a} : (option a) -> (list a) :=
   fun arg_29__ =>
     let j_31__ :=
       match arg_29__ with
-        | (Some x) => (x :: nil)
+        | (Some x) => cons x nil
         | _ => patternFailure
       end in
     match arg_29__ with
@@ -135,6 +135,6 @@ Definition maybeToList {a} : (option a) -> (list a) :=
     end.
 
 (* Unbound variables:
-     :: GHC.Prim.errorWithoutStackTrace None Some bool concatMap cons false list nil
+     GHC.Prim.errorWithoutStackTrace None Some bool concatMap cons false list nil
      option true
 *)

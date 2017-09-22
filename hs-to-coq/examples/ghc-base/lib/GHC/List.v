@@ -322,7 +322,7 @@ Definition foldr1 {a} : (a -> (a -> a)) -> ((list a) -> a) :=
                             | _ => j_171__
                           end in
                         match arg_169__ with
-                          | (x :: nil) => x
+                          | (cons x nil) => x
                           | _ => j_173__
                         end in
              go
@@ -633,10 +633,9 @@ Definition zipWithFB {a} {b} {c} {d} {e}
     end.
 
 (* Unbound variables:
-     * :: Coq.Program.Basics.compose GHC.BaseGen.const GHC.BaseGen.foldr
-     GHC.BaseGen.id GHC.Num.Int GHC.Num.Num GHC.Num.op_zp__ GHC.Num.op_zt__
-     GHC.Prim.Eq_ GHC.Prim.Ord GHC.Prim.String GHC.Prim.app
-     GHC.Prim.errorWithoutStackTrace GHC.Prim.max GHC.Prim.min GHC.Prim.oneShot
-     GHC.Prim.op_zeze__ GHC.Prim.op_zsze__ None Some andb bool cons false foldl
-     foldl' list nil option orb pair true
+     * Coq.Program.Basics.compose GHC.BaseGen.const GHC.BaseGen.foldr GHC.BaseGen.id
+     GHC.Num.Int GHC.Num.Num GHC.Num.op_zp__ GHC.Num.op_zt__ GHC.Prim.Eq_
+     GHC.Prim.Ord GHC.Prim.String GHC.Prim.app GHC.Prim.errorWithoutStackTrace
+     GHC.Prim.max GHC.Prim.min GHC.Prim.oneShot GHC.Prim.op_zeze__ GHC.Prim.op_zsze__
+     None Some andb bool cons false foldl foldl' list nil option orb pair true
 *)

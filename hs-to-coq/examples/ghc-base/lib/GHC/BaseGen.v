@@ -117,7 +117,7 @@ Local Definition instance_Applicative_list_op_zlztzg__ : (forall {a} {b},
   fun {a} {b} =>
     fun arg_161__ arg_162__ =>
       match arg_161__ , arg_162__ with
-        | fs , xs => concatMap (fun f => (concatMap (fun x => (f x :: nil)) xs)) fs
+        | fs , xs => concatMap (fun f => (concatMap (fun x => (cons (f x) nil)) xs)) fs
       end.
 
 Local Definition instance_Applicative_list_op_ztzg__ : (forall {a} {b},
@@ -125,11 +125,11 @@ Local Definition instance_Applicative_list_op_ztzg__ : (forall {a} {b},
   fun {a} {b} =>
     fun arg_165__ arg_166__ =>
       match arg_165__ , arg_166__ with
-        | xs , ys => concatMap (fun _ => (concatMap (fun y => (y :: nil)) ys)) xs
+        | xs , ys => concatMap (fun _ => (concatMap (fun y => (cons y nil)) ys)) xs
       end.
 
 Local Definition instance_Applicative_list_pure : (forall {a}, a -> (list a)) :=
-  fun {a} => fun arg_158__ => match arg_158__ with | x => (x :: nil) end.
+  fun {a} => fun arg_158__ => match arg_158__ with | x => cons x nil end.
 
 Local Definition instance_Monad_list_fail : (forall {a}, String -> (list a)) :=
   fun {a} => fun arg_157__ => nil.
@@ -139,7 +139,7 @@ Local Definition instance_Monad_list_op_zgzgze__ : (forall {a} {b},
   fun {a} {b} =>
     fun arg_153__ arg_154__ =>
       match arg_153__ , arg_154__ with
-        | xs , f => concatMap (fun x => (concatMap (fun y => (y :: nil)) (f x))) xs
+        | xs , f => concatMap (fun x => (concatMap (fun y => (cons y nil)) (f x))) xs
       end.
 
 (* Skipping instance instance_Alternative_list *)
@@ -729,6 +729,6 @@ Instance instance_Monoid_unit : !Monoid unit := {
   mempty := instance_Monoid_unit_mempty }.
 
 (* Unbound variables:
-     * :: Eq None Some String bool comparison concatMap cons e flip list nil option
-     pair true tt unit
+     * Eq None Some String bool comparison concatMap cons e flip list nil option pair
+     true tt unit
 *)

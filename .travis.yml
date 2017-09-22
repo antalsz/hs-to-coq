@@ -61,3 +61,5 @@ script:
  - make -C examples/ghc-base/lib/ -f Makefile.coq
  # Run successors example, which uses base
  - make -C examples/successors
+ # Run compiler example, which uses base
+ - make -C examples/compiler

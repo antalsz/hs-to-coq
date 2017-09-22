@@ -12,7 +12,7 @@
 .\#*
 
 # Scratch work files
-Test.hs
-test.v
+Test*
+test*
 Example.hs
 example.v

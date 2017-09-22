@@ -1,0 +1,4 @@
+-R ../ghc-base/lib/ Top
+-R . Top
+Compiler.v
+Proofs.v

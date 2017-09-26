@@ -59,7 +59,7 @@ script:
  - make -C examples/tests
  # Build Coq’ified base (generated sources are in the repo)
  - make -C examples/ghc-base/lib/ -f Makefile.coq
- # Run successors example, which uses base
+ # Run examples that use base:
  - make -C examples/successors
- # Run compiler example, which uses base
  - make -C examples/compiler
+ - make -C examples/histogram

@@ -5,6 +5,9 @@ import GHC.List
 hd :: [a] -> a
 hd (x:xs) = x
 
+tl :: [a] -> [a]
+tl (x:xs) = xs
+
 group                   :: Eq a => [a] -> [[a]]
 group                   =  groupBy (==)
 
@@ -26,3 +29,6 @@ groupBy f (x:xs) = case groupBy f xs of
 
 hist :: Eq a => [a] -> [(a,Int)]
 hist ys = map (\x -> (hd x, GHC.List.length x)) (group ys)
+
+bad_hist :: Eq a => [a] -> [(a,Int)]
+bad_hist ys = map (\x -> (hd (tl x), GHC.List.length x)) (group ys)

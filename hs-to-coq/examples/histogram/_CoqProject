@@ -1,0 +1,4 @@
+-R ../ghc-base/lib/ Top
+-R . Top
+Histogram.v
+Proofs.v

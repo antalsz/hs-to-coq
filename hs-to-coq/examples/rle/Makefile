@@ -8,14 +8,14 @@ SHELL = bash
 
 all: coq
 
-Histogram.v: Histogram.hs edits preamble.v
-	$(HS_TO_COQ) -e edits -p preamble.v -r ../ghc-base/renamings Histogram.hs -o .
+RLE.v: RLE.hs edits preamble.v
+	$(HS_TO_COQ) -e edits -p preamble.v -r ../ghc-base/renamings RLE.hs -o .
 
 Makefile.coq: _CoqProject
 	coq_makefile -f _CoqProject -o $@
 
-coq: Makefile.coq Histogram.v Proofs.v
+coq: Makefile.coq RLE.v Proofs.v
 	$(MAKE) -f Makefile.coq OPT=$(COQFLAGS)
 
 clean:
-	rm -f */*.vo */*.glob */*.v.d *.vo *.v.d Histogram.v Makefile.coq  */*.v~
+	rm -f */*.vo */*.glob */*.v.d *.vo *.v.d RLE.v Makefile.coq  */*.v~

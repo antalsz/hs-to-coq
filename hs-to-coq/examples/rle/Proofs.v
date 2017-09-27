@@ -1,5 +1,5 @@
 Require Import Prelude.
-Require Import Histogram.
+Require Import RLE.
 
 Lemma group_by_not_nil:
   forall A f (xs : list A),
@@ -73,15 +73,15 @@ Proof.
       * assumption.
 Qed.
 
-(* For the good histogram, we can prove
+(* For the good rle, we can prove
    properties about it, simply because we
    never look at the axiom. *)
-Lemma hist_dom:
+Lemma rle_dom:
   forall X `{Eq_ X} (x : X) xs,
-    In x (map fst (hist xs)) -> In x xs.
+    In x (map fst (rle xs)) -> In x xs.
 Proof.
   intros.
-  unfold hist in H0.
+  unfold rle in H0.
   rewrite map_map in H0.
   apply in_map_hd_in_concat in H0.
   rewrite concat_groupBy in H0.
@@ -90,7 +90,7 @@ Proof.
 Qed.
 
 
-(* For the bad histogram, at some point we
+(* For the bad rle, at some point we
    would have to prove that [hd nil] is in [xs].
    We would not be able to prove that in general. *)
 Lemma int_suc_absurd: forall x : Int,  (#1 + x <> x).
@@ -101,9 +101,9 @@ Proof.
   destruct (Z.eq_dec 1 0); intuition congruence.
 Qed.
 
-Lemma bad_hist_dom:
+Lemma bad_rle_dom:
   exists (x : Int) xs,
-    In x (map fst (bad_hist xs)) /\ ~ (In x xs).
+    In x (map fst (bad_rle xs)) /\ ~ (In x xs).
 Proof.
   remember (hd nil : Int) as x.
   exists x.

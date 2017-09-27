@@ -1,4 +1,4 @@
-module Histogram where
+module RLE where
 
 import GHC.List
 
@@ -27,8 +27,8 @@ groupBy f (x:xs) = case groupBy f xs of
     (y:ys) : yss | f x y     -> (x:y:ys) : yss
                  | otherwise -> [x] :(y:ys) : yss
 
-hist :: Eq a => [a] -> [(a,Int)]
-hist ys = map (\x -> (hd x, GHC.List.length x)) (group ys)
+rle :: Eq a => [a] -> [(a,Int)]
+rle ys = map (\x -> (hd x, GHC.List.length x)) (group ys)
 
-bad_hist :: Eq a => [a] -> [(a,Int)]
-bad_hist ys = map (\x -> (hd (tl x), GHC.List.length x)) (group ys)
+bad_rle :: Eq a => [a] -> [(a,Int)]
+bad_rle ys = map (\x -> (hd (tl x), GHC.List.length x)) (group ys)

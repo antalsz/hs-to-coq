@@ -36,4 +36,6 @@ Qed.
 
 Theorem comp_correct: forall e,
     exec (comp e) [] = Some [eval e].
-  by (intros; apply comp_correct_helper; auto).
+Proof.
+  intros; apply comp_correct_helper; auto.
+Qed.

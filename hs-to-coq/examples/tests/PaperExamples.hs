@@ -4,6 +4,11 @@ module PaperExamples where
 -- works independent of inter-module data flow
 data List a = Nil | Cons a (List a)
 
+-- should ge a complete pattern match
+mapList :: (a -> b) -> List a -> List b
+mapList f Nil = Nil
+mapList f (Cons x xs) = Cons (f x) (mapList f xs)
+
 uncurry :: (a -> b -> c) -> (a,b) -> c
 uncurry f (x,y) = f x y
 

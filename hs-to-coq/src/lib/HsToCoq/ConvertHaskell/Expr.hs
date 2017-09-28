@@ -1,6 +1,6 @@
 {-# LANGUAGE TupleSections, LambdaCase, RecordWildCards,
              OverloadedLists, OverloadedStrings,
-             FlexibleContexts,
+             FlexibleContexts, RankNTypes, ScopedTypeVariables,
              ViewPatterns #-}
 
 module HsToCoq.ConvertHaskell.Expr (
@@ -23,7 +23,6 @@ module HsToCoq.ConvertHaskell.Expr (
 import Control.Lens
 
 import Data.Bifunctor
-import Data.Foldable
 import Data.Traversable
 import HsToCoq.Util.Function
 import Data.Maybe
@@ -535,17 +534,6 @@ convertListComprehension allStmts = case fmap unLoc <$> unsnoc allStmts of
 --------------------------------------------------------------------------------
 
 -- Could this pattern be considered a 'catch all' or exhaustive pattern?
-isWild :: GHC.Pat GHC.Name -> Bool
-isWild (WildPat _)            = True
-isWild (GHC.VarPat _)         = True
-isWild (GHC.AsPat _ lp)       = isWild (unLoc lp)
-isWild (GHC.TuplePat lps _ _) = all (isWild . unLoc) lps
-isWild _ = False
-
-isUnderscoreCoq :: Pattern -> Bool
-isUnderscoreCoq UnderscorePat = True
-isUnderscoreCoq _ = False
-
 isWildCoq :: Pattern -> Bool
 isWildCoq UnderscorePat     = True
 isWildCoq (QualidPat _)     = True
@@ -582,43 +570,82 @@ chainFallThroughs cases failure = go (reverse cases) failure where
    go [] failure = pure failure
 
 
+-- A match group contains multiple alternatives, and each can have guards, and
+-- there is fall-through semantics. But oftne we know that if one pattern falls-through, then the
+-- next pattern will not match. In that case, we want to bind them in the same
+-- match-with clause, in the hope of obtaining a full pattern match
+--
+-- The plan is:
+-- * Convert each alternative individually into a pair of a pattern and a RHS.
+--   The RHS is a (shallow) function that takes the fall-through target.
+--   This is done by convertMatch
+-- * Group patterns that are mutually exclusive, and put them in match-with clauses.
+--   Add a catch-all case if that group is not complete already.
+-- * Chain these groups.
 convertMatchGroup :: ConversionMonad m =>
     NonEmpty Term ->
     MatchGroup GHC.Name (LHsExpr GHC.Name) ->
     m Term
-convertMatchGroup args (MG (L _ alts) _ _ _) =
-    chainFallThroughs (convertMatch args . unLoc <$> alts) PatternFailure
+convertMatchGroup args (MG (L _ alts) _ _ _) = do
+    convAlts <- mapM (convertMatch . unLoc) alts
+    -- TODO: Group
+    convGroups <- groupMatches convAlts
+
+    let scrut = args <&> \arg -> MatchItem arg Nothing Nothing
+    let matches = buildMatch scrut <$> convGroups
+
+    chainFallThroughs matches PatternFailure
+
+groupMatches :: forall m a. ConversionMonad m =>
+    [(MultPattern, a)] -> m [[(MultPattern, a)]]
+groupMatches pats = map (map snd) . go <$> mapM summarize pats
+  where
+    summarize :: (MultPattern, a) -> m ([PatternSummary],(MultPattern, a))
+    summarize (mp,x) = (,(mp,x)) <$> multPatternSummary mp
+
+    go :: forall x. [([PatternSummary], x)] -> [[([PatternSummary], x)]]
+    go [] = pure []
+    go ((ps,x):xs) = case go xs of
+        -- Append to a group, if mutually exclusive with all members
+        (g:gs) | all (mutExcls ps . fst) g
+           -> ((ps,x):g)  : gs
+        -- Start a new group
+        gs -> ((ps,x):[]) : gs
+
 
 convertMatch :: ConversionMonad m =>
-    NonEmpty Term -> -- scrutinee(s)
     Match GHC.Name (LHsExpr GHC.Name) -> -- the match
-    Term -> -- the fallthrough
-    m Term  -- the resulting term (a complete `match scrut with ...` expression)
-convertMatch binds GHC.Match{..} failure = do
+    m (MultPattern, Term -> m Term) -- the pattern, and the right-hand side
+convertMatch GHC.Match{..} = do
   (pats, guards) <- runWriterT $
     maybe (convUnsupported "no-pattern case arms") pure . nonEmpty
       =<< traverse convertLPat m_pats
   oty <- traverse convertLType m_type
 
   let extraGuards = map BoolGuard guards
-  rhs <- convertGRHSs extraGuards m_grhss failure
+  let rhs = convertGRHSs extraGuards m_grhss
+  return (MultPattern pats, rhs)
+
+  {- TODO: Recover that part!
   let typed_rhs = maybe id (flip HasType) oty rhs
   let scrut = binds <&> \arg -> MatchItem arg Nothing Nothing
   buildSingleEquationMatch scrut pats typed_rhs failure
+  -}
 
 
--- This short-cuts wildcard matches, and ensures that the failure case is only
--- added if the pattern is refutable
-buildSingleEquationMatch :: ConversionMonad m =>
-    NonEmpty MatchItem -> NonEmpty Pattern -> Term -> Term -> m Term
-buildSingleEquationMatch scruts pats rhs failure
-    | all isUnderscoreCoq pats = pure rhs
-    | otherwise = do
-        ref <- refutabilityMult (MultPattern pats)
-        pure $ Coq.Match scruts Nothing $
-          [ Equation [MultPattern pats] rhs ] ++
-          [ Equation [MultPattern (UnderscorePat <$ scruts)] failure | isRefutable ref ]
-
+buildMatch :: ConversionMonad m =>
+    NonEmpty MatchItem -> [(MultPattern, Term -> m Term)] -> Term -> m Term
+-- This short-cuts wildcard matches (avoid introducing a match-with alltogether)
+buildMatch _ [(pats,mkRhs)] failure
+    | isUnderscoreMultPattern pats = mkRhs failure
+buildMatch scruts eqns failure = do
+    -- Pass the failure
+    eqns' <- forM eqns $ \(pat,mkRhs) -> (pat,) <$> mkRhs failure
+    isComplete <- isCompleteMultiPattern (map fst eqns')
+    pure $ Coq.Match scruts Nothing $
+      [ Equation [pats] rhs | (pats, rhs) <- eqns' ] ++
+      [ Equation [MultPattern (UnderscorePat <$ scruts)] failure | not isComplete ]
+    -- Only add a catch-all clause if the the patterns can fail
 
 
 --------------------------------------------------------------------------------

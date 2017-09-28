@@ -1,20 +1,26 @@
-{-# LANGUAGE LambdaCase, RecordWildCards, OverloadedStrings, OverloadedLists, FlexibleContexts #-}
+{-# LANGUAGE LambdaCase, RecordWildCards, OverloadedStrings, OverloadedLists, FlexibleContexts, ScopedTypeVariables #-}
 
 module HsToCoq.ConvertHaskell.Pattern (
   convertPat,  convertLPat,
   -- * Utility
-  Refutability(..), refutability, refutabilityMult, isRefutable, isSoleConstructor
+  Refutability(..), refutability, refutabilityMult, isRefutable, isConstructor, isSoleConstructor,
+
+  PatternSummary(..), patternSummary, multPatternSummary,
+  isUnderscoreMultPattern,
+  mutExcl, mutExcls,
+  isCompleteMultiPattern,
 ) where
 
 import Control.Lens hiding ((<|))
 
 import Data.Maybe
 import Data.Traversable
-import Data.List.NonEmpty (NonEmpty(), (<|))
+import Data.List.NonEmpty (NonEmpty(..), (<|), toList)
 import qualified Data.Text as T
 
 import Control.Monad.Trans.Maybe
 import Control.Monad.Writer
+import Control.Monad.State
 
 import qualified Data.Map.Strict as M
 
@@ -162,6 +168,9 @@ convertIntegerPat what hsInt = do
   int <- convertInteger what hsInt
   Coq.VarPat var <$ tell ([Infix (Var var) "==" (PolyNum int)] :: [Term])
 
+isConstructor :: MonadState ConversionState m => Ident -> m Bool
+isConstructor con = isJust <$> (use $ constructorTypes . at con)
+
 -- Nothing:    Not a constructor
 -- Just True:  Sole constructor
 -- Just False: One of many constructors
@@ -207,3 +216,106 @@ refutability UnderscorePat              = pure $ Trivial Nothing
 refutability (NumPat _)                 = pure Refutable
 refutability (StringPat _)              = pure Refutable
 refutability (OrPats _)                 = pure Refutable -- TODO: Handle or-patterns?
+
+-- This turns a Pattern into a summary that contains just enough information
+-- to determine disjointness of patterns
+--
+-- It is ok to err on the side of OtherSummary.
+-- For example, OrPatterns are considered OtherSummary
+data PatternSummary = OtherSummary | ConApp Ident [PatternSummary]
+  deriving Show
+
+patternSummary :: MonadState ConversionState m => Pattern -> m PatternSummary
+patternSummary (ArgsPat con args)         = ConApp name <$> mapM patternSummary (toList args)
+  where name = qualidToIdent con
+patternSummary (ExplicitArgsPat con args) = ConApp name <$> mapM patternSummary (toList args)
+  where name = qualidToIdent con
+patternSummary (InfixPat arg1 con arg2)   = ConApp con <$> mapM patternSummary [arg1, arg2]
+patternSummary (Coq.AsPat pat _)          = patternSummary pat
+patternSummary (InScopePat pat _)         = patternSummary pat
+patternSummary (QualidPat qid)            = isConstructor name <&> \case
+    True -> ConApp name []
+    False -> OtherSummary
+  where name = qualidToIdent qid
+patternSummary UnderscorePat              = pure OtherSummary
+patternSummary (NumPat _)                 = pure OtherSummary
+patternSummary (StringPat _)              = pure OtherSummary
+patternSummary (OrPats _)                 = pure OtherSummary
+
+multPatternSummary :: MonadState ConversionState m => MultPattern -> m [PatternSummary]
+multPatternSummary (MultPattern pats) = mapM patternSummary (toList pats)
+
+mutExcls :: [PatternSummary] -> [PatternSummary] -> Bool
+mutExcls pats1 pats2 = or $ zipWith mutExcl pats1 pats2
+
+mutExcl :: PatternSummary -> PatternSummary -> Bool
+mutExcl (ConApp con1 args1) (ConApp con2 args2)
+    = con1 /= con2 || mutExcls args1 args2
+mutExcl _ _ = False
+
+
+-- A simple completeness checker. Traverses the list of patterns, and keep
+-- tracks of all pattern summaries that we still need to match
+-- Internally, we use OtherSummary as “everything yet has to match” 
+type Missing = [PatternSummary]
+type Missings = [Missing]
+
+isCompleteMultiPattern :: forall m. MonadState ConversionState m =>
+    [MultPattern] -> m Bool
+isCompleteMultiPattern [] = pure True -- Maybe an empty data type?
+isCompleteMultiPattern mpats = null <$> goGroup mpats
+  where
+    -- Initially, we miss everything
+    initMissings = [[]]
+
+    goGroup :: [MultPattern] -> m Missings
+    goGroup = foldM goMP initMissings
+
+    goMP :: Missings -> MultPattern -> m Missings
+    goMP missings mpats = multPatternSummary mpats >>= goPatsSet missings
+
+    goPatsSet :: Missings -> [PatternSummary] -> m Missings
+    goPatsSet missingSet pats = concat <$> mapM (\missing -> gos missing pats) missingSet
+
+    -- Combinding an conjunction of patterns
+    gos :: Missing -> [PatternSummary] -> m Missings
+    gos _ [] = pure []
+    gos [] pats = gos [OtherSummary] pats
+    gos (m:missings) (p:pats) = do
+        m' <- go m p
+        missings' <- gos missings pats
+        pure $ combineMissingsWith (:) m missings m' missings'
+
+    -- A single pattern
+    go :: PatternSummary -> PatternSummary -> m Missing
+    -- The pattern handles all cases
+    go _ OtherSummary = pure []
+    -- The pattern applies only partially. Split the input and recurse.
+    go OtherSummary p@(ConApp con _) =
+        fromMaybe [] <$> runMaybeT (do
+           ty    <- MaybeT . use $ constructorTypes . at con
+           ctors <- MaybeT . use $ constructors     . at ty
+           -- Re-run the process with a separate Missing for each constructor
+           lift $ concat <$> mapM (\ctor -> go (ConApp ctor []) p) ctors
+        )
+        -- What if we do not know this constructor? Just assume it is
+        -- completeness for now
+    go m@(ConApp con1 args1) (ConApp con2 args2)
+        -- The pattern applies, so the missing is restricted
+        -- to what’s left by the arguments, and what’s left to be done
+        | con1 == con2 = (ConApp con1 `map`) <$> gos args1 args2
+        -- The pattern does not apply, so the missing is unchanged
+        | otherwise    = pure [m]
+
+combineMissingsWith :: (a -> b -> c) -> a -> b -> [a] -> [b] -> [c]
+combineMissingsWith f a b as bs = ((`f`b) <$> as) ++ ((a`f`) <$> bs)
+-- this is the Applicative instance of Succs -- who would have thought
+-- I wonder if the code above would be simpler when written with some sort
+-- of SuccsT m
+
+isUnderscoreMultPattern :: MultPattern -> Bool
+isUnderscoreMultPattern (MultPattern pats) = all isUnderscoreCoq pats
+
+isUnderscoreCoq :: Pattern -> Bool
+isUnderscoreCoq UnderscorePat = True
+isUnderscoreCoq _ = False

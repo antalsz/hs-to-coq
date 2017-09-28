@@ -235,7 +235,7 @@ builtInDefaultMethods = fmap M.fromList $ M.fromList
    m ~> d  = (toCoqName m, d)
    arg       = Inferred Coq.Explicit . Ident
 
-evalConversion :: GhcMonad m => Renamings -> Edits -> ConversionT m a -> m a
+evalConversion :: Monad m => Renamings -> Edits -> ConversionT m a -> m a
 evalConversion _renamings _edits = evalVariablesT . (evalStateT ?? ConversionState{..}) where
   __currentModule = Nothing
 

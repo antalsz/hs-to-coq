@@ -62,4 +62,4 @@ script:
  # Run examples that use base:
  - make -C examples/successors
  - make -C examples/compiler
- - make -C examples/histogram
+ - make -C examples/rle

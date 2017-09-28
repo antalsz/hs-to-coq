@@ -18,6 +18,7 @@ PASS = \
   PartialAppliedPolyDataCon \
   PatternGuard \
   MapAccumR \
+  Sub \
   FTP \
   FTPDefault \
   MutrecInst
@@ -29,7 +30,6 @@ TODO_PASS  = \
   PolyInstance2 \
   Endo \
   Expr \
-  Sub \
   Mutrec \
   DotName \
   PaperExamples \

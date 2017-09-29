@@ -29,30 +29,21 @@ Require GHC.Integer.
 (* Converted declarations: *)
 
 Local Definition instance_Monoid_unit_mappend : unit -> (unit -> unit) :=
-  fun arg_224__ arg_225__ => tt.
+  fun arg_215__ arg_216__ => tt.
 
 Local Definition instance_Monoid_unit_mconcat : (list unit) -> unit :=
-  fun arg_226__ => tt.
+  fun arg_217__ => tt.
 
 Local Definition instance_Monoid_unit_mempty : unit :=
   tt.
 
 Local Definition instance_Monoid_comparison_mappend
     : comparison -> (comparison -> comparison) :=
-  fun arg_199__ arg_200__ =>
-    let j_201__ :=
-      match arg_199__ , arg_200__ with
-        | Gt , _ => Gt
-        | _ , _ => patternFailure
-      end in
-    let j_202__ :=
-      match arg_199__ , arg_200__ with
-        | Eq , y => y
-        | _ , _ => j_201__
-      end in
-    match arg_199__ , arg_200__ with
+  fun arg_192__ arg_193__ =>
+    match arg_192__ , arg_193__ with
       | Lt , _ => Lt
-      | _ , _ => j_202__
+      | Eq , y => y
+      | Gt , _ => Gt
     end.
 
 Local Definition instance_Monoid_comparison_mempty : comparison :=
@@ -61,29 +52,19 @@ Local Definition instance_Monoid_comparison_mempty : comparison :=
 Local Definition instance_Functor_option_fmap : (forall {a} {b},
                                                   (a -> b) -> ((option a) -> (option b))) :=
   fun {a} {b} =>
-    fun arg_188__ arg_189__ =>
-      let j_191__ :=
-        match arg_188__ , arg_189__ with
-          | f , (Some a) => Some (f a)
-          | _ , _ => patternFailure
-        end in
-      match arg_188__ , arg_189__ with
+    fun arg_183__ arg_184__ =>
+      match arg_183__ , arg_184__ with
         | _ , None => None
-        | _ , _ => j_191__
+        | f , (Some a) => Some (f a)
       end.
 
 Local Definition instance_Applicative_option_op_ztzg__ : (forall {a} {b},
                                                            (option a) -> ((option b) -> (option b))) :=
   fun {a} {b} =>
-    fun arg_184__ arg_185__ =>
-      let j_186__ :=
-        match arg_184__ , arg_185__ with
-          | None , _m2 => None
-          | _ , _ => patternFailure
-        end in
-      match arg_184__ , arg_185__ with
+    fun arg_180__ arg_181__ =>
+      match arg_180__ , arg_181__ with
         | (Some _m1) , m2 => m2
-        | _ , _ => j_186__
+        | None , _m2 => None
       end.
 
 Local Definition instance_Applicative_option_pure : (forall {a},
@@ -92,20 +73,15 @@ Local Definition instance_Applicative_option_pure : (forall {a},
 
 Local Definition instance_Monad_option_fail : (forall {a},
                                                 String -> (option a)) :=
-  fun {a} => fun arg_178__ => None.
+  fun {a} => fun arg_175__ => None.
 
 Local Definition instance_Monad_option_op_zgzgze__ : (forall {a} {b},
                                                        (option a) -> ((a -> (option b)) -> (option b))) :=
   fun {a} {b} =>
-    fun arg_173__ arg_174__ =>
-      let j_175__ :=
-        match arg_173__ , arg_174__ with
-          | None , _ => None
-          | _ , _ => patternFailure
-        end in
-      match arg_173__ , arg_174__ with
+    fun arg_171__ arg_172__ =>
+      match arg_171__ , arg_172__ with
         | (Some x) , k => k x
-        | _ , _ => j_175__
+        | None , _ => None
       end.
 
 (* Skipping instance instance_Alternative_option *)
@@ -115,30 +91,30 @@ Local Definition instance_Monad_option_op_zgzgze__ : (forall {a} {b},
 Local Definition instance_Applicative_list_op_zlztzg__ : (forall {a} {b},
                                                            (list (a -> b)) -> ((list a) -> (list b))) :=
   fun {a} {b} =>
-    fun arg_161__ arg_162__ =>
-      match arg_161__ , arg_162__ with
+    fun arg_159__ arg_160__ =>
+      match arg_159__ , arg_160__ with
         | fs , xs => concatMap (fun f => (concatMap (fun x => (cons (f x) nil)) xs)) fs
       end.
 
 Local Definition instance_Applicative_list_op_ztzg__ : (forall {a} {b},
                                                          (list a) -> ((list b) -> (list b))) :=
   fun {a} {b} =>
-    fun arg_165__ arg_166__ =>
-      match arg_165__ , arg_166__ with
+    fun arg_163__ arg_164__ =>
+      match arg_163__ , arg_164__ with
         | xs , ys => concatMap (fun _ => (concatMap (fun y => (cons y nil)) ys)) xs
       end.
 
 Local Definition instance_Applicative_list_pure : (forall {a}, a -> (list a)) :=
-  fun {a} => fun arg_158__ => match arg_158__ with | x => cons x nil end.
+  fun {a} => fun arg_156__ => match arg_156__ with | x => cons x nil end.
 
 Local Definition instance_Monad_list_fail : (forall {a}, String -> (list a)) :=
-  fun {a} => fun arg_157__ => nil.
+  fun {a} => fun arg_155__ => nil.
 
 Local Definition instance_Monad_list_op_zgzgze__ : (forall {a} {b},
                                                      (list a) -> ((a -> (list b)) -> (list b))) :=
   fun {a} {b} =>
-    fun arg_153__ arg_154__ =>
-      match arg_153__ , arg_154__ with
+    fun arg_151__ arg_152__ =>
+      match arg_151__ , arg_152__ with
         | xs , f => concatMap (fun x => (concatMap (fun y => (cons y nil)) (f x))) xs
       end.
 
@@ -172,18 +148,13 @@ Definition asTypeOf {a} : a -> (a -> a) :=
   const.
 
 Definition foldr {a} {b} : (a -> (b -> b)) -> (b -> ((list a) -> b)) :=
-  fun arg_67__ arg_68__ =>
-    match arg_67__ , arg_68__ with
+  fun arg_66__ arg_67__ =>
+    match arg_66__ , arg_67__ with
       | k , z => let go :=
-                   fix go arg_69__
-                         := let j_71__ :=
-                              match arg_69__ with
-                                | (cons y ys) => k y (go ys)
-                                | _ => patternFailure
-                              end in
-                            match arg_69__ with
+                   fix go arg_68__
+                         := match arg_68__ with
                               | nil => z
-                              | _ => j_71__
+                              | (cons y ys) => k y (go ys)
                             end in
                  go
     end.
@@ -201,14 +172,9 @@ Axiom ifThenElse : (forall {A : Type}, A).
 
 Definition map {a} {b} : (a -> b) -> ((list a) -> (list b)) :=
   fix map arg_62__ arg_63__
-        := let j_65__ :=
-             match arg_62__ , arg_63__ with
-               | f , (cons x xs) => cons (f x) (map f xs)
-               | _ , _ => patternFailure
-             end in
-           match arg_62__ , arg_63__ with
+        := match arg_62__ , arg_63__ with
              | _ , nil => nil
-             | _ , _ => j_65__
+             | f , (cons x xs) => cons (f x) (map f xs)
            end.
 
 Local Definition instance_Functor_list_fmap : (forall {a} {b},
@@ -311,8 +277,8 @@ Notation "'_>>=_'" := (op_zgzgze__).
 
 Definition op_zezlzl__ {m} {a} {b} `{Monad m} : (a -> (m b)) -> ((m a) -> (m
                                                 b)) :=
-  fun arg_117__ arg_118__ =>
-    match arg_117__ , arg_118__ with
+  fun arg_115__ arg_116__ =>
+    match arg_115__ , arg_116__ with
       | f , x => op_zgzgze__ x f
     end.
 
@@ -323,8 +289,8 @@ Notation "'_=<<_'" := (op_zezlzl__).
 Definition liftM5 {m} {a1} {a2} {a3} {a4} {a5} {r} `{(Monad m)}
     : (a1 -> (a2 -> (a3 -> (a4 -> (a5 -> r))))) -> ((m a1) -> ((m a2) -> ((m
       a3) -> ((m a4) -> ((m a5) -> (m r)))))) :=
-  fun arg_78__ arg_79__ arg_80__ arg_81__ arg_82__ arg_83__ =>
-    match arg_78__ , arg_79__ , arg_80__ , arg_81__ , arg_82__ , arg_83__ with
+  fun arg_76__ arg_77__ arg_78__ arg_79__ arg_80__ arg_81__ =>
+    match arg_76__ , arg_77__ , arg_78__ , arg_79__ , arg_80__ , arg_81__ with
       | f , m1 , m2 , m3 , m4 , m5 => (m1 >>= fun x1 =>
                                         (m2 >>= fun x2 =>
                                           (m3 >>= fun x3 =>
@@ -334,8 +300,8 @@ Definition liftM5 {m} {a1} {a2} {a3} {a4} {a5} {r} `{(Monad m)}
 Definition liftM4 {m} {a1} {a2} {a3} {a4} {r} `{(Monad m)}
     : (a1 -> (a2 -> (a3 -> (a4 -> r)))) -> ((m a1) -> ((m a2) -> ((m a3) -> ((m
       a4) -> (m r))))) :=
-  fun arg_86__ arg_87__ arg_88__ arg_89__ arg_90__ =>
-    match arg_86__ , arg_87__ , arg_88__ , arg_89__ , arg_90__ with
+  fun arg_84__ arg_85__ arg_86__ arg_87__ arg_88__ =>
+    match arg_84__ , arg_85__ , arg_86__ , arg_87__ , arg_88__ with
       | f , m1 , m2 , m3 , m4 => (m1 >>= fun x1 =>
                                    (m2 >>= fun x2 =>
                                      (m3 >>= fun x3 => (m4 >>= fun x4 => (return_ (f x1 x2 x3 x4))))))
@@ -343,35 +309,35 @@ Definition liftM4 {m} {a1} {a2} {a3} {a4} {r} `{(Monad m)}
 
 Definition liftM3 {m} {a1} {a2} {a3} {r} `{(Monad m)}
     : (a1 -> (a2 -> (a3 -> r))) -> ((m a1) -> ((m a2) -> ((m a3) -> (m r)))) :=
-  fun arg_93__ arg_94__ arg_95__ arg_96__ =>
-    match arg_93__ , arg_94__ , arg_95__ , arg_96__ with
+  fun arg_91__ arg_92__ arg_93__ arg_94__ =>
+    match arg_91__ , arg_92__ , arg_93__ , arg_94__ with
       | f , m1 , m2 , m3 => (m1 >>= fun x1 =>
                               (m2 >>= fun x2 => (m3 >>= fun x3 => (return_ (f x1 x2 x3)))))
     end.
 
 Definition liftM2 {m} {a1} {a2} {r} `{(Monad m)} : (a1 -> (a2 -> r)) -> ((m
                                                    a1) -> ((m a2) -> (m r))) :=
-  fun arg_99__ arg_100__ arg_101__ =>
-    match arg_99__ , arg_100__ , arg_101__ with
+  fun arg_97__ arg_98__ arg_99__ =>
+    match arg_97__ , arg_98__ , arg_99__ with
       | f , m1 , m2 => (m1 >>= fun x1 => (m2 >>= fun x2 => (return_ (f x1 x2))))
     end.
 
 Definition liftM {m} {a1} {r} `{(Monad m)} : (a1 -> r) -> ((m a1) -> (m r)) :=
-  fun arg_104__ arg_105__ =>
-    match arg_104__ , arg_105__ with
+  fun arg_102__ arg_103__ =>
+    match arg_102__ , arg_103__ with
       | f , m1 => (m1 >>= fun x1 => (return_ (f x1)))
     end.
 
 Definition join {m} {a} `{(Monad m)} : (m (m a)) -> (m a) :=
-  fun arg_121__ => match arg_121__ with | x => op_zgzgze__ x id end.
+  fun arg_119__ => match arg_119__ with | x => op_zgzgze__ x id end.
 
 Definition mapM {m} {a} {b} `{Monad m} : (a -> (m b)) -> ((list a) -> (m (list
                                                                          b))) :=
-  fun arg_108__ arg_109__ =>
-    match arg_108__ , arg_109__ with
+  fun arg_106__ arg_107__ =>
+    match arg_106__ , arg_107__ with
       | f , as_ => let k :=
-                     fun arg_110__ arg_111__ =>
-                       match arg_110__ , arg_111__ with
+                     fun arg_108__ arg_109__ =>
+                       match arg_108__ , arg_109__ with
                          | a , r => (f a >>= fun x => (r >>= fun xs => (return_ (cons x xs))))
                        end in
                    foldr k (return_ nil) as_
@@ -381,8 +347,8 @@ Definition sequence {m} {a} `{Monad m} : (list (m a)) -> (m (list a)) :=
   mapM id.
 
 Definition ap {m} {a} {b} `{(Monad m)} : (m (a -> b)) -> ((m a) -> (m b)) :=
-  fun arg_74__ arg_75__ =>
-    match arg_74__ , arg_75__ with
+  fun arg_72__ arg_73__ =>
+    match arg_72__ , arg_73__ with
       | m1 , m2 => (m1 >>= fun x1 => (m2 >>= fun x2 => (return_ (x1 x2))))
     end.
 
@@ -401,22 +367,22 @@ Class MonadPlus m `{Alternative m} `{Monad m} := {
   mzero : (forall {a}, m a) }.
 
 Definition liftA {f} {a} {b} `{Applicative f} : (a -> b) -> ((f a) -> (f b)) :=
-  fun arg_135__ arg_136__ =>
-    match arg_135__ , arg_136__ with
+  fun arg_133__ arg_134__ =>
+    match arg_133__ , arg_134__ with
       | f , a => op_zlztzg__ (pure f) a
     end.
 
 Definition liftA3 {f} {a} {b} {c} {d} `{Applicative f}
     : (a -> (b -> (c -> d))) -> ((f a) -> ((f b) -> ((f c) -> (f d)))) :=
-  fun arg_124__ arg_125__ arg_126__ arg_127__ =>
-    match arg_124__ , arg_125__ , arg_126__ , arg_127__ with
+  fun arg_122__ arg_123__ arg_124__ arg_125__ =>
+    match arg_122__ , arg_123__ , arg_124__ , arg_125__ with
       | f , a , b , c => op_zlztzg__ (op_zlztzg__ (fmap f a) b) c
     end.
 
 Definition liftA2 {f} {a} {b} {c} `{Applicative f} : (a -> (b -> c)) -> ((f
                                                      a) -> ((f b) -> (f c))) :=
-  fun arg_130__ arg_131__ arg_132__ =>
-    match arg_130__ , arg_131__ , arg_132__ with
+  fun arg_128__ arg_129__ arg_130__ =>
+    match arg_128__ , arg_129__ , arg_130__ with
       | f , a , b => op_zlztzg__ (fmap f a) b
     end.
 
@@ -466,15 +432,10 @@ Instance instance_Functor_option : !Functor option := {
 Local Definition instance_Applicative_option_op_zlztzg__ : (forall {a} {b},
                                                              (option (a -> b)) -> ((option a) -> (option b))) :=
   fun {a} {b} =>
-    fun arg_179__ arg_180__ =>
-      let j_181__ :=
-        match arg_179__ , arg_180__ with
-          | None , _m => None
-          | _ , _ => patternFailure
-        end in
-      match arg_179__ , arg_180__ with
+    fun arg_176__ arg_177__ =>
+      match arg_176__ , arg_177__ with
         | (Some f) , m => fmap f m
-        | _ , _ => j_181__
+        | None , _m => None
       end.
 
 Local Definition instance_Applicative_option_op_zlzt__ : (forall {a} {b},
@@ -517,20 +478,16 @@ Local Definition instance__forall___Monoid_a___Monoid__option_a___mempty `{Monoi
 Local Definition instance__forall___Monoid_a___Monoid__option_a___mappend `{Monoid
                                                                           a} : (option a) -> ((option a) -> (option
                                                                                a)) :=
-  fun arg_193__ arg_194__ =>
-    let j_196__ :=
-      match arg_193__ , arg_194__ with
+  fun arg_187__ arg_188__ =>
+    let j_190__ :=
+      match arg_187__ , arg_188__ with
+        | m , None => m
         | (Some m1) , (Some m2) => Some (mappend m1 m2)
         | _ , _ => patternFailure
       end in
-    let j_197__ :=
-      match arg_193__ , arg_194__ with
-        | m , None => m
-        | _ , _ => j_196__
-      end in
-    match arg_193__ , arg_194__ with
+    match arg_187__ , arg_188__ with
       | None , m => m
-      | _ , _ => j_197__
+      | _ , _ => j_190__
     end.
 
 Local Definition instance__forall___Monoid_a___Monoid__option_a___mconcat `{Monoid
@@ -574,8 +531,8 @@ Local Definition instance__forall___Monoid_a____Monoid_b____Monoid_c____Monoid_d
                                                                                                                                    `{Monoid
                                                                                                                                    e}
     : a * b * c * d * e -> (a * b * c * d * e -> (a * b * c * d * e)) :=
-  fun arg_205__ arg_206__ =>
-    match arg_205__ , arg_206__ with
+  fun arg_196__ arg_197__ =>
+    match arg_196__ , arg_197__ with
       | (pair (pair (pair (pair a1 b1) c1) d1) e1) , (pair (pair (pair (pair a2 b2)
                                                                        c2) d2) e2) => pair (pair (pair (pair (mappend a1
                                                                                                                       a2)
@@ -633,8 +590,8 @@ Local Definition instance__forall___Monoid_a____Monoid_b____Monoid_c____Monoid_d
                                                                                                                    `{Monoid
                                                                                                                    d}
     : a * b * c * d -> (a * b * c * d -> (a * b * c * d)) :=
-  fun arg_210__ arg_211__ =>
-    match arg_210__ , arg_211__ with
+  fun arg_201__ arg_202__ =>
+    match arg_201__ , arg_202__ with
       | (pair (pair (pair a1 b1) c1) d1) , (pair (pair (pair a2 b2) c2) d2) => pair
                                                                                (pair (pair (mappend a1 a2) (mappend b1
                                                                                                                     b2))
@@ -675,8 +632,8 @@ Local Definition instance__forall___Monoid_a____Monoid_b____Monoid_c___Monoid__a
                                                                                                                  c -> (a
                                                                                                                  * b *
                                                                                                                  c)) :=
-  fun arg_215__ arg_216__ =>
-    match arg_215__ , arg_216__ with
+  fun arg_206__ arg_207__ =>
+    match arg_206__ , arg_207__ with
       | (pair (pair a1 b1) c1) , (pair (pair a2 b2) c2) => pair (pair (mappend a1 a2)
                                                                       (mappend b1 b2)) (mappend c1 c2)
     end.
@@ -706,8 +663,8 @@ Local Definition instance__forall___Monoid_a____Monoid_b___Monoid__a___b___mempt
 Local Definition instance__forall___Monoid_a____Monoid_b___Monoid__a___b___mappend `{Monoid
                                                                                    a} `{Monoid b} : a * b -> (a *
                                                                                                     b -> (a * b)) :=
-  fun arg_220__ arg_221__ =>
-    match arg_220__ , arg_221__ with
+  fun arg_211__ arg_212__ =>
+    match arg_211__ , arg_212__ with
       | (pair a1 b1) , (pair a2 b2) => pair (mappend a1 a2) (mappend b1 b2)
     end.
 

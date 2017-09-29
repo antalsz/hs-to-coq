@@ -24,11 +24,4 @@ staticPreamble = T.unlines
  , "Set Maximal Implicit Insertion."
  , "Unset Strict Implicit."
  , "Unset Printing Implicit Defensive."
- , ""
- -- TODO: Shouldn't be duplicated in every file
- -- Let us be a bit explicit by having multiple axioms around.
- -- This one is for untranslatable expressions:
- , "Local Axiom missingValue : forall {a}, a."
- -- This one is for pattern match failures:
- , "Local Axiom patternFailure : forall {a}, a."
  ]

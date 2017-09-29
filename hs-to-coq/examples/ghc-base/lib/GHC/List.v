@@ -7,9 +7,6 @@ Set Maximal Implicit Insertion.
 Unset Strict Implicit.
 Unset Printing Implicit Defensive.
 
-Local Axiom missingValue : forall {a}, a.
-Local Axiom patternFailure : forall {a}, a.
-
 (* Preamble *)
 
 (* List notation *)
@@ -27,6 +24,11 @@ Require GHC.BaseGen.
 Require GHC.Prim.
 
 (* Converted declarations: *)
+
+(* The Haskell code containes partial or untranslateable code, which needs the
+   following *)
+
+Axiom patternFailure : (forall {a}, a).
 
 Definition all {a} : (a -> bool) -> ((list a) -> bool) :=
   fix all arg_88__ arg_89__

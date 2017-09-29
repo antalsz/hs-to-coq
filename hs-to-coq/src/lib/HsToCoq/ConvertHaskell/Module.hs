@@ -1,4 +1,4 @@
-{-# LANGUAGE TupleSections, LambdaCase, RecordWildCards, FlexibleContexts, DeriveDataTypeable #-}
+{-# LANGUAGE TupleSections, LambdaCase, RecordWildCards, FlexibleContexts, DeriveDataTypeable, OverloadedLists, OverloadedStrings, ScopedTypeVariables #-}
 
 module HsToCoq.ConvertHaskell.Module (
   -- * Convert whole module graphs and modules
@@ -19,6 +19,7 @@ import Control.Lens
 
 import HsToCoq.Util.Function
 import Data.Traversable
+import Data.Foldable
 import HsToCoq.Util.Traversable
 import Data.Maybe
 import Data.List.NonEmpty (NonEmpty(..))
@@ -266,6 +267,23 @@ convertModules sources = do
 moduleDeclarations :: ConversionMonad m => ConvertedModule -> m [Sentence]
 moduleDeclarations ConvertedModule{..} = do
   orders <- use $ edits.orders
-  pure .  topoSortSentences orders $  convModTyClDecls
-                                   ++ convModValDecls
-                                   ++ convModClsInstDecls
+  let sorted = topoSortSentences orders $
+        convModTyClDecls ++ convModValDecls ++ convModClsInstDecls
+  ax_decls <- usedAxioms sorted
+  return $ ax_decls ++ sorted
+
+usedAxioms :: forall m. ConversionMonad m => [Sentence] -> m [Sentence]
+usedAxioms decls = do
+    axs <- use axioms
+    let ax_decls =
+          [ AssumptionSentence (Assumption Axiom (UnparenthesizedAssums [i] t))
+          | i <- toList (getFreeVars (NoBinding decls))
+          , Just t <- return $ M.lookup i axs
+          ]
+
+        comment =
+          [ CommentSentence (Comment "The Haskell code containes partial or \
+             \untranslateable code, which needs the following")
+          | not (null ax_decls)
+          ]
+    return $ comment ++ ax_decls

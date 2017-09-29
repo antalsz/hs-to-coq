@@ -8,7 +8,7 @@ module HsToCoq.ConvertHaskell.Monad (
   ConversionMonad, ConversionT, evalConversion,
   -- * Types
   ConversionState(),
-  currentModule, renamings, edits, constructors, constructorTypes, constructorFields, recordFieldTypes, classDefns, defaultMethods, fixities, typecheckerEnvironment, renamed,
+  currentModule, renamings, edits, constructors, constructorTypes, constructorFields, recordFieldTypes, classDefns, defaultMethods, fixities, typecheckerEnvironment, renamed, axioms,
   ConstructorFields(..), _NonRecordFields, _RecordFields,
   -- * Operations
   maybeWithCurrentModule, withCurrentModule, withNoCurrentModule, withCurrentModuleOrNone,
@@ -73,6 +73,7 @@ data ConversionState = ConversionState { __currentModule         :: !(Maybe Modu
                                        , _defaultMethods         :: !(Map Ident (Map Ident Term))
                                        , _fixities               :: !(Map Ident (Coq.Associativity, Coq.Level))
                                        , _typecheckerEnvironment :: !(Maybe TcGblEnv)
+                                       , _axioms                 :: !(Map Ident Term)
                                        , __unique                :: !Natural
                                        }
 makeLenses ''ConversionState
@@ -235,6 +236,16 @@ builtInDefaultMethods = fmap M.fromList $ M.fromList
    m ~> d  = (toCoqName m, d)
    arg       = Inferred Coq.Explicit . Ident
 
+builtInAxioms :: [(Ident, Term)]
+builtInAxioms =
+    [ "patternFailure" =: Forall [ Inferred Implicit (Ident "a") ] (Var "a")
+    , "missingValue"   =: Forall [ Inferred Implicit (Ident "a") ] (Var "a")
+    ]
+  where
+   (=:) = (,)
+   infix 0 =:
+
+
 evalConversion :: Monad m => Renamings -> Edits -> ConversionT m a -> m a
 evalConversion _renamings _edits = evalVariablesT . (evalStateT ?? ConversionState{..}) where
   __currentModule = Nothing
@@ -247,6 +258,7 @@ evalConversion _renamings _edits = evalVariablesT . (evalStateT ?? ConversionSta
 --  _memberSigs        = M.empty
   _defaultMethods    =   builtInDefaultMethods
   _fixities          = M.empty
+  _axioms            = M.fromList builtInAxioms
   
   _typecheckerEnvironment = Nothing
   

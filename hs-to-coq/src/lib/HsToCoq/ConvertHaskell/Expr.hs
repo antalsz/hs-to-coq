@@ -167,7 +167,7 @@ convertExpr (HsIf overloaded c t f) =
   else convUnsupported "overloaded if-then-else"
 
 convertExpr (HsMultiIf PlaceHolder lgrhsList) =
-  convertLGRHSList [] lgrhsList PatternFailure
+  convertLGRHSList [] lgrhsList patternFailure
 
 convertExpr (HsLet (L _ binds) body) =
   convertLocalBinds binds $ convertLExpr body
@@ -210,7 +210,7 @@ convertExpr (RecordCon (L _ hsCon) PlaceHolder conExpr HsRecFields{..}) = do
   use (constructorFields . at con) >>= \case
     Just (RecordFields conFields) -> do
       let defaultVal field | isJust rec_dotdot = Var field
-                           | otherwise         = MissingValue
+                           | otherwise         = missingValue
 
       vals <- fmap M.fromList . for rec_flds $ \(L _ (HsRecField (L _ (FieldOcc _userField hsField)) hsVal pun)) -> do
                 field <- var ExprNS hsField
@@ -223,7 +223,7 @@ convertExpr (RecordCon (L _ hsCon) PlaceHolder conExpr HsRecFields{..}) = do
 
     Just (NonRecordFields count)
       | null rec_flds && isNothing rec_dotdot ->
-        pure . appList (Var con) $ replicate count (PosArg MissingValue)
+        pure . appList (Var con) $ replicate count (PosArg missingValue)
 
       | otherwise ->
         recConUnsupported "non-record"
@@ -263,7 +263,7 @@ convertExpr (RecordUpd recVal fields PlaceHolder PlaceHolder PlaceHolder PlaceHo
                                                     , rec_dotdot = Nothing } ]
           , m_type   = Nothing
           , m_grhss  = GRHSs { grhssGRHSs = [ loc . GRHS [] . loc $
-                                              -- TODO: A special variable which is special-cased to desugar to `MissingValue`?
+                                              -- TODO: A special variable which is special-cased to desugar to `missingValue`?
                                               HsApp (loc . HsVar . loc $ hsError)
                                                     (loc . HsLit . GHC.HsString "" $ fsLit "Partial record update") ]
                              , grhssLocalBinds = loc EmptyLocalBinds } }
@@ -594,7 +594,7 @@ convertMatchGroup args (MG (L _ alts) _ _ _) = do
     let scrut = args <&> \arg -> MatchItem arg Nothing Nothing
     let matches = buildMatch scrut <$> convGroups
 
-    chainFallThroughs matches PatternFailure
+    chainFallThroughs matches patternFailure
 
 groupMatches :: forall m a. ConversionMonad m =>
     [(MultPattern, a)] -> m [[(MultPattern, a)]]
@@ -752,7 +752,7 @@ convertTypedBinding _convHsTy PatSynBind{}  = convUnsupported "pattern synonym b
 convertTypedBinding _convHsTy PatBind{..}   = do -- TODO use `_convHsTy`?
   -- TODO: Respect `skipped'?
   (pat, guards) <- runWriterT $ convertLPat pat_lhs
-  Just . ConvertedPatternBinding pat <$> convertGRHSs (map BoolGuard guards) pat_rhs PatternFailure
+  Just . ConvertedPatternBinding pat <$> convertGRHSs (map BoolGuard guards) pat_rhs patternFailure
 convertTypedBinding  convHsTy FunBind{..}   = runMaybeT $ do
   (name, opName) <- freeVar (unLoc fun_id) <&> \case
                       name | identIsVariable name -> (name,            Nothing)
@@ -771,7 +771,7 @@ convertTypedBinding  convHsTy FunBind{..}   = runMaybeT $ do
     if all (null . m_pats . unLoc) . unLoc $ mg_alts fun_matches
     then case unLoc $ mg_alts fun_matches of
            [L _ (GHC.Match _ [] mty grhss)] ->
-             maybe (pure id) (fmap (flip HasType) . convertLType) mty <*> convertGRHSs [] grhss PatternFailure
+             maybe (pure id) (fmap (flip HasType) . convertLType) mty <*> convertGRHSs [] grhss patternFailure
            _ ->
              convUnsupported "malformed multi-match variable definitions"
     else do
@@ -851,3 +851,8 @@ smartLet :: Ident -> Term -> Term -> Term
 smartLet ident rhs (Qualid (Bare v)) | ident == v = rhs
 smartLet ident rhs body = Let ident [] Nothing rhs body
 
+patternFailure :: Term
+patternFailure = Var "patternFailure"
+
+missingValue :: Term
+missingValue = Var "missingValue"

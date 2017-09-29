@@ -7,9 +7,6 @@ Set Maximal Implicit Insertion.
 Unset Strict Implicit.
 Unset Printing Implicit Defensive.
 
-Local Axiom missingValue : forall {a}, a.
-Local Axiom patternFailure : forall {a}, a.
-
 (* Preamble *)
 
 Require Import GHC.Prim.

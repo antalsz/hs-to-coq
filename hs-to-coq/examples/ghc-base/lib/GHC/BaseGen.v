@@ -72,9 +72,6 @@ Local Definition instance_Applicative_option_op_ztzg__ : forall {a} {b},
 Local Definition instance_Applicative_option_pure : forall {a}, a -> option a :=
   fun {a} => Some.
 
-Local Definition instance_Monad_option_fail : forall {a}, String -> option a :=
-  fun {a} => fun arg_175__ => None.
-
 Local Definition instance_Monad_option_op_zgzgze__ : forall {a} {b},
                                                        option a -> (a -> option b) -> option b :=
   fun {a} {b} =>
@@ -106,9 +103,6 @@ Local Definition instance_Applicative_list_op_ztzg__ : forall {a} {b},
 
 Local Definition instance_Applicative_list_pure : forall {a}, a -> list a :=
   fun {a} => fun arg_156__ => match arg_156__ with | x => cons x nil end.
-
-Local Definition instance_Monad_list_fail : forall {a}, String -> list a :=
-  fun {a} => fun arg_155__ => nil.
 
 Local Definition instance_Monad_list_op_zgzgze__ : forall {a} {b},
                                                      list a -> (a -> list b) -> list b :=
@@ -264,7 +258,6 @@ Notation "'_<*>_'" := (op_zlztzg__).
 Class Monad m `{Applicative m} := {
   op_zgzg__ : forall {a} {b}, m a -> m b -> m b ;
   op_zgzgze__ : forall {a} {b}, m a -> (a -> m b) -> m b ;
-  fail : forall {a}, String -> m a ;
   return_ : forall {a}, a -> m a }.
 
 Infix ">>" := (op_zgzg__) (at level 99).
@@ -417,7 +410,6 @@ Local Definition instance_Monad_list_return_ : forall {a}, a -> list a :=
   fun {a} => pure.
 
 Instance instance_Monad_list : !Monad list := {
-  fail := fun {a} => instance_Monad_list_fail ;
   op_zgzg__ := fun {a} {b} => instance_Monad_list_op_zgzg__ ;
   op_zgzgze__ := fun {a} {b} => instance_Monad_list_op_zgzgze__ ;
   return_ := fun {a} => instance_Monad_list_return_ }.
@@ -457,7 +449,6 @@ Local Definition instance_Monad_option_return_ : forall {a}, a -> option a :=
   fun {a} => pure.
 
 Instance instance_Monad_option : !Monad option := {
-  fail := fun {a} => instance_Monad_option_fail ;
   op_zgzg__ := fun {a} {b} => instance_Monad_option_op_zgzg__ ;
   op_zgzgze__ := fun {a} {b} => instance_Monad_option_op_zgzgze__ ;
   return_ := fun {a} => instance_Monad_option_return_ }.
@@ -687,6 +678,6 @@ Instance instance_Monoid_unit : !Monoid unit := {
   mempty := instance_Monoid_unit_mempty }.
 
 (* Unbound variables:
-     * Eq None Some String bool comparison concatMap cons e flip list nil option pair
-     true tt unit
+     * Eq None Some bool comparison concatMap cons e flip list nil option pair true
+     tt unit
 *)

@@ -10,6 +10,7 @@ import qualified Data.List.NonEmpty as NE
 import Control.Monad
 
 import qualified Data.Map.Strict as M
+import qualified Data.Set as S
 
 import GHC hiding (Name)
 import qualified GHC
@@ -25,6 +26,7 @@ import HsToCoq.ConvertHaskell.Variables
 import HsToCoq.ConvertHaskell.Definitions
 import HsToCoq.ConvertHaskell.Type
 import HsToCoq.ConvertHaskell.Expr
+import HsToCoq.ConvertHaskell.Parameters.Edits
 import HsToCoq.ConvertHaskell.Sigs
 import HsToCoq.ConvertHaskell.Declarations.Notations
 
@@ -75,7 +77,12 @@ convertClassDecl (L _ hsCtx) (L _ hsName) ltvs fds lsigs defaults types typeDefa
   name <- freeVar hsName
   ctx  <- traverse (fmap (Generalized Coq.Implicit) . convertLType) hsCtx
   args <- convertLHsTyVarBndrs Coq.Explicit ltvs
-  sigs <- binding' args $ convertLSigs lsigs
+  all_sigs <- binding' args $ convertLSigs lsigs
+
+  -- implement the class part of "skip method"
+  skippedMethodsS <- use (edits.skippedMethods)
+  let sigs = (`M.filterWithKey` all_sigs) $ \meth _ ->
+        (name,toCoqName meth) `S.notMember` skippedMethodsS
 
   -- ugh! doesnt work for operators
   -- memberSigs.at name ?= sigs

@@ -15,7 +15,7 @@ module HsToCoq.Coq.Gallina.Util (
   binderNames, binderIdents, binderExplicitness,
   -- ** Functions
   qualidBase, qualidModule,
-  qualidToIdent, identToQualid,
+  qualidToIdent, identToQualid, identToBase,
   nameToTerm, nameToPattern,
   binderArgs
   ) where
@@ -113,6 +113,9 @@ identToQualid :: Ident -> Maybe Qualid
 identToQualid x = case T.splitOn "." x of
                     root:rest -> Just $ foldl' Qualified (Bare root) rest
                     []        -> Nothing
+
+identToBase :: Ident -> Ident
+identToBase = last . T.splitOn "."
 
 nameToTerm :: Name -> Term
 nameToTerm (Ident x)      = Var x

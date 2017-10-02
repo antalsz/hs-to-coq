@@ -28,7 +28,7 @@ import qualified Data.Text as T
 import Control.Monad
 
 import qualified Data.Map.Strict as M
-
+import qualified Data.Set as S
 
 import GHC hiding (Name)
 import qualified GHC
@@ -135,7 +135,12 @@ convertClsInstDecl cid@ClsInstDecl{..} rebuild mhandler = do
                  -- otherwise gives you a map
                  -- <$> is flip fmap
              <&> M.toList . M.filterWithKey (\meth _ -> isNothing $ lookup meth cdefs)
-    rebuild $ InstanceDefinition instanceName [] instanceHead (cdefs ++ defaults) Nothing
+
+    -- implement the instance part of "skip method"
+    skippedMethodsS <- use (edits.skippedMethods)
+    let methods = filter (\(m,_) -> (identToBase instanceClass,m) `S.notMember` skippedMethodsS) (cdefs ++ defaults)
+
+    rebuild $ InstanceDefinition instanceName [] instanceHead methods Nothing
 
 --------------------------------------------------------------------------------
 

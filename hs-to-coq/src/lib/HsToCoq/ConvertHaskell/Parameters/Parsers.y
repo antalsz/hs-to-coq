@@ -43,6 +43,7 @@ import HsToCoq.ConvertHaskell.Parameters.Parsers.Lexing
   indices       { TokWord    "indices"     }
   redefine      { TokWord    "redefine"    }
   skip          { TokWord    "skip"        }
+  method        { TokWord    "method"      }
   rename        { TokWord    "rename"      }
   order         { TokWord    "order"       }
   module        { TokWord    "module"      }
@@ -199,6 +200,7 @@ Edit :: { Edit }
   : type synonym Word ':->' Word                  { TypeSynonymTypeEdit   $3 $5                }
   | data type arguments Word DataTypeArguments    { DataTypeArgumentsEdit $4 $5                }
   | redefine CoqDefinition Optional('.')          { RedefinitionEdit      $2                   }
+  | skip method Word Word                         { SkipMethodEdit        $3 $4                }
   | skip Word                                     { SkipEdit              $2                   }
   | skip Op                                       { SkipEdit              $2                   }
   | rename module WordOrOp Renaming               { ModuleRenamingEdit    $3 (fst $4) (snd $4) }

@@ -1,7 +1,7 @@
 {-# LANGUAGE LambdaCase, TemplateHaskell #-}
 
 module HsToCoq.ConvertHaskell.Parameters.Edits (
-  Edits(..), typeSynonymTypes, dataTypeArguments, redefinitions, skipped, moduleRenamings, additionalScopes, orders,
+  Edits(..), typeSynonymTypes, dataTypeArguments, redefinitions, skipped, skippedMethods, moduleRenamings, additionalScopes, orders,
   DataTypeArguments(..), dtParameters, dtIndices,
   CoqDefinition(..), definitionSentence,
   ScopePlace(..),
@@ -49,6 +49,7 @@ data ScopePlace = SPValue | SPConstructor
 data Edit = TypeSynonymTypeEdit   Ident Ident
           | DataTypeArgumentsEdit Ident DataTypeArguments
           | RedefinitionEdit      CoqDefinition
+          | SkipMethodEdit        Ident Ident
           | SkipEdit              Ident
           | ModuleRenamingEdit    Ident NamespacedIdent Ident
           | AdditionalScopeEdit   ScopePlace Ident Ident
@@ -72,6 +73,7 @@ data Edits = Edits { _typeSynonymTypes  :: !(Map Ident Ident)
                    , _dataTypeArguments :: !(Map Ident DataTypeArguments)
                    , _redefinitions     :: !(Map Ident CoqDefinition)
                    , _skipped           :: !(Set Ident)
+                   , _skippedMethods    :: !(Set (Ident,Ident))
                    , _moduleRenamings   :: !(Map Ident Renamings)
                    , _additionalScopes  :: !(Map (ScopePlace, Ident) Ident)
                    , _orders            :: !(Map Ident (Set Ident))
@@ -80,11 +82,11 @@ data Edits = Edits { _typeSynonymTypes  :: !(Map Ident Ident)
 makeLenses ''Edits
 
 instance Semigroup Edits where
-  Edits tst1 dta1 rdf1 skp1 mrns1 ads1 o1 <> Edits tst2 dta2 rdf2 skp2 mrns2 ads2 o2 =
-    Edits (tst1 <> tst2) (dta1 <> dta2) (rdf1 <> rdf2) (skp1 <> skp2) (mrns1 <> mrns2) (ads1 <> ads2) (o1 <> o2)
+  Edits tst1 dta1 rdf1 skp1 skpm1 mrns1 ads1 o1 <> Edits tst2 dta2 rdf2 skp2 skpm2 mrns2 ads2 o2 =
+    Edits (tst1 <> tst2) (dta1 <> dta2) (rdf1 <> rdf2) (skp1 <> skp2) (skpm1 <> skpm2) (mrns1 <> mrns2) (ads1 <> ads2) (o1 <> o2)
 
 instance Monoid Edits where
-  mempty  = Edits mempty mempty mempty mempty mempty mempty mempty
+  mempty  = Edits mempty mempty mempty mempty mempty mempty mempty mempty
   mappend = (<>)
 
 -- Module-local'
@@ -101,6 +103,7 @@ addEdit = \case -- To bring the `where' clause into scope everywhere
   DataTypeArgumentsEdit ty         args   -> addFresh dataTypeArguments                   (duplicate_for  "data type argument specifications")           ty           args
   RedefinitionEdit      def               -> addFresh redefinitions                       (duplicate_for  "redefinition")                                (name def)   def
   SkipEdit              what              -> addFresh skipped                             (duplicate_for  "skip requests")                               what         ()
+  SkipMethodEdit        cls meth          -> addFresh skippedMethods                      (duplicate_for' "skip method requests"          prettyClsMth)  (cls,meth)   ()
   ModuleRenamingEdit    mod        hs coq -> addFresh (moduleRenamings.at mod.non mempty) (duplicate_for' ("renaming in module " ++. mod) prettyNSIdent) hs           coq
   AdditionalScopeEdit   place name scope  -> addFresh additionalScopes                    (duplicate_for' "addition of a scope"           prettyScoped)  (place,name) scope
   OrderEdit             idents            -> Right . appEndo (foldMap (Endo . addEdge orders . swap) (adjacents idents))
@@ -116,6 +119,8 @@ addEdit = \case -- To bring the `where' clause into scope everywhere
                                        SPValue       -> "value"
                                        SPConstructor -> "constructor"
                                  in pplace ++ ' ' : T.unpack name
+
+    prettyClsMth (cls, meth) = T.unpack cls <> "." <> T.unpack meth
 
     s ++. t = s ++ T.unpack t
     infixl 5 ++.

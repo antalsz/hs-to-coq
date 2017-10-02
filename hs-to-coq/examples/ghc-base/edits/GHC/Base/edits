@@ -1,3 +1,5 @@
+skip method Monad fail
+
 skip String
 skip Maybe
 

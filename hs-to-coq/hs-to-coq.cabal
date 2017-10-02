@@ -85,7 +85,7 @@ library
                      , HsToCoq.CLI.FileTree.Parser
                      , HsToCoq.CLI
 
-  build-tools:         happy
+  build-tools:         happy == 1.19.5
 
   other-extensions:    TupleSections, LambdaCase, MultiWayIf, RecordWildCards, OverloadedStrings
                      , RankNTypes, ConstraintKinds

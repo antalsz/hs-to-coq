@@ -433,6 +433,7 @@ data Signature = Signature { sigType   :: Term
 
 -- https://coq.inria.fr/refman/Reference-Manual005.html#init-notations
 -- todo: make PP monadic and update this table with new declarations?
+-- The table is given in Coq levels, but stored in levels for our use
 precTable :: [ (Op, (Int, Associativity)) ]
 precTable =
     [ mkPrecEntry "<->" 95      NoAssociativity
@@ -452,35 +453,55 @@ precTable =
     , mkPrecEntry "/"   40      LeftAssociativity
     , mkPrecEntry "^"   30      RightAssociativity
     ]
-   where mkPrecEntry sym level assoc = (sym, (level, assoc))
+   where mkPrecEntry sym level assoc = (sym, (fromCoqLevel level, assoc))
 
 -- precedence for various other expression forms
 arrowPrec :: Int
-arrowPrec = 20    -- right associative
+arrowPrec = fromCoqLevel 90    -- right associative
+  -- This number was found in here:
+  -- https://github.com/coq/coq/blob/master/dev/doc/translate.txt#L95
 
 appPrec   :: Int
-appPrec   = 10    -- left associative
+appPrec   = fromCoqLevel 10    -- left associative
 
 scopePrec :: Int
-scopePrec = 200   -- postfix, a%scope
+scopePrec = fromCoqLevel 200   -- postfix, a%scope
 
 funPrec   :: Int
-funPrec   = 200
+funPrec   = fromCoqLevel 200
+
+forallPrec :: Int
+forallPrec = fromCoqLevel 200
 
 matchPrec :: Int
-matchPrec = 200
+matchPrec = fromCoqLevel 200
 
 letPrec :: Int
-letPrec = 200
+letPrec = fromCoqLevel 200
 
 ifPrec  :: Int
-ifPrec  = 200
+ifPrec  = fromCoqLevel 200
 
 fixPrec :: Int
-fixPrec = 200
+fixPrec = fromCoqLevel 200
 
--- precedence levels from Coq sources
+castPrec :: Int
+castPrec = fromCoqLevel 100
+
+fromCoqLevel :: Int -> Int
+fromCoqLevel cl = 400 - 2 * cl
+
+-- Here are some precedence levels from Coq sources
 -- https://github.com/coq/coq/blob/trunk/printing/ppconstr.ml
+-- They do not apply directly to our pretty-printer, as the coq pretty-printer
+-- function *returns* this precedence level that cause parenthesis to be added
+-- if the context has a level lower than that. (hence latom = 0: Never add parens)
+--
+-- In our case, we *pass* a current levels as arguments and add parentheses when
+-- the this level *exceeds* the level of the syntactic construct. Hence, for
+-- atomic things, this level should be the maximum, 400.
+--
+-- We can thus transform a coq level to a level in our world using 400-2*coqLevel.
 {-
 latom = 0
 lprod = 200
@@ -593,7 +614,7 @@ render_mutual_def def bodies notations =
 
 -- TODO: Precedence!
 instance Gallina Term where
-  renderGallina' _p (Forall vars body) = parens $
+  renderGallina' p (Forall vars body) = maybeParen (p > forallPrec) $
     group $ "forall" <+> render_args V vars <> nest 2 ("," <!> renderGallina body)
 
   renderGallina' p (Fun vars body) = maybeParen (p > funPrec) $
@@ -602,7 +623,7 @@ instance Gallina Term where
   renderGallina' p (Fix fbs) = group $ maybeParen (p > fixPrec) $
     "fix" <+> renderGallina fbs
 
-  renderGallina' _p (Cofix cbs) = group $ parens $
+  renderGallina' p (Cofix cbs) = group $ maybeParen (p > fixPrec) $
     "cofix" <+> renderGallina cbs
 
   renderGallina' p (Let var args oty val body) = group $ maybeParen (p > letPrec) $
@@ -615,21 +636,21 @@ instance Gallina Term where
   renderGallina' p (LetFix def body) = group $ maybeParen (p > letPrec) $
     "let fix" <+> renderGallina def <+> "in" <!> align (renderGallina body)
 
-  renderGallina' _p (LetCofix def body) = group $ parens $
+  renderGallina' p (LetCofix def body) = group $ maybeParen (p > letPrec) $
     "let cofix" <+> renderGallina def <+> "in" <!> align (renderGallina body)
 
-  renderGallina' _p (LetTuple vars orty val body) = group $ parens $
+  renderGallina' p (LetTuple vars orty val body) = group $ maybeParen (p > letPrec) $
         "let" <+> group (   (parens . align . vsep . punctuate "," $ renderGallina <$> vars)
                         <>  render_opt_rtype orty
                         <+> nest 2 (":=" <!> renderGallina val))
     <+> "in" <!> align (renderGallina body)
 
-  renderGallina' _p (LetTick pat val body) = group $ parens $
+  renderGallina' p (LetTick pat val body) = group $ maybeParen (p > letPrec) $
         "let" <+> align (group $   "'" <> align (renderGallina pat)
                                <+> nest 2 (":=" <!> renderGallina val))
     <+> "in" <!> align (renderGallina body)
 
-  renderGallina' _p (LetTickDep pat oin val rty body) = group $ parens $
+  renderGallina' p (LetTickDep pat oin val rty body) = group $ maybeParen (p > letPrec) $
         "let" <+> align (group $   "'" <> align (renderGallina pat)
                                <>  render_in_annot oin
                                <+> nest 2 (":=" <!> renderGallina val
@@ -641,20 +662,20 @@ instance Gallina Term where
     <!> "then" <+> align (renderGallina t)
     <!> "else" <+> align (renderGallina f)
 
-  renderGallina' _p (HasType tm ty) = parens $
-    renderGallina tm <+> ":" <+> renderGallina ty
+  renderGallina' p (HasType tm ty) = maybeParen (p > castPrec) $
+    renderGallina' (castPrec + 1) tm <+> ":" <+> renderGallina' castPrec ty
 
-  renderGallina' _p (CheckType tm ty) = parens $
-    renderGallina tm <+> "<:" <+> renderGallina ty
+  renderGallina' p (CheckType tm ty) = maybeParen (p > castPrec) $
+    renderGallina' (castPrec + 1) tm <+> "<:" <+> renderGallina' castPrec ty
 
-  renderGallina' _p (ToSupportType tm) = parens $
-    renderGallina tm <+> ":>"
+  renderGallina' p (ToSupportType tm) = maybeParen (p > castPrec) $
+    renderGallina' (castPrec + 1) tm <+> ":>"
 
   renderGallina' p (Arrow ty1 ty2) = maybeParen (p > arrowPrec)  $
-    renderGallina' (arrowPrec + 1) ty1 <+> "->" <+> renderGallina' 200 ty2
+    renderGallina' (arrowPrec + 1) ty1 <+> "->" <+> renderGallina' arrowPrec ty2
 
   renderGallina' p (App f args) =  maybeParen (p > appPrec) $
-    renderGallina' appPrec f </> render_args' 201 H args
+    renderGallina' appPrec f </> render_args' (appPrec + 1) H args
 
   renderGallina' _p (ExplicitApp qid args) = parens $
     "@" <> renderGallina qid <> softlineIf args <> render_args H args

@@ -16,7 +16,7 @@ Require GHC.Base.
 
 (* Converted declarations: *)
 
-Definition op_za__ {a} {b} : a -> ((a -> b) -> b) :=
+Definition op_za__ {a} {b} : a -> (a -> b) -> b :=
   fun arg_0__ arg_1__ => match arg_0__ , arg_1__ with | x , f => f x end.
 
 Infix "&" := (op_za__) (at level 99).

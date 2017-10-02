@@ -28,30 +28,30 @@ Require GHC.Prim.
 (* The Haskell code containes partial or untranslateable code, which needs the
    following *)
 
-Axiom patternFailure : (forall {a}, a).
+Axiom patternFailure : forall {a}, a.
 
-Definition all {a} : (a -> bool) -> ((list a) -> bool) :=
+Definition all {a} : (a -> bool) -> list a -> bool :=
   fix all arg_88__ arg_89__
         := match arg_88__ , arg_89__ with
              | _ , nil => true
              | p , (cons x xs) => andb (p x) (all p xs)
            end.
 
-Definition and : (list bool) -> bool :=
+Definition and : list bool -> bool :=
   fix and arg_99__
         := match arg_99__ with
              | nil => true
              | (cons x xs) => andb x (and xs)
            end.
 
-Definition any {a} : (a -> bool) -> ((list a) -> bool) :=
+Definition any {a} : (a -> bool) -> list a -> bool :=
   fix any arg_92__ arg_93__
         := match arg_92__ , arg_93__ with
              | _ , nil => false
              | p , (cons x xs) => orb (p x) (any p xs)
            end.
 
-Definition break {a} : (a -> bool) -> ((list a) -> ((list a) * (list a))) :=
+Definition break {a} : (a -> bool) -> list a -> list a * list a :=
   fix break arg_109__ arg_110__
         := match arg_109__ , arg_110__ with
              | _ , (nil as xs) => pair xs xs
@@ -64,19 +64,19 @@ Definition break {a} : (a -> bool) -> ((list a) -> ((list a) * (list a))) :=
                                            else j_113__
            end.
 
-Definition concat {a} : (list (list a)) -> (list a) :=
+Definition concat {a} : list (list a) -> list a :=
   GHC.BaseGen.foldr GHC.Prim.app nil.
 
-Definition concatMap {a} {b} : (a -> (list b)) -> ((list a) -> (list b)) :=
+Definition concatMap {a} {b} : (a -> list b) -> list a -> list b :=
   fun arg_72__ =>
     match arg_72__ with
       | f => GHC.BaseGen.foldr (Coq.Program.Basics.compose GHC.Prim.app f) nil
     end.
 
-Definition constScanl {a} {b} : a -> (b -> a) :=
+Definition constScanl {a} {b} : a -> b -> a :=
   GHC.BaseGen.const.
 
-Definition dropWhile {a} : (a -> bool) -> ((list a) -> (list a)) :=
+Definition dropWhile {a} : (a -> bool) -> list a -> list a :=
   fix dropWhile arg_126__ arg_127__
         := match arg_126__ , arg_127__ with
              | _ , nil => nil
@@ -85,14 +85,14 @@ Definition dropWhile {a} : (a -> bool) -> ((list a) -> (list a)) :=
                                            else xs
            end.
 
-Definition elem {a} `{(GHC.Prim.Eq_ a)} : a -> ((list a) -> bool) :=
+Definition elem {a} `{(GHC.Prim.Eq_ a)} : a -> list a -> bool :=
   fix elem arg_84__ arg_85__
         := match arg_84__ , arg_85__ with
              | _ , nil => false
              | x , (cons y ys) => orb (GHC.Prim.op_zeze__ x y) (elem x ys)
            end.
 
-Definition filter {a} : (a -> bool) -> ((list a) -> (list a)) :=
+Definition filter {a} : (a -> bool) -> list a -> list a :=
   fix filter arg_233__ arg_234__
         := match arg_233__ , arg_234__ with
              | _pred , nil => nil
@@ -102,8 +102,7 @@ Definition filter {a} : (a -> bool) -> ((list a) -> (list a)) :=
                                      else j_235__
            end.
 
-Definition filterFB {a} {b}
-    : (a -> (b -> b)) -> ((a -> bool) -> (a -> (b -> b))) :=
+Definition filterFB {a} {b} : (a -> b -> b) -> (a -> bool) -> a -> b -> b :=
   fun arg_227__ arg_228__ arg_229__ arg_230__ =>
     match arg_227__ , arg_228__ , arg_229__ , arg_230__ with
       | c , p , x , r => if p x
@@ -111,14 +110,14 @@ Definition filterFB {a} {b}
                          else r
     end.
 
-Definition flipSeqScanl' {a} {b} : a -> (b -> a) :=
+Definition flipSeqScanl' {a} {b} : a -> b -> a :=
   fun arg_160__ arg_161__ => match arg_160__ , arg_161__ with | a , _b => a end.
 
-Definition flipSeqTake {a} : a -> (GHC.Num.Int -> a) :=
+Definition flipSeqTake {a} : a -> GHC.Num.Int -> a :=
   fun arg_123__ arg_124__ => match arg_123__ , arg_124__ with | x , _n => x end.
 
-Definition foldr2 {a} {b} {c} : (a -> (b -> (c -> c))) -> (c -> ((list
-                                a) -> ((list b) -> c))) :=
+Definition foldr2 {a} {b} {c} : (a -> b -> c -> c) -> c -> list a -> list
+                                b -> c :=
   fun arg_60__ arg_61__ =>
     match arg_60__ , arg_61__ with
       | k , z => let go :=
@@ -136,9 +135,8 @@ Definition foldr2 {a} {b} {c} : (a -> (b -> (c -> c))) -> (c -> ((list
                  go
     end.
 
-Definition foldr2_left {a} {b} {c} {d}
-    : (a -> (b -> (c -> d))) -> (d -> (a -> (((list b) -> c) -> ((list
-      b) -> d)))) :=
+Definition foldr2_left {a} {b} {c} {d} : (a -> b -> c -> d) -> d -> a -> (list
+                                         b -> c) -> list b -> d :=
   fun arg_53__ arg_54__ arg_55__ arg_56__ arg_57__ =>
     match arg_53__ , arg_54__ , arg_55__ , arg_56__ , arg_57__ with
       | _k , z , _x , _r , nil => z
@@ -148,18 +146,18 @@ Definition foldr2_left {a} {b} {c} {d}
 Definition idLength : GHC.Num.Int -> GHC.Num.Int :=
   GHC.BaseGen.id.
 
-Definition lenAcc {a} : (list a) -> (GHC.Num.Int -> GHC.Num.Int) :=
+Definition lenAcc {a} : list a -> GHC.Num.Int -> GHC.Num.Int :=
   fix lenAcc arg_245__ arg_246__
         := match arg_245__ , arg_246__ with
              | nil , n => n
              | (cons _ ys) , n => lenAcc ys (GHC.Num.op_zp__ n #1)
            end.
 
-Definition length {a} : (list a) -> GHC.Num.Int :=
+Definition length {a} : list a -> GHC.Num.Int :=
   fun arg_249__ => match arg_249__ with | xs => lenAcc xs #0 end.
 
 Definition lengthFB {x}
-    : x -> ((GHC.Num.Int -> GHC.Num.Int) -> (GHC.Num.Int -> GHC.Num.Int)) :=
+    : x -> (GHC.Num.Int -> GHC.Num.Int) -> GHC.Num.Int -> GHC.Num.Int :=
   fun arg_238__ arg_239__ =>
     match arg_238__ , arg_239__ with
       | _ , r => fun arg_240__ =>
@@ -168,8 +166,7 @@ Definition lengthFB {x}
                    end
     end.
 
-Definition lookup {a} {b} `{(GHC.Prim.Eq_ a)} : a -> ((list (a * b)) -> (option
-                                                b)) :=
+Definition lookup {a} {b} `{(GHC.Prim.Eq_ a)} : a -> list (a * b) -> option b :=
   fix lookup arg_75__ arg_76__
         := match arg_75__ , arg_76__ with
              | _key , nil => None
@@ -179,17 +176,17 @@ Definition lookup {a} {b} `{(GHC.Prim.Eq_ a)} : a -> ((list (a * b)) -> (option
                                               else j_77__
            end.
 
-Definition notElem {a} `{(GHC.Prim.Eq_ a)} : a -> ((list a) -> bool) :=
+Definition notElem {a} `{(GHC.Prim.Eq_ a)} : a -> list a -> bool :=
   fix notElem arg_80__ arg_81__
         := match arg_80__ , arg_81__ with
              | _ , nil => true
              | x , (cons y ys) => andb (GHC.Prim.op_zsze__ x y) (notElem x ys)
            end.
 
-Definition null {a} : (list a) -> bool :=
+Definition null {a} : list a -> bool :=
   fun arg_252__ => match arg_252__ with | nil => true | (cons _ _) => false end.
 
-Definition or : (list bool) -> bool :=
+Definition or : list bool -> bool :=
   fix or arg_96__
         := match arg_96__ with
              | nil => false
@@ -201,8 +198,8 @@ Definition prel_list_str : GHC.Prim.String :=
 
 Definition tooLarge {a} : GHC.Num.Int -> a :=
   fun arg_68__ =>
-    (GHC.Prim.errorWithoutStackTrace (GHC.Prim.app prel_list_str
-                                                   &"!!: index too large")).
+    GHC.Prim.errorWithoutStackTrace (GHC.Prim.app prel_list_str
+                                                  &"!!: index too large").
 
 Definition errorEmptyList {a} : GHC.Prim.String -> a :=
   fun arg_1__ =>
@@ -211,21 +208,21 @@ Definition errorEmptyList {a} : GHC.Prim.String -> a :=
                                                               (GHC.Prim.app fun_ &": empty list"))
     end.
 
-Definition foldl1 {a} : (a -> (a -> a)) -> ((list a) -> a) :=
+Definition foldl1 {a} : (a -> a -> a) -> list a -> a :=
   fun arg_210__ arg_211__ =>
     match arg_210__ , arg_211__ with
       | f , (cons x xs) => foldl f x xs
       | _ , nil => errorEmptyList &"foldl1"
     end.
 
-Definition foldl1' {a} : (a -> (a -> a)) -> ((list a) -> a) :=
+Definition foldl1' {a} : (a -> a -> a) -> list a -> a :=
   fun arg_205__ arg_206__ =>
     match arg_205__ , arg_206__ with
       | f , (cons x xs) => foldl' f x xs
       | _ , nil => errorEmptyList &"foldl1'"
     end.
 
-Definition foldr1 {a} : (a -> (a -> a)) -> ((list a) -> a) :=
+Definition foldr1 {a} : (a -> a -> a) -> list a -> a :=
   fun arg_153__ =>
     match arg_153__ with
       | f => let go :=
@@ -242,7 +239,7 @@ Definition foldr1 {a} : (a -> (a -> a)) -> ((list a) -> a) :=
              go
     end.
 
-Definition init {a} : (list a) -> (list a) :=
+Definition init {a} : list a -> list a :=
   fun arg_254__ =>
     match arg_254__ with
       | nil => errorEmptyList &"init"
@@ -258,7 +255,7 @@ Definition init {a} : (list a) -> (list a) :=
 Definition lastError {a} : a :=
   errorEmptyList &"last".
 
-Definition last {a} : (list a) -> a :=
+Definition last {a} : list a -> a :=
   fun arg_263__ =>
     match arg_263__ with
       | xs => foldl (fun arg_264__ arg_265__ =>
@@ -267,7 +264,7 @@ Definition last {a} : (list a) -> a :=
                       end) lastError xs
     end.
 
-Definition maximum {a} `{(GHC.Prim.Ord a)} : (list a) -> a :=
+Definition maximum {a} `{(GHC.Prim.Ord a)} : list a -> a :=
   fun arg_215__ =>
     let j_217__ := match arg_215__ with | xs => foldl1 GHC.Prim.max xs end in
     match arg_215__ with
@@ -275,7 +272,7 @@ Definition maximum {a} `{(GHC.Prim.Ord a)} : (list a) -> a :=
       | _ => j_217__
     end.
 
-Definition minimum {a} `{(GHC.Prim.Ord a)} : (list a) -> a :=
+Definition minimum {a} `{(GHC.Prim.Ord a)} : list a -> a :=
   fun arg_220__ =>
     let j_222__ := match arg_220__ with | xs => foldl1 GHC.Prim.min xs end in
     match arg_220__ with
@@ -283,17 +280,17 @@ Definition minimum {a} `{(GHC.Prim.Ord a)} : (list a) -> a :=
       | _ => j_222__
     end.
 
-Definition tail {a} : (list a) -> (list a) :=
+Definition tail {a} : list a -> list a :=
   fun arg_269__ =>
     match arg_269__ with
       | (cons _ xs) => xs
       | nil => errorEmptyList &"tail"
     end.
 
-Definition product {a} `{(GHC.Num.Num a)} : (list a) -> a :=
+Definition product {a} `{(GHC.Num.Num a)} : list a -> a :=
   foldl GHC.Num.op_zt__ #1.
 
-Definition reverse {a} : (list a) -> (list a) :=
+Definition reverse {a} : list a -> list a :=
   fun arg_102__ =>
     match arg_102__ with
       | l => let rev :=
@@ -305,8 +302,8 @@ Definition reverse {a} : (list a) -> (list a) :=
              rev l nil
     end.
 
-Definition scanl {b} {a} : (b -> (a -> b)) -> (b -> ((list a) -> (list b))) :=
-  let scanlGo {b} {a} : (b -> (a -> b)) -> (b -> ((list a) -> (list b))) :=
+Definition scanl {b} {a} : (b -> a -> b) -> b -> list a -> list b :=
+  let scanlGo {b} {a} : (b -> a -> b) -> b -> list a -> list b :=
     fix scanlGo arg_194__ arg_195__ arg_196__
           := match arg_194__ , arg_195__ , arg_196__ with
                | f , q , ls => cons q (match ls with
@@ -316,15 +313,15 @@ Definition scanl {b} {a} : (b -> (a -> b)) -> (b -> ((list a) -> (list b))) :=
              end in
   scanlGo.
 
-Definition scanl1 {a} : (a -> (a -> a)) -> ((list a) -> (list a)) :=
+Definition scanl1 {a} : (a -> a -> a) -> list a -> list a :=
   fun arg_201__ arg_202__ =>
     match arg_201__ , arg_202__ with
       | f , (cons x xs) => scanl f x xs
       | _ , nil => nil
     end.
 
-Definition scanl' {b} {a} : (b -> (a -> b)) -> (b -> ((list a) -> (list b))) :=
-  let scanlGo' {b} {a} : (b -> (a -> b)) -> (b -> ((list a) -> (list b))) :=
+Definition scanl' {b} {a} : (b -> a -> b) -> b -> list a -> list b :=
+  let scanlGo' {b} {a} : (b -> a -> b) -> b -> list a -> list b :=
     fix scanlGo' arg_175__ arg_176__ arg_177__
           := match arg_175__ , arg_176__ , arg_177__ with
                | f , q , ls => cons q (match ls with
@@ -335,7 +332,7 @@ Definition scanl' {b} {a} : (b -> (a -> b)) -> (b -> ((list a) -> (list b))) :=
   scanlGo'.
 
 Definition scanlFB {b} {a} {c}
-    : (b -> (a -> b)) -> ((b -> (c -> c)) -> (a -> ((b -> c) -> (b -> c)))) :=
+    : (b -> a -> b) -> (b -> c -> c) -> a -> (b -> c) -> b -> c :=
   fun arg_182__ arg_183__ =>
     match arg_182__ , arg_183__ with
       | f , c => fun arg_184__ arg_185__ =>
@@ -348,7 +345,7 @@ Definition scanlFB {b} {a} {c}
     end.
 
 Definition scanlFB' {b} {a} {c}
-    : (b -> (a -> b)) -> ((b -> (c -> c)) -> (a -> ((b -> c) -> (b -> c)))) :=
+    : (b -> a -> b) -> (b -> c -> c) -> a -> (b -> c) -> b -> c :=
   fun arg_163__ arg_164__ =>
     match arg_163__ , arg_164__ with
       | f , c => fun arg_165__ arg_166__ =>
@@ -362,8 +359,8 @@ Definition scanlFB' {b} {a} {c}
                    end
     end.
 
-Definition scanrFB {a} {b} {c} : (a -> (b -> b)) -> ((b -> (c -> c)) -> (a -> (b
-                                 * c -> (b * c)))) :=
+Definition scanrFB {a} {b} {c} : (a -> b -> b) -> (b -> c -> c) -> a -> b *
+                                 c -> b * c :=
   fun arg_139__ arg_140__ =>
     match arg_139__ , arg_140__ with
       | f , c => fun arg_141__ arg_142__ =>
@@ -372,7 +369,7 @@ Definition scanrFB {a} {b} {c} : (a -> (b -> b)) -> ((b -> (c -> c)) -> (a -> (b
                    end
     end.
 
-Definition span {a} : (a -> bool) -> ((list a) -> ((list a) * (list a))) :=
+Definition span {a} : (a -> bool) -> list a -> list a * list a :=
   fix span arg_116__ arg_117__
         := match arg_116__ , arg_117__ with
              | _ , (nil as xs) => pair xs xs
@@ -384,7 +381,7 @@ Definition span {a} : (a -> bool) -> ((list a) -> ((list a) * (list a))) :=
                                            else j_119__
            end.
 
-Definition strictUncurryScanr {a} {b} {c} : (a -> (b -> c)) -> (a * b -> c) :=
+Definition strictUncurryScanr {a} {b} {c} : (a -> b -> c) -> a * b -> c :=
   fun arg_147__ arg_148__ =>
     match arg_147__ , arg_148__ with
       | f , pair_ => match pair_ with
@@ -392,11 +389,11 @@ Definition strictUncurryScanr {a} {b} {c} : (a -> (b -> c)) -> (a * b -> c) :=
                      end
     end.
 
-Definition sum {a} `{(GHC.Num.Num a)} : (list a) -> a :=
+Definition sum {a} `{(GHC.Num.Num a)} : list a -> a :=
   foldl GHC.Num.op_zp__ #0.
 
 Definition takeWhileFB {a} {b}
-    : (a -> bool) -> ((a -> (b -> b)) -> (b -> (a -> (b -> b)))) :=
+    : (a -> bool) -> (a -> b -> b) -> b -> a -> b -> b :=
   fun arg_130__ arg_131__ arg_132__ =>
     match arg_130__ , arg_131__ , arg_132__ with
       | p , c , n => fun arg_133__ arg_134__ =>
@@ -407,28 +404,27 @@ Definition takeWhileFB {a} {b}
                        end
     end.
 
-Definition uncons {a} : (list a) -> (option (a * (list a))) :=
+Definition uncons {a} : list a -> option (a * list a) :=
   fun arg_272__ =>
     match arg_272__ with
       | nil => None
       | (cons x xs) => Some (pair x xs)
     end.
 
-Definition unzip {a} {b} : (list (a * b)) -> ((list a) * (list b)) :=
+Definition unzip {a} {b} : list (a * b) -> list a * list b :=
   GHC.BaseGen.foldr (fun arg_9__ arg_10__ =>
                       match arg_9__ , arg_10__ with
                         | (pair a b) , (pair as_ bs) => pair (cons a as_) (cons b bs)
                       end) (pair nil nil).
 
-Definition unzip3 {a} {b} {c} : (list (a * b * c)) -> ((list a) * (list b) *
-                                (list c)) :=
+Definition unzip3 {a} {b} {c} : list (a * b * c) -> list a * list b * list c :=
   GHC.BaseGen.foldr (fun arg_4__ arg_5__ =>
                       match arg_4__ , arg_5__ with
                         | (pair (pair a b) c) , (pair (pair as_ bs) cs) => pair (pair (cons a as_) (cons
                                                                                       b bs)) (cons c cs)
                       end) (pair (pair nil nil) nil).
 
-Definition zip {a} {b} : (list a) -> ((list b) -> (list (a * b))) :=
+Definition zip {a} {b} : list a -> list b -> list (a * b) :=
   fix zip arg_48__ arg_49__
         := let j_51__ :=
              match arg_48__ , arg_49__ with
@@ -441,8 +437,7 @@ Definition zip {a} {b} : (list a) -> ((list b) -> (list (a * b))) :=
              | _ , _ => j_51__
            end.
 
-Definition zip3 {a} {b} {c} : (list a) -> ((list b) -> ((list c) -> (list (a * b
-                                                                          * c)))) :=
+Definition zip3 {a} {b} {c} : list a -> list b -> list c -> list (a * b * c) :=
   fix zip3 arg_35__ arg_36__ arg_37__
         := match arg_35__ , arg_36__ , arg_37__ with
              | (cons a as_) , (cons b bs) , (cons c cs) => cons (pair (pair a b) c) (zip3 as_
@@ -450,8 +445,7 @@ Definition zip3 {a} {b} {c} : (list a) -> ((list b) -> ((list c) -> (list (a * b
              | _ , _ , _ => nil
            end.
 
-Definition zipFB {a} {b} {c} {d} : (a *
-                                   b -> (c -> d)) -> (a -> (b -> (c -> d))) :=
+Definition zipFB {a} {b} {c} {d} : (a * b -> c -> d) -> a -> b -> c -> d :=
   fun arg_40__ =>
     match arg_40__ with
       | c => fun arg_41__ arg_42__ arg_43__ =>
@@ -460,8 +454,7 @@ Definition zipFB {a} {b} {c} {d} : (a *
                end
     end.
 
-Definition zipWith {a} {b} {c} : (a -> (b -> c)) -> ((list a) -> ((list
-                                 b) -> (list c))) :=
+Definition zipWith {a} {b} {c} : (a -> b -> c) -> list a -> list b -> list c :=
   fix zipWith arg_29__ arg_30__ arg_31__
         := let j_33__ :=
              match arg_29__ , arg_30__ , arg_31__ with
@@ -474,8 +467,8 @@ Definition zipWith {a} {b} {c} : (a -> (b -> c)) -> ((list a) -> ((list
              | _ , _ , _ => j_33__
            end.
 
-Definition zipWith3 {a} {b} {c} {d} : (a -> (b -> (c -> d))) -> ((list
-                                      a) -> ((list b) -> ((list c) -> (list d)))) :=
+Definition zipWith3 {a} {b} {c} {d} : (a -> b -> c -> d) -> list a -> list
+                                      b -> list c -> list d :=
   fix zipWith3 arg_14__ arg_15__ arg_16__ arg_17__
         := match arg_14__ , arg_15__ , arg_16__ , arg_17__ with
              | z , (cons a as_) , (cons b bs) , (cons c cs) => cons (z a b c) (zipWith3 z as_
@@ -484,7 +477,7 @@ Definition zipWith3 {a} {b} {c} {d} : (a -> (b -> (c -> d))) -> ((list
            end.
 
 Definition zipWithFB {a} {b} {c} {d} {e}
-    : (a -> (b -> c)) -> ((d -> (e -> a)) -> (d -> (e -> (b -> c)))) :=
+    : (a -> b -> c) -> (d -> e -> a) -> d -> e -> b -> c :=
   fun arg_20__ arg_21__ =>
     match arg_20__ , arg_21__ with
       | c , f => fun arg_22__ arg_23__ arg_24__ =>

@@ -16,7 +16,7 @@ Require GHC.Base.
 
 (* Converted declarations: *)
 
-Definition curry {a} {b} {c} : (a * b -> c) -> (a -> (b -> c)) :=
+Definition curry {a} {b} {c} : (a * b -> c) -> a -> b -> c :=
   fun arg_3__ arg_4__ arg_5__ =>
     match arg_3__ , arg_4__ , arg_5__ with
       | f , x , y => f (pair x y)
@@ -28,13 +28,13 @@ Definition fst {a} {b} : a * b -> a :=
 Definition snd {a} {b} : a * b -> b :=
   fun arg_8__ => match arg_8__ with | (pair _ y) => y end.
 
-Definition uncurry {a} {b} {c} : (a -> (b -> c)) -> (a * b -> c) :=
+Definition uncurry {a} {b} {c} : (a -> b -> c) -> (a * b -> c) :=
   fun arg_12__ arg_13__ =>
     match arg_12__ , arg_13__ with
       | f , p => f (fst p) (snd p)
     end.
 
-Definition swap {a} {b} : a * b -> (b * a) :=
+Definition swap {a} {b} : a * b -> b * a :=
   fun arg_0__ => match arg_0__ with | (pair a b) => pair b a end.
 
 (* Unbound variables:

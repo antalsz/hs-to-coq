@@ -19,5 +19,5 @@ value GHC.Base.Nothing = None
 
 # This is mostly for PatternGuard, which has Int defined in its preamble.v
 type GHC.Types.Int    = Int
-value GHC.Num.-       = sub
-value GHC.Classes.<=  = leb
+value GHC.Num.-       = -
+value GHC.Classes.<=  = <=

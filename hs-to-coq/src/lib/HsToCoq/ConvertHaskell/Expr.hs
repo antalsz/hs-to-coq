@@ -596,26 +596,34 @@ convertMatchGroup args (MG (L _ alts) _ _ _) = do
 
     chainFallThroughs matches patternFailure
 
+data HasGuard = HasGuard | HasNoGuard
+
 groupMatches :: forall m a. ConversionMonad m =>
-    [(MultPattern, a)] -> m [[(MultPattern, a)]]
+    [(MultPattern, HasGuard, a)] -> m [[(MultPattern, a)]]
 groupMatches pats = map (map snd) . go <$> mapM summarize pats
   where
-    summarize :: (MultPattern, a) -> m ([PatternSummary],(MultPattern, a))
-    summarize (mp,x) = (,(mp,x)) <$> multPatternSummary mp
+    -- Gather some summary information on the alternatives
+    --  - do they have guards
+    --  - what is their PatternSummary
+    summarize :: (MultPattern, HasGuard, a) -> m ([PatternSummary], HasGuard, (MultPattern, a))
+    summarize (mp,hg,x) = do
+        s <- multPatternSummary mp
+        return (s,hg,(mp,x))
 
-    go :: forall x. [([PatternSummary], x)] -> [[([PatternSummary], x)]]
+    go :: forall x. [([PatternSummary], HasGuard, x)] -> [[([PatternSummary], x)]]
     go [] = pure []
-    go ((ps,x):xs) = case go xs of
+    go ((ps,hg,x):xs) = case go xs of
+        -- Append to a group if it has no guard
+        (g:gs) | HasNoGuard <- hg          -> ((ps,x):g)  : gs
         -- Append to a group, if mutually exclusive with all members
-        (g:gs) | all (mutExcls ps . fst) g
-           -> ((ps,x):g)  : gs
-        -- Start a new group
-        gs -> ((ps,x):[]) : gs
+               | all (mutExcls ps . fst) g -> ((ps,x):g)  : gs
+        -- Otherwise, start a new group
+        gs                                 -> ((ps,x):[]) : gs
 
 
 convertMatch :: ConversionMonad m =>
     Match GHC.Name (LHsExpr GHC.Name) -> -- the match
-    m (MultPattern, Term -> m Term) -- the pattern, and the right-hand side
+    m (MultPattern, HasGuard, Term -> m Term) -- the pattern, hasGuards, the right-hand side
 convertMatch GHC.Match{..} = do
   (pats, guards) <- runWriterT $
     maybe (convUnsupported "no-pattern case arms") pure . nonEmpty
@@ -624,7 +632,7 @@ convertMatch GHC.Match{..} = do
 
   let extraGuards = map BoolGuard guards
   let rhs = convertGRHSs extraGuards m_grhss
-  return (MultPattern pats, rhs)
+  return (MultPattern pats, hasGuards m_grhss, rhs)
 
   {- TODO: Recover that part!
   let typed_rhs = maybe id (flip HasType) oty rhs
@@ -649,6 +657,10 @@ buildMatch scruts eqns failure = do
 
 
 --------------------------------------------------------------------------------
+
+hasGuards :: GRHSs b e -> HasGuard
+hasGuards (GRHSs [ L _ (GRHS [] _) ] _) = HasNoGuard
+hasGuards _                             = HasGuard
 
 convertGRHS :: ConversionMonad m
             => [ConvertedGuard m]

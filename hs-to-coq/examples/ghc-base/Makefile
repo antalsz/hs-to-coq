@@ -68,6 +68,11 @@ MODULES  = GHC/List \
 # generated from drop-in/
 SPECIAL_MODULES = GHC/BaseGen
 
+# Theories
+
+THEORY = PreludeThy
+
+
 VFILES_GEN = $(addprefix lib/,$(addsuffix .v,$(MODULES)))
 VFILES_MAN = $(addprefix lib/,$(addsuffix .v,$(HANDMOD)))
 VFILES_EMPTY = $(addprefix lib/,$(addsuffix .v,$(EMPTY_MODS)))
@@ -124,4 +129,3 @@ lib/GHC/BaseGen.v : edits/GHC/Base/edits renamings edits/GHC/Base/preamble.v dro
 
 clean:
 	rm -f */*.vo */*.glob */*.v.d *.vo *.v.d  $(VFILES) _CoqProject Makefile.coq  */*.v~
-

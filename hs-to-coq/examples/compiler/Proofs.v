@@ -10,6 +10,7 @@ Definition bind {aT} {rT} (f : aT -> option rT) :=
   apply f None.
 
 
+
 Lemma exec_app_distributivity: forall c d s,
     exec (c ++ d) s = bind (exec d) (exec c s).
 Proof.

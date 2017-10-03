@@ -1,6 +1,6 @@
 {- |
-Description : Compiler Correctness from Graham Hutton’s 
-              Programming in Haskell second edition, 
+Description : Compiler Correctness from Graham Hutton’s
+              Programming in Haskell second edition,
               Section 16.7.
 -}
 
@@ -26,5 +26,4 @@ exec (ADD : c) (m : n : s) = exec c (n+m : s)
 
 comp :: Expr -> Code
 comp (Val n) = [PUSH n]
-comp (Add x y) = comp x ++ comp y ++ [ADD]
-
+comp (Add x y) = comp x ++ (comp y ++ [ADD])

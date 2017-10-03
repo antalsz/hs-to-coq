@@ -69,6 +69,7 @@ Proof.
   * simpl. rewrite H. rewrite IHx. auto.
 Qed.
 
+(* This should be the list monoid, no? *)
 Lemma append_nil:
   forall a (x : list a), app x nil = x.
 Proof.

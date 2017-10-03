@@ -1,7 +1,6 @@
 Require Import Prelude.
 Require Import Compiler.
 
-
 Import ListNotations.
 
 Definition apply {aT} {rT} (f : aT -> rT) x u :=

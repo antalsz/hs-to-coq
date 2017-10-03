@@ -632,7 +632,11 @@ convertMatch GHC.Match{..} = do
 
   let extraGuards = map BoolGuard guards
   let rhs = convertGRHSs extraGuards m_grhss
-  return (MultPattern pats, hasGuards m_grhss, rhs)
+
+  let hg | null extraGuards = hasGuards m_grhss
+         | otherwise        = HasGuard
+
+  return (MultPattern pats, hg, rhs)
 
   {- TODO: Recover that part!
   let typed_rhs = maybe id (flip HasType) oty rhs

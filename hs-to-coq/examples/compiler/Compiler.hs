@@ -22,8 +22,8 @@ data Op = PUSH Int | ADD
 exec :: Code -> Stack -> Maybe Stack
 exec [] s = Just s
 exec (PUSH n : c) s = exec c (n : s)
-exec (ADD : c) (m : n : s) = exec c (n+m : s)
-exec (ADD : c) _ = Nothing
+exec (ADD    : c) (m : n : s) = exec c (n+m : s)
+exec (ADD    : c) _ = Nothing
 
 comp :: Expr -> Code
 comp (Val n) = [PUSH n]

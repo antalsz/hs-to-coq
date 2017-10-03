@@ -18,8 +18,8 @@ Inductive Expr : Type := Mk_Val : GHC.Num.Int -> Expr
                       |  Mk_Add : Expr -> Expr -> Expr.
 
 Definition eval : Expr -> GHC.Num.Int :=
-  fix eval arg_12__
-        := match arg_12__ with
+  fix eval arg_13__
+        := match arg_13__ with
              | (Mk_Val n) => n
              | (Mk_Add x y) => GHC.Num.op_zp__ (eval x) (eval y)
            end.
@@ -42,16 +42,13 @@ Definition Stack :=
 
 Definition exec : Code -> Stack -> option Stack :=
   fix exec arg_5__ arg_6__
-        := let j_7__ :=
-             match arg_5__ , arg_6__ with
-               | (cons Mk_ADD c) , _ => None
-               | _ , _ => patternFailure
-             end in
-           match arg_5__ , arg_6__ with
+        := match arg_5__ , arg_6__ with
              | nil , s => Some s
              | (cons (Mk_PUSH n) c) , s => exec c (cons n s)
-             | (cons Mk_ADD c) , (cons m (cons n s)) => exec c (cons (GHC.Num.op_zp__ n m) s)
-             | _ , _ => j_7__
+             | (cons Mk_ADD c) , s => match s with
+                                        | (cons m (cons n s)) => exec c (cons (GHC.Num.op_zp__ n m) s)
+                                        | _ => None
+                                      end
            end.
 
 (* Unbound variables:

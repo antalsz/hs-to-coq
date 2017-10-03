@@ -3,48 +3,6 @@ Require Import CompilerOrig.
 
 Import ListNotations.
 
-(* AKA comp_correct_book *)
-Lemma distributivity : forall c s d,
-    exec c s <> patternFailure ->
-    exec (app c d) s =  exec d (exec c s).
-Proof.
-  induction c; intros; auto.
-  destruct a.
-  - simpl. rewrite IHc. auto.
-    simpl in H. auto.
-  - simpl. destruct s. simpl in H. contradiction.
-    destruct s. simpl in H. contradiction.
-    simpl in H.
-    rewrite IHc.
-    auto. auto.
-Qed.
-
-
-
-Lemma app_assoc : forall A (a b c : list A), app a (app b c) = app (app a b) c.
-Admitted.
-
-Lemma classical : forall e s, exec e s = patternFailure \/ exec e s <> patternFailure.
-Admitted.
-
-
-Lemma comp_correct_book : forall e s,
-    (forall s1, exec (comp e) s1 <> patternFailure) ->
-    exec (comp e) s = eval e :: s.
-Proof.
-  induction e; intros s DEF.
-  auto.
-  simpl.
-  rewrite <- app_assoc.
-  rewrite distributivity.
-  rewrite IHe1.
-  rewrite distributivity.
-  rewrite IHe2.
-  simpl.
-  auto.
-  admit.
-  admit.
-Admitted.
 
 
 Lemma comp_correct_helper: forall e s d,
@@ -67,3 +25,41 @@ Proof.
   replace (comp e) with (comp e ++ []) by apply app_nil_r.
   apply comp_correct_helper.
 Qed.
+
+(* Alternative proof that goes through with patternFailures *)
+
+(* Nice, but actually useless: The precondition cannot be
+   shown for concrete [c] and [s]. *)
+(* AKA comp_correct_book *)
+Lemma distributivity: forall c s d,
+    exec c s <> patternFailure ->
+    exec (c ++ d) s =  exec d (exec c s).
+Proof.
+  induction c; intros; auto.
+  destruct a.
+  - simpl. rewrite IHc. auto.
+    simpl in H. auto.
+  - simpl. destruct s. simpl in H. contradiction.
+    destruct s. simpl in H. contradiction.
+    simpl in H.
+    rewrite IHc.
+    auto. auto.
+Qed.
+
+(* We need a precondition to this lemma too. Can't put my finger on it though. *)
+Lemma comp_correct_book : forall e s,
+    exec (comp e) s = eval e :: s.
+Proof.
+  induction e; intros s.
+  auto.
+  simpl.
+  rewrite <- app_assoc.
+  rewrite distributivity.
+  rewrite IHe1.
+  rewrite distributivity.
+  rewrite IHe2.
+  simpl.
+  auto.
+  admit. (* exec (comp e2) (eval e1 :: s) <> patternFailure *)
+  admit. (* Cannot prove exec (comp e1) s <> patternFailure *)
+Abort.

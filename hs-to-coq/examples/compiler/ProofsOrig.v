@@ -55,3 +55,25 @@ Proof.
   replace (comp e) with (comp e ++ []) by apply app_nil_r.
   apply comp_correct_helper.
 Qed.
+
+(* Nice, but actually useless: The precondition cannot be
+   shown for concrete [c] and [s]. *)
+Lemma comp_correct_book: forall c s d,
+    exec c s <> patternFailure ->
+    exec (c ++ d) s =  exec d (exec c s).
+Proof.
+  induction c; intros.
+  * reflexivity.
+  * destruct a.
+    - simpl.
+      rewrite IHc.
+      reflexivity.
+      simpl in H. assumption.
+    - simpl.
+      destruct s.
+      + simpl in H. contradict H. reflexivity.
+      + destruct s.
+        ** simpl in H. contradict H. reflexivity.
+        ** rewrite IHc. reflexivity.
+           simpl in H. assumption.
+Qed.

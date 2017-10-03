@@ -1,9 +1,28 @@
 Require Import Prelude.
 Require Import Successors.
 
+(* We need a PreludeTheory for this sort of stuff. *)
 Section list_proofs.
 
-Lemma map_id:
+  Definition list_fmap_const {a} {b} :  a -> list b -> list a :=
+    map ∘ const.
+
+  Instance list_functor : Functor list := {
+                                           fmap := fun {a}{b} => map
+                                         }.
+  Proof.
+    intros. exact (list_fmap_const X X0).
+  Defined.
+
+  Class FunctorLaws (t : Type -> Type) `{ Functor t } :=
+    {
+      map_id : forall a (x: t a), fmap id x = x;
+      map_map : forall a b c (f : a -> b) (g : b -> c) (x : t a),
+          fmap g (fmap f x) = fmap (g ∘ f) x
+    }.
+
+
+Lemma list_map_id:
   forall a (x : list a),
   map id x = x.
 Proof.
@@ -12,20 +31,28 @@ Proof.
   * simpl. rewrite IHx. auto.
 Qed.
 
-Lemma map_map:
+Lemma list_map_map:
   forall a b c (f : a -> b) (g : b -> c) (x : list a),
   map g (map f x) = map (g ∘ f) x.
 Proof.
   intros.
+  unfold fmap, list_functor.
   induction x.
   * auto.
   * simpl. rewrite IHx. auto.
 Qed.
 
+Instance  list_functor_laws : FunctorLaws list := {
+                                                 map_id := list_map_id;
+                                                 map_map := list_map_map
+                                               }.
+
+
 Lemma map_append:
   forall a b (f : a -> b) (x y : list a),
   map f (x ++ y) = map f x ++ map f y.
 Proof.
+  intros.
   intros.
   induction x.
   * auto.
@@ -61,8 +88,20 @@ Proof.
   * simpl. rewrite IHx. auto.
 Qed.
 
-
 End list_proofs.
+
+(* A tactic to rewrite with the list functor *)
+Ltac rewrite_list_functor :=
+  let K := fresh in
+  let L := fresh in
+  pose (K := @map_id list list_functor list_functor_laws); clearbody K;
+  pose (L := @map_map list list_functor list_functor_laws); clearbody L;
+  try rewrite K; try rewrite L;
+  unfold fmap, list_functor in K, L;
+  try rewrite K; try rewrite L;
+  clear K; clear L.
+
+
 
 Lemma functor_law_1:
   forall a (x : Succs a),
@@ -71,7 +110,7 @@ Proof.
   intros.
   destruct x.
   simpl.
-  rewrite map_id.
+  rewrite_list_functor.
   auto.
 Qed.
 
@@ -82,9 +121,14 @@ Proof.
   intros.
   destruct x.
   simpl.
-  rewrite map_map.
+  rewrite_list_functor.
   auto.
 Qed.
+
+Instance Succ_FunctorLaws : FunctorLaws Succs :=
+  { map_id := functor_law_1;
+    map_map := functor_law_2}
+.
 
 Lemma applicative_law_1:
   forall a (x : Succs a),
@@ -93,7 +137,7 @@ Proof.
   intros.
   destruct x.
   simpl.
-  rewrite map_id.
+  rewrite_list_functor.
   auto.
 Qed.
 
@@ -101,7 +145,7 @@ Lemma applicative_law_2:
   forall a b c
     (x : Succs (b -> c))
     (y : Succs (a -> b))
-    (z : Succs a),  
+    (z : Succs a),
   (pure (_∘_) <*> x <*> y <*> z) = (x <*> (y <*> z)).
 Proof.
   intros.
@@ -109,7 +153,7 @@ Proof.
   simpl.
   unfold op_z2218U__.
   f_equal.
-  repeat (rewrite map_append || rewrite map_map || rewrite append_assoc
+  repeat (rewrite map_append || rewrite_list_functor || rewrite append_assoc
       || unfold op_z2218U__ || unfold op_zd__).
   auto.
 Qed.
@@ -153,7 +197,7 @@ Proof.
   destruct x.
   simpl.
   rewrite append_nil.
-  rewrite map_id.
+  rewrite_list_functor.
   auto.
 Qed.
 
@@ -168,8 +212,8 @@ Proof.
   destruct (k a0).
   destruct (h b0).
   f_equal.
-  repeat (rewrite map_map || rewrite map_append || rewrite append_assoc ||
-    unfold getCurrent, op_z2218U__, Successors.instance_GHC_BaseGen_Monad_Succs_op_zgzgze__ 
+  repeat (rewrite_list_functor || rewrite map_append || rewrite append_assoc ||
+    unfold getCurrent, op_z2218U__, Successors.instance_GHC_BaseGen_Monad_Succs_op_zgzgze__
     ).
   f_equal.
   apply map_cong; intro.
@@ -177,4 +221,3 @@ Proof.
   destruct (h b1).
   auto.
 Qed.
-

@@ -31,6 +31,7 @@ HANDMOD = GHC/Prim \
           GHC/Word \
           GHC/Int \
           Data/Bool \
+          Control/Category \
           Prelude
 
 # GHC.Base imports modules without using anything from it (e.g. because
@@ -53,7 +54,8 @@ EMPTY_MODS  =\
 	  _GHC/Base \
 	  _GHC/BaseGen \
 	  _GHC/Num \
-
+	  Data/Type/Coercion \
+	  GHC/Arr \
 
 # Generated modules
 # All except BaseGen are generated directly from GHC/libraries/base
@@ -63,22 +65,28 @@ MODULES  = GHC/List \
            Data/Function \
            Data/Ord \
            Data/Eq \
-           Data/Monoid
+           Data/Monoid \
+           Control/Arrow \
+           Data/Proxy \
+           Control/Applicative
+
+DROPIN =   Data/Either \
+	        Data/Foldable \
+           Control/Monad/Fix \
+
+
 
 # generated from drop-in/
-SPECIAL_MODULES = GHC/BaseGen
-
-# Theories
-
-THEORY = PreludeThy
+SPECIAL_MODULES = GHC/BaseGen \
 
 
 VFILES_GEN = $(addprefix lib/,$(addsuffix .v,$(MODULES)))
 VFILES_MAN = $(addprefix lib/,$(addsuffix .v,$(HANDMOD)))
 VFILES_EMPTY = $(addprefix lib/,$(addsuffix .v,$(EMPTY_MODS)))
 VFILES_SPECIAL = $(addprefix lib/,$(addsuffix .v,$(SPECIAL_MODULES)))
+VFILES_DROPIN = $(addprefix lib/,$(addsuffix .v,$(DROPIN)))
 
-VFILES   = $(VFILES_GEN) $(VFILES_MAN) $(VFILES_EMPTY) $(VFILES_SPECIAL)
+VFILES   = $(VFILES_GEN) $(VFILES_MAN) $(VFILES_EMPTY) $(VFILES_SPECIAL) $(VFILES_DROPIN)
 
 all:  $(VFILES) coq
 
@@ -90,6 +98,7 @@ lib/_CoqProject : Makefile
 	echo $(addsuffix .v,$(MODULES)) >> $@
 	echo $(addsuffix .v,$(EMPTY_MODS)) >> $@
 	echo $(addsuffix .v,$(SPECIAL_MODULES)) >> $@
+	echo $(addsuffix .v,$(DROPIN)) >> $@
 
 lib/Makefile.coq: lib/_CoqProject $(VFILES)
 	cd lib; coq_makefile -f _CoqProject -o Makefile.coq
@@ -125,6 +134,33 @@ lib/GHC/BaseGen.v : module-edits/GHC/Base/edits edits module-edits/GHC/Base/prea
 		     -Ibase/include \
 		     --ghc -this-unit-id=base \
 		     drop-in/GHC/BaseGen.hs
+
+
+$(VFILES_DROPIN): lib/%.v : module-edits/%/edits edits module-edits/%/preamble.v drop-in/%.hs
+	$(HS_TO_COQ) -e module-edits/$*/edits \
+	             -e edits \
+		     -o lib \
+		     -N \
+		     -p module-edits/$*/preamble.v \
+		     --ghc -ibase \
+		     --ghc -ibase/dist-install/build \
+		     -Ibase/include \
+		     --ghc -this-unit-id=base \
+		     drop-in/$*.hs
+
+
+
+# lib/Data/Foldable.v : module-edits/Data/Foldable/edits edits module-edits/Data/Foldable/preamble.v drop-in/Data/Foldable.hs
+#	$(HS_TO_COQ) -e module-edits/Data/Foldable/edits \
+#	             -e edits \
+#		     -o lib \
+#		     -N \
+#		     -p module-edits/Data/Foldable/preamble.v \
+#		     --ghc -ibase \
+#		     --ghc -ibase/dist-install/build \
+#		     -Ibase/include \
+#		     --ghc -this-unit-id=base \
+#		     drop-in/Data/Foldable.hs
 
 
 clean:

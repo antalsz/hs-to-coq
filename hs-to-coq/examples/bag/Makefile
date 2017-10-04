@@ -12,6 +12,17 @@ endif
 
 all: coq
 
+
+lib/Maybes.v: ghc/compiler/utils/Maybes.hs edits preamble.v
+	$(HS_TO_COQ) -e edits -p preamble.v $< -o lib/
+
+
+lib/MonadUtils.v: ghc/compiler/utils/MonadUtils.hs edits preamble.v
+	$(HS_TO_COQ) -e edits -p preamble.v $< -o lib/
+
+Util.v: ghc/compiler/utils/Util.hs edits preamble.v
+	$(HS_TO_COQ) -e edits -p preamble.v $< -o $@
+
 Bag.v: ghc/compiler/utils/Bag.hs edits preamble.v
 	$(HS_TO_COQ) -e edits -p preamble.v $< -o $@
 

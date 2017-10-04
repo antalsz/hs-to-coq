@@ -187,6 +187,7 @@ split.
 exact applicative_law_1.
 exact applicative_law_2.
 exact applicative_law_3.
+exact applicative_law_4.
 Qed.
 
 

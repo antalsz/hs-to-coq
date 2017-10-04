@@ -76,4 +76,6 @@ script:
  - make -C examples/successors
  - make -C examples/compiler
  - make -C examples/rle
- - make -C examples/ghc
+
+ # This requires a configured check-out of GHC, so lets not do that on travis
+ # - make -C examples/ghc

@@ -244,8 +244,9 @@ convert_module_with_requires convModName (group, imports, _exports, _docstring) 
                                        Qualified mod _ -> Just mod)
                       $ listify (const True :: Qualid -> Bool) decls
     
-    let modules =  importedModules
-                ++ S.toList (foldr S.delete (S.fromList extraModules) importedModules)
+    modules <- skipModules
+                 $  importedModules
+                 ++ S.toList (foldr S.delete (S.fromList extraModules) importedModules)
     
     convModImports <-
       traverse

@@ -628,7 +628,6 @@ convertMatch GHC.Match{..} = do
   (pats, guards) <- runWriterT $
     maybe (convUnsupported "no-pattern case arms") pure . nonEmpty
       =<< traverse convertLPat m_pats
-  oty <- traverse convertLType m_type
 
   let extraGuards = map BoolGuard guards
   let rhs = convertGRHSs extraGuards m_grhss
@@ -637,13 +636,6 @@ convertMatch GHC.Match{..} = do
          | otherwise        = HasGuard
 
   return (MultPattern pats, hg, rhs)
-
-  {- TODO: Recover that part!
-  let typed_rhs = maybe id (flip HasType) oty rhs
-  let scrut = binds <&> \arg -> MatchItem arg Nothing Nothing
-  buildSingleEquationMatch scrut pats typed_rhs failure
-  -}
-
 
 buildMatch :: ConversionMonad m =>
     NonEmpty MatchItem -> [(MultPattern, Term -> m Term)] -> Term -> m Term

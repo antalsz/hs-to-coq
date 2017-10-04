@@ -11,7 +11,7 @@ $(error Please create a symlink ghc (see README.md))
 endif
 
 # Handwritten modules (usually by modification of generated version)
-HANDMOD =
+HANDMOD = Proofs
 
 # Empty mods (to please imports)
 EMPTY_MODS =
@@ -48,6 +48,7 @@ coq: Makefile.coq $(VFILES)
 
 $(VFILES_GEN): %.v : edits
 	$(HS_TO_COQ) -e edits \
+	             -e ../ghc-base/edits \
 		     -N \
 		     -o . \
 		     ghc/compiler/*/$*.hs

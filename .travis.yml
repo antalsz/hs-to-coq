@@ -76,3 +76,4 @@ script:
  - make -C examples/successors
  - make -C examples/compiler
  - make -C examples/rle
+ - make -C examples/ghc

@@ -17,8 +17,8 @@ VFILES = $(VFILES_GEN)
 all: $(VFILES) coq
 
 
-$(VFILES_GEN): %.v: orig/%.hs edits/%/edits edits/%/preamble.v ../ghc-base/renamings renamings
-	$(HS_TO_COQ) $< -e ../ghc-base/renamings -e renamings -e edits/$*/edits -p edits/$*/preamble.v -o $@
+$(VFILES_GEN): %.v: orig/%.hs edits/%/edits edits/%/preamble.v ../ghc-base/edits renamings
+	$(HS_TO_COQ) $< -e ../ghc-base/edits -e renamings -e edits/$*/edits -p edits/$*/preamble.v -o $@
 	# Work around https://github.com/antalsz/hs-to-coq/issues/12
 	if [ $* = 'Combined' ]; then sed -e 's/Mk_Stream {s} :/Mk_Stream : forall {s},/' -i $@; fi
 	if [ $* = 'Combined' ]; then sed -e 's/| (Mk_Stream /| (Mk_Stream _ /' -i $@; fi

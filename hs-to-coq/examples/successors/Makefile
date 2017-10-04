@@ -19,8 +19,8 @@ VFILES   = $(VFILES_GEN) $(VFILES_MAN)
 
 all: coq
 
-$(VFILES_GEN): %.v : %.hs edits  ../ghc-base/renamings
-	$(HS_TO_COQ) -e edits -e ../ghc-base/renamings $< -o .
+$(VFILES_GEN): %.v : %.hs edits  ../ghc-base/edits
+	$(HS_TO_COQ) -e edits -e ../ghc-base/edits $< -o .
 
 _CoqProject : Makefile
 	> $@

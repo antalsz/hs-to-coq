@@ -60,6 +60,10 @@ before_install:
  # Only build the `hs-to-coq` project
  - cd hs-to-coq
 
+ # Get the GHC sources
+ - git clone -b ghc-8.0.2-release --recursive git://git.haskell.org/ghc.git ghc
+ - ln -s ../../ghc examples/ghc
+
 install:
  # Build dependencies
  - stack --no-terminal --install-ghc test --only-dependencies
@@ -78,4 +82,4 @@ script:
  - make -C examples/rle
 
  # This requires a configured check-out of GHC, so lets not do that on travis
- # - make -C examples/ghc
+ - make -C examples/ghc

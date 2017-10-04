@@ -58,4 +58,4 @@ $(VFILES_EMPTY): %.v :
 	echo '(* Empty module, exists only to make Import statments not fail *)' > $@
 
 clean:
-	rm -f */*.vo */*.glob */*.v.d *.vo *.v.d  $(VFILES_GEN) $(VFILES_EMPTY) _CoqProject Makefile.coq  */*.v~
+	rm -f */*.vo *.glob */*.v.d *.glob *.vo *.v.d  $(VFILES_GEN) $(VFILES_EMPTY) _CoqProject Makefile.coq  */*.v~

@@ -14,7 +14,12 @@ sudo: false
 # Do not choose a language; we provide our own build tools.
 language: generic
 
-# Caching so the next build will be fast too.
+# Travis slack notification
+notifications:
+  slack:
+    secure: B38DsPEJPcxRoTwDS4JHks2bi+ViZkTwI6sB/5R+xKXSz4ZEU9chrQ15mXS/NVwdEaQZLNjuIKdxj1LgKAr9gelXZMDLS9lv/bzajx6SRq8x6MZxlYcd7e5ej+xZSmo8R+2ivMLB23iSBtZDi98aTulplbmXb2Qdh5WznShrGRftdtyO7Aqf5xZOy3Q3+0ji7qAXQpWB4sDLJr4Iu2Fjkvj5fBkq9dLHmkK08AR1xyo3kswNx4pssPbfiAiuk3zJY9h+iPGOCj8F3rfVlGdVOGXnF6Qa12rmEVmxCoQ66JNf97ESAp92+lqB84bpNuxLdfn+XZZLQOLZCIRZxm/noJYlQgYs9LPUA5RZ014ryR2B+ThiX/Cgod6toNDVN/vl/lg9QqyQoo+jZbloy/Ot3Z74eFNaVY8vDUkuPpkdSo7bkKDdzQcojmjLXKCT47hnIImD5AclzAv5WnYJd+387XEf2nD3F2RBwi++m2smE+CI66GZ0rizRZKMHIzWUJoEunQY2xRnFqo0XU+jYz50guIdu7h6X5sw2TfilbWLPigaWM03JYwbp4hrB4hqbkEeYaDA4ygqnyePo7oMQMmv57fwwcpvYN2yO6kgun0npSmBg0sWYFkrwQsxT3sI9mTljbhgXtuk0SRDOdXrOvlK1/fRqiq76o6RZ16cE8JN7eQ=
+
+# Caching so the next build will be fast too
 cache:
   directories:
   - $HOME/.stack

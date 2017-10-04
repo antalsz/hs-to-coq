@@ -372,9 +372,6 @@ Definition foldl {a}{b} k z0 xs :=
 Definition foldl' {a}{b} k z0 xs :=
   foldr (fun(v:a) (fn:b->b) => (fun(z:b) => fn (k z v))) (id : b -> b) xs z0.
 
-Definition concatMap {a}{b} (f : a -> list b) : list a -> list b :=
-  foldr (compose (_++_) f) nil.
-
 Definition build {a} : (forall {b},(a -> b -> b) -> b -> b) -> list a :=
   fun g => g _ (fun x y => x :: y) nil.
 

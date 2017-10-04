@@ -1,55 +1,10 @@
 Require Import Prelude.
 Require Import Successors.
-Require Import GHC.BaseThy.
+Require Import Proofs.GHC.Base.
 
 (* We need a PreludeTheory for this sort of stuff. *)
 Section list_proofs.
 
-(*
-  Definition list_fmap_const {a} {b} :  a -> list b -> list a :=
-    map ∘ const.
-
-  Instance list_functor : Functor list := {
-                                           fmap := fun {a}{b} => map
-                                         }.
-  Proof.
-    intros. exact (list_fmap_const X X0).
-  Defined.
-
-  Class FunctorLaws (t : Type -> Type) `{ Functor t } :=
-    {
-      map_id : forall a (x: t a), fmap id x = x;
-      map_map : forall a b c (f : a -> b) (g : b -> c) (x : t a),
-          fmap g (fmap f x) = fmap (g ∘ f) x
-    }.
-
-
-Lemma list_map_id:
-  forall a (x : list a),
-  map id x = x.
-Proof.
-  intros. induction x.
-  * auto.
-  * simpl. rewrite IHx. auto.
-Qed.
-
-Lemma list_map_map:
-  forall a b c (f : a -> b) (g : b -> c) (x : list a),
-  map g (map f x) = map (g ∘ f) x.
-Proof.
-  intros.
-  unfold fmap, list_functor.
-  induction x.
-  * auto.
-  * simpl. rewrite IHx. auto.
-Qed.
-
-Instance  list_functor_laws : FunctorLaws list := {
-                                                 map_id := list_map_id;
-                                                 map_map := list_map_map
-                                               }.
-
-*)
 Lemma map_append:
   forall a b (f : a -> b) (x y : list a),
   map f (x ++ y) = map f x ++ map f y.

@@ -1,4 +1,4 @@
-{-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE FlexibleContexts, LambdaCase #-}
 
 module HsToCoq.ProcessFiles (ProcessingMode(..), processFiles) where
 
@@ -14,12 +14,14 @@ import System.Directory
 
 import GHC
 
+import HsToCoq.ConvertHaskell.Monad
+
 --------------------------------------------------------------------------------
 
 data ProcessingMode = Recursive | NonRecursive
                     deriving (Eq, Ord, Enum, Bounded, Show, Read)
 
-processFiles :: GhcMonad m => ProcessingMode -> [FilePath] -> m (Maybe [TypecheckedModule])
+processFiles :: ConversionMonad m => ProcessingMode -> [FilePath] -> m (Maybe [TypecheckedModule])
 processFiles mode files = do
   traverse_ (addTarget <=< (guessTarget ?? Nothing)) files
   load LoadAllTargets >>= \case
@@ -31,6 +33,9 @@ processFiles mode files = do
           filePaths <- S.fromList . map Just <$> canonicalizePaths files
           let moduleFile = canonicalizePaths . ml_hs_file . ms_location
           pure . filterM $ fmap (`S.member` filePaths) . moduleFile
-      traverse (typecheckModule <=< parseModule) =<< filterModules =<< getModuleGraph
+      traverse (typecheckModule <=< parseModule)
+        =<< skipModulesBy ms_mod_name
+        =<< filterModules
+        =<< getModuleGraph
     Failed ->
       pure Nothing

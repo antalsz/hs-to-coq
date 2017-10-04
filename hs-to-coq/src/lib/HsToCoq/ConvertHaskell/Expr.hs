@@ -520,8 +520,8 @@ convertListComprehension allStmts = case fmap unLoc <$> unsnoc allStmts of
     toExpr (BindStmt pat exp _bind _fail PlaceHolder) rest =
       convertPatternBinding
         pat exp
-        (\exp' fun          -> App2 (Var "concatMap") <$> (fun <$> rest) <*> pure exp')
-        (\exp' cont letCont -> letCont (App2 (Var "concatMap") (Var cont) exp') <$> rest)
+        (\exp' fun          -> App2 concatMapVar <$> (fun <$> rest) <*> pure exp')
+        (\exp' cont letCont -> letCont (App2 concatMapVar (Var cont) exp') <$> rest)
         (Var "nil")
 
     toExpr (LetStmt (L _ binds)) rest =
@@ -529,6 +529,8 @@ convertListComprehension allStmts = case fmap unLoc <$> unsnoc allStmts of
 
     toExpr _ _ =
       convUnsupported "impossibly fancy list comprehension conditions"
+
+    concatMapVar = Var "Coq.Lists.List.flat_map"
 
 --------------------------------------------------------------------------------
 

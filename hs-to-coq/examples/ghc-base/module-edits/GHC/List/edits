@@ -14,6 +14,7 @@ skip iterate
 skip cycle
 skip repeatFB  # doesn't terminate
 skip iterateFB # doesn't terminate
+skip concatMap # renamed to flat_map
 
 skip unsafeTake
 

@@ -1,7 +1,7 @@
 {-# LANGUAGE LambdaCase, TemplateHaskell, RecordWildCards #-}
 
 module HsToCoq.ConvertHaskell.Parameters.Edits (
-  Edits(..), typeSynonymTypes, dataTypeArguments, redefinitions, skipped, skippedMethods, moduleRenamings, additionalScopes, orders, renamings,
+  Edits(..), typeSynonymTypes, dataTypeArguments, redefinitions, skipped, skippedMethods, skippedModules, moduleRenamings, additionalScopes, orders, renamings,
   HsNamespace(..), NamespacedIdent(..), Renamings,
   DataTypeArguments(..), dtParameters, dtIndices,
   CoqDefinition(..), definitionSentence,
@@ -22,6 +22,8 @@ import qualified Data.Text as T
 import Data.Map (Map, singleton, unionWith)
 import Data.Set (Set, singleton, union)
 import Data.Tuple
+
+import HsToCoq.Util.GHC.Module
 
 import HsToCoq.Coq.Gallina
 
@@ -49,13 +51,14 @@ data ScopePlace = SPValue | SPConstructor
 data Edit = TypeSynonymTypeEdit   Ident Ident
           | DataTypeArgumentsEdit Ident DataTypeArguments
           | RedefinitionEdit      CoqDefinition
-          | SkipMethodEdit        Ident Ident
           | SkipEdit              Ident
+          | SkipModuleEdit        ModuleName
+          | SkipMethodEdit        Ident Ident
           | ModuleRenamingEdit    Ident NamespacedIdent Ident
           | AdditionalScopeEdit   ScopePlace Ident Ident
           | OrderEdit             (NonEmpty Ident)
           | RenameEdit            NamespacedIdent Ident
-          deriving (Eq, Ord, Show, Read)
+          deriving (Eq, Ord, Show)
 
 addFresh :: At m
          => LensLike (Either e) s t m m
@@ -89,20 +92,21 @@ data Edits = Edits { _typeSynonymTypes  :: !(Map Ident Ident)
                    , _redefinitions     :: !(Map Ident CoqDefinition)
                    , _skipped           :: !(Set Ident)
                    , _skippedMethods    :: !(Set (Ident,Ident))
+                   , _skippedModules    :: !(Set ModuleName)
                    , _moduleRenamings   :: !(Map Ident Renamings)
                    , _additionalScopes  :: !(Map (ScopePlace, Ident) Ident)
                    , _orders            :: !(Map Ident (Set Ident))
                    , _renamings         :: !Renamings
                    }
-           deriving (Eq, Ord, Show, Read)
+           deriving (Eq, Ord, Show)
 makeLenses ''Edits
 
 instance Semigroup Edits where
-  Edits tst1 dta1 rdf1 skp1 skpm1 mrns1 ads1 o1 r1 <> Edits tst2 dta2 rdf2 skp2 skpm2 mrns2 ads2 o2 r2 =
-    Edits (tst1 <> tst2) (dta1 <> dta2) (rdf1 <> rdf2) (skp1 <> skp2) (skpm1 <> skpm2) (mrns1 <> mrns2) (ads1 <> ads2) (o1 <> o2) (r1 <> r2)
+  Edits tst1 dta1 rdf1 skp1 smth1 smod1 mrns1 ads1 o1 r1 <> Edits tst2 dta2 rdf2 skp2 smth2 smod2 mrns2 ads2 o2 r2 =
+    Edits (tst1 <> tst2) (dta1 <> dta2) (rdf1 <> rdf2) (skp1 <> skp2) (smth1 <> smth2) (smod1 <> smod2) (mrns1 <> mrns2) (ads1 <> ads2) (o1 <> o2) (r1 <> r2)
 
 instance Monoid Edits where
-  mempty  = Edits mempty mempty mempty mempty mempty mempty mempty mempty mempty
+  mempty  = Edits mempty mempty mempty mempty mempty mempty mempty mempty mempty mempty
   mappend = (<>)
 
 -- Module-local'
@@ -115,15 +119,16 @@ duplicate_for what = duplicate_for' what T.unpack
 
 addEdit :: Edit -> Edits -> Either String Edits
 addEdit = \case -- To bring the `where' clause into scope everywhere
-  TypeSynonymTypeEdit   syn        res    -> addFresh typeSynonymTypes                    (duplicate_for  "type synonym result types")                   syn          res
-  DataTypeArgumentsEdit ty         args   -> addFresh dataTypeArguments                   (duplicate_for  "data type argument specifications")           ty           args
-  RedefinitionEdit      def               -> addFresh redefinitions                       (duplicate_for  "redefinition")                                (name def)   def
-  SkipEdit              what              -> addFresh skipped                             (duplicate_for  "skip requests")                               what         ()
-  SkipMethodEdit        cls meth          -> addFresh skippedMethods                      (duplicate_for' "skip method requests"          prettyClsMth)  (cls,meth)   ()
-  ModuleRenamingEdit    mod        hs coq -> addFresh (moduleRenamings.at mod.non mempty) (duplicate_for' ("renaming in module " ++. mod) prettyNSIdent) hs           coq
-  AdditionalScopeEdit   place name scope  -> addFresh additionalScopes                    (duplicate_for' "addition of a scope"           prettyScoped)  (place,name) scope
+  TypeSynonymTypeEdit   syn        res    -> addFresh typeSynonymTypes                    (duplicate_for  "type synonym result types")                       syn          res
+  DataTypeArgumentsEdit ty         args   -> addFresh dataTypeArguments                   (duplicate_for  "data type argument specifications")               ty           args
+  RedefinitionEdit      def               -> addFresh redefinitions                       (duplicate_for  "redefinition")                                    (name def)   def
+  SkipEdit              what              -> addFresh skipped                             (duplicate_for  "skip requests")                                   what         ()
+  SkipMethodEdit        cls meth          -> addFresh skippedMethods                      (duplicate_for' "skipped method requests"       prettyClsMth)      (cls,meth)   ()
+  SkipModuleEdit        mod               -> addFresh skippedModules                      (duplicate_for' "skipped module requests"       moduleNameString)  mod          ()
+  ModuleRenamingEdit    mod        hs coq -> addFresh (moduleRenamings.at mod.non mempty) (duplicate_for' ("renaming in module " ++. mod) prettyNSIdent)     hs           coq
+  AdditionalScopeEdit   place name scope  -> addFresh additionalScopes                    (duplicate_for' "addition of a scope"           prettyScoped)      (place,name) scope
   OrderEdit             idents            -> Right . appEndo (foldMap (Endo . addEdge orders . swap) (adjacents idents))
-  RenameEdit            hs to             -> addFresh renamings                           (duplicate_for' "renaming"                      prettyNSIdent) hs           to
+  RenameEdit            hs to             -> addFresh renamings                           (duplicate_for' "renaming"                      prettyNSIdent)     hs           to
   where
     name (CoqDefinitionDef (DefinitionDef _ x _ _ _))                = x
     name (CoqDefinitionDef (LetDef          x _ _ _))                = x

@@ -21,7 +21,8 @@ module HsToCoq.ConvertHaskell.Monad (
   throwProgramError, convUnsupported, editFailure,
   -- * Fixity
   getFixity, recordFixity,
-  
+  -- * Modules
+  skipModules, skipModulesBy
   ) where
 
 import Control.Lens
@@ -342,3 +343,9 @@ lookupTyThing name = do
     case (lookupNameEnv ?? name) =<< env of
         Just thing -> pure $ Just thing
         Nothing    -> lookupName name
+
+skipModulesBy :: ConversionMonad m => (a -> ModuleName) -> [a] -> m [a]
+skipModulesBy f = filterM $ \a -> use $ edits.skippedModules.contains (f a).to not
+
+skipModules :: ConversionMonad m => [ModuleName] -> m [ModuleName]
+skipModules = skipModulesBy id

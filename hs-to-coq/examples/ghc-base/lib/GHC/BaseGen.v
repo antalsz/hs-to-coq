@@ -22,6 +22,7 @@ Require GHC.Err.
 Require GHC.IO.
 Require GHC.Tuple.
 Require GHC.Integer.
+Require Coq.Lists.List.
 
 (* Converted declarations: *)
 
@@ -85,7 +86,8 @@ Local Definition instance_Applicative_list_op_zlztzg__ : forall {a} {b},
   fun {a} {b} =>
     fun arg_159__ arg_160__ =>
       match arg_159__ , arg_160__ with
-        | fs , xs => concatMap (fun f => concatMap (fun x => cons (f x) nil) xs) fs
+        | fs , xs => Coq.Lists.List.flat_map (fun f =>
+                                               Coq.Lists.List.flat_map (fun x => cons (f x) nil) xs) fs
       end.
 
 Local Definition instance_Applicative_list_op_ztzg__ : forall {a} {b},
@@ -93,7 +95,8 @@ Local Definition instance_Applicative_list_op_ztzg__ : forall {a} {b},
   fun {a} {b} =>
     fun arg_163__ arg_164__ =>
       match arg_163__ , arg_164__ with
-        | xs , ys => concatMap (fun _ => concatMap (fun y => cons y nil) ys) xs
+        | xs , ys => Coq.Lists.List.flat_map (fun _ =>
+                                               Coq.Lists.List.flat_map (fun y => cons y nil) ys) xs
       end.
 
 Local Definition instance_Applicative_list_pure : forall {a}, a -> list a :=
@@ -104,7 +107,8 @@ Local Definition instance_Monad_list_op_zgzgze__ : forall {a} {b},
   fun {a} {b} =>
     fun arg_151__ arg_152__ =>
       match arg_151__ , arg_152__ with
-        | xs , f => concatMap (fun x => concatMap (fun y => cons y nil) (f x)) xs
+        | xs , f => Coq.Lists.List.flat_map (fun x =>
+                                              Coq.Lists.List.flat_map (fun y => cons y nil) (f x)) xs
       end.
 
 (* Skipping instance instance_Alternative_list *)
@@ -668,6 +672,6 @@ Instance instance_Monoid_unit : !Monoid unit := {
   mempty := instance_Monoid_unit_mempty }.
 
 (* Unbound variables:
-     * Eq None Some bool comparison concatMap cons e flip list nil option pair true
-     tt unit
+     * Coq.Lists.List.flat_map Eq None Some bool comparison cons e flip list nil
+     option pair true tt unit
 *)

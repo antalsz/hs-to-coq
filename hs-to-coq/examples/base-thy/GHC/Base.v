@@ -2,6 +2,53 @@
 
 Require Import GHC.BaseGen.
 
+(* Properties of basic functions *)
+
+Lemma map_id:
+  forall a (x : list a),
+  map id x = x.
+Proof.
+  intros.
+  intros.
+  induction x.
+  * auto.
+  * simpl. rewrite IHx. auto.
+Qed.
+
+Lemma map_map:
+  forall a b c (f : a -> b) (g : b -> c) (x : list a),
+  map g (map f x) = map (g ∘ f) x.
+Proof.
+  intros.
+  intros.
+  induction x.
+  * auto.
+  * simpl. rewrite IHx. auto.
+Qed.
+
+Lemma map_append:
+  forall a b (f : a -> b) (x y : list a),
+  map f (x ++ y) = map f x ++ map f y.
+Proof.
+  intros.
+  intros.
+  induction x.
+  * auto.
+  * simpl. rewrite IHx. auto.
+Qed.
+
+Lemma map_cong:
+  forall a b (f g : a -> b) (x : list a),
+  (forall x, f x = g x) -> map f x = map g x.
+Proof.
+  intros.
+  induction x.
+  * auto.
+  * simpl. rewrite H. rewrite IHx. auto.
+Qed.
+
+(* -------------------------------------------------------------------- *)
+
 (* Monoid instances that don't yet translate *)
 
 Instance instance_Monoid_list_a {a} : Monoid (list a) :=
@@ -151,8 +198,8 @@ Proof.
   split;
     repeat unfold fmap, instance_Functor_list,
     BaseGen.instance_Functor_list_fmap.
-  - intros. induction x; simpl; try rewrite IHx; auto.
-  - intros. induction x; simpl; try rewrite IHx; auto.
+  - exact map_id.
+  - exact map_map.
 Qed.
 
 (* ------------------------- Applicative --------------------------- *)
@@ -181,6 +228,6 @@ Proof.
     simpl in IHv. rewrite IHv. auto.
   - intros.
     unfold concatMap.
-Admitted.
+Abort.
 
 (* ------------------------- Monad  --------------------------- *)

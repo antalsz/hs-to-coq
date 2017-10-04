@@ -89,8 +89,7 @@ Notation "'_::_'"   := (fun x y => x :: y).
 Notation "[->]"  := (fun x y => x -> y).
 
 (* Configure type argument to be maximally inserted *)
-Definition app := List.app.
-Arguments app {_} _ _.
+Arguments List.app {_} _ _.
 
 (****************************************************)
 

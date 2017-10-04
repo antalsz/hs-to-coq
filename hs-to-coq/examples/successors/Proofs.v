@@ -65,7 +65,7 @@ Proof.
   simpl.
   unfold op_z2218U__.
   f_equal.
-  repeat (unfold app || rewrite map_append || rewrite_Functor_list || rewrite app_assoc
+  repeat (rewrite map_append || rewrite_Functor_list || rewrite app_assoc
       || unfold op_z2218U__ || unfold op_zd__).
   reflexivity.
 Qed.
@@ -87,7 +87,6 @@ Proof.
   intros.
   destruct f.
   simpl.
-  unfold app.
   rewrite app_nil_r.
   reflexivity.
 Qed.
@@ -120,7 +119,6 @@ Proof.
   destruct x.
   simpl.
   rewrite map_id.
-  unfold app.
   rewrite app_nil_r.
   reflexivity.
 Qed.
@@ -136,7 +134,7 @@ Proof.
   destruct (k a0).
   destruct (h b0).
   f_equal.
-  repeat (unfold app || rewrite_Functor_list || rewrite map_append || rewrite <- app_assoc ||
+  repeat (rewrite_Functor_list || rewrite map_append || rewrite <- app_assoc ||
     unfold getCurrent, op_z2218U__, Successors.instance_GHC_BaseGen_Monad_Succs_op_zgzgze__
     ).
   f_equal.

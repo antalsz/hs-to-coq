@@ -19,6 +19,7 @@ Require Data.Maybe.
 Require GHC.Base.
 Require GHC.Num.
 Require GHC.Integer.
+Require Coq.Init.Datatypes.
 Require Coq.Program.Basics.
 Require GHC.BaseGen.
 Require GHC.Prim.
@@ -60,12 +61,13 @@ Definition break {a} : (a -> bool) -> list a -> list a * list a :=
            end.
 
 Definition concat {a} : list (list a) -> list a :=
-  GHC.BaseGen.foldr GHC.Prim.app nil.
+  GHC.BaseGen.foldr Coq.Init.Datatypes.app nil.
 
 Definition concatMap {a} {b} : (a -> list b) -> list a -> list b :=
   fun arg_69__ =>
     match arg_69__ with
-      | f => GHC.BaseGen.foldr (Coq.Program.Basics.compose GHC.Prim.app f) nil
+      | f => GHC.BaseGen.foldr (Coq.Program.Basics.compose Coq.Init.Datatypes.app f)
+             nil
     end.
 
 Definition constScanl {a} {b} : a -> b -> a :=
@@ -188,14 +190,14 @@ Definition prel_list_str : GHC.Prim.String :=
 
 Definition tooLarge {a} : GHC.Num.Int -> a :=
   fun arg_65__ =>
-    GHC.Prim.errorWithoutStackTrace (GHC.Prim.app prel_list_str
-                                                  &"!!: index too large").
+    GHC.Prim.errorWithoutStackTrace (Coq.Init.Datatypes.app prel_list_str
+                                                            &"!!: index too large").
 
 Definition errorEmptyList {a} : GHC.Prim.String -> a :=
   fun arg_1__ =>
     match arg_1__ with
-      | fun_ => GHC.Prim.errorWithoutStackTrace (GHC.Prim.app prel_list_str
-                                                              (GHC.Prim.app fun_ &": empty list"))
+      | fun_ => GHC.Prim.errorWithoutStackTrace (Coq.Init.Datatypes.app prel_list_str
+                                                                        (Coq.Init.Datatypes.app fun_ &": empty list"))
     end.
 
 Definition foldl1 {a} : (a -> a -> a) -> list a -> a :=
@@ -461,9 +463,10 @@ Definition zipWithFB {a} {b} {c} {d} {e}
     end.
 
 (* Unbound variables:
-     * Coq.Program.Basics.compose GHC.BaseGen.const GHC.BaseGen.foldr GHC.BaseGen.id
-     GHC.Num.Int GHC.Num.Num GHC.Num.op_zp__ GHC.Num.op_zt__ GHC.Prim.Eq_
-     GHC.Prim.Ord GHC.Prim.String GHC.Prim.app GHC.Prim.errorWithoutStackTrace
-     GHC.Prim.max GHC.Prim.min GHC.Prim.oneShot GHC.Prim.op_zeze__ GHC.Prim.op_zsze__
-     None Some andb bool cons false foldl foldl' list nil option orb pair true
+     * Coq.Init.Datatypes.app Coq.Program.Basics.compose GHC.BaseGen.const
+     GHC.BaseGen.foldr GHC.BaseGen.id GHC.Num.Int GHC.Num.Num GHC.Num.op_zp__
+     GHC.Num.op_zt__ GHC.Prim.Eq_ GHC.Prim.Ord GHC.Prim.String
+     GHC.Prim.errorWithoutStackTrace GHC.Prim.max GHC.Prim.min GHC.Prim.oneShot
+     GHC.Prim.op_zeze__ GHC.Prim.op_zsze__ None Some andb bool cons false foldl
+     foldl' list nil option orb pair true
 *)

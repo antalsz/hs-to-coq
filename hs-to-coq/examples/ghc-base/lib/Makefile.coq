@@ -136,7 +136,8 @@ VFILES:=GHC/Prim.v\
   _GHC/Base.v\
   _GHC/BaseGen.v\
   _GHC/Num.v\
-  GHC/BaseGen.v
+  GHC/BaseGen.v\
+  GHC/BaseThy.v
 
 ifneq ($(filter-out archclean clean cleanall printenv,$(MAKECMDGOALS)),)
 -include $(addsuffix .d,$(VFILES))

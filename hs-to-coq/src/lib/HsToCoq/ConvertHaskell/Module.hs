@@ -45,7 +45,6 @@ import Bag
 import Data.Generics
 
 import HsToCoq.ConvertHaskell.Parameters.Edits
-import HsToCoq.ConvertHaskell.Parameters.Renamings
 import HsToCoq.ConvertHaskell.Monad
 import HsToCoq.ConvertHaskell.Variables
 import HsToCoq.ConvertHaskell.Definitions

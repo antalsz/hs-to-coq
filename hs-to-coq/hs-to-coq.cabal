@@ -57,7 +57,6 @@ library
                      , HsToCoq.Coq.Gallina.Util
                      , HsToCoq.Coq.FreeVars
                      , HsToCoq.Coq.Subst
-                     , HsToCoq.ConvertHaskell.Parameters.Renamings
                      , HsToCoq.ConvertHaskell.Parameters.Edits
                      , HsToCoq.ConvertHaskell.Parameters.Parsers
                      , HsToCoq.ConvertHaskell.Parameters.Parsers.Lexing

@@ -33,7 +33,7 @@ import HsToCoq.Util.GHC
 import HsToCoq.Util.GHC.Name (isOperator)
 import HsToCoq.Coq.Gallina
 
-import HsToCoq.ConvertHaskell.Parameters.Renamings
+import HsToCoq.ConvertHaskell.Parameters.Edits
 import HsToCoq.ConvertHaskell.Monad
 import HsToCoq.ConvertHaskell.Variables
 import HsToCoq.ConvertHaskell.Type

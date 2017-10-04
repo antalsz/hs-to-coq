@@ -98,12 +98,12 @@ coq: lib/Makefile.coq $(VFILES)
 	$(MAKE) -C lib -f Makefile.coq OPT=$(COQFLAGS)
 
 
-$(VFILES_GEN): lib/%.v : edits/%/edits renamings edits/%/preamble.v
-	$(HS_TO_COQ) -e edits/$*/edits \
-	             -r renamings \
+$(VFILES_GEN): lib/%.v : module-edits/%/edits edits module-edits/%/preamble.v
+	$(HS_TO_COQ) -e module-edits/$*/edits \
+	             -e edits \
 		     -N \
 		     -o lib \
-		     -p edits/$*/preamble.v \
+		     -p module-edits/$*/preamble.v \
 		     base/$*.hs
 
 $(VFILES_MAN): lib/%.v : manual/%.v
@@ -114,12 +114,12 @@ $(VFILES_EMPTY): lib/%.v :
 	mkdir -p "$$(dirname lib/$*.v)"
 	echo '(* Empty module, exists only to make Import statments not fail *)' > $@
 
-lib/GHC/BaseGen.v : edits/GHC/Base/edits renamings edits/GHC/Base/preamble.v drop-in/GHC/BaseGen.hs
-	$(HS_TO_COQ) -e edits/GHC/Base/edits \
-	             -r renamings \
+lib/GHC/BaseGen.v : module-edits/GHC/Base/edits edits module-edits/GHC/Base/preamble.v drop-in/GHC/BaseGen.hs
+	$(HS_TO_COQ) -e module-edits/GHC/Base/edits \
+	             -e edits \
 		     -o lib \
 		     -N \
-		     -p edits/GHC/Base/preamble.v \
+		     -p module-edits/GHC/Base/preamble.v \
 		     --ghc -ibase \
 		     --ghc -ibase/dist-install/build \
 		     -Ibase/include \

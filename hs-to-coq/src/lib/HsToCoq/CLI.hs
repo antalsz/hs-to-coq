@@ -12,7 +12,7 @@ module HsToCoq.CLI (
   convertAndPrintModules,
   WithModulePrinter,
   -- * CLI configuration, parameters, etc.
-  Config(..), outputFile, preambleFile, renamingsFiles, editsFiles, processingMode, modulesFiles, modulesRoot, directInputFiles,
+  Config(..), outputFile, preambleFile, editsFiles, processingMode, modulesFiles, modulesRoot, directInputFiles,
   processArgs,
   ProgramArgs(..),
   argParser, argParserInfo,
@@ -54,7 +54,6 @@ import HsToCoq.Coq.FreeVars
 import HsToCoq.Coq.Preamble
 import HsToCoq.ProcessFiles
 import HsToCoq.ConvertHaskell
-import HsToCoq.ConvertHaskell.Parameters.Renamings
 import HsToCoq.ConvertHaskell.Parameters.Edits
 import HsToCoq.CLI.FileTree
 import HsToCoq.CLI.FileTree.Parser
@@ -69,7 +68,6 @@ prettyPrint = hPrettyPrint stdout
 
 data ProgramArgs = ProgramArgs { outputFileArg        :: Maybe FilePath
                                , preambleFileArg      :: Maybe FilePath
-                               , renamingsFilesArgs   :: [FilePath]
                                , editsFilesArgs       :: [FilePath]
                                , processingModeArg    :: ProcessingMode
                                , modulesFilesArgs     :: [FilePath]
@@ -91,11 +89,6 @@ argParser = ProgramArgs <$> optional (strOption       $  long    "output"
                                                       <> short   'p'
                                                       <> metavar "FILE"
                                                       <> help    "File containing code that goes at the top of the Coq output")
-                        
-                        <*> many     (strOption       $  long    "renamings"
-                                                      <> short   'r'
-                                                      <> metavar "FILE"
-                                                      <> help    "File with Haskell -> Coq identifier renamings")
                         
                         <*> many     (strOption       $  long    "edits"
                                                       <> short   'e'
@@ -147,7 +140,6 @@ argParserInfo = info (helper <*> argParser) $  fullDesc
 
 data Config = Config { _outputFile       :: !(Maybe FilePath)
                      , _preambleFile     :: !(Maybe FilePath)
-                     , _renamingsFiles   :: ![FilePath]
                      , _editsFiles       :: ![FilePath]
                      , _processingMode   :: !ProcessingMode
                      , _modulesFiles     :: ![FilePath]
@@ -183,7 +175,6 @@ processArgs = do
                                       then Nothing
                                       else outputFileArg
                 , _preambleFile     = preambleFileArg
-                , _renamingsFiles   = renamingsFilesArgs
                 , _editsFiles       = editsFilesArgs
                 , _processingMode   = processingModeArg
                 , _modulesFiles     = modulesFilesArgs
@@ -215,7 +206,6 @@ processFilesMain process = do
             Left  err -> die $ "Could not parse " ++ filename ++ ": " ++ err
             Right res -> either die pure $ builder res
   
-  renamings  <- parseConfigFiles renamingsFiles buildRenamings parseRenamingList
   edits      <- parseConfigFiles editsFiles     buildEdits     parseEditList
   
   inputFiles <- either (liftIO . die) pure <=< runExceptT $
@@ -246,7 +236,7 @@ processFilesMain process = do
         printPreamble hOut
         act hOut
 
-  evalConversion renamings edits $
+  evalConversion edits $
     traverse_ (process withModulePrinter) =<< processFiles (conf^.processingMode) inputFiles
 
 printConvertedModule :: ConversionMonad m

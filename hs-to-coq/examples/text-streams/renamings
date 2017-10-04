@@ -1,1 +1,1 @@
-value :*: = Mk_Pair
+rename value :*: = Mk_Pair

@@ -2,3 +2,4 @@ Compiler.v
 CompilerOrig.v
 CompilerRev.v
 Makefile.coq
+_CoqProject

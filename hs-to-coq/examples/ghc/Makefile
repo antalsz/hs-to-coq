@@ -49,6 +49,11 @@ coq: Makefile.coq $(VFILES)
 $(VFILES_GEN): %.v : edits
 	$(HS_TO_COQ) -e edits \
 	             -e ../ghc-base/edits \
+		     --ghc-tree ghc \
+		     -I ghc/includes \
+		     -I ghc/compiler \
+		     -I ghc/compiler/stage2/build \
+		     --ghc -DSTAGE=2 \
 		     -N \
 		     -o . \
 		     ghc/compiler/*/$*.hs

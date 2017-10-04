@@ -1,5 +1,7 @@
 module PaperExamples where
 
+import Prelude hiding (take)
+
 -- Inline data structures, so that this test case
 -- works independent of inter-module data flow
 data List a = Nil | Cons a (List a)
@@ -11,6 +13,13 @@ mapList f (Cons x xs) = Cons (f x) (mapList f xs)
 
 uncurry :: (a -> b -> c) -> (a,b) -> c
 uncurry f (x,y) = f x y
+
+
+take                   :: Int -> [a] -> [a]
+take n _      | n <= 0 =  []
+take _ []              =  []
+take n (x:xs)          =  x : take (n-1) xs
+
 
 takeMapMaybe :: (a -> Maybe b) -> Int -> List a -> List b
 takeMapMaybe f n xs | n <= 0 =  Nil

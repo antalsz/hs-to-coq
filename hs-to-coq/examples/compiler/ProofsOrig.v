@@ -4,6 +4,9 @@ Require Import CompilerOrig.
 Import ListNotations.
 
 
+(* Alternative proof that goes through, even
+   with patternFailures in the code.
+*)
 
 Lemma comp_correct_helper: forall e s d,
     exec (comp e ++ d) s =  exec d (eval e :: s).
@@ -26,7 +29,8 @@ Proof.
   apply comp_correct_helper.
 Qed.
 
-(* Alternative proof that goes through with patternFailures *)
+(* Anther approach that tries to follow the original code
+   in the presence of pattenFailure *)
 
 (* Nice, but actually useless: The precondition cannot be
    shown for concrete [c] and [s]. *)

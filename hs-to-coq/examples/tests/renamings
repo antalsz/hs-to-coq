@@ -3,7 +3,7 @@ value GHC.Tuple.() = tt
 
 type  GHC.Types.[] = list
 value GHC.Types.[] = nil
-value GHC.Types.:  = ::
+value GHC.Types.:  = cons
 
 type  GHC.Types.Bool  = bool
 value GHC.Types.True  = true

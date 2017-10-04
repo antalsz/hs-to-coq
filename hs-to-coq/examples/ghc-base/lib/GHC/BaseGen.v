@@ -25,24 +25,19 @@ Require GHC.Integer.
 
 (* Converted declarations: *)
 
-(* The Haskell code containes partial or untranslateable code, which needs the
-   following *)
-
-Axiom patternFailure : forall {a}, a.
-
 Local Definition instance_Monoid_unit_mappend : unit -> unit -> unit :=
-  fun arg_215__ arg_216__ => tt.
+  fun arg_213__ arg_214__ => tt.
 
 Local Definition instance_Monoid_unit_mconcat : list unit -> unit :=
-  fun arg_217__ => tt.
+  fun arg_215__ => tt.
 
 Local Definition instance_Monoid_unit_mempty : unit :=
   tt.
 
 Local Definition instance_Monoid_comparison_mappend
     : comparison -> comparison -> comparison :=
-  fun arg_192__ arg_193__ =>
-    match arg_192__ , arg_193__ with
+  fun arg_190__ arg_191__ =>
+    match arg_190__ , arg_191__ with
       | Lt , _ => Lt
       | Eq , y => y
       | Gt , _ => Gt
@@ -54,8 +49,8 @@ Local Definition instance_Monoid_comparison_mempty : comparison :=
 Local Definition instance_Functor_option_fmap : forall {a} {b},
                                                   (a -> b) -> option a -> option b :=
   fun {a} {b} =>
-    fun arg_183__ arg_184__ =>
-      match arg_183__ , arg_184__ with
+    fun arg_182__ arg_183__ =>
+      match arg_182__ , arg_183__ with
         | _ , None => None
         | f , (Some a) => Some (f a)
       end.
@@ -63,8 +58,8 @@ Local Definition instance_Functor_option_fmap : forall {a} {b},
 Local Definition instance_Applicative_option_op_ztzg__ : forall {a} {b},
                                                            option a -> option b -> option b :=
   fun {a} {b} =>
-    fun arg_180__ arg_181__ =>
-      match arg_180__ , arg_181__ with
+    fun arg_179__ arg_180__ =>
+      match arg_179__ , arg_180__ with
         | (Some _m1) , m2 => m2
         | None , _m2 => None
       end.
@@ -75,8 +70,8 @@ Local Definition instance_Applicative_option_pure : forall {a}, a -> option a :=
 Local Definition instance_Monad_option_op_zgzgze__ : forall {a} {b},
                                                        option a -> (a -> option b) -> option b :=
   fun {a} {b} =>
-    fun arg_171__ arg_172__ =>
-      match arg_171__ , arg_172__ with
+    fun arg_170__ arg_171__ =>
+      match arg_170__ , arg_171__ with
         | (Some x) , k => k x
         | None , _ => None
       end.
@@ -421,8 +416,8 @@ Instance instance_Functor_option : !Functor option := {
 Local Definition instance_Applicative_option_op_zlztzg__ : forall {a} {b},
                                                              option (a -> b) -> option a -> option b :=
   fun {a} {b} =>
-    fun arg_176__ arg_177__ =>
-      match arg_176__ , arg_177__ with
+    fun arg_175__ arg_176__ =>
+      match arg_175__ , arg_176__ with
         | (Some f) , m => fmap f m
         | None , _m => None
       end.
@@ -464,16 +459,11 @@ Local Definition instance_forall___Monoid_a___Monoid__option_a__mempty `{Monoid
 
 Local Definition instance_forall___Monoid_a___Monoid__option_a__mappend `{Monoid
                                                                         a} : (option a) -> (option a) -> (option a) :=
-  fun arg_187__ arg_188__ =>
-    let j_190__ :=
-      match arg_187__ , arg_188__ with
-        | m , None => m
-        | (Some m1) , (Some m2) => Some (mappend m1 m2)
-        | _ , _ => patternFailure
-      end in
-    match arg_187__ , arg_188__ with
+  fun arg_186__ arg_187__ =>
+    match arg_186__ , arg_187__ with
       | None , m => m
-      | _ , _ => j_190__
+      | m , None => m
+      | (Some m1) , (Some m2) => Some (mappend m1 m2)
     end.
 
 Local Definition instance_forall___Monoid_a___Monoid__option_a__mconcat `{Monoid
@@ -516,8 +506,8 @@ Local Definition instance_forall___Monoid_a____Monoid_b____Monoid_c____Monoid_d_
                                                                                                                                  `{Monoid
                                                                                                                                  e}
     : a * b * c * d * e -> a * b * c * d * e -> a * b * c * d * e :=
-  fun arg_196__ arg_197__ =>
-    match arg_196__ , arg_197__ with
+  fun arg_194__ arg_195__ =>
+    match arg_194__ , arg_195__ with
       | (pair (pair (pair (pair a1 b1) c1) d1) e1) , (pair (pair (pair (pair a2 b2)
                                                                        c2) d2) e2) => pair (pair (pair (pair (mappend a1
                                                                                                                       a2)
@@ -589,8 +579,8 @@ Local Definition instance_forall___Monoid_a____Monoid_b____Monoid_c____Monoid_d_
                                                                                                                       c
                                                                                                                       *
                                                                                                                       d :=
-  fun arg_201__ arg_202__ =>
-    match arg_201__ , arg_202__ with
+  fun arg_199__ arg_200__ =>
+    match arg_199__ , arg_200__ with
       | (pair (pair (pair a1 b1) c1) d1) , (pair (pair (pair a2 b2) c2) d2) => pair
                                                                                (pair (pair (mappend a1 a2) (mappend b1
                                                                                                                     b2))
@@ -627,8 +617,8 @@ Local Definition instance_forall___Monoid_a____Monoid_b____Monoid_c___Monoid__a_
                                                                                                  c} : a * b * c -> a * b
                                                                                                       * c -> a * b *
                                                                                                       c :=
-  fun arg_206__ arg_207__ =>
-    match arg_206__ , arg_207__ with
+  fun arg_204__ arg_205__ =>
+    match arg_204__ , arg_205__ with
       | (pair (pair a1 b1) c1) , (pair (pair a2 b2) c2) => pair (pair (mappend a1 a2)
                                                                       (mappend b1 b2)) (mappend c1 c2)
     end.
@@ -655,8 +645,8 @@ Local Definition instance_forall___Monoid_a____Monoid_b___Monoid__a___b__mempty 
 Local Definition instance_forall___Monoid_a____Monoid_b___Monoid__a___b__mappend `{Monoid
                                                                                  a} `{Monoid b} : a * b -> a * b -> a *
                                                                                                   b :=
-  fun arg_211__ arg_212__ =>
-    match arg_211__ , arg_212__ with
+  fun arg_209__ arg_210__ =>
+    match arg_209__ , arg_210__ with
       | (pair a1 b1) , (pair a2 b2) => pair (mappend a1 a2) (mappend b1 b2)
     end.
 

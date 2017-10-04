@@ -6,16 +6,32 @@ HS_TO_COQ = cabal new-run exe:hs-to-coq --
 endif
 SHELL = bash
 
+# Edit this
+GENMODS = Successors
+MANMODS = Proofs
+
+# Abstract stuff
+
+VFILES_GEN = $(addsuffix .v,$(GENMODS))
+VFILES_MAN = $(addsuffix .v,$(MANMODS))
+
+VFILES   = $(VFILES_GEN) $(VFILES_MAN)
+
 all: coq
 
-Successors.v: Successors.hs edits preamble.v ../ghc-base/renamings
-	$(HS_TO_COQ) -e edits -p preamble.v -r ../ghc-base/renamings Successors.hs -o .
+$(VFILES_GEN): %.v : %.hs edits  ../ghc-base/renamings
+	$(HS_TO_COQ) -e edits -r ../ghc-base/renamings $< -o .
+
+_CoqProject : Makefile
+	> $@
+	echo "-R ../ghc-base/lib/ Top" >> $@
+	echo $(VFILES)                 >> $@
 
 Makefile.coq: _CoqProject
 	coq_makefile -f _CoqProject -o $@
 
-coq: Makefile.coq Successors.v Proofs.v
+coq: Makefile.coq $(VFILES)
 	$(MAKE) -f Makefile.coq OPT=$(COQFLAGS)
 
 clean:
-	rm -f */*.vo */*.glob */*.v.d *.vo *.v.d Successors.v Makefile.coq  */*.v~
+	rm -f */*.vo */*.glob */*.v.d *.vo *.v.d _CoqProject $(VFILES_GEN) */*.v~

@@ -27,7 +27,7 @@ import HsToCoq.Util.GHC.Module
 
 import HsToCoq.Coq.Gallina
 import HsToCoq.Coq.Gallina.Util
-import HsToCoq.ConvertHaskell.Parameters.Renamings
+import HsToCoq.ConvertHaskell.Parameters.Edits
 import HsToCoq.ConvertHaskell.Monad
 
 --------------------------------------------------------------------------------

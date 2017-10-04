@@ -9,7 +9,7 @@ SHELL = bash
 all: coq
 
 RLE.v: RLE.hs edits preamble.v
-	$(HS_TO_COQ) -e edits -p preamble.v -r ../ghc-base/renamings RLE.hs -o .
+	$(HS_TO_COQ) -e edits -p preamble.v -e ../ghc-base/renamings RLE.hs -o .
 
 Makefile.coq: _CoqProject
 	coq_makefile -f _CoqProject -o $@

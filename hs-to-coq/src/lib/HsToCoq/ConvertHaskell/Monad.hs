@@ -8,7 +8,7 @@ module HsToCoq.ConvertHaskell.Monad (
   ConversionMonad, ConversionT, evalConversion,
   -- * Types
   ConversionState(),
-  currentModule, renamings, edits, constructors, constructorTypes, constructorFields, recordFieldTypes, classDefns, defaultMethods, fixities, typecheckerEnvironment, renamed, axioms,
+  currentModule, edits, constructors, constructorTypes, constructorFields, recordFieldTypes, classDefns, defaultMethods, fixities, typecheckerEnvironment, renamed, axioms,
   ConstructorFields(..), _NonRecordFields, _RecordFields,
   -- * Operations
   maybeWithCurrentModule, withCurrentModule, withNoCurrentModule, withCurrentModuleOrNone,
@@ -49,7 +49,6 @@ import HsToCoq.Coq.Gallina as Coq
 import HsToCoq.Coq.Gallina.Util
 
 import HsToCoq.ConvertHaskell.InfixNames
-import HsToCoq.ConvertHaskell.Parameters.Renamings
 import HsToCoq.ConvertHaskell.Parameters.Edits
 
 --------------------------------------------------------------------------------
@@ -60,7 +59,6 @@ data ConstructorFields = NonRecordFields !Int
 makePrisms ''ConstructorFields
 
 data ConversionState = ConversionState { __currentModule         :: !(Maybe ModuleName)
-                                       , _renamings              :: !Renamings
                                        , _edits                  :: !Edits
                                        , _constructors           :: !(Map Ident [Ident])
                                        , _constructorTypes       :: !(Map Ident Ident)
@@ -84,7 +82,7 @@ currentModule = _currentModule
 {-# INLINABLE currentModule #-}
 
 renamed :: HsNamespace -> Ident -> Lens' ConversionState (Maybe Ident)
-renamed ns x = renamings.at (NamespacedIdent ns x)
+renamed ns x = edits.renamings.at (NamespacedIdent ns x)
 {-# INLINABLE renamed #-}
 
 type ConversionMonad m = (GhcMonad m, MonadState ConversionState m, MonadVariables Ident () m)
@@ -246,8 +244,8 @@ builtInAxioms =
    infix 0 =:
 
 
-evalConversion :: Monad m => Renamings -> Edits -> ConversionT m a -> m a
-evalConversion _renamings _edits = evalVariablesT . (evalStateT ?? ConversionState{..}) where
+evalConversion :: Monad m => Edits -> ConversionT m a -> m a
+evalConversion _edits = evalVariablesT . (evalStateT ?? ConversionState{..}) where
   __currentModule = Nothing
 
   _constructors      = M.fromList [ (t, [d | (d,_) <- ds]) | (t,ds) <- builtInDataCons]
@@ -275,7 +273,7 @@ withCurrentModuleOrNone newModule = gbracket setModuleAndRenamings restoreModule
                                 (at . moduleNameText)
                                 newModule
                         . non M.empty
-    oldRenamings <- renamings <<%= (newRenamings `M.union`) -- (2)
+    oldRenamings <- (edits.renamings) <<%= (newRenamings `M.union`) -- (2)
     let overwrittenRenamings = oldRenamings `M.intersection` newRenamings
 
     pure (oldModule, overwrittenRenamings, newRenamings)
@@ -283,10 +281,10 @@ withCurrentModuleOrNone newModule = gbracket setModuleAndRenamings restoreModule
   restoreModuleAndRenamings (oldModule, overwrittenRenamings, newRenamings) = do
     _currentModule .= oldModule
 
-    finalRenamings <- use renamings
+    finalRenamings <- use (edits.renamings)
     for_ (M.toList newRenamings) $ \(hs, coq) ->
       when (M.lookup hs finalRenamings == Just coq) $
-        renamings.at hs .= M.lookup hs overwrittenRenamings
+        edits.renamings.at hs .= M.lookup hs overwrittenRenamings
 
 withNoCurrentModule :: ConversionMonad m => m a -> m a
 withNoCurrentModule = withCurrentModuleOrNone Nothing

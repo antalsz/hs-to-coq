@@ -2,7 +2,7 @@
 {-# LANGUAGE TupleSections, OverloadedStrings #-}
 
 module HsToCoq.ConvertHaskell.Parameters.Parsers (
-  parseTerm, parseSentence, parseRenamingList, parseEditList
+  parseTerm, parseSentence, parseEditList
 ) where
 
 import Data.Foldable
@@ -17,14 +17,12 @@ import Control.Monad.Trans.Parse
 import HsToCoq.Coq.Gallina
 import HsToCoq.Coq.Gallina.Util
 
-import HsToCoq.ConvertHaskell.Parameters.Renamings
 import HsToCoq.ConvertHaskell.Parameters.Edits
 import HsToCoq.ConvertHaskell.Parameters.Parsers.Lexing
 }
 
 %name      parseTerm         Term
 %name      parseSentence     Sentence
-%name      parseRenamingList Renamings
 %name      parseEditList     Edits
 
 %tokentype { Token }
@@ -168,9 +166,6 @@ NamespacedIdent :: { NamespacedIdent }
 Renaming :: { (NamespacedIdent, Ident) }
   : NamespacedIdent '=' WordOrOp    { ($1, $3) }
 
-Renamings :: { [(NamespacedIdent, Ident)] }
-  : Lines(Renaming)    { $1 }
-
 --------------------------------------------------------------------------------
 -- Edit commands
 --------------------------------------------------------------------------------
@@ -204,6 +199,7 @@ Edit :: { Edit }
   | skip Word                                     { SkipEdit              $2                   }
   | skip Op                                       { SkipEdit              $2                   }
   | rename module WordOrOp Renaming               { ModuleRenamingEdit    $3 (fst $4) (snd $4) }
+  | rename Renaming                               { RenameEdit            (fst $2) (snd $2)    }
   | add scope Scope for ScopePlace Word           { AdditionalScopeEdit   $5 $6 $3             }
   | order Some(Word)                              { OrderEdit             $2  }
 

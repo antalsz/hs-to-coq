@@ -100,7 +100,7 @@ coq: lib/Makefile.coq $(VFILES)
 
 $(VFILES_GEN): lib/%.v : edits/%/edits renamings edits/%/preamble.v
 	$(HS_TO_COQ) -e edits/$*/edits \
-	             -r renamings \
+	             -e renamings \
 		     -N \
 		     -o lib \
 		     -p edits/$*/preamble.v \
@@ -116,7 +116,7 @@ $(VFILES_EMPTY): lib/%.v :
 
 lib/GHC/BaseGen.v : edits/GHC/Base/edits renamings edits/GHC/Base/preamble.v drop-in/GHC/BaseGen.hs
 	$(HS_TO_COQ) -e edits/GHC/Base/edits \
-	             -r renamings \
+	             -e renamings \
 		     -o lib \
 		     -N \
 		     -p edits/GHC/Base/preamble.v \

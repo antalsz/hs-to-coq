@@ -35,10 +35,10 @@ HANDMOD = \
   Data/Bool \
   Control/Category \
   Data/Either \
-  Control/Arrow \
   Data/Proxy \
   Data/Foldable \
   Data/Functor/Const \
+  Control/Arrow \
   Prelude
 
 # GHC.Base imports modules without using anything from it (e.g. because
@@ -176,5 +176,6 @@ clean:
 
 
 todo:
+	grep Axiom lib/*.v lib/*/*.v lib/*/*/*.v
 	grep Admitted lib/*.v lib/*/*.v lib/*/*/*.v
 	grep errorWithout lib/*.v lib/*/*.v lib/*/*/*.v

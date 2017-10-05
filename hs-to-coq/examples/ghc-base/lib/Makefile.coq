@@ -114,10 +114,10 @@ VFILES:=GHC/Num.v\
   Data/Bool.v\
   Control/Category.v\
   Data/Either.v\
-  Control/Arrow.v\
   Data/Proxy.v\
   Data/Foldable.v\
   Data/Functor/Const.v\
+  Control/Arrow.v\
   Prelude.v\
   GHC/List.v\
   Data/Tuple.v\

@@ -11,6 +11,15 @@ Unset Printing Implicit Defensive.
 (* Note, standard practice is for pred/succ/toError to throw errors on invalid inputs.
    I have changed these to return dummy answers instead so that they are total functions. *)
 
+(* toEnumError, succError, predError, fromEnumError
+
+ eftWordFB
+ eftWord
+ eftIntFB
+ eftInt
+ eftCharFB
+ eftChar
+*)
 
 (* Converted data type declarations: *)
 (* Note: we will only be able to make instances of this class for bounded types. *)
@@ -63,30 +72,6 @@ Definition up_fb {a} : (((Z -> (a -> a))) -> (a -> (Z -> (Z -> (Z -> a))))) :=
                                     in (go ((x0 : Z))))
     end)).
 
-
-Definition toEnumError {a} {b} `{((Show a))} : (String -> (Int -> ((a *
-                                               a) -> b))) := (fun arg_12__
-                                                                  arg_13__
-                                                                  arg_14__ =>
-                                                               (match arg_12__ , arg_13__ , arg_14__ with
-                                                                 | inst_ty , i , bnds => ((((((errorWithoutStackTrace $
-                                                                                         &"Enum.toEnum{") ++ inst_ty) ++
-                                                                                         &"}: tag (") ++ (show i)) ++
-                                                                                         &") is outside of bounds ") ++
-                                                                                         (show bnds))
-                                                               end)).
-
-Definition succError {a} : (String -> a) :=
-(fun arg_17__ =>
-   (match arg_17__ with
-    | inst_ty => errorWithoutStackTrace ( &"Enum.succ{" ++ inst_ty ++ &"}: tried to take `succ' of maxBound")
-    end)).
-
-Definition predError {a} : (String -> a) :=
-(fun arg_18__ =>
-   (match arg_18__ with
-    | inst_ty => errorWithoutStackTrace ( &"Enum.pred{" ++ inst_ty ++ &"}: tried to take `pred' of minBound" )
-    end)).
 *)
 (* haha *)
 Definition maxIntWord : N := N.pow 2%N 31%N.
@@ -156,15 +141,6 @@ Definition go_dn_char_fb {a}
                                                              end))
                                     in (go_dn x0))
     end)).
-
-Definition fromEnumError {a} {b} `{((Show a))} : (String -> (a -> b)) :=
-  (fun arg_15__
-       arg_16__ =>
-    (match arg_15__ , arg_16__ with
-      | inst_ty , x => ((((((errorWithoutStackTrace $ &"Enum.fromEnum{") ++ inst_ty)
-                       ++ &"}: value (") ++ (show x)) ++ &") is outside of Int's bounds ") ++ (show
-                       (pair (minBound : Int) (maxBound : Int))))
-    end)).
 *)
 (*
 Definition enumDeltaToInteger1FB {a}
@@ -218,29 +194,6 @@ Definition enumDeltaInteger : (Z -> (Z -> (list Z))) := (fix enumDeltaInteger
                                                                                       end)).
 *)
 (*
-(* Translating `eftWordFB' failed: `Word#' literals unsupported *)
-
-Axiom eftWordFB : (forall {A : Type}, A).
-
-(* Translating `eftWord' failed: `Word#' literals unsupported *)
-
-Axiom eftWord : (forall {A : Type}, A).
-
-(* Translating `eftIntFB' failed: `Int#' literals unsupported *)
-
-Axiom eftIntFB : (forall {A : Type}, A).
-
-(* Translating `eftInt' failed: `Int#' literals unsupported *)
-
-Axiom eftInt : (forall {A : Type}, A).
-
-(* Translating `eftCharFB' failed: `Int#' literals unsupported *)
-
-Axiom eftCharFB : (forall {A : Type}, A).
-
-(* Translating `eftChar' failed: `Int#' literals unsupported *)
-
-Axiom eftChar : (forall {A : Type}, A).
 
 Definition efdtWordUpFB {r}
   : (((N -> (r -> r))) -> (r -> (Word# -> (Word# -> (Word# -> r))))) :=
@@ -913,6 +866,11 @@ destruct d. rewrite H in Heq_anonymous. done. auto. Defined.
 Lemma eftInt_fuel : forall (x:Int) (y:Int), eftInt_aux_fuel x y.
 Proof.
   intros x y.
+  remember ((x >? y)%Z) as M.
+  destruct M. eapply done. auto.
+  remember (y - x)%Z as N.
+  generalize dependent N.
+  induction N; intros.
 Admitted.
 
 Definition eftInt := fun x y => eftInt_aux (eftInt_fuel x y).
@@ -1085,21 +1043,16 @@ Instance instance__Bounded_Char__181__ : (Bounded Char) := {
   maxBound := &#"255" ;
 }.
 
+(*
 Instance instance__Enum_Char__182__ : (Enum Char) := {}.
 Proof.
-Admitted.
 
-(* Translating `instance (Bounded N)' failed: `Int#' literals unsupported *)
 
 Instance instance__Bounded_N__197__ : (Bounded N) := {}.
 Proof.
-Admitted.
-
 
 Instance instance__Enum_N__198__ : (Enum N) := {}.
 Proof.
-Admitted.
-
 (*
   succ := (fun arg_199__ =>
     (match arg_199__ with
@@ -1150,7 +1103,6 @@ Admitted.
 *)
 Instance instance__Enum_Z__211__ : (Enum Z) := {}.
 Proof.
-Admitted.
 (*
   succ := (fun arg_212__ => (match arg_212__ with | x => (x + #1) end)) ;
   pred := (fun arg_213__ => (match arg_213__ with | x => (x - #1) end)) ;
@@ -1184,11 +1136,4 @@ Admitted.
     end)) }.
 *)
 
-(* Unbound variables:
-     $ * + +# ++ - -# /= :: < <# <= == > ># >= >=# Char Eq Gt I# Int Int# Lt N Show
-     String W# Word# Z _C#_ _I#_ _W#_ _chr#_ _i#_ _int2Word#_ _isTrue#_ _maxInt#_
-     _maxWord#_ _word2Int#_ _x#_ asTypeOf bool c comparison d e
-     errorWithoutStackTrace f false g geWord# gtWord# h i integerToInt j k l list
-     ltWord# m many map maxInt minInt minusWord# n nil o pair plusWord# seq show
-     smallInteger true tt unit
 *)

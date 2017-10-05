@@ -54,7 +54,37 @@ Inductive GeneralCategory : Type := UppercaseLetter : GeneralCategory
                                  |  PrivateUse : GeneralCategory
                                  |  NotAssigned : GeneralCategory.
 
-Instance instance_Enum : Enum GeneralCategory. Admitted.
+Definition toEnum_GeneralCategory (x : Z) : GeneralCategory :=
+  if x == #0 then UppercaseLetter
+  else if x == #2 then   LowercaseLetter
+       else if x == #3 then   TitlecaseLetter
+            else if x == #4 then   ModifierLetter
+                 else if x == #5 then   OtherLetter
+                      else if x == #6 then   NonSpacingMark
+                           else if x == #7 then   SpacingCombiningMark
+                                else if x == #8 then   EnclosingMark
+                                     else if x == #9 then   DecimalNumber
+                                          else if x == #10 then   LetterNumber
+                                               else if x == #11 then   OtherNumber
+                                                    else if x == #12 then   ConnectorPunctuation
+                                                         else if x == #13 then   DashPunctuation
+                                                              else if x == #14 then   OpenPunctuation
+                                 else if x == #15 then   ClosePunctuation
+                                 else if x == #16 then   InitialQuote
+                                 else if x == #17 then   FinalQuote
+                                 else if x == #18 then   OtherPunctuation
+                                 else if x == #19 then   MathSymbol
+                                 else if x == #20 then   CurrencySymbol
+                                 else if x == #21 then   ModifierSymbol
+                                 else if x == #22 then   OtherSymbol
+                                 else if x == #23 then   Space
+                                 else if x == #24 then   LineSeparator
+                                 else if x == #25 then   ParagraphSeparator
+                                 else if x == #26 then   Control
+                                 else if x == #27 then   Format
+                                 else if x == #28 then   Surrogate
+                                 else if x == #29 then   PrivateUse
+                                 else  NotAssigned.
 
 (* Converted value declarations: *)
 Definition toUpper : Char -> Char := (fun arg_18__ =>
@@ -148,7 +178,7 @@ Definition isAlpha : Char -> bool := (fun arg_11__ =>
 
 Definition generalCategory : Char -> GeneralCategory := (fun arg_0__ =>
     (match arg_0__ with
-      | c => toEnum (fromIntegral (wgencat (fromIntegral (ord c))))
+     | c => toEnum_GeneralCategory (fromIntegral (wgencat (fromIntegral (ord c))))
     end)).
 
 Definition isPunctuation : Char -> bool := (fun arg_9__ =>

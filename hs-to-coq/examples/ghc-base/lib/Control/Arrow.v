@@ -252,17 +252,6 @@ Instance instance_forall___Arrow_a___GHC_Base_Applicative__ArrowMonad_a_
     instance_forall___Arrow_a___GHC_Base_Applicative__ArrowMonad_a__pure }.
 
 
-Instance instance_forall___ArrowApply_a____ArrowPlus_a___GHC_Base_MonadPlus__ArrowMonad_a_
- {a} `{ArrowApply a} `{ArrowPlus a} : !GHC.Base.MonadPlus (ArrowMonad a) :=
-  {}.
-Proof.
-Admitted.
-
-
-Instance instance_forall___ArrowPlus_a___GHC_Base_Alternative__ArrowMonad_a_
-  : !forall `{ArrowPlus a}, !GHC.Base.Alternative (ArrowMonad a) := {}.
-Proof.
-Admitted.
 
 Local Definition instance_forall___ArrowApply_a___GHC_Base_Monad__ArrowMonad_a__return_ `{ArrowApply
                                                                                            a} : forall {a},
@@ -322,30 +311,6 @@ Definition runKleisli {m} {a} {b} (arg_36__ : Kleisli m a b) :=
     | (Mk_Kleisli runKleisli) => runKleisli
   end.
 
-(*
-Local Definition instance_forall___Control_Monad_Fix_MonadFix_m___ArrowLoop__Kleisli_m__loop `{Control.Monad.Fix.MonadFix
-                                                                                             m} : forall {b} {d} {c},
-                                                                                                    (Kleisli m) (b * d)
-                                                                                                    (c * d) -> (Kleisli
-                                                                                                    m) b c :=
-  fun {b} {d} {c} =>
-    fun arg_66__ =>
-      match arg_66__ with
-        | (Mk_Kleisli f) => let f' :=
-                              fun arg_67__ arg_68__ =>
-                                match arg_67__ , arg_68__ with
-                                  | x , y => f (pair x (Data.Tuple.snd y))
-                                end in
-                            Mk_Kleisli (Control.Category.op_z2218U__ (GHC.Base.liftM Data.Tuple.fst)
-                                                                     (Control.Category.op_z2218U__
-                                                                     Control.Monad.Fix.mfix f'))
-      end.
-
-Instance instance_forall___Control_Monad_Fix_MonadFix_m___ArrowLoop__Kleisli_m_
-  : !forall `{Control.Monad.Fix.MonadFix m}, ArrowLoop (Kleisli m) := {
-  loop := fun {b} {d} {c} =>
-    instance_forall___Control_Monad_Fix_MonadFix_m___ArrowLoop__Kleisli_m__loop }.
-*)
 Local Definition instance_forall___GHC_Base_Monad_m___ArrowApply__Kleisli_m__app `{GHC.Base.Monad
                                                                                     m} : forall {b} {c},
                                                                                            (Kleisli m) ((Kleisli m) b c

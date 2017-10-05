@@ -2,10 +2,10 @@ Require Import Bag.
 Require Import Coq.Lists.List.
 Import ListNotations.
 
-From mathcomp Require Import ssreflect.
+From mathcomp Require Import ssreflect ssrfun.
 Set Bullet Behavior "Strict Subproofs".
 
-Theorem unit_bag_ok {A} (x : A) :
+Theorem unitBag_ok {A} (x : A) :
   bagToList (unitBag x) = [ x ].
 Proof. reflexivity. Qed.
 
@@ -42,6 +42,30 @@ Proof.
              ?app_assoc ?app_nil_r.
 Qed.
 
-Theorem bag_cons_ok {A} (x : A) (b : Bag A) :
+Theorem consBag_ok {A} (x : A) (b : Bag A) :
   bagToList (consBag x b) = x :: bagToList b.
 Proof. elim: b => //. Qed.
+
+Theorem snocBag_ok {A} (b : Bag A) (x : A) :
+  bagToList (snocBag b x) = bagToList b ++ [x].
+Proof. by rewrite /snocBag unionBags_ok unitBag_ok. Qed.
+
+Theorem mapBag_ok {A B} (f : A -> B) (b : Bag A) :
+  bagToList (mapBag f b) = map f (bagToList b).
+Proof.
+  elim: b => [| x | l IHl r IHr | xs] //=.
+  - rewrite /bagToList /=.
+    rewrite !foldrBag_ok !fold_right_cons_nil !fold_right_cons.
+    rewrite IHl IHr.
+    by rewrite map_app.
+  - rewrite /bagToList /= !fold_right_cons_nil.
+    admit. (* Coq map vs. Haskell map *)
+Admitted.
+
+Theorem bagToList_listToBag {A} (l : list A) :
+  bagToList (listToBag l) = l.
+Proof. by elim: l => [| x l IH] //=; rewrite /bagToList /= fold_right_cons_nil. Qed.
+
+(* Is there a partial inverse theorem?  The direct inverse isn't true because
+   there are multiple equivalent bags -- for example, `ListBag [x]` and
+   `UnitBag x`. *)

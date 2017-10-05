@@ -64,5 +64,8 @@ Instance __Eq_Z__  : Eq  Z. Admitted.
 Instance __Ord_Z__ : Ord Z. Admitted.
 Instance __Num_Z__ : Num Z. Admitted.
 
-
-Notation "'#' n" := (fromInteger n) (at level 1, format "'#' n").
+Module GHC.
+Module Num.
+Definition fromInteger := fromInteger.
+End Num.
+End GHC.

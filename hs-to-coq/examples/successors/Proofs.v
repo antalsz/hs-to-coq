@@ -1,5 +1,5 @@
 Require Import Prelude.
-Require Import Successors.
+Require Import Control.Applicative.Successors.
 Require Import Proofs.GHC.Base.
 
 

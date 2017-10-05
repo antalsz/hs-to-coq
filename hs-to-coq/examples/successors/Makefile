@@ -7,12 +7,12 @@ endif
 SHELL = bash
 
 # Edit this
-GENMODS = Successors
+GENMODS = Control.Applicative.Successors
 MANMODS = Proofs
 
 # Abstract stuff
 
-VFILES_GEN = $(addsuffix .v,$(GENMODS))
+VFILES_GEN = $(addsuffix .v,$(subst .,/,$(GENMODS)))
 VFILES_MAN = $(addsuffix .v,$(MANMODS))
 
 VFILES   = $(VFILES_GEN) $(VFILES_MAN)
@@ -36,4 +36,4 @@ coq: Makefile.coq $(VFILES)
 	$(MAKE) -f Makefile.coq OPT=$(COQFLAGS)
 
 clean:
-	rm -f */*.vo */*.glob */*.v.d *.vo *.v.d _CoqProject $(VFILES_GEN) */*.v~
+	rm -f */*/*.vo */*/*.glob */*/*.v.d */*.vo */*.glob */*.v.d *.glob *.vo *.v.d _CoqProject Makefile.coq $(VFILES_GEN) */*.v~

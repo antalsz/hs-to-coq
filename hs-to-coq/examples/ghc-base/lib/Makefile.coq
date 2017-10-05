@@ -118,7 +118,6 @@ VFILES:=GHC/Num.v\
   Data/Proxy.v\
   Data/Foldable.v\
   Data/Functor/Const.v\
-  Data/Monoid.v\
   Prelude.v\
   GHC/List.v\
   Data/Tuple.v\
@@ -127,6 +126,7 @@ VFILES:=GHC/Num.v\
   Data/Ord.v\
   Data/Eq.v\
   Data/Functor.v\
+  Data/Monoid.v\
   GHC/Types.v\
   GHC/Classes.v\
   GHC/CString.v\

@@ -39,7 +39,6 @@ HANDMOD = \
   Data/Proxy \
   Data/Foldable \
   Data/Functor/Const \
-  Data/Monoid \
   Prelude
 
 # GHC.Base imports modules without using anything from it (e.g. because
@@ -79,6 +78,7 @@ MODULES = \
   Data/Ord \
   Data/Eq \
   Data/Functor \
+  Data/Monoid \
 
 
 # generated from drop-in/

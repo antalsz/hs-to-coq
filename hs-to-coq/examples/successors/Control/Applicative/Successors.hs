@@ -22,7 +22,7 @@ This applicative functor can be useful to define shrink functions for QuickCheck
 as explained in a <http://stackoverflow.com/a/41944525/946226 StackExchange answer.>
 
 -}
-module Successors where
+module Control.Applicative.Successors where
 
 data Succs a = Succs a [a] deriving (Show, Eq)
 
@@ -32,6 +32,7 @@ instance Functor Succs where
 instance Applicative Succs where
     pure x = Succs x []
     Succs f fs <*> Succs x xs = Succs (f x) (map ($x) fs ++ map f xs)
+
 
 instance Monad Succs where
     Succs x xs >>= f = Succs y (map (getCurrent . f) xs ++ ys)

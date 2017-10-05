@@ -1,7 +1,7 @@
 Coqified ghc
 ============
 
-This directory contains beginnings a coqified version of GHC.
+This directory contains the beginnings of a coqified version of GHC.
 
 First, you will need to build the `base` library, in `../ghc-base` (see the
 README there for more information).

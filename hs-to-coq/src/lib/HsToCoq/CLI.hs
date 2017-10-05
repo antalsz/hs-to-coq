@@ -158,9 +158,12 @@ ghcInputDirs base = map ((base </> "compiler") </>) $ words
 processArgs :: GhcMonad m => m Config
 processArgs = do
   ProgramArgs{..} <- liftIO $ customExecParser defaultPrefs{prefMultiSuffix="..."} argParserInfo
-  
+
+  let defaultArgs = map (mkGeneralLocated "defaultArgs") $ words "-fno-code"
+
   let ghcArgs = let locate opt = mkGeneralLocated $ "command line (" ++ opt ++ ")"
-                in map (locate "-i"         . ("-i" ++)) importDirsArgs ++
+                in defaultArgs ++
+                   map (locate "-i"         . ("-i" ++)) importDirsArgs ++
                    map (locate "-I"         . ("-I" ++)) includeDirsArgs ++
                    map (locate "--ghc-tree" . ("-i" ++)) (concatMap ghcInputDirs ghcTreeDirsArgs) ++
                    map (locate "--ghc")                  ghcOptionsArgs

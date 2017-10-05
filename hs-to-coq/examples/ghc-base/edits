@@ -7,26 +7,28 @@ rename value GHC.Types.:   = cons
 
 rename type  GHC.Base.Alternative = GHC.BaseGen.Alternative
 rename type  GHC.Base.Applicative = GHC.BaseGen.Applicative
-rename type  GHC.Base.Functor = GHC.BaseGen.Functor
-rename type  GHC.Base.Monad  = GHC.BaseGen.Monad
-rename type  GHC.Base.Monoid = GHC.BaseGen.Monoid
-rename value GHC.Base.const  = GHC.BaseGen.const
-rename value GHC.Base.foldr  = GHC.BaseGen.foldr
-rename value GHC.Base.map    = GHC.BaseGen.map
-rename value GHC.Base.id     = GHC.BaseGen.id
-rename value GHC.Base.++     = Coq.Init.Datatypes.app
-rename value GHC.List.concatMap  = Coq.Lists.List.flat_map
-rename value GHC.Base..      = Coq.Program.Basics.compose
-rename value GHC.Base.$      = GHC.BaseGen.id
-rename value GHC.Base.fmap   = GHC.BaseGen.fmap
-rename value GHC.Base.flip   = GHC.BaseGen.flip
-rename value GHC.Base.mempty = GHC.BaseGen.mempty
-rename value GHC.Base.mappend = GHC.BaseGen.mappend
 
-rename value GHC.Base.<$ = GHC.BaseGen.<$
-rename value GHC.Base.<*> = GHC.BaseGen.<*>
-rename value GHC.Base.<|> = GHC.BaseGen.<|>
-rename value GHC.Base.pure = GHC.BaseGen.pure
+rename type  GHC.Base.Functor    = GHC.BaseGen.Functor
+rename type  GHC.Base.Monad      = GHC.BaseGen.Monad
+rename type  GHC.Base.Monoid     = GHC.BaseGen.Monoid
+rename value GHC.Base.const      = GHC.BaseGen.const
+rename value GHC.Base.foldr      = GHC.BaseGen.foldr
+rename value GHC.Base.map        = GHC.BaseGen.map
+rename value GHC.Base.id         = GHC.BaseGen.id
+rename value GHC.Base.++         = Coq.Init.Datatypes.app
+rename value GHC.List.concatMap  = Coq.Lists.List.flat_map
+rename value GHC.Base..          = Coq.Program.Basics.compose
+rename value GHC.Base.$          = GHC.BaseGen.id
+rename value GHC.Base.fmap       = GHC.BaseGen.fmap
+rename value GHC.Base.flip       = GHC.BaseGen.flip
+rename value GHC.Base.mempty     = GHC.BaseGen.mempty
+rename value GHC.Base.mappend    = GHC.BaseGen.mappend
+rename value GHC.Base.return     = GHC.BaseGen.return_
+rename value GHC.Base.>>         = GHC.BaseGen.op_zgzg__
+rename value GHC.Base.<$         = GHC.BaseGen.<$
+rename value GHC.Base.<*>        = GHC.BaseGen.<*>
+rename value GHC.Base.<|>        = GHC.BaseGen.<|>
+rename value GHC.Base.pure       = GHC.BaseGen.pure
 
 rename value GHC.Magic.oneShot = GHC.Prim.oneShot
 

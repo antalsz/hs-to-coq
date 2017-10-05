@@ -1,0 +1,42 @@
+skip module Outputable
+skip module Util
+skip module MonadUtils
+skip module Control.Monad
+skip module Data.Data
+skip module Data.List
+skip module Data.Foldable
+skip module Data.Either
+skip module Data.OldList
+skip module Data.Traversable
+
+
+skip unionManyBags
+skip mapBagM
+skip mapBagM_
+skip mapAndUnzipBagM
+skip mapAccumBagLM
+skip mapAccumBagL
+skip partitionBag
+skip partitionBagWith
+skip lengthBag
+skip isSingletonBag
+skip foldrBagM
+skip foldrBag
+skip foldlBagM
+skip foldlBag
+skip foldBag
+skip flatMapBagPairM
+skip flatMapBagM
+skip filterBagM
+skip elemBag
+skip concatBag
+skip catBagMaybes
+skip bagToList
+skip anyBagM
+skip allBagM
+skip anyBag
+
+skip instance_Data_Foldable_Foldable_Bag
+skip instance_forall___Data_Data_Data_a___Data_Data_Data__Bag_a_
+skip instance_forall____Outputable_Outputable_a____Outputable_Outputable__Bag_a_
+

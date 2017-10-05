@@ -54,7 +54,7 @@ Qed.
 Instance instance_Monoid_list_a {a} : Monoid (list a) :=
   { mempty  := nil;
     mappend := (_++_);
-    mconcat := fun xss => concatMap (fun xs => concatMap (fun x => x :: nil) xs) xss
+    mconcat := fun xss => flat_map (fun xs => flat_map (fun x => x :: nil) xs) xss
   }.
 
 Instance instance_Monoid_arrow {a}{b} `{Monoid b} : Monoid (a -> b) :=
@@ -164,6 +164,13 @@ Lemma foldr_initial : forall A (x : list A), Prim.foldr (_::_) nil x = x.
 Proof. induction x. simpl. auto. simpl. rewrite IHx. auto.
 Qed.
 
+Lemma flat_map_cons_id:
+  forall A (xs : list A),
+  flat_map (fun x  => x :: nil) xs = xs.
+Proof.
+   induction xs; auto. simpl. rewrite IHxs. reflexivity.
+Qed.
+
 Instance instance_MonoidLaws_list {a} : MonoidLaws (list a).
 Proof.
   split;
@@ -172,14 +179,12 @@ Proof.
   - apply app_nil_l.
   - apply app_nil_r.
   - apply app_assoc.
-  - unfold concatMap; simpl.
-    unfold compose.
-    induction x.
+  - induction x.
     simpl. auto.
     simpl. simpl in IHx.
     rewrite IHx.
-    rewrite foldr_initial.
-    auto.
+    rewrite flat_map_cons_id.
+    reflexivity.
 Qed.
 
 (* ------------------------- Functor --------------------------- *)
@@ -224,10 +229,9 @@ Proof.
     BaseGen.instance_Applicative_list_pure,
     BaseGen.instance_Applicative_list_op_zlztzg__,
     BaseGen.instance_Functor_list_fmap; simpl).
-  - intros. induction v; repeat (unfold concatMap, compose in *; simpl); auto.
+  - intros. induction v; simpl; auto.
     simpl in IHv. rewrite IHv. auto.
   - intros.
-    unfold concatMap.
 Abort.
 
 (* ------------------------- Monad  --------------------------- *)

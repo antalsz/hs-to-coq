@@ -9,7 +9,7 @@ Stability   : experimental
 <https://coq.inria.fr/distrib/current/refman/Reference-Manual003. Chapter 1, \"The Gallina Specification Language\", in the Coq reference manual.>
 -}
 
-{-# LANGUAGE DeriveDataTypeable, OverloadedStrings, LambdaCase, TemplateHaskell #-}
+{-# LANGUAGE DeriveDataTypeable, OverloadedStrings, OverloadedLists, LambdaCase, TemplateHaskell #-}
 
 module HsToCoq.Coq.Gallina (
   -- * Lexical structure
@@ -718,17 +718,32 @@ instance Gallina Term where
   renderGallina' _ (Num num) =
     renderNum num
 
-  renderGallina' _ (PolyNum num) =
-    char '#' <> renderNum num
+  renderGallina' p (PolyNum num) =
+    -- The notation for # is currently not always in scope,
+    -- as it requires Require Import, but we only do Require.
+    -- As a make-shift, do not use the notation. This should be
+    -- revisited later.
+    -- (E.g. every module could have an internal module Notations
+    -- that every requiring module the imports)
+    -- char '#' <> renderNum num
+    renderGallina' p (App (Qualid fromIntegerQI) [PosArg (Num num)])
+    where
+      fromIntegerQI = Qualified (Qualified (Bare "GHC") "Num") "fromInteger"
 
   renderGallina' _ (String str) =
     renderString str
 
-  renderGallina' _ (HsString str) =
-    char '&' <> renderString str
+  renderGallina' p (HsString str) =
+    -- char '&' <> renderString str
+    renderGallina' p (App (Qualid hs_stringQI) [PosArg (String str)])
+    where
+      hs_stringQI = Qualified (Qualified (Bare "GHC") "Base") "hs_string__"
 
-  renderGallina' _ (HsChar str) =
-    string "&#" <> renderString (T.singleton str)
+  renderGallina' p (HsChar str) =
+    -- string "&#" <> renderString (T.singleton str)
+    renderGallina' p (App (Qualid hs_charQI) [PosArg (String (T.singleton str))])
+    where
+      hs_charQI = Qualified (Qualified (Bare "GHC") "Char") "hs_char__"
 
   renderGallina' _ Underscore =
     char '_'

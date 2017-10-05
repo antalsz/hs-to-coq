@@ -1,5 +1,5 @@
 (* Preamble *)
-Require Import GHC.Prim.
+Require Import GHC.Base.
 Require Import GHC.Char.
 Require Import GHC.Enum.
 Require Import GHC.Real.

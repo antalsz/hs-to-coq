@@ -9,7 +9,7 @@ Unset Printing Implicit Defensive.
 
 (* Preamble *)
 
-Require Import GHC.Prim.
+Require Import GHC.Base.
 
 (* Converted imports: *)
 

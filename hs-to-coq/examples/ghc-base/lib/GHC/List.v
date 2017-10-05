@@ -9,8 +9,6 @@ Unset Printing Implicit Defensive.
 
 (* Preamble *)
 
-(* List notation *)
-Require Import Coq.Lists.List.
 Require Import GHC.Base.
 
 (* Converted imports: *)
@@ -193,14 +191,14 @@ Definition errorEmptyList {a} : GHC.Base.String -> a :=
 Definition foldl1 {a} : (a -> a -> a) -> list a -> a :=
   fun arg_203__ arg_204__ =>
     match arg_203__ , arg_204__ with
-      | f , (cons x xs) => foldl f x xs
+      | f , (cons x xs) => GHC.Base.foldl f x xs
       | _ , nil => errorEmptyList &"foldl1"
     end.
 
 Definition foldl1' {a} : (a -> a -> a) -> list a -> a :=
   fun arg_198__ arg_199__ =>
     match arg_198__ , arg_199__ with
-      | f , (cons x xs) => foldl' f x xs
+      | f , (cons x xs) => GHC.Base.foldl' f x xs
       | _ , nil => errorEmptyList &"foldl1'"
     end.
 
@@ -236,10 +234,10 @@ Definition lastError {a} : a :=
 Definition last {a} : list a -> a :=
   fun arg_254__ =>
     match arg_254__ with
-      | xs => foldl (fun arg_255__ arg_256__ =>
-                      match arg_255__ , arg_256__ with
-                        | _ , x => x
-                      end) lastError xs
+      | xs => GHC.Base.foldl (fun arg_255__ arg_256__ =>
+                               match arg_255__ , arg_256__ with
+                                 | _ , x => x
+                               end) lastError xs
     end.
 
 Definition maximum {a} `{(GHC.Base.Ord a)} : list a -> a :=
@@ -264,7 +262,7 @@ Definition tail {a} : list a -> list a :=
     end.
 
 Definition product {a} `{(GHC.Num.Num a)} : list a -> a :=
-  foldl GHC.Num.op_zt__ #1.
+  GHC.Base.foldl GHC.Num.op_zt__ #1.
 
 Definition reverse {a} : list a -> list a :=
   fun arg_96__ =>
@@ -366,7 +364,7 @@ Definition strictUncurryScanr {a} {b} {c} : (a -> b -> c) -> a * b -> c :=
     end.
 
 Definition sum {a} `{(GHC.Num.Num a)} : list a -> a :=
-  foldl GHC.Num.op_zp__ #0.
+  GHC.Base.foldl GHC.Num.op_zp__ #0.
 
 Definition takeWhileFB {a} {b}
     : (a -> bool) -> (a -> b -> b) -> b -> a -> b -> b :=
@@ -454,8 +452,8 @@ Definition zipWithFB {a} {b} {c} {d} {e}
 
 (* Unbound variables:
      * Coq.Init.Datatypes.app GHC.Base.Eq_ GHC.Base.Ord GHC.Base.String
-     GHC.Base.const GHC.Base.errorWithoutStackTrace GHC.Base.foldr GHC.Base.id
-     GHC.Base.max GHC.Base.min GHC.Base.oneShot GHC.Base.op_zeze__ GHC.Base.op_zsze__
-     GHC.Num.Int GHC.Num.Num GHC.Num.op_zp__ GHC.Num.op_zt__ None Some andb bool cons
-     false foldl foldl' list nil option orb pair true
+     GHC.Base.const GHC.Base.errorWithoutStackTrace GHC.Base.foldl GHC.Base.foldl'
+     GHC.Base.foldr GHC.Base.id GHC.Base.max GHC.Base.min GHC.Base.oneShot
+     GHC.Base.op_zeze__ GHC.Base.op_zsze__ GHC.Num.Int GHC.Num.Num GHC.Num.op_zp__
+     GHC.Num.op_zt__ None Some andb bool cons false list nil option orb pair true
 *)

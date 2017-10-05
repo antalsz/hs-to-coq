@@ -1,7 +1,10 @@
-Coq’ified ghc
-===============
+Coqified ghc
+============
 
 This directory contains beginnings a coqified version of GHC.
+
+First, you will need to build the `base` library, in `../ghc-base` (see the
+README there for more information).
 
  * `ghc`: Create a symlink to a checkout of `ghc`, e.g.
    `your/path/ghc-8.0`.

@@ -9,6 +9,21 @@ Unset Printing Implicit Defensive.
 
 (* Preamble *)
 
+(*
+skipped instances
+
+instance_GHC_Base_Alternative_Proxy
+instance_GHC_Base_MonadPlus_Proxy
+instance_GHC_Arr_Ix__Proxy_s_
+instance_GHC_Read_Read__Proxy_s_
+Instance instance_GHC_Show_Show__Proxy_s_
+
+instance_GHC_Enum_Enum__Proxy_s_
+
+manually crafted instances
+- monoid/bounded
+
+*)
 
 (* Converted imports: *)
 
@@ -124,56 +139,25 @@ Instance instance_GHC_Base_Monad_Proxy : !GHC.Base.Monad Proxy := {
   op_zgzgze__ := fun {a} {b} => instance_GHC_Base_Monad_Proxy_op_zgzgze__ ;
   return_ := fun {a} => instance_GHC_Base_Monad_Proxy_return_ }.
 
-Instance instance_GHC_Base_Alternative_Proxy : !GHC.Base.Alternative
-                                                  Proxy := {}.
-Proof.
-Admitted.
-
-Instance instance_GHC_Base_MonadPlus_Proxy : !GHC.Base.MonadPlus Proxy := {}.
-
-
 Instance instance_GHC_Base_Monoid__Proxy_s_ : !GHC.Base.Monoid (Proxy
                                                                      s) := {}.
 Proof.
-Admitted.
+  split. intros. apply Mk_Proxy. apply Mk_Proxy.
+Defined.
 
 Instance instance_GHC_Enum_Bounded__Proxy_s_ : !GHC.Enum.Bounded (Proxy s) :=
   {}.
 Proof.
-Admitted.
-
-(*
-Instance instance_GHC_Arr_Ix__Proxy_s_ : !GHC.Arr.Ix (Proxy s) := {}.
-Proof.
-Admitted. *)
-
-Instance instance_GHC_Enum_Enum__Proxy_s_ : !GHC.Enum.Enum (Proxy s) := {}.
-Proof.
-Admitted.
-
-(*
-Instance instance_GHC_Read_Read__Proxy_s_ : !GHC.Read.Read (Proxy s) := {}.
-Proof.
-Admitted.
-
-Instance instance_GHC_Show_Show__Proxy_s_ : !GHC.Show.Show (Proxy s) := {}.
-Proof.
-Admitted. *)
+  split. apply Mk_Proxy.
+Defined.
 
 Instance instance_GHC_Base_Eq___Proxy_s_ : !GHC.Base.Eq_ (Proxy s) := {}.
 Proof.
-Admitted.
+  - intros. exact false.
+  - intros. exact true.
+Defined.
 
+Definition compare_Proxy {s} : Proxy s -> Proxy s -> comparison := fun _ _ => Eq.
 
-Instance instance_GHC_Prim_Ord__Proxy_s_ : !GHC.Base.Ord (Proxy s) := {}.
-Proof.
-Admitted.
-
-
-(* Unbound variables:
-     GHC.Arr.Ix GHC.Base.MonadPlus GHC.Base.Alternative GHC.Base.Applicative
-     GHC.Base.Functor GHC.Base.Monad GHC.Base.Monoid GHC.Base.const
-     GHC.Base.fmap GHC.Base.id GHC.Base.op_ztzg__ GHC.Base.pure
-     GHC.Enum.Bounded GHC.Enum.Enum GHC.Base.Eq_ GHC.Base.Ord GHC.Read.Read
-     GHC.Show.Show Type s
-*)
+Instance instance_GHC_Prim_Ord__Proxy_s_ {s} : !GHC.Base.Ord (Proxy s) :=
+  Base.ord_default compare_Proxy.

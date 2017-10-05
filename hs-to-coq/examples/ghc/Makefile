@@ -52,6 +52,7 @@ $(VFILES_GEN): %.v : edits
 		     --ghc-tree ghc \
 		     -I ghc/includes \
 		     -I ghc/compiler \
+		     -I ghc/compiler/stage2 \
 		     -I ghc/compiler/stage2/build \
 		     --ghc -DSTAGE=2 \
 		     -N \

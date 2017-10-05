@@ -8,6 +8,9 @@ Generalizable All Variables.
 Unset Strict Implicit.
 Unset Printing Implicit Defensive.
 
+(* Note, standard practice is for pred/succ/toError to throw errors on invalid inputs.
+   I have changed these to return dummy answers instead so that they are total functions. *)
+
 
 (* Converted data type declarations: *)
 (* Note: we will only be able to make instances of this class for bounded types. *)
@@ -72,7 +75,7 @@ Definition toEnumError {a} {b} `{((Show a))} : (String -> (Int -> ((a *
                                                                                          &") is outside of bounds ") ++
                                                                                          (show bnds))
                                                                end)).
-*)
+
 Definition succError {a} : (String -> a) :=
 (fun arg_17__ =>
    (match arg_17__ with
@@ -84,7 +87,7 @@ Definition predError {a} : (String -> a) :=
    (match arg_18__ with
     | inst_ty => errorWithoutStackTrace ( &"Enum.pred{" ++ inst_ty ++ &"}: tried to take `pred' of minBound" )
     end)).
-
+*)
 (* haha *)
 Definition maxIntWord : N := N.pow 2%N 31%N.
 
@@ -633,20 +636,9 @@ Instance instance__Bounded_unit__141__ : (Bounded unit) := {
   maxBound := tt }.
 
 Instance instance__Enum_unit__142__ : (Enum unit) := {
-  succ := (fun arg_143__ =>
-    (match arg_143__ with
-      | _ => (errorWithoutStackTrace &"Prelude.Enum.().succ: bad argument")
-    end)) ;
-  pred := (fun arg_144__ =>
-    (match arg_144__ with
-      | _ => (errorWithoutStackTrace &"Prelude.Enum.().pred: bad argument")
-    end)) ;
-  toEnum := (fun arg_145__ =>
-    (match arg_145__ with
-      | x => (if (x == #0)
-             then tt
-             else (errorWithoutStackTrace &"Prelude.Enum.().toEnum: bad argument"))
-    end)) ;
+  succ := id;
+  pred := id;
+  toEnum := fun _ => tt ;
   fromEnum := (fun arg_146__ => (match arg_146__ with | tt => #0 end)) ;
   enumFrom := (fun arg_147__ => (match arg_147__ with | tt => (tt :: nil) end)) ;
   enumFromThen := (fun arg_148__ arg_149__ =>
@@ -937,6 +929,7 @@ Program Fixpoint efdtInt_aux  (x : Int) (y: Int) (z:Int) (d : efdtInt_aux_fuel x
 Obligation 1.
 destruct d. rewrite H in Heq_anonymous. done. auto. Defined.
 
+
 Lemma efdtInt_fuel : forall (x:Int) (y:Int) (z:Int), efdtInt_aux_fuel x y z.
 Proof.
   intros x y z.
@@ -949,15 +942,13 @@ Instance instance__Enum_Int__184__ : (Enum Int) := {
   succ := (fun arg_185__ =>
     (match arg_185__ with
       | x => (if (x == maxBound)
-             then (errorWithoutStackTrace
-                  &"Prelude.Enum.succ{Int}: tried to take `succ' of maxBound")
+             then x
              else (x + #1))
     end)) ;
   pred := (fun arg_186__ =>
     (match arg_186__ with
       | x => (if (x == minBound)
-             then (errorWithoutStackTrace
-                  &"Prelude.Enum.pred{Int}: tried to take `pred' of minBound")
+             then x
              else (x - #1))
     end)) ;
   toEnum := (fun arg_187__ => (match arg_187__ with | x => x end)) ;
@@ -1003,9 +994,7 @@ Definition toEnumBool : Int -> bool :=  (fun arg_173__ =>
     (match arg_173__ with
       | n => (if (n == #0)
              then false
-             else (if (n == #1)
-                  then true
-                  else (errorWithoutStackTrace &"Prelude.Enum.Bool.toEnum: bad argument")))
+             else true)
     end)).
 Definition fromEnumBool : bool -> Int :=
 (fun arg_174__ =>
@@ -1017,12 +1006,12 @@ Instance instance__Enum_bool__170__ : (Enum bool) := {
   succ := (fun arg_171__ =>
     (match arg_171__ with
       | false => true
-      | true => (errorWithoutStackTrace &"Prelude.Enum.Bool.succ: bad argument")
+      | true => true
     end)) ;
   pred := (fun arg_172__ =>
     (match arg_172__ with
       | true => false
-      | false => (errorWithoutStackTrace &"Prelude.Enum.Bool.pred: bad argument")
+      | false => false
     end)) ;
   toEnum := toEnumBool ;
   fromEnum := fromEnumBool ;
@@ -1059,7 +1048,7 @@ Definition toEnum_comparison : Int -> comparison :=
            then Eq
            else (if (n == #2)
                  then Gt
-                 else (errorWithoutStackTrace &"Prelude.Enum.Ordering.toEnum: bad argument")
+                 else Gt
     ))).
 
 Instance instance__Enum_comparison__176__ : (Enum comparison) := {
@@ -1067,13 +1056,13 @@ Instance instance__Enum_comparison__176__ : (Enum comparison) := {
     (match arg_177__ with
       | Lt => Eq
       | Eq => Gt
-      | Gt => (errorWithoutStackTrace &"Prelude.Enum.Ordering.succ: bad argument")
+      | Gt => Gt
     end)) ;
   pred := (fun arg_178__ =>
     (match arg_178__ with
       | Gt => Eq
       | Eq => Lt
-      | Lt => (errorWithoutStackTrace &"Prelude.Enum.Ordering.pred: bad argument")
+      | Lt => Lt
     end)) ;
   toEnum := toEnum_comparison ;
   fromEnum := fromEnum_comparison ;

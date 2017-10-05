@@ -105,10 +105,13 @@ Arguments Synonym {A}%type _uniq%type x%type.
 
 (****************************************************)
 
+(*
 Axiom primUserError : forall {A}, A.
 Axiom primIOError   : forall {A}, A.
 Axiom error         : forall {A : Type}, String -> A.
+*)
 Axiom errorWithoutStackTrace : forall {A : Type}, String -> A.
+
 
 (*********** built in classes Eq & Ord **********************)
 

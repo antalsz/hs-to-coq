@@ -15,7 +15,7 @@ module HsToCoq.Coq.Gallina.Util (
   binderNames, binderIdents, binderExplicitness,
   -- ** Functions
   qualidBase, qualidModule,
-  qualidToIdent, identToQualid, identToBase,
+  qualidToIdent, identToQualid, identToQualid', identToBase,
   nameToTerm, nameToPattern,
   binderArgs
   ) where
@@ -118,9 +118,18 @@ identToQualid :: Ident -> Maybe Qualid
 identToQualid = either (const Nothing) Just . parse qualid "" where
   qualid = do
     let modFrag = T.cons <$> upper <*> (T.pack <$> many (alphaNum <|> char '\''))
-    frags <- many (try modFrag <* char '.')
-    base  <- T.pack <$> some anyChar
-    pure $ foldl' Qualified (Bare base) frags
+    frags <- many (try (modFrag <* char '.'))
+    lastFrag  <- T.pack <$> some anyChar
+    -- This code is not pretty, but a quick fix to fix the build. I believe
+    -- the function is now doing the right thing, just the code could be nicer.
+    pure $ case frags ++ [lastFrag] of
+       (bare : qualifieds) -> foldl' Qualified (Bare bare) qualifieds
+       _ -> error "Unreachable"
+
+identToQualid' x = case T.splitOn "." x of
+                    root:rest -> Just $ foldl' Qualified (Bare root) rest
+                    []        -> Nothing
+
 
 identToBase :: Ident -> Ident
 identToBase x = maybe x qualidBase $ identToQualid x

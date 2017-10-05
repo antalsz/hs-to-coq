@@ -109,9 +109,11 @@ convertImportDecl ImportDecl{..} = do
 
 importDeclSentences :: ConversionMonad m => ConvertedImportDecl -> m [Sentence]
 importDeclSentences ConvertedImportDecl{..} = do
-  let moduleToQualid = maybe (throwProgramError "malformed module name") pure
-                     . identToQualid . moduleNameText
-  
+  let moduleToQualid mn =
+        case identToQualid (moduleNameText mn) of
+            Just qi -> pure qi
+            Nothing -> throwProgramError $ "malformed module name " ++ moduleNameString mn
+
   mod <- moduleToQualid convImportedModule
   let importSentence = ModuleSentence $ Require Nothing
                                                 (case convImportQualified of
@@ -196,8 +198,10 @@ convertHsGroup mod HsGroup{..} = do
 
 --------------------------------------------------------------------------------
 
-require :: ModuleName -> Maybe ModuleSentence
-require = fmap (Require Nothing Nothing . pure) . identToQualid . moduleNameText
+require :: MonadIO f => ModuleName -> f ModuleSentence
+require mn = case identToQualid (moduleNameText mn) of
+    Just qi -> pure (Require Nothing Nothing (pure qi))
+    Nothing -> throwProgramError $ "malformed module name " ++ moduleNameString mn
 
 --------------------------------------------------------------------------------
 
@@ -249,10 +253,7 @@ convert_module_with_requires convModName (group, imports, _exports, _docstring) 
                  ++ S.toList (foldr S.delete (S.fromList extraModules) importedModules)
     
     convModImports <-
-      traverse
-        ( maybe (throwProgramError "malformed module name") (pure . ModuleSentence)
-        . require )
-        modules
+      traverse (\mn -> ModuleSentence <$> require mn) modules
     pure (ConvertedModule{..}, modules)
 
 convertModule :: ConversionMonad m => ModuleName -> RenamedSource -> m ConvertedModule

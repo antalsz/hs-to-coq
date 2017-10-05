@@ -42,33 +42,6 @@ HANDMOD = \
   Data/Monoid \
   Prelude
 
-# GHC.Base imports modules without using anything from it (e.g. because
-# everything using there was renamed or skipped). For now, provide these empty
-# modules.
-# Ideally, hs-to-coq should be smarter, and maybe only import names that occur in
-# the code?
-EMPTY_MODS = \
-  GHC/Types \
-  GHC/Classes \
-  GHC/CString \
-  GHC/Magic \
-  GHC/Err \
-  GHC/IO \
-  GHC/Tuple \
-  GHC/Integer \
-  GHC/Read \
-  GHC/Show \
-  GHC/Generics \
-  _GHC/Num \
-  Data/Type/Coercion \
-  GHC/Arr \
-  GHC/ST \
-  System/IO \
-  Control/Monad/Fix \
-  Foreign/Storable \
-  GHC/Float \
-  Control/Applicative
-
 # Generated modules
 # generated directly from GHC/libraries/base
 MODULES = \
@@ -90,11 +63,10 @@ SPECIAL_MODULES =
 
 VFILES_GEN = $(addprefix lib/,$(addsuffix .v,$(MODULES)))
 VFILES_MAN = $(addprefix lib/,$(addsuffix .v,$(HANDMOD)))
-VFILES_EMPTY = $(addprefix lib/,$(addsuffix .v,$(EMPTY_MODS)))
 VFILES_SPECIAL = $(addprefix lib/,$(addsuffix .v,$(SPECIAL_MODULES)))
 VFILES_DROPIN = $(addprefix lib/,$(addsuffix .v,$(DROPIN)))
 
-VFILES   = $(VFILES_GEN) $(VFILES_MAN) $(VFILES_EMPTY) $(VFILES_SPECIAL) $(VFILES_DROPIN)
+VFILES   = $(VFILES_GEN) $(VFILES_MAN) $(VFILES_SPECIAL) $(VFILES_DROPIN)
 
 all:  $(VFILES) coq
 
@@ -104,7 +76,6 @@ lib/_CoqProject : Makefile
 	echo "-R . Top" >> $@
 	echo $(addsuffix .v,$(HANDMOD)) >> $@
 	echo $(addsuffix .v,$(MODULES)) >> $@
-	echo $(addsuffix .v,$(EMPTY_MODS)) >> $@
 	echo $(addsuffix .v,$(SPECIAL_MODULES)) >> $@
 	echo $(addsuffix .v,$(DROPIN)) >> $@
 
@@ -126,10 +97,6 @@ $(VFILES_GEN): lib/%.v : module-edits/%/edits edits module-edits/%/preamble.v
 $(VFILES_MAN): lib/%.v : manual/%.v
 	mkdir -p "$$(dirname lib/$*.v)"
 	cp -v $< $@
-
-$(VFILES_EMPTY): lib/%.v :
-	mkdir -p "$$(dirname lib/$*.v)"
-	echo '(* Empty module, exists only to make Import statments not fail *)' > $@
 
 # lib/GHC/BaseGen.v : module-edits/GHC/Base/edits edits module-edits/GHC/Base/preamble.v drop-in/GHC/BaseGen.hs
 #	$(HS_TO_COQ) -e module-edits/GHC/Base/edits \

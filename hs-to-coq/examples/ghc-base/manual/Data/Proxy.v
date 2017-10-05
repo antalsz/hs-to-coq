@@ -13,11 +13,7 @@ Unset Printing Implicit Defensive.
 (* Converted imports: *)
 
 Require GHC.Base.
-Require GHC.Show.
-Require GHC.Read.
 Require GHC.Enum.
-Require GHC.Arr.
-Require GHC.Base.
 
 (* Converted declarations: *)
 

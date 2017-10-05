@@ -14,17 +14,10 @@ Unset Printing Implicit Defensive.
 
 Require Data.Bits.
 Require Data.Foldable.
-Require Foreign.Storable.
-Require GHC.Arr.
 Require GHC.Base.
 Require GHC.Enum.
-Require GHC.Float.
-Require GHC.Generics.
 Require GHC.Num.
 Require GHC.Real.
-Require GHC.Read.
-Require GHC.Show.
-Require GHC.Base.
 
 (* Converted declarations: *)
 

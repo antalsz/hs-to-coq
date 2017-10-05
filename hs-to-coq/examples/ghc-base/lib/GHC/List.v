@@ -13,11 +13,9 @@ Require Import GHC.Base.
 
 (* Converted imports: *)
 
-Require Data.Maybe.
+Require Coq.Init.Datatypes.
 Require GHC.Base.
 Require GHC.Num.
-Require GHC.Integer.
-Require Coq.Init.Datatypes.
 
 (* Converted declarations: *)
 

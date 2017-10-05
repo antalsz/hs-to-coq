@@ -13,14 +13,6 @@ Require Import GHC.Base.
 Require Import GHC.Enum.
 Require Import GHC.Num.
 
-(* Converted imports: *)
-
-Require GHC.Base.
-Require GHC.Enum.
-Require GHC.Num.
-Require GHC.Read.
-Require GHC.Show.
-Require GHC.Generics.
 
 (* Converted declarations: *)
 

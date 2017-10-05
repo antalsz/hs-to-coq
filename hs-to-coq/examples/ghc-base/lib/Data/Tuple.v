@@ -10,9 +10,7 @@ Unset Printing Implicit Defensive.
 (* Preamble *)
 
 
-(* Converted imports: *)
-
-Require GHC.Base.
+(* No imports to convert. *)
 
 (* Converted declarations: *)
 

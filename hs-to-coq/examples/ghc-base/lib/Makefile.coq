@@ -127,26 +127,6 @@ VFILES:=GHC/Num.v\
   Data/Ord.v\
   Data/Eq.v\
   Data/Functor.v\
-  GHC/Types.v\
-  GHC/Classes.v\
-  GHC/CString.v\
-  GHC/Magic.v\
-  GHC/Err.v\
-  GHC/IO.v\
-  GHC/Tuple.v\
-  GHC/Integer.v\
-  GHC/Read.v\
-  GHC/Show.v\
-  GHC/Generics.v\
-  _GHC/Num.v\
-  Data/Type/Coercion.v\
-  GHC/Arr.v\
-  GHC/ST.v\
-  System/IO.v\
-  Control/Monad/Fix.v\
-  Foreign/Storable.v\
-  GHC/Float.v\
-  Control/Applicative.v\
   GHC/Base.v
 
 ifneq ($(filter-out archclean clean cleanall printenv,$(MAKECMDGOALS)),)

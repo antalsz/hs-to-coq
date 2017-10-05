@@ -27,7 +27,7 @@ VFILES_SPECIAL = $(addsuffix .v,$(SPECIAL_MODULES))
 
 VFILES   = $(VFILES_GEN) $(VFILES_MAN) $(VFILES_EMPTY) $(VFILES_SPECIAL)
 
-all:  $(VFILES) coq
+all: $(VFILES) coq
 
 _CoqProject : Makefile
 	> $@
@@ -58,6 +58,8 @@ $(VFILES_GEN): %.v : edits
 		     -N \
 		     -o . \
 		     ghc/compiler/*/$*.hs
+	test -e $@
+# We added the `test` because `hs-to-coq` doesn't return an error
 
 $(VFILES_EMPTY): %.v :
 	mkdir -p "$$(dirname lib/$*.v)"

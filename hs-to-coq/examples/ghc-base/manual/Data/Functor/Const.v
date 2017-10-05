@@ -115,26 +115,3 @@ Instance instance_forall___GHC_Base_Monoid_m___GHC_Base_Applicative__Const_m_
     instance_forall___GHC_Base_Monoid_m___GHC_Base_Applicative__Const_m__op_ztzg__ ;
   pure := fun {a} =>
     instance_forall___GHC_Base_Monoid_m___GHC_Base_Applicative__Const_m__pure }.
-
-
-Instance instance_Data_Foldable_Foldable__Const_m_ : !Data.Foldable.Foldable
-                                                     (Const m) := {}.
-Proof.
-Admitted.
-
-(*
-Instance instance_forall___GHC_Show_Show_a___GHC_Show_Show__Const_a_b_
-  : !forall `{GHC.Show.Show a}, GHC.Show.Show (Const a b) := {}.
-Proof.
-Admitted.
-
-Instance instance_forall___GHC_Read_Read_a___GHC_Read_Read__Const_a_b_
-  : !forall `{GHC.Read.Read a}, GHC.Read.Read (Const a b) := {}.
-Proof.
-Admitted.
-*)
-(* Unbound variables:
-     Data.Foldable.Foldable GHC.Base.mappend GHC.Base.mempty GHC.Base.Applicative
-     GHC.Base.Functor GHC.Base.Monoid GHC.Base.const GHC.Base.fmap
-     GHC.Base.id GHC.Prim.coerce GHC.Read.Read GHC.Show.Show m
-*)

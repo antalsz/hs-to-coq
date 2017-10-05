@@ -1,5 +1,5 @@
 (* Preamble *)
-Require Import GHC.Prim.
+Require Import GHC.Base.
 Require Export GHC.Char.
 Require Import GHC.Real.
 Require Import GHC.Num.

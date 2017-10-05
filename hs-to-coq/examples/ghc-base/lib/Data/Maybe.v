@@ -9,7 +9,6 @@ Unset Printing Implicit Defensive.
 
 (* Preamble *)
 
-Require Import GHC.Prim.
 
 (* Converted imports: *)
 
@@ -32,7 +31,8 @@ Definition catMaybes {a} : list (option a) -> list a :=
 Definition fromJust {a} : option a -> a :=
   fun arg_33__ =>
     match arg_33__ with
-      | None => GHC.Base.errorWithoutStackTrace &"Maybe.fromJust: Nothing"
+      | None => GHC.Base.errorWithoutStackTrace (GHC.Base.hs_string__
+                                                "Maybe.fromJust: Nothing")
       | (Some x) => x
     end.
 

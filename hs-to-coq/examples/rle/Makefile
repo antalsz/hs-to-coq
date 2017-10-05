@@ -18,4 +18,4 @@ coq: Makefile.coq RLE.v Proofs.v
 	$(MAKE) -f Makefile.coq OPT=$(COQFLAGS)
 
 clean:
-	rm -f */*.vo */*.glob */*.v.d *.vo *.v.d RLE.v Makefile.coq  */*.v~
+	rm -f */*.vo */*.glob */*.v.d *.vo *.glob *.v.d RLE.v Makefile.coq  */*.v~

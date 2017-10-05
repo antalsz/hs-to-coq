@@ -24,8 +24,7 @@ Require GHC.Num.
 Require GHC.Real.
 Require GHC.Read.
 Require GHC.Show.
-Require GHC.BaseGen.
-Require GHC.Prim.
+Require GHC.Base.
 
 (* Converted declarations: *)
 
@@ -47,19 +46,19 @@ Definition getConst {a} {b} (arg_0__ : Const a b) :=
     | (Mk_Const getConst) => getConst
   end.
 
-Local Definition instance_forall___GHC_BaseGen_Monoid_m___GHC_BaseGen_Applicative__Const_m__pure `{GHC.BaseGen.Monoid
+Local Definition instance_forall___GHC_Base_Monoid_m___GHC_Base_Applicative__Const_m__pure `{GHC.Base.Monoid
                                                                                                  m} : forall {a},
                                                                                                         a -> (Const m)
                                                                                                         a :=
-  fun {a} => fun arg_1__ => Mk_Const GHC.BaseGen.mempty.
+  fun {a} => fun arg_1__ => Mk_Const GHC.Base.mempty.
 
-Local Definition instance_forall___GHC_BaseGen_Monoid_m___GHC_BaseGen_Applicative__Const_m__op_zlztzg__ `{GHC.BaseGen.Monoid m} :
+Local Definition instance_forall___GHC_Base_Monoid_m___GHC_Base_Applicative__Const_m__op_zlztzg__ `{GHC.Base.Monoid m} :
   forall {a}{b}, (Const m) (a -> b) -> (Const m) a -> (Const m) b :=
   fun {a} {b} x y => match (x,y) with
-                    (Mk_Const x1, Mk_Const x2) => Mk_Const (GHC.BaseGen.mappend x1 x2)
+                    (Mk_Const x1, Mk_Const x2) => Mk_Const (GHC.Base.mappend x1 x2)
                   end.
 
-Local Definition instance_GHC_BaseGen_Functor__Const_m__fmap : forall {m}{a} {b},
+Local Definition instance_GHC_Base_Functor__Const_m__fmap : forall {m}{a} {b},
                                                                  (a -> b) -> (Const m) a -> (Const m) b :=
   fun {m}{a} {b} =>
     fun arg_5__ arg_6__ =>
@@ -67,20 +66,20 @@ Local Definition instance_GHC_BaseGen_Functor__Const_m__fmap : forall {m}{a} {b}
         | _ , (Mk_Const v) => Mk_Const v
       end.
 
-Local Definition instance_GHC_BaseGen_Functor__Const_m__op_zlzd__ : forall {m}{a}
+Local Definition instance_GHC_Base_Functor__Const_m__op_zlzd__ : forall {m}{a}
                                                                            {b},
                                                                       b -> (Const m) a -> (Const m) b :=
   fun {m}{a} {b} =>
-    fun x => instance_GHC_BaseGen_Functor__Const_m__fmap (GHC.BaseGen.const x).
+    fun x => instance_GHC_Base_Functor__Const_m__fmap (GHC.Base.const x).
 
-Instance instance_GHC_BaseGen_Functor__Const_m_ : !GHC.BaseGen.Functor (Const
+Instance instance_GHC_Base_Functor__Const_m_ : !GHC.Base.Functor (Const
                                                                        m) := {
-  fmap := fun {a} {b} => instance_GHC_BaseGen_Functor__Const_m__fmap ;
-  op_zlzd__ := fun {a} {b} => instance_GHC_BaseGen_Functor__Const_m__op_zlzd__ }.
+  fmap := fun {a} {b} => instance_GHC_Base_Functor__Const_m__fmap ;
+  op_zlzd__ := fun {a} {b} => instance_GHC_Base_Functor__Const_m__op_zlzd__ }.
 
 
 
-Local Definition instance_forall___GHC_BaseGen_Monoid_m___GHC_BaseGen_Applicative__Const_m__op_ztzg__ `{GHC.BaseGen.Monoid
+Local Definition instance_forall___GHC_Base_Monoid_m___GHC_Base_Applicative__Const_m__op_ztzg__ `{GHC.Base.Monoid
                                                                                                       m} : forall {a}
                                                                                                                   {b},
                                                                                                              (Const m)
@@ -90,10 +89,10 @@ Local Definition instance_forall___GHC_BaseGen_Monoid_m___GHC_BaseGen_Applicativ
                                                                                                              m) b :=
   fun {a} {b} =>
     fun x y =>
-      instance_forall___GHC_BaseGen_Monoid_m___GHC_BaseGen_Applicative__Const_m__op_zlztzg__
-      (GHC.BaseGen.fmap (GHC.BaseGen.const GHC.BaseGen.id) x) y.
+      instance_forall___GHC_Base_Monoid_m___GHC_Base_Applicative__Const_m__op_zlztzg__
+      (GHC.Base.fmap (GHC.Base.const GHC.Base.id) x) y.
 
-Local Definition instance_forall___GHC_BaseGen_Monoid_m___GHC_BaseGen_Applicative__Const_m__op_zlzt__ `{GHC.BaseGen.Monoid
+Local Definition instance_forall___GHC_Base_Monoid_m___GHC_Base_Applicative__Const_m__op_zlzt__ `{GHC.Base.Monoid
                                                                                                       m} : forall {a}
                                                                                                                   {b},
                                                                                                              (Const m)
@@ -103,19 +102,19 @@ Local Definition instance_forall___GHC_BaseGen_Monoid_m___GHC_BaseGen_Applicativ
                                                                                                              m) a :=
   fun {a} {b} =>
     fun x y =>
-      instance_forall___GHC_BaseGen_Monoid_m___GHC_BaseGen_Applicative__Const_m__op_zlztzg__
-      (GHC.BaseGen.fmap GHC.BaseGen.const x) y.
+      instance_forall___GHC_Base_Monoid_m___GHC_Base_Applicative__Const_m__op_zlztzg__
+      (GHC.Base.fmap GHC.Base.const x) y.
 
-Instance instance_forall___GHC_BaseGen_Monoid_m___GHC_BaseGen_Applicative__Const_m_
-  `{GHC.BaseGen.Monoid m} : !GHC.BaseGen.Applicative (Const m) := {
+Instance instance_forall___GHC_Base_Monoid_m___GHC_Base_Applicative__Const_m_
+  `{GHC.Base.Monoid m} : !GHC.Base.Applicative (Const m) := {
   op_zlzt__ := fun {a} {b} =>
-    instance_forall___GHC_BaseGen_Monoid_m___GHC_BaseGen_Applicative__Const_m__op_zlzt__ ;
+    instance_forall___GHC_Base_Monoid_m___GHC_Base_Applicative__Const_m__op_zlzt__ ;
   op_zlztzg__ := fun {a} {b} =>
-    instance_forall___GHC_BaseGen_Monoid_m___GHC_BaseGen_Applicative__Const_m__op_zlztzg__ ;
+    instance_forall___GHC_Base_Monoid_m___GHC_Base_Applicative__Const_m__op_zlztzg__ ;
   op_ztzg__ := fun {a} {b} =>
-    instance_forall___GHC_BaseGen_Monoid_m___GHC_BaseGen_Applicative__Const_m__op_ztzg__ ;
+    instance_forall___GHC_Base_Monoid_m___GHC_Base_Applicative__Const_m__op_ztzg__ ;
   pure := fun {a} =>
-    instance_forall___GHC_BaseGen_Monoid_m___GHC_BaseGen_Applicative__Const_m__pure }.
+    instance_forall___GHC_Base_Monoid_m___GHC_Base_Applicative__Const_m__pure }.
 
 
 Instance instance_Data_Foldable_Foldable__Const_m_ : !Data.Foldable.Foldable
@@ -135,7 +134,7 @@ Proof.
 Admitted.
 *)
 (* Unbound variables:
-     Data.Foldable.Foldable GHC.Base.mappend GHC.Base.mempty GHC.BaseGen.Applicative
-     GHC.BaseGen.Functor GHC.BaseGen.Monoid GHC.BaseGen.const GHC.BaseGen.fmap
-     GHC.BaseGen.id GHC.Prim.coerce GHC.Read.Read GHC.Show.Show m
+     Data.Foldable.Foldable GHC.Base.mappend GHC.Base.mempty GHC.Base.Applicative
+     GHC.Base.Functor GHC.Base.Monoid GHC.Base.const GHC.Base.fmap
+     GHC.Base.id GHC.Prim.coerce GHC.Read.Read GHC.Show.Show m
 *)

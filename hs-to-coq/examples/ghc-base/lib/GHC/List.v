@@ -9,9 +9,6 @@ Unset Printing Implicit Defensive.
 
 (* Preamble *)
 
-(* List notation *)
-Require Import Coq.Lists.List.
-Require Import GHC.Base.
 
 (* Converted imports: *)
 
@@ -132,11 +129,14 @@ Definition lenAcc {a} : list a -> GHC.Num.Int -> GHC.Num.Int :=
   fix lenAcc arg_236__ arg_237__
         := match arg_236__ , arg_237__ with
              | nil , n => n
-             | (cons _ ys) , n => lenAcc ys (GHC.Num.op_zp__ n #1)
+             | (cons _ ys) , n => lenAcc ys (GHC.Num.op_zp__ n (GHC.Num.fromInteger 1))
            end.
 
 Definition length {a} : list a -> GHC.Num.Int :=
-  fun arg_240__ => match arg_240__ with | xs => lenAcc xs #0 end.
+  fun arg_240__ =>
+    match arg_240__ with
+      | xs => lenAcc xs (GHC.Num.fromInteger 0)
+    end.
 
 Definition lengthFB {x}
     : x -> (GHC.Num.Int -> GHC.Num.Int) -> GHC.Num.Int -> GHC.Num.Int :=
@@ -144,7 +144,7 @@ Definition lengthFB {x}
     match arg_229__ , arg_230__ with
       | _ , r => fun arg_231__ =>
                    match arg_231__ with
-                     | a => r (GHC.Num.op_zp__ a #1)
+                     | a => r (GHC.Num.op_zp__ a (GHC.Num.fromInteger 1))
                    end
     end.
 
@@ -176,32 +176,34 @@ Definition or : list bool -> bool :=
            end.
 
 Definition prel_list_str : GHC.Base.String :=
-  &"Prelude.".
+  GHC.Base.hs_string__ "Prelude.".
 
 Definition tooLarge {a} : GHC.Num.Int -> a :=
   fun arg_65__ =>
     GHC.Base.errorWithoutStackTrace (Coq.Init.Datatypes.app prel_list_str
-                                                            &"!!: index too large").
+                                                            (GHC.Base.hs_string__ "!!: index too large")).
 
 Definition errorEmptyList {a} : GHC.Base.String -> a :=
   fun arg_1__ =>
     match arg_1__ with
       | fun_ => GHC.Base.errorWithoutStackTrace (Coq.Init.Datatypes.app prel_list_str
-                                                                        (Coq.Init.Datatypes.app fun_ &": empty list"))
+                                                                        (Coq.Init.Datatypes.app fun_
+                                                                                                (GHC.Base.hs_string__
+                                                                                                ": empty list")))
     end.
 
 Definition foldl1 {a} : (a -> a -> a) -> list a -> a :=
   fun arg_203__ arg_204__ =>
     match arg_203__ , arg_204__ with
-      | f , (cons x xs) => foldl f x xs
-      | _ , nil => errorEmptyList &"foldl1"
+      | f , (cons x xs) => GHC.Base.foldl f x xs
+      | _ , nil => errorEmptyList (GHC.Base.hs_string__ "foldl1")
     end.
 
 Definition foldl1' {a} : (a -> a -> a) -> list a -> a :=
   fun arg_198__ arg_199__ =>
     match arg_198__ , arg_199__ with
-      | f , (cons x xs) => foldl' f x xs
-      | _ , nil => errorEmptyList &"foldl1'"
+      | f , (cons x xs) => GHC.Base.foldl' f x xs
+      | _ , nil => errorEmptyList (GHC.Base.hs_string__ "foldl1'")
     end.
 
 Definition foldr1 {a} : (a -> a -> a) -> list a -> a :=
@@ -212,7 +214,7 @@ Definition foldr1 {a} : (a -> a -> a) -> list a -> a :=
                      := match arg_148__ with
                           | (cons x nil) => x
                           | (cons x xs) => f x (go xs)
-                          | nil => errorEmptyList &"foldr1"
+                          | nil => errorEmptyList (GHC.Base.hs_string__ "foldr1")
                         end in
              go
     end.
@@ -220,7 +222,7 @@ Definition foldr1 {a} : (a -> a -> a) -> list a -> a :=
 Definition init {a} : list a -> list a :=
   fun arg_245__ =>
     match arg_245__ with
-      | nil => errorEmptyList &"init"
+      | nil => errorEmptyList (GHC.Base.hs_string__ "init")
       | (cons x xs) => let init' :=
                          fix init' arg_247__ arg_248__
                                := match arg_247__ , arg_248__ with
@@ -231,28 +233,28 @@ Definition init {a} : list a -> list a :=
     end.
 
 Definition lastError {a} : a :=
-  errorEmptyList &"last".
+  errorEmptyList (GHC.Base.hs_string__ "last").
 
 Definition last {a} : list a -> a :=
   fun arg_254__ =>
     match arg_254__ with
-      | xs => foldl (fun arg_255__ arg_256__ =>
-                      match arg_255__ , arg_256__ with
-                        | _ , x => x
-                      end) lastError xs
+      | xs => GHC.Base.foldl (fun arg_255__ arg_256__ =>
+                               match arg_255__ , arg_256__ with
+                                 | _ , x => x
+                               end) lastError xs
     end.
 
 Definition maximum {a} `{(GHC.Base.Ord a)} : list a -> a :=
   fun arg_208__ =>
     match arg_208__ with
-      | nil => errorEmptyList &"maximum"
+      | nil => errorEmptyList (GHC.Base.hs_string__ "maximum")
       | xs => foldl1 GHC.Base.max xs
     end.
 
 Definition minimum {a} `{(GHC.Base.Ord a)} : list a -> a :=
   fun arg_212__ =>
     match arg_212__ with
-      | nil => errorEmptyList &"minimum"
+      | nil => errorEmptyList (GHC.Base.hs_string__ "minimum")
       | xs => foldl1 GHC.Base.min xs
     end.
 
@@ -260,11 +262,11 @@ Definition tail {a} : list a -> list a :=
   fun arg_260__ =>
     match arg_260__ with
       | (cons _ xs) => xs
-      | nil => errorEmptyList &"tail"
+      | nil => errorEmptyList (GHC.Base.hs_string__ "tail")
     end.
 
 Definition product {a} `{(GHC.Num.Num a)} : list a -> a :=
-  foldl GHC.Num.op_zt__ #1.
+  GHC.Base.foldl GHC.Num.op_zt__ (GHC.Num.fromInteger 1).
 
 Definition reverse {a} : list a -> list a :=
   fun arg_96__ =>
@@ -366,7 +368,7 @@ Definition strictUncurryScanr {a} {b} {c} : (a -> b -> c) -> a * b -> c :=
     end.
 
 Definition sum {a} `{(GHC.Num.Num a)} : list a -> a :=
-  foldl GHC.Num.op_zp__ #0.
+  GHC.Base.foldl GHC.Num.op_zp__ (GHC.Num.fromInteger 0).
 
 Definition takeWhileFB {a} {b}
     : (a -> bool) -> (a -> b -> b) -> b -> a -> b -> b :=
@@ -454,8 +456,8 @@ Definition zipWithFB {a} {b} {c} {d} {e}
 
 (* Unbound variables:
      * Coq.Init.Datatypes.app GHC.Base.Eq_ GHC.Base.Ord GHC.Base.String
-     GHC.Base.const GHC.Base.errorWithoutStackTrace GHC.Base.foldr GHC.Base.id
-     GHC.Base.max GHC.Base.min GHC.Base.oneShot GHC.Base.op_zeze__ GHC.Base.op_zsze__
-     GHC.Num.Int GHC.Num.Num GHC.Num.op_zp__ GHC.Num.op_zt__ None Some andb bool cons
-     false foldl foldl' list nil option orb pair true
+     GHC.Base.const GHC.Base.errorWithoutStackTrace GHC.Base.foldl GHC.Base.foldl'
+     GHC.Base.foldr GHC.Base.id GHC.Base.max GHC.Base.min GHC.Base.oneShot
+     GHC.Base.op_zeze__ GHC.Base.op_zsze__ GHC.Num.Int GHC.Num.Num GHC.Num.op_zp__
+     GHC.Num.op_zt__ None Some andb bool cons false list nil option orb pair true
 *)

@@ -430,7 +430,6 @@ Require GHC.Types.
 Require GHC.Classes.
 Require GHC.CString.
 Require GHC.Magic.
-Require GHC.Prim.
 Require GHC.Err.
 Require GHC.Tuple.
 Require GHC.Integer.

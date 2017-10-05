@@ -21,62 +21,64 @@ endif
 
 
 # Handwritten modules (usually by modification of generated version)
-HANDMOD = GHC/Num \
-          GHC/Char \
-          GHC/Enum \
-          GHC/Real \
-          GHC/Unicode \
-          Data/Char \
-          Data/Bits \
-          Data/Type/Equality \
-          GHC/Word \
-          GHC/Int \
-          Data/Bool \
-          Control/Category \
-		    Data/Either \
-          Control/Arrow \
-          Data/Proxy \
-	       Data/Foldable \
-          Data/Functor/Const \
-          Data/Monoid \
-          Prelude
+HANDMOD = \
+  GHC/Num \
+  GHC/Char \
+  GHC/Enum \
+  GHC/Real \
+  GHC/Unicode \
+  Data/Char \
+  Data/Bits \
+  Data/Type/Equality \
+  GHC/Word \
+  GHC/Int \
+  Data/Bool \
+  Control/Category \
+  Data/Either \
+  Control/Arrow \
+  Data/Proxy \
+  Data/Foldable \
+  Data/Functor/Const \
+  Data/Monoid \
+  Prelude
 
 # GHC.Base imports modules without using anything from it (e.g. because
 # everything using there was renamed or skipped). For now, provide these empty
 # modules.
 # Ideally, hs-to-coq should be smarter, and maybe only import names that occur in
 # the code?
-EMPTY_MODS  =\
-	  GHC/Types \
-	  GHC/Classes \
-	  GHC/CString \
-	  GHC/Magic \
-	  GHC/Err \
-	  GHC/IO \
-	  GHC/Tuple \
-	  GHC/Integer \
-	  GHC/Read \
-	  GHC/Show \
-	  GHC/Generics \
-	  _GHC/Num \
-	  Data/Type/Coercion \
-	  GHC/Arr \
-     GHC/ST \
-     System/IO \
-     Control/Monad/Fix \
-     Foreign/Storable \
-     GHC/Float \
-     Control/Applicative
+EMPTY_MODS = \
+  GHC/Types \
+  GHC/Classes \
+  GHC/CString \
+  GHC/Magic \
+  GHC/Err \
+  GHC/IO \
+  GHC/Tuple \
+  GHC/Integer \
+  GHC/Read \
+  GHC/Show \
+  GHC/Generics \
+  _GHC/Num \
+  Data/Type/Coercion \
+  GHC/Arr \
+  GHC/ST \
+  System/IO \
+  Control/Monad/Fix \
+  Foreign/Storable \
+  GHC/Float \
+  Control/Applicative
 
 # Generated modules
 # generated directly from GHC/libraries/base
-MODULES  = GHC/List \
-           Data/Tuple \
-           Data/Maybe \
-           Data/Function \
-           Data/Ord \
-           Data/Eq \
-           Data/Functor \
+MODULES = \
+  GHC/List \
+  Data/Tuple \
+  Data/Maybe \
+  Data/Function \
+  Data/Ord \
+  Data/Eq \
+  Data/Functor \
 
 
 # generated from drop-in/

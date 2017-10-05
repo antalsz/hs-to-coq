@@ -31,13 +31,13 @@ Proof.
   * reflexivity.
   * simpl.
     destruct (groupBy f xs) eqn:?.
-    - simpl in IHxs. simpl. congruence.
+    - simpl in IHxs.  unfold concat in *. simpl in *. congruence.
     - destruct l eqn:?.
       - exfalso.
         apply (group_by_not_nil _ f xs).
         rewrite Heql.
         intuition.
-      -  destruct (f a a0); simpl in *; congruence.
+        -  destruct (f a a0); unfold concat in *; simpl in *; congruence.
 Qed.
 
 Lemma map_map:

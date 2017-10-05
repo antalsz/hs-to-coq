@@ -15,7 +15,6 @@ Unset Printing Implicit Defensive.
 Require GHC.Base.
 Require Data.Type.Coercion.
 Require Data.Type.Equality.
-Require GHC.Prim.
 
 (* Converted declarations: *)
 

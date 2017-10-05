@@ -25,8 +25,8 @@ $(VFILES_GEN): %.v : %.hs edits  ../ghc-base/edits
 _CoqProject : Makefile
 	> $@
 	echo "-R .                Top" >> $@
+	echo "-R ../base-thy/     Proofs" >> $@
 	echo "-R ../ghc-base/lib/ Top" >> $@
-	echo "-R ../base-thy      Proofs" >> $@
 	echo $(VFILES)                 >> $@
 
 Makefile.coq: _CoqProject

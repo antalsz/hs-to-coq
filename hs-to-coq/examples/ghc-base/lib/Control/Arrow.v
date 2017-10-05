@@ -17,13 +17,13 @@ Require Data.Either.
 Require Control.Monad.Fix.
 Require Control.Category.
 Require GHC.Base.
-Require GHC.BaseGen.
+Require GHC.Base.
 
 (* Converted declarations: *)
 
 (* Skipping instance instance_Arrow_GHC_Prim_____ *)
 
-(* Translating `instance forall `{GHC.BaseGen.Monad m},
+(* Translating `instance forall `{GHC.Base.Monad m},
    Control.Category.Category (Kleisli m)' failed: OOPS! Cannot construct types for
    this class def: Nothing unsupported *)
 
@@ -31,7 +31,7 @@ Require GHC.BaseGen.
 
 (* Skipping instance instance_ArrowApply_GHC_Prim_____ *)
 
-(* Translating `instance forall `{ArrowPlus a}, GHC.BaseGen.Alternative
+(* Translating `instance forall `{ArrowPlus a}, GHC.Base.Alternative
    (ArrowMonad a)' failed: OOPS! Cannot construct types for this class def: Nothing
    unsupported *)
 
@@ -160,46 +160,46 @@ Definition leftApp {a} {b} {c} {d} `{ArrowApply a} : a b c -> a (sum b d) (sum c
 *)
 Inductive ArrowMonad (a : Type -> Type -> Type) b : Type := Mk_ArrowMonad : (a unit b) -> ArrowMonad a b.
 
-Local Definition instance_forall___Arrow_a___GHC_BaseGen_Functor__ArrowMonad_a__fmap
+Local Definition instance_forall___Arrow_a___GHC_Base_Functor__ArrowMonad_a__fmap
       `{Arrow a0} : forall {a} {b},
                                                                                             (a -> b) -> (ArrowMonad a0)
                                                                                             a -> (ArrowMonad a0) b :=
   fun {a} {b} =>
     fun arg_93__ arg_94__ =>
       match arg_93__ , arg_94__ with
-        | f , (Mk_ArrowMonad m) => GHC.BaseGen.id Mk_ArrowMonad
+        | f , (Mk_ArrowMonad m) => GHC.Base.id Mk_ArrowMonad
                                                   (Control.Category.op_zgzgzg__ m (arr f))
       end.
 
-Local Definition instance_forall___Arrow_a___GHC_BaseGen_Functor__ArrowMonad_a__op_zlzd__ `{Arrow
+Local Definition instance_forall___Arrow_a___GHC_Base_Functor__ArrowMonad_a__op_zlzd__ `{Arrow
                                                                                           a0} : forall {a} {b},
                                                                                                  b -> (ArrowMonad a0)
                                                                                                  a -> (ArrowMonad a0)
                                                                                                  b :=
   fun {a} {b} =>
     fun x =>
-      instance_forall___Arrow_a___GHC_BaseGen_Functor__ArrowMonad_a__fmap
-      (GHC.BaseGen.const x).
+      instance_forall___Arrow_a___GHC_Base_Functor__ArrowMonad_a__fmap
+      (GHC.Base.const x).
 
-Instance instance_forall___Arrow_a___GHC_BaseGen_Functor__ArrowMonad_a_
-  : !forall `{Arrow a}, GHC.BaseGen.Functor (ArrowMonad a) := {
+Instance instance_forall___Arrow_a___GHC_Base_Functor__ArrowMonad_a_
+  : !forall `{Arrow a}, GHC.Base.Functor (ArrowMonad a) := {
   fmap := fun {a} {b} =>
-    instance_forall___Arrow_a___GHC_BaseGen_Functor__ArrowMonad_a__fmap ;
+    instance_forall___Arrow_a___GHC_Base_Functor__ArrowMonad_a__fmap ;
   op_zlzd__ := fun {a} {b} =>
-    instance_forall___Arrow_a___GHC_BaseGen_Functor__ArrowMonad_a__op_zlzd__ }.
+    instance_forall___Arrow_a___GHC_Base_Functor__ArrowMonad_a__op_zlzd__ }.
 
 
-Local Definition instance_forall___Arrow_a___GHC_BaseGen_Applicative__ArrowMonad_a__pure `{Arrow
+Local Definition instance_forall___Arrow_a___GHC_Base_Applicative__ArrowMonad_a__pure `{Arrow
                                                                                          a0} : forall {a},
                                                                                                 a -> (ArrowMonad a0) a :=
   fun {a} =>
     fun arg_86__ =>
       match arg_86__ with
-        | x => Mk_ArrowMonad (arr (GHC.BaseGen.const x))
+        | x => Mk_ArrowMonad (arr (GHC.Base.const x))
       end.
 
 (*
-Local Definition instance_forall___Arrow_a___GHC_BaseGen_Applicative__ArrowMonad_a__op_zlztzg__ `{Arrow a0} : forall {a} {b},
+Local Definition instance_forall___Arrow_a___GHC_Base_Applicative__ArrowMonad_a__op_zlztzg__ `{Arrow a0} : forall {a} {b},
                                                                                                        (ArrowMonad a0)
                                                                                                        (a -> b) -> (ArrowMonad
                                                                                                        a0)
@@ -217,7 +217,7 @@ Local Definition instance_forall___Arrow_a___GHC_BaseGen_Applicative__ArrowMonad
       end.
 *)
 (*
-Local Definition instance_forall___Arrow_a___GHC_BaseGen_Applicative__ArrowMonad_a__op_ztzg__ `{Arrow
+Local Definition instance_forall___Arrow_a___GHC_Base_Applicative__ArrowMonad_a__op_ztzg__ `{Arrow
                                                                                               a0} : forall {a} {b},
                                                                                                      (ArrowMonad a0)
                                                                                                      a -> (ArrowMonad a0)
@@ -225,11 +225,11 @@ Local Definition instance_forall___Arrow_a___GHC_BaseGen_Applicative__ArrowMonad
                                                                                                      b :=
   fun {a} {b} =>
     fun x y =>
-      instance_forall___Arrow_a___GHC_BaseGen_Applicative__ArrowMonad_a__op_zlztzg__
-      (GHC.BaseGen.fmap (GHC.BaseGen.const GHC.BaseGen.id) x) y. *)
+      instance_forall___Arrow_a___GHC_Base_Applicative__ArrowMonad_a__op_zlztzg__
+      (GHC.Base.fmap (GHC.Base.const GHC.Base.id) x) y. *)
 
 (*
-Local Definition instance_forall___Arrow_a___GHC_BaseGen_Applicative__ArrowMonad_a__op_zlzt__ `{Arrow
+Local Definition instance_forall___Arrow_a___GHC_Base_Applicative__ArrowMonad_a__op_zlzt__ `{Arrow
                                                                                               a0} : forall {a} {b},
                                                                                                      (ArrowMonad a0)
                                                                                                      a -> (ArrowMonad a0)
@@ -237,40 +237,40 @@ Local Definition instance_forall___Arrow_a___GHC_BaseGen_Applicative__ArrowMonad
                                                                                                      a :=
   fun {a} {b} =>
     fun x y =>
-      instance_forall___Arrow_a___GHC_BaseGen_Applicative__ArrowMonad_a__op_zlztzg__
-      (GHC.BaseGen.fmap GHC.BaseGen.const x) y.
+      instance_forall___Arrow_a___GHC_Base_Applicative__ArrowMonad_a__op_zlztzg__
+      (GHC.Base.fmap GHC.Base.const x) y.
 
-Instance instance_forall___Arrow_a___GHC_BaseGen_Applicative__ArrowMonad_a_
-  : !forall `{Arrow a}, GHC.BaseGen.Applicative (ArrowMonad a) := {
+Instance instance_forall___Arrow_a___GHC_Base_Applicative__ArrowMonad_a_
+  : !forall `{Arrow a}, GHC.Base.Applicative (ArrowMonad a) := {
   op_zlzt__ := fun {a} {b} =>
-    instance_forall___Arrow_a___GHC_BaseGen_Applicative__ArrowMonad_a__op_zlzt__ ;
+    instance_forall___Arrow_a___GHC_Base_Applicative__ArrowMonad_a__op_zlzt__ ;
   op_zlztzg__ := fun {a} {b} =>
-    instance_forall___Arrow_a___GHC_BaseGen_Applicative__ArrowMonad_a__op_zlztzg__ ;
+    instance_forall___Arrow_a___GHC_Base_Applicative__ArrowMonad_a__op_zlztzg__ ;
   op_ztzg__ := fun {a} {b} =>
-    instance_forall___Arrow_a___GHC_BaseGen_Applicative__ArrowMonad_a__op_ztzg__ ;
+    instance_forall___Arrow_a___GHC_Base_Applicative__ArrowMonad_a__op_ztzg__ ;
   pure := fun {a} =>
-    instance_forall___Arrow_a___GHC_BaseGen_Applicative__ArrowMonad_a__pure }.
+    instance_forall___Arrow_a___GHC_Base_Applicative__ArrowMonad_a__pure }.
 
 
 Instance instance_forall___ArrowApply_a____ArrowPlus_a___GHC_Base_MonadPlus__ArrowMonad_a_
- {a} `{ArrowApply a} `{ArrowPlus a} : !GHC.BaseGen.MonadPlus (ArrowMonad a) :=
+ {a} `{ArrowApply a} `{ArrowPlus a} : !GHC.Base.MonadPlus (ArrowMonad a) :=
   {}.
 Proof.
 Admitted.
 
 
-Instance instance_forall___ArrowPlus_a___GHC_BaseGen_Alternative__ArrowMonad_a_
-  : !forall `{ArrowPlus a}, !GHC.BaseGen.Alternative (ArrowMonad a) := {}.
+Instance instance_forall___ArrowPlus_a___GHC_Base_Alternative__ArrowMonad_a_
+  : !forall `{ArrowPlus a}, !GHC.Base.Alternative (ArrowMonad a) := {}.
 Proof.
 Admitted.
 
-Local Definition instance_forall___ArrowApply_a___GHC_BaseGen_Monad__ArrowMonad_a__return_ `{ArrowApply
+Local Definition instance_forall___ArrowApply_a___GHC_Base_Monad__ArrowMonad_a__return_ `{ArrowApply
                                                                                            a} : forall {a},
                                                                                                   a -> (ArrowMonad a)
                                                                                                   a :=
-  fun {a} => GHC.BaseGen.pure.
+  fun {a} => GHC.Base.pure.
 
-Local Definition instance_forall___ArrowApply_a___GHC_BaseGen_Monad__ArrowMonad_a__op_zgzgze__ `{ArrowApply
+Local Definition instance_forall___ArrowApply_a___GHC_Base_Monad__ArrowMonad_a__op_zgzgze__ `{ArrowApply
                                                                                                a} : forall {a} {b},
                                                                                                       (ArrowMonad a)
                                                                                                       a -> (a -> (ArrowMonad
@@ -280,7 +280,7 @@ Local Definition instance_forall___ArrowApply_a___GHC_BaseGen_Monad__ArrowMonad_
   fun {a} {b} =>
     fun arg_78__ arg_79__ =>
       match arg_78__ , arg_79__ with
-        | (Mk_ArrowMonad m) , f => GHC.BaseGen.id Mk_ArrowMonad
+        | (Mk_ArrowMonad m) , f => GHC.Base.id Mk_ArrowMonad
                                                   (Control.Category.op_zgzgzg__ m (Control.Category.op_zgzgzg__ (arr
                                                                                                                 (fun arg_80__ =>
                                                                                                                   match arg_80__ with
@@ -297,22 +297,22 @@ Local Definition instance_forall___ArrowApply_a___GHC_BaseGen_Monad__ArrowMonad_
                                                                                                                 app))
       end.
 
-Local Definition instance_forall___ArrowApply_a___GHC_BaseGen_Monad__ArrowMonad_a__op_zgzg__ `{ArrowApply
+Local Definition instance_forall___ArrowApply_a___GHC_Base_Monad__ArrowMonad_a__op_zgzg__ `{ArrowApply
                                                                                              a} : forall {a} {b},
                                                                                                     (ArrowMonad a)
                                                                                                     a -> (ArrowMonad a)
                                                                                                     b -> (ArrowMonad a)
                                                                                                     b :=
-  fun {a} {b} => GHC.BaseGen.op_ztzg__.
+  fun {a} {b} => GHC.Base.op_ztzg__.
 
-Instance instance_forall___ArrowApply_a___GHC_BaseGen_Monad__ArrowMonad_a_
-  : !forall `{ArrowApply a}, GHC.BaseGen.Monad (ArrowMonad a) := {
+Instance instance_forall___ArrowApply_a___GHC_Base_Monad__ArrowMonad_a_
+  : !forall `{ArrowApply a}, GHC.Base.Monad (ArrowMonad a) := {
   op_zgzg__ := fun {a} {b} =>
-    instance_forall___ArrowApply_a___GHC_BaseGen_Monad__ArrowMonad_a__op_zgzg__ ;
+    instance_forall___ArrowApply_a___GHC_Base_Monad__ArrowMonad_a__op_zgzg__ ;
   op_zgzgze__ := fun {a} {b} =>
-    instance_forall___ArrowApply_a___GHC_BaseGen_Monad__ArrowMonad_a__op_zgzgze__ ;
+    instance_forall___ArrowApply_a___GHC_Base_Monad__ArrowMonad_a__op_zgzgze__ ;
   return_ := fun {a} =>
-    instance_forall___ArrowApply_a___GHC_BaseGen_Monad__ArrowMonad_a__return_ }.
+    instance_forall___ArrowApply_a___GHC_Base_Monad__ArrowMonad_a__return_ }.
 *)
 
 Inductive Kleisli (m : Type -> Type) a b : Type := Mk_Kleisli : (a -> m b) -> Kleisli m a b.
@@ -346,7 +346,7 @@ Instance instance_forall___Control_Monad_Fix_MonadFix_m___ArrowLoop__Kleisli_m_
   loop := fun {b} {d} {c} =>
     instance_forall___Control_Monad_Fix_MonadFix_m___ArrowLoop__Kleisli_m__loop }.
 *)
-Local Definition instance_forall___GHC_BaseGen_Monad_m___ArrowApply__Kleisli_m__app `{GHC.BaseGen.Monad
+Local Definition instance_forall___GHC_Base_Monad_m___ArrowApply__Kleisli_m__app `{GHC.Base.Monad
                                                                                     m} : forall {b} {c},
                                                                                            (Kleisli m) ((Kleisli m) b c
                                                                                                        * b) c :=
@@ -356,8 +356,8 @@ Local Definition instance_forall___GHC_BaseGen_Monad_m___ArrowApply__Kleisli_m__
                    | (pair (Mk_Kleisli f) x) => f x
                  end).
 
-Instance instance_forall___GHC_BaseGen_Monad_m___Control_Category_Category__Kleisli_m_
-  `{GHC.BaseGen.Monad m} : !Control.Category.Category (Kleisli m) := {}.
+Instance instance_forall___GHC_Base_Monad_m___Control_Category_Category__Kleisli_m_
+  `{GHC.Base.Monad m} : !Control.Category.Category (Kleisli m) := {}.
 Proof.
   - intro a. eapply Mk_Kleisli. destruct H0. eapply pure.
   - intros b a c K1 K2. destruct K1. destruct K2.
@@ -365,7 +365,7 @@ Proof.
     exact m0.
 Defined.
 
-Local Definition instance_forall___GHC_BaseGen_Monad_m___Arrow__Kleisli_m__second `{GHC.BaseGen.Monad
+Local Definition instance_forall___GHC_Base_Monad_m___Arrow__Kleisli_m__second `{GHC.Base.Monad
                                                                                   m} : forall {b} {c} {d},
                                                                                          (Kleisli m) b c -> (Kleisli m)
                                                                                          (d * b) (d * c) :=
@@ -374,14 +374,14 @@ Local Definition instance_forall___GHC_BaseGen_Monad_m___Arrow__Kleisli_m__secon
       match arg_149__ with
         | (Mk_Kleisli f) => Mk_Kleisli (fun arg_150__ =>
                                          match arg_150__ with
-                                           | (pair d b) => GHC.BaseGen.op_zgzgze__ (f b) (fun arg_151__ =>
+                                           | (pair d b) => GHC.Base.op_zgzgze__ (f b) (fun arg_151__ =>
                                                                                   match arg_151__ with
-                                                                                    | c => GHC.BaseGen.return_ (pair d c)
+                                                                                    | c => GHC.Base.return_ (pair d c)
                                                                                   end)
                                          end)
       end.
 
-Local Definition instance_forall___GHC_BaseGen_Monad_m___Arrow__Kleisli_m__first `{GHC.BaseGen.Monad
+Local Definition instance_forall___GHC_Base_Monad_m___Arrow__Kleisli_m__first `{GHC.Base.Monad
                                                                                  m} : forall {b} {c} {d},
                                                                                         (Kleisli m) b c -> (Kleisli m)
                                                                                         (b * d) (c * d) :=
@@ -390,24 +390,24 @@ Local Definition instance_forall___GHC_BaseGen_Monad_m___Arrow__Kleisli_m__first
       match arg_140__ with
         | (Mk_Kleisli f) => Mk_Kleisli (fun arg_141__ =>
                                          match arg_141__ with
-                                           | (pair b d) => GHC.BaseGen.op_zgzgze__ (f b) (fun arg_142__ =>
+                                           | (pair b d) => GHC.Base.op_zgzgze__ (f b) (fun arg_142__ =>
                                                                                   match arg_142__ with
-                                                                                    | c => GHC.BaseGen.return_ (pair c d)
+                                                                                    | c => GHC.Base.return_ (pair c d)
                                                                                   end)
                                          end)
       end.
 
 (*
-Local Definition instance_forall___GHC_BaseGen_Monad_m___Arrow__Kleisli_m__arr
-      `{GHC.BaseGen.Monad m} : forall {b} {c}, (b -> c) -> (Kleisli m) b c :=
+Local Definition instance_forall___GHC_Base_Monad_m___Arrow__Kleisli_m__arr
+      `{GHC.Base.Monad m} : forall {b} {c}, (b -> c) -> (Kleisli m) b c :=
   fun {b} {c} =>
     fun arg_137__ =>
       match arg_137__ with
-        | f => Mk_Kleisli (Control.Category.op_z2218U__ GHC.BaseGen.return_ f)
+        | f => Mk_Kleisli (Control.Category.op_z2218U__ GHC.Base.return_ f)
       end.
 
-Local Definition instance_forall___GHC_BaseGen_Monad_m___Arrow__Kleisli_m__op_ztztzt__
-      `{GHC.BaseGen.Monad
+Local Definition instance_forall___GHC_Base_Monad_m___Arrow__Kleisli_m__op_ztztzt__
+      `{GHC.Base.Monad
           m} : forall {b} {c} {b'} {c'},
     (Kleisli m) b
                 c -> (Kleisli m) b'
@@ -419,15 +419,15 @@ Local Definition instance_forall___GHC_BaseGen_Monad_m___Arrow__Kleisli_m__op_zt
         | f , g => let swap :=
                      fun arg_6__ => match arg_6__ with | (pair x y) => pair y x end in
                    Control.Category.op_zgzgzg__
-                   (instance_forall___GHC_BaseGen_Monad_m___Arrow__Kleisli_m__first f)
+                   (instance_forall___GHC_Base_Monad_m___Arrow__Kleisli_m__first f)
                    (Control.Category.op_zgzgzg__
-                   (instance_forall___GHC_BaseGen_Monad_m___Arrow__Kleisli_m__arr swap)
+                   (instance_forall___GHC_Base_Monad_m___Arrow__Kleisli_m__arr swap)
                    (Control.Category.op_zgzgzg__
-                   (instance_forall___GHC_BaseGen_Monad_m___Arrow__Kleisli_m__first g)
-                   (instance_forall___GHC_BaseGen_Monad_m___Arrow__Kleisli_m__arr swap)))
+                   (instance_forall___GHC_Base_Monad_m___Arrow__Kleisli_m__first g)
+                   (instance_forall___GHC_Base_Monad_m___Arrow__Kleisli_m__arr swap)))
       end.
 
-Local Definition instance_forall___GHC_BaseGen_Monad_m___Arrow__Kleisli_m__op_zazaza__ `{GHC.BaseGen.Monad
+Local Definition instance_forall___GHC_Base_Monad_m___Arrow__Kleisli_m__op_zazaza__ `{GHC.Base.Monad
                                                                                        m} : forall {b} {c} {c'},
                                                                                               (Kleisli m) b
                                                                                               c -> (Kleisli m) b
@@ -437,35 +437,35 @@ Local Definition instance_forall___GHC_BaseGen_Monad_m___Arrow__Kleisli_m__op_za
     fun arg_11__ arg_12__ =>
       match arg_11__ , arg_12__ with
         | f , g => Control.Category.op_zgzgzg__
-                   (instance_forall___GHC_BaseGen_Monad_m___Arrow__Kleisli_m__arr (fun arg_13__ =>
+                   (instance_forall___GHC_Base_Monad_m___Arrow__Kleisli_m__arr (fun arg_13__ =>
                                                                                     match arg_13__ with
                                                                                       | b => pair b b
                                                                                     end))
-                   (instance_forall___GHC_BaseGen_Monad_m___Arrow__Kleisli_m__op_ztztzt__ f g)
+                   (instance_forall___GHC_Base_Monad_m___Arrow__Kleisli_m__op_ztztzt__ f g)
       end.
 
-Instance instance_forall___GHC_BaseGen_Monad_m___Arrow__Kleisli_m_
-  : !forall `{GHC.BaseGen.Monad m}, Arrow (Kleisli m) := {
+Instance instance_forall___GHC_Base_Monad_m___Arrow__Kleisli_m_
+  : !forall `{GHC.Base.Monad m}, Arrow (Kleisli m) := {
   arr := fun {b} {c} =>
-    instance_forall___GHC_BaseGen_Monad_m___Arrow__Kleisli_m__arr ;
+    instance_forall___GHC_Base_Monad_m___Arrow__Kleisli_m__arr ;
   first := fun {b} {c} {d} =>
-    instance_forall___GHC_BaseGen_Monad_m___Arrow__Kleisli_m__first ;
+    instance_forall___GHC_Base_Monad_m___Arrow__Kleisli_m__first ;
   op_zazaza__ := fun {b} {c} {c'} =>
-    instance_forall___GHC_BaseGen_Monad_m___Arrow__Kleisli_m__op_zazaza__ ;
+    instance_forall___GHC_Base_Monad_m___Arrow__Kleisli_m__op_zazaza__ ;
   op_ztztzt__ := fun {b} {c} {b'} {c'} =>
-    instance_forall___GHC_BaseGen_Monad_m___Arrow__Kleisli_m__op_ztztzt__ ;
+    instance_forall___GHC_Base_Monad_m___Arrow__Kleisli_m__op_ztztzt__ ;
   second := fun {b} {c} {d} =>
-    instance_forall___GHC_BaseGen_Monad_m___Arrow__Kleisli_m__second }.
+    instance_forall___GHC_Base_Monad_m___Arrow__Kleisli_m__second }.
 
 
 
 (*
-Instance instance_forall___GHC_BaseGen_Monad_m___ArrowApply__Kleisli_m_
-  `{GHC.BaseGen.Monad m} : !ArrowApply (Kleisli m) := {
+Instance instance_forall___GHC_Base_Monad_m___ArrowApply__Kleisli_m_
+  `{GHC.Base.Monad m} : !ArrowApply (Kleisli m) := {
   app := fun {b} {c} =>
-    instance_forall___GHC_BaseGen_Monad_m___ArrowApply__Kleisli_m__app }.
+    instance_forall___GHC_Base_Monad_m___ArrowApply__Kleisli_m__app }.
 *)
-Local Definition instance_forall___GHC_BaseGen_Monad_m___ArrowChoice__Kleisli_m__op_zbzbzb__ `{GHC.BaseGen.Monad
+Local Definition instance_forall___GHC_Base_Monad_m___ArrowChoice__Kleisli_m__op_zbzbzb__ `{GHC.Base.Monad
                                                                                              m} : forall {b} {d} {c},
                                                                                                     (Kleisli m) b
                                                                                                     d -> (Kleisli m) c
@@ -477,7 +477,7 @@ Local Definition instance_forall___GHC_BaseGen_Monad_m___ArrowChoice__Kleisli_m_
         | (Mk_Kleisli f) , (Mk_Kleisli g) => Mk_Kleisli (Data.Either.either f g)
       end.
 
-Local Definition instance_forall___GHC_BaseGen_Monad_m___ArrowChoice__Kleisli_m__op_zpzpzp__ `{GHC.BaseGen.Monad
+Local Definition instance_forall___GHC_Base_Monad_m___ArrowChoice__Kleisli_m__op_zpzpzp__ `{GHC.Base.Monad
                                                                                              m} : forall {b}
                                                                                                          {c}
                                                                                                          {b'}
@@ -491,12 +491,12 @@ Local Definition instance_forall___GHC_BaseGen_Monad_m___ArrowChoice__Kleisli_m_
     fun arg_110__ arg_111__ =>
       match arg_110__ , arg_111__ with
         | f , g =>
-          instance_forall___GHC_BaseGen_Monad_m___ArrowChoice__Kleisli_m__op_zbzbzb__
+          instance_forall___GHC_Base_Monad_m___ArrowChoice__Kleisli_m__op_zbzbzb__
           (Control.Category.op_zgzgzg__ f (arr inr)) (Control.Category.op_zgzgzg__ g (arr
                                                                                    inl))
       end.
 
-Local Definition instance_forall___GHC_BaseGen_Monad_m___ArrowChoice__Kleisli_m__right `{GHC.BaseGen.Monad
+Local Definition instance_forall___GHC_Base_Monad_m___ArrowChoice__Kleisli_m__right `{GHC.Base.Monad
                                                                                        m} : forall {b} {c} {d},
                                                                                               (Kleisli m) b
                                                                                               c -> (Kleisli m) (sum d b)
@@ -505,11 +505,11 @@ Local Definition instance_forall___GHC_BaseGen_Monad_m___ArrowChoice__Kleisli_m_
     fun arg_107__ =>
       match arg_107__ with
         | f =>
-          instance_forall___GHC_BaseGen_Monad_m___ArrowChoice__Kleisli_m__op_zpzpzp__ (arr
+          instance_forall___GHC_Base_Monad_m___ArrowChoice__Kleisli_m__op_zpzpzp__ (arr
                                                                                       Control.Category.id) f
       end.
 
-Local Definition instance_forall___GHC_BaseGen_Monad_m___ArrowChoice__Kleisli_m__left `{GHC.BaseGen.Monad
+Local Definition instance_forall___GHC_Base_Monad_m___ArrowChoice__Kleisli_m__left `{GHC.Base.Monad
                                                                                       m} : forall {b} {c} {d},
                                                                                              (Kleisli m) b c -> (Kleisli
                                                                                              m) (sum b d) (sum c d) :=
@@ -517,20 +517,20 @@ Local Definition instance_forall___GHC_BaseGen_Monad_m___ArrowChoice__Kleisli_m_
     fun arg_104__ =>
       match arg_104__ with
         | f =>
-          instance_forall___GHC_BaseGen_Monad_m___ArrowChoice__Kleisli_m__op_zpzpzp__ f
+          instance_forall___GHC_Base_Monad_m___ArrowChoice__Kleisli_m__op_zpzpzp__ f
                                                                                       (arr Control.Category.id)
       end.
 
-Instance instance_forall___GHC_BaseGen_Monad_m___ArrowChoice__Kleisli_m_
-  : !forall `{GHC.BaseGen.Monad m}, ArrowChoice (Kleisli m) := {
+Instance instance_forall___GHC_Base_Monad_m___ArrowChoice__Kleisli_m_
+  : !forall `{GHC.Base.Monad m}, ArrowChoice (Kleisli m) := {
   left := fun {b} {c} {d} =>
-    instance_forall___GHC_BaseGen_Monad_m___ArrowChoice__Kleisli_m__left ;
+    instance_forall___GHC_Base_Monad_m___ArrowChoice__Kleisli_m__left ;
   op_zbzbzb__ := fun {b} {d} {c} =>
-    instance_forall___GHC_BaseGen_Monad_m___ArrowChoice__Kleisli_m__op_zbzbzb__ ;
+    instance_forall___GHC_Base_Monad_m___ArrowChoice__Kleisli_m__op_zbzbzb__ ;
   op_zpzpzp__ := fun {b} {c} {b'} {c'} =>
-    instance_forall___GHC_BaseGen_Monad_m___ArrowChoice__Kleisli_m__op_zpzpzp__ ;
+    instance_forall___GHC_Base_Monad_m___ArrowChoice__Kleisli_m__op_zpzpzp__ ;
   right := fun {b} {c} {d} =>
-    instance_forall___GHC_BaseGen_Monad_m___ArrowChoice__Kleisli_m__right }.
+    instance_forall___GHC_Base_Monad_m___ArrowChoice__Kleisli_m__right }.
 
 Local Definition instance_forall___GHC_Base_MonadPlus_m___ArrowPlus__Kleisli_m__op_zlzpzg__ `{GHC.Base.MonadPlus
                                                                                             m} : forall {b} {c},
@@ -570,7 +570,7 @@ Instance instance_forall___GHC_Base_MonadPlus_m___ArrowZero__Kleisli_m_
      Control.Monad.Fix.MonadFix Control.Monad.Fix.mfix Data.Either.either
      Data.Tuple.fst Data.Tuple.snd Data.Tuple.uncurry GHC.Base.MonadPlus
      GHC.Base.liftM GHC.Base.mplus GHC.Base.mzero GHC.Base.op_zgzgze__
-     GHC.Base.return_ GHC.BaseGen.Alternative GHC.BaseGen.Applicative
-     GHC.BaseGen.Functor GHC.BaseGen.Monad GHC.BaseGen.const GHC.BaseGen.fmap
-     GHC.BaseGen.id GHC.BaseGen.op_ztzg__ GHC.BaseGen.pure inl inr pair sum tt unit
+     GHC.Base.return_ GHC.Base.Alternative GHC.Base.Applicative
+     GHC.Base.Functor GHC.Base.Monad GHC.Base.const GHC.Base.fmap
+     GHC.Base.id GHC.Base.op_ztzg__ GHC.Base.pure inl inr pair sum tt unit
 *)

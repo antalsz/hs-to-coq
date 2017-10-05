@@ -198,6 +198,7 @@ Edit :: { Edit }
   : type synonym Word ':->' Word                  { TypeSynonymTypeEdit   $3 $5                        }
   | data type arguments Word DataTypeArguments    { DataTypeArgumentsEdit $4 $5                        }
   | redefine CoqDefinition Optional('.')          { RedefinitionEdit      $2                           }
+  | add CoqDefinition Optional('.')               { AddEdit               $2                           }
   | skip Word                                     { SkipEdit              $2                           }
   | skip Op                                       { SkipEdit              $2                           }
   | skip method Word Word                         { SkipMethodEdit        $3 $4                        }

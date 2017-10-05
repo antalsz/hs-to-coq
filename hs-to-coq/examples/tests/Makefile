@@ -20,6 +20,7 @@ PASS = \
   MapAccumR \
   Sub \
   FTP \
+  AddAndReplace \
   FTPDefault \
   MutrecInst
 

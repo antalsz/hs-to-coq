@@ -147,7 +147,9 @@ importDeclSentences ConvertedImportDecl{..} = do
 data ConvertedModuleDeclarations =
   ConvertedModuleDeclarations { convertedTyClDecls    :: ![Sentence]
                               , convertedValDecls     :: ![Sentence]
-                              , convertedClsInstDecls :: ![Sentence] }
+                              , convertedClsInstDecls :: ![Sentence]
+                              , convertedAddedDecls   :: ![Sentence]
+                              }
   deriving (Eq, Ord, Show, Data)
 
 convertHsGroup :: ConversionMonad m => ModuleName -> HsGroup GHC.Name -> m ConvertedModuleDeclarations
@@ -187,6 +189,9 @@ convertHsGroup mod HsGroup{..} = do
         -- TODO RENAMER use RecFlag info to do recursion stuff
         pure . foldMap (foldMap (defns M.!)) . topoSortEnvironment $ NoBinding <$> defns
   convertedClsInstDecls <- convertModuleClsInstDecls [(Just mod, cid) | L _ (ClsInstD cid) <- hs_instds]
+
+  convertedAddedDecls <- use (edits.adds)
+
   pure ConvertedModuleDeclarations{..}
 
   where axiomatizeBinding :: GhcMonad m => HsBind GHC.Name -> GhcException -> m (Ident, [Sentence])
@@ -210,7 +215,9 @@ data ConvertedModule =
                   , convModImports      :: ![Sentence]
                   , convModTyClDecls    :: ![Sentence]
                   , convModValDecls     :: ![Sentence]
-                  , convModClsInstDecls :: ![Sentence] }
+                  , convModClsInstDecls :: ![Sentence]
+                  , convModAddedDecls   :: ![Sentence]
+                  }
   deriving (Eq, Ord, Show)
 
 -- Module-local
@@ -237,7 +244,9 @@ convert_module_with_requires convModName (group, imports, _exports, _docstring) 
   withCurrentModule convModName $ do
     decls@ConvertedModuleDeclarations { convertedTyClDecls    = convModTyClDecls
                                       , convertedValDecls     = convModValDecls
-                                      , convertedClsInstDecls = convModClsInstDecls }
+                                      , convertedClsInstDecls = convModClsInstDecls
+                                      , convertedAddedDecls   = convModAddedDecls
+                                      }
       <- convertHsGroup convModName group
     
     let importedModules = map (unLoc . ideclName . unLoc) imports
@@ -269,7 +278,7 @@ moduleDeclarations :: ConversionMonad m => ConvertedModule -> m [Sentence]
 moduleDeclarations ConvertedModule{..} = do
   orders <- use $ edits.orders
   let sorted = topoSortSentences orders $
-        convModTyClDecls ++ convModValDecls ++ convModClsInstDecls
+        convModTyClDecls ++ convModValDecls ++ convModClsInstDecls ++ convModAddedDecls
   ax_decls <- usedAxioms sorted
   return $ ax_decls ++ sorted
 

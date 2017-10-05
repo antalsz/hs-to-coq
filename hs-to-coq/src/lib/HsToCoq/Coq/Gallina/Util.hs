@@ -26,6 +26,7 @@ import Control.Applicative
 import Data.Semigroup ((<>))
 import Data.Foldable
 import Data.List.NonEmpty (NonEmpty(..), nonEmpty)
+import HsToCoq.Util.List
 
 import qualified Data.Text as T
 import Text.Parsec hiding ((<|>), many)
@@ -118,13 +119,10 @@ identToQualid :: Ident -> Maybe Qualid
 identToQualid = either (const Nothing) Just . parse qualid "" where
   qualid = do
     let modFrag = T.cons <$> upper <*> (T.pack <$> many (alphaNum <|> char '\''))
-    frags <- many (try (modFrag <* char '.'))
-    lastFrag  <- T.pack <$> some anyChar
-    -- This code is not pretty, but a quick fix to fix the build. I believe
-    -- the function is now doing the right thing, just the code could be nicer.
-    pure $ case frags ++ [lastFrag] of
-       (bare : qualifieds) -> foldl' Qualified (Bare bare) qualifieds
-       _ -> error "Unreachable"
+        modules = many . try $ modFrag <* char '.'
+        base    = T.pack <$> some anyChar -- since we're assuming we get a valid name
+    root :| rest <- (|:) <$> modules <*> base
+    pure $ foldl' Qualified (Bare root) rest
 
 identToBase :: Ident -> Ident
 identToBase x = maybe x qualidBase $ identToQualid x

@@ -115,6 +115,11 @@ VFILES:=GHC/Prim.v\
   GHC/Int.v\
   Data/Bool.v\
   Control/Category.v\
+  Data/Either.v\
+  Control/Arrow.v\
+  Data/Proxy.v\
+  Data/Foldable.v\
+  Data/Functor/Const.v\
   Prelude.v\
   GHC/List.v\
   Data/Tuple.v\
@@ -123,9 +128,7 @@ VFILES:=GHC/Prim.v\
   Data/Ord.v\
   Data/Eq.v\
   Data/Monoid.v\
-  Control/Arrow.v\
-  Data/Proxy.v\
-  Control/Applicative.v\
+  Data/Functor.v\
   GHC/Types.v\
   GHC/Classes.v\
   GHC/CString.v\
@@ -142,10 +145,13 @@ VFILES:=GHC/Prim.v\
   _GHC/Num.v\
   Data/Type/Coercion.v\
   GHC/Arr.v\
-  GHC/BaseGen.v\
-  Data/Either.v\
-  Data/Foldable.v\
-  Control/Monad/Fix.v
+  GHC/ST.v\
+  System/IO.v\
+  Control/Monad/Fix.v\
+  Foreign/Storable.v\
+  GHC/Float.v\
+  Control/Applicative.v\
+  GHC/BaseGen.v
 
 ifneq ($(filter-out archclean clean cleanall printenv,$(MAKECMDGOALS)),)
 -include $(addsuffix .d,$(VFILES))

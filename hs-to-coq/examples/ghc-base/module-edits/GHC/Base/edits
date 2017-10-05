@@ -1,4 +1,3 @@
-skip method Monad fail
 
 skip String
 skip Maybe
@@ -43,8 +42,6 @@ skip getTag
 skip eqString # actual bug in output
 skip build    # something to do with _::_?
 skip augment  # same
-
-skip flip
 
 order instance_Functor_list instance_Applicative_list_op_zlzt__ instance_Applicative_list instance_Monad_list_op_zgzg__ instance_Monad_list_return_ instance_Monad_list
 order instance_Functor_option instance_Applicative_option_op_zlztzg__ instance_Applicative_option instance_Monad_option_op_zgzg__ instance_Monad_option_return_ instance_Monad_option

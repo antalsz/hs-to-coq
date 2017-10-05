@@ -32,6 +32,11 @@ HANDMOD = GHC/Prim \
           GHC/Int \
           Data/Bool \
           Control/Category \
+		    Data/Either \
+          Control/Arrow \
+          Data/Proxy \
+	       Data/Foldable \
+          Data/Functor/Const \
           Prelude
 
 # GHC.Base imports modules without using anything from it (e.g. because
@@ -56,9 +61,15 @@ EMPTY_MODS  =\
 	  _GHC/Num \
 	  Data/Type/Coercion \
 	  GHC/Arr \
+     GHC/ST \
+     System/IO \
+     Control/Monad/Fix \
+     Foreign/Storable \
+     GHC/Float \
+     Control/Applicative
 
 # Generated modules
-# All except BaseGen are generated directly from GHC/libraries/base
+# generated directly from GHC/libraries/base
 MODULES  = GHC/List \
            Data/Tuple \
            Data/Maybe \
@@ -66,17 +77,13 @@ MODULES  = GHC/List \
            Data/Ord \
            Data/Eq \
            Data/Monoid \
-           Control/Arrow \
-           Data/Proxy \
-           Control/Applicative
-
-DROPIN =   Data/Either \
-	        Data/Foldable \
-           Control/Monad/Fix \
-
+           Data/Functor \
 
 
 # generated from drop-in/
+DROPIN =
+
+# also generated from drop-in/
 SPECIAL_MODULES = GHC/BaseGen \
 
 

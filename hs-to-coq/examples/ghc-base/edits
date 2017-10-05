@@ -18,6 +18,16 @@ rename value GHC.Base.++     = Coq.Init.Datatypes.app
 rename value GHC.List.concatMap  = Coq.Lists.List.flat_map
 rename value GHC.Base..      = Coq.Program.Basics.compose
 rename value GHC.Base.$      = GHC.BaseGen.id
+rename value GHC.Base.fmap   = GHC.BaseGen.fmap
+rename value GHC.Base.flip   = GHC.BaseGen.flip
+rename value GHC.Base.mempty = GHC.BaseGen.mempty
+rename value GHC.Base.mappend = GHC.BaseGen.mappend
+
+rename value GHC.Base.<$ = GHC.BaseGen.<$
+rename value GHC.Base.<*> = GHC.BaseGen.<*>
+rename value GHC.Base.<|> = GHC.BaseGen.<|>
+rename value GHC.Base.pure = GHC.BaseGen.pure
+
 rename value GHC.Magic.oneShot = GHC.Prim.oneShot
 
 rename type GHC.Types.Ordering = comparison
@@ -58,3 +68,12 @@ rename type GHC.Base.String = GHC.Prim.String
 
 rename value GHC.Err.errorWithoutStackTrace = GHC.Prim.errorWithoutStackTrace
 
+rename type Data.Either.Either = sum
+rename value Data.Either.Right = inl
+rename value Data.Either.Left  = inr
+
+
+rename type GHC.Types.* = Type
+
+
+skip method Monad fail

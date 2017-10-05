@@ -1,0 +1,3 @@
+redefine Inductive Const c (b:Type) : Type := Mk_Const : c -> (Const c b).
+
+# redefine Local Definition instance_forall___GHC_BaseGen_Monoid_m___GHC_BaseGen_Applicative__Const_m__op_zlztzg__ `{GHC.BaseGen.Monoid m} : forall {a}{b}, (Const m) (a -> b) -> (Const m) a -> (Const m) b := fun {a} {b} x y => match (x,y) with (Mk_Const x1, Mk_Const x2) => Mk_Const (GHC.BaseGen.mappend x1 x2)  end.

@@ -15,7 +15,7 @@ module HsToCoq.Coq.Gallina.Util (
   binderNames, binderIdents, binderExplicitness,
   -- ** Functions
   qualidBase, qualidModule,
-  qualidToIdent, identToQualid, identToQualid', identToBase,
+  qualidToIdent, identToQualid, identToBase,
   nameToTerm, nameToPattern,
   binderArgs
   ) where
@@ -125,11 +125,6 @@ identToQualid = either (const Nothing) Just . parse qualid "" where
     pure $ case frags ++ [lastFrag] of
        (bare : qualifieds) -> foldl' Qualified (Bare bare) qualifieds
        _ -> error "Unreachable"
-
-identToQualid' x = case T.splitOn "." x of
-                    root:rest -> Just $ foldl' Qualified (Bare root) rest
-                    []        -> Nothing
-
 
 identToBase :: Ident -> Ident
 identToBase x = maybe x qualidBase $ identToQualid x

@@ -21,8 +21,7 @@ endif
 
 
 # Handwritten modules (usually by modification of generated version)
-HANDMOD = GHC/Base \
-          GHC/Num \
+HANDMOD = GHC/Num \
           GHC/Char \
           GHC/Enum \
           GHC/Real \
@@ -59,7 +58,6 @@ EMPTY_MODS  =\
 	  GHC/Read \
 	  GHC/Show \
 	  GHC/Generics \
-	  _GHC/Base \
 	  _GHC/Num \
 	  Data/Type/Coercion \
 	  GHC/Arr \
@@ -82,7 +80,7 @@ MODULES  = GHC/List \
 
 
 # generated from drop-in/
-DROPIN =
+DROPIN = GHC/Base
 
 # also generated from drop-in/
 SPECIAL_MODULES =

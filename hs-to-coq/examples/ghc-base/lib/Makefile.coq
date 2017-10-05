@@ -101,8 +101,7 @@ endif
 #                    #
 ######################
 
-VFILES:=GHC/Base.v\
-  GHC/Num.v\
+VFILES:=GHC/Num.v\
   GHC/Char.v\
   GHC/Enum.v\
   GHC/Real.v\
@@ -139,7 +138,6 @@ VFILES:=GHC/Base.v\
   GHC/Read.v\
   GHC/Show.v\
   GHC/Generics.v\
-  _GHC/Base.v\
   _GHC/Num.v\
   Data/Type/Coercion.v\
   GHC/Arr.v\
@@ -148,7 +146,8 @@ VFILES:=GHC/Base.v\
   Control/Monad/Fix.v\
   Foreign/Storable.v\
   GHC/Float.v\
-  Control/Applicative.v
+  Control/Applicative.v\
+  GHC/Base.v
 
 ifneq ($(filter-out archclean clean cleanall printenv,$(MAKECMDGOALS)),)
 -include $(addsuffix .d,$(VFILES))

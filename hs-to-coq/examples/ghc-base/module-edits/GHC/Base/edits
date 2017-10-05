@@ -50,3 +50,5 @@ skip instance_Alternative_list
 skip instance_MonadPlus_list
 skip instance_Alternative_option
 skip instance_MonadPlus_option
+
+skip foldr

@@ -9,7 +9,420 @@ Unset Printing Implicit Defensive.
 
 (* Preamble *)
 
-Require Export Prim.
+(* This includes everything that should be defined in GHC/Base.hs, but cannot
+   be generated from Base.hs.
+
+The types defined in GHC.Base:
+
+  list, (), Int, Bool, Ordering, Char, String
+
+are all mapped to corresponding Coq types. Therefore, the Eq/Ord classes must
+be defined in this module so that we can create instances for these types.
+
+ *)
+
+(* SSreflect library *)
+Require Export mathcomp.ssreflect.ssreflect.
+
+Generalizable All Variables.
+Set Implicit Arguments.
+Set Maximal Implicit Insertion.
+Unset Strict Implicit.
+Unset Printing Implicit Defensive.
+
+
+(********************* Types ************************)
+
+(* List notation *)
+Require Export Coq.Lists.List.
+
+(* Booleans *)
+Require Export Bool.Bool.
+
+(* Int and Integer types *)
+Require Export GHC.Num.
+
+(* Char type *)
+Require Export GHC.Char.
+
+(* TODO: add appropriate definitions to GHC.Num and GHC.Char *)
+Axiom primIntToChar      : Int -> Char.
+Axiom primCharToInt      : Char -> Int.
+Axiom primUnicodeMaxChar : Char.
+
+(* Strings *)
+Require Coq.Strings.String.
+Definition String := list Char.
+
+Bind Scope string_scope with String.string.
+Fixpoint hs_string__ (s : String.string) : String :=
+  match s with
+  | String.EmptyString => nil
+  | String.String c s  => &#c :: hs_string__ s
+  end.
+Notation "'&' s" := (hs_string__ s) (at level 1, format "'&' s").
+
+(* IO --- PUNT *)
+Definition FilePath := String.
+
+(* ASZ: I've been assured that this is OK *)
+Inductive IO (a : Type) : Type :=.
+Inductive IORef (a : Type) : Type :=.
+Inductive IOError : Type :=.
+
+Axiom returnIO : forall {a}, a -> IO a.
+Axiom bindIO : forall {a b}, IO a -> (a -> IO b) -> IO b.
+Axiom failIO : forall {a b}, a -> IO b.
+Axiom mplusIO : forall {a}, IO a -> IO a -> IO a.
+
+Axiom primPutChar   : Char -> IO unit.
+Axiom primReadFile  : String -> IO String.
+Axiom primWriteFile : String -> String -> IO unit.
+Axiom primGetContents : IO String.
+Axiom primGetChar     : IO Char.
+Axiom primCatch       : forall {a}, IO a -> (IOError -> IO a) -> IO a.
+Axiom primAppendFile  : FilePath -> String -> IO unit.
+
+
+(****************************************************)
+
+(* function composition *)
+Require Export Coq.Program.Basics.
+
+Notation "[,]"  := (fun x y => (x,y)).
+Notation "[,,]" := (fun x0 y1 z2 => (x0, y1, z2)).
+Notation "[,,,]" := (fun x0 x1 x2 x3 => (x0,x1,x2,x3)).
+Notation "[,,,,]" := (fun x0 x1 x2 x3 x4 => (x0,x1,x2,x3,x4)).
+Notation "[,,,,,]" := (fun x0 x1 x2 x3 x4 x5 => (x0,x1,x2,x3,x4,x5)).
+Notation "[,,,,,,]" := (fun x0 x1 x2 x3 x4 x5 x6 => (x0,x1,x2,x3,x4,x5,x6)).
+Notation "[,,,,,,,]" := (fun x0 x1 x2 x3 x4 x5 x6 x7 => (x0,x1,x2,x3,x4,x5,x6,x7)).
+
+Notation "'_++_'"   := (fun x y => x ++ y).
+Notation "'_::_'"   := (fun x y => x :: y).
+
+Notation "[->]"  := (fun x y => x -> y).
+
+(* Configure type argument to be maximally inserted *)
+Arguments List.app {_} _ _.
+
+(****************************************************)
+
+
+Definition Synonym {A : Type} (_uniq : Type) (x : A) : A := x.
+Arguments Synonym {A}%type _uniq%type x%type.
+
+(****************************************************)
+
+Axiom primUserError : forall {A}, A.
+Axiom primIOError   : forall {A}, A.
+Axiom error         : forall {A : Type}, String -> A.
+Axiom errorWithoutStackTrace : forall {A : Type}, String -> A.
+
+(*********** built in classes Eq & Ord **********************)
+
+(* Don't clash with Eq constructor for the comparison type. *)
+Class Eq_ a := {
+  op_zsze__ : (a -> (a -> bool)) ;
+  op_zeze__ : (a -> (a -> bool)) }.
+
+Infix "/=" := (op_zsze__) (no associativity, at level 70).
+
+Notation "'_/=_'" := (op_zsze__).
+
+Infix "==" := (op_zeze__) (no associativity, at level 70).
+
+Notation "'_==_'" := (op_zeze__).
+
+Class Ord a `{((Eq_ a))} := {
+  op_zl__ : (a -> (a -> bool)) ;
+  op_zlze__ : (a -> (a -> bool)) ;
+  op_zg__ : (a -> (a -> bool)) ;
+  op_zgze__ : (a -> (a -> bool)) ;
+  compare : (a -> (a -> comparison)) ;
+  max : (a -> (a -> a)) ;
+  min : (a -> (a -> a)) }.
+
+(* Don't clash with Coq's standard ordering predicates. *)
+Infix "<?" := (op_zl__) (no associativity, at level 70).
+
+Notation "'_<?_'" := (op_zl__).
+
+Infix "<=?" := (op_zlze__) (no associativity, at level 70).
+
+Notation "'_<=?_'" := (op_zlze__).
+
+Infix ">?" := (op_zg__) (no associativity, at level 70).
+
+Notation "'_>?_'" := (op_zg__).
+
+Infix ">=?" := (op_zgze__) (no associativity, at level 70).
+
+Notation "'_>=?_'" := (op_zgze__).
+
+(*********** Eq/Ord for primitive types **************************)
+
+Instance Eq_Int___ : Eq_ Int := {
+                               op_zsze__ := fun x y => (x =? y)%Z;
+                               op_zeze__ := fun x y => negb (x =? y)%Z;
+                             }.
+
+Instance Ord_Int___ : !Ord Int := {
+  op_zl__   := fun x y => (x <? y)%Z;
+  op_zlze__ := fun x y => (x <=? y)%Z;
+  op_zg__   := fun x y => (y <? x)%Z;
+  op_zgze__ := fun x y => (y <=? x)%Z;
+  compare   := Z.compare%Z ;
+  max       := Z.max%Z;
+  min       := Z.min%Z;
+}.
+
+Instance Eq_Integer___ : Eq_ Integer := {
+                               op_zsze__ := fun x y => (x =? y)%Z;
+                               op_zeze__ := fun x y => negb (x =? y)%Z;
+                             }.
+
+Instance Ord_Integer___ : !Ord Int := {
+  op_zl__   := fun x y => (x <? y)%Z;
+  op_zlze__ := fun x y => (x <=? y)%Z;
+  op_zg__   := fun x y => (y <? x)%Z;
+  op_zgze__ := fun x y => (y <=? x)%Z;
+  compare   := Z.compare%Z ;
+  max       := Z.max%Z;
+  min       := Z.min%Z;
+}.
+
+Instance Eq_Word___ : Eq_ Word := {
+                               op_zsze__ := fun x y => (x =? y)%N;
+                               op_zeze__ := fun x y => negb (x =? y)%N;
+                             }.
+
+Instance Ord_Word___ : !Ord Word := {
+  op_zl__   := fun x y => (x <? y)%N;
+  op_zlze__ := fun x y => (x <=? y)%N;
+  op_zg__   := fun x y => (y <? x)%N;
+  op_zgze__ := fun x y => (y <=? x)%N;
+  compare   := N.compare%N ;
+  max       := N.max%N;
+  min       := N.min%N;
+}.
+
+Instance Eq_Char___ : Eq_ Char := {
+                               op_zsze__ := fun x y => (x =? y)%N;
+                               op_zeze__ := fun x y => negb (x =? y)%N;
+                             }.
+
+Instance Ord_Char___ : !Ord Char := {
+  op_zl__   := fun x y => (x <? y)%N;
+  op_zlze__ := fun x y => (x <=? y)%N;
+  op_zg__   := fun x y => (y <? x)%N;
+  op_zgze__ := fun x y => (y <=? x)%N;
+  compare   := N.compare%N ;
+  max       := N.max%N;
+  min       := N.min%N;
+}.
+
+Instance Eq_bool___ : Eq_ bool := {
+                               op_zsze__ := eqb;
+                               op_zeze__ := fun x y => negb (eqb x y);
+                             }.
+
+Definition compare_bool (b1:bool)(b2:bool) : comparison :=
+  match b1 , b2 with
+  | true , true => Eq
+  | false, false => Eq
+  | true , false => Lt
+  | false , true => Gt
+  end.
+
+
+Instance Ord_bool___ : !Ord bool := {
+  op_zl__   := fun x y => andb (negb x) y;
+  op_zlze__ := fun x y => orb (negb x) y;
+  op_zg__   := fun x y => orb (negb y) x;
+  op_zgze__ := fun x y => andb (negb y) x;
+  compare   := compare_bool;
+  max       := orb;
+  min       := andb
+}.
+
+Instance Eq_unit___ : Eq_ unit := {
+                               op_zsze__ := fun x y => true;
+                               op_zeze__ := fun x y => false;
+                             }.
+
+Instance Ord_unit___ : !Ord unit := {
+  op_zl__   := fun x y => false;
+  op_zlze__ := fun x y => true;
+  op_zg__   := fun x y => false;
+  op_zgze__ := fun x y => true;
+  compare   := fun x y => Eq ;
+  max       := fun x y => tt;
+  min       := fun x y => tt;
+}.
+
+Definition eq_comparison (x : comparison) (y: comparison) :=
+  match x , y with
+  | Eq, Eq => true
+  | Gt, Gt => true
+  | Lt, Lt => true
+  | _ , _  => false
+end.
+
+Instance Eq_comparison___ : Eq_ comparison :=
+{
+  op_zsze__ := eq_comparison;
+  op_zeze__ := fun x y => negb (eq_comparison x y);
+}.
+
+Definition compare_comparison  (x : comparison) (y: comparison) :=
+  match x , y with
+  | Eq, Eq => Eq
+  | _, Eq  => Gt
+  | Eq, _  => Lt
+  | Lt, Lt => Eq
+  | _, Lt  => Lt
+  | Lt, _  => Gt
+  | Gt, Gt => Eq
+end.
+
+Definition ord_default {a} (comp : a -> a -> comparison) `{Eq_ a} :=
+  Build_Ord _
+  (fun x y => (comp x y) == Lt)
+  ( fun x y => negb ((comp x y) == Lt))
+  (fun x y => (comp y x) == Lt)
+  (fun x y => negb ((comp x y) == Lt))
+  comp
+  (fun x y =>
+     match comp x y with
+     | Lt => y
+     | _  => x
+     end)
+  (fun x y =>   match comp x y with
+             | Gt => y
+             | _  => x
+             end).
+
+Instance Ord_comparison___ : !Ord comparison := ord_default compare_comparison.
+
+
+(* TODO: are these available in a library somewhere? *)
+Fixpoint eqlist {a} `{Eq_ a} (xs :  list a) (ys : list a) : bool :=
+    match xs , ys with
+    | nil , nil => true
+    | x :: xs' , y :: ys' => andb (x == y) (eqlist xs' ys')
+    | _ ,  _ => false
+    end.
+
+Fixpoint compare_list {a} `{Ord a} (xs :  list a) (ys : list a) : comparison :=
+    match xs , ys with
+    | nil , nil => Eq
+    | nil , _   => Lt
+    | _   , nil => Gt
+    | x :: xs' , y :: ys' =>
+      match compare x y with
+          | Lt => Lt
+          | Gt => Gt
+          | Eq => compare_list xs' ys'
+      end
+    end.
+
+Instance Eq_list {a} `{Eq_ a} : Eq_ (list a) :=
+  { op_zsze__ := fun x y => true;
+    op_zeze__ := fun x y => false;
+  }.
+
+Instance Ord_list {a} `{Ord a}: !Ord (list a) :=
+  ord_default compare_list.
+
+
+Instance Eq_option {a} `{Eq_ a} : Eq_ (option a) := {
+   op_zsze__ := fun x y =>
+                  match x,y with
+                  | Some x0, Some y0 => x0 == y0
+                  | None, None => true
+                  | _,_ => false
+                  end ;
+   op_zeze__ := fun x y =>
+                  match x,y with
+                  | Some x0, Some y0 => x0 /= y0
+                  | None, None => false
+                  | _,_ => true
+                  end
+}.
+
+Definition compare_option {a} `{Ord a} (xs : option a) (ys : option a) : comparison :=
+  match xs, ys with
+  | None, None => Eq
+  | None, _    => Lt
+  | _   , None => Gt
+  | Some x , Some y => compare x y
+  end.
+
+Instance Ord_option {a} `{Ord a} : !Ord (option a) := ord_default compare_option.
+
+
+(* ********************************************************* *)
+(* Some Haskell functions we cannot translate (yet)          *)
+
+
+(* Pattern guards, ugh. *)
+Fixpoint take {a:Type} (n:Int) (xs:list a) : list a :=
+  match xs with
+  | nil => nil
+  | y :: ys => if Z.leb n #0 then nil else (y :: take (n - #1) ys)
+  end.
+
+Fixpoint drop {a:Type} (n:Int) (xs:list a) : list a :=
+  match xs with
+  | nil => nil
+  | y :: ys => if Z.leb n #0 then (y :: ys) else drop (n - #1) ys
+  end.
+
+(* The inner nil case is impossible. So it is left out of the Haskell version. *)
+Fixpoint scanr {a b:Type} (f : a -> b -> b) (q0 : b) (xs : list a) : list b :=
+  match xs with
+  | nil => q0 :: nil
+  | y :: ys => match scanr f q0 ys with
+              | q :: qs =>  f y q :: (q :: qs)
+              | nil => nil
+              end
+end.
+
+(* The inner nil case is impossible. So it is left out of the Haskell version. *)
+Fixpoint scanr1 {a :Type} (f : a -> a -> a) (q0 : a) (xs : list a) : list a :=
+  match xs with
+  | nil => q0 :: nil
+  | y :: nil => y :: nil
+  | y :: ys => match scanr1 f q0 ys with
+              | q :: qs =>  f y q :: (q :: qs)
+              | nil => nil
+              end
+end.
+
+(* ?? why doesn't this work? the infix variable k ? Or needed for foldl and foldl' below *)
+(* Yes, We need foldr for foldl and foldl' *)
+
+Fixpoint foldr {a}{b} (f: a -> b -> b) (z:b) (xs: list a) : b :=
+  match xs with
+  | nil => z
+  | y :: ys => f y (foldr f z ys)
+  end.
+
+
+Definition foldl {a}{b} k z0 xs :=
+  foldr (fun (v:a) (fn:b->b) => (fun (z:b) => fn (k z v))) (id : b -> b) xs z0.
+
+Definition foldl' {a}{b} k z0 xs :=
+  foldr (fun(v:a) (fn:b->b) => (fun(z:b) => fn (k z v))) (id : b -> b) xs z0.
+
+Definition build {a} : (forall {b},(a -> b -> b) -> b -> b) -> list a :=
+  fun g => g _ (fun x y => x :: y) nil.
+
+(********************************************************************)
+
+Definition seq {A} {B} (a : A) (b:B) := b.
+
+Definition oneShot {a} (x:a) := x.
 
 (* Converted imports: *)
 
@@ -47,39 +460,47 @@ Local Definition instance_Monoid_comparison_mappend
 Local Definition instance_Monoid_comparison_mempty : comparison :=
   Eq.
 
-Local Definition instance_Functor_option_fmap : forall {a} {b},
-                                                  (a -> b) -> option a -> option b :=
+Local Definition instance_Functor_Maybe_fmap : forall {a} {b},
+                                                 (a -> b) -> Maybe a -> Maybe b :=
   fun {a} {b} =>
     fun arg_187__ arg_188__ =>
       match arg_187__ , arg_188__ with
-        | _ , None => None
-        | f , (Some a) => Some (f a)
+        | _ , Nothing => Nothing
+        | f , (Just a) => Just (f a)
       end.
 
-Local Definition instance_Applicative_option_op_ztzg__ : forall {a} {b},
-                                                           option a -> option b -> option b :=
+Local Definition instance_Applicative_Maybe_op_ztzg__ : forall {a} {b},
+                                                          Maybe a -> Maybe b -> Maybe b :=
   fun {a} {b} =>
     fun arg_184__ arg_185__ =>
       match arg_184__ , arg_185__ with
-        | (Some _m1) , m2 => m2
-        | None , _m2 => None
+        | (Just _m1) , m2 => m2
+        | Nothing , _m2 => Nothing
       end.
 
-Local Definition instance_Applicative_option_pure : forall {a}, a -> option a :=
-  fun {a} => Some.
+Local Definition instance_Applicative_Maybe_pure : forall {a}, a -> Maybe a :=
+  fun {a} => Just.
 
-Local Definition instance_Monad_option_op_zgzgze__ : forall {a} {b},
-                                                       option a -> (a -> option b) -> option b :=
+Local Definition instance_Monad_Maybe_op_zgzgze__ : forall {a} {b},
+                                                      Maybe a -> (a -> Maybe b) -> Maybe b :=
   fun {a} {b} =>
     fun arg_175__ arg_176__ =>
       match arg_175__ , arg_176__ with
-        | (Some x) , k => k x
-        | None , _ => None
+        | (Just x) , k => k x
+        | Nothing , _ => Nothing
       end.
 
-(* Skipping instance instance_Alternative_option *)
+Local Definition instance_Alternative_Maybe_empty : forall {a}, Maybe a :=
+  fun {a} => Nothing.
 
-(* Skipping instance instance_MonadPlus_option *)
+Local Definition instance_Alternative_Maybe_op_zlzbzg__ : forall {a},
+                                                            Maybe a -> Maybe a -> Maybe a :=
+  fun {a} =>
+    fun arg_172__ arg_173__ =>
+      match arg_172__ , arg_173__ with
+        | Nothing , r => r
+        | l , _ => l
+      end.
 
 Local Definition instance_Applicative_list_op_zlztzg__ : forall {a} {b},
                                                            list (a -> b) -> list a -> list b :=
@@ -204,9 +625,9 @@ Local Definition instance_Functor_list_op_zlzd__ : forall {a} {b},
                                                      a -> list b -> list a :=
   fun {a} {b} => op_z2218U__ instance_Functor_list_fmap const.
 
-Local Definition instance_Functor_option_op_zlzd__ : forall {a} {b},
-                                                       a -> option b -> option a :=
-  fun {a} {b} => op_z2218U__ instance_Functor_option_fmap const.
+Local Definition instance_Functor_Maybe_op_zlzd__ : forall {a} {b},
+                                                      a -> Maybe b -> Maybe a :=
+  fun {a} {b} => op_z2218U__ instance_Functor_Maybe_fmap const.
 
 Definition op_zd__ {a} {b} : (a -> b) -> a -> b :=
   fun arg_30__ arg_31__ => match arg_30__ , arg_31__ with | f , x => f x end.
@@ -361,11 +782,34 @@ Class MonadPlus m `{Alternative m} `{Monad m} := {
   mplus : forall {a}, m a -> m a -> m a ;
   mzero : forall {a}, m a }.
 
+Local Definition instance_MonadPlus_Maybe_mzero : forall {a}, Maybe a :=
+  fun {a} => empty.
+
+Local Definition instance_MonadPlus_Maybe_mplus : forall {a},
+                                                    Maybe a -> Maybe a -> Maybe a :=
+  fun {a} => op_zlzbzg__.
+
+Instance instance_MonadPlus_Maybe : !MonadPlus Maybe := {
+  mplus := fun {a} => instance_MonadPlus_Maybe_mplus ;
+  mzero := fun {a} => instance_MonadPlus_Maybe_mzero }.
+
 Definition liftA {f} {a} {b} `{Applicative f} : (a -> b) -> f a -> f b :=
   fun arg_138__ arg_139__ =>
     match arg_138__ , arg_139__ with
       | f , a => op_zlztzg__ (pure f) a
     end.
+
+Local Definition instance_Monad_Maybe_return_ : forall {a}, a -> Maybe a :=
+  fun {a} => pure.
+
+Local Definition instance_Monad_Maybe_op_zgzg__ : forall {a} {b},
+                                                    Maybe a -> Maybe b -> Maybe b :=
+  fun {a} {b} => op_ztzg__.
+
+Instance instance_Monad_Maybe : !Monad Maybe := {
+  op_zgzg__ := fun {a} {b} => instance_Monad_Maybe_op_zgzg__ ;
+  op_zgzgze__ := fun {a} {b} => instance_Monad_Maybe_op_zgzgze__ ;
+  return_ := fun {a} => instance_Monad_Maybe_return_ }.
 
 Definition liftA3 {f} {a} {b} {c} {d} `{Applicative f} : (a -> b -> c -> d) -> f
                                                          a -> f b -> f c -> f d :=
@@ -419,73 +863,85 @@ Instance instance_Monad_list : !Monad list := {
   op_zgzgze__ := fun {a} {b} => instance_Monad_list_op_zgzgze__ ;
   return_ := fun {a} => instance_Monad_list_return_ }.
 
-Instance instance_Functor_option : !Functor option := {
-  fmap := fun {a} {b} => instance_Functor_option_fmap ;
-  op_zlzd__ := fun {a} {b} => instance_Functor_option_op_zlzd__ }.
+Local Definition instance_Alternative_Maybe_some : forall {a},
+                                                     Maybe a -> Maybe (list a) :=
+  fun {a} =>
+    fun arg_10__ =>
+      match arg_10__ with
+        | v => let many_v := instance_Alternative_Maybe_op_zlzbzg__ some_v (pure nil) in
+               let some_v := op_zlztzg__ (fmap cons v) many_v in some_v
+      end.
 
-Local Definition instance_Applicative_option_op_zlztzg__ : forall {a} {b},
-                                                             option (a -> b) -> option a -> option b :=
+Local Definition instance_Alternative_Maybe_many : forall {a},
+                                                     Maybe a -> Maybe (list a) :=
+  fun {a} =>
+    fun arg_14__ =>
+      match arg_14__ with
+        | v => let many_v := instance_Alternative_Maybe_op_zlzbzg__ some_v (pure nil) in
+               let some_v := op_zlztzg__ (fmap cons v) many_v in many_v
+      end.
+
+Instance instance_Alternative_Maybe : !Alternative Maybe := {
+  empty := fun {a} => instance_Alternative_Maybe_empty ;
+  many := fun {a} => instance_Alternative_Maybe_many ;
+  op_zlzbzg__ := fun {a} => instance_Alternative_Maybe_op_zlzbzg__ ;
+  some := fun {a} => instance_Alternative_Maybe_some }.
+
+Local Definition instance_Applicative_Maybe_op_zlztzg__ : forall {a} {b},
+                                                            Maybe (a -> b) -> Maybe a -> Maybe b :=
   fun {a} {b} =>
     fun arg_180__ arg_181__ =>
       match arg_180__ , arg_181__ with
-        | (Some f) , m => fmap f m
-        | None , _m => None
+        | (Just f) , m => fmap f m
+        | Nothing , _m => Nothing
       end.
 
-Local Definition instance_Applicative_option_op_zlzt__ : forall {a} {b},
-                                                           option a -> option b -> option a :=
+Local Definition instance_Applicative_Maybe_op_zlzt__ : forall {a} {b},
+                                                          Maybe a -> Maybe b -> Maybe a :=
   fun {a} {b} =>
     fun arg_6__ arg_7__ =>
       match arg_6__ , arg_7__ with
-        | a , b => instance_Applicative_option_op_zlztzg__ (fmap const a) b
+        | a , b => instance_Applicative_Maybe_op_zlztzg__ (fmap const a) b
       end.
 
-Instance instance_Applicative_option : !Applicative option := {
-  op_zlzt__ := fun {a} {b} => instance_Applicative_option_op_zlzt__ ;
-  op_zlztzg__ := fun {a} {b} => instance_Applicative_option_op_zlztzg__ ;
-  op_ztzg__ := fun {a} {b} => instance_Applicative_option_op_ztzg__ ;
-  pure := fun {a} => instance_Applicative_option_pure }.
+Instance instance_Applicative_Maybe : !Applicative Maybe := {
+  op_zlzt__ := fun {a} {b} => instance_Applicative_Maybe_op_zlzt__ ;
+  op_zlztzg__ := fun {a} {b} => instance_Applicative_Maybe_op_zlztzg__ ;
+  op_ztzg__ := fun {a} {b} => instance_Applicative_Maybe_op_ztzg__ ;
+  pure := fun {a} => instance_Applicative_Maybe_pure }.
 
-Local Definition instance_Monad_option_op_zgzg__ : forall {a} {b},
-                                                     option a -> option b -> option b :=
-  fun {a} {b} => op_ztzg__.
-
-Local Definition instance_Monad_option_return_ : forall {a}, a -> option a :=
-  fun {a} => pure.
-
-Instance instance_Monad_option : !Monad option := {
-  op_zgzg__ := fun {a} {b} => instance_Monad_option_op_zgzg__ ;
-  op_zgzgze__ := fun {a} {b} => instance_Monad_option_op_zgzgze__ ;
-  return_ := fun {a} => instance_Monad_option_return_ }.
+Instance instance_Functor_Maybe : !Functor Maybe := {
+  fmap := fun {a} {b} => instance_Functor_Maybe_fmap ;
+  op_zlzd__ := fun {a} {b} => instance_Functor_Maybe_op_zlzd__ }.
 
 Class Monoid a := {
   mappend : a -> a -> a ;
   mconcat : list a -> a ;
   mempty : a }.
 
-Local Definition instance_forall___Monoid_a___Monoid__option_a__mempty `{Monoid
-                                                                       a} : (option a) :=
-  None.
+Local Definition instance_forall___Monoid_a___Monoid__Maybe_a__mempty `{Monoid
+                                                                      a} : (Maybe a) :=
+  Nothing.
 
-Local Definition instance_forall___Monoid_a___Monoid__option_a__mappend `{Monoid
-                                                                        a} : (option a) -> (option a) -> (option a) :=
+Local Definition instance_forall___Monoid_a___Monoid__Maybe_a__mappend `{Monoid
+                                                                       a} : (Maybe a) -> (Maybe a) -> (Maybe a) :=
   fun arg_191__ arg_192__ =>
     match arg_191__ , arg_192__ with
-      | None , m => m
-      | m , None => m
-      | (Some m1) , (Some m2) => Some (mappend m1 m2)
+      | Nothing , m => m
+      | m , Nothing => m
+      | (Just m1) , (Just m2) => Just (mappend m1 m2)
     end.
 
-Local Definition instance_forall___Monoid_a___Monoid__option_a__mconcat `{Monoid
-                                                                        a} : list (option a) -> (option a) :=
-  foldr instance_forall___Monoid_a___Monoid__option_a__mappend
-  instance_forall___Monoid_a___Monoid__option_a__mempty.
+Local Definition instance_forall___Monoid_a___Monoid__Maybe_a__mconcat `{Monoid
+                                                                       a} : list (Maybe a) -> (Maybe a) :=
+  foldr instance_forall___Monoid_a___Monoid__Maybe_a__mappend
+  instance_forall___Monoid_a___Monoid__Maybe_a__mempty.
 
-Instance instance_forall___Monoid_a___Monoid__option_a_ : !forall `{Monoid a},
-                                                            Monoid (option a) := {
-  mappend := instance_forall___Monoid_a___Monoid__option_a__mappend ;
-  mconcat := instance_forall___Monoid_a___Monoid__option_a__mconcat ;
-  mempty := instance_forall___Monoid_a___Monoid__option_a__mempty }.
+Instance instance_forall___Monoid_a___Monoid__Maybe_a_ : !forall `{Monoid a},
+                                                           Monoid (Maybe a) := {
+  mappend := instance_forall___Monoid_a___Monoid__Maybe_a__mappend ;
+  mconcat := instance_forall___Monoid_a___Monoid__Maybe_a__mconcat ;
+  mempty := instance_forall___Monoid_a___Monoid__Maybe_a__mempty }.
 
 Instance instance_Monoid_comparison : !Monoid comparison := {
   mappend := instance_Monoid_comparison_mappend ;
@@ -678,6 +1134,6 @@ Instance instance_Monoid_unit : !Monoid unit := {
   mempty := instance_Monoid_unit_mempty }.
 
 (* Unbound variables:
-     * Coq.Lists.List.flat_map Eq None Some bool comparison cons e list nil option
-     pair true tt unit
+     * Coq.Lists.List.flat_map Eq Just Maybe Nothing bool comparison cons e list nil
+     pair some_v true tt unit
 *)

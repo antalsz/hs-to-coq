@@ -107,30 +107,30 @@ Other Prelude modules are much easier with fewer complex dependencies.
 
 #include "MachDeps.h"
 
-module GHC.BaseGen
+module GHC.Base
         (
-        module GHC.BaseGen,
+        module GHC.Base,
         module GHC.Classes,
         module GHC.CString,
         module GHC.Magic,
         module GHC.Types,
-        module GHC.Prim,        -- Re-export GHC.Prim and [boot] GHC.Err,
+        module GHC.Prim,        -- Re-export GHC.Prim and [boot] GHC.Err
                                 -- to avoid lots of people having to
         module GHC.Err          -- import it explicitly
   )
         where
 
--- import Prelude ((.))
 import GHC.Types
 import GHC.Classes
 import GHC.CString
 import GHC.Magic
 import GHC.Prim
 import GHC.Err
-import GHC.IO (failIO,mplusIO)
+import {-# SOURCE #-} GHC.IO (failIO,mplusIO)
 
 import GHC.Tuple ()     -- Note [Depend on GHC.Tuple]
 import GHC.Integer ()   -- Note [Depend on GHC.Integer]
+
 
 -- infixr 9  .
 infixr 5  ++
@@ -1104,6 +1104,8 @@ asTypeOf                =  const
 -- Functor/Applicative/Monad instances for IO
 ----------------------------------------------
 
+
+-- Comment out IO instances
 instance  Functor IO where
    fmap f x = x >>= (pure . f)
 
@@ -1119,11 +1121,11 @@ instance  Monad IO  where
     {-# INLINE (>>=)  #-}
     (>>)      = (*>)
     (>>=)     = bindIO
-    fail s    = failIO s
+    fail s    = undefined -- failIO s
 
 instance Alternative IO where
-    empty = failIO "mzero"
-    (<|>) = mplusIO
+    empty = undefined -- failIO "mzero"
+    (<|>) = undefined -- mplusIO
 
 instance MonadPlus IO
 
@@ -1138,6 +1140,7 @@ thenIO (IO m) k = IO (\ s -> case m s of (# new_s, _ #) -> unIO k new_s)
 
 unIO :: IO a -> (State# RealWorld -> (# State# RealWorld, a #))
 unIO (IO a) = a
+
 
 {- |
 Returns the 'tag' of a constructor application; this function is used

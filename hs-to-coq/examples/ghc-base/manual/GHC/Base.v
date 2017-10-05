@@ -389,13 +389,22 @@ Fixpoint scanr1 {a :Type} (f : a -> a -> a) (q0 : a) (xs : list a) : list a :=
 end.
 
 (* ?? why doesn't this work? the infix variable k ? Or needed for foldl and foldl' below *)
-(*
+
 Fixpoint foldr {a}{b} (f: a -> b -> b) (z:b) (xs: list a) : b :=
   match xs with
   | nil => z
   | y :: ys => f y (foldr f z ys)
   end.
-*)
+
+
+Definition foldl {a}{b} k z0 xs :=
+  foldr (fun (v:a) (fn:b->b) => (fun (z:b) => fn (k z v))) (id : b -> b) xs z0.
+
+Definition foldl' {a}{b} k z0 xs :=
+  foldr (fun(v:a) (fn:b->b) => (fun(z:b) => fn (k z v))) (id : b -> b) xs z0.
+
+Definition build {a} : (forall {b},(a -> b -> b) -> b -> b) -> list a :=
+  fun g => g _ (fun x y => x :: y) nil.
 
 (********************************************************************)
 
@@ -527,7 +536,7 @@ Definition flip {a} {b} {c} : (a -> b -> c) -> b -> a -> c :=
     match arg_34__ , arg_35__ , arg_36__ with
       | f , x , y => f y x
     end.
-
+(*
 Definition foldr {a} {b} : (a -> b -> b) -> b -> list a -> b :=
   fun arg_71__ arg_72__ =>
     match arg_71__ , arg_72__ with
@@ -539,7 +548,7 @@ Definition foldr {a} {b} : (a -> b -> b) -> b -> list a -> b :=
                             end in
                  go
     end.
-
+*)
 Local Definition instance_Monoid_comparison_mconcat : list comparison -> comparison :=
   foldr instance_Monoid_comparison_mappend instance_Monoid_comparison_mempty.
 
@@ -1065,14 +1074,6 @@ Instance instance_Monoid_unit : !Monoid unit := {
 
 (********************************************************************)
 
-Definition foldl {a}{b} k z0 xs :=
-  foldr (fun (v:a) (fn:b->b) => (fun (z:b) => fn (k z v))) (id : b -> b) xs z0.
-
-Definition foldl' {a}{b} k z0 xs :=
-  foldr (fun(v:a) (fn:b->b) => (fun(z:b) => fn (k z v))) (id : b -> b) xs z0.
-
-Definition build {a} : (forall {b},(a -> b -> b) -> b -> b) -> list a :=
-  fun g => g _ (fun x y => x :: y) nil.
 
 
 (*

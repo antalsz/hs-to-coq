@@ -86,8 +86,6 @@ Definition getAll (arg_7__ : All) :=
     | (Mk_All getAll) => getAll
   end.
 
-Print Monoid.
-
 Definition mappend_All : All -> All -> All :=
   fun x y => match x,y with
           | Mk_All b1, Mk_All b2 => Mk_All (b1 && b2)

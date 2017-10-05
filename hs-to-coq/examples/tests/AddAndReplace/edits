@@ -1,2 +1,2 @@
 redefine Definition foo := @bar.
-add Definition bar {a} (x : a) := x.
+add AddAndReplace Definition bar {a} (x : a) := x.

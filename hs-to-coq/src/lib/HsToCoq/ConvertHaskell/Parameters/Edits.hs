@@ -51,7 +51,7 @@ data ScopePlace = SPValue | SPConstructor
 data Edit = TypeSynonymTypeEdit   Ident Ident
           | DataTypeArgumentsEdit Ident DataTypeArguments
           | RedefinitionEdit      CoqDefinition
-          | AddEdit               CoqDefinition
+          | AddEdit               ModuleName CoqDefinition
           | SkipEdit              Ident
           | SkipModuleEdit        ModuleName
           | SkipMethodEdit        Ident Ident
@@ -91,7 +91,7 @@ type Renamings = Map NamespacedIdent Ident
 data Edits = Edits { _typeSynonymTypes  :: !(Map Ident Ident)
                    , _dataTypeArguments :: !(Map Ident DataTypeArguments)
                    , _redefinitions     :: !(Map Ident CoqDefinition)
-                   , _adds              :: [Sentence]
+                   , _adds              :: !(Map ModuleName [Sentence])
                    , _skipped           :: !(Set Ident)
                    , _skippedMethods    :: !(Set (Ident,Ident))
                    , _skippedModules    :: !(Set ModuleName)
@@ -124,7 +124,7 @@ addEdit = \case -- To bring the `where' clause into scope everywhere
   TypeSynonymTypeEdit   syn        res    -> addFresh typeSynonymTypes                    (duplicate_for  "type synonym result types")                       syn          res
   DataTypeArgumentsEdit ty         args   -> addFresh dataTypeArguments                   (duplicate_for  "data type argument specifications")               ty           args
   RedefinitionEdit      def               -> addFresh redefinitions                       (duplicate_for  "redefinition")                                    (name def)   def
-  AddEdit               def               -> Right . (adds %~ (definitionSentence def:))
+  AddEdit               mod def           -> Right . (adds.at mod.non mempty %~ (definitionSentence def:))
   SkipEdit              what              -> addFresh skipped                             (duplicate_for  "skip requests")                                   what         ()
   SkipMethodEdit        cls meth          -> addFresh skippedMethods                      (duplicate_for' "skipped method requests"       prettyClsMth)      (cls,meth)   ()
   SkipModuleEdit        mod               -> addFresh skippedModules                      (duplicate_for' "skipped module requests"       moduleNameString)  mod          ()

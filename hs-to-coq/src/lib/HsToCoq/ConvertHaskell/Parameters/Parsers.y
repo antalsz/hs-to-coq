@@ -195,18 +195,18 @@ Scope :: { Ident }
   | type    { "type" } -- This is so common, we have to special-case it
 
 Edit :: { Edit }
-  : type synonym Word ':->' Word                  { TypeSynonymTypeEdit   $3 $5                        }
-  | data type arguments Word DataTypeArguments    { DataTypeArgumentsEdit $4 $5                        }
-  | redefine CoqDefinition Optional('.')          { RedefinitionEdit      $2                           }
-  | add CoqDefinition Optional('.')               { AddEdit               $2                           }
-  | skip Word                                     { SkipEdit              $2                           }
-  | skip Op                                       { SkipEdit              $2                           }
-  | skip method Word Word                         { SkipMethodEdit        $3 $4                        }
-  | skip module Word                              { SkipModuleEdit        (mkModuleName (T.unpack $3)) }
-  | rename module WordOrOp Renaming               { ModuleRenamingEdit    $3 (fst $4) (snd $4)         }
-  | rename Renaming                               { RenameEdit            (fst $2) (snd $2)            }
-  | add scope Scope for ScopePlace Word           { AdditionalScopeEdit   $5 $6 $3                     }
-  | order Some(Word)                              { OrderEdit             $2                           }
+  : type synonym Word ':->' Word                  { TypeSynonymTypeEdit   $3 $5                           }
+  | data type arguments Word DataTypeArguments    { DataTypeArgumentsEdit $4 $5                           }
+  | redefine CoqDefinition Optional('.')          { RedefinitionEdit      $2                              }
+  | add Word CoqDefinition Optional('.')          { AddEdit               (mkModuleName (T.unpack $2)) $3 }
+  | skip Word                                     { SkipEdit              $2                              }
+  | skip Op                                       { SkipEdit              $2                              }
+  | skip method Word Word                         { SkipMethodEdit        $3 $4                           }
+  | skip module Word                              { SkipModuleEdit        (mkModuleName (T.unpack $3))    }
+  | rename module WordOrOp Renaming               { ModuleRenamingEdit    $3 (fst $4) (snd $4)            }
+  | rename Renaming                               { RenameEdit            (fst $2) (snd $2)               }
+  | add scope Scope for ScopePlace Word           { AdditionalScopeEdit   $5 $6 $3                        }
+  | order Some(Word)                              { OrderEdit             $2                              }
 
 Edits :: { [Edit] }
   : Lines(Edit)    { $1 }

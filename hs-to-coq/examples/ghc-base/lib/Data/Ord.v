@@ -26,6 +26,14 @@ Instance instance_Down_Eq {a} `(Eq_ a) : Eq_ (Down a) := {
                 end);
 }.
 
+Definition compare_Down `{Ord a} (xs : Down a) (ys : Down a) : comparison :=
+  match xs, ys with
+  | Mk_Down x , Mk_Down y => compare y x
+  end.
+
+Instance instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Down_a_
+   `{GHC.Base.Ord a}: !GHC.Base.Ord (Down a) := ord_default compare_Down.
+
 (*
  ( Eq
    , Show -- ^ @since 4.7.0.0
@@ -39,25 +47,18 @@ Instance instance_Down_Eq {a} `(Eq_ a) : Eq_ (Down a) := {
 Require GHC.Base.
 Require GHC.Show.
 Require GHC.Read.
-Require GHC.Prim.
 
 (* Converted declarations: *)
 
-(* Translating `instance forall `{GHC.Prim.Ord a}, GHC.Prim.Ord (Down a)'
-   failed: OOPS! Cannot construct types for this class def: Nothing unsupported *)
+(* Skipping instance instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Down_a_ *)
 
-Definition comparing {a} {b} `{(GHC.Prim.Ord a)}
+Definition comparing {a} {b} `{(GHC.Base.Ord a)}
     : (b -> a) -> b -> b -> comparison :=
   fun arg_0__ arg_1__ arg_2__ =>
     match arg_0__ , arg_1__ , arg_2__ with
-      | p , x , y => GHC.Prim.compare (p x) (p y)
+      | p , x , y => GHC.Base.compare (p x) (p y)
     end.
 
-Instance instance_forall___GHC_Prim_Ord_a___GHC_Prim_Ord__Down_a_
-  : !forall `{GHC.Prim.Ord a}, GHC.Prim.Ord (Down a) := {}.
-Proof.
-Admitted.
-
 (* Unbound variables:
-     Down GHC.Prim.Ord GHC.Prim.compare comparison
+     GHC.Base.Ord GHC.Base.compare comparison
 *)

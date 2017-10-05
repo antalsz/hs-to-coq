@@ -5,50 +5,50 @@ rename type  GHC.Types.[]  = list
 rename value GHC.Types.[]  = nil
 rename value GHC.Types.:   = cons
 
-rename type  GHC.Base.Alternative = GHC.BaseGen.Alternative
-rename type  GHC.Base.Applicative = GHC.BaseGen.Applicative
+# rename type  GHC.Base.Alternative = GHC.BaseGen.Alternative
+# rename type  GHC.Base.Applicative = GHC.BaseGen.Applicative
 
-rename type  GHC.Base.Functor    = GHC.BaseGen.Functor
-rename type  GHC.Base.Monad      = GHC.BaseGen.Monad
-rename type  GHC.Base.Monoid     = GHC.BaseGen.Monoid
-rename value GHC.Base.const      = GHC.BaseGen.const
-rename value GHC.Base.foldr      = GHC.BaseGen.foldr
-rename value GHC.Base.map        = GHC.BaseGen.map
-rename value GHC.Base.id         = GHC.BaseGen.id
+# rename type  GHC.Base.Functor    = GHC.BaseGen.Functor
+# rename type  GHC.Base.Monad      = GHC.BaseGen.Monad
+# rename type  GHC.Base.Monoid     = GHC.BaseGen.Monoid
+# rename value GHC.Base.const      = GHC.BaseGen.const
+# rename value GHC.Base.foldr      = GHC.BaseGen.foldr
+# rename value GHC.Base.map        = GHC.BaseGen.map
+# rename value GHC.Base.id         = GHC.BaseGen.id
 rename value GHC.Base.++         = Coq.Init.Datatypes.app
 rename value GHC.List.concatMap  = Coq.Lists.List.flat_map
 rename value GHC.Base..          = Coq.Program.Basics.compose
-rename value GHC.Base.$          = GHC.BaseGen.id
-rename value GHC.Base.fmap       = GHC.BaseGen.fmap
-rename value GHC.Base.flip       = GHC.BaseGen.flip
-rename value GHC.Base.mempty     = GHC.BaseGen.mempty
-rename value GHC.Base.mappend    = GHC.BaseGen.mappend
-rename value GHC.Base.return     = GHC.BaseGen.return_
-rename value GHC.Base.>>         = GHC.BaseGen.op_zgzg__
-rename value GHC.Base.<$         = GHC.BaseGen.<$
-rename value GHC.Base.<*>        = GHC.BaseGen.<*>
-rename value GHC.Base.<|>        = GHC.BaseGen.<|>
-rename value GHC.Base.pure       = GHC.BaseGen.pure
+# rename value GHC.Base.$          = GHC.BaseGen.id
+# rename value GHC.Base.fmap       = GHC.BaseGen.fmap
+# rename value GHC.Base.flip       = GHC.BaseGen.flip
+# rename value GHC.Base.mempty     = GHC.BaseGen.mempty
+# rename value GHC.Base.mappend    = GHC.BaseGen.mappend
+# rename value GHC.Base.return     = GHC.BaseGen.return_
+# rename value GHC.Base.>>         = GHC.BaseGen.op_zgzg__
+# rename value GHC.Base.<$         = GHC.BaseGen.<$
+# rename value GHC.Base.<*>        = GHC.BaseGen.<*>
+# rename value GHC.Base.<|>        = GHC.BaseGen.<|>
+# rename value GHC.Base.pure       = GHC.BaseGen.pure
 
-rename value GHC.Magic.oneShot = GHC.Prim.oneShot
+rename value GHC.Magic.oneShot = GHC.Base.oneShot
 
 rename type GHC.Types.Ordering = comparison
 rename value GHC.Types.EQ = Eq
 rename value GHC.Types.LT = Lt
 rename value GHC.Types.GT = Gt
 
-rename type  GHC.Classes.Eq = GHC.Prim.Eq_
-rename value GHC.Classes.== = GHC.Prim.op_zeze__
-rename value GHC.Classes./= = GHC.Prim.op_zsze__
+rename type  GHC.Classes.Eq = GHC.Base.Eq_
+rename value GHC.Classes.== = GHC.Base.op_zeze__
+rename value GHC.Classes./= = GHC.Base.op_zsze__
 
-rename type  GHC.Classes.Ord = GHC.Prim.Ord
+rename type  GHC.Classes.Ord = GHC.Base.Ord
 rename value GHC.Classes.<  = <?
 rename value GHC.Classes.<= = <=?
 rename value GHC.Classes.>  = >?
 rename value GHC.Classes.>= = >=?
-rename value GHC.Classes.max = GHC.Prim.max
-rename value GHC.Classes.min = GHC.Prim.min
-rename value GHC.Classes.compare = GHC.Prim.compare
+rename value GHC.Classes.max = GHC.Base.max
+rename value GHC.Classes.min = GHC.Base.min
+rename value GHC.Classes.compare = GHC.Base.compare
 
 rename type  GHC.Types.Int  = GHC.Num.Int
 
@@ -62,13 +62,13 @@ rename value GHC.Classes.&&    = andb
 rename type  GHC.Base.Maybe   = option
 rename value GHC.Base.Just    = Some
 rename value GHC.Base.Nothing = None
-rename type  GHC.BaseGen.Maybe   = option
-rename value GHC.BaseGen.Just    = Some
-rename value GHC.BaseGen.Nothing = None
+# rename type  GHC.BaseGen.Maybe   = option
+# rename value GHC.BaseGen.Just    = Some
+# rename value GHC.BaseGen.Nothing = None
 
-rename type GHC.Base.String = GHC.Prim.String
+# rename type GHC.Base.String = GHC.Base.String
 
-rename value GHC.Err.errorWithoutStackTrace = GHC.Prim.errorWithoutStackTrace
+rename value GHC.Err.errorWithoutStackTrace = GHC.Base.errorWithoutStackTrace
 
 rename type Data.Either.Either = sum
 rename value Data.Either.Right = inl

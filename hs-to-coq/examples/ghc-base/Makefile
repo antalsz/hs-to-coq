@@ -15,16 +15,18 @@ endif
 
 # GHC/Unicode needs precedence resolution, plus a few issues with unicode constants
 # Data/Char needs a show instance.  Also use of data cons separate from definition.
+
 # Data/Monoid redefines the notation "<>" (at a different level). Need to sort this out.
+# Also derives many type classes. We should fill the instances in.
+
 
 # Handwritten modules (usually by modification of generated version)
-HANDMOD = GHC/Prim \
+HANDMOD = GHC/Base \
           GHC/Num \
           GHC/Char \
           GHC/Enum \
           GHC/Real \
           GHC/Unicode \
-          GHC/Base \
           Data/Char \
           Data/Bits \
           Data/Type/Equality \
@@ -37,6 +39,7 @@ HANDMOD = GHC/Prim \
           Data/Proxy \
 	       Data/Foldable \
           Data/Functor/Const \
+          Data/Monoid \
           Prelude
 
 # GHC.Base imports modules without using anything from it (e.g. because
@@ -57,7 +60,6 @@ EMPTY_MODS  =\
 	  GHC/Show \
 	  GHC/Generics \
 	  _GHC/Base \
-	  _GHC/BaseGen \
 	  _GHC/Num \
 	  Data/Type/Coercion \
 	  GHC/Arr \
@@ -76,7 +78,6 @@ MODULES  = GHC/List \
            Data/Function \
            Data/Ord \
            Data/Eq \
-           Data/Monoid \
            Data/Functor \
 
 
@@ -84,7 +85,7 @@ MODULES  = GHC/List \
 DROPIN =
 
 # also generated from drop-in/
-SPECIAL_MODULES = GHC/BaseGen \
+SPECIAL_MODULES =
 
 
 VFILES_GEN = $(addprefix lib/,$(addsuffix .v,$(MODULES)))
@@ -130,17 +131,17 @@ $(VFILES_EMPTY): lib/%.v :
 	mkdir -p "$$(dirname lib/$*.v)"
 	echo '(* Empty module, exists only to make Import statments not fail *)' > $@
 
-lib/GHC/BaseGen.v : module-edits/GHC/Base/edits edits module-edits/GHC/Base/preamble.v drop-in/GHC/BaseGen.hs
-	$(HS_TO_COQ) -e module-edits/GHC/Base/edits \
-	             -e edits \
-		     -o lib \
-		     -N \
-		     -p module-edits/GHC/Base/preamble.v \
-		     --ghc -ibase \
-		     --ghc -ibase/dist-install/build \
-		     -Ibase/include \
-		     --ghc -this-unit-id=base \
-		     drop-in/GHC/BaseGen.hs
+# lib/GHC/BaseGen.v : module-edits/GHC/Base/edits edits module-edits/GHC/Base/preamble.v drop-in/GHC/BaseGen.hs
+#	$(HS_TO_COQ) -e module-edits/GHC/Base/edits \
+#	             -e edits \
+#		     -o lib \
+#		     -N \
+#		     -p module-edits/GHC/Base/preamble.v \
+#		     --ghc -ibase \
+#		     --ghc -ibase/dist-install/build \
+#		     -Ibase/include \
+#		     --ghc -this-unit-id=base \
+#		     drop-in/GHC/BaseGen.hs
 
 
 $(VFILES_DROPIN): lib/%.v : module-edits/%/edits edits module-edits/%/preamble.v drop-in/%.hs

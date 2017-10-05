@@ -70,10 +70,6 @@ Axiom primAppendFile  : FilePath -> String -> IO unit.
 
 (* function composition *)
 Require Export Coq.Program.Basics.
-(*
-Open Scope program_scope.
-Notation "'_∘_'" := (compose).
-*)
 
 Notation "[,]"  := (fun x y => (x,y)).
 Notation "[,,]" := (fun x0 y1 z2 => (x0, y1, z2)).

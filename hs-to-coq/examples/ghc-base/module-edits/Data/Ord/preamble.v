@@ -15,6 +15,14 @@ Instance instance_Down_Eq {a} `(Eq_ a) : Eq_ (Down a) := {
                 end);
 }.
 
+Definition compare_Down `{Ord a} (xs : Down a) (ys : Down a) : comparison :=
+  match xs, ys with
+  | Mk_Down x , Mk_Down y => compare y x
+  end.
+
+Instance instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Down_a_
+   `{GHC.Base.Ord a}: !GHC.Base.Ord (Down a) := ord_default compare_Down.
+
 (*
  ( Eq
    , Show -- ^ @since 4.7.0.0

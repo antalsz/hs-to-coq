@@ -15,7 +15,6 @@ Require Import GHC.Prim.
 
 Require GHC.Base.
 Require Coq.Lists.List.
-Require GHC.Prim.
 
 (* Converted declarations: *)
 
@@ -33,7 +32,7 @@ Definition catMaybes {a} : list (option a) -> list a :=
 Definition fromJust {a} : option a -> a :=
   fun arg_33__ =>
     match arg_33__ with
-      | None => GHC.Prim.errorWithoutStackTrace &"Maybe.fromJust: Nothing"
+      | None => GHC.Base.errorWithoutStackTrace &"Maybe.fromJust: Nothing"
       | (Some x) => x
     end.
 
@@ -89,6 +88,6 @@ Definition maybeToList {a} : option a -> list a :=
   fun arg_25__ => match arg_25__ with | None => nil | (Some x) => cons x nil end.
 
 (* Unbound variables:
-     Coq.Lists.List.flat_map GHC.Prim.errorWithoutStackTrace None Some bool cons
+     Coq.Lists.List.flat_map GHC.Base.errorWithoutStackTrace None Some bool cons
      false list nil option true
 *)

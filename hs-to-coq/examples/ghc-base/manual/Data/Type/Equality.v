@@ -24,7 +24,7 @@ Defined.
 Definition apply {k1}{k2}{f : k1 -> k2}{g}{a}{b} : (f :~: g) -> (a :~: b) -> (f a :~: g b).
 intros. subst. auto. Defined.
 
-Instance Eq_EqTy {A} {a b : A} : `{Eq_ (a :~: b)} := Build_Eq_ _ (fun x y => true) (fun x y => false).
+Instance Eq_EqTy {A} {a b : A} : `{Eq_ (a :~: b)} := Build_Eq_ (fun x y => true) (fun x y => false).
 
 
 (* inner and outer are not sound in Coq *)

@@ -115,11 +115,3 @@ Instance instance_forall___GHC_Base_Monoid_m___GHC_Base_Applicative__Const_m_
     instance_forall___GHC_Base_Monoid_m___GHC_Base_Applicative__Const_m__op_ztzg__ ;
   pure := fun {a} =>
     instance_forall___GHC_Base_Monoid_m___GHC_Base_Applicative__Const_m__pure }.
-
-(* Foldable, Read, Show derived *)
-
-(* Unbound variables:
-     Data.Foldable.Foldable GHC.Base.mappend GHC.Base.mempty GHC.Base.Applicative
-     GHC.Base.Functor GHC.Base.Monoid GHC.Base.const GHC.Base.fmap
-     GHC.Base.id GHC.Prim.coerce GHC.Read.Read GHC.Show.Show m
-*)

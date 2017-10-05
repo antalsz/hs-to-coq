@@ -28,14 +28,6 @@ Definition catMaybes {a} : list (option a) -> list a :=
               Coq.Lists.List.flat_map cont_18__ ls
     end.
 
-Definition fromJust {a} : option a -> a :=
-  fun arg_33__ =>
-    match arg_33__ with
-      | None => GHC.Base.errorWithoutStackTrace (GHC.Base.hs_string__
-                                                "Maybe.fromJust: Nothing")
-      | (Some x) => x
-    end.
-
 Definition fromMaybe {a} : a -> option a -> a :=
   fun arg_28__ arg_29__ =>
     match arg_28__ , arg_29__ with
@@ -46,10 +38,10 @@ Definition fromMaybe {a} : a -> option a -> a :=
     end.
 
 Definition isJust {a} : option a -> bool :=
-  fun arg_38__ => match arg_38__ with | None => false | _ => true end.
+  fun arg_35__ => match arg_35__ with | None => false | _ => true end.
 
 Definition isNothing {a} : option a -> bool :=
-  fun arg_36__ => match arg_36__ with | None => true | _ => false end.
+  fun arg_33__ => match arg_33__ with | None => true | _ => false end.
 
 Definition listToMaybe {a} : list a -> option a :=
   fun arg_22__ => match arg_22__ with | nil => None | (cons a _) => Some a end.
@@ -78,8 +70,8 @@ Definition mapMaybeFB {b} {r} {a} : (b -> r -> r) -> (a -> option
     end.
 
 Definition maybe {b} {a} : b -> (a -> b) -> option a -> b :=
-  fun arg_40__ arg_41__ arg_42__ =>
-    match arg_40__ , arg_41__ , arg_42__ with
+  fun arg_37__ arg_38__ arg_39__ =>
+    match arg_37__ , arg_38__ , arg_39__ with
       | n , _ , None => n
       | _ , f , (Some x) => f x
     end.
@@ -88,6 +80,5 @@ Definition maybeToList {a} : option a -> list a :=
   fun arg_25__ => match arg_25__ with | None => nil | (Some x) => cons x nil end.
 
 (* Unbound variables:
-     Coq.Lists.List.flat_map GHC.Base.errorWithoutStackTrace None Some bool cons
-     false list nil option true
+     Coq.Lists.List.flat_map None Some bool cons false list nil option true
 *)

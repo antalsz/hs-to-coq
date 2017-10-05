@@ -26,3 +26,16 @@ skip negIndex # parsing/pp $ incorrectly
 
 skip foldl'
 skip foldl
+
+# more partial functions
+skip tooLarge
+skip errorEmptyList
+skip foldl1
+skip foldl1'
+skip foldr1
+skip init
+skip lastError
+skip last
+skip maximum
+skip minimum
+skip tail

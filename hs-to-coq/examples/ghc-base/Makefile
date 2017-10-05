@@ -173,3 +173,8 @@ $(VFILES_DROPIN): lib/%.v : module-edits/%/edits edits module-edits/%/preamble.v
 
 clean:
 	rm -f */*.vo */*.glob */*.v.d *.vo *.v.d  $(VFILES) _CoqProject Makefile.coq  */*.v~
+
+
+todo:
+	grep Admitted lib/*.v lib/*/*.v lib/*/*/*.v
+	grep errorWithout lib/*.v lib/*/*.v lib/*/*/*.v

@@ -79,14 +79,10 @@ Require Data.Maybe.
 Require Data.Monoid.
 Require Data.Ord.
 Require Data.Proxy.
-Require GHC.Arr.
 Require GHC.Base.
-Require GHC.Generics.
 Require GHC.Num.
 (* Require #. *)
 Require Coq.Program.Basics.
-Require GHC.Tuple.
-Require GHC.Types.
 
 Definition zero : BinNums.Z := BinNums.Z0.
 Definition one  : BinNums.Z := BinNums.Zpos BinNums.xH.

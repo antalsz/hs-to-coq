@@ -240,7 +240,7 @@ convert_module_with_imports convModName (group, imports, _exports, _docstring) =
 convert_module_with_requires :: ConversionMonad m
                              => ModuleName -> RenamedSource ->
                              m (ConvertedModule, [ModuleName])
-convert_module_with_requires convModName (group, imports, _exports, _docstring) =
+convert_module_with_requires convModName (group, _imports, _exports, _docstring) =
   withCurrentModule convModName $ do
     decls@ConvertedModuleDeclarations { convertedTyClDecls    = convModTyClDecls
                                       , convertedValDecls     = convModValDecls
@@ -249,7 +249,6 @@ convert_module_with_requires convModName (group, imports, _exports, _docstring) 
                                       }
       <- convertHsGroup convModName group
     
-    let importedModules = map (unLoc . ideclName . unLoc) imports
     -- TODO: Is this the best approach to the problem where instead of
     -- 'Prelude.not', we get 'GHC.Classes.not'?
     let extraModules = map (mkModuleName . T.unpack . qualidToIdent)
@@ -257,9 +256,7 @@ convert_module_with_requires convModName (group, imports, _exports, _docstring) 
                                        Qualified mod _ -> Just mod)
                       $ listify (const True :: Qualid -> Bool) decls
     
-    modules <- skipModules
-                 $  importedModules
-                 ++ S.toList (foldr S.delete (S.fromList extraModules) importedModules)
+    modules <- skipModules $ S.toList $ S.fromList extraModules
     
     convModImports <-
       traverse (\mn -> ModuleSentence <$> require mn) modules

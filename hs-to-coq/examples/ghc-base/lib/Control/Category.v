@@ -13,8 +13,6 @@ Unset Printing Implicit Defensive.
 (* Converted imports: *)
 
 Require GHC.Base.
-Require Data.Type.Coercion.
-Require Data.Type.Equality.
 
 (* Converted declarations: *)
 

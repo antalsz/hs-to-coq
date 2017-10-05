@@ -119,14 +119,7 @@ Instance instance_GHC_Base_Monoid__Sum_a_ {a} `{Num a}: !GHC.Base.Monoid (Sum a)
  { mappend := mappend_Sum;
    mempty  := mempty_Sum;
    mconcat := foldr mappend_Sum mempty_Sum }.
-(* Converted imports: *)
-
-Require GHC.Base.
-Require GHC.Enum.
-Require GHC.Num.
-Require GHC.Read.
-Require GHC.Show.
-Require GHC.Generics.
+(* No imports to convert. *)
 
 (* Converted declarations: *)
 

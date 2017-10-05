@@ -406,14 +406,6 @@ Definition oneShot {a} (x:a) := x.
 
 (* Converted imports: *)
 
-Require GHC.Types.
-Require GHC.Classes.
-Require GHC.CString.
-Require GHC.Magic.
-Require GHC.Err.
-Require GHC.Tuple.
-Require GHC.Integer.
-Require GHC.IO.
 Require Coq.Lists.List.
 Require Coq.Program.Basics.
 

@@ -12,7 +12,6 @@ Unset Printing Implicit Defensive.
 
 (* Converted imports: *)
 
-Require GHC.Base.
 Require Coq.Lists.List.
 
 (* Converted declarations: *)

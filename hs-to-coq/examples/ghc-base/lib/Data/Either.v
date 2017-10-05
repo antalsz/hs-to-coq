@@ -13,11 +13,8 @@ Unset Printing Implicit Defensive.
 (* Converted imports: *)
 
 Require GHC.Base.
-Require GHC.Show.
-Require GHC.Read.
 Require Data.Type.Equality.
 Require Coq.Lists.List.
-Require GHC.Base.
 
 (* Converted declarations: *)
 (*

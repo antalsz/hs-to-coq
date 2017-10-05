@@ -14,9 +14,7 @@ Open Scope type_scope.
 
 Require Data.Tuple.
 Require Data.Either.
-Require Control.Monad.Fix.
 Require Control.Category.
-Require GHC.Base.
 Require GHC.Base.
 
 (* Converted declarations: *)

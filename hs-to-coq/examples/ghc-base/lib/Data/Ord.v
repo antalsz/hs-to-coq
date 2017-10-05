@@ -45,8 +45,6 @@ Instance instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Down_a_
 (* Converted imports: *)
 
 Require GHC.Base.
-Require GHC.Show.
-Require GHC.Read.
 
 (* Converted declarations: *)
 

@@ -28,7 +28,6 @@ module HsToCoq.ConvertHaskell.Monad (
 import Control.Lens
 
 import Data.Semigroup (Semigroup(..))
-import Data.Foldable
 import Data.Text (Text)
 import qualified Data.Text as T
 import Numeric.Natural
@@ -44,7 +43,6 @@ import TcRnTypes (TcGblEnv, tcg_type_env)
 import NameEnv (lookupNameEnv)
 
 import Panic
-import HsToCoq.Util.GHC.Module
 
 import HsToCoq.Coq.Gallina as Coq
 import HsToCoq.Coq.Gallina.Util
@@ -266,26 +264,10 @@ evalConversion _edits = evalVariablesT . (evalStateT ?? ConversionState{..}) whe
 -- Currently, this checks the /per-module/ renamings _without_ a qualified name,
 -- and the /global/ renamings _with_ a qualified name.  I think that's ok.
 withCurrentModuleOrNone :: ConversionMonad m => Maybe ModuleName -> m a -> m a
-withCurrentModuleOrNone newModule = gbracket setModuleAndRenamings restoreModuleAndRenamings . const where
-  setModuleAndRenamings = do
-    oldModule <- _currentModule <<.= newModule
-    newRenamings <- use $ edits.moduleRenamings
-                        . maybe (like Nothing)
-                                (at . moduleNameText)
-                                newModule
-                        . non M.empty
-    oldRenamings <- (edits.renamings) <<%= (newRenamings `M.union`) -- (2)
-    let overwrittenRenamings = oldRenamings `M.intersection` newRenamings
-
-    pure (oldModule, overwrittenRenamings, newRenamings)
-
-  restoreModuleAndRenamings (oldModule, overwrittenRenamings, newRenamings) = do
-    _currentModule .= oldModule
-
-    finalRenamings <- use (edits.renamings)
-    for_ (M.toList newRenamings) $ \(hs, coq) ->
-      when (M.lookup hs finalRenamings == Just coq) $
-        edits.renamings.at hs .= M.lookup hs overwrittenRenamings
+withCurrentModuleOrNone newModule = gbracket setModule restoreModule . const
+  where
+  setModule = _currentModule <<.= newModule
+  restoreModule oldModule = _currentModule .= oldModule
 
 withNoCurrentModule :: ConversionMonad m => m a -> m a
 withNoCurrentModule = withCurrentModuleOrNone Nothing

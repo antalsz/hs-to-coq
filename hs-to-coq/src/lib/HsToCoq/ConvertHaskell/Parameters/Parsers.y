@@ -203,7 +203,6 @@ Edit :: { Edit }
   | skip Op                                       { SkipEdit              $2                              }
   | skip method Word Word                         { SkipMethodEdit        $3 $4                           }
   | skip module Word                              { SkipModuleEdit        (mkModuleName (T.unpack $3))    }
-  | rename module WordOrOp Renaming               { ModuleRenamingEdit    $3 (fst $4) (snd $4)            }
   | rename Renaming                               { RenameEdit            (fst $2) (snd $2)               }
   | add scope Scope for ScopePlace Word           { AdditionalScopeEdit   $5 $6 $3                        }
   | order Some(Word)                              { OrderEdit             $2                              }

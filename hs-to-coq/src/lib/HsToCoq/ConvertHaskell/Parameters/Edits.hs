@@ -1,7 +1,7 @@
 {-# LANGUAGE LambdaCase, TemplateHaskell, RecordWildCards #-}
 
 module HsToCoq.ConvertHaskell.Parameters.Edits (
-  Edits(..), typeSynonymTypes, dataTypeArguments, redefinitions, adds, skipped, skippedMethods, skippedModules, moduleRenamings, additionalScopes, orders, renamings,
+  Edits(..), typeSynonymTypes, dataTypeArguments, redefinitions, adds, skipped, skippedMethods, skippedModules, additionalScopes, orders, renamings,
   HsNamespace(..), NamespacedIdent(..), Renamings,
   DataTypeArguments(..), dtParameters, dtIndices,
   CoqDefinition(..), definitionSentence,
@@ -55,7 +55,6 @@ data Edit = TypeSynonymTypeEdit   Ident Ident
           | SkipEdit              Ident
           | SkipModuleEdit        ModuleName
           | SkipMethodEdit        Ident Ident
-          | ModuleRenamingEdit    Ident NamespacedIdent Ident
           | AdditionalScopeEdit   ScopePlace Ident Ident
           | OrderEdit             (NonEmpty Ident)
           | RenameEdit            NamespacedIdent Ident
@@ -95,7 +94,6 @@ data Edits = Edits { _typeSynonymTypes  :: !(Map Ident Ident)
                    , _skipped           :: !(Set Ident)
                    , _skippedMethods    :: !(Set (Ident,Ident))
                    , _skippedModules    :: !(Set ModuleName)
-                   , _moduleRenamings   :: !(Map Ident Renamings)
                    , _additionalScopes  :: !(Map (ScopePlace, Ident) Ident)
                    , _orders            :: !(Map Ident (Set Ident))
                    , _renamings         :: !Renamings
@@ -104,11 +102,11 @@ data Edits = Edits { _typeSynonymTypes  :: !(Map Ident Ident)
 makeLenses ''Edits
 
 instance Semigroup Edits where
-  Edits tst1 dta1 rdf1 adds1 skp1 smth1 smod1 mrns1 ads1 o1 r1 <> Edits tst2 dta2 rdf2 adds2 skp2 smth2 smod2 mrns2 ads2 o2 r2 =
-    Edits (tst1 <> tst2) (dta1 <> dta2) (rdf1 <> rdf2) (adds1 <> adds2) (skp1 <> skp2) (smth1 <> smth2) (smod1 <> smod2) (mrns1 <> mrns2) (ads1 <> ads2) (o1 <> o2) (r1 <> r2)
+  Edits tst1 dta1 rdf1 adds1 skp1 smth1 smod1 ads1 o1 r1 <> Edits tst2 dta2 rdf2 adds2 skp2 smth2 smod2 ads2 o2 r2 =
+    Edits (tst1 <> tst2) (dta1 <> dta2) (rdf1 <> rdf2) (adds1 <> adds2) (skp1 <> skp2) (smth1 <> smth2) (smod1 <> smod2) (ads1 <> ads2) (o1 <> o2) (r1 <> r2)
 
 instance Monoid Edits where
-  mempty  = Edits mempty mempty mempty mempty mempty mempty mempty mempty mempty mempty mempty
+  mempty  = Edits mempty mempty mempty mempty mempty mempty mempty mempty mempty mempty
   mappend = (<>)
 
 -- Module-local'
@@ -128,7 +126,6 @@ addEdit = \case -- To bring the `where' clause into scope everywhere
   SkipEdit              what              -> addFresh skipped                             (duplicate_for  "skip requests")                                   what         ()
   SkipMethodEdit        cls meth          -> addFresh skippedMethods                      (duplicate_for' "skipped method requests"       prettyClsMth)      (cls,meth)   ()
   SkipModuleEdit        mod               -> addFresh skippedModules                      (duplicate_for' "skipped module requests"       moduleNameString)  mod          ()
-  ModuleRenamingEdit    mod        hs coq -> addFresh (moduleRenamings.at mod.non mempty) (duplicate_for' ("renaming in module " ++. mod) prettyNSIdent)     hs           coq
   AdditionalScopeEdit   place name scope  -> addFresh additionalScopes                    (duplicate_for' "addition of a scope"           prettyScoped)      (place,name) scope
   OrderEdit             idents            -> Right . appEndo (foldMap (Endo . addEdge orders . swap) (adjacents idents))
   RenameEdit            hs to             -> addFresh renamings                           (duplicate_for' "renaming"                      prettyNSIdent)     hs           to
@@ -146,9 +143,6 @@ addEdit = \case -- To bring the `where' clause into scope everywhere
                                  in pplace ++ ' ' : T.unpack name
 
     prettyClsMth (cls, meth) = T.unpack cls <> "." <> T.unpack meth
-
-    s ++. t = s ++ T.unpack t
-    infixl 5 ++.
 
 buildEdits :: Foldable f => f Edit -> Either String Edits
 buildEdits = foldM (flip addEdit) mempty

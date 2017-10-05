@@ -35,9 +35,11 @@ Require Export GHC.Num.
 Require Export GHC.Char.
 
 (* TODO: add appropriate definitions to GHC.Num and GHC.Char *)
+(*
 Axiom primIntToChar      : Int -> Char.
 Axiom primCharToInt      : Char -> Int.
 Axiom primUnicodeMaxChar : Char.
+*)
 
 (* Strings *)
 Require Coq.Strings.String.
@@ -59,6 +61,7 @@ Inductive IO (a : Type) : Type :=.
 Inductive IORef (a : Type) : Type :=.
 Inductive IOError : Type :=.
 
+(*
 Axiom returnIO : forall {a}, a -> IO a.
 Axiom bindIO : forall {a b}, IO a -> (a -> IO b) -> IO b.
 Axiom failIO : forall {a b}, a -> IO b.
@@ -71,7 +74,7 @@ Axiom primGetContents : IO String.
 Axiom primGetChar     : IO Char.
 Axiom primCatch       : forall {a}, IO a -> (IOError -> IO a) -> IO a.
 Axiom primAppendFile  : FilePath -> String -> IO unit.
-
+*)
 
 (****************************************************)
 

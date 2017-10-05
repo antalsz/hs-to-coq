@@ -1,0 +1,5 @@
+-R .                Top
+-R ../base-thy      Proofs
+-R ../ghc-base/lib/ Top
+Bag.v
+Proofs.v

@@ -28,7 +28,6 @@ HANDMOD = \
   GHC/Real \
   GHC/Unicode \
   Data/Char \
-  Data/Bits \
   Data/Type/Equality \
   GHC/Word \
   GHC/Int \
@@ -39,6 +38,7 @@ HANDMOD = \
   Data/Foldable \
   Data/Functor/Const \
   Control/Arrow \
+  Data/Bits \
   Prelude
 
 # GHC.Base imports modules without using anything from it (e.g. because
@@ -66,7 +66,10 @@ EMPTY_MODS = \
   Control/Monad/Fix \
   Foreign/Storable \
   GHC/Float \
-  Control/Applicative
+  Control/Applicative \
+  GHC/Integer/GMP/Internals \
+  GHC/Integer/Type \
+
 
 # Generated modules
 # generated directly from GHC/libraries/base
@@ -131,17 +134,6 @@ $(VFILES_EMPTY): lib/%.v :
 	mkdir -p "$$(dirname lib/$*.v)"
 	echo '(* Empty module, exists only to make Import statments not fail *)' > $@
 
-# lib/GHC/BaseGen.v : module-edits/GHC/Base/edits edits module-edits/GHC/Base/preamble.v drop-in/GHC/BaseGen.hs
-#	$(HS_TO_COQ) -e module-edits/GHC/Base/edits \
-#	             -e edits \
-#		     -o lib \
-#		     -N \
-#		     -p module-edits/GHC/Base/preamble.v \
-#		     --ghc -ibase \
-#		     --ghc -ibase/dist-install/build \
-#		     -Ibase/include \
-#		     --ghc -this-unit-id=base \
-#		     drop-in/GHC/BaseGen.hs
 
 
 $(VFILES_DROPIN): lib/%.v : module-edits/%/edits edits module-edits/%/preamble.v drop-in/%.hs
@@ -155,21 +147,6 @@ $(VFILES_DROPIN): lib/%.v : module-edits/%/edits edits module-edits/%/preamble.v
 		     -Ibase/include \
 		     --ghc -this-unit-id=base \
 		     drop-in/$*.hs
-
-
-
-# lib/Data/Foldable.v : module-edits/Data/Foldable/edits edits module-edits/Data/Foldable/preamble.v drop-in/Data/Foldable.hs
-#	$(HS_TO_COQ) -e module-edits/Data/Foldable/edits \
-#	             -e edits \
-#		     -o lib \
-#		     -N \
-#		     -p module-edits/Data/Foldable/preamble.v \
-#		     --ghc -ibase \
-#		     --ghc -ibase/dist-install/build \
-#		     -Ibase/include \
-#		     --ghc -this-unit-id=base \
-#		     drop-in/Data/Foldable.hs
-
 
 clean:
 	rm -f */*.vo */*.glob */*.v.d *.vo *.v.d  $(VFILES) _CoqProject Makefile.coq  */*.v~

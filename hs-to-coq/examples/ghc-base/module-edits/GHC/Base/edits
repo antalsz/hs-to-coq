@@ -52,3 +52,11 @@ skip instance_Alternative_option
 skip instance_MonadPlus_option
 
 skip foldr
+
+skip when
+skip ifThenElse
+
+
+skip primIntToChar
+skip primCharToInt
+skip primUnicodeMaxChar

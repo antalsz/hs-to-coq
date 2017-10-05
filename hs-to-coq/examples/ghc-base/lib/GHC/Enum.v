@@ -19,6 +19,12 @@ Unset Printing Implicit Defensive.
  eftInt
  eftCharFB
  eftChar
+ efdtCharFB : (forall {A : Type}, A).
+ efdtChar : (forall {A : Type}, A).
+ efdCharFB : (forall {A : Type}, A).
+ efdChar : (forall {A : Type}, A).
+
+
 *)
 
 (* Converted data type declarations: *)
@@ -480,13 +486,6 @@ Definition efdtInt : (Int# -> (Int# -> (Int# -> (list Int)))) := (fun arg_41__
                                                                                       else (((efdtIntDn x1) x2) y))
                                                                    end)).
 
-(* Translating `efdtCharFB' failed: `Int#' literals unsupported *)
-
-Axiom efdtCharFB : (forall {A : Type}, A).
-
-(* Translating `efdtChar' failed: `Int#' literals unsupported *)
-
-Axiom efdtChar : (forall {A : Type}, A).
 
 Definition efdWord : (Word# -> (Word# -> (list N))) := (fun arg_69__
                                                             arg_70__ =>
@@ -511,14 +510,6 @@ Definition efdInt : (Int# -> (Int# -> (list Int))) := (fun arg_39__
                                                                               | (I# y) => (((efdtIntDn x1) x2) y)
                                                                             end))
                                                         end)).
-
-(* Translating `efdCharFB' failed: `Int#' literals unsupported *)
-
-Axiom efdCharFB : (forall {A : Type}, A).
-
-(* Translating `efdChar' failed: `Int#' literals unsupported *)
-
-Axiom efdChar : (forall {A : Type}, A).
 
 Definition dn_list : (Z -> (Z -> (Z -> (list Z)))) := (fun arg_138__
                                                            arg_139__
@@ -871,7 +862,7 @@ Proof.
   remember (y - x)%Z as N.
   generalize dependent N.
   induction N; intros.
-Admitted.
+Admitted. (* Termination proof for eftInt *)
 
 Definition eftInt := fun x y => eftInt_aux (eftInt_fuel x y).
 
@@ -891,7 +882,7 @@ destruct d. rewrite H in Heq_anonymous. done. auto. Defined.
 Lemma efdtInt_fuel : forall (x:Int) (y:Int) (z:Int), efdtInt_aux_fuel x y z.
 Proof.
   intros x y z.
-Admitted.
+Admitted. (* Termination proof for efdtInt *)
 
 Definition efdtInt := fun x y z => efdtInt_aux (efdtInt_fuel x y z).
 

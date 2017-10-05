@@ -55,6 +55,7 @@ Definition isLetter : Char -> bool := (fun arg_1__ =>
              end)
     end)).
 
+(* Made this total by adding error value. *)
 Definition digitToInt : Char -> Int := (fun arg_0__ =>
     (match arg_0__ with
       | c => (let dec := ord c - ord &#"0"
@@ -66,12 +67,7 @@ Definition digitToInt : Char -> Int := (fun arg_0__ =>
                            then hexl + #10
                            else (if (((fromIntegral hexu : Word)) <=? #5)
                                 then hexu + #10
-                                else errorWithoutStackTrace ((&"Char.digitToInt: not a digit " ++ (c :: nil)))))))))
+                                else #256))))))
     end)).
 
 (* No type class instance declarations to convert. *)
-
-(* Unbound variables:
-     + ++ - <=? Char Int Word bool errorWithoutStackTrace false fromIntegral
-     generalCategory ord show true
-*)

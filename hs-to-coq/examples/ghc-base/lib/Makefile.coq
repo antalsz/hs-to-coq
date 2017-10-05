@@ -107,7 +107,6 @@ VFILES:=GHC/Num.v\
   GHC/Real.v\
   GHC/Unicode.v\
   Data/Char.v\
-  Data/Bits.v\
   Data/Type/Equality.v\
   GHC/Word.v\
   GHC/Int.v\
@@ -118,6 +117,7 @@ VFILES:=GHC/Num.v\
   Data/Foldable.v\
   Data/Functor/Const.v\
   Control/Arrow.v\
+  Data/Bits.v\
   Prelude.v\
   GHC/List.v\
   Data/Tuple.v\
@@ -147,6 +147,8 @@ VFILES:=GHC/Num.v\
   Foreign/Storable.v\
   GHC/Float.v\
   Control/Applicative.v\
+  GHC/Integer/GMP/Internals.v\
+  GHC/Integer/Type.v\
   GHC/Base.v
 
 ifneq ($(filter-out archclean clean cleanall printenv,$(MAKECMDGOALS)),)

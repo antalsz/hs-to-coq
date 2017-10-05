@@ -45,12 +45,6 @@ Require Export GHC.Num.
 (* Char type *)
 Require Export GHC.Char.
 
-(* TODO: add appropriate definitions to GHC.Num and GHC.Char *)
-(*
-Axiom primIntToChar      : Int -> Char.
-Axiom primCharToInt      : Char -> Int.
-Axiom primUnicodeMaxChar : Char.
-*)
 
 (* Strings *)
 Require Coq.Strings.String.
@@ -71,21 +65,6 @@ Definition FilePath := String.
 Inductive IO (a : Type) : Type :=.
 Inductive IORef (a : Type) : Type :=.
 Inductive IOError : Type :=.
-
-(*
-Axiom returnIO : forall {a}, a -> IO a.
-Axiom bindIO : forall {a b}, IO a -> (a -> IO b) -> IO b.
-Axiom failIO : forall {a b}, a -> IO b.
-Axiom mplusIO : forall {a}, IO a -> IO a -> IO a.
-
-Axiom primPutChar   : Char -> IO unit.
-Axiom primReadFile  : String -> IO String.
-Axiom primWriteFile : String -> String -> IO unit.
-Axiom primGetContents : IO String.
-Axiom primGetChar     : IO Char.
-Axiom primCatch       : forall {a}, IO a -> (IOError -> IO a) -> IO a.
-Axiom primAppendFile  : FilePath -> String -> IO unit.
-*)
 
 (****************************************************)
 
@@ -116,11 +95,6 @@ Arguments Synonym {A}%type _uniq%type x%type.
 
 (****************************************************)
 
-(*
-Axiom primUserError : forall {A}, A.
-Axiom primIOError   : forall {A}, A.
-Axiom error         : forall {A : Type}, String -> A.
-*)
 Axiom errorWithoutStackTrace : forall {A : Type}, String -> A.
 
 
@@ -576,10 +550,6 @@ Definition flip {a} {b} {c} : (a -> b -> c) -> b -> a -> c :=
 Definition id {a} : a -> a :=
   fun arg_57__ => match arg_57__ with | x => x end.
 
-Axiom ifThenElse : forall {A : Type}, A.
-
-(* Translating `ifThenElse' failed: overloaded if-then-else unsupported *)
-
 Definition map {a} {b} : (a -> b) -> list a -> list b :=
   fix map arg_67__ arg_68__
         := match arg_67__ , arg_68__ with
@@ -636,10 +606,6 @@ Notation "'_$!_'" := (op_zdzn__).
 
 Definition otherwise : bool :=
   true.
-
-Axiom when : forall {A : Type}, A.
-
-(* Translating `when' failed: overloaded if-then-else unsupported *)
 
 Class Functor f := {
   op_zlzd__ : forall {a} {b}, a -> f b -> f a ;

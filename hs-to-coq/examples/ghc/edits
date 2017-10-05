@@ -9,8 +9,6 @@ skip module Data.Either
 skip module Data.OldList
 skip module Data.Traversable
 
-
-skip unionManyBags
 skip mapBagM
 skip mapBagM_
 skip mapAndUnzipBagM
@@ -21,20 +19,18 @@ skip partitionBagWith
 skip lengthBag
 skip isSingletonBag
 skip foldrBagM
-skip foldrBag
 skip foldlBagM
 skip foldlBag
-skip foldBag
 skip flatMapBagPairM
 skip flatMapBagM
 skip filterBagM
 skip elemBag
-skip concatBag
-skip catBagMaybes
-skip bagToList
 skip anyBagM
 skip allBagM
 skip anyBag
+
+# These are lies
+rename value Data.Foldable.foldr = Coq.Lists.List.fold_right
 
 skip instance_Data_Foldable_Foldable_Bag
 skip instance_forall___Data_Data_Data_a___Data_Data_Data__Bag_a_

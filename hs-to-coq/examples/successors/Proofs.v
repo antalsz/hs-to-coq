@@ -10,7 +10,7 @@ Ltac rewrite_Functor_list :=
   pose (K := @functor_identity list instance_Functor_list instance_FunctorLaws_list); clearbody K;
   pose (L := @functor_composition list instance_Functor_list instance_FunctorLaws_list); clearbody L;
   try rewrite K; try rewrite L;
-  unfold fmap, instance_Functor_list, BaseGen.instance_Functor_list_fmap in K, L;
+  unfold fmap, instance_Functor_list, Base.instance_Functor_list_fmap in K, L;
   try rewrite K; try rewrite L;
   clear K; clear L.
 
@@ -130,12 +130,12 @@ Proof.
   intros.
   destruct m.
   simpl.
-  unfold getCurrent, op_z2218U__, Successors.instance_GHC_BaseGen_Monad_Succs_op_zgzgze__, compose.
+  unfold getCurrent, op_z2218U__, Successors.instance_GHC_Base_Monad_Succs_op_zgzgze__, compose.
   destruct (k a0).
   destruct (h b0).
   f_equal.
   repeat (rewrite_Functor_list || rewrite map_append || rewrite <- app_assoc ||
-    unfold getCurrent, op_z2218U__, Successors.instance_GHC_BaseGen_Monad_Succs_op_zgzgze__
+    unfold getCurrent, op_z2218U__, Successors.instance_GHC_Base_Monad_Succs_op_zgzgze__
     ).
   f_equal.
   apply map_cong; intro.

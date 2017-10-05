@@ -1,7 +1,4 @@
-Require Import GHC.Prim.
-Require Import GHC.Char.
-Require Import GHC.Enum.
-Require Import GHC.Real.
+Require Import GHC.Base.
 
 (* These are all C functions in GHC *)
 Parameter  iswalpha : Int -> Int.

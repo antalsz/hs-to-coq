@@ -21,10 +21,15 @@ module HsToCoq.Coq.Gallina.Util (
   ) where
 
 import Control.Lens
+
+import Control.Applicative
 import Data.Semigroup ((<>))
 import Data.Foldable
 import Data.List.NonEmpty (NonEmpty(..), nonEmpty)
+
 import qualified Data.Text as T
+import Text.Parsec hiding ((<|>), many)
+
 import HsToCoq.Coq.Gallina
 
 pattern Var  :: Ident                        -> Term
@@ -110,12 +115,15 @@ qualidToIdent (Qualified qid aid) = qualidToIdent qid <> "." <> aid
 
 -- This doesn't handle all malformed 'Ident's
 identToQualid :: Ident -> Maybe Qualid
-identToQualid x = case T.splitOn "." x of
-                    root:rest -> Just $ foldl' Qualified (Bare root) rest
-                    []        -> Nothing
+identToQualid = either (const Nothing) Just . parse qualid "" where
+  qualid = do
+    let modFrag = T.cons <$> upper <*> (T.pack <$> many (alphaNum <|> char '\''))
+    frags <- many (try modFrag <* char '.')
+    base  <- T.pack <$> some anyChar
+    pure $ foldl' Qualified (Bare base) frags
 
 identToBase :: Ident -> Ident
-identToBase = last . T.splitOn "."
+identToBase x = maybe x qualidBase $ identToQualid x
 
 nameToTerm :: Name -> Term
 nameToTerm (Ident x)      = Var x

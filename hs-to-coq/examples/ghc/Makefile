@@ -55,6 +55,7 @@ $(VFILES_GEN): %.v : edits
 		     -I ghc/compiler/stage2 \
 		     -I ghc/compiler/stage2/build \
 		     --ghc -DSTAGE=2 \
+		     --ghc -package=ghc-boot-th \
 		     -N \
 		     -o . \
 		     ghc/compiler/*/$*.hs

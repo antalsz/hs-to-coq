@@ -1,5 +1,8 @@
 Require Import Bag.
 
+Require Import Proofs.GHC.Base.
+Require Import Proofs.GHC.List.
+
 Require Import Coq.Lists.List.
 Import ListNotations.
 Require Import ListUtils.
@@ -90,8 +93,8 @@ Proof.
     rewrite IHl IHr.
     by rewrite map_app.
   - rewrite /bagToList /= !fold_right_cons_nil.
-    admit. (* Coq map vs. Haskell map *)
-Admitted.
+    apply hs_coq_map.
+Qed.
 
 Theorem bagToList_listToBag {A} (l : list A) :
   bagToList (listToBag l) = l.
@@ -130,8 +133,8 @@ Proof.
   - by case: (p x).
   - by rewrite unionBags_ok bagToList_TwoBags filter_app IHl IHr.
   - rewrite bagToList_listToBag /bagToList /= fold_right_cons_nil.
-    admit. (* Coq filter vs. Haskell filter *)
-Admitted.
+    apply hs_coq_filter.
+Qed.
 
 Theorem emptyBag_ok {A} : bagToList (@Mk_EmptyBag A) = [].
 Proof. reflexivity. Qed.

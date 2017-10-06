@@ -23,7 +23,7 @@ Definition deleteBy {a} : (a -> a -> bool) -> a -> list a -> list a :=
   fix deleteBy arg_148__ arg_149__ arg_150__
         := match arg_148__ , arg_149__ , arg_150__ with
              | _ , _ , nil => nil
-             | eq , x , (cons y ys) => if eq x y
+             | eq , x , (cons y ys) => if eq x y : bool
                                        then ys
                                        else cons y (deleteBy eq x ys)
            end.
@@ -77,7 +77,7 @@ Definition dropWhileEnd {a} : (a -> bool) -> list a -> list a :=
     match arg_204__ with
       | p => GHC.Base.foldr (fun arg_205__ arg_206__ =>
                               match arg_205__ , arg_206__ with
-                                | x , xs => if andb (p x) (GHC.List.null xs)
+                                | x , xs => if andb (p x) (GHC.List.null xs) : bool
                                             then nil
                                             else cons x xs
                               end) nil
@@ -98,7 +98,7 @@ Definition nubBy {a} : (a -> a -> bool) -> list a -> list a :=
                           := match arg_165__ , arg_166__ with
                                | nil , _ => nil
                                | (cons y ys) , xs => let j_167__ := cons y (nubBy' ys (cons y xs)) in
-                                                     if elem_by eq y xs
+                                                     if elem_by eq y xs : bool
                                                      then nubBy' ys xs
                                                      else j_167__
                              end in
@@ -154,7 +154,7 @@ Definition intersectBy {a} : (a -> a -> bool) -> list a -> list a -> list a :=
       | _ , nil , _ => nil
       | _ , _ , nil => nil
       | eq , xs , ys => Coq.Lists.List.flat_map (fun x =>
-                                                  if GHC.List.any (eq x) ys
+                                                  if GHC.List.any (eq x) ys : bool
                                                   then cons x nil
                                                   else nil) xs
     end.
@@ -226,7 +226,7 @@ Definition select {a} : (a -> bool) -> a -> list a * list a -> list a * list
   fun arg_128__ arg_129__ arg_130__ =>
     match arg_128__ , arg_129__ , arg_130__ with
       | p , x , (pair ts fs) => let j_131__ := pair ts (cons x fs) in
-                                if p x
+                                if p x : bool
                                 then pair (cons x ts) fs
                                 else j_131__
     end.
@@ -255,7 +255,7 @@ Definition stripPrefix {a} `{GHC.Base.Eq_ a} : list a -> list a -> option (list
   fix stripPrefix arg_199__ arg_200__
         := match arg_199__ , arg_200__ with
              | nil , ys => Some ys
-             | (cons x xs) , (cons y ys) => if GHC.Base.op_zeze__ x y
+             | (cons x xs) , (cons y ys) => if GHC.Base.op_zeze__ x y : bool
                                             then stripPrefix xs ys
                                             else None
              | _ , _ => None

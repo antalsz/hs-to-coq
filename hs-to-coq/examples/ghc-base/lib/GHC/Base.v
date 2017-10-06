@@ -21,9 +21,6 @@ be defined in this module so that we can create instances for these types.
 
  *)
 
-(* SSreflect library *)
-Require Export mathcomp.ssreflect.ssreflect.
-
 Generalizable All Variables.
 Set Implicit Arguments.
 Set Maximal Implicit Insertion.

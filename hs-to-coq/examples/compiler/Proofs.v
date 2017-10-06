@@ -1,6 +1,8 @@
 Require Import Prelude.
 Require Import Compiler.
 
+Require Import mathcomp.ssreflect.ssreflect.
+
 Import ListNotations.
 
 Definition apply {aT} {rT} (f : aT -> rT) x u :=

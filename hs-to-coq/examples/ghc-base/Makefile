@@ -53,8 +53,7 @@ MODULES = \
   Data/Functor \
   Data/Monoid \
   Control/Monad \
-  Data/OldList \
-  Data/Traversable \
+  Data/OldList
 
 # generated from drop-in/
 DROPIN = GHC/Base \

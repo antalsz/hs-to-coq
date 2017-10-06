@@ -42,7 +42,10 @@ Definition mfilter {m} {a} `{(GHC.Base.MonadPlus m)} : (a -> bool) -> m a -> m
                                                        a :=
   fun arg_0__ arg_1__ =>
     match arg_0__ , arg_1__ with
-      | p , ma => (ma >>= fun a => if p a then GHC.Base.return_ a else GHC.Base.mzero)
+      | p , ma => GHC.Base.op_zgzgze__ ma (fun a =>
+                                         if p a
+                                         then GHC.Base.return_ a
+                                         else GHC.Base.mzero)
     end.
 
 Definition op_zgzezg__ {m} {a} {b} {c} `{GHC.Base.Monad m} : (a -> m
@@ -71,7 +74,8 @@ Definition op_zlzdznzg__ {m} {a} {b} `{GHC.Base.Monad m} : (a -> b) -> m a -> m
                                                            b :=
   fun arg_4__ arg_5__ =>
     match arg_4__ , arg_5__ with
-      | f , m => (m >>= fun x => let z := f x in GHC.Base.seq z (GHC.Base.return_ z))
+      | f , m => GHC.Base.op_zgzgze__ m (fun x =>
+                                        let z := f x in GHC.Base.seq z (GHC.Base.return_ z))
     end.
 
 Infix "<$!>" := (op_zlzdznzg__) (at level 99).
@@ -94,7 +98,7 @@ Definition zipWithM_ {m} {a} {b} {c} `{(GHC.Base.Applicative m)} : (a -> b -> m
     end.
 
 (* Unbound variables:
-     >>= Data.Foldable.Foldable Data.Foldable.foldlM Data.Foldable.sequenceA_
+     Data.Foldable.Foldable Data.Foldable.foldlM Data.Foldable.sequenceA_
      GHC.Base.Alternative GHC.Base.Applicative GHC.Base.Monad GHC.Base.MonadPlus
      GHC.Base.empty GHC.Base.flip GHC.Base.mzero GHC.Base.op_zgzg__
      GHC.Base.op_zgzgze__ GHC.Base.pure GHC.Base.return_ GHC.Base.seq

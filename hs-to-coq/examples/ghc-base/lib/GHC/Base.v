@@ -662,7 +662,8 @@ Definition mapM {m} {a} {b} `{Monad m} : (a -> m b) -> list a -> m (list b) :=
       | f , as_ => let k :=
                      fun arg_107__ arg_108__ =>
                        match arg_107__ , arg_108__ with
-                         | a , r => (f a >>= fun x => (r >>= fun xs => return_ (cons x xs)))
+                         | a , r => op_zgzgze__ (f a) (fun x =>
+                                                  op_zgzgze__ r (fun xs => return_ (cons x xs)))
                        end in
                    foldr k (return_ nil) as_
     end.
@@ -672,40 +673,50 @@ Definition liftM5 {m} {a1} {a2} {a3} {a4} {a5} {r} `{(Monad m)}
       r :=
   fun arg_75__ arg_76__ arg_77__ arg_78__ arg_79__ arg_80__ =>
     match arg_75__ , arg_76__ , arg_77__ , arg_78__ , arg_79__ , arg_80__ with
-      | f , m1 , m2 , m3 , m4 , m5 => (m1 >>= fun x1 =>
-                                        (m2 >>= fun x2 =>
-                                          (m3 >>= fun x3 =>
-                                            (m4 >>= fun x4 => (m5 >>= fun x5 => return_ (f x1 x2 x3 x4 x5))))))
+      | f , m1 , m2 , m3 , m4 , m5 => op_zgzgze__ m1 (fun x1 =>
+                                                    op_zgzgze__ m2 (fun x2 =>
+                                                                  op_zgzgze__ m3 (fun x3 =>
+                                                                                op_zgzgze__ m4 (fun x4 =>
+                                                                                              op_zgzgze__ m5 (fun x5 =>
+                                                                                                            return_ (f
+                                                                                                                    x1
+                                                                                                                    x2
+                                                                                                                    x3
+                                                                                                                    x4
+                                                                                                                    x5))))))
     end.
 
 Definition liftM4 {m} {a1} {a2} {a3} {a4} {r} `{(Monad m)}
     : (a1 -> a2 -> a3 -> a4 -> r) -> m a1 -> m a2 -> m a3 -> m a4 -> m r :=
   fun arg_83__ arg_84__ arg_85__ arg_86__ arg_87__ =>
     match arg_83__ , arg_84__ , arg_85__ , arg_86__ , arg_87__ with
-      | f , m1 , m2 , m3 , m4 => (m1 >>= fun x1 =>
-                                   (m2 >>= fun x2 =>
-                                     (m3 >>= fun x3 => (m4 >>= fun x4 => return_ (f x1 x2 x3 x4)))))
+      | f , m1 , m2 , m3 , m4 => op_zgzgze__ m1 (fun x1 =>
+                                               op_zgzgze__ m2 (fun x2 =>
+                                                             op_zgzgze__ m3 (fun x3 =>
+                                                                           op_zgzgze__ m4 (fun x4 =>
+                                                                                         return_ (f x1 x2 x3 x4)))))
     end.
 
 Definition liftM3 {m} {a1} {a2} {a3} {r} `{(Monad m)}
     : (a1 -> a2 -> a3 -> r) -> m a1 -> m a2 -> m a3 -> m r :=
   fun arg_90__ arg_91__ arg_92__ arg_93__ =>
     match arg_90__ , arg_91__ , arg_92__ , arg_93__ with
-      | f , m1 , m2 , m3 => (m1 >>= fun x1 =>
-                              (m2 >>= fun x2 => (m3 >>= fun x3 => return_ (f x1 x2 x3))))
+      | f , m1 , m2 , m3 => op_zgzgze__ m1 (fun x1 =>
+                                          op_zgzgze__ m2 (fun x2 => op_zgzgze__ m3 (fun x3 => return_ (f x1 x2 x3))))
     end.
 
 Definition liftM2 {m} {a1} {a2} {r} `{(Monad m)} : (a1 -> a2 -> r) -> m a1 -> m
                                                    a2 -> m r :=
   fun arg_96__ arg_97__ arg_98__ =>
     match arg_96__ , arg_97__ , arg_98__ with
-      | f , m1 , m2 => (m1 >>= fun x1 => (m2 >>= fun x2 => return_ (f x1 x2)))
+      | f , m1 , m2 => op_zgzgze__ m1 (fun x1 =>
+                                     op_zgzgze__ m2 (fun x2 => return_ (f x1 x2)))
     end.
 
 Definition liftM {m} {a1} {r} `{(Monad m)} : (a1 -> r) -> m a1 -> m r :=
   fun arg_101__ arg_102__ =>
     match arg_101__ , arg_102__ with
-      | f , m1 => (m1 >>= fun x1 => return_ (f x1))
+      | f , m1 => op_zgzgze__ m1 (fun x1 => return_ (f x1))
     end.
 
 Definition join {m} {a} `{(Monad m)} : m (m a) -> m a :=
@@ -717,7 +728,8 @@ Definition sequence {m} {a} `{Monad m} : list (m a) -> m (list a) :=
 Definition ap {m} {a} {b} `{(Monad m)} : m (a -> b) -> m a -> m b :=
   fun arg_71__ arg_72__ =>
     match arg_71__ , arg_72__ with
-      | m1 , m2 => (m1 >>= fun x1 => (m2 >>= fun x2 => return_ (x1 x2)))
+      | m1 , m2 => op_zgzgze__ m1 (fun x1 =>
+                                 op_zgzgze__ m2 (fun x2 => return_ (x1 x2)))
     end.
 
 Class Alternative f `{Applicative f} := {

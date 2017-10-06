@@ -38,6 +38,14 @@ Proof.
   by rewrite IH f_assoc.
 Qed.
 
+Theorem filter_app {A} (p : A -> bool) (l1 l2 : list A) :
+  filter p (l1 ++ l2) = filter p l1 ++ filter p l2.
+Proof.
+  elim: l1 => [|x1 l1 IH] //=.
+  case: (p x1) => //=.
+  by rewrite IH.
+Qed.
+
 (**** Bag invariant *****)
 
 Fixpoint well_formed_bag {A} (b : Bag A) : bool :=
@@ -147,10 +155,6 @@ Proof.
   - by case: xs.
 Qed.
 
-Theorem consBag_ok {A} (x : A) (b : Bag A) :
-  bagToList (consBag x b) = x :: bagToList b.
-Proof. elim: b => //. Qed.
-
 Theorem foldBag_ok {A R} (f : R -> R -> R) (u : A -> R) (z : R) (b : Bag A) :
   associative f ->
   foldBag f u z b = fold_right f z (map u (bagToList b)).
@@ -160,4 +164,38 @@ Proof.
   - rewrite !foldrBag_ok fold_right_cons_nil fold_right_cons.
     by rewrite IHl IHr  -fold_right_app map_app.
   - by rewrite fold_right_cons_nil fold_right_map.
+Qed.
+
+Theorem filterBag_ok {A} (p : A -> bool) (b : Bag A) :
+  bagToList (filterBag p b) = filter p (bagToList b).
+Proof.
+  elim: b => [| x | l IHl r IHr | xs] //=.
+  - by case: (p x).
+  - by rewrite unionBags_ok bagToList_TwoBags filter_app IHl IHr.
+  - rewrite bagToList_listToBag /bagToList /= fold_right_cons_nil.
+    admit. (* Coq filter vs. Haskell filter *)
+Admitted.
+
+Theorem emptyBag_ok {A} : bagToList (@Mk_EmptyBag A) = [].
+Proof. reflexivity. Qed.
+
+Theorem consBag_ok {A} (x : A) (b : Bag A) :
+  bagToList (consBag x b) = x :: bagToList b.
+Proof. elim: b => //. Qed.
+
+Definition concatBag {A} (bb : Bag (Bag A)) :
+  bagToList (concatBag bb) = concat (map bagToList (bagToList bb)).
+Proof.
+  rewrite /concatBag foldrBag_ok.
+  elim: (bagToList bb) => [|b bs IH] //=.
+  by rewrite unionBags_ok IH.
+Qed.
+
+Definition catBagMaybes {A} (b : Bag (option A)) :
+  bagToList (catBagMaybes b) =
+  flat_map (fun o => match o with Some x => [x] | None => [] end) (bagToList b).
+Proof.
+  rewrite /catBagMaybes foldrBag_ok.
+  elim: (bagToList b) => [|[x|] xs IH] //=.
+  by rewrite consBag_ok IH.
 Qed.

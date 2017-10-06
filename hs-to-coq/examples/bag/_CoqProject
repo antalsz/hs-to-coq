@@ -3,3 +3,4 @@
 -R ../ghc-base/lib/ Top
 Bag.v
 Proofs.v
+ReferenceFoldBag.v

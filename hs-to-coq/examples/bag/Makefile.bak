@@ -107,8 +107,8 @@ endif
 #                    #
 ######################
 
-VFILES:=Proofs.v\
-  Bag.v
+VFILES:=Bag.v\
+  Proofs.v
 
 ifneq ($(filter-out archclean clean cleanall printenv,$(MAKECMDGOALS)),)
 -include $(addsuffix .d,$(VFILES))

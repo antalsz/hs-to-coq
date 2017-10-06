@@ -108,7 +108,8 @@ endif
 ######################
 
 VFILES:=Bag.v\
-  Proofs.v
+  Proofs.v\
+  ReferenceFoldBag.v
 
 ifneq ($(filter-out archclean clean cleanall printenv,$(MAKECMDGOALS)),)
 -include $(addsuffix .d,$(VFILES))

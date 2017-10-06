@@ -1,17 +1,17 @@
 Require Import Bag.
+Require GHC.List.
+
+Require Import Coq.Program.Basics.
 Require Import Coq.Lists.List.
 Import ListNotations.
+Open Scope program_scope.
 
-From mathcomp Require Import ssreflect ssrfun.
+From mathcomp Require Import ssreflect ssrfun ssrbool.
 Set Bullet Behavior "Strict Subproofs".
 
-Theorem unitBag_ok {A} (x : A) :
-  bagToList (unitBag x) = [ x ].
-Proof. reflexivity. Qed.
+(**** Lists *****)
 
-(* TODO: prove that Coq fold_right is the same as GHC foldr *)
-
-Lemma fold_right_cons {A} (tail l : list A) :
+Theorem fold_right_cons {A} (tail l : list A) :
   fold_right cons tail l = l ++ tail.
 Proof.
   elim: l => [| x l IH] //=.
@@ -21,6 +21,64 @@ Qed.
 Corollary fold_right_cons_nil {A} (l : list A) :
   fold_right cons [] l = l.
 Proof. by rewrite fold_right_cons app_nil_r. Qed.
+
+Theorem fold_right_map {A B C} (f : B -> C -> C) (z : C) (g : A -> B) (l : list A) :
+  fold_right f z (map g l) = fold_right (f ∘ g) z l.
+Proof.
+  elim: l => [|x l IH] //=.
+  by rewrite IH.
+Qed.
+
+Theorem fold_right_fold_right {A} (f : A -> A -> A) (z : A) (l1 l2 : list A) :
+  associative f -> left_id z f ->
+  fold_right f (fold_right f z l2) l1 = f (fold_right f z l1) (fold_right f z l2).
+Proof.
+  move=> f_assoc z_left_id.
+  elim: l1 => [|x1 l1 IH] //=.
+  by rewrite IH f_assoc.
+Qed.
+
+(**** Bag invariant *****)
+
+Fixpoint well_formed_bag {A} (b : Bag A) : bool :=
+  match b with
+  | Mk_EmptyBag              => true
+  | Mk_UnitBag _             => true
+  | Mk_TwoBags Mk_EmptyBag _ => false
+  | Mk_TwoBags _ Mk_EmptyBag => false
+  | Mk_TwoBags l r           => well_formed_bag l && well_formed_bag r
+  | Mk_ListBag []            => false
+  | Mk_ListBag (_ :: _)      => true
+  end.
+Arguments well_formed_bag _ : simpl nomatch.
+
+Theorem wf_inv_TwoBags {A} (l r : Bag A) :
+  well_formed_bag (Mk_TwoBags l r) ->
+  l <> Mk_EmptyBag /\ r <> Mk_EmptyBag /\
+  well_formed_bag l /\ well_formed_bag r.
+Proof.
+  by elim: l => //=; elim: r => //= *;
+     match goal with [wf : is_true (_ && _) |- _] => move: wf => /andP end;
+     split => //=.
+Qed.
+
+Theorem wf_inv_ListBag {A} (xs : list A) :
+  well_formed_bag (Mk_ListBag xs) ->
+  xs <> [].
+Proof. by case: xs. Qed.
+
+Theorem eval_wf_TwoBags {A} (l r : Bag A) :
+  well_formed_bag (Mk_TwoBags l r) =
+  [&& ~~ isEmptyBag l, ~~ isEmptyBag r, well_formed_bag l & well_formed_bag r].
+Proof. by case: l; case: r. Qed.
+
+(***** Bag correctness theorems *****)
+
+Theorem unitBag_ok {A} (x : A) :
+  bagToList (unitBag x) = [ x ].
+Proof. reflexivity. Qed.
+
+(* TODO: prove that Coq fold_right is the same as GHC foldr *)
 
 Theorem foldrBag_ok {A R} (f : A -> R -> R) (z : R) (b : Bag A) :
   foldrBag f z b = fold_right f z (bagToList b).
@@ -33,18 +91,22 @@ Proof.
   - by rewrite /bagToList /= fold_right_cons_nil.
 Qed.
 
-Theorem unionBags_ok {A} (b1 b2 : Bag A) :
-  bagToList (unionBags b1 b2) = bagToList b1 ++ bagToList b2.
+Lemma bagToList_TwoBags {A} (l r : Bag A) :
+  bagToList (Mk_TwoBags l r) = bagToList l ++ bagToList r.
 Proof.
-  by case: b1 => *; case: b2 => *;
-     rewrite /bagToList //=
-             ?foldrBag_ok ?fold_right_cons_nil ?fold_right_cons
-             ?app_assoc ?app_nil_r.
+  by rewrite /bagToList //= !foldrBag_ok !fold_right_cons_nil !fold_right_cons.
 Qed.
 
-Theorem consBag_ok {A} (x : A) (b : Bag A) :
-  bagToList (consBag x b) = x :: bagToList b.
-Proof. elim: b => //. Qed.
+Theorem unionBags_ok {A} (b1 b2 : Bag A) :
+  bagToList (unionBags b1 b2) = bagToList b1 ++ bagToList b2.
+Proof. by case: b1 => *; case: b2 => *; rewrite -bagToList_TwoBags. Qed.
+
+Theorem unionManyBags_ok {A} (bs : list (Bag A)) :
+  bagToList (unionManyBags bs) = concat (map bagToList bs).
+Proof.
+  rewrite /unionManyBags; elim: bs => [|b bs IH] //=.
+  by rewrite unionBags_ok IH.
+Qed.
 
 Theorem snocBag_ok {A} (b : Bag A) (x : A) :
   bagToList (snocBag b x) = bagToList b ++ [x].
@@ -69,3 +131,33 @@ Proof. by elim: l => [| x l IH] //=; rewrite /bagToList /= fold_right_cons_nil. 
 (* Is there a partial inverse theorem?  The direct inverse isn't true because
    there are multiple equivalent bags -- for example, `ListBag [x]` and
    `UnitBag x`. *)
+
+Lemma app_null {A} (xs ys : list A) :
+  GHC.List.null (xs ++ ys) = GHC.List.null xs && GHC.List.null ys.
+Proof. case: xs => //=. Qed.
+
+Theorem isEmptyBag_ok {A} (b : Bag A) :
+  well_formed_bag b ->
+  isEmptyBag b = GHC.List.null (bagToList b).
+Proof.
+  elim: b => [| x | l IHl r IHr | xs] //=.
+  - rewrite eval_wf_TwoBags => /and4P [nel ner wfl wfr] *.
+    rewrite bagToList_TwoBags app_null.
+    by rewrite -IHl // -IHr // (negbTE nel).
+  - by case: xs.
+Qed.
+
+Theorem consBag_ok {A} (x : A) (b : Bag A) :
+  bagToList (consBag x b) = x :: bagToList b.
+Proof. elim: b => //. Qed.
+
+Theorem foldBag_ok {A R} (f : R -> R -> R) (u : A -> R) (z : R) (b : Bag A) :
+  associative f ->
+  foldBag f u z b = fold_right f z (map u (bagToList b)).
+Proof.
+  move=> f_assoc.
+  elim: b z => [| x | l IHl r IHr | xs] //= z; rewrite /bagToList /=.
+  - rewrite !foldrBag_ok fold_right_cons_nil fold_right_cons.
+    by rewrite IHl IHr  -fold_right_app map_app.
+  - by rewrite fold_right_cons_nil fold_right_map.
+Qed.

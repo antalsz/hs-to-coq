@@ -52,6 +52,7 @@ MODULES = \
   Data/Eq \
   Data/Functor \
   Data/Monoid \
+  Control/Monad \
 
 
 # generated from drop-in/

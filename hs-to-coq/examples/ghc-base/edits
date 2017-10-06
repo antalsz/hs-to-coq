@@ -56,5 +56,7 @@ rename value Data.Either.Left  = inr
 
 rename type GHC.Types.* = Type
 
-
 skip method Monad fail
+
+rename value GHC.Prim.seq  = GHC.Base.seq
+rename value op_zlzez3fU__ = op_zlze__

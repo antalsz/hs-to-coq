@@ -88,13 +88,15 @@ coq: lib/Makefile.coq $(VFILES)
 	$(MAKE) -C lib -f Makefile.coq OPT=$(COQFLAGS)
 
 
-$(VFILES_GEN): lib/%.v : module-edits/%/edits edits module-edits/%/preamble.v
-	$(HS_TO_COQ) -e module-edits/$*/edits \
-	             -e edits \
+.SECONDEXPANSION:
+$(VFILES_GEN): lib/%.v : $$(wildcard module-edits/$*/preamble.v) $$(wildcard module-edits/$*/edits) edits
+	if [ -e module-edits/$*/edits ]; then E_ARG="-e module-edits/$*/edits"; else E_ARG=; fi;\
+	if [ -e module-edits/$*/preamble.v ]; then P_ARG="-p module-edits/$*/preamble.v"; else P_ARG=; fi;\
+	$(HS_TO_COQ) $${E_ARG} $${P_ARG} \
 		     -N \
 		     -o lib \
-		     -p module-edits/$*/preamble.v \
 		     base/$*.hs
+	test -e $@
 
 $(VFILES_MAN): lib/%.v : manual/%.v
 	mkdir -p "$$(dirname lib/$*.v)"

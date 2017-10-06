@@ -1,7 +1,7 @@
 Require Import Bag.
 Require Import Proofs.
-Require GHC.List.
 
+Require Import ListUtils.
 Require Import Coq.Program.Basics.
 Require Import Coq.Lists.List.
 Import ListNotations.

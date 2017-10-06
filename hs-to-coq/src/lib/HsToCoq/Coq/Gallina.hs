@@ -560,7 +560,7 @@ render_opt_type = maybe mempty render_type
 
 -- Module-local
 render_rtype :: Gallina a => a -> Doc
-render_rtype rty = nest 2 $ softline <> renderGallina rty
+render_rtype rty = nest 2 $ softline <> "return" <+> renderGallina rty
 
 -- Module-local
 render_opt_rtype :: Gallina a => Maybe a -> Doc

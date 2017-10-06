@@ -17,8 +17,8 @@ HANDMOD = Proofs
 EMPTY_MODS =
 
 # Generated modules
-# All except BaseGen are generated directly from GHC/libraries/base
-MODULES  = Bag
+MODULES  = Bag \
+           MonadUtils
 
 VFILES_GEN     = $(addsuffix .v,$(MODULES))
 VFILES_MAN     = $(addsuffix .v,$(HANDMOD))
@@ -49,6 +49,7 @@ coq: Makefile.coq $(VFILES)
 $(VFILES_GEN): %.v : edits
 	$(HS_TO_COQ) -e edits \
 	             -e ../ghc-base/edits \
+                -p preamble.v \
 	             --ghc-tree ghc \
 	             -I ghc/includes \
 	             -I ghc/compiler \

@@ -1,38 +1,73 @@
+#####################################################################
+# for Bag
+
 skip module Outputable
 skip module Util
-skip module MonadUtils
-skip module Control.Monad
 skip module Data.Data
 skip module Data.List
-skip module Data.Foldable
-skip module Data.Either
 skip module Data.OldList
 skip module Data.Traversable
 
+# Needs Data.Traversable
 skip mapBagM
-skip mapBagM_
 skip mapAndUnzipBagM
-skip mapAccumBagLM
 skip mapAccumBagL
+# Needs MonadUtil.mapAccumLM
+skip mapAccumBagLM
+# Needs Data.OldList.partition
 skip partitionBag
+# Needs Util.partitionWith
 skip partitionBagWith
-skip lengthBag
+# Needs Util.isSingleton
 skip isSingletonBag
-skip foldrBagM
-skip foldlBagM
-skip foldlBag
-skip flatMapBagPairM
-skip flatMapBagM
+# Needs Control.Monad.filterM
 skip filterBagM
-skip elemBag
-skip anyBagM
-skip allBagM
-skip anyBag
+
+## these all work now
+# skip mapBagM_
+# skip lengthBag
+# skip foldrBagM
+# skip foldlBagM
+# skip foldlBag
+# skip flatMapBagPairM
+# skip flatMapBagM
+# skip elemBag
+# skip anyBagM
+# skip allBagM
+# skip anyBag
 
 # These are lies
-rename value Data.Foldable.foldr = Coq.Lists.List.fold_right
+# rename value Data.Foldable.foldr = Coq.Lists.List.fold_right
+# skip instance_Data_Foldable_Foldable_Bag
 
-skip instance_Data_Foldable_Foldable_Bag
 skip instance_forall___Data_Data_Data_a___Data_Data_Data__Bag_a_
 skip instance_forall____Outputable_Outputable_a____Outputable_Outputable__Bag_a_
 
+####################################################################
+# for MonadUtils
+skip module Control.Monad.Fix
+skip module Control.Monad.IO.Class
+
+# partial
+skip unlessM
+
+# needs GHC.Base.when
+skip whenM
+
+# needs traversable
+skip concatMapM
+skip mapMaybeM
+
+skip liftIO1
+skip liftIO2
+skip liftIO3
+skip liftIO4
+
+# we cross inl/inr somewhere!
+skip fmapEitherM
+# UNDEFINED EVARS
+skip mapAccumLM
+skip mapAndUnzip3M
+skip mapAndUnzip4M
+skip mapAndUnzip5M
+skip zipWithAndUnzipM

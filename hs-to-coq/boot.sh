@@ -17,7 +17,7 @@ make -C examples/rle clean
 make -C examples/bag clean
 make -C examples/ghc clean
 
-if -e examples/ghc-base/ghc
+if -e examples/ghc-base/base
 then
 	echo "Regenerating examples/ghc-base/lib"
 	rm -rf examples/ghc-base/lib/

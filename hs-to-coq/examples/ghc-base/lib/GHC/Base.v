@@ -542,6 +542,10 @@ Definition flip {a} {b} {c} : (a -> b -> c) -> b -> a -> c :=
 Definition id {a} : a -> a :=
   fun arg_57__ => match arg_57__ with | x => x end.
 
+Axiom ifThenElse : forall {A : Type}, A.
+
+(* Translating `ifThenElse' failed: overloaded if-then-else unsupported *)
+
 Definition map {a} {b} : (a -> b) -> list a -> list b :=
   fix map arg_67__ arg_68__
         := match arg_67__ , arg_68__ with
@@ -598,6 +602,10 @@ Notation "'_$!_'" := (op_zdzn__).
 
 Definition otherwise : bool :=
   true.
+
+Axiom when : forall {A : Type}, A.
+
+(* Translating `when' failed: overloaded if-then-else unsupported *)
 
 Class Functor f := {
   op_zlzd__ : forall {a} {b}, a -> f b -> f a ;

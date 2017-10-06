@@ -5,7 +5,6 @@ skip module Outputable
 skip module Util
 skip module Data.Data
 skip module Data.List
-skip module Data.OldList
 skip module Data.Traversable
 
 # Needs Data.Traversable
@@ -52,7 +51,7 @@ skip module Control.Monad.IO.Class
 skip unlessM
 
 # needs GHC.Base.when
-skip whenM
+# skip whenM
 
 # needs traversable
 skip concatMapM
@@ -63,8 +62,6 @@ skip liftIO2
 skip liftIO3
 skip liftIO4
 
-# we cross inl/inr somewhere!
-skip fmapEitherM
 # UNDEFINED EVARS
 skip mapAccumLM
 skip mapAndUnzip3M

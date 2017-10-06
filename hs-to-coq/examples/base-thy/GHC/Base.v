@@ -1,5 +1,7 @@
 (* This file contains the theory & tactics for definitions in the Base library. *)
 
+Require Import mathcomp.ssreflect.ssreflect.
+
 Require Import GHC.Base.
 
 (* Properties of basic functions *)

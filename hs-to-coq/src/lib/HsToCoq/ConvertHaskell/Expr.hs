@@ -471,39 +471,45 @@ convertPatternBinding hsPat hsExp buildTrivial buildNontrivial fallback = do
           body
 
 convertDoBlock :: ConversionMonad m => [ExprLStmt GHC.Name] -> m Term
-convertDoBlock allStmts = case fmap unLoc <$> unsnoc allStmts of
-  Just (stmts, lastStmt -> Just e) -> foldMap (Endo . toExpr . unLoc) stmts `appEndo` convertLExpr e
-  Just _                           -> convUnsupported "invalid malformed `do' block"
-  Nothing                          -> convUnsupported "invalid empty `do' block"
+convertDoBlock allStmts = do
+    in_ghc_base <- (== Just (mkModuleName "GHC.Base")) <$> use currentModule
+    case fmap unLoc <$> unsnoc allStmts of
+      Just (stmts, lastStmt -> Just e) -> foldMap (Endo . toExpr in_ghc_base . unLoc) stmts `appEndo` convertLExpr e
+      Just _                           -> convUnsupported "invalid malformed `do' block"
+      Nothing                          -> convUnsupported "invalid empty `do' block"
   where
     lastStmt (BodyStmt e _ _ _) = Just e
     lastStmt (LastStmt e _ _)   = Just e
     lastStmt _                  = Nothing
     
-    toExpr (BodyStmt e _bind _guard _PlaceHolder) rest =
+    toExpr _ (BodyStmt e _bind _guard _PlaceHolder) rest =
       Infix <$> convertLExpr e <*> pure ">>" <*> rest
 
-    toExpr (BindStmt pat exp _bind _fail PlaceHolder) rest =
+    toExpr in_ghc_base (BindStmt pat exp _bind _fail PlaceHolder) rest =
       convertPatternBinding
         pat exp
-        (\exp' fun          -> Infix exp' ">>=" . fun <$> rest)
-        (\exp' cont letCont -> letCont (Infix exp' ">>=" (Var cont)) <$> rest)
-        (Var "fail" `App1` HsString "Partial pattern match in `do' notation")
+        (\exp' fun          -> monBind in_ghc_base exp' . fun <$> rest)
+        (\exp' cont letCont -> letCont (monBind in_ghc_base exp' (Var cont)) <$> rest)
+        (missingValue `App1` HsString "Partial pattern match in `do' notation")
 
-    toExpr (LetStmt (L _ binds)) rest =
+    toExpr _ (LetStmt (L _ binds)) rest =
       convertLocalBinds binds rest
 
-    toExpr (RecStmt{}) _ =
+    toExpr _ (RecStmt{}) _ =
       convUnsupported "`rec' statements in `do` blocks"
 
-    toExpr _ _ =
+    toExpr _ _ _ =
       convUnsupported "impossibly fancy `do' block statements"
+
+    -- monBind e1 e2 = Infix e1 ">>= e2
+    monBind True  = App2 (Var "op_zgzgze__")
+    monBind False = App2 (Var "GHC.Base.op_zgzgze__")
 
 convertListComprehension :: ConversionMonad m => [ExprLStmt GHC.Name] -> m Term
 convertListComprehension allStmts = case fmap unLoc <$> unsnoc allStmts of
   Just (stmts, LastStmt e _applicativeDoInfo _returnInfo) ->
     foldMap (Endo . toExpr . unLoc) stmts `appEndo`
-      (App2 (Var ("cons")) <$> convertLExpr e <*> pure (Var "nil"))
+      (App2 (Var "cons") <$> convertLExpr e <*> pure (Var "nil"))
   Just _ ->
     convUnsupported "invalid malformed list comprehensions"
   Nothing ->

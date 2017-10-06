@@ -7,10 +7,6 @@ Set Maximal Implicit Insertion.
 Unset Strict Implicit.
 Unset Printing Implicit Defensive.
 
-(* Preamble *)
-
-Require Import GHC.Base.
-
 (* Converted imports: *)
 
 Require Coq.Init.Datatypes.
@@ -69,8 +65,11 @@ Definition isSuffixOf {a} `{(GHC.Base.Eq_ a)} : list a -> list a -> bool :=
   fun arg_188__ arg_189__ =>
     match arg_188__ , arg_189__ with
       | ns , hs => GHC.Base.op_zd__ (Data.Maybe.maybe false GHC.Base.id)
-                                    (dropLengthMaybe ns hs >>= fun delta =>
-                                      GHC.Base.op_zd__ GHC.Base.return_ (GHC.Base.op_zeze__ ns (dropLength delta hs)))
+                                    (GHC.Base.op_zgzgze__ (dropLengthMaybe ns hs) (fun delta =>
+                                                            GHC.Base.op_zd__ GHC.Base.return_ (GHC.Base.op_zeze__ ns
+                                                                                                                  (dropLength
+                                                                                                                  delta
+                                                                                                                  hs))))
     end.
 
 Definition dropWhileEnd {a} : (a -> bool) -> list a -> list a :=
@@ -417,11 +416,11 @@ Definition emptySB {a} : SnocBuilder a :=
   Mk_SnocBuilder (GHC.Num.fromInteger 0) nil nil.
 
 (* Unbound variables:
-     * >>= Coq.Init.Datatypes.app Coq.Lists.List.flat_map Coq.Program.Basics.compose
+     * Coq.Init.Datatypes.app Coq.Lists.List.flat_map Coq.Program.Basics.compose
      Data.Maybe.listToMaybe Data.Maybe.maybe GHC.Base.Eq_ GHC.Base.Ord
      GHC.Base.String GHC.Base.compare GHC.Base.flip GHC.Base.foldl GHC.Base.foldr
      GHC.Base.id GHC.Base.oneShot GHC.Base.op_zd__ GHC.Base.op_zeze__
-     GHC.Base.return_ GHC.Base.seq GHC.List.any GHC.List.filter GHC.List.null
-     GHC.List.reverse GHC.Num.Num GHC.Num.Word GHC.Num.op_zp__ None Some andb bool
-     comparison cons false list nil option orb pair true
+     GHC.Base.op_zgzgze__ GHC.Base.return_ GHC.Base.seq GHC.List.any GHC.List.filter
+     GHC.List.null GHC.List.reverse GHC.Num.Num GHC.Num.Word GHC.Num.op_zp__ None
+     Some andb bool comparison cons false list nil option orb pair true
 *)

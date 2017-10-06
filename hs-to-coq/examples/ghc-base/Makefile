@@ -90,10 +90,14 @@ coq: lib/Makefile.coq $(VFILES)
 
 .SECONDEXPANSION:
 $(VFILES_GEN): lib/%.v : $$(wildcard module-edits/$*/preamble.v) $$(wildcard module-edits/$*/edits) edits
-	if [ -e module-edits/$*/edits ]; then E_ARG="-e module-edits/$*/edits"; else E_ARG=; fi;\
-	if [ -e module-edits/$*/preamble.v ]; then P_ARG="-p module-edits/$*/preamble.v"; else P_ARG=; fi;\
-	$(HS_TO_COQ) $${E_ARG} $${P_ARG} \
+	$(HS_TO_COQ) $(addprefix -e , $(wildcard module-edits/$*/edits)) \
+	             $(addprefix -p , $(wildcard module-edits/$*/preamble.v)) \
+	             -e edits \
 		     -N \
+		     -i base \
+		     -i base/dist-install/build \
+		     -I base/include \
+		     --ghc -this-unit-id --ghc base \
 		     -o lib \
 		     base/$*.hs
 	test -e $@

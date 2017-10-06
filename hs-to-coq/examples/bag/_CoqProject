@@ -1,6 +1,9 @@
 -R .                Top
 -R ../base-thy      Proofs
 -R ../ghc-base/lib/ Top
+
+ListUtils.v
+
 Bag.v
 Proofs.v
 ReferenceFoldBag.v

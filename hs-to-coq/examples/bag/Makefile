@@ -107,7 +107,8 @@ endif
 #                    #
 ######################
 
-VFILES:=Bag.v\
+VFILES:=ListUtils.v\
+  Bag.v\
   Proofs.v\
   ReferenceFoldBag.v
 

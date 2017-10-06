@@ -43,7 +43,7 @@ Definition mfilter {m} {a} `{(GHC.Base.MonadPlus m)} : (a -> bool) -> m a -> m
   fun arg_0__ arg_1__ =>
     match arg_0__ , arg_1__ with
       | p , ma => GHC.Base.op_zgzgze__ ma (fun a =>
-                                         if p a : bool
+                                         if p a
                                          then GHC.Base.return_ a
                                          else GHC.Base.mzero)
     end.
@@ -85,7 +85,7 @@ Notation "'_<$!>_'" := (op_zlzdznzg__).
 Definition unless {f} `{(GHC.Base.Applicative f)} : bool -> f unit -> f unit :=
   fun arg_9__ arg_10__ =>
     match arg_9__ , arg_10__ with
-      | p , s => if p : bool
+      | p , s => if p
                  then GHC.Base.pure tt
                  else s
     end.

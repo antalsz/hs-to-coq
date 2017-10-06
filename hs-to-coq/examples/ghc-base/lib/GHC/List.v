@@ -44,7 +44,7 @@ Definition break {a} : (a -> bool) -> list a -> list a * list a :=
                                              match break p xs' with
                                                | (pair ys zs) => pair (cons x ys) zs
                                              end in
-                                           if p x : bool
+                                           if p x
                                            then pair nil xs
                                            else j_101__
            end.
@@ -59,7 +59,7 @@ Definition dropWhile {a} : (a -> bool) -> list a -> list a :=
   fix dropWhile arg_114__ arg_115__
         := match arg_114__ , arg_115__ with
              | _ , nil => nil
-             | p , ((cons x xs') as xs) => if p x : bool
+             | p , ((cons x xs') as xs) => if p x
                                            then dropWhile p xs'
                                            else xs
            end.
@@ -76,7 +76,7 @@ Definition filter {a} : (a -> bool) -> list a -> list a :=
         := match arg_194__ , arg_195__ with
              | _pred , nil => nil
              | pred , (cons x xs) => let j_196__ := filter pred xs in
-                                     if pred x : bool
+                                     if pred x
                                      then cons x (filter pred xs)
                                      else j_196__
            end.
@@ -84,7 +84,7 @@ Definition filter {a} : (a -> bool) -> list a -> list a :=
 Definition filterFB {a} {b} : (a -> b -> b) -> (a -> bool) -> a -> b -> b :=
   fun arg_188__ arg_189__ arg_190__ arg_191__ =>
     match arg_188__ , arg_189__ , arg_190__ , arg_191__ with
-      | c , p , x , r => if p x : bool
+      | c , p , x , r => if p x
                          then c x r
                          else r
     end.
@@ -148,7 +148,7 @@ Definition lookup {a} {b} `{(GHC.Base.Eq_ a)} : a -> list (a * b) -> option b :=
         := match arg_63__ , arg_64__ with
              | _key , nil => None
              | key , (cons (pair x y) xys) => let j_65__ := lookup key xys in
-                                              if GHC.Base.op_zeze__ key x : bool
+                                              if GHC.Base.op_zeze__ key x
                                               then Some y
                                               else j_65__
            end.
@@ -260,7 +260,7 @@ Definition span {a} : (a -> bool) -> list a -> list a * list a :=
         := match arg_104__ , arg_105__ with
              | _ , (nil as xs) => pair xs xs
              | p , ((cons x xs') as xs) => let j_107__ := pair nil xs in
-                                           if p x : bool
+                                           if p x
                                            then match span p xs' with
                                                   | (pair ys zs) => pair (cons x ys) zs
                                                 end
@@ -284,7 +284,7 @@ Definition takeWhileFB {a} {b}
     match arg_118__ , arg_119__ , arg_120__ with
       | p , c , n => fun arg_121__ arg_122__ =>
                        match arg_121__ , arg_122__ with
-                         | x , r => if p x : bool
+                         | x , r => if p x
                                     then c x r
                                     else n
                        end

@@ -235,3 +235,13 @@ Proof.
 Abort.
 
 (* ------------------------- Monad  --------------------------- *)
+
+(* -------------------------------------------------------------------- *)
+
+(* Haskell-Coq equivalence *)
+
+Require Coq.Lists.List.
+
+Theorem hs_coq_map {A B} (f : A -> B) (l : list A) :
+  map f l = Coq.Lists.List.map f l.
+Proof. induction l; simpl; [|f_equal]; auto. Qed.

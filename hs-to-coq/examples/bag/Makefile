@@ -109,6 +109,8 @@ endif
 
 VFILES:=ListUtils.v\
   Bag.v\
+  WellFormed.v\
+  Correctness.v\
   Proofs.v\
   ReferenceFoldBag.v
 

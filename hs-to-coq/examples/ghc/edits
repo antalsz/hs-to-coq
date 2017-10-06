@@ -22,23 +22,6 @@ skip isSingletonBag
 # Needs Control.Monad.filterM
 skip filterBagM
 
-## these all work now
-# skip mapBagM_
-# skip lengthBag
-# skip foldrBagM
-# skip foldlBagM
-# skip foldlBag
-# skip flatMapBagPairM
-# skip flatMapBagM
-# skip elemBag
-# skip anyBagM
-# skip allBagM
-# skip anyBag
-
-# These are lies
-# rename value Data.Foldable.foldr = Coq.Lists.List.fold_right
-# skip instance_Data_Foldable_Foldable_Bag
-
 skip instance_forall___Data_Data_Data_a___Data_Data_Data__Bag_a_
 skip instance_forall____Outputable_Outputable_a____Outputable_Outputable__Bag_a_
 
@@ -49,9 +32,6 @@ skip module Control.Monad.IO.Class
 
 # partial
 skip unlessM
-
-# needs GHC.Base.when
-# skip whenM
 
 # needs traversable
 skip concatMapM

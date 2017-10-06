@@ -2,4 +2,5 @@ ghc
 Makefile.coq
 _CoqProject
 Bag.v
+MonadUtils.v
 

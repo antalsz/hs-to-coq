@@ -53,10 +53,11 @@ MODULES = \
   Data/Functor \
   Data/Monoid \
   Control/Monad \
-
+  Data/OldList \
 
 # generated from drop-in/
-DROPIN = GHC/Base
+DROPIN = GHC/Base \
+
 
 # also generated from drop-in/
 SPECIAL_MODULES =

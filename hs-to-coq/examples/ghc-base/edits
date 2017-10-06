@@ -50,11 +50,12 @@ rename value GHC.Base.Nothing = None
 rename value GHC.Err.errorWithoutStackTrace = GHC.Base.errorWithoutStackTrace
 
 rename type Data.Either.Either = sum
-rename value Data.Either.Right = inl
-rename value Data.Either.Left  = inr
+rename value Data.Either.Right = inr
+rename value Data.Either.Left  = inl
 
 
 rename type GHC.Types.* = Type
+rename type GHC.Types.Word = GHC.Num.Word
 
 skip method Monad fail
 

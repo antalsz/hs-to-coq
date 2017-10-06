@@ -1,18 +1,24 @@
-# precedence
-skip edits
-skip transpose
-skip prependToAll
-skip nonEmptySubsequences
-skip isSuffixOf
+# uses partial functions
+skip maximumBy
+skip minimumBy
 
-# precedence, character constant
+# Wrong name for tuple constructors
+skip zip4
+skip zip5
+skip zip6
+skip zip7
+
+# strange Coq bug
+skip transpose
+
+# character constant
 skip unlines
 
-#pattern guard
-skip genericTake
-skip genericSplitAt
+# uses op_zlzez3fU__ instead of op_zlze__
 skip genericIndex
 skip genericDrop
+skip genericTake
+skip genericSplitAt
 
 # mutrec
 skip sortBy
@@ -20,12 +26,13 @@ skip sortOn
 skip sort
 skip mapAccumR
 
-# is keyword used as variable, mutrec
+# "is" keyword used as variable, Coq anamoly
 skip permutations
 
 # precedence, ???
 skip sb
 skip snocSB
+
 
 # "" pattern / not structually inductive
 skip wordsFB

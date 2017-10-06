@@ -1,4 +1,8 @@
 skip module GHC.Prim
+skip module Control.Applicative
+skip module GHC.Arr
+skip module GHC.Generics
+skip module GHC.Tuple
 
 rename type  GHC.Tuple.() = unit
 rename value GHC.Tuple.() = tt

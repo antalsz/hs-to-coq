@@ -60,6 +60,7 @@ Proof.
   induction xs.
   * inversion H0.
   * simpl.
+    unfold concat. simpl.
     rewrite in_app_iff.
     destruct H0.
     - left.
@@ -84,6 +85,7 @@ Proof.
   unfold rle in H0.
   rewrite map_map in H0.
   apply in_map_hd_in_concat in H0.
+  unfold group in H0.
   rewrite concat_groupBy in H0.
   assumption.
   apply group_by_not_nil.

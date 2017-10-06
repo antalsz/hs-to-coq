@@ -120,8 +120,7 @@ $(VFILES_DROPIN): lib/%.v : module-edits/%/edits edits module-edits/%/preamble.v
 		     drop-in/$*.hs
 
 clean:
-	rm -f */*.vo */*.glob */*.v.d *.vo *.v.d  $(VFILES) _CoqProject Makefile.coq  */*.v~
-
+	rm -rf lib
 
 todo:
 	grep Axiom lib/*.v lib/*/*.v lib/*/*/*.v

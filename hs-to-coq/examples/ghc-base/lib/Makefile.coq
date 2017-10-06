@@ -129,6 +129,7 @@ VFILES:=GHC/Num.v\
   Data/Monoid.v\
   Control/Monad.v\
   Data/OldList.v\
+  Data/Traversable.v\
   GHC/Base.v
 
 ifneq ($(filter-out archclean clean cleanall printenv,$(MAKECMDGOALS)),)

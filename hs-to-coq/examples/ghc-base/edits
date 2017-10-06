@@ -61,3 +61,14 @@ skip method Monad fail
 
 rename value GHC.Prim.seq  = GHC.Base.seq
 rename value op_zlzez3fU__ = op_zlze__
+
+rename value Data.Proxy.Proxy    = Data.Proxy.Mk_Proxy
+rename value Data.Monoid.Dual    = Data.Monoid.Mk_Dual
+rename value Data.Monoid.Sum     = Data.Monoid.Mk_Sum
+rename value Data.Monoid.Product = Data.Monoid.Mk_Product
+rename value Data.Monoid.First   = Data.Monoid.Mk_First
+rename value Data.Monoid.Last    = Data.Monoid.Mk_Last
+rename value Data.Traversable.for = Data.Traversable.for_
+
+rename value getConst = Data.Functor.Const.getConst
+rename value Data.Functor.Const = Data.Functor.Const.Mk_Const

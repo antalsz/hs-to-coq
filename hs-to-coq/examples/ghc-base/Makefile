@@ -16,9 +16,6 @@ endif
 # GHC/Unicode needs precedence resolution, plus a few issues with unicode constants
 # Data/Char needs a show instance.  Also use of data cons separate from definition.
 
-# Data/Monoid redefines the notation "<>" (at a different level). Need to sort this out.
-# Also derives many type classes. We should fill the instances in.
-
 
 # Handwritten modules (usually by modification of generated version)
 HANDMOD = \

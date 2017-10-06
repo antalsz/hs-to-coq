@@ -7,10 +7,6 @@ Set Maximal Implicit Insertion.
 Unset Strict Implicit.
 Unset Printing Implicit Defensive.
 
-(* Preamble *)
-
-Require Import GHC.Base.
-
 (* Converted imports: *)
 
 Require Coq.Init.Datatypes.

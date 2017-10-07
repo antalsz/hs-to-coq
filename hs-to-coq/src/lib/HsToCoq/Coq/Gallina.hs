@@ -658,10 +658,9 @@ instance Gallina Term where
     <+> "in" <!> align (renderGallina body)
 
   renderGallina' p (If c odrty t f) = maybeParen (p > ifPrec) $
-        "if"   <+> align (renderGallina (HasType c boolTy) <> render_opt_rtype odrty)
+        "if"   <+> align (renderGallina c <> render_opt_rtype odrty)
     <!> "then" <+> align (renderGallina t)
     <!> "else" <+> align (renderGallina f)
-      where boolTy = Qualid (Bare "bool")
 
   renderGallina' p (HasType tm ty) = maybeParen (p > castPrec) $
     renderGallina' (castPrec + 1) tm <+> ":" <+> renderGallina' castPrec ty

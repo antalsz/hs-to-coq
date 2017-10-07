@@ -162,7 +162,7 @@ convertExpr (HsCase e mg) = do
 
 convertExpr (HsIf overloaded c t f) =
   if maybe True isNoSyntaxExpr overloaded
-  then If <$> convertLExpr c <*> pure Nothing <*> convertLExpr t <*> convertLExpr f
+  then ifBool <$> convertLExpr c <*> convertLExpr t <*> convertLExpr f
   else convUnsupported "overloaded if-then-else"
 
 convertExpr (HsMultiIf PlaceHolder lgrhsList) =
@@ -460,9 +460,9 @@ convertPatternBinding hsPat hsExp buildTrivial buildNontrivial fallback = do
             | SoleConstructor <- nontrivial = []
             | otherwise                     = [ Equation [MultPattern [UnderscorePat]] fallback ]
           guarded tm | null guards = tm
-                     | otherwise   = If (foldr1 (App2 $ Var "andb") guards) Nothing
-                                        tm
-                                        fallback
+                     | otherwise   = ifBool (foldr1 (App2 $ Var "andb") guards)
+                                            tm
+                                            fallback
 
       buildNontrivial exp cont $ \body rest ->
         Let cont [Inferred Coq.Explicit $ Ident arg] Nothing
@@ -518,9 +518,9 @@ convertListComprehension allStmts = case fmap unLoc <$> unsnoc allStmts of
     toExpr (BodyStmt e _bind _guard _PlaceHolder) rest =
       isTrueLExpr e >>= \case
         True  -> rest
-        False -> If <$> convertLExpr e <*> pure Nothing
-                    <*> rest
-                    <*> pure (Var "nil")
+        False -> ifBool <$> convertLExpr e
+                        <*> rest
+                        <*> pure (Var "nil")
 
     -- TODO: `concatMap` is really…?
     toExpr (BindStmt pat exp _bind _fail PlaceHolder) rest =
@@ -743,7 +743,7 @@ guardTerm gs rhs failure = go gs where
   go (OtherwiseGuard : (_:_)) =
     convUnsupported "unused guards after an `otherwise' (or similar)"
   go (BoolGuard cond : gs) =
-    If cond Nothing <$> go gs <*> pure failure
+    ifBool cond <$> go gs <*> pure failure
   -- if the pattern is exhaustive, don't include an otherwise case
   go (PatternGuard pat exp : gs) | isWildCoq pat = do
     guarded' <- go gs

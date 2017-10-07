@@ -7,4 +7,4 @@ This directory contains the translated version of GHC's `Bag.hs` file in
 First, you will need to have built the `base` library, in `../ghc-base`; see the
 README there for more information.
 
-To compile these proofs, run `Make`
+To compile these proofs, run `make`

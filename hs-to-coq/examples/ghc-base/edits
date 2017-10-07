@@ -65,7 +65,7 @@ skip method Enum enumFromThen
 skip method Enum enumFromThenTo
 
 rename value GHC.Prim.seq  = GHC.Base.seq
-rename value op_zlzez3fU__ = op_zlze__
+
 
 # data types defined in embeddings don't create the right
 # constructor names. So rename them.

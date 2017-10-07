@@ -1,13 +1,22 @@
 
-skip String
-skip Maybe
+skip String   # replace with Coq type
+skip Maybe    # replace with Coq type
+
+skip ++       # replace with Coq
+skip foldr    # replace with Coq
 
 skip Opaque   # can't handle existential
+skip build    # higher-rank type
+skip augment  # higher-rank type
 
+# partial
 skip until
-skip unsafeChr  # unboxed ints
 
-skip unIO       # State# RealWorld
+# can't handle overloaded ifthenelse
+skip ifThenElse
+
+# no IO
+skip unIO
 skip thenIO
 skip returnIO
 skip bindIO
@@ -16,6 +25,10 @@ skip instance_Applicative_GHC_Types_IO
 skip instance_Alternative_GHC_Types_IO
 skip instance_Monad_GHC_Types_IO
 skip instance_MonadPlus_GHC_Types_IO
+
+# no unboxed types
+skip unsafeChr
+skip ord
 
 skip shiftRL#
 skip shiftL#
@@ -30,18 +43,9 @@ skip divModInt
 skip divInt
 skip minInt
 skip maxInt
-
-skip quotInt
-skip ord
-
-skip ++
 skip modInt
-
+skip quotInt
 skip getTag
-
-skip eqString # actual bug in output
-skip build    # something to do with _::_?
-skip augment  # same
 
 order instance_Functor_list instance_Applicative_list_op_zlzt__ instance_Applicative_list instance_Monad_list_op_zgzg__ instance_Monad_list_return_ instance_Monad_list
 order instance_Functor_option instance_Applicative_option_op_zlztzg__ instance_Applicative_option instance_Monad_option_op_zgzg__ instance_Monad_option_return_ instance_Monad_option
@@ -50,9 +54,6 @@ skip instance_Alternative_list
 skip instance_MonadPlus_list
 skip instance_Alternative_option
 skip instance_MonadPlus_option
-
-skip foldr
-
 
 skip primIntToChar
 skip primCharToInt

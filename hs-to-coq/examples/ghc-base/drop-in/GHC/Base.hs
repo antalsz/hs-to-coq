@@ -555,7 +555,8 @@ when      :: (Applicative f) => Bool -> f () -> f ()
 {-# INLINEABLE when #-}
 {-. SPECIALIZE when :: Bool -> IO () -> IO () #-}
 {-. SPECIALIZE when :: Bool -> Maybe () -> Maybe () #-}
-when p s  = if p then s else pure ()
+-- SCW hs-to-coq: modified to avoid if then else
+when p s  = case p of { True -> s ; False ->  pure () }
 
 -- | Evaluate each action in the sequence from left to right,
 -- and collect the results.

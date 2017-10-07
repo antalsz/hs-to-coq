@@ -119,9 +119,9 @@ clean:
 	rm -rf lib
 
 todo:
-	grep Axiom lib/*.v lib/*/*.v lib/*/*/*.v
-	grep Admitted lib/*.v lib/*/*.v lib/*/*/*.v
-	grep errorWithout lib/*.v lib/*/*.v lib/*/*/*.v
+	grep -a Axiom lib/*.v lib/*/*.v lib/*/*/*.v
+	grep -a Admitted lib/*.v lib/*/*.v lib/*/*/*.v
+	grep -a errorWithout lib/*.v lib/*/*.v lib/*/*/*.v
 
 counts.tex: Makefile
 	(echo "\\begin{figure}"; \

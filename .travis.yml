@@ -77,6 +77,7 @@ script:
  - make -C examples/compiler
  - make -C examples/rle
  - make -C examples/bag
+ - make -C examples/quicksort
 
  # This requires a configured check-out of GHC, so lets not do that on travis
  # - make -C examples/ghc

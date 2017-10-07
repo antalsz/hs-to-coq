@@ -30,10 +30,10 @@ rename value GHC.Classes.== = GHC.Base.op_zeze__
 rename value GHC.Classes./= = GHC.Base.op_zsze__
 
 rename type  GHC.Classes.Ord = GHC.Base.Ord
-rename value GHC.Classes.<  = <?
-rename value GHC.Classes.<= = <=?
-rename value GHC.Classes.>  = >?
-rename value GHC.Classes.>= = >=?
+rename value GHC.Classes.<  = GHC.Base.op_zl__
+rename value GHC.Classes.<= = GHC.Base.op_zlze__
+rename value GHC.Classes.>  = GHC.Base.op_zg__
+rename value GHC.Classes.>= = GHC.Base.op_zgze__
 rename value GHC.Classes.max = GHC.Base.max
 rename value GHC.Classes.min = GHC.Base.min
 rename value GHC.Classes.compare = GHC.Base.compare

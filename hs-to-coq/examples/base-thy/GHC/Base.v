@@ -247,3 +247,7 @@ Require Coq.Lists.List.
 Theorem hs_coq_map {A B} (f : A -> B) (l : list A) :
   map f l = Coq.Lists.List.map f l.
 Proof. induction l; simpl; [|f_equal]; auto. Qed.
+
+Theorem hs_coq_foldr_base {A B} (f : A -> B -> B) (z : B) (l : list A) :
+  foldr f z l = Coq.Lists.List.fold_right f z l.
+Proof. induction l; simpl; [|f_equal]; auto. Qed.

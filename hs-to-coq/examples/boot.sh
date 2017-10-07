@@ -17,7 +17,7 @@ make -C rle clean
 make -C bag clean
 make -C ghc clean
 
-if -e ghc-base/base
+if [[ -e ghc-base/base ]]
 then
 	echo "Regenerating ghc-base/lib"
 	rm -rf ghc-base/lib/

@@ -8,10 +8,11 @@ module HsToCoq.ConvertHaskell.Monad (
   ConversionMonad, ConversionT, evalConversion,
   -- * Types
   ConversionState(),
-  currentModule, edits, constructors, constructorTypes, constructorFields, recordFieldTypes, classDefns, defaultMethods, fixities, typecheckerEnvironment, renamed, axioms,
+  currentModule, currentDefinition, edits, constructors, constructorTypes, constructorFields, recordFieldTypes, classDefns, defaultMethods, fixities, typecheckerEnvironment, renamed, axioms,
   ConstructorFields(..), _NonRecordFields, _RecordFields,
   -- * Operations
   maybeWithCurrentModule, withCurrentModule, withNoCurrentModule, withCurrentModuleOrNone,
+  withCurrentDefinition,
   fresh, gensym,
   rename,
   localizeConversionState,
@@ -58,6 +59,7 @@ data ConstructorFields = NonRecordFields !Int
 makePrisms ''ConstructorFields
 
 data ConversionState = ConversionState { __currentModule         :: !(Maybe ModuleName)
+                                       , __currentDefinition     :: !(Maybe Ident)
                                        , _edits                  :: !Edits
                                        , _constructors           :: !(Map Ident [Ident])
                                        , _constructorTypes       :: !(Map Ident Ident)
@@ -74,11 +76,15 @@ data ConversionState = ConversionState { __currentModule         :: !(Maybe Modu
                                        , __unique                :: !Natural
                                        }
 makeLenses ''ConversionState
--- '_currentModule' and '_unique' are not exported
+-- '_currentModule', '_currentDefinition) and '_unique' are not exported
 
 currentModule :: Getter ConversionState (Maybe ModuleName)
 currentModule = _currentModule
 {-# INLINABLE currentModule #-}
+
+currentDefinition :: Getter ConversionState (Maybe Ident)
+currentDefinition = _currentDefinition
+{-# INLINABLE currentDefinition #-}
 
 renamed :: HsNamespace -> Ident -> Lens' ConversionState (Maybe Ident)
 renamed ns x = edits.renamings.at (NamespacedIdent ns x)
@@ -235,17 +241,20 @@ builtInDefaultMethods = fmap M.fromList $ M.fromList
 
 builtInAxioms :: [(Ident, Term)]
 builtInAxioms =
-    [ "patternFailure" =: Forall [ Inferred Implicit (Ident "a") ] (Var "a")
-    , "missingValue"   =: Forall [ Inferred Implicit (Ident "a") ] (Var "a")
+    [ "patternFailure" =: Forall [ Inferred Implicit (Ident "a") ] a
+    , "missingValue"   =: Forall [ Inferred Implicit (Ident "a") ] a
+    , "unsafeFix"      =: Forall [ Inferred Implicit (Ident "a") ] ((a `Arrow` a) `Arrow` a)
     ]
   where
+   a = Var "a"
    (=:) = (,)
    infix 0 =:
 
 
 evalConversion :: Monad m => Edits -> ConversionT m a -> m a
 evalConversion _edits = evalVariablesT . (evalStateT ?? ConversionState{..}) where
-  __currentModule = Nothing
+  __currentModule     = Nothing
+  __currentDefinition = Nothing
 
   _constructors      = M.fromList [ (t, [d | (d,_) <- ds]) | (t,ds) <- builtInDataCons]
   _constructorTypes  = M.fromList [ (d,t) | (t,ds) <- builtInDataCons, (d,_) <- ds ]
@@ -277,6 +286,12 @@ withCurrentModule = withCurrentModuleOrNone . Just
 
 maybeWithCurrentModule :: ConversionMonad m => Maybe ModuleName -> m a -> m a
 maybeWithCurrentModule = maybe id withCurrentModule
+
+withCurrentDefinition :: ConversionMonad m => Ident -> m a -> m a
+withCurrentDefinition newDef = gbracket set restore . const
+  where
+  set = _currentDefinition <<.= Just newDef
+  restore oldDef = _currentDefinition .= oldDef
 
 fresh :: ConversionMonad m => m Natural
 fresh = _unique <<+= 1

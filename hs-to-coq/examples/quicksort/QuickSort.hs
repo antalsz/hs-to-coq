@@ -1,9 +1,10 @@
 module QuickSort where
 
+import Data.List
+
 -- polymorphism does not work nicely yet!
-quicksort :: [Int] -> [Int]
+quicksort :: Ord a => [a] -> [a]
 quicksort [] = []
-quicksort (p:xs) = (quicksort lesser) ++ [p] ++ (quicksort greater)
+quicksort (p:xs) = quicksort lesser ++ [p] ++ quicksort greater
     where
-        lesser = filter (< p) xs
-        greater = filter (>= p) xs
+        (lesser, greater) = partition (<p) xs

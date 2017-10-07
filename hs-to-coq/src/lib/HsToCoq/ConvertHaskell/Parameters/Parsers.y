@@ -35,56 +35,57 @@ import HsToCoq.ConvertHaskell.Parameters.Parsers.Lexing
 %lexer { (=<< token) } { TokEOF }
 
 %token
-  value         { TokWord    "value"       }
-  type          { TokWord    "type"        }
-  data          { TokWord    "data"        }
-  synonym       { TokWord    "synonym"     }
-  arguments     { TokWord    "arguments"   }
-  parameters    { TokWord    "parameters"  }
-  indices       { TokWord    "indices"     }
-  redefine      { TokWord    "redefine"    }
-  skip          { TokWord    "skip"        }
-  method        { TokWord    "method"      }
-  rename        { TokWord    "rename"      }
-  order         { TokWord    "order"       }
-  module        { TokWord    "module"      }
-  add           { TokWord    "add"         }
-  scope         { TokWord    "scope"       }
-  constructor   { TokWord    "constructor" }
-  fun           { TokWord    "fun"         }
-  fix           { TokWord    "fix"         }
-  cofix         { TokWord    "cofix"       }
-  struct        { TokWord    "struct"      }
-  with          { TokWord    "with"        }
-  for           { TokWord    "for"         }
-  where         { TokWord    "where"       }
-  and           { TokWord    "and"         }
-  'Inductive'   { TokWord    "Inductive"   }
-  'CoInductive' { TokWord    "CoInductive" }
-  'Definition'  { TokWord    "Definition"  }
-  'Let'         { TokWord    "Let"         }
-  'Fixpoint'    { TokWord    "Fixpoint"    }
-  'CoFixpoint'  { TokWord    "CoFixpoint"  }
-  'Local'       { TokWord    "Local"       }
-  '='           { TokOp      "="           }
-  ':->'         { TokOp      ":->"         }
-  ':'           { TokOp      ":"           }
-  '=>'          { TokOp      "=>"          }
-  ':='          { TokOp      ":="          }
-  '@'           { TokOp      "@"           }
-  '`'           { TokOp      "`"           }
-  '.'           { TokOp      "."           }
-  '|'           { TokOp      "|"           }
-  '"'           { TokOp      "\""          }
-  '\''          { TokOp      "'"           }
-  '('           { TokOpen    '('           }
-  ')'           { TokClose   ')'           }
-  '{'           { TokOpen    '{'           }
-  '}'           { TokClose   '}'           }
-  eol           { TokNewline               }
-  Word          { TokWord    $$            }
-  Op            { TokOp      $$            }
-  Num           { TokNat     $$            }
+  value           { TokWord    "value"          }
+  type            { TokWord    "type"           }
+  data            { TokWord    "data"           }
+  synonym         { TokWord    "synonym"        }
+  arguments       { TokWord    "arguments"      }
+  parameters      { TokWord    "parameters"     }
+  indices         { TokWord    "indices"        }
+  redefine        { TokWord    "redefine"       }
+  skip            { TokWord    "skip"           }
+  nonterminating  { TokWord    "nonterminating" }
+  method          { TokWord    "method"         }
+  rename          { TokWord    "rename"         }
+  order           { TokWord    "order"          }
+  module          { TokWord    "module"         }
+  add             { TokWord    "add"            }
+  scope           { TokWord    "scope"          }
+  constructor     { TokWord    "constructor"    }
+  fun             { TokWord    "fun"            }
+  fix             { TokWord    "fix"            }
+  cofix           { TokWord    "cofix"          }
+  struct          { TokWord    "struct"         }
+  with            { TokWord    "with"           }
+  for             { TokWord    "for"            }
+  where           { TokWord    "where"          }
+  and             { TokWord    "and"            }
+  'Inductive'     { TokWord    "Inductive"      }
+  'CoInductive'   { TokWord    "CoInductive"    }
+  'Definition'    { TokWord    "Definition"     }
+  'Let'           { TokWord    "Let"            }
+  'Fixpoint'      { TokWord    "Fixpoint"       }
+  'CoFixpoint'    { TokWord    "CoFixpoint"     }
+  'Local'         { TokWord    "Local"          }
+  '='             { TokOp      "="              }
+  ':->'           { TokOp      ":->"            }
+  ':'             { TokOp      ":"              }
+  '=>'            { TokOp      "=>"             }
+  ':='            { TokOp      ":="             }
+  '@'             { TokOp      "@"              }
+  '`'             { TokOp      "`"              }
+  '.'             { TokOp      "."              }
+  '|'             { TokOp      "|"              }
+  '"'             { TokOp      "\""             }
+  '\''            { TokOp      "'"              }
+  '('             { TokOpen    '('              }
+  ')'             { TokClose   ')'              }
+  '{'             { TokOpen    '{'              }
+  '}'             { TokClose   '}'              }
+  eol             { TokNewline                  }
+  Word            { TokWord    $$               }
+  Op              { TokOp      $$               }
+  Num             { TokNat     $$               }
 
 %nonassoc GenFixBodyOne
 %nonassoc with
@@ -203,6 +204,7 @@ Edit :: { Edit }
   | skip Op                                       { SkipEdit              $2                              }
   | skip method Word Word                         { SkipMethodEdit        $3 $4                           }
   | skip module Word                              { SkipModuleEdit        (mkModuleName (T.unpack $3))    }
+  | nonterminating Word                           { NonterminatingEdit    $2                              }
   | rename Renaming                               { RenameEdit            (fst $2) (snd $2)               }
   | add scope Scope for ScopePlace Word           { AdditionalScopeEdit   $5 $6 $3                        }
   | order Some(Word)                              { OrderEdit             $2                              }

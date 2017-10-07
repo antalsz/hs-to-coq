@@ -21,6 +21,9 @@ take _ []              =  []
 take n (x:xs)          =  x : take (n-1) xs
 
 
+fromJust :: Maybe a -> a
+fromJust (Just x) = x
+
 takeMapMaybe :: (a -> Maybe b) -> Int -> List a -> List b
 takeMapMaybe f n xs | n <= 0 =  Nil
 takeMapMaybe f n (Cons x xs)

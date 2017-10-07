@@ -31,9 +31,9 @@ all: $(VFILES) coq
 
 _CoqProject : Makefile
 	> $@
-	echo "-R .                Top" >> $@
-	echo "-R ../base-thy      Proofs" >> $@
-	echo "-R ../ghc-base/lib/ Top" >> $@
+	echo "-Q .                \"\"" >> $@
+	echo "-Q ../base-thy      Proofs" >> $@
+	echo "-Q ../ghc-base/lib/ \"\"" >> $@
 	echo $(addsuffix .v,$(HANDMOD)) >> $@
 	echo $(addsuffix .v,$(MODULES)) >> $@
 	echo $(addsuffix .v,$(EMPTY_MODS)) >> $@

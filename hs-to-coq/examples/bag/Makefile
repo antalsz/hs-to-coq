@@ -55,17 +55,17 @@ vo_to_obj = $(addsuffix .o,\
 ##########################
 
 COQLIBS?=\
-  -R "." Top\
-  -R "../base-thy" Proofs\
-  -R "../ghc-base/lib/" Top
+  -Q "." ""\
+  -Q "../base-thy" Proofs\
+  -Q "../ghc-base/lib/" ""
 COQCHKLIBS?=\
-  -R "." Top\
+  -R "." ""\
   -R "../base-thy" Proofs\
-  -R "../ghc-base/lib/" Top
+  -R "../ghc-base/lib/" ""
 COQDOCLIBS?=\
-  -R "." Top\
+  -R "." ""\
   -R "../base-thy" Proofs\
-  -R "../ghc-base/lib/" Top
+  -R "../ghc-base/lib/" ""
 
 ##########################
 #                        #
@@ -202,8 +202,8 @@ userinstall:
 
 install:
 	cd "." && for i in $(VOFILES) $(VFILES) $(GLOBFILES) $(NATIVEFILES) $(CMOFILES) $(CMIFILES) $(CMAFILES); do \
-	 install -d "`dirname "$(DSTROOT)"$(COQLIBINSTALL)/Top/$$i`"; \
-	 install -m 0644 $$i "$(DSTROOT)"$(COQLIBINSTALL)/Top/$$i; \
+	 install -d "`dirname "$(DSTROOT)"$(COQLIBINSTALL)//$$i`"; \
+	 install -m 0644 $$i "$(DSTROOT)"$(COQLIBINSTALL)//$$i; \
 	done
 
 install-doc:
@@ -214,7 +214,7 @@ install-doc:
 
 uninstall_me.sh: Makefile
 	echo '#!/bin/sh' > $@
-	printf 'cd "$${DSTROOT}"$(COQLIBINSTALL)/Top && rm -f $(VOFILES) $(VFILES) $(GLOBFILES) $(NATIVEFILES) $(CMOFILES) $(CMIFILES) $(CMAFILES) && find . -type d -and -empty -delete\ncd "$${DSTROOT}"$(COQLIBINSTALL) && find "Top" -maxdepth 0 -and -empty -exec rmdir -p \{\} \;\n' >> "$@"
+	printf 'cd "$${DSTROOT}"$(COQLIBINSTALL)/ && rm -f $(VOFILES) $(VFILES) $(GLOBFILES) $(NATIVEFILES) $(CMOFILES) $(CMIFILES) $(CMAFILES) && find . -type d -and -empty -delete\ncd "$${DSTROOT}"$(COQLIBINSTALL) && find "" -maxdepth 0 -and -empty -exec rmdir -p \{\} \;\n' >> "$@"
 	printf 'cd "$${DSTROOT}"$(COQDOCINSTALL)/$(INSTALLDEFAULTROOT) \\\n' >> "$@"
 	printf '&& rm -f $(shell find "html" -maxdepth 1 -and -type f -print)\n' >> "$@"
 	printf 'cd "$${DSTROOT}"$(COQDOCINSTALL) && find $(INSTALLDEFAULTROOT)/html -maxdepth 0 -and -empty -exec rmdir -p \{\} \;\n' >> "$@"

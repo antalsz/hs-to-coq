@@ -34,6 +34,7 @@ HANDMOD = \
   Data/Functor/Const \
   Control/Arrow \
   Data/Bits \
+  GHC/BaseInstances \
   Prelude
 
 # Generated modules

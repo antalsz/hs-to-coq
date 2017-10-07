@@ -3,6 +3,7 @@
 Require Import mathcomp.ssreflect.ssreflect.
 
 Require Import GHC.Base.
+Require Import GHC.BaseInstances.
 
 (* Properties of basic functions *)
 
@@ -48,23 +49,6 @@ Proof.
   * auto.
   * simpl. rewrite H. rewrite IHx. auto.
 Qed.
-
-(* -------------------------------------------------------------------- *)
-
-(* Monoid instances that don't yet translate *)
-
-Instance instance_Monoid_list_a {a} : Monoid (list a) :=
-  { mempty  := nil;
-    mappend := (_++_);
-    mconcat := fun xss => flat_map (fun xs => flat_map (fun x => x :: nil) xs) xss
-  }.
-
-Instance instance_Monoid_arrow {a}{b} `{Monoid b} : Monoid (a -> b) :=
-  {
-    mempty  := fun _ => (mempty : b);
-    mappend := fun f g x => mappend (f x) (g x);
-    mconcat := foldr (fun f g x => mappend (f x) (g x)) (fun _ => mempty)
-  }.
 
 (* -------------------------------------------------------------------- *)
 

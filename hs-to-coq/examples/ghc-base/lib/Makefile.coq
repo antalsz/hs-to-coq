@@ -116,6 +116,7 @@ VFILES:=GHC/Num.v\
   Data/Functor/Const.v\
   Control/Arrow.v\
   Data/Bits.v\
+  GHC/BaseInstances.v\
   Prelude.v\
   GHC/List.v\
   Data/Tuple.v\

@@ -776,31 +776,35 @@ convertTypedBinding  convHsTy FunBind{..}   = runMaybeT $ do
   guard . not =<< (case opName of { Just n -> use (edits.skipped.contains n) ; Nothing -> return False })
   -- TODO: what if we are skipping an operator?
 
-  let (tvs, coqTy) =
-        -- The @forall@ed arguments need to be brought into scope
-        let peelForall (Forall tvs body) = first (NEL.toList tvs ++) $ peelForall body
-            peelForall ty                = ([], ty)
-        in maybe ([], Nothing) (second Just . peelForall) convHsTy
+  withCurrentDefinition name $ do
+    let (tvs, coqTy) =
+          -- The @forall@ed arguments need to be brought into scope
+          let peelForall (Forall tvs body) = first (NEL.toList tvs ++) $ peelForall body
+              peelForall ty                = ([], ty)
+          in maybe ([], Nothing) (second Just . peelForall) convHsTy
 
-  defn <-
-    if all (null . m_pats . unLoc) . unLoc $ mg_alts fun_matches
-    then case unLoc $ mg_alts fun_matches of
-           [L _ (GHC.Match _ [] mty grhss)] ->
-             maybe (pure id) (fmap (flip HasType) . convertLType) mty <*> convertGRHSs [] grhss patternFailure
-           _ ->
-             convUnsupported "malformed multi-match variable definitions"
-    else do
-      let whichFix = Fix . FixOne
-      let whichFix = unsafeFix
-      (argBinders, match) <- convertFunction fun_matches
-      pure $ let bodyVars = getFreeVars match
-             in if name `S.member` bodyVars || maybe False (`S.member` bodyVars) opName
-                then whichFix $ FixBody name argBinders Nothing Nothing match -- TODO recursion and binary operators
-                else Fun argBinders match
+    defn <-
+      if all (null . m_pats . unLoc) . unLoc $ mg_alts fun_matches
+      then case unLoc $ mg_alts fun_matches of
+             [L _ (GHC.Match _ [] mty grhss)] ->
+               maybe (pure id) (fmap (flip HasType) . convertLType) mty <*> convertGRHSs [] grhss patternFailure
+             _ ->
+               convUnsupported "malformed multi-match variable definitions"
+      else do
+        whichFix <- use currentDefinition >>= \case
+            Nothing -> pure $ Fix . FixOne
+            Just n -> use (edits.nonterminating.contains n) >>= \case
+                False -> pure $ Fix . FixOne
+                True  -> pure $ unsafeFix
+        (argBinders, match) <- convertFunction fun_matches
+        pure $ let bodyVars = getFreeVars match
+               in if name `S.member` bodyVars || maybe False (`S.member` bodyVars) opName
+                  then whichFix $ FixBody name argBinders Nothing Nothing match -- TODO recursion and binary operators
+                  else Fun argBinders match
 
-  addScope <- maybe id (flip InScope) <$> use (edits.additionalScopes.at (SPValue, name))
+    addScope <- maybe id (flip InScope) <$> use (edits.additionalScopes.at (SPValue, name))
 
-  pure . ConvertedDefinitionBinding $ ConvertedDefinition name tvs coqTy (addScope defn) opName
+    pure . ConvertedDefinitionBinding $ ConvertedDefinition name tvs coqTy (addScope defn) opName
 
 
 unsafeFix :: FixBody -> Term

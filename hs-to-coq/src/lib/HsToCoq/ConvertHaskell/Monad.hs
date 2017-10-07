@@ -235,10 +235,12 @@ builtInDefaultMethods = fmap M.fromList $ M.fromList
 
 builtInAxioms :: [(Ident, Term)]
 builtInAxioms =
-    [ "patternFailure" =: Forall [ Inferred Implicit (Ident "a") ] (Var "a")
-    , "missingValue"   =: Forall [ Inferred Implicit (Ident "a") ] (Var "a")
+    [ "patternFailure" =: Forall [ Inferred Implicit (Ident "a") ] a
+    , "missingValue"   =: Forall [ Inferred Implicit (Ident "a") ] a
+    , "unsafeFix"      =: Forall [ Inferred Implicit (Ident "a") ] ((a `Arrow` a) `Arrow` a)
     ]
   where
+   a = Var "a"
    (=:) = (,)
    infix 0 =:
 

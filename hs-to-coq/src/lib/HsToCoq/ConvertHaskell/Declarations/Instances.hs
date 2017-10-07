@@ -243,8 +243,12 @@ topoSortInstance (InstanceDefinition instanceName params ty members mp) = go sor
 
         unFix :: Term -> Term
         unFix body = case body of
-                       Fix (FixOne (FixBody _ bnds _ _ body')) -> Fun bnds body'
-                       _ -> body
+            Fix (FixOne (FixBody _ bnds _ _ body'))
+              -> Fun bnds body'
+            App1 (Qualid (Bare "unsafeFix"))
+                 (Fun (Inferred Explicit (Ident _) NE.:| bnds) body')
+              -> Fun (NE.fromList bnds) body'
+            _ -> body
 
 
         quantify v body = do (_, className, _) <- decomposeTy ty

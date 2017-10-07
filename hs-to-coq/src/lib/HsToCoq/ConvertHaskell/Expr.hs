@@ -790,15 +790,24 @@ convertTypedBinding  convHsTy FunBind{..}   = runMaybeT $ do
            _ ->
              convUnsupported "malformed multi-match variable definitions"
     else do
+      let whichFix = Fix . FixOne
+      let whichFix = unsafeFix
       (argBinders, match) <- convertFunction fun_matches
       pure $ let bodyVars = getFreeVars match
              in if name `S.member` bodyVars || maybe False (`S.member` bodyVars) opName
-                then Fix . FixOne $ FixBody name argBinders Nothing Nothing match -- TODO recursion and binary operators
+                then whichFix $ FixBody name argBinders Nothing Nothing match -- TODO recursion and binary operators
                 else Fun argBinders match
 
   addScope <- maybe id (flip InScope) <$> use (edits.additionalScopes.at (SPValue, name))
 
   pure . ConvertedDefinitionBinding $ ConvertedDefinition name tvs coqTy (addScope defn) opName
+
+
+unsafeFix :: FixBody -> Term
+unsafeFix (FixBody ident argBinders Nothing Nothing rhs)
+ = App1 (Qualid (Bare "unsafeFix"))
+        (Fun (Inferred Explicit (Ident ident) NEL.<| argBinders) rhs)
+unsafeFix _ = error "unsafeFix: cannot handle annotations or types"
 
 --------------------------------------------------------------------------------
 

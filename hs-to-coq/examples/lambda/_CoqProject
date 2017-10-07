@@ -1,4 +1,4 @@
--R ../ghc-base/lib/ Top
--R . Top
+-R ../ghc-base/lib/ ""
+-R . ""
 Lambda.v
 Proofs.v

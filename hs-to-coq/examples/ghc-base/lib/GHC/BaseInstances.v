@@ -20,9 +20,6 @@ Instance instance_Monoid_arrow {a}{b} `{Monoid b} : Monoid (a -> b) :=
 -- cannot handle (,) in the instance head
 instance Functor ((,) a) where
     fmap f (x,y) = (x, f y)
--}
-
-{-
 instance Monoid a => Applicative ((,) a) where
     pure x = (mempty, x)
     (u, f) <*> (v, x) = (u `mappend` v, f x)

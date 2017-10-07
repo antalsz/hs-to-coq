@@ -4,7 +4,7 @@ Require Import Prelude.
 Require Import Coq.Lists.List.
 Import ListNotations.
 
-Inductive AlreadySorted  : list Int -> Prop :=
+Inductive AlreadySorted {a} `{Ord a} : list a -> Prop :=
  | ASNil: AlreadySorted []
  | ASCons: forall x xs,
      AlreadySorted xs -> 

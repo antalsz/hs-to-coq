@@ -9,7 +9,7 @@ Unset Printing Implicit Defensive.
 
 (* Preamble *)
 
-Require Import Base.   (* bind notation *)
+Require Import GHC.Base.   (* bind notation *)
 Open Scope type_scope. (* resolve  (a * b) types *)
 (* Converted imports: *)
 

@@ -73,7 +73,7 @@ all:  $(VFILES) coq
 lib/_CoqProject : Makefile
 	mkdir -p lib
 	> $@
-	echo "-R . \"\"" >> $@
+	echo "-Q . \"\"" >> $@
 	echo $(addsuffix .v,$(HANDMOD)) >> $@
 	echo $(addsuffix .v,$(MODULES)) >> $@
 	echo $(addsuffix .v,$(SPECIAL_MODULES)) >> $@

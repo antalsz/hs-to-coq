@@ -55,7 +55,7 @@ vo_to_obj = $(addsuffix .o,\
 ##########################
 
 COQLIBS?=\
-  -R "." ""
+  -Q "." ""
 COQCHKLIBS?=\
   -R "." ""
 COQDOCLIBS?=\

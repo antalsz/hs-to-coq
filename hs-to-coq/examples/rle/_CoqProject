@@ -1,4 +1,4 @@
--R ../ghc-base/lib/ ""
--R . ""
+-Q ../ghc-base/lib/ ""
+-Q . ""
 RLE.v
 Proofs.v

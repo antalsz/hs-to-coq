@@ -55,9 +55,9 @@ vo_to_obj = $(addsuffix .o,\
 ##########################
 
 COQLIBS?=\
-  -R "." ""\
-  -R "../base-thy" Proofs\
-  -R "../ghc-base/lib/" ""
+  -Q "." ""\
+  -Q "../base-thy" Proofs\
+  -Q "../ghc-base/lib/" ""
 COQCHKLIBS?=\
   -R "." ""\
   -R "../base-thy" Proofs\

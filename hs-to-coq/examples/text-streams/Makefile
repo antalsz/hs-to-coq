@@ -25,8 +25,8 @@ $(VFILES_GEN): %.v: orig/%.hs edits/%/edits edits/%/preamble.v ../ghc-base/edits
 
 _CoqProject:
 	> $@
-	echo '-R ../ghc-base/lib/ ""' >> $@
-	echo '-R . ""' >> $@
+	echo '-Q ../ghc-base/lib/ ""' >> $@
+	echo '-Q . ""' >> $@
 	echo $(VFILES) >> $@
 
 Makefile.coq: _CoqProject

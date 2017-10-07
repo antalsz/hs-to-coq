@@ -1,6 +1,6 @@
--R .                ""
--R ../base-thy      Proofs
--R ../ghc-base/lib/ ""
+-Q .                ""
+-Q ../base-thy      Proofs
+-Q ../ghc-base/lib/ ""
 
 ListUtils.v
 

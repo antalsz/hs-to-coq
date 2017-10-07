@@ -30,10 +30,11 @@ Proof.
 Qed.
 
 Theorem quicksort_already_sorted:
-  forall xs, AlreadySorted xs -> quicksort xs = xs.
+  forall a `(Ord a) (xs : list a),
+  AlreadySorted xs -> quicksort xs = xs.
 Proof.
   intros.
-  induction H.
+  induction H1.
   * unfold quicksort.
     rewrite unroll_unsafe_fix. reflexivity.
   * change (quicksort (x :: xs) = [] ++ [x] ++ xs).

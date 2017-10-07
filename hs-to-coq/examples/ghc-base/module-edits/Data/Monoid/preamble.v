@@ -1,5 +1,7 @@
 Require Import GHC.Base.
 
+(* WE do these by hand because they are defined in GHC using Data.Coerce. *)
+
 Inductive All : Type := Mk_All : bool -> All.
 Definition getAll (arg_7__ : All) :=
   match arg_7__ with
@@ -92,6 +94,13 @@ Instance instance_GHC_Base_Monoid__Product_a_ {a} `{Num a}: !GHC.Base.Monoid (Pr
    mempty  := mempty_Product;
    mconcat := foldr mappend_Product mempty_Product }.
 
+Instance instance_GHC_Base_Functor__Product_ : !GHC.Base.Functor Product := {}.
+Proof.
+- intros a b x pb. apply Mk_Product. exact x.
+- intros a b f pa. destruct pa. apply Mk_Product. apply f. exact a0.
+Defined.
+
+
 Inductive Sum a : Type := Mk_Sum : a -> Sum a.
 
 Definition getSum {a} (arg_1__ : Sum a) :=
@@ -108,3 +117,9 @@ Instance instance_GHC_Base_Monoid__Sum_a_ {a} `{Num a}: !GHC.Base.Monoid (Sum a)
  { mappend := mappend_Sum;
    mempty  := mempty_Sum;
    mconcat := foldr mappend_Sum mempty_Sum }.
+
+Instance instance_GHC_Base_Functor__Sum_ : !GHC.Base.Functor Sum := {}.
+Proof.
+- intros a b x pb. apply Mk_Sum. exact x.
+- intros a b f pa. destruct pa. apply Mk_Sum. apply f. exact a0.
+Defined.

@@ -67,10 +67,6 @@ skip instance_Traversable_GHC_Generics_U1
 order instance_GHC_Base_Functor_Id instance_GHC_Base_Applicative_Id_op_ztzg__
 order instance_GHC_Base_Functor_Id instance_GHC_Base_Applicative_Id_op_zlztzg__
 
-# skip for
-
-# rename value for = for_
-
 # type inference issue
 skip foldMapDefault
 

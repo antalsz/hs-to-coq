@@ -108,8 +108,6 @@ VFILES:=GHC/Num.v\
   GHC/Unicode.v\
   Data/Char.v\
   Data/Type/Equality.v\
-  GHC/Word.v\
-  GHC/Int.v\
   Data/Bool.v\
   Control/Category.v\
   Data/Either.v\

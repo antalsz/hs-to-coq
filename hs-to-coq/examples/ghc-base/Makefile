@@ -26,8 +26,6 @@ HANDMOD = \
   GHC/Unicode \
   Data/Char \
   Data/Type/Equality \
-  GHC/Word \
-  GHC/Int \
   Data/Bool \
   Control/Category \
   Data/Either \
@@ -124,3 +122,22 @@ todo:
 	grep Axiom lib/*.v lib/*/*.v lib/*/*/*.v
 	grep Admitted lib/*.v lib/*/*.v lib/*/*/*.v
 	grep errorWithout lib/*.v lib/*/*.v lib/*/*/*.v
+
+counts.tex: Makefile
+	(echo "\\begin{figure}"; \
+    echo "\\begin{tabular}{lllll}"; \
+    echo "Module & Defs & Class & Insts & Skipped\\\\"; \
+	for i in  $(MODULES) $(DROPIN) ; \
+       do (echo $$i; echo "&"; grep -a "Definition" lib/$$i.v | wc -l ;  echo "&"; \
+           grep -a "Class" lib/$$i.v | wc -l ;  echo "&"; \
+           grep -a "Instance" lib/$$i.v| wc -l;  echo "&"; \
+           grep -a "skip" module-edits/$$i/edits | wc -l;  echo "\\\\" ) done; \
+	echo "\\end{tabular}"; \
+   echo "\\end{figure} \\\\ "; \
+	echo "\\begin{figure}"; \
+	echo "\\begin{tabular}{llll} Module & Defs & Class & Insts\\\\"; \
+	for i in  $(HANDMOD) ; \
+       do (echo $$i; echo "&"; grep -a "Definition" lib/$$i.v | wc -l ;  echo "&"; \
+           grep -a "Class" lib/$$i.v | wc -l ;  echo "&"; \
+           grep -a "Instance" lib/$$i.v| wc -l; echo "\\\\" ) done; \
+	echo "\\end{tabular}\\end{figure}") > counts.fig

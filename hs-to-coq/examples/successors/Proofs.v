@@ -2,6 +2,17 @@ Require Import Prelude.
 Require Import Control.Applicative.Successors.
 Require Import Proofs.GHC.Base.
 
+Ltac unfold_Succs_Instances :=
+  repeat
+  unfold instance_GHC_Base_Functor_Succs,
+         instance_GHC_Base_Applicative_Succs,
+         instance_GHC_Base_Monad_Succs,
+         Successors.instance_GHC_Base_Functor_Succs_fmap,
+         Successors.instance_GHC_Base_Applicative_Succs_pure,
+         Successors.instance_GHC_Base_Applicative_Succs_op_zlztzg__,
+         Successors.instance_GHC_Base_Monad_Succs_op_zgzgze__,
+         Successors.instance_GHC_Base_Monad_Succs_return_.
+
 
 (* A tactic to rewrite with the list functor *)
 Ltac rewrite_Functor_list :=
@@ -13,6 +24,8 @@ Ltac rewrite_Functor_list :=
   unfold fmap, instance_Functor_list, Base.instance_Functor_list_fmap in K, L;
   try rewrite K; try rewrite L;
   clear K; clear L.
+
+
 
 
 Lemma functor_law_1:
@@ -130,18 +143,34 @@ Proof.
   intros.
   destruct m.
   simpl.
-  unfold getCurrent, op_z2218U__, Successors.instance_GHC_Base_Monad_Succs_op_zgzgze__, compose.
+  unfold_Succs_Instances.
+  unfold getCurrent, op_z2218U__, compose.
   destruct (k a0).
   destruct (h b0).
   f_equal.
   repeat (rewrite_Functor_list || rewrite map_append || rewrite <- app_assoc ||
-    unfold getCurrent, op_z2218U__, Successors.instance_GHC_Base_Monad_Succs_op_zgzgze__
-    ).
+    unfold getCurrent, op_z2218U__).
   f_equal.
   apply map_cong; intro.
   destruct (k x).
   destruct (h b1).
   reflexivity.
+Qed.
+
+
+Lemma monad_law_5 :
+  forall (A B : Type) (f : Succs (A -> B)) (x : Succs A), _<*>_ f x = ap f x.
+Proof.
+  intros.
+  unfold "_<*>_", ap.
+  unfold_Succs_Instances.
+  destruct f. destruct x.
+  unfold "_>>=_", return_, pure.
+  unfold_Succs_Instances.
+  f_equal.
+  unfold compose.
+  rewrite app_nil_r.
+  f_equal.
 Qed.
 
 Instance instance_MonadLaws_Succs : MonadLaws Succs.
@@ -150,4 +179,5 @@ exact monad_law_1.
 exact monad_law_2.
 exact monad_law_3.
 reflexivity.
+exact monad_law_5.
 Qed.

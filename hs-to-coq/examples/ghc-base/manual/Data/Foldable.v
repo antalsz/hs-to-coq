@@ -73,7 +73,6 @@ Unset Printing Implicit Defensive.
 
 Require Data.Bool.
 Require Data.Either.
-Require Data.Eq.
 Require GHC.List.
 Require Data.Maybe.
 Require Data.Monoid.

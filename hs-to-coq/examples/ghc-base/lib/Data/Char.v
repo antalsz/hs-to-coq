@@ -1,73 +1,72 @@
-(* Preamble *)
-Require Import GHC.Base.
-Require Export GHC.Char.
-Require Import GHC.Real.
-Require Import GHC.Num.
-Require Export GHC.Unicode.
+(* Default settings (from HsToCoq.Coq.Preamble) *)
+
+Generalizable All Variables.
 
 Set Implicit Arguments.
-Generalizable All Variables.
+Set Maximal Implicit Insertion.
 Unset Strict Implicit.
 Unset Printing Implicit Defensive.
 
-(* No data type declarations to convert. *)
+(* Preamble *)
 
-(* Converted value declarations: *)
-Definition isSeparator : Char -> bool := (fun arg_4__ =>
-    (match arg_4__ with
-      | c => (match generalCategory c with
-               | Space => true
-               | LineSeparator => true
-               | ParagraphSeparator => true
+
+(* Converted imports: *)
+
+Require GHC.Char.
+Require GHC.Unicode.
+
+(* Converted declarations: *)
+
+Definition isLetter : GHC.Char.Char -> bool :=
+  fun arg_15__ =>
+    match arg_15__ with
+      | c => let scrut_16__ := GHC.Unicode.generalCategory c in
+             match scrut_16__ with
+               | GHC.Unicode.UppercaseLetter => true
+               | GHC.Unicode.LowercaseLetter => true
+               | GHC.Unicode.TitlecaseLetter => true
+               | GHC.Unicode.ModifierLetter => true
+               | GHC.Unicode.OtherLetter => true
                | _ => false
-             end)
-    end)).
+             end
+    end.
 
-Definition isNumber : Char -> bool := (fun arg_3__ =>
-    (match arg_3__ with
-      | c => (match generalCategory c with
-               | DecimalNumber => true
-               | LetterNumber => true
-               | OtherNumber => true
+Definition isMark : GHC.Char.Char -> bool :=
+  fun arg_10__ =>
+    match arg_10__ with
+      | c => let scrut_11__ := GHC.Unicode.generalCategory c in
+             match scrut_11__ with
+               | GHC.Unicode.NonSpacingMark => true
+               | GHC.Unicode.SpacingCombiningMark => true
+               | GHC.Unicode.EnclosingMark => true
                | _ => false
-             end)
-    end)).
+             end
+    end.
 
-Definition isMark : Char -> bool := (fun arg_2__ =>
-    (match arg_2__ with
-      | c => (match generalCategory c with
-               | NonSpacingMark => true
-               | SpacingCombiningMark => true
-               | EnclosingMark => true
+Definition isNumber : GHC.Char.Char -> bool :=
+  fun arg_5__ =>
+    match arg_5__ with
+      | c => let scrut_6__ := GHC.Unicode.generalCategory c in
+             match scrut_6__ with
+               | GHC.Unicode.DecimalNumber => true
+               | GHC.Unicode.LetterNumber => true
+               | GHC.Unicode.OtherNumber => true
                | _ => false
-             end)
-    end)).
+             end
+    end.
 
-Definition isLetter : Char -> bool := (fun arg_1__ =>
-    (match arg_1__ with
-      | c => (match generalCategory c with
-               | UppercaseLetter => true
-               | LowercaseLetter => true
-               | TitlecaseLetter => true
-               | ModifierLetter => true
-               | OtherLetter => true
+Definition isSeparator : GHC.Char.Char -> bool :=
+  fun arg_0__ =>
+    match arg_0__ with
+      | c => let scrut_1__ := GHC.Unicode.generalCategory c in
+             match scrut_1__ with
+               | GHC.Unicode.Space => true
+               | GHC.Unicode.LineSeparator => true
+               | GHC.Unicode.ParagraphSeparator => true
                | _ => false
-             end)
-    end)).
+             end
+    end.
 
-(* Made this total by adding error value. *)
-Definition digitToInt : Char -> Int := (fun arg_0__ =>
-    (match arg_0__ with
-      | c => (let dec := ord c - ord &#"0"
-             in (let hexl := ord c - ord &#"a"
-                in (let hexu := ord c - ord &#"A"
-                   in (if (((fromIntegral dec : Word)) <=? #9)
-                      then dec
-                      else (if (((fromIntegral hexl : Word)) <=? #5)
-                           then hexl + #10
-                           else (if (((fromIntegral hexu : Word)) <=? #5)
-                                then hexu + #10
-                                else #256))))))
-    end)).
-
-(* No type class instance declarations to convert. *)
+(* Unbound variables:
+     GHC.Char.Char GHC.Unicode.generalCategory bool false true
+*)

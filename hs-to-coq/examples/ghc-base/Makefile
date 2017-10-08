@@ -24,17 +24,15 @@ HANDMOD = \
   GHC/Enum \
   GHC/Real \
   GHC/Unicode \
-  Data/Char \
-  Data/Type/Equality \
-  Data/Bool \
-  Control/Category \
   Data/Either \
   Data/Proxy \
   Data/Foldable \
-  Data/Functor/Const \
   Control/Arrow \
   Data/Bits \
+  Data/Type/Equality \
   GHC/BaseInstances \
+  Control/Category \
+  Data/Functor/Const \
   Prelude
 
 # Generated modules
@@ -45,12 +43,17 @@ MODULES = \
   Data/Maybe \
   Data/Function \
   Data/Ord \
-  Data/Eq \
   Data/Functor \
   Data/Monoid \
   Control/Monad \
   Data/OldList \
   Data/Traversable \
+  Data/Void \
+  Data/List \
+  Data/Char \
+  Data/Bool \
+
+
 
 # generated from drop-in/
 DROPIN = GHC/Base \
@@ -124,7 +127,7 @@ todo:
 	grep -a Admitted lib/*.v lib/*/*.v lib/*/*/*.v
 	grep -a errorWithout lib/*.v lib/*/*.v lib/*/*/*.v
 
-counts.tex: Makefile
+counts.fig: Makefile $(VFILES)
 	(echo "\\begin{figure}"; \
     echo "\\begin{tabular}{lllll}"; \
     echo "Module & Defs & Class & Insts & Skipped\\\\"; \
@@ -133,10 +136,8 @@ counts.tex: Makefile
            grep -a "Class" lib/$$i.v | wc -l ;  echo "&"; \
            grep -a "Instance" lib/$$i.v| wc -l;  echo "&"; \
            grep -a "skip" module-edits/$$i/edits | wc -l;  echo "\\\\" ) done; \
-	echo "\\end{tabular}"; \
-   echo "\\end{figure} \\\\ "; \
-	echo "\\begin{figure}"; \
-	echo "\\begin{tabular}{llll} Module & Defs & Class & Insts\\\\"; \
+   echo "\\\\"; \
+   echo "\\multicolumn{4}{l}{Manual modules}\\\\"; \
 	for i in  $(HANDMOD) ; \
        do (echo $$i; echo "&"; grep -a "Definition" lib/$$i.v | wc -l ;  echo "&"; \
            grep -a "Class" lib/$$i.v | wc -l ;  echo "&"; \

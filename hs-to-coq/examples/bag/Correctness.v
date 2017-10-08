@@ -75,7 +75,7 @@ Proof.
     rewrite IHl IHr.
     by rewrite map_app.
   - rewrite /bagToList /= !fold_right_cons_nil.
-    apply hs_coq_map.
+    rewrite hs_coq_map. auto.
 Qed.
 
 Theorem bagToList_listToBag {A} (l : list A) :

@@ -82,6 +82,34 @@ Definition partitionsums {a} {b} : list (sum a b) -> list a * list b :=
   GHC.Base.foldr (either left right) (pair nil nil).
 
 
+Instance instance_GHC_Base_Eq_sum {a}{b} `{Base.Eq_ a} `{Base.Eq_ b} : !Base.Eq_ (a + b).
+Proof.
+  split.
+  -  destruct H, H0. intros x y. destruct x; destruct y.
+    exact (op_zeze__ a0 a1).
+    exact false.
+    exact false.
+    exact (op_zeze__0 b0 b1).
+  -  destruct H, H0. intros x y. destruct x; destruct y.
+    exact (op_zsze__ a0 a1).
+    exact true.
+    exact true.
+    exact (op_zsze__0 b0 b1).
+Defined.
+
+Definition sum_comparison {a}{b} `{Base.Ord a} `{Base.Ord b} (x:a + b) (y: a + b) :
+  comparison := match (x,y) with
+                | (inl m, inl n) => Base.compare m n
+                | (inl _, _    ) => Lt
+                | (inr _, inl _) => Gt
+                | (inr m, inr n) => Base.compare m n
+                end.
+
+
+Instance instance_GHC_Base_Ord_sum {a}{b} `{Base.Ord a} `{Base.Ord b} : !Base.Ord (a + b) :=
+  Base.ord_default sum_comparison.
+
+
 
 Local Definition instance_GHC_Base_Functor__sum_a__fmap {e} : forall {a} {b},
                                                                   (a -> b) -> (sum e) a -> (sum e) b :=

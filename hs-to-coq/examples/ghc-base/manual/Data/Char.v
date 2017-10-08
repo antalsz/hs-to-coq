@@ -3,7 +3,6 @@ Require Import GHC.Base.
 Require Export GHC.Char.
 Require Import GHC.Real.
 Require Import GHC.Num.
-Require Export GHC.Unicode.
 
 Set Implicit Arguments.
 Generalizable All Variables.

@@ -41,8 +41,6 @@
 	classes we don't support
   Data/List
     - empty module
-  Data/Char
-    - 1 partial function
   Data/Bool
     - none
 
@@ -78,15 +76,29 @@
   Type inference: need to annotate parameter to ArrowMonad
   Bug in instance generation
 
-- GHC/Enum
+
 - GHC/Num
 - GHC/Char
 - GHC/Real
-- GHC/Unicode
 - Data/Bits
-- Data/Either
-- Data/Proxy
+   Lots of unboxed types in these modules for primitive numeric types.
+   Better to adapt by hand since we need to map the operations to Coq
+   library ones anyways.
 
+- GHC/Unicode
+   I'm removing this from base. It relies on a bunch of C functions that
+   we don't have, so it is not worth including. This also means we shouldn't
+   generate Data.Char, which only has functions that wrap the unicode
+   definitions.
+
+- Data/Either
+   Not a big file, but issue 9 interferes with its main purpose:
+   functor instances for the sum type.
+   Manually added Eq, Ord instances b/c of deriving
+
+- GHC/Enum
+
+- Data/Proxy
 
 - Prelude
 

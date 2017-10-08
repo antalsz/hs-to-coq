@@ -104,7 +104,6 @@ endif
 VFILES:=GHC/Num.v\
   GHC/Char.v\
   GHC/Real.v\
-  GHC/Unicode.v\
   Data/Either.v\
   Data/Proxy.v\
   GHC/Enum.v\
@@ -128,7 +127,6 @@ VFILES:=GHC/Num.v\
   Data/Monoid.v\
   Data/Traversable.v\
   Data/Void.v\
-  Data/Char.v\
   Data/Bool.v\
   GHC/Base.v
 

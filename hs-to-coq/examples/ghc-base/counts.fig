@@ -31,6 +31,16 @@ Data/OldList
 &
       33
 \\
+Data/Bool
+&
+       1
+&
+       0
+&
+       0
+&
+       0
+\\
 Data/Tuple
 &
        5
@@ -50,6 +60,16 @@ Data/Maybe
        0
 &
        1
+\\
+Data/Void
+&
+       2
+&
+       0
+&
+       0
+&
+       6
 \\
 Data/Function
 &
@@ -111,36 +131,6 @@ Data/Traversable
 &
       18
 \\
-Data/Void
-&
-       2
-&
-       0
-&
-       0
-&
-       6
-\\
-Data/Char
-&
-       4
-&
-       0
-&
-       0
-&
-       1
-\\
-Data/Bool
-&
-       1
-&
-       0
-&
-       0
-&
-       0
-\\
 GHC/Base
 &
       81
@@ -163,7 +153,7 @@ GHC/Num
 \\
 GHC/Char
 &
-       8
+       4
 &
        0
 &
@@ -177,21 +167,13 @@ GHC/Real
 &
        3
 \\
-GHC/Unicode
-&
-      21
-&
-       0
-&
-       0
-\\
 Data/Either
 &
-      15
+      16
 &
        0
 &
-       3
+       5
 \\
 Data/Proxy
 &

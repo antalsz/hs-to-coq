@@ -22,7 +22,6 @@ HANDMOD = \
   GHC/Num \
   GHC/Char \
   GHC/Real \
-  GHC/Unicode \
   Data/Either \
   Data/Proxy \
   GHC/Enum \
@@ -41,17 +40,16 @@ MODULES = \
   GHC/List \
   Data/List \
   Data/OldList \
+  Data/Bool \
   Data/Tuple \
   Data/Maybe \
+  Data/Void \
   Data/Function \
   Data/Ord \
   Data/Functor \
   Control/Monad \
   Data/Monoid \
   Data/Traversable \
-  Data/Void \
-  Data/Char \
-  Data/Bool \
 
 
 
@@ -126,6 +124,7 @@ todo:
 	grep -a Axiom lib/*.v lib/*/*.v lib/*/*/*.v
 	grep -a Admitted lib/*.v lib/*/*.v lib/*/*/*.v
 	grep -a errorWithout lib/*.v lib/*/*.v lib/*/*/*.v
+	grep -a Parameter lib/*.v lib/*/*.v lib/*/*/*.v
 
 
 counts.fig: Makefile $(VFILES)

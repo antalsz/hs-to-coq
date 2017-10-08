@@ -15,10 +15,14 @@
   Data/Char
   Data/Bool
 
+* Why is Base.hs drop-in?
+
 * What stops these modules from being generated?
 
 - GHC/BaseInstances
+  This is a manual part of Base.hs
   Bug in instance generation for partially applied type constructors
+  (e.g. monoid instance for list).
 
 - Data/Type/Equality
   functional dependencies
@@ -39,6 +43,10 @@
   Heavy use of Data.Coerce
   NOTE: without translation, default methods are unavailable. Ugh.
 
+- Control/Arrow
+  Type inference: need to annotate parameter to ArrowMonad
+  Bug in instance generation
+
 - GHC/Enum
 - GHC/Num
 - GHC/Char
@@ -47,7 +55,7 @@
 - Data/Bits
 - Data/Either
 - Data/Proxy
-- Control/Arrow
+
 
 
 - Prelude
@@ -227,7 +235,6 @@ Control.Applicative
 
 
 - All other modules
-
 
 X Control.Arrow
 X Control.Category

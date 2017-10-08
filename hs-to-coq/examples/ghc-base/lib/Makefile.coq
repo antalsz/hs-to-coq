@@ -103,31 +103,31 @@ endif
 
 VFILES:=GHC/Num.v\
   GHC/Char.v\
-  GHC/Enum.v\
   GHC/Real.v\
   GHC/Unicode.v\
   Data/Either.v\
   Data/Proxy.v\
+  GHC/Enum.v\
   Data/Foldable.v\
-  Control/Arrow.v\
   Data/Bits.v\
   Data/Type/Equality.v\
-  GHC/BaseInstances.v\
+  Control/Arrow.v\
   Control/Category.v\
   Data/Functor/Const.v\
+  GHC/BaseInstances.v\
   Prelude.v\
   GHC/List.v\
+  Data/List.v\
+  Data/OldList.v\
   Data/Tuple.v\
   Data/Maybe.v\
   Data/Function.v\
   Data/Ord.v\
   Data/Functor.v\
-  Data/Monoid.v\
   Control/Monad.v\
-  Data/OldList.v\
+  Data/Monoid.v\
   Data/Traversable.v\
   Data/Void.v\
-  Data/List.v\
   Data/Char.v\
   Data/Bool.v\
   GHC/Base.v

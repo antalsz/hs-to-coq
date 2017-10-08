@@ -21,35 +21,35 @@ endif
 HANDMOD = \
   GHC/Num \
   GHC/Char \
-  GHC/Enum \
   GHC/Real \
   GHC/Unicode \
   Data/Either \
   Data/Proxy \
+  GHC/Enum \
   Data/Foldable \
-  Control/Arrow \
   Data/Bits \
   Data/Type/Equality \
-  GHC/BaseInstances \
+  Control/Arrow \
   Control/Category \
   Data/Functor/Const \
+  GHC/BaseInstances \
   Prelude
 
 # Generated modules
 # generated directly from GHC/libraries/base
 MODULES = \
   GHC/List \
+  Data/List \
+  Data/OldList \
   Data/Tuple \
   Data/Maybe \
   Data/Function \
   Data/Ord \
   Data/Functor \
-  Data/Monoid \
   Control/Monad \
-  Data/OldList \
+  Data/Monoid \
   Data/Traversable \
   Data/Void \
-  Data/List \
   Data/Char \
   Data/Bool \
 

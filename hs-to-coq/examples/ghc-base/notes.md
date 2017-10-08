@@ -1,19 +1,50 @@
 * Generated modules, what are we skipping in them and why?
 
   GHC/List
+    - five skipped function (take,drop,replicate, scanr, splitAt)
+	  are total functions but Coq can't prove easily
+    - one skipped is concatMap, mapped to Coq's flat_map (should we do this?)
+	- rest are all partial functions
   Data/Tuple
+    - nothing skipped
   Data/Maybe
+    - fromJust (partial)
   Data/Function
+    - fix_ is partial
+	- on uses (.*.) as a variable name
   Data/Ord
+    - skip Down/Ord instance for down because
+	  cannot derive Eq instance for Down, so everything moved to preamble
+	  If we had a "add" edit (with ordering) that allowed us to add the
+	  Eq instance online, we wouldn't need to skip anything.
   Data/Functor
+    - nothing skipped
   Data/Monoid
+    - many F/A/M instances rely on Data.Coerce
+	- many Monoid instances trigger issue 9
   Control/Monad
+    - three partial functions
   Data/OldList
+    - 4 partial functions
+	- 9 not obviously total functions
+	- 10 bugs/unimplemented stuff
+	- 10 relies on one of the above
   Data/Traversable
+    - 9 instances can't do due to issue 9:
+	- 3 failure from other modules (functor for product/sum/dual)
+	- 2 out of scope (array, generics)
+	- 1 partial (applicative ziplist)
+	- 2 type class instances refer to same class
+	- issue with type inference
   Data/Void
+    - 6 instances for derivable classes (Ord,Eq, Show, Read) and
+	classes we don't support
   Data/List
+    - empty module
   Data/Char
+    - 1 partial function
   Data/Bool
+    - none
 
 * Why is Base.hs drop-in?
 
@@ -55,7 +86,6 @@
 - Data/Bits
 - Data/Either
 - Data/Proxy
-
 
 
 - Prelude

@@ -1,33 +1,23 @@
+skip concatMap # renamed to flat_map
+
+# actually total, but Coq can't tell
+skip take        # relies on partial unsafeTake
+skip drop        # relies on partial unsafeDrop
+skip replicate   # needs take and drop
+skip scanr
+skip splitAt
+
+# partial functions
 skip head
 skip badHead
-
-skip take
-skip drop
-skip scanr1
-skip scanr
-skip replicate
-
-skip takeWhile
+skip unsafeTake
 skip repeat
 skip until
 skip iterate
 skip cycle
 skip repeatFB  # doesn't terminate
 skip iterateFB # doesn't terminate
-skip concatMap # renamed to flat_map
-
-skip unsafeTake
-
-skip takeFB
-skip splitAt
 skip !!
-
-skip negIndex # parsing/pp $ incorrectly
-
-skip foldl'
-skip foldl
-
-# more partial functions
 skip tooLarge
 skip errorEmptyList
 skip foldl1
@@ -39,3 +29,4 @@ skip last
 skip maximum
 skip minimum
 skip tail
+skip scanr1

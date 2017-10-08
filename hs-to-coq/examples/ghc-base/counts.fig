@@ -1,9 +1,29 @@
-\begin{figure}
 \begin{tabular}{lllll}
 Module & Defs & Class & Insts & Skipped\\
+\multicolumn{4}{l}{\emph{Generated modules}}\\
 GHC/List
 &
-      44
+      47
+&
+       0
+&
+       0
+&
+      28
+\\
+Data/List
+&
+       1
+&
+       0
+&
+       0
+&
+       0
+\\
+Data/OldList
+&
+      45
 &
        0
 &
@@ -61,6 +81,16 @@ Data/Functor
 &
        0
 \\
+Control/Monad
+&
+      12
+&
+       0
+&
+       0
+&
+       3
+\\
 Data/Monoid
 &
       20
@@ -71,26 +101,6 @@ Data/Monoid
 &
       25
 \\
-Control/Monad
-&
-       9
-&
-       0
-&
-       0
-&
-       7
-\\
-Data/OldList
-&
-      42
-&
-       0
-&
-       0
-&
-      36
-\\
 Data/Traversable
 &
       24
@@ -99,7 +109,7 @@ Data/Traversable
 &
        5
 &
-      52
+      18
 \\
 Data/Void
 &
@@ -110,16 +120,6 @@ Data/Void
        0
 &
        6
-\\
-Data/List
-&
-       1
-&
-       0
-&
-       0
-&
-       0
 \\
 Data/Char
 &
@@ -152,7 +152,7 @@ GHC/Base
       42
 \\
 \\
-\multicolumn{4}{l}{Manual modules}\\
+\multicolumn{4}{l}{\emph{Manual adapted modules}}\\
 GHC/Num
 &
        5
@@ -168,14 +168,6 @@ GHC/Char
        0
 &
        0
-\\
-GHC/Enum
-&
-      11
-&
-       2
-&
-      23
 \\
 GHC/Real
 &
@@ -209,6 +201,14 @@ Data/Proxy
 &
        8
 \\
+GHC/Enum
+&
+      11
+&
+       2
+&
+      23
+\\
 Data/Foldable
 &
      158
@@ -216,14 +216,6 @@ Data/Foldable
        1
 &
       11
-\\
-Control/Arrow
-&
-      27
-&
-       6
-&
-       9
 \\
 Data/Bits
 &
@@ -241,13 +233,13 @@ Data/Type/Equality
 &
        2
 \\
-GHC/BaseInstances
+Control/Arrow
 &
-       0
+      27
 &
-       0
+       6
 &
-       2
+       9
 \\
 Control/Category
 &
@@ -265,6 +257,14 @@ Data/Functor/Const
 &
        2
 \\
+GHC/BaseInstances
+&
+       0
+&
+       0
+&
+       2
+\\
 Prelude
 &
        0
@@ -273,4 +273,4 @@ Prelude
 &
        1
 \\
-\end{tabular}\end{figure}
+\end{tabular}

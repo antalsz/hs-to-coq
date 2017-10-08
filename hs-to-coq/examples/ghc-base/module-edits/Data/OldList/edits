@@ -1,6 +1,8 @@
-# uses partial functions
+# uses partial functions or is partial
 skip maximumBy
 skip minimumBy
+skip genericIndex
+skip unfoldr
 
 # Wrong name for tuple constructors
 skip zip4
@@ -8,17 +10,11 @@ skip zip5
 skip zip6
 skip zip7
 
-# strange Coq bug
-skip transpose
+# "is" keyword used as variable, Coq anamoly
+skip permutations
 
 # character constant
 skip unlines
-
-# uses op_zlzez3fU__ instead of op_zlze__
-skip genericIndex
-skip genericDrop
-skip genericTake
-skip genericSplitAt
 
 # mutrec
 skip sortBy
@@ -26,24 +22,20 @@ skip sortOn
 skip sort
 skip mapAccumR
 
-# "is" keyword used as variable, Coq anamoly
-skip permutations
-
-# precedence, ???
-skip sb
-skip snocSB
-
+# tricky metric
+skip groupBy
+# not obviously total, also strange Coq error
+skip transpose
 
 # "" pattern / not structually inductive
 skip wordsFB
 skip words
 skip lines
 
-# tricky metric
-skip groupBy
+# precedence, ???
+skip sb
+skip snocSB
 
-# coinductive
-skip unfoldr
 
 # higher-rank (w/build)
 skip tails

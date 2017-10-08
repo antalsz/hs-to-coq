@@ -1,18 +1,6 @@
-skip module Data.Traversable
-
-# needs traversable
-skip mapAndUnzipM
-skip zipWithM
-
 # partial
 skip forever
 
 # Bug in Coq, please report, also partial
 skip replicateM
 skip replicateM_
-
-# Type inference issue
-skip filterM
-
-rename value GHC.Prim.seq  = GHC.Base.seq
-rename value op_zlzez3fU__ = op_zlze__

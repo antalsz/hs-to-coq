@@ -2,14 +2,15 @@ redefine Inductive Alt (f : Type -> Type) a : Type := Mk_Alt : (f a) -> (Alt f a
 # <> operator already defined
 skip op_zlzg__
 
-
 # A bunch of things using coerce
 skip instance_GHC_Base_Functor_Dual
 skip instance_GHC_Base_Applicative_Dual
 skip instance_GHC_Base_Monad_Dual
+
 skip instance_GHC_Base_Functor_Product
 skip instance_GHC_Base_Applicative_Product
 skip instance_GHC_Base_Monad_Product
+
 skip instance_GHC_Base_Functor_Sum
 skip instance_GHC_Base_Applicative_Sum
 skip instance_GHC_Base_Monad_Sum
@@ -20,9 +21,9 @@ skip instance_forall___GHC_Base_Alternative_f___GHC_Base_Monoid__Alt_f_a_
 skip instance_GHC_Base_Monoid__Endo_a_
 skip instance_forall___GHC_Base_Monoid_a___GHC_Base_Monoid__Dual_a_
 
-order instance_GHC_Base_Functor_Product instance_GHC_Base_Applicative_Product
-order instance_GHC_Base_Applicative_Product instance_GHC_Base_Monad_Product_return_
-order instance_GHC_Base_Applicative_Product instance_GHC_Base_Monad_Product_op_zgzg__
+# order instance_GHC_Base_Functor_Product instance_GHC_Base_Applicative_Product
+# order instance_GHC_Base_Applicative_Product instance_GHC_Base_Monad_Product_return_
+# order instance_GHC_Base_Applicative_Product instance_GHC_Base_Monad_Product_op_zgzg__
 
 order instance_GHC_Base_Functor_Dual instance_GHC_Base_Applicative_Dual
 order instance_GHC_Base_Applicative_Dual instance_GHC_Base_Monad_Dual_return_

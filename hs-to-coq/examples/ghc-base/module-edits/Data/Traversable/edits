@@ -1,67 +1,29 @@
-# UNDEFINED EVARS
-# type is not actually polymorphic enough
+# issue 9? type is not actually polymorphic enough
 # sum a a instead of sum a b.
-skip instance_Traversable__sum_a__sequenceA
-skip instance_Traversable__sum_a__sequence
 skip instance_Traversable__sum_a_
 
-# What do we call
+# What do we call, also issue 9
 # GHC.Tuple.[,] ??
-skip instance_Traversable__GHC_Tuple_____a__traverse
-skip instance_Traversable__GHC_Tuple_____a__sequenceA
-skip instance_Traversable__GHC_Tuple_____a__sequence
-skip instance_Traversable__GHC_Tuple_____a__mapM
 skip instance_Traversable__GHC_Tuple_____a_
 
-### instance method requires another instance of the same class
+# can't
+# instance method requires another instance of the same class
 skip instance_Traversable_Data_Monoid_First
 skip instance_Traversable_Data_Monoid_Last
 
-# bug in type variables (StateL s) doesn't quantify s
-skip instance_GHC_Base_Applicative__StateL_s__pure
-skip instance_GHC_Base_Applicative__StateL_s__op_zlztzg__
-skip instance_GHC_Base_Applicative__StateL_s__op_ztzg__
-skip instance_GHC_Base_Applicative__StateL_s__op_zlzt__
+# issue 9: bug in type variables (StateL s) doesn't quantify s
 skip instance_GHC_Base_Applicative__StateL_s_
-skip instance_GHC_Base_Functor__StateL_s__fma
-skip instance_GHC_Base_Functor__StateL_s__op_zlzd__
 skip instance_GHC_Base_Functor__StateL_s_
 skip mapAccumL
-
-skip instance_GHC_Base_Applicative__StateR_s__pure
-skip instance_GHC_Base_Applicative__StateR_s__op_zlztzg__
-skip instance_GHC_Base_Applicative__StateR_s__op_ztzg__
-skip instance_GHC_Base_Applicative__StateR_s__op_zlzt__
 skip instance_GHC_Base_Applicative__StateR_s_
-skip instance_GHC_Base_Functor__StateR_s__fma
-skip instance_GHC_Base_Functor__StateR_s__op_zlzd__
 skip instance_GHC_Base_Functor__StateR_s_
 skip mapAccumR
-
-skip instance_Traversable__Data_Functor_Const_Const_m__traverse
-skip instance_Traversable__Data_Functor_Const_Const_m__mapM
-skip instance_Traversable__Data_Functor_Const_Const_m__sequenceA
-skip instance_Traversable__Data_Functor_Const_Const_m__sequence
 skip instance_Traversable__Data_Functor_Const_Const_m_
 
 ## We'll never translate these
 
-skip instance_forall___GHC_Arr_Ix_i___Traversable__GHC_Arr_Array_i__traverse
-skip instance_forall___GHC_Arr_Ix_i___Traversable__GHC_Arr_Array_i__sequenceA
-skip instance_forall___GHC_Arr_Ix_i___Traversable__GHC_Arr_Array_i__sequence
-skip instance_forall___GHC_Arr_Ix_i___Traversable__GHC_Arr_Array_i__mapM
 skip instance_forall___GHC_Arr_Ix_i___Traversable__GHC_Arr_Array_i_
-
-skip instance_Traversable_Control_Applicative_ZipList_traverse
-skip instance_Traversable_Control_Applicative_ZipList_sequenceA
-skip instance_Traversable_Control_Applicative_ZipList_sequence
-skip instance_Traversable_Control_Applicative_ZipList_mapM
 skip instance_Traversable_Control_Applicative_ZipList
-
-skip instance_Traversable_GHC_Generics_U1_mapM
-skip instance_Traversable_GHC_Generics_U1_sequence
-skip instance_Traversable_GHC_Generics_U1_sequenceA
-skip instance_Traversable_GHC_Generics_U1_traverse
 skip instance_Traversable_GHC_Generics_U1
 
 order instance_GHC_Base_Functor_Id instance_GHC_Base_Applicative_Id_op_ztzg__

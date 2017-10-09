@@ -257,14 +257,6 @@ GHC/BaseInstances
 &
        2
 \\
-GHC/Unicode
-&
-      21
-&
-       0
-&
-       0
-\\
 Prelude
 &
        0

@@ -32,7 +32,6 @@ HANDMOD = \
   Control/Category \
   Data/Functor/Const \
   GHC/BaseInstances \
-  GHC/Unicode \
   Prelude\
 
 # Generated modules

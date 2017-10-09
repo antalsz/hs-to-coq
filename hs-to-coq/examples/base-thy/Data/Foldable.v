@@ -13,6 +13,10 @@ Theorem hs_coq_foldr_list {A B} (f : A -> B -> B) (z : B) (l : list A) :
   foldr f z l = Coq.Lists.List.fold_right f z l.
 Proof. rewrite hs_coq_foldr_base. auto. Qed.
 
+Theorem hs_coq_foldr_list' {A B} (f : A -> B -> B) (z : B) (l : list A) :
+  Data.Foldable.instance_Foldable_list_foldr f z l = Coq.Lists.List.fold_right f z l.
+Proof. apply hs_coq_foldr_list. Qed.
+
 Class FoldableLaws {t} `{Foldable t} := {
 (*  foldr_foldMap : forall f z t, foldr f z t = appEndo (foldMap (Mk_Endo ∘ f) t ) z;
   foldl_foldMap : forall f z t,

@@ -2,11 +2,17 @@
 -Q ../base-thy      Proofs
 -Q ../ghc-base/lib/ ""
 
+# Utility
 ListUtils.v
 
+# From GHC
+MonadUtils.v
 Bag.v
+
+# Proofs
 WellFormed.v
 Correctness.v
 Proofs.v
 
+# Extra proofs
 ReferenceFoldBag.v

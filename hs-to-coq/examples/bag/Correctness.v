@@ -3,6 +3,7 @@ Require Import WellFormed.
 
 Require Import Proofs.GHC.Base.
 Require Import Proofs.GHC.List.
+Require Import Proofs.Data.Foldable.
 
 Require Import Coq.Lists.List.
 Import ListNotations.
@@ -17,8 +18,6 @@ Set Bullet Behavior "Strict Subproofs".
 
 (***** Bag correctness theorems *****)
 
-(* TODO: prove that Coq fold_right is the same as GHC foldr *)
-
 Theorem foldrBag_ok {A R} (f : A -> R -> R) (z : R) (b : Bag A) :
   foldrBag f z b = fold_right f z (bagToList b).
 Proof.
@@ -27,7 +26,7 @@ Proof.
     rewrite (IHr _ cons []) fold_right_cons_nil.
     rewrite !IHl IHr.
     by rewrite -fold_right_app fold_right_cons.
-  - by rewrite /bagToList /= fold_right_cons_nil.
+  - by rewrite /bagToList /= !hs_coq_foldr_list' fold_right_cons_nil.
 Qed.
 
 Theorem unitBag_ok {A} (x : A) :
@@ -48,7 +47,7 @@ Proof.
   elim: b => [| x | l IHl r IHr | xs] //=.
   - by rewrite andbT.
   - by rewrite bagToList_TwoBags all_app IHl IHr.
-  - by rewrite /bagToList /= fold_right_cons_nil.
+  - by rewrite /bagToList /= !hs_coq_foldr_list' fold_right_cons_nil.
 Qed.
 
 Theorem unionBags_ok {A} (b1 b2 : Bag A) :
@@ -74,13 +73,15 @@ Proof.
     rewrite !foldrBag_ok !fold_right_cons_nil !fold_right_cons.
     rewrite IHl IHr.
     by rewrite map_app.
-  - rewrite /bagToList /= !fold_right_cons_nil.
-    rewrite hs_coq_map. auto.
+  - by rewrite /bagToList /= !hs_coq_foldr_list' !fold_right_cons_nil hs_coq_map.
 Qed.
 
 Theorem bagToList_listToBag {A} (l : list A) :
   bagToList (listToBag l) = l.
-Proof. by elim: l => [| x l IH] //=; rewrite /bagToList /= fold_right_cons_nil. Qed.
+Proof.
+  by elim: l => [| x l IH] //=;
+     rewrite /bagToList /= hs_coq_foldr_list' fold_right_cons_nil.
+Qed.
 
 (* Is there a partial inverse theorem?  The direct inverse isn't true because
    there are multiple equivalent bags -- for example, `ListBag [x]` and
@@ -105,7 +106,7 @@ Proof.
   elim: b z => [| x | l IHl r IHr | xs] //= z; rewrite /bagToList /=.
   - rewrite !foldrBag_ok fold_right_cons_nil fold_right_cons.
     by rewrite IHl IHr  -fold_right_app map_app.
-  - by rewrite fold_right_cons_nil fold_right_map.
+  - by rewrite !hs_coq_foldr_list' fold_right_cons_nil fold_right_map.
 Qed.
 
 Theorem filterBag_ok {A} (p : A -> bool) (b : Bag A) :
@@ -114,7 +115,7 @@ Proof.
   elim: b => [| x | l IHl r IHr | xs] //=.
   - by case: (p x).
   - by rewrite unionBags_ok bagToList_TwoBags filter_app IHl IHr.
-  - rewrite bagToList_listToBag /bagToList /= fold_right_cons_nil.
+  - rewrite bagToList_listToBag /bagToList /= hs_coq_foldr_list' fold_right_cons_nil.
     apply hs_coq_filter.
 Qed.
 

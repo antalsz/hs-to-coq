@@ -139,7 +139,7 @@ counts.fig: Makefile $(VFILES)
            grep -a "Instance" lib/$$i.v | wc -l;  echo "&"; \
            grep -a "skip" module-edits/$$i/edits | wc -l;  echo "\\\\" ) done; \
     echo "\\\\"; \
-    echo "\\multicolumn{4}{l}{\emph{Manual adapted modules}}\\\\"; \
+    echo "\\multicolumn{4}{l}{\emph{Manually adapted modules}}\\\\"; \
 	 for i in  $(HANDMOD) ; \
        do (echo $$i; echo "&"; grep -a "Definition" lib/$$i.v | wc -l ;  echo "&"; \
            grep -a "Class" lib/$$i.v | wc -l ;  echo "&"; \

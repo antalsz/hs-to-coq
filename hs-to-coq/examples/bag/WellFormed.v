@@ -100,6 +100,8 @@ Proof.
   - by case: xs.
 Qed.
 
+(* TODO mapBagM mapBagM_ mapAndUnzipBagM *)
+
 (* Not strictly necessary, but useful later *)
 Lemma foldrBag_wf {A B} (p : A -> bool) (f : A -> Bag B -> Bag B) (z : Bag B) :
   (forall x b, p x -> well_formed_bag b -> well_formed_bag (f x b)) ->
@@ -127,6 +129,20 @@ Theorem listToBag_wf {A} (l : list A) :
   well_formed_bag (listToBag l).
 Proof. by case: l. Qed.
 
+Theorem partitionBag_wf {A} (p : A -> bool) (b : Bag A) :
+  let: (bt, bf) := partitionBag p b
+  in well_formed_bag bt && well_formed_bag bf.
+Proof.
+  elim: b => [| x | l IHl r IHr | xs] //=.
+  - by case: (p x).
+  - case: (partitionBag p l) IHl => [lt lf] /andP[] IHlt IHlf;
+    case: (partitionBag p r) IHr => [rt rf] /andP[] IHrt IHrf.
+    by rewrite !unionBags_wf.
+  - by case: (Data.OldList.partition p xs) => *; rewrite !listToBag_wf.
+Qed.
+
+(* TODO flatMapBagM flatMapBagPairM *)
+
 Theorem filterBag_wf {A} (p : A -> bool) (b : Bag A) :
   well_formed_bag (filterBag p b).
 Proof.
@@ -135,6 +151,8 @@ Proof.
   - by apply unionBags_wf.
   - by apply listToBag_wf.
 Qed.
+
+(* TODO filterBagM *)
 
 Theorem emptyBag_wf {A} : well_formed_bag (@Mk_EmptyBag A).
 Proof. done. Qed.

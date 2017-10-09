@@ -111,7 +111,7 @@ Local Definition instance_GHC_Base_Applicative_Proxy_op_zlzt__ : forall {a}
 
 Instance instance_GHC_Base_Applicative_Proxy : !GHC.Base.Applicative
                                                   Proxy := {
-  op_zlzt__ := fun {a} {b} => instance_GHC_Base_Applicative_Proxy_op_zlzt__ ;
+(*   op_zlzt__ := fun {a} {b} => instance_GHC_Base_Applicative_Proxy_op_zlzt__ ; *)
   op_zlztzg__ := fun {a} {b} =>
     instance_GHC_Base_Applicative_Proxy_op_zlztzg__ ;
   op_ztzg__ := fun {a} {b} => instance_GHC_Base_Applicative_Proxy_op_ztzg__ ;

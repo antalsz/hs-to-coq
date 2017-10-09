@@ -100,8 +100,8 @@ Local Definition instance_forall___GHC_Base_Monoid_m___GHC_Base_Applicative__Con
 
 Instance instance_forall___GHC_Base_Monoid_m___GHC_Base_Applicative__Const_m_
   `{GHC.Base.Monoid m} : !GHC.Base.Applicative (Const m) := {
-  op_zlzt__ := fun {a} {b} =>
-    instance_forall___GHC_Base_Monoid_m___GHC_Base_Applicative__Const_m__op_zlzt__ ;
+(*  op_zlzt__ := fun {a} {b} =>
+    instance_forall___GHC_Base_Monoid_m___GHC_Base_Applicative__Const_m__op_zlzt__ ; *)
   op_zlztzg__ := fun {a} {b} =>
     instance_forall___GHC_Base_Monoid_m___GHC_Base_Applicative__Const_m__op_zlztzg__ ;
   op_ztzg__ := fun {a} {b} =>

@@ -19,6 +19,9 @@ Unset Printing Implicit Defensive.
 
 (********************* Types ************************)
 
+Require Export GHC.Prim.
+Require Export GHC.Tuple.
+
 (* List notation *)
 Require Export Coq.Lists.List.
 
@@ -68,7 +71,9 @@ Notation "[,,,,,,,]" := (fun x0 x1 x2 x3 x4 x5 x6 x7 => (x0,x1,x2,x3,x4,x5,x6,x7
 Notation "'_++_'"   := (fun x y => x ++ y).
 Notation "'_::_'"   := (fun x y => x :: y).
 
-Notation "[->]"  := (fun x y => x -> y).
+Notation "[->]"  := arrow.
+
+
 
 (* Configure type argument to be maximally inserted *)
 Arguments List.app {_} _ _.

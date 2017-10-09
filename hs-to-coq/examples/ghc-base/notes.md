@@ -46,6 +46,12 @@
 
 * Why is Base.hs drop-in?
 
+- syntax for -> and * type constructors
+
+- default Applicative member op_zlzt__ refers to liftA2,
+  which is defined in terms of Applicative for the same class
+
+
 * What stops these modules from being generated?
 
 - GHC/BaseInstances

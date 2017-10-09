@@ -114,8 +114,9 @@ VFILES:=GHC/Num.v\
   Control/Category.v\
   Data/Functor/Const.v\
   GHC/BaseInstances.v\
-  GHC/Unicode.v\
   Prelude.v\
+  GHC/Prim.v\
+  GHC/Tuple.v\
   GHC/List.v\
   Data/List.v\
   Data/OldList.v\

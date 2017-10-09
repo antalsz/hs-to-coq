@@ -1,3 +1,24 @@
+skip module GHC.Types
+skip instance_Functor__GHC_Prim_arrow_r_
+skip instance_Monad__GHC_Prim_arrow_r_
+skip instance_Applicative__GHC_Prim_arrow_r_
+
+skip instance_Functor__GHC_Prim_arrow_a_
+skip instance_Applicative__GHC_Prim_arrow_a_
+skip instance_Monad__GHC_Prim_arrow_a_
+
+skip instance_Functor__GHC_Tuple_pair_type_a_
+skip instance_Monad__GHC_Tuple_pair_type_a_
+skip instance_Applicative__Tuple_pair_type_a_
+
+skip instance_Monoid__list_a_
+skip instance_forall___Monoid_a___Monoid__GHC_Types_IO_a_
+skip instance_forall___Monoid_a___Monad__GHC_Tuple_pair_type_a_
+skip instance_forall___Monoid_a___Applicative__GHC_Tuple_pair_type_a_
+skip instance_forall___Monoid_b___Monoid__a____b_
+
+order instance_Functor_list instance_Applicative_list
+order instance_Applicative_list instance_Monad_list
 
 skip String   # replace with Coq type
 skip Maybe    # replace with Coq type

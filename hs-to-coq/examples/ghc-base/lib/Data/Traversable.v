@@ -74,7 +74,7 @@ Local Definition instance_Traversable_list_mapM : forall {m} {a} {b},
 
 (* Skipping instance instance_Traversable__sum_a_ *)
 
-(* Skipping instance instance_Traversable__GHC_Tuple_____a_ *)
+(* Skipping instance instance_Traversable__GHC_Tuple_pair_type_a_ *)
 
 (* Skipping instance
    instance_forall___GHC_Arr_Ix_i___Traversable__GHC_Arr_Array_i_ *)
@@ -172,12 +172,6 @@ Local Definition instance_GHC_Base_Applicative_Id_op_zlztzg__ : forall {a} {b},
         | (Mk_Id f) , (Mk_Id x) => Mk_Id (f x)
       end.
 
-Local Definition instance_GHC_Base_Applicative_Id_op_zlzt__ : forall {a} {b},
-                                                                Id a -> Id b -> Id a :=
-  fun {a} {b} =>
-    fun x y =>
-      instance_GHC_Base_Applicative_Id_op_zlztzg__ (GHC.Base.fmap GHC.Base.const x) y.
-
 Local Definition instance_GHC_Base_Applicative_Id_op_ztzg__ : forall {a} {b},
                                                                 Id a -> Id b -> Id b :=
   fun {a} {b} =>
@@ -186,7 +180,6 @@ Local Definition instance_GHC_Base_Applicative_Id_op_ztzg__ : forall {a} {b},
                                                                   GHC.Base.id) x) y.
 
 Instance instance_GHC_Base_Applicative_Id : !GHC.Base.Applicative Id := {
-  op_zlzt__ := fun {a} {b} => instance_GHC_Base_Applicative_Id_op_zlzt__ ;
   op_zlztzg__ := fun {a} {b} => instance_GHC_Base_Applicative_Id_op_zlztzg__ ;
   op_ztzg__ := fun {a} {b} => instance_GHC_Base_Applicative_Id_op_ztzg__ ;
   pure := fun {a} => instance_GHC_Base_Applicative_Id_pure }.

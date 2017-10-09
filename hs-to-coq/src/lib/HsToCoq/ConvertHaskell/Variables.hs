@@ -49,8 +49,8 @@ escapeReservedNames x =
     <> if | T.all (== '.') x  -> pure $ T.map (const '∘') x
           | T.all (== '∘') x  -> pure $ "⟨" <> x <> "⟩"
 -- these type operators aren't parsed by the renaming file
-          | x == "(->)"       -> pure $ ("[->]")
-          | x == "(,)"        -> pure $ ("[,]")
+          | x == "(->)"       -> pure $ ("arrow")
+          | x == "(,)"        -> pure $ ("pair_type")
 -- Maybe add this as part of an Int# solution? But don't want to
 -- always replace these, if we make "Int#" a notation for "Int_h"
 --          | T.isInfixOf "#" x -> pure $ T.replace "#" "_h" x
@@ -72,23 +72,23 @@ var :: ConversionMonad m => HsNamespace -> GHC.Name -> m Ident
 var ns name = do
   thisModM <- fmap moduleNameText <$> use currentModule
   let nameModM = moduleNameText . moduleName <$> nameModule_maybe name
-      
+
   let mod = nameModM
 
       qual | thisModM == nameModM = ""
            | otherwise            = fromMaybe "" mod
-  
+
       base = T.pack . occNameString $ nameOccName name
-  
+
   let localize q = case (identToQualid q, thisModM) of
         (Just (Qualified m b), Just thisMod) | qualidToIdent m == thisMod -> b
         _                                                                 -> q
-               
+
       "" <.> b = b
       q  <.> b = q <> "." <> b
       tryRenamed = fmap (fmap localize) . use . renamed ns
       (<<|>>) = liftA2 (<|>)
-  
+
   fmap (fromMaybe $ qual <.> escapeReservedNames base)
     $     maybe (pure Nothing) (tryRenamed . (<.> base)) mod
     <<|>> tryRenamed (qual <.> base)

@@ -168,8 +168,8 @@ Local Definition instance_GHC_Base_Applicative__sum_e__op_zlzt__ {e}
 
 Instance instance_GHC_Base_Applicative__sum_e_ {e} : !GHC.Base.Applicative
                                                        (sum e) := {
-  op_zlzt__ := fun {a} {b} =>
-    instance_GHC_Base_Applicative__sum_e__op_zlzt__ ;
+(*  op_zlzt__ := fun {a} {b} =>
+    instance_GHC_Base_Applicative__sum_e__op_zlzt__ ; *)
   op_zlztzg__ := fun {a} {b} =>
     instance_GHC_Base_Applicative__sum_e__op_zlztzg__ ;
   op_ztzg__ := fun {a} {b} =>

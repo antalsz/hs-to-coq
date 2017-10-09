@@ -25,6 +25,8 @@ skip filterBagM
 skip instance_forall___Data_Data_Data_a___Data_Data_Data__Bag_a_
 skip instance_forall____Outputable_Outputable_a____Outputable_Outputable__Bag_a_
 
+skip instance_Data_Foldable_Foldable_Bag
+
 ####################################################################
 # for MonadUtils
 skip module Control.Monad.Fix

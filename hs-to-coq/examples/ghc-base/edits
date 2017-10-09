@@ -1,8 +1,9 @@
-skip module GHC.Prim
+# skip module GHC.Prim
+# skip module GHC.Tuple
 skip module Control.Applicative
 skip module GHC.Arr
 skip module GHC.Generics
-skip module GHC.Tuple
+
 
 rename type  GHC.Tuple.() = unit
 rename value GHC.Tuple.() = tt
@@ -66,8 +67,9 @@ skip method Monad fail
 skip method Enum enumFromThen
 skip method Enum enumFromThenTo
 
-rename value GHC.Prim.seq  = GHC.Base.seq
+skip method Applicative op_zlzt__
 
+rename value GHC.Prim.seq  = GHC.Base.seq
 
 # data types defined in embeddings don't create the right
 # constructor names. So rename them.

@@ -2,9 +2,9 @@
 # sum a a instead of sum a b.
 skip instance_Traversable__sum_a_
 
-# What do we call, also issue 9
+# issue 9
 # GHC.Tuple.[,] ??
-skip instance_Traversable__GHC_Tuple_____a_
+skip instance_Traversable__GHC_Tuple_pair_type_a_
 
 # can't
 # instance method requires another instance of the same class

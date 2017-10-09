@@ -99,14 +99,6 @@ Definition flipSeqScanl' {a} {b} : a -> b -> a :=
 Definition flipSeqTake {a} : a -> GHC.Num.Int -> a :=
   fun arg_126__ arg_127__ => match arg_126__ , arg_127__ with | x , _n => x end.
 
-Axiom foldl : forall {A : Type}, A.
-
-(* Translating `foldl' failed: `SigPatIn' constructor unsupported *)
-
-Axiom foldl' : forall {A : Type}, A.
-
-(* Translating `foldl'' failed: `SigPatIn' constructor unsupported *)
-
 Definition foldr2 {a} {b} {c} : (a -> b -> c -> c) -> c -> list a -> list
                                 b -> c :=
   fun arg_55__ arg_56__ =>

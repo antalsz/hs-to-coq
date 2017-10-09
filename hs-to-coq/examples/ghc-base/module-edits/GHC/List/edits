@@ -1,5 +1,8 @@
 skip concatMap # renamed to flat_map
 
+skip foldl
+skip foldl'
+
 # actually total, but Coq can't tell
 skip take        # relies on partial unsafeTake
 skip drop        # relies on partial unsafeDrop

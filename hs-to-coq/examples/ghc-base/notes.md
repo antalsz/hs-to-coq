@@ -21,7 +21,7 @@
     - nothing skipped
   Data/Monoid
     - many F/A/M instances rely on Data.Coerce
-	- many Monoid instances trigger issue 9
+	- many Monoid instances trigger tyvar issue
   Control/Monad
     - three partial functions
   Data/OldList
@@ -43,14 +43,15 @@
     - empty module
   Data/Bool
     - none
-
-* Why is Base.hs drop-in?
-
-- syntax for -> and * type constructors
-
-- default Applicative member op_zlzt__ refers to liftA2,
-  which is defined in terms of Applicative for the same class
-
+  GHC/Base
+    - FAM instances for types with variables
+	- prelude types and functions replaced with Coq versions
+	- IO
+	- partial functions (until)
+	- unboxed types
+	- Alternative/MonadPlus
+  Control/Monad/Fail
+    - IO instance
 
 * What stops these modules from being generated?
 
@@ -75,16 +76,15 @@
   (NOTE: most of the instances are NOT available)
 
 - Data/Foldable
-  Heavy use of Data.Coerce
+  Heavy use of Data.Coerce as type class instances
   NOTE: without translation, default methods are unavailable. Ugh.
 
 - Control/Arrow
   Type inference: need to annotate parameter to ArrowMonad
   Bug in instance generation
 
-
-- GHC/Num
 - GHC/Char
+- GHC/Num
 - GHC/Real
 - Data/Bits
    Lots of unboxed types in these modules for primitive numeric types.
@@ -112,7 +112,6 @@
 
 - Partial modules
 
-Control.Monad.Fail
 Control.Monad.Fix
 
 - Modules that support imperative features

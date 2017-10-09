@@ -20,6 +20,7 @@ Unset Printing Implicit Defensive.
 (********************* Types ************************)
 
 Require Export GHC.Prim.
+
 Require Export GHC.Tuple.
 
 (* List notation *)
@@ -337,6 +338,7 @@ Instance Ord_option {a} `{Ord a} : !Ord (option a) := ord_default compare_option
 
 
 (* Pattern guards, ugh. *)
+(*
 Fixpoint take {a:Type} (n:Int) (xs:list a) : list a :=
   match xs with
   | nil => nil
@@ -348,6 +350,7 @@ Fixpoint drop {a:Type} (n:Int) (xs:list a) : list a :=
   | nil => nil
   | y :: ys => if Z.leb n #0 then (y :: ys) else drop (n - #1) ys
   end.
+*)
 
 (* The inner nil case is impossible. So it is left out of the Haskell version. *)
 Fixpoint scanr {a b:Type} (f : a -> b -> b) (q0 : b) (xs : list a) : list b :=
@@ -372,25 +375,24 @@ end.
 
 (* ?? why doesn't this work? the infix variable k ? Or needed for foldl and foldl' below *)
 (* Yes, We need foldr for foldl and foldl' *)
-
+(*
 Fixpoint foldr {a}{b} (f: a -> b -> b) (z:b) (xs: list a) : b :=
   match xs with
   | nil => z
   | y :: ys => f y (foldr f z ys)
   end.
-
+*)
 
 Definition foldl {a}{b} k z0 xs :=
-  foldr (fun (v:a) (fn:b->b) => (fun (z:b) => fn (k z v))) (id : b -> b) xs z0.
+  fold_right (fun (v:a) (fn:b->b) => (fun (z:b) => fn (k z v))) (id : b -> b) xs z0.
 
 Definition foldl' {a}{b} k z0 xs :=
-  foldr (fun(v:a) (fn:b->b) => (fun(z:b) => fn (k z v))) (id : b -> b) xs z0.
+  fold_right (fun(v:a) (fn:b->b) => (fun(z:b) => fn (k z v))) (id : b -> b) xs z0.
 
-Definition build {a} : (forall {b},(a -> b -> b) -> b -> b) -> list a :=
-  fun g => g _ (fun x y => x :: y) nil.
+(* Less general type for build *)
+Definition build {a} : ((a -> list a -> list a) -> list a -> list a) -> list a :=
+  fun g => g (fun x y => x :: y) nil.
 
 (********************************************************************)
-
-Definition seq {A} {B} (a : A) (b:B) := b.
 
 Definition oneShot {a} (x:a) := x.

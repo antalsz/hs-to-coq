@@ -12,10 +12,7 @@ endif
 
 # Not all of these need to be handwritten. Eventually we should be able to
 # generate some of these modules as hs-to-coq is improved.
-
-# GHC/Unicode needs precedence resolution, plus a few issues with unicode constants
-# Data/Char needs a show instance.  Also use of data cons separate from definition.
-
+# see [notes.md] for discussion of issues
 
 # Handwritten modules (usually by modification of generated version)
 HANDMOD = \
@@ -25,7 +22,6 @@ HANDMOD = \
   Data/Either \
   Data/Proxy \
   GHC/Enum \
-  Data/Foldable \
   Data/Bits \
   Data/Type/Equality \
   Control/Arrow \
@@ -35,6 +31,7 @@ HANDMOD = \
   Prelude\
   GHC/Prim \
   GHC/Tuple \
+  Data/Foldable \
 
 # Generated modules
 # generated directly from GHC/libraries/base
@@ -54,6 +51,7 @@ MODULES = \
   Data/Traversable \
   Control/Monad/Fail \
   GHC/Base \
+
 
 # generated from drop-in/
 DROPIN =

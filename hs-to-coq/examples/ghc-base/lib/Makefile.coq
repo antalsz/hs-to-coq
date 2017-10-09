@@ -107,7 +107,6 @@ VFILES:=GHC/Num.v\
   Data/Either.v\
   Data/Proxy.v\
   GHC/Enum.v\
-  Data/Foldable.v\
   Data/Bits.v\
   Data/Type/Equality.v\
   Control/Arrow.v\
@@ -117,6 +116,7 @@ VFILES:=GHC/Num.v\
   Prelude.v\
   GHC/Prim.v\
   GHC/Tuple.v\
+  Data/Foldable.v\
   GHC/List.v\
   Data/List.v\
   Data/OldList.v\

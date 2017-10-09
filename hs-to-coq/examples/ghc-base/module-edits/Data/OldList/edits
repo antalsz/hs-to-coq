@@ -38,7 +38,7 @@ skip snocSB
 
 
 # higher-rank (w/build)
-skip tails
+# skip tails
 
 # unboxed types, build
 skip findIndices

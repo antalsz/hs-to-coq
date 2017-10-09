@@ -24,7 +24,6 @@ skip String   # replace with Coq type
 skip Maybe    # replace with Coq type
 
 skip ++       # replace with Coq
-skip foldr    # replace with Coq
 
 skip Opaque   # can't handle existential
 skip build    # higher-rank type

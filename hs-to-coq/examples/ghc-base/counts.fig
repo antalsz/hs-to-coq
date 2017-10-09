@@ -9,7 +9,7 @@ GHC/List
 &
        0
 &
-      28
+      30
 \\
 Data/List
 &
@@ -23,7 +23,7 @@ Data/List
 \\
 Data/OldList
 &
-      45
+      46
 &
        0
 &
@@ -149,7 +149,7 @@ GHC/Base
 &
       31
 &
-      57
+      56
 \\
 \\
 \multicolumn{4}{l}{\emph{Manual adapted modules}}\\
@@ -200,14 +200,6 @@ GHC/Enum
        2
 &
       23
-\\
-Data/Foldable
-&
-     158
-&
-       1
-&
-      11
 \\
 Data/Bits
 &
@@ -267,7 +259,7 @@ Prelude
 \\
 GHC/Prim
 &
-       1
+       2
 &
        0
 &
@@ -280,5 +272,13 @@ GHC/Tuple
        0
 &
        0
+\\
+Data/Foldable
+&
+      69
+&
+       1
+&
+       3
 \\
 \end{tabular}

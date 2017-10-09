@@ -25,7 +25,6 @@ HANDMOD = \
   Data/Either \
   Data/Proxy \
   GHC/Enum \
-  Data/Foldable \
   Data/Bits \
   Data/Type/Equality \
   Control/Arrow \
@@ -35,6 +34,7 @@ HANDMOD = \
   Prelude\
   GHC/Prim \
   GHC/Tuple \
+  Data/Foldable \
 
 # Generated modules
 # generated directly from GHC/libraries/base
@@ -54,6 +54,7 @@ MODULES = \
   Data/Traversable \
   Control/Monad/Fail \
   GHC/Base \
+
 
 # generated from drop-in/
 DROPIN =

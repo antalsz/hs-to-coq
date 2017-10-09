@@ -18,6 +18,7 @@ Require Data.Functor.
 Require Data.Traversable.
 Require GHC.Base.
 Require GHC.List.
+Require GHC.Prim.
 
 (* Converted declarations: *)
 
@@ -100,7 +101,7 @@ Definition op_zlzdznzg__ {m} {a} {b} `{GHC.Base.Monad m} : (a -> b) -> m a -> m
   fun arg_4__ arg_5__ =>
     match arg_4__ , arg_5__ with
       | f , m => GHC.Base.op_zgzgze__ m (fun x =>
-                                        let z := f x in GHC.Base.seq z (GHC.Base.return_ z))
+                                        let z := f x in GHC.Prim.seq z (GHC.Base.return_ z))
     end.
 
 Infix "<$!>" := (op_zlzdznzg__) (at level 99).
@@ -135,6 +136,6 @@ Definition zipWithM_ {m} {a} {b} {c} `{(GHC.Base.Applicative m)} : (a -> b -> m
      GHC.Base.Alternative GHC.Base.Applicative GHC.Base.Monad GHC.Base.MonadPlus
      GHC.Base.empty GHC.Base.flip GHC.Base.foldr GHC.Base.id GHC.Base.liftA2
      GHC.Base.mzero GHC.Base.op_zgzg__ GHC.Base.op_zgzgze__ GHC.Base.pure
-     GHC.Base.return_ GHC.Base.seq GHC.List.unzip GHC.List.zipWith bool cons list nil
+     GHC.Base.return_ GHC.List.unzip GHC.List.zipWith GHC.Prim.seq bool cons list nil
      tt unit
 *)

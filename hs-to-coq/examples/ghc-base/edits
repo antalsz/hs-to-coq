@@ -1,5 +1,3 @@
-# skip module GHC.Prim
-# skip module GHC.Tuple
 skip module Control.Applicative
 skip module GHC.Arr
 skip module GHC.Generics
@@ -67,9 +65,9 @@ skip method Monad fail
 skip method Enum enumFromThen
 skip method Enum enumFromThenTo
 
+# default definition cannot be used
 skip method Applicative op_zlzt__
 
-rename value GHC.Prim.seq  = GHC.Base.seq
 
 # data types defined in embeddings don't create the right
 # constructor names. So rename them.

@@ -6,7 +6,7 @@ Description : Compiler Correctness from Graham Hutton’s
  Revised & more efficient compiler, called comp'
 -}
 
-module CompilerRev where
+module CompilerRevP where
 
 data Expr = Val Int | Add Expr Expr
 

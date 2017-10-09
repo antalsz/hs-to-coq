@@ -298,7 +298,7 @@ Fixpoint compare_list {a} `{Ord a} (xs :  list a) (ys : list a) : comparison :=
     end.
 
 Instance Eq_list {a} `{Eq_ a} : Eq_ (list a) :=
-  { op_zeze__ := eqlist
+  { op_zeze__ := eqlist;
     op_zsze__ := fun x y => negb (eqlist x y)
   }.
 
@@ -307,13 +307,13 @@ Instance Ord_list {a} `{Ord a}: !Ord (list a) :=
 
 
 Instance Eq_option {a} `{Eq_ a} : Eq_ (option a) := {
-   op_zsze__ := fun x y =>
+   op_zeze__ := fun x y =>
                   match x,y with
                   | Some x0, Some y0 => x0 == y0
                   | None, None => true
                   | _,_ => false
                   end ;
-   op_zeze__ := fun x y =>
+   op_zsze__ := fun x y =>
                   match x,y with
                   | Some x0, Some y0 => x0 /= y0
                   | None, None => false

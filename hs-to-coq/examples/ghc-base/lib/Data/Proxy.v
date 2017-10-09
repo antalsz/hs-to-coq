@@ -149,8 +149,8 @@ Defined.
 
 Instance instance_GHC_Base_Eq___Proxy_s_ : !GHC.Base.Eq_ (Proxy s) := {}.
 Proof.
-  - intros. exact false.
   - intros. exact true.
+  - intros. exact false.
 Defined.
 
 Definition compare_Proxy {s} : Proxy s -> Proxy s -> comparison := fun _ _ => Eq.

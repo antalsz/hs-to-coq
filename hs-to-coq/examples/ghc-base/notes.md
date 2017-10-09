@@ -287,7 +287,7 @@ Data.Bitraversable
 X Data.Bits
 X Data.Bool
 X Data.Char
-Data.Complex
+Data.Complex   -- needs floating point
 X Data.Either
 X Data.Eq
 Data.Fixed
@@ -296,14 +296,14 @@ X Data.Function
 X Data.Functor
 Data.Functor.Classes
 Data.Functor.Compose
-Data.Functor.Const
+X Data.Functor.Const
 Data.Functor.Identity
 Data.Functor.Product
 Data.Functor.Sum
 Data.Int
-Data.Kind
+Data.Kind  -- completely ignored
 X Data.List
-Data.List.NonEmpty
+Data.List.NonEmpty -- partial functions aren't really partial, :| constructor
 X Data.Maybe
 X Data.Monoid
 X Data.Ord

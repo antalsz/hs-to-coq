@@ -114,20 +114,22 @@ VFILES:=GHC/Num.v\
   Control/Category.v\
   Data/Functor/Const.v\
   GHC/BaseInstances.v\
+  GHC/Unicode.v\
   Prelude.v\
   GHC/List.v\
   Data/List.v\
   Data/OldList.v\
+  Data/Bool.v\
   Data/Tuple.v\
   Data/Maybe.v\
+  Data/Void.v\
   Data/Function.v\
   Data/Ord.v\
   Data/Functor.v\
   Control/Monad.v\
   Data/Monoid.v\
   Data/Traversable.v\
-  Data/Void.v\
-  Data/Bool.v\
+  Control/Monad/Fail.v\
   GHC/Base.v
 
 ifneq ($(filter-out archclean clean cleanall printenv,$(MAKECMDGOALS)),)

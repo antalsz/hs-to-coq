@@ -32,6 +32,7 @@ HANDMOD = \
   Control/Category \
   Data/Functor/Const \
   GHC/BaseInstances \
+  GHC/Unicode \
   Prelude\
 
 # Generated modules
@@ -50,8 +51,7 @@ MODULES = \
   Control/Monad \
   Data/Monoid \
   Data/Traversable \
-
-
+  Control/Monad/Fail \
 
 # generated from drop-in/
 DROPIN = GHC/Base \

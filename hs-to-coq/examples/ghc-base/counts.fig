@@ -131,6 +131,16 @@ Data/Traversable
 &
       18
 \\
+Control/Monad/Fail
+&
+       2
+&
+       1
+&
+       2
+&
+       1
+\\
 GHC/Base
 &
       81
@@ -246,6 +256,14 @@ GHC/BaseInstances
        0
 &
        2
+\\
+GHC/Unicode
+&
+      21
+&
+       0
+&
+       0
 \\
 Prelude
 &

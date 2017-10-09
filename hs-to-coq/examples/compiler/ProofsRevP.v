@@ -14,7 +14,7 @@ Proof.
 Qed.
 
 Theorem comp_correct: forall e,
-    exec (comp' e []) [] = Some [eval e].
+    exec (comp' e []) [] = [eval e].
 Proof.
   intros; apply comp_correct_helper; auto.
 Qed.

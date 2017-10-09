@@ -12,6 +12,7 @@ PASS = \
   Simple \
   Self \
   Poly \
+  Irrefutable \
   InstCtx \
   Guard2 \
   ExhaustGuard \

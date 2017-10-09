@@ -9,8 +9,9 @@ Instance EqLaws_Down {a} `{EqLaws a} : EqLaws (Down a).
 Proof.
   split.
   - case=> * /=; apply Eq_refl.
-  - repeat case=> ? //=; apply Eq_sym.
+  - do 2 case=> ? //=; apply Eq_sym.
   - do 3 case=> ? //=; apply Eq_trans.
+  - do 2 case=> ? //=; apply Eq_inv.
 Qed.
 
 Instance EqExact_Down {a} `{EqExact a} : EqExact (Down a).

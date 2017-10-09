@@ -15,6 +15,7 @@ Proof.
   - case=> ? /=; apply Eq_refl.
   - do 2 case=> ? //=; apply Eq_sym.
   - do 3 case=> ? //=; apply Eq_trans.
+  - do 2 case=> ? //=; apply Eq_inv.
 Qed.
 
 Instance EqExact_Either {a b} `{EqExact a} `{EqExact b} : EqExact (sum a b).

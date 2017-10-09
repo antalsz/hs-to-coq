@@ -153,8 +153,21 @@ Qed.
 Class EqLaws (t : Type) `{Eq_ t} :=
   { Eq_refl  : reflexive  _==_;
     Eq_sym   : symmetric  _==_;
-    Eq_trans : transitive _==_
+    Eq_trans : transitive _==_;
+    Eq_inv   : forall x y, x == y = ~~ (x /= y)
   }.
+
+Theorem Neq_inv {t} `{EqLaws t} x y : x /= y = ~~ (x == y).
+Proof. by rewrite Eq_inv negbK. Qed.
+
+Theorem Neq_irrefl {t} `{EqLaws t} : irreflexive _/=_.
+Proof. by move=> ?; rewrite Neq_inv Eq_refl. Qed.
+
+Theorem Neq_sym {t} `{EqLaws t} : symmetric _/=_.
+Proof. by move=> ? ?; rewrite !Neq_inv Eq_sym. Qed.
+
+Theorem Neq_atrans {t} `{EqLaws t} y x z : x /= z -> (x /= y) || (y /= z).
+Proof. rewrite !Neq_inv -negb_andb; apply contra => /andP[]; apply Eq_trans. Qed.
 
 Class EqExact (t : Type) `{EqLaws t} :=
   { Eq_eq : forall x y, reflect (x = y) (x == y) }.
@@ -165,6 +178,7 @@ Proof.
   - exact Z.eqb_refl.
   - exact Z.eqb_sym.
   - by move=> ? ? ? /Z.eqb_eq -> /Z.eqb_eq; apply Z.eqb_eq.
+  - by move=> * /=; rewrite negbK.
 Qed.
 
 Instance EqExact_Int : EqExact Int.
@@ -183,6 +197,7 @@ Proof.
   - exact N.eqb_refl.
   - exact N.eqb_sym.
   - by move=> ? ? ? /N.eqb_eq -> /N.eqb_eq; apply N.eqb_eq.
+  - by move=> * /=; rewrite negbK.
 Qed.
 
 Instance EqExact_Word : EqExact Word.
@@ -201,6 +216,7 @@ Proof.
   - exact eqb_reflx.
   - by repeat case.
   - by repeat case.
+  - by move=> * /=; rewrite negbK.
 Qed.
 
 Instance EqExact_bool : EqExact bool.
@@ -229,6 +245,7 @@ Proof.
     move=> /andP [eq_x_y eq_xs_ys] /andP [eq_y_z eq_ys_zs].
     apply/andP; split; first by apply (Eq_trans y).
     by apply IH.
+  - by move=> * /=; rewrite negbK.
 Qed.
 
 Instance EqExact_list {a} `{EqExact a} : EqExact (list a).
@@ -248,6 +265,7 @@ Proof.
   - case=> [?|] //=; apply Eq_refl.
   - repeat case=> [?|] //=; apply Eq_sym.
   - repeat case=> [?|] //=; apply Eq_trans.
+  - repeat case=> [?|] //=; apply Eq_inv.
 Qed.
 
 Instance EqExact_option {a} `{EqExact a} : EqExact (option a).

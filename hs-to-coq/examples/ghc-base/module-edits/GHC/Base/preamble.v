@@ -94,8 +94,8 @@ Axiom errorWithoutStackTrace : forall {A : Type}, String -> A.
 
 (* Don't clash with Eq constructor for the comparison type. *)
 Class Eq_ a := {
-  op_zsze__ : (a -> (a -> bool)) ;
-  op_zeze__ : (a -> (a -> bool)) }.
+  op_zeze__ : (a -> (a -> bool)) ;
+  op_zsze__ : (a -> (a -> bool)) }.
 
 Infix "/=" := (op_zsze__) (no associativity, at level 70).
 
@@ -134,8 +134,8 @@ Notation "'_>=?_'" := (op_zgze__).
 (*********** Eq/Ord for primitive types **************************)
 
 Instance Eq_Int___ : Eq_ Int := {
-                               op_zsze__ := fun x y => (x =? y)%Z;
-                               op_zeze__ := fun x y => negb (x =? y)%Z;
+                               op_zeze__ := fun x y => (x =? y)%Z;
+                               op_zsze__ := fun x y => negb (x =? y)%Z;
                              }.
 
 Instance Ord_Int___ : !Ord Int := {
@@ -149,8 +149,8 @@ Instance Ord_Int___ : !Ord Int := {
 }.
 
 Instance Eq_Integer___ : Eq_ Integer := {
-                               op_zsze__ := fun x y => (x =? y)%Z;
-                               op_zeze__ := fun x y => negb (x =? y)%Z;
+                               op_zeze__ := fun x y => (x =? y)%Z;
+                               op_zsze__ := fun x y => negb (x =? y)%Z;
                              }.
 
 Instance Ord_Integer___ : !Ord Int := {
@@ -164,8 +164,8 @@ Instance Ord_Integer___ : !Ord Int := {
 }.
 
 Instance Eq_Word___ : Eq_ Word := {
-                               op_zsze__ := fun x y => (x =? y)%N;
-                               op_zeze__ := fun x y => negb (x =? y)%N;
+                               op_zeze__ := fun x y => (x =? y)%N;
+                               op_zsze__ := fun x y => negb (x =? y)%N;
                              }.
 
 Instance Ord_Word___ : !Ord Word := {
@@ -179,8 +179,8 @@ Instance Ord_Word___ : !Ord Word := {
 }.
 
 Instance Eq_Char___ : Eq_ Char := {
-                               op_zsze__ := fun x y => (x =? y)%N;
-                               op_zeze__ := fun x y => negb (x =? y)%N;
+                               op_zeze__ := fun x y => (x =? y)%N;
+                               op_zsze__ := fun x y => negb (x =? y)%N;
                              }.
 
 Instance Ord_Char___ : !Ord Char := {
@@ -194,8 +194,8 @@ Instance Ord_Char___ : !Ord Char := {
 }.
 
 Instance Eq_bool___ : Eq_ bool := {
-                               op_zsze__ := eqb;
-                               op_zeze__ := fun x y => negb (eqb x y);
+                               op_zeze__ := eqb;
+                               op_zsze__ := fun x y => negb (eqb x y);
                              }.
 
 Definition compare_bool (b1:bool)(b2:bool) : comparison :=
@@ -218,8 +218,8 @@ Instance Ord_bool___ : !Ord bool := {
 }.
 
 Instance Eq_unit___ : Eq_ unit := {
-                               op_zsze__ := fun x y => true;
-                               op_zeze__ := fun x y => false;
+                               op_zeze__ := fun x y => true;
+                               op_zsze__ := fun x y => false;
                              }.
 
 Instance Ord_unit___ : !Ord unit := {
@@ -242,8 +242,8 @@ end.
 
 Instance Eq_comparison___ : Eq_ comparison :=
 {
-  op_zsze__ := eq_comparison;
-  op_zeze__ := fun x y => negb (eq_comparison x y);
+  op_zeze__ := eq_comparison;
+  op_zsze__ := fun x y => negb (eq_comparison x y);
 }.
 
 Definition compare_comparison  (x : comparison) (y: comparison) :=
@@ -299,8 +299,8 @@ Fixpoint compare_list {a} `{Ord a} (xs :  list a) (ys : list a) : comparison :=
     end.
 
 Instance Eq_list {a} `{Eq_ a} : Eq_ (list a) :=
-  { op_zsze__ := fun x y => true;
-    op_zeze__ := fun x y => false;
+  { op_zeze__ := eqlist;
+    op_zsze__ := fun x y => negb (eqlist x y)
   }.
 
 Instance Ord_list {a} `{Ord a}: !Ord (list a) :=
@@ -308,13 +308,13 @@ Instance Ord_list {a} `{Ord a}: !Ord (list a) :=
 
 
 Instance Eq_option {a} `{Eq_ a} : Eq_ (option a) := {
-   op_zsze__ := fun x y =>
+   op_zeze__ := fun x y =>
                   match x,y with
                   | Some x0, Some y0 => x0 == y0
                   | None, None => true
                   | _,_ => false
                   end ;
-   op_zeze__ := fun x y =>
+   op_zsze__ := fun x y =>
                   match x,y with
                   | Some x0, Some y0 => x0 /= y0
                   | None, None => false

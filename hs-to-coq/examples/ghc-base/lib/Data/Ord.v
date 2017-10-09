@@ -16,14 +16,14 @@ Require Import GHC.Num.
 Inductive Down a : Type := Mk_Down : a -> Down a.
 
 Instance instance_Down_Eq {a} `(Eq_ a) : Eq_ (Down a) := {
-  op_zsze__ := (fun x y =>
+  op_zeze__ := (fun x y =>
                 match x, y with
                 | Mk_Down x0, Mk_Down y0 => x0 == y0
                 end);
-  op_zeze__ := (fun x y =>
+  op_zsze__ := (fun x y =>
                 match x, y with
                 | Mk_Down x0, Mk_Down y0 => x0 /= y0
-                end);
+                end)
 }.
 
 Definition compare_Down `{Ord a} (xs : Down a) (ys : Down a) : comparison :=

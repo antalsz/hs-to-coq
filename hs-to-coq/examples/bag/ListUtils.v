@@ -3,6 +3,12 @@ Require Import Coq.Lists.List.
 Import ListNotations.
 Open Scope program_scope.
 
+Require Import Coq.ZArith.ZArith.
+
+Require Data.Foldable.
+Require Data.Monoid.
+Require Import Proofs.Data.Foldable.
+
 From mathcomp Require Import ssreflect ssrfun ssrbool.
 Set Bullet Behavior "Strict Subproofs".
 
@@ -55,6 +61,16 @@ Proof. by elim: l1 => [|x1 l1 IH] //=; rewrite IH andbA. Qed.
 Theorem any_app {A} (p : A -> bool) (l1 l2 : list A) :
   any p (l1 ++ l2) = any p l1 || any p l2.
 Proof. by elim: l1 => [|x1 l1 IH] //=; rewrite IH orbA. Qed.
+
+Theorem all_ext {A} (p1 p2 : A -> bool) (l : list A) :
+  p1 =1 p2 ->
+  all p1 l = all p2 l.
+Proof. by move=> ext; elim: l => [|x l IH] //=; rewrite ext IH. Qed.
+
+Theorem any_ext {A} (p1 p2 : A -> bool) (l : list A) :
+  p1 =1 p2 ->
+  any p1 l = any p2 l.
+Proof. by move=> ext; elim: l => [|x l IH] //=; rewrite ext IH. Qed.
 
 Theorem allP {A} (p : A -> bool) (l : list A) :
   reflect (Forall p l) (all p l).
@@ -122,3 +138,57 @@ Proof.
   elim: l1 => [|x1 l1 IH] //=.
   by rewrite IH f_assoc.
 Qed.
+
+Theorem hs_coq_any_list {A} (p : A -> bool) (l : list A) :
+  Data.Foldable.any p l = any p l.
+Proof.
+  rewrite /Data.Foldable.any /Data.Foldable.anyWith
+          /Data.Foldable.foldMap /= /Data.Foldable.instance_Foldable_list_foldMap
+          /Data.Foldable.instance_Foldable_list_foldr /=
+          /Data.Monoid.mempty_Any.
+  rewrite -(orbF (any p l)); move: false => b.
+  elim: l => [|x l IH] //=.
+  rewrite -orbA -IH /compose /=.
+  by case: (GHC.Base.foldr _ _ _); case: (p x).
+Qed.
+
+(***** partition *****)
+
+Theorem partition_app {A} (p : A -> bool) (l r : list A) :
+  let: (t,  f)  := partition p (l ++ r) in
+  let: (lt, lf) := partition p l        in
+  let: (rt, rf) := partition p r
+  in t = lt ++ rt /\ f = lf ++ rf.
+Proof.
+  elim: l => [|x l IH] //=.
+  - by case: (partition p r).
+  - case: (partition p r) (partition p l) (partition p (l ++ r)) IH
+      => [rt rf] [lt lf] [? ?] [-> ->].
+    by case: (p x).
+Qed.
+
+Corollary partition_app_1 {A} (p : A -> bool) (l r : list A) :
+  fst (partition p (l ++ r)) = fst (partition p l) ++ fst (partition p r).
+Proof.
+  by move: (partition p (l ++ r)) (partition p l) (partition p r) (partition_app p l r)
+       => [? ?] [? ?] [? ?] [-> ->].
+Qed.
+
+Corollary partition_app_2 {A} (p : A -> bool) (l r : list A) :
+  snd (partition p (l ++ r)) = snd (partition p l) ++ snd (partition p r).
+Proof.
+  by move: (partition p (l ++ r)) (partition p l) (partition p r) (partition_app p l r)
+       => [? ?] [? ?] [? ?] [-> ->].
+Qed.
+
+(***** Zlength *****)
+
+Section Z.
+
+Open Scope Z_scope.
+
+Theorem Zlength_app {A} (l r : list A) :
+  Zlength (l ++ r) = Zlength l + Zlength r.
+Proof. by rewrite Zlength_correct app_length Nat2Z.inj_add -!Zlength_correct. Qed.
+
+End Z.

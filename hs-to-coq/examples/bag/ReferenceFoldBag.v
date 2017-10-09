@@ -1,8 +1,9 @@
 Require Import Bag.
 Require Import Proofs.
 
+Require Import Proofs.Data.Foldable.
+
 Require Import ListUtils.
-Require Import Coq.Program.Basics.
 Require Import Coq.Lists.List.
 Import ListNotations.
 Open Scope program_scope.
@@ -42,10 +43,9 @@ Theorem referenceFoldBag_ok {A R} (f : R -> R -> R) (u : A -> R) (z : R) (b : Ba
   referenceFoldBag f u z b = fold_right f z (map u (bagToList b)).
 Proof.
   move=> f_assoc z_right_id z_left_id.
-  elim: b => [| x | l IHl r IHr | xs] //=; rewrite /bagToList /=.
-  - rewrite !foldrBag_ok fold_right_cons_nil fold_right_cons.
-    by rewrite IHl IHr -fold_right_fold_right // map_app fold_right_app.
-  - by rewrite fold_right_cons_nil fold_right_map.
+  elim: b => [| x | l IHl r IHr | xs] //=.
+  - by rewrite bagToList_TwoBags IHl IHr -fold_right_fold_right // map_app fold_right_app.
+  - by rewrite bagToList_ListBag fold_right_map.
 Qed.
 
 Corollary foldBag_is_referenceFoldBag_if_id
@@ -80,7 +80,7 @@ Module BagNeedsUnit.
   Proof.
     elim: b tail => [| x | l IHl r IHr | xs] //= tail.
     - by rewrite IHr IHl app_assoc.
-    - by rewrite fold_right_cons fold_right_cons_nil.
+    - by rewrite hs_coq_foldr_list' fold_right_cons fold_right_cons_nil.
   Qed.
 
   Lemma same_empty_list {A} (b : Bag A) :

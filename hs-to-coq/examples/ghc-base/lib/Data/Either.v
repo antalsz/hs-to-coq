@@ -82,20 +82,19 @@ Definition partitionsums {a} {b} : list (sum a b) -> list a * list b :=
   GHC.Base.foldr (either left right) (pair nil nil).
 
 
-Instance instance_GHC_Base_Eq_sum {a}{b} `{Base.Eq_ a} `{Base.Eq_ b} : !Base.Eq_ (a + b).
-Proof.
-  split.
-  -  destruct H, H0. intros x y. destruct x; destruct y.
-    exact (op_zeze__ a0 a1).
-    exact false.
-    exact false.
-    exact (op_zeze__0 b0 b1).
-  -  destruct H, H0. intros x y. destruct x; destruct y.
-    exact (op_zsze__ a0 a1).
-    exact true.
-    exact true.
-    exact (op_zsze__0 b0 b1).
-Defined.
+Instance instance_GHC_Base_Eq_sum {a}{b} `{Base.Eq_ a} `{Base.Eq_ b} : !Base.Eq_ (a + b) :=
+  { op_zeze__ := fun x y =>
+                   match x , y with
+                   | inl xl , inl yl => GHC.Base.op_zeze__ xl yl
+                   | inr xr , inr yr => GHC.Base.op_zeze__ xr yr
+                   | _      , _      => false
+                   end ;
+    op_zsze__ := fun x y =>
+                   match x , y with
+                   | inl xl , inl yl => GHC.Base.op_zsze__ xl yl
+                   | inr xr , inr yr => GHC.Base.op_zsze__ xr yr
+                   | _      , _      => true 
+                   end }.
 
 Definition sum_comparison {a}{b} `{Base.Ord a} `{Base.Ord b} (x:a + b) (y: a + b) :
   comparison := match (x,y) with

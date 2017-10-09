@@ -108,6 +108,7 @@ endif
 ######################
 
 VFILES:=ListUtils.v\
+  MonadUtils.v\
   Bag.v\
   WellFormed.v\
   Correctness.v\

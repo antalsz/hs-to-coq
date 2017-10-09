@@ -7,12 +7,13 @@
 
  *)
 
-Require Import mathcomp.ssreflect.ssreflect.
-
 Require Import GHC.Base.
 Require Import GHC.BaseInstances.
 
 Require Import Coq.Logic.FunctionalExtensionality.
+
+From mathcomp Require Import ssreflect ssrbool ssrfun.
+Set Bullet Behavior "Strict Subproofs".
 
 (* Properties of basic functions *)
 
@@ -20,13 +21,21 @@ Require Import Coq.Logic.FunctionalExtensionality.
 
 Require Coq.Lists.List.
 
-Theorem hs_coq_map {A B} : map = @Coq.Lists.List.map A B.
-Proof. extensionality f. extensionality l.
-induction l; simpl; [|f_equal]; auto. Qed.
+Theorem hs_coq_map : @map = @Coq.Lists.List.map.
+Proof.
+  extensionality A; extensionality B; extensionality f; extensionality l.
+  induction l; simpl; [|f_equal]; auto.
+Qed.
 
-Theorem hs_coq_foldr_base {A B} : foldr = @Coq.Lists.List.fold_right A B.
-Proof. extensionality f. extensionality z. extensionality l.
-       induction l; simpl; [|f_equal]; auto. Qed.
+Theorem hs_coq_foldr_base {A B} : @foldr A B = @Coq.Lists.List.fold_right B A.
+Proof.
+  extensionality f; extensionality z; extensionality l.
+  induction l; simpl; [|f_equal]; auto.
+Qed.
+
+Theorem hs_coq_foldl_base {A B} (f : B -> A -> B) (z : B) (l : list A) :
+  foldl f z l = Coq.Lists.List.fold_left f l z.
+Proof. by rewrite /foldl; move: z; elim: l => //=. Qed.
 
 Lemma map_id:
   forall a (x : list a),
@@ -139,6 +148,133 @@ Proof.
   rewrite flat_map_cons_f. auto.
 Qed.
 
+(* -------------------------------------------------------------------- *)
+
+Class EqLaws (t : Type) `{Eq_ t} :=
+  { Eq_refl  : reflexive  _==_;
+    Eq_sym   : symmetric  _==_;
+    Eq_trans : transitive _==_;
+    Eq_inv   : forall x y, x == y = ~~ (x /= y)
+  }.
+
+Theorem Neq_inv {t} `{EqLaws t} x y : x /= y = ~~ (x == y).
+Proof. by rewrite Eq_inv negbK. Qed.
+
+Theorem Neq_irrefl {t} `{EqLaws t} : irreflexive _/=_.
+Proof. by move=> ?; rewrite Neq_inv Eq_refl. Qed.
+
+Theorem Neq_sym {t} `{EqLaws t} : symmetric _/=_.
+Proof. by move=> ? ?; rewrite !Neq_inv Eq_sym. Qed.
+
+Theorem Neq_atrans {t} `{EqLaws t} y x z : x /= z -> (x /= y) || (y /= z).
+Proof. rewrite !Neq_inv -negb_andb; apply contra => /andP[]; apply Eq_trans. Qed.
+
+Class EqExact (t : Type) `{EqLaws t} :=
+  { Eq_eq : forall x y, reflect (x = y) (x == y) }.
+
+Instance EqLaws_Int : EqLaws Int.
+Proof.
+  split.
+  - exact Z.eqb_refl.
+  - exact Z.eqb_sym.
+  - by move=> ? ? ? /Z.eqb_eq -> /Z.eqb_eq; apply Z.eqb_eq.
+  - by move=> * /=; rewrite negbK.
+Qed.
+
+Instance EqExact_Int : EqExact Int.
+Proof.
+  split=> * /=; case H: (_ =? _)%Z; constructor.
+  - by apply Z.eqb_eq.
+  - by rewrite -Z.eqb_eq H.
+Qed.
+
+Instance EqLaws_Integer  : EqLaws  Integer := EqLaws_Int.
+Instance EqExact_Integer : EqExact Integer := EqExact_Int.
+
+Instance EqLaws_Word : EqLaws Word.
+Proof.
+  split.
+  - exact N.eqb_refl.
+  - exact N.eqb_sym.
+  - by move=> ? ? ? /N.eqb_eq -> /N.eqb_eq; apply N.eqb_eq.
+  - by move=> * /=; rewrite negbK.
+Qed.
+
+Instance EqExact_Word : EqExact Word.
+Proof.
+  split=> * /=; case H: (_ =? _)%N; constructor.
+  - by apply N.eqb_eq.
+  - by rewrite -N.eqb_eq H.
+Qed.
+
+Instance EqLaws_Char  : EqLaws  Char := EqLaws_Word.
+Instance EqExact_Char : EqExact Char := EqExact_Word.
+
+Instance EqLaws_bool : EqLaws bool.
+Proof.
+  split.
+  - exact eqb_reflx.
+  - by repeat case.
+  - by repeat case.
+  - by move=> * /=; rewrite negbK.
+Qed.
+
+Instance EqExact_bool : EqExact bool.
+Proof. by split; repeat case; constructor. Qed.
+
+Instance EqLaws_unit : EqLaws unit.
+Proof. by split. Qed.
+
+Instance EqExact_unit : EqExact unit.
+Proof. by split; repeat case; constructor. Qed.
+
+Instance EqLaws_comparison : EqLaws comparison.
+Proof. by split; repeat case. Qed.
+
+Instance EqExact_comparison : EqExact comparison.
+Proof. by split; repeat case; constructor. Qed.
+
+Instance EqLaws_list {a} `{EqLaws a} : EqLaws (list a).
+Proof.
+  split.
+  - by elim=> [|x xs IH] //=; rewrite Eq_refl.
+  - elim=> [|x xs /= IH] //=; first by case.
+    by case=> [|y ys] //=; rewrite Eq_sym IH.
+  - elim=> [|y ys /= IH] //=; first by case.
+    case=> [|x xs] //= [|z zs] //=.
+    move=> /andP [eq_x_y eq_xs_ys] /andP [eq_y_z eq_ys_zs].
+    apply/andP; split; first by apply (Eq_trans y).
+    by apply IH.
+  - by move=> * /=; rewrite negbK.
+Qed.
+
+Instance EqExact_list {a} `{EqExact a} : EqExact (list a).
+Proof.
+  split; elim=> [|x xs /= IH]; first by case; constructor.
+  case=> [|y ys] //=; first by constructor.
+  case: (IH ys) => [-> | NEQ].
+  - case E: (x == y); constructor; move/Eq_eq in E.
+    + by rewrite E.
+    + by contradict E; case: E.
+  - by rewrite andbF; constructor; contradict NEQ; case: NEQ.
+Qed.
+
+Instance EqLaws_option {a} `{EqLaws a} : EqLaws (option a).
+Proof.
+  split.
+  - case=> [?|] //=; apply Eq_refl.
+  - repeat case=> [?|] //=; apply Eq_sym.
+  - repeat case=> [?|] //=; apply Eq_trans.
+  - repeat case=> [?|] //=; apply Eq_inv.
+Qed.
+
+Instance EqExact_option {a} `{EqExact a} : EqExact (option a).
+Proof.
+  split=> - [x|] [y|] //=; try by constructor.
+  case E: (x == y); constructor; move/Eq_eq in E.
+  + by rewrite E.
+  + by contradict E; case: E.
+Qed.
 
 (* -------------------------------------------------------------------- *)
 
@@ -222,7 +358,7 @@ Proof.
   - destruct x; auto.
   - destruct x; auto.
   - intros x y z. destruct x; destruct y; destruct z; auto.
-  - f_equal.
+    f_equal.
     destruct H. destruct H0.
     unfold Base.mappend, Base.mempty in *.
     rewrite monoid_assoc0. auto.

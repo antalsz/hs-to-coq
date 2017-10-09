@@ -48,8 +48,11 @@ convertPat (WildPat PlaceHolder) =
 convertPat (GHC.VarPat (L _ x)) =
   Coq.VarPat <$> freeVar x
 
-convertPat (LazyPat p) =
-  convertLPat p
+convertPat (LazyPat p) = do
+  p' <- convertLPat p
+  r <- refutability p'
+  if isRefutable r then convUnsupported "lazy refutable pattern"
+                   else return p'
 
 convertPat (GHC.AsPat x p) =
   Coq.AsPat <$> convertLPat p <*> freeVar (unLoc x)

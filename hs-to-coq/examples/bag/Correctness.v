@@ -204,4 +204,13 @@ Proof.
   by rewrite consBag_ok IH.
 Qed.
 
-(* TODO anyBag anyBagM *)
+Theorem anyBag_ok {A} (p : A -> bool) (b : Bag A) :
+  anyBag p b = any p (bagToList b).
+Proof.
+  elim: b => [| x | l IHl r IHr | xs] //=.
+  - by rewrite orbF.
+  - by rewrite bagToList_TwoBags any_app IHl IHr.
+  - by rewrite bagToList_ListBag hs_coq_any_list.
+Qed.
+
+(* TODO anyBagM *)

@@ -31,7 +31,7 @@ Proof.
   - intros. destruct u; auto.
 Qed.
 
-Instance instance_MonadLaws_option : MonadLaws option.
+Instance instance_MonadLaws_Either {a} : MonadLaws (sum a).
 Proof.
   split; intros;
    repeat (unfold pure, instance_Applicative__sum_a_,

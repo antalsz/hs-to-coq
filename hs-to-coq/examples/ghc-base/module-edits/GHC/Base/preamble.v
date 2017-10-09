@@ -338,6 +338,7 @@ Instance Ord_option {a} `{Ord a} : !Ord (option a) := ord_default compare_option
 
 
 (* Pattern guards, ugh. *)
+(*
 Fixpoint take {a:Type} (n:Int) (xs:list a) : list a :=
   match xs with
   | nil => nil
@@ -349,6 +350,7 @@ Fixpoint drop {a:Type} (n:Int) (xs:list a) : list a :=
   | nil => nil
   | y :: ys => if Z.leb n #0 then (y :: ys) else drop (n - #1) ys
   end.
+*)
 
 (* The inner nil case is impossible. So it is left out of the Haskell version. *)
 Fixpoint scanr {a b:Type} (f : a -> b -> b) (q0 : b) (xs : list a) : list b :=

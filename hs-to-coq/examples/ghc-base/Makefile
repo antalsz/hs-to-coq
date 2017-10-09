@@ -12,10 +12,7 @@ endif
 
 # Not all of these need to be handwritten. Eventually we should be able to
 # generate some of these modules as hs-to-coq is improved.
-
-# GHC/Unicode needs precedence resolution, plus a few issues with unicode constants
-# Data/Char needs a show instance.  Also use of data cons separate from definition.
-
+# see [notes.md] for discussion of issues
 
 # Handwritten modules (usually by modification of generated version)
 HANDMOD = \

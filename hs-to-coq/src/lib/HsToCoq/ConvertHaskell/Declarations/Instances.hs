@@ -19,6 +19,7 @@ import Control.Lens
 
 import Data.Semigroup (Semigroup(..), (<>))
 import HsToCoq.Util.Function
+import Data.Traversable
 import HsToCoq.Util.Traversable
 import Data.Maybe
 import qualified Data.List.NonEmpty as NE
@@ -26,6 +27,7 @@ import Data.Char
 import qualified Data.Text as T
 
 import Control.Monad
+import Control.Monad.State
 
 import qualified Data.Map.Strict as M
 import qualified Data.Set as S
@@ -100,7 +102,7 @@ data InstanceInfo = InstanceInfo { instanceName  :: !Ident
 convertClsInstDeclInfo :: ConversionMonad m => ClsInstDecl GHC.Name -> m InstanceInfo
 convertClsInstDeclInfo ClsInstDecl{..} = do
   instanceName  <- convertInstanceName $ hsib_body cid_poly_ty
-  instanceHead  <- convertLType        $ hsib_body cid_poly_ty
+  instanceHead  <- convertLHsSigType cid_poly_ty
   instanceClass <- maybe (convUnsupported "strangely-formed instance heads")
                          (pure . renderOneLineT . renderGallina)
                     $ termHead instanceHead
@@ -111,8 +113,8 @@ convertClsInstDeclInfo ClsInstDecl{..} = do
 --------------------------------------------------------------------------------
 
 convertClsInstDecl :: ConversionMonad m
-                   => ClsInstDecl GHC.Name          -- Haskell Instance we are converting
-                   -> (InstanceDefinition -> m a)  -- Final "rebuilding" pass
+                   => ClsInstDecl GHC.Name        -- Haskell instance we are converting
+                   -> (InstanceDefinition -> m a) -- Final "rebuilding" pass
                    -> Maybe (InstanceInfo -> GhcException -> m a) -- error handling argument
                    -> m a
 convertClsInstDecl cid@ClsInstDecl{..} rebuild mhandler = do
@@ -133,7 +135,7 @@ convertClsInstDecl cid@ClsInstDecl{..} rebuild mhandler = do
     defaults <-  use (defaultMethods.at instanceClass.non M.empty)
                  -- lookup default methods in the global state, using the empty map if the class name is not found
                  -- otherwise gives you a map
-                 -- <$> is flip fmap
+                 -- <&> is flip fmap
              <&> M.toList . M.filterWithKey (\meth _ -> isNothing $ lookup meth cdefs)
 
     -- implement the instance part of "skip method"
@@ -223,23 +225,56 @@ topoSortInstance (InstanceDefinition instanceName params ty members mp) = go sor
         -- lookup the type of the class member
         -- add extra quantifiers from the class & instance definitions
         mkTy :: Ident -> m ([Binder], Maybe Term)
-        mkTy memberName = do (bnds, className, instTy) <- decomposeTy ty
-                             classDef <- use (classDefns.at className)
-                             -- TODO: May be broken by switch away from 'RdrName's
-                             case classDef of
-                               (Just (ClassDefinition _ (Inferred Explicit (Ident var):_) _ sigs)) ->
-                                   case (lookup memberName sigs) of
-                                     Just sigType -> do
-                                       -- TODO: the insTy could have a free variables in it,
-                                       -- should generalize those in the type
-                                       -- However, we don't keep track of inscope variables here,
-                                       -- so we cannot actually do this generalization. Ugh.
-                                       let sub = M.singleton var instTy
-                                       return $ (bnds, Just $ subst sub sigType)
-                                     Nothing ->
-                                       convUnsupported ("Cannot find sig for " ++ show memberName)
-                               _ -> convUnsupported
-                                    ("OOPS! Cannot construct types for this class def: " ++ (show classDef) ++ "\n")
+        mkTy memberName = do
+          (bnds, className, instTy) <- decomposeTy ty
+          classDef <- use (classDefns.at className)
+          -- TODO: May be broken by switch away from 'RdrName's
+          case classDef of
+            (Just (ClassDefinition _ (Inferred Explicit (Ident var):_) _ sigs)) ->
+              case lookup memberName sigs of
+                Just sigType ->
+                  -- GOAL: Consider
+                  -- @
+                  --     class Functor f where
+                  --       fmap :: (a -> b) -> f a -> f b
+                  --     instance Functor (Either a) where fmap = ...
+                  -- @
+                  -- When desugared naïvely into Coq, this will result in a term with type
+                  -- @
+                  --     forall {a₁}, forall {a₂ b},
+                  --       (a₂ -> b) -> f (Either a₁ a₂) -> f (Either a₁ b)
+                  -- @
+                  -- Except without the subscripts!  So we have to rename either
+                  -- the per-instance variables (here, @a₁@) or the type class
+                  -- method variables (here, @a₂@ and @b@).  We pick the
+                  -- per-instance variables, and rename @a₁@ to @inst_a₁@.
+                  -- 
+                  -- ASSUMPTION: type variables don't show up in terms.  Broken
+                  -- by ScopedTypeVariables.
+                  let renameInst UnderscoreName =
+                        pure UnderscoreName
+                      renameInst (Ident x) =
+                        let inst_x = "inst_" <> x
+                        in Ident inst_x <$ modify' (M.insert x $ Var inst_x)
+                      
+                      sub ty = ($ ty) <$> gets subst
+                      
+                      (instBnds, instSubst) = (runState ?? M.empty) $ for bnds $ \case
+                        Inferred      ei x     -> Inferred      ei <$> renameInst x
+                        Typed       g ei xs ty -> Typed       g ei <$> traverse renameInst xs <*> sub ty
+                        BindLet     x oty val  -> BindLet          <$> renameInst x <*> sub oty <*> sub val
+                        Generalized ei tm      -> Generalized   ei <$> sub tm
+
+                      -- Why the nested substitution?  The only place the
+                      -- per-instance variable name can show up is in the
+                      -- specific instance type!  It can't show up in the
+                      -- signature of the method, that's the whole point
+                      instSigType = subst (M.singleton var $ subst instSubst instTy) sigType
+                  in pure $ (instBnds, Just $ instSigType)
+                Nothing ->
+                  convUnsupported ("Cannot find sig for " ++ show memberName)
+            _ -> convUnsupported
+                 ("OOPS! Cannot construct types for this class def: " ++ (show classDef) ++ "\n")
 
         unFix :: Term -> Term
         unFix body = case body of

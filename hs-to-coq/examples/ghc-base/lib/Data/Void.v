@@ -25,6 +25,11 @@ Require GHC.Base.
 
 (* Skipping instance instance_GHC_Exception_Exception_Void *)
 
+(* Translating `instance GHC.Generics.Generic Void' failed: OOPS! Cannot find
+   information for class "GHC.Generics.Generic" unsupported *)
+
+(* Skipping instance instance_Data_Data_Data_Void *)
+
 Inductive Void : Type :=.
 
 Definition absurd {a} : Void -> a :=

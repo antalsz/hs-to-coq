@@ -25,8 +25,8 @@ Local Definition instance_Traversable_option_traverse : forall {f} {a} {b},
                                                           forall `{GHC.Base.Applicative f},
                                                             (a -> f b) -> option a -> f (option b) :=
   fun {f} {a} {b} `{GHC.Base.Applicative f} =>
-    fun arg_142__ arg_143__ =>
-      match arg_142__ , arg_143__ with
+    fun arg_218__ arg_219__ =>
+      match arg_218__ , arg_219__ with
         | _ , None => GHC.Base.pure None
         | f , (Some x) => Data.Functor.op_zlzdzg__ Some (f x)
       end.
@@ -50,11 +50,11 @@ Local Definition instance_Traversable_list_traverse : forall {f} {a} {b},
                                                         forall `{GHC.Base.Applicative f},
                                                           (a -> f b) -> list a -> f (list b) :=
   fun {f} {a} {b} `{GHC.Base.Applicative f} =>
-    fun arg_135__ =>
-      match arg_135__ with
+    fun arg_211__ =>
+      match arg_211__ with
         | f => let cons_f :=
-                 fun arg_136__ arg_137__ =>
-                   match arg_136__ , arg_137__ with
+                 fun arg_212__ arg_213__ =>
+                   match arg_212__ , arg_213__ with
                      | x , ys => GHC.Base.op_zlztzg__ (Data.Functor.op_zlzdzg__ cons (f x)) ys
                    end in
                GHC.Base.foldr cons_f (GHC.Base.pure nil)
@@ -87,7 +87,7 @@ Local Definition instance_Traversable_Data_Proxy_Proxy_mapM : forall {m}
                                                                   (a -> m b) -> Data.Proxy.Proxy a -> m
                                                                   (Data.Proxy.Proxy b) :=
   fun {m} {a} {b} `{GHC.Base.Monad m} =>
-    fun arg_115__ arg_116__ => GHC.Base.pure Data.Proxy.Mk_Proxy.
+    fun arg_191__ arg_192__ => GHC.Base.pure Data.Proxy.Mk_Proxy.
 
 Local Definition instance_Traversable_Data_Proxy_Proxy_sequence : forall {m}
                                                                          {a},
@@ -95,7 +95,7 @@ Local Definition instance_Traversable_Data_Proxy_Proxy_sequence : forall {m}
                                                                       Data.Proxy.Proxy (m a) -> m (Data.Proxy.Proxy
                                                                                                   a) :=
   fun {m} {a} `{GHC.Base.Monad m} =>
-    fun arg_119__ => GHC.Base.pure Data.Proxy.Mk_Proxy.
+    fun arg_195__ => GHC.Base.pure Data.Proxy.Mk_Proxy.
 
 Local Definition instance_Traversable_Data_Proxy_Proxy_sequenceA : forall {f}
                                                                           {a},
@@ -103,7 +103,7 @@ Local Definition instance_Traversable_Data_Proxy_Proxy_sequenceA : forall {f}
                                                                        Data.Proxy.Proxy (f a) -> f (Data.Proxy.Proxy
                                                                                                    a) :=
   fun {f} {a} `{GHC.Base.Applicative f} =>
-    fun arg_112__ => GHC.Base.pure Data.Proxy.Mk_Proxy.
+    fun arg_188__ => GHC.Base.pure Data.Proxy.Mk_Proxy.
 
 Local Definition instance_Traversable_Data_Proxy_Proxy_traverse : forall {f}
                                                                          {a}
@@ -112,7 +112,7 @@ Local Definition instance_Traversable_Data_Proxy_Proxy_traverse : forall {f}
                                                                       (a -> f b) -> Data.Proxy.Proxy a -> f
                                                                       (Data.Proxy.Proxy b) :=
   fun {f} {a} {b} `{GHC.Base.Applicative f} =>
-    fun arg_108__ arg_109__ => GHC.Base.pure Data.Proxy.Mk_Proxy.
+    fun arg_184__ arg_185__ => GHC.Base.pure Data.Proxy.Mk_Proxy.
 
 (* Skipping instance instance_Traversable__Data_Functor_Const_Const_m_ *)
 
@@ -138,6 +138,41 @@ Local Definition instance_Traversable_Data_Proxy_Proxy_traverse : forall {f}
 
 (* Skipping instance instance_GHC_Base_Applicative__StateR_s_ *)
 
+(* Skipping instance instance_Traversable_GHC_Generics_V1 *)
+
+(* Skipping instance instance_Traversable_GHC_Generics_Par1 *)
+
+(* Skipping instance
+   instance_forall___Traversable_f___Traversable__GHC_Generics_Rec1_f_ *)
+
+(* Skipping instance instance_Traversable__GHC_Generics_K1_i_c_ *)
+
+(* Skipping instance
+   instance_forall___Traversable_f___Traversable__GHC_Generics_M1_i_c_f_ *)
+
+(* Skipping instance
+   instance_forall___Traversable_f____Traversable_g___Traversable__GHC_Generics_____f_g_ *)
+
+(* Skipping instance
+   instance_forall___Traversable_f____Traversable_g___Traversable__GHC_Generics_____f_g_ *)
+
+(* Skipping instance
+   instance_forall___Traversable_f____Traversable_g___Traversable__GHC_Generics_____f_g_ *)
+
+(* Skipping instance
+   instance_Traversable__GHC_Generics_URec__GHC_Ptr_Ptr_unit__ *)
+
+(* Skipping instance instance_Traversable__GHC_Generics_URec_GHC_Char_Char_ *)
+
+(* Skipping instance
+   instance_Traversable__GHC_Generics_URec_GHC_Types_Double_ *)
+
+(* Skipping instance instance_Traversable__GHC_Generics_URec_GHC_Types_Float_ *)
+
+(* Skipping instance instance_Traversable__GHC_Generics_URec_GHC_Num_Int_ *)
+
+(* Skipping instance instance_Traversable__GHC_Generics_URec_GHC_Num_Word_ *)
+
 Inductive Id a : Type := Mk_Id : a -> Id a.
 
 Arguments Mk_Id {_} _.
@@ -154,8 +189,8 @@ Local Definition instance_GHC_Base_Applicative_Id_pure : forall {a},
 Local Definition instance_GHC_Base_Functor_Id_fmap : forall {a} {b},
                                                        (a -> b) -> Id a -> Id b :=
   fun {a} {b} =>
-    fun arg_16__ arg_17__ =>
-      match arg_16__ , arg_17__ with
+    fun arg_92__ arg_93__ =>
+      match arg_92__ , arg_93__ with
         | f , (Mk_Id x) => Mk_Id (f x)
       end.
 
@@ -170,8 +205,8 @@ Instance instance_GHC_Base_Functor_Id : GHC.Base.Functor Id := {
 Local Definition instance_GHC_Base_Applicative_Id_op_zlztzg__ : forall {a} {b},
                                                                   Id (a -> b) -> Id a -> Id b :=
   fun {a} {b} =>
-    fun arg_12__ arg_13__ =>
-      match arg_12__ , arg_13__ with
+    fun arg_88__ arg_89__ =>
+      match arg_88__ , arg_89__ with
         | (Mk_Id f) , (Mk_Id x) => Mk_Id (f x)
       end.
 

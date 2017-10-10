@@ -2,7 +2,7 @@
 
 Generalizable All Variables.
 
-Set Implicit Arguments.
+Unset Implicit Arguments.
 Set Maximal Implicit Insertion.
 Unset Strict Implicit.
 Unset Printing Implicit Defensive.
@@ -40,6 +40,12 @@ Inductive Bag a : Type := Mk_EmptyBag : Bag a
                        |  Mk_ListBag : list a -> Bag a.
 
 Arguments Mk_EmptyBag {_}.
+
+Arguments Mk_UnitBag {_} _.
+
+Arguments Mk_TwoBags {_} _ _.
+
+Arguments Mk_ListBag {_} _.
 
 Definition unitBag {a} : a -> Bag a :=
   Mk_UnitBag.

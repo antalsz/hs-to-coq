@@ -183,6 +183,204 @@ Defined.
 (* Skipping instance
    instance_forall___GHC_Base_Alternative_f___GHC_Base_Monoid__Alt_f_a_ *)
 
+(* Translating `instance forall {f}, forall `{GHC.Base.Functor f},
+   GHC.Base.Functor (Alt f)' failed: type applications unsupported *)
+
+(* Translating `instance forall {f}, forall `{GHC.Base.Alternative f},
+   GHC.Base.Alternative (Alt f)' failed: type applications unsupported *)
+
+(* Translating `instance forall {f}, forall `{GHC.Base.Applicative f},
+   GHC.Base.Applicative (Alt f)' failed: type applications unsupported *)
+
+(* Translating `instance forall {f}, forall `{GHC.Base.MonadPlus f},
+   GHC.Base.MonadPlus (Alt f)' failed: type applications unsupported *)
+
+(* Translating `instance forall {f}, forall `{GHC.Base.Monad f}, GHC.Base.Monad
+   (Alt f)' failed: type applications unsupported *)
+
+(* Translating `instance forall {k} {f} {a}, forall `{GHC.Enum.Enum (f a)},
+   GHC.Enum.Enum (Alt f a)' failed: type applications unsupported *)
+
+(* Translating `instance forall {k} {f} {a}, forall `{GHC.Num.Num (f a)},
+   GHC.Num.Num (Alt f a)' failed: type applications unsupported *)
+
+(* Translating `instance forall {k} {f} {a}, forall `{GHC.Base.Ord (f a)},
+   GHC.Base.Ord (Alt f a)' failed: type applications unsupported *)
+
+(* Translating `instance forall {k} {f} {a}, forall `{GHC.Base.Eq_ (f a)},
+   GHC.Base.Eq_ (Alt f a)' failed: type applications unsupported *)
+
+(* Skipping instance
+   instance_forall___GHC_Show_Show__f_a____GHC_Show_Show__Alt_f_a_ *)
+
+(* Skipping instance
+   instance_forall___GHC_Read_Read__f_a____GHC_Read_Read__Alt_f_a_ *)
+
+(* Translating `instance forall {f}, GHC.Generics.Generic1 (Alt f)' failed:
+   OOPS! Cannot find information for class "GHC.Generics.Generic1" unsupported *)
+
+(* Translating `instance forall {k} {f} {a}, GHC.Generics.Generic (Alt f a)'
+   failed: OOPS! Cannot find information for class "GHC.Generics.Generic"
+   unsupported *)
+
+(* Translating `instance GHC.Base.Monad Last' failed: type applications
+   unsupported *)
+
+(* Translating `instance GHC.Base.Applicative Last' failed: type applications
+   unsupported *)
+
+(* Translating `instance GHC.Base.Functor Last' failed: type applications
+   unsupported *)
+
+(* Translating `instance GHC.Generics.Generic1 Last' failed: OOPS! Cannot find
+   information for class "GHC.Generics.Generic1" unsupported *)
+
+(* Translating `instance forall {a}, GHC.Generics.Generic (Last a)' failed:
+   OOPS! Cannot find information for class "GHC.Generics.Generic" unsupported *)
+
+(* Skipping instance
+   instance_forall___GHC_Show_Show_a___GHC_Show_Show__Last_a_ *)
+
+(* Skipping instance
+   instance_forall___GHC_Read_Read_a___GHC_Read_Read__Last_a_ *)
+
+(* Translating `instance forall {a}, forall `{GHC.Base.Ord a}, GHC.Base.Ord
+   (Last a)' failed: type applications unsupported *)
+
+(* Translating `instance forall {a}, forall `{GHC.Base.Eq_ a}, GHC.Base.Eq_
+   (Last a)' failed: type applications unsupported *)
+
+(* Translating `instance GHC.Base.Monad First' failed: type applications
+   unsupported *)
+
+(* Translating `instance GHC.Base.Applicative First' failed: type applications
+   unsupported *)
+
+(* Translating `instance GHC.Base.Functor First' failed: type applications
+   unsupported *)
+
+(* Translating `instance GHC.Generics.Generic1 First' failed: OOPS! Cannot find
+   information for class "GHC.Generics.Generic1" unsupported *)
+
+(* Translating `instance forall {a}, GHC.Generics.Generic (First a)' failed:
+   OOPS! Cannot find information for class "GHC.Generics.Generic" unsupported *)
+
+(* Skipping instance
+   instance_forall___GHC_Show_Show_a___GHC_Show_Show__First_a_ *)
+
+(* Skipping instance
+   instance_forall___GHC_Read_Read_a___GHC_Read_Read__First_a_ *)
+
+(* Translating `instance forall {a}, forall `{GHC.Base.Ord a}, GHC.Base.Ord
+   (First a)' failed: type applications unsupported *)
+
+(* Translating `instance forall {a}, forall `{GHC.Base.Eq_ a}, GHC.Base.Eq_
+   (First a)' failed: type applications unsupported *)
+
+(* Translating `instance forall {a}, forall `{GHC.Num.Num a}, GHC.Num.Num
+   (Product a)' failed: type applications unsupported *)
+
+(* Translating `instance GHC.Generics.Generic1 Product' failed: OOPS! Cannot
+   find information for class "GHC.Generics.Generic1" unsupported *)
+
+(* Translating `instance forall {a}, GHC.Generics.Generic (Product a)' failed:
+   OOPS! Cannot find information for class "GHC.Generics.Generic" unsupported *)
+
+(* Translating `instance forall {a}, forall `{GHC.Enum.Bounded a},
+   GHC.Enum.Bounded (Product a)' failed: type applications unsupported *)
+
+(* Skipping instance
+   instance_forall___GHC_Show_Show_a___GHC_Show_Show__Product_a_ *)
+
+(* Skipping instance
+   instance_forall___GHC_Read_Read_a___GHC_Read_Read__Product_a_ *)
+
+(* Translating `instance forall {a}, forall `{GHC.Base.Ord a}, GHC.Base.Ord
+   (Product a)' failed: type applications unsupported *)
+
+(* Translating `instance forall {a}, forall `{GHC.Base.Eq_ a}, GHC.Base.Eq_
+   (Product a)' failed: type applications unsupported *)
+
+(* Translating `instance forall {a}, forall `{GHC.Num.Num a}, GHC.Num.Num (Sum
+   a)' failed: type applications unsupported *)
+
+(* Translating `instance GHC.Generics.Generic1 Sum' failed: OOPS! Cannot find
+   information for class "GHC.Generics.Generic1" unsupported *)
+
+(* Translating `instance forall {a}, GHC.Generics.Generic (Sum a)' failed: OOPS!
+   Cannot find information for class "GHC.Generics.Generic" unsupported *)
+
+(* Translating `instance forall {a}, forall `{GHC.Enum.Bounded a},
+   GHC.Enum.Bounded (Sum a)' failed: type applications unsupported *)
+
+(* Skipping instance
+   instance_forall___GHC_Show_Show_a___GHC_Show_Show__Sum_a_ *)
+
+(* Skipping instance
+   instance_forall___GHC_Read_Read_a___GHC_Read_Read__Sum_a_ *)
+
+(* Translating `instance forall {a}, forall `{GHC.Base.Ord a}, GHC.Base.Ord (Sum
+   a)' failed: type applications unsupported *)
+
+(* Translating `instance forall {a}, forall `{GHC.Base.Eq_ a}, GHC.Base.Eq_ (Sum
+   a)' failed: type applications unsupported *)
+
+(* Translating `instance GHC.Generics.Generic Any' failed: OOPS! Cannot find
+   information for class "GHC.Generics.Generic" unsupported *)
+
+(* Translating `instance GHC.Enum.Bounded Any' failed: type applications
+   unsupported *)
+
+(* Skipping instance instance_GHC_Show_Show_Any *)
+
+(* Skipping instance instance_GHC_Read_Read_Any *)
+
+(* Translating `instance GHC.Base.Ord Any' failed: type applications
+   unsupported *)
+
+(* Translating `instance GHC.Base.Eq_ Any' failed: type applications
+   unsupported *)
+
+(* Translating `instance GHC.Generics.Generic All' failed: OOPS! Cannot find
+   information for class "GHC.Generics.Generic" unsupported *)
+
+(* Translating `instance GHC.Enum.Bounded All' failed: type applications
+   unsupported *)
+
+(* Skipping instance instance_GHC_Show_Show_All *)
+
+(* Skipping instance instance_GHC_Read_Read_All *)
+
+(* Translating `instance GHC.Base.Ord All' failed: type applications
+   unsupported *)
+
+(* Translating `instance GHC.Base.Eq_ All' failed: type applications
+   unsupported *)
+
+(* Translating `instance forall {a}, GHC.Generics.Generic (Endo a)' failed:
+   OOPS! Cannot find information for class "GHC.Generics.Generic" unsupported *)
+
+(* Translating `instance GHC.Generics.Generic1 Dual' failed: OOPS! Cannot find
+   information for class "GHC.Generics.Generic1" unsupported *)
+
+(* Translating `instance forall {a}, GHC.Generics.Generic (Dual a)' failed:
+   OOPS! Cannot find information for class "GHC.Generics.Generic" unsupported *)
+
+(* Translating `instance forall {a}, forall `{GHC.Enum.Bounded a},
+   GHC.Enum.Bounded (Dual a)' failed: type applications unsupported *)
+
+(* Skipping instance
+   instance_forall___GHC_Show_Show_a___GHC_Show_Show__Dual_a_ *)
+
+(* Skipping instance
+   instance_forall___GHC_Read_Read_a___GHC_Read_Read__Dual_a_ *)
+
+(* Translating `instance forall {a}, forall `{GHC.Base.Ord a}, GHC.Base.Ord
+   (Dual a)' failed: type applications unsupported *)
+
+(* Translating `instance forall {a}, forall `{GHC.Base.Eq_ a}, GHC.Base.Eq_
+   (Dual a)' failed: type applications unsupported *)
+
 Inductive Alt (f : Type -> Type) a : Type := Mk_Alt : f a -> Alt f a.
 
 Inductive Dual a : Type := Mk_Dual : a -> Dual a.

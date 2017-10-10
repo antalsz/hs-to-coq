@@ -1,2 +1,4 @@
 skip Down
 skip instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Down_a_
+skip instance_forall___GHC_Read_Read_a___GHC_Read_Read__Down_a_
+skip instance_forall___GHC_Show_Show_a___GHC_Show_Show__Down_a_

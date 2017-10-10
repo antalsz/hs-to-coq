@@ -528,6 +528,12 @@ Local Definition instance_Monad_list_op_zgzgze__ : forall {a} {b},
 
 (* Skipping instance instance_MonadPlus_GHC_Types_IO *)
 
+(* Translating `instance forall {a}, forall `{Ord a}, Ord (option a)' failed:
+   OOPS! Cannot find information for class "Ord" unsupported *)
+
+(* Translating `instance forall {a}, forall `{Eq_ a}, Eq_ (option a)' failed:
+   OOPS! Cannot find information for class "Eq_" unsupported *)
+
 Definition assert {a} : bool -> a -> a :=
   fun arg_51__ arg_52__ => match arg_51__ , arg_52__ with | _pred , r => r end.
 

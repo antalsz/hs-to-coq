@@ -149,8 +149,7 @@ convertClsInstDecl cid@ClsInstDecl{..} rebuild mhandler = do
 convertModuleClsInstDecls :: forall m. ConversionMonad m
                           => [(Maybe ModuleName, ClsInstDecl GHC.Name)] -> m [Sentence]
 convertModuleClsInstDecls = foldTraverse $ maybeWithCurrentModule .*^ \cid ->
-                               convertClsInstDecl cid rebuild
-                                                  (Just axiomatizeInstance)
+                               convertClsInstDecl cid rebuild (Just axiomatizeInstance)
   where rebuild :: InstanceDefinition -> m [Sentence]
         rebuild instdef = do
             let InstanceDefinition coq_name _ _ _ _ = instdef
@@ -164,9 +163,11 @@ convertModuleClsInstDecls = foldTraverse $ maybeWithCurrentModule .*^ \cid ->
         -- what to do if instance conversion fails
         -- make an axiom that admits the instance declaration
         axiomatizeInstance InstanceInfo{..} exn = pure
-          [ translationFailedComment ("instance " <> renderOneLineT (renderGallina instanceHead)) exn
-          , InstanceSentence $ InstanceDefinition
+          [ translationFailedComment ("instance " <> renderOneLineT (renderGallina instanceHead)) exn ]
+          {-
+          [, InstanceSentence $ InstanceDefinition
               instanceName [] instanceHead [] (Just $ ProofAdmitted "") ]
+          -}
 
 --------------------------------------------------------------------------------
 
@@ -273,8 +274,7 @@ topoSortInstance (InstanceDefinition instanceName params ty members mp) = go sor
                   in pure $ (instBnds, Just $ instSigType)
                 Nothing ->
                   convUnsupported ("Cannot find sig for " ++ show memberName)
-            _ -> convUnsupported
-                 ("OOPS! Cannot construct types for this class def: " ++ (show classDef) ++ "\n")
+            _ -> convUnsupported ("OOPS! Cannot find information for class " ++ show className)
 
         unFix :: Term -> Term
         unFix body = case body of
@@ -301,7 +301,12 @@ topoSortInstance (InstanceDefinition instanceName params ty members mp) = go sor
            (params, mty)  <- mkTy v
            body <- quantify  (toPrefix v) (subst sub (m M.! v))
            let sub' = M.insert v (Qualid (Bare v')) sub
-           pure ([ DefinitionSentence (DefinitionDef Local v' params mty (unFix body)) ], sub')
+
+           -- implement redefinitions of methods
+           use (edits.redefinitions.at v') >>= \case
+               Just redef -> pure ([ definitionSentence redef], sub')
+               Nothing    -> pure ([ DefinitionSentence (DefinitionDef Local v' params mty (unFix body)) ], sub')
+
         mkDefnGrp many _sub =
            -- TODO: mutual recursion
            convUnsupported ("Giving up on mutual recursion" ++ show many)

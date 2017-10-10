@@ -51,6 +51,15 @@ Require GHC.Base.
 
 (* Skipping instance instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Down_a_ *)
 
+(* Skipping instance
+   instance_forall___GHC_Read_Read_a___GHC_Read_Read__Down_a_ *)
+
+(* Skipping instance
+   instance_forall___GHC_Show_Show_a___GHC_Show_Show__Down_a_ *)
+
+(* Translating `instance forall {a}, forall `{GHC.Base.Eq_ a}, GHC.Base.Eq_
+   (Down a)' failed: type applications unsupported *)
+
 Definition comparing {a} {b} `{(GHC.Base.Ord a)}
     : (b -> a) -> b -> b -> comparison :=
   fun arg_0__ arg_1__ arg_2__ =>

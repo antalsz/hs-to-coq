@@ -5,3 +5,4 @@ skip instance_GHC_Read_Read_Void
 
 skip instance_GHC_Base_Ord_Void
 skip instance_GHC_Base_Eq__Void
+skip instance_Data_Data_Data_Void

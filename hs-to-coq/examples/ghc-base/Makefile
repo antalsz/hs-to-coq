@@ -31,7 +31,7 @@ HANDMOD = \
   Prelude\
   GHC/Prim \
   GHC/Tuple \
-  Data/Foldable \
+  Data/FoldableInst \
 
 # Generated modules
 # generated directly from GHC/libraries/base
@@ -51,7 +51,7 @@ MODULES = \
   Data/Traversable \
   Control/Monad/Fail \
   GHC/Base \
-
+  Data/Foldable \
 
 # generated from drop-in/
 DROPIN =

@@ -51,6 +51,7 @@ escapeReservedNames x =
 -- these type operators aren't parsed by the renaming file
           | x == "(->)"       -> pure $ ("arrow")
           | x == "(,)"        -> pure $ ("pair_type")
+          | x == "#."       -> pure $ ("hash_compose")  -- Data.Foldable
 -- Maybe add this as part of an Int# solution? But don't want to
 -- always replace these, if we make "Int#" a notation for "Int_h"
 --          | T.isInfixOf "#" x -> pure $ T.replace "#" "_h" x

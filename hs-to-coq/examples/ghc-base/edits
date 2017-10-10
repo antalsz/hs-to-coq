@@ -73,11 +73,23 @@ skip method Applicative op_zlzt__
 # constructor names. So rename them.
 
 rename value Data.Proxy.Proxy    = Data.Proxy.Mk_Proxy
+
 rename value Data.Monoid.Dual    = Data.Monoid.Mk_Dual
+rename value getDual = Data.Monoid.getDual
 rename value Data.Monoid.Sum     = Data.Monoid.Mk_Sum
+rename value getSum = Data.Monoid.getSum
 rename value Data.Monoid.Product = Data.Monoid.Mk_Product
+rename value getProduct = Data.Monoid.getProduct
 rename value Data.Monoid.First   = Data.Monoid.Mk_First
+rename value getFirst = Data.Monoid.getFirst
 rename value Data.Monoid.Last    = Data.Monoid.Mk_Last
+rename value getLast = Data.Monoid.getLast
 
 rename value getConst = Data.Functor.Const.getConst
 rename value Data.Functor.Const.Const = Data.Functor.Const.Mk_Const
+
+rename value getAny = Data.Monoid.getAny
+rename value Data.Monoid.Any = Data.Monoid.Mk_Any
+
+rename value getAll = Data.Monoid.getAll
+rename value Data.Monoid.All = Data.Monoid.Mk_All

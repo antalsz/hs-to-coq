@@ -9,6 +9,7 @@ Unset Printing Implicit Defensive.
 
 (* Preamble *)
 
+Require Data.FoldableInst.
 
 (* Converted imports: *)
 

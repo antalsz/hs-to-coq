@@ -15,7 +15,7 @@ module HsToCoq.Coq.Gallina.Util (
   _Ident, _UnderscoreName, nameToIdent,
   binderNames, binderIdents, binderExplicitness,
   -- ** Functions
-  qualidBase, qualidModule,
+  qualidBase, qualidModule, qualidMapBase,
   qualidToIdent, identToQualid, identToBase,
   nameToTerm, nameToPattern,
   binderArgs
@@ -113,6 +113,10 @@ qualidBase (Qualified _ aid) = aid
 qualidModule :: Qualid -> Maybe Qualid
 qualidModule (Bare      _)     = Nothing
 qualidModule (Qualified qid _) = Just qid
+
+qualidMapBase :: (Ident -> Ident) -> Qualid -> Qualid
+qualidMapBase f (Bare             base) = Bare             $ f base
+qualidMapBase f (Qualified prefix base) = Qualified prefix $ f base
 
 qualidToIdent :: Qualid -> Ident
 qualidToIdent (Bare      ident)   = ident

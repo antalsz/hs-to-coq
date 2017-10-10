@@ -18,6 +18,7 @@ import qualified Data.Text as T
 import Encoding (zEncodeString)
 
 import HsToCoq.Coq.Gallina
+import HsToCoq.Coq.Gallina.Util
 
 --------------------------------------------------------------------------------
 
@@ -45,8 +46,8 @@ infixToCoq_ :: Op -> Ident
 infixToCoq_ name = "op_" <> T.pack (zEncodeString $ T.unpack name) <> "__"
 
 infixToCoq :: Op -> Ident
-infixToCoq op = T.intercalate "." (init parts ++ [infixToCoq_ (last parts)])
-  where parts = T.splitOn "." op
+infixToCoq op =
+  maybe (infixToCoq_ op) (qualidToIdent . qualidMapBase infixToCoq_) $ identToQualid op
 
 toCoqName :: Op -> Ident
 toCoqName x | identIsVariable x = x

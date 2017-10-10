@@ -7,8 +7,8 @@ endif
 SHELL = bash
 
 # Edit this
-GENMODS = Compiler CompilerOrig CompilerRev
-MANMODS = Proofs   ProofsOrig   ProofsRev
+GENMODS = Compiler CompilerOrig CompilerRev CompilerRevP
+MANMODS = Proofs   ProofsOrig   ProofsRev ProofsRevP
 
 # Abstract stuff
 

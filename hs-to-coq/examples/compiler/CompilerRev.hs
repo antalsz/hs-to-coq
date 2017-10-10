@@ -29,7 +29,8 @@ exec (ADD : c) s = case s of
   _           -> Nothing
 
 
-
+comp :: Expr -> Code
+comp e = comp' e []
 
 comp' :: Expr -> Code -> Code
 comp' (Val n)   c = PUSH n:c

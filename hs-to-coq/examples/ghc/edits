@@ -4,13 +4,9 @@
 skip module Outputable
 skip module Util
 skip module Data.Data
-skip module Data.List
 
 # Needs Data.Traversable.mapAccumL
 skip mapAccumBagL
-
-# Needs MonadUtil.mapAccumLM
-skip mapAccumBagLM
 
 # Needs Util.partitionWith
 skip partitionBagWith
@@ -40,10 +36,3 @@ skip liftIO1
 skip liftIO2
 skip liftIO3
 skip liftIO4
-
-# UNDEFINED EVARS
-skip mapAccumLM
-skip mapAndUnzip3M
-skip mapAndUnzip4M
-skip mapAndUnzip5M
-skip zipWithAndUnzipM

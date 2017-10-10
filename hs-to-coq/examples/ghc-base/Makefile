@@ -24,7 +24,6 @@ HANDMOD = \
   GHC/Enum \
   Data/Bits \
   Data/Type/Equality \
-  Control/Arrow \
   Control/Category \
   Data/Functor/Const \
   GHC/BaseInstances \
@@ -52,6 +51,7 @@ MODULES = \
   Control/Monad/Fail \
   GHC/Base \
   Data/Foldable \
+  Control/Arrow \
 
 # generated from drop-in/
 DROPIN =

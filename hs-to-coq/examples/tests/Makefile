@@ -23,13 +23,13 @@ PASS = \
   FTP \
   AddAndReplace \
   FTPDefault \
+  PolyInstance2 \
   MutrecInst
 
 
 # tests that *should* pass but currently fail
 TODO_PASS  = \
   EqList \
-  PolyInstance2 \
   Endo \
   Expr \
   Mutrec \

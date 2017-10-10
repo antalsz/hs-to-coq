@@ -24,9 +24,8 @@ data Op = PUSH Int | ADD
 exec :: Code -> Stack -> Maybe Stack
 exec [] s = Just s
 exec (PUSH n : c) s = exec c (n : s)
-exec (ADD : c) s = case s of
-  (m : n : s) -> exec c (n+m : s)
-  _           -> Nothing
+exec (ADD : c) (m : n : s) =  exec c (n+m : s)
+exec _ _ = Nothing
 
 
 

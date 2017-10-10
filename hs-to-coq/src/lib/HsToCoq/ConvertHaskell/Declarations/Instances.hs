@@ -100,7 +100,7 @@ data InstanceInfo = InstanceInfo { instanceName  :: !Ident
 convertClsInstDeclInfo :: ConversionMonad m => ClsInstDecl GHC.Name -> m InstanceInfo
 convertClsInstDeclInfo ClsInstDecl{..} = do
   instanceName  <- convertInstanceName $ hsib_body cid_poly_ty
-  instanceHead  <- convertLType        $ hsib_body cid_poly_ty
+  instanceHead  <- convertLHsSigType cid_poly_ty
   instanceClass <- maybe (convUnsupported "strangely-formed instance heads")
                          (pure . renderOneLineT . renderGallina)
                     $ termHead instanceHead
@@ -111,8 +111,8 @@ convertClsInstDeclInfo ClsInstDecl{..} = do
 --------------------------------------------------------------------------------
 
 convertClsInstDecl :: ConversionMonad m
-                   => ClsInstDecl GHC.Name          -- Haskell Instance we are converting
-                   -> (InstanceDefinition -> m a)  -- Final "rebuilding" pass
+                   => ClsInstDecl GHC.Name        -- Haskell instance we are converting
+                   -> (InstanceDefinition -> m a) -- Final "rebuilding" pass
                    -> Maybe (InstanceInfo -> GhcException -> m a) -- error handling argument
                    -> m a
 convertClsInstDecl cid@ClsInstDecl{..} rebuild mhandler = do

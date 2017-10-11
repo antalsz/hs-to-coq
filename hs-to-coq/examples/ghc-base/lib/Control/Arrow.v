@@ -2,7 +2,7 @@
 
 Generalizable All Variables.
 
-Set Implicit Arguments.
+Unset Implicit Arguments.
 Set Maximal Implicit Insertion.
 Unset Strict Implicit.
 Unset Printing Implicit Defensive.
@@ -13,7 +13,11 @@ Open Scope type_scope.
 
 Inductive ArrowMonad (a : Type -> Type -> Type) b : Type := Mk_ArrowMonad : ((a unit b) -> ArrowMonad a b).
 
+Arguments Mk_ArrowMonad {_} {_} _.
+
 Inductive Kleisli (m : Type -> Type) a b : Type := Mk_Kleisli : (a -> m b) -> Kleisli m a b.
+
+Arguments Mk_Kleisli {_} {_} _.
 
 (* Converted imports: *)
 
@@ -220,13 +224,13 @@ Local Definition instance_forall___Arrow_a___GHC_Base_Functor__ArrowMonad_a__op_
                                                                        x).
 
 Instance instance_forall___Arrow_a___GHC_Base_Functor__ArrowMonad_a_
-  : !forall {a}, forall `{Arrow a}, GHC.Base.Functor (ArrowMonad a) := {
+  : forall {a}, forall `{Arrow a}, GHC.Base.Functor (ArrowMonad a) := {
   fmap := fun {a} {b} =>
     instance_forall___Arrow_a___GHC_Base_Functor__ArrowMonad_a__fmap ;
   op_zlzd__ := fun {a} {b} =>
     instance_forall___Arrow_a___GHC_Base_Functor__ArrowMonad_a__op_zlzd__ }.
 
-Instance instance_Arrow_GHC_Prim_arrow : !Arrow GHC.Prim.arrow := {
+Instance instance_Arrow_GHC_Prim_arrow : Arrow GHC.Prim.arrow := {
   arr := fun {b} {c} => instance_Arrow_GHC_Prim_arrow_arr ;
   first := fun {b} {c} {d} => instance_Arrow_GHC_Prim_arrow_first ;
   op_zazaza__ := fun {b} {c} {c'} => instance_Arrow_GHC_Prim_arrow_op_zazaza__ ;
@@ -234,7 +238,7 @@ Instance instance_Arrow_GHC_Prim_arrow : !Arrow GHC.Prim.arrow := {
     instance_Arrow_GHC_Prim_arrow_op_ztztzt__ ;
   second := fun {b} {c} {d} => instance_Arrow_GHC_Prim_arrow_second }.
 
-Instance instance_ArrowApply_GHC_Prim_arrow : !ArrowApply GHC.Prim.arrow := {
+Instance instance_ArrowApply_GHC_Prim_arrow : ArrowApply GHC.Prim.arrow := {
   app := fun {b} {c} => instance_ArrowApply_GHC_Prim_arrow_app }.
 
 (* Unbound variables:

@@ -31,6 +31,7 @@ library
                      , HsToCoq.Util.GHC.HsExpr
                      , HsToCoq.Util.GHC.Exception
                      , HsToCoq.Util.GHC.Monad
+                     , HsToCoq.Util.GHC.Deriving
                      , HsToCoq.Util.Function
                      , HsToCoq.Util.Functor
                      , HsToCoq.Util.Foldable

@@ -2,7 +2,7 @@
 
 Generalizable All Variables.
 
-Set Implicit Arguments.
+Unset Implicit Arguments.
 Set Maximal Implicit Insertion.
 Unset Strict Implicit.
 Unset Printing Implicit Defensive.
@@ -26,10 +26,10 @@ Local Definition instance_MonadFail_list_fail : forall {a},
 Class MonadFail m `{GHC.Base.Monad m} := {
   fail : forall {a}, GHC.Base.String -> m a }.
 
-Instance instance_MonadFail_list : !MonadFail list := {
+Instance instance_MonadFail_list : MonadFail list := {
   fail := fun {a} => instance_MonadFail_list_fail }.
 
-Instance instance_MonadFail_option : !MonadFail option := {
+Instance instance_MonadFail_option : MonadFail option := {
   fail := fun {a} => instance_MonadFail_option_fail }.
 
 (* Unbound variables:

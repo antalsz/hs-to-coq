@@ -2,7 +2,7 @@
 
 Generalizable All Variables.
 
-Set Implicit Arguments.
+Unset Implicit Arguments.
 Set Maximal Implicit Insertion.
 Unset Strict Implicit.
 Unset Printing Implicit Defensive.
@@ -24,6 +24,11 @@ Require GHC.Base.
 (* Skipping instance instance_GHC_Arr_Ix_Void *)
 
 (* Skipping instance instance_GHC_Exception_Exception_Void *)
+
+(* Translating `instance GHC.Generics.Generic Void' failed: OOPS! Cannot find
+   information for class "GHC.Generics.Generic" unsupported *)
+
+(* Skipping instance instance_Data_Data_Data_Void *)
 
 Inductive Void : Type :=.
 

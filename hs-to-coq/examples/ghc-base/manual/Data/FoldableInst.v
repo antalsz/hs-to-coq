@@ -17,19 +17,13 @@ Require Data.Ord.
 Require Data.Proxy.
 Require GHC.Base.
 Require GHC.Num.
+
 Require Coq.Program.Basics.
 
 Definition zero : BinNums.Z := BinNums.Z0.
 Definition one  : BinNums.Z := BinNums.Zpos BinNums.xH.
 
 Require Import Data.Foldable.
-
-Definition anyWith {t} {a} (foldMap : (forall {m} {a}, forall `{GHC.Base.Monoid m}, (a -> m) -> t a -> m))  : (a -> bool) -> t a -> bool :=
-  fun arg_108__ x =>
-    match arg_108__ with
-      | p => Data.Monoid.getAny (foldMap (fun y => Data.Monoid.Mk_Any (p y)) x)
-    end.
-
 
 Local Definition instance_Foldable__sum_a__null : forall {a} {b},
                                                     (a + b) -> bool :=
@@ -75,28 +69,32 @@ Local Definition instance_Foldable__sum_a__foldl' : forall{a0} {b} {a},
                          instance_Foldable__sum_a__foldr f' GHC.Base.id xs z0
       end.
 
-Local Definition instance_Foldable__sum_a__foldMap : forall {a0}{m} {a},
-                                                       forall `{GHC.Base.Monoid m}, (a -> m) -> (a + a0) -> m :=
+Local Definition instance_Foldable__sum_a__foldMap :
+  forall {a0}{m} {a},
+  forall `{GHC.Base.Monoid m}, (a -> m) -> (a0 + a) -> m :=
   fun {a0} {m} {a} `{GHC.Base.Monoid m} =>
     fun arg_295__ arg_296__ =>
       match arg_295__ , arg_296__ with
-        | _ , (inr _) => GHC.Base.mempty
-        | f , (inl y) => f y
+        | _ , (inl _) => GHC.Base.mempty
+        | f , (inr y) => f y
       end.
 
 
-Local Definition instance_Foldable__sum_a__product : forall {a}{a0},
-                                                       forall `{GHC.Num.Num a}, (a + a0) -> a :=
+Local Definition instance_Foldable__sum_a__product :
+  forall {a}{a0},
+  forall `{GHC.Num.Num a}, (a0 + a) -> a :=
   fun {a}{a0} `{GHC.Num.Num a} x =>
     Data.Monoid.getProduct (instance_Foldable__sum_a__foldMap Data.Monoid.Mk_Product x).
 
-Local Definition instance_Foldable__sum_a__sum : forall {a}{a0},
-                                                   forall `{GHC.Num.Num a}, (a + a0) -> a :=
+Local Definition instance_Foldable__sum_a__sum :
+  forall {a}{a0},
+  forall `{GHC.Num.Num a}, (a0 + a) -> a :=
   fun {a}{a0} `{GHC.Num.Num a} x =>
     Data.Monoid.getSum (instance_Foldable__sum_a__foldMap Data.Monoid.Mk_Sum x).
 
-Local Definition instance_Foldable__sum_a__fold : forall {a}{m},
-                                                    forall `{GHC.Base.Monoid m}, (m + a) -> m :=
+Local Definition instance_Foldable__sum_a__fold :
+  forall {a}{m},
+  forall `{GHC.Base.Monoid m}, (a + m) -> m :=
   fun {a}{m} `{GHC.Base.Monoid m} =>
     instance_Foldable__sum_a__foldMap GHC.Base.id.
 
@@ -191,6 +189,13 @@ Local Definition instance_Foldable_option_fold : forall {m},
   fun {m} `{GHC.Base.Monoid m} =>
     instance_Foldable_option_foldMap GHC.Base.id.
 
+Definition anyWith {t} {a} (foldMap : (forall {m} {a}, forall `{GHC.Base.Monoid m}, (a -> m) -> t a -> m))  : (a -> bool) -> t a -> bool :=
+  fun arg_108__ x =>
+    match arg_108__ with
+      | p => Data.Monoid.getAny (foldMap (fun y => Data.Monoid.Mk_Any (p y)) x)
+    end.
+
+
 Local Definition instance_Foldable_option_elem : forall {a},
                                                    forall `{GHC.Base.Eq_ a}, a -> option a -> bool :=
   fun {a} `{GHC.Base.Eq_ a} => Coq.Program.Basics.compose (anyWith (fun _ _ _ => instance_Foldable_option_foldMap)) GHC.Base.op_zeze__.
@@ -209,3 +214,12 @@ Instance instance_Foldable_option : !Foldable option := {
   product := fun {a} `{GHC.Num.Num a} => instance_Foldable_option_product ;
   sum := fun {a} `{GHC.Num.Num a} => instance_Foldable_option_sum ;
   toList := fun {a} => instance_Foldable_option_toList }.
+
+
+
+Local Definition instance_Foldable__sum_a__elem :
+forall {b}{a},
+forall `{GHC.Base.Eq_ a}, a -> Datatypes.sum b a -> bool :=
+  fun {b}{a} `{GHC.Base.Eq_ a} =>
+    Coq.Program.Basics.compose
+      (anyWith (fun _ _ _ => instance_Foldable__sum_a__foldMap)) GHC.Base.op_zeze__.

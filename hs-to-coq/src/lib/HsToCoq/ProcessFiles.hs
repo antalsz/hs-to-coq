@@ -15,6 +15,7 @@ import System.Directory
 import GHC
 
 import HsToCoq.ConvertHaskell.Monad
+import HsToCoq.Util.GHC.Deriving
 
 --------------------------------------------------------------------------------
 
@@ -23,6 +24,7 @@ data ProcessingMode = Recursive | NonRecursive
 
 processFiles :: ConversionMonad m => ProcessingMode -> [FilePath] -> m (Maybe [TypecheckedModule])
 processFiles mode files = do
+  initForDeriving
   traverse_ (addTarget <=< (guessTarget ?? Nothing)) files
   load LoadAllTargets >>= \case
     Succeeded -> Just <$> do
@@ -33,7 +35,7 @@ processFiles mode files = do
           filePaths <- S.fromList . map Just <$> canonicalizePaths files
           let moduleFile = canonicalizePaths . ml_hs_file . ms_location
           pure . filterM $ fmap (`S.member` filePaths) . moduleFile
-      traverse (typecheckModule <=< parseModule)
+      traverse (addDerivedInstances <=< typecheckModule <=< parseModule)
         =<< skipModulesBy ms_mod_name
         =<< filterModules
         =<< getModuleGraph

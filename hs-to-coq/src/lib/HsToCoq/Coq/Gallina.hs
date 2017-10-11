@@ -1004,7 +1004,7 @@ instance Gallina ClassDefinition where
 
 instance Gallina InstanceDefinition where
   renderGallina' _ (InstanceDefinition inst params cl defns mpf) =
-    "Instance" <+> renderIdent inst <> spaceIf params <> render_args_ty H params (Bang cl)
+    "Instance" <+> renderIdent inst <> spaceIf params <> render_args_ty H params cl
                <+> nest 2 (":=" </> "{" <> lineIf defns
                                         <> sepWith (<+>) (<!>) ";" (map (\(f,def) -> renderIdent f <+> ":=" <+> renderGallina def) defns)
                                         <> spaceIf defns <> "}.")

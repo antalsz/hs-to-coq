@@ -2,7 +2,7 @@
 
 Generalizable All Variables.
 
-Set Implicit Arguments.
+Unset Implicit Arguments.
 Set Maximal Implicit Insertion.
 Unset Strict Implicit.
 Unset Printing Implicit Defensive.
@@ -14,6 +14,7 @@ Require Import GHC.Num.
 
 (* Converted data type declarations: *)
 Inductive Down a : Type := Mk_Down : a -> Down a.
+Arguments Mk_Down {_}.
 
 Instance instance_Down_Eq {a} `(Eq_ a) : Eq_ (Down a) := {
   op_zeze__ := (fun x y =>
@@ -49,6 +50,15 @@ Require GHC.Base.
 (* Converted declarations: *)
 
 (* Skipping instance instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Down_a_ *)
+
+(* Skipping instance
+   instance_forall___GHC_Read_Read_a___GHC_Read_Read__Down_a_ *)
+
+(* Skipping instance
+   instance_forall___GHC_Show_Show_a___GHC_Show_Show__Down_a_ *)
+
+(* Translating `instance forall {a}, forall `{GHC.Base.Eq_ a}, GHC.Base.Eq_
+   (Down a)' failed: type applications unsupported *)
 
 Definition comparing {a} {b} `{(GHC.Base.Ord a)}
     : (b -> a) -> b -> b -> comparison :=

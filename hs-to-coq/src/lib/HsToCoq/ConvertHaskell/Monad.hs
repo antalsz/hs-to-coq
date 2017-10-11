@@ -108,7 +108,20 @@ builtInDataCons =
 
 builtInClasses :: [ClassDefinition]
 builtInClasses =
-    [ ClassDefinition "Monoid" [Inferred Explicit (Ident "a")] Nothing
+    [ ClassDefinition "GHC.Base.Eq_" [Inferred Explicit (Ident "a")] Nothing
+        [ "op_zeze__" =: Var "a" `Arrow` Var "a" `Arrow` Var "bool"
+        , "op_zsze__" =: Var "a" `Arrow` Var "a" `Arrow` Var "bool"
+        ]
+    , ClassDefinition "GHC.Base.Ord" [Inferred Explicit (Ident "a")] Nothing
+        [ "op_zl__"   =: Var "a" `Arrow` Var "a" `Arrow` Var "bool"
+        , "op_zlze__" =: Var "a" `Arrow` Var "a" `Arrow` Var "bool"
+        , "op_zg__"   =: Var "a" `Arrow` Var "a" `Arrow` Var "bool"
+        , "op_zgze__" =: Var "a" `Arrow` Var "a" `Arrow` Var "bool"
+        , "compare"   =: Var "a" `Arrow` Var "a" `Arrow` Var "comparison"
+        , "min"       =: Var "a" `Arrow` Var "a" `Arrow` Var "a"
+        , "max"       =: Var "a" `Arrow` Var "a" `Arrow` Var "a"
+        ]
+    , ClassDefinition "Monoid" [Inferred Explicit (Ident "a")] Nothing
         [ "mappend" =: Var "a" `Arrow` Var "a" `Arrow` Var "a"
         , "mempty"  =: Var "a"
         , "mconcat" =: (Var "list" `App1` Var "a") `Arrow` Var "a"
@@ -211,7 +224,11 @@ builtInDefaultMethods :: Map Ident (Map Ident Term)
 builtInDefaultMethods = fmap M.fromList $ M.fromList
     [ "Eq" =:
         [ "==" ~> Fun [arg "x", arg "y"] (App1 (Var "negb") $ Infix (Var "x") "/=" (Var "y"))
-        , "/=" ~> Fun [arg "x", arg "y"] (App1 (Var "negb") $ Infix (Var "x") "==" (Var "y")) 
+        , "/=" ~> Fun [arg "x", arg "y"] (App1 (Var "negb") $ Infix (Var "x") "==" (Var "y"))
+        ]
+    , "GHC.Base.Ord" =:
+        [ "max" ~> Fun [arg "x", arg "y"] (ifBool (App2 (Var "op_zlze__") (Var "x") (Var "y")) (Var "y") (Var "x"))
+        , "min" ~> Fun [arg "x", arg "y"] (ifBool (App2 (Var "op_zlze__") (Var "x") (Var "y")) (Var "x") (Var "y"))
         ]
     , "GHC.Base.Functor" =:
         [ "op_zlzd__" ~> Fun [arg "x"] (App1 (Var "fmap") (App1 (Var "GHC.Base.const") (Var "x")))

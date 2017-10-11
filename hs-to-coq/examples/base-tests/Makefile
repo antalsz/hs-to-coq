@@ -9,37 +9,11 @@ endif
 
 # tests that should pass
 PASS = \
-  Simple \
-  Self \
-  Poly \
-  Irrefutable \
-  InstCtx \
-  Guard2 \
-  ExhaustGuard \
-  PartialAppliedPolyDataCon \
-  PatternGuard \
-  MapAccumR \
-  Sub \
-  FTP \
-  AddAndReplace \
-  FTPDefault \
-  PolyInstance2 \
-  PolyInstance3 \
-  MutrecInst
+  Deriv
 
 
 # tests that *should* pass but currently fail
 TODO_PASS  = \
-  EqList \
-  Endo \
-  Expr \
-  Mutrec \
-  DotName \
-  PaperExamples \
-  OpTyCon \
-  Successors \
-  Existential \
-  Bits
 
 MODULES = $(PASS) $(TODO_PASS)
 
@@ -47,8 +21,7 @@ VFILES    = $(addsuffix .v,$(MODULES))
 VOFILES   = $(patsubst %.v,%.vo,$(VFILES))
 COQFLAGS  = ""
 
-# typecheck *quietly*
-TYPECHECK=coqc 1>/dev/null
+TYPECHECK=coqc -Q ../ghc-base/lib/ '' 
 
 main:
 	# Call ourselves with -k, so that we see all test outputs,
@@ -83,14 +56,14 @@ todo_pass: $(foreach f,$(TODO_PASS),$(f).fail)
 	 fi
 
 %.vo : %.v
-	@coqc $*.v
+	$(TYPECHECK) $*.v
 
 .SECONDEXPANSION:
-%.v : FORCE $$(wildcard $*/edits) renamings $$(wildcard $*/preamble.v) %.hs
+%.v : FORCE $$(wildcard $*/edits) $$(wildcard $*/preamble.v) %.hs
 	@rm -f $*.v
 	@if [ -e $*/preamble.v ]; then P_ARG="-p $*/preamble.v"; else P_ARG=; fi;\
 	if [ -e $*/edits ]; then E_ARG="-e $*/edits"; else E_ARG=; fi;\
-	$(HS_TO_COQ) $${E_ARG} -e renamings -o . $${P_ARG} $*.hs 1>/dev/null
+	$(HS_TO_COQ) $${E_ARG} -e ../ghc-base/edits -o . $${P_ARG} $*.hs 1>/dev/null
 
 # We always want to re-build the .v files, to test the current build of hs-to-coq
 FORCE:

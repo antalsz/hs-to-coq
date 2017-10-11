@@ -41,6 +41,7 @@ Instance instance_GHC_Base_Monoid_Any : !GHC.Base.Monoid Any := {
 
 
 Inductive First a : Type := Mk_First : option a -> First a.
+Arguments Mk_First {_}.
 
 Definition getFirst {a} (arg_3__ : First a) :=
   match arg_3__ with
@@ -59,6 +60,7 @@ Instance instance_GHC_Base_Monoid__First_a_ : !GHC.Base.Monoid (First a) :=
    mconcat := foldr mappend_First mempty_First }.
 
 Inductive Last a : Type := Mk_Last : option a -> Last a.
+Arguments Mk_Last {_}.
 
 Definition getLast {a} (arg_2__ : Last a) :=
   match arg_2__ with
@@ -78,6 +80,7 @@ Instance instance_GHC_Base_Monoid__Last_a_ : !GHC.Base.Monoid (Last a) :=
 
 
 Inductive Product a : Type := Mk_Product : a -> Product a.
+Arguments Mk_Product {_}.
 
 Definition getProduct {a} (arg_1__ : Product a) :=
   match arg_1__ with
@@ -102,6 +105,7 @@ Defined.
 
 
 Inductive Sum a : Type := Mk_Sum : a -> Sum a.
+Arguments Mk_Sum {_}.
 
 Definition getSum {a} (arg_1__ : Sum a) :=
   match arg_1__ with

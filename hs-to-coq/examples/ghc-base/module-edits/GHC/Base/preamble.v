@@ -10,12 +10,6 @@ be defined in this module so that we can create instances for these types.
 
  *)
 
-Generalizable All Variables.
-Set Implicit Arguments.
-Set Maximal Implicit Insertion.
-Unset Strict Implicit.
-Unset Printing Implicit Defensive.
-
 
 (********************* Types ************************)
 
@@ -258,7 +252,7 @@ Definition compare_comparison  (x : comparison) (y: comparison) :=
 end.
 
 Definition ord_default {a} (comp : a -> a -> comparison) `{Eq_ a} :=
-  Build_Ord _
+  Build_Ord _ _
   (fun x y => (comp x y) == Lt)
   ( fun x y => negb ((comp x y) == Lt))
   (fun x y => (comp y x) == Lt)

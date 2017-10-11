@@ -2,7 +2,7 @@
 
 Generalizable All Variables.
 
-Set Implicit Arguments.
+Unset Implicit Arguments.
 Set Maximal Implicit Insertion.
 Unset Strict Implicit.
 Unset Printing Implicit Defensive.
@@ -92,22 +92,22 @@ Local Definition instance_Foldable_list_toList : forall {a}, list a -> list a :=
 Local Definition instance_Foldable_Data_Proxy_Proxy_elem : forall {a},
                                                              forall `{GHC.Base.Eq_ a},
                                                                a -> Data.Proxy.Proxy a -> bool :=
-  fun {a} `{GHC.Base.Eq_ a} => fun arg_269__ arg_270__ => false.
+  fun {a} `{GHC.Base.Eq_ a} => fun arg_408__ arg_409__ => false.
 
 Local Definition instance_Foldable_Data_Proxy_Proxy_fold : forall {m},
                                                              forall `{GHC.Base.Monoid m}, Data.Proxy.Proxy m -> m :=
-  fun {m} `{GHC.Base.Monoid m} => fun arg_248__ => GHC.Base.mempty.
+  fun {m} `{GHC.Base.Monoid m} => fun arg_387__ => GHC.Base.mempty.
 
 Local Definition instance_Foldable_Data_Proxy_Proxy_foldMap : forall {m} {a},
                                                                 forall `{GHC.Base.Monoid m},
                                                                   (a -> m) -> Data.Proxy.Proxy a -> m :=
-  fun {m} {a} `{GHC.Base.Monoid m} => fun arg_246__ arg_247__ => GHC.Base.mempty.
+  fun {m} {a} `{GHC.Base.Monoid m} => fun arg_385__ arg_386__ => GHC.Base.mempty.
 
 Local Definition instance_Foldable_Data_Proxy_Proxy_foldl : forall {b} {a},
                                                               (b -> a -> b) -> b -> Data.Proxy.Proxy a -> b :=
   fun {b} {a} =>
-    fun arg_253__ arg_254__ arg_255__ =>
-      match arg_253__ , arg_254__ , arg_255__ with
+    fun arg_392__ arg_393__ arg_394__ =>
+      match arg_392__ , arg_393__ , arg_394__ with
         | _ , z , _ => z
       end.
 
@@ -127,8 +127,8 @@ Local Definition instance_Foldable_Data_Proxy_Proxy_foldr' : forall {a} {b},
 Local Definition instance_Foldable_Data_Proxy_Proxy_foldr : forall {a} {b},
                                                               (a -> b -> b) -> b -> Data.Proxy.Proxy a -> b :=
   fun {a} {b} =>
-    fun arg_249__ arg_250__ arg_251__ =>
-      match arg_249__ , arg_250__ , arg_251__ with
+    fun arg_388__ arg_389__ arg_390__ =>
+      match arg_388__ , arg_389__ , arg_390__ with
         | _ , z , _ => z
       end.
 
@@ -158,19 +158,19 @@ Local Definition instance_Foldable_Data_Proxy_Proxy_foldl' : forall {b} {a},
 
 Local Definition instance_Foldable_Data_Proxy_Proxy_length : forall {a},
                                                                Data.Proxy.Proxy a -> GHC.Num.Int :=
-  fun {a} => fun arg_265__ => GHC.Num.fromInteger 0.
+  fun {a} => fun arg_404__ => GHC.Num.fromInteger 0.
 
 Local Definition instance_Foldable_Data_Proxy_Proxy_null : forall {a},
                                                              Data.Proxy.Proxy a -> bool :=
-  fun {a} => fun arg_268__ => true.
+  fun {a} => fun arg_407__ => true.
 
 Local Definition instance_Foldable_Data_Proxy_Proxy_product : forall {a},
                                                                 forall `{GHC.Num.Num a}, Data.Proxy.Proxy a -> a :=
-  fun {a} `{GHC.Num.Num a} => fun arg_274__ => GHC.Num.fromInteger 1.
+  fun {a} `{GHC.Num.Num a} => fun arg_413__ => GHC.Num.fromInteger 1.
 
 Local Definition instance_Foldable_Data_Proxy_Proxy_sum : forall {a},
                                                             forall `{GHC.Num.Num a}, Data.Proxy.Proxy a -> a :=
-  fun {a} `{GHC.Num.Num a} => fun arg_271__ => GHC.Num.fromInteger 0.
+  fun {a} `{GHC.Num.Num a} => fun arg_410__ => GHC.Num.fromInteger 0.
 
 (* Skipping instance instance_Foldable_Data_Monoid_Dual *)
 
@@ -190,8 +190,41 @@ Local Definition instance_Foldable_Data_Proxy_Proxy_sum : forall {a},
 
 (* Skipping instance instance_Foldable_GHC_Generics_U1 *)
 
-Definition hash_compose :=
-  (@Coq.Program.Basics.compose).
+(* Skipping instance instance_Foldable_GHC_Generics_V1 *)
+
+(* Skipping instance instance_Foldable_GHC_Generics_Par1 *)
+
+(* Skipping instance
+   instance_forall___Foldable_f___Foldable__GHC_Generics_Rec1_f_ *)
+
+(* Skipping instance instance_Foldable__GHC_Generics_K1_i_c_ *)
+
+(* Skipping instance
+   instance_forall___Foldable_f___Foldable__GHC_Generics_M1_i_c_f_ *)
+
+(* Skipping instance
+   instance_forall___Foldable_f____Foldable_g___Foldable__GHC_Generics_____f_g_ *)
+
+(* Skipping instance
+   instance_forall___Foldable_f____Foldable_g___Foldable__GHC_Generics_____f_g_ *)
+
+(* Skipping instance
+   instance_forall___Foldable_f____Foldable_g___Foldable__GHC_Generics_____f_g_ *)
+
+(* Skipping instance instance_Foldable__GHC_Generics_URec__GHC_Ptr_Ptr_unit__ *)
+
+(* Skipping instance instance_Foldable__GHC_Generics_URec_GHC_Char_Char_ *)
+
+(* Skipping instance instance_Foldable__GHC_Generics_URec_GHC_Types_Double_ *)
+
+(* Skipping instance instance_Foldable__GHC_Generics_URec_GHC_Types_Float_ *)
+
+(* Skipping instance instance_Foldable__GHC_Generics_URec_GHC_Num_Int_ *)
+
+(* Skipping instance instance_Foldable__GHC_Generics_URec_GHC_Num_Word_ *)
+
+Definition hash_compose {a} {b} {c} :=
+  (@Coq.Program.Basics.compose a b c).
 
 Class Foldable t := {
   elem : forall {a}, forall `{GHC.Base.Eq_ a}, a -> t a -> bool ;
@@ -308,7 +341,7 @@ Definition all {t} {a} `{Foldable t} : (a -> bool) -> t a -> bool :=
                                                                     p))
     end.
 
-Instance instance_Foldable_Data_Proxy_Proxy : !Foldable Data.Proxy.Proxy := {
+Instance instance_Foldable_Data_Proxy_Proxy : Foldable Data.Proxy.Proxy := {
   elem := fun {a} `{GHC.Base.Eq_ a} => instance_Foldable_Data_Proxy_Proxy_elem ;
   fold := fun {m} `{GHC.Base.Monoid m} =>
     instance_Foldable_Data_Proxy_Proxy_fold ;
@@ -325,7 +358,7 @@ Instance instance_Foldable_Data_Proxy_Proxy : !Foldable Data.Proxy.Proxy := {
   sum := fun {a} `{GHC.Num.Num a} => instance_Foldable_Data_Proxy_Proxy_sum ;
   toList := fun {a} => instance_Foldable_Data_Proxy_Proxy_toList }.
 
-Instance instance_Foldable_list : !Foldable list := {
+Instance instance_Foldable_list : Foldable list := {
   elem := fun {a} `{GHC.Base.Eq_ a} => instance_Foldable_list_elem ;
   fold := fun {m} `{GHC.Base.Monoid m} => instance_Foldable_list_fold ;
   foldMap := fun {m} {a} `{GHC.Base.Monoid m} => instance_Foldable_list_foldMap ;
@@ -366,12 +399,16 @@ Definition concat {t} {a} `{Foldable t} : t (list a) -> list a :=
 
 Inductive Max a : Type := Mk_Max : option a -> Max a.
 
+Arguments Mk_Max {_} _.
+
 Definition getMax {a} (arg_75__ : Max a) :=
   match arg_75__ with
     | (Mk_Max getMax) => getMax
   end.
 
 Inductive Min a : Type := Mk_Min : option a -> Min a.
+
+Arguments Mk_Min {_} _.
 
 Definition getMin {a} (arg_74__ : Min a) :=
   match arg_74__ with

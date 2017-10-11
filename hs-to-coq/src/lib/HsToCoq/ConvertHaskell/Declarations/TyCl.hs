@@ -203,48 +203,25 @@ convertDeclarationGroup DeclarationGroup{..} = case (nonEmpty dgInductives, nonE
 -- TODO: GADTs.
 -- TODO: Keep the argument specifiers with the data types.
 generateArgumentSpecifiers :: ConversionMonad m => IndBody -> m [Arguments]
-generateArgumentSpecifiers (IndBody tyName params _resTy cons)
+generateArgumentSpecifiers (IndBody _ params _resTy cons)
   | null params = pure []
-  | otherwise   = traverse setImplicits $ filter missingParameter cons
+  | otherwise   = catMaybes <$> traverse setImplicits cons
   where
-    missingParameter (_,args,resTy) =
-      let fvs = getFreeVars (maybeForall args . fromMaybe Underscore $ snipResult =<< resTy)
-      in not $ allOf (each.binderIdents) (`S.member` fvs) params
-      -- Given a constructor @C : a -> b -> T a b c@, 'snipResult' changes the
-      -- type to @a -> b -> _@ before checking for free variables.  Otherwise,
-      -- we'll always see the free variables because they're in the result type!
-      -- See below.
-    
-    setImplicits (con,_,_) = do
-      fieldCount <- use (constructorFields.at con) >>= \case
-        Just (NonRecordFields count)     -> pure count
-        Just (RecordFields    conFields) -> pure $ length conFields
-        Nothing                          ->
-          throwProgramError $  "internal error: unknown constructor `"
-                            <> T.unpack con <> "' for type `"
-                            <> T.unpack tyName <> "'"
-      
-      pure . Arguments Nothing (Bare con)
-               $  replicate paramCount (underscoreArg ArgMaximal)
-               ++ replicate fieldCount (underscoreArg ArgExplicit)
-    
-    paramCount = length params
-    
-    underscoreArg eim = ArgumentSpec eim UnderscoreName Nothing
-    
-    -- 'snipResult' drills down to the result type of the constructor and
-    -- removes it if it's a type application of the type being defined
-    snipResult (Forall bs t)  = Forall bs <$> snipResult t
-    snipResult (Arrow  t1 t2) = Arrow  t1 <$> snipResult t2
-    snipResult ty             = snipTypeApp ty
+    setImplicits (con,_,_) = use (constructorFields.at con) >>= \case
+        -- Ignore cons we do not know anythings about
+        -- (e.g. because they are skipped or redefined)
+        Nothing -> pure Nothing
+        Just fields -> do
+          let fieldCount = case fields of NonRecordFields count -> count
+                                          RecordFields conFields -> length conFields
 
-    -- 'snipTypeApp' checks if the result type is correctly an application of
-    -- the type being defined; if it is, we remove it, and if it's not, we
-    -- abandon the whole thing and definitely generate an @Arguments@
-    -- specification.
-    snipTypeApp (App f _) | f == Var tyName = Just Underscore
-                          | otherwise       = snipTypeApp f
-    snipTypeApp _                           = Nothing
+          pure . Just . Arguments Nothing (Bare con)
+                   $  replicate paramCount (underscoreArg ArgMaximal)
+                   ++ replicate fieldCount (underscoreArg ArgExplicit)
+
+    paramCount = length params
+
+    underscoreArg eim = ArgumentSpec eim UnderscoreName Nothing
 
 generateGroupArgumentSpecifiers :: ConversionMonad m => DeclarationGroup -> m [Sentence]
 generateGroupArgumentSpecifiers = fmap (fmap ArgumentsSentence)

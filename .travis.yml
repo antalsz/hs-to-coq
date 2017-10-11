@@ -73,6 +73,7 @@ script:
  # Build base theory
  - make -C examples/base-thy
  # Run examples that use base:
+ - make -C examples/base-tests
  - make -C examples/successors
  - make -C examples/compiler
  - make -C examples/rle

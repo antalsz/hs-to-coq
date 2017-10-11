@@ -21,10 +21,10 @@ Definition curry {a} {b} {c} : (a * b -> c) -> a -> b -> c :=
     end.
 
 Definition fst {a} {b} : a * b -> a :=
-  fun arg_10__ => match arg_10__ with | (pair x _) => x end.
+  fun arg_10__ => match arg_10__ with | pair x _ => x end.
 
 Definition snd {a} {b} : a * b -> b :=
-  fun arg_8__ => match arg_8__ with | (pair _ y) => y end.
+  fun arg_8__ => match arg_8__ with | pair _ y => y end.
 
 Definition uncurry {a} {b} {c} : (a -> b -> c) -> (a * b -> c) :=
   fun arg_12__ arg_13__ =>
@@ -33,7 +33,7 @@ Definition uncurry {a} {b} {c} : (a -> b -> c) -> (a * b -> c) :=
     end.
 
 Definition swap {a} {b} : a * b -> b * a :=
-  fun arg_0__ => match arg_0__ with | (pair a b) => pair b a end.
+  fun arg_0__ => match arg_0__ with | pair a b => pair b a end.
 
 (* Unbound variables:
      * pair

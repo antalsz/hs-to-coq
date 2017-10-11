@@ -40,7 +40,7 @@ Local Definition instance_Arrow_GHC_Prim_arrow_op_ztztzt__ : forall {b}
   fun {b} {c} {b'} {c'} =>
     fun arg_164__ arg_165__ arg_166__ =>
       match arg_164__ , arg_165__ , arg_166__ with
-        | f , g , (pair x y) => pair (f x) (g y)
+        | f , g , pair x y => pair (f x) (g y)
       end.
 
 Local Definition instance_Arrow_GHC_Prim_arrow_second : forall {b} {c} {d},
@@ -86,7 +86,7 @@ Local Definition instance_Arrow_GHC_Prim_arrow_op_zazaza__ : forall {b}
 
 Local Definition instance_ArrowApply_GHC_Prim_arrow_app : forall {b} {c},
                                                             GHC.Prim.arrow (GHC.Prim.arrow b c * b) c :=
-  fun {b} {c} => fun arg_97__ => match arg_97__ with | (pair f x) => f x end.
+  fun {b} {c} => fun arg_97__ => match arg_97__ with | pair f x => f x end.
 
 (* Skipping instance
    instance_forall___GHC_Base_Monad_m___ArrowApply__Kleisli_m_ *)
@@ -208,8 +208,8 @@ Local Definition instance_forall___Arrow_a___GHC_Base_Functor__ArrowMonad_a__fma
   fun {a} {b} =>
     fun arg_89__ arg_90__ =>
       match arg_89__ , arg_90__ with
-        | f , (Mk_ArrowMonad m) => GHC.Base.op_zd__ Mk_ArrowMonad
-                                                    (Control.Category.op_zgzgzg__ m (arr f))
+        | f , Mk_ArrowMonad m => GHC.Base.op_zd__ Mk_ArrowMonad
+                                                  (Control.Category.op_zgzgzg__ m (arr f))
       end.
 
 Local Definition instance_forall___Arrow_a___GHC_Base_Functor__ArrowMonad_a__op_zlzd__ {inst_a}

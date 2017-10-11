@@ -389,7 +389,7 @@ Arguments Mk_Dual {_} _.
 
 Definition getDual {a} (arg_1__ : Dual a) :=
   match arg_1__ with
-    | (Mk_Dual getDual) => getDual
+    | Mk_Dual getDual => getDual
   end.
 
 Inductive Endo a : Type := Mk_Endo : (a -> a) -> Endo a.
@@ -398,7 +398,7 @@ Arguments Mk_Endo {_} _.
 
 Definition appEndo {a} (arg_0__ : Endo a) :=
   match arg_0__ with
-    | (Mk_Endo appEndo) => appEndo
+    | Mk_Endo appEndo => appEndo
   end.
 
 (* Unbound variables:

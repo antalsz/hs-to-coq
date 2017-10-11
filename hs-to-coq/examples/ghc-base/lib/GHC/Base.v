@@ -492,7 +492,7 @@ Local Definition instance_Functor__GHC_Tuple_pair_type_a__fmap {inst_a}
   fun {a} {b} =>
     fun arg_196__ arg_197__ =>
       match arg_196__ , arg_197__ with
-        | f , (pair x y) => pair x (f y)
+        | f , pair x y => pair x (f y)
       end.
 
 Local Definition instance_Functor_option_fmap : forall {a} {b},
@@ -501,7 +501,7 @@ Local Definition instance_Functor_option_fmap : forall {a} {b},
     fun arg_192__ arg_193__ =>
       match arg_192__ , arg_193__ with
         | _ , None => None
-        | f , (Some a) => Some (f a)
+        | f , Some a => Some (f a)
       end.
 
 Local Definition instance_Applicative_option_op_ztzg__ : forall {a} {b},
@@ -509,7 +509,7 @@ Local Definition instance_Applicative_option_op_ztzg__ : forall {a} {b},
   fun {a} {b} =>
     fun arg_189__ arg_190__ =>
       match arg_189__ , arg_190__ with
-        | (Some _m1) , m2 => m2
+        | Some _m1 , m2 => m2
         | None , _m2 => None
       end.
 
@@ -521,7 +521,7 @@ Local Definition instance_Monad_option_op_zgzgze__ : forall {a} {b},
   fun {a} {b} =>
     fun arg_180__ arg_181__ =>
       match arg_180__ , arg_181__ with
-        | (Some x) , k => k x
+        | Some x , k => k x
         | None , _ => None
       end.
 
@@ -617,7 +617,7 @@ Definition eqString : String -> String -> bool :=
   fix eqString arg_56__ arg_57__
         := match arg_56__ , arg_57__ with
              | nil , nil => true
-             | (cons c1 cs1) , (cons c2 cs2) => andb (op_zeze__ c1 c2) (eqString cs1 cs2)
+             | cons c1 cs1 , cons c2 cs2 => andb (op_zeze__ c1 c2) (eqString cs1 cs2)
              | _ , _ => false
            end.
 
@@ -634,7 +634,7 @@ Definition foldr {a} {b} : (a -> b -> b) -> b -> list a -> b :=
                    fix go arg_74__
                          := match arg_74__ with
                               | nil => z
-                              | (cons y ys) => k y (go ys)
+                              | cons y ys => k y (go ys)
                             end in
                  go
     end.
@@ -650,7 +650,7 @@ Definition map {a} {b} : (a -> b) -> list a -> list b :=
   fix map arg_68__ arg_69__
         := match arg_68__ , arg_69__ with
              | _ , nil => nil
-             | f , (cons x xs) => cons (f x) (map f xs)
+             | f , cons x xs => cons (f x) (map f xs)
            end.
 
 Local Definition instance_Functor_list_fmap : forall {a} {b},
@@ -903,7 +903,7 @@ Local Definition instance_Applicative_option_op_zlztzg__ : forall {a} {b},
   fun {a} {b} =>
     fun arg_185__ arg_186__ =>
       match arg_185__ , arg_186__ with
-        | (Some f) , m => fmap f m
+        | Some f , m => fmap f m
         | None , _m => None
       end.
 
@@ -982,7 +982,7 @@ Local Definition instance_forall___Monoid_a___Applicative__GHC_Tuple_pair_type_a
   fun {a} {b} =>
     fun arg_224__ arg_225__ =>
       match arg_224__ , arg_225__ with
-        | (pair u f) , (pair v x) => pair (mappend u v) (f x)
+        | pair u f , pair v x => pair (mappend u v) (f x)
       end.
 
 Local Definition instance_forall___Monoid_a___Applicative__GHC_Tuple_pair_type_a__op_ztzg__ {inst_a}
@@ -1026,10 +1026,10 @@ Local Definition instance_forall___Monoid_a___Monad__GHC_Tuple_pair_type_a__op_z
   fun {a} {b} =>
     fun arg_214__ arg_215__ =>
       match arg_214__ , arg_215__ with
-        | (pair u a) , k => let scrut_216__ := k a in
-                            match scrut_216__ with
-                              | (pair v b) => pair (mappend u v) b
-                            end
+        | pair u a , k => let scrut_216__ := k a in
+                          match scrut_216__ with
+                            | pair v b => pair (mappend u v) b
+                          end
       end.
 
 Local Definition instance_forall___Monoid_a___Monad__GHC_Tuple_pair_type_a__op_zgzg__ {inst_a}
@@ -1068,7 +1068,7 @@ Local Definition instance_forall___Monoid_a___Monoid__option_a__mappend {inst_a}
     match arg_228__ , arg_229__ with
       | None , m => m
       | m , None => m
-      | (Some m1) , (Some m2) => Some (mappend m1 m2)
+      | Some m1 , Some m2 => Some (mappend m1 m2)
     end.
 
 Local Definition instance_forall___Monoid_a___Monoid__option_a__mconcat {inst_a}
@@ -1126,14 +1126,10 @@ Local Definition instance_forall___Monoid_a____Monoid_b____Monoid_c____Monoid_d_
       inst_d * inst_e -> inst_a * inst_b * inst_c * inst_d * inst_e :=
   fun arg_236__ arg_237__ =>
     match arg_236__ , arg_237__ with
-      | (pair (pair (pair (pair a1 b1) c1) d1) e1) , (pair (pair (pair (pair a2 b2)
-                                                                       c2) d2) e2) => pair (pair (pair (pair (mappend a1
-                                                                                                                      a2)
-                                                                                                             (mappend b1
-                                                                                                                      b2))
-                                                                                                       (mappend c1 c2))
-                                                                                                 (mappend d1 d2))
-                                                                                           (mappend e1 e2)
+      | pair (pair (pair (pair a1 b1) c1) d1) e1 , pair (pair (pair (pair a2 b2) c2)
+                                                              d2) e2 => pair (pair (pair (pair (mappend a1 a2) (mappend
+                                                                                               b1 b2)) (mappend c1 c2))
+                                                                                   (mappend d1 d2)) (mappend e1 e2)
     end.
 
 Local Definition instance_forall___Monoid_a____Monoid_b____Monoid_c____Monoid_d____Monoid_e___Monoid__a___b___c___d___e__mconcat {inst_a}
@@ -1196,10 +1192,9 @@ Local Definition instance_forall___Monoid_a____Monoid_b____Monoid_c____Monoid_d_
       inst_d -> inst_a * inst_b * inst_c * inst_d :=
   fun arg_241__ arg_242__ =>
     match arg_241__ , arg_242__ with
-      | (pair (pair (pair a1 b1) c1) d1) , (pair (pair (pair a2 b2) c2) d2) => pair
-                                                                               (pair (pair (mappend a1 a2) (mappend b1
-                                                                                                                    b2))
-                                                                                     (mappend c1 c2)) (mappend d1 d2)
+      | pair (pair (pair a1 b1) c1) d1 , pair (pair (pair a2 b2) c2) d2 => pair (pair
+                                                                                (pair (mappend a1 a2) (mappend b1 b2))
+                                                                                (mappend c1 c2)) (mappend d1 d2)
     end.
 
 Local Definition instance_forall___Monoid_a____Monoid_b____Monoid_c____Monoid_d___Monoid__a___b___c___d__mconcat {inst_a}
@@ -1245,8 +1240,8 @@ Local Definition instance_forall___Monoid_a____Monoid_b____Monoid_c___Monoid__a_
       inst_c :=
   fun arg_246__ arg_247__ =>
     match arg_246__ , arg_247__ with
-      | (pair (pair a1 b1) c1) , (pair (pair a2 b2) c2) => pair (pair (mappend a1 a2)
-                                                                      (mappend b1 b2)) (mappend c1 c2)
+      | pair (pair a1 b1) c1 , pair (pair a2 b2) c2 => pair (pair (mappend a1 a2)
+                                                                  (mappend b1 b2)) (mappend c1 c2)
     end.
 
 Local Definition instance_forall___Monoid_a____Monoid_b____Monoid_c___Monoid__a___b___c__mconcat {inst_a}
@@ -1285,7 +1280,7 @@ Local Definition instance_forall___Monoid_a____Monoid_b___Monoid__a___b__mappend
                                                                                            inst_b -> inst_a * inst_b :=
   fun arg_251__ arg_252__ =>
     match arg_251__ , arg_252__ with
-      | (pair a1 b1) , (pair a2 b2) => pair (mappend a1 a2) (mappend b1 b2)
+      | pair a1 b1 , pair a2 b2 => pair (mappend a1 a2) (mappend b1 b2)
     end.
 
 Local Definition instance_forall___Monoid_a____Monoid_b___Monoid__a___b__mconcat {inst_a}

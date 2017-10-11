@@ -843,11 +843,11 @@ instance Gallina MultPattern where
   renderGallina' _ (MultPattern pats) = spacedSepPost "," $ renderGallina <$> pats
 
 instance Gallina Pattern where
-  renderGallina' _p (ArgsPat qid args) = parens $
-    renderGallina qid </> render_args H args
+  renderGallina' p (ArgsPat qid args) = maybeParen (p > appPrec) $
+    renderGallina' appPrec qid </> render_args' (appPrec + 1) H args
 
-  renderGallina' _p (ExplicitArgsPat qid args) = parens $
-    "@" <> renderGallina qid <> softlineIf args <> render_args H args
+  renderGallina' p (ExplicitArgsPat qid args) = maybeParen (p > appPrec) $
+    "@" <> renderGallina' appPrec qid <> softlineIf args <> render_args' (appPrec +1) H args
 
   renderGallina' _p (InfixPat l op r) = parens $ -- TODO precedence
     renderGallina l </> renderOp op </> renderGallina r

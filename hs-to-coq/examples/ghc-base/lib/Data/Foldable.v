@@ -403,7 +403,7 @@ Arguments Mk_Max {_} _.
 
 Definition getMax {a} (arg_75__ : Max a) :=
   match arg_75__ with
-    | (Mk_Max getMax) => getMax
+    | Mk_Max getMax => getMax
   end.
 
 Inductive Min a : Type := Mk_Min : option a -> Min a.
@@ -412,7 +412,7 @@ Arguments Mk_Min {_} _.
 
 Definition getMin {a} (arg_74__ : Min a) :=
   match arg_74__ with
-    | (Mk_Min getMin) => getMin
+    | Mk_Min getMin => getMin
   end.
 
 (* Unbound variables:

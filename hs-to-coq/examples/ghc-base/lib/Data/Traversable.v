@@ -28,7 +28,7 @@ Local Definition instance_Traversable_option_traverse : forall {f} {a} {b},
     fun arg_218__ arg_219__ =>
       match arg_218__ , arg_219__ with
         | _ , None => GHC.Base.pure None
-        | f , (Some x) => Data.Functor.op_zlzdzg__ Some (f x)
+        | f , Some x => Data.Functor.op_zlzdzg__ Some (f x)
       end.
 
 Local Definition instance_Traversable_option_sequenceA : forall {f} {a},
@@ -179,7 +179,7 @@ Arguments Mk_Id {_} _.
 
 Definition getId {a} (arg_6__ : Id a) :=
   match arg_6__ with
-    | (Mk_Id getId) => getId
+    | Mk_Id getId => getId
   end.
 
 Local Definition instance_GHC_Base_Applicative_Id_pure : forall {a},
@@ -191,7 +191,7 @@ Local Definition instance_GHC_Base_Functor_Id_fmap : forall {a} {b},
   fun {a} {b} =>
     fun arg_92__ arg_93__ =>
       match arg_92__ , arg_93__ with
-        | f , (Mk_Id x) => Mk_Id (f x)
+        | f , Mk_Id x => Mk_Id (f x)
       end.
 
 Local Definition instance_GHC_Base_Functor_Id_op_zlzd__ : forall {a} {b},
@@ -207,7 +207,7 @@ Local Definition instance_GHC_Base_Applicative_Id_op_zlztzg__ : forall {a} {b},
   fun {a} {b} =>
     fun arg_88__ arg_89__ =>
       match arg_88__ , arg_89__ with
-        | (Mk_Id f) , (Mk_Id x) => Mk_Id (f x)
+        | Mk_Id f , Mk_Id x => Mk_Id (f x)
       end.
 
 Local Definition instance_GHC_Base_Applicative_Id_op_ztzg__ : forall {a} {b},
@@ -228,7 +228,7 @@ Arguments Mk_StateL {_} {_} _.
 
 Definition runStateL {s} {a} (arg_5__ : StateL s a) :=
   match arg_5__ with
-    | (Mk_StateL runStateL) => runStateL
+    | Mk_StateL runStateL => runStateL
   end.
 
 Inductive StateR s a : Type := Mk_StateR : (s -> s * a) -> StateR s a.
@@ -237,7 +237,7 @@ Arguments Mk_StateR {_} {_} _.
 
 Definition runStateR {s} {a} (arg_4__ : StateR s a) :=
   match arg_4__ with
-    | (Mk_StateR runStateR) => runStateR
+    | Mk_StateR runStateR => runStateR
   end.
 
 Class Traversable t `{GHC.Base.Functor t} `{Data.Foldable.Foldable t} := {

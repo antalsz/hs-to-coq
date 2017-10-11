@@ -30,15 +30,12 @@ https://downloads.haskell.org/~ghc/8.0.2/docs/html/libraries/ghc-8.0.2/
 * Use [GHC 8.0.2](https://www.haskell.org/ghc/download_ghc_8_0_2.html) for
   compilation (handled by Stack) and translation
 
-## Files:
+## Examples:
 
-* `preamble.v`: Coq code inserted at the start of the injected output
+* [ghc-base](examples/ghc-base) GHC base library `base-4.9.1.0`.
 
-* `edits.txt`: Various ways the injected Coq code should be different than the
-  input Haskell code.  Documentation on the different kinds of edits is
-  forthcoming.
+* [successors](examples/successors) Successors Monad
 
-* `modules.txt`/`call-arity-modules.txt`: Module file trees to be used when
-  translating GHC source code; `modules.txt` is in some sense the transitive
-  closure from `CoreSyn`, and `call-arity-modules.txt` is the transitive closure
-  from `CallArity`.
+* [compiler](examples/compiler) Hutton's razor
+
+* [bag](examples/bag) Multiset implementation

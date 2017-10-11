@@ -143,13 +143,13 @@ Control/Monad/Fail
 \\
 GHC/Base
 &
-      79
+     101
 &
        8
 &
-      31
+      39
 &
-      56
+      43
 \\
 Data/Foldable
 &
@@ -237,21 +237,13 @@ Data/Type/Equality
 &
        2
 \\
-GHC/BaseInstances
-&
-       0
-&
-       0
-&
-       2
-\\
 Prelude
 &
        0
 &
        0
 &
-       1
+       0
 \\
 GHC/Prim
 &

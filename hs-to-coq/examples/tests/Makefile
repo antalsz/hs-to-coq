@@ -38,6 +38,7 @@ TODO_PASS  = \
   OpTyCon \
   Successors \
   Existential \
+  PolyInstance3 \
   Bits
 
 MODULES = $(PASS) $(TODO_PASS)

@@ -17,13 +17,19 @@ Require Data.Ord.
 Require Data.Proxy.
 Require GHC.Base.
 Require GHC.Num.
-(* Require #. *)
 Require Coq.Program.Basics.
 
 Definition zero : BinNums.Z := BinNums.Z0.
 Definition one  : BinNums.Z := BinNums.Zpos BinNums.xH.
 
 Require Import Data.Foldable.
+
+Definition anyWith {t} {a} (foldMap : (forall {m} {a}, forall `{GHC.Base.Monoid m}, (a -> m) -> t a -> m))  : (a -> bool) -> t a -> bool :=
+  fun arg_108__ x =>
+    match arg_108__ with
+      | p => Data.Monoid.getAny (foldMap (fun y => Data.Monoid.Mk_Any (p y)) x)
+    end.
+
 
 Local Definition instance_Foldable__sum_a__null : forall {a} {b},
                                                     (a + b) -> bool :=

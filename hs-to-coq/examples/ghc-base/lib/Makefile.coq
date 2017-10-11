@@ -109,14 +109,13 @@ VFILES:=GHC/Num.v\
   GHC/Enum.v\
   Data/Bits.v\
   Data/Type/Equality.v\
-  Control/Arrow.v\
-  Control/Category.v\
-  Data/Functor/Const.v\
   GHC/BaseInstances.v\
   Prelude.v\
   GHC/Prim.v\
   GHC/Tuple.v\
   Data/FoldableInst.v\
+  Control/Category.v\
+  Data/Functor/Const.v\
   GHC/List.v\
   Data/List.v\
   Data/OldList.v\
@@ -132,7 +131,8 @@ VFILES:=GHC/Num.v\
   Data/Traversable.v\
   Control/Monad/Fail.v\
   GHC/Base.v\
-  Data/Foldable.v
+  Data/Foldable.v\
+  Control/Arrow.v
 
 ifneq ($(filter-out archclean clean cleanall printenv,$(MAKECMDGOALS)),)
 -include $(addsuffix .d,$(VFILES))

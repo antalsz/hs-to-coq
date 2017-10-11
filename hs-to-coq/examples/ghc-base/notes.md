@@ -72,7 +72,7 @@
 - Data/Functor/Const
   Type inference: need to annotate type of first argument to Const
   Deriving: most of the functionality of this module comes from
-  type class deriving
+  type class deriving (Data.coerce)
   (NOTE: most of the instances are NOT available)
 
 - Data/Foldable

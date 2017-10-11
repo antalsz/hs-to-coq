@@ -12,11 +12,22 @@ Unset Printing Implicit Defensive.
 
 (* Converted imports: *)
 
+Require Coq.Program.Basics.
 Require GHC.Base.
+Require GHC.Prim.
 
 (* Converted declarations: *)
 
-(* Skipping instance instance_Category_GHC_Prim_____ *)
+Local Definition instance_Category_GHC_Prim_arrow_id : forall {a},
+                                                         GHC.Prim.arrow a a :=
+  fun {a} => GHC.Base.id.
+
+Local Definition instance_Category_GHC_Prim_arrow_op_z2218U__ : forall {b}
+                                                                       {c}
+                                                                       {a},
+                                                                  GHC.Prim.arrow b c -> GHC.Prim.arrow a
+                                                                  b -> GHC.Prim.arrow a c :=
+  fun {b} {c} {a} => Coq.Program.Basics.compose.
 
 (* Skipping instance instance_Category_Data_Type_Equality____ *)
 
@@ -48,3 +59,12 @@ Definition op_zgzgzg__ {cat} {a} {b} {c} `{Category cat} : cat a b -> cat b
 Infix ">>>" := (op_zgzgzg__) (at level 99).
 
 Notation "'_>>>_'" := (op_zgzgzg__).
+
+Instance instance_Category_GHC_Prim_arrow : !Category GHC.Prim.arrow := {
+  id := fun {a} => instance_Category_GHC_Prim_arrow_id ;
+  op_z2218U__ := fun {b} {c} {a} =>
+    instance_Category_GHC_Prim_arrow_op_z2218U__ }.
+
+(* Unbound variables:
+     Coq.Program.Basics.compose GHC.Base.id GHC.Prim.arrow
+*)

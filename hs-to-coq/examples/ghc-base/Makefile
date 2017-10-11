@@ -24,13 +24,13 @@ HANDMOD = \
   GHC/Enum \
   Data/Bits \
   Data/Type/Equality \
-  Control/Category \
-  Data/Functor/Const \
   GHC/BaseInstances \
   Prelude\
   GHC/Prim \
   GHC/Tuple \
   Data/FoldableInst \
+  Control/Category \
+  Data/Functor/Const \
 
 # Generated modules
 # generated directly from GHC/libraries/base
@@ -52,6 +52,8 @@ MODULES = \
   GHC/Base \
   Data/Foldable \
   Control/Arrow \
+
+
 
 # generated from drop-in/
 DROPIN =

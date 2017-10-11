@@ -869,12 +869,13 @@ Class Monoid a := {
   mconcat : list a -> a ;
   mempty : a }.
 
-Local Definition instance_forall___Monoid_a___Monoid__option_a__mempty `{Monoid
-                                                                       a} : (option a) :=
+Local Definition instance_forall___Monoid_a___Monoid__option_a__mempty {inst_a}
+                                                                       `{Monoid inst_a} : (option inst_a) :=
   None.
 
-Local Definition instance_forall___Monoid_a___Monoid__option_a__mappend `{Monoid
-                                                                        a} : (option a) -> (option a) -> (option a) :=
+Local Definition instance_forall___Monoid_a___Monoid__option_a__mappend {inst_a}
+                                                                        `{Monoid inst_a} : (option inst_a) -> (option
+                                                                                           inst_a) -> (option inst_a) :=
   fun arg_228__ arg_229__ =>
     match arg_228__ , arg_229__ with
       | None , m => m
@@ -882,13 +883,15 @@ Local Definition instance_forall___Monoid_a___Monoid__option_a__mappend `{Monoid
       | (Some m1) , (Some m2) => Some (mappend m1 m2)
     end.
 
-Local Definition instance_forall___Monoid_a___Monoid__option_a__mconcat `{Monoid
-                                                                        a} : list (option a) -> (option a) :=
+Local Definition instance_forall___Monoid_a___Monoid__option_a__mconcat {inst_a}
+                                                                        `{Monoid inst_a} : list (option
+                                                                                                inst_a) -> (option
+                                                                                           inst_a) :=
   foldr instance_forall___Monoid_a___Monoid__option_a__mappend
   instance_forall___Monoid_a___Monoid__option_a__mempty.
 
-Instance instance_forall___Monoid_a___Monoid__option_a_ : !forall `{Monoid a},
-                                                            Monoid (option a) := {
+Instance instance_forall___Monoid_a___Monoid__option_a_ : !forall {a},
+                                                            forall `{Monoid a}, Monoid (option a) := {
   mappend := instance_forall___Monoid_a___Monoid__option_a__mappend ;
   mconcat := instance_forall___Monoid_a___Monoid__option_a__mconcat ;
   mempty := instance_forall___Monoid_a___Monoid__option_a__mempty }.
@@ -898,30 +901,41 @@ Instance instance_Monoid_comparison : !Monoid comparison := {
   mconcat := instance_Monoid_comparison_mconcat ;
   mempty := instance_Monoid_comparison_mempty }.
 
-Local Definition instance_forall___Monoid_a____Monoid_b____Monoid_c____Monoid_d____Monoid_e___Monoid__a___b___c___d___e__mempty `{Monoid
-                                                                                                                                a}
+Local Definition instance_forall___Monoid_a____Monoid_b____Monoid_c____Monoid_d____Monoid_e___Monoid__a___b___c___d___e__mempty {inst_a}
+                                                                                                                                {inst_b}
+                                                                                                                                {inst_c}
+                                                                                                                                {inst_d}
+                                                                                                                                {inst_e}
                                                                                                                                 `{Monoid
-                                                                                                                                b}
+                                                                                                                                inst_a}
                                                                                                                                 `{Monoid
-                                                                                                                                c}
+                                                                                                                                inst_b}
                                                                                                                                 `{Monoid
-                                                                                                                                d}
+                                                                                                                                inst_c}
                                                                                                                                 `{Monoid
-                                                                                                                                e}
-    : a * b * c * d * e :=
+                                                                                                                                inst_d}
+                                                                                                                                `{Monoid
+                                                                                                                                inst_e}
+    : inst_a * inst_b * inst_c * inst_d * inst_e :=
   pair (pair (pair (pair mempty mempty) mempty) mempty) mempty.
 
-Local Definition instance_forall___Monoid_a____Monoid_b____Monoid_c____Monoid_d____Monoid_e___Monoid__a___b___c___d___e__mappend `{Monoid
-                                                                                                                                 a}
+Local Definition instance_forall___Monoid_a____Monoid_b____Monoid_c____Monoid_d____Monoid_e___Monoid__a___b___c___d___e__mappend {inst_a}
+                                                                                                                                 {inst_b}
+                                                                                                                                 {inst_c}
+                                                                                                                                 {inst_d}
+                                                                                                                                 {inst_e}
                                                                                                                                  `{Monoid
-                                                                                                                                 b}
+                                                                                                                                 inst_a}
                                                                                                                                  `{Monoid
-                                                                                                                                 c}
+                                                                                                                                 inst_b}
                                                                                                                                  `{Monoid
-                                                                                                                                 d}
+                                                                                                                                 inst_c}
                                                                                                                                  `{Monoid
-                                                                                                                                 e}
-    : a * b * c * d * e -> a * b * c * d * e -> a * b * c * d * e :=
+                                                                                                                                 inst_d}
+                                                                                                                                 `{Monoid
+                                                                                                                                 inst_e}
+    : inst_a * inst_b * inst_c * inst_d * inst_e -> inst_a * inst_b * inst_c *
+      inst_d * inst_e -> inst_a * inst_b * inst_c * inst_d * inst_e :=
   fun arg_236__ arg_237__ =>
     match arg_236__ , arg_237__ with
       | (pair (pair (pair (pair a1 b1) c1) d1) e1) , (pair (pair (pair (pair a2 b2)
@@ -934,67 +948,64 @@ Local Definition instance_forall___Monoid_a____Monoid_b____Monoid_c____Monoid_d_
                                                                                            (mappend e1 e2)
     end.
 
-Local Definition instance_forall___Monoid_a____Monoid_b____Monoid_c____Monoid_d____Monoid_e___Monoid__a___b___c___d___e__mconcat `{Monoid
-                                                                                                                                 a}
+Local Definition instance_forall___Monoid_a____Monoid_b____Monoid_c____Monoid_d____Monoid_e___Monoid__a___b___c___d___e__mconcat {inst_a}
+                                                                                                                                 {inst_b}
+                                                                                                                                 {inst_c}
+                                                                                                                                 {inst_d}
+                                                                                                                                 {inst_e}
                                                                                                                                  `{Monoid
-                                                                                                                                 b}
+                                                                                                                                 inst_a}
                                                                                                                                  `{Monoid
-                                                                                                                                 c}
+                                                                                                                                 inst_b}
                                                                                                                                  `{Monoid
-                                                                                                                                 d}
+                                                                                                                                 inst_c}
                                                                                                                                  `{Monoid
-                                                                                                                                 e}
-    : list (a * b * c * d * e) -> a * b * c * d * e :=
+                                                                                                                                 inst_d}
+                                                                                                                                 `{Monoid
+                                                                                                                                 inst_e}
+    : list (inst_a * inst_b * inst_c * inst_d * inst_e) -> inst_a * inst_b * inst_c
+      * inst_d * inst_e :=
   foldr
   instance_forall___Monoid_a____Monoid_b____Monoid_c____Monoid_d____Monoid_e___Monoid__a___b___c___d___e__mappend
   instance_forall___Monoid_a____Monoid_b____Monoid_c____Monoid_d____Monoid_e___Monoid__a___b___c___d___e__mempty.
 
 Instance instance_forall___Monoid_a____Monoid_b____Monoid_c____Monoid_d____Monoid_e___Monoid__a___b___c___d___e_
-  : !forall `{Monoid a} `{Monoid b} `{Monoid c} `{Monoid d} `{Monoid e},
-      Monoid (a * b * c * d * e) := {
+  : !forall {a} {b} {c} {d} {e},
+      forall `{Monoid a} `{Monoid b} `{Monoid c} `{Monoid d} `{Monoid e},
+        Monoid (a * b * c * d * e) := {
   mappend := instance_forall___Monoid_a____Monoid_b____Monoid_c____Monoid_d____Monoid_e___Monoid__a___b___c___d___e__mappend ;
   mconcat := instance_forall___Monoid_a____Monoid_b____Monoid_c____Monoid_d____Monoid_e___Monoid__a___b___c___d___e__mconcat ;
   mempty := instance_forall___Monoid_a____Monoid_b____Monoid_c____Monoid_d____Monoid_e___Monoid__a___b___c___d___e__mempty }.
 
-Local Definition instance_forall___Monoid_a____Monoid_b____Monoid_c____Monoid_d___Monoid__a___b___c___d__mempty `{Monoid
-                                                                                                                a}
+Local Definition instance_forall___Monoid_a____Monoid_b____Monoid_c____Monoid_d___Monoid__a___b___c___d__mempty {inst_a}
+                                                                                                                {inst_b}
+                                                                                                                {inst_c}
+                                                                                                                {inst_d}
                                                                                                                 `{Monoid
-                                                                                                                b}
+                                                                                                                inst_a}
                                                                                                                 `{Monoid
-                                                                                                                c}
+                                                                                                                inst_b}
                                                                                                                 `{Monoid
-                                                                                                                d} : a *
-                                                                                                                     b *
-                                                                                                                     c *
-                                                                                                                     d :=
+                                                                                                                inst_c}
+                                                                                                                `{Monoid
+                                                                                                                inst_d}
+    : inst_a * inst_b * inst_c * inst_d :=
   pair (pair (pair mempty mempty) mempty) mempty.
 
-Local Definition instance_forall___Monoid_a____Monoid_b____Monoid_c____Monoid_d___Monoid__a___b___c___d__mappend `{Monoid
-                                                                                                                 a}
+Local Definition instance_forall___Monoid_a____Monoid_b____Monoid_c____Monoid_d___Monoid__a___b___c___d__mappend {inst_a}
+                                                                                                                 {inst_b}
+                                                                                                                 {inst_c}
+                                                                                                                 {inst_d}
                                                                                                                  `{Monoid
-                                                                                                                 b}
+                                                                                                                 inst_a}
                                                                                                                  `{Monoid
-                                                                                                                 c}
+                                                                                                                 inst_b}
                                                                                                                  `{Monoid
-                                                                                                                 d} : a
-                                                                                                                      *
-                                                                                                                      b
-                                                                                                                      *
-                                                                                                                      c
-                                                                                                                      *
-                                                                                                                      d -> a
-                                                                                                                      *
-                                                                                                                      b
-                                                                                                                      *
-                                                                                                                      c
-                                                                                                                      *
-                                                                                                                      d -> a
-                                                                                                                      *
-                                                                                                                      b
-                                                                                                                      *
-                                                                                                                      c
-                                                                                                                      *
-                                                                                                                      d :=
+                                                                                                                 inst_c}
+                                                                                                                 `{Monoid
+                                                                                                                 inst_d}
+    : inst_a * inst_b * inst_c * inst_d -> inst_a * inst_b * inst_c *
+      inst_d -> inst_a * inst_b * inst_c * inst_d :=
   fun arg_241__ arg_242__ =>
     match arg_241__ , arg_242__ with
       | (pair (pair (pair a1 b1) c1) d1) , (pair (pair (pair a2 b2) c2) d2) => pair
@@ -1003,77 +1014,103 @@ Local Definition instance_forall___Monoid_a____Monoid_b____Monoid_c____Monoid_d_
                                                                                      (mappend c1 c2)) (mappend d1 d2)
     end.
 
-Local Definition instance_forall___Monoid_a____Monoid_b____Monoid_c____Monoid_d___Monoid__a___b___c___d__mconcat `{Monoid
-                                                                                                                 a}
+Local Definition instance_forall___Monoid_a____Monoid_b____Monoid_c____Monoid_d___Monoid__a___b___c___d__mconcat {inst_a}
+                                                                                                                 {inst_b}
+                                                                                                                 {inst_c}
+                                                                                                                 {inst_d}
                                                                                                                  `{Monoid
-                                                                                                                 b}
+                                                                                                                 inst_a}
                                                                                                                  `{Monoid
-                                                                                                                 c}
+                                                                                                                 inst_b}
                                                                                                                  `{Monoid
-                                                                                                                 d}
-    : list (a * b * c * d) -> a * b * c * d :=
+                                                                                                                 inst_c}
+                                                                                                                 `{Monoid
+                                                                                                                 inst_d}
+    : list (inst_a * inst_b * inst_c * inst_d) -> inst_a * inst_b * inst_c *
+      inst_d :=
   foldr
   instance_forall___Monoid_a____Monoid_b____Monoid_c____Monoid_d___Monoid__a___b___c___d__mappend
   instance_forall___Monoid_a____Monoid_b____Monoid_c____Monoid_d___Monoid__a___b___c___d__mempty.
 
 Instance instance_forall___Monoid_a____Monoid_b____Monoid_c____Monoid_d___Monoid__a___b___c___d_
-  : !forall `{Monoid a} `{Monoid b} `{Monoid c} `{Monoid d},
-      Monoid (a * b * c * d) := {
+  : !forall {a} {b} {c} {d},
+      forall `{Monoid a} `{Monoid b} `{Monoid c} `{Monoid d},
+        Monoid (a * b * c * d) := {
   mappend := instance_forall___Monoid_a____Monoid_b____Monoid_c____Monoid_d___Monoid__a___b___c___d__mappend ;
   mconcat := instance_forall___Monoid_a____Monoid_b____Monoid_c____Monoid_d___Monoid__a___b___c___d__mconcat ;
   mempty := instance_forall___Monoid_a____Monoid_b____Monoid_c____Monoid_d___Monoid__a___b___c___d__mempty }.
 
-Local Definition instance_forall___Monoid_a____Monoid_b____Monoid_c___Monoid__a___b___c__mempty `{Monoid
-                                                                                                a} `{Monoid b} `{Monoid
-                                                                                                c} : a * b * c :=
+Local Definition instance_forall___Monoid_a____Monoid_b____Monoid_c___Monoid__a___b___c__mempty {inst_a}
+                                                                                                {inst_b} {inst_c}
+                                                                                                `{Monoid inst_a}
+                                                                                                `{Monoid inst_b}
+                                                                                                `{Monoid inst_c}
+    : inst_a * inst_b * inst_c :=
   pair (pair mempty mempty) mempty.
 
-Local Definition instance_forall___Monoid_a____Monoid_b____Monoid_c___Monoid__a___b___c__mappend `{Monoid
-                                                                                                 a} `{Monoid b} `{Monoid
-                                                                                                 c} : a * b * c -> a * b
-                                                                                                      * c -> a * b *
-                                                                                                      c :=
+Local Definition instance_forall___Monoid_a____Monoid_b____Monoid_c___Monoid__a___b___c__mappend {inst_a}
+                                                                                                 {inst_b} {inst_c}
+                                                                                                 `{Monoid inst_a}
+                                                                                                 `{Monoid inst_b}
+                                                                                                 `{Monoid inst_c}
+    : inst_a * inst_b * inst_c -> inst_a * inst_b * inst_c -> inst_a * inst_b *
+      inst_c :=
   fun arg_246__ arg_247__ =>
     match arg_246__ , arg_247__ with
       | (pair (pair a1 b1) c1) , (pair (pair a2 b2) c2) => pair (pair (mappend a1 a2)
                                                                       (mappend b1 b2)) (mappend c1 c2)
     end.
 
-Local Definition instance_forall___Monoid_a____Monoid_b____Monoid_c___Monoid__a___b___c__mconcat `{Monoid
-                                                                                                 a} `{Monoid b} `{Monoid
-                                                                                                 c} : list (a * b *
-                                                                                                           c) -> a * b *
-                                                                                                      c :=
+Local Definition instance_forall___Monoid_a____Monoid_b____Monoid_c___Monoid__a___b___c__mconcat {inst_a}
+                                                                                                 {inst_b} {inst_c}
+                                                                                                 `{Monoid inst_a}
+                                                                                                 `{Monoid inst_b}
+                                                                                                 `{Monoid inst_c} : list
+                                                                                                                    (inst_a
+                                                                                                                    *
+                                                                                                                    inst_b
+                                                                                                                    *
+                                                                                                                    inst_c) -> inst_a
+                                                                                                                    *
+                                                                                                                    inst_b
+                                                                                                                    *
+                                                                                                                    inst_c :=
   foldr
   instance_forall___Monoid_a____Monoid_b____Monoid_c___Monoid__a___b___c__mappend
   instance_forall___Monoid_a____Monoid_b____Monoid_c___Monoid__a___b___c__mempty.
 
 Instance instance_forall___Monoid_a____Monoid_b____Monoid_c___Monoid__a___b___c_
-  : !forall `{Monoid a} `{Monoid b} `{Monoid c}, Monoid (a * b * c) := {
+  : !forall {a} {b} {c},
+      forall `{Monoid a} `{Monoid b} `{Monoid c}, Monoid (a * b * c) := {
   mappend := instance_forall___Monoid_a____Monoid_b____Monoid_c___Monoid__a___b___c__mappend ;
   mconcat := instance_forall___Monoid_a____Monoid_b____Monoid_c___Monoid__a___b___c__mconcat ;
   mempty := instance_forall___Monoid_a____Monoid_b____Monoid_c___Monoid__a___b___c__mempty }.
 
-Local Definition instance_forall___Monoid_a____Monoid_b___Monoid__a___b__mempty `{Monoid
-                                                                                a} `{Monoid b} : a * b :=
+Local Definition instance_forall___Monoid_a____Monoid_b___Monoid__a___b__mempty {inst_a}
+                                                                                {inst_b} `{Monoid inst_a} `{Monoid
+                                                                                inst_b} : inst_a * inst_b :=
   pair mempty mempty.
 
-Local Definition instance_forall___Monoid_a____Monoid_b___Monoid__a___b__mappend `{Monoid
-                                                                                 a} `{Monoid b} : a * b -> a * b -> a *
-                                                                                                  b :=
+Local Definition instance_forall___Monoid_a____Monoid_b___Monoid__a___b__mappend {inst_a}
+                                                                                 {inst_b} `{Monoid inst_a} `{Monoid
+                                                                                 inst_b} : inst_a * inst_b -> inst_a *
+                                                                                           inst_b -> inst_a * inst_b :=
   fun arg_251__ arg_252__ =>
     match arg_251__ , arg_252__ with
       | (pair a1 b1) , (pair a2 b2) => pair (mappend a1 a2) (mappend b1 b2)
     end.
 
-Local Definition instance_forall___Monoid_a____Monoid_b___Monoid__a___b__mconcat `{Monoid
-                                                                                 a} `{Monoid b} : list (a * b) -> a *
-                                                                                                  b :=
+Local Definition instance_forall___Monoid_a____Monoid_b___Monoid__a___b__mconcat {inst_a}
+                                                                                 {inst_b} `{Monoid inst_a} `{Monoid
+                                                                                 inst_b} : list (inst_a *
+                                                                                                inst_b) -> inst_a *
+                                                                                           inst_b :=
   foldr instance_forall___Monoid_a____Monoid_b___Monoid__a___b__mappend
   instance_forall___Monoid_a____Monoid_b___Monoid__a___b__mempty.
 
-Instance instance_forall___Monoid_a____Monoid_b___Monoid__a___b_
-  : !forall `{Monoid a} `{Monoid b}, Monoid (a * b) := {
+Instance instance_forall___Monoid_a____Monoid_b___Monoid__a___b_ : !forall {a}
+                                                                           {b},
+                                                                     forall `{Monoid a} `{Monoid b}, Monoid (a * b) := {
   mappend := instance_forall___Monoid_a____Monoid_b___Monoid__a___b__mappend ;
   mconcat := instance_forall___Monoid_a____Monoid_b___Monoid__a___b__mconcat ;
   mempty := instance_forall___Monoid_a____Monoid_b___Monoid__a___b__mempty }.
@@ -1085,5 +1122,5 @@ Instance instance_Monoid_unit : !Monoid unit := {
 
 (* Unbound variables:
      * Coq.Lists.List.flat_map Coq.Program.Basics.compose Eq None Some String andb
-     bool comparison cons e false list nil op_zeze__ option pair true tt unit
+     bool comparison cons false list nil op_zeze__ option pair true tt unit
 *)

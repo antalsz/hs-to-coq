@@ -104,12 +104,21 @@ Proof.
   reflexivity.
 Qed.
 
+
+Lemma applicative_law_5:
+  forall (a b : Type) (f : a -> b) (x : Succs a), fmap f x = _<*>_ (pure f) x.
+Proof.
+  intros.
+  reflexivity.
+Qed.
+
 Instance instance_ApplicativeLaws_Succs : ApplicativeLaws Succs.
 split.
 exact applicative_law_1.
 exact applicative_law_2.
 exact applicative_law_3.
 exact applicative_law_4.
+exact applicative_law_5.
 Qed.
 
 
@@ -172,6 +181,7 @@ Proof.
   rewrite app_nil_r.
   f_equal.
 Qed.
+
 
 Instance instance_MonadLaws_Succs : MonadLaws Succs.
 split.

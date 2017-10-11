@@ -284,24 +284,27 @@ Class MonoidLaws (t : Type) `{ Monoid t } :=
     monoid_mconcat  : forall x, mconcat x = foldr mappend mempty x
   }.
 
-Class FunctorLaws (t : Type -> Type) `{ Functor t } :=
+Class FunctorLaws (t : Type -> Type) `{Functor t} :=
     {
       functor_identity    : forall a (x: t a), fmap id x = x;
       functor_composition : forall a b c (f : a -> b) (g : b -> c) (x : t a),
           fmap g (fmap f x) = fmap (g ∘ f) x
     }.
 
-Class ApplicativeLaws (t : Type -> Type) `{ Applicative t } `{ FunctorLaws t} :=
+Class ApplicativeLaws (t : Type -> Type) `{!Functor t, !Applicative t, !FunctorLaws t} :=
  { applicative_identity : forall a (v : t a), (pure id <*> v) = v;
    applicative_composition : forall a b c (u : t (b -> c)) (v : t (a -> b)) (w : t a),
      (pure _∘_ <*> u <*> v <*> w) = (u <*> (v <*> w));
    applicative_homomorphism : forall a b (f : a -> b) (x : a),
      (pure f <*> pure x) = (pure (f x));
    applicative_interchange : forall a b (u : t (a -> b)) (y : a),
-     (u <*> pure y) = ((pure (fun x => x y)) <*> u)
+     (u <*> pure y) = ((pure (fun x => x y)) <*> u);
+   applicative_fmap : forall a b (f : a -> b) (x : t a),
+     fmap f x = (pure f <*> x)
+     (* free theorem *)
  }.
 
-Class MonadLaws (t : Type -> Type) `{ Monad t } `{ ApplicativeLaws t } :=
+Class MonadLaws (t : Type -> Type) `{!Functor t, !Applicative t, !Monad t, !FunctorLaws t, !ApplicativeLaws t} :=
   { monad_left_id : forall A B (a :A) (k : A -> t B), (return_ a >>= k)  =  (k a);
     monad_right_id : forall A (m : t A),  (m >>= return_)  =  m;
     monad_composition : forall A B C (m : t A) (k : A -> t B) (h : B -> t C),
@@ -310,13 +313,12 @@ Class MonadLaws (t : Type -> Type) `{ Monad t } `{ ApplicativeLaws t } :=
     monad_applicative_ap : forall A B (f : t (A -> B)) (x: t A), (f <*> x) = ap f x
   }.
 
-Class MonadPlusLaws (t : Type -> Type) `{ MonadPlus t} `{ MonadLaws t } :=
+Class MonadPlusLaws (t : Type -> Type) `{!Functor t, !Applicative t, !Monad t, !Alternative t, !MonadPlus t, !FunctorLaws t, !ApplicativeLaws t, !MonadLaws t} :=
   { mzero_left : forall A B (f : A -> t B), (mzero >>= f)  =  mzero;
     mzero_right: forall A B (v : t A), (v >> mzero)   =  (mzero : t B);
     mplus_associative : forall A (f g h : t A),
           mplus f (mplus g h) = mplus (mplus f g) h;
   }.
-
 
 (* ------------------------- Monoid --------------------------- *)
 
@@ -418,6 +420,7 @@ Proof.
   - intros. destruct u; destruct v; destruct w; auto.
   - intros. auto.
   - intros. destruct u; auto.
+  - reflexivity.
 Qed.
 
 Instance instance_ApplicativeLaws_list : ApplicativeLaws list.
@@ -446,6 +449,7 @@ Proof.
     auto.
   - intros. auto.
   - intros. rewrite app_nil_r. auto.
+  - by move=> *; rewrite flat_map_cons_f app_nil_r.
 Qed.
 
 (* ------------------------- Monad  --------------------------- *)

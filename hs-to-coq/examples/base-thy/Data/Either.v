@@ -45,6 +45,7 @@ Proof.
   - intros. destruct u; destruct v; destruct w; auto.
   - intros. auto.
   - intros. destruct u; auto.
+  - by move=> ? ? f [].
 Qed.
 
 Instance instance_MonadLaws_Either {a} : MonadLaws (sum a).

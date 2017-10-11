@@ -26,6 +26,6 @@ skip instance_Foldable__GHC_Arr_Array_i_
 skip instance_forall___GHC_Base_Ord_a___GHC_Base_Monoid__Max_a_
 skip instance_forall___GHC_Base_Ord_a___GHC_Base_Monoid__Min_a_
 
-redefine Definition hash_compose := @Coq.Program.Basics.compose.
+redefine Definition hash_compose {a} {b} {c} := @Coq.Program.Basics.compose a b c.
 
 order instance_Foldable_list concatMap concat

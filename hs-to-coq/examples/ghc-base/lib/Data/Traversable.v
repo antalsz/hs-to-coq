@@ -2,7 +2,7 @@
 
 Generalizable All Variables.
 
-Set Implicit Arguments.
+Unset Implicit Arguments.
 Set Maximal Implicit Insertion.
 Unset Strict Implicit.
 Unset Printing Implicit Defensive.
@@ -140,6 +140,8 @@ Local Definition instance_Traversable_Data_Proxy_Proxy_traverse : forall {f}
 
 Inductive Id a : Type := Mk_Id : a -> Id a.
 
+Arguments Mk_Id {_} _.
+
 Definition getId {a} (arg_6__ : Id a) :=
   match arg_6__ with
     | (Mk_Id getId) => getId
@@ -187,12 +189,16 @@ Instance instance_GHC_Base_Applicative_Id : !GHC.Base.Applicative Id := {
 
 Inductive StateL s a : Type := Mk_StateL : (s -> s * a) -> StateL s a.
 
+Arguments Mk_StateL {_} {_} _.
+
 Definition runStateL {s} {a} (arg_5__ : StateL s a) :=
   match arg_5__ with
     | (Mk_StateL runStateL) => runStateL
   end.
 
 Inductive StateR s a : Type := Mk_StateR : (s -> s * a) -> StateR s a.
+
+Arguments Mk_StateR {_} {_} _.
 
 Definition runStateR {s} {a} (arg_4__ : StateR s a) :=
   match arg_4__ with

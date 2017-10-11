@@ -2,7 +2,7 @@
 
 Generalizable All Variables.
 
-Set Implicit Arguments.
+Unset Implicit Arguments.
 Set Maximal Implicit Insertion.
 Unset Strict Implicit.
 Unset Printing Implicit Defensive.
@@ -190,8 +190,8 @@ Local Definition instance_Foldable_Data_Proxy_Proxy_sum : forall {a},
 
 (* Skipping instance instance_Foldable_GHC_Generics_U1 *)
 
-Definition hash_compose :=
-  (@Coq.Program.Basics.compose).
+Definition hash_compose {a} {b} {c} :=
+  (@Coq.Program.Basics.compose a b c).
 
 Class Foldable t := {
   elem : forall {a}, forall `{GHC.Base.Eq_ a}, a -> t a -> bool ;
@@ -366,12 +366,16 @@ Definition concat {t} {a} `{Foldable t} : t (list a) -> list a :=
 
 Inductive Max a : Type := Mk_Max : option a -> Max a.
 
+Arguments Mk_Max {_} _.
+
 Definition getMax {a} (arg_75__ : Max a) :=
   match arg_75__ with
     | (Mk_Max getMax) => getMax
   end.
 
 Inductive Min a : Type := Mk_Min : option a -> Min a.
+
+Arguments Mk_Min {_} _.
 
 Definition getMin {a} (arg_74__ : Min a) :=
   match arg_74__ with

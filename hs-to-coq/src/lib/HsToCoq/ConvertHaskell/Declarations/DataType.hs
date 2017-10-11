@@ -81,7 +81,7 @@ convertConDecl curType extraArgs (ConDeclH98 lname mlqvs mlcxt details _doc) = d
     _ ->
       pure . NonRecordFields $ length args
   constructorFields . at con ?= fieldInfo
-  
+
   pure [(con, params, Just . maybeForall extraArgs $ foldr Arrow curType args)]
 convertConDecl _curType extraArgs (ConDeclGADT lnames sigTy _doc) = do
   cons  <- traverse convertConLName lnames
@@ -149,7 +149,7 @@ convertDataDecl :: ConversionMonad m
 convertDataDecl name tvs defn = do
   coqName   <- freeVar $ unLoc name
   rawParams <- convertLHsTyVarBndrs Coq.Explicit tvs
-  
+
   (params, indices) <-
     use (edits . dataTypeArguments . at coqName) >>= \case
       Just dta -> rewriteDataTypeArguments dta rawParams

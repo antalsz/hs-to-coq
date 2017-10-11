@@ -2,7 +2,7 @@
 
 Generalizable All Variables.
 
-Set Implicit Arguments.
+Unset Implicit Arguments.
 Set Maximal Implicit Insertion.
 Unset Strict Implicit.
 Unset Printing Implicit Defensive.
@@ -470,6 +470,8 @@ Definition zipWith7 {a} {b} {c} {d} {e} {f} {g} {h}
 
 Inductive SnocBuilder a : Type := Mk_SnocBuilder : GHC.Num.Word -> list
                                                    a -> list a -> SnocBuilder a.
+
+Arguments Mk_SnocBuilder {_} _ _ _.
 
 Definition toListSB {a} : SnocBuilder a -> list a :=
   fun arg_0__ =>

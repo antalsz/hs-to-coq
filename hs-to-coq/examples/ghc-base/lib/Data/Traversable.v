@@ -163,7 +163,7 @@ Local Definition instance_GHC_Base_Functor_Id_op_zlzd__ : forall {a} {b},
                                                             b -> Id a -> Id b :=
   fun {a} {b} => fun x => instance_GHC_Base_Functor_Id_fmap (GHC.Base.const x).
 
-Instance instance_GHC_Base_Functor_Id : !GHC.Base.Functor Id := {
+Instance instance_GHC_Base_Functor_Id : GHC.Base.Functor Id := {
   fmap := fun {a} {b} => instance_GHC_Base_Functor_Id_fmap ;
   op_zlzd__ := fun {a} {b} => instance_GHC_Base_Functor_Id_op_zlzd__ }.
 
@@ -182,7 +182,7 @@ Local Definition instance_GHC_Base_Applicative_Id_op_ztzg__ : forall {a} {b},
       instance_GHC_Base_Applicative_Id_op_zlztzg__ (GHC.Base.fmap (GHC.Base.const
                                                                   GHC.Base.id) x) y.
 
-Instance instance_GHC_Base_Applicative_Id : !GHC.Base.Applicative Id := {
+Instance instance_GHC_Base_Applicative_Id : GHC.Base.Applicative Id := {
   op_zlztzg__ := fun {a} {b} => instance_GHC_Base_Applicative_Id_op_zlztzg__ ;
   op_ztzg__ := fun {a} {b} => instance_GHC_Base_Applicative_Id_op_ztzg__ ;
   pure := fun {a} => instance_GHC_Base_Applicative_Id_pure }.
@@ -229,8 +229,8 @@ Definition fmapDefault {t} {a} {b} `{Traversable t} : (a -> b) -> t a -> t b :=
                                                         Mk_Id f))
     end.
 
-Instance instance_Traversable_Data_Proxy_Proxy : !Traversable
-                                                 Data.Proxy.Proxy := {
+Instance instance_Traversable_Data_Proxy_Proxy : Traversable Data.Proxy.Proxy :=
+  {
   mapM := fun {m} {a} {b} `{GHC.Base.Monad m} =>
     instance_Traversable_Data_Proxy_Proxy_mapM ;
   sequence := fun {m} {a} `{GHC.Base.Monad m} =>
@@ -240,7 +240,7 @@ Instance instance_Traversable_Data_Proxy_Proxy : !Traversable
   traverse := fun {f} {a} {b} `{GHC.Base.Applicative f} =>
     instance_Traversable_Data_Proxy_Proxy_traverse }.
 
-Instance instance_Traversable_list : !Traversable list := {
+Instance instance_Traversable_list : Traversable list := {
   mapM := fun {m} {a} {b} `{GHC.Base.Monad m} => instance_Traversable_list_mapM ;
   sequence := fun {m} {a} `{GHC.Base.Monad m} =>
     instance_Traversable_list_sequence ;
@@ -249,7 +249,7 @@ Instance instance_Traversable_list : !Traversable list := {
   traverse := fun {f} {a} {b} `{GHC.Base.Applicative f} =>
     instance_Traversable_list_traverse }.
 
-Instance instance_Traversable_option : !Traversable option := {
+Instance instance_Traversable_option : Traversable option := {
   mapM := fun {m} {a} {b} `{GHC.Base.Monad m} =>
     instance_Traversable_option_mapM ;
   sequence := fun {m} {a} `{GHC.Base.Monad m} =>

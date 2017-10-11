@@ -308,7 +308,7 @@ Definition all {t} {a} `{Foldable t} : (a -> bool) -> t a -> bool :=
                                                                     p))
     end.
 
-Instance instance_Foldable_Data_Proxy_Proxy : !Foldable Data.Proxy.Proxy := {
+Instance instance_Foldable_Data_Proxy_Proxy : Foldable Data.Proxy.Proxy := {
   elem := fun {a} `{GHC.Base.Eq_ a} => instance_Foldable_Data_Proxy_Proxy_elem ;
   fold := fun {m} `{GHC.Base.Monoid m} =>
     instance_Foldable_Data_Proxy_Proxy_fold ;
@@ -325,7 +325,7 @@ Instance instance_Foldable_Data_Proxy_Proxy : !Foldable Data.Proxy.Proxy := {
   sum := fun {a} `{GHC.Num.Num a} => instance_Foldable_Data_Proxy_Proxy_sum ;
   toList := fun {a} => instance_Foldable_Data_Proxy_Proxy_toList }.
 
-Instance instance_Foldable_list : !Foldable list := {
+Instance instance_Foldable_list : Foldable list := {
   elem := fun {a} `{GHC.Base.Eq_ a} => instance_Foldable_list_elem ;
   fold := fun {m} `{GHC.Base.Monoid m} => instance_Foldable_list_fold ;
   foldMap := fun {m} {a} `{GHC.Base.Monoid m} => instance_Foldable_list_foldMap ;

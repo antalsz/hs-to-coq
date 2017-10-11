@@ -21,12 +21,6 @@ be defined in this module so that we can create instances for these types.
 
  *)
 
-Generalizable All Variables.
-Set Implicit Arguments.
-Set Maximal Implicit Insertion.
-Unset Strict Implicit.
-Unset Printing Implicit Defensive.
-
 
 (********************* Types ************************)
 
@@ -269,7 +263,7 @@ Definition compare_comparison  (x : comparison) (y: comparison) :=
 end.
 
 Definition ord_default {a} (comp : a -> a -> comparison) `{Eq_ a} :=
-  Build_Ord _
+  Build_Ord _ _
   (fun x y => (comp x y) == Lt)
   ( fun x y => negb ((comp x y) == Lt))
   (fun x y => (comp y x) == Lt)
@@ -813,11 +807,11 @@ Infix "<**>" := (op_zlztztzg__) (at level 99).
 
 Notation "'_<**>_'" := (op_zlztztzg__).
 
-Instance instance_Functor_list : !Functor list := {
+Instance instance_Functor_list : Functor list := {
   fmap := fun {a} {b} => instance_Functor_list_fmap ;
   op_zlzd__ := fun {a} {b} => instance_Functor_list_op_zlzd__ }.
 
-Instance instance_Applicative_list : !Applicative list := {
+Instance instance_Applicative_list : Applicative list := {
   op_zlztzg__ := fun {a} {b} => instance_Applicative_list_op_zlztzg__ ;
   op_ztzg__ := fun {a} {b} => instance_Applicative_list_op_ztzg__ ;
   pure := fun {a} => instance_Applicative_list_pure }.
@@ -829,12 +823,12 @@ Local Definition instance_Monad_list_op_zgzg__ : forall {a} {b},
 Local Definition instance_Monad_list_return_ : forall {a}, a -> list a :=
   fun {a} => pure.
 
-Instance instance_Monad_list : !Monad list := {
+Instance instance_Monad_list : Monad list := {
   op_zgzg__ := fun {a} {b} => instance_Monad_list_op_zgzg__ ;
   op_zgzgze__ := fun {a} {b} => instance_Monad_list_op_zgzgze__ ;
   return_ := fun {a} => instance_Monad_list_return_ }.
 
-Instance instance_Functor_option : !Functor option := {
+Instance instance_Functor_option : Functor option := {
   fmap := fun {a} {b} => instance_Functor_option_fmap ;
   op_zlzd__ := fun {a} {b} => instance_Functor_option_op_zlzd__ }.
 
@@ -847,7 +841,7 @@ Local Definition instance_Applicative_option_op_zlztzg__ : forall {a} {b},
         | None , _m => None
       end.
 
-Instance instance_Applicative_option : !Applicative option := {
+Instance instance_Applicative_option : Applicative option := {
   op_zlztzg__ := fun {a} {b} => instance_Applicative_option_op_zlztzg__ ;
   op_ztzg__ := fun {a} {b} => instance_Applicative_option_op_ztzg__ ;
   pure := fun {a} => instance_Applicative_option_pure }.
@@ -859,7 +853,7 @@ Local Definition instance_Monad_option_op_zgzg__ : forall {a} {b},
 Local Definition instance_Monad_option_return_ : forall {a}, a -> option a :=
   fun {a} => pure.
 
-Instance instance_Monad_option : !Monad option := {
+Instance instance_Monad_option : Monad option := {
   op_zgzg__ := fun {a} {b} => instance_Monad_option_op_zgzg__ ;
   op_zgzgze__ := fun {a} {b} => instance_Monad_option_op_zgzgze__ ;
   return_ := fun {a} => instance_Monad_option_return_ }.
@@ -890,13 +884,13 @@ Local Definition instance_forall___Monoid_a___Monoid__option_a__mconcat {inst_a}
   foldr instance_forall___Monoid_a___Monoid__option_a__mappend
   instance_forall___Monoid_a___Monoid__option_a__mempty.
 
-Instance instance_forall___Monoid_a___Monoid__option_a_ : !forall {a},
+Instance instance_forall___Monoid_a___Monoid__option_a_ : forall {a},
                                                             forall `{Monoid a}, Monoid (option a) := {
   mappend := instance_forall___Monoid_a___Monoid__option_a__mappend ;
   mconcat := instance_forall___Monoid_a___Monoid__option_a__mconcat ;
   mempty := instance_forall___Monoid_a___Monoid__option_a__mempty }.
 
-Instance instance_Monoid_comparison : !Monoid comparison := {
+Instance instance_Monoid_comparison : Monoid comparison := {
   mappend := instance_Monoid_comparison_mappend ;
   mconcat := instance_Monoid_comparison_mconcat ;
   mempty := instance_Monoid_comparison_mempty }.
@@ -970,7 +964,7 @@ Local Definition instance_forall___Monoid_a____Monoid_b____Monoid_c____Monoid_d_
   instance_forall___Monoid_a____Monoid_b____Monoid_c____Monoid_d____Monoid_e___Monoid__a___b___c___d___e__mempty.
 
 Instance instance_forall___Monoid_a____Monoid_b____Monoid_c____Monoid_d____Monoid_e___Monoid__a___b___c___d___e_
-  : !forall {a} {b} {c} {d} {e},
+  : forall {a} {b} {c} {d} {e},
       forall `{Monoid a} `{Monoid b} `{Monoid c} `{Monoid d} `{Monoid e},
         Monoid (a * b * c * d * e) := {
   mappend := instance_forall___Monoid_a____Monoid_b____Monoid_c____Monoid_d____Monoid_e___Monoid__a___b___c___d___e__mappend ;
@@ -1033,7 +1027,7 @@ Local Definition instance_forall___Monoid_a____Monoid_b____Monoid_c____Monoid_d_
   instance_forall___Monoid_a____Monoid_b____Monoid_c____Monoid_d___Monoid__a___b___c___d__mempty.
 
 Instance instance_forall___Monoid_a____Monoid_b____Monoid_c____Monoid_d___Monoid__a___b___c___d_
-  : !forall {a} {b} {c} {d},
+  : forall {a} {b} {c} {d},
       forall `{Monoid a} `{Monoid b} `{Monoid c} `{Monoid d},
         Monoid (a * b * c * d) := {
   mappend := instance_forall___Monoid_a____Monoid_b____Monoid_c____Monoid_d___Monoid__a___b___c___d__mappend ;
@@ -1080,7 +1074,7 @@ Local Definition instance_forall___Monoid_a____Monoid_b____Monoid_c___Monoid__a_
   instance_forall___Monoid_a____Monoid_b____Monoid_c___Monoid__a___b___c__mempty.
 
 Instance instance_forall___Monoid_a____Monoid_b____Monoid_c___Monoid__a___b___c_
-  : !forall {a} {b} {c},
+  : forall {a} {b} {c},
       forall `{Monoid a} `{Monoid b} `{Monoid c}, Monoid (a * b * c) := {
   mappend := instance_forall___Monoid_a____Monoid_b____Monoid_c___Monoid__a___b___c__mappend ;
   mconcat := instance_forall___Monoid_a____Monoid_b____Monoid_c___Monoid__a___b___c__mconcat ;
@@ -1108,14 +1102,14 @@ Local Definition instance_forall___Monoid_a____Monoid_b___Monoid__a___b__mconcat
   foldr instance_forall___Monoid_a____Monoid_b___Monoid__a___b__mappend
   instance_forall___Monoid_a____Monoid_b___Monoid__a___b__mempty.
 
-Instance instance_forall___Monoid_a____Monoid_b___Monoid__a___b_ : !forall {a}
-                                                                           {b},
+Instance instance_forall___Monoid_a____Monoid_b___Monoid__a___b_ : forall {a}
+                                                                          {b},
                                                                      forall `{Monoid a} `{Monoid b}, Monoid (a * b) := {
   mappend := instance_forall___Monoid_a____Monoid_b___Monoid__a___b__mappend ;
   mconcat := instance_forall___Monoid_a____Monoid_b___Monoid__a___b__mconcat ;
   mempty := instance_forall___Monoid_a____Monoid_b___Monoid__a___b__mempty }.
 
-Instance instance_Monoid_unit : !Monoid unit := {
+Instance instance_Monoid_unit : Monoid unit := {
   mappend := instance_Monoid_unit_mappend ;
   mconcat := instance_Monoid_unit_mconcat ;
   mempty := instance_Monoid_unit_mempty }.

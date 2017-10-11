@@ -79,6 +79,119 @@ Definition foldrM {m} {b} {a} `{(GHC.Base.Monad m)} : (b -> a -> m
              | k , z , (cons x xs) => GHC.Base.op_zgzgze__ (foldrM k z xs) (fun r => k x r)
            end.
 
+Definition mapAccumLM {m} {acc} {x} {y} `{GHC.Base.Monad m} : (acc -> x -> m
+                                                              (acc * y)) -> acc -> list x -> m (acc * list y) :=
+  fix mapAccumLM arg_51__ arg_52__ arg_53__
+        := match arg_51__ , arg_52__ , arg_53__ with
+             | _ , s , nil => GHC.Base.return_ (pair s nil)
+             | f , s , (cons x xs) => let cont_55__ arg_56__ :=
+                                        match arg_56__ with
+                                          | (pair s1 x') => let cont_57__ arg_58__ :=
+                                                              match arg_58__ with
+                                                                | (pair s2 xs') => GHC.Base.return_ (pair s2 (cons x'
+                                                                                                                   xs'))
+                                                              end in
+                                                            GHC.Base.op_zgzgze__ (mapAccumLM f s1 xs) cont_57__
+                                        end in
+                                      GHC.Base.op_zgzgze__ (f s x) cont_55__
+           end.
+
+Definition mapAndUnzip3M {m} {a} {b} {c} {d} `{GHC.Base.Monad m} : (a -> m (b *
+                                                                           c * d)) -> list a -> m (list b * list c *
+                                                                                                  list d) :=
+  fix mapAndUnzip3M arg_79__ arg_80__
+        := match arg_79__ , arg_80__ with
+             | _ , nil => GHC.Base.return_ (pair (pair nil nil) nil)
+             | f , (cons x xs) => let cont_82__ arg_83__ :=
+                                    match arg_83__ with
+                                      | (pair (pair r1 r2) r3) => let cont_84__ arg_85__ :=
+                                                                    match arg_85__ with
+                                                                      | (pair (pair rs1 rs2) rs3) => GHC.Base.return_
+                                                                                                     (pair (pair (cons
+                                                                                                                 r1 rs1)
+                                                                                                                 (cons
+                                                                                                                 r2
+                                                                                                                 rs2))
+                                                                                                           (cons r3
+                                                                                                                 rs3))
+                                                                    end in
+                                                                  GHC.Base.op_zgzgze__ (mapAndUnzip3M f xs) cont_84__
+                                    end in
+                                  GHC.Base.op_zgzgze__ (f x) cont_82__
+           end.
+
+Definition mapAndUnzip4M {m} {a} {b} {c} {d} {e} `{GHC.Base.Monad m} : (a -> m
+                                                                       (b * c * d * e)) -> list a -> m (list b * list c
+                                                                                                       * list d * list
+                                                                                                       e) :=
+  fix mapAndUnzip4M arg_70__ arg_71__
+        := match arg_70__ , arg_71__ with
+             | _ , nil => GHC.Base.return_ (pair (pair (pair nil nil) nil) nil)
+             | f , (cons x xs) => let cont_73__ arg_74__ :=
+                                    match arg_74__ with
+                                      | (pair (pair (pair r1 r2) r3) r4) => let cont_75__ arg_76__ :=
+                                                                              match arg_76__ with
+                                                                                | (pair (pair (pair rs1 rs2) rs3)
+                                                                                        rs4) => GHC.Base.return_ (pair
+                                                                                                                 (pair
+                                                                                                                 (pair
+                                                                                                                 (cons
+                                                                                                                 r1 rs1)
+                                                                                                                 (cons
+                                                                                                                 r2
+                                                                                                                 rs2))
+                                                                                                                 (cons
+                                                                                                                 r3
+                                                                                                                 rs3))
+                                                                                                                 (cons
+                                                                                                                 r4
+                                                                                                                 rs4))
+                                                                              end in
+                                                                            GHC.Base.op_zgzgze__ (mapAndUnzip4M f xs)
+                                                                                                 cont_75__
+                                    end in
+                                  GHC.Base.op_zgzgze__ (f x) cont_73__
+           end.
+
+Definition mapAndUnzip5M {m} {a} {b} {c} {d} {e} {f} `{GHC.Base.Monad m}
+    : (a -> m (b * c * d * e * f)) -> list a -> m (list b * list c * list d * list e
+                                                  * list f) :=
+  fix mapAndUnzip5M arg_61__ arg_62__
+        := match arg_61__ , arg_62__ with
+             | _ , nil => GHC.Base.return_ (pair (pair (pair (pair nil nil) nil) nil) nil)
+             | f , (cons x xs) => let cont_64__ arg_65__ :=
+                                    match arg_65__ with
+                                      | (pair (pair (pair (pair r1 r2) r3) r4) r5) => let cont_66__ arg_67__ :=
+                                                                                        match arg_67__ with
+                                                                                          | (pair (pair (pair (pair rs1
+                                                                                                                    rs2)
+                                                                                                              rs3) rs4)
+                                                                                                  rs5) =>
+                                                                                            GHC.Base.return_ (pair (pair
+                                                                                                                   (pair
+                                                                                                                   (pair
+                                                                                                                   (cons
+                                                                                                                   r1
+                                                                                                                   rs1)
+                                                                                                                   (cons
+                                                                                                                   r2
+                                                                                                                   rs2))
+                                                                                                                   (cons
+                                                                                                                   r3
+                                                                                                                   rs3))
+                                                                                                                   (cons
+                                                                                                                   r4
+                                                                                                                   rs4))
+                                                                                                                   (cons
+                                                                                                                   r5
+                                                                                                                   rs5))
+                                                                                        end in
+                                                                                      GHC.Base.op_zgzgze__
+                                                                                      (mapAndUnzip5M f xs) cont_66__
+                                    end in
+                                  GHC.Base.op_zgzgze__ (f x) cont_64__
+           end.
+
 Definition mapSndM {m} {b} {c} {a} `{GHC.Base.Monad m} : (b -> m c) -> list (a *
                                                                             b) -> m (list (a * c)) :=
   fix mapSndM arg_46__ arg_47__
@@ -118,8 +231,8 @@ Definition whenM {m} `{GHC.Base.Monad m} : m bool -> m unit -> m unit :=
 
 Definition zipWith3M {m} {a} {b} {c} {d} `{GHC.Base.Monad m} : (a -> b -> c -> m
                                                                d) -> list a -> list b -> list c -> m (list d) :=
-  fix zipWith3M arg_62__ arg_63__ arg_64__ arg_65__
-        := match arg_62__ , arg_63__ , arg_64__ , arg_65__ with
+  fix zipWith3M arg_109__ arg_110__ arg_111__ arg_112__
+        := match arg_109__ , arg_110__ , arg_111__ , arg_112__ with
              | _ , nil , _ , _ => GHC.Base.return_ nil
              | _ , _ , nil , _ => GHC.Base.return_ nil
              | _ , _ , _ , nil => GHC.Base.return_ nil
@@ -136,8 +249,8 @@ Definition zipWith3M {m} {a} {b} {c} {d} `{GHC.Base.Monad m} : (a -> b -> c -> m
 
 Definition zipWith3M_ {m} {a} {b} {c} {d} `{GHC.Base.Monad m}
     : (a -> b -> c -> m d) -> list a -> list b -> list c -> m unit :=
-  fun arg_71__ arg_72__ arg_73__ arg_74__ =>
-    match arg_71__ , arg_72__ , arg_73__ , arg_74__ with
+  fun arg_118__ arg_119__ arg_120__ arg_121__ =>
+    match arg_118__ , arg_119__ , arg_120__ , arg_121__ with
       | f , as_ , bs , cs => GHC.Base.op_zgzgze__ (zipWith3M f as_ bs cs) (fun _ =>
                                                     GHC.Base.return_ tt)
     end.
@@ -145,8 +258,8 @@ Definition zipWith3M_ {m} {a} {b} {c} {d} `{GHC.Base.Monad m}
 Definition zipWith4M {m} {a} {b} {c} {d} {e} `{GHC.Base.Monad m}
     : (a -> b -> c -> d -> m e) -> list a -> list b -> list c -> list d -> m (list
                                                                              e) :=
-  fix zipWith4M arg_51__ arg_52__ arg_53__ arg_54__ arg_55__
-        := match arg_51__ , arg_52__ , arg_53__ , arg_54__ , arg_55__ with
+  fix zipWith4M arg_98__ arg_99__ arg_100__ arg_101__ arg_102__
+        := match arg_98__ , arg_99__ , arg_100__ , arg_101__ , arg_102__ with
              | _ , nil , _ , _ , _ => GHC.Base.return_ nil
              | _ , _ , nil , _ , _ => GHC.Base.return_ nil
              | _ , _ , _ , nil , _ => GHC.Base.return_ nil
@@ -157,9 +270,29 @@ Definition zipWith4M {m} {a} {b} {c} {d} {e} `{GHC.Base.Monad m}
                                                              GHC.Base.op_zd__ GHC.Base.return_ (cons r rs)))
            end.
 
+Definition zipWithAndUnzipM {m} {a} {b} {c} {d} `{GHC.Base.Monad m}
+    : (a -> b -> m (c * d)) -> list a -> list b -> m (list c * list d) :=
+  fix zipWithAndUnzipM arg_88__ arg_89__ arg_90__
+        := match arg_88__ , arg_89__ , arg_90__ with
+             | f , (cons x xs) , (cons y ys) => let cont_91__ arg_92__ :=
+                                                  match arg_92__ with
+                                                    | (pair c d) => let cont_93__ arg_94__ :=
+                                                                      match arg_94__ with
+                                                                        | (pair cs ds) => GHC.Base.return_ (pair (cons c
+                                                                                                                       cs)
+                                                                                                                 (cons d
+                                                                                                                       ds))
+                                                                      end in
+                                                                    GHC.Base.op_zgzgze__ (zipWithAndUnzipM f xs ys)
+                                                                                         cont_93__
+                                                  end in
+                                                GHC.Base.op_zgzgze__ (f x y) cont_91__
+             | _ , _ , _ => GHC.Base.return_ (pair nil nil)
+           end.
+
 (* Unbound variables:
      * Control.Monad.foldM Control.Monad.foldM_ Coq.Program.Basics.compose
      GHC.Base.Monad GHC.Base.liftM GHC.Base.op_zd__ GHC.Base.op_zgzgze__
-     GHC.Base.return_ GHC.Base.when Some bool cons false inl inr list option pair sum
-     true tt unit
+     GHC.Base.return_ GHC.Base.when Some bool cons false inl inr list nil option pair
+     sum true tt unit
 *)

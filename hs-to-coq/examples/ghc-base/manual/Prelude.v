@@ -10,7 +10,6 @@ Require Export Data.Traversable.
 Require Export Data.Tuple.
 
 Require Export GHC.Base.
-Require Export GHC.BaseInstances.
 (* Require Export Data.Char. *)
 (* No Text.Read *)
 Require Export GHC.Enum.

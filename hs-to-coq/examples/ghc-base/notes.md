@@ -53,12 +53,23 @@
   Control/Monad/Fail
     - IO instance
 
+  Data/Foldable
+    - Heavy use of Data.Coerce as type class instances
+
+
+
 * What stops these modules from being generated?
 
 - GHC/BaseInstances
   This is a manual part of Base.hs
   Bug in instance generation for partially applied type constructors
   (e.g. monoid instance for list).
+
+- Data/FoldableInst
+  This is the manual part of Data.Foldable
+  Instances for the option type.
+  One of the methods for this refers to the class. Currently resolve
+  using helper function `anyWith`.
 
 - Data/Type/Equality
   functional dependencies
@@ -74,10 +85,6 @@
   Deriving: most of the functionality of this module comes from
   type class deriving (Data.coerce)
   (NOTE: most of the instances are NOT available)
-
-- Data/Foldable
-  Heavy use of Data.Coerce as type class instances
-  NOTE: without translation, default methods are unavailable. Ugh.
 
 - Control/Arrow
   Type inference: need to annotate parameter to ArrowMonad
@@ -103,10 +110,13 @@
    Manually added Eq, Ord instances b/c of deriving
 
 - GHC/Enum
+  Lots of primitive types.
 
 - Data/Proxy
 
 - Prelude
+
+------------------------------------------------------------------------------
 
 * What features/modules are missing from Base?
 

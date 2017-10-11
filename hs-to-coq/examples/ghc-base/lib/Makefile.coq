@@ -109,7 +109,6 @@ VFILES:=GHC/Num.v\
   GHC/Enum.v\
   Data/Bits.v\
   Data/Type/Equality.v\
-  GHC/BaseInstances.v\
   Prelude.v\
   GHC/Prim.v\
   GHC/Tuple.v\

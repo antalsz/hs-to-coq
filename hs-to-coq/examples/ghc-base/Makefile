@@ -24,7 +24,6 @@ HANDMOD = \
   GHC/Enum \
   Data/Bits \
   Data/Type/Equality \
-  GHC/BaseInstances \
   Prelude\
   GHC/Prim \
   GHC/Tuple \

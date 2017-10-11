@@ -404,14 +404,28 @@ Definition oneShot {a} (x:a) := x.
 
 (* Converted imports: *)
 
+Require Coq.Init.Datatypes.
 Require Coq.Lists.List.
 Require Coq.Program.Basics.
+Require GHC.Prim.
+Require GHC.Tuple.
 
 (* Converted declarations: *)
 
-(* Skipping instance instance_Monoid__list_a_ *)
+Local Definition instance_Monoid__list_a__mappend {inst_a} : list inst_a -> list
+                                                             inst_a -> list inst_a :=
+  Coq.Init.Datatypes.app.
 
-(* Skipping instance instance_forall___Monoid_b___Monoid__a____b_ *)
+Local Definition instance_Monoid__list_a__mconcat {inst_a} : list (list
+                                                                  inst_a) -> list inst_a :=
+  fun arg_264__ =>
+    match arg_264__ with
+      | xss => Coq.Lists.List.flat_map (fun xs =>
+                                         Coq.Lists.List.flat_map (fun x => cons x nil) xs) xss
+    end.
+
+Local Definition instance_Monoid__list_a__mempty {inst_a} : list inst_a :=
+  nil.
 
 Local Definition instance_Monoid_unit_mappend : unit -> unit -> unit :=
   fun arg_255__ arg_256__ => tt.
@@ -434,21 +448,52 @@ Local Definition instance_Monoid_comparison_mappend
 Local Definition instance_Monoid_comparison_mempty : comparison :=
   Eq.
 
-(* Skipping instance
-   instance_forall___Monoid_a___Applicative__GHC_Tuple_pair_type_a_ *)
-
-(* Skipping instance
-   instance_forall___Monoid_a___Monad__GHC_Tuple_pair_type_a_ *)
-
 (* Skipping instance instance_forall___Monoid_a___Monoid__GHC_Types_IO_a_ *)
 
-(* Skipping instance instance_Functor__GHC_Prim_arrow_r_ *)
+Local Definition instance_Functor__GHC_Prim_arrow_r__fmap {inst_r} : forall {a}
+                                                                            {b},
+                                                                       (a -> b) -> (GHC.Prim.arrow inst_r)
+                                                                       a -> (GHC.Prim.arrow inst_r) b :=
+  fun {a} {b} => Coq.Program.Basics.compose.
 
-(* Skipping instance instance_Applicative__GHC_Prim_arrow_a_ *)
+Local Definition instance_Applicative__GHC_Prim_arrow_a__op_zlztzg__ {inst_a}
+    : forall {a} {b},
+        (GHC.Prim.arrow inst_a) (a -> b) -> (GHC.Prim.arrow inst_a) a -> (GHC.Prim.arrow
+        inst_a) b :=
+  fun {a} {b} =>
+    fun arg_207__ arg_208__ arg_209__ =>
+      match arg_207__ , arg_208__ , arg_209__ with
+        | f , g , x => f x (g x)
+      end.
 
-(* Skipping instance instance_Monad__GHC_Prim_arrow_r_ *)
+Local Definition instance_Monad__GHC_Prim_arrow_r__op_zgzgze__ {inst_r}
+    : forall {a} {b},
+        (GHC.Prim.arrow inst_r) a -> (a -> (GHC.Prim.arrow inst_r) b) -> (GHC.Prim.arrow
+        inst_r) b :=
+  fun {a} {b} =>
+    fun arg_200__ arg_201__ =>
+      match arg_200__ , arg_201__ with
+        | f , k => fun arg_202__ => match arg_202__ with | r => k (f r) r end
+      end.
 
-(* Skipping instance instance_Functor__GHC_Tuple_pair_type_a_ *)
+Local Definition instance_Monad__GHC_Prim_arrow_r__op_zgzg__ {inst_r}
+    : forall {a} {b},
+        (GHC.Prim.arrow inst_r) a -> (GHC.Prim.arrow inst_r) b -> (GHC.Prim.arrow
+        inst_r) b :=
+  fun {a} {b} =>
+    fun arg_15__ arg_16__ =>
+      match arg_15__ , arg_16__ with
+        | m , k => instance_Monad__GHC_Prim_arrow_r__op_zgzgze__ m (fun arg_17__ => k)
+      end.
+
+Local Definition instance_Functor__GHC_Tuple_pair_type_a__fmap {inst_a}
+    : forall {a} {b},
+        (a -> b) -> (GHC.Tuple.pair_type inst_a) a -> (GHC.Tuple.pair_type inst_a) b :=
+  fun {a} {b} =>
+    fun arg_196__ arg_197__ =>
+      match arg_196__ , arg_197__ with
+        | f , (pair x y) => pair x (f y)
+      end.
 
 Local Definition instance_Functor_option_fmap : forall {a} {b},
                                                   (a -> b) -> option a -> option b :=
@@ -552,6 +597,21 @@ Definition asTypeOf {a} : a -> a -> a :=
 Local Definition instance_Functor_option_op_zlzd__ : forall {a} {b},
                                                        a -> option b -> option a :=
   fun {a} {b} => Coq.Program.Basics.compose instance_Functor_option_fmap const.
+
+Local Definition instance_Functor__GHC_Tuple_pair_type_a__op_zlzd__ {inst_a}
+    : forall {a} {b},
+        a -> (GHC.Tuple.pair_type inst_a) b -> (GHC.Tuple.pair_type inst_a) a :=
+  fun {a} {b} =>
+    Coq.Program.Basics.compose instance_Functor__GHC_Tuple_pair_type_a__fmap const.
+
+Local Definition instance_Applicative__GHC_Prim_arrow_a__pure {inst_a}
+    : forall {a}, a -> (GHC.Prim.arrow inst_a) a :=
+  fun {a} => const.
+
+Local Definition instance_Functor__GHC_Prim_arrow_r__op_zlzd__ {inst_r}
+    : forall {a} {b}, a -> (GHC.Prim.arrow inst_r) b -> (GHC.Prim.arrow inst_r) a :=
+  fun {a} {b} =>
+    Coq.Program.Basics.compose instance_Functor__GHC_Prim_arrow_r__fmap const.
 
 Definition eqString : String -> String -> bool :=
   fix eqString arg_56__ arg_57__
@@ -822,12 +882,12 @@ Instance instance_Applicative_list : Applicative list := {
   op_ztzg__ := fun {a} {b} => instance_Applicative_list_op_ztzg__ ;
   pure := fun {a} => instance_Applicative_list_pure }.
 
+Local Definition instance_Monad_list_return_ : forall {a}, a -> list a :=
+  fun {a} => pure.
+
 Local Definition instance_Monad_list_op_zgzg__ : forall {a} {b},
                                                    list a -> list b -> list b :=
   fun {a} {b} => op_ztzg__.
-
-Local Definition instance_Monad_list_return_ : forall {a}, a -> list a :=
-  fun {a} => pure.
 
 Instance instance_Monad_list : Monad list := {
   op_zgzg__ := fun {a} {b} => instance_Monad_list_op_zgzg__ ;
@@ -864,10 +924,138 @@ Instance instance_Monad_option : Monad option := {
   op_zgzgze__ := fun {a} {b} => instance_Monad_option_op_zgzgze__ ;
   return_ := fun {a} => instance_Monad_option_return_ }.
 
+Instance instance_Functor__GHC_Tuple_pair_type_a_ : forall {a},
+                                                      Functor (GHC.Tuple.pair_type a) := {
+  fmap := fun {a} {b} => instance_Functor__GHC_Tuple_pair_type_a__fmap ;
+  op_zlzd__ := fun {a} {b} =>
+    instance_Functor__GHC_Tuple_pair_type_a__op_zlzd__ }.
+
+Instance instance_Functor__GHC_Prim_arrow_r_ : forall {r},
+                                                 Functor (GHC.Prim.arrow r) := {
+  fmap := fun {a} {b} => instance_Functor__GHC_Prim_arrow_r__fmap ;
+  op_zlzd__ := fun {a} {b} => instance_Functor__GHC_Prim_arrow_r__op_zlzd__ }.
+
+Local Definition instance_Applicative__GHC_Prim_arrow_a__op_ztzg__ {inst_a}
+    : forall {a} {b},
+        (GHC.Prim.arrow inst_a) a -> (GHC.Prim.arrow inst_a) b -> (GHC.Prim.arrow
+        inst_a) b :=
+  fun {a} {b} =>
+    fun arg_2__ arg_3__ =>
+      match arg_2__ , arg_3__ with
+        | a1 , a2 => instance_Applicative__GHC_Prim_arrow_a__op_zlztzg__ (op_zlzd__ id
+                                                                                    a1) a2
+      end.
+
+Instance instance_Applicative__GHC_Prim_arrow_a_ : forall {a},
+                                                     Applicative (GHC.Prim.arrow a) := {
+  op_zlztzg__ := fun {a} {b} =>
+    instance_Applicative__GHC_Prim_arrow_a__op_zlztzg__ ;
+  op_ztzg__ := fun {a} {b} => instance_Applicative__GHC_Prim_arrow_a__op_ztzg__ ;
+  pure := fun {a} => instance_Applicative__GHC_Prim_arrow_a__pure }.
+
+Local Definition instance_Monad__GHC_Prim_arrow_r__return_ {inst_r}
+    : forall {a}, a -> (GHC.Prim.arrow inst_r) a :=
+  fun {a} => pure.
+
+Instance instance_Monad__GHC_Prim_arrow_r_ : forall {r},
+                                               Monad (GHC.Prim.arrow r) := {
+  op_zgzg__ := fun {a} {b} => instance_Monad__GHC_Prim_arrow_r__op_zgzg__ ;
+  op_zgzgze__ := fun {a} {b} => instance_Monad__GHC_Prim_arrow_r__op_zgzgze__ ;
+  return_ := fun {a} => instance_Monad__GHC_Prim_arrow_r__return_ }.
+
 Class Monoid a := {
   mappend : a -> a -> a ;
   mconcat : list a -> a ;
   mempty : a }.
+
+Local Definition instance_forall___Monoid_a___Applicative__GHC_Tuple_pair_type_a__pure {inst_a}
+                                                                                       `{Monoid inst_a} : forall {a},
+                                                                                                            a -> (GHC.Tuple.pair_type
+                                                                                                            inst_a) a :=
+  fun {a} => fun arg_221__ => match arg_221__ with | x => pair mempty x end.
+
+Local Definition instance_forall___Monoid_a___Applicative__GHC_Tuple_pair_type_a__op_zlztzg__ {inst_a}
+                                                                                              `{Monoid inst_a}
+    : forall {a} {b},
+        (GHC.Tuple.pair_type inst_a) (a -> b) -> (GHC.Tuple.pair_type inst_a)
+        a -> (GHC.Tuple.pair_type inst_a) b :=
+  fun {a} {b} =>
+    fun arg_224__ arg_225__ =>
+      match arg_224__ , arg_225__ with
+        | (pair u f) , (pair v x) => pair (mappend u v) (f x)
+      end.
+
+Local Definition instance_forall___Monoid_a___Applicative__GHC_Tuple_pair_type_a__op_ztzg__ {inst_a}
+                                                                                            `{Monoid inst_a}
+    : forall {a} {b},
+        (GHC.Tuple.pair_type inst_a) a -> (GHC.Tuple.pair_type inst_a)
+        b -> (GHC.Tuple.pair_type inst_a) b :=
+  fun {a} {b} =>
+    fun arg_2__ arg_3__ =>
+      match arg_2__ , arg_3__ with
+        | a1 , a2 =>
+          instance_forall___Monoid_a___Applicative__GHC_Tuple_pair_type_a__op_zlztzg__
+          (op_zlzd__ id a1) a2
+      end.
+
+Instance instance_forall___Monoid_a___Applicative__GHC_Tuple_pair_type_a_
+  : forall {a}, forall `{Monoid a}, Applicative (GHC.Tuple.pair_type a) := {
+  op_zlztzg__ := fun {a} {b} =>
+    instance_forall___Monoid_a___Applicative__GHC_Tuple_pair_type_a__op_zlztzg__ ;
+  op_ztzg__ := fun {a} {b} =>
+    instance_forall___Monoid_a___Applicative__GHC_Tuple_pair_type_a__op_ztzg__ ;
+  pure := fun {a} =>
+    instance_forall___Monoid_a___Applicative__GHC_Tuple_pair_type_a__pure }.
+
+Local Definition instance_forall___Monoid_a___Monad__GHC_Tuple_pair_type_a__return_ {inst_a}
+                                                                                    `{Monoid inst_a} : forall {a},
+                                                                                                         a -> (GHC.Tuple.pair_type
+                                                                                                         inst_a) a :=
+  fun {a} => pure.
+
+Local Definition instance_forall___Monoid_a___Monad__GHC_Tuple_pair_type_a__op_zgzgze__ {inst_a}
+                                                                                        `{Monoid inst_a} : forall {a}
+                                                                                                                  {b},
+                                                                                                             (GHC.Tuple.pair_type
+                                                                                                             inst_a)
+                                                                                                             a -> (a -> (GHC.Tuple.pair_type
+                                                                                                             inst_a)
+                                                                                                             b) -> (GHC.Tuple.pair_type
+                                                                                                             inst_a)
+                                                                                                             b :=
+  fun {a} {b} =>
+    fun arg_214__ arg_215__ =>
+      match arg_214__ , arg_215__ with
+        | (pair u a) , k => let scrut_216__ := k a in
+                            match scrut_216__ with
+                              | (pair v b) => pair (mappend u v) b
+                            end
+      end.
+
+Local Definition instance_forall___Monoid_a___Monad__GHC_Tuple_pair_type_a__op_zgzg__ {inst_a}
+                                                                                      `{Monoid inst_a} : forall {a} {b},
+                                                                                                           (GHC.Tuple.pair_type
+                                                                                                           inst_a)
+                                                                                                           a -> (GHC.Tuple.pair_type
+                                                                                                           inst_a)
+                                                                                                           b -> (GHC.Tuple.pair_type
+                                                                                                           inst_a) b :=
+  fun {a} {b} =>
+    fun arg_15__ arg_16__ =>
+      match arg_15__ , arg_16__ with
+        | m , k =>
+          instance_forall___Monoid_a___Monad__GHC_Tuple_pair_type_a__op_zgzgze__ m
+                                                                                 (fun arg_17__ => k)
+      end.
+
+Instance instance_forall___Monoid_a___Monad__GHC_Tuple_pair_type_a_
+  : forall {a}, forall `{Monoid a}, Monad (GHC.Tuple.pair_type a) := {
+  op_zgzg__ := fun {a} {b} =>
+    instance_forall___Monoid_a___Monad__GHC_Tuple_pair_type_a__op_zgzg__ ;
+  op_zgzgze__ := fun {a} {b} =>
+    instance_forall___Monoid_a___Monad__GHC_Tuple_pair_type_a__op_zgzgze__ ;
+  return_ := fun {a} =>
+    instance_forall___Monoid_a___Monad__GHC_Tuple_pair_type_a__return_ }.
 
 Local Definition instance_forall___Monoid_a___Monoid__option_a__mempty {inst_a}
                                                                        `{Monoid inst_a} : (option inst_a) :=
@@ -1120,7 +1308,37 @@ Instance instance_Monoid_unit : Monoid unit := {
   mconcat := instance_Monoid_unit_mconcat ;
   mempty := instance_Monoid_unit_mempty }.
 
+Local Definition instance_forall___Monoid_b___Monoid__a____b__mempty {inst_b}
+                                                                     {inst_a} `{Monoid inst_b} : (inst_a -> inst_b) :=
+  fun arg_258__ => mempty.
+
+Local Definition instance_forall___Monoid_b___Monoid__a____b__mappend {inst_b}
+                                                                      {inst_a} `{Monoid inst_b}
+    : (inst_a -> inst_b) -> (inst_a -> inst_b) -> (inst_a -> inst_b) :=
+  fun arg_259__ arg_260__ arg_261__ =>
+    match arg_259__ , arg_260__ , arg_261__ with
+      | f , g , x => mappend (f x) (g x)
+    end.
+
+Local Definition instance_forall___Monoid_b___Monoid__a____b__mconcat {inst_b}
+                                                                      {inst_a} `{Monoid inst_b} : list
+                                                                                                  (inst_a -> inst_b) -> (inst_a -> inst_b) :=
+  foldr instance_forall___Monoid_b___Monoid__a____b__mappend
+  instance_forall___Monoid_b___Monoid__a____b__mempty.
+
+Instance instance_forall___Monoid_b___Monoid__a____b_ : forall {b} {a},
+                                                          forall `{Monoid b}, Monoid (a -> b) := {
+  mappend := instance_forall___Monoid_b___Monoid__a____b__mappend ;
+  mconcat := instance_forall___Monoid_b___Monoid__a____b__mconcat ;
+  mempty := instance_forall___Monoid_b___Monoid__a____b__mempty }.
+
+Instance instance_Monoid__list_a_ : forall {a}, Monoid (list a) := {
+  mappend := instance_Monoid__list_a__mappend ;
+  mconcat := instance_Monoid__list_a__mconcat ;
+  mempty := instance_Monoid__list_a__mempty }.
+
 (* Unbound variables:
-     * Coq.Lists.List.flat_map Coq.Program.Basics.compose Eq None Some String andb
-     bool comparison cons false list nil op_zeze__ option pair true tt unit
+     * Coq.Init.Datatypes.app Coq.Lists.List.flat_map Coq.Program.Basics.compose Eq
+     GHC.Prim.arrow GHC.Tuple.pair_type None Some String andb bool comparison cons
+     false list nil op_zeze__ option pair true tt unit
 *)

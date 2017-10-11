@@ -1,5 +1,4 @@
 Require Import GHC.Base.
-Require Import GHC.BaseInstances.
 
 Require Import Coq.Logic.FunctionalExtensionality.
 

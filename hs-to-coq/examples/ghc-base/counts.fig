@@ -69,7 +69,7 @@ Data/Void
 &
        0
 &
-       6
+       7
 \\
 Data/Function
 &
@@ -89,7 +89,7 @@ Data/Ord
 &
        2
 &
-       2
+       4
 \\
 Data/Functor
 &
@@ -119,7 +119,7 @@ Data/Monoid
 &
        8
 &
-      25
+      44
 \\
 Data/Traversable
 &
@@ -129,7 +129,7 @@ Data/Traversable
 &
        5
 &
-      18
+      30
 \\
 Control/Monad/Fail
 &
@@ -159,7 +159,17 @@ Data/Foldable
 &
        2
 &
-      21
+      33
+\\
+Control/Arrow
+&
+      12
+&
+       6
+&
+       3
+&
+      17
 \\
 \\
 \multicolumn{4}{l}{\emph{Manually adapted modules}}\\
@@ -227,30 +237,6 @@ Data/Type/Equality
 &
        2
 \\
-Control/Arrow
-&
-      27
-&
-       6
-&
-       9
-\\
-Control/Category
-&
-       2
-&
-       1
-&
-       0
-\\
-Data/Functor/Const
-&
-       7
-&
-       0
-&
-       2
-\\
 GHC/BaseInstances
 &
        0
@@ -290,5 +276,21 @@ Data/FoldableInst
        0
 &
        1
+\\
+Control/Category
+&
+       4
+&
+       1
+&
+       1
+\\
+Data/Functor/Const
+&
+       7
+&
+       0
+&
+       2
 \\
 \end{tabular}

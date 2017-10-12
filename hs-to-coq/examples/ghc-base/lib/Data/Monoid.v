@@ -139,16 +139,15 @@ Proof.
 - intros a b f pa. destruct pa. apply Mk_Sum. apply f. exact a0.
 Defined.
 
-(* Converted imports: *)
-
-Require GHC.Base.
-Require GHC.Prim.
+(* No imports to convert. *)
 
 (* Converted declarations: *)
 
 (* Translating `instance forall {a}, forall `{GHC.Base.Monoid a},
    GHC.Base.Monoid (Dual a)' failed: OOPS! Cannot find information for class
    "GHC.Base.Monoid" unsupported *)
+
+(* Skipping instance instance_GHC_Base_Functor_Dual *)
 
 (* Skipping instance instance_GHC_Base_Applicative_Dual *)
 
@@ -401,18 +400,6 @@ Definition getDual {a} (arg_1__ : Dual a) :=
     | Mk_Dual getDual => getDual
   end.
 
-Local Definition instance_GHC_Base_Functor_Dual_fmap : forall {a} {b},
-                                                         (a -> b) -> Dual a -> Dual b :=
-  fun {a} {b} => GHC.Prim.coerce.
-
-Local Definition instance_GHC_Base_Functor_Dual_op_zlzd__ : forall {a} {b},
-                                                              b -> Dual a -> Dual b :=
-  fun {a} {b} => fun x => instance_GHC_Base_Functor_Dual_fmap (GHC.Base.const x).
-
-Instance instance_GHC_Base_Functor_Dual : GHC.Base.Functor Dual := {
-  fmap := fun {a} {b} => instance_GHC_Base_Functor_Dual_fmap ;
-  op_zlzd__ := fun {a} {b} => instance_GHC_Base_Functor_Dual_op_zlzd__ }.
-
 Inductive Endo a : Type := Mk_Endo : (a -> a) -> Endo a.
 
 Arguments Mk_Endo {_} _.
@@ -423,5 +410,5 @@ Definition appEndo {a} (arg_0__ : Endo a) :=
   end.
 
 (* Unbound variables:
-     GHC.Base.Functor GHC.Base.const GHC.Prim.coerce Type
+     Type
 *)

@@ -4,15 +4,6 @@ skip minimumBy
 skip genericIndex
 skip unfoldr
 
-# Wrong name for tuple constructors
-skip zip4
-skip zip5
-skip zip6
-skip zip7
-
-# "is" keyword used as variable, Coq anamoly
-skip permutations
-
 # character constant
 skip unlines
 
@@ -26,6 +17,9 @@ skip mapAccumR
 skip groupBy
 # not obviously total, also strange Coq error
 skip transpose
+# terminating, but hard to tell
+skip permutations
+
 
 # "" pattern / not structually inductive
 skip wordsFB
@@ -35,10 +29,6 @@ skip lines
 # precedence, ???
 skip sb
 skip snocSB
-
-
-# higher-rank (w/build)
-# skip tails
 
 # unboxed types, build
 skip findIndices

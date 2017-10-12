@@ -18,12 +18,13 @@ Require GHC.List.
 Require GHC.Num.
 Require GHC.Prim.
 Require GHC.Real.
+Require GHC.Tuple.
 
 (* Converted declarations: *)
 
 Definition deleteBy {a} : (a -> a -> bool) -> a -> list a -> list a :=
-  fix deleteBy arg_180__ arg_181__ arg_182__
-        := match arg_180__ , arg_181__ , arg_182__ with
+  fix deleteBy arg_184__ arg_185__ arg_186__
+        := match arg_184__ , arg_185__ , arg_186__ with
              | _ , _ , nil => nil
              | eq , x , cons y ys => if eq x y : bool
                                      then ys
@@ -32,8 +33,8 @@ Definition deleteBy {a} : (a -> a -> bool) -> a -> list a -> list a :=
 
 Definition deleteFirstsBy {a} : (a -> a -> bool) -> list a -> list a -> list
                                 a :=
-  fun arg_185__ =>
-    match arg_185__ with
+  fun arg_189__ =>
+    match arg_189__ with
       | eq => GHC.Base.foldl (GHC.Base.flip (deleteBy eq))
     end.
 
@@ -48,24 +49,24 @@ Infix "\\" := (op_zrzr__) (at level 99).
 Notation "'_\\_'" := (op_zrzr__).
 
 Definition dropLength {a} {b} : list a -> list b -> list b :=
-  fix dropLength arg_216__ arg_217__
-        := match arg_216__ , arg_217__ with
+  fix dropLength arg_220__ arg_221__
+        := match arg_220__ , arg_221__ with
              | nil , y => y
              | _ , nil => nil
              | cons _ x' , cons _ y' => dropLength x' y'
            end.
 
 Definition dropLengthMaybe {a} {b} : list a -> list b -> option (list b) :=
-  fix dropLengthMaybe arg_211__ arg_212__
-        := match arg_211__ , arg_212__ with
+  fix dropLengthMaybe arg_215__ arg_216__
+        := match arg_215__ , arg_216__ with
              | nil , y => Some y
              | _ , nil => None
              | cons _ x' , cons _ y' => dropLengthMaybe x' y'
            end.
 
 Definition isSuffixOf {a} `{(GHC.Base.Eq_ a)} : list a -> list a -> bool :=
-  fun arg_220__ arg_221__ =>
-    match arg_220__ , arg_221__ with
+  fun arg_224__ arg_225__ =>
+    match arg_224__ , arg_225__ with
       | ns , hs => GHC.Base.op_zd__ (Data.Maybe.maybe false GHC.Base.id)
                                     (GHC.Base.op_zgzgze__ (dropLengthMaybe ns hs) (fun delta =>
                                                             GHC.Base.op_zd__ GHC.Base.return_ (GHC.Base.op_zeze__ ns
@@ -75,10 +76,10 @@ Definition isSuffixOf {a} `{(GHC.Base.Eq_ a)} : list a -> list a -> bool :=
     end.
 
 Definition dropWhileEnd {a} : (a -> bool) -> list a -> list a :=
-  fun arg_236__ =>
-    match arg_236__ with
-      | p => GHC.Base.foldr (fun arg_237__ arg_238__ =>
-                              match arg_237__ , arg_238__ with
+  fun arg_240__ =>
+    match arg_240__ with
+      | p => GHC.Base.foldr (fun arg_241__ arg_242__ =>
+                              match arg_241__ , arg_242__ with
                                 | x , xs => if andb (p x) (GHC.List.null xs) : bool
                                             then nil
                                             else cons x xs
@@ -86,23 +87,23 @@ Definition dropWhileEnd {a} : (a -> bool) -> list a -> list a :=
     end.
 
 Definition elem_by {a} : (a -> a -> bool) -> a -> list a -> bool :=
-  fix elem_by arg_190__ arg_191__ arg_192__
-        := match arg_190__ , arg_191__ , arg_192__ with
+  fix elem_by arg_194__ arg_195__ arg_196__
+        := match arg_194__ , arg_195__ , arg_196__ with
              | _ , _ , nil => false
              | eq , y , cons x xs => orb (eq x y) (elem_by eq y xs)
            end.
 
 Definition nubBy {a} : (a -> a -> bool) -> list a -> list a :=
-  fun arg_195__ arg_196__ =>
-    match arg_195__ , arg_196__ with
+  fun arg_199__ arg_200__ =>
+    match arg_199__ , arg_200__ with
       | eq , l => let nubBy' :=
-                    fix nubBy' arg_197__ arg_198__
-                          := match arg_197__ , arg_198__ with
+                    fix nubBy' arg_201__ arg_202__
+                          := match arg_201__ , arg_202__ with
                                | nil , _ => nil
-                               | cons y ys , xs => let j_199__ := cons y (nubBy' ys (cons y xs)) in
+                               | cons y ys , xs => let j_203__ := cons y (nubBy' ys (cons y xs)) in
                                                    if elem_by eq y xs : bool
                                                    then nubBy' ys xs
-                                                   else j_199__
+                                                   else j_203__
                              end in
                   nubBy' l nil
     end.
@@ -111,8 +112,8 @@ Definition nub {a} `{(GHC.Base.Eq_ a)} : list a -> list a :=
   nubBy GHC.Base.op_zeze__.
 
 Definition unionBy {a} : (a -> a -> bool) -> list a -> list a -> list a :=
-  fun arg_204__ arg_205__ arg_206__ =>
-    match arg_204__ , arg_205__ , arg_206__ with
+  fun arg_208__ arg_209__ arg_210__ =>
+    match arg_208__ , arg_209__ , arg_210__ with
       | eq , xs , ys => Coq.Init.Datatypes.app xs (GHC.Base.foldl (GHC.Base.flip
                                                                   (deleteBy eq)) (nubBy eq ys) xs)
     end.
@@ -121,84 +122,84 @@ Definition union {a} `{(GHC.Base.Eq_ a)} : list a -> list a -> list a :=
   unionBy GHC.Base.op_zeze__.
 
 Definition find {a} : (a -> bool) -> list a -> option a :=
-  fun arg_228__ =>
-    match arg_228__ with
+  fun arg_232__ =>
+    match arg_232__ with
       | p => Coq.Program.Basics.compose Data.Maybe.listToMaybe (GHC.List.filter p)
     end.
 
 Definition genericDrop {i} {a} `{(GHC.Real.Integral i)} : i -> list a -> list
                                                           a :=
-  fix genericDrop arg_99__ arg_100__
-        := let j_102__ :=
-             match arg_99__ , arg_100__ with
+  fix genericDrop arg_103__ arg_104__
+        := let j_106__ :=
+             match arg_103__ , arg_104__ with
                | _ , nil => nil
                | n , cons _ xs => genericDrop (GHC.Num.op_zm__ n (GHC.Num.fromInteger 1)) xs
              end in
-           match arg_99__ , arg_100__ with
+           match arg_103__ , arg_104__ with
              | n , xs => if GHC.Base.op_zlze__ n (GHC.Num.fromInteger 0) : bool
                          then xs
-                         else j_102__
+                         else j_106__
            end.
 
 Definition genericLength {i} {a} `{(GHC.Num.Num i)} : list a -> i :=
-  fix genericLength arg_119__
-        := match arg_119__ with
+  fix genericLength arg_123__
+        := match arg_123__ with
              | nil => GHC.Num.fromInteger 0
              | cons _ l => GHC.Num.op_zp__ (GHC.Num.fromInteger 1) (genericLength l)
            end.
 
 Definition genericSplitAt {i} {a} `{(GHC.Real.Integral i)} : i -> list a -> list
                                                              a * list a :=
-  fix genericSplitAt arg_91__ arg_92__
-        := let j_96__ :=
-             match arg_91__ , arg_92__ with
+  fix genericSplitAt arg_95__ arg_96__
+        := let j_100__ :=
+             match arg_95__ , arg_96__ with
                | _ , nil => pair nil nil
                | n , cons x xs => match genericSplitAt (GHC.Num.op_zm__ n (GHC.Num.fromInteger
                                                                         1)) xs with
                                     | pair xs' xs'' => pair (cons x xs') xs''
                                   end
              end in
-           match arg_91__ , arg_92__ with
+           match arg_95__ , arg_96__ with
              | n , xs => if GHC.Base.op_zlze__ n (GHC.Num.fromInteger 0) : bool
                          then pair nil xs
-                         else j_96__
+                         else j_100__
            end.
 
 Definition genericTake {i} {a} `{(GHC.Real.Integral i)} : i -> list a -> list
                                                           a :=
-  fix genericTake arg_105__ arg_106__
-        := let j_108__ :=
-             match arg_105__ , arg_106__ with
+  fix genericTake arg_109__ arg_110__
+        := let j_112__ :=
+             match arg_109__ , arg_110__ with
                | _ , nil => nil
                | n , cons x xs => cons x (genericTake (GHC.Num.op_zm__ n (GHC.Num.fromInteger
                                                                        1)) xs)
              end in
-           match arg_105__ , arg_106__ with
+           match arg_109__ , arg_110__ with
              | n , _ => if GHC.Base.op_zlze__ n (GHC.Num.fromInteger 0) : bool
                         then nil
-                        else j_108__
+                        else j_112__
            end.
 
 Definition insertBy {a} : (a -> a -> comparison) -> a -> list a -> list a :=
-  fix insertBy arg_123__ arg_124__ arg_125__
-        := match arg_123__ , arg_124__ , arg_125__ with
+  fix insertBy arg_127__ arg_128__ arg_129__
+        := match arg_127__ , arg_128__ , arg_129__ with
              | _ , x , nil => cons x nil
-             | cmp , x , (cons y ys' as ys) => let scrut_127__ := cmp x y in
-                                               match scrut_127__ with
+             | cmp , x , (cons y ys' as ys) => let scrut_131__ := cmp x y in
+                                               match scrut_131__ with
                                                  | Gt => cons y (insertBy cmp x ys')
                                                  | _ => cons x ys
                                                end
            end.
 
 Definition insert {a} `{GHC.Base.Ord a} : a -> list a -> list a :=
-  fun arg_133__ arg_134__ =>
-    match arg_133__ , arg_134__ with
+  fun arg_137__ arg_138__ =>
+    match arg_137__ , arg_138__ with
       | e , ls => insertBy (GHC.Base.compare) e ls
     end.
 
 Definition intersectBy {a} : (a -> a -> bool) -> list a -> list a -> list a :=
-  fun arg_174__ arg_175__ arg_176__ =>
-    match arg_174__ , arg_175__ , arg_176__ with
+  fun arg_178__ arg_179__ arg_180__ =>
+    match arg_178__ , arg_179__ , arg_180__ with
       | _ , nil , _ => nil
       | _ , _ , nil => nil
       | eq , xs , ys => Coq.Lists.List.flat_map (fun x =>
@@ -211,8 +212,8 @@ Definition intersect {a} `{(GHC.Base.Eq_ a)} : list a -> list a -> list a :=
   intersectBy GHC.Base.op_zeze__.
 
 Definition isPrefixOf {a} `{(GHC.Base.Eq_ a)} : list a -> list a -> bool :=
-  fix isPrefixOf arg_224__ arg_225__
-        := match arg_224__ , arg_225__ with
+  fix isPrefixOf arg_228__ arg_229__
+        := match arg_228__ , arg_229__ with
              | nil , _ => true
              | _ , nil => false
              | cons x xs , cons y ys => andb (GHC.Base.op_zeze__ x y) (isPrefixOf xs ys)
@@ -220,8 +221,8 @@ Definition isPrefixOf {a} `{(GHC.Base.Eq_ a)} : list a -> list a -> bool :=
 
 Definition mapAccumL {acc} {x} {y} : (acc -> x -> acc * y) -> acc -> list
                                      x -> acc * list y :=
-  fix mapAccumL arg_152__ arg_153__ arg_154__
-        := match arg_152__ , arg_153__ , arg_154__ with
+  fix mapAccumL arg_156__ arg_157__ arg_158__
+        := match arg_156__ , arg_157__ , arg_158__ with
              | _ , s , nil => pair s nil
              | f , s , cons x xs => match f s x with
                                       | pair s' y => match mapAccumL f s' xs with
@@ -232,12 +233,12 @@ Definition mapAccumL {acc} {x} {y} : (acc -> x -> acc * y) -> acc -> list
 
 Definition mapAccumLF {acc} {x} {y} : (acc -> x -> acc * y) -> x -> (acc -> acc
                                       * list y) -> acc -> acc * list y :=
-  fun arg_137__ =>
-    match arg_137__ with
-      | f => fun arg_138__ arg_139__ =>
-               match arg_138__ , arg_139__ with
-                 | x , r => GHC.Base.oneShot (fun arg_140__ =>
-                                               match arg_140__ with
+  fun arg_141__ =>
+    match arg_141__ with
+      | f => fun arg_142__ arg_143__ =>
+               match arg_142__ , arg_143__ with
+                 | x , r => GHC.Base.oneShot (fun arg_144__ =>
+                                               match arg_144__ with
                                                  | s => match f s x with
                                                           | pair s' y => match r s' with
                                                                            | pair s'' ys => pair s'' (cons y ys)
@@ -260,37 +261,37 @@ Definition nonEmptySubsequences {a} : list a -> list (list a) :=
            end.
 
 Definition pairWithNil {acc} {y} : acc -> acc * list y :=
-  fun arg_149__ => match arg_149__ with | x => pair x nil end.
+  fun arg_153__ => match arg_153__ with | x => pair x nil end.
 
 Definition prependToAll {a} : a -> list a -> list a :=
-  fix prependToAll arg_170__ arg_171__
-        := match arg_170__ , arg_171__ with
+  fix prependToAll arg_174__ arg_175__
+        := match arg_174__ , arg_175__ with
              | _ , nil => nil
              | sep , cons x xs => cons sep (cons x (prependToAll sep xs))
            end.
 
 Definition select {a} : (a -> bool) -> a -> list a * list a -> list a * list
                         a :=
-  fun arg_160__ arg_161__ arg_162__ =>
-    match arg_160__ , arg_161__ , arg_162__ with
-      | p , x , pair ts fs => let j_163__ := pair ts (cons x fs) in
+  fun arg_164__ arg_165__ arg_166__ =>
+    match arg_164__ , arg_165__ , arg_166__ with
+      | p , x , pair ts fs => let j_167__ := pair ts (cons x fs) in
                               if p x : bool
                               then pair (cons x ts) fs
-                              else j_163__
+                              else j_167__
     end.
 
 Definition partition {a} : (a -> bool) -> list a -> list a * list a :=
-  fun arg_166__ arg_167__ =>
-    match arg_166__ , arg_167__ with
+  fun arg_170__ arg_171__ =>
+    match arg_170__ , arg_171__ with
       | p , xs => GHC.Base.foldr (select p) (pair nil nil) xs
     end.
 
 Definition strictGenericLength {i} {b} `{(GHC.Num.Num i)} : list b -> i :=
-  fun arg_111__ =>
-    match arg_111__ with
+  fun arg_115__ =>
+    match arg_115__ with
       | l => let gl :=
-               fix gl arg_112__ arg_113__
-                     := match arg_112__ , arg_113__ with
+               fix gl arg_116__ arg_117__
+                     := match arg_116__ , arg_117__ with
                           | nil , a => a
                           | cons _ xs , a => let a' := GHC.Num.op_zp__ a (GHC.Num.fromInteger 1) in
                                              GHC.Prim.seq a' (gl xs a')
@@ -300,8 +301,8 @@ Definition strictGenericLength {i} {b} `{(GHC.Num.Num i)} : list b -> i :=
 
 Definition stripPrefix {a} `{GHC.Base.Eq_ a} : list a -> list a -> option (list
                                                                           a) :=
-  fix stripPrefix arg_231__ arg_232__
-        := match arg_231__ , arg_232__ with
+  fix stripPrefix arg_235__ arg_236__
+        := match arg_235__ , arg_236__ with
              | nil , ys => Some ys
              | cons x xs , cons y ys => if GHC.Base.op_zeze__ x y : bool
                                         then stripPrefix xs ys
@@ -416,6 +417,10 @@ Definition zipWith4 {a} {b} {c} {d} {e} : (a -> b -> c -> d -> e) -> list
              | _ , _ , _ , _ , _ => nil
            end.
 
+Definition zip4 {a} {b} {c} {d} : list a -> list b -> list c -> list d -> list
+                                  (a * b * c * d) :=
+  zipWith4 GHC.Tuple.op_Z4T__.
+
 Definition zipWith5 {a} {b} {c} {d} {e} {f}
     : (a -> b -> c -> d -> e -> f) -> list a -> list b -> list c -> list d -> list
       e -> list f :=
@@ -426,6 +431,10 @@ Definition zipWith5 {a} {b} {c} {d} {e} {f}
                                                                                       es)
              | _ , _ , _ , _ , _ , _ => nil
            end.
+
+Definition zip5 {a} {b} {c} {d} {e} : list a -> list b -> list c -> list
+                                      d -> list e -> list (a * b * c * d * e) :=
+  zipWith5 GHC.Tuple.op_Z5T__.
 
 Definition zipWith6 {a} {b} {c} {d} {e} {f} {g}
     : (a -> b -> c -> d -> e -> f -> g) -> list a -> list b -> list c -> list
@@ -442,6 +451,10 @@ Definition zipWith6 {a} {b} {c} {d} {e} {f} {g}
                cons (z a b c d e f) (zipWith6 z as_ bs cs ds es fs)
              | _ , _ , _ , _ , _ , _ , _ => nil
            end.
+
+Definition zip6 {a} {b} {c} {d} {e} {f} : list a -> list b -> list c -> list
+                                          d -> list e -> list f -> list (a * b * c * d * e * f) :=
+  zipWith6 GHC.Tuple.op_Z6T__.
 
 Definition zipWith7 {a} {b} {c} {d} {e} {f} {g} {h}
     : (a -> b -> c -> d -> e -> f -> g -> h) -> list a -> list b -> list c -> list
@@ -460,6 +473,10 @@ Definition zipWith7 {a} {b} {c} {d} {e} {f} {g} {h}
                cons g gs => cons (z a b c d e f g) (zipWith7 z as_ bs cs ds es fs gs)
              | _ , _ , _ , _ , _ , _ , _ , _ => nil
            end.
+
+Definition zip7 {a} {b} {c} {d} {e} {f} {g} : list a -> list b -> list c -> list
+                                              d -> list e -> list f -> list g -> list (a * b * c * d * e * f * g) :=
+  zipWith7 GHC.Tuple.op_Z7T__.
 
 Inductive SnocBuilder a : Type := Mk_SnocBuilder : GHC.Num.Word -> list
                                                    a -> list a -> SnocBuilder a.
@@ -482,6 +499,7 @@ Definition emptySB {a} : SnocBuilder a :=
      GHC.Base.foldr GHC.Base.id GHC.Base.oneShot GHC.Base.op_zd__ GHC.Base.op_zeze__
      GHC.Base.op_zgzgze__ GHC.Base.op_zlze__ GHC.Base.return_ GHC.List.any
      GHC.List.filter GHC.List.null GHC.List.reverse GHC.Num.Num GHC.Num.Word
-     GHC.Num.op_zm__ GHC.Num.op_zp__ GHC.Prim.seq GHC.Real.Integral None Some andb
-     bool comparison cons false list nil option orb pair true
+     GHC.Num.op_zm__ GHC.Num.op_zp__ GHC.Prim.seq GHC.Real.Integral
+     GHC.Tuple.op_Z4T__ GHC.Tuple.op_Z5T__ GHC.Tuple.op_Z6T__ GHC.Tuple.op_Z7T__ None
+     Some andb bool comparison cons false list nil option orb pair true
 *)

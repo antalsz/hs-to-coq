@@ -1,0 +1,17 @@
+skip module Outputable
+skip module Util
+skip module Data.Data
+
+# Needs Data.Traversable.mapAccumL
+skip mapAccumBagL
+
+# Needs Util.partitionWith
+skip partitionBagWith
+
+# Needs Util.isSingleton
+skip isSingletonBag
+
+skip instance_forall___Data_Data_Data_a___Data_Data_Data__Bag_a_
+skip instance_forall____Outputable_Outputable_a____Outputable_Outputable__Bag_a_
+
+skip instance_Data_Foldable_Foldable_Bag # still produces Admitted

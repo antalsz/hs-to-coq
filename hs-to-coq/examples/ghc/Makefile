@@ -10,22 +10,22 @@ ifeq (,$(wildcard ghc))
 $(error Please create a symlink ghc (see README.md))
 endif
 
-# Handwritten modules (usually by modification of generated version)
-HANDMOD = Proofs
+# Handwritten modules
+HANDMOD = Proofs \
 
-# Empty mods (to please imports)
-EMPTY_MODS =
 
 # Generated modules
-MODULES  = Bag \
-           MonadUtils
+MODULES  = MonadUtils \
+           Pair \
+           Bag \
+
+
 
 VFILES_GEN     = $(addsuffix .v,$(MODULES))
 VFILES_MAN     = $(addsuffix .v,$(HANDMOD))
-VFILES_EMPTY   = $(addsuffix .v,$(EMPTY_MODS))
 VFILES_SPECIAL = $(addsuffix .v,$(SPECIAL_MODULES))
 
-VFILES   = $(VFILES_GEN) $(VFILES_MAN) $(VFILES_EMPTY) $(VFILES_SPECIAL)
+VFILES   = $(VFILES_GEN) $(VFILES_MAN) $(VFILES_SPECIAL)
 
 all: $(VFILES) coq
 
@@ -45,11 +45,13 @@ Makefile.coq: _CoqProject $(VFILES)
 coq: Makefile.coq $(VFILES)
 	$(MAKE) -f Makefile.coq OPT=$(COQFLAGS)
 
-
-$(VFILES_GEN): %.v : edits
+.SECONDEXPANSION:
+$(VFILES_GEN): %.v : $$(wildcard module-edits/$$*/preamble.v) $$(wildcard module-edits/$$*/edits) edits
 	$(HS_TO_COQ) -e edits \
 	             -e ../ghc-base/edits \
                 -p preamble.v \
+	             $(addprefix -e , $(wildcard module-edits/$*/edits)) \
+	             $(addprefix -p , $(wildcard module-edits/$*/preamble.v)) \
 	             --ghc-tree ghc \
 	             -I ghc/includes \
 	             -I ghc/compiler \
@@ -63,9 +65,9 @@ $(VFILES_GEN): %.v : edits
 	test -e $@
 # We added the `test` because `hs-to-coq` doesn't return an error
 
-$(VFILES_EMPTY): %.v :
-	mkdir -p "$$(dirname lib/$*.v)"
-	echo '(* Empty module, exists only to make Import statments not fail *)' > $@
+# $(VFILES_MAN): lib/%.v : manual/%.v
+#	mkdir -p "$$(dirname lib/$*.v)"
+#	cp -v $< $@
 
 clean:
-	rm -f */*.vo *.glob */*.v.d *.glob *.vo *.v.d  $(VFILES_GEN) $(VFILES_EMPTY) _CoqProject Makefile.coq  */*.v~
+	rm -f */*.vo *.glob */*.v.d *.glob *.vo *.v.d  $(VFILES_GEN) _CoqProject Makefile.coq  */*.v~

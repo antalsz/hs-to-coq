@@ -53,7 +53,6 @@ MODULES = \
   Control/Arrow \
 
 
-
 # generated from drop-in/
 DROPIN =
 
@@ -120,6 +119,7 @@ $(VFILES_DROPIN): lib/%.v : module-edits/%/edits edits module-edits/%/preamble.v
 
 clean:
 	rm -rf lib
+	rm -f counts.pdf *.aux *.log
 
 todo:
 	grep -a Axiom lib/*.v lib/*/*.v lib/*/*/*.v

@@ -11,6 +11,6 @@ There are two projects in this repository:
    the re-extracted converted code back into GHC, allowing us to run Haskell
    programs against verified/verifiable code.  Currently does not work.
 
-[CoreSpec]: http://www.deepspec.org/research/Haskell/
+[CoreSpec]: https://deepspec.org/entry/Project/Haskell+CoreSpec
 [DeepSpec]: http://www.deepspec.org/
 

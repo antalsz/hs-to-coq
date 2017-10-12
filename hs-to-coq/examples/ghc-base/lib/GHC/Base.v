@@ -265,7 +265,7 @@ end.
 Definition ord_default {a} (comp : a -> a -> comparison) `{Eq_ a} :=
   Build_Ord _ _
   (fun x y => (comp x y) == Lt)
-  ( fun x y => negb ((comp x y) == Lt))
+  (fun x y => negb ((comp x y) == Lt))
   (fun x y => (comp y x) == Lt)
   (fun x y => negb ((comp x y) == Lt))
   comp
@@ -341,21 +341,6 @@ Instance Ord_option {a} `{Ord a} : !Ord (option a) := ord_default compare_option
 (* ********************************************************* *)
 (* Some Haskell functions we cannot translate (yet)          *)
 
-
-(* Pattern guards, ugh. *)
-(*
-Fixpoint take {a:Type} (n:Int) (xs:list a) : list a :=
-  match xs with
-  | nil => nil
-  | y :: ys => if Z.leb n #0 then nil else (y :: take (n - #1) ys)
-  end.
-
-Fixpoint drop {a:Type} (n:Int) (xs:list a) : list a :=
-  match xs with
-  | nil => nil
-  | y :: ys => if Z.leb n #0 then (y :: ys) else drop (n - #1) ys
-  end.
-*)
 
 (* The inner nil case is impossible. So it is left out of the Haskell version. *)
 Fixpoint scanr {a b:Type} (f : a -> b -> b) (q0 : b) (xs : list a) : list b :=

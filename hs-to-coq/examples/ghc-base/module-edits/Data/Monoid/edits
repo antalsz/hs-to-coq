@@ -1,12 +1,23 @@
+
+## DUAL
+# skip instance_forall___GHC_Base_Monoid_a___GHC_Base_Monoid__Dual_a_
+# this instance gets skipped anyways
+## needs coerce
+skip instance_GHC_Base_Functor_Dual
+skip instance_GHC_Base_Applicative_Dual
+skip instance_GHC_Base_Monad_Dual
+
+order instance_GHC_Base_Functor_Dual instance_GHC_Base_Applicative_Dual
+order instance_GHC_Base_Applicative_Dual instance_GHC_Base_Monad_Dual_return_
+order instance_GHC_Base_Applicative_Dual instance_GHC_Base_Monad_Dual_op_zgzg__
+
+
 redefine Inductive Alt (f : Type -> Type) a : Type := Mk_Alt : (f a) -> (Alt f a).
 
 # <> operator already defined
 skip op_zlzg__
 
 # A bunch of things using coerce
-skip instance_GHC_Base_Functor_Dual
-skip instance_GHC_Base_Applicative_Dual
-skip instance_GHC_Base_Monad_Dual
 
 skip instance_GHC_Base_Functor_Last
 skip instance_GHC_Base_Applicative_Last
@@ -22,17 +33,11 @@ skip instance_GHC_Base_Monad_Sum
 
 skip instance_forall___GHC_Base_Alternative_f___GHC_Base_Monoid__Alt_f_a_
 
-# https://github.com/antalsz/hs-to-coq/issues/9
-skip instance_GHC_Base_Monoid__Endo_a_
-skip instance_forall___GHC_Base_Monoid_a___GHC_Base_Monoid__Dual_a_
 
 # order instance_GHC_Base_Functor_Product instance_GHC_Base_Applicative_Product
 # order instance_GHC_Base_Applicative_Product instance_GHC_Base_Monad_Product_return_
 # order instance_GHC_Base_Applicative_Product instance_GHC_Base_Monad_Product_op_zgzg__
 
-order instance_GHC_Base_Functor_Dual instance_GHC_Base_Applicative_Dual
-order instance_GHC_Base_Applicative_Dual instance_GHC_Base_Monad_Dual_return_
-order instance_GHC_Base_Applicative_Dual instance_GHC_Base_Monad_Dual_op_zgzg__
 
 # Read and Show instancs
 skip instance_forall___GHC_Read_Read_a___GHC_Read_Read__Last_a_
@@ -54,19 +59,19 @@ skip instance_forall___GHC_Show_Show_a___GHC_Show_Show__Dual_a_
 
 # In the preamble.
 skip All
-skip instance_GHC_Base_Monoid_All
+# skip instance_GHC_Base_Monoid_All
 
 skip Any
-skip instance_GHC_Base_Monoid_Any
+# skip instance_GHC_Base_Monoid_Any
 
 skip First
-skip instance_GHC_Base_Monoid__First_a_
+# skip instance_GHC_Base_Monoid__First_a_
 
 skip Last
-skip instance_GHC_Base_Monoid__Last_a_
+# skip instance_GHC_Base_Monoid__Last_a_
 
 skip Product
-skip instance_forall___GHC_Num_Num_a___GHC_Base_Monoid__Product_a_
+# skip instance_forall___GHC_Num_Num_a___GHC_Base_Monoid__Product_a_
 
 skip Sum
-skip instance_forall___GHC_Num_Num_a___GHC_Base_Monoid__Sum_a_
+# skip instance_forall___GHC_Num_Num_a___GHC_Base_Monoid__Sum_a_

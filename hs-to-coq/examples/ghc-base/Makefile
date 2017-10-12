@@ -127,6 +127,8 @@ todo:
 	grep -a errorWithout lib/*.v lib/*/*.v lib/*/*/*.v
 	grep -a Parameter lib/*.v lib/*/*.v lib/*/*/*.v
 
+counts.pdf: counts.fig
+	pdflatex counts
 
 counts.fig: Makefile $(VFILES)
 	(echo "\\begin{tabular}{lllll}"; \

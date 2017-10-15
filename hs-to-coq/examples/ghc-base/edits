@@ -65,6 +65,10 @@ skip method Monad fail
 skip method Enum enumFromThen
 skip method Enum enumFromThenTo
 
+# deprecated
+skip method Bits bitSize
+
+
 # default definition cannot be used
 skip method Applicative op_zlzt__
 

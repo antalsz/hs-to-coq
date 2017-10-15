@@ -12,13 +12,15 @@ endif
 
 # Handwritten modules
 HANDMOD = Proofs \
-
+          Maybes \
+          FastString \
+          Util \
 
 # Generated modules
 MODULES  = MonadUtils \
            Pair \
            Bag \
-
+           SrcLoc \
 
 
 VFILES_GEN     = $(addsuffix .v,$(MODULES))

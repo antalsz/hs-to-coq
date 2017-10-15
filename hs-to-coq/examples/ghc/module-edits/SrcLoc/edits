@@ -1,0 +1,37 @@
+# what is this reference to?
+skip module GHC
+
+redefine Local Definition instance_forall___GHC_Base_Eq__e____GHC_Base_Eq__l___GHC_Base_Eq___GenLocated_l_e__op_zsze__ {inst_l : Type}{inst_e : Type}  `{H : GHC.Base.Eq_  inst_e} `{J : GHC.Base.Eq_ inst_l}    : ((GenLocated inst_l inst_e) -> ((GenLocated inst_l inst_e) -> bool)) :=  fun arg_253__ arg_254__ =>    match arg_253__ , arg_254__ with | Mk_L a1 a2 , Mk_L b1 b2 => (andb ((GHC.Base.op_zeze__ a1 b1))     ((GHC.Base.op_zeze__ a2 b2)))    end.
+
+redefine Local Definition instance_GHC_Base_Eq__SrcSpan_op_zsze__ : SrcSpan -> (SrcSpan -> bool) :=  fun arg_185__ arg_186__ =>  match arg_185__ , arg_186__ with | a , b => negb (instance_GHC_Base_Eq__SrcSpan_op_zeze__ a b)  end.
+
+redefine Local Definition instance_GHC_Base_Eq__RealSrcSpan_op_zsze__ : RealSrcSpan -> (RealSrcSpan -> bool) := fun arg_176__ arg_177__ =>  match arg_176__ , arg_177__ with | a , b => negb (instance_GHC_Base_Eq__RealSrcSpan_op_zeze__ a b) end.
+
+
+# orderings
+order instance_GHC_Base_Eq__RealSrcLoc instance_GHC_Base_Ord_RealSrcLoc_min instance_GHC_Base_Ord_RealSrcLoc_max instance_GHC_Base_Ord_RealSrcLoc cmpSrcLoc  instance_GHC_Base_Ord_SrcLoc_min instance_GHC_Base_Ord_SrcLoc_max instance_GHC_Base_Eq__SrcLoc instance_GHC_Base_Ord_SrcLoc
+
+order instance_GHC_Base_Ord_SrcSpan rightmost leftmost_smallest
+
+order instance_GHC_Base_Eq__RealSrcSpan  instance_GHC_Base_Eq__SrcSpan_op_zeze__ instance_GHC_Base_Ord_RealSrcSpan instance_GHC_Base_Ord_SrcSpan_op_zlze__ instance_GHC_Base_Ord_SrcSpan_op_zl__ instance_GHC_Base_Ord_SrcSpan_op_zgze__ instance_GHC_Base_Ord_SrcSpan_op_zg__ instance_GHC_Base_Ord_SrcSpan_compare
+
+
+# character constant
+skip advanceSrcLoc
+
+# need Data.OldList.sortBy
+skip sortLocated
+
+# partial
+skip spans
+
+# Outputtable
+skip pprUserRealSpan
+skip pprUserSpan
+
+# need Eq (Int * Int) and Ord (Int * Int) instance in base
+skip addCLoc
+skip combineLocs
+skip combineSrcSpans
+skip containsSpan
+skip combineRealSrcSpans

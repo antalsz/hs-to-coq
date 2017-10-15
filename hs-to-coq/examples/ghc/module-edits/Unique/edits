@@ -1,0 +1,17 @@
+# chars
+skip finish_show
+skip iToBase62
+skip showUnique
+
+# outputtable
+skip pprUnique
+
+
+# neef from header file
+rename value BasicTypes.Boxed = BasicTypes.Mk_Boxed
+rename value BasicTypes.Unboxed = BasicTypes.Mk_Unboxed
+
+rename value GHC.Base.ord = GHC.Char.ord
+
+# what bug causes this?
+skip module GHC

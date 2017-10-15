@@ -9,3 +9,5 @@ Instance instance_FastString_Ord : Ord FastString := {}.
 Admitted.
 
 Definition fsLit (s : String) : FastString := s.
+
+Parameter uniqueOfFS : FastString -> GHC.Num.Int.

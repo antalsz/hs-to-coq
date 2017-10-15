@@ -68,10 +68,10 @@ skip method Enum enumFromThenTo
 # default definition cannot be used
 skip method Applicative op_zlzt__
 
-
 # data types defined in embeddings don't create the right
 # constructor names. So rename them.
-
+# These are defined in the preamble.v because their instances
+# are defined via Data.Coerce
 rename value Data.Proxy.Proxy    = Data.Proxy.Mk_Proxy
 
 rename value Data.Monoid.Dual    = Data.Monoid.Mk_Dual

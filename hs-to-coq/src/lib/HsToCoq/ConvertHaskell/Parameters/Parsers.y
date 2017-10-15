@@ -55,6 +55,9 @@ import HsToCoq.ConvertHaskell.Parameters.Parsers.Lexing
   fun             { TokWord    "fun"            }
   fix             { TokWord    "fix"            }
   cofix           { TokWord    "cofix"          }
+  forall          { TokWord    "forall"         }
+  match           { TokWord    "match"          }
+  end             { TokWord    "end"            }
   struct          { TokWord    "struct"         }
   with            { TokWord    "with"           }
   for             { TokWord    "for"            }
@@ -78,10 +81,12 @@ import HsToCoq.ConvertHaskell.Parameters.Parsers.Lexing
   '|'             { TokOp      "|"              }
   '"'             { TokOp      "\""             }
   '\''            { TokOp      "'"              }
+  ','             { TokOp      ","              }
   '('             { TokOpen    '('              }
   ')'             { TokClose   ')'              }
   '{'             { TokOpen    '{'              }
   '}'             { TokClose   '}'              }
+  '_'             { TokWord    "_"              }
   eol             { TokNewline                  }
   Word            { TokWord    $$               }
   Op              { TokOp      $$               }
@@ -186,6 +191,7 @@ CoqDefinition :: { CoqDefinition }
   : Inductive    { CoqInductiveDef   $1 }
   | Definition   { CoqDefinitionDef  $1 }
   | Fixpoint     { CoqFixpointDef    $1 }
+{-   | Instance     { CoqInstanceDef    $1 } -}
 
 ScopePlace :: { ScopePlace }
   : constructor    { SPConstructor }
@@ -230,6 +236,8 @@ LargeTerm :: { Term }
   : fun   Binders '=>' Term    { Fun $2 $4 }
   | fix   FixBodies            { Fix   $2 }
   | cofix CofixBodies          { Cofix $2 }
+  | forall Binders ',' Term    { Forall $2 $4 }
+  | match SepBy1(MatchItem, ',') with SepBy(Equation,'|') end { Match $2 Nothing $4 }
   | Atom Op Atom               { if $2 == "->" then Arrow $1 $3 else Infix $1 $2 $3 }
 
 App :: { Term }
@@ -328,6 +336,25 @@ MutualDefinitions(p)
 NotationBinding :: { NotationBinding }
   : '"' '\'' Word '\'' '"' ':=' Term    { NotationIdentBinding $3 $7 }
 
+MatchItem :: { MatchItem }
+  : Term                 { MatchItem $1 Nothing Nothing }
+
+Equation :: { Equation }
+  : Some(MultPattern) '=>' Term  { Equation $1 $3 }
+
+MultPattern :: { MultPattern }
+  : '|' SepBy1(Pattern,',')           { MultPattern $2 }
+
+Pattern :: { Pattern }
+  : Word Some(AtomicPattern) { ArgsPat (forceIdentToQualid $1) $2 }
+  | AtomicPattern            { $1 }
+
+AtomicPattern :: { Pattern }
+  : '_'                     { UnderscorePat }
+  | Num                     { NumPat $1 }
+  | Word                    { QualidPat (forceIdentToQualid $1)  }
+  | '(' Pattern ')'         { $2 }
+
 --------------------------------------------------------------------------------
 -- Vernacular
 --------------------------------------------------------------------------------
@@ -361,6 +388,7 @@ Definition :: { Definition }
 Fixpoint :: { Fixpoint }
   : 'Fixpoint'   MutualDefinitions(FixBody)      { uncurry Fixpoint   $2 }
   | 'CoFixpoint' MutualDefinitions(CofixBody)    { uncurry CoFixpoint $2 }
+
 
 --------------------------------------------------------------------------------
 -- Haskell code

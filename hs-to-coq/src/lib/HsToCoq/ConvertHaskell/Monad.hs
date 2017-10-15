@@ -222,13 +222,23 @@ builtInClasses =
 
 builtInDefaultMethods :: Map Ident (Map Ident Term)
 builtInDefaultMethods = fmap M.fromList $ M.fromList
-    [ "Eq" =:
+    [ "GHC.Base.Eq_" =:
         [ "==" ~> Fun [arg "x", arg "y"] (App1 (Var "negb") $ Infix (Var "x") "/=" (Var "y"))
         , "/=" ~> Fun [arg "x", arg "y"] (App1 (Var "negb") $ Infix (Var "x") "==" (Var "y"))
         ]
     , "GHC.Base.Ord" =:
         [ "max" ~> Fun [arg "x", arg "y"] (ifBool (App2 (Var "op_zlze__") (Var "x") (Var "y")) (Var "y") (Var "x"))
         , "min" ~> Fun [arg "x", arg "y"] (ifBool (App2 (Var "op_zlze__") (Var "x") (Var "y")) (Var "x") (Var "y"))
+
+{-  x <= y  = compare x y /= GT
+    x <  y  = compare x y == LT
+    x >= y  = compare x y /= LT
+    x >  y  = compare x y == GT   -}
+
+        , "op_zlze__" ~> Fun  [arg "x", arg "y"] (App2 (Var "op_zsze__") (App2 (Var "compare") (Var "x") (Var "y")) (Var "Gt"))
+        , "op_zl__"   ~> Fun  [arg "x", arg "y"] (App2 (Var "op_zeze__") (App2 (Var "compare") (Var "x") (Var "y")) (Var "Lt"))
+        , "op_zgze__" ~> Fun  [arg "x", arg "y"] (App2 (Var "op_zsze__") (App2 (Var "compare") (Var "x") (Var "y")) (Var "Lt"))
+        , "op_zg__"   ~> Fun  [arg "x", arg "y"] (App2 (Var "op_zeze__") (App2 (Var "compare") (Var "x") (Var "y")) (Var "Gt"))
         ]
     , "GHC.Base.Functor" =:
         [ "op_zlzd__" ~> Fun [arg "x"] (App1 (Var "fmap") (App1 (Var "GHC.Base.const") (Var "x")))
@@ -282,9 +292,9 @@ evalConversion _edits = evalVariablesT . (evalStateT ?? ConversionState{..}) whe
   _defaultMethods    =   builtInDefaultMethods
   _fixities          = M.empty
   _axioms            = M.fromList builtInAxioms
-  
+
   _typecheckerEnvironment = Nothing
-  
+
   __unique = 0
 
 -- Currently, this checks the /per-module/ renamings _without_ a qualified name,

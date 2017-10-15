@@ -9,7 +9,7 @@ Unset Printing Implicit Defensive.
 
 (* Preamble *)
 
-
+Definition on {a}{b}{c} (op : b -> b -> c) (f: a -> b) := fun x y => op (f x) (f y).
 (* No imports to convert. *)
 
 (* Converted declarations: *)

@@ -158,7 +158,7 @@ Instance Eq_Integer___ : Eq_ Integer := {
                                op_zsze__ := fun x y => negb (x =? y)%Z;
                              }.
 
-Instance Ord_Integer___ : !Ord Int := {
+Instance Ord_Integer___ : !Ord Integer := {
   op_zl__   := fun x y => (x <? y)%Z;
   op_zlze__ := fun x y => (x <=? y)%Z;
   op_zg__   := fun x y => (y <? x)%Z;

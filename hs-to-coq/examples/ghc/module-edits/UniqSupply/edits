@@ -1,0 +1,7 @@
+skip module GHC.IO.Unsafe
+skip module GHC.Types
+
+order instance_GHC_Base_Functor_UniqSM instance_GHC_Base_Applicative_UniqSM instance_GHC_Base_Monad_UniqSM
+
+# uses IO Monad
+skip  mkSplitUniqSupply

@@ -23,6 +23,7 @@ MODULES  = MonadUtils \
            SrcLoc \
            BasicTypes \
            Unique \
+           UniqSupply \
 
 VFILES_GEN     = $(addsuffix .v,$(MODULES))
 VFILES_MAN     = $(addsuffix .v,$(HANDMOD))

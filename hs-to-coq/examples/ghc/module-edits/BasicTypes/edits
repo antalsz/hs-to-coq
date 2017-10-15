@@ -1,0 +1,61 @@
+skip module GHC.Show
+
+skip tupleParens
+
+skip pprSafeOverlap
+
+skip pprRuleName
+
+skip pprOneShotInfo
+
+# deriving Eq
+
+redefine Local Definition instance_GHC_Base_Eq__Boxity_op_zsze__ : Boxity -> (Boxity -> bool) := fun arg_319__ arg_320__ =>  match arg_319__ , arg_320__ with | a , b => negb (instance_GHC_Base_Eq__Boxity_op_zeze__ a b)  end.
+
+redefine Local Definition instance_GHC_Base_Eq__FixityDirection_op_zsze__ : FixityDirection -> (FixityDirection -> bool) := fun arg_312__ arg_313__ => match arg_312__ , arg_313__ with | a , b => negb (instance_GHC_Base_Eq__FixityDirection_op_zeze__ a b) end.
+
+redefine Local Definition instance_GHC_Base_Eq__InlineSpec_op_zsze__ : InlineSpec -> (InlineSpec -> bool) := fun arg_401__ arg_402__ => match arg_401__ , arg_402__ with | a , b => negb (instance_GHC_Base_Eq__InlineSpec_op_zeze__ a b) end.
+
+redefine Local Definition instance_GHC_Base_Eq__FunctionOrData_op_zsze__ : FunctionOrData -> (FunctionOrData -> bool) := fun arg_243__ arg_244__ =>  match arg_243__ , arg_244__ with    | a , b => negb (instance_GHC_Base_Eq__FunctionOrData_op_zeze__ a b)  end.
+
+redefine Local Definition instance_GHC_Base_Eq__IntWithInf_op_zsze__ : IntWithInf -> (IntWithInf -> bool) := fun arg_400__ arg_401__ =>  match arg_400__ , arg_401__ with  | a , b => negb (instance_GHC_Base_Eq__IntWithInf_op_zeze__ a b)  end.
+
+redefine Local Definition instance_GHC_Base_Eq__OneShotInfo_op_zsze__ : OneShotInfo -> (OneShotInfo -> bool) := fun arg_236__ arg_237__ =>  match arg_236__ , arg_237__ with | a , b => negb (instance_GHC_Base_Eq__OneShotInfo_op_zeze__ a b)  end.
+
+redefine Local Definition instance_GHC_Base_Eq__Origin_op_zsze__  : Origin -> (Origin -> bool) := fun arg_316__ arg_317__ =>  match arg_316__ , arg_317__ with | a , b => negb (instance_GHC_Base_Eq__Origin_op_zeze__ a b)  end.
+
+redefine Local Definition instance_GHC_Base_Eq__RecFlag_op_zsze__ : RecFlag -> (RecFlag -> bool) := fun arg_309__ arg_310__ =>  match arg_309__ , arg_310__ with  | a , b => negb (instance_GHC_Base_Eq__RecFlag_op_zeze__ a b)  end.
+
+redefine Local Definition instance_GHC_Base_Eq__RuleMatchInfo_op_zsze__ : RuleMatchInfo -> (RuleMatchInfo -> bool) := fun arg_377__ arg_378__ =>  match arg_377__ , arg_378__ with | a , b => negb (instance_GHC_Base_Eq__RuleMatchInfo_op_zeze__ a b) end.
+
+redefine Local Definition instance_GHC_Base_Eq__OccInfo_op_zsze__ : OccInfo -> (OccInfo -> bool) := fun arg_332__ arg_333__ =>  match arg_332__ , arg_333__ with  | a , b => negb (instance_GHC_Base_Eq__OccInfo_op_zeze__ a b) end.
+
+redefine Local Definition instance_GHC_Base_Eq__WarningTxt_op_zsze__ : WarningTxt -> (WarningTxt -> bool) := fun arg_361__ arg_362__ =>  match arg_361__ , arg_362__ with | a , b => negb (instance_GHC_Base_Eq__WarningTxt_op_zeze__ a b)  end.
+
+redefine Local Definition instance_GHC_Base_Eq__OverlapFlag_op_zsze__ : OverlapFlag -> (OverlapFlag -> bool) := fun arg_352__ arg_353__ =>  match arg_352__ , arg_353__ with | a , b => negb (instance_GHC_Base_Eq__OverlapFlag_op_zeze__ a b) end.
+
+redefine Local Definition instance_GHC_Base_Eq__OverlapMode_op_zsze__ : OverlapMode -> (OverlapMode -> bool) := fun arg_344__ arg_345__ =>  match arg_344__ , arg_345__ with  | a , b => negb (instance_GHC_Base_Eq__OverlapMode_op_zeze__ a b)  end.
+
+redefine Local Definition instance_GHC_Base_Eq__Activation_op_zsze__ : Activation -> (Activation -> bool) := fun arg_370__ arg_371__ => match arg_370__ , arg_371__ with | a , b => negb (instance_GHC_Base_Eq__Activation_op_zeze__ a b)  end.
+
+redefine Local Definition instance_GHC_Base_Eq__InlinePragma_op_zsze__ : InlinePragma -> (InlinePragma -> bool) := fun arg_370__ arg_371__ => match arg_370__ , arg_371__ with | a , b => negb (instance_GHC_Base_Eq__InlinePragma_op_zeze__ a b)  end.
+
+redefine Local Definition instance_GHC_Base_Eq__TupleSort_op_zsze__ : TupleSort -> (TupleSort -> bool) := fun arg_370__ arg_371__ => match arg_370__ , arg_371__ with | a , b => negb (instance_GHC_Base_Eq__TupleSort_op_zeze__ a b)  end.
+
+
+##########
+
+# char constant
+skip  negateFractionalLit
+
+rename type GHC.Integer.Type.Integer = GHC.Num.Integer
+
+# needs show
+skip integralFractionalLit
+skip defaultFixity
+
+#
+order instance_GHC_Base_Eq__FractionalLit instance_GHC_Base_Ord_FractionalLit_compare instance_GHC_Base_Ord_FractionalLit_min
+
+
+order instance_GHC_Base_Eq__OverlapMode instance_GHC_Base_Eq__OverlapFlag_op_zeze__

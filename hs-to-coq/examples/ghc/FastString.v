@@ -11,3 +11,5 @@ Admitted.
 Definition fsLit (s : String) : FastString := s.
 
 Parameter uniqueOfFS : FastString -> GHC.Num.Int.
+
+Parameter unpackFS : FastString -> GHC.Base.String.

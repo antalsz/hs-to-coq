@@ -30,6 +30,8 @@ HANDMOD = \
   Data/FoldableInst \
   Control/Category \
   Data/Functor/Const \
+  \
+  Data/IntMap \
 
 # Generated modules
 # generated directly from GHC/libraries/base

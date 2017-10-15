@@ -115,6 +115,7 @@ VFILES:=GHC/Num.v\
   Data/FoldableInst.v\
   Control/Category.v\
   Data/Functor/Const.v\
+  Data/IntMap.v\
   GHC/List.v\
   Data/List.v\
   Data/OldList.v\

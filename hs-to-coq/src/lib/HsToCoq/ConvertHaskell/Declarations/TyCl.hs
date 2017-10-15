@@ -80,27 +80,27 @@ convertTyClDecl decl = do
         SynDecl{..}   -> ConvSyn   <$> convertSynDecl   tcdLName (hsq_explicit tcdTyVars) tcdRhs
         DataDecl{..}  -> ConvData  <$> convertDataDecl  tcdLName (hsq_explicit tcdTyVars) tcdDataDefn
         ClassDecl{..} -> ConvClass <$> convertClassDecl tcdCtxt  tcdLName (hsq_explicit tcdTyVars) tcdFDs tcdSigs tcdMeths tcdATs tcdATDefs
-       
+
       Just redef -> do
         case (decl, redef) of
           (SynDecl{},  CoqDefinitionDef def) ->
             pure . ConvSyn $ case def of
               DefinitionDef _ name args oty body -> SynBody name args oty body
               LetDef          name args oty body -> SynBody name args oty body
-          
+
           (DataDecl{}, CoqInductiveDef ind) ->
             case ind of
               Inductive   (body :| [])  []    -> pure $ ConvData body
               Inductive   (_    :| _:_) _     -> editFailure $ "cannot redefine data type to mutually-recursive types"
               Inductive   _             (_:_) -> editFailure $ "cannot redefine data type to include notations"
               CoInductive _             _     -> editFailure $ "cannot redefine data type to be coinductive"
-          
+
           (FamDecl{}, _) ->
             editFailure "cannot redefine type/data families"
-          
+
           (ClassDecl{}, _) ->
             editFailure "cannot redefine type class declarations"
-          
+
           _ ->
             let from = case decl of
                          FamDecl{}   -> "a type/data family"
@@ -111,6 +111,7 @@ convertTyClDecl decl = do
                          CoqDefinitionDef _ -> "a Definition"
                          CoqFixpointDef   _ -> "a Fixpoint"
                          CoqInductiveDef  _ -> "an Inductive"
+                         CoqInstanceDef   _ -> "an Instance Definition"
             in editFailure $ "cannot redefine " ++ from ++ " to be " ++ to
 
 --------------------------------------------------------------------------------
@@ -138,37 +139,37 @@ convertDeclarationGroup :: DeclarationGroup -> Either String [Sentence]
 convertDeclarationGroup DeclarationGroup{..} = case (nonEmpty dgInductives, nonEmpty dgSynonyms, nonEmpty dgClasses) of
   (Just inds, Nothing, Nothing) ->
     Right [InductiveSentence $ Inductive inds []]
-  
+
   (Nothing, Just (SynBody name args oty def :| []), Nothing) ->
     Right [DefinitionSentence $ DefinitionDef Global name args oty def]
-  
+
   (Just inds, Just syns, Nothing) ->
     Right $  foldMap recSynType syns
           ++ [InductiveSentence $ Inductive inds (orderRecSynDefs $ recSynDefs inds syns)]
 
   (Nothing, Nothing, Just (ClassBody cdef nots :| [])) ->
     Right $ ClassSentence cdef : map NotationSentence nots
-  
+
   (Nothing, Just (_ :| _ : _), Nothing)           -> Left "mutually-recursive type synonyms"
   (Nothing, Nothing,           Just (_ :| _ : _)) -> Left "mutually-recursive type classes"
   (Just _,  Nothing,           Just _)            -> Left "mutually-recursive type classes and data types"
   (Nothing, Just _,            Just _)            -> Left "mutually-recursive type classes and type synonyms"
   (Just _,  Just _,            Just _)            -> Left "mutually-recursive type classes, data types, and type synonyms"
   (Nothing, Nothing,           Nothing)           -> Left "[internal] invalid empty declaration group"
-  
+
   where
     synName = (<> "__raw")
-    
+
     recSynType :: SynBody -> [Sentence] -- Otherwise GHC infers a type containing @~@.
     recSynType (SynBody name _ _ _) =
       [ InductiveSentence $ Inductive [IndBody (synName name) [] (Sort Type) []] []
       , NotationSentence $ ReservedNotationIdent name ]
-    
+
     indParams (IndBody _ params _ _) = S.fromList $ foldMap (toListOf binderIdents) params
-    
+
     -- FIXME use real substitution
     avoidParams params = until (`S.notMember` params) (<> "_")
-    
+
     recSynMapping params (SynBody name args oty def) =
       let mkFun    = maybe id Fun . nonEmpty
           withType = maybe id (flip HasType)
@@ -176,9 +177,9 @@ convertDeclarationGroup DeclarationGroup{..} = case (nonEmpty dgInductives, nonE
                   $ fmap PosArg [ Var (synName name)
                                 , everywhere (mkT $ avoidParams params) .
                                     mkFun args $ withType oty def ])
-    
+
     recSynDefs inds = M.fromList . toList . fmap (recSynMapping $ foldMap indParams inds)
-    
+
     orderRecSynDefs synDefs =
       [ NotationIdentBinding syn $ synDefs M.! syn
       | syn <- foldMap toList $ topoSortEnvironment synDefs ]
@@ -233,7 +234,7 @@ generateGroupArgumentSpecifiers = fmap (fmap ArgumentsSentence)
 generateRecordAccessors :: ConversionMonad m => IndBody -> m [Definition]
 generateRecordAccessors (IndBody tyName params resTy cons) = do
   let conNames = view _1 <$> cons
-  
+
   let restrict = M.filterWithKey $ \k _ -> k `elem` conNames
   allFields <- uses (constructorFields.to restrict.folded._RecordFields) S.fromList
   for (S.toAscList allFields) $ \field -> do
@@ -258,25 +259,25 @@ generateRecordAccessors (IndBody tyName params resTy cons) = do
                                 (HsString $  "Partial record selector: field `"
                                           <> field <> "' has no match in constructor `"
                                           <> con <> "' of type `" <> tyName <> "'")
-    
+
     arg <- gensym "arg"
-    
+
     let indices (Forall bs t)  = toList bs ++ indices t
         indices (Arrow  t1 t2) = Typed Ungeneralizable Coq.Explicit [UnderscoreName] t1 : indices t2
         indices _              = []
-        
+
         deunderscore UnderscoreName = Ident <$> gensym "ty"
         deunderscore name           = pure name
-    
+
     typeArgs <- for (params ++ indices resTy) $ \case
                   Inferred ei name           -> Inferred ei <$> deunderscore name
                   Typed    gen ex names kind -> (Typed gen ex ?? kind) <$> traverse deunderscore names
                   binder                     -> pure binder
-        
+
     let implicitArgs = typeArgs & mapped.binderExplicitness .~ Coq.Implicit
         argBinder    = Typed Ungeneralizable Coq.Explicit
                                [Ident arg] (appList (Var tyName) $ binderArgs typeArgs)
-    
+
     pure . DefinitionDef Global field (implicitArgs ++ [argBinder]) Nothing $
       Coq.Match [MatchItem (Var arg) Nothing Nothing] Nothing equations
 
@@ -292,10 +293,10 @@ groupTyClDecls :: ConversionMonad m
 groupTyClDecls decls = do
   bodies <- traverse (maybeWithCurrentModule .*^ convertTyClDecl) decls <&>
               M.fromList . map (convDeclName &&& id) . catMaybes
-  
+
   -- Might be overgenerous
   ctypes <- use constructorTypes
-  
+
   pure . map (foldMap $ singletonDeclarationGroup . (bodies M.!))
        . flip topoSortEnvironmentWith bodies
        $ \decl -> let vars = getFreeVars decl

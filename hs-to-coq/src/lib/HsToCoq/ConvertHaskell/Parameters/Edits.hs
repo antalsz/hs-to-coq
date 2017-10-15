@@ -37,12 +37,14 @@ makeLenses ''DataTypeArguments
 data CoqDefinition = CoqDefinitionDef Definition
                    | CoqFixpointDef   Fixpoint
                    | CoqInductiveDef  Inductive
+                   | CoqInstanceDef   InstanceDefinition
                    deriving (Eq, Ord, Show, Read)
 
 definitionSentence :: CoqDefinition -> Sentence
 definitionSentence (CoqDefinitionDef def) = DefinitionSentence def
 definitionSentence (CoqFixpointDef   fix) = FixpointSentence   fix
 definitionSentence (CoqInductiveDef  ind) = InductiveSentence  ind
+definitionSentence (CoqInstanceDef   ind) = InstanceSentence ind
 
 -- Add more as needed
 data ScopePlace = SPValue | SPConstructor
@@ -139,6 +141,7 @@ addEdit = \case -- To bring the `where' clause into scope everywhere
     name (CoqFixpointDef   (CoFixpoint  (CofixBody x _ _ _   :| _) _)) = x
     name (CoqInductiveDef  (Inductive   (IndBody   x _ _ _   :| _) _)) = x
     name (CoqInductiveDef  (CoInductive (IndBody   x _ _ _   :| _) _)) = x
+    name (CoqInstanceDef   (InstanceDefinition x _ _ _ _))             = x
 
     prettyScoped (place, name) = let pplace = case place of
                                        SPValue       -> "value"

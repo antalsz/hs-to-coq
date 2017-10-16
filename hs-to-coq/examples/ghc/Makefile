@@ -15,6 +15,7 @@ HANDMOD = Proofs \
           Maybes \
           FastString \
           Util \
+          Panic \
 
 # Generated modules
 MODULES  = MonadUtils \

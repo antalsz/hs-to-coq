@@ -5,6 +5,15 @@ skip module GHC.Int
 skip module GHC.Word
 
 
+# To account for these partial functions, we may be able to define a "default value" type class
+# and then add that constraint to "Panic.panic". The default value is evidence that we *could*
+# return an answer, but the panic is a note that we don't want to do so.
+
+add CmmTypes Instance instance_Default_word : Default Word := { default := W80 }.
+
+rename value Outputable.pprPanic = Panic.panic
+rename value Outputable.ppr = Panic.noString
+
 # partial
 skip halfWordMask
 skip wordWidth
@@ -14,6 +23,10 @@ skip narrowU
 skip narrowS
 skip halfWordWidth
 skip vecLength
+
+# many functions depend on this partial. But it returns an inhabited type.
+# fix this when parser is better.
+# redefine Definition widthFromBytes : GHC.Num.Int -> Width := fun arg_2__ =>  Mk_W80
 
 # DynFlags
 skip rEP_CostCentreStack_mem_alloc
@@ -26,22 +39,19 @@ skip bHalfWord
 skip cIntWidth
 skip cInt
 
-
 order instance_GHC_Base_Eq__Width cmmEqType cmmEqType_ignoring_ptrhood
 
-# something strange with this instance
+# something strange with this *derived* instance
 skip instance_GHC_Base_Ord_Width
 
-redefine Local Definition instance_GHC_Base_Eq__ForeignHint_op_zsze__ : ForeignHint -> (ForeignHint -> bool) := fun arg_272__ arg_273__ =>  match arg_272__ , arg_273__ with  | a , b => negb (instance_GHC_Base_Eq__ForeignHint_op_zeze__ a b)  end.
 
-## recursive! replace when we can parse
+## recursive instance definition! replace when we can parse
 redefine Local Definition instance_GHC_Base_Eq__CmmCat_op_zeze__ : CmmCat -> (CmmCat -> bool) := fun x y => true.
 # fix cat arg_261__ arg_262__ := match arg_261__ , arg_262__ with | Mk_GcPtrCat , Mk_GcPtrCat => true | Mk_BitsCat , Mk_BitsCat => true | Mk_FloatCat , Mk_FloatCat => true| Mk_VecCat a1 a2 , Mk_VecCat b1 b2 => (andb ((GHC.Base.op_zeze__ a1 b1)) ((cat a2 b2))) | _ , _ => false end.
 
-# fix this when parser is better.
-redefine Definition widthFromBytes : GHC.Num.Int -> Width := fun arg_2__ =>  Mk_W80
-
 # deriving Eq_
+
+redefine Local Definition instance_GHC_Base_Eq__ForeignHint_op_zsze__ : ForeignHint -> (ForeignHint -> bool) := fun arg_272__ arg_273__ =>  match arg_272__ , arg_273__ with  | a , b => negb (instance_GHC_Base_Eq__ForeignHint_op_zeze__ a b)  end.
 
 redefine Local Definition instance_GHC_Base_Eq__CmmCat_op_zsze__ : CmmCat -> (CmmCat -> bool) := fun arg_272__ arg_273__ =>  match arg_272__ , arg_273__ with  | a , b => negb (instance_GHC_Base_Eq__CmmCat_op_zeze__ a b)  end.
 

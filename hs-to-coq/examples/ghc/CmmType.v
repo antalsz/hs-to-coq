@@ -171,7 +171,59 @@ Definition widthInBits : Width -> GHC.Num.Int :=
     end.
 
 Definition widthFromBytes : GHC.Num.Int -> Width :=
-  fun arg_2__ => Mk_W80.
+  fun arg_2__ =>
+    let j_12__ :=
+      match arg_2__ with
+        | n => Panic.panic (GHC.Base.hs_string__ "no width for given number of bytes")
+               (Panic.noString n)
+      end in
+    let j_14__ :=
+      match arg_2__ with
+        | num_10__ => if (num_10__ == GHC.Num.fromInteger 10) : bool
+                      then Mk_W80
+                      else j_12__
+      end in
+    let j_16__ :=
+      match arg_2__ with
+        | num_9__ => if (num_9__ == GHC.Num.fromInteger 64) : bool
+                     then Mk_W512
+                     else j_14__
+      end in
+    let j_18__ :=
+      match arg_2__ with
+        | num_8__ => if (num_8__ == GHC.Num.fromInteger 32) : bool
+                     then Mk_W256
+                     else j_16__
+      end in
+    let j_20__ :=
+      match arg_2__ with
+        | num_7__ => if (num_7__ == GHC.Num.fromInteger 16) : bool
+                     then Mk_W128
+                     else j_18__
+      end in
+    let j_22__ :=
+      match arg_2__ with
+        | num_6__ => if (num_6__ == GHC.Num.fromInteger 8) : bool
+                     then Mk_W64
+                     else j_20__
+      end in
+    let j_24__ :=
+      match arg_2__ with
+        | num_5__ => if (num_5__ == GHC.Num.fromInteger 4) : bool
+                     then Mk_W32
+                     else j_22__
+      end in
+    let j_26__ :=
+      match arg_2__ with
+        | num_4__ => if (num_4__ == GHC.Num.fromInteger 2) : bool
+                     then Mk_W16
+                     else j_24__
+      end in
+    match arg_2__ with
+      | num_3__ => if (num_3__ == GHC.Num.fromInteger 1) : bool
+                   then Mk_W8
+                   else j_26__
+    end.
 
 Definition cmmVec : GHC.Num.Int -> CmmType -> CmmType :=
   fun arg_48__ arg_49__ =>
@@ -322,6 +374,6 @@ Definition cmmEqType_ignoring_ptrhood : CmmType -> CmmType -> bool :=
     end.
 
 (* Unbound variables:
-     FastString.LitString FastString.sLit GHC.Base.Eq_ GHC.Base.op_zeze__ GHC.Num.Int
-     GHC.Num.op_zt__ andb bool false negb true
+     == FastString.LitString FastString.sLit GHC.Base.Eq_ GHC.Base.op_zeze__
+     GHC.Num.Int GHC.Num.op_zt__ Panic.noString Panic.panic andb bool false negb true
 *)

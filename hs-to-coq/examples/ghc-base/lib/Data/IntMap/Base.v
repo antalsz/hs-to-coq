@@ -42,6 +42,7 @@ Definition null {a} (x:IM.t a) := IM.is_empty x.
 Definition empty {a} := @IM.empty a.
 Definition add {a} k (v:a) := IM.add k v.
 Definition insert {a} k (v:a) := IM.add k v.
+Definition singleton {a} k (v:a) := IM.add k v (@IM.empty a).
 
 Definition insertWithKey {a} : (Int -> a -> a -> a) -> Int -> a -> IntMap a -> IntMap a :=
   fun comb k v m =>
@@ -63,8 +64,8 @@ Definition findWithDefault {a} : a -> Int -> IntMap a -> a :=
                 | None => def
               end.
 
-Definition map := IM.map.
-Definition mapWithKey := IM.mapi.
+Definition map {a}{b} (f : a -> b) (m : IntMap a) := IM.map f m.
+Definition mapWithKey {a}{b} (f : Int -> a -> b) (m : IntMap a) := IM.mapi f m.
 Definition union {a} (m1 : IntMap a) (m2 : IntMap a)
   := IM.map2 (fun mx my =>
                 match mx with | Some x => Some x | None => my end) m1 m2.
@@ -77,20 +78,30 @@ Definition unionWith {a} (f : a -> a -> a) (m1 : IntMap a) (m2 : IntMap a)
                          end
                 | None => my end) m1 m2.
 
-Definition elems := IM.elements.
-Definition foldrWithKey := IM.fold.
-Definition foldr {a}{b} (f : a -> b -> b) := IM.fold (fun k => f).
-Definition foldr' {a}{b} (f : a -> b -> b) := IM.fold (fun k => f).
-Definition foldrWithKey' := IM.fold.
+Definition elems {a} (m : IntMap a) : list a :=
+  GHC.Base.map (fun x => match x with (y,z) => z end) (@IM.elements a m).
+Definition keys {a} (m : IntMap a) : list Int :=
+  GHC.Base.map (fun x => match x with (y,z) => y end) (@IM.elements a m).
+
+Definition foldWithKey {a}{b} : (Int -> a -> b -> b) -> b -> IntMap a -> b :=
+  fun f b m => IM.fold f m b.
+Definition foldrWithKey {a}{b} : (Int -> a -> b -> b) -> b -> IntMap a -> b :=
+  fun f b m => IM.fold f m b.
+Definition foldr {a}{b} (f : a -> b -> b) := foldrWithKey (fun k => f).
+Definition foldr' {a}{b} (f : a -> b -> b) := foldrWithKey (fun k => f).
+Definition foldrWithKey' {a}{b} : (Int -> a -> b -> b) -> b -> IntMap a -> b :=
+  fun f b m => IM.fold f m b.
+Definition fold {a}{b} (f : a -> b -> b) := foldrWithKey (fun k => f).
+
 
 Definition toList {a} (m: IM.t a) := IM.fold (fun k v x => cons (k,v) x) m nil.
 
-Definition splitLookup {a} k1 (m : IM.t a) :=
+Definition splitLookup {a} k1 (m : IM.t a) : (IM.t a * option a * IM.t a) :=
   IM.fold (fun k v tri => match tri with
                          | (lm, ko, rm) =>
                            if Z.leb k k1 then (IM.add k v lm, ko, rm)
                            else if Z.geb k k1 then (lm, ko, IM.add k v rm)
-                                else (lm, Some k, rm)
+                                else (lm, Some v, rm)
                          end) m (@IM.empty a, None, @IM.empty a).
 
 
@@ -131,6 +142,19 @@ Definition difference {a} {b} : IntMap a -> IntMap b -> IntMap a :=
                | None  , _      => None
                end) m1 m2.
 
+Definition alter {a} : (option a -> option a) -> Int -> IntMap a -> IntMap a :=
+  fun f k m =>
+    match f (lookup k m) with
+    | Some v => IM.add k v m
+    | None => m
+    end.
+
+Definition adjust {a} : (a -> a) -> Int -> IntMap a -> IntMap a :=
+  fun f k m =>
+    match lookup k m with
+    | Some v => IM.add k (f v) m
+    | None => m
+    end.
 
 
 Instance instance_Eq_IntMap {a} `{GHC.Base.Eq_ a} : GHC.Base.Eq_ (IntMap a) := {

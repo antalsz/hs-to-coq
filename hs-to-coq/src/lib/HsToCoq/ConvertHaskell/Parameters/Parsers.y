@@ -253,6 +253,7 @@ Atom :: { Term }
   : '(' Term ')'    { $2 }
   | Word            { Qualid (forceIdentToQualid $1) }
   | Num             { Num $1 }
+  | '_'             { Underscore }
 
 TypeAnnotation :: { Term }
   : ':' Term    { $2 }

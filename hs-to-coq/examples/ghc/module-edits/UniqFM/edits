@@ -1,0 +1,22 @@
+skip pprUniqFM
+skip pluralUFM
+
+skip module Compiler.Hoopl.Dataflow
+skip module Data.IntMap.Base
+skip module Data.IntSet.Base
+skip module Data
+
+skip pprUFM
+
+# requires Hoopl
+skip joinUFM
+
+# requires Data.IntMap.Base.mergeWithKey
+# not sure how that translates to map2
+skip plusUFM_CD
+
+# need to have set datastructure (Data.IntSet.Base)
+skip ufmToSet_Directly
+
+# need to avoid left / right as binding vars
+skip partitionUFM

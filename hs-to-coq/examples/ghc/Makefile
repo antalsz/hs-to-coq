@@ -11,8 +11,7 @@ $(error Please create a symlink ghc (see README.md))
 endif
 
 # Handwritten modules
-HANDMOD = Proofs \
-          Maybes \
+HANDMOD = Maybes \
           FastString \
           Util \
 

@@ -32,6 +32,7 @@ HANDMOD = \
   Data/Functor/Const \
   \
   Data/IntMap \
+  Data/IntMap/Base \
 
 # Generated modules
 # generated directly from GHC/libraries/base

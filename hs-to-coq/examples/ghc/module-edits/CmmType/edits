@@ -1,0 +1,48 @@
+skip module GHC
+skip module Deriving
+skip module DynFlags
+skip module GHC.Int
+skip module GHC.Word
+
+
+# partial
+skip halfWordMask
+skip wordWidth
+skip widthInLog
+skip vecElemType
+skip narrowU
+skip narrowS
+skip halfWordWidth
+skip vecLength
+
+# DynFlags
+skip rEP_CostCentreStack_mem_alloc
+skip rEP_CostCentreStack_scc_count
+skip rEP_StgEntCounter_allocd
+skip rEP_StgEntCounter_allocs
+skip gcWord
+skip bWord
+skip bHalfWord
+skip cIntWidth
+skip cInt
+
+
+order instance_GHC_Base_Eq__Width cmmEqType cmmEqType_ignoring_ptrhood
+
+# something strange with this instance
+skip instance_GHC_Base_Ord_Width
+
+redefine Local Definition instance_GHC_Base_Eq__ForeignHint_op_zsze__ : ForeignHint -> (ForeignHint -> bool) := fun arg_272__ arg_273__ =>  match arg_272__ , arg_273__ with  | a , b => negb (instance_GHC_Base_Eq__ForeignHint_op_zeze__ a b)  end.
+
+## recursive! replace when we can parse
+redefine Local Definition instance_GHC_Base_Eq__CmmCat_op_zeze__ : CmmCat -> (CmmCat -> bool) := fun x y => true.
+# fix cat arg_261__ arg_262__ := match arg_261__ , arg_262__ with | Mk_GcPtrCat , Mk_GcPtrCat => true | Mk_BitsCat , Mk_BitsCat => true | Mk_FloatCat , Mk_FloatCat => true| Mk_VecCat a1 a2 , Mk_VecCat b1 b2 => (andb ((GHC.Base.op_zeze__ a1 b1)) ((cat a2 b2))) | _ , _ => false end.
+
+# fix this when parser is better.
+redefine Definition widthFromBytes : GHC.Num.Int -> Width := fun arg_2__ =>  Mk_W80
+
+# deriving Eq_
+
+redefine Local Definition instance_GHC_Base_Eq__CmmCat_op_zsze__ : CmmCat -> (CmmCat -> bool) := fun arg_272__ arg_273__ =>  match arg_272__ , arg_273__ with  | a , b => negb (instance_GHC_Base_Eq__CmmCat_op_zeze__ a b)  end.
+
+redefine Local Definition instance_GHC_Base_Eq__Width_op_zsze__ : Width -> (Width -> bool) := fun arg_272__ arg_273__ =>  match arg_272__ , arg_273__ with  | a , b => negb (instance_GHC_Base_Eq__Width_op_zeze__ a b)  end.

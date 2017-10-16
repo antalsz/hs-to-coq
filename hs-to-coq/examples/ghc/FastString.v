@@ -13,3 +13,6 @@ Definition fsLit (s : String) : FastString := s.
 Parameter uniqueOfFS : FastString -> GHC.Num.Int.
 
 Parameter unpackFS : FastString -> GHC.Base.String.
+
+Definition LitString := String.
+Definition sLit (s : String) : LitString := s.

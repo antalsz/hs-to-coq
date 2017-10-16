@@ -66,6 +66,7 @@ import HsToCoq.ConvertHaskell.Parameters.Parsers.Lexing
   'Inductive'     { TokWord    "Inductive"      }
   'CoInductive'   { TokWord    "CoInductive"    }
   'Definition'    { TokWord    "Definition"     }
+  'Instance'      { TokWord    "Instance"       }
   'Let'           { TokWord    "Let"            }
   'Fixpoint'      { TokWord    "Fixpoint"       }
   'CoFixpoint'    { TokWord    "CoFixpoint"     }
@@ -191,7 +192,7 @@ CoqDefinition :: { CoqDefinition }
   : Inductive    { CoqInductiveDef   $1 }
   | Definition   { CoqDefinitionDef  $1 }
   | Fixpoint     { CoqFixpointDef    $1 }
-{-   | Instance     { CoqInstanceDef    $1 } -}
+  | Instance     { CoqInstanceDef    $1 }
 
 ScopePlace :: { ScopePlace }
   : constructor    { SPConstructor }
@@ -389,6 +390,9 @@ Definition :: { Definition }
 Fixpoint :: { Fixpoint }
   : 'Fixpoint'   MutualDefinitions(FixBody)      { uncurry Fixpoint   $2 }
   | 'CoFixpoint' MutualDefinitions(CofixBody)    { uncurry CoFixpoint $2 }
+
+Instance :: { InstanceDefinition }
+  : 'Instance' Word Many(Binder) TypeAnnotation ':=' Term  { InstanceTerm $2 $3 $4 $6 Nothing }
 
 
 --------------------------------------------------------------------------------

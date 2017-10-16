@@ -19,7 +19,7 @@ Notation "(# a , b #)" := (TupleHash a b).
 
 
 Require Export NArith.
-Definition Word     := N.  (* Unsigned *)
+Definition Word     := N.
 
 Class Num a := {
   op_zp__     : a -> a -> a ;   (* plus *)

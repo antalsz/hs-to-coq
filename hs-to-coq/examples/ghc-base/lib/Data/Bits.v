@@ -1,8 +1,7 @@
 (* Preamble *)
 
 (* Issues with:
-     - Level 60 is already declared right associative while it is now
-       expected to be left associative.
+     - Level 60 is already declared right associative while it is now expected to be left associative.
        (changed to 61)
      - .&. and .|. can't be used as Coq notations.
        (replaced with :&: and :|: )
@@ -16,8 +15,8 @@ Require Import GHC.Base.
 Require Import GHC.Real.
 
 
-Unset Implicit Arguments.
-Set Maximal Implicit Insertion.
+Set Implicit Arguments.
+Generalizable All Variables.
 Unset Strict Implicit.
 Unset Printing Implicit Defensive.
 
@@ -26,6 +25,7 @@ Class Bits a `{Eq_ a} := {
   op_zizazi__ : a -> a -> a ;
   op_zizbzi__ : a -> a -> a ;
   bit : Int -> a ;
+  bitSize : a -> Int ;
   bitSizeMaybe : a -> option Int ;
   clearBit : a -> Int -> a ;
   complement : a -> a ;
@@ -191,7 +191,7 @@ Definition clearBit_bool : bool -> Int -> bool :=
     end)).
 
 (* Converted type class instance declarations: *)
-Instance instance_Bits_bool_37__ : Bits bool := {
+Instance instance_Bits_bool_37__ : !Bits bool := {
   op_zizazi__ := andb ;
   op_zizbzi__ := orb ;
   xor := _/=_ ;
@@ -203,6 +203,7 @@ Instance instance_Bits_bool_37__ : Bits bool := {
                         then x
                         else false)) ;
   bitSizeMaybe := (fun arg_48__ => (match arg_48__ with | _ => Some #1 end)) ;
+  bitSize := (fun arg_49__ => (match arg_49__ with | _ => #1 end)) ;
   isSigned := (fun arg_50__ => (match arg_50__ with | _ => false end)) ;
   popCount := (fun arg_51__ =>
     (match arg_51__ with
@@ -252,7 +253,7 @@ Instance instance_Bits_bool_37__ : Bits bool := {
     end)) ;
   zeroBits := clearBit_bool (bit_bool #0) #0 }.
 
-Instance instance_FiniteBits_bool_52__ : FiniteBits bool := {
+Instance instance_FiniteBits_bool_52__ : !FiniteBits bool := {
   finiteBitSize := (fun arg_53__ => (match arg_53__ with | _ => #1 end)) ;
   countTrailingZeros := (fun arg_54__ =>
     (match arg_54__ with
@@ -266,49 +267,3 @@ Instance instance_FiniteBits_bool_52__ : FiniteBits bool := {
              then #0
              else #1)
     end)) }.
-
-Definition skip {a} : a.
-Admitted.
-(*
-popCountDefault :: (Bits a, Num a) => a -> Int
-popCountDefault = go 0
- where
-   go !c 0 = c
-   go c w = go (c+1) (w .&. (w - 1))
-*)
-
-
-Definition shiftL_Int := Z.shiftl.
-Definition bit_Int := shiftL_Int #1.
-Definition complementBit_Int x i := Z.lor x (bit_Int i).
-
-Definition complement_Int : Int -> Int := Z.lnot.
-Definition popCount_Int : Int -> Int := fun x => #0.   (* TODO *)
-Definition shift_Int (x:Int) (i:Int) :=
-  if x <? #0 then Z.shiftr x (-i)
-  else if x >? #0 then Z.shiftl x i
-       else x.
-
-Instance instance_Bits_Int : Bits Int :=  {
-  op_zizazi__ := Z.land ;
-  op_zizbzi__ := Z.lor ;
-  bit := bit_Int;
-  bitSizeMaybe := fun _ => None ;
-  clearBit := fun x i => Z.land x (complement_Int (bit_Int i)) ;
-  complement := complement_Int ;
-  complementBit := complementBit_Int ;
-  isSigned := fun x => true ;
-  popCount := popCount_Int ;
-  rotate := shiftL_Int;
-  rotateL := shiftL_Int;
-  rotateR := Z.shiftr;
-  setBit := fun x i => Z.lor x (bit_Int i);
-  shift := shift_Int;
-  shiftL := Z.shiftl;
-  shiftR := Z.shiftr;
-  testBit := Z.testbit;
-  unsafeShiftL := Z.shiftl;
-  unsafeShiftR := Z.shiftr;
-  xor := Z.lxor;
-  zeroBits := #0;
-}.

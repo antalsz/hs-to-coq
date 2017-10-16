@@ -70,6 +70,7 @@ import HsToCoq.ConvertHaskell.Parameters.Parsers.Lexing
   'Fixpoint'      { TokWord    "Fixpoint"       }
   'CoFixpoint'    { TokWord    "CoFixpoint"     }
   'Local'         { TokWord    "Local"          }
+  'Instance'      { TokWord    "Instance"       }
   '='             { TokOp      "="              }
   ':->'           { TokOp      ":->"            }
   ':'             { TokOp      ":"              }
@@ -82,6 +83,7 @@ import HsToCoq.ConvertHaskell.Parameters.Parsers.Lexing
   '"'             { TokOp      "\""             }
   '\''            { TokOp      "'"              }
   ','             { TokOp      ","              }
+  ';'             { TokOp      ";"              }
   '('             { TokOpen    '('              }
   ')'             { TokClose   ')'              }
   '{'             { TokOpen    '{'              }
@@ -191,7 +193,7 @@ CoqDefinition :: { CoqDefinition }
   : Inductive    { CoqInductiveDef   $1 }
   | Definition   { CoqDefinitionDef  $1 }
   | Fixpoint     { CoqFixpointDef    $1 }
-{-   | Instance     { CoqInstanceDef    $1 } -}
+  | Instance     { CoqInstanceDef    $1 }
 
 ScopePlace :: { ScopePlace }
   : constructor    { SPConstructor }
@@ -390,6 +392,12 @@ Fixpoint :: { Fixpoint }
   : 'Fixpoint'   MutualDefinitions(FixBody)      { uncurry Fixpoint   $2 }
   | 'CoFixpoint' MutualDefinitions(CofixBody)    { uncurry CoFixpoint $2 }
 
+Instance :: { InstanceDefinition }
+  : 'Instance'   Word Many(Binder) ':' Term ':=' '{' SepBy(FieldDefinition, ';')  '}'
+  { InstanceDefinition $2 $3 $5 $8 Nothing }
+
+FieldDefinition :: { (Ident,Term) }
+  : Word ':=' Term  { ($1 , $3) }
 
 --------------------------------------------------------------------------------
 -- Haskell code

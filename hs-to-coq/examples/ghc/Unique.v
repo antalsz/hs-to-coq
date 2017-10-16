@@ -250,13 +250,6 @@ Definition incrUnique : Unique -> Unique :=
 Definition tyConRepNameUnique : Unique -> Unique :=
   fun arg_118__ => match arg_118__ with | u => incrUnique u end.
 
-(*
-Definition hasKey {a} `{Uniquable a} : a -> Unique -> bool :=
-  fun arg_16__ arg_17__ =>
-    match arg_16__ , arg_17__ with
-      | x , k => GHC.Base.op_zeze__ (getUnique x) k
-    end.
-*)
 Definition getKey : Unique -> GHC.Num.Int :=
   fun arg_124__ => match arg_124__ with | Mk_MkUnique x => x end.
 
@@ -331,7 +324,6 @@ Local Definition instance_GHC_Base_Ord_Unique_compare
       | a , b => nonDetCmpUnique a b
     end.
 
-
 Local Definition instance_GHC_Base_Eq__Unique_op_zsze__
     : Unique -> Unique -> bool :=
   fun arg_152__ arg_153__ =>
@@ -350,6 +342,12 @@ Instance instance_GHC_Base_Eq__Unique : GHC.Base.Eq_ Unique := {
   op_zeze__ := instance_GHC_Base_Eq__Unique_op_zeze__ ;
   op_zsze__ := instance_GHC_Base_Eq__Unique_op_zsze__ }.
 
+Definition hasKey {a} `{Uniquable a} : a -> Unique -> bool :=
+  fun arg_16__ arg_17__ =>
+    match arg_16__ , arg_17__ with
+      | x , k => GHC.Base.op_zeze__ (getUnique x) k
+    end.
+
 Instance instance_GHC_Base_Ord_Unique : GHC.Base.Ord Unique := {
   compare := instance_GHC_Base_Ord_Unique_compare ;
   max := instance_GHC_Base_Ord_Unique_max ;
@@ -358,7 +356,6 @@ Instance instance_GHC_Base_Ord_Unique : GHC.Base.Ord Unique := {
   op_zgze__ := instance_GHC_Base_Ord_Unique_op_zgze__ ;
   op_zl__ := instance_GHC_Base_Ord_Unique_op_zl__ ;
   op_zlze__ := instance_GHC_Base_Ord_Unique_op_zlze__ }.
-
 
 Local Definition instance_Uniquable_GHC_Num_Int_getUnique
     : GHC.Num.Int -> Unique :=

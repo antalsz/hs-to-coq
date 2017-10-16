@@ -15,3 +15,5 @@ rename value GHC.Base.ord = GHC.Char.ord
 
 # what bug causes this?
 skip module GHC
+
+order instance_GHC_Base_Eq__Unique hasKey instance_GHC_Base_Ord_Unique

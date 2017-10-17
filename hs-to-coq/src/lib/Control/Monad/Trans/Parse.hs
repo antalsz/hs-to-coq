@@ -26,7 +26,7 @@ import qualified Data.Text as T
 newtype ParseT m a = ParseT { getParseT :: StateT Text (ExceptT String m) a }
                    deriving ( Functor, Applicative, Monad
                             , Alternative, MonadPlus
-                            , MonadFix, MonadError String )
+                            , MonadFix, MonadError String, MonadIO )
 
 type Parse = ParseT Identity
 

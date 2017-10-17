@@ -13,7 +13,8 @@ import qualified Data.List.NonEmpty as NEL
 import qualified Data.Text as T
 
 import Control.Monad.Except
-import Control.Monad.Trans.Parse
+import Control.Monad.State
+import Control.Monad.Parse
 
 import GHC (mkModuleName)
 
@@ -31,7 +32,7 @@ import HsToCoq.ConvertHaskell.Parameters.Parsers.Lexing
 %tokentype { Token }
 %error     { unexpected }
 
-%monad { Parse }
+%monad { NewlinesParse }
 %lexer { (=<< token) } { TokEOF }
 
 %token
@@ -189,11 +190,14 @@ DataTypeArguments :: { DataTypeArguments }
   | TaggedParens(indices)                                       { DataTypeArguments [] $1 }
   | {- empty -}                                                 { DataTypeArguments [] [] }
 
-CoqDefinition :: { CoqDefinition }
+CoqDefinitionRaw :: { CoqDefinition }
   : Inductive    { CoqInductiveDef   $1 }
   | Definition   { CoqDefinitionDef  $1 }
   | Fixpoint     { CoqFixpointDef    $1 }
   | Instance     { CoqInstanceDef    $1 }
+
+CoqDefinition :: { CoqDefinition }
+  : Coq(CoqDefinitionRaw) '.' { $1 }
 
 ScopePlace :: { ScopePlace }
   : constructor    { SPConstructor }
@@ -206,8 +210,8 @@ Scope :: { Ident }
 Edit :: { Edit }
   : type synonym Word ':->' Word                  { TypeSynonymTypeEdit   $3 $5                           }
   | data type arguments Word DataTypeArguments    { DataTypeArgumentsEdit $4 $5                           }
-  | redefine CoqDefinition Optional('.')          { RedefinitionEdit      $2                              }
-  | add Word CoqDefinition Optional('.')          { AddEdit               (mkModuleName (T.unpack $2)) $3 }
+  | redefine CoqDefinition                        { RedefinitionEdit      $2                              }
+  | add Word CoqDefinition                        { AddEdit               (mkModuleName (T.unpack $2)) $3 }
   | skip Word                                     { SkipEdit              $2                              }
   | skip Op                                       { SkipEdit              $2                              }
   | skip method Word Word                         { SkipMethodEdit        $3 $4                           }
@@ -225,9 +229,21 @@ Edits :: { [Edit] }
 --------------------------------------------------------------------------------
 
 -- TODO: parse operator names à la _*_
--- TODO: *sometimes* ignore \n (Coq)
 -- TODO: *sometimes* parse () and [] (Haskell) (fixed?)
 -- TODO: split qualified and unqualified names
+
+-- Wrap all references to Coq parsing with `Coq(…)` at the top level in order to
+-- ignore newlines inside them
+Coq(p)
+  : EnterCoqParsing p ExitCoqParsing    { $2 }
+
+-- This production is just for side effects
+EnterCoqParsing :: { () }
+  : {- empty -}    {% put NewlineWhitespace }
+
+-- This production is just for side effects
+ExitCoqParsing :: { () }
+  : {- empty -}    {% put NewlineSeparators }
 
 Term :: { Term }
   : LargeTerm    { $1 }
@@ -414,7 +430,7 @@ ifMaybe Nothing  _j  n = n
 uncurry3 :: (a -> b -> c -> d) -> (a,b,c) -> d
 uncurry3 f = \(a,b,c) -> f a b c
 
-unexpected :: Monad m => Token -> ParseT m a
+unexpected :: MonadError String m => Token -> m a
 unexpected tok = throwError $ "unexpected " ++ tokenDescription tok
 
 forceIdentToQualid :: Ident -> Qualid

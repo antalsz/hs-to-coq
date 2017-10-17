@@ -222,6 +222,10 @@ instance Binding InstanceDefinition where
     binding f params .
     (freeVars cl *> freeVars (map snd defns) *> freeVars mpf *>) .
     binding f inst
+  binding f (InstanceTerm inst params cl term mpf) =
+    binding f params .
+    (freeVars cl *> freeVars term *> freeVars mpf *>) .
+    binding f inst
 
 instance Binding Notation where
   binding f (ReservedNotationIdent x) = binding f x

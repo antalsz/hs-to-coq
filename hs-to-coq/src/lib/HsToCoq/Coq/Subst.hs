@@ -125,6 +125,7 @@ instance Subst ClassDefinition where
 
 instance Subst InstanceDefinition where
   subst _f (InstanceDefinition _inst _params _cl _defns _mpf) = error "subst"
+  subst _f (InstanceTerm       _inst _params _cl _term _mpf)  = error "subst"
 
 instance Subst Notation where
   subst _f (ReservedNotationIdent _x) = error "subst"

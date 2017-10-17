@@ -139,17 +139,16 @@ Proof.
 - intros a b f pa. destruct pa. apply Mk_Sum. apply f. exact a0.
 Defined.
 
-(* No imports to convert. *)
+(* Converted imports: *)
+
+Require GHC.Base.
+Require GHC.Prim.
 
 (* Converted declarations: *)
 
 (* Translating `instance forall {a}, forall `{GHC.Base.Monoid a},
    GHC.Base.Monoid (Dual a)' failed: OOPS! Cannot find information for class
    "GHC.Base.Monoid" unsupported *)
-
-(* Skipping instance instance_GHC_Base_Functor_Dual *)
-
-(* Skipping instance instance_GHC_Base_Applicative_Dual *)
 
 (* Skipping instance instance_GHC_Base_Monad_Dual *)
 
@@ -400,6 +399,41 @@ Definition getDual {a} (arg_1__ : Dual a) :=
     | Mk_Dual getDual => getDual
   end.
 
+Local Definition instance_GHC_Base_Applicative_Dual_pure : forall {a},
+                                                             a -> Dual a :=
+  fun {a} => Mk_Dual.
+
+Instance Unpeel_Dual a : Unpeel (Dual a) a := Build_Unpeel _ _ getDual Mk_Dual.
+
+Local Definition instance_GHC_Base_Applicative_Dual_op_zlztzg__ : forall {a}
+                                                                         {b},
+                                                                    Dual (a -> b) -> Dual a -> Dual b :=
+  fun {a} {b} => GHC.Prim.coerce.
+
+Local Definition instance_GHC_Base_Functor_Dual_fmap : forall {a} {b},
+                                                         (a -> b) -> Dual a -> Dual b :=
+  fun {a} {b} => GHC.Prim.coerce.
+
+Local Definition instance_GHC_Base_Functor_Dual_op_zlzd__ : forall {a} {b},
+                                                              b -> Dual a -> Dual b :=
+  fun {a} {b} => fun x => instance_GHC_Base_Functor_Dual_fmap (GHC.Base.const x).
+
+Instance instance_GHC_Base_Functor_Dual : GHC.Base.Functor Dual := {
+  fmap := fun {a} {b} => instance_GHC_Base_Functor_Dual_fmap ;
+  op_zlzd__ := fun {a} {b} => instance_GHC_Base_Functor_Dual_op_zlzd__ }.
+
+Local Definition instance_GHC_Base_Applicative_Dual_op_ztzg__ : forall {a} {b},
+                                                                  Dual a -> Dual b -> Dual b :=
+  fun {a} {b} =>
+    fun x y =>
+      instance_GHC_Base_Applicative_Dual_op_zlztzg__ (GHC.Base.fmap (GHC.Base.const
+                                                                    GHC.Base.id) x) y.
+
+Instance instance_GHC_Base_Applicative_Dual : GHC.Base.Applicative Dual := {
+  op_zlztzg__ := fun {a} {b} => instance_GHC_Base_Applicative_Dual_op_zlztzg__ ;
+  op_ztzg__ := fun {a} {b} => instance_GHC_Base_Applicative_Dual_op_ztzg__ ;
+  pure := fun {a} => instance_GHC_Base_Applicative_Dual_pure }.
+
 Inductive Endo a : Type := Mk_Endo : (a -> a) -> Endo a.
 
 Arguments Mk_Endo {_} _.
@@ -410,5 +444,6 @@ Definition appEndo {a} (arg_0__ : Endo a) :=
   end.
 
 (* Unbound variables:
-     Type
+     Build_Unpeel GHC.Base.Applicative GHC.Base.Functor GHC.Base.const GHC.Base.fmap
+     GHC.Base.id GHC.Prim.coerce Type Unpeel
 *)

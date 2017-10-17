@@ -142,6 +142,7 @@ addEdit = \case -- To bring the `where' clause into scope everywhere
     name (CoqInductiveDef  (Inductive   (IndBody   x _ _ _   :| _) _)) = x
     name (CoqInductiveDef  (CoInductive (IndBody   x _ _ _   :| _) _)) = x
     name (CoqInstanceDef   (InstanceDefinition x _ _ _ _))             = x
+    name (CoqInstanceDef   (InstanceTerm       x _ _ _ _))             = x
 
     prettyScoped (place, name) = let pplace = case place of
                                        SPValue       -> "value"

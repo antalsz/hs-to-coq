@@ -66,11 +66,11 @@ import HsToCoq.ConvertHaskell.Parameters.Parsers.Lexing
   'Inductive'     { TokWord    "Inductive"      }
   'CoInductive'   { TokWord    "CoInductive"    }
   'Definition'    { TokWord    "Definition"     }
+  'Instance'      { TokWord    "Instance"       }
   'Let'           { TokWord    "Let"            }
   'Fixpoint'      { TokWord    "Fixpoint"       }
   'CoFixpoint'    { TokWord    "CoFixpoint"     }
   'Local'         { TokWord    "Local"          }
-  'Instance'      { TokWord    "Instance"       }
   '='             { TokOp      "="              }
   ':->'           { TokOp      ":->"            }
   ':'             { TokOp      ":"              }
@@ -254,6 +254,7 @@ Atom :: { Term }
   : '(' Term ')'    { $2 }
   | Word            { Qualid (forceIdentToQualid $1) }
   | Num             { Num $1 }
+  | '_'             { Underscore }
 
 TypeAnnotation :: { Term }
   : ':' Term    { $2 }
@@ -393,8 +394,10 @@ Fixpoint :: { Fixpoint }
   | 'CoFixpoint' MutualDefinitions(CofixBody)    { uncurry CoFixpoint $2 }
 
 Instance :: { InstanceDefinition }
-  : 'Instance'   Word Many(Binder) ':' Term ':=' '{' SepBy(FieldDefinition, ';')  '}'
-  { InstanceDefinition $2 $3 $5 $8 Nothing }
+  : 'Instance' Word Many(Binder) TypeAnnotation ':=' '{' SepBy(FieldDefinition, ';')  '}'
+  { InstanceDefinition $2 $3 $4 $7 Nothing }
+  | 'Instance' Word Many(Binder) TypeAnnotation ':=' Term
+  { InstanceTerm $2 $3 $4 $6 Nothing }
 
 FieldDefinition :: { (Ident,Term) }
   : Word ':=' Term  { ($1 , $3) }

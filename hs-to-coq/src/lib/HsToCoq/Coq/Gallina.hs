@@ -383,8 +383,9 @@ data ClassDefinition = ClassDefinition Ident [Binder] (Maybe Sort) [(Ident, Term
 
 -- |@/instance_definition/ ::=@ /(extra)/
 data InstanceDefinition = InstanceDefinition Ident [Binder] Term [(Ident, Term)] (Maybe Proof) -- ^@Instance /ident/ [/binders/] : /term/ := { [/ident/ := /term/ ; … ; /ident/ := /term/] } [/proof/] .
+                                                                                               -- TODO: field arguments (which become @fun@ arguments)
+                        | InstanceTerm Ident [Binder] Term Term (Maybe Proof)                  -- ^@Instance /ident/ [/binders/] : /term/ := /term/ [/proof/] .
                         deriving (Eq, Ord, Show, Read, Typeable, Data)
-                        -- TODO: field arguments (which become @fun@ arguments)
 
 -- |@/associativity/ ::=@ /(extra)/
 data Associativity = LeftAssociativity                                                         -- ^@left@
@@ -1008,6 +1009,10 @@ instance Gallina InstanceDefinition where
                <+> nest 2 (":=" </> "{" <> lineIf defns
                                         <> sepWith (<+>) (<!>) ";" (map (\(f,def) -> renderIdent f <+> ":=" <+> renderGallina def) defns)
                                         <> spaceIf defns <> "}.")
+               <>  maybe empty ((line <>) . renderGallina) mpf
+  renderGallina' _ (InstanceTerm inst params cl term mpf) =
+    "Instance" <+> renderIdent inst <> spaceIf params <> render_args_ty H params cl
+               <+> nest 2 (":=" </> renderGallina term <> ".")
                <>  maybe empty ((line <>) . renderGallina) mpf
 
 instance Gallina Associativity where

@@ -120,14 +120,14 @@ importDeclSentences ConvertedImportDecl{..} = do
                                                    UnqualifiedImport -> Just Import
                                                    QualifiedImport   -> Nothing)
                                                 (mod :| [])
-  
+
   asSentence <- case convImportAs of
     Just short -> do
       coqShort <- moduleToQualid short
       pure [ModuleSentence $ ModuleAssignment coqShort mod]
     Nothing    ->
       pure []
-  
+
   importItems <- case convImportSpec of
     Just (ExplicitImports importItems) -> do
       pure $ [ NotationSentence . NotationBinding $
@@ -178,14 +178,16 @@ convertHsGroup mod HsGroup{..} = do
                             (DefinitionDef Global)     (pure . DefinitionSentence)
                             (buildInfixNotations sigs) (map    NotationSentence)
                             cdef
-                   
+
                         Just def ->
                           [definitionSentence def] <$ case def of
                             CoqInductiveDef  _ -> editFailure "cannot redefine a value definition into an Inductive"
                             CoqDefinitionDef _ -> pure ()
-                            CoqFixpointDef   _ -> pure ())
+                            CoqFixpointDef   _ -> pure ()
+                            CoqInstanceDef  _ -> editFailure "cannot redefine a value definition into an Instance"
+                   )
                    (\_ _ -> convUnsupported "top-level pattern bindings")
-         
+
         -- TODO RENAMER use RecFlag info to do recursion stuff
         pure . foldMap (foldMap (defns M.!)) . topoSortEnvironment $ NoBinding <$> defns
   convertedClsInstDecls <- convertModuleClsInstDecls [(Just mod, cid) | L _ (ClsInstD cid) <- hs_instds]
@@ -248,16 +250,16 @@ convert_module_with_requires convModName (group, _imports, _exports, _docstring)
                                       , convertedAddedDecls   = convModAddedDecls
                                       }
       <- convertHsGroup convModName group
-    
+
     -- TODO: Is this the best approach to the problem where instead of
     -- 'Prelude.not', we get 'GHC.Classes.not'?
     let extraModules = map (mkModuleName . T.unpack . qualidToIdent)
                      . mapMaybe (\case Bare      x     -> qualidModule =<< identToQualid x
                                        Qualified mod _ -> Just mod)
                       $ listify (const True :: Qualid -> Bool) decls
-    
+
     modules <- skipModules $ S.toList $ S.fromList extraModules
-    
+
     convModImports <-
       traverse (\mn -> ModuleSentence <$> require mn) modules
     pure (ConvertedModule{..}, modules)

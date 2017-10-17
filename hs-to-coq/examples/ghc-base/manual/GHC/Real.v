@@ -38,6 +38,15 @@ Instance Num_Q__ : Num Rational := {
   signum      := Qsignum; }.
 
 
+ Instance Eq_Q : Eq_ Rational := {
+   op_zeze__ := Qeq_bool;
+   op_zsze__ := fun x y => negb (Qeq_bool x y)
+ }.
+
+ Instance Ord_Q : Ord Rational :=
+   ord_default Qcompare.
+
+
 Definition numerator := Q.Qnum.
 Definition denominator := Q.Qden.
 

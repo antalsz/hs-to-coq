@@ -53,6 +53,9 @@ library
                      , Control.Monad.Variables
                      , Control.Monad.DefinedIdents
                      , Control.Monad.Trans.Parse
+                     , Control.Monad.Trans.NewlinesParse
+                     , Control.Monad.Parse.Class
+                     , Control.Monad.Parse
                      , HsToCoq.PrettyPrint
                      , HsToCoq.Coq.Preamble
                      , HsToCoq.Coq.Gallina

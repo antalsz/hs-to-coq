@@ -3,32 +3,40 @@ skip module Deriving
 skip module DynFlags
 skip module GHC.Int
 skip module GHC.Word
+skip module GHC.Integer.Type
 
+rename type GHC.Integer.Type.Integer = GHC.Num.Integer
 
 # To account for these partial functions, we may be able to define a "default value" type class
 # and then add that constraint to "Panic.panic". The default value is evidence that we *could*
 # return an answer, but the panic is a note that we don't want to do so.
 
-add CmmTypes Instance instance_Default_word : Default Word := { default := W80 }.
+add CmmType Instance instance_Default_CmmCat : Panic.Default CmmCat := { default := Mk_GcPtrCat }.
+add CmmType Instance instance_Default_width : Panic.Default Width := { default := Mk_W80 }.
+add CmmType Instance inst_Def_CmmType : Panic.Default CmmType := { default := Mk_CmmType Panic.default Panic.default }.
 
-rename value Outputable.pprPanic = Panic.panic
+order instance_Default_CmmCat instance_Default_width inst_Def_CmmType widthFromBytes
+
+rename value Outputable.pprPanic = Panic.panicStr
 rename value Outputable.ppr = Panic.noString
 
-# partial
-skip halfWordMask
-skip wordWidth
-skip widthInLog
-skip vecElemType
+# need Word8, etc.
 skip narrowU
 skip narrowS
-skip halfWordWidth
-skip vecLength
 
-# many functions depend on this partial. But it returns an inhabited type.
-# fix this when parser is better.
-# redefine Definition widthFromBytes : GHC.Num.Int -> Width := fun arg_2__ =>  Mk_W80
+
+# partial
+
+# skip widthInLog
+# skip vecElemType
+# skip halfWordWidth
+# skip vecLength
+
 
 # DynFlags
+skip wordWidth
+skip halfWordMask
+skip halfWordWidth
 skip rEP_CostCentreStack_mem_alloc
 skip rEP_CostCentreStack_scc_count
 skip rEP_StgEntCounter_allocd

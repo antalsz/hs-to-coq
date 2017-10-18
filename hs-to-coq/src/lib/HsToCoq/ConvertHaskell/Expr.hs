@@ -42,8 +42,8 @@ import qualified Data.Set        as S
 import qualified Data.Map.Strict as M
 
 
-
 import GHC hiding (Name, HsChar, HsString, AsPat)
+import MkId (coerceId)
 import qualified GHC
 import Bag
 import BasicTypes
@@ -116,6 +116,17 @@ convertExpr (HsLamCase PlaceHolder mg) =
 
 convertExpr (HsApp e1 e2) =
   App1 <$> convertLExpr e1 <*> convertLExpr e2
+
+-- This is a special case, in order to support GND. It shows, however, how to generalize this:
+-- We just have to keep track of the number of implicit arguments, and which one of them are types
+-- (allowing explicit type application) and which ones are type classes (need to be filled in with `_`).
+convertExpr (HsAppType (L _ (HsAppType (L _ (HsVar (L _ x))) t1)) t2)
+  | x == getName coerceId
+  = do
+    x' <- var ExprNS x
+    t1' <- convertType (unLoc (hswc_body t1))
+    t2' <- convertType (unLoc (hswc_body t2))
+    pure $ ExplicitApp (Bare x') [t1', t2', Underscore]
 
 convertExpr (HsAppType _ _) =
   convUnsupported "type applications"

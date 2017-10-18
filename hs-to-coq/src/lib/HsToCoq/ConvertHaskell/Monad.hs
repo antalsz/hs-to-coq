@@ -121,7 +121,7 @@ builtInClasses =
         , "min"       =: Var "a" `Arrow` Var "a" `Arrow` Var "a"
         , "max"       =: Var "a" `Arrow` Var "a" `Arrow` Var "a"
         ]
-    , ClassDefinition "Monoid" [Inferred Explicit (Ident "a")] Nothing
+    , ClassDefinition "GHC.Base.Monoid" [Inferred Explicit (Ident "a")] Nothing
         [ "mappend" =: Var "a" `Arrow` Var "a" `Arrow` Var "a"
         , "mempty"  =: Var "a"
         , "mconcat" =: (Var "list" `App1` Var "a") `Arrow` Var "a"
@@ -251,8 +251,8 @@ builtInDefaultMethods = fmap M.fromList $ M.fromList
             (let const    = Var "GHC.Base.const" in
             App2 (Var "op_zlztzg__") (App2 (Var "GHC.Base.fmap") const    (Var "x")) (Var "y"))
         ]
-    , "Monoid" =:
-        [ "mconcat" ~> App2 (Var "foldr") (Var "mappend") (Var "mempty")
+    , "GHC.Base.Monoid" =:
+        [ "mconcat" ~> App2 (Var "GHC.Base.foldr") (Var "mappend") (Var "mempty")
         ]
     , "GHC.Base.Monad" =:
         [ "return_" ~> Var "GHC.Base.pure"

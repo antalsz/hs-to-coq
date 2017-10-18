@@ -1,4 +1,5 @@
-{-# LANGUAGE TupleSections, LambdaCase #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE TupleSections, LambdaCase, FlexibleContexts #-}
 
 module HsToCoq.ConvertHaskell.Parameters.Parsers.Lexing (
   -- * Lexing and tokens
@@ -21,10 +22,13 @@ import Prelude hiding (Num())
 
 import Data.Foldable
 import HsToCoq.Util.Foldable
+import HsToCoq.Util.Functor
 import Control.Applicative
 import Control.Monad
 import HsToCoq.Util.Monad
-import Control.Monad.Trans.Parse
+import Control.Monad.State
+import Control.Monad.Parse
+
 import Data.Char
 import HsToCoq.Util.Char
 
@@ -77,7 +81,7 @@ tokenDescription TokEOF         = "end of file"
 --------------------------------------------------------------------------------
 
 -- Module-local
-empty_brackets :: Monad m => Char -> Char -> ParseT m Text
+empty_brackets :: MonadParse m => Char -> Char -> m Text
 empty_brackets open close = T.pack [open,close] <$ parseChar (== open)
                                                 <* many (parseChar isSpace)
                                                 <* parseChar (== close)
@@ -93,17 +97,17 @@ is = (==)
 data NameCategory = CatWord | CatSym
                   deriving (Eq, Ord, Enum, Bounded, Show, Read)
 
-uword, word, op, unit, nil :: Monad m => ParseT m Ident
+uword, word, op, unit, nil :: MonadParse m => m Ident
 uword = parseToken id isUpper    isWord
 word  = parseToken id isWordInit isWord
 op    = parseToken id isOperator isOperator
 unit  = empty_brackets '(' ')'
 nil   = empty_brackets '[' ']'
 
-unqualified :: Monad m => ParseT m (NameCategory, Ident)
+unqualified :: MonadParse m => m (NameCategory, Ident)
 unqualified = asumFmap (CatWord,) [word, unit, nil] <|> (CatSym,) <$> op
 
-qualified :: Monad m => ParseT m (NameCategory, Qualid)
+qualified :: MonadParse m => m (NameCategory, Qualid)
 qualified = do
   root  <- uword
   guard =<< is (Just '.') <$> peekChar
@@ -114,46 +118,45 @@ qualified = do
     
   pure . (cat,) . foldl' Qualified (Bare root) $ mods ++ base
 
-qualid :: Monad m => ParseT m (NameCategory, Qualid)
+qualid :: MonadParse m => m (NameCategory, Qualid)
 qualid = qualified <|> fmap Bare <$> unqualified
 
-comment, space, newline :: Monad m => ParseT m ()
+comment, space, newline :: MonadParse m => m ()
 comment = parseToken (const ()) (is '#') (not . isVSpace)
 space   = parseToken (const ()) isHSpace isHSpace
 newline = parseToken (const ()) isVSpace none
 
-nat :: Monad m => ParseT m Num
+nat :: MonadParse m => m Num
 nat = parseToken (read . T.unpack) isDigit isDigit
 
--- We differentiate between two kinds of @.@: word-dot (as in @Lists.list@) and
--- symbol-dot (as in @x .+. y@ or @Inductive unit : Type := tt.@).  This is a
--- horrible hack.
-
 -- arguments from parseToken (from Control.Monad.Trans.Parse)
--- parseToken :: Monad m => (Text -> a)  -> (Char -> Bool) -> (Char -> Bool) -> ParseT m a
+-- parseToken :: MonadParse m => (Text -> a)  -> (Char -> Bool) -> (Char -> Bool) -> m a
 -- parseToken build isFirst isRest = ...
 
-token' :: Monad m => ParseT m (Maybe Token)
+token' :: MonadNewlinesParse m => m (Maybe Token)
 token' = asum $
   [ Nothing          <$  comment
   , Nothing          <$  space
-  , Just TokNewline  <$  newline
+  , newlineToken     <*  newline
   , Just . TokNat    <$> nat
   , Just . TokOpen   <$> parseChar isOpen
   , Just . TokClose  <$> parseChar isClose
   , Just . nameToken <$> qualid'
   , Just TokEOF      <$  (guard =<< atEOF) ]
   where
-    nameToken = uncurry $ \case
-                  CatWord -> TokWord
-                  CatSym  -> TokOp
-    qualid'  = fmap qualidToIdent <$> qualid
+    newlineToken = get <&> \case
+                     NewlineSeparators -> Just TokNewline
+                     NewlineWhitespace -> Nothing
+    nameToken    = uncurry $ \case
+                     CatWord -> TokWord
+                     CatSym  -> TokOp
+    qualid'      = fmap qualidToIdent <$> qualid
       -- TODO: Fix when we have real qualid support
 
-token :: Monad m => ParseT m Token
+token :: MonadNewlinesParse m => m Token
 token = untilJustM token'
 
-tokens :: Monad m => ParseT m [Token]
+tokens :: MonadNewlinesParse m => m [Token]
 tokens = do
   tok <- token
   (tok :) <$> if tok == TokEOF then pure [] else tokens

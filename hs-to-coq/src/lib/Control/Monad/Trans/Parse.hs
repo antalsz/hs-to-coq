@@ -1,4 +1,5 @@
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving, MultiParamTypeClasses,
+             FlexibleInstances, UndecidableInstances #-}
 
 module Control.Monad.Trans.Parse (
   -- * The 'Parse' monad
@@ -6,15 +7,18 @@ module Control.Monad.Trans.Parse (
   -- * The 'ParseT' monad transformer
   ParseT(..), runParseT, evalParseT,
   -- * 'ParseT' operations
-  parseWithM, parseWith,
+  parseWithM, parseWithM', parseWith,
   atEOF, parseToken, parseCharTokenLookahead,
   -- * Lower-level
   parseChar, parseChars, peekChar
 ) where
 
+import HsToCoq.Util.Coerce
+
 import Data.Functor.Identity
 import Control.Applicative
 import Control.Monad
+import Control.Monad.Fail
 import Control.Monad.Fix
 import Control.Monad.State
 import Control.Monad.Except
@@ -23,10 +27,26 @@ import HsToCoq.Util.Function
 import Data.Text (Text)
 import qualified Data.Text as T
 
+import qualified Control.Monad.Reader.Class    as R
+import qualified Control.Monad.Writer.Class    as W
+import qualified Control.Monad.Cont.Class      as C
+import qualified Control.Monad.Variables.Class as V
+
+--------------------------------------------------------------------------------
+
 newtype ParseT m a = ParseT { getParseT :: StateT Text (ExceptT String m) a }
                    deriving ( Functor, Applicative, Monad
                             , Alternative, MonadPlus
-                            , MonadFix, MonadError String )
+                            , MonadFail, MonadFix, MonadIO, MonadError String
+                            , R.MonadReader r, W.MonadWriter w, C.MonadCont
+                            , V.MonadVariables i d )
+
+instance MonadTrans ParseT where lift = ParseT #. (lift . lift)
+
+-- Can't autoderive 'MonadState' through 'StateT'
+instance MonadState s m => MonadState s (ParseT m) where
+  get = lift get
+  put = lift . put
 
 type Parse = ParseT Identity
 

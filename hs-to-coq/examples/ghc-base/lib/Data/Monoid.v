@@ -141,29 +141,20 @@ Defined.
 
 (* Converted imports: *)
 
+Require Coq.Program.Basics.
 Require GHC.Base.
 Require GHC.Prim.
 
 (* Converted declarations: *)
 
-(* Translating `instance forall {a}, forall `{GHC.Base.Monoid a},
-   GHC.Base.Monoid (Dual a)' failed: OOPS! Cannot find information for class
-   "GHC.Base.Monoid" unsupported *)
-
 (* Skipping instance instance_GHC_Base_Monad_Dual *)
 
-(* Translating `instance forall {a}, GHC.Base.Monoid (Endo a)' failed: OOPS!
-   Cannot find information for class "GHC.Base.Monoid" unsupported *)
+(* Skipping instance instance_GHC_Base_Monoid_All *)
 
-(* Translating `instance GHC.Base.Monoid All' failed: OOPS! Cannot find
-   information for class "GHC.Base.Monoid" unsupported *)
+(* Skipping instance instance_GHC_Base_Monoid_Any *)
 
-(* Translating `instance GHC.Base.Monoid Any' failed: OOPS! Cannot find
-   information for class "GHC.Base.Monoid" unsupported *)
-
-(* Translating `instance forall {a}, forall `{GHC.Num.Num a}, GHC.Base.Monoid
-   (Sum a)' failed: OOPS! Cannot find information for class "GHC.Base.Monoid"
-   unsupported *)
+(* Skipping instance
+   instance_forall___GHC_Num_Num_a___GHC_Base_Monoid__Sum_a_ *)
 
 (* Skipping instance instance_GHC_Base_Functor_Sum *)
 
@@ -171,9 +162,8 @@ Require GHC.Prim.
 
 (* Skipping instance instance_GHC_Base_Monad_Sum *)
 
-(* Translating `instance forall {a}, forall `{GHC.Num.Num a}, GHC.Base.Monoid
-   (Product a)' failed: OOPS! Cannot find information for class "GHC.Base.Monoid"
-   unsupported *)
+(* Skipping instance
+   instance_forall___GHC_Num_Num_a___GHC_Base_Monoid__Product_a_ *)
 
 (* Skipping instance instance_GHC_Base_Functor_Product *)
 
@@ -181,11 +171,9 @@ Require GHC.Prim.
 
 (* Skipping instance instance_GHC_Base_Monad_Product *)
 
-(* Translating `instance forall {a}, GHC.Base.Monoid (First a)' failed: OOPS!
-   Cannot find information for class "GHC.Base.Monoid" unsupported *)
+(* Skipping instance instance_GHC_Base_Monoid__First_a_ *)
 
-(* Translating `instance forall {a}, GHC.Base.Monoid (Last a)' failed: OOPS!
-   Cannot find information for class "GHC.Base.Monoid" unsupported *)
+(* Skipping instance instance_GHC_Base_Monoid__Last_a_ *)
 
 (* Skipping instance
    instance_forall___GHC_Base_Alternative_f___GHC_Base_Monoid__Alt_f_a_ *)
@@ -403,6 +391,34 @@ Local Definition instance_GHC_Base_Applicative_Dual_pure : forall {a},
                                                              a -> Dual a :=
   fun {a} => Mk_Dual.
 
+Local Definition instance_forall___GHC_Base_Monoid_a___GHC_Base_Monoid__Dual_a__mempty {inst_a}
+                                                                                       `{GHC.Base.Monoid inst_a} : (Dual
+                                                                                                                   inst_a) :=
+  Mk_Dual GHC.Base.mempty.
+
+Local Definition instance_forall___GHC_Base_Monoid_a___GHC_Base_Monoid__Dual_a__mappend {inst_a}
+                                                                                        `{GHC.Base.Monoid inst_a}
+    : (Dual inst_a) -> (Dual inst_a) -> (Dual inst_a) :=
+  fun arg_92__ arg_93__ =>
+    match arg_92__ , arg_93__ with
+      | Mk_Dual x , Mk_Dual y => Mk_Dual (GHC.Base.mappend y x)
+    end.
+
+Local Definition instance_forall___GHC_Base_Monoid_a___GHC_Base_Monoid__Dual_a__mconcat {inst_a}
+                                                                                        `{GHC.Base.Monoid inst_a} : list
+                                                                                                                    (Dual
+                                                                                                                    inst_a) -> (Dual
+                                                                                                                    inst_a) :=
+  GHC.Base.foldr
+  instance_forall___GHC_Base_Monoid_a___GHC_Base_Monoid__Dual_a__mappend
+  instance_forall___GHC_Base_Monoid_a___GHC_Base_Monoid__Dual_a__mempty.
+
+Instance instance_forall___GHC_Base_Monoid_a___GHC_Base_Monoid__Dual_a_
+  : forall {a}, forall `{GHC.Base.Monoid a}, GHC.Base.Monoid (Dual a) := {
+  mappend := instance_forall___GHC_Base_Monoid_a___GHC_Base_Monoid__Dual_a__mappend ;
+  mconcat := instance_forall___GHC_Base_Monoid_a___GHC_Base_Monoid__Dual_a__mconcat ;
+  mempty := instance_forall___GHC_Base_Monoid_a___GHC_Base_Monoid__Dual_a__mempty }.
+
 Instance Unpeel_Dual a : Unpeel (Dual a) a := Build_Unpeel _ _ getDual Mk_Dual.
 
 Local Definition instance_GHC_Base_Applicative_Dual_op_zlztzg__ : forall {a}
@@ -443,7 +459,30 @@ Definition appEndo {a} (arg_0__ : Endo a) :=
     | Mk_Endo appEndo => appEndo
   end.
 
+Local Definition instance_GHC_Base_Monoid__Endo_a__mempty {inst_a} : (Endo
+                                                                     inst_a) :=
+  Mk_Endo GHC.Base.id.
+
+Local Definition instance_GHC_Base_Monoid__Endo_a__mappend {inst_a} : (Endo
+                                                                      inst_a) -> (Endo inst_a) -> (Endo inst_a) :=
+  fun arg_83__ arg_84__ =>
+    match arg_83__ , arg_84__ with
+      | Mk_Endo f , Mk_Endo g => Mk_Endo (Coq.Program.Basics.compose f g)
+    end.
+
+Local Definition instance_GHC_Base_Monoid__Endo_a__mconcat {inst_a} : list (Endo
+                                                                           inst_a) -> (Endo inst_a) :=
+  GHC.Base.foldr instance_GHC_Base_Monoid__Endo_a__mappend
+                 instance_GHC_Base_Monoid__Endo_a__mempty.
+
+Instance instance_GHC_Base_Monoid__Endo_a_ : forall {a},
+                                               GHC.Base.Monoid (Endo a) := {
+  mappend := instance_GHC_Base_Monoid__Endo_a__mappend ;
+  mconcat := instance_GHC_Base_Monoid__Endo_a__mconcat ;
+  mempty := instance_GHC_Base_Monoid__Endo_a__mempty }.
+
 (* Unbound variables:
-     Build_Unpeel GHC.Base.Applicative GHC.Base.Functor GHC.Base.const GHC.Base.fmap
-     GHC.Base.id GHC.Prim.coerce Type Unpeel
+     Build_Unpeel Coq.Program.Basics.compose GHC.Base.Applicative GHC.Base.Functor
+     GHC.Base.Monoid GHC.Base.const GHC.Base.fmap GHC.Base.foldr GHC.Base.id
+     GHC.Base.mappend GHC.Base.mempty GHC.Prim.coerce Type Unpeel list
 *)

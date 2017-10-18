@@ -679,7 +679,7 @@ instance Gallina Term where
     renderGallina' appPrec f </> render_args' (appPrec + 1) H args
 
   renderGallina' _p (ExplicitApp qid args) = parens $
-    "@" <> renderGallina qid <> softlineIf args <> render_args H args
+    "@" <> renderGallina qid <> softlineIf args <> render_args' (appPrec + 1) H args
 
   renderGallina' p (Infix l op r)  =
     case lookup op precTable of

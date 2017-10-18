@@ -32,6 +32,7 @@ PASS = \
 TODO_PASS  = \
   EqList \
   Endo \
+  InstVar \
   Expr \
   Mutrec \
   DotName \

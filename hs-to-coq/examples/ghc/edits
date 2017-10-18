@@ -1,3 +1,5 @@
 # Should skip these everywhere
 skip module Outputable
 skip module Panic
+
+rename value SourceLoc.L = SourceLoc.Mk_L

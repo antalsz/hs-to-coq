@@ -304,7 +304,7 @@ FixBinders :: { (NonEmpty Binder, Maybe Annotation) }
 
 -- TODO: Use a _ token?
 BinderName :: { Name }
-  : Word    { if $1 == "_" then UnderscoreName else Ident $1 }
+  : Word    { Ident $1 }
   | '_'     { UnderscoreName }
 
 ExplicitBinderGuts :: { Binder }

@@ -4,10 +4,6 @@ skip module Control.Monad.IO.Class
 # partial
 skip unlessM
 
-# needs traversable
-skip concatMapM
-skip mapMaybeM
-
 skip liftIO1
 skip liftIO2
 skip liftIO3

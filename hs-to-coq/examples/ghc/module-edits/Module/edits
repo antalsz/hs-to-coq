@@ -1,0 +1,49 @@
+# Overall, need Sets and Maps before we can even attempt to translate this
+# Coq module.
+
+skip module Config
+skip module GHC.IO
+skip module System.FilePath.Posix
+
+# TODO
+skip module Data.Map.Base
+skip module Data.Set.Base
+skip module FiniteMap
+
+# IO.FilePath
+skip addBootSuffix
+skip addBootSuffix_maybe
+skip ModLocation
+skip ml_hi_file
+skip ml_hs_file
+skip ml_obj_file
+addBootSuffixLocn
+
+# outputtable
+skip pprModuleName
+skip pprPackagePrefix
+skip pprModule
+
+add Instance default_ModuleName : Panic.Default ModuleName := { default := Mk_ModuleName default}.
+
+# need interface file for this
+add Instance instance_Uniquable_ModuleName : Unique.Uniquable ModuleName := {}. Admitted.
+
+# needs System.FilePath.Posix
+# perhaps we can just skip them? They aren't used elsewhere in this file
+redefine Definition moduleNameSlashes : ModuleName -> GHC.Base.String :=
+ fun x => Panic.panic &"unimplemented".
+redefine Definition mkModuleName : GHC.Base.String -> ModuleName :=
+  fun x => Panic.panic &"unimplemented".
+
+
+# Note need type applications in instances for Eq_ UnitID and Eq_ NDModule.
+# Or we need to add these instances explicitly.
+
+# /=
+redefine Local Definition instance_GHC_Base_Eq__Module_op_zsze__
+    : Module -> Module -> bool :=
+  fun arg_210__ arg_211__ =>
+    match arg_210__ , arg_211__ with
+      | a , b => negb (instance_GHC_Base_Eq__Module_op_zeze__ a b)
+    end.

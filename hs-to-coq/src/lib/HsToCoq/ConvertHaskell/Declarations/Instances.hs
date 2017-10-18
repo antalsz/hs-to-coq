@@ -152,7 +152,9 @@ convertModuleClsInstDecls = foldTraverse $ maybeWithCurrentModule .*^ \cid ->
                                convertClsInstDecl cid rebuild (Just axiomatizeInstance)
   where rebuild :: InstanceDefinition -> m [Sentence]
         rebuild instdef = do
-            let InstanceDefinition coq_name _ _ _ _ = instdef
+            let coq_name = case instdef of
+                    InstanceDefinition coq_name _ _ _ _ -> coq_name
+                    InstanceTerm       coq_name _ _ _ _ -> coq_name
             use (edits.skipped.contains coq_name) >>= \case
                 True -> do
                     let t = "Skipping instance " <> coq_name
@@ -175,6 +177,8 @@ convertModuleClsInstDecls = foldTraverse $ maybeWithCurrentModule .*^ \cid ->
 -- the instance declaration.
 
 topoSortInstance :: forall m.  ConversionMonad m => InstanceDefinition -> m [Sentence]
+topoSortInstance inst_def@(InstanceTerm _ _ _ _ _ ) =
+    pure $ [InstanceSentence inst_def]
 topoSortInstance (InstanceDefinition instanceName params ty members mp) = go sorted M.empty where
 
         m        = M.fromList members

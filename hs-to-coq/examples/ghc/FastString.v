@@ -25,4 +25,4 @@ Parameter unpackFS : FastString -> GHC.Base.String.
 Definition LitString := String.
 Definition sLit (s : String) : LitString := s.
 
-Definition mkFastString : String -> FastString.
+Definition mkFastString (s : String) : FastString := s.

@@ -75,17 +75,18 @@ instance Subst OrPattern where
 
 
 instance Subst Sentence where
-  subst f (AssumptionSentence assum)     = AssumptionSentence (subst f assum)
-  subst f (DefinitionSentence def)       = DefinitionSentence (subst f def)
-  subst f (InductiveSentence  ind)       = InductiveSentence  (subst f ind)
-  subst f (FixpointSentence   fix)       = FixpointSentence   (subst f fix)
-  subst f (AssertionSentence  assert pf) = AssertionSentence  (subst f assert) pf
-  subst f (ModuleSentence     mod)       = ModuleSentence     (subst f mod)
-  subst f (ClassSentence      cls)       = ClassSentence      (subst f cls)
-  subst f (InstanceSentence   ins)       = InstanceSentence   (subst f ins)
-  subst f (NotationSentence   not)       = NotationSentence   (subst f not)
-  subst _ s@(ArgumentsSentence  _)       = s
-  subst _ s@(CommentSentence    _)       = s
+  subst f (AssumptionSentence      assum)     = AssumptionSentence        (subst f assum)
+  subst f (DefinitionSentence      def)       = DefinitionSentence        (subst f def)
+  subst f (InductiveSentence       ind)       = InductiveSentence         (subst f ind)
+  subst f (FixpointSentence        fix)       = FixpointSentence          (subst f fix)
+  subst f (ProgramFixpointSentence pfx pf)    = ProgramFixpointSentence   (subst f pfx) pf
+  subst f (AssertionSentence       assert pf) = AssertionSentence         (subst f assert) pf
+  subst f (ModuleSentence          mod)       = ModuleSentence            (subst f mod)
+  subst f (ClassSentence           cls)       = ClassSentence             (subst f cls)
+  subst f (InstanceSentence        ins)       = InstanceSentence          (subst f ins)
+  subst f (NotationSentence        not)       = NotationSentence          (subst f not)
+  subst _ s@(ArgumentsSentence  _)            = s
+  subst _ s@(CommentSentence    _)            = s
 
 instance Subst Assumption where
   subst f (Assumption kwd assumptions) =
@@ -113,6 +114,14 @@ instance Subst Inductive where
 instance Subst Fixpoint where
   subst f (Fixpoint   fbs nots) = Fixpoint (subst f fbs) (subst f nots)
   subst f (CoFixpoint cbs nots) = CoFixpoint (subst f cbs) (subst f nots)
+
+instance Subst Order where
+  subst f (MeasureOrder expr rel) = MeasureOrder (subst f expr) (subst f rel)
+  subst f (WFOrder rel ident)     = WFOrder      (subst f rel)  ident
+
+instance Subst ProgramFixpoint where
+  subst f (ProgramFixpoint name args order ty body) =
+   ProgramFixpoint name (subst f args) (subst f order) (subst f ty) (subst f body)
 
 instance Subst Assertion where
   subst f (Assertion kwd name args ty) = Assertion kwd name (subst f args) (subst f ty)

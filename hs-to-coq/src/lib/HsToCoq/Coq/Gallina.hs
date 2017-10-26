@@ -58,6 +58,8 @@ module HsToCoq.Coq.Gallina (
   Inductive(..),
   IndBody(..),
   Fixpoint(..),
+  ProgramFixpoint(..),
+  Order(..),
   Assertion(..),
   AssertionKeyword(..),
   Tactics,
@@ -283,17 +285,18 @@ newtype Comment = Comment Text                                                  
 -- We also add cases to deal with certain notation definitions and similar.
 
 -- |@/sentence/ ::=@
-data Sentence = AssumptionSentence Assumption                                                  -- ^@/assumption/@
-              | DefinitionSentence Definition                                                  -- ^@/definition/@
-              | InductiveSentence  Inductive                                                   -- ^@/inductive/@
-              | FixpointSentence   Fixpoint                                                    -- ^@/fixpoint/@
-              | AssertionSentence  Assertion Proof                                             -- ^@/assertion/ /proof/@
-              | ModuleSentence     ModuleSentence                                              -- ^@/module_sentence/@ – extra (inferred from §2.5)
-              | ClassSentence      ClassDefinition                                             -- ^@/class_definition/@ – extra
-              | InstanceSentence   InstanceDefinition                                          -- ^@/instance_definition/@ – extra
-              | NotationSentence   Notation                                                    -- ^@/notation/@ – extra
-              | ArgumentsSentence  Arguments                                                   -- ^@/arguments/@ – extra
-              | CommentSentence    Comment                                                     -- ^@/comment/@ – extra
+data Sentence = AssumptionSentence       Assumption                                            -- ^@/assumption/@
+              | DefinitionSentence       Definition                                            -- ^@/definition/@
+              | InductiveSentence        Inductive                                             -- ^@/inductive/@
+              | FixpointSentence         Fixpoint                                              -- ^@/fixpoint/@
+              | ProgramFixpointSentence  ProgramFixpoint  Proof                                -- ^@/program fixpoint/ /proof/@
+              | AssertionSentence        Assertion Proof                                       -- ^@/assertion/ /proof/@
+              | ModuleSentence           ModuleSentence                                        -- ^@/module_sentence/@ – extra (inferred from §2.5)
+              | ClassSentence            ClassDefinition                                       -- ^@/class_definition/@ – extra
+              | InstanceSentence         InstanceDefinition                                    -- ^@/instance_definition/@ – extra
+              | NotationSentence         Notation                                              -- ^@/notation/@ – extra
+              | ArgumentsSentence        Arguments                                             -- ^@/arguments/@ – extra
+              | CommentSentence          Comment                                               -- ^@/comment/@ – extra
               deriving (Eq, Ord, Show, Read, Typeable, Data)
 
 -- |@/assumption/ ::=@
@@ -339,6 +342,15 @@ data IndBody = IndBody Ident [Binder] Term [(Ident, [Binder], Maybe Term)]      
 -- |@/fixpoint/ ::=@
 data Fixpoint = Fixpoint   (NonEmpty FixBody)   [NotationBinding]                              -- ^@Fixpoint /fix_body/ with … with /fix_body/ [where /notation_binding/ and … and /notation_binding/] .@
               | CoFixpoint (NonEmpty CofixBody) [NotationBinding]                              -- ^@CoFixpoint /fix_body/ with … with /fix_body/ [where /notation_binding/ and … and /notation_binding/] .@
+              deriving (Eq, Ord, Show, Read, Typeable, Data)
+
+-- |@/program fixpoint/ ::=@
+data ProgramFixpoint = ProgramFixpoint  Ident [Binder] Order Term Term                         -- ^@Program Fixpoint /ident/ /params/ {/order/} : /type/ := /term/.@
+              deriving (Eq, Ord, Show, Read, Typeable, Data)
+
+-- |@/order/ ::=@
+data Order = MeasureOrder Term (Maybe Term)                                                    -- ^@measure /term/ (/term/)?/
+           | WFOrder Term Ident                                                                -- ^@wf /term/ /ident//
               deriving (Eq, Ord, Show, Read, Typeable, Data)
 
 -- |@/assertion/ ::=@
@@ -881,17 +893,18 @@ instance Gallina Comment where
   renderGallina' _ (Comment com) = "(* " <> align (fillSep . map (text . T.replace "*)" "* )") $ T.words com) <> " *)"
 
 instance Gallina Sentence where
-  renderGallina' p (AssumptionSentence ass)    = renderGallina' p ass
-  renderGallina' p (DefinitionSentence def)    = renderGallina' p def
-  renderGallina' p (InductiveSentence  ind)    = renderGallina' p ind
-  renderGallina' p (FixpointSentence   fix)    = renderGallina' p fix
-  renderGallina' p (AssertionSentence  ass pf) = renderGallina' p ass <!> renderGallina' p pf
-  renderGallina' p (ModuleSentence     mod)    = renderGallina' p mod
-  renderGallina' p (ClassSentence      cls)    = renderGallina' p cls
-  renderGallina' p (InstanceSentence   ins)    = renderGallina' p ins
-  renderGallina' p (NotationSentence   not)    = renderGallina' p not
-  renderGallina' p (ArgumentsSentence  arg)    = renderGallina' p arg
-  renderGallina' p (CommentSentence    com)    = renderGallina' p com
+  renderGallina' p (AssumptionSentence      ass)    = renderGallina' p ass
+  renderGallina' p (DefinitionSentence      def)    = renderGallina' p def
+  renderGallina' p (InductiveSentence       ind)    = renderGallina' p ind
+  renderGallina' p (FixpointSentence        fix)    = renderGallina' p fix
+  renderGallina' p (ProgramFixpointSentence pfx pf) = renderGallina' p pfx <!> renderGallina' p pf
+  renderGallina' p (AssertionSentence       ass pf) = renderGallina' p ass <!> renderGallina' p pf
+  renderGallina' p (ModuleSentence          mod)    = renderGallina' p mod
+  renderGallina' p (ClassSentence           cls)    = renderGallina' p cls
+  renderGallina' p (InstanceSentence        ins)    = renderGallina' p ins
+  renderGallina' p (NotationSentence        not)    = renderGallina' p not
+  renderGallina' p (ArgumentsSentence       arg)    = renderGallina' p arg
+  renderGallina' p (CommentSentence         com)    = renderGallina' p com
 
 instance Gallina Assumption where
   renderGallina' p (Assumption kw ass) = renderGallina' p kw <+> align (renderGallina ass) <> "."
@@ -955,6 +968,20 @@ instance Gallina IndBody where
 instance Gallina Fixpoint where
   renderGallina' _ (Fixpoint   bodies nots) = render_mutual_def "Fixpoint"   bodies nots
   renderGallina' _ (CoFixpoint bodies nots) = render_mutual_def "CoFixpoint" bodies nots
+
+instance Gallina ProgramFixpoint where
+  renderGallina' _ (ProgramFixpoint name params order ty body) =
+    hang 2 ("Program Fixpoint" <+> renderIdent name
+                               <> spaceIf params <> render_args H params
+                               <+> renderGallina order
+                               <+> ":" <+> renderGallina ty <+> ":=") <$$> renderGallina body <> "."
+
+instance Gallina Order where
+  renderGallina' _ (MeasureOrder expr rel) =
+    "{" <+> "measure" <+> renderGallina' (appPrec+1) expr <+> maybe empty (parens . renderGallina) rel <+> "}"
+  renderGallina' _ (WFOrder rel ident) =
+    "{" <+> "wf" <+> renderGallina' (appPrec+1) rel <+> renderIdent ident <+> "}"
+
 
 instance Gallina Assertion where
   renderGallina' _ (Assertion kw name args ty) =

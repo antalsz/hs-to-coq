@@ -158,17 +158,18 @@ instance Binding (Qualid, [Pattern]) where
   binding f (con, pats) = (freeVars con *>) . binding f pats
 
 instance Binding Sentence where
-  binding f (AssumptionSentence assum)     = binding f assum
-  binding f (DefinitionSentence def)       = binding f def
-  binding f (InductiveSentence  ind)       = binding f ind
-  binding f (FixpointSentence   fix)       = binding f fix
-  binding f (AssertionSentence  assert pf) = binding f assert . (freeVars pf *>)
-  binding _ (ModuleSentence     mod)       = (freeVars mod *>)
-  binding f (ClassSentence      cls)       = binding f cls
-  binding f (InstanceSentence   ins)       = binding f ins
-  binding f (NotationSentence   not)       = binding f not
-  binding _ (ArgumentsSentence  arg)       = (freeVars arg *>)
-  binding _ (CommentSentence    com)       = (freeVars com *>)
+  binding f (AssumptionSentence       assum)     = binding f assum
+  binding f (DefinitionSentence       def)       = binding f def
+  binding f (InductiveSentence        ind)       = binding f ind
+  binding f (FixpointSentence         fix)       = binding f fix
+  binding f (ProgramFixpointSentence  pfx pf)    = binding f pfx . (freeVars pf *>)
+  binding f (AssertionSentence        assert pf) = binding f assert . (freeVars pf *>)
+  binding _ (ModuleSentence           mod)       = (freeVars mod *>)
+  binding f (ClassSentence            cls)       = binding f cls
+  binding f (InstanceSentence         ins)       = binding f ins
+  binding f (NotationSentence         not)       = binding f not
+  binding _ (ArgumentsSentence        arg)       = (freeVars arg *>)
+  binding _ (CommentSentence          com)       = (freeVars com *>)
 
 instance Binding Assumption where
   binding f (Assumption kwd assumptions) =
@@ -204,6 +205,11 @@ instance Binding Fixpoint where
   binding f (CoFixpoint cbs nots) = binding f (foldMap names cbs) . (freeVars cbs *> freeVars (NoBinding nots) *>)
   -- The notation bindings here can only rebind existing reserved names, so we
   -- fake out @binding' nots@ to get the free variables.
+
+instance Binding ProgramFixpoint where
+  binding f (ProgramFixpoint name args order ty body) =
+    (binding f args (freeVars order *> freeVars ty *> binding f name (freeVars body)) *>) .
+    binding f name
 
 instance Binding Assertion where
   binding f (Assertion kwd name args ty) =
@@ -368,6 +374,10 @@ instance FreeVars Arg where
   freeVars (NamedArg _x t) = freeVars t
     -- The name here is the name of a function parameter; it's not an occurrence
     -- of a Gallina-level variable.
+
+instance FreeVars Order where
+  freeVars (MeasureOrder expr rel) = freeVars expr *> freeVars rel
+  freeVars (WFOrder rel ident) = freeVars rel *> occurrence ident
 
 instance FreeVars Generalizability where
   freeVars Ungeneralizable = pure ()

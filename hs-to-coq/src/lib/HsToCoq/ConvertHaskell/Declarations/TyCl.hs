@@ -108,10 +108,11 @@ convertTyClDecl decl = do
                          DataDecl{}  -> "a data type"
                          ClassDecl{} -> "a type class"
                 to   = case redef of
-                         CoqDefinitionDef _ -> "a Definition"
-                         CoqFixpointDef   _ -> "a Fixpoint"
-                         CoqInductiveDef  _ -> "an Inductive"
-                         CoqInstanceDef   _ -> "an Instance Definition"
+                         CoqDefinitionDef       _ -> "a Definition"
+                         CoqFixpointDef         _ -> "a Fixpoint"
+                         CoqProgramFixpointDef  _ -> "a Program Fixpoint"
+                         CoqInductiveDef        _ -> "an Inductive"
+                         CoqInstanceDef         _ -> "an Instance Definition"
             in editFailure $ "cannot redefine " ++ from ++ " to be " ++ to
 
 --------------------------------------------------------------------------------

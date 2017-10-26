@@ -52,10 +52,11 @@ convertModuleValDecls mdecls = do
 
                      Just def ->
                        [definitionSentence def] <$ case def of
-                         CoqInductiveDef  _ -> editFailure "cannot redefine a value definition into an Inductive"
-                         CoqDefinitionDef _ -> pure ()
-                         CoqFixpointDef   _ -> pure ()
-                         CoqInstanceDef   _ -> editFailure "cannot redefine a value definition into an Instance")
+                         CoqInductiveDef        _ -> editFailure "cannot redefine a value definition into an Inductive"
+                         CoqDefinitionDef       _ -> pure ()
+                         CoqFixpointDef         _ -> pure ()
+                         CoqProgramFixpointDef  _ -> pure ()
+                         CoqInstanceDef         _ -> editFailure "cannot redefine a value definition into an Instance")
                 (\_ _ -> convUnsupported "top-level pattern bindings")
 
   -- TODO: Mutual recursion

@@ -46,6 +46,7 @@ import HsToCoq.ConvertHaskell.Parameters.Parsers.Lexing
   redefine        { TokWord    "redefine"       }
   skip            { TokWord    "skip"           }
   nonterminating  { TokWord    "nonterminating" }
+  terminating     { TokWord    "terminating"    }
   method          { TokWord    "method"         }
   rename          { TokWord    "rename"         }
   order           { TokWord    "order"          }
@@ -64,11 +65,14 @@ import HsToCoq.ConvertHaskell.Parameters.Parsers.Lexing
   for             { TokWord    "for"            }
   where           { TokWord    "where"          }
   and             { TokWord    "and"            }
+  'measure'       { TokWord    "measure"        }
+  'wf'            { TokWord    "wf"             }
   'Inductive'     { TokWord    "Inductive"      }
   'CoInductive'   { TokWord    "CoInductive"    }
   'Definition'    { TokWord    "Definition"     }
   'Instance'      { TokWord    "Instance"       }
   'Let'           { TokWord    "Let"            }
+  'Program'       { TokWord    "Program"        }
   'Fixpoint'      { TokWord    "Fixpoint"       }
   'CoFixpoint'    { TokWord    "CoFixpoint"     }
   'Local'         { TokWord    "Local"          }
@@ -154,6 +158,10 @@ Optional(p)
   : p              { Just $1 }
   | {- empty -}    { Nothing }
 
+OptionalParens(p)
+  : '(' p  ')'     { Just $2 }
+  | {- empty -}    { Nothing }
+
 OptionalList(p)
   : Optional(p)    { maybe [] toList $1 }
 
@@ -191,10 +199,11 @@ DataTypeArguments :: { DataTypeArguments }
   | {- empty -}                                                 { DataTypeArguments [] [] }
 
 CoqDefinitionRaw :: { CoqDefinition }
-  : Inductive    { CoqInductiveDef   $1 }
-  | Definition   { CoqDefinitionDef  $1 }
-  | Fixpoint     { CoqFixpointDef    $1 }
-  | Instance     { CoqInstanceDef    $1 }
+  : Inductive       { CoqInductiveDef       $1 }
+  | Definition      { CoqDefinitionDef      $1 }
+  | Fixpoint        { CoqFixpointDef        $1 }
+  | Instance        { CoqInstanceDef        $1 }
+  | ProgramFixpoint { CoqProgramFixpointDef $1 }
 
 CoqDefinition :: { CoqDefinition }
   : Coq(CoqDefinitionRaw) '.' { $1 }
@@ -217,6 +226,7 @@ Edit :: { Edit }
   | skip method Word Word                         { SkipMethodEdit        $3 $4                           }
   | skip module Word                              { SkipModuleEdit        (mkModuleName (T.unpack $3))    }
   | nonterminating Word                           { NonterminatingEdit    $2                              }
+  | terminating Word Order                        { TerminationEdit       $2 $3                           }
   | rename Renaming                               { RenameEdit            (fst $2) (snd $2)               }
   | add scope Scope for ScopePlace Word           { AdditionalScopeEdit   $5 $6 $3                        }
   | order Some(Word)                              { OrderEdit             $2                              }
@@ -408,6 +418,14 @@ Definition :: { Definition }
 Fixpoint :: { Fixpoint }
   : 'Fixpoint'   MutualDefinitions(FixBody)      { uncurry Fixpoint   $2 }
   | 'CoFixpoint' MutualDefinitions(CofixBody)    { uncurry CoFixpoint $2 }
+
+ProgramFixpoint :: { ProgramFixpoint }
+  : 'Program' 'Fixpoint' Word Many(Binder) Order TypeAnnotation ':=' Term  { ProgramFixpoint $3 $4 $5 $6 $8 }
+
+Order :: { Order }
+  : '{' 'measure' Term OptionalParens(Term) '}'    { MeasureOrder $3 $4 }
+  | '{' 'wf' Term Word '}'                         { WFOrder $3 $4 }
+
 
 Instance :: { InstanceDefinition }
   : 'Instance' Word Many(Binder) TypeAnnotation ':=' '{' SepBy(FieldDefinition, ';')  '}'

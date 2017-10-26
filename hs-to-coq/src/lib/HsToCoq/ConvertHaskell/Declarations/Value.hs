@@ -1,4 +1,4 @@
-{-# LANGUAGE RecordWildCards, TupleSections, LambdaCase, FlexibleContexts #-}
+{-# LANGUAGE RecordWildCards, TupleSections, LambdaCase, FlexibleContexts, MultiWayIf #-}
 
 module HsToCoq.ConvertHaskell.Declarations.Value (convertValDecls, convertModuleValDecls) where
 
@@ -42,22 +42,24 @@ convertModuleValDecls mdecls = do
 
   bindings <- (fmap M.fromList . (convertTypedModuleBindings defns sigs ?? Just axiomatizeBinding))
            $  withConvertedBinding
-                (\cdef@ConvertedDefinition{convDefName = name} -> do
-                   use (edits.redefinitions.at name) >>= ((name,) <$>) . \case
-                     Nothing  ->
-                       pure $ withConvertedDefinition
-                         (DefinitionDef Global)     (pure . DefinitionSentence)
-                         (buildInfixNotations sigs) (map    NotationSentence)
-                         cdef
-
-                     Just def ->
-                       [definitionSentence def] <$ case def of
-                         CoqInductiveDef        _ -> editFailure "cannot redefine a value definition into an Inductive"
-                         CoqDefinitionDef       _ -> pure ()
-                         CoqFixpointDef         _ -> pure ()
-                         CoqProgramFixpointDef  _ -> pure ()
-                         CoqInstanceDef         _ -> editFailure "cannot redefine a value definition into an Instance")
-                (\_ _ -> convUnsupported "top-level pattern bindings")
+                (\cdef@ConvertedDefinition{convDefName = name} -> ((name,) <$>) $ do
+                   r <- use (edits.redefinitions.at name)
+                   t <- use (edits.termination.at name)
+                   if | Just def <- r               -- redefined
+                      -> [definitionSentence def] <$ case def of
+                          CoqInductiveDef        _ -> editFailure "cannot redefine a value definition into an Inductive"
+                          CoqDefinitionDef       _ -> pure ()
+                          CoqFixpointDef         _ -> pure ()
+                          CoqProgramFixpointDef  _ -> pure ()
+                          CoqInstanceDef         _ -> editFailure "cannot redefine a value definition into an Instance"
+                      | Just (order, tactic) <- t  -- turn into Program Fixpoint
+                      ->  pure <$> toProgramFixpointSentence cdef order tactic
+                      | otherwise                   -- no edit
+                      -> pure $ withConvertedDefinition
+                          (DefinitionDef Global)     (pure . DefinitionSentence)
+                          (buildInfixNotations sigs) (map    NotationSentence)
+                          cdef
+                )(\_ _ -> convUnsupported "top-level pattern bindings")
 
   -- TODO: Mutual recursion
   pure . foldMap (foldMap (bindings M.!)) . topoSortEnvironment $ NoBinding <$> bindings

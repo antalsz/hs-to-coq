@@ -18,6 +18,7 @@ PASS = \
   ExhaustGuard \
   PartialAppliedPolyDataCon \
   PatternGuard \
+  NonStructuralRec \
   MapAccumR \
   Sub \
   FTP \

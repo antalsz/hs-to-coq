@@ -162,7 +162,7 @@ instance Binding Sentence where
   binding f (DefinitionSentence       def)       = binding f def
   binding f (InductiveSentence        ind)       = binding f ind
   binding f (FixpointSentence         fix)       = binding f fix
-  binding f (ProgramFixpointSentence  pfx pf)    = binding f pfx . (freeVars pf *>)
+  binding f (ProgramFixpointSentence  pfx _)     = binding f pfx
   binding f (AssertionSentence        assert pf) = binding f assert . (freeVars pf *>)
   binding _ (ModuleSentence           mod)       = (freeVars mod *>)
   binding f (ClassSentence            cls)       = binding f cls

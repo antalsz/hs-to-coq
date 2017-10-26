@@ -17,6 +17,7 @@ import Control.Lens
 import Control.Monad
 import Data.Semigroup
 import Data.List.NonEmpty (NonEmpty(..), toList, tail)
+import Data.Text (Text)
 import qualified Data.Text as T
 
 import Data.Map (Map, singleton, unionWith)
@@ -44,7 +45,7 @@ data CoqDefinition = CoqDefinitionDef      Definition
 definitionSentence :: CoqDefinition -> Sentence
 definitionSentence (CoqDefinitionDef      def) = DefinitionSentence       def
 definitionSentence (CoqFixpointDef        fix) = FixpointSentence         fix
-definitionSentence (CoqProgramFixpointDef pfx) = ProgramFixpointSentence  pfx (ProofAdmitted "")
+definitionSentence (CoqProgramFixpointDef pfx) = ProgramFixpointSentence  pfx Nothing
 definitionSentence (CoqInductiveDef       ind) = InductiveSentence        ind
 definitionSentence (CoqInstanceDef        ind) = InstanceSentence         ind
 
@@ -58,7 +59,7 @@ data Edit = TypeSynonymTypeEdit   Ident Ident
           | AddEdit               ModuleName CoqDefinition
           | SkipEdit              Ident
           | NonterminatingEdit    Ident
-          | TerminationEdit       Ident Order
+          | TerminationEdit       Ident Order (Maybe Text)
           | SkipModuleEdit        ModuleName
           | SkipMethodEdit        Ident Ident
           | AdditionalScopeEdit   ScopePlace Ident Ident
@@ -99,7 +100,7 @@ data Edits = Edits { _typeSynonymTypes  :: !(Map Ident Ident)
                    , _adds              :: !(Map ModuleName [Sentence])
                    , _skipped           :: !(Set Ident)
                    , _nonterminating    :: !(Set Ident)
-                   , _termination       :: !(Map Ident Order)
+                   , _termination       :: !(Map Ident (Order, Maybe Text))
                    , _skippedMethods    :: !(Set (Ident,Ident))
                    , _skippedModules    :: !(Set ModuleName)
                    , _additionalScopes  :: !(Map (ScopePlace, Ident) Ident)
@@ -133,7 +134,7 @@ addEdit = \case -- To bring the `where' clause into scope everywhere
   AddEdit               mod def           -> Right . (adds.at mod.non mempty %~ (definitionSentence def:))
   SkipEdit              what              -> addFresh skipped                             (duplicate_for  "skip requests")                                   what         ()
   NonterminatingEdit    what              -> addFresh nonterminating                      (duplicate_for  "nonterminating requests")                         what         ()
-  TerminationEdit       what order        -> addFresh termination                         (duplicate_for  "termination requests")                            what         order
+  TerminationEdit       what order tac    -> addFresh termination                         (duplicate_for  "termination requests")                            what         (order,tac)
   SkipMethodEdit        cls meth          -> addFresh skippedMethods                      (duplicate_for' "skipped method requests"       prettyClsMth)      (cls,meth)   ()
   SkipModuleEdit        mod               -> addFresh skippedModules                      (duplicate_for' "skipped module requests"       moduleNameString)  mod          ()
   AdditionalScopeEdit   place name scope  -> addFresh additionalScopes                    (duplicate_for' "addition of a scope"           prettyScoped)      (place,name) scope

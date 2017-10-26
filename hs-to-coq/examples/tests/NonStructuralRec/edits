@@ -1,0 +1,8 @@
+skip N
+skip addd
+rename type N = nat
+rename value N = O
+rename value S = S
+rename value addd = Nat.add
+
+termination mapTree2 { measure (size arg_1__) } prog_omega

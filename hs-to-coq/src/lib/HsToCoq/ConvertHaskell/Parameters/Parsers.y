@@ -46,7 +46,7 @@ import HsToCoq.ConvertHaskell.Parameters.Parsers.Lexing
   redefine        { TokWord    "redefine"       }
   skip            { TokWord    "skip"           }
   nonterminating  { TokWord    "nonterminating" }
-  terminating     { TokWord    "terminating"    }
+  termination     { TokWord    "termination"    }
   method          { TokWord    "method"         }
   rename          { TokWord    "rename"         }
   order           { TokWord    "order"          }
@@ -226,7 +226,7 @@ Edit :: { Edit }
   | skip method Word Word                         { SkipMethodEdit        $3 $4                           }
   | skip module Word                              { SkipModuleEdit        (mkModuleName (T.unpack $3))    }
   | nonterminating Word                           { NonterminatingEdit    $2                              }
-  | terminating Word Order                        { TerminationEdit       $2 $3                           }
+  | termination Word Order Optional(Word)         { TerminationEdit       $2 $3 $4                        }
   | rename Renaming                               { RenameEdit            (fst $2) (snd $2)               }
   | add scope Scope for ScopePlace Word           { AdditionalScopeEdit   $5 $6 $3                        }
   | order Some(Word)                              { OrderEdit             $2                              }
@@ -423,8 +423,8 @@ ProgramFixpoint :: { ProgramFixpoint }
   : 'Program' 'Fixpoint' Word Many(Binder) Order TypeAnnotation ':=' Term  { ProgramFixpoint $3 $4 $5 $6 $8 }
 
 Order :: { Order }
-  : '{' 'measure' Term OptionalParens(Term) '}'    { MeasureOrder $3 $4 }
-  | '{' 'wf' Term Word '}'                         { WFOrder $3 $4 }
+  : '{' 'measure' Atom OptionalParens(Term) '}'    { MeasureOrder $3 $4 }
+  | '{' 'wf' Atom Word '}'                         { WFOrder $3 $4 }
 
 
 Instance :: { InstanceDefinition }

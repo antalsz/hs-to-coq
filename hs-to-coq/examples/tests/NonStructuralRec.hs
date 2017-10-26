@@ -9,28 +9,13 @@ mx N n = n
 mx n N = n
 mx (S n) (S m) = S (mx n m)
 
-addd :: N -> N -> N
-addd N m     = m
-addd (S n) m = S (addd n m)
-
-sm :: List N -> N
-sm (Cons x xs) = addd x (sm xs)
-sm Nil         = N
+addN :: N -> N -> N
+addN N m     = m
+addN (S n) m = S (addN n m)
 
 -- Inlined list datatype
 
 data List a = Nil | Cons a (List a)
-
--- higher order function
-
-mapList :: (a -> b) -> List a -> List b
-mapList f Nil = Nil
-mapList f (Cons x xs) = Cons (f x) (mapList f xs)
-
-goodMapList :: (a -> b) -> List a -> List b
-goodMapList f = go
-  where go Nil = Nil
-        go (Cons x xs) = Cons (f x) (go xs)
 
 -- Tree type
 
@@ -38,7 +23,9 @@ data Tree a = Node a (List (Tree a))
 
 -- Size minus one, to avoid proving that the size is always positive
 size :: Tree a -> N
-size (Node v ts) = sm (goodMapList S (goodMapList size ts))
+size (Node v ts) = go ts
+  where go Nil = N
+        go (Cons t ts) = addN (S (size t)) (go ts)
 
 -- Nonstructurual recursion
 

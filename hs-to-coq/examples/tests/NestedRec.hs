@@ -1,5 +1,9 @@
 module NestedRec where
 
+-- Nats
+
+data N = N | S N
+
 -- Inlined list datatype
 
 data List a = Nil | Cons a (List a)
@@ -10,10 +14,26 @@ mapList :: (a -> b) -> List a -> List b
 mapList f Nil = Nil
 mapList f (Cons x xs) = Cons (f x) (mapList f xs)
 
+goodMapList :: (a -> b) -> List a -> List b
+goodMapList f = go
+  where go Nil = Nil
+        go (Cons x xs) = Cons (f x) (go xs)
 
 -- Tree type
 
 data Tree a = Node a (List (Tree a))
+
+mx :: N -> N -> N
+mx N n = n
+mx n N = n
+mx (S n) (S m) = S (mx n m)
+
+maxmum :: List N -> N
+maxmum (Cons x xs) = mx x (maxmum xs)
+maxmum Nil         = N
+
+height :: Tree a -> N
+height (Node v ts) = S (maxmum (goodMapList height ts))
 
 -- Nested recursion
 

@@ -1,0 +1,4 @@
+skip N
+rename type N = nat
+rename value N = O
+rename value S = S

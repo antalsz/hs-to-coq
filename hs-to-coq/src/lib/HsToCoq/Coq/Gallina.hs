@@ -898,8 +898,7 @@ instance Gallina Sentence where
   renderGallina' p (InductiveSentence       ind)    = renderGallina' p ind
   renderGallina' p (FixpointSentence        fix)    = renderGallina' p fix
   renderGallina' p (ProgramFixpointSentence pfx pf) = renderGallina' p pfx <!>
-                                                      maybe empty (\t -> "Solve Obligations with ("<> text t <>").") pf <!>
-                                                      "Admit Obligations."
+                                                      maybe "Admit Obligations." (\t -> "Solve Obligations with ("<> text t <>").") pf
   renderGallina' p (AssertionSentence       ass pf) = renderGallina' p ass <!> renderGallina' p pf
   renderGallina' p (ModuleSentence          mod)    = renderGallina' p mod
   renderGallina' p (ClassSentence           cls)    = renderGallina' p cls

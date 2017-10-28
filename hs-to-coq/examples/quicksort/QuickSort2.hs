@@ -1,4 +1,4 @@
-module QuickSort where
+module QuickSort2 where
 
 import Data.List
 

@@ -1,4 +1,6 @@
 -Q ../ghc-base/lib/ ""
 -Q . ""
+-Q ../base-thy/ Proofs
 QuickSort.v
 Proofs.v
+QuickSort2.v

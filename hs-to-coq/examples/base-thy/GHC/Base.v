@@ -118,7 +118,7 @@ Lemma flat_map_cons_f : forall A B (f : A -> B) xs,
 Proof.
   induction xs.
   - simpl. auto.
-  - simpl. f_equal. auto.
+  - simpl. auto.
 Qed.
 
 Lemma flat_map_cons_id:

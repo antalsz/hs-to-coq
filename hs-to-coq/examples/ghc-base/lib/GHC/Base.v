@@ -646,12 +646,8 @@ Local Definition instance_Monoid_comparison_mconcat : list
 Definition id {a} : a -> a :=
   fun arg_54__ => match arg_54__ with | x => x end.
 
-Definition map {a} {b} : (a -> b) -> list a -> list b :=
-  fix map arg_68__ arg_69__
-        := match arg_68__ , arg_69__ with
-             | _ , nil => nil
-             | f , cons x xs => cons (f x) (map f xs)
-           end.
+Definition map {A B : Type} (f : A -> B) xs :=
+  Coq.Lists.List.map f xs.
 
 Local Definition instance_Functor_list_fmap : forall {a} {b},
                                                 (a -> b) -> list a -> list b :=
@@ -1333,7 +1329,8 @@ Instance instance_Monoid__list_a_ : forall {a}, Monoid (list a) := {
   mempty := instance_Monoid__list_a__mempty }.
 
 (* Unbound variables:
-     * Coq.Init.Datatypes.app Coq.Lists.List.flat_map Coq.Program.Basics.compose Eq
-     GHC.Prim.arrow GHC.Tuple.pair_type None Some String andb bool comparison cons
-     false list nil op_zeze__ option pair true tt unit
+     * Coq.Init.Datatypes.app Coq.Lists.List.flat_map Coq.Lists.List.map
+     Coq.Program.Basics.compose Eq GHC.Prim.arrow GHC.Tuple.pair_type None Some
+     String Type andb bool comparison cons false list nil op_zeze__ option pair true
+     tt unit
 *)

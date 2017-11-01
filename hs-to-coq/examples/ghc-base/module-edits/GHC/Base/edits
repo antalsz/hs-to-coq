@@ -66,3 +66,8 @@ skip instance_Alternative_list
 skip instance_MonadPlus_list
 skip instance_Alternative_option
 skip instance_MonadPlus_option
+
+# Haskell’s definition of passes the f around, which trips over the
+# termination checker when a function does nested recursion through map
+# If we have a local fix for just the argument, then things often work out
+redefine Definition map {A B :Type} (f : A -> B) xs := Coq.Lists.List.map f xs.

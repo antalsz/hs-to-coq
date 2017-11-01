@@ -1,5 +1,1 @@
 termination quicksort {measure (length arg_0__)} solve_quicksort_termination
-
-# bug in parsing of qualified names in edit files
-skip module Proofs
-skip module GHC

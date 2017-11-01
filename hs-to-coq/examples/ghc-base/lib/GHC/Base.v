@@ -7,6 +7,8 @@ Set Maximal Implicit Insertion.
 Unset Strict Implicit.
 Unset Printing Implicit Defensive.
 
+Require Coq.Program.Wf.
+
 (* Preamble *)
 
 (* This includes everything that should be defined in GHC/Base.hs, but cannot

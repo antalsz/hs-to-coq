@@ -117,6 +117,7 @@ VFILES:=GHC/Num.v\
   Data/Functor/Const.v\
   Data/IntMap.v\
   Data/IntMap/Base.v\
+  Data/IntSet/Base.v\
   GHC/List.v\
   Data/List.v\
   Data/OldList.v\

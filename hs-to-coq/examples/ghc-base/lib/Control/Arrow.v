@@ -7,6 +7,8 @@ Set Maximal Implicit Insertion.
 Unset Strict Implicit.
 Unset Printing Implicit Defensive.
 
+Require Coq.Program.Wf.
+
 (* Preamble *)
 
 Open Scope type_scope.

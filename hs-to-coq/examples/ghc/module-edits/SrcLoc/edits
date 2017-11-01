@@ -1,6 +1,3 @@
-# what is this reference to?
-skip module GHC
-
 redefine Local Definition instance_forall___GHC_Base_Eq__e____GHC_Base_Eq__l___GHC_Base_Eq___GenLocated_l_e__op_zsze__ {inst_l : Type}{inst_e : Type}  `{H : GHC.Base.Eq_  inst_e} `{J : GHC.Base.Eq_ inst_l}    : ((GenLocated inst_l inst_e) -> ((GenLocated inst_l inst_e) -> bool)) :=  fun arg_253__ arg_254__ =>    match arg_253__ , arg_254__ with | Mk_L a1 a2 , Mk_L b1 b2 => (andb ((GHC.Base.op_zeze__ a1 b1))     ((GHC.Base.op_zeze__ a2 b2)))    end.
 
 redefine Local Definition instance_GHC_Base_Eq__SrcSpan_op_zsze__ : SrcSpan -> (SrcSpan -> bool) :=  fun arg_185__ arg_186__ =>  match arg_185__ , arg_186__ with | a , b => negb (instance_GHC_Base_Eq__SrcSpan_op_zeze__ a b)  end.

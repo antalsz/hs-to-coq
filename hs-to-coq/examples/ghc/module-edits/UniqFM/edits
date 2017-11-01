@@ -4,7 +4,6 @@ skip pluralUFM
 skip module Compiler.Hoopl.Dataflow
 skip module Data.IntMap.Base
 skip module Data.IntSet.Base
-skip module Data
 
 skip pprUFM
 

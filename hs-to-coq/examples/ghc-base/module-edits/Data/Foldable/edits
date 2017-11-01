@@ -1,6 +1,4 @@
 skip module GHC.Types
-skip module Coq
-skip module Coq.Program
 
 skip method Foldable foldl1
 skip method Foldable foldr1

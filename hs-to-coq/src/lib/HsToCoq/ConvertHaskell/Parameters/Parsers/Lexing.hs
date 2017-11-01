@@ -1,5 +1,6 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE TupleSections, LambdaCase, FlexibleContexts #-}
+{-# LANGUAGE OverloadedStrings #-}
 
 module HsToCoq.ConvertHaskell.Parameters.Parsers.Lexing (
   -- * Lexing and tokens
@@ -21,6 +22,8 @@ module HsToCoq.ConvertHaskell.Parameters.Parsers.Lexing (
 import Prelude hiding (Num())
 
 import Data.Foldable
+import Data.Bifunctor (second)
+import Data.Monoid
 import HsToCoq.Util.Foldable
 import HsToCoq.Util.Functor
 import Control.Applicative
@@ -36,7 +39,6 @@ import Data.Text (Text)
 import qualified Data.Text as T
 
 import HsToCoq.Coq.Gallina
-import HsToCoq.Coq.Gallina.Util
 
 --------------------------------------------------------------------------------
 -- Lexing-specific character categories
@@ -107,19 +109,14 @@ nil   = empty_brackets '[' ']'
 unqualified :: MonadParse m => m (NameCategory, Ident)
 unqualified = asumFmap (CatWord,) [word, unit, nil] <|> (CatSym,) <$> op
 
-qualified :: MonadParse m => m (NameCategory, Qualid)
+qualified :: MonadParse m => m (NameCategory, Ident)
 qualified = do
   root  <- uword
-  guard =<< is (Just '.') <$> peekChar
-  mods  <- many     $ parseChar (is '.') *> uword
-  mbase <- optional $ parseChar (is '.') *> unqualified
-  
-  let (cat, base) = maybe (CatWord, []) (fmap pure) mbase
-    
-  pure . (cat,) . foldl' Qualified (Bare root) $ mods ++ base
+  _ <- parseChar (is '.')
+  second ((root <> ".") <>) <$> qualid
 
-qualid :: MonadParse m => m (NameCategory, Qualid)
-qualid = qualified <|> fmap Bare <$> unqualified
+qualid :: MonadParse m => m (NameCategory, Ident)
+qualid = qualified <|> unqualified
 
 comment, space, newline :: MonadParse m => m ()
 comment = parseToken (const ()) (is '#') (not . isVSpace)
@@ -141,7 +138,7 @@ token' = asum $
   , Just . TokNat    <$> nat
   , Just . TokOpen   <$> parseChar isOpen
   , Just . TokClose  <$> parseChar isClose
-  , Just . nameToken <$> qualid'
+  , Just . nameToken <$> qualid
   , Just TokEOF      <$  (guard =<< atEOF) ]
   where
     newlineToken = get <&> \case
@@ -150,8 +147,6 @@ token' = asum $
     nameToken    = uncurry $ \case
                      CatWord -> TokWord
                      CatSym  -> TokOp
-    qualid'      = fmap qualidToIdent <$> qualid
-      -- TODO: Fix when we have real qualid support
 
 token :: MonadNewlinesParse m => m Token
 token = untilJustM token'

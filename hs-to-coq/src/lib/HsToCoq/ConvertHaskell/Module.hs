@@ -43,7 +43,7 @@ import HsToCoq.Util.GHC.Module
 import Panic
 import Bag
 
-import Data.Generics
+import Data.Data (Data(..))
 
 import HsToCoq.ConvertHaskell.Parameters.Edits
 import HsToCoq.ConvertHaskell.Monad
@@ -75,6 +75,7 @@ data ConvertedImportDecl =
                       , convImportAs        :: !(Maybe ModuleName)
                       , convImportSpec      :: !(Maybe ImportSpec) }
   deriving (Eq, Ord, Show)
+
 
 -- TODO: Import all type class instances
 convertImportItem :: ConversionMonad m => IE GHC.Name -> m [Ident]
@@ -273,19 +274,17 @@ convert_module_with_requires_via :: ConversionMonad m
                                  m (ConvertedModule, [ModuleName])
 convert_module_with_requires_via convGroup convModName (group, _imports, _exports, _docstring) =
   withCurrentModule convModName $ do
-    decls@ConvertedModuleDeclarations { convertedTyClDecls    = convModTyClDecls
-                                      , convertedValDecls     = convModValDecls
-                                      , convertedClsInstDecls = convModClsInstDecls
-                                      , convertedAddedDecls   = convModAddedDecls
-                                      }
+    ConvertedModuleDeclarations { convertedTyClDecls    = convModTyClDecls
+                                , convertedValDecls     = convModValDecls
+                                , convertedClsInstDecls = convModClsInstDecls
+                                , convertedAddedDecls   = convModAddedDecls
+                                }
       <- convGroup convModName group
 
-    -- TODO: Is this the best approach to the problem where instead of
-    -- 'Prelude.not', we get 'GHC.Classes.not'?
+    let allSentences = convModTyClDecls ++ convModValDecls ++ convModClsInstDecls ++ convModAddedDecls
     let extraModules = map (mkModuleName . T.unpack . qualidToIdent)
-                     . mapMaybe (\case Bare      x     -> qualidModule =<< identToQualid x
-                                       Qualified mod _ -> Just mod)
-                      $ listify (const True :: Qualid -> Bool) decls
+                     . mapMaybe (qualidModule <=< identToQualid)
+                      $ toList . getFreeVars $ NoBinding allSentences
 
     modules <- skipModules $ S.toList $ S.fromList extraModules
 

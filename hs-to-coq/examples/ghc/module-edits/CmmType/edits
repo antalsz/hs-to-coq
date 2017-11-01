@@ -1,4 +1,3 @@
-skip module GHC
 skip module Deriving
 skip module DynFlags
 skip module GHC.Int

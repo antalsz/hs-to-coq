@@ -2,8 +2,10 @@
 
 module HsToCoq.ConvertHaskell.Axiomatize (
   translationFailedComment, translationFailedCommentText,
-  axiom) where
+  axiom, typedAxiom, bottomType,
+) where
 
+import HsToCoq.Util.Functor
 import Data.Semigroup (Semigroup(..))
 import Data.Text (Text)
 import qualified Data.Text as T
@@ -22,6 +24,11 @@ translationFailedCommentText what exn =
 translationFailedComment :: Text -> GhcException -> Sentence
 translationFailedComment what exn = CommentSentence . Comment $ translationFailedCommentText what exn
 
+typedAxiom :: Ident -> Term -> Sentence
+typedAxiom name = AssumptionSentence . Assumption Axiom . UnparenthesizedAssums [name]
+
+bottomType :: Term
+bottomType = Forall [Typed Ungeneralizable Coq.Implicit [Ident "A"] $ Sort Type] (Var "A")
+
 axiom :: Ident -> Sentence
-axiom name = AssumptionSentence . Assumption Axiom . UnparenthesizedAssums [name]
-           $ Forall [Typed Ungeneralizable Coq.Implicit [Ident "A"] $ Sort Type] (Var "A")
+axiom = typedAxiom ?? bottomType

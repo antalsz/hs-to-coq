@@ -91,7 +91,7 @@ library
 
   build-tools:         happy == 1.19.5
 
-  other-extensions:    TupleSections, LambdaCase, MultiWayIf, RecordWildCards, OverloadedStrings
+  other-extensions:    TupleSections, LambdaCase, MultiWayIf, RecordWildCards, TypeApplications, OverloadedStrings
                      , RankNTypes, ConstraintKinds
                      , MultiParamTypeClasses, FunctionalDependencies, FlexibleContexts
                      , TypeSynonymInstances, FlexibleInstances, UndecidableInstances

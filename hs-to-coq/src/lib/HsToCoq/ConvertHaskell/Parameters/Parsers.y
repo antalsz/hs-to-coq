@@ -45,6 +45,7 @@ import HsToCoq.ConvertHaskell.Parameters.Parsers.Lexing
   indices         { TokWord    "indices"        }
   redefine        { TokWord    "redefine"       }
   skip            { TokWord    "skip"           }
+  axiomatize      { TokWord    "axiomatize"     }
   nonterminating  { TokWord    "nonterminating" }
   termination     { TokWord    "termination"    }
   method          { TokWord    "method"         }
@@ -228,6 +229,7 @@ Edit :: { Edit }
   | nonterminating Word                           { NonterminatingEdit    $2                              }
   | termination Word Order Optional(Word)         { TerminationEdit       $2 $3 $4                        }
   | rename Renaming                               { RenameEdit            (fst $2) (snd $2)               }
+  | axiomatize module Word                        { AxiomatizeModuleEdit  (mkModuleName (T.unpack $3))    }
   | add scope Scope for ScopePlace Word           { AdditionalScopeEdit   $5 $6 $3                        }
   | order Some(Word)                              { OrderEdit             $2                              }
 

@@ -195,7 +195,7 @@ convertHsGroup mod HsGroup{..} = do
         pure . foldMap (foldMap (defns M.!)) . topoSortEnvironment $ NoBinding <$> defns
   convertedClsInstDecls <- convertModuleClsInstDecls [(Just mod, cid) | L _ (ClsInstD cid) <- hs_instds]
 
-  convertedAddedDecls <- use (edits.adds.at mod.non [])
+  convertedAddedDecls <- use (edits.additions.at mod.non [])
 
   pure ConvertedModuleDeclarations{..}
 
@@ -227,7 +227,7 @@ axiomatizeHsGroup mod HsGroup{..} = do
   
   convertedClsInstDecls <- convertModuleClsInstDecls [(Just mod, cid) | L _ (ClsInstD cid) <- hs_instds]
 
-  convertedAddedDecls <- use (edits.adds.at mod.non [])
+  convertedAddedDecls <- use (edits.additions.at mod.non [])
 
   pure ConvertedModuleDeclarations{..}
 

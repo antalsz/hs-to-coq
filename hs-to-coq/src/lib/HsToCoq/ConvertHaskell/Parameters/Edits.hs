@@ -1,7 +1,7 @@
 {-# LANGUAGE LambdaCase, TemplateHaskell, RecordWildCards, OverloadedStrings #-}
 
 module HsToCoq.ConvertHaskell.Parameters.Edits (
-  Edits(..), typeSynonymTypes, dataTypeArguments, nonterminating, termination, redefinitions, adds, skipped, skippedMethods, skippedModules, axiomatizedModules, additionalScopes, orders, renamings,
+  Edits(..), typeSynonymTypes, dataTypeArguments, nonterminating, termination, redefinitions, additions, skipped, skippedMethods, skippedModules, axiomatizedModules, additionalScopes, orders, renamings,
   HsNamespace(..), NamespacedIdent(..), Renamings,
   DataTypeArguments(..), dtParameters, dtIndices,
   CoqDefinition(..), definitionSentence,
@@ -100,7 +100,7 @@ data Edits = Edits { _typeSynonymTypes   :: !(Map Ident Ident)
                    , _nonterminating     :: !(Set Ident)
                    , _termination        :: !(Map Ident (Order, Maybe Text))
                    , _redefinitions      :: !(Map Ident CoqDefinition)
-                   , _adds               :: !(Map ModuleName [Sentence])
+                   , _additions          :: !(Map ModuleName [Sentence])
                    , _skipped            :: !(Set Ident)
                    , _skippedMethods     :: !(Set (Ident,Ident))
                    , _skippedModules     :: !(Set ModuleName)
@@ -136,7 +136,7 @@ addEdit = \case -- To bring the `where' clause into scope everywhere
   NonterminatingEdit    what              -> addFresh nonterminating                      (duplicate_for  "declarations of nontermination")                  what         ()
   TerminationEdit       what order tac    -> addFresh termination                         (duplicate_for  "termination requests")                            what         (order,tac)
   RedefinitionEdit      def               -> addFresh redefinitions                       (duplicate_for  "redefinitions")                                   (name def)   def
-  AddEdit               mod def           -> Right . (adds.at mod.non mempty %~ (definitionSentence def:))
+  AddEdit               mod def           -> Right . (additions.at mod.non mempty %~ (definitionSentence def:))
   SkipEdit              what              -> addFresh skipped                             (duplicate_for  "skips")                                           what         ()
   SkipMethodEdit        cls meth          -> addFresh skippedMethods                      (duplicate_for' "skipped method requests"       prettyClsMth)      (cls,meth)   ()
   SkipModuleEdit        mod               -> addFresh skippedModules                      (duplicate_for' "skipped module requests"       moduleNameString)  mod          ()

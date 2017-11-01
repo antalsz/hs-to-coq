@@ -113,6 +113,7 @@ VFILES:=ListUtils.v\
   WellFormed.v\
   Correctness.v\
   Proofs.v\
+  MonadicCorrectness.v\
   ReferenceFoldBag.v
 
 ifneq ($(filter-out archclean clean cleanall printenv,$(MAKECMDGOALS)),)

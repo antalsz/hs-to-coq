@@ -14,5 +14,8 @@ WellFormed.v
 Correctness.v
 Proofs.v
 
+# Monadic correcntess – not yet integrated
+MonadicCorrectness.v
+
 # Extra proofs
 ReferenceFoldBag.v

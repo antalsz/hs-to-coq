@@ -1,7 +1,7 @@
 {-# LANGUAGE LambdaCase, TemplateHaskell, RecordWildCards, OverloadedStrings #-}
 
 module HsToCoq.ConvertHaskell.Parameters.Edits (
-  Edits(..), typeSynonymTypes, dataTypeArguments, redefinitions, adds, skipped, nonterminating, termination, skippedMethods, skippedModules, axiomatizedModules, additionalScopes, orders, renamings,
+  Edits(..), typeSynonymTypes, dataTypeArguments, nonterminating, termination, redefinitions, adds, skipped, skippedMethods, skippedModules, axiomatizedModules, additionalScopes, orders, renamings,
   HsNamespace(..), NamespacedIdent(..), Renamings,
   DataTypeArguments(..), dtParameters, dtIndices,
   CoqDefinition(..), definitionSentence,
@@ -55,16 +55,16 @@ data ScopePlace = SPValue | SPConstructor
 
 data Edit = TypeSynonymTypeEdit   Ident Ident
           | DataTypeArgumentsEdit Ident DataTypeArguments
+          | NonterminatingEdit    Ident
+          | TerminationEdit       Ident Order (Maybe Text)
           | RedefinitionEdit      CoqDefinition
           | AddEdit               ModuleName CoqDefinition
           | SkipEdit              Ident
-          | NonterminatingEdit    Ident
-          | TerminationEdit       Ident Order (Maybe Text)
-          | SkipModuleEdit        ModuleName
           | SkipMethodEdit        Ident Ident
+          | SkipModuleEdit        ModuleName
+          | AxiomatizeModuleEdit  ModuleName
           | AdditionalScopeEdit   ScopePlace Ident Ident
           | OrderEdit             (NonEmpty Ident)
-          | AxiomatizeModuleEdit  ModuleName
           | RenameEdit            NamespacedIdent Ident
           deriving (Eq, Ord, Show)
 
@@ -97,11 +97,11 @@ type Renamings = Map NamespacedIdent Ident
 
 data Edits = Edits { _typeSynonymTypes   :: !(Map Ident Ident)
                    , _dataTypeArguments  :: !(Map Ident DataTypeArguments)
+                   , _nonterminating     :: !(Set Ident)
+                   , _termination        :: !(Map Ident (Order, Maybe Text))
                    , _redefinitions      :: !(Map Ident CoqDefinition)
                    , _adds               :: !(Map ModuleName [Sentence])
                    , _skipped            :: !(Set Ident)
-                   , _nonterminating     :: !(Set Ident)
-                   , _termination        :: !(Map Ident (Order, Maybe Text))
                    , _skippedMethods     :: !(Set (Ident,Ident))
                    , _skippedModules     :: !(Set ModuleName)
                    , _axiomatizedModules :: !(Set ModuleName)
@@ -113,8 +113,9 @@ data Edits = Edits { _typeSynonymTypes   :: !(Map Ident Ident)
 makeLenses ''Edits
 
 instance Semigroup Edits where
-  Edits tst1 dta1 rdf1 adds1 skp1 nt1 t1 smth1 smod1 axm1 ads1 o1 r1 <> Edits tst2 dta2 rdf2 adds2 skp2 nt2 t2 smth2 smod2 axm2 ads2 o2 r2 =
-    Edits (tst1 <> tst2) (dta1 <> dta2) (rdf1 <> rdf2) (adds1 <> adds2) (skp1 <> skp2) (nt1 <> nt2) (t1 <> t2) (smth1 <> smth2) (smod1 <> smod2) (axm1 <> axm2) (ads1 <> ads2) (o1 <> o2) (r1 <> r2)
+  (<>) (Edits tst1 dta1 ntm1 trm1 rdf1 add1 skp1 smth1 smod1 axm1 ads1 ord1 rnm1)
+       (Edits tst2 dta2 ntm2 trm2 rdf2 add2 skp2 smth2 smod2 axm2 ads2 ord2 rnm2) =
+    Edits (tst1 <> tst2) (dta1 <> dta2) (ntm1 <> ntm2) (trm1 <> trm2) (rdf1 <> rdf2) (add1 <> add2) (skp1 <> skp2) (smth1 <> smth2) (smod1 <> smod2) (axm1 <> axm2) (ads1 <> ads2) (ord1 <> ord2) (rnm1 <> rnm2)
 
 instance Monoid Edits where
   mempty  = Edits mempty mempty mempty mempty mempty mempty mempty mempty mempty mempty mempty mempty mempty
@@ -132,20 +133,20 @@ addEdit :: Edit -> Edits -> Either String Edits
 addEdit = \case -- To bring the `where' clause into scope everywhere
   TypeSynonymTypeEdit   syn        res    -> addFresh typeSynonymTypes                    (duplicate_for  "type synonym result types")                       syn          res
   DataTypeArgumentsEdit ty         args   -> addFresh dataTypeArguments                   (duplicate_for  "data type argument specifications")               ty           args
+  NonterminatingEdit    what              -> addFresh nonterminating                      (duplicate_for  "declarations of nontermination")                  what         ()
+  TerminationEdit       what order tac    -> addFresh termination                         (duplicate_for  "termination requests")                            what         (order,tac)
   RedefinitionEdit      def               -> addFresh redefinitions                       (duplicate_for  "redefinitions")                                   (name def)   def
   AddEdit               mod def           -> Right . (adds.at mod.non mempty %~ (definitionSentence def:))
   SkipEdit              what              -> addFresh skipped                             (duplicate_for  "skips")                                           what         ()
-  NonterminatingEdit    what              -> addFresh nonterminating                      (duplicate_for  "declarations of nontermination")                  what         ()
-  TerminationEdit       what order tac    -> addFresh termination                         (duplicate_for  "termination requests")                            what         (order,tac)
   SkipMethodEdit        cls meth          -> addFresh skippedMethods                      (duplicate_for' "skipped method requests"       prettyClsMth)      (cls,meth)   ()
   SkipModuleEdit        mod               -> addFresh skippedModules                      (duplicate_for' "skipped module requests"       moduleNameString)  mod          ()
+  AxiomatizeModuleEdit  mod               -> addFresh axiomatizedModules                  (duplicate_for' "module axiomatizations"        moduleNameString)  mod          ()
   AdditionalScopeEdit   place name scope  -> addFresh additionalScopes                    (duplicate_for' "additions of a scope"          prettyScoped)      (place,name) scope
   OrderEdit             idents            -> Right . appEndo (foldMap (Endo . addEdge orders . swap) (adjacents idents))
-  AxiomatizeModuleEdit  mod               -> addFresh axiomatizedModules                  (duplicate_for' "module axiomatizations"        moduleNameString)  mod          ()
   RenameEdit            hs to             -> addFresh renamings                           (duplicate_for' "renamings"                     prettyNSIdent)     hs           to
   where
-    name (CoqDefinitionDef (DefinitionDef _ x _ _ _))                = x
-    name (CoqDefinitionDef (LetDef          x _ _ _))                = x
+    name (CoqDefinitionDef (DefinitionDef _ x _ _ _))                  = x
+    name (CoqDefinitionDef (LetDef          x _ _ _))                  = x
     name (CoqFixpointDef   (Fixpoint    (FixBody   x _ _ _ _ :| _) _)) = x
     name (CoqFixpointDef   (CoFixpoint  (CofixBody x _ _ _   :| _) _)) = x
     name (CoqProgramFixpointDef  (ProgramFixpoint x _ _ _ _))          = x

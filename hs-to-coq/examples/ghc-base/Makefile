@@ -107,7 +107,7 @@ $(VFILES_GEN): lib/%.v : $$(wildcard module-edits/$$*/preamble.v) $$(wildcard mo
 $(VFILES_MAN): lib/%.v : manual/%.v
 	mkdir -p "$$(dirname lib/$*.v)"
 	rm -f $@
-	ln -v -s $(PWD)/$< $@
+	ln -v -s -r $< $@
 
 
 $(VFILES_DROPIN): lib/%.v : module-edits/%/edits edits module-edits/%/preamble.v drop-in/%.hs

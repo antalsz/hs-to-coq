@@ -22,7 +22,8 @@ Require GHC.Base.
 Require GHC.List.
 Require GHC.Prim.
 
-(* Converted declarations: *)
+(* No type declarations to convert. *)
+(* Converted value declarations: *)
 
 Definition filterM {m} {a} `{(GHC.Base.Applicative m)} : (a -> m bool) -> list
                                                          a -> m (list a) :=

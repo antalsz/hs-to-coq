@@ -16,7 +16,8 @@ Require Coq.Program.Wf.
 
 Require Coq.Lists.List.
 
-(* Converted declarations: *)
+(* No type declarations to convert. *)
+(* Converted value declarations: *)
 
 Definition catMaybes {a} : list (option a) -> list a :=
   fun arg_17__ =>

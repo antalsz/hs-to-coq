@@ -1,0 +1,1 @@
+../../manual/GHC/Word.v

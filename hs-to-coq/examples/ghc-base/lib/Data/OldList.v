@@ -22,7 +22,13 @@ Require GHC.Prim.
 Require GHC.Real.
 Require GHC.Tuple.
 
-(* Converted declarations: *)
+(* Converted type declarations: *)
+
+Inductive SnocBuilder a : Type := Mk_SnocBuilder : GHC.Num.Word -> list
+                                                   a -> list a -> SnocBuilder a.
+
+Arguments Mk_SnocBuilder {_} _ _ _.
+(* Converted value declarations: *)
 
 Definition deleteBy {a} : (a -> a -> bool) -> a -> list a -> list a :=
   fix deleteBy arg_184__ arg_185__ arg_186__
@@ -122,6 +128,9 @@ Definition unionBy {a} : (a -> a -> bool) -> list a -> list a -> list a :=
 
 Definition union {a} `{(GHC.Base.Eq_ a)} : list a -> list a -> list a :=
   unionBy GHC.Base.op_zeze__.
+
+Definition emptySB {a} : SnocBuilder a :=
+  Mk_SnocBuilder (GHC.Num.fromInteger 0) nil nil.
 
 Definition find {a} : (a -> bool) -> list a -> option a :=
   fun arg_232__ =>
@@ -332,6 +341,12 @@ Definition tails {a} : list a -> list (list a) :=
                                 end)
     end.
 
+Definition toListSB {a} : SnocBuilder a -> list a :=
+  fun arg_0__ =>
+    match arg_0__ with
+      | Mk_SnocBuilder _ f r => Coq.Init.Datatypes.app f (GHC.List.reverse r)
+    end.
+
 Definition unwords : list GHC.Base.String -> GHC.Base.String :=
   fun arg_10__ =>
     match arg_10__ with
@@ -479,20 +494,6 @@ Definition zipWith7 {a} {b} {c} {d} {e} {f} {g} {h}
 Definition zip7 {a} {b} {c} {d} {e} {f} {g} : list a -> list b -> list c -> list
                                               d -> list e -> list f -> list g -> list (a * b * c * d * e * f * g) :=
   zipWith7 GHC.Tuple.op_Z7T__.
-
-Inductive SnocBuilder a : Type := Mk_SnocBuilder : GHC.Num.Word -> list
-                                                   a -> list a -> SnocBuilder a.
-
-Arguments Mk_SnocBuilder {_} _ _ _.
-
-Definition toListSB {a} : SnocBuilder a -> list a :=
-  fun arg_0__ =>
-    match arg_0__ with
-      | Mk_SnocBuilder _ f r => Coq.Init.Datatypes.app f (GHC.List.reverse r)
-    end.
-
-Definition emptySB {a} : SnocBuilder a :=
-  Mk_SnocBuilder (GHC.Num.fromInteger 0) nil nil.
 
 (* Unbound variables:
      * Coq.Init.Datatypes.app Coq.Lists.List.flat_map Coq.Program.Basics.compose

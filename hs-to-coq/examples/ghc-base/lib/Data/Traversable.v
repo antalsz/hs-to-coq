@@ -21,7 +21,44 @@ Require Data.Functor.
 Require Data.Proxy.
 Require GHC.Base.
 
-(* Converted declarations: *)
+(* Converted type declarations: *)
+
+Class Traversable t `{GHC.Base.Functor t} `{Data.Foldable.Foldable t} := {
+  mapM : forall {m} {a} {b},
+    forall `{GHC.Base.Monad m}, (a -> m b) -> t a -> m (t b) ;
+  sequence : forall {m} {a}, forall `{GHC.Base.Monad m}, t (m a) -> m (t a) ;
+  sequenceA : forall {f} {a},
+    forall `{GHC.Base.Applicative f}, t (f a) -> f (t a) ;
+  traverse : forall {f} {a} {b},
+    forall `{GHC.Base.Applicative f}, (a -> f b) -> t a -> f (t b) }.
+
+Inductive StateR s a : Type := Mk_StateR : (s -> s * a) -> StateR s a.
+
+Inductive StateL s a : Type := Mk_StateL : (s -> s * a) -> StateL s a.
+
+Inductive Id a : Type := Mk_Id : a -> Id a.
+
+Arguments Mk_StateR {_} {_} _.
+
+Arguments Mk_StateL {_} {_} _.
+
+Arguments Mk_Id {_} _.
+
+Definition runStateR {s} {a} (arg_4__ : StateR s a) :=
+  match arg_4__ with
+    | Mk_StateR runStateR => runStateR
+  end.
+
+Definition runStateL {s} {a} (arg_5__ : StateL s a) :=
+  match arg_5__ with
+    | Mk_StateL runStateL => runStateL
+  end.
+
+Definition getId {a} (arg_6__ : Id a) :=
+  match arg_6__ with
+    | Mk_Id getId => getId
+  end.
+(* Converted value declarations: *)
 
 Local Definition instance_Traversable_option_traverse : forall {f} {a} {b},
                                                           forall `{GHC.Base.Applicative f},
@@ -47,6 +84,16 @@ Local Definition instance_Traversable_option_mapM : forall {m} {a} {b},
                                                       forall `{GHC.Base.Monad m},
                                                         (a -> m b) -> option a -> m (option b) :=
   fun {m} {a} {b} `{GHC.Base.Monad m} => instance_Traversable_option_traverse.
+
+Instance instance_Traversable_option : Traversable option := {
+  mapM := fun {m} {a} {b} `{GHC.Base.Monad m} =>
+    instance_Traversable_option_mapM ;
+  sequence := fun {m} {a} `{GHC.Base.Monad m} =>
+    instance_Traversable_option_sequence ;
+  sequenceA := fun {f} {a} `{GHC.Base.Applicative f} =>
+    instance_Traversable_option_sequenceA ;
+  traverse := fun {f} {a} {b} `{GHC.Base.Applicative f} =>
+    instance_Traversable_option_traverse }.
 
 Local Definition instance_Traversable_list_traverse : forall {f} {a} {b},
                                                         forall `{GHC.Base.Applicative f},
@@ -74,6 +121,15 @@ Local Definition instance_Traversable_list_sequence : forall {m} {a},
 Local Definition instance_Traversable_list_mapM : forall {m} {a} {b},
                                                     forall `{GHC.Base.Monad m}, (a -> m b) -> list a -> m (list b) :=
   fun {m} {a} {b} `{GHC.Base.Monad m} => instance_Traversable_list_traverse.
+
+Instance instance_Traversable_list : Traversable list := {
+  mapM := fun {m} {a} {b} `{GHC.Base.Monad m} => instance_Traversable_list_mapM ;
+  sequence := fun {m} {a} `{GHC.Base.Monad m} =>
+    instance_Traversable_list_sequence ;
+  sequenceA := fun {f} {a} `{GHC.Base.Applicative f} =>
+    instance_Traversable_list_sequenceA ;
+  traverse := fun {f} {a} {b} `{GHC.Base.Applicative f} =>
+    instance_Traversable_list_traverse }.
 
 (* Skipping instance instance_Traversable__sum_a_ *)
 
@@ -116,6 +172,17 @@ Local Definition instance_Traversable_Data_Proxy_Proxy_traverse : forall {f}
   fun {f} {a} {b} `{GHC.Base.Applicative f} =>
     fun arg_184__ arg_185__ => GHC.Base.pure Data.Proxy.Mk_Proxy.
 
+Instance instance_Traversable_Data_Proxy_Proxy : Traversable Data.Proxy.Proxy :=
+  {
+  mapM := fun {m} {a} {b} `{GHC.Base.Monad m} =>
+    instance_Traversable_Data_Proxy_Proxy_mapM ;
+  sequence := fun {m} {a} `{GHC.Base.Monad m} =>
+    instance_Traversable_Data_Proxy_Proxy_sequence ;
+  sequenceA := fun {f} {a} `{GHC.Base.Applicative f} =>
+    instance_Traversable_Data_Proxy_Proxy_sequenceA ;
+  traverse := fun {f} {a} {b} `{GHC.Base.Applicative f} =>
+    instance_Traversable_Data_Proxy_Proxy_traverse }.
+
 (* Skipping instance instance_Traversable__Data_Functor_Const_Const_m_ *)
 
 (* Skipping instance instance_Traversable_Data_Monoid_Dual *)
@@ -139,6 +206,46 @@ Local Definition instance_Traversable_Data_Proxy_Proxy_traverse : forall {f}
 (* Skipping instance instance_GHC_Base_Functor__StateR_s_ *)
 
 (* Skipping instance instance_GHC_Base_Applicative__StateR_s_ *)
+
+Local Definition instance_GHC_Base_Functor_Id_fmap : forall {a} {b},
+                                                       (a -> b) -> Id a -> Id b :=
+  fun {a} {b} =>
+    fun arg_92__ arg_93__ =>
+      match arg_92__ , arg_93__ with
+        | f , Mk_Id x => Mk_Id (f x)
+      end.
+
+Local Definition instance_GHC_Base_Functor_Id_op_zlzd__ : forall {a} {b},
+                                                            b -> Id a -> Id b :=
+  fun {a} {b} => fun x => instance_GHC_Base_Functor_Id_fmap (GHC.Base.const x).
+
+Instance instance_GHC_Base_Functor_Id : GHC.Base.Functor Id := {
+  fmap := fun {a} {b} => instance_GHC_Base_Functor_Id_fmap ;
+  op_zlzd__ := fun {a} {b} => instance_GHC_Base_Functor_Id_op_zlzd__ }.
+
+Local Definition instance_GHC_Base_Applicative_Id_op_zlztzg__ : forall {a} {b},
+                                                                  Id (a -> b) -> Id a -> Id b :=
+  fun {a} {b} =>
+    fun arg_88__ arg_89__ =>
+      match arg_88__ , arg_89__ with
+        | Mk_Id f , Mk_Id x => Mk_Id (f x)
+      end.
+
+Local Definition instance_GHC_Base_Applicative_Id_op_ztzg__ : forall {a} {b},
+                                                                Id a -> Id b -> Id b :=
+  fun {a} {b} =>
+    fun x y =>
+      instance_GHC_Base_Applicative_Id_op_zlztzg__ (GHC.Base.fmap (GHC.Base.const
+                                                                  GHC.Base.id) x) y.
+
+Local Definition instance_GHC_Base_Applicative_Id_pure : forall {a},
+                                                           a -> Id a :=
+  fun {a} => Mk_Id.
+
+Instance instance_GHC_Base_Applicative_Id : GHC.Base.Applicative Id := {
+  op_zlztzg__ := fun {a} {b} => instance_GHC_Base_Applicative_Id_op_zlztzg__ ;
+  op_ztzg__ := fun {a} {b} => instance_GHC_Base_Applicative_Id_op_ztzg__ ;
+  pure := fun {a} => instance_GHC_Base_Applicative_Id_pure }.
 
 (* Skipping instance instance_Traversable_GHC_Generics_V1 *)
 
@@ -175,90 +282,6 @@ Local Definition instance_Traversable_Data_Proxy_Proxy_traverse : forall {f}
 
 (* Skipping instance instance_Traversable__GHC_Generics_URec_GHC_Num_Word_ *)
 
-Inductive Id a : Type := Mk_Id : a -> Id a.
-
-Arguments Mk_Id {_} _.
-
-Definition getId {a} (arg_6__ : Id a) :=
-  match arg_6__ with
-    | Mk_Id getId => getId
-  end.
-
-Local Definition instance_GHC_Base_Applicative_Id_pure : forall {a},
-                                                           a -> Id a :=
-  fun {a} => Mk_Id.
-
-Local Definition instance_GHC_Base_Functor_Id_fmap : forall {a} {b},
-                                                       (a -> b) -> Id a -> Id b :=
-  fun {a} {b} =>
-    fun arg_92__ arg_93__ =>
-      match arg_92__ , arg_93__ with
-        | f , Mk_Id x => Mk_Id (f x)
-      end.
-
-Local Definition instance_GHC_Base_Functor_Id_op_zlzd__ : forall {a} {b},
-                                                            b -> Id a -> Id b :=
-  fun {a} {b} => fun x => instance_GHC_Base_Functor_Id_fmap (GHC.Base.const x).
-
-Instance instance_GHC_Base_Functor_Id : GHC.Base.Functor Id := {
-  fmap := fun {a} {b} => instance_GHC_Base_Functor_Id_fmap ;
-  op_zlzd__ := fun {a} {b} => instance_GHC_Base_Functor_Id_op_zlzd__ }.
-
-Local Definition instance_GHC_Base_Applicative_Id_op_zlztzg__ : forall {a} {b},
-                                                                  Id (a -> b) -> Id a -> Id b :=
-  fun {a} {b} =>
-    fun arg_88__ arg_89__ =>
-      match arg_88__ , arg_89__ with
-        | Mk_Id f , Mk_Id x => Mk_Id (f x)
-      end.
-
-Local Definition instance_GHC_Base_Applicative_Id_op_ztzg__ : forall {a} {b},
-                                                                Id a -> Id b -> Id b :=
-  fun {a} {b} =>
-    fun x y =>
-      instance_GHC_Base_Applicative_Id_op_zlztzg__ (GHC.Base.fmap (GHC.Base.const
-                                                                  GHC.Base.id) x) y.
-
-Instance instance_GHC_Base_Applicative_Id : GHC.Base.Applicative Id := {
-  op_zlztzg__ := fun {a} {b} => instance_GHC_Base_Applicative_Id_op_zlztzg__ ;
-  op_ztzg__ := fun {a} {b} => instance_GHC_Base_Applicative_Id_op_ztzg__ ;
-  pure := fun {a} => instance_GHC_Base_Applicative_Id_pure }.
-
-Inductive StateL s a : Type := Mk_StateL : (s -> s * a) -> StateL s a.
-
-Arguments Mk_StateL {_} {_} _.
-
-Definition runStateL {s} {a} (arg_5__ : StateL s a) :=
-  match arg_5__ with
-    | Mk_StateL runStateL => runStateL
-  end.
-
-Inductive StateR s a : Type := Mk_StateR : (s -> s * a) -> StateR s a.
-
-Arguments Mk_StateR {_} {_} _.
-
-Definition runStateR {s} {a} (arg_4__ : StateR s a) :=
-  match arg_4__ with
-    | Mk_StateR runStateR => runStateR
-  end.
-
-Class Traversable t `{GHC.Base.Functor t} `{Data.Foldable.Foldable t} := {
-  mapM : forall {m} {a} {b},
-    forall `{GHC.Base.Monad m}, (a -> m b) -> t a -> m (t b) ;
-  sequence : forall {m} {a}, forall `{GHC.Base.Monad m}, t (m a) -> m (t a) ;
-  sequenceA : forall {f} {a},
-    forall `{GHC.Base.Applicative f}, t (f a) -> f (t a) ;
-  traverse : forall {f} {a} {b},
-    forall `{GHC.Base.Applicative f}, (a -> f b) -> t a -> f (t b) }.
-
-Definition for_ {t} {f} {a} {b} `{Traversable t} `{GHC.Base.Applicative f} : t
-                                                                             a -> (a -> f b) -> f (t b) :=
-  GHC.Base.flip traverse.
-
-Definition forM {t} {m} {a} {b} `{Traversable t} `{GHC.Base.Monad m} : t
-                                                                       a -> (a -> m b) -> m (t b) :=
-  GHC.Base.flip mapM.
-
 Definition fmapDefault {t} {a} {b} `{Traversable t} : (a -> b) -> t a -> t b :=
   fun arg_7__ =>
     match arg_7__ with
@@ -266,35 +289,13 @@ Definition fmapDefault {t} {a} {b} `{Traversable t} : (a -> b) -> t a -> t b :=
                                                         Mk_Id f))
     end.
 
-Instance instance_Traversable_Data_Proxy_Proxy : Traversable Data.Proxy.Proxy :=
-  {
-  mapM := fun {m} {a} {b} `{GHC.Base.Monad m} =>
-    instance_Traversable_Data_Proxy_Proxy_mapM ;
-  sequence := fun {m} {a} `{GHC.Base.Monad m} =>
-    instance_Traversable_Data_Proxy_Proxy_sequence ;
-  sequenceA := fun {f} {a} `{GHC.Base.Applicative f} =>
-    instance_Traversable_Data_Proxy_Proxy_sequenceA ;
-  traverse := fun {f} {a} {b} `{GHC.Base.Applicative f} =>
-    instance_Traversable_Data_Proxy_Proxy_traverse }.
+Definition forM {t} {m} {a} {b} `{Traversable t} `{GHC.Base.Monad m} : t
+                                                                       a -> (a -> m b) -> m (t b) :=
+  GHC.Base.flip mapM.
 
-Instance instance_Traversable_list : Traversable list := {
-  mapM := fun {m} {a} {b} `{GHC.Base.Monad m} => instance_Traversable_list_mapM ;
-  sequence := fun {m} {a} `{GHC.Base.Monad m} =>
-    instance_Traversable_list_sequence ;
-  sequenceA := fun {f} {a} `{GHC.Base.Applicative f} =>
-    instance_Traversable_list_sequenceA ;
-  traverse := fun {f} {a} {b} `{GHC.Base.Applicative f} =>
-    instance_Traversable_list_traverse }.
-
-Instance instance_Traversable_option : Traversable option := {
-  mapM := fun {m} {a} {b} `{GHC.Base.Monad m} =>
-    instance_Traversable_option_mapM ;
-  sequence := fun {m} {a} `{GHC.Base.Monad m} =>
-    instance_Traversable_option_sequence ;
-  sequenceA := fun {f} {a} `{GHC.Base.Applicative f} =>
-    instance_Traversable_option_sequenceA ;
-  traverse := fun {f} {a} {b} `{GHC.Base.Applicative f} =>
-    instance_Traversable_option_traverse }.
+Definition for_ {t} {f} {a} {b} `{Traversable t} `{GHC.Base.Applicative f} : t
+                                                                             a -> (a -> f b) -> f (t b) :=
+  GHC.Base.flip traverse.
 
 (* Unbound variables:
      * Coq.Program.Basics.compose Data.Foldable.Foldable Data.Functor.op_zlzdzg__

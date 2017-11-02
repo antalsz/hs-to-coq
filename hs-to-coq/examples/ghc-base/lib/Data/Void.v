@@ -13,7 +13,10 @@ Require Coq.Program.Wf.
 
 Require GHC.Base.
 
-(* Converted declarations: *)
+(* Converted type declarations: *)
+
+Inductive Void : Type :=.
+(* Converted value declarations: *)
 
 (* Skipping instance instance_GHC_Base_Eq__Void *)
 
@@ -31,8 +34,6 @@ Require GHC.Base.
    information for class "GHC.Generics.Generic" unsupported *)
 
 (* Skipping instance instance_Data_Data_Data_Void *)
-
-Inductive Void : Type :=.
 
 Definition absurd {a} : Void -> a :=
   fun arg_0__ => match arg_0__ with | a => match a with end end.

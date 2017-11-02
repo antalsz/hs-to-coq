@@ -14,7 +14,8 @@ Require Coq.Program.Wf.
 
 (* No imports to convert. *)
 
-(* Converted declarations: *)
+(* No type declarations to convert. *)
+(* Converted value declarations: *)
 
 Definition bool {a} : a -> a -> bool -> a :=
   fun arg_0__ arg_1__ arg_2__ =>

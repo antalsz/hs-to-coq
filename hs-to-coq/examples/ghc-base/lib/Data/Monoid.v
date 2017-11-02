@@ -147,9 +147,115 @@ Require Coq.Program.Basics.
 Require GHC.Base.
 Require GHC.Prim.
 
-(* Converted declarations: *)
+(* Converted type declarations: *)
+
+Inductive Endo a : Type := Mk_Endo : (a -> a) -> Endo a.
+
+Inductive Dual a : Type := Mk_Dual : a -> Dual a.
+
+Inductive Alt (f : Type -> Type) a : Type := Mk_Alt : f a -> Alt f a.
+
+Arguments Mk_Endo {_} _.
+
+Arguments Mk_Dual {_} _.
+
+Definition appEndo {a} (arg_0__ : Endo a) :=
+  match arg_0__ with
+    | Mk_Endo appEndo => appEndo
+  end.
+
+Definition getDual {a} (arg_1__ : Dual a) :=
+  match arg_1__ with
+    | Mk_Dual getDual => getDual
+  end.
+(* Converted value declarations: *)
+
+Instance Unpeel_Dual a : Unpeel (Dual a) a := Build_Unpeel _ _ getDual Mk_Dual.
+
+Local Definition instance_forall___GHC_Base_Monoid_a___GHC_Base_Monoid__Dual_a__mappend {inst_a}
+                                                                                        `{GHC.Base.Monoid inst_a}
+    : (Dual inst_a) -> (Dual inst_a) -> (Dual inst_a) :=
+  fun arg_92__ arg_93__ =>
+    match arg_92__ , arg_93__ with
+      | Mk_Dual x , Mk_Dual y => Mk_Dual (GHC.Base.mappend y x)
+    end.
+
+Local Definition instance_forall___GHC_Base_Monoid_a___GHC_Base_Monoid__Dual_a__mempty {inst_a}
+                                                                                       `{GHC.Base.Monoid inst_a} : (Dual
+                                                                                                                   inst_a) :=
+  Mk_Dual GHC.Base.mempty.
+
+Local Definition instance_forall___GHC_Base_Monoid_a___GHC_Base_Monoid__Dual_a__mconcat {inst_a}
+                                                                                        `{GHC.Base.Monoid inst_a} : list
+                                                                                                                    (Dual
+                                                                                                                    inst_a) -> (Dual
+                                                                                                                    inst_a) :=
+  GHC.Base.foldr
+  instance_forall___GHC_Base_Monoid_a___GHC_Base_Monoid__Dual_a__mappend
+  instance_forall___GHC_Base_Monoid_a___GHC_Base_Monoid__Dual_a__mempty.
+
+Instance instance_forall___GHC_Base_Monoid_a___GHC_Base_Monoid__Dual_a_
+  : forall {a}, forall `{GHC.Base.Monoid a}, GHC.Base.Monoid (Dual a) := {
+  mappend := instance_forall___GHC_Base_Monoid_a___GHC_Base_Monoid__Dual_a__mappend ;
+  mconcat := instance_forall___GHC_Base_Monoid_a___GHC_Base_Monoid__Dual_a__mconcat ;
+  mempty := instance_forall___GHC_Base_Monoid_a___GHC_Base_Monoid__Dual_a__mempty }.
+
+Local Definition instance_GHC_Base_Functor_Dual_fmap : forall {a} {b},
+                                                         (a -> b) -> Dual a -> Dual b :=
+  fun {a} {b} => GHC.Prim.coerce.
+
+Local Definition instance_GHC_Base_Functor_Dual_op_zlzd__ : forall {a} {b},
+                                                              b -> Dual a -> Dual b :=
+  fun {a} {b} => fun x => instance_GHC_Base_Functor_Dual_fmap (GHC.Base.const x).
+
+Instance instance_GHC_Base_Functor_Dual : GHC.Base.Functor Dual := {
+  fmap := fun {a} {b} => instance_GHC_Base_Functor_Dual_fmap ;
+  op_zlzd__ := fun {a} {b} => instance_GHC_Base_Functor_Dual_op_zlzd__ }.
+
+Local Definition instance_GHC_Base_Applicative_Dual_op_zlztzg__ : forall {a}
+                                                                         {b},
+                                                                    Dual (a -> b) -> Dual a -> Dual b :=
+  fun {a} {b} => GHC.Prim.coerce.
+
+Local Definition instance_GHC_Base_Applicative_Dual_op_ztzg__ : forall {a} {b},
+                                                                  Dual a -> Dual b -> Dual b :=
+  fun {a} {b} =>
+    fun x y =>
+      instance_GHC_Base_Applicative_Dual_op_zlztzg__ (GHC.Base.fmap (GHC.Base.const
+                                                                    GHC.Base.id) x) y.
+
+Local Definition instance_GHC_Base_Applicative_Dual_pure : forall {a},
+                                                             a -> Dual a :=
+  fun {a} => Mk_Dual.
+
+Instance instance_GHC_Base_Applicative_Dual : GHC.Base.Applicative Dual := {
+  op_zlztzg__ := fun {a} {b} => instance_GHC_Base_Applicative_Dual_op_zlztzg__ ;
+  op_ztzg__ := fun {a} {b} => instance_GHC_Base_Applicative_Dual_op_ztzg__ ;
+  pure := fun {a} => instance_GHC_Base_Applicative_Dual_pure }.
 
 (* Skipping instance instance_GHC_Base_Monad_Dual *)
+
+Local Definition instance_GHC_Base_Monoid__Endo_a__mappend {inst_a} : (Endo
+                                                                      inst_a) -> (Endo inst_a) -> (Endo inst_a) :=
+  fun arg_83__ arg_84__ =>
+    match arg_83__ , arg_84__ with
+      | Mk_Endo f , Mk_Endo g => Mk_Endo (Coq.Program.Basics.compose f g)
+    end.
+
+Local Definition instance_GHC_Base_Monoid__Endo_a__mempty {inst_a} : (Endo
+                                                                     inst_a) :=
+  Mk_Endo GHC.Base.id.
+
+Local Definition instance_GHC_Base_Monoid__Endo_a__mconcat {inst_a} : list (Endo
+                                                                           inst_a) -> (Endo inst_a) :=
+  GHC.Base.foldr instance_GHC_Base_Monoid__Endo_a__mappend
+                 instance_GHC_Base_Monoid__Endo_a__mempty.
+
+Instance instance_GHC_Base_Monoid__Endo_a_ : forall {a},
+                                               GHC.Base.Monoid (Endo a) := {
+  mappend := instance_GHC_Base_Monoid__Endo_a__mappend ;
+  mconcat := instance_GHC_Base_Monoid__Endo_a__mconcat ;
+  mempty := instance_GHC_Base_Monoid__Endo_a__mempty }.
 
 (* Skipping instance instance_GHC_Base_Monoid_All *)
 
@@ -377,111 +483,6 @@ Require GHC.Prim.
 
 (* Translating `instance forall {a}, forall `{GHC.Base.Eq_ a}, GHC.Base.Eq_
    (Dual a)' failed: type applications unsupported *)
-
-Inductive Alt (f : Type -> Type) a : Type := Mk_Alt : f a -> Alt f a.
-
-Inductive Dual a : Type := Mk_Dual : a -> Dual a.
-
-Arguments Mk_Dual {_} _.
-
-Definition getDual {a} (arg_1__ : Dual a) :=
-  match arg_1__ with
-    | Mk_Dual getDual => getDual
-  end.
-
-Local Definition instance_GHC_Base_Applicative_Dual_pure : forall {a},
-                                                             a -> Dual a :=
-  fun {a} => Mk_Dual.
-
-Local Definition instance_forall___GHC_Base_Monoid_a___GHC_Base_Monoid__Dual_a__mempty {inst_a}
-                                                                                       `{GHC.Base.Monoid inst_a} : (Dual
-                                                                                                                   inst_a) :=
-  Mk_Dual GHC.Base.mempty.
-
-Local Definition instance_forall___GHC_Base_Monoid_a___GHC_Base_Monoid__Dual_a__mappend {inst_a}
-                                                                                        `{GHC.Base.Monoid inst_a}
-    : (Dual inst_a) -> (Dual inst_a) -> (Dual inst_a) :=
-  fun arg_92__ arg_93__ =>
-    match arg_92__ , arg_93__ with
-      | Mk_Dual x , Mk_Dual y => Mk_Dual (GHC.Base.mappend y x)
-    end.
-
-Local Definition instance_forall___GHC_Base_Monoid_a___GHC_Base_Monoid__Dual_a__mconcat {inst_a}
-                                                                                        `{GHC.Base.Monoid inst_a} : list
-                                                                                                                    (Dual
-                                                                                                                    inst_a) -> (Dual
-                                                                                                                    inst_a) :=
-  GHC.Base.foldr
-  instance_forall___GHC_Base_Monoid_a___GHC_Base_Monoid__Dual_a__mappend
-  instance_forall___GHC_Base_Monoid_a___GHC_Base_Monoid__Dual_a__mempty.
-
-Instance instance_forall___GHC_Base_Monoid_a___GHC_Base_Monoid__Dual_a_
-  : forall {a}, forall `{GHC.Base.Monoid a}, GHC.Base.Monoid (Dual a) := {
-  mappend := instance_forall___GHC_Base_Monoid_a___GHC_Base_Monoid__Dual_a__mappend ;
-  mconcat := instance_forall___GHC_Base_Monoid_a___GHC_Base_Monoid__Dual_a__mconcat ;
-  mempty := instance_forall___GHC_Base_Monoid_a___GHC_Base_Monoid__Dual_a__mempty }.
-
-Instance Unpeel_Dual a : Unpeel (Dual a) a := Build_Unpeel _ _ getDual Mk_Dual.
-
-Local Definition instance_GHC_Base_Applicative_Dual_op_zlztzg__ : forall {a}
-                                                                         {b},
-                                                                    Dual (a -> b) -> Dual a -> Dual b :=
-  fun {a} {b} => GHC.Prim.coerce.
-
-Local Definition instance_GHC_Base_Functor_Dual_fmap : forall {a} {b},
-                                                         (a -> b) -> Dual a -> Dual b :=
-  fun {a} {b} => GHC.Prim.coerce.
-
-Local Definition instance_GHC_Base_Functor_Dual_op_zlzd__ : forall {a} {b},
-                                                              b -> Dual a -> Dual b :=
-  fun {a} {b} => fun x => instance_GHC_Base_Functor_Dual_fmap (GHC.Base.const x).
-
-Instance instance_GHC_Base_Functor_Dual : GHC.Base.Functor Dual := {
-  fmap := fun {a} {b} => instance_GHC_Base_Functor_Dual_fmap ;
-  op_zlzd__ := fun {a} {b} => instance_GHC_Base_Functor_Dual_op_zlzd__ }.
-
-Local Definition instance_GHC_Base_Applicative_Dual_op_ztzg__ : forall {a} {b},
-                                                                  Dual a -> Dual b -> Dual b :=
-  fun {a} {b} =>
-    fun x y =>
-      instance_GHC_Base_Applicative_Dual_op_zlztzg__ (GHC.Base.fmap (GHC.Base.const
-                                                                    GHC.Base.id) x) y.
-
-Instance instance_GHC_Base_Applicative_Dual : GHC.Base.Applicative Dual := {
-  op_zlztzg__ := fun {a} {b} => instance_GHC_Base_Applicative_Dual_op_zlztzg__ ;
-  op_ztzg__ := fun {a} {b} => instance_GHC_Base_Applicative_Dual_op_ztzg__ ;
-  pure := fun {a} => instance_GHC_Base_Applicative_Dual_pure }.
-
-Inductive Endo a : Type := Mk_Endo : (a -> a) -> Endo a.
-
-Arguments Mk_Endo {_} _.
-
-Definition appEndo {a} (arg_0__ : Endo a) :=
-  match arg_0__ with
-    | Mk_Endo appEndo => appEndo
-  end.
-
-Local Definition instance_GHC_Base_Monoid__Endo_a__mempty {inst_a} : (Endo
-                                                                     inst_a) :=
-  Mk_Endo GHC.Base.id.
-
-Local Definition instance_GHC_Base_Monoid__Endo_a__mappend {inst_a} : (Endo
-                                                                      inst_a) -> (Endo inst_a) -> (Endo inst_a) :=
-  fun arg_83__ arg_84__ =>
-    match arg_83__ , arg_84__ with
-      | Mk_Endo f , Mk_Endo g => Mk_Endo (Coq.Program.Basics.compose f g)
-    end.
-
-Local Definition instance_GHC_Base_Monoid__Endo_a__mconcat {inst_a} : list (Endo
-                                                                           inst_a) -> (Endo inst_a) :=
-  GHC.Base.foldr instance_GHC_Base_Monoid__Endo_a__mappend
-                 instance_GHC_Base_Monoid__Endo_a__mempty.
-
-Instance instance_GHC_Base_Monoid__Endo_a_ : forall {a},
-                                               GHC.Base.Monoid (Endo a) := {
-  mappend := instance_GHC_Base_Monoid__Endo_a__mappend ;
-  mconcat := instance_GHC_Base_Monoid__Endo_a__mconcat ;
-  mempty := instance_GHC_Base_Monoid__Endo_a__mempty }.
 
 (* Unbound variables:
      Build_Unpeel Coq.Program.Basics.compose GHC.Base.Applicative GHC.Base.Functor

@@ -14,7 +14,8 @@ Require Coq.Program.Wf.
 
 (* No imports to convert. *)
 
-(* Converted declarations: *)
+(* No type declarations to convert. *)
+(* Converted value declarations: *)
 
 Definition curry {a} {b} {c} : (a * b -> c) -> a -> b -> c :=
   fun arg_3__ arg_4__ arg_5__ =>

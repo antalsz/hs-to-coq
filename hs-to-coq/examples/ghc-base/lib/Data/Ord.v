@@ -49,7 +49,8 @@ Instance instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Down_a_
 
 Require GHC.Base.
 
-(* Converted declarations: *)
+(* No type declarations to convert. *)
+(* Converted value declarations: *)
 
 (* Skipping instance instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Down_a_ *)
 

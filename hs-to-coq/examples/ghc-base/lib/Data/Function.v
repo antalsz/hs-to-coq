@@ -14,7 +14,8 @@ Require Coq.Program.Wf.
 Definition on {a}{b}{c} (op : b -> b -> c) (f: a -> b) := fun x y => op (f x) (f y).
 (* No imports to convert. *)
 
-(* Converted declarations: *)
+(* No type declarations to convert. *)
+(* Converted value declarations: *)
 
 Definition op_za__ {a} {b} : a -> (a -> b) -> b :=
   fun arg_0__ arg_1__ => match arg_0__ , arg_1__ with | x , f => f x end.

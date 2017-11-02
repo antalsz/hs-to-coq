@@ -16,7 +16,8 @@ Require Coq.Program.Wf.
 
 Require GHC.Base.
 
-(* Converted declarations: *)
+(* No type declarations to convert. *)
+(* Converted value declarations: *)
 
 Definition op_zdzg__ {f} {a} {b} `{GHC.Base.Functor f} : f a -> b -> f b :=
   GHC.Base.flip GHC.Base.op_zlzd__.

@@ -13,7 +13,8 @@ Require Coq.Program.Wf.
 
 Require GHC.Base.
 
-(* Converted declarations: *)
+(* No type declarations to convert. *)
+(* Converted value declarations: *)
 
 Definition isSubsequenceOf {a} `{(GHC.Base.Eq_ a)} : list a -> list a -> bool :=
   fix isSubsequenceOf arg_0__ arg_1__

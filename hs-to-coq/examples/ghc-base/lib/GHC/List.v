@@ -19,7 +19,8 @@ Require Coq.Init.Datatypes.
 Require GHC.Base.
 Require GHC.Num.
 
-(* Converted declarations: *)
+(* No type declarations to convert. *)
+(* Converted value declarations: *)
 
 Definition all {a} : (a -> bool) -> list a -> bool :=
   fix all arg_77__ arg_78__

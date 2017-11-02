@@ -1,1 +1,3 @@
+order instance_Funktor_Pair instance_Abblicative_Pair
+order instance_Funktor_Pair instance_Trafersable_Pair
 order instance_Foltable_Pair instance_Trafersable_Pair

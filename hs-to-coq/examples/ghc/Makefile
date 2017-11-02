@@ -52,12 +52,13 @@ coq: Makefile.coq $(VFILES)
 	$(MAKE) -f Makefile.coq OPT=$(COQFLAGS)
 
 .SECONDEXPANSION:
-$(VFILES_GEN): %.v : $$(wildcard module-edits/$$*/preamble.v) $$(wildcard module-edits/$$*/edits) edits
+$(VFILES_GEN): %.v : $$(wildcard module-edits/$$*/preamble.v) $$(wildcard module-edits/$$*/midamble.v) $$(wildcard module-edits/$$*/edits) edits
 	$(HS_TO_COQ) -e edits \
 	             -e ../ghc-base/edits \
                 -p preamble.v \
 	             $(addprefix -e , $(wildcard module-edits/$*/edits)) \
 	             $(addprefix -p , $(wildcard module-edits/$*/preamble.v)) \
+	             $(addprefix -m , $(wildcard module-edits/$*/midamble.v)) \
 	             --ghc-tree ghc \
 	             -I ghc/includes \
 	             -I ghc/compiler \

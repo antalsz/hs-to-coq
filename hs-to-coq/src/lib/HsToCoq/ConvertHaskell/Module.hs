@@ -321,13 +321,13 @@ convertModules sources = do
   pure $ stronglyConnCompNE
     [(cmod, convModName cmod, imps) | (cmod, imps) <- mods]
 
-moduleDeclarations :: ConversionMonad m => ConvertedModule -> m [Sentence]
+moduleDeclarations :: ConversionMonad m => ConvertedModule -> m ([Sentence], [Sentence])
 moduleDeclarations ConvertedModule{..} = do
   orders <- use $ edits.orders
   let sorted = topoSortSentences orders $
-        convModTyClDecls ++ convModValDecls ++ convModClsInstDecls ++ convModAddedDecls
+        convModValDecls ++ convModClsInstDecls ++ convModAddedDecls
   ax_decls <- usedAxioms sorted
-  return $ ax_decls ++ sorted
+  return (convModTyClDecls, ax_decls ++ sorted)
 
 usedAxioms :: forall m. ConversionMonad m => [Sentence] -> m [Sentence]
 usedAxioms decls = do

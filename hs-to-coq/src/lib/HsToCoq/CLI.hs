@@ -12,7 +12,7 @@ module HsToCoq.CLI (
   convertAndPrintModules,
   WithModulePrinter,
   -- * CLI configuration, parameters, etc.
-  Config(..), outputFile, preambleFile, editsFiles, processingMode, modulesFiles, modulesRoot, directInputFiles,
+  Config(..), outputFile, preambleFile, midambleFile, editsFiles, processingMode, modulesFiles, modulesRoot, directInputFiles,
   processArgs,
   ProgramArgs(..),
   argParser, argParserInfo,
@@ -68,6 +68,7 @@ prettyPrint = hPrettyPrint stdout
 
 data ProgramArgs = ProgramArgs { outputFileArg        :: Maybe FilePath
                                , preambleFileArg      :: Maybe FilePath
+                               , midambleFileArg      :: Maybe FilePath
                                , editsFilesArgs       :: [FilePath]
                                , processingModeArg    :: ProcessingMode
                                , modulesFilesArgs     :: [FilePath]
@@ -89,6 +90,11 @@ argParser = ProgramArgs <$> optional (strOption       $  long    "output"
                                                       <> short   'p'
                                                       <> metavar "FILE"
                                                       <> help    "File containing code that goes at the top of the Coq output")
+                        
+                        <*> optional (strOption       $  long    "midamble"
+                                                      <> short   'm'
+                                                      <> metavar "FILE"
+                                                      <> help    "File containing code that goes after the type declarations")
                         
                         <*> many     (strOption       $  long    "edits"
                                                       <> short   'e'
@@ -140,6 +146,7 @@ argParserInfo = info (helper <*> argParser) $  fullDesc
 
 data Config = Config { _outputFile       :: !(Maybe FilePath)
                      , _preambleFile     :: !(Maybe FilePath)
+                     , _midambleFile     :: !(Maybe FilePath)
                      , _editsFiles       :: ![FilePath]
                      , _processingMode   :: !ProcessingMode
                      , _modulesFiles     :: ![FilePath]
@@ -178,6 +185,7 @@ processArgs = do
                                       then Nothing
                                       else outputFileArg
                 , _preambleFile     = preambleFileArg
+                , _midambleFile     = midambleFileArg
                 , _editsFiles       = editsFilesArgs
                 , _processingMode   = processingModeArg
                 , _modulesFiles     = modulesFilesArgs
@@ -195,10 +203,14 @@ parseModulesFiles root files =
 
 --------------------------------------------------------------------------------
 
-type WithModulePrinter m a = ModuleName -> (Handle -> m a) -> m a
+type WithModulePrinter m =
+    ModuleName ->
+    (Handle -> m ()) -> -- print type declarations
+    (Handle -> m ()) -> -- print rest
+    m ()
 
 processFilesMain :: GhcMonad m
-                 => (WithModulePrinter (ConversionT m) () -> [TypecheckedModule] -> ConversionT m ())
+                 => (WithModulePrinter (ConversionT m) -> [TypecheckedModule] -> ConversionT m ())
                  -> m ()
 processFilesMain process = do
   conf <- processArgs
@@ -214,71 +226,90 @@ processFilesMain process = do
   inputFiles <- either (liftIO . die) pure <=< runExceptT $
                   (++) <$> parseModulesFiles (conf^.modulesRoot.non "") (conf^.modulesFiles)
                        <*> pure (conf^.directInputFiles)
-  
-  preamble <- liftIO $ traverse readFile (conf^.preambleFile)
-  let printPreamble hOut = liftIO $ do
+
+  preambles <- liftIO $ traverse readFile (conf^.preambleFile)
+  let printPreambles hOut = liftIO $ do
         T.hPutStr hOut staticPreamble
         hPutStrLn hOut ""
-        unless (null preamble) $ do
+        unless (null preambles) $ do
           hPutStrLn hOut "(* Preamble *)"
           hPutStrLn hOut ""
-        for_ preamble $ \contents -> do
+        for_ preambles $ \contents -> do
             hPutStr   hOut contents
             hPutStrLn hOut ""
             hFlush    hOut
-  
-  withModulePrinter <- case conf^.outputFile of
-    Nothing  -> printPreamble stdout $> \mod act -> do
-        liftIO . putStrLn $ "(* " ++ moduleNameString mod ++ " *)"
-        liftIO $ putStrLn ""
-        act stdout
-    Just outDir -> pure $ \mod act -> do
-      let path = outDir </> moduleNameSlashes mod <.> "v"
-      liftIO . createDirectoryIfMissing True $ takeDirectory path
-      gWithFile path WriteMode $ \hOut -> do
-        printPreamble hOut
-        act hOut
+
+  midambles <- liftIO $ traverse readFile (conf^.midambleFile)
+  let printMidambles hOut = liftIO $ do
+        unless (null midambles) $ do
+          hPutStrLn hOut "(* Midamble *)"
+          hPutStrLn hOut ""
+        for_ midambles $ \contents -> do
+            hPutStr   hOut contents
+            hPutStrLn hOut ""
+            hFlush    hOut
+
+  let withModulePrinter = case conf^.outputFile of
+        Nothing  -> \mod act1 act2 -> do
+            liftIO . putStrLn $ "(* " ++ moduleNameString mod ++ " *)"
+            liftIO $ putStrLn ""
+            printPreambles stdout
+            void $ act1 stdout
+            printMidambles stdout
+            void $ act2 stdout
+        Just outDir -> \mod act1 act2 -> do
+          let path = outDir </> moduleNameSlashes mod <.> "v"
+          liftIO . createDirectoryIfMissing True $ takeDirectory path
+          gWithFile path WriteMode $ \hOut -> do
+            printPreambles hOut
+            void $ act1 hOut
+            printMidambles hOut
+            void $ act2 hOut
 
   evalConversion edits $
     traverse_ (process withModulePrinter) =<< processFiles (conf^.processingMode) inputFiles
 
 printConvertedModule :: ConversionMonad m
-                     => WithModulePrinter m ()
+                     => WithModulePrinter m
                      -> ConvertedModule
                      -> m ()
-printConvertedModule withModulePrinter cmod@ConvertedModule{..} =
-  withModulePrinter convModName $ \out -> do
-    convModDecls <- moduleDeclarations cmod
-    
-    liftIO $ do
-      let flush    = hFlush out
-          printGap = hPutStrLn out ""
-          
-          printThe what _   [] = hPutStrLn out $ "(* No " ++ what ++ " to convert. *)"
-          printThe what sep ds = do hPutStrLn out $ "(* Converted " ++ what ++ ": *)"
-                                    printGap
-                                    traverse_ (hPrettyPrint out) . intersperse sep $
-                                      map ((<> line) . renderGallina) ds
-        
-      printThe "imports"      mempty convModImports <* printGap <* flush
-      printThe "declarations" line   convModDecls   <*             flush
-        
-      case toList . getFreeVars $ NoBinding convModDecls of
-        []  -> pure ()
-        fvs -> do hPrettyPrint out $
-                    line <> "(*" <+> hang 2
-                      ("Unbound variables:" <!> fillSep (map text fvs))
-                    <!> "*)" <> line
-                  hFlush out
+printConvertedModule withModulePrinter cmod@ConvertedModule{..} = do
+  (convModDecls1, convModDecls2) <- moduleDeclarations cmod
+
+  let printUnbound out = do
+          let fvs = toList . getFreeVars $ NoBinding (convModDecls1 ++ convModDecls2)
+          unless (null fvs) $ do
+              hPrettyPrint out $
+                line <> "(*" <+> hang 2
+                  ("Unbound variables:" <!> fillSep (map text fvs))
+                <!> "*)" <> line
+              hFlush out
+
+      part1 out = liftIO $ do
+          printThe out "imports"            mempty convModImports <* gap out
+          printThe out "type declarations"  line   convModDecls1  <* hFlush out
+      part2 out = liftIO $ do
+          printThe out "value declarations" line   convModDecls2  <* hFlush out
+          printUnbound out
+
+  withModulePrinter convModName part1 part2
+ where
+  gap out = hPutStrLn out "" >> hFlush out
+
+  printThe out what _   [] = hPutStrLn out $ "(* No " ++ what ++ " to convert. *)"
+  printThe out what sep ds = do hPutStrLn out $ "(* Converted " ++ what ++ ": *)"
+                                gap out
+                                traverse_ (hPrettyPrint out) . intersperse sep $
+                                  map ((<> line) . renderGallina) ds
 
 printConvertedModules :: ConversionMonad m
-                      => WithModulePrinter m ()
+                      => WithModulePrinter m
                       -> [NonEmpty ConvertedModule]
                       -> m ()
 printConvertedModules withModulePrinter =
   traverse_ (printConvertedModule withModulePrinter) . foldMap toList
 
-convertAndPrintModules :: ConversionMonad m => WithModulePrinter m () -> [TypecheckedModule] -> m ()
+convertAndPrintModules :: ConversionMonad m => WithModulePrinter m -> [TypecheckedModule] -> m ()
 convertAndPrintModules p = printConvertedModules p <=< convertModules <=< traverse toRenamed
   where toRenamed tcm
           | Just rn <- tm_renamed_source tcm = do

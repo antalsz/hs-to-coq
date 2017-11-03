@@ -148,3 +148,14 @@ Definition toDescList : IntSet -> list Key := foldr cons nil.
 Definition fromAscList : list Key -> IntSet := fromList. (* Inefficient! *)
 
 Definition fromDistinctAscList : list Key -> IntSet := fromList. (* Inefficient! *)
+
+Instance instance_Eq_IntSet : GHC.Base.Eq_ IntSet := {
+  op_zeze__ := ISR.equal;
+  op_zsze__ := fun x y => negb (ISR.equal x y)
+}.
+
+Instance instance_Monoid_IntSet : GHC.Base.Monoid IntSet := {
+  mempty := empty;
+  mappend := union;
+  mconcat := unions;
+}.

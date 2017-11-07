@@ -140,10 +140,19 @@ Notation "'_>=?_'" := (op_zgze__).
 
 (*********** Eq/Ord for primitive types **************************)
 
+Require Coq.Structures.Equalities.
+Require Coq.Structures.DecidableType.
+Require Coq.Structures.DecidableTypeEx.
+Require Coq.Structures.OrderedType.
+Require Coq.Structures.OrderedTypeEx.
+
 Instance Eq_Int___ : Eq_ Int := {
                                op_zeze__ := fun x y => (x =? y)%Z;
                                op_zsze__ := fun x y => negb (x =? y)%Z;
-                             }.
+                               }.
+
+Module Int_DecidableType___ <: DecidableType.DecidableType :=
+  DecidableTypeEx.Z_as_DT.
 
 Instance Ord_Int___ : !Ord Int := {
   op_zl__   := fun x y => (x <? y)%Z;
@@ -155,10 +164,16 @@ Instance Ord_Int___ : !Ord Int := {
   min       := Z.min%Z;
 }.
 
+Module Int_OrderedType___ <: OrderedType.OrderedType :=
+  OrderedTypeEx.Z_as_OT.
+
 Instance Eq_Integer___ : Eq_ Integer := {
                                op_zeze__ := fun x y => (x =? y)%Z;
                                op_zsze__ := fun x y => negb (x =? y)%Z;
                              }.
+
+Module Integer_DecidableType___ <: DecidableType.DecidableType :=
+  DecidableTypeEx.Z_as_DT.
 
 Instance Ord_Integer___ : !Ord Integer := {
   op_zl__   := fun x y => (x <? y)%Z;
@@ -170,10 +185,16 @@ Instance Ord_Integer___ : !Ord Integer := {
   min       := Z.min%Z;
 }.
 
+Module Integer_OrderedType___ <: OrderedType.OrderedType :=
+  OrderedTypeEx.Z_as_OT.
+
 Instance Eq_Word___ : Eq_ Word := {
                                op_zeze__ := fun x y => (x =? y)%N;
                                op_zsze__ := fun x y => negb (x =? y)%N;
                              }.
+
+Module Word_DecidableType___ <: DecidableType.DecidableType :=
+  DecidableTypeEx.N_as_DT.
 
 Instance Ord_Word___ : !Ord Word := {
   op_zl__   := fun x y => (x <? y)%N;
@@ -185,10 +206,16 @@ Instance Ord_Word___ : !Ord Word := {
   min       := N.min%N;
 }.
 
+Module Word_OrderedType___ <: OrderedType.OrderedType :=
+  OrderedTypeEx.N_as_OT.
+
 Instance Eq_Char___ : Eq_ Char := {
                                op_zeze__ := fun x y => (x =? y)%N;
                                op_zsze__ := fun x y => negb (x =? y)%N;
                              }.
+
+Module Char_DecidableType___ <: DecidableType.DecidableType :=
+  DecidableTypeEx.N_as_DT.
 
 Instance Ord_Char___ : !Ord Char := {
   op_zl__   := fun x y => (x <? y)%N;
@@ -200,19 +227,77 @@ Instance Ord_Char___ : !Ord Char := {
   min       := N.min%N;
 }.
 
+Module Char_OrderedType___ <: OrderedType.OrderedType :=
+  OrderedTypeEx.N_as_OT.
+
+(** We can, of course, just use tactics like [repeat decide equality]
+    to prove decidablity, but this one utilizes [op_zeze__] function
+    of the [Eq] type class This means that the decidable equality
+    proof relies on the [op_zeze__] function -- no duplicated
+    deciders! *)
+Ltac dec_eq_with_Eq eq_iff :=
+  refine (fun x y =>
+              (match eq_iff x y with
+               | conj f g =>
+                 (match (x == y) as b
+                        return (x == y = b -> { eq x y } + { ~ eq x y }) with
+                  | true =>
+                    (fun Heq : x == y = true =>
+                       left (f Heq))
+                  | false =>
+                    (fun Heq : x == y = false =>
+                       right (fun H: eq x y =>
+                                let contra :=
+                                    eq_ind (x == y)
+                                           (fun b => b = false) Heq true (g H)
+                                    : true = false in _))
+                  end)
+               end) Logic.eq_refl);
+  inversion contra.
+
+Ltac dec_compare_with_Ord lt lt_gt_rev eq_iff_compare_eq :=
+  refine (fun x y =>
+            (match (compare x y) as c
+                   return (compare x y = c -> OrderedType.Compare lt eq x y) with
+             | Lt =>
+               (fun Hlt: compare x y = Lt =>
+                  OrderedType.LT Hlt)
+             | Gt =>
+               (fun Hlt: compare x y = Gt =>
+                  match lt_gt_rev y x with
+                  | conj _ f => OrderedType.GT (f Hlt)
+                  end)
+             | Eq =>
+               (fun Hlt: compare x y = Eq =>
+                  match eq_iff_compare_eq x y with
+                  | conj f _ => OrderedType.EQ (f Hlt)
+                  end)
+             end) Logic.eq_refl).
+
 Instance Eq_bool___ : Eq_ bool := {
                                op_zeze__ := eqb;
                                op_zsze__ := fun x y => negb (eqb x y);
                              }.
 
+Module bool_Typ <: Equalities.Typ.
+  Definition t := bool.
+End bool_Typ.
+
+Module bool_DecidableType___ <: DecidableType.DecidableType.
+  Include bool_Typ <+ Equalities.HasUsualEq <+ Equalities.UsualIsEqOrig.
+
+  Definition eq_dec : forall x y : t, { eq x y } + { ~ eq x y }.
+    dec_eq_with_Eq eqb_true_iff.
+  Defined.
+End bool_DecidableType___.
+
 Definition compare_bool (b1:bool)(b2:bool) : comparison :=
   match b1 , b2 with
   | true , true => Eq
   | false, false => Eq
-  | true , false => Lt
-  | false , true => Gt
+  | true , false => Gt
+  | false , true => Lt
   end.
-
 
 Instance Ord_bool___ : !Ord bool := {
   op_zl__   := fun x y => andb (negb x) y;
@@ -224,10 +309,60 @@ Instance Ord_bool___ : !Ord bool := {
   min       := andb
 }.
 
+(** This is just a heuristic tactic. No guarantee that it will work
+    for an arbitrary non-recursive type. *)
+Ltac prove_non_rec_type :=
+  repeat (match goal with
+          | [ |- forall x, _ ] => destruct x
+          | [ |- _ <-> _ ] => split
+          | [ |- _ -> _ ] => inversion 1
+          | [ |- ~ _ ] => inversion 1
+          end; auto).
+
+Module bool_OrderedType___ <: OrderedType.OrderedType.
+  Include bool_DecidableType___.
+
+  Hint Unfold eq.
+
+  Definition lt (x y : t) := compare x y = Lt.
+
+  Lemma lt_trans : forall x y z : t, lt x y -> lt y z -> lt x z.
+  Proof. prove_non_rec_type. Qed.
+  
+  Lemma lt_not_eq : forall x y : t, lt x y -> ~ eq x y.
+  Proof. prove_non_rec_type. Qed.
+
+  Lemma lt_gt_rev: forall x y : t, compare x y = Lt <-> compare y x = Gt.
+  Proof. prove_non_rec_type. Qed.
+  
+  Lemma eq_iff_compare_eq : forall x y : t, compare x y = Eq <-> eq x y.
+  Proof. prove_non_rec_type. Qed.
+  
+  Definition compare : forall x y : t, OrderedType.Compare lt eq x y.
+    dec_compare_with_Ord lt lt_gt_rev eq_iff_compare_eq.
+  Defined.
+End bool_OrderedType___.
+
 Instance Eq_unit___ : Eq_ unit := {
                                op_zeze__ := fun x y => true;
                                op_zsze__ := fun x y => false;
                              }.
+
+Module unit_Typ <: Equalities.Typ.
+  Definition t := unit.
+End unit_Typ.
+
+Module unit_DecidableType___ <: DecidableType.DecidableType.
+  Include unit_Typ <+ Equalities.HasUsualEq <+ Equalities.UsualIsEqOrig.
+
+  Lemma eq_iff : forall x y,
+      x == y = true <-> x = y.
+  Proof. prove_non_rec_type. Qed.
+
+  Definition eq_dec : forall x y : t, { eq x y } + { ~ eq x y }.
+    dec_eq_with_Eq eq_iff.
+  Defined.
+End unit_DecidableType___.
 
 Instance Ord_unit___ : !Ord unit := {
   op_zl__   := fun x y => false;
@@ -238,6 +373,31 @@ Instance Ord_unit___ : !Ord unit := {
   max       := fun x y => tt;
   min       := fun x y => tt;
 }.
+
+Module unit_OrderedType___ <: OrderedType.OrderedType.
+  Include unit_DecidableType___.
+
+  Hint Unfold eq.
+
+  Definition lt x y := compare x y = Lt.
+
+  Lemma lt_trans : forall x y z : t, lt x y -> lt y z -> lt x z.
+  Proof. prove_non_rec_type. Qed.
+  
+  Lemma lt_not_eq : forall x y : t, lt x y -> ~ eq x y.
+  Proof. prove_non_rec_type. Qed.
+
+  Lemma lt_gt_rev: forall x y : t, compare x y = Lt <-> compare y x = Gt.
+  Proof. prove_non_rec_type. Qed.
+  
+  Lemma eq_iff_compare_eq : forall x y : t,
+      compare x y = Eq <-> eq x y.
+  Proof. prove_non_rec_type. Qed.
+  
+  Definition compare : forall x y : t, OrderedType.Compare lt eq x y.
+    dec_compare_with_Ord lt lt_gt_rev eq_iff_compare_eq.
+  Defined.
+End unit_OrderedType___.
 
 Definition eq_comparison (x : comparison) (y: comparison) :=
   match x , y with
@@ -252,6 +412,22 @@ Instance Eq_comparison___ : Eq_ comparison :=
   op_zeze__ := eq_comparison;
   op_zsze__ := fun x y => negb (eq_comparison x y);
 }.
+
+Module comparison_Typ.
+  Definition t := comparison.
+End comparison_Typ.
+
+Module comparison_DecidableType___ <: DecidableType.DecidableType.
+  Include comparison_Typ <+ Equalities.HasUsualEq <+ Equalities.UsualIsEqOrig.
+
+  Lemma eq_iff : forall x y : t,
+      x == y = true <-> x = y.
+  Proof. prove_non_rec_type. Qed.
+
+  Definition eq_dec : forall x y : t, { eq x y } + { ~ eq x y }.
+    dec_eq_with_Eq eq_iff.
+  Defined.
+End comparison_DecidableType___.
 
 Definition compare_comparison  (x : comparison) (y: comparison) :=
   match x , y with
@@ -283,6 +459,30 @@ Definition ord_default {a} (comp : a -> a -> comparison) `{Eq_ a} :=
 
 Instance Ord_comparison___ : !Ord comparison := ord_default compare_comparison.
 
+Module comparison_OrderedType___ <: OrderedType.OrderedType.
+  Include comparison_DecidableType___.
+
+  Hint Unfold eq.
+
+  Definition lt x y := compare x y = Lt.
+
+  Lemma lt_trans : forall x y z : t, lt x y -> lt y z -> lt x z.
+  Proof. prove_non_rec_type. Qed.
+  
+  Lemma lt_not_eq : forall x y : t, lt x y -> ~ eq x y.
+  Proof. prove_non_rec_type. Qed.
+  
+  Lemma lt_gt_rev: forall x y : t, compare x y = Lt <-> compare y x = Gt.
+  Proof. prove_non_rec_type. Qed.
+    
+  Lemma eq_iff_compare_eq : forall x y : t,
+      compare x y = Eq <-> eq x y.
+  Proof. prove_non_rec_type. Qed.
+    
+  Definition compare : forall x y : t, OrderedType.Compare lt eq x y.
+    dec_compare_with_Ord lt lt_gt_rev eq_iff_compare_eq.
+  Defined.
+End comparison_OrderedType___.
 
 (* TODO: are these available in a library somewhere? *)
 Fixpoint eqlist {a} `{Eq_ a} (xs :  list a) (ys : list a) : bool :=

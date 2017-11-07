@@ -296,30 +296,34 @@ Instance Ord_bool___ : !Ord bool := {
   min       := andb
 }.
 
+(** This is just a heuristic tactic. No guarantee that it will work
+    for an arbitrary non-recursive type. *)
+Ltac prove_non_rec_type :=
+  repeat (match goal with
+          | [ |- forall x, _ ] => destruct x
+          | [ |- _ <-> _ ] => split
+          | [ |- _ -> _ ] => inversion 1
+          | [ |- ~ _ ] => inversion 1
+          end; auto).
+
 Module bool_OrderedType___ <: OrderedType.OrderedType.
   Include bool_DecidableType___.
+
+  Hint Unfold eq.
 
   Definition lt (x y : t) := compare x y = Lt.
 
   Lemma lt_trans : forall x y z : t, lt x y -> lt y z -> lt x z.
-  Proof.
-    destruct x; destruct y; destruct z; auto; repeat inversion 1.
-  Qed.
+  Proof. prove_non_rec_type. Qed.
   
   Lemma lt_not_eq : forall x y : t, lt x y -> ~ eq x y.
-  Proof.
-    destruct x; destruct y; repeat inversion 1.
-  Qed.
+  Proof. prove_non_rec_type. Qed.
 
   Lemma lt_gt_rev: forall x y : t, compare x y = Lt <-> compare y x = Gt.
-  Proof.
-    destruct x; destruct y; simpl; split; auto; repeat inversion 1.
-  Qed.
+  Proof. prove_non_rec_type. Qed.
   
   Lemma eq_iff_compare_eq : forall x y : t, compare x y = Eq <-> eq x y.
-  Proof.
-    destruct x; destruct y; split; auto; repeat inversion 1; reflexivity.
-  Qed.
+  Proof. prove_non_rec_type. Qed.
   
   Definition compare : forall x y : t, OrderedType.Compare lt eq x y.
     dec_compare_with_Ord lt lt_gt_rev eq_iff_compare_eq.
@@ -340,9 +344,7 @@ Module unit_DecidableType___ <: DecidableType.DecidableType.
 
   Lemma eq_iff : forall x y,
       x == y = true <-> x = y.
-  Proof.
-    destruct x; destruct y; split; auto.
-  Qed.
+  Proof. prove_non_rec_type. Qed.
 
   Definition eq_dec : forall x y : t, { eq x y } + { ~ eq x y }.
     dec_eq_with_Eq eq_iff.
@@ -362,20 +364,22 @@ Instance Ord_unit___ : !Ord unit := {
 Module unit_OrderedType___ <: OrderedType.OrderedType.
   Include unit_DecidableType___.
 
+  Hint Unfold eq.
+
   Definition lt x y := compare x y = Lt.
 
   Lemma lt_trans : forall x y z : t, lt x y -> lt y z -> lt x z.
-  Proof. inversion 1. Qed.
+  Proof. prove_non_rec_type. Qed.
   
   Lemma lt_not_eq : forall x y : t, lt x y -> ~ eq x y.
-  Proof. inversion 1. Qed.
+  Proof. prove_non_rec_type. Qed.
 
   Lemma lt_gt_rev: forall x y : t, compare x y = Lt <-> compare y x = Gt.
-  Proof. split; inversion 1. Qed.
+  Proof. prove_non_rec_type. Qed.
   
   Lemma eq_iff_compare_eq : forall x y : t,
       compare x y = Eq <-> eq x y.
-  Proof. destruct x; destruct y; split; reflexivity. Qed.
+  Proof. prove_non_rec_type. Qed.
   
   Definition compare : forall x y : t, OrderedType.Compare lt eq x y.
     dec_compare_with_Ord lt lt_gt_rev eq_iff_compare_eq.
@@ -405,9 +409,7 @@ Module comparison_DecidableType___ <: DecidableType.DecidableType.
 
   Lemma eq_iff : forall x y : t,
       x == y = true <-> x = y.
-  Proof.
-    destruct x; destruct y; split; auto; inversion 1.
-  Qed.
+  Proof. prove_non_rec_type. Qed.
 
   Definition eq_dec : forall x y : t, { eq x y } + { ~ eq x y }.
     dec_eq_with_Eq eq_iff.
@@ -447,28 +449,22 @@ Instance Ord_comparison___ : !Ord comparison := ord_default compare_comparison.
 Module comparison_OrderedType___ <: OrderedType.OrderedType.
   Include comparison_DecidableType___.
 
+  Hint Unfold eq.
+
   Definition lt x y := compare x y = Lt.
 
   Lemma lt_trans : forall x y z : t, lt x y -> lt y z -> lt x z.
-  Proof.
-    destruct x; destruct y; destruct z; auto; repeat inversion 1.
-  Qed.
+  Proof. prove_non_rec_type. Qed.
   
   Lemma lt_not_eq : forall x y : t, lt x y -> ~ eq x y.
-  Proof.
-    destruct x; destruct y; auto; repeat inversion 1.
-  Qed.
+  Proof. prove_non_rec_type. Qed.
   
   Lemma lt_gt_rev: forall x y : t, compare x y = Lt <-> compare y x = Gt.
-  Proof.
-    destruct x; destruct y; split; auto; inversion 1.
-  Qed.
+  Proof. prove_non_rec_type. Qed.
     
   Lemma eq_iff_compare_eq : forall x y : t,
       compare x y = Eq <-> eq x y.
-  Proof.
-    destruct x; destruct y; split; auto; inversion 1; reflexivity.
-  Qed.
+  Proof. prove_non_rec_type. Qed.
     
   Definition compare : forall x y : t, OrderedType.Compare lt eq x y.
     dec_compare_with_Ord lt lt_gt_rev eq_iff_compare_eq.

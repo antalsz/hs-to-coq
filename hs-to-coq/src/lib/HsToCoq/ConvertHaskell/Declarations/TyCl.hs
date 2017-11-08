@@ -148,8 +148,8 @@ convertDeclarationGroup DeclarationGroup{..} = case (nonEmpty dgInductives, nonE
     Right $  foldMap recSynType syns
           ++ [InductiveSentence $ Inductive inds (orderRecSynDefs $ recSynDefs inds syns)]
 
-  (Nothing, Nothing, Just (ClassBody cdef nots :| [])) ->
-    Right $ ClassSentence cdef : map NotationSentence nots
+  (Nothing, Nothing, Just (classDef :| [])) ->
+    Right $ classSentences classDef
 
   (Nothing, Just (_ :| _ : _), Nothing)           -> Left "mutually-recursive type synonyms"
   (Nothing, Nothing,           Just (_ :| _ : _)) -> Left "mutually-recursive type classes"

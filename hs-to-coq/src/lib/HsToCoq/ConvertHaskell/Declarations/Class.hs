@@ -1,6 +1,6 @@
 {-# LANGUAGE RecordWildCards, LambdaCase, FlexibleContexts #-}
 
-module HsToCoq.ConvertHaskell.Declarations.Class (ClassBody(..), convertClassDecl, getImplicitBindersForClassMember) where
+module HsToCoq.ConvertHaskell.Declarations.Class (ClassBody(..), convertClassDecl, getImplicitBindersForClassMember, classSentences) where
 
 import Control.Lens
 
@@ -103,3 +103,7 @@ convertClassDecl (L _ hsCtx) (L _ hsName) ltvs fds lsigs defaults types typeDefa
 
   pure $ ClassBody classDefn
                    (concatMap (buildInfixNotations sigs <*> infixToCoq) . filter identIsOperator $ M.keys sigs)
+
+classSentences :: ClassBody -> [Sentence]
+classSentences (ClassBody cdef nots) =
+    ClassSentence cdef : map NotationSentence nots

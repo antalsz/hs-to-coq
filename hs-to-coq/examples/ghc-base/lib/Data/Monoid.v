@@ -202,13 +202,10 @@ Instance instance_forall___GHC_Base_Monoid_a___GHC_Base_Monoid__Dual_a_ {a}
                                                                         `{GHC.Base.Monoid a} : GHC.Base.Monoid (Dual
                                                                                                                a) :=
   fun _ k =>
-    k
-    {|GHC.Base.mappend__ := (@instance_forall___GHC_Base_Monoid_a___GHC_Base_Monoid__Dual_a__mappend
-    _ _) ;
-    GHC.Base.mconcat__ := (@instance_forall___GHC_Base_Monoid_a___GHC_Base_Monoid__Dual_a__mconcat
-    _ _) ;
-    GHC.Base.mempty__ := (@instance_forall___GHC_Base_Monoid_a___GHC_Base_Monoid__Dual_a__mempty
-    _ _) |}.
+    k (GHC.Base.Monoid__Dict_Build (Dual a)
+                                   instance_forall___GHC_Base_Monoid_a___GHC_Base_Monoid__Dual_a__mappend
+                                   instance_forall___GHC_Base_Monoid_a___GHC_Base_Monoid__Dual_a__mconcat
+                                   instance_forall___GHC_Base_Monoid_a___GHC_Base_Monoid__Dual_a__mempty).
 
 Local Definition instance_GHC_Base_Functor_Dual_fmap : forall {a} {b},
                                                          (a -> b) -> Dual a -> Dual b :=
@@ -219,8 +216,9 @@ Local Definition instance_GHC_Base_Functor_Dual_op_zlzd__ : forall {a} {b},
   fun {a} {b} => fun x => instance_GHC_Base_Functor_Dual_fmap (GHC.Base.const x).
 
 Instance instance_GHC_Base_Functor_Dual : GHC.Base.Functor Dual := fun _ k =>
-    k {|GHC.Base.fmap__ := (@instance_GHC_Base_Functor_Dual_fmap) ;
-      GHC.Base.op_zlzd____ := (@instance_GHC_Base_Functor_Dual_op_zlzd__) |}.
+    k (GHC.Base.Functor__Dict_Build Dual (fun {a} {b} =>
+                                      instance_GHC_Base_Functor_Dual_op_zlzd__) (fun {a} {b} =>
+                                      instance_GHC_Base_Functor_Dual_fmap)).
 
 Local Definition instance_GHC_Base_Applicative_Dual_op_zlztzg__ : forall {a}
                                                                          {b},
@@ -240,10 +238,10 @@ Local Definition instance_GHC_Base_Applicative_Dual_pure : forall {a},
 
 Instance instance_GHC_Base_Applicative_Dual : GHC.Base.Applicative Dual := fun _
                                                                                k =>
-    k
-    {|GHC.Base.op_zlztzg____ := (@instance_GHC_Base_Applicative_Dual_op_zlztzg__) ;
-    GHC.Base.op_ztzg____ := (@instance_GHC_Base_Applicative_Dual_op_ztzg__) ;
-    GHC.Base.pure__ := (@instance_GHC_Base_Applicative_Dual_pure) |}.
+    k (GHC.Base.Applicative__Dict_Build Dual (fun {a} {b} =>
+                                          instance_GHC_Base_Applicative_Dual_op_ztzg__) (fun {a} {b} =>
+                                          instance_GHC_Base_Applicative_Dual_op_zlztzg__) (fun {a} =>
+                                          instance_GHC_Base_Applicative_Dual_pure)).
 
 (* Skipping instance instance_GHC_Base_Monad_Dual *)
 
@@ -265,9 +263,10 @@ Local Definition instance_GHC_Base_Monoid__Endo_a__mconcat {inst_a} : list (Endo
 
 Instance instance_GHC_Base_Monoid__Endo_a_ {a} : GHC.Base.Monoid (Endo a) :=
   fun _ k =>
-    k {|GHC.Base.mappend__ := (@instance_GHC_Base_Monoid__Endo_a__mappend _) ;
-      GHC.Base.mconcat__ := (@instance_GHC_Base_Monoid__Endo_a__mconcat _) ;
-      GHC.Base.mempty__ := (@instance_GHC_Base_Monoid__Endo_a__mempty _) |}.
+    k (GHC.Base.Monoid__Dict_Build (Endo a)
+                                   instance_GHC_Base_Monoid__Endo_a__mappend
+                                   instance_GHC_Base_Monoid__Endo_a__mconcat
+                                   instance_GHC_Base_Monoid__Endo_a__mempty).
 
 (* Skipping instance instance_GHC_Base_Monoid_All *)
 
@@ -497,7 +496,9 @@ Instance instance_GHC_Base_Monoid__Endo_a_ {a} : GHC.Base.Monoid (Endo a) :=
    (Dual a)' failed: type applications unsupported *)
 
 (* Unbound variables:
-     Build_Unpeel Coq.Program.Basics.compose GHC.Base.Applicative GHC.Base.Functor
-     GHC.Base.Monoid GHC.Base.const GHC.Base.fmap GHC.Base.foldr GHC.Base.id
-     GHC.Base.mappend GHC.Base.mempty GHC.Prim.coerce Type Unpeel list
+     Build_Unpeel Coq.Program.Basics.compose GHC.Base.Applicative
+     GHC.Base.Applicative__Dict_Build GHC.Base.Functor GHC.Base.Functor__Dict_Build
+     GHC.Base.Monoid GHC.Base.Monoid__Dict_Build GHC.Base.const GHC.Base.fmap
+     GHC.Base.foldr GHC.Base.id GHC.Base.mappend GHC.Base.mempty GHC.Prim.coerce Type
+     Unpeel list
 *)

@@ -1,4 +1,4 @@
-{-# LANGUAGE RecordWildCards, LambdaCase, FlexibleContexts #-}
+{-# LANGUAGE RecordWildCards, LambdaCase, FlexibleContexts, OverloadedStrings, OverloadedLists #-}
 
 module HsToCoq.ConvertHaskell.Declarations.Class (ClassBody(..), convertClassDecl, getImplicitBindersForClassMember, classSentences) where
 
@@ -8,6 +8,7 @@ import Data.Traversable
 import qualified Data.List.NonEmpty as NE
 
 import Control.Monad
+import Data.Monoid
 
 import qualified Data.Map.Strict as M
 import qualified Data.Set as S
@@ -18,6 +19,7 @@ import Bag
 import Class
 
 import HsToCoq.Coq.Gallina as Coq
+import HsToCoq.Coq.Gallina.Util
 import HsToCoq.Coq.FreeVars
 
 import HsToCoq.ConvertHaskell.Monad
@@ -105,5 +107,23 @@ convertClassDecl (L _ hsCtx) (L _ hsName) ltvs fds lsigs defaults types typeDefa
                    (concatMap (buildInfixNotations sigs <*> infixToCoq) . filter identIsOperator $ M.keys sigs)
 
 classSentences :: ClassBody -> [Sentence]
-classSentences (ClassBody cdef nots) =
-    ClassSentence cdef : map NotationSentence nots
+classSentences (ClassBody (ClassDefinition name args ty methods) nots) =
+    [ RecordSentence dict_record
+    , DefinitionSentence (DefinitionDef Global name args Nothing class_ty)
+    , ExistingClassSentence name
+    ] ++
+    [ DefinitionSentence $
+        DefinitionDef Global n
+            [Typed Generalizable Implicit [Ident "g"] (app_args (Var name))]
+            (Just ty)
+            (App2 (Var "g") Underscore (app_args (Var (n <> "__"))))
+    | (n, ty) <- methods ] ++
+    map NotationSentence nots
+  where
+    dict_name = name <> "__Dict"
+    dict_methods = [ (name <> "__", ty) | (name, ty) <- methods ]
+    dict_record  = RecordDefinition dict_name args ty dict_methods
+    app_args f = foldl App1 f [ Var n | Inferred Explicit (Ident n) <- args ]
+    class_ty = Forall [ Inferred Explicit (Ident "r")] $
+            (app_args (Var dict_name)  `Arrow` Var "r") `Arrow` Var "r"
+

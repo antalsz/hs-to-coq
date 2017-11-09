@@ -398,7 +398,7 @@ data ClassDefinition = ClassDefinition Ident [Binder] (Maybe Sort) [(Ident, Term
                      -- TODO: field arguments (which become @forall@ed)
 
 -- |@/record_definition/ ::=@ /(extra)/
-data RecordDefinition = RecordDefinition Ident [Binder] (Maybe Sort) [(Ident, Term)]             -- ^@Record /ident/ [/binders/] [: /sort/] := { [/ident/ : /term/ ; … ; /ident/ : /term/] } .
+data RecordDefinition = RecordDefinition Ident [Binder] (Maybe Sort) (Maybe Ident) [(Ident, Term)]  -- ^@Record /ident/ [/binders/] [: /sort/] := /ident/ { [/ident/ : /term/ ; … ; /ident/ : /term/] } .
                      deriving (Eq, Ord, Show, Read, Typeable, Data)
 
 -- |@/instance_definition/ ::=@ /(extra)/
@@ -1046,9 +1046,10 @@ instance Gallina ClassDefinition where
                                      <> spaceIf fields <> "}.")
 
 instance Gallina RecordDefinition where
-  renderGallina' _ (RecordDefinition cl params osort fields) =
+  renderGallina' _ (RecordDefinition cl params osort build fields) =
     "Record" <+> renderIdent cl <> spaceIf params <> render_args_oty H params (Sort <$> osort)
-            <+> nest 2 (":=" </> "{" <> lineIf fields
+            <+> nest 2 (":=" </> maybe empty renderIdent build <+>
+                                 "{" <> lineIf fields
                                      <> sepWith (<+>) (<!>) ";" (map (\(f,ty) -> renderIdent f <+> ":" <+> renderGallina ty) fields)
                                      <> spaceIf fields <> "}.")
 

@@ -226,9 +226,10 @@ instance Binding ClassDefinition where
     flip (foldr (\(field,ty) -> (binding f params (freeVars ty) *>) . binding f field)) fields
 
 instance Binding RecordDefinition where
-  binding f (RecordDefinition cl params osort fields) =
+  binding f (RecordDefinition name params osort build fields) =
     (freeVars (NoBinding params) *> freeVars osort *>) .
-    binding f cl .
+    binding f name .
+    (maybe id (binding f) build) .
     flip (foldr (\(field,ty) -> (binding f params (freeVars ty) *>) . binding f field)) fields
 
 instance Binding InstanceDefinition where

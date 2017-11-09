@@ -37,6 +37,7 @@ import GHC hiding (Name)
 import qualified GHC
 import Bag
 import HsToCoq.Util.GHC.Exception
+import HsToCoq.Util.GHC.Module
 
 import HsToCoq.PrettyPrint (renderOneLineT)
 import HsToCoq.Coq.Gallina
@@ -232,11 +233,12 @@ topoSortInstance (InstanceDefinition instanceName params ty members mp) = go sor
            App (Qualid (Bare cn)) ((PosArg a) NE.:| []) -> (cn, a)
            _ -> error ("cannot deconstruct instance head: " ++ (show ty))
 
+        (className, instTy) = decomposeClassTy ty
+
         -- lookup the type of the class member
         -- add extra quantifiers from the class & instance definitions
         mkTy :: Ident -> m ([Binder], Maybe Term)
         mkTy memberName = do
-          let (className, instTy) = decomposeClassTy ty
           classDef <- use (classDefns.at className)
           -- TODO: May be broken by switch away from 'RdrName's
           case classDef of
@@ -295,13 +297,20 @@ topoSortInstance (InstanceDefinition instanceName params ty members mp) = go sor
             _ -> body
 
 
-        quantify v body = do let (className, _) = decomposeClassTy ty
-                             typeArgs <- getImplicitBindersForClassMember className v
-                             case (NE.nonEmpty typeArgs) of
-                               Nothing -> return body
-                               Just args -> return $ Fun args body
+        -- This is the variant
+        --   {| foo := fun {a} {b} => instance_foo |}
+        -- which seems to trigger a bug in Coq, reported at
+        -- https://sympa.inria.fr/sympa/arc/coq-club/2017-11/msg00035.html
+        quantify meth body =
+            do typeArgs <- getImplicitBindersForClassMember className meth
+               case (NE.nonEmpty typeArgs) of
+                   Nothing -> return body
+                   Just args -> return $ Fun args body
 
-        addArgs v = ExplicitApp (Bare v) (Underscore <$ params)
+        -- This is the variant
+        --   {| foo := @instance_foo _ _ |}
+        -- which works only if params really are all arguments (no [{a} `{MonadArrow a}])
+        addArgs _meth impl = return $ ExplicitApp (Bare impl) (Underscore <$ params)
 
         -- given a group of member ids turn them into lifted definitions, keeping track of the current
         -- substitution
@@ -310,7 +319,7 @@ topoSortInstance (InstanceDefinition instanceName params ty members mp) = go sor
         mkDefnGrp [ v ] sub = do
            let v' = instanceName <> "_" <> v
            (params, mty)  <- mkTy v
-           body <- quantify  (toPrefix v) (subst (fmap (Qualid . Bare) sub) (m M.! v))
+           body <- quantify (toPrefix v) (subst (fmap (Qualid . Bare) sub) (m M.! v))
            let sub' = M.insert v v' sub
 
            -- implement redefinitions of methods
@@ -325,12 +334,24 @@ topoSortInstance (InstanceDefinition instanceName params ty members mp) = go sor
         -- make the final instance declaration, using the current substitution as the instance
         mkID :: M.Map Ident Ident -> m [ Sentence ]
         mkID mems = do
-           let mems' = map (\(v,v') -> (v <> "__", addArgs v')) (M.toList mems)
+            -- Tack the module name of the class to the methods,
+            -- if the class is defined in a different module
+            thisModM <- use currentModule
+            let qualify field_name
+                  | Just thisMod <- thisModM >>= identToQualid . moduleNameText
+                  , Just classMod <- identToQualid className >>= qualidModule
+                  , thisMod /= classMod
+                  = Qualified classMod field_name
+                  | otherwise
+                  = Bare field_name
 
-           let instTerm = Fun (Inferred Explicit UnderscoreName NE.:| [Inferred Explicit (Ident "k")])
-                              (App1 (Var "k") (Record mems'))
+            mems' <- sequence [ (qualify (v <> "__"),) <$> addArgs v v'
+                              | (v,v') <- M.toList mems ]
 
-           pure [InstanceSentence (InstanceTerm instanceName params ty instTerm mp)]
+            let instTerm = Fun (Inferred Explicit UnderscoreName NE.:| [Inferred Explicit (Ident "k")])
+                               (App1 (Var "k") (Record mems'))
+
+            pure [InstanceSentence (InstanceTerm instanceName params ty instTerm mp)]
 
 --------------------------------------------------------------------------------
 

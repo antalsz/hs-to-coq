@@ -169,7 +169,7 @@ data Term = Forall Binders Term                                                 
           | Underscore                                                                         -- ^@_@
           | Parens Term                                                                        -- ^@( /term/ )@
           | Bang Term                                                                          -- ^@! term - tmp suppress implicit arguments (for Instance decls)
-          | Record [ (Ident, Term) ]                                                           -- ^@{| /ident/ := /term/; … |}@
+          | Record [ (Qualid, Term) ]                                                          -- ^@{| /qualid/ := /term/; … |}@
           deriving (Eq, Ord, Show, Read, Typeable, Data)
 
 infixr 7 `Arrow`
@@ -776,7 +776,7 @@ instance Gallina Term where
     char '!' <>  renderGallina t
 
   renderGallina' _ (Record defns) =
-    "{|" <> sepWith (<+>) (<!>) ";" (map (\(f,def) -> renderIdent f <+> ":=" <+> renderGallina def) defns)
+    "{|" <> sepWith (<+>) (<!>) ";" (map (\(f,def) -> renderGallina f <+> ":=" <+> renderGallina def) defns)
         <+> "|}"
 
 instance Gallina Arg where

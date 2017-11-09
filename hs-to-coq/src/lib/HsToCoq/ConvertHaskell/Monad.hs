@@ -134,9 +134,9 @@ builtInClasses =
                      App1 (Var "f") (Var "b"))
         , "op_zlzd__" =: (Forall [ Inferred Implicit (Ident "a")
                             , Inferred Implicit (Ident "b")] $
-                     (Var "b") `Arrow`
-                     App1 (Var "f") (Var "a") `Arrow`
-                     App1 (Var "f") (Var "b"))
+                     (Var "a") `Arrow`
+                     App1 (Var "f") (Var "b") `Arrow`
+                     App1 (Var "f") (Var "a"))
         ]
     , ClassDefinition "GHC.Base.Applicative"
         [ Inferred Explicit (Ident "f")

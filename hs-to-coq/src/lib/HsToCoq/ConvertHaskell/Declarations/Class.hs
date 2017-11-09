@@ -78,8 +78,15 @@ convertClassDecl (L _ hsCtx) (L _ hsName) ltvs fds lsigs defaults types typeDefa
 
   name <- freeVar hsName
   ctx  <- traverse (fmap (Generalized Coq.Implicit) . convertLType) hsCtx
+
   args <- convertLHsTyVarBndrs Coq.Explicit ltvs
-  all_sigs <- binding' args $ convertLSigs lsigs
+  kinds <- (++ repeat Nothing) . map Just . maybe [] NE.toList <$> use (edits.classKinds.at name)
+  let args' = zipWith go args kinds
+       where go (Inferred exp name) (Just t) = Typed Ungeneralizable exp (name NE.:| []) t
+             go a _ = a
+
+
+  all_sigs <- binding' args' $ convertLSigs lsigs
 
   -- implement the class part of "skip method"
   skippedMethodsS <- use (edits.skippedMethods)
@@ -99,7 +106,7 @@ convertClassDecl (L _ hsCtx) (L _ hsName) ltvs fds lsigs defaults types typeDefa
                 convUnsupported $ "skipping a type class method in " ++ show name
   unless (null defs) $ defaultMethods.at name ?= defs
 
-  let classDefn = (ClassDefinition name (args ++ ctx) Nothing (bimap toCoqName sigType <$> M.toList sigs))
+  let classDefn = (ClassDefinition name (args' ++ ctx) Nothing (bimap toCoqName sigType <$> M.toList sigs))
 
   classDefns.at name ?= classDefn
 

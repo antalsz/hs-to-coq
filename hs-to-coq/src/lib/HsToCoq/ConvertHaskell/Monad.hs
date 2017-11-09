@@ -118,75 +118,79 @@ builtInClasses =
         , "op_zg__"   =: Var "a" `Arrow` Var "a" `Arrow` Var "bool"
         , "op_zgze__" =: Var "a" `Arrow` Var "a" `Arrow` Var "bool"
         , "compare"   =: Var "a" `Arrow` Var "a" `Arrow` Var "comparison"
-        , "min"       =: Var "a" `Arrow` Var "a" `Arrow` Var "a"
         , "max"       =: Var "a" `Arrow` Var "a" `Arrow` Var "a"
+        , "min"       =: Var "a" `Arrow` Var "a" `Arrow` Var "a"
         ]
     , ClassDefinition "GHC.Base.Monoid" [Inferred Explicit (Ident "a")] Nothing
         [ "mappend" =: Var "a" `Arrow` Var "a" `Arrow` Var "a"
-        , "mempty"  =: Var "a"
         , "mconcat" =: (Var "list" `App1` Var "a") `Arrow` Var "a"
+        , "mempty"  =: Var "a"
         ]
     , ClassDefinition "GHC.Base.Functor" [Inferred Explicit (Ident "f")] Nothing
-        [ "fmap" =: (Forall [ Inferred Implicit (Ident "a")
-                            , Inferred Implicit (Ident "b")] $
-                     (Var "a" `Arrow` Var "b") `Arrow`
-                     App1 (Var "f") (Var "a") `Arrow`
-                     App1 (Var "f") (Var "b"))
-        , "op_zlzd__" =: (Forall [ Inferred Implicit (Ident "a")
+        [ "op_zlzd__" =: (Forall [ Inferred Implicit (Ident "a")
                             , Inferred Implicit (Ident "b")] $
                      (Var "a") `Arrow`
                      App1 (Var "f") (Var "b") `Arrow`
                      App1 (Var "f") (Var "a"))
+        , "fmap" =: (Forall [ Inferred Implicit (Ident "a")
+                            , Inferred Implicit (Ident "b")] $
+                     (Var "a" `Arrow` Var "b") `Arrow`
+                     App1 (Var "f") (Var "a") `Arrow`
+                     App1 (Var "f") (Var "b"))
         ]
     , ClassDefinition "GHC.Base.Applicative"
         [ Inferred Explicit (Ident "f")
         , Generalized Implicit (App1 (Var "Functor") (Var "f"))
         ]
         Nothing
-        [ "pure"  =: (Forall [Inferred Implicit (Ident "a")]  $
-                      Var "a" `Arrow` App1 (Var "f") (Var "a"))
+        [ "op_ztzg__" =:
+            (Forall [ Inferred Implicit (Ident "a")
+                    , Inferred Implicit (Ident "b")] $
+                     App1 (Var "f") (Var "a") `Arrow`
+                     App1 (Var "f") (Var "b") `Arrow`
+                     App1 (Var "f") (Var "b"))
         , "op_zlztzg__" =:
             (Forall [ Inferred Implicit (Ident "a")
                     , Inferred Implicit (Ident "b")] $
                      App1 (Var "f") (Var "a" `Arrow` Var "b") `Arrow`
                      App1 (Var "f") (Var "a") `Arrow`
                      App1 (Var "f") (Var "b"))
-        , "op_ztzg__" =:
-            (Forall [ Inferred Implicit (Ident "a")
-                    , Inferred Implicit (Ident "b")] $
-                     App1 (Var "f") (Var "a") `Arrow`
-                     App1 (Var "f") (Var "b") `Arrow`
-                     App1 (Var "f") (Var "b"))
+        , "pure"  =: (Forall [Inferred Implicit (Ident "a")]  $
+                      Var "a" `Arrow` App1 (Var "f") (Var "a"))
+        {- skipped
         , "op_zlzt__" =:
             (Forall [ Inferred Implicit (Ident "a")
                     , Inferred Implicit (Ident "b")] $
                      App1 (Var "f") (Var "a") `Arrow`
                      App1 (Var "f") (Var "b") `Arrow`
                      App1 (Var "f") (Var "a"))
+        -}
         ]
     , ClassDefinition "GHC.Base.Monad"
         [ Inferred Explicit (Ident "f")
         , Generalized Implicit (App1 (Var "GHC.Base.Applicative") (Var "f"))
         ]
         Nothing
-        [ "return_"  =: (Forall [Inferred Implicit (Ident "a")]  $
-                      Var "a" `Arrow` App1 (Var "f") (Var "a"))
+        [ "op_zgzg__" =:
+           (Forall [ Inferred Implicit (Ident "a")
+                   , Inferred Implicit (Ident "b")] $
+                    App1 (Var "f") (Var "a") `Arrow`
+                    App1 (Var "f") (Var "b") `Arrow`
+                    App1 (Var "f") (Var "b"))
         , "op_zgzgze__" =:
             (Forall [ Inferred Implicit (Ident "a")
                     , Inferred Implicit (Ident "b")] $
                      App1 (Var "f") (Var "a") `Arrow`
                      (Var "a" `Arrow` App1 (Var "f") (Var "b")) `Arrow`
                      App1 (Var "f") (Var "b"))
-        , "op_zgzg__" =:
-           (Forall [ Inferred Implicit (Ident "a")
-                   , Inferred Implicit (Ident "b")] $
-                    App1 (Var "f") (Var "a") `Arrow`
-                    App1 (Var "f") (Var "b") `Arrow`
-                    App1 (Var "f") (Var "b"))
+        , "return_"  =: (Forall [Inferred Implicit (Ident "a")]  $
+                      Var "a" `Arrow` App1 (Var "f") (Var "a"))
+        {-
         , "fail" =:
            (Forall [ Inferred Implicit (Ident "a")] $
                     Var "GHC.Prim.String" `Arrow`
                     App1 (Var "f") (Var "a"))
+        -}
         ]
     , ClassDefinition "Foldable"
         [ Inferred Explicit (Ident "t")
@@ -247,9 +251,11 @@ builtInDefaultMethods = fmap M.fromList $ M.fromList
         [ "op_ztzg__" ~> Fun [arg "x", arg "y"]
             (let const_id = App1 (Var "GHC.Base.const") (Var "GHC.Base.id") in
             App2 (Var "op_zlztzg__") (App2 (Var "GHC.Base.fmap") const_id (Var "x")) (Var "y"))
+        {-
         , "op_zlzt__" ~> Fun [arg "x", arg "y"]
             (let const    = Var "GHC.Base.const" in
             App2 (Var "op_zlztzg__") (App2 (Var "GHC.Base.fmap") const    (Var "x")) (Var "y"))
+        -}
         ]
     , "GHC.Base.Monoid" =:
         [ "mconcat" ~> App2 (Var "GHC.Base.foldr") (Var "mappend") (Var "mempty")

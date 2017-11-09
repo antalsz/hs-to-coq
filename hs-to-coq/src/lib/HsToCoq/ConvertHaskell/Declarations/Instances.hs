@@ -235,6 +235,8 @@ topoSortInstance (InstanceDefinition instanceName params ty members mp) = go sor
 
         (className, instTy) = decomposeClassTy ty
 
+        buildName = className <> "__Dict_Build"
+
         -- lookup the type of the class member
         -- add extra quantifiers from the class & instance definitions
         mkTy :: Ident -> m ([Binder], Maybe Term)
@@ -296,6 +298,14 @@ topoSortInstance (InstanceDefinition instanceName params ty members mp) = go sor
               -> Fun (NE.fromList bnds) body'
             _ -> body
 
+        -- Gets the class method names, in the original
+        getClassMethods = do
+          classDef <- use (classDefns.at className)
+          -- TODO: May be broken by switch away from 'RdrName's
+          case classDef of
+            (Just (ClassDefinition _ _ _ sigs)) ->
+                pure $ map fst sigs
+            _ -> convUnsupported ("OOPS! Cannot find information for class " ++ show className)
 
         -- This is the variant
         --   {| foo := fun {a} {b} => instance_foo |}
@@ -310,7 +320,7 @@ topoSortInstance (InstanceDefinition instanceName params ty members mp) = go sor
         -- This is the variant
         --   {| foo := @instance_foo _ _ |}
         -- which works only if params really are all arguments (no [{a} `{MonadArrow a}])
-        addArgs _meth impl = return $ ExplicitApp (Bare impl) (Underscore <$ params)
+        _addArgs _meth impl = return $ ExplicitApp (Bare impl) (Underscore <$ params)
 
         -- given a group of member ids turn them into lifted definitions, keeping track of the current
         -- substitution
@@ -345,11 +355,26 @@ topoSortInstance (InstanceDefinition instanceName params ty members mp) = go sor
                   | otherwise
                   = Bare field_name
 
-            mems' <- sequence [ (qualify (v <> "__"),) <$> addArgs v v'
-                              | (v,v') <- M.toList mems ]
+            -- Assemble members in the right order
+            classMethods <- getClassMethods
+
+            mems' <- forM classMethods $ \v -> do
+                case M.lookup v mems of
+                  Just v' -> do
+                      t <- quantify v (Var v')
+                      pure $ (qualify (v <> "__"), t)
+                  Nothing -> convUnsupported ("missing " ++ show v ++ " in " ++ show mems )
+
+            -- When we can use record syntax, we can use this.
+            -- But typechecking sometimes stumbles...
+            let _body = Record mems'
+
+            let body = appList (Var buildName) $ map PosArg $
+                    [ instTy ] ++ map snd mems'
+
 
             let instTerm = Fun (Inferred Explicit UnderscoreName NE.:| [Inferred Explicit (Ident "k")])
-                               (App1 (Var "k") (Record mems'))
+                               (App1 (Var "k") body)
 
             pure [InstanceSentence (InstanceTerm instanceName params ty instTerm mp)]
 

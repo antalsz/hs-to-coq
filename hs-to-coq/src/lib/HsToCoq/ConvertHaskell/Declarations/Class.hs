@@ -128,9 +128,14 @@ classSentences (ClassBody (ClassDefinition name args ty methods) nots) =
     map NotationSentence nots
   where
     dict_name = name <> "__Dict"
+    dict_build = name <> "__Dict_Build"
     dict_methods = [ (name <> "__", ty) | (name, ty) <- methods ]
-    dict_record  = RecordDefinition dict_name args ty dict_methods
-    app_args f = foldl App1 f [ Var n | Inferred Explicit (Ident n) <- args ]
+    dict_record  = RecordDefinition dict_name inst_args ty (Just dict_build) dict_methods
+    -- The dictionary needs all explicit (type) arguments,
+    -- but none of the implicit (constraint) arguments
+    inst_args = filter (\b -> b ^? binderExplicitness == Just Explicit) args
+    app_args f = foldl App1 f (map Var (foldMap (toListOf binderIdents) inst_args))
     class_ty = Forall [ Inferred Explicit (Ident "r")] $
             (app_args (Var dict_name)  `Arrow` Var "r") `Arrow` Var "r"
+
 

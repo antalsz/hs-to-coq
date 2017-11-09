@@ -27,12 +27,12 @@ Definition mappend_All : All -> All -> All :=
           end.
 Definition mempty_All : All := Mk_All true.
 
-Instance instance_GHC_Base_Monoid_All : !GHC.Base.Monoid All := {
-   mappend := mappend_All;
-   mempty  := mempty_All;
-   mconcat := foldr mappend_All mempty_All;
-}.
-
+Instance instance_GHC_Base_Monoid_All :
+  GHC.Base.Monoid All := fun _ k => k {|
+   mappend__ := mappend_All;
+   mempty__  := mempty_All;
+   mconcat__ := foldr mappend_All mempty_All;
+|}.
 
 Inductive Any : Type := Mk_Any : bool -> Any.
 Definition getAny (arg_7__ : Any) :=
@@ -46,11 +46,12 @@ Definition mappend_Any : Any -> Any -> Any :=
           end.
 Definition mempty_Any : Any := Mk_Any false.
 
-Instance instance_GHC_Base_Monoid_Any : !GHC.Base.Monoid Any := {
-   mappend := mappend_Any;
-   mempty  := mempty_Any;
-   mconcat := foldr mappend_Any mempty_Any;
-}.
+Instance instance_GHC_Base_Monoid_Any :
+  GHC.Base.Monoid Any := fun _ k => k {|
+   mappend__ := mappend_Any;
+   mempty__  := mempty_Any;
+   mconcat__ := foldr mappend_Any mempty_Any;
+|}.
 
 
 Inductive First a : Type := Mk_First : option a -> First a.
@@ -67,10 +68,11 @@ Definition mappend_First {a} (x: First a) (y :First a) : First a :=
     | Mk_First None, _ => y
     | _ , _ => x
   end.
-Instance instance_GHC_Base_Monoid__First_a_ : !GHC.Base.Monoid (First a) :=
- { mappend := mappend_First;
-   mempty  := mempty_First;
-   mconcat := foldr mappend_First mempty_First }.
+Instance instance_GHC_Base_Monoid__First_a_ {a} :
+  GHC.Base.Monoid (First a) := fun _ k => k
+ {| mappend__ := mappend_First;
+    mempty__  := mempty_First;
+    mconcat__ := foldr mappend_First mempty_First |}.
 
 Inductive Last a : Type := Mk_Last : option a -> Last a.
 Arguments Mk_Last {_}.
@@ -85,11 +87,12 @@ Definition mappend_Last {a} (x: Last a) (y :Last a) : Last a :=
     | _ , Mk_Last None => y
     | _ , _ => x
   end.
-Instance instance_GHC_Base_Monoid__Last_a_ : !GHC.Base.Monoid (Last a) :=
- { mappend := mappend_Last;
-   mempty  := mempty_Last;
-   mconcat := foldr mappend_Last mempty_Last }.
 
+Instance instance_GHC_Base_Monoid__Last_a_ {a} :
+  GHC.Base.Monoid (Last a) := fun _ k => k
+ {| mappend__ := mappend_Last;
+    mempty__  := mempty_Last;
+    mconcat__ := foldr mappend_Last mempty_Last |}.
 
 
 Inductive Product a : Type := Mk_Product : a -> Product a.
@@ -105,17 +108,17 @@ Definition mappend_Product {a} `{Num a} (x: Product a) (y :Product a)  : Product
   match x , y with
     | Mk_Product i , Mk_Product j => Mk_Product (i * j)
   end.
-Instance instance_GHC_Base_Monoid__Product_a_ {a} `{Num a}: !GHC.Base.Monoid (Product a) :=
- { mappend := mappend_Product;
-   mempty  := mempty_Product;
-   mconcat := foldr mappend_Product mempty_Product }.
+Instance instance_GHC_Base_Monoid__Product_a_ {a} `{Num a}:
+  GHC.Base.Monoid (Product a) := fun _ k => k 
+ {| mappend__ := mappend_Product;
+    mempty__  := mempty_Product;
+    mconcat__ := foldr mappend_Product mempty_Product |}.
 
-Instance instance_GHC_Base_Functor__Product_ : !GHC.Base.Functor Product := {}.
-Proof.
-- intros a b x pb. apply Mk_Product. exact x.
-- intros a b f pa. destruct pa. apply Mk_Product. apply f. exact a0.
-Defined.
-
+Instance instance_GHC_Base_Functor__Product_ : GHC.Base.Functor Product := 
+  fun _ k => k {|
+    fmap__      := fun _ _ f y => match y with | Mk_Product j => Mk_Product (f j) end;
+    op_zlzd____ := fun _ _ x y => match y with | Mk_Product j => Mk_Product x end;
+    |}.
 
 Inductive Sum a : Type := Mk_Sum : a -> Sum a.
 Arguments Mk_Sum {_}.
@@ -130,16 +133,17 @@ Definition mappend_Sum {a} `{Num a} (x: Sum a) (y :Sum a)  : Sum a :=
   match x , y with
     | Mk_Sum i , Mk_Sum j => Mk_Sum (i + j)
   end.
-Instance instance_GHC_Base_Monoid__Sum_a_ {a} `{Num a}: !GHC.Base.Monoid (Sum a) :=
- { mappend := mappend_Sum;
-   mempty  := mempty_Sum;
-   mconcat := foldr mappend_Sum mempty_Sum }.
+Instance instance_GHC_Base_Monoid__Sum_a_ {a} `{Num a}:
+  GHC.Base.Monoid (Sum a) := fun _ k => k 
+ {| mappend__ := mappend_Sum;
+    mempty__  := mempty_Sum;
+    mconcat__ := foldr mappend_Sum mempty_Sum |}.
 
-Instance instance_GHC_Base_Functor__Sum_ : !GHC.Base.Functor Sum := {}.
-Proof.
-- intros a b x pb. apply Mk_Sum. exact x.
-- intros a b f pa. destruct pa. apply Mk_Sum. apply f. exact a0.
-Defined.
+Instance instance_GHC_Base_Functor__Sum_ : GHC.Base.Functor Sum := 
+  fun _ k => k {|
+    fmap__      := fun _ _ f y => match y with | Mk_Sum j => Mk_Sum (f j) end;
+    op_zlzd____ := fun _ _ x y => match y with | Mk_Sum j => Mk_Sum x end;
+    |}.
 
 (* Converted imports: *)
 
@@ -194,23 +198,29 @@ Local Definition instance_forall___GHC_Base_Monoid_a___GHC_Base_Monoid__Dual_a__
   instance_forall___GHC_Base_Monoid_a___GHC_Base_Monoid__Dual_a__mappend
   instance_forall___GHC_Base_Monoid_a___GHC_Base_Monoid__Dual_a__mempty.
 
-Instance instance_forall___GHC_Base_Monoid_a___GHC_Base_Monoid__Dual_a_
-  : forall {a}, forall `{GHC.Base.Monoid a}, GHC.Base.Monoid (Dual a) := {
-  mappend := instance_forall___GHC_Base_Monoid_a___GHC_Base_Monoid__Dual_a__mappend ;
-  mconcat := instance_forall___GHC_Base_Monoid_a___GHC_Base_Monoid__Dual_a__mconcat ;
-  mempty := instance_forall___GHC_Base_Monoid_a___GHC_Base_Monoid__Dual_a__mempty }.
+Instance instance_forall___GHC_Base_Monoid_a___GHC_Base_Monoid__Dual_a_ {a}
+                                                                        `{GHC.Base.Monoid a} : GHC.Base.Monoid (Dual
+                                                                                                               a) :=
+  fun _ k =>
+    k
+    {|GHC.Base.mappend__ := (@instance_forall___GHC_Base_Monoid_a___GHC_Base_Monoid__Dual_a__mappend
+    _ _) ;
+    GHC.Base.mconcat__ := (@instance_forall___GHC_Base_Monoid_a___GHC_Base_Monoid__Dual_a__mconcat
+    _ _) ;
+    GHC.Base.mempty__ := (@instance_forall___GHC_Base_Monoid_a___GHC_Base_Monoid__Dual_a__mempty
+    _ _) |}.
 
 Local Definition instance_GHC_Base_Functor_Dual_fmap : forall {a} {b},
                                                          (a -> b) -> Dual a -> Dual b :=
   fun {a} {b} => GHC.Prim.coerce.
 
 Local Definition instance_GHC_Base_Functor_Dual_op_zlzd__ : forall {a} {b},
-                                                              b -> Dual a -> Dual b :=
+                                                              a -> Dual b -> Dual a :=
   fun {a} {b} => fun x => instance_GHC_Base_Functor_Dual_fmap (GHC.Base.const x).
 
-Instance instance_GHC_Base_Functor_Dual : GHC.Base.Functor Dual := {
-  fmap := fun {a} {b} => instance_GHC_Base_Functor_Dual_fmap ;
-  op_zlzd__ := fun {a} {b} => instance_GHC_Base_Functor_Dual_op_zlzd__ }.
+Instance instance_GHC_Base_Functor_Dual : GHC.Base.Functor Dual := fun _ k =>
+    k {|GHC.Base.fmap__ := (@instance_GHC_Base_Functor_Dual_fmap) ;
+      GHC.Base.op_zlzd____ := (@instance_GHC_Base_Functor_Dual_op_zlzd__) |}.
 
 Local Definition instance_GHC_Base_Applicative_Dual_op_zlztzg__ : forall {a}
                                                                          {b},
@@ -228,10 +238,12 @@ Local Definition instance_GHC_Base_Applicative_Dual_pure : forall {a},
                                                              a -> Dual a :=
   fun {a} => Mk_Dual.
 
-Instance instance_GHC_Base_Applicative_Dual : GHC.Base.Applicative Dual := {
-  op_zlztzg__ := fun {a} {b} => instance_GHC_Base_Applicative_Dual_op_zlztzg__ ;
-  op_ztzg__ := fun {a} {b} => instance_GHC_Base_Applicative_Dual_op_ztzg__ ;
-  pure := fun {a} => instance_GHC_Base_Applicative_Dual_pure }.
+Instance instance_GHC_Base_Applicative_Dual : GHC.Base.Applicative Dual := fun _
+                                                                               k =>
+    k
+    {|GHC.Base.op_zlztzg____ := (@instance_GHC_Base_Applicative_Dual_op_zlztzg__) ;
+    GHC.Base.op_ztzg____ := (@instance_GHC_Base_Applicative_Dual_op_ztzg__) ;
+    GHC.Base.pure__ := (@instance_GHC_Base_Applicative_Dual_pure) |}.
 
 (* Skipping instance instance_GHC_Base_Monad_Dual *)
 
@@ -251,11 +263,11 @@ Local Definition instance_GHC_Base_Monoid__Endo_a__mconcat {inst_a} : list (Endo
   GHC.Base.foldr instance_GHC_Base_Monoid__Endo_a__mappend
                  instance_GHC_Base_Monoid__Endo_a__mempty.
 
-Instance instance_GHC_Base_Monoid__Endo_a_ : forall {a},
-                                               GHC.Base.Monoid (Endo a) := {
-  mappend := instance_GHC_Base_Monoid__Endo_a__mappend ;
-  mconcat := instance_GHC_Base_Monoid__Endo_a__mconcat ;
-  mempty := instance_GHC_Base_Monoid__Endo_a__mempty }.
+Instance instance_GHC_Base_Monoid__Endo_a_ {a} : GHC.Base.Monoid (Endo a) :=
+  fun _ k =>
+    k {|GHC.Base.mappend__ := (@instance_GHC_Base_Monoid__Endo_a__mappend _) ;
+      GHC.Base.mconcat__ := (@instance_GHC_Base_Monoid__Endo_a__mconcat _) ;
+      GHC.Base.mempty__ := (@instance_GHC_Base_Monoid__Endo_a__mempty _) |}.
 
 (* Skipping instance instance_GHC_Base_Monoid_All *)
 

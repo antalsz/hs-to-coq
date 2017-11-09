@@ -25,6 +25,7 @@ PASS = \
   AddAndReplace \
   FTPDefault \
   PolyInstance2 \
+  PolyInstance3 \
   MutrecInst
 
 
@@ -41,7 +42,6 @@ TODO_PASS  = \
   OpTyCon \
   Successors \
   Existential \
-  PolyInstance3 \
   Bits
 
 MODULES = $(PASS) $(TODO_PASS)

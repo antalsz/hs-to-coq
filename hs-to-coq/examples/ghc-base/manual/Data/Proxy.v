@@ -74,14 +74,13 @@ Local Definition instance_GHC_Base_Functor_Proxy_fmap : forall {a} {b},
                                                              (a -> b) -> Proxy a -> Proxy b :=
   fun {a} {b} => fun arg_5__ arg_6__ => Mk_Proxy.
 
-Local Definition instance_GHC_Base_Functor_Proxy_op_zlzd__ : forall {a} {b},
-                                                                  b -> Proxy a -> Proxy b :=
-  fun {a} {b} =>
-    fun x => instance_GHC_Base_Functor_Proxy_fmap (GHC.Base.const x).
+Local Definition instance_GHC_Base_Functor_Proxy_op_zlzd__ :
+   forall {b} {a}, b -> Proxy a -> Proxy b :=
+  fun {b} {a} => fun x => instance_GHC_Base_Functor_Proxy_fmap (GHC.Base.const x).
 
-Instance instance_GHC_Base_Functor_Proxy : !GHC.Base.Functor Proxy := {
-  fmap := fun {a} {b} => instance_GHC_Base_Functor_Proxy_fmap ;
-  op_zlzd__ := fun {a} {b} => instance_GHC_Base_Functor_Proxy_op_zlzd__ }.
+Instance instance_GHC_Base_Functor_Proxy : GHC.Base.Functor Proxy := fun _ k => k {|
+  GHC.Base.fmap__ := @instance_GHC_Base_Functor_Proxy_fmap ;
+  GHC.Base.op_zlzd____ := @instance_GHC_Base_Functor_Proxy_op_zlzd__  |}.
 
 
 Local Definition instance_GHC_Base_Applicative_Proxy_pure : forall {a},
@@ -109,13 +108,11 @@ Local Definition instance_GHC_Base_Applicative_Proxy_op_zlzt__ : forall {a}
       instance_GHC_Base_Applicative_Proxy_op_zlztzg__ (GHC.Base.fmap
                                                          GHC.Base.const x) y.
 
-Instance instance_GHC_Base_Applicative_Proxy : !GHC.Base.Applicative
-                                                  Proxy := {
-(*   op_zlzt__ := fun {a} {b} => instance_GHC_Base_Applicative_Proxy_op_zlzt__ ; *)
-  op_zlztzg__ := fun {a} {b} =>
-    instance_GHC_Base_Applicative_Proxy_op_zlztzg__ ;
-  op_ztzg__ := fun {a} {b} => instance_GHC_Base_Applicative_Proxy_op_ztzg__ ;
-  pure := fun {a} => instance_GHC_Base_Applicative_Proxy_pure }.
+Instance instance_GHC_Base_Applicative_Proxy :
+  GHC.Base.Applicative Proxy := fun _ k => k {|
+  GHC.Base.op_zlztzg____ := @instance_GHC_Base_Applicative_Proxy_op_zlztzg__ ;
+  GHC.Base.op_ztzg____ := @instance_GHC_Base_Applicative_Proxy_op_ztzg__ ;
+  GHC.Base.pure__ := @instance_GHC_Base_Applicative_Proxy_pure |}.
 
 
 Local Definition instance_GHC_Base_Monad_Proxy_return_ : forall {a},
@@ -130,28 +127,24 @@ Local Definition instance_GHC_Base_Monad_Proxy_op_zgzg__ : forall {a} {b},
                                                                 Proxy a -> Proxy b -> Proxy b :=
   fun {a} {b} => GHC.Base.op_ztzg__.
 
-Instance instance_GHC_Base_Monad_Proxy : !GHC.Base.Monad Proxy := {
-  op_zgzg__ := fun {a} {b} => instance_GHC_Base_Monad_Proxy_op_zgzg__ ;
-  op_zgzgze__ := fun {a} {b} => instance_GHC_Base_Monad_Proxy_op_zgzgze__ ;
-  return_ := fun {a} => instance_GHC_Base_Monad_Proxy_return_ }.
+Instance instance_GHC_Base_Monad_Proxy : GHC.Base.Monad Proxy := fun _ k => k {|
+  GHC.Base.op_zgzg____ := @instance_GHC_Base_Monad_Proxy_op_zgzg__ ;
+  GHC.Base.op_zgzgze____ := @instance_GHC_Base_Monad_Proxy_op_zgzgze__ ;
+  GHC.Base.return___ := @instance_GHC_Base_Monad_Proxy_return_ |}.
 
-Instance instance_GHC_Base_Monoid__Proxy_s_ : !GHC.Base.Monoid (Proxy
-                                                                     s) := {}.
-Proof.
-  split. intros. apply Mk_Proxy. apply Mk_Proxy.
-Defined.
+Instance instance_GHC_Base_Monoid__Proxy_s_ {s} : GHC.Base.Monoid (Proxy s) :=
+  fun _ k => k {|
+    GHC.Base.mempty__ := Mk_Proxy ;
+    GHC.Base.mappend__ := fun _ _ => Mk_Proxy ;
+    GHC.Base.mconcat__ := fun _ => Mk_Proxy|}.
 
-Instance instance_GHC_Enum_Bounded__Proxy_s_ : !GHC.Enum.Bounded (Proxy s) :=
-  {}.
-Proof.
-  split. apply Mk_Proxy.
-Defined.
+Instance instance_GHC_Base_Bounded__Proxy_s_ {s} : GHC.Enum.Bounded (Proxy s) :=
+  { maxBound := Mk_Proxy;
+    minBound := Mk_Proxy }.
 
-Instance instance_GHC_Base_Eq___Proxy_s_ : !GHC.Base.Eq_ (Proxy s) := {}.
-Proof.
-  - intros. exact true.
-  - intros. exact false.
-Defined.
+Instance instance_GHC_Base_Eq__Proxy_s_ {s} : GHC.Base.Eq_ (Proxy s) := fun _ k => k
+  {| GHC.Base.op_zeze____ := fun _ _ => true;
+     GHC.Base.op_zsze____ := fun _ _ => false |}.
 
 Definition compare_Proxy {s} : Proxy s -> Proxy s -> comparison := fun _ _ => Eq.
 

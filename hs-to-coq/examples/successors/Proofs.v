@@ -34,7 +34,7 @@ Lemma functor_law_1:
 Proof.
   intros.
   destruct x.
-  simpl.
+  unfold fmap, fmap__, instance_GHC_Base_Functor_Succs. simpl.
   rewrite_Functor_list.
   auto.
 Qed.
@@ -45,7 +45,7 @@ Lemma functor_law_2:
 Proof.
   intros.
   destruct x.
-  simpl.
+  unfold fmap, fmap__, instance_GHC_Base_Functor_Succs. simpl.
   rewrite_Functor_list.
   auto.
 Qed.
@@ -61,7 +61,8 @@ Lemma applicative_law_1:
 Proof.
   intros.
   destruct x.
-  simpl.
+  unfold op_zlztzg__, op_zlztzg____, pure, pure__,
+         instance_GHC_Base_Applicative_Succs. simpl.
   rewrite_Functor_list.
   auto.
 Qed.
@@ -77,9 +78,10 @@ Proof.
   destruct x, z, y.
   simpl.
   unfold op_z2218U__.
+  unfold op_zlztzg__, op_zlztzg____, pure, pure__,
+         instance_GHC_Base_Applicative_Succs. simpl.
   f_equal.
-  repeat (rewrite map_append || rewrite_Functor_list || rewrite app_assoc
-      || unfold op_z2218U__ || unfold op_zd__).
+  repeat (rewrite map_append || rewrite_Functor_list || rewrite app_assoc).
   reflexivity.
 Qed.
 
@@ -99,6 +101,8 @@ Lemma applicative_law_4:
 Proof.
   intros.
   destruct f.
+  unfold op_zlztzg__, op_zlztzg____, pure, pure__,
+         instance_GHC_Base_Applicative_Succs. simpl.
   simpl.
   rewrite app_nil_r.
   reflexivity.
@@ -128,6 +132,8 @@ Lemma monad_law_1:
   ((return_ x >>= k) = k x).
 Proof.
   intros.
+  unfold op_zgzgze__, op_zgzgze____, return_, return___,
+         instance_GHC_Base_Monad_Succs. simpl.
   simpl.
   destruct (k x).
   auto.
@@ -139,6 +145,8 @@ Lemma monad_law_2:
 Proof.
   intros.
   destruct x.
+  unfold op_zgzgze__, op_zgzgze____, return_, return___,
+         instance_GHC_Base_Monad_Succs. simpl.
   simpl.
   rewrite map_id.
   rewrite app_nil_r.
@@ -151,7 +159,8 @@ Lemma monad_law_3:
 Proof.
   intros.
   destruct m.
-  simpl.
+  unfold op_zgzgze__, op_zgzgze____, return_, return___,
+         instance_GHC_Base_Monad_Succs. simpl.
   unfold_Succs_Instances.
   unfold getCurrent, op_z2218U__, compose.
   destruct (k a0).
@@ -171,11 +180,10 @@ Lemma monad_law_5 :
   forall (A B : Type) (f : Succs (A -> B)) (x : Succs A), _<*>_ f x = ap f x.
 Proof.
   intros.
-  unfold "_<*>_", ap.
-  unfold_Succs_Instances.
   destruct f. destruct x.
-  unfold "_>>=_", return_, pure.
-  unfold_Succs_Instances.
+  unfold ap, op_zgzgze__, op_zgzgze____, return_, return___,
+         op_zlztzg__, op_zlztzg____,
+         instance_GHC_Base_Monad_Succs, instance_GHC_Base_Applicative_Succs. simpl.
   f_equal.
   unfold compose.
   rewrite app_nil_r.

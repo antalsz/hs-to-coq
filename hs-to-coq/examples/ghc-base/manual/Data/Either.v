@@ -83,18 +83,19 @@ Definition partitionsums {a} {b} : list (sum a b) -> list a * list b :=
 
 
 Instance instance_GHC_Base_Eq_sum {a}{b} `{Base.Eq_ a} `{Base.Eq_ b} : !Base.Eq_ (a + b) :=
-  { op_zeze__ := fun x y =>
+  fun _ k => k {|
+    GHC.Base.op_zeze____ := fun x y =>
                    match x , y with
                    | inl xl , inl yl => GHC.Base.op_zeze__ xl yl
                    | inr xr , inr yr => GHC.Base.op_zeze__ xr yr
                    | _      , _      => false
                    end ;
-    op_zsze__ := fun x y =>
+    GHC.Base.op_zsze____ := fun x y =>
                    match x , y with
                    | inl xl , inl yl => GHC.Base.op_zsze__ xl yl
                    | inr xr , inr yr => GHC.Base.op_zsze__ xr yr
                    | _      , _      => true 
-                   end }.
+                   end |}.
 
 Definition sum_comparison {a}{b} `{Base.Ord a} `{Base.Ord b} (x:a + b) (y: a + b) :
   comparison := match (x,y) with
@@ -125,10 +126,10 @@ Local Definition instance_GHC_Base_Functor__sum_a__op_zlzd__ {e} : forall {a}
   fun {a} {b} =>
     fun x => instance_GHC_Base_Functor__sum_a__fmap (GHC.Base.const x).
 
-Instance instance_GHC_Base_Functor__sum_a_  {e} : !GHC.Base.Functor (sum
-                                                                        e) := {
-  fmap := fun {a} {b} => instance_GHC_Base_Functor__sum_a__fmap ;
-  op_zlzd__ := fun {a} {b} => instance_GHC_Base_Functor__sum_a__op_zlzd__ }.
+Instance instance_GHC_Base_Functor__sum_a_  {e} : !GHC.Base.Functor (sum e) :=
+  fun _ k => k {|
+  GHC.Base.fmap__ := fun {a} {b} => instance_GHC_Base_Functor__sum_a__fmap ;
+  GHC.Base.op_zlzd____ := fun {a} {b} => instance_GHC_Base_Functor__sum_a__op_zlzd__ |}.
 
 (* Unbound variables:
      * Coq.Lists.List.flat_map GHC.Base.fmap GHC.Base.Applicative
@@ -138,8 +139,7 @@ Instance instance_GHC_Base_Functor__sum_a_  {e} : !GHC.Base.Functor (sum
 *)
 
 
-Local Definition instance_GHC_Base_Applicative__sum_e__pure {e} : forall {a},
-                                                                      a -> (sum e) a :=
+Local Definition instance_GHC_Base_Applicative__sum_e__pure {e} : forall {a}, a -> (sum e) a :=
   fun {a} => inr.
 
 Local Definition instance_GHC_Base_Applicative__sum_e__op_zlztzg__ {e}
@@ -165,16 +165,11 @@ Local Definition instance_GHC_Base_Applicative__sum_e__op_zlzt__ {e}
       instance_GHC_Base_Applicative__sum_e__op_zlztzg__ (GHC.Base.fmap
                                                               GHC.Base.const x) y.
 
-Instance instance_GHC_Base_Applicative__sum_e_ {e} : !GHC.Base.Applicative
-                                                       (sum e) := {
-(*  op_zlzt__ := fun {a} {b} =>
-    instance_GHC_Base_Applicative__sum_e__op_zlzt__ ; *)
-  op_zlztzg__ := fun {a} {b} =>
-    instance_GHC_Base_Applicative__sum_e__op_zlztzg__ ;
-  op_ztzg__ := fun {a} {b} =>
-    instance_GHC_Base_Applicative__sum_e__op_ztzg__ ;
-  pure := fun {a} => instance_GHC_Base_Applicative__sum_e__pure }.
-
+Instance instance_GHC_Base_Applicative__sum_e_ {e} :
+   GHC.Base.Applicative (sum e) := fun _ k => k {|
+  GHC.Base.op_zlztzg____ := @instance_GHC_Base_Applicative__sum_e__op_zlztzg__ _;
+  GHC.Base.op_ztzg____ := @instance_GHC_Base_Applicative__sum_e__op_ztzg__ _;
+  GHC.Base.pure__ := @instance_GHC_Base_Applicative__sum_e__pure _|}.
 
 
 Local Definition instance_GHC_Base_Monad__sum_e__return_ {e} : forall {a},
@@ -197,9 +192,8 @@ Local Definition instance_GHC_Base_Monad__sum_e__op_zgzg__ {e} : forall {a}
                                                                      (sum e) a -> (sum e) b -> (sum e) b :=
   fun {a} {b} => GHC.Base.op_ztzg__.
 
-Instance instance_GHC_Base_Monad__sum_e_ {e} : !GHC.Base.Monad (sum
-                                                                    e) := {
-  op_zgzg__ := fun {a} {b} => instance_GHC_Base_Monad__sum_e__op_zgzg__ ;
-  op_zgzgze__ := fun {a} {b} =>
-    instance_GHC_Base_Monad__sum_e__op_zgzgze__ ;
-  return_ := fun {a} => instance_GHC_Base_Monad__sum_e__return_ }.
+Instance instance_GHC_Base_Monad__sum_e_ {e} :
+  GHC.Base.Monad (sum e) := fun _ k => k {|
+  GHC.Base.op_zgzg____ := @instance_GHC_Base_Monad__sum_e__op_zgzg__ _;
+  GHC.Base.op_zgzgze____ := @instance_GHC_Base_Monad__sum_e__op_zgzgze__ _;
+  GHC.Base.return___ := @instance_GHC_Base_Monad__sum_e__return_ _ |}.

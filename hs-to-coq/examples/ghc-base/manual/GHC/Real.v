@@ -38,10 +38,10 @@ Instance Num_Q__ : Num Rational := {
   signum      := Qsignum; }.
 
 
- Instance Eq_Q : Eq_ Rational := {
-   op_zeze__ := Qeq_bool;
-   op_zsze__ := fun x y => negb (Qeq_bool x y)
- }.
+ Instance Eq_Q : Eq_ Rational := fun _ k => k {|
+   op_zeze____ := Qeq_bool;
+   op_zsze____ := fun x y => negb (Qeq_bool x y)
+ |}.
 
  Instance Ord_Q : Ord Rational :=
    ord_default Qcompare.

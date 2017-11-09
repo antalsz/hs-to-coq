@@ -87,9 +87,15 @@ Axiom errorWithoutStackTrace : forall {A : Type}, String -> A.
 (*********** built in classes Eq & Ord **********************)
 
 (* Don't clash with Eq constructor for the comparison type. *)
-Class Eq_ a := {
-  op_zeze__ : (a -> (a -> bool)) ;
-  op_zsze__ : (a -> (a -> bool)) }.
+Record Eq___Dict a := {
+  op_zeze____ : (a -> (a -> bool)) ;
+  op_zsze____ : (a -> (a -> bool)) }.
+
+Definition Eq_ a := forall r, (Eq___Dict a -> r) -> r.
+Existing Class Eq_.
+
+Definition op_zeze__ {a} {g : Eq_ a} := g _ (op_zeze____ _).
+Definition op_zsze__ {a} {g : Eq_ a} := g _ (op_zsze____ _).
 
 Infix "/=" := (op_zsze__) (no associativity, at level 70).
 
@@ -133,10 +139,10 @@ Require Coq.Structures.DecidableTypeEx.
 Require Coq.Structures.OrderedType.
 Require Coq.Structures.OrderedTypeEx.
 
-Instance Eq_Int___ : Eq_ Int := {
-                               op_zeze__ := fun x y => (x =? y)%Z;
-                               op_zsze__ := fun x y => negb (x =? y)%Z;
-                               }.
+Instance Eq_Int___ : Eq_ Int := fun _ k => k {|
+                               op_zeze____ := fun x y => (x =? y)%Z;
+                               op_zsze____ := fun x y => negb (x =? y)%Z;
+                               |}.
 
 Module Int_DecidableType___ <: DecidableType.DecidableType :=
   DecidableTypeEx.Z_as_DT.
@@ -154,10 +160,10 @@ Instance Ord_Int___ : !Ord Int := {
 Module Int_OrderedType___ <: OrderedType.OrderedType :=
   OrderedTypeEx.Z_as_OT.
 
-Instance Eq_Integer___ : Eq_ Integer := {
-                               op_zeze__ := fun x y => (x =? y)%Z;
-                               op_zsze__ := fun x y => negb (x =? y)%Z;
-                             }.
+Instance Eq_Integer___ : Eq_ Integer := fun _ k => k {|
+                               op_zeze____ := fun x y => (x =? y)%Z;
+                               op_zsze____ := fun x y => negb (x =? y)%Z;
+                             |}.
 
 Module Integer_DecidableType___ <: DecidableType.DecidableType :=
   DecidableTypeEx.Z_as_DT.
@@ -175,10 +181,10 @@ Instance Ord_Integer___ : !Ord Integer := {
 Module Integer_OrderedType___ <: OrderedType.OrderedType :=
   OrderedTypeEx.Z_as_OT.
 
-Instance Eq_Word___ : Eq_ Word := {
-                               op_zeze__ := fun x y => (x =? y)%N;
-                               op_zsze__ := fun x y => negb (x =? y)%N;
-                             }.
+Instance Eq_Word___ : Eq_ Word := fun _ k => k {|
+                               op_zeze____ := fun x y => (x =? y)%N;
+                               op_zsze____ := fun x y => negb (x =? y)%N;
+                             |}.
 
 Module Word_DecidableType___ <: DecidableType.DecidableType :=
   DecidableTypeEx.N_as_DT.
@@ -196,10 +202,10 @@ Instance Ord_Word___ : !Ord Word := {
 Module Word_OrderedType___ <: OrderedType.OrderedType :=
   OrderedTypeEx.N_as_OT.
 
-Instance Eq_Char___ : Eq_ Char := {
-                               op_zeze__ := fun x y => (x =? y)%N;
-                               op_zsze__ := fun x y => negb (x =? y)%N;
-                             }.
+Instance Eq_Char___ : Eq_ Char := fun _ k => k {|
+                               op_zeze____ := fun x y => (x =? y)%N;
+                               op_zsze____ := fun x y => negb (x =? y)%N;
+                             |}.
 
 Module Char_DecidableType___ <: DecidableType.DecidableType :=
   DecidableTypeEx.N_as_DT.
@@ -261,10 +267,10 @@ Ltac dec_compare_with_Ord lt lt_gt_rev eq_iff_compare_eq :=
                   end)
              end) Logic.eq_refl).
 
-Instance Eq_bool___ : Eq_ bool := {
-                               op_zeze__ := eqb;
-                               op_zsze__ := fun x y => negb (eqb x y);
-                             }.
+Instance Eq_bool___ : Eq_ bool := fun _ k => k {|
+                               op_zeze____ := eqb;
+                               op_zsze____ := fun x y => negb (eqb x y);
+                             |}.
 
 Module bool_Typ <: Equalities.Typ.
   Definition t := bool.
@@ -330,10 +336,10 @@ Module bool_OrderedType___ <: OrderedType.OrderedType.
   Defined.
 End bool_OrderedType___.
 
-Instance Eq_unit___ : Eq_ unit := {
-                               op_zeze__ := fun x y => true;
-                               op_zsze__ := fun x y => false;
-                             }.
+Instance Eq_unit___ : Eq_ unit := fun _ k => k {|
+                               op_zeze____ := fun x y => true;
+                               op_zsze____ := fun x y => false;
+                             |}.
 
 Module unit_Typ <: Equalities.Typ.
   Definition t := unit.
@@ -394,11 +400,11 @@ Definition eq_comparison (x : comparison) (y: comparison) :=
   | _ , _  => false
 end.
 
-Instance Eq_comparison___ : Eq_ comparison :=
-{
-  op_zeze__ := eq_comparison;
-  op_zsze__ := fun x y => negb (eq_comparison x y);
-}.
+Instance Eq_comparison___ : Eq_ comparison := fun _ k => k
+{|
+  op_zeze____ := eq_comparison;
+  op_zsze____ := fun x y => negb (eq_comparison x y);
+|}.
 
 Module comparison_Typ.
   Definition t := comparison.
@@ -493,29 +499,29 @@ Fixpoint compare_list {a} `{Ord a} (xs :  list a) (ys : list a) : comparison :=
       end
     end.
 
-Instance Eq_list {a} `{Eq_ a} : Eq_ (list a) :=
-  { op_zeze__ := eqlist;
-    op_zsze__ := fun x y => negb (eqlist x y)
-  }.
+Instance Eq_list {a} `{Eq_ a} : Eq_ (list a) := fun _ k => k
+  {| op_zeze____ := eqlist;
+     op_zsze____ := fun x y => negb (eqlist x y)
+  |}.
 
 Instance Ord_list {a} `{Ord a}: !Ord (list a) :=
   ord_default compare_list.
 
 
-Instance Eq_option {a} `{Eq_ a} : Eq_ (option a) := {
-   op_zeze__ := fun x y =>
+Instance Eq_option {a} `{Eq_ a} : Eq_ (option a) := fun _ k => k {|
+   op_zeze____ := fun x y =>
                   match x,y with
                   | Some x0, Some y0 => x0 == y0
                   | None, None => true
                   | _,_ => false
                   end ;
-   op_zsze__ := fun x y =>
+   op_zsze____ := fun x y =>
                   match x,y with
                   | Some x0, Some y0 => x0 /= y0
                   | None, None => false
                   | _,_ => true
                   end
-}.
+|}.
 
 Definition compare_option {a} `{Ord a} (xs : option a) (ys : option a) : comparison :=
   match xs, ys with

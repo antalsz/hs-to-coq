@@ -10,7 +10,7 @@ Set Bullet Behavior "Strict Subproofs".
 
 Instance EqLaws_Either {a b} `{EqLaws a} `{EqLaws b} : EqLaws (sum a b).
 Proof.
-  split.
+  split; unfold op_zeze__, op_zsze__, instance_GHC_Base_Eq_sum,  op_zeze____, op_zsze____.
   - case=> ? /=; apply Eq_refl.
   - do 2 case=> ? //=; apply Eq_sym.
   - do 3 case=> ? //=; apply Eq_trans.
@@ -18,8 +18,8 @@ Proof.
 Qed.
 
 Instance EqExact_Either {a b} `{EqExact a} `{EqExact b} : EqExact (sum a b).
-Proof.
-  split=> - [xl|xr] [yl|yr] //=; try (by constructor);
+Proof. 
+  split ; unfold op_zeze__, op_zsze__, instance_GHC_Base_Eq_sum,  op_zeze____, op_zsze____=> - [xl|xr] [yl|yr] //=; try (by constructor);
     case E: (_ == _); constructor; move/Eq_eq in E;
     by [rewrite E | contradict E; case: E].
 Qed.

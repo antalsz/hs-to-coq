@@ -22,6 +22,8 @@ skip leftApp
 skip instance_forall___ArrowApply_a____ArrowPlus_a___GHC_Base_MonadPlus__ArrowMonad_a_
 skip instance_forall___ArrowPlus_a___GHC_Base_Alternative__ArrowMonad_a_
 
+# hs-to-coq fails to guess the right number of implicit parameters to the method implementations
+skip instance_forall___Arrow_a___GHC_Base_Functor__ArrowMonad_a_
 
 ## nothing supported?
 skip instance_forall___GHC_Base_Monad_m___Control_Category_Category__Kleisli_m_

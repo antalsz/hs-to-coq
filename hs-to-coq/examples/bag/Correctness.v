@@ -23,7 +23,10 @@ Set Bullet Behavior "Strict Subproofs".
 Lemma bagToList_ListBag {A} (xs : list A) :
   bagToList (Mk_ListBag xs) = xs.
 Proof.
-  by case: xs => * //=; rewrite /bagToList /= hs_coq_foldr_list' fold_right_cons_nil.
+  by case: xs => * //=;
+  rewrite /bagToList /= 
+    /Foldable.foldr /Foldable.instance_Foldable_list /Foldable.foldr__ 
+    hs_coq_foldr_list' fold_right_cons_nil.
 Qed.
 
 Theorem foldrBag_ok {A R} (f : A -> R -> R) (z : R) (b : Bag A) :
@@ -34,7 +37,9 @@ Proof.
     rewrite (IHr _ cons []) fold_right_cons_nil.
     rewrite !IHl IHr.
     by rewrite -fold_right_app fold_right_cons.
-  - by rewrite bagToList_ListBag hs_coq_foldr_list'.
+  - by rewrite bagToList_ListBag
+        /Foldable.foldr /Foldable.instance_Foldable_list /Foldable.foldr__ 
+        hs_coq_foldr_list'.
 Qed.
 
 Lemma bagToList_TwoBags {A} (l r : Bag A) :
@@ -110,7 +115,9 @@ Theorem lengthBag_ok {A} (b : Bag A) :
 Proof.
   elim: b => [| x | l IHl r IHr | xs] //=.
   - by rewrite bagToList_TwoBags Zlength_app IHl IHr.
-  - by rewrite hs_coq_length_list' bagToList_ListBag.
+  - by rewrite 
+      /Foldable.length /Foldable.instance_Foldable_list /Foldable.length__ 
+      hs_coq_length_list' bagToList_ListBag.
 Qed.
 
 Theorem isEmptyBag_ok {A} (b : Bag A) :
@@ -129,7 +136,9 @@ Theorem foldlBag_ok {A R} (f : R -> A -> R) (z : R) (b : Bag A) :
 Proof.
   elim: b z => [|x | l IHl r IHr | xs] //= z.
   - by rewrite bagToList_TwoBags fold_left_app IHl IHr.
-  - by rewrite bagToList_ListBag hs_coq_foldl_list'.
+  - by rewrite bagToList_ListBag
+       /Foldable.foldl /Foldable.instance_Foldable_list /Foldable.foldl__ 
+       hs_coq_foldl_list'.
 Qed.
 
 (* TODO foldrBagM foldlBagM *)
@@ -142,7 +151,9 @@ Proof.
   elim: b z => [| x | l IHl r IHr | xs] //= z; rewrite /bagToList /=.
   - rewrite !foldrBag_ok fold_right_cons_nil fold_right_cons.
     by rewrite IHl IHr  -fold_right_app map_app.
-  - by rewrite !hs_coq_foldr_list' fold_right_cons_nil fold_right_map.
+  - by rewrite
+       /Foldable.foldr /Foldable.instance_Foldable_list /Foldable.foldr__ 
+      !hs_coq_foldr_list' fold_right_cons_nil fold_right_map.
 Qed.
 
 (* TODO flatMapBagM flatMapBagPairM *)

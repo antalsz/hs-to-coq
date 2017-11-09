@@ -182,7 +182,9 @@ Qed.
 
 Instance EqExact_Int : EqExact Int.
 Proof.
-  split=> * /=; case H: (_ =? _)%Z; constructor.
+  constructor. intros. 
+  unfold op_zeze__, Eq_Integer___, op_zeze____.
+  case H: (_ =? _)%Z; constructor.
   - by apply Z.eqb_eq.
   - by rewrite -Z.eqb_eq H.
 Qed.
@@ -201,7 +203,9 @@ Qed.
 
 Instance EqExact_Word : EqExact Word.
 Proof.
-  split=> * /=; case H: (_ =? _)%N; constructor.
+  constructor. intros. 
+  unfold op_zeze__, Eq_Word___, op_zeze____, Eq_Char___.
+  case H: (_ =? _)%N; constructor.
   - by apply N.eqb_eq.
   - by rewrite -N.eqb_eq H.
 Qed.
@@ -235,7 +239,8 @@ Proof. by split; repeat case; constructor. Qed.
 
 Instance EqLaws_list {a} `{EqLaws a} : EqLaws (list a).
 Proof.
-  split.
+  split;
+  unfold op_zeze__, op_zsze__, Eq_list, op_zeze____, op_zsze____.
   - by elim=> [|x xs IH] //=; rewrite Eq_refl.
   - elim=> [|x xs /= IH] //=; first by case.
     by case=> [|y ys] //=; rewrite Eq_sym IH.
@@ -249,7 +254,8 @@ Qed.
 
 Instance EqExact_list {a} `{EqExact a} : EqExact (list a).
 Proof.
-  split; elim=> [|x xs /= IH]; first by case; constructor.
+  split; unfold op_zeze__, op_zsze__, Eq_list, op_zeze____, op_zsze____;
+  elim=> [|x xs /= IH]; first by case; constructor.
   case=> [|y ys] //=; first by constructor.
   case: (IH ys) => [-> | NEQ].
   - case E: (x == y); constructor; move/Eq_eq in E.
@@ -260,7 +266,7 @@ Qed.
 
 Instance EqLaws_option {a} `{EqLaws a} : EqLaws (option a).
 Proof.
-  split.
+  split; unfold op_zeze__, op_zsze__, Eq_option, op_zeze____, op_zsze____.
   - case=> [?|] //=; apply Eq_refl.
   - repeat case=> [?|] //=; apply Eq_sym.
   - repeat case=> [?|] //=; apply Eq_trans.
@@ -269,7 +275,8 @@ Qed.
 
 Instance EqExact_option {a} `{EqExact a} : EqExact (option a).
 Proof.
-  split=> - [x|] [y|] //=; try by constructor.
+  split; unfold op_zeze__, op_zsze__, Eq_option, op_zeze____, op_zsze____
+     => - [x|] [y|] //=; try by constructor.
   case E: (x == y); constructor; move/Eq_eq in E.
   + by rewrite E.
   + by contradict E; case: E.
@@ -358,11 +365,11 @@ Proof.
     Base.instance_forall___Monoid_a___Monoid__option_a__mempty.
   - destruct x; auto.
   - destruct x; auto.
-  - intros x y z. destruct x; destruct y; destruct z; auto.
+  - intros x y z.
+    simpl; repeat fold mappend.
+    destruct x; destruct y; destruct z; auto.
     f_equal.
-    destruct H. destruct H0.
-    unfold Base.mappend, Base.mempty in *.
-    rewrite monoid_assoc0. auto.
+    apply monoid_assoc.
   - induction x; simpl. auto.
     destruct a0. auto.
     auto.
@@ -370,20 +377,18 @@ Qed.
 
 Instance instance_MonoidLaws_list {a} : MonoidLaws (list a).
 Proof.
-  split;
-    repeat unfold mappend, mempty, mconcat,
-    instance_Monoid_list_a.
+  split.
   - apply app_nil_l.
   - apply app_nil_r.
   - apply app_assoc.
   - induction x.
-    simpl. auto.
-    simpl. simpl in IHx.
-    rewrite IHx.
-    rewrite flat_map_cons_id.
-    reflexivity.
+    * simpl. auto.
+    * simpl.
+      unfold mconcat, instance_Monoid__list_a_ in *; simpl in *.
+      rewrite IHx.
+      rewrite flat_map_cons_id.
+      reflexivity.
 Qed.
-
 
 
 (* ------------------------- Functor --------------------------- *)
@@ -426,10 +431,12 @@ Qed.
 Instance instance_ApplicativeLaws_list : ApplicativeLaws list.
 Proof.
   split;
-    repeat (unfold pure, instance_Applicative_list,
-    Base.instance_Applicative_list_pure,
-    Base.instance_Applicative_list_op_zlztzg__,
-    Base.instance_Functor_list_fmap; simpl).
+    repeat (unfold
+      op_zlztzg__,
+      pure, instance_Applicative_list,
+      Base.instance_Applicative_list_pure,
+      Base.instance_Applicative_list_op_zlztzg__,
+      Base.instance_Functor_list_fmap; simpl).
   - intros. induction v; simpl; auto.
     simpl in IHv. rewrite IHv. auto.
   - intros.
@@ -474,7 +481,7 @@ Qed.
 Instance instance_MonadLaws_list : MonadLaws list.
 Proof.
   split; intros;
-    repeat (unfold pure,
+    repeat (unfold pure, op_zgzgze__, op_zlztzg__, ap,
             instance_Monad_list,
             Base.instance_Monad_list_op_zgzgze__,
             Base.instance_Monad_list_return_,
@@ -482,7 +489,8 @@ Proof.
             Base.instance_Applicative_list_pure,
             Base.instance_Applicative_list_op_zlztzg__,
             Base.instance_Functor_list_fmap; simpl).
-  - rewrite app_nil_r. rewrite flat_map_cons_id. auto.
+  - simpl.
+    rewrite app_nil_r. rewrite flat_map_cons_id. auto.
   - rewrite flat_map_cons_id. auto.
   - induction m. simpl. auto.
     simpl. rewrite IHm.

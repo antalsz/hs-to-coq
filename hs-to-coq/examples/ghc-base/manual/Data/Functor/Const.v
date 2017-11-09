@@ -59,16 +59,17 @@ Local Definition instance_GHC_Base_Functor__Const_m__fmap : forall {m}{a} {b},
         | _ , (Mk_Const v) => Mk_Const v
       end.
 
-Local Definition instance_GHC_Base_Functor__Const_m__op_zlzd__ : forall {m}{a}
-                                                                           {b},
+Local Definition instance_GHC_Base_Functor__Const_m__op_zlzd__ : forall {m}{b}
+                                                                           {a},
                                                                       b -> (Const m) a -> (Const m) b :=
   fun {m}{a} {b} =>
     fun x => instance_GHC_Base_Functor__Const_m__fmap (GHC.Base.const x).
 
-Instance instance_GHC_Base_Functor__Const_m_ : !GHC.Base.Functor (Const
-                                                                       m) := {
-  fmap := fun {a} {b} => instance_GHC_Base_Functor__Const_m__fmap ;
-  op_zlzd__ := fun {a} {b} => instance_GHC_Base_Functor__Const_m__op_zlzd__ }.
+Instance instance_GHC_Base_Functor__Const_m_ {m} :
+   GHC.Base.Functor (Const m) := fun _ k => k {|
+  GHC.Base.fmap__ := @instance_GHC_Base_Functor__Const_m__fmap _ ;
+  GHC.Base.op_zlzd____ := @instance_GHC_Base_Functor__Const_m__op_zlzd__ _
+  |}.
 
 
 
@@ -99,12 +100,8 @@ Local Definition instance_forall___GHC_Base_Monoid_m___GHC_Base_Applicative__Con
       (GHC.Base.fmap GHC.Base.const x) y.
 
 Instance instance_forall___GHC_Base_Monoid_m___GHC_Base_Applicative__Const_m_
-  `{GHC.Base.Monoid m} : !GHC.Base.Applicative (Const m) := {
-(*  op_zlzt__ := fun {a} {b} =>
-    instance_forall___GHC_Base_Monoid_m___GHC_Base_Applicative__Const_m__op_zlzt__ ; *)
-  op_zlztzg__ := fun {a} {b} =>
-    instance_forall___GHC_Base_Monoid_m___GHC_Base_Applicative__Const_m__op_zlztzg__ ;
-  op_ztzg__ := fun {a} {b} =>
-    instance_forall___GHC_Base_Monoid_m___GHC_Base_Applicative__Const_m__op_ztzg__ ;
-  pure := fun {a} =>
-    instance_forall___GHC_Base_Monoid_m___GHC_Base_Applicative__Const_m__pure }.
+  `{GHC.Base.Monoid m} : GHC.Base.Applicative (Const m) := fun _ k => k {|
+  GHC.Base.op_zlztzg____ := @instance_forall___GHC_Base_Monoid_m___GHC_Base_Applicative__Const_m__op_zlztzg__ _ _ ;
+  GHC.Base.op_ztzg____ := @instance_forall___GHC_Base_Monoid_m___GHC_Base_Applicative__Const_m__op_ztzg__ _ _ ;
+  GHC.Base.pure__ := @instance_forall___GHC_Base_Monoid_m___GHC_Base_Applicative__Const_m__pure _ _
+    |}.

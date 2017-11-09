@@ -657,6 +657,9 @@ Definition compare_comparison  (x : comparison) (y: comparison) :=
   | Gt, Gt => Eq
 end.
 
+Definition eq_default {a} (eq : a -> a -> bool) : Eq_ a :=
+  fun _ k => k {|op_zeze____ := eq; op_zsze____ := fun x y => negb (eq x y) |}.
+
 Definition ord_default {a} (comp : a -> a -> comparison) `{Eq_ a} : Ord a :=
   fun _ k => k (Ord__Dict_Build _
   (fun x y => (comp x y) == Lt)

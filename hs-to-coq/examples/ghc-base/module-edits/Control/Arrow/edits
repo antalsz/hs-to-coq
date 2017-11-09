@@ -1,4 +1,9 @@
 rename value ArrowMonad = Mk_ArrowMonad
+
+class kinds ArrowApply (Type -> (Type -> Type))
+class kinds ArrowZero (Type -> (Type -> Type))
+class kinds ArrowPlus (Type -> (Type -> Type))
+
 # Need to add kind annotation
 skip ArrowMonad
 rename value Kleisli = Mk_Kleisli

@@ -148,5 +148,5 @@ Instance instance_GHC_Base_Eq__Proxy_s_ {s} : GHC.Base.Eq_ (Proxy s) := fun _ k 
 
 Definition compare_Proxy {s} : Proxy s -> Proxy s -> comparison := fun _ _ => Eq.
 
-Instance instance_GHC_Prim_Ord__Proxy_s_ {s} : !GHC.Base.Ord (Proxy s) :=
+Instance instance_GHC_Prim_Ord__Proxy_s_ {s} : GHC.Base.Ord (Proxy s) :=
   Base.ord_default compare_Proxy.

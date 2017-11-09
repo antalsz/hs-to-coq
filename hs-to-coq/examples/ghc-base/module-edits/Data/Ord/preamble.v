@@ -22,7 +22,7 @@ Definition compare_Down `{Ord a} (xs : Down a) (ys : Down a) : comparison :=
   end.
 
 Instance instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Down_a_
-   `{GHC.Base.Ord a}: !GHC.Base.Ord (Down a) := ord_default compare_Down.
+   `{GHC.Base.Ord a}: GHC.Base.Ord (Down a) := ord_default compare_Down.
 
 (*
  ( Eq

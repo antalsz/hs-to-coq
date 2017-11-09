@@ -91,9 +91,10 @@ coq: lib/Makefile.coq $(VFILES)
 
 
 .SECONDEXPANSION:
-$(VFILES_GEN): lib/%.v : $$(wildcard module-edits/$$*/preamble.v) $$(wildcard module-edits/$$*/edits) edits
+$(VFILES_GEN): lib/%.v : $$(wildcard module-edits/$$*/preamble.v) $$(wildcard module-edits/$$*/midamble.v)  $$(wildcard module-edits/$$*/edits) edits
 	$(HS_TO_COQ) $(addprefix -e , $(wildcard module-edits/$*/edits)) \
 	             $(addprefix -p , $(wildcard module-edits/$*/preamble.v)) \
+	             $(addprefix --midamble , $(wildcard module-edits/$*/midamble.v)) \
 	             -e edits \
 		     -N \
 		     -i base \

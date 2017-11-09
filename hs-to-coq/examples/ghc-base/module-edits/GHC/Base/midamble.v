@@ -87,7 +87,7 @@ Axiom errorWithoutStackTrace : forall {A : Type}, String -> A.
 (*********** built in classes Eq & Ord **********************)
 
 (* Don't clash with Eq constructor for the comparison type. *)
-Record Eq___Dict a := {
+Record Eq___Dict a := Eq___Dict_Build {
   op_zeze____ : (a -> (a -> bool)) ;
   op_zsze____ : (a -> (a -> bool)) }.
 
@@ -105,14 +105,40 @@ Infix "==" := (op_zeze__) (no associativity, at level 70).
 
 Notation "'_==_'" := (op_zeze__).
 
-Class Ord a `{((Eq_ a))} := {
-  op_zl__ : (a -> (a -> bool)) ;
-  op_zlze__ : (a -> (a -> bool)) ;
-  op_zg__ : (a -> (a -> bool)) ;
-  op_zgze__ : (a -> (a -> bool)) ;
-  compare : (a -> (a -> comparison)) ;
-  max : (a -> (a -> a)) ;
-  min : (a -> (a -> a)) }.
+Record Ord__Dict a := Ord__Dict_Build {
+  op_zl____ : a -> a -> bool ;
+  op_zlze____ : a -> a -> bool ;
+  op_zg____ : a -> a -> bool ;
+  op_zgze____ : a -> a -> bool ;
+  compare__ : a -> a -> comparison ;
+  max__ : a -> a -> a ;
+  min__ : a -> a -> a }.
+
+Definition Ord a `{Eq_ a} :=
+  forall r, (Ord__Dict a -> r) -> r.
+
+Existing Class Ord.
+
+Definition op_zl__ `{g : Ord a} : a -> a -> bool :=
+  g _ (op_zl____ a).
+
+Definition op_zlze__ `{g : Ord a} : a -> a -> bool :=
+  g _ (op_zlze____ a).
+
+Definition op_zg__ `{g : Ord a} : a -> a -> bool :=
+  g _ (op_zg____ a).
+
+Definition op_zgze__ `{g : Ord a} : a -> a -> bool :=
+  g _ (op_zgze____ a).
+
+Definition compare `{g : Ord a} : a -> a -> comparison :=
+  g _ (compare__ a).
+
+Definition max `{g : Ord a} : a -> a -> a :=
+  g _ (max__ a).
+
+Definition min `{g : Ord a} : a -> a -> a :=
+  g _ (min__ a).
 
 (* Don't clash with Coq's standard ordering predicates. *)
 Infix "<?" := (op_zl__) (no associativity, at level 70).
@@ -147,15 +173,15 @@ Instance Eq_Int___ : Eq_ Int := fun _ k => k {|
 Module Int_DecidableType___ <: DecidableType.DecidableType :=
   DecidableTypeEx.Z_as_DT.
 
-Instance Ord_Int___ : !Ord Int := {
-  op_zl__   := fun x y => (x <? y)%Z;
-  op_zlze__ := fun x y => (x <=? y)%Z;
-  op_zg__   := fun x y => (y <? x)%Z;
-  op_zgze__ := fun x y => (y <=? x)%Z;
-  compare   := Z.compare%Z ;
-  max       := Z.max%Z;
-  min       := Z.min%Z;
-}.
+Instance Ord_Int___ : Ord Int := fun _ k => k {|
+  op_zl____   := fun x y => (x <? y)%Z;
+  op_zlze____ := fun x y => (x <=? y)%Z;
+  op_zg____   := fun x y => (y <? x)%Z;
+  op_zgze____ := fun x y => (y <=? x)%Z;
+  compare__   := Z.compare%Z ;
+  max__       := Z.max%Z;
+  min__       := Z.min%Z;
+|}.
 
 Module Int_OrderedType___ <: OrderedType.OrderedType :=
   OrderedTypeEx.Z_as_OT.
@@ -168,15 +194,15 @@ Instance Eq_Integer___ : Eq_ Integer := fun _ k => k {|
 Module Integer_DecidableType___ <: DecidableType.DecidableType :=
   DecidableTypeEx.Z_as_DT.
 
-Instance Ord_Integer___ : !Ord Integer := {
-  op_zl__   := fun x y => (x <? y)%Z;
-  op_zlze__ := fun x y => (x <=? y)%Z;
-  op_zg__   := fun x y => (y <? x)%Z;
-  op_zgze__ := fun x y => (y <=? x)%Z;
-  compare   := Z.compare%Z ;
-  max       := Z.max%Z;
-  min       := Z.min%Z;
-}.
+Instance Ord_Integer___ : Ord Integer := fun _ k => k {|
+  op_zl____   := fun x y => (x <? y)%Z;
+  op_zlze____ := fun x y => (x <=? y)%Z;
+  op_zg____   := fun x y => (y <? x)%Z;
+  op_zgze____ := fun x y => (y <=? x)%Z;
+  compare__   := Z.compare%Z ;
+  max__       := Z.max%Z;
+  min__       := Z.min%Z;
+|}.
 
 Module Integer_OrderedType___ <: OrderedType.OrderedType :=
   OrderedTypeEx.Z_as_OT.
@@ -189,15 +215,15 @@ Instance Eq_Word___ : Eq_ Word := fun _ k => k {|
 Module Word_DecidableType___ <: DecidableType.DecidableType :=
   DecidableTypeEx.N_as_DT.
 
-Instance Ord_Word___ : !Ord Word := {
-  op_zl__   := fun x y => (x <? y)%N;
-  op_zlze__ := fun x y => (x <=? y)%N;
-  op_zg__   := fun x y => (y <? x)%N;
-  op_zgze__ := fun x y => (y <=? x)%N;
-  compare   := N.compare%N ;
-  max       := N.max%N;
-  min       := N.min%N;
-}.
+Instance Ord_Word___ : Ord Word := fun _ k => k {|
+  op_zl____   := fun x y => (x <? y)%N;
+  op_zlze____ := fun x y => (x <=? y)%N;
+  op_zg____   := fun x y => (y <? x)%N;
+  op_zgze____ := fun x y => (y <=? x)%N;
+  compare__   := N.compare%N ;
+  max__       := N.max%N;
+  min__       := N.min%N;
+|}.
 
 Module Word_OrderedType___ <: OrderedType.OrderedType :=
   OrderedTypeEx.N_as_OT.
@@ -210,15 +236,15 @@ Instance Eq_Char___ : Eq_ Char := fun _ k => k {|
 Module Char_DecidableType___ <: DecidableType.DecidableType :=
   DecidableTypeEx.N_as_DT.
 
-Instance Ord_Char___ : !Ord Char := {
-  op_zl__   := fun x y => (x <? y)%N;
-  op_zlze__ := fun x y => (x <=? y)%N;
-  op_zg__   := fun x y => (y <? x)%N;
-  op_zgze__ := fun x y => (y <=? x)%N;
-  compare   := N.compare%N ;
-  max       := N.max%N;
-  min       := N.min%N;
-}.
+Instance Ord_Char___ : Ord Char := fun _ k => k {|
+  op_zl____   := fun x y => (x <? y)%N;
+  op_zlze____ := fun x y => (x <=? y)%N;
+  op_zg____   := fun x y => (y <? x)%N;
+  op_zgze____ := fun x y => (y <=? x)%N;
+  compare__   := N.compare%N ;
+  max__       := N.max%N;
+  min__       := N.min%N;
+|}.
 
 Module Char_OrderedType___ <: OrderedType.OrderedType :=
   OrderedTypeEx.N_as_OT.
@@ -292,15 +318,15 @@ Definition compare_bool (b1:bool)(b2:bool) : comparison :=
   | false , true => Lt
   end.
 
-Instance Ord_bool___ : !Ord bool := {
-  op_zl__   := fun x y => andb (negb x) y;
-  op_zlze__ := fun x y => orb (negb x) y;
-  op_zg__   := fun x y => orb (negb y) x;
-  op_zgze__ := fun x y => andb (negb y) x;
-  compare   := compare_bool;
-  max       := orb;
-  min       := andb
-}.
+Instance Ord_bool___ : Ord bool := fun _ k => k {|
+  op_zl____   := fun x y => andb (negb x) y;
+  op_zlze____ := fun x y => orb (negb x) y;
+  op_zg____   := fun x y => orb (negb y) x;
+  op_zgze____ := fun x y => andb (negb y) x;
+  compare__   := compare_bool;
+  max__       := orb;
+  min__       := andb
+|}.
 
 (** This is just a heuristic tactic. No guarantee that it will work
     for an arbitrary non-recursive type. *)
@@ -357,15 +383,15 @@ Module unit_DecidableType___ <: DecidableType.DecidableType.
   Defined.
 End unit_DecidableType___.
 
-Instance Ord_unit___ : !Ord unit := {
-  op_zl__   := fun x y => false;
-  op_zlze__ := fun x y => true;
-  op_zg__   := fun x y => false;
-  op_zgze__ := fun x y => true;
-  compare   := fun x y => Eq ;
-  max       := fun x y => tt;
-  min       := fun x y => tt;
-}.
+Instance Ord_unit___ : Ord unit := fun _ k => k {|
+  op_zl____   := fun x y => false;
+  op_zlze____ := fun x y => true;
+  op_zg____   := fun x y => false;
+  op_zgze____ := fun x y => true;
+  compare__   := fun x y => Eq ;
+  max__       := fun x y => tt;
+  min__       := fun x y => tt;
+|}.
 
 Module unit_OrderedType___ <: OrderedType.OrderedType.
   Include unit_DecidableType___.
@@ -433,8 +459,8 @@ Definition compare_comparison  (x : comparison) (y: comparison) :=
   | Gt, Gt => Eq
 end.
 
-Definition ord_default {a} (comp : a -> a -> comparison) `{Eq_ a} :=
-  Build_Ord _ _
+Definition ord_default {a} (comp : a -> a -> comparison) `{Eq_ a} : Ord a :=
+  fun _ k => k (Ord__Dict_Build _
   (fun x y => (comp x y) == Lt)
   ( fun x y => negb ((comp x y) == Lt))
   (fun x y => (comp y x) == Lt)
@@ -448,9 +474,9 @@ Definition ord_default {a} (comp : a -> a -> comparison) `{Eq_ a} :=
   (fun x y =>   match comp x y with
              | Gt => y
              | _  => x
-             end).
+             end)).
 
-Instance Ord_comparison___ : !Ord comparison := ord_default compare_comparison.
+Instance Ord_comparison___ : Ord comparison := ord_default compare_comparison.
 
 Module comparison_OrderedType___ <: OrderedType.OrderedType.
   Include comparison_DecidableType___.
@@ -504,7 +530,7 @@ Instance Eq_list {a} `{Eq_ a} : Eq_ (list a) := fun _ k => k
      op_zsze____ := fun x y => negb (eqlist x y)
   |}.
 
-Instance Ord_list {a} `{Ord a}: !Ord (list a) :=
+Instance Ord_list {a} `{Ord a}: Ord (list a) :=
   ord_default compare_list.
 
 
@@ -531,7 +557,7 @@ Definition compare_option {a} `{Ord a} (xs : option a) (ys : option a) : compari
   | Some x , Some y => compare x y
   end.
 
-Instance Ord_option {a} `{Ord a} : !Ord (option a) := ord_default compare_option.
+Instance Ord_option {a} `{Ord a} : Ord (option a) := ord_default compare_option.
 
 
 (* ********************************************************* *)

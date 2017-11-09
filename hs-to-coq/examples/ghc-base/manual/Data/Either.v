@@ -106,7 +106,7 @@ Definition sum_comparison {a}{b} `{Base.Ord a} `{Base.Ord b} (x:a + b) (y: a + b
                 end.
 
 
-Instance instance_GHC_Base_Ord_sum {a}{b} `{Base.Ord a} `{Base.Ord b} : !Base.Ord (a + b) :=
+Instance instance_GHC_Base_Ord_sum {a}{b} `{Base.Ord a} `{Base.Ord b} : Base.Ord (a + b) :=
   Base.ord_default sum_comparison.
 
 

@@ -1,1 +1,2 @@
 skip instance_MonadFail_GHC_Types_IO
+class kinds MonadFail (Type -> Type)

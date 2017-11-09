@@ -323,13 +323,26 @@ Require Coq.Structures.DecidableTypeEx.
 Require Coq.Structures.OrderedType.
 Require Coq.Structures.OrderedTypeEx.
 
+Module Type HsToCoqDecidableType.
+  Include DecidableType.DecidableType.
+  Declare Instance eq_t: Eq_ t.
+End HsToCoqDecidableType.
+
+Module Type HsToCoqOrderedType.
+  Include OrderedType.OrderedType.
+  Declare Instance eq_t: Eq_ t.
+  Declare Instance ord_t: Ord t.
+End HsToCoqOrderedType.
+
 Instance Eq_Int___ : Eq_ Int := fun _ k => k {|
                                op_zeze____ := fun x y => (x =? y)%Z;
                                op_zsze____ := fun x y => negb (x =? y)%Z;
                                |}.
 
-Module Int_DecidableType___ <: DecidableType.DecidableType :=
-  DecidableTypeEx.Z_as_DT.
+Module Int_DecidableType___ <: HsToCoqDecidableType.
+  Include DecidableTypeEx.Z_as_DT.
+  Definition eq_t := Eq_Int___.
+End Int_DecidableType___.
 
 Instance Ord_Int___ : Ord Int := fun _ k => k {|
   op_zl____   := fun x y => (x <? y)%Z;
@@ -341,16 +354,22 @@ Instance Ord_Int___ : Ord Int := fun _ k => k {|
   min__       := Z.min%Z;
 |}.
 
-Module Int_OrderedType___ <: OrderedType.OrderedType :=
-  OrderedTypeEx.Z_as_OT.
+Module Int_OrderedType___ <: HsToCoqOrderedType.
+  Include Int_DecidableType___.
+  Definition ord_t := Ord_Int___.
+End Int_OrderedType___.
 
 Instance Eq_Integer___ : Eq_ Integer := fun _ k => k {|
                                op_zeze____ := fun x y => (x =? y)%Z;
                                op_zsze____ := fun x y => negb (x =? y)%Z;
                              |}.
 
-Module Integer_DecidableType___ <: DecidableType.DecidableType :=
-  DecidableTypeEx.Z_as_DT.
+(** This is the same as Int_DecidableType___, but we probably don't
+    want to reuse that? *)
+Module Integer_DecidableType___ <: HsToCoqDecidableType.
+  Include DecidableTypeEx.Z_as_DT.
+  Definition eq_t := Eq_Integer___.
+End Integer_DecidableType___.
 
 Instance Ord_Integer___ : Ord Integer := fun _ k => k {|
   op_zl____   := fun x y => (x <? y)%Z;
@@ -362,16 +381,20 @@ Instance Ord_Integer___ : Ord Integer := fun _ k => k {|
   min__       := Z.min%Z;
 |}.
 
-Module Integer_OrderedType___ <: OrderedType.OrderedType :=
-  OrderedTypeEx.Z_as_OT.
+Module Integer_OrderedType___ <: HsToCoqOrderedType.
+  Include Integer_DecidableType___.
+  Definition ord_t := Ord_Integer___.
+End Integer_OrderedType___.
 
 Instance Eq_Word___ : Eq_ Word := fun _ k => k {|
                                op_zeze____ := fun x y => (x =? y)%N;
                                op_zsze____ := fun x y => negb (x =? y)%N;
                              |}.
 
-Module Word_DecidableType___ <: DecidableType.DecidableType :=
-  DecidableTypeEx.N_as_DT.
+Module Word_DecidableType___ <: HsToCoqDecidableType.
+  Include DecidableTypeEx.N_as_DT.
+  Definition eq_t := Eq_Word___.
+End Word_DecidableType___.
 
 Instance Ord_Word___ : Ord Word := fun _ k => k {|
   op_zl____   := fun x y => (x <? y)%N;
@@ -383,16 +406,20 @@ Instance Ord_Word___ : Ord Word := fun _ k => k {|
   min__       := N.min%N;
 |}.
 
-Module Word_OrderedType___ <: OrderedType.OrderedType :=
-  OrderedTypeEx.N_as_OT.
+Module Word_OrderedType___ <: HsToCoqOrderedType.
+  Include Word_DecidableType___.
+  Definition ord_t := Ord_Word___.
+End Word_OrderedType___.
 
 Instance Eq_Char___ : Eq_ Char := fun _ k => k {|
                                op_zeze____ := fun x y => (x =? y)%N;
                                op_zsze____ := fun x y => negb (x =? y)%N;
                              |}.
 
-Module Char_DecidableType___ <: DecidableType.DecidableType :=
-  DecidableTypeEx.N_as_DT.
+Module Char_DecidableType___ <: HsToCoqDecidableType.
+  Include DecidableTypeEx.N_as_DT.
+  Definition eq_t := Eq_Char___.
+End Char_DecidableType___.
 
 Instance Ord_Char___ : Ord Char := fun _ k => k {|
   op_zl____   := fun x y => (x <? y)%N;
@@ -404,8 +431,21 @@ Instance Ord_Char___ : Ord Char := fun _ k => k {|
   min__       := N.min%N;
 |}.
 
-Module Char_OrderedType___ <: OrderedType.OrderedType :=
-  OrderedTypeEx.N_as_OT.
+Module Char_OrderedType___ <: HsToCoqOrderedType.
+  Include Char_DecidableType___.
+  Definition ord_t := Ord_Char___.
+End Char_OrderedType___.
+
+
+(** This is just a heuristic tactic. No guarantee that it will work
+    for an arbitrary non-recursive type. *)
+Ltac prove_non_rec_type :=
+  repeat (match goal with
+          | [ |- forall x, _ ] => destruct x
+          | [ |- _ <-> _ ] => split
+          | [ |- _ -> _ ] => inversion 1
+          | [ |- ~ _ ] => inversion 1
+          end; auto).
 
 (** We can, of course, just use tactics like [repeat decide equality]
     to prove decidablity, but this one utilizes [op_zeze__] function
@@ -460,12 +500,14 @@ Module bool_Typ <: Equalities.Typ.
   Definition t := bool.
 End bool_Typ.
 
-Module bool_DecidableType___ <: DecidableType.DecidableType.
+Module bool_DecidableType___ <: HsToCoqDecidableType.
   Include bool_Typ <+ Equalities.HasUsualEq <+ Equalities.UsualIsEqOrig.
 
   Definition eq_dec : forall x y : t, { eq x y } + { ~ eq x y }.
     dec_eq_with_Eq eqb_true_iff.
   Defined.
+
+  Definition eq_t := Eq_bool___.
 End bool_DecidableType___.
 
 Definition compare_bool (b1:bool)(b2:bool) : comparison :=
@@ -486,17 +528,7 @@ Instance Ord_bool___ : Ord bool := fun _ k => k {|
   min__       := andb
 |}.
 
-(** This is just a heuristic tactic. No guarantee that it will work
-    for an arbitrary non-recursive type. *)
-Ltac prove_non_rec_type :=
-  repeat (match goal with
-          | [ |- forall x, _ ] => destruct x
-          | [ |- _ <-> _ ] => split
-          | [ |- _ -> _ ] => inversion 1
-          | [ |- ~ _ ] => inversion 1
-          end; auto).
-
-Module bool_OrderedType___ <: OrderedType.OrderedType.
+Module bool_OrderedType___ <: HsToCoqOrderedType.
   Include bool_DecidableType___.
 
   Hint Unfold eq.
@@ -518,6 +550,8 @@ Module bool_OrderedType___ <: OrderedType.OrderedType.
   Definition compare : forall x y : t, OrderedType.Compare lt eq x y.
     dec_compare_with_Ord lt lt_gt_rev eq_iff_compare_eq.
   Defined.
+
+  Definition ord_t := Ord_bool___.
 End bool_OrderedType___.
 
 Instance Eq_unit___ : Eq_ unit := fun _ k => k {|
@@ -529,7 +563,7 @@ Module unit_Typ <: Equalities.Typ.
   Definition t := unit.
 End unit_Typ.
 
-Module unit_DecidableType___ <: DecidableType.DecidableType.
+Module unit_DecidableType___ <: HsToCoqDecidableType.
   Include unit_Typ <+ Equalities.HasUsualEq <+ Equalities.UsualIsEqOrig.
 
   Lemma eq_iff : forall x y,
@@ -539,6 +573,8 @@ Module unit_DecidableType___ <: DecidableType.DecidableType.
   Definition eq_dec : forall x y : t, { eq x y } + { ~ eq x y }.
     dec_eq_with_Eq eq_iff.
   Defined.
+
+  Definition eq_t := Eq_unit___.
 End unit_DecidableType___.
 
 Instance Ord_unit___ : Ord unit := fun _ k => k {|
@@ -551,7 +587,7 @@ Instance Ord_unit___ : Ord unit := fun _ k => k {|
   min__       := fun x y => tt;
 |}.
 
-Module unit_OrderedType___ <: OrderedType.OrderedType.
+Module unit_OrderedType___ <: HsToCoqOrderedType.
   Include unit_DecidableType___.
 
   Hint Unfold eq.
@@ -574,6 +610,8 @@ Module unit_OrderedType___ <: OrderedType.OrderedType.
   Definition compare : forall x y : t, OrderedType.Compare lt eq x y.
     dec_compare_with_Ord lt lt_gt_rev eq_iff_compare_eq.
   Defined.
+
+  Definition ord_t := Ord_unit___.
 End unit_OrderedType___.
 
 Definition eq_comparison (x : comparison) (y: comparison) :=
@@ -594,7 +632,7 @@ Module comparison_Typ.
   Definition t := comparison.
 End comparison_Typ.
 
-Module comparison_DecidableType___ <: DecidableType.DecidableType.
+Module comparison_DecidableType___ <: HsToCoqDecidableType.
   Include comparison_Typ <+ Equalities.HasUsualEq <+ Equalities.UsualIsEqOrig.
 
   Lemma eq_iff : forall x y : t,
@@ -604,6 +642,8 @@ Module comparison_DecidableType___ <: DecidableType.DecidableType.
   Definition eq_dec : forall x y : t, { eq x y } + { ~ eq x y }.
     dec_eq_with_Eq eq_iff.
   Defined.
+
+  Definition eq_t := Eq_comparison___.
 End comparison_DecidableType___.
 
 Definition compare_comparison  (x : comparison) (y: comparison) :=
@@ -636,7 +676,7 @@ Definition ord_default {a} (comp : a -> a -> comparison) `{Eq_ a} : Ord a :=
 
 Instance Ord_comparison___ : Ord comparison := ord_default compare_comparison.
 
-Module comparison_OrderedType___ <: OrderedType.OrderedType.
+Module comparison_OrderedType___ <: HsToCoqOrderedType.
   Include comparison_DecidableType___.
 
   Hint Unfold eq.
@@ -659,6 +699,8 @@ Module comparison_OrderedType___ <: OrderedType.OrderedType.
   Definition compare : forall x y : t, OrderedType.Compare lt eq x y.
     dec_compare_with_Ord lt lt_gt_rev eq_iff_compare_eq.
   Defined.
+
+  Definition ord_t := Ord_comparison___.
 End comparison_OrderedType___.
 
 (* TODO: are these available in a library somewhere? *)

@@ -472,7 +472,7 @@ Module comparison_OrderedType___ <: OrderedType.OrderedType.
 End comparison_OrderedType___.
 
 (* TODO: are these available in a library somewhere? *)
-Fixpoint eqlist {a} `{Eq_ a} : list a -> list a -> bool :=
+Definition eqlist {a} `{Eq_ a} : list a -> list a -> bool :=
 	fix eqlist xs ys :=
 	    match xs , ys with
 	    | nil , nil => true

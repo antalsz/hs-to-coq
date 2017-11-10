@@ -52,7 +52,7 @@ Proof. intros f g Hfg. apply functional_extensionality. intro x; apply sb, (Hfg 
 
 (***** Bag correctness theorems *****)
 
-Theorem mapMBag_ok {M A B} `{MonadLaws M} (f : A -> M B) (b : Bag A) :
+Theorem mapBagM_ok {M A B} `{MonadLaws M} (f : A -> M B) (b : Bag A) :
   GHC.Base.fmap bagToList (mapBagM f b) = Data.Traversable.mapM f (bagToList b).
 Proof.
   rewrite /Data.Traversable.mapM /=
@@ -140,7 +140,7 @@ Lemma monad_fmap_return {M A B} `{MonadLaws M} (f : A -> B) (x : A) :
   fmap f (return_ x) = return_ (f x) :> M B.
 Proof. by rewrite -!monad_applicative_pure applicative_fmap_pure. Qed.
 
-Theorem mapMBag_ok' {M A B} `{MonadLaws M} (f : A -> M B) (b : Bag A) :
+Theorem mapBagM_ok' {M A B} `{MonadLaws M} (f : A -> M B) (b : Bag A) :
   GHC.Base.fmap bagToList (mapBagM f b) = Data.Traversable.mapM f (bagToList b).
 Proof.
   rewrite /Data.Traversable.mapM /=
@@ -197,7 +197,7 @@ Ltac applicative_normalize_equal :=
 Ltac anf       := applicative_normalize.
 Ltac anf_equal := applicative_normalize_equal.
 
-Theorem mapMBag_ok'' {M A B} `{MonadLaws M} (f : A -> M B) (b : Bag A) :
+Theorem mapBagM_ok'' {M A B} `{MonadLaws M} (f : A -> M B) (b : Bag A) :
   GHC.Base.fmap bagToList (mapBagM f b) = Data.Traversable.mapM f (bagToList b).
 Proof.
   rewrite /Data.Traversable.mapM /=
@@ -221,7 +221,7 @@ Proof.
 Qed.
 
   (* I forget what I was trying to do with this. —ASZ *)
-Theorem mapMBag_ok''' {M A B} `{MonadLaws M} (f : A -> M B) (b : Bag A) :
+Theorem mapBagM_ok''' {M A B} `{MonadLaws M} (f : A -> M B) (b : Bag A) :
   GHC.Base.fmap bagToList (mapBagM f b) = Data.Traversable.traverse f (bagToList b).
 Proof.
   rewrite /Data.Traversable.traverse /= /Data.Traversable.instance_Traversable_list_traverse.
@@ -243,8 +243,49 @@ Abort.
 
 (* TODO mapBagM_ mapAndUnzipBagM *)
 
-(* TODO foldrBagM foldlBagM *)
+Theorem mapBagM_is_ok {M A B} `{MonadLaws M} (f : A -> M B) (b : Bag A) :
+  (mapBagM_ f b) =
+  Data.Foldable.mapM_ f (bagToList b).
+Proof.
+  rewrite /Data.Foldable.mapM_ /=
+          /Foldable.instance_Foldable_list_foldr.
+  induction b; simpl; try reflexivity.
+  - unfold bagToList.
+    rewrite foldrBag_ok.
+    rewrite bagToList_TwoBags
+            -!hs_coq_foldr_base foldr_app
+            !hs_coq_foldr_base.
+    Locate "_>>_".
+    Check @op_zgzg__.
+    Print op_zgzg__.
+    rewrite IHb1 IHb2.
+Admitted.
 
+  
+Theorem mapAndUnzipBagM_ok {M A B C} `{MonadLaws M}
+        (f : A -> M (B*C)%type) (b : Bag A) :
+  GHC.Base.fmap bagToList (GHC.Base.fmap (fst) (mapAndUnzipBagM f b)) =
+  (GHC.Base.fmap (map fst) (Data.Traversable.mapM f (bagToList b))).
+  (*/\
+  (GHC.Base.fmap bagToList (mapAndUnzipBagM f b).2 =
+   (Data.Traversable.mapM f (bagToList b)).2).*)
+Proof.
+Admitted.
+
+(* TODO foldrBagM foldlBagM *)
+Check foldrBagM.
+Print GHC.Base.fmap.
+Check mapBagM.
+Search foldr.
+(*
+Theorem foldrBagM_ok {M A B C} `{MonadLaws M}
+        (f : A -> B -> M B) (d : B) (b : Bag A):
+  (GHC.Base.fmap bagToList (foldrBagM f d b) =
+  (fold_right f (bagToList b))).
+Proof.
+  
+Admitted.
+*)
 (* TODO flatMapBagM flatMapBagPairM *)
 
 (* TODO filterBagM *)

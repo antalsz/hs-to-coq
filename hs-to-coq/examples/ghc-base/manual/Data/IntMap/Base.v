@@ -157,17 +157,20 @@ Definition adjust {a} : (a -> a) -> Int -> IntMap a -> IntMap a :=
     end.
 
 
-Instance instance_Eq_IntMap {a} `{GHC.Base.Eq_ a} : GHC.Base.Eq_ (IntMap a) := {
-  op_zeze__ := IM.equal GHC.Base.op_zeze__ ;
-  op_zsze__ := fun x y => negb (IM.equal GHC.Base.op_zeze__ x y)
-}.
+Instance instance_Eq_IntMap {a} `{GHC.Base.Eq_ a} : GHC.Base.Eq_ (IntMap a) := fun _ k => k {|
+  op_zeze____ := IM.equal GHC.Base.op_zeze__ ;
+  op_zsze____ := fun x y => negb (IM.equal GHC.Base.op_zeze__ x y)
+|}.
 
 
-Instance instance_Monoid_IntMap {a} `{GHC.Base.Monoid a} : GHC.Base.Monoid (IntMap a) := {
-  mempty := empty;
-  mappend := unionWith GHC.Base.mempty;
-  mconcat := GHC.Base.foldr (unionWith GHC.Base.mempty) empty;
-}.
+Instance instance_Monoid_IntMap {a} `{GHC.Base.Monoid a} : GHC.Base.Monoid (IntMap a) :=
+  fun _ k => k {|
+  GHC.Base.mempty__ := empty;
+  GHC.Base.mappend__ := unionWith GHC.Base.mempty;
+  GHC.Base.mconcat__ := GHC.Base.foldr (unionWith GHC.Base.mempty) empty;
+|}.
 
 Instance instance_Functor_IntMap : GHC.Base.Functor IntMap :=
-  { fmap := IM.map ; op_zlzd__ := fun {b}{c} (x:b) => IM.map (fun j => x) }.
+  fun _ k => k {|
+    GHC.Base.fmap__ := IM.map ;
+    GHC.Base.op_zlzd____ := fun {b}{c} (x:b) => IM.map (fun j => x) |}.

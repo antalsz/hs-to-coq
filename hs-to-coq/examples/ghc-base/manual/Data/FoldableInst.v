@@ -200,20 +200,20 @@ Local Definition instance_Foldable_option_elem : forall {a},
                                                    forall `{GHC.Base.Eq_ a}, a -> option a -> bool :=
   fun {a} `{GHC.Base.Eq_ a} => Coq.Program.Basics.compose (anyWith (fun _ _ _ => instance_Foldable_option_foldMap)) GHC.Base.op_zeze__.
 
-Instance instance_Foldable_option : !Foldable option := {
-  elem := fun {a} `{GHC.Base.Eq_ a} => instance_Foldable_option_elem ;
-  fold := fun {m} `{GHC.Base.Monoid m} => instance_Foldable_option_fold ;
-  foldMap := fun {m} {a} `{GHC.Base.Monoid m} =>
+Instance instance_Foldable_option : !Foldable option := fun _ k => k {|
+  elem__ := fun {a} `{GHC.Base.Eq_ a} => instance_Foldable_option_elem ;
+  fold__ := fun {m} `{GHC.Base.Monoid m} => instance_Foldable_option_fold ;
+  foldMap__ := fun {m} {a} `{GHC.Base.Monoid m} =>
     instance_Foldable_option_foldMap ;
-  foldl := fun {b} {a} => instance_Foldable_option_foldl ;
-  foldl' := fun {b} {a} => instance_Foldable_option_foldl' ;
-  foldr := fun {a} {b} => instance_Foldable_option_foldr ;
-  foldr' := fun {a} {b} => instance_Foldable_option_foldr' ;
-  length := fun {a} => instance_Foldable_option_length ;
-  null := fun {a} => instance_Foldable_option_null ;
-  product := fun {a} `{GHC.Num.Num a} => instance_Foldable_option_product ;
-  sum := fun {a} `{GHC.Num.Num a} => instance_Foldable_option_sum ;
-  toList := fun {a} => instance_Foldable_option_toList }.
+  foldl__ := fun {b} {a} => instance_Foldable_option_foldl ;
+  foldl'__ := fun {b} {a} => instance_Foldable_option_foldl' ;
+  foldr__ := fun {a} {b} => instance_Foldable_option_foldr ;
+  foldr'__ := fun {a} {b} => instance_Foldable_option_foldr' ;
+  length__ := fun {a} => instance_Foldable_option_length ;
+  null__ := fun {a} => instance_Foldable_option_null ;
+  product__ := fun {a} `{GHC.Num.Num a} => instance_Foldable_option_product ;
+  sum__ := fun {a} `{GHC.Num.Num a} => instance_Foldable_option_sum ;
+  toList__ := fun {a} => instance_Foldable_option_toList |}.
 
 
 

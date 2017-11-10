@@ -149,13 +149,13 @@ Definition fromAscList : list Key -> IntSet := fromList. (* Inefficient! *)
 
 Definition fromDistinctAscList : list Key -> IntSet := fromList. (* Inefficient! *)
 
-Instance instance_Eq_IntSet : GHC.Base.Eq_ IntSet := {
-  op_zeze__ := ISR.equal;
-  op_zsze__ := fun x y => negb (ISR.equal x y)
-}.
+Instance instance_Eq_IntSet : GHC.Base.Eq_ IntSet := fun _ k => k {|
+  GHC.Base.op_zeze____ := ISR.equal;
+  GHC.Base.op_zsze____ := fun x y => negb (ISR.equal x y)
+|}.
 
-Instance instance_Monoid_IntSet : GHC.Base.Monoid IntSet := {
-  mempty := empty;
-  mappend := union;
-  mconcat := unions;
-}.
+Instance instance_Monoid_IntSet : GHC.Base.Monoid IntSet := fun _ k => k {|
+  GHC.Base.mempty__ := empty;
+  GHC.Base.mappend__ := union;
+  GHC.Base.mconcat__ := unions;
+|}.

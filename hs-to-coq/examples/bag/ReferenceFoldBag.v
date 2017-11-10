@@ -80,7 +80,9 @@ Module BagNeedsUnit.
   Proof.
     elim: b tail => [| x | l IHl r IHr | xs] //= tail.
     - by rewrite IHr IHl app_assoc.
-    - by rewrite hs_coq_foldr_list' fold_right_cons fold_right_cons_nil.
+    - by rewrite
+         /Data.Foldable.foldr /Foldable.instance_Foldable_list /Data.Foldable.foldr__
+         hs_coq_foldr_list' fold_right_cons fold_right_cons_nil.
   Qed.
 
   Lemma same_empty_list {A} (b : Bag A) :

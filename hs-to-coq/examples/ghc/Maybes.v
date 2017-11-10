@@ -135,11 +135,10 @@ Local Definition instance_GHC_Base_Functor__MaybeErr_err__op_zlzd__ {inst_err}
   fun {a} {b} =>
     fun x => instance_GHC_Base_Functor__MaybeErr_err__fmap (GHC.Base.const x).
 
-Instance instance_GHC_Base_Functor__MaybeErr_err_ : forall {err},
-                                                      GHC.Base.Functor (MaybeErr err) := {
-  fmap := fun {a} {b} => instance_GHC_Base_Functor__MaybeErr_err__fmap ;
-  op_zlzd__ := fun {a} {b} =>
-    instance_GHC_Base_Functor__MaybeErr_err__op_zlzd__ }.
+Instance instance_GHC_Base_Functor__MaybeErr_err_ {err} :
+  GHC.Base.Functor (MaybeErr err) := fun _ k => k {|
+  fmap__ := fun {a} {b} => instance_GHC_Base_Functor__MaybeErr_err__fmap ;
+  op_zlzd____ := fun {a} {b} => instance_GHC_Base_Functor__MaybeErr_err__op_zlzd__ |}.
 
 
 Local Definition instance_GHC_Base_Applicative__MaybeErr_err__op_zlztzg__ {inst_err}
@@ -157,13 +156,13 @@ Local Definition instance_GHC_Base_Applicative__MaybeErr_err__op_ztzg__ {inst_er
       instance_GHC_Base_Applicative__MaybeErr_err__op_zlztzg__ (GHC.Base.fmap
                                                                (GHC.Base.const GHC.Base.id) x) y.
 
-Instance instance_GHC_Base_Applicative__MaybeErr_err_ : forall {err},
-                                                          GHC.Base.Applicative (MaybeErr err) := {
-  op_zlztzg__ := fun {a} {b} =>
-    instance_GHC_Base_Applicative__MaybeErr_err__op_zlztzg__ ;
-  op_ztzg__ := fun {a} {b} =>
-    instance_GHC_Base_Applicative__MaybeErr_err__op_ztzg__ ;
-  pure := fun {a} => instance_GHC_Base_Applicative__MaybeErr_err__pure }.
+Instance instance_GHC_Base_Applicative__MaybeErr_err_ 
+  {err} : GHC.Base.Applicative (MaybeErr err) := fun _ k => k (
+    GHC.Base.Applicative__Dict_Build (MaybeErr err)
+      (fun {a} {b} => instance_GHC_Base_Applicative__MaybeErr_err__op_ztzg__)
+      (fun {a} {b} => instance_GHC_Base_Applicative__MaybeErr_err__op_zlztzg__)
+      (fun {a} => instance_GHC_Base_Applicative__MaybeErr_err__pure)
+    ).
 
 
 Local Definition instance_GHC_Base_Monad__MaybeErr_err__op_zgzg__ {inst_err}
@@ -171,12 +170,12 @@ Local Definition instance_GHC_Base_Monad__MaybeErr_err__op_zgzg__ {inst_err}
         (MaybeErr inst_err) a -> (MaybeErr inst_err) b -> (MaybeErr inst_err) b :=
   fun {a} {b} => GHC.Base.op_ztzg__.
 
-Instance instance_GHC_Base_Monad__MaybeErr_err_ : forall {err},
-                                                    GHC.Base.Monad (MaybeErr err) := {
-  op_zgzg__ := fun {a} {b} => instance_GHC_Base_Monad__MaybeErr_err__op_zgzg__ ;
-  op_zgzgze__ := fun {a} {b} =>
+Instance instance_GHC_Base_Monad__MaybeErr_err_ {err} :
+  GHC.Base.Monad (MaybeErr err) := fun _ k => k {|
+  op_zgzg____ := fun {a} {b} => instance_GHC_Base_Monad__MaybeErr_err__op_zgzg__ ;
+  op_zgzgze____ := fun {a} {b} =>
     instance_GHC_Base_Monad__MaybeErr_err__op_zgzgze__ ;
-  return_ := fun {a} => instance_GHC_Base_Monad__MaybeErr_err__return_ }.
+  return___ := fun {a} => instance_GHC_Base_Monad__MaybeErr_err__return_ |}.
 
 
 (* Unbound variables:

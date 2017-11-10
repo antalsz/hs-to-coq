@@ -45,6 +45,8 @@ import HsToCoq.ConvertHaskell.Parameters.Parsers.Lexing
   indices         { TokWord    "indices"        }
   redefine        { TokWord    "redefine"       }
   skip            { TokWord    "skip"           }
+  class           { TokWord    "class"          }
+  kinds           { TokWord    "kinds"          }
   axiomatize      { TokWord    "axiomatize"     }
   nonterminating  { TokWord    "nonterminating" }
   termination     { TokWord    "termination"    }
@@ -232,6 +234,7 @@ Edit :: { Edit }
   | axiomatize module Word                        { AxiomatizeModuleEdit  (mkModuleName (T.unpack $3))    }
   | add scope Scope for ScopePlace Word           { AdditionalScopeEdit   $5 $6 $3                        }
   | order Some(Word)                              { OrderEdit             $2                              }
+  | class kinds Word Some(Term)                   { ClassKindEdit         $3 $4                           }
 
 Edits :: { [Edit] }
   : Lines(Edit)    { $1 }

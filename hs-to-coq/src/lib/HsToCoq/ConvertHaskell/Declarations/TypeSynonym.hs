@@ -9,6 +9,9 @@ import Control.Lens
 import GHC hiding (Name)
 import qualified GHC
 
+import qualified Data.List.NonEmpty as NE
+import qualified Data.Set as S
+
 import HsToCoq.Coq.Gallina as Coq
 import HsToCoq.Coq.Gallina.Util
 import HsToCoq.Coq.FreeVars
@@ -31,7 +34,29 @@ convertSynDecl :: ConversionMonad m
                -> m SynBody
 convertSynDecl name args def  = do
   coqName <- freeVar $ unLoc name
+  params <- convertLHsTyVarBndrs Coq.Explicit args
+  rhs    <- convertLType def
+  let (params', rhs') = etaContract params rhs
   SynBody <$> freeVar (unLoc name)
-          <*> convertLHsTyVarBndrs Coq.Explicit args
+          <*> pure params'
           <*> use (edits.typeSynonymTypes . at coqName . to (fmap Var))
-          <*> ((`InScope` "type") <$> convertLType def)
+          <*> pure (rhs' `InScope` "type")
+
+-- Eta-contracting type synonyms allows Coq’s instance resolution mechanism
+-- to look though type synonym more easily.
+etaContract :: [Binder] -> Term -> ([Binder], Term)
+etaContract bndrs (App f args)
+    = let (rbinders, rargs) = go (reverse bndrs) (reverse (NE.toList args))
+      in (reverse rbinders, appList f (reverse rargs))
+  where
+    go (b:bs) (a:as)
+        | PosArg (Var v) <- a
+        , [v'] <- toListOf binderIdents b
+        , v == v'
+        , v' `S.notMember` getFreeVars f
+        , v' `S.notMember` getFreeVars as
+        = go bs as
+    go bs as = (bs, as)
+etaContract b t = (b,t)
+
+

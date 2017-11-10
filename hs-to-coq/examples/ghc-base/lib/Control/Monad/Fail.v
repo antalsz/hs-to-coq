@@ -15,26 +15,26 @@ Require GHC.Base.
 
 (* Converted type declarations: *)
 
-Class MonadFail m `{GHC.Base.Monad m} := {
-  fail : forall {a}, GHC.Base.String -> m a }.
+Record MonadFail__Dict (m : Type -> Type) := MonadFail__Dict_Build {
+  fail__ : forall {a}, GHC.Base.String -> m a }.
+
+Definition MonadFail (m : Type -> Type) `{GHC.Base.Monad m} :=
+  forall r, (MonadFail__Dict m -> r) -> r.
+
+Existing Class MonadFail.
+
+Definition fail `{g : MonadFail m} : forall {a}, GHC.Base.String -> m a :=
+  g _ (fail__ m).
 (* Converted value declarations: *)
 
-Local Definition instance_MonadFail_option_fail : forall {a},
-                                                    GHC.Base.String -> option a :=
-  fun {a} => fun arg_1__ => None.
+(* Translating `instance MonadFail option' failed: OOPS! Cannot find information
+   for class "MonadFail" unsupported *)
 
-Instance instance_MonadFail_option : MonadFail option := {
-  fail := fun {a} => instance_MonadFail_option_fail }.
-
-Local Definition instance_MonadFail_list_fail : forall {a},
-                                                  GHC.Base.String -> list a :=
-  fun {a} => fun arg_0__ => nil.
-
-Instance instance_MonadFail_list : MonadFail list := {
-  fail := fun {a} => instance_MonadFail_list_fail }.
+(* Translating `instance MonadFail list' failed: OOPS! Cannot find information
+   for class "MonadFail" unsupported *)
 
 (* Skipping instance instance_MonadFail_GHC_Types_IO *)
 
 (* Unbound variables:
-     GHC.Base.Monad GHC.Base.String None list nil option
+     GHC.Base.Monad GHC.Base.String Type
 *)

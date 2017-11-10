@@ -67,6 +67,7 @@ module HsToCoq.Coq.Gallina (
   ImportExport(..),
   ModuleSentence(..),
   ClassDefinition(..),
+  RecordDefinition(..),
   InstanceDefinition(..),
   Associativity(..),
   Level(..),
@@ -168,6 +169,7 @@ data Term = Forall Binders Term                                                 
           | Underscore                                                                         -- ^@_@
           | Parens Term                                                                        -- ^@( /term/ )@
           | Bang Term                                                                          -- ^@! term - tmp suppress implicit arguments (for Instance decls)
+          | Record [ (Qualid, Term) ]                                                          -- ^@{| /qualid/ := /term/; … |}@
           deriving (Eq, Ord, Show, Read, Typeable, Data)
 
 infixr 7 `Arrow`
@@ -293,6 +295,8 @@ data Sentence = AssumptionSentence       Assumption                             
               | AssertionSentence        Assertion Proof                                       -- ^@/assertion/ /proof/@
               | ModuleSentence           ModuleSentence                                        -- ^@/module_sentence/@ – extra (inferred from §2.5)
               | ClassSentence            ClassDefinition                                       -- ^@/class_definition/@ – extra
+              | ExistingClassSentence    Ident                                                 -- ^@/Existing Class /ident//@ – extra
+              | RecordSentence           RecordDefinition                                       -- ^@/class_definition/@ – extra
               | InstanceSentence         InstanceDefinition                                    -- ^@/instance_definition/@ – extra
               | NotationSentence         Notation                                              -- ^@/notation/@ – extra
               | ArgumentsSentence        Arguments                                             -- ^@/arguments/@ – extra
@@ -392,6 +396,10 @@ data ModuleSentence = ModuleImport ImportExport (NonEmpty Qualid)               
 data ClassDefinition = ClassDefinition Ident [Binder] (Maybe Sort) [(Ident, Term)]             -- ^@Class /ident/ [/binders/] [: /sort/] := { [/ident/ : /term/ ; … ; /ident/ : /term/] } .
                      deriving (Eq, Ord, Show, Read, Typeable, Data)
                      -- TODO: field arguments (which become @forall@ed)
+
+-- |@/record_definition/ ::=@ /(extra)/
+data RecordDefinition = RecordDefinition Ident [Binder] (Maybe Sort) (Maybe Ident) [(Ident, Term)]  -- ^@Record /ident/ [/binders/] [: /sort/] := /ident/ { [/ident/ : /term/ ; … ; /ident/ : /term/] } .
+                     deriving (Eq, Ord, Show, Read, Typeable, Data)
 
 -- |@/instance_definition/ ::=@ /(extra)/
 data InstanceDefinition = InstanceDefinition Ident [Binder] Term [(Ident, Term)] (Maybe Proof) -- ^@Instance /ident/ [/binders/] : /term/ := { [/ident/ := /term/ ; … ; /ident/ := /term/] } [/proof/] .
@@ -767,6 +775,10 @@ instance Gallina Term where
   renderGallina' _ (Bang t) =
     char '!' <>  renderGallina t
 
+  renderGallina' _ (Record defns) =
+    "{|" <> sepWith (<+>) (<!>) ";" (map (\(f,def) -> renderGallina f <+> ":=" <+> renderGallina def) defns)
+        <+> "|}"
+
 instance Gallina Arg where
   renderGallina' p (PosArg t) =
     renderGallina' p t
@@ -902,6 +914,8 @@ instance Gallina Sentence where
   renderGallina' p (AssertionSentence       ass pf) = renderGallina' p ass <!> renderGallina' p pf
   renderGallina' p (ModuleSentence          mod)    = renderGallina' p mod
   renderGallina' p (ClassSentence           cls)    = renderGallina' p cls
+  renderGallina' _ (ExistingClassSentence   ident)  = "Existing Class" <+> renderIdent ident <> "."
+  renderGallina' p (RecordSentence          rcd)    = renderGallina' p rcd
   renderGallina' p (InstanceSentence        ins)    = renderGallina' p ins
   renderGallina' p (NotationSentence        not)    = renderGallina' p not
   renderGallina' p (ArgumentsSentence       arg)    = renderGallina' p arg
@@ -1028,6 +1042,14 @@ instance Gallina ClassDefinition where
   renderGallina' _ (ClassDefinition cl params osort fields) =
     "Class" <+> renderIdent cl <> spaceIf params <> render_args_oty H params (Sort <$> osort)
             <+> nest 2 (":=" </> "{" <> lineIf fields
+                                     <> sepWith (<+>) (<!>) ";" (map (\(f,ty) -> renderIdent f <+> ":" <+> renderGallina ty) fields)
+                                     <> spaceIf fields <> "}.")
+
+instance Gallina RecordDefinition where
+  renderGallina' _ (RecordDefinition cl params osort build fields) =
+    "Record" <+> renderIdent cl <> spaceIf params <> render_args_oty H params (Sort <$> osort)
+            <+> nest 2 (":=" </> maybe empty renderIdent build <+>
+                                 "{" <> lineIf fields
                                      <> sepWith (<+>) (<!>) ";" (map (\(f,ty) -> renderIdent f <+> ":" <+> renderGallina ty) fields)
                                      <> spaceIf fields <> "}.")
 

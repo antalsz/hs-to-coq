@@ -1,6 +1,6 @@
-{-# LANGUAGE RecordWildCards, LambdaCase, FlexibleContexts #-}
+{-# LANGUAGE RecordWildCards, LambdaCase, FlexibleContexts, OverloadedStrings, OverloadedLists #-}
 
-module HsToCoq.ConvertHaskell.Declarations.Class (ClassBody(..), convertClassDecl, getImplicitBindersForClassMember) where
+module HsToCoq.ConvertHaskell.Declarations.Class (ClassBody(..), convertClassDecl, getImplicitBindersForClassMember, classSentences) where
 
 import Control.Lens
 
@@ -8,6 +8,7 @@ import Data.Traversable
 import qualified Data.List.NonEmpty as NE
 
 import Control.Monad
+import Data.Monoid
 
 import qualified Data.Map.Strict as M
 import qualified Data.Set as S
@@ -18,6 +19,7 @@ import Bag
 import Class
 
 import HsToCoq.Coq.Gallina as Coq
+import HsToCoq.Coq.Gallina.Util
 import HsToCoq.Coq.FreeVars
 
 import HsToCoq.ConvertHaskell.Monad
@@ -76,8 +78,15 @@ convertClassDecl (L _ hsCtx) (L _ hsName) ltvs fds lsigs defaults types typeDefa
 
   name <- freeVar hsName
   ctx  <- traverse (fmap (Generalized Coq.Implicit) . convertLType) hsCtx
+
   args <- convertLHsTyVarBndrs Coq.Explicit ltvs
-  all_sigs <- binding' args $ convertLSigs lsigs
+  kinds <- (++ repeat Nothing) . map Just . maybe [] NE.toList <$> use (edits.classKinds.at name)
+  let args' = zipWith go args kinds
+       where go (Inferred exp name) (Just t) = Typed Ungeneralizable exp (name NE.:| []) t
+             go a _ = a
+
+
+  all_sigs <- binding' args' $ convertLSigs lsigs
 
   -- implement the class part of "skip method"
   skippedMethodsS <- use (edits.skippedMethods)
@@ -97,9 +106,36 @@ convertClassDecl (L _ hsCtx) (L _ hsName) ltvs fds lsigs defaults types typeDefa
                 convUnsupported $ "skipping a type class method in " ++ show name
   unless (null defs) $ defaultMethods.at name ?= defs
 
-  let classDefn = (ClassDefinition name (args ++ ctx) Nothing (bimap toCoqName sigType <$> M.toList sigs))
+  let classDefn = (ClassDefinition name (args' ++ ctx) Nothing (bimap toCoqName sigType <$> M.toList sigs))
 
   classDefns.at name ?= classDefn
 
   pure $ ClassBody classDefn
                    (concatMap (buildInfixNotations sigs <*> infixToCoq) . filter identIsOperator $ M.keys sigs)
+
+classSentences :: ClassBody -> [Sentence]
+classSentences (ClassBody (ClassDefinition name args ty methods) nots) =
+    [ RecordSentence dict_record
+    , DefinitionSentence (DefinitionDef Global name args Nothing class_ty)
+    , ExistingClassSentence name
+    ] ++
+    [ DefinitionSentence $
+        DefinitionDef Global n
+            [Typed Generalizable Implicit [Ident "g"] (app_args (Var name))]
+            (Just ty)
+            (App2 (Var "g") Underscore (app_args (Var (n <> "__"))))
+    | (n, ty) <- methods ] ++
+    map NotationSentence nots
+  where
+    dict_name = name <> "__Dict"
+    dict_build = name <> "__Dict_Build"
+    dict_methods = [ (name <> "__", ty) | (name, ty) <- methods ]
+    dict_record  = RecordDefinition dict_name inst_args ty (Just dict_build) dict_methods
+    -- The dictionary needs all explicit (type) arguments,
+    -- but none of the implicit (constraint) arguments
+    inst_args = filter (\b -> b ^? binderExplicitness == Just Explicit) args
+    app_args f = foldl App1 f (map Var (foldMap (toListOf binderIdents) inst_args))
+    class_ty = Forall [ Inferred Explicit (Ident "r")] $
+            (app_args (Var dict_name)  `Arrow` Var "r") `Arrow` Var "r"
+
+

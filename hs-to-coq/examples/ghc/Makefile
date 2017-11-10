@@ -26,6 +26,7 @@ MODULES  = MonadUtils \
            UniqSupply \
            UniqFM \
            CmmType \
+	   BooleanFormula \
 
 VFILES_GEN     = $(addsuffix .v,$(MODULES))
 VFILES_MAN     = $(addsuffix .v,$(HANDMOD))

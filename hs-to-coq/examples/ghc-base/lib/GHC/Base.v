@@ -9,7 +9,152 @@ Unset Printing Implicit Defensive.
 
 Require Coq.Program.Wf.
 
-(* Preamble *)
+(* Converted imports: *)
+
+Require Coq.Init.Datatypes.
+Require Coq.Lists.List.
+Require Coq.Program.Basics.
+Require GHC.Prim.
+Require GHC.Tuple.
+
+(* Converted type declarations: *)
+
+Record Monoid__Dict a := Monoid__Dict_Build {
+  mappend__ : a -> a -> a ;
+  mconcat__ : list a -> a ;
+  mempty__ : a }.
+
+Definition Monoid a :=
+  forall r, (Monoid__Dict a -> r) -> r.
+
+Existing Class Monoid.
+
+Definition mappend `{g : Monoid a} : a -> a -> a :=
+  g _ (mappend__ a).
+
+Definition mconcat `{g : Monoid a} : list a -> a :=
+  g _ (mconcat__ a).
+
+Definition mempty `{g : Monoid a} : a :=
+  g _ (mempty__ a).
+
+Record Functor__Dict f := Functor__Dict_Build {
+  op_zlzd____ : forall {a} {b}, a -> f b -> f a ;
+  fmap__ : forall {a} {b}, (a -> b) -> f a -> f b }.
+
+Definition Functor f :=
+  forall r, (Functor__Dict f -> r) -> r.
+
+Existing Class Functor.
+
+Definition op_zlzd__ `{g : Functor f} : forall {a} {b}, a -> f b -> f a :=
+  g _ (op_zlzd____ f).
+
+Definition fmap `{g : Functor f} : forall {a} {b}, (a -> b) -> f a -> f b :=
+  g _ (fmap__ f).
+
+Infix "<$" := (op_zlzd__) (at level 99).
+
+Notation "'_<$_'" := (op_zlzd__).
+
+Record Applicative__Dict f := Applicative__Dict_Build {
+  op_ztzg____ : forall {a} {b}, f a -> f b -> f b ;
+  op_zlztzg____ : forall {a} {b}, f (a -> b) -> f a -> f b ;
+  pure__ : forall {a}, a -> f a }.
+
+Definition Applicative f `{Functor f} :=
+  forall r, (Applicative__Dict f -> r) -> r.
+
+Existing Class Applicative.
+
+Definition op_ztzg__ `{g : Applicative f} : forall {a} {b}, f a -> f b -> f b :=
+  g _ (op_ztzg____ f).
+
+Definition op_zlztzg__ `{g : Applicative f} : forall {a} {b},
+                                                f (a -> b) -> f a -> f b :=
+  g _ (op_zlztzg____ f).
+
+Definition pure `{g : Applicative f} : forall {a}, a -> f a :=
+  g _ (pure__ f).
+
+Infix "*>" := (op_ztzg__) (at level 99).
+
+Notation "'_*>_'" := (op_ztzg__).
+
+Infix "<*>" := (op_zlztzg__) (at level 99).
+
+Notation "'_<*>_'" := (op_zlztzg__).
+
+Record Monad__Dict m := Monad__Dict_Build {
+  op_zgzg____ : forall {a} {b}, m a -> m b -> m b ;
+  op_zgzgze____ : forall {a} {b}, m a -> (a -> m b) -> m b ;
+  return___ : forall {a}, a -> m a }.
+
+Definition Monad m `{Applicative m} :=
+  forall r, (Monad__Dict m -> r) -> r.
+
+Existing Class Monad.
+
+Definition op_zgzg__ `{g : Monad m} : forall {a} {b}, m a -> m b -> m b :=
+  g _ (op_zgzg____ m).
+
+Definition op_zgzgze__ `{g : Monad m} : forall {a} {b},
+                                          m a -> (a -> m b) -> m b :=
+  g _ (op_zgzgze____ m).
+
+Definition return_ `{g : Monad m} : forall {a}, a -> m a :=
+  g _ (return___ m).
+
+Infix ">>" := (op_zgzg__) (at level 99).
+
+Notation "'_>>_'" := (op_zgzg__).
+
+Infix ">>=" := (op_zgzgze__) (at level 99).
+
+Notation "'_>>=_'" := (op_zgzgze__).
+
+Record Alternative__Dict f := Alternative__Dict_Build {
+  op_zlzbzg____ : forall {a}, f a -> f a -> f a ;
+  empty__ : forall {a}, f a ;
+  many__ : forall {a}, f a -> f (list a) ;
+  some__ : forall {a}, f a -> f (list a) }.
+
+Definition Alternative f `{Applicative f} :=
+  forall r, (Alternative__Dict f -> r) -> r.
+
+Existing Class Alternative.
+
+Definition op_zlzbzg__ `{g : Alternative f} : forall {a}, f a -> f a -> f a :=
+  g _ (op_zlzbzg____ f).
+
+Definition empty `{g : Alternative f} : forall {a}, f a :=
+  g _ (empty__ f).
+
+Definition many `{g : Alternative f} : forall {a}, f a -> f (list a) :=
+  g _ (many__ f).
+
+Definition some `{g : Alternative f} : forall {a}, f a -> f (list a) :=
+  g _ (some__ f).
+
+Infix "<|>" := (op_zlzbzg__) (at level 99).
+
+Notation "'_<|>_'" := (op_zlzbzg__).
+
+Record MonadPlus__Dict (m : Type -> Type) := MonadPlus__Dict_Build {
+  mplus__ : forall {a}, m a -> m a -> m a ;
+  mzero__ : forall {a}, m a }.
+
+Definition MonadPlus (m : Type -> Type) `{Alternative m} `{Monad m} :=
+  forall r, (MonadPlus__Dict m -> r) -> r.
+
+Existing Class MonadPlus.
+
+Definition mplus `{g : MonadPlus m} : forall {a}, m a -> m a -> m a :=
+  g _ (mplus__ m).
+
+Definition mzero `{g : MonadPlus m} : forall {a}, m a :=
+  g _ (mzero__ m).
+(* Midamble *)
 
 (* This includes everything that should be defined in GHC/Base.hs, but cannot
    be generated from Base.hs.
@@ -100,9 +245,15 @@ Axiom errorWithoutStackTrace : forall {A : Type}, String -> A.
 (*********** built in classes Eq & Ord **********************)
 
 (* Don't clash with Eq constructor for the comparison type. *)
-Class Eq_ a := {
-  op_zeze__ : (a -> (a -> bool)) ;
-  op_zsze__ : (a -> (a -> bool)) }.
+Record Eq___Dict a := Eq___Dict_Build {
+  op_zeze____ : (a -> (a -> bool)) ;
+  op_zsze____ : (a -> (a -> bool)) }.
+
+Definition Eq_ a := forall r, (Eq___Dict a -> r) -> r.
+Existing Class Eq_.
+
+Definition op_zeze__ {a} {g : Eq_ a} := g _ (op_zeze____ _).
+Definition op_zsze__ {a} {g : Eq_ a} := g _ (op_zsze____ _).
 
 Infix "/=" := (op_zsze__) (no associativity, at level 70).
 
@@ -112,14 +263,40 @@ Infix "==" := (op_zeze__) (no associativity, at level 70).
 
 Notation "'_==_'" := (op_zeze__).
 
-Class Ord a `{((Eq_ a))} := {
-  op_zl__ : (a -> (a -> bool)) ;
-  op_zlze__ : (a -> (a -> bool)) ;
-  op_zg__ : (a -> (a -> bool)) ;
-  op_zgze__ : (a -> (a -> bool)) ;
-  compare : (a -> (a -> comparison)) ;
-  max : (a -> (a -> a)) ;
-  min : (a -> (a -> a)) }.
+Record Ord__Dict a := Ord__Dict_Build {
+  op_zl____ : a -> a -> bool ;
+  op_zlze____ : a -> a -> bool ;
+  op_zg____ : a -> a -> bool ;
+  op_zgze____ : a -> a -> bool ;
+  compare__ : a -> a -> comparison ;
+  max__ : a -> a -> a ;
+  min__ : a -> a -> a }.
+
+Definition Ord a `{Eq_ a} :=
+  forall r, (Ord__Dict a -> r) -> r.
+
+Existing Class Ord.
+
+Definition op_zl__ `{g : Ord a} : a -> a -> bool :=
+  g _ (op_zl____ a).
+
+Definition op_zlze__ `{g : Ord a} : a -> a -> bool :=
+  g _ (op_zlze____ a).
+
+Definition op_zg__ `{g : Ord a} : a -> a -> bool :=
+  g _ (op_zg____ a).
+
+Definition op_zgze__ `{g : Ord a} : a -> a -> bool :=
+  g _ (op_zgze____ a).
+
+Definition compare `{g : Ord a} : a -> a -> comparison :=
+  g _ (compare__ a).
+
+Definition max `{g : Ord a} : a -> a -> a :=
+  g _ (max__ a).
+
+Definition min `{g : Ord a} : a -> a -> a :=
+  g _ (min__ a).
 
 (* Don't clash with Coq's standard ordering predicates. *)
 Infix "<?" := (op_zl__) (no associativity, at level 70).
@@ -140,104 +317,302 @@ Notation "'_>=?_'" := (op_zgze__).
 
 (*********** Eq/Ord for primitive types **************************)
 
-Instance Eq_Int___ : Eq_ Int := {
-                               op_zeze__ := fun x y => (x =? y)%Z;
-                               op_zsze__ := fun x y => negb (x =? y)%Z;
-                             }.
+Require Coq.Structures.Equalities.
+Require Coq.Structures.DecidableType.
+Require Coq.Structures.DecidableTypeEx.
+Require Coq.Structures.OrderedType.
+Require Coq.Structures.OrderedTypeEx.
 
-Instance Ord_Int___ : !Ord Int := {
-  op_zl__   := fun x y => (x <? y)%Z;
-  op_zlze__ := fun x y => (x <=? y)%Z;
-  op_zg__   := fun x y => (y <? x)%Z;
-  op_zgze__ := fun x y => (y <=? x)%Z;
-  compare   := Z.compare%Z ;
-  max       := Z.max%Z;
-  min       := Z.min%Z;
-}.
+Module Type HsToCoqDecidableType.
+  Include DecidableType.DecidableType.
+  Declare Instance eq_t: Eq_ t.
+End HsToCoqDecidableType.
 
-Instance Eq_Integer___ : Eq_ Integer := {
-                               op_zeze__ := fun x y => (x =? y)%Z;
-                               op_zsze__ := fun x y => negb (x =? y)%Z;
-                             }.
+Module Type HsToCoqOrderedType.
+  Include OrderedType.OrderedType.
+  Declare Instance eq_t: Eq_ t.
+  Declare Instance ord_t: Ord t.
+End HsToCoqOrderedType.
 
-Instance Ord_Integer___ : !Ord Integer := {
-  op_zl__   := fun x y => (x <? y)%Z;
-  op_zlze__ := fun x y => (x <=? y)%Z;
-  op_zg__   := fun x y => (y <? x)%Z;
-  op_zgze__ := fun x y => (y <=? x)%Z;
-  compare   := Z.compare%Z ;
-  max       := Z.max%Z;
-  min       := Z.min%Z;
-}.
+Instance Eq_Int___ : Eq_ Int := fun _ k => k {|
+                               op_zeze____ := fun x y => (x =? y)%Z;
+                               op_zsze____ := fun x y => negb (x =? y)%Z;
+                               |}.
 
-Instance Eq_Word___ : Eq_ Word := {
-                               op_zeze__ := fun x y => (x =? y)%N;
-                               op_zsze__ := fun x y => negb (x =? y)%N;
-                             }.
+Module Int_DecidableType___ <: HsToCoqDecidableType.
+  Include DecidableTypeEx.Z_as_DT.
+  Definition eq_t := Eq_Int___.
+End Int_DecidableType___.
 
-Instance Ord_Word___ : !Ord Word := {
-  op_zl__   := fun x y => (x <? y)%N;
-  op_zlze__ := fun x y => (x <=? y)%N;
-  op_zg__   := fun x y => (y <? x)%N;
-  op_zgze__ := fun x y => (y <=? x)%N;
-  compare   := N.compare%N ;
-  max       := N.max%N;
-  min       := N.min%N;
-}.
+Instance Ord_Int___ : Ord Int := fun _ k => k {|
+  op_zl____   := fun x y => (x <? y)%Z;
+  op_zlze____ := fun x y => (x <=? y)%Z;
+  op_zg____   := fun x y => (y <? x)%Z;
+  op_zgze____ := fun x y => (y <=? x)%Z;
+  compare__   := Z.compare%Z ;
+  max__       := Z.max%Z;
+  min__       := Z.min%Z;
+|}.
 
-Instance Eq_Char___ : Eq_ Char := {
-                               op_zeze__ := fun x y => (x =? y)%N;
-                               op_zsze__ := fun x y => negb (x =? y)%N;
-                             }.
+Module Int_OrderedType___ <: HsToCoqOrderedType.
+  Include Int_DecidableType___.
+  Definition ord_t := Ord_Int___.
+End Int_OrderedType___.
 
-Instance Ord_Char___ : !Ord Char := {
-  op_zl__   := fun x y => (x <? y)%N;
-  op_zlze__ := fun x y => (x <=? y)%N;
-  op_zg__   := fun x y => (y <? x)%N;
-  op_zgze__ := fun x y => (y <=? x)%N;
-  compare   := N.compare%N ;
-  max       := N.max%N;
-  min       := N.min%N;
-}.
+Instance Eq_Integer___ : Eq_ Integer := fun _ k => k {|
+                               op_zeze____ := fun x y => (x =? y)%Z;
+                               op_zsze____ := fun x y => negb (x =? y)%Z;
+                             |}.
 
-Instance Eq_bool___ : Eq_ bool := {
-                               op_zeze__ := eqb;
-                               op_zsze__ := fun x y => negb (eqb x y);
-                             }.
+(** This is the same as Int_DecidableType___, but we probably don't
+    want to reuse that? *)
+Module Integer_DecidableType___ <: HsToCoqDecidableType.
+  Include DecidableTypeEx.Z_as_DT.
+  Definition eq_t := Eq_Integer___.
+End Integer_DecidableType___.
+
+Instance Ord_Integer___ : Ord Integer := fun _ k => k {|
+  op_zl____   := fun x y => (x <? y)%Z;
+  op_zlze____ := fun x y => (x <=? y)%Z;
+  op_zg____   := fun x y => (y <? x)%Z;
+  op_zgze____ := fun x y => (y <=? x)%Z;
+  compare__   := Z.compare%Z ;
+  max__       := Z.max%Z;
+  min__       := Z.min%Z;
+|}.
+
+Module Integer_OrderedType___ <: HsToCoqOrderedType.
+  Include Integer_DecidableType___.
+  Definition ord_t := Ord_Integer___.
+End Integer_OrderedType___.
+
+Instance Eq_Word___ : Eq_ Word := fun _ k => k {|
+                               op_zeze____ := fun x y => (x =? y)%N;
+                               op_zsze____ := fun x y => negb (x =? y)%N;
+                             |}.
+
+Module Word_DecidableType___ <: HsToCoqDecidableType.
+  Include DecidableTypeEx.N_as_DT.
+  Definition eq_t := Eq_Word___.
+End Word_DecidableType___.
+
+Instance Ord_Word___ : Ord Word := fun _ k => k {|
+  op_zl____   := fun x y => (x <? y)%N;
+  op_zlze____ := fun x y => (x <=? y)%N;
+  op_zg____   := fun x y => (y <? x)%N;
+  op_zgze____ := fun x y => (y <=? x)%N;
+  compare__   := N.compare%N ;
+  max__       := N.max%N;
+  min__       := N.min%N;
+|}.
+
+Module Word_OrderedType___ <: HsToCoqOrderedType.
+  Include Word_DecidableType___.
+  Definition ord_t := Ord_Word___.
+End Word_OrderedType___.
+
+Instance Eq_Char___ : Eq_ Char := fun _ k => k {|
+                               op_zeze____ := fun x y => (x =? y)%N;
+                               op_zsze____ := fun x y => negb (x =? y)%N;
+                             |}.
+
+Module Char_DecidableType___ <: HsToCoqDecidableType.
+  Include DecidableTypeEx.N_as_DT.
+  Definition eq_t := Eq_Char___.
+End Char_DecidableType___.
+
+Instance Ord_Char___ : Ord Char := fun _ k => k {|
+  op_zl____   := fun x y => (x <? y)%N;
+  op_zlze____ := fun x y => (x <=? y)%N;
+  op_zg____   := fun x y => (y <? x)%N;
+  op_zgze____ := fun x y => (y <=? x)%N;
+  compare__   := N.compare%N ;
+  max__       := N.max%N;
+  min__       := N.min%N;
+|}.
+
+Module Char_OrderedType___ <: HsToCoqOrderedType.
+  Include Char_DecidableType___.
+  Definition ord_t := Ord_Char___.
+End Char_OrderedType___.
+
+
+(** This is just a heuristic tactic. No guarantee that it will work
+    for an arbitrary non-recursive type. *)
+Ltac prove_non_rec_type :=
+  repeat (match goal with
+          | [ |- forall x, _ ] => destruct x
+          | [ |- _ <-> _ ] => split
+          | [ |- _ -> _ ] => inversion 1
+          | [ |- ~ _ ] => inversion 1
+          end; auto).
+
+(** We can, of course, just use tactics like [repeat decide equality]
+    to prove decidablity, but this one utilizes [op_zeze__] function
+    of the [Eq] type class This means that the decidable equality
+    proof relies on the [op_zeze__] function -- no duplicated
+    deciders! *)
+Ltac dec_eq_with_Eq eq_iff :=
+  refine (fun x y =>
+              (match eq_iff x y with
+               | conj f g =>
+                 (match (x == y) as b
+                        return (x == y = b -> { eq x y } + { ~ eq x y }) with
+                  | true =>
+                    (fun Heq : x == y = true =>
+                       left (f Heq))
+                  | false =>
+                    (fun Heq : x == y = false =>
+                       right (fun H: eq x y =>
+                                let contra :=
+                                    eq_ind (x == y)
+                                           (fun b => b = false) Heq true (g H)
+                                    : true = false in _))
+                  end)
+               end) Logic.eq_refl);
+  inversion contra.
+
+Ltac dec_compare_with_Ord lt lt_gt_rev eq_iff_compare_eq :=
+  refine (fun x y =>
+            (match (compare x y) as c
+                   return (compare x y = c -> OrderedType.Compare lt eq x y) with
+             | Lt =>
+               (fun Hlt: compare x y = Lt =>
+                  OrderedType.LT Hlt)
+             | Gt =>
+               (fun Hlt: compare x y = Gt =>
+                  match lt_gt_rev y x with
+                  | conj _ f => OrderedType.GT (f Hlt)
+                  end)
+             | Eq =>
+               (fun Hlt: compare x y = Eq =>
+                  match eq_iff_compare_eq x y with
+                  | conj f _ => OrderedType.EQ (f Hlt)
+                  end)
+             end) Logic.eq_refl).
+
+Instance Eq_bool___ : Eq_ bool := fun _ k => k {|
+                               op_zeze____ := eqb;
+                               op_zsze____ := fun x y => negb (eqb x y);
+                             |}.
+
+Module bool_Typ <: Equalities.Typ.
+  Definition t := bool.
+End bool_Typ.
+
+Module bool_DecidableType___ <: HsToCoqDecidableType.
+  Include bool_Typ <+ Equalities.HasUsualEq <+ Equalities.UsualIsEqOrig.
+
+  Definition eq_dec : forall x y : t, { eq x y } + { ~ eq x y }.
+    dec_eq_with_Eq eqb_true_iff.
+  Defined.
+
+  Definition eq_t := Eq_bool___.
+End bool_DecidableType___.
 
 Definition compare_bool (b1:bool)(b2:bool) : comparison :=
   match b1 , b2 with
   | true , true => Eq
   | false, false => Eq
-  | true , false => Lt
-  | false , true => Gt
+  | true , false => Gt
+  | false , true => Lt
   end.
 
+Instance Ord_bool___ : Ord bool := fun _ k => k {|
+  op_zl____   := fun x y => andb (negb x) y;
+  op_zlze____ := fun x y => orb (negb x) y;
+  op_zg____   := fun x y => orb (negb y) x;
+  op_zgze____ := fun x y => andb (negb y) x;
+  compare__   := compare_bool;
+  max__       := orb;
+  min__       := andb
+|}.
 
-Instance Ord_bool___ : !Ord bool := {
-  op_zl__   := fun x y => andb (negb x) y;
-  op_zlze__ := fun x y => orb (negb x) y;
-  op_zg__   := fun x y => orb (negb y) x;
-  op_zgze__ := fun x y => andb (negb y) x;
-  compare   := compare_bool;
-  max       := orb;
-  min       := andb
-}.
+Module bool_OrderedType___ <: HsToCoqOrderedType.
+  Include bool_DecidableType___.
 
-Instance Eq_unit___ : Eq_ unit := {
-                               op_zeze__ := fun x y => true;
-                               op_zsze__ := fun x y => false;
-                             }.
+  Hint Unfold eq.
 
-Instance Ord_unit___ : !Ord unit := {
-  op_zl__   := fun x y => false;
-  op_zlze__ := fun x y => true;
-  op_zg__   := fun x y => false;
-  op_zgze__ := fun x y => true;
-  compare   := fun x y => Eq ;
-  max       := fun x y => tt;
-  min       := fun x y => tt;
-}.
+  Definition lt (x y : t) := compare x y = Lt.
+
+  Lemma lt_trans : forall x y z : t, lt x y -> lt y z -> lt x z.
+  Proof. prove_non_rec_type. Qed.
+  
+  Lemma lt_not_eq : forall x y : t, lt x y -> ~ eq x y.
+  Proof. prove_non_rec_type. Qed.
+
+  Lemma lt_gt_rev: forall x y : t, compare x y = Lt <-> compare y x = Gt.
+  Proof. prove_non_rec_type. Qed.
+  
+  Lemma eq_iff_compare_eq : forall x y : t, compare x y = Eq <-> eq x y.
+  Proof. prove_non_rec_type. Qed.
+  
+  Definition compare : forall x y : t, OrderedType.Compare lt eq x y.
+    dec_compare_with_Ord lt lt_gt_rev eq_iff_compare_eq.
+  Defined.
+
+  Definition ord_t := Ord_bool___.
+End bool_OrderedType___.
+
+Instance Eq_unit___ : Eq_ unit := fun _ k => k {|
+                               op_zeze____ := fun x y => true;
+                               op_zsze____ := fun x y => false;
+                             |}.
+
+Module unit_Typ <: Equalities.Typ.
+  Definition t := unit.
+End unit_Typ.
+
+Module unit_DecidableType___ <: HsToCoqDecidableType.
+  Include unit_Typ <+ Equalities.HasUsualEq <+ Equalities.UsualIsEqOrig.
+
+  Lemma eq_iff : forall x y,
+      x == y = true <-> x = y.
+  Proof. prove_non_rec_type. Qed.
+
+  Definition eq_dec : forall x y : t, { eq x y } + { ~ eq x y }.
+    dec_eq_with_Eq eq_iff.
+  Defined.
+
+  Definition eq_t := Eq_unit___.
+End unit_DecidableType___.
+
+Instance Ord_unit___ : Ord unit := fun _ k => k {|
+  op_zl____   := fun x y => false;
+  op_zlze____ := fun x y => true;
+  op_zg____   := fun x y => false;
+  op_zgze____ := fun x y => true;
+  compare__   := fun x y => Eq ;
+  max__       := fun x y => tt;
+  min__       := fun x y => tt;
+|}.
+
+Module unit_OrderedType___ <: HsToCoqOrderedType.
+  Include unit_DecidableType___.
+
+  Hint Unfold eq.
+
+  Definition lt x y := compare x y = Lt.
+
+  Lemma lt_trans : forall x y z : t, lt x y -> lt y z -> lt x z.
+  Proof. prove_non_rec_type. Qed.
+  
+  Lemma lt_not_eq : forall x y : t, lt x y -> ~ eq x y.
+  Proof. prove_non_rec_type. Qed.
+
+  Lemma lt_gt_rev: forall x y : t, compare x y = Lt <-> compare y x = Gt.
+  Proof. prove_non_rec_type. Qed.
+  
+  Lemma eq_iff_compare_eq : forall x y : t,
+      compare x y = Eq <-> eq x y.
+  Proof. prove_non_rec_type. Qed.
+  
+  Definition compare : forall x y : t, OrderedType.Compare lt eq x y.
+    dec_compare_with_Ord lt lt_gt_rev eq_iff_compare_eq.
+  Defined.
+
+  Definition ord_t := Ord_unit___.
+End unit_OrderedType___.
 
 Definition eq_comparison (x : comparison) (y: comparison) :=
   match x , y with
@@ -247,11 +622,29 @@ Definition eq_comparison (x : comparison) (y: comparison) :=
   | _ , _  => false
 end.
 
-Instance Eq_comparison___ : Eq_ comparison :=
-{
-  op_zeze__ := eq_comparison;
-  op_zsze__ := fun x y => negb (eq_comparison x y);
-}.
+Instance Eq_comparison___ : Eq_ comparison := fun _ k => k
+{|
+  op_zeze____ := eq_comparison;
+  op_zsze____ := fun x y => negb (eq_comparison x y);
+|}.
+
+Module comparison_Typ.
+  Definition t := comparison.
+End comparison_Typ.
+
+Module comparison_DecidableType___ <: HsToCoqDecidableType.
+  Include comparison_Typ <+ Equalities.HasUsualEq <+ Equalities.UsualIsEqOrig.
+
+  Lemma eq_iff : forall x y : t,
+      x == y = true <-> x = y.
+  Proof. prove_non_rec_type. Qed.
+
+  Definition eq_dec : forall x y : t, { eq x y } + { ~ eq x y }.
+    dec_eq_with_Eq eq_iff.
+  Defined.
+
+  Definition eq_t := Eq_comparison___.
+End comparison_DecidableType___.
 
 Definition compare_comparison  (x : comparison) (y: comparison) :=
   match x , y with
@@ -264,8 +657,11 @@ Definition compare_comparison  (x : comparison) (y: comparison) :=
   | Gt, Gt => Eq
 end.
 
-Definition ord_default {a} (comp : a -> a -> comparison) `{Eq_ a} :=
-  Build_Ord _ _
+Definition eq_default {a} (eq : a -> a -> bool) : Eq_ a :=
+  fun _ k => k {|op_zeze____ := eq; op_zsze____ := fun x y => negb (eq x y) |}.
+
+Definition ord_default {a} (comp : a -> a -> comparison) `{Eq_ a} : Ord a :=
+  fun _ k => k (Ord__Dict_Build _
   (fun x y => (comp x y) == Lt)
   ( fun x y => negb ((comp x y) == Lt))
   (fun x y => (comp y x) == Lt)
@@ -279,18 +675,45 @@ Definition ord_default {a} (comp : a -> a -> comparison) `{Eq_ a} :=
   (fun x y =>   match comp x y with
              | Gt => y
              | _  => x
-             end).
+             end)).
 
-Instance Ord_comparison___ : !Ord comparison := ord_default compare_comparison.
+Instance Ord_comparison___ : Ord comparison := ord_default compare_comparison.
 
+Module comparison_OrderedType___ <: HsToCoqOrderedType.
+  Include comparison_DecidableType___.
+
+  Hint Unfold eq.
+
+  Definition lt x y := compare x y = Lt.
+
+  Lemma lt_trans : forall x y z : t, lt x y -> lt y z -> lt x z.
+  Proof. prove_non_rec_type. Qed.
+  
+  Lemma lt_not_eq : forall x y : t, lt x y -> ~ eq x y.
+  Proof. prove_non_rec_type. Qed.
+  
+  Lemma lt_gt_rev: forall x y : t, compare x y = Lt <-> compare y x = Gt.
+  Proof. prove_non_rec_type. Qed.
+    
+  Lemma eq_iff_compare_eq : forall x y : t,
+      compare x y = Eq <-> eq x y.
+  Proof. prove_non_rec_type. Qed.
+    
+  Definition compare : forall x y : t, OrderedType.Compare lt eq x y.
+    dec_compare_with_Ord lt lt_gt_rev eq_iff_compare_eq.
+  Defined.
+
+  Definition ord_t := Ord_comparison___.
+End comparison_OrderedType___.
 
 (* TODO: are these available in a library somewhere? *)
-Fixpoint eqlist {a} `{Eq_ a} (xs :  list a) (ys : list a) : bool :=
-    match xs , ys with
-    | nil , nil => true
-    | x :: xs' , y :: ys' => andb (x == y) (eqlist xs' ys')
-    | _ ,  _ => false
-    end.
+Definition eqlist {a} `{Eq_ a} : list a -> list a -> bool :=
+	fix eqlist xs ys :=
+	    match xs , ys with
+	    | nil , nil => true
+	    | x :: xs' , y :: ys' => andb (x == y) (eqlist xs' ys')
+	    | _ ,  _ => false
+	    end.
 
 Fixpoint compare_list {a} `{Ord a} (xs :  list a) (ys : list a) : comparison :=
     match xs , ys with
@@ -305,29 +728,29 @@ Fixpoint compare_list {a} `{Ord a} (xs :  list a) (ys : list a) : comparison :=
       end
     end.
 
-Instance Eq_list {a} `{Eq_ a} : Eq_ (list a) :=
-  { op_zeze__ := eqlist;
-    op_zsze__ := fun x y => negb (eqlist x y)
-  }.
+Instance Eq_list {a} `{Eq_ a} : Eq_ (list a) := fun _ k => k
+  {| op_zeze____ := eqlist;
+     op_zsze____ := fun x y => negb (eqlist x y)
+  |}.
 
-Instance Ord_list {a} `{Ord a}: !Ord (list a) :=
+Instance Ord_list {a} `{Ord a}: Ord (list a) :=
   ord_default compare_list.
 
 
-Instance Eq_option {a} `{Eq_ a} : Eq_ (option a) := {
-   op_zeze__ := fun x y =>
+Instance Eq_option {a} `{Eq_ a} : Eq_ (option a) := fun _ k => k {|
+   op_zeze____ := fun x y =>
                   match x,y with
                   | Some x0, Some y0 => x0 == y0
                   | None, None => true
                   | _,_ => false
                   end ;
-   op_zsze__ := fun x y =>
+   op_zsze____ := fun x y =>
                   match x,y with
                   | Some x0, Some y0 => x0 /= y0
                   | None, None => false
                   | _,_ => true
                   end
-}.
+|}.
 
 Definition compare_option {a} `{Ord a} (xs : option a) (ys : option a) : comparison :=
   match xs, ys with
@@ -337,7 +760,7 @@ Definition compare_option {a} `{Ord a} (xs : option a) (ys : option a) : compari
   | Some x , Some y => compare x y
   end.
 
-Instance Ord_option {a} `{Ord a} : !Ord (option a) := ord_default compare_option.
+Instance Ord_option {a} `{Ord a} : Ord (option a) := ord_default compare_option.
 
 
 (* ********************************************************* *)
@@ -404,68 +827,6 @@ Definition build {a} : ((a -> list a -> list a) -> list a -> list a) -> list a :
 
 Definition oneShot {a} (x:a) := x.
 
-(* Converted imports: *)
-
-Require Coq.Init.Datatypes.
-Require Coq.Lists.List.
-Require Coq.Program.Basics.
-Require GHC.Prim.
-Require GHC.Tuple.
-
-(* Converted type declarations: *)
-
-Class Monoid a := {
-  mappend : a -> a -> a ;
-  mconcat : list a -> a ;
-  mempty : a }.
-
-Class Functor f := {
-  op_zlzd__ : forall {a} {b}, a -> f b -> f a ;
-  fmap : forall {a} {b}, (a -> b) -> f a -> f b }.
-
-Infix "<$" := (op_zlzd__) (at level 99).
-
-Notation "'_<$_'" := (op_zlzd__).
-
-Class Applicative f `{Functor f} := {
-  op_ztzg__ : forall {a} {b}, f a -> f b -> f b ;
-  op_zlztzg__ : forall {a} {b}, f (a -> b) -> f a -> f b ;
-  pure : forall {a}, a -> f a }.
-
-Infix "*>" := (op_ztzg__) (at level 99).
-
-Notation "'_*>_'" := (op_ztzg__).
-
-Infix "<*>" := (op_zlztzg__) (at level 99).
-
-Notation "'_<*>_'" := (op_zlztzg__).
-
-Class Monad m `{Applicative m} := {
-  op_zgzg__ : forall {a} {b}, m a -> m b -> m b ;
-  op_zgzgze__ : forall {a} {b}, m a -> (a -> m b) -> m b ;
-  return_ : forall {a}, a -> m a }.
-
-Infix ">>" := (op_zgzg__) (at level 99).
-
-Notation "'_>>_'" := (op_zgzg__).
-
-Infix ">>=" := (op_zgzgze__) (at level 99).
-
-Notation "'_>>=_'" := (op_zgzgze__).
-
-Class Alternative f `{Applicative f} := {
-  op_zlzbzg__ : forall {a}, f a -> f a -> f a ;
-  empty : forall {a}, f a ;
-  many : forall {a}, f a -> f (list a) ;
-  some : forall {a}, f a -> f (list a) }.
-
-Infix "<|>" := (op_zlzbzg__) (at level 99).
-
-Notation "'_<|>_'" := (op_zlzbzg__).
-
-Class MonadPlus m `{Alternative m} `{Monad m} := {
-  mplus : forall {a}, m a -> m a -> m a ;
-  mzero : forall {a}, m a }.
 (* Converted value declarations: *)
 
 Local Definition instance_Monoid__list_a__mappend {inst_a} : list inst_a -> list
@@ -483,10 +844,9 @@ Local Definition instance_Monoid__list_a__mconcat {inst_a} : list (list
 Local Definition instance_Monoid__list_a__mempty {inst_a} : list inst_a :=
   nil.
 
-Instance instance_Monoid__list_a_ : forall {a}, Monoid (list a) := {
-  mappend := instance_Monoid__list_a__mappend ;
-  mconcat := instance_Monoid__list_a__mconcat ;
-  mempty := instance_Monoid__list_a__mempty }.
+Instance instance_Monoid__list_a_ {a} : Monoid (list a) := fun _ k =>
+    k (Monoid__Dict_Build (list a) instance_Monoid__list_a__mappend
+                          instance_Monoid__list_a__mconcat instance_Monoid__list_a__mempty).
 
 Local Definition instance_forall___Monoid_b___Monoid__a____b__mappend {inst_b}
                                                                       {inst_a} `{Monoid inst_b}
@@ -509,10 +869,9 @@ Local Definition instance_Monoid_unit_mconcat : list unit -> unit :=
 Local Definition instance_Monoid_unit_mempty : unit :=
   tt.
 
-Instance instance_Monoid_unit : Monoid unit := {
-  mappend := instance_Monoid_unit_mappend ;
-  mconcat := instance_Monoid_unit_mconcat ;
-  mempty := instance_Monoid_unit_mempty }.
+Instance instance_Monoid_unit : Monoid unit := fun _ k =>
+    k (Monoid__Dict_Build unit instance_Monoid_unit_mappend
+                          instance_Monoid_unit_mconcat instance_Monoid_unit_mempty).
 
 Local Definition instance_forall___Monoid_a____Monoid_b___Monoid__a___b__mappend {inst_a}
                                                                                  {inst_b} `{Monoid inst_a} `{Monoid
@@ -828,9 +1187,9 @@ Local Definition instance_Functor_option_op_zlzd__ : forall {a} {b},
                                                        a -> option b -> option a :=
   fun {a} {b} => Coq.Program.Basics.compose instance_Functor_option_fmap const.
 
-Instance instance_Functor_option : Functor option := {
-  fmap := fun {a} {b} => instance_Functor_option_fmap ;
-  op_zlzd__ := fun {a} {b} => instance_Functor_option_op_zlzd__ }.
+Instance instance_Functor_option : Functor option := fun _ k =>
+    k (Functor__Dict_Build option (fun {a} {b} => instance_Functor_option_op_zlzd__)
+                           (fun {a} {b} => instance_Functor_option_fmap)).
 
 Local Definition instance_Applicative_option_op_zlztzg__ : forall {a} {b},
                                                              option (a -> b) -> option a -> option b :=
@@ -841,10 +1200,11 @@ Local Definition instance_Applicative_option_op_zlztzg__ : forall {a} {b},
         | None , _m => None
       end.
 
-Instance instance_Applicative_option : Applicative option := {
-  op_zlztzg__ := fun {a} {b} => instance_Applicative_option_op_zlztzg__ ;
-  op_ztzg__ := fun {a} {b} => instance_Applicative_option_op_ztzg__ ;
-  pure := fun {a} => instance_Applicative_option_pure }.
+Instance instance_Applicative_option : Applicative option := fun _ k =>
+    k (Applicative__Dict_Build option (fun {a} {b} =>
+                                 instance_Applicative_option_op_ztzg__) (fun {a} {b} =>
+                                 instance_Applicative_option_op_zlztzg__) (fun {a} =>
+                                 instance_Applicative_option_pure)).
 
 Local Definition instance_Monad_option_op_zgzg__ : forall {a} {b},
                                                      option a -> option b -> option b :=
@@ -853,10 +1213,10 @@ Local Definition instance_Monad_option_op_zgzg__ : forall {a} {b},
 Local Definition instance_Monad_option_return_ : forall {a}, a -> option a :=
   fun {a} => pure.
 
-Instance instance_Monad_option : Monad option := {
-  op_zgzg__ := fun {a} {b} => instance_Monad_option_op_zgzg__ ;
-  op_zgzgze__ := fun {a} {b} => instance_Monad_option_op_zgzgze__ ;
-  return_ := fun {a} => instance_Monad_option_return_ }.
+Instance instance_Monad_option : Monad option := fun _ k =>
+    k (Monad__Dict_Build option (fun {a} {b} => instance_Monad_option_op_zgzg__)
+                         (fun {a} {b} => instance_Monad_option_op_zgzgze__) (fun {a} =>
+                           instance_Monad_option_return_)).
 
 Local Definition instance_Functor__GHC_Tuple_pair_type_a__op_zlzd__ {inst_a}
     : forall {a} {b},
@@ -864,11 +1224,11 @@ Local Definition instance_Functor__GHC_Tuple_pair_type_a__op_zlzd__ {inst_a}
   fun {a} {b} =>
     Coq.Program.Basics.compose instance_Functor__GHC_Tuple_pair_type_a__fmap const.
 
-Instance instance_Functor__GHC_Tuple_pair_type_a_ : forall {a},
-                                                      Functor (GHC.Tuple.pair_type a) := {
-  fmap := fun {a} {b} => instance_Functor__GHC_Tuple_pair_type_a__fmap ;
-  op_zlzd__ := fun {a} {b} =>
-    instance_Functor__GHC_Tuple_pair_type_a__op_zlzd__ }.
+Instance instance_Functor__GHC_Tuple_pair_type_a_ {a} : Functor
+                                                        (GHC.Tuple.pair_type a) := fun _ k =>
+    k (Functor__Dict_Build (GHC.Tuple.pair_type a) (fun {a} {b} =>
+                             instance_Functor__GHC_Tuple_pair_type_a__op_zlzd__) (fun {a} {b} =>
+                             instance_Functor__GHC_Tuple_pair_type_a__fmap)).
 
 Local Definition instance_Applicative__GHC_Prim_arrow_a__pure {inst_a}
     : forall {a}, a -> (GHC.Prim.arrow inst_a) a :=
@@ -879,10 +1239,11 @@ Local Definition instance_Functor__GHC_Prim_arrow_r__op_zlzd__ {inst_r}
   fun {a} {b} =>
     Coq.Program.Basics.compose instance_Functor__GHC_Prim_arrow_r__fmap const.
 
-Instance instance_Functor__GHC_Prim_arrow_r_ : forall {r},
-                                                 Functor (GHC.Prim.arrow r) := {
-  fmap := fun {a} {b} => instance_Functor__GHC_Prim_arrow_r__fmap ;
-  op_zlzd__ := fun {a} {b} => instance_Functor__GHC_Prim_arrow_r__op_zlzd__ }.
+Instance instance_Functor__GHC_Prim_arrow_r_ {r} : Functor (GHC.Prim.arrow r) :=
+  fun _ k =>
+    k (Functor__Dict_Build (GHC.Prim.arrow r) (fun {a} {b} =>
+                             instance_Functor__GHC_Prim_arrow_r__op_zlzd__) (fun {a} {b} =>
+                             instance_Functor__GHC_Prim_arrow_r__fmap)).
 
 Definition eqString : String -> String -> bool :=
   fix eqString arg_56__ arg_57__
@@ -929,20 +1290,20 @@ Local Definition instance_forall___Monoid_a___Monoid__option_a__mconcat {inst_a}
   foldr instance_forall___Monoid_a___Monoid__option_a__mappend
   instance_forall___Monoid_a___Monoid__option_a__mempty.
 
-Instance instance_forall___Monoid_a___Monoid__option_a_ : forall {a},
-                                                            forall `{Monoid a}, Monoid (option a) := {
-  mappend := instance_forall___Monoid_a___Monoid__option_a__mappend ;
-  mconcat := instance_forall___Monoid_a___Monoid__option_a__mconcat ;
-  mempty := instance_forall___Monoid_a___Monoid__option_a__mempty }.
+Instance instance_forall___Monoid_a___Monoid__option_a_ {a} `{Monoid a} : Monoid
+                                                                          (option a) := fun _ k =>
+    k (Monoid__Dict_Build (option a)
+                          instance_forall___Monoid_a___Monoid__option_a__mappend
+                          instance_forall___Monoid_a___Monoid__option_a__mconcat
+                          instance_forall___Monoid_a___Monoid__option_a__mempty).
 
 Local Definition instance_Monoid_comparison_mconcat : list
                                                       comparison -> comparison :=
   foldr instance_Monoid_comparison_mappend instance_Monoid_comparison_mempty.
 
-Instance instance_Monoid_comparison : Monoid comparison := {
-  mappend := instance_Monoid_comparison_mappend ;
-  mconcat := instance_Monoid_comparison_mconcat ;
-  mempty := instance_Monoid_comparison_mempty }.
+Instance instance_Monoid_comparison : Monoid comparison := fun _ k =>
+    k (Monoid__Dict_Build comparison instance_Monoid_comparison_mappend
+                          instance_Monoid_comparison_mconcat instance_Monoid_comparison_mempty).
 
 Local Definition instance_forall___Monoid_a____Monoid_b____Monoid_c____Monoid_d____Monoid_e___Monoid__a___b___c___d___e__mconcat {inst_a}
                                                                                                                                  {inst_b}
@@ -965,13 +1326,24 @@ Local Definition instance_forall___Monoid_a____Monoid_b____Monoid_c____Monoid_d_
   instance_forall___Monoid_a____Monoid_b____Monoid_c____Monoid_d____Monoid_e___Monoid__a___b___c___d___e__mappend
   instance_forall___Monoid_a____Monoid_b____Monoid_c____Monoid_d____Monoid_e___Monoid__a___b___c___d___e__mempty.
 
-Instance instance_forall___Monoid_a____Monoid_b____Monoid_c____Monoid_d____Monoid_e___Monoid__a___b___c___d___e_
-  : forall {a} {b} {c} {d} {e},
-      forall `{Monoid a} `{Monoid b} `{Monoid c} `{Monoid d} `{Monoid e},
-        Monoid (a * b * c * d * e) := {
-  mappend := instance_forall___Monoid_a____Monoid_b____Monoid_c____Monoid_d____Monoid_e___Monoid__a___b___c___d___e__mappend ;
-  mconcat := instance_forall___Monoid_a____Monoid_b____Monoid_c____Monoid_d____Monoid_e___Monoid__a___b___c___d___e__mconcat ;
-  mempty := instance_forall___Monoid_a____Monoid_b____Monoid_c____Monoid_d____Monoid_e___Monoid__a___b___c___d___e__mempty }.
+Instance instance_forall___Monoid_a____Monoid_b____Monoid_c____Monoid_d____Monoid_e___Monoid__a___b___c___d___e_ {a}
+                                                                                                                 {b} {c}
+                                                                                                                 {d} {e}
+                                                                                                                 `{Monoid
+                                                                                                                 a}
+                                                                                                                 `{Monoid
+                                                                                                                 b}
+                                                                                                                 `{Monoid
+                                                                                                                 c}
+                                                                                                                 `{Monoid
+                                                                                                                 d}
+                                                                                                                 `{Monoid
+                                                                                                                 e}
+  : Monoid (a * b * c * d * e) := fun _ k =>
+    k (Monoid__Dict_Build (a * b * c * d * e)
+                          instance_forall___Monoid_a____Monoid_b____Monoid_c____Monoid_d____Monoid_e___Monoid__a___b___c___d___e__mappend
+                          instance_forall___Monoid_a____Monoid_b____Monoid_c____Monoid_d____Monoid_e___Monoid__a___b___c___d___e__mconcat
+                          instance_forall___Monoid_a____Monoid_b____Monoid_c____Monoid_d____Monoid_e___Monoid__a___b___c___d___e__mempty).
 
 Local Definition instance_forall___Monoid_a____Monoid_b____Monoid_c____Monoid_d___Monoid__a___b___c___d__mconcat {inst_a}
                                                                                                                  {inst_b}
@@ -991,13 +1363,21 @@ Local Definition instance_forall___Monoid_a____Monoid_b____Monoid_c____Monoid_d_
   instance_forall___Monoid_a____Monoid_b____Monoid_c____Monoid_d___Monoid__a___b___c___d__mappend
   instance_forall___Monoid_a____Monoid_b____Monoid_c____Monoid_d___Monoid__a___b___c___d__mempty.
 
-Instance instance_forall___Monoid_a____Monoid_b____Monoid_c____Monoid_d___Monoid__a___b___c___d_
-  : forall {a} {b} {c} {d},
-      forall `{Monoid a} `{Monoid b} `{Monoid c} `{Monoid d},
-        Monoid (a * b * c * d) := {
-  mappend := instance_forall___Monoid_a____Monoid_b____Monoid_c____Monoid_d___Monoid__a___b___c___d__mappend ;
-  mconcat := instance_forall___Monoid_a____Monoid_b____Monoid_c____Monoid_d___Monoid__a___b___c___d__mconcat ;
-  mempty := instance_forall___Monoid_a____Monoid_b____Monoid_c____Monoid_d___Monoid__a___b___c___d__mempty }.
+Instance instance_forall___Monoid_a____Monoid_b____Monoid_c____Monoid_d___Monoid__a___b___c___d_ {a}
+                                                                                                 {b} {c} {d} `{Monoid a}
+                                                                                                 `{Monoid b} `{Monoid c}
+                                                                                                 `{Monoid d} : Monoid (a
+                                                                                                                      *
+                                                                                                                      b
+                                                                                                                      *
+                                                                                                                      c
+                                                                                                                      *
+                                                                                                                      d) :=
+  fun _ k =>
+    k (Monoid__Dict_Build (a * b * c * d)
+                          instance_forall___Monoid_a____Monoid_b____Monoid_c____Monoid_d___Monoid__a___b___c___d__mappend
+                          instance_forall___Monoid_a____Monoid_b____Monoid_c____Monoid_d___Monoid__a___b___c___d__mconcat
+                          instance_forall___Monoid_a____Monoid_b____Monoid_c____Monoid_d___Monoid__a___b___c___d__mempty).
 
 Local Definition instance_forall___Monoid_a____Monoid_b____Monoid_c___Monoid__a___b___c__mconcat {inst_a}
                                                                                                  {inst_b} {inst_c}
@@ -1017,12 +1397,14 @@ Local Definition instance_forall___Monoid_a____Monoid_b____Monoid_c___Monoid__a_
   instance_forall___Monoid_a____Monoid_b____Monoid_c___Monoid__a___b___c__mappend
   instance_forall___Monoid_a____Monoid_b____Monoid_c___Monoid__a___b___c__mempty.
 
-Instance instance_forall___Monoid_a____Monoid_b____Monoid_c___Monoid__a___b___c_
-  : forall {a} {b} {c},
-      forall `{Monoid a} `{Monoid b} `{Monoid c}, Monoid (a * b * c) := {
-  mappend := instance_forall___Monoid_a____Monoid_b____Monoid_c___Monoid__a___b___c__mappend ;
-  mconcat := instance_forall___Monoid_a____Monoid_b____Monoid_c___Monoid__a___b___c__mconcat ;
-  mempty := instance_forall___Monoid_a____Monoid_b____Monoid_c___Monoid__a___b___c__mempty }.
+Instance instance_forall___Monoid_a____Monoid_b____Monoid_c___Monoid__a___b___c_ {a}
+                                                                                 {b} {c} `{Monoid a} `{Monoid b}
+                                                                                 `{Monoid c} : Monoid (a * b * c) :=
+  fun _ k =>
+    k (Monoid__Dict_Build (a * b * c)
+                          instance_forall___Monoid_a____Monoid_b____Monoid_c___Monoid__a___b___c__mappend
+                          instance_forall___Monoid_a____Monoid_b____Monoid_c___Monoid__a___b___c__mconcat
+                          instance_forall___Monoid_a____Monoid_b____Monoid_c___Monoid__a___b___c__mempty).
 
 Local Definition instance_forall___Monoid_a____Monoid_b___Monoid__a___b__mconcat {inst_a}
                                                                                  {inst_b} `{Monoid inst_a} `{Monoid
@@ -1032,12 +1414,12 @@ Local Definition instance_forall___Monoid_a____Monoid_b___Monoid__a___b__mconcat
   foldr instance_forall___Monoid_a____Monoid_b___Monoid__a___b__mappend
   instance_forall___Monoid_a____Monoid_b___Monoid__a___b__mempty.
 
-Instance instance_forall___Monoid_a____Monoid_b___Monoid__a___b_ : forall {a}
-                                                                          {b},
-                                                                     forall `{Monoid a} `{Monoid b}, Monoid (a * b) := {
-  mappend := instance_forall___Monoid_a____Monoid_b___Monoid__a___b__mappend ;
-  mconcat := instance_forall___Monoid_a____Monoid_b___Monoid__a___b__mconcat ;
-  mempty := instance_forall___Monoid_a____Monoid_b___Monoid__a___b__mempty }.
+Instance instance_forall___Monoid_a____Monoid_b___Monoid__a___b_ {a} {b}
+                                                                 `{Monoid a} `{Monoid b} : Monoid (a * b) := fun _ k =>
+    k (Monoid__Dict_Build (a * b)
+                          instance_forall___Monoid_a____Monoid_b___Monoid__a___b__mappend
+                          instance_forall___Monoid_a____Monoid_b___Monoid__a___b__mconcat
+                          instance_forall___Monoid_a____Monoid_b___Monoid__a___b__mempty).
 
 Local Definition instance_forall___Monoid_b___Monoid__a____b__mconcat {inst_b}
                                                                       {inst_a} `{Monoid inst_b} : list
@@ -1045,11 +1427,12 @@ Local Definition instance_forall___Monoid_b___Monoid__a____b__mconcat {inst_b}
   foldr instance_forall___Monoid_b___Monoid__a____b__mappend
   instance_forall___Monoid_b___Monoid__a____b__mempty.
 
-Instance instance_forall___Monoid_b___Monoid__a____b_ : forall {b} {a},
-                                                          forall `{Monoid b}, Monoid (a -> b) := {
-  mappend := instance_forall___Monoid_b___Monoid__a____b__mappend ;
-  mconcat := instance_forall___Monoid_b___Monoid__a____b__mconcat ;
-  mempty := instance_forall___Monoid_b___Monoid__a____b__mempty }.
+Instance instance_forall___Monoid_b___Monoid__a____b_ {b} {a} `{Monoid b}
+  : Monoid (a -> b) := fun _ k =>
+    k (Monoid__Dict_Build (a -> b)
+                          instance_forall___Monoid_b___Monoid__a____b__mappend
+                          instance_forall___Monoid_b___Monoid__a____b__mconcat
+                          instance_forall___Monoid_b___Monoid__a____b__mempty).
 
 Definition id {a} : a -> a :=
   fun arg_54__ => match arg_54__ with | x => x end.
@@ -1071,22 +1454,23 @@ Local Definition instance_Applicative__GHC_Prim_arrow_a__op_ztzg__ {inst_a}
                                                                                     a1) a2
       end.
 
-Instance instance_Applicative__GHC_Prim_arrow_a_ : forall {a},
-                                                     Applicative (GHC.Prim.arrow a) := {
-  op_zlztzg__ := fun {a} {b} =>
-    instance_Applicative__GHC_Prim_arrow_a__op_zlztzg__ ;
-  op_ztzg__ := fun {a} {b} => instance_Applicative__GHC_Prim_arrow_a__op_ztzg__ ;
-  pure := fun {a} => instance_Applicative__GHC_Prim_arrow_a__pure }.
+Instance instance_Applicative__GHC_Prim_arrow_a_ {a} : Applicative
+                                                       (GHC.Prim.arrow a) := fun _ k =>
+    k (Applicative__Dict_Build (GHC.Prim.arrow a) (fun {a} {b} =>
+                                 instance_Applicative__GHC_Prim_arrow_a__op_ztzg__) (fun {a} {b} =>
+                                 instance_Applicative__GHC_Prim_arrow_a__op_zlztzg__) (fun {a} =>
+                                 instance_Applicative__GHC_Prim_arrow_a__pure)).
 
 Local Definition instance_Monad__GHC_Prim_arrow_r__return_ {inst_r}
     : forall {a}, a -> (GHC.Prim.arrow inst_r) a :=
   fun {a} => pure.
 
-Instance instance_Monad__GHC_Prim_arrow_r_ : forall {r},
-                                               Monad (GHC.Prim.arrow r) := {
-  op_zgzg__ := fun {a} {b} => instance_Monad__GHC_Prim_arrow_r__op_zgzg__ ;
-  op_zgzgze__ := fun {a} {b} => instance_Monad__GHC_Prim_arrow_r__op_zgzgze__ ;
-  return_ := fun {a} => instance_Monad__GHC_Prim_arrow_r__return_ }.
+Instance instance_Monad__GHC_Prim_arrow_r_ {r} : Monad (GHC.Prim.arrow r) :=
+  fun _ k =>
+    k (Monad__Dict_Build (GHC.Prim.arrow r) (fun {a} {b} =>
+                           instance_Monad__GHC_Prim_arrow_r__op_zgzg__) (fun {a} {b} =>
+                           instance_Monad__GHC_Prim_arrow_r__op_zgzgze__) (fun {a} =>
+                           instance_Monad__GHC_Prim_arrow_r__return_)).
 
 Local Definition instance_forall___Monoid_a___Applicative__GHC_Tuple_pair_type_a__op_ztzg__ {inst_a}
                                                                                             `{Monoid inst_a}
@@ -1101,14 +1485,15 @@ Local Definition instance_forall___Monoid_a___Applicative__GHC_Tuple_pair_type_a
           (op_zlzd__ id a1) a2
       end.
 
-Instance instance_forall___Monoid_a___Applicative__GHC_Tuple_pair_type_a_
-  : forall {a}, forall `{Monoid a}, Applicative (GHC.Tuple.pair_type a) := {
-  op_zlztzg__ := fun {a} {b} =>
-    instance_forall___Monoid_a___Applicative__GHC_Tuple_pair_type_a__op_zlztzg__ ;
-  op_ztzg__ := fun {a} {b} =>
-    instance_forall___Monoid_a___Applicative__GHC_Tuple_pair_type_a__op_ztzg__ ;
-  pure := fun {a} =>
-    instance_forall___Monoid_a___Applicative__GHC_Tuple_pair_type_a__pure }.
+Instance instance_forall___Monoid_a___Applicative__GHC_Tuple_pair_type_a_ {a}
+                                                                          `{Monoid a} : Applicative (GHC.Tuple.pair_type
+                                                                                                    a) := fun _ k =>
+    k (Applicative__Dict_Build (GHC.Tuple.pair_type a) (fun {a} {b} =>
+                                 instance_forall___Monoid_a___Applicative__GHC_Tuple_pair_type_a__op_ztzg__)
+                               (fun {a} {b} =>
+                                 instance_forall___Monoid_a___Applicative__GHC_Tuple_pair_type_a__op_zlztzg__)
+                               (fun {a} =>
+                                 instance_forall___Monoid_a___Applicative__GHC_Tuple_pair_type_a__pure)).
 
 Local Definition instance_forall___Monoid_a___Monad__GHC_Tuple_pair_type_a__return_ {inst_a}
                                                                                     `{Monoid inst_a} : forall {a},
@@ -1151,14 +1536,14 @@ Local Definition instance_forall___Monoid_a___Monad__GHC_Tuple_pair_type_a__op_z
                                                                                  (fun arg_17__ => k)
       end.
 
-Instance instance_forall___Monoid_a___Monad__GHC_Tuple_pair_type_a_
-  : forall {a}, forall `{Monoid a}, Monad (GHC.Tuple.pair_type a) := {
-  op_zgzg__ := fun {a} {b} =>
-    instance_forall___Monoid_a___Monad__GHC_Tuple_pair_type_a__op_zgzg__ ;
-  op_zgzgze__ := fun {a} {b} =>
-    instance_forall___Monoid_a___Monad__GHC_Tuple_pair_type_a__op_zgzgze__ ;
-  return_ := fun {a} =>
-    instance_forall___Monoid_a___Monad__GHC_Tuple_pair_type_a__return_ }.
+Instance instance_forall___Monoid_a___Monad__GHC_Tuple_pair_type_a_ {a} `{Monoid
+                                                                    a} : Monad (GHC.Tuple.pair_type a) := fun _ k =>
+    k (Monad__Dict_Build (GHC.Tuple.pair_type a) (fun {a} {b} =>
+                           instance_forall___Monoid_a___Monad__GHC_Tuple_pair_type_a__op_zgzg__) (fun {a}
+                                                                                                      {b} =>
+                           instance_forall___Monoid_a___Monad__GHC_Tuple_pair_type_a__op_zgzgze__)
+                         (fun {a} =>
+                           instance_forall___Monoid_a___Monad__GHC_Tuple_pair_type_a__return_)).
 
 Definition liftA {f} {a} {b} `{Applicative f} : (a -> b) -> f a -> f b :=
   fun arg_143__ arg_144__ =>
@@ -1242,14 +1627,15 @@ Local Definition instance_Functor_list_op_zlzd__ : forall {a} {b},
                                                      a -> list b -> list a :=
   fun {a} {b} => Coq.Program.Basics.compose instance_Functor_list_fmap const.
 
-Instance instance_Functor_list : Functor list := {
-  fmap := fun {a} {b} => instance_Functor_list_fmap ;
-  op_zlzd__ := fun {a} {b} => instance_Functor_list_op_zlzd__ }.
+Instance instance_Functor_list : Functor list := fun _ k =>
+    k (Functor__Dict_Build list (fun {a} {b} => instance_Functor_list_op_zlzd__)
+                           (fun {a} {b} => instance_Functor_list_fmap)).
 
-Instance instance_Applicative_list : Applicative list := {
-  op_zlztzg__ := fun {a} {b} => instance_Applicative_list_op_zlztzg__ ;
-  op_ztzg__ := fun {a} {b} => instance_Applicative_list_op_ztzg__ ;
-  pure := fun {a} => instance_Applicative_list_pure }.
+Instance instance_Applicative_list : Applicative list := fun _ k =>
+    k (Applicative__Dict_Build list (fun {a} {b} =>
+                                 instance_Applicative_list_op_ztzg__) (fun {a} {b} =>
+                                 instance_Applicative_list_op_zlztzg__) (fun {a} =>
+                                 instance_Applicative_list_pure)).
 
 Local Definition instance_Monad_list_return_ : forall {a}, a -> list a :=
   fun {a} => pure.
@@ -1258,10 +1644,10 @@ Local Definition instance_Monad_list_op_zgzg__ : forall {a} {b},
                                                    list a -> list b -> list b :=
   fun {a} {b} => op_ztzg__.
 
-Instance instance_Monad_list : Monad list := {
-  op_zgzg__ := fun {a} {b} => instance_Monad_list_op_zgzg__ ;
-  op_zgzgze__ := fun {a} {b} => instance_Monad_list_op_zgzgze__ ;
-  return_ := fun {a} => instance_Monad_list_return_ }.
+Instance instance_Monad_list : Monad list := fun _ k =>
+    k (Monad__Dict_Build list (fun {a} {b} => instance_Monad_list_op_zgzg__)
+                         (fun {a} {b} => instance_Monad_list_op_zgzgze__) (fun {a} =>
+                           instance_Monad_list_return_)).
 
 Definition mapFB {elt} {lst} {a}
     : (elt -> lst -> lst) -> (a -> elt) -> a -> lst -> lst :=

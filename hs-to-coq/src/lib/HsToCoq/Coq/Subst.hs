@@ -83,8 +83,10 @@ instance Subst Sentence where
   subst f (AssertionSentence       assert pf) = AssertionSentence         (subst f assert) pf
   subst f (ModuleSentence          mod)       = ModuleSentence            (subst f mod)
   subst f (ClassSentence           cls)       = ClassSentence             (subst f cls)
+  subst f (RecordSentence          rcd)       = RecordSentence            (subst f rcd)
   subst f (InstanceSentence        ins)       = InstanceSentence          (subst f ins)
   subst f (NotationSentence        not)       = NotationSentence          (subst f not)
+  subst _ s@(ExistingClassSentence  _)        = s
   subst _ s@(ArgumentsSentence  _)            = s
   subst _ s@(CommentSentence    _)            = s
 
@@ -131,6 +133,9 @@ instance Subst ModuleSentence where
 
 instance Subst ClassDefinition where
   subst _f (ClassDefinition _cl _params _osrt _fields) = error "subst"
+
+instance Subst RecordDefinition where
+  subst _f _ = error "subst"
 
 instance Subst InstanceDefinition where
   subst _f (InstanceDefinition _inst _params _cl _defns _mpf) = error "subst"
@@ -238,6 +243,8 @@ instance Subst Term where
   subst f (Parens t) = Parens (subst f  t)
 
   subst f (Bang t) = Bang (subst f t)
+
+  subst f (Record defns) = Record [ (v, subst f t) | (v,t) <- defns ]
 
 instance (Subst a, Functor f) => Subst (f a) where
   subst f = fmap (subst f)

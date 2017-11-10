@@ -71,3 +71,5 @@ skip instance_MonadPlus_option
 # termination checker when a function does nested recursion through map
 # If we have a local fix for just the argument, then things often work out
 redefine Definition map {A B :Type} (f : A -> B) xs := Coq.Lists.List.map f xs.
+
+class kinds MonadPlus (Type -> Type)

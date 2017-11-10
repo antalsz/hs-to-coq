@@ -166,6 +166,8 @@ instance Binding Sentence where
   binding f (AssertionSentence        assert pf) = binding f assert . (freeVars pf *>)
   binding _ (ModuleSentence           mod)       = (freeVars mod *>)
   binding f (ClassSentence            cls)       = binding f cls
+  binding _ (ExistingClassSentence    name)      = (occurrence name *>)
+  binding f (RecordSentence           rcd)       = binding f rcd
   binding f (InstanceSentence         ins)       = binding f ins
   binding f (NotationSentence         not)       = binding f not
   binding _ (ArgumentsSentence        arg)       = (freeVars arg *>)
@@ -221,6 +223,13 @@ instance Binding ClassDefinition where
   binding f (ClassDefinition cl params osort fields) =
     (freeVars (NoBinding params) *> freeVars osort *>) .
     binding f cl .
+    flip (foldr (\(field,ty) -> (binding f params (freeVars ty) *>) . binding f field)) fields
+
+instance Binding RecordDefinition where
+  binding f (RecordDefinition name params osort build fields) =
+    (freeVars (NoBinding params) *> freeVars osort *>) .
+    binding f name .
+    (maybe id (binding f) build) .
     flip (foldr (\(field,ty) -> (binding f params (freeVars ty) *>) . binding f field)) fields
 
 instance Binding InstanceDefinition where
@@ -368,6 +377,9 @@ instance FreeVars Term where
 
   freeVars (Bang t) =
     freeVars t
+
+  freeVars (Record defns) =
+    mapM_ freeVars (map snd defns)
 
 instance FreeVars Arg where
   freeVars (PosArg      t) = freeVars t

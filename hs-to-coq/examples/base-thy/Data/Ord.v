@@ -7,7 +7,7 @@ Set Bullet Behavior "Strict Subproofs".
 
 Instance EqLaws_Down {a} `{EqLaws a} : EqLaws (Down a).
 Proof.
-  split.
+  split; unfold op_zeze__, op_zsze__, instance_Down_Eq, op_zeze____, op_zsze____.
   - case=> * /=; apply Eq_refl.
   - do 2 case=> ? //=; apply Eq_sym.
   - do 3 case=> ? //=; apply Eq_trans.
@@ -16,7 +16,8 @@ Qed.
 
 Instance EqExact_Down {a} `{EqExact a} : EqExact (Down a).
 Proof.
-  split=> - [x] [y] /=.
+  split; unfold op_zeze__, op_zsze__, instance_Down_Eq, op_zeze____, op_zsze____
+     => - [x] [y] /=.
   case E: (x == y); constructor; move/Eq_eq in E.
   + by rewrite E.
   + by contradict E; case: E.

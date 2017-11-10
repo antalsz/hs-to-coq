@@ -1,6 +1,6 @@
 {-# LANGUAGE TupleSections, LambdaCase, RecordWildCards,
              OverloadedLists, OverloadedStrings,
-             FlexibleContexts #-}
+             FlexibleContexts, ScopedTypeVariables #-}
 
 module HsToCoq.ConvertHaskell.Declarations.TyCl (
   convertTyClDecls, convertModuleTyClDecls,
@@ -48,96 +48,112 @@ import Data.Generics hiding (Fixity(..))
 import HsToCoq.ConvertHaskell.Parameters.Edits
 import HsToCoq.ConvertHaskell.Monad
 import HsToCoq.ConvertHaskell.Variables
+import HsToCoq.ConvertHaskell.Axiomatize
 import HsToCoq.ConvertHaskell.Declarations.TypeSynonym
 import HsToCoq.ConvertHaskell.Declarations.DataType
 import HsToCoq.ConvertHaskell.Declarations.Class
+
+import Exception
 
 --------------------------------------------------------------------------------
 
 data ConvertedDeclaration = ConvData  IndBody
                           | ConvSyn   SynBody
                           | ConvClass ClassBody
+                          | ConvFailure Ident Sentence
                           deriving (Eq, Ord, Show, Read)
 
 instance FreeVars ConvertedDeclaration where
-  freeVars (ConvData  ind) = freeVars ind
-  freeVars (ConvSyn   syn) = freeVars syn
-  freeVars (ConvClass cls) = freeVars cls
+  freeVars (ConvData    ind)   = freeVars ind
+  freeVars (ConvSyn     syn)   = freeVars syn
+  freeVars (ConvClass   cls)   = freeVars cls
+  freeVars (ConvFailure _ sen) = freeVars (NoBinding sen)
 
 convDeclName :: ConvertedDeclaration -> Ident
 convDeclName (ConvData  (IndBody                    tyName  _ _ _))    = tyName
 convDeclName (ConvSyn   (SynBody                    synName _ _ _))    = synName
 convDeclName (ConvClass (ClassBody (ClassDefinition clsName _ _ _) _)) = clsName
+convDeclName (ConvFailure n _)                                         = n
+
+failTyClDecl :: ConversionMonad m => Ident -> GhcException -> m (Maybe ConvertedDeclaration)
+failTyClDecl name e = pure $ Just $
+    ConvFailure name $ translationFailedComment name e
 
 convertTyClDecl :: ConversionMonad m => TyClDecl GHC.Name -> m (Maybe ConvertedDeclaration)
 convertTyClDecl decl = do
   coqName <- freeVar . unLoc $ tyClDeclLName decl
-  use (edits.skipped.contains coqName) >>= \case
-    True  -> pure Nothing
-    False -> use (edits.redefinitions.at coqName) >>= fmap Just . \case
-      Nothing -> case decl of
-        FamDecl{}     -> convUnsupported "type/data families"
-        SynDecl{..}   -> ConvSyn   <$> convertSynDecl   tcdLName (hsq_explicit tcdTyVars) tcdRhs
-        DataDecl{..}  -> ConvData  <$> convertDataDecl  tcdLName (hsq_explicit tcdTyVars) tcdDataDefn
-        ClassDecl{..} -> ConvClass <$> convertClassDecl tcdCtxt  tcdLName (hsq_explicit tcdTyVars) tcdFDs tcdSigs tcdMeths tcdATs tcdATDefs
+  ghandle (failTyClDecl coqName) $ do
+    use (edits.skipped.contains coqName) >>= \case
+      True  -> pure Nothing
+      False -> use (edits.redefinitions.at coqName) >>= fmap Just . \case
+        Nothing -> case decl of
+          FamDecl{}     -> convUnsupported "type/data families"
+          SynDecl{..}   -> ConvSyn   <$> convertSynDecl   tcdLName (hsq_explicit tcdTyVars) tcdRhs
+          DataDecl{..}  -> ConvData  <$> convertDataDecl  tcdLName (hsq_explicit tcdTyVars) tcdDataDefn
+          ClassDecl{..} -> ConvClass <$> convertClassDecl tcdCtxt  tcdLName (hsq_explicit tcdTyVars) tcdFDs tcdSigs tcdMeths tcdATs tcdATDefs
 
-      Just redef -> do
-        case (decl, redef) of
-          (SynDecl{},  CoqDefinitionDef def) ->
-            pure . ConvSyn $ case def of
-              DefinitionDef _ name args oty body -> SynBody name args oty body
-              LetDef          name args oty body -> SynBody name args oty body
+        Just redef -> do
+          case (decl, redef) of
+            (SynDecl{},  CoqDefinitionDef def) ->
+              pure . ConvSyn $ case def of
+                DefinitionDef _ name args oty body -> SynBody name args oty body
+                LetDef          name args oty body -> SynBody name args oty body
 
-          (DataDecl{}, CoqInductiveDef ind) ->
-            case ind of
-              Inductive   (body :| [])  []    -> pure $ ConvData body
-              Inductive   (_    :| _:_) _     -> editFailure $ "cannot redefine data type to mutually-recursive types"
-              Inductive   _             (_:_) -> editFailure $ "cannot redefine data type to include notations"
-              CoInductive _             _     -> editFailure $ "cannot redefine data type to be coinductive"
+            (DataDecl{}, CoqInductiveDef ind) ->
+              case ind of
+                Inductive   (body :| [])  []    -> pure $ ConvData body
+                Inductive   (_    :| _:_) _     -> editFailure $ "cannot redefine data type to mutually-recursive types"
+                Inductive   _             (_:_) -> editFailure $ "cannot redefine data type to include notations"
+                CoInductive _             _     -> editFailure $ "cannot redefine data type to be coinductive"
 
-          (FamDecl{}, _) ->
-            editFailure "cannot redefine type/data families"
+            (FamDecl{}, _) ->
+              editFailure "cannot redefine type/data families"
 
-          (ClassDecl{}, _) ->
-            editFailure "cannot redefine type class declarations"
+            (ClassDecl{}, _) ->
+              editFailure "cannot redefine type class declarations"
 
-          _ ->
-            let from = case decl of
-                         FamDecl{}   -> "a type/data family"
-                         SynDecl{}   -> "a type synonym"
-                         DataDecl{}  -> "a data type"
-                         ClassDecl{} -> "a type class"
-                to   = case redef of
-                         CoqDefinitionDef       _ -> "a Definition"
-                         CoqFixpointDef         _ -> "a Fixpoint"
-                         CoqProgramFixpointDef  _ -> "a Program Fixpoint"
-                         CoqInductiveDef        _ -> "an Inductive"
-                         CoqInstanceDef         _ -> "an Instance Definition"
-            in editFailure $ "cannot redefine " ++ from ++ " to be " ++ to
+            _ ->
+              let from = case decl of
+                           FamDecl{}   -> "a type/data family"
+                           SynDecl{}   -> "a type synonym"
+                           DataDecl{}  -> "a data type"
+                           ClassDecl{} -> "a type class"
+                  to   = case redef of
+                           CoqDefinitionDef       _ -> "a Definition"
+                           CoqFixpointDef         _ -> "a Fixpoint"
+                           CoqProgramFixpointDef  _ -> "a Program Fixpoint"
+                           CoqInductiveDef        _ -> "an Inductive"
+                           CoqInstanceDef         _ -> "an Instance Definition"
+              in editFailure $ "cannot redefine " ++ from ++ " to be " ++ to
 
 --------------------------------------------------------------------------------
 
 data DeclarationGroup = DeclarationGroup { dgInductives :: [IndBody]
                                          , dgSynonyms   :: [SynBody]
-                                         , dgClasses    :: [ClassBody] }
+                                         , dgClasses    :: [ClassBody]
+                                         , dgFailures   :: [Sentence]}
                       deriving (Eq, Ord, Show, Read)
 
 instance Semigroup DeclarationGroup where
-  DeclarationGroup ind1 syn1 cls1 <> DeclarationGroup ind2 syn2 cls2 = DeclarationGroup (ind1 <> ind2) (syn1 <> syn2) (cls1 <> cls2)
+  DeclarationGroup ind1 syn1 cls1 fail1 <> DeclarationGroup ind2 syn2 cls2 fail2 =
+    DeclarationGroup (ind1 <> ind2) (syn1 <> syn2) (cls1 <> cls2) (fail1 <> fail2)
 
 instance Monoid DeclarationGroup where
-  mempty  = DeclarationGroup [] [] []
+  mempty  = DeclarationGroup [] [] [] []
   mappend = (<>)
 
 singletonDeclarationGroup :: ConvertedDeclaration -> DeclarationGroup
-singletonDeclarationGroup (ConvData  ind) = DeclarationGroup [ind] []    []
-singletonDeclarationGroup (ConvSyn   syn) = DeclarationGroup []    [syn] []
-singletonDeclarationGroup (ConvClass cls) = DeclarationGroup []    []    [cls]
+singletonDeclarationGroup (ConvData  ind)     = DeclarationGroup [ind] []    []    []
+singletonDeclarationGroup (ConvSyn   syn)     = DeclarationGroup []    [syn] []    []
+singletonDeclarationGroup (ConvClass cls)     = DeclarationGroup []    []    [cls] []
+singletonDeclarationGroup (ConvFailure _ sen) = DeclarationGroup []    []    []    [sen]
 
 --------------------------------------------------------------------------------
 
 convertDeclarationGroup :: DeclarationGroup -> Either String [Sentence]
-convertDeclarationGroup DeclarationGroup{..} = case (nonEmpty dgInductives, nonEmpty dgSynonyms, nonEmpty dgClasses) of
+convertDeclarationGroup DeclarationGroup{..} =
+    (dgFailures ++) <$>
+    case (nonEmpty dgInductives, nonEmpty dgSynonyms, nonEmpty dgClasses) of
   (Just inds, Nothing, Nothing) ->
     Right [InductiveSentence $ Inductive inds []]
 
@@ -148,15 +164,15 @@ convertDeclarationGroup DeclarationGroup{..} = case (nonEmpty dgInductives, nonE
     Right $  foldMap recSynType syns
           ++ [InductiveSentence $ Inductive inds (orderRecSynDefs $ recSynDefs inds syns)]
 
-  (Nothing, Nothing, Just (ClassBody cdef nots :| [])) ->
-    Right $ ClassSentence cdef : map NotationSentence nots
+  (Nothing, Nothing, Just (classDef :| [])) ->
+    Right $ classSentences classDef
 
   (Nothing, Just (_ :| _ : _), Nothing)           -> Left "mutually-recursive type synonyms"
   (Nothing, Nothing,           Just (_ :| _ : _)) -> Left "mutually-recursive type classes"
   (Just _,  Nothing,           Just _)            -> Left "mutually-recursive type classes and data types"
   (Nothing, Just _,            Just _)            -> Left "mutually-recursive type classes and type synonyms"
   (Just _,  Just _,            Just _)            -> Left "mutually-recursive type classes, data types, and type synonyms"
-  (Nothing, Nothing,           Nothing)           -> Left "[internal] invalid empty declaration group"
+  (Nothing, Nothing,           Nothing)           -> Right []
 
   where
     synName = (<> "__raw")

@@ -12,9 +12,9 @@ Instance Unpeel_refl a : Unpeel a a := Build_Unpeel _ _ (fun x => x) (fun x => x
 
 Instance Unpeel_arrow
   a b c d
-  `{Unpeel a b}
+  `{Unpeel b a}
   `{Unpeel c d}
-  : Unpeel (a -> c) (b -> d) :=
+  : Unpeel (b -> c) (a -> d) :=
   { unpeel f x := unpeel (f (repeel x))
   ; repeel f x := repeel (f (unpeel x))
   }.
@@ -27,4 +27,3 @@ Instance Coercible_Unpeel
   {U2 : Unpeel b c}
   : Coercible a b :=
   { coerce x := @repeel b c U2 (@unpeel a c U1 x) }.
-

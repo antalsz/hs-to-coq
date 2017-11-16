@@ -42,7 +42,7 @@ Qed.
 (* Make sure by-hand definitions are suitable for reasoning. *)
 
 Lemma take_drop : forall (a:Set) (xs : list a) n,
-    xs = take n xs ++ drop n xs.
+    xs = Coq.Lists.List.app (take n xs) (drop n xs).
 Proof.
   intros a xs.
   induction xs; intro n.

@@ -88,10 +88,8 @@
     op_z2218U__ : forall {b} {c} {a}, cat b c -> cat a b -> cat a c }.
 
 - Data/Functor/Const
-  Type inference: need to annotate type of first argument to Const
-  Deriving: most of the functionality of this module comes from
-  type class deriving (Data.coerce)
-  (NOTE: most of the instances are NOT available)
+  Bug in monoid instance --- inst_m type variable vs. m in body of
+  instance declaration.
 
 - Control/Arrow
   Type inference: need to annotate parameter to ArrowMonad

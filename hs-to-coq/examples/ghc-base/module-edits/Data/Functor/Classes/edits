@@ -1,0 +1,34 @@
+skip module GHC.Read
+skip module GHC.Show
+skip module Text.ParserCombinators.ReadP
+
+skip Read1
+skip Show1
+skip Read2
+skip Show2
+
+skip readListWith
+skip readsPrec1
+skip readsData
+skip readsUnary
+skip readsUnary1
+skip readsUnaryWith
+skip readsBinaryWith
+skip readsBinary1
+skip readsPrec2
+
+
+skip showsPrec1
+skip liftShowList2
+skip liftShowsPrec2
+skip liftReadList2
+skip liftReadsPrec2
+skip showsBinary1
+skip showsBinaryWith
+skip showsPrec2
+skip showsUnary
+skip showsUnary1
+skip showsUnaryWith
+
+skip instance_Read2_GHC_Tuple_pair_type_liftReadsPrec2
+skip instance_Read2_GHC_Tuple_pair_type_liftReadList2

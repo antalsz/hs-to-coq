@@ -57,6 +57,7 @@ MODULES = \
   Control/Arrow \
   Data/Functor/Identity \
   Control/Applicative \
+  Data/Functor/Classes \
 
 # generated from drop-in/
 DROPIN =

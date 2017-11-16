@@ -136,7 +136,8 @@ VFILES:=GHC/Num.v\
   Data/Foldable.v\
   Control/Arrow.v\
   Data/Functor/Identity.v\
-  Control/Applicative.v
+  Control/Applicative.v\
+  Data/Functor/Classes.v
 
 ifneq ($(filter-out archclean clean cleanall printenv,$(MAKECMDGOALS)),)
 -include $(addsuffix .d,$(VFILES))

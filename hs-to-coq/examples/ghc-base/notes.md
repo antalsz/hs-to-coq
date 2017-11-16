@@ -47,6 +47,7 @@
 	- partial functions (until)
 	- unboxed types
 	- Alternative/MonadPlus
+
   Control/Monad/Fail
     - IO instance
 
@@ -59,7 +60,7 @@
 
   Control/Applicative
     - two newtypes are manually defined because we need to annotate their
-      (higher-order kinds)
+      (higher-order) kinds
 	- skip ZipList because its Applicative instance is coinductive (using repeat)
 
 * What stops these modules from being generated?
@@ -293,6 +294,7 @@ GHC.Exception
 
 - All other modules
 
+X Control.Applicative
 X Control.Arrow
 X Control.Category
 X Control.Monad

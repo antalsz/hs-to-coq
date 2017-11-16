@@ -1,4 +1,3 @@
-# skip module Control.Applicative
 skip module GHC.Arr
 skip module GHC.Generics
 skip module GHC.Types
@@ -24,15 +23,15 @@ rename value GHC.Types.EQ = Eq
 rename value GHC.Types.LT = Lt
 rename value GHC.Types.GT = Gt
 
+rename type GHC.Types.* = Type
+rename type GHC.Types.Word = GHC.Num.Word
+rename type GHC.Types.Int = GHC.Num.Int
+rename type GHC.Types.Char = GHC.Char.Char
+
+
 rename type  GHC.Classes.Eq = GHC.Base.Eq_
 rename value GHC.Classes.== = GHC.Base.op_zeze__
 rename value GHC.Classes./= = GHC.Base.op_zsze__
-
-rename type GHC.Types.* = Type
-rename type GHC.Types.Word = GHC.Num.Word
-rename type  GHC.Types.Int = GHC.Num.Int
-
-rename type GHC.Types.Char = GHC.Char.Char
 
 rename type  GHC.Classes.Ord = GHC.Base.Ord
 rename value GHC.Classes.<  = GHC.Base.op_zl__
@@ -97,3 +96,6 @@ rename value Data.Monoid.Any = Data.Monoid.Mk_Any
 
 rename value getAll = Data.Monoid.getAll
 rename value Data.Monoid.All = Data.Monoid.Mk_All
+
+rename value getIdentity = Data.Functor.Identity.getIdentity
+rename value Data.Functor.Identity.Identity = Data.Functor.Identity.Mk_Identity

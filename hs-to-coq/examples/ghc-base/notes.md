@@ -3,6 +3,7 @@
   GHC/List
     - five skipped function (take,drop,replicate, scanr, splitAt)
 	  are total functions but Coq can't prove easily
+	  these are defined in prelude.v
     - one skipped is concatMap, mapped to Coq's flat_map (should we do this?)
 	- rest are all partial functions
   Data/Tuple
@@ -13,10 +14,7 @@
     - fix_ is partial
 	- on uses (.*.) as a variable name
   Data/Ord
-    - skip Down/Ord instance for down because
-	  cannot derive Eq instance for Down, so everything moved to preamble
-	  If we had a "add" edit (with ordering) that allowed us to add the
-	  Eq instance online, we wouldn't need to skip anything.
+    - cannot derive Eq instance for Down, so instance added to "midamble"
   Data/Functor
     - nothing skipped
   Data/Monoid

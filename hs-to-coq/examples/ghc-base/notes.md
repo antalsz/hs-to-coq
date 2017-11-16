@@ -286,7 +286,7 @@ GHC.Exception
 
 Control.Applicative
   hs-to-coq silently fails
-  but it is mostly newtype instances that we cannot yet generated
+  but it is mostly newtype instances that we cannot yet generate
 
 
 - All other modules

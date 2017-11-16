@@ -11,6 +11,7 @@ Require Coq.Program.Wf.
 
 (* Preamble *)
 
+(*
 Inductive WrappedMonad (m : Type -> Type) a : Type := Mk_WrapMonad : m a -> WrappedMonad m a.
 
 Inductive WrappedArrow (a : Type -> Type -> Type) b c : Type := Mk_WrapArrow : a b c -> WrappedArrow a b c.
@@ -28,7 +29,7 @@ Definition unwrapArrow {a} {b} {c} (arg_1__ : WrappedArrow a b c) :=
   match arg_1__ with
     | Mk_WrapArrow unwrapArrow => unwrapArrow
   end.
-
+*)
 (* Converted imports: *)
 
 Require Control.Arrow.
@@ -38,7 +39,28 @@ Require Data.Functor.
 Require Data.Tuple.
 Require GHC.Base.
 
-(* No type declarations to convert. *)
+(* Converted type declarations: *)
+
+Inductive WrappedMonad (m : Type -> Type) a : Type := Mk_WrapMonad : m
+                                                                     a -> WrappedMonad m a.
+
+Inductive WrappedArrow (a : Type -> Type -> Type) b c : Type := Mk_WrapArrow : a
+                                                                               b c -> WrappedArrow a b c.
+
+Arguments Mk_WrapMonad {_} {_} _.
+
+Arguments Mk_WrapArrow {_} {_} {_} _.
+
+Definition unwrapMonad {m : Type -> Type} {a} (arg_0__ : WrappedMonad m a) :=
+  match arg_0__ with
+    | Mk_WrapMonad unwrapMonad => unwrapMonad
+  end.
+
+Definition unwrapArrow {a : Type -> Type -> Type} {b} {c} (arg_1__
+                         : WrappedArrow a b c) :=
+  match arg_1__ with
+    | Mk_WrapArrow unwrapArrow => unwrapArrow
+  end.
 (* Converted value declarations: *)
 
 Local Definition instance_forall___GHC_Base_Monad_m___GHC_Base_Functor__WrappedMonad_m__fmap {inst_m}
@@ -46,8 +68,8 @@ Local Definition instance_forall___GHC_Base_Monad_m___GHC_Base_Functor__WrappedM
     : forall {a} {b},
         (a -> b) -> (WrappedMonad inst_m) a -> (WrappedMonad inst_m) b :=
   fun {a} {b} =>
-    fun arg_26__ arg_27__ =>
-      match arg_26__ , arg_27__ with
+    fun arg_28__ arg_29__ =>
+      match arg_28__ , arg_29__ with
         | f , Mk_WrapMonad v => Mk_WrapMonad (GHC.Base.liftM f v)
       end.
 
@@ -81,8 +103,8 @@ Local Definition instance_forall___GHC_Base_Monad_m___GHC_Base_Applicative__Wrap
         (WrappedMonad inst_m) (a -> b) -> (WrappedMonad inst_m) a -> (WrappedMonad
         inst_m) b :=
   fun {a} {b} =>
-    fun arg_22__ arg_23__ =>
-      match arg_22__ , arg_23__ with
+    fun arg_24__ arg_25__ =>
+      match arg_24__ , arg_25__ with
         | Mk_WrapMonad f , Mk_WrapMonad v => Mk_WrapMonad (GHC.Base.ap f v)
       end.
 
@@ -131,8 +153,8 @@ Local Definition instance_forall___Control_Arrow_Arrow_a___GHC_Base_Functor__Wra
                                                                                                                 inst_b)
                                                                                                                 b :=
   fun {a} {b} =>
-    fun arg_17__ arg_18__ =>
-      match arg_17__ , arg_18__ with
+    fun arg_19__ arg_20__ =>
+      match arg_19__ , arg_20__ with
         | f , Mk_WrapArrow a => Mk_WrapArrow (Control.Category.op_zgzgzg__ a
                                                                            (Control.Arrow.arr f))
       end.
@@ -164,8 +186,8 @@ Local Definition instance_forall___Control_Arrow_Arrow_a___GHC_Base_Applicative_
         (WrappedArrow inst_a inst_b) (a -> b) -> (WrappedArrow inst_a inst_b)
         a -> (WrappedArrow inst_a inst_b) b :=
   fun {a} {b} =>
-    fun arg_13__ arg_14__ =>
-      match arg_13__ , arg_14__ with
+    fun arg_15__ arg_16__ =>
+      match arg_15__ , arg_16__ with
         | Mk_WrapArrow f , Mk_WrapArrow v => Mk_WrapArrow (Control.Category.op_zgzgzg__
                                                           (Control.Arrow.op_zazaza__ f v) (Control.Arrow.arr
                                                           (Data.Tuple.uncurry GHC.Base.id)))
@@ -189,8 +211,8 @@ Local Definition instance_forall___Control_Arrow_Arrow_a___GHC_Base_Applicative_
                                                                                                         inst_a}
     : forall {a}, a -> (WrappedArrow inst_a inst_b) a :=
   fun {a} =>
-    fun arg_10__ =>
-      match arg_10__ with
+    fun arg_12__ =>
+      match arg_12__ with
         | x => Mk_WrapArrow (Control.Arrow.arr (GHC.Base.const x))
       end.
 
@@ -256,8 +278,8 @@ Instance instance_forall___Control_Arrow_Arrow_a___GHC_Base_Applicative__Wrapped
    unsupported *)
 
 Definition optional {f} {a} `{GHC.Base.Alternative f} : f a -> f (option a) :=
-  fun arg_0__ =>
-    match arg_0__ with
+  fun arg_2__ =>
+    match arg_2__ with
       | v => GHC.Base.op_zlzbzg__ (Data.Functor.op_zlzdzg__ Some v) (GHC.Base.pure
                                   None)
     end.
@@ -268,6 +290,5 @@ Definition optional {f} {a} `{GHC.Base.Alternative f} : f a -> f (option a) :=
      Data.Tuple.uncurry GHC.Base.Alternative GHC.Base.Applicative
      GHC.Base.Applicative__Dict_Build GHC.Base.Functor GHC.Base.Functor__Dict_Build
      GHC.Base.Monad GHC.Base.ap GHC.Base.const GHC.Base.fmap GHC.Base.id
-     GHC.Base.liftM GHC.Base.op_zlzbzg__ GHC.Base.pure Mk_WrapArrow Mk_WrapMonad None
-     Some WrappedArrow WrappedMonad option
+     GHC.Base.liftM GHC.Base.op_zlzbzg__ GHC.Base.pure None Some Type option
 *)

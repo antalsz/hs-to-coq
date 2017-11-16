@@ -1,6 +1,32 @@
 skip module GHC.Arr
 skip module GHC.Generics
 skip module GHC.Types
+skip module GHC.CString
+skip module GHC.Classes
+skip module GHC.Magic
+skip module GHC.Err
+skip module GHC.IO
+skip module GHC.Integer
+skip module GHC.Unicode
+
+# manual versions
+# skip module GHC.Num
+# skip module GHC.Char
+# skip module GHC.Real
+# skip module Data.Either
+# skip module Data.Proxy
+# skip module GHC.Enum
+# skip module Data.Bits
+# skip module Data.Type.Equality
+# skip module GHC.Prim
+# skip module GHC.Tuple
+# skip module Control.Category
+# skip module Data.Functor.Const
+# skip module Data.IntMap
+# skip module Data.IntMap.Base
+# skip module Data.IntSet.Base
+
+
 
 rename type  GHC.Tuple.() = unit
 rename value GHC.Tuple.() = tt

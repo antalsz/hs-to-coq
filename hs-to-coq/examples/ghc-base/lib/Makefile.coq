@@ -118,12 +118,13 @@ VFILES:=GHC/Num.v\
   Data/IntMap.v\
   Data/IntMap/Base.v\
   Data/IntSet/Base.v\
+  GHC/Base.v\
+  Data/Maybe.v\
   GHC/List.v\
   Data/List.v\
   Data/OldList.v\
   Data/Bool.v\
   Data/Tuple.v\
-  Data/Maybe.v\
   Data/Void.v\
   Data/Function.v\
   Data/Ord.v\
@@ -132,7 +133,6 @@ VFILES:=GHC/Num.v\
   Data/Monoid.v\
   Data/Traversable.v\
   Control/Monad/Fail.v\
-  GHC/Base.v\
   Data/Foldable.v\
   Control/Arrow.v\
   Data/Functor/Identity.v\

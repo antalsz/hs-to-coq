@@ -235,6 +235,7 @@ Edit :: { Edit }
   | add scope Scope for ScopePlace Word           { AdditionalScopeEdit   $5 $6 $3                        }
   | order Some(Word)                              { OrderEdit             $2                              }
   | class kinds Word Some(Term)                   { ClassKindEdit         $3 $4                           }
+  | data  kinds Word Some(Term)                   { DataKindEdit          $3 $4                           }
 
 Edits :: { [Edit] }
   : Lines(Edit)    { $1 }

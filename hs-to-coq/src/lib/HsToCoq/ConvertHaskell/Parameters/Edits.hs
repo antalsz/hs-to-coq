@@ -1,7 +1,7 @@
 {-# LANGUAGE LambdaCase, TemplateHaskell, RecordWildCards, OverloadedStrings #-}
 
 module HsToCoq.ConvertHaskell.Parameters.Edits (
-  Edits(..), typeSynonymTypes, dataTypeArguments, nonterminating, termination, redefinitions, additions, skipped, skippedMethods, skippedModules, axiomatizedModules, additionalScopes, orders, renamings, classKinds,
+  Edits(..), typeSynonymTypes, dataTypeArguments, nonterminating, termination, redefinitions, additions, skipped, skippedMethods, skippedModules, axiomatizedModules, additionalScopes, orders, renamings, classKinds, dataKinds,
   HsNamespace(..), NamespacedIdent(..), Renamings,
   DataTypeArguments(..), dtParameters, dtIndices,
   CoqDefinition(..), definitionSentence,
@@ -67,6 +67,7 @@ data Edit = TypeSynonymTypeEdit   Ident Ident
           | OrderEdit             (NonEmpty Ident)
           | RenameEdit            NamespacedIdent Ident
           | ClassKindEdit         Ident (NonEmpty Term)
+          | DataKindEdit          Ident (NonEmpty Term)
           deriving (Eq, Ord, Show)
 
 addFresh :: At m
@@ -109,18 +110,19 @@ data Edits = Edits { _typeSynonymTypes   :: !(Map Ident Ident)
                    , _additionalScopes   :: !(Map (ScopePlace, Ident) Ident)
                    , _orders             :: !(Map Ident (Set Ident))
                    , _classKinds         :: !(Map Ident (NonEmpty Term))
+                   , _dataKinds          :: !(Map Ident (NonEmpty Term))
                    , _renamings          :: !Renamings
                    }
            deriving (Eq, Ord, Show)
 makeLenses ''Edits
 
 instance Semigroup Edits where
-  (<>) (Edits tst1 dta1 ntm1 trm1 rdf1 add1 skp1 smth1 smod1 axm1 ads1 ord1 rnm1 clk1)
-       (Edits tst2 dta2 ntm2 trm2 rdf2 add2 skp2 smth2 smod2 axm2 ads2 ord2 rnm2 clk2) =
-    Edits (tst1 <> tst2) (dta1 <> dta2) (ntm1 <> ntm2) (trm1 <> trm2) (rdf1 <> rdf2) (add1 <> add2) (skp1 <> skp2) (smth1 <> smth2) (smod1 <> smod2) (axm1 <> axm2) (ads1 <> ads2) (ord1 <> ord2) (rnm1 <> rnm2) (clk1 <> clk2)
+  (<>) (Edits tst1 dta1 ntm1 trm1 rdf1 add1 skp1 smth1 smod1 axm1 ads1 ord1 rnm1 clk1 dk1)
+       (Edits tst2 dta2 ntm2 trm2 rdf2 add2 skp2 smth2 smod2 axm2 ads2 ord2 rnm2 clk2 dk2) =
+    Edits (tst1 <> tst2) (dta1 <> dta2) (ntm1 <> ntm2) (trm1 <> trm2) (rdf1 <> rdf2) (add1 <> add2) (skp1 <> skp2) (smth1 <> smth2) (smod1 <> smod2) (axm1 <> axm2) (ads1 <> ads2) (ord1 <> ord2) (rnm1 <> rnm2) (clk1 <> clk2) (dk1 <> dk2)
 
 instance Monoid Edits where
-  mempty  = Edits mempty mempty mempty mempty mempty mempty mempty mempty mempty mempty mempty mempty mempty mempty
+  mempty  = Edits mempty mempty mempty mempty mempty mempty mempty mempty mempty mempty mempty mempty mempty mempty mempty
   mappend = (<>)
 
 -- Module-local'
@@ -147,6 +149,7 @@ addEdit = \case -- To bring the `where' clause into scope everywhere
   OrderEdit             idents            -> Right . appEndo (foldMap (Endo . addEdge orders . swap) (adjacents idents))
   RenameEdit            hs to             -> addFresh renamings                           (duplicate_for' "renamings"                     prettyNSIdent)     hs           to
   ClassKindEdit         cls kinds         -> addFresh classKinds                          (duplicate_for  "class kinds")                                     cls          kinds
+  DataKindEdit          cls kinds         -> addFresh dataKinds                           (duplicate_for  "data kinds")                                      cls          kinds
   where
     name (CoqDefinitionDef (DefinitionDef _ x _ _ _))                  = x
     name (CoqDefinitionDef (LetDef          x _ _ _))                  = x

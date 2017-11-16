@@ -1,11 +1,8 @@
 # we define these types in the preamble because we need an edit to supply
 # the kinds of their arguments. Coq can't figure it out.
 
-skip WrappedMonad
-skip WrappedArrow
-
-rename value WrapMonad = Mk_WrapMonad
-rename value WrapArrow = Mk_WrapArrow
+data kinds WrappedMonad (Type -> Type)
+data kinds WrappedArrow (Type -> (Type -> Type))
 
 skip ZipList
 skip instance_GHC_Base_Applicative_ZipList_op_zlztzg__

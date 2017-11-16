@@ -1,3 +1,4 @@
+(*
 Inductive WrappedMonad (m : Type -> Type) a : Type := Mk_WrapMonad : m a -> WrappedMonad m a.
 
 Inductive WrappedArrow (a : Type -> Type -> Type) b c : Type := Mk_WrapArrow : a b c -> WrappedArrow a b c.
@@ -15,3 +16,4 @@ Definition unwrapArrow {a} {b} {c} (arg_1__ : WrappedArrow a b c) :=
   match arg_1__ with
     | Mk_WrapArrow unwrapArrow => unwrapArrow
   end.
+*)

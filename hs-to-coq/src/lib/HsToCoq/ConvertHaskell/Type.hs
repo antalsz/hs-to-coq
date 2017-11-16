@@ -80,8 +80,8 @@ convertType (HsTupleTy tupTy tys) = do
     [ty] -> convertLType ty
     _    -> foldl1 (Infix ?? "*") <$> traverse convertLType tys
 
-convertType (HsOpTy _ty1 _op _ty2) =
-  convUnsupported "binary operators" -- FIXME
+convertType (HsOpTy ty1 op ty2) =
+  App2 <$> (Var <$> var TypeNS (unLoc op)) <*> convertLType ty1 <*> convertLType ty2   -- ???
 
 convertType (HsParTy ty) =
   Parens <$> convertLType ty

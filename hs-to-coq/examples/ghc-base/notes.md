@@ -63,6 +63,10 @@
       (higher-order) kinds
 	- skip ZipList because its Applicative instance is coinductive (using repeat)
 
+  Data/Functor/Classes
+	- just read and show instances
+
+
 * What stops these modules from being generated?
 
 - GHC/BaseInstances
@@ -311,7 +315,7 @@ Data.Fixed
 X Data.Foldable
 X Data.Function
 X Data.Functor
-Data.Functor.Classes
+X Data.Functor.Classes
 Data.Functor.Compose
 X Data.Functor.Const
 X Data.Functor.Identity

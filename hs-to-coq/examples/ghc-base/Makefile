@@ -38,12 +38,13 @@ HANDMOD = \
 # Generated modules
 # generated directly from GHC/libraries/base
 MODULES = \
+  GHC/Base \
+  Data/Maybe \
   GHC/List \
   Data/List \
   Data/OldList \
   Data/Bool \
   Data/Tuple \
-  Data/Maybe \
   Data/Void \
   Data/Function \
   Data/Ord \
@@ -52,7 +53,6 @@ MODULES = \
   Data/Monoid \
   Data/Traversable \
   Control/Monad/Fail \
-  GHC/Base \
   Data/Foldable \
   Control/Arrow \
   Data/Functor/Identity \
@@ -97,7 +97,7 @@ $(VFILES_GEN): lib/%.v : $$(wildcard module-edits/$$*/preamble.v) $$(wildcard mo
 	             $(addprefix -p , $(wildcard module-edits/$*/preamble.v)) \
 	             $(addprefix --midamble , $(wildcard module-edits/$*/midamble.v)) \
 	             -e edits \
-		     -N \
+           -N \
 		     -i base \
 		     -i base/dist-install/build \
 		     -I base/include \

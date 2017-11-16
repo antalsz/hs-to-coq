@@ -113,11 +113,11 @@ VFILES:=GHC/Num.v\
   GHC/Prim.v\
   GHC/Tuple.v\
   Data/FoldableInst.v\
-  Control/Category.v\
   Data/IntMap.v\
   Data/IntMap/Base.v\
   Data/IntSet/Base.v\
   Data/Functor/Const.v\
+  Control/Category.v\
   GHC/Base.v\
   Data/Maybe.v\
   GHC/List.v\

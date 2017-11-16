@@ -1,0 +1,4 @@
+class kinds Category (Type -> (Type -> Type))
+
+skip instance_Category_Data_Type_Coercion_Coercion
+skip instance_Category_Data_Type_Equality____

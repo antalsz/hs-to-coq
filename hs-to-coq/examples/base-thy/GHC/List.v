@@ -36,3 +36,24 @@ Proof.
   induction l; simpl; auto.
   destruct (p _); f_equal; auto.
 Qed.
+
+(* -------------------------------------------------------------------- *)
+
+(* Make sure by-hand definitions are suitable for reasoning. *)
+
+Lemma take_drop : forall (a:Set) (xs : list a) n,
+    xs = take n xs ++ drop n xs.
+Proof.
+  intros a xs.
+  induction xs; intro n.
+  unfold take. unfold drop.
+  destruct (n <=? 0)%Z; auto.
+  unfold take. unfold drop.
+  destruct (n <=? 0)%Z.
+  auto.
+  fold (@take a).
+  fold (@drop a).
+  simpl.
+  f_equal.
+  auto.
+Qed.

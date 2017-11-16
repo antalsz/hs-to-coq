@@ -1,9 +1,11 @@
 skip concatMap # renamed to flat_map
 
-skip foldl
-skip foldl'
+skip foldl     # renamed to GHC.Base.foldl
+skip foldl'    # renamed to GHC.Base.foldl
 
 # actually total, but Coq can't tell
+# these are implemented by hand in preamble.v
+
 skip take        # relies on partial unsafeTake
 skip drop        # relies on partial unsafeDrop
 skip replicate   # needs take and drop

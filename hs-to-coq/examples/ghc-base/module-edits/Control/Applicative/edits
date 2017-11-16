@@ -1,0 +1,16 @@
+# we define these types in the preamble because we need an edit to supply
+# the kinds of their arguments. Coq can't figure it out.
+
+skip WrappedMonad
+skip WrappedArrow
+
+rename value WrapMonad = Mk_WrapMonad
+rename value WrapArrow = Mk_WrapArrow
+
+skip ZipList
+skip instance_GHC_Base_Applicative_ZipList_op_zlztzg__
+skip instance_GHC_Base_Applicative_ZipList_op_ztzg__
+skip instance_GHC_Base_Applicative_ZipList_pure
+skip instance_GHC_Base_Applicative_ZipList
+
+# will also need to skip Ord/Eq_/Functor/Foldable when those type applications are supported

@@ -55,11 +55,11 @@ MODULES = \
   GHC/Base \
   Data/Foldable \
   Control/Arrow \
-
+  Data/Functor/Identity \
+  Control/Applicative \
 
 # generated from drop-in/
 DROPIN =
-
 
 # also generated from drop-in/
 SPECIAL_MODULES =

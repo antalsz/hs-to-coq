@@ -35,8 +35,7 @@
 	- 2 type class instances refer to same class
 	- issue with type inference
   Data/Void
-    - 6 instances for derivable classes (Ord,Eq, Show, Read) and
-	classes we don't support
+    - skip 5 instances for classes we don't support (Show, Read, Data)
   Data/List
     - empty module
   Data/Bool
@@ -54,7 +53,14 @@
   Data/Foldable
     - Heavy use of Data.Coerce as type class instances
 
+  Data/Functor/Identity
+    - hash_compose, a helper function for Coercible type class
+	- several type class instances (Foldable, Traversible) implicitly skipped
 
+  Control/Applicative
+    - two newtypes are manually defined because we need to annotate their
+      (higher-order kinds)
+	- skip ZipList because its Applicative instance is coinductive (using repeat)
 
 * What stops these modules from being generated?
 
@@ -284,10 +290,6 @@ GHC.Exception
 
 - Modules with features we haven't implemented yet
 
-Control.Applicative
-  hs-to-coq silently fails
-  but it is mostly newtype instances that we cannot yet generate
-
 
 - All other modules
 
@@ -310,7 +312,7 @@ X Data.Functor
 Data.Functor.Classes
 Data.Functor.Compose
 X Data.Functor.Const
-Data.Functor.Identity
+X Data.Functor.Identity
 Data.Functor.Product
 Data.Functor.Sum
 Data.Int

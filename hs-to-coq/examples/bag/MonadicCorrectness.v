@@ -123,6 +123,17 @@ Proof.
                            monad_left_id.
 Qed.
 
+Lemma monad_bind_return_fmap2 {M A B C} `{MonadLaws M} (f : A -> B -> C) (mx : M A) (my : M B) :
+  (mx >>= fun x => (my >>= fun y => return_ (f x y))) = (f <$> mx <*> my).
+Proof.
+  unfold "<$>".
+  rewrite applicative_fmap !monad_applicative_ap monad_applicative_pure /ap.
+  rewrite monad_left_id -monad_composition.
+  f_equal; funext; intros.
+  rewrite monad_left_id.
+  reflexivity.
+Qed.
+
 Lemma monad_bind_fmap_ap {M A B C} `{MonadLaws M} (f : A -> B -> C) (mx : M A) (my : M B) :
   (mx >>= fun x : A => fmap (f x) my) = (f <$> mx <*> my).
 Proof.
@@ -247,6 +258,76 @@ Proof.
       !applicative_fmap !monad_applicative_ap /ap !monad_applicative_pure.
  *)
 Abort.
+
+Lemma mapM_nil {M A B} `{MonadLaws M} (f : A -> M B):
+  Traversable.mapM f [] = pure [].
+Proof.
+  by rewrite /Traversable.mapM /Traversable.instance_Traversable_list /Traversable.mapM__.
+Qed.
+
+Lemma mapM_cons {M A B} `{MonadLaws M} (f : A -> M B) x xs:
+  Traversable.mapM f (x::xs) = ((cons <$> f x) <*> Traversable.mapM f xs).
+Proof.
+  by rewrite /Traversable.mapM /Traversable.instance_Traversable_list /Traversable.mapM__.
+Qed.
+
+Lemma mapM_app {M A B} `{MonadLaws M} (f : A -> M B) l1 l2:
+  Traversable.mapM f (l1 ++ l2) = (app <$> Traversable.mapM f l1 <*> Traversable.mapM f l2).
+Proof.
+  intros. induction l1.
+  * rewrite /Traversable.mapM /Traversable.instance_Traversable_list /Traversable.mapM__.
+    anf. reflexivity.
+  * rewrite /= !mapM_cons IHl1.
+    anf. reflexivity.
+Qed.
+
+Lemma monad_fmap_bind1 {M A B C} `{MonadLaws M} (f : B -> C) (a : M A) k:
+  fmap f (a >>= k) = (a >>= (fun x => fmap f (k x))).
+Proof.
+  (* Get LHS into monad-only land *)
+  rewrite !applicative_fmap !monad_applicative_ap /ap monad_applicative_pure.
+  (* Clean up a bit *)
+  rewrite monad_left_id -monad_composition.
+  f_equal; funext; intros.
+  (* Get RHS into monad-only land *)
+  rewrite !applicative_fmap !monad_applicative_ap /ap monad_applicative_pure.
+  rewrite monad_left_id.
+  reflexivity.
+Qed.
+
+Lemma monad_fmap_bind2 {M A B C} `{MonadLaws M} (f : A -> B) (a : M A) (k : B -> M C):
+  (fmap f a >>= k) = (a >>= (fun x => k (f x))).
+Proof.
+  (* Get LHS into monad-only land *)
+  rewrite !applicative_fmap !monad_applicative_ap /ap monad_applicative_pure.
+  (* Clean up a bit *)
+  rewrite monad_left_id -monad_composition.
+  f_equal; funext; intros.
+  rewrite monad_left_id.
+  reflexivity.
+Qed.
+
+Theorem mapMBag_ok''' {M A B} `{MonadLaws M} (f : A -> M B) (b : Bag A) :
+  GHC.Base.fmap bagToList (mapBagM f b) = Data.Traversable.mapM f (bagToList b).
+Proof.
+  induction b.
+  * rewrite /= emptyBag_ok mapM_nil -monad_applicative_pure.
+    anf_equal.
+  * rewrite /= monad_bind_return_fmap bagToList_UnitBag mapM_cons mapM_nil.
+    anf_equal.
+  * rewrite /= bagToList_TwoBags.
+    rewrite monad_bind_return_fmap2.
+    rewrite mapM_app.
+    rewrite -IHb1 -IHb2.
+    anf_equal.
+    by rewrite /op_z2218U__ bagToList_TwoBags.
+  * rewrite /= monad_bind_return_fmap bagToList_ListBag.
+    anf_equal.
+    replace (_∘_ bagToList Mk_ListBag) with (@id (list B)).
+    anf_equal.
+    funext; intros.
+    by rewrite /op_z2218U__ bagToList_ListBag.
+Qed.
 
 (* TODO mapBagM_ mapAndUnzipBagM *)
 

@@ -20,6 +20,13 @@ Set Bullet Behavior "Strict Subproofs".
 
 (***** Bag correctness theorems *****)
 
+Lemma bagToList_UnitBag {A} (a : A) :
+  bagToList (Mk_UnitBag a) = [a].
+Proof.
+  by rewrite /bagToList //= !foldrBag_ok !fold_right_cons_nil !fold_right_cons.
+Qed.
+
+
 Lemma bagToList_ListBag {A} (xs : list A) :
   bagToList (Mk_ListBag xs) = xs.
 Proof.

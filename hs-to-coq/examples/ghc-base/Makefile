@@ -29,11 +29,11 @@ HANDMOD = \
   GHC/Tuple \
   Data/FoldableInst \
   Control/Category \
-  Data/Functor/Const \
   \
   Data/IntMap \
   Data/IntMap/Base \
   Data/IntSet/Base \
+  Data/Functor/Const \
 
 # Generated modules
 # generated directly from GHC/libraries/base

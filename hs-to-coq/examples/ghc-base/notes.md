@@ -59,8 +59,6 @@
 	- several type class instances (Foldable, Traversible) implicitly skipped
 
   Control/Applicative
-    - two newtypes are manually defined because we need to annotate their
-      (higher-order) kinds
 	- skip ZipList because its Applicative instance is coinductive (using repeat)
 
   Data/Functor/Classes

@@ -64,6 +64,9 @@
   Data/Functor/Classes
 	- just read and show instances
 
+- Control/Arrow
+    - needs information about Control/Category class
+
 
 * What stops these modules from being generated?
 
@@ -90,10 +93,6 @@
 - Data/Functor/Const
   Bug in monoid instance --- inst_m type variable vs. m in body of
   instance declaration.
-
-- Control/Arrow
-  Type inference: need to annotate parameter to ArrowMonad
-  Bug in instance generation
 
 - GHC/Char
 - GHC/Num

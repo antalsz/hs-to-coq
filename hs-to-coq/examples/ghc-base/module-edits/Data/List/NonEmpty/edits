@@ -1,0 +1,75 @@
+# axiomatize module Data.List.NonEmpty
+# doesn't skip <| and !!
+
+rename value :| = NEcons
+# rename value Mk_:| = Mk_NEcons
+rename value op_ZCzb__ = Mk_NEcons
+# rename value <| = Mk_NEcons
+# rename value !! = nth
+
+skip !!
+skip op_znzn__
+
+skip instance_GHC_Base_Applicative_NonEmpty_op_zlztzg__
+skip instance_GHC_Base_Applicative_NonEmpty
+skip instance_GHC_Base_Monad_NonEmpty
+
+order instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___NonEmpty_a_ instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__NonEmpty_a_
+
+# needs foldable
+skip reverse
+
+# needs Data.OldList.sort
+skip sort
+skip sortBy
+skip sortWith
+
+# needs Data.OldList.transpose
+skip transpose
+# needs Data.OldList.intersperse
+skip intersperse
+
+skip iterate
+
+skip inits
+
+skip repeat
+
+skip cycle
+
+##???
+skip unfoldr
+
+# type inference issue
+skip scanr
+skip take
+skip splitAt
+skip drop
+
+# actually total, can't tell
+skip scanr1
+skip init
+skip last
+skip unfold
+
+# recursive call to Foldable
+skip groupBy
+skip group
+skip groupWith
+skip groupAllWith
+skip groupBy1
+skip groupWith1
+skip groupAllWith1
+skip group1
+
+
+
+
+
+redefine Local Definition instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___NonEmpty_a__op_zsze__ {inst_a}
+                                                                                        `{_: GHC.Base.Eq_ inst_a}
+    : (NonEmpty inst_a) -> ((NonEmpty inst_a) -> bool) :=
+  fun arg_198__ arg_199__ =>
+    match arg_198__ , arg_199__ with
+      | a , b => negb (instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___NonEmpty_a__op_zeze__ a b)
+    end.

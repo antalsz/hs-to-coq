@@ -89,7 +89,12 @@ empty_brackets open close = T.pack [open,close] <$ parseChar (== open)
                                                 <* parseChar (== close)
 
 tuple_operator :: MonadParse m => m Text
-tuple_operator = (\x y z -> T.pack $ [x] ++ y ++ [z]) <$> parseChar (== '(') <*> many (parseChar (== ',')) <*> parseChar (== ')')
+tuple_operator = (\x y z -> T.pack $ [x] ++ y ++ [z]) <$>
+                 parseChar (== '(') <*> many (parseChar (== ',')) <*> parseChar (== ')')
+
+
+infix_datacon :: MonadParse m => m Text
+infix_datacon = (\x y -> T.pack (x:y)) <$> parseChar (== ':') <*> some (parseChar isOperator)
 
 -- Module-local
 none :: Char -> Bool
@@ -110,7 +115,7 @@ unit  = empty_brackets '(' ')'
 nil   = empty_brackets '[' ']'
 
 unqualified :: MonadParse m => m (NameCategory, Ident)
-unqualified = asumFmap (CatWord,) [word, unit, nil,tuple_operator] <|> (CatSym,) <$> op
+unqualified = asumFmap (CatWord,) [word] <|> asumFmap (CatSym,) [op,unit,nil,tuple_operator,infix_datacon]
 
 qualified :: MonadParse m => m (NameCategory, Ident)
 qualified = do

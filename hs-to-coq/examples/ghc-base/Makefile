@@ -60,8 +60,7 @@ MODULES = \
   Data/Functor/Classes \
   Control/Category \
   Data/BiFunctor \
-
-#  Data/List/NonEmpty \
+  Data/List/NonEmpty \
 #  Data/Semigroup \
 
 # generated from drop-in/

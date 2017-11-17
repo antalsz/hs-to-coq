@@ -51,7 +51,7 @@ convertPat (GHC.VarPat (L _ x)) =
 convertPat (LazyPat p) = do
   p' <- convertLPat p
   r <- refutability p'
-  if isRefutable r then convUnsupported "lazy refutable pattern"
+  if isRefutable r then return p' -- convUnsupported "lazy refutable pattern"
                    else return p'
 
 convertPat (GHC.AsPat x p) =
@@ -189,7 +189,7 @@ data Refutability = Trivial (Maybe Ident) -- Variables (with `Just`), underscore
                   deriving (Eq, Ord, Show, Read)
 
 isRefutable :: Refutability -> Bool
-isRefutable Refutable = True 
+isRefutable Refutable = True
 isRefutable _ = False
 
 -- Module-local
@@ -259,7 +259,7 @@ mutExcl _ _ = False
 
 -- A simple completeness checker. Traverses the list of patterns, and keep
 -- tracks of all pattern summaries that we still need to match
--- Internally, we use OtherSummary as “everything yet has to match” 
+-- Internally, we use OtherSummary as “everything yet has to match”
 type Missing = [PatternSummary]
 type Missings = [Missing]
 

@@ -61,6 +61,9 @@ MODULES = \
   Control/Category \
   Data/BiFunctor \
 
+#  Data/List/NonEmpty \
+#  Data/Semigroup \
+
 # generated from drop-in/
 DROPIN =
 

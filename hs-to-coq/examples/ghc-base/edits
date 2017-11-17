@@ -13,14 +13,12 @@ skip module GHC.Unicode
 # skip module GHC.Num
 # skip module GHC.Char
 # skip module GHC.Real
-# skip module Data.Either
 # skip module Data.Proxy
 # skip module GHC.Enum
 # skip module Data.Bits
 # skip module Data.Type.Equality
 # skip module GHC.Prim
 # skip module GHC.Tuple
-# skip module Control.Category
 # skip module Data.Functor.Const
 # skip module Data.IntMap
 # skip module Data.IntMap.Base

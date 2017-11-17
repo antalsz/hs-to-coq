@@ -11,8 +11,9 @@ Require Coq.Program.Wf.
 
 (* Preamble *)
 
-Open Scope type_scope.
 
+Open Scope type_scope.
+(*
 Inductive ArrowMonad (a : Type -> Type -> Type) b : Type := Mk_ArrowMonad : ((a unit b) -> ArrowMonad a b).
 
 Arguments Mk_ArrowMonad {_} {_} _.
@@ -20,15 +21,23 @@ Arguments Mk_ArrowMonad {_} {_} _.
 Inductive Kleisli (m : Type -> Type) a b : Type := Mk_Kleisli : (a -> m b) -> Kleisli m a b.
 
 Arguments Mk_Kleisli {_} {_} _.
-
+*)
 (* Converted imports: *)
 
 Require Control.Category.
+Require Data.Either.
+Require GHC.Base.
 Require GHC.Prim.
 
 (* Converted type declarations: *)
 
-Record Arrow__Dict a := Arrow__Dict_Build {
+Inductive Kleisli (m : Type -> Type) a b : Type := Mk_Kleisli : (a -> m
+                                                                b) -> Kleisli m a b.
+
+Inductive ArrowMonad (a : Type -> Type -> Type) b : Type := Mk_ArrowMonad : (a
+                                                                            unit b) -> ArrowMonad a b.
+
+Record Arrow__Dict (a : Type -> Type -> Type) := Arrow__Dict_Build {
   op_zazaza____ : forall {b} {c} {c'}, a b c -> a b c' -> a b (c * c') ;
   op_ztztzt____ : forall {b} {c} {b'} {c'},
     a b c -> a b' c' -> a (b * b') (c * c') ;
@@ -36,7 +45,7 @@ Record Arrow__Dict a := Arrow__Dict_Build {
   first__ : forall {b} {c} {d}, a b c -> a (b * d) (c * d) ;
   second__ : forall {b} {c} {d}, a b c -> a (d * b) (d * c) }.
 
-Definition Arrow a `{Control.Category.Category a} :=
+Definition Arrow (a : Type -> Type -> Type) `{Control.Category.Category a} :=
   forall r, (Arrow__Dict a -> r) -> r.
 
 Existing Class Arrow.
@@ -153,59 +162,23 @@ Definition op_zlzpzg__ `{g : ArrowPlus a} : forall {b} {c},
 Infix "<+>" := (op_zlzpzg__) (at level 99).
 
 Notation "'_<+>_'" := (op_zlzpzg__).
+
+Arguments Mk_Kleisli {_} {_} {_} _.
+
+Arguments Mk_ArrowMonad {_} {_} _.
+
+Definition runKleisli {m : Type -> Type} {a} {b} (arg_36__ : Kleisli m a b) :=
+  match arg_36__ with
+    | Mk_Kleisli runKleisli => runKleisli
+  end.
 (* Converted value declarations: *)
 
-Local Definition instance_Arrow_GHC_Prim_arrow_arr : forall {b} {c},
-                                                       (b -> c) -> GHC.Prim.arrow b c :=
-  fun {b} {c} => fun arg_159__ => match arg_159__ with | f => f end.
+(* Translating `instance Arrow GHC.Prim.arrow' failed: OOPS! Cannot find
+   information for class "Arrow" unsupported *)
 
-Local Definition instance_Arrow_GHC_Prim_arrow_op_ztztzt__ : forall {b}
-                                                                    {c}
-                                                                    {b'}
-                                                                    {c'},
-                                                               GHC.Prim.arrow b c -> GHC.Prim.arrow b'
-                                                               c' -> GHC.Prim.arrow (b * b') (c * c') :=
-  fun {b} {c} {b'} {c'} =>
-    fun arg_161__ arg_162__ arg_163__ =>
-      match arg_161__ , arg_162__ , arg_163__ with
-        | f , g , pair x y => pair (f x) (g y)
-      end.
-
-Local Definition instance_Arrow_GHC_Prim_arrow_second : forall {b} {c} {d},
-                                                          GHC.Prim.arrow b c -> GHC.Prim.arrow (d * b) (d * c) :=
-  fun {b} {c} {d} =>
-    (fun arg_2__ =>
-      instance_Arrow_GHC_Prim_arrow_op_ztztzt__ Control.Category.id arg_2__).
-
-Local Definition instance_Arrow_GHC_Prim_arrow_first : forall {b} {c} {d},
-                                                         GHC.Prim.arrow b c -> GHC.Prim.arrow (b * d) (c * d) :=
-  fun {b} {c} {d} =>
-    (fun arg_0__ =>
-      instance_Arrow_GHC_Prim_arrow_op_ztztzt__ arg_0__ Control.Category.id).
-
-Local Definition instance_Arrow_GHC_Prim_arrow_op_zazaza__ : forall {b}
-                                                                    {c}
-                                                                    {c'},
-                                                               GHC.Prim.arrow b c -> GHC.Prim.arrow b
-                                                               c' -> GHC.Prim.arrow b (c * c') :=
-  fun {b} {c} {c'} =>
-    fun arg_11__ arg_12__ =>
-      match arg_11__ , arg_12__ with
-        | f , g => Control.Category.op_zgzgzg__ (instance_Arrow_GHC_Prim_arrow_arr
-                                                (fun arg_13__ => match arg_13__ with | b => pair b b end))
-                                                (instance_Arrow_GHC_Prim_arrow_op_ztztzt__ f g)
-      end.
-
-Instance instance_Arrow_GHC_Prim_arrow : Arrow GHC.Prim.arrow := fun _ k =>
-    k (Arrow__Dict_Build GHC.Prim.arrow (fun {b} {c} {c'} =>
-                           instance_Arrow_GHC_Prim_arrow_op_zazaza__) (fun {b} {c} {b'} {c'} =>
-                           instance_Arrow_GHC_Prim_arrow_op_ztztzt__) (fun {b} {c} =>
-                           instance_Arrow_GHC_Prim_arrow_arr) (fun {b} {c} {d} =>
-                           instance_Arrow_GHC_Prim_arrow_first) (fun {b} {c} {d} =>
-                           instance_Arrow_GHC_Prim_arrow_second)).
-
-(* Skipping instance
-   instance_forall___GHC_Base_Monad_m___Control_Category_Category__Kleisli_m_ *)
+(* Translating `instance forall {m}, forall `{GHC.Base.Monad m},
+   Control.Category.Category (Kleisli m)' failed: OOPS! Cannot find information for
+   class "Control.Category.Category" unsupported *)
 
 (* Skipping instance instance_forall___GHC_Base_Monad_m___Arrow__Kleisli_m_ *)
 
@@ -215,7 +188,51 @@ Instance instance_Arrow_GHC_Prim_arrow : Arrow GHC.Prim.arrow := fun _ k =>
 (* Skipping instance
    instance_forall___GHC_Base_MonadPlus_m___ArrowPlus__Kleisli_m_ *)
 
-(* Skipping instance instance_ArrowChoice_GHC_Prim_arrow *)
+Local Definition instance_ArrowChoice_GHC_Prim_arrow_op_zbzbzb__ : forall {b}
+                                                                          {d}
+                                                                          {c},
+                                                                     GHC.Prim.arrow b d -> GHC.Prim.arrow c
+                                                                     d -> GHC.Prim.arrow (sum b c) d :=
+  fun {b} {d} {c} => Data.Either.either.
+
+Local Definition instance_ArrowChoice_GHC_Prim_arrow_op_zpzpzp__ : forall {b}
+                                                                          {c}
+                                                                          {b'}
+                                                                          {c'},
+                                                                     GHC.Prim.arrow b c -> GHC.Prim.arrow b'
+                                                                     c' -> GHC.Prim.arrow (sum b b') (sum c c') :=
+  fun {b} {c} {b'} {c'} =>
+    fun arg_115__ arg_116__ =>
+      match arg_115__ , arg_116__ with
+        | f , g => instance_ArrowChoice_GHC_Prim_arrow_op_zbzbzb__
+                   (Control.Category.op_z2218U__ inl f) (Control.Category.op_z2218U__ inr g)
+      end.
+
+Local Definition instance_ArrowChoice_GHC_Prim_arrow_right : forall {b} {c} {d},
+                                                               GHC.Prim.arrow b c -> GHC.Prim.arrow (sum d b) (sum d
+                                                                                                              c) :=
+  fun {b} {c} {d} =>
+    fun arg_112__ =>
+      match arg_112__ with
+        | f => instance_ArrowChoice_GHC_Prim_arrow_op_zpzpzp__ Control.Category.id f
+      end.
+
+Local Definition instance_ArrowChoice_GHC_Prim_arrow_left : forall {b} {c} {d},
+                                                              GHC.Prim.arrow b c -> GHC.Prim.arrow (sum b d) (sum c
+                                                                                                             d) :=
+  fun {b} {c} {d} =>
+    fun arg_109__ =>
+      match arg_109__ with
+        | f => instance_ArrowChoice_GHC_Prim_arrow_op_zpzpzp__ f Control.Category.id
+      end.
+
+Instance instance_ArrowChoice_GHC_Prim_arrow : ArrowChoice GHC.Prim.arrow :=
+  fun _ k =>
+    k (ArrowChoice__Dict_Build GHC.Prim.arrow (fun {b} {c} {b'} {c'} =>
+                                 instance_ArrowChoice_GHC_Prim_arrow_op_zpzpzp__) (fun {b} {c} {d} =>
+                                 instance_ArrowChoice_GHC_Prim_arrow_left) (fun {b} {c} {d} =>
+                                 instance_ArrowChoice_GHC_Prim_arrow_right) (fun {b} {d} {c} =>
+                                 instance_ArrowChoice_GHC_Prim_arrow_op_zbzbzb__)).
 
 (* Skipping instance
    instance_forall___GHC_Base_Monad_m___ArrowChoice__Kleisli_m_ *)
@@ -223,11 +240,40 @@ Instance instance_Arrow_GHC_Prim_arrow : Arrow GHC.Prim.arrow := fun _ k =>
 (* Translating `instance ArrowApply GHC.Prim.arrow' failed: OOPS! Cannot find
    information for class "ArrowApply" unsupported *)
 
-(* Skipping instance
-   instance_forall___GHC_Base_Monad_m___ArrowApply__Kleisli_m_ *)
+(* Translating `instance forall {m}, forall `{GHC.Base.Monad m}, ArrowApply
+   (Kleisli m)' failed: OOPS! Cannot find information for class "ArrowApply"
+   unsupported *)
 
-(* Skipping instance
-   instance_forall___Arrow_a___GHC_Base_Functor__ArrowMonad_a_ *)
+Local Definition instance_forall___Arrow_a___GHC_Base_Functor__ArrowMonad_a__fmap {inst_a}
+                                                                                  `{Arrow inst_a} : forall {a} {b},
+                                                                                                      (a -> b) -> (ArrowMonad
+                                                                                                      inst_a)
+                                                                                                      a -> (ArrowMonad
+                                                                                                      inst_a) b :=
+  fun {a} {b} =>
+    fun arg_91__ arg_92__ =>
+      match arg_91__ , arg_92__ with
+        | f , Mk_ArrowMonad m => GHC.Base.op_zd__ Mk_ArrowMonad
+                                                  (Control.Category.op_zgzgzg__ m (arr f))
+      end.
+
+Local Definition instance_forall___Arrow_a___GHC_Base_Functor__ArrowMonad_a__op_zlzd__ {inst_a}
+                                                                                       `{Arrow inst_a} : forall {a} {b},
+                                                                                                           a -> (ArrowMonad
+                                                                                                           inst_a)
+                                                                                                           b -> (ArrowMonad
+                                                                                                           inst_a) a :=
+  fun {a} {b} =>
+    fun x =>
+      instance_forall___Arrow_a___GHC_Base_Functor__ArrowMonad_a__fmap (GHC.Base.const
+                                                                       x).
+
+Instance instance_forall___Arrow_a___GHC_Base_Functor__ArrowMonad_a_ {a} `{Arrow
+                                                                     a} : GHC.Base.Functor (ArrowMonad a) := fun _ k =>
+    k (GHC.Base.Functor__Dict_Build (ArrowMonad a) (fun {a} {b} =>
+                                      instance_forall___Arrow_a___GHC_Base_Functor__ArrowMonad_a__op_zlzd__) (fun {a}
+                                                                                                                  {b} =>
+                                      instance_forall___Arrow_a___GHC_Base_Functor__ArrowMonad_a__fmap)).
 
 (* Skipping instance
    instance_forall___Arrow_a___GHC_Base_Applicative__ArrowMonad_a_ *)
@@ -248,8 +294,8 @@ Instance instance_Arrow_GHC_Prim_arrow : Arrow GHC.Prim.arrow := fun _ k =>
 
 Definition op_zczgzg__ {a} {b} {c} {d} `{Arrow a} : (b -> c) -> a c d -> a b
                                                     d :=
-  fun arg_48__ arg_49__ =>
-    match arg_48__ , arg_49__ with
+  fun arg_49__ arg_50__ =>
+    match arg_49__ , arg_50__ with
       | f , a => Control.Category.op_zgzgzg__ (arr f) a
     end.
 
@@ -259,8 +305,8 @@ Notation "'_^>>_'" := (op_zczgzg__).
 
 Definition op_zczlzl__ {a} {c} {d} {b} `{Arrow a} : (c -> d) -> a b c -> a b
                                                     d :=
-  fun arg_36__ arg_37__ =>
-    match arg_36__ , arg_37__ with
+  fun arg_37__ arg_38__ =>
+    match arg_37__ , arg_38__ with
       | f , a => Control.Category.op_zlzlzl__ (arr f) a
     end.
 
@@ -270,8 +316,8 @@ Notation "'_^<<_'" := (op_zczlzl__).
 
 Definition op_zgzgzc__ {a} {b} {c} {d} `{Arrow a} : a b c -> (c -> d) -> a b
                                                     d :=
-  fun arg_44__ arg_45__ =>
-    match arg_44__ , arg_45__ with
+  fun arg_45__ arg_46__ =>
+    match arg_45__ , arg_46__ with
       | a , f => Control.Category.op_zgzgzg__ a (arr f)
     end.
 
@@ -281,8 +327,8 @@ Notation "'_>>^_'" := (op_zgzgzc__).
 
 Definition op_zlzlzc__ {a} {c} {d} {b} `{Arrow a} : a c d -> (b -> c) -> a b
                                                     d :=
-  fun arg_40__ arg_41__ =>
-    match arg_40__ , arg_41__ with
+  fun arg_41__ arg_42__ =>
+    match arg_41__ , arg_42__ with
       | a , f => Control.Category.op_zlzlzl__ a (arr f)
     end.
 
@@ -290,7 +336,12 @@ Infix "<<^" := (op_zlzlzc__) (at level 99).
 
 Notation "'_<<^_'" := (op_zlzlzc__).
 
+Definition returnA {a} {b} `{Arrow a} : a b b :=
+  arr Control.Category.id.
+
 (* Unbound variables:
-     * Control.Category.Category Control.Category.id Control.Category.op_zgzgzg__
-     Control.Category.op_zlzlzl__ GHC.Prim.arrow Type pair sum
+     * Control.Category.Category Control.Category.id Control.Category.op_z2218U__
+     Control.Category.op_zgzgzg__ Control.Category.op_zlzlzl__ Data.Either.either
+     GHC.Base.Functor GHC.Base.Functor__Dict_Build GHC.Base.const GHC.Base.op_zd__
+     GHC.Prim.arrow Type inl inr sum unit
 *)

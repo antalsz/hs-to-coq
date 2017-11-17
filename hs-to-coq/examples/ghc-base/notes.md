@@ -74,6 +74,11 @@
   Data/Either
     - map Either type to Coq's sum
 
+  Data/Proxy
+    - kinds for Proxy/KProxy
+	- preamble needs to import GHC.Base so that == is in scope
+
+
 * What stops these modules from being generated?
 
 - GHC/BaseInstances
@@ -111,7 +116,6 @@
 - GHC/Enum
   Lots of primitive types.
 
-- Data/Proxy
 
 - Prelude
 

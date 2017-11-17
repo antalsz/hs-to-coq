@@ -71,6 +71,9 @@
     - skip Data.Type.Coercion
     - skip Data.Type.Equality
 
+  Data/Either
+    - map Either type to Coq's sum
+
 * What stops these modules from being generated?
 
 - GHC/BaseInstances
@@ -104,11 +107,6 @@
    we don't have, so it is not worth including. This also means we shouldn't
    generate Data.Char, which only has functions that wrap the unicode
    definitions.
-
-- Data/Either
-   Not a big file, but issue 9 interferes with its main purpose:
-   functor instances for the sum type.
-   Manually added Eq, Ord instances b/c of deriving
 
 - GHC/Enum
   Lots of primitive types.

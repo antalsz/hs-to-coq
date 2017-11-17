@@ -19,7 +19,6 @@ HANDMOD = \
   GHC/Num \
   GHC/Char \
   GHC/Real \
-  Data/Either \
   Data/Proxy \
   GHC/Enum \
   Data/Bits \
@@ -49,6 +48,7 @@ MODULES = \
   Data/Function \
   Data/Ord \
   Data/Functor \
+  Data/Either \
   Control/Monad \
   Data/Monoid \
   Data/Traversable \

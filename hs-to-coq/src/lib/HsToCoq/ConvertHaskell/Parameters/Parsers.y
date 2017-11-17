@@ -334,7 +334,6 @@ FixBinders :: { (NonEmpty Binder, Maybe Annotation) }
            ([],     _)                             -> throwError "no binders given for fixpoint"
            (_,      _:_:_)                         -> throwError "too many decreasing arguments given for fixpoint" }
 
--- TODO: Use a _ token?
 BinderName :: { Name }
   : Word    { Ident $1 }
   | '_'     { UnderscoreName }

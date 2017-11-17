@@ -88,6 +88,9 @@ empty_brackets open close = T.pack [open,close] <$ parseChar (== open)
                                                 <* many (parseChar isSpace)
                                                 <* parseChar (== close)
 
+tuple_operator :: MonadParse m => m Text
+tuple_operator = (\x y z -> T.pack $ [x] ++ y ++ [z]) <$> parseChar (== '(') <*> many (parseChar (== ',')) <*> parseChar (== ')')
+
 -- Module-local
 none :: Char -> Bool
 none = const False
@@ -107,7 +110,7 @@ unit  = empty_brackets '(' ')'
 nil   = empty_brackets '[' ']'
 
 unqualified :: MonadParse m => m (NameCategory, Ident)
-unqualified = asumFmap (CatWord,) [word, unit, nil] <|> (CatSym,) <$> op
+unqualified = asumFmap (CatWord,) [word, unit, nil,tuple_operator] <|> (CatSym,) <$> op
 
 qualified :: MonadParse m => m (NameCategory, Ident)
 qualified = do

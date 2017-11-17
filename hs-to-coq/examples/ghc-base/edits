@@ -31,6 +31,14 @@ skip module GHC.Unicode
 rename type  GHC.Tuple.() = unit
 rename value GHC.Tuple.() = tt
 
+rename type GHC.Tuple.(,) = GHC.Tuple.pair_type
+rename type GHC.Tuple.(,,) = GHC.Tuple.triple_type
+rename type GHC.Tuple.(,,,) = GHC.Tuple.quad_type
+rename type GHC.Tuple.(,,,,) = GHC.Tuple.quint_type
+rename type GHC.Tuple.(,,,,,) = GHC.Tuple.sext_type
+rename type GHC.Tuple.(,,,,,,) = GHC.Tuple.sept_type
+
+
 rename type  GHC.Types.[]  = list
 rename value GHC.Types.[]  = nil
 rename value GHC.Types.:   = cons

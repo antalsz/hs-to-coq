@@ -78,6 +78,8 @@
     - kinds for Proxy/KProxy
 	- preamble needs to import GHC.Base so that == is in scope
 
+  Data/BiFunctor
+    - skip GHC.Generics instances
 
 * What stops these modules from being generated?
 
@@ -93,6 +95,7 @@
 - Data/Functor/Const
   Bug in monoid instance --- inst_m type variable vs. m in body of
   instance declaration.
+
 
 - GHC/Char
 - GHC/Num
@@ -292,7 +295,7 @@ X Control.Arrow
 X Control.Category
 X Control.Monad
 Data.Bifoldable
-Data.Bifunctor
+X Data.Bifunctor
 Data.Bitraversable
 X Data.Bits
 X Data.Bool

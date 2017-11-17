@@ -59,7 +59,7 @@ MODULES = \
   Control/Applicative \
   Data/Functor/Classes \
   Control/Category \
-  Data/BiFunctor \
+
 
 # generated from drop-in/
 DROPIN =

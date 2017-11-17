@@ -9,9 +9,6 @@ Unset Printing Implicit Defensive.
 
 Require Coq.Program.Wf.
 
-(* Preamble *)
-
-
 (* Converted imports: *)
 
 Require Coq.Lists.List.

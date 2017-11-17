@@ -51,11 +51,11 @@ escapeReservedNames x =
 -- these type operators aren't parsed by the renaming file
           | x == "(->)"       -> pure $ ("arrow")
           | x == "(,)"        -> pure $ ("pair_type")
-          | x == "(,,)"       -> pure $ ("triple_type")
-          | x == "(,,,)"      -> pure $ ("quad_type")
-          | x == "(,,,,)"     -> pure $ ("quint_type")
-          | x == "(,,,,,)"    -> pure $ ("sext_type")
-          | x == "(,,,,,,)"   -> pure $ ("sept_type")
+--          | x == "(,,)"       -> pure $ ("triple_type")  -- how to distinguish types & datacons?
+--          | x == "(,,,)"      -> pure $ ("quad_type")
+--          | x == "(,,,,)"     -> pure $ ("quint_type")
+--          | x == "(,,,,,)"    -> pure $ ("sext_type")
+--          | x == "(,,,,,,)"   -> pure $ ("sept_type")
           | x == "#."       -> pure $ ("hash_compose")  -- Data.Foldable
 -- Maybe add this as part of an Int# solution? But don't want to
 -- always replace these, if we make "Int#" a notation for "Int_h"

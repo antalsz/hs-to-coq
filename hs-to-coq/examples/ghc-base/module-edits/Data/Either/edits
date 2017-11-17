@@ -10,4 +10,4 @@ redefine Local Definition instance_forall___GHC_Base_Eq__b____GHC_Base_Eq__a___G
   fun arg_34__ arg_35__ =>
     match arg_34__ , arg_35__ with
       | a , b => negb (instance_forall___GHC_Base_Eq__b____GHC_Base_Eq__a___GHC_Base_Eq___sum_a_b__op_zeze__  a b)
-    end.
+  end.

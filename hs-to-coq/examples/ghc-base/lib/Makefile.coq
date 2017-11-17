@@ -117,7 +117,6 @@ VFILES:=GHC/Num.v\
   Data/IntMap/Base.v\
   Data/IntSet/Base.v\
   Data/Functor/Const.v\
-  Control/Category.v\
   GHC/Base.v\
   Data/Maybe.v\
   GHC/List.v\
@@ -137,7 +136,8 @@ VFILES:=GHC/Num.v\
   Control/Arrow.v\
   Data/Functor/Identity.v\
   Control/Applicative.v\
-  Data/Functor/Classes.v
+  Data/Functor/Classes.v\
+  Control/Category.v
 
 ifneq ($(filter-out archclean clean cleanall printenv,$(MAKECMDGOALS)),)
 -include $(addsuffix .d,$(VFILES))

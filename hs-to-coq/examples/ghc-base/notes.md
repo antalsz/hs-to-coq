@@ -64,9 +64,12 @@
   Data/Functor/Classes
 	- just read and show instances
 
-- Control/Arrow
+  Control/Arrow
     - needs information about Control/Category class
 
+  Control/Category
+    - skip Data.Type.Coercion
+    - skip Data.Type.Equality
 
 * What stops these modules from being generated?
 
@@ -83,12 +86,6 @@
 
 - Data/Type/Equality
   functional dependencies
-
-- Control/Category
-  Type inference: need to annotate type of cat in class definition.
-  Class Category cat := {
-    id : forall {a}, cat a a ;
-    op_z2218U__ : forall {b} {c} {a}, cat b c -> cat a b -> cat a c }.
 
 - Data/Functor/Const
   Bug in monoid instance --- inst_m type variable vs. m in body of

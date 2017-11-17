@@ -33,7 +33,7 @@ HANDMOD = \
   Data/IntMap/Base \
   Data/IntSet/Base \
   Data/Functor/Const \
-  Control/Category \
+
 
 # Generated modules
 # generated directly from GHC/libraries/base
@@ -58,7 +58,7 @@ MODULES = \
   Data/Functor/Identity \
   Control/Applicative \
   Data/Functor/Classes \
-
+  Control/Category \
 
 # generated from drop-in/
 DROPIN =

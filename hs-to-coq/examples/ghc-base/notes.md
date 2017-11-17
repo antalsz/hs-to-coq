@@ -81,11 +81,6 @@
 
 * What stops these modules from being generated?
 
-- GHC/BaseInstances
-  This is a manual part of Base.hs
-  Bug in instance generation for partially applied type constructors
-  (e.g. monoid instance for list).
-
 - Data/FoldableInst
   This is the manual part of Data.Foldable
   Instances for the option type.

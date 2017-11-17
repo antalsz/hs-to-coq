@@ -21,10 +21,10 @@ HANDMOD = \
   GHC/Real \
   GHC/Enum \
   Data/Bits \
-  Data/Type/Equality \
-  Prelude\
   GHC/Prim \
   GHC/Tuple \
+  Data/Type/Equality \
+  Prelude\
   Data/FoldableInst \
   \
   Data/IntMap \

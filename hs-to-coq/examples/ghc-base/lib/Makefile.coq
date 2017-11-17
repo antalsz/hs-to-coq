@@ -106,10 +106,10 @@ VFILES:=GHC/Num.v\
   GHC/Real.v\
   GHC/Enum.v\
   Data/Bits.v\
-  Data/Type/Equality.v\
-  Prelude.v\
   GHC/Prim.v\
   GHC/Tuple.v\
+  Data/Type/Equality.v\
+  Prelude.v\
   Data/FoldableInst.v\
   Data/IntMap.v\
   Data/IntMap/Base.v\

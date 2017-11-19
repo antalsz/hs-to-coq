@@ -1,7 +1,16 @@
 Require Import GHC.Base.
+(*
+Definition op_zlzg__ {m} `{GHC.Base.Monoid m} : m -> m -> m :=
+  GHC.Base.mappend.
+
+Infix "<>" := (op_zlzg__) (at level 70).
+
+Notation "'_<>_'" := (op_zlzg__).
+*)
 
 (* WE do these by hand because they are defined in GHC using Data.Coerce. *)
 
+(*
 Inductive All : Type := Mk_All : bool -> All.
 Definition getAll (arg_7__ : All) :=
   match arg_7__ with
@@ -20,6 +29,7 @@ Instance instance_GHC_Base_Monoid_All :
    mempty__  := mempty_All;
    mconcat__ := foldr mappend_All mempty_All;
 |}.
+
 
 Inductive Any : Type := Mk_Any : bool -> Any.
 Definition getAny (arg_7__ : Any) :=
@@ -96,12 +106,12 @@ Definition mappend_Product {a} `{Num a} (x: Product a) (y :Product a)  : Product
     | Mk_Product i , Mk_Product j => Mk_Product (i * j)
   end.
 Instance instance_GHC_Base_Monoid__Product_a_ {a} `{Num a}:
-  GHC.Base.Monoid (Product a) := fun _ k => k 
+  GHC.Base.Monoid (Product a) := fun _ k => k
  {| mappend__ := mappend_Product;
     mempty__  := mempty_Product;
     mconcat__ := foldr mappend_Product mempty_Product |}.
 
-Instance instance_GHC_Base_Functor__Product_ : GHC.Base.Functor Product := 
+Instance instance_GHC_Base_Functor__Product_ : GHC.Base.Functor Product :=
   fun _ k => k {|
     fmap__      := fun _ _ f y => match y with | Mk_Product j => Mk_Product (f j) end;
     op_zlzd____ := fun _ _ x y => match y with | Mk_Product j => Mk_Product x end;
@@ -121,13 +131,14 @@ Definition mappend_Sum {a} `{Num a} (x: Sum a) (y :Sum a)  : Sum a :=
     | Mk_Sum i , Mk_Sum j => Mk_Sum (i + j)
   end.
 Instance instance_GHC_Base_Monoid__Sum_a_ {a} `{Num a}:
-  GHC.Base.Monoid (Sum a) := fun _ k => k 
+  GHC.Base.Monoid (Sum a) := fun _ k => k
  {| mappend__ := mappend_Sum;
     mempty__  := mempty_Sum;
     mconcat__ := foldr mappend_Sum mempty_Sum |}.
 
-Instance instance_GHC_Base_Functor__Sum_ : GHC.Base.Functor Sum := 
+Instance instance_GHC_Base_Functor__Sum_ : GHC.Base.Functor Sum :=
   fun _ k => k {|
     fmap__      := fun _ _ f y => match y with | Mk_Sum j => Mk_Sum (f j) end;
     op_zlzd____ := fun _ _ x y => match y with | Mk_Sum j => Mk_Sum x end;
     |}.
+*)

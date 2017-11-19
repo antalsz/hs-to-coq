@@ -103,31 +103,19 @@ skip method Bits bitSize
 # default definition cannot be used
 skip method Applicative op_zlzt__
 
-# data types defined in embeddings don't create the right
-# constructor names. So rename them.
-# These are defined in the preamble.v because their instances
-# are defined via Data.Coerce
+# Any types defined in one module and used elsewhere need to have
+# their constructors renamed consistently
 rename value Data.Proxy.Proxy    = Data.Proxy.Mk_Proxy
 
 rename value Data.Monoid.Dual    = Data.Monoid.Mk_Dual
-rename value getDual = Data.Monoid.getDual
 rename value Data.Monoid.Sum     = Data.Monoid.Mk_Sum
-rename value getSum = Data.Monoid.getSum
 rename value Data.Monoid.Product = Data.Monoid.Mk_Product
-rename value getProduct = Data.Monoid.getProduct
 rename value Data.Monoid.First   = Data.Monoid.Mk_First
-rename value getFirst = Data.Monoid.getFirst
 rename value Data.Monoid.Last    = Data.Monoid.Mk_Last
-rename value getLast = Data.Monoid.getLast
+rename value Data.Monoid.Any     = Data.Monoid.Mk_Any
+rename value Data.Monoid.All     = Data.Monoid.Mk_All
 
-rename value getConst = Data.Functor.Const.getConst
 rename value Data.Functor.Const.Const = Data.Functor.Const.Mk_Const
-
-rename value getAny = Data.Monoid.getAny
-rename value Data.Monoid.Any = Data.Monoid.Mk_Any
-
-rename value getAll = Data.Monoid.getAll
-rename value Data.Monoid.All = Data.Monoid.Mk_All
-
-rename value getIdentity = Data.Functor.Identity.getIdentity
 rename value Data.Functor.Identity.Identity = Data.Functor.Identity.Mk_Identity
+
+rename value op_zlzg__ = Data.Monoid.op_zlzg__

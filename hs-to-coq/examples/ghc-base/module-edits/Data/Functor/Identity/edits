@@ -1,1 +1,7 @@
-skip hash_compose
+redefine Definition hash_compose {a} {b} {c} := @Coq.Program.Basics.compose a b c.
+
+redefine Local Definition instance_Data_Foldable_Foldable_Identity_foldr' :
+			forall {a} {b}, (a -> (b -> b)) -> (b -> ((Identity a) -> b)) :=
+         fun {a} {b} => instance_Data_Foldable_Foldable_Identity_foldr.
+
+order instance_Data_Foldable_Foldable_Identity instance_Data_Traversable_Traversable_Identity

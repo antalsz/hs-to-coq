@@ -11,8 +11,11 @@ Require Coq.Program.Wf.
 
 (* Converted imports: *)
 
+Require Coq.Program.Basics.
+Require Data.Foldable.
 Require Data.Traversable.
 Require GHC.Base.
+Require GHC.Num.
 Require GHC.Prim.
 
 (* Converted type declarations: *)
@@ -40,8 +43,61 @@ Instance Unpeel_Identity a : Prim.Unpeel (Identity a) a :=
    (Identity a)' failed: OOPS! Cannot find information for class "GHC.Show.Show"
    unsupported *)
 
-(* Translating `instance Data.Foldable.Foldable Identity' failed: Cannot find
-   sig for "minimum" unsupported *)
+Local Definition instance_Data_Foldable_Foldable_Identity_foldMap : forall {m}
+                                                                           {a},
+                                                                      forall `{GHC.Base.Monoid m},
+                                                                        (a -> m) -> Identity a -> m :=
+  fun {m} {a} `{GHC.Base.Monoid m} => GHC.Prim.coerce.
+
+Local Definition instance_Data_Foldable_Foldable_Identity_fold : forall {m},
+                                                                   forall `{GHC.Base.Monoid m}, Identity m -> m :=
+  fun {m} `{GHC.Base.Monoid m} =>
+    instance_Data_Foldable_Foldable_Identity_foldMap GHC.Base.id.
+
+Local Definition instance_Data_Foldable_Foldable_Identity_foldl : forall {b}
+                                                                         {a},
+                                                                    (b -> a -> b) -> b -> Identity a -> b :=
+  fun {b} {a} => GHC.Prim.coerce.
+
+Local Definition instance_Data_Foldable_Foldable_Identity_foldl' : forall {b}
+                                                                          {a},
+                                                                     (b -> a -> b) -> b -> Identity a -> b :=
+  fun {b} {a} => GHC.Prim.coerce.
+
+Local Definition instance_Data_Foldable_Foldable_Identity_foldr : forall {a}
+                                                                         {b},
+                                                                    (a -> b -> b) -> b -> Identity a -> b :=
+  fun {a} {b} =>
+    fun arg_17__ arg_18__ arg_19__ =>
+      match arg_17__ , arg_18__ , arg_19__ with
+        | f , z , Mk_Identity x => f x z
+      end.
+
+Local Definition instance_Data_Foldable_Foldable_Identity_foldr' : forall {a}
+                                                                          {b},
+                                                                     (a -> b -> b) -> b -> Identity a -> b :=
+  fun {a} {b} => instance_Data_Foldable_Foldable_Identity_foldr.
+
+Local Definition instance_Data_Foldable_Foldable_Identity_length : forall {a},
+                                                                     Identity a -> GHC.Num.Int :=
+  fun {a} => fun arg_23__ => GHC.Num.fromInteger 1.
+
+Local Definition instance_Data_Foldable_Foldable_Identity_null : forall {a},
+                                                                   Identity a -> bool :=
+  fun {a} => fun arg_26__ => false.
+
+Local Definition instance_Data_Foldable_Foldable_Identity_product : forall {a},
+                                                                      forall `{GHC.Num.Num a}, Identity a -> a :=
+  fun {a} `{GHC.Num.Num a} => runIdentity.
+
+Local Definition instance_Data_Foldable_Foldable_Identity_sum : forall {a},
+                                                                  forall `{GHC.Num.Num a}, Identity a -> a :=
+  fun {a} `{GHC.Num.Num a} => runIdentity.
+
+Local Definition instance_Data_Foldable_Foldable_Identity_toList : forall {a},
+                                                                     Identity a -> list a :=
+  fun {a} =>
+    fun arg_27__ => match arg_27__ with | Mk_Identity x => cons x nil end.
 
 Local Definition instance_GHC_Base_Functor_Identity_fmap : forall {a} {b},
                                                              (a -> b) -> Identity a -> Identity b :=
@@ -89,8 +145,8 @@ Local Definition instance_GHC_Base_Monad_Identity_op_zgzg__ : forall {a} {b},
 Local Definition instance_GHC_Base_Monad_Identity_op_zgzgze__ : forall {a} {b},
                                                                   Identity a -> (a -> Identity b) -> Identity b :=
   fun {a} {b} =>
-    fun arg_8__ arg_9__ =>
-      match arg_8__ , arg_9__ with
+    fun arg_10__ arg_11__ =>
+      match arg_10__ , arg_11__ with
         | m , k => k (runIdentity m)
       end.
 
@@ -115,10 +171,10 @@ Local Definition instance_Data_Traversable_Traversable_Identity_traverse
     : forall {f} {a} {b},
         forall `{GHC.Base.Applicative f}, (a -> f b) -> Identity a -> f (Identity b) :=
   fun {f} {a} {b} `{GHC.Base.Applicative f} =>
-    fun arg_1__ arg_2__ =>
-      match arg_1__ , arg_2__ with
-        | f , Mk_Identity a1 => GHC.Base.fmap (fun arg_3__ =>
-                                                match arg_3__ with
+    fun arg_3__ arg_4__ =>
+      match arg_3__ , arg_4__ with
+        | f , Mk_Identity a1 => GHC.Base.fmap (fun arg_5__ =>
+                                                match arg_5__ with
                                                   | b1 => Mk_Identity b1
                                                 end) (f a1)
       end.
@@ -140,27 +196,6 @@ Local Definition instance_Data_Traversable_Traversable_Identity_mapM
         forall `{GHC.Base.Monad m}, (a -> m b) -> Identity a -> m (Identity b) :=
   fun {m} {a} {b} `{GHC.Base.Monad m} =>
     instance_Data_Traversable_Traversable_Identity_traverse.
-
-Instance instance_Data_Traversable_Traversable_Identity
-  : Data.Traversable.Traversable Identity := fun _ k =>
-    k (Data.Traversable.Traversable__Dict_Build Identity (fun {m}
-                                                              {a}
-                                                              {b}
-                                                              `{GHC.Base.Monad m} =>
-                                                  instance_Data_Traversable_Traversable_Identity_mapM) (fun {m}
-                                                                                                            {a}
-                                                                                                            `{GHC.Base.Monad
-                                                                                                            m} =>
-                                                  instance_Data_Traversable_Traversable_Identity_sequence) (fun {f}
-                                                                                                                {a}
-                                                                                                                `{GHC.Base.Applicative
-                                                                                                                f} =>
-                                                  instance_Data_Traversable_Traversable_Identity_sequenceA) (fun {f}
-                                                                                                                 {a}
-                                                                                                                 {b}
-                                                                                                                 `{GHC.Base.Applicative
-                                                                                                                 f} =>
-                                                  instance_Data_Traversable_Traversable_Identity_traverse)).
 
 (* Translating `instance forall {a}, forall `{Foreign.Storable.Storable a},
    Foreign.Storable.Storable (Identity a)' failed: type applications unsupported *)
@@ -226,10 +261,63 @@ Instance instance_Data_Traversable_Traversable_Identity
 (* Translating `instance forall {a}, forall `{Data.Bits.Bits a}, Data.Bits.Bits
    (Identity a)' failed: type applications unsupported *)
 
+Definition hash_compose {a} {b} {c} :=
+  (@Coq.Program.Basics.compose a b c).
+
+Local Definition instance_Data_Foldable_Foldable_Identity_elem : forall {a},
+                                                                   forall `{GHC.Base.Eq_ a}, a -> Identity a -> bool :=
+  fun {a} `{GHC.Base.Eq_ a} =>
+    hash_compose (fun arg_14__ => Coq.Program.Basics.compose arg_14__ runIdentity)
+                 GHC.Base.op_zeze__.
+
+Instance instance_Data_Foldable_Foldable_Identity : Data.Foldable.Foldable
+                                                    Identity := fun _ k =>
+    k (Data.Foldable.Foldable__Dict_Build Identity (fun {a} `{GHC.Base.Eq_ a} =>
+                                            instance_Data_Foldable_Foldable_Identity_elem) (fun {m}
+                                                                                                `{GHC.Base.Monoid m} =>
+                                            instance_Data_Foldable_Foldable_Identity_fold) (fun {m}
+                                                                                                {a}
+                                                                                                `{GHC.Base.Monoid m} =>
+                                            instance_Data_Foldable_Foldable_Identity_foldMap) (fun {b} {a} =>
+                                            instance_Data_Foldable_Foldable_Identity_foldl) (fun {b} {a} =>
+                                            instance_Data_Foldable_Foldable_Identity_foldl') (fun {a} {b} =>
+                                            instance_Data_Foldable_Foldable_Identity_foldr) (fun {a} {b} =>
+                                            instance_Data_Foldable_Foldable_Identity_foldr') (fun {a} =>
+                                            instance_Data_Foldable_Foldable_Identity_length) (fun {a} =>
+                                            instance_Data_Foldable_Foldable_Identity_null) (fun {a} `{GHC.Num.Num a} =>
+                                            instance_Data_Foldable_Foldable_Identity_product) (fun {a}
+                                                                                                   `{GHC.Num.Num a} =>
+                                            instance_Data_Foldable_Foldable_Identity_sum) (fun {a} =>
+                                            instance_Data_Foldable_Foldable_Identity_toList)).
+
+Instance instance_Data_Traversable_Traversable_Identity
+  : Data.Traversable.Traversable Identity := fun _ k =>
+    k (Data.Traversable.Traversable__Dict_Build Identity (fun {m}
+                                                              {a}
+                                                              {b}
+                                                              `{GHC.Base.Monad m} =>
+                                                  instance_Data_Traversable_Traversable_Identity_mapM) (fun {m}
+                                                                                                            {a}
+                                                                                                            `{GHC.Base.Monad
+                                                                                                            m} =>
+                                                  instance_Data_Traversable_Traversable_Identity_sequence) (fun {f}
+                                                                                                                {a}
+                                                                                                                `{GHC.Base.Applicative
+                                                                                                                f} =>
+                                                  instance_Data_Traversable_Traversable_Identity_sequenceA) (fun {f}
+                                                                                                                 {a}
+                                                                                                                 {b}
+                                                                                                                 `{GHC.Base.Applicative
+                                                                                                                 f} =>
+                                                  instance_Data_Traversable_Traversable_Identity_traverse)).
+
 (* Unbound variables:
-     Data.Traversable.Traversable Data.Traversable.Traversable__Dict_Build
-     GHC.Base.Applicative GHC.Base.Applicative__Dict_Build GHC.Base.Functor
+     Coq.Program.Basics.compose Data.Foldable.Foldable
+     Data.Foldable.Foldable__Dict_Build Data.Traversable.Traversable
+     Data.Traversable.Traversable__Dict_Build GHC.Base.Applicative
+     GHC.Base.Applicative__Dict_Build GHC.Base.Eq_ GHC.Base.Functor
      GHC.Base.Functor__Dict_Build GHC.Base.Monad GHC.Base.Monad__Dict_Build
-     GHC.Base.const GHC.Base.fmap GHC.Base.id GHC.Base.op_ztzg__ GHC.Base.pure
-     GHC.Prim.coerce
+     GHC.Base.Monoid GHC.Base.const GHC.Base.fmap GHC.Base.id GHC.Base.op_zeze__
+     GHC.Base.op_ztzg__ GHC.Base.pure GHC.Num.Int GHC.Num.Num GHC.Prim.coerce bool
+     cons false list nil
 *)

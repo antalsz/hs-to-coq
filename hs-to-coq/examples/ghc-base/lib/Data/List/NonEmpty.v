@@ -19,7 +19,9 @@ Require Coq.Init.Datatypes.
 Require Coq.Program.Basics.
 Require Data.Foldable.
 Require Data.Functor.
+Require Data.Monoid.
 Require Data.OldList.
+Require Data.Ord.
 Require Data.Traversable.
 Require Data.Tuple.
 Require GHC.Base.
@@ -45,16 +47,16 @@ Arguments NEcons {_} _ _.
 Local Definition instance_GHC_Base_Functor_NonEmpty_fmap : forall {a} {b},
                                                              (a -> b) -> NonEmpty a -> NonEmpty b :=
   fun {a} {b} =>
-    fun arg_184__ arg_185__ =>
-      match arg_184__ , arg_185__ with
+    fun arg_211__ arg_212__ =>
+      match arg_211__ , arg_212__ with
         | f , NEcons a as_ => NEcons (f a) (GHC.Base.fmap f as_)
       end.
 
 Local Definition instance_GHC_Base_Functor_NonEmpty_op_zlzd__ : forall {a} {b},
                                                                   a -> NonEmpty b -> NonEmpty a :=
   fun {a} {b} =>
-    fun arg_188__ arg_189__ =>
-      match arg_188__ , arg_189__ with
+    fun arg_215__ arg_216__ =>
+      match arg_215__ , arg_216__ with
         | b , NEcons _ as_ => NEcons b (GHC.Base.op_zlzd__ b as_)
       end.
 
@@ -66,14 +68,14 @@ Instance instance_GHC_Base_Functor_NonEmpty : GHC.Base.Functor NonEmpty := fun _
 
 Local Definition instance_GHC_Base_Applicative_NonEmpty_pure : forall {a},
                                                                  a -> NonEmpty a :=
-  fun {a} => fun arg_181__ => match arg_181__ with | a => NEcons a nil end.
+  fun {a} => fun arg_208__ => match arg_208__ with | a => NEcons a nil end.
 
 Local Definition instance_Data_Traversable_Traversable_NonEmpty_traverse
     : forall {f} {a} {b},
         forall `{GHC.Base.Applicative f}, (a -> f b) -> NonEmpty a -> f (NonEmpty b) :=
   fun {f} {a} {b} `{GHC.Base.Applicative f} =>
-    fun arg_171__ arg_172__ =>
-      match arg_171__ , arg_172__ with
+    fun arg_198__ arg_199__ =>
+      match arg_198__ , arg_199__ with
         | f , NEcons a as_ => GHC.Base.op_zlztzg__ (Data.Functor.op_zlzdzg__ NEcons (f
                                                                              a)) (Data.Traversable.traverse f as_)
       end.
@@ -96,6 +98,137 @@ Local Definition instance_Data_Traversable_Traversable_NonEmpty_mapM
   fun {m} {a} {b} `{GHC.Base.Monad m} =>
     instance_Data_Traversable_Traversable_NonEmpty_traverse.
 
+Local Definition instance_Data_Foldable_Foldable_NonEmpty_fold : forall {m},
+                                                                   forall `{GHC.Base.Monoid m}, NonEmpty m -> m :=
+  fun {m} `{GHC.Base.Monoid m} =>
+    fun arg_195__ =>
+      match arg_195__ with
+        | NEcons m ms => GHC.Base.mappend m (Data.Foldable.fold ms)
+      end.
+
+Local Definition instance_Data_Foldable_Foldable_NonEmpty_foldMap : forall {m}
+                                                                           {a},
+                                                                      forall `{GHC.Base.Monoid m},
+                                                                        (a -> m) -> NonEmpty a -> m :=
+  fun {m} {a} `{GHC.Base.Monoid m} =>
+    fun arg_191__ arg_192__ =>
+      match arg_191__ , arg_192__ with
+        | f , NEcons a as_ => GHC.Base.mappend (f a) (Data.Foldable.foldMap f as_)
+      end.
+
+Local Definition instance_Data_Foldable_Foldable_NonEmpty_product : forall {a},
+                                                                      forall `{GHC.Num.Num a}, NonEmpty a -> a :=
+  fun {a} `{GHC.Num.Num a} =>
+    Data.Foldable.hash_compose Data.Monoid.getProduct
+                               (instance_Data_Foldable_Foldable_NonEmpty_foldMap Data.Monoid.Mk_Product).
+
+Local Definition instance_Data_Foldable_Foldable_NonEmpty_sum : forall {a},
+                                                                  forall `{GHC.Num.Num a}, NonEmpty a -> a :=
+  fun {a} `{GHC.Num.Num a} =>
+    Data.Foldable.hash_compose Data.Monoid.getSum
+                               (instance_Data_Foldable_Foldable_NonEmpty_foldMap Data.Monoid.Mk_Sum).
+
+Local Definition instance_Data_Foldable_Foldable_NonEmpty_elem : forall {a},
+                                                                   forall `{_ : GHC.Base.Eq_ a},
+                                                                     a -> NonEmpty a -> bool :=
+  fun {a} `{_ : GHC.Base.Eq_ a} =>
+    Coq.Program.Basics.compose (fun p =>
+                                 Data.Foldable.hash_compose Data.Monoid.getAny
+                                                            (instance_Data_Foldable_Foldable_NonEmpty_foldMap
+                                                            (Data.Foldable.hash_compose Data.Monoid.Mk_Any p)))
+                               GHC.Base.op_zeze__.
+
+Local Definition instance_Data_Foldable_Foldable_NonEmpty_foldl : forall {b}
+                                                                         {a},
+                                                                    (b -> a -> b) -> b -> NonEmpty a -> b :=
+  fun {b} {a} =>
+    fun arg_182__ arg_183__ arg_184__ =>
+      match arg_182__ , arg_183__ , arg_184__ with
+        | f , z , NEcons a as_ => Data.Foldable.foldl f (f z a) as_
+      end.
+
+Local Definition instance_Data_Foldable_Foldable_NonEmpty_foldr' : forall {a}
+                                                                          {b},
+                                                                     (a -> b -> b) -> b -> NonEmpty a -> b :=
+  fun {a} {b} =>
+    fun arg_9__ arg_10__ arg_11__ =>
+      match arg_9__ , arg_10__ , arg_11__ with
+        | f , z0 , xs => let f' :=
+                           fun arg_12__ arg_13__ arg_14__ =>
+                             match arg_12__ , arg_13__ , arg_14__ with
+                               | k , x , z => GHC.Base.op_zdzn__ k (f x z)
+                             end in
+                         instance_Data_Foldable_Foldable_NonEmpty_foldl f' GHC.Base.id xs z0
+      end.
+
+Local Definition instance_Data_Foldable_Foldable_NonEmpty_foldr : forall {a}
+                                                                         {b},
+                                                                    (a -> b -> b) -> b -> NonEmpty a -> b :=
+  fun {a} {b} =>
+    fun arg_177__ arg_178__ arg_179__ =>
+      match arg_177__ , arg_178__ , arg_179__ with
+        | f , z , NEcons a as_ => f a (Data.Foldable.foldr f z as_)
+      end.
+
+Local Definition instance_Data_Foldable_Foldable_NonEmpty_null : forall {a},
+                                                                   NonEmpty a -> bool :=
+  fun {a} =>
+    instance_Data_Foldable_Foldable_NonEmpty_foldr (fun arg_61__ arg_62__ => false)
+    true.
+
+Local Definition instance_Data_Foldable_Foldable_NonEmpty_toList : forall {a},
+                                                                     NonEmpty a -> list a :=
+  fun {a} =>
+    fun arg_54__ =>
+      match arg_54__ with
+        | t => GHC.Base.build (fun arg_55__ arg_56__ =>
+                                match arg_55__ , arg_56__ with
+                                  | c , n => instance_Data_Foldable_Foldable_NonEmpty_foldr c n t
+                                end)
+      end.
+
+Local Definition instance_Data_Foldable_Foldable_NonEmpty_foldl' : forall {b}
+                                                                          {a},
+                                                                     (b -> a -> b) -> b -> NonEmpty a -> b :=
+  fun {b} {a} =>
+    fun arg_24__ arg_25__ arg_26__ =>
+      match arg_24__ , arg_25__ , arg_26__ with
+        | f , z0 , xs => let f' :=
+                           fun arg_27__ arg_28__ arg_29__ =>
+                             match arg_27__ , arg_28__ , arg_29__ with
+                               | x , k , z => GHC.Base.op_zdzn__ k (f z x)
+                             end in
+                         instance_Data_Foldable_Foldable_NonEmpty_foldr f' GHC.Base.id xs z0
+      end.
+
+Local Definition instance_Data_Foldable_Foldable_NonEmpty_length : forall {a},
+                                                                     NonEmpty a -> GHC.Num.Int :=
+  fun {a} =>
+    instance_Data_Foldable_Foldable_NonEmpty_foldl' (fun arg_64__ arg_65__ =>
+                                                      match arg_64__ , arg_65__ with
+                                                        | c , _ => GHC.Num.op_zp__ c (GHC.Num.fromInteger 1)
+                                                      end) (GHC.Num.fromInteger 0).
+
+Instance instance_Data_Foldable_Foldable_NonEmpty : Data.Foldable.Foldable
+                                                    NonEmpty := fun _ k =>
+    k (Data.Foldable.Foldable__Dict_Build NonEmpty (fun {a} `{GHC.Base.Eq_ a} =>
+                                            instance_Data_Foldable_Foldable_NonEmpty_elem) (fun {m}
+                                                                                                `{GHC.Base.Monoid m} =>
+                                            instance_Data_Foldable_Foldable_NonEmpty_fold) (fun {m}
+                                                                                                {a}
+                                                                                                `{GHC.Base.Monoid m} =>
+                                            instance_Data_Foldable_Foldable_NonEmpty_foldMap) (fun {b} {a} =>
+                                            instance_Data_Foldable_Foldable_NonEmpty_foldl) (fun {b} {a} =>
+                                            instance_Data_Foldable_Foldable_NonEmpty_foldl') (fun {a} {b} =>
+                                            instance_Data_Foldable_Foldable_NonEmpty_foldr) (fun {a} {b} =>
+                                            instance_Data_Foldable_Foldable_NonEmpty_foldr') (fun {a} =>
+                                            instance_Data_Foldable_Foldable_NonEmpty_length) (fun {a} =>
+                                            instance_Data_Foldable_Foldable_NonEmpty_null) (fun {a} `{GHC.Num.Num a} =>
+                                            instance_Data_Foldable_Foldable_NonEmpty_product) (fun {a}
+                                                                                                   `{GHC.Num.Num a} =>
+                                            instance_Data_Foldable_Foldable_NonEmpty_sum) (fun {a} =>
+                                            instance_Data_Foldable_Foldable_NonEmpty_toList)).
+
 Instance instance_Data_Traversable_Traversable_NonEmpty
   : Data.Traversable.Traversable NonEmpty := fun _ k =>
     k (Data.Traversable.Traversable__Dict_Build NonEmpty (fun {m}
@@ -116,9 +249,6 @@ Instance instance_Data_Traversable_Traversable_NonEmpty
                                                                                                                  `{GHC.Base.Applicative
                                                                                                                  f} =>
                                                   instance_Data_Traversable_Traversable_NonEmpty_traverse)).
-
-(* Translating `instance Data.Foldable.Foldable NonEmpty' failed: Cannot find
-   sig for "foldr1" unsupported *)
 
 (* Translating `instance GHC.Generics.Generic1 NonEmpty' failed: OOPS! Cannot
    find information for class "GHC.Generics.Generic1" unsupported *)
@@ -142,12 +272,12 @@ Local Definition instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__NonEmpty_a__co
                                                                                       `{GHC.Base.Ord inst_a} : NonEmpty
                                                                                                                inst_a -> NonEmpty
                                                                                                                inst_a -> comparison :=
-  fun arg_116__ arg_117__ =>
-    match arg_116__ , arg_117__ with
+  fun arg_122__ arg_123__ =>
+    match arg_122__ , arg_123__ with
       | a , b => match a with
                    | NEcons a1 a2 => match b with
-                                       | NEcons b1 b2 => let scrut_118__ := (GHC.Base.compare a1 b1) in
-                                                         match scrut_118__ with
+                                       | NEcons b1 b2 => let scrut_124__ := (GHC.Base.compare a1 b1) in
+                                                         match scrut_124__ with
                                                            | Lt => Lt
                                                            | Eq => (GHC.Base.compare a2 b2)
                                                            | Gt => Gt
@@ -160,12 +290,12 @@ Local Definition instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__NonEmpty_a__op
                                                                                       `{GHC.Base.Ord inst_a} : NonEmpty
                                                                                                                inst_a -> NonEmpty
                                                                                                                inst_a -> bool :=
-  fun arg_160__ arg_161__ =>
-    match arg_160__ , arg_161__ with
+  fun arg_166__ arg_167__ =>
+    match arg_166__ , arg_167__ with
       | a , b => match a with
                    | NEcons a1 a2 => match b with
-                                       | NEcons b1 b2 => let scrut_162__ := (GHC.Base.compare a1 b1) in
-                                                         match scrut_162__ with
+                                       | NEcons b1 b2 => let scrut_168__ := (GHC.Base.compare a1 b1) in
+                                                         match scrut_168__ with
                                                            | Lt => false
                                                            | Eq => (GHC.Base.op_zg__ a2 b2)
                                                            | Gt => true
@@ -177,12 +307,12 @@ Local Definition instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__NonEmpty_a__op
 Local Definition instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__NonEmpty_a__op_zgze__ {inst_a}
                                                                                         `{GHC.Base.Ord inst_a}
     : NonEmpty inst_a -> NonEmpty inst_a -> bool :=
-  fun arg_149__ arg_150__ =>
-    match arg_149__ , arg_150__ with
+  fun arg_155__ arg_156__ =>
+    match arg_155__ , arg_156__ with
       | a , b => match a with
                    | NEcons a1 a2 => match b with
-                                       | NEcons b1 b2 => let scrut_151__ := (GHC.Base.compare a1 b1) in
-                                                         match scrut_151__ with
+                                       | NEcons b1 b2 => let scrut_157__ := (GHC.Base.compare a1 b1) in
+                                                         match scrut_157__ with
                                                            | Lt => false
                                                            | Eq => (GHC.Base.op_zgze__ a2 b2)
                                                            | Gt => true
@@ -195,12 +325,12 @@ Local Definition instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__NonEmpty_a__op
                                                                                       `{GHC.Base.Ord inst_a} : NonEmpty
                                                                                                                inst_a -> NonEmpty
                                                                                                                inst_a -> bool :=
-  fun arg_127__ arg_128__ =>
-    match arg_127__ , arg_128__ with
+  fun arg_133__ arg_134__ =>
+    match arg_133__ , arg_134__ with
       | a , b => match a with
                    | NEcons a1 a2 => match b with
-                                       | NEcons b1 b2 => let scrut_129__ := (GHC.Base.compare a1 b1) in
-                                                         match scrut_129__ with
+                                       | NEcons b1 b2 => let scrut_135__ := (GHC.Base.compare a1 b1) in
+                                                         match scrut_135__ with
                                                            | Lt => true
                                                            | Eq => (GHC.Base.op_zl__ a2 b2)
                                                            | Gt => false
@@ -212,12 +342,12 @@ Local Definition instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__NonEmpty_a__op
 Local Definition instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__NonEmpty_a__op_zlze__ {inst_a}
                                                                                         `{GHC.Base.Ord inst_a}
     : NonEmpty inst_a -> NonEmpty inst_a -> bool :=
-  fun arg_138__ arg_139__ =>
-    match arg_138__ , arg_139__ with
+  fun arg_144__ arg_145__ =>
+    match arg_144__ , arg_145__ with
       | a , b => match a with
                    | NEcons a1 a2 => match b with
-                                       | NEcons b1 b2 => let scrut_140__ := (GHC.Base.compare a1 b1) in
-                                                         match scrut_140__ with
+                                       | NEcons b1 b2 => let scrut_146__ := (GHC.Base.compare a1 b1) in
+                                                         match scrut_146__ with
                                                            | Lt => true
                                                            | Eq => (GHC.Base.op_zlze__ a2 b2)
                                                            | Gt => false
@@ -251,8 +381,8 @@ Local Definition instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__NonEmpty_a__ma
 Local Definition instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___NonEmpty_a__op_zeze__ {inst_a}
                                                                                         `{GHC.Base.Eq_ inst_a}
     : NonEmpty inst_a -> NonEmpty inst_a -> bool :=
-  fun arg_108__ arg_109__ =>
-    match arg_108__ , arg_109__ with
+  fun arg_114__ arg_115__ =>
+    match arg_114__ , arg_115__ with
       | NEcons a1 a2 , NEcons b1 b2 => (andb ((GHC.Base.op_zeze__ a1 b1))
                                              ((GHC.Base.op_zeze__ a2 b2)))
     end.
@@ -295,8 +425,8 @@ Definition fromList {a} : list a -> NonEmpty a :=
 
 Definition insert {f} {a} `{Data.Foldable.Foldable f} `{GHC.Base.Ord a} : a -> f
                                                                           a -> NonEmpty a :=
-  fun arg_69__ =>
-    match arg_69__ with
+  fun arg_74__ =>
+    match arg_74__ with
       | a => Coq.Program.Basics.compose fromList (Coq.Program.Basics.compose
                                         (Data.OldList.insert a) Data.Foldable.toList)
     end.
@@ -309,24 +439,37 @@ Definition lift {f} {a} {b} `{Data.Foldable.Foldable f} : (list a -> list
                                                                              Data.Foldable.toList)
     end.
 
+Definition reverse {a} : NonEmpty a -> NonEmpty a :=
+  lift GHC.List.reverse.
+
+Definition sort {a} `{GHC.Base.Ord a} : NonEmpty a -> NonEmpty a :=
+  lift Data.OldList.sort.
+
+Definition sortBy {a} : (a -> a -> comparison) -> NonEmpty a -> NonEmpty a :=
+  fun arg_69__ => match arg_69__ with | f => lift (Data.OldList.sortBy f) end.
+
+Definition sortWith {o} {a} `{GHC.Base.Ord o} : (a -> o) -> NonEmpty
+                                                a -> NonEmpty a :=
+  Coq.Program.Basics.compose sortBy Data.Ord.comparing.
+
 Definition scanl {f} {b} {a} `{Data.Foldable.Foldable f}
     : (b -> a -> b) -> b -> f a -> NonEmpty b :=
-  fun arg_72__ arg_73__ =>
-    match arg_72__ , arg_73__ with
+  fun arg_77__ arg_78__ =>
+    match arg_77__ , arg_78__ with
       | f , z => Coq.Program.Basics.compose fromList (Coq.Program.Basics.compose
                                             (GHC.List.scanl f z) Data.Foldable.toList)
     end.
 
 Definition scanl1 {a} : (a -> a -> a) -> NonEmpty a -> NonEmpty a :=
-  fun arg_80__ arg_81__ =>
-    match arg_80__ , arg_81__ with
+  fun arg_85__ arg_86__ =>
+    match arg_85__ , arg_86__ with
       | f , NEcons a as_ => fromList (GHC.List.scanl f a as_)
     end.
 
 Definition scanr {f} {a} {b} `{Data.Foldable.Foldable f}
     : (a -> b -> b) -> b -> f a -> NonEmpty b :=
-  fun arg_76__ arg_77__ =>
-    match arg_76__ , arg_77__ with
+  fun arg_81__ arg_82__ =>
+    match arg_81__ , arg_82__ with
       | f , z => Coq.Program.Basics.compose fromList (Coq.Program.Basics.compose
                                             (GHC.List.scanr f z) Data.Foldable.toList)
     end.
@@ -337,7 +480,7 @@ Definition tails {f} {a} `{Data.Foldable.Foldable f} : f a -> NonEmpty (list
                              Data.OldList.tails Data.Foldable.toList).
 
 Definition head {a} : NonEmpty a -> a :=
-  fun arg_90__ => match arg_90__ with | NEcons a _ => a end.
+  fun arg_96__ => match arg_96__ with | NEcons a _ => a end.
 
 Definition isPrefixOf {a} `{GHC.Base.Eq_ a} : list a -> NonEmpty a -> bool :=
   fun arg_20__ arg_21__ =>
@@ -348,8 +491,8 @@ Definition isPrefixOf {a} `{GHC.Base.Eq_ a} : list a -> NonEmpty a -> bool :=
     end.
 
 Definition length {a} : NonEmpty a -> GHC.Num.Int :=
-  fun arg_105__ =>
-    match arg_105__ with
+  fun arg_111__ =>
+    match arg_111__ with
       | NEcons _ xs => GHC.Num.op_zp__ (GHC.Num.fromInteger 1) (Data.Foldable.length
                                        xs)
     end.
@@ -361,14 +504,17 @@ Definition map {a} {b} : (a -> b) -> NonEmpty a -> NonEmpty b :=
     end.
 
 Definition nonEmpty {a} : list a -> option (NonEmpty a) :=
-  fun arg_92__ =>
-    match arg_92__ with
+  fun arg_98__ =>
+    match arg_98__ with
       | nil => None
       | cons a as_ => Some (NEcons a as_)
     end.
 
 Definition uncons {a} : NonEmpty a -> a * option (NonEmpty a) :=
-  fun arg_95__ => match arg_95__ with | NEcons a as_ => pair a (nonEmpty as_) end.
+  fun arg_101__ =>
+    match arg_101__ with
+      | NEcons a as_ => pair a (nonEmpty as_)
+    end.
 
 Definition nubBy {a} : (a -> a -> bool) -> NonEmpty a -> NonEmpty a :=
   fun arg_0__ arg_1__ =>
@@ -384,8 +530,8 @@ Definition nub {a} `{GHC.Base.Eq_ a} : NonEmpty a -> NonEmpty a :=
   nubBy GHC.Base.op_zeze__.
 
 Definition op_zlzb__ {a} : a -> NonEmpty a -> NonEmpty a :=
-  fun arg_84__ arg_85__ =>
-    match arg_84__ , arg_85__ with
+  fun arg_90__ arg_91__ =>
+    match arg_90__ , arg_91__ with
       | a , NEcons b bs => NEcons a (cons b bs)
     end.
 
@@ -404,7 +550,7 @@ Definition some1 {f} {a} `{GHC.Base.Alternative f} : f a -> f (NonEmpty a) :=
     end.
 
 Definition tail {a} : NonEmpty a -> list a :=
-  fun arg_88__ => match arg_88__ with | NEcons _ as_ => as_ end.
+  fun arg_94__ => match arg_94__ with | NEcons _ as_ => as_ end.
 
 Definition toList {a} : NonEmpty a -> list a :=
   fun arg_31__ => match arg_31__ with | NEcons a as_ => cons a as_ end.
@@ -466,8 +612,8 @@ Definition drop {a} : GHC.Num.Int -> NonEmpty a -> list a :=
 Local Definition instance_GHC_Base_Monad_NonEmpty_op_zgzgze__ : forall {a} {b},
                                                                   NonEmpty a -> (a -> NonEmpty b) -> NonEmpty b :=
   fun {a} {b} =>
-    fun arg_175__ arg_176__ =>
-      match arg_175__ , arg_176__ with
+    fun arg_202__ arg_203__ =>
+      match arg_202__ , arg_203__ with
         | NEcons a as_ , f => let bs' :=
                                 GHC.Base.op_zgzgze__ as_ (Coq.Program.Basics.compose toList f) in
                               match f a with
@@ -483,11 +629,11 @@ Definition unzip {f} {a} {b} `{GHC.Base.Functor f} : f (a * b) -> f a * f b :=
     end.
 
 Definition xor : NonEmpty bool -> bool :=
-  fun arg_98__ =>
-    match arg_98__ with
+  fun arg_104__ =>
+    match arg_104__ with
       | NEcons x xs => let xor' :=
-                         fun arg_99__ arg_100__ =>
-                           match arg_99__ , arg_100__ with
+                         fun arg_105__ arg_106__ =>
+                           match arg_105__ , arg_106__ with
                              | true , y => negb y
                              | false , y => y
                            end in
@@ -544,20 +690,25 @@ Instance instance_GHC_Base_Monad_NonEmpty : GHC.Base.Monad NonEmpty := fun _
 
 (* Unbound variables:
      * Coq.Init.Datatypes.app Coq.Program.Basics.compose Data.Foldable.Foldable
-     Data.Foldable.foldr Data.Foldable.length Data.Foldable.toList
-     Data.Functor.op_zlzdzg__ Data.OldList.insert Data.OldList.isPrefixOf
-     Data.OldList.nubBy Data.OldList.partition Data.OldList.tails
+     Data.Foldable.Foldable__Dict_Build Data.Foldable.fold Data.Foldable.foldMap
+     Data.Foldable.foldl Data.Foldable.foldr Data.Foldable.hash_compose
+     Data.Foldable.length Data.Foldable.toList Data.Functor.op_zlzdzg__
+     Data.Monoid.Mk_Any Data.Monoid.Mk_Product Data.Monoid.Mk_Sum Data.Monoid.getAny
+     Data.Monoid.getProduct Data.Monoid.getSum Data.OldList.insert
+     Data.OldList.isPrefixOf Data.OldList.nubBy Data.OldList.partition
+     Data.OldList.sort Data.OldList.sortBy Data.OldList.tails Data.Ord.comparing
      Data.Traversable.Traversable Data.Traversable.Traversable__Dict_Build
      Data.Traversable.traverse Data.Tuple.fst Data.Tuple.snd GHC.Base.Alternative
      GHC.Base.Applicative GHC.Base.Applicative__Dict_Build GHC.Base.Eq_
      GHC.Base.Eq___Dict_Build GHC.Base.Functor GHC.Base.Functor__Dict_Build
-     GHC.Base.Monad GHC.Base.Monad__Dict_Build GHC.Base.Ord GHC.Base.Ord__Dict_Build
-     GHC.Base.compare GHC.Base.const GHC.Base.errorWithoutStackTrace GHC.Base.fmap
-     GHC.Base.id GHC.Base.many GHC.Base.op_zeze__ GHC.Base.op_zg__ GHC.Base.op_zgze__
-     GHC.Base.op_zgzgze__ GHC.Base.op_zl__ GHC.Base.op_zlzd__ GHC.Base.op_zlze__
-     GHC.Base.op_zlztzg__ GHC.Base.op_ztzg__ GHC.Base.pure GHC.List.drop
-     GHC.List.dropWhile GHC.List.filter GHC.List.scanl GHC.List.scanr GHC.List.span
-     GHC.List.splitAt GHC.List.take GHC.List.takeWhile GHC.List.zip GHC.List.zipWith
-     GHC.Num.Int GHC.Num.op_zp__ None Some andb bool comparison cons false id list
-     negb nil option pair true
+     GHC.Base.Monad GHC.Base.Monad__Dict_Build GHC.Base.Monoid GHC.Base.Ord
+     GHC.Base.Ord__Dict_Build GHC.Base.build GHC.Base.compare GHC.Base.const
+     GHC.Base.errorWithoutStackTrace GHC.Base.fmap GHC.Base.id GHC.Base.many
+     GHC.Base.mappend GHC.Base.op_zdzn__ GHC.Base.op_zeze__ GHC.Base.op_zg__
+     GHC.Base.op_zgze__ GHC.Base.op_zgzgze__ GHC.Base.op_zl__ GHC.Base.op_zlzd__
+     GHC.Base.op_zlze__ GHC.Base.op_zlztzg__ GHC.Base.op_ztzg__ GHC.Base.pure
+     GHC.List.drop GHC.List.dropWhile GHC.List.filter GHC.List.reverse GHC.List.scanl
+     GHC.List.scanr GHC.List.span GHC.List.splitAt GHC.List.take GHC.List.takeWhile
+     GHC.List.zip GHC.List.zipWith GHC.Num.Int GHC.Num.Num GHC.Num.op_zp__ None Some
+     andb bool comparison cons false id list negb nil option pair true
 *)

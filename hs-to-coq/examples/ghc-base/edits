@@ -60,6 +60,7 @@ rename type GHC.Types.Word = GHC.Num.Word
 rename type GHC.Types.Int = GHC.Num.Int
 rename type GHC.Types.Char = GHC.Char.Char
 
+rename type GHC.Types.Coercible = GHC.Prim.Coercible
 
 rename type  GHC.Classes.Eq = GHC.Base.Eq_
 rename value GHC.Classes.== = GHC.Base.op_zeze__
@@ -99,9 +100,16 @@ skip method Enum enumFromThenTo
 # deprecated
 skip method Bits bitSize
 
-
 # default definition cannot be used
 skip method Applicative op_zlzt__
+
+# partial methods
+skip method Foldable foldl1
+skip method Foldable foldr1
+skip method Foldable maximum
+skip method Foldable minimum
+
+
 
 # Any types defined in one module and used elsewhere need to have
 # their constructors renamed consistently

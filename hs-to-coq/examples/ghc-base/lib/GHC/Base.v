@@ -537,16 +537,16 @@ Module bool_OrderedType___ <: HsToCoqOrderedType.
 
   Lemma lt_trans : forall x y z : t, lt x y -> lt y z -> lt x z.
   Proof. prove_non_rec_type. Qed.
-  
+
   Lemma lt_not_eq : forall x y : t, lt x y -> ~ eq x y.
   Proof. prove_non_rec_type. Qed.
 
   Lemma lt_gt_rev: forall x y : t, compare x y = Lt <-> compare y x = Gt.
   Proof. prove_non_rec_type. Qed.
-  
+
   Lemma eq_iff_compare_eq : forall x y : t, compare x y = Eq <-> eq x y.
   Proof. prove_non_rec_type. Qed.
-  
+
   Definition compare : forall x y : t, OrderedType.Compare lt eq x y.
     dec_compare_with_Ord lt lt_gt_rev eq_iff_compare_eq.
   Defined.
@@ -596,17 +596,17 @@ Module unit_OrderedType___ <: HsToCoqOrderedType.
 
   Lemma lt_trans : forall x y z : t, lt x y -> lt y z -> lt x z.
   Proof. prove_non_rec_type. Qed.
-  
+
   Lemma lt_not_eq : forall x y : t, lt x y -> ~ eq x y.
   Proof. prove_non_rec_type. Qed.
 
   Lemma lt_gt_rev: forall x y : t, compare x y = Lt <-> compare y x = Gt.
   Proof. prove_non_rec_type. Qed.
-  
+
   Lemma eq_iff_compare_eq : forall x y : t,
       compare x y = Eq <-> eq x y.
   Proof. prove_non_rec_type. Qed.
-  
+
   Definition compare : forall x y : t, OrderedType.Compare lt eq x y.
     dec_compare_with_Ord lt lt_gt_rev eq_iff_compare_eq.
   Defined.
@@ -685,17 +685,17 @@ Module comparison_OrderedType___ <: HsToCoqOrderedType.
 
   Lemma lt_trans : forall x y z : t, lt x y -> lt y z -> lt x z.
   Proof. prove_non_rec_type. Qed.
-  
+
   Lemma lt_not_eq : forall x y : t, lt x y -> ~ eq x y.
   Proof. prove_non_rec_type. Qed.
-  
+
   Lemma lt_gt_rev: forall x y : t, compare x y = Lt <-> compare y x = Gt.
   Proof. prove_non_rec_type. Qed.
-    
+
   Lemma eq_iff_compare_eq : forall x y : t,
       compare x y = Eq <-> eq x y.
   Proof. prove_non_rec_type. Qed.
-    
+
   Definition compare : forall x y : t, OrderedType.Compare lt eq x y.
     dec_compare_with_Ord lt lt_gt_rev eq_iff_compare_eq.
   Defined.
@@ -764,21 +764,6 @@ Instance Ord_option {a} `{Ord a} : Ord (option a) := ord_default compare_option.
 (* Some Haskell functions we cannot translate (yet)          *)
 
 
-(* Pattern guards, ugh. *)
-(*
-Fixpoint take {a:Type} (n:Int) (xs:list a) : list a :=
-  match xs with
-  | nil => nil
-  | y :: ys => if Z.leb n #0 then nil else (y :: take (n - #1) ys)
-  end.
-
-Fixpoint drop {a:Type} (n:Int) (xs:list a) : list a :=
-  match xs with
-  | nil => nil
-  | y :: ys => if Z.leb n #0 then (y :: ys) else drop (n - #1) ys
-  end.
-*)
-
 (* The inner nil case is impossible. So it is left out of the Haskell version. *)
 Fixpoint scanr {a b:Type} (f : a -> b -> b) (q0 : b) (xs : list a) : list b :=
   match xs with
@@ -788,6 +773,7 @@ Fixpoint scanr {a b:Type} (f : a -> b -> b) (q0 : b) (xs : list a) : list b :=
               | nil => nil
               end
 end.
+
 
 (* The inner nil case is impossible. So it is left out of the Haskell version. *)
 Fixpoint scanr1 {a :Type} (f : a -> a -> a) (q0 : a) (xs : list a) : list a :=
@@ -799,16 +785,6 @@ Fixpoint scanr1 {a :Type} (f : a -> a -> a) (q0 : a) (xs : list a) : list a :=
               | nil => nil
               end
 end.
-
-(* ?? why doesn't this work? the infix variable k ? Or needed for foldl and foldl' below *)
-(* Yes, We need foldr for foldl and foldl' *)
-(*
-Fixpoint foldr {a}{b} (f: a -> b -> b) (z:b) (xs: list a) : b :=
-  match xs with
-  | nil => z
-  | y :: ys => f y (foldr f z ys)
-  end.
-*)
 
 Definition foldl {a}{b} k z0 xs :=
   fold_right (fun (v:a) (fn:b->b) => (fun (z:b) => fn (k z v))) (id : b -> b) xs z0.

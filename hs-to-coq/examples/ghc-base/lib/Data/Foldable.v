@@ -11,7 +11,7 @@ Require Coq.Program.Wf.
 
 (* Preamble *)
 
-
+Require Import Data.Monoid.
 (* Converted imports: *)
 
 Require Coq.Program.Basics.
@@ -372,12 +372,12 @@ Definition concat {t} {a} `{Foldable t} : t (list a) -> list a :=
 Definition find {t} {a} `{Foldable t} : (a -> bool) -> t a -> option a :=
   fun arg_78__ =>
     match arg_78__ with
-      | p => Coq.Program.Basics.compose Data.Monoid.getFirst (foldMap (fun arg_79__ =>
-                                                                        match arg_79__ with
-                                                                          | x => Data.Monoid.Mk_First (if p x : bool
-                                                                                                      then Some x
-                                                                                                      else None)
-                                                                        end))
+      | p => Coq.Program.Basics.compose getFirst (foldMap (fun arg_79__ =>
+                                                            match arg_79__ with
+                                                              | x => Data.Monoid.Mk_First (if p x : bool
+                                                                                          then Some x
+                                                                                          else None)
+                                                            end))
     end.
 
 Definition foldlM {t} {m} {b} {a} `{Foldable t} `{GHC.Base.Monad m}
@@ -408,23 +408,21 @@ Definition hash_compose {a} {b} {c} :=
   (@Coq.Program.Basics.compose a b c).
 
 Definition or {t} `{Foldable t} : t bool -> bool :=
-  hash_compose Data.Monoid.getAny (foldMap Data.Monoid.Mk_Any).
+  hash_compose getAny (foldMap Data.Monoid.Mk_Any).
 
 Definition any {t} {a} `{Foldable t} : (a -> bool) -> t a -> bool :=
   fun arg_90__ =>
     match arg_90__ with
-      | p => hash_compose Data.Monoid.getAny (foldMap (hash_compose Data.Monoid.Mk_Any
-                                                                    p))
+      | p => hash_compose getAny (foldMap (hash_compose Data.Monoid.Mk_Any p))
     end.
 
 Definition and {t} `{Foldable t} : t bool -> bool :=
-  hash_compose Data.Monoid.getAll (foldMap Data.Monoid.Mk_All).
+  hash_compose getAll (foldMap Data.Monoid.Mk_All).
 
 Definition all {t} {a} `{Foldable t} : (a -> bool) -> t a -> bool :=
   fun arg_87__ =>
     match arg_87__ with
-      | p => hash_compose Data.Monoid.getAll (foldMap (hash_compose Data.Monoid.Mk_All
-                                                                    p))
+      | p => hash_compose getAll (foldMap (hash_compose Data.Monoid.Mk_All p))
     end.
 
 Definition mapM_ {t} {m} {a} {b} `{Foldable t} `{GHC.Base.Monad m} : (a -> m
@@ -467,13 +465,12 @@ Definition for__ {t} {f} {a} {b} `{Foldable t} `{GHC.Base.Applicative f} : t
 
 (* Unbound variables:
      Coq.Program.Basics.compose Data.Monoid.Mk_All Data.Monoid.Mk_Any
-     Data.Monoid.Mk_First Data.Monoid.getAll Data.Monoid.getAny Data.Monoid.getFirst
-     Data.Proxy.Proxy GHC.Base.Alternative GHC.Base.Applicative GHC.Base.Eq_
-     GHC.Base.Monad GHC.Base.MonadPlus GHC.Base.Monoid GHC.Base.build GHC.Base.empty
-     GHC.Base.flip GHC.Base.foldl GHC.Base.foldl' GHC.Base.foldr GHC.Base.id
-     GHC.Base.mappend GHC.Base.mempty GHC.Base.op_zdzn__ GHC.Base.op_zgzg__
-     GHC.Base.op_zgzgze__ GHC.Base.op_zlzbzg__ GHC.Base.op_ztzg__ GHC.Base.pure
-     GHC.Base.return_ GHC.List.elem GHC.List.length GHC.List.null GHC.List.product
-     GHC.List.sum GHC.Num.Int GHC.Num.Num None Some bool false list negb option true
-     tt unit
+     Data.Monoid.Mk_First Data.Proxy.Proxy GHC.Base.Alternative GHC.Base.Applicative
+     GHC.Base.Eq_ GHC.Base.Monad GHC.Base.MonadPlus GHC.Base.Monoid GHC.Base.build
+     GHC.Base.empty GHC.Base.flip GHC.Base.foldl GHC.Base.foldl' GHC.Base.foldr
+     GHC.Base.id GHC.Base.mappend GHC.Base.mempty GHC.Base.op_zdzn__
+     GHC.Base.op_zgzg__ GHC.Base.op_zgzgze__ GHC.Base.op_zlzbzg__ GHC.Base.op_ztzg__
+     GHC.Base.pure GHC.Base.return_ GHC.List.elem GHC.List.length GHC.List.null
+     GHC.List.product GHC.List.sum GHC.Num.Int GHC.Num.Num None Some bool false
+     getAll getAny getFirst list negb option true tt unit
 *)

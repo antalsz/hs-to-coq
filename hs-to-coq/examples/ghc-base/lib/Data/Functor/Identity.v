@@ -11,6 +11,7 @@ Require Coq.Program.Wf.
 
 (* Converted imports: *)
 
+Require Data.Traversable.
 Require GHC.Base.
 Require GHC.Prim.
 
@@ -39,8 +40,8 @@ Instance Unpeel_Identity a : Prim.Unpeel (Identity a) a :=
    (Identity a)' failed: OOPS! Cannot find information for class "GHC.Show.Show"
    unsupported *)
 
-(* Translating `instance Data.Foldable.Foldable Identity' failed: OOPS! Cannot
-   find information for class "Data.Foldable.Foldable" unsupported *)
+(* Translating `instance Data.Foldable.Foldable Identity' failed: Cannot find
+   sig for "minimum" unsupported *)
 
 Local Definition instance_GHC_Base_Functor_Identity_fmap : forall {a} {b},
                                                              (a -> b) -> Identity a -> Identity b :=
@@ -88,8 +89,8 @@ Local Definition instance_GHC_Base_Monad_Identity_op_zgzg__ : forall {a} {b},
 Local Definition instance_GHC_Base_Monad_Identity_op_zgzgze__ : forall {a} {b},
                                                                   Identity a -> (a -> Identity b) -> Identity b :=
   fun {a} {b} =>
-    fun arg_1__ arg_2__ =>
-      match arg_1__ , arg_2__ with
+    fun arg_8__ arg_9__ =>
+      match arg_8__ , arg_9__ with
         | m , k => k (runIdentity m)
       end.
 
@@ -110,8 +111,56 @@ Instance instance_GHC_Base_Monad_Identity : GHC.Base.Monad Identity := fun _
 (* Translating `instance Control.Monad.Zip.MonadZip Identity' failed: OOPS!
    Cannot find information for class "Control.Monad.Zip.MonadZip" unsupported *)
 
-(* Translating `instance Data.Traversable.Traversable Identity' failed: OOPS!
-   Cannot find information for class "Data.Traversable.Traversable" unsupported *)
+Local Definition instance_Data_Traversable_Traversable_Identity_traverse
+    : forall {f} {a} {b},
+        forall `{GHC.Base.Applicative f}, (a -> f b) -> Identity a -> f (Identity b) :=
+  fun {f} {a} {b} `{GHC.Base.Applicative f} =>
+    fun arg_1__ arg_2__ =>
+      match arg_1__ , arg_2__ with
+        | f , Mk_Identity a1 => GHC.Base.fmap (fun arg_3__ =>
+                                                match arg_3__ with
+                                                  | b1 => Mk_Identity b1
+                                                end) (f a1)
+      end.
+
+Local Definition instance_Data_Traversable_Traversable_Identity_sequenceA
+    : forall {f} {a},
+        forall `{GHC.Base.Applicative f}, Identity (f a) -> f (Identity a) :=
+  fun {f} {a} `{GHC.Base.Applicative f} =>
+    instance_Data_Traversable_Traversable_Identity_traverse GHC.Base.id.
+
+Local Definition instance_Data_Traversable_Traversable_Identity_sequence
+    : forall {m} {a},
+        forall `{GHC.Base.Monad m}, Identity (m a) -> m (Identity a) :=
+  fun {m} {a} `{GHC.Base.Monad m} =>
+    instance_Data_Traversable_Traversable_Identity_sequenceA.
+
+Local Definition instance_Data_Traversable_Traversable_Identity_mapM
+    : forall {m} {a} {b},
+        forall `{GHC.Base.Monad m}, (a -> m b) -> Identity a -> m (Identity b) :=
+  fun {m} {a} {b} `{GHC.Base.Monad m} =>
+    instance_Data_Traversable_Traversable_Identity_traverse.
+
+Instance instance_Data_Traversable_Traversable_Identity
+  : Data.Traversable.Traversable Identity := fun _ k =>
+    k (Data.Traversable.Traversable__Dict_Build Identity (fun {m}
+                                                              {a}
+                                                              {b}
+                                                              `{GHC.Base.Monad m} =>
+                                                  instance_Data_Traversable_Traversable_Identity_mapM) (fun {m}
+                                                                                                            {a}
+                                                                                                            `{GHC.Base.Monad
+                                                                                                            m} =>
+                                                  instance_Data_Traversable_Traversable_Identity_sequence) (fun {f}
+                                                                                                                {a}
+                                                                                                                `{GHC.Base.Applicative
+                                                                                                                f} =>
+                                                  instance_Data_Traversable_Traversable_Identity_sequenceA) (fun {f}
+                                                                                                                 {a}
+                                                                                                                 {b}
+                                                                                                                 `{GHC.Base.Applicative
+                                                                                                                 f} =>
+                                                  instance_Data_Traversable_Traversable_Identity_traverse)).
 
 (* Translating `instance forall {a}, forall `{Foreign.Storable.Storable a},
    Foreign.Storable.Storable (Identity a)' failed: type applications unsupported *)
@@ -178,6 +227,7 @@ Instance instance_GHC_Base_Monad_Identity : GHC.Base.Monad Identity := fun _
    (Identity a)' failed: type applications unsupported *)
 
 (* Unbound variables:
+     Data.Traversable.Traversable Data.Traversable.Traversable__Dict_Build
      GHC.Base.Applicative GHC.Base.Applicative__Dict_Build GHC.Base.Functor
      GHC.Base.Functor__Dict_Build GHC.Base.Monad GHC.Base.Monad__Dict_Build
      GHC.Base.const GHC.Base.fmap GHC.Base.id GHC.Base.op_ztzg__ GHC.Base.pure

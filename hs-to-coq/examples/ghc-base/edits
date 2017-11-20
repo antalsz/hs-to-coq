@@ -1,10 +1,41 @@
-skip module Control.Applicative
 skip module GHC.Arr
 skip module GHC.Generics
+skip module GHC.Types
+skip module GHC.CString
+skip module GHC.Classes
+skip module GHC.Magic
+skip module GHC.Err
+skip module GHC.IO
+skip module GHC.Integer
+skip module GHC.Unicode
+
+# manual versions
+# skip module GHC.Num
+# skip module GHC.Char
+# skip module GHC.Real
+# skip module Data.Proxy
+# skip module GHC.Enum
+# skip module Data.Bits
+# skip module Data.Type.Equality
+# skip module GHC.Prim
+# skip module GHC.Tuple
+# skip module Data.Functor.Const
+# skip module Data.IntMap
+# skip module Data.IntMap.Base
+# skip module Data.IntSet.Base
+
 
 
 rename type  GHC.Tuple.() = unit
 rename value GHC.Tuple.() = tt
+
+rename type GHC.Tuple.(,) = GHC.Tuple.pair_type
+rename type GHC.Tuple.(,,) = GHC.Tuple.triple_type
+rename type GHC.Tuple.(,,,) = GHC.Tuple.quad_type
+rename type GHC.Tuple.(,,,,) = GHC.Tuple.quint_type
+rename type GHC.Tuple.(,,,,,) = GHC.Tuple.sext_type
+rename type GHC.Tuple.(,,,,,,) = GHC.Tuple.sept_type
+
 
 rename type  GHC.Types.[]  = list
 rename value GHC.Types.[]  = nil
@@ -24,15 +55,16 @@ rename value GHC.Types.EQ = Eq
 rename value GHC.Types.LT = Lt
 rename value GHC.Types.GT = Gt
 
+rename type GHC.Types.* = Type
+rename type GHC.Types.Word = GHC.Num.Word
+rename type GHC.Types.Int = GHC.Num.Int
+rename type GHC.Types.Char = GHC.Char.Char
+
+rename type GHC.Types.Coercible = GHC.Prim.Coercible
+
 rename type  GHC.Classes.Eq = GHC.Base.Eq_
 rename value GHC.Classes.== = GHC.Base.op_zeze__
 rename value GHC.Classes./= = GHC.Base.op_zsze__
-
-rename type GHC.Types.* = Type
-rename type GHC.Types.Word = GHC.Num.Word
-rename type  GHC.Types.Int = GHC.Num.Int
-
-rename type GHC.Types.Char = GHC.Char.Char
 
 rename type  GHC.Classes.Ord = GHC.Base.Ord
 rename value GHC.Classes.<  = GHC.Base.op_zl__
@@ -68,32 +100,30 @@ skip method Enum enumFromThenTo
 # deprecated
 skip method Bits bitSize
 
-
 # default definition cannot be used
 skip method Applicative op_zlzt__
 
-# data types defined in embeddings don't create the right
-# constructor names. So rename them.
-# These are defined in the preamble.v because their instances
-# are defined via Data.Coerce
+# partial methods
+skip method Foldable foldl1
+skip method Foldable foldr1
+skip method Foldable maximum
+skip method Foldable minimum
+
+
+
+# Any types defined in one module and used elsewhere need to have
+# their constructors renamed consistently
 rename value Data.Proxy.Proxy    = Data.Proxy.Mk_Proxy
 
 rename value Data.Monoid.Dual    = Data.Monoid.Mk_Dual
-rename value getDual = Data.Monoid.getDual
 rename value Data.Monoid.Sum     = Data.Monoid.Mk_Sum
-rename value getSum = Data.Monoid.getSum
 rename value Data.Monoid.Product = Data.Monoid.Mk_Product
-rename value getProduct = Data.Monoid.getProduct
 rename value Data.Monoid.First   = Data.Monoid.Mk_First
-rename value getFirst = Data.Monoid.getFirst
 rename value Data.Monoid.Last    = Data.Monoid.Mk_Last
-rename value getLast = Data.Monoid.getLast
+rename value Data.Monoid.Any     = Data.Monoid.Mk_Any
+rename value Data.Monoid.All     = Data.Monoid.Mk_All
 
-rename value getConst = Data.Functor.Const.getConst
 rename value Data.Functor.Const.Const = Data.Functor.Const.Mk_Const
+rename value Data.Functor.Identity.Identity = Data.Functor.Identity.Mk_Identity
 
-rename value getAny = Data.Monoid.getAny
-rename value Data.Monoid.Any = Data.Monoid.Mk_Any
-
-rename value getAll = Data.Monoid.getAll
-rename value Data.Monoid.All = Data.Monoid.Mk_All
+rename value op_zlzg__ = Data.Monoid.op_zlzg__

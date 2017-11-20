@@ -104,37 +104,42 @@ endif
 VFILES:=GHC/Num.v\
   GHC/Char.v\
   GHC/Real.v\
-  Data/Either.v\
-  Data/Proxy.v\
   GHC/Enum.v\
   Data/Bits.v\
-  Data/Type/Equality.v\
-  Prelude.v\
   GHC/Prim.v\
   GHC/Tuple.v\
+  Data/Type/Equality.v\
+  Prelude.v\
   Data/FoldableInst.v\
-  Control/Category.v\
-  Data/Functor/Const.v\
   Data/IntMap.v\
   Data/IntMap/Base.v\
   Data/IntSet/Base.v\
+  Data/Functor/Const.v\
+  GHC/Base.v\
+  Data/Maybe.v\
   GHC/List.v\
   Data/List.v\
   Data/OldList.v\
   Data/Bool.v\
   Data/Tuple.v\
-  Data/Maybe.v\
   Data/Void.v\
   Data/Function.v\
   Data/Ord.v\
   Data/Functor.v\
+  Data/Either.v\
+  Data/Proxy.v\
   Control/Monad.v\
   Data/Monoid.v\
   Data/Traversable.v\
   Control/Monad/Fail.v\
-  GHC/Base.v\
   Data/Foldable.v\
-  Control/Arrow.v
+  Control/Arrow.v\
+  Data/Functor/Identity.v\
+  Control/Applicative.v\
+  Data/Functor/Classes.v\
+  Control/Category.v\
+  Data/BiFunctor.v\
+  Data/List/NonEmpty.v
 
 ifneq ($(filter-out archclean clean cleanall printenv,$(MAKECMDGOALS)),)
 -include $(addsuffix .d,$(VFILES))

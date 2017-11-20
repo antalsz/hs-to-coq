@@ -1,51 +1,35 @@
+data kinds Alt (Type -> Type)
 
-## DUAL
-# skip instance_forall___GHC_Base_Monoid_a___GHC_Base_Monoid__Dual_a_
-# this instance gets skipped anyways
-## needs coerce
 
-add Data.Monoid Instance Unpeel_Dual a : Unpeel (Dual a) a := Build_Unpeel _ _ getDual Mk_Dual.
+add Data.Monoid Instance Unpeel_Dual a : Unpeel (Dual a) a :=
+	 Build_Unpeel _ _ getDual Mk_Dual.
+add Data.Monoid Instance Unpeel_Sum a : Unpeel (Sum a) a :=
+	 Build_Unpeel _ _ getSum Mk_Sum.
+add Data.Monoid Instance Unpeel_Product a : Unpeel (Product a) a :=
+	 Build_Unpeel _ _ getProduct Mk_Product.
+
 order Unpeel_Dual instance_GHC_Base_Functor_Dual_fmap
 order Unpeel_Dual instance_GHC_Base_Applicative_Dual_op_zlztzg__
 order instance_GHC_Base_Functor_Dual instance_GHC_Base_Applicative_Dual_op_ztzg__
-
-# https://github.com/antalsz/hs-to-coq/issues/34
-skip instance_GHC_Base_Monad_Dual
-
-
 order instance_GHC_Base_Functor_Dual instance_GHC_Base_Applicative_Dual
 order instance_GHC_Base_Applicative_Dual instance_GHC_Base_Monad_Dual_return_
 order instance_GHC_Base_Applicative_Dual instance_GHC_Base_Monad_Dual_op_zgzg__
 
+# https://github.com/antalsz/hs-to-coq/issues/34
+# skip instance_GHC_Base_Monad_Dual
 
-redefine Inductive Alt (f : Type -> Type) a : Type := Mk_Alt : (f a) -> (Alt f a).
+# cannot refer to scoped type variables in instance declaration
+# defined in the midamble instance
+skip instance_forall___GHC_Num_Num_a___GHC_Base_Monoid__Product_a_
+skip instance_forall___GHC_Num_Num_a___GHC_Base_Monoid__Sum_a_
 
-# <> operator already defined
+# <> operator already defined (as not equal)
+# in the preamble.v
 skip op_zlzg__
-
-# A bunch of things using coerce
-
-skip instance_GHC_Base_Functor_Last
-skip instance_GHC_Base_Applicative_Last
-skip instance_GHC_Base_Monad_Last
-
-skip instance_GHC_Base_Functor_Product
-skip instance_GHC_Base_Applicative_Product
-skip instance_GHC_Base_Monad_Product
-
-skip instance_GHC_Base_Functor_Sum
-skip instance_GHC_Base_Applicative_Sum
-skip instance_GHC_Base_Monad_Sum
 
 skip instance_forall___GHC_Base_Alternative_f___GHC_Base_Monoid__Alt_f_a_
 
-
-# order instance_GHC_Base_Functor_Product instance_GHC_Base_Applicative_Product
-# order instance_GHC_Base_Applicative_Product instance_GHC_Base_Monad_Product_return_
-# order instance_GHC_Base_Applicative_Product instance_GHC_Base_Monad_Product_op_zgzg__
-
-
-# Read and Show instancs
+# Read and Show instances
 skip instance_forall___GHC_Read_Read_a___GHC_Read_Read__Last_a_
 skip instance_forall___GHC_Read_Read_a___GHC_Read_Read__First_a_
 skip instance_forall___GHC_Read_Read_a___GHC_Read_Read__Product_a_
@@ -62,22 +46,3 @@ skip instance_GHC_Show_Show_Any
 skip instance_GHC_Show_Show_All
 skip instance_forall___GHC_Show_Show__f_a____GHC_Show_Show__Alt_f_a_
 skip instance_forall___GHC_Show_Show_a___GHC_Show_Show__Dual_a_
-
-# In the preamble.
-skip All
-skip instance_GHC_Base_Monoid_All
-
-skip Any
-skip instance_GHC_Base_Monoid_Any
-
-skip First
-skip instance_GHC_Base_Monoid__First_a_
-
-skip Last
-skip instance_GHC_Base_Monoid__Last_a_
-
-skip Product
-skip instance_forall___GHC_Num_Num_a___GHC_Base_Monoid__Product_a_
-
-skip Sum
-skip instance_forall___GHC_Num_Num_a___GHC_Base_Monoid__Sum_a_

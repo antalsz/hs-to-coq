@@ -1,38 +1,24 @@
-rename value ArrowMonad = Mk_ArrowMonad
-
+class kinds Arrow (Type -> (Type -> Type))
 class kinds ArrowApply (Type -> (Type -> Type))
 class kinds ArrowZero (Type -> (Type -> Type))
 class kinds ArrowPlus (Type -> (Type -> Type))
 
-# Need to add kind annotation
-skip ArrowMonad
-rename value Kleisli = Mk_Kleisli
-skip Kleisli
+data kinds ArrowMonad (Type -> (Type -> Type))
+data kinds Kleisli (Type -> Type)
 
 # arrow type constructor
+# need category instance for Klesli
 skip instance_ArrowChoice_GHC_Prim_arrow
 skip instance_ArrowLoop_GHC_Prim_arrow
-
-
-
-
-# type class constraint
-skip returnA
 
 # ???
 skip leftApp
 
-
-# can't parse instance head
-skip instance_forall___ArrowApply_a____ArrowPlus_a___GHC_Base_MonadPlus__ArrowMonad_a_
-skip instance_forall___ArrowPlus_a___GHC_Base_Alternative__ArrowMonad_a_
-
-# hs-to-coq fails to guess the right number of implicit parameters to the method implementations
-skip instance_forall___Arrow_a___GHC_Base_Functor__ArrowMonad_a_
-
-## nothing supported?
+## need Control.Category instances
 skip instance_forall___GHC_Base_Monad_m___Control_Category_Category__Kleisli_m_
 skip instance_forall___GHC_Base_Monad_m___ArrowApply__Kleisli_m_
+skip instance_forall___ArrowApply_a____ArrowPlus_a___GHC_Base_MonadPlus__ArrowMonad_a_
+skip instance_forall___ArrowPlus_a___GHC_Base_Alternative__ArrowMonad_a_
 skip instance_forall___GHC_Base_MonadPlus_m___ArrowPlus__Kleisli_m_
 skip instance_forall___GHC_Base_MonadPlus_m___ArrowZero__Kleisli_m_
 skip instance_forall___GHC_Base_Monad_m___ArrowChoice__Kleisli_m_

@@ -38,6 +38,6 @@ skip instance_Foldable__GHC_Generics_K1_i_c_
 skip instance_forall___Foldable_f___Foldable__GHC_Generics_Rec1_f_
 skip instance_Foldable_GHC_Generics_Par1
 
-redefine Definition hash_compose {a} {b} {c} := @Coq.Program.Basics.compose a b c.
-
 order instance_Foldable_list concatMap concat
+
+redefine Definition hash_compose {a} {b} {c} := @Coq.Program.Basics.compose a b c.

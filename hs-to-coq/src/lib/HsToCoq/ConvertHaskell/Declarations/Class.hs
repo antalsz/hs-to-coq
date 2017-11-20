@@ -32,7 +32,10 @@ import HsToCoq.ConvertHaskell.Parameters.Edits
 import HsToCoq.ConvertHaskell.Sigs
 import HsToCoq.ConvertHaskell.Declarations.Notations
 
---------------------------------------------------------------------------------
+----------------------------
+import Control.Monad.IO.Class
+import Debug.Trace
+----------------------------------------------------
 
 data ClassBody = ClassBody ClassDefinition [Notation]
                deriving (Eq, Ord, Read, Show)
@@ -88,6 +91,7 @@ convertClassDecl (L _ hsCtx) (L _ hsName) ltvs fds lsigs defaults types typeDefa
 
   all_sigs <- binding' args' $ convertLSigs lsigs
 
+
   -- implement the class part of "skip method"
   skippedMethodsS <- use (edits.skippedMethods)
   let sigs = (`M.filterWithKey` all_sigs) $ \meth _ ->
@@ -106,9 +110,12 @@ convertClassDecl (L _ hsCtx) (L _ hsName) ltvs fds lsigs defaults types typeDefa
                 convUnsupported $ "skipping a type class method in " ++ show name
   unless (null defs) $ defaultMethods.at name ?= defs
 
+
   let classDefn = (ClassDefinition name (args' ++ ctx) Nothing (bimap toCoqName sigType <$> M.toList sigs))
 
   classDefns.at name ?= classDefn
+
+
 
   pure $ ClassBody classDefn
                    (concatMap (buildInfixNotations sigs <*> infixToCoq) . filter identIsOperator $ M.keys sigs)
@@ -137,5 +144,3 @@ classSentences (ClassBody (ClassDefinition name args ty methods) nots) =
     app_args f = foldl App1 f (map Var (foldMap (toListOf binderIdents) inst_args))
     class_ty = Forall [ Inferred Explicit (Ident "r")] $
             (app_args (Var dict_name)  `Arrow` Var "r") `Arrow` Var "r"
-
-

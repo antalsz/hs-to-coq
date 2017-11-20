@@ -244,7 +244,7 @@ topoSortInstance (InstanceDefinition instanceName params ty members mp) = go sor
           classDef <- use (classDefns.at className)
           -- TODO: May be broken by switch away from 'RdrName's
           case classDef of
-            (Just (ClassDefinition _ (Inferred Explicit (Ident var):_) _ sigs)) ->
+            (Just (ClassDefinition _ (b:_) _ sigs)) | [var] <- toListOf binderIdents b ->
               case lookup memberName sigs of
                 Just sigType ->
                   -- GOAL: Consider

@@ -14,9 +14,16 @@ Require Coq.Program.Wf.
 Require Import GHC.Base.
 Require Import GHC.Num.
 
-(* Converted data type declarations: *)
+(* Converted imports: *)
+
+Require GHC.Base.
+
+(* Converted type declarations: *)
+
 Inductive Down a : Type := Mk_Down : a -> Down a.
-Arguments Mk_Down {_}.
+
+Arguments Mk_Down {_} _.
+(* Midamble *)
 
 Instance instance_Down_Eq {a} `(Eq_ a) : Eq_ (Down a) := fun _ k => k {|
   op_zeze____ := (fun x y =>
@@ -29,36 +36,88 @@ Instance instance_Down_Eq {a} `(Eq_ a) : Eq_ (Down a) := fun _ k => k {|
                 end)
 |}.
 
-Definition compare_Down `{Ord a} (xs : Down a) (ys : Down a) : comparison :=
-  match xs, ys with
-  | Mk_Down x , Mk_Down y => compare y x
-  end.
-
-Instance instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Down_a_
-   `{GHC.Base.Ord a}: GHC.Base.Ord (Down a) := ord_default compare_Down.
-
-(*
- ( Eq
-   , Show -- ^ @since 4.7.0.0
-   , Read -- ^ @since 4.7.0.0
-   , Num -- ^ @since 4.11.0.0
-   , Monoid -- ^ @since 4.11.0.0
-*)
-
-(* Converted imports: *)
-
-Require GHC.Base.
-
-(* No type declarations to convert. *)
 (* Converted value declarations: *)
 
-(* Skipping instance instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Down_a_ *)
+Local Definition instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Down_a__compare {inst_a}
+                                                                                  `{GHC.Base.Ord inst_a} : (Down
+                                                                                                           inst_a) -> (Down
+                                                                                                           inst_a) -> comparison :=
+  fun arg_5__ arg_6__ =>
+    match arg_5__ , arg_6__ with
+      | Mk_Down x , Mk_Down y => GHC.Base.compare y x
+    end.
 
-(* Skipping instance
-   instance_forall___GHC_Read_Read_a___GHC_Read_Read__Down_a_ *)
+Local Definition instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Down_a__op_zg__ {inst_a}
+                                                                                  `{GHC.Base.Ord inst_a} : (Down
+                                                                                                           inst_a) -> (Down
+                                                                                                           inst_a) -> bool :=
+  fun x y =>
+    op_zeze__ (instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Down_a__compare x y)
+              Gt.
 
-(* Skipping instance
-   instance_forall___GHC_Show_Show_a___GHC_Show_Show__Down_a_ *)
+Local Definition instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Down_a__op_zgze__ {inst_a}
+                                                                                    `{GHC.Base.Ord inst_a} : (Down
+                                                                                                             inst_a) -> (Down
+                                                                                                             inst_a) -> bool :=
+  fun x y =>
+    op_zsze__ (instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Down_a__compare x y)
+              Lt.
+
+Local Definition instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Down_a__op_zl__ {inst_a}
+                                                                                  `{GHC.Base.Ord inst_a} : (Down
+                                                                                                           inst_a) -> (Down
+                                                                                                           inst_a) -> bool :=
+  fun x y =>
+    op_zeze__ (instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Down_a__compare x y)
+              Lt.
+
+Local Definition instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Down_a__op_zlze__ {inst_a}
+                                                                                    `{GHC.Base.Ord inst_a} : (Down
+                                                                                                             inst_a) -> (Down
+                                                                                                             inst_a) -> bool :=
+  fun x y =>
+    op_zsze__ (instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Down_a__compare x y)
+              Gt.
+
+Local Definition instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Down_a__max {inst_a}
+                                                                              `{GHC.Base.Ord inst_a} : (Down
+                                                                                                       inst_a) -> (Down
+                                                                                                       inst_a) -> (Down
+                                                                                                       inst_a) :=
+  fun x y =>
+    if instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Down_a__op_zlze__ x y : bool
+    then y
+    else x.
+
+Local Definition instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Down_a__min {inst_a}
+                                                                              `{GHC.Base.Ord inst_a} : (Down
+                                                                                                       inst_a) -> (Down
+                                                                                                       inst_a) -> (Down
+                                                                                                       inst_a) :=
+  fun x y =>
+    if instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Down_a__op_zlze__ x y : bool
+    then x
+    else y.
+
+Instance instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Down_a_ {a}
+                                                                  `{GHC.Base.Ord a} : GHC.Base.Ord (Down a) := fun _
+                                                                                                                   k =>
+    k (GHC.Base.Ord__Dict_Build (Down a)
+                                instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Down_a__op_zl__
+                                instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Down_a__op_zlze__
+                                instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Down_a__op_zg__
+                                instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Down_a__op_zgze__
+                                instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Down_a__compare
+                                instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Down_a__max
+                                instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Down_a__min).
+
+(* Translating `instance forall {a}, forall `{GHC.Read.Read a}, GHC.Read.Read
+   (Down a)' failed: OOPS! Cannot find information for class "GHC.Read.Read"
+   unsupported *)
+
+(* Translating `instance forall {a}, forall `{GHC.Show.Show a}, GHC.Show.Show
+   (Down a)' failed: OOPS! Cannot find information for class "GHC.Show.Show"
+   unsupported *)
 
 (* Translating `instance forall {a}, forall `{GHC.Base.Eq_ a}, GHC.Base.Eq_
    (Down a)' failed: type applications unsupported *)
@@ -71,5 +130,6 @@ Definition comparing {a} {b} `{(GHC.Base.Ord a)}
     end.
 
 (* Unbound variables:
-     GHC.Base.Ord GHC.Base.compare comparison
+     GHC.Base.Ord GHC.Base.Ord__Dict_Build GHC.Base.compare Gt Lt bool comparison
+     op_zeze__ op_zsze__
 *)

@@ -27,14 +27,22 @@ Definition fail `{g : MonadFail m} : forall {a}, GHC.Base.String -> m a :=
   g _ (fail__ m).
 (* Converted value declarations: *)
 
-(* Translating `instance MonadFail option' failed: OOPS! Cannot find information
-   for class "MonadFail" unsupported *)
+Local Definition instance_MonadFail_option_fail : forall {a},
+                                                    GHC.Base.String -> option a :=
+  fun {a} => fun arg_1__ => None.
 
-(* Translating `instance MonadFail list' failed: OOPS! Cannot find information
-   for class "MonadFail" unsupported *)
+Instance instance_MonadFail_option : MonadFail option := fun _ k =>
+    k (MonadFail__Dict_Build option (fun {a} => instance_MonadFail_option_fail)).
+
+Local Definition instance_MonadFail_list_fail : forall {a},
+                                                  GHC.Base.String -> list a :=
+  fun {a} => fun arg_0__ => nil.
+
+Instance instance_MonadFail_list : MonadFail list := fun _ k =>
+    k (MonadFail__Dict_Build list (fun {a} => instance_MonadFail_list_fail)).
 
 (* Skipping instance instance_MonadFail_GHC_Types_IO *)
 
 (* Unbound variables:
-     GHC.Base.Monad GHC.Base.String Type
+     GHC.Base.Monad GHC.Base.String None Type list nil option
 *)

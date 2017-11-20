@@ -23,6 +23,7 @@ import Control.Monad
 
 import GHC hiding (Name)
 import qualified GHC
+
 import HsToCoq.Util.GHC
 import HsToCoq.Util.GHC.Module
 
@@ -33,6 +34,8 @@ import HsToCoq.ConvertHaskell.Parameters.Edits
 import HsToCoq.ConvertHaskell.Monad
 import HsToCoq.ConvertHaskell.Variables
 import HsToCoq.ConvertHaskell.Type
+
+import qualified Data.List.NonEmpty as NE
 
 --------------------------------------------------------------------------------
 
@@ -66,14 +69,14 @@ convertConDecl :: ConversionMonad m
                => Term -> [Binder] -> ConDecl GHC.Name -> m [Constructor]
 convertConDecl curType extraArgs (ConDeclH98 lname mlqvs mlcxt details _doc) = do
   unless (maybe True (null . unLoc) mlcxt) $ convUnsupported "constructor contexts"
-  
+
   con <- convertConLName lname
 
   -- Only the explicit tyvars are available before renaming, so they're all we
   -- need to consider
   params <- maybe (pure []) (convertLHsTyVarBndrs Coq.Implicit . hsq_explicit) mlqvs
   args   <- traverse convertLType $ hsConDeclArgTys details
-  
+
   fieldInfo <- case details of
     RecCon (L _ fields) ->
       fmap RecordFields .  traverse freeVar
@@ -94,31 +97,31 @@ rewriteDataTypeArguments :: ConversionMonad m => DataTypeArguments -> [Binder] -
 rewriteDataTypeArguments dta bs = do
   let dtaEditFailure what =
         editFailure $ what ++ " when adjusting data type parameters and indices"
-  
+
   let (ibs, ebs) = flip span bs $ (== Coq.Implicit) . \case
                      Inferred ei _     -> ei
                      Typed    _ ei _ _ -> ei
                      _                 -> Coq.Explicit
-  
+
   explicitMap <-
     let extraImplicit  = "non-initial implicit arguments"
         complexBinding = "complex (let/generalized) bindings"
     in either dtaEditFailure (pure . M.fromList) . forFold ebs $ \case
          Inferred   Coq.Explicit x     -> Right [(x, Inferred Coq.Explicit x)]
          Typed    g Coq.Explicit xs ty -> Right [(x, Typed g Coq.Explicit (pure x) ty) | x <- toList xs]
-         
+
          Inferred   Coq.Implicit _   -> Left extraImplicit
          Typed    _ Coq.Implicit _ _ -> Left extraImplicit
-         
+
          BindLet     _ _ _ -> Left complexBinding
          Generalized _ _   -> Left complexBinding
-  
+
   let editIdents  = S.fromList $ dta^.dtParameters <> dta^.dtIndices
       boundIdents = fmap S.fromList . traverse (view nameToIdent) $ foldMap (toListOf binderNames) ebs
                        -- Underscores are an automatic failure
     in unless (boundIdents == Just editIdents) $
          dtaEditFailure $ "mismatched names"
-  
+
   let coalesceTypedBinders [] = []
       coalesceTypedBinders (Typed g ei xs0 ty : bs) =
         let (tbs, bs') = flip span bs $ \case
@@ -127,11 +130,11 @@ rewriteDataTypeArguments dta bs = do
         in Typed g ei (foldl' (\xs (Typed _ _ xs' _) -> xs <> xs') xs0 tbs) ty : coalesceTypedBinders bs'
       coalesceTypedBinders (b : bs) =
         b : coalesceTypedBinders bs
-      
+
       getBindersFor = coalesceTypedBinders . map ((explicitMap M.!) . Ident) . (dta^.)
-  
+
   pure (ibs ++ getBindersFor dtParameters, getBindersFor dtIndices)
-  
+
 --------------------------------------------------------------------------------
 
 convertDataDefn :: ConversionMonad m
@@ -148,18 +151,25 @@ convertDataDecl :: ConversionMonad m
                 -> m IndBody
 convertDataDecl name tvs defn = do
   coqName   <- freeVar $ unLoc name
-  rawParams <- convertLHsTyVarBndrs Coq.Explicit tvs
+
+  kinds     <- (++ repeat Nothing) . map Just . maybe [] NE.toList <$> use (edits.dataKinds.at coqName)
+  let cvtName tv = Ident <$> freeVar (unLoc tv)
+  let  go (L _ (UserTyVar name))     (Just t) = cvtName name >>= \n -> return $ Typed Ungeneralizable Coq.Explicit (n NE.:| []) t
+       go (L _ (UserTyVar name))     Nothing  = cvtName name >>= \n -> return $ Inferred Coq.Explicit n
+       go (L _ (KindedTyVar name _)) (Just t) = cvtName name >>= \n -> return $ Typed Ungeneralizable Coq.Explicit (n NE.:| []) t
+       go (L _ (KindedTyVar name _)) Nothing  = cvtName name >>= \n -> return $ Inferred Coq.Explicit n  -- dunno if this could happen
+  rawParams <- zipWithM go tvs kinds
 
   (params, indices) <-
     use (edits . dataTypeArguments . at coqName) >>= \case
       Just dta -> rewriteDataTypeArguments dta rawParams
       Nothing  -> pure (rawParams, [])
   let conIndices = indices & mapped.binderExplicitness .~ Coq.Implicit
-  
+
   let curType  = appList (Var coqName) . binderArgs $ params ++ indices
   (resTy, cons) <- first (maybeForall indices)
                      <$> convertDataDefn curType conIndices defn
-  
+
   let conNames = [con | (con,_,_) <- cons]
   constructors . at coqName ?= conNames
   for_ conNames $ \con -> do
@@ -169,5 +179,5 @@ convertDataDecl name tvs defn = do
         for_ fields $ \field -> recordFieldTypes . at field ?= coqName
       _ ->
         pure ()
-  
+
   pure $ IndBody coqName params resTy cons

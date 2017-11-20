@@ -3,6 +3,7 @@
   GHC/List
     - five skipped function (take,drop,replicate, scanr, splitAt)
 	  are total functions but Coq can't prove easily
+	  these are defined in prelude.v
     - one skipped is concatMap, mapped to Coq's flat_map (should we do this?)
 	- rest are all partial functions
   Data/Tuple
@@ -13,10 +14,7 @@
     - fix_ is partial
 	- on uses (.*.) as a variable name
   Data/Ord
-    - skip Down/Ord instance for down because
-	  cannot derive Eq instance for Down, so everything moved to preamble
-	  If we had a "add" edit (with ordering) that allowed us to add the
-	  Eq instance online, we wouldn't need to skip anything.
+    - cannot derive Eq instance for Down, so instance added to "midamble"
   Data/Functor
     - nothing skipped
   Data/Monoid
@@ -37,8 +35,7 @@
 	- 2 type class instances refer to same class
 	- issue with type inference
   Data/Void
-    - 6 instances for derivable classes (Ord,Eq, Show, Read) and
-	classes we don't support
+    - skip 5 instances for classes we don't support (Show, Read, Data)
   Data/List
     - empty module
   Data/Bool
@@ -50,20 +47,41 @@
 	- partial functions (until)
 	- unboxed types
 	- Alternative/MonadPlus
+
   Control/Monad/Fail
     - IO instance
 
   Data/Foldable
     - Heavy use of Data.Coerce as type class instances
 
+  Data/Functor/Identity
+    - hash_compose, a helper function for Coercible type class
+	- several type class instances (Foldable, Traversible) implicitly skipped
 
+  Control/Applicative
+	- skip ZipList because its Applicative instance is coinductive (using repeat)
+
+  Data/Functor/Classes
+	- just read and show instances
+
+  Control/Arrow
+    - needs information about Control/Category class
+
+  Control/Category
+    - skip Data.Type.Coercion
+    - skip Data.Type.Equality
+
+  Data/Either
+    - map Either type to Coq's sum
+
+  Data/Proxy
+    - kinds for Proxy/KProxy
+	- preamble needs to import GHC.Base so that == is in scope
+
+  Data/BiFunctor
+    - skip GHC.Generics instances
 
 * What stops these modules from being generated?
-
-- GHC/BaseInstances
-  This is a manual part of Base.hs
-  Bug in instance generation for partially applied type constructors
-  (e.g. monoid instance for list).
 
 - Data/FoldableInst
   This is the manual part of Data.Foldable
@@ -74,21 +92,10 @@
 - Data/Type/Equality
   functional dependencies
 
-- Control/Category
-  Type inference: need to annotate type of cat in class definition.
-  Class Category cat := {
-    id : forall {a}, cat a a ;
-    op_z2218U__ : forall {b} {c} {a}, cat b c -> cat a b -> cat a c }.
-
 - Data/Functor/Const
-  Type inference: need to annotate type of first argument to Const
-  Deriving: most of the functionality of this module comes from
-  type class deriving (Data.coerce)
-  (NOTE: most of the instances are NOT available)
+  Bug in monoid instance --- inst_m type variable vs. m in body of
+  instance declaration.
 
-- Control/Arrow
-  Type inference: need to annotate parameter to ArrowMonad
-  Bug in instance generation
 
 - GHC/Char
 - GHC/Num
@@ -104,15 +111,9 @@
    generate Data.Char, which only has functions that wrap the unicode
    definitions.
 
-- Data/Either
-   Not a big file, but issue 9 interferes with its main purpose:
-   functor instances for the sum type.
-   Manually added Eq, Ord instances b/c of deriving
-
 - GHC/Enum
   Lots of primitive types.
 
-- Data/Proxy
 
 - Prelude
 
@@ -286,18 +287,15 @@ GHC.Exception
 
 - Modules with features we haven't implemented yet
 
-Control.Applicative
-  hs-to-coq silently fails
-  but it is mostly newtype instances that we cannot yet generated
-
 
 - All other modules
 
+X Control.Applicative
 X Control.Arrow
 X Control.Category
 X Control.Monad
 Data.Bifoldable
-Data.Bifunctor
+X Data.Bifunctor
 Data.Bitraversable
 X Data.Bits
 X Data.Bool
@@ -309,10 +307,10 @@ Data.Fixed
 X Data.Foldable
 X Data.Function
 X Data.Functor
-Data.Functor.Classes
+X Data.Functor.Classes
 Data.Functor.Compose
 X Data.Functor.Const
-Data.Functor.Identity
+X Data.Functor.Identity
 Data.Functor.Product
 Data.Functor.Sum
 Data.Int

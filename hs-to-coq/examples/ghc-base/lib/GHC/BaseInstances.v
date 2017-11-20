@@ -1,1 +1,0 @@
-../../manual/GHC/BaseInstances.v

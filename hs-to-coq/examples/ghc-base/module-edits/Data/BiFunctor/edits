@@ -1,0 +1,3 @@
+skip instance_Bifunctor__GHC_Generics_K1_i__bimap
+skip instance_Bifunctor__GHC_Generics_K1_i__second
+skip instance_Bifunctor__GHC_Generics_K1_i_

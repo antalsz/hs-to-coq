@@ -9,8 +9,8 @@ skip unlines
 
 # mutrec
 skip sortBy
-skip sortOn
-skip sort
+#skip sortOn
+#skip sort
 skip mapAccumR
 
 # tricky metric

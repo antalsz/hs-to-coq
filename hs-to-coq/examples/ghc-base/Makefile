@@ -19,47 +19,51 @@ HANDMOD = \
   GHC/Num \
   GHC/Char \
   GHC/Real \
-  Data/Either \
-  Data/Proxy \
   GHC/Enum \
   Data/Bits \
-  Data/Type/Equality \
-  Prelude\
   GHC/Prim \
   GHC/Tuple \
+  Data/Type/Equality \
+  Prelude\
   Data/FoldableInst \
-  Control/Category \
-  Data/Functor/Const \
   \
   Data/IntMap \
   Data/IntMap/Base \
   Data/IntSet/Base \
+  Data/Functor/Const \
+
 
 # Generated modules
 # generated directly from GHC/libraries/base
 MODULES = \
+  GHC/Base \
+  Data/Maybe \
   GHC/List \
   Data/List \
   Data/OldList \
   Data/Bool \
   Data/Tuple \
-  Data/Maybe \
   Data/Void \
   Data/Function \
   Data/Ord \
   Data/Functor \
+  Data/Either \
+  Data/Proxy \
   Control/Monad \
   Data/Monoid \
   Data/Traversable \
   Control/Monad/Fail \
-  GHC/Base \
   Data/Foldable \
   Control/Arrow \
-
+  Data/Functor/Identity \
+  Control/Applicative \
+  Data/Functor/Classes \
+  Control/Category \
+  Data/BiFunctor \
+  Data/List/NonEmpty \
 
 # generated from drop-in/
 DROPIN =
-
 
 # also generated from drop-in/
 SPECIAL_MODULES =
@@ -96,7 +100,7 @@ $(VFILES_GEN): lib/%.v : $$(wildcard module-edits/$$*/preamble.v) $$(wildcard mo
 	             $(addprefix -p , $(wildcard module-edits/$*/preamble.v)) \
 	             $(addprefix --midamble , $(wildcard module-edits/$*/midamble.v)) \
 	             -e edits \
-		     -N \
+           -N \
 		     -i base \
 		     -i base/dist-install/build \
 		     -I base/include \

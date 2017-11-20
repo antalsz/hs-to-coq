@@ -137,38 +137,40 @@ collectSigs modSigs = do
 
       asTypes    mname lnames sigTy = list $ map ((, asType mname sigTy) . unLoc) lnames
       --asFixities mname lnames fixity = list . map (, asFixity mname fixity) . filter isRdrOperator $ map unLoc lnames
-      
+
   multimap <-  fmap (M.fromListWith (<>)) . runListT $ list modSigs >>= \case
     (mname, TypeSig lnames (HsIB itvs (HsWC wcs _ss lty)))
       | null wcs  -> asTypes mname lnames $ HsIB itvs lty
       | otherwise -> throwError "type wildcards found"
-    (mname, ClassOpSig False lnames sigTy)  ->
+    (mname, ClassOpSig _ lnames sigTy)  ->
       asTypes mname lnames sigTy
     --(mname, FixSig           (FixitySig lnames fixity))                                 -> asFixities mname lnames fixity
-    
+
     (_, FixSig _)          -> mempty
     (_, InlineSig   _ _)   -> mempty
     (_, SpecSig     _ _ _) -> mempty
     (_, SpecInstSig _ _)   -> mempty
     (_, MinimalSig  _ _)   -> mempty
-    
-    (_, ClassOpSig True _ _) -> throwError "typeclass-based generic default method signatures"
+
+--    (_, ClassOpSig True _ _) -> throwError "typeclass-based generic default method signatures"
     (_, PatSynSig  _ _)      -> throwError "pattern synonym signatures"
     (_, IdSig      _)        -> throwError "generated-code signatures"
 
 
   pure $ (flip M.mapWithKey (multimap & each._1 %~ S.toList) $ \_key info@(mnames,_,_) ->
+    -- SCW: I'm allowing multiple type signatures so that we can support generic default method sigs
 
     let multiplesError = Left . (,catMaybes mnames)
     in case info of
-         ([mname], [ty],  [fixity])  -> Right $ HsSignature mname ty (Just fixity)
-         ([mname], [ty],  [])        -> Right $ HsSignature mname ty Nothing
+         ([mname], ty:_,  [fixity])  -> Right $ HsSignature mname ty (Just fixity)
+         ([mname], ty:_,  [])        -> Right $ HsSignature mname ty Nothing
          (_,       [_ty], [_fixity]) -> multiplesError $ "type and fixity signatures split across modules"
          (_,       [_ty], [])        -> multiplesError $ "duplicate type signatures across modules"
          (_,       [],    [_fixity]) -> multiplesError $ "a fixity annotation without a type signature"
          (_,       [],    _)         -> multiplesError $ "multiple fixity annotations without a type signature"
-         (_,       _,     [])        -> multiplesError $ "multiple type signatures for the same identifier"
-         (_,       _,     _)         -> multiplesError $ "multiple type and fixity signatures for the same identifier")
+--         (_,       _,     [])        -> multiplesError $ "multiple type signatures for the same identifier"
+         (_,       _,     _)         -> multiplesError $ "multiple type and fixity signatures for the same identifier"
+         )
 
 collectSigsWithErrors :: ConversionMonad m => [(Maybe ModuleName, Sig GHC.Name)] -> m (Map GHC.Name HsSignature)
 collectSigsWithErrors =

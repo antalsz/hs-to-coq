@@ -30,6 +30,7 @@ Set Bullet Behavior "Strict Subproofs".
 Infix "<$>" := Data.Functor.op_zlzdzg__ : hs_op_scope.
 Infix "<*>" := GHC.Base.op_zlztzg__ : hs_op_scope.
 Infix ">>=" := GHC.Base.op_zgzgze__ : hs_op_scope.
+Infix ">>" := GHC.Base.op_zgzg__ : hs_op_scope.
 Open Scope hs_op_scope.
 
 (***** Working with extensionality *****)
@@ -250,33 +251,140 @@ Abort.
 
 (* TODO mapBagM_ mapAndUnzipBagM *)
 
+
+(* we need to add that to MonadLaws *)
+Axiom extra_monad_then_bind:
+  forall {M A B} `{Monad M} (x:M A) (y: M B),
+    (x >> y) = (x >>= (fun _ => y)).
+
+
+Lemma fold_right_then {M A B} `{MonadLaws M}
+      (x : M B) (l: list (M A)):
+    fold_right _>>_ x l =
+     _>>_ (fold_right _>>_ (return_ tt) l) x.
+Proof.
+  induction l; simpl.
+  - rewrite extra_monad_then_bind.
+    rewrite monad_left_id.
+    reflexivity.
+  - rewrite IHl.
+    rewrite !extra_monad_then_bind.
+    rewrite monad_composition.
+    reflexivity.
+Qed.
+
 Theorem mapBagM_is_ok {M A B} `{MonadLaws M} (f : A -> M B) (b : Bag A) :
   (mapBagM_ f b) =
   Data.Foldable.mapM_ f (bagToList b).
 Proof.
   rewrite /Data.Foldable.mapM_ /=
+          /Foldable.instance_Foldable_list_foldr
+          /Foldable.foldr /Foldable.instance_Foldable_list
+          /Foldable.foldr__
           /Foldable.instance_Foldable_list_foldr.
   induction b; simpl; try reflexivity.
-  - unfold bagToList.
-    rewrite foldrBag_ok.
-    rewrite bagToList_TwoBags
-            -!hs_coq_foldr_base foldr_app
-            !hs_coq_foldr_base.
-    Locate "_>>_".
-    Check @op_zgzg__.
-    Print op_zgzg__.
-    rewrite IHb1 IHb2.
-Admitted.
+  - rewrite bagToList_TwoBags foldr_app.
+    rewrite -IHb2.
+    rewrite !hs_coq_foldr_base -fold_right_map.
+    rewrite fold_right_then.
+    rewrite  fold_right_map -hs_coq_foldr_base.
+    rewrite -IHb1. reflexivity.
+  - rewrite /Foldable.mapM_
+            hs_coq_foldr_list hs_coq_foldr_base.
+    rewrite bagToList_ListBag. reflexivity.
+Qed.
 
   
 Theorem mapAndUnzipBagM_ok {M A B C} `{MonadLaws M}
         (f : A -> M (B*C)%type) (b : Bag A) :
   GHC.Base.fmap bagToList (GHC.Base.fmap (fst) (mapAndUnzipBagM f b)) =
-  (GHC.Base.fmap (map fst) (Data.Traversable.mapM f (bagToList b))).
-  (*/\
-  (GHC.Base.fmap bagToList (mapAndUnzipBagM f b).2 =
-   (Data.Traversable.mapM f (bagToList b)).2).*)
+  GHC.Base.fmap (map fst) (Data.Traversable.mapM f (bagToList b)) /\
+  GHC.Base.fmap bagToList (GHC.Base.fmap (snd) (mapAndUnzipBagM f b)) =
+  GHC.Base.fmap (map snd) (Data.Traversable.mapM f (bagToList b)).
 Proof.
+  rewrite
+    /Data.Traversable.mapM
+    /Traversable.instance_Traversable_list
+    /Data.Traversable.mapM__
+    /Data.Traversable.instance_Traversable_list_mapM
+    /Data.Traversable.instance_Traversable_list_traverse.
+  induction b; simpl;
+    [split; anf_equal | | |].
+  - split.
+    + replace
+        (fmap fst
+           (f a >>=
+              (fun arg_23__ : B * C =>
+                 let (r, s) := arg_23__ in
+                 return_ (Mk_UnitBag r, Mk_UnitBag s)))) with
+        (fmap fst
+          (f a >>=
+             (fun x: B * C =>
+                return_ (Mk_UnitBag (fst x),
+                         Mk_UnitBag (snd x))))).
+      * 
+      * do 2 f_equal. funext=> p. destruct p. reflexivity.
+      rewrite -monad_bind_fmap_ap !applicative_fmap.
+   
+      Print MonadLaws.
+      
+      Check @applicative_fmap.
+      admit.
+      unfold "<$>".
+      rewrite functor_composition
+              !applicative_fmap applicative_interchange
+      -applicative_composition !applicative_homomorphism;
+        do 2 f_equal; funext=> ?; unfold "∘";
+                                rewrite app_nil_r.
+      unfold bagToList.
+      anf.
+      rewrite applicative_fmap_pure.
+      anf.
+      replace
+        (fmap fst
+           (f a >>=
+              (fun arg_23__ : B * C =>
+                 let (r, s) := arg_23__ in
+                 return_ (Mk_UnitBag r, Mk_UnitBag s)))) with
+        (fmap fst
+          (f a >>=
+             (fun x: B * C =>
+                return_ (Mk_UnitBag (fst x),
+                         Mk_UnitBag (snd x))))).
+      * admit.
+      * repeat f_equal.
+        anf.
+        Search (_ = (let _ := _ in _)). split.
+        destruct arg_23__. Hint View (let _ := _ in _) fst.
+        idtac.
+        Search (_ <$>  _).
+      rewrite -monad_bind_fmap_ap.
+ 
+      
+      Search (fmap _ (fmap _ _)).
+      rewrite applicative_fmap_pure. Search fmap.
+      anf_equal.
+      
+      f_equal.
+      
+
+      apply monad_left_id.
+      destruct arg_23__.
+      Locate "let".
+      ?x:=_ in _). admit.
+    + admit.
+  - split.
+    
+    Check @monad_fmap_return.
+      Check  applicative_interchange.
+      Search (_ <*> pure _).
+      Search (_∘_ _ _).
+      Locate "<*>".
+      Search op_zlztzg__.
+      Print MonadLaws.
+
+      Print ApplicativeLaws. Search fmap.
+      Search return_. simpl.
 Admitted.
 
 (* TODO foldrBagM foldlBagM *)

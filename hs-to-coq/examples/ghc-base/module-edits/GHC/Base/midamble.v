@@ -105,6 +105,9 @@ Infix "==" := (op_zeze__) (no associativity, at level 70).
 
 Notation "'_==_'" := (op_zeze__).
 
+Definition eq_default {a} (eq : a -> a -> bool) : Eq_ a :=
+  fun _ k => k {|op_zeze____ := eq; op_zsze____ := fun x y => negb (eq x y) |}.
+
 Record Ord__Dict a := Ord__Dict_Build {
   op_zl____ : a -> a -> bool ;
   op_zlze____ : a -> a -> bool ;

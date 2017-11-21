@@ -3,7 +3,6 @@ Require Export Control.Monad.
 Require Export GHC.List.
 Require Export Data.Either.
 Require Export Data.Foldable.
-Require Export Data.FoldableInst.
 Require Export Data.Functor.
 Require Export Data.Maybe.
 Require Export Data.Traversable.

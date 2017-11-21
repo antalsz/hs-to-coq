@@ -19,6 +19,13 @@ Instance Unpeel_arrow
   ; repeel f x := repeel (f (unpeel x))
   }.
 
+Require Coq.Lists.List.
+Instance Unpeel_list a b
+   `{Unpeel a b} : Unpeel (list a) (list b) :=
+  { unpeel x := Coq.Lists.List.map unpeel x
+  ; repeel x := Coq.Lists.List.map repeel x
+  }.
+
 Class Coercible a b := { coerce : a -> b }.
 
 Instance Coercible_Unpeel

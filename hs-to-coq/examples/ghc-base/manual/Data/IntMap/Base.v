@@ -12,6 +12,9 @@ Require Coq.Structures.OrderedTypeEx.
 
 Require Import GHC.Base.
 Require Data.Monoid.
+Require Data.Foldable.
+Require Data.Traversable.
+
 
 Module IM := FMapAVL.Make(Coq.Structures.OrderedTypeEx.Z_as_OT).
 
@@ -165,7 +168,7 @@ Instance instance_Eq_IntMap {a} `{GHC.Base.Eq_ a} : GHC.Base.Eq_ (IntMap a) := f
 
 Instance instance_Monoid_IntMap {a} `{GHC.Base.Monoid a} : GHC.Base.Monoid (IntMap a) :=
   fun _ k => k {|
-  GHC.Base.mempty__ := empty;
+  GHC.Base.mempty__  := empty;
   GHC.Base.mappend__ := unionWith GHC.Base.mempty;
   GHC.Base.mconcat__ := GHC.Base.foldr (unionWith GHC.Base.mempty) empty;
 |}.
@@ -174,3 +177,9 @@ Instance instance_Functor_IntMap : GHC.Base.Functor IntMap :=
   fun _ k => k {|
     GHC.Base.fmap__ := IM.map ;
     GHC.Base.op_zlzd____ := fun {b}{c} (x:b) => IM.map (fun j => x) |}.
+
+Instance instance_Foldable_IntMap : Data.Foldable.Foldable IntMap :=
+  fun _ k => k (Data.Foldable.default_foldable_foldr IntMap (fun {a}{b} => foldr)).
+
+Instance instance_Traversable_IntMap : Data.Traversable.Traversable IntMap.
+Admitted. (* TODO *)

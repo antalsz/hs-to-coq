@@ -5,26 +5,30 @@ skip method Foldable foldr1
 skip method Foldable maximum
 skip method Foldable minimum
 
+
 skip minimumBy
 skip maximumBy
 
-skip instance_Foldable_option
-
-skip instance_Foldable__sum_a_ # appEndo, issue 9
-skip instance_Foldable__GHC_Tuple_pair_type_a_
+# skip instance_Foldable_option
+# skip instance_Foldable__sum_a_ # appEndo, issue 9
+# skip instance_Foldable__GHC_Tuple_pair_type_a_
 
 skip instance_Foldable_Data_Monoid_Dual
 skip instance_Foldable_Data_Monoid_Sum
 skip instance_Foldable_Data_Monoid_Product
 skip instance_Foldable_Data_Monoid_First
 skip instance_Foldable_Data_Monoid_Last
-skip instance_Foldable_GHC_Generics_U1
-skip instance_Foldable__GHC_Arr_Array_i_
 
 skip instance_forall___GHC_Base_Ord_a___GHC_Base_Monoid__Max_a_
 skip instance_forall___GHC_Base_Ord_a___GHC_Base_Monoid__Min_a_
 
+order instance_Foldable_list concatMap concat
+redefine Definition hash_compose {a} {b} {c} := @Coq.Program.Basics.compose a b c.
+
+
 # Generic stuff
+skip instance_Foldable_GHC_Generics_U1
+skip instance_Foldable__GHC_Arr_Array_i_
 skip instance_Foldable_GHC_Generics_V1
 skip instance_Foldable__GHC_Generics_URec__GHC_Ptr_Ptr_unit__
 skip instance_Foldable__GHC_Generics_URec_GHC_Num_Word_
@@ -37,7 +41,3 @@ skip instance_forall___Foldable_f___Foldable__GHC_Generics_M1_i_c_f_
 skip instance_Foldable__GHC_Generics_K1_i_c_
 skip instance_forall___Foldable_f___Foldable__GHC_Generics_Rec1_f_
 skip instance_Foldable_GHC_Generics_Par1
-
-order instance_Foldable_list concatMap concat
-
-redefine Definition hash_compose {a} {b} {c} := @Coq.Program.Basics.compose a b c.

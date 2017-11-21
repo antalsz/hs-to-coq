@@ -1,3 +1,13 @@
+* TODO (hs-to-coq):
+  axiomize instances
+  rename type class members
+  special case for functions that do not match their args
+  edit for redefining default class definitions
+  Alt instances in Data.Monoid
+  Only rename data constructors when specified by edits? (i.e. don't
+    automatically add the Mk_ in front.)
+
+
 * Generated modules, what are we skipping in them and why?
 
   GHC/List
@@ -12,14 +22,16 @@
     - fromJust (partial)
   Data/Function
     - fix_ is partial
-	- on uses (.*.) as a variable name
+	- `on` uses (.*.) as a variable name
   Data/Ord
     - cannot derive Eq instance for Down, so instance added to "midamble"
   Data/Functor
     - nothing skipped
   Data/Monoid
-    - many F/A/M instances rely on Data.Coerce
-	- many Monoid instances trigger tyvar issue
+	- Product/Sum Monoid instances trigger scoped ty var issue
+	- issue with Alt instances & extra var generalized
+	- skip Alternative instance
+	- read/show instances
   Control/Monad
     - three partial functions
   Data/OldList

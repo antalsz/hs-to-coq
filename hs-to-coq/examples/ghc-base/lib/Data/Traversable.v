@@ -9,13 +9,10 @@ Unset Printing Implicit Defensive.
 
 Require Coq.Program.Wf.
 
-(* Preamble *)
-
-Require Data.FoldableInst.
-
 (* Converted imports: *)
 
 Require Coq.Program.Basics.
+Require Data.Either.
 Require Data.Foldable.
 Require Data.Functor.
 Require Data.Proxy.
@@ -153,7 +150,59 @@ Instance instance_Traversable_list : Traversable list := fun _ k =>
                                                                            `{GHC.Base.Applicative f} =>
                                  instance_Traversable_list_traverse)).
 
-(* Skipping instance instance_Traversable__sum_a_ *)
+Local Definition instance_Traversable__Data_Either_Either_a__traverse {inst_a}
+    : forall {f} {a} {b},
+        forall `{GHC.Base.Applicative f},
+          (a -> f b) -> (Data.Either.Either inst_a) a -> f ((Data.Either.Either inst_a)
+                                                           b) :=
+  fun {f} {a} {b} `{GHC.Base.Applicative f} =>
+    fun arg_206__ arg_207__ =>
+      match arg_206__ , arg_207__ with
+        | _ , Data.Either.Mk_Left x => GHC.Base.pure (Data.Either.Mk_Left x)
+        | f , Data.Either.Mk_Right y => Data.Functor.op_zlzdzg__ Data.Either.Mk_Right (f
+                                                                 y)
+      end.
+
+Local Definition instance_Traversable__Data_Either_Either_a__sequenceA {inst_a}
+    : forall {f} {a},
+        forall `{GHC.Base.Applicative f},
+          (Data.Either.Either inst_a) (f a) -> f ((Data.Either.Either inst_a) a) :=
+  fun {f} {a} `{GHC.Base.Applicative f} =>
+    instance_Traversable__Data_Either_Either_a__traverse GHC.Base.id.
+
+Local Definition instance_Traversable__Data_Either_Either_a__sequence {inst_a}
+    : forall {m} {a},
+        forall `{GHC.Base.Monad m},
+          (Data.Either.Either inst_a) (m a) -> m ((Data.Either.Either inst_a) a) :=
+  fun {m} {a} `{GHC.Base.Monad m} =>
+    instance_Traversable__Data_Either_Either_a__sequenceA.
+
+Local Definition instance_Traversable__Data_Either_Either_a__mapM {inst_a}
+    : forall {m} {a} {b},
+        forall `{GHC.Base.Monad m},
+          (a -> m b) -> (Data.Either.Either inst_a) a -> m ((Data.Either.Either inst_a)
+                                                           b) :=
+  fun {m} {a} {b} `{GHC.Base.Monad m} =>
+    instance_Traversable__Data_Either_Either_a__traverse.
+
+Instance instance_Traversable__Data_Either_Either_a_ {a} : Traversable
+                                                           (Data.Either.Either a) := fun _ k =>
+    k (Traversable__Dict_Build (Data.Either.Either a) (fun {m}
+                                                           {a}
+                                                           {b}
+                                                           `{GHC.Base.Monad m} =>
+                                 instance_Traversable__Data_Either_Either_a__mapM) (fun {m}
+                                                                                        {a}
+                                                                                        `{GHC.Base.Monad m} =>
+                                 instance_Traversable__Data_Either_Either_a__sequence) (fun {f}
+                                                                                            {a}
+                                                                                            `{GHC.Base.Applicative f} =>
+                                 instance_Traversable__Data_Either_Either_a__sequenceA) (fun {f}
+                                                                                             {a}
+                                                                                             {b}
+                                                                                             `{GHC.Base.Applicative
+                                                                                             f} =>
+                                 instance_Traversable__Data_Either_Either_a__traverse)).
 
 (* Skipping instance instance_Traversable__GHC_Tuple_pair_type_a_ *)
 
@@ -328,7 +377,8 @@ Definition for_ {t} {f} {a} {b} `{Traversable t} `{GHC.Base.Applicative f} : t
   GHC.Base.flip traverse.
 
 (* Unbound variables:
-     * Coq.Program.Basics.compose Data.Foldable.Foldable Data.Functor.op_zlzdzg__
+     * Coq.Program.Basics.compose Data.Either.Either Data.Either.Mk_Left
+     Data.Either.Mk_Right Data.Foldable.Foldable Data.Functor.op_zlzdzg__
      Data.Proxy.Mk_Proxy Data.Proxy.Proxy GHC.Base.Applicative
      GHC.Base.Applicative__Dict_Build GHC.Base.Functor GHC.Base.Functor__Dict_Build
      GHC.Base.Monad GHC.Base.const GHC.Base.flip GHC.Base.fmap GHC.Base.foldr

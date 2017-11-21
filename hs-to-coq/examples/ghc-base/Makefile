@@ -25,7 +25,6 @@ HANDMOD = \
   GHC/Tuple \
   Data/Type/Equality \
   Prelude\
-  Data/FoldableInst \
   \
   Data/IntMap \
   Data/IntMap/Base \
@@ -61,6 +60,7 @@ MODULES = \
   Control/Category \
   Data/BiFunctor \
   Data/List/NonEmpty \
+
 
 # generated from drop-in/
 DROPIN =

@@ -1,1 +1,0 @@
-Require Data.FoldableInst.

@@ -119,12 +119,10 @@ Definition unless {f} `{(GHC.Base.Applicative f)} : bool -> f unit -> f unit :=
                  else s
     end.
 
-Definition zipWithM {m} {a} {b} {c} `{(GHC.Base.Applicative m)} : (a -> b -> m
-                                                                  c) -> list a -> list b -> m (list c) :=
-  fun arg_23__ arg_24__ arg_25__ =>
-    match arg_23__ , arg_24__ , arg_25__ with
-      | f , xs , ys => Data.Traversable.sequenceA (GHC.List.zipWith f xs ys)
-    end.
+Definition zipWithM {m} {a} {b} {c} `{_ : GHC.Base.Applicative m} : (a -> b -> m
+                                                                    c) -> list a -> list b -> m (list c) :=
+  fun f xs ys =>
+    (@Data.Traversable.sequenceA _ _ _ _ m _ _ _ (GHC.List.zipWith f xs ys)).
 
 Definition zipWithM_ {m} {a} {b} {c} `{(GHC.Base.Applicative m)} : (a -> b -> m
                                                                    c) -> list a -> list b -> m unit :=

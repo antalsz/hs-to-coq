@@ -24,18 +24,7 @@ Require GHC.Base.
 (* Require GHC.Err.
 Require GHC.Exception.
 Require GHC.Types. *)
-Require Data.FoldableInst.
 (* Converted declarations: *)
-
-(*
-Definition expectJust {a} : GHC.Base.String -> option a -> a :=
-  fun arg_20__ arg_21__ =>
-    match arg_20__ , arg_21__ with
-      | _ , Some x => x
-      | err , None => GHC.Err.error (Coq.Init.Datatypes.app (GHC.Base.hs_string__
-                                                            "expectJust ") err)
-    end.
-*)
 
 Instance instance_alternative_option : Alternative option.
 Admitted.
@@ -123,11 +112,12 @@ Local Definition instance_GHC_Base_Monad__MaybeErr_err__op_zgzgze__ {inst_err}
       end.
 
 Local Definition instance_GHC_Base_Functor__MaybeErr_err__fmap {inst_err}
-    : forall {a} {b}, (a -> b) -> (MaybeErr inst_err) a -> (MaybeErr inst_err) b.
-Admitted.
-(*
-  fun {a} {b} => GHC.Base.liftM.
-*)
+    : forall {a} {b}, (a -> b) -> (MaybeErr inst_err) a -> (MaybeErr inst_err) b :=
+  fun {a} {b} f me => match me with
+                   | Mk_Succeeded v => Mk_Succeeded (f v)
+                   | Mk_Failed e     => Mk_Failed e
+                   end.
+
 
 
 Local Definition instance_GHC_Base_Functor__MaybeErr_err__op_zlzd__ {inst_err}
@@ -144,9 +134,12 @@ Instance instance_GHC_Base_Functor__MaybeErr_err_ {err} :
 Local Definition instance_GHC_Base_Applicative__MaybeErr_err__op_zlztzg__ {inst_err}
     : forall {a} {b},
         (MaybeErr inst_err) (a -> b) -> (MaybeErr inst_err) a -> (MaybeErr inst_err)
-        b.
-Admitted.
-(*   fun {a} {b} => GHC.Base.ap. *)
+        b :=
+ fun {a} {b} mf ma => match mf , ma  with
+                   | Mk_Succeeded f , Mk_Succeeded v => Mk_Succeeded (f v)
+                   | Mk_Failed e , _     => Mk_Failed e
+                   | _ , Mk_Failed e     => Mk_Failed e
+                   end.
 
 Local Definition instance_GHC_Base_Applicative__MaybeErr_err__op_ztzg__ {inst_err}
     : forall {a} {b},
@@ -156,7 +149,7 @@ Local Definition instance_GHC_Base_Applicative__MaybeErr_err__op_ztzg__ {inst_er
       instance_GHC_Base_Applicative__MaybeErr_err__op_zlztzg__ (GHC.Base.fmap
                                                                (GHC.Base.const GHC.Base.id) x) y.
 
-Instance instance_GHC_Base_Applicative__MaybeErr_err_ 
+Instance instance_GHC_Base_Applicative__MaybeErr_err_
   {err} : GHC.Base.Applicative (MaybeErr err) := fun _ k => k (
     GHC.Base.Applicative__Dict_Build (MaybeErr err)
       (fun {a} {b} => instance_GHC_Base_Applicative__MaybeErr_err__op_ztzg__)

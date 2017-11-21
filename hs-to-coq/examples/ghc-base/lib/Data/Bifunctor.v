@@ -11,6 +11,7 @@ Require Coq.Program.Wf.
 
 (* Converted imports: *)
 
+Require Data.Either.
 Require Data.Functor.Const.
 Require GHC.Base.
 Require GHC.Tuple.
@@ -321,31 +322,43 @@ Instance instance_Bifunctor__GHC_Tuple_sept_type_x1_x2_x3_x4_x5_ {x1} {x2} {x3}
                                                                                                    {a} =>
                                instance_Bifunctor__GHC_Tuple_sept_type_x1_x2_x3_x4_x5__second)).
 
-Local Definition instance_Bifunctor_sum_bimap : forall {a} {b} {c} {d},
-                                                  (a -> b) -> (c -> d) -> sum a c -> sum b d :=
+Local Definition instance_Bifunctor_Data_Either_Either_bimap : forall {a}
+                                                                      {b}
+                                                                      {c}
+                                                                      {d},
+                                                                 (a -> b) -> (c -> d) -> Data.Either.Either a
+                                                                 c -> Data.Either.Either b d :=
   fun {a} {b} {c} {d} =>
     fun arg_18__ arg_19__ arg_20__ =>
       match arg_18__ , arg_19__ , arg_20__ with
-        | f , _ , inl a => inl (f a)
-        | _ , g , inr b => inr (g b)
+        | f , _ , Data.Either.Mk_Left a => Data.Either.Mk_Left (f a)
+        | _ , g , Data.Either.Mk_Right b => Data.Either.Mk_Right (g b)
       end.
 
-Local Definition instance_Bifunctor_sum_first : forall {a} {b} {c},
-                                                  (a -> b) -> sum a c -> sum b c :=
+Local Definition instance_Bifunctor_Data_Either_Either_first : forall {a}
+                                                                      {b}
+                                                                      {c},
+                                                                 (a -> b) -> Data.Either.Either a
+                                                                 c -> Data.Either.Either b c :=
   fun {a} {b} {c} =>
     fun arg_4__ =>
       match arg_4__ with
-        | f => instance_Bifunctor_sum_bimap f GHC.Base.id
+        | f => instance_Bifunctor_Data_Either_Either_bimap f GHC.Base.id
       end.
 
-Local Definition instance_Bifunctor_sum_second : forall {b} {c} {a},
-                                                   (b -> c) -> sum a b -> sum a c :=
-  fun {b} {c} {a} => instance_Bifunctor_sum_bimap GHC.Base.id.
+Local Definition instance_Bifunctor_Data_Either_Either_second : forall {b}
+                                                                       {c}
+                                                                       {a},
+                                                                  (b -> c) -> Data.Either.Either a
+                                                                  b -> Data.Either.Either a c :=
+  fun {b} {c} {a} => instance_Bifunctor_Data_Either_Either_bimap GHC.Base.id.
 
-Instance instance_Bifunctor_sum : Bifunctor sum := fun _ k =>
-    k (Bifunctor__Dict_Build sum (fun {a} {b} {c} {d} =>
-                               instance_Bifunctor_sum_bimap) (fun {a} {b} {c} => instance_Bifunctor_sum_first)
-                             (fun {b} {c} {a} => instance_Bifunctor_sum_second)).
+Instance instance_Bifunctor_Data_Either_Either : Bifunctor Data.Either.Either :=
+  fun _ k =>
+    k (Bifunctor__Dict_Build Data.Either.Either (fun {a} {b} {c} {d} =>
+                               instance_Bifunctor_Data_Either_Either_bimap) (fun {a} {b} {c} =>
+                               instance_Bifunctor_Data_Either_Either_first) (fun {b} {c} {a} =>
+                               instance_Bifunctor_Data_Either_Either_second)).
 
 Local Definition instance_Bifunctor_Data_Functor_Const_Const_bimap : forall {a}
                                                                             {b}
@@ -388,7 +401,8 @@ Instance instance_Bifunctor_Data_Functor_Const_Const : Bifunctor
 (* Skipping instance instance_Bifunctor__GHC_Generics_K1_i_ *)
 
 (* Unbound variables:
+     Data.Either.Either Data.Either.Mk_Left Data.Either.Mk_Right
      Data.Functor.Const.Const Data.Functor.Const.Mk_Const GHC.Base.id
      GHC.Tuple.pair_type GHC.Tuple.quad_type GHC.Tuple.quint_type GHC.Tuple.sept_type
-     GHC.Tuple.sext_type GHC.Tuple.triple_type inl inr pair sum
+     GHC.Tuple.sext_type GHC.Tuple.triple_type pair
 *)

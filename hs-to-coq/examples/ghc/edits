@@ -2,4 +2,7 @@
 skip module Outputable
 skip module Panic
 
+
 rename value SourceLoc.L = SourceLoc.Mk_L
+
+axiomatize module UniqSet

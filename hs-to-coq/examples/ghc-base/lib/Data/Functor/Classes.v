@@ -11,6 +11,7 @@ Require Coq.Program.Wf.
 
 (* Converted imports: *)
 
+Require Data.Either.
 Require Data.Functor.Const.
 Require Data.Functor.Identity.
 Require Data.Proxy.
@@ -218,75 +219,84 @@ Instance instance_forall____GHC_Base_Ord_a____Ord1__GHC_Tuple_pair_type_a_ {a}
    (GHC.Tuple.pair_type a)' failed: OOPS! Cannot find information for class "Show1"
    unsupported *)
 
-Local Definition instance_Eq2_sum_liftEq2 : forall {a} {b} {c} {d},
-                                              (a -> b -> bool) -> (c -> d -> bool) -> sum a c -> sum b d -> bool :=
+Local Definition instance_Eq2_Data_Either_Either_liftEq2 : forall {a}
+                                                                  {b}
+                                                                  {c}
+                                                                  {d},
+                                                             (a -> b -> bool) -> (c -> d -> bool) -> Data.Either.Either
+                                                             a c -> Data.Either.Either b d -> bool :=
   fun {a} {b} {c} {d} =>
     fun arg_43__ arg_44__ arg_45__ arg_46__ =>
       match arg_43__ , arg_44__ , arg_45__ , arg_46__ with
-        | e1 , _ , inl x , inl y => e1 x y
-        | _ , _ , inl _ , inr _ => false
-        | _ , _ , inr _ , inl _ => false
-        | _ , e2 , inr x , inr y => e2 x y
+        | e1 , _ , Data.Either.Mk_Left x , Data.Either.Mk_Left y => e1 x y
+        | _ , _ , Data.Either.Mk_Left _ , Data.Either.Mk_Right _ => false
+        | _ , _ , Data.Either.Mk_Right _ , Data.Either.Mk_Left _ => false
+        | _ , e2 , Data.Either.Mk_Right x , Data.Either.Mk_Right y => e2 x y
       end.
 
-Instance instance_Eq2_sum : Eq2 sum := fun _ k =>
-    k (Eq2__Dict_Build sum (fun {a} {b} {c} {d} => instance_Eq2_sum_liftEq2)).
+Instance instance_Eq2_Data_Either_Either : Eq2 Data.Either.Either := fun _ k =>
+    k (Eq2__Dict_Build Data.Either.Either (fun {a} {b} {c} {d} =>
+                         instance_Eq2_Data_Either_Either_liftEq2)).
 
-Local Definition instance_Ord2_sum_liftCompare2 : forall {a} {b} {c} {d},
-                                                    (a -> b -> comparison) -> (c -> d -> comparison) -> sum a c -> sum b
-                                                    d -> comparison :=
+Local Definition instance_Ord2_Data_Either_Either_liftCompare2 : forall {a}
+                                                                        {b}
+                                                                        {c}
+                                                                        {d},
+                                                                   (a -> b -> comparison) -> (c -> d -> comparison) -> Data.Either.Either
+                                                                   a c -> Data.Either.Either b d -> comparison :=
   fun {a} {b} {c} {d} =>
     fun arg_36__ arg_37__ arg_38__ arg_39__ =>
       match arg_36__ , arg_37__ , arg_38__ , arg_39__ with
-        | comp1 , _ , inl x , inl y => comp1 x y
-        | _ , _ , inl _ , inr _ => Lt
-        | _ , _ , inr _ , inl _ => Gt
-        | _ , comp2 , inr x , inr y => comp2 x y
+        | comp1 , _ , Data.Either.Mk_Left x , Data.Either.Mk_Left y => comp1 x y
+        | _ , _ , Data.Either.Mk_Left _ , Data.Either.Mk_Right _ => Lt
+        | _ , _ , Data.Either.Mk_Right _ , Data.Either.Mk_Left _ => Gt
+        | _ , comp2 , Data.Either.Mk_Right x , Data.Either.Mk_Right y => comp2 x y
       end.
 
-Instance instance_Ord2_sum : Ord2 sum := fun _ k =>
-    k (Ord2__Dict_Build sum (fun {a} {b} {c} {d} =>
-                          instance_Ord2_sum_liftCompare2)).
+Instance instance_Ord2_Data_Either_Either : Ord2 Data.Either.Either := fun _
+                                                                           k =>
+    k (Ord2__Dict_Build Data.Either.Either (fun {a} {b} {c} {d} =>
+                          instance_Ord2_Data_Either_Either_liftCompare2)).
 
-(* Translating `instance Read2 sum' failed: OOPS! Cannot find information for
-   class "Read2" unsupported *)
+(* Translating `instance Read2 Data.Either.Either' failed: OOPS! Cannot find
+   information for class "Read2" unsupported *)
 
-(* Translating `instance Show2 sum' failed: OOPS! Cannot find information for
-   class "Show2" unsupported *)
+(* Translating `instance Show2 Data.Either.Either' failed: OOPS! Cannot find
+   information for class "Show2" unsupported *)
 
-Local Definition instance_forall____GHC_Base_Eq__a____Eq1__sum_a__liftEq {inst_a}
-                                                                         `{(GHC.Base.Eq_ inst_a)} : forall {a} {b},
-                                                                                                      (a -> b -> bool) -> (sum
-                                                                                                      inst_a) a -> (sum
-                                                                                                      inst_a)
-                                                                                                      b -> bool :=
+Local Definition instance_forall____GHC_Base_Eq__a____Eq1__Data_Either_Either_a__liftEq {inst_a}
+                                                                                        `{(GHC.Base.Eq_ inst_a)}
+    : forall {a} {b},
+        (a -> b -> bool) -> (Data.Either.Either inst_a) a -> (Data.Either.Either inst_a)
+        b -> bool :=
   fun {a} {b} => liftEq2 GHC.Base.op_zeze__.
 
-Instance instance_forall____GHC_Base_Eq__a____Eq1__sum_a_ {a} `{(GHC.Base.Eq_
-                                                          a)} : Eq1 (sum a) := fun _ k =>
-    k (Eq1__Dict_Build (sum a) (fun {a} {b} =>
-                         instance_forall____GHC_Base_Eq__a____Eq1__sum_a__liftEq)).
+Instance instance_forall____GHC_Base_Eq__a____Eq1__Data_Either_Either_a_ {a}
+                                                                         `{(GHC.Base.Eq_ a)} : Eq1 (Data.Either.Either
+                                                                                                   a) := fun _ k =>
+    k (Eq1__Dict_Build (Data.Either.Either a) (fun {a} {b} =>
+                         instance_forall____GHC_Base_Eq__a____Eq1__Data_Either_Either_a__liftEq)).
 
-Local Definition instance_forall____GHC_Base_Ord_a____Ord1__sum_a__liftCompare {inst_a}
-                                                                               `{(GHC.Base.Ord inst_a)} : forall {a}
-                                                                                                                 {b},
-                                                                                                            (a -> b -> comparison) -> (sum
-                                                                                                            inst_a)
-                                                                                                            a -> (sum
-                                                                                                            inst_a)
-                                                                                                            b -> comparison :=
+Local Definition instance_forall____GHC_Base_Ord_a____Ord1__Data_Either_Either_a__liftCompare {inst_a}
+                                                                                              `{(GHC.Base.Ord inst_a)}
+    : forall {a} {b},
+        (a -> b -> comparison) -> (Data.Either.Either inst_a) a -> (Data.Either.Either
+        inst_a) b -> comparison :=
   fun {a} {b} => liftCompare2 GHC.Base.compare.
 
-Instance instance_forall____GHC_Base_Ord_a____Ord1__sum_a_ {a} `{(GHC.Base.Ord
-                                                           a)} : Ord1 (sum a) := fun _ k =>
-    k (Ord1__Dict_Build (sum a) (fun {a} {b} =>
-                          instance_forall____GHC_Base_Ord_a____Ord1__sum_a__liftCompare)).
+Instance instance_forall____GHC_Base_Ord_a____Ord1__Data_Either_Either_a_ {a}
+                                                                          `{(GHC.Base.Ord a)} : Ord1 (Data.Either.Either
+                                                                                                     a) := fun _ k =>
+    k (Ord1__Dict_Build (Data.Either.Either a) (fun {a} {b} =>
+                          instance_forall____GHC_Base_Ord_a____Ord1__Data_Either_Either_a__liftCompare)).
 
-(* Translating `instance forall {a}, forall `{(GHC.Read.Read a)}, Read1 (sum a)'
-   failed: OOPS! Cannot find information for class "Read1" unsupported *)
+(* Translating `instance forall {a}, forall `{(GHC.Read.Read a)}, Read1
+   (Data.Either.Either a)' failed: OOPS! Cannot find information for class "Read1"
+   unsupported *)
 
-(* Translating `instance forall {a}, forall `{(GHC.Show.Show a)}, Show1 (sum a)'
-   failed: OOPS! Cannot find information for class "Show1" unsupported *)
+(* Translating `instance forall {a}, forall `{(GHC.Show.Show a)}, Show1
+   (Data.Either.Either a)' failed: OOPS! Cannot find information for class "Show1"
+   unsupported *)
 
 Local Definition instance_Eq1_Data_Functor_Identity_Identity_liftEq : forall {a}
                                                                              {b},
@@ -443,9 +453,10 @@ Definition eq2 {f} {a} {b} `{Eq2 f} `{GHC.Base.Eq_ a} `{GHC.Base.Eq_ b} : f a
   liftEq2 GHC.Base.op_zeze__ GHC.Base.op_zeze__.
 
 (* Unbound variables:
+     Data.Either.Either Data.Either.Mk_Left Data.Either.Mk_Right
      Data.Functor.Const.Const Data.Functor.Const.Mk_Const
      Data.Functor.Identity.Identity Data.Functor.Identity.Mk_Identity
      Data.Proxy.Proxy Eq GHC.Base.Eq_ GHC.Base.Ord GHC.Base.compare GHC.Base.mappend
      GHC.Base.op_zeze__ GHC.Tuple.pair_type Gt Lt Some andb bool comparison cons
-     false inl inr list option pair sum true
+     false list option pair true
 *)

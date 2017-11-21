@@ -17,6 +17,7 @@ Require Import GHC.Num.
 (* Converted imports: *)
 
 Require GHC.Base.
+Require GHC.Prim.
 
 (* Converted type declarations: *)
 
@@ -42,8 +43,8 @@ Local Definition instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Down_a__compar
                                                                                   `{GHC.Base.Ord inst_a} : (Down
                                                                                                            inst_a) -> (Down
                                                                                                            inst_a) -> comparison :=
-  fun arg_5__ arg_6__ =>
-    match arg_5__ , arg_6__ with
+  fun arg_7__ arg_8__ =>
+    match arg_7__ , arg_8__ with
       | Mk_Down x , Mk_Down y => GHC.Base.compare y x
     end.
 
@@ -119,8 +120,24 @@ Instance instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Down_a_ {a}
    (Down a)' failed: OOPS! Cannot find information for class "GHC.Show.Show"
    unsupported *)
 
-(* Translating `instance forall {a}, forall `{GHC.Base.Eq_ a}, GHC.Base.Eq_
-   (Down a)' failed: type applications unsupported *)
+Local Definition instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___Down_a__op_zeze__ {inst_a}
+                                                                                    `{GHC.Base.Eq_ inst_a} : Down
+                                                                                                             inst_a -> Down
+                                                                                                             inst_a -> bool :=
+  GHC.Prim.coerce GHC.Base.op_zeze__.
+
+Local Definition instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___Down_a__op_zsze__ {inst_a}
+                                                                                    `{GHC.Base.Eq_ inst_a} : Down
+                                                                                                             inst_a -> Down
+                                                                                                             inst_a -> bool :=
+  GHC.Prim.coerce GHC.Base.op_zsze__.
+
+Instance instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___Down_a_ {a}
+                                                                  `{GHC.Base.Eq_ a} : GHC.Base.Eq_ (Down a) := fun _
+                                                                                                                   k =>
+    k (GHC.Base.Eq___Dict_Build (Down a)
+                                instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___Down_a__op_zeze__
+                                instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___Down_a__op_zsze__).
 
 Definition comparing {a} {b} `{(GHC.Base.Ord a)}
     : (b -> a) -> b -> b -> comparison :=
@@ -130,6 +147,7 @@ Definition comparing {a} {b} `{(GHC.Base.Ord a)}
     end.
 
 (* Unbound variables:
-     GHC.Base.Ord GHC.Base.Ord__Dict_Build GHC.Base.compare Gt Lt bool comparison
-     op_zeze__ op_zsze__
+     GHC.Base.Eq_ GHC.Base.Eq___Dict_Build GHC.Base.Ord GHC.Base.Ord__Dict_Build
+     GHC.Base.compare GHC.Base.op_zeze__ GHC.Base.op_zsze__ GHC.Prim.coerce Gt Lt
+     bool comparison op_zeze__ op_zsze__
 *)

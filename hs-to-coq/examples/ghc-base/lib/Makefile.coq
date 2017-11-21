@@ -110,7 +110,6 @@ VFILES:=GHC/Num.v\
   GHC/Tuple.v\
   Data/Type/Equality.v\
   Prelude.v\
-  Data/FoldableInst.v\
   Data/IntMap.v\
   Data/IntMap/Base.v\
   Data/IntSet/Base.v\

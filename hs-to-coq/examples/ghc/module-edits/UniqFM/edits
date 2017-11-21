@@ -1,11 +1,11 @@
 skip pprUniqFM
 skip pluralUFM
+skip pprUFM
 
 skip module Compiler.Hoopl.Dataflow
 skip module Data.IntMap.Base
 skip module Data.IntSet.Base
 
-skip pprUFM
 
 # requires Hoopl
 skip joinUFM
@@ -19,3 +19,8 @@ skip ufmToSet_Directly
 
 # need to avoid left / right as binding vars
 skip partitionUFM
+
+order instance_GHC_Base_Functor_UniqFM instance_Data_Foldable_Foldable_UniqFM instance_Data_Traversable_Traversable_UniqFM
+
+add UniqFM Instance Unpeel_UniqFM ele : GHC.Prim.Unpeel (UniqFM ele) (Data.IntMap.Base.IntMap ele) :=
+  GHC.Prim.Build_Unpeel _ _ (fun x => match x with | Mk_UFM y => y end) Mk_UFM.

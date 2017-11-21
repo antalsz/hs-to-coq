@@ -88,9 +88,14 @@ rename value GHC.Base.Nothing = None
 
 rename value GHC.Err.errorWithoutStackTrace = GHC.Base.errorWithoutStackTrace
 
-rename type Data.Either.Either = sum
-rename value Data.Either.Right = inr
-rename value Data.Either.Left  = inl
+# rename type Data.Either.Either = sum
+# rename value Data.Either.Right = inr
+# rename value Data.Either.Left  = inl
+rename value Data.Either.Right = Data.Either.Mk_Right
+rename value Data.Either.Left  = Data.Either.Mk_Left
+
+# clashes with Coq's "sum" type
+# rename value Data.Foldable.sum = Data.Foldable.fsum
 
 
 skip method Monad fail
@@ -122,6 +127,7 @@ rename value Data.Monoid.First   = Data.Monoid.Mk_First
 rename value Data.Monoid.Last    = Data.Monoid.Mk_Last
 rename value Data.Monoid.Any     = Data.Monoid.Mk_Any
 rename value Data.Monoid.All     = Data.Monoid.Mk_All
+rename value Data.Monoid.Endo    = Data.Monoid.Mk_Endo
 
 rename value Data.Functor.Const.Const = Data.Functor.Const.Mk_Const
 rename value Data.Functor.Identity.Identity = Data.Functor.Identity.Mk_Identity

@@ -169,6 +169,7 @@ instance Binding Sentence where
   binding _ (ExistingClassSentence    name)      = (occurrence name *>)
   binding f (RecordSentence           rcd)       = binding f rcd
   binding f (InstanceSentence         ins)       = binding f ins
+  binding f (ProgramInstanceSentence  ins)       = binding f ins
   binding f (NotationSentence         not)       = binding f not
   binding _ (ArgumentsSentence        arg)       = (freeVars arg *>)
   binding _ (CommentSentence          com)       = (freeVars com *>)

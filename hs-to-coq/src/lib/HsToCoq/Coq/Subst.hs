@@ -85,6 +85,7 @@ instance Subst Sentence where
   subst f (ClassSentence           cls)       = ClassSentence             (subst f cls)
   subst f (RecordSentence          rcd)       = RecordSentence            (subst f rcd)
   subst f (InstanceSentence        ins)       = InstanceSentence          (subst f ins)
+  subst f (ProgramInstanceSentence ins)       = ProgramInstanceSentence   (subst f ins)
   subst f (NotationSentence        not)       = NotationSentence          (subst f not)
   subst _ s@(ExistingClassSentence  _)        = s
   subst _ s@(ArgumentsSentence  _)            = s

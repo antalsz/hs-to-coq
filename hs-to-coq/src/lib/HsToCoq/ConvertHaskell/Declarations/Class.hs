@@ -91,7 +91,6 @@ convertClassDecl (L _ hsCtx) (L _ hsName) ltvs fds lsigs defaults types typeDefa
 
   all_sigs <- binding' args' $ convertLSigs lsigs
 
-
   -- implement the class part of "skip method"
   skippedMethodsS <- use (edits.skippedMethods)
   let sigs = (`M.filterWithKey` all_sigs) $ \meth _ ->
@@ -110,6 +109,8 @@ convertClassDecl (L _ hsCtx) (L _ hsName) ltvs fds lsigs defaults types typeDefa
                 convUnsupported $ "skipping a type class method in " ++ show name
   unless (null defs) $ defaultMethods.at name ?= defs
 
+--  liftIO (traceIO (show name))
+--  liftIO (traceIO (show defs))
 
   let classDefn = (ClassDefinition name (args' ++ ctx) Nothing (bimap toCoqName sigType <$> M.toList sigs))
 

@@ -7,6 +7,7 @@ Set Maximal Implicit Insertion.
 Unset Strict Implicit.
 Unset Printing Implicit Defensive.
 
+Require Coq.Program.Tactics.
 Require Coq.Program.Wf.
 
 (* Converted imports: *)
@@ -84,8 +85,8 @@ Local Definition instance_Eq1_option_liftEq : forall {a} {b},
         | eq , Some x , Some y => eq x y
       end.
 
-Instance instance_Eq1_option : Eq1 option := fun _ k =>
-    k (Eq1__Dict_Build option (fun {a} {b} => instance_Eq1_option_liftEq)).
+Program Instance instance_Eq1_option : Eq1 option := fun _ k =>
+    k {|liftEq__ := fun {a} {b} => instance_Eq1_option_liftEq |}.
 
 Local Definition instance_Ord1_option_liftCompare : forall {a} {b},
                                                       (a -> b -> comparison) -> option a -> option b -> comparison :=
@@ -98,8 +99,8 @@ Local Definition instance_Ord1_option_liftCompare : forall {a} {b},
         | comp , Some x , Some y => comp x y
       end.
 
-Instance instance_Ord1_option : Ord1 option := fun _ k =>
-    k (Ord1__Dict_Build option (fun {a} {b} => instance_Ord1_option_liftCompare)).
+Program Instance instance_Ord1_option : Ord1 option := fun _ k =>
+    k {|liftCompare__ := fun {a} {b} => instance_Ord1_option_liftCompare |}.
 
 (* Translating `instance Read1 option' failed: OOPS! Cannot find information for
    class "Read1" unsupported *)
@@ -118,8 +119,8 @@ Local Definition instance_Eq1_list_liftEq : forall {a} {b},
                | eq , cons x xs , cons y ys => andb (eq x y) (liftEq eq xs ys)
              end.
 
-Instance instance_Eq1_list : Eq1 list := fun _ k =>
-    k (Eq1__Dict_Build list (fun {a} {b} => instance_Eq1_list_liftEq)).
+Program Instance instance_Eq1_list : Eq1 list := fun _ k =>
+    k {|liftEq__ := fun {a} {b} => instance_Eq1_list_liftEq |}.
 
 Local Definition instance_Ord1_list_liftCompare : forall {a} {b},
                                                     (a -> b -> comparison) -> list a -> list b -> comparison :=
@@ -133,8 +134,8 @@ Local Definition instance_Ord1_list_liftCompare : forall {a} {b},
                                                                   xs ys)
              end.
 
-Instance instance_Ord1_list : Ord1 list := fun _ k =>
-    k (Ord1__Dict_Build list (fun {a} {b} => instance_Ord1_list_liftCompare)).
+Program Instance instance_Ord1_list : Ord1 list := fun _ k =>
+    k {|liftCompare__ := fun {a} {b} => instance_Ord1_list_liftCompare |}.
 
 (* Translating `instance Read1 list' failed: OOPS! Cannot find information for
    class "Read1" unsupported *)
@@ -154,10 +155,10 @@ Local Definition instance_Eq2_GHC_Tuple_pair_type_liftEq2 : forall {a}
         | e1 , e2 , pair x1 y1 , pair x2 y2 => andb (e1 x1 x2) (e2 y1 y2)
       end.
 
-Instance instance_Eq2_GHC_Tuple_pair_type : Eq2 GHC.Tuple.pair_type := fun _
-                                                                           k =>
-    k (Eq2__Dict_Build GHC.Tuple.pair_type (fun {a} {b} {c} {d} =>
-                         instance_Eq2_GHC_Tuple_pair_type_liftEq2)).
+Program Instance instance_Eq2_GHC_Tuple_pair_type : Eq2 GHC.Tuple.pair_type :=
+  fun _ k =>
+    k {|liftEq2__ := fun {a} {b} {c} {d} =>
+        instance_Eq2_GHC_Tuple_pair_type_liftEq2 |}.
 
 Local Definition instance_Ord2_GHC_Tuple_pair_type_liftCompare2 : forall {a}
                                                                          {b}
@@ -172,10 +173,10 @@ Local Definition instance_Ord2_GHC_Tuple_pair_type_liftCompare2 : forall {a}
                                                                       (comp2 y1 y2)
       end.
 
-Instance instance_Ord2_GHC_Tuple_pair_type : Ord2 GHC.Tuple.pair_type := fun _
-                                                                             k =>
-    k (Ord2__Dict_Build GHC.Tuple.pair_type (fun {a} {b} {c} {d} =>
-                          instance_Ord2_GHC_Tuple_pair_type_liftCompare2)).
+Program Instance instance_Ord2_GHC_Tuple_pair_type : Ord2 GHC.Tuple.pair_type :=
+  fun _ k =>
+    k {|liftCompare2__ := fun {a} {b} {c} {d} =>
+        instance_Ord2_GHC_Tuple_pair_type_liftCompare2 |}.
 
 (* Translating `instance Read2 GHC.Tuple.pair_type' failed: OOPS! Cannot find
    information for class "Read2" unsupported *)
@@ -190,11 +191,12 @@ Local Definition instance_forall____GHC_Base_Eq__a____Eq1__GHC_Tuple_pair_type_a
         inst_a) b -> bool :=
   fun {a} {b} => liftEq2 GHC.Base.op_zeze__.
 
-Instance instance_forall____GHC_Base_Eq__a____Eq1__GHC_Tuple_pair_type_a_ {a}
-                                                                          `{(GHC.Base.Eq_ a)} : Eq1 (GHC.Tuple.pair_type
-                                                                                                    a) := fun _ k =>
-    k (Eq1__Dict_Build (GHC.Tuple.pair_type a) (fun {a} {b} =>
-                         instance_forall____GHC_Base_Eq__a____Eq1__GHC_Tuple_pair_type_a__liftEq)).
+Program Instance instance_forall____GHC_Base_Eq__a____Eq1__GHC_Tuple_pair_type_a_ {a}
+                                                                                  `{(GHC.Base.Eq_ a)} : Eq1
+                                                                                                        (GHC.Tuple.pair_type
+                                                                                                        a) := fun _ k =>
+    k {|liftEq__ := fun {a} {b} =>
+        instance_forall____GHC_Base_Eq__a____Eq1__GHC_Tuple_pair_type_a__liftEq |}.
 
 Local Definition instance_forall____GHC_Base_Ord_a____Ord1__GHC_Tuple_pair_type_a__liftCompare {inst_a}
                                                                                                `{(GHC.Base.Ord inst_a)}
@@ -203,12 +205,13 @@ Local Definition instance_forall____GHC_Base_Ord_a____Ord1__GHC_Tuple_pair_type_
         inst_a) b -> comparison :=
   fun {a} {b} => liftCompare2 GHC.Base.compare.
 
-Instance instance_forall____GHC_Base_Ord_a____Ord1__GHC_Tuple_pair_type_a_ {a}
-                                                                           `{(GHC.Base.Ord a)} : Ord1
-                                                                                                 (GHC.Tuple.pair_type
-                                                                                                 a) := fun _ k =>
-    k (Ord1__Dict_Build (GHC.Tuple.pair_type a) (fun {a} {b} =>
-                          instance_forall____GHC_Base_Ord_a____Ord1__GHC_Tuple_pair_type_a__liftCompare)).
+Program Instance instance_forall____GHC_Base_Ord_a____Ord1__GHC_Tuple_pair_type_a_ {a}
+                                                                                   `{(GHC.Base.Ord a)} : Ord1
+                                                                                                         (GHC.Tuple.pair_type
+                                                                                                         a) := fun _
+                                                                                                                   k =>
+    k {|liftCompare__ := fun {a} {b} =>
+        instance_forall____GHC_Base_Ord_a____Ord1__GHC_Tuple_pair_type_a__liftCompare |}.
 
 (* Translating `instance forall {a}, forall `{(GHC.Read.Read a)}, Read1
    (GHC.Tuple.pair_type a)' failed: OOPS! Cannot find information for class "Read1"
@@ -229,8 +232,8 @@ Local Definition instance_Eq2_sum_liftEq2 : forall {a} {b} {c} {d},
         | _ , e2 , inr x , inr y => e2 x y
       end.
 
-Instance instance_Eq2_sum : Eq2 sum := fun _ k =>
-    k (Eq2__Dict_Build sum (fun {a} {b} {c} {d} => instance_Eq2_sum_liftEq2)).
+Program Instance instance_Eq2_sum : Eq2 sum := fun _ k =>
+    k {|liftEq2__ := fun {a} {b} {c} {d} => instance_Eq2_sum_liftEq2 |}.
 
 Local Definition instance_Ord2_sum_liftCompare2 : forall {a} {b} {c} {d},
                                                     (a -> b -> comparison) -> (c -> d -> comparison) -> sum a c -> sum b
@@ -244,9 +247,8 @@ Local Definition instance_Ord2_sum_liftCompare2 : forall {a} {b} {c} {d},
         | _ , comp2 , inr x , inr y => comp2 x y
       end.
 
-Instance instance_Ord2_sum : Ord2 sum := fun _ k =>
-    k (Ord2__Dict_Build sum (fun {a} {b} {c} {d} =>
-                          instance_Ord2_sum_liftCompare2)).
+Program Instance instance_Ord2_sum : Ord2 sum := fun _ k =>
+    k {|liftCompare2__ := fun {a} {b} {c} {d} => instance_Ord2_sum_liftCompare2 |}.
 
 (* Translating `instance Read2 sum' failed: OOPS! Cannot find information for
    class "Read2" unsupported *)
@@ -262,10 +264,10 @@ Local Definition instance_forall____GHC_Base_Eq__a____Eq1__sum_a__liftEq {inst_a
                                                                                                       b -> bool :=
   fun {a} {b} => liftEq2 GHC.Base.op_zeze__.
 
-Instance instance_forall____GHC_Base_Eq__a____Eq1__sum_a_ {a} `{(GHC.Base.Eq_
-                                                          a)} : Eq1 (sum a) := fun _ k =>
-    k (Eq1__Dict_Build (sum a) (fun {a} {b} =>
-                         instance_forall____GHC_Base_Eq__a____Eq1__sum_a__liftEq)).
+Program Instance instance_forall____GHC_Base_Eq__a____Eq1__sum_a_ {a}
+                                                                  `{(GHC.Base.Eq_ a)} : Eq1 (sum a) := fun _ k =>
+    k {|liftEq__ := fun {a} {b} =>
+        instance_forall____GHC_Base_Eq__a____Eq1__sum_a__liftEq |}.
 
 Local Definition instance_forall____GHC_Base_Ord_a____Ord1__sum_a__liftCompare {inst_a}
                                                                                `{(GHC.Base.Ord inst_a)} : forall {a}
@@ -277,10 +279,10 @@ Local Definition instance_forall____GHC_Base_Ord_a____Ord1__sum_a__liftCompare {
                                                                                                             b -> comparison :=
   fun {a} {b} => liftCompare2 GHC.Base.compare.
 
-Instance instance_forall____GHC_Base_Ord_a____Ord1__sum_a_ {a} `{(GHC.Base.Ord
-                                                           a)} : Ord1 (sum a) := fun _ k =>
-    k (Ord1__Dict_Build (sum a) (fun {a} {b} =>
-                          instance_forall____GHC_Base_Ord_a____Ord1__sum_a__liftCompare)).
+Program Instance instance_forall____GHC_Base_Ord_a____Ord1__sum_a_ {a}
+                                                                   `{(GHC.Base.Ord a)} : Ord1 (sum a) := fun _ k =>
+    k {|liftCompare__ := fun {a} {b} =>
+        instance_forall____GHC_Base_Ord_a____Ord1__sum_a__liftCompare |}.
 
 (* Translating `instance forall {a}, forall `{(GHC.Read.Read a)}, Read1 (sum a)'
    failed: OOPS! Cannot find information for class "Read1" unsupported *)
@@ -299,10 +301,10 @@ Local Definition instance_Eq1_Data_Functor_Identity_Identity_liftEq : forall {a}
           y => eq x y
       end.
 
-Instance instance_Eq1_Data_Functor_Identity_Identity : Eq1
-                                                       Data.Functor.Identity.Identity := fun _ k =>
-    k (Eq1__Dict_Build Data.Functor.Identity.Identity (fun {a} {b} =>
-                         instance_Eq1_Data_Functor_Identity_Identity_liftEq)).
+Program Instance instance_Eq1_Data_Functor_Identity_Identity : Eq1
+                                                               Data.Functor.Identity.Identity := fun _ k =>
+    k {|liftEq__ := fun {a} {b} =>
+        instance_Eq1_Data_Functor_Identity_Identity_liftEq |}.
 
 Local Definition instance_Ord1_Data_Functor_Identity_Identity_liftCompare
     : forall {a} {b},
@@ -315,10 +317,10 @@ Local Definition instance_Ord1_Data_Functor_Identity_Identity_liftCompare
           y => comp x y
       end.
 
-Instance instance_Ord1_Data_Functor_Identity_Identity : Ord1
-                                                        Data.Functor.Identity.Identity := fun _ k =>
-    k (Ord1__Dict_Build Data.Functor.Identity.Identity (fun {a} {b} =>
-                          instance_Ord1_Data_Functor_Identity_Identity_liftCompare)).
+Program Instance instance_Ord1_Data_Functor_Identity_Identity : Ord1
+                                                                Data.Functor.Identity.Identity := fun _ k =>
+    k {|liftCompare__ := fun {a} {b} =>
+        instance_Ord1_Data_Functor_Identity_Identity_liftCompare |}.
 
 (* Translating `instance Read1 Data.Functor.Identity.Identity' failed: OOPS!
    Cannot find information for class "Read1" unsupported *)
@@ -339,10 +341,10 @@ Local Definition instance_Eq2_Data_Functor_Const_Const_liftEq2 : forall {a}
                                                                                     y
       end.
 
-Instance instance_Eq2_Data_Functor_Const_Const : Eq2 Data.Functor.Const.Const :=
-  fun _ k =>
-    k (Eq2__Dict_Build Data.Functor.Const.Const (fun {a} {b} {c} {d} =>
-                         instance_Eq2_Data_Functor_Const_Const_liftEq2)).
+Program Instance instance_Eq2_Data_Functor_Const_Const : Eq2
+                                                         Data.Functor.Const.Const := fun _ k =>
+    k {|liftEq2__ := fun {a} {b} {c} {d} =>
+        instance_Eq2_Data_Functor_Const_Const_liftEq2 |}.
 
 Local Definition instance_Ord2_Data_Functor_Const_Const_liftCompare2
     : forall {a} {b} {c} {d},
@@ -355,10 +357,10 @@ Local Definition instance_Ord2_Data_Functor_Const_Const_liftCompare2
           comp x y
       end.
 
-Instance instance_Ord2_Data_Functor_Const_Const : Ord2
-                                                  Data.Functor.Const.Const := fun _ k =>
-    k (Ord2__Dict_Build Data.Functor.Const.Const (fun {a} {b} {c} {d} =>
-                          instance_Ord2_Data_Functor_Const_Const_liftCompare2)).
+Program Instance instance_Ord2_Data_Functor_Const_Const : Ord2
+                                                          Data.Functor.Const.Const := fun _ k =>
+    k {|liftCompare2__ := fun {a} {b} {c} {d} =>
+        instance_Ord2_Data_Functor_Const_Const_liftCompare2 |}.
 
 (* Translating `instance Read2 Data.Functor.Const.Const' failed: OOPS! Cannot
    find information for class "Read2" unsupported *)
@@ -373,12 +375,13 @@ Local Definition instance_forall____GHC_Base_Eq__a____Eq1__Data_Functor_Const_Co
         a -> (Data.Functor.Const.Const inst_a) b -> bool :=
   fun {a} {b} => liftEq2 GHC.Base.op_zeze__.
 
-Instance instance_forall____GHC_Base_Eq__a____Eq1__Data_Functor_Const_Const_a_ {a}
-                                                                               `{(GHC.Base.Eq_ a)} : Eq1
-                                                                                                     (Data.Functor.Const.Const
-                                                                                                     a) := fun _ k =>
-    k (Eq1__Dict_Build (Data.Functor.Const.Const a) (fun {a} {b} =>
-                         instance_forall____GHC_Base_Eq__a____Eq1__Data_Functor_Const_Const_a__liftEq)).
+Program Instance instance_forall____GHC_Base_Eq__a____Eq1__Data_Functor_Const_Const_a_ {a}
+                                                                                       `{(GHC.Base.Eq_ a)} : Eq1
+                                                                                                             (Data.Functor.Const.Const
+                                                                                                             a) := fun _
+                                                                                                                       k =>
+    k {|liftEq__ := fun {a} {b} =>
+        instance_forall____GHC_Base_Eq__a____Eq1__Data_Functor_Const_Const_a__liftEq |}.
 
 Local Definition instance_forall____GHC_Base_Ord_a____Ord1__Data_Functor_Const_Const_a__liftCompare {inst_a}
                                                                                                     `{(GHC.Base.Ord
@@ -388,12 +391,13 @@ Local Definition instance_forall____GHC_Base_Ord_a____Ord1__Data_Functor_Const_C
         a -> (Data.Functor.Const.Const inst_a) b -> comparison :=
   fun {a} {b} => liftCompare2 GHC.Base.compare.
 
-Instance instance_forall____GHC_Base_Ord_a____Ord1__Data_Functor_Const_Const_a_ {a}
-                                                                                `{(GHC.Base.Ord a)} : Ord1
-                                                                                                      (Data.Functor.Const.Const
-                                                                                                      a) := fun _ k =>
-    k (Ord1__Dict_Build (Data.Functor.Const.Const a) (fun {a} {b} =>
-                          instance_forall____GHC_Base_Ord_a____Ord1__Data_Functor_Const_Const_a__liftCompare)).
+Program Instance instance_forall____GHC_Base_Ord_a____Ord1__Data_Functor_Const_Const_a_ {a}
+                                                                                        `{(GHC.Base.Ord a)} : Ord1
+                                                                                                              (Data.Functor.Const.Const
+                                                                                                              a) :=
+  fun _ k =>
+    k {|liftCompare__ := fun {a} {b} =>
+        instance_forall____GHC_Base_Ord_a____Ord1__Data_Functor_Const_Const_a__liftCompare |}.
 
 (* Translating `instance forall {a}, forall `{(GHC.Read.Read a)}, Read1
    (Data.Functor.Const.Const a)' failed: OOPS! Cannot find information for class
@@ -408,18 +412,19 @@ Local Definition instance_Eq1_Data_Proxy_Proxy_liftEq : forall {a} {b},
                                                           b -> bool :=
   fun {a} {b} => fun arg_7__ arg_8__ arg_9__ => true.
 
-Instance instance_Eq1_Data_Proxy_Proxy : Eq1 Data.Proxy.Proxy := fun _ k =>
-    k (Eq1__Dict_Build Data.Proxy.Proxy (fun {a} {b} =>
-                         instance_Eq1_Data_Proxy_Proxy_liftEq)).
+Program Instance instance_Eq1_Data_Proxy_Proxy : Eq1 Data.Proxy.Proxy := fun _
+                                                                             k =>
+    k {|liftEq__ := fun {a} {b} => instance_Eq1_Data_Proxy_Proxy_liftEq |}.
 
 Local Definition instance_Ord1_Data_Proxy_Proxy_liftCompare : forall {a} {b},
                                                                 (a -> b -> comparison) -> Data.Proxy.Proxy
                                                                 a -> Data.Proxy.Proxy b -> comparison :=
   fun {a} {b} => fun arg_4__ arg_5__ arg_6__ => Eq.
 
-Instance instance_Ord1_Data_Proxy_Proxy : Ord1 Data.Proxy.Proxy := fun _ k =>
-    k (Ord1__Dict_Build Data.Proxy.Proxy (fun {a} {b} =>
-                          instance_Ord1_Data_Proxy_Proxy_liftCompare)).
+Program Instance instance_Ord1_Data_Proxy_Proxy : Ord1 Data.Proxy.Proxy := fun _
+                                                                               k =>
+    k {|liftCompare__ := fun {a} {b} =>
+        instance_Ord1_Data_Proxy_Proxy_liftCompare |}.
 
 (* Translating `instance Show1 Data.Proxy.Proxy' failed: OOPS! Cannot find
    information for class "Show1" unsupported *)

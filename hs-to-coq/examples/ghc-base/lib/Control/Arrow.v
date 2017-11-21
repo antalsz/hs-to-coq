@@ -7,6 +7,7 @@ Set Maximal Implicit Insertion.
 Unset Strict Implicit.
 Unset Printing Implicit Defensive.
 
+Require Coq.Program.Tactics.
 Require Coq.Program.Wf.
 
 (* Preamble *)
@@ -204,13 +205,15 @@ Local Definition instance_Arrow_GHC_Prim_arrow_op_zazaza__ : forall {b}
                                                 (instance_Arrow_GHC_Prim_arrow_op_ztztzt__ f g)
       end.
 
-Instance instance_Arrow_GHC_Prim_arrow : Arrow GHC.Prim.arrow := fun _ k =>
-    k (Arrow__Dict_Build GHC.Prim.arrow (fun {b} {c} {c'} =>
-                           instance_Arrow_GHC_Prim_arrow_op_zazaza__) (fun {b} {c} {b'} {c'} =>
-                           instance_Arrow_GHC_Prim_arrow_op_ztztzt__) (fun {b} {c} =>
-                           instance_Arrow_GHC_Prim_arrow_arr) (fun {b} {c} {d} =>
-                           instance_Arrow_GHC_Prim_arrow_first) (fun {b} {c} {d} =>
-                           instance_Arrow_GHC_Prim_arrow_second)).
+Program Instance instance_Arrow_GHC_Prim_arrow : Arrow GHC.Prim.arrow := fun _
+                                                                             k =>
+    k {|op_zazaza____ := fun {b} {c} {c'} =>
+        instance_Arrow_GHC_Prim_arrow_op_zazaza__ ;
+      op_ztztzt____ := fun {b} {c} {b'} {c'} =>
+        instance_Arrow_GHC_Prim_arrow_op_ztztzt__ ;
+      arr__ := fun {b} {c} => instance_Arrow_GHC_Prim_arrow_arr ;
+      first__ := fun {b} {c} {d} => instance_Arrow_GHC_Prim_arrow_first ;
+      second__ := fun {b} {c} {d} => instance_Arrow_GHC_Prim_arrow_second |}.
 
 (* Skipping instance
    instance_forall___GHC_Base_Monad_m___Control_Category_Category__Kleisli_m_ *)
@@ -232,10 +235,9 @@ Local Definition instance_ArrowApply_GHC_Prim_arrow_app : forall {b} {c},
                                                             GHC.Prim.arrow (GHC.Prim.arrow b c * b) c :=
   fun {b} {c} => fun arg_99__ => match arg_99__ with | pair f x => f x end.
 
-Instance instance_ArrowApply_GHC_Prim_arrow : ArrowApply GHC.Prim.arrow := fun _
-                                                                               k =>
-    k (ArrowApply__Dict_Build GHC.Prim.arrow (fun {b} {c} =>
-                                instance_ArrowApply_GHC_Prim_arrow_app)).
+Program Instance instance_ArrowApply_GHC_Prim_arrow : ArrowApply
+                                                      GHC.Prim.arrow := fun _ k =>
+    k {|app__ := fun {b} {c} => instance_ArrowApply_GHC_Prim_arrow_app |}.
 
 (* Skipping instance
    instance_forall___GHC_Base_Monad_m___ArrowApply__Kleisli_m_ *)
@@ -264,12 +266,14 @@ Local Definition instance_forall___Arrow_a___GHC_Base_Functor__ArrowMonad_a__op_
       instance_forall___Arrow_a___GHC_Base_Functor__ArrowMonad_a__fmap (GHC.Base.const
                                                                        x).
 
-Instance instance_forall___Arrow_a___GHC_Base_Functor__ArrowMonad_a_ {a} `{Arrow
-                                                                     a} : GHC.Base.Functor (ArrowMonad a) := fun _ k =>
-    k (GHC.Base.Functor__Dict_Build (ArrowMonad a) (fun {a} {b} =>
-                                      instance_forall___Arrow_a___GHC_Base_Functor__ArrowMonad_a__op_zlzd__) (fun {a}
-                                                                                                                  {b} =>
-                                      instance_forall___Arrow_a___GHC_Base_Functor__ArrowMonad_a__fmap)).
+Program Instance instance_forall___Arrow_a___GHC_Base_Functor__ArrowMonad_a_ {a}
+                                                                             `{Arrow a} : GHC.Base.Functor (ArrowMonad
+                                                                                                           a) := fun _
+                                                                                                                     k =>
+    k {|GHC.Base.op_zlzd____ := fun {a} {b} =>
+        instance_forall___Arrow_a___GHC_Base_Functor__ArrowMonad_a__op_zlzd__ ;
+      GHC.Base.fmap__ := fun {a} {b} =>
+        instance_forall___Arrow_a___GHC_Base_Functor__ArrowMonad_a__fmap |}.
 
 (* Skipping instance
    instance_forall___Arrow_a___GHC_Base_Applicative__ArrowMonad_a_ *)
@@ -337,6 +341,6 @@ Definition returnA {a} {b} `{Arrow a} : a b b :=
 
 (* Unbound variables:
      * Control.Category.Category Control.Category.id Control.Category.op_zgzgzg__
-     Control.Category.op_zlzlzl__ GHC.Base.Functor GHC.Base.Functor__Dict_Build
-     GHC.Base.const GHC.Base.op_zd__ GHC.Prim.arrow Type pair sum unit
+     Control.Category.op_zlzlzl__ GHC.Base.Functor GHC.Base.const GHC.Base.op_zd__
+     GHC.Prim.arrow Type pair sum unit
 *)

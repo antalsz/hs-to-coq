@@ -7,6 +7,7 @@ Set Maximal Implicit Insertion.
 Unset Strict Implicit.
 Unset Printing Implicit Defensive.
 
+Require Coq.Program.Tactics.
 Require Coq.Program.Wf.
 
 (* Preamble *)
@@ -27,9 +28,9 @@ Local Definition instance_GHC_Base_Eq__Void_op_zeze__ : Void -> Void -> bool :=
 Local Definition instance_GHC_Base_Eq__Void_op_zsze__ : Void -> Void -> bool :=
   fun x y => negb (instance_GHC_Base_Eq__Void_op_zeze__ x y).
 
-Instance instance_GHC_Base_Eq__Void : GHC.Base.Eq_ Void := fun _ k =>
-    k (GHC.Base.Eq___Dict_Build Void instance_GHC_Base_Eq__Void_op_zeze__
-                                instance_GHC_Base_Eq__Void_op_zsze__).
+Program Instance instance_GHC_Base_Eq__Void : GHC.Base.Eq_ Void := fun _ k =>
+    k {|GHC.Base.op_zeze____ := instance_GHC_Base_Eq__Void_op_zeze__ ;
+      GHC.Base.op_zsze____ := instance_GHC_Base_Eq__Void_op_zsze__ |}.
 
 Local Definition instance_GHC_Base_Ord_Void_compare
     : Void -> Void -> comparison :=
@@ -53,11 +54,14 @@ Local Definition instance_GHC_Base_Ord_Void_max : Void -> Void -> Void :=
 Local Definition instance_GHC_Base_Ord_Void_min : Void -> Void -> Void :=
   fun x y => if instance_GHC_Base_Ord_Void_op_zlze__ x y : bool then x else y.
 
-Instance instance_GHC_Base_Ord_Void : GHC.Base.Ord Void := fun _ k =>
-    k (GHC.Base.Ord__Dict_Build Void instance_GHC_Base_Ord_Void_op_zl__
-                                instance_GHC_Base_Ord_Void_op_zlze__ instance_GHC_Base_Ord_Void_op_zg__
-                                instance_GHC_Base_Ord_Void_op_zgze__ instance_GHC_Base_Ord_Void_compare
-                                instance_GHC_Base_Ord_Void_max instance_GHC_Base_Ord_Void_min).
+Program Instance instance_GHC_Base_Ord_Void : GHC.Base.Ord Void := fun _ k =>
+    k {|GHC.Base.op_zl____ := instance_GHC_Base_Ord_Void_op_zl__ ;
+      GHC.Base.op_zlze____ := instance_GHC_Base_Ord_Void_op_zlze__ ;
+      GHC.Base.op_zg____ := instance_GHC_Base_Ord_Void_op_zg__ ;
+      GHC.Base.op_zgze____ := instance_GHC_Base_Ord_Void_op_zgze__ ;
+      GHC.Base.compare__ := instance_GHC_Base_Ord_Void_compare ;
+      GHC.Base.max__ := instance_GHC_Base_Ord_Void_max ;
+      GHC.Base.min__ := instance_GHC_Base_Ord_Void_min |}.
 
 (* Skipping instance instance_GHC_Read_Read_Void *)
 
@@ -79,7 +83,6 @@ Definition vacuous {f} {a} `{GHC.Base.Functor f} : f Void -> f a :=
   GHC.Base.fmap absurd.
 
 (* Unbound variables:
-     Eq GHC.Base.Eq_ GHC.Base.Eq___Dict_Build GHC.Base.Functor GHC.Base.Ord
-     GHC.Base.Ord__Dict_Build GHC.Base.fmap Gt Lt bool comparison negb op_zeze__
-     op_zsze__ true
+     Eq GHC.Base.Eq_ GHC.Base.Functor GHC.Base.Ord GHC.Base.fmap Gt Lt bool
+     comparison negb op_zeze__ op_zsze__ true
 *)

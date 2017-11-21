@@ -7,6 +7,7 @@ Set Maximal Implicit Insertion.
 Unset Strict Implicit.
 Unset Printing Implicit Defensive.
 
+Require Coq.Program.Tactics.
 Require Coq.Program.Wf.
 
 (* Converted imports: *)
@@ -31,15 +32,15 @@ Local Definition instance_MonadFail_option_fail : forall {a},
                                                     GHC.Base.String -> option a :=
   fun {a} => fun arg_1__ => None.
 
-Instance instance_MonadFail_option : MonadFail option := fun _ k =>
-    k (MonadFail__Dict_Build option (fun {a} => instance_MonadFail_option_fail)).
+Program Instance instance_MonadFail_option : MonadFail option := fun _ k =>
+    k {|fail__ := fun {a} => instance_MonadFail_option_fail |}.
 
 Local Definition instance_MonadFail_list_fail : forall {a},
                                                   GHC.Base.String -> list a :=
   fun {a} => fun arg_0__ => nil.
 
-Instance instance_MonadFail_list : MonadFail list := fun _ k =>
-    k (MonadFail__Dict_Build list (fun {a} => instance_MonadFail_list_fail)).
+Program Instance instance_MonadFail_list : MonadFail list := fun _ k =>
+    k {|fail__ := fun {a} => instance_MonadFail_list_fail |}.
 
 (* Skipping instance instance_MonadFail_GHC_Types_IO *)
 

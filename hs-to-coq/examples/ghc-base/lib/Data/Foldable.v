@@ -7,6 +7,7 @@ Set Maximal Implicit Insertion.
 Unset Strict Implicit.
 Unset Printing Implicit Defensive.
 
+Require Coq.Program.Tactics.
 Require Coq.Program.Wf.
 
 (* Preamble *)
@@ -168,17 +169,20 @@ Local Definition instance_Foldable_list_sum : forall {a},
 Local Definition instance_Foldable_list_toList : forall {a}, list a -> list a :=
   fun {a} => GHC.Base.id.
 
-Instance instance_Foldable_list : Foldable list := fun _ k =>
-    k (Foldable__Dict_Build list (fun {a} `{GHC.Base.Eq_ a} =>
-                              instance_Foldable_list_elem) (fun {m} `{GHC.Base.Monoid m} =>
-                              instance_Foldable_list_fold) (fun {m} {a} `{GHC.Base.Monoid m} =>
-                              instance_Foldable_list_foldMap) (fun {b} {a} => instance_Foldable_list_foldl)
-                            (fun {b} {a} => instance_Foldable_list_foldl') (fun {a} {b} =>
-                              instance_Foldable_list_foldr) (fun {a} {b} => instance_Foldable_list_foldr')
-                            (fun {a} => instance_Foldable_list_length) (fun {a} =>
-                              instance_Foldable_list_null) (fun {a} `{GHC.Num.Num a} =>
-                              instance_Foldable_list_product) (fun {a} `{GHC.Num.Num a} =>
-                              instance_Foldable_list_sum) (fun {a} => instance_Foldable_list_toList)).
+Program Instance instance_Foldable_list : Foldable list := fun _ k =>
+    k {|elem__ := fun {a} `{GHC.Base.Eq_ a} => instance_Foldable_list_elem ;
+      fold__ := fun {m} `{GHC.Base.Monoid m} => instance_Foldable_list_fold ;
+      foldMap__ := fun {m} {a} `{GHC.Base.Monoid m} =>
+        instance_Foldable_list_foldMap ;
+      foldl__ := fun {b} {a} => instance_Foldable_list_foldl ;
+      foldl'__ := fun {b} {a} => instance_Foldable_list_foldl' ;
+      foldr__ := fun {a} {b} => instance_Foldable_list_foldr ;
+      foldr'__ := fun {a} {b} => instance_Foldable_list_foldr' ;
+      length__ := fun {a} => instance_Foldable_list_length ;
+      null__ := fun {a} => instance_Foldable_list_null ;
+      product__ := fun {a} `{GHC.Num.Num a} => instance_Foldable_list_product ;
+      sum__ := fun {a} `{GHC.Num.Num a} => instance_Foldable_list_sum ;
+      toList__ := fun {a} => instance_Foldable_list_toList |}.
 
 (* Skipping instance instance_Foldable__sum_a_ *)
 
@@ -269,21 +273,24 @@ Local Definition instance_Foldable_Data_Proxy_Proxy_sum : forall {a},
                                                             forall `{GHC.Num.Num a}, Data.Proxy.Proxy a -> a :=
   fun {a} `{GHC.Num.Num a} => fun arg_410__ => GHC.Num.fromInteger 0.
 
-Instance instance_Foldable_Data_Proxy_Proxy : Foldable Data.Proxy.Proxy := fun _
-                                                                               k =>
-    k (Foldable__Dict_Build Data.Proxy.Proxy (fun {a} `{GHC.Base.Eq_ a} =>
-                              instance_Foldable_Data_Proxy_Proxy_elem) (fun {m} `{GHC.Base.Monoid m} =>
-                              instance_Foldable_Data_Proxy_Proxy_fold) (fun {m} {a} `{GHC.Base.Monoid m} =>
-                              instance_Foldable_Data_Proxy_Proxy_foldMap) (fun {b} {a} =>
-                              instance_Foldable_Data_Proxy_Proxy_foldl) (fun {b} {a} =>
-                              instance_Foldable_Data_Proxy_Proxy_foldl') (fun {a} {b} =>
-                              instance_Foldable_Data_Proxy_Proxy_foldr) (fun {a} {b} =>
-                              instance_Foldable_Data_Proxy_Proxy_foldr') (fun {a} =>
-                              instance_Foldable_Data_Proxy_Proxy_length) (fun {a} =>
-                              instance_Foldable_Data_Proxy_Proxy_null) (fun {a} `{GHC.Num.Num a} =>
-                              instance_Foldable_Data_Proxy_Proxy_product) (fun {a} `{GHC.Num.Num a} =>
-                              instance_Foldable_Data_Proxy_Proxy_sum) (fun {a} =>
-                              instance_Foldable_Data_Proxy_Proxy_toList)).
+Program Instance instance_Foldable_Data_Proxy_Proxy : Foldable
+                                                      Data.Proxy.Proxy := fun _ k =>
+    k {|elem__ := fun {a} `{GHC.Base.Eq_ a} =>
+        instance_Foldable_Data_Proxy_Proxy_elem ;
+      fold__ := fun {m} `{GHC.Base.Monoid m} =>
+        instance_Foldable_Data_Proxy_Proxy_fold ;
+      foldMap__ := fun {m} {a} `{GHC.Base.Monoid m} =>
+        instance_Foldable_Data_Proxy_Proxy_foldMap ;
+      foldl__ := fun {b} {a} => instance_Foldable_Data_Proxy_Proxy_foldl ;
+      foldl'__ := fun {b} {a} => instance_Foldable_Data_Proxy_Proxy_foldl' ;
+      foldr__ := fun {a} {b} => instance_Foldable_Data_Proxy_Proxy_foldr ;
+      foldr'__ := fun {a} {b} => instance_Foldable_Data_Proxy_Proxy_foldr' ;
+      length__ := fun {a} => instance_Foldable_Data_Proxy_Proxy_length ;
+      null__ := fun {a} => instance_Foldable_Data_Proxy_Proxy_null ;
+      product__ := fun {a} `{GHC.Num.Num a} =>
+        instance_Foldable_Data_Proxy_Proxy_product ;
+      sum__ := fun {a} `{GHC.Num.Num a} => instance_Foldable_Data_Proxy_Proxy_sum ;
+      toList__ := fun {a} => instance_Foldable_Data_Proxy_Proxy_toList |}.
 
 (* Skipping instance instance_Foldable_Data_Monoid_Dual *)
 

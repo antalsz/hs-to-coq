@@ -7,6 +7,7 @@ Set Maximal Implicit Insertion.
 Unset Strict Implicit.
 Unset Printing Implicit Defensive.
 
+Require Coq.Program.Tactics.
 Require Coq.Program.Wf.
 
 (* Preamble *)
@@ -106,15 +107,15 @@ Local Definition instance_Traversable_option_mapM : forall {m} {a} {b},
                                                         (a -> m b) -> option a -> m (option b) :=
   fun {m} {a} {b} `{GHC.Base.Monad m} => instance_Traversable_option_traverse.
 
-Instance instance_Traversable_option : Traversable option := fun _ k =>
-    k (Traversable__Dict_Build option (fun {m} {a} {b} `{GHC.Base.Monad m} =>
-                                 instance_Traversable_option_mapM) (fun {m} {a} `{GHC.Base.Monad m} =>
-                                 instance_Traversable_option_sequence) (fun {f} {a} `{GHC.Base.Applicative f} =>
-                                 instance_Traversable_option_sequenceA) (fun {f}
-                                                                             {a}
-                                                                             {b}
-                                                                             `{GHC.Base.Applicative f} =>
-                                 instance_Traversable_option_traverse)).
+Program Instance instance_Traversable_option : Traversable option := fun _ k =>
+    k {|mapM__ := fun {m} {a} {b} `{GHC.Base.Monad m} =>
+        instance_Traversable_option_mapM ;
+      sequence__ := fun {m} {a} `{GHC.Base.Monad m} =>
+        instance_Traversable_option_sequence ;
+      sequenceA__ := fun {f} {a} `{GHC.Base.Applicative f} =>
+        instance_Traversable_option_sequenceA ;
+      traverse__ := fun {f} {a} {b} `{GHC.Base.Applicative f} =>
+        instance_Traversable_option_traverse |}.
 
 Local Definition instance_Traversable_list_traverse : forall {f} {a} {b},
                                                         forall `{GHC.Base.Applicative f},
@@ -143,15 +144,15 @@ Local Definition instance_Traversable_list_mapM : forall {m} {a} {b},
                                                     forall `{GHC.Base.Monad m}, (a -> m b) -> list a -> m (list b) :=
   fun {m} {a} {b} `{GHC.Base.Monad m} => instance_Traversable_list_traverse.
 
-Instance instance_Traversable_list : Traversable list := fun _ k =>
-    k (Traversable__Dict_Build list (fun {m} {a} {b} `{GHC.Base.Monad m} =>
-                                 instance_Traversable_list_mapM) (fun {m} {a} `{GHC.Base.Monad m} =>
-                                 instance_Traversable_list_sequence) (fun {f} {a} `{GHC.Base.Applicative f} =>
-                                 instance_Traversable_list_sequenceA) (fun {f}
-                                                                           {a}
-                                                                           {b}
-                                                                           `{GHC.Base.Applicative f} =>
-                                 instance_Traversable_list_traverse)).
+Program Instance instance_Traversable_list : Traversable list := fun _ k =>
+    k {|mapM__ := fun {m} {a} {b} `{GHC.Base.Monad m} =>
+        instance_Traversable_list_mapM ;
+      sequence__ := fun {m} {a} `{GHC.Base.Monad m} =>
+        instance_Traversable_list_sequence ;
+      sequenceA__ := fun {f} {a} `{GHC.Base.Applicative f} =>
+        instance_Traversable_list_sequenceA ;
+      traverse__ := fun {f} {a} {b} `{GHC.Base.Applicative f} =>
+        instance_Traversable_list_traverse |}.
 
 (* Skipping instance instance_Traversable__sum_a_ *)
 
@@ -194,21 +195,16 @@ Local Definition instance_Traversable_Data_Proxy_Proxy_traverse : forall {f}
   fun {f} {a} {b} `{GHC.Base.Applicative f} =>
     fun arg_184__ arg_185__ => GHC.Base.pure Data.Proxy.Mk_Proxy.
 
-Instance instance_Traversable_Data_Proxy_Proxy : Traversable Data.Proxy.Proxy :=
-  fun _ k =>
-    k (Traversable__Dict_Build Data.Proxy.Proxy (fun {m}
-                                                     {a}
-                                                     {b}
-                                                     `{GHC.Base.Monad m} =>
-                                 instance_Traversable_Data_Proxy_Proxy_mapM) (fun {m} {a} `{GHC.Base.Monad m} =>
-                                 instance_Traversable_Data_Proxy_Proxy_sequence) (fun {f}
-                                                                                      {a}
-                                                                                      `{GHC.Base.Applicative f} =>
-                                 instance_Traversable_Data_Proxy_Proxy_sequenceA) (fun {f}
-                                                                                       {a}
-                                                                                       {b}
-                                                                                       `{GHC.Base.Applicative f} =>
-                                 instance_Traversable_Data_Proxy_Proxy_traverse)).
+Program Instance instance_Traversable_Data_Proxy_Proxy : Traversable
+                                                         Data.Proxy.Proxy := fun _ k =>
+    k {|mapM__ := fun {m} {a} {b} `{GHC.Base.Monad m} =>
+        instance_Traversable_Data_Proxy_Proxy_mapM ;
+      sequence__ := fun {m} {a} `{GHC.Base.Monad m} =>
+        instance_Traversable_Data_Proxy_Proxy_sequence ;
+      sequenceA__ := fun {f} {a} `{GHC.Base.Applicative f} =>
+        instance_Traversable_Data_Proxy_Proxy_sequenceA ;
+      traverse__ := fun {f} {a} {b} `{GHC.Base.Applicative f} =>
+        instance_Traversable_Data_Proxy_Proxy_traverse |}.
 
 (* Skipping instance instance_Traversable__Data_Functor_Const_Const_m_ *)
 
@@ -246,10 +242,11 @@ Local Definition instance_GHC_Base_Functor_Id_op_zlzd__ : forall {a} {b},
                                                             a -> Id b -> Id a :=
   fun {a} {b} => fun x => instance_GHC_Base_Functor_Id_fmap (GHC.Base.const x).
 
-Instance instance_GHC_Base_Functor_Id : GHC.Base.Functor Id := fun _ k =>
-    k (GHC.Base.Functor__Dict_Build Id (fun {a} {b} =>
-                                      instance_GHC_Base_Functor_Id_op_zlzd__) (fun {a} {b} =>
-                                      instance_GHC_Base_Functor_Id_fmap)).
+Program Instance instance_GHC_Base_Functor_Id : GHC.Base.Functor Id := fun _
+                                                                           k =>
+    k {|GHC.Base.op_zlzd____ := fun {a} {b} =>
+        instance_GHC_Base_Functor_Id_op_zlzd__ ;
+      GHC.Base.fmap__ := fun {a} {b} => instance_GHC_Base_Functor_Id_fmap |}.
 
 Local Definition instance_GHC_Base_Applicative_Id_op_zlztzg__ : forall {a} {b},
                                                                   Id (a -> b) -> Id a -> Id b :=
@@ -270,12 +267,13 @@ Local Definition instance_GHC_Base_Applicative_Id_pure : forall {a},
                                                            a -> Id a :=
   fun {a} => Mk_Id.
 
-Instance instance_GHC_Base_Applicative_Id : GHC.Base.Applicative Id := fun _
-                                                                           k =>
-    k (GHC.Base.Applicative__Dict_Build Id (fun {a} {b} =>
-                                          instance_GHC_Base_Applicative_Id_op_ztzg__) (fun {a} {b} =>
-                                          instance_GHC_Base_Applicative_Id_op_zlztzg__) (fun {a} =>
-                                          instance_GHC_Base_Applicative_Id_pure)).
+Program Instance instance_GHC_Base_Applicative_Id : GHC.Base.Applicative Id :=
+  fun _ k =>
+    k {|GHC.Base.op_ztzg____ := fun {a} {b} =>
+        instance_GHC_Base_Applicative_Id_op_ztzg__ ;
+      GHC.Base.op_zlztzg____ := fun {a} {b} =>
+        instance_GHC_Base_Applicative_Id_op_zlztzg__ ;
+      GHC.Base.pure__ := fun {a} => instance_GHC_Base_Applicative_Id_pure |}.
 
 (* Skipping instance instance_Traversable_GHC_Generics_V1 *)
 
@@ -329,8 +327,7 @@ Definition for_ {t} {f} {a} {b} `{Traversable t} `{GHC.Base.Applicative f} : t
 
 (* Unbound variables:
      * Coq.Program.Basics.compose Data.Foldable.Foldable Data.Functor.op_zlzdzg__
-     Data.Proxy.Mk_Proxy Data.Proxy.Proxy GHC.Base.Applicative
-     GHC.Base.Applicative__Dict_Build GHC.Base.Functor GHC.Base.Functor__Dict_Build
+     Data.Proxy.Mk_Proxy Data.Proxy.Proxy GHC.Base.Applicative GHC.Base.Functor
      GHC.Base.Monad GHC.Base.const GHC.Base.flip GHC.Base.fmap GHC.Base.foldr
      GHC.Base.id GHC.Base.op_zlztzg__ GHC.Base.pure Some cons list nil option
 *)

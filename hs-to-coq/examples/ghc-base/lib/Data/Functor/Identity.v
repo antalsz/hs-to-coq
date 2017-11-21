@@ -68,8 +68,8 @@ Local Definition instance_Data_Foldable_Foldable_Identity_foldr : forall {a}
                                                                          {b},
                                                                     (a -> b -> b) -> b -> Identity a -> b :=
   fun {a} {b} =>
-    fun arg_17__ arg_18__ arg_19__ =>
-      match arg_17__ , arg_18__ , arg_19__ with
+    fun arg_29__ arg_30__ arg_31__ =>
+      match arg_29__ , arg_30__ , arg_31__ with
         | f , z , Mk_Identity x => f x z
       end.
 
@@ -80,11 +80,11 @@ Local Definition instance_Data_Foldable_Foldable_Identity_foldr' : forall {a}
 
 Local Definition instance_Data_Foldable_Foldable_Identity_length : forall {a},
                                                                      Identity a -> GHC.Num.Int :=
-  fun {a} => fun arg_23__ => GHC.Num.fromInteger 1.
+  fun {a} => fun arg_35__ => GHC.Num.fromInteger 1.
 
 Local Definition instance_Data_Foldable_Foldable_Identity_null : forall {a},
                                                                    Identity a -> bool :=
-  fun {a} => fun arg_26__ => false.
+  fun {a} => fun arg_38__ => false.
 
 Local Definition instance_Data_Foldable_Foldable_Identity_product : forall {a},
                                                                       forall `{GHC.Num.Num a}, Identity a -> a :=
@@ -97,7 +97,7 @@ Local Definition instance_Data_Foldable_Foldable_Identity_sum : forall {a},
 Local Definition instance_Data_Foldable_Foldable_Identity_toList : forall {a},
                                                                      Identity a -> list a :=
   fun {a} =>
-    fun arg_27__ => match arg_27__ with | Mk_Identity x => cons x nil end.
+    fun arg_39__ => match arg_39__ with | Mk_Identity x => cons x nil end.
 
 Local Definition instance_GHC_Base_Functor_Identity_fmap : forall {a} {b},
                                                              (a -> b) -> Identity a -> Identity b :=
@@ -145,8 +145,8 @@ Local Definition instance_GHC_Base_Monad_Identity_op_zgzg__ : forall {a} {b},
 Local Definition instance_GHC_Base_Monad_Identity_op_zgzgze__ : forall {a} {b},
                                                                   Identity a -> (a -> Identity b) -> Identity b :=
   fun {a} {b} =>
-    fun arg_10__ arg_11__ =>
-      match arg_10__ , arg_11__ with
+    fun arg_22__ arg_23__ =>
+      match arg_22__ , arg_23__ with
         | m , k => k (runIdentity m)
       end.
 
@@ -171,10 +171,10 @@ Local Definition instance_Data_Traversable_Traversable_Identity_traverse
     : forall {f} {a} {b},
         forall `{GHC.Base.Applicative f}, (a -> f b) -> Identity a -> f (Identity b) :=
   fun {f} {a} {b} `{GHC.Base.Applicative f} =>
-    fun arg_3__ arg_4__ =>
-      match arg_3__ , arg_4__ with
-        | f , Mk_Identity a1 => GHC.Base.fmap (fun arg_5__ =>
-                                                match arg_5__ with
+    fun arg_15__ arg_16__ =>
+      match arg_15__ , arg_16__ with
+        | f , Mk_Identity a1 => GHC.Base.fmap (fun arg_17__ =>
+                                                match arg_17__ with
                                                   | b1 => Mk_Identity b1
                                                 end) (f a1)
       end.
@@ -198,37 +198,106 @@ Local Definition instance_Data_Traversable_Traversable_Identity_mapM
     instance_Data_Traversable_Traversable_Identity_traverse.
 
 (* Translating `instance forall {a}, forall `{Foreign.Storable.Storable a},
-   Foreign.Storable.Storable (Identity a)' failed: type applications unsupported *)
+   Foreign.Storable.Storable (Identity a)' failed: OOPS! Cannot find information
+   for class "Foreign.Storable.Storable" unsupported *)
 
 (* Translating `instance forall {a}, forall `{Data.Semigroup.Semigroup a},
-   Data.Semigroup.Semigroup (Identity a)' failed: type applications unsupported *)
+   Data.Semigroup.Semigroup (Identity a)' failed: OOPS! Cannot find information for
+   class "Data.Semigroup.Semigroup" unsupported *)
 
 (* Translating `instance forall {a}, forall `{GHC.Float.RealFloat a},
-   GHC.Float.RealFloat (Identity a)' failed: type applications unsupported *)
+   GHC.Float.RealFloat (Identity a)' failed: OOPS! Cannot find information for
+   class "GHC.Float.RealFloat" unsupported *)
 
 (* Translating `instance forall {a}, forall `{GHC.Real.RealFrac a},
-   GHC.Real.RealFrac (Identity a)' failed: type applications unsupported *)
+   GHC.Real.RealFrac (Identity a)' failed: OOPS! Cannot find information for class
+   "GHC.Real.RealFrac" unsupported *)
 
 (* Translating `instance forall {a}, forall `{GHC.Real.Real a}, GHC.Real.Real
-   (Identity a)' failed: type applications unsupported *)
+   (Identity a)' failed: OOPS! Cannot find information for class "GHC.Real.Real"
+   unsupported *)
 
-(* Translating `instance forall {a}, forall `{GHC.Base.Ord a}, GHC.Base.Ord
-   (Identity a)' failed: type applications unsupported *)
+Local Definition instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Identity_a__compare {inst_a}
+                                                                                      `{GHC.Base.Ord inst_a} : Identity
+                                                                                                               inst_a -> Identity
+                                                                                                               inst_a -> comparison :=
+  GHC.Prim.coerce GHC.Base.compare.
+
+Local Definition instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Identity_a__max {inst_a}
+                                                                                  `{GHC.Base.Ord inst_a} : Identity
+                                                                                                           inst_a -> Identity
+                                                                                                           inst_a -> Identity
+                                                                                                           inst_a :=
+  GHC.Prim.coerce GHC.Base.max.
+
+Local Definition instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Identity_a__min {inst_a}
+                                                                                  `{GHC.Base.Ord inst_a} : Identity
+                                                                                                           inst_a -> Identity
+                                                                                                           inst_a -> Identity
+                                                                                                           inst_a :=
+  GHC.Prim.coerce GHC.Base.min.
+
+Local Definition instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Identity_a__op_zg__ {inst_a}
+                                                                                      `{GHC.Base.Ord inst_a} : Identity
+                                                                                                               inst_a -> Identity
+                                                                                                               inst_a -> bool :=
+  GHC.Prim.coerce GHC.Base.op_zg__.
+
+Local Definition instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Identity_a__op_zgze__ {inst_a}
+                                                                                        `{GHC.Base.Ord inst_a}
+    : Identity inst_a -> Identity inst_a -> bool :=
+  GHC.Prim.coerce GHC.Base.op_zgze__.
+
+Local Definition instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Identity_a__op_zl__ {inst_a}
+                                                                                      `{GHC.Base.Ord inst_a} : Identity
+                                                                                                               inst_a -> Identity
+                                                                                                               inst_a -> bool :=
+  GHC.Prim.coerce GHC.Base.op_zl__.
+
+Local Definition instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Identity_a__op_zlze__ {inst_a}
+                                                                                        `{GHC.Base.Ord inst_a}
+    : Identity inst_a -> Identity inst_a -> bool :=
+  GHC.Prim.coerce GHC.Base.op_zlze__.
 
 (* Translating `instance forall {a}, forall `{GHC.Num.Num a}, GHC.Num.Num
-   (Identity a)' failed: type applications unsupported *)
+   (Identity a)' failed: OOPS! Cannot find information for class "GHC.Num.Num"
+   unsupported *)
 
-(* Translating `instance forall {a}, forall `{GHC.Base.Monoid a},
-   GHC.Base.Monoid (Identity a)' failed: type applications unsupported *)
+Local Definition instance_forall___GHC_Base_Monoid_a___GHC_Base_Monoid__Identity_a__mappend {inst_a}
+                                                                                            `{GHC.Base.Monoid inst_a}
+    : Identity inst_a -> Identity inst_a -> Identity inst_a :=
+  GHC.Prim.coerce GHC.Base.mappend.
+
+Local Definition instance_forall___GHC_Base_Monoid_a___GHC_Base_Monoid__Identity_a__mconcat {inst_a}
+                                                                                            `{GHC.Base.Monoid inst_a}
+    : list (Identity inst_a) -> Identity inst_a :=
+  GHC.Prim.coerce GHC.Base.mconcat.
+
+Local Definition instance_forall___GHC_Base_Monoid_a___GHC_Base_Monoid__Identity_a__mempty {inst_a}
+                                                                                           `{GHC.Base.Monoid inst_a}
+    : Identity inst_a :=
+  GHC.Prim.coerce GHC.Base.mempty.
+
+Instance instance_forall___GHC_Base_Monoid_a___GHC_Base_Monoid__Identity_a_ {a}
+                                                                            `{GHC.Base.Monoid a} : GHC.Base.Monoid
+                                                                                                   (Identity a) := fun _
+                                                                                                                       k =>
+    k (GHC.Base.Monoid__Dict_Build (Identity a)
+                                   instance_forall___GHC_Base_Monoid_a___GHC_Base_Monoid__Identity_a__mappend
+                                   instance_forall___GHC_Base_Monoid_a___GHC_Base_Monoid__Identity_a__mconcat
+                                   instance_forall___GHC_Base_Monoid_a___GHC_Base_Monoid__Identity_a__mempty).
 
 (* Translating `instance forall {a}, forall `{GHC.Arr.Ix a}, GHC.Arr.Ix
-   (Identity a)' failed: type applications unsupported *)
+   (Identity a)' failed: OOPS! Cannot find information for class "GHC.Arr.Ix"
+   unsupported *)
 
 (* Translating `instance forall {a}, forall `{Data.String.IsString a},
-   Data.String.IsString (Identity a)' failed: type applications unsupported *)
+   Data.String.IsString (Identity a)' failed: OOPS! Cannot find information for
+   class "Data.String.IsString" unsupported *)
 
 (* Translating `instance forall {a}, forall `{GHC.Real.Integral a},
-   GHC.Real.Integral (Identity a)' failed: type applications unsupported *)
+   GHC.Real.Integral (Identity a)' failed: OOPS! Cannot find information for class
+   "GHC.Real.Integral" unsupported *)
 
 (* Translating `instance GHC.Generics.Generic1 Identity' failed: OOPS! Cannot
    find information for class "GHC.Generics.Generic1" unsupported *)
@@ -237,29 +306,61 @@ Local Definition instance_Data_Traversable_Traversable_Identity_mapM
    OOPS! Cannot find information for class "GHC.Generics.Generic" unsupported *)
 
 (* Translating `instance forall {a}, forall `{GHC.Real.Fractional a},
-   GHC.Real.Fractional (Identity a)' failed: type applications unsupported *)
+   GHC.Real.Fractional (Identity a)' failed: OOPS! Cannot find information for
+   class "GHC.Real.Fractional" unsupported *)
 
 (* Translating `instance forall {a}, forall `{GHC.Float.Floating a},
-   GHC.Float.Floating (Identity a)' failed: type applications unsupported *)
+   GHC.Float.Floating (Identity a)' failed: OOPS! Cannot find information for class
+   "GHC.Float.Floating" unsupported *)
 
 (* Translating `instance forall {a}, forall `{Data.Bits.FiniteBits a},
-   Data.Bits.FiniteBits (Identity a)' failed: type applications unsupported *)
+   Data.Bits.FiniteBits (Identity a)' failed: OOPS! Cannot find information for
+   class "Data.Bits.FiniteBits" unsupported *)
 
-(* Translating `instance forall {a}, forall `{GHC.Base.Eq_ a}, GHC.Base.Eq_
-   (Identity a)' failed: type applications unsupported *)
+Local Definition instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___Identity_a__op_zeze__ {inst_a}
+                                                                                        `{GHC.Base.Eq_ inst_a}
+    : Identity inst_a -> Identity inst_a -> bool :=
+  GHC.Prim.coerce GHC.Base.op_zeze__.
+
+Local Definition instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___Identity_a__op_zsze__ {inst_a}
+                                                                                        `{GHC.Base.Eq_ inst_a}
+    : Identity inst_a -> Identity inst_a -> bool :=
+  GHC.Prim.coerce GHC.Base.op_zsze__.
+
+Instance instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___Identity_a_ {a}
+                                                                      `{GHC.Base.Eq_ a} : GHC.Base.Eq_ (Identity a) :=
+  fun _ k =>
+    k (GHC.Base.Eq___Dict_Build (Identity a)
+                                instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___Identity_a__op_zeze__
+                                instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___Identity_a__op_zsze__).
+
+Instance instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Identity_a_ {a}
+                                                                      `{GHC.Base.Ord a} : GHC.Base.Ord (Identity a) :=
+  fun _ k =>
+    k (GHC.Base.Ord__Dict_Build (Identity a)
+                                instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Identity_a__op_zl__
+                                instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Identity_a__op_zlze__
+                                instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Identity_a__op_zg__
+                                instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Identity_a__op_zgze__
+                                instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Identity_a__compare
+                                instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Identity_a__max
+                                instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Identity_a__min).
 
 (* Translating `instance forall {a}, forall `{GHC.Enum.Enum a}, GHC.Enum.Enum
-   (Identity a)' failed: type applications unsupported *)
+   (Identity a)' failed: OOPS! Cannot find information for class "GHC.Enum.Enum"
+   unsupported *)
 
 (* Translating `instance forall {a}, forall `{Data.Data.Data a}, Data.Data.Data
    (Identity a)' failed: OOPS! Cannot find information for class "Data.Data.Data"
    unsupported *)
 
 (* Translating `instance forall {a}, forall `{GHC.Enum.Bounded a},
-   GHC.Enum.Bounded (Identity a)' failed: type applications unsupported *)
+   GHC.Enum.Bounded (Identity a)' failed: OOPS! Cannot find information for class
+   "GHC.Enum.Bounded" unsupported *)
 
 (* Translating `instance forall {a}, forall `{Data.Bits.Bits a}, Data.Bits.Bits
-   (Identity a)' failed: type applications unsupported *)
+   (Identity a)' failed: OOPS! Cannot find information for class "Data.Bits.Bits"
+   unsupported *)
 
 Definition hash_compose {a} {b} {c} :=
   (@Coq.Program.Basics.compose a b c).
@@ -267,7 +368,7 @@ Definition hash_compose {a} {b} {c} :=
 Local Definition instance_Data_Foldable_Foldable_Identity_elem : forall {a},
                                                                    forall `{GHC.Base.Eq_ a}, a -> Identity a -> bool :=
   fun {a} `{GHC.Base.Eq_ a} =>
-    hash_compose (fun arg_14__ => Coq.Program.Basics.compose arg_14__ runIdentity)
+    hash_compose (fun arg_26__ => Coq.Program.Basics.compose arg_26__ runIdentity)
                  GHC.Base.op_zeze__.
 
 Instance instance_Data_Foldable_Foldable_Identity : Data.Foldable.Foldable
@@ -315,9 +416,13 @@ Instance instance_Data_Traversable_Traversable_Identity
      Coq.Program.Basics.compose Data.Foldable.Foldable
      Data.Foldable.Foldable__Dict_Build Data.Traversable.Traversable
      Data.Traversable.Traversable__Dict_Build GHC.Base.Applicative
-     GHC.Base.Applicative__Dict_Build GHC.Base.Eq_ GHC.Base.Functor
-     GHC.Base.Functor__Dict_Build GHC.Base.Monad GHC.Base.Monad__Dict_Build
-     GHC.Base.Monoid GHC.Base.const GHC.Base.fmap GHC.Base.id GHC.Base.op_zeze__
+     GHC.Base.Applicative__Dict_Build GHC.Base.Eq_ GHC.Base.Eq___Dict_Build
+     GHC.Base.Functor GHC.Base.Functor__Dict_Build GHC.Base.Monad
+     GHC.Base.Monad__Dict_Build GHC.Base.Monoid GHC.Base.Monoid__Dict_Build
+     GHC.Base.Ord GHC.Base.Ord__Dict_Build GHC.Base.compare GHC.Base.const
+     GHC.Base.fmap GHC.Base.id GHC.Base.mappend GHC.Base.max GHC.Base.mconcat
+     GHC.Base.mempty GHC.Base.min GHC.Base.op_zeze__ GHC.Base.op_zg__
+     GHC.Base.op_zgze__ GHC.Base.op_zl__ GHC.Base.op_zlze__ GHC.Base.op_zsze__
      GHC.Base.op_ztzg__ GHC.Base.pure GHC.Num.Int GHC.Num.Num GHC.Prim.coerce bool
-     cons false list nil
+     comparison cons false list nil
 *)

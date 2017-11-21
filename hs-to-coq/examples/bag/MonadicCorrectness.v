@@ -383,6 +383,8 @@ Theorem mapAndUnzipBagM_ok {M A B C} `{MonadLaws M}
   GHC.Base.fmap bagToList (GHC.Base.fmap (snd) (mapAndUnzipBagM f b)) =
   GHC.Base.fmap (map snd) (Data.Traversable.mapM f (bagToList b)).
 Proof.
+Admitted.
+(* 
   rewrite
     /Data.Traversable.mapM
     /Traversable.instance_Traversable_list
@@ -467,7 +469,7 @@ Proof.
       Print ApplicativeLaws. Search fmap.
       Search return_. simpl.
 Admitted.
-
+ *)
 (* TODO foldrBagM foldlBagM *)
 Check foldrBagM.
 Print GHC.Base.fmap.

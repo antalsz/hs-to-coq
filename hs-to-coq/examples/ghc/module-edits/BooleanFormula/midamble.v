@@ -31,3 +31,73 @@ Local Definition BooleanFormula_fmap
         | f , Mk_Or a1 => Mk_Or (GHC.Base.fmap (GHC.Base.fmap (BooleanFormula_fmap f)) a1)
         | f , Mk_Parens a1 => Mk_Parens (GHC.Base.fmap (BooleanFormula_fmap f) a1)
       end.
+
+Local Definition BooleanFormula_traverse
+    : forall {f} {a} {b},   forall `{GHC.Base.Applicative f}, (a -> f b) -> BooleanFormula a -> f (BooleanFormula b) :=
+  fun {f0} {a} {b} `{GHC.Base.Applicative f0} => fix BooleanFormula_traverse arg_144__ arg_145__ :=
+      match arg_144__ , arg_145__ with
+        | f , Mk_Var a1 => GHC.Base.fmap  Mk_Var (f a1)
+        | f , Mk_And a1 => GHC.Base.fmap Mk_And (Data.Traversable.traverse (Data.Traversable.traverse
+                                                                           (BooleanFormula_traverse f)) a1)
+        | f , Mk_Or a1 => GHC.Base.fmap Mk_Or
+                        (@Data.Traversable.traverse _ _ _ _ f0 _ _ _ _ (Data.Traversable.traverse
+                                                                          (BooleanFormula_traverse f)) a1)
+        | f , Mk_Parens a1 => GHC.Base.fmap Mk_Parens
+                             (@Data.Traversable.traverse _ _ _ _ f0 _ _ _ _  (BooleanFormula_traverse f) a1)
+      end.
+
+Local Definition BooleanFormula_foldMap
+    : forall {m} {a},
+        forall `{GHC.Base.Monoid m}, (a -> m) -> BooleanFormula a -> m :=
+  fun {m} {a} `{GHC.Base.Monoid m} => fix foldMap arg_137__ arg_138__ :=
+      match arg_137__ , arg_138__ with
+        | f , Mk_Var a1 => f a1
+        | f , Mk_And a1 => Data.Foldable.foldMap (Data.Foldable.foldMap
+                                                 (foldMap f)) a1
+        | f , Mk_Or a1 => Data.Foldable.foldMap (Data.Foldable.foldMap
+                                                (foldMap f)) a1
+        | f , Mk_Parens a1 => Data.Foldable.foldMap (foldMap f) a1
+      end.
+
+Local Definition BooleanFormula_foldr
+    : forall {a} {b}, (a -> b -> b) -> b -> BooleanFormula a -> b :=
+  fun {a} {b} => fix foldr arg_97__ arg_98__ arg_99__ :=
+      match arg_97__ , arg_98__ , arg_99__ with
+        | f , z , Mk_Var a1 => f a1 z
+        | f , z , Mk_And a1 => (fun arg_101__ arg_102__ =>
+                                 match arg_101__ , arg_102__ with
+                                   | b5 , b6 => Data.Foldable.foldr (fun arg_103__ arg_104__ =>
+                                                                      match arg_103__ , arg_104__ with
+                                                                        | b3 , b4 => Data.Foldable.foldr (fun arg_105__
+                                                                                                              arg_106__ =>
+                                                                                                           match arg_105__
+                                                                                                               , arg_106__ with
+                                                                                                             | b1 ,
+                                                                                                               b2 =>
+                                                                                                               foldr
+                                                                                                               f b2 b1
+                                                                                                           end) b4 b3
+                                                                      end) b6 b5
+                                 end) a1 z
+        | f , z , Mk_Or a1 => (fun arg_114__ arg_115__ =>
+                                match arg_114__ , arg_115__ with
+                                  | b5 , b6 => Data.Foldable.foldr (fun arg_116__ arg_117__ =>
+                                                                     match arg_116__ , arg_117__ with
+                                                                       | b3 , b4 => Data.Foldable.foldr (fun arg_118__
+                                                                                                             arg_119__ =>
+                                                                                                          match arg_118__
+                                                                                                              , arg_119__ with
+                                                                                                            | b1 , b2 =>
+                                                                                                              foldr
+                                                                                                              f b2 b1
+                                                                                                          end) b4 b3
+                                                                     end) b6 b5
+                                end) a1 z
+        | f , z , Mk_Parens a1 => (fun arg_127__ arg_128__ =>
+                                    match arg_127__ , arg_128__ with
+                                      | b3 , b4 => Data.Foldable.foldr (fun arg_129__ arg_130__ =>
+                                                                         match arg_129__ , arg_130__ with
+                                                                           | b1 , b2 => foldr f b2 b1
+                                                                         end) b4 b3
+                                    end) a1 z
+      end.

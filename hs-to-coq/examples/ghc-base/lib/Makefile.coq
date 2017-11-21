@@ -138,7 +138,7 @@ VFILES:=GHC/Num.v\
   Control/Applicative.v\
   Data/Functor/Classes.v\
   Control/Category.v\
-  Data/BiFunctor.v\
+  Data/Bifunctor.v\
   Data/List/NonEmpty.v
 
 ifneq ($(filter-out archclean clean cleanall printenv,$(MAKECMDGOALS)),)

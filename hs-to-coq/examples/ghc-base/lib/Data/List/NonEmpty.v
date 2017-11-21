@@ -7,6 +7,7 @@ Set Maximal Implicit Insertion.
 Unset Strict Implicit.
 Unset Printing Implicit Defensive.
 
+Require Coq.Program.Tactics.
 Require Coq.Program.Wf.
 
 (* Preamble *)
@@ -60,11 +61,11 @@ Local Definition instance_GHC_Base_Functor_NonEmpty_op_zlzd__ : forall {a} {b},
         | b , NEcons _ as_ => NEcons b (GHC.Base.op_zlzd__ b as_)
       end.
 
-Instance instance_GHC_Base_Functor_NonEmpty : GHC.Base.Functor NonEmpty := fun _
-                                                                               k =>
-    k (GHC.Base.Functor__Dict_Build NonEmpty (fun {a} {b} =>
-                                      instance_GHC_Base_Functor_NonEmpty_op_zlzd__) (fun {a} {b} =>
-                                      instance_GHC_Base_Functor_NonEmpty_fmap)).
+Program Instance instance_GHC_Base_Functor_NonEmpty : GHC.Base.Functor
+                                                      NonEmpty := fun _ k =>
+    k {|GHC.Base.op_zlzd____ := fun {a} {b} =>
+        instance_GHC_Base_Functor_NonEmpty_op_zlzd__ ;
+      GHC.Base.fmap__ := fun {a} {b} => instance_GHC_Base_Functor_NonEmpty_fmap |}.
 
 Local Definition instance_GHC_Base_Applicative_NonEmpty_pure : forall {a},
                                                                  a -> NonEmpty a :=
@@ -209,46 +210,43 @@ Local Definition instance_Data_Foldable_Foldable_NonEmpty_length : forall {a},
                                                         | c , _ => GHC.Num.op_zp__ c (GHC.Num.fromInteger 1)
                                                       end) (GHC.Num.fromInteger 0).
 
-Instance instance_Data_Foldable_Foldable_NonEmpty : Data.Foldable.Foldable
-                                                    NonEmpty := fun _ k =>
-    k (Data.Foldable.Foldable__Dict_Build NonEmpty (fun {a} `{GHC.Base.Eq_ a} =>
-                                            instance_Data_Foldable_Foldable_NonEmpty_elem) (fun {m}
-                                                                                                `{GHC.Base.Monoid m} =>
-                                            instance_Data_Foldable_Foldable_NonEmpty_fold) (fun {m}
-                                                                                                {a}
-                                                                                                `{GHC.Base.Monoid m} =>
-                                            instance_Data_Foldable_Foldable_NonEmpty_foldMap) (fun {b} {a} =>
-                                            instance_Data_Foldable_Foldable_NonEmpty_foldl) (fun {b} {a} =>
-                                            instance_Data_Foldable_Foldable_NonEmpty_foldl') (fun {a} {b} =>
-                                            instance_Data_Foldable_Foldable_NonEmpty_foldr) (fun {a} {b} =>
-                                            instance_Data_Foldable_Foldable_NonEmpty_foldr') (fun {a} =>
-                                            instance_Data_Foldable_Foldable_NonEmpty_length) (fun {a} =>
-                                            instance_Data_Foldable_Foldable_NonEmpty_null) (fun {a} `{GHC.Num.Num a} =>
-                                            instance_Data_Foldable_Foldable_NonEmpty_product) (fun {a}
-                                                                                                   `{GHC.Num.Num a} =>
-                                            instance_Data_Foldable_Foldable_NonEmpty_sum) (fun {a} =>
-                                            instance_Data_Foldable_Foldable_NonEmpty_toList)).
+Program Instance instance_Data_Foldable_Foldable_NonEmpty
+  : Data.Foldable.Foldable NonEmpty := fun _ k =>
+    k {|Data.Foldable.elem__ := fun {a} `{GHC.Base.Eq_ a} =>
+        instance_Data_Foldable_Foldable_NonEmpty_elem ;
+      Data.Foldable.fold__ := fun {m} `{GHC.Base.Monoid m} =>
+        instance_Data_Foldable_Foldable_NonEmpty_fold ;
+      Data.Foldable.foldMap__ := fun {m} {a} `{GHC.Base.Monoid m} =>
+        instance_Data_Foldable_Foldable_NonEmpty_foldMap ;
+      Data.Foldable.foldl__ := fun {b} {a} =>
+        instance_Data_Foldable_Foldable_NonEmpty_foldl ;
+      Data.Foldable.foldl'__ := fun {b} {a} =>
+        instance_Data_Foldable_Foldable_NonEmpty_foldl' ;
+      Data.Foldable.foldr__ := fun {a} {b} =>
+        instance_Data_Foldable_Foldable_NonEmpty_foldr ;
+      Data.Foldable.foldr'__ := fun {a} {b} =>
+        instance_Data_Foldable_Foldable_NonEmpty_foldr' ;
+      Data.Foldable.length__ := fun {a} =>
+        instance_Data_Foldable_Foldable_NonEmpty_length ;
+      Data.Foldable.null__ := fun {a} =>
+        instance_Data_Foldable_Foldable_NonEmpty_null ;
+      Data.Foldable.product__ := fun {a} `{GHC.Num.Num a} =>
+        instance_Data_Foldable_Foldable_NonEmpty_product ;
+      Data.Foldable.sum__ := fun {a} `{GHC.Num.Num a} =>
+        instance_Data_Foldable_Foldable_NonEmpty_sum ;
+      Data.Foldable.toList__ := fun {a} =>
+        instance_Data_Foldable_Foldable_NonEmpty_toList |}.
 
-Instance instance_Data_Traversable_Traversable_NonEmpty
+Program Instance instance_Data_Traversable_Traversable_NonEmpty
   : Data.Traversable.Traversable NonEmpty := fun _ k =>
-    k (Data.Traversable.Traversable__Dict_Build NonEmpty (fun {m}
-                                                              {a}
-                                                              {b}
-                                                              `{GHC.Base.Monad m} =>
-                                                  instance_Data_Traversable_Traversable_NonEmpty_mapM) (fun {m}
-                                                                                                            {a}
-                                                                                                            `{GHC.Base.Monad
-                                                                                                            m} =>
-                                                  instance_Data_Traversable_Traversable_NonEmpty_sequence) (fun {f}
-                                                                                                                {a}
-                                                                                                                `{GHC.Base.Applicative
-                                                                                                                f} =>
-                                                  instance_Data_Traversable_Traversable_NonEmpty_sequenceA) (fun {f}
-                                                                                                                 {a}
-                                                                                                                 {b}
-                                                                                                                 `{GHC.Base.Applicative
-                                                                                                                 f} =>
-                                                  instance_Data_Traversable_Traversable_NonEmpty_traverse)).
+    k {|Data.Traversable.mapM__ := fun {m} {a} {b} `{GHC.Base.Monad m} =>
+        instance_Data_Traversable_Traversable_NonEmpty_mapM ;
+      Data.Traversable.sequence__ := fun {m} {a} `{GHC.Base.Monad m} =>
+        instance_Data_Traversable_Traversable_NonEmpty_sequence ;
+      Data.Traversable.sequenceA__ := fun {f} {a} `{GHC.Base.Applicative f} =>
+        instance_Data_Traversable_Traversable_NonEmpty_sequenceA ;
+      Data.Traversable.traverse__ := fun {f} {a} {b} `{GHC.Base.Applicative f} =>
+        instance_Data_Traversable_Traversable_NonEmpty_traverse |}.
 
 (* Translating `instance GHC.Generics.Generic1 NonEmpty' failed: OOPS! Cannot
    find information for class "GHC.Generics.Generic1" unsupported *)
@@ -396,24 +394,26 @@ Local Definition instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___NonEmpty_a__op
                  (instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___NonEmpty_a__op_zeze__ a b)
     end.
 
-Instance instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___NonEmpty_a_ {a}
-                                                                      `{GHC.Base.Eq_ a} : GHC.Base.Eq_ (NonEmpty a) :=
+Program Instance instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___NonEmpty_a_ {a}
+                                                                              `{GHC.Base.Eq_ a} : GHC.Base.Eq_ (NonEmpty
+                                                                                                               a) :=
   fun _ k =>
-    k (GHC.Base.Eq___Dict_Build (NonEmpty a)
-                                instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___NonEmpty_a__op_zeze__
-                                instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___NonEmpty_a__op_zsze__).
+    k
+    {|GHC.Base.op_zeze____ := instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___NonEmpty_a__op_zeze__ ;
+    GHC.Base.op_zsze____ := instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___NonEmpty_a__op_zsze__ |}.
 
-Instance instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__NonEmpty_a_ {a}
-                                                                      `{GHC.Base.Ord a} : GHC.Base.Ord (NonEmpty a) :=
+Program Instance instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__NonEmpty_a_ {a}
+                                                                              `{GHC.Base.Ord a} : GHC.Base.Ord (NonEmpty
+                                                                                                               a) :=
   fun _ k =>
-    k (GHC.Base.Ord__Dict_Build (NonEmpty a)
-                                instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__NonEmpty_a__op_zl__
-                                instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__NonEmpty_a__op_zlze__
-                                instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__NonEmpty_a__op_zg__
-                                instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__NonEmpty_a__op_zgze__
-                                instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__NonEmpty_a__compare
-                                instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__NonEmpty_a__max
-                                instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__NonEmpty_a__min).
+    k
+    {|GHC.Base.op_zl____ := instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__NonEmpty_a__op_zl__ ;
+    GHC.Base.op_zlze____ := instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__NonEmpty_a__op_zlze__ ;
+    GHC.Base.op_zg____ := instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__NonEmpty_a__op_zg__ ;
+    GHC.Base.op_zgze____ := instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__NonEmpty_a__op_zgze__ ;
+    GHC.Base.compare__ := instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__NonEmpty_a__compare ;
+    GHC.Base.max__ := instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__NonEmpty_a__max ;
+    GHC.Base.min__ := instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__NonEmpty_a__min |}.
 
 Definition fromList {a} : list a -> NonEmpty a :=
   fun arg_61__ =>
@@ -666,12 +666,13 @@ Local Definition instance_GHC_Base_Applicative_NonEmpty_op_ztzg__ : forall {a}
       instance_GHC_Base_Applicative_NonEmpty_op_zlztzg__ (GHC.Base.fmap
                                                          (GHC.Base.const GHC.Base.id) x) y.
 
-Instance instance_GHC_Base_Applicative_NonEmpty : GHC.Base.Applicative
-                                                  NonEmpty := fun _ k =>
-    k (GHC.Base.Applicative__Dict_Build NonEmpty (fun {a} {b} =>
-                                          instance_GHC_Base_Applicative_NonEmpty_op_ztzg__) (fun {a} {b} =>
-                                          instance_GHC_Base_Applicative_NonEmpty_op_zlztzg__) (fun {a} =>
-                                          instance_GHC_Base_Applicative_NonEmpty_pure)).
+Program Instance instance_GHC_Base_Applicative_NonEmpty : GHC.Base.Applicative
+                                                          NonEmpty := fun _ k =>
+    k {|GHC.Base.op_ztzg____ := fun {a} {b} =>
+        instance_GHC_Base_Applicative_NonEmpty_op_ztzg__ ;
+      GHC.Base.op_zlztzg____ := fun {a} {b} =>
+        instance_GHC_Base_Applicative_NonEmpty_op_zlztzg__ ;
+      GHC.Base.pure__ := fun {a} => instance_GHC_Base_Applicative_NonEmpty_pure |}.
 
 Local Definition instance_GHC_Base_Monad_NonEmpty_op_zgzg__ : forall {a} {b},
                                                                 NonEmpty a -> NonEmpty b -> NonEmpty b :=
@@ -681,34 +682,32 @@ Local Definition instance_GHC_Base_Monad_NonEmpty_return_ : forall {a},
                                                               a -> NonEmpty a :=
   fun {a} => GHC.Base.pure.
 
-Instance instance_GHC_Base_Monad_NonEmpty : GHC.Base.Monad NonEmpty := fun _
-                                                                           k =>
-    k (GHC.Base.Monad__Dict_Build NonEmpty (fun {a} {b} =>
-                                    instance_GHC_Base_Monad_NonEmpty_op_zgzg__) (fun {a} {b} =>
-                                    instance_GHC_Base_Monad_NonEmpty_op_zgzgze__) (fun {a} =>
-                                    instance_GHC_Base_Monad_NonEmpty_return_)).
+Program Instance instance_GHC_Base_Monad_NonEmpty : GHC.Base.Monad NonEmpty :=
+  fun _ k =>
+    k {|GHC.Base.op_zgzg____ := fun {a} {b} =>
+        instance_GHC_Base_Monad_NonEmpty_op_zgzg__ ;
+      GHC.Base.op_zgzgze____ := fun {a} {b} =>
+        instance_GHC_Base_Monad_NonEmpty_op_zgzgze__ ;
+      GHC.Base.return___ := fun {a} => instance_GHC_Base_Monad_NonEmpty_return_ |}.
 
 (* Unbound variables:
      * Coq.Init.Datatypes.app Coq.Program.Basics.compose Data.Foldable.Foldable
-     Data.Foldable.Foldable__Dict_Build Data.Foldable.fold Data.Foldable.foldMap
-     Data.Foldable.foldl Data.Foldable.foldr Data.Foldable.hash_compose
-     Data.Foldable.length Data.Foldable.toList Data.Functor.op_zlzdzg__
-     Data.Monoid.Mk_Any Data.Monoid.Mk_Product Data.Monoid.Mk_Sum Data.Monoid.getAny
-     Data.Monoid.getProduct Data.Monoid.getSum Data.OldList.insert
-     Data.OldList.isPrefixOf Data.OldList.nubBy Data.OldList.partition
-     Data.OldList.sort Data.OldList.sortBy Data.OldList.tails Data.Ord.comparing
-     Data.Traversable.Traversable Data.Traversable.Traversable__Dict_Build
-     Data.Traversable.traverse Data.Tuple.fst Data.Tuple.snd GHC.Base.Alternative
-     GHC.Base.Applicative GHC.Base.Applicative__Dict_Build GHC.Base.Eq_
-     GHC.Base.Eq___Dict_Build GHC.Base.Functor GHC.Base.Functor__Dict_Build
-     GHC.Base.Monad GHC.Base.Monad__Dict_Build GHC.Base.Monoid GHC.Base.Ord
-     GHC.Base.Ord__Dict_Build GHC.Base.build GHC.Base.compare GHC.Base.const
-     GHC.Base.errorWithoutStackTrace GHC.Base.fmap GHC.Base.id GHC.Base.many
-     GHC.Base.mappend GHC.Base.op_zdzn__ GHC.Base.op_zeze__ GHC.Base.op_zg__
-     GHC.Base.op_zgze__ GHC.Base.op_zgzgze__ GHC.Base.op_zl__ GHC.Base.op_zlzd__
-     GHC.Base.op_zlze__ GHC.Base.op_zlztzg__ GHC.Base.op_ztzg__ GHC.Base.pure
-     GHC.List.drop GHC.List.dropWhile GHC.List.filter GHC.List.reverse GHC.List.scanl
-     GHC.List.scanr GHC.List.span GHC.List.splitAt GHC.List.take GHC.List.takeWhile
-     GHC.List.zip GHC.List.zipWith GHC.Num.Int GHC.Num.Num GHC.Num.op_zp__ None Some
-     andb bool comparison cons false id list negb nil option pair true
+     Data.Foldable.fold Data.Foldable.foldMap Data.Foldable.foldl Data.Foldable.foldr
+     Data.Foldable.hash_compose Data.Foldable.length Data.Foldable.toList
+     Data.Functor.op_zlzdzg__ Data.Monoid.Mk_Any Data.Monoid.Mk_Product
+     Data.Monoid.Mk_Sum Data.Monoid.getAny Data.Monoid.getProduct Data.Monoid.getSum
+     Data.OldList.insert Data.OldList.isPrefixOf Data.OldList.nubBy
+     Data.OldList.partition Data.OldList.sort Data.OldList.sortBy Data.OldList.tails
+     Data.Ord.comparing Data.Traversable.Traversable Data.Traversable.traverse
+     Data.Tuple.fst Data.Tuple.snd GHC.Base.Alternative GHC.Base.Applicative
+     GHC.Base.Eq_ GHC.Base.Functor GHC.Base.Monad GHC.Base.Monoid GHC.Base.Ord
+     GHC.Base.build GHC.Base.compare GHC.Base.const GHC.Base.errorWithoutStackTrace
+     GHC.Base.fmap GHC.Base.id GHC.Base.many GHC.Base.mappend GHC.Base.op_zdzn__
+     GHC.Base.op_zeze__ GHC.Base.op_zg__ GHC.Base.op_zgze__ GHC.Base.op_zgzgze__
+     GHC.Base.op_zl__ GHC.Base.op_zlzd__ GHC.Base.op_zlze__ GHC.Base.op_zlztzg__
+     GHC.Base.op_ztzg__ GHC.Base.pure GHC.List.drop GHC.List.dropWhile
+     GHC.List.filter GHC.List.reverse GHC.List.scanl GHC.List.scanr GHC.List.span
+     GHC.List.splitAt GHC.List.take GHC.List.takeWhile GHC.List.zip GHC.List.zipWith
+     GHC.Num.Int GHC.Num.Num GHC.Num.op_zp__ None Some andb bool comparison cons
+     false id list negb nil option pair true
 *)

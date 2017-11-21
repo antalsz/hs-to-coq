@@ -366,17 +366,20 @@ topoSortInstance (InstanceDefinition instanceName params ty members mp) = go sor
                   Nothing -> convUnsupported ("missing " ++ show v ++ " in " ++ show mems )
 
             -- When we can use record syntax, we can use this.
-            -- But typechecking sometimes stumbles...
-            let _body = Record mems'
+            -- `Instance` plus record syntax does sometimes not work,
+            -- but `Program Instance` does.
+            let body = Record mems'
 
-            let body = appList (Var buildName) $ map PosArg $
+            -- This variant uses the explicit `Build` command, which does
+            -- works with `Instance`, but is ugly
+            let _body = appList (Var buildName) $ map PosArg $
                     [ instTy ] ++ map snd mems'
 
 
             let instTerm = Fun (Inferred Explicit UnderscoreName NE.:| [Inferred Explicit (Ident "k")])
                                (App1 (Var "k") body)
 
-            pure [InstanceSentence (InstanceTerm instanceName params ty instTerm mp)]
+            pure [ProgramInstanceSentence (InstanceTerm instanceName params ty instTerm mp)]
 
 --------------------------------------------------------------------------------
 

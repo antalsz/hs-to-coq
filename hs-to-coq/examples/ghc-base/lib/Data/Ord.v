@@ -7,6 +7,7 @@ Set Maximal Implicit Insertion.
 Unset Strict Implicit.
 Unset Printing Implicit Defensive.
 
+Require Coq.Program.Tactics.
 Require Coq.Program.Wf.
 
 (* Preamble *)
@@ -100,17 +101,17 @@ Local Definition instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Down_a__min {i
     then x
     else y.
 
-Instance instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Down_a_ {a}
-                                                                  `{GHC.Base.Ord a} : GHC.Base.Ord (Down a) := fun _
-                                                                                                                   k =>
-    k (GHC.Base.Ord__Dict_Build (Down a)
-                                instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Down_a__op_zl__
-                                instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Down_a__op_zlze__
-                                instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Down_a__op_zg__
-                                instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Down_a__op_zgze__
-                                instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Down_a__compare
-                                instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Down_a__max
-                                instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Down_a__min).
+Program Instance instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Down_a_ {a}
+                                                                          `{GHC.Base.Ord a} : GHC.Base.Ord (Down a) :=
+  fun _ k =>
+    k
+    {|GHC.Base.op_zl____ := instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Down_a__op_zl__ ;
+    GHC.Base.op_zlze____ := instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Down_a__op_zlze__ ;
+    GHC.Base.op_zg____ := instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Down_a__op_zg__ ;
+    GHC.Base.op_zgze____ := instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Down_a__op_zgze__ ;
+    GHC.Base.compare__ := instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Down_a__compare ;
+    GHC.Base.max__ := instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Down_a__max ;
+    GHC.Base.min__ := instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Down_a__min |}.
 
 (* Translating `instance forall {a}, forall `{GHC.Read.Read a}, GHC.Read.Read
    (Down a)' failed: OOPS! Cannot find information for class "GHC.Read.Read"

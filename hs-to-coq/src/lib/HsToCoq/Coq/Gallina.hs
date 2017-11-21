@@ -291,13 +291,14 @@ data Sentence = AssumptionSentence       Assumption                             
               | DefinitionSentence       Definition                                            -- ^@/definition/@
               | InductiveSentence        Inductive                                             -- ^@/inductive/@
               | FixpointSentence         Fixpoint                                              -- ^@/fixpoint/@
-              | ProgramFixpointSentence  ProgramFixpoint (Maybe Text)                          -- ^@/program fixpoint/ /Solve Obligations with (/tac/). Admit Obligations./@
+              | ProgramFixpointSentence  ProgramFixpoint (Maybe Text)                          -- ^@/program fixpoint/ Solve Obligations with (/tac/). Admit Obligations.@
               | AssertionSentence        Assertion Proof                                       -- ^@/assertion/ /proof/@
               | ModuleSentence           ModuleSentence                                        -- ^@/module_sentence/@ – extra (inferred from §2.5)
               | ClassSentence            ClassDefinition                                       -- ^@/class_definition/@ – extra
               | ExistingClassSentence    Ident                                                 -- ^@/Existing Class /ident//@ – extra
               | RecordSentence           RecordDefinition                                       -- ^@/class_definition/@ – extra
               | InstanceSentence         InstanceDefinition                                    -- ^@/instance_definition/@ – extra
+              | ProgramInstanceSentence  InstanceDefinition                                    -- ^@Program /instance_definition/@ – extra
               | NotationSentence         Notation                                              -- ^@/notation/@ – extra
               | ArgumentsSentence        Arguments                                             -- ^@/arguments/@ – extra
               | CommentSentence          Comment                                               -- ^@/comment/@ – extra
@@ -917,6 +918,7 @@ instance Gallina Sentence where
   renderGallina' _ (ExistingClassSentence   ident)  = "Existing Class" <+> renderIdent ident <> "."
   renderGallina' p (RecordSentence          rcd)    = renderGallina' p rcd
   renderGallina' p (InstanceSentence        ins)    = renderGallina' p ins
+  renderGallina' p (ProgramInstanceSentence ins)    = "Program" <+> renderGallina' p ins
   renderGallina' p (NotationSentence        not)    = renderGallina' p not
   renderGallina' p (ArgumentsSentence       arg)    = renderGallina' p arg
   renderGallina' p (CommentSentence         com)    = renderGallina' p com

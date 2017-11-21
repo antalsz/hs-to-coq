@@ -7,6 +7,7 @@ Set Maximal Implicit Insertion.
 Unset Strict Implicit.
 Unset Printing Implicit Defensive.
 
+Require Coq.Program.Tactics.
 Require Coq.Program.Wf.
 
 (* Preamble *)
@@ -52,11 +53,11 @@ Local Definition instance_Category_GHC_Prim_arrow_op_z2218U__ : forall {b}
                                                                   b -> GHC.Prim.arrow a c :=
   fun {b} {c} {a} => Coq.Program.Basics.compose.
 
-Instance instance_Category_GHC_Prim_arrow : Category GHC.Prim.arrow := fun _
-                                                                           k =>
-    k (Category__Dict_Build GHC.Prim.arrow (fun {a} =>
-                              instance_Category_GHC_Prim_arrow_id) (fun {b} {c} {a} =>
-                              instance_Category_GHC_Prim_arrow_op_z2218U__)).
+Program Instance instance_Category_GHC_Prim_arrow : Category GHC.Prim.arrow :=
+  fun _ k =>
+    k {|id__ := fun {a} => instance_Category_GHC_Prim_arrow_id ;
+      op_z2218U____ := fun {b} {c} {a} =>
+        instance_Category_GHC_Prim_arrow_op_z2218U__ |}.
 
 (* Skipping instance instance_Category_Data_Type_Equality____ *)
 

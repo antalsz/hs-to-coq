@@ -7,6 +7,7 @@ Set Maximal Implicit Insertion.
 Unset Strict Implicit.
 Unset Printing Implicit Defensive.
 
+Require Coq.Program.Tactics.
 Require Coq.Program.Wf.
 
 (* Preamble *)
@@ -36,10 +37,10 @@ Local Definition instance_GHC_Base_Eq___Proxy_s__op_zsze__ {inst_s} : (Proxy
                                                                       inst_s) -> (Proxy inst_s) -> bool :=
   fun x y => negb (instance_GHC_Base_Eq___Proxy_s__op_zeze__ x y).
 
-Instance instance_GHC_Base_Eq___Proxy_s_ {s} : GHC.Base.Eq_ (Proxy s) := fun _
-                                                                             k =>
-    k (GHC.Base.Eq___Dict_Build (Proxy s) instance_GHC_Base_Eq___Proxy_s__op_zeze__
-                                instance_GHC_Base_Eq___Proxy_s__op_zsze__).
+Program Instance instance_GHC_Base_Eq___Proxy_s_ {s} : GHC.Base.Eq_ (Proxy s) :=
+  fun _ k =>
+    k {|GHC.Base.op_zeze____ := instance_GHC_Base_Eq___Proxy_s__op_zeze__ ;
+      GHC.Base.op_zsze____ := instance_GHC_Base_Eq___Proxy_s__op_zsze__ |}.
 
 Local Definition instance_GHC_Base_Ord__Proxy_s__compare {inst_s} : (Proxy
                                                                     inst_s) -> (Proxy inst_s) -> comparison :=
@@ -75,14 +76,15 @@ Local Definition instance_GHC_Base_Ord__Proxy_s__min {inst_s} : (Proxy
     then x
     else y.
 
-Instance instance_GHC_Base_Ord__Proxy_s_ {s} : GHC.Base.Ord (Proxy s) := fun _
-                                                                             k =>
-    k (GHC.Base.Ord__Dict_Build (Proxy s) instance_GHC_Base_Ord__Proxy_s__op_zl__
-                                instance_GHC_Base_Ord__Proxy_s__op_zlze__
-                                instance_GHC_Base_Ord__Proxy_s__op_zg__
-                                instance_GHC_Base_Ord__Proxy_s__op_zgze__
-                                instance_GHC_Base_Ord__Proxy_s__compare instance_GHC_Base_Ord__Proxy_s__max
-                                instance_GHC_Base_Ord__Proxy_s__min).
+Program Instance instance_GHC_Base_Ord__Proxy_s_ {s} : GHC.Base.Ord (Proxy s) :=
+  fun _ k =>
+    k {|GHC.Base.op_zl____ := instance_GHC_Base_Ord__Proxy_s__op_zl__ ;
+      GHC.Base.op_zlze____ := instance_GHC_Base_Ord__Proxy_s__op_zlze__ ;
+      GHC.Base.op_zg____ := instance_GHC_Base_Ord__Proxy_s__op_zg__ ;
+      GHC.Base.op_zgze____ := instance_GHC_Base_Ord__Proxy_s__op_zgze__ ;
+      GHC.Base.compare__ := instance_GHC_Base_Ord__Proxy_s__compare ;
+      GHC.Base.max__ := instance_GHC_Base_Ord__Proxy_s__max ;
+      GHC.Base.min__ := instance_GHC_Base_Ord__Proxy_s__min |}.
 
 (* Translating `instance forall {s}, GHC.Show.Show (Proxy s)' failed: OOPS!
    Cannot find information for class "GHC.Show.Show" unsupported *)
@@ -111,12 +113,11 @@ Local Definition instance_GHC_Base_Monoid__Proxy_s__mempty {inst_s} : (Proxy
                                                                       inst_s) :=
   Mk_Proxy.
 
-Instance instance_GHC_Base_Monoid__Proxy_s_ {s} : GHC.Base.Monoid (Proxy s) :=
-  fun _ k =>
-    k (GHC.Base.Monoid__Dict_Build (Proxy s)
-                                   instance_GHC_Base_Monoid__Proxy_s__mappend
-                                   instance_GHC_Base_Monoid__Proxy_s__mconcat
-                                   instance_GHC_Base_Monoid__Proxy_s__mempty).
+Program Instance instance_GHC_Base_Monoid__Proxy_s_ {s} : GHC.Base.Monoid (Proxy
+                                                                          s) := fun _ k =>
+    k {|GHC.Base.mappend__ := instance_GHC_Base_Monoid__Proxy_s__mappend ;
+      GHC.Base.mconcat__ := instance_GHC_Base_Monoid__Proxy_s__mconcat ;
+      GHC.Base.mempty__ := instance_GHC_Base_Monoid__Proxy_s__mempty |}.
 
 Local Definition instance_GHC_Base_Functor_Proxy_fmap : forall {a} {b},
                                                           (a -> b) -> Proxy a -> Proxy b :=
@@ -126,10 +127,11 @@ Local Definition instance_GHC_Base_Functor_Proxy_op_zlzd__ : forall {a} {b},
                                                                a -> Proxy b -> Proxy a :=
   fun {a} {b} => fun x => instance_GHC_Base_Functor_Proxy_fmap (GHC.Base.const x).
 
-Instance instance_GHC_Base_Functor_Proxy : GHC.Base.Functor Proxy := fun _ k =>
-    k (GHC.Base.Functor__Dict_Build Proxy (fun {a} {b} =>
-                                      instance_GHC_Base_Functor_Proxy_op_zlzd__) (fun {a} {b} =>
-                                      instance_GHC_Base_Functor_Proxy_fmap)).
+Program Instance instance_GHC_Base_Functor_Proxy : GHC.Base.Functor Proxy :=
+  fun _ k =>
+    k {|GHC.Base.op_zlzd____ := fun {a} {b} =>
+        instance_GHC_Base_Functor_Proxy_op_zlzd__ ;
+      GHC.Base.fmap__ := fun {a} {b} => instance_GHC_Base_Functor_Proxy_fmap |}.
 
 Local Definition instance_GHC_Base_Applicative_Proxy_op_zlztzg__ : forall {a}
                                                                           {b},
@@ -147,12 +149,13 @@ Local Definition instance_GHC_Base_Applicative_Proxy_pure : forall {a},
                                                               a -> Proxy a :=
   fun {a} => fun arg_2__ => Mk_Proxy.
 
-Instance instance_GHC_Base_Applicative_Proxy : GHC.Base.Applicative Proxy :=
-  fun _ k =>
-    k (GHC.Base.Applicative__Dict_Build Proxy (fun {a} {b} =>
-                                          instance_GHC_Base_Applicative_Proxy_op_ztzg__) (fun {a} {b} =>
-                                          instance_GHC_Base_Applicative_Proxy_op_zlztzg__) (fun {a} =>
-                                          instance_GHC_Base_Applicative_Proxy_pure)).
+Program Instance instance_GHC_Base_Applicative_Proxy : GHC.Base.Applicative
+                                                       Proxy := fun _ k =>
+    k {|GHC.Base.op_ztzg____ := fun {a} {b} =>
+        instance_GHC_Base_Applicative_Proxy_op_ztzg__ ;
+      GHC.Base.op_zlztzg____ := fun {a} {b} =>
+        instance_GHC_Base_Applicative_Proxy_op_zlztzg__ ;
+      GHC.Base.pure__ := fun {a} => instance_GHC_Base_Applicative_Proxy_pure |}.
 
 (* Translating `instance GHC.Base.Alternative Proxy' failed: OOPS! Cannot find
    information for class "GHC.Base.Alternative" unsupported *)
@@ -169,11 +172,13 @@ Local Definition instance_GHC_Base_Monad_Proxy_return_ : forall {a},
                                                            a -> Proxy a :=
   fun {a} => GHC.Base.pure.
 
-Instance instance_GHC_Base_Monad_Proxy : GHC.Base.Monad Proxy := fun _ k =>
-    k (GHC.Base.Monad__Dict_Build Proxy (fun {a} {b} =>
-                                    instance_GHC_Base_Monad_Proxy_op_zgzg__) (fun {a} {b} =>
-                                    instance_GHC_Base_Monad_Proxy_op_zgzgze__) (fun {a} =>
-                                    instance_GHC_Base_Monad_Proxy_return_)).
+Program Instance instance_GHC_Base_Monad_Proxy : GHC.Base.Monad Proxy := fun _
+                                                                             k =>
+    k {|GHC.Base.op_zgzg____ := fun {a} {b} =>
+        instance_GHC_Base_Monad_Proxy_op_zgzg__ ;
+      GHC.Base.op_zgzgze____ := fun {a} {b} =>
+        instance_GHC_Base_Monad_Proxy_op_zgzgze__ ;
+      GHC.Base.return___ := fun {a} => instance_GHC_Base_Monad_Proxy_return_ |}.
 
 (* Translating `instance GHC.Base.MonadPlus Proxy' failed: OOPS! Cannot find
    information for class "GHC.Base.MonadPlus" unsupported *)
@@ -182,10 +187,8 @@ Definition asProxyTypeOf {a} : a -> Proxy a -> a :=
   GHC.Base.const.
 
 (* Unbound variables:
-     Eq GHC.Base.Applicative GHC.Base.Applicative__Dict_Build GHC.Base.Eq_
-     GHC.Base.Eq___Dict_Build GHC.Base.Functor GHC.Base.Functor__Dict_Build
-     GHC.Base.Monad GHC.Base.Monad__Dict_Build GHC.Base.Monoid
-     GHC.Base.Monoid__Dict_Build GHC.Base.Ord GHC.Base.Ord__Dict_Build GHC.Base.const
-     GHC.Base.fmap GHC.Base.id GHC.Base.op_ztzg__ GHC.Base.pure Gt Lt Type bool
-     comparison list negb op_zeze__ op_zsze__ true
+     Eq GHC.Base.Applicative GHC.Base.Eq_ GHC.Base.Functor GHC.Base.Monad
+     GHC.Base.Monoid GHC.Base.Ord GHC.Base.const GHC.Base.fmap GHC.Base.id
+     GHC.Base.op_ztzg__ GHC.Base.pure Gt Lt Type bool comparison list negb op_zeze__
+     op_zsze__ true
 *)

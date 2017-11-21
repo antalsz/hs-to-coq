@@ -148,7 +148,7 @@ Proof.
           /= /Data.Foldable.instance_Foldable_list_foldMap
           /Data.Foldable.instance_Foldable_list_foldr /=
           /Base.mempty /Monoid.instance_GHC_Base_Monoid_Any /Base.mempty__
-          /Data.Monoid.mempty_Any
+          /Monoid.instance_GHC_Base_Monoid_Any_mempty
           /Foldable.hash_compose.
   rewrite -(orbF (any p l)); move: false => b.
   elim: l => [|x l IH] //=.

@@ -7,6 +7,7 @@ Set Maximal Implicit Insertion.
 Unset Strict Implicit.
 Unset Printing Implicit Defensive.
 
+Require Coq.Program.Tactics.
 Require Coq.Program.Wf.
 
 (* Converted imports: *)
@@ -71,12 +72,12 @@ Local Definition instance_Bifunctor_GHC_Tuple_pair_type_second : forall {b}
                                                                    b -> GHC.Tuple.pair_type a c :=
   fun {b} {c} {a} => instance_Bifunctor_GHC_Tuple_pair_type_bimap GHC.Base.id.
 
-Instance instance_Bifunctor_GHC_Tuple_pair_type : Bifunctor
-                                                  GHC.Tuple.pair_type := fun _ k =>
-    k (Bifunctor__Dict_Build GHC.Tuple.pair_type (fun {a} {b} {c} {d} =>
-                               instance_Bifunctor_GHC_Tuple_pair_type_bimap) (fun {a} {b} {c} =>
-                               instance_Bifunctor_GHC_Tuple_pair_type_first) (fun {b} {c} {a} =>
-                               instance_Bifunctor_GHC_Tuple_pair_type_second)).
+Program Instance instance_Bifunctor_GHC_Tuple_pair_type : Bifunctor
+                                                          GHC.Tuple.pair_type := fun _ k =>
+    k {|bimap__ := fun {a} {b} {c} {d} =>
+        instance_Bifunctor_GHC_Tuple_pair_type_bimap ;
+      first__ := fun {a} {b} {c} => instance_Bifunctor_GHC_Tuple_pair_type_first ;
+      second__ := fun {b} {c} {a} => instance_Bifunctor_GHC_Tuple_pair_type_second |}.
 
 Local Definition instance_Bifunctor__GHC_Tuple_triple_type_x1__bimap {inst_x1}
     : forall {a} {b} {c} {d},
@@ -105,12 +106,14 @@ Local Definition instance_Bifunctor__GHC_Tuple_triple_type_x1__second {inst_x1}
   fun {b} {c} {a} =>
     instance_Bifunctor__GHC_Tuple_triple_type_x1__bimap GHC.Base.id.
 
-Instance instance_Bifunctor__GHC_Tuple_triple_type_x1_ {x1} : Bifunctor
-                                                              (GHC.Tuple.triple_type x1) := fun _ k =>
-    k (Bifunctor__Dict_Build (GHC.Tuple.triple_type x1) (fun {a} {b} {c} {d} =>
-                               instance_Bifunctor__GHC_Tuple_triple_type_x1__bimap) (fun {a} {b} {c} =>
-                               instance_Bifunctor__GHC_Tuple_triple_type_x1__first) (fun {b} {c} {a} =>
-                               instance_Bifunctor__GHC_Tuple_triple_type_x1__second)).
+Program Instance instance_Bifunctor__GHC_Tuple_triple_type_x1_ {x1} : Bifunctor
+                                                                      (GHC.Tuple.triple_type x1) := fun _ k =>
+    k {|bimap__ := fun {a} {b} {c} {d} =>
+        instance_Bifunctor__GHC_Tuple_triple_type_x1__bimap ;
+      first__ := fun {a} {b} {c} =>
+        instance_Bifunctor__GHC_Tuple_triple_type_x1__first ;
+      second__ := fun {b} {c} {a} =>
+        instance_Bifunctor__GHC_Tuple_triple_type_x1__second |}.
 
 Local Definition instance_Bifunctor__GHC_Tuple_quad_type_x1_x2__bimap {inst_x1}
                                                                       {inst_x2} : forall {a} {b} {c} {d},
@@ -145,12 +148,14 @@ Local Definition instance_Bifunctor__GHC_Tuple_quad_type_x1_x2__second {inst_x1}
   fun {b} {c} {a} =>
     instance_Bifunctor__GHC_Tuple_quad_type_x1_x2__bimap GHC.Base.id.
 
-Instance instance_Bifunctor__GHC_Tuple_quad_type_x1_x2_ {x1} {x2} : Bifunctor
-                                                                    (GHC.Tuple.quad_type x1 x2) := fun _ k =>
-    k (Bifunctor__Dict_Build (GHC.Tuple.quad_type x1 x2) (fun {a} {b} {c} {d} =>
-                               instance_Bifunctor__GHC_Tuple_quad_type_x1_x2__bimap) (fun {a} {b} {c} =>
-                               instance_Bifunctor__GHC_Tuple_quad_type_x1_x2__first) (fun {b} {c} {a} =>
-                               instance_Bifunctor__GHC_Tuple_quad_type_x1_x2__second)).
+Program Instance instance_Bifunctor__GHC_Tuple_quad_type_x1_x2_ {x1} {x2}
+  : Bifunctor (GHC.Tuple.quad_type x1 x2) := fun _ k =>
+    k {|bimap__ := fun {a} {b} {c} {d} =>
+        instance_Bifunctor__GHC_Tuple_quad_type_x1_x2__bimap ;
+      first__ := fun {a} {b} {c} =>
+        instance_Bifunctor__GHC_Tuple_quad_type_x1_x2__first ;
+      second__ := fun {b} {c} {a} =>
+        instance_Bifunctor__GHC_Tuple_quad_type_x1_x2__second |}.
 
 Local Definition instance_Bifunctor__GHC_Tuple_quint_type_x1_x2_x3__bimap {inst_x1}
                                                                           {inst_x2} {inst_x3} : forall {a} {b} {c} {d},
@@ -192,12 +197,15 @@ Local Definition instance_Bifunctor__GHC_Tuple_quint_type_x1_x2_x3__second {inst
   fun {b} {c} {a} =>
     instance_Bifunctor__GHC_Tuple_quint_type_x1_x2_x3__bimap GHC.Base.id.
 
-Instance instance_Bifunctor__GHC_Tuple_quint_type_x1_x2_x3_ {x1} {x2} {x3}
-  : Bifunctor (GHC.Tuple.quint_type x1 x2 x3) := fun _ k =>
-    k (Bifunctor__Dict_Build (GHC.Tuple.quint_type x1 x2 x3) (fun {a} {b} {c} {d} =>
-                               instance_Bifunctor__GHC_Tuple_quint_type_x1_x2_x3__bimap) (fun {a} {b} {c} =>
-                               instance_Bifunctor__GHC_Tuple_quint_type_x1_x2_x3__first) (fun {b} {c} {a} =>
-                               instance_Bifunctor__GHC_Tuple_quint_type_x1_x2_x3__second)).
+Program Instance instance_Bifunctor__GHC_Tuple_quint_type_x1_x2_x3_ {x1} {x2}
+                                                                    {x3} : Bifunctor (GHC.Tuple.quint_type x1 x2 x3) :=
+  fun _ k =>
+    k {|bimap__ := fun {a} {b} {c} {d} =>
+        instance_Bifunctor__GHC_Tuple_quint_type_x1_x2_x3__bimap ;
+      first__ := fun {a} {b} {c} =>
+        instance_Bifunctor__GHC_Tuple_quint_type_x1_x2_x3__first ;
+      second__ := fun {b} {c} {a} =>
+        instance_Bifunctor__GHC_Tuple_quint_type_x1_x2_x3__second |}.
 
 Local Definition instance_Bifunctor__GHC_Tuple_sext_type_x1_x2_x3_x4__bimap {inst_x1}
                                                                             {inst_x2} {inst_x3} {inst_x4} : forall {a}
@@ -262,16 +270,15 @@ Local Definition instance_Bifunctor__GHC_Tuple_sext_type_x1_x2_x3_x4__second {in
   fun {b} {c} {a} =>
     instance_Bifunctor__GHC_Tuple_sext_type_x1_x2_x3_x4__bimap GHC.Base.id.
 
-Instance instance_Bifunctor__GHC_Tuple_sext_type_x1_x2_x3_x4_ {x1} {x2} {x3}
-                                                              {x4} : Bifunctor (GHC.Tuple.sext_type x1 x2 x3 x4) :=
-  fun _ k =>
-    k (Bifunctor__Dict_Build (GHC.Tuple.sext_type x1 x2 x3 x4) (fun {a}
-                                                                    {b}
-                                                                    {c}
-                                                                    {d} =>
-                               instance_Bifunctor__GHC_Tuple_sext_type_x1_x2_x3_x4__bimap) (fun {a} {b} {c} =>
-                               instance_Bifunctor__GHC_Tuple_sext_type_x1_x2_x3_x4__first) (fun {b} {c} {a} =>
-                               instance_Bifunctor__GHC_Tuple_sext_type_x1_x2_x3_x4__second)).
+Program Instance instance_Bifunctor__GHC_Tuple_sext_type_x1_x2_x3_x4_ {x1} {x2}
+                                                                      {x3} {x4} : Bifunctor (GHC.Tuple.sext_type x1 x2
+                                                                                            x3 x4) := fun _ k =>
+    k {|bimap__ := fun {a} {b} {c} {d} =>
+        instance_Bifunctor__GHC_Tuple_sext_type_x1_x2_x3_x4__bimap ;
+      first__ := fun {a} {b} {c} =>
+        instance_Bifunctor__GHC_Tuple_sext_type_x1_x2_x3_x4__first ;
+      second__ := fun {b} {c} {a} =>
+        instance_Bifunctor__GHC_Tuple_sext_type_x1_x2_x3_x4__second |}.
 
 Local Definition instance_Bifunctor__GHC_Tuple_sept_type_x1_x2_x3_x4_x5__bimap {inst_x1}
                                                                                {inst_x2} {inst_x3} {inst_x4} {inst_x5}
@@ -307,20 +314,17 @@ Local Definition instance_Bifunctor__GHC_Tuple_sept_type_x1_x2_x3_x4_x5__second 
   fun {b} {c} {a} =>
     instance_Bifunctor__GHC_Tuple_sept_type_x1_x2_x3_x4_x5__bimap GHC.Base.id.
 
-Instance instance_Bifunctor__GHC_Tuple_sept_type_x1_x2_x3_x4_x5_ {x1} {x2} {x3}
-                                                                 {x4} {x5} : Bifunctor (GHC.Tuple.sept_type x1 x2 x3 x4
-                                                                                       x5) := fun _ k =>
-    k (Bifunctor__Dict_Build (GHC.Tuple.sept_type x1 x2 x3 x4 x5) (fun {a}
-                                                                       {b}
-                                                                       {c}
-                                                                       {d} =>
-                               instance_Bifunctor__GHC_Tuple_sept_type_x1_x2_x3_x4_x5__bimap) (fun {a}
-                                                                                                   {b}
-                                                                                                   {c} =>
-                               instance_Bifunctor__GHC_Tuple_sept_type_x1_x2_x3_x4_x5__first) (fun {b}
-                                                                                                   {c}
-                                                                                                   {a} =>
-                               instance_Bifunctor__GHC_Tuple_sept_type_x1_x2_x3_x4_x5__second)).
+Program Instance instance_Bifunctor__GHC_Tuple_sept_type_x1_x2_x3_x4_x5_ {x1}
+                                                                         {x2} {x3} {x4} {x5} : Bifunctor
+                                                                                               (GHC.Tuple.sept_type x1
+                                                                                               x2 x3 x4 x5) := fun _
+                                                                                                                   k =>
+    k {|bimap__ := fun {a} {b} {c} {d} =>
+        instance_Bifunctor__GHC_Tuple_sept_type_x1_x2_x3_x4_x5__bimap ;
+      first__ := fun {a} {b} {c} =>
+        instance_Bifunctor__GHC_Tuple_sept_type_x1_x2_x3_x4_x5__first ;
+      second__ := fun {b} {c} {a} =>
+        instance_Bifunctor__GHC_Tuple_sept_type_x1_x2_x3_x4_x5__second |}.
 
 Local Definition instance_Bifunctor_Data_Either_Either_bimap : forall {a}
                                                                       {b}
@@ -353,12 +357,12 @@ Local Definition instance_Bifunctor_Data_Either_Either_second : forall {b}
                                                                   b -> Data.Either.Either a c :=
   fun {b} {c} {a} => instance_Bifunctor_Data_Either_Either_bimap GHC.Base.id.
 
-Instance instance_Bifunctor_Data_Either_Either : Bifunctor Data.Either.Either :=
-  fun _ k =>
-    k (Bifunctor__Dict_Build Data.Either.Either (fun {a} {b} {c} {d} =>
-                               instance_Bifunctor_Data_Either_Either_bimap) (fun {a} {b} {c} =>
-                               instance_Bifunctor_Data_Either_Either_first) (fun {b} {c} {a} =>
-                               instance_Bifunctor_Data_Either_Either_second)).
+
+Program Instance instance_Bifunctor_sum : Bifunctor sum := fun _ k =>
+    k {|bimap__ := fun {a} {b} {c} {d} => instance_Bifunctor_sum_bimap ;
+      first__ := fun {a} {b} {c} => instance_Bifunctor_sum_first ;
+      second__ := fun {b} {c} {a} => instance_Bifunctor_sum_second |}.
+
 
 Local Definition instance_Bifunctor_Data_Functor_Const_Const_bimap : forall {a}
                                                                             {b}
@@ -391,12 +395,14 @@ Local Definition instance_Bifunctor_Data_Functor_Const_Const_second : forall {b}
   fun {b} {c} {a} =>
     instance_Bifunctor_Data_Functor_Const_Const_bimap GHC.Base.id.
 
-Instance instance_Bifunctor_Data_Functor_Const_Const : Bifunctor
-                                                       Data.Functor.Const.Const := fun _ k =>
-    k (Bifunctor__Dict_Build Data.Functor.Const.Const (fun {a} {b} {c} {d} =>
-                               instance_Bifunctor_Data_Functor_Const_Const_bimap) (fun {a} {b} {c} =>
-                               instance_Bifunctor_Data_Functor_Const_Const_first) (fun {b} {c} {a} =>
-                               instance_Bifunctor_Data_Functor_Const_Const_second)).
+Program Instance instance_Bifunctor_Data_Functor_Const_Const : Bifunctor
+                                                               Data.Functor.Const.Const := fun _ k =>
+    k {|bimap__ := fun {a} {b} {c} {d} =>
+        instance_Bifunctor_Data_Functor_Const_Const_bimap ;
+      first__ := fun {a} {b} {c} =>
+        instance_Bifunctor_Data_Functor_Const_Const_first ;
+      second__ := fun {b} {c} {a} =>
+        instance_Bifunctor_Data_Functor_Const_Const_second |}.
 
 (* Skipping instance instance_Bifunctor__GHC_Generics_K1_i_ *)
 

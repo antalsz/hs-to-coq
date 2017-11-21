@@ -7,6 +7,7 @@ Set Maximal Implicit Insertion.
 Unset Strict Implicit.
 Unset Printing Implicit Defensive.
 
+Require Coq.Program.Tactics.
 Require Coq.Program.Wf.
 
 (* Converted imports: *)
@@ -820,9 +821,10 @@ Local Definition instance_Monoid__list_a__mconcat {inst_a} : list (list
 Local Definition instance_Monoid__list_a__mempty {inst_a} : list inst_a :=
   nil.
 
-Instance instance_Monoid__list_a_ {a} : Monoid (list a) := fun _ k =>
-    k (Monoid__Dict_Build (list a) instance_Monoid__list_a__mappend
-                          instance_Monoid__list_a__mconcat instance_Monoid__list_a__mempty).
+Program Instance instance_Monoid__list_a_ {a} : Monoid (list a) := fun _ k =>
+    k {|mappend__ := instance_Monoid__list_a__mappend ;
+      mconcat__ := instance_Monoid__list_a__mconcat ;
+      mempty__ := instance_Monoid__list_a__mempty |}.
 
 Local Definition instance_forall___Monoid_b___Monoid__a____b__mappend {inst_b}
                                                                       {inst_a} `{Monoid inst_b}
@@ -845,9 +847,10 @@ Local Definition instance_Monoid_unit_mconcat : list unit -> unit :=
 Local Definition instance_Monoid_unit_mempty : unit :=
   tt.
 
-Instance instance_Monoid_unit : Monoid unit := fun _ k =>
-    k (Monoid__Dict_Build unit instance_Monoid_unit_mappend
-                          instance_Monoid_unit_mconcat instance_Monoid_unit_mempty).
+Program Instance instance_Monoid_unit : Monoid unit := fun _ k =>
+    k {|mappend__ := instance_Monoid_unit_mappend ;
+      mconcat__ := instance_Monoid_unit_mconcat ;
+      mempty__ := instance_Monoid_unit_mempty |}.
 
 Local Definition instance_forall___Monoid_a____Monoid_b___Monoid__a___b__mappend {inst_a}
                                                                                  {inst_b} `{Monoid inst_a} `{Monoid
@@ -1163,9 +1166,9 @@ Local Definition instance_Functor_option_op_zlzd__ : forall {a} {b},
                                                        a -> option b -> option a :=
   fun {a} {b} => Coq.Program.Basics.compose instance_Functor_option_fmap const.
 
-Instance instance_Functor_option : Functor option := fun _ k =>
-    k (Functor__Dict_Build option (fun {a} {b} => instance_Functor_option_op_zlzd__)
-                           (fun {a} {b} => instance_Functor_option_fmap)).
+Program Instance instance_Functor_option : Functor option := fun _ k =>
+    k {|op_zlzd____ := fun {a} {b} => instance_Functor_option_op_zlzd__ ;
+      fmap__ := fun {a} {b} => instance_Functor_option_fmap |}.
 
 Local Definition instance_Applicative_option_op_zlztzg__ : forall {a} {b},
                                                              option (a -> b) -> option a -> option b :=
@@ -1176,11 +1179,10 @@ Local Definition instance_Applicative_option_op_zlztzg__ : forall {a} {b},
         | None , _m => None
       end.
 
-Instance instance_Applicative_option : Applicative option := fun _ k =>
-    k (Applicative__Dict_Build option (fun {a} {b} =>
-                                 instance_Applicative_option_op_ztzg__) (fun {a} {b} =>
-                                 instance_Applicative_option_op_zlztzg__) (fun {a} =>
-                                 instance_Applicative_option_pure)).
+Program Instance instance_Applicative_option : Applicative option := fun _ k =>
+    k {|op_ztzg____ := fun {a} {b} => instance_Applicative_option_op_ztzg__ ;
+      op_zlztzg____ := fun {a} {b} => instance_Applicative_option_op_zlztzg__ ;
+      pure__ := fun {a} => instance_Applicative_option_pure |}.
 
 Local Definition instance_Monad_option_op_zgzg__ : forall {a} {b},
                                                      option a -> option b -> option b :=
@@ -1189,10 +1191,10 @@ Local Definition instance_Monad_option_op_zgzg__ : forall {a} {b},
 Local Definition instance_Monad_option_return_ : forall {a}, a -> option a :=
   fun {a} => pure.
 
-Instance instance_Monad_option : Monad option := fun _ k =>
-    k (Monad__Dict_Build option (fun {a} {b} => instance_Monad_option_op_zgzg__)
-                         (fun {a} {b} => instance_Monad_option_op_zgzgze__) (fun {a} =>
-                           instance_Monad_option_return_)).
+Program Instance instance_Monad_option : Monad option := fun _ k =>
+    k {|op_zgzg____ := fun {a} {b} => instance_Monad_option_op_zgzg__ ;
+      op_zgzgze____ := fun {a} {b} => instance_Monad_option_op_zgzgze__ ;
+      return___ := fun {a} => instance_Monad_option_return_ |}.
 
 Local Definition instance_Functor__GHC_Tuple_pair_type_a__op_zlzd__ {inst_a}
     : forall {a} {b},
@@ -1200,11 +1202,11 @@ Local Definition instance_Functor__GHC_Tuple_pair_type_a__op_zlzd__ {inst_a}
   fun {a} {b} =>
     Coq.Program.Basics.compose instance_Functor__GHC_Tuple_pair_type_a__fmap const.
 
-Instance instance_Functor__GHC_Tuple_pair_type_a_ {a} : Functor
-                                                        (GHC.Tuple.pair_type a) := fun _ k =>
-    k (Functor__Dict_Build (GHC.Tuple.pair_type a) (fun {a} {b} =>
-                             instance_Functor__GHC_Tuple_pair_type_a__op_zlzd__) (fun {a} {b} =>
-                             instance_Functor__GHC_Tuple_pair_type_a__fmap)).
+Program Instance instance_Functor__GHC_Tuple_pair_type_a_ {a} : Functor
+                                                                (GHC.Tuple.pair_type a) := fun _ k =>
+    k {|op_zlzd____ := fun {a} {b} =>
+        instance_Functor__GHC_Tuple_pair_type_a__op_zlzd__ ;
+      fmap__ := fun {a} {b} => instance_Functor__GHC_Tuple_pair_type_a__fmap |}.
 
 Local Definition instance_Applicative__GHC_Prim_arrow_a__pure {inst_a}
     : forall {a}, a -> (GHC.Prim.arrow inst_a) a :=
@@ -1215,11 +1217,11 @@ Local Definition instance_Functor__GHC_Prim_arrow_r__op_zlzd__ {inst_r}
   fun {a} {b} =>
     Coq.Program.Basics.compose instance_Functor__GHC_Prim_arrow_r__fmap const.
 
-Instance instance_Functor__GHC_Prim_arrow_r_ {r} : Functor (GHC.Prim.arrow r) :=
-  fun _ k =>
-    k (Functor__Dict_Build (GHC.Prim.arrow r) (fun {a} {b} =>
-                             instance_Functor__GHC_Prim_arrow_r__op_zlzd__) (fun {a} {b} =>
-                             instance_Functor__GHC_Prim_arrow_r__fmap)).
+Program Instance instance_Functor__GHC_Prim_arrow_r_ {r} : Functor
+                                                           (GHC.Prim.arrow r) := fun _ k =>
+    k {|op_zlzd____ := fun {a} {b} =>
+        instance_Functor__GHC_Prim_arrow_r__op_zlzd__ ;
+      fmap__ := fun {a} {b} => instance_Functor__GHC_Prim_arrow_r__fmap |}.
 
 Definition eqString : String -> String -> bool :=
   fix eqString arg_56__ arg_57__
@@ -1266,20 +1268,20 @@ Local Definition instance_forall___Monoid_a___Monoid__option_a__mconcat {inst_a}
   foldr instance_forall___Monoid_a___Monoid__option_a__mappend
   instance_forall___Monoid_a___Monoid__option_a__mempty.
 
-Instance instance_forall___Monoid_a___Monoid__option_a_ {a} `{Monoid a} : Monoid
-                                                                          (option a) := fun _ k =>
-    k (Monoid__Dict_Build (option a)
-                          instance_forall___Monoid_a___Monoid__option_a__mappend
-                          instance_forall___Monoid_a___Monoid__option_a__mconcat
-                          instance_forall___Monoid_a___Monoid__option_a__mempty).
+Program Instance instance_forall___Monoid_a___Monoid__option_a_ {a} `{Monoid a}
+  : Monoid (option a) := fun _ k =>
+    k {|mappend__ := instance_forall___Monoid_a___Monoid__option_a__mappend ;
+      mconcat__ := instance_forall___Monoid_a___Monoid__option_a__mconcat ;
+      mempty__ := instance_forall___Monoid_a___Monoid__option_a__mempty |}.
 
 Local Definition instance_Monoid_comparison_mconcat : list
                                                       comparison -> comparison :=
   foldr instance_Monoid_comparison_mappend instance_Monoid_comparison_mempty.
 
-Instance instance_Monoid_comparison : Monoid comparison := fun _ k =>
-    k (Monoid__Dict_Build comparison instance_Monoid_comparison_mappend
-                          instance_Monoid_comparison_mconcat instance_Monoid_comparison_mempty).
+Program Instance instance_Monoid_comparison : Monoid comparison := fun _ k =>
+    k {|mappend__ := instance_Monoid_comparison_mappend ;
+      mconcat__ := instance_Monoid_comparison_mconcat ;
+      mempty__ := instance_Monoid_comparison_mempty |}.
 
 Local Definition instance_forall___Monoid_a____Monoid_b____Monoid_c____Monoid_d____Monoid_e___Monoid__a___b___c___d___e__mconcat {inst_a}
                                                                                                                                  {inst_b}
@@ -1302,24 +1304,26 @@ Local Definition instance_forall___Monoid_a____Monoid_b____Monoid_c____Monoid_d_
   instance_forall___Monoid_a____Monoid_b____Monoid_c____Monoid_d____Monoid_e___Monoid__a___b___c___d___e__mappend
   instance_forall___Monoid_a____Monoid_b____Monoid_c____Monoid_d____Monoid_e___Monoid__a___b___c___d___e__mempty.
 
-Instance instance_forall___Monoid_a____Monoid_b____Monoid_c____Monoid_d____Monoid_e___Monoid__a___b___c___d___e_ {a}
-                                                                                                                 {b} {c}
-                                                                                                                 {d} {e}
-                                                                                                                 `{Monoid
-                                                                                                                 a}
-                                                                                                                 `{Monoid
-                                                                                                                 b}
-                                                                                                                 `{Monoid
-                                                                                                                 c}
-                                                                                                                 `{Monoid
-                                                                                                                 d}
-                                                                                                                 `{Monoid
-                                                                                                                 e}
+Program Instance instance_forall___Monoid_a____Monoid_b____Monoid_c____Monoid_d____Monoid_e___Monoid__a___b___c___d___e_ {a}
+                                                                                                                         {b}
+                                                                                                                         {c}
+                                                                                                                         {d}
+                                                                                                                         {e}
+                                                                                                                         `{Monoid
+                                                                                                                         a}
+                                                                                                                         `{Monoid
+                                                                                                                         b}
+                                                                                                                         `{Monoid
+                                                                                                                         c}
+                                                                                                                         `{Monoid
+                                                                                                                         d}
+                                                                                                                         `{Monoid
+                                                                                                                         e}
   : Monoid (a * b * c * d * e) := fun _ k =>
-    k (Monoid__Dict_Build (a * b * c * d * e)
-                          instance_forall___Monoid_a____Monoid_b____Monoid_c____Monoid_d____Monoid_e___Monoid__a___b___c___d___e__mappend
-                          instance_forall___Monoid_a____Monoid_b____Monoid_c____Monoid_d____Monoid_e___Monoid__a___b___c___d___e__mconcat
-                          instance_forall___Monoid_a____Monoid_b____Monoid_c____Monoid_d____Monoid_e___Monoid__a___b___c___d___e__mempty).
+    k
+    {|mappend__ := instance_forall___Monoid_a____Monoid_b____Monoid_c____Monoid_d____Monoid_e___Monoid__a___b___c___d___e__mappend ;
+    mconcat__ := instance_forall___Monoid_a____Monoid_b____Monoid_c____Monoid_d____Monoid_e___Monoid__a___b___c___d___e__mconcat ;
+    mempty__ := instance_forall___Monoid_a____Monoid_b____Monoid_c____Monoid_d____Monoid_e___Monoid__a___b___c___d___e__mempty |}.
 
 Local Definition instance_forall___Monoid_a____Monoid_b____Monoid_c____Monoid_d___Monoid__a___b___c___d__mconcat {inst_a}
                                                                                                                  {inst_b}
@@ -1339,21 +1343,17 @@ Local Definition instance_forall___Monoid_a____Monoid_b____Monoid_c____Monoid_d_
   instance_forall___Monoid_a____Monoid_b____Monoid_c____Monoid_d___Monoid__a___b___c___d__mappend
   instance_forall___Monoid_a____Monoid_b____Monoid_c____Monoid_d___Monoid__a___b___c___d__mempty.
 
-Instance instance_forall___Monoid_a____Monoid_b____Monoid_c____Monoid_d___Monoid__a___b___c___d_ {a}
-                                                                                                 {b} {c} {d} `{Monoid a}
-                                                                                                 `{Monoid b} `{Monoid c}
-                                                                                                 `{Monoid d} : Monoid (a
-                                                                                                                      *
-                                                                                                                      b
-                                                                                                                      *
-                                                                                                                      c
-                                                                                                                      *
-                                                                                                                      d) :=
-  fun _ k =>
-    k (Monoid__Dict_Build (a * b * c * d)
-                          instance_forall___Monoid_a____Monoid_b____Monoid_c____Monoid_d___Monoid__a___b___c___d__mappend
-                          instance_forall___Monoid_a____Monoid_b____Monoid_c____Monoid_d___Monoid__a___b___c___d__mconcat
-                          instance_forall___Monoid_a____Monoid_b____Monoid_c____Monoid_d___Monoid__a___b___c___d__mempty).
+Program Instance instance_forall___Monoid_a____Monoid_b____Monoid_c____Monoid_d___Monoid__a___b___c___d_ {a}
+                                                                                                         {b} {c} {d}
+                                                                                                         `{Monoid a}
+                                                                                                         `{Monoid b}
+                                                                                                         `{Monoid c}
+                                                                                                         `{Monoid d}
+  : Monoid (a * b * c * d) := fun _ k =>
+    k
+    {|mappend__ := instance_forall___Monoid_a____Monoid_b____Monoid_c____Monoid_d___Monoid__a___b___c___d__mappend ;
+    mconcat__ := instance_forall___Monoid_a____Monoid_b____Monoid_c____Monoid_d___Monoid__a___b___c___d__mconcat ;
+    mempty__ := instance_forall___Monoid_a____Monoid_b____Monoid_c____Monoid_d___Monoid__a___b___c___d__mempty |}.
 
 Local Definition instance_forall___Monoid_a____Monoid_b____Monoid_c___Monoid__a___b___c__mconcat {inst_a}
                                                                                                  {inst_b} {inst_c}
@@ -1373,14 +1373,15 @@ Local Definition instance_forall___Monoid_a____Monoid_b____Monoid_c___Monoid__a_
   instance_forall___Monoid_a____Monoid_b____Monoid_c___Monoid__a___b___c__mappend
   instance_forall___Monoid_a____Monoid_b____Monoid_c___Monoid__a___b___c__mempty.
 
-Instance instance_forall___Monoid_a____Monoid_b____Monoid_c___Monoid__a___b___c_ {a}
-                                                                                 {b} {c} `{Monoid a} `{Monoid b}
-                                                                                 `{Monoid c} : Monoid (a * b * c) :=
+Program Instance instance_forall___Monoid_a____Monoid_b____Monoid_c___Monoid__a___b___c_ {a}
+                                                                                         {b} {c} `{Monoid a} `{Monoid b}
+                                                                                         `{Monoid c} : Monoid (a * b *
+                                                                                                              c) :=
   fun _ k =>
-    k (Monoid__Dict_Build (a * b * c)
-                          instance_forall___Monoid_a____Monoid_b____Monoid_c___Monoid__a___b___c__mappend
-                          instance_forall___Monoid_a____Monoid_b____Monoid_c___Monoid__a___b___c__mconcat
-                          instance_forall___Monoid_a____Monoid_b____Monoid_c___Monoid__a___b___c__mempty).
+    k
+    {|mappend__ := instance_forall___Monoid_a____Monoid_b____Monoid_c___Monoid__a___b___c__mappend ;
+    mconcat__ := instance_forall___Monoid_a____Monoid_b____Monoid_c___Monoid__a___b___c__mconcat ;
+    mempty__ := instance_forall___Monoid_a____Monoid_b____Monoid_c___Monoid__a___b___c__mempty |}.
 
 Local Definition instance_forall___Monoid_a____Monoid_b___Monoid__a___b__mconcat {inst_a}
                                                                                  {inst_b} `{Monoid inst_a} `{Monoid
@@ -1390,12 +1391,13 @@ Local Definition instance_forall___Monoid_a____Monoid_b___Monoid__a___b__mconcat
   foldr instance_forall___Monoid_a____Monoid_b___Monoid__a___b__mappend
   instance_forall___Monoid_a____Monoid_b___Monoid__a___b__mempty.
 
-Instance instance_forall___Monoid_a____Monoid_b___Monoid__a___b_ {a} {b}
-                                                                 `{Monoid a} `{Monoid b} : Monoid (a * b) := fun _ k =>
-    k (Monoid__Dict_Build (a * b)
-                          instance_forall___Monoid_a____Monoid_b___Monoid__a___b__mappend
-                          instance_forall___Monoid_a____Monoid_b___Monoid__a___b__mconcat
-                          instance_forall___Monoid_a____Monoid_b___Monoid__a___b__mempty).
+Program Instance instance_forall___Monoid_a____Monoid_b___Monoid__a___b_ {a} {b}
+                                                                         `{Monoid a} `{Monoid b} : Monoid (a * b) :=
+  fun _ k =>
+    k
+    {|mappend__ := instance_forall___Monoid_a____Monoid_b___Monoid__a___b__mappend ;
+    mconcat__ := instance_forall___Monoid_a____Monoid_b___Monoid__a___b__mconcat ;
+    mempty__ := instance_forall___Monoid_a____Monoid_b___Monoid__a___b__mempty |}.
 
 Local Definition instance_forall___Monoid_b___Monoid__a____b__mconcat {inst_b}
                                                                       {inst_a} `{Monoid inst_b} : list
@@ -1403,12 +1405,11 @@ Local Definition instance_forall___Monoid_b___Monoid__a____b__mconcat {inst_b}
   foldr instance_forall___Monoid_b___Monoid__a____b__mappend
   instance_forall___Monoid_b___Monoid__a____b__mempty.
 
-Instance instance_forall___Monoid_b___Monoid__a____b_ {b} {a} `{Monoid b}
-  : Monoid (a -> b) := fun _ k =>
-    k (Monoid__Dict_Build (a -> b)
-                          instance_forall___Monoid_b___Monoid__a____b__mappend
-                          instance_forall___Monoid_b___Monoid__a____b__mconcat
-                          instance_forall___Monoid_b___Monoid__a____b__mempty).
+Program Instance instance_forall___Monoid_b___Monoid__a____b_ {b} {a} `{Monoid
+                                                              b} : Monoid (a -> b) := fun _ k =>
+    k {|mappend__ := instance_forall___Monoid_b___Monoid__a____b__mappend ;
+      mconcat__ := instance_forall___Monoid_b___Monoid__a____b__mconcat ;
+      mempty__ := instance_forall___Monoid_b___Monoid__a____b__mempty |}.
 
 Definition id {a} : a -> a :=
   fun arg_54__ => match arg_54__ with | x => x end.
@@ -1430,23 +1431,23 @@ Local Definition instance_Applicative__GHC_Prim_arrow_a__op_ztzg__ {inst_a}
                                                                                     a1) a2
       end.
 
-Instance instance_Applicative__GHC_Prim_arrow_a_ {a} : Applicative
-                                                       (GHC.Prim.arrow a) := fun _ k =>
-    k (Applicative__Dict_Build (GHC.Prim.arrow a) (fun {a} {b} =>
-                                 instance_Applicative__GHC_Prim_arrow_a__op_ztzg__) (fun {a} {b} =>
-                                 instance_Applicative__GHC_Prim_arrow_a__op_zlztzg__) (fun {a} =>
-                                 instance_Applicative__GHC_Prim_arrow_a__pure)).
+Program Instance instance_Applicative__GHC_Prim_arrow_a_ {a} : Applicative
+                                                               (GHC.Prim.arrow a) := fun _ k =>
+    k {|op_ztzg____ := fun {a} {b} =>
+        instance_Applicative__GHC_Prim_arrow_a__op_ztzg__ ;
+      op_zlztzg____ := fun {a} {b} =>
+        instance_Applicative__GHC_Prim_arrow_a__op_zlztzg__ ;
+      pure__ := fun {a} => instance_Applicative__GHC_Prim_arrow_a__pure |}.
 
 Local Definition instance_Monad__GHC_Prim_arrow_r__return_ {inst_r}
     : forall {a}, a -> (GHC.Prim.arrow inst_r) a :=
   fun {a} => pure.
 
-Instance instance_Monad__GHC_Prim_arrow_r_ {r} : Monad (GHC.Prim.arrow r) :=
-  fun _ k =>
-    k (Monad__Dict_Build (GHC.Prim.arrow r) (fun {a} {b} =>
-                           instance_Monad__GHC_Prim_arrow_r__op_zgzg__) (fun {a} {b} =>
-                           instance_Monad__GHC_Prim_arrow_r__op_zgzgze__) (fun {a} =>
-                           instance_Monad__GHC_Prim_arrow_r__return_)).
+Program Instance instance_Monad__GHC_Prim_arrow_r_ {r} : Monad (GHC.Prim.arrow
+                                                               r) := fun _ k =>
+    k {|op_zgzg____ := fun {a} {b} => instance_Monad__GHC_Prim_arrow_r__op_zgzg__ ;
+      op_zgzgze____ := fun {a} {b} => instance_Monad__GHC_Prim_arrow_r__op_zgzgze__ ;
+      return___ := fun {a} => instance_Monad__GHC_Prim_arrow_r__return_ |}.
 
 Local Definition instance_forall___Monoid_a___Applicative__GHC_Tuple_pair_type_a__op_ztzg__ {inst_a}
                                                                                             `{Monoid inst_a}
@@ -1461,15 +1462,16 @@ Local Definition instance_forall___Monoid_a___Applicative__GHC_Tuple_pair_type_a
           (op_zlzd__ id a1) a2
       end.
 
-Instance instance_forall___Monoid_a___Applicative__GHC_Tuple_pair_type_a_ {a}
-                                                                          `{Monoid a} : Applicative (GHC.Tuple.pair_type
-                                                                                                    a) := fun _ k =>
-    k (Applicative__Dict_Build (GHC.Tuple.pair_type a) (fun {a} {b} =>
-                                 instance_forall___Monoid_a___Applicative__GHC_Tuple_pair_type_a__op_ztzg__)
-                               (fun {a} {b} =>
-                                 instance_forall___Monoid_a___Applicative__GHC_Tuple_pair_type_a__op_zlztzg__)
-                               (fun {a} =>
-                                 instance_forall___Monoid_a___Applicative__GHC_Tuple_pair_type_a__pure)).
+Program Instance instance_forall___Monoid_a___Applicative__GHC_Tuple_pair_type_a_ {a}
+                                                                                  `{Monoid a} : Applicative
+                                                                                                (GHC.Tuple.pair_type
+                                                                                                a) := fun _ k =>
+    k {|op_ztzg____ := fun {a} {b} =>
+        instance_forall___Monoid_a___Applicative__GHC_Tuple_pair_type_a__op_ztzg__ ;
+      op_zlztzg____ := fun {a} {b} =>
+        instance_forall___Monoid_a___Applicative__GHC_Tuple_pair_type_a__op_zlztzg__ ;
+      pure__ := fun {a} =>
+        instance_forall___Monoid_a___Applicative__GHC_Tuple_pair_type_a__pure |}.
 
 Local Definition instance_forall___Monoid_a___Monad__GHC_Tuple_pair_type_a__return_ {inst_a}
                                                                                     `{Monoid inst_a} : forall {a},
@@ -1512,14 +1514,15 @@ Local Definition instance_forall___Monoid_a___Monad__GHC_Tuple_pair_type_a__op_z
                                                                                  (fun arg_17__ => k)
       end.
 
-Instance instance_forall___Monoid_a___Monad__GHC_Tuple_pair_type_a_ {a} `{Monoid
-                                                                    a} : Monad (GHC.Tuple.pair_type a) := fun _ k =>
-    k (Monad__Dict_Build (GHC.Tuple.pair_type a) (fun {a} {b} =>
-                           instance_forall___Monoid_a___Monad__GHC_Tuple_pair_type_a__op_zgzg__) (fun {a}
-                                                                                                      {b} =>
-                           instance_forall___Monoid_a___Monad__GHC_Tuple_pair_type_a__op_zgzgze__)
-                         (fun {a} =>
-                           instance_forall___Monoid_a___Monad__GHC_Tuple_pair_type_a__return_)).
+Program Instance instance_forall___Monoid_a___Monad__GHC_Tuple_pair_type_a_ {a}
+                                                                            `{Monoid a} : Monad (GHC.Tuple.pair_type
+                                                                                                a) := fun _ k =>
+    k {|op_zgzg____ := fun {a} {b} =>
+        instance_forall___Monoid_a___Monad__GHC_Tuple_pair_type_a__op_zgzg__ ;
+      op_zgzgze____ := fun {a} {b} =>
+        instance_forall___Monoid_a___Monad__GHC_Tuple_pair_type_a__op_zgzgze__ ;
+      return___ := fun {a} =>
+        instance_forall___Monoid_a___Monad__GHC_Tuple_pair_type_a__return_ |}.
 
 Definition liftA {f} {a} {b} `{Applicative f} : (a -> b) -> f a -> f b :=
   fun arg_143__ arg_144__ =>
@@ -1603,15 +1606,14 @@ Local Definition instance_Functor_list_op_zlzd__ : forall {a} {b},
                                                      a -> list b -> list a :=
   fun {a} {b} => Coq.Program.Basics.compose instance_Functor_list_fmap const.
 
-Instance instance_Functor_list : Functor list := fun _ k =>
-    k (Functor__Dict_Build list (fun {a} {b} => instance_Functor_list_op_zlzd__)
-                           (fun {a} {b} => instance_Functor_list_fmap)).
+Program Instance instance_Functor_list : Functor list := fun _ k =>
+    k {|op_zlzd____ := fun {a} {b} => instance_Functor_list_op_zlzd__ ;
+      fmap__ := fun {a} {b} => instance_Functor_list_fmap |}.
 
-Instance instance_Applicative_list : Applicative list := fun _ k =>
-    k (Applicative__Dict_Build list (fun {a} {b} =>
-                                 instance_Applicative_list_op_ztzg__) (fun {a} {b} =>
-                                 instance_Applicative_list_op_zlztzg__) (fun {a} =>
-                                 instance_Applicative_list_pure)).
+Program Instance instance_Applicative_list : Applicative list := fun _ k =>
+    k {|op_ztzg____ := fun {a} {b} => instance_Applicative_list_op_ztzg__ ;
+      op_zlztzg____ := fun {a} {b} => instance_Applicative_list_op_zlztzg__ ;
+      pure__ := fun {a} => instance_Applicative_list_pure |}.
 
 Local Definition instance_Monad_list_return_ : forall {a}, a -> list a :=
   fun {a} => pure.
@@ -1620,10 +1622,10 @@ Local Definition instance_Monad_list_op_zgzg__ : forall {a} {b},
                                                    list a -> list b -> list b :=
   fun {a} {b} => op_ztzg__.
 
-Instance instance_Monad_list : Monad list := fun _ k =>
-    k (Monad__Dict_Build list (fun {a} {b} => instance_Monad_list_op_zgzg__)
-                         (fun {a} {b} => instance_Monad_list_op_zgzgze__) (fun {a} =>
-                           instance_Monad_list_return_)).
+Program Instance instance_Monad_list : Monad list := fun _ k =>
+    k {|op_zgzg____ := fun {a} {b} => instance_Monad_list_op_zgzg__ ;
+      op_zgzgze____ := fun {a} {b} => instance_Monad_list_op_zgzgze__ ;
+      return___ := fun {a} => instance_Monad_list_return_ |}.
 
 Definition mapFB {elt} {lst} {a}
     : (elt -> lst -> lst) -> (a -> elt) -> a -> lst -> lst :=

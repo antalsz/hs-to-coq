@@ -7,6 +7,7 @@ Set Maximal Implicit Insertion.
 Unset Strict Implicit.
 Unset Printing Implicit Defensive.
 
+Require Coq.Program.Tactics.
 Require Coq.Program.Wf.
 
 (* Preamble *)
@@ -404,14 +405,14 @@ Local Definition instance_forall___GHC_Base_Monoid_a___GHC_Base_Monoid__Dual_a__
   instance_forall___GHC_Base_Monoid_a___GHC_Base_Monoid__Dual_a__mappend
   instance_forall___GHC_Base_Monoid_a___GHC_Base_Monoid__Dual_a__mempty.
 
-Instance instance_forall___GHC_Base_Monoid_a___GHC_Base_Monoid__Dual_a_ {a}
-                                                                        `{GHC.Base.Monoid a} : GHC.Base.Monoid (Dual
-                                                                                                               a) :=
-  fun _ k =>
-    k (GHC.Base.Monoid__Dict_Build (Dual a)
-                                   instance_forall___GHC_Base_Monoid_a___GHC_Base_Monoid__Dual_a__mappend
-                                   instance_forall___GHC_Base_Monoid_a___GHC_Base_Monoid__Dual_a__mconcat
-                                   instance_forall___GHC_Base_Monoid_a___GHC_Base_Monoid__Dual_a__mempty).
+Program Instance instance_forall___GHC_Base_Monoid_a___GHC_Base_Monoid__Dual_a_ {a}
+                                                                                `{GHC.Base.Monoid a} : GHC.Base.Monoid
+                                                                                                       (Dual a) := fun _
+                                                                                                                       k =>
+    k
+    {|GHC.Base.mappend__ := instance_forall___GHC_Base_Monoid_a___GHC_Base_Monoid__Dual_a__mappend ;
+    GHC.Base.mconcat__ := instance_forall___GHC_Base_Monoid_a___GHC_Base_Monoid__Dual_a__mconcat ;
+    GHC.Base.mempty__ := instance_forall___GHC_Base_Monoid_a___GHC_Base_Monoid__Dual_a__mempty |}.
 
 Local Definition instance_GHC_Base_Functor_Dual_fmap : forall {a} {b},
                                                          (a -> b) -> Dual a -> Dual b :=
@@ -421,10 +422,11 @@ Local Definition instance_GHC_Base_Functor_Dual_op_zlzd__ : forall {a} {b},
                                                               a -> Dual b -> Dual a :=
   fun {a} {b} => fun x => instance_GHC_Base_Functor_Dual_fmap (GHC.Base.const x).
 
-Instance instance_GHC_Base_Functor_Dual : GHC.Base.Functor Dual := fun _ k =>
-    k (GHC.Base.Functor__Dict_Build Dual (fun {a} {b} =>
-                                      instance_GHC_Base_Functor_Dual_op_zlzd__) (fun {a} {b} =>
-                                      instance_GHC_Base_Functor_Dual_fmap)).
+Program Instance instance_GHC_Base_Functor_Dual : GHC.Base.Functor Dual := fun _
+                                                                               k =>
+    k {|GHC.Base.op_zlzd____ := fun {a} {b} =>
+        instance_GHC_Base_Functor_Dual_op_zlzd__ ;
+      GHC.Base.fmap__ := fun {a} {b} => instance_GHC_Base_Functor_Dual_fmap |}.
 
 Local Definition instance_GHC_Base_Applicative_Dual_op_zlztzg__ : forall {a}
                                                                          {b},
@@ -442,12 +444,13 @@ Local Definition instance_GHC_Base_Applicative_Dual_pure : forall {a},
                                                              a -> Dual a :=
   fun {a} => Mk_Dual.
 
-Instance instance_GHC_Base_Applicative_Dual : GHC.Base.Applicative Dual := fun _
-                                                                               k =>
-    k (GHC.Base.Applicative__Dict_Build Dual (fun {a} {b} =>
-                                          instance_GHC_Base_Applicative_Dual_op_ztzg__) (fun {a} {b} =>
-                                          instance_GHC_Base_Applicative_Dual_op_zlztzg__) (fun {a} =>
-                                          instance_GHC_Base_Applicative_Dual_pure)).
+Program Instance instance_GHC_Base_Applicative_Dual : GHC.Base.Applicative
+                                                      Dual := fun _ k =>
+    k {|GHC.Base.op_ztzg____ := fun {a} {b} =>
+        instance_GHC_Base_Applicative_Dual_op_ztzg__ ;
+      GHC.Base.op_zlztzg____ := fun {a} {b} =>
+        instance_GHC_Base_Applicative_Dual_op_zlztzg__ ;
+      GHC.Base.pure__ := fun {a} => instance_GHC_Base_Applicative_Dual_pure |}.
 
 Local Definition instance_GHC_Base_Monad_Dual_op_zgzg__ : forall {a} {b},
                                                             Dual a -> Dual b -> Dual b :=
@@ -465,11 +468,13 @@ Local Definition instance_GHC_Base_Monad_Dual_return_ : forall {a},
                                                           a -> Dual a :=
   fun {a} => GHC.Base.pure.
 
-Instance instance_GHC_Base_Monad_Dual : GHC.Base.Monad Dual := fun _ k =>
-    k (GHC.Base.Monad__Dict_Build Dual (fun {a} {b} =>
-                                    instance_GHC_Base_Monad_Dual_op_zgzg__) (fun {a} {b} =>
-                                    instance_GHC_Base_Monad_Dual_op_zgzgze__) (fun {a} =>
-                                    instance_GHC_Base_Monad_Dual_return_)).
+Program Instance instance_GHC_Base_Monad_Dual : GHC.Base.Monad Dual := fun _
+                                                                           k =>
+    k {|GHC.Base.op_zgzg____ := fun {a} {b} =>
+        instance_GHC_Base_Monad_Dual_op_zgzg__ ;
+      GHC.Base.op_zgzgze____ := fun {a} {b} =>
+        instance_GHC_Base_Monad_Dual_op_zgzgze__ ;
+      GHC.Base.return___ := fun {a} => instance_GHC_Base_Monad_Dual_return_ |}.
 
 Local Definition instance_GHC_Base_Monoid__Endo_a__mappend {inst_a} : (Endo
                                                                       inst_a) -> (Endo inst_a) -> (Endo inst_a) :=
@@ -487,12 +492,11 @@ Local Definition instance_GHC_Base_Monoid__Endo_a__mconcat {inst_a} : list (Endo
   GHC.Base.foldr instance_GHC_Base_Monoid__Endo_a__mappend
                  instance_GHC_Base_Monoid__Endo_a__mempty.
 
-Instance instance_GHC_Base_Monoid__Endo_a_ {a} : GHC.Base.Monoid (Endo a) :=
-  fun _ k =>
-    k (GHC.Base.Monoid__Dict_Build (Endo a)
-                                   instance_GHC_Base_Monoid__Endo_a__mappend
-                                   instance_GHC_Base_Monoid__Endo_a__mconcat
-                                   instance_GHC_Base_Monoid__Endo_a__mempty).
+Program Instance instance_GHC_Base_Monoid__Endo_a_ {a} : GHC.Base.Monoid (Endo
+                                                                         a) := fun _ k =>
+    k {|GHC.Base.mappend__ := instance_GHC_Base_Monoid__Endo_a__mappend ;
+      GHC.Base.mconcat__ := instance_GHC_Base_Monoid__Endo_a__mconcat ;
+      GHC.Base.mempty__ := instance_GHC_Base_Monoid__Endo_a__mempty |}.
 
 Local Definition instance_GHC_Base_Monoid_All_mappend : All -> All -> All :=
   fun arg_187__ arg_188__ =>
@@ -507,9 +511,11 @@ Local Definition instance_GHC_Base_Monoid_All_mconcat : list All -> All :=
   GHC.Base.foldr instance_GHC_Base_Monoid_All_mappend
                  instance_GHC_Base_Monoid_All_mempty.
 
-Instance instance_GHC_Base_Monoid_All : GHC.Base.Monoid All := fun _ k =>
-    k (GHC.Base.Monoid__Dict_Build All instance_GHC_Base_Monoid_All_mappend
-                                   instance_GHC_Base_Monoid_All_mconcat instance_GHC_Base_Monoid_All_mempty).
+Program Instance instance_GHC_Base_Monoid_All : GHC.Base.Monoid All := fun _
+                                                                           k =>
+    k {|GHC.Base.mappend__ := instance_GHC_Base_Monoid_All_mappend ;
+      GHC.Base.mconcat__ := instance_GHC_Base_Monoid_All_mconcat ;
+      GHC.Base.mempty__ := instance_GHC_Base_Monoid_All_mempty |}.
 
 Local Definition instance_GHC_Base_Monoid_Any_mappend : Any -> Any -> Any :=
   fun arg_182__ arg_183__ =>
@@ -524,9 +530,11 @@ Local Definition instance_GHC_Base_Monoid_Any_mconcat : list Any -> Any :=
   GHC.Base.foldr instance_GHC_Base_Monoid_Any_mappend
                  instance_GHC_Base_Monoid_Any_mempty.
 
-Instance instance_GHC_Base_Monoid_Any : GHC.Base.Monoid Any := fun _ k =>
-    k (GHC.Base.Monoid__Dict_Build Any instance_GHC_Base_Monoid_Any_mappend
-                                   instance_GHC_Base_Monoid_Any_mconcat instance_GHC_Base_Monoid_Any_mempty).
+Program Instance instance_GHC_Base_Monoid_Any : GHC.Base.Monoid Any := fun _
+                                                                           k =>
+    k {|GHC.Base.mappend__ := instance_GHC_Base_Monoid_Any_mappend ;
+      GHC.Base.mconcat__ := instance_GHC_Base_Monoid_Any_mconcat ;
+      GHC.Base.mempty__ := instance_GHC_Base_Monoid_Any_mempty |}.
 
 (* Skipping instance
    instance_forall___GHC_Num_Num_a___GHC_Base_Monoid__Sum_a_ *)
@@ -539,10 +547,11 @@ Local Definition instance_GHC_Base_Functor_Sum_op_zlzd__ : forall {a} {b},
                                                              a -> Sum b -> Sum a :=
   fun {a} {b} => fun x => instance_GHC_Base_Functor_Sum_fmap (GHC.Base.const x).
 
-Instance instance_GHC_Base_Functor_Sum : GHC.Base.Functor Sum := fun _ k =>
-    k (GHC.Base.Functor__Dict_Build Sum (fun {a} {b} =>
-                                      instance_GHC_Base_Functor_Sum_op_zlzd__) (fun {a} {b} =>
-                                      instance_GHC_Base_Functor_Sum_fmap)).
+Program Instance instance_GHC_Base_Functor_Sum : GHC.Base.Functor Sum := fun _
+                                                                             k =>
+    k {|GHC.Base.op_zlzd____ := fun {a} {b} =>
+        instance_GHC_Base_Functor_Sum_op_zlzd__ ;
+      GHC.Base.fmap__ := fun {a} {b} => instance_GHC_Base_Functor_Sum_fmap |}.
 
 Local Definition instance_GHC_Base_Applicative_Sum_op_zlztzg__ : forall {a} {b},
                                                                    Sum (a -> b) -> Sum a -> Sum b :=
@@ -559,12 +568,13 @@ Local Definition instance_GHC_Base_Applicative_Sum_pure : forall {a},
                                                             a -> Sum a :=
   fun {a} => Mk_Sum.
 
-Instance instance_GHC_Base_Applicative_Sum : GHC.Base.Applicative Sum := fun _
-                                                                             k =>
-    k (GHC.Base.Applicative__Dict_Build Sum (fun {a} {b} =>
-                                          instance_GHC_Base_Applicative_Sum_op_ztzg__) (fun {a} {b} =>
-                                          instance_GHC_Base_Applicative_Sum_op_zlztzg__) (fun {a} =>
-                                          instance_GHC_Base_Applicative_Sum_pure)).
+Program Instance instance_GHC_Base_Applicative_Sum : GHC.Base.Applicative Sum :=
+  fun _ k =>
+    k {|GHC.Base.op_ztzg____ := fun {a} {b} =>
+        instance_GHC_Base_Applicative_Sum_op_ztzg__ ;
+      GHC.Base.op_zlztzg____ := fun {a} {b} =>
+        instance_GHC_Base_Applicative_Sum_op_zlztzg__ ;
+      GHC.Base.pure__ := fun {a} => instance_GHC_Base_Applicative_Sum_pure |}.
 
 Local Definition instance_GHC_Base_Monad_Sum_op_zgzg__ : forall {a} {b},
                                                            Sum a -> Sum b -> Sum b :=
@@ -581,11 +591,12 @@ Local Definition instance_GHC_Base_Monad_Sum_op_zgzgze__ : forall {a} {b},
 Local Definition instance_GHC_Base_Monad_Sum_return_ : forall {a}, a -> Sum a :=
   fun {a} => GHC.Base.pure.
 
-Instance instance_GHC_Base_Monad_Sum : GHC.Base.Monad Sum := fun _ k =>
-    k (GHC.Base.Monad__Dict_Build Sum (fun {a} {b} =>
-                                    instance_GHC_Base_Monad_Sum_op_zgzg__) (fun {a} {b} =>
-                                    instance_GHC_Base_Monad_Sum_op_zgzgze__) (fun {a} =>
-                                    instance_GHC_Base_Monad_Sum_return_)).
+Program Instance instance_GHC_Base_Monad_Sum : GHC.Base.Monad Sum := fun _ k =>
+    k {|GHC.Base.op_zgzg____ := fun {a} {b} =>
+        instance_GHC_Base_Monad_Sum_op_zgzg__ ;
+      GHC.Base.op_zgzgze____ := fun {a} {b} =>
+        instance_GHC_Base_Monad_Sum_op_zgzgze__ ;
+      GHC.Base.return___ := fun {a} => instance_GHC_Base_Monad_Sum_return_ |}.
 
 (* Skipping instance
    instance_forall___GHC_Num_Num_a___GHC_Base_Monoid__Product_a_ *)
@@ -599,11 +610,11 @@ Local Definition instance_GHC_Base_Functor_Product_op_zlzd__ : forall {a} {b},
   fun {a} {b} =>
     fun x => instance_GHC_Base_Functor_Product_fmap (GHC.Base.const x).
 
-Instance instance_GHC_Base_Functor_Product : GHC.Base.Functor Product := fun _
-                                                                             k =>
-    k (GHC.Base.Functor__Dict_Build Product (fun {a} {b} =>
-                                      instance_GHC_Base_Functor_Product_op_zlzd__) (fun {a} {b} =>
-                                      instance_GHC_Base_Functor_Product_fmap)).
+Program Instance instance_GHC_Base_Functor_Product : GHC.Base.Functor Product :=
+  fun _ k =>
+    k {|GHC.Base.op_zlzd____ := fun {a} {b} =>
+        instance_GHC_Base_Functor_Product_op_zlzd__ ;
+      GHC.Base.fmap__ := fun {a} {b} => instance_GHC_Base_Functor_Product_fmap |}.
 
 Local Definition instance_GHC_Base_Applicative_Product_op_zlztzg__ : forall {a}
                                                                             {b},
@@ -622,12 +633,13 @@ Local Definition instance_GHC_Base_Applicative_Product_pure : forall {a},
                                                                 a -> Product a :=
   fun {a} => Mk_Product.
 
-Instance instance_GHC_Base_Applicative_Product : GHC.Base.Applicative Product :=
-  fun _ k =>
-    k (GHC.Base.Applicative__Dict_Build Product (fun {a} {b} =>
-                                          instance_GHC_Base_Applicative_Product_op_ztzg__) (fun {a} {b} =>
-                                          instance_GHC_Base_Applicative_Product_op_zlztzg__) (fun {a} =>
-                                          instance_GHC_Base_Applicative_Product_pure)).
+Program Instance instance_GHC_Base_Applicative_Product : GHC.Base.Applicative
+                                                         Product := fun _ k =>
+    k {|GHC.Base.op_ztzg____ := fun {a} {b} =>
+        instance_GHC_Base_Applicative_Product_op_ztzg__ ;
+      GHC.Base.op_zlztzg____ := fun {a} {b} =>
+        instance_GHC_Base_Applicative_Product_op_zlztzg__ ;
+      GHC.Base.pure__ := fun {a} => instance_GHC_Base_Applicative_Product_pure |}.
 
 Local Definition instance_GHC_Base_Monad_Product_op_zgzg__ : forall {a} {b},
                                                                Product a -> Product b -> Product b :=
@@ -645,11 +657,13 @@ Local Definition instance_GHC_Base_Monad_Product_return_ : forall {a},
                                                              a -> Product a :=
   fun {a} => GHC.Base.pure.
 
-Instance instance_GHC_Base_Monad_Product : GHC.Base.Monad Product := fun _ k =>
-    k (GHC.Base.Monad__Dict_Build Product (fun {a} {b} =>
-                                    instance_GHC_Base_Monad_Product_op_zgzg__) (fun {a} {b} =>
-                                    instance_GHC_Base_Monad_Product_op_zgzgze__) (fun {a} =>
-                                    instance_GHC_Base_Monad_Product_return_)).
+Program Instance instance_GHC_Base_Monad_Product : GHC.Base.Monad Product :=
+  fun _ k =>
+    k {|GHC.Base.op_zgzg____ := fun {a} {b} =>
+        instance_GHC_Base_Monad_Product_op_zgzg__ ;
+      GHC.Base.op_zgzgze____ := fun {a} {b} =>
+        instance_GHC_Base_Monad_Product_op_zgzgze__ ;
+      GHC.Base.return___ := fun {a} => instance_GHC_Base_Monad_Product_return_ |}.
 
 Local Definition instance_GHC_Base_Monoid__First_a__mappend {inst_a} : (First
                                                                        inst_a) -> (First inst_a) -> (First inst_a) :=
@@ -668,12 +682,11 @@ Local Definition instance_GHC_Base_Monoid__First_a__mconcat {inst_a} : list
   GHC.Base.foldr instance_GHC_Base_Monoid__First_a__mappend
                  instance_GHC_Base_Monoid__First_a__mempty.
 
-Instance instance_GHC_Base_Monoid__First_a_ {a} : GHC.Base.Monoid (First a) :=
-  fun _ k =>
-    k (GHC.Base.Monoid__Dict_Build (First a)
-                                   instance_GHC_Base_Monoid__First_a__mappend
-                                   instance_GHC_Base_Monoid__First_a__mconcat
-                                   instance_GHC_Base_Monoid__First_a__mempty).
+Program Instance instance_GHC_Base_Monoid__First_a_ {a} : GHC.Base.Monoid (First
+                                                                          a) := fun _ k =>
+    k {|GHC.Base.mappend__ := instance_GHC_Base_Monoid__First_a__mappend ;
+      GHC.Base.mconcat__ := instance_GHC_Base_Monoid__First_a__mconcat ;
+      GHC.Base.mempty__ := instance_GHC_Base_Monoid__First_a__mempty |}.
 
 Local Definition instance_GHC_Base_Monoid__Last_a__mappend {inst_a} : (Last
                                                                       inst_a) -> (Last inst_a) -> (Last inst_a) :=
@@ -692,12 +705,11 @@ Local Definition instance_GHC_Base_Monoid__Last_a__mconcat {inst_a} : list (Last
   GHC.Base.foldr instance_GHC_Base_Monoid__Last_a__mappend
                  instance_GHC_Base_Monoid__Last_a__mempty.
 
-Instance instance_GHC_Base_Monoid__Last_a_ {a} : GHC.Base.Monoid (Last a) :=
-  fun _ k =>
-    k (GHC.Base.Monoid__Dict_Build (Last a)
-                                   instance_GHC_Base_Monoid__Last_a__mappend
-                                   instance_GHC_Base_Monoid__Last_a__mconcat
-                                   instance_GHC_Base_Monoid__Last_a__mempty).
+Program Instance instance_GHC_Base_Monoid__Last_a_ {a} : GHC.Base.Monoid (Last
+                                                                         a) := fun _ k =>
+    k {|GHC.Base.mappend__ := instance_GHC_Base_Monoid__Last_a__mappend ;
+      GHC.Base.mconcat__ := instance_GHC_Base_Monoid__Last_a__mconcat ;
+      GHC.Base.mempty__ := instance_GHC_Base_Monoid__Last_a__mempty |}.
 
 Local Definition instance_forall___GHC_Base_Alternative_f___GHC_Base_Monoid__Alt_f_a__mappend {inst_f}
                                                                                               {inst_a} `{_

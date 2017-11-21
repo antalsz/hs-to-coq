@@ -7,6 +7,7 @@ Set Maximal Implicit Insertion.
 Unset Strict Implicit.
 Unset Printing Implicit Defensive.
 
+Require Coq.Program.Tactics.
 Require Coq.Program.Wf.
 
 (* Converted imports: *)
@@ -74,14 +75,13 @@ Local Definition instance_forall___GHC_Base_Monad_m___GHC_Base_Functor__WrappedM
       instance_forall___GHC_Base_Monad_m___GHC_Base_Functor__WrappedMonad_m__fmap
       (GHC.Base.const x).
 
-Instance instance_forall___GHC_Base_Monad_m___GHC_Base_Functor__WrappedMonad_m_ {m}
-                                                                                `{GHC.Base.Monad m} : GHC.Base.Functor
-                                                                                                      (WrappedMonad
-                                                                                                      m) := fun _ k =>
-    k (GHC.Base.Functor__Dict_Build (WrappedMonad m) (fun {a} {b} =>
-                                      instance_forall___GHC_Base_Monad_m___GHC_Base_Functor__WrappedMonad_m__op_zlzd__)
-                                    (fun {a} {b} =>
-                                      instance_forall___GHC_Base_Monad_m___GHC_Base_Functor__WrappedMonad_m__fmap)).
+Program Instance instance_forall___GHC_Base_Monad_m___GHC_Base_Functor__WrappedMonad_m_ {m}
+                                                                                        `{GHC.Base.Monad m}
+  : GHC.Base.Functor (WrappedMonad m) := fun _ k =>
+    k {|GHC.Base.op_zlzd____ := fun {a} {b} =>
+        instance_forall___GHC_Base_Monad_m___GHC_Base_Functor__WrappedMonad_m__op_zlzd__ ;
+      GHC.Base.fmap__ := fun {a} {b} =>
+        instance_forall___GHC_Base_Monad_m___GHC_Base_Functor__WrappedMonad_m__fmap |}.
 
 Local Definition instance_forall___GHC_Base_Monad_m___GHC_Base_Applicative__WrappedMonad_m__op_zlztzg__ {inst_m}
                                                                                                         `{GHC.Base.Monad
@@ -113,15 +113,15 @@ Local Definition instance_forall___GHC_Base_Monad_m___GHC_Base_Applicative__Wrap
                                                                                                              a :=
   fun {a} => Coq.Program.Basics.compose Mk_WrapMonad GHC.Base.pure.
 
-Instance instance_forall___GHC_Base_Monad_m___GHC_Base_Applicative__WrappedMonad_m_ {m}
-                                                                                    `{GHC.Base.Monad m}
+Program Instance instance_forall___GHC_Base_Monad_m___GHC_Base_Applicative__WrappedMonad_m_ {m}
+                                                                                            `{GHC.Base.Monad m}
   : GHC.Base.Applicative (WrappedMonad m) := fun _ k =>
-    k (GHC.Base.Applicative__Dict_Build (WrappedMonad m) (fun {a} {b} =>
-                                          instance_forall___GHC_Base_Monad_m___GHC_Base_Applicative__WrappedMonad_m__op_ztzg__)
-                                        (fun {a} {b} =>
-                                          instance_forall___GHC_Base_Monad_m___GHC_Base_Applicative__WrappedMonad_m__op_zlztzg__)
-                                        (fun {a} =>
-                                          instance_forall___GHC_Base_Monad_m___GHC_Base_Applicative__WrappedMonad_m__pure)).
+    k {|GHC.Base.op_ztzg____ := fun {a} {b} =>
+        instance_forall___GHC_Base_Monad_m___GHC_Base_Applicative__WrappedMonad_m__op_ztzg__ ;
+      GHC.Base.op_zlztzg____ := fun {a} {b} =>
+        instance_forall___GHC_Base_Monad_m___GHC_Base_Applicative__WrappedMonad_m__op_zlztzg__ ;
+      GHC.Base.pure__ := fun {a} =>
+        instance_forall___GHC_Base_Monad_m___GHC_Base_Applicative__WrappedMonad_m__pure |}.
 
 (* Translating `instance forall {m}, forall `{GHC.Base.MonadPlus m},
    GHC.Base.Alternative (WrappedMonad m)' failed: OOPS! Cannot find information for
@@ -157,13 +157,15 @@ Local Definition instance_forall___Control_Arrow_Arrow_a___GHC_Base_Functor__Wra
       instance_forall___Control_Arrow_Arrow_a___GHC_Base_Functor__WrappedArrow_a_b__fmap
       (GHC.Base.const x).
 
-Instance instance_forall___Control_Arrow_Arrow_a___GHC_Base_Functor__WrappedArrow_a_b_ {a}
-                                                                                       {b} `{Control.Arrow.Arrow a}
-  : GHC.Base.Functor (WrappedArrow a b) := fun _ k =>
-    k (GHC.Base.Functor__Dict_Build (WrappedArrow a b) (fun {a} {b} =>
-                                      instance_forall___Control_Arrow_Arrow_a___GHC_Base_Functor__WrappedArrow_a_b__op_zlzd__)
-                                    (fun {a} {b} =>
-                                      instance_forall___Control_Arrow_Arrow_a___GHC_Base_Functor__WrappedArrow_a_b__fmap)).
+Program Instance instance_forall___Control_Arrow_Arrow_a___GHC_Base_Functor__WrappedArrow_a_b_ {a}
+                                                                                               {b} `{Control.Arrow.Arrow
+                                                                                               a} : GHC.Base.Functor
+                                                                                                    (WrappedArrow a
+                                                                                                    b) := fun _ k =>
+    k {|GHC.Base.op_zlzd____ := fun {a} {b} =>
+        instance_forall___Control_Arrow_Arrow_a___GHC_Base_Functor__WrappedArrow_a_b__op_zlzd__ ;
+      GHC.Base.fmap__ := fun {a} {b} =>
+        instance_forall___Control_Arrow_Arrow_a___GHC_Base_Functor__WrappedArrow_a_b__fmap |}.
 
 Local Definition instance_forall___Control_Arrow_Arrow_a___GHC_Base_Applicative__WrappedArrow_a_b__op_zlztzg__ {inst_a}
                                                                                                                {inst_b}
@@ -203,15 +205,17 @@ Local Definition instance_forall___Control_Arrow_Arrow_a___GHC_Base_Applicative_
         | x => Mk_WrapArrow (Control.Arrow.arr (GHC.Base.const x))
       end.
 
-Instance instance_forall___Control_Arrow_Arrow_a___GHC_Base_Applicative__WrappedArrow_a_b_ {a}
-                                                                                           {b} `{Control.Arrow.Arrow a}
+Program Instance instance_forall___Control_Arrow_Arrow_a___GHC_Base_Applicative__WrappedArrow_a_b_ {a}
+                                                                                                   {b}
+                                                                                                   `{Control.Arrow.Arrow
+                                                                                                   a}
   : GHC.Base.Applicative (WrappedArrow a b) := fun _ k =>
-    k (GHC.Base.Applicative__Dict_Build (WrappedArrow a b) (fun {a} {b} =>
-                                          instance_forall___Control_Arrow_Arrow_a___GHC_Base_Applicative__WrappedArrow_a_b__op_ztzg__)
-                                        (fun {a} {b} =>
-                                          instance_forall___Control_Arrow_Arrow_a___GHC_Base_Applicative__WrappedArrow_a_b__op_zlztzg__)
-                                        (fun {a} =>
-                                          instance_forall___Control_Arrow_Arrow_a___GHC_Base_Applicative__WrappedArrow_a_b__pure)).
+    k {|GHC.Base.op_ztzg____ := fun {a} {b} =>
+        instance_forall___Control_Arrow_Arrow_a___GHC_Base_Applicative__WrappedArrow_a_b__op_ztzg__ ;
+      GHC.Base.op_zlztzg____ := fun {a} {b} =>
+        instance_forall___Control_Arrow_Arrow_a___GHC_Base_Applicative__WrappedArrow_a_b__op_zlztzg__ ;
+      GHC.Base.pure__ := fun {a} =>
+        instance_forall___Control_Arrow_Arrow_a___GHC_Base_Applicative__WrappedArrow_a_b__pure |}.
 
 (* Translating `instance forall {a} {b}, forall `{Control.Arrow.ArrowZero a}
    `{Control.Arrow.ArrowPlus a}, GHC.Base.Alternative (WrappedArrow a b)' failed:
@@ -310,4 +314,7 @@ Definition optional {f} {a} `{GHC.Base.Alternative f} : f a -> f (option a) :=
      GHC.Base.fmap GHC.Base.id GHC.Base.liftM GHC.Base.op_zgzg__ GHC.Base.op_zgzgze__
      GHC.Base.op_zlzbzg__ GHC.Base.pure GHC.Base.return_ GHC.Prim.Build_Unpeel
      GHC.Prim.Unpeel GHC.Prim.coerce None Some Type option
+     Data.Tuple.uncurry GHC.Base.Alternative GHC.Base.Applicative GHC.Base.Functor
+     GHC.Base.Monad GHC.Base.ap GHC.Base.const GHC.Base.fmap GHC.Base.id
+     GHC.Base.liftM GHC.Base.op_zlzbzg__ GHC.Base.pure None Some Type option
 *)

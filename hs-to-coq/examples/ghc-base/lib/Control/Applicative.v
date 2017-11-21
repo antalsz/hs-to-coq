@@ -279,16 +279,15 @@ Local Definition instance_forall___GHC_Base_Monad_m___GHC_Base_Monad__WrappedMon
     : forall {a}, a -> WrappedMonad inst_m a :=
   fun {a} => GHC.Prim.coerce GHC.Base.return_.
 
-Instance instance_forall___GHC_Base_Monad_m___GHC_Base_Monad__WrappedMonad_m_ {m}
-                                                                              `{GHC.Base.Monad m} : GHC.Base.Monad
-                                                                                                    (WrappedMonad m) :=
-  fun _ k =>
-    k (GHC.Base.Monad__Dict_Build (WrappedMonad m) (fun {a} {b} =>
-                                    instance_forall___GHC_Base_Monad_m___GHC_Base_Monad__WrappedMonad_m__op_zgzg__)
-                                  (fun {a} {b} =>
-                                    instance_forall___GHC_Base_Monad_m___GHC_Base_Monad__WrappedMonad_m__op_zgzgze__)
-                                  (fun {a} =>
-                                    instance_forall___GHC_Base_Monad_m___GHC_Base_Monad__WrappedMonad_m__return_)).
+Program Instance instance_forall___GHC_Base_Monad_m___GHC_Base_Monad__WrappedMonad_m_ {m}
+                                                                                      `{GHC.Base.Monad m}
+  : GHC.Base.Monad (WrappedMonad m) := fun _ k =>
+    k {|GHC.Base.op_zgzg____ := fun {a} {b} =>
+        instance_forall___GHC_Base_Monad_m___GHC_Base_Monad__WrappedMonad_m__op_zgzg__ ;
+      GHC.Base.op_zgzgze____ := fun {a} {b} =>
+        instance_forall___GHC_Base_Monad_m___GHC_Base_Monad__WrappedMonad_m__op_zgzgze__ ;
+      GHC.Base.return___ := fun {a} =>
+        instance_forall___GHC_Base_Monad_m___GHC_Base_Monad__WrappedMonad_m__return_ |}.
 
 (* Translating `instance forall {m}, GHC.Generics.Generic1 (WrappedMonad m)'
    failed: OOPS! Cannot find information for class "GHC.Generics.Generic1"
@@ -308,13 +307,9 @@ Definition optional {f} {a} `{GHC.Base.Alternative f} : f a -> f (option a) :=
 (* Unbound variables:
      Control.Arrow.Arrow Control.Arrow.arr Control.Arrow.op_zazaza__
      Control.Category.op_zgzgzg__ Coq.Program.Basics.compose Data.Functor.op_zlzdzg__
-     Data.Tuple.uncurry GHC.Base.Alternative GHC.Base.Applicative
-     GHC.Base.Applicative__Dict_Build GHC.Base.Functor GHC.Base.Functor__Dict_Build
-     GHC.Base.Monad GHC.Base.Monad__Dict_Build GHC.Base.ap GHC.Base.const
-     GHC.Base.fmap GHC.Base.id GHC.Base.liftM GHC.Base.op_zgzg__ GHC.Base.op_zgzgze__
-     GHC.Base.op_zlzbzg__ GHC.Base.pure GHC.Base.return_ GHC.Prim.Build_Unpeel
-     GHC.Prim.Unpeel GHC.Prim.coerce None Some Type option
      Data.Tuple.uncurry GHC.Base.Alternative GHC.Base.Applicative GHC.Base.Functor
      GHC.Base.Monad GHC.Base.ap GHC.Base.const GHC.Base.fmap GHC.Base.id
-     GHC.Base.liftM GHC.Base.op_zlzbzg__ GHC.Base.pure None Some Type option
+     GHC.Base.liftM GHC.Base.op_zgzg__ GHC.Base.op_zgzgze__ GHC.Base.op_zlzbzg__
+     GHC.Base.pure GHC.Base.return_ GHC.Prim.Build_Unpeel GHC.Prim.Unpeel
+     GHC.Prim.coerce None Some Type option
 *)

@@ -357,12 +357,12 @@ Local Definition instance_Bifunctor_Data_Either_Either_second : forall {b}
                                                                   b -> Data.Either.Either a c :=
   fun {b} {c} {a} => instance_Bifunctor_Data_Either_Either_bimap GHC.Base.id.
 
-
-Program Instance instance_Bifunctor_sum : Bifunctor sum := fun _ k =>
-    k {|bimap__ := fun {a} {b} {c} {d} => instance_Bifunctor_sum_bimap ;
-      first__ := fun {a} {b} {c} => instance_Bifunctor_sum_first ;
-      second__ := fun {b} {c} {a} => instance_Bifunctor_sum_second |}.
-
+Program Instance instance_Bifunctor_Data_Either_Either : Bifunctor
+                                                         Data.Either.Either := fun _ k =>
+    k {|bimap__ := fun {a} {b} {c} {d} =>
+        instance_Bifunctor_Data_Either_Either_bimap ;
+      first__ := fun {a} {b} {c} => instance_Bifunctor_Data_Either_Either_first ;
+      second__ := fun {b} {c} {a} => instance_Bifunctor_Data_Either_Either_second |}.
 
 Local Definition instance_Bifunctor_Data_Functor_Const_Const_bimap : forall {a}
                                                                             {b}

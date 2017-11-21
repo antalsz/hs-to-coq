@@ -237,10 +237,10 @@ Local Definition instance_Eq2_Data_Either_Either_liftEq2 : forall {a}
         | _ , e2 , Data.Either.Mk_Right x , Data.Either.Mk_Right y => e2 x y
       end.
 
-
-Program Instance instance_Eq2_Data_Either_Either : Eq2 Data.Either.Either := fun _ k =>
+Program Instance instance_Eq2_Data_Either_Either : Eq2 Data.Either.Either :=
+  fun _ k =>
     k {|liftEq2__ := fun {a} {b} {c} {d} =>
-                       instance_Eq2_Data_Either_Either_liftEq2 |}.
+        instance_Eq2_Data_Either_Either_liftEq2 |}.
 
 Local Definition instance_Ord2_Data_Either_Either_liftCompare2 : forall {a}
                                                                         {b}
@@ -257,10 +257,10 @@ Local Definition instance_Ord2_Data_Either_Either_liftCompare2 : forall {a}
         | _ , comp2 , Data.Either.Mk_Right x , Data.Either.Mk_Right y => comp2 x y
       end.
 
-
-Program Instance instance_Ord2_sum : Ord2 sum := fun _ k =>
-    k {|liftCompare2__ := fun {a} {b} {c} {d} => instance_Ord2_sum_liftCompare2 |}.
-
+Program Instance instance_Ord2_Data_Either_Either : Ord2 Data.Either.Either :=
+  fun _ k =>
+    k {|liftCompare2__ := fun {a} {b} {c} {d} =>
+        instance_Ord2_Data_Either_Either_liftCompare2 |}.
 
 (* Translating `instance Read2 Data.Either.Either' failed: OOPS! Cannot find
    information for class "Read2" unsupported *)
@@ -275,12 +275,12 @@ Local Definition instance_forall____GHC_Base_Eq__a____Eq1__Data_Either_Either_a_
         b -> bool :=
   fun {a} {b} => liftEq2 GHC.Base.op_zeze__.
 
-
-Instance instance_forall____GHC_Base_Eq__a____Eq1__Data_Either_Either_a_ {a}
-                                                                         `{(GHC.Base.Eq_ a)} : Eq1 (Data.Either.Either
-                                                                                                   a) := fun _ k =>
-    k (Eq1__Dict_Build (Data.Either.Either a) (fun {a} {b} =>
-                         instance_forall____GHC_Base_Eq__a____Eq1__Data_Either_Either_a__liftEq)).
+Program Instance instance_forall____GHC_Base_Eq__a____Eq1__Data_Either_Either_a_ {a}
+                                                                                 `{(GHC.Base.Eq_ a)} : Eq1
+                                                                                                       (Data.Either.Either
+                                                                                                       a) := fun _ k =>
+    k {|liftEq__ := fun {a} {b} =>
+        instance_forall____GHC_Base_Eq__a____Eq1__Data_Either_Either_a__liftEq |}.
 
 Local Definition instance_forall____GHC_Base_Ord_a____Ord1__Data_Either_Either_a__liftCompare {inst_a}
                                                                                               `{(GHC.Base.Ord inst_a)}
@@ -289,11 +289,12 @@ Local Definition instance_forall____GHC_Base_Ord_a____Ord1__Data_Either_Either_a
         inst_a) b -> comparison :=
   fun {a} {b} => liftCompare2 GHC.Base.compare.
 
-Instance instance_forall____GHC_Base_Ord_a____Ord1__Data_Either_Either_a_ {a}
-                                                                          `{(GHC.Base.Ord a)} : Ord1 (Data.Either.Either
-                                                                                                     a) := fun _ k =>
-    k (Ord1__Dict_Build (Data.Either.Either a) (fun {a} {b} =>
-                          instance_forall____GHC_Base_Ord_a____Ord1__Data_Either_Either_a__liftCompare)).
+Program Instance instance_forall____GHC_Base_Ord_a____Ord1__Data_Either_Either_a_ {a}
+                                                                                  `{(GHC.Base.Ord a)} : Ord1
+                                                                                                        (Data.Either.Either
+                                                                                                        a) := fun _ k =>
+    k {|liftCompare__ := fun {a} {b} =>
+        instance_forall____GHC_Base_Ord_a____Ord1__Data_Either_Either_a__liftCompare |}.
 
 (* Translating `instance forall {a}, forall `{(GHC.Read.Read a)}, Read1
    (Data.Either.Either a)' failed: OOPS! Cannot find information for class "Read1"

@@ -346,9 +346,6 @@ Definition returnA {a} {b} `{Arrow a} : a b b :=
 
 (* Unbound variables:
      * Control.Category.Category Control.Category.id Control.Category.op_zgzgzg__
-     Control.Category.op_zlzlzl__ Data.Either.Either GHC.Base.Functor
-     GHC.Base.Functor__Dict_Build GHC.Base.const GHC.Base.op_zd__ GHC.Prim.arrow Type
-     pair unit
-     Control.Category.op_zlzlzl__ GHC.Base.Functor GHC.Base.const GHC.Base.op_zd__
-     GHC.Prim.arrow Type pair sum unit
+     Control.Category.op_zlzlzl__ Data.Either.Either GHC.Base.Functor GHC.Base.const
+     GHC.Base.op_zd__ GHC.Prim.arrow Type pair unit
 *)

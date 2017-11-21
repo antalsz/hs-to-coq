@@ -43,13 +43,11 @@ Local Definition instance_GHC_Base_Functor__Either_a__op_zlzd__ {inst_a}
   fun {a} {b} =>
     fun x => instance_GHC_Base_Functor__Either_a__fmap (GHC.Base.const x).
 
-
-Program Instance instance_GHC_Base_Functor__sum_a_ {a} : GHC.Base.Functor (sum
-                                                                          a) := fun _ k =>
+Program Instance instance_GHC_Base_Functor__Either_a_ {a} : GHC.Base.Functor
+                                                            (Either a) := fun _ k =>
     k {|GHC.Base.op_zlzd____ := fun {a} {b} =>
-        instance_GHC_Base_Functor__sum_a__op_zlzd__ ;
-      GHC.Base.fmap__ := fun {a} {b} => instance_GHC_Base_Functor__sum_a__fmap |}.
-
+        instance_GHC_Base_Functor__Either_a__op_zlzd__ ;
+      GHC.Base.fmap__ := fun {a} {b} => instance_GHC_Base_Functor__Either_a__fmap |}.
 
 Local Definition instance_GHC_Base_Applicative__Either_e__op_zlztzg__ {inst_e}
     : forall {a} {b},
@@ -65,25 +63,23 @@ Local Definition instance_GHC_Base_Applicative__Either_e__op_ztzg__ {inst_e}
     : forall {a} {b}, (Either inst_e) a -> (Either inst_e) b -> (Either inst_e) b :=
   fun {a} {b} =>
     fun x y =>
-      instance_GHC_Base_Applicative__sum_e__op_zlztzg__ (GHC.Base.fmap (GHC.Base.const
-                                                                       GHC.Base.id) x) y.
+      instance_GHC_Base_Applicative__Either_e__op_zlztzg__ (GHC.Base.fmap
+                                                           (GHC.Base.const GHC.Base.id) x) y.
 
-Local Definition instance_GHC_Base_Applicative__sum_e__pure {inst_e}
-    : forall {a}, a -> (sum inst_e) a :=
-  fun {a} => inr.
+Local Definition instance_GHC_Base_Applicative__Either_e__pure {inst_e}
+    : forall {a}, a -> (Either inst_e) a :=
+  fun {a} => Mk_Right.
 
-Program Instance instance_GHC_Base_Applicative__sum_e_ {e}
-  : GHC.Base.Applicative (sum e) := fun _ k =>
+Program Instance instance_GHC_Base_Applicative__Either_e_ {e}
+  : GHC.Base.Applicative (Either e) := fun _ k =>
     k {|GHC.Base.op_ztzg____ := fun {a} {b} =>
-        instance_GHC_Base_Applicative__sum_e__op_ztzg__ ;
+        instance_GHC_Base_Applicative__Either_e__op_ztzg__ ;
       GHC.Base.op_zlztzg____ := fun {a} {b} =>
-        instance_GHC_Base_Applicative__sum_e__op_zlztzg__ ;
-      GHC.Base.pure__ := fun {a} => instance_GHC_Base_Applicative__sum_e__pure |}.
+        instance_GHC_Base_Applicative__Either_e__op_zlztzg__ ;
+      GHC.Base.pure__ := fun {a} => instance_GHC_Base_Applicative__Either_e__pure |}.
 
-Local Definition instance_GHC_Base_Monad__sum_e__op_zgzg__ {inst_e} : forall {a}
-                                                                             {b},
-                                                                        (sum inst_e) a -> (sum inst_e) b -> (sum inst_e)
-                                                                        b :=
+Local Definition instance_GHC_Base_Monad__Either_e__op_zgzg__ {inst_e}
+    : forall {a} {b}, (Either inst_e) a -> (Either inst_e) b -> (Either inst_e) b :=
   fun {a} {b} => GHC.Base.op_ztzg__.
 
 Local Definition instance_GHC_Base_Monad__Either_e__op_zgzgze__ {inst_e}
@@ -100,14 +96,13 @@ Local Definition instance_GHC_Base_Monad__Either_e__return_ {inst_e}
     : forall {a}, a -> (Either inst_e) a :=
   fun {a} => GHC.Base.pure.
 
-Program Instance instance_GHC_Base_Monad__sum_e_ {e} : GHC.Base.Monad (sum e) :=
-  fun _ k =>
+Program Instance instance_GHC_Base_Monad__Either_e_ {e} : GHC.Base.Monad (Either
+                                                                         e) := fun _ k =>
     k {|GHC.Base.op_zgzg____ := fun {a} {b} =>
-        instance_GHC_Base_Monad__sum_e__op_zgzg__ ;
+        instance_GHC_Base_Monad__Either_e__op_zgzg__ ;
       GHC.Base.op_zgzgze____ := fun {a} {b} =>
-        instance_GHC_Base_Monad__sum_e__op_zgzgze__ ;
-      GHC.Base.return___ := fun {a} => instance_GHC_Base_Monad__sum_e__return_ |}.
-
+        instance_GHC_Base_Monad__Either_e__op_zgzgze__ ;
+      GHC.Base.return___ := fun {a} => instance_GHC_Base_Monad__Either_e__return_ |}.
 
 (* Translating `instance forall {a} {b}, forall `{GHC.Show.Show b}
    `{GHC.Show.Show a}, GHC.Show.Show (Either a b)' failed: OOPS! Cannot find
@@ -296,28 +291,28 @@ Local Definition instance_forall___GHC_Base_Eq__b____GHC_Base_Eq__a___GHC_Base_E
                  a b)
     end.
 
-Program Instance instance_forall___GHC_Base_Eq__b____GHC_Base_Eq__a___GHC_Base_Eq___sum_a_b_ {a}
-                                                                                             {b} `{GHC.Base.Eq_ b}
-                                                                                             `{GHC.Base.Eq_ a}
-  : GHC.Base.Eq_ (sum a b) := fun _ k =>
+Program Instance instance_forall___GHC_Base_Eq__b____GHC_Base_Eq__a___GHC_Base_Eq___Either_a_b_ {a}
+                                                                                                {b} `{GHC.Base.Eq_ b}
+                                                                                                `{GHC.Base.Eq_ a}
+  : GHC.Base.Eq_ (Either a b) := fun _ k =>
     k
-    {|GHC.Base.op_zeze____ := instance_forall___GHC_Base_Eq__b____GHC_Base_Eq__a___GHC_Base_Eq___sum_a_b__op_zeze__ ;
-    GHC.Base.op_zsze____ := instance_forall___GHC_Base_Eq__b____GHC_Base_Eq__a___GHC_Base_Eq___sum_a_b__op_zsze__ |}.
+    {|GHC.Base.op_zeze____ := instance_forall___GHC_Base_Eq__b____GHC_Base_Eq__a___GHC_Base_Eq___Either_a_b__op_zeze__ ;
+    GHC.Base.op_zsze____ := instance_forall___GHC_Base_Eq__b____GHC_Base_Eq__a___GHC_Base_Eq___Either_a_b__op_zsze__ |}.
 
-Program Instance instance_forall___GHC_Base_Ord_b____GHC_Base_Ord_a___GHC_Base_Ord__sum_a_b_ {a}
-                                                                                             {b} `{GHC.Base.Ord b}
-                                                                                             `{GHC.Base.Ord a}
-  : GHC.Base.Ord (sum a b) := fun _ k =>
+Program Instance instance_forall___GHC_Base_Ord_b____GHC_Base_Ord_a___GHC_Base_Ord__Either_a_b_ {a}
+                                                                                                {b} `{GHC.Base.Ord b}
+                                                                                                `{GHC.Base.Ord a}
+  : GHC.Base.Ord (Either a b) := fun _ k =>
     k
-    {|GHC.Base.op_zl____ := instance_forall___GHC_Base_Ord_b____GHC_Base_Ord_a___GHC_Base_Ord__sum_a_b__op_zl__ ;
-    GHC.Base.op_zlze____ := instance_forall___GHC_Base_Ord_b____GHC_Base_Ord_a___GHC_Base_Ord__sum_a_b__op_zlze__ ;
-    GHC.Base.op_zg____ := instance_forall___GHC_Base_Ord_b____GHC_Base_Ord_a___GHC_Base_Ord__sum_a_b__op_zg__ ;
-    GHC.Base.op_zgze____ := instance_forall___GHC_Base_Ord_b____GHC_Base_Ord_a___GHC_Base_Ord__sum_a_b__op_zgze__ ;
-    GHC.Base.compare__ := instance_forall___GHC_Base_Ord_b____GHC_Base_Ord_a___GHC_Base_Ord__sum_a_b__compare ;
-    GHC.Base.max__ := instance_forall___GHC_Base_Ord_b____GHC_Base_Ord_a___GHC_Base_Ord__sum_a_b__max ;
-    GHC.Base.min__ := instance_forall___GHC_Base_Ord_b____GHC_Base_Ord_a___GHC_Base_Ord__sum_a_b__min |}.
+    {|GHC.Base.op_zl____ := instance_forall___GHC_Base_Ord_b____GHC_Base_Ord_a___GHC_Base_Ord__Either_a_b__op_zl__ ;
+    GHC.Base.op_zlze____ := instance_forall___GHC_Base_Ord_b____GHC_Base_Ord_a___GHC_Base_Ord__Either_a_b__op_zlze__ ;
+    GHC.Base.op_zg____ := instance_forall___GHC_Base_Ord_b____GHC_Base_Ord_a___GHC_Base_Ord__Either_a_b__op_zg__ ;
+    GHC.Base.op_zgze____ := instance_forall___GHC_Base_Ord_b____GHC_Base_Ord_a___GHC_Base_Ord__Either_a_b__op_zgze__ ;
+    GHC.Base.compare__ := instance_forall___GHC_Base_Ord_b____GHC_Base_Ord_a___GHC_Base_Ord__Either_a_b__compare ;
+    GHC.Base.max__ := instance_forall___GHC_Base_Ord_b____GHC_Base_Ord_a___GHC_Base_Ord__Either_a_b__max ;
+    GHC.Base.min__ := instance_forall___GHC_Base_Ord_b____GHC_Base_Ord_a___GHC_Base_Ord__Either_a_b__min |}.
 
-Definition either {a} {c} {b} : (a -> c) -> (b -> c) -> sum a b -> c :=
+Definition either {a} {c} {b} : (a -> c) -> (b -> c) -> Either a b -> c :=
   fun arg_14__ arg_15__ arg_16__ =>
     match arg_14__ , arg_15__ , arg_16__ with
       | f , _ , Mk_Left x => f x

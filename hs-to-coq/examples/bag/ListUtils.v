@@ -6,7 +6,6 @@ Open Scope program_scope.
 Require Import Coq.ZArith.ZArith.
 
 Require Data.Foldable.
-Require Data.FoldableInst.
 Require Data.Monoid.
 Require Import Proofs.Data.Foldable.
 
@@ -143,7 +142,7 @@ Qed.
 Theorem hs_coq_any_list {A} (p : A -> bool) (l : list A) :
   Data.Foldable.any p l = any p l.
 Proof.
-  rewrite /Data.Foldable.any /Data.FoldableInst.anyWith
+  rewrite /Data.Foldable.any
           /Data.Foldable.foldMap /Foldable.instance_Foldable_list /Foldable.foldMap__
           /= /Data.Foldable.instance_Foldable_list_foldMap
           /Data.Foldable.instance_Foldable_list_foldr /=

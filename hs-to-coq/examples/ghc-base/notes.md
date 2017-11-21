@@ -1,6 +1,5 @@
 * TODO (hs-to-coq):
   axiomize instances
-  rename type class members
   special case for functions that do not match their args
   edit for redefining default class definitions
   Alt instances in Data.Monoid

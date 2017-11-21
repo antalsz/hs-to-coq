@@ -281,14 +281,13 @@ Local Definition instance_forall___GHC_Base_Monoid_a___GHC_Base_Monoid__Identity
     : Identity inst_a :=
   GHC.Prim.coerce GHC.Base.mempty.
 
-Instance instance_forall___GHC_Base_Monoid_a___GHC_Base_Monoid__Identity_a_ {a}
-                                                                            `{GHC.Base.Monoid a} : GHC.Base.Monoid
-                                                                                                   (Identity a) := fun _
-                                                                                                                       k =>
-    k (GHC.Base.Monoid__Dict_Build (Identity a)
-                                   instance_forall___GHC_Base_Monoid_a___GHC_Base_Monoid__Identity_a__mappend
-                                   instance_forall___GHC_Base_Monoid_a___GHC_Base_Monoid__Identity_a__mconcat
-                                   instance_forall___GHC_Base_Monoid_a___GHC_Base_Monoid__Identity_a__mempty).
+Program Instance instance_forall___GHC_Base_Monoid_a___GHC_Base_Monoid__Identity_a_ {a}
+                                                                                    `{GHC.Base.Monoid a}
+  : GHC.Base.Monoid (Identity a) := fun _ k =>
+    k
+    {|GHC.Base.mappend__ := instance_forall___GHC_Base_Monoid_a___GHC_Base_Monoid__Identity_a__mappend ;
+    GHC.Base.mconcat__ := instance_forall___GHC_Base_Monoid_a___GHC_Base_Monoid__Identity_a__mconcat ;
+    GHC.Base.mempty__ := instance_forall___GHC_Base_Monoid_a___GHC_Base_Monoid__Identity_a__mempty |}.
 
 (* Translating `instance forall {a}, forall `{GHC.Arr.Ix a}, GHC.Arr.Ix
    (Identity a)' failed: OOPS! Cannot find information for class "GHC.Arr.Ix"
@@ -330,24 +329,26 @@ Local Definition instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___Identity_a__op
     : Identity inst_a -> Identity inst_a -> bool :=
   GHC.Prim.coerce GHC.Base.op_zsze__.
 
-Instance instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___Identity_a_ {a}
-                                                                      `{GHC.Base.Eq_ a} : GHC.Base.Eq_ (Identity a) :=
+Program Instance instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___Identity_a_ {a}
+                                                                              `{GHC.Base.Eq_ a} : GHC.Base.Eq_ (Identity
+                                                                                                               a) :=
   fun _ k =>
-    k (GHC.Base.Eq___Dict_Build (Identity a)
-                                instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___Identity_a__op_zeze__
-                                instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___Identity_a__op_zsze__).
+    k
+    {|GHC.Base.op_zeze____ := instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___Identity_a__op_zeze__ ;
+    GHC.Base.op_zsze____ := instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___Identity_a__op_zsze__ |}.
 
-Instance instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Identity_a_ {a}
-                                                                      `{GHC.Base.Ord a} : GHC.Base.Ord (Identity a) :=
+Program Instance instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Identity_a_ {a}
+                                                                              `{GHC.Base.Ord a} : GHC.Base.Ord (Identity
+                                                                                                               a) :=
   fun _ k =>
-    k (GHC.Base.Ord__Dict_Build (Identity a)
-                                instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Identity_a__op_zl__
-                                instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Identity_a__op_zlze__
-                                instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Identity_a__op_zg__
-                                instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Identity_a__op_zgze__
-                                instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Identity_a__compare
-                                instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Identity_a__max
-                                instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Identity_a__min).
+    k
+    {|GHC.Base.op_zl____ := instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Identity_a__op_zl__ ;
+    GHC.Base.op_zlze____ := instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Identity_a__op_zlze__ ;
+    GHC.Base.op_zg____ := instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Identity_a__op_zg__ ;
+    GHC.Base.op_zgze____ := instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Identity_a__op_zgze__ ;
+    GHC.Base.compare__ := instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Identity_a__compare ;
+    GHC.Base.max__ := instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Identity_a__max ;
+    GHC.Base.min__ := instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Identity_a__min |}.
 
 (* Translating `instance forall {a}, forall `{GHC.Enum.Enum a}, GHC.Enum.Enum
    (Identity a)' failed: OOPS! Cannot find information for class "GHC.Enum.Enum"
@@ -413,16 +414,12 @@ Program Instance instance_Data_Traversable_Traversable_Identity
         instance_Data_Traversable_Traversable_Identity_traverse |}.
 
 (* Unbound variables:
-     Coq.Program.Basics.compose Data.Foldable.Foldable
-     Data.Foldable.Foldable__Dict_Build Data.Traversable.Traversable
-     Data.Traversable.Traversable__Dict_Build GHC.Base.Applicative
-     GHC.Base.Applicative__Dict_Build GHC.Base.Eq_ GHC.Base.Eq___Dict_Build
-     GHC.Base.Functor GHC.Base.Functor__Dict_Build GHC.Base.Monad
-     GHC.Base.Monad__Dict_Build GHC.Base.Monoid GHC.Base.Monoid__Dict_Build
-     GHC.Base.Ord GHC.Base.Ord__Dict_Build GHC.Base.compare GHC.Base.const
-     GHC.Base.fmap GHC.Base.id GHC.Base.mappend GHC.Base.max GHC.Base.mconcat
-     GHC.Base.mempty GHC.Base.min GHC.Base.op_zeze__ GHC.Base.op_zg__
-     GHC.Base.op_zgze__ GHC.Base.op_zl__ GHC.Base.op_zlze__ GHC.Base.op_zsze__
-     GHC.Base.op_ztzg__ GHC.Base.pure GHC.Num.Int GHC.Num.Num GHC.Prim.coerce bool
-     comparison cons false list nil
+     Coq.Program.Basics.compose Data.Foldable.Foldable Data.Traversable.Traversable
+     GHC.Base.Applicative GHC.Base.Eq_ GHC.Base.Functor GHC.Base.Monad
+     GHC.Base.Monoid GHC.Base.Ord GHC.Base.compare GHC.Base.const GHC.Base.fmap
+     GHC.Base.id GHC.Base.mappend GHC.Base.max GHC.Base.mconcat GHC.Base.mempty
+     GHC.Base.min GHC.Base.op_zeze__ GHC.Base.op_zg__ GHC.Base.op_zgze__
+     GHC.Base.op_zl__ GHC.Base.op_zlze__ GHC.Base.op_zsze__ GHC.Base.op_ztzg__
+     GHC.Base.pure GHC.Num.Int GHC.Num.Num GHC.Prim.coerce bool comparison cons false
+     list nil
 *)

@@ -186,24 +186,16 @@ Local Definition instance_Traversable__Data_Either_Either_a__mapM {inst_a}
   fun {m} {a} {b} `{GHC.Base.Monad m} =>
     instance_Traversable__Data_Either_Either_a__traverse.
 
-Instance instance_Traversable__Data_Either_Either_a_ {a} : Traversable
-                                                           (Data.Either.Either a) := fun _ k =>
-    k (Traversable__Dict_Build (Data.Either.Either a) (fun {m}
-                                                           {a}
-                                                           {b}
-                                                           `{GHC.Base.Monad m} =>
-                                 instance_Traversable__Data_Either_Either_a__mapM) (fun {m}
-                                                                                        {a}
-                                                                                        `{GHC.Base.Monad m} =>
-                                 instance_Traversable__Data_Either_Either_a__sequence) (fun {f}
-                                                                                            {a}
-                                                                                            `{GHC.Base.Applicative f} =>
-                                 instance_Traversable__Data_Either_Either_a__sequenceA) (fun {f}
-                                                                                             {a}
-                                                                                             {b}
-                                                                                             `{GHC.Base.Applicative
-                                                                                             f} =>
-                                 instance_Traversable__Data_Either_Either_a__traverse)).
+Program Instance instance_Traversable__Data_Either_Either_a_ {a} : Traversable
+                                                                   (Data.Either.Either a) := fun _ k =>
+    k {|mapM__ := fun {m} {a} {b} `{GHC.Base.Monad m} =>
+        instance_Traversable__Data_Either_Either_a__mapM ;
+      sequence__ := fun {m} {a} `{GHC.Base.Monad m} =>
+        instance_Traversable__Data_Either_Either_a__sequence ;
+      sequenceA__ := fun {f} {a} `{GHC.Base.Applicative f} =>
+        instance_Traversable__Data_Either_Either_a__sequenceA ;
+      traverse__ := fun {f} {a} {b} `{GHC.Base.Applicative f} =>
+        instance_Traversable__Data_Either_Either_a__traverse |}.
 
 (* Skipping instance instance_Traversable__GHC_Tuple_pair_type_a_ *)
 
@@ -377,8 +369,7 @@ Definition for_ {t} {f} {a} {b} `{Traversable t} `{GHC.Base.Applicative f} : t
 (* Unbound variables:
      * Coq.Program.Basics.compose Data.Either.Either Data.Either.Mk_Left
      Data.Either.Mk_Right Data.Foldable.Foldable Data.Functor.op_zlzdzg__
-     Data.Proxy.Mk_Proxy Data.Proxy.Proxy GHC.Base.Applicative
-     GHC.Base.Applicative__Dict_Build GHC.Base.Functor GHC.Base.Functor__Dict_Build
+     Data.Proxy.Mk_Proxy Data.Proxy.Proxy GHC.Base.Applicative GHC.Base.Functor
      GHC.Base.Monad GHC.Base.const GHC.Base.flip GHC.Base.fmap GHC.Base.foldr
      GHC.Base.id GHC.Base.op_zlztzg__ GHC.Base.pure Some cons list nil option
 *)

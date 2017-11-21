@@ -133,12 +133,12 @@ Local Definition instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___Down_a__op_zsz
                                                                                                              inst_a -> bool :=
   GHC.Prim.coerce GHC.Base.op_zsze__.
 
-Instance instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___Down_a_ {a}
-                                                                  `{GHC.Base.Eq_ a} : GHC.Base.Eq_ (Down a) := fun _
-                                                                                                                   k =>
-    k (GHC.Base.Eq___Dict_Build (Down a)
-                                instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___Down_a__op_zeze__
-                                instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___Down_a__op_zsze__).
+Program Instance instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___Down_a_ {a}
+                                                                          `{GHC.Base.Eq_ a} : GHC.Base.Eq_ (Down a) :=
+  fun _ k =>
+    k
+    {|GHC.Base.op_zeze____ := instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___Down_a__op_zeze__ ;
+    GHC.Base.op_zsze____ := instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___Down_a__op_zsze__ |}.
 
 Definition comparing {a} {b} `{(GHC.Base.Ord a)}
     : (b -> a) -> b -> b -> comparison :=
@@ -148,7 +148,6 @@ Definition comparing {a} {b} `{(GHC.Base.Ord a)}
     end.
 
 (* Unbound variables:
-     GHC.Base.Eq_ GHC.Base.Eq___Dict_Build GHC.Base.Ord GHC.Base.Ord__Dict_Build
-     GHC.Base.compare GHC.Base.op_zeze__ GHC.Base.op_zsze__ GHC.Prim.coerce Gt Lt
-     bool comparison op_zeze__ op_zsze__
+     GHC.Base.Eq_ GHC.Base.Ord GHC.Base.compare GHC.Base.op_zeze__ GHC.Base.op_zsze__
+     GHC.Prim.coerce Gt Lt bool comparison op_zeze__ op_zsze__
 *)

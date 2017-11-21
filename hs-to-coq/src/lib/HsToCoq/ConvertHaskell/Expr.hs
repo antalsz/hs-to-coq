@@ -117,8 +117,10 @@ convertExpr (HsLamCase PlaceHolder mg) =
 convertExpr (HsApp e1 e2) =
   App1 <$> convertLExpr e1 <*> convertLExpr e2
 
-convertExpr (HsAppType _ _) =
-  convUnsupported "type applications"
+convertExpr (HsAppType e1 _) =
+  convertLExpr e1
+--  convUnsupported "type applications"
+--  SCW: just ignore them for now, and let the user figure it out.
 
 convertExpr (HsAppTypeOut _ _) =
   convUnsupported "`HsAppTypeOut' constructor"
@@ -481,7 +483,7 @@ convertDoBlock allStmts = do
     lastStmt (BodyStmt e _ _ _) = Just e
     lastStmt (LastStmt e _ _)   = Just e
     lastStmt _                  = Nothing
-    
+
     toExpr _ (BodyStmt e _bind _guard _PlaceHolder) rest =
       Infix <$> convertLExpr e <*> pure ">>" <*> rest
 
@@ -766,6 +768,7 @@ convertTypedBinding _convHsTy AbsBindsSig{} = convUnsupported "[internal?] `AbsB
 convertTypedBinding _convHsTy PatSynBind{}  = convUnsupported "pattern synonym bindings"
 convertTypedBinding _convHsTy PatBind{..}   = do -- TODO use `_convHsTy`?
   -- TODO: Respect `skipped'?
+  -- TODO: what if we need to rename this definition? (i.e. for a class member)
   (pat, guards) <- runWriterT $ convertLPat pat_lhs
   Just . ConvertedPatternBinding pat <$> convertGRHSs (map BoolGuard guards) pat_rhs patternFailure
 convertTypedBinding  convHsTy FunBind{..}   = runMaybeT $ do
@@ -775,6 +778,7 @@ convertTypedBinding  convHsTy FunBind{..}   = runMaybeT $ do
   guard . not =<< use (edits.skipped.contains name)
   guard . not =<< (case opName of { Just n -> use (edits.skipped.contains n) ; Nothing -> return False })
   -- TODO: what if we are skipping an operator?
+  -- TODO: what if we need to rename this function? (i.e. for a class member)
 
   withCurrentDefinition name $ do
     let (tvs, coqTy) =

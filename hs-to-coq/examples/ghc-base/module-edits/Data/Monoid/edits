@@ -7,16 +7,36 @@ add Data.Monoid Instance Unpeel_Sum a : Unpeel (Sum a) a :=
 	 Build_Unpeel _ _ getSum Mk_Sum.
 add Data.Monoid Instance Unpeel_Product a : Unpeel (Product a) a :=
 	 Build_Unpeel _ _ getProduct Mk_Product.
+add Data.Monoid Instance Unpeel_First a : Unpeel (First a) (option a) :=
+	 Build_Unpeel _ _ getFirst Mk_First.
+add Data.Monoid Instance Unpeel_Last a : Unpeel (Last a) (option a) :=
+	 Build_Unpeel _ _ getLast Mk_Last.
+add Data.Monoid Instance Unpeel_Endo a : Unpeel (Endo a) (a -> a) :=
+	 Build_Unpeel _ _ appEndo Mk_Endo.
+add Data.Monoid Instance Unpeel_Any : Unpeel Any bool :=
+	 Build_Unpeel _ _ getAny Mk_Any.
+add Data.Monoid Instance Unpeel_All : Unpeel All bool :=
+	 Build_Unpeel _ _ getAll Mk_All.
 
-order Unpeel_Dual instance_GHC_Base_Functor_Dual_fmap
-order Unpeel_Dual instance_GHC_Base_Applicative_Dual_op_zlztzg__
-order instance_GHC_Base_Functor_Dual instance_GHC_Base_Applicative_Dual_op_ztzg__
-order instance_GHC_Base_Functor_Dual instance_GHC_Base_Applicative_Dual
-order instance_GHC_Base_Applicative_Dual instance_GHC_Base_Monad_Dual_return_
-order instance_GHC_Base_Applicative_Dual instance_GHC_Base_Monad_Dual_op_zgzg__
 
-# https://github.com/antalsz/hs-to-coq/issues/34
-# skip instance_GHC_Base_Monad_Dual
+order instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___Dual_a_ instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Dual_a_
+order  Unpeel_Dual instance_GHC_Base_Functor_Dual instance_GHC_Base_Applicative_Dual instance_GHC_Base_Monad_Dual
+
+order instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___Last_a_ instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Last_a_
+order Unpeel_Last instance_GHC_Base_Functor_Last instance_GHC_Base_Applicative_Last instance_GHC_Base_Monad_Last
+
+order instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___First_a_ instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__First_a_
+order Unpeel_First instance_GHC_Base_Functor_First instance_GHC_Base_Applicative_First instance_GHC_Base_Monad_First
+
+order instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___Product_a_ instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Product_a_
+order Unpeel_Product instance_GHC_Base_Functor_Product instance_GHC_Base_Applicative_Product instance_GHC_Base_Monad_Product
+
+order instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___Sum_a_ instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Sum_a_
+order Unpeel_Sum instance_GHC_Base_Functor_Sum instance_GHC_Base_Applicative_Sum instance_GHC_Base_Monad_Sum
+
+order Unpeel_Any instance_GHC_Base_Eq__Any instance_GHC_Base_Ord_Any
+order Unpeel_All instance_GHC_Base_Eq__All instance_GHC_Base_Ord_All
+
 
 # cannot refer to scoped type variables in instance declaration
 # defined in the midamble instance
@@ -27,7 +47,20 @@ skip instance_forall___GHC_Num_Num_a___GHC_Base_Monoid__Sum_a_
 # in the preamble.v
 skip op_zlzg__
 
-skip instance_forall___GHC_Base_Alternative_f___GHC_Base_Monoid__Alt_f_a_
+
+
+# skip instance_forall___GHC_Base_Alternative_f___GHC_Base_Monoid__Alt_f_a_
+# scoped type variables
+redefine Local Definition instance_forall___GHC_Base_Alternative_f___GHC_Base_Monoid__Alt_f_a__mappend {inst_f} {inst_a}`{_:GHC.Base.Alternative inst_f} :
+			(Alt inst_f inst_a) -> ((Alt inst_f inst_a) -> (Alt inst_f inst_a)) :=
+  GHC.Prim.coerce GHC.Base.op_zlzbzg__.
+
+# issues with Alt (extra {inst_k} or {k} abstraction)
+# defined in midamble
+skip instance_forall___GHC_Base_Eq___f_a____GHC_Base_Eq___Alt_f_a_
+skip instance_forall___GHC_Base_Ord__f_a____GHC_Base_Ord__Alt_f_a_
+
+
 
 # Read and Show instances
 skip instance_forall___GHC_Read_Read_a___GHC_Read_Read__Last_a_

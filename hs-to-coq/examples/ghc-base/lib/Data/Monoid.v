@@ -271,6 +271,95 @@ Instance instance_GHC_Base_Monoid__Product_a_ {a} `{Num a}:
     mempty__  := mempty_Product;
     mconcat__ := foldr mappend_Product mempty_Product |}.
 
+Instance Unpeel_Alt (f:Type->Type) a : Unpeel (Alt f a) (f a) :=
+    Build_Unpeel _ _ getAlt Mk_Alt.
+
+
+Local Definition instance_forall___GHC_Base_Eq___f_a____GHC_Base_Eq___Alt_f_a__op_zeze__
+                                                                                         {inst_f} {inst_a}
+                                                                                         `{GHC.Base.Eq_ (inst_f inst_a)}
+    : Alt inst_f inst_a -> Alt inst_f inst_a -> bool :=
+  GHC.Prim.coerce GHC.Base.op_zeze__.
+
+Local Definition instance_forall___GHC_Base_Eq___f_a____GHC_Base_Eq___Alt_f_a__op_zsze__
+                                                                                         {inst_f} {inst_a}
+                                                                                         `{GHC.Base.Eq_ (inst_f inst_a)}
+    : Alt inst_f inst_a -> Alt inst_f inst_a -> bool :=
+  GHC.Prim.coerce GHC.Base.op_zsze__.
+
+Instance instance_forall___GHC_Base_Eq___f_a____GHC_Base_Eq___Alt_f_a_  {f}
+                                                                       {a} `{GHC.Base.Eq_ (f a)} : GHC.Base.Eq_ (Alt f
+                                                                                                                a) :=
+  fun _ k =>
+    k (GHC.Base.Eq___Dict_Build (Alt f a)
+                                instance_forall___GHC_Base_Eq___f_a____GHC_Base_Eq___Alt_f_a__op_zeze__
+                                instance_forall___GHC_Base_Eq___f_a____GHC_Base_Eq___Alt_f_a__op_zsze__).
+
+
+Local Definition instance_forall___GHC_Base_Ord__f_a____GHC_Base_Ord__Alt_f_a__compare
+                                                                                       {inst_f} {inst_a} `{GHC.Base.Ord
+                                                                                       (inst_f inst_a)} : Alt inst_f
+                                                                                                          inst_a -> Alt
+                                                                                                          inst_f
+                                                                                                          inst_a -> comparison :=
+  GHC.Prim.coerce GHC.Base.compare.
+
+Local Definition instance_forall___GHC_Base_Ord__f_a____GHC_Base_Ord__Alt_f_a__max                                                                                   {inst_f} {inst_a} `{GHC.Base.Ord
+                                                                                   (inst_f inst_a)} : Alt inst_f
+                                                                                                      inst_a -> Alt
+                                                                                                      inst_f
+                                                                                                      inst_a -> Alt
+                                                                                                      inst_f inst_a :=
+  GHC.Prim.coerce GHC.Base.max.
+
+Local Definition instance_forall___GHC_Base_Ord__f_a____GHC_Base_Ord__Alt_f_a__min                                                                                    {inst_f} {inst_a} `{GHC.Base.Ord
+                                                                                   (inst_f inst_a)} : Alt inst_f
+                                                                                                      inst_a -> Alt
+                                                                                                      inst_f
+                                                                                                      inst_a -> Alt
+                                                                                                      inst_f inst_a :=
+  GHC.Prim.coerce GHC.Base.min.
+
+Local Definition instance_forall___GHC_Base_Ord__f_a____GHC_Base_Ord__Alt_f_a__op_zg__
+                                                                                       {inst_f} {inst_a} `{GHC.Base.Ord
+                                                                                       (inst_f inst_a)} : Alt inst_f
+                                                                                                          inst_a -> Alt
+                                                                                                          inst_f
+                                                                                                          inst_a -> bool :=
+  GHC.Prim.coerce GHC.Base.op_zg__.
+
+Local Definition instance_forall___GHC_Base_Ord__f_a____GHC_Base_Ord__Alt_f_a__op_zgze__
+                                                                                         {inst_f} {inst_a}
+                                                                                         `{GHC.Base.Ord (inst_f inst_a)}
+    : Alt inst_f inst_a -> Alt inst_f inst_a -> bool :=
+  GHC.Prim.coerce GHC.Base.op_zgze__.
+
+Local Definition instance_forall___GHC_Base_Ord__f_a____GHC_Base_Ord__Alt_f_a__op_zl__
+                                                                                       {inst_f} {inst_a} `{GHC.Base.Ord
+                                                                                       (inst_f inst_a)} : Alt inst_f
+                                                                                                          inst_a -> Alt
+                                                                                                          inst_f
+                                                                                                          inst_a -> bool :=
+  GHC.Prim.coerce GHC.Base.op_zl__.
+
+Local Definition instance_forall___GHC_Base_Ord__f_a____GHC_Base_Ord__Alt_f_a__op_zlze__
+                                                                                         {inst_f} {inst_a}
+                                                                                         `{GHC.Base.Ord (inst_f inst_a)}
+    : Alt inst_f inst_a -> Alt inst_f inst_a -> bool :=
+  GHC.Prim.coerce GHC.Base.op_zlze__.
+
+Instance instance_forall___GHC_Base_Ord__f_a____GHC_Base_Ord__Alt_f_a_  {f}
+                                                                       {a} `{GHC.Base.Ord (f a)} : GHC.Base.Ord (Alt f
+                                                                                                                a) :=
+  fun _ k =>
+    k (GHC.Base.Ord__Dict_Build (Alt f a)
+                                instance_forall___GHC_Base_Ord__f_a____GHC_Base_Ord__Alt_f_a__op_zl__
+                                instance_forall___GHC_Base_Ord__f_a____GHC_Base_Ord__Alt_f_a__op_zlze__
+                                instance_forall___GHC_Base_Ord__f_a____GHC_Base_Ord__Alt_f_a__op_zg__
+                                instance_forall___GHC_Base_Ord__f_a____GHC_Base_Ord__Alt_f_a__op_zgze__
+                                instance_forall___GHC_Base_Ord__f_a____GHC_Base_Ord__Alt_f_a__compare
+                                instance_forall___GHC_Base_Ord__f_a____GHC_Base_Ord__Alt_f_a__max
+                                instance_forall___GHC_Base_Ord__f_a____GHC_Base_Ord__Alt_f_a__min).
 (* Converted value declarations: *)
 
 Instance Unpeel_Dual a : Unpeel (Dual a) a := Build_Unpeel _ _ getDual Mk_Dual.
@@ -280,11 +369,24 @@ Instance Unpeel_Sum a : Unpeel (Sum a) a := Build_Unpeel _ _ getSum Mk_Sum.
 Instance Unpeel_Product a : Unpeel (Product a) a := Build_Unpeel _ _ getProduct
                                                                  Mk_Product.
 
+Instance Unpeel_First a : Unpeel (First a) (option a) := Build_Unpeel _ _
+                                                                      getFirst Mk_First.
+
+Instance Unpeel_Last a : Unpeel (Last a) (option a) := Build_Unpeel _ _ getLast
+                                                                    Mk_Last.
+
+Instance Unpeel_Endo a : Unpeel (Endo a) (a -> a) := Build_Unpeel _ _ appEndo
+                                                                  Mk_Endo.
+
+Instance Unpeel_Any : Unpeel Any bool := Build_Unpeel _ _ getAny Mk_Any.
+
+Instance Unpeel_All : Unpeel All bool := Build_Unpeel _ _ getAll Mk_All.
+
 Local Definition instance_forall___GHC_Base_Monoid_a___GHC_Base_Monoid__Dual_a__mappend {inst_a}
                                                                                         `{GHC.Base.Monoid inst_a}
     : (Dual inst_a) -> (Dual inst_a) -> (Dual inst_a) :=
-  fun arg_99__ arg_100__ =>
-    match arg_99__ , arg_100__ with
+  fun arg_201__ arg_202__ =>
+    match arg_201__ , arg_202__ with
       | Mk_Dual x , Mk_Dual y => Mk_Dual (GHC.Base.mappend y x)
     end.
 
@@ -354,8 +456,8 @@ Local Definition instance_GHC_Base_Monad_Dual_op_zgzg__ : forall {a} {b},
 Local Definition instance_GHC_Base_Monad_Dual_op_zgzgze__ : forall {a} {b},
                                                               Dual a -> (a -> Dual b) -> Dual b :=
   fun {a} {b} =>
-    fun arg_94__ arg_95__ =>
-      match arg_94__ , arg_95__ with
+    fun arg_196__ arg_197__ =>
+      match arg_196__ , arg_197__ with
         | m , k => k (getDual m)
       end.
 
@@ -371,8 +473,8 @@ Instance instance_GHC_Base_Monad_Dual : GHC.Base.Monad Dual := fun _ k =>
 
 Local Definition instance_GHC_Base_Monoid__Endo_a__mappend {inst_a} : (Endo
                                                                       inst_a) -> (Endo inst_a) -> (Endo inst_a) :=
-  fun arg_90__ arg_91__ =>
-    match arg_90__ , arg_91__ with
+  fun arg_192__ arg_193__ =>
+    match arg_192__ , arg_193__ with
       | Mk_Endo f , Mk_Endo g => Mk_Endo (Coq.Program.Basics.compose f g)
     end.
 
@@ -393,8 +495,8 @@ Instance instance_GHC_Base_Monoid__Endo_a_ {a} : GHC.Base.Monoid (Endo a) :=
                                    instance_GHC_Base_Monoid__Endo_a__mempty).
 
 Local Definition instance_GHC_Base_Monoid_All_mappend : All -> All -> All :=
-  fun arg_85__ arg_86__ =>
-    match arg_85__ , arg_86__ with
+  fun arg_187__ arg_188__ =>
+    match arg_187__ , arg_188__ with
       | Mk_All x , Mk_All y => Mk_All (andb x y)
     end.
 
@@ -410,8 +512,8 @@ Instance instance_GHC_Base_Monoid_All : GHC.Base.Monoid All := fun _ k =>
                                    instance_GHC_Base_Monoid_All_mconcat instance_GHC_Base_Monoid_All_mempty).
 
 Local Definition instance_GHC_Base_Monoid_Any_mappend : Any -> Any -> Any :=
-  fun arg_80__ arg_81__ =>
-    match arg_80__ , arg_81__ with
+  fun arg_182__ arg_183__ =>
+    match arg_182__ , arg_183__ with
       | Mk_Any x , Mk_Any y => Mk_Any (orb x y)
     end.
 
@@ -471,8 +573,8 @@ Local Definition instance_GHC_Base_Monad_Sum_op_zgzg__ : forall {a} {b},
 Local Definition instance_GHC_Base_Monad_Sum_op_zgzgze__ : forall {a} {b},
                                                              Sum a -> (a -> Sum b) -> Sum b :=
   fun {a} {b} =>
-    fun arg_73__ arg_74__ =>
-      match arg_73__ , arg_74__ with
+    fun arg_175__ arg_176__ =>
+      match arg_175__ , arg_176__ with
         | m , k => k (getSum m)
       end.
 
@@ -534,8 +636,8 @@ Local Definition instance_GHC_Base_Monad_Product_op_zgzg__ : forall {a} {b},
 Local Definition instance_GHC_Base_Monad_Product_op_zgzgze__ : forall {a} {b},
                                                                  Product a -> (a -> Product b) -> Product b :=
   fun {a} {b} =>
-    fun arg_67__ arg_68__ =>
-      match arg_67__ , arg_68__ with
+    fun arg_169__ arg_170__ =>
+      match arg_169__ , arg_170__ with
         | m , k => k (getProduct m)
       end.
 
@@ -551,8 +653,8 @@ Instance instance_GHC_Base_Monad_Product : GHC.Base.Monad Product := fun _ k =>
 
 Local Definition instance_GHC_Base_Monoid__First_a__mappend {inst_a} : (First
                                                                        inst_a) -> (First inst_a) -> (First inst_a) :=
-  fun arg_64__ arg_65__ =>
-    match arg_64__ , arg_65__ with
+  fun arg_166__ arg_167__ =>
+    match arg_166__ , arg_167__ with
       | Mk_First None , r => r
       | l , _ => l
     end.
@@ -575,8 +677,8 @@ Instance instance_GHC_Base_Monoid__First_a_ {a} : GHC.Base.Monoid (First a) :=
 
 Local Definition instance_GHC_Base_Monoid__Last_a__mappend {inst_a} : (Last
                                                                       inst_a) -> (Last inst_a) -> (Last inst_a) :=
-  fun arg_60__ arg_61__ =>
-    match arg_60__ , arg_61__ with
+  fun arg_162__ arg_163__ =>
+    match arg_162__ , arg_163__ with
       | l , Mk_Last None => l
       | _ , r => r
     end.
@@ -597,35 +699,144 @@ Instance instance_GHC_Base_Monoid__Last_a_ {a} : GHC.Base.Monoid (Last a) :=
                                    instance_GHC_Base_Monoid__Last_a__mconcat
                                    instance_GHC_Base_Monoid__Last_a__mempty).
 
-(* Skipping instance
-   instance_forall___GHC_Base_Alternative_f___GHC_Base_Monoid__Alt_f_a_ *)
+Local Definition instance_forall___GHC_Base_Alternative_f___GHC_Base_Monoid__Alt_f_a__mappend {inst_f}
+                                                                                              {inst_a} `{_
+                                                                                                : GHC.Base.Alternative
+                                                                                                  inst_f} : Alt inst_f
+                                                                                                                inst_a -> Alt
+                                                                                                            inst_f
+                                                                                                            inst_a -> Alt
+                                                                                                            inst_f
+                                                                                                            inst_a :=
+  GHC.Prim.coerce GHC.Base.op_zlzbzg__.
 
-(* Translating `instance forall {f}, forall `{GHC.Base.Functor f},
-   GHC.Base.Functor (Alt f)' failed: type applications unsupported *)
+Local Definition instance_forall___GHC_Base_Alternative_f___GHC_Base_Monoid__Alt_f_a__mempty {inst_f}
+                                                                                             {inst_a}
+                                                                                             `{GHC.Base.Alternative
+                                                                                             inst_f} : (Alt inst_f
+                                                                                                       inst_a) :=
+  Mk_Alt GHC.Base.empty.
+
+Local Definition instance_forall___GHC_Base_Alternative_f___GHC_Base_Monoid__Alt_f_a__mconcat {inst_f}
+                                                                                              {inst_a}
+                                                                                              `{GHC.Base.Alternative
+                                                                                              inst_f} : list (Alt inst_f
+                                                                                                             inst_a) -> (Alt
+                                                                                                        inst_f
+                                                                                                        inst_a) :=
+  GHC.Base.foldr
+  instance_forall___GHC_Base_Alternative_f___GHC_Base_Monoid__Alt_f_a__mappend
+  instance_forall___GHC_Base_Alternative_f___GHC_Base_Monoid__Alt_f_a__mempty.
+
+Instance instance_forall___GHC_Base_Alternative_f___GHC_Base_Monoid__Alt_f_a_ {f}
+                                                                              {a} `{GHC.Base.Alternative f}
+  : GHC.Base.Monoid (Alt f a) := fun _ k =>
+    k (GHC.Base.Monoid__Dict_Build (Alt f a)
+                                   instance_forall___GHC_Base_Alternative_f___GHC_Base_Monoid__Alt_f_a__mappend
+                                   instance_forall___GHC_Base_Alternative_f___GHC_Base_Monoid__Alt_f_a__mconcat
+                                   instance_forall___GHC_Base_Alternative_f___GHC_Base_Monoid__Alt_f_a__mempty).
+
+Local Definition instance_forall___GHC_Base_Functor_f___GHC_Base_Functor__Alt_f__fmap {inst_f}
+                                                                                      `{GHC.Base.Functor inst_f}
+    : forall {a} {b}, (a -> b) -> Alt inst_f a -> Alt inst_f b :=
+  fun {a} {b} => GHC.Prim.coerce GHC.Base.fmap.
+
+Local Definition instance_forall___GHC_Base_Functor_f___GHC_Base_Functor__Alt_f__op_zlzd__ {inst_f}
+                                                                                           `{GHC.Base.Functor inst_f}
+    : forall {a} {b}, a -> Alt inst_f b -> Alt inst_f a :=
+  fun {a} {b} => GHC.Prim.coerce GHC.Base.op_zlzd__.
+
+Instance instance_forall___GHC_Base_Functor_f___GHC_Base_Functor__Alt_f_ {f}
+                                                                         `{GHC.Base.Functor f} : GHC.Base.Functor (Alt
+                                                                                                                  f) :=
+  fun _ k =>
+    k (GHC.Base.Functor__Dict_Build (Alt f) (fun {a} {b} =>
+                                      instance_forall___GHC_Base_Functor_f___GHC_Base_Functor__Alt_f__op_zlzd__)
+                                    (fun {a} {b} =>
+                                      instance_forall___GHC_Base_Functor_f___GHC_Base_Functor__Alt_f__fmap)).
 
 (* Translating `instance forall {f}, forall `{GHC.Base.Alternative f},
-   GHC.Base.Alternative (Alt f)' failed: type applications unsupported *)
+   GHC.Base.Alternative (Alt f)' failed: OOPS! Cannot find information for class
+   "GHC.Base.Alternative" unsupported *)
 
-(* Translating `instance forall {f}, forall `{GHC.Base.Applicative f},
-   GHC.Base.Applicative (Alt f)' failed: type applications unsupported *)
+Local Definition instance_forall___GHC_Base_Applicative_f___GHC_Base_Applicative__Alt_f__op_zlztzg__ {inst_f}
+                                                                                                     `{GHC.Base.Applicative
+                                                                                                     inst_f}
+    : forall {a} {b}, Alt inst_f (a -> b) -> Alt inst_f a -> Alt inst_f b :=
+  fun {a} {b} => GHC.Prim.coerce GHC.Base.op_zlztzg__.
+
+Local Definition instance_forall___GHC_Base_Applicative_f___GHC_Base_Applicative__Alt_f__op_ztzg__ {inst_f}
+                                                                                                   `{GHC.Base.Applicative
+                                                                                                   inst_f} : forall {a}
+                                                                                                                    {b},
+                                                                                                               Alt
+                                                                                                               inst_f
+                                                                                                               a -> Alt
+                                                                                                               inst_f
+                                                                                                               b -> Alt
+                                                                                                               inst_f
+                                                                                                               b :=
+  fun {a} {b} => GHC.Prim.coerce GHC.Base.op_ztzg__.
+
+Local Definition instance_forall___GHC_Base_Applicative_f___GHC_Base_Applicative__Alt_f__pure {inst_f}
+                                                                                              `{GHC.Base.Applicative
+                                                                                              inst_f} : forall {a},
+                                                                                                          a -> Alt
+                                                                                                          inst_f a :=
+  fun {a} => GHC.Prim.coerce GHC.Base.pure.
+
+Instance instance_forall___GHC_Base_Applicative_f___GHC_Base_Applicative__Alt_f_ {f}
+                                                                                 `{GHC.Base.Applicative f}
+  : GHC.Base.Applicative (Alt f) := fun _ k =>
+    k (GHC.Base.Applicative__Dict_Build (Alt f) (fun {a} {b} =>
+                                          instance_forall___GHC_Base_Applicative_f___GHC_Base_Applicative__Alt_f__op_ztzg__)
+                                        (fun {a} {b} =>
+                                          instance_forall___GHC_Base_Applicative_f___GHC_Base_Applicative__Alt_f__op_zlztzg__)
+                                        (fun {a} =>
+                                          instance_forall___GHC_Base_Applicative_f___GHC_Base_Applicative__Alt_f__pure)).
 
 (* Translating `instance forall {f}, forall `{GHC.Base.MonadPlus f},
-   GHC.Base.MonadPlus (Alt f)' failed: type applications unsupported *)
+   GHC.Base.MonadPlus (Alt f)' failed: OOPS! Cannot find information for class
+   "GHC.Base.MonadPlus" unsupported *)
 
-(* Translating `instance forall {f}, forall `{GHC.Base.Monad f}, GHC.Base.Monad
-   (Alt f)' failed: type applications unsupported *)
+Local Definition instance_forall___GHC_Base_Monad_f___GHC_Base_Monad__Alt_f__op_zgzg__ {inst_f}
+                                                                                       `{GHC.Base.Monad inst_f}
+    : forall {a} {b}, Alt inst_f a -> Alt inst_f b -> Alt inst_f b :=
+  fun {a} {b} => GHC.Prim.coerce GHC.Base.op_zgzg__.
+
+Local Definition instance_forall___GHC_Base_Monad_f___GHC_Base_Monad__Alt_f__op_zgzgze__ {inst_f}
+                                                                                         `{GHC.Base.Monad inst_f}
+    : forall {a} {b}, Alt inst_f a -> (a -> Alt inst_f b) -> Alt inst_f b :=
+  fun {a} {b} => GHC.Prim.coerce GHC.Base.op_zgzgze__.
+
+Local Definition instance_forall___GHC_Base_Monad_f___GHC_Base_Monad__Alt_f__return_ {inst_f}
+                                                                                     `{GHC.Base.Monad inst_f}
+    : forall {a}, a -> Alt inst_f a :=
+  fun {a} => GHC.Prim.coerce GHC.Base.return_.
+
+Instance instance_forall___GHC_Base_Monad_f___GHC_Base_Monad__Alt_f_ {f}
+                                                                     `{GHC.Base.Monad f} : GHC.Base.Monad (Alt f) :=
+  fun _ k =>
+    k (GHC.Base.Monad__Dict_Build (Alt f) (fun {a} {b} =>
+                                    instance_forall___GHC_Base_Monad_f___GHC_Base_Monad__Alt_f__op_zgzg__) (fun {a}
+                                                                                                                {b} =>
+                                    instance_forall___GHC_Base_Monad_f___GHC_Base_Monad__Alt_f__op_zgzgze__)
+                                  (fun {a} =>
+                                    instance_forall___GHC_Base_Monad_f___GHC_Base_Monad__Alt_f__return_)).
 
 (* Translating `instance forall {k} {f} {a}, forall `{GHC.Enum.Enum (f a)},
-   GHC.Enum.Enum (Alt f a)' failed: type applications unsupported *)
+   GHC.Enum.Enum (Alt f a)' failed: OOPS! Cannot find information for class
+   "GHC.Enum.Enum" unsupported *)
 
 (* Translating `instance forall {k} {f} {a}, forall `{GHC.Num.Num (f a)},
-   GHC.Num.Num (Alt f a)' failed: type applications unsupported *)
+   GHC.Num.Num (Alt f a)' failed: OOPS! Cannot find information for class
+   "GHC.Num.Num" unsupported *)
 
-(* Translating `instance forall {k} {f} {a}, forall `{GHC.Base.Ord (f a)},
-   GHC.Base.Ord (Alt f a)' failed: type applications unsupported *)
+(* Skipping instance
+   instance_forall___GHC_Base_Ord__f_a____GHC_Base_Ord__Alt_f_a_ *)
 
-(* Translating `instance forall {k} {f} {a}, forall `{GHC.Base.Eq_ (f a)},
-   GHC.Base.Eq_ (Alt f a)' failed: type applications unsupported *)
+(* Skipping instance
+   instance_forall___GHC_Base_Eq___f_a____GHC_Base_Eq___Alt_f_a_ *)
 
 (* Skipping instance
    instance_forall___GHC_Show_Show__f_a____GHC_Show_Show__Alt_f_a_ *)
@@ -640,14 +851,56 @@ Instance instance_GHC_Base_Monoid__Last_a_ {a} : GHC.Base.Monoid (Last a) :=
    failed: OOPS! Cannot find information for class "GHC.Generics.Generic"
    unsupported *)
 
-(* Translating `instance GHC.Base.Monad Last' failed: type applications
-   unsupported *)
+Local Definition instance_GHC_Base_Monad_Last_op_zgzg__ : forall {a} {b},
+                                                            Last a -> Last b -> Last b :=
+  fun {a} {b} => GHC.Prim.coerce GHC.Base.op_zgzg__.
 
-(* Translating `instance GHC.Base.Applicative Last' failed: type applications
-   unsupported *)
+Local Definition instance_GHC_Base_Monad_Last_op_zgzgze__ : forall {a} {b},
+                                                              Last a -> (a -> Last b) -> Last b :=
+  fun {a} {b} => GHC.Prim.coerce GHC.Base.op_zgzgze__.
 
-(* Translating `instance GHC.Base.Functor Last' failed: type applications
-   unsupported *)
+Local Definition instance_GHC_Base_Monad_Last_return_ : forall {a},
+                                                          a -> Last a :=
+  fun {a} => GHC.Prim.coerce GHC.Base.return_.
+
+Local Definition instance_GHC_Base_Applicative_Last_op_zlztzg__ : forall {a}
+                                                                         {b},
+                                                                    Last (a -> b) -> Last a -> Last b :=
+  fun {a} {b} => GHC.Prim.coerce GHC.Base.op_zlztzg__.
+
+Local Definition instance_GHC_Base_Applicative_Last_op_ztzg__ : forall {a} {b},
+                                                                  Last a -> Last b -> Last b :=
+  fun {a} {b} => GHC.Prim.coerce GHC.Base.op_ztzg__.
+
+Local Definition instance_GHC_Base_Applicative_Last_pure : forall {a},
+                                                             a -> Last a :=
+  fun {a} => GHC.Prim.coerce GHC.Base.pure.
+
+Local Definition instance_GHC_Base_Functor_Last_fmap : forall {a} {b},
+                                                         (a -> b) -> Last a -> Last b :=
+  fun {a} {b} => GHC.Prim.coerce GHC.Base.fmap.
+
+Local Definition instance_GHC_Base_Functor_Last_op_zlzd__ : forall {a} {b},
+                                                              a -> Last b -> Last a :=
+  fun {a} {b} => GHC.Prim.coerce GHC.Base.op_zlzd__.
+
+Instance instance_GHC_Base_Functor_Last : GHC.Base.Functor Last := fun _ k =>
+    k (GHC.Base.Functor__Dict_Build Last (fun {a} {b} =>
+                                      instance_GHC_Base_Functor_Last_op_zlzd__) (fun {a} {b} =>
+                                      instance_GHC_Base_Functor_Last_fmap)).
+
+Instance instance_GHC_Base_Applicative_Last : GHC.Base.Applicative Last := fun _
+                                                                               k =>
+    k (GHC.Base.Applicative__Dict_Build Last (fun {a} {b} =>
+                                          instance_GHC_Base_Applicative_Last_op_ztzg__) (fun {a} {b} =>
+                                          instance_GHC_Base_Applicative_Last_op_zlztzg__) (fun {a} =>
+                                          instance_GHC_Base_Applicative_Last_pure)).
+
+Instance instance_GHC_Base_Monad_Last : GHC.Base.Monad Last := fun _ k =>
+    k (GHC.Base.Monad__Dict_Build Last (fun {a} {b} =>
+                                    instance_GHC_Base_Monad_Last_op_zgzg__) (fun {a} {b} =>
+                                    instance_GHC_Base_Monad_Last_op_zgzgze__) (fun {a} =>
+                                    instance_GHC_Base_Monad_Last_return_)).
 
 (* Translating `instance GHC.Generics.Generic1 Last' failed: OOPS! Cannot find
    information for class "GHC.Generics.Generic1" unsupported *)
@@ -661,20 +914,131 @@ Instance instance_GHC_Base_Monoid__Last_a_ {a} : GHC.Base.Monoid (Last a) :=
 (* Skipping instance
    instance_forall___GHC_Read_Read_a___GHC_Read_Read__Last_a_ *)
 
-(* Translating `instance forall {a}, forall `{GHC.Base.Ord a}, GHC.Base.Ord
-   (Last a)' failed: type applications unsupported *)
+Local Definition instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Last_a__compare {inst_a}
+                                                                                  `{GHC.Base.Ord inst_a} : Last
+                                                                                                           inst_a -> Last
+                                                                                                           inst_a -> comparison :=
+  GHC.Prim.coerce GHC.Base.compare.
 
-(* Translating `instance forall {a}, forall `{GHC.Base.Eq_ a}, GHC.Base.Eq_
-   (Last a)' failed: type applications unsupported *)
+Local Definition instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Last_a__max {inst_a}
+                                                                              `{GHC.Base.Ord inst_a} : Last
+                                                                                                       inst_a -> Last
+                                                                                                       inst_a -> Last
+                                                                                                       inst_a :=
+  GHC.Prim.coerce GHC.Base.max.
 
-(* Translating `instance GHC.Base.Monad First' failed: type applications
-   unsupported *)
+Local Definition instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Last_a__min {inst_a}
+                                                                              `{GHC.Base.Ord inst_a} : Last
+                                                                                                       inst_a -> Last
+                                                                                                       inst_a -> Last
+                                                                                                       inst_a :=
+  GHC.Prim.coerce GHC.Base.min.
 
-(* Translating `instance GHC.Base.Applicative First' failed: type applications
-   unsupported *)
+Local Definition instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Last_a__op_zg__ {inst_a}
+                                                                                  `{GHC.Base.Ord inst_a} : Last
+                                                                                                           inst_a -> Last
+                                                                                                           inst_a -> bool :=
+  GHC.Prim.coerce GHC.Base.op_zg__.
 
-(* Translating `instance GHC.Base.Functor First' failed: type applications
-   unsupported *)
+Local Definition instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Last_a__op_zgze__ {inst_a}
+                                                                                    `{GHC.Base.Ord inst_a} : Last
+                                                                                                             inst_a -> Last
+                                                                                                             inst_a -> bool :=
+  GHC.Prim.coerce GHC.Base.op_zgze__.
+
+Local Definition instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Last_a__op_zl__ {inst_a}
+                                                                                  `{GHC.Base.Ord inst_a} : Last
+                                                                                                           inst_a -> Last
+                                                                                                           inst_a -> bool :=
+  GHC.Prim.coerce GHC.Base.op_zl__.
+
+Local Definition instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Last_a__op_zlze__ {inst_a}
+                                                                                    `{GHC.Base.Ord inst_a} : Last
+                                                                                                             inst_a -> Last
+                                                                                                             inst_a -> bool :=
+  GHC.Prim.coerce GHC.Base.op_zlze__.
+
+Local Definition instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___Last_a__op_zeze__ {inst_a}
+                                                                                    `{GHC.Base.Eq_ inst_a} : Last
+                                                                                                             inst_a -> Last
+                                                                                                             inst_a -> bool :=
+  GHC.Prim.coerce GHC.Base.op_zeze__.
+
+Local Definition instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___Last_a__op_zsze__ {inst_a}
+                                                                                    `{GHC.Base.Eq_ inst_a} : Last
+                                                                                                             inst_a -> Last
+                                                                                                             inst_a -> bool :=
+  GHC.Prim.coerce GHC.Base.op_zsze__.
+
+Instance instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___Last_a_ {a}
+                                                                  `{GHC.Base.Eq_ a} : GHC.Base.Eq_ (Last a) := fun _
+                                                                                                                   k =>
+    k (GHC.Base.Eq___Dict_Build (Last a)
+                                instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___Last_a__op_zeze__
+                                instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___Last_a__op_zsze__).
+
+Instance instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Last_a_ {a}
+                                                                  `{GHC.Base.Ord a} : GHC.Base.Ord (Last a) := fun _
+                                                                                                                   k =>
+    k (GHC.Base.Ord__Dict_Build (Last a)
+                                instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Last_a__op_zl__
+                                instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Last_a__op_zlze__
+                                instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Last_a__op_zg__
+                                instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Last_a__op_zgze__
+                                instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Last_a__compare
+                                instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Last_a__max
+                                instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Last_a__min).
+
+Local Definition instance_GHC_Base_Monad_First_op_zgzg__ : forall {a} {b},
+                                                             First a -> First b -> First b :=
+  fun {a} {b} => GHC.Prim.coerce GHC.Base.op_zgzg__.
+
+Local Definition instance_GHC_Base_Monad_First_op_zgzgze__ : forall {a} {b},
+                                                               First a -> (a -> First b) -> First b :=
+  fun {a} {b} => GHC.Prim.coerce GHC.Base.op_zgzgze__.
+
+Local Definition instance_GHC_Base_Monad_First_return_ : forall {a},
+                                                           a -> First a :=
+  fun {a} => GHC.Prim.coerce GHC.Base.return_.
+
+Local Definition instance_GHC_Base_Applicative_First_op_zlztzg__ : forall {a}
+                                                                          {b},
+                                                                     First (a -> b) -> First a -> First b :=
+  fun {a} {b} => GHC.Prim.coerce GHC.Base.op_zlztzg__.
+
+Local Definition instance_GHC_Base_Applicative_First_op_ztzg__ : forall {a} {b},
+                                                                   First a -> First b -> First b :=
+  fun {a} {b} => GHC.Prim.coerce GHC.Base.op_ztzg__.
+
+Local Definition instance_GHC_Base_Applicative_First_pure : forall {a},
+                                                              a -> First a :=
+  fun {a} => GHC.Prim.coerce GHC.Base.pure.
+
+Local Definition instance_GHC_Base_Functor_First_fmap : forall {a} {b},
+                                                          (a -> b) -> First a -> First b :=
+  fun {a} {b} => GHC.Prim.coerce GHC.Base.fmap.
+
+Local Definition instance_GHC_Base_Functor_First_op_zlzd__ : forall {a} {b},
+                                                               a -> First b -> First a :=
+  fun {a} {b} => GHC.Prim.coerce GHC.Base.op_zlzd__.
+
+Instance instance_GHC_Base_Functor_First : GHC.Base.Functor First := fun _ k =>
+    k (GHC.Base.Functor__Dict_Build First (fun {a} {b} =>
+                                      instance_GHC_Base_Functor_First_op_zlzd__) (fun {a} {b} =>
+                                      instance_GHC_Base_Functor_First_fmap)).
+
+Instance instance_GHC_Base_Applicative_First : GHC.Base.Applicative First :=
+  fun _ k =>
+    k (GHC.Base.Applicative__Dict_Build First (fun {a} {b} =>
+                                          instance_GHC_Base_Applicative_First_op_ztzg__) (fun {a} {b} =>
+                                          instance_GHC_Base_Applicative_First_op_zlztzg__) (fun {a} =>
+                                          instance_GHC_Base_Applicative_First_pure)).
+
+Instance instance_GHC_Base_Monad_First : GHC.Base.Monad First := fun _ k =>
+    k (GHC.Base.Monad__Dict_Build First (fun {a} {b} =>
+                                    instance_GHC_Base_Monad_First_op_zgzg__) (fun {a} {b} =>
+                                    instance_GHC_Base_Monad_First_op_zgzgze__) (fun {a} =>
+                                    instance_GHC_Base_Monad_First_return_)).
 
 (* Translating `instance GHC.Generics.Generic1 First' failed: OOPS! Cannot find
    information for class "GHC.Generics.Generic1" unsupported *)
@@ -688,14 +1052,84 @@ Instance instance_GHC_Base_Monoid__Last_a_ {a} : GHC.Base.Monoid (Last a) :=
 (* Skipping instance
    instance_forall___GHC_Read_Read_a___GHC_Read_Read__First_a_ *)
 
-(* Translating `instance forall {a}, forall `{GHC.Base.Ord a}, GHC.Base.Ord
-   (First a)' failed: type applications unsupported *)
+Local Definition instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__First_a__compare {inst_a}
+                                                                                   `{GHC.Base.Ord inst_a} : First
+                                                                                                            inst_a -> First
+                                                                                                            inst_a -> comparison :=
+  GHC.Prim.coerce GHC.Base.compare.
 
-(* Translating `instance forall {a}, forall `{GHC.Base.Eq_ a}, GHC.Base.Eq_
-   (First a)' failed: type applications unsupported *)
+Local Definition instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__First_a__max {inst_a}
+                                                                               `{GHC.Base.Ord inst_a} : First
+                                                                                                        inst_a -> First
+                                                                                                        inst_a -> First
+                                                                                                        inst_a :=
+  GHC.Prim.coerce GHC.Base.max.
+
+Local Definition instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__First_a__min {inst_a}
+                                                                               `{GHC.Base.Ord inst_a} : First
+                                                                                                        inst_a -> First
+                                                                                                        inst_a -> First
+                                                                                                        inst_a :=
+  GHC.Prim.coerce GHC.Base.min.
+
+Local Definition instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__First_a__op_zg__ {inst_a}
+                                                                                   `{GHC.Base.Ord inst_a} : First
+                                                                                                            inst_a -> First
+                                                                                                            inst_a -> bool :=
+  GHC.Prim.coerce GHC.Base.op_zg__.
+
+Local Definition instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__First_a__op_zgze__ {inst_a}
+                                                                                     `{GHC.Base.Ord inst_a} : First
+                                                                                                              inst_a -> First
+                                                                                                              inst_a -> bool :=
+  GHC.Prim.coerce GHC.Base.op_zgze__.
+
+Local Definition instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__First_a__op_zl__ {inst_a}
+                                                                                   `{GHC.Base.Ord inst_a} : First
+                                                                                                            inst_a -> First
+                                                                                                            inst_a -> bool :=
+  GHC.Prim.coerce GHC.Base.op_zl__.
+
+Local Definition instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__First_a__op_zlze__ {inst_a}
+                                                                                     `{GHC.Base.Ord inst_a} : First
+                                                                                                              inst_a -> First
+                                                                                                              inst_a -> bool :=
+  GHC.Prim.coerce GHC.Base.op_zlze__.
+
+Local Definition instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___First_a__op_zeze__ {inst_a}
+                                                                                     `{GHC.Base.Eq_ inst_a} : First
+                                                                                                              inst_a -> First
+                                                                                                              inst_a -> bool :=
+  GHC.Prim.coerce GHC.Base.op_zeze__.
+
+Local Definition instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___First_a__op_zsze__ {inst_a}
+                                                                                     `{GHC.Base.Eq_ inst_a} : First
+                                                                                                              inst_a -> First
+                                                                                                              inst_a -> bool :=
+  GHC.Prim.coerce GHC.Base.op_zsze__.
+
+Instance instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___First_a_ {a}
+                                                                   `{GHC.Base.Eq_ a} : GHC.Base.Eq_ (First a) := fun _
+                                                                                                                     k =>
+    k (GHC.Base.Eq___Dict_Build (First a)
+                                instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___First_a__op_zeze__
+                                instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___First_a__op_zsze__).
+
+Instance instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__First_a_ {a}
+                                                                   `{GHC.Base.Ord a} : GHC.Base.Ord (First a) := fun _
+                                                                                                                     k =>
+    k (GHC.Base.Ord__Dict_Build (First a)
+                                instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__First_a__op_zl__
+                                instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__First_a__op_zlze__
+                                instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__First_a__op_zg__
+                                instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__First_a__op_zgze__
+                                instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__First_a__compare
+                                instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__First_a__max
+                                instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__First_a__min).
 
 (* Translating `instance forall {a}, forall `{GHC.Num.Num a}, GHC.Num.Num
-   (Product a)' failed: type applications unsupported *)
+   (Product a)' failed: OOPS! Cannot find information for class "GHC.Num.Num"
+   unsupported *)
 
 (* Translating `instance GHC.Generics.Generic1 Product' failed: OOPS! Cannot
    find information for class "GHC.Generics.Generic1" unsupported *)
@@ -704,7 +1138,8 @@ Instance instance_GHC_Base_Monoid__Last_a_ {a} : GHC.Base.Monoid (Last a) :=
    OOPS! Cannot find information for class "GHC.Generics.Generic" unsupported *)
 
 (* Translating `instance forall {a}, forall `{GHC.Enum.Bounded a},
-   GHC.Enum.Bounded (Product a)' failed: type applications unsupported *)
+   GHC.Enum.Bounded (Product a)' failed: OOPS! Cannot find information for class
+   "GHC.Enum.Bounded" unsupported *)
 
 (* Skipping instance
    instance_forall___GHC_Show_Show_a___GHC_Show_Show__Product_a_ *)
@@ -712,14 +1147,83 @@ Instance instance_GHC_Base_Monoid__Last_a_ {a} : GHC.Base.Monoid (Last a) :=
 (* Skipping instance
    instance_forall___GHC_Read_Read_a___GHC_Read_Read__Product_a_ *)
 
-(* Translating `instance forall {a}, forall `{GHC.Base.Ord a}, GHC.Base.Ord
-   (Product a)' failed: type applications unsupported *)
+Local Definition instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Product_a__compare {inst_a}
+                                                                                     `{GHC.Base.Ord inst_a} : Product
+                                                                                                              inst_a -> Product
+                                                                                                              inst_a -> comparison :=
+  GHC.Prim.coerce GHC.Base.compare.
 
-(* Translating `instance forall {a}, forall `{GHC.Base.Eq_ a}, GHC.Base.Eq_
-   (Product a)' failed: type applications unsupported *)
+Local Definition instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Product_a__max {inst_a}
+                                                                                 `{GHC.Base.Ord inst_a} : Product
+                                                                                                          inst_a -> Product
+                                                                                                          inst_a -> Product
+                                                                                                          inst_a :=
+  GHC.Prim.coerce GHC.Base.max.
+
+Local Definition instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Product_a__min {inst_a}
+                                                                                 `{GHC.Base.Ord inst_a} : Product
+                                                                                                          inst_a -> Product
+                                                                                                          inst_a -> Product
+                                                                                                          inst_a :=
+  GHC.Prim.coerce GHC.Base.min.
+
+Local Definition instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Product_a__op_zg__ {inst_a}
+                                                                                     `{GHC.Base.Ord inst_a} : Product
+                                                                                                              inst_a -> Product
+                                                                                                              inst_a -> bool :=
+  GHC.Prim.coerce GHC.Base.op_zg__.
+
+Local Definition instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Product_a__op_zgze__ {inst_a}
+                                                                                       `{GHC.Base.Ord inst_a} : Product
+                                                                                                                inst_a -> Product
+                                                                                                                inst_a -> bool :=
+  GHC.Prim.coerce GHC.Base.op_zgze__.
+
+Local Definition instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Product_a__op_zl__ {inst_a}
+                                                                                     `{GHC.Base.Ord inst_a} : Product
+                                                                                                              inst_a -> Product
+                                                                                                              inst_a -> bool :=
+  GHC.Prim.coerce GHC.Base.op_zl__.
+
+Local Definition instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Product_a__op_zlze__ {inst_a}
+                                                                                       `{GHC.Base.Ord inst_a} : Product
+                                                                                                                inst_a -> Product
+                                                                                                                inst_a -> bool :=
+  GHC.Prim.coerce GHC.Base.op_zlze__.
+
+Local Definition instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___Product_a__op_zeze__ {inst_a}
+                                                                                       `{GHC.Base.Eq_ inst_a} : Product
+                                                                                                                inst_a -> Product
+                                                                                                                inst_a -> bool :=
+  GHC.Prim.coerce GHC.Base.op_zeze__.
+
+Local Definition instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___Product_a__op_zsze__ {inst_a}
+                                                                                       `{GHC.Base.Eq_ inst_a} : Product
+                                                                                                                inst_a -> Product
+                                                                                                                inst_a -> bool :=
+  GHC.Prim.coerce GHC.Base.op_zsze__.
+
+Instance instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___Product_a_ {a}
+                                                                     `{GHC.Base.Eq_ a} : GHC.Base.Eq_ (Product a) :=
+  fun _ k =>
+    k (GHC.Base.Eq___Dict_Build (Product a)
+                                instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___Product_a__op_zeze__
+                                instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___Product_a__op_zsze__).
+
+Instance instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Product_a_ {a}
+                                                                     `{GHC.Base.Ord a} : GHC.Base.Ord (Product a) :=
+  fun _ k =>
+    k (GHC.Base.Ord__Dict_Build (Product a)
+                                instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Product_a__op_zl__
+                                instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Product_a__op_zlze__
+                                instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Product_a__op_zg__
+                                instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Product_a__op_zgze__
+                                instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Product_a__compare
+                                instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Product_a__max
+                                instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Product_a__min).
 
 (* Translating `instance forall {a}, forall `{GHC.Num.Num a}, GHC.Num.Num (Sum
-   a)' failed: type applications unsupported *)
+   a)' failed: OOPS! Cannot find information for class "GHC.Num.Num" unsupported *)
 
 (* Translating `instance GHC.Generics.Generic1 Sum' failed: OOPS! Cannot find
    information for class "GHC.Generics.Generic1" unsupported *)
@@ -728,7 +1232,8 @@ Instance instance_GHC_Base_Monoid__Last_a_ {a} : GHC.Base.Monoid (Last a) :=
    Cannot find information for class "GHC.Generics.Generic" unsupported *)
 
 (* Translating `instance forall {a}, forall `{GHC.Enum.Bounded a},
-   GHC.Enum.Bounded (Sum a)' failed: type applications unsupported *)
+   GHC.Enum.Bounded (Sum a)' failed: OOPS! Cannot find information for class
+   "GHC.Enum.Bounded" unsupported *)
 
 (* Skipping instance
    instance_forall___GHC_Show_Show_a___GHC_Show_Show__Sum_a_ *)
@@ -736,43 +1241,170 @@ Instance instance_GHC_Base_Monoid__Last_a_ {a} : GHC.Base.Monoid (Last a) :=
 (* Skipping instance
    instance_forall___GHC_Read_Read_a___GHC_Read_Read__Sum_a_ *)
 
-(* Translating `instance forall {a}, forall `{GHC.Base.Ord a}, GHC.Base.Ord (Sum
-   a)' failed: type applications unsupported *)
+Local Definition instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Sum_a__compare {inst_a}
+                                                                                 `{GHC.Base.Ord inst_a} : Sum
+                                                                                                          inst_a -> Sum
+                                                                                                          inst_a -> comparison :=
+  GHC.Prim.coerce GHC.Base.compare.
 
-(* Translating `instance forall {a}, forall `{GHC.Base.Eq_ a}, GHC.Base.Eq_ (Sum
-   a)' failed: type applications unsupported *)
+Local Definition instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Sum_a__max {inst_a}
+                                                                             `{GHC.Base.Ord inst_a} : Sum inst_a -> Sum
+                                                                                                      inst_a -> Sum
+                                                                                                      inst_a :=
+  GHC.Prim.coerce GHC.Base.max.
+
+Local Definition instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Sum_a__min {inst_a}
+                                                                             `{GHC.Base.Ord inst_a} : Sum inst_a -> Sum
+                                                                                                      inst_a -> Sum
+                                                                                                      inst_a :=
+  GHC.Prim.coerce GHC.Base.min.
+
+Local Definition instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Sum_a__op_zg__ {inst_a}
+                                                                                 `{GHC.Base.Ord inst_a} : Sum
+                                                                                                          inst_a -> Sum
+                                                                                                          inst_a -> bool :=
+  GHC.Prim.coerce GHC.Base.op_zg__.
+
+Local Definition instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Sum_a__op_zgze__ {inst_a}
+                                                                                   `{GHC.Base.Ord inst_a} : Sum
+                                                                                                            inst_a -> Sum
+                                                                                                            inst_a -> bool :=
+  GHC.Prim.coerce GHC.Base.op_zgze__.
+
+Local Definition instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Sum_a__op_zl__ {inst_a}
+                                                                                 `{GHC.Base.Ord inst_a} : Sum
+                                                                                                          inst_a -> Sum
+                                                                                                          inst_a -> bool :=
+  GHC.Prim.coerce GHC.Base.op_zl__.
+
+Local Definition instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Sum_a__op_zlze__ {inst_a}
+                                                                                   `{GHC.Base.Ord inst_a} : Sum
+                                                                                                            inst_a -> Sum
+                                                                                                            inst_a -> bool :=
+  GHC.Prim.coerce GHC.Base.op_zlze__.
+
+Local Definition instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___Sum_a__op_zeze__ {inst_a}
+                                                                                   `{GHC.Base.Eq_ inst_a} : Sum
+                                                                                                            inst_a -> Sum
+                                                                                                            inst_a -> bool :=
+  GHC.Prim.coerce GHC.Base.op_zeze__.
+
+Local Definition instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___Sum_a__op_zsze__ {inst_a}
+                                                                                   `{GHC.Base.Eq_ inst_a} : Sum
+                                                                                                            inst_a -> Sum
+                                                                                                            inst_a -> bool :=
+  GHC.Prim.coerce GHC.Base.op_zsze__.
+
+Instance instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___Sum_a_ {a}
+                                                                 `{GHC.Base.Eq_ a} : GHC.Base.Eq_ (Sum a) := fun _ k =>
+    k (GHC.Base.Eq___Dict_Build (Sum a)
+                                instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___Sum_a__op_zeze__
+                                instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___Sum_a__op_zsze__).
+
+Instance instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Sum_a_ {a}
+                                                                 `{GHC.Base.Ord a} : GHC.Base.Ord (Sum a) := fun _ k =>
+    k (GHC.Base.Ord__Dict_Build (Sum a)
+                                instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Sum_a__op_zl__
+                                instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Sum_a__op_zlze__
+                                instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Sum_a__op_zg__
+                                instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Sum_a__op_zgze__
+                                instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Sum_a__compare
+                                instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Sum_a__max
+                                instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Sum_a__min).
 
 (* Translating `instance GHC.Generics.Generic Any' failed: OOPS! Cannot find
    information for class "GHC.Generics.Generic" unsupported *)
 
-(* Translating `instance GHC.Enum.Bounded Any' failed: type applications
-   unsupported *)
+(* Translating `instance GHC.Enum.Bounded Any' failed: OOPS! Cannot find
+   information for class "GHC.Enum.Bounded" unsupported *)
 
 (* Skipping instance instance_GHC_Show_Show_Any *)
 
 (* Skipping instance instance_GHC_Read_Read_Any *)
 
-(* Translating `instance GHC.Base.Ord Any' failed: type applications
-   unsupported *)
+Local Definition instance_GHC_Base_Ord_Any_compare : Any -> Any -> comparison :=
+  GHC.Prim.coerce GHC.Base.compare.
 
-(* Translating `instance GHC.Base.Eq_ Any' failed: type applications
-   unsupported *)
+Local Definition instance_GHC_Base_Ord_Any_max : Any -> Any -> Any :=
+  GHC.Prim.coerce GHC.Base.max.
+
+Local Definition instance_GHC_Base_Ord_Any_min : Any -> Any -> Any :=
+  GHC.Prim.coerce GHC.Base.min.
+
+Local Definition instance_GHC_Base_Ord_Any_op_zg__ : Any -> Any -> bool :=
+  GHC.Prim.coerce GHC.Base.op_zg__.
+
+Local Definition instance_GHC_Base_Ord_Any_op_zgze__ : Any -> Any -> bool :=
+  GHC.Prim.coerce GHC.Base.op_zgze__.
+
+Local Definition instance_GHC_Base_Ord_Any_op_zl__ : Any -> Any -> bool :=
+  GHC.Prim.coerce GHC.Base.op_zl__.
+
+Local Definition instance_GHC_Base_Ord_Any_op_zlze__ : Any -> Any -> bool :=
+  GHC.Prim.coerce GHC.Base.op_zlze__.
+
+Local Definition instance_GHC_Base_Eq__Any_op_zeze__ : Any -> Any -> bool :=
+  GHC.Prim.coerce GHC.Base.op_zeze__.
+
+Local Definition instance_GHC_Base_Eq__Any_op_zsze__ : Any -> Any -> bool :=
+  GHC.Prim.coerce GHC.Base.op_zsze__.
+
+Instance instance_GHC_Base_Eq__Any : GHC.Base.Eq_ Any := fun _ k =>
+    k (GHC.Base.Eq___Dict_Build Any instance_GHC_Base_Eq__Any_op_zeze__
+                                instance_GHC_Base_Eq__Any_op_zsze__).
+
+Instance instance_GHC_Base_Ord_Any : GHC.Base.Ord Any := fun _ k =>
+    k (GHC.Base.Ord__Dict_Build Any instance_GHC_Base_Ord_Any_op_zl__
+                                instance_GHC_Base_Ord_Any_op_zlze__ instance_GHC_Base_Ord_Any_op_zg__
+                                instance_GHC_Base_Ord_Any_op_zgze__ instance_GHC_Base_Ord_Any_compare
+                                instance_GHC_Base_Ord_Any_max instance_GHC_Base_Ord_Any_min).
 
 (* Translating `instance GHC.Generics.Generic All' failed: OOPS! Cannot find
    information for class "GHC.Generics.Generic" unsupported *)
 
-(* Translating `instance GHC.Enum.Bounded All' failed: type applications
-   unsupported *)
+(* Translating `instance GHC.Enum.Bounded All' failed: OOPS! Cannot find
+   information for class "GHC.Enum.Bounded" unsupported *)
 
 (* Skipping instance instance_GHC_Show_Show_All *)
 
 (* Skipping instance instance_GHC_Read_Read_All *)
 
-(* Translating `instance GHC.Base.Ord All' failed: type applications
-   unsupported *)
+Local Definition instance_GHC_Base_Ord_All_compare : All -> All -> comparison :=
+  GHC.Prim.coerce GHC.Base.compare.
 
-(* Translating `instance GHC.Base.Eq_ All' failed: type applications
-   unsupported *)
+Local Definition instance_GHC_Base_Ord_All_max : All -> All -> All :=
+  GHC.Prim.coerce GHC.Base.max.
+
+Local Definition instance_GHC_Base_Ord_All_min : All -> All -> All :=
+  GHC.Prim.coerce GHC.Base.min.
+
+Local Definition instance_GHC_Base_Ord_All_op_zg__ : All -> All -> bool :=
+  GHC.Prim.coerce GHC.Base.op_zg__.
+
+Local Definition instance_GHC_Base_Ord_All_op_zgze__ : All -> All -> bool :=
+  GHC.Prim.coerce GHC.Base.op_zgze__.
+
+Local Definition instance_GHC_Base_Ord_All_op_zl__ : All -> All -> bool :=
+  GHC.Prim.coerce GHC.Base.op_zl__.
+
+Local Definition instance_GHC_Base_Ord_All_op_zlze__ : All -> All -> bool :=
+  GHC.Prim.coerce GHC.Base.op_zlze__.
+
+Local Definition instance_GHC_Base_Eq__All_op_zeze__ : All -> All -> bool :=
+  GHC.Prim.coerce GHC.Base.op_zeze__.
+
+Local Definition instance_GHC_Base_Eq__All_op_zsze__ : All -> All -> bool :=
+  GHC.Prim.coerce GHC.Base.op_zsze__.
+
+Instance instance_GHC_Base_Eq__All : GHC.Base.Eq_ All := fun _ k =>
+    k (GHC.Base.Eq___Dict_Build All instance_GHC_Base_Eq__All_op_zeze__
+                                instance_GHC_Base_Eq__All_op_zsze__).
+
+Instance instance_GHC_Base_Ord_All : GHC.Base.Ord All := fun _ k =>
+    k (GHC.Base.Ord__Dict_Build All instance_GHC_Base_Ord_All_op_zl__
+                                instance_GHC_Base_Ord_All_op_zlze__ instance_GHC_Base_Ord_All_op_zg__
+                                instance_GHC_Base_Ord_All_op_zgze__ instance_GHC_Base_Ord_All_compare
+                                instance_GHC_Base_Ord_All_max instance_GHC_Base_Ord_All_min).
 
 (* Translating `instance forall {a}, GHC.Generics.Generic (Endo a)' failed:
    OOPS! Cannot find information for class "GHC.Generics.Generic" unsupported *)
@@ -784,7 +1416,8 @@ Instance instance_GHC_Base_Monoid__Last_a_ {a} : GHC.Base.Monoid (Last a) :=
    OOPS! Cannot find information for class "GHC.Generics.Generic" unsupported *)
 
 (* Translating `instance forall {a}, forall `{GHC.Enum.Bounded a},
-   GHC.Enum.Bounded (Dual a)' failed: type applications unsupported *)
+   GHC.Enum.Bounded (Dual a)' failed: OOPS! Cannot find information for class
+   "GHC.Enum.Bounded" unsupported *)
 
 (* Skipping instance
    instance_forall___GHC_Show_Show_a___GHC_Show_Show__Dual_a_ *)
@@ -792,17 +1425,92 @@ Instance instance_GHC_Base_Monoid__Last_a_ {a} : GHC.Base.Monoid (Last a) :=
 (* Skipping instance
    instance_forall___GHC_Read_Read_a___GHC_Read_Read__Dual_a_ *)
 
-(* Translating `instance forall {a}, forall `{GHC.Base.Ord a}, GHC.Base.Ord
-   (Dual a)' failed: type applications unsupported *)
+Local Definition instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Dual_a__compare {inst_a}
+                                                                                  `{GHC.Base.Ord inst_a} : Dual
+                                                                                                           inst_a -> Dual
+                                                                                                           inst_a -> comparison :=
+  GHC.Prim.coerce GHC.Base.compare.
 
-(* Translating `instance forall {a}, forall `{GHC.Base.Eq_ a}, GHC.Base.Eq_
-   (Dual a)' failed: type applications unsupported *)
+Local Definition instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Dual_a__max {inst_a}
+                                                                              `{GHC.Base.Ord inst_a} : Dual
+                                                                                                       inst_a -> Dual
+                                                                                                       inst_a -> Dual
+                                                                                                       inst_a :=
+  GHC.Prim.coerce GHC.Base.max.
+
+Local Definition instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Dual_a__min {inst_a}
+                                                                              `{GHC.Base.Ord inst_a} : Dual
+                                                                                                       inst_a -> Dual
+                                                                                                       inst_a -> Dual
+                                                                                                       inst_a :=
+  GHC.Prim.coerce GHC.Base.min.
+
+Local Definition instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Dual_a__op_zg__ {inst_a}
+                                                                                  `{GHC.Base.Ord inst_a} : Dual
+                                                                                                           inst_a -> Dual
+                                                                                                           inst_a -> bool :=
+  GHC.Prim.coerce GHC.Base.op_zg__.
+
+Local Definition instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Dual_a__op_zgze__ {inst_a}
+                                                                                    `{GHC.Base.Ord inst_a} : Dual
+                                                                                                             inst_a -> Dual
+                                                                                                             inst_a -> bool :=
+  GHC.Prim.coerce GHC.Base.op_zgze__.
+
+Local Definition instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Dual_a__op_zl__ {inst_a}
+                                                                                  `{GHC.Base.Ord inst_a} : Dual
+                                                                                                           inst_a -> Dual
+                                                                                                           inst_a -> bool :=
+  GHC.Prim.coerce GHC.Base.op_zl__.
+
+Local Definition instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Dual_a__op_zlze__ {inst_a}
+                                                                                    `{GHC.Base.Ord inst_a} : Dual
+                                                                                                             inst_a -> Dual
+                                                                                                             inst_a -> bool :=
+  GHC.Prim.coerce GHC.Base.op_zlze__.
+
+Local Definition instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___Dual_a__op_zeze__ {inst_a}
+                                                                                    `{GHC.Base.Eq_ inst_a} : Dual
+                                                                                                             inst_a -> Dual
+                                                                                                             inst_a -> bool :=
+  GHC.Prim.coerce GHC.Base.op_zeze__.
+
+Local Definition instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___Dual_a__op_zsze__ {inst_a}
+                                                                                    `{GHC.Base.Eq_ inst_a} : Dual
+                                                                                                             inst_a -> Dual
+                                                                                                             inst_a -> bool :=
+  GHC.Prim.coerce GHC.Base.op_zsze__.
+
+Instance instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___Dual_a_ {a}
+                                                                  `{GHC.Base.Eq_ a} : GHC.Base.Eq_ (Dual a) := fun _
+                                                                                                                   k =>
+    k (GHC.Base.Eq___Dict_Build (Dual a)
+                                instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___Dual_a__op_zeze__
+                                instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___Dual_a__op_zsze__).
+
+Instance instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Dual_a_ {a}
+                                                                  `{GHC.Base.Ord a} : GHC.Base.Ord (Dual a) := fun _
+                                                                                                                   k =>
+    k (GHC.Base.Ord__Dict_Build (Dual a)
+                                instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Dual_a__op_zl__
+                                instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Dual_a__op_zlze__
+                                instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Dual_a__op_zg__
+                                instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Dual_a__op_zgze__
+                                instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Dual_a__compare
+                                instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Dual_a__max
+                                instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Dual_a__min).
 
 (* Unbound variables:
-     Build_Unpeel Coq.Program.Basics.compose GHC.Base.Applicative
-     GHC.Base.Applicative__Dict_Build GHC.Base.Functor GHC.Base.Functor__Dict_Build
+     Build_Unpeel Coq.Program.Basics.compose GHC.Base.Alternative
+     GHC.Base.Applicative GHC.Base.Applicative__Dict_Build GHC.Base.Eq_
+     GHC.Base.Eq___Dict_Build GHC.Base.Functor GHC.Base.Functor__Dict_Build
      GHC.Base.Monad GHC.Base.Monad__Dict_Build GHC.Base.Monoid
-     GHC.Base.Monoid__Dict_Build GHC.Base.const GHC.Base.fmap GHC.Base.foldr
-     GHC.Base.id GHC.Base.mappend GHC.Base.mempty GHC.Base.op_ztzg__ GHC.Base.pure
-     GHC.Prim.coerce None Type Unpeel andb bool false list option orb true
+     GHC.Base.Monoid__Dict_Build GHC.Base.Ord GHC.Base.Ord__Dict_Build
+     GHC.Base.compare GHC.Base.const GHC.Base.empty GHC.Base.fmap GHC.Base.foldr
+     GHC.Base.id GHC.Base.mappend GHC.Base.max GHC.Base.mempty GHC.Base.min
+     GHC.Base.op_zeze__ GHC.Base.op_zg__ GHC.Base.op_zgze__ GHC.Base.op_zgzg__
+     GHC.Base.op_zgzgze__ GHC.Base.op_zl__ GHC.Base.op_zlzbzg__ GHC.Base.op_zlzd__
+     GHC.Base.op_zlze__ GHC.Base.op_zlztzg__ GHC.Base.op_zsze__ GHC.Base.op_ztzg__
+     GHC.Base.pure GHC.Base.return_ GHC.Prim.coerce None Type Unpeel andb bool
+     comparison false list option orb true
 *)

@@ -4,10 +4,18 @@
 data kinds WrappedMonad (Type -> Type)
 data kinds WrappedArrow (Type -> (Type -> Type))
 
+add Control.Applicative Instance Unpeel_WrappedMonad {m} {a} : GHC.Prim.Unpeel (WrappedMonad m a) (m a) :=
+  GHC.Prim.Build_Unpeel _ _ unwrapMonad Mk_WrapMonad.
+add Control.Applicative Instance Unpeel_WrappedArrow {a}{b}{c} : GHC.Prim.Unpeel (WrappedArrow a b c) (a b c) :=
+  GHC.Prim.Build_Unpeel _ _ unwrapArrow Mk_WrapArrow.
+
+
 skip ZipList
-skip instance_GHC_Base_Applicative_ZipList_op_zlztzg__
-skip instance_GHC_Base_Applicative_ZipList_op_ztzg__
-skip instance_GHC_Base_Applicative_ZipList_pure
 skip instance_GHC_Base_Applicative_ZipList
+skip instance_Data_Foldable_Foldable_ZipList
+skip instance_GHC_Base_Functor_ZipList
+skip instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__ZipList_a_
+skip instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___ZipList_a_
+
 
 # will also need to skip Ord/Eq_/Functor/Foldable when those type applications are supported

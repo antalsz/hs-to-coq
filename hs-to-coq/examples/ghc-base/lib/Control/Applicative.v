@@ -17,6 +17,7 @@ Require Coq.Program.Basics.
 Require Data.Functor.
 Require Data.Tuple.
 Require GHC.Base.
+Require GHC.Prim.
 
 (* Converted type declarations: *)
 
@@ -42,13 +43,20 @@ Definition unwrapArrow {a : Type -> Type -> Type} {b} {c} (arg_1__
   end.
 (* Converted value declarations: *)
 
+Instance Unpeel_WrappedMonad {m} {a} : GHC.Prim.Unpeel (WrappedMonad m a) (m
+                                                       a) := GHC.Prim.Build_Unpeel _ _ unwrapMonad Mk_WrapMonad.
+
+Instance Unpeel_WrappedArrow {a} {b} {c} : GHC.Prim.Unpeel (WrappedArrow a b c)
+                                                           (a b c) := GHC.Prim.Build_Unpeel _ _ unwrapArrow
+                                                                                            Mk_WrapArrow.
+
 Local Definition instance_forall___GHC_Base_Monad_m___GHC_Base_Functor__WrappedMonad_m__fmap {inst_m}
                                                                                              `{GHC.Base.Monad inst_m}
     : forall {a} {b},
         (a -> b) -> (WrappedMonad inst_m) a -> (WrappedMonad inst_m) b :=
   fun {a} {b} =>
-    fun arg_28__ arg_29__ =>
-      match arg_28__ , arg_29__ with
+    fun arg_59__ arg_60__ =>
+      match arg_59__ , arg_60__ with
         | f , Mk_WrapMonad v => Mk_WrapMonad (GHC.Base.liftM f v)
       end.
 
@@ -82,8 +90,8 @@ Local Definition instance_forall___GHC_Base_Monad_m___GHC_Base_Applicative__Wrap
         (WrappedMonad inst_m) (a -> b) -> (WrappedMonad inst_m) a -> (WrappedMonad
         inst_m) b :=
   fun {a} {b} =>
-    fun arg_24__ arg_25__ =>
-      match arg_24__ , arg_25__ with
+    fun arg_55__ arg_56__ =>
+      match arg_55__ , arg_56__ with
         | Mk_WrapMonad f , Mk_WrapMonad v => Mk_WrapMonad (GHC.Base.ap f v)
       end.
 
@@ -132,8 +140,8 @@ Local Definition instance_forall___Control_Arrow_Arrow_a___GHC_Base_Functor__Wra
                                                                                                                 inst_b)
                                                                                                                 b :=
   fun {a} {b} =>
-    fun arg_19__ arg_20__ =>
-      match arg_19__ , arg_20__ with
+    fun arg_50__ arg_51__ =>
+      match arg_50__ , arg_51__ with
         | f , Mk_WrapArrow a => Mk_WrapArrow (Control.Category.op_zgzgzg__ a
                                                                            (Control.Arrow.arr f))
       end.
@@ -165,8 +173,8 @@ Local Definition instance_forall___Control_Arrow_Arrow_a___GHC_Base_Applicative_
         (WrappedArrow inst_a inst_b) (a -> b) -> (WrappedArrow inst_a inst_b)
         a -> (WrappedArrow inst_a inst_b) b :=
   fun {a} {b} =>
-    fun arg_15__ arg_16__ =>
-      match arg_15__ , arg_16__ with
+    fun arg_46__ arg_47__ =>
+      match arg_46__ , arg_47__ with
         | Mk_WrapArrow f , Mk_WrapArrow v => Mk_WrapArrow (Control.Category.op_zgzgzg__
                                                           (Control.Arrow.op_zazaza__ f v) (Control.Arrow.arr
                                                           (Data.Tuple.uncurry GHC.Base.id)))
@@ -190,8 +198,8 @@ Local Definition instance_forall___Control_Arrow_Arrow_a___GHC_Base_Applicative_
                                                                                                         inst_a}
     : forall {a}, a -> (WrappedArrow inst_a inst_b) a :=
   fun {a} =>
-    fun arg_12__ =>
-      match arg_12__ with
+    fun arg_43__ =>
+      match arg_43__ with
         | x => Mk_WrapArrow (Control.Arrow.arr (GHC.Base.const x))
       end.
 
@@ -217,21 +225,19 @@ Instance instance_forall___Control_Arrow_Arrow_a___GHC_Base_Applicative__Wrapped
 (* Translating `instance forall {a}, GHC.Generics.Generic (ZipList a)' failed:
    OOPS! Cannot find information for class "GHC.Generics.Generic" unsupported *)
 
-(* Translating `instance Data.Foldable.Foldable ZipList' failed: type
-   applications unsupported *)
+(* Skipping instance instance_Data_Foldable_Foldable_ZipList *)
 
-(* Translating `instance GHC.Base.Functor ZipList' failed: type applications
-   unsupported *)
+(* Skipping instance instance_GHC_Base_Functor_ZipList *)
 
 (* Translating `instance forall {a}, forall `{GHC.Read.Read a}, GHC.Read.Read
    (ZipList a)' failed: OOPS! Cannot find information for class "GHC.Read.Read"
    unsupported *)
 
-(* Translating `instance forall {a}, forall `{GHC.Base.Ord a}, GHC.Base.Ord
-   (ZipList a)' failed: type applications unsupported *)
+(* Skipping instance
+   instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__ZipList_a_ *)
 
-(* Translating `instance forall {a}, forall `{GHC.Base.Eq_ a}, GHC.Base.Eq_
-   (ZipList a)' failed: type applications unsupported *)
+(* Skipping instance
+   instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___ZipList_a_ *)
 
 (* Translating `instance forall {a}, forall `{GHC.Show.Show a}, GHC.Show.Show
    (ZipList a)' failed: OOPS! Cannot find information for class "GHC.Show.Show"
@@ -245,8 +251,40 @@ Instance instance_forall___Control_Arrow_Arrow_a___GHC_Base_Applicative__Wrapped
    a b c)' failed: OOPS! Cannot find information for class "GHC.Generics.Generic"
    unsupported *)
 
-(* Translating `instance forall {m}, forall `{GHC.Base.Monad m}, GHC.Base.Monad
-   (WrappedMonad m)' failed: type applications unsupported *)
+Local Definition instance_forall___GHC_Base_Monad_m___GHC_Base_Monad__WrappedMonad_m__op_zgzg__ {inst_m}
+                                                                                                `{GHC.Base.Monad inst_m}
+    : forall {a} {b},
+        WrappedMonad inst_m a -> WrappedMonad inst_m b -> WrappedMonad inst_m b :=
+  fun {a} {b} => GHC.Prim.coerce GHC.Base.op_zgzg__.
+
+Local Definition instance_forall___GHC_Base_Monad_m___GHC_Base_Monad__WrappedMonad_m__op_zgzgze__ {inst_m}
+                                                                                                  `{GHC.Base.Monad
+                                                                                                  inst_m} : forall {a}
+                                                                                                                   {b},
+                                                                                                              WrappedMonad
+                                                                                                              inst_m
+                                                                                                              a -> (a -> WrappedMonad
+                                                                                                              inst_m
+                                                                                                              b) -> WrappedMonad
+                                                                                                              inst_m
+                                                                                                              b :=
+  fun {a} {b} => GHC.Prim.coerce GHC.Base.op_zgzgze__.
+
+Local Definition instance_forall___GHC_Base_Monad_m___GHC_Base_Monad__WrappedMonad_m__return_ {inst_m}
+                                                                                              `{GHC.Base.Monad inst_m}
+    : forall {a}, a -> WrappedMonad inst_m a :=
+  fun {a} => GHC.Prim.coerce GHC.Base.return_.
+
+Instance instance_forall___GHC_Base_Monad_m___GHC_Base_Monad__WrappedMonad_m_ {m}
+                                                                              `{GHC.Base.Monad m} : GHC.Base.Monad
+                                                                                                    (WrappedMonad m) :=
+  fun _ k =>
+    k (GHC.Base.Monad__Dict_Build (WrappedMonad m) (fun {a} {b} =>
+                                    instance_forall___GHC_Base_Monad_m___GHC_Base_Monad__WrappedMonad_m__op_zgzg__)
+                                  (fun {a} {b} =>
+                                    instance_forall___GHC_Base_Monad_m___GHC_Base_Monad__WrappedMonad_m__op_zgzgze__)
+                                  (fun {a} =>
+                                    instance_forall___GHC_Base_Monad_m___GHC_Base_Monad__WrappedMonad_m__return_)).
 
 (* Translating `instance forall {m}, GHC.Generics.Generic1 (WrappedMonad m)'
    failed: OOPS! Cannot find information for class "GHC.Generics.Generic1"
@@ -268,6 +306,8 @@ Definition optional {f} {a} `{GHC.Base.Alternative f} : f a -> f (option a) :=
      Control.Category.op_zgzgzg__ Coq.Program.Basics.compose Data.Functor.op_zlzdzg__
      Data.Tuple.uncurry GHC.Base.Alternative GHC.Base.Applicative
      GHC.Base.Applicative__Dict_Build GHC.Base.Functor GHC.Base.Functor__Dict_Build
-     GHC.Base.Monad GHC.Base.ap GHC.Base.const GHC.Base.fmap GHC.Base.id
-     GHC.Base.liftM GHC.Base.op_zlzbzg__ GHC.Base.pure None Some Type option
+     GHC.Base.Monad GHC.Base.Monad__Dict_Build GHC.Base.ap GHC.Base.const
+     GHC.Base.fmap GHC.Base.id GHC.Base.liftM GHC.Base.op_zgzg__ GHC.Base.op_zgzgze__
+     GHC.Base.op_zlzbzg__ GHC.Base.pure GHC.Base.return_ GHC.Prim.Build_Unpeel
+     GHC.Prim.Unpeel GHC.Prim.coerce None Some Type option
 *)

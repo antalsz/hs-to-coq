@@ -417,6 +417,7 @@ convertLExpr = convertExpr . unLoc
 --------------------------------------------------------------------------------
 
 convertFunction :: ConversionMonad m => MatchGroup GHC.Name (LHsExpr GHC.Name) -> m (Binders, Term)
+convertFunction mg | Just alt <- isTrivialMatch mg = convTrivialMatch alt
 convertFunction mg = do
   let n_args = matchGroupArity mg
   args <- replicateM n_args (gensym "arg") >>= maybe err pure . nonEmpty
@@ -425,6 +426,37 @@ convertFunction mg = do
   pure (argBinders, match)
  where
    err = convUnsupported "convertFunction: Empty argument list"
+
+isTrivialMatch :: MatchGroup GHC.Name (LHsExpr GHC.Name) -> Maybe (Match GHC.Name (LHsExpr GHC.Name))
+isTrivialMatch (MG (L _ [L _ alt]) _ _ _) = trivMatch alt where
+
+  trivMatch :: Match GHC.Name (LHsExpr GHC.Name) ->
+    Maybe (Match GHC.Name (LHsExpr GHC.Name))
+  trivMatch alt = if all trivPat (m_pats alt) then Just alt else Nothing
+
+  trivPat :: LPat GHC.Name -> Bool
+  trivPat (L _ (GHC.WildPat _)) = False
+  trivPat (L _ (GHC.VarPat _))  = True
+  trivPat (L _ (GHC.BangPat p)) = trivPat p
+  trivPat (L _ (GHC.LazyPat p)) = trivPat p
+  trivPat (L _ (GHC.ParPat  p)) = trivPat p
+  trivPat _                     = False
+isTrivialMatch _ = Nothing
+
+convTrivialMatch ::  ConversionMonad m =>
+  Match GHC.Name (LHsExpr GHC.Name) ->  m (Binders, Term)
+convTrivialMatch alt = do
+  (MultPattern pats, HasNoGuard, rhs) <- convertMatch alt
+  names <- mapM patToName pats
+  let argBinders = (Inferred Coq.Explicit) <$> names
+  body <- rhs patternFailure
+  return (argBinders, body)
+
+
+patToName :: ConversionMonad m => Pattern -> m Name
+patToName UnderscorePat          = return UnderscoreName
+patToName (QualidPat (Bare ident))  = return $ Ident ident
+patToName _                      = convUnsupported "patToArg: not a trivial pat"
 
 --------------------------------------------------------------------------------
 

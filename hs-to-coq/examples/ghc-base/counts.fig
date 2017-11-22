@@ -1,9 +1,29 @@
 \begin{tabular}{lllll}
 Module & Defs & Class & Insts & Skipped\\
 \multicolumn{4}{l}{\emph{Generated modules}}\\
+GHC/Base
+&
+     163
+&
+       8
+&
+      42
+&
+      43
+\\
+Data/Maybe
+&
+       9
+&
+       0
+&
+       0
+&
+       1
+\\
 GHC/List
 &
-      47
+      48
 &
        0
 &
@@ -23,13 +43,13 @@ Data/List
 \\
 Data/OldList
 &
-      46
+      55
 &
        0
 &
        0
 &
-      33
+      28
 \\
 Data/Bool
 &
@@ -51,29 +71,19 @@ Data/Tuple
 &
        0
 \\
-Data/Maybe
-&
-       9
-&
-       0
-&
-       0
-&
-       1
-\\
 Data/Void
+&
+      11
+&
+       0
 &
        2
 &
-       0
-&
-       0
-&
-       7
+       5
 \\
 Data/Function
 &
-       1
+       2
 &
        0
 &
@@ -83,13 +93,13 @@ Data/Function
 \\
 Data/Ord
 &
-       2
+      10
 &
        0
 &
-       2
+       3
 &
-       4
+       0
 \\
 Data/Functor
 &
@@ -98,6 +108,26 @@ Data/Functor
        0
 &
        0
+&
+       0
+\\
+Data/Either
+&
+      23
+&
+       0
+&
+       5
+&
+       1
+\\
+Data/Proxy
+&
+      21
+&
+       0
+&
+       6
 &
        0
 \\
@@ -113,63 +143,113 @@ Control/Monad
 \\
 Data/Monoid
 &
-      20
+     174
 &
        0
 &
-       8
+      60
 &
-      44
+      22
 \\
 Data/Traversable
 &
-      23
+      60
 &
        1
 &
-       5
+      14
 &
-      30
+      19
 \\
 Control/Monad/Fail
 &
-       2
+       4
 &
        1
 &
        2
 &
        1
-\\
-GHC/Base
-&
-     101
-&
-       8
-&
-      39
-&
-      43
 \\
 Data/Foldable
 &
-      45
+     139
 &
        1
 &
-       2
+      10
 &
-      33
+      25
 \\
 Control/Arrow
 &
-      12
+      33
 &
        6
 &
        3
 &
-      17
+      14
+\\
+Data/Functor/Identity
+&
+      38
+&
+       0
+&
+       9
+&
+       0
+\\
+Control/Applicative
+&
+      16
+&
+       0
+&
+       7
+&
+       7
+\\
+Data/Functor/Classes
+&
+      32
+&
+       4
+&
+      20
+&
+      29
+\\
+Control/Category
+&
+       7
+&
+       1
+&
+       1
+&
+       2
+\\
+Data/Bifunctor
+&
+      28
+&
+       1
+&
+       8
+&
+       3
+\\
+Data/List/NonEmpty
+&
+      70
+&
+       0
+&
+       7
+&
+      21
 \\
 \\
 \multicolumn{4}{l}{\emph{Manually adapted modules}}\\
@@ -195,23 +275,7 @@ GHC/Real
 &
        4
 &
-       3
-\\
-Data/Either
-&
-      16
-&
-       0
-&
        5
-\\
-Data/Proxy
-&
-      11
-&
-       0
-&
-       8
 \\
 GHC/Enum
 &
@@ -223,11 +287,27 @@ GHC/Enum
 \\
 Data/Bits
 &
-       8
+      14
+&
+       2
+&
+       3
+\\
+GHC/Prim
 &
        2
 &
        2
+&
+       4
+\\
+GHC/Tuple
+&
+      12
+&
+       0
+&
+       0
 \\
 Data/Type/Equality
 &
@@ -237,6 +317,14 @@ Data/Type/Equality
 &
        2
 \\
+Data/Functor/Const
+&
+       8
+&
+       0
+&
+       3
+\\
 Prelude
 &
        0
@@ -245,7 +333,7 @@ Prelude
 &
        0
 \\
-GHC/Prim
+Data/IntMap
 &
        2
 &
@@ -253,33 +341,17 @@ GHC/Prim
 &
        0
 \\
-GHC/Tuple
+Data/IntMap/Base
 &
-       1
-&
-       0
-&
-       0
-\\
-Data/FoldableInst
-&
-      25
+      36
 &
        0
 &
-       1
+       5
 \\
-Control/Category
+Data/IntSet/Base
 &
-       4
-&
-       1
-&
-       1
-\\
-Data/Functor/Const
-&
-       7
+      40
 &
        0
 &

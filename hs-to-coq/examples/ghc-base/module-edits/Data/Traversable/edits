@@ -1,43 +1,21 @@
-# issue 9? type is not actually polymorphic enough
-# sum a a instead of sum a b.
-skip instance_Traversable__sum_a_
+order instance_GHC_Base_Functor_Id instance_GHC_Base_Applicative_Id
 
-# issue 9
-# GHC.Tuple.[,] ??
+# incorrectly makes pair section (uses type name instead of term name)
 skip instance_Traversable__GHC_Tuple_pair_type_a_
 
-# can't
 # instance method requires another instance of the same class
+# also needs Foldable instance
 skip instance_Traversable_Data_Monoid_First
 skip instance_Traversable_Data_Monoid_Last
-
-# issue 9: bug in type variables (StateL s) doesn't quantify s
-skip instance_GHC_Base_Applicative__StateL_s_
-skip instance_GHC_Base_Functor__StateL_s_
-skip mapAccumL
-skip instance_GHC_Base_Applicative__StateR_s_
-skip instance_GHC_Base_Functor__StateR_s_
-skip mapAccumR
-skip instance_Traversable__Data_Functor_Const_Const_m_
-
-## We'll never translate these
-
-skip instance_forall___GHC_Arr_Ix_i___Traversable__GHC_Arr_Array_i_
-skip instance_Traversable_Control_Applicative_ZipList
-skip instance_Traversable_GHC_Generics_U1
-
-order instance_GHC_Base_Functor_Id instance_GHC_Base_Applicative_Id_op_ztzg__
-order instance_GHC_Base_Functor_Id instance_GHC_Base_Applicative_Id_op_zlztzg__
 
 # type inference issue
 skip foldMapDefault
 
-# go back and make an instance of Functor for Product/Sum
-skip instance_Traversable_Data_Monoid_Product
-skip instance_Traversable_Data_Monoid_Sum
-skip instance_Traversable_Data_Monoid_Dual
 
-# Generics
+# Generics & out of scope
+skip instance_forall___GHC_Arr_Ix_i___Traversable__GHC_Arr_Array_i_
+skip instance_Traversable_Control_Applicative_ZipList
+skip instance_Traversable_GHC_Generics_U1
 skip instance_Traversable__GHC_Generics_URec_GHC_Num_Word_
 skip instance_Traversable__GHC_Generics_URec_GHC_Num_Int_
 skip instance_Traversable__GHC_Generics_URec_GHC_Types_Float_
@@ -50,4 +28,3 @@ skip instance_Traversable__GHC_Generics_K1_i_c_
 skip instance_forall___Traversable_f___Traversable__GHC_Generics_Rec1_f_
 skip instance_Traversable_GHC_Generics_Par1
 skip instance_Traversable_GHC_Generics_V1
-

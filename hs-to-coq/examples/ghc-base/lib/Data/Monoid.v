@@ -386,8 +386,8 @@ Instance Unpeel_All : Unpeel All bool := Build_Unpeel _ _ getAll Mk_All.
 Local Definition instance_forall___GHC_Base_Monoid_a___GHC_Base_Monoid__Dual_a__mappend {inst_a}
                                                                                         `{GHC.Base.Monoid inst_a}
     : (Dual inst_a) -> (Dual inst_a) -> (Dual inst_a) :=
-  fun arg_201__ arg_202__ =>
-    match arg_201__ , arg_202__ with
+  fun arg_192__ arg_193__ =>
+    match arg_192__ , arg_193__ with
       | Mk_Dual x , Mk_Dual y => Mk_Dual (GHC.Base.mappend y x)
     end.
 
@@ -458,11 +458,7 @@ Local Definition instance_GHC_Base_Monad_Dual_op_zgzg__ : forall {a} {b},
 
 Local Definition instance_GHC_Base_Monad_Dual_op_zgzgze__ : forall {a} {b},
                                                               Dual a -> (a -> Dual b) -> Dual b :=
-  fun {a} {b} =>
-    fun arg_196__ arg_197__ =>
-      match arg_196__ , arg_197__ with
-        | m , k => k (getDual m)
-      end.
+  fun {a} {b} => fun m k => k (getDual m).
 
 Local Definition instance_GHC_Base_Monad_Dual_return_ : forall {a},
                                                           a -> Dual a :=
@@ -478,8 +474,8 @@ Program Instance instance_GHC_Base_Monad_Dual : GHC.Base.Monad Dual := fun _
 
 Local Definition instance_GHC_Base_Monoid__Endo_a__mappend {inst_a} : (Endo
                                                                       inst_a) -> (Endo inst_a) -> (Endo inst_a) :=
-  fun arg_192__ arg_193__ =>
-    match arg_192__ , arg_193__ with
+  fun arg_186__ arg_187__ =>
+    match arg_186__ , arg_187__ with
       | Mk_Endo f , Mk_Endo g => Mk_Endo (Coq.Program.Basics.compose f g)
     end.
 
@@ -499,8 +495,8 @@ Program Instance instance_GHC_Base_Monoid__Endo_a_ {a} : GHC.Base.Monoid (Endo
       GHC.Base.mempty__ := instance_GHC_Base_Monoid__Endo_a__mempty |}.
 
 Local Definition instance_GHC_Base_Monoid_All_mappend : All -> All -> All :=
-  fun arg_187__ arg_188__ =>
-    match arg_187__ , arg_188__ with
+  fun arg_181__ arg_182__ =>
+    match arg_181__ , arg_182__ with
       | Mk_All x , Mk_All y => Mk_All (andb x y)
     end.
 
@@ -518,8 +514,8 @@ Program Instance instance_GHC_Base_Monoid_All : GHC.Base.Monoid All := fun _
       GHC.Base.mempty__ := instance_GHC_Base_Monoid_All_mempty |}.
 
 Local Definition instance_GHC_Base_Monoid_Any_mappend : Any -> Any -> Any :=
-  fun arg_182__ arg_183__ =>
-    match arg_182__ , arg_183__ with
+  fun arg_176__ arg_177__ =>
+    match arg_176__ , arg_177__ with
       | Mk_Any x , Mk_Any y => Mk_Any (orb x y)
     end.
 
@@ -582,11 +578,7 @@ Local Definition instance_GHC_Base_Monad_Sum_op_zgzg__ : forall {a} {b},
 
 Local Definition instance_GHC_Base_Monad_Sum_op_zgzgze__ : forall {a} {b},
                                                              Sum a -> (a -> Sum b) -> Sum b :=
-  fun {a} {b} =>
-    fun arg_175__ arg_176__ =>
-      match arg_175__ , arg_176__ with
-        | m , k => k (getSum m)
-      end.
+  fun {a} {b} => fun m k => k (getSum m).
 
 Local Definition instance_GHC_Base_Monad_Sum_return_ : forall {a}, a -> Sum a :=
   fun {a} => GHC.Base.pure.
@@ -647,11 +639,7 @@ Local Definition instance_GHC_Base_Monad_Product_op_zgzg__ : forall {a} {b},
 
 Local Definition instance_GHC_Base_Monad_Product_op_zgzgze__ : forall {a} {b},
                                                                  Product a -> (a -> Product b) -> Product b :=
-  fun {a} {b} =>
-    fun arg_169__ arg_170__ =>
-      match arg_169__ , arg_170__ with
-        | m , k => k (getProduct m)
-      end.
+  fun {a} {b} => fun m k => k (getProduct m).
 
 Local Definition instance_GHC_Base_Monad_Product_return_ : forall {a},
                                                              a -> Product a :=

@@ -49,8 +49,8 @@ Local Definition instance_Bifunctor_GHC_Tuple_pair_type_bimap : forall {a}
                                                                   (a -> b) -> (c -> d) -> GHC.Tuple.pair_type a
                                                                   c -> GHC.Tuple.pair_type b d :=
   fun {a} {b} {c} {d} =>
-    fun arg_49__ arg_50__ arg_51__ =>
-      match arg_49__ , arg_50__ , arg_51__ with
+    fun arg_44__ arg_45__ arg_46__ =>
+      match arg_44__ , arg_45__ , arg_46__ with
         | f , g , pair a b => pair (f a) (g b)
       end.
 
@@ -60,10 +60,7 @@ Local Definition instance_Bifunctor_GHC_Tuple_pair_type_first : forall {a}
                                                                   (a -> b) -> GHC.Tuple.pair_type a
                                                                   c -> GHC.Tuple.pair_type b c :=
   fun {a} {b} {c} =>
-    fun arg_4__ =>
-      match arg_4__ with
-        | f => instance_Bifunctor_GHC_Tuple_pair_type_bimap f GHC.Base.id
-      end.
+    fun f => instance_Bifunctor_GHC_Tuple_pair_type_bimap f GHC.Base.id.
 
 Local Definition instance_Bifunctor_GHC_Tuple_pair_type_second : forall {b}
                                                                         {c}
@@ -84,8 +81,8 @@ Local Definition instance_Bifunctor__GHC_Tuple_triple_type_x1__bimap {inst_x1}
         (a -> b) -> (c -> d) -> (GHC.Tuple.triple_type inst_x1) a
         c -> (GHC.Tuple.triple_type inst_x1) b d :=
   fun {a} {b} {c} {d} =>
-    fun arg_44__ arg_45__ arg_46__ =>
-      match arg_44__ , arg_45__ , arg_46__ with
+    fun arg_39__ arg_40__ arg_41__ =>
+      match arg_39__ , arg_40__ , arg_41__ with
         | f , g , pair (pair x1 a) b => pair (pair x1 (f a)) (g b)
       end.
 
@@ -94,10 +91,7 @@ Local Definition instance_Bifunctor__GHC_Tuple_triple_type_x1__first {inst_x1}
         (a -> b) -> (GHC.Tuple.triple_type inst_x1) a c -> (GHC.Tuple.triple_type
         inst_x1) b c :=
   fun {a} {b} {c} =>
-    fun arg_4__ =>
-      match arg_4__ with
-        | f => instance_Bifunctor__GHC_Tuple_triple_type_x1__bimap f GHC.Base.id
-      end.
+    fun f => instance_Bifunctor__GHC_Tuple_triple_type_x1__bimap f GHC.Base.id.
 
 Local Definition instance_Bifunctor__GHC_Tuple_triple_type_x1__second {inst_x1}
     : forall {b} {c} {a},
@@ -122,8 +116,8 @@ Local Definition instance_Bifunctor__GHC_Tuple_quad_type_x1_x2__bimap {inst_x1}
                                                                                     c -> (GHC.Tuple.quad_type inst_x1
                                                                                     inst_x2) b d :=
   fun {a} {b} {c} {d} =>
-    fun arg_39__ arg_40__ arg_41__ =>
-      match arg_39__ , arg_40__ , arg_41__ with
+    fun arg_34__ arg_35__ arg_36__ =>
+      match arg_34__ , arg_35__ , arg_36__ with
         | f , g , pair (pair (pair x1 x2) a) b => pair (pair (pair x1 x2) (f a)) (g b)
       end.
 
@@ -134,10 +128,7 @@ Local Definition instance_Bifunctor__GHC_Tuple_quad_type_x1_x2__first {inst_x1}
                                                                                     c -> (GHC.Tuple.quad_type inst_x1
                                                                                     inst_x2) b c :=
   fun {a} {b} {c} =>
-    fun arg_4__ =>
-      match arg_4__ with
-        | f => instance_Bifunctor__GHC_Tuple_quad_type_x1_x2__bimap f GHC.Base.id
-      end.
+    fun f => instance_Bifunctor__GHC_Tuple_quad_type_x1_x2__bimap f GHC.Base.id.
 
 Local Definition instance_Bifunctor__GHC_Tuple_quad_type_x1_x2__second {inst_x1}
                                                                        {inst_x2} : forall {b} {c} {a},
@@ -166,8 +157,8 @@ Local Definition instance_Bifunctor__GHC_Tuple_quint_type_x1_x2_x3__bimap {inst_
                                                                                                   inst_x1 inst_x2
                                                                                                   inst_x3) b d :=
   fun {a} {b} {c} {d} =>
-    fun arg_34__ arg_35__ arg_36__ =>
-      match arg_34__ , arg_35__ , arg_36__ with
+    fun arg_29__ arg_30__ arg_31__ =>
+      match arg_29__ , arg_30__ , arg_31__ with
         | f , g , pair (pair (pair (pair x1 x2) x3) a) b => pair (pair (pair (pair x1
                                                                                    x2) x3) (f a)) (g b)
       end.
@@ -181,10 +172,7 @@ Local Definition instance_Bifunctor__GHC_Tuple_quint_type_x1_x2_x3__first {inst_
                                                                                                   inst_x1 inst_x2
                                                                                                   inst_x3) b c :=
   fun {a} {b} {c} =>
-    fun arg_4__ =>
-      match arg_4__ with
-        | f => instance_Bifunctor__GHC_Tuple_quint_type_x1_x2_x3__bimap f GHC.Base.id
-      end.
+    fun f => instance_Bifunctor__GHC_Tuple_quint_type_x1_x2_x3__bimap f GHC.Base.id.
 
 Local Definition instance_Bifunctor__GHC_Tuple_quint_type_x1_x2_x3__second {inst_x1}
                                                                            {inst_x2} {inst_x3} : forall {b} {c} {a},
@@ -224,8 +212,8 @@ Local Definition instance_Bifunctor__GHC_Tuple_sext_type_x1_x2_x3_x4__bimap {ins
                                                                                                               inst_x4) b
                                                                                                               d :=
   fun {a} {b} {c} {d} =>
-    fun arg_29__ arg_30__ arg_31__ =>
-      match arg_29__ , arg_30__ , arg_31__ with
+    fun arg_24__ arg_25__ arg_26__ =>
+      match arg_24__ , arg_25__ , arg_26__ with
         | f , g , pair (pair (pair (pair (pair x1 x2) x3) x4) a) b => pair (pair (pair
                                                                                  (pair (pair x1 x2) x3) x4) (f a)) (g b)
       end.
@@ -246,10 +234,8 @@ Local Definition instance_Bifunctor__GHC_Tuple_sext_type_x1_x2_x3_x4__first {ins
                                                                                                               inst_x4) b
                                                                                                               c :=
   fun {a} {b} {c} =>
-    fun arg_4__ =>
-      match arg_4__ with
-        | f => instance_Bifunctor__GHC_Tuple_sext_type_x1_x2_x3_x4__bimap f GHC.Base.id
-      end.
+    fun f =>
+      instance_Bifunctor__GHC_Tuple_sext_type_x1_x2_x3_x4__bimap f GHC.Base.id.
 
 Local Definition instance_Bifunctor__GHC_Tuple_sext_type_x1_x2_x3_x4__second {inst_x1}
                                                                              {inst_x2} {inst_x3} {inst_x4} : forall {b}
@@ -287,8 +273,8 @@ Local Definition instance_Bifunctor__GHC_Tuple_sept_type_x1_x2_x3_x4_x5__bimap {
         inst_x5) a c -> (GHC.Tuple.sept_type inst_x1 inst_x2 inst_x3 inst_x4 inst_x5) b
         d :=
   fun {a} {b} {c} {d} =>
-    fun arg_24__ arg_25__ arg_26__ =>
-      match arg_24__ , arg_25__ , arg_26__ with
+    fun arg_19__ arg_20__ arg_21__ =>
+      match arg_19__ , arg_20__ , arg_21__ with
         | f , g , pair (pair (pair (pair (pair (pair x1 x2) x3) x4) x5) a) b => pair
                                                                                 (pair (pair (pair (pair (pair x1 x2) x3)
                                                                                                   x4) x5) (f a)) (g b)
@@ -300,11 +286,8 @@ Local Definition instance_Bifunctor__GHC_Tuple_sept_type_x1_x2_x3_x4_x5__first {
         (a -> b) -> (GHC.Tuple.sept_type inst_x1 inst_x2 inst_x3 inst_x4 inst_x5) a
         c -> (GHC.Tuple.sept_type inst_x1 inst_x2 inst_x3 inst_x4 inst_x5) b c :=
   fun {a} {b} {c} =>
-    fun arg_4__ =>
-      match arg_4__ with
-        | f => instance_Bifunctor__GHC_Tuple_sept_type_x1_x2_x3_x4_x5__bimap f
-               GHC.Base.id
-      end.
+    fun f =>
+      instance_Bifunctor__GHC_Tuple_sept_type_x1_x2_x3_x4_x5__bimap f GHC.Base.id.
 
 Local Definition instance_Bifunctor__GHC_Tuple_sept_type_x1_x2_x3_x4_x5__second {inst_x1}
                                                                                 {inst_x2} {inst_x3} {inst_x4} {inst_x5}
@@ -333,8 +316,8 @@ Local Definition instance_Bifunctor_Data_Either_Either_bimap : forall {a}
                                                                  (a -> b) -> (c -> d) -> Data.Either.Either a
                                                                  c -> Data.Either.Either b d :=
   fun {a} {b} {c} {d} =>
-    fun arg_18__ arg_19__ arg_20__ =>
-      match arg_18__ , arg_19__ , arg_20__ with
+    fun arg_13__ arg_14__ arg_15__ =>
+      match arg_13__ , arg_14__ , arg_15__ with
         | f , _ , Data.Either.Mk_Left a => Data.Either.Mk_Left (f a)
         | _ , g , Data.Either.Mk_Right b => Data.Either.Mk_Right (g b)
       end.
@@ -345,10 +328,7 @@ Local Definition instance_Bifunctor_Data_Either_Either_first : forall {a}
                                                                  (a -> b) -> Data.Either.Either a
                                                                  c -> Data.Either.Either b c :=
   fun {a} {b} {c} =>
-    fun arg_4__ =>
-      match arg_4__ with
-        | f => instance_Bifunctor_Data_Either_Either_bimap f GHC.Base.id
-      end.
+    fun f => instance_Bifunctor_Data_Either_Either_bimap f GHC.Base.id.
 
 Local Definition instance_Bifunctor_Data_Either_Either_second : forall {b}
                                                                        {c}
@@ -371,8 +351,8 @@ Local Definition instance_Bifunctor_Data_Functor_Const_Const_bimap : forall {a}
                                                                        (a -> b) -> (c -> d) -> Data.Functor.Const.Const
                                                                        a c -> Data.Functor.Const.Const b d :=
   fun {a} {b} {c} {d} =>
-    fun arg_13__ arg_14__ arg_15__ =>
-      match arg_13__ , arg_14__ , arg_15__ with
+    fun arg_8__ arg_9__ arg_10__ =>
+      match arg_8__ , arg_9__ , arg_10__ with
         | f , _ , Data.Functor.Const.Mk_Const a => Data.Functor.Const.Mk_Const (f a)
       end.
 
@@ -382,10 +362,7 @@ Local Definition instance_Bifunctor_Data_Functor_Const_Const_first : forall {a}
                                                                        (a -> b) -> Data.Functor.Const.Const a
                                                                        c -> Data.Functor.Const.Const b c :=
   fun {a} {b} {c} =>
-    fun arg_4__ =>
-      match arg_4__ with
-        | f => instance_Bifunctor_Data_Functor_Const_Const_bimap f GHC.Base.id
-      end.
+    fun f => instance_Bifunctor_Data_Functor_Const_Const_bimap f GHC.Base.id.
 
 Local Definition instance_Bifunctor_Data_Functor_Const_Const_second : forall {b}
                                                                              {c}

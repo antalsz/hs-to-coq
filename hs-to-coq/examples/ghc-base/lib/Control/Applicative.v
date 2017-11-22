@@ -56,8 +56,8 @@ Local Definition instance_forall___GHC_Base_Monad_m___GHC_Base_Functor__WrappedM
     : forall {a} {b},
         (a -> b) -> (WrappedMonad inst_m) a -> (WrappedMonad inst_m) b :=
   fun {a} {b} =>
-    fun arg_59__ arg_60__ =>
-      match arg_59__ , arg_60__ with
+    fun arg_53__ arg_54__ =>
+      match arg_53__ , arg_54__ with
         | f , Mk_WrapMonad v => Mk_WrapMonad (GHC.Base.liftM f v)
       end.
 
@@ -90,8 +90,8 @@ Local Definition instance_forall___GHC_Base_Monad_m___GHC_Base_Applicative__Wrap
         (WrappedMonad inst_m) (a -> b) -> (WrappedMonad inst_m) a -> (WrappedMonad
         inst_m) b :=
   fun {a} {b} =>
-    fun arg_55__ arg_56__ =>
-      match arg_55__ , arg_56__ with
+    fun arg_49__ arg_50__ =>
+      match arg_49__ , arg_50__ with
         | Mk_WrapMonad f , Mk_WrapMonad v => Mk_WrapMonad (GHC.Base.ap f v)
       end.
 
@@ -140,8 +140,8 @@ Local Definition instance_forall___Control_Arrow_Arrow_a___GHC_Base_Functor__Wra
                                                                                                                 inst_b)
                                                                                                                 b :=
   fun {a} {b} =>
-    fun arg_50__ arg_51__ =>
-      match arg_50__ , arg_51__ with
+    fun arg_44__ arg_45__ =>
+      match arg_44__ , arg_45__ with
         | f , Mk_WrapArrow a => Mk_WrapArrow (Control.Category.op_zgzgzg__ a
                                                                            (Control.Arrow.arr f))
       end.
@@ -175,8 +175,8 @@ Local Definition instance_forall___Control_Arrow_Arrow_a___GHC_Base_Applicative_
         (WrappedArrow inst_a inst_b) (a -> b) -> (WrappedArrow inst_a inst_b)
         a -> (WrappedArrow inst_a inst_b) b :=
   fun {a} {b} =>
-    fun arg_46__ arg_47__ =>
-      match arg_46__ , arg_47__ with
+    fun arg_40__ arg_41__ =>
+      match arg_40__ , arg_41__ with
         | Mk_WrapArrow f , Mk_WrapArrow v => Mk_WrapArrow (Control.Category.op_zgzgzg__
                                                           (Control.Arrow.op_zazaza__ f v) (Control.Arrow.arr
                                                           (Data.Tuple.uncurry GHC.Base.id)))
@@ -199,11 +199,7 @@ Local Definition instance_forall___Control_Arrow_Arrow_a___GHC_Base_Applicative_
                                                                                                         `{Control.Arrow.Arrow
                                                                                                         inst_a}
     : forall {a}, a -> (WrappedArrow inst_a inst_b) a :=
-  fun {a} =>
-    fun arg_43__ =>
-      match arg_43__ with
-        | x => Mk_WrapArrow (Control.Arrow.arr (GHC.Base.const x))
-      end.
+  fun {a} => fun x => Mk_WrapArrow (Control.Arrow.arr (GHC.Base.const x)).
 
 Program Instance instance_forall___Control_Arrow_Arrow_a___GHC_Base_Applicative__WrappedArrow_a_b_ {a}
                                                                                                    {b}
@@ -298,11 +294,8 @@ Program Instance instance_forall___GHC_Base_Monad_m___GHC_Base_Monad__WrappedMon
    unsupported *)
 
 Definition optional {f} {a} `{GHC.Base.Alternative f} : f a -> f (option a) :=
-  fun arg_2__ =>
-    match arg_2__ with
-      | v => GHC.Base.op_zlzbzg__ (Data.Functor.op_zlzdzg__ Some v) (GHC.Base.pure
-                                  None)
-    end.
+  fun v =>
+    GHC.Base.op_zlzbzg__ (Data.Functor.op_zlzdzg__ Some v) (GHC.Base.pure None).
 
 (* Unbound variables:
      Control.Arrow.Arrow Control.Arrow.arr Control.Arrow.op_zazaza__

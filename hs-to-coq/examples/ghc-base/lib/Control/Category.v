@@ -65,10 +65,7 @@ Program Instance instance_Category_GHC_Prim_arrow : Category GHC.Prim.arrow :=
 
 Definition op_zgzgzg__ {cat} {a} {b} {c} `{Category cat} : cat a b -> cat b
                                                            c -> cat a c :=
-  fun arg_0__ arg_1__ =>
-    match arg_0__ , arg_1__ with
-      | f , g => op_z2218U__ g f
-    end.
+  fun f g => op_z2218U__ g f.
 
 Infix ">>>" := (op_zgzgzg__) (at level 99).
 

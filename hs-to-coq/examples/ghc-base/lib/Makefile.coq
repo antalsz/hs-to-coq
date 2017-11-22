@@ -109,11 +109,11 @@ VFILES:=GHC/Num.v\
   GHC/Prim.v\
   GHC/Tuple.v\
   Data/Type/Equality.v\
+  Data/Functor/Const.v\
   Prelude.v\
   Data/IntMap.v\
   Data/IntMap/Base.v\
   Data/IntSet/Base.v\
-  Data/Functor/Const.v\
   GHC/Base.v\
   Data/Maybe.v\
   GHC/List.v\

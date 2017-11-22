@@ -23,7 +23,7 @@ Inductive Void : Type :=.
 (* Converted value declarations: *)
 
 Local Definition instance_GHC_Base_Eq__Void_op_zeze__ : Void -> Void -> bool :=
-  fun arg_29__ arg_30__ => true.
+  fun arg_23__ arg_24__ => true.
 
 Local Definition instance_GHC_Base_Eq__Void_op_zsze__ : Void -> Void -> bool :=
   fun x y => negb (instance_GHC_Base_Eq__Void_op_zeze__ x y).
@@ -34,7 +34,7 @@ Program Instance instance_GHC_Base_Eq__Void : GHC.Base.Eq_ Void := fun _ k =>
 
 Local Definition instance_GHC_Base_Ord_Void_compare
     : Void -> Void -> comparison :=
-  fun arg_27__ arg_28__ => Eq.
+  fun arg_21__ arg_22__ => Eq.
 
 Local Definition instance_GHC_Base_Ord_Void_op_zg__ : Void -> Void -> bool :=
   fun x y => op_zeze__ (instance_GHC_Base_Ord_Void_compare x y) Gt.
@@ -77,7 +77,7 @@ Program Instance instance_GHC_Base_Ord_Void : GHC.Base.Ord Void := fun _ k =>
 (* Skipping instance instance_Data_Data_Data_Void *)
 
 Definition absurd {a} : Void -> a :=
-  fun arg_0__ => match arg_0__ with | a => match a with end end.
+  fun a => match a with end.
 
 Definition vacuous {f} {a} `{GHC.Base.Functor f} : f Void -> f a :=
   GHC.Base.fmap absurd.

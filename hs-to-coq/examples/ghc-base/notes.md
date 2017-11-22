@@ -73,7 +73,7 @@
 	- skip ZipList because its Applicative instance is coinductive (using repeat)
 
   Data/Functor/Classes
-	- just read and show instances
+	- skip read and show instances
 
   Control/Arrow
     - needs information about Control/Category class
@@ -94,19 +94,12 @@
 
 * What stops these modules from being generated?
 
-- Data/FoldableInst
-  This is the manual part of Data.Foldable
-  Instances for the option type.
-  One of the methods for this refers to the class. Currently resolve
-  using helper function `anyWith`.
-
 - Data/Type/Equality
   functional dependencies
 
 - Data/Functor/Const
   Bug in monoid instance --- inst_m type variable vs. m in body of
   instance declaration.
-
 
 - GHC/Char
 - GHC/Num

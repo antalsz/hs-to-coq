@@ -69,8 +69,8 @@ Local Definition instance_Data_Foldable_Foldable_Identity_foldr : forall {a}
                                                                          {b},
                                                                     (a -> b -> b) -> b -> Identity a -> b :=
   fun {a} {b} =>
-    fun arg_29__ arg_30__ arg_31__ =>
-      match arg_29__ , arg_30__ , arg_31__ with
+    fun arg_22__ arg_23__ arg_24__ =>
+      match arg_22__ , arg_23__ , arg_24__ with
         | f , z , Mk_Identity x => f x z
       end.
 
@@ -81,11 +81,11 @@ Local Definition instance_Data_Foldable_Foldable_Identity_foldr' : forall {a}
 
 Local Definition instance_Data_Foldable_Foldable_Identity_length : forall {a},
                                                                      Identity a -> GHC.Num.Int :=
-  fun {a} => fun arg_35__ => GHC.Num.fromInteger 1.
+  fun {a} => fun arg_28__ => GHC.Num.fromInteger 1.
 
 Local Definition instance_Data_Foldable_Foldable_Identity_null : forall {a},
                                                                    Identity a -> bool :=
-  fun {a} => fun arg_38__ => false.
+  fun {a} => fun arg_31__ => false.
 
 Local Definition instance_Data_Foldable_Foldable_Identity_product : forall {a},
                                                                       forall `{GHC.Num.Num a}, Identity a -> a :=
@@ -98,7 +98,7 @@ Local Definition instance_Data_Foldable_Foldable_Identity_sum : forall {a},
 Local Definition instance_Data_Foldable_Foldable_Identity_toList : forall {a},
                                                                      Identity a -> list a :=
   fun {a} =>
-    fun arg_39__ => match arg_39__ with | Mk_Identity x => cons x nil end.
+    fun arg_32__ => match arg_32__ with | Mk_Identity x => cons x nil end.
 
 Local Definition instance_GHC_Base_Functor_Identity_fmap : forall {a} {b},
                                                              (a -> b) -> Identity a -> Identity b :=
@@ -146,11 +146,7 @@ Local Definition instance_GHC_Base_Monad_Identity_op_zgzg__ : forall {a} {b},
 
 Local Definition instance_GHC_Base_Monad_Identity_op_zgzgze__ : forall {a} {b},
                                                                   Identity a -> (a -> Identity b) -> Identity b :=
-  fun {a} {b} =>
-    fun arg_22__ arg_23__ =>
-      match arg_22__ , arg_23__ with
-        | m , k => k (runIdentity m)
-      end.
+  fun {a} {b} => fun m k => k (runIdentity m).
 
 Local Definition instance_GHC_Base_Monad_Identity_return_ : forall {a},
                                                               a -> Identity a :=
@@ -174,12 +170,9 @@ Local Definition instance_Data_Traversable_Traversable_Identity_traverse
     : forall {f} {a} {b},
         forall `{GHC.Base.Applicative f}, (a -> f b) -> Identity a -> f (Identity b) :=
   fun {f} {a} {b} `{GHC.Base.Applicative f} =>
-    fun arg_15__ arg_16__ =>
-      match arg_15__ , arg_16__ with
-        | f , Mk_Identity a1 => GHC.Base.fmap (fun arg_17__ =>
-                                                match arg_17__ with
-                                                  | b1 => Mk_Identity b1
-                                                end) (f a1)
+    fun arg_13__ arg_14__ =>
+      match arg_13__ , arg_14__ with
+        | f , Mk_Identity a1 => GHC.Base.fmap (fun b1 => Mk_Identity b1) (f a1)
       end.
 
 Local Definition instance_Data_Traversable_Traversable_Identity_sequenceA
@@ -372,7 +365,7 @@ Definition hash_compose {a} {b} {c} :=
 Local Definition instance_Data_Foldable_Foldable_Identity_elem : forall {a},
                                                                    forall `{GHC.Base.Eq_ a}, a -> Identity a -> bool :=
   fun {a} `{GHC.Base.Eq_ a} =>
-    hash_compose (fun arg_26__ => Coq.Program.Basics.compose arg_26__ runIdentity)
+    hash_compose (fun arg_19__ => Coq.Program.Basics.compose arg_19__ runIdentity)
                  GHC.Base.op_zeze__.
 
 Program Instance instance_Data_Foldable_Foldable_Identity

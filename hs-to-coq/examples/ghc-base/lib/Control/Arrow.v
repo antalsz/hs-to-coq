@@ -163,15 +163,15 @@ Arguments Mk_Kleisli {_} {_} {_} _.
 
 Arguments Mk_ArrowMonad {_} {_} _.
 
-Definition runKleisli {m : Type -> Type} {a} {b} (arg_36__ : Kleisli m a b) :=
-  match arg_36__ with
+Definition runKleisli {m : Type -> Type} {a} {b} (arg_22__ : Kleisli m a b) :=
+  match arg_22__ with
     | Mk_Kleisli runKleisli => runKleisli
   end.
 (* Converted value declarations: *)
 
 Local Definition instance_Arrow_GHC_Prim_arrow_arr : forall {b} {c},
                                                        (b -> c) -> GHC.Prim.arrow b c :=
-  fun {b} {c} => fun arg_164__ => match arg_164__ with | f => f end.
+  fun {b} {c} => fun f => f.
 
 Local Definition instance_Arrow_GHC_Prim_arrow_op_ztztzt__ : forall {b}
                                                                     {c}
@@ -180,8 +180,8 @@ Local Definition instance_Arrow_GHC_Prim_arrow_op_ztztzt__ : forall {b}
                                                                GHC.Prim.arrow b c -> GHC.Prim.arrow b'
                                                                c' -> GHC.Prim.arrow (b * b') (c * c') :=
   fun {b} {c} {b'} {c'} =>
-    fun arg_166__ arg_167__ arg_168__ =>
-      match arg_166__ , arg_167__ , arg_168__ with
+    fun arg_104__ arg_105__ arg_106__ =>
+      match arg_104__ , arg_105__ , arg_106__ with
         | f , g , pair x y => pair (f x) (g y)
       end.
 
@@ -203,12 +203,10 @@ Local Definition instance_Arrow_GHC_Prim_arrow_op_zazaza__ : forall {b}
                                                                GHC.Prim.arrow b c -> GHC.Prim.arrow b
                                                                c' -> GHC.Prim.arrow b (c * c') :=
   fun {b} {c} {c'} =>
-    fun arg_11__ arg_12__ =>
-      match arg_11__ , arg_12__ with
-        | f , g => Control.Category.op_zgzgzg__ (instance_Arrow_GHC_Prim_arrow_arr
-                                                (fun arg_13__ => match arg_13__ with | b => pair b b end))
-                                                (instance_Arrow_GHC_Prim_arrow_op_ztztzt__ f g)
-      end.
+    fun f g =>
+      Control.Category.op_zgzgzg__ (instance_Arrow_GHC_Prim_arrow_arr (fun b =>
+                                                                        pair b b))
+                                   (instance_Arrow_GHC_Prim_arrow_op_ztztzt__ f g).
 
 Program Instance instance_Arrow_GHC_Prim_arrow : Arrow GHC.Prim.arrow := fun _
                                                                              k =>
@@ -238,7 +236,7 @@ Program Instance instance_Arrow_GHC_Prim_arrow : Arrow GHC.Prim.arrow := fun _
 
 Local Definition instance_ArrowApply_GHC_Prim_arrow_app : forall {b} {c},
                                                             GHC.Prim.arrow (GHC.Prim.arrow b c * b) c :=
-  fun {b} {c} => fun arg_99__ => match arg_99__ with | pair f x => f x end.
+  fun {b} {c} => fun arg_63__ => match arg_63__ with | pair f x => f x end.
 
 Program Instance instance_ArrowApply_GHC_Prim_arrow : ArrowApply
                                                       GHC.Prim.arrow := fun _ k =>
@@ -254,8 +252,8 @@ Local Definition instance_forall___Arrow_a___GHC_Base_Functor__ArrowMonad_a__fma
                                                                                                       a -> (ArrowMonad
                                                                                                       inst_a) b :=
   fun {a} {b} =>
-    fun arg_91__ arg_92__ =>
-      match arg_91__ , arg_92__ with
+    fun arg_55__ arg_56__ =>
+      match arg_55__ , arg_56__ with
         | f , Mk_ArrowMonad m => GHC.Base.op_zd__ Mk_ArrowMonad
                                                   (Control.Category.op_zgzgzg__ m (arr f))
       end.
@@ -299,10 +297,7 @@ Program Instance instance_forall___Arrow_a___GHC_Base_Functor__ArrowMonad_a_ {a}
 
 Definition op_zczgzg__ {a} {b} {c} {d} `{Arrow a} : (b -> c) -> a c d -> a b
                                                     d :=
-  fun arg_49__ arg_50__ =>
-    match arg_49__ , arg_50__ with
-      | f , a => Control.Category.op_zgzgzg__ (arr f) a
-    end.
+  fun f a => Control.Category.op_zgzgzg__ (arr f) a.
 
 Infix "^>>" := (op_zczgzg__) (at level 99).
 
@@ -310,10 +305,7 @@ Notation "'_^>>_'" := (op_zczgzg__).
 
 Definition op_zczlzl__ {a} {c} {d} {b} `{Arrow a} : (c -> d) -> a b c -> a b
                                                     d :=
-  fun arg_37__ arg_38__ =>
-    match arg_37__ , arg_38__ with
-      | f , a => Control.Category.op_zlzlzl__ (arr f) a
-    end.
+  fun f a => Control.Category.op_zlzlzl__ (arr f) a.
 
 Infix "^<<" := (op_zczlzl__) (at level 99).
 
@@ -321,10 +313,7 @@ Notation "'_^<<_'" := (op_zczlzl__).
 
 Definition op_zgzgzc__ {a} {b} {c} {d} `{Arrow a} : a b c -> (c -> d) -> a b
                                                     d :=
-  fun arg_45__ arg_46__ =>
-    match arg_45__ , arg_46__ with
-      | a , f => Control.Category.op_zgzgzg__ a (arr f)
-    end.
+  fun a f => Control.Category.op_zgzgzg__ a (arr f).
 
 Infix ">>^" := (op_zgzgzc__) (at level 99).
 
@@ -332,10 +321,7 @@ Notation "'_>>^_'" := (op_zgzgzc__).
 
 Definition op_zlzlzc__ {a} {c} {d} {b} `{Arrow a} : a c d -> (b -> c) -> a b
                                                     d :=
-  fun arg_41__ arg_42__ =>
-    match arg_41__ , arg_42__ with
-      | a , f => Control.Category.op_zlzlzl__ a (arr f)
-    end.
+  fun a f => Control.Category.op_zlzlzl__ a (arr f).
 
 Infix "<<^" := (op_zlzlzc__) (at level 99).
 

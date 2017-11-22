@@ -44,8 +44,8 @@ Local Definition instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Down_a__compar
                                                                                   `{GHC.Base.Ord inst_a} : (Down
                                                                                                            inst_a) -> (Down
                                                                                                            inst_a) -> comparison :=
-  fun arg_7__ arg_8__ =>
-    match arg_7__ , arg_8__ with
+  fun arg_3__ arg_4__ =>
+    match arg_3__ , arg_4__ with
       | Mk_Down x , Mk_Down y => GHC.Base.compare y x
     end.
 
@@ -142,10 +142,7 @@ Program Instance instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___Down_a_ {a}
 
 Definition comparing {a} {b} `{(GHC.Base.Ord a)}
     : (b -> a) -> b -> b -> comparison :=
-  fun arg_0__ arg_1__ arg_2__ =>
-    match arg_0__ , arg_1__ , arg_2__ with
-      | p , x , y => GHC.Base.compare (p x) (p y)
-    end.
+  fun p x y => GHC.Base.compare (p x) (p y).
 
 (* Unbound variables:
      GHC.Base.Eq_ GHC.Base.Ord GHC.Base.compare GHC.Base.op_zeze__ GHC.Base.op_zsze__

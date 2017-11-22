@@ -36,7 +36,7 @@ Infix "<$>" := (op_zlzdzg__) (at level 99).
 Notation "'_<$>_'" := (op_zlzdzg__).
 
 Definition void {f} {a} `{GHC.Base.Functor f} : f a -> f unit :=
-  fun arg_0__ => match arg_0__ with | x => GHC.Base.op_zlzd__ tt x end.
+  fun x => GHC.Base.op_zlzd__ tt x.
 
 (* Unbound variables:
      GHC.Base.Functor GHC.Base.flip GHC.Base.fmap GHC.Base.op_zlzd__ tt unit

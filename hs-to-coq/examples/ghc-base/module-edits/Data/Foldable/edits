@@ -19,6 +19,9 @@ skip instance_Foldable_Data_Monoid_Last
 order instance_Foldable_list concatMap concat
 redefine Definition hash_compose {a} {b} {c} := @Coq.Program.Basics.compose a b c.
 
+# HACK: We want Coq to pick up the list instance of Foldable inside concat
+order concat concatinstance_Foldable_option
+order concat instance_Foldable__Data_Either_Either_a_
 
 # Generic stuff
 skip instance_Foldable_GHC_Generics_U1

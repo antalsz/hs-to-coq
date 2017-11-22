@@ -27,9 +27,6 @@ Require GHC.Real.
 (* Translating `instance forall `{GHC.Show.Show a}, GHC.Show.Show (Const a b)'
    failed: OOPS! Cannot construct types for this class def: Nothing unsupported *)
 
-(* Translating `instance Data.Foldable.Foldable (Const m)' failed: OOPS! Cannot
-   construct types for this class def: Nothing unsupported *)
-
 Inductive Const a (b:Type) : Type := Mk_Const : a -> Const a b.
 
 Arguments Mk_Const {_} {_} _.
@@ -105,3 +102,15 @@ Instance instance_forall___GHC_Base_Monoid_m___GHC_Base_Applicative__Const_m_
   GHC.Base.op_ztzg____ := @instance_forall___GHC_Base_Monoid_m___GHC_Base_Applicative__Const_m__op_ztzg__ _ _ ;
   GHC.Base.pure__ := @instance_forall___GHC_Base_Monoid_m___GHC_Base_Applicative__Const_m__pure _ _
     |}.
+
+
+Local Definition foldMap_Const {k}  :
+  forall {m}{a}`{Base.Monoid m}, (a -> m) -> Const k a -> m :=
+  fun {m}{a} `{Base.Monoid m} f cs =>
+    match cs with
+     | Mk_Const x => Base.mempty
+    end.
+
+Instance instance_Foldable_Const {k} : Data.Foldable.Foldable (Const k) :=
+  fun {k} k1 => k1 (Data.Foldable.default_foldable_foldMap
+             (fun {m}{a}`{Base.Monoid m} => foldMap_Const)).

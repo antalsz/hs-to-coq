@@ -32,11 +32,6 @@ import HsToCoq.ConvertHaskell.Parameters.Edits
 import HsToCoq.ConvertHaskell.Sigs
 import HsToCoq.ConvertHaskell.Declarations.Notations
 
-----------------------------
-import Control.Monad.IO.Class
-import Debug.Trace
-----------------------------------------------------
-
 data ClassBody = ClassBody ClassDefinition [Notation]
                deriving (Eq, Ord, Read, Show)
 

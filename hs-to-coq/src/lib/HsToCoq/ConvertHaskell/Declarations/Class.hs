@@ -6,9 +6,11 @@ import Control.Lens
 
 import Data.Traversable
 import qualified Data.List.NonEmpty as NE
+import Control.Monad.State.Class (MonadState)
 
 import Control.Monad
 import Data.Monoid
+import Data.Maybe
 
 import qualified Data.Map.Strict as M
 import qualified Data.Set as S
@@ -75,10 +77,11 @@ convertClassDecl (L _ hsCtx) (L _ hsName) ltvs fds lsigs defaults types typeDefa
   unless (null       typeDefaults) $ convUnsupported "default associated type definitions"
 
   name <- freeVar hsName
+  qname <- qualifyWithCurrentModule name
   ctx  <- traverse (fmap (Generalized Coq.Implicit) . convertLType) hsCtx
 
   args <- convertLHsTyVarBndrs Coq.Explicit ltvs
-  kinds <- (++ repeat Nothing) . map Just . maybe [] NE.toList <$> use (edits.classKinds.at name)
+  kinds <- (++ repeat Nothing) . map Just . maybe [] NE.toList <$> use (edits.classKinds.at qname)
   let args' = zipWith go args kinds
        where go (Inferred exp name) (Just t) = Typed Ungeneralizable exp (name NE.:| []) t
              go a _ = a
@@ -102,19 +105,25 @@ convertClassDecl (L _ hsCtx) (L _ hsName) ltvs fds lsigs defaults types typeDefa
                 convUnsupported "pattern bindings in class declarations"
             Nothing                                                   ->
                 convUnsupported $ "skipping a type class method in " ++ show name
-  unless (null defs) $ defaultMethods.at name ?= defs
+  unless (null defs) $ defaultMethods.at qname ??= defs
 
 --  liftIO (traceIO (show name))
 --  liftIO (traceIO (show defs))
 
   let classDefn = (ClassDefinition name (args' ++ ctx) Nothing (bimap toCoqName sigType <$> M.toList sigs))
 
-  classDefns.at name ?= classDefn
+  classDefns.at qname ??= classDefn
 
 
 
   pure $ ClassBody classDefn
                    (concatMap (buildInfixNotations sigs <*> infixToCoq) . filter identIsOperator $ M.keys sigs)
+
+-- | A setter that does not override existing values
+(??=) :: MonadState s m => ASetter s s (Maybe a) (Maybe a) -> a -> m ()
+lens ??= v = lens %= (Just . fromMaybe v)
+infix 4 ??=
+
 
 classSentences :: ClassBody -> [Sentence]
 classSentences (ClassBody (ClassDefinition name args ty methods) nots) =

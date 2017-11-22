@@ -53,6 +53,7 @@ import HsToCoq.ConvertHaskell.Expr
 import HsToCoq.ConvertHaskell.Axiomatize
 import HsToCoq.ConvertHaskell.Declarations.Class
 import HsToCoq.ConvertHaskell.InfixNames
+import HsToCoq.ConvertHaskell.Variables
 
 --------------------------------------------------------------------------------
 
@@ -134,7 +135,8 @@ convertClsInstDecl cid@ClsInstDecl{..} rebuild mhandler = do
     cdefs <-  mapM (\ConvertedDefinition{..} -> do
                        return (convDefName, maybe id Fun (NE.nonEmpty (convDefArgs)) $ convDefBody)) cbinds
 
-    defaults <-  use (defaultMethods.at instanceClass.non M.empty)
+    qInstanceClass <- qualifyWithCurrentModule instanceClass
+    defaults <-  use (defaultMethods.at qInstanceClass.non M.empty)
                  -- lookup default methods in the global state, using the empty map if the class name is not found
                  -- otherwise gives you a map
                  -- <&> is flip fmap
@@ -241,7 +243,8 @@ topoSortInstance (InstanceDefinition instanceName params ty members mp) = go sor
         -- add extra quantifiers from the class & instance definitions
         mkTy :: Ident -> m ([Binder], Maybe Term)
         mkTy memberName = do
-          classDef <- use (classDefns.at className)
+          qClassName <- qualifyWithCurrentModule className
+          classDef <- use (classDefns.at qClassName)
           -- TODO: May be broken by switch away from 'RdrName's
           case classDef of
             (Just (ClassDefinition _ (b:_) _ sigs)) | [var] <- toListOf binderIdents b ->
@@ -287,7 +290,7 @@ topoSortInstance (InstanceDefinition instanceName params ty members mp) = go sor
                   in pure $ (instBnds, Just $ instSigType)
                 Nothing ->
                   convUnsupported ("Cannot find sig for " ++ show memberName)
-            _ -> convUnsupported ("OOPS! Cannot find information for class " ++ show className)
+            _ -> convUnsupported ("OOPS! Cannot find information for class " ++ show qClassName)
 
         unFix :: Term -> Term
         unFix body = case body of
@@ -300,22 +303,24 @@ topoSortInstance (InstanceDefinition instanceName params ty members mp) = go sor
 
         -- Gets the class method names, in the original
         getClassMethods = do
-          classDef <- use (classDefns.at className)
+          qClassName <- qualifyWithCurrentModule className
+          classDef <- use (classDefns.at qClassName)
           -- TODO: May be broken by switch away from 'RdrName's
           case classDef of
             (Just (ClassDefinition _ _ _ sigs)) ->
                 pure $ map fst sigs
-            _ -> convUnsupported ("OOPS! Cannot find information for class " ++ show className)
+            _ -> convUnsupported ("OOPS! Cannot find information for class " ++ show qClassName)
 
         -- This is the variant
         --   {| foo := fun {a} {b} => instance_foo |}
         -- which seems to trigger a bug in Coq, reported at
         -- https://sympa.inria.fr/sympa/arc/coq-club/2017-11/msg00035.html
-        quantify meth body =
-            do typeArgs <- getImplicitBindersForClassMember className meth
-               case (NE.nonEmpty typeArgs) of
-                   Nothing -> return body
-                   Just args -> return $ Fun args body
+        quantify meth body = do
+          qClassName <- qualifyWithCurrentModule className
+          typeArgs <- getImplicitBindersForClassMember qClassName meth
+          case (NE.nonEmpty typeArgs) of
+            Nothing -> return body
+            Just args -> return $ Fun args body
 
         -- This is the variant
         --   {| foo := @instance_foo _ _ |}

@@ -5,7 +5,8 @@ module HsToCoq.ConvertHaskell.Variables (
   var', var, recordField,
   freeVar', freeVar,
   -- * Avoiding reserved words/names
-  tryEscapeReservedWord, escapeReservedNames
+  tryEscapeReservedWord, escapeReservedNames,
+  qualifyWithCurrentModule
   ) where
 
 import Control.Lens
@@ -96,3 +97,13 @@ var ns name = do
 
 recordField :: (ConversionMonad m, HasOccName name, OutputableBndr name) => name -> m Ident
 recordField = var' ExprNS <=< ghcPpr -- TODO Check module part?
+
+-- This un-does what var does. It is all a big mess at this point...
+qualifyWithCurrentModule :: ConversionMonad m => Ident -> m Ident
+qualifyWithCurrentModule n = do
+  thisMod <- moduleNameText . fromMaybe (error "no current module") <$> use currentModule
+  case identToQualid n of
+    Just (Qualified _ _) -> return n
+    Just (Bare b)        -> return $ thisMod <> "." <> b
+    _ -> error $ "qualifyWithCurrentModule: Not an indent: " ++ T.unpack n
+

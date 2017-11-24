@@ -10,6 +10,17 @@ skip method Foldable minimum
 skip minimumBy
 skip maximumBy
 
+redefine Local Definition instance_Foldable__GHC_Tuple_pair_type_a__elem {inst_a}
+    {a} {H : GHC.Base.Eq_ a} : (a -> (((GHC.Tuple.pair_type inst_a) a) -> bool))
+    := default_elem instance_Foldable__GHC_Tuple_pair_type_a__foldMap.
+redefine Local Definition instance_Foldable__Data_Either_Either_a__elem {inst_a}
+    {a} {H : GHC.Base.Eq_ a} : (a -> (((Data.Either.Either inst_a) a) -> bool))
+    := default_elem instance_Foldable__Data_Either_Either_a__foldMap.
+redefine Local Definition instance_Foldable_option_elem
+    {a} {H : GHC.Base.Eq_ a} : (a -> ((option a) -> bool))
+    := default_elem instance_Foldable_option_foldMap.
+
+
 skip instance_Foldable_Data_Monoid_First
 skip instance_Foldable_Data_Monoid_Last
 

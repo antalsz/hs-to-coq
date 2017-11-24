@@ -1,3 +1,8 @@
+Definition default_elem {t : Type -> Type} {a} `{GHC.Base.Eq_ a} (foldMap : (a -> Any) -> t a -> Any) :
+  a -> t a -> bool :=
+   fun x xs => getAny (foldMap (fun y => Mk_Any (GHC.Base.op_zeze__ x y)) xs).
+
+
 Definition default_foldable {f:Type -> Type}
   (foldMap : forall {m} {a}, forall `{GHC.Base.Monoid m}, (a -> m) -> f a -> m)
   (foldr : forall {a} {b}, (a -> b -> b) -> b -> f a -> b):=

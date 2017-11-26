@@ -1,4 +1,0 @@
--Q ../ghc-base/lib/ ""
--Q . ""
-Lambda.v
-Proofs.v

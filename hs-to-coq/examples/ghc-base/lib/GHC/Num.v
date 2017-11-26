@@ -1,1 +1,0 @@
-../../manual/GHC/Num.v

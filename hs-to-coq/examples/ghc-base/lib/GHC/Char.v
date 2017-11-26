@@ -1,1 +1,0 @@
-../../manual/GHC/Char.v

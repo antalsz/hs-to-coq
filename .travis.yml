@@ -57,9 +57,6 @@ before_install:
  - opam list -i coq-mathcomp-ssreflect || opam install -y coq-mathcomp-ssreflect
  - eval $(opam config env)
 
- # Only build the `hs-to-coq` project
- - cd hs-to-coq
-
 install:
  # Build dependencies
  - stack --no-terminal --install-ghc test --only-dependencies
@@ -69,9 +66,9 @@ script:
  # Run test suite
  - make -C examples/tests
  # Build Coq’ified base (generated sources are in the repo)
- - make -C examples/ghc-base/lib/ -f Makefile.coq
+ - make -C base
  # Build base theory
- - make -C examples/base-thy
+ - make -C base-thy
  # Run examples that use base:
  - make -C examples/base-tests
  - make -C examples/successors

@@ -1,1 +1,0 @@
-../../manual/Data/Char.v

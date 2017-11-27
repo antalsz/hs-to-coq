@@ -46,7 +46,7 @@ convertPat (WildPat PlaceHolder) =
   pure UnderscorePat
 
 convertPat (GHC.VarPat (L _ x)) =
-  Coq.VarPat <$> freeVar x
+  Coq.VarPat . toPrefix <$> freeVar x
 
 convertPat (LazyPat p) = do
   p' <- convertLPat p

@@ -10,13 +10,13 @@ Unset Printing Implicit Defensive.
 Require Coq.Program.Tactics.
 Require Coq.Program.Wf.
 
-(* Preamble *)
-
-Definition on {a}{b}{c} (op : b -> b -> c) (f: a -> b) := fun x y => op (f x) (f y).
 (* No imports to convert. *)
 
 (* No type declarations to convert. *)
 (* Converted value declarations: *)
+
+Definition on {b} {c} {a} : (b -> b -> c) -> (a -> b) -> a -> a -> c :=
+  fun op_ziztzi__ f => fun x y => op_ziztzi__ (f x) (f y).
 
 Definition op_za__ {a} {b} : a -> (a -> b) -> b :=
   fun x f => f x.

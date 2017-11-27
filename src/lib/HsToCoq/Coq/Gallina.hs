@@ -207,22 +207,27 @@ data Name = Ident_ Ident                                                        
           | UnderscoreName                                                                     -- ^@_@
           deriving (Eq, Ord, Show, Read, Typeable, Data)
 
-pattern Ident :: Ident -> Name
+pattern Ident :: HasCallStack => Ident -> Name
 pattern Ident x <- Ident_ x where
     Ident x | "." `T.isInfixOf` x = error $ "Invalid ident in name:" ++ show x
             | otherwise           = Ident_ x
 {- not supported in 8.0 yet # COMPLETE Ident, UnderscoreName #-}
 
 -- |@/qualid/ ::=@
-data Qualid = Bare Ident                                                                       -- ^@/ident/@
+data Qualid = Bare_ Ident                                                                       -- ^@/ident/@
             | Qualified_ Qualid AccessIdent                                                     -- ^@/qualid/ /access_ident/@
             deriving (Eq, Ord, Show, Read, Typeable, Data)
+
+pattern Bare :: HasCallStack => Ident -> Qualid
+pattern Bare x <- Bare_ x where
+    Bare x -- | "." `T.isInfixOf` x = error $ "Invalid ident in bare qualid:" ++ show x
+           | otherwise          = Bare_ x
 
 pattern Qualified :: HasCallStack => Qualid -> AccessIdent -> Qualid
 pattern Qualified m x <- Qualified_ m x where
     Qualified m x
         -- | T.null m            = error $ "Empty module in Qualid:" ++ show m
-        | "." `T.isInfixOf` x = error $ "Invalid ident n Qualid:" ++ show x ++ " module " ++ show m
+        | "." `T.isInfixOf` x = error $ "Invalid ident in Qualid:" ++ show x ++ " module " ++ show m
         | otherwise           = Qualified_ m x
 {- not supported in 8.0 yet # COMPLETE Bare, Qualified #-}
 

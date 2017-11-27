@@ -1,2 +1,1 @@
 skip fix_  # partial
-skip on    # uses (.*.) as a variable name

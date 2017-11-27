@@ -19,6 +19,7 @@ PASS = \
   PartialAppliedPolyDataCon \
   PatternGuard \
   NonStructuralRec \
+  DotName \
   MapAccumR \
   Sub \
   FTP \
@@ -37,7 +38,6 @@ TODO_PASS  = \
   InstVar \
   Expr \
   Mutrec \
-  DotName \
   PaperExamples \
   OpTyCon \
   Successors \

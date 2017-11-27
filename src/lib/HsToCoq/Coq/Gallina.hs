@@ -9,7 +9,7 @@ Stability   : experimental
 <https://coq.inria.fr/distrib/current/refman/Reference-Manual003. Chapter 1, \"The Gallina Specification Language\", in the Coq reference manual.>
 -}
 
-{-# LANGUAGE DeriveDataTypeable, OverloadedStrings, OverloadedLists, LambdaCase, TemplateHaskell #-}
+{-# LANGUAGE DeriveDataTypeable, OverloadedStrings, OverloadedLists, LambdaCase, TemplateHaskell, PatternSynonyms #-}
 
 module HsToCoq.Coq.Gallina (
   -- * Lexical structure
@@ -27,8 +27,8 @@ module HsToCoq.Coq.Gallina (
   Generalizability(..),
   Explicitness(..),
   Binder(..),
-  Name(..),
-  Qualid(..),
+  Name(UnderscoreName, Ident),
+  Qualid(Bare, Qualified),
   Sort(..),
   FixBodies(..),
   CofixBodies(..),
@@ -93,6 +93,8 @@ import HsToCoq.Util.Traversable
 import Data.Text (Text)
 import qualified Data.Text as T
 import Numeric.Natural
+
+import GHC.Stack
 
 import Data.List.NonEmpty (NonEmpty(), (<|), nonEmpty)
 
@@ -201,14 +203,28 @@ data Binder = Inferred Explicitness Name                                        
             deriving (Eq, Ord, Show, Read, Typeable, Data)
 
 -- |@/name/ ::=@
-data Name = Ident Ident                                                                        -- ^@/ident/@
+data Name = Ident_ Ident                                                                        -- ^@/ident/@
           | UnderscoreName                                                                     -- ^@_@
           deriving (Eq, Ord, Show, Read, Typeable, Data)
 
+pattern Ident :: Ident -> Name
+pattern Ident x <- Ident_ x where
+    Ident x | "." `T.isInfixOf` x = error $ "Invalid ident in name:" ++ show x
+            | otherwise           = Ident_ x
+{- not supported in 8.0 yet # COMPLETE Ident, UnderscoreName #-}
+
 -- |@/qualid/ ::=@
 data Qualid = Bare Ident                                                                       -- ^@/ident/@
-            | Qualified Qualid AccessIdent                                                     -- ^@/qualid/ /access_ident/@
+            | Qualified_ Qualid AccessIdent                                                     -- ^@/qualid/ /access_ident/@
             deriving (Eq, Ord, Show, Read, Typeable, Data)
+
+pattern Qualified :: HasCallStack => Qualid -> AccessIdent -> Qualid
+pattern Qualified m x <- Qualified_ m x where
+    Qualified m x
+        -- | T.null m            = error $ "Empty module in Qualid:" ++ show m
+        | "." `T.isInfixOf` x = error $ "Invalid ident n Qualid:" ++ show x ++ " module " ++ show m
+        | otherwise           = Qualified_ m x
+{- not supported in 8.0 yet # COMPLETE Bare, Qualified #-}
 
 -- |@/sort/ ::=@
 data Sort = Prop                                                                               -- ^@Prop@

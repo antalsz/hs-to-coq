@@ -16,6 +16,7 @@ module HsToCoq.Coq.Gallina.Util (
   binderNames, binderIdents, binderExplicitness,
   -- ** Functions
   qualidBase, qualidModule, qualidMapBase,
+  splitModule,
   qualidToIdent, identToQualid, identToBase,
   nameToTerm, nameToPattern,
   binderArgs
@@ -31,6 +32,8 @@ import HsToCoq.Util.List
 
 import qualified Data.Text as T
 import Text.Parsec hiding ((<|>), many)
+
+import GHC.Stack
 
 import HsToCoq.Coq.Gallina
 
@@ -82,6 +85,10 @@ termHead _                    = Nothing
 
 makePrisms ''Name
 
+-- Indirection due to the pattern synonym
+_Ident :: Prism' Name Ident
+_Ident = _Ident_
+
 nameToIdent :: Iso' Name (Maybe Ident)
 nameToIdent = iso (\case Ident x        -> Just x
                          UnderscoreName -> Nothing)
@@ -122,15 +129,22 @@ qualidToIdent :: Qualid -> Ident
 qualidToIdent (Bare      ident)   = ident
 qualidToIdent (Qualified qid aid) = qualidToIdent qid <> "." <> aid
 
--- This doesn't handle all malformed 'Ident's
-identToQualid :: Ident -> Maybe Qualid
-identToQualid = either (const Nothing) Just . parse qualid "" where
+splitModule :: Ident -> Maybe (Qualid, AccessIdent)
+splitModule = either (const Nothing) Just . parse qualid "" where
   qualid = do
     let modFrag = T.cons <$> upper <*> (T.pack <$> many (alphaNum <|> char '\''))
-        modules = many . try $ modFrag <* char '.'
-        base    = T.pack <$> some anyChar -- since we're assuming we get a valid name
-    root :| rest <- (|:) <$> modules <*> base
-    pure $ foldl' Qualified (Bare root) rest
+    root <- try $ modFrag <* char '.'
+    rest <- many . try $ modFrag <* char '.'
+    let mod = foldl' Qualified (Bare root) rest
+    base <- T.pack <$> some anyChar -- since we're assuming we get a valid name
+    pure $ (mod, base)
+
+
+-- This doesn't handle all malformed 'Ident's
+identToQualid :: HasCallStack => Ident -> Maybe Qualid
+identToQualid x = case splitModule x of
+    Just (mod, ident) -> Just (Qualified mod ident)
+    _                 -> Just (Bare x)
 
 identToBase :: Ident -> Ident
 identToBase x = maybe x qualidBase $ identToQualid x

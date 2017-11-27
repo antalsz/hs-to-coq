@@ -17,6 +17,8 @@ import qualified Data.Text as T
 
 import Encoding (zEncodeString)
 
+import GHC.Stack
+
 import HsToCoq.Coq.Gallina
 import HsToCoq.Coq.Gallina.Util
 
@@ -45,9 +47,11 @@ toPrefix x | identIsVariable x = x
 infixToCoq_ :: Op -> Ident
 infixToCoq_ name = "op_" <> T.pack (zEncodeString $ T.unpack name) <> "__"
 
-infixToCoq :: Op -> Ident
-infixToCoq op =
-  maybe (infixToCoq_ op) (qualidToIdent . qualidMapBase infixToCoq_) $ identToQualid op
+-- This is code smell: Why do we return an unstructured Ident, and not a QualId?
+infixToCoq :: HasCallStack => Op -> Ident
+infixToCoq op = case splitModule op of
+    Just (m,op) -> qualidToIdent $ Qualified m (infixToCoq_ op)
+    Nothing     -> infixToCoq_ op
 
 toCoqName :: Op -> Ident
 toCoqName x | identIsVariable x = x

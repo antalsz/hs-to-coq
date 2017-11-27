@@ -457,5 +457,5 @@ unexpected :: MonadError String m => Token -> m a
 unexpected tok = throwError $ "unexpected " ++ tokenDescription tok
 
 forceIdentToQualid :: Ident -> Qualid
-forceIdentToQualid = fromMaybe (error "internal error: lexer produced a malfored qualid!") . identToQualid
+forceIdentToQualid x = fromMaybe (error $ "internal error: lexer produced a malfored qualid: " ++ show x) (identToQualid x)
 }

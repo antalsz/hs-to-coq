@@ -56,13 +56,13 @@ instance Names IndBody where
 ----------------------------------------------------------------------------------------------------
 
 class Binding b where
-  binding :: (MonadVariables Ident d m, Monoid d) => (Ident -> d) -> b -> m a -> m a
+  binding :: (MonadVariables Qualid d m, Monoid d) => (Qualid -> d) -> b -> m a -> m a
 
-binding' :: (Binding b, MonadVariables Ident d m, Monoid d) => b -> m a -> m a
+binding' :: (Binding b, MonadVariables Qualid d m, Monoid d) => b -> m a -> m a
 binding' = binding $ const mempty
 
 instance Binding Ident where
-  binding f x = bind x (f x)
+  binding f x = bind (Bare x) (f (Bare x))
 
 instance Binding Name where
   binding f (Ident x)      = binding f x
@@ -120,7 +120,9 @@ instance Binding Pattern where
     (freeVars con *>) . binding f xs
 
   binding f (InfixPat l op r) =
-    (occurrence op *>) . binding f [l,r]
+    -- TODO: InfixPat not really supported at the moment
+    -- (Need to chage it to take a qualifid name)
+    (occurrence (Bare op) *>) . binding f [l,r]
 
   binding f (AsPat pat x) =
     binding f pat . binding f x
@@ -198,14 +200,14 @@ instance Binding Definition where
       binding f x
 
 instance Binding Inductive where
-  binding f (Inductive   ibs nots) = binding f (foldMap names ibs) . (freeVars ibs *> freeVars (NoBinding nots) *>)
-  binding f (CoInductive cbs nots) = binding f (foldMap names cbs) . (freeVars cbs *> freeVars (NoBinding nots) *>)
+  binding f (Inductive   ibs nots) = binding f (foldMap (S.map Bare . names) ibs) . (freeVars ibs *> freeVars (NoBinding nots) *>)
+  binding f (CoInductive cbs nots) = binding f (foldMap (S.map Bare . names) cbs) . (freeVars cbs *> freeVars (NoBinding nots) *>)
   -- The notation bindings here can only rebind existing reserved names, so we
   -- fake out @binding' nots@ to get the free variables.
 
 instance Binding Fixpoint where
-  binding f (Fixpoint   fbs nots) = binding f (foldMap names fbs) . (freeVars fbs *> freeVars (NoBinding nots) *>)
-  binding f (CoFixpoint cbs nots) = binding f (foldMap names cbs) . (freeVars cbs *> freeVars (NoBinding nots) *>)
+  binding f (Fixpoint   fbs nots) = binding f (foldMap (S.map Bare . names) fbs) . (freeVars fbs *> freeVars (NoBinding nots) *>)
+  binding f (CoFixpoint cbs nots) = binding f (foldMap (S.map Bare . names) cbs) . (freeVars cbs *> freeVars (NoBinding nots) *>)
   -- The notation bindings here can only rebind existing reserved names, so we
   -- fake out @binding' nots@ to get the free variables.
 
@@ -255,11 +257,11 @@ instance Binding NotationBinding where
   binding f (NotationIdentBinding x def) = (freeVars def *>) . binding f x
 
 -- TODO Not all sequences of bindings should be telescopes!
-bindingTelescope :: (Binding b, MonadVariables Ident d m, Monoid d, Foldable f)
-                 => (Ident -> d) -> f b -> m a -> m a
-bindingTelescope = flip . foldr . binding
+bindingTelescope :: (Binding b, MonadVariables Qualid d m, Monoid d, Foldable f)
+                 => (Qualid -> d) -> f b -> m a -> m a
+bindingTelescope f xs rest = foldr (binding f) rest xs
 
-instance Binding (Set Ident) where
+instance Binding (Set Qualid) where
   binding = bindAll .: M.fromSet
 
 instance Binding b => Binding (Maybe b) where
@@ -273,11 +275,11 @@ instance Binding b => Binding (NonEmpty b) where
 
 ----------------------------------------------------------------------------------------------------
 
-getFreeVars :: FreeVars t => t -> Set Ident
-getFreeVars = execVariables . (freeVars :: FreeVars t => t -> Variables Ident () ())
+getFreeVars :: FreeVars t => t -> Set Qualid
+getFreeVars = execVariables . (freeVars :: FreeVars t => t -> Variables Qualid () ())
 
 class FreeVars t where
-  freeVars :: (MonadVariables Ident d m, Monoid d) => t -> m ()
+  freeVars :: (MonadVariables Qualid d m, Monoid d) => t -> m ()
 
 instance FreeVars Term where
   freeVars (Forall xs t) =
@@ -298,11 +300,11 @@ instance FreeVars Term where
 
   freeVars (LetFix fb body) = do
     freeVars fb
-    binding' (names fb) $ freeVars body
+    binding' (S.map Bare (names fb)) $ freeVars body
 
   freeVars (LetCofix cb body) = do
     freeVars cb
-    binding' (names cb) $ freeVars body
+    binding' (S.map Bare (names cb)) $ freeVars body
 
   freeVars (LetTuple xs oret val body) = do
     freeVars oret *> freeVars val
@@ -339,7 +341,7 @@ instance FreeVars Term where
     freeVars qid *> freeVars xs
 
   freeVars (Infix l op r) =
-    freeVars l *> occurrence op *> freeVars r
+    freeVars l *> occurrence (Bare op) *> freeVars r
 
   freeVars (InScope t _scope) =
     freeVars t
@@ -390,7 +392,7 @@ instance FreeVars Arg where
 
 instance FreeVars Order where
   freeVars (MeasureOrder expr rel) = freeVars expr *> freeVars rel
-  freeVars (WFOrder rel ident) = freeVars rel *> occurrence ident
+  freeVars (WFOrder rel qid) = freeVars rel *> occurrence qid
 
 instance FreeVars Generalizability where
   freeVars Ungeneralizable = pure ()
@@ -401,7 +403,7 @@ instance FreeVars Explicitness where
   freeVars Implicit = pure ()
 
 instance FreeVars Qualid where
-  freeVars = occurrence . qualidToIdent
+  freeVars = occurrence
 
 instance FreeVars Sort where
   freeVars Prop = pure ()
@@ -413,14 +415,14 @@ instance FreeVars FixBodies where
     freeVars fb
   freeVars (FixMany fb' fbs' x) =
     let fbs = fb' <| fbs'
-    in binding' (x `S.insert` foldMap names fbs) $ freeVars fbs
+    in binding' (S.map Bare (x `S.insert` foldMap names fbs)) $ freeVars fbs
 
 instance FreeVars CofixBodies where
   freeVars (CofixOne cb) =
     freeVars cb
   freeVars (CofixMany cb' cbs' x) =
     let cbs = cb' <| cbs'
-    in binding' (x `S.insert` foldMap names cbs) $ freeVars cbs
+    in binding' (S.map Bare (x `S.insert` foldMap names cbs)) $ freeVars cbs
 
 instance FreeVars FixBody where
   freeVars (FixBody f args annot oty def) =
@@ -516,7 +518,7 @@ instance FreeVars ArgumentExplicitness where
   freeVars ArgImplicit = pure ()
   freeVars ArgMaximal  = pure ()
 
-foldableFreeVars :: (FreeVars t, MonadVariables Ident d m, Monoid d, Foldable f) => f t -> m ()
+foldableFreeVars :: (FreeVars t, MonadVariables Qualid d m, Monoid d, Foldable f) => f t -> m ()
 foldableFreeVars = traverse_ freeVars
 
 instance FreeVars t => FreeVars (Maybe t) where
@@ -539,18 +541,18 @@ instance Binding b => FreeVars (NoBinding b) where
 
 -- The order is correct – later identifiers refer only to previous ones – since
 -- 'stronglyConnComp'' returns its outputs in topologically sorted order.
-topoSortEnvironmentWith :: Foldable f => (a -> f Ident) -> Map Ident a -> [NonEmpty Ident]
+topoSortEnvironmentWith :: Foldable f => (a -> f Qualid) -> Map Qualid a -> [NonEmpty Qualid]
 topoSortEnvironmentWith fvs = stronglyConnComp' . M.toList
-                            . fmap (fmap canonicalName . toList . fvs)
+                            . fmap (toList . fvs)
 
 -- The order is correct – later identifiers refer only to previous ones – since
 -- 'stronglyConnComp'' returns its outputs in topologically sorted order.
-topoSortEnvironment :: FreeVars t => Map Ident t -> [NonEmpty Ident]
+topoSortEnvironment :: FreeVars t => Map Qualid t -> [NonEmpty Qualid]
 topoSortEnvironment = topoSortEnvironmentWith getFreeVars
 
-type ExtraFreeVars = M.Map Ident (S.Set Ident)
+type ExtraFreeVars = M.Map Qualid (S.Set Qualid)
 
-definedBy :: Binding x => x -> [Ident]
+definedBy :: Binding x => x -> [Qualid]
 definedBy b = execDefinedIdents (binding' b startCollectingBinders)
 
 -- | Sort Sentences based on their free variables and the
@@ -561,10 +563,10 @@ topoSortSentences extraFVs sentences = sorted
     numSentences = zip [0..] sentences
     canonMap = M.fromList [ (i,n) | (n,s) <- numSentences, i <- definedBy s]
 
-    canon :: Ident -> Maybe Int
+    canon :: Qualid -> Maybe Int
     canon i =  M.lookup i canonMap
 
-    extras :: Ident -> S.Set Ident
+    extras :: Qualid -> S.Set Qualid
     extras i = fromMaybe S.empty $ M.lookup i extraFVs
 
     graph = reverse $

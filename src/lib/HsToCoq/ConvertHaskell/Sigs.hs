@@ -194,18 +194,18 @@ convertSignature rdrName (HsSignature hsMod sigTy _hsFix) = do
   maybeWithCurrentModule hsMod $ Signature <$> convertLHsSigType sigTy
                                            <*> pure maybeFix
 
-convertSignatures :: ConversionMonad m => Map GHC.Name HsSignature -> m (Map Ident Signature)
+convertSignatures :: ConversionMonad m => Map GHC.Name HsSignature -> m (Map Qualid Signature)
 convertSignatures = fmap M.fromList . traverse (\(r,hs) -> (,) <$> (var ExprNS r) <*> convertSignature r hs) . M.toList
 
-convertModuleSigs :: ConversionMonad m => [(Maybe ModuleName, Sig GHC.Name)] -> m (Map Ident Signature)
+convertModuleSigs :: ConversionMonad m => [(Maybe ModuleName, Sig GHC.Name)] -> m (Map Qualid Signature)
 convertModuleSigs sigs =
   (convertSignatures <=< collectSigsWithErrors) sigs
 
-convertModuleLSigs :: ConversionMonad m => [(Maybe ModuleName, LSig GHC.Name)] -> m (Map Ident Signature)
+convertModuleLSigs :: ConversionMonad m => [(Maybe ModuleName, LSig GHC.Name)] -> m (Map Qualid Signature)
 convertModuleLSigs = convertModuleSigs . map (second unLoc)
 
-convertSigs :: ConversionMonad m => [Sig GHC.Name] -> m (Map Ident Signature)
+convertSigs :: ConversionMonad m => [Sig GHC.Name] -> m (Map Qualid Signature)
 convertSigs = convertModuleSigs . map (Nothing,)
 
-convertLSigs :: ConversionMonad m => [LSig GHC.Name] -> m (Map Ident Signature)
+convertLSigs :: ConversionMonad m => [LSig GHC.Name] -> m (Map Qualid Signature)
 convertLSigs = convertModuleLSigs . map (Nothing,)

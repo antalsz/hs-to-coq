@@ -13,10 +13,11 @@ import HsToCoq.ConvertHaskell.InfixNames
 
 --------------------------------------------------------------------------------
 
-buildInfixNotations :: Map Ident Signature -> Op -> Ident -> [Notation]
-buildInfixNotations sigs op def = [ uncurry (InfixDefinition op (Var def))
+-- TODO: calculate op from def, instead of passing it around
+buildInfixNotations :: Map Qualid Signature -> Qualid -> Qualid -> [Notation]
+buildInfixNotations sigs op def = [ uncurry (InfixDefinition (qualidBase op) (Qualid def))
                                       . maybe hardCodedAssoc (first Just)
                                       $ sigFixity =<< M.lookup op sigs
-                                  , NotationBinding $ NotationIdentBinding (infixToPrefix op) (Var def) ]
-  where hardCodedAssoc | op == "∘" = (Just LeftAssociativity, Level 40)
-                       | otherwise = (Nothing, Level 99)
+                                  , NotationBinding $ NotationIdentBinding (qualidBase op) (Qualid def) ]
+  where hardCodedAssoc | qualidBase op == "∘" = (Just LeftAssociativity, Level 40)
+                       | otherwise            = (Nothing, Level 99)

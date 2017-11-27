@@ -30,6 +30,7 @@ import Control.Lens
 
 import Data.Semigroup (Semigroup(..))
 import Data.Text (Text)
+import Data.Bifunctor
 import qualified Data.Text as T
 import Numeric.Natural
 
@@ -56,25 +57,25 @@ import Data.List.NonEmpty (NonEmpty(..))
 --------------------------------------------------------------------------------
 
 data ConstructorFields = NonRecordFields !Int
-                       | RecordFields    ![Ident]
+                       | RecordFields    ![Qualid]
                        deriving (Eq, Ord, Show, Read)
 makePrisms ''ConstructorFields
 
 data ConversionState = ConversionState { __currentModule         :: !(Maybe ModuleName)
-                                       , __currentDefinition     :: !(Maybe Ident)
+                                       , __currentDefinition     :: !(Maybe Qualid)
                                        , _edits                  :: !Edits
-                                       , _constructors           :: !(Map Ident [Ident])
-                                       , _constructorTypes       :: !(Map Ident Ident)
-                                       , _constructorFields      :: !(Map Ident ConstructorFields)
-                                       , _recordFieldTypes       :: !(Map Ident Ident)
+                                       , _constructors           :: !(Map Qualid [Qualid])
+                                       , _constructorTypes       :: !(Map Qualid Qualid)
+                                       , _constructorFields      :: !(Map Qualid ConstructorFields)
+                                       , _recordFieldTypes       :: !(Map Qualid Qualid)
                                        -- types of class members
                                        -- , _memberSigs       :: !(Map Ident (Map Ident Signature))
                                        -- translated classes
-                                       , _classDefns             :: !(Map Ident ClassDefinition)
-                                       , _defaultMethods         :: !(Map Ident (Map Ident Term))
+                                       , _classDefns             :: !(Map Qualid ClassDefinition)
+                                       , _defaultMethods         :: !(Map Qualid (Map Ident Term))
                                        , _fixities               :: !(Map Ident (Coq.Associativity, Coq.Level))
                                        , _typecheckerEnvironment :: !(Maybe TcGblEnv)
-                                       , _axioms                 :: !(Map Ident Term)
+                                       , _axioms                 :: !(Map Qualid Term)
                                        , __unique                :: !Natural
                                        }
 makeLenses ''ConversionState
@@ -84,16 +85,16 @@ currentModule :: Getter ConversionState (Maybe ModuleName)
 currentModule = _currentModule
 {-# INLINABLE currentModule #-}
 
-currentDefinition :: Getter ConversionState (Maybe Ident)
+currentDefinition :: Getter ConversionState (Maybe Qualid)
 currentDefinition = _currentDefinition
 {-# INLINABLE currentDefinition #-}
 
-renamed :: HsNamespace -> Ident -> Lens' ConversionState (Maybe Ident)
+renamed :: HsNamespace -> Qualid -> Lens' ConversionState (Maybe Qualid)
 renamed ns x = edits.renamings.at (NamespacedIdent ns x)
 {-# INLINABLE renamed #-}
 
-type ConversionMonad m = (GhcMonad m, MonadState ConversionState m, MonadVariables Ident () m)
-type ConversionT m = StateT ConversionState (VariablesT Ident () m)
+type ConversionMonad m = (GhcMonad m, MonadState ConversionState m, MonadVariables Qualid () m)
+type ConversionT m = StateT ConversionState (VariablesT Qualid () m)
 
 -- HACK: Hard-code information about some data types here
 -- This needs to be solved proper, but for now this makes the test suite
@@ -280,8 +281,8 @@ builtInClasses =
    (=:) = (,)
    infix 0 =:
 
-builtInDefaultMethods :: Map Ident (Map Ident Term)
-builtInDefaultMethods = fmap M.fromList $ M.fromList
+builtInDefaultMethods :: Map Qualid (Map Ident Term)
+builtInDefaultMethods = fmap M.fromList $ M.fromList $ map (first unsafeIdentToQualid) $
     [ "GHC.Base.Eq_" =:
         [ "==" ~> Fun [arg "x", arg "y"] (App1 (Var "negb") $ Infix (Var "x") "/=" (Var "y"))
         , "/=" ~> Fun [arg "x", arg "y"] (App1 (Var "negb") $ Infix (Var "x") "==" (Var "y"))
@@ -365,8 +366,8 @@ builtInDefaultMethods = fmap M.fromList $ M.fromList
    m ~> d  = (toCoqName m, d)
    arg       = Inferred Coq.Explicit . Ident
 
-builtInAxioms :: [(Ident, Term)]
-builtInAxioms =
+builtInAxioms :: [(Qualid, Term)]
+builtInAxioms = map (first Bare)
     [ "patternFailure" =: Forall [ Inferred Implicit (Ident "a") ] a
     , "missingValue"   =: Forall [ Inferred Implicit (Ident "a") ] a
     , "unsafeFix"      =: Forall [ Inferred Implicit (Ident "a") ] ((a `Arrow` a) `Arrow` a)
@@ -382,11 +383,11 @@ evalConversion _edits = evalVariablesT . (evalStateT ?? ConversionState{..}) whe
   __currentModule     = Nothing
   __currentDefinition = Nothing
 
-  _constructors      = M.fromList [ (t, [d | (d,_) <- ds]) | (t,ds) <- builtInDataCons]
-  _constructorTypes  = M.fromList [ (d,t) | (t,ds) <- builtInDataCons, (d,_) <- ds ]
-  _constructorFields = M.fromList [ (d, NonRecordFields n) | (_,ds) <- builtInDataCons, (d,n) <- ds ]
+  _constructors      = M.fromList [ (unsafeIdentToQualid t, [unsafeIdentToQualid d | (d,_) <- ds]) | (t,ds) <- builtInDataCons]
+  _constructorTypes  = M.fromList [ (unsafeIdentToQualid d, unsafeIdentToQualid t) | (t,ds) <- builtInDataCons, (d,_) <- ds ]
+  _constructorFields = M.fromList [ (unsafeIdentToQualid d, NonRecordFields n) | (_,ds) <- builtInDataCons, (d,n) <- ds ]
   _recordFieldTypes  = M.empty
-  _classDefns        = M.fromList [ (i, cls) | cls@(ClassDefinition i _ _ _) <- builtInClasses ]
+  _classDefns        = M.fromList [ (unsafeIdentToQualid i, cls) | cls@(ClassDefinition i _ _ _) <- builtInClasses ]
 --  _memberSigs        = M.empty
   _defaultMethods    =   builtInDefaultMethods
   _fixities          = M.empty
@@ -413,7 +414,7 @@ withCurrentModule = withCurrentModuleOrNone . Just
 maybeWithCurrentModule :: ConversionMonad m => Maybe ModuleName -> m a -> m a
 maybeWithCurrentModule = maybe id withCurrentModule
 
-withCurrentDefinition :: ConversionMonad m => Ident -> m a -> m a
+withCurrentDefinition :: ConversionMonad m => Qualid -> m a -> m a
 withCurrentDefinition newDef = gbracket set restore . const
   where
   set = _currentDefinition <<.= Just newDef
@@ -427,7 +428,7 @@ gensym name = do u <- fresh
                  pure $ name <> "_" <> T.pack (show u) <> "__"
 
 -- Mostly for point-free use these days
-rename :: ConversionMonad m => HsNamespace -> Ident -> Ident -> m ()
+rename :: ConversionMonad m => HsNamespace -> Qualid -> Qualid -> m ()
 rename ns x x' = renamed ns x ?= x'
 {-# INLINABLE rename #-}
 

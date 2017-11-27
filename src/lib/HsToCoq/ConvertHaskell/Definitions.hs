@@ -18,25 +18,25 @@ import HsToCoq.ConvertHaskell.Monad
 
 --------------------------------------------------------------------------------
 
-data ConvertedDefinition = ConvertedDefinition { convDefName  :: !Ident
+data ConvertedDefinition = ConvertedDefinition { convDefName  :: !Qualid
                                                , convDefArgs  :: ![Binder]
                                                , convDefType  :: !(Maybe Term)
                                                , convDefBody  :: !Term
-                                               , convDefInfix :: !(Maybe Op) }
+                                               , convDefInfix :: !(Maybe Qualid) }
                          deriving (Eq, Ord, Show, Read)
 
 withConvertedDefinition :: Monoid m
-                        => (Ident -> [Binder] -> Maybe Term -> Term -> a) -> (a -> m)
-                        -> (Op -> Ident -> b)                             -> (b -> m)
+                        => (Qualid -> [Binder] -> Maybe Term -> Term -> a) -> (a -> m)
+                        -> (Qualid -> Qualid -> b)                             -> (b -> m)
                         -> (ConvertedDefinition -> m)
 withConvertedDefinition withDef wrapDef withOp wrapOp ConvertedDefinition{..} =
   mappend (wrapDef $ withDef convDefName convDefArgs convDefType convDefBody)
           (maybe mempty (wrapOp . flip withOp convDefName) convDefInfix)
 
-withConvertedDefinitionDef :: (Ident -> [Binder] -> Maybe Term -> Term -> a) -> (ConvertedDefinition -> a)
+withConvertedDefinitionDef :: (Qualid -> [Binder] -> Maybe Term -> Term -> a) -> (ConvertedDefinition -> a)
 withConvertedDefinitionDef f ConvertedDefinition{..} = f convDefName convDefArgs convDefType convDefBody
 
-withConvertedDefinitionOp :: (Op -> Ident -> a) -> (ConvertedDefinition -> Maybe a)
+withConvertedDefinitionOp :: (Qualid -> Qualid -> a) -> (ConvertedDefinition -> Maybe a)
 withConvertedDefinitionOp f ConvertedDefinition{..} = (f ?? convDefName) <$> convDefInfix
 
 --------------------------------------------------------------------------------
@@ -57,7 +57,7 @@ toProgramFixpointSentence (ConvertedDefinition{..}) order tac
     = editFailure "cannot \"termination\" a definition without a type signature"
     | Just ty <- convDefType
     , Fix (FixOne (FixBody name binders _ _ body)) <- convDefBody
-    = if | name /= convDefName
+    = if | Bare name /= convDefName
          -> editFailure "internal name and external name disagree?"
          | otherwise
          -> do

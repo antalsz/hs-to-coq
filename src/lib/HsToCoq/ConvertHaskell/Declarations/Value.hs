@@ -18,6 +18,7 @@ import Panic
 
 import HsToCoq.Coq.FreeVars
 import HsToCoq.Coq.Gallina as Coq
+import HsToCoq.Coq.Gallina.Util
 
 import HsToCoq.ConvertHaskell.Parameters.Edits
 import HsToCoq.ConvertHaskell.Monad
@@ -56,7 +57,7 @@ convertModuleValDecls mdecls = do
                       ->  pure <$> toProgramFixpointSentence cdef order tactic
                       | otherwise                   -- no edit
                       -> pure $ withConvertedDefinition
-                          (DefinitionDef Global)     (pure . DefinitionSentence)
+                          (DefinitionDef Global . qualidBase)  (pure . DefinitionSentence)
                           (buildInfixNotations sigs) (map    NotationSentence)
                           cdef
                 )(\_ _ -> convUnsupported "top-level pattern bindings")
@@ -64,10 +65,10 @@ convertModuleValDecls mdecls = do
   -- TODO: Mutual recursion
   pure . foldMap (foldMap (bindings M.!)) . topoSortEnvironment $ NoBinding <$> bindings
 
-  where axiomatizeBinding :: GhcMonad m => HsBind GHC.Name -> GhcException -> m (Ident, [Sentence])
+  where axiomatizeBinding :: GhcMonad m => HsBind GHC.Name -> GhcException -> m (Qualid, [Sentence])
         axiomatizeBinding FunBind{..} exn = do
           name <- freeVar $ unLoc fun_id
-          pure (name, [translationFailedComment name exn, axiom name])
+          pure (Bare name, [translationFailedComment name exn, axiom (Bare name)])
         axiomatizeBinding _ exn =
           liftIO $ throwGhcExceptionIO exn
 

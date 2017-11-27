@@ -27,6 +27,7 @@ import Data.Tuple
 import HsToCoq.Util.GHC.Module
 
 import HsToCoq.Coq.Gallina
+import HsToCoq.Coq.Gallina.Util
 
 --------------------------------------------------------------------------------
 
@@ -54,20 +55,20 @@ data ScopePlace = SPValue | SPConstructor
                 deriving (Eq, Ord, Enum, Bounded, Show, Read)
 
 data Edit = TypeSynonymTypeEdit   Ident Ident
-          | DataTypeArgumentsEdit Ident DataTypeArguments
-          | NonterminatingEdit    Ident
-          | TerminationEdit       Ident Order (Maybe Text)
+          | DataTypeArgumentsEdit Qualid DataTypeArguments
+          | NonterminatingEdit    Qualid
+          | TerminationEdit       Qualid Order (Maybe Text)
           | RedefinitionEdit      CoqDefinition
           | AddEdit               ModuleName CoqDefinition
-          | SkipEdit              Ident
-          | SkipMethodEdit        Ident Ident
+          | SkipEdit              Qualid
+          | SkipMethodEdit        Qualid Ident
           | SkipModuleEdit        ModuleName
           | AxiomatizeModuleEdit  ModuleName
-          | AdditionalScopeEdit   ScopePlace Ident Ident
-          | OrderEdit             (NonEmpty Ident)
-          | RenameEdit            NamespacedIdent Ident
-          | ClassKindEdit         Ident (NonEmpty Term)
-          | DataKindEdit          Ident (NonEmpty Term)
+          | AdditionalScopeEdit   ScopePlace Qualid Ident
+          | OrderEdit             (NonEmpty Qualid)
+          | RenameEdit            NamespacedIdent Qualid
+          | ClassKindEdit         Qualid (NonEmpty Term)
+          | DataKindEdit          Qualid (NonEmpty Term)
           deriving (Eq, Ord, Show)
 
 addFresh :: At m
@@ -87,30 +88,30 @@ data HsNamespace = ExprNS | TypeNS
                  deriving (Eq, Ord, Show, Read, Enum, Bounded)
 
 prettyNSIdent :: NamespacedIdent -> String
-prettyNSIdent NamespacedIdent{..} = prettyNS niNS ++ " " ++ T.unpack niId where
+prettyNSIdent NamespacedIdent{..} = prettyNS niNS ++ " " ++ T.unpack (qualidToIdent niId) where
   prettyNS ExprNS = "value"
   prettyNS TypeNS = "type"
 
 data NamespacedIdent = NamespacedIdent { niNS :: !HsNamespace
-                                       , niId :: !Ident }
+                                       , niId :: !Qualid }
                      deriving (Eq, Ord, Show, Read)
 
-type Renamings = Map NamespacedIdent Ident
+type Renamings = Map NamespacedIdent Qualid
 
 data Edits = Edits { _typeSynonymTypes   :: !(Map Ident Ident)
-                   , _dataTypeArguments  :: !(Map Ident DataTypeArguments)
-                   , _nonterminating     :: !(Set Ident)
-                   , _termination        :: !(Map Ident (Order, Maybe Text))
-                   , _redefinitions      :: !(Map Ident CoqDefinition)
+                   , _dataTypeArguments  :: !(Map Qualid DataTypeArguments)
+                   , _nonterminating     :: !(Set Qualid)
+                   , _termination        :: !(Map Qualid (Order, Maybe Text))
+                   , _redefinitions      :: !(Map Qualid CoqDefinition)
                    , _additions          :: !(Map ModuleName [Sentence])
-                   , _skipped            :: !(Set Ident)
-                   , _skippedMethods     :: !(Set (Ident,Ident))
+                   , _skipped            :: !(Set Qualid)
+                   , _skippedMethods     :: !(Set (Qualid,Ident))
                    , _skippedModules     :: !(Set ModuleName)
                    , _axiomatizedModules :: !(Set ModuleName)
-                   , _additionalScopes   :: !(Map (ScopePlace, Ident) Ident)
-                   , _orders             :: !(Map Ident (Set Ident))
-                   , _classKinds         :: !(Map Ident (NonEmpty Term))
-                   , _dataKinds          :: !(Map Ident (NonEmpty Term))
+                   , _additionalScopes   :: !(Map (ScopePlace, Qualid) Ident)
+                   , _orders             :: !(Map Qualid (Set Qualid))
+                   , _classKinds         :: !(Map Qualid (NonEmpty Term))
+                   , _dataKinds          :: !(Map Qualid (NonEmpty Term))
                    , _renamings          :: !Renamings
                    }
            deriving (Eq, Ord, Show)
@@ -133,23 +134,26 @@ duplicate_for' what disp x = "Duplicate " ++ what ++ " for " ++ disp x
 duplicate_for :: String -> Ident -> String
 duplicate_for what = duplicate_for' what T.unpack
 
+duplicateQ_for :: String -> Qualid -> String
+duplicateQ_for what = duplicate_for' what (T.unpack . qualidToIdent)
+
 addEdit :: Edit -> Edits -> Either String Edits
 addEdit = \case -- To bring the `where' clause into scope everywhere
   TypeSynonymTypeEdit   syn        res    -> addFresh typeSynonymTypes                    (duplicate_for  "type synonym result types")                       syn          res
-  DataTypeArgumentsEdit ty         args   -> addFresh dataTypeArguments                   (duplicate_for  "data type argument specifications")               ty           args
-  NonterminatingEdit    what              -> addFresh nonterminating                      (duplicate_for  "declarations of nontermination")                  what         ()
-  TerminationEdit       what order tac    -> addFresh termination                         (duplicate_for  "termination requests")                            what         (order,tac)
-  RedefinitionEdit      def               -> addFresh redefinitions                       (duplicate_for  "redefinitions")                                   (name def)   def
+  DataTypeArgumentsEdit ty         args   -> addFresh dataTypeArguments                   (duplicateQ_for "data type argument specifications")               ty           args
+  NonterminatingEdit    what              -> addFresh nonterminating                      (duplicateQ_for "declarations of nontermination")                  what         ()
+  TerminationEdit       what order tac    -> addFresh termination                         (duplicateQ_for  "termination requests")                            what         (order,tac)
+  RedefinitionEdit      def               -> addFresh redefinitions                       (duplicateQ_for "redefinitions")                                   (Bare (name def))   def
   AddEdit               mod def           -> Right . (additions.at mod.non mempty %~ (definitionSentence def:))
-  SkipEdit              what              -> addFresh skipped                             (duplicate_for  "skips")                                           what         ()
+  SkipEdit              what              -> addFresh skipped                             (duplicateQ_for "skips")                                           what         ()
   SkipMethodEdit        cls meth          -> addFresh skippedMethods                      (duplicate_for' "skipped method requests"       prettyClsMth)      (cls,meth)   ()
   SkipModuleEdit        mod               -> addFresh skippedModules                      (duplicate_for' "skipped module requests"       moduleNameString)  mod          ()
   AxiomatizeModuleEdit  mod               -> addFresh axiomatizedModules                  (duplicate_for' "module axiomatizations"        moduleNameString)  mod          ()
   AdditionalScopeEdit   place name scope  -> addFresh additionalScopes                    (duplicate_for' "additions of a scope"          prettyScoped)      (place,name) scope
   OrderEdit             idents            -> Right . appEndo (foldMap (Endo . addEdge orders . swap) (adjacents idents))
   RenameEdit            hs to             -> addFresh renamings                           (duplicate_for' "renamings"                     prettyNSIdent)     hs           to
-  ClassKindEdit         cls kinds         -> addFresh classKinds                          (duplicate_for  "class kinds")                                     cls          kinds
-  DataKindEdit          cls kinds         -> addFresh dataKinds                           (duplicate_for  "data kinds")                                      cls          kinds
+  ClassKindEdit         cls kinds         -> addFresh classKinds                          (duplicateQ_for "class kinds")                                     cls          kinds
+  DataKindEdit          cls kinds         -> addFresh dataKinds                           (duplicateQ_for "data kinds")                                      cls          kinds
   where
     name (CoqDefinitionDef (DefinitionDef _ x _ _ _))                  = x
     name (CoqDefinitionDef (LetDef          x _ _ _))                  = x
@@ -164,9 +168,9 @@ addEdit = \case -- To bring the `where' clause into scope everywhere
     prettyScoped (place, name) = let pplace = case place of
                                        SPValue       -> "value"
                                        SPConstructor -> "constructor"
-                                 in pplace ++ ' ' : T.unpack name
+                                 in pplace ++ ' ' : T.unpack (qualidToIdent name)
 
-    prettyClsMth (cls, meth) = T.unpack cls <> "." <> T.unpack meth
+    prettyClsMth (cls, meth) = T.unpack (qualidToIdent cls) <> "." <> T.unpack meth
 
 buildEdits :: Foldable f => f Edit -> Either String Edits
 buildEdits = foldM (flip addEdit) mempty

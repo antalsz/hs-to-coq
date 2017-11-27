@@ -184,10 +184,10 @@ Namespace :: { HsNamespace }
   | type     { TypeNS }
 
 NamespacedIdent :: { NamespacedIdent }
-  : Namespace WordOrOp    { NamespacedIdent $1 $2 }
+  : Namespace Qualid    { NamespacedIdent $1 $2 }
 
-Renaming :: { (NamespacedIdent, Ident) }
-  : NamespacedIdent '=' WordOrOp    { ($1, $3) }
+Renaming :: { (NamespacedIdent, Qualid) }
+  : NamespacedIdent '=' Qualid    { ($1, $3) }
 
 --------------------------------------------------------------------------------
 -- Edit commands
@@ -221,21 +221,20 @@ Scope :: { Ident }
 
 Edit :: { Edit }
   : type synonym Word ':->' Word                  { TypeSynonymTypeEdit   $3 $5                           }
-  | data type arguments Word DataTypeArguments    { DataTypeArgumentsEdit $4 $5                           }
+  | data type arguments Qualid DataTypeArguments  { DataTypeArgumentsEdit $4 $5                           }
   | redefine CoqDefinition                        { RedefinitionEdit      $2                              }
   | add Word CoqDefinition                        { AddEdit               (mkModuleName (T.unpack $2)) $3 }
-  | skip Word                                     { SkipEdit              $2                              }
-  | skip Op                                       { SkipEdit              $2                              }
-  | skip method Word Word                         { SkipMethodEdit        $3 $4                           }
+  | skip Qualid                                   { SkipEdit              $2                              }
+  | skip method Qualid Word                       { SkipMethodEdit        $3 $4                           }
   | skip module Word                              { SkipModuleEdit        (mkModuleName (T.unpack $3))    }
-  | nonterminating Word                           { NonterminatingEdit    $2                              }
-  | termination Word Order Optional(Word)         { TerminationEdit       $2 $3 $4                        }
+  | nonterminating Qualid                         { NonterminatingEdit    $2                              }
+  | termination Qualid Order Optional(Word)       { TerminationEdit       $2 $3 $4                        }
   | rename Renaming                               { RenameEdit            (fst $2) (snd $2)               }
   | axiomatize module Word                        { AxiomatizeModuleEdit  (mkModuleName (T.unpack $3))    }
-  | add scope Scope for ScopePlace Word           { AdditionalScopeEdit   $5 $6 $3                        }
-  | order Some(Word)                              { OrderEdit             $2                              }
-  | class kinds Word SepBy1(Term,',')             { ClassKindEdit         $3 $4                           }
-  | data  kinds Word SepBy1(Term,',')             { DataKindEdit          $3 $4                           }
+  | add scope Scope for ScopePlace Qualid         { AdditionalScopeEdit   $5 $6 $3                        }
+  | order Some(Qualid)                            { OrderEdit             $2                              }
+  | class kinds Qualid SepBy1(Term,',')           { ClassKindEdit         $3 $4                           }
+  | data  kinds Qualid SepBy1(Term,',')           { DataKindEdit          $3 $4                           }
 
 Edits :: { [Edit] }
   : Lines(Edit)    { $1 }
@@ -261,6 +260,9 @@ EnterCoqParsing :: { () }
 ExitCoqParsing :: { () }
   : {- empty -}    {% put NewlineSeparators }
 
+Qualid :: { Qualid }
+  : Word   { forceIdentToQualid $1 }
+
 Term :: { Term }
   : LargeTerm    { $1 }
   | App          { $1 }
@@ -276,7 +278,7 @@ LargeTerm :: { Term }
 
 App :: { Term }
   :     Atom Some(Arg)     { App $1 $2 }
-  | '@' Word Many(Atom)    { ExplicitApp (forceIdentToQualid $2) $3 }
+  | '@' Qualid Many(Atom)    { ExplicitApp $2 $3 }
 
 Arg :: { Arg }
   : '(' Word ':=' Term ')'    { NamedArg $2 $4 }
@@ -284,7 +286,7 @@ Arg :: { Arg }
 
 Atom :: { Term }
   : '(' Term ')'    { $2 }
-  | Word            { Qualid (forceIdentToQualid $1) }
+  | Qualid          { Qualid $1 }
   | Num             { Num $1 }
   | '_'             { Underscore }
 
@@ -381,13 +383,13 @@ MultPattern :: { MultPattern }
   : '|' SepBy1(Pattern,',')           { MultPattern $2 }
 
 Pattern :: { Pattern }
-  : Word Some(AtomicPattern) { ArgsPat (forceIdentToQualid $1) $2 }
+  : Qualid Some(AtomicPattern) { ArgsPat $1 $2 }
   | AtomicPattern            { $1 }
 
 AtomicPattern :: { Pattern }
   : '_'                     { UnderscorePat }
   | Num                     { NumPat $1 }
-  | Word                    { QualidPat (forceIdentToQualid $1)  }
+  | Qualid                  { QualidPat $1  }
   | '(' Pattern ')'         { $2 }
 
 --------------------------------------------------------------------------------
@@ -429,7 +431,7 @@ ProgramFixpoint :: { ProgramFixpoint }
 
 Order :: { Order }
   : '{' 'measure' Atom OptionalParens(Term) '}'    { MeasureOrder $3 $4 }
-  | '{' 'wf' Atom Word '}'                         { WFOrder $3 $4 }
+  | '{' 'wf' Atom Qualid '}'                       { WFOrder $3 $4 }
 
 
 Instance :: { InstanceDefinition }

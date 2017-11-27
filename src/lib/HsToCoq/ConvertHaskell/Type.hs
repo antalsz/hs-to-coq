@@ -44,7 +44,7 @@ convertType (HsQualTy (L _ ctx) ty) = do
   pure . maybe tyBody (Forall ?? tyBody) $ nonEmpty classes
 
 convertType (HsTyVar (L _ tv)) =
-  Var <$> var TypeNS tv
+  Qualid <$> var TypeNS tv
 
 convertType (HsAppTy ty1 ty2) =
   App1 <$> convertLType ty1 <*> convertLType ty2
@@ -81,7 +81,7 @@ convertType (HsTupleTy tupTy tys) = do
     _    -> foldl1 (Infix ?? "*") <$> traverse convertLType tys
 
 convertType (HsOpTy ty1 op ty2) =
-  App2 <$> (Var <$> var TypeNS (unLoc op)) <*> convertLType ty1 <*> convertLType ty2   -- ???
+  App2 <$> (Qualid <$> var TypeNS (unLoc op)) <*> convertLType ty1 <*> convertLType ty2   -- ???
 
 convertType (HsParTy ty) =
   Parens <$> convertLType ty
@@ -89,7 +89,7 @@ convertType (HsParTy ty) =
 convertType (HsIParamTy (HsIPName ip) lty) = do
   isTyCallStack <- maybe (pure False) (fmap (== "CallStack") . ghcPpr) $ viewLHsTyVar lty
   if isTyCallStack && ip == fsLit "callStack"
-    then Var <$> var' TypeNS "CallStack"
+    then Qualid <$> var' TypeNS "CallStack"
     else convUnsupported "implicit parameter constraints"
 
 convertType (HsEqTy _ty1 _ty2) =
@@ -139,8 +139,8 @@ convertLType = convertType . unLoc
 
 convertLHsSigType :: ConversionMonad m => LHsSigType GHC.Name -> m Term
 convertLHsSigType (HsIB itvs lty) =
-  maybeForall <$> (map (Inferred Coq.Implicit . Ident) <$> traverse (var TypeNS) itvs)
-              <*> convertLType lty
+  maybeForall (map (Inferred Coq.Implicit . Ident . bareName) itvs)
+              <$> convertLType lty
 
 convertLHsSigWcType :: ConversionMonad m => LHsSigWcType GHC.Name -> m Term
 convertLHsSigWcType (HsIB itvs (HsWC wcs _ss lty))

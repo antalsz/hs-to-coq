@@ -39,7 +39,7 @@ import qualified Data.List.NonEmpty as NE
 
 --------------------------------------------------------------------------------
 
-type Constructor = (Ident, [Binder], Maybe Term)
+type Constructor = (Qualid, [Binder], Maybe Term)
 
 --------------------------------------------------------------------------------
 
@@ -53,17 +53,8 @@ addAdditionalConstructorScope ctor@(name, bs, Just resTy) =
 
 --------------------------------------------------------------------------------
 
-convertConLName :: ConversionMonad m => Located GHC.Name -> m Ident
-convertConLName (L _ hsCon) = do
-  con <- ghcPpr hsCon -- We use 'ghcPpr' because we munge the name here ourselves
-  use (renamed ExprNS con) >>= \case
-    Nothing   -> do
-      let mk_con = "Mk_" <> con
-      qual <- maybe "" ((`T.snoc` '.') . moduleNameText) <$> use currentModule
-      renamed ExprNS (qual <> con) ?= qual <> mk_con
-      pure mk_con
-    Just con' ->
-      pure con'
+convertConLName :: ConversionMonad m => Located GHC.Name -> m Qualid
+convertConLName (L _ hsCon) = dcVar ExprNS hsCon
 
 convertConDecl :: ConversionMonad m
                => Term -> [Binder] -> ConDecl GHC.Name -> m [Constructor]
@@ -79,13 +70,14 @@ convertConDecl curType extraArgs (ConDeclH98 lname mlqvs mlcxt details _doc) = d
 
   fieldInfo <- case details of
     RecCon (L _ fields) ->
-      fmap RecordFields .  traverse freeVar
+      fmap (RecordFields . map Bare) . traverse freeVar
         $ concatMap (map (unLoc . rdrNameFieldOcc . unLoc) . cd_fld_names . unLoc) fields
     _ ->
       pure . NonRecordFields $ length args
   constructorFields . at con ?= fieldInfo
 
   pure [(con, params, Just . maybeForall extraArgs $ foldr Arrow curType args)]
+
 convertConDecl _curType extraArgs (ConDeclGADT lnames sigTy _doc) = do
   cons  <- traverse convertConLName lnames
   conTy <- maybeForall extraArgs <$> convertLHsSigType sigTy
@@ -150,7 +142,7 @@ convertDataDecl :: ConversionMonad m
                 => Located GHC.Name -> [LHsTyVarBndr GHC.Name] -> HsDataDefn GHC.Name
                 -> m IndBody
 convertDataDecl name tvs defn = do
-  coqName   <- freeVar $ unLoc name
+  coqName   <- var TypeNS $ unLoc name
 
   kinds     <- (++ repeat Nothing) . map Just . maybe [] NE.toList <$> use (edits.dataKinds.at coqName)
   let cvtName tv = Ident <$> freeVar (unLoc tv)
@@ -166,7 +158,7 @@ convertDataDecl name tvs defn = do
       Nothing  -> pure (rawParams, [])
   let conIndices = indices & mapped.binderExplicitness .~ Coq.Implicit
 
-  let curType  = appList (Var coqName) . binderArgs $ params ++ indices
+  let curType  = appList (Qualid coqName) . binderArgs $ params ++ indices
   (resTy, cons) <- first (maybeForall indices)
                      <$> convertDataDefn curType conIndices defn
 
@@ -180,4 +172,5 @@ convertDataDecl name tvs defn = do
       _ ->
         pure ()
 
-  pure $ IndBody coqName params resTy cons
+  -- The actual definition of the inductive data type is not qualified
+  pure $ IndBody (qualidBase coqName) params resTy (map (_1 %~ qualidBase) cons)

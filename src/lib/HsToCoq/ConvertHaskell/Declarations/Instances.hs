@@ -134,19 +134,20 @@ convertClsInstDecl cid@ClsInstDecl{..} rebuild mhandler = do
     cdefs <-  mapM (\ConvertedDefinition{..} -> do
                        return (convDefName, maybe id Fun (NE.nonEmpty (convDefArgs)) $ convDefBody)) cbinds
 
-    defaults <-  use (defaultMethods.at instanceClass.non M.empty)
+    (defaults :: [(Ident, Term)]) <-  use (defaultMethods.at (Bare instanceClass).non M.empty)
                  -- lookup default methods in the global state, using the empty map if the class name is not found
                  -- otherwise gives you a map
                  -- <&> is flip fmap
-             <&> M.toList . M.filterWithKey (\meth _ -> isNothing $ lookup meth cdefs)
+             <&> filter (\(meth, _) -> isNothing $ lookup (Bare meth) cdefs) . M.toList
 
     -- implement the instance part of "skip method"
     skippedMethodsS <- use (edits.skippedMethods)
-    let methods = filter (\(m,_) -> (identToBase instanceClass,m) `S.notMember` skippedMethodsS) (cdefs ++ defaults)
+    -- TODO: Qualify default method names here (or make methods consistently unqualified Idents)
+    let methods = filter (\(m,_) -> (Bare instanceClass,qualidBase m) `S.notMember` skippedMethodsS) (cdefs ++ (map (first Bare) defaults))
 
     let (binds, classTy) = decomposeForall instanceHead
 
-    rebuild $ InstanceDefinition instanceName binds classTy methods Nothing
+    rebuild $ InstanceDefinition instanceName binds classTy (map (first qualidBase) methods) Nothing
 
 
 decomposeForall :: Term -> ([Binder], Term)
@@ -164,7 +165,7 @@ convertModuleClsInstDecls = foldTraverse $ maybeWithCurrentModule .*^ \cid ->
             let coq_name = case instdef of
                     InstanceDefinition coq_name _ _ _ _ -> coq_name
                     InstanceTerm       coq_name _ _ _ _ -> coq_name
-            use (edits.skipped.contains coq_name) >>= \case
+            use (edits.skipped.contains (Bare coq_name)) >>= \case
                 True -> do
                     let t = "Skipping instance " <> coq_name
                     return [CommentSentence (Comment t)]
@@ -190,7 +191,7 @@ topoSortInstance inst_def@(InstanceTerm _ _ _ _ _ ) =
     pure $ [InstanceSentence inst_def]
 topoSortInstance (InstanceDefinition instanceName params ty members mp) = go sorted M.empty where
 
-        m        = M.fromList members
+        m        = M.fromList $ map (first Bare) members
         sorted   = topoSortEnvironment m
 {-
         getFreeVarsIdent :: Ident -> S.Set Ident
@@ -219,7 +220,7 @@ topoSortInstance (InstanceDefinition instanceName params ty members mp) = go sor
                           (h : h' : tl', S.empty) -- don't care anymore
 -}
         -- go through the toposort of members, constructing the final sentences
-        go :: [ NE.NonEmpty Ident ] -> M.Map Ident Ident -> m [ Sentence ]
+        go :: [ NE.NonEmpty Qualid ] -> M.Map Qualid Qualid -> m [ Sentence ]
 
         go []      sub = mkID sub
         go (hd:tl) sub = do (s1,bnds) <- mkDefnGrp (NE.toList hd) sub
@@ -239,13 +240,13 @@ topoSortInstance (InstanceDefinition instanceName params ty members mp) = go sor
 
         -- lookup the type of the class member
         -- add extra quantifiers from the class & instance definitions
-        mkTy :: Ident -> m ([Binder], Maybe Term)
+        mkTy :: Qualid -> m ([Binder], Maybe Term)
         mkTy memberName = do
-          classDef <- use (classDefns.at className)
+          classDef <- use (classDefns.at (Bare className))
           -- TODO: May be broken by switch away from 'RdrName's
           case classDef of
             (Just (ClassDefinition _ (b:_) _ sigs)) | [var] <- toListOf binderIdents b ->
-              case lookup memberName sigs of
+              case lookup (qualidBase memberName) sigs of
                 Just sigType ->
                   -- GOAL: Consider
                   -- @
@@ -269,7 +270,7 @@ topoSortInstance (InstanceDefinition instanceName params ty members mp) = go sor
                         pure UnderscoreName
                       renameInst (Ident x) =
                         let inst_x = "inst_" <> x
-                        in Ident inst_x <$ modify' (M.insert x $ Var inst_x)
+                        in Ident inst_x <$ modify' (M.insert (Bare x) $ Var inst_x)
                       
                       sub ty = ($ ty) <$> gets subst
                       
@@ -283,7 +284,7 @@ topoSortInstance (InstanceDefinition instanceName params ty members mp) = go sor
                       -- per-instance variable name can show up is in the
                       -- specific instance type!  It can't show up in the
                       -- signature of the method, that's the whole point
-                      instSigType = subst (M.singleton var $ subst instSubst instTy) sigType
+                      instSigType = subst (M.singleton (Bare var) $ subst instSubst instTy) sigType
                   in pure $ (instBnds, Just $ instSigType)
                 Nothing ->
                   convUnsupported ("Cannot find sig for " ++ show memberName)
@@ -300,7 +301,7 @@ topoSortInstance (InstanceDefinition instanceName params ty members mp) = go sor
 
         -- Gets the class method names, in the original
         getClassMethods = do
-          classDef <- use (classDefns.at className)
+          classDef <- use (classDefns.at (Bare className))
           -- TODO: May be broken by switch away from 'RdrName's
           case classDef of
             (Just (ClassDefinition _ _ _ sigs)) ->
@@ -309,10 +310,11 @@ topoSortInstance (InstanceDefinition instanceName params ty members mp) = go sor
 
         -- This is the variant
         --   {| foo := fun {a} {b} => instance_foo |}
-        -- which seems to trigger a bug in Coq, reported at
+        -- which is too much for Coq’s type inference (without Program mode), see
         -- https://sympa.inria.fr/sympa/arc/coq-club/2017-11/msg00035.html
+        quantify :: Qualid -> Term -> m Term
         quantify meth body =
-            do typeArgs <- getImplicitBindersForClassMember className meth
+            do typeArgs <- getImplicitBindersForClassMember (Bare className) (qualidBase meth)
                case (NE.nonEmpty typeArgs) of
                    Nothing -> return body
                    Just args -> return $ Fun args body
@@ -324,45 +326,35 @@ topoSortInstance (InstanceDefinition instanceName params ty members mp) = go sor
 
         -- given a group of member ids turn them into lifted definitions, keeping track of the current
         -- substitution
-        mkDefnGrp :: [ Ident ] -> (M.Map Ident Ident) -> m ([ Sentence ], M.Map Ident Ident)
+        mkDefnGrp :: [ Qualid ] -> (M.Map Qualid Qualid) -> m ([ Sentence ], M.Map Qualid Qualid)
         mkDefnGrp [] sub = return ([], sub)
         mkDefnGrp [ v ] sub = do
-           let v' = instanceName <> "_" <> v
+           -- TODO: Qualify with current module name (or leave Bare, as it is a Local Definition?)
+           let v' = Bare (instanceName <> "_" <> qualidBase v)
            (params, mty)  <- mkTy v
-           body <- quantify (toPrefix v) (subst (fmap (Qualid . Bare) sub) (m M.! v))
+           body <- quantify v (subst (fmap Qualid sub) (m M.! v))
            let sub' = M.insert v v' sub
 
            -- implement redefinitions of methods
            use (edits.redefinitions.at v') >>= \case
                Just redef -> pure ([ definitionSentence redef], sub')
-               Nothing    -> pure ([ DefinitionSentence (DefinitionDef Local v' params mty (unFix body)) ], sub')
+               Nothing    -> pure ([ DefinitionSentence (DefinitionDef Local (qualidBase v') params mty (unFix body)) ], sub')
 
         mkDefnGrp many _sub =
            -- TODO: mutual recursion
            convUnsupported ("Giving up on mutual recursion" ++ show many)
 
         -- make the final instance declaration, using the current substitution as the instance
-        mkID :: M.Map Ident Ident -> m [ Sentence ]
+        mkID :: M.Map Qualid Qualid -> m [ Sentence ]
         mkID mems = do
-            -- Tack the module name of the class to the methods,
-            -- if the class is defined in a different module
-            thisModM <- use currentModule
-            let qualify field_name
-                  | Just thisMod <- thisModM >>= identToQualid . moduleNameText
-                  , Just classMod <- identToQualid className >>= qualidModule
-                  , thisMod /= classMod
-                  = Qualified classMod field_name
-                  | otherwise
-                  = Bare field_name
-
             -- Assemble members in the right order
             classMethods <- getClassMethods
 
             mems' <- forM classMethods $ \v -> do
-                case M.lookup v mems of
+                case M.lookup (Bare v) mems of
                   Just v' -> do
-                      t <- quantify v (Var v')
-                      pure $ (qualify (v <> "__"), t)
+                      t <- quantify (Bare v) (Qualid v')
+                      pure $ ((qualidMapBase (<> "__") (Bare v)), t)
                   Nothing -> convUnsupported ("missing " ++ show v ++ " in " ++ show mems )
 
             -- When we can use record syntax, we can use this.

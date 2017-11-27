@@ -10,9 +10,6 @@ module HsToCoq.ConvertHaskell.Module (
   ConvertedModuleDeclarations(..), convertHsGroup,
   -- * Turn import statements into @Require@s, unconditionally
   require,
-  -- * Convert import statements (INCOMPLETE -- TODO)
-  Qualification(..), ImportSpec(..), ConvertedImportDecl(..),
-  convertImportDecl, importDeclSentences,
 ) where
 
 import Control.Lens
@@ -58,94 +55,6 @@ import HsToCoq.ConvertHaskell.Axiomatize
 
 --------------------------------------------------------------------------------
 
--- TODO: We're just doing qualified imports for now, so the details here aren't
--- fully finished
-
-data Qualification = UnqualifiedImport
-                   | QualifiedImport
-                   deriving (Eq, Ord, Enum, Bounded, Show, Read)
-
-data ImportSpec = ExplicitImports [Ident]
-                | ExplicitHiding  [Ident]
-                deriving (Eq, Ord, Show, Read)
-
-data ConvertedImportDecl =
-  ConvertedImportDecl { convImportedModule  :: !ModuleName -- TODO: 'Name'?
-                      , convImportQualified :: !Qualification
-                      , convImportAs        :: !(Maybe ModuleName)
-                      , convImportSpec      :: !(Maybe ImportSpec) }
-  deriving (Eq, Ord, Show)
-
-
--- TODO: Import all type class instances
-convertImportItem :: ConversionMonad m => IE GHC.Name -> m [Ident]
-convertImportItem (IEVar       (L _ x)) = pure <$> var ExprNS x
-convertImportItem (IEThingAbs  (L _ x)) = pure <$> var TypeNS x
-convertImportItem (IEThingAll  (L _ _)) =
-  pure [] -- FIXME convUnsupported "(..)-exports"
-convertImportItem (IEThingWith (L _ x) NoIEWildcard subitems []) =
-  (:) <$> var TypeNS x <*> traverse (var ExprNS . unLoc) subitems
-convertImportItem (IEGroup          _ _)                  = pure [] -- Haddock
-convertImportItem (IEDoc            _)                    = pure [] -- Haddock
-convertImportItem (IEDocNamed       _)                    = pure [] -- Haddock
-convertImportItem (IEThingWith      _ (IEWildcard _) _ _) = convUnsupported "import items with `IEWildcard' value"
-convertImportItem (IEThingWith      _ _ _ (_:_))          = convUnsupported "import items with field label imports"
-convertImportItem (IEModuleContents _)                    = convUnsupported "whole-module exports as import items"
-
-convertImportDecl :: ConversionMonad m => ImportDecl GHC.Name -> m ConvertedImportDecl
-convertImportDecl ImportDecl{..} = do
-  let convImportedModule  = unLoc ideclName
-      convImportQualified = if ideclQualified then QualifiedImport else UnqualifiedImport
-      convImportAs        = ideclAs
-  unless (isNothing ideclPkgQual) $
-    convUnsupported "package-qualified imports"
-  -- Ignore:
-  --   * Source text (@ideclSourceSrc)@;
-  --   * @{-# SOURCE #-}@ imports (@ideclSource@); and
-  --   * Module safety annotations (@ideclSafe@).
-  -- Also, don't treat the implicit Prelude import specially (@ideclImplicit@).
-  convImportSpec <- for ideclHiding $ \(hiding, L _ spec) ->
-                      (if hiding then ExplicitHiding else ExplicitImports) <$>
-                        foldTraverse (convertImportItem . unLoc) spec
-  pure ConvertedImportDecl{..}
-
-importDeclSentences :: ConversionMonad m => ConvertedImportDecl -> m [Sentence]
-importDeclSentences ConvertedImportDecl{..} = do
-  let moduleToQualid mn =
-        case identToQualid (moduleNameText mn) of
-            Just qi -> pure qi
-            Nothing -> throwProgramError $ "malformed module name " ++ moduleNameString mn
-
-  mod <- moduleToQualid convImportedModule
-  let importSentence = ModuleSentence $ Require Nothing
-                                                (case convImportQualified of
-                                                   UnqualifiedImport -> Just Import
-                                                   QualifiedImport   -> Nothing)
-                                                (mod :| [])
-
-  asSentence <- case convImportAs of
-    Just short -> do
-      coqShort <- moduleToQualid short
-      pure [ModuleSentence $ ModuleAssignment coqShort mod]
-    Nothing    ->
-      pure []
-
-  importItems <- case convImportSpec of
-    Just (ExplicitImports importItems) -> do
-      pure $ [ NotationSentence . NotationBinding $
-                 NotationIdentBinding imp (Qualid $ Qualified mod imp)
-             | imp <- importItems ]
-    Just (ExplicitHiding _) ->
-      pure [] -- FIXME convUnsupported "import hiding"
-    Nothing ->
-      pure []
-
-  pure $  importSentence
-       :  asSentence
-       ++ importItems
-
---------------------------------------------------------------------------------
-
 data ConvertedModuleDeclarations =
   ConvertedModuleDeclarations { convertedTyClDecls    :: ![Sentence]
                               , convertedValDecls     :: ![Sentence]
@@ -187,7 +96,7 @@ convertHsGroup mod HsGroup{..} = do
                           ->  pure <$> toProgramFixpointSentence cdef order tactic
                           | otherwise                   -- no edit
                           -> pure $ withConvertedDefinition
-                              (DefinitionDef Global)     (pure . DefinitionSentence)
+                              (DefinitionDef Global . qualidBase) (pure . DefinitionSentence)
                               (buildInfixNotations sigs) (map    NotationSentence)
                               cdef
                    ) (\_ _ -> convUnsupported "top-level pattern bindings")
@@ -200,10 +109,10 @@ convertHsGroup mod HsGroup{..} = do
 
   pure ConvertedModuleDeclarations{..}
 
-  where axiomatizeBinding :: GhcMonad m => HsBind GHC.Name -> GhcException -> m (Ident, [Sentence])
+  where axiomatizeBinding :: GhcMonad m => HsBind GHC.Name -> GhcException -> m (Qualid, [Sentence])
         axiomatizeBinding FunBind{..} exn = do
           name <- freeVar $ unLoc fun_id
-          pure (name, [translationFailedComment name exn, axiom name])
+          pure (Bare name, [translationFailedComment name exn, axiom (Bare name)])
         axiomatizeBinding _ exn =
           liftIO $ throwGhcExceptionIO exn
 
@@ -222,7 +131,7 @@ axiomatizeHsGroup mod HsGroup{..} = do
         for (map unLoc $ concatMap (bagToList . snd) binds) $ \case
           FunBind{..} -> do
             name <- freeVar $ unLoc fun_id
-            pure . typedAxiom name $ sigs^.at name.to (fmap sigType).non bottomType
+            pure . typedAxiom (Bare name) $ sigs^.at (Bare name).to (fmap sigType).non bottomType
           _ ->
             convUnsupported "non-type, non-class, non-value definitions in axiomatized modules"
   
@@ -283,7 +192,7 @@ convert_module_with_requires_via convGroup convModName (group, _imports, _export
 
     let allSentences = convModTyClDecls ++ convModValDecls ++ convModClsInstDecls ++ convModAddedDecls
     let extraModules = map (mkModuleName . T.unpack . qualidToIdent)
-                     . mapMaybe (qualidModule <=< identToQualid)
+                     . mapMaybe qualidModule
                       $ toList . getFreeVars $ NoBinding allSentences
 
     modules <- skipModules $ S.toList $ S.fromList extraModules
@@ -333,7 +242,7 @@ usedAxioms :: forall m. ConversionMonad m => [Sentence] -> m [Sentence]
 usedAxioms decls = do
     axs <- use axioms
     let ax_decls =
-          [ AssumptionSentence (Assumption Axiom (UnparenthesizedAssums [i] t))
+          [ AssumptionSentence (Assumption Axiom (UnparenthesizedAssums [qualidBase i] t))
           | i <- toList (getFreeVars (NoBinding decls))
           , Just t <- return $ M.lookup i axs
           ]

@@ -1,4 +1,4 @@
-{-# LANGUAGE RecordWildCards, LambdaCase, FlexibleContexts, OverloadedStrings, OverloadedLists #-}
+{-# LANGUAGE RecordWildCards, LambdaCase, FlexibleContexts, OverloadedStrings, OverloadedLists, ScopedTypeVariables #-}
 
 module HsToCoq.ConvertHaskell.Declarations.Class (ClassBody(..), convertClassDecl, getImplicitBindersForClassMember, classSentences) where
 
@@ -45,7 +45,7 @@ instance FreeVars ClassBody where
 
 -- lookup the signature of a class member and return the list of its
 -- implicit binders
-getImplicitBindersForClassMember  :: ConversionMonad m => Ident -> Ident -> m [Binder]
+getImplicitBindersForClassMember  :: ConversionMonad m => Qualid -> Ident -> m [Binder]
 getImplicitBindersForClassMember className memberName = do
   classDef <- use (classDefns.at className)
   case classDef of
@@ -79,7 +79,7 @@ convertClassDecl (L _ hsCtx) (L _ hsName) ltvs fds lsigs defaults types typeDefa
   unless (null       types)        $ convUnsupported "associated types"
   unless (null       typeDefaults) $ convUnsupported "default associated type definitions"
 
-  name <- freeVar hsName
+  name <- var TypeNS hsName
   ctx  <- traverse (fmap (Generalized Coq.Implicit) . convertLType) hsCtx
 
   args <- convertLHsTyVarBndrs Coq.Explicit ltvs
@@ -89,12 +89,12 @@ convertClassDecl (L _ hsCtx) (L _ hsName) ltvs fds lsigs defaults types typeDefa
              go a _ = a
 
 
-  all_sigs <- binding' args' $ convertLSigs lsigs
+  (all_sigs :: M.Map Qualid Signature) <- binding' args' $ convertLSigs lsigs
 
   -- implement the class part of "skip method"
   skippedMethodsS <- use (edits.skippedMethods)
   let sigs = (`M.filterWithKey` all_sigs) $ \meth _ ->
-        (name,toCoqName meth) `S.notMember` skippedMethodsS
+        (name,qualidBase meth) `S.notMember` skippedMethodsS
 
   -- ugh! doesnt work for operators
   -- memberSigs.at name ?= sigs
@@ -102,7 +102,7 @@ convertClassDecl (L _ hsCtx) (L _ hsName) ltvs fds lsigs defaults types typeDefa
   defs <- fmap M.fromList $ for (bagToList defaults) $ convertTypedBinding Nothing . unLoc >=> \case
             Just (ConvertedDefinitionBinding ConvertedDefinition{..}) -> do
 --                typeArgs <- getImplicitBindersForClassMember name convDefName
-                pure (convDefName, maybe id Fun (NE.nonEmpty (convDefArgs)) convDefBody)
+                pure (qualidBase convDefName, maybe id Fun (NE.nonEmpty (convDefArgs)) convDefBody)
             Just (ConvertedPatternBinding    _ _)                     ->
                 convUnsupported "pattern bindings in class declarations"
             Nothing                                                   ->
@@ -112,20 +112,21 @@ convertClassDecl (L _ hsCtx) (L _ hsName) ltvs fds lsigs defaults types typeDefa
 --  liftIO (traceIO (show name))
 --  liftIO (traceIO (show defs))
 
-  let classDefn = (ClassDefinition name (args' ++ ctx) Nothing (bimap toCoqName sigType <$> M.toList sigs))
+  let classDefn = (ClassDefinition (qualidBase name) (args' ++ ctx) Nothing (bimap qualidBase sigType <$> M.toList sigs))
 
   classDefns.at name ?= classDefn
 
 
+  -- TODO: This is mostly broken
+  let nots = concatMap (buildInfixNotations sigs <*> id) . filter (identIsOperator . qualidBase) $ M.keys sigs
 
-  pure $ ClassBody classDefn
-                   (concatMap (buildInfixNotations sigs <*> infixToCoq) . filter identIsOperator $ M.keys sigs)
+  pure $ ClassBody classDefn nots
 
 classSentences :: ClassBody -> [Sentence]
 classSentences (ClassBody (ClassDefinition name args ty methods) nots) =
     [ RecordSentence dict_record
     , DefinitionSentence (DefinitionDef Global name args Nothing class_ty)
-    , ExistingClassSentence name
+    , ExistingClassSentence (Bare name)
     ] ++
     [ DefinitionSentence $
         DefinitionDef Global n

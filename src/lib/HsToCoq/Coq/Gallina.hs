@@ -220,7 +220,7 @@ data Qualid = Bare_ Ident                                                       
 
 pattern Bare :: HasCallStack => Ident -> Qualid
 pattern Bare x <- Bare_ x where
-    Bare x -- | "." `T.isInfixOf` x = error $ "Invalid ident in bare qualid:" ++ show x
+    Bare x | "." `T.isInfixOf` x = error $ "Invalid ident in bare qualid:" ++ show x
            | otherwise          = Bare_ x
 
 pattern Qualified :: HasCallStack => Qualid -> AccessIdent -> Qualid
@@ -316,7 +316,7 @@ data Sentence = AssumptionSentence       Assumption                             
               | AssertionSentence        Assertion Proof                                       -- ^@/assertion/ /proof/@
               | ModuleSentence           ModuleSentence                                        -- ^@/module_sentence/@ – extra (inferred from §2.5)
               | ClassSentence            ClassDefinition                                       -- ^@/class_definition/@ – extra
-              | ExistingClassSentence    Ident                                                 -- ^@/Existing Class /ident//@ – extra
+              | ExistingClassSentence    Qualid                                                -- ^@/Existing Class /ident//@ – extra
               | RecordSentence           RecordDefinition                                       -- ^@/class_definition/@ – extra
               | InstanceSentence         InstanceDefinition                                    -- ^@/instance_definition/@ – extra
               | ProgramInstanceSentence  InstanceDefinition                                    -- ^@Program /instance_definition/@ – extra
@@ -376,7 +376,7 @@ data ProgramFixpoint = ProgramFixpoint  Ident [Binder] Order Term Term          
 
 -- |@/order/ ::=@
 data Order = MeasureOrder Term (Maybe Term)                                                    -- ^@measure /term/ (/term/)?/
-           | WFOrder Term Ident                                                                -- ^@wf /term/ /ident//
+           | WFOrder Term Qualid                                                                -- ^@wf /term/ /ident//
               deriving (Eq, Ord, Show, Read, Typeable, Data)
 
 -- |@/assertion/ ::=@
@@ -936,7 +936,7 @@ instance Gallina Sentence where
   renderGallina' p (AssertionSentence       ass pf) = renderGallina' p ass <!> renderGallina' p pf
   renderGallina' p (ModuleSentence          mod)    = renderGallina' p mod
   renderGallina' p (ClassSentence           cls)    = renderGallina' p cls
-  renderGallina' _ (ExistingClassSentence   ident)  = "Existing Class" <+> renderIdent ident <> "."
+  renderGallina' _ (ExistingClassSentence   qid)  = "Existing Class" <+> renderGallina qid <> "."
   renderGallina' p (RecordSentence          rcd)    = renderGallina' p rcd
   renderGallina' p (InstanceSentence        ins)    = renderGallina' p ins
   renderGallina' p (ProgramInstanceSentence ins)    = "Program" <+> renderGallina' p ins
@@ -1018,7 +1018,7 @@ instance Gallina Order where
   renderGallina' _ (MeasureOrder expr rel) =
     "{" <+> "measure" <+> renderGallina' (appPrec+1) expr <+> maybe empty (parens . renderGallina) rel <+> "}"
   renderGallina' _ (WFOrder rel ident) =
-    "{" <+> "wf" <+> renderGallina' (appPrec+1) rel <+> renderIdent ident <+> "}"
+    "{" <+> "wf" <+> renderGallina' (appPrec+1) rel <+> renderGallina ident <+> "}"
 
 
 instance Gallina Assertion where

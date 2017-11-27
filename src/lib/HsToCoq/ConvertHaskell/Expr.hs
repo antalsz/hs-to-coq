@@ -72,13 +72,13 @@ import HsToCoq.ConvertHaskell.Sigs
 
 convertExpr :: ConversionMonad m => HsExpr GHC.Name -> m Term
 convertExpr (HsVar (L _ x)) =
-  Var . toPrefix <$> var ExprNS x
+  Qualid <$> var ExprNS x
 
 convertExpr (HsUnboundVar x) =
   Var <$> freeVar (unboundVarOcc x)
 
 convertExpr (HsRecFld fld) =
-  Var . toPrefix <$> recordField (rdrNameAmbiguousFieldOcc fld)
+  Qualid <$> recordField (rdrNameAmbiguousFieldOcc fld)
 
 convertExpr (HsOverLabel _) =
   convUnsupported "overloaded labels"
@@ -131,7 +131,7 @@ convertExpr (OpApp el eop _fixity er) =
       op <- var ExprNS hsOp
       l  <- convertLExpr el
       r  <- convertLExpr er
-      pure $ App2 (Var (toPrefix op)) l r
+      pure $ App2 (Qualid op) l r
     _ ->
       convUnsupported "non-variable infix operators"
 
@@ -210,21 +210,21 @@ convertExpr (RecordCon (L _ hsCon) PlaceHolder conExpr HsRecFields{..}) = do
 
   use (constructorFields . at con) >>= \case
     Just (RecordFields conFields) -> do
-      let defaultVal field | isJust rec_dotdot = Var field
+      let defaultVal field | isJust rec_dotdot = Qualid field
                            | otherwise         = missingValue
 
       vals <- fmap M.fromList . for rec_flds $ \(L _ (HsRecField (L _ (FieldOcc _userField hsField)) hsVal pun)) -> do
                 field <- var ExprNS hsField
                 val   <- if pun
-                         then pure $ Var field
+                         then pure $ Qualid field
                          else convertLExpr hsVal
                 pure (field, val)
-      pure . appList (Var con)
+      pure . appList (Qualid con)
            $ map (\field -> PosArg $ M.findWithDefault (defaultVal field) field vals) conFields
 
     Just (NonRecordFields count)
       | null rec_flds && isNothing rec_dotdot ->
-        pure . appList (Var con) $ replicate count (PosArg missingValue)
+        pure . appList (Qualid con) $ replicate count (PosArg missingValue)
 
       | otherwise ->
         recConUnsupported "non-record"
@@ -238,7 +238,7 @@ convertExpr (RecordUpd recVal fields PlaceHolder PlaceHolder PlaceHolder PlaceHo
 
   let updFields       = M.keys updates
       prettyUpdFields what =
-        let quote f = "`" ++ T.unpack f ++ "'"
+        let quote f = "`" ++ T.unpack (qualidToIdent f) ++ "'"
         in what ++ case assertUnsnoc updFields of
                      ([],   f)  -> " "  ++ quote f
                      ([f1], f2) -> "s " ++ quote f1                        ++ " and "  ++ quote f2
@@ -249,13 +249,13 @@ convertExpr (RecordUpd recVal fields PlaceHolder PlaceHolder PlaceHolder PlaceHo
                Just (Nothing,      []) -> convUnsupported $ "invalid record upate with " ++ prettyUpdFields "non-record-field"
                _                       -> convUnsupported $ "invalid mixed-data-type record updates with " ++ prettyUpdFields "the given field"
 
-  ctors   <- maybe (convUnsupported "invalid unknown record type") pure =<< use (constructors . at recType)
+  ctors :: [Qualid]  <- maybe (convUnsupported "invalid unknown record type") pure =<< use (constructors . at recType)
 
   let loc  = mkGeneralLocated "generated"
       toHs = freshInternalName . T.unpack
 
   let partialUpdateError con = do
-        hsCon   <- toHs con
+        hsCon   <- toHs (qualidBase con)
         hsError <- freshInternalName "error" -- TODO RENAMER this shouldn't be fresh
         pure $ GHC.Match
           { m_fixity = NonFunBindMatch
@@ -279,8 +279,8 @@ convertExpr (RecordUpd recVal fields PlaceHolder PlaceHolder PlaceHolder PlaceHo
             useFields fields = HsRecFields { rec_flds   = map (fmap addFieldOcc) fields
                                            , rec_dotdot = Nothing }
         (fieldPats, fieldVals) <- fmap (bimap useFields useFields . unzip) . for fields $ \field -> do
-          fieldVar   <- gensym field
-          hsField    <- toHs field
+          fieldVar   <- gensym (qualidBase field)
+          hsField    <- toHs (qualidBase field)
           hsFieldVar <- toHs fieldVar
           let mkField arg = loc $ HsRecField { hsRecFieldLbl = loc hsField
                                              , hsRecFieldArg = arg
@@ -289,7 +289,7 @@ convertExpr (RecordUpd recVal fields PlaceHolder PlaceHolder PlaceHolder PlaceHo
                , mkField . fromMaybe (loc . HsVar $ loc hsField) -- NOT `fieldVar` – this was punned
                          $ M.findWithDefault (Just . loc . HsVar $ loc hsFieldVar) field updates )
 
-        hsCon <- toHs con
+        hsCon <- toHs (qualidBase con)
         pure GHC.Match { m_fixity = NonFunBindMatch
                        , m_pats   = [ loc . ConPatIn (loc hsCon) $ RecCon fieldPats ]
                        , m_type   = Nothing
@@ -482,7 +482,7 @@ convertPatternBinding hsPat hsExp buildTrivial buildNontrivial fallback = do
 
   refutability pat >>= \case
     Trivial tpat | null guards ->
-      buildTrivial exp $ Fun [Inferred Coq.Explicit $ maybe UnderscoreName Ident tpat]
+      buildTrivial exp $ Fun [Inferred Coq.Explicit $ maybe UnderscoreName (Ident . qualidBase) tpat]
 
     nontrivial -> do
       cont <- gensym "cont"
@@ -804,13 +804,9 @@ convertTypedBinding _convHsTy PatBind{..}   = do -- TODO use `_convHsTy`?
   (pat, guards) <- runWriterT $ convertLPat pat_lhs
   Just . ConvertedPatternBinding pat <$> convertGRHSs (map BoolGuard guards) pat_rhs patternFailure
 convertTypedBinding  convHsTy FunBind{..}   = runMaybeT $ do
-  (name, opName) <- freeVar (unLoc fun_id) <&> \case
-                      name | identIsVariable name -> (name,            Nothing)
-                           | otherwise            -> (infixToCoq name, Just name)
+  name <- var ExprNS (unLoc fun_id)
+  let opName = Nothing -- TODO
   guard . not =<< use (edits.skipped.contains name)
-  guard . not =<< (case opName of { Just n -> use (edits.skipped.contains n) ; Nothing -> return False })
-  -- TODO: what if we are skipping an operator?
-  -- TODO: what if we need to rename this function? (i.e. for a class member)
 
   withCurrentDefinition name $ do
     let (tvs, coqTy) =
@@ -835,7 +831,7 @@ convertTypedBinding  convHsTy FunBind{..}   = runMaybeT $ do
         (argBinders, match) <- convertFunction fun_matches
         pure $ let bodyVars = getFreeVars match
                in if name `S.member` bodyVars || maybe False (`S.member` bodyVars) opName
-                  then whichFix $ FixBody name argBinders Nothing Nothing match -- TODO recursion and binary operators
+                  then whichFix $ FixBody (qualidBase name) argBinders Nothing Nothing match -- TODO recursion and binary operators
                   else Fun argBinders match
 
     addScope <- maybe id (flip InScope) <$> use (edits.additionalScopes.at (SPValue, name))
@@ -853,7 +849,7 @@ unsafeFix _ = error "unsafeFix: cannot handle annotations or types"
 
 -- TODO mutual recursion :-(
 convertTypedModuleBindings :: ConversionMonad m
-                           => [(Maybe ModuleName, HsBind GHC.Name)] -> Map Ident Signature
+                           => [(Maybe ModuleName, HsBind GHC.Name)] -> Map Qualid Signature
                            -> (ConvertedBinding -> m a)
                            -> Maybe (HsBind GHC.Name -> GhcException -> m a)
                            -> m [a]
@@ -870,7 +866,7 @@ convertTypedModuleBindings defns sigs build mhandler =
        processed defn $ convertTypedBinding ty defn
 
 convertTypedBindings :: ConversionMonad m
-                     => [HsBind GHC.Name] -> Map Ident Signature
+                     => [HsBind GHC.Name] -> Map Qualid Signature
                      -> (ConvertedBinding -> m a)
                      -> Maybe (HsBind GHC.Name -> GhcException -> m a)
                      -> m [a]
@@ -887,7 +883,7 @@ convertLocalBinds (HsValBinds (ValBindsIn binds lsigs)) body = localizeConversio
                        convDefs
   let matchLet pat term body = Coq.Match [MatchItem term Nothing Nothing] Nothing
                                          [Equation [MultPattern [pat]] body]
-  (foldr (withConvertedBinding (withConvertedDefinitionDef Let) matchLet) ?? convDefs) <$> body
+  (foldr (withConvertedBinding (withConvertedDefinitionDef (Let . qualidBase)) matchLet) ?? convDefs) <$> body
 convertLocalBinds (HsValBinds (ValBindsOut recBinds lsigs)) body =
   -- TODO RENAMER use RecFlag info to do recursion stuff
   convertLocalBinds (HsValBinds $ ValBindsIn (unionManyBags $ map snd recBinds) lsigs) body

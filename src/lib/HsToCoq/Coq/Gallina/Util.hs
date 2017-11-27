@@ -18,6 +18,7 @@ module HsToCoq.Coq.Gallina.Util (
   qualidBase, qualidModule, qualidMapBase,
   splitModule,
   qualidToIdent, identToQualid, identToBase,
+  unsafeIdentToQualid,
   nameToTerm, nameToPattern,
   binderArgs
   ) where
@@ -27,6 +28,7 @@ import Control.Lens
 import Control.Applicative
 import Data.Semigroup ((<>))
 import Data.Foldable
+import Data.Maybe
 import Data.List.NonEmpty (NonEmpty(..), nonEmpty)
 import HsToCoq.Util.List
 
@@ -145,6 +147,9 @@ identToQualid :: HasCallStack => Ident -> Maybe Qualid
 identToQualid x = case splitModule x of
     Just (mod, ident) -> Just (Qualified mod ident)
     _                 -> Just (Bare x)
+
+unsafeIdentToQualid :: HasCallStack => Ident -> Qualid
+unsafeIdentToQualid i = fromMaybe (error $ "unsafeIdentToQualid: " ++ show i) (identToQualid i)
 
 identToBase :: Ident -> Ident
 identToBase x = maybe x qualidBase $ identToQualid x

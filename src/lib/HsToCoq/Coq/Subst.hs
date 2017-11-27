@@ -14,6 +14,7 @@ import Prelude hiding (Num)
 --import HsToCoq.Util.Function
 --import Data.List.NonEmpty (NonEmpty(), (<|))
 import Data.Map.Strict (Map)
+import Data.Maybe
 import qualified Data.Map.Strict as M
 
 import HsToCoq.Coq.Gallina
@@ -29,7 +30,7 @@ import HsToCoq.ConvertHaskell.InfixNames
 -- if necessary.
 
 class Subst t where
-  subst :: Map Ident Term -> t -> t
+  subst :: Map Qualid Term -> t -> t
 
 instance Subst Binder where
   subst _f b@(Inferred _ex _x)    = b
@@ -213,7 +214,7 @@ instance Subst Term where
   subst f  (ExplicitApp qid xs) = ExplicitApp qid (subst f  xs)
 
   subst f  (Infix l op r)
-    | Just t <- M.lookup (infixToCoq op) f
+    | Just t <- M.lookup (Bare op) f
     = App t [PosArg (subst f l), PosArg (subst f r)]
     | otherwise
     = Infix (subst f l) op (subst f  r)
@@ -223,8 +224,7 @@ instance Subst Term where
 
   subst f (Match items oret eqns) = Match (subst f items) (subst f oret) (subst f eqns)
 
-  subst  f x@(Qualid (Bare id)) = maybe x (\x -> x) (M.lookup id f)
-  subst _f x@(Qualid (Qualified _ _)) = x
+  subst  f x@(Qualid qid) = fromMaybe x (M.lookup qid f)
 
 
   subst _f x@(Sort _sort) = x

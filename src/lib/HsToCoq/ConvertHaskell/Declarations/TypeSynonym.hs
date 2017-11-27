@@ -50,11 +50,11 @@ etaContract bndrs (App f args)
       in (reverse rbinders, appList f (reverse rargs))
   where
     go (b:bs) (a:as)
-        | PosArg (Var v) <- a
+        | PosArg (Qualid v) <- a
         , [v'] <- toListOf binderIdents b
-        , v == v'
-        , v' `S.notMember` getFreeVars f
-        , v' `S.notMember` getFreeVars as
+        , v == Bare v'
+        , Bare v' `S.notMember` getFreeVars f
+        , Bare v' `S.notMember` getFreeVars as
         = go bs as
     go bs as = (bs, as)
 etaContract b t = (b,t)

@@ -75,13 +75,13 @@ convDeclName (ConvSyn   (SynBody                    synName _ _ _))    = synName
 convDeclName (ConvClass (ClassBody (ClassDefinition clsName _ _ _) _)) = clsName
 convDeclName (ConvFailure n _)                                         = n
 
-failTyClDecl :: ConversionMonad m => Ident -> GhcException -> m (Maybe ConvertedDeclaration)
+failTyClDecl :: ConversionMonad m => Qualid -> GhcException -> m (Maybe ConvertedDeclaration)
 failTyClDecl name e = pure $ Just $
-    ConvFailure name $ translationFailedComment name e
+    ConvFailure (qualidBase name) $ translationFailedComment (qualidBase name) e
 
 convertTyClDecl :: ConversionMonad m => TyClDecl GHC.Name -> m (Maybe ConvertedDeclaration)
 convertTyClDecl decl = do
-  coqName <- freeVar . unLoc $ tyClDeclLName decl
+  coqName <- var TypeNS . unLoc $ tyClDeclLName decl
   ghandle (failTyClDecl coqName) $ do
     use (edits.skipped.contains coqName) >>= \case
       True  -> pure Nothing
@@ -190,7 +190,7 @@ convertDeclarationGroup DeclarationGroup{..} =
     recSynMapping params (SynBody name args oty def) =
       let mkFun    = maybe id Fun . nonEmpty
           withType = maybe id (flip HasType)
-      in (name, App (Var "Synonym")
+      in (Bare name, App (Var "Synonym")
                   $ fmap PosArg [ Var (synName name)
                                 , everywhere (mkT $ avoidParams params) .
                                     mkFun args $ withType oty def ])
@@ -198,7 +198,7 @@ convertDeclarationGroup DeclarationGroup{..} =
     recSynDefs inds = M.fromList . toList . fmap (recSynMapping $ foldMap indParams inds)
 
     orderRecSynDefs synDefs =
-      [ NotationIdentBinding syn $ synDefs M.! syn
+      [ NotationIdentBinding (qualidBase syn) $ synDefs M.! syn
       | syn <- foldMap toList $ topoSortEnvironment synDefs ]
 
 --------------------------------------------------------------------------------
@@ -225,7 +225,7 @@ generateArgumentSpecifiers (IndBody _ params _resTy cons)
   | null params = pure []
   | otherwise   = catMaybes <$> traverse setImplicits cons
   where
-    setImplicits (con,_,_) = use (constructorFields.at con) >>= \case
+    setImplicits (con,_,_) = use (constructorFields.at (Bare con)) >>= \case
         -- Ignore cons we do not know anythings about
         -- (e.g. because they are skipped or redefined)
         Nothing -> pure Nothing
@@ -252,29 +252,30 @@ generateRecordAccessors :: ConversionMonad m => IndBody -> m [Definition]
 generateRecordAccessors (IndBody tyName params resTy cons) = do
   let conNames = view _1 <$> cons
 
-  let restrict = M.filterWithKey $ \k _ -> k `elem` conNames
+  let restrict = M.filterWithKey $ \k _ -> k `elem` (map Bare conNames)
   allFields <- uses (constructorFields.to restrict.folded._RecordFields) S.fromList
-  for (S.toAscList allFields) $ \field -> do
+  for (S.toAscList allFields) $ \(field :: Qualid) -> do
     equations <- for conNames $ \con -> do
-      (args, hasField) <- use (constructorFields.at con) >>= \case
+      -- TODO: Qualify con here, or in IndBody
+      (args, hasField) <- use (constructorFields.at (Bare con)) >>= \case
         Just (NonRecordFields count) ->
           pure (replicate count UnderscorePat, False)
         Just (RecordFields conFields0) ->
           pure $ go conFields0 where
             go [] = ([], False)
             go (conField : conFields)
-              | field == conField  = (Coq.VarPat field : map (const UnderscorePat) conFields, True)
-              | otherwise          = first (UnderscorePat :) $ go conFields
+              | field == conField  = (Coq.VarPat (qualidBase field) : map (const UnderscorePat) conFields, True)
+              | otherwise               = first (UnderscorePat :) $ go conFields
 
         Nothing -> throwProgramError $  "internal error: unknown constructor `"
                                      <> T.unpack con <> "' for type `"
                                      <> T.unpack tyName <> "'"
       pure . Equation [MultPattern [appListPat (Bare con) args]] $
                       if hasField
-                      then Var field
+                      then Qualid field
                       else App1 (Var "error")
                                 (HsString $  "Partial record selector: field `"
-                                          <> field <> "' has no match in constructor `"
+                                          <> qualidBase field <> "' has no match in constructor `"
                                           <> con <> "' of type `" <> tyName <> "'")
 
     arg <- gensym "arg"
@@ -295,7 +296,7 @@ generateRecordAccessors (IndBody tyName params resTy cons) = do
         argBinder    = Typed Ungeneralizable Coq.Explicit
                                [Ident arg] (appList (Var tyName) $ binderArgs typeArgs)
 
-    pure . DefinitionDef Global field (implicitArgs ++ [argBinder]) Nothing $
+    pure . DefinitionDef Global (qualidBase field) (implicitArgs ++ [argBinder]) Nothing $
       Coq.Match [MatchItem (Var arg) Nothing Nothing] Nothing equations
 
 generateGroupRecordAccessors :: ConversionMonad m => DeclarationGroup -> m [Sentence]
@@ -309,7 +310,7 @@ groupTyClDecls :: ConversionMonad m
                => [(Maybe ModuleName, TyClDecl GHC.Name)] -> m [DeclarationGroup]
 groupTyClDecls decls = do
   bodies <- traverse (maybeWithCurrentModule .*^ convertTyClDecl) decls <&>
-              M.fromList . map (convDeclName &&& id) . catMaybes
+              M.fromList . map ((Bare . convDeclName) &&& id) . catMaybes
 
   -- Might be overgenerous
   ctypes <- use constructorTypes

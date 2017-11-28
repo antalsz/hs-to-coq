@@ -1,37 +1,37 @@
-skip concatMap # renamed to flat_map
+skip GHC.List.concatMap # renamed to flat_map
 
-skip foldl     # renamed to GHC.Base.foldl
-skip foldl'    # renamed to GHC.Base.foldl
+skip GHC.List.foldl     # renamed to GHC.Base.foldl
+skip GHC.List.foldl'    # renamed to GHC.Base.foldl
 
 # actually total, but Coq can't tell
 # these are implemented by hand in preamble.v
 
-skip take        # relies on partial unsafeTake
-skip drop        # relies on partial unsafeDrop
-skip replicate   # needs take and drop
-skip scanr
-skip splitAt
+skip GHC.List.take        # relies on partial unsafeTake
+skip GHC.List.drop        # relies on partial unsafeDrop
+skip GHC.List.replicate   # needs take and drop
+skip GHC.List.scanr
+skip GHC.List.splitAt
 
 # partial functions
-skip head
-skip badHead
-skip unsafeTake
-skip repeat
-skip until
-skip iterate
-skip cycle
-skip repeatFB  # doesn't terminate
-skip iterateFB # doesn't terminate
-skip !!
-skip tooLarge
-skip errorEmptyList
-skip foldl1
-skip foldl1'
-skip foldr1
-skip init
-skip lastError
-skip last
-skip maximum
-skip minimum
-skip tail
-skip scanr1
+skip GHC.List.head
+skip GHC.List.badHead
+skip GHC.List.unsafeTake
+skip GHC.List.repeat
+skip GHC.List.until
+skip GHC.List.iterate
+skip GHC.List.cycle
+skip GHC.List.repeatFB  # doesn't terminate
+skip GHC.List.iterateFB # doesn't terminate
+skip GHC.List.!!
+skip GHC.List.tooLarge
+skip GHC.List.errorEmptyList
+skip GHC.List.foldl1
+skip GHC.List.foldl1'
+skip GHC.List.foldr1
+skip GHC.List.init
+skip GHC.List.lastError
+skip GHC.List.last
+skip GHC.List.maximum
+skip GHC.List.minimum
+skip GHC.List.tail
+skip GHC.List.scanr1

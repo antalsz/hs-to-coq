@@ -14,7 +14,6 @@ import Data.Bifunctor
 import Data.Semigroup (Semigroup(..))
 import Data.Foldable
 import HsToCoq.Util.Traversable
-import qualified Data.Text as T
 
 import qualified Data.Set        as S
 import qualified Data.Map.Strict as M
@@ -23,9 +22,6 @@ import Control.Monad
 
 import GHC hiding (Name)
 import qualified GHC
-
-import HsToCoq.Util.GHC
-import HsToCoq.Util.GHC.Module
 
 import HsToCoq.Coq.Gallina as Coq
 import HsToCoq.Coq.Gallina.Util

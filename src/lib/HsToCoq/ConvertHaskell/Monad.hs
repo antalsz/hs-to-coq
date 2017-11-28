@@ -49,7 +49,6 @@ import Panic
 import HsToCoq.Coq.Gallina as Coq
 import HsToCoq.Coq.Gallina.Util
 
-import HsToCoq.ConvertHaskell.InfixNames
 import HsToCoq.ConvertHaskell.Parameters.Edits
 
 import Data.List.NonEmpty (NonEmpty(..))
@@ -314,8 +313,8 @@ builtInClasses =
 builtInDefaultMethods :: Map Qualid (Map Qualid Term)
 builtInDefaultMethods = fmap M.fromList $ M.fromList $
     [ "GHC.Base.Eq_" =:
-        [ "GHC.Base.==" ~> Fun ["x", "y"] (App1 "negb" $ Infix "x" "GHC.Base./=" "y")
-        , "GHC.Base./=" ~> Fun ["x", "y"] (App1 "negb" $ Infix "x" "GHC.Base.==" "y")
+        [ "GHC.Base.==" ~> Fun ["x", "y"] (App1 "negb" $ App2 "GHC.Base./=" "x" "y")
+        , "GHC.Base./=" ~> Fun ["x", "y"] (App1 "negb" $ App2 "GHC.Base.==" "x" "y")
         ]
     , "GHC.Base.Ord" =:
         [ "GHC.Base.max" ~> Fun ["x", "y"] (ifBool (App2 "GHC.Base.op_zlze__" "x" "y") "y" "x")
@@ -432,8 +431,6 @@ evalConversion _edits = evalVariablesT . (evalStateT ?? ConversionState{..}) whe
 
   __unique = 0
 
--- Currently, this checks the /per-module/ renamings _without_ a qualified name,
--- and the /global/ renamings _with_ a qualified name.  I think that's ok.
 withCurrentModuleOrNone :: ConversionMonad m => Maybe ModuleName -> m a -> m a
 withCurrentModuleOrNone newModule = gbracket setModule restoreModule . const
   where

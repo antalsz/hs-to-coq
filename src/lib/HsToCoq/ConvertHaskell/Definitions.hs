@@ -1,12 +1,11 @@
 {-# LANGUAGE RecordWildCards, FlexibleContexts, MultiWayIf, OverloadedLists #-}
 
 module HsToCoq.ConvertHaskell.Definitions (
-  ConvertedDefinition(..), withConvertedDefinition, withConvertedDefinitionDef, withConvertedDefinitionOp,
+  ConvertedDefinition(..),
   ConvertedBinding(..), withConvertedBinding,
   toProgramFixpointSentence
   ) where
 
-import HsToCoq.Util.Functor
 import HsToCoq.Coq.Gallina
 
 import Data.List.NonEmpty (toList )
@@ -22,22 +21,8 @@ data ConvertedDefinition = ConvertedDefinition { convDefName  :: !Qualid
                                                , convDefArgs  :: ![Binder]
                                                , convDefType  :: !(Maybe Term)
                                                , convDefBody  :: !Term
-                                               , convDefInfix :: !(Maybe Qualid) }
+                                               }
                          deriving (Eq, Ord, Show, Read)
-
-withConvertedDefinition :: Monoid m
-                        => (Qualid -> [Binder] -> Maybe Term -> Term -> a) -> (a -> m)
-                        -> (Qualid -> Qualid -> b)                             -> (b -> m)
-                        -> (ConvertedDefinition -> m)
-withConvertedDefinition withDef wrapDef withOp wrapOp ConvertedDefinition{..} =
-  mappend (wrapDef $ withDef convDefName convDefArgs convDefType convDefBody)
-          (maybe mempty (wrapOp . flip withOp convDefName) convDefInfix)
-
-withConvertedDefinitionDef :: (Qualid -> [Binder] -> Maybe Term -> Term -> a) -> (ConvertedDefinition -> a)
-withConvertedDefinitionDef f ConvertedDefinition{..} = f convDefName convDefArgs convDefType convDefBody
-
-withConvertedDefinitionOp :: (Qualid -> Qualid -> a) -> (ConvertedDefinition -> Maybe a)
-withConvertedDefinitionOp f ConvertedDefinition{..} = (f ?? convDefName) <$> convDefInfix
 
 --------------------------------------------------------------------------------
 

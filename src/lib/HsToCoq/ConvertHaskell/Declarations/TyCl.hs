@@ -27,7 +27,6 @@ import HsToCoq.Util.Traversable
 import HsToCoq.Util.Function
 import Data.Maybe
 import Data.List.NonEmpty (NonEmpty(..), nonEmpty)
-import qualified Data.Text as T
 
 import Control.Arrow ((&&&))
 import Control.Monad

@@ -43,7 +43,6 @@ rename value GHC.Types.:   = cons
 
 rename value GHC.Base.++         = Coq.Init.Datatypes.app
 rename value GHC.List.concatMap  = Coq.Lists.List.flat_map
-rename value GHC.Base..          = Coq.Program.Basics.compose
 
 rename value GHC.List.foldl      = GHC.Base.foldl
 rename value GHC.List.foldl'     = GHC.Base.foldl'
@@ -98,7 +97,7 @@ rename value Data.Either.Left  = Data.Either.Mk_Left
 # rename value Data.Foldable.sum = Data.Foldable.fsum
 
 
-skip method Monad fail
+skip method GHC.Base.Monad fail
 skip method Enum enumFromThen
 skip method Enum enumFromThenTo
 
@@ -106,7 +105,7 @@ skip method Enum enumFromThenTo
 skip method Bits bitSize
 
 # default definition cannot be used
-skip method Applicative op_zlzt__
+skip method GHC.Base.Applicative op_zlzt__
 
 # partial methods
 skip method Foldable foldl1

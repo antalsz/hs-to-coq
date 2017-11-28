@@ -135,7 +135,7 @@ convertExpr (OpApp el eop _fixity er) =
       convUnsupported "non-variable infix operators"
 
 convertExpr (NegApp e1 _) =
-  App1 <$> pure (Var "negate") <*> convertLExpr e1
+  App1 <$> pure "negate" <*> convertLExpr e1
 
 convertExpr (HsPar e) =
   Parens <$> convertLExpr e
@@ -150,7 +150,7 @@ convertExpr (SectionR opE r) =
 convertExpr (ExplicitTuple exprs _boxity) = do
   -- TODO A tuple constructor in the Gallina grammar?
   (tuple, args) <- runWriterT
-                .  fmap (foldl1 . App2 $ Var "pair")
+                .  fmap (foldl1 . App2 $ "pair")
                 .  for exprs $ unLoc <&> \case
                      Present e           -> lift $ convertLExpr e
                      Missing PlaceHolder -> do arg <- lift (genqid "arg")
@@ -188,7 +188,7 @@ convertExpr (HsDo sty (L _ stmts) PlaceHolder) =
 
 convertExpr (ExplicitList PlaceHolder overloaded exprs) =
   if maybe True isNoSyntaxExpr overloaded
-  then foldr (App2 (Var "cons")) (Var "nil") <$> traverse convertLExpr exprs
+  then foldr (App2 "cons") "nil" <$> traverse convertLExpr exprs
   else convUnsupported "overloaded lists"
 
 convertExpr (ExplicitPArr _ _) =
@@ -328,10 +328,10 @@ convertExpr (ArithSeq _postTc _overloadedLists info) =
   --
   -- Only `'..'` doesn't work for some reason.
   case info of
-    From       low           -> App1 (Var "enumFrom")       <$> convertLExpr low
-    FromThen   low next      -> App2 (Var "enumFromThen")   <$> convertLExpr low <*> convertLExpr next
-    FromTo     low      high -> App2 (Var "enumFromTo")     <$> convertLExpr low                       <*> convertLExpr high
-    FromThenTo low next high -> App3 (Var "enumFromThenTo") <$> convertLExpr low <*> convertLExpr next <*> convertLExpr high
+    From       low           -> App1 "enumFrom"       <$> convertLExpr low
+    FromThen   low next      -> App2 "enumFromThen"   <$> convertLExpr low <*> convertLExpr next
+    FromTo     low      high -> App2 "enumFromTo"     <$> convertLExpr low                       <*> convertLExpr high
+    FromThenTo low next high -> App3 "enumFromThenTo" <$> convertLExpr low <*> convertLExpr next <*> convertLExpr high
 
 convertExpr (PArrSeq _ _) =
   convUnsupported "parallel array arithmetic sequences"
@@ -493,7 +493,7 @@ convertPatternBinding hsPat hsExp buildTrivial buildNontrivial fallback = do
             | SoleConstructor <- nontrivial = []
             | otherwise                     = [ Equation [MultPattern [UnderscorePat]] fallback ]
           guarded tm | null guards = tm
-                     | otherwise   = ifBool (foldr1 (App2 $ Var "andb") guards)
+                     | otherwise   = ifBool (foldr1 (App2 "andb") guards)
                                             tm
                                             fallback
 
@@ -505,9 +505,8 @@ convertPatternBinding hsPat hsExp buildTrivial buildNontrivial fallback = do
 
 convertDoBlock :: ConversionMonad m => [ExprLStmt GHC.Name] -> m Term
 convertDoBlock allStmts = do
-    in_ghc_base <- (== Just (mkModuleName "GHC.Base")) <$> use currentModule
     case fmap unLoc <$> unsnoc allStmts of
-      Just (stmts, lastStmt -> Just e) -> foldMap (Endo . toExpr in_ghc_base . unLoc) stmts `appEndo` convertLExpr e
+      Just (stmts, lastStmt -> Just e) -> foldMap (Endo . toExpr . unLoc) stmts `appEndo` convertLExpr e
       Just _                           -> convUnsupported "invalid malformed `do' block"
       Nothing                          -> convUnsupported "invalid empty `do' block"
   where
@@ -515,28 +514,28 @@ convertDoBlock allStmts = do
     lastStmt (LastStmt e _ _)   = Just e
     lastStmt _                  = Nothing
 
-    toExpr _ (BodyStmt e _bind _guard _PlaceHolder) rest =
-      Infix <$> convertLExpr e <*> pure ">>" <*> rest
+    toExpr (BodyStmt e _bind _guard _PlaceHolder) rest =
+      monThen <$> convertLExpr e <*> rest
 
-    toExpr in_ghc_base (BindStmt pat exp _bind _fail PlaceHolder) rest =
+    toExpr (BindStmt pat exp _bind _fail PlaceHolder) rest =
       convertPatternBinding
         pat exp
-        (\exp' fun          -> monBind in_ghc_base exp' . fun <$> rest)
-        (\exp' cont letCont -> letCont (monBind in_ghc_base exp' (Qualid cont)) <$> rest)
+        (\exp' fun          -> monBind exp' . fun <$> rest)
+        (\exp' cont letCont -> letCont (monBind exp' (Qualid cont)) <$> rest)
         (missingValue `App1` HsString "Partial pattern match in `do' notation")
 
-    toExpr _ (LetStmt (L _ binds)) rest =
+    toExpr (LetStmt (L _ binds)) rest =
       convertLocalBinds binds rest
 
-    toExpr _ (RecStmt{}) _ =
+    toExpr (RecStmt{}) _ =
       convUnsupported "`rec' statements in `do` blocks"
 
-    toExpr _ _ _ =
+    toExpr _ _ =
       convUnsupported "impossibly fancy `do' block statements"
 
-    -- monBind e1 e2 = Infix e1 ">>= e2
-    monBind True  = App2 (Var "op_zgzgze__")
-    monBind False = App2 (Var "GHC.Base.op_zgzgze__")
+    -- monBind e1 e2 = Infix e1 ">>=" e2
+    monBind = App2 "GHC.Base.>>="
+    monThen = App2 "GHC.Base.>>"
 
 convertListComprehension :: ConversionMonad m => [ExprLStmt GHC.Name] -> m Term
 convertListComprehension allStmts = case fmap unLoc <$> unsnoc allStmts of
@@ -559,8 +558,8 @@ convertListComprehension allStmts = case fmap unLoc <$> unsnoc allStmts of
     toExpr (BindStmt pat exp _bind _fail PlaceHolder) rest =
       convertPatternBinding
         pat exp
-        (\exp' fun          -> App2 concatMapVar <$> (fun <$> rest) <*> pure exp')
-        (\exp' cont letCont -> letCont (App2 concatMapVar (Qualid cont) exp') <$> rest)
+        (\exp' fun          -> App2 concatMapT <$> (fun <$> rest) <*> pure exp')
+        (\exp' cont letCont -> letCont (App2 concatMapT (Qualid cont) exp') <$> rest)
         (Var "nil")
 
     toExpr (LetStmt (L _ binds)) rest =
@@ -569,7 +568,8 @@ convertListComprehension allStmts = case fmap unLoc <$> unsnoc allStmts of
     toExpr _ _ =
       convUnsupported "impossibly fancy list comprehension conditions"
 
-    concatMapVar = Var "Coq.Lists.List.flat_map"
+    concatMapT :: Term
+    concatMapT = "Coq.Lists.List.flat_map"
 
 --------------------------------------------------------------------------------
 
@@ -808,7 +808,6 @@ convertTypedBinding  convHsTy FunBind{..}   = runMaybeT $ do
   guard . not =<< use (edits.skipped.contains (varUnrenamed (unLoc fun_id)))
 
   name <- var ExprNS (unLoc fun_id)
-  let opName = Nothing -- TODO
 
   withCurrentDefinition name $ do
     let (tvs, coqTy) =
@@ -832,13 +831,13 @@ convertTypedBinding  convHsTy FunBind{..}   = runMaybeT $ do
                 True  -> pure $ unsafeFix
         (argBinders, match) <- convertFunction fun_matches
         pure $ let bodyVars = getFreeVars match
-               in if name `S.member` bodyVars || maybe False (`S.member` bodyVars) opName
-                  then whichFix $ FixBody name argBinders Nothing Nothing match -- TODO recursion and binary operators
+               in if name `S.member` bodyVars
+                  then whichFix $ FixBody name argBinders Nothing Nothing match
                   else Fun argBinders match
 
     addScope <- maybe id (flip InScope) <$> use (edits.additionalScopes.at (SPValue, name))
 
-    pure . ConvertedDefinitionBinding $ ConvertedDefinition name tvs coqTy (addScope defn) opName
+    pure . ConvertedDefinitionBinding $ ConvertedDefinition name tvs coqTy (addScope defn)
 
 
 unsafeFix :: FixBody -> Term
@@ -880,12 +879,10 @@ convertLocalBinds :: ConversionMonad m => HsLocalBinds GHC.Name -> m Term -> m T
 convertLocalBinds (HsValBinds (ValBindsIn binds lsigs)) body = localizeConversionState $ do
   sigs     <- convertLSigs lsigs
   convDefs <- convertTypedBindings (map unLoc . bagToList $ binds) sigs pure Nothing
-  sequence_ $ mapMaybe (withConvertedBinding (withConvertedDefinitionOp $ rename ExprNS)
-                                             (\_ _ -> Nothing))
-                       convDefs
   let matchLet pat term body = Coq.Match [MatchItem term Nothing Nothing] Nothing
                                          [Equation [MultPattern [pat]] body]
-  (foldr (withConvertedBinding (withConvertedDefinitionDef Let) matchLet) ?? convDefs) <$> body
+  let toLet ConvertedDefinition{..} = Let convDefName convDefArgs convDefType convDefBody
+  (foldr (withConvertedBinding toLet matchLet) ?? convDefs) <$> body
 convertLocalBinds (HsValBinds (ValBindsOut recBinds lsigs)) body =
   -- TODO RENAMER use RecFlag info to do recursion stuff
   convertLocalBinds (HsValBinds $ ValBindsIn (unionManyBags $ map snd recBinds) lsigs) body

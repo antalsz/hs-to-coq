@@ -1,54 +1,51 @@
 # axiomatize module Data.List.NonEmpty
 # poor treatment of <| and !! when axiomatized (notation, cannot rename them either)
 
-rename value :| = NEcons
-rename value op_ZCzb__ = Mk_NEcons
+rename value Data.List.NonEmpty.:| = NEcons
 
 # still partial
-skip !!
-skip op_znzn__
+skip Data.List.NonEmpty.!!
 
+redefine Local Definition instance_GHC_Base_Applicative_Data_List_NonEmpty_op_zlztzg__ : forall {a} {b},
+  (Data.List.NonEmpty (a -> b)) -> ((Data.List.NonEmpty a) -> (Data.List.NonEmpty b)) := fun {a} {b} => zipWith id.
 
-redefine Local Definition instance_GHC_Base_Applicative_NonEmpty_op_zlztzg__ : forall {a} {b},
-  (NonEmpty (a -> b)) -> ((NonEmpty a) -> (NonEmpty b)) := fun {a} {b} => zipWith id.
+order zipWith instance_GHC_Base_Applicative_Data_List_NonEmpty_op_zlztzg__ instance_GHC_Base_Applicative_Data_List_NonEmpty instance_GHC_Base_Monad_Data_List_NonEmpty_op_zgzg__ instance_GHC_Base_Monad_Data_List_NonEmpty_return_ instance_GHC_Base_Monad_Data_List_NonEmpty
 
-order zipWith instance_GHC_Base_Applicative_NonEmpty_op_zlztzg__ instance_GHC_Base_Applicative_NonEmpty instance_GHC_Base_Monad_NonEmpty_op_zgzg__ instance_GHC_Base_Monad_NonEmpty_return_ instance_GHC_Base_Monad_NonEmpty
+order instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___Data_List_NonEmpty_a_ instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Data_List_NonEmpty_a_
 
-order instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___NonEmpty_a_ instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__NonEmpty_a_
-
-order instance_Data_Foldable_Foldable_NonEmpty instance_Data_Traversable_Traversable_NonEmpty reverse sort sortBy sortWith
+order instance_Data_Foldable_Foldable_Data_List_NonEmpty instance_Data_Traversable_Traversable_Data_List_NonEmpty reverse sort sortBy sortWith
 
 # needs Data.OldList.transpose
-skip transpose
+skip Data.List.NonEmpty.transpose
 # needs Data.OldList.intersperse
-skip intersperse
+skip Data.List.NonEmpty.intersperse
 
-skip iterate
+skip Data.List.NonEmpty.iterate
 
-skip inits
+skip Data.List.NonEmpty.inits
 
-skip repeat
+skip Data.List.NonEmpty.repeat
 
-skip cycle
+skip Data.List.NonEmpty.cycle
 
 ##???
-skip unfoldr
+skip Data.List.NonEmpty.unfoldr
 
 # actually total, can't tell
-skip scanr1
-skip init
-skip last
-skip unfold
+skip Data.List.NonEmpty.scanr1
+skip Data.List.NonEmpty.init
+skip Data.List.NonEmpty.last
+skip Data.List.NonEmpty.unfold
 
 # recursive call to Foldable
-skip groupBy
-skip group
-skip groupWith
-skip groupAllWith
-skip groupBy1
-skip groupWith1
-skip groupAllWith1
-skip group1
+skip Data.List.NonEmpty.groupBy
+skip Data.List.NonEmpty.group
+skip Data.List.NonEmpty.groupWith
+skip Data.List.NonEmpty.groupAllWith
+skip Data.List.NonEmpty.groupBy1
+skip Data.List.NonEmpty.groupWith1
+skip Data.List.NonEmpty.groupAllWith1
+skip Data.List.NonEmpty.group1
 
 
 

@@ -4,6 +4,7 @@ module HsToCoq.ConvertHaskell.InfixNames (
   identIsVariable, identIsOperator,
   infixToPrefix, toPrefix,
   infixToCoq, toCoqName,
+  identToOp,
   canonicalName,
   splitModule -- a bit out of place here. oh well.
   ) where
@@ -18,7 +19,7 @@ import Data.Text (Text)
 import qualified Data.Text as T
 import Text.Parsec hiding ((<|>), many)
 
-import Encoding (zEncodeString)
+import Encoding (zEncodeString, zDecodeString)
 
 import GHC.Stack
 
@@ -75,3 +76,10 @@ canonicalName :: Op -> Ident
 canonicalName x
   | identIsVariable x = x
   | otherwise         = infixToCoq . fromMaybe x $ T.stripPrefix "_" =<< T.stripSuffix "_" x
+
+identToOp :: Ident -> Maybe Op
+identToOp t
+   | "op_" `T.isPrefixOf` t, "__" `T.isSuffixOf` t
+   = Just $ T.pack (zDecodeString (T.unpack (T.drop 3 (T.dropEnd 2 t))))
+   | otherwise = Nothing
+

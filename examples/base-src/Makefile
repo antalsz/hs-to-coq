@@ -88,7 +88,7 @@ $(OUT)/_CoqProject : Makefile
 	echo $(addsuffix .v,$(SPECIAL_MODULES)) >> $@
 	echo $(addsuffix .v,$(DROPIN)) >> $@
 
-$(OUT)/Makefile: $(OUT)/_CoqProject $(VFILES)
+$(OUT)/Makefile: $(OUT)/_CoqProject
 	cd $(OUT); coq_makefile -f _CoqProject -o Makefile
 
 $(OUT)/edits:

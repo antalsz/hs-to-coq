@@ -95,10 +95,13 @@ convertHsGroup mod HsGroup{..} = do
                           | Just (order, tactic) <- t  -- turn into Program Fixpoint
                           ->  pure <$> toProgramFixpointSentence cdef order tactic
                           | otherwise                   -- no edit
-                          -> pure $ withConvertedDefinition
-                              (DefinitionDef Global) (pure . DefinitionSentence)
-                              (buildInfixNotations sigs) (map    NotationSentence)
-                              cdef
+                          -> let def = DefinitionDef Global (convDefName cdef)
+                                                            (convDefArgs cdef)
+                                                            (convDefType cdef)
+                                                            (convDefBody cdef)
+                             in pure $
+                                [ DefinitionSentence def ] ++
+                                [ NotationSentence n | n <- buildInfixNotations sigs (convDefName cdef) ]
                    ) (\_ _ -> convUnsupported "top-level pattern bindings")
 
         -- TODO RENAMER use RecFlag info to do recursion stuff
@@ -191,7 +194,8 @@ convert_module_with_requires_via convGroup convModName (group, _imports, _export
       <- convGroup convModName group
 
     let allSentences = convModTyClDecls ++ convModValDecls ++ convModClsInstDecls ++ convModAddedDecls
-    let extraModules = map (mkModuleName . T.unpack)
+    let extraModules = filter (/= convModName)
+                     . map (mkModuleName . T.unpack)
                      . mapMaybe qualidModule
                       $ toList . getFreeVars $ NoBinding allSentences
 

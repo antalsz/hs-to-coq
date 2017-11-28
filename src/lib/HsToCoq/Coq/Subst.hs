@@ -19,8 +19,6 @@ import qualified Data.Map.Strict as M
 
 import HsToCoq.Coq.Gallina
 
-import HsToCoq.ConvertHaskell.InfixNames
-
 ----------------------------------------------------------------------------------------------------
 
 -- Note: this is not capture avoiding substitution (yet!)

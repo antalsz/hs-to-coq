@@ -26,7 +26,6 @@ module HsToCoq.Coq.Gallina.Util (
 
 import Control.Lens
 
-import Control.Applicative
 import Data.Semigroup ((<>))
 import Data.Foldable
 import Data.Maybe

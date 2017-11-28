@@ -8,7 +8,6 @@ import Data.Traversable
 import qualified Data.List.NonEmpty as NE
 
 import Control.Monad
-import Data.Monoid
 
 import qualified Data.Map.Strict as M
 import qualified Data.Set as S
@@ -23,7 +22,6 @@ import HsToCoq.Coq.Gallina.Util
 import HsToCoq.Coq.FreeVars
 
 import HsToCoq.ConvertHaskell.Monad
-import HsToCoq.ConvertHaskell.InfixNames
 import HsToCoq.ConvertHaskell.Variables
 import HsToCoq.ConvertHaskell.Definitions
 import HsToCoq.ConvertHaskell.Type
@@ -32,10 +30,6 @@ import HsToCoq.ConvertHaskell.Parameters.Edits
 import HsToCoq.ConvertHaskell.Sigs
 import HsToCoq.ConvertHaskell.Declarations.Notations
 
-----------------------------
-import Control.Monad.IO.Class
-import Debug.Trace
-----------------------------------------------------
 
 data ClassBody = ClassBody ClassDefinition [Notation]
                deriving (Eq, Ord, Read, Show)
@@ -118,7 +112,7 @@ convertClassDecl (L _ hsCtx) (L _ hsName) ltvs fds lsigs defaults types typeDefa
 
 
   -- TODO: This is mostly broken
-  let nots = concatMap (buildInfixNotations sigs <*> id) . filter (identIsOperator . qualidBase) $ M.keys sigs
+  let nots = concatMap (buildInfixNotations sigs) $ M.keys sigs
 
   pure $ ClassBody classDefn nots
 

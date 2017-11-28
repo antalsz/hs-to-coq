@@ -15,7 +15,6 @@ import Data.Monoid hiding ((<>))
 import Data.Maybe
 import qualified Data.Text as T
 
-import Control.Applicative
 import Control.Monad
 
 import GHC hiding (Name)
@@ -27,12 +26,9 @@ import HsToCoq.Util.GHC
 import HsToCoq.Util.GHC.Module
 
 import HsToCoq.Coq.Gallina
-import HsToCoq.Coq.Gallina.Util
 import HsToCoq.ConvertHaskell.Parameters.Edits
 import HsToCoq.ConvertHaskell.Monad
 import HsToCoq.ConvertHaskell.InfixNames
-
-import Outputable hiding ((<>))
 
 --------------------------------------------------------------------------------
 

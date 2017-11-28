@@ -18,7 +18,6 @@ import Panic
 
 import HsToCoq.Coq.FreeVars
 import HsToCoq.Coq.Gallina as Coq
-import HsToCoq.Coq.Gallina.Util
 
 import HsToCoq.ConvertHaskell.Parameters.Edits
 import HsToCoq.ConvertHaskell.Monad
@@ -56,10 +55,13 @@ convertModuleValDecls mdecls = do
                       | Just (order, tactic) <- t  -- turn into Program Fixpoint
                       ->  pure <$> toProgramFixpointSentence cdef order tactic
                       | otherwise                   -- no edit
-                      -> pure $ withConvertedDefinition
-                          (DefinitionDef Global)  (pure . DefinitionSentence)
-                          (buildInfixNotations sigs) (map    NotationSentence)
-                          cdef
+                      -> let def = DefinitionDef Global (convDefName cdef)
+                                                        (convDefArgs cdef)
+                                                        (convDefType cdef)
+                                                        (convDefBody cdef)
+                         in pure $
+                            [ DefinitionSentence def ] ++
+                            [ NotationSentence n | n <- buildInfixNotations sigs (convDefName cdef) ]
                 )(\_ _ -> convUnsupported "top-level pattern bindings")
 
   -- TODO: Mutual recursion

@@ -119,7 +119,7 @@ qualidBase :: Qualid -> Ident
 qualidBase (Bare      ident) = ident
 qualidBase (Qualified _ aid) = aid
 
-qualidModule :: Qualid -> Maybe Qualid
+qualidModule :: Qualid -> Maybe ModuleIdent
 qualidModule (Bare      _)     = Nothing
 qualidModule (Qualified qid _) = Just qid
 
@@ -129,15 +129,13 @@ qualidMapBase f (Qualified prefix base) = Qualified prefix $ f base
 
 qualidToIdent :: Qualid -> Ident
 qualidToIdent (Bare      ident)   = ident
-qualidToIdent (Qualified qid aid) = qualidToIdent qid <> "." <> aid
+qualidToIdent (Qualified qid aid) = qid <> "." <> aid
 
-splitModule :: Ident -> Maybe (Qualid, AccessIdent)
+splitModule :: Ident -> Maybe (ModuleIdent, AccessIdent)
 splitModule = either (const Nothing) Just . parse qualid "" where
   qualid = do
     let modFrag = T.cons <$> upper <*> (T.pack <$> many (alphaNum <|> char '\''))
-    root <- try $ modFrag <* char '.'
-    rest <- many . try $ modFrag <* char '.'
-    let mod = foldl' Qualified (Bare root) rest
+    mod <- T.intercalate "." <$> many1 (try (modFrag <* char '.'))
     base <- T.pack <$> some anyChar -- since we're assuming we get a valid name
     pure $ (mod, base)
 

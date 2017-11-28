@@ -15,6 +15,7 @@ module HsToCoq.Coq.Gallina (
   -- * Lexical structure
   -- $Lexical
   Ident,
+  ModuleIdent,
   AccessIdent,
   Num,
   Op,
@@ -112,6 +113,8 @@ import qualified Language.Haskell.TH as TH
 
 -- |@/ident/ ::= /first_letter/ [/subsequent_letter/ … /subsequent_letter/]@
 type Ident       = Text
+-- |@/module_ident/ ::= /ident/ . /ident/ . …@
+type ModuleIdent = Text
 -- |@/access_ident/ ::= . /ident/@
 type AccessIdent = Ident
 -- |@/num/ ::= /digit/ … /digit/@
@@ -215,7 +218,7 @@ pattern Ident x <- Ident_ x where
 
 -- |@/qualid/ ::=@
 data Qualid = Bare_ Ident                                                                       -- ^@/ident/@
-            | Qualified_ Qualid AccessIdent                                                     -- ^@/qualid/ /access_ident/@
+            | Qualified_ ModuleIdent AccessIdent                                                -- ^@/module_ident/ /access_ident/@
             deriving (Eq, Ord, Show, Read, Typeable, Data)
 
 pattern Bare :: HasCallStack => Ident -> Qualid
@@ -223,7 +226,7 @@ pattern Bare x <- Bare_ x where
     Bare x | "." `T.isInfixOf` x = error $ "Invalid ident in bare qualid:" ++ show x
            | otherwise          = Bare_ x
 
-pattern Qualified :: HasCallStack => Qualid -> AccessIdent -> Qualid
+pattern Qualified :: HasCallStack => ModuleIdent -> AccessIdent -> Qualid
 pattern Qualified m x <- Qualified_ m x where
     Qualified m x
         -- | T.null m            = error $ "Empty module in Qualid:" ++ show m
@@ -771,7 +774,7 @@ instance Gallina Term where
     -- char '#' <> renderNum num
     renderGallina' p (App (Qualid fromIntegerQI) [PosArg (Num num)])
     where
-      fromIntegerQI = Qualified (Qualified (Bare "GHC") "Num") "fromInteger"
+      fromIntegerQI = Qualified "GHC.Num" "fromInteger"
 
   renderGallina' _ (String str) =
     renderString str
@@ -780,13 +783,13 @@ instance Gallina Term where
     -- char '&' <> renderString str
     renderGallina' p (App (Qualid hs_stringQI) [PosArg (String str)])
     where
-      hs_stringQI = Qualified (Qualified (Bare "GHC") "Base") "hs_string__"
+      hs_stringQI = Qualified "GHC.Base" "hs_string__"
 
   renderGallina' p (HsChar str) =
     -- string "&#" <> renderString (T.singleton str)
     renderGallina' p (App (Qualid hs_charQI) [PosArg (String (T.singleton str))])
     where
-      hs_charQI = Qualified (Qualified (Bare "GHC") "Char") "hs_char__"
+      hs_charQI = Qualified "GHC.String" "hs_char__"
 
   renderGallina' _ Underscore =
     char '_'
@@ -834,7 +837,7 @@ instance Gallina Name where
 
 instance Gallina Qualid where
   renderGallina' _ (Bare ident)        = renderIdent ident
-  renderGallina' _ (Qualified qid aid) = renderGallina qid <> renderAccessIdent aid
+  renderGallina' _ (Qualified mid aid) = text mid <> renderAccessIdent aid
 
 instance Gallina Sort where
   renderGallina' _ Prop = "Prop"

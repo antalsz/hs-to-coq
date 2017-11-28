@@ -191,7 +191,7 @@ convert_module_with_requires_via convGroup convModName (group, _imports, _export
       <- convGroup convModName group
 
     let allSentences = convModTyClDecls ++ convModValDecls ++ convModClsInstDecls ++ convModAddedDecls
-    let extraModules = map (mkModuleName . T.unpack . qualidToIdent)
+    let extraModules = map (mkModuleName . T.unpack)
                      . mapMaybe qualidModule
                       $ toList . getFreeVars $ NoBinding allSentences
 

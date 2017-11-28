@@ -78,42 +78,36 @@ var' ns x = use $ renamed ns (Bare x) . non (Bare (escapeReservedNames x))
 var :: ConversionMonad m => HsNamespace -> GHC.Name -> m Qualid
 var ns name = do
   thisModM <- fmap moduleNameText <$> use currentModule
-  let Just (Just thisModQ) = identToQualid <$> thisModM
 
   let nameModM = moduleNameText . moduleName <$> nameModule_maybe name
 
-      qid | Just m <- nameModM   = case identToQualid m of
-                Just qm -> Qualified qm (bareName name)
-                Nothing -> error $ "Invalid module name: " ++ show m
-          | otherwise   = Bare (bareName name)
+      qid | Just m <- nameModM = Qualified m (bareName name)
+          | otherwise          = Bare (bareName name)
 
   use (renamed ns qid . non qid) >>= \case
     -- Something in this module
-    (Qualified m b) | m == thisModQ -> pure (Bare b)
+    (Qualified m b) | Just m == thisModM -> pure (Bare b)
     -- Something bare (built-in or local) or external
-    qi'                             -> pure qi'
+    qi'                                  -> pure qi'
 
--- HACK
+-- HACK (until we have interface files)
 -- like var, but if there is no renaming registered, add Mk_ to the name
 dcVar :: ConversionMonad m => HsNamespace -> GHC.Name -> m Qualid
 dcVar ns name = do
   thisModM <- fmap moduleNameText <$> use currentModule
-  let Just (Just thisModQ) = identToQualid <$> thisModM
 
   let nameModM = moduleNameText . moduleName <$> nameModule_maybe name
 
-      qid | Just m <- nameModM   = case identToQualid m of
-                Just qm -> Qualified qm (bareName name)
-                Nothing -> error $ "Invalid module name: " ++ show m
-          | otherwise   = Bare (bareName name)
+      qid | Just m <- nameModM = Qualified m (bareName name)
+          | otherwise          = Bare (bareName name)
 
       mkqid = qualidMapBase ("Mk_" <>) qid
 
   use (renamed ns qid . non mkqid) >>= \case
     -- Something in this module
-    (Qualified m b) | m == thisModQ -> pure (Bare b)
+    (Qualified m b) | Just m == thisModM -> pure (Bare b)
     -- Something bare (built-in or local) or external
-    qi'                             -> pure qi'
+    qi'                                  -> pure qi'
 
 
 recordField :: (ConversionMonad m, HasOccName name, OutputableBndr name) => name -> m Qualid

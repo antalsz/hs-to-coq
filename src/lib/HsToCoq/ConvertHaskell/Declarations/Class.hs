@@ -45,7 +45,7 @@ instance FreeVars ClassBody where
 
 -- lookup the signature of a class member and return the list of its
 -- implicit binders
-getImplicitBindersForClassMember  :: ConversionMonad m => Qualid -> Ident -> m [Binder]
+getImplicitBindersForClassMember  :: ConversionMonad m => Qualid -> Qualid -> m [Binder]
 getImplicitBindersForClassMember className memberName = do
   classDef <- use (classDefns.at className)
   case classDef of
@@ -112,7 +112,7 @@ convertClassDecl (L _ hsCtx) (L _ hsName) ltvs fds lsigs defaults types typeDefa
 --  liftIO (traceIO (show name))
 --  liftIO (traceIO (show defs))
 
-  let classDefn = (ClassDefinition (qualidBase name) (args' ++ ctx) Nothing (bimap qualidBase sigType <$> M.toList sigs))
+  let classDefn = (ClassDefinition name (args' ++ ctx) Nothing (bimap id sigType <$> M.toList sigs))
 
   classDefns.at name ?= classDefn
 
@@ -126,23 +126,24 @@ classSentences :: ClassBody -> [Sentence]
 classSentences (ClassBody (ClassDefinition name args ty methods) nots) =
     [ RecordSentence dict_record
     , DefinitionSentence (DefinitionDef Global name args Nothing class_ty)
-    , ExistingClassSentence (Bare name)
+    , ExistingClassSentence name
     ] ++
     [ DefinitionSentence $
         DefinitionDef Global n
-            [Typed Generalizable Implicit [Ident "g"] (app_args (Var name))]
+            [Typed Generalizable Implicit [Ident "g"] (app_args (Qualid name))]
             (Just ty)
-            (App2 (Var "g") Underscore (app_args (Var (n <> "__"))))
-    | (n, ty) <- methods ] ++
+            (App2 "g" Underscore (app_args (Qualid n')))
+    | (n, ty) <- methods
+    , let n' = qualidExtendBase "" n
+    ] ++
     map NotationSentence nots
   where
-    dict_name = name <> "__Dict"
-    dict_build = name <> "__Dict_Build"
-    dict_methods = [ (name <> "__", ty) | (name, ty) <- methods ]
+    dict_name = qualidExtendBase "__Dict" name
+    dict_build = qualidExtendBase "__Dict_Build" name
+    dict_methods = [ (qualidExtendBase "" name, ty) | (name, ty) <- methods ]
     dict_record  = RecordDefinition dict_name inst_args ty (Just dict_build) dict_methods
     -- The dictionary needs all explicit (type) arguments,
     -- but none of the implicit (constraint) arguments
     inst_args = filter (\b -> b ^? binderExplicitness == Just Explicit) args
-    app_args f = foldl App1 f (map Var (foldMap (toListOf binderIdents) inst_args))
-    class_ty = Forall [ Inferred Explicit (Ident "r")] $
-            (app_args (Var dict_name)  `Arrow` Var "r") `Arrow` Var "r"
+    app_args f = foldl App1 f (map Qualid (foldMap (toListOf binderIdents) inst_args))
+    class_ty = Forall [ "r" ] $ (app_args (Qualid dict_name)  `Arrow` "r") `Arrow` "r"

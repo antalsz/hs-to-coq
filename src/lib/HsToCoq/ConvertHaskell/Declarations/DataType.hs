@@ -145,7 +145,7 @@ convertDataDecl name tvs defn = do
   coqName   <- var TypeNS $ unLoc name
 
   kinds     <- (++ repeat Nothing) . map Just . maybe [] NE.toList <$> use (edits.dataKinds.at coqName)
-  let cvtName tv = Ident <$> freeVar (unLoc tv)
+  let cvtName tv = Ident <$> var TypeNS (unLoc tv)
   let  go (L _ (UserTyVar name))     (Just t) = cvtName name >>= \n -> return $ Typed Ungeneralizable Coq.Explicit (n NE.:| []) t
        go (L _ (UserTyVar name))     Nothing  = cvtName name >>= \n -> return $ Inferred Coq.Explicit n
        go (L _ (KindedTyVar name _)) (Just t) = cvtName name >>= \n -> return $ Typed Ungeneralizable Coq.Explicit (n NE.:| []) t
@@ -173,4 +173,4 @@ convertDataDecl name tvs defn = do
         pure ()
 
   -- The actual definition of the inductive data type is not qualified
-  pure $ IndBody (qualidBase coqName) params resTy (map (_1 %~ qualidBase) cons)
+  pure $ IndBody coqName params resTy cons

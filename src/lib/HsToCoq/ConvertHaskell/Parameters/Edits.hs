@@ -31,8 +31,8 @@ import HsToCoq.Coq.Gallina.Util
 
 --------------------------------------------------------------------------------
 
-data DataTypeArguments = DataTypeArguments { _dtParameters :: ![Ident]
-                                           , _dtIndices    :: ![Ident] }
+data DataTypeArguments = DataTypeArguments { _dtParameters :: ![Qualid]
+                                           , _dtIndices    :: ![Qualid] }
                        deriving (Eq, Ord, Show, Read)
 makeLenses ''DataTypeArguments
 
@@ -143,7 +143,7 @@ addEdit = \case -- To bring the `where' clause into scope everywhere
   DataTypeArgumentsEdit ty         args   -> addFresh dataTypeArguments                   (duplicateQ_for "data type argument specifications")               ty           args
   NonterminatingEdit    what              -> addFresh nonterminating                      (duplicateQ_for "declarations of nontermination")                  what         ()
   TerminationEdit       what order tac    -> addFresh termination                         (duplicateQ_for  "termination requests")                            what         (order,tac)
-  RedefinitionEdit      def               -> addFresh redefinitions                       (duplicateQ_for "redefinitions")                                   (Bare (name def))   def
+  RedefinitionEdit      def               -> addFresh redefinitions                       (duplicateQ_for "redefinitions")                                   (name def)   def
   AddEdit               mod def           -> Right . (additions.at mod.non mempty %~ (definitionSentence def:))
   SkipEdit              what              -> addFresh skipped                             (duplicateQ_for "skips")                                           what         ()
   SkipMethodEdit        cls meth          -> addFresh skippedMethods                      (duplicate_for' "skipped method requests"       prettyClsMth)      (cls,meth)   ()

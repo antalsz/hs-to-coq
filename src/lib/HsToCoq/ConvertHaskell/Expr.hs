@@ -154,8 +154,8 @@ convertExpr (ExplicitTuple exprs _boxity) = do
                 .  fmap (foldl1 . App2 $ Var "pair")
                 .  for exprs $ unLoc <&> \case
                      Present e           -> lift $ convertLExpr e
-                     Missing PlaceHolder -> do arg <- lift $ gensym "arg"
-                                               Var arg <$ tell [arg]
+                     Missing PlaceHolder -> do arg <- lift (genqid "arg")
+                                               Qualid arg <$ tell [arg]
   pure $ maybe id Fun (nonEmpty $ map (Inferred Coq.Explicit . Ident) args) tuple
 
 convertExpr (HsCase e mg) = do
@@ -398,11 +398,11 @@ convert_section :: ConversionMonad m => Maybe (LHsExpr GHC.Name) -> LHsExpr GHC.
 convert_section  ml opE mr = do
   let -- We need this type signature, and I think it's because @let@ isn't being
       -- generalized.
-      hs :: ConversionMonad m => Text -> m (HsExpr GHC.Name)
-      hs  = fmap (HsVar . mkGeneralLocated "generated") . freshInternalName . T.unpack
+      hs :: ConversionMonad m => Qualid -> m (HsExpr GHC.Name)
+      hs  = fmap (HsVar . mkGeneralLocated "generated") . freshInternalName . T.unpack . qualidToIdent
       coq = Inferred Coq.Explicit . Ident
 
-  arg <- gensym "arg"
+  arg <- Bare <$> gensym "arg"
   let orArg = maybe (fmap noLoc $ hs arg) pure
   l <- orArg ml
   r <- orArg mr
@@ -420,9 +420,9 @@ convertFunction :: ConversionMonad m => MatchGroup GHC.Name (LHsExpr GHC.Name) -
 convertFunction mg | Just alt <- isTrivialMatch mg = convTrivialMatch alt
 convertFunction mg = do
   let n_args = matchGroupArity mg
-  args <- replicateM n_args (gensym "arg") >>= maybe err pure . nonEmpty
+  args <- replicateM n_args (genqid "arg") >>= maybe err pure . nonEmpty
   let argBinders = (Inferred Coq.Explicit . Ident) <$> args
-  match <- convertMatchGroup (Var <$> args) mg
+  match <- convertMatchGroup (Qualid <$> args) mg
   pure (argBinders, match)
  where
    err = convUnsupported "convertFunction: Empty argument list"
@@ -454,9 +454,9 @@ convTrivialMatch alt = do
 
 
 patToName :: ConversionMonad m => Pattern -> m Name
-patToName UnderscorePat          = return UnderscoreName
-patToName (QualidPat (Bare ident))  = return $ Ident ident
-patToName _                      = convUnsupported "patToArg: not a trivial pat"
+patToName UnderscorePat    = return UnderscoreName
+patToName (QualidPat qid)  = return $ Ident qid
+patToName _                = convUnsupported "patToArg: not a trivial pat"
 
 --------------------------------------------------------------------------------
 
@@ -473,7 +473,7 @@ isTrueLExpr _                       = pure False
 convertPatternBinding :: ConversionMonad m
                       => LPat GHC.Name -> LHsExpr GHC.Name
                       -> (Term -> (Term -> Term) -> m a)
-                      -> (Term -> Ident -> (Term -> Term -> Term) -> m a)
+                      -> (Term -> Qualid -> (Term -> Term -> Term) -> m a)
                       -> Term
                       -> m a
 convertPatternBinding hsPat hsExp buildTrivial buildNontrivial fallback = do
@@ -482,11 +482,11 @@ convertPatternBinding hsPat hsExp buildTrivial buildNontrivial fallback = do
 
   refutability pat >>= \case
     Trivial tpat | null guards ->
-      buildTrivial exp $ Fun [Inferred Coq.Explicit $ maybe UnderscoreName (Ident . qualidBase) tpat]
+      buildTrivial exp $ Fun [Inferred Coq.Explicit $ maybe UnderscoreName Ident tpat]
 
     nontrivial -> do
-      cont <- gensym "cont"
-      arg  <- gensym "arg"
+      cont <- genqid "cont"
+      arg  <- genqid "arg"
 
       -- TODO: Use SSReflect's `let:` in the `SoleConstructor` case?
       -- (Involves adding a constructor to `Term`.)
@@ -500,7 +500,7 @@ convertPatternBinding hsPat hsExp buildTrivial buildNontrivial fallback = do
 
       buildNontrivial exp cont $ \body rest ->
         Let cont [Inferred Coq.Explicit $ Ident arg] Nothing
-                 (Coq.Match [MatchItem (Var arg) Nothing Nothing] Nothing $
+                 (Coq.Match [MatchItem (Qualid arg) Nothing Nothing] Nothing $
                    Equation [MultPattern [pat]] (guarded rest) : fallbackMatches)
           body
 
@@ -523,7 +523,7 @@ convertDoBlock allStmts = do
       convertPatternBinding
         pat exp
         (\exp' fun          -> monBind in_ghc_base exp' . fun <$> rest)
-        (\exp' cont letCont -> letCont (monBind in_ghc_base exp' (Var cont)) <$> rest)
+        (\exp' cont letCont -> letCont (monBind in_ghc_base exp' (Qualid cont)) <$> rest)
         (missingValue `App1` HsString "Partial pattern match in `do' notation")
 
     toExpr _ (LetStmt (L _ binds)) rest =
@@ -561,7 +561,7 @@ convertListComprehension allStmts = case fmap unLoc <$> unsnoc allStmts of
       convertPatternBinding
         pat exp
         (\exp' fun          -> App2 concatMapVar <$> (fun <$> rest) <*> pure exp')
-        (\exp' cont letCont -> letCont (App2 concatMapVar (Var cont) exp') <$> rest)
+        (\exp' cont letCont -> letCont (App2 concatMapVar (Qualid cont) exp') <$> rest)
         (Var "nil")
 
     toExpr (LetStmt (L _ binds)) rest =
@@ -831,7 +831,7 @@ convertTypedBinding  convHsTy FunBind{..}   = runMaybeT $ do
         (argBinders, match) <- convertFunction fun_matches
         pure $ let bodyVars = getFreeVars match
                in if name `S.member` bodyVars || maybe False (`S.member` bodyVars) opName
-                  then whichFix $ FixBody (qualidBase name) argBinders Nothing Nothing match -- TODO recursion and binary operators
+                  then whichFix $ FixBody name argBinders Nothing Nothing match -- TODO recursion and binary operators
                   else Fun argBinders match
 
     addScope <- maybe id (flip InScope) <$> use (edits.additionalScopes.at (SPValue, name))
@@ -883,7 +883,7 @@ convertLocalBinds (HsValBinds (ValBindsIn binds lsigs)) body = localizeConversio
                        convDefs
   let matchLet pat term body = Coq.Match [MatchItem term Nothing Nothing] Nothing
                                          [Equation [MultPattern [pat]] body]
-  (foldr (withConvertedBinding (withConvertedDefinitionDef (Let . qualidBase)) matchLet) ?? convDefs) <$> body
+  (foldr (withConvertedBinding (withConvertedDefinitionDef Let) matchLet) ?? convDefs) <$> body
 convertLocalBinds (HsValBinds (ValBindsOut recBinds lsigs)) body =
   -- TODO RENAMER use RecFlag info to do recursion stuff
   convertLocalBinds (HsValBinds $ ValBindsIn (unionManyBags $ map snd recBinds) lsigs) body
@@ -900,15 +900,15 @@ convertLocalBinds EmptyLocalBinds body =
 bindIn :: ConversionMonad m => Text -> Term -> (Term -> m Term) -> m Term
 bindIn _ rhs@(Qualid _) genBody = genBody rhs
 bindIn tmpl rhs genBody = do
-  j <- gensym tmpl
-  body <- genBody (Qualid (Bare j))
+  j <- genqid tmpl
+  body <- genBody (Qualid j)
   pure $ smartLet j rhs body
 
 
 -- This prevents the pattern conversion code to create
 -- `let j_24__ := … in j_24__`
-smartLet :: Ident -> Term -> Term -> Term
-smartLet ident rhs (Qualid (Bare v)) | ident == v = rhs
+smartLet :: Qualid -> Term -> Term -> Term
+smartLet ident rhs (Qualid v) | ident == v = rhs
 smartLet ident rhs body = Let ident [] Nothing rhs body
 
 patternFailure :: Term

@@ -193,8 +193,8 @@ Renaming :: { (NamespacedIdent, Qualid) }
 -- Edit commands
 --------------------------------------------------------------------------------
 
-TaggedParens(tag) :: { [Ident] }
- : '(' tag ':' Many(Word) ')'    { $4 }
+TaggedParens(tag) :: { [Qualid] }
+ : '(' tag ':' Many(Qualid) ')'    { $4 }
 
 DataTypeArguments :: { DataTypeArguments }
   : TaggedParens(parameters) Optional(TaggedParens(indices))    { DataTypeArguments $1 (fromMaybe [] $2) }
@@ -306,7 +306,7 @@ Plicitly(p)
 
 GenFixBodies(body)
   : body                                    %prec GenFixBodyOne { Left $1 }
-  | body with SepBy1(body,with) for Word                        { Right ($1,$3,$5) }
+  | body with SepBy1(body,with) for Qualid                      { Right ($1,$3,$5) }
 
 FixBodies :: { FixBodies }
   : GenFixBodies(FixBody)    { either FixOne (uncurry3 FixMany) $1 }
@@ -315,13 +315,13 @@ CofixBodies :: { CofixBodies }
   : GenFixBodies(CofixBody)    { either CofixOne (uncurry3 CofixMany) $1 }
 
 FixBody :: { FixBody }
-  : Word FixBinders Optional(TypeAnnotation) ':=' Term    { uncurry (FixBody $1) $2 $3 $5 }
+  : Qualid FixBinders Optional(TypeAnnotation) ':=' Term    { uncurry (FixBody $1) $2 $3 $5 }
 
 CofixBody :: { CofixBody }
-  : Word Binders Optional(TypeAnnotation) ':=' Term    { CofixBody $1 $2 $3 $5 }
+  : Qualid Binders Optional(TypeAnnotation) ':=' Term    { CofixBody $1 $2 $3 $5 }
 
 Annotation :: { Annotation }
-  : '{' struct Word '}'    { Annotation $3 }
+  : '{' struct Qualid '}'    { Annotation $3 }
 
 -- There is an ambiguity between @{implicitVar : ty}@ and @{struct x}@.  Our
 -- options are either (a) use right-recursion and incur stack space blowup, or
@@ -337,7 +337,7 @@ FixBinders :: { (NonEmpty Binder, Maybe Annotation) }
            (_,      _:_:_)                         -> throwError "too many decreasing arguments given for fixpoint" }
 
 BinderName :: { Name }
-  : Word    { Ident $1 }
+  : Qualid    { Ident $1 }
   | '_'     { UnderscoreName }
 
 ExplicitBinderGuts :: { Binder }
@@ -407,27 +407,27 @@ Inductive :: { Inductive }
   | 'CoInductive' MutualDefinitions(IndBody)    { uncurry CoInductive $2 }
 
 IndBody :: { IndBody }
-  : Word Many(Binder) Optional(TypeAnnotation) ':=' Constructors    { IndBody $1 $2 (fromMaybe (Sort Type) $3) $5 }
+  : Qualid Many(Binder) Optional(TypeAnnotation) ':=' Constructors    { IndBody $1 $2 (fromMaybe (Sort Type) $3) $5 }
 
-Constructors :: { [(Ident, [Binder], Maybe Term)] }
+Constructors :: { [(Qualid, [Binder], Maybe Term)] }
   : SepByIf(Optional('|'), Constructor, '|')    { $1 }
 
-Constructor :: { (Ident, [Binder], Maybe Term) }
-  : Word Many(Binder) Optional(TypeAnnotation)    { ($1, $2, $3) }
+Constructor :: { (Qualid, [Binder], Maybe Term) }
+  : Qualid Many(Binder) Optional(TypeAnnotation)    { ($1, $2, $3) }
 
 Locality :: { Locality }
   : Optional('Local')    { ifMaybe $1 Local Global }
 
 Definition :: { Definition }
-  : Locality 'Definition' Word Many(Binder) Optional(TypeAnnotation) ':=' Term    { DefinitionDef $1 $3 $4 $5 $7 }
-  |          'Let'        Word Many(Binder) Optional(TypeAnnotation) ':=' Term    { LetDef           $2 $3 $4 $6 }
+  : Locality 'Definition' Qualid Many(Binder) Optional(TypeAnnotation) ':=' Term    { DefinitionDef $1 $3 $4 $5 $7 }
+  |          'Let'        Qualid Many(Binder) Optional(TypeAnnotation) ':=' Term    { LetDef           $2 $3 $4 $6 }
 
 Fixpoint :: { Fixpoint }
   : 'Fixpoint'   MutualDefinitions(FixBody)      { uncurry Fixpoint   $2 }
   | 'CoFixpoint' MutualDefinitions(CofixBody)    { uncurry CoFixpoint $2 }
 
 ProgramFixpoint :: { ProgramFixpoint }
-  : 'Program' 'Fixpoint' Word Many(Binder) Order TypeAnnotation ':=' Term  { ProgramFixpoint $3 $4 $5 $6 $8 }
+  : 'Program' 'Fixpoint' Qualid Many(Binder) Order TypeAnnotation ':=' Term  { ProgramFixpoint $3 $4 $5 $6 $8 }
 
 Order :: { Order }
   : '{' 'measure' Atom OptionalParens(Term) '}'    { MeasureOrder $3 $4 }
@@ -435,13 +435,13 @@ Order :: { Order }
 
 
 Instance :: { InstanceDefinition }
-  : 'Instance' Word Many(Binder) TypeAnnotation ':=' '{' SepBy(FieldDefinition, ';')  '}'
+  : 'Instance' Qualid Many(Binder) TypeAnnotation ':=' '{' SepBy(FieldDefinition, ';')  '}'
   { InstanceDefinition $2 $3 $4 $7 Nothing }
-  | 'Instance' Word Many(Binder) TypeAnnotation ':=' Term
+  | 'Instance' Qualid Many(Binder) TypeAnnotation ':=' Term
   { InstanceTerm $2 $3 $4 $6 Nothing }
 
-FieldDefinition :: { (Ident,Term) }
-  : Word ':=' Term  { ($1 , $3) }
+FieldDefinition :: { (Qualid,Term) }
+  : Qualid ':=' Term  { ($1 , $3) }
 
 --------------------------------------------------------------------------------
 -- Haskell code

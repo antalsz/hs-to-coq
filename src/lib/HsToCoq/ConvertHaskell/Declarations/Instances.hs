@@ -58,8 +58,9 @@ import HsToCoq.ConvertHaskell.InfixNames
 
 -- Take the instance head and make it into a valid identifier by replacing
 -- non-alphanumerics with underscores.  Then, prepend "instance_".
-convertInstanceName :: ConversionMonad m => LHsType GHC.Name -> m Ident
+convertInstanceName :: ConversionMonad m => LHsType GHC.Name -> m Qualid
 convertInstanceName =   pure
+                    .   Bare
                     .   ("instance_" <>)
                     .   T.map (\c -> if isAlphaNum c || c == '\'' then c else '_')
                     .   renderOneLineT . renderGallina
@@ -95,7 +96,7 @@ findHsClass insthead = case getLHsInstDeclClass_maybe insthead of
       Class = "Eq"
 
 -}
-data InstanceInfo = InstanceInfo { instanceName  :: !Ident
+data InstanceInfo = InstanceInfo { instanceName  :: !Qualid
                                  , instanceHead  :: !Term
                                  , instanceClass :: !Ident
                                  , instanceHsClass :: Class}
@@ -147,7 +148,7 @@ convertClsInstDecl cid@ClsInstDecl{..} rebuild mhandler = do
 
     let (binds, classTy) = decomposeForall instanceHead
 
-    rebuild $ InstanceDefinition instanceName binds classTy (map (first qualidBase) methods) Nothing
+    rebuild $ InstanceDefinition instanceName binds classTy methods Nothing
 
 
 decomposeForall :: Term -> ([Binder], Term)
@@ -165,9 +166,9 @@ convertModuleClsInstDecls = foldTraverse $ maybeWithCurrentModule .*^ \cid ->
             let coq_name = case instdef of
                     InstanceDefinition coq_name _ _ _ _ -> coq_name
                     InstanceTerm       coq_name _ _ _ _ -> coq_name
-            use (edits.skipped.contains (Bare coq_name)) >>= \case
+            use (edits.skipped.contains coq_name) >>= \case
                 True -> do
-                    let t = "Skipping instance " <> coq_name
+                    let t = "Skipping instance " <> qualidBase coq_name
                     return [CommentSentence (Comment t)]
                 False -> topoSortInstance instdef
         -- rebuild = pure . pure . InstanceSentence
@@ -191,7 +192,7 @@ topoSortInstance inst_def@(InstanceTerm _ _ _ _ _ ) =
     pure $ [InstanceSentence inst_def]
 topoSortInstance (InstanceDefinition instanceName params ty members mp) = go sorted M.empty where
 
-        m        = M.fromList $ map (first Bare) members
+        m        = M.fromList members
         sorted   = topoSortEnvironment m
 {-
         getFreeVarsIdent :: Ident -> S.Set Ident
@@ -231,22 +232,22 @@ topoSortInstance (InstanceDefinition instanceName params ty members mp) = go sor
         -- TODO: multiparameter type classes   "instance C t1 t2 where"
         --       instances with contexts       "instance C a => C (Maybe a) where"
         decomposeClassTy ty = case ty of
-           App (Qualid (Bare cn)) ((PosArg a) NE.:| []) -> (cn, a)
+           App (Qualid cn) ((PosArg a) NE.:| []) -> (cn, a)
            _ -> error ("cannot deconstruct instance head: " ++ (show ty))
 
         (className, instTy) = decomposeClassTy ty
 
-        buildName = className <> "__Dict_Build"
+        buildName = qualidExtendBase "__Dict_Build" className
 
         -- lookup the type of the class member
         -- add extra quantifiers from the class & instance definitions
         mkTy :: Qualid -> m ([Binder], Maybe Term)
         mkTy memberName = do
-          classDef <- use (classDefns.at (Bare className))
+          classDef <- use (classDefns.at className)
           -- TODO: May be broken by switch away from 'RdrName's
           case classDef of
             (Just (ClassDefinition _ (b:_) _ sigs)) | [var] <- toListOf binderIdents b ->
-              case lookup (qualidBase memberName) sigs of
+              case lookup memberName sigs of
                 Just sigType ->
                   -- GOAL: Consider
                   -- @
@@ -269,8 +270,8 @@ topoSortInstance (InstanceDefinition instanceName params ty members mp) = go sor
                   let renameInst UnderscoreName =
                         pure UnderscoreName
                       renameInst (Ident x) =
-                        let inst_x = "inst_" <> x
-                        in Ident inst_x <$ modify' (M.insert (Bare x) $ Var inst_x)
+                        let inst_x = qualidMapBase ("inst_" <>) x
+                        in Ident inst_x <$ modify' (M.insert x (Qualid inst_x))
                       
                       sub ty = ($ ty) <$> gets subst
                       
@@ -284,7 +285,7 @@ topoSortInstance (InstanceDefinition instanceName params ty members mp) = go sor
                       -- per-instance variable name can show up is in the
                       -- specific instance type!  It can't show up in the
                       -- signature of the method, that's the whole point
-                      instSigType = subst (M.singleton (Bare var) $ subst instSubst instTy) sigType
+                      instSigType = subst (M.singleton var $ subst instSubst instTy) sigType
                   in pure $ (instBnds, Just $ instSigType)
                 Nothing ->
                   convUnsupported ("Cannot find sig for " ++ show memberName)
@@ -301,7 +302,7 @@ topoSortInstance (InstanceDefinition instanceName params ty members mp) = go sor
 
         -- Gets the class method names, in the original
         getClassMethods = do
-          classDef <- use (classDefns.at (Bare className))
+          classDef <- use (classDefns.at className)
           -- TODO: May be broken by switch away from 'RdrName's
           case classDef of
             (Just (ClassDefinition _ _ _ sigs)) ->
@@ -314,7 +315,7 @@ topoSortInstance (InstanceDefinition instanceName params ty members mp) = go sor
         -- https://sympa.inria.fr/sympa/arc/coq-club/2017-11/msg00035.html
         quantify :: Qualid -> Term -> m Term
         quantify meth body =
-            do typeArgs <- getImplicitBindersForClassMember (Bare className) (qualidBase meth)
+            do typeArgs <- getImplicitBindersForClassMember className meth
                case (NE.nonEmpty typeArgs) of
                    Nothing -> return body
                    Just args -> return $ Fun args body
@@ -330,7 +331,7 @@ topoSortInstance (InstanceDefinition instanceName params ty members mp) = go sor
         mkDefnGrp [] sub = return ([], sub)
         mkDefnGrp [ v ] sub = do
            -- TODO: Qualify with current module name (or leave Bare, as it is a Local Definition?)
-           let v' = Bare (instanceName <> "_" <> qualidBase v)
+           let v' = qualidMapBase (<> ("_" <> qualidBase v)) instanceName
            (params, mty)  <- mkTy v
            body <- quantify v (subst (fmap Qualid sub) (m M.! v))
            let sub' = M.insert v v' sub
@@ -338,7 +339,7 @@ topoSortInstance (InstanceDefinition instanceName params ty members mp) = go sor
            -- implement redefinitions of methods
            use (edits.redefinitions.at v') >>= \case
                Just redef -> pure ([ definitionSentence redef], sub')
-               Nothing    -> pure ([ DefinitionSentence (DefinitionDef Local (qualidBase v') params mty (unFix body)) ], sub')
+               Nothing    -> pure ([ DefinitionSentence (DefinitionDef Local v' params mty (unFix body)) ], sub')
 
         mkDefnGrp many _sub =
            -- TODO: mutual recursion
@@ -351,10 +352,10 @@ topoSortInstance (InstanceDefinition instanceName params ty members mp) = go sor
             classMethods <- getClassMethods
 
             mems' <- forM classMethods $ \v -> do
-                case M.lookup (Bare v) mems of
+                case M.lookup v mems of
                   Just v' -> do
-                      t <- quantify (Bare v) (Qualid v')
-                      pure $ ((qualidMapBase (<> "__") (Bare v)), t)
+                      t <- quantify v (Qualid v')
+                      pure $ ((qualidMapBase (<> "__") v), t)
                   Nothing -> convUnsupported ("missing " ++ show v ++ " in " ++ show mems )
 
             -- When we can use record syntax, we can use this.
@@ -364,7 +365,7 @@ topoSortInstance (InstanceDefinition instanceName params ty members mp) = go sor
 
             -- This variant uses the explicit `Build` command, which does
             -- works with `Instance`, but is ugly
-            let _body = appList (Var buildName) $ map PosArg $
+            let _body = appList (Qualid buildName) $ map PosArg $
                     [ instTy ] ++ map snd mems'
 
 

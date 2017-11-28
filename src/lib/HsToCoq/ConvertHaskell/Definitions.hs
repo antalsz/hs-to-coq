@@ -57,7 +57,7 @@ toProgramFixpointSentence (ConvertedDefinition{..}) order tac
     = editFailure "cannot \"termination\" a definition without a type signature"
     | Just ty <- convDefType
     , Fix (FixOne (FixBody name binders _ _ body)) <- convDefBody
-    = if | Bare name /= convDefName
+    = if | name /= convDefName
          -> editFailure "internal name and external name disagree?"
          | otherwise
          -> do

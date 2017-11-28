@@ -148,7 +148,7 @@ data Term = Forall Binders Term                                                 
           | Fun Binders Term                                                                   -- ^@fun /binders/ => /term/@
           | Fix FixBodies                                                                      -- ^@fix /fix_bodies/@
           | Cofix CofixBodies                                                                  -- ^@cofix /cofix_bodies/@
-          | Let Ident [Binder] (Maybe Term) Term Term                                          -- ^@let /ident/ [/binders/] [: /term/] := /term/ in /term/@
+          | Let Qualid [Binder] (Maybe Term) Term Term                                          -- ^@let /ident/ [/binders/] [: /term/] := /term/ in /term/@
           | LetFix FixBody Term                                                                -- ^@let fix /fix_body/ in /term/@
           | LetCofix CofixBody Term                                                            -- ^@let cofix /cofix_body/ in /term/@
           | LetTuple [Name] (Maybe DepRetType) Term Term                                       -- ^@let ( [/name/ , … , /name/] ) [/dep_ret_type/] := /term/ in /term/@
@@ -206,15 +206,9 @@ data Binder = Inferred Explicitness Name                                        
             deriving (Eq, Ord, Show, Read, Typeable, Data)
 
 -- |@/name/ ::=@
-data Name = Ident_ Ident                                                                        -- ^@/ident/@
+data Name = Ident Qualid                                                                       -- ^@/ident/@
           | UnderscoreName                                                                     -- ^@_@
           deriving (Eq, Ord, Show, Read, Typeable, Data)
-
-pattern Ident :: HasCallStack => Ident -> Name
-pattern Ident x <- Ident_ x where
-    Ident x | "." `T.isInfixOf` x = error $ "Invalid ident in name:" ++ show x
-            | otherwise           = Ident_ x
-{- not supported in 8.0 yet # COMPLETE Ident, UnderscoreName #-}
 
 -- |@/qualid/ ::=@
 data Qualid = Bare_ Ident                                                                       -- ^@/ident/@
@@ -242,24 +236,24 @@ data Sort = Prop                                                                
 
 -- |@/fix_bodies/ ::=@
 data FixBodies = FixOne FixBody                                                                -- ^@/fix_body/@
-               | FixMany FixBody (NonEmpty FixBody) Ident                                      -- ^@/fix_body/ with /fix_body/ with … with /fix_body/ for /ident/@
+               | FixMany FixBody (NonEmpty FixBody) Qualid                                     -- ^@/fix_body/ with /fix_body/ with … with /fix_body/ for /ident/@
                deriving (Eq, Ord, Show, Read, Typeable, Data)
 
 -- |@/cofix_bodies/ ::=@
 data CofixBodies = CofixOne CofixBody                                                          -- ^@/cofix_body/@
-                 | CofixMany CofixBody (NonEmpty CofixBody) Ident                              -- ^@/cofix_body/ with /cofix_body/ with … with /cofix_body/ for /ident/@
+                 | CofixMany CofixBody (NonEmpty CofixBody) Qualid                             -- ^@/cofix_body/ with /cofix_body/ with … with /cofix_body/ for /ident/@
                  deriving (Eq, Ord, Show, Read, Typeable, Data)
 
 -- |@/fix_body/ ::=@
-data FixBody = FixBody Ident Binders (Maybe Annotation) (Maybe Term) Term                      -- ^@/ident/ /binders/ [/annotation/] [: /term/] := /term/@
+data FixBody = FixBody Qualid Binders (Maybe Annotation) (Maybe Term) Term                     -- ^@/ident/ /binders/ [/annotation/] [: /term/] := /term/@
              deriving (Eq, Ord, Show, Read, Typeable, Data)
 
 -- |@/cofix_body/ ::=@
-data CofixBody = CofixBody Ident Binders (Maybe Term) Term                                     -- ^@/ident/ /binders/ [: /term/] := /term/@
+data CofixBody = CofixBody Qualid Binders (Maybe Term) Term                                    -- ^@/ident/ /binders/ [: /term/] := /term/@
                deriving (Eq, Ord, Show, Read, Typeable, Data)
 
 -- |@/annotation/ ::=@
-newtype Annotation = Annotation Ident                                                          -- ^@{ struct /ident/ }@
+newtype Annotation = Annotation Qualid                                                         -- ^@{ struct /ident/ }@
                    deriving (Eq, Ord, Show, Read, Typeable, Data)
 
 -- |@/match_item/ ::=@
@@ -286,7 +280,7 @@ newtype MultPattern = MultPattern (NonEmpty Pattern)                            
 data Pattern = ArgsPat Qualid (NonEmpty Pattern)                                               -- ^@/qualid/ /pattern/ … /pattern/@
              | ExplicitArgsPat Qualid (NonEmpty Pattern)                                       -- ^@\@ /qualid/ /pattern/ … /pattern/@
              | InfixPat Pattern Op Pattern                                                     -- ^@/pattern/ /op/ /pattern/@ – extra
-             | AsPat Pattern Ident                                                             -- ^@/pattern/ as /ident/@
+             | AsPat Pattern Qualid                                                            -- ^@/pattern/ as /ident/@
              | InScopePat Pattern Ident                                                        -- ^@/pattern/ % /ident/@
              | QualidPat Qualid                                                                -- ^@/qualid/@
              | UnderscorePat                                                                   -- ^@_@
@@ -345,8 +339,8 @@ data AssumptionKeyword = Axiom                                                  
                        deriving (Eq, Ord, Show, Read, Enum, Bounded, Typeable, Data)
 
 -- |@/assums/ ::=@
-data Assums = UnparenthesizedAssums (NonEmpty Ident) Term                                      -- ^@/ident/ … /ident/ : /term/@
-            | ParenthesizedAssums (NonEmpty (NonEmpty Ident, Term))                            -- ^@( /ident/ … /ident/ : /term ) … ( /ident/ … /ident/ : /term)@
+data Assums = UnparenthesizedAssums (NonEmpty Qualid) Term                                     -- ^@/ident/ … /ident/ : /term/@
+            | ParenthesizedAssums (NonEmpty (NonEmpty Qualid, Term))                           -- ^@( /ident/ … /ident/ : /term ) … ( /ident/ … /ident/ : /term)@
             deriving (Eq, Ord, Show, Read, Typeable, Data)
 
 -- |@[Local] ::=@ – not a part of the grammar /per se/, but a common fragment
@@ -355,8 +349,8 @@ data Locality = Global                                                          
               deriving (Eq, Ord, Show, Read, Enum, Bounded, Typeable, Data)
 
 -- |@/definition/ ::=@
-data Definition = DefinitionDef Locality Ident [Binder] (Maybe Term) Term                      -- ^@[Local] Definition /ident/ [/binders/] [: /term/] := /term/ .@
-                | LetDef Ident [Binder] (Maybe Term) Term                                      -- ^@Let /ident/ [/binders/] [: /term/] := /term/ .@
+data Definition = DefinitionDef Locality Qualid [Binder] (Maybe Term) Term                     -- ^@[Local] Definition /ident/ [/binders/] [: /term/] := /term/ .@
+                | LetDef Qualid [Binder] (Maybe Term) Term                                     -- ^@Let /ident/ [/binders/] [: /term/] := /term/ .@
                 deriving (Eq, Ord, Show, Read, Typeable, Data)
 
 -- |@/inductive/ ::=@ – the @where@ notation bindings are extra
@@ -365,7 +359,7 @@ data Inductive = Inductive   (NonEmpty IndBody) [NotationBinding]               
                deriving (Eq, Ord, Show, Read, Typeable, Data)
 
 -- |@/ind_body/ ::=@
-data IndBody = IndBody Ident [Binder] Term [(Ident, [Binder], Maybe Term)]                     -- ^@/ident/ [/binders/] : /term/ := [[|] /ident/ [/binders/] [: /term/] | … | /ident/ [/binders/] [: /term/]]@
+data IndBody = IndBody Qualid [Binder] Term [(Qualid, [Binder], Maybe Term)]                   -- ^@/ident/ [/binders/] : /term/ := [[|] /ident/ [/binders/] [: /term/] | … | /ident/ [/binders/] [: /term/]]@
              deriving (Eq, Ord, Show, Read, Typeable, Data)
 
 -- |@/fixpoint/ ::=@
@@ -374,16 +368,16 @@ data Fixpoint = Fixpoint   (NonEmpty FixBody)   [NotationBinding]               
               deriving (Eq, Ord, Show, Read, Typeable, Data)
 
 -- |@/program fixpoint/ ::=@
-data ProgramFixpoint = ProgramFixpoint  Ident [Binder] Order Term Term                         -- ^@Program Fixpoint /ident/ /params/ {/order/} : /type/ := /term/.@
+data ProgramFixpoint = ProgramFixpoint Qualid [Binder] Order Term Term                         -- ^@Program Fixpoint /ident/ /params/ {/order/} : /type/ := /term/.@
               deriving (Eq, Ord, Show, Read, Typeable, Data)
 
 -- |@/order/ ::=@
 data Order = MeasureOrder Term (Maybe Term)                                                    -- ^@measure /term/ (/term/)?/
-           | WFOrder Term Qualid                                                                -- ^@wf /term/ /ident//
+           | WFOrder Term Qualid                                                               -- ^@wf /term/ /ident//
               deriving (Eq, Ord, Show, Read, Typeable, Data)
 
 -- |@/assertion/ ::=@
-data Assertion = Assertion AssertionKeyword Ident [Binder] Term                                -- ^@/assertion_keyword/ /ident/ [/binders/] : /term/ .@
+data Assertion = Assertion AssertionKeyword Qualid [Binder] Term                               -- ^@/assertion_keyword/ /ident/ [/binders/] : /term/ .@
                deriving (Eq, Ord, Show, Read, Typeable, Data)
 
 -- |@/assertion_keyword/ ::=@
@@ -418,18 +412,18 @@ data ModuleSentence = ModuleImport ImportExport (NonEmpty Qualid)               
                     deriving (Eq, Ord, Show, Read, Typeable, Data)
 
 -- |@/class_definition/ ::=@ /(extra)/
-data ClassDefinition = ClassDefinition Ident [Binder] (Maybe Sort) [(Ident, Term)]             -- ^@Class /ident/ [/binders/] [: /sort/] := { [/ident/ : /term/ ; … ; /ident/ : /term/] } .
+data ClassDefinition = ClassDefinition Qualid [Binder] (Maybe Sort) [(Qualid, Term)]            -- ^@Class /ident/ [/binders/] [: /sort/] := { [/ident/ : /term/ ; … ; /ident/ : /term/] } .
                      deriving (Eq, Ord, Show, Read, Typeable, Data)
                      -- TODO: field arguments (which become @forall@ed)
 
 -- |@/record_definition/ ::=@ /(extra)/
-data RecordDefinition = RecordDefinition Ident [Binder] (Maybe Sort) (Maybe Ident) [(Ident, Term)]  -- ^@Record /ident/ [/binders/] [: /sort/] := /ident/ { [/ident/ : /term/ ; … ; /ident/ : /term/] } .
+data RecordDefinition = RecordDefinition Qualid [Binder] (Maybe Sort) (Maybe Qualid) [(Qualid, Term)]  -- ^@Record /ident/ [/binders/] [: /sort/] := /ident/ { [/ident/ : /term/ ; … ; /ident/ : /term/] } .
                      deriving (Eq, Ord, Show, Read, Typeable, Data)
 
 -- |@/instance_definition/ ::=@ /(extra)/
-data InstanceDefinition = InstanceDefinition Ident [Binder] Term [(Ident, Term)] (Maybe Proof) -- ^@Instance /ident/ [/binders/] : /term/ := { [/ident/ := /term/ ; … ; /ident/ := /term/] } [/proof/] .
+data InstanceDefinition = InstanceDefinition Qualid [Binder] Term [(Qualid, Term)] (Maybe Proof) -- ^@Instance /ident/ [/binders/] : /term/ := { [/ident/ := /term/ ; … ; /ident/ := /term/] } [/proof/] .
                                                                                                -- TODO: field arguments (which become @fun@ arguments)
-                        | InstanceTerm Ident [Binder] Term Term (Maybe Proof)                  -- ^@Instance /ident/ [/binders/] : /term/ := /term/ [/proof/] .
+                        | InstanceTerm Qualid [Binder] Term Term (Maybe Proof)                  -- ^@Instance /ident/ [/binders/] : /term/ := /term/ [/proof/] .
                         deriving (Eq, Ord, Show, Read, Typeable, Data)
 
 -- |@/associativity/ ::=@ /(extra)/
@@ -585,6 +579,9 @@ renderIdent = text
 renderAccessIdent :: AccessIdent -> Doc
 renderAccessIdent = text . T.cons '.'
 
+renderModuleIdent :: ModuleIdent -> Doc
+renderModuleIdent = text
+
 renderNum :: Num -> Doc
 renderNum = integer . toInteger
 
@@ -673,7 +670,7 @@ instance Gallina Term where
     "cofix" <+> renderGallina cbs
 
   renderGallina' p (Let var args oty val body) = group $ maybeParen (p > letPrec) $
-         "let" <+> group (   renderIdent var
+         "let" <+> group (   renderGallina var
                          <>  spaceIf args <> render_args_oty V args oty
                          <+> nest 2 (":=" <!> renderGallina val))
                <+> "in"
@@ -832,12 +829,12 @@ instance Gallina Binder where
     binder_decoration Generalizable ex True $ renderGallina ty
 
 instance Gallina Name where
-  renderGallina' _ (Ident ident)  = renderIdent ident
+  renderGallina' _ (Ident ident)  = renderGallina ident
   renderGallina' _ UnderscoreName = char '_'
 
 instance Gallina Qualid where
   renderGallina' _ (Bare ident)        = renderIdent ident
-  renderGallina' _ (Qualified mid aid) = text mid <> renderAccessIdent aid
+  renderGallina' _ (Qualified mid aid) = renderModuleIdent mid <> renderAccessIdent aid
 
 instance Gallina Sort where
   renderGallina' _ Prop = "Prop"
@@ -848,28 +845,28 @@ instance Gallina FixBodies where
   renderGallina' p (FixOne fb) =
     renderGallina' p fb
   renderGallina' p (FixMany fb fbs var) =
-    spacedSepPre "with" (align . renderGallina' p <$> fb <| fbs) </> "for" <+> renderIdent var
+    spacedSepPre "with" (align . renderGallina' p <$> fb <| fbs) </> "for" <+> renderGallina var
 
 instance Gallina CofixBodies where
   renderGallina' p (CofixOne cb) =
     renderGallina' p cb
   renderGallina' p (CofixMany cb cbs var) =
-    spacedSepPre "with" (align . renderGallina' p <$> cb <| cbs) </> "for" <+> renderIdent var
+    spacedSepPre "with" (align . renderGallina' p <$> cb <| cbs) </> "for" <+> renderGallina var
 
 instance Gallina FixBody where
   renderGallina' _ (FixBody f args oannot oty def) =
     hang 2 $
-      renderIdent f </> align (    fillSep (renderGallina <$> args)
-                              </?> (renderGallina <$> oannot))
-                    <>  render_opt_type oty <!> ":=" <+> align (renderGallina def)
+      renderGallina f </> align (    fillSep (renderGallina <$> args)
+                                </?> (renderGallina <$> oannot))
+                      <>  render_opt_type oty <!> ":=" <+> align (renderGallina def)
 
 instance Gallina CofixBody where
   renderGallina' _ (CofixBody f args oty def) =
-    renderIdent f </> render_args_oty H args oty
-                  </> ":=" <+> align (renderGallina def)
+    renderGallina f </> render_args_oty H args oty
+                    </> ":=" <+> align (renderGallina def)
 
 instance Gallina Annotation where
-  renderGallina' _ (Annotation var) = braces $ "struct" <+> renderIdent var
+  renderGallina' _ (Annotation var) = braces $ "struct" <+> renderGallina var
 
 instance Gallina MatchItem where
   renderGallina' _ (MatchItem scrutinee oas oin) =
@@ -903,7 +900,7 @@ instance Gallina Pattern where
     renderGallina l </> renderOp op </> renderGallina r
 
   renderGallina' _p (AsPat pat x) = parens $
-    renderGallina pat <+> "as" <+> renderIdent x
+    renderGallina pat <+> "as" <+> renderGallina x
 
   renderGallina' _p (InScopePat pat scope) = parens $
     renderGallina pat <> "%" <> renderIdent scope
@@ -966,7 +963,7 @@ instance Gallina Assums where
     UnparenthesizedAssums ids ty -> renderAss ids ty
     ParenthesizedAssums   groups -> group . vsep $ parens . align . uncurry renderAss <$> groups
     where
-      renderAss ids ty = fillSep (renderIdent <$> ids) <> nest 2 (render_type ty)
+      renderAss ids ty = fillSep (renderGallina <$> ids) <> nest 2 (render_type ty)
 
 instance Gallina Locality where
   renderGallina' _ Global = "(*Global*)"
@@ -987,7 +984,7 @@ instance Gallina Definition where
     LetDef            name args oty body -> renderDef "Let"                                name args oty body
     where
       renderDef def name args oty body =
-        hang 2 ((def <+> renderIdent name
+        hang 2 ((def <+> renderGallina name
                      <>  spaceIf args <> render_args_oty H args oty
                      <+> ":=") <$$> renderGallina body <>  ".")
 
@@ -997,14 +994,14 @@ instance Gallina Inductive where
 
 instance Gallina IndBody where
   renderGallina' _ (IndBody name params ty cons) =
-    renderIdent name <> spaceIf params <> render_args_ty H params ty
+    renderGallina name <> spaceIf params <> render_args_ty H params ty
                      <> nest 2 (softline <> renderCons cons)
     where
       renderCons []         = ":="
       renderCons (con:cons) = align $ foldl' (<!>) (renderCon ":=" con) (renderCon "| " <$> cons)
 
       renderCon delim (cname, cargs, coty) =
-        delim <+> renderIdent cname <> spaceIf cargs <> render_args_oty H cargs coty
+        delim <+> renderGallina cname <> spaceIf cargs <> render_args_oty H cargs coty
 
 instance Gallina Fixpoint where
   renderGallina' _ (Fixpoint   bodies nots) = render_mutual_def "Fixpoint"   bodies nots
@@ -1012,7 +1009,7 @@ instance Gallina Fixpoint where
 
 instance Gallina ProgramFixpoint where
   renderGallina' _ (ProgramFixpoint name params order ty body) =
-    hang 2 ("Program Fixpoint" <+> renderIdent name
+    hang 2 ("Program Fixpoint" <+> renderGallina name
                                <> spaceIf params <> render_args H params
                                <+> renderGallina order
                                <+> ":" <+> renderGallina ty <+> ":=") <$$> renderGallina body <> "."
@@ -1026,7 +1023,7 @@ instance Gallina Order where
 
 instance Gallina Assertion where
   renderGallina' _ (Assertion kw name args ty) =
-    renderGallina kw <+> renderIdent name <> spaceIf args <> group (render_args V args)
+    renderGallina kw <+> renderGallina name <> spaceIf args <> group (render_args V args)
                      <+> group (nest 2 $ ":" </> renderGallina ty)
                      <>  "."
 
@@ -1066,28 +1063,28 @@ instance Gallina ModuleSentence where
 
 instance Gallina ClassDefinition where
   renderGallina' _ (ClassDefinition cl params osort fields) =
-    "Class" <+> renderIdent cl <> spaceIf params <> render_args_oty H params (Sort <$> osort)
+    "Class" <+> renderGallina cl <> spaceIf params <> render_args_oty H params (Sort <$> osort)
             <+> nest 2 (":=" </> "{" <> lineIf fields
-                                     <> sepWith (<+>) (<!>) ";" (map (\(f,ty) -> renderIdent f <+> ":" <+> renderGallina ty) fields)
+                                     <> sepWith (<+>) (<!>) ";" (map (\(f,ty) -> renderGallina f <+> ":" <+> renderGallina ty) fields)
                                      <> spaceIf fields <> "}.")
 
 instance Gallina RecordDefinition where
   renderGallina' _ (RecordDefinition cl params osort build fields) =
-    "Record" <+> renderIdent cl <> spaceIf params <> render_args_oty H params (Sort <$> osort)
-            <+> nest 2 (":=" </> maybe empty renderIdent build <+>
+    "Record" <+> renderGallina cl <> spaceIf params <> render_args_oty H params (Sort <$> osort)
+            <+> nest 2 (":=" </> maybe empty renderGallina build <+>
                                  "{" <> lineIf fields
-                                     <> sepWith (<+>) (<!>) ";" (map (\(f,ty) -> renderIdent f <+> ":" <+> renderGallina ty) fields)
+                                     <> sepWith (<+>) (<!>) ";" (map (\(f,ty) -> renderGallina f <+> ":" <+> renderGallina ty) fields)
                                      <> spaceIf fields <> "}.")
 
 instance Gallina InstanceDefinition where
   renderGallina' _ (InstanceDefinition inst params cl defns mpf) =
-    "Instance" <+> renderIdent inst <> spaceIf params <> render_args_ty H params cl
+    "Instance" <+> renderGallina inst <> spaceIf params <> render_args_ty H params cl
                <+> nest 2 (":=" </> "{" <> lineIf defns
-                                        <> sepWith (<+>) (<!>) ";" (map (\(f,def) -> renderIdent f <+> ":=" <+> renderGallina def) defns)
+                                        <> sepWith (<+>) (<!>) ";" (map (\(f,def) -> renderGallina f <+> ":=" <+> renderGallina def) defns)
                                         <> spaceIf defns <> "}.")
                <>  maybe empty ((line <>) . renderGallina) mpf
   renderGallina' _ (InstanceTerm inst params cl term mpf) =
-    "Instance" <+> renderIdent inst <> spaceIf params <> render_args_ty H params cl
+    "Instance" <+> renderGallina inst <> spaceIf params <> render_args_ty H params cl
                <+> nest 2 (":=" </> renderGallina term <> ".")
                <>  maybe empty ((line <>) . renderGallina) mpf
 

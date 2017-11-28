@@ -75,6 +75,8 @@ bareName = toPrefix . escapeReservedNames . T.pack . occNameString . nameOccName
 var' :: ConversionMonad m => HsNamespace -> Ident -> m Qualid
 var' ns x = use $ renamed ns (Bare x) . non (Bare (escapeReservedNames x))
 
+-- TODO: Avoid looking up in the renaming data base when it is a local name
+-- (Or make sure local names are always Bare)
 var :: ConversionMonad m => HsNamespace -> GHC.Name -> m Qualid
 var ns name = do
   thisModM <- fmap moduleNameText <$> use currentModule

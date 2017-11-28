@@ -57,7 +57,7 @@ convertModuleValDecls mdecls = do
                       ->  pure <$> toProgramFixpointSentence cdef order tactic
                       | otherwise                   -- no edit
                       -> pure $ withConvertedDefinition
-                          (DefinitionDef Global . qualidBase)  (pure . DefinitionSentence)
+                          (DefinitionDef Global)  (pure . DefinitionSentence)
                           (buildInfixNotations sigs) (map    NotationSentence)
                           cdef
                 )(\_ _ -> convUnsupported "top-level pattern bindings")

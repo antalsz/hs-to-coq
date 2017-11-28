@@ -55,7 +55,7 @@ convertPat (LazyPat p) = do
                    else return p'
 
 convertPat (GHC.AsPat x p) =
-  Coq.AsPat <$> convertLPat p <*> freeVar (unLoc x)
+  Coq.AsPat <$> convertLPat p <*> var ExprNS (unLoc x)
 
 convertPat (ParPat p) =
   convertLPat p

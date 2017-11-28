@@ -41,7 +41,7 @@ import HsToCoq.ConvertHaskell.InfixNames
 ----------------------------------------------------------------------------------------------------
 
 class Names t where
-  names :: t -> Set Ident
+  names :: t -> Set Qualid
 
 instance Names FixBody where
   names (FixBody f _ _ _ _) = S.singleton f
@@ -61,8 +61,8 @@ class Binding b where
 binding' :: (Binding b, MonadVariables Qualid d m, Monoid d) => b -> m a -> m a
 binding' = binding $ const mempty
 
-instance Binding Ident where
-  binding f x = bind (Bare x) (f (Bare x))
+instance Binding Qualid where
+  binding f x = bind x (f x)
 
 instance Binding Name where
   binding f (Ident x)      = binding f x
@@ -132,8 +132,8 @@ instance Binding Pattern where
     binding f pat
     -- The scope is a different sort of identifier, not a term-level variable.
 
-  binding f (QualidPat (Bare x)) =
-    binding f x
+  binding f (QualidPat qid@(Bare x)) =
+    binding f qid
     -- See [Note Bound variables in patterns]
 
   binding _ (QualidPat qid@(Qualified _ _)) =
@@ -200,14 +200,14 @@ instance Binding Definition where
       binding f x
 
 instance Binding Inductive where
-  binding f (Inductive   ibs nots) = binding f (foldMap (S.map Bare . names) ibs) . (freeVars ibs *> freeVars (NoBinding nots) *>)
-  binding f (CoInductive cbs nots) = binding f (foldMap (S.map Bare . names) cbs) . (freeVars cbs *> freeVars (NoBinding nots) *>)
+  binding f (Inductive   ibs nots) = binding f (foldMap names ibs) . (freeVars ibs *> freeVars (NoBinding nots) *>)
+  binding f (CoInductive cbs nots) = binding f (foldMap names cbs) . (freeVars cbs *> freeVars (NoBinding nots) *>)
   -- The notation bindings here can only rebind existing reserved names, so we
   -- fake out @binding' nots@ to get the free variables.
 
 instance Binding Fixpoint where
-  binding f (Fixpoint   fbs nots) = binding f (foldMap (S.map Bare . names) fbs) . (freeVars fbs *> freeVars (NoBinding nots) *>)
-  binding f (CoFixpoint cbs nots) = binding f (foldMap (S.map Bare . names) cbs) . (freeVars cbs *> freeVars (NoBinding nots) *>)
+  binding f (Fixpoint   fbs nots) = binding f (foldMap names fbs) . (freeVars fbs *> freeVars (NoBinding nots) *>)
+  binding f (CoFixpoint cbs nots) = binding f (foldMap names cbs) . (freeVars cbs *> freeVars (NoBinding nots) *>)
   -- The notation bindings here can only rebind existing reserved names, so we
   -- fake out @binding' nots@ to get the free variables.
 
@@ -246,15 +246,17 @@ instance Binding InstanceDefinition where
     binding f inst
 
 instance Binding Notation where
-  binding f (ReservedNotationIdent x) = binding f x
+  binding f (ReservedNotationIdent x) = binding f (Bare x)
     -- We treat reserved single-identifier notations as bound variables
   binding f (NotationBinding nb) = binding f nb
   binding f (InfixDefinition op defn oassoc level) =
-    (freeVars defn *> freeVars oassoc *> freeVars level *>) . binding f op
+    -- TODO: This Bare is fishy
+    (freeVars defn *> freeVars oassoc *> freeVars level *>) . binding f (Bare op)
     -- We treat infix operators as bound variables
 
 instance Binding NotationBinding where
-  binding f (NotationIdentBinding x def) = (freeVars def *>) . binding f x
+    -- TODO: This Bare is fishy
+  binding f (NotationIdentBinding x def) = (freeVars def *>) . binding f (Bare x)
 
 -- TODO Not all sequences of bindings should be telescopes!
 bindingTelescope :: (Binding b, MonadVariables Qualid d m, Monoid d, Foldable f)
@@ -300,11 +302,11 @@ instance FreeVars Term where
 
   freeVars (LetFix fb body) = do
     freeVars fb
-    binding' (S.map Bare (names fb)) $ freeVars body
+    binding' (names fb) $ freeVars body
 
   freeVars (LetCofix cb body) = do
     freeVars cb
-    binding' (S.map Bare (names cb)) $ freeVars body
+    binding' (names cb) $ freeVars body
 
   freeVars (LetTuple xs oret val body) = do
     freeVars oret *> freeVars val
@@ -415,14 +417,14 @@ instance FreeVars FixBodies where
     freeVars fb
   freeVars (FixMany fb' fbs' x) =
     let fbs = fb' <| fbs'
-    in binding' (S.map Bare (x `S.insert` foldMap names fbs)) $ freeVars fbs
+    in binding' (x `S.insert` foldMap names fbs) $ freeVars fbs
 
 instance FreeVars CofixBodies where
   freeVars (CofixOne cb) =
     freeVars cb
   freeVars (CofixMany cb' cbs' x) =
     let cbs = cb' <| cbs'
-    in binding' (S.map Bare (x `S.insert` foldMap names cbs)) $ freeVars cbs
+    in binding' (x `S.insert` foldMap names cbs) $ freeVars cbs
 
 instance FreeVars FixBody where
   freeVars (FixBody f args annot oty def) =

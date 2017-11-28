@@ -4,6 +4,7 @@ module HsToCoq.Coq.Gallina.Util (
   -- * Common AST patterns
   pattern Var,    pattern App1,    pattern App2,    pattern App3,    appList,
   pattern VarPat, pattern App1Pat, pattern App2Pat, pattern App3Pat, appListPat,
+  pattern BName,
   maybeForall,
   ifBool,
 
@@ -15,7 +16,7 @@ module HsToCoq.Coq.Gallina.Util (
   _Ident, _UnderscoreName, nameToIdent,
   binderNames, binderIdents, binderExplicitness,
   -- ** Functions
-  qualidBase, qualidModule, qualidMapBase,
+  qualidBase, qualidModule, qualidMapBase, qualidExtendBase,
   splitModule,
   qualidToIdent, identToQualid, identToBase,
   unsafeIdentToQualid,
@@ -29,8 +30,8 @@ import Control.Applicative
 import Data.Semigroup ((<>))
 import Data.Foldable
 import Data.Maybe
+import Data.String
 import Data.List.NonEmpty (NonEmpty(..), nonEmpty)
-import HsToCoq.Util.List
 
 import qualified Data.Text as T
 import Text.Parsec hiding ((<|>), many)
@@ -63,6 +64,9 @@ pattern App2Pat c x1 x2    = ArgsPat c (x1 :| x2 : [])
 pattern App3Pat c x1 x2 x3 = ArgsPat c (x1 :| x2 : x3 : [])
 appListPat      c          = maybe (QualidPat c) (ArgsPat c) . nonEmpty
 
+pattern BName :: Ident -> Name
+pattern BName  x          = Ident (Bare x)
+
 maybeForall :: Foldable f => f Binder -> Term -> Term
 maybeForall = maybe id Forall . nonEmpty . toList
 {-# INLINABLE  maybeForall #-}
@@ -87,11 +91,7 @@ termHead _                    = Nothing
 
 makePrisms ''Name
 
--- Indirection due to the pattern synonym
-_Ident :: Prism' Name Ident
-_Ident = _Ident_
-
-nameToIdent :: Iso' Name (Maybe Ident)
+nameToIdent :: Iso' Name (Maybe Qualid)
 nameToIdent = iso (\case Ident x        -> Just x
                          UnderscoreName -> Nothing)
                   (maybe UnderscoreName Ident)
@@ -104,7 +104,7 @@ binderNames _ gen@Generalized{}             = pure gen
 binderNames _ blet@BindLet{}                = pure blet
 {-# INLINEABLE binderNames #-}
 
-binderIdents :: Traversal' Binder Ident
+binderIdents :: Traversal' Binder Qualid
 binderIdents = binderNames._Ident
 {-# INLINEABLE binderIdents #-}
 
@@ -127,6 +127,9 @@ qualidMapBase :: (Ident -> Ident) -> Qualid -> Qualid
 qualidMapBase f (Bare             base) = Bare             $ f base
 qualidMapBase f (Qualified prefix base) = Qualified prefix $ f base
 
+qualidExtendBase :: T.Text -> Qualid -> Qualid
+qualidExtendBase suffix = qualidMapBase (<> suffix)
+
 qualidToIdent :: Qualid -> Ident
 qualidToIdent (Bare      ident)   = ident
 qualidToIdent (Qualified qid aid) = qid <> "." <> aid
@@ -146,20 +149,29 @@ identToQualid x = case splitModule x of
     Just (mod, ident) -> Just (Qualified mod ident)
     _                 -> Just (Bare x)
 
-unsafeIdentToQualid :: HasCallStack => Ident -> Qualid
-unsafeIdentToQualid i = fromMaybe (error $ "unsafeIdentToQualid: " ++ show i) (identToQualid i)
-
 identToBase :: Ident -> Ident
 identToBase x = maybe x qualidBase $ identToQualid x
 
 nameToTerm :: Name -> Term
-nameToTerm (Ident x)      = Var x
+nameToTerm (Ident x)      = Qualid x
 nameToTerm UnderscoreName = Underscore
 
 nameToPattern :: Name -> Pattern
-nameToPattern (Ident x)      = VarPat x
+nameToPattern (Ident x)      = QualidPat x
 nameToPattern UnderscoreName = UnderscorePat
 
 binderArgs :: Foldable f => f Binder -> [Arg]
 binderArgs = map (PosArg . nameToTerm) . foldMap (toListOf binderNames)
            . filter (\b -> b^?binderExplicitness == Just Explicit) . toList
+
+-- For internal use only (e.g. hardcoded names)
+instance IsString Term where
+    fromString x = Qualid (unsafeIdentToQualid (T.pack x))
+instance IsString Qualid where
+    fromString x = unsafeIdentToQualid (T.pack x)
+instance IsString Binder where
+    fromString x = Inferred Explicit (Ident (unsafeIdentToQualid (T.pack x)))
+
+unsafeIdentToQualid :: HasCallStack => Ident -> Qualid
+unsafeIdentToQualid i = fromMaybe (error $ "unsafeIdentToQualid: " ++ show i) (identToQualid i)
+

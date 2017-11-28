@@ -96,7 +96,7 @@ convertHsGroup mod HsGroup{..} = do
                           ->  pure <$> toProgramFixpointSentence cdef order tactic
                           | otherwise                   -- no edit
                           -> pure $ withConvertedDefinition
-                              (DefinitionDef Global . qualidBase) (pure . DefinitionSentence)
+                              (DefinitionDef Global) (pure . DefinitionSentence)
                               (buildInfixNotations sigs) (map    NotationSentence)
                               cdef
                    ) (\_ _ -> convUnsupported "top-level pattern bindings")
@@ -242,7 +242,7 @@ usedAxioms :: forall m. ConversionMonad m => [Sentence] -> m [Sentence]
 usedAxioms decls = do
     axs <- use axioms
     let ax_decls =
-          [ AssumptionSentence (Assumption Axiom (UnparenthesizedAssums [qualidBase i] t))
+          [ AssumptionSentence (Assumption Axiom (UnparenthesizedAssums [i] t))
           | i <- toList (getFreeVars (NoBinding decls))
           , Just t <- return $ M.lookup i axs
           ]

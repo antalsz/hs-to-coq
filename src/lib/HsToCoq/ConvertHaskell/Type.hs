@@ -27,8 +27,8 @@ import HsToCoq.ConvertHaskell.Literals
 
 convertLHsTyVarBndrs :: ConversionMonad m => Explicitness -> [LHsTyVarBndr GHC.Name] -> m [Binder]
 convertLHsTyVarBndrs ex tvs = for (map unLoc tvs) $ \case
-  UserTyVar   tv   -> Inferred ex . Ident <$> freeVar (unLoc tv)
-  KindedTyVar tv k -> Typed Ungeneralizable ex <$> (pure . Ident <$> freeVar (unLoc tv)) <*> convertLType k
+  UserTyVar   tv   -> Inferred ex . Ident <$> var TypeNS (unLoc tv)
+  KindedTyVar tv k -> Typed Ungeneralizable ex <$> (pure . Ident <$> var TypeNS (unLoc tv)) <*> convertLType k
 
 --------------------------------------------------------------------------------
 
@@ -139,8 +139,8 @@ convertLType = convertType . unLoc
 
 convertLHsSigType :: ConversionMonad m => LHsSigType GHC.Name -> m Term
 convertLHsSigType (HsIB itvs lty) =
-  maybeForall (map (Inferred Coq.Implicit . Ident . bareName) itvs)
-              <$> convertLType lty
+  maybeForall <$> (map (Inferred Coq.Implicit . Ident) <$> traverse (var TypeNS) itvs)
+              <*> convertLType lty
 
 convertLHsSigWcType :: ConversionMonad m => LHsSigWcType GHC.Name -> m Term
 convertLHsSigWcType (HsIB itvs (HsWC wcs _ss lty))

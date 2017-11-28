@@ -72,7 +72,7 @@ data ConversionState = ConversionState { __currentModule         :: !(Maybe Modu
                                        -- , _memberSigs       :: !(Map Ident (Map Ident Signature))
                                        -- translated classes
                                        , _classDefns             :: !(Map Qualid ClassDefinition)
-                                       , _defaultMethods         :: !(Map Qualid (Map Ident Term))
+                                       , _defaultMethods         :: !(Map Qualid (Map Qualid Term))
                                        , _fixities               :: !(Map Ident (Coq.Associativity, Coq.Level))
                                        , _typecheckerEnvironment :: !(Maybe TcGblEnv)
                                        , _axioms                 :: !(Map Qualid Term)
@@ -112,30 +112,30 @@ builtInDataCons =
 builtInClasses :: [ClassDefinition]
 builtInClasses =
     [ ClassDefinition "GHC.Base.Eq_" ["a"] Nothing
-        [ "op_zeze__" =: "a" `Arrow` "a" `Arrow` "bool"
-        , "op_zsze__" =: "a" `Arrow` "a" `Arrow` "bool"
+        [ "GHC.Base.op_zeze__" =: "a" `Arrow` "a" `Arrow` "bool"
+        , "GHC.Base.op_zsze__" =: "a" `Arrow` "a" `Arrow` "bool"
         ]
     , ClassDefinition "GHC.Base.Ord" ["a"] Nothing
-        [ "op_zl__"   =: "a" `Arrow` "a" `Arrow` "bool"
-        , "op_zlze__" =: "a" `Arrow` "a" `Arrow` "bool"
-        , "op_zg__"   =: "a" `Arrow` "a" `Arrow` "bool"
-        , "op_zgze__" =: "a" `Arrow` "a" `Arrow` "bool"
-        , "compare"   =: "a" `Arrow` "a" `Arrow` "comparison"
-        , "max"       =: "a" `Arrow` "a" `Arrow` "a"
-        , "min"       =: "a" `Arrow` "a" `Arrow` "a"
+        [ "GHC.Base.op_zl__"   =: "a" `Arrow` "a" `Arrow` "bool"
+        , "GHC.Base.op_zlze__" =: "a" `Arrow` "a" `Arrow` "bool"
+        , "GHC.Base.op_zg__"   =: "a" `Arrow` "a" `Arrow` "bool"
+        , "GHC.Base.op_zgze__" =: "a" `Arrow` "a" `Arrow` "bool"
+        , "GHC.Base.compare"   =: "a" `Arrow` "a" `Arrow` "comparison"
+        , "GHC.Base.max"       =: "a" `Arrow` "a" `Arrow` "a"
+        , "GHC.Base.min"       =: "a" `Arrow` "a" `Arrow` "a"
         ]
     , ClassDefinition "GHC.Base.Monoid" ["a"] Nothing
-        [ "mappend" =: "a" `Arrow` "a" `Arrow` "a"
-        , "mconcat" =: ("list" `App1` "a") `Arrow` "a"
-        , "mempty"  =: "a"
+        [ "GHC.Base.mappend" =: "a" `Arrow` "a" `Arrow` "a"
+        , "GHC.Base.mconcat" =: ("list" `App1` "a") `Arrow` "a"
+        , "GHC.Base.mempty"  =: "a"
         ]
     , ClassDefinition "GHC.Base.Functor" ["f"] Nothing
-        [ "op_zlzd__" =: (Forall [ Inferred Implicit (Ident "a")
+        [ "GHC.Base.op_zlzd__" =: (Forall [ Inferred Implicit (Ident "a")
                             , Inferred Implicit (Ident "b")] $
                      "a" `Arrow`
                      App1 "f" "b" `Arrow`
                      App1 "f" "a")
-        , "fmap" =: (Forall [ Inferred Implicit (Ident "a")
+        , "GHC.Base.fmap" =: (Forall [ Inferred Implicit (Ident "a")
                             , Inferred Implicit (Ident "b")] $
                      ("a" `Arrow` "b") `Arrow`
                      App1 "f" "a" `Arrow`
@@ -143,22 +143,22 @@ builtInClasses =
         ]
     , ClassDefinition "GHC.Base.Applicative"
         [ "f"
-        , Generalized Implicit (App1 "Functor" "f")
+        , Generalized Implicit (App1 "GHC.Base.Functor" "f")
         ]
         Nothing
-        [ "op_ztzg__" =:
+        [ "GHC.Base.op_ztzg__" =:
             (Forall [ Inferred Implicit (Ident "a")
                     , Inferred Implicit (Ident "b")] $
                      App1 "f" "a" `Arrow`
                      App1 "f" "b" `Arrow`
                      App1 "f" "b")
-        , "op_zlztzg__" =:
+        , "GHC.Base.op_zlztzg__" =:
             (Forall [ Inferred Implicit (Ident "a")
                     , Inferred Implicit (Ident "b")] $
                      App1 "f" ("a" `Arrow` "b") `Arrow`
                      App1 "f" "a" `Arrow`
                      App1 "f" "b")
-        , "pure"  =: (Forall [Inferred Implicit (Ident "a")]  $
+        , "GHC.Base.pure"  =: (Forall [Inferred Implicit (Ident "a")]  $
                       "a" `Arrow` App1 "f" "a")
         {- skipped
         , "op_zlzt__" =:
@@ -174,19 +174,19 @@ builtInClasses =
         , Generalized Implicit (App1 "GHC.Base.Applicative" "f")
         ]
         Nothing
-        [ "op_zgzg__" =:
+        [ "GHC.Base.op_zgzg__" =:
            (Forall [ Inferred Implicit (Ident "a")
                    , Inferred Implicit (Ident "b")] $
                     App1 "f" "a" `Arrow`
                     App1 "f" "b" `Arrow`
                     App1 "f" "b")
-        , "op_zgzgze__" =:
+        , "GHC.Base.op_zgzgze__" =:
             (Forall [ Inferred Implicit (Ident "a")
                     , Inferred Implicit (Ident "b")] $
                      App1 "f" "a" `Arrow`
                      ("a" `Arrow` App1 "f" "b") `Arrow`
                      App1 "f" "b")
-        , "return_"  =: (Forall [Inferred Implicit (Ident "a")]  $
+        , "GHC.Base.return_"  =: (Forall [Inferred Implicit (Ident "a")]  $
                       "a" `Arrow` App1 "f" "a")
         {-
         , "fail" =:
@@ -209,18 +209,18 @@ builtInClasses =
         ] -}
 
     , ClassDefinition "Data.Foldable.Foldable" ["t"] Nothing
-      [("elem",Forall (Inferred Implicit (Ident "a") :| []) (Forall (Generalized Implicit (App "GHC.Base.Eq_" (PosArg "a" :| [])) :| []) (Arrow "a" (Arrow (App "t" (PosArg "a" :| [])) "bool")))),
-        ("fold",Forall (Inferred Implicit (Ident "m") :| []) (Forall (Generalized Implicit (App "GHC.Base.Monoid" (PosArg "m" :| [])) :| []) (Arrow (App "t" (PosArg "m" :| [])) "m"))),
-        ("foldMap",Forall (Inferred Implicit (Ident "m") :| [Inferred Implicit (Ident "a")]) (Forall (Generalized Implicit (App "GHC.Base.Monoid" (PosArg "m" :| [])) :| []) (Arrow (Parens (Arrow "a" "m")) (Arrow (App "t" (PosArg "a" :| [])) "m")))),
-        ("foldl",Forall (Inferred Implicit (Ident "b") :| [Inferred Implicit (Ident "a")]) (Arrow (Parens (Arrow "b" (Arrow "a" "b"))) (Arrow "b" (Arrow (App "t" (PosArg "a" :| [])) "b")))),
-        ("foldl'",Forall (Inferred Implicit (Ident "b") :| [Inferred Implicit (Ident "a")]) (Arrow (Parens (Arrow "b" (Arrow "a" "b"))) (Arrow "b" (Arrow (App "t" (PosArg "a" :| [])) "b")))),
+      [("Data.Foldable.elem",Forall (Inferred Implicit (Ident "a") :| []) (Forall (Generalized Implicit (App "GHC.Base.Eq_" (PosArg "a" :| [])) :| []) (Arrow "a" (Arrow (App "t" (PosArg "a" :| [])) "bool")))),
+        ("Data.Foldable.fold",Forall (Inferred Implicit (Ident "m") :| []) (Forall (Generalized Implicit (App "GHC.Base.Monoid" (PosArg "m" :| [])) :| []) (Arrow (App "t" (PosArg "m" :| [])) "m"))),
+        ("Data.Foldable.foldMap",Forall (Inferred Implicit (Ident "m") :| [Inferred Implicit (Ident "a")]) (Forall (Generalized Implicit (App "GHC.Base.Monoid" (PosArg "m" :| [])) :| []) (Arrow (Parens (Arrow "a" "m")) (Arrow (App "t" (PosArg "a" :| [])) "m")))),
+        ("Data.Foldable.foldl",Forall (Inferred Implicit (Ident "b") :| [Inferred Implicit (Ident "a")]) (Arrow (Parens (Arrow "b" (Arrow "a" "b"))) (Arrow "b" (Arrow (App "t" (PosArg "a" :| [])) "b")))),
+        ("Data.Foldable.foldl'",Forall (Inferred Implicit (Ident "b") :| [Inferred Implicit (Ident "a")]) (Arrow (Parens (Arrow "b" (Arrow "a" "b"))) (Arrow "b" (Arrow (App "t" (PosArg "a" :| [])) "b")))),
         ("foldr",Forall (Inferred Implicit (Ident "a") :| [Inferred Implicit (Ident "b")]) (Arrow (Parens (Arrow "a" (Arrow "b" "b"))) (Arrow "b" (Arrow (App "t" (PosArg "a" :| [])) "b")))),
-        ("foldr'",Forall (Inferred Implicit (Ident "a") :| [Inferred Implicit (Ident "b")]) (Arrow (Parens (Arrow "a" (Arrow "b" "b"))) (Arrow "b" (Arrow (App "t" (PosArg "a" :| [])) "b")))),
-        ("length",Forall (Inferred Implicit (Ident "a") :| []) (Arrow (App "t" (PosArg "a" :| [])) "GHC.Num.Int")),
-        ("null",Forall (Inferred Implicit (Ident "a") :| []) (Arrow (App "t" (PosArg "a" :| [])) "bool")),
-        ("product",Forall (Inferred Implicit (Ident "a") :| []) (Forall (Generalized Implicit (App "GHC.Num.Num" (PosArg "a" :| [])) :| []) (Arrow (App "t" (PosArg "a" :| [])) "a"))),
-        ("sum",Forall (Inferred Implicit (Ident "a") :| []) (Forall (Generalized Implicit (App "GHC.Num.Num" (PosArg "a" :| [])) :| []) (Arrow (App "t" (PosArg "a" :| [])) "a"))),
-        ("toList",Forall (Inferred Implicit (Ident "a") :| []) (Arrow (App "t" (PosArg "a" :| [])) (App "list" (PosArg "a" :| []))))]
+        ("Data.Foldable.foldr'",Forall (Inferred Implicit (Ident "a") :| [Inferred Implicit (Ident "b")]) (Arrow (Parens (Arrow "a" (Arrow "b" "b"))) (Arrow "b" (Arrow (App "t" (PosArg "a" :| [])) "b")))),
+        ("Data.Foldable.length",Forall (Inferred Implicit (Ident "a") :| []) (Arrow (App "t" (PosArg "a" :| [])) "GHC.Num.Int")),
+        ("Data.Foldable.null",Forall (Inferred Implicit (Ident "a") :| []) (Arrow (App "t" (PosArg "a" :| [])) "bool")),
+        ("Data.Foldable.product",Forall (Inferred Implicit (Ident "a") :| []) (Forall (Generalized Implicit (App "GHC.Num.Num" (PosArg "a" :| [])) :| []) (Arrow (App "t" (PosArg "a" :| [])) "a"))),
+        ("Data.Foldable.sum",Forall (Inferred Implicit (Ident "a") :| []) (Forall (Generalized Implicit (App "GHC.Num.Num" (PosArg "a" :| [])) :| []) (Arrow (App "t" (PosArg "a" :| [])) "a"))),
+        ("Data.Foldable.toList",Forall (Inferred Implicit (Ident "a") :| []) (Arrow (App "t" (PosArg "a" :| [])) (App "list" (PosArg "a" :| []))))]
 
 
 {-    , ClassDefinition "Data.Traversable"
@@ -248,66 +248,96 @@ builtInClasses =
                               (PosArg "t" :| []))
       ]
       Nothing
-      [("mapM",
+      [("Data.Traversable.mapM",
          Forall (Inferred Implicit (Ident "m") :| [Inferred Implicit (Ident "a"),Inferred Implicit (Ident "b")]) (Forall (Generalized Implicit (App "GHC.Base.Monad" (PosArg "m" :| [])) :| []) (Arrow (Parens (Arrow "a" (App "m" (PosArg "b" :| [])))) (Arrow (App "t" (PosArg "a" :| [])) (App "m" (PosArg (Parens (App "t" (PosArg "b" :| []))) :| [])))))),
-        ("sequence",Forall (Inferred Implicit (Ident "m") :| [Inferred Implicit (Ident "a")]) (Forall (Generalized Implicit (App "GHC.Base.Monad" (PosArg "m" :| [])) :| []) (Arrow (App "t" (PosArg (Parens (App "m" (PosArg "a" :| []))) :| [])) (App "m" (PosArg (Parens (App "t" (PosArg "a" :| []))) :| []))))),
-        ("sequenceA",Forall (Inferred Implicit (Ident "f") :| [Inferred Implicit (Ident "a")]) (Forall (Generalized Implicit (App "GHC.Base.Applicative" (PosArg "f" :| [])) :| []) (Arrow (App "t" (PosArg (Parens (App "f" (PosArg "a" :| []))) :| [])) (App "f" (PosArg (Parens (App "t" (PosArg "a" :| []))) :| []))))),
-        ("traverse",Forall (Inferred Implicit (Ident "f") :| [Inferred Implicit (Ident "a"),Inferred Implicit (Ident "b")]) (Forall (Generalized Implicit (App "GHC.Base.Applicative" (PosArg "f" :| [])) :| []) (Arrow (Parens (Arrow "a" (App "f" (PosArg "b" :| [])))) (Arrow (App "t" (PosArg "a" :| [])) (App "f" (PosArg (Parens (App "t" (PosArg "b" :| []))) :| []))))))]
+        ("Data.Traversable.sequence",Forall (Inferred Implicit (Ident "m") :| [Inferred Implicit (Ident "a")]) (Forall (Generalized Implicit (App "GHC.Base.Monad" (PosArg "m" :| [])) :| []) (Arrow (App "t" (PosArg (Parens (App "m" (PosArg "a" :| []))) :| [])) (App "m" (PosArg (Parens (App "t" (PosArg "a" :| []))) :| []))))),
+        ("Data.Traversable.sequenceA",Forall (Inferred Implicit (Ident "f") :| [Inferred Implicit (Ident "a")]) (Forall (Generalized Implicit (App "GHC.Base.Applicative" (PosArg "f" :| [])) :| []) (Arrow (App "t" (PosArg (Parens (App "f" (PosArg "a" :| []))) :| [])) (App "f" (PosArg (Parens (App "t" (PosArg "a" :| []))) :| []))))),
+        ("Data.Traversable.traverse",Forall (Inferred Implicit (Ident "f") :| [Inferred Implicit (Ident "a"),Inferred Implicit (Ident "b")]) (Forall (Generalized Implicit (App "GHC.Base.Applicative" (PosArg "f" :| [])) :| []) (Arrow (Parens (Arrow "a" (App "f" (PosArg "b" :| [])))) (Arrow (App "t" (PosArg "a" :| [])) (App "f" (PosArg (Parens (App "t" (PosArg "b" :| []))) :| []))))))]
 
-    , ClassDefinition "Control.Arrow.Arrow" [Typed Ungeneralizable Explicit (Ident "a" :| []) (Arrow "Type" (Arrow "Type" "Type")),Generalized Implicit (App "Control.Category.Category" (PosArg "a" :| []))] Nothing [("op_zazaza__",Forall (Inferred Implicit (Ident "b") :| [Inferred Implicit (Ident "c"),Inferred Implicit (Ident "c'")]) (Arrow (App (App "a" (PosArg "b" :| [])) (PosArg "c" :| [])) (Arrow (App (App "a" (PosArg "b" :| [])) (PosArg "c'" :| [])) (App (App "a" (PosArg "b" :| [])) (PosArg (Infix "c" "*" "c'") :| []))))),("op_ztztzt__",Forall (Inferred Implicit (Ident "b") :| [Inferred Implicit (Ident "c"),Inferred Implicit (Ident "b'"),Inferred Implicit (Ident "c'")]) (Arrow (App (App "a" (PosArg "b" :| [])) (PosArg "c" :| [])) (Arrow (App (App "a" (PosArg "b'" :| [])) (PosArg "c'" :| [])) (App (App "a" (PosArg (Infix "b" "*" "b'") :| [])) (PosArg (Infix "c" "*" "c'") :| []))))),("arr",Forall (Inferred Implicit (Ident "b") :| [Inferred Implicit (Ident "c")]) (Arrow (Parens (Arrow "b" "c")) (App (App "a" (PosArg "b" :| [])) (PosArg "c" :| [])))),("first",Forall (Inferred Implicit (Ident "b") :| [Inferred Implicit (Ident "c"),Inferred Implicit (Ident "d")]) (Arrow (App (App "a" (PosArg "b" :| [])) (PosArg "c" :| [])) (App (App "a" (PosArg (Infix "b" "*" "d") :| [])) (PosArg (Infix "c" "*" "d") :| [])))),("second",Forall (Inferred Implicit (Ident "b") :| [Inferred Implicit (Ident "c"),Inferred Implicit (Ident "d")]) (Arrow (App (App "a" (PosArg "b" :| [])) (PosArg "c" :| [])) (App (App "a" (PosArg (Infix "d" "*" "b") :| [])) (PosArg (Infix "d" "*" "c") :| []))))]
+    , ClassDefinition "Control.Arrow.Arrow"
+       [Typed Ungeneralizable Explicit (Ident "a" :| []) (Arrow "Type" (Arrow "Type" "Type")),Generalized Implicit (App "Control.Category.Category" (PosArg "a" :| []))]
+       Nothing
+       [("Control.Arrow.op_zazaza__",Forall (Inferred Implicit (Ident "b") :| [Inferred Implicit (Ident "c"),Inferred Implicit (Ident "c'")]) (Arrow (App (App "a" (PosArg "b" :| [])) (PosArg "c" :| [])) (Arrow (App (App "a" (PosArg "b" :| [])) (PosArg "c'" :| [])) (App (App "a" (PosArg "b" :| [])) (PosArg (Infix "c" "*" "c'") :| [])))))
+       ,("Control.Arrow.op_ztztzt__",Forall (Inferred Implicit (Ident "b") :| [Inferred Implicit (Ident "c"),Inferred Implicit (Ident "b'"),Inferred Implicit (Ident "c'")]) (Arrow (App (App "a" (PosArg "b" :| [])) (PosArg "c" :| [])) (Arrow (App (App "a" (PosArg "b'" :| [])) (PosArg "c'" :| [])) (App (App "a" (PosArg (Infix "b" "*" "b'") :| [])) (PosArg (Infix "c" "*" "c'") :| [])))))
+       ,("Conrol.Arrow.arr",Forall (Inferred Implicit (Ident "b") :| [Inferred Implicit (Ident "c")]) (Arrow (Parens (Arrow "b" "c")) (App (App "a" (PosArg "b" :| [])) (PosArg "c" :| []))))
+       ,("Control.Arrow.first",Forall (Inferred Implicit (Ident "b") :| [Inferred Implicit (Ident "c"),Inferred Implicit (Ident "d")]) (Arrow (App (App "a" (PosArg "b" :| [])) (PosArg "c" :| [])) (App (App "a" (PosArg (Infix "b" "*" "d") :| [])) (PosArg (Infix "c" "*" "d") :| []))))
+       ,("Control.Arrowsecond",Forall (Inferred Implicit (Ident "b") :| [Inferred Implicit (Ident "c"),Inferred Implicit (Ident "d")]) (Arrow (App (App "a" (PosArg "b" :| [])) (PosArg "c" :| [])) (App (App "a" (PosArg (Infix "d" "*" "b") :| [])) (PosArg (Infix "d" "*" "c") :| []))))]
 
-    , ClassDefinition "Control.Arrow.ArrowZero" [Typed Ungeneralizable Explicit (Ident "a" :| []) (Arrow "Type" (Arrow "Type" "Type")),Generalized Implicit (App "Arrow" (PosArg "a" :| []))] Nothing [("zeroArrow",Forall (Inferred Implicit (Ident "b") :| [Inferred Implicit (Ident "c")]) (App (App "a" (PosArg "b" :| [])) (PosArg "c" :| [])))]
+    , ClassDefinition "Control.Arrow.ArrowZero"
+      [Typed Ungeneralizable Explicit (Ident "a" :| []) (Arrow "Type" (Arrow "Type" "Type")),Generalized Implicit (App "Arrow" (PosArg "a" :| []))]
+      Nothing
+      [("Control.Arrow.zeroArrow",Forall (Inferred Implicit (Ident "b") :| [Inferred Implicit (Ident "c")]) (App (App "a" (PosArg "b" :| [])) (PosArg "c" :| [])))]
 
-    ,  ClassDefinition "Control.Arrow.ArrowPlus" [Typed Ungeneralizable Explicit (Ident "a" :| []) (Arrow "Type" (Arrow "Type" "Type")),Generalized Implicit (App "ArrowZero" (PosArg "a" :| []))] Nothing [("op_zlzpzg__",Forall (Inferred Implicit (Ident "b") :| [Inferred Implicit (Ident "c")]) (Arrow (App (App "a" (PosArg "b" :| [])) (PosArg "c" :| [])) (Arrow (App (App "a" (PosArg "b" :| [])) (PosArg "c" :| [])) (App (App "a" (PosArg "b" :| [])) (PosArg "c" :| [])))))]
+    , ClassDefinition "Control.Arrow.ArrowPlus"
+     [Typed Ungeneralizable Explicit (Ident "a" :| []) (Arrow "Type" (Arrow "Type" "Type")),Generalized Implicit (App "ArrowZero" (PosArg "a" :| []))]
+     Nothing
+     [("Control.Arrow.op_zlzpzg__",Forall (Inferred Implicit (Ident "b") :| [Inferred Implicit (Ident "c")]) (Arrow (App (App "a" (PosArg "b" :| [])) (PosArg "c" :| [])) (Arrow (App (App "a" (PosArg "b" :| [])) (PosArg "c" :| [])) (App (App "a" (PosArg "b" :| [])) (PosArg "c" :| [])))))]
 
-    ,  ClassDefinition "Control.Arrow.ArrowChoice" ["a",Generalized Implicit (App "Arrow" (PosArg "a" :| []))] Nothing [("op_zpzpzp__",Forall (Inferred Implicit (Ident "b") :| [Inferred Implicit (Ident "c"),Inferred Implicit (Ident "b'"),Inferred Implicit (Ident "c'")]) (Arrow (App (App "a" (PosArg "b" :| [])) (PosArg "c" :| [])) (Arrow (App (App "a" (PosArg "b'" :| [])) (PosArg "c'" :| [])) (App (App "a" (PosArg (Parens (App (App "sum" (PosArg "b" :| [])) (PosArg "b'" :| []))) :| [])) (PosArg (Parens (App (App "sum" (PosArg "c" :| [])) (PosArg "c'" :| []))) :| []))))),("left",Forall (Inferred Implicit (Ident "b") :| [Inferred Implicit (Ident "c"),Inferred Implicit (Ident "d")]) (Arrow (App (App "a" (PosArg "b" :| [])) (PosArg "c" :| [])) (App (App "a" (PosArg (Parens (App (App "sum" (PosArg "b" :| [])) (PosArg "d" :| []))) :| [])) (PosArg (Parens (App (App "sum" (PosArg "c" :| [])) (PosArg "d" :| []))) :| [])))),("right",Forall (Inferred Implicit (Ident "b") :| [Inferred Implicit (Ident "c"),Inferred Implicit (Ident "d")]) (Arrow (App (App "a" (PosArg "b" :| [])) (PosArg "c" :| [])) (App (App "a" (PosArg (Parens (App (App "sum" (PosArg "d" :| [])) (PosArg "b" :| []))) :| [])) (PosArg (Parens (App (App "sum" (PosArg "d" :| [])) (PosArg "c" :| []))) :| [])))),("op_zbzbzb__",Forall (Inferred Implicit (Ident "b") :| [Inferred Implicit (Ident "d"),Inferred Implicit (Ident "c")]) (Arrow (App (App "a" (PosArg "b" :| [])) (PosArg "d" :| [])) (Arrow (App (App "a" (PosArg "c" :| [])) (PosArg "d" :| [])) (App (App "a" (PosArg (Parens (App (App "sum" (PosArg "b" :| [])) (PosArg "c" :| []))) :| [])) (PosArg "d" :| [])))))]
+    ,ClassDefinition "Control.Arrow.ArrowChoice"
+     ["a",Generalized Implicit (App "Arrow" (PosArg "a" :| []))]
+     Nothing
+     [("Control.Arrow.op_zpzpzp__",Forall (Inferred Implicit (Ident "b") :| [Inferred Implicit (Ident "c"),Inferred Implicit (Ident "b'"),Inferred Implicit (Ident "c'")]) (Arrow (App (App "a" (PosArg "b" :| [])) (PosArg "c" :| [])) (Arrow (App (App "a" (PosArg "b'" :| [])) (PosArg "c'" :| [])) (App (App "a" (PosArg (Parens (App (App "sum" (PosArg "b" :| [])) (PosArg "b'" :| []))) :| [])) (PosArg (Parens (App (App "sum" (PosArg "c" :| [])) (PosArg "c'" :| []))) :| [])))))
+     ,("Control.Arrow.left",Forall (Inferred Implicit (Ident "b") :| [Inferred Implicit (Ident "c"),Inferred Implicit (Ident "d")]) (Arrow (App (App "a" (PosArg "b" :| [])) (PosArg "c" :| [])) (App (App "a" (PosArg (Parens (App (App "sum" (PosArg "b" :| [])) (PosArg "d" :| []))) :| [])) (PosArg (Parens (App (App "sum" (PosArg "c" :| [])) (PosArg "d" :| []))) :| []))))
+     ,("Control.Arrow.right",Forall (Inferred Implicit (Ident "b") :| [Inferred Implicit (Ident "c"),Inferred Implicit (Ident "d")]) (Arrow (App (App "a" (PosArg "b" :| [])) (PosArg "c" :| [])) (App (App "a" (PosArg (Parens (App (App "sum" (PosArg "d" :| [])) (PosArg "b" :| []))) :| [])) (PosArg (Parens (App (App "sum" (PosArg "d" :| [])) (PosArg "c" :| []))) :| []))))
+     ,("Control.Arrow.op_zbzbzb__",Forall (Inferred Implicit (Ident "b") :| [Inferred Implicit (Ident "d"),Inferred Implicit (Ident "c")]) (Arrow (App (App "a" (PosArg "b" :| [])) (PosArg "d" :| [])) (Arrow (App (App "a" (PosArg "c" :| [])) (PosArg "d" :| [])) (App (App "a" (PosArg (Parens (App (App "sum" (PosArg "b" :| [])) (PosArg "c" :| []))) :| [])) (PosArg "d" :| [])))))]
 
     , ClassDefinition "Control.Arrow.ArrowApply" [Typed Ungeneralizable Explicit (Ident "a" :| []) (Arrow "Type" (Arrow "Type" "Type")),Generalized Implicit (App "Arrow" (PosArg "a" :| []))] Nothing [("app",Forall (Inferred Implicit (Ident "b") :| [Inferred Implicit (Ident "c")]) (App (App "a" (PosArg (Infix (App (App "a" (PosArg "b" :| [])) (PosArg "c" :| [])) "*" "b") :| [])) (PosArg "c" :| [])))]
 
-    , ClassDefinition "Control.Arrow. ArrowLoop" ["a",Generalized Implicit (App "Arrow" (PosArg "a" :| []))] Nothing [("loop",Forall (Inferred Implicit (Ident "b") :| [Inferred Implicit (Ident "d"),Inferred Implicit (Ident "c")]) (Arrow (App (App "a" (PosArg (Infix "b" "*" "d") :| [])) (PosArg (Infix "c" "*" "d") :| [])) (App (App "a" (PosArg "b" :| [])) (PosArg "c" :| []))))]
+    , ClassDefinition "Control.Arrow.ArrowLoop"
+      ["a",Generalized Implicit (App "Arrow" (PosArg "a" :| []))]
+      Nothing
+      [("Control.Arrow.loop",Forall (Inferred Implicit (Ident "b") :| [Inferred Implicit (Ident "d"),Inferred Implicit (Ident "c")]) (Arrow (App (App "a" (PosArg (Infix "b" "*" "d") :| [])) (PosArg (Infix "c" "*" "d") :| [])) (App (App "a" (PosArg "b" :| [])) (PosArg "c" :| []))))]
 
-      , ClassDefinition "Data.Functor.Eq1" ["f"] Nothing [("liftEq",Forall (Inferred Implicit (Ident "a") :| [Inferred Implicit (Ident "b")]) (Arrow (Parens (Arrow "a" (Arrow "b" "bool"))) (Arrow (App "f" (PosArg "a" :| [])) (Arrow (App "f" (PosArg "b" :| [])) "bool"))))]
-        , ClassDefinition "Data.Functor.Ord1" ["f",Generalized Implicit (Parens (App "Eq1" (PosArg "f" :| [])))] Nothing [("liftCompare",Forall (Inferred Implicit (Ident "a") :| [Inferred Implicit (Ident "b")]) (Arrow (Parens (Arrow "a" (Arrow "b" "comparison"))) (Arrow (App "f" (PosArg "a" :| [])) (Arrow (App "f" (PosArg "b" :| [])) "comparison"))))]
+    , ClassDefinition "Data.Functor.Eq1" ["f"] Nothing
+      [("Data.Functor.liftEq",Forall (Inferred Implicit (Ident "a") :| [Inferred Implicit (Ident "b")]) (Arrow (Parens (Arrow "a" (Arrow "b" "bool"))) (Arrow (App "f" (PosArg "a" :| [])) (Arrow (App "f" (PosArg "b" :| [])) "bool"))))]
+    , ClassDefinition "Data.Functor.Ord1" ["f",Generalized Implicit (Parens (App "Eq1" (PosArg "f" :| [])))] Nothing
+      [("Data.Functor.liftCompare",Forall (Inferred Implicit (Ident "a") :| [Inferred Implicit (Ident "b")]) (Arrow (Parens (Arrow "a" (Arrow "b" "comparison"))) (Arrow (App "f" (PosArg "a" :| [])) (Arrow (App "f" (PosArg "b" :| [])) "comparison"))))]
+    , ClassDefinition "Data.Functor.Eq2" ["f"] Nothing
+      [("Data.Functor.liftEq2",Forall (Inferred Implicit (Ident "a") :| [Inferred Implicit (Ident "b"),Inferred Implicit (Ident "c"),Inferred Implicit (Ident "d")]) (Arrow (Parens (Arrow "a" (Arrow "b" "bool"))) (Arrow (Parens (Arrow "c" (Arrow "d" "bool"))) (Arrow (App (App "f" (PosArg "a" :| [])) (PosArg "c" :| [])) (Arrow (App (App "f" (PosArg "b" :| [])) (PosArg "d" :| [])) "bool")))))]
+    , ClassDefinition "Data.Functor.Ord2" ["f",Generalized Implicit (Parens (App "Eq2" (PosArg "f" :| [])))] Nothing
+      [("Data.Functor.liftCompare2",Forall (Inferred Implicit (Ident "a") :| [Inferred Implicit (Ident "b"),Inferred Implicit (Ident "c"),Inferred Implicit (Ident "d")]) (Arrow (Parens (Arrow "a" (Arrow "b" "comparison"))) (Arrow (Parens (Arrow "c" (Arrow "d" "comparison"))) (Arrow (App (App "f" (PosArg "a" :| [])) (PosArg "c" :| [])) (Arrow (App (App "f" (PosArg "b" :| [])) (PosArg "d" :| [])) "comparison")))))]
 
-        , ClassDefinition "Data.Functor.Eq2" ["f"] Nothing [("liftEq2",Forall (Inferred Implicit (Ident "a") :| [Inferred Implicit (Ident "b"),Inferred Implicit (Ident "c"),Inferred Implicit (Ident "d")]) (Arrow (Parens (Arrow "a" (Arrow "b" "bool"))) (Arrow (Parens (Arrow "c" (Arrow "d" "bool"))) (Arrow (App (App "f" (PosArg "a" :| [])) (PosArg "c" :| [])) (Arrow (App (App "f" (PosArg "b" :| [])) (PosArg "d" :| [])) "bool")))))]
-          , ClassDefinition "Data.Functor.Ord2" ["f",Generalized Implicit (Parens (App "Eq2" (PosArg "f" :| [])))] Nothing [("liftCompare2",Forall (Inferred Implicit (Ident "a") :| [Inferred Implicit (Ident "b"),Inferred Implicit (Ident "c"),Inferred Implicit (Ident "d")]) (Arrow (Parens (Arrow "a" (Arrow "b" "comparison"))) (Arrow (Parens (Arrow "c" (Arrow "d" "comparison"))) (Arrow (App (App "f" (PosArg "a" :| [])) (PosArg "c" :| [])) (Arrow (App (App "f" (PosArg "b" :| [])) (PosArg "d" :| [])) "comparison")))))]
+     , ClassDefinition "Control.Category.Category" [Typed Ungeneralizable Explicit (Ident "cat" :| []) (Arrow "Type" (Arrow "Type" "Type"))] Nothing
+      [("Control.Category.id",Forall (Inferred Implicit (Ident "a") :| []) (App (App "cat" (PosArg "a" :| [])) (PosArg "a" :| [])))
+     ,("Control.Category.op_z2218U__",Forall (Inferred Implicit (Ident "b") :| [Inferred Implicit (Ident "c"),Inferred Implicit (Ident "a")]) (Arrow (App (App "cat" (PosArg "b" :| [])) (PosArg "c" :| [])) (Arrow (App (App "cat" (PosArg "a" :| [])) (PosArg "b" :| [])) (App (App "cat" (PosArg "a" :| [])) (PosArg "c" :| [])))))]
 
-            , ClassDefinition "Control.Category.Category" [Typed Ungeneralizable Explicit (Ident "cat" :| []) (Arrow "Type" (Arrow "Type" "Type"))] Nothing [("id",Forall (Inferred Implicit (Ident "a") :| []) (App (App "cat" (PosArg "a" :| [])) (PosArg "a" :| []))),("op_z2218U__",Forall (Inferred Implicit (Ident "b") :| [Inferred Implicit (Ident "c"),Inferred Implicit (Ident "a")]) (Arrow (App (App "cat" (PosArg "b" :| [])) (PosArg "c" :| [])) (Arrow (App (App "cat" (PosArg "a" :| [])) (PosArg "b" :| [])) (App (App "cat" (PosArg "a" :| [])) (PosArg "c" :| [])))))]
-
-            , ClassDefinition "Data.Bifunctor.Bifunctor" ["p"] Nothing [("bimap",Forall (Inferred Implicit (Ident "a") :| [Inferred Implicit (Ident "b"),Inferred Implicit (Ident "c"),Inferred Implicit (Ident "d")]) (Arrow (Parens (Arrow "a" "b")) (Arrow (Parens (Arrow "c" "d")) (Arrow (App (App "p" (PosArg "a" :| [])) (PosArg "c" :| [])) (App (App "p" (PosArg "b" :| [])) (PosArg "d" :| [])))))),("first",Forall (Inferred Implicit (Ident "a") :| [Inferred Implicit (Ident "b"),Inferred Implicit (Ident "c")]) (Arrow (Parens (Arrow "a" "b")) (Arrow (App (App "p" (PosArg "a" :| [])) (PosArg "c" :| [])) (App (App "p" (PosArg "b" :| [])) (PosArg "c" :| []))))),("second",Forall (Inferred Implicit (Ident "b") :| [Inferred Implicit (Ident "c"),Inferred Implicit (Ident "a")]) (Arrow (Parens (Arrow "b" "c")) (Arrow (App (App "p" (PosArg "a" :| [])) (PosArg "b" :| [])) (App (App "p" (PosArg "a" :| [])) (PosArg "c" :| [])))))]
+     , ClassDefinition "Data.Bifunctor.Bifunctor" ["p"] Nothing
+       [("Data.Bifunctor.bimap",Forall (Inferred Implicit (Ident "a") :| [Inferred Implicit (Ident "b"),Inferred Implicit (Ident "c"),Inferred Implicit (Ident "d")]) (Arrow (Parens (Arrow "a" "b")) (Arrow (Parens (Arrow "c" "d")) (Arrow (App (App "p" (PosArg "a" :| [])) (PosArg "c" :| [])) (App (App "p" (PosArg "b" :| [])) (PosArg "d" :| []))))))
+       ,("Data.Bifunctor.first",Forall (Inferred Implicit (Ident "a") :| [Inferred Implicit (Ident "b"),Inferred Implicit (Ident "c")]) (Arrow (Parens (Arrow "a" "b")) (Arrow (App (App "p" (PosArg "a" :| [])) (PosArg "c" :| [])) (App (App "p" (PosArg "b" :| [])) (PosArg "c" :| [])))))
+       ,("Data.Bifunctor.second",Forall (Inferred Implicit (Ident "b") :| [Inferred Implicit (Ident "c"),Inferred Implicit (Ident "a")]) (Arrow (Parens (Arrow "b" "c")) (Arrow (App (App "p" (PosArg "a" :| [])) (PosArg "b" :| [])) (App (App "p" (PosArg "a" :| [])) (PosArg "c" :| [])))))]
 
     ]
   where
    (=:) = (,)
    infix 0 =:
 
-builtInDefaultMethods :: Map Qualid (Map Ident Term)
-builtInDefaultMethods = fmap M.fromList $ M.fromList $ map (first unsafeIdentToQualid) $
+builtInDefaultMethods :: Map Qualid (Map Qualid Term)
+builtInDefaultMethods = fmap M.fromList $ M.fromList $
     [ "GHC.Base.Eq_" =:
-        [ "==" ~> Fun ["x", "y"] (App1 "negb" $ Infix "x" "/=" "y")
-        , "/=" ~> Fun ["x", "y"] (App1 "negb" $ Infix "x" "==" "y")
+        [ "GHC.Base.==" ~> Fun ["x", "y"] (App1 "negb" $ Infix "x" "GHC.Base./=" "y")
+        , "GHC.Base./=" ~> Fun ["x", "y"] (App1 "negb" $ Infix "x" "GHC.Base.==" "y")
         ]
     , "GHC.Base.Ord" =:
-        [ "max" ~> Fun ["x", "y"] (ifBool (App2 "op_zlze__" "x" "y") "y" "x")
-        , "min" ~> Fun ["x", "y"] (ifBool (App2 "op_zlze__" "x" "y") "x" "y")
+        [ "GHC.Base.max" ~> Fun ["x", "y"] (ifBool (App2 "GHC.Base.op_zlze__" "x" "y") "y" "x")
+        , "GHC.Base.min" ~> Fun ["x", "y"] (ifBool (App2 "GHC.Base.op_zlze__" "x" "y") "x" "y")
 
 {-  x <= y  = compare x y /= GT
     x <  y  = compare x y == LT
     x >= y  = compare x y /= LT
     x >  y  = compare x y == GT   -}
 
-        , "op_zlze__" ~> Fun  ["x", "y"] (App2 "op_zsze__" (App2 "compare" "x" "y") "Gt")
-        , "op_zl__"   ~> Fun  ["x", "y"] (App2 "op_zeze__" (App2 "compare" "x" "y") "Lt")
-        , "op_zgze__" ~> Fun  ["x", "y"] (App2 "op_zsze__" (App2 "compare" "x" "y") "Lt")
-        , "op_zg__"   ~> Fun  ["x", "y"] (App2 "op_zeze__" (App2 "compare" "x" "y") "Gt")
+        , "GHC.Base.op_zlze__" ~> Fun  ["x", "y"] (App2 "GHC.Base.op_zsze__" (App2 "GHC.Base.compare" "x" "y") "Gt")
+        , "GHC.Base.op_zl__"   ~> Fun  ["x", "y"] (App2 "GHC.Base.op_zeze__" (App2 "GHC.Base.compare" "x" "y") "Lt")
+        , "GHC.Base.op_zgze__" ~> Fun  ["x", "y"] (App2 "GHC.Base.op_zsze__" (App2 "GHC.Base.compare" "x" "y") "Lt")
+        , "GHC.Base.op_zg__"   ~> Fun  ["x", "y"] (App2 "GHC.Base.op_zeze__" (App2 "GHC.Base.compare" "x" "y") "Gt")
         ]
     , "GHC.Base.Functor" =:
-        [ "op_zlzd__" ~> Fun ["x"] (App1 "fmap" (App1 "GHC.Base.const" "x"))
+        [ "GHC.Base.op_zlzd__" ~> Fun ["x"] (App1 "GHC.Base.fmap" (App1 "GHC.Base.const" "x"))
         ]
     , "GHC.Base.Applicative" =:
-        [ "op_ztzg__" ~> Fun ["x", "y"]
+        [ "GHC.Base.op_ztzg__" ~> Fun ["x", "y"]
             (let const_id = App1 "GHC.Base.const" "GHC.Base.id" in
-            App2 "op_zlztzg__" (App2 "GHC.Base.fmap" const_id "x") "y")
+            App2 "GHC.Base.op_zlztzg__" (App2 "GHC.Base.fmap" const_id "x") "y")
         {-
         , "op_zlzt__" ~> Fun ["x", "y"]
             (let const    = "GHC.Base.const" in
@@ -315,55 +345,61 @@ builtInDefaultMethods = fmap M.fromList $ M.fromList $ map (first unsafeIdentToQ
         -}
         ]
     , "GHC.Base.Monoid" =:
-        [ "mconcat" ~> App2 "GHC.Base.foldr" "mappend" "mempty"
+        [ "GHC.Base.mconcat" ~> App2 "GHC.Base.foldr" "GHC.Base.mappend" "GHC.Base.mempty"
         ]
     , "GHC.Base.Monad" =:
-        [ "return_" ~> "GHC.Base.pure"
-        , "op_zgzg__" ~> "GHC.Base.op_ztzg__"
-        , "fail" ~> Fun ["x"] "missingValue"
+        [ "GHC.Base.return_" ~> "GHC.Base.pure"
+        , "GHC.Base.op_zgzg__" ~> "GHC.Base.op_ztzg__"
+        , "GHC.Base.fail" ~> Fun ["x"] "missingValue"
         ]
 
     , "Data.Traversable.Traversable" =:
-      ["mapM" ~> "traverse",
-       "sequence" ~> "sequenceA",
-       "sequenceA" ~> App "traverse" (PosArg "GHC.Base.id" :| []),
-       "traverse" ~> Fun ("arg_0__" :| [])
+      ["Data.Traversable.mapM" ~> "Data.Traversable.traverse",
+       "Data.Traversable.sequence" ~> "Data.Traversable.sequenceA",
+       "Data.Traversable.sequenceA" ~> App "Data.Traversable.traverse" (PosArg "GHC.Base.id" :| []),
+       "Data.Traversable.traverse" ~> Fun ("arg_0__" :| [])
                          (Coq.Match (MatchItem "arg_0__" Nothing Nothing :| []) Nothing
                          [Equation (MultPattern (QualidPat (Bare "f") :| []) :| [])
-                              (App "Coq.Program.Basics.compose" (PosArg "sequenceA"
+                              (App "Coq.Program.Basics.compose" (PosArg "Data.Traversable.sequenceA"
                               :| [PosArg (App "GHC.Base.fmap" (PosArg "f" :| []))]))])]
 
 
     , "Data.Foldable.Foldable" =:
       -- inline the default definition of elem. Need an edit to modify this default....
-      ["elem" ~> App "Coq.Program.Basics.compose" (PosArg (Parens (Fun ("arg_69__" :| []) (Coq.Match (MatchItem "arg_69__" Nothing Nothing :| []) Nothing [Equation (MultPattern (QualidPat (Bare "p") :| []) :| []) (App "Coq.Program.Basics.compose" (PosArg "Data.Monoid.getAny" :| [PosArg (App "foldMap" (PosArg (Parens (App "Coq.Program.Basics.compose" (PosArg "Data.Monoid.Mk_Any" :| [PosArg "p"]))) :| []))]))]))) :| [PosArg "GHC.Base.op_zeze__"]),
-       ("fold" ~> App "foldMap" (PosArg "GHC.Base.id" :| [])),
-       ("foldMap" ~> Fun ("arg_1__" :| []) (Coq.Match (MatchItem "arg_1__" Nothing Nothing :| []) Nothing [Equation (MultPattern (QualidPat (Bare "f") :| []) :| []) (App (App "foldr" (PosArg (Parens (App "Coq.Program.Basics.compose" (PosArg "GHC.Base.mappend" :| [PosArg "f"]))) :| [])) (PosArg "GHC.Base.mempty" :| []))])),
-       ("foldl" ~> Fun ("arg_19__" :| ["arg_20__","arg_21__"]) (Coq.Match (MatchItem "arg_19__" Nothing Nothing :| [MatchItem "arg_20__" Nothing Nothing,MatchItem "arg_21__" Nothing Nothing]) Nothing [Equation (MultPattern (QualidPat (Bare "f") :| [QualidPat (Bare "z"),QualidPat (Bare "t")]) :| []) (App (App "Data.Monoid.appEndo" (PosArg (Parens (App "Data.Monoid.getDual" (PosArg (Parens (App (App "foldMap" (PosArg (Parens (App "Coq.Program.Basics.compose" (PosArg "Data.Monoid.Mk_Dual" :| [PosArg (App "Coq.Program.Basics.compose" (PosArg "Data.Monoid.Mk_Endo" :| [PosArg (App "GHC.Base.flip" (PosArg "f" :| []))]))]))) :| [])) (PosArg "t" :| []))) :| []))) :| [])) (PosArg "z" :| []))])),
-       ("foldl'"~>Fun ("arg_24__" :| ["arg_25__","arg_26__"]) (Coq.Match (MatchItem "arg_24__" Nothing Nothing :| [MatchItem "arg_25__" Nothing Nothing,MatchItem "arg_26__" Nothing Nothing]) Nothing [Equation (MultPattern (QualidPat (Bare "f") :| [QualidPat (Bare "z0"),QualidPat (Bare "xs")]) :| []) (Let "f'" [] Nothing (Fun ("arg_27__" :| ["arg_28__","arg_29__"]) (Coq.Match (MatchItem "arg_27__" Nothing Nothing :| [MatchItem "arg_28__" Nothing Nothing,MatchItem "arg_29__" Nothing Nothing]) Nothing [Equation (MultPattern (QualidPat (Bare "x") :| [QualidPat (Bare "k"),QualidPat (Bare "z")]) :| []) (App "GHC.Base.op_zdzn__" (PosArg "k" :| [PosArg (App (App "f" (PosArg "z" :| [])) (PosArg "x" :| []))]))])) (App (App (App (App "foldr" (PosArg "f'" :| [])) (PosArg "GHC.Base.id" :| [])) (PosArg "xs" :| [])) (PosArg "z0" :| [])))])),
-       ("foldr"~>Fun ("arg_4__" :| ["arg_5__","arg_6__"]) (Coq.Match (MatchItem "arg_4__" Nothing Nothing :| [MatchItem "arg_5__" Nothing Nothing,MatchItem "arg_6__" Nothing Nothing]) Nothing [Equation (MultPattern (QualidPat (Bare "f") :| [QualidPat (Bare "z"),QualidPat (Bare "t")]) :| []) (App (App "Data.Monoid.appEndo" (PosArg (Parens (App (App "foldMap" (PosArg (Parens (App "Data.Foldable.hash_compose" (PosArg "Data.Monoid.Mk_Endo" :| [PosArg "f"]))) :| [])) (PosArg "t" :| []))) :| [])) (PosArg "z" :| []))])),
-       ("foldr'"~>Fun ("arg_9__" :| ["arg_10__","arg_11__"]) (Coq.Match (MatchItem "arg_9__" Nothing Nothing :| [MatchItem "arg_10__" Nothing Nothing,MatchItem "arg_11__" Nothing Nothing]) Nothing [Equation (MultPattern (QualidPat (Bare "f") :| [QualidPat (Bare "z0"),QualidPat (Bare "xs")]) :| []) (Let "f'" [] Nothing (Fun ("arg_12__" :| ["arg_13__","arg_14__"]) (Coq.Match (MatchItem "arg_12__" Nothing Nothing :| [MatchItem "arg_13__" Nothing Nothing,MatchItem "arg_14__" Nothing Nothing]) Nothing [Equation (MultPattern (QualidPat (Bare "k") :| [QualidPat (Bare "x"),QualidPat (Bare "z")]) :| []) (App "GHC.Base.op_zdzn__" (PosArg "k" :| [PosArg (App (App "f" (PosArg "x" :| [])) (PosArg "z" :| []))]))])) (App (App (App (App "foldl" (PosArg "f'" :| [])) (PosArg "GHC.Base.id" :| [])) (PosArg "xs" :| [])) (PosArg "z0" :| [])))])),
-       ("length"~>App (App "foldl'" (PosArg (Parens (Fun ("arg_64__" :| ["arg_65__"]) (Coq.Match (MatchItem "arg_64__" Nothing Nothing :| [MatchItem "arg_65__" Nothing Nothing]) Nothing [Equation (MultPattern (QualidPat (Bare "c") :| [UnderscorePat]) :| []) (App "GHC.Num.op_zp__" (PosArg "c" :| [PosArg (PolyNum 1)]))]))) :| [])) (PosArg (PolyNum 0) :| [])),
-       ("null"~>App (App "foldr" (PosArg (Parens (Fun ("arg_61__" :| ["arg_62__"]) "false")) :| [])) (PosArg "true" :| [])),
-       ("product"~>App "Data.Foldable.hash_compose" (PosArg "Data.Monoid.getProduct" :| [PosArg (App "foldMap" (PosArg "Data.Monoid.Mk_Product" :| []))])),
-       ("sum"~>App "Data.Foldable.hash_compose" (PosArg "Data.Monoid.getSum" :| [PosArg (App "foldMap" (PosArg "Data.Monoid.Mk_Sum" :| []))])),
-       ("toList"~>Fun ("arg_54__" :| []) (Coq.Match (MatchItem "arg_54__" Nothing Nothing :| []) Nothing [Equation (MultPattern (QualidPat (Bare "t") :| []) :| []) (App "GHC.Base.build" (PosArg (Parens (Fun ("arg_55__" :| ["arg_56__"]) (Coq.Match (MatchItem "arg_55__" Nothing Nothing :| [MatchItem "arg_56__" Nothing Nothing]) Nothing [Equation (MultPattern (QualidPat (Bare "c") :| [QualidPat (Bare "n")]) :| []) (App (App (App "foldr" (PosArg "c" :| [])) (PosArg "n" :| [])) (PosArg "t" :| []))]))) :| []))]))]
+      ["Data.Foldable.elem" ~> App "Coq.Program.Basics.compose" (PosArg (Parens (Fun ("arg_69__" :| []) (Coq.Match (MatchItem "arg_69__" Nothing Nothing :| []) Nothing [Equation (MultPattern (QualidPat (Bare "p") :| []) :| []) (App "Coq.Program.Basics.compose" (PosArg "Data.Monoid.getAny" :| [PosArg (App "Data.Foldable.foldMap" (PosArg (Parens (App "Coq.Program.Basics.compose" (PosArg "Data.Monoid.Mk_Any" :| [PosArg "p"]))) :| []))]))]))) :| [PosArg "GHC.Base.op_zeze__"]),
+       ("Data.Foldable.fold" ~> App "Data.Foldable.foldMap" (PosArg "GHC.Base.id" :| [])),
+       ("Data.Foldable.foldMap" ~> Fun ("arg_1__" :| []) (Coq.Match (MatchItem "arg_1__" Nothing Nothing :| []) Nothing [Equation (MultPattern (QualidPat (Bare "f") :| []) :| []) (App (App "Data.Foldable.foldr" (PosArg (Parens (App "Coq.Program.Basics.compose" (PosArg "GHC.Base.mappend" :| [PosArg "f"]))) :| [])) (PosArg "GHC.Base.mempty" :| []))])),
+       ("Data.Foldable.foldl" ~> Fun ("arg_19__" :| ["arg_20__","arg_21__"]) (Coq.Match (MatchItem "arg_19__" Nothing Nothing :| [MatchItem "arg_20__" Nothing Nothing,MatchItem "arg_21__" Nothing Nothing]) Nothing [Equation (MultPattern (QualidPat (Bare "f") :| [QualidPat (Bare "z"),QualidPat (Bare "t")]) :| []) (App (App "Data.Monoid.appEndo" (PosArg (Parens (App "Data.Monoid.getDual" (PosArg (Parens (App (App "Data.Foldable.foldMap" (PosArg (Parens (App "Coq.Program.Basics.compose" (PosArg "Data.Monoid.Mk_Dual" :| [PosArg (App "Coq.Program.Basics.compose" (PosArg "Data.Monoid.Mk_Endo" :| [PosArg (App "GHC.Base.flip" (PosArg "f" :| []))]))]))) :| [])) (PosArg "t" :| []))) :| []))) :| [])) (PosArg "z" :| []))])),
+       ("Data.Foldable.foldl'"~>Fun ("arg_24__" :| ["arg_25__","arg_26__"]) (Coq.Match (MatchItem "arg_24__" Nothing Nothing :| [MatchItem "arg_25__" Nothing Nothing,MatchItem "arg_26__" Nothing Nothing]) Nothing [Equation (MultPattern (QualidPat (Bare "f") :| [QualidPat (Bare "z0"),QualidPat (Bare "xs")]) :| []) (Let "f'" [] Nothing (Fun ("arg_27__" :| ["arg_28__","arg_29__"]) (Coq.Match (MatchItem "arg_27__" Nothing Nothing :| [MatchItem "arg_28__" Nothing Nothing,MatchItem "arg_29__" Nothing Nothing]) Nothing [Equation (MultPattern (QualidPat (Bare "x") :| [QualidPat (Bare "k"),QualidPat (Bare "z")]) :| []) (App "GHC.Base.op_zdzn__" (PosArg "k" :| [PosArg (App (App "f" (PosArg "z" :| [])) (PosArg "x" :| []))]))])) (App (App (App (App "Data.Foldable.foldr" (PosArg "f'" :| [])) (PosArg "GHC.Base.id" :| [])) (PosArg "xs" :| [])) (PosArg "z0" :| [])))])),
+       ("Data.Foldable.foldr"~>Fun ("arg_4__" :| ["arg_5__","arg_6__"]) (Coq.Match (MatchItem "arg_4__" Nothing Nothing :| [MatchItem "arg_5__" Nothing Nothing,MatchItem "arg_6__" Nothing Nothing]) Nothing [Equation (MultPattern (QualidPat (Bare "f") :| [QualidPat (Bare "z"),QualidPat (Bare "t")]) :| []) (App (App "Data.Monoid.appEndo" (PosArg (Parens (App (App "Data.Foldable.foldMap" (PosArg (Parens (App "Data.Foldable.hash_compose" (PosArg "Data.Monoid.Mk_Endo" :| [PosArg "f"]))) :| [])) (PosArg "t" :| []))) :| [])) (PosArg "z" :| []))])),
+       ("Data.Foldable.foldr'"~>Fun ("arg_9__" :| ["arg_10__","arg_11__"]) (Coq.Match (MatchItem "arg_9__" Nothing Nothing :| [MatchItem "arg_10__" Nothing Nothing,MatchItem "arg_11__" Nothing Nothing]) Nothing [Equation (MultPattern (QualidPat (Bare "f") :| [QualidPat (Bare "z0"),QualidPat (Bare "xs")]) :| []) (Let "f'" [] Nothing (Fun ("arg_12__" :| ["arg_13__","arg_14__"]) (Coq.Match (MatchItem "arg_12__" Nothing Nothing :| [MatchItem "arg_13__" Nothing Nothing,MatchItem "arg_14__" Nothing Nothing]) Nothing [Equation (MultPattern (QualidPat (Bare "k") :| [QualidPat (Bare "x"),QualidPat (Bare "z")]) :| []) (App "GHC.Base.op_zdzn__" (PosArg "k" :| [PosArg (App (App "f" (PosArg "x" :| [])) (PosArg "z" :| []))]))])) (App (App (App (App "Data.Foldable.foldl" (PosArg "f'" :| [])) (PosArg "GHC.Base.id" :| [])) (PosArg "xs" :| [])) (PosArg "z0" :| [])))])),
+       ("Data.Foldable.length"~>App (App "Data.Foldable.foldl'" (PosArg (Parens (Fun ("arg_64__" :| ["arg_65__"]) (Coq.Match (MatchItem "arg_64__" Nothing Nothing :| [MatchItem "arg_65__" Nothing Nothing]) Nothing [Equation (MultPattern (QualidPat (Bare "c") :| [UnderscorePat]) :| []) (App "GHC.Num.op_zp__" (PosArg "c" :| [PosArg (PolyNum 1)]))]))) :| [])) (PosArg (PolyNum 0) :| [])),
+       ("Data.Foldable.null"~>App (App "Data.Foldable.foldr" (PosArg (Parens (Fun ("arg_61__" :| ["arg_62__"]) "false")) :| [])) (PosArg "true" :| [])),
+       ("Data.Foldable.product"~>App "Data.Foldable.hash_compose" (PosArg "Data.Monoid.getProduct" :| [PosArg (App "Data.Foldable.foldMap" (PosArg "Data.Monoid.Mk_Product" :| []))])),
+       ("Data.Foldable.sum"~>App "Data.Foldable.hash_compose" (PosArg "Data.Monoid.getSum" :| [PosArg (App "Data.Foldable.foldMap" (PosArg "Data.Monoid.Mk_Sum" :| []))])),
+       ("Data.Foldable.toList"~>Fun ("arg_54__" :| []) (Coq.Match (MatchItem "arg_54__" Nothing Nothing :| []) Nothing [Equation (MultPattern (QualidPat (Bare "t") :| []) :| []) (App "GHC.Base.build" (PosArg (Parens (Fun ("arg_55__" :| ["arg_56__"]) (Coq.Match (MatchItem "arg_55__" Nothing Nothing :| [MatchItem "arg_56__" Nothing Nothing]) Nothing [Equation (MultPattern (QualidPat (Bare "c") :| [QualidPat (Bare "n")]) :| []) (App (App (App "Data.Foldable.foldr" (PosArg "c" :| [])) (PosArg "n" :| [])) (PosArg "t" :| []))]))) :| []))]))]
 
 
 
       , "Control.Arrow.Arrow" =:
-        [("first",Parens (Fun ("arg_0__" :| []) (App "op_ztztzt__" (PosArg "arg_0__" :| [PosArg "Control.Category.id"])))),("op_zazaza__",Fun ("arg_11__" :| ["arg_12__"]) (Coq.Match (MatchItem "arg_11__" Nothing Nothing :| [MatchItem "arg_12__" Nothing Nothing]) Nothing [Equation (MultPattern (QualidPat (Bare "f") :| [QualidPat (Bare "g")]) :| []) (App "Control.Category.op_zgzgzg__" (PosArg (App "arr" (PosArg (Parens (Fun ("arg_13__" :| []) (Coq.Match (MatchItem "arg_13__" Nothing Nothing :| []) Nothing [Equation (MultPattern (QualidPat (Bare "b") :| []) :| []) (App "pair" (PosArg "b" :| [PosArg "b"]))]))) :| [])) :| [PosArg (App "op_ztztzt__" (PosArg "f" :| [PosArg "g"]))]))])),("op_ztztzt__",Fun ("arg_4__" :| ["arg_5__"]) (Coq.Match (MatchItem "arg_4__" Nothing Nothing :| [MatchItem "arg_5__" Nothing Nothing]) Nothing [Equation (MultPattern (QualidPat (Bare "f") :| [QualidPat (Bare "g")]) :| []) (Let "swap" [] Nothing (Fun ("arg_6__" :| []) (Coq.Match (MatchItem "arg_6__" Nothing Nothing :| []) Nothing [Equation (MultPattern (ArgsPat (Bare "pair") (QualidPat (Bare "x") :| [QualidPat (Bare "y")]) :| []) :| []) (App "pair" (PosArg "y" :| [PosArg "x"]))])) (App "Control.Category.op_zgzgzg__" (PosArg (App "first" (PosArg "f" :| [])) :| [PosArg (App "Control.Category.op_zgzgzg__" (PosArg (App "arr" (PosArg "swap" :| [])) :| [PosArg (App "Control.Category.op_zgzgzg__" (PosArg (App "first" (PosArg "g" :| [])) :| [PosArg (App "arr" (PosArg "swap" :| []))]))]))])))])),("second",Parens (Fun ("arg_2__" :| []) (App "op_ztztzt__" (PosArg "Control.Category.id" :| [PosArg "arg_2__"]))))]
+        [("Control.Arrow.first",Parens (Fun ("arg_0__" :| []) (App "Control.Arrow.op_ztztzt__" (PosArg "arg_0__" :| [PosArg "Control.Category.id"]))))
+        ,("Control.Arrow.op_zazaza__",Fun ("arg_11__" :| ["arg_12__"]) (Coq.Match (MatchItem "arg_11__" Nothing Nothing :| [MatchItem "arg_12__" Nothing Nothing]) Nothing [Equation (MultPattern (QualidPat (Bare "f") :| [QualidPat (Bare "g")]) :| []) (App "Control.Category.op_zgzgzg__" (PosArg (App "arr" (PosArg (Parens (Fun ("arg_13__" :| []) (Coq.Match (MatchItem "arg_13__" Nothing Nothing :| []) Nothing [Equation (MultPattern (QualidPat (Bare "b") :| []) :| []) (App "pair" (PosArg "b" :| [PosArg "b"]))]))) :| [])) :| [PosArg (App "op_ztztzt__" (PosArg "f" :| [PosArg "g"]))]))]))
+        ,("Control.Arrow.op_ztztzt__",Fun ("arg_4__" :| ["arg_5__"]) (Coq.Match (MatchItem "arg_4__" Nothing Nothing :| [MatchItem "arg_5__" Nothing Nothing]) Nothing [Equation (MultPattern (QualidPat (Bare "f") :| [QualidPat (Bare "g")]) :| []) (Let "swap" [] Nothing (Fun ("arg_6__" :| []) (Coq.Match (MatchItem "arg_6__" Nothing Nothing :| []) Nothing [Equation (MultPattern (ArgsPat (Bare "pair") (QualidPat (Bare "x") :| [QualidPat (Bare "y")]) :| []) :| []) (App "pair" (PosArg "y" :| [PosArg "x"]))])) (App "Control.Category.op_zgzgzg__" (PosArg (App "first" (PosArg "f" :| [])) :| [PosArg (App "Control.Category.op_zgzgzg__" (PosArg (App "arr" (PosArg "swap" :| [])) :| [PosArg (App "Control.Category.op_zgzgzg__" (PosArg (App "first" (PosArg "g" :| [])) :| [PosArg (App "arr" (PosArg "swap" :| []))]))]))])))]))
+        ,("Control.Arrow.second",Parens (Fun ("arg_2__" :| []) (App "Control.Arrow.op_ztztzt__" (PosArg "Control.Category.id" :| [PosArg "arg_2__"]))))]
        , "Control.Arrow.ArrowZero" =: []
        , "Control.Arrow.ArrowPlus" =: []
        , "Control.Arrow.ArrowChoice" =:
-         [("left",Parens (Fun ("arg_18__" :| []) (App "op_zpzpzp__" (PosArg "arg_18__" :| [PosArg "Control.Category.id"])))),("op_zbzbzb__",Fun ("arg_30__" :| ["arg_31__"]) (Coq.Match (MatchItem "arg_30__" Nothing Nothing :| [MatchItem "arg_31__" Nothing Nothing]) Nothing [Equation (MultPattern (QualidPat (Bare "f") :| [QualidPat (Bare "g")]) :| []) (Let "untag" [] Nothing (Fun ("arg_32__" :| []) (Coq.Match (MatchItem "arg_32__" Nothing Nothing :| []) Nothing [Equation (MultPattern (ArgsPat (Bare "inl") (QualidPat (Bare "x") :| []) :| []) :| []) "x",Equation (MultPattern (ArgsPat (Bare "inr") (QualidPat (Bare "y") :| []) :| []) :| []) "y"])) (App "Control.Category.op_zgzgzg__" (PosArg (App "op_zpzpzp__" (PosArg "f" :| [PosArg "g"])) :| [PosArg (App "arr" (PosArg "untag" :| []))])))])),("op_zpzpzp__",Fun ("arg_22__" :| ["arg_23__"]) (Coq.Match (MatchItem "arg_22__" Nothing Nothing :| [MatchItem "arg_23__" Nothing Nothing]) Nothing [Equation (MultPattern (QualidPat (Bare "f") :| [QualidPat (Bare "g")]) :| []) (Let "mirror" [Inferred Implicit (Ident "x"),Inferred Implicit (Ident "y")] (Just (Arrow (App (App "sum" (PosArg "x" :| [])) (PosArg "y" :| [])) (App (App "sum" (PosArg "y" :| [])) (PosArg "x" :| [])))) (Fun ("arg_24__" :| []) (Coq.Match (MatchItem "arg_24__" Nothing Nothing :| []) Nothing [Equation (MultPattern (ArgsPat (Bare "inl") (QualidPat (Bare "x") :| []) :| []) :| []) (App "inr" (PosArg "x" :| [])),Equation (MultPattern (ArgsPat (Bare "inr") (QualidPat (Bare "y") :| []) :| []) :| []) (App "inl" (PosArg "y" :| []))])) (App "Control.Category.op_zgzgzg__" (PosArg (App "left" (PosArg "f" :| [])) :| [PosArg (App "Control.Category.op_zgzgzg__" (PosArg (App "arr" (PosArg "mirror" :| [])) :| [PosArg (App "Control.Category.op_zgzgzg__" (PosArg (App "left" (PosArg "g" :| [])) :| [PosArg (App "arr" (PosArg "mirror" :| []))]))]))])))])),("right",Parens (Fun ("arg_20__" :| []) (App "op_zpzpzp__" (PosArg "Control.Category.id" :| [PosArg "arg_20__"]))))]
+         [("Control.Arrow.left",Parens (Fun ("arg_18__" :| []) (App "Control.Arrow.op_zpzpzp__" (PosArg "arg_18__" :| [PosArg "Control.Category.id"]))))
+         ,("Control.Arrow.op_zbzbzb__",Fun ("arg_30__" :| ["arg_31__"]) (Coq.Match (MatchItem "arg_30__" Nothing Nothing :| [MatchItem "arg_31__" Nothing Nothing]) Nothing [Equation (MultPattern (QualidPat (Bare "f") :| [QualidPat (Bare "g")]) :| []) (Let "untag" [] Nothing (Fun ("arg_32__" :| []) (Coq.Match (MatchItem "arg_32__" Nothing Nothing :| []) Nothing [Equation (MultPattern (ArgsPat (Bare "inl") (QualidPat (Bare "x") :| []) :| []) :| []) "x",Equation (MultPattern (ArgsPat (Bare "inr") (QualidPat (Bare "y") :| []) :| []) :| []) "y"])) (App "Control.Category.op_zgzgzg__" (PosArg (App "Control.Arrow.op_zpzpzp__" (PosArg "f" :| [PosArg "g"])) :| [PosArg (App "Control.Arrow.arr" (PosArg "untag" :| []))])))]))
+         ,("Control.Arrow.op_zpzpzp__",Fun ("arg_22__" :| ["arg_23__"]) (Coq.Match (MatchItem "arg_22__" Nothing Nothing :| [MatchItem "arg_23__" Nothing Nothing]) Nothing [Equation (MultPattern (QualidPat (Bare "f") :| [QualidPat (Bare "g")]) :| []) (Let "mirror" [Inferred Implicit (Ident "x"),Inferred Implicit (Ident "y")] (Just (Arrow (App (App "sum" (PosArg "x" :| [])) (PosArg "y" :| [])) (App (App "sum" (PosArg "y" :| [])) (PosArg "x" :| [])))) (Fun ("arg_24__" :| []) (Coq.Match (MatchItem "arg_24__" Nothing Nothing :| []) Nothing [Equation (MultPattern (ArgsPat (Bare "inl") (QualidPat (Bare "x") :| []) :| []) :| []) (App "inr" (PosArg "x" :| [])),Equation (MultPattern (ArgsPat (Bare "inr") (QualidPat (Bare "y") :| []) :| []) :| []) (App "inl" (PosArg "y" :| []))])) (App "Control.Category.op_zgzgzg__" (PosArg (App "left" (PosArg "f" :| [])) :| [PosArg (App "Control.Category.op_zgzgzg__" (PosArg (App "arr" (PosArg "mirror" :| [])) :| [PosArg (App "Control.Category.op_zgzgzg__" (PosArg (App "Control.Arrow.left" (PosArg "g" :| [])) :| [PosArg (App "Control.Arrow.arr" (PosArg "mirror" :| []))]))]))])))]))
+         ,("Control.Arrow.right",Parens (Fun ("arg_20__" :| []) (App "Control.Arrow.op_zpzpzp__" (PosArg "Control.Category.id" :| [PosArg "arg_20__"]))))]
 
 
     ]
   where
    (=:) = (,)
    infix 0 =:
-   m ~> d  = (toCoqName m, d)
+   m ~> d  = (m, d)
 
 builtInAxioms :: [(Qualid, Term)]
 builtInAxioms = map (first Bare)

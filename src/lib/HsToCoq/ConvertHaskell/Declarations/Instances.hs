@@ -37,7 +37,6 @@ import GHC hiding (Name)
 import qualified GHC
 import Bag
 import HsToCoq.Util.GHC.Exception
-import HsToCoq.Util.GHC.Module
 
 import HsToCoq.PrettyPrint (renderOneLineT)
 import HsToCoq.Coq.Gallina
@@ -52,7 +51,6 @@ import HsToCoq.ConvertHaskell.Type
 import HsToCoq.ConvertHaskell.Expr
 import HsToCoq.ConvertHaskell.Axiomatize
 import HsToCoq.ConvertHaskell.Declarations.Class
-import HsToCoq.ConvertHaskell.InfixNames
 
 --------------------------------------------------------------------------------
 
@@ -98,7 +96,7 @@ findHsClass insthead = case getLHsInstDeclClass_maybe insthead of
 -}
 data InstanceInfo = InstanceInfo { instanceName  :: !Qualid
                                  , instanceHead  :: !Term
-                                 , instanceClass :: !Ident
+                                 , instanceClass :: !Qualid
                                  , instanceHsClass :: Class}
                   deriving (Eq, Ord)
 
@@ -106,9 +104,8 @@ convertClsInstDeclInfo :: ConversionMonad m => ClsInstDecl GHC.Name -> m Instanc
 convertClsInstDeclInfo ClsInstDecl{..} = do
   instanceName  <- convertInstanceName $ hsib_body cid_poly_ty
   instanceHead  <- convertLHsSigType cid_poly_ty
-  instanceClass <- maybe (convUnsupported "strangely-formed instance heads")
-                         (pure . renderOneLineT . renderGallina)
-                    $ termHead instanceHead
+  instanceClass <- maybe (convUnsupported "strangely-formed instance heads") pure $
+                    termHead instanceHead
   instanceHsClass <- findHsClass cid_poly_ty
 
   pure InstanceInfo{..}
@@ -135,16 +132,16 @@ convertClsInstDecl cid@ClsInstDecl{..} rebuild mhandler = do
     cdefs <-  mapM (\ConvertedDefinition{..} -> do
                        return (convDefName, maybe id Fun (NE.nonEmpty (convDefArgs)) $ convDefBody)) cbinds
 
-    (defaults :: [(Ident, Term)]) <-  use (defaultMethods.at (Bare instanceClass).non M.empty)
+    defaults <-  use (defaultMethods.at instanceClass.non M.empty)
                  -- lookup default methods in the global state, using the empty map if the class name is not found
                  -- otherwise gives you a map
                  -- <&> is flip fmap
-             <&> filter (\(meth, _) -> isNothing $ lookup (Bare meth) cdefs) . M.toList
+             <&> filter (\(meth, _) -> isNothing $ lookup meth cdefs) . M.toList
 
     -- implement the instance part of "skip method"
     skippedMethodsS <- use (edits.skippedMethods)
     -- TODO: Qualify default method names here (or make methods consistently unqualified Idents)
-    let methods = filter (\(m,_) -> (Bare instanceClass,qualidBase m) `S.notMember` skippedMethodsS) (cdefs ++ (map (first Bare) defaults))
+    let methods = filter (\(m,_) -> (instanceClass,qualidBase m) `S.notMember` skippedMethodsS) (cdefs ++ defaults)
 
     let (binds, classTy) = decomposeForall instanceHead
 

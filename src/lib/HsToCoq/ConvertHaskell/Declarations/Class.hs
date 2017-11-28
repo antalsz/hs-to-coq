@@ -102,7 +102,7 @@ convertClassDecl (L _ hsCtx) (L _ hsName) ltvs fds lsigs defaults types typeDefa
   defs <- fmap M.fromList $ for (bagToList defaults) $ convertTypedBinding Nothing . unLoc >=> \case
             Just (ConvertedDefinitionBinding ConvertedDefinition{..}) -> do
 --                typeArgs <- getImplicitBindersForClassMember name convDefName
-                pure (qualidBase convDefName, maybe id Fun (NE.nonEmpty (convDefArgs)) convDefBody)
+                pure (convDefName, maybe id Fun (NE.nonEmpty (convDefArgs)) convDefBody)
             Just (ConvertedPatternBinding    _ _)                     ->
                 convUnsupported "pattern bindings in class declarations"
             Nothing                                                   ->
@@ -134,13 +134,13 @@ classSentences (ClassBody (ClassDefinition name args ty methods) nots) =
             (Just ty)
             (App2 "g" Underscore (app_args (Qualid n')))
     | (n, ty) <- methods
-    , let n' = qualidExtendBase "" n
+    , let n' = qualidExtendBase "__" n
     ] ++
     map NotationSentence nots
   where
     dict_name = qualidExtendBase "__Dict" name
     dict_build = qualidExtendBase "__Dict_Build" name
-    dict_methods = [ (qualidExtendBase "" name, ty) | (name, ty) <- methods ]
+    dict_methods = [ (qualidExtendBase "__" name, ty) | (name, ty) <- methods ]
     dict_record  = RecordDefinition dict_name inst_args ty (Just dict_build) dict_methods
     -- The dictionary needs all explicit (type) arguments,
     -- but none of the implicit (constraint) arguments

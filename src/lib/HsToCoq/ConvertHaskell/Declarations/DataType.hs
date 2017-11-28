@@ -54,7 +54,14 @@ addAdditionalConstructorScope ctor@(name, bs, Just resTy) =
 --------------------------------------------------------------------------------
 
 convertConLName :: ConversionMonad m => Located GHC.Name -> m Qualid
-convertConLName (L _ hsCon) = dcVar ExprNS hsCon
+convertConLName (L _ hsCon) = do
+    let qid = varUnrenamed hsCon
+    use (renamed ExprNS qid) >>= \case
+        Nothing -> do
+            let munged = qualidMapBase ("Mk_" <>) qid
+            renamed ExprNS qid ?= munged
+            pure munged
+        Just rid -> pure rid
 
 convertConDecl :: ConversionMonad m
                => Term -> [Binder] -> ConDecl GHC.Name -> m [Constructor]

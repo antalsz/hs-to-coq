@@ -4,25 +4,31 @@ module HsToCoq.ConvertHaskell.InfixNames (
   identIsVariable, identIsOperator,
   infixToPrefix, toPrefix,
   infixToCoq, toCoqName,
-  canonicalName
+  canonicalName,
+  splitModule -- a bit out of place here. oh well.
   ) where
 
 import Control.Lens
 
+import Control.Applicative
 import Data.Semigroup (Semigroup(..))
 import Data.Maybe
 import Data.Char
 import Data.Text (Text)
 import qualified Data.Text as T
+import Text.Parsec hiding ((<|>), many)
 
 import Encoding (zEncodeString)
 
 import GHC.Stack
 
-import HsToCoq.Coq.Gallina
-import HsToCoq.Coq.Gallina.Util
-
 --------------------------------------------------------------------------------
+
+-- Lets keep this module self-contained (but use the same type synonyms)
+type Op = T.Text
+type Ident = T.Text
+type ModuleIdent = T.Text
+type AccessIdent = T.Text
 
 identIsVariable_ :: Text -> Bool
 identIsVariable_ = T.uncons <&> \case
@@ -50,8 +56,16 @@ infixToCoq_ name = "op_" <> T.pack (zEncodeString $ T.unpack name) <> "__"
 -- This is code smell: Why do we return an unstructured Ident, and not a QualId?
 infixToCoq :: HasCallStack => Op -> Ident
 infixToCoq op = case splitModule op of
-    Just (m,op) -> qualidToIdent $ Qualified m (infixToCoq_ op)
+    Just (m,op) -> m <> "." <> infixToCoq_ op
     Nothing     -> infixToCoq_ op
+
+splitModule :: Ident -> Maybe (ModuleIdent, AccessIdent)
+splitModule = either (const Nothing) Just . parse qualid "" where
+  qualid = do
+    let modFrag = T.cons <$> upper <*> (T.pack <$> many (alphaNum <|> char '\''))
+    mod <- T.intercalate "." <$> many1 (try (modFrag <* char '.'))
+    base <- T.pack <$> some anyChar -- since we're assuming we get a valid name
+    pure $ (mod, base)
 
 toCoqName :: Op -> Ident
 toCoqName x | identIsVariable x = x

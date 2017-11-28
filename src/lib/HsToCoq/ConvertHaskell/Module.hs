@@ -3,7 +3,7 @@
 module HsToCoq.ConvertHaskell.Module (
   -- * Convert whole module graphs and modules
   ConvertedModule(..),
-  convertModules, convertModule, axiomatizeModule,
+  convertModules,
   -- ** Extract all the declarations from a module
   moduleDeclarations,
   -- * Convert declaration groups
@@ -17,12 +17,12 @@ import Control.Lens
 import HsToCoq.Util.Function
 import Data.Traversable
 import Data.Foldable
-import HsToCoq.Util.Traversable
 import Data.Maybe
 import Data.List.NonEmpty (NonEmpty(..))
 import HsToCoq.Util.Containers
 
-import Control.Monad
+import Data.Generics
+
 import Control.Monad.IO.Class
 import Control.Exception (SomeException)
 import qualified Data.Set as S
@@ -158,7 +158,7 @@ data ConvertedModule =
                   , convModClsInstDecls :: ![Sentence]
                   , convModAddedDecls   :: ![Sentence]
                   }
-  deriving (Eq, Ord, Show)
+  deriving (Eq, Ord, Show, Data)
 
 -- Module-local
 {-
@@ -213,11 +213,22 @@ axiomatize_module_with_requires :: ConversionMonad m
                              m (ConvertedModule, [ModuleName])
 axiomatize_module_with_requires = convert_module_with_requires_via axiomatizeHsGroup
 
-convertModule :: ConversionMonad m => ModuleName -> RenamedSource -> m ConvertedModule
-convertModule = fmap fst .: convert_module_with_requires
+_convertModule :: ConversionMonad m => ModuleName -> RenamedSource -> m ConvertedModule
+_convertModule = fmap fst .: convert_module_with_requires
 
-axiomatizeModule :: ConversionMonad m => ModuleName -> RenamedSource -> m ConvertedModule
-axiomatizeModule = fmap fst .: axiomatize_module_with_requires
+_axiomatizeModule :: ConversionMonad m => ModuleName -> RenamedSource -> m ConvertedModule
+_axiomatizeModule = fmap fst .: axiomatize_module_with_requires
+
+-- | This un-qualifies all variable names in the current module.
+-- It should be called very late, just before pretty-printing.
+localizeModule :: ConvertedModule -> ConvertedModule
+localizeModule cmod = everywhere (mkT localize) cmod
+  where
+    m' = moduleNameText (convModName cmod)
+
+    localize :: Qualid -> Qualid
+    localize (Qualified m b) | m == m' = Bare b
+    localize qid = qid
 
 -- NOT THE SAME as `traverse $ uncurry convertModule`!  Produces connected
 -- components and can axiomatize individual modules as per edits
@@ -227,8 +238,9 @@ convertModules sources = do
                                 True  -> axiomatize_module_with_requires mod src
                                 False -> convert_module_with_requires    mod src
   mods <- traverse convThisMod sources
-  pure $ stronglyConnCompNE
-    [(cmod, convModName cmod, imps) | (cmod, imps) <- mods]
+  pure $
+    fmap (fmap localizeModule) $
+    stronglyConnCompNE [(cmod, convModName cmod, imps) | (cmod, imps) <- mods]
 
 moduleDeclarations :: ConversionMonad m => ConvertedModule -> m ([Sentence], [Sentence])
 moduleDeclarations ConvertedModule{..} = do

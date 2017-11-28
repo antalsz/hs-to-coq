@@ -40,7 +40,6 @@ TODO_PASS  = \
   Mutrec \
   PaperExamples \
   OpTyCon \
-  Successors \
   Existential \
   Bits
 

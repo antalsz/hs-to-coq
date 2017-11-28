@@ -261,7 +261,7 @@ ExitCoqParsing :: { () }
   : {- empty -}    {% put NewlineSeparators }
 
 Qualid :: { Qualid }
-  : Word   { forceIdentToQualid $1 }
+  : WordOrOp   { forceIdentToQualid $1 }
 
 Term :: { Term }
   : LargeTerm    { $1 }

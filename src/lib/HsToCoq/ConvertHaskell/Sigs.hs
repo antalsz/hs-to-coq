@@ -198,8 +198,7 @@ convertSignatures :: ConversionMonad m => Map GHC.Name HsSignature -> m (Map Qua
 convertSignatures = fmap M.fromList . traverse (\(r,hs) -> (,) <$> (var ExprNS r) <*> convertSignature r hs) . M.toList
 
 convertModuleSigs :: ConversionMonad m => [(Maybe ModuleName, Sig GHC.Name)] -> m (Map Qualid Signature)
-convertModuleSigs sigs =
-  (convertSignatures <=< collectSigsWithErrors) sigs
+convertModuleSigs = convertSignatures <=< collectSigsWithErrors
 
 convertModuleLSigs :: ConversionMonad m => [(Maybe ModuleName, LSig GHC.Name)] -> m (Map Qualid Signature)
 convertModuleLSigs = convertModuleSigs . map (second unLoc)

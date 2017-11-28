@@ -2,8 +2,8 @@
 
 module HsToCoq.ConvertHaskell.Variables (
   -- * Generate variable names
-  var', var, dcVar, recordField,
-  bareName,
+  var', var, varUnrenamed, unQualifyLocal,
+  recordField, bareName,
   freeVar', freeVar,
   -- * Avoiding reserved words/names
   tryEscapeReservedWord, escapeReservedNames
@@ -31,6 +31,8 @@ import HsToCoq.Coq.Gallina.Util
 import HsToCoq.ConvertHaskell.Parameters.Edits
 import HsToCoq.ConvertHaskell.Monad
 import HsToCoq.ConvertHaskell.InfixNames
+
+import Outputable hiding ((<>))
 
 --------------------------------------------------------------------------------
 
@@ -75,42 +77,29 @@ bareName = toPrefix . escapeReservedNames . T.pack . occNameString . nameOccName
 var' :: ConversionMonad m => HsNamespace -> Ident -> m Qualid
 var' ns x = use $ renamed ns (Bare x) . non (Bare (escapeReservedNames x))
 
--- TODO: Avoid looking up in the renaming data base when it is a local name
--- (Or make sure local names are always Bare)
+varUnrenamed :: GHC.Name -> Qualid
+varUnrenamed name = qid
+  where
+    nameModM = moduleNameText . moduleName <$> nameModule_maybe name
+
+    qid | Just m <- nameModM = Qualified m (bareName name)
+        | otherwise          = Bare (bareName name)
+
+unQualifyLocal :: ConversionMonad m => Qualid -> m Qualid
+unQualifyLocal qi = do
+  thisModM <- fmap moduleNameText <$> use currentModule
+  case qi of
+    -- Something in this module
+    (Qualified m b) | Just m == thisModM -> pure (Bare b)
+    -- Something bare (built-in or local) or external
+    _                                    -> pure qi
+
+
 var :: ConversionMonad m => HsNamespace -> GHC.Name -> m Qualid
 var ns name = do
-  thisModM <- fmap moduleNameText <$> use currentModule
-
-  let nameModM = moduleNameText . moduleName <$> nameModule_maybe name
-
-      qid | Just m <- nameModM = Qualified m (bareName name)
-          | otherwise          = Bare (bareName name)
-
-  use (renamed ns qid . non qid) >>= \case
-    -- Something in this module
-    (Qualified m b) | Just m == thisModM -> pure (Bare b)
-    -- Something bare (built-in or local) or external
-    qi'                                  -> pure qi'
-
--- HACK (until we have interface files)
--- like var, but if there is no renaming registered, add Mk_ to the name
-dcVar :: ConversionMonad m => HsNamespace -> GHC.Name -> m Qualid
-dcVar ns name = do
-  thisModM <- fmap moduleNameText <$> use currentModule
-
-  let nameModM = moduleNameText . moduleName <$> nameModule_maybe name
-
-      qid | Just m <- nameModM = Qualified m (bareName name)
-          | otherwise          = Bare (bareName name)
-
-      mkqid = qualidMapBase ("Mk_" <>) qid
-
-  use (renamed ns qid . non mkqid) >>= \case
-    -- Something in this module
-    (Qualified m b) | Just m == thisModM -> pure (Bare b)
-    -- Something bare (built-in or local) or external
-    qi'                                  -> pure qi'
-
+  let qid = varUnrenamed name
+  renamed_qid <- use (renamed ns qid . non qid)
+  pure renamed_qid
 
 recordField :: (ConversionMonad m, HasOccName name, OutputableBndr name) => name -> m Qualid
 recordField = var' ExprNS <=< ghcPpr -- TODO Check module part?

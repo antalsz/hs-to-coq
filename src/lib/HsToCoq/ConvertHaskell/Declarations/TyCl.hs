@@ -81,9 +81,10 @@ failTyClDecl name e = pure $ Just $
 
 convertTyClDecl :: ConversionMonad m => TyClDecl GHC.Name -> m (Maybe ConvertedDeclaration)
 convertTyClDecl decl = do
+  let orig_name = varUnrenamed (unLoc $ tyClDeclLName decl)
   coqName <- var TypeNS . unLoc $ tyClDeclLName decl
   ghandle (failTyClDecl coqName) $ do
-    use (edits.skipped.contains coqName) >>= \case
+    use (edits.skipped.contains orig_name) >>= \case
       True  -> pure Nothing
       False -> use (edits.redefinitions.at coqName) >>= fmap Just . \case
         Nothing -> case decl of

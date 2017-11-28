@@ -34,11 +34,11 @@ import Data.String
 import Data.List.NonEmpty (NonEmpty(..), nonEmpty)
 
 import qualified Data.Text as T
-import Text.Parsec hiding ((<|>), many)
 
 import GHC.Stack
 
 import HsToCoq.Coq.Gallina
+import HsToCoq.ConvertHaskell.InfixNames
 
 pattern Var  :: Ident                        -> Term
 pattern App1 :: Term -> Term                 -> Term
@@ -134,20 +134,12 @@ qualidToIdent :: Qualid -> Ident
 qualidToIdent (Bare      ident)   = ident
 qualidToIdent (Qualified qid aid) = qid <> "." <> aid
 
-splitModule :: Ident -> Maybe (ModuleIdent, AccessIdent)
-splitModule = either (const Nothing) Just . parse qualid "" where
-  qualid = do
-    let modFrag = T.cons <$> upper <*> (T.pack <$> many (alphaNum <|> char '\''))
-    mod <- T.intercalate "." <$> many1 (try (modFrag <* char '.'))
-    base <- T.pack <$> some anyChar -- since we're assuming we get a valid name
-    pure $ (mod, base)
-
 
 -- This doesn't handle all malformed 'Ident's
 identToQualid :: HasCallStack => Ident -> Maybe Qualid
 identToQualid x = case splitModule x of
-    Just (mod, ident) -> Just (Qualified mod ident)
-    _                 -> Just (Bare x)
+    Just (mod, ident) -> Just (Qualified mod (toPrefix ident))
+    _                 -> Just (Bare (toPrefix x))
 
 identToBase :: Ident -> Ident
 identToBase x = maybe x qualidBase $ identToQualid x

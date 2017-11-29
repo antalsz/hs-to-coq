@@ -111,9 +111,6 @@ VFILES:=GHC/Num.v\
   Data/Type/Equality.v\
   Data/Functor/Const.v\
   Prelude.v\
-  Data/IntMap.v\
-  Data/IntMap/Base.v\
-  Data/IntSet/Base.v\
   GHC/Base.v\
   Data/Maybe.v\
   GHC/List.v\

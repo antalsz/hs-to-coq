@@ -48,9 +48,6 @@ skip Data.List.NonEmpty.group1
 redefine Local Definition Data.List.NonEmpty.instance_GHC_Base_Applicative_Data_List_NonEmpty_NonEmpty_op_zlztzg__ : forall {a} {b},
   (Data.List.NonEmpty.NonEmpty (a -> b)) -> ((Data.List.NonEmpty.NonEmpty a) -> (Data.List.NonEmpty.NonEmpty b)) := fun {a} {b} => zipWith id.
 
-redefine Local Definition Data.List.NonEmpty.instance_GHC_Base_Functor_Data_List_NonEmpty_NonEmpty_fmap: forall {a} {b},  (a -> b) -> ((NonEmpty a) -> (NonEmpty b))
-  := fun {a} {b} f x => match x with | NEcons a as_ => NEcons (f a) (GHC.Base.fmap f as_) end.
-
 redefine Local Definition Data.List.NonEmpty.instance_GHC_Base_Functor_Data_List_NonEmpty_NonEmpty_op_zlzd__: forall {a} {b}, a -> ((NonEmpty b) -> (NonEmpty a))
   := fun {a} {b} f x => match x with | NEcons a as_ => NEcons f (GHC.Base.op_zlzd__ f as_) end.
 
@@ -108,7 +105,7 @@ redefine Local Definition Data.List.NonEmpty.instance_GHC_Base_Monad_Data_List_N
                                      end
              end.
 
-# Something broke with derived instances (no longer creates qualified names for
-# compare etc.) after going to qualified names
+# Something broke with derived instances (compare gets renamed to the instance’s method,
+# even though it should use GHC.Base.compare) after going to qualified names
 skip Data.List.NonEmpty.instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Data_List_NonEmpty_NonEmpty_a_
-skip Data.List.NonEmpty.instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___Data_List_NonEmpty_NonEmpty_a_
+#skip Data.List.NonEmpty.instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___Data_List_NonEmpty_NonEmpty_a_

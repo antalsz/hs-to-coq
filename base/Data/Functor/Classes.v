@@ -134,13 +134,13 @@ Program Instance instance_Data_Functor_Classes_Eq1_list : Eq1 list := fun _ k =>
 Local Definition instance_Data_Functor_Classes_Ord1_list_liftCompare
     : forall {a} {b}, (a -> b -> comparison) -> list a -> list b -> comparison :=
   fun {a} {b} =>
-    fix liftCompare arg_64__ arg_65__ arg_66__
-          := match arg_64__ , arg_65__ , arg_66__ with
+    fix liftCompare arg_69__ arg_70__ arg_71__
+          := match arg_69__ , arg_70__ , arg_71__ with
                | _ , nil , nil => Eq
                | _ , nil , cons _ _ => Lt
                | _ , cons _ _ , nil => Gt
                | comp , cons x xs , cons y ys => GHC.Base.mappend (comp x y) (liftCompare comp
-                                                                  xs ys)
+                                                                                          xs ys)
              end.
 
 Program Instance instance_Data_Functor_Classes_Ord1_list : Ord1 list := fun _

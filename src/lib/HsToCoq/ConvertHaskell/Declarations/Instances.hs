@@ -291,8 +291,11 @@ topoSortInstance (InstanceDefinition instanceName params ty members mp) = go sor
                   convUnsupported ("Cannot find sig for " ++ show memberName)
             _ -> convUnsupported ("OOPS! Cannot find information for class " ++ show className)
 
+        -- Methods often look recursive, but usually they are not really,
+        -- so by default, we un-do the fix introduced by convertTypedBinding
         unFix :: Term -> Term
         unFix body = case body of
+            Fun bnds t -> Fun bnds (unFix t)
             Fix (FixOne (FixBody _ bnds _ _ body'))
               -> Fun bnds body'
             App1 (Qualid (Bare "unsafeFix"))

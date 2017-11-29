@@ -50,10 +50,11 @@ Arguments NEcons {_} _ _.
 
 Local Definition instance_GHC_Base_Functor_Data_List_NonEmpty_NonEmpty_fmap
     : forall {a} {b}, (a -> b) -> NonEmpty a -> NonEmpty b :=
-  fun {a} {b} f x =>
-    match x with
-      | NEcons a as_ => NEcons (f a) (GHC.Base.fmap f as_)
-    end.
+  fun {a} {b} =>
+    fun arg_155__ arg_156__ =>
+      match arg_155__ , arg_156__ with
+        | f , NEcons a as_ => NEcons (f a) (GHC.Base.fmap f as_)
+      end.
 
 Local Definition instance_GHC_Base_Functor_Data_List_NonEmpty_NonEmpty_op_zlzd__
     : forall {a} {b}, a -> NonEmpty b -> NonEmpty a :=
@@ -289,8 +290,34 @@ Program Instance instance_Data_Traversable_Traversable_Data_List_NonEmpty_NonEmp
 (* Skipping instance
    instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Data_List_NonEmpty_NonEmpty_a_ *)
 
-(* Skipping instance
-   instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___Data_List_NonEmpty_NonEmpty_a_ *)
+Local Definition instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___Data_List_NonEmpty_NonEmpty_a__op_zeze__ {inst_a}
+                                                                                                           `{GHC.Base.Eq_
+                                                                                                           inst_a}
+    : NonEmpty inst_a -> NonEmpty inst_a -> bool :=
+  fun arg_78__ arg_79__ =>
+    match arg_78__ , arg_79__ with
+      | NEcons a1 a2 , NEcons b1 b2 => (andb ((GHC.Base.op_zeze__ a1 b1))
+                                             ((GHC.Base.op_zeze__ a2 b2)))
+    end.
+
+Local Definition instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___Data_List_NonEmpty_NonEmpty_a__op_zsze__ {inst_a}
+                                                                                                           `{_
+                                                                                                             : GHC.Base.Eq_
+                                                                                                               inst_a}
+    : NonEmpty inst_a -> NonEmpty inst_a -> bool :=
+  fun arg_198__ arg_199__ =>
+    match arg_198__ , arg_199__ with
+      | a , b => negb
+                 (instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___Data_List_NonEmpty_NonEmpty_a__op_zeze__
+                 a b)
+    end.
+
+Program Instance instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___Data_List_NonEmpty_NonEmpty_a_ {a}
+                                                                                                 `{GHC.Base.Eq_ a}
+  : GHC.Base.Eq_ (NonEmpty a) := fun _ k =>
+    k
+    {|GHC.Base.op_zeze____ := instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___Data_List_NonEmpty_NonEmpty_a__op_zeze__ ;
+    GHC.Base.op_zsze____ := instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___Data_List_NonEmpty_NonEmpty_a__op_zsze__ |}.
 
 Definition fromList {a} : list a -> NonEmpty a :=
   fun arg_37__ =>

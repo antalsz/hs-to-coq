@@ -37,7 +37,6 @@ import HsToCoq.ConvertHaskell.Parameters.Edits
 import HsToCoq.ConvertHaskell.Monad
 import HsToCoq.ConvertHaskell.Variables
 import HsToCoq.ConvertHaskell.Literals
-import HsToCoq.ConvertHaskell.InfixNames
 
 --------------------------------------------------------------------------------
 
@@ -46,7 +45,7 @@ convertPat (WildPat PlaceHolder) =
   pure UnderscorePat
 
 convertPat (GHC.VarPat (L _ x)) =
-  Coq.VarPat . toPrefix <$> freeVar x
+  QualidPat <$> var ExprNS x
 
 convertPat (LazyPat p) = do
   p' <- convertLPat p

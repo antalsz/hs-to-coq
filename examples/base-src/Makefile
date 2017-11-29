@@ -28,10 +28,6 @@ HANDMOD = \
   Data/Type/Equality \
   Data/Functor/Const \
   Prelude\
-  \
-  Data/IntMap \
-  Data/IntMap/Base \
-  Data/IntSet/Base \
 
 # Generated modules
 # generated directly from GHC/libraries/base

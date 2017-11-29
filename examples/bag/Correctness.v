@@ -32,7 +32,7 @@ Lemma bagToList_ListBag {A} (xs : list A) :
 Proof.
   by case: xs => * //=;
   rewrite /bagToList /= 
-    /Foldable.foldr /Foldable.instance_Foldable_list /Foldable.foldr__ 
+    /Foldable.foldr /Foldable.instance_Data_Foldable_Foldable_list /Foldable.foldr__ 
     hs_coq_foldr_list' fold_right_cons_nil.
 Qed.
 
@@ -45,7 +45,7 @@ Proof.
     rewrite !IHl IHr.
     by rewrite -fold_right_app fold_right_cons.
   - by rewrite bagToList_ListBag
-        /Foldable.foldr /Foldable.instance_Foldable_list /Foldable.foldr__ 
+        /Foldable.foldr /Foldable.instance_Data_Foldable_Foldable_list /Foldable.foldr__ 
         hs_coq_foldr_list'.
 Qed.
 
@@ -123,7 +123,7 @@ Proof.
   elim: b => [| x | l IHl r IHr | xs] //=.
   - by rewrite bagToList_TwoBags Zlength_app IHl IHr.
   - by rewrite 
-      /Foldable.length /Foldable.instance_Foldable_list /Foldable.length__ 
+      /Foldable.length /Foldable.instance_Data_Foldable_Foldable_list /Foldable.length__ 
       hs_coq_length_list' bagToList_ListBag.
 Qed.
 
@@ -144,7 +144,7 @@ Proof.
   elim: b z => [|x | l IHl r IHr | xs] //= z.
   - by rewrite bagToList_TwoBags fold_left_app IHl IHr.
   - by rewrite bagToList_ListBag
-       /Foldable.foldl /Foldable.instance_Foldable_list /Foldable.foldl__ 
+       /Foldable.foldl /Foldable.instance_Data_Foldable_Foldable_list /Foldable.foldl__ 
        hs_coq_foldl_list'.
 Qed.
 
@@ -159,7 +159,7 @@ Proof.
   - rewrite !foldrBag_ok fold_right_cons_nil fold_right_cons.
     by rewrite IHl IHr  -fold_right_app map_app.
   - by rewrite
-       /Foldable.foldr /Foldable.instance_Foldable_list /Foldable.foldr__ 
+       /Foldable.foldr /Foldable.instance_Data_Foldable_Foldable_list /Foldable.foldr__ 
       !hs_coq_foldr_list' fold_right_cons_nil fold_right_map.
 Qed.
 

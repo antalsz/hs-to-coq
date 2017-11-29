@@ -57,15 +57,15 @@ vo_to_obj = $(addsuffix .o,\
 COQLIBS?=\
   -Q "." ""\
   -Q "../../base-thy" Proofs\
-  -Q "../../base"     ""
+  -Q "../../base" ""
 COQCHKLIBS?=\
   -R "." ""\
   -R "../../base-thy" Proofs\
-  -R "../../base"     ""
+  -R "../../base" ""
 COQDOCLIBS?=\
   -R "." ""\
   -R "../../base-thy" Proofs\
-  -R "../../base"     ""
+  -R "../../base" ""
 
 ##########################
 #                        #

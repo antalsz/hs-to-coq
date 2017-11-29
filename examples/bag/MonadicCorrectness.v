@@ -405,9 +405,9 @@ Proof.
              anf_equal].
   - destruct IHb1 as [IHb11 IHb12].
     destruct IHb2 as [IHb21 IHb22].
-    rewrite bagToList_TwoBags foldr_app.
+    rewrite bagToList_TwoBags.
     split.
-    assert (Hr: (fun x : Bag B * Bag C =>
+    + assert (Hr: (fun x : Bag B * Bag C =>
          let (r1, s1) := x in
          mapAndUnzipBagM f b2 >>=
          (fun y: Bag B * Bag C =>
@@ -419,10 +419,18 @@ Proof.
           return_ (Mk_TwoBags x.1 y.1, Mk_TwoBags x.2 y.2))));
       try solve [funext; intros x; destruct x; f_equal;
                  funext; intros y; destruct y; reflexivity].
-    rewrite Hr.
-    + Check @monad_bind_return_fmap.
-       repeat rewrite -IHb11 -IHb12 -IHb21 -IHb22.
-    
+      rewrite Hr.
+      rewrite monad_bind_return_fmap2.
+      rewrite <- monad_bind_fmap_ap.
+    (*  setoid_rewrite 
+      rewrite bagToList_TwoBags foldr_app -IHl -IHr.
+    unfold "<$>"; rewrite !functor_composition.
+    rewrite !applicative_fmap -!applicative_composition !applicative_homomorphism; f_equal.
+    rewrite !applicative_interchange -!applicative_fmap functor_composition; do 2 f_equal.
+    funext=> l'; funext=> r'; funext=> z'.
+    by unfold "∘"; rewrite bagToList_TwoBags app_assoc.
+
+*)  
 Admitted.
  
 (* TODO foldrBagM foldlBagM *)

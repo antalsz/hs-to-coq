@@ -122,7 +122,7 @@ instance Binding Pattern where
   binding f (InfixPat l op r) =
     -- TODO: InfixPat not really supported at the moment
     -- (Need to chage it to take a qualifid name)
-    (occurrence (Bare op) *>) . binding f [l,r]
+    (occurrence (Bare (infixToCoq op)) *>) . binding f [l,r]
 
   binding f (AsPat pat x) =
     binding f pat . binding f x
@@ -251,12 +251,12 @@ instance Binding Notation where
   binding f (NotationBinding nb) = binding f nb
   binding f (InfixDefinition op defn oassoc level) =
     -- TODO: This Bare is fishy
-    (freeVars defn *> freeVars oassoc *> freeVars level *>) . binding f (Bare op)
+    (freeVars defn *> freeVars oassoc *> freeVars level *>) . binding f (Bare (infixToCoq op))
     -- We treat infix operators as bound variables
 
 instance Binding NotationBinding where
     -- TODO: This Bare is fishy
-  binding f (NotationIdentBinding x def) = (freeVars def *>) . binding f (Bare x)
+  binding f (NotationIdentBinding x def) = (freeVars def *>) . binding f (Bare (infixToCoq x))
 
 -- TODO Not all sequences of bindings should be telescopes!
 bindingTelescope :: (Binding b, MonadVariables Qualid d m, Monoid d, Foldable f)
@@ -343,7 +343,7 @@ instance FreeVars Term where
     freeVars qid *> freeVars xs
 
   freeVars (Infix l op r) =
-    freeVars l *> occurrence (Bare op) *> freeVars r
+    freeVars l *> occurrence (Bare (infixToCoq op)) *> freeVars r
 
   freeVars (InScope t _scope) =
     freeVars t

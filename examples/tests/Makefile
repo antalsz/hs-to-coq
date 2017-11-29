@@ -27,7 +27,8 @@ PASS = \
   FTPDefault \
   PolyInstance2 \
   PolyInstance3 \
-  MutrecInst
+  MutrecInst \
+  Bits
 
 
 # tests that *should* pass but currently fail
@@ -40,8 +41,7 @@ TODO_PASS  = \
   Mutrec \
   PaperExamples \
   OpTyCon \
-  Existential \
-  Bits
+  Existential
 
 MODULES = $(PASS) $(TODO_PASS)
 

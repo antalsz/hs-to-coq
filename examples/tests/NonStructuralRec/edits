@@ -1,8 +1,8 @@
 skip NonStructuralRec.N
-skip NonStructuralRec.addN
+skip NonStructuralRec.add
 rename type NonStructuralRec.N = nat
 rename value NonStructuralRec.N = O
 rename value NonStructuralRec.S = S
-rename value NonStructuralRec.addN = Nat.add
+rename value NonStructuralRec.add = Nat.add
 
 termination NonStructuralRec.mapTree2 { measure (NonStructuralRec.size arg_1__) } prog_omega

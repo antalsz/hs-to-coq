@@ -9,9 +9,9 @@ mx N n = n
 mx n N = n
 mx (S n) (S m) = S (mx n m)
 
-addN :: N -> N -> N
-addN N m     = m
-addN (S n) m = S (addN n m)
+add :: N -> N -> N
+add N m     = m
+add (S n) m = S (add n m)
 
 -- Inlined list datatype
 
@@ -25,7 +25,7 @@ data Tree a = Node a (List (Tree a))
 size :: Tree a -> N
 size (Node v ts) = go ts
   where go Nil = N
-        go (Cons t ts) = addN (S (size t)) (go ts)
+        go (Cons t ts) = add (S (size t)) (go ts)
 
 -- Nonstructurual recursion
 

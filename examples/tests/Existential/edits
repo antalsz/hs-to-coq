@@ -1,0 +1,1 @@
+rename value GHC.Classes.&& = andb

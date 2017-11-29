@@ -385,10 +385,10 @@ Theorem mapAndUnzipBagM_ok {M A B C} `{MonadLaws M}
 Proof.
   rewrite
     /Data.Traversable.mapM
-    /Traversable.instance_Traversable_list
+    /Traversable.instance_Data_Traversable_Traversable_list
     /Data.Traversable.mapM__
-    /Data.Traversable.instance_Traversable_list_mapM
-    /Data.Traversable.instance_Traversable_list_traverse.
+    /Data.Traversable.instance_Data_Traversable_Traversable_list_mapM
+    /Data.Traversable.instance_Data_Traversable_Traversable_list_traverse.
   induction b; simpl;
     [split; anf_equal | | |].
   - split;

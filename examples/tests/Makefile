@@ -28,7 +28,7 @@ PASS = \
   PolyInstance2 \
   PolyInstance3 \
   MutrecInst \
-  Bits
+  Bits \
 
 
 # tests that *should* pass but currently fail
@@ -41,7 +41,8 @@ TODO_PASS  = \
   Mutrec \
   PaperExamples \
   OpTyCon \
-  Existential
+  Existential \
+  TypeAnnotations \
 
 MODULES = $(PASS) $(TODO_PASS)
 

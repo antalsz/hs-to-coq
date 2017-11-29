@@ -92,9 +92,11 @@ $(OUT)/Makefile: $(OUT)/_CoqProject
 	cd $(OUT); coq_makefile -f _CoqProject -o Makefile
 
 $(OUT)/edits:
+	mkdir -p $(OUT)
 	ln -fs ../examples/base-src/edits $(OUT)/edits
 
 $(OUT)/README.md:
+	mkdir -p $(OUT)
 	> $@
 	echo 'This directory contains a Coq’ified version of the Haskell base library' >> $@
 	echo 'Do not edit files here! Instead, look in `examples/base-src`.' >> $@

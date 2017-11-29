@@ -579,32 +579,6 @@ Instance Ord_list {a} `{Ord a}: Ord (list a) :=
   ord_default compare_list.
 
 
-Instance Eq_option {a} `{Eq_ a} : Eq_ (option a) := fun _ k => k {|
-   op_zeze____ := fun x y =>
-                  match x,y with
-                  | Some x0, Some y0 => x0 == y0
-                  | None, None => true
-                  | _,_ => false
-                  end ;
-   op_zsze____ := fun x y =>
-                  match x,y with
-                  | Some x0, Some y0 => x0 /= y0
-                  | None, None => false
-                  | _,_ => true
-                  end
-|}.
-
-Definition compare_option {a} `{Ord a} (xs : option a) (ys : option a) : comparison :=
-  match xs, ys with
-  | None, None => Eq
-  | None, _    => Lt
-  | _   , None => Gt
-  | Some x , Some y => compare x y
-  end.
-
-Instance Ord_option {a} `{Ord a} : Ord (option a) := ord_default compare_option.
-
-
 (* ********************************************************* *)
 (* Some Haskell functions we cannot translate (yet)          *)
 

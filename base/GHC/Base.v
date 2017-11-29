@@ -737,32 +737,6 @@ Instance Ord_list {a} `{Ord a}: Ord (list a) :=
   ord_default compare_list.
 
 
-Instance Eq_option {a} `{Eq_ a} : Eq_ (option a) := fun _ k => k {|
-   op_zeze____ := fun x y =>
-                  match x,y with
-                  | Some x0, Some y0 => x0 == y0
-                  | None, None => true
-                  | _,_ => false
-                  end ;
-   op_zsze____ := fun x y =>
-                  match x,y with
-                  | Some x0, Some y0 => x0 /= y0
-                  | None, None => false
-                  | _,_ => true
-                  end
-|}.
-
-Definition compare_option {a} `{Ord a} (xs : option a) (ys : option a) : comparison :=
-  match xs, ys with
-  | None, None => Eq
-  | None, _    => Lt
-  | _   , None => Gt
-  | Some x , Some y => compare x y
-  end.
-
-Instance Ord_option {a} `{Ord a} : Ord (option a) := ord_default compare_option.
-
-
 (* ********************************************************* *)
 (* Some Haskell functions we cannot translate (yet)          *)
 
@@ -1233,17 +1207,6 @@ Local Definition instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__option_a__max 
     then y
     else x.
 
-Program Instance instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__option_a_ {a}
-                                                                            `{Ord a} : Ord (option a) := fun _ k =>
-    k
-    {|op_zl____ := instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__option_a__op_zl__ ;
-    op_zlze____ := instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__option_a__op_zlze__ ;
-    op_zg____ := instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__option_a__op_zg__ ;
-    op_zgze____ := instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__option_a__op_zgze__ ;
-    compare__ := instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__option_a__compare ;
-    max__ := instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__option_a__max ;
-    min__ := instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__option_a__min |}.
-
 Local Definition instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___option_a__op_zeze__ {inst_a}
                                                                                       `{Eq_ inst_a} : option
                                                                                                       inst_a -> option
@@ -1267,6 +1230,17 @@ Program Instance instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___option_a_ {a}
     k
     {|op_zeze____ := instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___option_a__op_zeze__ ;
     op_zsze____ := instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___option_a__op_zsze__ |}.
+
+Program Instance instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__option_a_ {a}
+                                                                            `{Ord a} : Ord (option a) := fun _ k =>
+    k
+    {|op_zl____ := instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__option_a__op_zl__ ;
+    op_zlze____ := instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__option_a__op_zlze__ ;
+    op_zg____ := instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__option_a__op_zg__ ;
+    op_zgze____ := instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__option_a__op_zgze__ ;
+    compare__ := instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__option_a__compare ;
+    max__ := instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__option_a__max ;
+    min__ := instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__option_a__min |}.
 
 Definition ap {m} {a} {b} `{(Monad m)} : m (a -> b) -> m a -> m b :=
   fun m1 m2 =>
@@ -1781,8 +1755,8 @@ Definition when {f} `{(Applicative f)} : bool -> f unit -> f unit :=
   fun p s => if p : bool then s else pure tt.
 
 (* Unbound variables:
-     * Eq Eq_ Gt Lt None Ord Some String Type andb bool compare comparison cons false
-     list negb nil op_zeze__ op_zg__ op_zgze__ op_zl__ op_zlze__ option pair true tt
-     unit Coq.Init.Datatypes.app Coq.Lists.List.flat_map Coq.Lists.List.map
+     Eq Eq_ Gt Lt None Ord Some String Type andb bool compare comparison cons false
+     list negb nil op_zeze__ op_zg__ op_zgze__ op_zl__ op_zlze__ op_zt__ option pair
+     true tt unit Coq.Init.Datatypes.app Coq.Lists.List.flat_map Coq.Lists.List.map
      GHC.Prim.arrow GHC.Tuple.pair_type
 *)

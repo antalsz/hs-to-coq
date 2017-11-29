@@ -1,6 +1,6 @@
--Q .           ""
--Q ../base-thy Proofs
--Q ../../base  ""
+-Q .              ""
+-Q ../../base-thy Proofs
+-Q ../../base     ""
 
 # Utility
 ListUtils.v

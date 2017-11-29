@@ -48,6 +48,7 @@ import Panic
 
 import HsToCoq.Coq.Gallina as Coq
 import HsToCoq.Coq.Gallina.Util
+import HsToCoq.Coq.Gallina.Orphans ()
 
 import HsToCoq.ConvertHaskell.Parameters.Edits
 

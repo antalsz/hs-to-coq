@@ -60,6 +60,7 @@ library
                      , HsToCoq.Coq.Preamble
                      , HsToCoq.Coq.Gallina
                      , HsToCoq.Coq.Gallina.Util
+                     , HsToCoq.Coq.Gallina.Orphans
                      , HsToCoq.Coq.FreeVars
                      , HsToCoq.Coq.Subst
                      , HsToCoq.ConvertHaskell.Parameters.Edits

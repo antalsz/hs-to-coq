@@ -29,7 +29,6 @@ import Control.Lens
 import Data.Semigroup ((<>))
 import Data.Foldable
 import Data.Maybe
-import Data.String
 import Data.List.NonEmpty (NonEmpty(..), nonEmpty)
 
 import qualified Data.Text as T
@@ -155,13 +154,6 @@ binderArgs :: Foldable f => f Binder -> [Arg]
 binderArgs = map (PosArg . nameToTerm) . foldMap (toListOf binderNames)
            . filter (\b -> b^?binderExplicitness == Just Explicit) . toList
 
--- For internal use only (e.g. hardcoded names)
-instance IsString Term where
-    fromString x = Qualid (unsafeIdentToQualid (T.pack x))
-instance IsString Qualid where
-    fromString x = unsafeIdentToQualid (T.pack x)
-instance IsString Binder where
-    fromString x = Inferred Explicit (Ident (unsafeIdentToQualid (T.pack x)))
 
 unsafeIdentToQualid :: HasCallStack => Ident -> Qualid
 unsafeIdentToQualid i = fromMaybe (error $ "unsafeIdentToQualid: " ++ show i) (identToQualid i)

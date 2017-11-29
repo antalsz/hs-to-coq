@@ -95,8 +95,6 @@ import Data.Text (Text)
 import qualified Data.Text as T
 import Numeric.Natural
 
-import GHC.Stack
-
 import Data.List.NonEmpty (NonEmpty(), (<|), nonEmpty)
 
 import Data.Typeable

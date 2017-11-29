@@ -35,7 +35,6 @@ import Data.Maybe (fromMaybe)
 import Data.Monoid
 
 import HsToCoq.Coq.Gallina
-import HsToCoq.Coq.Gallina.Util
 import HsToCoq.ConvertHaskell.InfixNames
 
 ----------------------------------------------------------------------------------------------------
@@ -132,7 +131,7 @@ instance Binding Pattern where
     binding f pat
     -- The scope is a different sort of identifier, not a term-level variable.
 
-  binding f (QualidPat qid@(Bare x)) =
+  binding f (QualidPat qid@(Bare _)) =
     binding f qid
     -- See [Note Bound variables in patterns]
 

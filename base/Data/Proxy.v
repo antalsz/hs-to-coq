@@ -17,6 +17,7 @@ Require Import GHC.Base.
 (* Converted imports: *)
 
 Require GHC.Base.
+Import GHC.Base.Notations.
 
 (* Converted type declarations: *)
 
@@ -50,22 +51,22 @@ Local Definition instance_GHC_Base_Ord__Data_Proxy_Proxy_s__compare {inst_s}
 Local Definition instance_GHC_Base_Ord__Data_Proxy_Proxy_s__op_zg__ {inst_s}
     : (Proxy inst_s) -> (Proxy inst_s) -> bool :=
   fun x y =>
-    GHC.Base.op_zeze__ (instance_GHC_Base_Ord__Data_Proxy_Proxy_s__compare x y) Gt.
+    _GHC.Base.==_ (instance_GHC_Base_Ord__Data_Proxy_Proxy_s__compare x y) Gt.
 
 Local Definition instance_GHC_Base_Ord__Data_Proxy_Proxy_s__op_zgze__ {inst_s}
     : (Proxy inst_s) -> (Proxy inst_s) -> bool :=
   fun x y =>
-    GHC.Base.op_zsze__ (instance_GHC_Base_Ord__Data_Proxy_Proxy_s__compare x y) Lt.
+    _GHC.Base./=_ (instance_GHC_Base_Ord__Data_Proxy_Proxy_s__compare x y) Lt.
 
 Local Definition instance_GHC_Base_Ord__Data_Proxy_Proxy_s__op_zl__ {inst_s}
     : (Proxy inst_s) -> (Proxy inst_s) -> bool :=
   fun x y =>
-    GHC.Base.op_zeze__ (instance_GHC_Base_Ord__Data_Proxy_Proxy_s__compare x y) Lt.
+    _GHC.Base.==_ (instance_GHC_Base_Ord__Data_Proxy_Proxy_s__compare x y) Lt.
 
 Local Definition instance_GHC_Base_Ord__Data_Proxy_Proxy_s__op_zlze__ {inst_s}
     : (Proxy inst_s) -> (Proxy inst_s) -> bool :=
   fun x y =>
-    GHC.Base.op_zsze__ (instance_GHC_Base_Ord__Data_Proxy_Proxy_s__compare x y) Gt.
+    _GHC.Base./=_ (instance_GHC_Base_Ord__Data_Proxy_Proxy_s__compare x y) Gt.
 
 Local Definition instance_GHC_Base_Ord__Data_Proxy_Proxy_s__max {inst_s}
     : (Proxy inst_s) -> (Proxy inst_s) -> (Proxy inst_s) :=
@@ -177,7 +178,7 @@ Program Instance instance_GHC_Base_Applicative_Data_Proxy_Proxy
 Local Definition instance_GHC_Base_Monad_Data_Proxy_Proxy_op_zgzg__ : forall {a}
                                                                              {b},
                                                                         Proxy a -> Proxy b -> Proxy b :=
-  fun {a} {b} => GHC.Base.op_ztzg__.
+  fun {a} {b} => _GHC.Base.*>_.
 
 Local Definition instance_GHC_Base_Monad_Data_Proxy_Proxy_op_zgzgze__
     : forall {a} {b}, Proxy a -> (a -> Proxy b) -> Proxy b :=

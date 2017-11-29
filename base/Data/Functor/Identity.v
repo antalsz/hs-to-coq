@@ -18,6 +18,7 @@ Require Data.Traversable.
 Require GHC.Base.
 Require GHC.Num.
 Require GHC.Prim.
+Import GHC.Base.Notations.
 
 (* Converted type declarations: *)
 
@@ -140,7 +141,7 @@ Program Instance instance_GHC_Base_Applicative_Data_Functor_Identity_Identity
 
 Local Definition instance_GHC_Base_Monad_Data_Functor_Identity_Identity_op_zgzg__
     : forall {a} {b}, Identity a -> Identity b -> Identity b :=
-  fun {a} {b} => GHC.Base.op_ztzg__.
+  fun {a} {b} => _GHC.Base.*>_.
 
 Local Definition instance_GHC_Base_Monad_Data_Functor_Identity_Identity_op_zgzgze__
     : forall {a} {b}, Identity a -> (a -> Identity b) -> Identity b :=
@@ -239,25 +240,25 @@ Local Definition instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Data_Functor_I
                                                                                                             `{GHC.Base.Ord
                                                                                                             inst_a}
     : Identity inst_a -> Identity inst_a -> bool :=
-  GHC.Prim.coerce GHC.Base.op_zg__.
+  GHC.Prim.coerce _GHC.Base.>_.
 
 Local Definition instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Data_Functor_Identity_Identity_a__op_zgze__ {inst_a}
                                                                                                               `{GHC.Base.Ord
                                                                                                               inst_a}
     : Identity inst_a -> Identity inst_a -> bool :=
-  GHC.Prim.coerce GHC.Base.op_zgze__.
+  GHC.Prim.coerce _GHC.Base.>=_.
 
 Local Definition instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Data_Functor_Identity_Identity_a__op_zl__ {inst_a}
                                                                                                             `{GHC.Base.Ord
                                                                                                             inst_a}
     : Identity inst_a -> Identity inst_a -> bool :=
-  GHC.Prim.coerce GHC.Base.op_zl__.
+  GHC.Prim.coerce _GHC.Base.<_.
 
 Local Definition instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Data_Functor_Identity_Identity_a__op_zlze__ {inst_a}
                                                                                                               `{GHC.Base.Ord
                                                                                                               inst_a}
     : Identity inst_a -> Identity inst_a -> bool :=
-  GHC.Prim.coerce GHC.Base.op_zlze__.
+  GHC.Prim.coerce _GHC.Base.<=_.
 
 (* Translating `instance forall {a}, forall `{GHC.Num.Num a}, GHC.Num.Num
    (Data.Functor.Identity.Identity a)' failed: OOPS! Cannot find information for
@@ -326,13 +327,13 @@ Local Definition instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___Data_Functor_I
                                                                                                               `{GHC.Base.Eq_
                                                                                                               inst_a}
     : Identity inst_a -> Identity inst_a -> bool :=
-  GHC.Prim.coerce GHC.Base.op_zeze__.
+  GHC.Prim.coerce _GHC.Base.==_.
 
 Local Definition instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___Data_Functor_Identity_Identity_a__op_zsze__ {inst_a}
                                                                                                               `{GHC.Base.Eq_
                                                                                                               inst_a}
     : Identity inst_a -> Identity inst_a -> bool :=
-  GHC.Prim.coerce GHC.Base.op_zsze__.
+  GHC.Prim.coerce _GHC.Base./=_.
 
 Program Instance instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___Data_Functor_Identity_Identity_a_ {a}
                                                                                                     `{GHC.Base.Eq_ a}
@@ -375,8 +376,7 @@ Definition hash_compose {a} {b} {c} :=
 Local Definition instance_Data_Foldable_Foldable_Data_Functor_Identity_Identity_elem
     : forall {a}, forall `{GHC.Base.Eq_ a}, a -> Identity a -> bool :=
   fun {a} `{GHC.Base.Eq_ a} =>
-    hash_compose (fun arg_19__ => GHC.Base.op_z2218U__ arg_19__ runIdentity)
-                 GHC.Base.op_zeze__.
+    hash_compose (fun arg_19__ => arg_19__ GHC.Base.∘ runIdentity) _GHC.Base.==_.
 
 Program Instance instance_Data_Foldable_Foldable_Data_Functor_Identity_Identity
   : Data.Foldable.Foldable Identity := fun _ k =>

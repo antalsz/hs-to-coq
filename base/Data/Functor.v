@@ -16,33 +16,34 @@ Require Coq.Program.Wf.
 (* Converted imports: *)
 
 Require GHC.Base.
+Import GHC.Base.Notations.
 
 (* No type declarations to convert. *)
 (* Converted value declarations: *)
 
 Definition op_zdzg__ {f} {a} {b} `{GHC.Base.Functor f} : f a -> b -> f b :=
-  GHC.Base.flip GHC.Base.op_zlzd__.
-
-Infix "$>" := (op_zdzg__) (at level 99).
+  GHC.Base.flip _GHC.Base.<$_.
 
 Notation "'_$>_'" := (op_zdzg__).
+
+Infix "$>" := (_$>_) (at level 99).
 
 Definition op_zlzdzg__ {f} {a} {b} `{GHC.Base.Functor f} : (a -> b) -> f a -> f
                                                            b :=
   GHC.Base.fmap.
 
-Infix "<$>" := (op_zlzdzg__) (at level 99).
-
 Notation "'_<$>_'" := (op_zlzdzg__).
 
+Infix "<$>" := (_<$>_) (at level 99).
+
 Definition void {f} {a} `{GHC.Base.Functor f} : f a -> f unit :=
-  fun x => GHC.Base.op_zlzd__ tt x.
+  fun x => tt GHC.Base.<$ x.
 
 Module Notations.
-Infix "Data.Functor.$>" := (op_zdzg__) (at level 99).
 Notation "'_Data.Functor.$>_'" := (op_zdzg__).
-Infix "Data.Functor.<$>" := (op_zlzdzg__) (at level 99).
+Infix "Data.Functor.$>" := (_$>_) (at level 99).
 Notation "'_Data.Functor.<$>_'" := (op_zlzdzg__).
+Infix "Data.Functor.<$>" := (_<$>_) (at level 99).
 End Notations.
 
 (* Unbound variables:

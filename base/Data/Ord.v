@@ -19,6 +19,7 @@ Require Import GHC.Num.
 
 Require GHC.Base.
 Require GHC.Prim.
+Import GHC.Base.Notations.
 
 (* Converted type declarations: *)
 
@@ -52,7 +53,7 @@ Local Definition instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Data_Ord_Down_
                                                                                            `{GHC.Base.Ord inst_a}
     : (Down inst_a) -> (Down inst_a) -> bool :=
   fun x y =>
-    GHC.Base.op_zeze__
+    _GHC.Base.==_
     (instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Data_Ord_Down_a__compare x y)
     Gt.
 
@@ -60,7 +61,7 @@ Local Definition instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Data_Ord_Down_
                                                                                              `{GHC.Base.Ord inst_a}
     : (Down inst_a) -> (Down inst_a) -> bool :=
   fun x y =>
-    GHC.Base.op_zsze__
+    _GHC.Base./=_
     (instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Data_Ord_Down_a__compare x y)
     Lt.
 
@@ -68,7 +69,7 @@ Local Definition instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Data_Ord_Down_
                                                                                            `{GHC.Base.Ord inst_a}
     : (Down inst_a) -> (Down inst_a) -> bool :=
   fun x y =>
-    GHC.Base.op_zeze__
+    _GHC.Base.==_
     (instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Data_Ord_Down_a__compare x y)
     Lt.
 
@@ -76,7 +77,7 @@ Local Definition instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Data_Ord_Down_
                                                                                              `{GHC.Base.Ord inst_a}
     : (Down inst_a) -> (Down inst_a) -> bool :=
   fun x y =>
-    GHC.Base.op_zsze__
+    _GHC.Base./=_
     (instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Data_Ord_Down_a__compare x y)
     Gt.
 
@@ -126,12 +127,12 @@ Program Instance instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Data_Ord_Down_
 Local Definition instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___Data_Ord_Down_a__op_zeze__ {inst_a}
                                                                                              `{GHC.Base.Eq_ inst_a}
     : Down inst_a -> Down inst_a -> bool :=
-  GHC.Prim.coerce GHC.Base.op_zeze__.
+  GHC.Prim.coerce _GHC.Base.==_.
 
 Local Definition instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___Data_Ord_Down_a__op_zsze__ {inst_a}
                                                                                              `{GHC.Base.Eq_ inst_a}
     : Down inst_a -> Down inst_a -> bool :=
-  GHC.Prim.coerce GHC.Base.op_zsze__.
+  GHC.Prim.coerce _GHC.Base./=_.
 
 Program Instance instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___Data_Ord_Down_a_ {a}
                                                                                    `{GHC.Base.Eq_ a} : GHC.Base.Eq_

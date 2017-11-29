@@ -14,6 +14,7 @@ Require Coq.Program.Wf.
 
 Require Coq.Lists.List.
 Require GHC.Base.
+Import GHC.Base.Notations.
 
 (* Converted type declarations: *)
 
@@ -81,7 +82,7 @@ Program Instance instance_GHC_Base_Applicative__Data_Either_Either_e_ {e}
 
 Local Definition instance_GHC_Base_Monad__Data_Either_Either_e__op_zgzg__ {inst_e}
     : forall {a} {b}, (Either inst_e) a -> (Either inst_e) b -> (Either inst_e) b :=
-  fun {a} {b} => GHC.Base.op_ztzg__.
+  fun {a} {b} => _GHC.Base.*>_.
 
 Local Definition instance_GHC_Base_Monad__Data_Either_Either_e__op_zgzgze__ {inst_e}
     : forall {a} {b},
@@ -143,11 +144,11 @@ Local Definition instance_forall___GHC_Base_Ord_b____GHC_Base_Ord_a___GHC_Base_O
   fun a b =>
     match a with
       | Mk_Left a1 => match b with
-                        | Mk_Left b1 => (GHC.Base.op_zg__ a1 b1)
+                        | Mk_Left b1 => (a1 GHC.Base.> b1)
                         | _ => false
                       end
       | Mk_Right a1 => match b with
-                         | Mk_Right b1 => (GHC.Base.op_zg__ a1 b1)
+                         | Mk_Right b1 => (a1 GHC.Base.> b1)
                          | _ => true
                        end
     end.
@@ -162,11 +163,11 @@ Local Definition instance_forall___GHC_Base_Ord_b____GHC_Base_Ord_a___GHC_Base_O
   fun a b =>
     match a with
       | Mk_Left a1 => match b with
-                        | Mk_Left b1 => (GHC.Base.op_zgze__ a1 b1)
+                        | Mk_Left b1 => (a1 GHC.Base.>= b1)
                         | _ => false
                       end
       | Mk_Right a1 => match b with
-                         | Mk_Right b1 => (GHC.Base.op_zgze__ a1 b1)
+                         | Mk_Right b1 => (a1 GHC.Base.>= b1)
                          | _ => true
                        end
     end.
@@ -181,11 +182,11 @@ Local Definition instance_forall___GHC_Base_Ord_b____GHC_Base_Ord_a___GHC_Base_O
   fun a b =>
     match a with
       | Mk_Left a1 => match b with
-                        | Mk_Left b1 => (GHC.Base.op_zl__ a1 b1)
+                        | Mk_Left b1 => (a1 GHC.Base.< b1)
                         | _ => true
                       end
       | Mk_Right a1 => match b with
-                         | Mk_Right b1 => (GHC.Base.op_zl__ a1 b1)
+                         | Mk_Right b1 => (a1 GHC.Base.< b1)
                          | _ => false
                        end
     end.
@@ -200,11 +201,11 @@ Local Definition instance_forall___GHC_Base_Ord_b____GHC_Base_Ord_a___GHC_Base_O
   fun a b =>
     match a with
       | Mk_Left a1 => match b with
-                        | Mk_Left b1 => (GHC.Base.op_zlze__ a1 b1)
+                        | Mk_Left b1 => (a1 GHC.Base.<= b1)
                         | _ => true
                       end
       | Mk_Right a1 => match b with
-                         | Mk_Right b1 => (GHC.Base.op_zlze__ a1 b1)
+                         | Mk_Right b1 => (a1 GHC.Base.<= b1)
                          | _ => false
                        end
     end.
@@ -244,8 +245,8 @@ Local Definition instance_forall___GHC_Base_Eq__b____GHC_Base_Eq__a___GHC_Base_E
     : Either inst_a inst_b -> Either inst_a inst_b -> bool :=
   fun arg_25__ arg_26__ =>
     match arg_25__ , arg_26__ with
-      | Mk_Left a1 , Mk_Left b1 => ((GHC.Base.op_zeze__ a1 b1))
-      | Mk_Right a1 , Mk_Right b1 => ((GHC.Base.op_zeze__ a1 b1))
+      | Mk_Left a1 , Mk_Left b1 => ((a1 GHC.Base.== b1))
+      | Mk_Right a1 , Mk_Right b1 => ((a1 GHC.Base.== b1))
       | _ , _ => false
     end.
 

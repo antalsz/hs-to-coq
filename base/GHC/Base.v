@@ -53,9 +53,9 @@ Definition fmap `{g : Functor f} : forall {a} {b}, (a -> b) -> f a -> f b :=
 Definition op_zlzd__ `{g : Functor f} : forall {a} {b}, a -> f b -> f a :=
   g _ (op_zlzd____ f).
 
-Infix "<$" := (op_zlzd__) (at level 99).
-
 Notation "'_<$_'" := (op_zlzd__).
+
+Infix "<$" := (_<$_) (at level 99).
 
 Record Applicative__Dict f := Applicative__Dict_Build {
   op_zlztzg____ : forall {a} {b}, f (a -> b) -> f a -> f b ;
@@ -77,13 +77,13 @@ Definition op_ztzg__ `{g : Applicative f} : forall {a} {b}, f a -> f b -> f b :=
 Definition pure `{g : Applicative f} : forall {a}, a -> f a :=
   g _ (pure__ f).
 
-Infix "<*>" := (op_zlztzg__) (at level 99).
-
 Notation "'_<*>_'" := (op_zlztzg__).
 
-Infix "*>" := (op_ztzg__) (at level 99).
+Infix "<*>" := (_<*>_) (at level 99).
 
 Notation "'_*>_'" := (op_ztzg__).
+
+Infix "*>" := (_*>_) (at level 99).
 
 Record Monad__Dict m := Monad__Dict_Build {
   op_zgzg____ : forall {a} {b}, m a -> m b -> m b ;
@@ -105,13 +105,13 @@ Definition op_zgzgze__ `{g : Monad m} : forall {a} {b},
 Definition return_ `{g : Monad m} : forall {a}, a -> m a :=
   g _ (return___ m).
 
-Infix ">>" := (op_zgzg__) (at level 99).
-
 Notation "'_>>_'" := (op_zgzg__).
 
-Infix ">>=" := (op_zgzgze__) (at level 99).
+Infix ">>" := (_>>_) (at level 99).
 
 Notation "'_>>=_'" := (op_zgzgze__).
+
+Infix ">>=" := (_>>=_) (at level 99).
 
 Record Alternative__Dict f := Alternative__Dict_Build {
   empty__ : forall {a}, f a ;
@@ -136,9 +136,9 @@ Definition op_zlzbzg__ `{g : Alternative f} : forall {a}, f a -> f a -> f a :=
 Definition some `{g : Alternative f} : forall {a}, f a -> f (list a) :=
   g _ (some__ f).
 
-Infix "<|>" := (op_zlzbzg__) (at level 99).
-
 Notation "'_<|>_'" := (op_zlzbzg__).
+
+Infix "<|>" := (_<|>_) (at level 99).
 
 Record MonadPlus__Dict (m : Type -> Type) := MonadPlus__Dict_Build {
   mplus__ : forall {a}, m a -> m a -> m a ;
@@ -256,11 +256,8 @@ Definition op_zeze__ {a} {g : Eq_ a} := g _ (op_zeze____ _).
 Definition op_zsze__ {a} {g : Eq_ a} := g _ (op_zsze____ _).
 
 Infix "/=" := (op_zsze__) (no associativity, at level 70).
-
 Notation "'_/=_'" := (op_zsze__).
-
 Infix "==" := (op_zeze__) (no associativity, at level 70).
-
 Notation "'_==_'" := (op_zeze__).
 
 Definition eq_default {a} (eq : a -> a -> bool) : Eq_ a :=
@@ -301,22 +298,21 @@ Definition max `{g : Ord a} : a -> a -> a :=
 Definition min `{g : Ord a} : a -> a -> a :=
   g _ (min__ a).
 
-(* Don't clash with Coq's standard ordering predicates. *)
-Infix "<?" := (op_zl__) (no associativity, at level 70).
+Infix "<" := (op_zl__) (no associativity, at level 70).
 
-Notation "'_<?_'" := (op_zl__).
+Notation "'_<_'" := (op_zl__).
 
-Infix "<=?" := (op_zlze__) (no associativity, at level 70).
+Infix "<=" := (op_zlze__) (no associativity, at level 70).
 
-Notation "'_<=?_'" := (op_zlze__).
+Notation "'_<=_'" := (op_zlze__).
 
-Infix ">?" := (op_zg__) (no associativity, at level 70).
+Infix ">" := (op_zg__) (no associativity, at level 70).
 
-Notation "'_>?_'" := (op_zg__).
+Notation "'_>_'" := (op_zg__).
 
-Infix ">=?" := (op_zgze__) (no associativity, at level 70).
+Infix ">=" := (op_zgze__) (no associativity, at level 70).
 
-Notation "'_>=?_'" := (op_zgze__).
+Notation "'_>=_'" := (op_zgze__).
 
 (*********** Eq/Ord for primitive types **************************)
 
@@ -777,6 +773,24 @@ Definition build {a} : ((a -> list a -> list a) -> list a -> list a) -> list a :
 
 Definition oneShot {a} (x:a) := x.
 
+(** Qualified notation for the notation defined here **)
+
+Module ManualNotations.
+Infix "GHC.Base./=" := (op_zsze__) (no associativity, at level 70).
+Notation "'_GHC.Base./=_'" := (op_zsze__).
+Infix "GHC.Base.==" := (op_zeze__) (no associativity, at level 70).
+Notation "'_GHC.Base.==_'" := (op_zeze__).
+Infix "GHC.Base.<" := (op_zl__) (no associativity, at level 70).
+Notation "'_GHC.Base.<_'" := (op_zl__).
+Infix "GHC.Base.<=" := (op_zlze__) (no associativity, at level 70).
+Notation "'_GHC.Base.<=_'" := (op_zlze__).
+Infix "GHC.Base.>" := (op_zg__) (no associativity, at level 70).
+Notation "'_GHC.Base.>_'" := (op_zg__).
+Infix "GHC.Base.>=" := (op_zgze__) (no associativity, at level 70).
+Notation "'_GHC.Base.>=_'" := (op_zgze__).
+End ManualNotations.
+
+
 (* Converted value declarations: *)
 
 Local Definition instance_GHC_Base_Monoid__list_a__mappend {inst_a} : list
@@ -1134,7 +1148,7 @@ Local Definition instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__option_a__op_z
                   | _ => false
                 end
       | Some a1 => match b with
-                     | Some b1 => (op_zg__ a1 b1)
+                     | Some b1 => (a1 > b1)
                      | _ => true
                    end
     end.
@@ -1150,7 +1164,7 @@ Local Definition instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__option_a__op_z
                   | _ => false
                 end
       | Some a1 => match b with
-                     | Some b1 => (op_zgze__ a1 b1)
+                     | Some b1 => (a1 >= b1)
                      | _ => true
                    end
     end.
@@ -1166,7 +1180,7 @@ Local Definition instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__option_a__op_z
                   | _ => true
                 end
       | Some a1 => match b with
-                     | Some b1 => (op_zl__ a1 b1)
+                     | Some b1 => (a1 < b1)
                      | _ => false
                    end
     end.
@@ -1182,7 +1196,7 @@ Local Definition instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__option_a__op_z
                   | _ => true
                 end
       | Some a1 => match b with
-                     | Some b1 => (op_zlze__ a1 b1)
+                     | Some b1 => (a1 <= b1)
                      | _ => false
                    end
     end.
@@ -1214,7 +1228,7 @@ Local Definition instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___option_a__op_z
   fun arg_51__ arg_52__ =>
     match arg_51__ , arg_52__ with
       | None , None => true
-      | Some a1 , Some b1 => ((op_zeze__ a1 b1))
+      | Some a1 , Some b1 => ((a1 == b1))
       | _ , _ => false
     end.
 
@@ -1243,8 +1257,7 @@ Program Instance instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__option_a_ {a}
     min__ := instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__option_a__min |}.
 
 Definition ap {m} {a} {b} `{(Monad m)} : m (a -> b) -> m a -> m b :=
-  fun m1 m2 =>
-    op_zgzgze__ m1 (fun x1 => op_zgzgze__ m2 (fun x2 => return_ (x1 x2))).
+  fun m1 m2 => m1 >>= (fun x1 => m2 >>= (fun x2 => return_ (x1 x2))).
 
 Definition assert {a} : bool -> a -> a :=
   fun _pred r => r.
@@ -1269,7 +1282,7 @@ Definition eqString : String -> String -> bool :=
   fix eqString arg_22__ arg_23__
         := match arg_22__ , arg_23__ with
              | nil , nil => true
-             | cons c1 cs1 , cons c2 cs2 => andb (op_zeze__ c1 c2) (eqString cs1 cs2)
+             | cons c1 cs1 , cons c2 cs2 => andb (c1 == c2) (eqString cs1 cs2)
              | _ , _ => false
            end.
 
@@ -1288,9 +1301,7 @@ Definition foldr {a} {b} : (a -> b -> b) -> b -> list a -> b :=
 
 Definition mapM {m} {a} {b} `{Monad m} : (a -> m b) -> list a -> m (list b) :=
   fun f as_ =>
-    let k :=
-      fun a r =>
-        op_zgzgze__ (f a) (fun x => op_zgzgze__ r (fun xs => return_ (cons x xs))) in
+    let k := fun a r => f a >>= (fun x => r >>= (fun xs => return_ (cons x xs))) in
     foldr k (return_ nil) as_.
 
 Local Definition instance_forall___GHC_Base_Monoid_a___GHC_Base_Monoid__option_a__mconcat {inst_a}
@@ -1467,52 +1478,49 @@ Definition id {a} : a -> a :=
   fun x => x.
 
 Definition join {m} {a} `{(Monad m)} : m (m a) -> m a :=
-  fun x => op_zgzgze__ x id.
+  fun x => x >>= id.
 
 Definition sequence {m} {a} `{Monad m} : list (m a) -> m (list a) :=
   mapM id.
 
 Definition liftA {f} {a} {b} `{Applicative f} : (a -> b) -> f a -> f b :=
-  fun f a => op_zlztzg__ (pure f) a.
+  fun f a => pure f <*> a.
 
 Definition liftA2 {f} {a} {b} {c} `{Applicative f} : (a -> b -> c) -> f a -> f
                                                      b -> f c :=
-  fun f a b => op_zlztzg__ (fmap f a) b.
+  fun f a b => fmap f a <*> b.
 
 Definition liftA3 {f} {a} {b} {c} {d} `{Applicative f} : (a -> b -> c -> d) -> f
                                                          a -> f b -> f c -> f d :=
-  fun f a b c => op_zlztzg__ (op_zlztzg__ (fmap f a) b) c.
+  fun f a b c => (fmap f a <*> b) <*> c.
 
 Definition liftM {m} {a1} {r} `{(Monad m)} : (a1 -> r) -> m a1 -> m r :=
-  fun f m1 => op_zgzgze__ m1 (fun x1 => return_ (f x1)).
+  fun f m1 => m1 >>= (fun x1 => return_ (f x1)).
 
 Definition liftM2 {m} {a1} {a2} {r} `{(Monad m)} : (a1 -> a2 -> r) -> m a1 -> m
                                                    a2 -> m r :=
-  fun f m1 m2 =>
-    op_zgzgze__ m1 (fun x1 => op_zgzgze__ m2 (fun x2 => return_ (f x1 x2))).
+  fun f m1 m2 => m1 >>= (fun x1 => m2 >>= (fun x2 => return_ (f x1 x2))).
 
 Definition liftM3 {m} {a1} {a2} {a3} {r} `{(Monad m)}
     : (a1 -> a2 -> a3 -> r) -> m a1 -> m a2 -> m a3 -> m r :=
   fun f m1 m2 m3 =>
-    op_zgzgze__ m1 (fun x1 =>
-                  op_zgzgze__ m2 (fun x2 => op_zgzgze__ m3 (fun x3 => return_ (f x1 x2 x3)))).
+    m1 >>= (fun x1 => m2 >>= (fun x2 => m3 >>= (fun x3 => return_ (f x1 x2 x3)))).
 
 Definition liftM4 {m} {a1} {a2} {a3} {a4} {r} `{(Monad m)}
     : (a1 -> a2 -> a3 -> a4 -> r) -> m a1 -> m a2 -> m a3 -> m a4 -> m r :=
   fun f m1 m2 m3 m4 =>
-    op_zgzgze__ m1 (fun x1 =>
-                  op_zgzgze__ m2 (fun x2 =>
-                                op_zgzgze__ m3 (fun x3 => op_zgzgze__ m4 (fun x4 => return_ (f x1 x2 x3 x4))))).
+    m1 >>= (fun x1 =>
+      m2 >>= (fun x2 =>
+        m3 >>= (fun x3 => m4 >>= (fun x4 => return_ (f x1 x2 x3 x4))))).
 
 Definition liftM5 {m} {a1} {a2} {a3} {a4} {a5} {r} `{(Monad m)}
     : (a1 -> a2 -> a3 -> a4 -> a5 -> r) -> m a1 -> m a2 -> m a3 -> m a4 -> m a5 -> m
       r :=
   fun f m1 m2 m3 m4 m5 =>
-    op_zgzgze__ m1 (fun x1 =>
-                  op_zgzgze__ m2 (fun x2 =>
-                                op_zgzgze__ m3 (fun x3 =>
-                                              op_zgzgze__ m4 (fun x4 =>
-                                                            op_zgzgze__ m5 (fun x5 => return_ (f x1 x2 x3 x4 x5)))))).
+    m1 >>= (fun x1 =>
+      m2 >>= (fun x2 =>
+        m3 >>= (fun x3 =>
+          m4 >>= (fun x4 => m5 >>= (fun x5 => return_ (f x1 x2 x3 x4 x5)))))).
 
 Definition map {A B : Type} (f : A -> B) xs :=
   Coq.Lists.List.map f xs.
@@ -1528,13 +1536,13 @@ Definition mapFB {elt} {lst} {a}
 Definition op_z2218U__ {b} {c} {a} : (b -> c) -> (a -> b) -> a -> c :=
   fun f g => fun x => f (g x).
 
-Infix "∘" := (op_z2218U__) (left associativity, at level 40).
-
 Notation "'_∘_'" := (op_z2218U__).
+
+Infix "∘" := (_∘_) (left associativity, at level 40).
 
 Local Definition instance_GHC_Base_Functor_list_op_zlzd__ : forall {a} {b},
                                                               a -> list b -> list a :=
-  fun {a} {b} => op_z2218U__ instance_GHC_Base_Functor_list_fmap const.
+  fun {a} {b} => instance_GHC_Base_Functor_list_fmap ∘ const.
 
 Program Instance instance_GHC_Base_Functor_list : Functor list := fun _ k =>
     k {|fmap__ := fun {a} {b} => instance_GHC_Base_Functor_list_fmap ;
@@ -1553,7 +1561,7 @@ Local Definition instance_GHC_Base_Monad_list_return_ : forall {a},
 
 Local Definition instance_GHC_Base_Monad_list_op_zgzg__ : forall {a} {b},
                                                             list a -> list b -> list b :=
-  fun {a} {b} => op_ztzg__.
+  fun {a} {b} => _*>_.
 
 Program Instance instance_GHC_Base_Monad_list : Monad list := fun _ k =>
     k {|op_zgzg____ := fun {a} {b} => instance_GHC_Base_Monad_list_op_zgzg__ ;
@@ -1562,7 +1570,7 @@ Program Instance instance_GHC_Base_Monad_list : Monad list := fun _ k =>
 
 Local Definition instance_GHC_Base_Functor_option_op_zlzd__ : forall {a} {b},
                                                                 a -> option b -> option a :=
-  fun {a} {b} => op_z2218U__ instance_GHC_Base_Functor_option_fmap const.
+  fun {a} {b} => instance_GHC_Base_Functor_option_fmap ∘ const.
 
 Program Instance instance_GHC_Base_Functor_option : Functor option := fun _ k =>
     k {|fmap__ := fun {a} {b} => instance_GHC_Base_Functor_option_fmap ;
@@ -1587,7 +1595,7 @@ Program Instance instance_GHC_Base_Applicative_option : Applicative option :=
 
 Local Definition instance_GHC_Base_Monad_option_op_zgzg__ : forall {a} {b},
                                                               option a -> option b -> option b :=
-  fun {a} {b} => op_ztzg__.
+  fun {a} {b} => _*>_.
 
 Local Definition instance_GHC_Base_Monad_option_return_ : forall {a},
                                                             a -> option a :=
@@ -1601,8 +1609,7 @@ Program Instance instance_GHC_Base_Monad_option : Monad option := fun _ k =>
 Local Definition instance_GHC_Base_Functor__GHC_Tuple_pair_type_a__op_zlzd__ {inst_a}
     : forall {a} {b},
         a -> (GHC.Tuple.pair_type inst_a) b -> (GHC.Tuple.pair_type inst_a) a :=
-  fun {a} {b} =>
-    op_z2218U__ instance_GHC_Base_Functor__GHC_Tuple_pair_type_a__fmap const.
+  fun {a} {b} => instance_GHC_Base_Functor__GHC_Tuple_pair_type_a__fmap ∘ const.
 
 Program Instance instance_GHC_Base_Functor__GHC_Tuple_pair_type_a_ {a} : Functor
                                                                          (GHC.Tuple.pair_type a) := fun _ k =>
@@ -1620,7 +1627,7 @@ Local Definition instance_forall___GHC_Base_Monoid_a___GHC_Base_Applicative__GHC
   fun {a} {b} =>
     fun a1 a2 =>
       instance_forall___GHC_Base_Monoid_a___GHC_Base_Applicative__GHC_Tuple_pair_type_a__op_zlztzg__
-      (op_zlzd__ id a1) a2.
+      (id <$ a1) a2.
 
 Program Instance instance_forall___GHC_Base_Monoid_a___GHC_Base_Applicative__GHC_Tuple_pair_type_a_ {a}
                                                                                                     `{Monoid a}
@@ -1677,12 +1684,11 @@ Program Instance instance_forall___GHC_Base_Monoid_a___GHC_Base_Monad__GHC_Tuple
 Local Definition instance_GHC_Base_Functor__GHC_Prim_arrow_r__fmap {inst_r}
     : forall {a} {b},
         (a -> b) -> (GHC.Prim.arrow inst_r) a -> (GHC.Prim.arrow inst_r) b :=
-  fun {a} {b} => op_z2218U__.
+  fun {a} {b} => _∘_.
 
 Local Definition instance_GHC_Base_Functor__GHC_Prim_arrow_r__op_zlzd__ {inst_r}
     : forall {a} {b}, a -> (GHC.Prim.arrow inst_r) b -> (GHC.Prim.arrow inst_r) a :=
-  fun {a} {b} =>
-    op_z2218U__ instance_GHC_Base_Functor__GHC_Prim_arrow_r__fmap const.
+  fun {a} {b} => instance_GHC_Base_Functor__GHC_Prim_arrow_r__fmap ∘ const.
 
 Program Instance instance_GHC_Base_Functor__GHC_Prim_arrow_r_ {r} : Functor
                                                                     (GHC.Prim.arrow r) := fun _ k =>
@@ -1696,8 +1702,7 @@ Local Definition instance_GHC_Base_Applicative__GHC_Prim_arrow_a__op_ztzg__ {ins
         inst_a) b :=
   fun {a} {b} =>
     fun a1 a2 =>
-      instance_GHC_Base_Applicative__GHC_Prim_arrow_a__op_zlztzg__ (op_zlzd__ id a1)
-                                                                   a2.
+      instance_GHC_Base_Applicative__GHC_Prim_arrow_a__op_zlztzg__ (id <$ a1) a2.
 
 Program Instance instance_GHC_Base_Applicative__GHC_Prim_arrow_a_ {a}
   : Applicative (GHC.Prim.arrow a) := fun _ k =>
@@ -1722,31 +1727,31 @@ Program Instance instance_GHC_Base_Monad__GHC_Prim_arrow_r_ {r} : Monad
 Definition op_zd__ {a} {b} : (a -> b) -> a -> b :=
   fun f x => f x.
 
-Infix "$" := (op_zd__) (at level 99).
-
 Notation "'_$_'" := (op_zd__).
+
+Infix "$" := (_$_) (at level 99).
 
 Definition op_zlztztzg__ {f} {a} {b} `{Applicative f} : f a -> f (a -> b) -> f
                                                         b :=
-  liftA2 (flip op_zd__).
-
-Infix "<**>" := (op_zlztztzg__) (at level 99).
+  liftA2 (flip _$_).
 
 Notation "'_<**>_'" := (op_zlztztzg__).
+
+Infix "<**>" := (_<**>_) (at level 99).
 
 Definition op_zdzn__ {a} {b} : (a -> b) -> a -> b :=
   fun f x => match x with | vx => f vx end.
 
-Infix "$!" := (op_zdzn__) (at level 99).
-
 Notation "'_$!_'" := (op_zdzn__).
 
-Definition op_zezlzl__ {m} {a} {b} `{Monad m} : (a -> m b) -> m a -> m b :=
-  fun f x => op_zgzgze__ x f.
+Infix "$!" := (_$!_) (at level 99).
 
-Infix "=<<" := (op_zezlzl__) (at level 99).
+Definition op_zezlzl__ {m} {a} {b} `{Monad m} : (a -> m b) -> m a -> m b :=
+  fun f x => x >>= f.
 
 Notation "'_=<<_'" := (op_zezlzl__).
+
+Infix "=<<" := (_=<<_) (at level 99).
 
 Definition otherwise : bool :=
   true.
@@ -1755,28 +1760,29 @@ Definition when {f} `{(Applicative f)} : bool -> f unit -> f unit :=
   fun p s => if p : bool then s else pure tt.
 
 Module Notations.
-Infix "GHC.Base.<$" := (op_zlzd__) (at level 99).
+Export ManualNotations.
 Notation "'_GHC.Base.<$_'" := (op_zlzd__).
-Infix "GHC.Base.<*>" := (op_zlztzg__) (at level 99).
+Infix "GHC.Base.<$" := (_<$_) (at level 99).
 Notation "'_GHC.Base.<*>_'" := (op_zlztzg__).
-Infix "GHC.Base.*>" := (op_ztzg__) (at level 99).
+Infix "GHC.Base.<*>" := (_<*>_) (at level 99).
 Notation "'_GHC.Base.*>_'" := (op_ztzg__).
-Infix "GHC.Base.>>" := (op_zgzg__) (at level 99).
+Infix "GHC.Base.*>" := (_*>_) (at level 99).
 Notation "'_GHC.Base.>>_'" := (op_zgzg__).
-Infix "GHC.Base.>>=" := (op_zgzgze__) (at level 99).
+Infix "GHC.Base.>>" := (_>>_) (at level 99).
 Notation "'_GHC.Base.>>=_'" := (op_zgzgze__).
-Infix "GHC.Base.<|>" := (op_zlzbzg__) (at level 99).
+Infix "GHC.Base.>>=" := (_>>=_) (at level 99).
 Notation "'_GHC.Base.<|>_'" := (op_zlzbzg__).
-Infix "GHC.Base.∘" := (op_z2218U__) (left associativity, at level 40).
+Infix "GHC.Base.<|>" := (_<|>_) (at level 99).
 Notation "'_GHC.Base.∘_'" := (op_z2218U__).
-Infix "GHC.Base.$" := (op_zd__) (at level 99).
+Infix "GHC.Base.∘" := (_∘_) (left associativity, at level 40).
 Notation "'_GHC.Base.$_'" := (op_zd__).
-Infix "GHC.Base.<**>" := (op_zlztztzg__) (at level 99).
+Infix "GHC.Base.$" := (_$_) (at level 99).
 Notation "'_GHC.Base.<**>_'" := (op_zlztztzg__).
-Infix "GHC.Base.$!" := (op_zdzn__) (at level 99).
+Infix "GHC.Base.<**>" := (_<**>_) (at level 99).
 Notation "'_GHC.Base.$!_'" := (op_zdzn__).
-Infix "GHC.Base.=<<" := (op_zezlzl__) (at level 99).
+Infix "GHC.Base.$!" := (_$!_) (at level 99).
 Notation "'_GHC.Base.=<<_'" := (op_zezlzl__).
+Infix "GHC.Base.=<<" := (_=<<_) (at level 99).
 End Notations.
 
 (* Unbound variables:

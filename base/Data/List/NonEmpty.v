@@ -28,6 +28,9 @@ Require Data.Tuple.
 Require GHC.Base.
 Require GHC.List.
 Require GHC.Num.
+Import Data.Functor.Notations.
+Import GHC.Base.Notations.
+Import GHC.Num.Notations.
 
 (* Converted type declarations: *)
 
@@ -60,7 +63,7 @@ Local Definition instance_GHC_Base_Functor_Data_List_NonEmpty_NonEmpty_op_zlzd__
     : forall {a} {b}, a -> NonEmpty b -> NonEmpty a :=
   fun {a} {b} f x =>
     match x with
-      | NEcons a as_ => NEcons f (GHC.Base.op_zlzd__ f as_)
+      | NEcons a as_ => NEcons f (_GHC.Base.<$_ f as_)
     end.
 
 Program Instance instance_GHC_Base_Functor_Data_List_NonEmpty_NonEmpty
@@ -80,8 +83,8 @@ Local Definition instance_Data_Traversable_Traversable_Data_List_NonEmpty_NonEmp
   fun {f} {a} {b} {_} {_} =>
     fun arg_144__ arg_145__ =>
       match arg_144__ , arg_145__ with
-        | f , NEcons a as_ => GHC.Base.op_zlztzg__ (Data.Functor.op_zlzdzg__ NEcons (f
-                                                                             a)) (Data.Traversable.traverse f as_)
+        | f , NEcons a as_ => _GHC.Base.<*>_ (_Data.Functor.<$>_ NEcons (f a))
+                                             (Data.Traversable.traverse f as_)
       end.
 
 Local Definition instance_Data_Traversable_Traversable_Data_List_NonEmpty_NonEmpty_sequenceA
@@ -140,7 +143,7 @@ Local Definition instance_Data_Foldable_Foldable_Data_List_NonEmpty_NonEmpty_ele
                                  Data.Foldable.hash_compose Data.Monoid.getAny
                                                             (instance_Data_Foldable_Foldable_Data_List_NonEmpty_NonEmpty_foldMap
                                                             (Data.Foldable.hash_compose Data.Monoid.Mk_Any p)))
-                               GHC.Base.op_zeze__.
+                               _GHC.Base.==_.
 
 Local Definition instance_Data_Foldable_Foldable_Data_List_NonEmpty_NonEmpty_foldl
     : forall {b} {a}, (b -> a -> b) -> b -> NonEmpty a -> b :=
@@ -158,7 +161,7 @@ Local Definition instance_Data_Foldable_Foldable_Data_List_NonEmpty_NonEmpty_fol
         | f , z0 , xs => let f' :=
                            fun arg_12__ arg_13__ arg_14__ =>
                              match arg_12__ , arg_13__ , arg_14__ with
-                               | k , x , z => GHC.Base.op_zdzn__ k (f x z)
+                               | k , x , z => _GHC.Base.$!_ k (f x z)
                              end in
                          instance_Data_Foldable_Foldable_Data_List_NonEmpty_NonEmpty_foldl f' GHC.Base.id
                          xs z0
@@ -197,10 +200,10 @@ Local Definition instance_GHC_Base_Monad_Data_List_NonEmpty_NonEmpty_op_zgzgze__
     fun arg_148__ arg_149__ =>
       match arg_148__ , arg_149__ with
         | NEcons a as_ , f => match f a with
-                                | NEcons b bs => NEcons b (Coq.Init.Datatypes.app bs (GHC.Base.op_zgzgze__ as_
-                                                                                                           (GHC.Base.op_z2218U__
-                                                                                                           instance_Data_Foldable_Foldable_Data_List_NonEmpty_NonEmpty_toList
-                                                                                                           f)))
+                                | NEcons b bs => NEcons b (Coq.Init.Datatypes.app bs (_GHC.Base.>>=_ as_
+                                                                                                     (_GHC.Base.∘_
+                                                                                                     instance_Data_Foldable_Foldable_Data_List_NonEmpty_NonEmpty_toList
+                                                                                                     f)))
                               end
       end.
 
@@ -212,7 +215,7 @@ Local Definition instance_Data_Foldable_Foldable_Data_List_NonEmpty_NonEmpty_fol
         | f , z0 , xs => let f' :=
                            fun arg_27__ arg_28__ arg_29__ =>
                              match arg_27__ , arg_28__ , arg_29__ with
-                               | x , k , z => GHC.Base.op_zdzn__ k (f z x)
+                               | x , k , z => _GHC.Base.$!_ k (f z x)
                              end in
                          instance_Data_Foldable_Foldable_Data_List_NonEmpty_NonEmpty_foldr f' GHC.Base.id
                          xs z0
@@ -224,9 +227,8 @@ Local Definition instance_Data_Foldable_Foldable_Data_List_NonEmpty_NonEmpty_len
     instance_Data_Foldable_Foldable_Data_List_NonEmpty_NonEmpty_foldl' (fun arg_64__
                                                                             arg_65__ =>
                                                                          match arg_64__ , arg_65__ with
-                                                                           | c , _ => GHC.Num.op_zp__ c
-                                                                                                      (GHC.Num.fromInteger
-                                                                                                      1)
+                                                                           | c , _ => _GHC.Num.+_ c (GHC.Num.fromInteger
+                                                                                                  1)
                                                                          end) (GHC.Num.fromInteger 0).
 
 Program Instance instance_Data_Foldable_Foldable_Data_List_NonEmpty_NonEmpty
@@ -296,8 +298,8 @@ Local Definition instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___Data_List_NonE
     : NonEmpty inst_a -> NonEmpty inst_a -> bool :=
   fun arg_78__ arg_79__ =>
     match arg_78__ , arg_79__ with
-      | NEcons a1 a2 , NEcons b1 b2 => (andb ((GHC.Base.op_zeze__ a1 b1))
-                                             ((GHC.Base.op_zeze__ a2 b2)))
+      | NEcons a1 a2 , NEcons b1 b2 => (andb ((a1 GHC.Base.== b1)) ((a2 GHC.Base.==
+                                             b2)))
     end.
 
 Local Definition instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___Data_List_NonEmpty_NonEmpty_a__op_zsze__ {inst_a}
@@ -330,13 +332,11 @@ Definition fromList {a} : list a -> NonEmpty a :=
 Definition insert {f} {a} `{Data.Foldable.Foldable f} `{GHC.Base.Ord a} : a -> f
                                                                           a -> NonEmpty a :=
   fun a =>
-    GHC.Base.op_z2218U__ fromList (GHC.Base.op_z2218U__ (Data.OldList.insert a)
-                                                        Data.Foldable.toList).
+    fromList GHC.Base.∘ (Data.OldList.insert a GHC.Base.∘ Data.Foldable.toList).
 
 Definition lift {f} {a} {b} `{Data.Foldable.Foldable f} : (list a -> list
                                                           b) -> f a -> NonEmpty b :=
-  fun f =>
-    GHC.Base.op_z2218U__ fromList (GHC.Base.op_z2218U__ f Data.Foldable.toList).
+  fun f => fromList GHC.Base.∘ (f GHC.Base.∘ Data.Foldable.toList).
 
 Definition reverse {a} : NonEmpty a -> NonEmpty a :=
   lift GHC.List.reverse.
@@ -349,13 +349,12 @@ Definition sortBy {a} : (a -> a -> comparison) -> NonEmpty a -> NonEmpty a :=
 
 Definition sortWith {o} {a} `{GHC.Base.Ord o} : (a -> o) -> NonEmpty
                                                 a -> NonEmpty a :=
-  GHC.Base.op_z2218U__ sortBy Data.Ord.comparing.
+  sortBy GHC.Base.∘ Data.Ord.comparing.
 
 Definition scanl {f} {b} {a} `{Data.Foldable.Foldable f}
     : (b -> a -> b) -> b -> f a -> NonEmpty b :=
   fun f z =>
-    GHC.Base.op_z2218U__ fromList (GHC.Base.op_z2218U__ (GHC.List.scanl f z)
-                                                        Data.Foldable.toList).
+    fromList GHC.Base.∘ (GHC.List.scanl f z GHC.Base.∘ Data.Foldable.toList).
 
 Definition scanl1 {a} : (a -> a -> a) -> NonEmpty a -> NonEmpty a :=
   fun arg_49__ arg_50__ =>
@@ -366,13 +365,11 @@ Definition scanl1 {a} : (a -> a -> a) -> NonEmpty a -> NonEmpty a :=
 Definition scanr {f} {a} {b} `{Data.Foldable.Foldable f}
     : (a -> b -> b) -> b -> f a -> NonEmpty b :=
   fun f z =>
-    GHC.Base.op_z2218U__ fromList (GHC.Base.op_z2218U__ (GHC.List.scanr f z)
-                                                        Data.Foldable.toList).
+    fromList GHC.Base.∘ (GHC.List.scanr f z GHC.Base.∘ Data.Foldable.toList).
 
 Definition tails {f} {a} `{Data.Foldable.Foldable f} : f a -> NonEmpty (list
                                                                        a) :=
-  GHC.Base.op_z2218U__ fromList (GHC.Base.op_z2218U__ Data.OldList.tails
-                                                      Data.Foldable.toList).
+  fromList GHC.Base.∘ (Data.OldList.tails GHC.Base.∘ Data.Foldable.toList).
 
 Definition head {a} : NonEmpty a -> a :=
   fun arg_60__ => match arg_60__ with | NEcons a _ => a end.
@@ -381,15 +378,14 @@ Definition isPrefixOf {a} `{GHC.Base.Eq_ a} : list a -> NonEmpty a -> bool :=
   fun arg_16__ arg_17__ =>
     match arg_16__ , arg_17__ with
       | nil , _ => true
-      | cons y ys , NEcons x xs => andb (GHC.Base.op_zeze__ y x)
-                                        (Data.OldList.isPrefixOf ys xs)
+      | cons y ys , NEcons x xs => andb (y GHC.Base.== x) (Data.OldList.isPrefixOf ys
+                                        xs)
     end.
 
 Definition length {a} : NonEmpty a -> GHC.Num.Int :=
   fun arg_75__ =>
     match arg_75__ with
-      | NEcons _ xs => GHC.Num.op_zp__ (GHC.Num.fromInteger 1) (Data.Foldable.length
-                                       xs)
+      | NEcons _ xs => GHC.Num.fromInteger 1 GHC.Num.+ Data.Foldable.length xs
     end.
 
 Definition map {a} {b} : (a -> b) -> NonEmpty a -> NonEmpty b :=
@@ -416,7 +412,7 @@ Definition nubBy {a} : (a -> a -> bool) -> NonEmpty a -> NonEmpty a :=
     end.
 
 Definition nub {a} `{GHC.Base.Eq_ a} : NonEmpty a -> NonEmpty a :=
-  nubBy GHC.Base.op_zeze__.
+  nubBy _GHC.Base.==_.
 
 Definition op_zlzb__ {a} : a -> NonEmpty a -> NonEmpty a :=
   fun arg_54__ arg_55__ =>
@@ -424,16 +420,15 @@ Definition op_zlzb__ {a} : a -> NonEmpty a -> NonEmpty a :=
       | a , NEcons b bs => NEcons a (cons b bs)
     end.
 
-Infix "<|" := (op_zlzb__) (at level 99).
-
 Notation "'_<|_'" := (op_zlzb__).
 
+Infix "<|" := (_<|_) (at level 99).
+
 Definition cons_ {a} : a -> NonEmpty a -> NonEmpty a :=
-  op_zlzb__.
+  _<|_.
 
 Definition some1 {f} {a} `{GHC.Base.Alternative f} : f a -> f (NonEmpty a) :=
-  fun x =>
-    GHC.Base.op_zlztzg__ (Data.Functor.op_zlzdzg__ NEcons x) (GHC.Base.many x).
+  fun x => (NEcons Data.Functor.<$> x) GHC.Base.<*> GHC.Base.many x.
 
 Definition tail {a} : NonEmpty a -> list a :=
   fun arg_58__ => match arg_58__ with | NEcons _ as_ => as_ end.
@@ -442,36 +437,35 @@ Definition toList {a} : NonEmpty a -> list a :=
   fun arg_25__ => match arg_25__ with | NEcons a as_ => cons a as_ end.
 
 Definition takeWhile {a} : (a -> bool) -> NonEmpty a -> list a :=
-  fun p => GHC.Base.op_z2218U__ (GHC.List.takeWhile p) toList.
+  fun p => GHC.List.takeWhile p GHC.Base.∘ toList.
 
 Definition take {a} : GHC.Num.Int -> NonEmpty a -> list a :=
-  fun n => GHC.Base.op_z2218U__ (GHC.List.take n) toList.
+  fun n => GHC.List.take n GHC.Base.∘ toList.
 
 Definition splitAt {a} : GHC.Num.Int -> NonEmpty a -> list a * list a :=
-  fun n => GHC.Base.op_z2218U__ (GHC.List.splitAt n) toList.
+  fun n => GHC.List.splitAt n GHC.Base.∘ toList.
 
 Definition span {a} : (a -> bool) -> NonEmpty a -> list a * list a :=
-  fun p => GHC.Base.op_z2218U__ (GHC.List.span p) toList.
+  fun p => GHC.List.span p GHC.Base.∘ toList.
 
 Definition break {a} : (a -> bool) -> NonEmpty a -> list a * list a :=
-  fun p => span (GHC.Base.op_z2218U__ negb p).
+  fun p => span (negb GHC.Base.∘ p).
 
 Definition partition {a} : (a -> bool) -> NonEmpty a -> list a * list a :=
-  fun p => GHC.Base.op_z2218U__ (Data.OldList.partition p) toList.
+  fun p => Data.OldList.partition p GHC.Base.∘ toList.
 
 Definition filter {a} : (a -> bool) -> NonEmpty a -> list a :=
-  fun p => GHC.Base.op_z2218U__ (GHC.List.filter p) toList.
+  fun p => GHC.List.filter p GHC.Base.∘ toList.
 
 Definition dropWhile {a} : (a -> bool) -> NonEmpty a -> list a :=
-  fun p => GHC.Base.op_z2218U__ (GHC.List.dropWhile p) toList.
+  fun p => GHC.List.dropWhile p GHC.Base.∘ toList.
 
 Definition drop {a} : GHC.Num.Int -> NonEmpty a -> list a :=
-  fun n => GHC.Base.op_z2218U__ (GHC.List.drop n) toList.
+  fun n => GHC.List.drop n GHC.Base.∘ toList.
 
 Definition unzip {f} {a} {b} `{GHC.Base.Functor f} : f (a * b) -> f a * f b :=
   fun xs =>
-    pair (Data.Functor.op_zlzdzg__ Data.Tuple.fst xs) (Data.Functor.op_zlzdzg__
-         Data.Tuple.snd xs).
+    pair (Data.Tuple.fst Data.Functor.<$> xs) (Data.Tuple.snd Data.Functor.<$> xs).
 
 Definition xor : NonEmpty bool -> bool :=
   fun arg_68__ =>
@@ -520,7 +514,7 @@ Program Instance instance_GHC_Base_Applicative_Data_List_NonEmpty_NonEmpty
 
 Local Definition instance_GHC_Base_Monad_Data_List_NonEmpty_NonEmpty_op_zgzg__
     : forall {a} {b}, NonEmpty a -> NonEmpty b -> NonEmpty b :=
-  fun {a} {b} => GHC.Base.op_ztzg__.
+  fun {a} {b} => _GHC.Base.*>_.
 
 Local Definition instance_GHC_Base_Monad_Data_List_NonEmpty_NonEmpty_return_
     : forall {a}, a -> NonEmpty a :=
@@ -536,8 +530,8 @@ Program Instance instance_GHC_Base_Monad_Data_List_NonEmpty_NonEmpty
         instance_GHC_Base_Monad_Data_List_NonEmpty_NonEmpty_return_ |}.
 
 Module Notations.
-Infix "Data.List.NonEmpty.<|" := (op_zlzb__) (at level 99).
 Notation "'_Data.List.NonEmpty.<|_'" := (op_zlzb__).
+Infix "Data.List.NonEmpty.<|" := (_<|_) (at level 99).
 End Notations.
 
 (* Unbound variables:

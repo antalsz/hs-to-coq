@@ -20,6 +20,8 @@ Require Control.Category.
 Require Data.Either.
 Require GHC.Base.
 Require GHC.Prim.
+Import Control.Category.Notations.
+Import GHC.Base.Notations.
 
 (* Converted type declarations: *)
 
@@ -61,13 +63,13 @@ Definition second `{g : Arrow a} : forall {b} {c} {d},
                                      a b c -> a (d * b) (d * c) :=
   g _ (second__ a).
 
-Infix "&&&" := (op_zazaza__) (at level 99).
-
 Notation "'_&&&_'" := (op_zazaza__).
 
-Infix "***" := (op_ztztzt__) (at level 99).
+Infix "&&&" := (_&&&_) (at level 99).
 
 Notation "'_***_'" := (op_ztztzt__).
+
+Infix "***" := (_***_) (at level 99).
 
 Record ArrowApply__Dict (a : Type -> Type -> Type) := ArrowApply__Dict_Build {
   app__ : forall {b} {c}, a (a b c * b) c }.
@@ -112,13 +114,13 @@ Definition right `{g : ArrowChoice a} : forall {b} {c} {d},
                                           a b c -> a (Data.Either.Either d b) (Data.Either.Either d c) :=
   g _ (right__ a).
 
-Infix "|||" := (op_zbzbzb__) (at level 99).
-
 Notation "'_|||_'" := (op_zbzbzb__).
 
-Infix "+++" := (op_zpzpzp__) (at level 99).
+Infix "|||" := (_|||_) (at level 99).
 
 Notation "'_+++_'" := (op_zpzpzp__).
+
+Infix "+++" := (_+++_) (at level 99).
 
 Record ArrowLoop__Dict a := ArrowLoop__Dict_Build {
   loop__ : forall {b} {d} {c}, a (b * d) (c * d) -> a b c }.
@@ -155,9 +157,9 @@ Definition op_zlzpzg__ `{g : ArrowPlus a} : forall {b} {c},
                                               a b c -> a b c -> a b c :=
   g _ (op_zlzpzg____ a).
 
-Infix "<+>" := (op_zlzpzg__) (at level 99).
-
 Notation "'_<+>_'" := (op_zlzpzg__).
+
+Infix "<+>" := (_<+>_) (at level 99).
 
 Arguments Mk_Kleisli {_} {_} {_} _.
 
@@ -210,9 +212,9 @@ Local Definition instance_Control_Arrow_Arrow_GHC_Prim_arrow_op_zazaza__
         GHC.Prim.arrow b c -> GHC.Prim.arrow b c' -> GHC.Prim.arrow b (c * c') :=
   fun {b} {c} {c'} =>
     fun f g =>
-      Control.Category.op_zgzgzg__ (instance_Control_Arrow_Arrow_GHC_Prim_arrow_arr
-                                   (fun b => pair b b)) (instance_Control_Arrow_Arrow_GHC_Prim_arrow_op_ztztzt__ f
-                                                                                                                 g).
+      instance_Control_Arrow_Arrow_GHC_Prim_arrow_arr (fun b => pair b b)
+      Control.Category.>>> instance_Control_Arrow_Arrow_GHC_Prim_arrow_op_ztztzt__ f
+                                                                                   g.
 
 Program Instance instance_Control_Arrow_Arrow_GHC_Prim_arrow : Arrow
                                                                GHC.Prim.arrow := fun _ k =>
@@ -262,8 +264,7 @@ Local Definition instance_forall___Control_Arrow_Arrow_a___GHC_Base_Functor__Con
   fun {a} {b} =>
     fun arg_55__ arg_56__ =>
       match arg_55__ , arg_56__ with
-        | f , Mk_ArrowMonad m => GHC.Base.op_zd__ Mk_ArrowMonad
-                                                  (Control.Category.op_zgzgzg__ m (arr f))
+        | f , Mk_ArrowMonad m => Mk_ArrowMonad GHC.Base.$ (m Control.Category.>>> arr f)
       end.
 
 Local Definition instance_forall___Control_Arrow_Arrow_a___GHC_Base_Functor__Control_Arrow_ArrowMonad_a__op_zlzd__ {inst_a}
@@ -302,58 +303,58 @@ Program Instance instance_forall___Control_Arrow_Arrow_a___GHC_Base_Functor__Con
 
 Definition op_zczgzg__ {a} {b} {c} {d} `{Arrow a} : (b -> c) -> a c d -> a b
                                                     d :=
-  fun f a => Control.Category.op_zgzgzg__ (arr f) a.
-
-Infix "^>>" := (op_zczgzg__) (at level 99).
+  fun f a => arr f Control.Category.>>> a.
 
 Notation "'_^>>_'" := (op_zczgzg__).
 
+Infix "^>>" := (_^>>_) (at level 99).
+
 Definition op_zczlzl__ {a} {c} {d} {b} `{Arrow a} : (c -> d) -> a b c -> a b
                                                     d :=
-  fun f a => Control.Category.op_zlzlzl__ (arr f) a.
-
-Infix "^<<" := (op_zczlzl__) (at level 99).
+  fun f a => arr f Control.Category.<<< a.
 
 Notation "'_^<<_'" := (op_zczlzl__).
 
+Infix "^<<" := (_^<<_) (at level 99).
+
 Definition op_zgzgzc__ {a} {b} {c} {d} `{Arrow a} : a b c -> (c -> d) -> a b
                                                     d :=
-  fun a f => Control.Category.op_zgzgzg__ a (arr f).
-
-Infix ">>^" := (op_zgzgzc__) (at level 99).
+  fun a f => a Control.Category.>>> arr f.
 
 Notation "'_>>^_'" := (op_zgzgzc__).
 
+Infix ">>^" := (_>>^_) (at level 99).
+
 Definition op_zlzlzc__ {a} {c} {d} {b} `{Arrow a} : a c d -> (b -> c) -> a b
                                                     d :=
-  fun a f => Control.Category.op_zlzlzl__ a (arr f).
-
-Infix "<<^" := (op_zlzlzc__) (at level 99).
+  fun a f => a Control.Category.<<< arr f.
 
 Notation "'_<<^_'" := (op_zlzlzc__).
+
+Infix "<<^" := (_<<^_) (at level 99).
 
 Definition returnA {a} {b} `{Arrow a} : a b b :=
   arr Control.Category.id.
 
 Module Notations.
-Infix "Control.Arrow.&&&" := (op_zazaza__) (at level 99).
 Notation "'_Control.Arrow.&&&_'" := (op_zazaza__).
-Infix "Control.Arrow.***" := (op_ztztzt__) (at level 99).
+Infix "Control.Arrow.&&&" := (_&&&_) (at level 99).
 Notation "'_Control.Arrow.***_'" := (op_ztztzt__).
-Infix "Control.Arrow.|||" := (op_zbzbzb__) (at level 99).
+Infix "Control.Arrow.***" := (_***_) (at level 99).
 Notation "'_Control.Arrow.|||_'" := (op_zbzbzb__).
-Infix "Control.Arrow.+++" := (op_zpzpzp__) (at level 99).
+Infix "Control.Arrow.|||" := (_|||_) (at level 99).
 Notation "'_Control.Arrow.+++_'" := (op_zpzpzp__).
-Infix "Control.Arrow.<+>" := (op_zlzpzg__) (at level 99).
+Infix "Control.Arrow.+++" := (_+++_) (at level 99).
 Notation "'_Control.Arrow.<+>_'" := (op_zlzpzg__).
-Infix "Control.Arrow.^>>" := (op_zczgzg__) (at level 99).
+Infix "Control.Arrow.<+>" := (_<+>_) (at level 99).
 Notation "'_Control.Arrow.^>>_'" := (op_zczgzg__).
-Infix "Control.Arrow.^<<" := (op_zczlzl__) (at level 99).
+Infix "Control.Arrow.^>>" := (_^>>_) (at level 99).
 Notation "'_Control.Arrow.^<<_'" := (op_zczlzl__).
-Infix "Control.Arrow.>>^" := (op_zgzgzc__) (at level 99).
+Infix "Control.Arrow.^<<" := (_^<<_) (at level 99).
 Notation "'_Control.Arrow.>>^_'" := (op_zgzgzc__).
-Infix "Control.Arrow.<<^" := (op_zlzlzc__) (at level 99).
+Infix "Control.Arrow.>>^" := (_>>^_) (at level 99).
 Notation "'_Control.Arrow.<<^_'" := (op_zlzlzc__).
+Infix "Control.Arrow.<<^" := (_<<^_) (at level 99).
 End Notations.
 
 (* Unbound variables:

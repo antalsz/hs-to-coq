@@ -19,6 +19,8 @@ Require Data.Functor.Const.
 Require Data.Monoid.
 Require Data.Proxy.
 Require GHC.Base.
+Import Data.Functor.Notations.
+Import GHC.Base.Notations.
 
 (* Converted type declarations: *)
 
@@ -87,7 +89,7 @@ Local Definition instance_Data_Traversable_Traversable_option_traverse
     fun arg_177__ arg_178__ =>
       match arg_177__ , arg_178__ with
         | _ , None => GHC.Base.pure None
-        | f , Some x => Data.Functor.op_zlzdzg__ Some (f x)
+        | f , Some x => Some Data.Functor.<$> f x
       end.
 
 Local Definition instance_Data_Traversable_Traversable_option_sequenceA
@@ -125,8 +127,7 @@ Local Definition instance_Data_Traversable_Traversable_list_traverse
         forall `{GHC.Base.Applicative f}, (a -> f b) -> list a -> f (list b) :=
   fun {f} {a} {b} `{GHC.Base.Applicative f} =>
     fun f =>
-      let cons_f :=
-        fun x ys => GHC.Base.op_zlztzg__ (Data.Functor.op_zlzdzg__ cons (f x)) ys in
+      let cons_f := fun x ys => (cons Data.Functor.<$> f x) GHC.Base.<*> ys in
       GHC.Base.foldr cons_f (GHC.Base.pure nil).
 
 Local Definition instance_Data_Traversable_Traversable_list_sequenceA
@@ -167,8 +168,7 @@ Local Definition instance_Data_Traversable_Traversable__Data_Either_Either_a__tr
     fun arg_170__ arg_171__ =>
       match arg_170__ , arg_171__ with
         | _ , Data.Either.Mk_Left x => GHC.Base.pure (Data.Either.Mk_Left x)
-        | f , Data.Either.Mk_Right y => Data.Functor.op_zlzdzg__ Data.Either.Mk_Right (f
-                                                                 y)
+        | f , Data.Either.Mk_Right y => Data.Either.Mk_Right Data.Functor.<$> f y
       end.
 
 Local Definition instance_Data_Traversable_Traversable__Data_Either_Either_a__sequenceA {inst_a}
@@ -257,8 +257,8 @@ Local Definition instance_Data_Traversable_Traversable__Data_Functor_Const_Const
   fun {f} {a} {b} `{GHC.Base.Applicative f} =>
     fun arg_147__ arg_148__ =>
       match arg_147__ , arg_148__ with
-        | _ , Data.Functor.Const.Mk_Const m => GHC.Base.op_zd__ GHC.Base.pure
-                                                                (Data.Functor.Const.Mk_Const m)
+        | _ , Data.Functor.Const.Mk_Const m => GHC.Base.pure GHC.Base.$
+                                               Data.Functor.Const.Mk_Const m
       end.
 
 Local Definition instance_Data_Traversable_Traversable__Data_Functor_Const_Const_m__sequenceA {inst_m}
@@ -304,8 +304,7 @@ Local Definition instance_Data_Traversable_Traversable_Data_Monoid_Dual_traverse
   fun {f} {a} {b} `{GHC.Base.Applicative f} =>
     fun arg_143__ arg_144__ =>
       match arg_143__ , arg_144__ with
-        | f , Data.Monoid.Mk_Dual x => Data.Functor.op_zlzdzg__ Data.Monoid.Mk_Dual (f
-                                                                x)
+        | f , Data.Monoid.Mk_Dual x => Data.Monoid.Mk_Dual Data.Functor.<$> f x
       end.
 
 Local Definition instance_Data_Traversable_Traversable_Data_Monoid_Dual_sequenceA
@@ -346,7 +345,7 @@ Local Definition instance_Data_Traversable_Traversable_Data_Monoid_Sum_traverse
   fun {f} {a} {b} `{GHC.Base.Applicative f} =>
     fun arg_139__ arg_140__ =>
       match arg_139__ , arg_140__ with
-        | f , Data.Monoid.Mk_Sum x => Data.Functor.op_zlzdzg__ Data.Monoid.Mk_Sum (f x)
+        | f , Data.Monoid.Mk_Sum x => Data.Monoid.Mk_Sum Data.Functor.<$> f x
       end.
 
 Local Definition instance_Data_Traversable_Traversable_Data_Monoid_Sum_sequenceA
@@ -387,8 +386,7 @@ Local Definition instance_Data_Traversable_Traversable_Data_Monoid_Product_trave
   fun {f} {a} {b} `{GHC.Base.Applicative f} =>
     fun arg_135__ arg_136__ =>
       match arg_135__ , arg_136__ with
-        | f , Data.Monoid.Mk_Product x => Data.Functor.op_zlzdzg__
-                                          Data.Monoid.Mk_Product (f x)
+        | f , Data.Monoid.Mk_Product x => Data.Monoid.Mk_Product Data.Functor.<$> f x
       end.
 
 Local Definition instance_Data_Traversable_Traversable_Data_Monoid_Product_sequenceA
@@ -437,10 +435,10 @@ Local Definition instance_GHC_Base_Functor__Data_Traversable_StateL_s__fmap {ins
   fun {a} {b} =>
     fun arg_103__ arg_104__ =>
       match arg_103__ , arg_104__ with
-        | f , Mk_StateL k => GHC.Base.op_zd__ Mk_StateL (fun s =>
-                                                match k s with
-                                                  | pair s' v => pair s' (f v)
-                                                end)
+        | f , Mk_StateL k => Mk_StateL GHC.Base.$ (fun s =>
+                               match k s with
+                                 | pair s' v => pair s' (f v)
+                               end)
       end.
 
 Local Definition instance_GHC_Base_Functor__Data_Traversable_StateL_s__op_zlzd__ {inst_s}
@@ -462,12 +460,12 @@ Local Definition instance_GHC_Base_Applicative__Data_Traversable_StateL_s__op_zl
   fun {a} {b} =>
     fun arg_96__ arg_97__ =>
       match arg_96__ , arg_97__ with
-        | Mk_StateL kf , Mk_StateL kv => GHC.Base.op_zd__ Mk_StateL (fun s =>
-                                                            match kf s with
-                                                              | pair s' f => match kv s' with
-                                                                               | pair s'' v => pair s'' (f v)
-                                                                             end
-                                                            end)
+        | Mk_StateL kf , Mk_StateL kv => Mk_StateL GHC.Base.$ (fun s =>
+                                           match kf s with
+                                             | pair s' f => match kv s' with
+                                                              | pair s'' v => pair s'' (f v)
+                                                            end
+                                           end)
       end.
 
 Local Definition instance_GHC_Base_Applicative__Data_Traversable_StateL_s__op_ztzg__ {inst_s}
@@ -495,10 +493,10 @@ Local Definition instance_GHC_Base_Functor__Data_Traversable_StateR_s__fmap {ins
   fun {a} {b} =>
     fun arg_88__ arg_89__ =>
       match arg_88__ , arg_89__ with
-        | f , Mk_StateR k => GHC.Base.op_zd__ Mk_StateR (fun s =>
-                                                match k s with
-                                                  | pair s' v => pair s' (f v)
-                                                end)
+        | f , Mk_StateR k => Mk_StateR GHC.Base.$ (fun s =>
+                               match k s with
+                                 | pair s' v => pair s' (f v)
+                               end)
       end.
 
 Local Definition instance_GHC_Base_Functor__Data_Traversable_StateR_s__op_zlzd__ {inst_s}
@@ -520,12 +518,12 @@ Local Definition instance_GHC_Base_Applicative__Data_Traversable_StateR_s__op_zl
   fun {a} {b} =>
     fun arg_81__ arg_82__ =>
       match arg_81__ , arg_82__ with
-        | Mk_StateR kf , Mk_StateR kv => GHC.Base.op_zd__ Mk_StateR (fun s =>
-                                                            match kv s with
-                                                              | pair s' v => match kf s' with
-                                                                               | pair s'' f => pair s'' (f v)
-                                                                             end
-                                                            end)
+        | Mk_StateR kf , Mk_StateR kv => Mk_StateR GHC.Base.$ (fun s =>
+                                           match kv s with
+                                             | pair s' v => match kf s' with
+                                                              | pair s'' f => pair s'' (f v)
+                                                            end
+                                           end)
       end.
 
 Local Definition instance_GHC_Base_Applicative__Data_Traversable_StateR_s__op_ztzg__ {inst_s}
@@ -611,13 +609,13 @@ Program Instance instance_GHC_Base_Applicative_Data_Traversable_Id
    instance_forall___Data_Traversable_Traversable_f___Data_Traversable_Traversable__GHC_Generics_M1_i_c_f_ *)
 
 (* Skipping instance
-   instance_forall___Data_Traversable_Traversable_f____Data_Traversable_Traversable_g___Data_Traversable_Traversable__GHC_Generics_op_ZCzpZC___f_g_ *)
+   instance_forall___Data_Traversable_Traversable_f____Data_Traversable_Traversable_g___Data_Traversable_Traversable___GHC_Generics______f_g_ *)
 
 (* Skipping instance
-   instance_forall___Data_Traversable_Traversable_f____Data_Traversable_Traversable_g___Data_Traversable_Traversable__GHC_Generics_op_ZCztZC___f_g_ *)
+   instance_forall___Data_Traversable_Traversable_f____Data_Traversable_Traversable_g___Data_Traversable_Traversable___GHC_Generics______f_g_ *)
 
 (* Skipping instance
-   instance_forall___Data_Traversable_Traversable_f____Data_Traversable_Traversable_g___Data_Traversable_Traversable__GHC_Generics_op_ZCziZC___f_g_ *)
+   instance_forall___Data_Traversable_Traversable_f____Data_Traversable_Traversable_g___Data_Traversable_Traversable___GHC_Generics______f_g_ *)
 
 (* Skipping instance
    instance_Data_Traversable_Traversable__GHC_Generics_URec__GHC_Ptr_Ptr_unit__ *)
@@ -638,7 +636,7 @@ Program Instance instance_GHC_Base_Applicative_Data_Traversable_Id
    instance_Data_Traversable_Traversable__GHC_Generics_URec_GHC_Num_Word_ *)
 
 Definition fmapDefault {t} {a} {b} `{Traversable t} : (a -> b) -> t a -> t b :=
-  fun f => GHC.Base.op_z2218U__ getId (traverse (GHC.Base.op_z2218U__ Mk_Id f)).
+  fun f => getId GHC.Base.∘ traverse (Mk_Id GHC.Base.∘ f).
 
 Definition forM {t} {m} {a} {b} `{Traversable t} `{GHC.Base.Monad m} : t
                                                                        a -> (a -> m b) -> m (t b) :=
@@ -650,13 +648,11 @@ Definition for_ {t} {f} {a} {b} `{Traversable t} `{GHC.Base.Applicative f} : t
 
 Definition mapAccumL {t} {a} {b} {c} `{Traversable t} : (a -> b -> a *
                                                         c) -> a -> t b -> a * t c :=
-  fun f s t =>
-    runStateL (traverse (GHC.Base.op_z2218U__ Mk_StateL (GHC.Base.flip f)) t) s.
+  fun f s t => runStateL (traverse (Mk_StateL GHC.Base.∘ GHC.Base.flip f) t) s.
 
 Definition mapAccumR {t} {a} {b} {c} `{Traversable t} : (a -> b -> a *
                                                         c) -> a -> t b -> a * t c :=
-  fun f s t =>
-    runStateR (traverse (GHC.Base.op_z2218U__ Mk_StateR (GHC.Base.flip f)) t) s.
+  fun f s t => runStateR (traverse (Mk_StateR GHC.Base.∘ GHC.Base.flip f) t) s.
 
 (* Unbound variables:
      Some cons list nil op_zt__ option pair Data.Either.Either Data.Either.Mk_Left

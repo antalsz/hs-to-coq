@@ -18,6 +18,7 @@ Require Data.Functor.Identity.
 Require Data.Proxy.
 Require GHC.Base.
 Require GHC.Tuple.
+Import GHC.Base.Notations.
 
 (* Converted type declarations: *)
 
@@ -201,7 +202,7 @@ Local Definition instance_forall____GHC_Base_Eq__a____Data_Functor_Classes_Eq1__
     : forall {a} {b},
         (a -> b -> bool) -> (GHC.Tuple.pair_type inst_a) a -> (GHC.Tuple.pair_type
         inst_a) b -> bool :=
-  fun {a} {b} => liftEq2 GHC.Base.op_zeze__.
+  fun {a} {b} => liftEq2 _GHC.Base.==_.
 
 Program Instance instance_forall____GHC_Base_Eq__a____Data_Functor_Classes_Eq1__GHC_Tuple_pair_type_a_ {a}
                                                                                                        `{(GHC.Base.Eq_
@@ -287,7 +288,7 @@ Local Definition instance_forall____GHC_Base_Eq__a____Data_Functor_Classes_Eq1__
     : forall {a} {b},
         (a -> b -> bool) -> (Data.Either.Either inst_a) a -> (Data.Either.Either inst_a)
         b -> bool :=
-  fun {a} {b} => liftEq2 GHC.Base.op_zeze__.
+  fun {a} {b} => liftEq2 _GHC.Base.==_.
 
 Program Instance instance_forall____GHC_Base_Eq__a____Data_Functor_Classes_Eq1__Data_Either_Either_a_ {a}
                                                                                                       `{(GHC.Base.Eq_
@@ -409,7 +410,7 @@ Local Definition instance_forall____GHC_Base_Eq__a____Data_Functor_Classes_Eq1__
     : forall {a} {b},
         (a -> b -> bool) -> (Data.Functor.Const.Const inst_a)
         a -> (Data.Functor.Const.Const inst_a) b -> bool :=
-  fun {a} {b} => liftEq2 GHC.Base.op_zeze__.
+  fun {a} {b} => liftEq2 _GHC.Base.==_.
 
 Program Instance instance_forall____GHC_Base_Eq__a____Data_Functor_Classes_Eq1__Data_Functor_Const_Const_a_ {a}
                                                                                                             `{(GHC.Base.Eq_
@@ -485,11 +486,11 @@ Definition compare2 {f} {a} {b} `{Ord2 f} `{GHC.Base.Ord a} `{GHC.Base.Ord b}
   liftCompare2 GHC.Base.compare GHC.Base.compare.
 
 Definition eq1 {f} {a} `{Eq1 f} `{GHC.Base.Eq_ a} : f a -> f a -> bool :=
-  liftEq GHC.Base.op_zeze__.
+  liftEq _GHC.Base.==_.
 
 Definition eq2 {f} {a} {b} `{Eq2 f} `{GHC.Base.Eq_ a} `{GHC.Base.Eq_ b} : f a
                                                                           b -> f a b -> bool :=
-  liftEq2 GHC.Base.op_zeze__ GHC.Base.op_zeze__.
+  liftEq2 _GHC.Base.==_ _GHC.Base.==_.
 
 (* Unbound variables:
      Eq Gt Lt Some andb bool comparison cons false list option pair true

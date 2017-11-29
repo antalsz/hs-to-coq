@@ -274,8 +274,8 @@ Definition complementBit_Int x i := Z.lor x (bit_Int i).
 Definition complement_Int : Int -> Int := Z.lnot.
 Definition popCount_Int : Int -> Int := fun x => #0.   (* TODO *)
 Definition shift_Int (x:Int) (i:Int) :=
-  if x <? #0 then Z.shiftr x (-i)
-  else if x >? #0 then Z.shiftl x i
+  if x < #0 then Z.shiftr x (-i)
+  else if x > #0 then Z.shiftl x i
        else x.
 
 Instance instance_Bits_Int : Bits Int :=  {

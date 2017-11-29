@@ -98,11 +98,8 @@ Definition op_zeze__ {a} {g : Eq_ a} := g _ (op_zeze____ _).
 Definition op_zsze__ {a} {g : Eq_ a} := g _ (op_zsze____ _).
 
 Infix "/=" := (op_zsze__) (no associativity, at level 70).
-
 Notation "'_/=_'" := (op_zsze__).
-
 Infix "==" := (op_zeze__) (no associativity, at level 70).
-
 Notation "'_==_'" := (op_zeze__).
 
 Definition eq_default {a} (eq : a -> a -> bool) : Eq_ a :=
@@ -143,22 +140,21 @@ Definition max `{g : Ord a} : a -> a -> a :=
 Definition min `{g : Ord a} : a -> a -> a :=
   g _ (min__ a).
 
-(* Don't clash with Coq's standard ordering predicates. *)
-Infix "<?" := (op_zl__) (no associativity, at level 70).
+Infix "<" := (op_zl__) (no associativity, at level 70).
 
-Notation "'_<?_'" := (op_zl__).
+Notation "'_<_'" := (op_zl__).
 
-Infix "<=?" := (op_zlze__) (no associativity, at level 70).
+Infix "<=" := (op_zlze__) (no associativity, at level 70).
 
-Notation "'_<=?_'" := (op_zlze__).
+Notation "'_<=_'" := (op_zlze__).
 
-Infix ">?" := (op_zg__) (no associativity, at level 70).
+Infix ">" := (op_zg__) (no associativity, at level 70).
 
-Notation "'_>?_'" := (op_zg__).
+Notation "'_>_'" := (op_zg__).
 
-Infix ">=?" := (op_zgze__) (no associativity, at level 70).
+Infix ">=" := (op_zgze__) (no associativity, at level 70).
 
-Notation "'_>=?_'" := (op_zgze__).
+Notation "'_>=_'" := (op_zgze__).
 
 (*********** Eq/Ord for primitive types **************************)
 
@@ -618,3 +614,21 @@ Definition build {a} : ((a -> list a -> list a) -> list a -> list a) -> list a :
 (********************************************************************)
 
 Definition oneShot {a} (x:a) := x.
+
+(** Qualified notation for the notation defined here **)
+
+Module ManualNotations.
+Infix "GHC.Base./=" := (op_zsze__) (no associativity, at level 70).
+Notation "'_GHC.Base./=_'" := (op_zsze__).
+Infix "GHC.Base.==" := (op_zeze__) (no associativity, at level 70).
+Notation "'_GHC.Base.==_'" := (op_zeze__).
+Infix "GHC.Base.<" := (op_zl__) (no associativity, at level 70).
+Notation "'_GHC.Base.<_'" := (op_zl__).
+Infix "GHC.Base.<=" := (op_zlze__) (no associativity, at level 70).
+Notation "'_GHC.Base.<=_'" := (op_zlze__).
+Infix "GHC.Base.>" := (op_zg__) (no associativity, at level 70).
+Notation "'_GHC.Base.>_'" := (op_zg__).
+Infix "GHC.Base.>=" := (op_zgze__) (no associativity, at level 70).
+Notation "'_GHC.Base.>=_'" := (op_zgze__).
+End ManualNotations.
+

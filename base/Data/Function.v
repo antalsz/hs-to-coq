@@ -16,16 +16,16 @@ Require Coq.Program.Wf.
 (* Converted value declarations: *)
 
 Definition on {b} {c} {a} : (b -> b -> c) -> (a -> b) -> a -> a -> c :=
-  fun op_ziztzi__ f => fun x y => op_ziztzi__ (f x) (f y).
+  fun lop_ziztzi__ f => fun x y => lop_ziztzi__ (f x) (f y).
 
 Definition op_za__ {a} {b} : a -> (a -> b) -> b :=
   fun x f => f x.
 
-Infix "&" := (op_za__) (at level 99).
-
 Notation "'_&_'" := (op_za__).
 
+Infix "&" := (_&_) (at level 99).
+
 Module Notations.
-Infix "Data.Function.&" := (op_za__) (at level 99).
 Notation "'_Data.Function.&_'" := (op_za__).
+Infix "Data.Function.&" := (_&_) (at level 99).
 End Notations.

@@ -1,3 +1,7 @@
+# We have notation in the midamble, and we have to tell hs-to-coq
+# to include the ManualNotations module in the Notations module
+manual notation GHC.Base
+
 skip module GHC.Types
 
 skip GHC.Base.String   # replace with Coq type

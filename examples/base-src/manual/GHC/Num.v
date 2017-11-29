@@ -68,3 +68,14 @@ Instance Num_Word__ : Num Word := {
   fromInteger := Z.to_N;
   negate      := fun x => x;
   signum      := fun x => match x with | N0 => N0 | _ => 1%N  end }.
+
+Module Notations.
+Infix    "GHC.Num.+"     := op_zp__ (at level 50, left associativity).
+Notation "'_GHC.Num.+_'" := op_zp__.
+
+Infix    "GHC.Num.-"     := op_zm__ (at level 50, left associativity).
+Notation "'_GHC.Num.-_'" := op_zm__.
+
+Infix    "GHC.Num.*"     := op_zt__ (at level 40, left associativity).
+Notation "'_GHC.Num.*_'" := op_zt__.
+End Notations.

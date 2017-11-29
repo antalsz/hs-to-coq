@@ -18,6 +18,10 @@ Require Data.Functor.
 Require Data.Tuple.
 Require GHC.Base.
 Require GHC.Prim.
+Import Control.Arrow.Notations.
+Import Control.Category.Notations.
+Import Data.Functor.Notations.
+Import GHC.Base.Notations.
 
 (* Converted type declarations: *)
 
@@ -105,7 +109,7 @@ Local Definition instance_forall___GHC_Base_Monad_m___GHC_Base_Applicative__Cont
                                                                                                                      `{GHC.Base.Monad
                                                                                                                      inst_m}
     : forall {a}, a -> (WrappedMonad inst_m) a :=
-  fun {a} => GHC.Base.op_z2218U__ Mk_WrapMonad GHC.Base.pure.
+  fun {a} => Mk_WrapMonad GHC.Base.∘ GHC.Base.pure.
 
 Program Instance instance_forall___GHC_Base_Monad_m___GHC_Base_Applicative__Control_Applicative_WrappedMonad_m_ {m}
                                                                                                                 `{GHC.Base.Monad
@@ -131,8 +135,8 @@ Local Definition instance_forall___Control_Arrow_Arrow_a___GHC_Base_Functor__Con
   fun {a} {b} =>
     fun arg_44__ arg_45__ =>
       match arg_44__ , arg_45__ with
-        | f , Mk_WrapArrow a => Mk_WrapArrow (Control.Category.op_zgzgzg__ a
-                                                                           (Control.Arrow.arr f))
+        | f , Mk_WrapArrow a => Mk_WrapArrow (a Control.Category.>>> Control.Arrow.arr
+                                             f)
       end.
 
 Local Definition instance_forall___Control_Arrow_Arrow_a___GHC_Base_Functor__Control_Applicative_WrappedArrow_a_b__op_zlzd__ {inst_a}
@@ -166,9 +170,9 @@ Local Definition instance_forall___Control_Arrow_Arrow_a___GHC_Base_Applicative_
   fun {a} {b} =>
     fun arg_40__ arg_41__ =>
       match arg_40__ , arg_41__ with
-        | Mk_WrapArrow f , Mk_WrapArrow v => Mk_WrapArrow (Control.Category.op_zgzgzg__
-                                                          (Control.Arrow.op_zazaza__ f v) (Control.Arrow.arr
-                                                          (Data.Tuple.uncurry GHC.Base.id)))
+        | Mk_WrapArrow f , Mk_WrapArrow v => Mk_WrapArrow ((f Control.Arrow.&&& v)
+                                                          Control.Category.>>> Control.Arrow.arr (Data.Tuple.uncurry
+                                                                                                 GHC.Base.id))
       end.
 
 Local Definition instance_forall___Control_Arrow_Arrow_a___GHC_Base_Applicative__Control_Applicative_WrappedArrow_a_b__op_ztzg__ {inst_a}
@@ -250,7 +254,7 @@ Local Definition instance_forall___GHC_Base_Monad_m___GHC_Base_Monad__Control_Ap
                                                                                                                     inst_m}
     : forall {a} {b},
         WrappedMonad inst_m a -> WrappedMonad inst_m b -> WrappedMonad inst_m b :=
-  fun {a} {b} => GHC.Prim.coerce GHC.Base.op_zgzg__.
+  fun {a} {b} => GHC.Prim.coerce _GHC.Base.>>_.
 
 Local Definition instance_forall___GHC_Base_Monad_m___GHC_Base_Monad__Control_Applicative_WrappedMonad_m__op_zgzgze__ {inst_m}
                                                                                                                       `{GHC.Base.Monad
@@ -258,7 +262,7 @@ Local Definition instance_forall___GHC_Base_Monad_m___GHC_Base_Monad__Control_Ap
     : forall {a} {b},
         WrappedMonad inst_m a -> (a -> WrappedMonad inst_m b) -> WrappedMonad inst_m
         b :=
-  fun {a} {b} => GHC.Prim.coerce GHC.Base.op_zgzgze__.
+  fun {a} {b} => GHC.Prim.coerce _GHC.Base.>>=_.
 
 Local Definition instance_forall___GHC_Base_Monad_m___GHC_Base_Monad__Control_Applicative_WrappedMonad_m__return_ {inst_m}
                                                                                                                   `{GHC.Base.Monad
@@ -286,8 +290,7 @@ Program Instance instance_forall___GHC_Base_Monad_m___GHC_Base_Monad__Control_Ap
    for class Qualified "GHC.Generics" "Generic" unsupported *)
 
 Definition optional {f} {a} `{GHC.Base.Alternative f} : f a -> f (option a) :=
-  fun v =>
-    GHC.Base.op_zlzbzg__ (Data.Functor.op_zlzdzg__ Some v) (GHC.Base.pure None).
+  fun v => (Some Data.Functor.<$> v) GHC.Base.<|> GHC.Base.pure None.
 
 (* Unbound variables:
      None Some Type option Control.Arrow.Arrow Control.Arrow.arr

@@ -2,3 +2,4 @@ class kinds Control.Category.Category (Type -> (Type -> Type))
 
 skip Control.Category.instance_Control_Category_Category_Data_Type_Coercion_Coercion
 skip Control.Category.instance_Control_Category_Category_Data_Type_Equality_op_ZCz7eUZC__
+skip Control.Category.instance_Control_Category_Category__Data_Type_Equality_____

@@ -16,6 +16,7 @@ Require Import GHC.Base.
 (* Converted imports: *)
 
 Require GHC.Base.
+Import GHC.Base.Notations.
 
 (* Converted type declarations: *)
 
@@ -41,23 +42,19 @@ Local Definition instance_GHC_Base_Ord_Data_Void_Void_compare
 
 Local Definition instance_GHC_Base_Ord_Data_Void_Void_op_zg__
     : Void -> Void -> bool :=
-  fun x y =>
-    GHC.Base.op_zeze__ (instance_GHC_Base_Ord_Data_Void_Void_compare x y) Gt.
+  fun x y => _GHC.Base.==_ (instance_GHC_Base_Ord_Data_Void_Void_compare x y) Gt.
 
 Local Definition instance_GHC_Base_Ord_Data_Void_Void_op_zgze__
     : Void -> Void -> bool :=
-  fun x y =>
-    GHC.Base.op_zsze__ (instance_GHC_Base_Ord_Data_Void_Void_compare x y) Lt.
+  fun x y => _GHC.Base./=_ (instance_GHC_Base_Ord_Data_Void_Void_compare x y) Lt.
 
 Local Definition instance_GHC_Base_Ord_Data_Void_Void_op_zl__
     : Void -> Void -> bool :=
-  fun x y =>
-    GHC.Base.op_zeze__ (instance_GHC_Base_Ord_Data_Void_Void_compare x y) Lt.
+  fun x y => _GHC.Base.==_ (instance_GHC_Base_Ord_Data_Void_Void_compare x y) Lt.
 
 Local Definition instance_GHC_Base_Ord_Data_Void_Void_op_zlze__
     : Void -> Void -> bool :=
-  fun x y =>
-    GHC.Base.op_zsze__ (instance_GHC_Base_Ord_Data_Void_Void_compare x y) Gt.
+  fun x y => _GHC.Base./=_ (instance_GHC_Base_Ord_Data_Void_Void_compare x y) Gt.
 
 Local Definition instance_GHC_Base_Ord_Data_Void_Void_max
     : Void -> Void -> Void :=

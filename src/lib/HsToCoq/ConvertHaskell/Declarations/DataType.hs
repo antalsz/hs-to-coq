@@ -175,5 +175,4 @@ convertDataDecl name tvs defn = do
       _ ->
         pure ()
 
-  -- The actual definition of the inductive data type is not qualified
   pure $ IndBody coqName params resTy cons

@@ -143,7 +143,7 @@ convertClsInstDecl cid@ClsInstDecl{..} rebuild mhandler = do
 
     -- implement the instance part of "skip method"
     skippedMethodsS <- use (edits.skippedMethods)
-    -- TODO: Qualify default method names here (or make methods consistently unqualified Idents)
+
     let methods = filter (\(m,_) -> (instanceClass,qualidBase m) `S.notMember` skippedMethodsS) (cdefs ++ defaults)
 
     let (binds, classTy) = decomposeForall instanceHead

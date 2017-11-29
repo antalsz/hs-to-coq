@@ -256,7 +256,6 @@ generateRecordAccessors (IndBody tyName params resTy cons) = do
   allFields <- uses (constructorFields.to restrict.folded._RecordFields) S.fromList
   for (S.toAscList allFields) $ \(field :: Qualid) -> do
     equations <- for conNames $ \con -> do
-      -- TODO: Qualify con here, or in IndBody
       (args, hasField) <- use (constructorFields.at con) >>= \case
         Just (NonRecordFields count) ->
           pure (replicate count UnderscorePat, False)

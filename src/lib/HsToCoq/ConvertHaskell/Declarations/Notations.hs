@@ -13,7 +13,6 @@ import HsToCoq.ConvertHaskell.InfixNames
 
 --------------------------------------------------------------------------------
 
--- TODO: calculate op from def, instead of passing it around
 buildInfixNotations :: Map Qualid Signature -> Qualid -> [Notation]
 buildInfixNotations sigs def
     | Just op <- identToOp (qualidBase def)

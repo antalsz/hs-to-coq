@@ -110,8 +110,6 @@ convertClassDecl (L _ hsCtx) (L _ hsName) ltvs fds lsigs defaults types typeDefa
 
   classDefns.at name ?= classDefn
 
-
-  -- TODO: This is mostly broken
   let nots = concatMap (buildInfixNotations sigs) $ M.keys sigs
 
   pure $ ClassBody classDefn nots

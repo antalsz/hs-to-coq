@@ -10,15 +10,15 @@ Set Bullet Behavior "Strict Subproofs".
 
 Instance EqLaws_Data_Either_Either {a b} `{EqLaws a} `{EqLaws b} : EqLaws (Either a b).
 Proof.
-  split; repeat unfold op_zeze__, op_zsze__,
+  split; repeat unfold op_zeze__, op_zsze__, op_zeze____, op_zsze____,
   Either.instance_forall___GHC_Base_Eq__b____GHC_Base_Eq__a___GHC_Base_Eq___Data_Either_Either_a_b_ ,
   Either.instance_forall___GHC_Base_Eq__b____GHC_Base_Eq__a___GHC_Base_Eq___Data_Either_Either_a_b__op_zeze__,
   Either.instance_forall___GHC_Base_Eq__b____GHC_Base_Eq__a___GHC_Base_Eq___Data_Either_Either_a_b__op_zsze__.
   - case=> ? /=; apply Eq_refl.
   - do 2 case=> ? //=; apply Eq_sym.
   - do 3 case=> ? //=; apply Eq_trans.
-  - do 2 case => ? //=; admit.
-Admitted.
+  - do 2 case => ? //=; rewrite negb_involutive; reflexivity.
+Qed.
 
 Instance EqExact_Data_Either_Either {a b} `{EqExact a} `{EqExact b} : EqExact (Either a b).
 Proof.

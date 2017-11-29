@@ -240,7 +240,8 @@ moduleDeclarations ConvertedModule{..} = do
   let sorted = topoSortSentences orders $
         convModValDecls ++ convModClsInstDecls ++ convModAddedDecls
   ax_decls <- usedAxioms sorted
-  return $ deQualifyLocalNames convModName $ (convModTyClDecls, ax_decls ++ sorted)
+  let not_decls = qualifiedNotations convModName (convModTyClDecls ++ sorted)
+  return $ deQualifyLocalNames convModName $ (convModTyClDecls, ax_decls ++ sorted ++ not_decls)
 
 -- | This un-qualifies all variable names in the current module.
 -- It should be called very late, just before pretty-printing.
@@ -268,3 +269,13 @@ usedAxioms decls = do
           | not (null ax_decls)
           ]
     return $ comment ++ ax_decls
+
+qualifiedNotations :: ModuleName -> [Sentence] -> [Sentence]
+qualifiedNotations mod decls = wrap
+    [ NotationSentence qn
+    | NotationSentence n <- decls, Just qn <- pure $ qualifyNotation mod n ]
+  where
+    wrap :: [Sentence] -> [Sentence]
+    wrap []        = []
+    wrap sentences = [ LocalModuleSentence (LocalModule "Notations" sentences) ]
+

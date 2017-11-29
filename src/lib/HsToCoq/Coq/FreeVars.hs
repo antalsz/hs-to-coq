@@ -172,6 +172,7 @@ instance Binding Sentence where
   binding f (InstanceSentence         ins)       = binding f ins
   binding f (ProgramInstanceSentence  ins)       = binding f ins
   binding f (NotationSentence         not)       = binding f not
+  binding f (LocalModuleSentence      lmd)       = binding f lmd
   binding _ (ArgumentsSentence        arg)       = (freeVars arg *>)
   binding _ (CommentSentence          com)       = (freeVars com *>)
 
@@ -256,6 +257,9 @@ instance Binding Notation where
 instance Binding NotationBinding where
     -- TODO: This Bare is fishy
   binding f (NotationIdentBinding x def) = (freeVars def *>) . binding f (Bare (infixToCoq x))
+
+instance Binding LocalModule where
+  binding f (LocalModule _name sentences) = binding f sentences
 
 -- TODO Not all sequences of bindings should be telescopes!
 bindingTelescope :: (Binding b, MonadVariables Qualid d m, Monoid d, Foldable f)

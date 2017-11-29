@@ -1,10 +1,16 @@
 {-# LANGUAGE OverloadedStrings #-}
-module HsToCoq.ConvertHaskell.Declarations.Notations (buildInfixNotations) where
+module HsToCoq.ConvertHaskell.Declarations.Notations
+    ( buildInfixNotations
+    , qualifyNotation
+    ) where
 
 import Data.Bifunctor
 
 import           Data.Map.Strict (Map)
 import qualified Data.Map.Strict as M
+import qualified Data.Text as T
+import Data.Monoid
+import HsToCoq.Util.GHC.Module
 
 import HsToCoq.Coq.Gallina
 import HsToCoq.Coq.Gallina.Util
@@ -24,4 +30,14 @@ buildInfixNotations sigs def
   where
     hardCodedAssoc op | op == "∘" = (Just LeftAssociativity, Level 40)
                       | otherwise = (Nothing, Level 99)
+
+qualifyNotation :: ModuleName -> Notation -> Maybe Notation
+qualifyNotation mod (InfixDefinition inf def assoc lvl )
+    = let inf' = moduleNameText mod <> "." <> inf
+      in Just $ InfixDefinition inf' def assoc lvl
+qualifyNotation mod (NotationBinding (NotationIdentBinding prefix def))
+    | "_" `T.isPrefixOf` prefix
+    = let prefix' = "_" <> moduleNameText mod <> "." <> T.drop 1 prefix
+      in Just $ NotationBinding $ NotationIdentBinding prefix' def
+qualifyNotation _ _ = Nothing
 

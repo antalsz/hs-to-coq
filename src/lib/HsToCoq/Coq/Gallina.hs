@@ -44,6 +44,7 @@ module HsToCoq.Coq.Gallina (
   Pattern(..),
   OrPattern(..),
   Comment(..),
+  LocalModule(..),
 
   -- * Signatures
   Signature(..),
@@ -305,6 +306,7 @@ data Sentence = AssumptionSentence       Assumption                             
               | NotationSentence         Notation                                              -- ^@/notation/@ – extra
               | ArgumentsSentence        Arguments                                             -- ^@/arguments/@ – extra
               | CommentSentence          Comment                                               -- ^@/comment/@ – extra
+              | LocalModuleSentence      LocalModule
               deriving (Eq, Ord, Show, Read, Typeable, Data)
 
 -- |@/assumption/ ::=@
@@ -445,6 +447,9 @@ data ArgumentExplicitness = ArgExplicit                                         
                           | ArgMaximal                                                         -- ^@{ ⋯ }@ – wrap in braces
                           deriving (Eq, Ord, Show, Read, Enum, Bounded, Typeable, Data)
 
+
+data LocalModule = LocalModule Ident [Sentence]
+                      deriving (Eq, Ord, Show, Read, Typeable, Data)
 
 -- A Coq signature
 -- TODO: Move this?
@@ -928,6 +933,7 @@ instance Gallina Sentence where
   renderGallina' p (NotationSentence        not)    = renderGallina' p not
   renderGallina' p (ArgumentsSentence       arg)    = renderGallina' p arg
   renderGallina' p (CommentSentence         com)    = renderGallina' p com
+  renderGallina' p (LocalModuleSentence     lmd)    = renderGallina' p lmd
 
 instance Gallina Assumption where
   renderGallina' p (Assumption kw ass) = renderGallina' p kw <+> align (renderGallina ass) <> "."
@@ -1107,6 +1113,13 @@ instance Gallina ArgumentSpec where
                  ArgImplicit -> brackets
                  ArgMaximal  -> braces
     in wrap (renderGallina arg) <> maybe mempty (("%" <>) . renderIdent) oscope
+
+instance Gallina LocalModule where
+  renderGallina' _ (LocalModule name sentences) = vcat $
+    [ "Module" <+> text name <> "." ] ++
+    [ renderGallina s | s <- sentences ] ++
+    [ "End" <+> text name <> "." ]
+
 
 -- Make all 'Gallina' types 'Pretty' types in the default way
 let abort = fail "Internal error: unexpected result from `reify'" in

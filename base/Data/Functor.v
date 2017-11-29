@@ -39,5 +39,5 @@ Definition void {f} {a} `{GHC.Base.Functor f} : f a -> f unit :=
   fun x => GHC.Base.op_zlzd__ tt x.
 
 (* Unbound variables:
-     GHC.Base.Functor GHC.Base.flip GHC.Base.fmap GHC.Base.op_zlzd__ tt unit
+     tt unit GHC.Base.Functor GHC.Base.flip GHC.Base.fmap GHC.Base.op_zlzd__
 *)

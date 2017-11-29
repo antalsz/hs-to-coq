@@ -14,7 +14,6 @@ Require Coq.Program.Wf.
 
 Require Coq.Init.Datatypes.
 Require Coq.Lists.List.
-Require Coq.Program.Basics.
 Require Data.Maybe.
 Require Data.Ord.
 Require Data.Tuple.
@@ -203,7 +202,7 @@ Definition emptySB {a} : SnocBuilder a :=
   Mk_SnocBuilder (GHC.Num.fromInteger 0) nil nil.
 
 Definition find {a} : (a -> bool) -> list a -> option a :=
-  fun p => Coq.Program.Basics.compose Data.Maybe.listToMaybe (GHC.List.filter p).
+  fun p => GHC.Base.op_z2218U__ Data.Maybe.listToMaybe (GHC.List.filter p).
 
 Definition genericDrop {i} {a} `{(GHC.Real.Integral i)} : i -> list a -> list
                                                           a :=
@@ -353,10 +352,12 @@ Definition sort {a} `{(GHC.Base.Ord a)} : list a -> list a :=
 
 Definition sortOn {b} {a} `{GHC.Base.Ord b} : (a -> b) -> list a -> list a :=
   fun f =>
-    Coq.Program.Basics.compose (GHC.Base.map Data.Tuple.snd)
-                               (Coq.Program.Basics.compose (sortBy (Data.Ord.comparing Data.Tuple.fst))
-                                                           (GHC.Base.map (fun x =>
-                                                                           let y := f x in GHC.Prim.seq y (pair y x)))).
+    GHC.Base.op_z2218U__ (GHC.Base.map Data.Tuple.snd) (GHC.Base.op_z2218U__ (sortBy
+                                                                             (Data.Ord.comparing Data.Tuple.fst))
+                                                                             (GHC.Base.map (fun x =>
+                                                                                             let y := f x in
+                                                                                             GHC.Prim.seq y (pair y
+                                                                                                                  x)))).
 
 Definition strictGenericLength {i} {b} `{(GHC.Num.Num i)} : list b -> i :=
   fun l =>
@@ -543,14 +544,14 @@ Definition zip7 {a} {b} {c} {d} {e} {f} {g} : list a -> list b -> list c -> list
   zipWith7 GHC.Tuple.op_Z7T__.
 
 (* Unbound variables:
-     * Coq.Init.Datatypes.app Coq.Lists.List.flat_map Coq.Program.Basics.compose
-     Data.Maybe.listToMaybe Data.Maybe.maybe Data.Ord.comparing Data.Tuple.fst
-     Data.Tuple.snd GHC.Base.Eq_ GHC.Base.Ord GHC.Base.String GHC.Base.build
-     GHC.Base.compare GHC.Base.flip GHC.Base.foldl GHC.Base.foldr GHC.Base.id
-     GHC.Base.map GHC.Base.oneShot GHC.Base.op_zd__ GHC.Base.op_zeze__
-     GHC.Base.op_zgzgze__ GHC.Base.op_zlze__ GHC.Base.return_ GHC.List.any
-     GHC.List.filter GHC.List.null GHC.List.reverse GHC.Num.Num GHC.Num.Word
-     GHC.Num.op_zm__ GHC.Num.op_zp__ GHC.Prim.seq GHC.Real.Integral
-     GHC.Tuple.op_Z4T__ GHC.Tuple.op_Z5T__ GHC.Tuple.op_Z6T__ GHC.Tuple.op_Z7T__ None
-     Some andb bool comparison cons false list nil option orb pair sortBy true
+     * None Some andb bool comparison cons false list nil option orb pair sortBy true
+     Coq.Init.Datatypes.app Coq.Lists.List.flat_map Data.Maybe.listToMaybe
+     Data.Maybe.maybe Data.Ord.comparing Data.Tuple.fst Data.Tuple.snd GHC.Base.Eq_
+     GHC.Base.Ord GHC.Base.String GHC.Base.build GHC.Base.compare GHC.Base.flip
+     GHC.Base.foldl GHC.Base.foldr GHC.Base.id GHC.Base.map GHC.Base.oneShot
+     GHC.Base.op_z2218U__ GHC.Base.op_zd__ GHC.Base.op_zeze__ GHC.Base.op_zgzgze__
+     GHC.Base.op_zlze__ GHC.Base.return_ GHC.List.any GHC.List.filter GHC.List.null
+     GHC.List.reverse GHC.Num.Num GHC.Num.Word GHC.Num.op_zm__ GHC.Num.op_zp__
+     GHC.Prim.seq GHC.Real.Integral GHC.Tuple.op_Z4T__ GHC.Tuple.op_Z5T__
+     GHC.Tuple.op_Z6T__ GHC.Tuple.op_Z7T__
 *)

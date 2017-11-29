@@ -1,46 +1,46 @@
 # uses partial functions or is partial
-skip maximumBy
-skip minimumBy
-skip genericIndex
-skip unfoldr
+skip Data.OldList.maximumBy
+skip Data.OldList.minimumBy
+skip Data.OldList.genericIndex
+skip Data.OldList.unfoldr
 
 # character constant
-skip unlines
+skip Data.OldList.unlines
 
 # mutrec
-skip sortBy
-#skip sortOn
-#skip sort
-skip mapAccumR
+skip Data.OldList.sortBy
+#skip Data.OldList.sortOn
+#skip Data.OldList.sort
+skip Data.OldList.mapAccumR
 
 # tricky metric
-skip groupBy
+skip Data.OldList.groupBy
 # not obviously total, also strange Coq error
-skip transpose
+skip Data.OldList.transpose
 # terminating, but hard to tell
-skip permutations
+skip Data.OldList.permutations
 
 
 # "" pattern / not structually inductive
-skip wordsFB
-skip words
-skip lines
+skip Data.OldList.wordsFB
+skip Data.OldList.words
+skip Data.OldList.lines
 
 # precedence, ???
-skip sb
-skip snocSB
+skip Data.OldList.sb
+skip Data.OldList.snocSB
 
 # unboxed types, build
-skip findIndices
+skip Data.OldList.findIndices
 
 # needs one of the above
-skip isInfixOf
-skip subsequences
-skip intersperse
-skip group
-skip genericReplicate
-skip findIndex
-skip inits
-skip elemIndices
-skip elemIndex
-skip intercalate
+skip Data.OldList.isInfixOf
+skip Data.OldList.subsequences
+skip Data.OldList.intersperse
+skip Data.OldList.group
+skip Data.OldList.genericReplicate
+skip Data.OldList.findIndex
+skip Data.OldList.inits
+skip Data.OldList.elemIndices
+skip Data.OldList.elemIndex
+skip Data.OldList.intercalate

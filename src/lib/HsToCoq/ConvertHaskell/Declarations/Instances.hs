@@ -37,6 +37,7 @@ import GHC hiding (Name)
 import qualified GHC
 import Bag
 import HsToCoq.Util.GHC.Exception
+import HsToCoq.Util.GHC.Module
 
 import HsToCoq.PrettyPrint (renderOneLineT)
 import HsToCoq.Coq.Gallina
@@ -57,16 +58,18 @@ import HsToCoq.ConvertHaskell.Declarations.Class
 -- Take the instance head and make it into a valid identifier by replacing
 -- non-alphanumerics with underscores.  Then, prepend "instance_".
 convertInstanceName :: ConversionMonad m => LHsType GHC.Name -> m Qualid
-convertInstanceName =   pure
-                    .   Bare
-                    .   ("instance_" <>)
-                    .   T.map (\c -> if isAlphaNum c || c == '\'' then c else '_')
-                    .   renderOneLineT . renderGallina
-                    <=< ghandle (withGhcException $ const . pure $ Var "unknown_type")
-                    .   convertLType
-                    .   \case
-                          L _ (HsForAllTy _ head) -> head
-                          lty                     -> lty
+convertInstanceName n = do
+    qual <- maybe Bare (Qualified . moduleNameText) <$> use currentModule
+    pure . qual
+         .   ("instance_" <>)
+         .   T.map (\c -> if isAlphaNum c || c == '\'' then c else '_')
+         .   renderOneLineT . renderGallina
+     <=< ghandle (withGhcException $ const . pure $ Var "unknown_type")
+         .   convertLType
+         .   \case
+               L _ (HsForAllTy _ head) -> head
+               lty                     -> lty
+         $ n
   where withGhcException :: (GhcException -> a) -> (GhcException -> a)
         withGhcException = id
 
@@ -327,7 +330,6 @@ topoSortInstance (InstanceDefinition instanceName params ty members mp) = go sor
         mkDefnGrp :: [ Qualid ] -> (M.Map Qualid Qualid) -> m ([ Sentence ], M.Map Qualid Qualid)
         mkDefnGrp [] sub = return ([], sub)
         mkDefnGrp [ v ] sub = do
-           -- TODO: Qualify with current module name (or leave Bare, as it is a Local Definition?)
            let v' = qualidMapBase (<> ("_" <> qualidBase v)) instanceName
            (params, mty)  <- mkTy v
            body <- quantify v (subst (fmap Qualid sub) (m M.! v))

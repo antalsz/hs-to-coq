@@ -158,7 +158,6 @@ Instance instance_GHC_Base_Functor__Sum_ : GHC.Base.Functor Sum :=
 *)
 (* Converted imports: *)
 
-Require Coq.Program.Basics.
 Require GHC.Base.
 Require GHC.Prim.
 
@@ -383,389 +382,450 @@ Instance Unpeel_Any : Unpeel Any bool := Build_Unpeel _ _ getAny Mk_Any.
 
 Instance Unpeel_All : Unpeel All bool := Build_Unpeel _ _ getAll Mk_All.
 
-Local Definition instance_forall___GHC_Base_Monoid_a___GHC_Base_Monoid__Dual_a__mappend {inst_a}
-                                                                                        `{GHC.Base.Monoid inst_a}
-    : (Dual inst_a) -> (Dual inst_a) -> (Dual inst_a) :=
+Local Definition instance_forall___GHC_Base_Monoid_a___GHC_Base_Monoid__Data_Monoid_Dual_a__mappend {inst_a}
+                                                                                                    `{GHC.Base.Monoid
+                                                                                                    inst_a} : (Dual
+                                                                                                              inst_a) -> (Dual
+                                                                                                              inst_a) -> (Dual
+                                                                                                              inst_a) :=
   fun arg_192__ arg_193__ =>
     match arg_192__ , arg_193__ with
       | Mk_Dual x , Mk_Dual y => Mk_Dual (GHC.Base.mappend y x)
     end.
 
-Local Definition instance_forall___GHC_Base_Monoid_a___GHC_Base_Monoid__Dual_a__mempty {inst_a}
-                                                                                       `{GHC.Base.Monoid inst_a} : (Dual
-                                                                                                                   inst_a) :=
+Local Definition instance_forall___GHC_Base_Monoid_a___GHC_Base_Monoid__Data_Monoid_Dual_a__mempty {inst_a}
+                                                                                                   `{GHC.Base.Monoid
+                                                                                                   inst_a} : (Dual
+                                                                                                             inst_a) :=
   Mk_Dual GHC.Base.mempty.
 
-Local Definition instance_forall___GHC_Base_Monoid_a___GHC_Base_Monoid__Dual_a__mconcat {inst_a}
-                                                                                        `{GHC.Base.Monoid inst_a} : list
-                                                                                                                    (Dual
-                                                                                                                    inst_a) -> (Dual
-                                                                                                                    inst_a) :=
+Local Definition instance_forall___GHC_Base_Monoid_a___GHC_Base_Monoid__Data_Monoid_Dual_a__mconcat {inst_a}
+                                                                                                    `{GHC.Base.Monoid
+                                                                                                    inst_a} : list (Dual
+                                                                                                                   inst_a) -> (Dual
+                                                                                                              inst_a) :=
   GHC.Base.foldr
-  instance_forall___GHC_Base_Monoid_a___GHC_Base_Monoid__Dual_a__mappend
-  instance_forall___GHC_Base_Monoid_a___GHC_Base_Monoid__Dual_a__mempty.
+  instance_forall___GHC_Base_Monoid_a___GHC_Base_Monoid__Data_Monoid_Dual_a__mappend
+  instance_forall___GHC_Base_Monoid_a___GHC_Base_Monoid__Data_Monoid_Dual_a__mempty.
 
-Program Instance instance_forall___GHC_Base_Monoid_a___GHC_Base_Monoid__Dual_a_ {a}
-                                                                                `{GHC.Base.Monoid a} : GHC.Base.Monoid
-                                                                                                       (Dual a) := fun _
-                                                                                                                       k =>
+Program Instance instance_forall___GHC_Base_Monoid_a___GHC_Base_Monoid__Data_Monoid_Dual_a_ {a}
+                                                                                            `{GHC.Base.Monoid a}
+  : GHC.Base.Monoid (Dual a) := fun _ k =>
     k
-    {|GHC.Base.mappend__ := instance_forall___GHC_Base_Monoid_a___GHC_Base_Monoid__Dual_a__mappend ;
-    GHC.Base.mconcat__ := instance_forall___GHC_Base_Monoid_a___GHC_Base_Monoid__Dual_a__mconcat ;
-    GHC.Base.mempty__ := instance_forall___GHC_Base_Monoid_a___GHC_Base_Monoid__Dual_a__mempty |}.
+    {|GHC.Base.mappend__ := instance_forall___GHC_Base_Monoid_a___GHC_Base_Monoid__Data_Monoid_Dual_a__mappend ;
+    GHC.Base.mconcat__ := instance_forall___GHC_Base_Monoid_a___GHC_Base_Monoid__Data_Monoid_Dual_a__mconcat ;
+    GHC.Base.mempty__ := instance_forall___GHC_Base_Monoid_a___GHC_Base_Monoid__Data_Monoid_Dual_a__mempty |}.
 
-Local Definition instance_GHC_Base_Functor_Dual_fmap : forall {a} {b},
-                                                         (a -> b) -> Dual a -> Dual b :=
+Local Definition instance_GHC_Base_Functor_Data_Monoid_Dual_fmap : forall {a}
+                                                                          {b},
+                                                                     (a -> b) -> Dual a -> Dual b :=
   fun {a} {b} => GHC.Prim.coerce.
 
-Local Definition instance_GHC_Base_Functor_Dual_op_zlzd__ : forall {a} {b},
-                                                              a -> Dual b -> Dual a :=
-  fun {a} {b} => fun x => instance_GHC_Base_Functor_Dual_fmap (GHC.Base.const x).
+Local Definition instance_GHC_Base_Functor_Data_Monoid_Dual_op_zlzd__
+    : forall {a} {b}, a -> Dual b -> Dual a :=
+  fun {a} {b} =>
+    fun x => instance_GHC_Base_Functor_Data_Monoid_Dual_fmap (GHC.Base.const x).
 
-Program Instance instance_GHC_Base_Functor_Dual : GHC.Base.Functor Dual := fun _
-                                                                               k =>
+Program Instance instance_GHC_Base_Functor_Data_Monoid_Dual : GHC.Base.Functor
+                                                              Dual := fun _ k =>
     k {|GHC.Base.op_zlzd____ := fun {a} {b} =>
-        instance_GHC_Base_Functor_Dual_op_zlzd__ ;
-      GHC.Base.fmap__ := fun {a} {b} => instance_GHC_Base_Functor_Dual_fmap |}.
+        instance_GHC_Base_Functor_Data_Monoid_Dual_op_zlzd__ ;
+      GHC.Base.fmap__ := fun {a} {b} =>
+        instance_GHC_Base_Functor_Data_Monoid_Dual_fmap |}.
 
-Local Definition instance_GHC_Base_Applicative_Dual_op_zlztzg__ : forall {a}
-                                                                         {b},
-                                                                    Dual (a -> b) -> Dual a -> Dual b :=
+Local Definition instance_GHC_Base_Applicative_Data_Monoid_Dual_op_zlztzg__
+    : forall {a} {b}, Dual (a -> b) -> Dual a -> Dual b :=
   fun {a} {b} => GHC.Prim.coerce.
 
-Local Definition instance_GHC_Base_Applicative_Dual_op_ztzg__ : forall {a} {b},
-                                                                  Dual a -> Dual b -> Dual b :=
+Local Definition instance_GHC_Base_Applicative_Data_Monoid_Dual_op_ztzg__
+    : forall {a} {b}, Dual a -> Dual b -> Dual b :=
   fun {a} {b} =>
     fun x y =>
-      instance_GHC_Base_Applicative_Dual_op_zlztzg__ (GHC.Base.fmap (GHC.Base.const
-                                                                    GHC.Base.id) x) y.
+      instance_GHC_Base_Applicative_Data_Monoid_Dual_op_zlztzg__ (GHC.Base.fmap
+                                                                 (GHC.Base.const GHC.Base.id) x) y.
 
-Local Definition instance_GHC_Base_Applicative_Dual_pure : forall {a},
-                                                             a -> Dual a :=
+Local Definition instance_GHC_Base_Applicative_Data_Monoid_Dual_pure
+    : forall {a}, a -> Dual a :=
   fun {a} => Mk_Dual.
 
-Program Instance instance_GHC_Base_Applicative_Dual : GHC.Base.Applicative
-                                                      Dual := fun _ k =>
+Program Instance instance_GHC_Base_Applicative_Data_Monoid_Dual
+  : GHC.Base.Applicative Dual := fun _ k =>
     k {|GHC.Base.op_ztzg____ := fun {a} {b} =>
-        instance_GHC_Base_Applicative_Dual_op_ztzg__ ;
+        instance_GHC_Base_Applicative_Data_Monoid_Dual_op_ztzg__ ;
       GHC.Base.op_zlztzg____ := fun {a} {b} =>
-        instance_GHC_Base_Applicative_Dual_op_zlztzg__ ;
-      GHC.Base.pure__ := fun {a} => instance_GHC_Base_Applicative_Dual_pure |}.
+        instance_GHC_Base_Applicative_Data_Monoid_Dual_op_zlztzg__ ;
+      GHC.Base.pure__ := fun {a} =>
+        instance_GHC_Base_Applicative_Data_Monoid_Dual_pure |}.
 
-Local Definition instance_GHC_Base_Monad_Dual_op_zgzg__ : forall {a} {b},
-                                                            Dual a -> Dual b -> Dual b :=
+Local Definition instance_GHC_Base_Monad_Data_Monoid_Dual_op_zgzg__ : forall {a}
+                                                                             {b},
+                                                                        Dual a -> Dual b -> Dual b :=
   fun {a} {b} => GHC.Base.op_ztzg__.
 
-Local Definition instance_GHC_Base_Monad_Dual_op_zgzgze__ : forall {a} {b},
-                                                              Dual a -> (a -> Dual b) -> Dual b :=
+Local Definition instance_GHC_Base_Monad_Data_Monoid_Dual_op_zgzgze__
+    : forall {a} {b}, Dual a -> (a -> Dual b) -> Dual b :=
   fun {a} {b} => fun m k => k (getDual m).
 
-Local Definition instance_GHC_Base_Monad_Dual_return_ : forall {a},
-                                                          a -> Dual a :=
+Local Definition instance_GHC_Base_Monad_Data_Monoid_Dual_return_ : forall {a},
+                                                                      a -> Dual a :=
   fun {a} => GHC.Base.pure.
 
-Program Instance instance_GHC_Base_Monad_Dual : GHC.Base.Monad Dual := fun _
-                                                                           k =>
+Program Instance instance_GHC_Base_Monad_Data_Monoid_Dual : GHC.Base.Monad
+                                                            Dual := fun _ k =>
     k {|GHC.Base.op_zgzg____ := fun {a} {b} =>
-        instance_GHC_Base_Monad_Dual_op_zgzg__ ;
+        instance_GHC_Base_Monad_Data_Monoid_Dual_op_zgzg__ ;
       GHC.Base.op_zgzgze____ := fun {a} {b} =>
-        instance_GHC_Base_Monad_Dual_op_zgzgze__ ;
-      GHC.Base.return___ := fun {a} => instance_GHC_Base_Monad_Dual_return_ |}.
+        instance_GHC_Base_Monad_Data_Monoid_Dual_op_zgzgze__ ;
+      GHC.Base.return___ := fun {a} =>
+        instance_GHC_Base_Monad_Data_Monoid_Dual_return_ |}.
 
-Local Definition instance_GHC_Base_Monoid__Endo_a__mappend {inst_a} : (Endo
-                                                                      inst_a) -> (Endo inst_a) -> (Endo inst_a) :=
+Local Definition instance_GHC_Base_Monoid__Data_Monoid_Endo_a__mappend {inst_a}
+    : (Endo inst_a) -> (Endo inst_a) -> (Endo inst_a) :=
   fun arg_186__ arg_187__ =>
     match arg_186__ , arg_187__ with
-      | Mk_Endo f , Mk_Endo g => Mk_Endo (Coq.Program.Basics.compose f g)
+      | Mk_Endo f , Mk_Endo g => Mk_Endo (GHC.Base.op_z2218U__ f g)
     end.
 
-Local Definition instance_GHC_Base_Monoid__Endo_a__mempty {inst_a} : (Endo
-                                                                     inst_a) :=
+Local Definition instance_GHC_Base_Monoid__Data_Monoid_Endo_a__mempty {inst_a}
+    : (Endo inst_a) :=
   Mk_Endo GHC.Base.id.
 
-Local Definition instance_GHC_Base_Monoid__Endo_a__mconcat {inst_a} : list (Endo
-                                                                           inst_a) -> (Endo inst_a) :=
-  GHC.Base.foldr instance_GHC_Base_Monoid__Endo_a__mappend
-                 instance_GHC_Base_Monoid__Endo_a__mempty.
+Local Definition instance_GHC_Base_Monoid__Data_Monoid_Endo_a__mconcat {inst_a}
+    : list (Endo inst_a) -> (Endo inst_a) :=
+  GHC.Base.foldr instance_GHC_Base_Monoid__Data_Monoid_Endo_a__mappend
+                 instance_GHC_Base_Monoid__Data_Monoid_Endo_a__mempty.
 
-Program Instance instance_GHC_Base_Monoid__Endo_a_ {a} : GHC.Base.Monoid (Endo
-                                                                         a) := fun _ k =>
-    k {|GHC.Base.mappend__ := instance_GHC_Base_Monoid__Endo_a__mappend ;
-      GHC.Base.mconcat__ := instance_GHC_Base_Monoid__Endo_a__mconcat ;
-      GHC.Base.mempty__ := instance_GHC_Base_Monoid__Endo_a__mempty |}.
+Program Instance instance_GHC_Base_Monoid__Data_Monoid_Endo_a_ {a}
+  : GHC.Base.Monoid (Endo a) := fun _ k =>
+    k
+    {|GHC.Base.mappend__ := instance_GHC_Base_Monoid__Data_Monoid_Endo_a__mappend ;
+    GHC.Base.mconcat__ := instance_GHC_Base_Monoid__Data_Monoid_Endo_a__mconcat ;
+    GHC.Base.mempty__ := instance_GHC_Base_Monoid__Data_Monoid_Endo_a__mempty |}.
 
-Local Definition instance_GHC_Base_Monoid_All_mappend : All -> All -> All :=
+Local Definition instance_GHC_Base_Monoid_Data_Monoid_All_mappend
+    : All -> All -> All :=
   fun arg_181__ arg_182__ =>
     match arg_181__ , arg_182__ with
       | Mk_All x , Mk_All y => Mk_All (andb x y)
     end.
 
-Local Definition instance_GHC_Base_Monoid_All_mempty : All :=
+Local Definition instance_GHC_Base_Monoid_Data_Monoid_All_mempty : All :=
   Mk_All true.
 
-Local Definition instance_GHC_Base_Monoid_All_mconcat : list All -> All :=
-  GHC.Base.foldr instance_GHC_Base_Monoid_All_mappend
-                 instance_GHC_Base_Monoid_All_mempty.
+Local Definition instance_GHC_Base_Monoid_Data_Monoid_All_mconcat : list
+                                                                    All -> All :=
+  GHC.Base.foldr instance_GHC_Base_Monoid_Data_Monoid_All_mappend
+                 instance_GHC_Base_Monoid_Data_Monoid_All_mempty.
 
-Program Instance instance_GHC_Base_Monoid_All : GHC.Base.Monoid All := fun _
-                                                                           k =>
-    k {|GHC.Base.mappend__ := instance_GHC_Base_Monoid_All_mappend ;
-      GHC.Base.mconcat__ := instance_GHC_Base_Monoid_All_mconcat ;
-      GHC.Base.mempty__ := instance_GHC_Base_Monoid_All_mempty |}.
+Program Instance instance_GHC_Base_Monoid_Data_Monoid_All : GHC.Base.Monoid
+                                                            All := fun _ k =>
+    k {|GHC.Base.mappend__ := instance_GHC_Base_Monoid_Data_Monoid_All_mappend ;
+      GHC.Base.mconcat__ := instance_GHC_Base_Monoid_Data_Monoid_All_mconcat ;
+      GHC.Base.mempty__ := instance_GHC_Base_Monoid_Data_Monoid_All_mempty |}.
 
-Local Definition instance_GHC_Base_Monoid_Any_mappend : Any -> Any -> Any :=
+Local Definition instance_GHC_Base_Monoid_Data_Monoid_Any_mappend
+    : Any -> Any -> Any :=
   fun arg_176__ arg_177__ =>
     match arg_176__ , arg_177__ with
       | Mk_Any x , Mk_Any y => Mk_Any (orb x y)
     end.
 
-Local Definition instance_GHC_Base_Monoid_Any_mempty : Any :=
+Local Definition instance_GHC_Base_Monoid_Data_Monoid_Any_mempty : Any :=
   Mk_Any false.
 
-Local Definition instance_GHC_Base_Monoid_Any_mconcat : list Any -> Any :=
-  GHC.Base.foldr instance_GHC_Base_Monoid_Any_mappend
-                 instance_GHC_Base_Monoid_Any_mempty.
+Local Definition instance_GHC_Base_Monoid_Data_Monoid_Any_mconcat : list
+                                                                    Any -> Any :=
+  GHC.Base.foldr instance_GHC_Base_Monoid_Data_Monoid_Any_mappend
+                 instance_GHC_Base_Monoid_Data_Monoid_Any_mempty.
 
-Program Instance instance_GHC_Base_Monoid_Any : GHC.Base.Monoid Any := fun _
-                                                                           k =>
-    k {|GHC.Base.mappend__ := instance_GHC_Base_Monoid_Any_mappend ;
-      GHC.Base.mconcat__ := instance_GHC_Base_Monoid_Any_mconcat ;
-      GHC.Base.mempty__ := instance_GHC_Base_Monoid_Any_mempty |}.
+Program Instance instance_GHC_Base_Monoid_Data_Monoid_Any : GHC.Base.Monoid
+                                                            Any := fun _ k =>
+    k {|GHC.Base.mappend__ := instance_GHC_Base_Monoid_Data_Monoid_Any_mappend ;
+      GHC.Base.mconcat__ := instance_GHC_Base_Monoid_Data_Monoid_Any_mconcat ;
+      GHC.Base.mempty__ := instance_GHC_Base_Monoid_Data_Monoid_Any_mempty |}.
 
 (* Skipping instance
-   instance_forall___GHC_Num_Num_a___GHC_Base_Monoid__Sum_a_ *)
+   instance_forall___GHC_Num_Num_a___GHC_Base_Monoid__Data_Monoid_Sum_a_ *)
 
-Local Definition instance_GHC_Base_Functor_Sum_fmap : forall {a} {b},
-                                                        (a -> b) -> Sum a -> Sum b :=
+Local Definition instance_GHC_Base_Functor_Data_Monoid_Sum_fmap : forall {a}
+                                                                         {b},
+                                                                    (a -> b) -> Sum a -> Sum b :=
   fun {a} {b} => GHC.Prim.coerce.
 
-Local Definition instance_GHC_Base_Functor_Sum_op_zlzd__ : forall {a} {b},
-                                                             a -> Sum b -> Sum a :=
-  fun {a} {b} => fun x => instance_GHC_Base_Functor_Sum_fmap (GHC.Base.const x).
+Local Definition instance_GHC_Base_Functor_Data_Monoid_Sum_op_zlzd__
+    : forall {a} {b}, a -> Sum b -> Sum a :=
+  fun {a} {b} =>
+    fun x => instance_GHC_Base_Functor_Data_Monoid_Sum_fmap (GHC.Base.const x).
 
-Program Instance instance_GHC_Base_Functor_Sum : GHC.Base.Functor Sum := fun _
-                                                                             k =>
+Program Instance instance_GHC_Base_Functor_Data_Monoid_Sum : GHC.Base.Functor
+                                                             Sum := fun _ k =>
     k {|GHC.Base.op_zlzd____ := fun {a} {b} =>
-        instance_GHC_Base_Functor_Sum_op_zlzd__ ;
-      GHC.Base.fmap__ := fun {a} {b} => instance_GHC_Base_Functor_Sum_fmap |}.
+        instance_GHC_Base_Functor_Data_Monoid_Sum_op_zlzd__ ;
+      GHC.Base.fmap__ := fun {a} {b} =>
+        instance_GHC_Base_Functor_Data_Monoid_Sum_fmap |}.
 
-Local Definition instance_GHC_Base_Applicative_Sum_op_zlztzg__ : forall {a} {b},
-                                                                   Sum (a -> b) -> Sum a -> Sum b :=
+Local Definition instance_GHC_Base_Applicative_Data_Monoid_Sum_op_zlztzg__
+    : forall {a} {b}, Sum (a -> b) -> Sum a -> Sum b :=
   fun {a} {b} => GHC.Prim.coerce.
 
-Local Definition instance_GHC_Base_Applicative_Sum_op_ztzg__ : forall {a} {b},
-                                                                 Sum a -> Sum b -> Sum b :=
+Local Definition instance_GHC_Base_Applicative_Data_Monoid_Sum_op_ztzg__
+    : forall {a} {b}, Sum a -> Sum b -> Sum b :=
   fun {a} {b} =>
     fun x y =>
-      instance_GHC_Base_Applicative_Sum_op_zlztzg__ (GHC.Base.fmap (GHC.Base.const
-                                                                   GHC.Base.id) x) y.
+      instance_GHC_Base_Applicative_Data_Monoid_Sum_op_zlztzg__ (GHC.Base.fmap
+                                                                (GHC.Base.const GHC.Base.id) x) y.
 
-Local Definition instance_GHC_Base_Applicative_Sum_pure : forall {a},
-                                                            a -> Sum a :=
+Local Definition instance_GHC_Base_Applicative_Data_Monoid_Sum_pure
+    : forall {a}, a -> Sum a :=
   fun {a} => Mk_Sum.
 
-Program Instance instance_GHC_Base_Applicative_Sum : GHC.Base.Applicative Sum :=
-  fun _ k =>
+Program Instance instance_GHC_Base_Applicative_Data_Monoid_Sum
+  : GHC.Base.Applicative Sum := fun _ k =>
     k {|GHC.Base.op_ztzg____ := fun {a} {b} =>
-        instance_GHC_Base_Applicative_Sum_op_ztzg__ ;
+        instance_GHC_Base_Applicative_Data_Monoid_Sum_op_ztzg__ ;
       GHC.Base.op_zlztzg____ := fun {a} {b} =>
-        instance_GHC_Base_Applicative_Sum_op_zlztzg__ ;
-      GHC.Base.pure__ := fun {a} => instance_GHC_Base_Applicative_Sum_pure |}.
+        instance_GHC_Base_Applicative_Data_Monoid_Sum_op_zlztzg__ ;
+      GHC.Base.pure__ := fun {a} =>
+        instance_GHC_Base_Applicative_Data_Monoid_Sum_pure |}.
 
-Local Definition instance_GHC_Base_Monad_Sum_op_zgzg__ : forall {a} {b},
-                                                           Sum a -> Sum b -> Sum b :=
+Local Definition instance_GHC_Base_Monad_Data_Monoid_Sum_op_zgzg__ : forall {a}
+                                                                            {b},
+                                                                       Sum a -> Sum b -> Sum b :=
   fun {a} {b} => GHC.Base.op_ztzg__.
 
-Local Definition instance_GHC_Base_Monad_Sum_op_zgzgze__ : forall {a} {b},
-                                                             Sum a -> (a -> Sum b) -> Sum b :=
+Local Definition instance_GHC_Base_Monad_Data_Monoid_Sum_op_zgzgze__
+    : forall {a} {b}, Sum a -> (a -> Sum b) -> Sum b :=
   fun {a} {b} => fun m k => k (getSum m).
 
-Local Definition instance_GHC_Base_Monad_Sum_return_ : forall {a}, a -> Sum a :=
+Local Definition instance_GHC_Base_Monad_Data_Monoid_Sum_return_ : forall {a},
+                                                                     a -> Sum a :=
   fun {a} => GHC.Base.pure.
 
-Program Instance instance_GHC_Base_Monad_Sum : GHC.Base.Monad Sum := fun _ k =>
+Program Instance instance_GHC_Base_Monad_Data_Monoid_Sum : GHC.Base.Monad Sum :=
+  fun _ k =>
     k {|GHC.Base.op_zgzg____ := fun {a} {b} =>
-        instance_GHC_Base_Monad_Sum_op_zgzg__ ;
+        instance_GHC_Base_Monad_Data_Monoid_Sum_op_zgzg__ ;
       GHC.Base.op_zgzgze____ := fun {a} {b} =>
-        instance_GHC_Base_Monad_Sum_op_zgzgze__ ;
-      GHC.Base.return___ := fun {a} => instance_GHC_Base_Monad_Sum_return_ |}.
+        instance_GHC_Base_Monad_Data_Monoid_Sum_op_zgzgze__ ;
+      GHC.Base.return___ := fun {a} =>
+        instance_GHC_Base_Monad_Data_Monoid_Sum_return_ |}.
 
 (* Skipping instance
-   instance_forall___GHC_Num_Num_a___GHC_Base_Monoid__Product_a_ *)
+   instance_forall___GHC_Num_Num_a___GHC_Base_Monoid__Data_Monoid_Product_a_ *)
 
-Local Definition instance_GHC_Base_Functor_Product_fmap : forall {a} {b},
-                                                            (a -> b) -> Product a -> Product b :=
+Local Definition instance_GHC_Base_Functor_Data_Monoid_Product_fmap : forall {a}
+                                                                             {b},
+                                                                        (a -> b) -> Product a -> Product b :=
   fun {a} {b} => GHC.Prim.coerce.
 
-Local Definition instance_GHC_Base_Functor_Product_op_zlzd__ : forall {a} {b},
-                                                                 a -> Product b -> Product a :=
+Local Definition instance_GHC_Base_Functor_Data_Monoid_Product_op_zlzd__
+    : forall {a} {b}, a -> Product b -> Product a :=
   fun {a} {b} =>
-    fun x => instance_GHC_Base_Functor_Product_fmap (GHC.Base.const x).
+    fun x => instance_GHC_Base_Functor_Data_Monoid_Product_fmap (GHC.Base.const x).
 
-Program Instance instance_GHC_Base_Functor_Product : GHC.Base.Functor Product :=
-  fun _ k =>
+Program Instance instance_GHC_Base_Functor_Data_Monoid_Product
+  : GHC.Base.Functor Product := fun _ k =>
     k {|GHC.Base.op_zlzd____ := fun {a} {b} =>
-        instance_GHC_Base_Functor_Product_op_zlzd__ ;
-      GHC.Base.fmap__ := fun {a} {b} => instance_GHC_Base_Functor_Product_fmap |}.
+        instance_GHC_Base_Functor_Data_Monoid_Product_op_zlzd__ ;
+      GHC.Base.fmap__ := fun {a} {b} =>
+        instance_GHC_Base_Functor_Data_Monoid_Product_fmap |}.
 
-Local Definition instance_GHC_Base_Applicative_Product_op_zlztzg__ : forall {a}
-                                                                            {b},
-                                                                       Product (a -> b) -> Product a -> Product b :=
+Local Definition instance_GHC_Base_Applicative_Data_Monoid_Product_op_zlztzg__
+    : forall {a} {b}, Product (a -> b) -> Product a -> Product b :=
   fun {a} {b} => GHC.Prim.coerce.
 
-Local Definition instance_GHC_Base_Applicative_Product_op_ztzg__ : forall {a}
-                                                                          {b},
-                                                                     Product a -> Product b -> Product b :=
+Local Definition instance_GHC_Base_Applicative_Data_Monoid_Product_op_ztzg__
+    : forall {a} {b}, Product a -> Product b -> Product b :=
   fun {a} {b} =>
     fun x y =>
-      instance_GHC_Base_Applicative_Product_op_zlztzg__ (GHC.Base.fmap (GHC.Base.const
-                                                                       GHC.Base.id) x) y.
+      instance_GHC_Base_Applicative_Data_Monoid_Product_op_zlztzg__ (GHC.Base.fmap
+                                                                    (GHC.Base.const GHC.Base.id) x) y.
 
-Local Definition instance_GHC_Base_Applicative_Product_pure : forall {a},
-                                                                a -> Product a :=
+Local Definition instance_GHC_Base_Applicative_Data_Monoid_Product_pure
+    : forall {a}, a -> Product a :=
   fun {a} => Mk_Product.
 
-Program Instance instance_GHC_Base_Applicative_Product : GHC.Base.Applicative
-                                                         Product := fun _ k =>
+Program Instance instance_GHC_Base_Applicative_Data_Monoid_Product
+  : GHC.Base.Applicative Product := fun _ k =>
     k {|GHC.Base.op_ztzg____ := fun {a} {b} =>
-        instance_GHC_Base_Applicative_Product_op_ztzg__ ;
+        instance_GHC_Base_Applicative_Data_Monoid_Product_op_ztzg__ ;
       GHC.Base.op_zlztzg____ := fun {a} {b} =>
-        instance_GHC_Base_Applicative_Product_op_zlztzg__ ;
-      GHC.Base.pure__ := fun {a} => instance_GHC_Base_Applicative_Product_pure |}.
+        instance_GHC_Base_Applicative_Data_Monoid_Product_op_zlztzg__ ;
+      GHC.Base.pure__ := fun {a} =>
+        instance_GHC_Base_Applicative_Data_Monoid_Product_pure |}.
 
-Local Definition instance_GHC_Base_Monad_Product_op_zgzg__ : forall {a} {b},
-                                                               Product a -> Product b -> Product b :=
+Local Definition instance_GHC_Base_Monad_Data_Monoid_Product_op_zgzg__
+    : forall {a} {b}, Product a -> Product b -> Product b :=
   fun {a} {b} => GHC.Base.op_ztzg__.
 
-Local Definition instance_GHC_Base_Monad_Product_op_zgzgze__ : forall {a} {b},
-                                                                 Product a -> (a -> Product b) -> Product b :=
+Local Definition instance_GHC_Base_Monad_Data_Monoid_Product_op_zgzgze__
+    : forall {a} {b}, Product a -> (a -> Product b) -> Product b :=
   fun {a} {b} => fun m k => k (getProduct m).
 
-Local Definition instance_GHC_Base_Monad_Product_return_ : forall {a},
-                                                             a -> Product a :=
+Local Definition instance_GHC_Base_Monad_Data_Monoid_Product_return_
+    : forall {a}, a -> Product a :=
   fun {a} => GHC.Base.pure.
 
-Program Instance instance_GHC_Base_Monad_Product : GHC.Base.Monad Product :=
-  fun _ k =>
+Program Instance instance_GHC_Base_Monad_Data_Monoid_Product : GHC.Base.Monad
+                                                               Product := fun _ k =>
     k {|GHC.Base.op_zgzg____ := fun {a} {b} =>
-        instance_GHC_Base_Monad_Product_op_zgzg__ ;
+        instance_GHC_Base_Monad_Data_Monoid_Product_op_zgzg__ ;
       GHC.Base.op_zgzgze____ := fun {a} {b} =>
-        instance_GHC_Base_Monad_Product_op_zgzgze__ ;
-      GHC.Base.return___ := fun {a} => instance_GHC_Base_Monad_Product_return_ |}.
+        instance_GHC_Base_Monad_Data_Monoid_Product_op_zgzgze__ ;
+      GHC.Base.return___ := fun {a} =>
+        instance_GHC_Base_Monad_Data_Monoid_Product_return_ |}.
 
-Local Definition instance_GHC_Base_Monoid__First_a__mappend {inst_a} : (First
-                                                                       inst_a) -> (First inst_a) -> (First inst_a) :=
+Local Definition instance_GHC_Base_Monoid__Data_Monoid_First_a__mappend {inst_a}
+    : (First inst_a) -> (First inst_a) -> (First inst_a) :=
   fun arg_166__ arg_167__ =>
     match arg_166__ , arg_167__ with
       | Mk_First None , r => r
       | l , _ => l
     end.
 
-Local Definition instance_GHC_Base_Monoid__First_a__mempty {inst_a} : (First
-                                                                      inst_a) :=
+Local Definition instance_GHC_Base_Monoid__Data_Monoid_First_a__mempty {inst_a}
+    : (First inst_a) :=
   Mk_First None.
 
-Local Definition instance_GHC_Base_Monoid__First_a__mconcat {inst_a} : list
-                                                                       (First inst_a) -> (First inst_a) :=
-  GHC.Base.foldr instance_GHC_Base_Monoid__First_a__mappend
-                 instance_GHC_Base_Monoid__First_a__mempty.
+Local Definition instance_GHC_Base_Monoid__Data_Monoid_First_a__mconcat {inst_a}
+    : list (First inst_a) -> (First inst_a) :=
+  GHC.Base.foldr instance_GHC_Base_Monoid__Data_Monoid_First_a__mappend
+                 instance_GHC_Base_Monoid__Data_Monoid_First_a__mempty.
 
-Program Instance instance_GHC_Base_Monoid__First_a_ {a} : GHC.Base.Monoid (First
-                                                                          a) := fun _ k =>
-    k {|GHC.Base.mappend__ := instance_GHC_Base_Monoid__First_a__mappend ;
-      GHC.Base.mconcat__ := instance_GHC_Base_Monoid__First_a__mconcat ;
-      GHC.Base.mempty__ := instance_GHC_Base_Monoid__First_a__mempty |}.
+Program Instance instance_GHC_Base_Monoid__Data_Monoid_First_a_ {a}
+  : GHC.Base.Monoid (First a) := fun _ k =>
+    k
+    {|GHC.Base.mappend__ := instance_GHC_Base_Monoid__Data_Monoid_First_a__mappend ;
+    GHC.Base.mconcat__ := instance_GHC_Base_Monoid__Data_Monoid_First_a__mconcat ;
+    GHC.Base.mempty__ := instance_GHC_Base_Monoid__Data_Monoid_First_a__mempty |}.
 
-Local Definition instance_GHC_Base_Monoid__Last_a__mappend {inst_a} : (Last
-                                                                      inst_a) -> (Last inst_a) -> (Last inst_a) :=
+Local Definition instance_GHC_Base_Monoid__Data_Monoid_Last_a__mappend {inst_a}
+    : (Last inst_a) -> (Last inst_a) -> (Last inst_a) :=
   fun arg_162__ arg_163__ =>
     match arg_162__ , arg_163__ with
       | l , Mk_Last None => l
       | _ , r => r
     end.
 
-Local Definition instance_GHC_Base_Monoid__Last_a__mempty {inst_a} : (Last
-                                                                     inst_a) :=
+Local Definition instance_GHC_Base_Monoid__Data_Monoid_Last_a__mempty {inst_a}
+    : (Last inst_a) :=
   Mk_Last None.
 
-Local Definition instance_GHC_Base_Monoid__Last_a__mconcat {inst_a} : list (Last
-                                                                           inst_a) -> (Last inst_a) :=
-  GHC.Base.foldr instance_GHC_Base_Monoid__Last_a__mappend
-                 instance_GHC_Base_Monoid__Last_a__mempty.
+Local Definition instance_GHC_Base_Monoid__Data_Monoid_Last_a__mconcat {inst_a}
+    : list (Last inst_a) -> (Last inst_a) :=
+  GHC.Base.foldr instance_GHC_Base_Monoid__Data_Monoid_Last_a__mappend
+                 instance_GHC_Base_Monoid__Data_Monoid_Last_a__mempty.
 
-Program Instance instance_GHC_Base_Monoid__Last_a_ {a} : GHC.Base.Monoid (Last
-                                                                         a) := fun _ k =>
-    k {|GHC.Base.mappend__ := instance_GHC_Base_Monoid__Last_a__mappend ;
-      GHC.Base.mconcat__ := instance_GHC_Base_Monoid__Last_a__mconcat ;
-      GHC.Base.mempty__ := instance_GHC_Base_Monoid__Last_a__mempty |}.
+Program Instance instance_GHC_Base_Monoid__Data_Monoid_Last_a_ {a}
+  : GHC.Base.Monoid (Last a) := fun _ k =>
+    k
+    {|GHC.Base.mappend__ := instance_GHC_Base_Monoid__Data_Monoid_Last_a__mappend ;
+    GHC.Base.mconcat__ := instance_GHC_Base_Monoid__Data_Monoid_Last_a__mconcat ;
+    GHC.Base.mempty__ := instance_GHC_Base_Monoid__Data_Monoid_Last_a__mempty |}.
 
-Local Definition instance_forall___GHC_Base_Alternative_f___GHC_Base_Monoid__Alt_f_a__mappend {inst_f}
-                                                                                              {inst_a} `{_
-                                                                                                : GHC.Base.Alternative
-                                                                                                  inst_f} : Alt inst_f
-                                                                                                                inst_a -> Alt
-                                                                                                            inst_f
-                                                                                                            inst_a -> Alt
-                                                                                                            inst_f
-                                                                                                            inst_a :=
+Local Definition instance_forall___GHC_Base_Alternative_f___GHC_Base_Monoid__Data_Monoid_Alt_f_a__mappend {inst_f}
+                                                                                                          {inst_a} `{_
+                                                                                                            : GHC.Base.Alternative
+                                                                                                              inst_f}
+    : Alt inst_f inst_a -> Alt inst_f inst_a -> Alt inst_f inst_a :=
   GHC.Prim.coerce GHC.Base.op_zlzbzg__.
 
-Local Definition instance_forall___GHC_Base_Alternative_f___GHC_Base_Monoid__Alt_f_a__mempty {inst_f}
-                                                                                             {inst_a}
-                                                                                             `{GHC.Base.Alternative
-                                                                                             inst_f} : (Alt inst_f
-                                                                                                       inst_a) :=
+Local Definition instance_forall___GHC_Base_Alternative_f___GHC_Base_Monoid__Data_Monoid_Alt_f_a__mempty {inst_f}
+                                                                                                         {inst_a}
+                                                                                                         `{GHC.Base.Alternative
+                                                                                                         inst_f} : (Alt
+                                                                                                                   inst_f
+                                                                                                                   inst_a) :=
   Mk_Alt GHC.Base.empty.
 
-Local Definition instance_forall___GHC_Base_Alternative_f___GHC_Base_Monoid__Alt_f_a__mconcat {inst_f}
-                                                                                              {inst_a}
-                                                                                              `{GHC.Base.Alternative
-                                                                                              inst_f} : list (Alt inst_f
-                                                                                                             inst_a) -> (Alt
-                                                                                                        inst_f
-                                                                                                        inst_a) :=
+Local Definition instance_forall___GHC_Base_Alternative_f___GHC_Base_Monoid__Data_Monoid_Alt_f_a__mconcat {inst_f}
+                                                                                                          {inst_a}
+                                                                                                          `{GHC.Base.Alternative
+                                                                                                          inst_f} : list
+                                                                                                                    (Alt
+                                                                                                                    inst_f
+                                                                                                                    inst_a) -> (Alt
+                                                                                                                    inst_f
+                                                                                                                    inst_a) :=
   GHC.Base.foldr
-  instance_forall___GHC_Base_Alternative_f___GHC_Base_Monoid__Alt_f_a__mappend
-  instance_forall___GHC_Base_Alternative_f___GHC_Base_Monoid__Alt_f_a__mempty.
+  instance_forall___GHC_Base_Alternative_f___GHC_Base_Monoid__Data_Monoid_Alt_f_a__mappend
+  instance_forall___GHC_Base_Alternative_f___GHC_Base_Monoid__Data_Monoid_Alt_f_a__mempty.
 
-Program Instance instance_forall___GHC_Base_Alternative_f___GHC_Base_Monoid__Alt_f_a_ {f}
-                                                                                      {a} `{GHC.Base.Alternative f}
-  : GHC.Base.Monoid (Alt f a) := fun _ k =>
+Program Instance instance_forall___GHC_Base_Alternative_f___GHC_Base_Monoid__Data_Monoid_Alt_f_a_ {f}
+                                                                                                  {a}
+                                                                                                  `{GHC.Base.Alternative
+                                                                                                  f} : GHC.Base.Monoid
+                                                                                                       (Alt f a) :=
+  fun _ k =>
     k
-    {|GHC.Base.mappend__ := instance_forall___GHC_Base_Alternative_f___GHC_Base_Monoid__Alt_f_a__mappend ;
-    GHC.Base.mconcat__ := instance_forall___GHC_Base_Alternative_f___GHC_Base_Monoid__Alt_f_a__mconcat ;
-    GHC.Base.mempty__ := instance_forall___GHC_Base_Alternative_f___GHC_Base_Monoid__Alt_f_a__mempty |}.
+    {|GHC.Base.mappend__ := instance_forall___GHC_Base_Alternative_f___GHC_Base_Monoid__Data_Monoid_Alt_f_a__mappend ;
+    GHC.Base.mconcat__ := instance_forall___GHC_Base_Alternative_f___GHC_Base_Monoid__Data_Monoid_Alt_f_a__mconcat ;
+    GHC.Base.mempty__ := instance_forall___GHC_Base_Alternative_f___GHC_Base_Monoid__Data_Monoid_Alt_f_a__mempty |}.
 
-Local Definition instance_forall___GHC_Base_Functor_f___GHC_Base_Functor__Alt_f__fmap {inst_f}
-                                                                                      `{GHC.Base.Functor inst_f}
-    : forall {a} {b}, (a -> b) -> Alt inst_f a -> Alt inst_f b :=
+Local Definition instance_forall___GHC_Base_Functor_f___GHC_Base_Functor__Data_Monoid_Alt_f__fmap {inst_f}
+                                                                                                  `{GHC.Base.Functor
+                                                                                                  inst_f} : forall {a}
+                                                                                                                   {b},
+                                                                                                              (a -> b) -> Alt
+                                                                                                              inst_f
+                                                                                                              a -> Alt
+                                                                                                              inst_f
+                                                                                                              b :=
   fun {a} {b} => GHC.Prim.coerce GHC.Base.fmap.
 
-Local Definition instance_forall___GHC_Base_Functor_f___GHC_Base_Functor__Alt_f__op_zlzd__ {inst_f}
-                                                                                           `{GHC.Base.Functor inst_f}
+Local Definition instance_forall___GHC_Base_Functor_f___GHC_Base_Functor__Data_Monoid_Alt_f__op_zlzd__ {inst_f}
+                                                                                                       `{GHC.Base.Functor
+                                                                                                       inst_f}
     : forall {a} {b}, a -> Alt inst_f b -> Alt inst_f a :=
   fun {a} {b} => GHC.Prim.coerce GHC.Base.op_zlzd__.
 
-Program Instance instance_forall___GHC_Base_Functor_f___GHC_Base_Functor__Alt_f_ {f}
-                                                                                 `{GHC.Base.Functor f}
+Program Instance instance_forall___GHC_Base_Functor_f___GHC_Base_Functor__Data_Monoid_Alt_f_ {f}
+                                                                                             `{GHC.Base.Functor f}
   : GHC.Base.Functor (Alt f) := fun _ k =>
     k {|GHC.Base.op_zlzd____ := fun {a} {b} =>
-        instance_forall___GHC_Base_Functor_f___GHC_Base_Functor__Alt_f__op_zlzd__ ;
+        instance_forall___GHC_Base_Functor_f___GHC_Base_Functor__Data_Monoid_Alt_f__op_zlzd__ ;
       GHC.Base.fmap__ := fun {a} {b} =>
-        instance_forall___GHC_Base_Functor_f___GHC_Base_Functor__Alt_f__fmap |}.
+        instance_forall___GHC_Base_Functor_f___GHC_Base_Functor__Data_Monoid_Alt_f__fmap |}.
 
 (* Translating `instance forall {f}, forall `{GHC.Base.Alternative f},
-   GHC.Base.Alternative (Alt f)' failed: OOPS! Cannot find information for class
-   "GHC.Base.Alternative" unsupported *)
+   GHC.Base.Alternative (Data.Monoid.Alt f)' failed: OOPS! Cannot find information
+   for class Qualified_ "GHC.Base" "Alternative" unsupported *)
 
-Local Definition instance_forall___GHC_Base_Applicative_f___GHC_Base_Applicative__Alt_f__op_zlztzg__ {inst_f}
-                                                                                                     `{GHC.Base.Applicative
-                                                                                                     inst_f}
+Local Definition instance_forall___GHC_Base_Applicative_f___GHC_Base_Applicative__Data_Monoid_Alt_f__op_zlztzg__ {inst_f}
+                                                                                                                 `{GHC.Base.Applicative
+                                                                                                                 inst_f}
     : forall {a} {b}, Alt inst_f (a -> b) -> Alt inst_f a -> Alt inst_f b :=
   fun {a} {b} => GHC.Prim.coerce GHC.Base.op_zlztzg__.
 
-Local Definition instance_forall___GHC_Base_Applicative_f___GHC_Base_Applicative__Alt_f__op_ztzg__ {inst_f}
-                                                                                                   `{GHC.Base.Applicative
+Local Definition instance_forall___GHC_Base_Applicative_f___GHC_Base_Applicative__Data_Monoid_Alt_f__op_ztzg__ {inst_f}
+                                                                                                               `{GHC.Base.Applicative
+                                                                                                               inst_f}
+    : forall {a} {b}, Alt inst_f a -> Alt inst_f b -> Alt inst_f b :=
+  fun {a} {b} => GHC.Prim.coerce GHC.Base.op_ztzg__.
+
+Local Definition instance_forall___GHC_Base_Applicative_f___GHC_Base_Applicative__Data_Monoid_Alt_f__pure {inst_f}
+                                                                                                          `{GHC.Base.Applicative
+                                                                                                          inst_f}
+    : forall {a}, a -> Alt inst_f a :=
+  fun {a} => GHC.Prim.coerce GHC.Base.pure.
+
+Program Instance instance_forall___GHC_Base_Applicative_f___GHC_Base_Applicative__Data_Monoid_Alt_f_ {f}
+                                                                                                     `{GHC.Base.Applicative
+                                                                                                     f}
+  : GHC.Base.Applicative (Alt f) := fun _ k =>
+    k {|GHC.Base.op_ztzg____ := fun {a} {b} =>
+        instance_forall___GHC_Base_Applicative_f___GHC_Base_Applicative__Data_Monoid_Alt_f__op_ztzg__ ;
+      GHC.Base.op_zlztzg____ := fun {a} {b} =>
+        instance_forall___GHC_Base_Applicative_f___GHC_Base_Applicative__Data_Monoid_Alt_f__op_zlztzg__ ;
+      GHC.Base.pure__ := fun {a} =>
+        instance_forall___GHC_Base_Applicative_f___GHC_Base_Applicative__Data_Monoid_Alt_f__pure |}.
+
+(* Translating `instance forall {f}, forall `{GHC.Base.MonadPlus f},
+   GHC.Base.MonadPlus (Data.Monoid.Alt f)' failed: OOPS! Cannot find information
+   for class Qualified_ "GHC.Base" "MonadPlus" unsupported *)
+
+Local Definition instance_forall___GHC_Base_Monad_f___GHC_Base_Monad__Data_Monoid_Alt_f__op_zgzg__ {inst_f}
+                                                                                                   `{GHC.Base.Monad
                                                                                                    inst_f} : forall {a}
                                                                                                                     {b},
                                                                                                                Alt
@@ -775,757 +835,750 @@ Local Definition instance_forall___GHC_Base_Applicative_f___GHC_Base_Applicative
                                                                                                                b -> Alt
                                                                                                                inst_f
                                                                                                                b :=
-  fun {a} {b} => GHC.Prim.coerce GHC.Base.op_ztzg__.
-
-Local Definition instance_forall___GHC_Base_Applicative_f___GHC_Base_Applicative__Alt_f__pure {inst_f}
-                                                                                              `{GHC.Base.Applicative
-                                                                                              inst_f} : forall {a},
-                                                                                                          a -> Alt
-                                                                                                          inst_f a :=
-  fun {a} => GHC.Prim.coerce GHC.Base.pure.
-
-Program Instance instance_forall___GHC_Base_Applicative_f___GHC_Base_Applicative__Alt_f_ {f}
-                                                                                         `{GHC.Base.Applicative f}
-  : GHC.Base.Applicative (Alt f) := fun _ k =>
-    k {|GHC.Base.op_ztzg____ := fun {a} {b} =>
-        instance_forall___GHC_Base_Applicative_f___GHC_Base_Applicative__Alt_f__op_ztzg__ ;
-      GHC.Base.op_zlztzg____ := fun {a} {b} =>
-        instance_forall___GHC_Base_Applicative_f___GHC_Base_Applicative__Alt_f__op_zlztzg__ ;
-      GHC.Base.pure__ := fun {a} =>
-        instance_forall___GHC_Base_Applicative_f___GHC_Base_Applicative__Alt_f__pure |}.
-
-(* Translating `instance forall {f}, forall `{GHC.Base.MonadPlus f},
-   GHC.Base.MonadPlus (Alt f)' failed: OOPS! Cannot find information for class
-   "GHC.Base.MonadPlus" unsupported *)
-
-Local Definition instance_forall___GHC_Base_Monad_f___GHC_Base_Monad__Alt_f__op_zgzg__ {inst_f}
-                                                                                       `{GHC.Base.Monad inst_f}
-    : forall {a} {b}, Alt inst_f a -> Alt inst_f b -> Alt inst_f b :=
   fun {a} {b} => GHC.Prim.coerce GHC.Base.op_zgzg__.
 
-Local Definition instance_forall___GHC_Base_Monad_f___GHC_Base_Monad__Alt_f__op_zgzgze__ {inst_f}
-                                                                                         `{GHC.Base.Monad inst_f}
+Local Definition instance_forall___GHC_Base_Monad_f___GHC_Base_Monad__Data_Monoid_Alt_f__op_zgzgze__ {inst_f}
+                                                                                                     `{GHC.Base.Monad
+                                                                                                     inst_f}
     : forall {a} {b}, Alt inst_f a -> (a -> Alt inst_f b) -> Alt inst_f b :=
   fun {a} {b} => GHC.Prim.coerce GHC.Base.op_zgzgze__.
 
-Local Definition instance_forall___GHC_Base_Monad_f___GHC_Base_Monad__Alt_f__return_ {inst_f}
-                                                                                     `{GHC.Base.Monad inst_f}
-    : forall {a}, a -> Alt inst_f a :=
+Local Definition instance_forall___GHC_Base_Monad_f___GHC_Base_Monad__Data_Monoid_Alt_f__return_ {inst_f}
+                                                                                                 `{GHC.Base.Monad
+                                                                                                 inst_f} : forall {a},
+                                                                                                             a -> Alt
+                                                                                                             inst_f a :=
   fun {a} => GHC.Prim.coerce GHC.Base.return_.
 
-Program Instance instance_forall___GHC_Base_Monad_f___GHC_Base_Monad__Alt_f_ {f}
-                                                                             `{GHC.Base.Monad f} : GHC.Base.Monad (Alt
-                                                                                                                  f) :=
-  fun _ k =>
+Program Instance instance_forall___GHC_Base_Monad_f___GHC_Base_Monad__Data_Monoid_Alt_f_ {f}
+                                                                                         `{GHC.Base.Monad f}
+  : GHC.Base.Monad (Alt f) := fun _ k =>
     k {|GHC.Base.op_zgzg____ := fun {a} {b} =>
-        instance_forall___GHC_Base_Monad_f___GHC_Base_Monad__Alt_f__op_zgzg__ ;
+        instance_forall___GHC_Base_Monad_f___GHC_Base_Monad__Data_Monoid_Alt_f__op_zgzg__ ;
       GHC.Base.op_zgzgze____ := fun {a} {b} =>
-        instance_forall___GHC_Base_Monad_f___GHC_Base_Monad__Alt_f__op_zgzgze__ ;
+        instance_forall___GHC_Base_Monad_f___GHC_Base_Monad__Data_Monoid_Alt_f__op_zgzgze__ ;
       GHC.Base.return___ := fun {a} =>
-        instance_forall___GHC_Base_Monad_f___GHC_Base_Monad__Alt_f__return_ |}.
+        instance_forall___GHC_Base_Monad_f___GHC_Base_Monad__Data_Monoid_Alt_f__return_ |}.
 
 (* Translating `instance forall {k} {f} {a}, forall `{GHC.Enum.Enum (f a)},
-   GHC.Enum.Enum (Alt f a)' failed: OOPS! Cannot find information for class
-   "GHC.Enum.Enum" unsupported *)
+   GHC.Enum.Enum (Data.Monoid.Alt f a)' failed: OOPS! Cannot find information for
+   class Qualified_ "GHC.Enum" "Enum" unsupported *)
 
 (* Translating `instance forall {k} {f} {a}, forall `{GHC.Num.Num (f a)},
-   GHC.Num.Num (Alt f a)' failed: OOPS! Cannot find information for class
-   "GHC.Num.Num" unsupported *)
+   GHC.Num.Num (Data.Monoid.Alt f a)' failed: OOPS! Cannot find information for
+   class Qualified_ "GHC.Num" "Num" unsupported *)
 
 (* Skipping instance
-   instance_forall___GHC_Base_Ord__f_a____GHC_Base_Ord__Alt_f_a_ *)
+   instance_forall___GHC_Base_Ord__f_a____GHC_Base_Ord__Data_Monoid_Alt_f_a_ *)
 
 (* Skipping instance
-   instance_forall___GHC_Base_Eq___f_a____GHC_Base_Eq___Alt_f_a_ *)
+   instance_forall___GHC_Base_Eq___f_a____GHC_Base_Eq___Data_Monoid_Alt_f_a_ *)
 
 (* Skipping instance
-   instance_forall___GHC_Show_Show__f_a____GHC_Show_Show__Alt_f_a_ *)
+   instance_forall___GHC_Show_Show__f_a____GHC_Show_Show__Data_Monoid_Alt_f_a_ *)
 
 (* Skipping instance
-   instance_forall___GHC_Read_Read__f_a____GHC_Read_Read__Alt_f_a_ *)
+   instance_forall___GHC_Read_Read__f_a____GHC_Read_Read__Data_Monoid_Alt_f_a_ *)
 
-(* Translating `instance forall {f}, GHC.Generics.Generic1 (Alt f)' failed:
-   OOPS! Cannot find information for class "GHC.Generics.Generic1" unsupported *)
+(* Translating `instance forall {f}, GHC.Generics.Generic1 (Data.Monoid.Alt f)'
+   failed: OOPS! Cannot find information for class Qualified_ "GHC.Generics"
+   "Generic1" unsupported *)
 
-(* Translating `instance forall {k} {f} {a}, GHC.Generics.Generic (Alt f a)'
-   failed: OOPS! Cannot find information for class "GHC.Generics.Generic"
+(* Translating `instance forall {k} {f} {a}, GHC.Generics.Generic
+   (Data.Monoid.Alt f a)' failed: OOPS! Cannot find information for class
+   Qualified_ "GHC.Generics" "Generic" unsupported *)
+
+Local Definition instance_GHC_Base_Monad_Data_Monoid_Last_op_zgzg__ : forall {a}
+                                                                             {b},
+                                                                        Last a -> Last b -> Last b :=
+  fun {a} {b} => GHC.Prim.coerce GHC.Base.op_zgzg__.
+
+Local Definition instance_GHC_Base_Monad_Data_Monoid_Last_op_zgzgze__
+    : forall {a} {b}, Last a -> (a -> Last b) -> Last b :=
+  fun {a} {b} => GHC.Prim.coerce GHC.Base.op_zgzgze__.
+
+Local Definition instance_GHC_Base_Monad_Data_Monoid_Last_return_ : forall {a},
+                                                                      a -> Last a :=
+  fun {a} => GHC.Prim.coerce GHC.Base.return_.
+
+Local Definition instance_GHC_Base_Applicative_Data_Monoid_Last_op_zlztzg__
+    : forall {a} {b}, Last (a -> b) -> Last a -> Last b :=
+  fun {a} {b} => GHC.Prim.coerce GHC.Base.op_zlztzg__.
+
+Local Definition instance_GHC_Base_Applicative_Data_Monoid_Last_op_ztzg__
+    : forall {a} {b}, Last a -> Last b -> Last b :=
+  fun {a} {b} => GHC.Prim.coerce GHC.Base.op_ztzg__.
+
+Local Definition instance_GHC_Base_Applicative_Data_Monoid_Last_pure
+    : forall {a}, a -> Last a :=
+  fun {a} => GHC.Prim.coerce GHC.Base.pure.
+
+Local Definition instance_GHC_Base_Functor_Data_Monoid_Last_fmap : forall {a}
+                                                                          {b},
+                                                                     (a -> b) -> Last a -> Last b :=
+  fun {a} {b} => GHC.Prim.coerce GHC.Base.fmap.
+
+Local Definition instance_GHC_Base_Functor_Data_Monoid_Last_op_zlzd__
+    : forall {a} {b}, a -> Last b -> Last a :=
+  fun {a} {b} => GHC.Prim.coerce GHC.Base.op_zlzd__.
+
+Program Instance instance_GHC_Base_Functor_Data_Monoid_Last : GHC.Base.Functor
+                                                              Last := fun _ k =>
+    k {|GHC.Base.op_zlzd____ := fun {a} {b} =>
+        instance_GHC_Base_Functor_Data_Monoid_Last_op_zlzd__ ;
+      GHC.Base.fmap__ := fun {a} {b} =>
+        instance_GHC_Base_Functor_Data_Monoid_Last_fmap |}.
+
+Program Instance instance_GHC_Base_Applicative_Data_Monoid_Last
+  : GHC.Base.Applicative Last := fun _ k =>
+    k {|GHC.Base.op_ztzg____ := fun {a} {b} =>
+        instance_GHC_Base_Applicative_Data_Monoid_Last_op_ztzg__ ;
+      GHC.Base.op_zlztzg____ := fun {a} {b} =>
+        instance_GHC_Base_Applicative_Data_Monoid_Last_op_zlztzg__ ;
+      GHC.Base.pure__ := fun {a} =>
+        instance_GHC_Base_Applicative_Data_Monoid_Last_pure |}.
+
+Program Instance instance_GHC_Base_Monad_Data_Monoid_Last : GHC.Base.Monad
+                                                            Last := fun _ k =>
+    k {|GHC.Base.op_zgzg____ := fun {a} {b} =>
+        instance_GHC_Base_Monad_Data_Monoid_Last_op_zgzg__ ;
+      GHC.Base.op_zgzgze____ := fun {a} {b} =>
+        instance_GHC_Base_Monad_Data_Monoid_Last_op_zgzgze__ ;
+      GHC.Base.return___ := fun {a} =>
+        instance_GHC_Base_Monad_Data_Monoid_Last_return_ |}.
+
+(* Translating `instance GHC.Generics.Generic1 Data.Monoid.Last' failed: OOPS!
+   Cannot find information for class Qualified_ "GHC.Generics" "Generic1"
    unsupported *)
 
-Local Definition instance_GHC_Base_Monad_Last_op_zgzg__ : forall {a} {b},
-                                                            Last a -> Last b -> Last b :=
-  fun {a} {b} => GHC.Prim.coerce GHC.Base.op_zgzg__.
-
-Local Definition instance_GHC_Base_Monad_Last_op_zgzgze__ : forall {a} {b},
-                                                              Last a -> (a -> Last b) -> Last b :=
-  fun {a} {b} => GHC.Prim.coerce GHC.Base.op_zgzgze__.
-
-Local Definition instance_GHC_Base_Monad_Last_return_ : forall {a},
-                                                          a -> Last a :=
-  fun {a} => GHC.Prim.coerce GHC.Base.return_.
-
-Local Definition instance_GHC_Base_Applicative_Last_op_zlztzg__ : forall {a}
-                                                                         {b},
-                                                                    Last (a -> b) -> Last a -> Last b :=
-  fun {a} {b} => GHC.Prim.coerce GHC.Base.op_zlztzg__.
-
-Local Definition instance_GHC_Base_Applicative_Last_op_ztzg__ : forall {a} {b},
-                                                                  Last a -> Last b -> Last b :=
-  fun {a} {b} => GHC.Prim.coerce GHC.Base.op_ztzg__.
-
-Local Definition instance_GHC_Base_Applicative_Last_pure : forall {a},
-                                                             a -> Last a :=
-  fun {a} => GHC.Prim.coerce GHC.Base.pure.
-
-Local Definition instance_GHC_Base_Functor_Last_fmap : forall {a} {b},
-                                                         (a -> b) -> Last a -> Last b :=
-  fun {a} {b} => GHC.Prim.coerce GHC.Base.fmap.
-
-Local Definition instance_GHC_Base_Functor_Last_op_zlzd__ : forall {a} {b},
-                                                              a -> Last b -> Last a :=
-  fun {a} {b} => GHC.Prim.coerce GHC.Base.op_zlzd__.
-
-Program Instance instance_GHC_Base_Functor_Last : GHC.Base.Functor Last := fun _
-                                                                               k =>
-    k {|GHC.Base.op_zlzd____ := fun {a} {b} =>
-        instance_GHC_Base_Functor_Last_op_zlzd__ ;
-      GHC.Base.fmap__ := fun {a} {b} => instance_GHC_Base_Functor_Last_fmap |}.
-
-Program Instance instance_GHC_Base_Applicative_Last : GHC.Base.Applicative
-                                                      Last := fun _ k =>
-    k {|GHC.Base.op_ztzg____ := fun {a} {b} =>
-        instance_GHC_Base_Applicative_Last_op_ztzg__ ;
-      GHC.Base.op_zlztzg____ := fun {a} {b} =>
-        instance_GHC_Base_Applicative_Last_op_zlztzg__ ;
-      GHC.Base.pure__ := fun {a} => instance_GHC_Base_Applicative_Last_pure |}.
-
-Program Instance instance_GHC_Base_Monad_Last : GHC.Base.Monad Last := fun _
-                                                                           k =>
-    k {|GHC.Base.op_zgzg____ := fun {a} {b} =>
-        instance_GHC_Base_Monad_Last_op_zgzg__ ;
-      GHC.Base.op_zgzgze____ := fun {a} {b} =>
-        instance_GHC_Base_Monad_Last_op_zgzgze__ ;
-      GHC.Base.return___ := fun {a} => instance_GHC_Base_Monad_Last_return_ |}.
-
-(* Translating `instance GHC.Generics.Generic1 Last' failed: OOPS! Cannot find
-   information for class "GHC.Generics.Generic1" unsupported *)
-
-(* Translating `instance forall {a}, GHC.Generics.Generic (Last a)' failed:
-   OOPS! Cannot find information for class "GHC.Generics.Generic" unsupported *)
+(* Translating `instance forall {a}, GHC.Generics.Generic (Data.Monoid.Last a)'
+   failed: OOPS! Cannot find information for class Qualified_ "GHC.Generics"
+   "Generic" unsupported *)
 
 (* Skipping instance
-   instance_forall___GHC_Show_Show_a___GHC_Show_Show__Last_a_ *)
+   instance_forall___GHC_Show_Show_a___GHC_Show_Show__Data_Monoid_Last_a_ *)
 
 (* Skipping instance
-   instance_forall___GHC_Read_Read_a___GHC_Read_Read__Last_a_ *)
+   instance_forall___GHC_Read_Read_a___GHC_Read_Read__Data_Monoid_Last_a_ *)
 
-Local Definition instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Last_a__compare {inst_a}
-                                                                                  `{GHC.Base.Ord inst_a} : Last
-                                                                                                           inst_a -> Last
-                                                                                                           inst_a -> comparison :=
+Local Definition instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Data_Monoid_Last_a__compare {inst_a}
+                                                                                              `{GHC.Base.Ord inst_a}
+    : Last inst_a -> Last inst_a -> comparison :=
   GHC.Prim.coerce GHC.Base.compare.
 
-Local Definition instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Last_a__max {inst_a}
-                                                                              `{GHC.Base.Ord inst_a} : Last
-                                                                                                       inst_a -> Last
-                                                                                                       inst_a -> Last
-                                                                                                       inst_a :=
+Local Definition instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Data_Monoid_Last_a__max {inst_a}
+                                                                                          `{GHC.Base.Ord inst_a} : Last
+                                                                                                                   inst_a -> Last
+                                                                                                                   inst_a -> Last
+                                                                                                                   inst_a :=
   GHC.Prim.coerce GHC.Base.max.
 
-Local Definition instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Last_a__min {inst_a}
-                                                                              `{GHC.Base.Ord inst_a} : Last
-                                                                                                       inst_a -> Last
-                                                                                                       inst_a -> Last
-                                                                                                       inst_a :=
+Local Definition instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Data_Monoid_Last_a__min {inst_a}
+                                                                                          `{GHC.Base.Ord inst_a} : Last
+                                                                                                                   inst_a -> Last
+                                                                                                                   inst_a -> Last
+                                                                                                                   inst_a :=
   GHC.Prim.coerce GHC.Base.min.
 
-Local Definition instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Last_a__op_zg__ {inst_a}
-                                                                                  `{GHC.Base.Ord inst_a} : Last
-                                                                                                           inst_a -> Last
-                                                                                                           inst_a -> bool :=
+Local Definition instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Data_Monoid_Last_a__op_zg__ {inst_a}
+                                                                                              `{GHC.Base.Ord inst_a}
+    : Last inst_a -> Last inst_a -> bool :=
   GHC.Prim.coerce GHC.Base.op_zg__.
 
-Local Definition instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Last_a__op_zgze__ {inst_a}
-                                                                                    `{GHC.Base.Ord inst_a} : Last
-                                                                                                             inst_a -> Last
-                                                                                                             inst_a -> bool :=
+Local Definition instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Data_Monoid_Last_a__op_zgze__ {inst_a}
+                                                                                                `{GHC.Base.Ord inst_a}
+    : Last inst_a -> Last inst_a -> bool :=
   GHC.Prim.coerce GHC.Base.op_zgze__.
 
-Local Definition instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Last_a__op_zl__ {inst_a}
-                                                                                  `{GHC.Base.Ord inst_a} : Last
-                                                                                                           inst_a -> Last
-                                                                                                           inst_a -> bool :=
+Local Definition instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Data_Monoid_Last_a__op_zl__ {inst_a}
+                                                                                              `{GHC.Base.Ord inst_a}
+    : Last inst_a -> Last inst_a -> bool :=
   GHC.Prim.coerce GHC.Base.op_zl__.
 
-Local Definition instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Last_a__op_zlze__ {inst_a}
-                                                                                    `{GHC.Base.Ord inst_a} : Last
-                                                                                                             inst_a -> Last
-                                                                                                             inst_a -> bool :=
+Local Definition instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Data_Monoid_Last_a__op_zlze__ {inst_a}
+                                                                                                `{GHC.Base.Ord inst_a}
+    : Last inst_a -> Last inst_a -> bool :=
   GHC.Prim.coerce GHC.Base.op_zlze__.
 
-Local Definition instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___Last_a__op_zeze__ {inst_a}
-                                                                                    `{GHC.Base.Eq_ inst_a} : Last
-                                                                                                             inst_a -> Last
-                                                                                                             inst_a -> bool :=
+Local Definition instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___Data_Monoid_Last_a__op_zeze__ {inst_a}
+                                                                                                `{GHC.Base.Eq_ inst_a}
+    : Last inst_a -> Last inst_a -> bool :=
   GHC.Prim.coerce GHC.Base.op_zeze__.
 
-Local Definition instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___Last_a__op_zsze__ {inst_a}
-                                                                                    `{GHC.Base.Eq_ inst_a} : Last
-                                                                                                             inst_a -> Last
-                                                                                                             inst_a -> bool :=
+Local Definition instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___Data_Monoid_Last_a__op_zsze__ {inst_a}
+                                                                                                `{GHC.Base.Eq_ inst_a}
+    : Last inst_a -> Last inst_a -> bool :=
   GHC.Prim.coerce GHC.Base.op_zsze__.
 
-Program Instance instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___Last_a_ {a}
-                                                                          `{GHC.Base.Eq_ a} : GHC.Base.Eq_ (Last a) :=
+Program Instance instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___Data_Monoid_Last_a_ {a}
+                                                                                      `{GHC.Base.Eq_ a} : GHC.Base.Eq_
+                                                                                                          (Last a) :=
   fun _ k =>
     k
-    {|GHC.Base.op_zeze____ := instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___Last_a__op_zeze__ ;
-    GHC.Base.op_zsze____ := instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___Last_a__op_zsze__ |}.
+    {|GHC.Base.op_zeze____ := instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___Data_Monoid_Last_a__op_zeze__ ;
+    GHC.Base.op_zsze____ := instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___Data_Monoid_Last_a__op_zsze__ |}.
 
-Program Instance instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Last_a_ {a}
-                                                                          `{GHC.Base.Ord a} : GHC.Base.Ord (Last a) :=
+Program Instance instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Data_Monoid_Last_a_ {a}
+                                                                                      `{GHC.Base.Ord a} : GHC.Base.Ord
+                                                                                                          (Last a) :=
   fun _ k =>
     k
-    {|GHC.Base.op_zl____ := instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Last_a__op_zl__ ;
-    GHC.Base.op_zlze____ := instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Last_a__op_zlze__ ;
-    GHC.Base.op_zg____ := instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Last_a__op_zg__ ;
-    GHC.Base.op_zgze____ := instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Last_a__op_zgze__ ;
-    GHC.Base.compare__ := instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Last_a__compare ;
-    GHC.Base.max__ := instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Last_a__max ;
-    GHC.Base.min__ := instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Last_a__min |}.
+    {|GHC.Base.op_zl____ := instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Data_Monoid_Last_a__op_zl__ ;
+    GHC.Base.op_zlze____ := instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Data_Monoid_Last_a__op_zlze__ ;
+    GHC.Base.op_zg____ := instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Data_Monoid_Last_a__op_zg__ ;
+    GHC.Base.op_zgze____ := instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Data_Monoid_Last_a__op_zgze__ ;
+    GHC.Base.compare__ := instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Data_Monoid_Last_a__compare ;
+    GHC.Base.max__ := instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Data_Monoid_Last_a__max ;
+    GHC.Base.min__ := instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Data_Monoid_Last_a__min |}.
 
-Local Definition instance_GHC_Base_Monad_First_op_zgzg__ : forall {a} {b},
-                                                             First a -> First b -> First b :=
+Local Definition instance_GHC_Base_Monad_Data_Monoid_First_op_zgzg__
+    : forall {a} {b}, First a -> First b -> First b :=
   fun {a} {b} => GHC.Prim.coerce GHC.Base.op_zgzg__.
 
-Local Definition instance_GHC_Base_Monad_First_op_zgzgze__ : forall {a} {b},
-                                                               First a -> (a -> First b) -> First b :=
+Local Definition instance_GHC_Base_Monad_Data_Monoid_First_op_zgzgze__
+    : forall {a} {b}, First a -> (a -> First b) -> First b :=
   fun {a} {b} => GHC.Prim.coerce GHC.Base.op_zgzgze__.
 
-Local Definition instance_GHC_Base_Monad_First_return_ : forall {a},
-                                                           a -> First a :=
+Local Definition instance_GHC_Base_Monad_Data_Monoid_First_return_ : forall {a},
+                                                                       a -> First a :=
   fun {a} => GHC.Prim.coerce GHC.Base.return_.
 
-Local Definition instance_GHC_Base_Applicative_First_op_zlztzg__ : forall {a}
-                                                                          {b},
-                                                                     First (a -> b) -> First a -> First b :=
+Local Definition instance_GHC_Base_Applicative_Data_Monoid_First_op_zlztzg__
+    : forall {a} {b}, First (a -> b) -> First a -> First b :=
   fun {a} {b} => GHC.Prim.coerce GHC.Base.op_zlztzg__.
 
-Local Definition instance_GHC_Base_Applicative_First_op_ztzg__ : forall {a} {b},
-                                                                   First a -> First b -> First b :=
+Local Definition instance_GHC_Base_Applicative_Data_Monoid_First_op_ztzg__
+    : forall {a} {b}, First a -> First b -> First b :=
   fun {a} {b} => GHC.Prim.coerce GHC.Base.op_ztzg__.
 
-Local Definition instance_GHC_Base_Applicative_First_pure : forall {a},
-                                                              a -> First a :=
+Local Definition instance_GHC_Base_Applicative_Data_Monoid_First_pure
+    : forall {a}, a -> First a :=
   fun {a} => GHC.Prim.coerce GHC.Base.pure.
 
-Local Definition instance_GHC_Base_Functor_First_fmap : forall {a} {b},
-                                                          (a -> b) -> First a -> First b :=
+Local Definition instance_GHC_Base_Functor_Data_Monoid_First_fmap : forall {a}
+                                                                           {b},
+                                                                      (a -> b) -> First a -> First b :=
   fun {a} {b} => GHC.Prim.coerce GHC.Base.fmap.
 
-Local Definition instance_GHC_Base_Functor_First_op_zlzd__ : forall {a} {b},
-                                                               a -> First b -> First a :=
+Local Definition instance_GHC_Base_Functor_Data_Monoid_First_op_zlzd__
+    : forall {a} {b}, a -> First b -> First a :=
   fun {a} {b} => GHC.Prim.coerce GHC.Base.op_zlzd__.
 
-Program Instance instance_GHC_Base_Functor_First : GHC.Base.Functor First :=
-  fun _ k =>
+Program Instance instance_GHC_Base_Functor_Data_Monoid_First : GHC.Base.Functor
+                                                               First := fun _ k =>
     k {|GHC.Base.op_zlzd____ := fun {a} {b} =>
-        instance_GHC_Base_Functor_First_op_zlzd__ ;
-      GHC.Base.fmap__ := fun {a} {b} => instance_GHC_Base_Functor_First_fmap |}.
+        instance_GHC_Base_Functor_Data_Monoid_First_op_zlzd__ ;
+      GHC.Base.fmap__ := fun {a} {b} =>
+        instance_GHC_Base_Functor_Data_Monoid_First_fmap |}.
 
-Program Instance instance_GHC_Base_Applicative_First : GHC.Base.Applicative
-                                                       First := fun _ k =>
+Program Instance instance_GHC_Base_Applicative_Data_Monoid_First
+  : GHC.Base.Applicative First := fun _ k =>
     k {|GHC.Base.op_ztzg____ := fun {a} {b} =>
-        instance_GHC_Base_Applicative_First_op_ztzg__ ;
+        instance_GHC_Base_Applicative_Data_Monoid_First_op_ztzg__ ;
       GHC.Base.op_zlztzg____ := fun {a} {b} =>
-        instance_GHC_Base_Applicative_First_op_zlztzg__ ;
-      GHC.Base.pure__ := fun {a} => instance_GHC_Base_Applicative_First_pure |}.
+        instance_GHC_Base_Applicative_Data_Monoid_First_op_zlztzg__ ;
+      GHC.Base.pure__ := fun {a} =>
+        instance_GHC_Base_Applicative_Data_Monoid_First_pure |}.
 
-Program Instance instance_GHC_Base_Monad_First : GHC.Base.Monad First := fun _
-                                                                             k =>
+Program Instance instance_GHC_Base_Monad_Data_Monoid_First : GHC.Base.Monad
+                                                             First := fun _ k =>
     k {|GHC.Base.op_zgzg____ := fun {a} {b} =>
-        instance_GHC_Base_Monad_First_op_zgzg__ ;
+        instance_GHC_Base_Monad_Data_Monoid_First_op_zgzg__ ;
       GHC.Base.op_zgzgze____ := fun {a} {b} =>
-        instance_GHC_Base_Monad_First_op_zgzgze__ ;
-      GHC.Base.return___ := fun {a} => instance_GHC_Base_Monad_First_return_ |}.
+        instance_GHC_Base_Monad_Data_Monoid_First_op_zgzgze__ ;
+      GHC.Base.return___ := fun {a} =>
+        instance_GHC_Base_Monad_Data_Monoid_First_return_ |}.
 
-(* Translating `instance GHC.Generics.Generic1 First' failed: OOPS! Cannot find
-   information for class "GHC.Generics.Generic1" unsupported *)
+(* Translating `instance GHC.Generics.Generic1 Data.Monoid.First' failed: OOPS!
+   Cannot find information for class Qualified_ "GHC.Generics" "Generic1"
+   unsupported *)
 
-(* Translating `instance forall {a}, GHC.Generics.Generic (First a)' failed:
-   OOPS! Cannot find information for class "GHC.Generics.Generic" unsupported *)
+(* Translating `instance forall {a}, GHC.Generics.Generic (Data.Monoid.First a)'
+   failed: OOPS! Cannot find information for class Qualified_ "GHC.Generics"
+   "Generic" unsupported *)
 
 (* Skipping instance
-   instance_forall___GHC_Show_Show_a___GHC_Show_Show__First_a_ *)
+   instance_forall___GHC_Show_Show_a___GHC_Show_Show__Data_Monoid_First_a_ *)
 
 (* Skipping instance
-   instance_forall___GHC_Read_Read_a___GHC_Read_Read__First_a_ *)
+   instance_forall___GHC_Read_Read_a___GHC_Read_Read__Data_Monoid_First_a_ *)
 
-Local Definition instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__First_a__compare {inst_a}
-                                                                                   `{GHC.Base.Ord inst_a} : First
-                                                                                                            inst_a -> First
-                                                                                                            inst_a -> comparison :=
+Local Definition instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Data_Monoid_First_a__compare {inst_a}
+                                                                                               `{GHC.Base.Ord inst_a}
+    : First inst_a -> First inst_a -> comparison :=
   GHC.Prim.coerce GHC.Base.compare.
 
-Local Definition instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__First_a__max {inst_a}
-                                                                               `{GHC.Base.Ord inst_a} : First
-                                                                                                        inst_a -> First
-                                                                                                        inst_a -> First
-                                                                                                        inst_a :=
+Local Definition instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Data_Monoid_First_a__max {inst_a}
+                                                                                           `{GHC.Base.Ord inst_a}
+    : First inst_a -> First inst_a -> First inst_a :=
   GHC.Prim.coerce GHC.Base.max.
 
-Local Definition instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__First_a__min {inst_a}
-                                                                               `{GHC.Base.Ord inst_a} : First
-                                                                                                        inst_a -> First
-                                                                                                        inst_a -> First
-                                                                                                        inst_a :=
+Local Definition instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Data_Monoid_First_a__min {inst_a}
+                                                                                           `{GHC.Base.Ord inst_a}
+    : First inst_a -> First inst_a -> First inst_a :=
   GHC.Prim.coerce GHC.Base.min.
 
-Local Definition instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__First_a__op_zg__ {inst_a}
-                                                                                   `{GHC.Base.Ord inst_a} : First
-                                                                                                            inst_a -> First
-                                                                                                            inst_a -> bool :=
+Local Definition instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Data_Monoid_First_a__op_zg__ {inst_a}
+                                                                                               `{GHC.Base.Ord inst_a}
+    : First inst_a -> First inst_a -> bool :=
   GHC.Prim.coerce GHC.Base.op_zg__.
 
-Local Definition instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__First_a__op_zgze__ {inst_a}
-                                                                                     `{GHC.Base.Ord inst_a} : First
-                                                                                                              inst_a -> First
-                                                                                                              inst_a -> bool :=
+Local Definition instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Data_Monoid_First_a__op_zgze__ {inst_a}
+                                                                                                 `{GHC.Base.Ord inst_a}
+    : First inst_a -> First inst_a -> bool :=
   GHC.Prim.coerce GHC.Base.op_zgze__.
 
-Local Definition instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__First_a__op_zl__ {inst_a}
-                                                                                   `{GHC.Base.Ord inst_a} : First
-                                                                                                            inst_a -> First
-                                                                                                            inst_a -> bool :=
+Local Definition instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Data_Monoid_First_a__op_zl__ {inst_a}
+                                                                                               `{GHC.Base.Ord inst_a}
+    : First inst_a -> First inst_a -> bool :=
   GHC.Prim.coerce GHC.Base.op_zl__.
 
-Local Definition instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__First_a__op_zlze__ {inst_a}
-                                                                                     `{GHC.Base.Ord inst_a} : First
-                                                                                                              inst_a -> First
-                                                                                                              inst_a -> bool :=
+Local Definition instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Data_Monoid_First_a__op_zlze__ {inst_a}
+                                                                                                 `{GHC.Base.Ord inst_a}
+    : First inst_a -> First inst_a -> bool :=
   GHC.Prim.coerce GHC.Base.op_zlze__.
 
-Local Definition instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___First_a__op_zeze__ {inst_a}
-                                                                                     `{GHC.Base.Eq_ inst_a} : First
-                                                                                                              inst_a -> First
-                                                                                                              inst_a -> bool :=
+Local Definition instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___Data_Monoid_First_a__op_zeze__ {inst_a}
+                                                                                                 `{GHC.Base.Eq_ inst_a}
+    : First inst_a -> First inst_a -> bool :=
   GHC.Prim.coerce GHC.Base.op_zeze__.
 
-Local Definition instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___First_a__op_zsze__ {inst_a}
-                                                                                     `{GHC.Base.Eq_ inst_a} : First
-                                                                                                              inst_a -> First
-                                                                                                              inst_a -> bool :=
+Local Definition instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___Data_Monoid_First_a__op_zsze__ {inst_a}
+                                                                                                 `{GHC.Base.Eq_ inst_a}
+    : First inst_a -> First inst_a -> bool :=
   GHC.Prim.coerce GHC.Base.op_zsze__.
 
-Program Instance instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___First_a_ {a}
-                                                                           `{GHC.Base.Eq_ a} : GHC.Base.Eq_ (First a) :=
+Program Instance instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___Data_Monoid_First_a_ {a}
+                                                                                       `{GHC.Base.Eq_ a} : GHC.Base.Eq_
+                                                                                                           (First a) :=
   fun _ k =>
     k
-    {|GHC.Base.op_zeze____ := instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___First_a__op_zeze__ ;
-    GHC.Base.op_zsze____ := instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___First_a__op_zsze__ |}.
+    {|GHC.Base.op_zeze____ := instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___Data_Monoid_First_a__op_zeze__ ;
+    GHC.Base.op_zsze____ := instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___Data_Monoid_First_a__op_zsze__ |}.
 
-Program Instance instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__First_a_ {a}
-                                                                           `{GHC.Base.Ord a} : GHC.Base.Ord (First a) :=
+Program Instance instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Data_Monoid_First_a_ {a}
+                                                                                       `{GHC.Base.Ord a} : GHC.Base.Ord
+                                                                                                           (First a) :=
   fun _ k =>
     k
-    {|GHC.Base.op_zl____ := instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__First_a__op_zl__ ;
-    GHC.Base.op_zlze____ := instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__First_a__op_zlze__ ;
-    GHC.Base.op_zg____ := instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__First_a__op_zg__ ;
-    GHC.Base.op_zgze____ := instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__First_a__op_zgze__ ;
-    GHC.Base.compare__ := instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__First_a__compare ;
-    GHC.Base.max__ := instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__First_a__max ;
-    GHC.Base.min__ := instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__First_a__min |}.
+    {|GHC.Base.op_zl____ := instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Data_Monoid_First_a__op_zl__ ;
+    GHC.Base.op_zlze____ := instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Data_Monoid_First_a__op_zlze__ ;
+    GHC.Base.op_zg____ := instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Data_Monoid_First_a__op_zg__ ;
+    GHC.Base.op_zgze____ := instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Data_Monoid_First_a__op_zgze__ ;
+    GHC.Base.compare__ := instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Data_Monoid_First_a__compare ;
+    GHC.Base.max__ := instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Data_Monoid_First_a__max ;
+    GHC.Base.min__ := instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Data_Monoid_First_a__min |}.
 
 (* Translating `instance forall {a}, forall `{GHC.Num.Num a}, GHC.Num.Num
-   (Product a)' failed: OOPS! Cannot find information for class "GHC.Num.Num"
+   (Data.Monoid.Product a)' failed: OOPS! Cannot find information for class
+   Qualified_ "GHC.Num" "Num" unsupported *)
+
+(* Translating `instance GHC.Generics.Generic1 Data.Monoid.Product' failed:
+   OOPS! Cannot find information for class Qualified_ "GHC.Generics" "Generic1"
    unsupported *)
 
-(* Translating `instance GHC.Generics.Generic1 Product' failed: OOPS! Cannot
-   find information for class "GHC.Generics.Generic1" unsupported *)
-
-(* Translating `instance forall {a}, GHC.Generics.Generic (Product a)' failed:
-   OOPS! Cannot find information for class "GHC.Generics.Generic" unsupported *)
+(* Translating `instance forall {a}, GHC.Generics.Generic (Data.Monoid.Product
+   a)' failed: OOPS! Cannot find information for class Qualified_ "GHC.Generics"
+   "Generic" unsupported *)
 
 (* Translating `instance forall {a}, forall `{GHC.Enum.Bounded a},
-   GHC.Enum.Bounded (Product a)' failed: OOPS! Cannot find information for class
-   "GHC.Enum.Bounded" unsupported *)
+   GHC.Enum.Bounded (Data.Monoid.Product a)' failed: OOPS! Cannot find information
+   for class Qualified_ "GHC.Enum" "Bounded" unsupported *)
 
 (* Skipping instance
-   instance_forall___GHC_Show_Show_a___GHC_Show_Show__Product_a_ *)
+   instance_forall___GHC_Show_Show_a___GHC_Show_Show__Data_Monoid_Product_a_ *)
 
 (* Skipping instance
-   instance_forall___GHC_Read_Read_a___GHC_Read_Read__Product_a_ *)
+   instance_forall___GHC_Read_Read_a___GHC_Read_Read__Data_Monoid_Product_a_ *)
 
-Local Definition instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Product_a__compare {inst_a}
-                                                                                     `{GHC.Base.Ord inst_a} : Product
-                                                                                                              inst_a -> Product
-                                                                                                              inst_a -> comparison :=
+Local Definition instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Data_Monoid_Product_a__compare {inst_a}
+                                                                                                 `{GHC.Base.Ord inst_a}
+    : Product inst_a -> Product inst_a -> comparison :=
   GHC.Prim.coerce GHC.Base.compare.
 
-Local Definition instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Product_a__max {inst_a}
-                                                                                 `{GHC.Base.Ord inst_a} : Product
-                                                                                                          inst_a -> Product
-                                                                                                          inst_a -> Product
-                                                                                                          inst_a :=
+Local Definition instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Data_Monoid_Product_a__max {inst_a}
+                                                                                             `{GHC.Base.Ord inst_a}
+    : Product inst_a -> Product inst_a -> Product inst_a :=
   GHC.Prim.coerce GHC.Base.max.
 
-Local Definition instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Product_a__min {inst_a}
-                                                                                 `{GHC.Base.Ord inst_a} : Product
-                                                                                                          inst_a -> Product
-                                                                                                          inst_a -> Product
-                                                                                                          inst_a :=
+Local Definition instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Data_Monoid_Product_a__min {inst_a}
+                                                                                             `{GHC.Base.Ord inst_a}
+    : Product inst_a -> Product inst_a -> Product inst_a :=
   GHC.Prim.coerce GHC.Base.min.
 
-Local Definition instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Product_a__op_zg__ {inst_a}
-                                                                                     `{GHC.Base.Ord inst_a} : Product
-                                                                                                              inst_a -> Product
-                                                                                                              inst_a -> bool :=
+Local Definition instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Data_Monoid_Product_a__op_zg__ {inst_a}
+                                                                                                 `{GHC.Base.Ord inst_a}
+    : Product inst_a -> Product inst_a -> bool :=
   GHC.Prim.coerce GHC.Base.op_zg__.
 
-Local Definition instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Product_a__op_zgze__ {inst_a}
-                                                                                       `{GHC.Base.Ord inst_a} : Product
-                                                                                                                inst_a -> Product
-                                                                                                                inst_a -> bool :=
+Local Definition instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Data_Monoid_Product_a__op_zgze__ {inst_a}
+                                                                                                   `{GHC.Base.Ord
+                                                                                                   inst_a} : Product
+                                                                                                             inst_a -> Product
+                                                                                                             inst_a -> bool :=
   GHC.Prim.coerce GHC.Base.op_zgze__.
 
-Local Definition instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Product_a__op_zl__ {inst_a}
-                                                                                     `{GHC.Base.Ord inst_a} : Product
-                                                                                                              inst_a -> Product
-                                                                                                              inst_a -> bool :=
+Local Definition instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Data_Monoid_Product_a__op_zl__ {inst_a}
+                                                                                                 `{GHC.Base.Ord inst_a}
+    : Product inst_a -> Product inst_a -> bool :=
   GHC.Prim.coerce GHC.Base.op_zl__.
 
-Local Definition instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Product_a__op_zlze__ {inst_a}
-                                                                                       `{GHC.Base.Ord inst_a} : Product
-                                                                                                                inst_a -> Product
-                                                                                                                inst_a -> bool :=
+Local Definition instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Data_Monoid_Product_a__op_zlze__ {inst_a}
+                                                                                                   `{GHC.Base.Ord
+                                                                                                   inst_a} : Product
+                                                                                                             inst_a -> Product
+                                                                                                             inst_a -> bool :=
   GHC.Prim.coerce GHC.Base.op_zlze__.
 
-Local Definition instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___Product_a__op_zeze__ {inst_a}
-                                                                                       `{GHC.Base.Eq_ inst_a} : Product
-                                                                                                                inst_a -> Product
-                                                                                                                inst_a -> bool :=
+Local Definition instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___Data_Monoid_Product_a__op_zeze__ {inst_a}
+                                                                                                   `{GHC.Base.Eq_
+                                                                                                   inst_a} : Product
+                                                                                                             inst_a -> Product
+                                                                                                             inst_a -> bool :=
   GHC.Prim.coerce GHC.Base.op_zeze__.
 
-Local Definition instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___Product_a__op_zsze__ {inst_a}
-                                                                                       `{GHC.Base.Eq_ inst_a} : Product
-                                                                                                                inst_a -> Product
-                                                                                                                inst_a -> bool :=
+Local Definition instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___Data_Monoid_Product_a__op_zsze__ {inst_a}
+                                                                                                   `{GHC.Base.Eq_
+                                                                                                   inst_a} : Product
+                                                                                                             inst_a -> Product
+                                                                                                             inst_a -> bool :=
   GHC.Prim.coerce GHC.Base.op_zsze__.
 
-Program Instance instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___Product_a_ {a}
-                                                                             `{GHC.Base.Eq_ a} : GHC.Base.Eq_ (Product
-                                                                                                              a) :=
-  fun _ k =>
+Program Instance instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___Data_Monoid_Product_a_ {a}
+                                                                                         `{GHC.Base.Eq_ a}
+  : GHC.Base.Eq_ (Product a) := fun _ k =>
     k
-    {|GHC.Base.op_zeze____ := instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___Product_a__op_zeze__ ;
-    GHC.Base.op_zsze____ := instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___Product_a__op_zsze__ |}.
+    {|GHC.Base.op_zeze____ := instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___Data_Monoid_Product_a__op_zeze__ ;
+    GHC.Base.op_zsze____ := instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___Data_Monoid_Product_a__op_zsze__ |}.
 
-Program Instance instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Product_a_ {a}
-                                                                             `{GHC.Base.Ord a} : GHC.Base.Ord (Product
-                                                                                                              a) :=
-  fun _ k =>
+Program Instance instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Data_Monoid_Product_a_ {a}
+                                                                                         `{GHC.Base.Ord a}
+  : GHC.Base.Ord (Product a) := fun _ k =>
     k
-    {|GHC.Base.op_zl____ := instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Product_a__op_zl__ ;
-    GHC.Base.op_zlze____ := instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Product_a__op_zlze__ ;
-    GHC.Base.op_zg____ := instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Product_a__op_zg__ ;
-    GHC.Base.op_zgze____ := instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Product_a__op_zgze__ ;
-    GHC.Base.compare__ := instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Product_a__compare ;
-    GHC.Base.max__ := instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Product_a__max ;
-    GHC.Base.min__ := instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Product_a__min |}.
+    {|GHC.Base.op_zl____ := instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Data_Monoid_Product_a__op_zl__ ;
+    GHC.Base.op_zlze____ := instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Data_Monoid_Product_a__op_zlze__ ;
+    GHC.Base.op_zg____ := instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Data_Monoid_Product_a__op_zg__ ;
+    GHC.Base.op_zgze____ := instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Data_Monoid_Product_a__op_zgze__ ;
+    GHC.Base.compare__ := instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Data_Monoid_Product_a__compare ;
+    GHC.Base.max__ := instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Data_Monoid_Product_a__max ;
+    GHC.Base.min__ := instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Data_Monoid_Product_a__min |}.
 
-(* Translating `instance forall {a}, forall `{GHC.Num.Num a}, GHC.Num.Num (Sum
-   a)' failed: OOPS! Cannot find information for class "GHC.Num.Num" unsupported *)
+(* Translating `instance forall {a}, forall `{GHC.Num.Num a}, GHC.Num.Num
+   (Data.Monoid.Sum a)' failed: OOPS! Cannot find information for class Qualified_
+   "GHC.Num" "Num" unsupported *)
 
-(* Translating `instance GHC.Generics.Generic1 Sum' failed: OOPS! Cannot find
-   information for class "GHC.Generics.Generic1" unsupported *)
+(* Translating `instance GHC.Generics.Generic1 Data.Monoid.Sum' failed: OOPS!
+   Cannot find information for class Qualified_ "GHC.Generics" "Generic1"
+   unsupported *)
 
-(* Translating `instance forall {a}, GHC.Generics.Generic (Sum a)' failed: OOPS!
-   Cannot find information for class "GHC.Generics.Generic" unsupported *)
+(* Translating `instance forall {a}, GHC.Generics.Generic (Data.Monoid.Sum a)'
+   failed: OOPS! Cannot find information for class Qualified_ "GHC.Generics"
+   "Generic" unsupported *)
 
 (* Translating `instance forall {a}, forall `{GHC.Enum.Bounded a},
-   GHC.Enum.Bounded (Sum a)' failed: OOPS! Cannot find information for class
-   "GHC.Enum.Bounded" unsupported *)
+   GHC.Enum.Bounded (Data.Monoid.Sum a)' failed: OOPS! Cannot find information for
+   class Qualified_ "GHC.Enum" "Bounded" unsupported *)
 
 (* Skipping instance
-   instance_forall___GHC_Show_Show_a___GHC_Show_Show__Sum_a_ *)
+   instance_forall___GHC_Show_Show_a___GHC_Show_Show__Data_Monoid_Sum_a_ *)
 
 (* Skipping instance
-   instance_forall___GHC_Read_Read_a___GHC_Read_Read__Sum_a_ *)
+   instance_forall___GHC_Read_Read_a___GHC_Read_Read__Data_Monoid_Sum_a_ *)
 
-Local Definition instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Sum_a__compare {inst_a}
-                                                                                 `{GHC.Base.Ord inst_a} : Sum
-                                                                                                          inst_a -> Sum
-                                                                                                          inst_a -> comparison :=
+Local Definition instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Data_Monoid_Sum_a__compare {inst_a}
+                                                                                             `{GHC.Base.Ord inst_a}
+    : Sum inst_a -> Sum inst_a -> comparison :=
   GHC.Prim.coerce GHC.Base.compare.
 
-Local Definition instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Sum_a__max {inst_a}
-                                                                             `{GHC.Base.Ord inst_a} : Sum inst_a -> Sum
-                                                                                                      inst_a -> Sum
-                                                                                                      inst_a :=
+Local Definition instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Data_Monoid_Sum_a__max {inst_a}
+                                                                                         `{GHC.Base.Ord inst_a} : Sum
+                                                                                                                  inst_a -> Sum
+                                                                                                                  inst_a -> Sum
+                                                                                                                  inst_a :=
   GHC.Prim.coerce GHC.Base.max.
 
-Local Definition instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Sum_a__min {inst_a}
-                                                                             `{GHC.Base.Ord inst_a} : Sum inst_a -> Sum
-                                                                                                      inst_a -> Sum
-                                                                                                      inst_a :=
+Local Definition instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Data_Monoid_Sum_a__min {inst_a}
+                                                                                         `{GHC.Base.Ord inst_a} : Sum
+                                                                                                                  inst_a -> Sum
+                                                                                                                  inst_a -> Sum
+                                                                                                                  inst_a :=
   GHC.Prim.coerce GHC.Base.min.
 
-Local Definition instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Sum_a__op_zg__ {inst_a}
-                                                                                 `{GHC.Base.Ord inst_a} : Sum
-                                                                                                          inst_a -> Sum
-                                                                                                          inst_a -> bool :=
+Local Definition instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Data_Monoid_Sum_a__op_zg__ {inst_a}
+                                                                                             `{GHC.Base.Ord inst_a}
+    : Sum inst_a -> Sum inst_a -> bool :=
   GHC.Prim.coerce GHC.Base.op_zg__.
 
-Local Definition instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Sum_a__op_zgze__ {inst_a}
-                                                                                   `{GHC.Base.Ord inst_a} : Sum
-                                                                                                            inst_a -> Sum
-                                                                                                            inst_a -> bool :=
+Local Definition instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Data_Monoid_Sum_a__op_zgze__ {inst_a}
+                                                                                               `{GHC.Base.Ord inst_a}
+    : Sum inst_a -> Sum inst_a -> bool :=
   GHC.Prim.coerce GHC.Base.op_zgze__.
 
-Local Definition instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Sum_a__op_zl__ {inst_a}
-                                                                                 `{GHC.Base.Ord inst_a} : Sum
-                                                                                                          inst_a -> Sum
-                                                                                                          inst_a -> bool :=
+Local Definition instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Data_Monoid_Sum_a__op_zl__ {inst_a}
+                                                                                             `{GHC.Base.Ord inst_a}
+    : Sum inst_a -> Sum inst_a -> bool :=
   GHC.Prim.coerce GHC.Base.op_zl__.
 
-Local Definition instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Sum_a__op_zlze__ {inst_a}
-                                                                                   `{GHC.Base.Ord inst_a} : Sum
-                                                                                                            inst_a -> Sum
-                                                                                                            inst_a -> bool :=
+Local Definition instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Data_Monoid_Sum_a__op_zlze__ {inst_a}
+                                                                                               `{GHC.Base.Ord inst_a}
+    : Sum inst_a -> Sum inst_a -> bool :=
   GHC.Prim.coerce GHC.Base.op_zlze__.
 
-Local Definition instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___Sum_a__op_zeze__ {inst_a}
-                                                                                   `{GHC.Base.Eq_ inst_a} : Sum
-                                                                                                            inst_a -> Sum
-                                                                                                            inst_a -> bool :=
+Local Definition instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___Data_Monoid_Sum_a__op_zeze__ {inst_a}
+                                                                                               `{GHC.Base.Eq_ inst_a}
+    : Sum inst_a -> Sum inst_a -> bool :=
   GHC.Prim.coerce GHC.Base.op_zeze__.
 
-Local Definition instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___Sum_a__op_zsze__ {inst_a}
-                                                                                   `{GHC.Base.Eq_ inst_a} : Sum
-                                                                                                            inst_a -> Sum
-                                                                                                            inst_a -> bool :=
+Local Definition instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___Data_Monoid_Sum_a__op_zsze__ {inst_a}
+                                                                                               `{GHC.Base.Eq_ inst_a}
+    : Sum inst_a -> Sum inst_a -> bool :=
   GHC.Prim.coerce GHC.Base.op_zsze__.
 
-Program Instance instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___Sum_a_ {a}
-                                                                         `{GHC.Base.Eq_ a} : GHC.Base.Eq_ (Sum a) :=
+Program Instance instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___Data_Monoid_Sum_a_ {a}
+                                                                                     `{GHC.Base.Eq_ a} : GHC.Base.Eq_
+                                                                                                         (Sum a) :=
   fun _ k =>
     k
-    {|GHC.Base.op_zeze____ := instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___Sum_a__op_zeze__ ;
-    GHC.Base.op_zsze____ := instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___Sum_a__op_zsze__ |}.
+    {|GHC.Base.op_zeze____ := instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___Data_Monoid_Sum_a__op_zeze__ ;
+    GHC.Base.op_zsze____ := instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___Data_Monoid_Sum_a__op_zsze__ |}.
 
-Program Instance instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Sum_a_ {a}
-                                                                         `{GHC.Base.Ord a} : GHC.Base.Ord (Sum a) :=
+Program Instance instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Data_Monoid_Sum_a_ {a}
+                                                                                     `{GHC.Base.Ord a} : GHC.Base.Ord
+                                                                                                         (Sum a) :=
   fun _ k =>
     k
-    {|GHC.Base.op_zl____ := instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Sum_a__op_zl__ ;
-    GHC.Base.op_zlze____ := instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Sum_a__op_zlze__ ;
-    GHC.Base.op_zg____ := instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Sum_a__op_zg__ ;
-    GHC.Base.op_zgze____ := instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Sum_a__op_zgze__ ;
-    GHC.Base.compare__ := instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Sum_a__compare ;
-    GHC.Base.max__ := instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Sum_a__max ;
-    GHC.Base.min__ := instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Sum_a__min |}.
+    {|GHC.Base.op_zl____ := instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Data_Monoid_Sum_a__op_zl__ ;
+    GHC.Base.op_zlze____ := instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Data_Monoid_Sum_a__op_zlze__ ;
+    GHC.Base.op_zg____ := instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Data_Monoid_Sum_a__op_zg__ ;
+    GHC.Base.op_zgze____ := instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Data_Monoid_Sum_a__op_zgze__ ;
+    GHC.Base.compare__ := instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Data_Monoid_Sum_a__compare ;
+    GHC.Base.max__ := instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Data_Monoid_Sum_a__max ;
+    GHC.Base.min__ := instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Data_Monoid_Sum_a__min |}.
 
-(* Translating `instance GHC.Generics.Generic Any' failed: OOPS! Cannot find
-   information for class "GHC.Generics.Generic" unsupported *)
+(* Translating `instance GHC.Generics.Generic Data.Monoid.Any' failed: OOPS!
+   Cannot find information for class Qualified_ "GHC.Generics" "Generic"
+   unsupported *)
 
-(* Translating `instance GHC.Enum.Bounded Any' failed: OOPS! Cannot find
-   information for class "GHC.Enum.Bounded" unsupported *)
+(* Translating `instance GHC.Enum.Bounded Data.Monoid.Any' failed: OOPS! Cannot
+   find information for class Qualified_ "GHC.Enum" "Bounded" unsupported *)
 
-(* Skipping instance instance_GHC_Show_Show_Any *)
+(* Skipping instance instance_GHC_Show_Show_Data_Monoid_Any *)
 
-(* Skipping instance instance_GHC_Read_Read_Any *)
+(* Skipping instance instance_GHC_Read_Read_Data_Monoid_Any *)
 
-Local Definition instance_GHC_Base_Ord_Any_compare : Any -> Any -> comparison :=
+Local Definition instance_GHC_Base_Ord_Data_Monoid_Any_compare
+    : Any -> Any -> comparison :=
   GHC.Prim.coerce GHC.Base.compare.
 
-Local Definition instance_GHC_Base_Ord_Any_max : Any -> Any -> Any :=
+Local Definition instance_GHC_Base_Ord_Data_Monoid_Any_max
+    : Any -> Any -> Any :=
   GHC.Prim.coerce GHC.Base.max.
 
-Local Definition instance_GHC_Base_Ord_Any_min : Any -> Any -> Any :=
+Local Definition instance_GHC_Base_Ord_Data_Monoid_Any_min
+    : Any -> Any -> Any :=
   GHC.Prim.coerce GHC.Base.min.
 
-Local Definition instance_GHC_Base_Ord_Any_op_zg__ : Any -> Any -> bool :=
+Local Definition instance_GHC_Base_Ord_Data_Monoid_Any_op_zg__
+    : Any -> Any -> bool :=
   GHC.Prim.coerce GHC.Base.op_zg__.
 
-Local Definition instance_GHC_Base_Ord_Any_op_zgze__ : Any -> Any -> bool :=
+Local Definition instance_GHC_Base_Ord_Data_Monoid_Any_op_zgze__
+    : Any -> Any -> bool :=
   GHC.Prim.coerce GHC.Base.op_zgze__.
 
-Local Definition instance_GHC_Base_Ord_Any_op_zl__ : Any -> Any -> bool :=
+Local Definition instance_GHC_Base_Ord_Data_Monoid_Any_op_zl__
+    : Any -> Any -> bool :=
   GHC.Prim.coerce GHC.Base.op_zl__.
 
-Local Definition instance_GHC_Base_Ord_Any_op_zlze__ : Any -> Any -> bool :=
+Local Definition instance_GHC_Base_Ord_Data_Monoid_Any_op_zlze__
+    : Any -> Any -> bool :=
   GHC.Prim.coerce GHC.Base.op_zlze__.
 
-Local Definition instance_GHC_Base_Eq__Any_op_zeze__ : Any -> Any -> bool :=
+Local Definition instance_GHC_Base_Eq__Data_Monoid_Any_op_zeze__
+    : Any -> Any -> bool :=
   GHC.Prim.coerce GHC.Base.op_zeze__.
 
-Local Definition instance_GHC_Base_Eq__Any_op_zsze__ : Any -> Any -> bool :=
+Local Definition instance_GHC_Base_Eq__Data_Monoid_Any_op_zsze__
+    : Any -> Any -> bool :=
   GHC.Prim.coerce GHC.Base.op_zsze__.
 
-Program Instance instance_GHC_Base_Eq__Any : GHC.Base.Eq_ Any := fun _ k =>
-    k {|GHC.Base.op_zeze____ := instance_GHC_Base_Eq__Any_op_zeze__ ;
-      GHC.Base.op_zsze____ := instance_GHC_Base_Eq__Any_op_zsze__ |}.
+Program Instance instance_GHC_Base_Eq__Data_Monoid_Any : GHC.Base.Eq_ Any :=
+  fun _ k =>
+    k {|GHC.Base.op_zeze____ := instance_GHC_Base_Eq__Data_Monoid_Any_op_zeze__ ;
+      GHC.Base.op_zsze____ := instance_GHC_Base_Eq__Data_Monoid_Any_op_zsze__ |}.
 
-Program Instance instance_GHC_Base_Ord_Any : GHC.Base.Ord Any := fun _ k =>
-    k {|GHC.Base.op_zl____ := instance_GHC_Base_Ord_Any_op_zl__ ;
-      GHC.Base.op_zlze____ := instance_GHC_Base_Ord_Any_op_zlze__ ;
-      GHC.Base.op_zg____ := instance_GHC_Base_Ord_Any_op_zg__ ;
-      GHC.Base.op_zgze____ := instance_GHC_Base_Ord_Any_op_zgze__ ;
-      GHC.Base.compare__ := instance_GHC_Base_Ord_Any_compare ;
-      GHC.Base.max__ := instance_GHC_Base_Ord_Any_max ;
-      GHC.Base.min__ := instance_GHC_Base_Ord_Any_min |}.
+Program Instance instance_GHC_Base_Ord_Data_Monoid_Any : GHC.Base.Ord Any :=
+  fun _ k =>
+    k {|GHC.Base.op_zl____ := instance_GHC_Base_Ord_Data_Monoid_Any_op_zl__ ;
+      GHC.Base.op_zlze____ := instance_GHC_Base_Ord_Data_Monoid_Any_op_zlze__ ;
+      GHC.Base.op_zg____ := instance_GHC_Base_Ord_Data_Monoid_Any_op_zg__ ;
+      GHC.Base.op_zgze____ := instance_GHC_Base_Ord_Data_Monoid_Any_op_zgze__ ;
+      GHC.Base.compare__ := instance_GHC_Base_Ord_Data_Monoid_Any_compare ;
+      GHC.Base.max__ := instance_GHC_Base_Ord_Data_Monoid_Any_max ;
+      GHC.Base.min__ := instance_GHC_Base_Ord_Data_Monoid_Any_min |}.
 
-(* Translating `instance GHC.Generics.Generic All' failed: OOPS! Cannot find
-   information for class "GHC.Generics.Generic" unsupported *)
+(* Translating `instance GHC.Generics.Generic Data.Monoid.All' failed: OOPS!
+   Cannot find information for class Qualified_ "GHC.Generics" "Generic"
+   unsupported *)
 
-(* Translating `instance GHC.Enum.Bounded All' failed: OOPS! Cannot find
-   information for class "GHC.Enum.Bounded" unsupported *)
+(* Translating `instance GHC.Enum.Bounded Data.Monoid.All' failed: OOPS! Cannot
+   find information for class Qualified_ "GHC.Enum" "Bounded" unsupported *)
 
-(* Skipping instance instance_GHC_Show_Show_All *)
+(* Skipping instance instance_GHC_Show_Show_Data_Monoid_All *)
 
-(* Skipping instance instance_GHC_Read_Read_All *)
+(* Skipping instance instance_GHC_Read_Read_Data_Monoid_All *)
 
-Local Definition instance_GHC_Base_Ord_All_compare : All -> All -> comparison :=
+Local Definition instance_GHC_Base_Ord_Data_Monoid_All_compare
+    : All -> All -> comparison :=
   GHC.Prim.coerce GHC.Base.compare.
 
-Local Definition instance_GHC_Base_Ord_All_max : All -> All -> All :=
+Local Definition instance_GHC_Base_Ord_Data_Monoid_All_max
+    : All -> All -> All :=
   GHC.Prim.coerce GHC.Base.max.
 
-Local Definition instance_GHC_Base_Ord_All_min : All -> All -> All :=
+Local Definition instance_GHC_Base_Ord_Data_Monoid_All_min
+    : All -> All -> All :=
   GHC.Prim.coerce GHC.Base.min.
 
-Local Definition instance_GHC_Base_Ord_All_op_zg__ : All -> All -> bool :=
+Local Definition instance_GHC_Base_Ord_Data_Monoid_All_op_zg__
+    : All -> All -> bool :=
   GHC.Prim.coerce GHC.Base.op_zg__.
 
-Local Definition instance_GHC_Base_Ord_All_op_zgze__ : All -> All -> bool :=
+Local Definition instance_GHC_Base_Ord_Data_Monoid_All_op_zgze__
+    : All -> All -> bool :=
   GHC.Prim.coerce GHC.Base.op_zgze__.
 
-Local Definition instance_GHC_Base_Ord_All_op_zl__ : All -> All -> bool :=
+Local Definition instance_GHC_Base_Ord_Data_Monoid_All_op_zl__
+    : All -> All -> bool :=
   GHC.Prim.coerce GHC.Base.op_zl__.
 
-Local Definition instance_GHC_Base_Ord_All_op_zlze__ : All -> All -> bool :=
+Local Definition instance_GHC_Base_Ord_Data_Monoid_All_op_zlze__
+    : All -> All -> bool :=
   GHC.Prim.coerce GHC.Base.op_zlze__.
 
-Local Definition instance_GHC_Base_Eq__All_op_zeze__ : All -> All -> bool :=
+Local Definition instance_GHC_Base_Eq__Data_Monoid_All_op_zeze__
+    : All -> All -> bool :=
   GHC.Prim.coerce GHC.Base.op_zeze__.
 
-Local Definition instance_GHC_Base_Eq__All_op_zsze__ : All -> All -> bool :=
+Local Definition instance_GHC_Base_Eq__Data_Monoid_All_op_zsze__
+    : All -> All -> bool :=
   GHC.Prim.coerce GHC.Base.op_zsze__.
 
-Program Instance instance_GHC_Base_Eq__All : GHC.Base.Eq_ All := fun _ k =>
-    k {|GHC.Base.op_zeze____ := instance_GHC_Base_Eq__All_op_zeze__ ;
-      GHC.Base.op_zsze____ := instance_GHC_Base_Eq__All_op_zsze__ |}.
+Program Instance instance_GHC_Base_Eq__Data_Monoid_All : GHC.Base.Eq_ All :=
+  fun _ k =>
+    k {|GHC.Base.op_zeze____ := instance_GHC_Base_Eq__Data_Monoid_All_op_zeze__ ;
+      GHC.Base.op_zsze____ := instance_GHC_Base_Eq__Data_Monoid_All_op_zsze__ |}.
 
-Program Instance instance_GHC_Base_Ord_All : GHC.Base.Ord All := fun _ k =>
-    k {|GHC.Base.op_zl____ := instance_GHC_Base_Ord_All_op_zl__ ;
-      GHC.Base.op_zlze____ := instance_GHC_Base_Ord_All_op_zlze__ ;
-      GHC.Base.op_zg____ := instance_GHC_Base_Ord_All_op_zg__ ;
-      GHC.Base.op_zgze____ := instance_GHC_Base_Ord_All_op_zgze__ ;
-      GHC.Base.compare__ := instance_GHC_Base_Ord_All_compare ;
-      GHC.Base.max__ := instance_GHC_Base_Ord_All_max ;
-      GHC.Base.min__ := instance_GHC_Base_Ord_All_min |}.
+Program Instance instance_GHC_Base_Ord_Data_Monoid_All : GHC.Base.Ord All :=
+  fun _ k =>
+    k {|GHC.Base.op_zl____ := instance_GHC_Base_Ord_Data_Monoid_All_op_zl__ ;
+      GHC.Base.op_zlze____ := instance_GHC_Base_Ord_Data_Monoid_All_op_zlze__ ;
+      GHC.Base.op_zg____ := instance_GHC_Base_Ord_Data_Monoid_All_op_zg__ ;
+      GHC.Base.op_zgze____ := instance_GHC_Base_Ord_Data_Monoid_All_op_zgze__ ;
+      GHC.Base.compare__ := instance_GHC_Base_Ord_Data_Monoid_All_compare ;
+      GHC.Base.max__ := instance_GHC_Base_Ord_Data_Monoid_All_max ;
+      GHC.Base.min__ := instance_GHC_Base_Ord_Data_Monoid_All_min |}.
 
-(* Translating `instance forall {a}, GHC.Generics.Generic (Endo a)' failed:
-   OOPS! Cannot find information for class "GHC.Generics.Generic" unsupported *)
+(* Translating `instance forall {a}, GHC.Generics.Generic (Data.Monoid.Endo a)'
+   failed: OOPS! Cannot find information for class Qualified_ "GHC.Generics"
+   "Generic" unsupported *)
 
-(* Translating `instance GHC.Generics.Generic1 Dual' failed: OOPS! Cannot find
-   information for class "GHC.Generics.Generic1" unsupported *)
+(* Translating `instance GHC.Generics.Generic1 Data.Monoid.Dual' failed: OOPS!
+   Cannot find information for class Qualified_ "GHC.Generics" "Generic1"
+   unsupported *)
 
-(* Translating `instance forall {a}, GHC.Generics.Generic (Dual a)' failed:
-   OOPS! Cannot find information for class "GHC.Generics.Generic" unsupported *)
+(* Translating `instance forall {a}, GHC.Generics.Generic (Data.Monoid.Dual a)'
+   failed: OOPS! Cannot find information for class Qualified_ "GHC.Generics"
+   "Generic" unsupported *)
 
 (* Translating `instance forall {a}, forall `{GHC.Enum.Bounded a},
-   GHC.Enum.Bounded (Dual a)' failed: OOPS! Cannot find information for class
-   "GHC.Enum.Bounded" unsupported *)
+   GHC.Enum.Bounded (Data.Monoid.Dual a)' failed: OOPS! Cannot find information for
+   class Qualified_ "GHC.Enum" "Bounded" unsupported *)
 
 (* Skipping instance
-   instance_forall___GHC_Show_Show_a___GHC_Show_Show__Dual_a_ *)
+   instance_forall___GHC_Show_Show_a___GHC_Show_Show__Data_Monoid_Dual_a_ *)
 
 (* Skipping instance
-   instance_forall___GHC_Read_Read_a___GHC_Read_Read__Dual_a_ *)
+   instance_forall___GHC_Read_Read_a___GHC_Read_Read__Data_Monoid_Dual_a_ *)
 
-Local Definition instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Dual_a__compare {inst_a}
-                                                                                  `{GHC.Base.Ord inst_a} : Dual
-                                                                                                           inst_a -> Dual
-                                                                                                           inst_a -> comparison :=
+Local Definition instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Data_Monoid_Dual_a__compare {inst_a}
+                                                                                              `{GHC.Base.Ord inst_a}
+    : Dual inst_a -> Dual inst_a -> comparison :=
   GHC.Prim.coerce GHC.Base.compare.
 
-Local Definition instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Dual_a__max {inst_a}
-                                                                              `{GHC.Base.Ord inst_a} : Dual
-                                                                                                       inst_a -> Dual
-                                                                                                       inst_a -> Dual
-                                                                                                       inst_a :=
+Local Definition instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Data_Monoid_Dual_a__max {inst_a}
+                                                                                          `{GHC.Base.Ord inst_a} : Dual
+                                                                                                                   inst_a -> Dual
+                                                                                                                   inst_a -> Dual
+                                                                                                                   inst_a :=
   GHC.Prim.coerce GHC.Base.max.
 
-Local Definition instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Dual_a__min {inst_a}
-                                                                              `{GHC.Base.Ord inst_a} : Dual
-                                                                                                       inst_a -> Dual
-                                                                                                       inst_a -> Dual
-                                                                                                       inst_a :=
+Local Definition instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Data_Monoid_Dual_a__min {inst_a}
+                                                                                          `{GHC.Base.Ord inst_a} : Dual
+                                                                                                                   inst_a -> Dual
+                                                                                                                   inst_a -> Dual
+                                                                                                                   inst_a :=
   GHC.Prim.coerce GHC.Base.min.
 
-Local Definition instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Dual_a__op_zg__ {inst_a}
-                                                                                  `{GHC.Base.Ord inst_a} : Dual
-                                                                                                           inst_a -> Dual
-                                                                                                           inst_a -> bool :=
+Local Definition instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Data_Monoid_Dual_a__op_zg__ {inst_a}
+                                                                                              `{GHC.Base.Ord inst_a}
+    : Dual inst_a -> Dual inst_a -> bool :=
   GHC.Prim.coerce GHC.Base.op_zg__.
 
-Local Definition instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Dual_a__op_zgze__ {inst_a}
-                                                                                    `{GHC.Base.Ord inst_a} : Dual
-                                                                                                             inst_a -> Dual
-                                                                                                             inst_a -> bool :=
+Local Definition instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Data_Monoid_Dual_a__op_zgze__ {inst_a}
+                                                                                                `{GHC.Base.Ord inst_a}
+    : Dual inst_a -> Dual inst_a -> bool :=
   GHC.Prim.coerce GHC.Base.op_zgze__.
 
-Local Definition instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Dual_a__op_zl__ {inst_a}
-                                                                                  `{GHC.Base.Ord inst_a} : Dual
-                                                                                                           inst_a -> Dual
-                                                                                                           inst_a -> bool :=
+Local Definition instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Data_Monoid_Dual_a__op_zl__ {inst_a}
+                                                                                              `{GHC.Base.Ord inst_a}
+    : Dual inst_a -> Dual inst_a -> bool :=
   GHC.Prim.coerce GHC.Base.op_zl__.
 
-Local Definition instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Dual_a__op_zlze__ {inst_a}
-                                                                                    `{GHC.Base.Ord inst_a} : Dual
-                                                                                                             inst_a -> Dual
-                                                                                                             inst_a -> bool :=
+Local Definition instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Data_Monoid_Dual_a__op_zlze__ {inst_a}
+                                                                                                `{GHC.Base.Ord inst_a}
+    : Dual inst_a -> Dual inst_a -> bool :=
   GHC.Prim.coerce GHC.Base.op_zlze__.
 
-Local Definition instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___Dual_a__op_zeze__ {inst_a}
-                                                                                    `{GHC.Base.Eq_ inst_a} : Dual
-                                                                                                             inst_a -> Dual
-                                                                                                             inst_a -> bool :=
+Local Definition instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___Data_Monoid_Dual_a__op_zeze__ {inst_a}
+                                                                                                `{GHC.Base.Eq_ inst_a}
+    : Dual inst_a -> Dual inst_a -> bool :=
   GHC.Prim.coerce GHC.Base.op_zeze__.
 
-Local Definition instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___Dual_a__op_zsze__ {inst_a}
-                                                                                    `{GHC.Base.Eq_ inst_a} : Dual
-                                                                                                             inst_a -> Dual
-                                                                                                             inst_a -> bool :=
+Local Definition instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___Data_Monoid_Dual_a__op_zsze__ {inst_a}
+                                                                                                `{GHC.Base.Eq_ inst_a}
+    : Dual inst_a -> Dual inst_a -> bool :=
   GHC.Prim.coerce GHC.Base.op_zsze__.
 
-Program Instance instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___Dual_a_ {a}
-                                                                          `{GHC.Base.Eq_ a} : GHC.Base.Eq_ (Dual a) :=
+Program Instance instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___Data_Monoid_Dual_a_ {a}
+                                                                                      `{GHC.Base.Eq_ a} : GHC.Base.Eq_
+                                                                                                          (Dual a) :=
   fun _ k =>
     k
-    {|GHC.Base.op_zeze____ := instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___Dual_a__op_zeze__ ;
-    GHC.Base.op_zsze____ := instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___Dual_a__op_zsze__ |}.
+    {|GHC.Base.op_zeze____ := instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___Data_Monoid_Dual_a__op_zeze__ ;
+    GHC.Base.op_zsze____ := instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___Data_Monoid_Dual_a__op_zsze__ |}.
 
-Program Instance instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Dual_a_ {a}
-                                                                          `{GHC.Base.Ord a} : GHC.Base.Ord (Dual a) :=
+Program Instance instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Data_Monoid_Dual_a_ {a}
+                                                                                      `{GHC.Base.Ord a} : GHC.Base.Ord
+                                                                                                          (Dual a) :=
   fun _ k =>
     k
-    {|GHC.Base.op_zl____ := instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Dual_a__op_zl__ ;
-    GHC.Base.op_zlze____ := instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Dual_a__op_zlze__ ;
-    GHC.Base.op_zg____ := instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Dual_a__op_zg__ ;
-    GHC.Base.op_zgze____ := instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Dual_a__op_zgze__ ;
-    GHC.Base.compare__ := instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Dual_a__compare ;
-    GHC.Base.max__ := instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Dual_a__max ;
-    GHC.Base.min__ := instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Dual_a__min |}.
+    {|GHC.Base.op_zl____ := instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Data_Monoid_Dual_a__op_zl__ ;
+    GHC.Base.op_zlze____ := instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Data_Monoid_Dual_a__op_zlze__ ;
+    GHC.Base.op_zg____ := instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Data_Monoid_Dual_a__op_zg__ ;
+    GHC.Base.op_zgze____ := instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Data_Monoid_Dual_a__op_zgze__ ;
+    GHC.Base.compare__ := instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Data_Monoid_Dual_a__compare ;
+    GHC.Base.max__ := instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Data_Monoid_Dual_a__max ;
+    GHC.Base.min__ := instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Data_Monoid_Dual_a__min |}.
 
 (* Unbound variables:
-     Build_Unpeel Coq.Program.Basics.compose GHC.Base.Alternative
-     GHC.Base.Applicative GHC.Base.Eq_ GHC.Base.Functor GHC.Base.Monad
-     GHC.Base.Monoid GHC.Base.Ord GHC.Base.compare GHC.Base.const GHC.Base.empty
-     GHC.Base.fmap GHC.Base.foldr GHC.Base.id GHC.Base.mappend GHC.Base.max
-     GHC.Base.mempty GHC.Base.min GHC.Base.op_zeze__ GHC.Base.op_zg__
-     GHC.Base.op_zgze__ GHC.Base.op_zgzg__ GHC.Base.op_zgzgze__ GHC.Base.op_zl__
-     GHC.Base.op_zlzbzg__ GHC.Base.op_zlzd__ GHC.Base.op_zlze__ GHC.Base.op_zlztzg__
-     GHC.Base.op_zsze__ GHC.Base.op_ztzg__ GHC.Base.pure GHC.Base.return_
-     GHC.Prim.coerce None Type Unpeel andb bool comparison false list option orb true
+     Build_Unpeel None Type Unpeel andb bool comparison false list option orb true
+     GHC.Base.Alternative GHC.Base.Applicative GHC.Base.Eq_ GHC.Base.Functor
+     GHC.Base.Monad GHC.Base.Monoid GHC.Base.Ord GHC.Base.compare GHC.Base.const
+     GHC.Base.empty GHC.Base.fmap GHC.Base.foldr GHC.Base.id GHC.Base.mappend
+     GHC.Base.max GHC.Base.mempty GHC.Base.min GHC.Base.op_z2218U__
+     GHC.Base.op_zeze__ GHC.Base.op_zg__ GHC.Base.op_zgze__ GHC.Base.op_zgzg__
+     GHC.Base.op_zgzgze__ GHC.Base.op_zl__ GHC.Base.op_zlzbzg__ GHC.Base.op_zlzd__
+     GHC.Base.op_zlze__ GHC.Base.op_zlztzg__ GHC.Base.op_zsze__ GHC.Base.op_ztzg__
+     GHC.Base.pure GHC.Base.return_ GHC.Prim.coerce
 *)

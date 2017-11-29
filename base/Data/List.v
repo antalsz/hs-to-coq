@@ -29,5 +29,5 @@ Definition isSubsequenceOf {a} `{(GHC.Base.Eq_ a)} : list a -> list a -> bool :=
            end.
 
 (* Unbound variables:
-     GHC.Base.Eq_ GHC.Base.op_zeze__ bool cons false list true
+     bool cons false list true GHC.Base.Eq_ GHC.Base.op_zeze__
 *)

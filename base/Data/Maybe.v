@@ -16,6 +16,7 @@ Require Coq.Program.Wf.
 (* Converted imports: *)
 
 Require Coq.Lists.List.
+Require GHC.Base.
 
 (* No type declarations to convert. *)
 (* Converted value declarations: *)
@@ -29,14 +30,22 @@ Definition catMaybes {a} : list (option a) -> list a :=
       end in
     Coq.Lists.List.flat_map cont_12__ ls.
 
+Definition fromJust {a} : option a -> a :=
+  fun arg_23__ =>
+    match arg_23__ with
+      | None => GHC.Base.errorWithoutStackTrace (GHC.Base.hs_string__
+                                                "Maybe.fromJust: Nothing")
+      | Some x => x
+    end.
+
 Definition fromMaybe {a} : a -> option a -> a :=
   fun d x => match x with | None => d | Some v => v end.
 
 Definition isJust {a} : option a -> bool :=
-  fun arg_25__ => match arg_25__ with | None => false | _ => true end.
+  fun arg_28__ => match arg_28__ with | None => false | _ => true end.
 
 Definition isNothing {a} : option a -> bool :=
-  fun arg_23__ => match arg_23__ with | None => true | _ => false end.
+  fun arg_26__ => match arg_26__ with | None => true | _ => false end.
 
 Definition listToMaybe {a} : list a -> option a :=
   fun arg_15__ => match arg_15__ with | nil => None | cons a _ => Some a end.
@@ -63,8 +72,8 @@ Definition mapMaybeFB {b} {r} {a} : (b -> r -> r) -> (a -> option
     end.
 
 Definition maybe {b} {a} : b -> (a -> b) -> option a -> b :=
-  fun arg_27__ arg_28__ arg_29__ =>
-    match arg_27__ , arg_28__ , arg_29__ with
+  fun arg_30__ arg_31__ arg_32__ =>
+    match arg_30__ , arg_31__ , arg_32__ with
       | n , _ , None => n
       | _ , f , Some x => f x
     end.
@@ -73,5 +82,6 @@ Definition maybeToList {a} : option a -> list a :=
   fun arg_18__ => match arg_18__ with | None => nil | Some x => cons x nil end.
 
 (* Unbound variables:
-     Coq.Lists.List.flat_map None Some bool cons false list nil option true
+     None Some bool cons false list nil option true Coq.Lists.List.flat_map
+     GHC.Base.errorWithoutStackTrace
 *)

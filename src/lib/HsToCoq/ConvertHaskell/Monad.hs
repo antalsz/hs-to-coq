@@ -213,7 +213,7 @@ builtInClasses =
         ("Data.Foldable.foldMap",Forall (Inferred Implicit (Ident "m") :| [Inferred Implicit (Ident "a")]) (Forall (Generalized Implicit (App "GHC.Base.Monoid" (PosArg "m" :| [])) :| []) (Arrow (Parens (Arrow "a" "m")) (Arrow (App "t" (PosArg "a" :| [])) "m")))),
         ("Data.Foldable.foldl",Forall (Inferred Implicit (Ident "b") :| [Inferred Implicit (Ident "a")]) (Arrow (Parens (Arrow "b" (Arrow "a" "b"))) (Arrow "b" (Arrow (App "t" (PosArg "a" :| [])) "b")))),
         ("Data.Foldable.foldl'",Forall (Inferred Implicit (Ident "b") :| [Inferred Implicit (Ident "a")]) (Arrow (Parens (Arrow "b" (Arrow "a" "b"))) (Arrow "b" (Arrow (App "t" (PosArg "a" :| [])) "b")))),
-        ("foldr",Forall (Inferred Implicit (Ident "a") :| [Inferred Implicit (Ident "b")]) (Arrow (Parens (Arrow "a" (Arrow "b" "b"))) (Arrow "b" (Arrow (App "t" (PosArg "a" :| [])) "b")))),
+        ("Data.Foldable.foldr",Forall (Inferred Implicit (Ident "a") :| [Inferred Implicit (Ident "b")]) (Arrow (Parens (Arrow "a" (Arrow "b" "b"))) (Arrow "b" (Arrow (App "t" (PosArg "a" :| [])) "b")))),
         ("Data.Foldable.foldr'",Forall (Inferred Implicit (Ident "a") :| [Inferred Implicit (Ident "b")]) (Arrow (Parens (Arrow "a" (Arrow "b" "b"))) (Arrow "b" (Arrow (App "t" (PosArg "a" :| [])) "b")))),
         ("Data.Foldable.length",Forall (Inferred Implicit (Ident "a") :| []) (Arrow (App "t" (PosArg "a" :| [])) "GHC.Num.Int")),
         ("Data.Foldable.null",Forall (Inferred Implicit (Ident "a") :| []) (Arrow (App "t" (PosArg "a" :| [])) "bool")),

@@ -98,20 +98,20 @@ rename value Data.Either.Left  = Data.Either.Mk_Left
 
 
 skip method GHC.Base.Monad fail
-skip method Enum enumFromThen
-skip method Enum enumFromThenTo
+skip method GHC.Enum.Enum enumFromThen
+skip method GHC.Enum.Enum enumFromThenTo
 
 # deprecated
-skip method Bits bitSize
+skip method Data.Bits.Bits bitSize
 
 # default definition cannot be used
 skip method GHC.Base.Applicative op_zlzt__
 
 # partial methods
-skip method Foldable foldl1
-skip method Foldable foldr1
-skip method Foldable maximum
-skip method Foldable minimum
+skip method Data.Foldable.Foldable foldl1
+skip method Data.Foldable.Foldable foldr1
+skip method Data.Foldable.Foldable maximum
+skip method Data.Foldable.Foldable minimum
 
 
 

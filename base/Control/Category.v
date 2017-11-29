@@ -15,7 +15,6 @@ Require Coq.Program.Wf.
 
 (* Converted imports: *)
 
-Require Coq.Program.Basics.
 Require GHC.Base.
 Require GHC.Prim.
 
@@ -42,26 +41,26 @@ Infix "∘" := (op_z2218U__) (left associativity, at level 40).
 Notation "'_∘_'" := (op_z2218U__).
 (* Converted value declarations: *)
 
-Local Definition instance_Category_GHC_Prim_arrow_id : forall {a},
-                                                         GHC.Prim.arrow a a :=
+Local Definition instance_Control_Category_Category_GHC_Prim_arrow_id
+    : forall {a}, GHC.Prim.arrow a a :=
   fun {a} => GHC.Base.id.
 
-Local Definition instance_Category_GHC_Prim_arrow_op_z2218U__ : forall {b}
-                                                                       {c}
-                                                                       {a},
-                                                                  GHC.Prim.arrow b c -> GHC.Prim.arrow a
-                                                                  b -> GHC.Prim.arrow a c :=
-  fun {b} {c} {a} => Coq.Program.Basics.compose.
+Local Definition instance_Control_Category_Category_GHC_Prim_arrow_op_z2218U__
+    : forall {b} {c} {a},
+        GHC.Prim.arrow b c -> GHC.Prim.arrow a b -> GHC.Prim.arrow a c :=
+  fun {b} {c} {a} => GHC.Base.op_z2218U__.
 
-Program Instance instance_Category_GHC_Prim_arrow : Category GHC.Prim.arrow :=
-  fun _ k =>
-    k {|id__ := fun {a} => instance_Category_GHC_Prim_arrow_id ;
+Program Instance instance_Control_Category_Category_GHC_Prim_arrow : Category
+                                                                     GHC.Prim.arrow := fun _ k =>
+    k {|id__ := fun {a} => instance_Control_Category_Category_GHC_Prim_arrow_id ;
       op_z2218U____ := fun {b} {c} {a} =>
-        instance_Category_GHC_Prim_arrow_op_z2218U__ |}.
+        instance_Control_Category_Category_GHC_Prim_arrow_op_z2218U__ |}.
 
-(* Skipping instance instance_Category_Data_Type_Equality____ *)
+(* Skipping instance
+   instance_Control_Category_Category_Data_Type_Equality_op_ZCz7eUZC__ *)
 
-(* Skipping instance instance_Category_Data_Type_Coercion_Coercion *)
+(* Skipping instance
+   instance_Control_Category_Category_Data_Type_Coercion_Coercion *)
 
 Definition op_zgzgzg__ {cat} {a} {b} {c} `{Category cat} : cat a b -> cat b
                                                            c -> cat a c :=
@@ -80,5 +79,5 @@ Infix "<<<" := (op_zlzlzl__) (at level 99).
 Notation "'_<<<_'" := (op_zlzlzl__).
 
 (* Unbound variables:
-     Coq.Program.Basics.compose GHC.Base.id GHC.Prim.arrow Type
+     Type GHC.Base.id GHC.Base.op_z2218U__ GHC.Prim.arrow
 *)

@@ -374,9 +374,9 @@ Definition zipWithFB {a} {b} {c} {d} {e}
   fun c f => fun x y r => c (f x y) r.
 
 (* Unbound variables:
-     * == Coq.Init.Datatypes.app GHC.Base.Eq_ GHC.Base.String GHC.Base.const
+     * == None Some andb bool cons false list nil option orb pair true
+     Coq.Init.Datatypes.app GHC.Base.Eq_ GHC.Base.String GHC.Base.const
      GHC.Base.errorWithoutStackTrace GHC.Base.foldl GHC.Base.foldr GHC.Base.id
      GHC.Base.oneShot GHC.Base.op_zd__ GHC.Base.op_zeze__ GHC.Base.op_zsze__
-     GHC.Num.Int GHC.Num.Num GHC.Num.op_zm__ GHC.Num.op_zp__ GHC.Num.op_zt__ None
-     Some andb bool cons false list nil option orb pair true
+     GHC.Num.Int GHC.Num.Num GHC.Num.op_zm__ GHC.Num.op_zp__ GHC.Num.op_zt__
 *)

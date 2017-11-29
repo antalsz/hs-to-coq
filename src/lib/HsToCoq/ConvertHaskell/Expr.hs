@@ -57,6 +57,7 @@ import HsToCoq.Util.GHC.HsExpr
 import HsToCoq.Coq.Gallina as Coq
 import HsToCoq.Coq.Gallina.Util
 import HsToCoq.Coq.FreeVars
+import HsToCoq.Coq.Subst
 
 import HsToCoq.ConvertHaskell.Parameters.Edits
 import HsToCoq.ConvertHaskell.Monad
@@ -832,7 +833,11 @@ convertTypedBinding  convHsTy FunBind{..}   = runMaybeT $ do
         (argBinders, match) <- convertFunction fun_matches
         pure $ let bodyVars = getFreeVars match
                in if name `S.member` bodyVars
-                  then whichFix $ FixBody name argBinders Nothing Nothing match
+                  then let bareName = Bare (qualidBase name)
+                           match' = subst (M.singleton name (Qualid bareName)) match
+                           -- Removing the qualification is necessary when the name
+                           -- is a method from a class in a different module
+                       in  whichFix $ FixBody bareName argBinders Nothing Nothing match'
                   else Fun argBinders match
 
     addScope <- maybe id (flip InScope) <$> use (edits.additionalScopes.at (SPValue, name))

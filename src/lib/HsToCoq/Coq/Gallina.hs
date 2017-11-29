@@ -786,7 +786,7 @@ instance Gallina Term where
     -- string "&#" <> renderString (T.singleton str)
     renderGallina' p (App (Qualid hs_charQI) [PosArg (String (T.singleton str))])
     where
-      hs_charQI = Qualified "GHC.String" "hs_char__"
+      hs_charQI = Qualified "GHC.Char" "hs_char__"
 
   renderGallina' _ Underscore =
     char '_'

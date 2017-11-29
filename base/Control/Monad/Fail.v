@@ -28,22 +28,24 @@ Definition fail `{g : MonadFail m} : forall {a}, GHC.Base.String -> m a :=
   g _ (fail__ m).
 (* Converted value declarations: *)
 
-Local Definition instance_MonadFail_option_fail : forall {a},
-                                                    GHC.Base.String -> option a :=
+Local Definition instance_Control_Monad_Fail_MonadFail_option_fail : forall {a},
+                                                                       GHC.Base.String -> option a :=
   fun {a} => fun arg_1__ => None.
 
-Program Instance instance_MonadFail_option : MonadFail option := fun _ k =>
-    k {|fail__ := fun {a} => instance_MonadFail_option_fail |}.
+Program Instance instance_Control_Monad_Fail_MonadFail_option : MonadFail
+                                                                option := fun _ k =>
+    k {|fail__ := fun {a} => instance_Control_Monad_Fail_MonadFail_option_fail |}.
 
-Local Definition instance_MonadFail_list_fail : forall {a},
-                                                  GHC.Base.String -> list a :=
+Local Definition instance_Control_Monad_Fail_MonadFail_list_fail : forall {a},
+                                                                     GHC.Base.String -> list a :=
   fun {a} => fun arg_0__ => nil.
 
-Program Instance instance_MonadFail_list : MonadFail list := fun _ k =>
-    k {|fail__ := fun {a} => instance_MonadFail_list_fail |}.
+Program Instance instance_Control_Monad_Fail_MonadFail_list : MonadFail list :=
+  fun _ k =>
+    k {|fail__ := fun {a} => instance_Control_Monad_Fail_MonadFail_list_fail |}.
 
-(* Skipping instance instance_MonadFail_GHC_Types_IO *)
+(* Skipping instance instance_Control_Monad_Fail_MonadFail_GHC_Types_IO *)
 
 (* Unbound variables:
-     GHC.Base.Monad GHC.Base.String None Type list nil option
+     None Type list nil option GHC.Base.Monad GHC.Base.String
 *)

@@ -223,17 +223,6 @@ _convertModule = fmap fst .: convert_module_with_requires
 _axiomatizeModule :: ConversionMonad m => ModuleName -> RenamedSource -> m ConvertedModule
 _axiomatizeModule = fmap fst .: axiomatize_module_with_requires
 
--- | This un-qualifies all variable names in the current module.
--- It should be called very late, just before pretty-printing.
-localizeModule :: ConvertedModule -> ConvertedModule
-localizeModule cmod = everywhere (mkT localize) cmod
-  where
-    m' = moduleNameText (convModName cmod)
-
-    localize :: Qualid -> Qualid
-    localize (Qualified m b) | m == m' = Bare b
-    localize qid = qid
-
 -- NOT THE SAME as `traverse $ uncurry convertModule`!  Produces connected
 -- components and can axiomatize individual modules as per edits
 convertModules :: ConversionMonad m => [(ModuleName, RenamedSource)] -> m [NonEmpty ConvertedModule]
@@ -243,7 +232,6 @@ convertModules sources = do
                                 False -> convert_module_with_requires    mod src
   mods <- traverse convThisMod sources
   pure $
-    fmap (fmap localizeModule) $
     stronglyConnCompNE [(cmod, convModName cmod, imps) | (cmod, imps) <- mods]
 
 moduleDeclarations :: ConversionMonad m => ConvertedModule -> m ([Sentence], [Sentence])
@@ -252,7 +240,18 @@ moduleDeclarations ConvertedModule{..} = do
   let sorted = topoSortSentences orders $
         convModValDecls ++ convModClsInstDecls ++ convModAddedDecls
   ax_decls <- usedAxioms sorted
-  return (convModTyClDecls, ax_decls ++ sorted)
+  return $ deQualifyLocalNames convModName $ (convModTyClDecls, ax_decls ++ sorted)
+
+-- | This un-qualifies all variable names in the current module.
+-- It should be called very late, just before pretty-printing.
+deQualifyLocalNames :: Data a => ModuleName -> a -> a
+deQualifyLocalNames modName = everywhere (mkT localize)
+  where
+    m' = moduleNameText modName
+
+    localize :: Qualid -> Qualid
+    localize (Qualified m b) | m == m' = Bare b
+    localize qid = qid
 
 usedAxioms :: forall m. ConversionMonad m => [Sentence] -> m [Sentence]
 usedAxioms decls = do

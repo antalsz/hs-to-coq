@@ -6,14 +6,11 @@ rename value Data.List.NonEmpty.:| = NEcons
 # still partial
 skip Data.List.NonEmpty.!!
 
-redefine Local Definition instance_GHC_Base_Applicative_Data_List_NonEmpty_op_zlztzg__ : forall {a} {b},
-  (Data.List.NonEmpty (a -> b)) -> ((Data.List.NonEmpty a) -> (Data.List.NonEmpty b)) := fun {a} {b} => zipWith id.
+order Data.List.NonEmpty.zipWith Data.List.NonEmpty.instance_GHC_Base_Applicative_Data_List_NonEmpty_NonEmpty_op_zlztzg__ Data.List.NonEmpty.instance_GHC_Base_Applicative_Data_List_NonEmpty_NonEmpty Data.List.NonEmpty.instance_GHC_Base_Monad_Data_List_NonEmpty_NonEmpty_op_zgzg__ Data.List.NonEmpty.instance_GHC_Base_Monad_Data_List_NonEmpty_NonEmpty_return_ Data.List.NonEmpty.instance_GHC_Base_Monad_Data_List_NonEmpty_NonEmpty
 
-order zipWith instance_GHC_Base_Applicative_Data_List_NonEmpty_op_zlztzg__ instance_GHC_Base_Applicative_Data_List_NonEmpty instance_GHC_Base_Monad_Data_List_NonEmpty_op_zgzg__ instance_GHC_Base_Monad_Data_List_NonEmpty_return_ instance_GHC_Base_Monad_Data_List_NonEmpty
+order Data.List.NonEmpty.instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___Data_List_NonEmpty_NonEmpty_a_ Data.List.NonEmpty.instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Data_List_NonEmpty_NonEmpty_a_
 
-order instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___Data_List_NonEmpty_a_ instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Data_List_NonEmpty_a_
-
-order instance_Data_Foldable_Foldable_Data_List_NonEmpty instance_Data_Traversable_Traversable_Data_List_NonEmpty reverse sort sortBy sortWith
+order Data.List.NonEmpty.instance_Data_Foldable_Foldable_Data_List_NonEmpty_NonEmpty Data.List.NonEmpty.instance_Data_Traversable_Traversable_Data_List_NonEmpty_NonEmpty Data.List.NonEmpty.reverse Data.List.NonEmpty.sort Data.List.NonEmpty.sortBy Data.List.NonEmpty.sortWith
 
 # needs Data.OldList.transpose
 skip Data.List.NonEmpty.transpose
@@ -48,22 +45,70 @@ skip Data.List.NonEmpty.groupAllWith1
 skip Data.List.NonEmpty.group1
 
 
+redefine Local Definition Data.List.NonEmpty.instance_GHC_Base_Applicative_Data_List_NonEmpty_NonEmpty_op_zlztzg__ : forall {a} {b},
+  (Data.List.NonEmpty.NonEmpty (a -> b)) -> ((Data.List.NonEmpty.NonEmpty a) -> (Data.List.NonEmpty.NonEmpty b)) := fun {a} {b} => zipWith id.
 
+redefine Local Definition Data.List.NonEmpty.instance_GHC_Base_Functor_Data_List_NonEmpty_NonEmpty_fmap: forall {a} {b},  (a -> b) -> ((NonEmpty a) -> (NonEmpty b))
+  := fun {a} {b} f x => match x with | NEcons a as_ => NEcons (f a) (GHC.Base.fmap f as_) end.
 
-redefine Local Definition instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___NonEmpty_a__op_zsze__ {inst_a}
+redefine Local Definition Data.List.NonEmpty.instance_GHC_Base_Functor_Data_List_NonEmpty_NonEmpty_op_zlzd__: forall {a} {b}, a -> ((NonEmpty b) -> (NonEmpty a))
+  := fun {a} {b} f x => match x with | NEcons a as_ => NEcons f (GHC.Base.op_zlzd__ f as_) end.
+
+redefine Local Definition Data.List.NonEmpty.instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___Data_List_NonEmpty_NonEmpty_a__op_zsze__ {inst_a}
                                                                                         `{_: GHC.Base.Eq_ inst_a}
     : (NonEmpty inst_a) -> ((NonEmpty inst_a) -> bool) :=
   fun arg_198__ arg_199__ =>
     match arg_198__ , arg_199__ with
-      | a , b => negb (instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___NonEmpty_a__op_zeze__ a b)
+      | a , b => negb (Data.List.NonEmpty.instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___Data_List_NonEmpty_NonEmpty_a__op_zeze__ a b)
     end.
 
+redefine Local Definition Data.List.NonEmpty.instance_Data_Traversable_Traversable_Data_List_NonEmpty_NonEmpty_traverse
+    : forall {f} {a} {b} {H : GHC.Base.Functor f} {_ : GHC.Base.Applicative f}, (a -> (f b)) -> ((NonEmpty a) -> (f (NonEmpty b))) :=
+  fun {f} {a} {b} {_} {_} =>
+    fun arg_144__ arg_145__ =>
+      match arg_144__ , arg_145__ with
+        | f , NEcons a as_ => GHC.Base.op_zlztzg__ (Data.Functor.op_zlzdzg__ NEcons (f a)) (Data.Traversable.traverse f as_)
+      end.
 
-redefine Local Definition instance_Data_Foldable_Foldable_NonEmpty_elem :
+redefine Local Definition Data.List.NonEmpty.instance_Data_Foldable_Foldable_Data_List_NonEmpty_NonEmpty_fold
+    : forall {m} {_ : GHC.Base.Monoid m}, ((NonEmpty m) -> m) :=
+  fun {m} {_} => fun arg_141__ => match arg_141__ with | NEcons m ms => GHC.Base.mappend m (Data.Foldable.fold ms) end.
+
+redefine Local Definition Data.List.NonEmpty.instance_Data_Foldable_Foldable_Data_List_NonEmpty_NonEmpty_foldMap
+    : forall {m} {a} {_ : GHC.Base.Monoid m}, (a -> m) -> ((NonEmpty a) -> m) :=
+  fun {m} {a} {_} => fun f arg_141__ => match arg_141__ with | NEcons m ms => GHC.Base.mappend (f m) (Data.Foldable.foldMap f ms) end.
+
+redefine Local Definition Data.List.NonEmpty.instance_Data_Foldable_Foldable_Data_List_NonEmpty_NonEmpty_foldl
+    : forall {b} {a}, (b -> (a -> b)) -> (b -> ((NonEmpty a) -> b)) :=
+  fun {b} {a} => fun arg_128__ arg_129__ arg_130__
+          => match arg_128__ , arg_129__ , arg_130__ with
+               | f , z , NEcons a as_ => Data.Foldable.foldl f (f z a) as_
+             end.
+
+redefine Local Definition Data.List.NonEmpty.instance_Data_Foldable_Foldable_Data_List_NonEmpty_NonEmpty_foldr
+    : forall {a} {b}, (a -> (b -> b)) -> (b -> ((NonEmpty a) -> b)) :=
+  fun {a} {b} => fun arg_128__ arg_129__ arg_130__
+          => match arg_128__ , arg_129__ , arg_130__ with
+               | f , z , NEcons a as_ => f a (Data.Foldable.foldr f z as_)
+             end.
+
+redefine Local Definition Data.List.NonEmpty.instance_Data_Foldable_Foldable_Data_List_NonEmpty_NonEmpty_elem :
   forall {a},
   forall `{_ : GHC.Base.Eq_ a}, a -> ((NonEmpty a) -> bool) :=
   fun {a} `{_ : GHC.Base.Eq_ a} => Coq.Program.Basics.compose
-   (fun p => Data.Foldable.hash_compose Data.Monoid.getAny (instance_Data_Foldable_Foldable_NonEmpty_foldMap (Data.Foldable.hash_compose Data.Monoid.Mk_Any p)))
+   (fun p => Data.Foldable.hash_compose Data.Monoid.getAny (Data.List.NonEmpty.instance_Data_Foldable_Foldable_Data_List_NonEmpty_NonEmpty_foldMap (Data.Foldable.hash_compose Data.Monoid.Mk_Any p)))
    GHC.Base.op_zeze__.
 
-order instance_Data_Foldable_Foldable_NonEmpty_foldMap instance_Data_Foldable_Foldable_NonEmpty_elem
+redefine Local Definition Data.List.NonEmpty.instance_GHC_Base_Monad_Data_List_NonEmpty_NonEmpty_op_zgzgze__
+    : forall {a} {b}, ((NonEmpty a) -> ((a -> (NonEmpty b)) -> (NonEmpty b))) :=
+  fun {a} {b} => fun arg_148__ arg_149__ =>
+             match arg_148__ , arg_149__ with
+               | NEcons a as_ , f => match f a with
+                                       | NEcons b bs => NEcons b (Coq.Init.Datatypes.app bs (GHC.Base.op_zgzgze__ as_ (GHC.Base.op_z2218U__ Data.List.NonEmpty.instance_Data_Foldable_Foldable_Data_List_NonEmpty_NonEmpty_toList f)))
+                                     end
+             end.
+
+# Something broke with derived instances (no longer creates qualified names for
+# compare etc.) after going to qualified names
+skip Data.List.NonEmpty.instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Data_List_NonEmpty_NonEmpty_a_
+skip Data.List.NonEmpty.instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___Data_List_NonEmpty_NonEmpty_a_

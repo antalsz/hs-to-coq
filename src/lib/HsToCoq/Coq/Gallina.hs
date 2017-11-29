@@ -9,7 +9,7 @@ Stability   : experimental
 <https://coq.inria.fr/distrib/current/refman/Reference-Manual003. Chapter 1, \"The Gallina Specification Language\", in the Coq reference manual.>
 -}
 
-{-# LANGUAGE DeriveDataTypeable, OverloadedStrings, OverloadedLists, LambdaCase, TemplateHaskell, PatternSynonyms #-}
+{-# LANGUAGE DeriveDataTypeable, OverloadedStrings, OverloadedLists, LambdaCase, TemplateHaskell #-}
 
 module HsToCoq.Coq.Gallina (
   -- * Lexical structure
@@ -28,8 +28,8 @@ module HsToCoq.Coq.Gallina (
   Generalizability(..),
   Explicitness(..),
   Binder(..),
-  Name(UnderscoreName, Ident),
-  Qualid(Bare, Qualified),
+  Name(..),
+  Qualid(..),
   Sort(..),
   FixBodies(..),
   CofixBodies(..),
@@ -211,22 +211,9 @@ data Name = Ident Qualid                                                        
           deriving (Eq, Ord, Show, Read, Typeable, Data)
 
 -- |@/qualid/ ::=@
-data Qualid = Bare_ Ident                                                                       -- ^@/ident/@
-            | Qualified_ ModuleIdent AccessIdent                                                -- ^@/module_ident/ /access_ident/@
+data Qualid = Bare Ident                                                                       -- ^@/ident/@
+            | Qualified ModuleIdent AccessIdent                                                -- ^@/module_ident/ /access_ident/@
             deriving (Eq, Ord, Show, Read, Typeable, Data)
-
-pattern Bare :: HasCallStack => Ident -> Qualid
-pattern Bare x <- Bare_ x where
-    Bare x | "." `T.isInfixOf` x = error $ "Invalid ident in bare qualid:" ++ show x
-           | otherwise          = Bare_ x
-
-pattern Qualified :: HasCallStack => ModuleIdent -> AccessIdent -> Qualid
-pattern Qualified m x <- Qualified_ m x where
-    Qualified m x
-        -- | T.null m            = error $ "Empty module in Qualid:" ++ show m
-        | "." `T.isInfixOf` x = error $ "Invalid ident in Qualid:" ++ show x ++ " module " ++ show m
-        | otherwise           = Qualified_ m x
-{- not supported in 8.0 yet # COMPLETE Bare, Qualified #-}
 
 -- |@/sort/ ::=@
 data Sort = Prop                                                                               -- ^@Prop@

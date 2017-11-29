@@ -535,6 +535,11 @@ Program Instance instance_GHC_Base_Monad_Data_List_NonEmpty_NonEmpty
       GHC.Base.return___ := fun {a} =>
         instance_GHC_Base_Monad_Data_List_NonEmpty_NonEmpty_return_ |}.
 
+Module Notations.
+Infix "Data.List.NonEmpty.<|" := (op_zlzb__) (at level 99).
+Notation "'_Data.List.NonEmpty.<|_'" := (op_zlzb__).
+End Notations.
+
 (* Unbound variables:
      None Some andb bool comparison cons false id list negb nil op_zt__ option pair
      true Coq.Init.Datatypes.app Coq.Program.Basics.compose Data.Foldable.Foldable

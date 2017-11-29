@@ -543,6 +543,11 @@ Definition zip7 {a} {b} {c} {d} {e} {f} {g} : list a -> list b -> list c -> list
                                               d -> list e -> list f -> list g -> list (a * b * c * d * e * f * g) :=
   zipWith7 GHC.Tuple.op_Z7T__.
 
+Module Notations.
+Infix "Data.OldList.\\" := (op_zrzr__) (at level 99).
+Notation "'_Data.OldList.\\_'" := (op_zrzr__).
+End Notations.
+
 (* Unbound variables:
      None Some andb bool comparison cons false list nil op_zt__ option orb pair
      sortBy true Coq.Init.Datatypes.app Coq.Lists.List.flat_map

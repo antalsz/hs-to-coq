@@ -78,6 +78,15 @@ Infix "<<<" := (op_zlzlzl__) (at level 99).
 
 Notation "'_<<<_'" := (op_zlzlzl__).
 
+Module Notations.
+Infix "Control.Category.∘" := (op_z2218U__) (left associativity, at level 40).
+Notation "'_Control.Category.∘_'" := (op_z2218U__).
+Infix "Control.Category.>>>" := (op_zgzgzg__) (at level 99).
+Notation "'_Control.Category.>>>_'" := (op_zgzgzg__).
+Infix "Control.Category.<<<" := (op_zlzlzl__) (at level 99).
+Notation "'_Control.Category.<<<_'" := (op_zlzlzl__).
+End Notations.
+
 (* Unbound variables:
      Type GHC.Base.id GHC.Base.op_z2218U__ GHC.Prim.arrow
 *)

@@ -77,7 +77,7 @@ VFILES_DROPIN = $(addprefix $(OUT)/,$(addsuffix .v,$(DROPIN)))
 
 VFILES   = $(VFILES_GEN) $(VFILES_MAN) $(VFILES_SPECIAL) $(VFILES_DROPIN)
 
-all:  $(VFILES) coq $(OUT)/edits $(OUT)/README.md
+all:  $(OUT)/edits $(OUT)/README.md $(VFILES) coq
 
 $(OUT)/_CoqProject : Makefile
 	mkdir -p $(OUT)

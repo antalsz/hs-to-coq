@@ -24,3 +24,8 @@ Definition op_za__ {a} {b} : a -> (a -> b) -> b :=
 Infix "&" := (op_za__) (at level 99).
 
 Notation "'_&_'" := (op_za__).
+
+Module Notations.
+Infix "Data.Function.&" := (op_za__) (at level 99).
+Notation "'_Data.Function.&_'" := (op_za__).
+End Notations.

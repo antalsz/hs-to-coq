@@ -335,6 +335,27 @@ Notation "'_<<^_'" := (op_zlzlzc__).
 Definition returnA {a} {b} `{Arrow a} : a b b :=
   arr Control.Category.id.
 
+Module Notations.
+Infix "Control.Arrow.&&&" := (op_zazaza__) (at level 99).
+Notation "'_Control.Arrow.&&&_'" := (op_zazaza__).
+Infix "Control.Arrow.***" := (op_ztztzt__) (at level 99).
+Notation "'_Control.Arrow.***_'" := (op_ztztzt__).
+Infix "Control.Arrow.|||" := (op_zbzbzb__) (at level 99).
+Notation "'_Control.Arrow.|||_'" := (op_zbzbzb__).
+Infix "Control.Arrow.+++" := (op_zpzpzp__) (at level 99).
+Notation "'_Control.Arrow.+++_'" := (op_zpzpzp__).
+Infix "Control.Arrow.<+>" := (op_zlzpzg__) (at level 99).
+Notation "'_Control.Arrow.<+>_'" := (op_zlzpzg__).
+Infix "Control.Arrow.^>>" := (op_zczgzg__) (at level 99).
+Notation "'_Control.Arrow.^>>_'" := (op_zczgzg__).
+Infix "Control.Arrow.^<<" := (op_zczlzl__) (at level 99).
+Notation "'_Control.Arrow.^<<_'" := (op_zczlzl__).
+Infix "Control.Arrow.>>^" := (op_zgzgzc__) (at level 99).
+Notation "'_Control.Arrow.>>^_'" := (op_zgzgzc__).
+Infix "Control.Arrow.<<^" := (op_zlzlzc__) (at level 99).
+Notation "'_Control.Arrow.<<^_'" := (op_zlzlzc__).
+End Notations.
+
 (* Unbound variables:
      Type op_zt__ pair unit Control.Category.Category Control.Category.id
      Control.Category.op_zgzgzg__ Control.Category.op_zlzlzl__ Data.Either.Either

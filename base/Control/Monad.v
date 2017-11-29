@@ -102,6 +102,15 @@ Definition zipWithM_ {m} {a} {b} {c} `{(GHC.Base.Applicative m)} : (a -> b -> m
                                                                    c) -> list a -> list b -> m unit :=
   fun f xs ys => Data.Foldable.sequenceA_ (GHC.List.zipWith f xs ys).
 
+Module Notations.
+Infix "Control.Monad.>=>" := (op_zgzezg__) (at level 99).
+Notation "'_Control.Monad.>=>_'" := (op_zgzezg__).
+Infix "Control.Monad.<=<" := (op_zlzezl__) (at level 99).
+Notation "'_Control.Monad.<=<_'" := (op_zlzezl__).
+Infix "Control.Monad.<$!>" := (op_zlzdznzg__) (at level 99).
+Notation "'_Control.Monad.<$!>_'" := (op_zlzdznzg__).
+End Notations.
+
 (* Unbound variables:
      bool cons list nil op_zt__ tt unit Data.Foldable.Foldable Data.Foldable.foldlM
      Data.Foldable.sequenceA_ Data.Functor.op_zlzdzg__ Data.Traversable.sequenceA

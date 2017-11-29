@@ -1754,6 +1754,31 @@ Definition otherwise : bool :=
 Definition when {f} `{(Applicative f)} : bool -> f unit -> f unit :=
   fun p s => if p : bool then s else pure tt.
 
+Module Notations.
+Infix "GHC.Base.<$" := (op_zlzd__) (at level 99).
+Notation "'_GHC.Base.<$_'" := (op_zlzd__).
+Infix "GHC.Base.<*>" := (op_zlztzg__) (at level 99).
+Notation "'_GHC.Base.<*>_'" := (op_zlztzg__).
+Infix "GHC.Base.*>" := (op_ztzg__) (at level 99).
+Notation "'_GHC.Base.*>_'" := (op_ztzg__).
+Infix "GHC.Base.>>" := (op_zgzg__) (at level 99).
+Notation "'_GHC.Base.>>_'" := (op_zgzg__).
+Infix "GHC.Base.>>=" := (op_zgzgze__) (at level 99).
+Notation "'_GHC.Base.>>=_'" := (op_zgzgze__).
+Infix "GHC.Base.<|>" := (op_zlzbzg__) (at level 99).
+Notation "'_GHC.Base.<|>_'" := (op_zlzbzg__).
+Infix "GHC.Base.∘" := (op_z2218U__) (left associativity, at level 40).
+Notation "'_GHC.Base.∘_'" := (op_z2218U__).
+Infix "GHC.Base.$" := (op_zd__) (at level 99).
+Notation "'_GHC.Base.$_'" := (op_zd__).
+Infix "GHC.Base.<**>" := (op_zlztztzg__) (at level 99).
+Notation "'_GHC.Base.<**>_'" := (op_zlztztzg__).
+Infix "GHC.Base.$!" := (op_zdzn__) (at level 99).
+Notation "'_GHC.Base.$!_'" := (op_zdzn__).
+Infix "GHC.Base.=<<" := (op_zezlzl__) (at level 99).
+Notation "'_GHC.Base.=<<_'" := (op_zezlzl__).
+End Notations.
+
 (* Unbound variables:
      Eq Eq_ Gt Lt None Ord Some String Type andb bool compare comparison cons false
      list negb nil op_zeze__ op_zg__ op_zgze__ op_zl__ op_zlze__ op_zt__ option pair

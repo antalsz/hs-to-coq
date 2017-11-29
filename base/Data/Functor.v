@@ -38,6 +38,13 @@ Notation "'_<$>_'" := (op_zlzdzg__).
 Definition void {f} {a} `{GHC.Base.Functor f} : f a -> f unit :=
   fun x => GHC.Base.op_zlzd__ tt x.
 
+Module Notations.
+Infix "Data.Functor.$>" := (op_zdzg__) (at level 99).
+Notation "'_Data.Functor.$>_'" := (op_zdzg__).
+Infix "Data.Functor.<$>" := (op_zlzdzg__) (at level 99).
+Notation "'_Data.Functor.<$>_'" := (op_zlzdzg__).
+End Notations.
+
 (* Unbound variables:
      tt unit GHC.Base.Functor GHC.Base.flip GHC.Base.fmap GHC.Base.op_zlzd__
 *)

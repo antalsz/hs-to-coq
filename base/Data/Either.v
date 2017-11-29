@@ -108,11 +108,11 @@ Program Instance instance_GHC_Base_Monad__Data_Either_Either_e_ {e}
 
 (* Translating `instance forall {a} {b}, forall `{GHC.Show.Show b}
    `{GHC.Show.Show a}, GHC.Show.Show (Data.Either.Either a b)' failed: OOPS! Cannot
-   find information for class Qualified_ "GHC.Show" "Show" unsupported *)
+   find information for class Qualified "GHC.Show" "Show" unsupported *)
 
 (* Translating `instance forall {a} {b}, forall `{GHC.Read.Read b}
    `{GHC.Read.Read a}, GHC.Read.Read (Data.Either.Either a b)' failed: OOPS! Cannot
-   find information for class Qualified_ "GHC.Read" "Read" unsupported *)
+   find information for class Qualified "GHC.Read" "Read" unsupported *)
 
 Local Definition instance_forall___GHC_Base_Ord_b____GHC_Base_Ord_a___GHC_Base_Ord__Data_Either_Either_a_b__compare {inst_a}
                                                                                                                     {inst_b}
@@ -337,7 +337,7 @@ Definition rights {a} {b} : list (Either a b) -> list b :=
     Coq.Lists.List.flat_map cont_4__ x.
 
 (* Unbound variables:
-     * Gt Lt bool comparison cons false list negb nil pair true
+     Gt Lt bool comparison cons false list negb nil op_zt__ pair true
      Coq.Lists.List.flat_map GHC.Base.Applicative GHC.Base.Eq_ GHC.Base.Functor
      GHC.Base.Monad GHC.Base.Ord GHC.Base.compare GHC.Base.const GHC.Base.fmap
      GHC.Base.foldr GHC.Base.id GHC.Base.op_zeze__ GHC.Base.op_zg__

@@ -84,24 +84,24 @@ Program Instance instance_GHC_Base_Ord_Data_Void_Void : GHC.Base.Ord Void :=
       GHC.Base.min__ := instance_GHC_Base_Ord_Data_Void_Void_min |}.
 
 (* Translating `instance GHC.Read.Read Data.Void.Void' failed: OOPS! Cannot find
-   information for class Qualified_ "GHC.Read" "Read" unsupported *)
+   information for class Qualified "GHC.Read" "Read" unsupported *)
 
 (* Translating `instance GHC.Show.Show Data.Void.Void' failed: OOPS! Cannot find
-   information for class Qualified_ "GHC.Show" "Show" unsupported *)
+   information for class Qualified "GHC.Show" "Show" unsupported *)
 
 (* Translating `instance GHC.Arr.Ix Data.Void.Void' failed: OOPS! Cannot find
-   information for class Qualified_ "GHC.Arr" "Ix" unsupported *)
+   information for class Qualified "GHC.Arr" "Ix" unsupported *)
 
 (* Translating `instance GHC.Exception.Exception Data.Void.Void' failed: OOPS!
-   Cannot find information for class Qualified_ "GHC.Exception" "Exception"
+   Cannot find information for class Qualified "GHC.Exception" "Exception"
    unsupported *)
 
 (* Translating `instance GHC.Generics.Generic Data.Void.Void' failed: OOPS!
-   Cannot find information for class Qualified_ "GHC.Generics" "Generic"
+   Cannot find information for class Qualified "GHC.Generics" "Generic"
    unsupported *)
 
 (* Translating `instance Data.Data.Data Data.Void.Void' failed: OOPS! Cannot
-   find information for class Qualified_ "Data.Data" "Data" unsupported *)
+   find information for class Qualified "Data.Data" "Data" unsupported *)
 
 Definition absurd {a} : Void -> a :=
   fun a => match a with end.

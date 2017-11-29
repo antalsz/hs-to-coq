@@ -34,5 +34,5 @@ Definition swap {a} {b} : a * b -> b * a :=
   fun arg_0__ => match arg_0__ with | pair a b => pair b a end.
 
 (* Unbound variables:
-     * pair
+     op_zt__ pair
 *)

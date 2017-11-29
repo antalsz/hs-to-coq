@@ -789,7 +789,7 @@ Program Instance instance_forall___GHC_Base_Functor_f___GHC_Base_Functor__Data_M
 
 (* Translating `instance forall {f}, forall `{GHC.Base.Alternative f},
    GHC.Base.Alternative (Data.Monoid.Alt f)' failed: OOPS! Cannot find information
-   for class Qualified_ "GHC.Base" "Alternative" unsupported *)
+   for class Qualified "GHC.Base" "Alternative" unsupported *)
 
 Local Definition instance_forall___GHC_Base_Applicative_f___GHC_Base_Applicative__Data_Monoid_Alt_f__op_zlztzg__ {inst_f}
                                                                                                                  `{GHC.Base.Applicative
@@ -822,7 +822,7 @@ Program Instance instance_forall___GHC_Base_Applicative_f___GHC_Base_Applicative
 
 (* Translating `instance forall {f}, forall `{GHC.Base.MonadPlus f},
    GHC.Base.MonadPlus (Data.Monoid.Alt f)' failed: OOPS! Cannot find information
-   for class Qualified_ "GHC.Base" "MonadPlus" unsupported *)
+   for class Qualified "GHC.Base" "MonadPlus" unsupported *)
 
 Local Definition instance_forall___GHC_Base_Monad_f___GHC_Base_Monad__Data_Monoid_Alt_f__op_zgzg__ {inst_f}
                                                                                                    `{GHC.Base.Monad
@@ -862,11 +862,11 @@ Program Instance instance_forall___GHC_Base_Monad_f___GHC_Base_Monad__Data_Monoi
 
 (* Translating `instance forall {k} {f} {a}, forall `{GHC.Enum.Enum (f a)},
    GHC.Enum.Enum (Data.Monoid.Alt f a)' failed: OOPS! Cannot find information for
-   class Qualified_ "GHC.Enum" "Enum" unsupported *)
+   class Qualified "GHC.Enum" "Enum" unsupported *)
 
 (* Translating `instance forall {k} {f} {a}, forall `{GHC.Num.Num (f a)},
    GHC.Num.Num (Data.Monoid.Alt f a)' failed: OOPS! Cannot find information for
-   class Qualified_ "GHC.Num" "Num" unsupported *)
+   class Qualified "GHC.Num" "Num" unsupported *)
 
 (* Skipping instance
    instance_forall___GHC_Base_Ord__f_a____GHC_Base_Ord__Data_Monoid_Alt_f_a_ *)
@@ -881,12 +881,12 @@ Program Instance instance_forall___GHC_Base_Monad_f___GHC_Base_Monad__Data_Monoi
    instance_forall___GHC_Read_Read__f_a____GHC_Read_Read__Data_Monoid_Alt_f_a_ *)
 
 (* Translating `instance forall {f}, GHC.Generics.Generic1 (Data.Monoid.Alt f)'
-   failed: OOPS! Cannot find information for class Qualified_ "GHC.Generics"
+   failed: OOPS! Cannot find information for class Qualified "GHC.Generics"
    "Generic1" unsupported *)
 
 (* Translating `instance forall {k} {f} {a}, GHC.Generics.Generic
-   (Data.Monoid.Alt f a)' failed: OOPS! Cannot find information for class
-   Qualified_ "GHC.Generics" "Generic" unsupported *)
+   (Data.Monoid.Alt f a)' failed: OOPS! Cannot find information for class Qualified
+   "GHC.Generics" "Generic" unsupported *)
 
 Local Definition instance_GHC_Base_Monad_Data_Monoid_Last_op_zgzg__ : forall {a}
                                                                              {b},
@@ -948,11 +948,11 @@ Program Instance instance_GHC_Base_Monad_Data_Monoid_Last : GHC.Base.Monad
         instance_GHC_Base_Monad_Data_Monoid_Last_return_ |}.
 
 (* Translating `instance GHC.Generics.Generic1 Data.Monoid.Last' failed: OOPS!
-   Cannot find information for class Qualified_ "GHC.Generics" "Generic1"
+   Cannot find information for class Qualified "GHC.Generics" "Generic1"
    unsupported *)
 
 (* Translating `instance forall {a}, GHC.Generics.Generic (Data.Monoid.Last a)'
-   failed: OOPS! Cannot find information for class Qualified_ "GHC.Generics"
+   failed: OOPS! Cannot find information for class Qualified "GHC.Generics"
    "Generic" unsupported *)
 
 (* Skipping instance
@@ -1090,11 +1090,11 @@ Program Instance instance_GHC_Base_Monad_Data_Monoid_First : GHC.Base.Monad
         instance_GHC_Base_Monad_Data_Monoid_First_return_ |}.
 
 (* Translating `instance GHC.Generics.Generic1 Data.Monoid.First' failed: OOPS!
-   Cannot find information for class Qualified_ "GHC.Generics" "Generic1"
+   Cannot find information for class Qualified "GHC.Generics" "Generic1"
    unsupported *)
 
 (* Translating `instance forall {a}, GHC.Generics.Generic (Data.Monoid.First a)'
-   failed: OOPS! Cannot find information for class Qualified_ "GHC.Generics"
+   failed: OOPS! Cannot find information for class Qualified "GHC.Generics"
    "Generic" unsupported *)
 
 (* Skipping instance
@@ -1171,19 +1171,19 @@ Program Instance instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Data_Monoid_Fi
 
 (* Translating `instance forall {a}, forall `{GHC.Num.Num a}, GHC.Num.Num
    (Data.Monoid.Product a)' failed: OOPS! Cannot find information for class
-   Qualified_ "GHC.Num" "Num" unsupported *)
+   Qualified "GHC.Num" "Num" unsupported *)
 
 (* Translating `instance GHC.Generics.Generic1 Data.Monoid.Product' failed:
-   OOPS! Cannot find information for class Qualified_ "GHC.Generics" "Generic1"
+   OOPS! Cannot find information for class Qualified "GHC.Generics" "Generic1"
    unsupported *)
 
 (* Translating `instance forall {a}, GHC.Generics.Generic (Data.Monoid.Product
-   a)' failed: OOPS! Cannot find information for class Qualified_ "GHC.Generics"
+   a)' failed: OOPS! Cannot find information for class Qualified "GHC.Generics"
    "Generic" unsupported *)
 
 (* Translating `instance forall {a}, forall `{GHC.Enum.Bounded a},
    GHC.Enum.Bounded (Data.Monoid.Product a)' failed: OOPS! Cannot find information
-   for class Qualified_ "GHC.Enum" "Bounded" unsupported *)
+   for class Qualified "GHC.Enum" "Bounded" unsupported *)
 
 (* Skipping instance
    instance_forall___GHC_Show_Show_a___GHC_Show_Show__Data_Monoid_Product_a_ *)
@@ -1264,20 +1264,20 @@ Program Instance instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Data_Monoid_Pr
     GHC.Base.min__ := instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Data_Monoid_Product_a__min |}.
 
 (* Translating `instance forall {a}, forall `{GHC.Num.Num a}, GHC.Num.Num
-   (Data.Monoid.Sum a)' failed: OOPS! Cannot find information for class Qualified_
+   (Data.Monoid.Sum a)' failed: OOPS! Cannot find information for class Qualified
    "GHC.Num" "Num" unsupported *)
 
 (* Translating `instance GHC.Generics.Generic1 Data.Monoid.Sum' failed: OOPS!
-   Cannot find information for class Qualified_ "GHC.Generics" "Generic1"
+   Cannot find information for class Qualified "GHC.Generics" "Generic1"
    unsupported *)
 
 (* Translating `instance forall {a}, GHC.Generics.Generic (Data.Monoid.Sum a)'
-   failed: OOPS! Cannot find information for class Qualified_ "GHC.Generics"
+   failed: OOPS! Cannot find information for class Qualified "GHC.Generics"
    "Generic" unsupported *)
 
 (* Translating `instance forall {a}, forall `{GHC.Enum.Bounded a},
    GHC.Enum.Bounded (Data.Monoid.Sum a)' failed: OOPS! Cannot find information for
-   class Qualified_ "GHC.Enum" "Bounded" unsupported *)
+   class Qualified "GHC.Enum" "Bounded" unsupported *)
 
 (* Skipping instance
    instance_forall___GHC_Show_Show_a___GHC_Show_Show__Data_Monoid_Sum_a_ *)
@@ -1356,11 +1356,11 @@ Program Instance instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Data_Monoid_Su
     GHC.Base.min__ := instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Data_Monoid_Sum_a__min |}.
 
 (* Translating `instance GHC.Generics.Generic Data.Monoid.Any' failed: OOPS!
-   Cannot find information for class Qualified_ "GHC.Generics" "Generic"
+   Cannot find information for class Qualified "GHC.Generics" "Generic"
    unsupported *)
 
 (* Translating `instance GHC.Enum.Bounded Data.Monoid.Any' failed: OOPS! Cannot
-   find information for class Qualified_ "GHC.Enum" "Bounded" unsupported *)
+   find information for class Qualified "GHC.Enum" "Bounded" unsupported *)
 
 (* Skipping instance instance_GHC_Show_Show_Data_Monoid_Any *)
 
@@ -1418,11 +1418,11 @@ Program Instance instance_GHC_Base_Ord_Data_Monoid_Any : GHC.Base.Ord Any :=
       GHC.Base.min__ := instance_GHC_Base_Ord_Data_Monoid_Any_min |}.
 
 (* Translating `instance GHC.Generics.Generic Data.Monoid.All' failed: OOPS!
-   Cannot find information for class Qualified_ "GHC.Generics" "Generic"
+   Cannot find information for class Qualified "GHC.Generics" "Generic"
    unsupported *)
 
 (* Translating `instance GHC.Enum.Bounded Data.Monoid.All' failed: OOPS! Cannot
-   find information for class Qualified_ "GHC.Enum" "Bounded" unsupported *)
+   find information for class Qualified "GHC.Enum" "Bounded" unsupported *)
 
 (* Skipping instance instance_GHC_Show_Show_Data_Monoid_All *)
 
@@ -1480,20 +1480,20 @@ Program Instance instance_GHC_Base_Ord_Data_Monoid_All : GHC.Base.Ord All :=
       GHC.Base.min__ := instance_GHC_Base_Ord_Data_Monoid_All_min |}.
 
 (* Translating `instance forall {a}, GHC.Generics.Generic (Data.Monoid.Endo a)'
-   failed: OOPS! Cannot find information for class Qualified_ "GHC.Generics"
+   failed: OOPS! Cannot find information for class Qualified "GHC.Generics"
    "Generic" unsupported *)
 
 (* Translating `instance GHC.Generics.Generic1 Data.Monoid.Dual' failed: OOPS!
-   Cannot find information for class Qualified_ "GHC.Generics" "Generic1"
+   Cannot find information for class Qualified "GHC.Generics" "Generic1"
    unsupported *)
 
 (* Translating `instance forall {a}, GHC.Generics.Generic (Data.Monoid.Dual a)'
-   failed: OOPS! Cannot find information for class Qualified_ "GHC.Generics"
+   failed: OOPS! Cannot find information for class Qualified "GHC.Generics"
    "Generic" unsupported *)
 
 (* Translating `instance forall {a}, forall `{GHC.Enum.Bounded a},
    GHC.Enum.Bounded (Data.Monoid.Dual a)' failed: OOPS! Cannot find information for
-   class Qualified_ "GHC.Enum" "Bounded" unsupported *)
+   class Qualified "GHC.Enum" "Bounded" unsupported *)
 
 (* Skipping instance
    instance_forall___GHC_Show_Show_a___GHC_Show_Show__Data_Monoid_Dual_a_ *)

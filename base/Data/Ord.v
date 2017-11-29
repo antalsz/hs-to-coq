@@ -116,11 +116,11 @@ Program Instance instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Data_Ord_Down_
     GHC.Base.min__ := instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Data_Ord_Down_a__min |}.
 
 (* Translating `instance forall {a}, forall `{GHC.Read.Read a}, GHC.Read.Read
-   (Data.Ord.Down a)' failed: OOPS! Cannot find information for class Qualified_
+   (Data.Ord.Down a)' failed: OOPS! Cannot find information for class Qualified
    "GHC.Read" "Read" unsupported *)
 
 (* Translating `instance forall {a}, forall `{GHC.Show.Show a}, GHC.Show.Show
-   (Data.Ord.Down a)' failed: OOPS! Cannot find information for class Qualified_
+   (Data.Ord.Down a)' failed: OOPS! Cannot find information for class Qualified
    "GHC.Show" "Show" unsupported *)
 
 Local Definition instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___Data_Ord_Down_a__op_zeze__ {inst_a}

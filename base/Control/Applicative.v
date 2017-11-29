@@ -120,7 +120,7 @@ Program Instance instance_forall___GHC_Base_Monad_m___GHC_Base_Applicative__Cont
 
 (* Translating `instance forall {m}, forall `{GHC.Base.MonadPlus m},
    GHC.Base.Alternative (Control.Applicative.WrappedMonad m)' failed: OOPS! Cannot
-   find information for class Qualified_ "GHC.Base" "Alternative" unsupported *)
+   find information for class Qualified "GHC.Base" "Alternative" unsupported *)
 
 Local Definition instance_forall___Control_Arrow_Arrow_a___GHC_Base_Functor__Control_Applicative_WrappedArrow_a_b__fmap {inst_a}
                                                                                                                         {inst_b}
@@ -205,18 +205,18 @@ Program Instance instance_forall___Control_Arrow_Arrow_a___GHC_Base_Applicative_
 (* Translating `instance forall {a} {b}, forall `{Control.Arrow.ArrowZero a}
    `{Control.Arrow.ArrowPlus a}, GHC.Base.Alternative
    (Control.Applicative.WrappedArrow a b)' failed: OOPS! Cannot find information
-   for class Qualified_ "GHC.Base" "Alternative" unsupported *)
+   for class Qualified "GHC.Base" "Alternative" unsupported *)
 
 (* Skipping instance
    instance_GHC_Base_Applicative_Control_Applicative_ZipList *)
 
 (* Translating `instance GHC.Generics.Generic1 Control.Applicative.ZipList'
-   failed: OOPS! Cannot find information for class Qualified_ "GHC.Generics"
+   failed: OOPS! Cannot find information for class Qualified "GHC.Generics"
    "Generic1" unsupported *)
 
 (* Translating `instance forall {a}, GHC.Generics.Generic
    (Control.Applicative.ZipList a)' failed: OOPS! Cannot find information for class
-   Qualified_ "GHC.Generics" "Generic" unsupported *)
+   Qualified "GHC.Generics" "Generic" unsupported *)
 
 (* Skipping instance
    instance_Data_Foldable_Foldable_Control_Applicative_ZipList *)
@@ -225,7 +225,7 @@ Program Instance instance_forall___Control_Arrow_Arrow_a___GHC_Base_Applicative_
 
 (* Translating `instance forall {a}, forall `{GHC.Read.Read a}, GHC.Read.Read
    (Control.Applicative.ZipList a)' failed: OOPS! Cannot find information for class
-   Qualified_ "GHC.Read" "Read" unsupported *)
+   Qualified "GHC.Read" "Read" unsupported *)
 
 (* Skipping instance
    instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Control_Applicative_ZipList_a_ *)
@@ -235,15 +235,15 @@ Program Instance instance_forall___Control_Arrow_Arrow_a___GHC_Base_Applicative_
 
 (* Translating `instance forall {a}, forall `{GHC.Show.Show a}, GHC.Show.Show
    (Control.Applicative.ZipList a)' failed: OOPS! Cannot find information for class
-   Qualified_ "GHC.Show" "Show" unsupported *)
+   Qualified "GHC.Show" "Show" unsupported *)
 
 (* Translating `instance forall {a} {b}, GHC.Generics.Generic1
    (Control.Applicative.WrappedArrow a b)' failed: OOPS! Cannot find information
-   for class Qualified_ "GHC.Generics" "Generic1" unsupported *)
+   for class Qualified "GHC.Generics" "Generic1" unsupported *)
 
 (* Translating `instance forall {a} {b} {c}, GHC.Generics.Generic
    (Control.Applicative.WrappedArrow a b c)' failed: OOPS! Cannot find information
-   for class Qualified_ "GHC.Generics" "Generic" unsupported *)
+   for class Qualified "GHC.Generics" "Generic" unsupported *)
 
 Local Definition instance_forall___GHC_Base_Monad_m___GHC_Base_Monad__Control_Applicative_WrappedMonad_m__op_zgzg__ {inst_m}
                                                                                                                     `{GHC.Base.Monad
@@ -279,11 +279,11 @@ Program Instance instance_forall___GHC_Base_Monad_m___GHC_Base_Monad__Control_Ap
 
 (* Translating `instance forall {m}, GHC.Generics.Generic1
    (Control.Applicative.WrappedMonad m)' failed: OOPS! Cannot find information for
-   class Qualified_ "GHC.Generics" "Generic1" unsupported *)
+   class Qualified "GHC.Generics" "Generic1" unsupported *)
 
 (* Translating `instance forall {m} {a}, GHC.Generics.Generic
    (Control.Applicative.WrappedMonad m a)' failed: OOPS! Cannot find information
-   for class Qualified_ "GHC.Generics" "Generic" unsupported *)
+   for class Qualified "GHC.Generics" "Generic" unsupported *)
 
 Definition optional {f} {a} `{GHC.Base.Alternative f} : f a -> f (option a) :=
   fun v =>

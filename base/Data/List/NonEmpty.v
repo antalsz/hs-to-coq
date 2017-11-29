@@ -38,14 +38,14 @@ Arguments NEcons {_} _ _.
 
 (* Translating `instance forall {a}, GHC.Exts.IsList
    (Data.List.NonEmpty.NonEmpty a)' failed: OOPS! Cannot find information for class
-   Qualified_ "GHC.Exts" "IsList" unsupported *)
+   Qualified "GHC.Exts" "IsList" unsupported *)
 
 (* Translating `instance Control.Monad.Fix.MonadFix Data.List.NonEmpty.NonEmpty'
-   failed: OOPS! Cannot find information for class Qualified_ "Control.Monad.Fix"
+   failed: OOPS! Cannot find information for class Qualified "Control.Monad.Fix"
    "MonadFix" unsupported *)
 
 (* Translating `instance Control.Monad.Zip.MonadZip Data.List.NonEmpty.NonEmpty'
-   failed: OOPS! Cannot find information for class Qualified_ "Control.Monad.Zip"
+   failed: OOPS! Cannot find information for class Qualified "Control.Monad.Zip"
    "MonadZip" unsupported *)
 
 Local Definition instance_GHC_Base_Functor_Data_List_NonEmpty_NonEmpty_fmap
@@ -268,24 +268,24 @@ Program Instance instance_Data_Traversable_Traversable_Data_List_NonEmpty_NonEmp
         instance_Data_Traversable_Traversable_Data_List_NonEmpty_NonEmpty_traverse |}.
 
 (* Translating `instance GHC.Generics.Generic1 Data.List.NonEmpty.NonEmpty'
-   failed: OOPS! Cannot find information for class Qualified_ "GHC.Generics"
+   failed: OOPS! Cannot find information for class Qualified "GHC.Generics"
    "Generic1" unsupported *)
 
 (* Translating `instance forall {a}, GHC.Generics.Generic
    (Data.List.NonEmpty.NonEmpty a)' failed: OOPS! Cannot find information for class
-   Qualified_ "GHC.Generics" "Generic" unsupported *)
+   Qualified "GHC.Generics" "Generic" unsupported *)
 
 (* Translating `instance forall {a}, forall `{Data.Data.Data a}, Data.Data.Data
    (Data.List.NonEmpty.NonEmpty a)' failed: OOPS! Cannot find information for class
-   Qualified_ "Data.Data" "Data" unsupported *)
+   Qualified "Data.Data" "Data" unsupported *)
 
 (* Translating `instance forall {a}, forall `{GHC.Read.Read a}, GHC.Read.Read
    (Data.List.NonEmpty.NonEmpty a)' failed: OOPS! Cannot find information for class
-   Qualified_ "GHC.Read" "Read" unsupported *)
+   Qualified "GHC.Read" "Read" unsupported *)
 
 (* Translating `instance forall {a}, forall `{GHC.Show.Show a}, GHC.Show.Show
    (Data.List.NonEmpty.NonEmpty a)' failed: OOPS! Cannot find information for class
-   Qualified_ "GHC.Show" "Show" unsupported *)
+   Qualified "GHC.Show" "Show" unsupported *)
 
 (* Skipping instance
    instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Data_List_NonEmpty_NonEmpty_a_ *)
@@ -536,8 +536,8 @@ Program Instance instance_GHC_Base_Monad_Data_List_NonEmpty_NonEmpty
         instance_GHC_Base_Monad_Data_List_NonEmpty_NonEmpty_return_ |}.
 
 (* Unbound variables:
-     * None Some andb bool comparison cons false id list negb nil option pair true
-     Coq.Init.Datatypes.app Coq.Program.Basics.compose Data.Foldable.Foldable
+     None Some andb bool comparison cons false id list negb nil op_zt__ option pair
+     true Coq.Init.Datatypes.app Coq.Program.Basics.compose Data.Foldable.Foldable
      Data.Foldable.fold Data.Foldable.foldMap Data.Foldable.foldl Data.Foldable.foldr
      Data.Foldable.hash_compose Data.Foldable.length Data.Foldable.toList
      Data.Functor.op_zlzdzg__ Data.Monoid.Mk_Any Data.Monoid.Mk_Product

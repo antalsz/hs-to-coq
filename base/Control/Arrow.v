@@ -336,7 +336,7 @@ Definition returnA {a} {b} `{Arrow a} : a b b :=
   arr Control.Category.id.
 
 (* Unbound variables:
-     * Type pair unit Control.Category.Category Control.Category.id
+     Type op_zt__ pair unit Control.Category.Category Control.Category.id
      Control.Category.op_zgzgzg__ Control.Category.op_zlzlzl__ Data.Either.Either
      GHC.Base.Functor GHC.Base.const GHC.Base.op_zd__ GHC.Prim.arrow
 *)

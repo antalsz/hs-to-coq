@@ -544,14 +544,14 @@ Definition zip7 {a} {b} {c} {d} {e} {f} {g} : list a -> list b -> list c -> list
   zipWith7 GHC.Tuple.op_Z7T__.
 
 (* Unbound variables:
-     * None Some andb bool comparison cons false list nil option orb pair sortBy true
-     Coq.Init.Datatypes.app Coq.Lists.List.flat_map Data.Maybe.listToMaybe
-     Data.Maybe.maybe Data.Ord.comparing Data.Tuple.fst Data.Tuple.snd GHC.Base.Eq_
-     GHC.Base.Ord GHC.Base.String GHC.Base.build GHC.Base.compare GHC.Base.flip
-     GHC.Base.foldl GHC.Base.foldr GHC.Base.id GHC.Base.map GHC.Base.oneShot
-     GHC.Base.op_z2218U__ GHC.Base.op_zd__ GHC.Base.op_zeze__ GHC.Base.op_zgzgze__
-     GHC.Base.op_zlze__ GHC.Base.return_ GHC.List.any GHC.List.filter GHC.List.null
-     GHC.List.reverse GHC.Num.Num GHC.Num.Word GHC.Num.op_zm__ GHC.Num.op_zp__
-     GHC.Prim.seq GHC.Real.Integral GHC.Tuple.op_Z4T__ GHC.Tuple.op_Z5T__
-     GHC.Tuple.op_Z6T__ GHC.Tuple.op_Z7T__
+     None Some andb bool comparison cons false list nil op_zt__ option orb pair
+     sortBy true Coq.Init.Datatypes.app Coq.Lists.List.flat_map
+     Data.Maybe.listToMaybe Data.Maybe.maybe Data.Ord.comparing Data.Tuple.fst
+     Data.Tuple.snd GHC.Base.Eq_ GHC.Base.Ord GHC.Base.String GHC.Base.build
+     GHC.Base.compare GHC.Base.flip GHC.Base.foldl GHC.Base.foldr GHC.Base.id
+     GHC.Base.map GHC.Base.oneShot GHC.Base.op_z2218U__ GHC.Base.op_zd__
+     GHC.Base.op_zeze__ GHC.Base.op_zgzgze__ GHC.Base.op_zlze__ GHC.Base.return_
+     GHC.List.any GHC.List.filter GHC.List.null GHC.List.reverse GHC.Num.Num
+     GHC.Num.Word GHC.Num.op_zm__ GHC.Num.op_zp__ GHC.Prim.seq GHC.Real.Integral
+     GHC.Tuple.op_Z4T__ GHC.Tuple.op_Z5T__ GHC.Tuple.op_Z6T__ GHC.Tuple.op_Z7T__
 *)

@@ -103,7 +103,7 @@ Definition zipWithM_ {m} {a} {b} {c} `{(GHC.Base.Applicative m)} : (a -> b -> m
   fun f xs ys => Data.Foldable.sequenceA_ (GHC.List.zipWith f xs ys).
 
 (* Unbound variables:
-     * bool cons list nil tt unit Data.Foldable.Foldable Data.Foldable.foldlM
+     bool cons list nil op_zt__ tt unit Data.Foldable.Foldable Data.Foldable.foldlM
      Data.Foldable.sequenceA_ Data.Functor.op_zlzdzg__ Data.Traversable.sequenceA
      Data.Traversable.traverse GHC.Base.Alternative GHC.Base.Applicative
      GHC.Base.Monad GHC.Base.MonadPlus GHC.Base.empty GHC.Base.flip GHC.Base.foldr

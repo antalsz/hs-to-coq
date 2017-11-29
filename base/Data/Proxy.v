@@ -92,22 +92,22 @@ Program Instance instance_GHC_Base_Ord__Data_Proxy_Proxy_s_ {s} : GHC.Base.Ord
       GHC.Base.min__ := instance_GHC_Base_Ord__Data_Proxy_Proxy_s__min |}.
 
 (* Translating `instance forall {s}, GHC.Show.Show (Data.Proxy.Proxy s)' failed:
-   OOPS! Cannot find information for class Qualified_ "GHC.Show" "Show"
+   OOPS! Cannot find information for class Qualified "GHC.Show" "Show"
    unsupported *)
 
 (* Translating `instance forall {s}, GHC.Read.Read (Data.Proxy.Proxy s)' failed:
-   OOPS! Cannot find information for class Qualified_ "GHC.Read" "Read"
+   OOPS! Cannot find information for class Qualified "GHC.Read" "Read"
    unsupported *)
 
 (* Translating `instance forall {s}, GHC.Enum.Enum (Data.Proxy.Proxy s)' failed:
-   OOPS! Cannot find information for class Qualified_ "GHC.Enum" "Enum"
+   OOPS! Cannot find information for class Qualified "GHC.Enum" "Enum"
    unsupported *)
 
 (* Translating `instance forall {s}, GHC.Arr.Ix (Data.Proxy.Proxy s)' failed:
-   OOPS! Cannot find information for class Qualified_ "GHC.Arr" "Ix" unsupported *)
+   OOPS! Cannot find information for class Qualified "GHC.Arr" "Ix" unsupported *)
 
 (* Translating `instance forall {s}, GHC.Enum.Bounded (Data.Proxy.Proxy s)'
-   failed: OOPS! Cannot find information for class Qualified_ "GHC.Enum" "Bounded"
+   failed: OOPS! Cannot find information for class Qualified "GHC.Enum" "Bounded"
    unsupported *)
 
 Local Definition instance_GHC_Base_Monoid__Data_Proxy_Proxy_s__mappend {inst_s}
@@ -171,7 +171,7 @@ Program Instance instance_GHC_Base_Applicative_Data_Proxy_Proxy
         instance_GHC_Base_Applicative_Data_Proxy_Proxy_pure |}.
 
 (* Translating `instance GHC.Base.Alternative Data.Proxy.Proxy' failed: OOPS!
-   Cannot find information for class Qualified_ "GHC.Base" "Alternative"
+   Cannot find information for class Qualified "GHC.Base" "Alternative"
    unsupported *)
 
 Local Definition instance_GHC_Base_Monad_Data_Proxy_Proxy_op_zgzg__ : forall {a}
@@ -197,7 +197,7 @@ Program Instance instance_GHC_Base_Monad_Data_Proxy_Proxy : GHC.Base.Monad
         instance_GHC_Base_Monad_Data_Proxy_Proxy_return_ |}.
 
 (* Translating `instance GHC.Base.MonadPlus Data.Proxy.Proxy' failed: OOPS!
-   Cannot find information for class Qualified_ "GHC.Base" "MonadPlus"
+   Cannot find information for class Qualified "GHC.Base" "MonadPlus"
    unsupported *)
 
 Definition asProxyTypeOf {a} : a -> Proxy a -> a :=

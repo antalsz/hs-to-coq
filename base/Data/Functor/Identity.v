@@ -38,11 +38,11 @@ Instance Unpeel_Identity a : Prim.Unpeel (Identity a) a :=
 
 (* Translating `instance forall {a}, forall `{(GHC.Read.Read a)}, GHC.Read.Read
    (Data.Functor.Identity.Identity a)' failed: OOPS! Cannot find information for
-   class Qualified_ "GHC.Read" "Read" unsupported *)
+   class Qualified "GHC.Read" "Read" unsupported *)
 
 (* Translating `instance forall {a}, forall `{(GHC.Show.Show a)}, GHC.Show.Show
    (Data.Functor.Identity.Identity a)' failed: OOPS! Cannot find information for
-   class Qualified_ "GHC.Show" "Show" unsupported *)
+   class Qualified "GHC.Show" "Show" unsupported *)
 
 Local Definition instance_Data_Foldable_Foldable_Data_Functor_Identity_Identity_foldMap
     : forall {m} {a}, forall `{GHC.Base.Monoid m}, (a -> m) -> Identity a -> m :=
@@ -161,11 +161,11 @@ Program Instance instance_GHC_Base_Monad_Data_Functor_Identity_Identity
 
 (* Translating `instance Control.Monad.Fix.MonadFix
    Data.Functor.Identity.Identity' failed: OOPS! Cannot find information for class
-   Qualified_ "Control.Monad.Fix" "MonadFix" unsupported *)
+   Qualified "Control.Monad.Fix" "MonadFix" unsupported *)
 
 (* Translating `instance Control.Monad.Zip.MonadZip
    Data.Functor.Identity.Identity' failed: OOPS! Cannot find information for class
-   Qualified_ "Control.Monad.Zip" "MonadZip" unsupported *)
+   Qualified "Control.Monad.Zip" "MonadZip" unsupported *)
 
 Local Definition instance_Data_Traversable_Traversable_Data_Functor_Identity_Identity_traverse
     : forall {f} {a} {b},
@@ -197,25 +197,25 @@ Local Definition instance_Data_Traversable_Traversable_Data_Functor_Identity_Ide
 
 (* Translating `instance forall {a}, forall `{Foreign.Storable.Storable a},
    Foreign.Storable.Storable (Data.Functor.Identity.Identity a)' failed: OOPS!
-   Cannot find information for class Qualified_ "Foreign.Storable" "Storable"
+   Cannot find information for class Qualified "Foreign.Storable" "Storable"
    unsupported *)
 
 (* Translating `instance forall {a}, forall `{Data.Semigroup.Semigroup a},
    Data.Semigroup.Semigroup (Data.Functor.Identity.Identity a)' failed: OOPS!
-   Cannot find information for class Qualified_ "Data.Semigroup" "Semigroup"
+   Cannot find information for class Qualified "Data.Semigroup" "Semigroup"
    unsupported *)
 
 (* Translating `instance forall {a}, forall `{GHC.Float.RealFloat a},
    GHC.Float.RealFloat (Data.Functor.Identity.Identity a)' failed: OOPS! Cannot
-   find information for class Qualified_ "GHC.Float" "RealFloat" unsupported *)
+   find information for class Qualified "GHC.Float" "RealFloat" unsupported *)
 
 (* Translating `instance forall {a}, forall `{GHC.Real.RealFrac a},
    GHC.Real.RealFrac (Data.Functor.Identity.Identity a)' failed: OOPS! Cannot find
-   information for class Qualified_ "GHC.Real" "RealFrac" unsupported *)
+   information for class Qualified "GHC.Real" "RealFrac" unsupported *)
 
 (* Translating `instance forall {a}, forall `{GHC.Real.Real a}, GHC.Real.Real
    (Data.Functor.Identity.Identity a)' failed: OOPS! Cannot find information for
-   class Qualified_ "GHC.Real" "Real" unsupported *)
+   class Qualified "GHC.Real" "Real" unsupported *)
 
 Local Definition instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Data_Functor_Identity_Identity_a__compare {inst_a}
                                                                                                             `{GHC.Base.Ord
@@ -261,7 +261,7 @@ Local Definition instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Data_Functor_I
 
 (* Translating `instance forall {a}, forall `{GHC.Num.Num a}, GHC.Num.Num
    (Data.Functor.Identity.Identity a)' failed: OOPS! Cannot find information for
-   class Qualified_ "GHC.Num" "Num" unsupported *)
+   class Qualified "GHC.Num" "Num" unsupported *)
 
 Local Definition instance_forall___GHC_Base_Monoid_a___GHC_Base_Monoid__Data_Functor_Identity_Identity_a__mappend {inst_a}
                                                                                                                   `{GHC.Base.Monoid
@@ -292,35 +292,35 @@ Program Instance instance_forall___GHC_Base_Monoid_a___GHC_Base_Monoid__Data_Fun
 
 (* Translating `instance forall {a}, forall `{GHC.Arr.Ix a}, GHC.Arr.Ix
    (Data.Functor.Identity.Identity a)' failed: OOPS! Cannot find information for
-   class Qualified_ "GHC.Arr" "Ix" unsupported *)
+   class Qualified "GHC.Arr" "Ix" unsupported *)
 
 (* Translating `instance forall {a}, forall `{Data.String.IsString a},
    Data.String.IsString (Data.Functor.Identity.Identity a)' failed: OOPS! Cannot
-   find information for class Qualified_ "Data.String" "IsString" unsupported *)
+   find information for class Qualified "Data.String" "IsString" unsupported *)
 
 (* Translating `instance forall {a}, forall `{GHC.Real.Integral a},
    GHC.Real.Integral (Data.Functor.Identity.Identity a)' failed: OOPS! Cannot find
-   information for class Qualified_ "GHC.Real" "Integral" unsupported *)
+   information for class Qualified "GHC.Real" "Integral" unsupported *)
 
 (* Translating `instance GHC.Generics.Generic1 Data.Functor.Identity.Identity'
-   failed: OOPS! Cannot find information for class Qualified_ "GHC.Generics"
+   failed: OOPS! Cannot find information for class Qualified "GHC.Generics"
    "Generic1" unsupported *)
 
 (* Translating `instance forall {a}, GHC.Generics.Generic
    (Data.Functor.Identity.Identity a)' failed: OOPS! Cannot find information for
-   class Qualified_ "GHC.Generics" "Generic" unsupported *)
+   class Qualified "GHC.Generics" "Generic" unsupported *)
 
 (* Translating `instance forall {a}, forall `{GHC.Real.Fractional a},
    GHC.Real.Fractional (Data.Functor.Identity.Identity a)' failed: OOPS! Cannot
-   find information for class Qualified_ "GHC.Real" "Fractional" unsupported *)
+   find information for class Qualified "GHC.Real" "Fractional" unsupported *)
 
 (* Translating `instance forall {a}, forall `{GHC.Float.Floating a},
    GHC.Float.Floating (Data.Functor.Identity.Identity a)' failed: OOPS! Cannot find
-   information for class Qualified_ "GHC.Float" "Floating" unsupported *)
+   information for class Qualified "GHC.Float" "Floating" unsupported *)
 
 (* Translating `instance forall {a}, forall `{Data.Bits.FiniteBits a},
    Data.Bits.FiniteBits (Data.Functor.Identity.Identity a)' failed: OOPS! Cannot
-   find information for class Qualified_ "Data.Bits" "FiniteBits" unsupported *)
+   find information for class Qualified "Data.Bits" "FiniteBits" unsupported *)
 
 Local Definition instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___Data_Functor_Identity_Identity_a__op_zeze__ {inst_a}
                                                                                                               `{GHC.Base.Eq_
@@ -355,19 +355,19 @@ Program Instance instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Data_Functor_I
 
 (* Translating `instance forall {a}, forall `{GHC.Enum.Enum a}, GHC.Enum.Enum
    (Data.Functor.Identity.Identity a)' failed: OOPS! Cannot find information for
-   class Qualified_ "GHC.Enum" "Enum" unsupported *)
+   class Qualified "GHC.Enum" "Enum" unsupported *)
 
 (* Translating `instance forall {a}, forall `{Data.Data.Data a}, Data.Data.Data
    (Data.Functor.Identity.Identity a)' failed: OOPS! Cannot find information for
-   class Qualified_ "Data.Data" "Data" unsupported *)
+   class Qualified "Data.Data" "Data" unsupported *)
 
 (* Translating `instance forall {a}, forall `{GHC.Enum.Bounded a},
    GHC.Enum.Bounded (Data.Functor.Identity.Identity a)' failed: OOPS! Cannot find
-   information for class Qualified_ "GHC.Enum" "Bounded" unsupported *)
+   information for class Qualified "GHC.Enum" "Bounded" unsupported *)
 
 (* Translating `instance forall {a}, forall `{Data.Bits.Bits a}, Data.Bits.Bits
    (Data.Functor.Identity.Identity a)' failed: OOPS! Cannot find information for
-   class Qualified_ "Data.Bits" "Bits" unsupported *)
+   class Qualified "Data.Bits" "Bits" unsupported *)
 
 Definition hash_compose {a} {b} {c} :=
   (@Coq.Program.Basics.compose a b c).

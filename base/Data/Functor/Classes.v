@@ -110,11 +110,11 @@ Program Instance instance_Data_Functor_Classes_Ord1_option : Ord1 option :=
         instance_Data_Functor_Classes_Ord1_option_liftCompare |}.
 
 (* Translating `instance Data.Functor.Classes.Read1 option' failed: OOPS! Cannot
-   find information for class Qualified_ "Data.Functor.Classes" "Read1"
+   find information for class Qualified "Data.Functor.Classes" "Read1"
    unsupported *)
 
 (* Translating `instance Data.Functor.Classes.Show1 option' failed: OOPS! Cannot
-   find information for class Qualified_ "Data.Functor.Classes" "Show1"
+   find information for class Qualified "Data.Functor.Classes" "Show1"
    unsupported *)
 
 Local Definition instance_Data_Functor_Classes_Eq1_list_liftEq : forall {a} {b},
@@ -149,11 +149,11 @@ Program Instance instance_Data_Functor_Classes_Ord1_list : Ord1 list := fun _
         instance_Data_Functor_Classes_Ord1_list_liftCompare |}.
 
 (* Translating `instance Data.Functor.Classes.Read1 list' failed: OOPS! Cannot
-   find information for class Qualified_ "Data.Functor.Classes" "Read1"
+   find information for class Qualified "Data.Functor.Classes" "Read1"
    unsupported *)
 
 (* Translating `instance Data.Functor.Classes.Show1 list' failed: OOPS! Cannot
-   find information for class Qualified_ "Data.Functor.Classes" "Show1"
+   find information for class Qualified "Data.Functor.Classes" "Show1"
    unsupported *)
 
 Local Definition instance_Data_Functor_Classes_Eq2_GHC_Tuple_pair_type_liftEq2
@@ -188,12 +188,12 @@ Program Instance instance_Data_Functor_Classes_Ord2_GHC_Tuple_pair_type : Ord2
         instance_Data_Functor_Classes_Ord2_GHC_Tuple_pair_type_liftCompare2 |}.
 
 (* Translating `instance Data.Functor.Classes.Read2 GHC.Tuple.pair_type' failed:
-   OOPS! Cannot find information for class Qualified_ "Data.Functor.Classes"
-   "Read2" unsupported *)
+   OOPS! Cannot find information for class Qualified "Data.Functor.Classes" "Read2"
+   unsupported *)
 
 (* Translating `instance Data.Functor.Classes.Show2 GHC.Tuple.pair_type' failed:
-   OOPS! Cannot find information for class Qualified_ "Data.Functor.Classes"
-   "Show2" unsupported *)
+   OOPS! Cannot find information for class Qualified "Data.Functor.Classes" "Show2"
+   unsupported *)
 
 Local Definition instance_forall____GHC_Base_Eq__a____Data_Functor_Classes_Eq1__GHC_Tuple_pair_type_a__liftEq {inst_a}
                                                                                                               `{(GHC.Base.Eq_
@@ -231,11 +231,11 @@ Program Instance instance_forall____GHC_Base_Ord_a____Data_Functor_Classes_Ord1_
 
 (* Translating `instance forall {a}, forall `{(GHC.Read.Read a)},
    Data.Functor.Classes.Read1 (GHC.Tuple.pair_type a)' failed: OOPS! Cannot find
-   information for class Qualified_ "Data.Functor.Classes" "Read1" unsupported *)
+   information for class Qualified "Data.Functor.Classes" "Read1" unsupported *)
 
 (* Translating `instance forall {a}, forall `{(GHC.Show.Show a)},
    Data.Functor.Classes.Show1 (GHC.Tuple.pair_type a)' failed: OOPS! Cannot find
-   information for class Qualified_ "Data.Functor.Classes" "Show1" unsupported *)
+   information for class Qualified "Data.Functor.Classes" "Show1" unsupported *)
 
 Local Definition instance_Data_Functor_Classes_Eq2_Data_Either_Either_liftEq2
     : forall {a} {b} {c} {d},
@@ -274,12 +274,12 @@ Program Instance instance_Data_Functor_Classes_Ord2_Data_Either_Either : Ord2
         instance_Data_Functor_Classes_Ord2_Data_Either_Either_liftCompare2 |}.
 
 (* Translating `instance Data.Functor.Classes.Read2 Data.Either.Either' failed:
-   OOPS! Cannot find information for class Qualified_ "Data.Functor.Classes"
-   "Read2" unsupported *)
+   OOPS! Cannot find information for class Qualified "Data.Functor.Classes" "Read2"
+   unsupported *)
 
 (* Translating `instance Data.Functor.Classes.Show2 Data.Either.Either' failed:
-   OOPS! Cannot find information for class Qualified_ "Data.Functor.Classes"
-   "Show2" unsupported *)
+   OOPS! Cannot find information for class Qualified "Data.Functor.Classes" "Show2"
+   unsupported *)
 
 Local Definition instance_forall____GHC_Base_Eq__a____Data_Functor_Classes_Eq1__Data_Either_Either_a__liftEq {inst_a}
                                                                                                              `{(GHC.Base.Eq_
@@ -317,11 +317,11 @@ Program Instance instance_forall____GHC_Base_Ord_a____Data_Functor_Classes_Ord1_
 
 (* Translating `instance forall {a}, forall `{(GHC.Read.Read a)},
    Data.Functor.Classes.Read1 (Data.Either.Either a)' failed: OOPS! Cannot find
-   information for class Qualified_ "Data.Functor.Classes" "Read1" unsupported *)
+   information for class Qualified "Data.Functor.Classes" "Read1" unsupported *)
 
 (* Translating `instance forall {a}, forall `{(GHC.Show.Show a)},
    Data.Functor.Classes.Show1 (Data.Either.Either a)' failed: OOPS! Cannot find
-   information for class Qualified_ "Data.Functor.Classes" "Show1" unsupported *)
+   information for class Qualified "Data.Functor.Classes" "Show1" unsupported *)
 
 Local Definition instance_Data_Functor_Classes_Eq1_Data_Functor_Identity_Identity_liftEq
     : forall {a} {b},
@@ -357,11 +357,11 @@ Program Instance instance_Data_Functor_Classes_Ord1_Data_Functor_Identity_Identi
 
 (* Translating `instance Data.Functor.Classes.Read1
    Data.Functor.Identity.Identity' failed: OOPS! Cannot find information for class
-   Qualified_ "Data.Functor.Classes" "Read1" unsupported *)
+   Qualified "Data.Functor.Classes" "Read1" unsupported *)
 
 (* Translating `instance Data.Functor.Classes.Show1
    Data.Functor.Identity.Identity' failed: OOPS! Cannot find information for class
-   Qualified_ "Data.Functor.Classes" "Show1" unsupported *)
+   Qualified "Data.Functor.Classes" "Show1" unsupported *)
 
 Local Definition instance_Data_Functor_Classes_Eq2_Data_Functor_Const_Const_liftEq2
     : forall {a} {b} {c} {d},
@@ -396,12 +396,12 @@ Program Instance instance_Data_Functor_Classes_Ord2_Data_Functor_Const_Const
         instance_Data_Functor_Classes_Ord2_Data_Functor_Const_Const_liftCompare2 |}.
 
 (* Translating `instance Data.Functor.Classes.Read2 Data.Functor.Const.Const'
-   failed: OOPS! Cannot find information for class Qualified_
-   "Data.Functor.Classes" "Read2" unsupported *)
+   failed: OOPS! Cannot find information for class Qualified "Data.Functor.Classes"
+   "Read2" unsupported *)
 
 (* Translating `instance Data.Functor.Classes.Show2 Data.Functor.Const.Const'
-   failed: OOPS! Cannot find information for class Qualified_
-   "Data.Functor.Classes" "Show2" unsupported *)
+   failed: OOPS! Cannot find information for class Qualified "Data.Functor.Classes"
+   "Show2" unsupported *)
 
 Local Definition instance_forall____GHC_Base_Eq__a____Data_Functor_Classes_Eq1__Data_Functor_Const_Const_a__liftEq {inst_a}
                                                                                                                    `{(GHC.Base.Eq_
@@ -439,12 +439,12 @@ Program Instance instance_forall____GHC_Base_Ord_a____Data_Functor_Classes_Ord1_
 
 (* Translating `instance forall {a}, forall `{(GHC.Read.Read a)},
    Data.Functor.Classes.Read1 (Data.Functor.Const.Const a)' failed: OOPS! Cannot
-   find information for class Qualified_ "Data.Functor.Classes" "Read1"
+   find information for class Qualified "Data.Functor.Classes" "Read1"
    unsupported *)
 
 (* Translating `instance forall {a}, forall `{(GHC.Show.Show a)},
    Data.Functor.Classes.Show1 (Data.Functor.Const.Const a)' failed: OOPS! Cannot
-   find information for class Qualified_ "Data.Functor.Classes" "Show1"
+   find information for class Qualified "Data.Functor.Classes" "Show1"
    unsupported *)
 
 Local Definition instance_Data_Functor_Classes_Eq1_Data_Proxy_Proxy_liftEq
@@ -469,12 +469,12 @@ Program Instance instance_Data_Functor_Classes_Ord1_Data_Proxy_Proxy : Ord1
         instance_Data_Functor_Classes_Ord1_Data_Proxy_Proxy_liftCompare |}.
 
 (* Translating `instance Data.Functor.Classes.Show1 Data.Proxy.Proxy' failed:
-   OOPS! Cannot find information for class Qualified_ "Data.Functor.Classes"
-   "Show1" unsupported *)
+   OOPS! Cannot find information for class Qualified "Data.Functor.Classes" "Show1"
+   unsupported *)
 
 (* Translating `instance Data.Functor.Classes.Read1 Data.Proxy.Proxy' failed:
-   OOPS! Cannot find information for class Qualified_ "Data.Functor.Classes"
-   "Read1" unsupported *)
+   OOPS! Cannot find information for class Qualified "Data.Functor.Classes" "Read1"
+   unsupported *)
 
 Definition compare1 {f} {a} `{Ord1 f} `{GHC.Base.Ord a} : f a -> f
                                                           a -> comparison :=

@@ -445,7 +445,7 @@ isTrivialMatch _ = Nothing
 convTrivialMatch ::  ConversionMonad m =>
   Match GHC.Name (LHsExpr GHC.Name) ->  m (Binders, Term)
 convTrivialMatch alt = do
-  (MultPattern pats, HasNoGuard, rhs) <- convertMatch alt
+  (MultPattern pats, _, rhs) <- convertMatch alt
   names <- mapM patToName pats
   let argBinders = (Inferred Coq.Explicit) <$> names
   body <- rhs patternFailure

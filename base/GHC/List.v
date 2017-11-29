@@ -126,14 +126,17 @@ Definition elem {a} `{(GHC.Base.Eq_ a)} : a -> list a -> bool :=
            end.
 
 Definition filter {a} : (a -> bool) -> list a -> list a :=
-  fix filter arg_139__ arg_140__
-        := match arg_139__ , arg_140__ with
+  fix filter arg_140__ arg_141__
+        := match arg_140__ , arg_141__ with
              | _pred , nil => nil
-             | pred , cons x xs => let j_141__ := filter pred xs in
+             | pred , cons x xs => let j_142__ := filter pred xs in
                                    if pred x : bool
                                    then cons x (filter pred xs)
-                                   else j_141__
+                                   else j_142__
            end.
+
+Definition filterFB {a} {b} : (a -> b -> b) -> (a -> bool) -> a -> b -> b :=
+  fun c p x r => if p x : bool then c x r else r.
 
 Definition flipSeqScanl' {a} {b} : a -> b -> a :=
   fun a _b => a.
@@ -165,8 +168,8 @@ Definition idLength : GHC.Num.Int -> GHC.Num.Int :=
   GHC.Base.id.
 
 Definition lenAcc {a} : list a -> GHC.Num.Int -> GHC.Num.Int :=
-  fix lenAcc arg_149__ arg_150__
-        := match arg_149__ , arg_150__ with
+  fix lenAcc arg_150__ arg_151__
+        := match arg_150__ , arg_151__ with
              | nil , n => n
              | cons _ ys , n => lenAcc ys (GHC.Num.op_zp__ n (GHC.Num.fromInteger 1))
            end.
@@ -176,8 +179,8 @@ Definition length {a} : list a -> GHC.Num.Int :=
 
 Definition lengthFB {x}
     : x -> (GHC.Num.Int -> GHC.Num.Int) -> GHC.Num.Int -> GHC.Num.Int :=
-  fun arg_144__ arg_145__ =>
-    match arg_144__ , arg_145__ with
+  fun arg_145__ arg_146__ =>
+    match arg_145__ , arg_146__ with
       | _ , r => fun a => r (GHC.Num.op_zp__ a (GHC.Num.fromInteger 1))
     end.
 
@@ -199,7 +202,7 @@ Definition notElem {a} `{(GHC.Base.Eq_ a)} : a -> list a -> bool :=
            end.
 
 Definition null {a} : list a -> bool :=
-  fun arg_154__ => match arg_154__ with | nil => true | cons _ _ => false end.
+  fun arg_155__ => match arg_155__ with | nil => true | cons _ _ => false end.
 
 Definition or : list bool -> bool :=
   fix or arg_69__
@@ -314,8 +317,8 @@ Definition takeWhileFB {a} {b}
   fun p c n => fun x r => if p x : bool then c x r else n.
 
 Definition uncons {a} : list a -> option (a * list a) :=
-  fun arg_156__ =>
-    match arg_156__ with
+  fun arg_157__ =>
+    match arg_157__ with
       | nil => None
       | cons x xs => Some (pair x xs)
     end.

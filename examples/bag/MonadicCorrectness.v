@@ -383,8 +383,6 @@ Theorem mapAndUnzipBagM_ok {M A B C} `{MonadLaws M}
   GHC.Base.fmap bagToList (GHC.Base.fmap (snd) (mapAndUnzipBagM f b)) =
   GHC.Base.fmap (map snd) (Data.Traversable.mapM f (bagToList b)).
 Proof.
-Admitted.
-(*
   rewrite
     /Data.Traversable.mapM
     /Traversable.instance_Traversable_list
@@ -393,83 +391,40 @@ Admitted.
     /Data.Traversable.instance_Traversable_list_traverse.
   induction b; simpl;
     [split; anf_equal | | |].
-  - split.
-    + replace
-        (fmap fst
-           (f a >>=
-              (fun arg_23__ : B * C =>
-                 let (r, s) := arg_23__ in
-                 return_ (Mk_UnitBag r, Mk_UnitBag s)))) with
-        (fmap fst
-          (f a >>=
-             (fun x: B * C =>
-                return_ (Mk_UnitBag (fst x),
-                         Mk_UnitBag (snd x))))).
-      *
-      * do 2 f_equal. funext=> p. destruct p. reflexivity.
-      rewrite -monad_bind_fmap_ap !applicative_fmap.
-
-      Print MonadLaws.
-
-      Check @applicative_fmap.
-      admit.
-      unfold "<$>".
-      rewrite functor_composition
-              !applicative_fmap applicative_interchange
-      -applicative_composition !applicative_homomorphism;
-        do 2 f_equal; funext=> ?; unfold "∘";
-                                rewrite app_nil_r.
-      unfold bagToList.
-      anf.
-      rewrite applicative_fmap_pure.
-      anf.
-      replace
-        (fmap fst
-           (f a >>=
-              (fun arg_23__ : B * C =>
-                 let (r, s) := arg_23__ in
-                 return_ (Mk_UnitBag r, Mk_UnitBag s)))) with
-        (fmap fst
-          (f a >>=
-             (fun x: B * C =>
-                return_ (Mk_UnitBag (fst x),
-                         Mk_UnitBag (snd x))))).
-      * admit.
-      * repeat f_equal.
-        anf.
-        Search (_ = (let _ := _ in _)). split.
-        destruct arg_23__. Hint View (let _ := _ in _) fst.
-        idtac.
-        Search (_ <$>  _).
-      rewrite -monad_bind_fmap_ap.
-
-
-      Search (fmap _ (fmap _ _)).
-      rewrite applicative_fmap_pure. Search fmap.
-      anf_equal.
-
-      f_equal.
-
-
-      apply monad_left_id.
-      destruct arg_23__.
-      Locate "let".
-      ?x:=_ in _). admit.
-    + admit.
-  - split.
-
-    Check @monad_fmap_return.
-      Check  applicative_interchange.
-      Search (_ <*> pure _).
-      Search (_∘_ _ _).
-      Locate "<*>".
-      Search op_zlztzg__.
-      Print MonadLaws.
-
-      Print ApplicativeLaws. Search fmap.
-      Search return_. simpl.
+  - split;
+      assert (Hr: (fun x : B * C =>
+                   let (r, s) := x in
+                   return_ (Mk_UnitBag r, Mk_UnitBag s)) =
+                (fun x : B * C =>
+                  return_ (Mk_UnitBag x.1, Mk_UnitBag x.2)));
+      solve [funext; 
+             intros x;  destruct x;
+             reflexivity |
+             rewrite Hr;
+             rewrite monad_bind_return_fmap;
+             anf_equal].
+  - destruct IHb1 as [IHb11 IHb12].
+    destruct IHb2 as [IHb21 IHb22].
+    rewrite bagToList_TwoBags foldr_app.
+    split.
+    assert (Hr: (fun x : Bag B * Bag C =>
+         let (r1, s1) := x in
+         mapAndUnzipBagM f b2 >>=
+         (fun y: Bag B * Bag C =>
+          let (r2, s2) := y in
+          return_ (Mk_TwoBags r1 r2, Mk_TwoBags s1 s2))) =
+         (fun x : Bag B * Bag C =>
+         mapAndUnzipBagM f b2 >>=
+         (fun y: Bag B * Bag C =>
+          return_ (Mk_TwoBags x.1 y.1, Mk_TwoBags x.2 y.2))));
+      try solve [funext; intros x; destruct x; f_equal;
+                 funext; intros y; destruct y; reflexivity].
+    rewrite Hr.
+    + Check @monad_bind_return_fmap.
+       repeat rewrite -IHb11 -IHb12 -IHb21 -IHb22.
+    
 Admitted.
- *)
+ 
 (* TODO foldrBagM foldlBagM *)
 (*
 Check foldrBagM.

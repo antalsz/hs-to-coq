@@ -49,9 +49,9 @@ import HsToCoq.ConvertHaskell.Parameters.Parsers
 import HsToCoq.Util.Monad
 import HsToCoq.Util.Messages
 import HsToCoq.PrettyPrint hiding ((</>))
-import HsToCoq.Coq.Gallina
 import HsToCoq.Coq.Gallina.Util
 import HsToCoq.Coq.FreeVars
+import HsToCoq.Coq.Pretty
 import HsToCoq.Coq.Preamble
 import HsToCoq.ProcessFiles
 import HsToCoq.ConvertHaskell

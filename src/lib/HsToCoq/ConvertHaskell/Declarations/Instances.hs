@@ -41,6 +41,7 @@ import HsToCoq.Util.GHC.Module
 
 import HsToCoq.PrettyPrint (renderOneLineT)
 import HsToCoq.Coq.Gallina
+import HsToCoq.Coq.Pretty
 import HsToCoq.Coq.FreeVars
 import HsToCoq.Coq.Subst
 import HsToCoq.Coq.Gallina.Util

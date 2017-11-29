@@ -380,9 +380,9 @@ data ImportExport = Import                                                      
                   deriving (Eq, Ord, Show, Read, Enum, Bounded, Typeable, Data)
 
 -- |@/module_sentence/@ ::= – extra (inferred from §2.5 and §6.5.1), and incomplete
-data ModuleSentence = ModuleImport ImportExport (NonEmpty Qualid)                              -- ^@/import_export/ /qualid/ … /qualid/ .@
-                    | Require (Maybe Qualid) (Maybe ImportExport) (NonEmpty Qualid)            -- ^@[From /qualid/] Require [/import_export/] /qualid/ … /qualid/ .@
-                    | ModuleAssignment Qualid Qualid                                           -- ^@Module /qualid/ := /qualid/ .@
+data ModuleSentence = ModuleImport ImportExport (NonEmpty ModuleIdent)                         -- ^@/import_export/ /qualid/ … /qualid/ .@
+                    | Require (Maybe ModuleIdent) (Maybe ImportExport) (NonEmpty ModuleIdent)  -- ^@[From /qualid/] Require [/import_export/] /qualid/ … /qualid/ .@
+                    | ModuleAssignment ModuleIdent ModuleIdent                                 -- ^@Module /qualid/ := /qualid/ .@
                     deriving (Eq, Ord, Show, Read, Typeable, Data)
 
 -- |@/class_definition/ ::=@ /(extra)/

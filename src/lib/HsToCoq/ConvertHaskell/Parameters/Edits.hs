@@ -1,7 +1,7 @@
 {-# LANGUAGE LambdaCase, TemplateHaskell, RecordWildCards, OverloadedStrings #-}
 
 module HsToCoq.ConvertHaskell.Parameters.Edits (
-  Edits(..), typeSynonymTypes, dataTypeArguments, nonterminating, termination, redefinitions, additions, skipped, skippedMethods, skippedModules, axiomatizedModules, additionalScopes, orders, renamings, classKinds, dataKinds,
+  Edits(..), typeSynonymTypes, dataTypeArguments, nonterminating, termination, redefinitions, additions, skipped, hasManualNotation, skippedMethods, skippedModules, axiomatizedModules, additionalScopes, orders, renamings, classKinds, dataKinds,
   HsNamespace(..), NamespacedIdent(..), Renamings,
   DataTypeArguments(..), dtParameters, dtIndices,
   CoqDefinition(..), definitionSentence,
@@ -64,6 +64,7 @@ data Edit = TypeSynonymTypeEdit   Ident Ident
           | SkipMethodEdit        Qualid Ident
           | SkipModuleEdit        ModuleName
           | AxiomatizeModuleEdit  ModuleName
+          | HasManualNotationEdit ModuleName
           | AdditionalScopeEdit   ScopePlace Qualid Ident
           | OrderEdit             (NonEmpty Qualid)
           | RenameEdit            NamespacedIdent Qualid
@@ -108,6 +109,7 @@ data Edits = Edits { _typeSynonymTypes   :: !(Map Ident Ident)
                    , _skippedMethods     :: !(Set (Qualid,Ident))
                    , _skippedModules     :: !(Set ModuleName)
                    , _axiomatizedModules :: !(Set ModuleName)
+                   , _hasManualNotation  :: !(Set ModuleName)
                    , _additionalScopes   :: !(Map (ScopePlace, Qualid) Ident)
                    , _orders             :: !(Map Qualid (Set Qualid))
                    , _classKinds         :: !(Map Qualid (NonEmpty Term))
@@ -118,12 +120,12 @@ data Edits = Edits { _typeSynonymTypes   :: !(Map Ident Ident)
 makeLenses ''Edits
 
 instance Semigroup Edits where
-  (<>) (Edits tst1 dta1 ntm1 trm1 rdf1 add1 skp1 smth1 smod1 axm1 ads1 ord1 rnm1 clk1 dk1)
-       (Edits tst2 dta2 ntm2 trm2 rdf2 add2 skp2 smth2 smod2 axm2 ads2 ord2 rnm2 clk2 dk2) =
-    Edits (tst1 <> tst2) (dta1 <> dta2) (ntm1 <> ntm2) (trm1 <> trm2) (rdf1 <> rdf2) (add1 <> add2) (skp1 <> skp2) (smth1 <> smth2) (smod1 <> smod2) (axm1 <> axm2) (ads1 <> ads2) (ord1 <> ord2) (rnm1 <> rnm2) (clk1 <> clk2) (dk1 <> dk2)
+  (<>) (Edits tst1 dta1 ntm1 trm1 rdf1 add1 skp1 smth1 smod1 axm1 hmn1 ads1 ord1 rnm1 clk1 dk1)
+       (Edits tst2 dta2 ntm2 trm2 rdf2 add2 skp2 smth2 smod2 axm2 hmn2 ads2 ord2 rnm2 clk2 dk2) =
+    Edits (tst1 <> tst2) (dta1 <> dta2) (ntm1 <> ntm2) (trm1 <> trm2) (rdf1 <> rdf2) (add1 <> add2) (skp1 <> skp2) (smth1 <> smth2) (smod1 <> smod2) (axm1 <> axm2) (hmn1 <> hmn2) (ads1 <> ads2) (ord1 <> ord2) (rnm1 <> rnm2) (clk1 <> clk2) (dk1 <> dk2)
 
 instance Monoid Edits where
-  mempty  = Edits mempty mempty mempty mempty mempty mempty mempty mempty mempty mempty mempty mempty mempty mempty mempty
+  mempty  = Edits mempty mempty mempty mempty mempty mempty mempty mempty mempty mempty mempty mempty mempty mempty mempty mempty
   mappend = (<>)
 
 -- Module-local'
@@ -148,6 +150,7 @@ addEdit = \case -- To bring the `where' clause into scope everywhere
   SkipEdit              what              -> addFresh skipped                             (duplicateQ_for "skips")                                           what         ()
   SkipMethodEdit        cls meth          -> addFresh skippedMethods                      (duplicate_for' "skipped method requests"       prettyClsMth)      (cls,meth)   ()
   SkipModuleEdit        mod               -> addFresh skippedModules                      (duplicate_for' "skipped module requests"       moduleNameString)  mod          ()
+  HasManualNotationEdit what              -> addFresh hasManualNotation                   (duplicate_for' "has manual notation"            moduleNameString) what         ()
   AxiomatizeModuleEdit  mod               -> addFresh axiomatizedModules                  (duplicate_for' "module axiomatizations"        moduleNameString)  mod          ()
   AdditionalScopeEdit   place name scope  -> addFresh additionalScopes                    (duplicate_for' "additions of a scope"          prettyScoped)      (place,name) scope
   OrderEdit             idents            -> Right . appEndo (foldMap (Endo . addEdge orders . swap) (adjacents idents))

@@ -46,6 +46,8 @@ import HsToCoq.ConvertHaskell.Parameters.Parsers.Lexing
   indices         { TokWord    "indices"        }
   redefine        { TokWord    "redefine"       }
   skip            { TokWord    "skip"           }
+  manual          { TokWord    "manual"         }
+  notation        { TokWord    "notation"       }
   class           { TokWord    "class"          }
   kinds           { TokWord    "kinds"          }
   axiomatize      { TokWord    "axiomatize"     }
@@ -228,6 +230,7 @@ Edit :: { Edit }
   | skip Qualid                                   { SkipEdit              $2                              }
   | skip method Qualid Word                       { SkipMethodEdit        $3 $4                           }
   | skip module Word                              { SkipModuleEdit        (mkModuleName (T.unpack $3))    }
+  | manual notation Word                          { HasManualNotationEdit (mkModuleName (T.unpack $3))    }
   | nonterminating Qualid                         { NonterminatingEdit    $2                              }
   | termination Qualid Order Optional(Word)       { TerminationEdit       $2 $3 $4                        }
   | rename Renaming                               { RenameEdit            (fst $2) (snd $2)               }
@@ -264,6 +267,9 @@ ExitCoqParsing :: { () }
 Qualid :: { Qualid }
   : WordOrOp   { forceIdentToQualid $1 }
 
+QualOp :: { Qualid }
+  : Op   { forceIdentToQualid $1 }
+
 Term :: { Term }
   : LargeTerm    { $1 }
   | App          { $1 }
@@ -275,7 +281,7 @@ LargeTerm :: { Term }
   | cofix CofixBodies          { Cofix $2 }
   | forall Binders ',' Term    { Forall $2 $4 }
   | match SepBy1(MatchItem, ',') with Many(Equation) end { Match $2 Nothing $4 }
-  | Atom Qualid Atom           { if $2 == "->" then Arrow $1 $3 else Infix $1 $2 $3 }
+  | Atom QualOp Atom           { if $2 == "->" then Arrow $1 $3 else Infix $1 $2 $3 }
 
 App :: { Term }
   :     Atom Some(Arg)     { App $1 $2 }

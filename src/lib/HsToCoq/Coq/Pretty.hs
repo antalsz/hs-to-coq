@@ -169,7 +169,7 @@ renderQOp qid = case qualidToOp qid of
 renderQPrefix :: Qualid -> Doc
 renderQPrefix qid = case qualidToPrefix qid of
     Just op -> renderOp op
-    Nothing -> error $ "Cannot turn " ++ show qid ++ " into an operator"
+    Nothing -> error $ "Cannot turn " ++ show qid ++ " into a prefix operator"
 
 -- Module-local
 render_type :: Term -> Doc
@@ -633,15 +633,15 @@ instance Gallina ImportExport where
 
 instance Gallina ModuleSentence where
   renderGallina' _ (ModuleImport ie mods) =
-    renderGallina ie <+> align (fillSep $ renderGallina <$> mods) <> "."
+    renderGallina ie <+> align (fillSep $ renderModuleIdent <$> mods) <> "."
   renderGallina' _ (Require mfrom mie mods) =
-       (("From" <+>) . renderGallina) ?? mfrom
+       (("From" <+>) . renderModuleIdent) ?? mfrom
     <> "Require" <+> renderGallina ?? mie
-    <> align (fillSep $ renderGallina <$> mods) <> "."
+    <> align (fillSep $ renderModuleIdent <$> mods) <> "."
     where render ?? mx = maybe mempty render mx <> spaceIf mx
           infix 9 ??
   renderGallina' _ (ModuleAssignment modNew modOld) =
-    "Module" <+> renderGallina modNew <+> nest 2 (":=" </> renderGallina modOld <> ".")
+    "Module" <+> renderModuleIdent modNew <+> nest 2 (":=" </> renderModuleIdent modOld <> ".")
 
 instance Gallina ClassDefinition where
   renderGallina' _ (ClassDefinition cl params osort fields) =

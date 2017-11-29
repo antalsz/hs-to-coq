@@ -1,7 +1,7 @@
 {-# LANGUAGE LambdaCase, OverloadedStrings #-}
 
 module HsToCoq.ConvertHaskell.InfixNames (
-  identIsVariable, identIsOperator,
+  identIsVariable,
   infixToPrefix, toPrefix, toLocalPrefix,
   infixToCoq, toCoqName,
   identIsOp, identToOp,
@@ -38,9 +38,6 @@ identIsVariable_ = T.uncons <&> \case
 
 identIsVariable :: Text -> Bool
 identIsVariable = all identIsVariable_ . T.splitOn "."
-
-identIsOperator :: Text -> Bool
-identIsOperator = not . identIsVariable
 
 -- An operator's user-facing name in Coq (a notation)
 infixToPrefix :: Op -> Ident

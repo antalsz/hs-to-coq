@@ -8,8 +8,6 @@ module HsToCoq.ConvertHaskell.Module (
   moduleDeclarations,
   -- * Convert declaration groups
   ConvertedModuleDeclarations(..), convertHsGroup,
-  -- * Turn import statements into @Require@s, unconditionally
-  require,
 ) where
 
 import Control.Lens
@@ -18,6 +16,7 @@ import HsToCoq.Util.Function
 import Data.Traversable
 import Data.Foldable
 import Data.Maybe
+import Data.Monoid
 import Data.List.NonEmpty (NonEmpty(..))
 import HsToCoq.Util.Containers
 
@@ -146,11 +145,6 @@ axiomatizeHsGroup mod HsGroup{..} = do
 
 --------------------------------------------------------------------------------
 
-require :: MonadIO f => ModuleName -> f ModuleSentence
-require mn = case identToQualid (moduleNameText mn) of
-    Just qi -> pure (Require Nothing Nothing (pure qi))
-    Nothing -> throwProgramError $ "malformed module name " ++ moduleNameString mn
-
 --------------------------------------------------------------------------------
 
 data ConvertedModule =
@@ -194,15 +188,24 @@ convert_module_with_requires_via convGroup convModName (group, _imports, _export
       <- convGroup convModName group
 
     let allSentences = convModTyClDecls ++ convModValDecls ++ convModClsInstDecls ++ convModAddedDecls
-    let extraModules = filter (/= convModName)
+    let freeVars = toList . getFreeVars $ NoBinding allSentences
+    let modules = filter (/= convModName)
+                     . map (mkModuleName . T.unpack)
+                     . mapMaybe qualidModule $ freeVars
+    let notationModules
+                     = filter (/= convModName)
                      . map (mkModuleName . T.unpack)
                      . mapMaybe qualidModule
-                      $ toList . getFreeVars $ NoBinding allSentences
+                     . filter qualidIsOp $ freeVars
 
-    modules <- skipModules $ S.toList $ S.fromList extraModules
+    modules         <- skipModules $ S.toList $ S.fromList modules
+    notationModules <- skipModules $ S.toList $ S.fromList notationModules
 
-    convModImports <-
-      traverse (\mn -> ModuleSentence <$> require mn) modules
+    let convModImports =
+            [ ModuleSentence (Require Nothing Nothing [moduleNameText mn])
+            | mn <- modules] ++
+            [ ModuleSentence (ModuleImport Import [moduleNameText mn <> ".Notations"])
+            | mn <- notationModules ]
     pure (ConvertedModule{..}, modules)
 
 -- Module-local
@@ -240,7 +243,7 @@ moduleDeclarations ConvertedModule{..} = do
   let sorted = topoSortSentences orders $
         convModValDecls ++ convModClsInstDecls ++ convModAddedDecls
   ax_decls <- usedAxioms sorted
-  let not_decls = qualifiedNotations convModName (convModTyClDecls ++ sorted)
+  not_decls <- qualifiedNotations convModName (convModTyClDecls ++ sorted)
   return $ deQualifyLocalNames convModName $ (convModTyClDecls, ax_decls ++ sorted ++ not_decls)
 
 -- | This un-qualifies all variable names in the current module.
@@ -270,12 +273,20 @@ usedAxioms decls = do
           ]
     return $ comment ++ ax_decls
 
-qualifiedNotations :: ModuleName -> [Sentence] -> [Sentence]
-qualifiedNotations mod decls = wrap
-    [ NotationSentence qn
-    | NotationSentence n <- decls, Just qn <- pure $ qualifyNotation mod n ]
+qualifiedNotations :: ConversionMonad m => ModuleName -> [Sentence] -> m [Sentence]
+qualifiedNotations mod decls = do
+    hmn <- use (edits . hasManualNotation . contains mod)
+    return $ wrap $
+        extra hmn ++
+        [ NotationSentence qn
+        | NotationSentence n <- decls, Just qn <- pure $ qualifyNotation mod n ]
   where
     wrap :: [Sentence] -> [Sentence]
     wrap []        = []
     wrap sentences = [ LocalModuleSentence (LocalModule "Notations" sentences) ]
+
+    extra :: Bool -> [Sentence]
+    extra True  = [ ModuleSentence (ModuleImport Export ["ManualNotations"]) ]
+    extra False = []
+
 

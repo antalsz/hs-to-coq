@@ -70,6 +70,9 @@ freeVar = fmap freeVar' . ghcPpr
 bareName :: GHC.Name -> Ident
 bareName = toPrefix . escapeReservedNames . T.pack . occNameString . nameOccName
 
+localName :: GHC.Name -> Ident
+localName = toLocalPrefix . escapeReservedNames . T.pack . occNameString . nameOccName
+
 var' :: ConversionMonad m => HsNamespace -> Ident -> m Qualid
 var' ns x = use $ renamed ns (Bare x) . non (Bare (escapeReservedNames x))
 
@@ -79,7 +82,7 @@ varUnrenamed name = qid
     nameModM = moduleNameText . moduleName <$> nameModule_maybe name
 
     qid | Just m <- nameModM = Qualified m (bareName name)
-        | otherwise          = Bare (bareName name)
+        | otherwise          = Bare        (localName name)
 
 unQualifyLocal :: ConversionMonad m => Qualid -> m Qualid
 unQualifyLocal qi = do

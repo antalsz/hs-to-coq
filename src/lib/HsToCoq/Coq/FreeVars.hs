@@ -35,7 +35,6 @@ import Data.Maybe (fromMaybe)
 import Data.Monoid
 
 import HsToCoq.Coq.Gallina
-import HsToCoq.ConvertHaskell.InfixNames
 
 ----------------------------------------------------------------------------------------------------
 
@@ -119,9 +118,7 @@ instance Binding Pattern where
     (freeVars con *>) . binding f xs
 
   binding f (InfixPat l op r) =
-    -- TODO: InfixPat not really supported at the moment
-    -- (Need to chage it to take a qualifid name)
-    (occurrence (Bare (infixToCoq op)) *>) . binding f [l,r]
+    (occurrence (Bare op) *>) . binding f [l,r]
 
   binding f (AsPat pat x) =
     binding f pat . binding f x
@@ -171,7 +168,7 @@ instance Binding Sentence where
   binding f (RecordSentence           rcd)       = binding f rcd
   binding f (InstanceSentence         ins)       = binding f ins
   binding f (ProgramInstanceSentence  ins)       = binding f ins
-  binding f (NotationSentence         not)       = binding f not
+  binding _ (NotationSentence         not)       = (freeVars not *>)
   binding f (LocalModuleSentence      lmd)       = binding f lmd
   binding _ (ArgumentsSentence        arg)       = (freeVars arg *>)
   binding _ (CommentSentence          com)       = (freeVars com *>)
@@ -200,16 +197,12 @@ instance Binding Definition where
       binding f x
 
 instance Binding Inductive where
-  binding f (Inductive   ibs nots) = binding f (foldMap names ibs) . (freeVars ibs *> freeVars (NoBinding nots) *>)
-  binding f (CoInductive cbs nots) = binding f (foldMap names cbs) . (freeVars cbs *> freeVars (NoBinding nots) *>)
-  -- The notation bindings here can only rebind existing reserved names, so we
-  -- fake out @binding' nots@ to get the free variables.
+  binding f (Inductive   ibs nots) = binding f (foldMap names ibs) . (freeVars ibs *> freeVars nots *>)
+  binding f (CoInductive cbs nots) = binding f (foldMap names cbs) . (freeVars cbs *> freeVars nots *>)
 
 instance Binding Fixpoint where
-  binding f (Fixpoint   fbs nots) = binding f (foldMap names fbs) . (freeVars fbs *> freeVars (NoBinding nots) *>)
-  binding f (CoFixpoint cbs nots) = binding f (foldMap names cbs) . (freeVars cbs *> freeVars (NoBinding nots) *>)
-  -- The notation bindings here can only rebind existing reserved names, so we
-  -- fake out @binding' nots@ to get the free variables.
+  binding f (Fixpoint   fbs nots) = binding f (foldMap names fbs) . (freeVars fbs *> freeVars nots *>)
+  binding f (CoFixpoint cbs nots) = binding f (foldMap names cbs) . (freeVars cbs *> freeVars nots *>)
 
 instance Binding ProgramFixpoint where
   binding f (ProgramFixpoint name args order ty body) =
@@ -244,19 +237,6 @@ instance Binding InstanceDefinition where
     binding f params .
     (freeVars cl *> freeVars term *> freeVars mpf *>) .
     binding f inst
-
-instance Binding Notation where
-  binding f (ReservedNotationIdent x) = binding f (Bare x)
-    -- We treat reserved single-identifier notations as bound variables
-  binding f (NotationBinding nb) = binding f nb
-  binding f (InfixDefinition op defn oassoc level) =
-    -- TODO: This Bare is fishy
-    (freeVars defn *> freeVars oassoc *> freeVars level *>) . binding f (Bare (infixToCoq op))
-    -- We treat infix operators as bound variables
-
-instance Binding NotationBinding where
-    -- TODO: This Bare is fishy
-  binding f (NotationIdentBinding x def) = (freeVars def *>) . binding f (Bare (infixToCoq x))
 
 instance Binding LocalModule where
   binding f (LocalModule _name sentences) = binding f sentences
@@ -346,7 +326,7 @@ instance FreeVars Term where
     freeVars qid *> freeVars xs
 
   freeVars (Infix l op r) =
-    freeVars l *> occurrence (Bare (infixToCoq op)) *> freeVars r
+    freeVars l *> occurrence op *> freeVars r
 
   freeVars (InScope t _scope) =
     freeVars t
@@ -357,6 +337,9 @@ instance FreeVars Term where
     freeVars eqns
 
   freeVars (Qualid qid) =
+    freeVars qid
+
+  freeVars (RawQualid qid) =
     freeVars qid
 
   freeVars (Sort sort) =
@@ -483,6 +466,17 @@ instance FreeVars AssertionKeyword where
   freeVars Proposition = pure ()
   freeVars Definition  = pure ()
   freeVars Example     = pure ()
+
+instance FreeVars Notation where
+  -- Notations are not bindings sites, because our AST always refers to the
+  -- Qualid corresponding to the notation)
+  freeVars (ReservedNotationIdent _) = return ()
+  freeVars (NotationBinding nb) = freeVars nb
+  freeVars (InfixDefinition _ defn _ _) = freeVars defn
+
+instance FreeVars NotationBinding where
+  freeVars (NotationIdentBinding _ def) = freeVars def
+
 
 instance FreeVars Proof where
   -- We don't model proofs.

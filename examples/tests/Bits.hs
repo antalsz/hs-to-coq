@@ -14,6 +14,8 @@ class Bits a where
 testBitDefault :: Bits a => a -> a -> a
 testBitDefault = \x i -> (x .&. i)
 
+testBitDefault2 :: Bits a => a -> a -> a
+testBitDefault2 = (.&.)
 
 popCountDefault :: (Bits a) =>
     a -> (a -> a) -> (a -> a) -> (a -> Bool) -> a -> a

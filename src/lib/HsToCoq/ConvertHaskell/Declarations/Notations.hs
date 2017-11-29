@@ -22,10 +22,12 @@ import HsToCoq.ConvertHaskell.InfixNames
 buildInfixNotations :: Map Qualid Signature -> Qualid -> [Notation]
 buildInfixNotations sigs def
     | Just op <- identToOp (qualidBase def)
-    = [ uncurry (InfixDefinition op (Qualid def))
-      . maybe (hardCodedAssoc op) (first Just)
-      $ sigFixity =<< M.lookup def sigs
-      , NotationBinding $ NotationIdentBinding (infixToPrefix op) (Qualid def) ]
+    = -- Order matters: We want Coq to prefer the infix form
+      [ NotationBinding $ NotationIdentBinding (infixToPrefix op) (RawQualid def)
+      , uncurry (InfixDefinition op (Qualid def))
+        . maybe (hardCodedAssoc op) (first Just)
+        $ sigFixity =<< M.lookup def sigs
+      ]
     | otherwise = []
   where
     hardCodedAssoc op | op == "∘" = (Just LeftAssociativity, Level 40)

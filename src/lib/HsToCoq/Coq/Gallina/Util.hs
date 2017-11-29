@@ -19,6 +19,7 @@ module HsToCoq.Coq.Gallina.Util (
   qualidBase, qualidModule, qualidMapBase, qualidExtendBase,
   splitModule,
   qualidToIdent, identToQualid, identToBase,
+  qualidIsOp, qualidToOp, qualidToPrefix,
   unsafeIdentToQualid,
   nameToTerm, nameToPattern,
   binderArgs
@@ -83,7 +84,7 @@ termHead (Parens t)           = termHead t
 termHead (InScope t _)        = termHead t
 termHead (App t _)            = termHead t
 termHead (ExplicitApp name _) = Just name
-termHead (Infix _ op _)       = Just $ Bare op
+termHead (Infix _ op _)       = Just op
 termHead (Qualid name)        = Just name
 termHead _                    = Nothing
 
@@ -131,6 +132,16 @@ qualidExtendBase suffix = qualidMapBase (<> suffix)
 qualidToIdent :: Qualid -> Ident
 qualidToIdent (Bare      ident)   = ident
 qualidToIdent (Qualified qid aid) = qid <> "." <> aid
+
+qualidIsOp :: Qualid -> Bool
+qualidIsOp = identIsOp . qualidBase
+
+qualidToOp :: Qualid -> Maybe Op
+qualidToOp (Qualified qid aid) = ((qid <> ".") <>) <$> identToOp aid
+qualidToOp (Bare aid)          =                       identToOp aid
+
+qualidToPrefix :: Qualid -> Maybe Op
+qualidToPrefix qid = infixToPrefix <$> qualidToOp qid
 
 
 -- This doesn't handle all malformed 'Ident's

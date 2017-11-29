@@ -1,7 +1,7 @@
 {-# LANGUAGE TupleSections, LambdaCase, RecordWildCards,
              OverloadedLists, OverloadedStrings,
              FlexibleContexts, RankNTypes, ScopedTypeVariables,
-             ViewPatterns #-}
+             ViewPatterns, MultiWayIf  #-}
 
 module HsToCoq.ConvertHaskell.Expr (
   -- * Expressions
@@ -130,7 +130,9 @@ convertExpr (OpApp el eop _fixity er) =
       op <- var ExprNS hsOp
       l  <- convertLExpr el
       r  <- convertLExpr er
-      pure $ App2 (Qualid op) l r
+      pure $ if
+        | qualidIsOp op -> Infix l op r
+        | otherwise     -> App2 (Qualid op) l r
     _ ->
       convUnsupported "non-variable infix operators"
 
@@ -533,9 +535,8 @@ convertDoBlock allStmts = do
     toExpr _ _ =
       convUnsupported "impossibly fancy `do' block statements"
 
-    -- monBind e1 e2 = Infix e1 ">>=" e2
-    monBind = App2 "GHC.Base.>>="
-    monThen = App2 "GHC.Base.>>"
+    monBind e1 e2 = Infix e1 "GHC.Base.>>=" e2
+    monThen e1 e2 = Infix e1 "GHC.Base.>>"  e2
 
 convertListComprehension :: ConversionMonad m => [ExprLStmt GHC.Name] -> m Term
 convertListComprehension allStmts = case fmap unLoc <$> unsnoc allStmts of

@@ -2,9 +2,9 @@
 
 module HsToCoq.ConvertHaskell.InfixNames (
   identIsVariable, identIsOperator,
-  infixToPrefix, toPrefix,
+  infixToPrefix, toPrefix, toLocalPrefix,
   infixToCoq, toCoqName,
-  identToOp,
+  identIsOp, identToOp,
   canonicalName,
   splitModule -- a bit out of place here. oh well.
   ) where
@@ -50,6 +50,11 @@ toPrefix :: Ident -> Ident
 toPrefix x | identIsVariable x = x
            | otherwise         = infixToCoq x
 
+toLocalPrefix :: Ident -> Ident
+toLocalPrefix x | identIsVariable x = x
+                | otherwise         = "l" <> infixToCoq x
+
+
 -- An operator's defined name in Coq (hidden by a notation)
 infixToCoq_ :: Op -> Ident
 infixToCoq_ name = "op_" <> T.pack (zEncodeString $ T.unpack name) <> "__"
@@ -77,9 +82,14 @@ canonicalName x
   | identIsVariable x = x
   | otherwise         = infixToCoq . fromMaybe x $ T.stripPrefix "_" =<< T.stripSuffix "_" x
 
+identIsOp :: Ident -> Bool
+identIsOp t = "op_" `T.isPrefixOf` t && "__" `T.isSuffixOf` t
+    -- the next clause is a work-around as long as the dict accessors are named
+    -- op_...____ – these do not have notations
+    && not ("____" `T.isSuffixOf` t)
+
 identToOp :: Ident -> Maybe Op
 identToOp t
-   | "op_" `T.isPrefixOf` t, "__" `T.isSuffixOf` t
-   = Just $ T.pack (zDecodeString (T.unpack (T.drop 3 (T.dropEnd 2 t))))
-   | otherwise = Nothing
+   | identIsOp t = Just $ T.pack (zDecodeString (T.unpack (T.drop 3 (T.dropEnd 2 t))))
+   | otherwise   = Nothing
 

@@ -35,7 +35,7 @@ data ClassBody = ClassBody ClassDefinition [Notation]
                deriving (Eq, Ord, Read, Show)
 
 instance FreeVars ClassBody where
-  freeVars (ClassBody cls nots) = binding' cls $ freeVars (NoBinding nots)
+  freeVars (ClassBody cls nots) = binding' cls $ freeVars nots
 
 -- lookup the signature of a class member and return the list of its
 -- implicit binders

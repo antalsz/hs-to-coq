@@ -18,6 +18,7 @@ import Data.Maybe
 import qualified Data.Map.Strict as M
 
 import HsToCoq.Coq.Gallina
+import HsToCoq.Coq.Gallina.Util
 
 ----------------------------------------------------------------------------------------------------
 
@@ -215,11 +216,15 @@ instance Subst Term where
 
   subst f  (ExplicitApp qid xs) = ExplicitApp qid (subst f  xs)
 
-  subst f  (Infix l op r)
-    | Just t <- M.lookup (Bare op) f
+  subst f  (Infix l qid r)
+    | Just t <- M.lookup qid f
+    , Qualid qid' <- t
+    , qualidIsOp qid'
+    = Infix (subst f l) qid' (subst f r)
+    | Just t <- M.lookup qid f
     = App t [PosArg (subst f l), PosArg (subst f r)]
     | otherwise
-    = Infix (subst f l) op (subst f  r)
+    = Infix (subst f l) qid (subst f  r)
 
   subst f  (InScope t scope) =  InScope (subst f  t) scope
     -- The scope is a different sort of identifier, not a term-level variable.
@@ -228,6 +233,7 @@ instance Subst Term where
 
   subst  f x@(Qualid qid) = fromMaybe x (M.lookup qid f)
 
+  subst  f x@(RawQualid qid) = fromMaybe x (M.lookup qid f)
 
   subst _f x@(Sort _sort) = x
 

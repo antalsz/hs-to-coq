@@ -273,7 +273,7 @@ LargeTerm :: { Term }
   | fix   FixBodies            { Fix   $2 }
   | cofix CofixBodies          { Cofix $2 }
   | forall Binders ',' Term    { Forall $2 $4 }
-  | match SepBy1(MatchItem, ',') with SepBy(Equation,'|') end { Match $2 Nothing $4 }
+  | match SepBy1(MatchItem, ',') with Many(Equation) end { Match $2 Nothing $4 }
   | Atom Op Atom               { if $2 == "->" then Arrow $1 $3 else Infix $1 $2 $3 }
 
 App :: { Term }

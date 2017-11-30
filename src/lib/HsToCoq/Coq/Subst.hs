@@ -14,11 +14,11 @@ import Prelude hiding (Num)
 --import HsToCoq.Util.Function
 --import Data.List.NonEmpty (NonEmpty(), (<|))
 import Data.Map.Strict (Map)
+import Data.Maybe
 import qualified Data.Map.Strict as M
 
 import HsToCoq.Coq.Gallina
-
-import HsToCoq.ConvertHaskell.InfixNames
+import HsToCoq.Coq.Gallina.Util
 
 ----------------------------------------------------------------------------------------------------
 
@@ -29,7 +29,7 @@ import HsToCoq.ConvertHaskell.InfixNames
 -- if necessary.
 
 class Subst t where
-  subst :: Map Ident Term -> t -> t
+  subst :: Map Qualid Term -> t -> t
 
 instance Subst Binder where
   subst _f b@(Inferred _ex _x)    = b
@@ -87,6 +87,7 @@ instance Subst Sentence where
   subst f (InstanceSentence        ins)       = InstanceSentence          (subst f ins)
   subst f (ProgramInstanceSentence ins)       = ProgramInstanceSentence   (subst f ins)
   subst f (NotationSentence        not)       = NotationSentence          (subst f not)
+  subst f (LocalModuleSentence     lmd)       = LocalModuleSentence       (subst f lmd)
   subst _ s@(ExistingClassSentence  _)        = s
   subst _ s@(ArgumentsSentence  _)            = s
   subst _ s@(CommentSentence    _)            = s
@@ -131,6 +132,9 @@ instance Subst Assertion where
 
 instance Subst ModuleSentence where
   subst _ mod = mod
+
+instance Subst LocalModule where
+  subst f (LocalModule name sentences) = LocalModule name (map (subst f) sentences)
 
 instance Subst ClassDefinition where
   subst _f (ClassDefinition _cl _params _osrt _fields) = error "subst"
@@ -212,20 +216,24 @@ instance Subst Term where
 
   subst f  (ExplicitApp qid xs) = ExplicitApp qid (subst f  xs)
 
-  subst f  (Infix l op r)
-    | Just t <- M.lookup (infixToCoq op) f
+  subst f  (Infix l qid r)
+    | Just t <- M.lookup qid f
+    , Qualid qid' <- t
+    , qualidIsOp qid'
+    = Infix (subst f l) qid' (subst f r)
+    | Just t <- M.lookup qid f
     = App t [PosArg (subst f l), PosArg (subst f r)]
     | otherwise
-    = Infix (subst f l) op (subst f  r)
+    = Infix (subst f l) qid (subst f  r)
 
   subst f  (InScope t scope) =  InScope (subst f  t) scope
     -- The scope is a different sort of identifier, not a term-level variable.
 
   subst f (Match items oret eqns) = Match (subst f items) (subst f oret) (subst f eqns)
 
-  subst  f x@(Qualid (Bare id)) = maybe x (\x -> x) (M.lookup id f)
-  subst _f x@(Qualid (Qualified _ _)) = x
+  subst  f x@(Qualid qid) = fromMaybe x (M.lookup qid f)
 
+  subst  f x@(RawQualid qid) = fromMaybe x (M.lookup qid f)
 
   subst _f x@(Sort _sort) = x
 

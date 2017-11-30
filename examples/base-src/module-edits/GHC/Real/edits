@@ -1,18 +1,18 @@
-skip showSigned
+skip GHC.Real.showSigned
 
-skip ratioZeroDenominatorError
-skip overflowError
+skip GHC.Real.ratioZeroDenominatorError
+skip GHC.Real.overflowError
 
-skip numericEnumFromThen
-skip numericEnumFromThenTo
-skip numericEnumFrom
-skip numericEnumFromTo
+skip GHC.Real.numericEnumFromThen
+skip GHC.Real.numericEnumFromThenTo
+skip GHC.Real.numericEnumFrom
+skip GHC.Real.numericEnumFromTo
 
-skip ratioZeroDemoninatorError
-skip overflowError
+skip GHC.Real.ratioZeroDemoninatorError
+skip GHC.Real.overflowError
 
-skip Ratio      # in preamble
-skip numerator  # issue with pattern matching
-skip gcd
-skip lcm
-skip reduce
+skip GHC.Real.Ratio      # in preamble
+skip GHC.Real.numerator  # issue with pattern matching
+skip GHC.Real.gcd
+skip GHC.Real.lcm
+skip GHC.Real.reduce

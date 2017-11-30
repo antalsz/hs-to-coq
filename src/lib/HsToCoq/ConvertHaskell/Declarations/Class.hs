@@ -1,4 +1,4 @@
-{-# LANGUAGE RecordWildCards, LambdaCase, FlexibleContexts, OverloadedStrings, OverloadedLists #-}
+{-# LANGUAGE RecordWildCards, LambdaCase, FlexibleContexts, OverloadedStrings, OverloadedLists, ScopedTypeVariables #-}
 
 module HsToCoq.ConvertHaskell.Declarations.Class (ClassBody(..), convertClassDecl, getImplicitBindersForClassMember, classSentences) where
 
@@ -8,7 +8,6 @@ import Data.Traversable
 import qualified Data.List.NonEmpty as NE
 
 import Control.Monad
-import Data.Monoid
 
 import qualified Data.Map.Strict as M
 import qualified Data.Set as S
@@ -23,7 +22,6 @@ import HsToCoq.Coq.Gallina.Util
 import HsToCoq.Coq.FreeVars
 
 import HsToCoq.ConvertHaskell.Monad
-import HsToCoq.ConvertHaskell.InfixNames
 import HsToCoq.ConvertHaskell.Variables
 import HsToCoq.ConvertHaskell.Definitions
 import HsToCoq.ConvertHaskell.Type
@@ -32,20 +30,16 @@ import HsToCoq.ConvertHaskell.Parameters.Edits
 import HsToCoq.ConvertHaskell.Sigs
 import HsToCoq.ConvertHaskell.Declarations.Notations
 
-----------------------------
-import Control.Monad.IO.Class
-import Debug.Trace
-----------------------------------------------------
 
 data ClassBody = ClassBody ClassDefinition [Notation]
                deriving (Eq, Ord, Read, Show)
 
 instance FreeVars ClassBody where
-  freeVars (ClassBody cls nots) = binding' cls $ freeVars (NoBinding nots)
+  freeVars (ClassBody cls nots) = binding' cls $ freeVars nots
 
 -- lookup the signature of a class member and return the list of its
 -- implicit binders
-getImplicitBindersForClassMember  :: ConversionMonad m => Ident -> Ident -> m [Binder]
+getImplicitBindersForClassMember  :: ConversionMonad m => Qualid -> Qualid -> m [Binder]
 getImplicitBindersForClassMember className memberName = do
   classDef <- use (classDefns.at className)
   case classDef of
@@ -79,7 +73,7 @@ convertClassDecl (L _ hsCtx) (L _ hsName) ltvs fds lsigs defaults types typeDefa
   unless (null       types)        $ convUnsupported "associated types"
   unless (null       typeDefaults) $ convUnsupported "default associated type definitions"
 
-  name <- freeVar hsName
+  name <- var TypeNS hsName
   ctx  <- traverse (fmap (Generalized Coq.Implicit) . convertLType) hsCtx
 
   args <- convertLHsTyVarBndrs Coq.Explicit ltvs
@@ -89,12 +83,12 @@ convertClassDecl (L _ hsCtx) (L _ hsName) ltvs fds lsigs defaults types typeDefa
              go a _ = a
 
 
-  all_sigs <- binding' args' $ convertLSigs lsigs
+  (all_sigs :: M.Map Qualid Signature) <- binding' args' $ convertLSigs lsigs
 
   -- implement the class part of "skip method"
   skippedMethodsS <- use (edits.skippedMethods)
   let sigs = (`M.filterWithKey` all_sigs) $ \meth _ ->
-        (name,toCoqName meth) `S.notMember` skippedMethodsS
+        (name,qualidBase meth) `S.notMember` skippedMethodsS
 
   -- ugh! doesnt work for operators
   -- memberSigs.at name ?= sigs
@@ -112,14 +106,13 @@ convertClassDecl (L _ hsCtx) (L _ hsName) ltvs fds lsigs defaults types typeDefa
 --  liftIO (traceIO (show name))
 --  liftIO (traceIO (show defs))
 
-  let classDefn = (ClassDefinition name (args' ++ ctx) Nothing (bimap toCoqName sigType <$> M.toList sigs))
+  let classDefn = (ClassDefinition name (args' ++ ctx) Nothing (bimap id sigType <$> M.toList sigs))
 
   classDefns.at name ?= classDefn
 
+  let nots = concatMap (buildInfixNotations sigs) $ M.keys sigs
 
-
-  pure $ ClassBody classDefn
-                   (concatMap (buildInfixNotations sigs <*> infixToCoq) . filter identIsOperator $ M.keys sigs)
+  pure $ ClassBody classDefn nots
 
 classSentences :: ClassBody -> [Sentence]
 classSentences (ClassBody (ClassDefinition name args ty methods) nots) =
@@ -129,19 +122,20 @@ classSentences (ClassBody (ClassDefinition name args ty methods) nots) =
     ] ++
     [ DefinitionSentence $
         DefinitionDef Global n
-            [Typed Generalizable Implicit [Ident "g"] (app_args (Var name))]
+            [Typed Generalizable Implicit [Ident "g"] (app_args (Qualid name))]
             (Just ty)
-            (App2 (Var "g") Underscore (app_args (Var (n <> "__"))))
-    | (n, ty) <- methods ] ++
+            (App2 "g" Underscore (app_args (Qualid n')))
+    | (n, ty) <- methods
+    , let n' = qualidExtendBase "__" n
+    ] ++
     map NotationSentence nots
   where
-    dict_name = name <> "__Dict"
-    dict_build = name <> "__Dict_Build"
-    dict_methods = [ (name <> "__", ty) | (name, ty) <- methods ]
+    dict_name = qualidExtendBase "__Dict" name
+    dict_build = qualidExtendBase "__Dict_Build" name
+    dict_methods = [ (qualidExtendBase "__" name, ty) | (name, ty) <- methods ]
     dict_record  = RecordDefinition dict_name inst_args ty (Just dict_build) dict_methods
     -- The dictionary needs all explicit (type) arguments,
     -- but none of the implicit (constraint) arguments
     inst_args = filter (\b -> b ^? binderExplicitness == Just Explicit) args
-    app_args f = foldl App1 f (map Var (foldMap (toListOf binderIdents) inst_args))
-    class_ty = Forall [ Inferred Explicit (Ident "r")] $
-            (app_args (Var dict_name)  `Arrow` Var "r") `Arrow` Var "r"
+    app_args f = foldl App1 f (map Qualid (foldMap (toListOf binderIdents) inst_args))
+    class_ty = Forall [ "r" ] $ (app_args (Qualid dict_name)  `Arrow` "r") `Arrow` "r"

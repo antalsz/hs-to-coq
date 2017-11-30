@@ -1,75 +1,83 @@
+# We have notation in the midamble, and we have to tell hs-to-coq
+# to include the ManualNotations module in the Notations module
+manual notation GHC.Base
+
 skip module GHC.Types
 
-skip String   # replace with Coq type
-skip Maybe    # replace with Coq type
+skip GHC.Base.String   # replace with Coq type
+skip GHC.Base.Maybe    # replace with Coq type
 
-skip ++       # replace with Coq
+skip GHC.Base.++       # replace with Coq
 
-skip Opaque   # can't handle existential
-skip build    # higher-rank type
-skip augment  # higher-rank type
+skip GHC.Base.Opaque   # can't handle existential
+skip GHC.Base.build    # higher-rank type
+skip GHC.Base.augment  # higher-rank type
 
 # partial
-skip until
+skip GHC.Base.until
 
 # can't handle overloaded ifthenelse
-skip ifThenElse
+skip GHC.Base.ifThenElse
 
 # no IO
-skip unIO
-skip thenIO
-skip returnIO
-skip bindIO
-skip instance_Functor_GHC_Types_IO
-skip instance_Applicative_GHC_Types_IO
-skip instance_Alternative_GHC_Types_IO
-skip instance_Monad_GHC_Types_IO
-skip instance_MonadPlus_GHC_Types_IO
-skip instance_forall___Monoid_a___Monoid__GHC_Types_IO_a_
+skip GHC.Base.unIO
+skip GHC.Base.thenIO
+skip GHC.Base.returnIO
+skip GHC.Base.bindIO
+skip GHC.Base.instance_GHC_Base_Functor_GHC_Types_IO
+skip GHC.Base.instance_GHC_Base_Applicative_GHC_Types_IO
+skip GHC.Base.instance_GHC_Base_Alternative_GHC_Types_IO
+skip GHC.Base.instance_GHC_Base_Monad_GHC_Types_IO
+skip GHC.Base.instance_GHC_Base_MonadPlus_GHC_Types_IO
+skip GHC.Base.instance_forall___GHC_Base_Monoid_a___GHC_Base_Monoid__GHC_Types_IO_a_
 
 # no unboxed types
-skip unsafeChr
-skip ord
+skip GHC.Base.unsafeChr
+skip GHC.Base.ord
 
-skip shiftRL#
-skip shiftL#
-skip iShiftL#
-skip iShiftRA#
-skip iShiftRL#
-skip divModInt#
+skip GHC.Base.shiftRL#
+skip GHC.Base.shiftL#
+skip GHC.Base.iShiftL#
+skip GHC.Base.iShiftRA#
+skip GHC.Base.iShiftRL#
+skip GHC.Base.divModInt#
 
-skip remInt
-skip quotRemInt
-skip divModInt
-skip divInt
-skip minInt
-skip maxInt
-skip modInt
-skip quotInt
-skip getTag
+skip GHC.Base.remInt
+skip GHC.Base.quotRemInt
+skip GHC.Base.divModInt
+skip GHC.Base.divInt
+skip GHC.Base.minInt
+skip GHC.Base.maxInt
+skip GHC.Base.modInt
+skip GHC.Base.quotInt
+skip GHC.Base.getTag
 
-skip primIntToChar
-skip primCharToInt
-skip primUnicodeMaxChar
+skip GHC.Base.primIntToChar
+skip GHC.Base.primCharToInt
+skip GHC.Base.primUnicodeMaxChar
 
 ## Type class instance ordering
 
-order instance_Functor__GHC_Prim_arrow_r_ instance_Applicative__GHC_Prim_arrow_a__op_ztzg__ instance_Applicative__GHC_Prim_arrow_a_ instance_Monad__GHC_Prim_arrow_r__return_ instance_Monad__GHC_Prim_arrow_r_ instance_Alternative__GHC_Prim_arrow_r_ instance_MonadPlus__GHC_Prim_arrow_r_
+order GHC.Base.instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___option_a_ GHC.Base.instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__option_a_
 
-order instance_Functor_list instance_Applicative_list instance_Monad_list_return_ instance_Monad_list_op_zgzg__ instance_Monad_list
+order GHC.Base.instance_GHC_Base_Functor__GHC_Prim_arrow_r_ GHC.Base.instance_GHC_Base_Applicative__GHC_Prim_arrow_a__op_ztzg__ GHC.Base.instance_GHC_Base_Applicative__GHC_Prim_arrow_a_ GHC.Base.instance_GHC_Base_Monad__GHC_Prim_arrow_r__return_ GHC.Base.instance_GHC_Base_Monad__GHC_Prim_arrow_r_ GHC.Base.instance_GHC_Base_Alternative__GHC_Prim_arrow_r_ GHC.Base.instance_GHC_Base_MonadPlus__GHC_Prim_arrow_r_
 
-order instance_Functor_option instance_Applicative_option_op_zlztzg__ instance_Applicative_option instance_Monad_option_op_zgzg__ instance_Monad_option_return_ instance_Monad_option instance_Alternative_option instance_MonadPlus_option
+order GHC.Base.instance_GHC_Base_Functor_list GHC.Base.instance_GHC_Base_Applicative_list GHC.Base.instance_GHC_Base_Monad_list_return_ GHC.Base.instance_GHC_Base_Monad_list_op_zgzg__ GHC.Base.instance_GHC_Base_Monad_list
 
-order instance instance_Functor__GHC_Tuple_pair_type_a_ instance_forall___Monoid_a___Applicative__GHC_Tuple_pair_type_a_ instance_forall___Monoid_a___Monad__GHC_Tuple_pair_type_a__return_ instance_forall___Monoid_a___Monad__GHC_Tuple_pair_type_a__op_zgzgze__ instance_forall___Monoid_a___Monad__GHC_Tuple_pair_type_a__op_zgzg__
+order GHC.Base.instance_GHC_Base_Functor_option GHC.Base.instance_GHC_Base_Applicative_option_op_zlztzg__ GHC.Base.instance_GHC_Base_Applicative_option GHC.Base.instance_GHC_Base_Monad_option_op_zgzg__ GHC.Base.instance_GHC_Base_Monad_option_return_ GHC.Base.instance_GHC_Base_Monad_option GHC.Base.instance_GHC_Base_Alternative_option GHC.Base.instance_GHC_Base_MonadPlus_option
 
-skip instance_Alternative_list
-skip instance_MonadPlus_list
-skip instance_Alternative_option
-skip instance_MonadPlus_option
+order GHC.Base.instance_GHC_Base_Functor__GHC_Tuple_pair_type_a_ GHC.Base.instance_forall___GHC_Base_Monoid_a___GHC_Base_Applicative__GHC_Tuple_pair_type_a_ GHC.Base.instance_forall___GHC_Base_Monoid_a___GHC_Base_Monad__GHC_Tuple_pair_type_a__return_ GHC.Base.instance_forall___GHC_Base_Monoid_a___GHC_Base_Monad__GHC_Tuple_pair_type_a__op_zgzgze__ GHC.Base.instance_forall___GHC_Base_Monoid_a___GHC_Base_Monad__GHC_Tuple_pair_type_a__op_zgzg__
+
+order GHC.Base.instance_GHC_Base_Functor__GHC_Tuple_pair_type_a_ GHC.Base.instance_forall___GHC_Base_Monoid_a___GHC_Base_Applicative__GHC_Tuple_pair_type_a__op_ztzg__
+
+skip GHC.Base.instance_GHC_Base_Alternative_list
+skip GHC.Base.instance_GHC_Base_MonadPlus_list
+skip GHC.Base.instance_GHC_Base_Alternative_option
+skip GHC.Base.instance_GHC_Base_MonadPlus_option
 
 # Haskell’s definition of passes the f around, which trips over the
 # termination checker when a function does nested recursion through map
 # If we have a local fix for just the argument, then things often work out
-redefine Definition map {A B :Type} (f : A -> B) xs := Coq.Lists.List.map f xs.
+redefine Definition GHC.Base.map {A B :Type} (f : A -> B) xs := Coq.Lists.List.map f xs.
 
-class kinds MonadPlus (Type -> Type)
+class kinds GHC.Base.MonadPlus (Type -> Type)

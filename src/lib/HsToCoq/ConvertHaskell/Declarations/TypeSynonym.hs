@@ -23,7 +23,7 @@ import HsToCoq.ConvertHaskell.Parameters.Edits
 
 --------------------------------------------------------------------------------
 
-data SynBody = SynBody Ident [Binder] (Maybe Term) Term
+data SynBody = SynBody Qualid [Binder] (Maybe Term) Term
              deriving (Eq, Ord, Read, Show)
 
 instance FreeVars SynBody where
@@ -37,7 +37,7 @@ convertSynDecl name args def  = do
   params <- convertLHsTyVarBndrs Coq.Explicit args
   rhs    <- convertLType def
   let (params', rhs') = etaContract params rhs
-  SynBody <$> freeVar (unLoc name)
+  SynBody <$> var TypeNS (unLoc name)
           <*> pure params'
           <*> use (edits.typeSynonymTypes . at coqName . to (fmap Var))
           <*> pure (rhs' `InScope` "type")
@@ -50,7 +50,7 @@ etaContract bndrs (App f args)
       in (reverse rbinders, appList f (reverse rargs))
   where
     go (b:bs) (a:as)
-        | PosArg (Var v) <- a
+        | PosArg (Qualid v) <- a
         , [v'] <- toListOf binderIdents b
         , v == v'
         , v' `S.notMember` getFreeVars f

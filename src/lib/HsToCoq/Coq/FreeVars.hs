@@ -35,13 +35,11 @@ import Data.Maybe (fromMaybe)
 import Data.Monoid
 
 import HsToCoq.Coq.Gallina
-import HsToCoq.Coq.Gallina.Util
-import HsToCoq.ConvertHaskell.InfixNames
 
 ----------------------------------------------------------------------------------------------------
 
 class Names t where
-  names :: t -> Set Ident
+  names :: t -> Set Qualid
 
 instance Names FixBody where
   names (FixBody f _ _ _ _) = S.singleton f
@@ -56,12 +54,12 @@ instance Names IndBody where
 ----------------------------------------------------------------------------------------------------
 
 class Binding b where
-  binding :: (MonadVariables Ident d m, Monoid d) => (Ident -> d) -> b -> m a -> m a
+  binding :: (MonadVariables Qualid d m, Monoid d) => (Qualid -> d) -> b -> m a -> m a
 
-binding' :: (Binding b, MonadVariables Ident d m, Monoid d) => b -> m a -> m a
+binding' :: (Binding b, MonadVariables Qualid d m, Monoid d) => b -> m a -> m a
 binding' = binding $ const mempty
 
-instance Binding Ident where
+instance Binding Qualid where
   binding f x = bind x (f x)
 
 instance Binding Name where
@@ -120,7 +118,7 @@ instance Binding Pattern where
     (freeVars con *>) . binding f xs
 
   binding f (InfixPat l op r) =
-    (occurrence op *>) . binding f [l,r]
+    (occurrence (Bare op) *>) . binding f [l,r]
 
   binding f (AsPat pat x) =
     binding f pat . binding f x
@@ -130,8 +128,8 @@ instance Binding Pattern where
     binding f pat
     -- The scope is a different sort of identifier, not a term-level variable.
 
-  binding f (QualidPat (Bare x)) =
-    binding f x
+  binding f (QualidPat qid@(Bare _)) =
+    binding f qid
     -- See [Note Bound variables in patterns]
 
   binding _ (QualidPat qid@(Qualified _ _)) =
@@ -170,7 +168,8 @@ instance Binding Sentence where
   binding f (RecordSentence           rcd)       = binding f rcd
   binding f (InstanceSentence         ins)       = binding f ins
   binding f (ProgramInstanceSentence  ins)       = binding f ins
-  binding f (NotationSentence         not)       = binding f not
+  binding _ (NotationSentence         not)       = (freeVars not *>)
+  binding f (LocalModuleSentence      lmd)       = binding f lmd
   binding _ (ArgumentsSentence        arg)       = (freeVars arg *>)
   binding _ (CommentSentence          com)       = (freeVars com *>)
 
@@ -198,16 +197,12 @@ instance Binding Definition where
       binding f x
 
 instance Binding Inductive where
-  binding f (Inductive   ibs nots) = binding f (foldMap names ibs) . (freeVars ibs *> freeVars (NoBinding nots) *>)
-  binding f (CoInductive cbs nots) = binding f (foldMap names cbs) . (freeVars cbs *> freeVars (NoBinding nots) *>)
-  -- The notation bindings here can only rebind existing reserved names, so we
-  -- fake out @binding' nots@ to get the free variables.
+  binding f (Inductive   ibs nots) = binding f (foldMap names ibs) . (freeVars ibs *> freeVars nots *>)
+  binding f (CoInductive cbs nots) = binding f (foldMap names cbs) . (freeVars cbs *> freeVars nots *>)
 
 instance Binding Fixpoint where
-  binding f (Fixpoint   fbs nots) = binding f (foldMap names fbs) . (freeVars fbs *> freeVars (NoBinding nots) *>)
-  binding f (CoFixpoint cbs nots) = binding f (foldMap names cbs) . (freeVars cbs *> freeVars (NoBinding nots) *>)
-  -- The notation bindings here can only rebind existing reserved names, so we
-  -- fake out @binding' nots@ to get the free variables.
+  binding f (Fixpoint   fbs nots) = binding f (foldMap names fbs) . (freeVars fbs *> freeVars nots *>)
+  binding f (CoFixpoint cbs nots) = binding f (foldMap names cbs) . (freeVars cbs *> freeVars nots *>)
 
 instance Binding ProgramFixpoint where
   binding f (ProgramFixpoint name args order ty body) =
@@ -243,23 +238,15 @@ instance Binding InstanceDefinition where
     (freeVars cl *> freeVars term *> freeVars mpf *>) .
     binding f inst
 
-instance Binding Notation where
-  binding f (ReservedNotationIdent x) = binding f x
-    -- We treat reserved single-identifier notations as bound variables
-  binding f (NotationBinding nb) = binding f nb
-  binding f (InfixDefinition op defn oassoc level) =
-    (freeVars defn *> freeVars oassoc *> freeVars level *>) . binding f op
-    -- We treat infix operators as bound variables
-
-instance Binding NotationBinding where
-  binding f (NotationIdentBinding x def) = (freeVars def *>) . binding f x
+instance Binding LocalModule where
+  binding f (LocalModule _name sentences) = binding f sentences
 
 -- TODO Not all sequences of bindings should be telescopes!
-bindingTelescope :: (Binding b, MonadVariables Ident d m, Monoid d, Foldable f)
-                 => (Ident -> d) -> f b -> m a -> m a
-bindingTelescope = flip . foldr . binding
+bindingTelescope :: (Binding b, MonadVariables Qualid d m, Monoid d, Foldable f)
+                 => (Qualid -> d) -> f b -> m a -> m a
+bindingTelescope f xs rest = foldr (binding f) rest xs
 
-instance Binding (Set Ident) where
+instance Binding (Set Qualid) where
   binding = bindAll .: M.fromSet
 
 instance Binding b => Binding (Maybe b) where
@@ -273,11 +260,11 @@ instance Binding b => Binding (NonEmpty b) where
 
 ----------------------------------------------------------------------------------------------------
 
-getFreeVars :: FreeVars t => t -> Set Ident
-getFreeVars = execVariables . (freeVars :: FreeVars t => t -> Variables Ident () ())
+getFreeVars :: FreeVars t => t -> Set Qualid
+getFreeVars = execVariables . (freeVars :: FreeVars t => t -> Variables Qualid () ())
 
 class FreeVars t where
-  freeVars :: (MonadVariables Ident d m, Monoid d) => t -> m ()
+  freeVars :: (MonadVariables Qualid d m, Monoid d) => t -> m ()
 
 instance FreeVars Term where
   freeVars (Forall xs t) =
@@ -352,6 +339,9 @@ instance FreeVars Term where
   freeVars (Qualid qid) =
     freeVars qid
 
+  freeVars (RawQualid qid) =
+    freeVars qid
+
   freeVars (Sort sort) =
     freeVars sort -- Pro forma – there are none.
 
@@ -390,7 +380,7 @@ instance FreeVars Arg where
 
 instance FreeVars Order where
   freeVars (MeasureOrder expr rel) = freeVars expr *> freeVars rel
-  freeVars (WFOrder rel ident) = freeVars rel *> occurrence ident
+  freeVars (WFOrder rel qid) = freeVars rel *> occurrence qid
 
 instance FreeVars Generalizability where
   freeVars Ungeneralizable = pure ()
@@ -401,7 +391,7 @@ instance FreeVars Explicitness where
   freeVars Implicit = pure ()
 
 instance FreeVars Qualid where
-  freeVars = occurrence . qualidToIdent
+  freeVars = occurrence
 
 instance FreeVars Sort where
   freeVars Prop = pure ()
@@ -477,6 +467,17 @@ instance FreeVars AssertionKeyword where
   freeVars Definition  = pure ()
   freeVars Example     = pure ()
 
+instance FreeVars Notation where
+  -- Notations are not bindings sites, because our AST always refers to the
+  -- Qualid corresponding to the notation)
+  freeVars (ReservedNotationIdent _) = return ()
+  freeVars (NotationBinding nb) = freeVars nb
+  freeVars (InfixDefinition _ defn _ _) = freeVars defn
+
+instance FreeVars NotationBinding where
+  freeVars (NotationIdentBinding _ def) = freeVars def
+
+
 instance FreeVars Proof where
   -- We don't model proofs.
   freeVars (ProofQed      _tactics) = pure ()
@@ -516,7 +517,7 @@ instance FreeVars ArgumentExplicitness where
   freeVars ArgImplicit = pure ()
   freeVars ArgMaximal  = pure ()
 
-foldableFreeVars :: (FreeVars t, MonadVariables Ident d m, Monoid d, Foldable f) => f t -> m ()
+foldableFreeVars :: (FreeVars t, MonadVariables Qualid d m, Monoid d, Foldable f) => f t -> m ()
 foldableFreeVars = traverse_ freeVars
 
 instance FreeVars t => FreeVars (Maybe t) where
@@ -539,18 +540,18 @@ instance Binding b => FreeVars (NoBinding b) where
 
 -- The order is correct – later identifiers refer only to previous ones – since
 -- 'stronglyConnComp'' returns its outputs in topologically sorted order.
-topoSortEnvironmentWith :: Foldable f => (a -> f Ident) -> Map Ident a -> [NonEmpty Ident]
+topoSortEnvironmentWith :: Foldable f => (a -> f Qualid) -> Map Qualid a -> [NonEmpty Qualid]
 topoSortEnvironmentWith fvs = stronglyConnComp' . M.toList
-                            . fmap (fmap canonicalName . toList . fvs)
+                            . fmap (toList . fvs)
 
 -- The order is correct – later identifiers refer only to previous ones – since
 -- 'stronglyConnComp'' returns its outputs in topologically sorted order.
-topoSortEnvironment :: FreeVars t => Map Ident t -> [NonEmpty Ident]
+topoSortEnvironment :: FreeVars t => Map Qualid t -> [NonEmpty Qualid]
 topoSortEnvironment = topoSortEnvironmentWith getFreeVars
 
-type ExtraFreeVars = M.Map Ident (S.Set Ident)
+type ExtraFreeVars = M.Map Qualid (S.Set Qualid)
 
-definedBy :: Binding x => x -> [Ident]
+definedBy :: Binding x => x -> [Qualid]
 definedBy b = execDefinedIdents (binding' b startCollectingBinders)
 
 -- | Sort Sentences based on their free variables and the
@@ -561,10 +562,10 @@ topoSortSentences extraFVs sentences = sorted
     numSentences = zip [0..] sentences
     canonMap = M.fromList [ (i,n) | (n,s) <- numSentences, i <- definedBy s]
 
-    canon :: Ident -> Maybe Int
+    canon :: Qualid -> Maybe Int
     canon i =  M.lookup i canonMap
 
-    extras :: Ident -> S.Set Ident
+    extras :: Qualid -> S.Set Qualid
     extras i = fromMaybe S.empty $ M.lookup i extraFVs
 
     graph = reverse $

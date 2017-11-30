@@ -65,6 +65,8 @@ Defined.
 Require Coq.Init.Datatypes.
 Require GHC.Base.
 Require GHC.Num.
+Import GHC.Base.Notations.
+Import GHC.Num.Notations.
 
 (* No type declarations to convert. *)
 (* Converted value declarations: *)
@@ -122,7 +124,7 @@ Definition elem {a} `{(GHC.Base.Eq_ a)} : a -> list a -> bool :=
   fix elem arg_57__ arg_58__
         := match arg_57__ , arg_58__ with
              | _ , nil => false
-             | x , cons y ys => orb (GHC.Base.op_zeze__ x y) (elem x ys)
+             | x , cons y ys => orb (x GHC.Base.== y) (elem x ys)
            end.
 
 Definition filter {a} : (a -> bool) -> list a -> list a :=
@@ -171,7 +173,7 @@ Definition lenAcc {a} : list a -> GHC.Num.Int -> GHC.Num.Int :=
   fix lenAcc arg_150__ arg_151__
         := match arg_150__ , arg_151__ with
              | nil , n => n
-             | cons _ ys , n => lenAcc ys (GHC.Num.op_zp__ n (GHC.Num.fromInteger 1))
+             | cons _ ys , n => lenAcc ys (n GHC.Num.+ GHC.Num.fromInteger 1)
            end.
 
 Definition length {a} : list a -> GHC.Num.Int :=
@@ -181,7 +183,7 @@ Definition lengthFB {x}
     : x -> (GHC.Num.Int -> GHC.Num.Int) -> GHC.Num.Int -> GHC.Num.Int :=
   fun arg_145__ arg_146__ =>
     match arg_145__ , arg_146__ with
-      | _ , r => fun a => r (GHC.Num.op_zp__ a (GHC.Num.fromInteger 1))
+      | _ , r => fun a => r (a GHC.Num.+ GHC.Num.fromInteger 1)
     end.
 
 Definition lookup {a} {b} `{(GHC.Base.Eq_ a)} : a -> list (a * b) -> option b :=
@@ -189,7 +191,7 @@ Definition lookup {a} {b} `{(GHC.Base.Eq_ a)} : a -> list (a * b) -> option b :=
         := match arg_48__ , arg_49__ with
              | _key , nil => None
              | key , cons (pair x y) xys => let j_50__ := lookup key xys in
-                                            if GHC.Base.op_zeze__ key x : bool
+                                            if key GHC.Base.== x : bool
                                             then Some y
                                             else j_50__
            end.
@@ -198,7 +200,7 @@ Definition notElem {a} `{(GHC.Base.Eq_ a)} : a -> list a -> bool :=
   fix notElem arg_53__ arg_54__
         := match arg_53__ , arg_54__ with
              | _ , nil => true
-             | x , cons y ys => andb (GHC.Base.op_zsze__ x y) (notElem x ys)
+             | x , cons y ys => andb (x GHC.Base./= y) (notElem x ys)
            end.
 
 Definition null {a} : list a -> bool :=
@@ -215,11 +217,11 @@ Definition prel_list_str : GHC.Base.String :=
   GHC.Base.hs_string__ "Prelude.".
 
 Definition negIndex {a} : a :=
-  GHC.Base.op_zd__ GHC.Base.errorWithoutStackTrace (Coq.Init.Datatypes.app
-                   prel_list_str (GHC.Base.hs_string__ "!!: negative index")).
+  GHC.Base.errorWithoutStackTrace GHC.Base.$ Coq.Init.Datatypes.app prel_list_str
+                                                                    (GHC.Base.hs_string__ "!!: negative index").
 
 Definition product {a} `{(GHC.Num.Num a)} : list a -> a :=
-  GHC.Base.foldl GHC.Num.op_zt__ (GHC.Num.fromInteger 1).
+  GHC.Base.foldl _GHC.Num.*_ (GHC.Num.fromInteger 1).
 
 Definition reverse {a} : list a -> list a :=
   fun l =>
@@ -290,15 +292,15 @@ Definition strictUncurryScanr {a} {b} {c} : (a -> b -> c) -> a * b -> c :=
   fun f pair_ => match pair_ with | pair x y => f x y end.
 
 Definition sum {a} `{(GHC.Num.Num a)} : list a -> a :=
-  GHC.Base.foldl GHC.Num.op_zp__ (GHC.Num.fromInteger 0).
+  GHC.Base.foldl _GHC.Num.+_ (GHC.Num.fromInteger 0).
 
 Definition takeFB {a} {b}
     : (a -> b -> b) -> b -> a -> (GHC.Num.Int -> b) -> GHC.Num.Int -> b :=
   fun c n x xs =>
     fun m =>
-      let j_96__ := c x (xs (GHC.Num.op_zm__ m (GHC.Num.fromInteger 1))) in
+      let j_96__ := c x (xs (m GHC.Num.- GHC.Num.fromInteger 1)) in
       match m with
-        | num_94__ => if (num_94__ == GHC.Num.fromInteger 1) : bool
+        | num_94__ => if num_94__ == GHC.Num.fromInteger 1 : bool
                       then c x n
                       else j_96__
       end.
@@ -377,9 +379,9 @@ Definition zipWithFB {a} {b} {c} {d} {e}
   fun c f => fun x y r => c (f x y) r.
 
 (* Unbound variables:
-     * == Coq.Init.Datatypes.app GHC.Base.Eq_ GHC.Base.String GHC.Base.const
+     None Some andb bool cons false list nil op_zeze__ op_zt__ option orb pair true
+     Coq.Init.Datatypes.app GHC.Base.Eq_ GHC.Base.String GHC.Base.const
      GHC.Base.errorWithoutStackTrace GHC.Base.foldl GHC.Base.foldr GHC.Base.id
      GHC.Base.oneShot GHC.Base.op_zd__ GHC.Base.op_zeze__ GHC.Base.op_zsze__
-     GHC.Num.Int GHC.Num.Num GHC.Num.op_zm__ GHC.Num.op_zp__ GHC.Num.op_zt__ None
-     Some andb bool cons false list nil option orb pair true
+     GHC.Num.Int GHC.Num.Num GHC.Num.op_zm__ GHC.Num.op_zp__ GHC.Num.op_zt__
 *)

@@ -27,7 +27,6 @@ import HsToCoq.Util.Traversable
 import HsToCoq.Util.Function
 import Data.Maybe
 import Data.List.NonEmpty (NonEmpty(..), nonEmpty)
-import qualified Data.Text as T
 
 import Control.Arrow ((&&&))
 import Control.Monad
@@ -60,7 +59,7 @@ import Exception
 data ConvertedDeclaration = ConvData  IndBody
                           | ConvSyn   SynBody
                           | ConvClass ClassBody
-                          | ConvFailure Ident Sentence
+                          | ConvFailure Qualid Sentence
                           deriving (Eq, Ord, Show, Read)
 
 instance FreeVars ConvertedDeclaration where
@@ -69,21 +68,22 @@ instance FreeVars ConvertedDeclaration where
   freeVars (ConvClass   cls)   = freeVars cls
   freeVars (ConvFailure _ sen) = freeVars (NoBinding sen)
 
-convDeclName :: ConvertedDeclaration -> Ident
+convDeclName :: ConvertedDeclaration -> Qualid
 convDeclName (ConvData  (IndBody                    tyName  _ _ _))    = tyName
 convDeclName (ConvSyn   (SynBody                    synName _ _ _))    = synName
 convDeclName (ConvClass (ClassBody (ClassDefinition clsName _ _ _) _)) = clsName
 convDeclName (ConvFailure n _)                                         = n
 
-failTyClDecl :: ConversionMonad m => Ident -> GhcException -> m (Maybe ConvertedDeclaration)
+failTyClDecl :: ConversionMonad m => Qualid -> GhcException -> m (Maybe ConvertedDeclaration)
 failTyClDecl name e = pure $ Just $
-    ConvFailure name $ translationFailedComment name e
+    ConvFailure name $ translationFailedComment (qualidBase name) e
 
 convertTyClDecl :: ConversionMonad m => TyClDecl GHC.Name -> m (Maybe ConvertedDeclaration)
 convertTyClDecl decl = do
-  coqName <- freeVar . unLoc $ tyClDeclLName decl
+  let orig_name = varUnrenamed (unLoc $ tyClDeclLName decl)
+  coqName <- var TypeNS . unLoc $ tyClDeclLName decl
   ghandle (failTyClDecl coqName) $ do
-    use (edits.skipped.contains coqName) >>= \case
+    use (edits.skipped.contains orig_name) >>= \case
       True  -> pure Nothing
       False -> use (edits.redefinitions.at coqName) >>= fmap Just . \case
         Nothing -> case decl of
@@ -175,30 +175,30 @@ convertDeclarationGroup DeclarationGroup{..} =
   (Nothing, Nothing,           Nothing)           -> Right []
 
   where
-    synName = (<> "__raw")
+    synName = qualidExtendBase "__raw"
 
     recSynType :: SynBody -> [Sentence] -- Otherwise GHC infers a type containing @~@.
     recSynType (SynBody name _ _ _) =
       [ InductiveSentence $ Inductive [IndBody (synName name) [] (Sort Type) []] []
-      , NotationSentence $ ReservedNotationIdent name ]
+      , NotationSentence $ ReservedNotationIdent (qualidBase name) ]
 
     indParams (IndBody _ params _ _) = S.fromList $ foldMap (toListOf binderIdents) params
 
     -- FIXME use real substitution
-    avoidParams params = until (`S.notMember` params) (<> "_")
+    avoidParams params = until (`S.notMember` params) (qualidExtendBase "_")
 
     recSynMapping params (SynBody name args oty def) =
       let mkFun    = maybe id Fun . nonEmpty
           withType = maybe id (flip HasType)
-      in (name, App (Var "Synonym")
-                  $ fmap PosArg [ Var (synName name)
+      in (name, App "Synonym"
+                  $ fmap PosArg [ Qualid (synName name)
                                 , everywhere (mkT $ avoidParams params) .
                                     mkFun args $ withType oty def ])
 
     recSynDefs inds = M.fromList . toList . fmap (recSynMapping $ foldMap indParams inds)
 
     orderRecSynDefs synDefs =
-      [ NotationIdentBinding syn $ synDefs M.! syn
+      [ NotationIdentBinding (qualidBase syn) $ synDefs M.! syn
       | syn <- foldMap toList $ topoSortEnvironment synDefs ]
 
 --------------------------------------------------------------------------------
@@ -233,7 +233,7 @@ generateArgumentSpecifiers (IndBody _ params _resTy cons)
           let fieldCount = case fields of NonRecordFields count -> count
                                           RecordFields conFields -> length conFields
 
-          pure . Just . Arguments Nothing (Bare con)
+          pure . Just . Arguments Nothing con
                    $  replicate paramCount (underscoreArg ArgMaximal)
                    ++ replicate fieldCount (underscoreArg ArgExplicit)
 
@@ -254,7 +254,7 @@ generateRecordAccessors (IndBody tyName params resTy cons) = do
 
   let restrict = M.filterWithKey $ \k _ -> k `elem` conNames
   allFields <- uses (constructorFields.to restrict.folded._RecordFields) S.fromList
-  for (S.toAscList allFields) $ \field -> do
+  for (S.toAscList allFields) $ \(field :: Qualid) -> do
     equations <- for conNames $ \con -> do
       (args, hasField) <- use (constructorFields.at con) >>= \case
         Just (NonRecordFields count) ->
@@ -263,27 +263,28 @@ generateRecordAccessors (IndBody tyName params resTy cons) = do
           pure $ go conFields0 where
             go [] = ([], False)
             go (conField : conFields)
-              | field == conField  = (Coq.VarPat field : map (const UnderscorePat) conFields, True)
-              | otherwise          = first (UnderscorePat :) $ go conFields
+              | field == conField  = (Coq.VarPat (qualidBase field) : map (const UnderscorePat) conFields, True)
+              | otherwise               = first (UnderscorePat :) $ go conFields
 
         Nothing -> throwProgramError $  "internal error: unknown constructor `"
-                                     <> T.unpack con <> "' for type `"
-                                     <> T.unpack tyName <> "'"
-      pure . Equation [MultPattern [appListPat (Bare con) args]] $
+                                     <> show con <> "' for type `"
+                                     <> show tyName <> "'"
+      pure . Equation [MultPattern [appListPat con args]] $
                       if hasField
-                      then Var field
-                      else App1 (Var "error")
+                      then Qualid field
+                      else App1 "error"
                                 (HsString $  "Partial record selector: field `"
-                                          <> field <> "' has no match in constructor `"
-                                          <> con <> "' of type `" <> tyName <> "'")
+                                          <> qualidBase field <> "' has no match in constructor `"
+                                          <> qualidBase con <> "' of type `"
+                                          <> qualidBase tyName <> "'")
 
-    arg <- gensym "arg"
+    arg <- genqid "arg"
 
     let indices (Forall bs t)  = toList bs ++ indices t
         indices (Arrow  t1 t2) = Typed Ungeneralizable Coq.Explicit [UnderscoreName] t1 : indices t2
         indices _              = []
 
-        deunderscore UnderscoreName = Ident <$> gensym "ty"
+        deunderscore UnderscoreName = Ident <$> genqid "ty"
         deunderscore name           = pure name
 
     typeArgs <- for (params ++ indices resTy) $ \case
@@ -293,10 +294,10 @@ generateRecordAccessors (IndBody tyName params resTy cons) = do
 
     let implicitArgs = typeArgs & mapped.binderExplicitness .~ Coq.Implicit
         argBinder    = Typed Ungeneralizable Coq.Explicit
-                               [Ident arg] (appList (Var tyName) $ binderArgs typeArgs)
+                               [Ident arg] (appList (Qualid tyName) $ binderArgs typeArgs)
 
     pure . DefinitionDef Global field (implicitArgs ++ [argBinder]) Nothing $
-      Coq.Match [MatchItem (Var arg) Nothing Nothing] Nothing equations
+      Coq.Match [MatchItem (Qualid arg) Nothing Nothing] Nothing equations
 
 generateGroupRecordAccessors :: ConversionMonad m => DeclarationGroup -> m [Sentence]
 generateGroupRecordAccessors = fmap (fmap DefinitionSentence)

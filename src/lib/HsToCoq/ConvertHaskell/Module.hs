@@ -3,16 +3,11 @@
 module HsToCoq.ConvertHaskell.Module (
   -- * Convert whole module graphs and modules
   ConvertedModule(..),
-  convertModules, convertModule, axiomatizeModule,
+  convertModules,
   -- ** Extract all the declarations from a module
   moduleDeclarations,
   -- * Convert declaration groups
   ConvertedModuleDeclarations(..), convertHsGroup,
-  -- * Turn import statements into @Require@s, unconditionally
-  require,
-  -- * Convert import statements (INCOMPLETE -- TODO)
-  Qualification(..), ImportSpec(..), ConvertedImportDecl(..),
-  convertImportDecl, importDeclSentences,
 ) where
 
 import Control.Lens
@@ -20,12 +15,13 @@ import Control.Lens
 import HsToCoq.Util.Function
 import Data.Traversable
 import Data.Foldable
-import HsToCoq.Util.Traversable
 import Data.Maybe
+import Data.Monoid
 import Data.List.NonEmpty (NonEmpty(..))
 import HsToCoq.Util.Containers
 
-import Control.Monad
+import Data.Generics
+
 import Control.Monad.IO.Class
 import Control.Exception (SomeException)
 import qualified Data.Set as S
@@ -55,94 +51,6 @@ import HsToCoq.ConvertHaskell.Declarations.TyCl
 import HsToCoq.ConvertHaskell.Declarations.Instances
 import HsToCoq.ConvertHaskell.Declarations.Notations
 import HsToCoq.ConvertHaskell.Axiomatize
-
---------------------------------------------------------------------------------
-
--- TODO: We're just doing qualified imports for now, so the details here aren't
--- fully finished
-
-data Qualification = UnqualifiedImport
-                   | QualifiedImport
-                   deriving (Eq, Ord, Enum, Bounded, Show, Read)
-
-data ImportSpec = ExplicitImports [Ident]
-                | ExplicitHiding  [Ident]
-                deriving (Eq, Ord, Show, Read)
-
-data ConvertedImportDecl =
-  ConvertedImportDecl { convImportedModule  :: !ModuleName -- TODO: 'Name'?
-                      , convImportQualified :: !Qualification
-                      , convImportAs        :: !(Maybe ModuleName)
-                      , convImportSpec      :: !(Maybe ImportSpec) }
-  deriving (Eq, Ord, Show)
-
-
--- TODO: Import all type class instances
-convertImportItem :: ConversionMonad m => IE GHC.Name -> m [Ident]
-convertImportItem (IEVar       (L _ x)) = pure <$> var ExprNS x
-convertImportItem (IEThingAbs  (L _ x)) = pure <$> var TypeNS x
-convertImportItem (IEThingAll  (L _ _)) =
-  pure [] -- FIXME convUnsupported "(..)-exports"
-convertImportItem (IEThingWith (L _ x) NoIEWildcard subitems []) =
-  (:) <$> var TypeNS x <*> traverse (var ExprNS . unLoc) subitems
-convertImportItem (IEGroup          _ _)                  = pure [] -- Haddock
-convertImportItem (IEDoc            _)                    = pure [] -- Haddock
-convertImportItem (IEDocNamed       _)                    = pure [] -- Haddock
-convertImportItem (IEThingWith      _ (IEWildcard _) _ _) = convUnsupported "import items with `IEWildcard' value"
-convertImportItem (IEThingWith      _ _ _ (_:_))          = convUnsupported "import items with field label imports"
-convertImportItem (IEModuleContents _)                    = convUnsupported "whole-module exports as import items"
-
-convertImportDecl :: ConversionMonad m => ImportDecl GHC.Name -> m ConvertedImportDecl
-convertImportDecl ImportDecl{..} = do
-  let convImportedModule  = unLoc ideclName
-      convImportQualified = if ideclQualified then QualifiedImport else UnqualifiedImport
-      convImportAs        = ideclAs
-  unless (isNothing ideclPkgQual) $
-    convUnsupported "package-qualified imports"
-  -- Ignore:
-  --   * Source text (@ideclSourceSrc)@;
-  --   * @{-# SOURCE #-}@ imports (@ideclSource@); and
-  --   * Module safety annotations (@ideclSafe@).
-  -- Also, don't treat the implicit Prelude import specially (@ideclImplicit@).
-  convImportSpec <- for ideclHiding $ \(hiding, L _ spec) ->
-                      (if hiding then ExplicitHiding else ExplicitImports) <$>
-                        foldTraverse (convertImportItem . unLoc) spec
-  pure ConvertedImportDecl{..}
-
-importDeclSentences :: ConversionMonad m => ConvertedImportDecl -> m [Sentence]
-importDeclSentences ConvertedImportDecl{..} = do
-  let moduleToQualid mn =
-        case identToQualid (moduleNameText mn) of
-            Just qi -> pure qi
-            Nothing -> throwProgramError $ "malformed module name " ++ moduleNameString mn
-
-  mod <- moduleToQualid convImportedModule
-  let importSentence = ModuleSentence $ Require Nothing
-                                                (case convImportQualified of
-                                                   UnqualifiedImport -> Just Import
-                                                   QualifiedImport   -> Nothing)
-                                                (mod :| [])
-
-  asSentence <- case convImportAs of
-    Just short -> do
-      coqShort <- moduleToQualid short
-      pure [ModuleSentence $ ModuleAssignment coqShort mod]
-    Nothing    ->
-      pure []
-
-  importItems <- case convImportSpec of
-    Just (ExplicitImports importItems) -> do
-      pure $ [ NotationSentence . NotationBinding $
-                 NotationIdentBinding imp (Qualid $ Qualified mod imp)
-             | imp <- importItems ]
-    Just (ExplicitHiding _) ->
-      pure [] -- FIXME convUnsupported "import hiding"
-    Nothing ->
-      pure []
-
-  pure $  importSentence
-       :  asSentence
-       ++ importItems
 
 --------------------------------------------------------------------------------
 
@@ -186,10 +94,13 @@ convertHsGroup mod HsGroup{..} = do
                           | Just (order, tactic) <- t  -- turn into Program Fixpoint
                           ->  pure <$> toProgramFixpointSentence cdef order tactic
                           | otherwise                   -- no edit
-                          -> pure $ withConvertedDefinition
-                              (DefinitionDef Global)     (pure . DefinitionSentence)
-                              (buildInfixNotations sigs) (map    NotationSentence)
-                              cdef
+                          -> let def = DefinitionDef Global (convDefName cdef)
+                                                            (convDefArgs cdef)
+                                                            (convDefType cdef)
+                                                            (convDefBody cdef)
+                             in pure $
+                                [ DefinitionSentence def ] ++
+                                [ NotationSentence n | n <- buildInfixNotations sigs (convDefName cdef) ]
                    ) (\_ _ -> convUnsupported "top-level pattern bindings")
 
         -- TODO RENAMER use RecFlag info to do recursion stuff
@@ -200,10 +111,10 @@ convertHsGroup mod HsGroup{..} = do
 
   pure ConvertedModuleDeclarations{..}
 
-  where axiomatizeBinding :: GhcMonad m => HsBind GHC.Name -> GhcException -> m (Ident, [Sentence])
+  where axiomatizeBinding :: GhcMonad m => HsBind GHC.Name -> GhcException -> m (Qualid, [Sentence])
         axiomatizeBinding FunBind{..} exn = do
           name <- freeVar $ unLoc fun_id
-          pure (name, [translationFailedComment name exn, axiom name])
+          pure (Bare name, [translationFailedComment name exn, axiom (Bare name)])
         axiomatizeBinding _ exn =
           liftIO $ throwGhcExceptionIO exn
 
@@ -222,7 +133,7 @@ axiomatizeHsGroup mod HsGroup{..} = do
         for (map unLoc $ concatMap (bagToList . snd) binds) $ \case
           FunBind{..} -> do
             name <- freeVar $ unLoc fun_id
-            pure . typedAxiom name $ sigs^.at name.to (fmap sigType).non bottomType
+            pure . typedAxiom (Bare name) $ sigs^.at (Bare name).to (fmap sigType).non bottomType
           _ ->
             convUnsupported "non-type, non-class, non-value definitions in axiomatized modules"
   
@@ -234,11 +145,6 @@ axiomatizeHsGroup mod HsGroup{..} = do
 
 --------------------------------------------------------------------------------
 
-require :: MonadIO f => ModuleName -> f ModuleSentence
-require mn = case identToQualid (moduleNameText mn) of
-    Just qi -> pure (Require Nothing Nothing (pure qi))
-    Nothing -> throwProgramError $ "malformed module name " ++ moduleNameString mn
-
 --------------------------------------------------------------------------------
 
 data ConvertedModule =
@@ -249,7 +155,7 @@ data ConvertedModule =
                   , convModClsInstDecls :: ![Sentence]
                   , convModAddedDecls   :: ![Sentence]
                   }
-  deriving (Eq, Ord, Show)
+  deriving (Eq, Ord, Show, Data)
 
 -- Module-local
 {-
@@ -282,14 +188,24 @@ convert_module_with_requires_via convGroup convModName (group, _imports, _export
       <- convGroup convModName group
 
     let allSentences = convModTyClDecls ++ convModValDecls ++ convModClsInstDecls ++ convModAddedDecls
-    let extraModules = map (mkModuleName . T.unpack . qualidToIdent)
-                     . mapMaybe (qualidModule <=< identToQualid)
-                      $ toList . getFreeVars $ NoBinding allSentences
+    let freeVars = toList . getFreeVars $ NoBinding allSentences
+    let modules = filter (/= convModName)
+                     . map (mkModuleName . T.unpack)
+                     . mapMaybe qualidModule $ freeVars
+    let notationModules
+                     = filter (/= convModName)
+                     . map (mkModuleName . T.unpack)
+                     . mapMaybe qualidModule
+                     . filter qualidIsOp $ freeVars
 
-    modules <- skipModules $ S.toList $ S.fromList extraModules
+    modules         <- skipModules $ S.toList $ S.fromList modules
+    notationModules <- skipModules $ S.toList $ S.fromList notationModules
 
-    convModImports <-
-      traverse (\mn -> ModuleSentence <$> require mn) modules
+    let convModImports =
+            [ ModuleSentence (Require Nothing Nothing [moduleNameText mn])
+            | mn <- modules] ++
+            [ ModuleSentence (ModuleImport Import [moduleNameText mn <> ".Notations"])
+            | mn <- notationModules ]
     pure (ConvertedModule{..}, modules)
 
 -- Module-local
@@ -304,11 +220,11 @@ axiomatize_module_with_requires :: ConversionMonad m
                              m (ConvertedModule, [ModuleName])
 axiomatize_module_with_requires = convert_module_with_requires_via axiomatizeHsGroup
 
-convertModule :: ConversionMonad m => ModuleName -> RenamedSource -> m ConvertedModule
-convertModule = fmap fst .: convert_module_with_requires
+_convertModule :: ConversionMonad m => ModuleName -> RenamedSource -> m ConvertedModule
+_convertModule = fmap fst .: convert_module_with_requires
 
-axiomatizeModule :: ConversionMonad m => ModuleName -> RenamedSource -> m ConvertedModule
-axiomatizeModule = fmap fst .: axiomatize_module_with_requires
+_axiomatizeModule :: ConversionMonad m => ModuleName -> RenamedSource -> m ConvertedModule
+_axiomatizeModule = fmap fst .: axiomatize_module_with_requires
 
 -- NOT THE SAME as `traverse $ uncurry convertModule`!  Produces connected
 -- components and can axiomatize individual modules as per edits
@@ -318,8 +234,8 @@ convertModules sources = do
                                 True  -> axiomatize_module_with_requires mod src
                                 False -> convert_module_with_requires    mod src
   mods <- traverse convThisMod sources
-  pure $ stronglyConnCompNE
-    [(cmod, convModName cmod, imps) | (cmod, imps) <- mods]
+  pure $
+    stronglyConnCompNE [(cmod, convModName cmod, imps) | (cmod, imps) <- mods]
 
 moduleDeclarations :: ConversionMonad m => ConvertedModule -> m ([Sentence], [Sentence])
 moduleDeclarations ConvertedModule{..} = do
@@ -327,7 +243,19 @@ moduleDeclarations ConvertedModule{..} = do
   let sorted = topoSortSentences orders $
         convModValDecls ++ convModClsInstDecls ++ convModAddedDecls
   ax_decls <- usedAxioms sorted
-  return (convModTyClDecls, ax_decls ++ sorted)
+  not_decls <- qualifiedNotations convModName (convModTyClDecls ++ sorted)
+  return $ deQualifyLocalNames convModName $ (convModTyClDecls, ax_decls ++ sorted ++ not_decls)
+
+-- | This un-qualifies all variable names in the current module.
+-- It should be called very late, just before pretty-printing.
+deQualifyLocalNames :: Data a => ModuleName -> a -> a
+deQualifyLocalNames modName = everywhere (mkT localize)
+  where
+    m' = moduleNameText modName
+
+    localize :: Qualid -> Qualid
+    localize (Qualified m b) | m == m' = Bare b
+    localize qid = qid
 
 usedAxioms :: forall m. ConversionMonad m => [Sentence] -> m [Sentence]
 usedAxioms decls = do
@@ -344,3 +272,21 @@ usedAxioms decls = do
           | not (null ax_decls)
           ]
     return $ comment ++ ax_decls
+
+qualifiedNotations :: ConversionMonad m => ModuleName -> [Sentence] -> m [Sentence]
+qualifiedNotations mod decls = do
+    hmn <- use (edits . hasManualNotation . contains mod)
+    return $ wrap $
+        extra hmn ++
+        [ NotationSentence qn
+        | NotationSentence n <- decls, Just qn <- pure $ qualifyNotation mod n ]
+  where
+    wrap :: [Sentence] -> [Sentence]
+    wrap []        = []
+    wrap sentences = [ LocalModuleSentence (LocalModule "Notations" sentences) ]
+
+    extra :: Bool -> [Sentence]
+    extra True  = [ ModuleSentence (ModuleImport Export ["ManualNotations"]) ]
+    extra False = []
+
+

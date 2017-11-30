@@ -13,6 +13,7 @@ Require Coq.Program.Wf.
 (* Converted imports: *)
 
 Require GHC.Base.
+Import GHC.Base.Notations.
 
 (* No type declarations to convert. *)
 (* Converted value declarations: *)
@@ -23,11 +24,11 @@ Definition isSubsequenceOf {a} `{(GHC.Base.Eq_ a)} : list a -> list a -> bool :=
              | nil , _ => true
              | _ , nil => false
              | (cons x a' as a) , cons y b => let j_2__ := isSubsequenceOf a b in
-                                              if GHC.Base.op_zeze__ x y : bool
+                                              if x GHC.Base.== y : bool
                                               then isSubsequenceOf a' b
                                               else j_2__
            end.
 
 (* Unbound variables:
-     GHC.Base.Eq_ GHC.Base.op_zeze__ bool cons false list true
+     bool cons false list true GHC.Base.Eq_ GHC.Base.op_zeze__
 *)

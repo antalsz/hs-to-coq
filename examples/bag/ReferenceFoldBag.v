@@ -81,7 +81,7 @@ Module BagNeedsUnit.
     elim: b tail => [| x | l IHl r IHr | xs] //= tail.
     - by rewrite IHr IHl app_assoc.
     - by rewrite
-         /Data.Foldable.foldr /Foldable.instance_Foldable_list /Data.Foldable.foldr__
+         /Data.Foldable.foldr /Foldable.instance_Data_Foldable_Foldable_list /Data.Foldable.foldr__
          hs_coq_foldr_list' fold_right_cons fold_right_cons_nil.
   Qed.
 

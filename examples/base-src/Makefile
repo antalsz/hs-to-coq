@@ -28,10 +28,6 @@ HANDMOD = \
   Data/Type/Equality \
   Data/Functor/Const \
   Prelude\
-  \
-  Data/IntMap \
-  Data/IntMap/Base \
-  Data/IntSet/Base \
 
 # Generated modules
 # generated directly from GHC/libraries/base
@@ -77,7 +73,7 @@ VFILES_DROPIN = $(addprefix $(OUT)/,$(addsuffix .v,$(DROPIN)))
 
 VFILES   = $(VFILES_GEN) $(VFILES_MAN) $(VFILES_SPECIAL) $(VFILES_DROPIN)
 
-all:  $(VFILES) coq $(OUT)/edits $(OUT)/README.md
+all:  $(OUT)/edits $(OUT)/README.md $(VFILES) coq
 
 $(OUT)/_CoqProject : Makefile
 	mkdir -p $(OUT)
@@ -88,13 +84,15 @@ $(OUT)/_CoqProject : Makefile
 	echo $(addsuffix .v,$(SPECIAL_MODULES)) >> $@
 	echo $(addsuffix .v,$(DROPIN)) >> $@
 
-$(OUT)/Makefile: $(OUT)/_CoqProject $(VFILES)
+$(OUT)/Makefile: $(OUT)/_CoqProject
 	cd $(OUT); coq_makefile -f _CoqProject -o Makefile
 
 $(OUT)/edits:
+	mkdir -p $(OUT)
 	ln -fs ../examples/base-src/edits $(OUT)/edits
 
 $(OUT)/README.md:
+	mkdir -p $(OUT)
 	> $@
 	echo 'This directory contains a Coq’ified version of the Haskell base library' >> $@
 	echo 'Do not edit files here! Instead, look in `examples/base-src`.' >> $@

@@ -56,10 +56,10 @@ Proof. intros f g Hfg. apply functional_extensionality. intro x; apply sb, (Hfg 
 Theorem mapBagM_ok {M A B} `{MonadLaws M} (f : A -> M B) (b : Bag A) :
   GHC.Base.fmap bagToList (mapBagM f b) = Data.Traversable.mapM f (bagToList b).
 Proof.
-  rewrite /Data.Traversable.mapM /Traversable.instance_Traversable_list /Data.Traversable.mapM__
+  rewrite /Data.Traversable.mapM /Traversable.instance_Data_Traversable_Traversable_list /Data.Traversable.mapM__
           /=
-          /Data.Traversable.instance_Traversable_list_mapM
-          /Data.Traversable.instance_Traversable_list_traverse.
+          /Data.Traversable.instance_Data_Traversable_Traversable_list_mapM
+          /Data.Traversable.instance_Data_Traversable_Traversable_list_traverse.
   replace (fmap bagToList (mapBagM f b)) with
           (_++_ <$> (fmap bagToList (mapBagM f b)) <*> pure [])
           by by unfold "<$>";
@@ -90,9 +90,9 @@ Proof.
     f_equal.
     by unfold "∘"; rewrite /= bagToList_TwoBags app_assoc.
   - rewrite bagToList_ListBag
-            /Data.Traversable.mapM /Traversable.instance_Traversable_list /Data.Traversable.mapM__
-            /Data.Traversable.instance_Traversable_list_mapM
-            /Data.Traversable.instance_Traversable_list_traverse.
+            /Data.Traversable.mapM /Traversable.instance_Data_Traversable_Traversable_list /Data.Traversable.mapM__
+            /Data.Traversable.instance_Data_Traversable_Traversable_list_mapM
+            /Data.Traversable.instance_Data_Traversable_Traversable_list_traverse.
     unfold "<$>"; rewrite
       functor_composition applicative_fmap
       !monad_applicative_ap /ap monad_applicative_pure monad_left_id.
@@ -157,9 +157,9 @@ Proof. by rewrite -!monad_applicative_pure applicative_fmap_pure. Qed.
 Theorem mapBagM_ok' {M A B} `{MonadLaws M} (f : A -> M B) (b : Bag A) :
   GHC.Base.fmap bagToList (mapBagM f b) = Data.Traversable.mapM f (bagToList b).
 Proof.
-  rewrite /Data.Traversable.mapM /Traversable.instance_Traversable_list /Data.Traversable.mapM__ /=
-          /Data.Traversable.instance_Traversable_list_mapM
-          /Data.Traversable.instance_Traversable_list_traverse.
+  rewrite /Data.Traversable.mapM /Traversable.instance_Data_Traversable_Traversable_list /Data.Traversable.mapM__ /=
+          /Data.Traversable.instance_Data_Traversable_Traversable_list_mapM
+          /Data.Traversable.instance_Data_Traversable_Traversable_list_traverse.
   replace (fmap bagToList (mapBagM f b)) with
           (_++_ <$> (fmap bagToList (mapBagM f b)) <*> pure [])
           by by unfold "<$>";
@@ -180,9 +180,9 @@ Proof.
     funext=> l'; funext=> r'; funext=> z'.
     by unfold "∘"; rewrite bagToList_TwoBags app_assoc.
   - rewrite bagToList_ListBag
-            /Data.Traversable.mapM /Traversable.instance_Traversable_list /Data.Traversable.mapM__
-            /Data.Traversable.instance_Traversable_list_mapM
-            /Data.Traversable.instance_Traversable_list_traverse.
+            /Data.Traversable.mapM /Traversable.instance_Data_Traversable_Traversable_list /Data.Traversable.mapM__
+            /Data.Traversable.instance_Data_Traversable_Traversable_list_mapM
+            /Data.Traversable.instance_Data_Traversable_Traversable_list_traverse.
     rewrite monad_bind_return_fmap; unfold "<$>"; rewrite !functor_composition.
     elim: xs => [|x xs IH] /=.
     + by rewrite applicative_fmap_pure applicative_identity.
@@ -215,9 +215,9 @@ Ltac anf_equal := applicative_normalize_equal.
 Theorem mapBagM_ok'' {M A B} `{MonadLaws M} (f : A -> M B) (b : Bag A) :
   GHC.Base.fmap bagToList (mapBagM f b) = Data.Traversable.mapM f (bagToList b).
 Proof.
-  rewrite /Data.Traversable.mapM /Data.Traversable.mapM /Traversable.instance_Traversable_list /Data.Traversable.mapM__ /=
-          /Data.Traversable.instance_Traversable_list_mapM
-          /Data.Traversable.instance_Traversable_list_traverse.
+  rewrite /Data.Traversable.mapM /Data.Traversable.mapM /Traversable.instance_Data_Traversable_Traversable_list /Data.Traversable.mapM__ /=
+          /Data.Traversable.instance_Data_Traversable_Traversable_list_mapM
+          /Data.Traversable.instance_Data_Traversable_Traversable_list_traverse.
   replace (fmap bagToList (mapBagM f b)) with
           (_++_ <$> (fmap bagToList (mapBagM f b)) <*> pure [])
           by by anf_equal; unfold "∘"; rewrite app_nil_r.
@@ -229,9 +229,9 @@ Proof.
     setoid_rewrite ->monad_bind_return_fmap; setoid_rewrite ->monad_bind_fmap_ap.
     by anf_equal; unfold "∘"; rewrite bagToList_TwoBags app_assoc.
   - rewrite bagToList_ListBag
-            /Data.Traversable.mapM /Data.Traversable.mapM /Traversable.instance_Traversable_list /Data.Traversable.mapM__
-            /Data.Traversable.instance_Traversable_list_mapM
-            /Data.Traversable.instance_Traversable_list_traverse.
+            /Data.Traversable.mapM /Data.Traversable.mapM /Traversable.instance_Data_Traversable_Traversable_list /Data.Traversable.mapM__
+            /Data.Traversable.instance_Data_Traversable_Traversable_list_mapM
+            /Data.Traversable.instance_Data_Traversable_Traversable_list_traverse.
     rewrite monad_bind_return_fmap; anf.
     elim: xs => [|x xs /= <-]; anf_equal.
 Qed.
@@ -263,20 +263,20 @@ Abort.
 Lemma mapM_nil {M A B} `{MonadLaws M} (f : A -> M B):
   Traversable.mapM f [] = pure [].
 Proof.
-  by rewrite /Traversable.mapM /Traversable.instance_Traversable_list /Traversable.mapM__.
+  by rewrite /Traversable.mapM /Traversable.instance_Data_Traversable_Traversable_list /Traversable.mapM__.
 Qed.
 
 Lemma mapM_cons {M A B} `{MonadLaws M} (f : A -> M B) x xs:
   Traversable.mapM f (x::xs) = ((cons <$> f x) <*> Traversable.mapM f xs).
 Proof.
-  by rewrite /Traversable.mapM /Traversable.instance_Traversable_list /Traversable.mapM__.
+  by rewrite /Traversable.mapM /Traversable.instance_Data_Traversable_Traversable_list /Traversable.mapM__.
 Qed.
 
 Lemma mapM_app {M A B} `{MonadLaws M} (f : A -> M B) l1 l2:
   Traversable.mapM f (l1 ++ l2) = (app <$> Traversable.mapM f l1 <*> Traversable.mapM f l2).
 Proof.
   intros. induction l1.
-  * rewrite /Traversable.mapM /Traversable.instance_Traversable_list /Traversable.mapM__.
+  * rewrite /Traversable.mapM /Traversable.instance_Data_Traversable_Traversable_list /Traversable.mapM__.
     anf. reflexivity.
   * rewrite /= !mapM_cons IHl1.
     anf. reflexivity.
@@ -359,10 +359,10 @@ Theorem mapBagM_is_ok {M A B} `{MonadLaws M} (f : A -> M B) (b : Bag A) :
   Data.Foldable.mapM_ f (bagToList b).
 Proof.
   rewrite /Data.Foldable.mapM_ /=
-          /Foldable.instance_Foldable_list_foldr
-          /Foldable.foldr /Foldable.instance_Foldable_list
+          /Foldable.instance_Data_Foldable_Foldable_list_foldr
+          /Foldable.foldr /Foldable.instance_Data_Foldable_Foldable_list
           /Foldable.foldr__
-          /Foldable.instance_Foldable_list_foldr.
+          /Foldable.instance_Data_Foldable_Foldable_list_foldr.
   induction b; simpl; try reflexivity.
   - rewrite bagToList_TwoBags foldr_app.
     rewrite -IHb2.
@@ -385,10 +385,10 @@ Theorem mapAndUnzipBagM_ok {M A B C} `{MonadLaws M}
 Proof.
   rewrite
     /Data.Traversable.mapM
-    /Traversable.instance_Traversable_list
+    /Traversable.instance_Data_Traversable_Traversable_list
     /Data.Traversable.mapM__
-    /Data.Traversable.instance_Traversable_list_mapM
-    /Data.Traversable.instance_Traversable_list_traverse.
+    /Data.Traversable.instance_Data_Traversable_Traversable_list_mapM
+    /Data.Traversable.instance_Data_Traversable_Traversable_list_traverse.
   induction b; simpl;
     [split; anf_equal | | |].
   - split;
@@ -405,9 +405,9 @@ Proof.
              anf_equal].
   - destruct IHb1 as [IHb11 IHb12].
     destruct IHb2 as [IHb21 IHb22].
-    rewrite bagToList_TwoBags foldr_app.
+    rewrite bagToList_TwoBags.
     split.
-    assert (Hr: (fun x : Bag B * Bag C =>
+    + assert (Hr: (fun x : Bag B * Bag C =>
          let (r1, s1) := x in
          mapAndUnzipBagM f b2 >>=
          (fun y: Bag B * Bag C =>
@@ -419,10 +419,18 @@ Proof.
           return_ (Mk_TwoBags x.1 y.1, Mk_TwoBags x.2 y.2))));
       try solve [funext; intros x; destruct x; f_equal;
                  funext; intros y; destruct y; reflexivity].
-    rewrite Hr.
-    + Check @monad_bind_return_fmap.
-       repeat rewrite -IHb11 -IHb12 -IHb21 -IHb22.
-    
+      rewrite Hr.
+      rewrite monad_bind_return_fmap2.
+      rewrite <- monad_bind_fmap_ap.
+    (*  setoid_rewrite 
+      rewrite bagToList_TwoBags foldr_app -IHl -IHr.
+    unfold "<$>"; rewrite !functor_composition.
+    rewrite !applicative_fmap -!applicative_composition !applicative_homomorphism; f_equal.
+    rewrite !applicative_interchange -!applicative_fmap functor_composition; do 2 f_equal.
+    funext=> l'; funext=> r'; funext=> z'.
+    by unfold "∘"; rewrite bagToList_TwoBags app_assoc.
+
+*)  
 Admitted.
  
 (* TODO foldrBagM foldlBagM *)

@@ -117,7 +117,7 @@ Qed.
 Lemma partition_length_l:
   forall a p (xs ys zs : list a),
   OldList.partition p xs = (ys, zs) ->
-  length ys <= length xs.
+  Peano.le (length ys) (length xs).
 Proof.
   induction xs; intros.
   * simpl in *. inversion_clear H. constructor.
@@ -143,7 +143,7 @@ Qed.
 Lemma partition_length_r:
   forall a p (xs ys zs : list a),
   OldList.partition p xs = (ys, zs) ->
-  length zs <= length xs.
+  Peano.le (length zs) (length xs).
 Proof.
   induction xs; intros.
   * simpl in *. inversion_clear H. constructor.
@@ -179,7 +179,7 @@ Proof.
   rewrite unroll_unsafe_fix.
   destruct xs.
   * apply perm_nil.
-  * destruct (OldList.partition (fun arg_1__ : a => _<?_ arg_1__ a0) xs) eqn:?.
+  * destruct (OldList.partition (fun arg_1__ : a => _<_ arg_1__ a0) xs) eqn:?.
     simpl app.
     rewrite <- Permutation_middle.
     apply Permutation_cons; [reflexivity|].
@@ -231,7 +231,7 @@ Section sorted.
  Variable eq : Eq_ a.
  Variable ord : Ord a.
  
- Definition R x y := x <? y = true.
+ Definition R x y := x < y = true.
 
  Variable trans : Transitive R.
  Variable total : forall a b, R a b \/ R b a.
@@ -275,7 +275,7 @@ Proof.
   rewrite unroll_unsafe_fix.
   destruct xs.
   * apply SSorted_nil.
-  * destruct (OldList.partition (fun arg_1__ : a => _<?_ arg_1__ a0) xs) eqn:?.
+  * destruct (OldList.partition (fun arg_1__ : a => _<_ arg_1__ a0) xs) eqn:?.
     simpl app.
     apply StronglySorted_app_cons.
     - apply (H (length l)).

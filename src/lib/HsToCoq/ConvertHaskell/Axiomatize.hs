@@ -24,11 +24,12 @@ translationFailedCommentText what exn =
 translationFailedComment :: Text -> GhcException -> Sentence
 translationFailedComment what exn = CommentSentence . Comment $ translationFailedCommentText what exn
 
-typedAxiom :: Ident -> Term -> Sentence
-typedAxiom name = AssumptionSentence . Assumption Axiom . UnparenthesizedAssums [name]
+typedAxiom :: Qualid -> Term -> Sentence
+typedAxiom name term =
+    AssumptionSentence (Assumption Axiom (UnparenthesizedAssums [name] term))
 
 bottomType :: Term
-bottomType = Forall [Typed Ungeneralizable Coq.Implicit [Ident "A"] $ Sort Type] (Var "A")
+bottomType = Forall [Typed Ungeneralizable Coq.Implicit [Ident (Bare "A")] $ Sort Type] (Var "A")
 
-axiom :: Ident -> Sentence
+axiom :: Qualid -> Sentence
 axiom = typedAxiom ?? bottomType

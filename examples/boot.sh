@@ -8,6 +8,8 @@ then
   stack build
 fi
 
+cd $(dirname $0)
+
 echo "Cleaning everything"
 make -C tests clean
 make -C successors clean

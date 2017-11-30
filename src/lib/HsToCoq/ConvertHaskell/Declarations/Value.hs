@@ -55,19 +55,22 @@ convertModuleValDecls mdecls = do
                       | Just (order, tactic) <- t  -- turn into Program Fixpoint
                       ->  pure <$> toProgramFixpointSentence cdef order tactic
                       | otherwise                   -- no edit
-                      -> pure $ withConvertedDefinition
-                          (DefinitionDef Global)     (pure . DefinitionSentence)
-                          (buildInfixNotations sigs) (map    NotationSentence)
-                          cdef
+                      -> let def = DefinitionDef Global (convDefName cdef)
+                                                        (convDefArgs cdef)
+                                                        (convDefType cdef)
+                                                        (convDefBody cdef)
+                         in pure $
+                            [ DefinitionSentence def ] ++
+                            [ NotationSentence n | n <- buildInfixNotations sigs (convDefName cdef) ]
                 )(\_ _ -> convUnsupported "top-level pattern bindings")
 
   -- TODO: Mutual recursion
   pure . foldMap (foldMap (bindings M.!)) . topoSortEnvironment $ NoBinding <$> bindings
 
-  where axiomatizeBinding :: GhcMonad m => HsBind GHC.Name -> GhcException -> m (Ident, [Sentence])
+  where axiomatizeBinding :: GhcMonad m => HsBind GHC.Name -> GhcException -> m (Qualid, [Sentence])
         axiomatizeBinding FunBind{..} exn = do
           name <- freeVar $ unLoc fun_id
-          pure (name, [translationFailedComment name exn, axiom name])
+          pure (Bare name, [translationFailedComment name exn, axiom (Bare name)])
         axiomatizeBinding _ exn =
           liftIO $ throwGhcExceptionIO exn
 

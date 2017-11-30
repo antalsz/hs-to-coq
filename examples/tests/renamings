@@ -18,6 +18,6 @@ rename value GHC.Base.Just    = Some
 rename value GHC.Base.Nothing = None
 
 # This is mostly for PatternGuard, which has Int defined in its preamble.v
-rename type GHC.Types.Int    = Int
-rename value GHC.Num.-       = -
-rename value GHC.Classes.<=  = <=
+rename type GHC.Types.Int    = PatternGuard.Int
+rename value GHC.Num.-       = PatternGuard.-
+rename value GHC.Classes.<=  = PatternGuard.<?

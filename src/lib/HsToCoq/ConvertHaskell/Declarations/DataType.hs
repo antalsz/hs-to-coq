@@ -14,7 +14,6 @@ import Data.Bifunctor
 import Data.Semigroup (Semigroup(..))
 import Data.Foldable
 import HsToCoq.Util.Traversable
-import qualified Data.Text as T
 
 import qualified Data.Set        as S
 import qualified Data.Map.Strict as M
@@ -23,9 +22,6 @@ import Control.Monad
 
 import GHC hiding (Name)
 import qualified GHC
-
-import HsToCoq.Util.GHC
-import HsToCoq.Util.GHC.Module
 
 import HsToCoq.Coq.Gallina as Coq
 import HsToCoq.Coq.Gallina.Util
@@ -39,7 +35,7 @@ import qualified Data.List.NonEmpty as NE
 
 --------------------------------------------------------------------------------
 
-type Constructor = (Ident, [Binder], Maybe Term)
+type Constructor = (Qualid, [Binder], Maybe Term)
 
 --------------------------------------------------------------------------------
 
@@ -53,17 +49,15 @@ addAdditionalConstructorScope ctor@(name, bs, Just resTy) =
 
 --------------------------------------------------------------------------------
 
-convertConLName :: ConversionMonad m => Located GHC.Name -> m Ident
+convertConLName :: ConversionMonad m => Located GHC.Name -> m Qualid
 convertConLName (L _ hsCon) = do
-  con <- ghcPpr hsCon -- We use 'ghcPpr' because we munge the name here ourselves
-  use (renamed ExprNS con) >>= \case
-    Nothing   -> do
-      let mk_con = "Mk_" <> con
-      qual <- maybe "" ((`T.snoc` '.') . moduleNameText) <$> use currentModule
-      renamed ExprNS (qual <> con) ?= qual <> mk_con
-      pure mk_con
-    Just con' ->
-      pure con'
+    let qid = varUnrenamed hsCon
+    use (renamed ExprNS qid) >>= \case
+        Nothing -> do
+            let munged = qualidMapBase ("Mk_" <>) qid
+            renamed ExprNS qid ?= munged
+            pure munged
+        Just rid -> pure rid
 
 convertConDecl :: ConversionMonad m
                => Term -> [Binder] -> ConDecl GHC.Name -> m [Constructor]
@@ -79,13 +73,14 @@ convertConDecl curType extraArgs (ConDeclH98 lname mlqvs mlcxt details _doc) = d
 
   fieldInfo <- case details of
     RecCon (L _ fields) ->
-      fmap RecordFields .  traverse freeVar
+      fmap (RecordFields . map Bare) . traverse freeVar
         $ concatMap (map (unLoc . rdrNameFieldOcc . unLoc) . cd_fld_names . unLoc) fields
     _ ->
       pure . NonRecordFields $ length args
   constructorFields . at con ?= fieldInfo
 
   pure [(con, params, Just . maybeForall extraArgs $ foldr Arrow curType args)]
+
 convertConDecl _curType extraArgs (ConDeclGADT lnames sigTy _doc) = do
   cons  <- traverse convertConLName lnames
   conTy <- maybeForall extraArgs <$> convertLHsSigType sigTy
@@ -150,10 +145,10 @@ convertDataDecl :: ConversionMonad m
                 => Located GHC.Name -> [LHsTyVarBndr GHC.Name] -> HsDataDefn GHC.Name
                 -> m IndBody
 convertDataDecl name tvs defn = do
-  coqName   <- freeVar $ unLoc name
+  coqName   <- var TypeNS $ unLoc name
 
   kinds     <- (++ repeat Nothing) . map Just . maybe [] NE.toList <$> use (edits.dataKinds.at coqName)
-  let cvtName tv = Ident <$> freeVar (unLoc tv)
+  let cvtName tv = Ident <$> var TypeNS (unLoc tv)
   let  go (L _ (UserTyVar name))     (Just t) = cvtName name >>= \n -> return $ Typed Ungeneralizable Coq.Explicit (n NE.:| []) t
        go (L _ (UserTyVar name))     Nothing  = cvtName name >>= \n -> return $ Inferred Coq.Explicit n
        go (L _ (KindedTyVar name _)) (Just t) = cvtName name >>= \n -> return $ Typed Ungeneralizable Coq.Explicit (n NE.:| []) t
@@ -166,7 +161,7 @@ convertDataDecl name tvs defn = do
       Nothing  -> pure (rawParams, [])
   let conIndices = indices & mapped.binderExplicitness .~ Coq.Implicit
 
-  let curType  = appList (Var coqName) . binderArgs $ params ++ indices
+  let curType  = appList (Qualid coqName) . binderArgs $ params ++ indices
   (resTy, cons) <- first (maybeForall indices)
                      <$> convertDataDefn curType conIndices defn
 

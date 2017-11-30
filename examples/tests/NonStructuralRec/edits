@@ -1,8 +1,8 @@
-skip N
-skip addN
-rename type N = nat
-rename value N = O
-rename value S = S
-rename value addN = Nat.add
+skip NonStructuralRec.N
+skip NonStructuralRec.add
+rename type NonStructuralRec.N = nat
+rename value NonStructuralRec.N = O
+rename value NonStructuralRec.S = S
+rename value NonStructuralRec.add = Nat.add
 
-termination mapTree2 { measure (size arg_1__) } prog_omega
+termination NonStructuralRec.mapTree2 { measure (NonStructuralRec.size arg_1__) } prog_omega

@@ -1,34 +1,52 @@
-skip module GHC.Read
-skip module GHC.Show
-skip module Text.ParserCombinators.ReadP
+skip Data.Functor.Classes.Read1
+skip Data.Functor.Classes.Show1
+skip Data.Functor.Classes.Read2
+skip Data.Functor.Classes.Show2
 
-skip Read1
-skip Show1
-skip Read2
-skip Show2
-
-skip readListWith
-skip readsPrec1
-skip readsData
-skip readsUnary
-skip readsUnary1
-skip readsUnaryWith
-skip readsBinaryWith
-skip readsBinary1
-skip readsPrec2
+skip Data.Functor.Classes.readListWith
+skip Data.Functor.Classes.readsPrec1
+skip Data.Functor.Classes.readsData
+skip Data.Functor.Classes.readsUnary
+skip Data.Functor.Classes.readsUnary1
+skip Data.Functor.Classes.readsUnaryWith
+skip Data.Functor.Classes.readsBinaryWith
+skip Data.Functor.Classes.readsBinary1
+skip Data.Functor.Classes.readsPrec2
 
 
-skip showsPrec1
-skip liftShowList2
-skip liftShowsPrec2
-skip liftReadList2
-skip liftReadsPrec2
-skip showsBinary1
-skip showsBinaryWith
-skip showsPrec2
-skip showsUnary
-skip showsUnary1
-skip showsUnaryWith
+skip Data.Functor.Classes.showsPrec1
+skip Data.Functor.Classes.liftShowList2
+skip Data.Functor.Classes.liftShowsPrec2
+skip Data.Functor.Classes.liftReadList2
+skip Data.Functor.Classes.liftReadsPrec2
+skip Data.Functor.Classes.showsBinary1
+skip Data.Functor.Classes.showsBinaryWith
+skip Data.Functor.Classes.showsPrec2
+skip Data.Functor.Classes.showsUnary
+skip Data.Functor.Classes.showsUnary1
+skip Data.Functor.Classes.showsUnaryWith
 
-skip instance_Read2_GHC_Tuple_pair_type_liftReadsPrec2
-skip instance_Read2_GHC_Tuple_pair_type_liftReadList2
+skip Data.Functor.Classes.instance_Data_Functor_Classes_Read2_GHC_Tuple_pair_type_liftReadsPrec2
+skip Data.Functor.Classes.instance_Data_Functor_Classes_Read2_GHC_Tuple_pair_type_liftReadList2
+
+# Manual definition as this is recursive
+redefine Local Definition Data.Functor.Classes.instance_Data_Functor_Classes_Eq1_list_liftEq : forall {a} {b}, (a -> (b -> bool)) -> ((list a) -> ((list b) -> bool)) :=
+  fun {a} {b} =>
+    fix liftEq arg_69__ arg_70__ arg_71__
+          := match arg_69__, arg_70__,  arg_71__ with
+               | _,  nil, nil => true
+               | _,  nil, cons _ _ => false
+               | _,  cons _ _, nil => false
+               | eq, cons x xs, cons y ys => andb (eq x y) (liftEq eq xs ys)
+             end.
+
+redefine Local Definition Data.Functor.Classes.instance_Data_Functor_Classes_Ord1_list_liftCompare : forall {a} {b}, (a -> (b -> comparison)) -> ((list a) -> ((list b) -> comparison)) :=
+  fun {a} {b} =>
+    fix liftCompare arg_69__ arg_70__ arg_71__
+          := match arg_69__, arg_70__,  arg_71__ with
+               | _,  nil, nil => Eq
+               | _,  nil, cons _ _ => Lt
+               | _,  cons _ _, nil => Gt
+               | comp, cons x xs, cons y ys => GHC.Base.mappend (comp x y) (liftCompare comp xs ys)
+	     end.
+

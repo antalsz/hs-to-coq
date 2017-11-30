@@ -10,17 +10,22 @@ Unset Printing Implicit Defensive.
 Require Coq.Program.Tactics.
 Require Coq.Program.Wf.
 
-(* Preamble *)
-
-Definition on {a}{b}{c} (op : b -> b -> c) (f: a -> b) := fun x y => op (f x) (f y).
 (* No imports to convert. *)
 
 (* No type declarations to convert. *)
 (* Converted value declarations: *)
 
+Definition on {b} {c} {a} : (b -> b -> c) -> (a -> b) -> a -> a -> c :=
+  fun lop_ziztzi__ f => fun x y => lop_ziztzi__ (f x) (f y).
+
 Definition op_za__ {a} {b} : a -> (a -> b) -> b :=
   fun x f => f x.
 
-Infix "&" := (op_za__) (at level 99).
-
 Notation "'_&_'" := (op_za__).
+
+Infix "&" := (_&_) (at level 99).
+
+Module Notations.
+Notation "'_Data.Function.&_'" := (op_za__).
+Infix "Data.Function.&" := (_&_) (at level 99).
+End Notations.

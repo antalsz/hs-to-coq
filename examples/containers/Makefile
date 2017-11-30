@@ -18,6 +18,9 @@ OUT=lib
 
 # Handwritten modules (usually by modification of generated version)
 HANDMOD = \
+  Data/IntMap \
+  Data/IntSet/Base \
+  Data/IntMap/Base \
 
 # Generated modules
 # generated directly from GHC/libraries/containers
@@ -54,12 +57,12 @@ $(OUT)/Makefile: $(OUT)/_CoqProject $(VFILES)
 	cd $(OUT); coq_makefile -f _CoqProject -o Makefile
 
 $(OUT)/edits:
-	ln -fs ../examples/containers-src/edits $(OUT)/edits
+	ln -fs ../edits $(OUT)/edits
 
 $(OUT)/README.md:
 	> $@
 	echo 'This directory contains a Coq’ified version of the Haskell containers library' >> $@
-	echo 'Do not edit files here! Instead, look in `examples/containers-src`.' >> $@
+	echo 'Do not edit files here! Instead, look in `examples/containers`.' >> $@
 
 coq: $(OUT)/Makefile $(VFILES)
 	$(MAKE) -C $(OUT) -f Makefile OPT=$(COQFLAGS)
@@ -71,19 +74,19 @@ $(VFILES_GEN): $(OUT)/%.v : $$(wildcard module-edits/$$*/preamble.v) $$(wildcard
 	             $(addprefix -p , $(wildcard module-edits/$*/preamble.v)) \
 	             $(addprefix --midamble , $(wildcard module-edits/$*/midamble.v)) \
 	             -e edits \
-           -N \
+                     -N \
 		     -i containers \
 		     -i containers/dist-install/build \
 		     -I containers/include \
 		     --ghc -this-unit-id --ghc containers \
-		     -o $(OUT) \
+                     -o $(OUT) \
 		     containers/$*.hs
 	test -e $@
 
 $(VFILES_MAN): $(OUT)/%.v : manual/%.v
 	mkdir -p "$$(dirname $(OUT)/$*.v)"
 	rm -f $@
-	lndir ../examples/containers-src/manual $(OUT)/
+	lndir ../manual $(OUT)/
 
 
 $(VFILES_DROPIN): $(OUT)/%.v : module-edits/%/edits edits module-edits/%/preamble.v drop-in/%.hs

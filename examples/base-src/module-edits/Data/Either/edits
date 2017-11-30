@@ -1,10 +1,10 @@
-order instance_GHC_Base_Functor__Either_a_ instance_GHC_Base_Applicative__Either_e__op_zlztzg__ instance_GHC_BaseGen_Applicative__Either_e_ instance_GHC_Base_Monad__Either_e__op_zgzg__ instance_GHC_Base_Monad__Either_e__return_ instance_GHC_BaseGen_Monad__Either_e_
+order Data.Either.instance_GHC_Base_Functor__Data_Either_Either_a_ Data.Either.instance_GHC_Base_Applicative__Data_Either_Either_e__op_zlztzg__ Data.Either.instance_GHC_BaseGen_Applicative__Data_Either_Either_e_ Data.Either.instance_GHC_Base_Monad__Data_Either_Either_e__op_zgzg__ Data.Either.instance_GHC_Base_Monad__Data_Either_Either_e__return_
 
-order   instance_forall___GHC_Base_Eq__b____GHC_Base_Eq__a___GHC_Base_Eq___Either_a_b_ instance_forall___GHC_Base_Ord_b____GHC_Base_Ord_a___GHC_Base_Ord__Either_a_b_
+order   Data.Either.instance_forall___GHC_Base_Eq__b____GHC_Base_Eq__a___GHC_Base_Eq___Data_Either_Either_a_b_ Data.Either.instance_forall___GHC_Base_Ord_b____GHC_Base_Ord_a___GHC_Base_Ord__Data_Either_Either_a_b_
 
 
-redefine Local Definition instance_forall___GHC_Base_Eq__b____GHC_Base_Eq__a___GHC_Base_Eq___Either_a_b__op_zsze__ {inst_a}{inst_b}`{_ : GHC.Base.Eq_ inst_b} `{_ : GHC.Base.Eq_ inst_a} : ((Either inst_a inst_b) -> ((Either inst_a inst_b) -> bool)) :=
+redefine Local Definition Data.Either.instance_forall___GHC_Base_Eq__b____GHC_Base_Eq__a___GHC_Base_Eq___Data_Either_Either_a_b__op_zsze__ {inst_a}{inst_b}`{_ : GHC.Base.Eq_ inst_b} `{_ : GHC.Base.Eq_ inst_a} : ((Either inst_a inst_b) -> ((Either inst_a inst_b) -> bool)) :=
   fun arg_34__ arg_35__ =>
     match arg_34__ , arg_35__ with
-      | a , b => negb (instance_forall___GHC_Base_Eq__b____GHC_Base_Eq__a___GHC_Base_Eq___Either_a_b__op_zeze__  a b)
+      | a , b => negb (Data.Either.instance_forall___GHC_Base_Eq__b____GHC_Base_Eq__a___GHC_Base_Eq___Data_Either_Either_a_b__op_zeze__  a b)
   end.

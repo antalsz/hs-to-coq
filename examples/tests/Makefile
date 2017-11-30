@@ -19,6 +19,7 @@ PASS = \
   PartialAppliedPolyDataCon \
   PatternGuard \
   NonStructuralRec \
+  DotName \
   MapAccumR \
   Sub \
   FTP \
@@ -26,7 +27,8 @@ PASS = \
   FTPDefault \
   PolyInstance2 \
   PolyInstance3 \
-  MutrecInst
+  MutrecInst \
+  Bits \
 
 
 # tests that *should* pass but currently fail
@@ -37,12 +39,10 @@ TODO_PASS  = \
   InstVar \
   Expr \
   Mutrec \
-  DotName \
   PaperExamples \
   OpTyCon \
-  Successors \
   Existential \
-  Bits
+  TypeAnnotations \
 
 MODULES = $(PASS) $(TODO_PASS)
 

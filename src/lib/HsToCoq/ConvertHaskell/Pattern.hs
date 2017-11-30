@@ -37,7 +37,6 @@ import HsToCoq.ConvertHaskell.Parameters.Edits
 import HsToCoq.ConvertHaskell.Monad
 import HsToCoq.ConvertHaskell.Variables
 import HsToCoq.ConvertHaskell.Literals
-import HsToCoq.ConvertHaskell.InfixNames
 
 --------------------------------------------------------------------------------
 
@@ -46,7 +45,7 @@ convertPat (WildPat PlaceHolder) =
   pure UnderscorePat
 
 convertPat (GHC.VarPat (L _ x)) =
-  Coq.VarPat <$> freeVar x
+  QualidPat <$> var ExprNS x
 
 convertPat (LazyPat p) = do
   p' <- convertLPat p
@@ -55,7 +54,7 @@ convertPat (LazyPat p) = do
                    else return p'
 
 convertPat (GHC.AsPat x p) =
-  Coq.AsPat <$> convertLPat p <*> freeVar (unLoc x)
+  Coq.AsPat <$> convertLPat p <*> var ExprNS (unLoc x)
 
 convertPat (ParPat p) =
   convertLPat p
@@ -80,7 +79,7 @@ convertPat (ConPatIn (L _ hsCon) conVariety) = do
 
   case conVariety of
     PrefixCon args ->
-      appListPat (Bare con) <$> traverse convertLPat args
+      appListPat con <$> traverse convertLPat args
 
     RecCon HsRecFields{..} ->
       let recPatUnsupported what = do
@@ -90,21 +89,21 @@ convertPat (ConPatIn (L _ hsCon) conVariety) = do
 
       in use (constructorFields . at con) >>= \case
            Just (RecordFields conFields) -> do
-             let defaultPat field | isJust rec_dotdot = Coq.VarPat field
+             let defaultPat field | isJust rec_dotdot = QualidPat field
                                   | otherwise         = UnderscorePat
 
              patterns <- fmap M.fromList . for rec_flds $ \(L _ (HsRecField (L _ (FieldOcc (L _ hsField) _)) hsPat pun)) -> do
                            field <- recordField hsField
                            pat   <- if pun
-                                    then pure $ Coq.VarPat field
+                                    then pure $ Coq.VarPat (qualidBase field)
                                     else convertLPat hsPat
                            pure (field, pat)
-             pure . appListPat (Bare con)
+             pure . appListPat con
                   $ map (\field -> M.findWithDefault (defaultPat field) field patterns) conFields
 
            Just (NonRecordFields count)
              | null rec_flds && isNothing rec_dotdot ->
-               pure . appListPat (Bare con) $ replicate count UnderscorePat
+               pure . appListPat con $ replicate count UnderscorePat
 
              | otherwise ->
                recPatUnsupported "non-record"
@@ -112,7 +111,7 @@ convertPat (ConPatIn (L _ hsCon) conVariety) = do
            Nothing -> recPatUnsupported "unknown"
 
     InfixCon l r -> do
-      App2Pat (Bare (toPrefix con)) <$> convertLPat l <*> convertLPat r
+      App2Pat con <$> convertLPat l <*> convertLPat r
 
 convertPat (ConPatOut{}) =
   convUnsupported "[internal?] `ConPatOut' constructor"
@@ -171,19 +170,19 @@ convertIntegerPat what hsInt = do
   int <- convertInteger what hsInt
   Coq.VarPat var <$ tell ([Infix (Var var) "==" (PolyNum int)] :: [Term])
 
-isConstructor :: MonadState ConversionState m => Ident -> m Bool
+isConstructor :: MonadState ConversionState m => Qualid -> m Bool
 isConstructor con = isJust <$> (use $ constructorTypes . at con)
 
 -- Nothing:    Not a constructor
 -- Just True:  Sole constructor
 -- Just False: One of many constructors
-isSoleConstructor :: ConversionMonad m => Ident -> m (Maybe Bool)
+isSoleConstructor :: ConversionMonad m => Qualid -> m (Maybe Bool)
 isSoleConstructor con = runMaybeT $ do
   ty    <- MaybeT . use $ constructorTypes . at con
   ctors <-          use $ constructors     . at ty
   pure $ length (fromMaybe [] ctors) == 1
 
-data Refutability = Trivial (Maybe Ident) -- Variables (with `Just`), underscore (with `Nothing`)
+data Refutability = Trivial (Maybe Qualid) -- Variables (with `Just`), underscore (with `Nothing`)
                   | SoleConstructor       -- (), (x,y)
                   | Refutable             -- Nothing, Right x, (3,_)
                   deriving (Eq, Ord, Show, Read)
@@ -195,7 +194,7 @@ isRefutable _ = False
 -- Module-local
 constructor_refutability :: ConversionMonad m => Qualid -> NonEmpty Pattern -> m Refutability
 constructor_refutability con args =
-  isSoleConstructor (qualidToIdent con) >>= \case
+  isSoleConstructor con >>= \case
     Nothing    -> pure Refutable -- Error
     Just True  -> maximum . (SoleConstructor <|) <$> traverse refutability args
     Just False -> pure Refutable
@@ -210,8 +209,7 @@ refutability (ExplicitArgsPat con args) = constructor_refutability con args
 refutability (InfixPat arg1 con arg2)   = constructor_refutability (Bare con) [arg1,arg2]
 refutability (Coq.AsPat pat _)          = refutability pat
 refutability (InScopePat _ _)           = pure Refutable -- TODO: Handle scopes
-refutability (QualidPat qid)            = let name = qualidToIdent qid
-                                          in isSoleConstructor name <&> \case
+refutability (QualidPat name)           = isSoleConstructor name <&> \case
                                                Nothing    -> Trivial $ Just name
                                                Just True  -> SoleConstructor
                                                Just False -> Refutable
@@ -225,21 +223,18 @@ refutability (OrPats _)                 = pure Refutable -- TODO: Handle or-patt
 --
 -- It is ok to err on the side of OtherSummary.
 -- For example, OrPatterns are considered OtherSummary
-data PatternSummary = OtherSummary | ConApp Ident [PatternSummary]
+data PatternSummary = OtherSummary | ConApp Qualid [PatternSummary]
   deriving Show
 
 patternSummary :: MonadState ConversionState m => Pattern -> m PatternSummary
-patternSummary (ArgsPat con args)         = ConApp name <$> mapM patternSummary (toList args)
-  where name = qualidToIdent con
-patternSummary (ExplicitArgsPat con args) = ConApp name <$> mapM patternSummary (toList args)
-  where name = qualidToIdent con
-patternSummary (InfixPat arg1 con arg2)   = ConApp con <$> mapM patternSummary [arg1, arg2]
+patternSummary (ArgsPat con args)         = ConApp con <$> mapM patternSummary (toList args)
+patternSummary (ExplicitArgsPat con args) = ConApp con <$> mapM patternSummary (toList args)
+patternSummary (InfixPat _ _ _)           = pure OtherSummary
 patternSummary (Coq.AsPat pat _)          = patternSummary pat
 patternSummary (InScopePat pat _)         = patternSummary pat
-patternSummary (QualidPat qid)            = isConstructor name <&> \case
+patternSummary (QualidPat name)           = isConstructor name <&> \case
     True -> ConApp name []
     False -> OtherSummary
-  where name = qualidToIdent qid
 patternSummary UnderscorePat              = pure OtherSummary
 patternSummary (NumPat _)                 = pure OtherSummary
 patternSummary (StringPat _)              = pure OtherSummary

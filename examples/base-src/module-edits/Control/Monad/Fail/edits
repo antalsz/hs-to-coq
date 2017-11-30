@@ -1,2 +1,2 @@
-skip instance_MonadFail_GHC_Types_IO
-class kinds MonadFail (Type -> Type)
+skip Control.Monad.Fail.instance_Control_Monad_Fail_MonadFail_GHC_Types_IO
+class kinds Control.Monad.Fail.MonadFail (Type -> Type)

@@ -36,6 +36,12 @@ rename type GHC.Tuple.(,,,,) = GHC.Tuple.quint_type
 rename type GHC.Tuple.(,,,,,) = GHC.Tuple.sext_type
 rename type GHC.Tuple.(,,,,,,) = GHC.Tuple.sept_type
 
+rename value GHC.Tuple.(,) = GHC.Tuple.pair2
+rename value GHC.Tuple.(,,) = GHC.Tuple.pair3
+rename value GHC.Tuple.(,,,) = GHC.Tuple.pair4
+rename value GHC.Tuple.(,,,,) = GHC.Tuple.pair5
+rename value GHC.Tuple.(,,,,,) = GHC.Tuple.pair6
+rename value GHC.Tuple.(,,,,,,) = GHC.Tuple.pair7
 
 rename type  GHC.Types.[]  = list
 rename value GHC.Types.[]  = nil
@@ -43,7 +49,6 @@ rename value GHC.Types.:   = cons
 
 rename value GHC.Base.++         = Coq.Init.Datatypes.app
 rename value GHC.List.concatMap  = Coq.Lists.List.flat_map
-rename value GHC.Base..          = Coq.Program.Basics.compose
 
 rename value GHC.List.foldl      = GHC.Base.foldl
 rename value GHC.List.foldl'     = GHC.Base.foldl'
@@ -67,10 +72,10 @@ rename value GHC.Classes.== = GHC.Base.op_zeze__
 rename value GHC.Classes./= = GHC.Base.op_zsze__
 
 rename type  GHC.Classes.Ord = GHC.Base.Ord
-rename value GHC.Classes.<  = GHC.Base.op_zl__
-rename value GHC.Classes.<= = GHC.Base.op_zlze__
-rename value GHC.Classes.>  = GHC.Base.op_zg__
-rename value GHC.Classes.>= = GHC.Base.op_zgze__
+rename value GHC.Classes.<   = GHC.Base.<
+rename value GHC.Classes.<=  = GHC.Base.<=
+rename value GHC.Classes.>   = GHC.Base.>
+rename value GHC.Classes.>=  = GHC.Base.>=
 rename value GHC.Classes.max = GHC.Base.max
 rename value GHC.Classes.min = GHC.Base.min
 rename value GHC.Classes.compare = GHC.Base.compare
@@ -98,21 +103,21 @@ rename value Data.Either.Left  = Data.Either.Mk_Left
 # rename value Data.Foldable.sum = Data.Foldable.fsum
 
 
-skip method Monad fail
-skip method Enum enumFromThen
-skip method Enum enumFromThenTo
+skip method GHC.Base.Monad fail
+skip method GHC.Enum.Enum enumFromThen
+skip method GHC.Enum.Enum enumFromThenTo
 
 # deprecated
-skip method Bits bitSize
+skip method Data.Bits.Bits bitSize
 
 # default definition cannot be used
-skip method Applicative op_zlzt__
+skip method GHC.Base.Applicative op_zlzt__
 
 # partial methods
-skip method Foldable foldl1
-skip method Foldable foldr1
-skip method Foldable maximum
-skip method Foldable minimum
+skip method Data.Foldable.Foldable foldl1
+skip method Data.Foldable.Foldable foldr1
+skip method Data.Foldable.Foldable maximum
+skip method Data.Foldable.Foldable minimum
 
 
 

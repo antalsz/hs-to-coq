@@ -7,8 +7,9 @@ data Step s a = Yield a s | Done
 -- https://github.com/antalsz/hs-to-coq/issues/12
 data Stream a = forall s. Stream (s -> Step s a) s
 
-eq :: Eq a => Stream a -> [a] -> Bool
-eq (Stream next1 s1) xs = loop (next1 s1) xs
+
+eq :: (a -> a -> Bool) -> Stream a -> [a] -> Bool
+eq (==) (Stream next1 s1) xs = loop (next1 s1) xs
     where
       loop Done []   = True
       loop Done _    = False

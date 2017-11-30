@@ -49,8 +49,9 @@ import HsToCoq.ConvertHaskell.Parameters.Parsers
 import HsToCoq.Util.Monad
 import HsToCoq.Util.Messages
 import HsToCoq.PrettyPrint hiding ((</>))
-import HsToCoq.Coq.Gallina
+import HsToCoq.Coq.Gallina.Util
 import HsToCoq.Coq.FreeVars
+import HsToCoq.Coq.Pretty
 import HsToCoq.Coq.Preamble
 import HsToCoq.ProcessFiles
 import HsToCoq.ConvertHaskell
@@ -281,7 +282,7 @@ printConvertedModule withModulePrinter cmod@ConvertedModule{..} = do
           unless (null fvs) $ do
               hPrettyPrint out $
                 line <> "(*" <+> hang 2
-                  ("Unbound variables:" <!> fillSep (map text fvs))
+                  ("Unbound variables:" <!> fillSep (map (text . qualidToIdent) fvs))
                 <!> "*)" <> line
               hFlush out
 

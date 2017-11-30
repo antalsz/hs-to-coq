@@ -98,11 +98,8 @@ Definition op_zeze__ {a} {g : Eq_ a} := g _ (op_zeze____ _).
 Definition op_zsze__ {a} {g : Eq_ a} := g _ (op_zsze____ _).
 
 Infix "/=" := (op_zsze__) (no associativity, at level 70).
-
 Notation "'_/=_'" := (op_zsze__).
-
 Infix "==" := (op_zeze__) (no associativity, at level 70).
-
 Notation "'_==_'" := (op_zeze__).
 
 Definition eq_default {a} (eq : a -> a -> bool) : Eq_ a :=
@@ -143,22 +140,21 @@ Definition max `{g : Ord a} : a -> a -> a :=
 Definition min `{g : Ord a} : a -> a -> a :=
   g _ (min__ a).
 
-(* Don't clash with Coq's standard ordering predicates. *)
-Infix "<?" := (op_zl__) (no associativity, at level 70).
+Infix "<" := (op_zl__) (no associativity, at level 70).
 
-Notation "'_<?_'" := (op_zl__).
+Notation "'_<_'" := (op_zl__).
 
-Infix "<=?" := (op_zlze__) (no associativity, at level 70).
+Infix "<=" := (op_zlze__) (no associativity, at level 70).
 
-Notation "'_<=?_'" := (op_zlze__).
+Notation "'_<=_'" := (op_zlze__).
 
-Infix ">?" := (op_zg__) (no associativity, at level 70).
+Infix ">" := (op_zg__) (no associativity, at level 70).
 
-Notation "'_>?_'" := (op_zg__).
+Notation "'_>_'" := (op_zg__).
 
-Infix ">=?" := (op_zgze__) (no associativity, at level 70).
+Infix ">=" := (op_zgze__) (no associativity, at level 70).
 
-Notation "'_>=?_'" := (op_zgze__).
+Notation "'_>=_'" := (op_zgze__).
 
 (*********** Eq/Ord for primitive types **************************)
 
@@ -579,32 +575,6 @@ Instance Ord_list {a} `{Ord a}: Ord (list a) :=
   ord_default compare_list.
 
 
-Instance Eq_option {a} `{Eq_ a} : Eq_ (option a) := fun _ k => k {|
-   op_zeze____ := fun x y =>
-                  match x,y with
-                  | Some x0, Some y0 => x0 == y0
-                  | None, None => true
-                  | _,_ => false
-                  end ;
-   op_zsze____ := fun x y =>
-                  match x,y with
-                  | Some x0, Some y0 => x0 /= y0
-                  | None, None => false
-                  | _,_ => true
-                  end
-|}.
-
-Definition compare_option {a} `{Ord a} (xs : option a) (ys : option a) : comparison :=
-  match xs, ys with
-  | None, None => Eq
-  | None, _    => Lt
-  | _   , None => Gt
-  | Some x , Some y => compare x y
-  end.
-
-Instance Ord_option {a} `{Ord a} : Ord (option a) := ord_default compare_option.
-
-
 (* ********************************************************* *)
 (* Some Haskell functions we cannot translate (yet)          *)
 
@@ -644,3 +614,21 @@ Definition build {a} : ((a -> list a -> list a) -> list a -> list a) -> list a :
 (********************************************************************)
 
 Definition oneShot {a} (x:a) := x.
+
+(** Qualified notation for the notation defined here **)
+
+Module ManualNotations.
+Infix "GHC.Base./=" := (op_zsze__) (no associativity, at level 70).
+Notation "'_GHC.Base./=_'" := (op_zsze__).
+Infix "GHC.Base.==" := (op_zeze__) (no associativity, at level 70).
+Notation "'_GHC.Base.==_'" := (op_zeze__).
+Infix "GHC.Base.<" := (op_zl__) (no associativity, at level 70).
+Notation "'_GHC.Base.<_'" := (op_zl__).
+Infix "GHC.Base.<=" := (op_zlze__) (no associativity, at level 70).
+Notation "'_GHC.Base.<=_'" := (op_zlze__).
+Infix "GHC.Base.>" := (op_zg__) (no associativity, at level 70).
+Notation "'_GHC.Base.>_'" := (op_zg__).
+Infix "GHC.Base.>=" := (op_zgze__) (no associativity, at level 70).
+Notation "'_GHC.Base.>=_'" := (op_zgze__).
+End ManualNotations.
+

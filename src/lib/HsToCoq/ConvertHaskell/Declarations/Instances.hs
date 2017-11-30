@@ -41,6 +41,7 @@ import HsToCoq.Util.GHC.Module
 
 import HsToCoq.PrettyPrint (renderOneLineT)
 import HsToCoq.Coq.Gallina
+import HsToCoq.Coq.Pretty
 import HsToCoq.Coq.FreeVars
 import HsToCoq.Coq.Subst
 import HsToCoq.Coq.Gallina.Util
@@ -52,22 +53,24 @@ import HsToCoq.ConvertHaskell.Type
 import HsToCoq.ConvertHaskell.Expr
 import HsToCoq.ConvertHaskell.Axiomatize
 import HsToCoq.ConvertHaskell.Declarations.Class
-import HsToCoq.ConvertHaskell.InfixNames
 
 --------------------------------------------------------------------------------
 
 -- Take the instance head and make it into a valid identifier by replacing
 -- non-alphanumerics with underscores.  Then, prepend "instance_".
-convertInstanceName :: ConversionMonad m => LHsType GHC.Name -> m Ident
-convertInstanceName =   pure
-                    .   ("instance_" <>)
-                    .   T.map (\c -> if isAlphaNum c || c == '\'' then c else '_')
-                    .   renderOneLineT . renderGallina
-                    <=< ghandle (withGhcException $ const . pure $ Var "unknown_type")
-                    .   convertLType
-                    .   \case
-                          L _ (HsForAllTy _ head) -> head
-                          lty                     -> lty
+convertInstanceName :: ConversionMonad m => LHsType GHC.Name -> m Qualid
+convertInstanceName n = do
+    qual <- maybe Bare (Qualified . moduleNameText) <$> use currentModule
+    pure . qual
+         .   ("instance_" <>)
+         .   T.map (\c -> if isAlphaNum c || c == '\'' then c else '_')
+         .   renderOneLineT . renderGallina
+     <=< ghandle (withGhcException $ const . pure $ Var "unknown_type")
+         .   convertLType
+         .   \case
+               L _ (HsForAllTy _ head) -> head
+               lty                     -> lty
+         $ n
   where withGhcException :: (GhcException -> a) -> (GhcException -> a)
         withGhcException = id
 
@@ -95,9 +98,9 @@ findHsClass insthead = case getLHsInstDeclClass_maybe insthead of
       Class = "Eq"
 
 -}
-data InstanceInfo = InstanceInfo { instanceName  :: !Ident
+data InstanceInfo = InstanceInfo { instanceName  :: !Qualid
                                  , instanceHead  :: !Term
-                                 , instanceClass :: !Ident
+                                 , instanceClass :: !Qualid
                                  , instanceHsClass :: Class}
                   deriving (Eq, Ord)
 
@@ -105,9 +108,8 @@ convertClsInstDeclInfo :: ConversionMonad m => ClsInstDecl GHC.Name -> m Instanc
 convertClsInstDeclInfo ClsInstDecl{..} = do
   instanceName  <- convertInstanceName $ hsib_body cid_poly_ty
   instanceHead  <- convertLHsSigType cid_poly_ty
-  instanceClass <- maybe (convUnsupported "strangely-formed instance heads")
-                         (pure . renderOneLineT . renderGallina)
-                    $ termHead instanceHead
+  instanceClass <- maybe (convUnsupported "strangely-formed instance heads") pure $
+                    termHead instanceHead
   instanceHsClass <- findHsClass cid_poly_ty
 
   pure InstanceInfo{..}
@@ -138,11 +140,12 @@ convertClsInstDecl cid@ClsInstDecl{..} rebuild mhandler = do
                  -- lookup default methods in the global state, using the empty map if the class name is not found
                  -- otherwise gives you a map
                  -- <&> is flip fmap
-             <&> M.toList . M.filterWithKey (\meth _ -> isNothing $ lookup meth cdefs)
+             <&> filter (\(meth, _) -> isNothing $ lookup meth cdefs) . M.toList
 
     -- implement the instance part of "skip method"
     skippedMethodsS <- use (edits.skippedMethods)
-    let methods = filter (\(m,_) -> (identToBase instanceClass,m) `S.notMember` skippedMethodsS) (cdefs ++ defaults)
+
+    let methods = filter (\(m,_) -> (instanceClass,qualidBase m) `S.notMember` skippedMethodsS) (cdefs ++ defaults)
 
     let (binds, classTy) = decomposeForall instanceHead
 
@@ -166,7 +169,7 @@ convertModuleClsInstDecls = foldTraverse $ maybeWithCurrentModule .*^ \cid ->
                     InstanceTerm       coq_name _ _ _ _ -> coq_name
             use (edits.skipped.contains coq_name) >>= \case
                 True -> do
-                    let t = "Skipping instance " <> coq_name
+                    let t = "Skipping instance " <> qualidBase coq_name
                     return [CommentSentence (Comment t)]
                 False -> topoSortInstance instdef
         -- rebuild = pure . pure . InstanceSentence
@@ -219,7 +222,7 @@ topoSortInstance (InstanceDefinition instanceName params ty members mp) = go sor
                           (h : h' : tl', S.empty) -- don't care anymore
 -}
         -- go through the toposort of members, constructing the final sentences
-        go :: [ NE.NonEmpty Ident ] -> M.Map Ident Ident -> m [ Sentence ]
+        go :: [ NE.NonEmpty Qualid ] -> M.Map Qualid Qualid -> m [ Sentence ]
 
         go []      sub = mkID sub
         go (hd:tl) sub = do (s1,bnds) <- mkDefnGrp (NE.toList hd) sub
@@ -230,16 +233,16 @@ topoSortInstance (InstanceDefinition instanceName params ty members mp) = go sor
         -- TODO: multiparameter type classes   "instance C t1 t2 where"
         --       instances with contexts       "instance C a => C (Maybe a) where"
         decomposeClassTy ty = case ty of
-           App (Qualid (Bare cn)) ((PosArg a) NE.:| []) -> (cn, a)
+           App (Qualid cn) ((PosArg a) NE.:| []) -> (cn, a)
            _ -> error ("cannot deconstruct instance head: " ++ (show ty))
 
         (className, instTy) = decomposeClassTy ty
 
-        buildName = className <> "__Dict_Build"
+        buildName = qualidExtendBase "__Dict_Build" className
 
         -- lookup the type of the class member
         -- add extra quantifiers from the class & instance definitions
-        mkTy :: Ident -> m ([Binder], Maybe Term)
+        mkTy :: Qualid -> m ([Binder], Maybe Term)
         mkTy memberName = do
           classDef <- use (classDefns.at className)
           -- TODO: May be broken by switch away from 'RdrName's
@@ -268,8 +271,8 @@ topoSortInstance (InstanceDefinition instanceName params ty members mp) = go sor
                   let renameInst UnderscoreName =
                         pure UnderscoreName
                       renameInst (Ident x) =
-                        let inst_x = "inst_" <> x
-                        in Ident inst_x <$ modify' (M.insert x $ Var inst_x)
+                        let inst_x = qualidMapBase ("inst_" <>) x
+                        in Ident inst_x <$ modify' (M.insert x (Qualid inst_x))
                       
                       sub ty = ($ ty) <$> gets subst
                       
@@ -289,8 +292,11 @@ topoSortInstance (InstanceDefinition instanceName params ty members mp) = go sor
                   convUnsupported ("Cannot find sig for " ++ show memberName)
             _ -> convUnsupported ("OOPS! Cannot find information for class " ++ show className)
 
+        -- Methods often look recursive, but usually they are not really,
+        -- so by default, we un-do the fix introduced by convertTypedBinding
         unFix :: Term -> Term
         unFix body = case body of
+            Fun bnds t -> Fun bnds (unFix t)
             Fix (FixOne (FixBody _ bnds _ _ body'))
               -> Fun bnds body'
             App1 (Qualid (Bare "unsafeFix"))
@@ -309,8 +315,9 @@ topoSortInstance (InstanceDefinition instanceName params ty members mp) = go sor
 
         -- This is the variant
         --   {| foo := fun {a} {b} => instance_foo |}
-        -- which seems to trigger a bug in Coq, reported at
+        -- which is too much for Coq’s type inference (without Program mode), see
         -- https://sympa.inria.fr/sympa/arc/coq-club/2017-11/msg00035.html
+        quantify :: Qualid -> Term -> m Term
         quantify meth body =
             do typeArgs <- getImplicitBindersForClassMember className meth
                case (NE.nonEmpty typeArgs) of
@@ -324,12 +331,12 @@ topoSortInstance (InstanceDefinition instanceName params ty members mp) = go sor
 
         -- given a group of member ids turn them into lifted definitions, keeping track of the current
         -- substitution
-        mkDefnGrp :: [ Ident ] -> (M.Map Ident Ident) -> m ([ Sentence ], M.Map Ident Ident)
+        mkDefnGrp :: [ Qualid ] -> (M.Map Qualid Qualid) -> m ([ Sentence ], M.Map Qualid Qualid)
         mkDefnGrp [] sub = return ([], sub)
         mkDefnGrp [ v ] sub = do
-           let v' = instanceName <> "_" <> v
+           let v' = qualidMapBase (<> ("_" <> qualidBase v)) instanceName
            (params, mty)  <- mkTy v
-           body <- quantify (toPrefix v) (subst (fmap (Qualid . Bare) sub) (m M.! v))
+           body <- quantify v (subst (fmap Qualid sub) (m M.! v))
            let sub' = M.insert v v' sub
 
            -- implement redefinitions of methods
@@ -342,27 +349,16 @@ topoSortInstance (InstanceDefinition instanceName params ty members mp) = go sor
            convUnsupported ("Giving up on mutual recursion" ++ show many)
 
         -- make the final instance declaration, using the current substitution as the instance
-        mkID :: M.Map Ident Ident -> m [ Sentence ]
+        mkID :: M.Map Qualid Qualid -> m [ Sentence ]
         mkID mems = do
-            -- Tack the module name of the class to the methods,
-            -- if the class is defined in a different module
-            thisModM <- use currentModule
-            let qualify field_name
-                  | Just thisMod <- thisModM >>= identToQualid . moduleNameText
-                  , Just classMod <- identToQualid className >>= qualidModule
-                  , thisMod /= classMod
-                  = Qualified classMod field_name
-                  | otherwise
-                  = Bare field_name
-
             -- Assemble members in the right order
             classMethods <- getClassMethods
 
             mems' <- forM classMethods $ \v -> do
                 case M.lookup v mems of
                   Just v' -> do
-                      t <- quantify v (Var v')
-                      pure $ (qualify (v <> "__"), t)
+                      t <- quantify v (Qualid v')
+                      pure $ ((qualidMapBase (<> "__") v), t)
                   Nothing -> convUnsupported ("missing " ++ show v ++ " in " ++ show mems )
 
             -- When we can use record syntax, we can use this.
@@ -372,7 +368,7 @@ topoSortInstance (InstanceDefinition instanceName params ty members mp) = go sor
 
             -- This variant uses the explicit `Build` command, which does
             -- works with `Instance`, but is ugly
-            let _body = appList (Var buildName) $ map PosArg $
+            let _body = appList (Qualid buildName) $ map PosArg $
                     [ instTy ] ++ map snd mems'
 
 

@@ -20,6 +20,7 @@ import GHC (mkModuleName)
 
 import HsToCoq.Coq.Gallina
 import HsToCoq.Coq.Gallina.Util
+import HsToCoq.Coq.Gallina.Orphans ()
 
 import HsToCoq.ConvertHaskell.Parameters.Edits
 import HsToCoq.ConvertHaskell.Parameters.Parsers.Lexing
@@ -45,6 +46,8 @@ import HsToCoq.ConvertHaskell.Parameters.Parsers.Lexing
   indices         { TokWord    "indices"        }
   redefine        { TokWord    "redefine"       }
   skip            { TokWord    "skip"           }
+  manual          { TokWord    "manual"         }
+  notation        { TokWord    "notation"       }
   class           { TokWord    "class"          }
   kinds           { TokWord    "kinds"          }
   axiomatize      { TokWord    "axiomatize"     }
@@ -184,17 +187,17 @@ Namespace :: { HsNamespace }
   | type     { TypeNS }
 
 NamespacedIdent :: { NamespacedIdent }
-  : Namespace WordOrOp    { NamespacedIdent $1 $2 }
+  : Namespace Qualid    { NamespacedIdent $1 $2 }
 
-Renaming :: { (NamespacedIdent, Ident) }
-  : NamespacedIdent '=' WordOrOp    { ($1, $3) }
+Renaming :: { (NamespacedIdent, Qualid) }
+  : NamespacedIdent '=' Qualid    { ($1, $3) }
 
 --------------------------------------------------------------------------------
 -- Edit commands
 --------------------------------------------------------------------------------
 
-TaggedParens(tag) :: { [Ident] }
- : '(' tag ':' Many(Word) ')'    { $4 }
+TaggedParens(tag) :: { [Qualid] }
+ : '(' tag ':' Many(Qualid) ')'    { $4 }
 
 DataTypeArguments :: { DataTypeArguments }
   : TaggedParens(parameters) Optional(TaggedParens(indices))    { DataTypeArguments $1 (fromMaybe [] $2) }
@@ -221,21 +224,21 @@ Scope :: { Ident }
 
 Edit :: { Edit }
   : type synonym Word ':->' Word                  { TypeSynonymTypeEdit   $3 $5                           }
-  | data type arguments Word DataTypeArguments    { DataTypeArgumentsEdit $4 $5                           }
+  | data type arguments Qualid DataTypeArguments  { DataTypeArgumentsEdit $4 $5                           }
   | redefine CoqDefinition                        { RedefinitionEdit      $2                              }
   | add Word CoqDefinition                        { AddEdit               (mkModuleName (T.unpack $2)) $3 }
-  | skip Word                                     { SkipEdit              $2                              }
-  | skip Op                                       { SkipEdit              $2                              }
-  | skip method Word Word                         { SkipMethodEdit        $3 $4                           }
+  | skip Qualid                                   { SkipEdit              $2                              }
+  | skip method Qualid Word                       { SkipMethodEdit        $3 $4                           }
   | skip module Word                              { SkipModuleEdit        (mkModuleName (T.unpack $3))    }
-  | nonterminating Word                           { NonterminatingEdit    $2                              }
-  | termination Word Order Optional(Word)         { TerminationEdit       $2 $3 $4                        }
+  | manual notation Word                          { HasManualNotationEdit (mkModuleName (T.unpack $3))    }
+  | nonterminating Qualid                         { NonterminatingEdit    $2                              }
+  | termination Qualid Order Optional(Word)       { TerminationEdit       $2 $3 $4                        }
   | rename Renaming                               { RenameEdit            (fst $2) (snd $2)               }
   | axiomatize module Word                        { AxiomatizeModuleEdit  (mkModuleName (T.unpack $3))    }
-  | add scope Scope for ScopePlace Word           { AdditionalScopeEdit   $5 $6 $3                        }
-  | order Some(Word)                              { OrderEdit             $2                              }
-  | class kinds Word SepBy1(Term,',')             { ClassKindEdit         $3 $4                           }
-  | data  kinds Word SepBy1(Term,',')             { DataKindEdit          $3 $4                           }
+  | add scope Scope for ScopePlace Qualid         { AdditionalScopeEdit   $5 $6 $3                        }
+  | order Some(Qualid)                            { OrderEdit             $2                              }
+  | class kinds Qualid SepBy1(Term,',')           { ClassKindEdit         $3 $4                           }
+  | data  kinds Qualid SepBy1(Term,',')           { DataKindEdit          $3 $4                           }
 
 Edits :: { [Edit] }
   : Lines(Edit)    { $1 }
@@ -261,6 +264,12 @@ EnterCoqParsing :: { () }
 ExitCoqParsing :: { () }
   : {- empty -}    {% put NewlineSeparators }
 
+Qualid :: { Qualid }
+  : WordOrOp   { forceIdentToQualid $1 }
+
+QualOp :: { Qualid }
+  : Op   { forceIdentToQualid $1 }
+
 Term :: { Term }
   : LargeTerm    { $1 }
   | App          { $1 }
@@ -271,12 +280,12 @@ LargeTerm :: { Term }
   | fix   FixBodies            { Fix   $2 }
   | cofix CofixBodies          { Cofix $2 }
   | forall Binders ',' Term    { Forall $2 $4 }
-  | match SepBy1(MatchItem, ',') with SepBy(Equation,'|') end { Match $2 Nothing $4 }
-  | Atom Op Atom               { if $2 == "->" then Arrow $1 $3 else Infix $1 $2 $3 }
+  | match SepBy1(MatchItem, ',') with Many(Equation) end { Match $2 Nothing $4 }
+  | Atom QualOp Atom           { if $2 == "->" then Arrow $1 $3 else Infix $1 $2 $3 }
 
 App :: { Term }
   :     Atom Some(Arg)     { App $1 $2 }
-  | '@' Word Many(Atom)    { ExplicitApp (forceIdentToQualid $2) $3 }
+  | '@' Qualid Many(Atom)    { ExplicitApp $2 $3 }
 
 Arg :: { Arg }
   : '(' Word ':=' Term ')'    { NamedArg $2 $4 }
@@ -284,7 +293,7 @@ Arg :: { Arg }
 
 Atom :: { Term }
   : '(' Term ')'    { $2 }
-  | Word            { Qualid (forceIdentToQualid $1) }
+  | Qualid          { Qualid $1 }
   | Num             { Num $1 }
   | '_'             { Underscore }
 
@@ -304,7 +313,7 @@ Plicitly(p)
 
 GenFixBodies(body)
   : body                                    %prec GenFixBodyOne { Left $1 }
-  | body with SepBy1(body,with) for Word                        { Right ($1,$3,$5) }
+  | body with SepBy1(body,with) for Qualid                      { Right ($1,$3,$5) }
 
 FixBodies :: { FixBodies }
   : GenFixBodies(FixBody)    { either FixOne (uncurry3 FixMany) $1 }
@@ -313,13 +322,13 @@ CofixBodies :: { CofixBodies }
   : GenFixBodies(CofixBody)    { either CofixOne (uncurry3 CofixMany) $1 }
 
 FixBody :: { FixBody }
-  : Word FixBinders Optional(TypeAnnotation) ':=' Term    { uncurry (FixBody $1) $2 $3 $5 }
+  : Qualid FixBinders Optional(TypeAnnotation) ':=' Term    { uncurry (FixBody $1) $2 $3 $5 }
 
 CofixBody :: { CofixBody }
-  : Word Binders Optional(TypeAnnotation) ':=' Term    { CofixBody $1 $2 $3 $5 }
+  : Qualid Binders Optional(TypeAnnotation) ':=' Term    { CofixBody $1 $2 $3 $5 }
 
 Annotation :: { Annotation }
-  : '{' struct Word '}'    { Annotation $3 }
+  : '{' struct Qualid '}'    { Annotation $3 }
 
 -- There is an ambiguity between @{implicitVar : ty}@ and @{struct x}@.  Our
 -- options are either (a) use right-recursion and incur stack space blowup, or
@@ -335,7 +344,7 @@ FixBinders :: { (NonEmpty Binder, Maybe Annotation) }
            (_,      _:_:_)                         -> throwError "too many decreasing arguments given for fixpoint" }
 
 BinderName :: { Name }
-  : Word    { Ident $1 }
+  : Qualid    { Ident $1 }
   | '_'     { UnderscoreName }
 
 ExplicitBinderGuts :: { Binder }
@@ -381,13 +390,13 @@ MultPattern :: { MultPattern }
   : '|' SepBy1(Pattern,',')           { MultPattern $2 }
 
 Pattern :: { Pattern }
-  : Word Some(AtomicPattern) { ArgsPat (forceIdentToQualid $1) $2 }
+  : Qualid Some(AtomicPattern) { ArgsPat $1 $2 }
   | AtomicPattern            { $1 }
 
 AtomicPattern :: { Pattern }
   : '_'                     { UnderscorePat }
   | Num                     { NumPat $1 }
-  | Word                    { QualidPat (forceIdentToQualid $1)  }
+  | Qualid                  { QualidPat $1  }
   | '(' Pattern ')'         { $2 }
 
 --------------------------------------------------------------------------------
@@ -405,41 +414,41 @@ Inductive :: { Inductive }
   | 'CoInductive' MutualDefinitions(IndBody)    { uncurry CoInductive $2 }
 
 IndBody :: { IndBody }
-  : Word Many(Binder) Optional(TypeAnnotation) ':=' Constructors    { IndBody $1 $2 (fromMaybe (Sort Type) $3) $5 }
+  : Qualid Many(Binder) Optional(TypeAnnotation) ':=' Constructors    { IndBody $1 $2 (fromMaybe (Sort Type) $3) $5 }
 
-Constructors :: { [(Ident, [Binder], Maybe Term)] }
+Constructors :: { [(Qualid, [Binder], Maybe Term)] }
   : SepByIf(Optional('|'), Constructor, '|')    { $1 }
 
-Constructor :: { (Ident, [Binder], Maybe Term) }
-  : Word Many(Binder) Optional(TypeAnnotation)    { ($1, $2, $3) }
+Constructor :: { (Qualid, [Binder], Maybe Term) }
+  : Qualid Many(Binder) Optional(TypeAnnotation)    { ($1, $2, $3) }
 
 Locality :: { Locality }
   : Optional('Local')    { ifMaybe $1 Local Global }
 
 Definition :: { Definition }
-  : Locality 'Definition' Word Many(Binder) Optional(TypeAnnotation) ':=' Term    { DefinitionDef $1 $3 $4 $5 $7 }
-  |          'Let'        Word Many(Binder) Optional(TypeAnnotation) ':=' Term    { LetDef           $2 $3 $4 $6 }
+  : Locality 'Definition' Qualid Many(Binder) Optional(TypeAnnotation) ':=' Term    { DefinitionDef $1 $3 $4 $5 $7 }
+  |          'Let'        Qualid Many(Binder) Optional(TypeAnnotation) ':=' Term    { LetDef           $2 $3 $4 $6 }
 
 Fixpoint :: { Fixpoint }
   : 'Fixpoint'   MutualDefinitions(FixBody)      { uncurry Fixpoint   $2 }
   | 'CoFixpoint' MutualDefinitions(CofixBody)    { uncurry CoFixpoint $2 }
 
 ProgramFixpoint :: { ProgramFixpoint }
-  : 'Program' 'Fixpoint' Word Many(Binder) Order TypeAnnotation ':=' Term  { ProgramFixpoint $3 $4 $5 $6 $8 }
+  : 'Program' 'Fixpoint' Qualid Many(Binder) Order TypeAnnotation ':=' Term  { ProgramFixpoint $3 $4 $5 $6 $8 }
 
 Order :: { Order }
   : '{' 'measure' Atom OptionalParens(Term) '}'    { MeasureOrder $3 $4 }
-  | '{' 'wf' Atom Word '}'                         { WFOrder $3 $4 }
+  | '{' 'wf' Atom Qualid '}'                       { WFOrder $3 $4 }
 
 
 Instance :: { InstanceDefinition }
-  : 'Instance' Word Many(Binder) TypeAnnotation ':=' '{' SepBy(FieldDefinition, ';')  '}'
+  : 'Instance' Qualid Many(Binder) TypeAnnotation ':=' '{' SepBy(FieldDefinition, ';')  '}'
   { InstanceDefinition $2 $3 $4 $7 Nothing }
-  | 'Instance' Word Many(Binder) TypeAnnotation ':=' Term
+  | 'Instance' Qualid Many(Binder) TypeAnnotation ':=' Term
   { InstanceTerm $2 $3 $4 $6 Nothing }
 
-FieldDefinition :: { (Ident,Term) }
-  : Word ':=' Term  { ($1 , $3) }
+FieldDefinition :: { (Qualid,Term) }
+  : Qualid ':=' Term  { ($1 , $3) }
 
 --------------------------------------------------------------------------------
 -- Haskell code
@@ -457,5 +466,5 @@ unexpected :: MonadError String m => Token -> m a
 unexpected tok = throwError $ "unexpected " ++ tokenDescription tok
 
 forceIdentToQualid :: Ident -> Qualid
-forceIdentToQualid = fromMaybe (error "internal error: lexer produced a malfored qualid!") . identToQualid
+forceIdentToQualid x = fromMaybe (error $ "internal error: lexer produced a malfored qualid: " ++ show x) (identToQualid x)
 }

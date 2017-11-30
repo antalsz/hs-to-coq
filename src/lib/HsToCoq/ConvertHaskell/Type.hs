@@ -27,8 +27,8 @@ import HsToCoq.ConvertHaskell.Literals
 
 convertLHsTyVarBndrs :: ConversionMonad m => Explicitness -> [LHsTyVarBndr GHC.Name] -> m [Binder]
 convertLHsTyVarBndrs ex tvs = for (map unLoc tvs) $ \case
-  UserTyVar   tv   -> Inferred ex . Ident <$> freeVar (unLoc tv)
-  KindedTyVar tv k -> Typed Ungeneralizable ex <$> (pure . Ident <$> freeVar (unLoc tv)) <*> convertLType k
+  UserTyVar   tv   -> Inferred ex . Ident <$> var TypeNS (unLoc tv)
+  KindedTyVar tv k -> Typed Ungeneralizable ex <$> (pure . Ident <$> var TypeNS (unLoc tv)) <*> convertLType k
 
 --------------------------------------------------------------------------------
 
@@ -44,7 +44,7 @@ convertType (HsQualTy (L _ ctx) ty) = do
   pure . maybe tyBody (Forall ?? tyBody) $ nonEmpty classes
 
 convertType (HsTyVar (L _ tv)) =
-  Var <$> var TypeNS tv
+  Qualid <$> var TypeNS tv
 
 convertType (HsAppTy ty1 ty2) =
   App1 <$> convertLType ty1 <*> convertLType ty2
@@ -81,7 +81,7 @@ convertType (HsTupleTy tupTy tys) = do
     _    -> foldl1 (Infix ?? "*") <$> traverse convertLType tys
 
 convertType (HsOpTy ty1 op ty2) =
-  App2 <$> (Var <$> var TypeNS (unLoc op)) <*> convertLType ty1 <*> convertLType ty2   -- ???
+  App2 <$> (Qualid <$> var TypeNS (unLoc op)) <*> convertLType ty1 <*> convertLType ty2   -- ???
 
 convertType (HsParTy ty) =
   Parens <$> convertLType ty
@@ -89,7 +89,7 @@ convertType (HsParTy ty) =
 convertType (HsIParamTy (HsIPName ip) lty) = do
   isTyCallStack <- maybe (pure False) (fmap (== "CallStack") . ghcPpr) $ viewLHsTyVar lty
   if isTyCallStack && ip == fsLit "callStack"
-    then Var <$> var' TypeNS "CallStack"
+    then Qualid <$> var' TypeNS "CallStack"
     else convUnsupported "implicit parameter constraints"
 
 convertType (HsEqTy _ty1 _ty2) =

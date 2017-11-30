@@ -37,3 +37,10 @@ Instance TestEquality_EqTy {k}{a:k} : `{ TestEquality (fun x => a :~: x) } :=
   { testEquality := fun a b x y => match x,  y with eq_refl, eq_refl => Some eq_refl end }.
 
 (* Coq cannot implement the == type family (for types) *)
+
+Module Notations.
+Notation "a 'Data.Type.Equality.:~:' b" := (a = b) (no associativity, at level 70).
+Notation "'_Data.Type.Equality.:~:_'" := (fun a b => a = b) (no associativity, at level 70).
+Notation "a 'Data.Type.Equality.~~' b" := (EqTy a b) (no associativity, at level 70).
+Notation "'_Data.Type.Equality.~~_'" := (fun a b => EqTy a b) (no associativity, at level 70).
+End Notations.

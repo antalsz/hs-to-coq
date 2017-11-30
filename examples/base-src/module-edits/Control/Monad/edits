@@ -1,11 +1,11 @@
 # partial
-skip forever
+skip Control.Monad.forever
 
 # Bug in Coq, please report, also partial
-skip replicateM
-skip replicateM_
+skip Control.Monad.replicateM
+skip Control.Monad.replicateM_
 
 # ????
-redefine Definition zipWithM {m} {a} {b} {c} `{_:GHC.Base.Applicative m} :
+redefine Definition Control.Monad.zipWithM {m} {a} {b} {c} `{_:GHC.Base.Applicative m} :
   (a -> (b -> (m c))) -> ((list a) -> ((list b) -> (m (list c)))) :=
   fun f xs ys => @Data.Traversable.sequenceA _ _ _ _ m _ _ _  (GHC.List.zipWith f xs ys).

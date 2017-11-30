@@ -1,8 +1,9 @@
-{-# LANGUAGE MultiWayIf, OverloadedStrings, FlexibleContexts #-}
+{-# LANGUAGE MultiWayIf, LambdaCase, OverloadedStrings, FlexibleContexts #-}
 
 module HsToCoq.ConvertHaskell.Variables (
   -- * Generate variable names
-  var', var, recordField,
+  var', var, varUnrenamed, unQualifyLocal,
+  recordField, bareName,
   freeVar', freeVar,
   -- * Avoiding reserved words/names
   tryEscapeReservedWord, escapeReservedNames
@@ -14,7 +15,6 @@ import Data.Monoid hiding ((<>))
 import Data.Maybe
 import qualified Data.Text as T
 
-import Control.Applicative
 import Control.Monad
 
 import GHC hiding (Name)
@@ -26,9 +26,9 @@ import HsToCoq.Util.GHC
 import HsToCoq.Util.GHC.Module
 
 import HsToCoq.Coq.Gallina
-import HsToCoq.Coq.Gallina.Util
 import HsToCoq.ConvertHaskell.Parameters.Edits
 import HsToCoq.ConvertHaskell.Monad
+import HsToCoq.ConvertHaskell.InfixNames
 
 --------------------------------------------------------------------------------
 
@@ -65,34 +65,40 @@ freeVar' = escapeReservedNames
 freeVar :: (GhcMonad m, OutputableBndr name) => name -> m Ident
 freeVar = fmap freeVar' . ghcPpr
 
-var' :: ConversionMonad m => HsNamespace -> Ident -> m Ident
-var' ns x = use $ renamed ns x . non (escapeReservedNames x)
+-- Does not qualify with the module, does not look it up in renamings
+-- (useful for locally bound names)
+bareName :: GHC.Name -> Ident
+bareName = toPrefix . escapeReservedNames . T.pack . occNameString . nameOccName
 
--- This is dishonest: it should return a Qualid for qualified names
-var :: ConversionMonad m => HsNamespace -> GHC.Name -> m Ident
-var ns name = do
+localName :: GHC.Name -> Ident
+localName = toLocalPrefix . escapeReservedNames . T.pack . occNameString . nameOccName
+
+var' :: ConversionMonad m => HsNamespace -> Ident -> m Qualid
+var' ns x = use $ renamed ns (Bare x) . non (Bare (escapeReservedNames x))
+
+varUnrenamed :: GHC.Name -> Qualid
+varUnrenamed name = qid
+  where
+    nameModM = moduleNameText . moduleName <$> nameModule_maybe name
+
+    qid | Just m <- nameModM = Qualified m (bareName name)
+        | otherwise          = Bare        (localName name)
+
+unQualifyLocal :: ConversionMonad m => Qualid -> m Qualid
+unQualifyLocal qi = do
   thisModM <- fmap moduleNameText <$> use currentModule
-  let nameModM = moduleNameText . moduleName <$> nameModule_maybe name
+  case qi of
+    -- Something in this module
+    (Qualified m b) | Just m == thisModM -> pure (Bare b)
+    -- Something bare (built-in or local) or external
+    _                                    -> pure qi
 
-  let mod = nameModM
 
-      qual | thisModM == nameModM = ""
-           | otherwise            = fromMaybe "" mod
+var :: ConversionMonad m => HsNamespace -> GHC.Name -> m Qualid
+var ns name = do
+  let qid = varUnrenamed name
+  renamed_qid <- use (renamed ns qid . non qid)
+  pure renamed_qid
 
-      base = T.pack . occNameString $ nameOccName name
-
-  let localize q = case (identToQualid q, thisModM) of
-        (Just (Qualified m b), Just thisMod) | qualidToIdent m == thisMod -> b
-        _                                                                 -> q
-
-      "" <.> b = b
-      q  <.> b = q <> "." <> b
-      tryRenamed = fmap (fmap localize) . use . renamed ns
-      (<<|>>) = liftA2 (<|>)
-
-  fmap (fromMaybe $ qual <.> escapeReservedNames base)
-    $     maybe (pure Nothing) (tryRenamed . (<.> base)) mod
-    <<|>> tryRenamed (qual <.> base)
-
-recordField :: (ConversionMonad m, HasOccName name, OutputableBndr name) => name -> m Ident
+recordField :: (ConversionMonad m, HasOccName name, OutputableBndr name) => name -> m Qualid
 recordField = var' ExprNS <=< ghcPpr -- TODO Check module part?

@@ -1,12 +1,11 @@
 {-# LANGUAGE RecordWildCards, FlexibleContexts, MultiWayIf, OverloadedLists #-}
 
 module HsToCoq.ConvertHaskell.Definitions (
-  ConvertedDefinition(..), withConvertedDefinition, withConvertedDefinitionDef, withConvertedDefinitionOp,
+  ConvertedDefinition(..),
   ConvertedBinding(..), withConvertedBinding,
   toProgramFixpointSentence
   ) where
 
-import HsToCoq.Util.Functor
 import HsToCoq.Coq.Gallina
 
 import Data.List.NonEmpty (toList )
@@ -18,26 +17,12 @@ import HsToCoq.ConvertHaskell.Monad
 
 --------------------------------------------------------------------------------
 
-data ConvertedDefinition = ConvertedDefinition { convDefName  :: !Ident
+data ConvertedDefinition = ConvertedDefinition { convDefName  :: !Qualid
                                                , convDefArgs  :: ![Binder]
                                                , convDefType  :: !(Maybe Term)
                                                , convDefBody  :: !Term
-                                               , convDefInfix :: !(Maybe Op) }
+                                               }
                          deriving (Eq, Ord, Show, Read)
-
-withConvertedDefinition :: Monoid m
-                        => (Ident -> [Binder] -> Maybe Term -> Term -> a) -> (a -> m)
-                        -> (Op -> Ident -> b)                             -> (b -> m)
-                        -> (ConvertedDefinition -> m)
-withConvertedDefinition withDef wrapDef withOp wrapOp ConvertedDefinition{..} =
-  mappend (wrapDef $ withDef convDefName convDefArgs convDefType convDefBody)
-          (maybe mempty (wrapOp . flip withOp convDefName) convDefInfix)
-
-withConvertedDefinitionDef :: (Ident -> [Binder] -> Maybe Term -> Term -> a) -> (ConvertedDefinition -> a)
-withConvertedDefinitionDef f ConvertedDefinition{..} = f convDefName convDefArgs convDefType convDefBody
-
-withConvertedDefinitionOp :: (Op -> Ident -> a) -> (ConvertedDefinition -> Maybe a)
-withConvertedDefinitionOp f ConvertedDefinition{..} = (f ?? convDefName) <$> convDefInfix
 
 --------------------------------------------------------------------------------
 

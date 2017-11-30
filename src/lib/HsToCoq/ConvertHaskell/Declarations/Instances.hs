@@ -63,9 +63,10 @@ convertInstanceName n = do
     qual <$> skip coqType
   where
     -- Skip type vaiables and constraints
-    skip (Forall _ t) = skip t
-    skip (Arrow _ t)  = skip t
-    skip t = split t
+    skip (Forall _ t)  = skip t
+    skip (Arrow _ t)   = skip t
+    skip (InScope t _) = skip t
+    skip t             = split t
 
     -- Split class and args
     split (App (Qualid cls) args) | Just argsText <- mapM describeArg args
@@ -78,6 +79,7 @@ convertInstanceName n = do
 
     describeTerm :: Term -> Maybe T.Text
     describeTerm (Parens t)      = describeTerm t
+    describeTerm (InScope t _)   = describeTerm t
     describeTerm (App t _)       = describeTerm t
     describeTerm (Infix _ qid _) = Just $ qualidBase qid
     describeTerm (Qualid qid)    = Just $ qualidBase qid

@@ -4,6 +4,9 @@ skip module Panic
 skip module GHC.Show
 
 
-rename value SourceLoc.L = SourceLoc.Mk_L
+rename value Pair.Pair   = Pair.Mk_Pair
+rename value SrcLoc.RealSrcSpan = SrcLoc.Mk_RealSrcSpan
+rename value SrcLoc.RealSrcLoc  = SrcLoc.Mk_RealSrcLoc
+rename value SrcLoc.SrcLoc      = SrcLoc.Mk_SrcLoc
 
 axiomatize module UniqSet

@@ -73,7 +73,7 @@ defaultOpPrec :: Int
 defaultOpPrec = fromCoqLevel 99
 
 scopePrec :: Int
-scopePrec = fromCoqLevel 200   -- postfix, a%scope
+scopePrec = fromCoqLevel 8   -- postfix, a%scope
 
 funPrec   :: Int
 funPrec   = fromCoqLevel 200

@@ -10,8 +10,8 @@ rename type GHC.Integer.Type.Integer = GHC.Num.Integer
 # and then add that constraint to "Panic.panic". The default value is evidence that we *could*
 # return an answer, but the panic is a note that we don't want to do so.
 
-add CmmType Instance Default_CmmCat : Panic.Default CmmCat := { default := Mk_GcPtrCat }.
-add CmmType Instance Default_width : Panic.Default Width := { default := Mk_W80 }.
+add CmmType Instance Default_CmmCat : Panic.Default CmmCat := { default := GcPtrCat }.
+add CmmType Instance Default_width : Panic.Default Width := { default := W80 }.
 add CmmType Instance Def_CmmType : Panic.Default CmmType := { default := Mk_CmmType Panic.default Panic.default }.
 
 order CmmType.Default_CmmCat CmmType.Default_width CmmType.inst_Def_CmmType CmmType.widthFromBytes
@@ -54,7 +54,7 @@ skip CmmType.Ord__Width
 
 ## recursive instance definition! replace when we can parse
 redefine Local Definition CmmType.Eq___CmmCat_op_zeze__ : CmmCat -> (CmmCat -> bool) := fun x y => true.
-# fix cat arg_261__ arg_262__ := match arg_261__ , arg_262__ with | Mk_GcPtrCat , Mk_GcPtrCat => true | Mk_BitsCat , Mk_BitsCat => true | Mk_FloatCat , Mk_FloatCat => true| Mk_VecCat a1 a2 , Mk_VecCat b1 b2 => (andb ((GHC.Base.op_zeze__ a1 b1)) ((cat a2 b2))) | _ , _ => false end.
+# fix cat arg_261__ arg_262__ := match arg_261__ , arg_262__ with | GcPtrCat , GcPtrCat => true | BitsCat , BitsCat => true | FloatCat , FloatCat => true| VecCat a1 a2 , VecCat b1 b2 => (andb ((GHC.Base.op_zeze__ a1 b1)) ((cat a2 b2))) | _ , _ => false end.
 
 # deriving Eq_
 

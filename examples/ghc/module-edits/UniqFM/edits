@@ -23,4 +23,4 @@ skip UniqFM.partitionUFM
 order UniqFM.Functor__UniqFM UniqFM.Foldable__UniqFM UniqFM.Traversable__UniqFM
 
 add UniqFM Instance Unpeel_UniqFM ele : GHC.Prim.Unpeel (UniqFM ele) (Data.IntMap.Base.IntMap ele) :=
-  GHC.Prim.Build_Unpeel _ _ (fun x => match x with | Mk_UFM y => y end) Mk_UFM.
+  GHC.Prim.Build_Unpeel _ _ (fun x => match x with | UFM y => y end) UFM.

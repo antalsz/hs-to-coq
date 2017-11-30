@@ -1,0 +1,1310 @@
+(* Default settings (from HsToCoq.Coq.Preamble) *)
+
+Generalizable All Variables.
+
+Unset Implicit Arguments.
+Set Maximal Implicit Insertion.
+Unset Strict Implicit.
+Unset Printing Implicit Defensive.
+
+Require Coq.Program.Tactics.
+Require Coq.Program.Wf.
+
+(* Converted imports: *)
+
+Require Data.Function.
+Require FastString.
+Require GHC.Base.
+Require GHC.Num.
+Require GHC.Prim.
+Require GHC.Real.
+Require SrcLoc.
+Import GHC.Base.Notations.
+Import GHC.Num.Notations.
+
+(* Converted type declarations: *)
+
+Definition Version :=
+  GHC.Num.Int%type.
+
+Inductive TupleSort : Type := BoxedTuple : TupleSort
+                           |  UnboxedTuple : TupleSort
+                           |  ConstraintTuple : TupleSort.
+
+Inductive TopLevelFlag : Type := TopLevel : TopLevelFlag
+                              |  NotTopLevel : TopLevelFlag.
+
+Inductive SwapFlag : Type := NotSwapped : SwapFlag
+                          |  IsSwapped : SwapFlag.
+
+Inductive SuccessFlag : Type := Succeeded : SuccessFlag
+                             |  Failed : SuccessFlag.
+
+Definition SourceText :=
+  GHC.Base.String%type.
+
+Inductive StringLiteral : Type := Mk_StringLiteral
+                                 : SourceText -> FastString.FastString -> StringLiteral.
+
+Inductive WarningTxt : Type := Mk_WarningTxt : (SrcLoc.Located
+                                               SourceText) -> list (SrcLoc.Located StringLiteral) -> WarningTxt
+                            |  DeprecatedTxt : (SrcLoc.Located SourceText) -> list (SrcLoc.Located
+                                                                                   StringLiteral) -> WarningTxt.
+
+Definition RulesOnly :=
+  bool%type.
+
+Definition RuleName :=
+  FastString.FastString%type.
+
+Inductive RuleMatchInfo : Type := ConLike : RuleMatchInfo
+                               |  FunLike : RuleMatchInfo.
+
+Definition RepArity :=
+  GHC.Num.Int%type.
+
+Inductive RecFlag : Type := Recursive : RecFlag
+                         |  NonRecursive : RecFlag.
+
+Definition PhaseNum :=
+  GHC.Num.Int%type.
+
+Inductive OverlapMode : Type := NoOverlap : SourceText -> OverlapMode
+                             |  Overlappable : SourceText -> OverlapMode
+                             |  Overlapping : SourceText -> OverlapMode
+                             |  Overlaps : SourceText -> OverlapMode
+                             |  Incoherent : SourceText -> OverlapMode.
+
+Inductive OverlapFlag : Type := Mk_OverlapFlag
+                               : OverlapMode -> bool -> OverlapFlag.
+
+Inductive Origin : Type := FromSource : Origin
+                        |  Generated : Origin.
+
+Inductive OneShotInfo : Type := NoOneShotInfo : OneShotInfo
+                             |  ProbOneShot : OneShotInfo
+                             |  OneShotLam : OneShotInfo.
+
+Definition OneBranch :=
+  bool%type.
+
+Definition InterestingCxt :=
+  bool%type.
+
+Inductive IntWithInf : Type := Int : GHC.Num.Int -> IntWithInf
+                            |  Infinity : IntWithInf.
+
+Definition InsideLam :=
+  bool%type.
+
+Inductive OccInfo : Type := NoOccInfo : OccInfo
+                         |  IAmDead : OccInfo
+                         |  OneOcc : InsideLam -> OneBranch -> InterestingCxt -> OccInfo
+                         |  IAmALoopBreaker : RulesOnly -> OccInfo.
+
+Inductive InlineSpec : Type := Inline : InlineSpec
+                            |  Inlinable : InlineSpec
+                            |  NoInline : InlineSpec
+                            |  EmptyInlineSpec : InlineSpec.
+
+Inductive FunctionOrData : Type := IsFunction : FunctionOrData
+                                |  IsData : FunctionOrData.
+
+Inductive FractionalLit : Type := FL
+                                 : GHC.Base.String -> GHC.Real.Rational -> FractionalLit.
+
+Inductive FixityDirection : Type := InfixL : FixityDirection
+                                 |  InfixR : FixityDirection
+                                 |  InfixN : FixityDirection.
+
+Inductive Fixity : Type := Mk_Fixity
+                          : SourceText -> GHC.Num.Int -> FixityDirection -> Fixity.
+
+Inductive EP a : Type := Mk_EP : a -> a -> EP a.
+
+Inductive DefMethSpec ty : Type := VanillaDM : DefMethSpec ty
+                                |  GenericDM : ty -> DefMethSpec ty.
+
+Definition ConTag :=
+  GHC.Num.Int%type.
+
+Inductive CompilerPhase : Type := Phase : PhaseNum -> CompilerPhase
+                               |  InitialPhase : CompilerPhase.
+
+Inductive Boxity : Type := Boxed : Boxity
+                        |  Unboxed : Boxity.
+
+Definition Arity :=
+  GHC.Num.Int%type.
+
+Definition Alignment :=
+  GHC.Num.Int%type.
+
+Inductive Activation : Type := NeverActive : Activation
+                            |  AlwaysActive : Activation
+                            |  ActiveBefore : SourceText -> PhaseNum -> Activation
+                            |  ActiveAfter : SourceText -> PhaseNum -> Activation.
+
+Inductive InlinePragma : Type := Mk_InlinePragma
+                                : SourceText -> InlineSpec -> option
+                                  Arity -> Activation -> RuleMatchInfo -> InlinePragma.
+
+Arguments Mk_EP {_} _ _.
+
+Arguments VanillaDM {_}.
+
+Arguments GenericDM {_} _.
+
+Definition sl_fs (arg_0__ : StringLiteral) :=
+  match arg_0__ with
+    | Mk_StringLiteral _ sl_fs => sl_fs
+  end.
+
+Definition sl_st (arg_1__ : StringLiteral) :=
+  match arg_1__ with
+    | Mk_StringLiteral sl_st _ => sl_st
+  end.
+
+Definition isSafeOverlap (arg_2__ : OverlapFlag) :=
+  match arg_2__ with
+    | Mk_OverlapFlag _ isSafeOverlap => isSafeOverlap
+  end.
+
+Definition overlapMode (arg_3__ : OverlapFlag) :=
+  match arg_3__ with
+    | Mk_OverlapFlag overlapMode _ => overlapMode
+  end.
+
+Definition fl_text (arg_4__ : FractionalLit) :=
+  match arg_4__ with
+    | FL fl_text _ => fl_text
+  end.
+
+Definition fl_value (arg_5__ : FractionalLit) :=
+  match arg_5__ with
+    | FL _ fl_value => fl_value
+  end.
+
+Definition fromEP {a} (arg_6__ : EP a) :=
+  match arg_6__ with
+    | Mk_EP fromEP _ => fromEP
+  end.
+
+Definition toEP {a} (arg_7__ : EP a) :=
+  match arg_7__ with
+    | Mk_EP _ toEP => toEP
+  end.
+
+Definition inl_act (arg_8__ : InlinePragma) :=
+  match arg_8__ with
+    | Mk_InlinePragma _ _ _ inl_act _ => inl_act
+  end.
+
+Definition inl_inline (arg_9__ : InlinePragma) :=
+  match arg_9__ with
+    | Mk_InlinePragma _ inl_inline _ _ _ => inl_inline
+  end.
+
+Definition inl_rule (arg_10__ : InlinePragma) :=
+  match arg_10__ with
+    | Mk_InlinePragma _ _ _ _ inl_rule => inl_rule
+  end.
+
+Definition inl_sat (arg_11__ : InlinePragma) :=
+  match arg_11__ with
+    | Mk_InlinePragma _ _ inl_sat _ _ => inl_sat
+  end.
+
+Definition inl_src (arg_12__ : InlinePragma) :=
+  match arg_12__ with
+    | Mk_InlinePragma inl_src _ _ _ _ => inl_src
+  end.
+(* Converted value declarations: *)
+
+(* The Haskell code containes partial or untranslateable code, which needs the
+   following *)
+
+Axiom missingValue : forall {a}, a.
+
+(* Translating `instance Outputable.Outputable BasicTypes.OneShotInfo' failed:
+   OOPS! Cannot find information for class Qualified "Outputable" "Outputable"
+   unsupported *)
+
+(* Translating `instance Outputable.Outputable BasicTypes.SwapFlag' failed:
+   OOPS! Cannot find information for class Qualified "Outputable" "Outputable"
+   unsupported *)
+
+(* Translating `instance Outputable.Outputable BasicTypes.FunctionOrData'
+   failed: OOPS! Cannot find information for class Qualified "Outputable"
+   "Outputable" unsupported *)
+
+Local Definition Eq___StringLiteral_op_zeze__
+    : StringLiteral -> StringLiteral -> bool :=
+  fun arg_275__ arg_276__ =>
+    match arg_275__ , arg_276__ with
+      | Mk_StringLiteral _ a , Mk_StringLiteral _ b => a GHC.Base.== b
+    end.
+
+Local Definition Eq___StringLiteral_op_zsze__
+    : StringLiteral -> StringLiteral -> bool :=
+  fun x y => negb (Eq___StringLiteral_op_zeze__ x y).
+
+Program Instance Eq___StringLiteral : GHC.Base.Eq_ StringLiteral := fun _ k =>
+    k {|GHC.Base.op_zeze____ := Eq___StringLiteral_op_zeze__ ;
+      GHC.Base.op_zsze____ := Eq___StringLiteral_op_zsze__ |}.
+
+(* Translating `instance Outputable.Outputable BasicTypes.WarningTxt' failed:
+   OOPS! Cannot find information for class Qualified "Outputable" "Outputable"
+   unsupported *)
+
+(* Translating `instance Outputable.Outputable BasicTypes.Fixity' failed: OOPS!
+   Cannot find information for class Qualified "Outputable" "Outputable"
+   unsupported *)
+
+(* Translating `instance Outputable.Outputable BasicTypes.FixityDirection'
+   failed: OOPS! Cannot find information for class Qualified "Outputable"
+   "Outputable" unsupported *)
+
+(* Translating `instance Outputable.Outputable BasicTypes.TopLevelFlag' failed:
+   OOPS! Cannot find information for class Qualified "Outputable" "Outputable"
+   unsupported *)
+
+(* Translating `instance Outputable.Outputable BasicTypes.Boxity' failed: OOPS!
+   Cannot find information for class Qualified "Outputable" "Outputable"
+   unsupported *)
+
+(* Translating `instance Outputable.Outputable BasicTypes.RecFlag' failed: OOPS!
+   Cannot find information for class Qualified "Outputable" "Outputable"
+   unsupported *)
+
+(* Translating `instance Outputable.Outputable BasicTypes.Origin' failed: OOPS!
+   Cannot find information for class Qualified "Outputable" "Outputable"
+   unsupported *)
+
+(* Translating `instance Outputable.Outputable BasicTypes.OverlapFlag' failed:
+   OOPS! Cannot find information for class Qualified "Outputable" "Outputable"
+   unsupported *)
+
+(* Translating `instance Outputable.Outputable BasicTypes.OverlapMode' failed:
+   OOPS! Cannot find information for class Qualified "Outputable" "Outputable"
+   unsupported *)
+
+(* Translating `instance Outputable.Outputable BasicTypes.OccInfo' failed: OOPS!
+   Cannot find information for class Qualified "Outputable" "Outputable"
+   unsupported *)
+
+(* Translating `instance forall {ty}, Outputable.Outputable
+   (BasicTypes.DefMethSpec ty)' failed: OOPS! Cannot find information for class
+   Qualified "Outputable" "Outputable" unsupported *)
+
+(* Translating `instance Outputable.Outputable BasicTypes.SuccessFlag' failed:
+   OOPS! Cannot find information for class Qualified "Outputable" "Outputable"
+   unsupported *)
+
+(* Translating `instance Outputable.Outputable BasicTypes.CompilerPhase' failed:
+   OOPS! Cannot find information for class Qualified "Outputable" "Outputable"
+   unsupported *)
+
+(* Translating `instance Outputable.Outputable BasicTypes.Activation' failed:
+   OOPS! Cannot find information for class Qualified "Outputable" "Outputable"
+   unsupported *)
+
+(* Translating `instance Outputable.Outputable BasicTypes.RuleMatchInfo' failed:
+   OOPS! Cannot find information for class Qualified "Outputable" "Outputable"
+   unsupported *)
+
+(* Translating `instance Outputable.Outputable BasicTypes.InlineSpec' failed:
+   OOPS! Cannot find information for class Qualified "Outputable" "Outputable"
+   unsupported *)
+
+(* Translating `instance Outputable.Outputable BasicTypes.InlinePragma' failed:
+   OOPS! Cannot find information for class Qualified "Outputable" "Outputable"
+   unsupported *)
+
+Local Definition Eq___FractionalLit_op_zeze__
+    : FractionalLit -> FractionalLit -> bool :=
+  Data.Function.on _GHC.Base.==_ fl_value.
+
+Local Definition Eq___FractionalLit_op_zsze__
+    : FractionalLit -> FractionalLit -> bool :=
+  fun x y => negb (Eq___FractionalLit_op_zeze__ x y).
+
+Program Instance Eq___FractionalLit : GHC.Base.Eq_ FractionalLit := fun _ k =>
+    k {|GHC.Base.op_zeze____ := Eq___FractionalLit_op_zeze__ ;
+      GHC.Base.op_zsze____ := Eq___FractionalLit_op_zsze__ |}.
+
+Local Definition Ord__FractionalLit_compare
+    : FractionalLit -> FractionalLit -> comparison :=
+  Data.Function.on GHC.Base.compare fl_value.
+
+Local Definition Ord__FractionalLit_op_zg__
+    : FractionalLit -> FractionalLit -> bool :=
+  fun x y => _GHC.Base.==_ (Ord__FractionalLit_compare x y) Gt.
+
+Local Definition Ord__FractionalLit_op_zgze__
+    : FractionalLit -> FractionalLit -> bool :=
+  fun x y => _GHC.Base./=_ (Ord__FractionalLit_compare x y) Lt.
+
+Local Definition Ord__FractionalLit_op_zl__
+    : FractionalLit -> FractionalLit -> bool :=
+  fun x y => _GHC.Base.==_ (Ord__FractionalLit_compare x y) Lt.
+
+Local Definition Ord__FractionalLit_op_zlze__
+    : FractionalLit -> FractionalLit -> bool :=
+  fun x y => _GHC.Base./=_ (Ord__FractionalLit_compare x y) Gt.
+
+Local Definition Ord__FractionalLit_max
+    : FractionalLit -> FractionalLit -> FractionalLit :=
+  fun x y => if Ord__FractionalLit_op_zlze__ x y : bool then y else x.
+
+Local Definition Ord__FractionalLit_min
+    : FractionalLit -> FractionalLit -> FractionalLit :=
+  fun x y => if Ord__FractionalLit_op_zlze__ x y : bool then x else y.
+
+Program Instance Ord__FractionalLit : GHC.Base.Ord FractionalLit := fun _ k =>
+    k {|GHC.Base.op_zl____ := Ord__FractionalLit_op_zl__ ;
+      GHC.Base.op_zlze____ := Ord__FractionalLit_op_zlze__ ;
+      GHC.Base.op_zg____ := Ord__FractionalLit_op_zg__ ;
+      GHC.Base.op_zgze____ := Ord__FractionalLit_op_zgze__ ;
+      GHC.Base.compare__ := Ord__FractionalLit_compare ;
+      GHC.Base.max__ := Ord__FractionalLit_max ;
+      GHC.Base.min__ := Ord__FractionalLit_min |}.
+
+(* Translating `instance Outputable.Outputable BasicTypes.FractionalLit' failed:
+   OOPS! Cannot find information for class Qualified "Outputable" "Outputable"
+   unsupported *)
+
+Local Definition Ord__IntWithInf_compare
+    : IntWithInf -> IntWithInf -> comparison :=
+  fun arg_265__ arg_266__ =>
+    match arg_265__ , arg_266__ with
+      | Infinity , Infinity => Eq
+      | Int _ , Infinity => Lt
+      | Infinity , Int _ => Gt
+      | Int a , Int b => GHC.Base.compare a b
+    end.
+
+Local Definition Ord__IntWithInf_op_zg__ : IntWithInf -> IntWithInf -> bool :=
+  fun x y => _GHC.Base.==_ (Ord__IntWithInf_compare x y) Gt.
+
+Local Definition Ord__IntWithInf_op_zgze__ : IntWithInf -> IntWithInf -> bool :=
+  fun x y => _GHC.Base./=_ (Ord__IntWithInf_compare x y) Lt.
+
+Local Definition Ord__IntWithInf_op_zl__ : IntWithInf -> IntWithInf -> bool :=
+  fun x y => _GHC.Base.==_ (Ord__IntWithInf_compare x y) Lt.
+
+Local Definition Ord__IntWithInf_op_zlze__ : IntWithInf -> IntWithInf -> bool :=
+  fun x y => _GHC.Base./=_ (Ord__IntWithInf_compare x y) Gt.
+
+Local Definition Ord__IntWithInf_max : IntWithInf -> IntWithInf -> IntWithInf :=
+  fun x y => if Ord__IntWithInf_op_zlze__ x y : bool then y else x.
+
+Local Definition Ord__IntWithInf_min : IntWithInf -> IntWithInf -> IntWithInf :=
+  fun x y => if Ord__IntWithInf_op_zlze__ x y : bool then x else y.
+
+(* Translating `instance Outputable.Outputable BasicTypes.IntWithInf' failed:
+   OOPS! Cannot find information for class Qualified "Outputable" "Outputable"
+   unsupported *)
+
+(* Translating `instance GHC.Num.Num BasicTypes.IntWithInf' failed: OOPS! Cannot
+   find information for class Qualified "GHC.Num" "Num" unsupported *)
+
+Local Definition Eq___IntWithInf_op_zeze__ : IntWithInf -> IntWithInf -> bool :=
+  fun arg_260__ arg_261__ =>
+    match arg_260__ , arg_261__ with
+      | Int a1 , Int b1 => ((a1 GHC.Base.== b1))
+      | Infinity , Infinity => true
+      | _ , _ => false
+    end.
+
+Local Definition Eq___IntWithInf_op_zsze__ : IntWithInf -> IntWithInf -> bool :=
+  fun arg_400__ arg_401__ =>
+    match arg_400__ , arg_401__ with
+      | a , b => negb (Eq___IntWithInf_op_zeze__ a b)
+    end.
+
+Program Instance Eq___IntWithInf : GHC.Base.Eq_ IntWithInf := fun _ k =>
+    k {|GHC.Base.op_zeze____ := Eq___IntWithInf_op_zeze__ ;
+      GHC.Base.op_zsze____ := Eq___IntWithInf_op_zsze__ |}.
+
+Program Instance Ord__IntWithInf : GHC.Base.Ord IntWithInf := fun _ k =>
+    k {|GHC.Base.op_zl____ := Ord__IntWithInf_op_zl__ ;
+      GHC.Base.op_zlze____ := Ord__IntWithInf_op_zlze__ ;
+      GHC.Base.op_zg____ := Ord__IntWithInf_op_zg__ ;
+      GHC.Base.op_zgze____ := Ord__IntWithInf_op_zgze__ ;
+      GHC.Base.compare__ := Ord__IntWithInf_compare ;
+      GHC.Base.max__ := Ord__IntWithInf_max ;
+      GHC.Base.min__ := Ord__IntWithInf_min |}.
+
+(* Translating `instance GHC.Show.Show BasicTypes.FractionalLit' failed: OOPS!
+   Cannot find information for class Qualified "GHC.Show" "Show" unsupported *)
+
+(* Translating `instance Data.Data.Data BasicTypes.FractionalLit' failed: OOPS!
+   Cannot find information for class Qualified "Data.Data" "Data" unsupported *)
+
+(* Translating `instance Data.Data.Data BasicTypes.InlinePragma' failed: OOPS!
+   Cannot find information for class Qualified "Data.Data" "Data" unsupported *)
+
+(* Translating `instance GHC.Show.Show BasicTypes.InlineSpec' failed: OOPS!
+   Cannot find information for class Qualified "GHC.Show" "Show" unsupported *)
+
+(* Translating `instance Data.Data.Data BasicTypes.InlineSpec' failed: OOPS!
+   Cannot find information for class Qualified "Data.Data" "Data" unsupported *)
+
+Local Definition Eq___InlineSpec_op_zeze__ : InlineSpec -> InlineSpec -> bool :=
+  fun arg_251__ arg_252__ =>
+    match arg_251__ , arg_252__ with
+      | Inline , Inline => true
+      | Inlinable , Inlinable => true
+      | NoInline , NoInline => true
+      | EmptyInlineSpec , EmptyInlineSpec => true
+      | _ , _ => false
+    end.
+
+Local Definition Eq___InlineSpec_op_zsze__ : InlineSpec -> InlineSpec -> bool :=
+  fun arg_401__ arg_402__ =>
+    match arg_401__ , arg_402__ with
+      | a , b => negb (Eq___InlineSpec_op_zeze__ a b)
+    end.
+
+Program Instance Eq___InlineSpec : GHC.Base.Eq_ InlineSpec := fun _ k =>
+    k {|GHC.Base.op_zeze____ := Eq___InlineSpec_op_zeze__ ;
+      GHC.Base.op_zsze____ := Eq___InlineSpec_op_zsze__ |}.
+
+(* Translating `instance GHC.Show.Show BasicTypes.RuleMatchInfo' failed: OOPS!
+   Cannot find information for class Qualified "GHC.Show" "Show" unsupported *)
+
+(* Translating `instance Data.Data.Data BasicTypes.RuleMatchInfo' failed: OOPS!
+   Cannot find information for class Qualified "Data.Data" "Data" unsupported *)
+
+Local Definition Eq___RuleMatchInfo_op_zeze__
+    : RuleMatchInfo -> RuleMatchInfo -> bool :=
+  fun arg_247__ arg_248__ =>
+    match arg_247__ , arg_248__ with
+      | ConLike , ConLike => true
+      | FunLike , FunLike => true
+      | _ , _ => false
+    end.
+
+Local Definition Eq___RuleMatchInfo_op_zsze__
+    : RuleMatchInfo -> RuleMatchInfo -> bool :=
+  fun arg_377__ arg_378__ =>
+    match arg_377__ , arg_378__ with
+      | a , b => negb (Eq___RuleMatchInfo_op_zeze__ a b)
+    end.
+
+Program Instance Eq___RuleMatchInfo : GHC.Base.Eq_ RuleMatchInfo := fun _ k =>
+    k {|GHC.Base.op_zeze____ := Eq___RuleMatchInfo_op_zeze__ ;
+      GHC.Base.op_zsze____ := Eq___RuleMatchInfo_op_zsze__ |}.
+
+(* Translating `instance Data.Data.Data BasicTypes.Activation' failed: OOPS!
+   Cannot find information for class Qualified "Data.Data" "Data" unsupported *)
+
+Local Definition Eq___Activation_op_zeze__ : Activation -> Activation -> bool :=
+  fun arg_241__ arg_242__ =>
+    match arg_241__ , arg_242__ with
+      | NeverActive , NeverActive => true
+      | AlwaysActive , AlwaysActive => true
+      | ActiveBefore a1 a2 , ActiveBefore b1 b2 => (andb ((a1 GHC.Base.== b1)) ((a2
+                                                         GHC.Base.== b2)))
+      | ActiveAfter a1 a2 , ActiveAfter b1 b2 => (andb ((a1 GHC.Base.== b1)) ((a2
+                                                       GHC.Base.== b2)))
+      | _ , _ => false
+    end.
+
+Local Definition Eq___Activation_op_zsze__ : Activation -> Activation -> bool :=
+  fun arg_370__ arg_371__ =>
+    match arg_370__ , arg_371__ with
+      | a , b => negb (Eq___Activation_op_zeze__ a b)
+    end.
+
+Program Instance Eq___Activation : GHC.Base.Eq_ Activation := fun _ k =>
+    k {|GHC.Base.op_zeze____ := Eq___Activation_op_zeze__ ;
+      GHC.Base.op_zsze____ := Eq___Activation_op_zsze__ |}.
+
+Local Definition Eq___InlinePragma_op_zeze__
+    : InlinePragma -> InlinePragma -> bool :=
+  fun arg_255__ arg_256__ =>
+    match arg_255__ , arg_256__ with
+      | Mk_InlinePragma a1 a2 a3 a4 a5 , Mk_InlinePragma b1 b2 b3 b4 b5 => (andb (andb
+                                                                                 (andb (andb ((a1 GHC.Base.== b1)) ((a2
+                                                                                             GHC.Base.== b2))) ((a3
+                                                                                       GHC.Base.== b3))) ((a4
+                                                                                 GHC.Base.== b4))) ((a5 GHC.Base.==
+                                                                                 b5)))
+    end.
+
+Local Definition Eq___InlinePragma_op_zsze__
+    : InlinePragma -> InlinePragma -> bool :=
+  fun arg_370__ arg_371__ =>
+    match arg_370__ , arg_371__ with
+      | a , b => negb (Eq___InlinePragma_op_zeze__ a b)
+    end.
+
+Program Instance Eq___InlinePragma : GHC.Base.Eq_ InlinePragma := fun _ k =>
+    k {|GHC.Base.op_zeze____ := Eq___InlinePragma_op_zeze__ ;
+      GHC.Base.op_zsze____ := Eq___InlinePragma_op_zsze__ |}.
+
+(* Translating `instance Data.Data.Data BasicTypes.WarningTxt' failed: OOPS!
+   Cannot find information for class Qualified "Data.Data" "Data" unsupported *)
+
+Local Definition Eq___WarningTxt_op_zeze__ : WarningTxt -> WarningTxt -> bool :=
+  fun arg_235__ arg_236__ =>
+    match arg_235__ , arg_236__ with
+      | Mk_WarningTxt a1 a2 , Mk_WarningTxt b1 b2 => (andb ((a1 GHC.Base.== b1)) ((a2
+                                                           GHC.Base.== b2)))
+      | DeprecatedTxt a1 a2 , DeprecatedTxt b1 b2 => (andb ((a1 GHC.Base.== b1)) ((a2
+                                                           GHC.Base.== b2)))
+      | _ , _ => false
+    end.
+
+Local Definition Eq___WarningTxt_op_zsze__ : WarningTxt -> WarningTxt -> bool :=
+  fun arg_361__ arg_362__ =>
+    match arg_361__ , arg_362__ with
+      | a , b => negb (Eq___WarningTxt_op_zeze__ a b)
+    end.
+
+Program Instance Eq___WarningTxt : GHC.Base.Eq_ WarningTxt := fun _ k =>
+    k {|GHC.Base.op_zeze____ := Eq___WarningTxt_op_zeze__ ;
+      GHC.Base.op_zsze____ := Eq___WarningTxt_op_zsze__ |}.
+
+(* Translating `instance Data.Data.Data BasicTypes.StringLiteral' failed: OOPS!
+   Cannot find information for class Qualified "Data.Data" "Data" unsupported *)
+
+(* Translating `instance Data.Data.Data BasicTypes.Fixity' failed: OOPS! Cannot
+   find information for class Qualified "Data.Data" "Data" unsupported *)
+
+(* Translating `instance Data.Data.Data BasicTypes.OverlapFlag' failed: OOPS!
+   Cannot find information for class Qualified "Data.Data" "Data" unsupported *)
+
+(* Translating `instance Data.Data.Data BasicTypes.OverlapMode' failed: OOPS!
+   Cannot find information for class Qualified "Data.Data" "Data" unsupported *)
+
+Local Definition Eq___OverlapMode_op_zeze__
+    : OverlapMode -> OverlapMode -> bool :=
+  fun arg_221__ arg_222__ =>
+    match arg_221__ , arg_222__ with
+      | NoOverlap a1 , NoOverlap b1 => ((a1 GHC.Base.== b1))
+      | Overlappable a1 , Overlappable b1 => ((a1 GHC.Base.== b1))
+      | Overlapping a1 , Overlapping b1 => ((a1 GHC.Base.== b1))
+      | Overlaps a1 , Overlaps b1 => ((a1 GHC.Base.== b1))
+      | Incoherent a1 , Incoherent b1 => ((a1 GHC.Base.== b1))
+      | _ , _ => false
+    end.
+
+Local Definition Eq___OverlapMode_op_zsze__
+    : OverlapMode -> OverlapMode -> bool :=
+  fun arg_344__ arg_345__ =>
+    match arg_344__ , arg_345__ with
+      | a , b => negb (Eq___OverlapMode_op_zeze__ a b)
+    end.
+
+Program Instance Eq___OverlapMode : GHC.Base.Eq_ OverlapMode := fun _ k =>
+    k {|GHC.Base.op_zeze____ := Eq___OverlapMode_op_zeze__ ;
+      GHC.Base.op_zsze____ := Eq___OverlapMode_op_zsze__ |}.
+
+Local Definition Eq___OverlapFlag_op_zeze__
+    : OverlapFlag -> OverlapFlag -> bool :=
+  fun arg_230__ arg_231__ =>
+    match arg_230__ , arg_231__ with
+      | Mk_OverlapFlag a1 a2 , Mk_OverlapFlag b1 b2 => (andb ((a1 GHC.Base.== b1))
+                                                             ((a2 GHC.Base.== b2)))
+    end.
+
+Local Definition Eq___OverlapFlag_op_zsze__
+    : OverlapFlag -> OverlapFlag -> bool :=
+  fun arg_352__ arg_353__ =>
+    match arg_352__ , arg_353__ with
+      | a , b => negb (Eq___OverlapFlag_op_zeze__ a b)
+    end.
+
+Program Instance Eq___OverlapFlag : GHC.Base.Eq_ OverlapFlag := fun _ k =>
+    k {|GHC.Base.op_zeze____ := Eq___OverlapFlag_op_zeze__ ;
+      GHC.Base.op_zsze____ := Eq___OverlapFlag_op_zsze__ |}.
+
+Local Definition Eq___OccInfo_op_zeze__ : OccInfo -> OccInfo -> bool :=
+  fun arg_215__ arg_216__ =>
+    match arg_215__ , arg_216__ with
+      | NoOccInfo , NoOccInfo => true
+      | IAmDead , IAmDead => true
+      | OneOcc a1 a2 a3 , OneOcc b1 b2 b3 => (andb (andb ((a1 GHC.Base.== b1)) ((a2
+                                                         GHC.Base.== b2))) ((a3 GHC.Base.== b3)))
+      | IAmALoopBreaker a1 , IAmALoopBreaker b1 => ((a1 GHC.Base.== b1))
+      | _ , _ => false
+    end.
+
+Local Definition Eq___OccInfo_op_zsze__ : OccInfo -> OccInfo -> bool :=
+  fun arg_332__ arg_333__ =>
+    match arg_332__ , arg_333__ with
+      | a , b => negb (Eq___OccInfo_op_zeze__ a b)
+    end.
+
+Program Instance Eq___OccInfo : GHC.Base.Eq_ OccInfo := fun _ k =>
+    k {|GHC.Base.op_zeze____ := Eq___OccInfo_op_zeze__ ;
+      GHC.Base.op_zsze____ := Eq___OccInfo_op_zsze__ |}.
+
+(* Translating `instance Data.Data.Data BasicTypes.TupleSort' failed: OOPS!
+   Cannot find information for class Qualified "Data.Data" "Data" unsupported *)
+
+Local Definition Eq___TupleSort_op_zeze__ : TupleSort -> TupleSort -> bool :=
+  fun arg_211__ arg_212__ =>
+    match arg_211__ , arg_212__ with
+      | BoxedTuple , BoxedTuple => true
+      | UnboxedTuple , UnboxedTuple => true
+      | ConstraintTuple , ConstraintTuple => true
+      | _ , _ => false
+    end.
+
+Local Definition Eq___TupleSort_op_zsze__ : TupleSort -> TupleSort -> bool :=
+  fun arg_370__ arg_371__ =>
+    match arg_370__ , arg_371__ with
+      | a , b => negb (Eq___TupleSort_op_zeze__ a b)
+    end.
+
+Program Instance Eq___TupleSort : GHC.Base.Eq_ TupleSort := fun _ k =>
+    k {|GHC.Base.op_zeze____ := Eq___TupleSort_op_zeze__ ;
+      GHC.Base.op_zsze____ := Eq___TupleSort_op_zsze__ |}.
+
+(* Translating `instance Data.Data.Data BasicTypes.Origin' failed: OOPS! Cannot
+   find information for class Qualified "Data.Data" "Data" unsupported *)
+
+Local Definition Eq___Origin_op_zeze__ : Origin -> Origin -> bool :=
+  fun arg_207__ arg_208__ =>
+    match arg_207__ , arg_208__ with
+      | FromSource , FromSource => true
+      | Generated , Generated => true
+      | _ , _ => false
+    end.
+
+Local Definition Eq___Origin_op_zsze__ : Origin -> Origin -> bool :=
+  fun arg_316__ arg_317__ =>
+    match arg_316__ , arg_317__ with
+      | a , b => negb (Eq___Origin_op_zeze__ a b)
+    end.
+
+Program Instance Eq___Origin : GHC.Base.Eq_ Origin := fun _ k =>
+    k {|GHC.Base.op_zeze____ := Eq___Origin_op_zeze__ ;
+      GHC.Base.op_zsze____ := Eq___Origin_op_zsze__ |}.
+
+(* Translating `instance Data.Data.Data BasicTypes.RecFlag' failed: OOPS! Cannot
+   find information for class Qualified "Data.Data" "Data" unsupported *)
+
+Local Definition Eq___RecFlag_op_zeze__ : RecFlag -> RecFlag -> bool :=
+  fun arg_203__ arg_204__ =>
+    match arg_203__ , arg_204__ with
+      | Recursive , Recursive => true
+      | NonRecursive , NonRecursive => true
+      | _ , _ => false
+    end.
+
+Local Definition Eq___RecFlag_op_zsze__ : RecFlag -> RecFlag -> bool :=
+  fun arg_309__ arg_310__ =>
+    match arg_309__ , arg_310__ with
+      | a , b => negb (Eq___RecFlag_op_zeze__ a b)
+    end.
+
+Program Instance Eq___RecFlag : GHC.Base.Eq_ RecFlag := fun _ k =>
+    k {|GHC.Base.op_zeze____ := Eq___RecFlag_op_zeze__ ;
+      GHC.Base.op_zsze____ := Eq___RecFlag_op_zsze__ |}.
+
+(* Translating `instance Data.Data.Data BasicTypes.Boxity' failed: OOPS! Cannot
+   find information for class Qualified "Data.Data" "Data" unsupported *)
+
+Local Definition Eq___Boxity_op_zeze__ : Boxity -> Boxity -> bool :=
+  fun arg_199__ arg_200__ =>
+    match arg_199__ , arg_200__ with
+      | Boxed , Boxed => true
+      | Unboxed , Unboxed => true
+      | _ , _ => false
+    end.
+
+Local Definition Eq___Boxity_op_zsze__ : Boxity -> Boxity -> bool :=
+  fun arg_319__ arg_320__ =>
+    match arg_319__ , arg_320__ with
+      | a , b => negb (Eq___Boxity_op_zeze__ a b)
+    end.
+
+Program Instance Eq___Boxity : GHC.Base.Eq_ Boxity := fun _ k =>
+    k {|GHC.Base.op_zeze____ := Eq___Boxity_op_zeze__ ;
+      GHC.Base.op_zsze____ := Eq___Boxity_op_zsze__ |}.
+
+(* Translating `instance Data.Data.Data BasicTypes.FixityDirection' failed:
+   OOPS! Cannot find information for class Qualified "Data.Data" "Data"
+   unsupported *)
+
+Local Definition Eq___FixityDirection_op_zeze__
+    : FixityDirection -> FixityDirection -> bool :=
+  fun arg_195__ arg_196__ =>
+    match arg_195__ , arg_196__ with
+      | InfixL , InfixL => true
+      | InfixR , InfixR => true
+      | InfixN , InfixN => true
+      | _ , _ => false
+    end.
+
+Local Definition Eq___FixityDirection_op_zsze__
+    : FixityDirection -> FixityDirection -> bool :=
+  fun arg_312__ arg_313__ =>
+    match arg_312__ , arg_313__ with
+      | a , b => negb (Eq___FixityDirection_op_zeze__ a b)
+    end.
+
+Program Instance Eq___FixityDirection : GHC.Base.Eq_ FixityDirection := fun _
+                                                                            k =>
+    k {|GHC.Base.op_zeze____ := Eq___FixityDirection_op_zeze__ ;
+      GHC.Base.op_zsze____ := Eq___FixityDirection_op_zsze__ |}.
+
+Local Definition Eq___Fixity_op_zeze__ : Fixity -> Fixity -> bool :=
+  fun arg_271__ arg_272__ =>
+    match arg_271__ , arg_272__ with
+      | Mk_Fixity _ p1 dir1 , Mk_Fixity _ p2 dir2 => andb (p1 GHC.Base.== p2) (dir1
+                                                          GHC.Base.== dir2)
+    end.
+
+Local Definition Eq___Fixity_op_zsze__ : Fixity -> Fixity -> bool :=
+  fun x y => negb (Eq___Fixity_op_zeze__ x y).
+
+Program Instance Eq___Fixity : GHC.Base.Eq_ Fixity := fun _ k =>
+    k {|GHC.Base.op_zeze____ := Eq___Fixity_op_zeze__ ;
+      GHC.Base.op_zsze____ := Eq___Fixity_op_zsze__ |}.
+
+(* Translating `instance Data.Data.Data BasicTypes.FunctionOrData' failed: OOPS!
+   Cannot find information for class Qualified "Data.Data" "Data" unsupported *)
+
+Local Definition Ord__FunctionOrData_compare
+    : FunctionOrData -> FunctionOrData -> comparison :=
+  fun a b =>
+    match a with
+      | IsFunction => match b with
+                        | IsFunction => Eq
+                        | _ => Lt
+                      end
+      | IsData => match b with
+                    | IsData => Eq
+                    | _ => Gt
+                  end
+    end.
+
+Local Definition Ord__FunctionOrData_op_zg__
+    : FunctionOrData -> FunctionOrData -> bool :=
+  fun a b =>
+    match a with
+      | IsFunction => match b with
+                        | IsFunction => false
+                        | _ => false
+                      end
+      | IsData => match b with
+                    | IsData => false
+                    | _ => true
+                  end
+    end.
+
+Local Definition Ord__FunctionOrData_op_zgze__
+    : FunctionOrData -> FunctionOrData -> bool :=
+  fun a b =>
+    match a with
+      | IsFunction => match b with
+                        | IsFunction => true
+                        | _ => false
+                      end
+      | IsData => match b with
+                    | IsData => true
+                    | _ => true
+                  end
+    end.
+
+Local Definition Ord__FunctionOrData_op_zl__
+    : FunctionOrData -> FunctionOrData -> bool :=
+  fun a b =>
+    match a with
+      | IsFunction => match b with
+                        | IsFunction => false
+                        | _ => true
+                      end
+      | IsData => match b with
+                    | IsData => false
+                    | _ => false
+                  end
+    end.
+
+Local Definition Ord__FunctionOrData_op_zlze__
+    : FunctionOrData -> FunctionOrData -> bool :=
+  fun a b =>
+    match a with
+      | IsFunction => match b with
+                        | IsFunction => true
+                        | _ => true
+                      end
+      | IsData => match b with
+                    | IsData => true
+                    | _ => false
+                  end
+    end.
+
+Local Definition Ord__FunctionOrData_min
+    : FunctionOrData -> FunctionOrData -> FunctionOrData :=
+  fun x y => if Ord__FunctionOrData_op_zlze__ x y : bool then x else y.
+
+Local Definition Ord__FunctionOrData_max
+    : FunctionOrData -> FunctionOrData -> FunctionOrData :=
+  fun x y => if Ord__FunctionOrData_op_zlze__ x y : bool then y else x.
+
+Local Definition Eq___FunctionOrData_op_zeze__
+    : FunctionOrData -> FunctionOrData -> bool :=
+  fun arg_161__ arg_162__ =>
+    match arg_161__ , arg_162__ with
+      | IsFunction , IsFunction => true
+      | IsData , IsData => true
+      | _ , _ => false
+    end.
+
+Local Definition Eq___FunctionOrData_op_zsze__
+    : FunctionOrData -> FunctionOrData -> bool :=
+  fun arg_243__ arg_244__ =>
+    match arg_243__ , arg_244__ with
+      | a , b => negb (Eq___FunctionOrData_op_zeze__ a b)
+    end.
+
+Program Instance Eq___FunctionOrData : GHC.Base.Eq_ FunctionOrData := fun _ k =>
+    k {|GHC.Base.op_zeze____ := Eq___FunctionOrData_op_zeze__ ;
+      GHC.Base.op_zsze____ := Eq___FunctionOrData_op_zsze__ |}.
+
+Program Instance Ord__FunctionOrData : GHC.Base.Ord FunctionOrData := fun _ k =>
+    k {|GHC.Base.op_zl____ := Ord__FunctionOrData_op_zl__ ;
+      GHC.Base.op_zlze____ := Ord__FunctionOrData_op_zlze__ ;
+      GHC.Base.op_zg____ := Ord__FunctionOrData_op_zg__ ;
+      GHC.Base.op_zgze____ := Ord__FunctionOrData_op_zgze__ ;
+      GHC.Base.compare__ := Ord__FunctionOrData_compare ;
+      GHC.Base.max__ := Ord__FunctionOrData_max ;
+      GHC.Base.min__ := Ord__FunctionOrData_min |}.
+
+Local Definition Eq___OneShotInfo_op_zeze__
+    : OneShotInfo -> OneShotInfo -> bool :=
+  fun arg_157__ arg_158__ =>
+    match arg_157__ , arg_158__ with
+      | NoOneShotInfo , NoOneShotInfo => true
+      | ProbOneShot , ProbOneShot => true
+      | OneShotLam , OneShotLam => true
+      | _ , _ => false
+    end.
+
+Local Definition Eq___OneShotInfo_op_zsze__
+    : OneShotInfo -> OneShotInfo -> bool :=
+  fun arg_236__ arg_237__ =>
+    match arg_236__ , arg_237__ with
+      | a , b => negb (Eq___OneShotInfo_op_zeze__ a b)
+    end.
+
+Program Instance Eq___OneShotInfo : GHC.Base.Eq_ OneShotInfo := fun _ k =>
+    k {|GHC.Base.op_zeze____ := Eq___OneShotInfo_op_zeze__ ;
+      GHC.Base.op_zsze____ := Eq___OneShotInfo_op_zsze__ |}.
+
+Axiom alwaysInlinePragma : forall {A : Type}, A.
+
+(* Translating `alwaysInlinePragma' failed: using a record pattern for the
+   unknown constructor `Mk_InlinePragma' unsupported *)
+
+Axiom dfunInlinePragma : forall {A : Type}, A.
+
+(* Translating `dfunInlinePragma' failed: using a record pattern for the unknown
+   constructor `Mk_InlinePragma' unsupported *)
+
+Axiom neverInlinePragma : forall {A : Type}, A.
+
+(* Translating `neverInlinePragma' failed: using a record pattern for the
+   unknown constructor `Mk_InlinePragma' unsupported *)
+
+Axiom setInlinePragmaActivation : forall {A : Type}, A.
+
+(* Translating `setInlinePragmaActivation' failed: using a record pattern for
+   the unknown constructor `Mk_InlinePragma' unsupported *)
+
+Axiom setInlinePragmaRuleMatchInfo : forall {A : Type}, A.
+
+(* Translating `setInlinePragmaRuleMatchInfo' failed: using a record pattern for
+   the unknown constructor `Mk_InlinePragma' unsupported *)
+
+Axiom setOverlapModeMaybe : forall {A : Type}, A.
+
+(* Translating `setOverlapModeMaybe' failed: using a record pattern for the
+   unknown constructor `Mk_OverlapFlag' unsupported *)
+
+Definition bestOneShot : OneShotInfo -> OneShotInfo -> OneShotInfo :=
+  fun arg_146__ arg_147__ =>
+    match arg_146__ , arg_147__ with
+      | NoOneShotInfo , os => os
+      | ProbOneShot , OneShotLam => OneShotLam
+      | ProbOneShot , _ => ProbOneShot
+      | OneShotLam , _ => OneShotLam
+    end.
+
+Definition boolToRecFlag : bool -> RecFlag :=
+  fun arg_105__ =>
+    match arg_105__ with
+      | true => Recursive
+      | false => NonRecursive
+    end.
+
+Definition boxityTupleSort : Boxity -> TupleSort :=
+  fun arg_95__ =>
+    match arg_95__ with
+      | Boxed => BoxedTuple
+      | Unboxed => UnboxedTuple
+    end.
+
+Definition bumpVersion : Version -> Version :=
+  fun v => v GHC.Num.+ GHC.Num.fromInteger 1.
+
+Definition compareFixity : Fixity -> Fixity -> (bool * bool)%type :=
+  fun arg_117__ arg_118__ =>
+    match arg_117__ , arg_118__ with
+      | Mk_Fixity _ prec1 dir1 , Mk_Fixity _ prec2 dir2 => let error_please :=
+                                                             pair true false in
+                                                           let left := pair false false in
+                                                           let right := pair false true in
+                                                           let scrut_122__ := GHC.Base.compare prec1 prec2 in
+                                                           match scrut_122__ with
+                                                             | Gt => left
+                                                             | Lt => right
+                                                             | Eq => let scrut_123__ := pair dir1 dir2 in
+                                                                     match scrut_123__ with
+                                                                       | pair InfixR InfixR => right
+                                                                       | pair InfixL InfixL => left
+                                                                       | _ => error_please
+                                                                     end
+                                                           end
+    end.
+
+Definition competesWith : Activation -> Activation -> bool :=
+  fun arg_37__ arg_38__ =>
+    match arg_37__ , arg_38__ with
+      | NeverActive , _ => false
+      | _ , NeverActive => false
+      | AlwaysActive , _ => true
+      | ActiveBefore _ _ , AlwaysActive => true
+      | ActiveBefore _ _ , ActiveBefore _ _ => true
+      | ActiveBefore _ a , ActiveAfter _ b => a GHC.Base.< b
+      | ActiveAfter _ _ , AlwaysActive => false
+      | ActiveAfter _ _ , ActiveBefore _ _ => false
+      | ActiveAfter _ a , ActiveAfter _ b => a GHC.Base.>= b
+    end.
+
+Definition defaultInlinePragma : InlinePragma :=
+  Mk_InlinePragma missingValue missingValue missingValue missingValue
+                  missingValue.
+
+Definition fIRST_TAG : ConTag :=
+  GHC.Num.fromInteger 1.
+
+Definition failed : SuccessFlag -> bool :=
+  fun arg_74__ => match arg_74__ with | Succeeded => false | Failed => true end.
+
+Definition flipSwap : SwapFlag -> SwapFlag :=
+  fun arg_144__ =>
+    match arg_144__ with
+      | IsSwapped => NotSwapped
+      | NotSwapped => IsSwapped
+    end.
+
+Definition funTyFixity : Fixity :=
+  Mk_Fixity (GHC.Base.hs_string__ "0") (GHC.Num.fromInteger 0) InfixR.
+
+Definition hasNoOneShotInfo : OneShotInfo -> bool :=
+  fun arg_152__ => match arg_152__ with | NoOneShotInfo => true | _ => false end.
+
+Definition hasOverlappableFlag : OverlapMode -> bool :=
+  fun mode =>
+    match mode with
+      | Overlappable _ => true
+      | Overlaps _ => true
+      | Incoherent _ => true
+      | _ => false
+    end.
+
+Definition hasOverlappingFlag : OverlapMode -> bool :=
+  fun mode =>
+    match mode with
+      | Overlapping _ => true
+      | Overlaps _ => true
+      | Incoherent _ => true
+      | _ => false
+    end.
+
+Definition infinity : IntWithInf :=
+  Infinity.
+
+Definition initialVersion : Version :=
+  GHC.Num.fromInteger 1.
+
+Definition inlinePragmaActivation : InlinePragma -> Activation :=
+  fun arg_53__ =>
+    match arg_53__ with
+      | Mk_InlinePragma _ _ _ activation _ => activation
+    end.
+
+Definition inlinePragmaRuleMatchInfo : InlinePragma -> RuleMatchInfo :=
+  fun arg_51__ => match arg_51__ with | Mk_InlinePragma _ _ _ _ info => info end.
+
+Definition inlinePragmaSat : InlinePragma -> option Arity :=
+  inl_sat.
+
+Definition inlinePragmaSpec : InlinePragma -> InlineSpec :=
+  inl_inline.
+
+Definition insideLam : InsideLam :=
+  true.
+
+Definition intGtLimit : GHC.Num.Int -> IntWithInf -> bool :=
+  fun arg_27__ arg_28__ =>
+    match arg_27__ , arg_28__ with
+      | _ , Infinity => false
+      | n , Int m => n GHC.Base.> m
+    end.
+
+Definition isActiveIn : PhaseNum -> Activation -> bool :=
+  fun arg_42__ arg_43__ =>
+    match arg_42__ , arg_43__ with
+      | _ , NeverActive => false
+      | _ , AlwaysActive => true
+      | p , ActiveAfter _ n => p GHC.Base.<= n
+      | p , ActiveBefore _ n => p GHC.Base.> n
+    end.
+
+Definition isActive : CompilerPhase -> Activation -> bool :=
+  fun arg_47__ arg_48__ =>
+    match arg_47__ , arg_48__ with
+      | InitialPhase , AlwaysActive => true
+      | InitialPhase , ActiveBefore _ _ => true
+      | InitialPhase , _ => false
+      | Phase p , act => isActiveIn p act
+    end.
+
+Definition isAlwaysActive : Activation -> bool :=
+  fun arg_33__ => match arg_33__ with | AlwaysActive => true | _ => false end.
+
+Definition isAnyInlinePragma : InlinePragma -> bool :=
+  fun prag =>
+    let scrut_55__ := inl_inline prag in
+    match scrut_55__ with
+      | Inline => true
+      | Inlinable => true
+      | _ => false
+    end.
+
+Definition isBoxed : Boxity -> bool :=
+  fun arg_111__ => match arg_111__ with | Boxed => true | Unboxed => false end.
+
+Definition isConLike : RuleMatchInfo -> bool :=
+  fun arg_72__ => match arg_72__ with | ConLike => true | _ => false end.
+
+Definition isDeadOcc : OccInfo -> bool :=
+  fun arg_84__ => match arg_84__ with | IAmDead => true | _ => false end.
+
+Definition isEarlyActive : Activation -> bool :=
+  fun arg_31__ =>
+    match arg_31__ with
+      | AlwaysActive => true
+      | ActiveBefore _ _ => true
+      | _ => false
+    end.
+
+Definition isEmptyInlineSpec : InlineSpec -> bool :=
+  fun arg_65__ => match arg_65__ with | EmptyInlineSpec => true | _ => false end.
+
+Definition isFunLike : RuleMatchInfo -> bool :=
+  fun arg_67__ => match arg_67__ with | FunLike => true | _ => false end.
+
+Definition isDefaultInlinePragma : InlinePragma -> bool :=
+  fun arg_69__ =>
+    match arg_69__ with
+      | Mk_InlinePragma _ inline _ activation match_info => andb (isEmptyInlineSpec
+                                                                 inline) (andb (isAlwaysActive activation) (isFunLike
+                                                                               match_info))
+    end.
+
+Definition isGenerated : Origin -> bool :=
+  fun arg_103__ =>
+    match arg_103__ with
+      | Generated => true
+      | FromSource => false
+    end.
+
+Definition isInlinablePragma : InlinePragma -> bool :=
+  fun prag =>
+    let scrut_58__ := inl_inline prag in
+    match scrut_58__ with
+      | Inlinable => true
+      | _ => false
+    end.
+
+Definition isInlinePragma : InlinePragma -> bool :=
+  fun prag =>
+    let scrut_61__ := inl_inline prag in
+    match scrut_61__ with
+      | Inline => true
+      | _ => false
+    end.
+
+Definition isNeverActive : Activation -> bool :=
+  fun arg_35__ => match arg_35__ with | NeverActive => true | _ => false end.
+
+Definition isNoOcc : OccInfo -> bool :=
+  fun arg_93__ => match arg_93__ with | NoOccInfo => true | _ => false end.
+
+Definition isNonRec : RecFlag -> bool :=
+  fun arg_107__ =>
+    match arg_107__ with
+      | Recursive => false
+      | NonRecursive => true
+    end.
+
+Definition isNotTopLevel : TopLevelFlag -> bool :=
+  fun arg_115__ =>
+    match arg_115__ with
+      | NotTopLevel => true
+      | TopLevel => false
+    end.
+
+Definition isOneOcc : OccInfo -> bool :=
+  fun arg_82__ => match arg_82__ with | OneOcc _ _ _ => true | _ => false end.
+
+Definition isOneShotInfo : OneShotInfo -> bool :=
+  fun arg_154__ => match arg_154__ with | OneShotLam => true | _ => false end.
+
+Definition isRec : RecFlag -> bool :=
+  fun arg_109__ =>
+    match arg_109__ with
+      | Recursive => true
+      | NonRecursive => false
+    end.
+
+Definition isStrongLoopBreaker : OccInfo -> bool :=
+  fun arg_86__ =>
+    match arg_86__ with
+      | IAmALoopBreaker false => true
+      | _ => false
+    end.
+
+Definition isSwapped : SwapFlag -> bool :=
+  fun arg_142__ =>
+    match arg_142__ with
+      | IsSwapped => true
+      | NotSwapped => false
+    end.
+
+Definition isTopLevel : TopLevelFlag -> bool :=
+  fun arg_113__ =>
+    match arg_113__ with
+      | TopLevel => true
+      | NotTopLevel => false
+    end.
+
+Definition isWeakLoopBreaker : OccInfo -> bool :=
+  fun arg_88__ =>
+    match arg_88__ with
+      | IAmALoopBreaker _ => true
+      | _ => false
+    end.
+
+Definition maxPrecedence : GHC.Num.Int :=
+  GHC.Num.fromInteger 9.
+
+Definition minPrecedence : GHC.Num.Int :=
+  GHC.Num.fromInteger 0.
+
+Definition mkIntWithInf : GHC.Num.Int -> IntWithInf :=
+  Int.
+
+Definition mulWithInf : IntWithInf -> IntWithInf -> IntWithInf :=
+  fun arg_19__ arg_20__ =>
+    match arg_19__ , arg_20__ with
+      | Infinity , _ => Infinity
+      | _ , Infinity => Infinity
+      | Int a , Int b => Int (a GHC.Num.* b)
+    end.
+
+Definition negateFixity : Fixity :=
+  Mk_Fixity (GHC.Base.hs_string__ "6") (GHC.Num.fromInteger 6) InfixL.
+
+Definition noOneShotInfo : OneShotInfo :=
+  NoOneShotInfo.
+
+Definition notInsideLam : InsideLam :=
+  false.
+
+Definition notOneBranch : OneBranch :=
+  false.
+
+Definition oneBranch : OneBranch :=
+  true.
+
+Definition plusWithInf : IntWithInf -> IntWithInf -> IntWithInf :=
+  fun arg_23__ arg_24__ =>
+    match arg_23__ , arg_24__ with
+      | Infinity , _ => Infinity
+      | _ , Infinity => Infinity
+      | Int a , Int b => Int (a GHC.Num.+ b)
+    end.
+
+Definition seqOccInfo : OccInfo -> unit :=
+  fun occ => GHC.Prim.seq occ tt.
+
+Definition strongLoopBreaker : OccInfo :=
+  IAmALoopBreaker false.
+
+Definition succeeded : SuccessFlag -> bool :=
+  fun arg_76__ => match arg_76__ with | Succeeded => true | Failed => false end.
+
+Definition successIf : bool -> SuccessFlag :=
+  fun arg_78__ => match arg_78__ with | true => Succeeded | false => Failed end.
+
+Definition treatZeroAsInf : GHC.Num.Int -> IntWithInf :=
+  fun arg_13__ =>
+    let j_16__ := match arg_13__ with | n => Int n end in
+    match arg_13__ with
+      | num_14__ => if num_14__ GHC.Base.== GHC.Num.fromInteger 0 : bool
+                    then Infinity
+                    else j_16__
+    end.
+
+Definition tupleSortBoxity : TupleSort -> Boxity :=
+  fun arg_97__ =>
+    match arg_97__ with
+      | BoxedTuple => Boxed
+      | UnboxedTuple => Unboxed
+      | ConstraintTuple => Boxed
+    end.
+
+Definition unSwap {a} {b} : SwapFlag -> (a -> a -> b) -> a -> a -> b :=
+  fun arg_135__ arg_136__ arg_137__ arg_138__ =>
+    match arg_135__ , arg_136__ , arg_137__ , arg_138__ with
+      | NotSwapped , f , a , b => f a b
+      | IsSwapped , f , a , b => f b a
+    end.
+
+Definition weakLoopBreaker : OccInfo :=
+  IAmALoopBreaker true.
+
+Definition worstOneShot : OneShotInfo -> OneShotInfo -> OneShotInfo :=
+  fun arg_149__ arg_150__ =>
+    match arg_149__ , arg_150__ with
+      | NoOneShotInfo , _ => NoOneShotInfo
+      | ProbOneShot , NoOneShotInfo => NoOneShotInfo
+      | ProbOneShot , _ => ProbOneShot
+      | OneShotLam , os => os
+    end.
+
+Definition zapFragileOcc : OccInfo -> OccInfo :=
+  fun arg_80__ =>
+    match arg_80__ with
+      | OneOcc _ _ _ => NoOccInfo
+      | occ => occ
+    end.
+
+(* Unbound variables:
+     Eq Gt Lt andb bool comparison false list negb op_zt__ option pair true tt unit
+     Data.Function.on FastString.FastString GHC.Base.Eq_ GHC.Base.Ord GHC.Base.String
+     GHC.Base.compare GHC.Base.op_zeze__ GHC.Base.op_zg__ GHC.Base.op_zgze__
+     GHC.Base.op_zl__ GHC.Base.op_zlze__ GHC.Base.op_zsze__ GHC.Num.Int
+     GHC.Num.op_zp__ GHC.Num.op_zt__ GHC.Prim.seq GHC.Real.Rational SrcLoc.Located
+*)

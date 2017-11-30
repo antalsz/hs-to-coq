@@ -1,28 +1,26 @@
-rename value SrcLoc.L = SrcLoc.Mk_L
-
 skip BooleanFormula.pprBooleanFormula'
 skip BooleanFormula.pprBooleanFormula
 skip BooleanFormula.pprBooleanFormulaNice
 
-redefine Local Definition BooleanFormula.Functor_BooleanFormula_fmap {a} {b} :
+redefine Local Definition BooleanFormula.Functor__BooleanFormula_fmap {a} {b} :
 	(a -> b) -> ((BooleanFormula a) -> (BooleanFormula b))
 	:= BooleanFormula_fmap.
 
-redefine Local Definition BooleanFormula.Traversable_BooleanFormula_traverse
+redefine Local Definition BooleanFormula.Traversable__BooleanFormula_traverse
     {f} {a} {b} `{_:GHC.Base.Applicative f}: (a -> (f b)) ->
 	 ((BooleanFormula a) -> (f (BooleanFormula b)))
     := BooleanFormula_traverse.
 
-redefine Local Definition BooleanFormula.Foldable_BooleanFormula_foldMap
+redefine Local Definition BooleanFormula.Foldable__BooleanFormula_foldMap
     {m} {a} `{_:GHC.Base.Monoid m}: (a -> m) -> ((BooleanFormula a) -> m)
 	 := BooleanFormula_foldMap.
 
-redefine Local Definition BooleanFormula.Foldable_BooleanFormula_foldr
+redefine Local Definition BooleanFormula.Foldable__BooleanFormula_foldr
     {a} {b} : (a -> (b -> b)) -> (b -> ((BooleanFormula a) -> b))
 	 := BooleanFormula_foldr.
 
 ## defined in the midamble
-skip instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___BooleanFormula_a_
+skip Eq___BooleanFormula
 
 
-order instance BooleanFormula.Functor_BooleanFormula BooleanFormula.Traversable_BooleanFormula
+order instance BooleanFormula.Functor__BooleanFormula BooleanFormula.Traversable__BooleanFormula

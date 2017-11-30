@@ -6,11 +6,6 @@ skip Unique.showUnique
 # outputtable
 skip Unique.pprUnique
 
-
-# neef from header file
-rename value BasicTypes.Boxed = BasicTypes.Mk_Boxed
-rename value BasicTypes.Unboxed = BasicTypes.Mk_Unboxed
-
 rename value GHC.Base.ord = GHC.Char.ord
 
 order Unique.Eq___Unique Unique.hasKey Ord__Unique

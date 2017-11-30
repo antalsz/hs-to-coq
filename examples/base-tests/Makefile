@@ -9,7 +9,8 @@ endif
 
 # tests that should pass
 PASS = \
-  Deriv
+  Deriv \
+  PatternGuard \
 
 
 # tests that *should* pass but currently fail

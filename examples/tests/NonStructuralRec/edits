@@ -1,5 +1,5 @@
-skip NonStructuralRec.N
-skip NonStructuralRec.add
+skip nat
+skip Nat.add
 rename type NonStructuralRec.N = nat
 rename value NonStructuralRec.N = O
 rename value NonStructuralRec.S = S

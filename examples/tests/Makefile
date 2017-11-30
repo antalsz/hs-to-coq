@@ -17,7 +17,6 @@ PASS = \
   Guard2 \
   ExhaustGuard \
   PartialAppliedPolyDataCon \
-  PatternGuard \
   NonStructuralRec \
   DotName \
   MapAccumR \

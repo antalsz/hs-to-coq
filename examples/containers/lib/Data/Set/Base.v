@@ -90,7 +90,7 @@ Local Definition Foldable__Set__fold : forall {m},
                  end in
                match arg_357__ with
                  | Tip => GHC.Base.mempty
-                 | Bin num_358__ k _ _ => if num_358__ == GHC.Num.fromInteger 1 : bool
+                 | Bin num_358__ k _ _ => if num_358__ GHC.Base.== GHC.Num.fromInteger 1 : bool
                                           then k
                                           else j_360__
                end in
@@ -109,7 +109,7 @@ Local Definition Foldable__Set__foldMap : forall {m} {a},
                    end in
                  match arg_363__ with
                    | Tip => GHC.Base.mempty
-                   | Bin num_364__ k _ _ => if num_364__ == GHC.Num.fromInteger 1 : bool
+                   | Bin num_364__ k _ _ => if num_364__ GHC.Base.== GHC.Num.fromInteger 1 : bool
                                             then f k
                                             else j_366__
                  end in
@@ -698,7 +698,7 @@ Definition balanceR {a} : a -> Set_ a -> Set_ a -> Set_ a :=
                         end
     end.
 
-Definition deleteFindMin {a} : Set_ a -> a * Set_ a :=
+Definition deleteFindMin {a} : Set_ a -> (a * Set_ a)%type :=
   fix deleteFindMin t
         := match t with
              | Bin _ x Tip r => pair x r
@@ -709,7 +709,7 @@ Definition deleteFindMin {a} : Set_ a -> a * Set_ a :=
                                           "Set.deleteFindMin: can not return the minimal element of an empty set")) Tip
            end.
 
-Definition minView {a} : Set_ a -> option (a * Set_ a) :=
+Definition minView {a} : Set_ a -> option (a * Set_ a)%type :=
   fun arg_337__ =>
     match arg_337__ with
       | Tip => None
@@ -818,7 +818,7 @@ Definition balanceL {a} : a -> Set_ a -> Set_ a -> Set_ a :=
                         end
     end.
 
-Definition deleteFindMax {a} : Set_ a -> a * Set_ a :=
+Definition deleteFindMax {a} : Set_ a -> (a * Set_ a)%type :=
   fix deleteFindMax t
         := match t with
              | Bin _ x l Tip => pair x l
@@ -829,7 +829,7 @@ Definition deleteFindMax {a} : Set_ a -> a * Set_ a :=
                                           "Set.deleteFindMax: can not return the maximal element of an empty set")) Tip
            end.
 
-Definition maxView {a} : Set_ a -> option (a * Set_ a) :=
+Definition maxView {a} : Set_ a -> option (a * Set_ a)%type :=
   fun arg_249__ =>
     match arg_249__ with
       | Tip => None
@@ -1037,12 +1037,11 @@ Definition withEmpty : list GHC.Base.String -> list GHC.Base.String :=
   fun bars => cons (GHC.Base.hs_string__ "   ") bars.
 
 (* Unbound variables:
-     Gt Lt None Some andb bool comparison cons false list negb nil op_zeze__ op_zt__
-     option orb pair true Data.Foldable.Foldable GHC.Base.Eq_ GHC.Base.Monoid
-     GHC.Base.Ord GHC.Base.String GHC.Base.compare GHC.Base.const GHC.Base.flip
-     GHC.Base.mappend GHC.Base.mempty GHC.Base.op_zd__ GHC.Base.op_zdzn__
-     GHC.Base.op_zeze__ GHC.Base.op_zg__ GHC.Base.op_zgze__ GHC.Base.op_zl__
-     GHC.Base.op_zlze__ GHC.Base.op_zsze__ GHC.Err.error GHC.Err.undefined
-     GHC.Num.Int GHC.Num.Num GHC.Num.op_zm__ GHC.Num.op_zp__ GHC.Num.op_zt__
-     GHC.Prim.seq
+     Gt Lt None Some andb bool comparison cons false list negb nil op_zt__ option orb
+     pair true Data.Foldable.Foldable GHC.Base.Eq_ GHC.Base.Monoid GHC.Base.Ord
+     GHC.Base.String GHC.Base.compare GHC.Base.const GHC.Base.flip GHC.Base.mappend
+     GHC.Base.mempty GHC.Base.op_zd__ GHC.Base.op_zdzn__ GHC.Base.op_zeze__
+     GHC.Base.op_zg__ GHC.Base.op_zgze__ GHC.Base.op_zl__ GHC.Base.op_zlze__
+     GHC.Base.op_zsze__ GHC.Err.error GHC.Err.undefined GHC.Num.Int GHC.Num.Num
+     GHC.Num.op_zm__ GHC.Num.op_zp__ GHC.Num.op_zt__ GHC.Prim.seq
 *)

@@ -54,9 +54,9 @@ Definition traverse `{g : Traversable t} : forall {f} {a} {b},
                                              forall `{GHC.Base.Applicative f}, (a -> f b) -> t a -> f (t b) :=
   g _ (traverse__ t).
 
-Inductive StateR s a : Type := Mk_StateR : (s -> s * a) -> StateR s a.
+Inductive StateR s a : Type := Mk_StateR : (s -> (s * a)%type) -> StateR s a.
 
-Inductive StateL s a : Type := Mk_StateL : (s -> s * a) -> StateL s a.
+Inductive StateL s a : Type := Mk_StateL : (s -> (s * a)%type) -> StateL s a.
 
 Inductive Id a : Type := Mk_Id : a -> Id a.
 
@@ -537,12 +537,12 @@ Definition for_ {t} {f} {a} {b} `{Traversable t} `{GHC.Base.Applicative f} : t
                                                                              a -> (a -> f b) -> f (t b) :=
   GHC.Base.flip traverse.
 
-Definition mapAccumL {t} {a} {b} {c} `{Traversable t} : (a -> b -> a *
-                                                        c) -> a -> t b -> a * t c :=
+Definition mapAccumL {t} {a} {b} {c} `{Traversable t} : (a -> b -> (a *
+                                                        c)%type) -> a -> t b -> (a * t c)%type :=
   fun f s t => runStateL (traverse (Mk_StateL GHC.Base.∘ GHC.Base.flip f) t) s.
 
-Definition mapAccumR {t} {a} {b} {c} `{Traversable t} : (a -> b -> a *
-                                                        c) -> a -> t b -> a * t c :=
+Definition mapAccumR {t} {a} {b} {c} `{Traversable t} : (a -> b -> (a *
+                                                        c)%type) -> a -> t b -> (a * t c)%type :=
   fun f s t => runStateR (traverse (Mk_StateR GHC.Base.∘ GHC.Base.flip f) t) s.
 
 (* Unbound variables:

@@ -364,7 +364,7 @@ Definition nonEmpty {a} : list a -> option (NonEmpty a) :=
       | cons a as_ => Some (NEcons a as_)
     end.
 
-Definition uncons {a} : NonEmpty a -> a * option (NonEmpty a) :=
+Definition uncons {a} : NonEmpty a -> (a * option (NonEmpty a))%type :=
   fun arg_65__ => match arg_65__ with | NEcons a as_ => pair a (nonEmpty as_) end.
 
 Definition nubBy {a} : (a -> a -> bool) -> NonEmpty a -> NonEmpty a :=
@@ -405,16 +405,17 @@ Definition takeWhile {a} : (a -> bool) -> NonEmpty a -> list a :=
 Definition take {a} : GHC.Num.Int -> NonEmpty a -> list a :=
   fun n => GHC.List.take n GHC.Base.∘ toList.
 
-Definition splitAt {a} : GHC.Num.Int -> NonEmpty a -> list a * list a :=
+Definition splitAt {a} : GHC.Num.Int -> NonEmpty a -> (list a * list a)%type :=
   fun n => GHC.List.splitAt n GHC.Base.∘ toList.
 
-Definition span {a} : (a -> bool) -> NonEmpty a -> list a * list a :=
+Definition span {a} : (a -> bool) -> NonEmpty a -> (list a * list a)%type :=
   fun p => GHC.List.span p GHC.Base.∘ toList.
 
-Definition break {a} : (a -> bool) -> NonEmpty a -> list a * list a :=
+Definition break {a} : (a -> bool) -> NonEmpty a -> (list a * list a)%type :=
   fun p => span (negb GHC.Base.∘ p).
 
-Definition partition {a} : (a -> bool) -> NonEmpty a -> list a * list a :=
+Definition partition {a} : (a -> bool) -> NonEmpty a -> (list a * list
+                           a)%type :=
   fun p => Data.OldList.partition p GHC.Base.∘ toList.
 
 Definition filter {a} : (a -> bool) -> NonEmpty a -> list a :=
@@ -426,7 +427,8 @@ Definition dropWhile {a} : (a -> bool) -> NonEmpty a -> list a :=
 Definition drop {a} : GHC.Num.Int -> NonEmpty a -> list a :=
   fun n => GHC.List.drop n GHC.Base.∘ toList.
 
-Definition unzip {f} {a} {b} `{GHC.Base.Functor f} : f (a * b) -> f a * f b :=
+Definition unzip {f} {a} {b} `{GHC.Base.Functor f} : f (a * b)%type -> (f a * f
+                                                     b)%type :=
   fun xs =>
     pair (Data.Tuple.fst Data.Functor.<$> xs) (Data.Tuple.snd Data.Functor.<$> xs).
 
@@ -442,7 +444,7 @@ Definition xor : NonEmpty bool -> bool :=
                        Data.Foldable.foldr xor' x xs
     end.
 
-Definition zip {a} {b} : NonEmpty a -> NonEmpty b -> NonEmpty (a * b) :=
+Definition zip {a} {b} : NonEmpty a -> NonEmpty b -> NonEmpty (a * b)%type :=
   fun arg_12__ arg_13__ =>
     match arg_12__ , arg_13__ with
       | NEcons x xs , NEcons y ys => NEcons (pair x y) (GHC.List.zip xs ys)

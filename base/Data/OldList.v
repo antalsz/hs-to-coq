@@ -226,8 +226,8 @@ Definition genericLength {i} {a} `{(GHC.Num.Num i)} : list a -> i :=
              | cons _ l => GHC.Num.fromInteger 1 GHC.Num.+ genericLength l
            end.
 
-Definition genericSplitAt {i} {a} `{(GHC.Real.Integral i)} : i -> list a -> list
-                                                             a * list a :=
+Definition genericSplitAt {i} {a} `{(GHC.Real.Integral i)} : i -> list
+                                                             a -> (list a * list a)%type :=
   fix genericSplitAt arg_86__ arg_87__
         := let j_91__ :=
              match arg_86__ , arg_87__ with
@@ -293,8 +293,8 @@ Definition isPrefixOf {a} `{(GHC.Base.Eq_ a)} : list a -> list a -> bool :=
              | cons x xs , cons y ys => andb (x GHC.Base.== y) (isPrefixOf xs ys)
            end.
 
-Definition mapAccumL {acc} {x} {y} : (acc -> x -> acc * y) -> acc -> list
-                                     x -> acc * list y :=
+Definition mapAccumL {acc} {x} {y} : (acc -> x -> (acc * y)%type) -> acc -> list
+                                     x -> (acc * list y)%type :=
   fix mapAccumL arg_133__ arg_134__ arg_135__
         := match arg_133__ , arg_134__ , arg_135__ with
              | _ , s , nil => pair s nil
@@ -305,8 +305,8 @@ Definition mapAccumL {acc} {x} {y} : (acc -> x -> acc * y) -> acc -> list
                                     end
            end.
 
-Definition mapAccumLF {acc} {x} {y} : (acc -> x -> acc * y) -> x -> (acc -> acc
-                                      * list y) -> acc -> acc * list y :=
+Definition mapAccumLF {acc} {x} {y} : (acc -> x -> (acc *
+                                      y)%type) -> x -> (acc -> (acc * list y)%type) -> acc -> (acc * list y)%type :=
   fun f =>
     fun x r =>
       GHC.Base.oneShot (fun s =>
@@ -324,7 +324,7 @@ Definition nonEmptySubsequences {a} : list a -> list (list a) :=
                             cons (cons x nil) (GHC.Base.foldr f nil (nonEmptySubsequences xs))
            end.
 
-Definition pairWithNil {acc} {y} : acc -> acc * list y :=
+Definition pairWithNil {acc} {y} : acc -> (acc * list y)%type :=
   fun x => pair x nil.
 
 Definition prependToAll {a} : a -> list a -> list a :=
@@ -334,8 +334,8 @@ Definition prependToAll {a} : a -> list a -> list a :=
              | sep , cons x xs => cons sep (cons x (prependToAll sep xs))
            end.
 
-Definition select {a} : (a -> bool) -> a -> list a * list a -> list a * list
-                        a :=
+Definition select {a} : (a -> bool) -> a -> (list a * list a)%type -> (list a *
+                        list a)%type :=
   fun arg_141__ arg_142__ arg_143__ =>
     match arg_141__ , arg_142__ , arg_143__ with
       | p , x , pair ts fs => let j_144__ := pair ts (cons x fs) in
@@ -344,7 +344,7 @@ Definition select {a} : (a -> bool) -> a -> list a * list a -> list a * list
                               else j_144__
     end.
 
-Definition partition {a} : (a -> bool) -> list a -> list a * list a :=
+Definition partition {a} : (a -> bool) -> list a -> (list a * list a)%type :=
   fun p xs => GHC.Base.foldr (select p) (pair nil nil) xs.
 
 Definition sort {a} `{(GHC.Base.Ord a)} : list a -> list a :=
@@ -413,8 +413,8 @@ Definition unwords : list GHC.Base.String -> GHC.Base.String :=
 Definition unwordsFB : GHC.Base.String -> GHC.Base.String -> GHC.Base.String :=
   fun w r => cons (GHC.Char.hs_char__ " ") (Coq.Init.Datatypes.app w r).
 
-Definition unzip4 {a} {b} {c} {d} : list (a * b * c * d) -> list a * list b *
-                                    list c * list d :=
+Definition unzip4 {a} {b} {c} {d} : list (a * b * c * d)%type -> (list a * list
+                                    b * list c * list d)%type :=
   GHC.Base.foldr (fun arg_43__ arg_44__ =>
                    match arg_43__ , arg_44__ with
                      | pair (pair (pair a b) c) d , pair (pair (pair as_ bs) cs) ds => pair (pair
@@ -423,8 +423,8 @@ Definition unzip4 {a} {b} {c} {d} : list (a * b * c * d) -> list a * list b *
                                                                                             (cons c cs)) (cons d ds)
                    end) (pair (pair (pair nil nil) nil) nil).
 
-Definition unzip5 {a} {b} {c} {d} {e} : list (a * b * c * d * e) -> list a *
-                                        list b * list c * list d * list e :=
+Definition unzip5 {a} {b} {c} {d} {e} : list (a * b * c * d * e)%type -> (list a
+                                        * list b * list c * list d * list e)%type :=
   GHC.Base.foldr (fun arg_38__ arg_39__ =>
                    match arg_38__ , arg_39__ with
                      | pair (pair (pair (pair a b) c) d) e , pair (pair (pair (pair as_ bs) cs) ds)
@@ -433,8 +433,9 @@ Definition unzip5 {a} {b} {c} {d} {e} : list (a * b * c * d * e) -> list a *
                                                                              e es)
                    end) (pair (pair (pair (pair nil nil) nil) nil) nil).
 
-Definition unzip6 {a} {b} {c} {d} {e} {f} : list (a * b * c * d * e * f) -> list
-                                            a * list b * list c * list d * list e * list f :=
+Definition unzip6 {a} {b} {c} {d} {e} {f} : list (a * b * c * d * e *
+                                                 f)%type -> (list a * list b * list c * list d * list e * list
+                                            f)%type :=
   GHC.Base.foldr (fun arg_33__ arg_34__ =>
                    match arg_33__ , arg_34__ with
                      | pair (pair (pair (pair (pair a b) c) d) e) f , pair (pair (pair (pair (pair
@@ -444,8 +445,8 @@ Definition unzip6 {a} {b} {c} {d} {e} {f} : list (a * b * c * d * e * f) -> list
                    end) (pair (pair (pair (pair (pair nil nil) nil) nil) nil) nil).
 
 Definition unzip7 {a} {b} {c} {d} {e} {f} {g} : list (a * b * c * d * e * f *
-                                                     g) -> list a * list b * list c * list d * list e * list f * list
-                                                g :=
+                                                     g)%type -> (list a * list b * list c * list d * list e * list f *
+                                                list g)%type :=
   GHC.Base.foldr (fun arg_28__ arg_29__ =>
                    match arg_28__ , arg_29__ with
                      | pair (pair (pair (pair (pair (pair a b) c) d) e) f) g , pair (pair (pair (pair
@@ -482,7 +483,7 @@ Definition zipWith4 {a} {b} {c} {d} {e} : (a -> b -> c -> d -> e) -> list
            end.
 
 Definition zip4 {a} {b} {c} {d} : list a -> list b -> list c -> list d -> list
-                                  (a * b * c * d) :=
+                                  (a * b * c * d)%type :=
   zipWith4 GHC.Tuple.pair4.
 
 Definition zipWith5 {a} {b} {c} {d} {e} {f}
@@ -497,7 +498,7 @@ Definition zipWith5 {a} {b} {c} {d} {e} {f}
            end.
 
 Definition zip5 {a} {b} {c} {d} {e} : list a -> list b -> list c -> list
-                                      d -> list e -> list (a * b * c * d * e) :=
+                                      d -> list e -> list (a * b * c * d * e)%type :=
   zipWith5 GHC.Tuple.pair5.
 
 Definition zipWith6 {a} {b} {c} {d} {e} {f} {g}
@@ -517,7 +518,7 @@ Definition zipWith6 {a} {b} {c} {d} {e} {f} {g}
            end.
 
 Definition zip6 {a} {b} {c} {d} {e} {f} : list a -> list b -> list c -> list
-                                          d -> list e -> list f -> list (a * b * c * d * e * f) :=
+                                          d -> list e -> list f -> list (a * b * c * d * e * f)%type :=
   zipWith6 GHC.Tuple.pair6.
 
 Definition zipWith7 {a} {b} {c} {d} {e} {f} {g} {h}
@@ -539,7 +540,8 @@ Definition zipWith7 {a} {b} {c} {d} {e} {f} {g} {h}
            end.
 
 Definition zip7 {a} {b} {c} {d} {e} {f} {g} : list a -> list b -> list c -> list
-                                              d -> list e -> list f -> list g -> list (a * b * c * d * e * f * g) :=
+                                              d -> list e -> list f -> list g -> list (a * b * c * d * e * f *
+                                                                                      g)%type :=
   zipWith7 GHC.Tuple.pair7.
 
 Module Notations.

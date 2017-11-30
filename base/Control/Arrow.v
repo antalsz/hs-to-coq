@@ -33,11 +33,11 @@ Inductive ArrowMonad (a : Type -> Type -> Type) b : Type := Mk_ArrowMonad : (a
 
 Record Arrow__Dict (a : Type -> Type -> Type) := Arrow__Dict_Build {
   arr__ : forall {b} {c}, (b -> c) -> a b c ;
-  first__ : forall {b} {c} {d}, a b c -> a (b * d) (c * d) ;
-  op_zazaza____ : forall {b} {c} {c'}, a b c -> a b c' -> a b (c * c') ;
+  first__ : forall {b} {c} {d}, a b c -> a (b * d)%type (c * d)%type ;
+  op_zazaza____ : forall {b} {c} {c'}, a b c -> a b c' -> a b (c * c')%type ;
   op_ztztzt____ : forall {b} {c} {b'} {c'},
-    a b c -> a b' c' -> a (b * b') (c * c') ;
-  second__ : forall {b} {c} {d}, a b c -> a (d * b) (d * c) }.
+    a b c -> a b' c' -> a (b * b')%type (c * c')%type ;
+  second__ : forall {b} {c} {d}, a b c -> a (d * b)%type (d * c)%type }.
 
 Definition Arrow (a : Type -> Type -> Type) `{Control.Category.Category a} :=
   forall r, (Arrow__Dict a -> r) -> r.
@@ -48,19 +48,19 @@ Definition arr `{g : Arrow a} : forall {b} {c}, (b -> c) -> a b c :=
   g _ (arr__ a).
 
 Definition first `{g : Arrow a} : forall {b} {c} {d},
-                                    a b c -> a (b * d) (c * d) :=
+                                    a b c -> a (b * d)%type (c * d)%type :=
   g _ (first__ a).
 
 Definition op_zazaza__ `{g : Arrow a} : forall {b} {c} {c'},
-                                          a b c -> a b c' -> a b (c * c') :=
+                                          a b c -> a b c' -> a b (c * c')%type :=
   g _ (op_zazaza____ a).
 
 Definition op_ztztzt__ `{g : Arrow a} : forall {b} {c} {b'} {c'},
-                                          a b c -> a b' c' -> a (b * b') (c * c') :=
+                                          a b c -> a b' c' -> a (b * b')%type (c * c')%type :=
   g _ (op_ztztzt____ a).
 
 Definition second `{g : Arrow a} : forall {b} {c} {d},
-                                     a b c -> a (d * b) (d * c) :=
+                                     a b c -> a (d * b)%type (d * c)%type :=
   g _ (second__ a).
 
 Notation "'_&&&_'" := (op_zazaza__).
@@ -72,14 +72,14 @@ Notation "'_***_'" := (op_ztztzt__).
 Infix "***" := (_***_) (at level 99).
 
 Record ArrowApply__Dict (a : Type -> Type -> Type) := ArrowApply__Dict_Build {
-  app__ : forall {b} {c}, a (a b c * b) c }.
+  app__ : forall {b} {c}, a (a b c * b)%type c }.
 
 Definition ArrowApply (a : Type -> Type -> Type) `{Arrow a} :=
   forall r, (ArrowApply__Dict a -> r) -> r.
 
 Existing Class ArrowApply.
 
-Definition app `{g : ArrowApply a} : forall {b} {c}, a (a b c * b) c :=
+Definition app `{g : ArrowApply a} : forall {b} {c}, a (a b c * b)%type c :=
   g _ (app__ a).
 
 Record ArrowChoice__Dict a := ArrowChoice__Dict_Build {
@@ -123,7 +123,7 @@ Notation "'_+++_'" := (op_zpzpzp__).
 Infix "+++" := (_+++_) (at level 99).
 
 Record ArrowLoop__Dict a := ArrowLoop__Dict_Build {
-  loop__ : forall {b} {d} {c}, a (b * d) (c * d) -> a b c }.
+  loop__ : forall {b} {d} {c}, a (b * d)%type (c * d)%type -> a b c }.
 
 Definition ArrowLoop a `{Arrow a} :=
   forall r, (ArrowLoop__Dict a -> r) -> r.
@@ -131,7 +131,7 @@ Definition ArrowLoop a `{Arrow a} :=
 Existing Class ArrowLoop.
 
 Definition loop `{g : ArrowLoop a} : forall {b} {d} {c},
-                                       a (b * d) (c * d) -> a b c :=
+                                       a (b * d)%type (c * d)%type -> a b c :=
   g _ (loop__ a).
 
 Record ArrowZero__Dict (a : Type -> Type -> Type) := ArrowZero__Dict_Build {
@@ -176,8 +176,8 @@ Local Definition Arrow__arrow_arr : forall {b} {c},
   fun {b} {c} => fun f => f.
 
 Local Definition Arrow__arrow_op_ztztzt__ : forall {b} {c} {b'} {c'},
-                                              GHC.Prim.arrow b c -> GHC.Prim.arrow b' c' -> GHC.Prim.arrow (b * b') (c *
-                                                                                                                    c') :=
+                                              GHC.Prim.arrow b c -> GHC.Prim.arrow b' c' -> GHC.Prim.arrow (b * b')%type
+                                              (c * c')%type :=
   fun {b} {c} {b'} {c'} =>
     fun arg_104__ arg_105__ arg_106__ =>
       match arg_104__ , arg_105__ , arg_106__ with
@@ -185,17 +185,18 @@ Local Definition Arrow__arrow_op_ztztzt__ : forall {b} {c} {b'} {c'},
       end.
 
 Local Definition Arrow__arrow_second : forall {b} {c} {d},
-                                         GHC.Prim.arrow b c -> GHC.Prim.arrow (d * b) (d * c) :=
+                                         GHC.Prim.arrow b c -> GHC.Prim.arrow (d * b)%type (d * c)%type :=
   fun {b} {c} {d} =>
     (fun arg_2__ => Arrow__arrow_op_ztztzt__ Control.Category.id arg_2__).
 
 Local Definition Arrow__arrow_first : forall {b} {c} {d},
-                                        GHC.Prim.arrow b c -> GHC.Prim.arrow (b * d) (c * d) :=
+                                        GHC.Prim.arrow b c -> GHC.Prim.arrow (b * d)%type (c * d)%type :=
   fun {b} {c} {d} =>
     (fun arg_0__ => Arrow__arrow_op_ztztzt__ arg_0__ Control.Category.id).
 
 Local Definition Arrow__arrow_op_zazaza__ : forall {b} {c} {c'},
-                                              GHC.Prim.arrow b c -> GHC.Prim.arrow b c' -> GHC.Prim.arrow b (c * c') :=
+                                              GHC.Prim.arrow b c -> GHC.Prim.arrow b c' -> GHC.Prim.arrow b (c *
+                                                                                                            c')%type :=
   fun {b} {c} {c'} =>
     fun f g =>
       Arrow__arrow_arr (fun b => pair b b) Control.Category.>>>
@@ -221,7 +222,7 @@ Program Instance Arrow__arrow : Arrow GHC.Prim.arrow := fun _ k =>
 (* Skipping instance ArrowChoice__Kleisli *)
 
 Local Definition ArrowApply__arrow_app : forall {b} {c},
-                                           GHC.Prim.arrow (GHC.Prim.arrow b c * b) c :=
+                                           GHC.Prim.arrow (GHC.Prim.arrow b c * b)%type c :=
   fun {b} {c} => fun arg_63__ => match arg_63__ with | pair f x => f x end.
 
 Program Instance ArrowApply__arrow : ArrowApply GHC.Prim.arrow := fun _ k =>

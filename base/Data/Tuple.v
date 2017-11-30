@@ -18,19 +18,19 @@ Require Coq.Program.Wf.
 (* No type declarations to convert. *)
 (* Converted value declarations: *)
 
-Definition curry {a} {b} {c} : (a * b -> c) -> a -> b -> c :=
+Definition curry {a} {b} {c} : ((a * b)%type -> c) -> a -> b -> c :=
   fun f x y => f (pair x y).
 
-Definition fst {a} {b} : a * b -> a :=
+Definition fst {a} {b} : (a * b)%type -> a :=
   fun arg_6__ => match arg_6__ with | pair x _ => x end.
 
-Definition snd {a} {b} : a * b -> b :=
+Definition snd {a} {b} : (a * b)%type -> b :=
   fun arg_4__ => match arg_4__ with | pair _ y => y end.
 
-Definition uncurry {a} {b} {c} : (a -> b -> c) -> (a * b -> c) :=
+Definition uncurry {a} {b} {c} : (a -> b -> c) -> ((a * b)%type -> c) :=
   fun f p => f (fst p) (snd p).
 
-Definition swap {a} {b} : a * b -> b * a :=
+Definition swap {a} {b} : (a * b)%type -> (b * a)%type :=
   fun arg_0__ => match arg_0__ with | pair a b => pair b a end.
 
 (* Unbound variables:

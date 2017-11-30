@@ -53,7 +53,8 @@ Definition guard {f} `{(GHC.Base.Alternative f)} : bool -> f unit :=
     end.
 
 Definition mapAndUnzipM {m} {a} {b} {c} `{(GHC.Base.Applicative m)} : (a -> m (b
-                                                                              * c)) -> list a -> m (list b * list c) :=
+                                                                              * c)%type) -> list a -> m (list b * list
+                                                                                                        c)%type :=
   fun f xs => GHC.List.unzip Data.Functor.<$> Data.Traversable.traverse f xs.
 
 Definition mfilter {m} {a} `{(GHC.Base.MonadPlus m)} : (a -> bool) -> m a -> m

@@ -226,7 +226,8 @@ Definition either {a} {c} {b} : (a -> c) -> (b -> c) -> Either a b -> c :=
       | _ , g , Right y => g y
     end.
 
-Definition partitionEithers {a} {b} : list (Either a b) -> list a * list b :=
+Definition partitionEithers {a} {b} : list (Either a b) -> (list a * list
+                                      b)%type :=
   let right :=
     fun arg_16__ arg_17__ =>
       match arg_16__ , arg_17__ with

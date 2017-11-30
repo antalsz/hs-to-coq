@@ -34,7 +34,6 @@ skip unions
 
 
 rename value Data.Utils.StrictFold.foldlStrict = foldl
-rename value Data.Utils.StrictPair.op_ZCztZC__ = pair
 rename value Data.Utils.StrictPair.:*: = pair
 
 order instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___Set__a_ instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Set__a_

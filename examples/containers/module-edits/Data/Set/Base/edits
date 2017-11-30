@@ -1,39 +1,40 @@
-skip mappend
+skip Data.Set.Base.mappend
 
-skip showTree
-skip showTreeWith
-skip showsTree
-skip showsTreeHang
-skip showWide
-skip showsBars
-skip fromListConstr
-skip setDataType
-skip link
-skip filterGt
-skip filterLt
-skip fromDistinctAscList
-skip fromAscList
-skip fromList
-skip merge
-skip partition
-skip filter
-skip map
-skip split
-skip splitMember
-skip isSubsetOfX
-skip isSubsetOf
-skip isProperSubsetOf
-skip hedgeInt
-skip intersection
-skip hedgeDiff
-skip difference
-skip op_zrzr__
-skip hedgeUnion
-skip union
-skip unions
+skip Data.Set.Base.showTree
+skip Data.Set.Base.showTreeWith
+skip Data.Set.Base.showsTree
+skip Data.Set.Base.showsTreeHang
+skip Data.Set.Base.showWide
+skip Data.Set.Base.showsBars
+skip Data.Set.Base.fromListConstr
+skip Data.Set.Base.setDataType
+skip Data.Set.Base.link
+skip Data.Set.Base.filterGt
+skip Data.Set.Base.filterLt
+skip Data.Set.Base.fromDistinctAscList
+skip Data.Set.Base.fromAscList
+skip Data.Set.Base.fromList
+skip Data.Set.Base.merge
+skip Data.Set.Base.partition
+skip Data.Set.Base.filter
+skip Data.Set.Base.map
+skip Data.Set.Base.split
+skip Data.Set.Base.splitMember
+skip Data.Set.Base.isSubsetOfX
+skip Data.Set.Base.isSubsetOf
+skip Data.Set.Base.isProperSubsetOf
+skip Data.Set.Base.hedgeInt
+skip Data.Set.Base.intersection
+skip Data.Set.Base.hedgeDiff
+skip Data.Set.Base.difference
+skip Data.Set.Base.op_zrzr__
+skip Data.Set.Base.hedgeUnion
+skip Data.Set.Base.union
+skip Data.Set.Base.unions
 
 
 rename value Data.Utils.StrictFold.foldlStrict = foldl
 rename value Data.Utils.StrictPair.:*: = pair
 
-order instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___Set__a_ instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Set__a_
+order Data.Set.Base.Eq___Set_ Data.Set.Base.Ord__Set_
+skip Data.Set.Base.Monoid__Set_

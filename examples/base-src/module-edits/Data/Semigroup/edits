@@ -1,0 +1,48 @@
+# These are addrssed using their local name, which is accidental and probably not ideal.
+nonterminating rep
+nonterminating g
+nonterminating f
+nonterminating go
+
+# looping
+skip Data.Semigroup.cycle1
+
+#type error?
+skip Data.Semigroup.stimesMonoid
+
+
+order Data.Semigroup.Eq___Option Data.Semigroup.Ord__Option
+order Data.Semigroup.Eq___WrappedMonoid Data.Semigroup.Ord__WrappedMonoid
+order Data.Semigroup.Eq___First Data.Semigroup.Ord__First
+order Data.Semigroup.Eq___Last Data.Semigroup.Ord__Last
+order Data.Semigroup.Eq___Max Data.Semigroup.Ord__Max
+order Data.Semigroup.Eq___Min Data.Semigroup.Ord__Min
+
+# Instance names for nested products are created wrongly, so
+# Semigroup (,) and Semigroup (,,) clash
+skip Data.Semigroup.Semigroup__op_zt__
+
+# https://github.com/antalsz/hs-to-coq/issues/51
+skip Data.Semigroup.Semigroup__Endo
+skip Data.Semigroup.Semigroup__Sum
+skip Data.Semigroup.Semigroup__Product
+skip Data.Semigroup.Semigroup__Const
+skip Data.Semigroup.Semigroup__Min
+skip Data.Semigroup.Semigroup__Max
+skip Data.Semigroup.Semigroup__First
+skip Data.Semigroup.Semigroup__Last
+skip Data.Semigroup.Semigroup__Option
+skip Data.Semigroup.Semigroup__WrappedMonoid
+
+# Picks wrong methods in methods
+skip Data.Semigroup.Ord__Arg
+
+# Because of the above
+skip Data.Semigroup.Monoid__Min
+skip Data.Semigroup.Monoid__Max
+skip Data.Semigroup.Monoid__WrappedMonoid
+skip Data.Semigroup.Monoid__Option
+
+skip Data.Semigroup.mtimesDefault # needs Semigroup__WrapMonoid
+
+skip Data.Semigroup.Semigroup__Alt # needs stimesMonoid

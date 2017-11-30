@@ -3,6 +3,7 @@ Require Import GHC.Base.
 Require Import GHC.Num.
 Require Import GHC.List.
 Require Import GHC.Enum.
+Import GHC.Base.Notations.
 
 Generalizable All Variables.
 Unset Strict Implicit.
@@ -102,3 +103,14 @@ Instance instance__Integral_Int__74__ : (Integral Int) := {
   mod_ := Z.modulo ;
   quotRem := Z.quotrem ;
   divMod := fun x y => (Z.div x y, Z.modulo x y) }.
+
+Definition even {a} `{Integral a} : a -> bool :=
+  fun a => (rem a (fromInteger 2) GHC.Base.== fromInteger 0).
+Definition odd {a} `{Integral a} : a -> bool :=
+  fun a => negb (even a).
+
+Module Notations.
+Infix "GHC.Real./" := (op_zs__) (left associativity, at level 40).
+Notation "'_GHC.Real./_'" := (op_zs__).
+End Notations.
+

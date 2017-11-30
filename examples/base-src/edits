@@ -110,6 +110,10 @@ skip method Data.Foldable.Foldable maximum
 skip method Data.Foldable.Foldable minimum
 
 
+# We do not create notation for constructors yet
+# (but it would not be hard)
+rename value Data.List.NonEmpty.:| = Data.List.NonEmpty.NEcons
+
 
 # Punned constructors
 rename value Control.Arrow.ArrowMonad       = Control.Arrow.Mk_ArrowMonad
@@ -131,6 +135,12 @@ rename value Data.OldList.SnocBuilder       = Data.OldList.Mk_SnocBuilder
 rename value Data.Ord.Down                  = Data.Ord.Mk_Down
 rename value Data.Proxy.KProxy              = Data.Proxy.Mk_KProxy
 rename value Data.Proxy.Proxy               = Data.Proxy.Mk_Proxy
+rename value Data.Semigroup.Arg             = Data.Semigroup.Mk_Arg
+rename value Data.Semigroup.First           = Data.Semigroup.Mk_First
+rename value Data.Semigroup.Last            = Data.Semigroup.Mk_Last
+rename value Data.Semigroup.Max             = Data.Semigroup.Mk_Max
+rename value Data.Semigroup.Min             = Data.Semigroup.Mk_Min
+rename value Data.Semigroup.Option          = Data.Semigroup.Mk_Option
 rename value Data.Traversable.Id            = Data.Traversable.Mk_Id
 rename value Data.Traversable.StateL        = Data.Traversable.Mk_StateL
 rename value Data.Traversable.StateR        = Data.Traversable.Mk_StateR

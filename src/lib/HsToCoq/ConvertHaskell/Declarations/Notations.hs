@@ -30,8 +30,9 @@ buildInfixNotations sigs def
       ]
     | otherwise = []
   where
-    hardCodedAssoc op | op == "∘" = (Just LeftAssociativity, Level 40)
-                      | otherwise = (Nothing, Level 99)
+    hardCodedAssoc op | op == "∘"  = (Just LeftAssociativity, Level 40)
+                      | op == "<>" = (Nothing, Level 70)
+                      | otherwise  = (Nothing, Level 99)
 
 qualifyNotation :: ModuleName -> Notation -> Maybe Notation
 qualifyNotation mod (InfixDefinition inf def assoc lvl )

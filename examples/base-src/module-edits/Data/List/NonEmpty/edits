@@ -1,8 +1,6 @@
 # axiomatize module Data.List.NonEmpty
 # poor treatment of <| and !! when axiomatized (notation, cannot rename them either)
 
-rename value Data.List.NonEmpty.:| = NEcons
-
 # still partial
 skip Data.List.NonEmpty.!!
 

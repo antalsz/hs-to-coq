@@ -10,56 +10,56 @@ rename type GHC.Integer.Type.Integer = GHC.Num.Integer
 # and then add that constraint to "Panic.panic". The default value is evidence that we *could*
 # return an answer, but the panic is a note that we don't want to do so.
 
-add CmmType Instance instance_Default_CmmCat : Panic.Default CmmCat := { default := Mk_GcPtrCat }.
-add CmmType Instance instance_Default_width : Panic.Default Width := { default := Mk_W80 }.
-add CmmType Instance inst_Def_CmmType : Panic.Default CmmType := { default := Mk_CmmType Panic.default Panic.default }.
+add CmmType Instance Default_CmmCat : Panic.Default CmmCat := { default := Mk_GcPtrCat }.
+add CmmType Instance Default_width : Panic.Default Width := { default := Mk_W80 }.
+add CmmType Instance Def_CmmType : Panic.Default CmmType := { default := Mk_CmmType Panic.default Panic.default }.
 
-order instance_Default_CmmCat instance_Default_width inst_Def_CmmType widthFromBytes
+order CmmType.Default_CmmCat CmmType.Default_width CmmType.inst_Def_CmmType CmmType.widthFromBytes
 
 rename value Outputable.pprPanic = Panic.panicStr
 rename value Outputable.ppr = Panic.noString
 
 # need Word8, etc.
-skip narrowU
-skip narrowS
+skip CmmType.narrowU
+skip CmmType.narrowS
 
 
 # partial
 
-# skip widthInLog
-# skip vecElemType
-# skip halfWordWidth
-# skip vecLength
+# skip CmmType.widthInLog
+# skip CmmType.vecElemType
+# skip CmmType.halfWordWidth
+# skip CmmType.vecLength
 
 
 # DynFlags
-skip wordWidth
-skip halfWordMask
-skip halfWordWidth
-skip rEP_CostCentreStack_mem_alloc
-skip rEP_CostCentreStack_scc_count
-skip rEP_StgEntCounter_allocd
-skip rEP_StgEntCounter_allocs
-skip gcWord
-skip bWord
-skip bHalfWord
-skip cIntWidth
-skip cInt
+skip CmmType.wordWidth
+skip CmmType.halfWordMask
+skip CmmType.halfWordWidth
+skip CmmType.rEP_CostCentreStack_mem_alloc
+skip CmmType.rEP_CostCentreStack_scc_count
+skip CmmType.rEP_StgEntCounter_allocd
+skip CmmType.rEP_StgEntCounter_allocs
+skip CmmType.gcWord
+skip CmmType.bWord
+skip CmmType.bHalfWord
+skip CmmType.cIntWidth
+skip CmmType.cInt
 
-order instance_GHC_Base_Eq__Width cmmEqType cmmEqType_ignoring_ptrhood
+order CmmType.Eq__Width CmmType.cmmEqType CmmType.cmmEqType_ignoring_ptrhood
 
 # something strange with this *derived* instance
-skip instance_GHC_Base_Ord_Width
+skip CmmType.Ord__Width
 
 
 ## recursive instance definition! replace when we can parse
-redefine Local Definition instance_GHC_Base_Eq__CmmCat_op_zeze__ : CmmCat -> (CmmCat -> bool) := fun x y => true.
+redefine Local Definition CmmType.Eq___CmmCat_op_zeze__ : CmmCat -> (CmmCat -> bool) := fun x y => true.
 # fix cat arg_261__ arg_262__ := match arg_261__ , arg_262__ with | Mk_GcPtrCat , Mk_GcPtrCat => true | Mk_BitsCat , Mk_BitsCat => true | Mk_FloatCat , Mk_FloatCat => true| Mk_VecCat a1 a2 , Mk_VecCat b1 b2 => (andb ((GHC.Base.op_zeze__ a1 b1)) ((cat a2 b2))) | _ , _ => false end.
 
 # deriving Eq_
 
-redefine Local Definition instance_GHC_Base_Eq__ForeignHint_op_zsze__ : ForeignHint -> (ForeignHint -> bool) := fun arg_272__ arg_273__ =>  match arg_272__ , arg_273__ with  | a , b => negb (instance_GHC_Base_Eq__ForeignHint_op_zeze__ a b)  end.
+redefine Local Definition CmmType.ForeignHint_op_zsze__ : ForeignHint -> (ForeignHint -> bool) := fun arg_272__ arg_273__ =>  match arg_272__ , arg_273__ with  | a , b => negb (instance_GHC_Base_Eq__ForeignHint_op_zeze__ a b)  end.
 
-redefine Local Definition instance_GHC_Base_Eq__CmmCat_op_zsze__ : CmmCat -> (CmmCat -> bool) := fun arg_272__ arg_273__ =>  match arg_272__ , arg_273__ with  | a , b => negb (instance_GHC_Base_Eq__CmmCat_op_zeze__ a b)  end.
+redefine Local Definition CmmType.Eq__CmmCat_op_zsze__ : CmmCat -> (CmmCat -> bool) := fun arg_272__ arg_273__ =>  match arg_272__ , arg_273__ with  | a , b => negb (instance_GHC_Base_Eq__CmmCat_op_zeze__ a b)  end.
 
-redefine Local Definition instance_GHC_Base_Eq__Width_op_zsze__ : Width -> (Width -> bool) := fun arg_272__ arg_273__ =>  match arg_272__ , arg_273__ with  | a , b => negb (instance_GHC_Base_Eq__Width_op_zeze__ a b)  end.
+redefine Local Definition CmmType.Eq__Width_op_zsze__ : Width -> (Width -> bool) := fun arg_272__ arg_273__ =>  match arg_272__ , arg_273__ with  | a , b => negb (instance_GHC_Base_Eq__Width_op_zeze__ a b)  end.

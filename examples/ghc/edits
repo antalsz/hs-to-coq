@@ -1,6 +1,7 @@
 # Should skip these everywhere
 skip module Outputable
 skip module Panic
+skip module GHC.Show
 
 
 rename value SourceLoc.L = SourceLoc.Mk_L

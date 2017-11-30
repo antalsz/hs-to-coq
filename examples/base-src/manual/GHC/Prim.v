@@ -34,3 +34,6 @@ Instance Coercible_Unpeel
   {U2 : Unpeel b c}
   : Coercible a b :=
   { coerce x := @repeel b c U2 (@unpeel a c U1 x) }.
+
+Module Notations.
+End Notations.

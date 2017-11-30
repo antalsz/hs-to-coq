@@ -43,6 +43,7 @@ _CoqProject : Makefile
 	echo "-Q .               \"\"" >> $@
 	echo "-Q ../../base-thy  Proofs" >> $@
 	echo "-Q ../../base      \"\"" >> $@
+	echo "-Q ../containers/lib   \"\"" >> $@
 	echo $(addsuffix .v,$(HANDMOD)) >> $@
 	echo $(addsuffix .v,$(MODULES)) >> $@
 	echo $(addsuffix .v,$(EMPTY_MODS)) >> $@

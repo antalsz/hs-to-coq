@@ -1,38 +1,41 @@
-redefine Local Definition instance_forall___GHC_Base_Eq__e____GHC_Base_Eq__l___GHC_Base_Eq___GenLocated_l_e__op_zsze__ {inst_l : Type} {inst_e : Type} `{H : GHC.Base.Eq_ inst_e} `{J : GHC.Base.Eq_ inst_l} : ((GenLocated inst_l inst_e) -> ((GenLocated inst_l inst_e) -> bool)) := fun a b => negb (instance_forall___GHC_Base_Eq__e____GHC_Base_Eq__l___GHC_Base_Eq___GenLocated_l_e__op_zeze__ a b).
+redefine Local Definition SrcLoc.Eq___GenLocated_op_zsze__ {inst_l : Type} {inst_e : Type} `{H : GHC.Base.Eq_ inst_e} `{J : GHC.Base.Eq_ inst_l} : ((GenLocated inst_l inst_e) -> ((GenLocated inst_l inst_e) -> bool)) := fun a b => negb (SrcLoc.Eq___GenLocated_op_zeze__ a b).
 
-redefine Local Definition instance_GHC_Base_Eq__SrcSpan_op_zsze__ : SrcSpan -> (SrcSpan -> bool) :=  fun arg_185__ arg_186__ =>  match arg_185__ , arg_186__ with | a , b => negb (instance_GHC_Base_Eq__SrcSpan_op_zeze__ a b)  end.
+redefine Local Definition SrcLoc.Eq___SrcSpan_op_zsze__ : SrcSpan -> (SrcSpan -> bool) :=  fun arg_185__ arg_186__ =>  match arg_185__ , arg_186__ with | a , b => negb (SrcLoc.Eq___SrcSpan_op_zeze__ a b)  end.
 
-redefine Local Definition instance_GHC_Base_Eq__RealSrcSpan_op_zsze__ : RealSrcSpan -> (RealSrcSpan -> bool) := fun arg_176__ arg_177__ =>  match arg_176__ , arg_177__ with | a , b => negb (instance_GHC_Base_Eq__RealSrcSpan_op_zeze__ a b) end.
+redefine Local Definition SrcLoc.Eq___RealSrcSpan_op_zsze__ : RealSrcSpan -> (RealSrcSpan -> bool) := fun arg_176__ arg_177__ =>  match arg_176__ , arg_177__ with | a , b => negb (SrcLoc.Eq___RealSrcSpan_op_zeze__ a b) end.
 
 
 # orderings
-order instance_GHC_Base_Eq__RealSrcLoc instance_GHC_Base_Ord_RealSrcLoc_min instance_GHC_Base_Ord_RealSrcLoc_max instance_GHC_Base_Ord_RealSrcLoc cmpSrcLoc  instance_GHC_Base_Ord_SrcLoc_min instance_GHC_Base_Ord_SrcLoc_max instance_GHC_Base_Eq__SrcLoc instance_GHC_Base_Ord_SrcLoc
+order SrcLoc.Eq___RealSrcLoc SrcLoc.Ord__RealSrcLoc_min SrcLoc.Ord__RealSrcLoc_max SrcLoc.Ord__RealSrcLoc SrcLoc.cmpSrcLoc  SrcLoc.Ord__SrcLoc_min SrcLoc.Ord__SrcLoc_max SrcLoc.Eq___SrcLoc SrcLoc.Ord__SrcLoc
 
-order instance_GHC_Base_Ord_SrcSpan rightmost leftmost_smallest
+order SrcLoc.Ord__SrcSpan SrcLoc.rightmost SrcLoc.leftmost_smallest
 
-order instance_GHC_Base_Eq__RealSrcSpan  instance_GHC_Base_Eq__SrcSpan_op_zeze__ instance_GHC_Base_Ord_RealSrcSpan instance_GHC_Base_Ord_SrcSpan_op_zlze__ instance_GHC_Base_Ord_SrcSpan_op_zl__ instance_GHC_Base_Ord_SrcSpan_op_zgze__ instance_GHC_Base_Ord_SrcSpan_op_zg__ instance_GHC_Base_Ord_SrcSpan_compare
+order SrcLoc.Eq___RealSrcSpan  SrcLoc.Eq___SrcSpan_op_zeze__ SrcLoc.Ord__RealSrcSpan SrcLoc.Ord__SrcSpan_op_zlze__ SrcLoc.Ord__SrcSpan_op_zl__ SrcLoc.Ord__SrcSpan_op_zgze__ SrcLoc.Ord__SrcSpan_op_zg__ SrcLoc.Ord__SrcSpan_compare
 
 
-order instance_forall___GHC_Base_Eq__e____GHC_Base_Eq__l___GHC_Base_Eq___GenLocated_l_e_ instance_forall___GHC_Base_Ord_e____GHC_Base_Ord_l___GHC_Base_Ord__GenLocated_l_e_
+order SrcLoc.Eq___GenLocated SrcLoc.Ord__GenLocated
 
-order instance_GHC_Base_Functor__GenLocated_l_ instance_Data_Foldable_Foldable__GenLocated_l_ instance_Data_Traversable_Traversable__GenLocated_l_
+order SrcLoc.Functor__GenLocated SrcLoc.Foldable__GenLocated SrcLoc.Traversable__GenLocated
 
 # character constant
-skip advanceSrcLoc
+skip SrcLoc.advanceSrcLoc
 
 # need Data.OldList.sortBy
-skip sortLocated
+skip SrcLoc.sortLocated
 
 # partial
-skip spans
+skip SrcLoc.spans
 
 # Outputtable
-skip pprUserRealSpan
-skip pprUserSpan
+skip SrcLoc.pprUserRealSpan
+skip SrcLoc.pprUserSpan
 
-# need Eq (Int * Int) and Ord (Int * Int) instance in base
-skip addCLoc
-skip combineLocs
-skip combineSrcSpans
-skip containsSpan
-skip combineRealSrcSpans
+# need SrcLoc.Eq (Int * Int) and SrcLoc.Ord (Int * Int) instance in base
+skip SrcLoc.addCLoc
+skip SrcLoc.combineLocs
+skip SrcLoc.combineSrcSpans
+skip SrcLoc.containsSpan
+skip SrcLoc.combineRealSrcSpans
+
+# The methods use Ord__GenLocated_compare instead of Base’s compare
+skip SrcLoc.Ord__GenLocated

@@ -1,10 +1,10 @@
 # chars
-skip finish_show
-skip iToBase62
-skip showUnique
+skip Unique.finish_show
+skip Unique.iToBase62
+skip Unique.showUnique
 
 # outputtable
-skip pprUnique
+skip Unique.pprUnique
 
 
 # neef from header file
@@ -13,4 +13,4 @@ rename value BasicTypes.Unboxed = BasicTypes.Mk_Unboxed
 
 rename value GHC.Base.ord = GHC.Char.ord
 
-order instance_GHC_Base_Eq__Unique hasKey instance_GHC_Base_Ord_Unique
+order Unique.Eq___Unique Unique.hasKey Ord__Unique

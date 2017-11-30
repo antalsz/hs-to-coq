@@ -152,8 +152,8 @@ Local Definition instance_GHC_Base_Applicative__MaybeErr_err__op_ztzg__ {inst_er
 Instance instance_GHC_Base_Applicative__MaybeErr_err_
   {err} : GHC.Base.Applicative (MaybeErr err) := fun _ k => k (
     GHC.Base.Applicative__Dict_Build (MaybeErr err)
-      (fun {a} {b} => instance_GHC_Base_Applicative__MaybeErr_err__op_ztzg__)
       (fun {a} {b} => instance_GHC_Base_Applicative__MaybeErr_err__op_zlztzg__)
+      (fun {a} {b} => instance_GHC_Base_Applicative__MaybeErr_err__op_ztzg__)
       (fun {a} => instance_GHC_Base_Applicative__MaybeErr_err__pure)
     ).
 

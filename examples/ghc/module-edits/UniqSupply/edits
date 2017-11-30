@@ -1,12 +1,12 @@
 skip module GHC.IO.Unsafe
 skip module GHC.Types
 
-order instance_GHC_Base_Functor_UniqSM instance_GHC_Base_Applicative_UniqSM instance_GHC_Base_Monad_UniqSM
+order UniqSupply.Functor__UniqSM UniqSupply.Applicative__UniqSM UniqSupply.Monad__UniqSM
 
 # uses IO Monad
 # problemmatic for SimplCore.hs and CorePrep.hs
 # revisit when we figure out what to do with the monads in these files
-skip  mkSplitUniqSupply
+skip  UniqSupply.mkSplitUniqSupply
 
-order instance_GHC_Base_Applicative_UniqSM instance_GHC_Base_Monad_UniqSM_op_zgzg__
-order instance_GHC_Base_Applicative_UniqSM instance_GHC_Base_Monad_UniqSM_return_
+order UniqSupply.Applicative__UniqSM UniqSupply.Monad__UniqSM_op_zgzg__
+order UniqSupply.Applicative__UniqSM UniqSupply.Monad__UniqSM_return_

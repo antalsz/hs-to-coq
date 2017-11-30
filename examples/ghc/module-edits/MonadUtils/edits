@@ -2,9 +2,9 @@ skip module Control.Monad.Fix
 skip module Control.Monad.IO.Class
 
 # partial
-skip unlessM
+skip MonadUtils.unlessM
 
-skip liftIO1
-skip liftIO2
-skip liftIO3
-skip liftIO4
+skip MonadUtils.liftIO1
+skip MonadUtils.liftIO2
+skip MonadUtils.liftIO3
+skip MonadUtils.liftIO4

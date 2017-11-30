@@ -44,13 +44,13 @@ Class Bits a `{Eq_ a} := {
   xor : a -> a -> a ;
   zeroBits : a }.
 
-Infix ":&:" := (op_zizazi__) (left associativity, at level 40).
+Infix ".&." := (op_zizazi__) (left associativity, at level 40).
 
-Notation "'_:&:_'" := (op_zizazi__).
+Notation "'_.&._'" := (op_zizazi__).
 
-Infix ":|:" := (op_zizbzi__) (left associativity, at level 61).
+Infix ".|." := (op_zizbzi__) (left associativity, at level 61).
 
-Notation "'_:|:_'" := (op_zizbzi__).
+Notation "'_.|._'" := (op_zizbzi__).
 
 Class FiniteBits b `{Bits b} := {
   countLeadingZeros : b -> Int ;
@@ -62,7 +62,7 @@ Definition testBitDefault {a} `{Bits a} `{Num a} : a -> Int -> bool :=
   (fun arg_27__
        arg_28__ =>
     (match arg_27__ , arg_28__ with
-      | x , i => (((x :&: bit i)) /= #0)
+      | x , i => (((x .&. bit i)) /= #0)
     end)).
 
 
@@ -301,3 +301,10 @@ Instance instance_Bits_Int : Bits Int :=  {
   xor := Z.lxor;
   zeroBits := #0;
 }.
+
+Module Notations.
+Infix "Data.Bits..&." := (op_zizazi__) (left associativity, at level 40).
+Notation "'_Data.Bits..&._'" := (op_zizazi__).
+Infix "Data.Bits..|." := (op_zizbzi__) (left associativity, at level 61).
+Notation "'_Data.Bits..|._'" := (op_zizbzi__).
+End Notations.

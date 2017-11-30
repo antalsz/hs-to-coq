@@ -25,34 +25,33 @@ Import GHC.Base.Notations.
 
 (* Converted type declarations: *)
 
-Inductive WrappedMonad (m : Type -> Type) a : Type := Mk_WrapMonad : m
-                                                                     a -> WrappedMonad m a.
+Inductive WrappedMonad (m : Type -> Type) a : Type := WrapMonad : m
+                                                                  a -> WrappedMonad m a.
 
-Inductive WrappedArrow (a : Type -> Type -> Type) b c : Type := Mk_WrapArrow : a
-                                                                               b c -> WrappedArrow a b c.
+Inductive WrappedArrow (a : Type -> Type -> Type) b c : Type := WrapArrow : a b
+                                                                            c -> WrappedArrow a b c.
 
-Arguments Mk_WrapMonad {_} {_} _.
+Arguments WrapMonad {_} {_} _.
 
-Arguments Mk_WrapArrow {_} {_} {_} _.
+Arguments WrapArrow {_} {_} {_} _.
 
 Definition unwrapMonad {m : Type -> Type} {a} (arg_0__ : WrappedMonad m a) :=
   match arg_0__ with
-    | Mk_WrapMonad unwrapMonad => unwrapMonad
+    | WrapMonad unwrapMonad => unwrapMonad
   end.
 
 Definition unwrapArrow {a : Type -> Type -> Type} {b} {c} (arg_1__
                          : WrappedArrow a b c) :=
   match arg_1__ with
-    | Mk_WrapArrow unwrapArrow => unwrapArrow
+    | WrapArrow unwrapArrow => unwrapArrow
   end.
 (* Converted value declarations: *)
 
 Instance Unpeel_WrappedMonad {m} {a} : GHC.Prim.Unpeel (WrappedMonad m a) (m
-                                                       a) := GHC.Prim.Build_Unpeel _ _ unwrapMonad Mk_WrapMonad.
+                                                       a) := GHC.Prim.Build_Unpeel _ _ unwrapMonad WrapMonad.
 
 Instance Unpeel_WrappedArrow {a} {b} {c} : GHC.Prim.Unpeel (WrappedArrow a b c)
-                                                           (a b c) := GHC.Prim.Build_Unpeel _ _ unwrapArrow
-                                                                                            Mk_WrapArrow.
+                                                           (a b c) := GHC.Prim.Build_Unpeel _ _ unwrapArrow WrapArrow.
 
 Local Definition Functor__WrappedMonad_fmap {inst_m} `{GHC.Base.Monad inst_m}
     : forall {a} {b},
@@ -60,7 +59,7 @@ Local Definition Functor__WrappedMonad_fmap {inst_m} `{GHC.Base.Monad inst_m}
   fun {a} {b} =>
     fun arg_53__ arg_54__ =>
       match arg_53__ , arg_54__ with
-        | f , Mk_WrapMonad v => Mk_WrapMonad (GHC.Base.liftM f v)
+        | f , WrapMonad v => WrapMonad (GHC.Base.liftM f v)
       end.
 
 Local Definition Functor__WrappedMonad_op_zlzd__ {inst_m} `{GHC.Base.Monad
@@ -80,7 +79,7 @@ Local Definition Applicative__WrappedMonad_op_zlztzg__ {inst_m} `{GHC.Base.Monad
   fun {a} {b} =>
     fun arg_49__ arg_50__ =>
       match arg_49__ , arg_50__ with
-        | Mk_WrapMonad f , Mk_WrapMonad v => Mk_WrapMonad (GHC.Base.ap f v)
+        | WrapMonad f , WrapMonad v => WrapMonad (GHC.Base.ap f v)
       end.
 
 Local Definition Applicative__WrappedMonad_op_ztzg__ {inst_m} `{GHC.Base.Monad
@@ -94,7 +93,7 @@ Local Definition Applicative__WrappedMonad_op_ztzg__ {inst_m} `{GHC.Base.Monad
 
 Local Definition Applicative__WrappedMonad_pure {inst_m} `{GHC.Base.Monad
                                                 inst_m} : forall {a}, a -> (WrappedMonad inst_m) a :=
-  fun {a} => Mk_WrapMonad GHC.Base.∘ GHC.Base.pure.
+  fun {a} => WrapMonad GHC.Base.∘ GHC.Base.pure.
 
 Program Instance Applicative__WrappedMonad {m} `{GHC.Base.Monad m}
   : GHC.Base.Applicative (WrappedMonad m) := fun _ k =>
@@ -113,8 +112,7 @@ Local Definition Functor__WrappedArrow_fmap {inst_a} {inst_b}
   fun {a} {b} =>
     fun arg_44__ arg_45__ =>
       match arg_44__ , arg_45__ with
-        | f , Mk_WrapArrow a => Mk_WrapArrow (a Control.Category.>>> Control.Arrow.arr
-                                             f)
+        | f , WrapArrow a => WrapArrow (a Control.Category.>>> Control.Arrow.arr f)
       end.
 
 Local Definition Functor__WrappedArrow_op_zlzd__ {inst_a} {inst_b}
@@ -139,9 +137,9 @@ Local Definition Applicative__WrappedArrow_op_zlztzg__ {inst_a} {inst_b}
   fun {a} {b} =>
     fun arg_40__ arg_41__ =>
       match arg_40__ , arg_41__ with
-        | Mk_WrapArrow f , Mk_WrapArrow v => Mk_WrapArrow ((f Control.Arrow.&&& v)
-                                                          Control.Category.>>> Control.Arrow.arr (Data.Tuple.uncurry
-                                                                                                 GHC.Base.id))
+        | WrapArrow f , WrapArrow v => WrapArrow ((f Control.Arrow.&&& v)
+                                                 Control.Category.>>> Control.Arrow.arr (Data.Tuple.uncurry
+                                                                                        GHC.Base.id))
       end.
 
 Local Definition Applicative__WrappedArrow_op_ztzg__ {inst_a} {inst_b}
@@ -158,7 +156,7 @@ Local Definition Applicative__WrappedArrow_op_ztzg__ {inst_a} {inst_b}
 Local Definition Applicative__WrappedArrow_pure {inst_a} {inst_b}
                                                 `{Control.Arrow.Arrow inst_a} : forall {a},
                                                                                   a -> (WrappedArrow inst_a inst_b) a :=
-  fun {a} => fun x => Mk_WrapArrow (Control.Arrow.arr (GHC.Base.const x)).
+  fun {a} => fun x => WrapArrow (Control.Arrow.arr (GHC.Base.const x)).
 
 Program Instance Applicative__WrappedArrow {a} {b} `{Control.Arrow.Arrow a}
   : GHC.Base.Applicative (WrappedArrow a b) := fun _ k =>

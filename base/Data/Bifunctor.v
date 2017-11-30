@@ -227,8 +227,8 @@ Local Definition Bifunctor__Either_bimap : forall {a} {b} {c} {d},
   fun {a} {b} {c} {d} =>
     fun arg_13__ arg_14__ arg_15__ =>
       match arg_13__ , arg_14__ , arg_15__ with
-        | f , _ , Data.Either.Mk_Left a => Data.Either.Mk_Left (f a)
-        | _ , g , Data.Either.Mk_Right b => Data.Either.Mk_Right (g b)
+        | f , _ , Data.Either.Left a => Data.Either.Left (f a)
+        | _ , g , Data.Either.Right b => Data.Either.Right (g b)
       end.
 
 Local Definition Bifunctor__Either_first : forall {a} {b} {c},
@@ -270,7 +270,7 @@ Program Instance Bifunctor__Const : Bifunctor Data.Functor.Const.Const := fun _
 (* Skipping instance Bifunctor__K1 *)
 
 (* Unbound variables:
-     pair Data.Either.Either Data.Either.Mk_Left Data.Either.Mk_Right
+     pair Data.Either.Either Data.Either.Left Data.Either.Right
      Data.Functor.Const.Const Data.Functor.Const.Mk_Const GHC.Base.id
      GHC.Tuple.pair_type GHC.Tuple.quad_type GHC.Tuple.quint_type GHC.Tuple.sept_type
      GHC.Tuple.sext_type GHC.Tuple.triple_type

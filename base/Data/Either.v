@@ -20,12 +20,12 @@ Import GHC.Base.Notations.
 
 (* Translating `EqEither' failed: type/data families unsupported *)
 
-Inductive Either a b : Type := Mk_Left : a -> Either a b
-                            |  Mk_Right : b -> Either a b.
+Inductive Either a b : Type := Left : a -> Either a b
+                            |  Right : b -> Either a b.
 
-Arguments Mk_Left {_} {_} _.
+Arguments Left {_} {_} _.
 
-Arguments Mk_Right {_} {_} _.
+Arguments Right {_} {_} _.
 (* Converted value declarations: *)
 
 Local Definition Functor__Either_fmap {inst_a} : forall {a} {b},
@@ -33,8 +33,8 @@ Local Definition Functor__Either_fmap {inst_a} : forall {a} {b},
   fun {a} {b} =>
     fun arg_81__ arg_82__ =>
       match arg_81__ , arg_82__ with
-        | _ , Mk_Left x => Mk_Left x
-        | f , Mk_Right y => Mk_Right (f y)
+        | _ , Left x => Left x
+        | f , Right y => Right (f y)
       end.
 
 Local Definition Functor__Either_op_zlzd__ {inst_a} : forall {a} {b},
@@ -51,8 +51,8 @@ Local Definition Applicative__Either_op_zlztzg__ {inst_e} : forall {a} {b},
   fun {a} {b} =>
     fun arg_76__ arg_77__ =>
       match arg_76__ , arg_77__ with
-        | Mk_Left e , _ => Mk_Left e
-        | Mk_Right f , r => GHC.Base.fmap f r
+        | Left e , _ => Left e
+        | Right f , r => GHC.Base.fmap f r
       end.
 
 Local Definition Applicative__Either_op_ztzg__ {inst_e} : forall {a} {b},
@@ -65,7 +65,7 @@ Local Definition Applicative__Either_op_ztzg__ {inst_e} : forall {a} {b},
 
 Local Definition Applicative__Either_pure {inst_e} : forall {a},
                                                        a -> (Either inst_e) a :=
-  fun {a} => Mk_Right.
+  fun {a} => Right.
 
 Program Instance Applicative__Either {e} : GHC.Base.Applicative (Either e) :=
   fun _ k =>
@@ -83,8 +83,8 @@ Local Definition Monad__Either_op_zgzgze__ {inst_e} : forall {a} {b},
   fun {a} {b} =>
     fun arg_71__ arg_72__ =>
       match arg_71__ , arg_72__ with
-        | Mk_Left l , _ => Mk_Left l
-        | Mk_Right r , k => k r
+        | Left l , _ => Left l
+        | Right r , k => k r
       end.
 
 Local Definition Monad__Either_return_ {inst_e} : forall {a},
@@ -109,70 +109,70 @@ Local Definition Ord__Either_compare {inst_a} {inst_b} `{GHC.Base.Ord inst_b}
                                                               inst_b -> comparison :=
   fun a b =>
     match a with
-      | Mk_Left a1 => match b with
-                        | Mk_Left b1 => (GHC.Base.compare a1 b1)
-                        | _ => Lt
-                      end
-      | Mk_Right a1 => match b with
-                         | Mk_Right b1 => (GHC.Base.compare a1 b1)
-                         | _ => Gt
-                       end
+      | Left a1 => match b with
+                     | Left b1 => (GHC.Base.compare a1 b1)
+                     | _ => Lt
+                   end
+      | Right a1 => match b with
+                      | Right b1 => (GHC.Base.compare a1 b1)
+                      | _ => Gt
+                    end
     end.
 
 Local Definition Ord__Either_op_zg__ {inst_a} {inst_b} `{GHC.Base.Ord inst_b}
                                      `{GHC.Base.Ord inst_a} : Either inst_a inst_b -> Either inst_a inst_b -> bool :=
   fun a b =>
     match a with
-      | Mk_Left a1 => match b with
-                        | Mk_Left b1 => (a1 GHC.Base.> b1)
-                        | _ => false
-                      end
-      | Mk_Right a1 => match b with
-                         | Mk_Right b1 => (a1 GHC.Base.> b1)
-                         | _ => true
-                       end
+      | Left a1 => match b with
+                     | Left b1 => (a1 GHC.Base.> b1)
+                     | _ => false
+                   end
+      | Right a1 => match b with
+                      | Right b1 => (a1 GHC.Base.> b1)
+                      | _ => true
+                    end
     end.
 
 Local Definition Ord__Either_op_zgze__ {inst_a} {inst_b} `{GHC.Base.Ord inst_b}
                                        `{GHC.Base.Ord inst_a} : Either inst_a inst_b -> Either inst_a inst_b -> bool :=
   fun a b =>
     match a with
-      | Mk_Left a1 => match b with
-                        | Mk_Left b1 => (a1 GHC.Base.>= b1)
-                        | _ => false
-                      end
-      | Mk_Right a1 => match b with
-                         | Mk_Right b1 => (a1 GHC.Base.>= b1)
-                         | _ => true
-                       end
+      | Left a1 => match b with
+                     | Left b1 => (a1 GHC.Base.>= b1)
+                     | _ => false
+                   end
+      | Right a1 => match b with
+                      | Right b1 => (a1 GHC.Base.>= b1)
+                      | _ => true
+                    end
     end.
 
 Local Definition Ord__Either_op_zl__ {inst_a} {inst_b} `{GHC.Base.Ord inst_b}
                                      `{GHC.Base.Ord inst_a} : Either inst_a inst_b -> Either inst_a inst_b -> bool :=
   fun a b =>
     match a with
-      | Mk_Left a1 => match b with
-                        | Mk_Left b1 => (a1 GHC.Base.< b1)
-                        | _ => true
-                      end
-      | Mk_Right a1 => match b with
-                         | Mk_Right b1 => (a1 GHC.Base.< b1)
-                         | _ => false
-                       end
+      | Left a1 => match b with
+                     | Left b1 => (a1 GHC.Base.< b1)
+                     | _ => true
+                   end
+      | Right a1 => match b with
+                      | Right b1 => (a1 GHC.Base.< b1)
+                      | _ => false
+                    end
     end.
 
 Local Definition Ord__Either_op_zlze__ {inst_a} {inst_b} `{GHC.Base.Ord inst_b}
                                        `{GHC.Base.Ord inst_a} : Either inst_a inst_b -> Either inst_a inst_b -> bool :=
   fun a b =>
     match a with
-      | Mk_Left a1 => match b with
-                        | Mk_Left b1 => (a1 GHC.Base.<= b1)
-                        | _ => true
-                      end
-      | Mk_Right a1 => match b with
-                         | Mk_Right b1 => (a1 GHC.Base.<= b1)
-                         | _ => false
-                       end
+      | Left a1 => match b with
+                     | Left b1 => (a1 GHC.Base.<= b1)
+                     | _ => true
+                   end
+      | Right a1 => match b with
+                      | Right b1 => (a1 GHC.Base.<= b1)
+                      | _ => false
+                    end
     end.
 
 Local Definition Ord__Either_min {inst_a} {inst_b} `{GHC.Base.Ord inst_b}
@@ -189,8 +189,8 @@ Local Definition Eq___Either_op_zeze__ {inst_a} {inst_b} `{GHC.Base.Eq_ inst_b}
                                        `{GHC.Base.Eq_ inst_a} : Either inst_a inst_b -> Either inst_a inst_b -> bool :=
   fun arg_25__ arg_26__ =>
     match arg_25__ , arg_26__ with
-      | Mk_Left a1 , Mk_Left b1 => ((a1 GHC.Base.== b1))
-      | Mk_Right a1 , Mk_Right b1 => ((a1 GHC.Base.== b1))
+      | Left a1 , Left b1 => ((a1 GHC.Base.== b1))
+      | Right a1 , Right b1 => ((a1 GHC.Base.== b1))
       | _ , _ => false
     end.
 
@@ -222,8 +222,8 @@ Program Instance Ord__Either {a} {b} `{GHC.Base.Ord b} `{GHC.Base.Ord a}
 Definition either {a} {c} {b} : (a -> c) -> (b -> c) -> Either a b -> c :=
   fun arg_10__ arg_11__ arg_12__ =>
     match arg_10__ , arg_11__ , arg_12__ with
-      | f , _ , Mk_Left x => f x
-      | _ , g , Mk_Right y => g y
+      | f , _ , Left x => f x
+      | _ , g , Right y => g y
     end.
 
 Definition partitionEithers {a} {b} : list (Either a b) -> list a * list b :=
@@ -240,16 +240,16 @@ Definition partitionEithers {a} {b} : list (Either a b) -> list a * list b :=
   GHC.Base.foldr (either left right) (pair nil nil).
 
 Definition isLeft {a} {b} : Either a b -> bool :=
-  fun arg_2__ => match arg_2__ with | Mk_Left _ => true | Mk_Right _ => false end.
+  fun arg_2__ => match arg_2__ with | Left _ => true | Right _ => false end.
 
 Definition isRight {a} {b} : Either a b -> bool :=
-  fun arg_0__ => match arg_0__ with | Mk_Left _ => false | Mk_Right _ => true end.
+  fun arg_0__ => match arg_0__ with | Left _ => false | Right _ => true end.
 
 Definition lefts {a} {b} : list (Either a b) -> list a :=
   fun x =>
     let cont_7__ arg_8__ :=
       match arg_8__ with
-        | Mk_Left a => cons a nil
+        | Left a => cons a nil
         | _ => nil
       end in
     Coq.Lists.List.flat_map cont_7__ x.
@@ -258,7 +258,7 @@ Definition rights {a} {b} : list (Either a b) -> list b :=
   fun x =>
     let cont_4__ arg_5__ :=
       match arg_5__ with
-        | Mk_Right a => cons a nil
+        | Right a => cons a nil
         | _ => nil
       end in
     Coq.Lists.List.flat_map cont_4__ x.

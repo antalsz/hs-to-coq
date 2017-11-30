@@ -3,3 +3,5 @@ order FTPDefault.Funktor__Pair FTPDefault.Abblicative__Pair_op_ztztzg__
 order FTPDefault.Funktor__Pair FTPDefault.Abblicative__Pair
 order FTPDefault.Funktor__Pair FTPDefault.Trafersable__Pair
 order FTPDefault.Foltable__Pair FTPDefault.Trafersable__Pair
+
+rename value FTPDefault.Pair = FTPDefault.Mk_Pair

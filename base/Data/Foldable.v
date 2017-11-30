@@ -326,8 +326,8 @@ Local Definition Foldable__Either_foldMap {inst_a} : forall {m} {a},
   fun {m} {a} `{GHC.Base.Monoid m} =>
     fun arg_306__ arg_307__ =>
       match arg_306__ , arg_307__ with
-        | _ , Data.Either.Mk_Left _ => GHC.Base.mempty
-        | f , Data.Either.Mk_Right y => f y
+        | _ , Data.Either.Left _ => GHC.Base.mempty
+        | f , Data.Either.Right y => f y
       end.
 
 Local Definition Foldable__Either_foldl {inst_a} : forall {b} {a},
@@ -357,8 +357,8 @@ Local Definition Foldable__Either_foldr {inst_a} : forall {a} {b},
   fun {a} {b} =>
     fun arg_310__ arg_311__ arg_312__ =>
       match arg_310__ , arg_311__ , arg_312__ with
-        | _ , z , Data.Either.Mk_Left _ => z
-        | f , z , Data.Either.Mk_Right y => f y z
+        | _ , z , Data.Either.Left _ => z
+        | f , z , Data.Either.Right y => f y z
       end.
 
 Local Definition Foldable__Either_toList {inst_a} : forall {a},
@@ -377,8 +377,8 @@ Local Definition Foldable__Either_length {inst_a} : forall {a},
   fun {a} =>
     fun arg_315__ =>
       match arg_315__ with
-        | Data.Either.Mk_Left _ => GHC.Num.fromInteger 0
-        | Data.Either.Mk_Right _ => GHC.Num.fromInteger 1
+        | Data.Either.Left _ => GHC.Num.fromInteger 0
+        | Data.Either.Right _ => GHC.Num.fromInteger 1
       end.
 
 Local Definition Foldable__Either_null {inst_a} : forall {a},
@@ -967,9 +967,9 @@ Definition for__ {t} {f} {a} {b} `{Foldable t} `{GHC.Base.Applicative f} : t
 (* Unbound variables:
      None Some appEndo bool cons default_elem false getAll getAny getDual getFirst
      getProduct getSum list negb nil option pair true tt unit
-     Coq.Program.Basics.compose Data.Either.Either Data.Either.Mk_Left
-     Data.Either.Mk_Right Data.Either.isLeft Data.Monoid.Dual Data.Monoid.Mk_All
-     Data.Monoid.Mk_Any Data.Monoid.Mk_Dual Data.Monoid.Mk_Endo Data.Monoid.Mk_First
+     Coq.Program.Basics.compose Data.Either.Either Data.Either.Left Data.Either.Right
+     Data.Either.isLeft Data.Monoid.Dual Data.Monoid.Mk_All Data.Monoid.Mk_Any
+     Data.Monoid.Mk_Dual Data.Monoid.Mk_Endo Data.Monoid.Mk_First
      Data.Monoid.Mk_Product Data.Monoid.Mk_Sum Data.Monoid.Product Data.Monoid.Sum
      Data.Proxy.Proxy GHC.Base.Alternative GHC.Base.Applicative GHC.Base.Eq_
      GHC.Base.Monad GHC.Base.MonadPlus GHC.Base.Monoid GHC.Base.Ord GHC.Base.build

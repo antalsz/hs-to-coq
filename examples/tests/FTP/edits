@@ -1,3 +1,5 @@
 order FTP.Funktor__Pair FTP.Abblicative__Pair
 order FTP.Funktor__Pair FTP.Trafersable__Pair
 order FTP.Foltable__Pair FTP.Trafersable__Pair
+
+rename value FTP.Pair = FTP.Mk_Pair

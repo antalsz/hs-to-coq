@@ -76,8 +76,8 @@ script:
  - make -C examples/rle
  - make -C examples/bag
  - make -C examples/quicksort
- - make -C examples/ghc/lib
  - make -C examples/containers/lib
+ - make -C examples/ghc/lib
 
  # This requires a configured check-out of GHC, so lets not do that on travis
  # - make -C examples/ghc

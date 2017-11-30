@@ -216,10 +216,10 @@ Local Definition Eq2__Either_liftEq2 : forall {a} {b} {c} {d},
   fun {a} {b} {c} {d} =>
     fun arg_43__ arg_44__ arg_45__ arg_46__ =>
       match arg_43__ , arg_44__ , arg_45__ , arg_46__ with
-        | e1 , _ , Data.Either.Mk_Left x , Data.Either.Mk_Left y => e1 x y
-        | _ , _ , Data.Either.Mk_Left _ , Data.Either.Mk_Right _ => false
-        | _ , _ , Data.Either.Mk_Right _ , Data.Either.Mk_Left _ => false
-        | _ , e2 , Data.Either.Mk_Right x , Data.Either.Mk_Right y => e2 x y
+        | e1 , _ , Data.Either.Left x , Data.Either.Left y => e1 x y
+        | _ , _ , Data.Either.Left _ , Data.Either.Right _ => false
+        | _ , _ , Data.Either.Right _ , Data.Either.Left _ => false
+        | _ , e2 , Data.Either.Right x , Data.Either.Right y => e2 x y
       end.
 
 Program Instance Eq2__Either : Eq2 Data.Either.Either := fun _ k =>
@@ -231,10 +231,10 @@ Local Definition Ord2__Either_liftCompare2 : forall {a} {b} {c} {d},
   fun {a} {b} {c} {d} =>
     fun arg_36__ arg_37__ arg_38__ arg_39__ =>
       match arg_36__ , arg_37__ , arg_38__ , arg_39__ with
-        | comp1 , _ , Data.Either.Mk_Left x , Data.Either.Mk_Left y => comp1 x y
-        | _ , _ , Data.Either.Mk_Left _ , Data.Either.Mk_Right _ => Lt
-        | _ , _ , Data.Either.Mk_Right _ , Data.Either.Mk_Left _ => Gt
-        | _ , comp2 , Data.Either.Mk_Right x , Data.Either.Mk_Right y => comp2 x y
+        | comp1 , _ , Data.Either.Left x , Data.Either.Left y => comp1 x y
+        | _ , _ , Data.Either.Left _ , Data.Either.Right _ => Lt
+        | _ , _ , Data.Either.Right _ , Data.Either.Left _ => Gt
+        | _ , comp2 , Data.Either.Right x , Data.Either.Right y => comp2 x y
       end.
 
 Program Instance Ord2__Either : Ord2 Data.Either.Either := fun _ k =>
@@ -416,9 +416,8 @@ Definition eq2 {f} {a} {b} `{Eq2 f} `{GHC.Base.Eq_ a} `{GHC.Base.Eq_ b} : f a
 
 (* Unbound variables:
      Eq Gt Lt Some andb bool comparison cons false list option pair true
-     Data.Either.Either Data.Either.Mk_Left Data.Either.Mk_Right
-     Data.Functor.Const.Const Data.Functor.Const.Mk_Const
-     Data.Functor.Identity.Identity Data.Functor.Identity.Mk_Identity
-     Data.Proxy.Proxy GHC.Base.Eq_ GHC.Base.Ord GHC.Base.compare GHC.Base.mappend
-     GHC.Base.op_zeze__ GHC.Tuple.pair_type
+     Data.Either.Either Data.Either.Left Data.Either.Right Data.Functor.Const.Const
+     Data.Functor.Const.Mk_Const Data.Functor.Identity.Identity
+     Data.Functor.Identity.Mk_Identity Data.Proxy.Proxy GHC.Base.Eq_ GHC.Base.Ord
+     GHC.Base.compare GHC.Base.mappend GHC.Base.op_zeze__ GHC.Tuple.pair_type
 *)

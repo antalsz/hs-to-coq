@@ -1,9 +1,1 @@
-skip method Monad fail
-
-order instance_GHC_Base_Functor_Succs instance_GHC_Base_Applicative_Succs instance_GHC_Base_Monad_Succs
-order instance_GHC_Base_Functor_Succs instance_GHC_Base_Applicative_Succs_op_ztzg__
-order instance_GHC_Base_Functor_Succs instance_GHC_Base_Applicative_Succs_op_zlzt__
-order instance_GHC_Base_Applicative_Succs instance_GHC_Base_Monad_Succs_return_
-order instance_GHC_Base_Applicative_Succs instance_GHC_Base_Monad_Succs_op_zgzg__
-
-redefine Local Definition instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___Succs_a__op_zsze__ {a} {_ : GHC.Base.Eq_ a} x y := negb (instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___Succs_a__op_zeze__ x y).
+rename value Control.Applicative.Successors.Succs = Control.Applicative.Successors.succs

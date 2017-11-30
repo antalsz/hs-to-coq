@@ -93,16 +93,6 @@ rename value GHC.Base.Nothing = None
 
 rename value GHC.Err.errorWithoutStackTrace = GHC.Base.errorWithoutStackTrace
 
-# rename type Data.Either.Either = sum
-# rename value Data.Either.Right = inr
-# rename value Data.Either.Left  = inl
-rename value Data.Either.Right = Data.Either.Mk_Right
-rename value Data.Either.Left  = Data.Either.Mk_Left
-
-# clashes with Coq's "sum" type
-# rename value Data.Foldable.sum = Data.Foldable.fsum
-
-
 skip method GHC.Base.Monad fail
 skip method GHC.Enum.Enum enumFromThen
 skip method GHC.Enum.Enum enumFromThenTo
@@ -121,20 +111,26 @@ skip method Data.Foldable.Foldable minimum
 
 
 
-# Any types defined in one module and used elsewhere need to have
-# their constructors renamed consistently
-rename value Data.Proxy.Proxy    = Data.Proxy.Mk_Proxy
-
-rename value Data.Monoid.Dual    = Data.Monoid.Mk_Dual
-rename value Data.Monoid.Sum     = Data.Monoid.Mk_Sum
-rename value Data.Monoid.Product = Data.Monoid.Mk_Product
-rename value Data.Monoid.First   = Data.Monoid.Mk_First
-rename value Data.Monoid.Last    = Data.Monoid.Mk_Last
-rename value Data.Monoid.Any     = Data.Monoid.Mk_Any
-rename value Data.Monoid.All     = Data.Monoid.Mk_All
-rename value Data.Monoid.Endo    = Data.Monoid.Mk_Endo
-
-rename value Data.Functor.Const.Const = Data.Functor.Const.Mk_Const
+# Punned constructors
+rename value Control.Arrow.ArrowMonad       = Control.Arrow.Mk_ArrowMonad
+rename value Control.Arrow.Kleisli          = Control.Arrow.Mk_Kleisli
+rename value Data.Foldable.Max              = Data.Foldable.Mk_Max
+rename value Data.Foldable.Min              = Data.Foldable.Mk_Min
+rename value Data.Functor.Const.Const       = Data.Functor.Const.Mk_Const
 rename value Data.Functor.Identity.Identity = Data.Functor.Identity.Mk_Identity
-
-rename value op_zlzg__ = Data.Monoid.op_zlzg__
+rename value Data.Monoid.All                = Data.Monoid.Mk_All
+rename value Data.Monoid.Alt                = Data.Monoid.Mk_Alt
+rename value Data.Monoid.Any                = Data.Monoid.Mk_Any
+rename value Data.Monoid.Dual               = Data.Monoid.Mk_Dual
+rename value Data.Monoid.Endo               = Data.Monoid.Mk_Endo
+rename value Data.Monoid.First              = Data.Monoid.Mk_First
+rename value Data.Monoid.Last               = Data.Monoid.Mk_Last
+rename value Data.Monoid.Product            = Data.Monoid.Mk_Product
+rename value Data.Monoid.Sum                = Data.Monoid.Mk_Sum
+rename value Data.OldList.SnocBuilder       = Data.OldList.Mk_SnocBuilder
+rename value Data.Ord.Down                  = Data.Ord.Mk_Down
+rename value Data.Proxy.KProxy              = Data.Proxy.Mk_KProxy
+rename value Data.Proxy.Proxy               = Data.Proxy.Mk_Proxy
+rename value Data.Traversable.Id            = Data.Traversable.Mk_Id
+rename value Data.Traversable.StateL        = Data.Traversable.Mk_StateL
+rename value Data.Traversable.StateR        = Data.Traversable.Mk_StateR

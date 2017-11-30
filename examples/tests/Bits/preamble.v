@@ -4,9 +4,9 @@ Require Export ZArith.
 Definition Int : Type := Z.
 
 
-Inductive Ordering : Type := Mk_LT : Ordering
-                          |  Mk_EQ : Ordering
-                          |  Mk_GT : Ordering.
+Inductive Ordering : Type := LT : Ordering
+                          |  EQ : Ordering
+                          |  GT : Ordering.
 
 Class Eq (a : Type) := {
   __op_zeze__ : a -> a -> bool;

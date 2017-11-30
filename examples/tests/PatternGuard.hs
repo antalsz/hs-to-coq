@@ -8,7 +8,7 @@ checkNum _ = False
 
 -- Inline data structures, so that this test case
 -- works independent of inter-module data flow
-data Pair a b = Pair a b
+data Pairing a b = Pair a b
 data List a = Nil | Cons a (List a)
 
 

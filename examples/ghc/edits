@@ -3,6 +3,9 @@ skip module Outputable
 skip module Panic
 
 
-rename value SourceLoc.L = SourceLoc.Mk_L
 
 axiomatize module UniqSet
+
+# Punned
+rename value Pair.Pair = Pair.Mk_Pair
+rename value SourceLoc.L = SourceLoc.Mk_L

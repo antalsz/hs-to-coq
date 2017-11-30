@@ -10,74 +10,96 @@ ifeq (,$(wildcard ghc))
 $(error Please create a symlink ghc (see README.md))
 endif
 
-# Handwritten modules
-HANDMOD = Maybes \
-          FastString \
-          Util \
-          Panic \
+OUT=lib
+
+# Not all of these need to be handwritten. Eventually we should be able to
+# generate some of these modules as hs-to-coq is improved.
+# see [notes.md] for discussion of issues
+
+# Handwritten modules (usually by modification of generated version)
+HANDMOD = \
+  Maybes \
+  FastString \
+  Util \
+  Panic \
 
 # Generated modules
-MODULES  = MonadUtils \
-           Pair \
-           Bag \
-           SrcLoc \
-           BasicTypes \
-           Unique \
-           UniqSupply \
-           UniqFM \
-           CmmType \
-	        BooleanFormula \
-	        UniqSet \
+# generated directly from ghc/compiler/*/
+MODULES = \
+  MonadUtils \
+  Pair \
+  Bag \
+  SrcLoc \
+  BasicTypes \
+  Unique \
+  UniqSupply \
+  UniqFM \
+  CmmType \
+  BooleanFormula \
+  UniqSet \
+
+# also generated from drop-in/
+SPECIAL_MODULES =
 
 
-VFILES_GEN     = $(addsuffix .v,$(MODULES))
-VFILES_MAN     = $(addsuffix .v,$(HANDMOD))
-VFILES_SPECIAL = $(addsuffix .v,$(SPECIAL_MODULES))
+VFILES_GEN = $(addprefix $(OUT)/,$(addsuffix .v,$(MODULES)))
+VFILES_MAN = $(addprefix $(OUT)/,$(addsuffix .v,$(HANDMOD)))
+VFILES_SPECIAL = $(addprefix $(OUT)/,$(addsuffix .v,$(SPECIAL_MODULES)))
 
 VFILES   = $(VFILES_GEN) $(VFILES_MAN) $(VFILES_SPECIAL)
 
-all: $(VFILES) coq
+all:  $(VFILES) coq $(OUT)/edits $(OUT)/README.md
 
-_CoqProject : Makefile
+$(OUT)/_CoqProject : Makefile
+	mkdir -p $(OUT)
 	> $@
-	echo "-Q .               \"\"" >> $@
-	echo "-Q ../../base-thy  Proofs" >> $@
-	echo "-Q ../../base      \"\"" >> $@
+	echo "-Q . \"\"" >> $@
+	echo "-R ../../../base \"\"" >> $@
 	echo $(addsuffix .v,$(HANDMOD)) >> $@
 	echo $(addsuffix .v,$(MODULES)) >> $@
-	echo $(addsuffix .v,$(EMPTY_MODS)) >> $@
 	echo $(addsuffix .v,$(SPECIAL_MODULES)) >> $@
 
-Makefile.coq: _CoqProject $(VFILES)
-	coq_makefile -f _CoqProject -o Makefile.coq
+$(OUT)/Makefile: $(OUT)/_CoqProject $(VFILES)
+	cd $(OUT); coq_makefile -f _CoqProject -o Makefile
 
-coq: Makefile.coq $(VFILES)
-	$(MAKE) -f Makefile.coq OPT=$(COQFLAGS)
+$(OUT)/edits:
+	ln -fs ../edits $(OUT)/edits
+
+$(OUT)/README.md:
+	> $@
+	echo 'This directory contains a Coq’ified version of parts of GHC' >> $@
+	echo 'Do not edit files here! Instead, look in `examples/ghc`.' >> $@
+
+coq: $(OUT)/Makefile $(VFILES)
+	$(MAKE) -C $(OUT) -f Makefile OPT=$(COQFLAGS)
+
 
 .SECONDEXPANSION:
-$(VFILES_GEN): %.v : $$(wildcard module-edits/$$*/preamble.v) $$(wildcard module-edits/$$*/midamble.v) $$(wildcard module-edits/$$*/edits) edits
-	$(HS_TO_COQ) -e edits \
-	             -e ../../base/edits \
-                -p preamble.v \
-	             $(addprefix -e , $(wildcard module-edits/$*/edits)) \
+$(VFILES_GEN): $(OUT)/%.v : $$(wildcard module-edits/$$*/preamble.v) $$(wildcard module-edits/$$*/midamble.v)  $$(wildcard module-edits/$$*/edits) edits
+	$(HS_TO_COQ) $(addprefix -e , $(wildcard module-edits/$*/edits)) \
 	             $(addprefix -p , $(wildcard module-edits/$*/preamble.v)) \
-	             $(addprefix -m , $(wildcard module-edits/$*/midamble.v)) \
-	             --ghc-tree ghc \
-	             -I ghc/includes \
-	             -I ghc/compiler \
-	             -I ghc/compiler/stage2 \
-	             -I ghc/compiler/stage2/build \
-	             --ghc -DSTAGE=2 \
-	             --ghc -package=ghc-boot-th \
-	             -N \
-	             -o . \
-	             ghc/compiler/*/$*.hs
+	             $(addprefix --midamble , $(wildcard module-edits/$*/midamble.v)) \
+                     --ghc-tree ghc \
+                     -I ghc/includes \
+                     -I ghc/compiler \
+                     -I ghc/compiler/stage2 \
+                     -I ghc/compiler/stage2/build \
+                     --ghc -DSTAGE=2 \
+                     --ghc -package=ghc-boot-th \
+                     -e ../../base/edits \
+                     -e edits \
+                     -N \
+                     -o $(OUT) \
+		     ghc/compiler/*/$*.hs
 	test -e $@
 # We added the `test` because `hs-to-coq` doesn't return an error
 
-# $(VFILES_MAN): lib/%.v : manual/%.v
-#	mkdir -p "$$(dirname lib/$*.v)"
-#	cp -v $< $@
+
+$(VFILES_MAN): $(OUT)/%.v : manual/%.v
+	mkdir -p "$$(dirname $(OUT)/$*.v)"
+	rm -f $@
+	lndir ../manual $(OUT)/
 
 clean:
-	rm -f */*.vo *.glob */*.v.d *.glob *.vo *.v.d  $(VFILES_GEN) _CoqProject Makefile.coq  */*.v~
+	rm -rf $(OUT)
+	rm -f *.aux *.log

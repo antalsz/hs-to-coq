@@ -1,4 +1,3 @@
 ghc
 Makefile.coq
 _CoqProject
-*.v

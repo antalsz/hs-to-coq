@@ -37,19 +37,19 @@ these tools:
 
 Once installed, you can build the base library with
 
-   make -C base
+    make -C base
 
 Th directory `base-thy/` contains auxillary definitions and lemmas, such as
 lawful type-class instances. You can build these with
 
-   make -C base-thy
+    make -C base-thy
 
 # Using the tool
 
 To use the tool, run it (using `stack`), passing the Haskell file to be
 translated and an output directory to write to:
 
-  stack exec hs-to-coq -- -o output-directory/ Input/File.hs
+    stack exec hs-to-coq -- -o output-directory/ Input/File.hs
 
 Very likely you want to make use of the `base/` library. In that case, make
 sure you pass `-e base/edits`.

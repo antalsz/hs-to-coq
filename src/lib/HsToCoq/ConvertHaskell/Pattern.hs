@@ -168,7 +168,7 @@ convertIntegerPat :: (ConversionMonad m, MonadWriter [Term] m)
 convertIntegerPat what hsInt = do
   var <- gensym "num"
   int <- convertInteger what hsInt
-  Coq.VarPat var <$ tell ([Infix (Var var) "==" (PolyNum int)] :: [Term])
+  Coq.VarPat var <$ tell ([Infix (Var var) "GHC.Base.==" (PolyNum int)] :: [Term])
 
 isConstructor :: MonadState ConversionState m => Qualid -> m Bool
 isConstructor con = isJust <$> (use $ constructorTypes . at con)

@@ -189,7 +189,7 @@ convertDeclarationGroup DeclarationGroup{..} =
     recSynMapping params (SynBody name args oty def) =
       let mkFun    = maybe id Fun . nonEmpty
           withType = maybe id (flip HasType)
-      in (name, App "Synonym"
+      in (name, App "GHC.Base.Synonym"
                   $ fmap PosArg [ Qualid (synName name)
                                 , everywhere (mkT $ avoidParams params) .
                                     mkFun args $ withType oty def ])

@@ -4,10 +4,10 @@ manual notation GHC.Base
 
 skip module GHC.Types
 
-skip GHC.Base.String   # replace with Coq type
-skip GHC.Base.Maybe    # replace with Coq type
-
-skip GHC.Base.++       # replace with Coq
+# replaced with Coq types
+skip GHC.Base.String
+skip option
+skip Coq.Init.Datatypes.app
 
 skip GHC.Base.Opaque   # can't handle existential
 skip GHC.Base.build    # higher-rank type

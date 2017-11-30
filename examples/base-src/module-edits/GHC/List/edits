@@ -1,7 +1,7 @@
-skip GHC.List.concatMap # renamed to flat_map
-
-skip GHC.List.foldl     # renamed to GHC.Base.foldl
-skip GHC.List.foldl'    # renamed to GHC.Base.foldl
+# replaced by renamed thing:
+skip Coq.Lists.List.flat_map
+skip GHC.Base.foldl
+skip GHC.Base.foldl'
 
 # actually total, but Coq can't tell
 # these are implemented by hand in preamble.v

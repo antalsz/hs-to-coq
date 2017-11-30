@@ -8,7 +8,7 @@ Antal Spector-Zabusky, Joachim Breitner, Christine Rizkallah, and Stephanie Weir
 
 # Requirements
 
-`hs-to-coq` uses GHC-8.0 (which 
+`hs-to-coq` uses GHC-8.0, Coq 8.6 and ssreflect.
 
 # Compilation
 
@@ -25,7 +25,17 @@ To build `hs-to-coq`, then run
 
 This repository comes with a version of (parts of the) Haskell base library
 converted to Coq, which you will likely need if you want to verify Haskell
-code. You can build it with
+code.
+
+You must have Coq 8.6 and ssreflect to build the base library. To install
+these tools:
+
+  1. `opam repo add coq-released https://coq.inria.fr/opam/released` (for
+     SSReflect and MathComp)
+  2. `opam update`
+  3. `opam install coq.8.6 coq-mathcomp-ssreflect.1.6.1`
+
+Once installed, you can build the base library with
 
    make -C base
 
@@ -67,4 +77,3 @@ convenient `Makefile` based setup.
 
 [CoreSpec]: https://deepspec.org/entry/Project/Haskell+CoreSpec
 [DeepSpec]: http://www.deepspec.org/
-

@@ -2,7 +2,8 @@
 
 module HsToCoq.ConvertHaskell.Variables (
   -- * Generate variable names
-  var', var, varUnrenamed, unQualifyLocal,
+  var', var,
+  unQualifyLocal,
   recordField, bareName,
   freeVar', freeVar,
   -- * Avoiding reserved words/names
@@ -76,14 +77,6 @@ localName = toLocalPrefix . escapeReservedNames . T.pack . occNameString . nameO
 var' :: ConversionMonad m => HsNamespace -> Ident -> m Qualid
 var' ns x = use $ renamed ns (Bare x) . non (Bare (escapeReservedNames x))
 
-varUnrenamed :: GHC.Name -> Qualid
-varUnrenamed name = qid
-  where
-    nameModM = moduleNameText . moduleName <$> nameModule_maybe name
-
-    qid | Just m <- nameModM = Qualified m (bareName name)
-        | otherwise          = Bare        (localName name)
-
 unQualifyLocal :: ConversionMonad m => Qualid -> m Qualid
 unQualifyLocal qi = do
   thisModM <- fmap moduleNameText <$> use currentModule
@@ -96,9 +89,12 @@ unQualifyLocal qi = do
 
 var :: ConversionMonad m => HsNamespace -> GHC.Name -> m Qualid
 var ns name = do
-  let qid = varUnrenamed name
-  renamed_qid <- use (renamed ns qid . non qid)
-  pure renamed_qid
+    renamed_qid <- use (renamed ns qid . non qid)
+    pure renamed_qid
+  where
+    nameModM = moduleNameText . moduleName <$> nameModule_maybe name
 
+    qid | Just m <- nameModM = Qualified m (bareName name)
+        | otherwise          = Bare        (localName name)
 recordField :: (ConversionMonad m, HasOccName name, OutputableBndr name) => name -> m Qualid
 recordField = var' ExprNS <=< ghcPpr -- TODO Check module part?

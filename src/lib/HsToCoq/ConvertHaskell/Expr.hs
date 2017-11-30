@@ -804,11 +804,10 @@ convertTypedBinding _convHsTy PatBind{..}   = do -- TODO use `_convHsTy`?
   (pat, guards) <- runWriterT $ convertLPat pat_lhs
   Just . ConvertedPatternBinding pat <$> convertGRHSs (map BoolGuard guards) pat_rhs patternFailure
 convertTypedBinding  convHsTy FunBind{..}   = runMaybeT $ do
+  name <- var ExprNS (unLoc fun_id)
 
   -- Skip it?
-  guard . not =<< use (edits.skipped.contains (varUnrenamed (unLoc fun_id)))
-
-  name <- var ExprNS (unLoc fun_id)
+  guard . not =<< use (edits.skipped.contains name)
 
   withCurrentDefinition name $ do
     let (tvs, coqTy) =

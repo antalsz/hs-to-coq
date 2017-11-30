@@ -1,0 +1,7 @@
+-Q . ""
+-R ../../../base ""
+-Q ../../../base-thy  Proofs
+-Q ../../containers/lib   ""
+Maybes.v FastString.v Util.v Panic.v
+MonadUtils.v Pair.v Bag.v SrcLoc.v BasicTypes.v Unique.v UniqSupply.v UniqFM.v CmmType.v BooleanFormula.v UniqSet.v
+

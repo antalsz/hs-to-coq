@@ -55,6 +55,8 @@ $(OUT)/_CoqProject : Makefile
 	> $@
 	echo "-Q . \"\"" >> $@
 	echo "-R ../../../base \"\"" >> $@
+	echo "-Q ../../../base-thy  Proofs" >> $@
+	echo "-Q ../../containers/lib   \"\"" >> $@
 	echo $(addsuffix .v,$(HANDMOD)) >> $@
 	echo $(addsuffix .v,$(MODULES)) >> $@
 	echo $(addsuffix .v,$(SPECIAL_MODULES)) >> $@
@@ -87,6 +89,7 @@ $(VFILES_GEN): $(OUT)/%.v : $$(wildcard module-edits/$$*/preamble.v) $$(wildcard
                      --ghc -DSTAGE=2 \
                      --ghc -package=ghc-boot-th \
                      -e ../../base/edits \
+                     -e ../containers/edits \
                      -e edits \
                      -N \
                      -o $(OUT) \

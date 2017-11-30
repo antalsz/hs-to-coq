@@ -1,11 +1,20 @@
 # Should skip these everywhere
 skip module Outputable
 skip module Panic
-
-
+skip module GHC.Show
 
 axiomatize module UniqSet
 
 # Punned
+
+rename value BasicTypes.EP   = BasicTypes.Mk_EP
+rename value BasicTypes.Fixity   = BasicTypes.Mk_Fixity
+rename value BasicTypes.InlinePragma = BasicTypes.Mk_InlinePragma
+rename value BasicTypes.OverlapFlag   = BasicTypes.Mk_OverlapFlag
+rename value BasicTypes.StringLiteral = BasicTypes.Mk_StringLiteral
+rename value BasicTypes.WarningTxt   = BasicTypes.Mk_WarningTxt
 rename value Pair.Pair = Pair.Mk_Pair
 rename value SourceLoc.L = SourceLoc.Mk_L
+rename value SrcLoc.RealSrcLoc  = SrcLoc.Mk_RealSrcLoc
+rename value SrcLoc.RealSrcSpan = SrcLoc.Mk_RealSrcSpan
+rename value SrcLoc.SrcLoc      = SrcLoc.Mk_SrcLoc

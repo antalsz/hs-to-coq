@@ -32,9 +32,5 @@ skip Data.Set.Base.hedgeUnion
 skip Data.Set.Base.union
 skip Data.Set.Base.unions
 
-
-rename value Data.Utils.StrictFold.foldlStrict = foldl
-rename value Data.Utils.StrictPair.:*: = pair
-
 order Data.Set.Base.Eq___Set_ Data.Set.Base.Ord__Set_
 skip Data.Set.Base.Monoid__Set_

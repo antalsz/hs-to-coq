@@ -23,6 +23,7 @@ End GHC.
 
 (* Converted imports: *)
 
+Require Data.Foldable.
 Require GHC.Base.
 Require GHC.Num.
 Require GHC.Prim.
@@ -49,14 +50,70 @@ Arguments NothingS {_}.
 Arguments JustS {_} _.
 (* Converted value declarations: *)
 
+(* The Haskell code containes partial or untranslateable code, which needs the
+   following *)
+
+Axiom patternFailure : forall {a}, a.
+
 (* Skipping instance Monoid__Set_ *)
 
 (* Translating `instance forall {a}, forall `{GHC.Base.Ord a},
    Data.Semigroup.Semigroup (Data.Set.Base.Set_ a)' failed: OOPS! Cannot find
    information for class Qualified "Data.Semigroup" "Semigroup" unsupported *)
 
-(* Translating `instance Data.Foldable.Foldable Data.Set.Base.Set_' failed:
-   Cannot find sig for Qualified "Data.Foldable" "minimum" unsupported *)
+Local Definition Foldable__Set__elem : forall {a},
+                                         forall `{GHC.Base.Eq_ a}, a -> Set_ a -> bool :=
+  fun {a} `{GHC.Base.Eq_ a} =>
+    let go :=
+      fix go arg_370__ arg_371__
+            := let j_373__ :=
+                 match arg_370__ , arg_371__ with
+                   | _ , Tip => false
+                   | x , Bin _ y l r => orb (x GHC.Base.== y) (orb (go x l) (go x r))
+                 end in
+               match arg_370__ , arg_371__ with
+                 | arg , _ => if GHC.Prim.seq arg false : bool
+                              then GHC.Err.undefined
+                              else j_373__
+               end in
+    go.
+
+Local Definition Foldable__Set__fold : forall {m},
+                                         forall `{GHC.Base.Monoid m}, Set_ m -> m :=
+  fun {m} `{GHC.Base.Monoid m} =>
+    let go :=
+      fix go arg_357__
+            := let j_360__ :=
+                 match arg_357__ with
+                   | Bin _ k l r => GHC.Base.mappend (go l) (GHC.Base.mappend k (go r))
+                   | _ => patternFailure
+                 end in
+               match arg_357__ with
+                 | Tip => GHC.Base.mempty
+                 | Bin num_358__ k _ _ => if num_358__ == GHC.Num.fromInteger 1 : bool
+                                          then k
+                                          else j_360__
+               end in
+    go.
+
+Local Definition Foldable__Set__foldMap : forall {m} {a},
+                                            forall `{GHC.Base.Monoid m}, (a -> m) -> Set_ a -> m :=
+  fun {m} {a} `{GHC.Base.Monoid m} =>
+    fun f t =>
+      let go :=
+        fix go arg_363__
+              := let j_366__ :=
+                   match arg_363__ with
+                     | Bin _ k l r => GHC.Base.mappend (go l) (GHC.Base.mappend (f k) (go r))
+                     | _ => patternFailure
+                   end in
+                 match arg_363__ with
+                   | Tip => GHC.Base.mempty
+                   | Bin num_364__ k _ _ => if num_364__ == GHC.Num.fromInteger 1 : bool
+                                            then f k
+                                            else j_366__
+                 end in
+      go t.
 
 (* Translating `instance forall {a}, forall `{Data.Data.Data a} `{GHC.Base.Ord
    a}, Data.Data.Data (Data.Set.Base.Set_ a)' failed: OOPS! Cannot find information
@@ -118,6 +175,10 @@ Definition foldlFB {a} {b} : (a -> b -> a) -> a -> Set_ b -> a :=
 Definition toDescList {a} : Set_ a -> list a :=
   foldl (GHC.Base.flip cons) nil.
 
+Local Definition Foldable__Set__foldl : forall {b} {a},
+                                          (b -> a -> b) -> b -> Set_ a -> b :=
+  fun {b} {a} => foldl.
+
 Definition foldl' {a} {b} : (a -> b -> a) -> a -> Set_ b -> a :=
   fun f z =>
     let go :=
@@ -133,6 +194,18 @@ Definition foldl' {a} {b} : (a -> b -> a) -> a -> Set_ b -> a :=
                               else j_39__
                end in
     go z.
+
+Local Definition Foldable__Set__sum : forall {a},
+                                        forall `{GHC.Num.Num a}, Set_ a -> a :=
+  fun {a} `{GHC.Num.Num a} => foldl' _GHC.Num.+_ (GHC.Num.fromInteger 0).
+
+Local Definition Foldable__Set__product : forall {a},
+                                            forall `{GHC.Num.Num a}, Set_ a -> a :=
+  fun {a} `{GHC.Num.Num a} => foldl' _GHC.Num.*_ (GHC.Num.fromInteger 1).
+
+Local Definition Foldable__Set__foldl' : forall {b} {a},
+                                           (b -> a -> b) -> b -> Set_ a -> b :=
+  fun {b} {a} => foldl'.
 
 Definition foldr {a} {b} : (a -> b -> b) -> b -> Set_ a -> b :=
   fun f z =>
@@ -152,6 +225,9 @@ Definition toAscList {a} : Set_ a -> list a :=
 
 Definition toList {a} : Set_ a -> list a :=
   toAscList.
+
+Local Definition Foldable__Set__toList : forall {a}, Set_ a -> list a :=
+  fun {a} => toList.
 
 Definition elems {a} : Set_ a -> list a :=
   toAscList.
@@ -187,6 +263,10 @@ Local Definition Ord__Set__min {inst_a} `{GHC.Base.Ord inst_a} : (Set_
 Definition fold {a} {b} : (a -> b -> b) -> b -> Set_ a -> b :=
   foldr.
 
+Local Definition Foldable__Set__foldr : forall {a} {b},
+                                          (a -> b -> b) -> b -> Set_ a -> b :=
+  fun {a} {b} => foldr.
+
 Definition foldr' {a} {b} : (a -> b -> b) -> b -> Set_ a -> b :=
   fun f z =>
     let go :=
@@ -202,6 +282,10 @@ Definition foldr' {a} {b} : (a -> b -> b) -> b -> Set_ a -> b :=
                               else j_52__
                end in
     go z.
+
+Local Definition Foldable__Set__foldr' : forall {a} {b},
+                                           (a -> b -> b) -> b -> Set_ a -> b :=
+  fun {a} {b} => foldr'.
 
 Definition lookupGE {a} `{GHC.Base.Ord a} : a -> Set_ a -> option a :=
   let goJust :=
@@ -378,6 +462,9 @@ Definition node : GHC.Base.String :=
 
 Definition null {a} : Set_ a -> bool :=
   fun arg_353__ => match arg_353__ with | Tip => true | Bin _ _ _ _ => false end.
+
+Local Definition Foldable__Set__null : forall {a}, Set_ a -> bool :=
+  fun {a} => null.
 
 Definition ordered {a} `{GHC.Base.Ord a} : Set_ a -> bool :=
   fun t =>
@@ -878,6 +965,24 @@ Program Instance Ord__Set_ {a} `{GHC.Base.Ord a} : GHC.Base.Ord (Set_ a) :=
       GHC.Base.max__ := Ord__Set__max ;
       GHC.Base.min__ := Ord__Set__min |}.
 
+Local Definition Foldable__Set__length : forall {a}, Set_ a -> GHC.Num.Int :=
+  fun {a} => size.
+
+Program Instance Foldable__Set_ : Data.Foldable.Foldable Set_ := fun _ k =>
+    k {|Data.Foldable.elem__ := fun {a} `{GHC.Base.Eq_ a} => Foldable__Set__elem ;
+      Data.Foldable.fold__ := fun {m} `{GHC.Base.Monoid m} => Foldable__Set__fold ;
+      Data.Foldable.foldMap__ := fun {m} {a} `{GHC.Base.Monoid m} =>
+        Foldable__Set__foldMap ;
+      Data.Foldable.foldl__ := fun {b} {a} => Foldable__Set__foldl ;
+      Data.Foldable.foldl'__ := fun {b} {a} => Foldable__Set__foldl' ;
+      Data.Foldable.foldr__ := fun {a} {b} => Foldable__Set__foldr ;
+      Data.Foldable.foldr'__ := fun {a} {b} => Foldable__Set__foldr' ;
+      Data.Foldable.length__ := fun {a} => Foldable__Set__length ;
+      Data.Foldable.null__ := fun {a} => Foldable__Set__null ;
+      Data.Foldable.product__ := fun {a} `{GHC.Num.Num a} => Foldable__Set__product ;
+      Data.Foldable.sum__ := fun {a} `{GHC.Num.Num a} => Foldable__Set__sum ;
+      Data.Foldable.toList__ := fun {a} => Foldable__Set__toList |}.
+
 Definition trim {a} `{GHC.Base.Ord a} : MaybeS a -> MaybeS a -> Set_ a -> Set_
                                         a :=
   fun arg_11__ arg_12__ arg_13__ =>
@@ -932,10 +1037,12 @@ Definition withEmpty : list GHC.Base.String -> list GHC.Base.String :=
   fun bars => cons (GHC.Base.hs_string__ "   ") bars.
 
 (* Unbound variables:
-     Gt Lt None Some andb bool comparison cons false list negb nil op_zt__ option orb
-     pair true GHC.Base.Eq_ GHC.Base.Ord GHC.Base.String GHC.Base.compare
-     GHC.Base.const GHC.Base.flip GHC.Base.op_zd__ GHC.Base.op_zdzn__
+     Gt Lt None Some andb bool comparison cons false list negb nil op_zeze__ op_zt__
+     option orb pair true Data.Foldable.Foldable GHC.Base.Eq_ GHC.Base.Monoid
+     GHC.Base.Ord GHC.Base.String GHC.Base.compare GHC.Base.const GHC.Base.flip
+     GHC.Base.mappend GHC.Base.mempty GHC.Base.op_zd__ GHC.Base.op_zdzn__
      GHC.Base.op_zeze__ GHC.Base.op_zg__ GHC.Base.op_zgze__ GHC.Base.op_zl__
      GHC.Base.op_zlze__ GHC.Base.op_zsze__ GHC.Err.error GHC.Err.undefined
-     GHC.Num.Int GHC.Num.op_zm__ GHC.Num.op_zp__ GHC.Num.op_zt__ GHC.Prim.seq
+     GHC.Num.Int GHC.Num.Num GHC.Num.op_zm__ GHC.Num.op_zp__ GHC.Num.op_zt__
+     GHC.Prim.seq
 *)

@@ -266,7 +266,7 @@ Qed.
 
 Instance EqLaws_option {a} `{EqLaws a} : EqLaws (option a).
 Proof.
-  split; rewrite /op_zeze__ /op_zsze__ /instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___option_a_ /op_zeze____ /op_zsze____.
+  split; rewrite /op_zeze__ /op_zsze__ /Eq___option /op_zeze____ /op_zsze____.
   - case=> [?|] //=; apply Eq_refl.
   - repeat case=> [?|] //=; apply Eq_sym.
   - repeat case=> [?|] //=; apply Eq_trans.
@@ -275,7 +275,7 @@ Qed.
 
 Instance EqExact_option {a} `{EqExact a} : EqExact (option a).
 Proof.
-  split; unfold op_zeze__, op_zsze__, instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___option_a_, op_zeze____, op_zsze____
+  split; unfold op_zeze__, op_zsze__, Eq___option, op_zeze____, op_zsze____
      => - [x|] [y|] //=; try by constructor.
   case E: (x == y); constructor; move/Eq_eq in E.
   + by rewrite E.
@@ -332,10 +332,10 @@ Class MonadPlusLaws (t : Type -> Type) `{!Functor t, !Applicative t, !Monad t, !
 Instance instance_MonoidLaws_unit : MonoidLaws unit.
 Proof.
   split;
-    unfold mappend, mempty, mconcat, instance_GHC_Base_Monoid_unit,
-         Base.instance_GHC_Base_Monoid_unit_mappend,
-         Base.instance_GHC_Base_Monoid_unit_mempty,
-         Base.instance_GHC_Base_Monoid_unit_mconcat.
+    unfold mappend, mempty, mconcat, Monoid__unit,
+         Base.Monoid__unit_mappend,
+         Base.Monoid__unit_mempty,
+         Base.Monoid__unit_mconcat.
   - intro x. destruct x. auto.
   - intro x. destruct x. auto.
   - intros. auto.
@@ -346,9 +346,9 @@ Instance instance_MonoidLaws_comparison : MonoidLaws comparison.
 Proof.
   split;
     repeat unfold mappend, mempty, mconcat, instance_Monoid_comparison,
-    Base.instance_GHC_Base_Monoid_comparison_mappend,
-    Base.instance_GHC_Base_Monoid_comparison_mempty,
-    Base.instance_GHC_Base_Monoid_comparison_mconcat.
+    Base.Monoid__comparison_mappend,
+    Base.Monoid__comparison_mempty,
+    Base.Monoid__comparison_mconcat.
   - intro x. auto.
   - intro x. destruct x; auto.
   - intros. destruct x; destruct y; auto.
@@ -359,10 +359,10 @@ Instance instance_MonoidLaws_option {a} `{ MonoidLaws a } : MonoidLaws (option a
 Proof.
   split;
     repeat unfold mappend, mempty, mconcat,
-    Base.instance_forall___GHC_Base_Monoid_a___GHC_Base_Monoid__option_a_,
-    Base.instance_forall___GHC_Base_Monoid_a___GHC_Base_Monoid__option_a__mappend,
-    Base.instance_forall___GHC_Base_Monoid_a___GHC_Base_Monoid__option_a__mconcat,
-    Base.instance_forall___GHC_Base_Monoid_a___GHC_Base_Monoid__option_a__mempty.
+    Base.Monoid__option,
+    Base.Monoid__option_mappend,
+    Base.Monoid__option_mconcat,
+    Base.Monoid__option_mempty.
   - destruct x; auto.
   - destruct x; auto.
   - intros x y z.
@@ -384,7 +384,7 @@ Proof.
   - induction x.
     * simpl. auto.
     * simpl.
-      unfold mconcat, instance_GHC_Base_Monoid__list_a_ in *; simpl in *.
+      unfold mconcat, Monoid__list in *; simpl in *.
       rewrite IHx.
       rewrite flat_map_cons_id.
       reflexivity.
@@ -396,8 +396,8 @@ Qed.
 Instance instance_FunctorLaws_option : FunctorLaws option.
 Proof.
   split;
-    repeat unfold fmap, instance_GHC_Base_Functor_option,
-    Base.instance_GHC_Base_Functor_option_fmap.
+    repeat unfold fmap, Functor__option,
+    Base.Functor__option_fmap.
   - intros. destruct x; auto.
   - intros. destruct x; auto.
 Qed.
@@ -405,8 +405,8 @@ Qed.
 Instance instance_FunctorLaws_list : FunctorLaws list.
 Proof.
   split;
-    repeat unfold fmap, instance_GHC_Base_Functor_list,
-    Base.instance_GHC_Base_Functor_list_fmap.
+    repeat unfold fmap, Functor__list,
+    Base.Functor__list_fmap.
   - exact map_id.
   - exact map_map.
 Qed.
@@ -417,10 +417,10 @@ Qed.
 Instance instance_ApplicativeLaws_option : ApplicativeLaws option.
 Proof.
   split;
-    repeat (unfold pure, instance_Applicative_option,
-    Base.instance_GHC_Base_Applicative_option_pure,
-    Base.instance_GHC_Base_Applicative_option_op_zlztzg__,
-    Base.instance_GHC_Base_Functor_option_fmap; simpl).
+    repeat (unfold pure, Applicative__option,
+    Base.Applicative__option_pure,
+    Base.Applicative__option_op_zlztzg__,
+    Base.Functor__option_fmap; simpl).
   - intros. destruct v; auto.
   - intros. destruct u; destruct v; destruct w; auto.
   - intros. auto.
@@ -433,10 +433,10 @@ Proof.
   split;
     repeat (unfold
       op_zlztzg__,
-      pure, instance_GHC_Base_Applicative_list,
-      Base.instance_GHC_Base_Applicative_list_pure,
-      Base.instance_GHC_Base_Applicative_list_op_zlztzg__,
-      Base.instance_GHC_Base_Functor_list_fmap; simpl).
+      pure, Applicative__list,
+      Base.Applicative__list_pure,
+      Base.Applicative__list_op_zlztzg__,
+      Base.Functor__list_fmap; simpl).
   - intros. induction v; simpl; auto.
     simpl in IHv. rewrite IHv. auto.
   - intros.
@@ -464,13 +464,13 @@ Qed.
 Instance instance_MonadLaws_option : MonadLaws option.
 Proof.
   split; intros;
-   repeat (unfold pure, instance_Monad_option,
-           Base.instance_GHC_Base_Monad_option_op_zgzgze__,
-           Base.instance_GHC_Base_Monad_option_return_,
-           instance_Applicative_option,
-           Base.instance_GHC_Base_Applicative_option_pure,
-           Base.instance_GHC_Base_Applicative_option_op_zlztzg__,
-           Base.instance_GHC_Base_Functor_option_fmap; simpl).
+   repeat (unfold pure, instance_Monad__option,
+           Base.Monad__option_op_zgzgze__,
+           Base.Monad__option_return_,
+           Base.Applicative__option,
+           Base.Applicative__option_pure,
+           Base.Applicative__option_op_zlztzg__,
+           Base.Functor__option_fmap; simpl).
   - auto.
   - destruct m; auto.
   - destruct m; try destruct (k x); auto.
@@ -482,13 +482,13 @@ Instance instance_MonadLaws_list : MonadLaws list.
 Proof.
   split; intros;
     repeat (unfold pure, GHC.Base.op_zgzgze__, GHC.Base.op_zlztzg__, ap,
-            Base.instance_GHC_Base_Monad_list,
-            Base.instance_GHC_Base_Monad_list_op_zgzgze__,
-            Base.instance_GHC_Base_Monad_list_return_,
-            Base.instance_GHC_Base_Applicative_list,
-            Base.instance_GHC_Base_Applicative_list_pure,
-            Base.instance_GHC_Base_Applicative_list_op_zlztzg__,
-            Base.instance_GHC_Base_Functor_list_fmap; simpl).
+            Base.Monad__list,
+            Base.Monad__list_op_zgzgze__,
+            Base.Monad__list_return_,
+            Base.Applicative__list,
+            Base.Applicative__list_pure,
+            Base.Applicative__list_op_zlztzg__,
+            Base.Functor__list_fmap; simpl).
   - simpl.
     rewrite app_nil_r. rewrite flat_map_cons_id. auto.
   - rewrite flat_map_cons_id. auto.

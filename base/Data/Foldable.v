@@ -198,8 +198,8 @@ Definition default_foldable_foldr (f : Type -> Type)
 
 (* Converted value declarations: *)
 
-Local Definition instance_Data_Foldable_Foldable_option_foldl : forall {b} {a},
-                                                                  (b -> a -> b) -> b -> option a -> b :=
+Local Definition Foldable__option_foldl : forall {b} {a},
+                                            (b -> a -> b) -> b -> option a -> b :=
   fun {b} {a} =>
     fun arg_324__ arg_325__ arg_326__ =>
       match arg_324__ , arg_325__ , arg_326__ with
@@ -207,15 +207,15 @@ Local Definition instance_Data_Foldable_Foldable_option_foldl : forall {b} {a},
         | f , z , Some x => f z x
       end.
 
-Local Definition instance_Data_Foldable_Foldable_option_foldr' : forall {a} {b},
-                                                                   (a -> b -> b) -> b -> option a -> b :=
+Local Definition Foldable__option_foldr' : forall {a} {b},
+                                             (a -> b -> b) -> b -> option a -> b :=
   fun {a} {b} =>
     fun f z0 xs =>
       let f' := fun k x z => k GHC.Base.$! f x z in
-      instance_Data_Foldable_Foldable_option_foldl f' GHC.Base.id xs z0.
+      Foldable__option_foldl f' GHC.Base.id xs z0.
 
-Local Definition instance_Data_Foldable_Foldable_option_foldr : forall {a} {b},
-                                                                  (a -> b -> b) -> b -> option a -> b :=
+Local Definition Foldable__option_foldr : forall {a} {b},
+                                            (a -> b -> b) -> b -> option a -> b :=
   fun {a} {b} =>
     fun arg_319__ arg_320__ arg_321__ =>
       match arg_319__ , arg_320__ , arg_321__ with
@@ -223,129 +223,106 @@ Local Definition instance_Data_Foldable_Foldable_option_foldr : forall {a} {b},
         | f , z , Some x => f x z
       end.
 
-Local Definition instance_Data_Foldable_Foldable_option_null : forall {a},
-                                                                 option a -> bool :=
-  fun {a} =>
-    instance_Data_Foldable_Foldable_option_foldr (fun arg_18__ arg_19__ => false)
-    true.
+Local Definition Foldable__option_null : forall {a}, option a -> bool :=
+  fun {a} => Foldable__option_foldr (fun arg_18__ arg_19__ => false) true.
 
-Local Definition instance_Data_Foldable_Foldable_option_toList : forall {a},
-                                                                   option a -> list a :=
-  fun {a} =>
-    fun t =>
-      GHC.Base.build (fun c n => instance_Data_Foldable_Foldable_option_foldr c n t).
+Local Definition Foldable__option_toList : forall {a}, option a -> list a :=
+  fun {a} => fun t => GHC.Base.build (fun c n => Foldable__option_foldr c n t).
 
-Local Definition instance_Data_Foldable_Foldable_option_foldl' : forall {b} {a},
-                                                                   (b -> a -> b) -> b -> option a -> b :=
+Local Definition Foldable__option_foldl' : forall {b} {a},
+                                             (b -> a -> b) -> b -> option a -> b :=
   fun {b} {a} =>
     fun f z0 xs =>
       let f' := fun x k z => k GHC.Base.$! f z x in
-      instance_Data_Foldable_Foldable_option_foldr f' GHC.Base.id xs z0.
+      Foldable__option_foldr f' GHC.Base.id xs z0.
 
-Local Definition instance_Data_Foldable_Foldable_option_length : forall {a},
-                                                                   option a -> GHC.Num.Int :=
+Local Definition Foldable__option_length : forall {a},
+                                             option a -> GHC.Num.Int :=
   fun {a} =>
-    instance_Data_Foldable_Foldable_option_foldl' (fun arg_21__ arg_22__ =>
-                                                    match arg_21__ , arg_22__ with
-                                                      | c , _ => c GHC.Num.+ GHC.Num.fromInteger 1
-                                                    end) (GHC.Num.fromInteger 0).
+    Foldable__option_foldl' (fun arg_21__ arg_22__ =>
+                              match arg_21__ , arg_22__ with
+                                | c , _ => c GHC.Num.+ GHC.Num.fromInteger 1
+                              end) (GHC.Num.fromInteger 0).
 
-Local Definition instance_Data_Foldable_Foldable_option_foldMap : forall {m}
-                                                                         {a},
-                                                                    forall `{GHC.Base.Monoid m},
-                                                                      (a -> m) -> option a -> m :=
+Local Definition Foldable__option_foldMap : forall {m} {a},
+                                              forall `{GHC.Base.Monoid m}, (a -> m) -> option a -> m :=
   fun {m} {a} `{GHC.Base.Monoid m} =>
-    fun f =>
-      instance_Data_Foldable_Foldable_option_foldr (GHC.Base.mappend GHC.Base.∘ f)
-      GHC.Base.mempty.
+    fun f => Foldable__option_foldr (GHC.Base.mappend GHC.Base.∘ f) GHC.Base.mempty.
 
-Local Definition instance_Data_Foldable_Foldable_option_fold : forall {m},
-                                                                 forall `{GHC.Base.Monoid m}, option m -> m :=
-  fun {m} `{GHC.Base.Monoid m} =>
-    instance_Data_Foldable_Foldable_option_foldMap GHC.Base.id.
+Local Definition Foldable__option_fold : forall {m},
+                                           forall `{GHC.Base.Monoid m}, option m -> m :=
+  fun {m} `{GHC.Base.Monoid m} => Foldable__option_foldMap GHC.Base.id.
 
-Local Definition instance_Data_Foldable_Foldable_option_elem {a} {H
-                                                               : GHC.Base.Eq_ a} : a -> option a -> bool :=
-  default_elem instance_Data_Foldable_Foldable_option_foldMap.
+Local Definition Foldable__option_elem {a} {H : GHC.Base.Eq_ a} : a -> option
+                                                                  a -> bool :=
+  default_elem Foldable__option_foldMap.
 
-Local Definition instance_Data_Foldable_Foldable_list_elem : forall {a},
-                                                               forall `{GHC.Base.Eq_ a}, a -> list a -> bool :=
+Local Definition Foldable__list_elem : forall {a},
+                                         forall `{GHC.Base.Eq_ a}, a -> list a -> bool :=
   fun {a} `{GHC.Base.Eq_ a} => GHC.List.elem.
 
-Local Definition instance_Data_Foldable_Foldable_list_foldl : forall {b} {a},
-                                                                (b -> a -> b) -> b -> list a -> b :=
+Local Definition Foldable__list_foldl : forall {b} {a},
+                                          (b -> a -> b) -> b -> list a -> b :=
   fun {b} {a} => GHC.Base.foldl.
 
-Local Definition instance_Data_Foldable_Foldable_list_foldr' : forall {a} {b},
-                                                                 (a -> b -> b) -> b -> list a -> b :=
+Local Definition Foldable__list_foldr' : forall {a} {b},
+                                           (a -> b -> b) -> b -> list a -> b :=
   fun {a} {b} =>
     fun f z0 xs =>
       let f' := fun k x z => k GHC.Base.$! f x z in
-      instance_Data_Foldable_Foldable_list_foldl f' GHC.Base.id xs z0.
+      Foldable__list_foldl f' GHC.Base.id xs z0.
 
-Local Definition instance_Data_Foldable_Foldable_list_foldl' : forall {b} {a},
-                                                                 (b -> a -> b) -> b -> list a -> b :=
+Local Definition Foldable__list_foldl' : forall {b} {a},
+                                           (b -> a -> b) -> b -> list a -> b :=
   fun {b} {a} => GHC.Base.foldl'.
 
-Local Definition instance_Data_Foldable_Foldable_list_foldr : forall {a} {b},
-                                                                (a -> b -> b) -> b -> list a -> b :=
+Local Definition Foldable__list_foldr : forall {a} {b},
+                                          (a -> b -> b) -> b -> list a -> b :=
   fun {a} {b} => GHC.Base.foldr.
 
-Local Definition instance_Data_Foldable_Foldable_list_foldMap : forall {m} {a},
-                                                                  forall `{GHC.Base.Monoid m},
-                                                                    (a -> m) -> list a -> m :=
+Local Definition Foldable__list_foldMap : forall {m} {a},
+                                            forall `{GHC.Base.Monoid m}, (a -> m) -> list a -> m :=
   fun {m} {a} `{GHC.Base.Monoid m} =>
-    fun f =>
-      instance_Data_Foldable_Foldable_list_foldr (GHC.Base.mappend GHC.Base.∘ f)
-      GHC.Base.mempty.
+    fun f => Foldable__list_foldr (GHC.Base.mappend GHC.Base.∘ f) GHC.Base.mempty.
 
-Local Definition instance_Data_Foldable_Foldable_list_fold : forall {m},
-                                                               forall `{GHC.Base.Monoid m}, list m -> m :=
-  fun {m} `{GHC.Base.Monoid m} =>
-    instance_Data_Foldable_Foldable_list_foldMap GHC.Base.id.
+Local Definition Foldable__list_fold : forall {m},
+                                         forall `{GHC.Base.Monoid m}, list m -> m :=
+  fun {m} `{GHC.Base.Monoid m} => Foldable__list_foldMap GHC.Base.id.
 
-Local Definition instance_Data_Foldable_Foldable_list_length : forall {a},
-                                                                 list a -> GHC.Num.Int :=
+Local Definition Foldable__list_length : forall {a}, list a -> GHC.Num.Int :=
   fun {a} => GHC.List.length.
 
-Local Definition instance_Data_Foldable_Foldable_list_null : forall {a},
-                                                               list a -> bool :=
+Local Definition Foldable__list_null : forall {a}, list a -> bool :=
   fun {a} => GHC.List.null.
 
-Local Definition instance_Data_Foldable_Foldable_list_product : forall {a},
-                                                                  forall `{GHC.Num.Num a}, list a -> a :=
+Local Definition Foldable__list_product : forall {a},
+                                            forall `{GHC.Num.Num a}, list a -> a :=
   fun {a} `{GHC.Num.Num a} => GHC.List.product.
 
-Local Definition instance_Data_Foldable_Foldable_list_sum : forall {a},
-                                                              forall `{GHC.Num.Num a}, list a -> a :=
+Local Definition Foldable__list_sum : forall {a},
+                                        forall `{GHC.Num.Num a}, list a -> a :=
   fun {a} `{GHC.Num.Num a} => GHC.List.sum.
 
-Local Definition instance_Data_Foldable_Foldable_list_toList : forall {a},
-                                                                 list a -> list a :=
+Local Definition Foldable__list_toList : forall {a}, list a -> list a :=
   fun {a} => GHC.Base.id.
 
-Program Instance instance_Data_Foldable_Foldable_list : Foldable list := fun _
-                                                                             k =>
-    k {|elem__ := fun {a} `{GHC.Base.Eq_ a} =>
-        instance_Data_Foldable_Foldable_list_elem ;
-      fold__ := fun {m} `{GHC.Base.Monoid m} =>
-        instance_Data_Foldable_Foldable_list_fold ;
-      foldMap__ := fun {m} {a} `{GHC.Base.Monoid m} =>
-        instance_Data_Foldable_Foldable_list_foldMap ;
-      foldl__ := fun {b} {a} => instance_Data_Foldable_Foldable_list_foldl ;
-      foldl'__ := fun {b} {a} => instance_Data_Foldable_Foldable_list_foldl' ;
-      foldr__ := fun {a} {b} => instance_Data_Foldable_Foldable_list_foldr ;
-      foldr'__ := fun {a} {b} => instance_Data_Foldable_Foldable_list_foldr' ;
-      length__ := fun {a} => instance_Data_Foldable_Foldable_list_length ;
-      null__ := fun {a} => instance_Data_Foldable_Foldable_list_null ;
-      product__ := fun {a} `{GHC.Num.Num a} =>
-        instance_Data_Foldable_Foldable_list_product ;
-      sum__ := fun {a} `{GHC.Num.Num a} => instance_Data_Foldable_Foldable_list_sum ;
-      toList__ := fun {a} => instance_Data_Foldable_Foldable_list_toList |}.
+Program Instance Foldable__list : Foldable list := fun _ k =>
+    k {|elem__ := fun {a} `{GHC.Base.Eq_ a} => Foldable__list_elem ;
+      fold__ := fun {m} `{GHC.Base.Monoid m} => Foldable__list_fold ;
+      foldMap__ := fun {m} {a} `{GHC.Base.Monoid m} => Foldable__list_foldMap ;
+      foldl__ := fun {b} {a} => Foldable__list_foldl ;
+      foldl'__ := fun {b} {a} => Foldable__list_foldl' ;
+      foldr__ := fun {a} {b} => Foldable__list_foldr ;
+      foldr'__ := fun {a} {b} => Foldable__list_foldr' ;
+      length__ := fun {a} => Foldable__list_length ;
+      null__ := fun {a} => Foldable__list_null ;
+      product__ := fun {a} `{GHC.Num.Num a} => Foldable__list_product ;
+      sum__ := fun {a} `{GHC.Num.Num a} => Foldable__list_sum ;
+      toList__ := fun {a} => Foldable__list_toList |}.
 
-Local Definition instance_Data_Foldable_Foldable__Data_Either_Either_a__foldMap {inst_a}
-    : forall {m} {a},
-        forall `{GHC.Base.Monoid m}, (a -> m) -> (Data.Either.Either inst_a) a -> m :=
+Local Definition Foldable__Either_foldMap {inst_a} : forall {m} {a},
+                                                       forall `{GHC.Base.Monoid m},
+                                                         (a -> m) -> (Data.Either.Either inst_a) a -> m :=
   fun {m} {a} `{GHC.Base.Monoid m} =>
     fun arg_306__ arg_307__ =>
       match arg_306__ , arg_307__ with
@@ -353,34 +330,30 @@ Local Definition instance_Data_Foldable_Foldable__Data_Either_Either_a__foldMap 
         | f , Data.Either.Mk_Right y => f y
       end.
 
-Local Definition instance_Data_Foldable_Foldable__Data_Either_Either_a__foldl {inst_a}
-    : forall {b} {a}, (b -> a -> b) -> b -> (Data.Either.Either inst_a) a -> b :=
+Local Definition Foldable__Either_foldl {inst_a} : forall {b} {a},
+                                                     (b -> a -> b) -> b -> (Data.Either.Either inst_a) a -> b :=
   fun {b} {a} =>
     fun f z t =>
-      appEndo (getDual (instance_Data_Foldable_Foldable__Data_Either_Either_a__foldMap
-                       (Data.Monoid.Mk_Dual GHC.Base.∘ (Data.Monoid.Mk_Endo GHC.Base.∘ GHC.Base.flip
-                       f)) t)) z.
+      appEndo (getDual (Foldable__Either_foldMap (Data.Monoid.Mk_Dual GHC.Base.∘
+                                                 (Data.Monoid.Mk_Endo GHC.Base.∘ GHC.Base.flip f)) t)) z.
 
-Local Definition instance_Data_Foldable_Foldable__Data_Either_Either_a__foldr' {inst_a}
-    : forall {a} {b}, (a -> b -> b) -> b -> (Data.Either.Either inst_a) a -> b :=
+Local Definition Foldable__Either_foldr' {inst_a} : forall {a} {b},
+                                                      (a -> b -> b) -> b -> (Data.Either.Either inst_a) a -> b :=
   fun {a} {b} =>
     fun f z0 xs =>
       let f' := fun k x z => k GHC.Base.$! f x z in
-      instance_Data_Foldable_Foldable__Data_Either_Either_a__foldl f' GHC.Base.id xs
-      z0.
+      Foldable__Either_foldl f' GHC.Base.id xs z0.
 
-Local Definition instance_Data_Foldable_Foldable__Data_Either_Either_a__fold {inst_a}
-    : forall {m}, forall `{GHC.Base.Monoid m}, (Data.Either.Either inst_a) m -> m :=
-  fun {m} `{GHC.Base.Monoid m} =>
-    instance_Data_Foldable_Foldable__Data_Either_Either_a__foldMap GHC.Base.id.
+Local Definition Foldable__Either_fold {inst_a} : forall {m},
+                                                    forall `{GHC.Base.Monoid m}, (Data.Either.Either inst_a) m -> m :=
+  fun {m} `{GHC.Base.Monoid m} => Foldable__Either_foldMap GHC.Base.id.
 
-Local Definition instance_Data_Foldable_Foldable__Data_Either_Either_a__elem {inst_a}
-                                                                             {a} {H : GHC.Base.Eq_ a}
+Local Definition Foldable__Either_elem {inst_a} {a} {H : GHC.Base.Eq_ a}
     : a -> Data.Either.Either inst_a a -> bool :=
-  default_elem instance_Data_Foldable_Foldable__Data_Either_Either_a__foldMap.
+  default_elem Foldable__Either_foldMap.
 
-Local Definition instance_Data_Foldable_Foldable__Data_Either_Either_a__foldr {inst_a}
-    : forall {a} {b}, (a -> b -> b) -> b -> (Data.Either.Either inst_a) a -> b :=
+Local Definition Foldable__Either_foldr {inst_a} : forall {a} {b},
+                                                     (a -> b -> b) -> b -> (Data.Either.Either inst_a) a -> b :=
   fun {a} {b} =>
     fun arg_310__ arg_311__ arg_312__ =>
       match arg_310__ , arg_311__ , arg_312__ with
@@ -388,23 +361,19 @@ Local Definition instance_Data_Foldable_Foldable__Data_Either_Either_a__foldr {i
         | f , z , Data.Either.Mk_Right y => f y z
       end.
 
-Local Definition instance_Data_Foldable_Foldable__Data_Either_Either_a__toList {inst_a}
-    : forall {a}, (Data.Either.Either inst_a) a -> list a :=
-  fun {a} =>
-    fun t =>
-      GHC.Base.build (fun c n =>
-                       instance_Data_Foldable_Foldable__Data_Either_Either_a__foldr c n t).
+Local Definition Foldable__Either_toList {inst_a} : forall {a},
+                                                      (Data.Either.Either inst_a) a -> list a :=
+  fun {a} => fun t => GHC.Base.build (fun c n => Foldable__Either_foldr c n t).
 
-Local Definition instance_Data_Foldable_Foldable__Data_Either_Either_a__foldl' {inst_a}
-    : forall {b} {a}, (b -> a -> b) -> b -> (Data.Either.Either inst_a) a -> b :=
+Local Definition Foldable__Either_foldl' {inst_a} : forall {b} {a},
+                                                      (b -> a -> b) -> b -> (Data.Either.Either inst_a) a -> b :=
   fun {b} {a} =>
     fun f z0 xs =>
       let f' := fun x k z => k GHC.Base.$! f z x in
-      instance_Data_Foldable_Foldable__Data_Either_Either_a__foldr f' GHC.Base.id xs
-      z0.
+      Foldable__Either_foldr f' GHC.Base.id xs z0.
 
-Local Definition instance_Data_Foldable_Foldable__Data_Either_Either_a__length {inst_a}
-    : forall {a}, (Data.Either.Either inst_a) a -> GHC.Num.Int :=
+Local Definition Foldable__Either_length {inst_a} : forall {a},
+                                                      (Data.Either.Either inst_a) a -> GHC.Num.Int :=
   fun {a} =>
     fun arg_315__ =>
       match arg_315__ with
@@ -412,342 +381,305 @@ Local Definition instance_Data_Foldable_Foldable__Data_Either_Either_a__length {
         | Data.Either.Mk_Right _ => GHC.Num.fromInteger 1
       end.
 
-Local Definition instance_Data_Foldable_Foldable__Data_Either_Either_a__null {inst_a}
-    : forall {a}, (Data.Either.Either inst_a) a -> bool :=
+Local Definition Foldable__Either_null {inst_a} : forall {a},
+                                                    (Data.Either.Either inst_a) a -> bool :=
   fun {a} => Data.Either.isLeft.
 
-Local Definition instance_Data_Foldable_Foldable__GHC_Tuple_pair_type_a__foldMap {inst_a}
-    : forall {m} {a},
-        forall `{GHC.Base.Monoid m}, (a -> m) -> (GHC.Tuple.pair_type inst_a) a -> m :=
+Local Definition Foldable__pair_type_foldMap {inst_a} : forall {m} {a},
+                                                          forall `{GHC.Base.Monoid m},
+                                                            (a -> m) -> (GHC.Tuple.pair_type inst_a) a -> m :=
   fun {m} {a} `{GHC.Base.Monoid m} =>
     fun arg_297__ arg_298__ =>
       match arg_297__ , arg_298__ with
         | f , pair _ y => f y
       end.
 
-Local Definition instance_Data_Foldable_Foldable__GHC_Tuple_pair_type_a__foldl {inst_a}
-    : forall {b} {a}, (b -> a -> b) -> b -> (GHC.Tuple.pair_type inst_a) a -> b :=
+Local Definition Foldable__pair_type_foldl {inst_a} : forall {b} {a},
+                                                        (b -> a -> b) -> b -> (GHC.Tuple.pair_type inst_a) a -> b :=
   fun {b} {a} =>
     fun f z t =>
-      appEndo (getDual
-              (instance_Data_Foldable_Foldable__GHC_Tuple_pair_type_a__foldMap
-              (Data.Monoid.Mk_Dual GHC.Base.∘ (Data.Monoid.Mk_Endo GHC.Base.∘ GHC.Base.flip
-              f)) t)) z.
+      appEndo (getDual (Foldable__pair_type_foldMap (Data.Monoid.Mk_Dual GHC.Base.∘
+                                                    (Data.Monoid.Mk_Endo GHC.Base.∘ GHC.Base.flip f)) t)) z.
 
-Local Definition instance_Data_Foldable_Foldable__GHC_Tuple_pair_type_a__foldr' {inst_a}
-    : forall {a} {b}, (a -> b -> b) -> b -> (GHC.Tuple.pair_type inst_a) a -> b :=
+Local Definition Foldable__pair_type_foldr' {inst_a} : forall {a} {b},
+                                                         (a -> b -> b) -> b -> (GHC.Tuple.pair_type inst_a) a -> b :=
   fun {a} {b} =>
     fun f z0 xs =>
       let f' := fun k x z => k GHC.Base.$! f x z in
-      instance_Data_Foldable_Foldable__GHC_Tuple_pair_type_a__foldl f' GHC.Base.id xs
-      z0.
+      Foldable__pair_type_foldl f' GHC.Base.id xs z0.
 
-Local Definition instance_Data_Foldable_Foldable__GHC_Tuple_pair_type_a__fold {inst_a}
-    : forall {m},
-        forall `{GHC.Base.Monoid m}, (GHC.Tuple.pair_type inst_a) m -> m :=
-  fun {m} `{GHC.Base.Monoid m} =>
-    instance_Data_Foldable_Foldable__GHC_Tuple_pair_type_a__foldMap GHC.Base.id.
+Local Definition Foldable__pair_type_fold {inst_a} : forall {m},
+                                                       forall `{GHC.Base.Monoid m},
+                                                         (GHC.Tuple.pair_type inst_a) m -> m :=
+  fun {m} `{GHC.Base.Monoid m} => Foldable__pair_type_foldMap GHC.Base.id.
 
-Local Definition instance_Data_Foldable_Foldable__GHC_Tuple_pair_type_a__elem {inst_a}
-                                                                              {a} {H : GHC.Base.Eq_ a}
+Local Definition Foldable__pair_type_elem {inst_a} {a} {H : GHC.Base.Eq_ a}
     : a -> GHC.Tuple.pair_type inst_a a -> bool :=
-  default_elem instance_Data_Foldable_Foldable__GHC_Tuple_pair_type_a__foldMap.
+  default_elem Foldable__pair_type_foldMap.
 
-Local Definition instance_Data_Foldable_Foldable__GHC_Tuple_pair_type_a__foldr {inst_a}
-    : forall {a} {b}, (a -> b -> b) -> b -> (GHC.Tuple.pair_type inst_a) a -> b :=
+Local Definition Foldable__pair_type_foldr {inst_a} : forall {a} {b},
+                                                        (a -> b -> b) -> b -> (GHC.Tuple.pair_type inst_a) a -> b :=
   fun {a} {b} =>
     fun arg_301__ arg_302__ arg_303__ =>
       match arg_301__ , arg_302__ , arg_303__ with
         | f , z , pair _ y => f y z
       end.
 
-Local Definition instance_Data_Foldable_Foldable__GHC_Tuple_pair_type_a__null {inst_a}
-    : forall {a}, (GHC.Tuple.pair_type inst_a) a -> bool :=
-  fun {a} =>
-    instance_Data_Foldable_Foldable__GHC_Tuple_pair_type_a__foldr (fun arg_18__
-                                                                       arg_19__ =>
-                                                                    false) true.
+Local Definition Foldable__pair_type_null {inst_a} : forall {a},
+                                                       (GHC.Tuple.pair_type inst_a) a -> bool :=
+  fun {a} => Foldable__pair_type_foldr (fun arg_18__ arg_19__ => false) true.
 
-Local Definition instance_Data_Foldable_Foldable__GHC_Tuple_pair_type_a__toList {inst_a}
-    : forall {a}, (GHC.Tuple.pair_type inst_a) a -> list a :=
-  fun {a} =>
-    fun t =>
-      GHC.Base.build (fun c n =>
-                       instance_Data_Foldable_Foldable__GHC_Tuple_pair_type_a__foldr c n t).
+Local Definition Foldable__pair_type_toList {inst_a} : forall {a},
+                                                         (GHC.Tuple.pair_type inst_a) a -> list a :=
+  fun {a} => fun t => GHC.Base.build (fun c n => Foldable__pair_type_foldr c n t).
 
-Local Definition instance_Data_Foldable_Foldable__GHC_Tuple_pair_type_a__foldl' {inst_a}
-    : forall {b} {a}, (b -> a -> b) -> b -> (GHC.Tuple.pair_type inst_a) a -> b :=
+Local Definition Foldable__pair_type_foldl' {inst_a} : forall {b} {a},
+                                                         (b -> a -> b) -> b -> (GHC.Tuple.pair_type inst_a) a -> b :=
   fun {b} {a} =>
     fun f z0 xs =>
       let f' := fun x k z => k GHC.Base.$! f z x in
-      instance_Data_Foldable_Foldable__GHC_Tuple_pair_type_a__foldr f' GHC.Base.id xs
-      z0.
+      Foldable__pair_type_foldr f' GHC.Base.id xs z0.
 
-Local Definition instance_Data_Foldable_Foldable__GHC_Tuple_pair_type_a__length {inst_a}
-    : forall {a}, (GHC.Tuple.pair_type inst_a) a -> GHC.Num.Int :=
+Local Definition Foldable__pair_type_length {inst_a} : forall {a},
+                                                         (GHC.Tuple.pair_type inst_a) a -> GHC.Num.Int :=
   fun {a} =>
-    instance_Data_Foldable_Foldable__GHC_Tuple_pair_type_a__foldl' (fun arg_21__
-                                                                        arg_22__ =>
-                                                                     match arg_21__ , arg_22__ with
-                                                                       | c , _ => c GHC.Num.+ GHC.Num.fromInteger 1
-                                                                     end) (GHC.Num.fromInteger 0).
+    Foldable__pair_type_foldl' (fun arg_21__ arg_22__ =>
+                                 match arg_21__ , arg_22__ with
+                                   | c , _ => c GHC.Num.+ GHC.Num.fromInteger 1
+                                 end) (GHC.Num.fromInteger 0).
 
-(* Skipping instance instance_Data_Foldable_Foldable__GHC_Arr_Array_i_ *)
+(* Skipping instance Foldable__Array *)
 
-Local Definition instance_Data_Foldable_Foldable_Data_Proxy_Proxy_elem
-    : forall {a}, forall `{GHC.Base.Eq_ a}, a -> Data.Proxy.Proxy a -> bool :=
+Local Definition Foldable__Proxy_elem : forall {a},
+                                          forall `{GHC.Base.Eq_ a}, a -> Data.Proxy.Proxy a -> bool :=
   fun {a} `{GHC.Base.Eq_ a} => fun arg_288__ arg_289__ => false.
 
-Local Definition instance_Data_Foldable_Foldable_Data_Proxy_Proxy_fold
-    : forall {m}, forall `{GHC.Base.Monoid m}, Data.Proxy.Proxy m -> m :=
+Local Definition Foldable__Proxy_fold : forall {m},
+                                          forall `{GHC.Base.Monoid m}, Data.Proxy.Proxy m -> m :=
   fun {m} `{GHC.Base.Monoid m} => fun arg_267__ => GHC.Base.mempty.
 
-Local Definition instance_Data_Foldable_Foldable_Data_Proxy_Proxy_foldMap
-    : forall {m} {a},
-        forall `{GHC.Base.Monoid m}, (a -> m) -> Data.Proxy.Proxy a -> m :=
+Local Definition Foldable__Proxy_foldMap : forall {m} {a},
+                                             forall `{GHC.Base.Monoid m}, (a -> m) -> Data.Proxy.Proxy a -> m :=
   fun {m} {a} `{GHC.Base.Monoid m} => fun arg_265__ arg_266__ => GHC.Base.mempty.
 
-Local Definition instance_Data_Foldable_Foldable_Data_Proxy_Proxy_foldl
-    : forall {b} {a}, (b -> a -> b) -> b -> Data.Proxy.Proxy a -> b :=
+Local Definition Foldable__Proxy_foldl : forall {b} {a},
+                                           (b -> a -> b) -> b -> Data.Proxy.Proxy a -> b :=
   fun {b} {a} =>
     fun arg_272__ arg_273__ arg_274__ =>
       match arg_272__ , arg_273__ , arg_274__ with
         | _ , z , _ => z
       end.
 
-Local Definition instance_Data_Foldable_Foldable_Data_Proxy_Proxy_foldr'
-    : forall {a} {b}, (a -> b -> b) -> b -> Data.Proxy.Proxy a -> b :=
+Local Definition Foldable__Proxy_foldr' : forall {a} {b},
+                                            (a -> b -> b) -> b -> Data.Proxy.Proxy a -> b :=
   fun {a} {b} =>
     fun f z0 xs =>
       let f' := fun k x z => k GHC.Base.$! f x z in
-      instance_Data_Foldable_Foldable_Data_Proxy_Proxy_foldl f' GHC.Base.id xs z0.
+      Foldable__Proxy_foldl f' GHC.Base.id xs z0.
 
-Local Definition instance_Data_Foldable_Foldable_Data_Proxy_Proxy_foldr
-    : forall {a} {b}, (a -> b -> b) -> b -> Data.Proxy.Proxy a -> b :=
+Local Definition Foldable__Proxy_foldr : forall {a} {b},
+                                           (a -> b -> b) -> b -> Data.Proxy.Proxy a -> b :=
   fun {a} {b} =>
     fun arg_268__ arg_269__ arg_270__ =>
       match arg_268__ , arg_269__ , arg_270__ with
         | _ , z , _ => z
       end.
 
-Local Definition instance_Data_Foldable_Foldable_Data_Proxy_Proxy_toList
-    : forall {a}, Data.Proxy.Proxy a -> list a :=
-  fun {a} =>
-    fun t =>
-      GHC.Base.build (fun c n =>
-                       instance_Data_Foldable_Foldable_Data_Proxy_Proxy_foldr c n t).
+Local Definition Foldable__Proxy_toList : forall {a},
+                                            Data.Proxy.Proxy a -> list a :=
+  fun {a} => fun t => GHC.Base.build (fun c n => Foldable__Proxy_foldr c n t).
 
-Local Definition instance_Data_Foldable_Foldable_Data_Proxy_Proxy_foldl'
-    : forall {b} {a}, (b -> a -> b) -> b -> Data.Proxy.Proxy a -> b :=
+Local Definition Foldable__Proxy_foldl' : forall {b} {a},
+                                            (b -> a -> b) -> b -> Data.Proxy.Proxy a -> b :=
   fun {b} {a} =>
     fun f z0 xs =>
       let f' := fun x k z => k GHC.Base.$! f z x in
-      instance_Data_Foldable_Foldable_Data_Proxy_Proxy_foldr f' GHC.Base.id xs z0.
+      Foldable__Proxy_foldr f' GHC.Base.id xs z0.
 
-Local Definition instance_Data_Foldable_Foldable_Data_Proxy_Proxy_length
-    : forall {a}, Data.Proxy.Proxy a -> GHC.Num.Int :=
+Local Definition Foldable__Proxy_length : forall {a},
+                                            Data.Proxy.Proxy a -> GHC.Num.Int :=
   fun {a} => fun arg_284__ => GHC.Num.fromInteger 0.
 
-Local Definition instance_Data_Foldable_Foldable_Data_Proxy_Proxy_null
-    : forall {a}, Data.Proxy.Proxy a -> bool :=
+Local Definition Foldable__Proxy_null : forall {a},
+                                          Data.Proxy.Proxy a -> bool :=
   fun {a} => fun arg_287__ => true.
 
-Local Definition instance_Data_Foldable_Foldable_Data_Proxy_Proxy_product
-    : forall {a}, forall `{GHC.Num.Num a}, Data.Proxy.Proxy a -> a :=
+Local Definition Foldable__Proxy_product : forall {a},
+                                             forall `{GHC.Num.Num a}, Data.Proxy.Proxy a -> a :=
   fun {a} `{GHC.Num.Num a} => fun arg_293__ => GHC.Num.fromInteger 1.
 
-Local Definition instance_Data_Foldable_Foldable_Data_Proxy_Proxy_sum
-    : forall {a}, forall `{GHC.Num.Num a}, Data.Proxy.Proxy a -> a :=
+Local Definition Foldable__Proxy_sum : forall {a},
+                                         forall `{GHC.Num.Num a}, Data.Proxy.Proxy a -> a :=
   fun {a} `{GHC.Num.Num a} => fun arg_290__ => GHC.Num.fromInteger 0.
 
-Program Instance instance_Data_Foldable_Foldable_Data_Proxy_Proxy : Foldable
-                                                                    Data.Proxy.Proxy := fun _ k =>
-    k {|elem__ := fun {a} `{GHC.Base.Eq_ a} =>
-        instance_Data_Foldable_Foldable_Data_Proxy_Proxy_elem ;
-      fold__ := fun {m} `{GHC.Base.Monoid m} =>
-        instance_Data_Foldable_Foldable_Data_Proxy_Proxy_fold ;
-      foldMap__ := fun {m} {a} `{GHC.Base.Monoid m} =>
-        instance_Data_Foldable_Foldable_Data_Proxy_Proxy_foldMap ;
-      foldl__ := fun {b} {a} =>
-        instance_Data_Foldable_Foldable_Data_Proxy_Proxy_foldl ;
-      foldl'__ := fun {b} {a} =>
-        instance_Data_Foldable_Foldable_Data_Proxy_Proxy_foldl' ;
-      foldr__ := fun {a} {b} =>
-        instance_Data_Foldable_Foldable_Data_Proxy_Proxy_foldr ;
-      foldr'__ := fun {a} {b} =>
-        instance_Data_Foldable_Foldable_Data_Proxy_Proxy_foldr' ;
-      length__ := fun {a} => instance_Data_Foldable_Foldable_Data_Proxy_Proxy_length ;
-      null__ := fun {a} => instance_Data_Foldable_Foldable_Data_Proxy_Proxy_null ;
-      product__ := fun {a} `{GHC.Num.Num a} =>
-        instance_Data_Foldable_Foldable_Data_Proxy_Proxy_product ;
-      sum__ := fun {a} `{GHC.Num.Num a} =>
-        instance_Data_Foldable_Foldable_Data_Proxy_Proxy_sum ;
-      toList__ := fun {a} =>
-        instance_Data_Foldable_Foldable_Data_Proxy_Proxy_toList |}.
+Program Instance Foldable__Proxy : Foldable Data.Proxy.Proxy := fun _ k =>
+    k {|elem__ := fun {a} `{GHC.Base.Eq_ a} => Foldable__Proxy_elem ;
+      fold__ := fun {m} `{GHC.Base.Monoid m} => Foldable__Proxy_fold ;
+      foldMap__ := fun {m} {a} `{GHC.Base.Monoid m} => Foldable__Proxy_foldMap ;
+      foldl__ := fun {b} {a} => Foldable__Proxy_foldl ;
+      foldl'__ := fun {b} {a} => Foldable__Proxy_foldl' ;
+      foldr__ := fun {a} {b} => Foldable__Proxy_foldr ;
+      foldr'__ := fun {a} {b} => Foldable__Proxy_foldr' ;
+      length__ := fun {a} => Foldable__Proxy_length ;
+      null__ := fun {a} => Foldable__Proxy_null ;
+      product__ := fun {a} `{GHC.Num.Num a} => Foldable__Proxy_product ;
+      sum__ := fun {a} `{GHC.Num.Num a} => Foldable__Proxy_sum ;
+      toList__ := fun {a} => Foldable__Proxy_toList |}.
 
-Local Definition instance_Data_Foldable_Foldable_Data_Monoid_Dual_foldMap
-    : forall {m} {a},
-        forall `{GHC.Base.Monoid m}, (a -> m) -> Data.Monoid.Dual a -> m :=
+Local Definition Foldable__Dual_foldMap : forall {m} {a},
+                                            forall `{GHC.Base.Monoid m}, (a -> m) -> Data.Monoid.Dual a -> m :=
   fun {m} {a} `{GHC.Base.Monoid m} => GHC.Prim.coerce.
 
-Local Definition instance_Data_Foldable_Foldable_Data_Monoid_Dual_fold
-    : forall {m}, forall `{GHC.Base.Monoid m}, Data.Monoid.Dual m -> m :=
-  fun {m} `{GHC.Base.Monoid m} =>
-    instance_Data_Foldable_Foldable_Data_Monoid_Dual_foldMap GHC.Base.id.
+Local Definition Foldable__Dual_fold : forall {m},
+                                         forall `{GHC.Base.Monoid m}, Data.Monoid.Dual m -> m :=
+  fun {m} `{GHC.Base.Monoid m} => Foldable__Dual_foldMap GHC.Base.id.
 
-Local Definition instance_Data_Foldable_Foldable_Data_Monoid_Dual_foldl
-    : forall {b} {a}, (b -> a -> b) -> b -> Data.Monoid.Dual a -> b :=
+Local Definition Foldable__Dual_foldl : forall {b} {a},
+                                          (b -> a -> b) -> b -> Data.Monoid.Dual a -> b :=
   fun {b} {a} => GHC.Prim.coerce.
 
-Local Definition instance_Data_Foldable_Foldable_Data_Monoid_Dual_foldl'
-    : forall {b} {a}, (b -> a -> b) -> b -> Data.Monoid.Dual a -> b :=
+Local Definition Foldable__Dual_foldl' : forall {b} {a},
+                                           (b -> a -> b) -> b -> Data.Monoid.Dual a -> b :=
   fun {b} {a} => GHC.Prim.coerce.
 
-Local Definition instance_Data_Foldable_Foldable_Data_Monoid_Dual_foldr
-    : forall {a} {b}, (a -> b -> b) -> b -> Data.Monoid.Dual a -> b :=
+Local Definition Foldable__Dual_foldr : forall {a} {b},
+                                          (a -> b -> b) -> b -> Data.Monoid.Dual a -> b :=
   fun {a} {b} =>
     fun arg_252__ arg_253__ arg_254__ =>
       match arg_252__ , arg_253__ , arg_254__ with
         | f , z , Data.Monoid.Mk_Dual x => f x z
       end.
 
-Local Definition instance_Data_Foldable_Foldable_Data_Monoid_Dual_foldr'
-    : forall {a} {b}, (a -> b -> b) -> b -> Data.Monoid.Dual a -> b :=
-  fun {a} {b} => instance_Data_Foldable_Foldable_Data_Monoid_Dual_foldr.
+Local Definition Foldable__Dual_foldr' : forall {a} {b},
+                                           (a -> b -> b) -> b -> Data.Monoid.Dual a -> b :=
+  fun {a} {b} => Foldable__Dual_foldr.
 
-Local Definition instance_Data_Foldable_Foldable_Data_Monoid_Dual_length
-    : forall {a}, Data.Monoid.Dual a -> GHC.Num.Int :=
+Local Definition Foldable__Dual_length : forall {a},
+                                           Data.Monoid.Dual a -> GHC.Num.Int :=
   fun {a} => fun arg_258__ => GHC.Num.fromInteger 1.
 
-Local Definition instance_Data_Foldable_Foldable_Data_Monoid_Dual_null
-    : forall {a}, Data.Monoid.Dual a -> bool :=
+Local Definition Foldable__Dual_null : forall {a}, Data.Monoid.Dual a -> bool :=
   fun {a} => fun arg_261__ => false.
 
-Local Definition instance_Data_Foldable_Foldable_Data_Monoid_Dual_product
-    : forall {a}, forall `{GHC.Num.Num a}, Data.Monoid.Dual a -> a :=
+Local Definition Foldable__Dual_product : forall {a},
+                                            forall `{GHC.Num.Num a}, Data.Monoid.Dual a -> a :=
   fun {a} `{GHC.Num.Num a} => getDual.
 
-Local Definition instance_Data_Foldable_Foldable_Data_Monoid_Dual_sum
-    : forall {a}, forall `{GHC.Num.Num a}, Data.Monoid.Dual a -> a :=
+Local Definition Foldable__Dual_sum : forall {a},
+                                        forall `{GHC.Num.Num a}, Data.Monoid.Dual a -> a :=
   fun {a} `{GHC.Num.Num a} => getDual.
 
-Local Definition instance_Data_Foldable_Foldable_Data_Monoid_Dual_toList
-    : forall {a}, Data.Monoid.Dual a -> list a :=
+Local Definition Foldable__Dual_toList : forall {a},
+                                           Data.Monoid.Dual a -> list a :=
   fun {a} =>
     fun arg_262__ => match arg_262__ with | Data.Monoid.Mk_Dual x => cons x nil end.
 
-Local Definition instance_Data_Foldable_Foldable_Data_Monoid_Sum_foldMap
-    : forall {m} {a},
-        forall `{GHC.Base.Monoid m}, (a -> m) -> Data.Monoid.Sum a -> m :=
+Local Definition Foldable__Sum_foldMap : forall {m} {a},
+                                           forall `{GHC.Base.Monoid m}, (a -> m) -> Data.Monoid.Sum a -> m :=
   fun {m} {a} `{GHC.Base.Monoid m} => GHC.Prim.coerce.
 
-Local Definition instance_Data_Foldable_Foldable_Data_Monoid_Sum_fold
-    : forall {m}, forall `{GHC.Base.Monoid m}, Data.Monoid.Sum m -> m :=
-  fun {m} `{GHC.Base.Monoid m} =>
-    instance_Data_Foldable_Foldable_Data_Monoid_Sum_foldMap GHC.Base.id.
+Local Definition Foldable__Sum_fold : forall {m},
+                                        forall `{GHC.Base.Monoid m}, Data.Monoid.Sum m -> m :=
+  fun {m} `{GHC.Base.Monoid m} => Foldable__Sum_foldMap GHC.Base.id.
 
-Local Definition instance_Data_Foldable_Foldable_Data_Monoid_Sum_foldl
-    : forall {b} {a}, (b -> a -> b) -> b -> Data.Monoid.Sum a -> b :=
+Local Definition Foldable__Sum_foldl : forall {b} {a},
+                                         (b -> a -> b) -> b -> Data.Monoid.Sum a -> b :=
   fun {b} {a} => GHC.Prim.coerce.
 
-Local Definition instance_Data_Foldable_Foldable_Data_Monoid_Sum_foldl'
-    : forall {b} {a}, (b -> a -> b) -> b -> Data.Monoid.Sum a -> b :=
+Local Definition Foldable__Sum_foldl' : forall {b} {a},
+                                          (b -> a -> b) -> b -> Data.Monoid.Sum a -> b :=
   fun {b} {a} => GHC.Prim.coerce.
 
-Local Definition instance_Data_Foldable_Foldable_Data_Monoid_Sum_foldr
-    : forall {a} {b}, (a -> b -> b) -> b -> Data.Monoid.Sum a -> b :=
+Local Definition Foldable__Sum_foldr : forall {a} {b},
+                                         (a -> b -> b) -> b -> Data.Monoid.Sum a -> b :=
   fun {a} {b} =>
     fun arg_236__ arg_237__ arg_238__ =>
       match arg_236__ , arg_237__ , arg_238__ with
         | f , z , Data.Monoid.Mk_Sum x => f x z
       end.
 
-Local Definition instance_Data_Foldable_Foldable_Data_Monoid_Sum_foldr'
-    : forall {a} {b}, (a -> b -> b) -> b -> Data.Monoid.Sum a -> b :=
-  fun {a} {b} => instance_Data_Foldable_Foldable_Data_Monoid_Sum_foldr.
+Local Definition Foldable__Sum_foldr' : forall {a} {b},
+                                          (a -> b -> b) -> b -> Data.Monoid.Sum a -> b :=
+  fun {a} {b} => Foldable__Sum_foldr.
 
-Local Definition instance_Data_Foldable_Foldable_Data_Monoid_Sum_length
-    : forall {a}, Data.Monoid.Sum a -> GHC.Num.Int :=
+Local Definition Foldable__Sum_length : forall {a},
+                                          Data.Monoid.Sum a -> GHC.Num.Int :=
   fun {a} => fun arg_242__ => GHC.Num.fromInteger 1.
 
-Local Definition instance_Data_Foldable_Foldable_Data_Monoid_Sum_null
-    : forall {a}, Data.Monoid.Sum a -> bool :=
+Local Definition Foldable__Sum_null : forall {a}, Data.Monoid.Sum a -> bool :=
   fun {a} => fun arg_245__ => false.
 
-Local Definition instance_Data_Foldable_Foldable_Data_Monoid_Sum_product
-    : forall {a}, forall `{GHC.Num.Num a}, Data.Monoid.Sum a -> a :=
+Local Definition Foldable__Sum_product : forall {a},
+                                           forall `{GHC.Num.Num a}, Data.Monoid.Sum a -> a :=
   fun {a} `{GHC.Num.Num a} => getSum.
 
-Local Definition instance_Data_Foldable_Foldable_Data_Monoid_Sum_sum
-    : forall {a}, forall `{GHC.Num.Num a}, Data.Monoid.Sum a -> a :=
+Local Definition Foldable__Sum_sum : forall {a},
+                                       forall `{GHC.Num.Num a}, Data.Monoid.Sum a -> a :=
   fun {a} `{GHC.Num.Num a} => getSum.
 
-Local Definition instance_Data_Foldable_Foldable_Data_Monoid_Sum_toList
-    : forall {a}, Data.Monoid.Sum a -> list a :=
+Local Definition Foldable__Sum_toList : forall {a},
+                                          Data.Monoid.Sum a -> list a :=
   fun {a} =>
     fun arg_246__ => match arg_246__ with | Data.Monoid.Mk_Sum x => cons x nil end.
 
-Local Definition instance_Data_Foldable_Foldable_Data_Monoid_Product_foldMap
-    : forall {m} {a},
-        forall `{GHC.Base.Monoid m}, (a -> m) -> Data.Monoid.Product a -> m :=
+Local Definition Foldable__Product_foldMap : forall {m} {a},
+                                               forall `{GHC.Base.Monoid m}, (a -> m) -> Data.Monoid.Product a -> m :=
   fun {m} {a} `{GHC.Base.Monoid m} => GHC.Prim.coerce.
 
-Local Definition instance_Data_Foldable_Foldable_Data_Monoid_Product_fold
-    : forall {m}, forall `{GHC.Base.Monoid m}, Data.Monoid.Product m -> m :=
-  fun {m} `{GHC.Base.Monoid m} =>
-    instance_Data_Foldable_Foldable_Data_Monoid_Product_foldMap GHC.Base.id.
+Local Definition Foldable__Product_fold : forall {m},
+                                            forall `{GHC.Base.Monoid m}, Data.Monoid.Product m -> m :=
+  fun {m} `{GHC.Base.Monoid m} => Foldable__Product_foldMap GHC.Base.id.
 
-Local Definition instance_Data_Foldable_Foldable_Data_Monoid_Product_foldl
-    : forall {b} {a}, (b -> a -> b) -> b -> Data.Monoid.Product a -> b :=
+Local Definition Foldable__Product_foldl : forall {b} {a},
+                                             (b -> a -> b) -> b -> Data.Monoid.Product a -> b :=
   fun {b} {a} => GHC.Prim.coerce.
 
-Local Definition instance_Data_Foldable_Foldable_Data_Monoid_Product_foldl'
-    : forall {b} {a}, (b -> a -> b) -> b -> Data.Monoid.Product a -> b :=
+Local Definition Foldable__Product_foldl' : forall {b} {a},
+                                              (b -> a -> b) -> b -> Data.Monoid.Product a -> b :=
   fun {b} {a} => GHC.Prim.coerce.
 
-Local Definition instance_Data_Foldable_Foldable_Data_Monoid_Product_foldr
-    : forall {a} {b}, (a -> b -> b) -> b -> Data.Monoid.Product a -> b :=
+Local Definition Foldable__Product_foldr : forall {a} {b},
+                                             (a -> b -> b) -> b -> Data.Monoid.Product a -> b :=
   fun {a} {b} =>
     fun arg_220__ arg_221__ arg_222__ =>
       match arg_220__ , arg_221__ , arg_222__ with
         | f , z , Data.Monoid.Mk_Product x => f x z
       end.
 
-Local Definition instance_Data_Foldable_Foldable_Data_Monoid_Product_foldr'
-    : forall {a} {b}, (a -> b -> b) -> b -> Data.Monoid.Product a -> b :=
-  fun {a} {b} => instance_Data_Foldable_Foldable_Data_Monoid_Product_foldr.
+Local Definition Foldable__Product_foldr' : forall {a} {b},
+                                              (a -> b -> b) -> b -> Data.Monoid.Product a -> b :=
+  fun {a} {b} => Foldable__Product_foldr.
 
-Local Definition instance_Data_Foldable_Foldable_Data_Monoid_Product_length
-    : forall {a}, Data.Monoid.Product a -> GHC.Num.Int :=
+Local Definition Foldable__Product_length : forall {a},
+                                              Data.Monoid.Product a -> GHC.Num.Int :=
   fun {a} => fun arg_226__ => GHC.Num.fromInteger 1.
 
-Local Definition instance_Data_Foldable_Foldable_Data_Monoid_Product_null
-    : forall {a}, Data.Monoid.Product a -> bool :=
+Local Definition Foldable__Product_null : forall {a},
+                                            Data.Monoid.Product a -> bool :=
   fun {a} => fun arg_229__ => false.
 
-Local Definition instance_Data_Foldable_Foldable_Data_Monoid_Product_product
-    : forall {a}, forall `{GHC.Num.Num a}, Data.Monoid.Product a -> a :=
+Local Definition Foldable__Product_product : forall {a},
+                                               forall `{GHC.Num.Num a}, Data.Monoid.Product a -> a :=
   fun {a} `{GHC.Num.Num a} => getProduct.
 
-Local Definition instance_Data_Foldable_Foldable_Data_Monoid_Product_sum
-    : forall {a}, forall `{GHC.Num.Num a}, Data.Monoid.Product a -> a :=
+Local Definition Foldable__Product_sum : forall {a},
+                                           forall `{GHC.Num.Num a}, Data.Monoid.Product a -> a :=
   fun {a} `{GHC.Num.Num a} => getProduct.
 
-Local Definition instance_Data_Foldable_Foldable_Data_Monoid_Product_toList
-    : forall {a}, Data.Monoid.Product a -> list a :=
+Local Definition Foldable__Product_toList : forall {a},
+                                              Data.Monoid.Product a -> list a :=
   fun {a} =>
     fun arg_230__ =>
       match arg_230__ with
         | Data.Monoid.Mk_Product x => cons x nil
       end.
 
-(* Skipping instance instance_Data_Foldable_Foldable_Data_Monoid_First *)
+(* Skipping instance Foldable__First *)
 
-(* Skipping instance instance_Data_Foldable_Foldable_Data_Monoid_Last *)
+(* Skipping instance Foldable__Last *)
 
-Local Definition instance_forall___GHC_Base_Ord_a___GHC_Base_Monoid__Data_Foldable_Max_a__mappend {inst_a}
-                                                                                                  `{GHC.Base.Ord inst_a}
-    : (Max inst_a) -> (Max inst_a) -> (Max inst_a) :=
+Local Definition Monoid__Max_mappend {inst_a} `{GHC.Base.Ord inst_a} : (Max
+                                                                       inst_a) -> (Max inst_a) -> (Max inst_a) :=
   fun arg_210__ arg_211__ =>
     match arg_210__ , arg_211__ with
       | m , Mk_Max None => m
@@ -758,29 +690,22 @@ Local Definition instance_forall___GHC_Base_Ord_a___GHC_Base_Monoid__Data_Foldab
                                                        else j_212__
     end.
 
-Local Definition instance_forall___GHC_Base_Ord_a___GHC_Base_Monoid__Data_Foldable_Max_a__mempty {inst_a}
-                                                                                                 `{GHC.Base.Ord inst_a}
-    : (Max inst_a) :=
+Local Definition Monoid__Max_mempty {inst_a} `{GHC.Base.Ord inst_a} : (Max
+                                                                      inst_a) :=
   Mk_Max None.
 
-Local Definition instance_forall___GHC_Base_Ord_a___GHC_Base_Monoid__Data_Foldable_Max_a__mconcat {inst_a}
-                                                                                                  `{GHC.Base.Ord inst_a}
-    : list (Max inst_a) -> (Max inst_a) :=
-  GHC.Base.foldr
-  instance_forall___GHC_Base_Ord_a___GHC_Base_Monoid__Data_Foldable_Max_a__mappend
-  instance_forall___GHC_Base_Ord_a___GHC_Base_Monoid__Data_Foldable_Max_a__mempty.
+Local Definition Monoid__Max_mconcat {inst_a} `{GHC.Base.Ord inst_a} : list (Max
+                                                                            inst_a) -> (Max inst_a) :=
+  GHC.Base.foldr Monoid__Max_mappend Monoid__Max_mempty.
 
-Program Instance instance_forall___GHC_Base_Ord_a___GHC_Base_Monoid__Data_Foldable_Max_a_ {a}
-                                                                                          `{GHC.Base.Ord a}
-  : GHC.Base.Monoid (Max a) := fun _ k =>
-    k
-    {|GHC.Base.mappend__ := instance_forall___GHC_Base_Ord_a___GHC_Base_Monoid__Data_Foldable_Max_a__mappend ;
-    GHC.Base.mconcat__ := instance_forall___GHC_Base_Ord_a___GHC_Base_Monoid__Data_Foldable_Max_a__mconcat ;
-    GHC.Base.mempty__ := instance_forall___GHC_Base_Ord_a___GHC_Base_Monoid__Data_Foldable_Max_a__mempty |}.
+Program Instance Monoid__Max {a} `{GHC.Base.Ord a} : GHC.Base.Monoid (Max a) :=
+  fun _ k =>
+    k {|GHC.Base.mappend__ := Monoid__Max_mappend ;
+      GHC.Base.mconcat__ := Monoid__Max_mconcat ;
+      GHC.Base.mempty__ := Monoid__Max_mempty |}.
 
-Local Definition instance_forall___GHC_Base_Ord_a___GHC_Base_Monoid__Data_Foldable_Min_a__mappend {inst_a}
-                                                                                                  `{GHC.Base.Ord inst_a}
-    : (Min inst_a) -> (Min inst_a) -> (Min inst_a) :=
+Local Definition Monoid__Min_mappend {inst_a} `{GHC.Base.Ord inst_a} : (Min
+                                                                       inst_a) -> (Min inst_a) -> (Min inst_a) :=
   fun arg_204__ arg_205__ =>
     match arg_204__ , arg_205__ with
       | m , Mk_Min None => m
@@ -791,66 +716,49 @@ Local Definition instance_forall___GHC_Base_Ord_a___GHC_Base_Monoid__Data_Foldab
                                                        else j_206__
     end.
 
-Local Definition instance_forall___GHC_Base_Ord_a___GHC_Base_Monoid__Data_Foldable_Min_a__mempty {inst_a}
-                                                                                                 `{GHC.Base.Ord inst_a}
-    : (Min inst_a) :=
+Local Definition Monoid__Min_mempty {inst_a} `{GHC.Base.Ord inst_a} : (Min
+                                                                      inst_a) :=
   Mk_Min None.
 
-Local Definition instance_forall___GHC_Base_Ord_a___GHC_Base_Monoid__Data_Foldable_Min_a__mconcat {inst_a}
-                                                                                                  `{GHC.Base.Ord inst_a}
-    : list (Min inst_a) -> (Min inst_a) :=
-  GHC.Base.foldr
-  instance_forall___GHC_Base_Ord_a___GHC_Base_Monoid__Data_Foldable_Min_a__mappend
-  instance_forall___GHC_Base_Ord_a___GHC_Base_Monoid__Data_Foldable_Min_a__mempty.
+Local Definition Monoid__Min_mconcat {inst_a} `{GHC.Base.Ord inst_a} : list (Min
+                                                                            inst_a) -> (Min inst_a) :=
+  GHC.Base.foldr Monoid__Min_mappend Monoid__Min_mempty.
 
-Program Instance instance_forall___GHC_Base_Ord_a___GHC_Base_Monoid__Data_Foldable_Min_a_ {a}
-                                                                                          `{GHC.Base.Ord a}
-  : GHC.Base.Monoid (Min a) := fun _ k =>
-    k
-    {|GHC.Base.mappend__ := instance_forall___GHC_Base_Ord_a___GHC_Base_Monoid__Data_Foldable_Min_a__mappend ;
-    GHC.Base.mconcat__ := instance_forall___GHC_Base_Ord_a___GHC_Base_Monoid__Data_Foldable_Min_a__mconcat ;
-    GHC.Base.mempty__ := instance_forall___GHC_Base_Ord_a___GHC_Base_Monoid__Data_Foldable_Min_a__mempty |}.
+Program Instance Monoid__Min {a} `{GHC.Base.Ord a} : GHC.Base.Monoid (Min a) :=
+  fun _ k =>
+    k {|GHC.Base.mappend__ := Monoid__Min_mappend ;
+      GHC.Base.mconcat__ := Monoid__Min_mconcat ;
+      GHC.Base.mempty__ := Monoid__Min_mempty |}.
 
-(* Skipping instance instance_Data_Foldable_Foldable_GHC_Generics_U1 *)
+(* Skipping instance Foldable__U1 *)
 
-(* Skipping instance instance_Data_Foldable_Foldable_GHC_Generics_V1 *)
+(* Skipping instance Foldable__V1 *)
 
-(* Skipping instance instance_Data_Foldable_Foldable_GHC_Generics_Par1 *)
+(* Skipping instance Foldable__Par1 *)
 
-(* Skipping instance
-   instance_forall___Data_Foldable_Foldable_f___Data_Foldable_Foldable__GHC_Generics_Rec1_f_ *)
+(* Skipping instance Foldable__Rec1 *)
 
-(* Skipping instance instance_Data_Foldable_Foldable__GHC_Generics_K1_i_c_ *)
+(* Skipping instance Foldable__K1 *)
 
-(* Skipping instance
-   instance_forall___Data_Foldable_Foldable_f___Data_Foldable_Foldable__GHC_Generics_M1_i_c_f_ *)
+(* Skipping instance Foldable__M1 *)
 
-(* Skipping instance
-   instance_forall___Data_Foldable_Foldable_f____Data_Foldable_Foldable_g___Data_Foldable_Foldable___GHC_Generics______f_g_ *)
+(* Skipping instance Foldable__op_ZCzpZC__ *)
 
-(* Skipping instance
-   instance_forall___Data_Foldable_Foldable_f____Data_Foldable_Foldable_g___Data_Foldable_Foldable___GHC_Generics______f_g_ *)
+(* Skipping instance Foldable__op_ZCztZC__ *)
 
-(* Skipping instance
-   instance_forall___Data_Foldable_Foldable_f____Data_Foldable_Foldable_g___Data_Foldable_Foldable___GHC_Generics______f_g_ *)
+(* Skipping instance Foldable__op_ZCziZC__ *)
 
-(* Skipping instance
-   instance_Data_Foldable_Foldable__GHC_Generics_URec__GHC_Ptr_Ptr_unit__ *)
+(* Skipping instance Foldable__URec *)
 
-(* Skipping instance
-   instance_Data_Foldable_Foldable__GHC_Generics_URec_GHC_Char_Char_ *)
+(* Skipping instance Foldable__URec *)
 
-(* Skipping instance
-   instance_Data_Foldable_Foldable__GHC_Generics_URec_GHC_Types_Double_ *)
+(* Skipping instance Foldable__URec *)
 
-(* Skipping instance
-   instance_Data_Foldable_Foldable__GHC_Generics_URec_GHC_Types_Float_ *)
+(* Skipping instance Foldable__URec *)
 
-(* Skipping instance
-   instance_Data_Foldable_Foldable__GHC_Generics_URec_GHC_Num_Int_ *)
+(* Skipping instance Foldable__URec *)
 
-(* Skipping instance
-   instance_Data_Foldable_Foldable__GHC_Generics_URec_GHC_Num_Word_ *)
+(* Skipping instance Foldable__URec *)
 
 Definition asum {t} {f} {a} `{Foldable t} `{GHC.Base.Alternative f} : t (f
                                                                         a) -> f a :=
@@ -897,210 +805,137 @@ Definition and {t} `{Foldable t} : t bool -> bool :=
 Definition all {t} {a} `{Foldable t} : (a -> bool) -> t a -> bool :=
   fun p => hash_compose getAll (foldMap (hash_compose Data.Monoid.Mk_All p)).
 
-Local Definition instance_Data_Foldable_Foldable_Data_Monoid_Product_elem
-    : forall {a}, forall `{GHC.Base.Eq_ a}, a -> Data.Monoid.Product a -> bool :=
+Local Definition Foldable__Product_elem : forall {a},
+                                            forall `{GHC.Base.Eq_ a}, a -> Data.Monoid.Product a -> bool :=
   fun {a} `{GHC.Base.Eq_ a} =>
     hash_compose (fun arg_217__ => arg_217__ GHC.Base.∘ getProduct) _GHC.Base.==_.
 
-Program Instance instance_Data_Foldable_Foldable_Data_Monoid_Product : Foldable
-                                                                       Data.Monoid.Product := fun _ k =>
-    k {|elem__ := fun {a} `{GHC.Base.Eq_ a} =>
-        instance_Data_Foldable_Foldable_Data_Monoid_Product_elem ;
-      fold__ := fun {m} `{GHC.Base.Monoid m} =>
-        instance_Data_Foldable_Foldable_Data_Monoid_Product_fold ;
-      foldMap__ := fun {m} {a} `{GHC.Base.Monoid m} =>
-        instance_Data_Foldable_Foldable_Data_Monoid_Product_foldMap ;
-      foldl__ := fun {b} {a} =>
-        instance_Data_Foldable_Foldable_Data_Monoid_Product_foldl ;
-      foldl'__ := fun {b} {a} =>
-        instance_Data_Foldable_Foldable_Data_Monoid_Product_foldl' ;
-      foldr__ := fun {a} {b} =>
-        instance_Data_Foldable_Foldable_Data_Monoid_Product_foldr ;
-      foldr'__ := fun {a} {b} =>
-        instance_Data_Foldable_Foldable_Data_Monoid_Product_foldr' ;
-      length__ := fun {a} =>
-        instance_Data_Foldable_Foldable_Data_Monoid_Product_length ;
-      null__ := fun {a} => instance_Data_Foldable_Foldable_Data_Monoid_Product_null ;
-      product__ := fun {a} `{GHC.Num.Num a} =>
-        instance_Data_Foldable_Foldable_Data_Monoid_Product_product ;
-      sum__ := fun {a} `{GHC.Num.Num a} =>
-        instance_Data_Foldable_Foldable_Data_Monoid_Product_sum ;
-      toList__ := fun {a} =>
-        instance_Data_Foldable_Foldable_Data_Monoid_Product_toList |}.
+Program Instance Foldable__Product : Foldable Data.Monoid.Product := fun _ k =>
+    k {|elem__ := fun {a} `{GHC.Base.Eq_ a} => Foldable__Product_elem ;
+      fold__ := fun {m} `{GHC.Base.Monoid m} => Foldable__Product_fold ;
+      foldMap__ := fun {m} {a} `{GHC.Base.Monoid m} => Foldable__Product_foldMap ;
+      foldl__ := fun {b} {a} => Foldable__Product_foldl ;
+      foldl'__ := fun {b} {a} => Foldable__Product_foldl' ;
+      foldr__ := fun {a} {b} => Foldable__Product_foldr ;
+      foldr'__ := fun {a} {b} => Foldable__Product_foldr' ;
+      length__ := fun {a} => Foldable__Product_length ;
+      null__ := fun {a} => Foldable__Product_null ;
+      product__ := fun {a} `{GHC.Num.Num a} => Foldable__Product_product ;
+      sum__ := fun {a} `{GHC.Num.Num a} => Foldable__Product_sum ;
+      toList__ := fun {a} => Foldable__Product_toList |}.
 
-Local Definition instance_Data_Foldable_Foldable_Data_Monoid_Sum_elem
-    : forall {a}, forall `{GHC.Base.Eq_ a}, a -> Data.Monoid.Sum a -> bool :=
+Local Definition Foldable__Sum_elem : forall {a},
+                                        forall `{GHC.Base.Eq_ a}, a -> Data.Monoid.Sum a -> bool :=
   fun {a} `{GHC.Base.Eq_ a} =>
     hash_compose (fun arg_233__ => arg_233__ GHC.Base.∘ getSum) _GHC.Base.==_.
 
-Program Instance instance_Data_Foldable_Foldable_Data_Monoid_Sum : Foldable
-                                                                   Data.Monoid.Sum := fun _ k =>
-    k {|elem__ := fun {a} `{GHC.Base.Eq_ a} =>
-        instance_Data_Foldable_Foldable_Data_Monoid_Sum_elem ;
-      fold__ := fun {m} `{GHC.Base.Monoid m} =>
-        instance_Data_Foldable_Foldable_Data_Monoid_Sum_fold ;
-      foldMap__ := fun {m} {a} `{GHC.Base.Monoid m} =>
-        instance_Data_Foldable_Foldable_Data_Monoid_Sum_foldMap ;
-      foldl__ := fun {b} {a} =>
-        instance_Data_Foldable_Foldable_Data_Monoid_Sum_foldl ;
-      foldl'__ := fun {b} {a} =>
-        instance_Data_Foldable_Foldable_Data_Monoid_Sum_foldl' ;
-      foldr__ := fun {a} {b} =>
-        instance_Data_Foldable_Foldable_Data_Monoid_Sum_foldr ;
-      foldr'__ := fun {a} {b} =>
-        instance_Data_Foldable_Foldable_Data_Monoid_Sum_foldr' ;
-      length__ := fun {a} => instance_Data_Foldable_Foldable_Data_Monoid_Sum_length ;
-      null__ := fun {a} => instance_Data_Foldable_Foldable_Data_Monoid_Sum_null ;
-      product__ := fun {a} `{GHC.Num.Num a} =>
-        instance_Data_Foldable_Foldable_Data_Monoid_Sum_product ;
-      sum__ := fun {a} `{GHC.Num.Num a} =>
-        instance_Data_Foldable_Foldable_Data_Monoid_Sum_sum ;
-      toList__ := fun {a} =>
-        instance_Data_Foldable_Foldable_Data_Monoid_Sum_toList |}.
+Program Instance Foldable__Sum : Foldable Data.Monoid.Sum := fun _ k =>
+    k {|elem__ := fun {a} `{GHC.Base.Eq_ a} => Foldable__Sum_elem ;
+      fold__ := fun {m} `{GHC.Base.Monoid m} => Foldable__Sum_fold ;
+      foldMap__ := fun {m} {a} `{GHC.Base.Monoid m} => Foldable__Sum_foldMap ;
+      foldl__ := fun {b} {a} => Foldable__Sum_foldl ;
+      foldl'__ := fun {b} {a} => Foldable__Sum_foldl' ;
+      foldr__ := fun {a} {b} => Foldable__Sum_foldr ;
+      foldr'__ := fun {a} {b} => Foldable__Sum_foldr' ;
+      length__ := fun {a} => Foldable__Sum_length ;
+      null__ := fun {a} => Foldable__Sum_null ;
+      product__ := fun {a} `{GHC.Num.Num a} => Foldable__Sum_product ;
+      sum__ := fun {a} `{GHC.Num.Num a} => Foldable__Sum_sum ;
+      toList__ := fun {a} => Foldable__Sum_toList |}.
 
-Local Definition instance_Data_Foldable_Foldable_Data_Monoid_Dual_elem
-    : forall {a}, forall `{GHC.Base.Eq_ a}, a -> Data.Monoid.Dual a -> bool :=
+Local Definition Foldable__Dual_elem : forall {a},
+                                         forall `{GHC.Base.Eq_ a}, a -> Data.Monoid.Dual a -> bool :=
   fun {a} `{GHC.Base.Eq_ a} =>
     hash_compose (fun arg_249__ => arg_249__ GHC.Base.∘ getDual) _GHC.Base.==_.
 
-Program Instance instance_Data_Foldable_Foldable_Data_Monoid_Dual : Foldable
-                                                                    Data.Monoid.Dual := fun _ k =>
-    k {|elem__ := fun {a} `{GHC.Base.Eq_ a} =>
-        instance_Data_Foldable_Foldable_Data_Monoid_Dual_elem ;
-      fold__ := fun {m} `{GHC.Base.Monoid m} =>
-        instance_Data_Foldable_Foldable_Data_Monoid_Dual_fold ;
-      foldMap__ := fun {m} {a} `{GHC.Base.Monoid m} =>
-        instance_Data_Foldable_Foldable_Data_Monoid_Dual_foldMap ;
-      foldl__ := fun {b} {a} =>
-        instance_Data_Foldable_Foldable_Data_Monoid_Dual_foldl ;
-      foldl'__ := fun {b} {a} =>
-        instance_Data_Foldable_Foldable_Data_Monoid_Dual_foldl' ;
-      foldr__ := fun {a} {b} =>
-        instance_Data_Foldable_Foldable_Data_Monoid_Dual_foldr ;
-      foldr'__ := fun {a} {b} =>
-        instance_Data_Foldable_Foldable_Data_Monoid_Dual_foldr' ;
-      length__ := fun {a} => instance_Data_Foldable_Foldable_Data_Monoid_Dual_length ;
-      null__ := fun {a} => instance_Data_Foldable_Foldable_Data_Monoid_Dual_null ;
-      product__ := fun {a} `{GHC.Num.Num a} =>
-        instance_Data_Foldable_Foldable_Data_Monoid_Dual_product ;
-      sum__ := fun {a} `{GHC.Num.Num a} =>
-        instance_Data_Foldable_Foldable_Data_Monoid_Dual_sum ;
-      toList__ := fun {a} =>
-        instance_Data_Foldable_Foldable_Data_Monoid_Dual_toList |}.
+Program Instance Foldable__Dual : Foldable Data.Monoid.Dual := fun _ k =>
+    k {|elem__ := fun {a} `{GHC.Base.Eq_ a} => Foldable__Dual_elem ;
+      fold__ := fun {m} `{GHC.Base.Monoid m} => Foldable__Dual_fold ;
+      foldMap__ := fun {m} {a} `{GHC.Base.Monoid m} => Foldable__Dual_foldMap ;
+      foldl__ := fun {b} {a} => Foldable__Dual_foldl ;
+      foldl'__ := fun {b} {a} => Foldable__Dual_foldl' ;
+      foldr__ := fun {a} {b} => Foldable__Dual_foldr ;
+      foldr'__ := fun {a} {b} => Foldable__Dual_foldr' ;
+      length__ := fun {a} => Foldable__Dual_length ;
+      null__ := fun {a} => Foldable__Dual_null ;
+      product__ := fun {a} `{GHC.Num.Num a} => Foldable__Dual_product ;
+      sum__ := fun {a} `{GHC.Num.Num a} => Foldable__Dual_sum ;
+      toList__ := fun {a} => Foldable__Dual_toList |}.
 
-Local Definition instance_Data_Foldable_Foldable__GHC_Tuple_pair_type_a__product {inst_a}
-    : forall {a}, forall `{GHC.Num.Num a}, (GHC.Tuple.pair_type inst_a) a -> a :=
+Local Definition Foldable__pair_type_product {inst_a} : forall {a},
+                                                          forall `{GHC.Num.Num a},
+                                                            (GHC.Tuple.pair_type inst_a) a -> a :=
   fun {a} `{GHC.Num.Num a} =>
-    hash_compose getProduct
-                 (instance_Data_Foldable_Foldable__GHC_Tuple_pair_type_a__foldMap
-                 Data.Monoid.Mk_Product).
+    hash_compose getProduct (Foldable__pair_type_foldMap Data.Monoid.Mk_Product).
 
-Local Definition instance_Data_Foldable_Foldable__GHC_Tuple_pair_type_a__sum {inst_a}
-    : forall {a}, forall `{GHC.Num.Num a}, (GHC.Tuple.pair_type inst_a) a -> a :=
+Local Definition Foldable__pair_type_sum {inst_a} : forall {a},
+                                                      forall `{GHC.Num.Num a}, (GHC.Tuple.pair_type inst_a) a -> a :=
   fun {a} `{GHC.Num.Num a} =>
-    hash_compose getSum
-                 (instance_Data_Foldable_Foldable__GHC_Tuple_pair_type_a__foldMap
-                 Data.Monoid.Mk_Sum).
+    hash_compose getSum (Foldable__pair_type_foldMap Data.Monoid.Mk_Sum).
 
-Program Instance instance_Data_Foldable_Foldable__GHC_Tuple_pair_type_a_ {a}
-  : Foldable (GHC.Tuple.pair_type a) := fun _ k =>
-    k {|elem__ := fun {a} `{GHC.Base.Eq_ a} =>
-        instance_Data_Foldable_Foldable__GHC_Tuple_pair_type_a__elem ;
-      fold__ := fun {m} `{GHC.Base.Monoid m} =>
-        instance_Data_Foldable_Foldable__GHC_Tuple_pair_type_a__fold ;
-      foldMap__ := fun {m} {a} `{GHC.Base.Monoid m} =>
-        instance_Data_Foldable_Foldable__GHC_Tuple_pair_type_a__foldMap ;
-      foldl__ := fun {b} {a} =>
-        instance_Data_Foldable_Foldable__GHC_Tuple_pair_type_a__foldl ;
-      foldl'__ := fun {b} {a} =>
-        instance_Data_Foldable_Foldable__GHC_Tuple_pair_type_a__foldl' ;
-      foldr__ := fun {a} {b} =>
-        instance_Data_Foldable_Foldable__GHC_Tuple_pair_type_a__foldr ;
-      foldr'__ := fun {a} {b} =>
-        instance_Data_Foldable_Foldable__GHC_Tuple_pair_type_a__foldr' ;
-      length__ := fun {a} =>
-        instance_Data_Foldable_Foldable__GHC_Tuple_pair_type_a__length ;
-      null__ := fun {a} =>
-        instance_Data_Foldable_Foldable__GHC_Tuple_pair_type_a__null ;
-      product__ := fun {a} `{GHC.Num.Num a} =>
-        instance_Data_Foldable_Foldable__GHC_Tuple_pair_type_a__product ;
-      sum__ := fun {a} `{GHC.Num.Num a} =>
-        instance_Data_Foldable_Foldable__GHC_Tuple_pair_type_a__sum ;
-      toList__ := fun {a} =>
-        instance_Data_Foldable_Foldable__GHC_Tuple_pair_type_a__toList |}.
-
-Local Definition instance_Data_Foldable_Foldable__Data_Either_Either_a__product {inst_a}
-    : forall {a}, forall `{GHC.Num.Num a}, (Data.Either.Either inst_a) a -> a :=
-  fun {a} `{GHC.Num.Num a} =>
-    hash_compose getProduct
-                 (instance_Data_Foldable_Foldable__Data_Either_Either_a__foldMap
-                 Data.Monoid.Mk_Product).
-
-Local Definition instance_Data_Foldable_Foldable__Data_Either_Either_a__sum {inst_a}
-    : forall {a}, forall `{GHC.Num.Num a}, (Data.Either.Either inst_a) a -> a :=
-  fun {a} `{GHC.Num.Num a} =>
-    hash_compose getSum
-                 (instance_Data_Foldable_Foldable__Data_Either_Either_a__foldMap
-                 Data.Monoid.Mk_Sum).
-
-Program Instance instance_Data_Foldable_Foldable__Data_Either_Either_a_ {a}
-  : Foldable (Data.Either.Either a) := fun _ k =>
-    k {|elem__ := fun {a} `{GHC.Base.Eq_ a} =>
-        instance_Data_Foldable_Foldable__Data_Either_Either_a__elem ;
-      fold__ := fun {m} `{GHC.Base.Monoid m} =>
-        instance_Data_Foldable_Foldable__Data_Either_Either_a__fold ;
-      foldMap__ := fun {m} {a} `{GHC.Base.Monoid m} =>
-        instance_Data_Foldable_Foldable__Data_Either_Either_a__foldMap ;
-      foldl__ := fun {b} {a} =>
-        instance_Data_Foldable_Foldable__Data_Either_Either_a__foldl ;
-      foldl'__ := fun {b} {a} =>
-        instance_Data_Foldable_Foldable__Data_Either_Either_a__foldl' ;
-      foldr__ := fun {a} {b} =>
-        instance_Data_Foldable_Foldable__Data_Either_Either_a__foldr ;
-      foldr'__ := fun {a} {b} =>
-        instance_Data_Foldable_Foldable__Data_Either_Either_a__foldr' ;
-      length__ := fun {a} =>
-        instance_Data_Foldable_Foldable__Data_Either_Either_a__length ;
-      null__ := fun {a} =>
-        instance_Data_Foldable_Foldable__Data_Either_Either_a__null ;
-      product__ := fun {a} `{GHC.Num.Num a} =>
-        instance_Data_Foldable_Foldable__Data_Either_Either_a__product ;
-      sum__ := fun {a} `{GHC.Num.Num a} =>
-        instance_Data_Foldable_Foldable__Data_Either_Either_a__sum ;
-      toList__ := fun {a} =>
-        instance_Data_Foldable_Foldable__Data_Either_Either_a__toList |}.
-
-Local Definition instance_Data_Foldable_Foldable_option_product : forall {a},
-                                                                    forall `{GHC.Num.Num a}, option a -> a :=
-  fun {a} `{GHC.Num.Num a} =>
-    hash_compose getProduct (instance_Data_Foldable_Foldable_option_foldMap
-                 Data.Monoid.Mk_Product).
-
-Local Definition instance_Data_Foldable_Foldable_option_sum : forall {a},
-                                                                forall `{GHC.Num.Num a}, option a -> a :=
-  fun {a} `{GHC.Num.Num a} =>
-    hash_compose getSum (instance_Data_Foldable_Foldable_option_foldMap
-                 Data.Monoid.Mk_Sum).
-
-Program Instance instance_Data_Foldable_Foldable_option : Foldable option :=
+Program Instance Foldable__pair_type {a} : Foldable (GHC.Tuple.pair_type a) :=
   fun _ k =>
-    k {|elem__ := fun {a} `{GHC.Base.Eq_ a} =>
-        instance_Data_Foldable_Foldable_option_elem ;
-      fold__ := fun {m} `{GHC.Base.Monoid m} =>
-        instance_Data_Foldable_Foldable_option_fold ;
-      foldMap__ := fun {m} {a} `{GHC.Base.Monoid m} =>
-        instance_Data_Foldable_Foldable_option_foldMap ;
-      foldl__ := fun {b} {a} => instance_Data_Foldable_Foldable_option_foldl ;
-      foldl'__ := fun {b} {a} => instance_Data_Foldable_Foldable_option_foldl' ;
-      foldr__ := fun {a} {b} => instance_Data_Foldable_Foldable_option_foldr ;
-      foldr'__ := fun {a} {b} => instance_Data_Foldable_Foldable_option_foldr' ;
-      length__ := fun {a} => instance_Data_Foldable_Foldable_option_length ;
-      null__ := fun {a} => instance_Data_Foldable_Foldable_option_null ;
-      product__ := fun {a} `{GHC.Num.Num a} =>
-        instance_Data_Foldable_Foldable_option_product ;
-      sum__ := fun {a} `{GHC.Num.Num a} =>
-        instance_Data_Foldable_Foldable_option_sum ;
-      toList__ := fun {a} => instance_Data_Foldable_Foldable_option_toList |}.
+    k {|elem__ := fun {a} `{GHC.Base.Eq_ a} => Foldable__pair_type_elem ;
+      fold__ := fun {m} `{GHC.Base.Monoid m} => Foldable__pair_type_fold ;
+      foldMap__ := fun {m} {a} `{GHC.Base.Monoid m} => Foldable__pair_type_foldMap ;
+      foldl__ := fun {b} {a} => Foldable__pair_type_foldl ;
+      foldl'__ := fun {b} {a} => Foldable__pair_type_foldl' ;
+      foldr__ := fun {a} {b} => Foldable__pair_type_foldr ;
+      foldr'__ := fun {a} {b} => Foldable__pair_type_foldr' ;
+      length__ := fun {a} => Foldable__pair_type_length ;
+      null__ := fun {a} => Foldable__pair_type_null ;
+      product__ := fun {a} `{GHC.Num.Num a} => Foldable__pair_type_product ;
+      sum__ := fun {a} `{GHC.Num.Num a} => Foldable__pair_type_sum ;
+      toList__ := fun {a} => Foldable__pair_type_toList |}.
+
+Local Definition Foldable__Either_product {inst_a} : forall {a},
+                                                       forall `{GHC.Num.Num a}, (Data.Either.Either inst_a) a -> a :=
+  fun {a} `{GHC.Num.Num a} =>
+    hash_compose getProduct (Foldable__Either_foldMap Data.Monoid.Mk_Product).
+
+Local Definition Foldable__Either_sum {inst_a} : forall {a},
+                                                   forall `{GHC.Num.Num a}, (Data.Either.Either inst_a) a -> a :=
+  fun {a} `{GHC.Num.Num a} =>
+    hash_compose getSum (Foldable__Either_foldMap Data.Monoid.Mk_Sum).
+
+Program Instance Foldable__Either {a} : Foldable (Data.Either.Either a) := fun _
+                                                                               k =>
+    k {|elem__ := fun {a} `{GHC.Base.Eq_ a} => Foldable__Either_elem ;
+      fold__ := fun {m} `{GHC.Base.Monoid m} => Foldable__Either_fold ;
+      foldMap__ := fun {m} {a} `{GHC.Base.Monoid m} => Foldable__Either_foldMap ;
+      foldl__ := fun {b} {a} => Foldable__Either_foldl ;
+      foldl'__ := fun {b} {a} => Foldable__Either_foldl' ;
+      foldr__ := fun {a} {b} => Foldable__Either_foldr ;
+      foldr'__ := fun {a} {b} => Foldable__Either_foldr' ;
+      length__ := fun {a} => Foldable__Either_length ;
+      null__ := fun {a} => Foldable__Either_null ;
+      product__ := fun {a} `{GHC.Num.Num a} => Foldable__Either_product ;
+      sum__ := fun {a} `{GHC.Num.Num a} => Foldable__Either_sum ;
+      toList__ := fun {a} => Foldable__Either_toList |}.
+
+Local Definition Foldable__option_product : forall {a},
+                                              forall `{GHC.Num.Num a}, option a -> a :=
+  fun {a} `{GHC.Num.Num a} =>
+    hash_compose getProduct (Foldable__option_foldMap Data.Monoid.Mk_Product).
+
+Local Definition Foldable__option_sum : forall {a},
+                                          forall `{GHC.Num.Num a}, option a -> a :=
+  fun {a} `{GHC.Num.Num a} =>
+    hash_compose getSum (Foldable__option_foldMap Data.Monoid.Mk_Sum).
+
+Program Instance Foldable__option : Foldable option := fun _ k =>
+    k {|elem__ := fun {a} `{GHC.Base.Eq_ a} => Foldable__option_elem ;
+      fold__ := fun {m} `{GHC.Base.Monoid m} => Foldable__option_fold ;
+      foldMap__ := fun {m} {a} `{GHC.Base.Monoid m} => Foldable__option_foldMap ;
+      foldl__ := fun {b} {a} => Foldable__option_foldl ;
+      foldl'__ := fun {b} {a} => Foldable__option_foldl' ;
+      foldr__ := fun {a} {b} => Foldable__option_foldr ;
+      foldr'__ := fun {a} {b} => Foldable__option_foldr' ;
+      length__ := fun {a} => Foldable__option_length ;
+      null__ := fun {a} => Foldable__option_null ;
+      product__ := fun {a} `{GHC.Num.Num a} => Foldable__option_product ;
+      sum__ := fun {a} `{GHC.Num.Num a} => Foldable__option_sum ;
+      toList__ := fun {a} => Foldable__option_toList |}.
 
 Definition mapM_ {t} {m} {a} {b} `{Foldable t} `{GHC.Base.Monad m} : (a -> m
                                                                      b) -> t a -> m unit :=

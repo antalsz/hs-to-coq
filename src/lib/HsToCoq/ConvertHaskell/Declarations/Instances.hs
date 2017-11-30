@@ -23,11 +23,9 @@ import Data.Traversable
 import HsToCoq.Util.Traversable
 import Data.Maybe
 import qualified Data.List.NonEmpty as NE
-import Data.Char
 import Data.Bifunctor
 import qualified Data.Text as T
 
-import Control.Monad
 import Control.Monad.State
 
 import qualified Data.Map.Strict as M
@@ -60,19 +58,32 @@ import HsToCoq.ConvertHaskell.Declarations.Class
 -- non-alphanumerics with underscores.  Then, prepend "instance_".
 convertInstanceName :: ConversionMonad m => LHsType GHC.Name -> m Qualid
 convertInstanceName n = do
+    coqType <- convertLType n
     qual <- maybe Bare (Qualified . moduleNameText) <$> use currentModule
-    pure . qual
-         .   ("instance_" <>)
-         .   T.map (\c -> if isAlphaNum c || c == '\'' then c else '_')
-         .   renderOneLineT . renderGallina
-     <=< ghandle (withGhcException $ const . pure $ Var "unknown_type")
-         .   convertLType
-         .   \case
-               L _ (HsForAllTy _ head) -> head
-               lty                     -> lty
-         $ n
-  where withGhcException :: (GhcException -> a) -> (GhcException -> a)
-        withGhcException = id
+    qual <$> skip coqType
+  where
+    -- Skip type vaiables and constraints
+    skip (Forall _ t) = skip t
+    skip (Arrow _ t)  = skip t
+    skip t = split t
+
+    -- Split class and args
+    split (App (Qualid cls) args) | Just argsText <- mapM describeArg args
+        = return $ T.intercalate "__" (qualidBase cls : NE.toList argsText)
+    split t = convUnsupported $ "Cannot derive instance name from " ++ show t
+
+    describeArg :: Arg -> Maybe T.Text
+    describeArg (PosArg t) = describeTerm t
+    describeArg _          = Nothing
+
+    describeTerm :: Term -> Maybe T.Text
+    describeTerm (Parens t)      = describeTerm t
+    describeTerm (App t _)       = describeTerm t
+    describeTerm (Infix _ qid _) = Just $ qualidBase qid
+    describeTerm (Qualid qid)    = Just $ qualidBase qid
+    describeTerm (Arrow _ _ )    = Just "arrow"
+    describeTerm _               = Nothing
+
 
 -- Looks up what GHC knows about this class (given by an instance head)
 findHsClass :: ConversionMonad m => LHsSigType GHC.Name -> m Class

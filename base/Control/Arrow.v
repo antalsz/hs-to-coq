@@ -171,135 +171,94 @@ Definition runKleisli {m : Type -> Type} {a} {b} (arg_22__ : Kleisli m a b) :=
   end.
 (* Converted value declarations: *)
 
-Local Definition instance_Control_Arrow_Arrow_GHC_Prim_arrow_arr : forall {b}
-                                                                          {c},
-                                                                     (b -> c) -> GHC.Prim.arrow b c :=
+Local Definition Arrow__arrow_arr : forall {b} {c},
+                                      (b -> c) -> GHC.Prim.arrow b c :=
   fun {b} {c} => fun f => f.
 
-Local Definition instance_Control_Arrow_Arrow_GHC_Prim_arrow_op_ztztzt__
-    : forall {b} {c} {b'} {c'},
-        GHC.Prim.arrow b c -> GHC.Prim.arrow b' c' -> GHC.Prim.arrow (b * b') (c *
-                                                                              c') :=
+Local Definition Arrow__arrow_op_ztztzt__ : forall {b} {c} {b'} {c'},
+                                              GHC.Prim.arrow b c -> GHC.Prim.arrow b' c' -> GHC.Prim.arrow (b * b') (c *
+                                                                                                                    c') :=
   fun {b} {c} {b'} {c'} =>
     fun arg_104__ arg_105__ arg_106__ =>
       match arg_104__ , arg_105__ , arg_106__ with
         | f , g , pair x y => pair (f x) (g y)
       end.
 
-Local Definition instance_Control_Arrow_Arrow_GHC_Prim_arrow_second : forall {b}
-                                                                             {c}
-                                                                             {d},
-                                                                        GHC.Prim.arrow b c -> GHC.Prim.arrow (d * b) (d
-                                                                                                                     *
-                                                                                                                     c) :=
+Local Definition Arrow__arrow_second : forall {b} {c} {d},
+                                         GHC.Prim.arrow b c -> GHC.Prim.arrow (d * b) (d * c) :=
   fun {b} {c} {d} =>
-    (fun arg_2__ =>
-      instance_Control_Arrow_Arrow_GHC_Prim_arrow_op_ztztzt__ Control.Category.id
-                                                              arg_2__).
+    (fun arg_2__ => Arrow__arrow_op_ztztzt__ Control.Category.id arg_2__).
 
-Local Definition instance_Control_Arrow_Arrow_GHC_Prim_arrow_first : forall {b}
-                                                                            {c}
-                                                                            {d},
-                                                                       GHC.Prim.arrow b c -> GHC.Prim.arrow (b * d) (c *
-                                                                                                                    d) :=
+Local Definition Arrow__arrow_first : forall {b} {c} {d},
+                                        GHC.Prim.arrow b c -> GHC.Prim.arrow (b * d) (c * d) :=
   fun {b} {c} {d} =>
-    (fun arg_0__ =>
-      instance_Control_Arrow_Arrow_GHC_Prim_arrow_op_ztztzt__ arg_0__
-                                                              Control.Category.id).
+    (fun arg_0__ => Arrow__arrow_op_ztztzt__ arg_0__ Control.Category.id).
 
-Local Definition instance_Control_Arrow_Arrow_GHC_Prim_arrow_op_zazaza__
-    : forall {b} {c} {c'},
-        GHC.Prim.arrow b c -> GHC.Prim.arrow b c' -> GHC.Prim.arrow b (c * c') :=
+Local Definition Arrow__arrow_op_zazaza__ : forall {b} {c} {c'},
+                                              GHC.Prim.arrow b c -> GHC.Prim.arrow b c' -> GHC.Prim.arrow b (c * c') :=
   fun {b} {c} {c'} =>
     fun f g =>
-      instance_Control_Arrow_Arrow_GHC_Prim_arrow_arr (fun b => pair b b)
-      Control.Category.>>> instance_Control_Arrow_Arrow_GHC_Prim_arrow_op_ztztzt__ f
-                                                                                   g.
+      Arrow__arrow_arr (fun b => pair b b) Control.Category.>>>
+      Arrow__arrow_op_ztztzt__ f g.
 
-Program Instance instance_Control_Arrow_Arrow_GHC_Prim_arrow : Arrow
-                                                               GHC.Prim.arrow := fun _ k =>
-    k {|arr__ := fun {b} {c} => instance_Control_Arrow_Arrow_GHC_Prim_arrow_arr ;
-      first__ := fun {b} {c} {d} =>
-        instance_Control_Arrow_Arrow_GHC_Prim_arrow_first ;
-      op_zazaza____ := fun {b} {c} {c'} =>
-        instance_Control_Arrow_Arrow_GHC_Prim_arrow_op_zazaza__ ;
-      op_ztztzt____ := fun {b} {c} {b'} {c'} =>
-        instance_Control_Arrow_Arrow_GHC_Prim_arrow_op_ztztzt__ ;
-      second__ := fun {b} {c} {d} =>
-        instance_Control_Arrow_Arrow_GHC_Prim_arrow_second |}.
+Program Instance Arrow__arrow : Arrow GHC.Prim.arrow := fun _ k =>
+    k {|arr__ := fun {b} {c} => Arrow__arrow_arr ;
+      first__ := fun {b} {c} {d} => Arrow__arrow_first ;
+      op_zazaza____ := fun {b} {c} {c'} => Arrow__arrow_op_zazaza__ ;
+      op_ztztzt____ := fun {b} {c} {b'} {c'} => Arrow__arrow_op_ztztzt__ ;
+      second__ := fun {b} {c} {d} => Arrow__arrow_second |}.
 
-(* Skipping instance
-   instance_forall___GHC_Base_Monad_m___Control_Category_Category__Control_Arrow_Kleisli_m_ *)
+(* Skipping instance Category__Kleisli *)
 
-(* Skipping instance
-   instance_forall___GHC_Base_Monad_m___Control_Arrow_Arrow__Control_Arrow_Kleisli_m_ *)
+(* Skipping instance Arrow__Kleisli *)
 
-(* Skipping instance
-   instance_forall___GHC_Base_MonadPlus_m___Control_Arrow_ArrowZero__Control_Arrow_Kleisli_m_ *)
+(* Skipping instance ArrowZero__Kleisli *)
 
-(* Skipping instance
-   instance_forall___GHC_Base_MonadPlus_m___Control_Arrow_ArrowPlus__Control_Arrow_Kleisli_m_ *)
+(* Skipping instance ArrowPlus__Kleisli *)
 
-(* Skipping instance instance_Control_Arrow_ArrowChoice_GHC_Prim_arrow *)
+(* Skipping instance ArrowChoice__arrow *)
 
-(* Skipping instance
-   instance_forall___GHC_Base_Monad_m___Control_Arrow_ArrowChoice__Control_Arrow_Kleisli_m_ *)
+(* Skipping instance ArrowChoice__Kleisli *)
 
-Local Definition instance_Control_Arrow_ArrowApply_GHC_Prim_arrow_app
-    : forall {b} {c}, GHC.Prim.arrow (GHC.Prim.arrow b c * b) c :=
+Local Definition ArrowApply__arrow_app : forall {b} {c},
+                                           GHC.Prim.arrow (GHC.Prim.arrow b c * b) c :=
   fun {b} {c} => fun arg_63__ => match arg_63__ with | pair f x => f x end.
 
-Program Instance instance_Control_Arrow_ArrowApply_GHC_Prim_arrow : ArrowApply
-                                                                    GHC.Prim.arrow := fun _ k =>
-    k {|app__ := fun {b} {c} =>
-        instance_Control_Arrow_ArrowApply_GHC_Prim_arrow_app |}.
+Program Instance ArrowApply__arrow : ArrowApply GHC.Prim.arrow := fun _ k =>
+    k {|app__ := fun {b} {c} => ArrowApply__arrow_app |}.
 
-(* Skipping instance
-   instance_forall___GHC_Base_Monad_m___Control_Arrow_ArrowApply__Control_Arrow_Kleisli_m_ *)
+(* Skipping instance ArrowApply__Kleisli *)
 
-Local Definition instance_forall___Control_Arrow_Arrow_a___GHC_Base_Functor__Control_Arrow_ArrowMonad_a__fmap {inst_a}
-                                                                                                              `{Arrow
-                                                                                                              inst_a}
-    : forall {a} {b}, (a -> b) -> (ArrowMonad inst_a) a -> (ArrowMonad inst_a) b :=
+Local Definition Functor__ArrowMonad_fmap {inst_a} `{Arrow inst_a} : forall {a}
+                                                                            {b},
+                                                                       (a -> b) -> (ArrowMonad inst_a) a -> (ArrowMonad
+                                                                       inst_a) b :=
   fun {a} {b} =>
     fun arg_55__ arg_56__ =>
       match arg_55__ , arg_56__ with
         | f , Mk_ArrowMonad m => Mk_ArrowMonad GHC.Base.$ (m Control.Category.>>> arr f)
       end.
 
-Local Definition instance_forall___Control_Arrow_Arrow_a___GHC_Base_Functor__Control_Arrow_ArrowMonad_a__op_zlzd__ {inst_a}
-                                                                                                                   `{Arrow
-                                                                                                                   inst_a}
+Local Definition Functor__ArrowMonad_op_zlzd__ {inst_a} `{Arrow inst_a}
     : forall {a} {b}, a -> (ArrowMonad inst_a) b -> (ArrowMonad inst_a) a :=
-  fun {a} {b} =>
-    fun x =>
-      instance_forall___Control_Arrow_Arrow_a___GHC_Base_Functor__Control_Arrow_ArrowMonad_a__fmap
-      (GHC.Base.const x).
+  fun {a} {b} => fun x => Functor__ArrowMonad_fmap (GHC.Base.const x).
 
-Program Instance instance_forall___Control_Arrow_Arrow_a___GHC_Base_Functor__Control_Arrow_ArrowMonad_a_ {a}
-                                                                                                         `{Arrow a}
-  : GHC.Base.Functor (ArrowMonad a) := fun _ k =>
-    k {|GHC.Base.op_zlzd____ := fun {a} {b} =>
-        instance_forall___Control_Arrow_Arrow_a___GHC_Base_Functor__Control_Arrow_ArrowMonad_a__op_zlzd__ ;
-      GHC.Base.fmap__ := fun {a} {b} =>
-        instance_forall___Control_Arrow_Arrow_a___GHC_Base_Functor__Control_Arrow_ArrowMonad_a__fmap |}.
+Program Instance Functor__ArrowMonad {a} `{Arrow a} : GHC.Base.Functor
+                                                      (ArrowMonad a) := fun _ k =>
+    k {|GHC.Base.op_zlzd____ := fun {a} {b} => Functor__ArrowMonad_op_zlzd__ ;
+      GHC.Base.fmap__ := fun {a} {b} => Functor__ArrowMonad_fmap |}.
 
-(* Skipping instance
-   instance_forall___Control_Arrow_Arrow_a___GHC_Base_Applicative__Control_Arrow_ArrowMonad_a_ *)
+(* Skipping instance Applicative__ArrowMonad *)
 
-(* Skipping instance
-   instance_forall___Control_Arrow_ArrowApply_a___GHC_Base_Monad__Control_Arrow_ArrowMonad_a_ *)
+(* Skipping instance Monad__ArrowMonad *)
 
-(* Skipping instance
-   instance_forall___Control_Arrow_ArrowPlus_a___GHC_Base_Alternative__Control_Arrow_ArrowMonad_a_ *)
+(* Skipping instance Alternative__ArrowMonad *)
 
-(* Skipping instance
-   instance_forall___Control_Arrow_ArrowApply_a____Control_Arrow_ArrowPlus_a___GHC_Base_MonadPlus__Control_Arrow_ArrowMonad_a_ *)
+(* Skipping instance MonadPlus__ArrowMonad *)
 
-(* Skipping instance instance_Control_Arrow_ArrowLoop_GHC_Prim_arrow *)
+(* Skipping instance ArrowLoop__arrow *)
 
-(* Skipping instance
-   instance_forall___Control_Monad_Fix_MonadFix_m___Control_Arrow_ArrowLoop__Control_Arrow_Kleisli_m_ *)
+(* Skipping instance ArrowLoop__Kleisli *)
 
 Definition op_zczgzg__ {a} {b} {c} {d} `{Arrow a} : (b -> c) -> a c d -> a b
                                                     d :=

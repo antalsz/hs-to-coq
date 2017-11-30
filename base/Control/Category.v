@@ -42,26 +42,20 @@ Notation "'_∘_'" := (op_z2218U__).
 Infix "∘" := (_∘_) (left associativity, at level 40).
 (* Converted value declarations: *)
 
-Local Definition instance_Control_Category_Category_GHC_Prim_arrow_id
-    : forall {a}, GHC.Prim.arrow a a :=
+Local Definition Category__arrow_id : forall {a}, GHC.Prim.arrow a a :=
   fun {a} => GHC.Base.id.
 
-Local Definition instance_Control_Category_Category_GHC_Prim_arrow_op_z2218U__
-    : forall {b} {c} {a},
-        GHC.Prim.arrow b c -> GHC.Prim.arrow a b -> GHC.Prim.arrow a c :=
+Local Definition Category__arrow_op_z2218U__ : forall {b} {c} {a},
+                                                 GHC.Prim.arrow b c -> GHC.Prim.arrow a b -> GHC.Prim.arrow a c :=
   fun {b} {c} {a} => _GHC.Base.∘_.
 
-Program Instance instance_Control_Category_Category_GHC_Prim_arrow : Category
-                                                                     GHC.Prim.arrow := fun _ k =>
-    k {|id__ := fun {a} => instance_Control_Category_Category_GHC_Prim_arrow_id ;
-      op_z2218U____ := fun {b} {c} {a} =>
-        instance_Control_Category_Category_GHC_Prim_arrow_op_z2218U__ |}.
+Program Instance Category__arrow : Category GHC.Prim.arrow := fun _ k =>
+    k {|id__ := fun {a} => Category__arrow_id ;
+      op_z2218U____ := fun {b} {c} {a} => Category__arrow_op_z2218U__ |}.
 
-(* Skipping instance
-   instance_Control_Category_Category__Data_Type_Equality_____ *)
+(* Skipping instance Category__op_ZCz7eUZC__ *)
 
-(* Skipping instance
-   instance_Control_Category_Category_Data_Type_Coercion_Coercion *)
+(* Skipping instance Category__Coercion *)
 
 Definition op_zgzgzg__ {cat} {a} {b} {c} `{Category cat} : cat a b -> cat b
                                                            c -> cat a c :=

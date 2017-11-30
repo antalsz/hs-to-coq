@@ -1,3 +1,1 @@
-skip Data.Bifunctor.instance_Data_Bifunctor_Bifunctor__GHC_Generics_K1_i__bimap
-skip Data.Bifunctor.instance_Data_Bifunctor_Bifunctor__GHC_Generics_K1_i__second
-skip Data.Bifunctor.instance_Data_Bifunctor_Bifunctor__GHC_Generics_K1_i_
+skip Data.Bifunctor.Bifunctor__K1

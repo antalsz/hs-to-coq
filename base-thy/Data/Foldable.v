@@ -34,7 +34,7 @@ Theorem hs_coq_length_list {A} (l : list A) :
 Proof. apply hs_coq_list_length. Qed.
 
 Theorem hs_coq_length_list' {A} (l : list A) :
-  Data.Foldable.instance_Data_Foldable_Foldable_list_length l = Zlength l.
+  Data.Foldable.Foldable__list_length l = Zlength l.
 Proof. apply hs_coq_length_list. Qed.
 
 Theorem hs_coq_foldr_list {A B} (f : A -> B -> B) (z : B) (l : list A) :
@@ -42,7 +42,7 @@ Theorem hs_coq_foldr_list {A B} (f : A -> B -> B) (z : B) (l : list A) :
 Proof. by rewrite ->hs_coq_foldr_base. Qed.
 
 Theorem hs_coq_foldr_list' {A B} (f : A -> B -> B) (z : B) (l : list A) :
-  Data.Foldable.instance_Data_Foldable_Foldable_list_foldr f z l = Coq.Lists.List.fold_right f z l.
+  Data.Foldable.Foldable__list_foldr f z l = Coq.Lists.List.fold_right f z l.
 Proof. apply hs_coq_foldr_list. Qed.
 
 Theorem hs_coq_foldl_list {A B} (f : B -> A -> B) (z : B) (l : list A) :
@@ -50,5 +50,5 @@ Theorem hs_coq_foldl_list {A B} (f : B -> A -> B) (z : B) (l : list A) :
 Proof. apply hs_coq_foldl_base. Qed.
 
 Theorem hs_coq_foldl_list' {A B} (f : B -> A -> B) (z : B) (l : list A) :
-  Data.Foldable.instance_Data_Foldable_Foldable_list_foldl f z l = Coq.Lists.List.fold_left f l z.
+  Data.Foldable.Foldable__list_foldl f z l = Coq.Lists.List.fold_left f l z.
 Proof. apply hs_coq_foldl_list. Qed.

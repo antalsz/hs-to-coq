@@ -24,12 +24,15 @@ skip GHC.Base.unIO
 skip GHC.Base.thenIO
 skip GHC.Base.returnIO
 skip GHC.Base.bindIO
-skip GHC.Base.instance_GHC_Base_Functor_GHC_Types_IO
-skip GHC.Base.instance_GHC_Base_Applicative_GHC_Types_IO
-skip GHC.Base.instance_GHC_Base_Alternative_GHC_Types_IO
-skip GHC.Base.instance_GHC_Base_Monad_GHC_Types_IO
-skip GHC.Base.instance_GHC_Base_MonadPlus_GHC_Types_IO
-skip GHC.Base.instance_forall___GHC_Base_Monoid_a___GHC_Base_Monoid__GHC_Types_IO_a_
+skip GHC.Base.Functor__IO
+skip GHC.Base.Applicative__IO
+skip GHC.Base.Alternative__IO
+skip GHC.Base.Monad__IO
+skip GHC.Base.MonadPlus__IO
+skip GHC.Base.Monoid__IO
+
+# Why is this not Monoid__pair_type?
+skip GHC.Base.Monoid__op_zt__
 
 # no unboxed types
 skip GHC.Base.unsafeChr
@@ -58,22 +61,22 @@ skip GHC.Base.primUnicodeMaxChar
 
 ## Type class instance ordering
 
-order GHC.Base.instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___option_a_ GHC.Base.instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__option_a_
+order GHC.Base.Eq___option GHC.Base.Ord__option
 
-order GHC.Base.instance_GHC_Base_Functor__GHC_Prim_arrow_r_ GHC.Base.instance_GHC_Base_Applicative__GHC_Prim_arrow_a__op_ztzg__ GHC.Base.instance_GHC_Base_Applicative__GHC_Prim_arrow_a_ GHC.Base.instance_GHC_Base_Monad__GHC_Prim_arrow_r__return_ GHC.Base.instance_GHC_Base_Monad__GHC_Prim_arrow_r_ GHC.Base.instance_GHC_Base_Alternative__GHC_Prim_arrow_r_ GHC.Base.instance_GHC_Base_MonadPlus__GHC_Prim_arrow_r_
+order GHC.Base.Functor__arrow GHC.Base.Applicative__arrow_op_ztzg__ GHC.Base.Applicative__arrow GHC.Base.Monad__arrow_return_ GHC.Base.Monad__arrow GHC.Base.Alternative__arrow GHC.Base.MonadPlus__arrow
 
-order GHC.Base.instance_GHC_Base_Functor_list GHC.Base.instance_GHC_Base_Applicative_list GHC.Base.instance_GHC_Base_Monad_list_return_ GHC.Base.instance_GHC_Base_Monad_list_op_zgzg__ GHC.Base.instance_GHC_Base_Monad_list
+order GHC.Base.Functor__list GHC.Base.Applicative__list GHC.Base.Monad__list_return_ GHC.Base.Monad__list_op_zgzg__ GHC.Base.Monad__list
 
-order GHC.Base.instance_GHC_Base_Functor_option GHC.Base.instance_GHC_Base_Applicative_option_op_zlztzg__ GHC.Base.instance_GHC_Base_Applicative_option GHC.Base.instance_GHC_Base_Monad_option_op_zgzg__ GHC.Base.instance_GHC_Base_Monad_option_return_ GHC.Base.instance_GHC_Base_Monad_option GHC.Base.instance_GHC_Base_Alternative_option GHC.Base.instance_GHC_Base_MonadPlus_option
+order GHC.Base.Functor__option GHC.Base.Applicative__option_op_zlztzg__ GHC.Base.Applicative__option GHC.Base.Monad__option_op_zgzg__ GHC.Base.Monad__option_return_ GHC.Base.Monad__option GHC.Base.Alternative__option GHC.Base.MonadPlus__option
 
-order GHC.Base.instance_GHC_Base_Functor__GHC_Tuple_pair_type_a_ GHC.Base.instance_forall___GHC_Base_Monoid_a___GHC_Base_Applicative__GHC_Tuple_pair_type_a_ GHC.Base.instance_forall___GHC_Base_Monoid_a___GHC_Base_Monad__GHC_Tuple_pair_type_a__return_ GHC.Base.instance_forall___GHC_Base_Monoid_a___GHC_Base_Monad__GHC_Tuple_pair_type_a__op_zgzgze__ GHC.Base.instance_forall___GHC_Base_Monoid_a___GHC_Base_Monad__GHC_Tuple_pair_type_a__op_zgzg__
+order GHC.Base.Functor__pair_type GHC.Base.Applicative__pair_type GHC.Base.Monad__pair_type_return_ GHC.Base.Monad__pair_type_op_zgzgze__ GHC.Base.Monad__pair_type_op_zgzg__
 
-order GHC.Base.instance_GHC_Base_Functor__GHC_Tuple_pair_type_a_ GHC.Base.instance_forall___GHC_Base_Monoid_a___GHC_Base_Applicative__GHC_Tuple_pair_type_a__op_ztzg__
+order GHC.Base.Functor__pair_type GHC.Base.Applicative__pair_type_op_ztzg__
 
-skip GHC.Base.instance_GHC_Base_Alternative_list
-skip GHC.Base.instance_GHC_Base_MonadPlus_list
-skip GHC.Base.instance_GHC_Base_Alternative_option
-skip GHC.Base.instance_GHC_Base_MonadPlus_option
+skip GHC.Base.Alternative__list
+skip GHC.Base.MonadPlus__list
+skip GHC.Base.Alternative__option
+skip GHC.Base.MonadPlus__option
 
 # Haskell’s definition of passes the f around, which trips over the
 # termination checker when a function does nested recursion through map

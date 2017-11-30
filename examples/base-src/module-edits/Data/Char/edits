@@ -1,4 +1,1 @@
-# partial
-skip digitToInt
-#
 skip module GHC.Unicode

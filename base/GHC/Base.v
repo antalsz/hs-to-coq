@@ -793,180 +793,55 @@ End ManualNotations.
 
 (* Converted value declarations: *)
 
-Local Definition instance_GHC_Base_Monoid__list_a__mappend {inst_a} : list
-                                                                      inst_a -> list inst_a -> list inst_a :=
+Local Definition Monoid__list_mappend {inst_a} : list inst_a -> list
+                                                 inst_a -> list inst_a :=
   Coq.Init.Datatypes.app.
 
-Local Definition instance_GHC_Base_Monoid__list_a__mconcat {inst_a} : list (list
-                                                                           inst_a) -> list inst_a :=
+Local Definition Monoid__list_mconcat {inst_a} : list (list inst_a) -> list
+                                                 inst_a :=
   fun xss =>
     Coq.Lists.List.flat_map (fun xs =>
                               Coq.Lists.List.flat_map (fun x => cons x nil) xs) xss.
 
-Local Definition instance_GHC_Base_Monoid__list_a__mempty {inst_a} : list
-                                                                     inst_a :=
+Local Definition Monoid__list_mempty {inst_a} : list inst_a :=
   nil.
 
-Program Instance instance_GHC_Base_Monoid__list_a_ {a} : Monoid (list a) :=
-  fun _ k =>
-    k {|mappend__ := instance_GHC_Base_Monoid__list_a__mappend ;
-      mconcat__ := instance_GHC_Base_Monoid__list_a__mconcat ;
-      mempty__ := instance_GHC_Base_Monoid__list_a__mempty |}.
+Program Instance Monoid__list {a} : Monoid (list a) := fun _ k =>
+    k {|mappend__ := Monoid__list_mappend ;
+      mconcat__ := Monoid__list_mconcat ;
+      mempty__ := Monoid__list_mempty |}.
 
-Local Definition instance_forall___GHC_Base_Monoid_b___GHC_Base_Monoid__a____b__mappend {inst_b}
-                                                                                        {inst_a} `{Monoid inst_b}
+Local Definition Monoid__arrow_mappend {inst_b} {inst_a} `{Monoid inst_b}
     : (inst_a -> inst_b) -> (inst_a -> inst_b) -> (inst_a -> inst_b) :=
   fun f g x => mappend (f x) (g x).
 
-Local Definition instance_forall___GHC_Base_Monoid_b___GHC_Base_Monoid__a____b__mempty {inst_b}
-                                                                                       {inst_a} `{Monoid inst_b}
+Local Definition Monoid__arrow_mempty {inst_b} {inst_a} `{Monoid inst_b}
     : (inst_a -> inst_b) :=
   fun arg_171__ => mempty.
 
-Local Definition instance_GHC_Base_Monoid_unit_mappend : unit -> unit -> unit :=
+Local Definition Monoid__unit_mappend : unit -> unit -> unit :=
   fun arg_168__ arg_169__ => tt.
 
-Local Definition instance_GHC_Base_Monoid_unit_mconcat : list unit -> unit :=
+Local Definition Monoid__unit_mconcat : list unit -> unit :=
   fun arg_170__ => tt.
 
-Local Definition instance_GHC_Base_Monoid_unit_mempty : unit :=
+Local Definition Monoid__unit_mempty : unit :=
   tt.
 
-Program Instance instance_GHC_Base_Monoid_unit : Monoid unit := fun _ k =>
-    k {|mappend__ := instance_GHC_Base_Monoid_unit_mappend ;
-      mconcat__ := instance_GHC_Base_Monoid_unit_mconcat ;
-      mempty__ := instance_GHC_Base_Monoid_unit_mempty |}.
+Program Instance Monoid__unit : Monoid unit := fun _ k =>
+    k {|mappend__ := Monoid__unit_mappend ;
+      mconcat__ := Monoid__unit_mconcat ;
+      mempty__ := Monoid__unit_mempty |}.
 
-Local Definition instance_forall___GHC_Base_Monoid_a____GHC_Base_Monoid_b___GHC_Base_Monoid__a___b__mappend {inst_a}
-                                                                                                            {inst_b}
-                                                                                                            `{Monoid
-                                                                                                            inst_a}
-                                                                                                            `{Monoid
-                                                                                                            inst_b}
-    : inst_a * inst_b -> inst_a * inst_b -> inst_a * inst_b :=
-  fun arg_164__ arg_165__ =>
-    match arg_164__ , arg_165__ with
-      | pair a1 b1 , pair a2 b2 => pair (mappend a1 a2) (mappend b1 b2)
-    end.
+(* Skipping instance Monoid__op_zt__ *)
 
-Local Definition instance_forall___GHC_Base_Monoid_a____GHC_Base_Monoid_b___GHC_Base_Monoid__a___b__mempty {inst_a}
-                                                                                                           {inst_b}
-                                                                                                           `{Monoid
-                                                                                                           inst_a}
-                                                                                                           `{Monoid
-                                                                                                           inst_b}
-    : inst_a * inst_b :=
-  pair mempty mempty.
+(* Skipping instance Monoid__op_zt__ *)
 
-Local Definition instance_forall___GHC_Base_Monoid_a____GHC_Base_Monoid_b____GHC_Base_Monoid_c___GHC_Base_Monoid__a___b___c__mappend {inst_a}
-                                                                                                                                     {inst_b}
-                                                                                                                                     {inst_c}
-                                                                                                                                     `{Monoid
-                                                                                                                                     inst_a}
-                                                                                                                                     `{Monoid
-                                                                                                                                     inst_b}
-                                                                                                                                     `{Monoid
-                                                                                                                                     inst_c}
-    : inst_a * inst_b * inst_c -> inst_a * inst_b * inst_c -> inst_a * inst_b *
-      inst_c :=
-  fun arg_159__ arg_160__ =>
-    match arg_159__ , arg_160__ with
-      | pair (pair a1 b1) c1 , pair (pair a2 b2) c2 => pair (pair (mappend a1 a2)
-                                                                  (mappend b1 b2)) (mappend c1 c2)
-    end.
+(* Skipping instance Monoid__op_zt__ *)
 
-Local Definition instance_forall___GHC_Base_Monoid_a____GHC_Base_Monoid_b____GHC_Base_Monoid_c___GHC_Base_Monoid__a___b___c__mempty {inst_a}
-                                                                                                                                    {inst_b}
-                                                                                                                                    {inst_c}
-                                                                                                                                    `{Monoid
-                                                                                                                                    inst_a}
-                                                                                                                                    `{Monoid
-                                                                                                                                    inst_b}
-                                                                                                                                    `{Monoid
-                                                                                                                                    inst_c}
-    : inst_a * inst_b * inst_c :=
-  pair (pair mempty mempty) mempty.
+(* Skipping instance Monoid__op_zt__ *)
 
-Local Definition instance_forall___GHC_Base_Monoid_a____GHC_Base_Monoid_b____GHC_Base_Monoid_c____GHC_Base_Monoid_d___GHC_Base_Monoid__a___b___c___d__mappend {inst_a}
-                                                                                                                                                              {inst_b}
-                                                                                                                                                              {inst_c}
-                                                                                                                                                              {inst_d}
-                                                                                                                                                              `{Monoid
-                                                                                                                                                              inst_a}
-                                                                                                                                                              `{Monoid
-                                                                                                                                                              inst_b}
-                                                                                                                                                              `{Monoid
-                                                                                                                                                              inst_c}
-                                                                                                                                                              `{Monoid
-                                                                                                                                                              inst_d}
-    : inst_a * inst_b * inst_c * inst_d -> inst_a * inst_b * inst_c *
-      inst_d -> inst_a * inst_b * inst_c * inst_d :=
-  fun arg_154__ arg_155__ =>
-    match arg_154__ , arg_155__ with
-      | pair (pair (pair a1 b1) c1) d1 , pair (pair (pair a2 b2) c2) d2 => pair (pair
-                                                                                (pair (mappend a1 a2) (mappend b1 b2))
-                                                                                (mappend c1 c2)) (mappend d1 d2)
-    end.
-
-Local Definition instance_forall___GHC_Base_Monoid_a____GHC_Base_Monoid_b____GHC_Base_Monoid_c____GHC_Base_Monoid_d___GHC_Base_Monoid__a___b___c___d__mempty {inst_a}
-                                                                                                                                                             {inst_b}
-                                                                                                                                                             {inst_c}
-                                                                                                                                                             {inst_d}
-                                                                                                                                                             `{Monoid
-                                                                                                                                                             inst_a}
-                                                                                                                                                             `{Monoid
-                                                                                                                                                             inst_b}
-                                                                                                                                                             `{Monoid
-                                                                                                                                                             inst_c}
-                                                                                                                                                             `{Monoid
-                                                                                                                                                             inst_d}
-    : inst_a * inst_b * inst_c * inst_d :=
-  pair (pair (pair mempty mempty) mempty) mempty.
-
-Local Definition instance_forall___GHC_Base_Monoid_a____GHC_Base_Monoid_b____GHC_Base_Monoid_c____GHC_Base_Monoid_d____GHC_Base_Monoid_e___GHC_Base_Monoid__a___b___c___d___e__mappend {inst_a}
-                                                                                                                                                                                       {inst_b}
-                                                                                                                                                                                       {inst_c}
-                                                                                                                                                                                       {inst_d}
-                                                                                                                                                                                       {inst_e}
-                                                                                                                                                                                       `{Monoid
-                                                                                                                                                                                       inst_a}
-                                                                                                                                                                                       `{Monoid
-                                                                                                                                                                                       inst_b}
-                                                                                                                                                                                       `{Monoid
-                                                                                                                                                                                       inst_c}
-                                                                                                                                                                                       `{Monoid
-                                                                                                                                                                                       inst_d}
-                                                                                                                                                                                       `{Monoid
-                                                                                                                                                                                       inst_e}
-    : inst_a * inst_b * inst_c * inst_d * inst_e -> inst_a * inst_b * inst_c *
-      inst_d * inst_e -> inst_a * inst_b * inst_c * inst_d * inst_e :=
-  fun arg_149__ arg_150__ =>
-    match arg_149__ , arg_150__ with
-      | pair (pair (pair (pair a1 b1) c1) d1) e1 , pair (pair (pair (pair a2 b2) c2)
-                                                              d2) e2 => pair (pair (pair (pair (mappend a1 a2) (mappend
-                                                                                               b1 b2)) (mappend c1 c2))
-                                                                                   (mappend d1 d2)) (mappend e1 e2)
-    end.
-
-Local Definition instance_forall___GHC_Base_Monoid_a____GHC_Base_Monoid_b____GHC_Base_Monoid_c____GHC_Base_Monoid_d____GHC_Base_Monoid_e___GHC_Base_Monoid__a___b___c___d___e__mempty {inst_a}
-                                                                                                                                                                                      {inst_b}
-                                                                                                                                                                                      {inst_c}
-                                                                                                                                                                                      {inst_d}
-                                                                                                                                                                                      {inst_e}
-                                                                                                                                                                                      `{Monoid
-                                                                                                                                                                                      inst_a}
-                                                                                                                                                                                      `{Monoid
-                                                                                                                                                                                      inst_b}
-                                                                                                                                                                                      `{Monoid
-                                                                                                                                                                                      inst_c}
-                                                                                                                                                                                      `{Monoid
-                                                                                                                                                                                      inst_d}
-                                                                                                                                                                                      `{Monoid
-                                                                                                                                                                                      inst_e}
-    : inst_a * inst_b * inst_c * inst_d * inst_e :=
-  pair (pair (pair (pair mempty mempty) mempty) mempty) mempty.
-
-Local Definition instance_GHC_Base_Monoid_comparison_mappend
+Local Definition Monoid__comparison_mappend
     : comparison -> comparison -> comparison :=
   fun arg_145__ arg_146__ =>
     match arg_145__ , arg_146__ with
@@ -975,14 +850,11 @@ Local Definition instance_GHC_Base_Monoid_comparison_mappend
       | Gt , _ => Gt
     end.
 
-Local Definition instance_GHC_Base_Monoid_comparison_mempty : comparison :=
+Local Definition Monoid__comparison_mempty : comparison :=
   Eq.
 
-Local Definition instance_forall___GHC_Base_Monoid_a___GHC_Base_Monoid__option_a__mappend {inst_a}
-                                                                                          `{Monoid inst_a} : (option
-                                                                                                             inst_a) -> (option
-                                                                                                             inst_a) -> (option
-                                                                                                             inst_a) :=
+Local Definition Monoid__option_mappend {inst_a} `{Monoid inst_a} : (option
+                                                                    inst_a) -> (option inst_a) -> (option inst_a) :=
   fun arg_141__ arg_142__ =>
     match arg_141__ , arg_142__ with
       | None , m => m
@@ -990,14 +862,11 @@ Local Definition instance_forall___GHC_Base_Monoid_a___GHC_Base_Monoid__option_a
       | Some m1 , Some m2 => Some (mappend m1 m2)
     end.
 
-Local Definition instance_forall___GHC_Base_Monoid_a___GHC_Base_Monoid__option_a__mempty {inst_a}
-                                                                                         `{Monoid inst_a} : (option
-                                                                                                            inst_a) :=
+Local Definition Monoid__option_mempty {inst_a} `{Monoid inst_a} : (option
+                                                                   inst_a) :=
   None.
 
-Local Definition instance_forall___GHC_Base_Monoid_a___GHC_Base_Applicative__GHC_Tuple_pair_type_a__op_zlztzg__ {inst_a}
-                                                                                                                `{Monoid
-                                                                                                                inst_a}
+Local Definition Applicative__pair_type_op_zlztzg__ {inst_a} `{Monoid inst_a}
     : forall {a} {b},
         (GHC.Tuple.pair_type inst_a) (a -> b) -> (GHC.Tuple.pair_type inst_a)
         a -> (GHC.Tuple.pair_type inst_a) b :=
@@ -1007,46 +876,38 @@ Local Definition instance_forall___GHC_Base_Monoid_a___GHC_Base_Applicative__GHC
         | pair u f , pair v x => pair (mappend u v) (f x)
       end.
 
-Local Definition instance_forall___GHC_Base_Monoid_a___GHC_Base_Applicative__GHC_Tuple_pair_type_a__pure {inst_a}
-                                                                                                         `{Monoid
-                                                                                                         inst_a}
+Local Definition Applicative__pair_type_pure {inst_a} `{Monoid inst_a}
     : forall {a}, a -> (GHC.Tuple.pair_type inst_a) a :=
   fun {a} => fun x => pair mempty x.
 
-(* Skipping instance
-   instance_forall___GHC_Base_Monoid_a___GHC_Base_Monoid__GHC_Types_IO_a_ *)
+(* Skipping instance Monoid__IO *)
 
-Local Definition instance_GHC_Base_Applicative__GHC_Prim_arrow_a__op_zlztzg__ {inst_a}
-    : forall {a} {b},
-        (GHC.Prim.arrow inst_a) (a -> b) -> (GHC.Prim.arrow inst_a) a -> (GHC.Prim.arrow
-        inst_a) b :=
+Local Definition Applicative__arrow_op_zlztzg__ {inst_a} : forall {a} {b},
+                                                             (GHC.Prim.arrow inst_a) (a -> b) -> (GHC.Prim.arrow inst_a)
+                                                             a -> (GHC.Prim.arrow inst_a) b :=
   fun {a} {b} => fun f g x => f x (g x).
 
-Local Definition instance_GHC_Base_Monad__GHC_Prim_arrow_r__op_zgzgze__ {inst_r}
-    : forall {a} {b},
-        (GHC.Prim.arrow inst_r) a -> (a -> (GHC.Prim.arrow inst_r) b) -> (GHC.Prim.arrow
-        inst_r) b :=
+Local Definition Monad__arrow_op_zgzgze__ {inst_r} : forall {a} {b},
+                                                       (GHC.Prim.arrow inst_r) a -> (a -> (GHC.Prim.arrow inst_r)
+                                                       b) -> (GHC.Prim.arrow inst_r) b :=
   fun {a} {b} => fun f k => fun r => k (f r) r.
 
-Local Definition instance_GHC_Base_Monad__GHC_Prim_arrow_r__op_zgzg__ {inst_r}
-    : forall {a} {b},
-        (GHC.Prim.arrow inst_r) a -> (GHC.Prim.arrow inst_r) b -> (GHC.Prim.arrow
-        inst_r) b :=
-  fun {a} {b} =>
-    fun m k =>
-      instance_GHC_Base_Monad__GHC_Prim_arrow_r__op_zgzgze__ m (fun arg_8__ => k).
+Local Definition Monad__arrow_op_zgzg__ {inst_r} : forall {a} {b},
+                                                     (GHC.Prim.arrow inst_r) a -> (GHC.Prim.arrow inst_r)
+                                                     b -> (GHC.Prim.arrow inst_r) b :=
+  fun {a} {b} => fun m k => Monad__arrow_op_zgzgze__ m (fun arg_8__ => k).
 
-Local Definition instance_GHC_Base_Functor__GHC_Tuple_pair_type_a__fmap {inst_a}
-    : forall {a} {b},
-        (a -> b) -> (GHC.Tuple.pair_type inst_a) a -> (GHC.Tuple.pair_type inst_a) b :=
+Local Definition Functor__pair_type_fmap {inst_a} : forall {a} {b},
+                                                      (a -> b) -> (GHC.Tuple.pair_type inst_a) a -> (GHC.Tuple.pair_type
+                                                      inst_a) b :=
   fun {a} {b} =>
     fun arg_120__ arg_121__ =>
       match arg_120__ , arg_121__ with
         | f , pair x y => pair x (f y)
       end.
 
-Local Definition instance_GHC_Base_Functor_option_fmap : forall {a} {b},
-                                                           (a -> b) -> option a -> option b :=
+Local Definition Functor__option_fmap : forall {a} {b},
+                                          (a -> b) -> option a -> option b :=
   fun {a} {b} =>
     fun arg_116__ arg_117__ =>
       match arg_116__ , arg_117__ with
@@ -1054,9 +915,8 @@ Local Definition instance_GHC_Base_Functor_option_fmap : forall {a} {b},
         | f , Some a => Some (f a)
       end.
 
-Local Definition instance_GHC_Base_Applicative_option_op_ztzg__ : forall {a}
-                                                                         {b},
-                                                                    option a -> option b -> option b :=
+Local Definition Applicative__option_op_ztzg__ : forall {a} {b},
+                                                   option a -> option b -> option b :=
   fun {a} {b} =>
     fun arg_113__ arg_114__ =>
       match arg_113__ , arg_114__ with
@@ -1064,12 +924,11 @@ Local Definition instance_GHC_Base_Applicative_option_op_ztzg__ : forall {a}
         | None , _m2 => None
       end.
 
-Local Definition instance_GHC_Base_Applicative_option_pure : forall {a},
-                                                               a -> option a :=
+Local Definition Applicative__option_pure : forall {a}, a -> option a :=
   fun {a} => Some.
 
-Local Definition instance_GHC_Base_Monad_option_op_zgzgze__ : forall {a} {b},
-                                                                option a -> (a -> option b) -> option b :=
+Local Definition Monad__option_op_zgzgze__ : forall {a} {b},
+                                               option a -> (a -> option b) -> option b :=
   fun {a} {b} =>
     fun arg_104__ arg_105__ =>
       match arg_104__ , arg_105__ with
@@ -1077,54 +936,50 @@ Local Definition instance_GHC_Base_Monad_option_op_zgzgze__ : forall {a} {b},
         | None , _ => None
       end.
 
-(* Skipping instance instance_GHC_Base_Alternative_option *)
+(* Skipping instance Alternative__option *)
 
-(* Skipping instance instance_GHC_Base_MonadPlus_option *)
+(* Skipping instance MonadPlus__option *)
 
-Local Definition instance_GHC_Base_Applicative_list_op_zlztzg__ : forall {a}
-                                                                         {b},
-                                                                    list (a -> b) -> list a -> list b :=
+Local Definition Applicative__list_op_zlztzg__ : forall {a} {b},
+                                                   list (a -> b) -> list a -> list b :=
   fun {a} {b} =>
     fun fs xs =>
       Coq.Lists.List.flat_map (fun f =>
                                 Coq.Lists.List.flat_map (fun x => cons (f x) nil) xs) fs.
 
-Local Definition instance_GHC_Base_Applicative_list_op_ztzg__ : forall {a} {b},
-                                                                  list a -> list b -> list b :=
+Local Definition Applicative__list_op_ztzg__ : forall {a} {b},
+                                                 list a -> list b -> list b :=
   fun {a} {b} =>
     fun xs ys =>
       Coq.Lists.List.flat_map (fun _ =>
                                 Coq.Lists.List.flat_map (fun y => cons y nil) ys) xs.
 
-Local Definition instance_GHC_Base_Applicative_list_pure : forall {a},
-                                                             a -> list a :=
+Local Definition Applicative__list_pure : forall {a}, a -> list a :=
   fun {a} => fun x => cons x nil.
 
-Local Definition instance_GHC_Base_Monad_list_op_zgzgze__ : forall {a} {b},
-                                                              list a -> (a -> list b) -> list b :=
+Local Definition Monad__list_op_zgzgze__ : forall {a} {b},
+                                             list a -> (a -> list b) -> list b :=
   fun {a} {b} =>
     fun xs f =>
       Coq.Lists.List.flat_map (fun x =>
                                 Coq.Lists.List.flat_map (fun y => cons y nil) (f x)) xs.
 
-(* Skipping instance instance_GHC_Base_Alternative_list *)
+(* Skipping instance Alternative__list *)
 
-(* Skipping instance instance_GHC_Base_MonadPlus_list *)
+(* Skipping instance MonadPlus__list *)
 
-(* Skipping instance instance_GHC_Base_Functor_GHC_Types_IO *)
+(* Skipping instance Functor__IO *)
 
-(* Skipping instance instance_GHC_Base_Applicative_GHC_Types_IO *)
+(* Skipping instance Applicative__IO *)
 
-(* Skipping instance instance_GHC_Base_Monad_GHC_Types_IO *)
+(* Skipping instance Monad__IO *)
 
-(* Skipping instance instance_GHC_Base_Alternative_GHC_Types_IO *)
+(* Skipping instance Alternative__IO *)
 
-(* Skipping instance instance_GHC_Base_MonadPlus_GHC_Types_IO *)
+(* Skipping instance MonadPlus__IO *)
 
-Local Definition instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__option_a__compare {inst_a}
-                                                                                    `{Ord inst_a} : option
-                                                                                                    inst_a -> option
-                                                                                                    inst_a -> comparison :=
+Local Definition Ord__option_compare {inst_a} `{Ord inst_a} : option
+                                                              inst_a -> option inst_a -> comparison :=
   fun a b =>
     match a with
       | None => match b with
@@ -1137,10 +992,8 @@ Local Definition instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__option_a__comp
                    end
     end.
 
-Local Definition instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__option_a__op_zg__ {inst_a}
-                                                                                    `{Ord inst_a} : option
-                                                                                                    inst_a -> option
-                                                                                                    inst_a -> bool :=
+Local Definition Ord__option_op_zg__ {inst_a} `{Ord inst_a} : option
+                                                              inst_a -> option inst_a -> bool :=
   fun a b =>
     match a with
       | None => match b with
@@ -1153,10 +1006,8 @@ Local Definition instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__option_a__op_z
                    end
     end.
 
-Local Definition instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__option_a__op_zgze__ {inst_a}
-                                                                                      `{Ord inst_a} : option
-                                                                                                      inst_a -> option
-                                                                                                      inst_a -> bool :=
+Local Definition Ord__option_op_zgze__ {inst_a} `{Ord inst_a} : option
+                                                                inst_a -> option inst_a -> bool :=
   fun a b =>
     match a with
       | None => match b with
@@ -1169,10 +1020,8 @@ Local Definition instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__option_a__op_z
                    end
     end.
 
-Local Definition instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__option_a__op_zl__ {inst_a}
-                                                                                    `{Ord inst_a} : option
-                                                                                                    inst_a -> option
-                                                                                                    inst_a -> bool :=
+Local Definition Ord__option_op_zl__ {inst_a} `{Ord inst_a} : option
+                                                              inst_a -> option inst_a -> bool :=
   fun a b =>
     match a with
       | None => match b with
@@ -1185,10 +1034,8 @@ Local Definition instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__option_a__op_z
                    end
     end.
 
-Local Definition instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__option_a__op_zlze__ {inst_a}
-                                                                                      `{Ord inst_a} : option
-                                                                                                      inst_a -> option
-                                                                                                      inst_a -> bool :=
+Local Definition Ord__option_op_zlze__ {inst_a} `{Ord inst_a} : option
+                                                                inst_a -> option inst_a -> bool :=
   fun a b =>
     match a with
       | None => match b with
@@ -1201,30 +1048,16 @@ Local Definition instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__option_a__op_z
                    end
     end.
 
-Local Definition instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__option_a__min {inst_a}
-                                                                                `{Ord inst_a} : option inst_a -> option
-                                                                                                inst_a -> option
-                                                                                                inst_a :=
-  fun x y =>
-    if instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__option_a__op_zlze__ x
-                                                                            y : bool
-    then x
-    else y.
+Local Definition Ord__option_min {inst_a} `{Ord inst_a} : option
+                                                          inst_a -> option inst_a -> option inst_a :=
+  fun x y => if Ord__option_op_zlze__ x y : bool then x else y.
 
-Local Definition instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__option_a__max {inst_a}
-                                                                                `{Ord inst_a} : option inst_a -> option
-                                                                                                inst_a -> option
-                                                                                                inst_a :=
-  fun x y =>
-    if instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__option_a__op_zlze__ x
-                                                                            y : bool
-    then y
-    else x.
+Local Definition Ord__option_max {inst_a} `{Ord inst_a} : option
+                                                          inst_a -> option inst_a -> option inst_a :=
+  fun x y => if Ord__option_op_zlze__ x y : bool then y else x.
 
-Local Definition instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___option_a__op_zeze__ {inst_a}
-                                                                                      `{Eq_ inst_a} : option
-                                                                                                      inst_a -> option
-                                                                                                      inst_a -> bool :=
+Local Definition Eq___option_op_zeze__ {inst_a} `{Eq_ inst_a} : option
+                                                                inst_a -> option inst_a -> bool :=
   fun arg_51__ arg_52__ =>
     match arg_51__ , arg_52__ with
       | None , None => true
@@ -1232,29 +1065,22 @@ Local Definition instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___option_a__op_z
       | _ , _ => false
     end.
 
-Local Definition instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___option_a__op_zsze__ {inst_a}
-                                                                                      `{Eq_ inst_a} : option
-                                                                                                      inst_a -> option
-                                                                                                      inst_a -> bool :=
-  fun a b =>
-    negb (instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___option_a__op_zeze__ a b).
+Local Definition Eq___option_op_zsze__ {inst_a} `{Eq_ inst_a} : option
+                                                                inst_a -> option inst_a -> bool :=
+  fun a b => negb (Eq___option_op_zeze__ a b).
 
-Program Instance instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___option_a_ {a}
-                                                                            `{Eq_ a} : Eq_ (option a) := fun _ k =>
-    k
-    {|op_zeze____ := instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___option_a__op_zeze__ ;
-    op_zsze____ := instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___option_a__op_zsze__ |}.
+Program Instance Eq___option {a} `{Eq_ a} : Eq_ (option a) := fun _ k =>
+    k {|op_zeze____ := Eq___option_op_zeze__ ;
+      op_zsze____ := Eq___option_op_zsze__ |}.
 
-Program Instance instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__option_a_ {a}
-                                                                            `{Ord a} : Ord (option a) := fun _ k =>
-    k
-    {|op_zl____ := instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__option_a__op_zl__ ;
-    op_zlze____ := instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__option_a__op_zlze__ ;
-    op_zg____ := instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__option_a__op_zg__ ;
-    op_zgze____ := instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__option_a__op_zgze__ ;
-    compare__ := instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__option_a__compare ;
-    max__ := instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__option_a__max ;
-    min__ := instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__option_a__min |}.
+Program Instance Ord__option {a} `{Ord a} : Ord (option a) := fun _ k =>
+    k {|op_zl____ := Ord__option_op_zl__ ;
+      op_zlze____ := Ord__option_op_zlze__ ;
+      op_zg____ := Ord__option_op_zg__ ;
+      op_zgze____ := Ord__option_op_zgze__ ;
+      compare__ := Ord__option_compare ;
+      max__ := Ord__option_max ;
+      min__ := Ord__option_min |}.
 
 Definition ap {m} {a} {b} `{(Monad m)} : m (a -> b) -> m a -> m b :=
   fun m1 m2 => m1 >>= (fun x1 => m2 >>= (fun x2 => return_ (x1 x2))).
@@ -1274,8 +1100,8 @@ Definition const {a} {b} : a -> b -> a :=
 Definition asTypeOf {a} : a -> a -> a :=
   const.
 
-Local Definition instance_GHC_Base_Applicative__GHC_Prim_arrow_a__pure {inst_a}
-    : forall {a}, a -> (GHC.Prim.arrow inst_a) a :=
+Local Definition Applicative__arrow_pure {inst_a} : forall {a},
+                                                      a -> (GHC.Prim.arrow inst_a) a :=
   fun {a} => const.
 
 Definition eqString : String -> String -> bool :=
@@ -1304,175 +1130,33 @@ Definition mapM {m} {a} {b} `{Monad m} : (a -> m b) -> list a -> m (list b) :=
     let k := fun a r => f a >>= (fun x => r >>= (fun xs => return_ (cons x xs))) in
     foldr k (return_ nil) as_.
 
-Local Definition instance_forall___GHC_Base_Monoid_a___GHC_Base_Monoid__option_a__mconcat {inst_a}
-                                                                                          `{Monoid inst_a} : list
-                                                                                                             (option
-                                                                                                             inst_a) -> (option
-                                                                                                             inst_a) :=
-  foldr instance_forall___GHC_Base_Monoid_a___GHC_Base_Monoid__option_a__mappend
-  instance_forall___GHC_Base_Monoid_a___GHC_Base_Monoid__option_a__mempty.
+Local Definition Monoid__option_mconcat {inst_a} `{Monoid inst_a} : list (option
+                                                                         inst_a) -> (option inst_a) :=
+  foldr Monoid__option_mappend Monoid__option_mempty.
 
-Program Instance instance_forall___GHC_Base_Monoid_a___GHC_Base_Monoid__option_a_ {a}
-                                                                                  `{Monoid a} : Monoid (option a) :=
-  fun _ k =>
-    k
-    {|mappend__ := instance_forall___GHC_Base_Monoid_a___GHC_Base_Monoid__option_a__mappend ;
-    mconcat__ := instance_forall___GHC_Base_Monoid_a___GHC_Base_Monoid__option_a__mconcat ;
-    mempty__ := instance_forall___GHC_Base_Monoid_a___GHC_Base_Monoid__option_a__mempty |}.
+Program Instance Monoid__option {a} `{Monoid a} : Monoid (option a) := fun _
+                                                                           k =>
+    k {|mappend__ := Monoid__option_mappend ;
+      mconcat__ := Monoid__option_mconcat ;
+      mempty__ := Monoid__option_mempty |}.
 
-Local Definition instance_GHC_Base_Monoid_comparison_mconcat : list
-                                                               comparison -> comparison :=
-  foldr instance_GHC_Base_Monoid_comparison_mappend
-  instance_GHC_Base_Monoid_comparison_mempty.
+Local Definition Monoid__comparison_mconcat : list comparison -> comparison :=
+  foldr Monoid__comparison_mappend Monoid__comparison_mempty.
 
-Program Instance instance_GHC_Base_Monoid_comparison : Monoid comparison :=
-  fun _ k =>
-    k {|mappend__ := instance_GHC_Base_Monoid_comparison_mappend ;
-      mconcat__ := instance_GHC_Base_Monoid_comparison_mconcat ;
-      mempty__ := instance_GHC_Base_Monoid_comparison_mempty |}.
+Program Instance Monoid__comparison : Monoid comparison := fun _ k =>
+    k {|mappend__ := Monoid__comparison_mappend ;
+      mconcat__ := Monoid__comparison_mconcat ;
+      mempty__ := Monoid__comparison_mempty |}.
 
-Local Definition instance_forall___GHC_Base_Monoid_a____GHC_Base_Monoid_b____GHC_Base_Monoid_c____GHC_Base_Monoid_d____GHC_Base_Monoid_e___GHC_Base_Monoid__a___b___c___d___e__mconcat {inst_a}
-                                                                                                                                                                                       {inst_b}
-                                                                                                                                                                                       {inst_c}
-                                                                                                                                                                                       {inst_d}
-                                                                                                                                                                                       {inst_e}
-                                                                                                                                                                                       `{Monoid
-                                                                                                                                                                                       inst_a}
-                                                                                                                                                                                       `{Monoid
-                                                                                                                                                                                       inst_b}
-                                                                                                                                                                                       `{Monoid
-                                                                                                                                                                                       inst_c}
-                                                                                                                                                                                       `{Monoid
-                                                                                                                                                                                       inst_d}
-                                                                                                                                                                                       `{Monoid
-                                                                                                                                                                                       inst_e}
-    : list (inst_a * inst_b * inst_c * inst_d * inst_e) -> inst_a * inst_b * inst_c
-      * inst_d * inst_e :=
-  foldr
-  instance_forall___GHC_Base_Monoid_a____GHC_Base_Monoid_b____GHC_Base_Monoid_c____GHC_Base_Monoid_d____GHC_Base_Monoid_e___GHC_Base_Monoid__a___b___c___d___e__mappend
-  instance_forall___GHC_Base_Monoid_a____GHC_Base_Monoid_b____GHC_Base_Monoid_c____GHC_Base_Monoid_d____GHC_Base_Monoid_e___GHC_Base_Monoid__a___b___c___d___e__mempty.
+Local Definition Monoid__arrow_mconcat {inst_b} {inst_a} `{Monoid inst_b} : list
+                                                                            (inst_a -> inst_b) -> (inst_a -> inst_b) :=
+  foldr Monoid__arrow_mappend Monoid__arrow_mempty.
 
-Program Instance instance_forall___GHC_Base_Monoid_a____GHC_Base_Monoid_b____GHC_Base_Monoid_c____GHC_Base_Monoid_d____GHC_Base_Monoid_e___GHC_Base_Monoid__a___b___c___d___e_ {a}
-                                                                                                                                                                               {b}
-                                                                                                                                                                               {c}
-                                                                                                                                                                               {d}
-                                                                                                                                                                               {e}
-                                                                                                                                                                               `{Monoid
-                                                                                                                                                                               a}
-                                                                                                                                                                               `{Monoid
-                                                                                                                                                                               b}
-                                                                                                                                                                               `{Monoid
-                                                                                                                                                                               c}
-                                                                                                                                                                               `{Monoid
-                                                                                                                                                                               d}
-                                                                                                                                                                               `{Monoid
-                                                                                                                                                                               e}
-  : Monoid (a * b * c * d * e) := fun _ k =>
-    k
-    {|mappend__ := instance_forall___GHC_Base_Monoid_a____GHC_Base_Monoid_b____GHC_Base_Monoid_c____GHC_Base_Monoid_d____GHC_Base_Monoid_e___GHC_Base_Monoid__a___b___c___d___e__mappend ;
-    mconcat__ := instance_forall___GHC_Base_Monoid_a____GHC_Base_Monoid_b____GHC_Base_Monoid_c____GHC_Base_Monoid_d____GHC_Base_Monoid_e___GHC_Base_Monoid__a___b___c___d___e__mconcat ;
-    mempty__ := instance_forall___GHC_Base_Monoid_a____GHC_Base_Monoid_b____GHC_Base_Monoid_c____GHC_Base_Monoid_d____GHC_Base_Monoid_e___GHC_Base_Monoid__a___b___c___d___e__mempty |}.
-
-Local Definition instance_forall___GHC_Base_Monoid_a____GHC_Base_Monoid_b____GHC_Base_Monoid_c____GHC_Base_Monoid_d___GHC_Base_Monoid__a___b___c___d__mconcat {inst_a}
-                                                                                                                                                              {inst_b}
-                                                                                                                                                              {inst_c}
-                                                                                                                                                              {inst_d}
-                                                                                                                                                              `{Monoid
-                                                                                                                                                              inst_a}
-                                                                                                                                                              `{Monoid
-                                                                                                                                                              inst_b}
-                                                                                                                                                              `{Monoid
-                                                                                                                                                              inst_c}
-                                                                                                                                                              `{Monoid
-                                                                                                                                                              inst_d}
-    : list (inst_a * inst_b * inst_c * inst_d) -> inst_a * inst_b * inst_c *
-      inst_d :=
-  foldr
-  instance_forall___GHC_Base_Monoid_a____GHC_Base_Monoid_b____GHC_Base_Monoid_c____GHC_Base_Monoid_d___GHC_Base_Monoid__a___b___c___d__mappend
-  instance_forall___GHC_Base_Monoid_a____GHC_Base_Monoid_b____GHC_Base_Monoid_c____GHC_Base_Monoid_d___GHC_Base_Monoid__a___b___c___d__mempty.
-
-Program Instance instance_forall___GHC_Base_Monoid_a____GHC_Base_Monoid_b____GHC_Base_Monoid_c____GHC_Base_Monoid_d___GHC_Base_Monoid__a___b___c___d_ {a}
-                                                                                                                                                      {b}
-                                                                                                                                                      {c}
-                                                                                                                                                      {d}
-                                                                                                                                                      `{Monoid
-                                                                                                                                                      a}
-                                                                                                                                                      `{Monoid
-                                                                                                                                                      b}
-                                                                                                                                                      `{Monoid
-                                                                                                                                                      c}
-                                                                                                                                                      `{Monoid
-                                                                                                                                                      d}
-  : Monoid (a * b * c * d) := fun _ k =>
-    k
-    {|mappend__ := instance_forall___GHC_Base_Monoid_a____GHC_Base_Monoid_b____GHC_Base_Monoid_c____GHC_Base_Monoid_d___GHC_Base_Monoid__a___b___c___d__mappend ;
-    mconcat__ := instance_forall___GHC_Base_Monoid_a____GHC_Base_Monoid_b____GHC_Base_Monoid_c____GHC_Base_Monoid_d___GHC_Base_Monoid__a___b___c___d__mconcat ;
-    mempty__ := instance_forall___GHC_Base_Monoid_a____GHC_Base_Monoid_b____GHC_Base_Monoid_c____GHC_Base_Monoid_d___GHC_Base_Monoid__a___b___c___d__mempty |}.
-
-Local Definition instance_forall___GHC_Base_Monoid_a____GHC_Base_Monoid_b____GHC_Base_Monoid_c___GHC_Base_Monoid__a___b___c__mconcat {inst_a}
-                                                                                                                                     {inst_b}
-                                                                                                                                     {inst_c}
-                                                                                                                                     `{Monoid
-                                                                                                                                     inst_a}
-                                                                                                                                     `{Monoid
-                                                                                                                                     inst_b}
-                                                                                                                                     `{Monoid
-                                                                                                                                     inst_c}
-    : list (inst_a * inst_b * inst_c) -> inst_a * inst_b * inst_c :=
-  foldr
-  instance_forall___GHC_Base_Monoid_a____GHC_Base_Monoid_b____GHC_Base_Monoid_c___GHC_Base_Monoid__a___b___c__mappend
-  instance_forall___GHC_Base_Monoid_a____GHC_Base_Monoid_b____GHC_Base_Monoid_c___GHC_Base_Monoid__a___b___c__mempty.
-
-Program Instance instance_forall___GHC_Base_Monoid_a____GHC_Base_Monoid_b____GHC_Base_Monoid_c___GHC_Base_Monoid__a___b___c_ {a}
-                                                                                                                             {b}
-                                                                                                                             {c}
-                                                                                                                             `{Monoid
-                                                                                                                             a}
-                                                                                                                             `{Monoid
-                                                                                                                             b}
-                                                                                                                             `{Monoid
-                                                                                                                             c}
-  : Monoid (a * b * c) := fun _ k =>
-    k
-    {|mappend__ := instance_forall___GHC_Base_Monoid_a____GHC_Base_Monoid_b____GHC_Base_Monoid_c___GHC_Base_Monoid__a___b___c__mappend ;
-    mconcat__ := instance_forall___GHC_Base_Monoid_a____GHC_Base_Monoid_b____GHC_Base_Monoid_c___GHC_Base_Monoid__a___b___c__mconcat ;
-    mempty__ := instance_forall___GHC_Base_Monoid_a____GHC_Base_Monoid_b____GHC_Base_Monoid_c___GHC_Base_Monoid__a___b___c__mempty |}.
-
-Local Definition instance_forall___GHC_Base_Monoid_a____GHC_Base_Monoid_b___GHC_Base_Monoid__a___b__mconcat {inst_a}
-                                                                                                            {inst_b}
-                                                                                                            `{Monoid
-                                                                                                            inst_a}
-                                                                                                            `{Monoid
-                                                                                                            inst_b}
-    : list (inst_a * inst_b) -> inst_a * inst_b :=
-  foldr
-  instance_forall___GHC_Base_Monoid_a____GHC_Base_Monoid_b___GHC_Base_Monoid__a___b__mappend
-  instance_forall___GHC_Base_Monoid_a____GHC_Base_Monoid_b___GHC_Base_Monoid__a___b__mempty.
-
-Program Instance instance_forall___GHC_Base_Monoid_a____GHC_Base_Monoid_b___GHC_Base_Monoid__a___b_ {a}
-                                                                                                    {b} `{Monoid a}
-                                                                                                    `{Monoid b} : Monoid
-                                                                                                                  (a *
-                                                                                                                  b) :=
-  fun _ k =>
-    k
-    {|mappend__ := instance_forall___GHC_Base_Monoid_a____GHC_Base_Monoid_b___GHC_Base_Monoid__a___b__mappend ;
-    mconcat__ := instance_forall___GHC_Base_Monoid_a____GHC_Base_Monoid_b___GHC_Base_Monoid__a___b__mconcat ;
-    mempty__ := instance_forall___GHC_Base_Monoid_a____GHC_Base_Monoid_b___GHC_Base_Monoid__a___b__mempty |}.
-
-Local Definition instance_forall___GHC_Base_Monoid_b___GHC_Base_Monoid__a____b__mconcat {inst_b}
-                                                                                        {inst_a} `{Monoid inst_b} : list
-                                                                                                                    (inst_a -> inst_b) -> (inst_a -> inst_b) :=
-  foldr instance_forall___GHC_Base_Monoid_b___GHC_Base_Monoid__a____b__mappend
-  instance_forall___GHC_Base_Monoid_b___GHC_Base_Monoid__a____b__mempty.
-
-Program Instance instance_forall___GHC_Base_Monoid_b___GHC_Base_Monoid__a____b_ {b}
-                                                                                {a} `{Monoid b} : Monoid (a -> b) :=
-  fun _ k =>
-    k
-    {|mappend__ := instance_forall___GHC_Base_Monoid_b___GHC_Base_Monoid__a____b__mappend ;
-    mconcat__ := instance_forall___GHC_Base_Monoid_b___GHC_Base_Monoid__a____b__mconcat ;
-    mempty__ := instance_forall___GHC_Base_Monoid_b___GHC_Base_Monoid__a____b__mempty |}.
+Program Instance Monoid__arrow {b} {a} `{Monoid b} : Monoid (a -> b) := fun _
+                                                                            k =>
+    k {|mappend__ := Monoid__arrow_mappend ;
+      mconcat__ := Monoid__arrow_mconcat ;
+      mempty__ := Monoid__arrow_mempty |}.
 
 Definition id {a} : a -> a :=
   fun x => x.
@@ -1525,8 +1209,8 @@ Definition liftM5 {m} {a1} {a2} {a3} {a4} {a5} {r} `{(Monad m)}
 Definition map {A B : Type} (f : A -> B) xs :=
   Coq.Lists.List.map f xs.
 
-Local Definition instance_GHC_Base_Functor_list_fmap : forall {a} {b},
-                                                         (a -> b) -> list a -> list b :=
+Local Definition Functor__list_fmap : forall {a} {b},
+                                        (a -> b) -> list a -> list b :=
   fun {a} {b} => map.
 
 Definition mapFB {elt} {lst} {a}
@@ -1540,45 +1224,41 @@ Notation "'_∘_'" := (op_z2218U__).
 
 Infix "∘" := (_∘_) (left associativity, at level 40).
 
-Local Definition instance_GHC_Base_Functor_list_op_zlzd__ : forall {a} {b},
-                                                              a -> list b -> list a :=
-  fun {a} {b} => instance_GHC_Base_Functor_list_fmap ∘ const.
+Local Definition Functor__list_op_zlzd__ : forall {a} {b},
+                                             a -> list b -> list a :=
+  fun {a} {b} => Functor__list_fmap ∘ const.
 
-Program Instance instance_GHC_Base_Functor_list : Functor list := fun _ k =>
-    k {|fmap__ := fun {a} {b} => instance_GHC_Base_Functor_list_fmap ;
-      op_zlzd____ := fun {a} {b} => instance_GHC_Base_Functor_list_op_zlzd__ |}.
+Program Instance Functor__list : Functor list := fun _ k =>
+    k {|fmap__ := fun {a} {b} => Functor__list_fmap ;
+      op_zlzd____ := fun {a} {b} => Functor__list_op_zlzd__ |}.
 
-Program Instance instance_GHC_Base_Applicative_list : Applicative list := fun _
-                                                                              k =>
-    k {|op_zlztzg____ := fun {a} {b} =>
-        instance_GHC_Base_Applicative_list_op_zlztzg__ ;
-      op_ztzg____ := fun {a} {b} => instance_GHC_Base_Applicative_list_op_ztzg__ ;
-      pure__ := fun {a} => instance_GHC_Base_Applicative_list_pure |}.
+Program Instance Applicative__list : Applicative list := fun _ k =>
+    k {|op_zlztzg____ := fun {a} {b} => Applicative__list_op_zlztzg__ ;
+      op_ztzg____ := fun {a} {b} => Applicative__list_op_ztzg__ ;
+      pure__ := fun {a} => Applicative__list_pure |}.
 
-Local Definition instance_GHC_Base_Monad_list_return_ : forall {a},
-                                                          a -> list a :=
+Local Definition Monad__list_return_ : forall {a}, a -> list a :=
   fun {a} => pure.
 
-Local Definition instance_GHC_Base_Monad_list_op_zgzg__ : forall {a} {b},
-                                                            list a -> list b -> list b :=
+Local Definition Monad__list_op_zgzg__ : forall {a} {b},
+                                           list a -> list b -> list b :=
   fun {a} {b} => _*>_.
 
-Program Instance instance_GHC_Base_Monad_list : Monad list := fun _ k =>
-    k {|op_zgzg____ := fun {a} {b} => instance_GHC_Base_Monad_list_op_zgzg__ ;
-      op_zgzgze____ := fun {a} {b} => instance_GHC_Base_Monad_list_op_zgzgze__ ;
-      return___ := fun {a} => instance_GHC_Base_Monad_list_return_ |}.
+Program Instance Monad__list : Monad list := fun _ k =>
+    k {|op_zgzg____ := fun {a} {b} => Monad__list_op_zgzg__ ;
+      op_zgzgze____ := fun {a} {b} => Monad__list_op_zgzgze__ ;
+      return___ := fun {a} => Monad__list_return_ |}.
 
-Local Definition instance_GHC_Base_Functor_option_op_zlzd__ : forall {a} {b},
-                                                                a -> option b -> option a :=
-  fun {a} {b} => instance_GHC_Base_Functor_option_fmap ∘ const.
+Local Definition Functor__option_op_zlzd__ : forall {a} {b},
+                                               a -> option b -> option a :=
+  fun {a} {b} => Functor__option_fmap ∘ const.
 
-Program Instance instance_GHC_Base_Functor_option : Functor option := fun _ k =>
-    k {|fmap__ := fun {a} {b} => instance_GHC_Base_Functor_option_fmap ;
-      op_zlzd____ := fun {a} {b} => instance_GHC_Base_Functor_option_op_zlzd__ |}.
+Program Instance Functor__option : Functor option := fun _ k =>
+    k {|fmap__ := fun {a} {b} => Functor__option_fmap ;
+      op_zlzd____ := fun {a} {b} => Functor__option_op_zlzd__ |}.
 
-Local Definition instance_GHC_Base_Applicative_option_op_zlztzg__ : forall {a}
-                                                                           {b},
-                                                                      option (a -> b) -> option a -> option b :=
+Local Definition Applicative__option_op_zlztzg__ : forall {a} {b},
+                                                     option (a -> b) -> option a -> option b :=
   fun {a} {b} =>
     fun arg_109__ arg_110__ =>
       match arg_109__ , arg_110__ with
@@ -1586,67 +1266,50 @@ Local Definition instance_GHC_Base_Applicative_option_op_zlztzg__ : forall {a}
         | None , _m => None
       end.
 
-Program Instance instance_GHC_Base_Applicative_option : Applicative option :=
-  fun _ k =>
-    k {|op_zlztzg____ := fun {a} {b} =>
-        instance_GHC_Base_Applicative_option_op_zlztzg__ ;
-      op_ztzg____ := fun {a} {b} => instance_GHC_Base_Applicative_option_op_ztzg__ ;
-      pure__ := fun {a} => instance_GHC_Base_Applicative_option_pure |}.
+Program Instance Applicative__option : Applicative option := fun _ k =>
+    k {|op_zlztzg____ := fun {a} {b} => Applicative__option_op_zlztzg__ ;
+      op_ztzg____ := fun {a} {b} => Applicative__option_op_ztzg__ ;
+      pure__ := fun {a} => Applicative__option_pure |}.
 
-Local Definition instance_GHC_Base_Monad_option_op_zgzg__ : forall {a} {b},
-                                                              option a -> option b -> option b :=
+Local Definition Monad__option_op_zgzg__ : forall {a} {b},
+                                             option a -> option b -> option b :=
   fun {a} {b} => _*>_.
 
-Local Definition instance_GHC_Base_Monad_option_return_ : forall {a},
-                                                            a -> option a :=
+Local Definition Monad__option_return_ : forall {a}, a -> option a :=
   fun {a} => pure.
 
-Program Instance instance_GHC_Base_Monad_option : Monad option := fun _ k =>
-    k {|op_zgzg____ := fun {a} {b} => instance_GHC_Base_Monad_option_op_zgzg__ ;
-      op_zgzgze____ := fun {a} {b} => instance_GHC_Base_Monad_option_op_zgzgze__ ;
-      return___ := fun {a} => instance_GHC_Base_Monad_option_return_ |}.
+Program Instance Monad__option : Monad option := fun _ k =>
+    k {|op_zgzg____ := fun {a} {b} => Monad__option_op_zgzg__ ;
+      op_zgzgze____ := fun {a} {b} => Monad__option_op_zgzgze__ ;
+      return___ := fun {a} => Monad__option_return_ |}.
 
-Local Definition instance_GHC_Base_Functor__GHC_Tuple_pair_type_a__op_zlzd__ {inst_a}
-    : forall {a} {b},
-        a -> (GHC.Tuple.pair_type inst_a) b -> (GHC.Tuple.pair_type inst_a) a :=
-  fun {a} {b} => instance_GHC_Base_Functor__GHC_Tuple_pair_type_a__fmap ∘ const.
+Local Definition Functor__pair_type_op_zlzd__ {inst_a} : forall {a} {b},
+                                                           a -> (GHC.Tuple.pair_type inst_a) b -> (GHC.Tuple.pair_type
+                                                           inst_a) a :=
+  fun {a} {b} => Functor__pair_type_fmap ∘ const.
 
-Program Instance instance_GHC_Base_Functor__GHC_Tuple_pair_type_a_ {a} : Functor
-                                                                         (GHC.Tuple.pair_type a) := fun _ k =>
-    k {|fmap__ := fun {a} {b} =>
-        instance_GHC_Base_Functor__GHC_Tuple_pair_type_a__fmap ;
-      op_zlzd____ := fun {a} {b} =>
-        instance_GHC_Base_Functor__GHC_Tuple_pair_type_a__op_zlzd__ |}.
+Program Instance Functor__pair_type {a} : Functor (GHC.Tuple.pair_type a) :=
+  fun _ k =>
+    k {|fmap__ := fun {a} {b} => Functor__pair_type_fmap ;
+      op_zlzd____ := fun {a} {b} => Functor__pair_type_op_zlzd__ |}.
 
-Local Definition instance_forall___GHC_Base_Monoid_a___GHC_Base_Applicative__GHC_Tuple_pair_type_a__op_ztzg__ {inst_a}
-                                                                                                              `{Monoid
-                                                                                                              inst_a}
+Local Definition Applicative__pair_type_op_ztzg__ {inst_a} `{Monoid inst_a}
     : forall {a} {b},
         (GHC.Tuple.pair_type inst_a) a -> (GHC.Tuple.pair_type inst_a)
         b -> (GHC.Tuple.pair_type inst_a) b :=
-  fun {a} {b} =>
-    fun a1 a2 =>
-      instance_forall___GHC_Base_Monoid_a___GHC_Base_Applicative__GHC_Tuple_pair_type_a__op_zlztzg__
-      (id <$ a1) a2.
+  fun {a} {b} => fun a1 a2 => Applicative__pair_type_op_zlztzg__ (id <$ a1) a2.
 
-Program Instance instance_forall___GHC_Base_Monoid_a___GHC_Base_Applicative__GHC_Tuple_pair_type_a_ {a}
-                                                                                                    `{Monoid a}
-  : Applicative (GHC.Tuple.pair_type a) := fun _ k =>
-    k {|op_zlztzg____ := fun {a} {b} =>
-        instance_forall___GHC_Base_Monoid_a___GHC_Base_Applicative__GHC_Tuple_pair_type_a__op_zlztzg__ ;
-      op_ztzg____ := fun {a} {b} =>
-        instance_forall___GHC_Base_Monoid_a___GHC_Base_Applicative__GHC_Tuple_pair_type_a__op_ztzg__ ;
-      pure__ := fun {a} =>
-        instance_forall___GHC_Base_Monoid_a___GHC_Base_Applicative__GHC_Tuple_pair_type_a__pure |}.
+Program Instance Applicative__pair_type {a} `{Monoid a} : Applicative
+                                                          (GHC.Tuple.pair_type a) := fun _ k =>
+    k {|op_zlztzg____ := fun {a} {b} => Applicative__pair_type_op_zlztzg__ ;
+      op_ztzg____ := fun {a} {b} => Applicative__pair_type_op_ztzg__ ;
+      pure__ := fun {a} => Applicative__pair_type_pure |}.
 
-Local Definition instance_forall___GHC_Base_Monoid_a___GHC_Base_Monad__GHC_Tuple_pair_type_a__return_ {inst_a}
-                                                                                                      `{Monoid inst_a}
+Local Definition Monad__pair_type_return_ {inst_a} `{Monoid inst_a}
     : forall {a}, a -> (GHC.Tuple.pair_type inst_a) a :=
   fun {a} => pure.
 
-Local Definition instance_forall___GHC_Base_Monoid_a___GHC_Base_Monad__GHC_Tuple_pair_type_a__op_zgzgze__ {inst_a}
-                                                                                                          `{Monoid
-                                                                                                          inst_a}
+Local Definition Monad__pair_type_op_zgzgze__ {inst_a} `{Monoid inst_a}
     : forall {a} {b},
         (GHC.Tuple.pair_type inst_a) a -> (a -> (GHC.Tuple.pair_type inst_a)
         b) -> (GHC.Tuple.pair_type inst_a) b :=
@@ -1659,70 +1322,49 @@ Local Definition instance_forall___GHC_Base_Monoid_a___GHC_Base_Monad__GHC_Tuple
                           end
       end.
 
-Local Definition instance_forall___GHC_Base_Monoid_a___GHC_Base_Monad__GHC_Tuple_pair_type_a__op_zgzg__ {inst_a}
-                                                                                                        `{Monoid inst_a}
+Local Definition Monad__pair_type_op_zgzg__ {inst_a} `{Monoid inst_a}
     : forall {a} {b},
         (GHC.Tuple.pair_type inst_a) a -> (GHC.Tuple.pair_type inst_a)
         b -> (GHC.Tuple.pair_type inst_a) b :=
-  fun {a} {b} =>
-    fun m k =>
-      instance_forall___GHC_Base_Monoid_a___GHC_Base_Monad__GHC_Tuple_pair_type_a__op_zgzgze__
-      m (fun arg_8__ => k).
+  fun {a} {b} => fun m k => Monad__pair_type_op_zgzgze__ m (fun arg_8__ => k).
 
-Program Instance instance_forall___GHC_Base_Monoid_a___GHC_Base_Monad__GHC_Tuple_pair_type_a_ {a}
-                                                                                              `{Monoid a} : Monad
-                                                                                                            (GHC.Tuple.pair_type
-                                                                                                            a) := fun _
-                                                                                                                      k =>
-    k {|op_zgzg____ := fun {a} {b} =>
-        instance_forall___GHC_Base_Monoid_a___GHC_Base_Monad__GHC_Tuple_pair_type_a__op_zgzg__ ;
-      op_zgzgze____ := fun {a} {b} =>
-        instance_forall___GHC_Base_Monoid_a___GHC_Base_Monad__GHC_Tuple_pair_type_a__op_zgzgze__ ;
-      return___ := fun {a} =>
-        instance_forall___GHC_Base_Monoid_a___GHC_Base_Monad__GHC_Tuple_pair_type_a__return_ |}.
+Program Instance Monad__pair_type {a} `{Monoid a} : Monad (GHC.Tuple.pair_type
+                                                          a) := fun _ k =>
+    k {|op_zgzg____ := fun {a} {b} => Monad__pair_type_op_zgzg__ ;
+      op_zgzgze____ := fun {a} {b} => Monad__pair_type_op_zgzgze__ ;
+      return___ := fun {a} => Monad__pair_type_return_ |}.
 
-Local Definition instance_GHC_Base_Functor__GHC_Prim_arrow_r__fmap {inst_r}
-    : forall {a} {b},
-        (a -> b) -> (GHC.Prim.arrow inst_r) a -> (GHC.Prim.arrow inst_r) b :=
+Local Definition Functor__arrow_fmap {inst_r} : forall {a} {b},
+                                                  (a -> b) -> (GHC.Prim.arrow inst_r) a -> (GHC.Prim.arrow inst_r) b :=
   fun {a} {b} => _∘_.
 
-Local Definition instance_GHC_Base_Functor__GHC_Prim_arrow_r__op_zlzd__ {inst_r}
-    : forall {a} {b}, a -> (GHC.Prim.arrow inst_r) b -> (GHC.Prim.arrow inst_r) a :=
-  fun {a} {b} => instance_GHC_Base_Functor__GHC_Prim_arrow_r__fmap ∘ const.
+Local Definition Functor__arrow_op_zlzd__ {inst_r} : forall {a} {b},
+                                                       a -> (GHC.Prim.arrow inst_r) b -> (GHC.Prim.arrow inst_r) a :=
+  fun {a} {b} => Functor__arrow_fmap ∘ const.
 
-Program Instance instance_GHC_Base_Functor__GHC_Prim_arrow_r_ {r} : Functor
-                                                                    (GHC.Prim.arrow r) := fun _ k =>
-    k {|fmap__ := fun {a} {b} => instance_GHC_Base_Functor__GHC_Prim_arrow_r__fmap ;
-      op_zlzd____ := fun {a} {b} =>
-        instance_GHC_Base_Functor__GHC_Prim_arrow_r__op_zlzd__ |}.
+Program Instance Functor__arrow {r} : Functor (GHC.Prim.arrow r) := fun _ k =>
+    k {|fmap__ := fun {a} {b} => Functor__arrow_fmap ;
+      op_zlzd____ := fun {a} {b} => Functor__arrow_op_zlzd__ |}.
 
-Local Definition instance_GHC_Base_Applicative__GHC_Prim_arrow_a__op_ztzg__ {inst_a}
-    : forall {a} {b},
-        (GHC.Prim.arrow inst_a) a -> (GHC.Prim.arrow inst_a) b -> (GHC.Prim.arrow
-        inst_a) b :=
-  fun {a} {b} =>
-    fun a1 a2 =>
-      instance_GHC_Base_Applicative__GHC_Prim_arrow_a__op_zlztzg__ (id <$ a1) a2.
+Local Definition Applicative__arrow_op_ztzg__ {inst_a} : forall {a} {b},
+                                                           (GHC.Prim.arrow inst_a) a -> (GHC.Prim.arrow inst_a)
+                                                           b -> (GHC.Prim.arrow inst_a) b :=
+  fun {a} {b} => fun a1 a2 => Applicative__arrow_op_zlztzg__ (id <$ a1) a2.
 
-Program Instance instance_GHC_Base_Applicative__GHC_Prim_arrow_a_ {a}
-  : Applicative (GHC.Prim.arrow a) := fun _ k =>
-    k {|op_zlztzg____ := fun {a} {b} =>
-        instance_GHC_Base_Applicative__GHC_Prim_arrow_a__op_zlztzg__ ;
-      op_ztzg____ := fun {a} {b} =>
-        instance_GHC_Base_Applicative__GHC_Prim_arrow_a__op_ztzg__ ;
-      pure__ := fun {a} => instance_GHC_Base_Applicative__GHC_Prim_arrow_a__pure |}.
+Program Instance Applicative__arrow {a} : Applicative (GHC.Prim.arrow a) :=
+  fun _ k =>
+    k {|op_zlztzg____ := fun {a} {b} => Applicative__arrow_op_zlztzg__ ;
+      op_ztzg____ := fun {a} {b} => Applicative__arrow_op_ztzg__ ;
+      pure__ := fun {a} => Applicative__arrow_pure |}.
 
-Local Definition instance_GHC_Base_Monad__GHC_Prim_arrow_r__return_ {inst_r}
-    : forall {a}, a -> (GHC.Prim.arrow inst_r) a :=
+Local Definition Monad__arrow_return_ {inst_r} : forall {a},
+                                                   a -> (GHC.Prim.arrow inst_r) a :=
   fun {a} => pure.
 
-Program Instance instance_GHC_Base_Monad__GHC_Prim_arrow_r_ {r} : Monad
-                                                                  (GHC.Prim.arrow r) := fun _ k =>
-    k {|op_zgzg____ := fun {a} {b} =>
-        instance_GHC_Base_Monad__GHC_Prim_arrow_r__op_zgzg__ ;
-      op_zgzgze____ := fun {a} {b} =>
-        instance_GHC_Base_Monad__GHC_Prim_arrow_r__op_zgzgze__ ;
-      return___ := fun {a} => instance_GHC_Base_Monad__GHC_Prim_arrow_r__return_ |}.
+Program Instance Monad__arrow {r} : Monad (GHC.Prim.arrow r) := fun _ k =>
+    k {|op_zgzg____ := fun {a} {b} => Monad__arrow_op_zgzg__ ;
+      op_zgzgze____ := fun {a} {b} => Monad__arrow_op_zgzgze__ ;
+      return___ := fun {a} => Monad__arrow_return_ |}.
 
 Definition op_zd__ {a} {b} : (a -> b) -> a -> b :=
   fun f x => f x.
@@ -1787,7 +1429,7 @@ End Notations.
 
 (* Unbound variables:
      Eq Eq_ Gt Lt None Ord Some String Type andb bool compare comparison cons false
-     list negb nil op_zeze__ op_zg__ op_zgze__ op_zl__ op_zlze__ op_zt__ option pair
-     true tt unit Coq.Init.Datatypes.app Coq.Lists.List.flat_map Coq.Lists.List.map
+     list negb nil op_zeze__ op_zg__ op_zgze__ op_zl__ op_zlze__ option pair true tt
+     unit Coq.Init.Datatypes.app Coq.Lists.List.flat_map Coq.Lists.List.map
      GHC.Prim.arrow GHC.Tuple.pair_type
 *)

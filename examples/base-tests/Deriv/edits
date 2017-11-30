@@ -1,6 +1,6 @@
-redefine Local Definition Deriv.instance_GHC_Base_Eq__MyBool_op_zsze__ a b := negb (Deriv.instance_GHC_Base_Eq__MyBool_op_zeze__ a b).
-redefine Local Definition Deriv.instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___Deriv_Option_a__op_zsze__ {a} {_ : GHC.Base.Eq_ a} x y := negb (Deriv.instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___Deriv_Option_a__op_zeze__ x y).
+redefine Local Definition Deriv.Eq___MyBool_op_zsze__ a b := negb (Deriv.Eq___MyBool_op_zeze__ a b).
+redefine Local Definition Deriv.Eq___Option_op_zsze__ {a} {_ : GHC.Base.Eq_ a} x y := negb (Deriv.Eq___Option_op_zeze__ x y).
 
-order Deriv.instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___Deriv_Option_a_ Deriv.instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Deriv_Option_a_
+order Deriv.Eq___Option Deriv.Ord__Option
 
-order  Deriv.instance_GHC_Base_Eq__Deriv_MyBool Deriv.instance_GHC_Base_Ord_Deriv_MyBool
+order Deriv.Eq___MyBool Deriv.Ord__MyBool

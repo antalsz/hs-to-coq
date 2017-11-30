@@ -11,11 +11,10 @@ add Control.Applicative Instance Unpeel_WrappedArrow {a}{b}{c} : GHC.Prim.Unpeel
 
 
 skip Control.Applicative.ZipList
-skip Control.Applicative.instance_GHC_Base_Applicative_Control_Applicative_ZipList
-skip Control.Applicative.instance_Data_Foldable_Foldable_Control_Applicative_ZipList
-skip Control.Applicative.instance_GHC_Base_Functor_Control_Applicative_ZipList
-skip Control.Applicative.instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Control_Applicative_ZipList_a_
-skip Control.Applicative.instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___Control_Applicative_ZipList_a_
-
+skip Control.Applicative.Applicative__ZipList
+skip Control.Applicative.Foldable__ZipList
+skip Control.Applicative.Functor__ZipList
+skip Control.Applicative.Eq___ZipList
+skip Control.Applicative.Ord__ZipList
 
 # will also need to skip Ord/Eq_/Functor/Foldable when those type applications are supported

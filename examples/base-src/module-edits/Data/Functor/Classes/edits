@@ -26,11 +26,11 @@ skip Data.Functor.Classes.showsUnary
 skip Data.Functor.Classes.showsUnary1
 skip Data.Functor.Classes.showsUnaryWith
 
-skip Data.Functor.Classes.instance_Data_Functor_Classes_Read2_GHC_Tuple_pair_type_liftReadsPrec2
-skip Data.Functor.Classes.instance_Data_Functor_Classes_Read2_GHC_Tuple_pair_type_liftReadList2
+skip Data.Functor.Classes.Read2__pair_type_liftReadsPrec2
+skip Data.Functor.Classes.Read2__pair_type_liftReadList2
 
 # Manual definition as this is recursive
-redefine Local Definition Data.Functor.Classes.instance_Data_Functor_Classes_Eq1_list_liftEq : forall {a} {b}, (a -> (b -> bool)) -> ((list a) -> ((list b) -> bool)) :=
+redefine Local Definition Data.Functor.Classes.Eq1__list_liftEq : forall {a} {b}, (a -> (b -> bool)) -> ((list a) -> ((list b) -> bool)) :=
   fun {a} {b} =>
     fix liftEq arg_69__ arg_70__ arg_71__
           := match arg_69__, arg_70__,  arg_71__ with
@@ -40,7 +40,7 @@ redefine Local Definition Data.Functor.Classes.instance_Data_Functor_Classes_Eq1
                | eq, cons x xs, cons y ys => andb (eq x y) (liftEq eq xs ys)
              end.
 
-redefine Local Definition Data.Functor.Classes.instance_Data_Functor_Classes_Ord1_list_liftCompare : forall {a} {b}, (a -> (b -> comparison)) -> ((list a) -> ((list b) -> comparison)) :=
+redefine Local Definition Data.Functor.Classes.Ord1__list_liftCompare : forall {a} {b}, (a -> (b -> comparison)) -> ((list a) -> ((list b) -> comparison)) :=
   fun {a} {b} =>
     fix liftCompare arg_69__ arg_70__ arg_71__
           := match arg_69__, arg_70__,  arg_71__ with

@@ -51,35 +51,34 @@ Arguments NEcons {_} _ _.
    failed: OOPS! Cannot find information for class Qualified "Control.Monad.Zip"
    "MonadZip" unsupported *)
 
-Local Definition instance_GHC_Base_Functor_Data_List_NonEmpty_NonEmpty_fmap
-    : forall {a} {b}, (a -> b) -> NonEmpty a -> NonEmpty b :=
+Local Definition Functor__NonEmpty_fmap : forall {a} {b},
+                                            (a -> b) -> NonEmpty a -> NonEmpty b :=
   fun {a} {b} =>
     fun arg_155__ arg_156__ =>
       match arg_155__ , arg_156__ with
         | f , NEcons a as_ => NEcons (f a) (GHC.Base.fmap f as_)
       end.
 
-Local Definition instance_GHC_Base_Functor_Data_List_NonEmpty_NonEmpty_op_zlzd__
-    : forall {a} {b}, a -> NonEmpty b -> NonEmpty a :=
+Local Definition Functor__NonEmpty_op_zlzd__ : forall {a} {b},
+                                                 a -> NonEmpty b -> NonEmpty a :=
   fun {a} {b} f x =>
     match x with
       | NEcons a as_ => NEcons f (_GHC.Base.<$_ f as_)
     end.
 
-Program Instance instance_GHC_Base_Functor_Data_List_NonEmpty_NonEmpty
-  : GHC.Base.Functor NonEmpty := fun _ k =>
-    k {|GHC.Base.op_zlzd____ := fun {a} {b} =>
-        instance_GHC_Base_Functor_Data_List_NonEmpty_NonEmpty_op_zlzd__ ;
-      GHC.Base.fmap__ := fun {a} {b} =>
-        instance_GHC_Base_Functor_Data_List_NonEmpty_NonEmpty_fmap |}.
+Program Instance Functor__NonEmpty : GHC.Base.Functor NonEmpty := fun _ k =>
+    k {|GHC.Base.op_zlzd____ := fun {a} {b} => Functor__NonEmpty_op_zlzd__ ;
+      GHC.Base.fmap__ := fun {a} {b} => Functor__NonEmpty_fmap |}.
 
-Local Definition instance_GHC_Base_Applicative_Data_List_NonEmpty_NonEmpty_pure
-    : forall {a}, a -> NonEmpty a :=
+Local Definition Applicative__NonEmpty_pure : forall {a}, a -> NonEmpty a :=
   fun {a} => fun a => NEcons a nil.
 
-Local Definition instance_Data_Traversable_Traversable_Data_List_NonEmpty_NonEmpty_traverse
-    : forall {f} {a} {b} {H : GHC.Base.Functor f} {_ : GHC.Base.Applicative f},
-        (a -> f b) -> NonEmpty a -> f (NonEmpty b) :=
+Local Definition Traversable__NonEmpty_traverse : forall {f}
+                                                         {a}
+                                                         {b}
+                                                         {H : GHC.Base.Functor f}
+                                                         {_ : GHC.Base.Applicative f},
+                                                    (a -> f b) -> NonEmpty a -> f (NonEmpty b) :=
   fun {f} {a} {b} {_} {_} =>
     fun arg_144__ arg_145__ =>
       match arg_144__ , arg_145__ with
@@ -87,74 +86,69 @@ Local Definition instance_Data_Traversable_Traversable_Data_List_NonEmpty_NonEmp
                                              (Data.Traversable.traverse f as_)
       end.
 
-Local Definition instance_Data_Traversable_Traversable_Data_List_NonEmpty_NonEmpty_sequenceA
-    : forall {f} {a},
-        forall `{GHC.Base.Applicative f}, NonEmpty (f a) -> f (NonEmpty a) :=
+Local Definition Traversable__NonEmpty_sequenceA : forall {f} {a},
+                                                     forall `{GHC.Base.Applicative f},
+                                                       NonEmpty (f a) -> f (NonEmpty a) :=
   fun {f} {a} `{GHC.Base.Applicative f} =>
-    instance_Data_Traversable_Traversable_Data_List_NonEmpty_NonEmpty_traverse
-    GHC.Base.id.
+    Traversable__NonEmpty_traverse GHC.Base.id.
 
-Local Definition instance_Data_Traversable_Traversable_Data_List_NonEmpty_NonEmpty_sequence
-    : forall {m} {a},
-        forall `{GHC.Base.Monad m}, NonEmpty (m a) -> m (NonEmpty a) :=
-  fun {m} {a} `{GHC.Base.Monad m} =>
-    instance_Data_Traversable_Traversable_Data_List_NonEmpty_NonEmpty_sequenceA.
+Local Definition Traversable__NonEmpty_sequence : forall {m} {a},
+                                                    forall `{GHC.Base.Monad m}, NonEmpty (m a) -> m (NonEmpty a) :=
+  fun {m} {a} `{GHC.Base.Monad m} => Traversable__NonEmpty_sequenceA.
 
-Local Definition instance_Data_Traversable_Traversable_Data_List_NonEmpty_NonEmpty_mapM
-    : forall {m} {a} {b},
-        forall `{GHC.Base.Monad m}, (a -> m b) -> NonEmpty a -> m (NonEmpty b) :=
-  fun {m} {a} {b} `{GHC.Base.Monad m} =>
-    instance_Data_Traversable_Traversable_Data_List_NonEmpty_NonEmpty_traverse.
+Local Definition Traversable__NonEmpty_mapM : forall {m} {a} {b},
+                                                forall `{GHC.Base.Monad m},
+                                                  (a -> m b) -> NonEmpty a -> m (NonEmpty b) :=
+  fun {m} {a} {b} `{GHC.Base.Monad m} => Traversable__NonEmpty_traverse.
 
-Local Definition instance_Data_Foldable_Foldable_Data_List_NonEmpty_NonEmpty_fold
-    : forall {m} {_ : GHC.Base.Monoid m}, NonEmpty m -> m :=
+Local Definition Foldable__NonEmpty_fold : forall {m} {_ : GHC.Base.Monoid m},
+                                             NonEmpty m -> m :=
   fun {m} {_} =>
     fun arg_141__ =>
       match arg_141__ with
         | NEcons m ms => GHC.Base.mappend m (Data.Foldable.fold ms)
       end.
 
-Local Definition instance_Data_Foldable_Foldable_Data_List_NonEmpty_NonEmpty_foldMap
-    : forall {m} {a} {_ : GHC.Base.Monoid m}, (a -> m) -> NonEmpty a -> m :=
+Local Definition Foldable__NonEmpty_foldMap : forall {m}
+                                                     {a}
+                                                     {_ : GHC.Base.Monoid m},
+                                                (a -> m) -> NonEmpty a -> m :=
   fun {m} {a} {_} =>
     fun f arg_141__ =>
       match arg_141__ with
         | NEcons m ms => GHC.Base.mappend (f m) (Data.Foldable.foldMap f ms)
       end.
 
-Local Definition instance_Data_Foldable_Foldable_Data_List_NonEmpty_NonEmpty_product
-    : forall {a}, forall `{GHC.Num.Num a}, NonEmpty a -> a :=
+Local Definition Foldable__NonEmpty_product : forall {a},
+                                                forall `{GHC.Num.Num a}, NonEmpty a -> a :=
   fun {a} `{GHC.Num.Num a} =>
-    Data.Foldable.hash_compose Data.Monoid.getProduct
-                               (instance_Data_Foldable_Foldable_Data_List_NonEmpty_NonEmpty_foldMap
+    Data.Foldable.hash_compose Data.Monoid.getProduct (Foldable__NonEmpty_foldMap
                                Data.Monoid.Mk_Product).
 
-Local Definition instance_Data_Foldable_Foldable_Data_List_NonEmpty_NonEmpty_sum
-    : forall {a}, forall `{GHC.Num.Num a}, NonEmpty a -> a :=
+Local Definition Foldable__NonEmpty_sum : forall {a},
+                                            forall `{GHC.Num.Num a}, NonEmpty a -> a :=
   fun {a} `{GHC.Num.Num a} =>
-    Data.Foldable.hash_compose Data.Monoid.getSum
-                               (instance_Data_Foldable_Foldable_Data_List_NonEmpty_NonEmpty_foldMap
+    Data.Foldable.hash_compose Data.Monoid.getSum (Foldable__NonEmpty_foldMap
                                Data.Monoid.Mk_Sum).
 
-Local Definition instance_Data_Foldable_Foldable_Data_List_NonEmpty_NonEmpty_elem
-    : forall {a}, forall `{_ : GHC.Base.Eq_ a}, a -> NonEmpty a -> bool :=
+Local Definition Foldable__NonEmpty_elem : forall {a},
+                                             forall `{_ : GHC.Base.Eq_ a}, a -> NonEmpty a -> bool :=
   fun {a} `{_ : GHC.Base.Eq_ a} =>
     Coq.Program.Basics.compose (fun p =>
-                                 Data.Foldable.hash_compose Data.Monoid.getAny
-                                                            (instance_Data_Foldable_Foldable_Data_List_NonEmpty_NonEmpty_foldMap
+                                 Data.Foldable.hash_compose Data.Monoid.getAny (Foldable__NonEmpty_foldMap
                                                             (Data.Foldable.hash_compose Data.Monoid.Mk_Any p)))
                                _GHC.Base.==_.
 
-Local Definition instance_Data_Foldable_Foldable_Data_List_NonEmpty_NonEmpty_foldl
-    : forall {b} {a}, (b -> a -> b) -> b -> NonEmpty a -> b :=
+Local Definition Foldable__NonEmpty_foldl : forall {b} {a},
+                                              (b -> a -> b) -> b -> NonEmpty a -> b :=
   fun {b} {a} =>
     fun arg_128__ arg_129__ arg_130__ =>
       match arg_128__ , arg_129__ , arg_130__ with
         | f , z , NEcons a as_ => Data.Foldable.foldl f (f z a) as_
       end.
 
-Local Definition instance_Data_Foldable_Foldable_Data_List_NonEmpty_NonEmpty_foldr'
-    : forall {a} {b}, (a -> b -> b) -> b -> NonEmpty a -> b :=
+Local Definition Foldable__NonEmpty_foldr' : forall {a} {b},
+                                               (a -> b -> b) -> b -> NonEmpty a -> b :=
   fun {a} {b} =>
     fun arg_9__ arg_10__ arg_11__ =>
       match arg_9__ , arg_10__ , arg_11__ with
@@ -163,52 +157,45 @@ Local Definition instance_Data_Foldable_Foldable_Data_List_NonEmpty_NonEmpty_fol
                              match arg_12__ , arg_13__ , arg_14__ with
                                | k , x , z => _GHC.Base.$!_ k (f x z)
                              end in
-                         instance_Data_Foldable_Foldable_Data_List_NonEmpty_NonEmpty_foldl f' GHC.Base.id
-                         xs z0
+                         Foldable__NonEmpty_foldl f' GHC.Base.id xs z0
       end.
 
-Local Definition instance_Data_Foldable_Foldable_Data_List_NonEmpty_NonEmpty_foldr
-    : forall {a} {b}, (a -> b -> b) -> b -> NonEmpty a -> b :=
+Local Definition Foldable__NonEmpty_foldr : forall {a} {b},
+                                              (a -> b -> b) -> b -> NonEmpty a -> b :=
   fun {a} {b} =>
     fun arg_128__ arg_129__ arg_130__ =>
       match arg_128__ , arg_129__ , arg_130__ with
         | f , z , NEcons a as_ => f a (Data.Foldable.foldr f z as_)
       end.
 
-Local Definition instance_Data_Foldable_Foldable_Data_List_NonEmpty_NonEmpty_null
-    : forall {a}, NonEmpty a -> bool :=
-  fun {a} =>
-    instance_Data_Foldable_Foldable_Data_List_NonEmpty_NonEmpty_foldr (fun arg_61__
-                                                                           arg_62__ =>
-                                                                        false) true.
+Local Definition Foldable__NonEmpty_null : forall {a}, NonEmpty a -> bool :=
+  fun {a} => Foldable__NonEmpty_foldr (fun arg_61__ arg_62__ => false) true.
 
-Local Definition instance_Data_Foldable_Foldable_Data_List_NonEmpty_NonEmpty_toList
-    : forall {a}, NonEmpty a -> list a :=
+Local Definition Foldable__NonEmpty_toList : forall {a}, NonEmpty a -> list a :=
   fun {a} =>
     fun arg_54__ =>
       match arg_54__ with
         | t => GHC.Base.build (fun arg_55__ arg_56__ =>
                                 match arg_55__ , arg_56__ with
-                                  | c , n => instance_Data_Foldable_Foldable_Data_List_NonEmpty_NonEmpty_foldr c n
-                                             t
+                                  | c , n => Foldable__NonEmpty_foldr c n t
                                 end)
       end.
 
-Local Definition instance_GHC_Base_Monad_Data_List_NonEmpty_NonEmpty_op_zgzgze__
-    : forall {a} {b}, NonEmpty a -> (a -> NonEmpty b) -> NonEmpty b :=
+Local Definition Monad__NonEmpty_op_zgzgze__ : forall {a} {b},
+                                                 NonEmpty a -> (a -> NonEmpty b) -> NonEmpty b :=
   fun {a} {b} =>
     fun arg_148__ arg_149__ =>
       match arg_148__ , arg_149__ with
         | NEcons a as_ , f => match f a with
                                 | NEcons b bs => NEcons b (Coq.Init.Datatypes.app bs (_GHC.Base.>>=_ as_
                                                                                                      (_GHC.Base.∘_
-                                                                                                     instance_Data_Foldable_Foldable_Data_List_NonEmpty_NonEmpty_toList
+                                                                                                     Foldable__NonEmpty_toList
                                                                                                      f)))
                               end
       end.
 
-Local Definition instance_Data_Foldable_Foldable_Data_List_NonEmpty_NonEmpty_foldl'
-    : forall {b} {a}, (b -> a -> b) -> b -> NonEmpty a -> b :=
+Local Definition Foldable__NonEmpty_foldl' : forall {b} {a},
+                                               (b -> a -> b) -> b -> NonEmpty a -> b :=
   fun {b} {a} =>
     fun arg_24__ arg_25__ arg_26__ =>
       match arg_24__ , arg_25__ , arg_26__ with
@@ -217,57 +204,46 @@ Local Definition instance_Data_Foldable_Foldable_Data_List_NonEmpty_NonEmpty_fol
                              match arg_27__ , arg_28__ , arg_29__ with
                                | x , k , z => _GHC.Base.$!_ k (f z x)
                              end in
-                         instance_Data_Foldable_Foldable_Data_List_NonEmpty_NonEmpty_foldr f' GHC.Base.id
-                         xs z0
+                         Foldable__NonEmpty_foldr f' GHC.Base.id xs z0
       end.
 
-Local Definition instance_Data_Foldable_Foldable_Data_List_NonEmpty_NonEmpty_length
-    : forall {a}, NonEmpty a -> GHC.Num.Int :=
+Local Definition Foldable__NonEmpty_length : forall {a},
+                                               NonEmpty a -> GHC.Num.Int :=
   fun {a} =>
-    instance_Data_Foldable_Foldable_Data_List_NonEmpty_NonEmpty_foldl' (fun arg_64__
-                                                                            arg_65__ =>
-                                                                         match arg_64__ , arg_65__ with
-                                                                           | c , _ => _GHC.Num.+_ c (GHC.Num.fromInteger
-                                                                                                  1)
-                                                                         end) (GHC.Num.fromInteger 0).
+    Foldable__NonEmpty_foldl' (fun arg_64__ arg_65__ =>
+                                match arg_64__ , arg_65__ with
+                                  | c , _ => _GHC.Num.+_ c (GHC.Num.fromInteger 1)
+                                end) (GHC.Num.fromInteger 0).
 
-Program Instance instance_Data_Foldable_Foldable_Data_List_NonEmpty_NonEmpty
-  : Data.Foldable.Foldable NonEmpty := fun _ k =>
+Program Instance Foldable__NonEmpty : Data.Foldable.Foldable NonEmpty := fun _
+                                                                             k =>
     k {|Data.Foldable.elem__ := fun {a} `{GHC.Base.Eq_ a} =>
-        instance_Data_Foldable_Foldable_Data_List_NonEmpty_NonEmpty_elem ;
+        Foldable__NonEmpty_elem ;
       Data.Foldable.fold__ := fun {m} `{GHC.Base.Monoid m} =>
-        instance_Data_Foldable_Foldable_Data_List_NonEmpty_NonEmpty_fold ;
+        Foldable__NonEmpty_fold ;
       Data.Foldable.foldMap__ := fun {m} {a} `{GHC.Base.Monoid m} =>
-        instance_Data_Foldable_Foldable_Data_List_NonEmpty_NonEmpty_foldMap ;
-      Data.Foldable.foldl__ := fun {b} {a} =>
-        instance_Data_Foldable_Foldable_Data_List_NonEmpty_NonEmpty_foldl ;
-      Data.Foldable.foldl'__ := fun {b} {a} =>
-        instance_Data_Foldable_Foldable_Data_List_NonEmpty_NonEmpty_foldl' ;
-      Data.Foldable.foldr__ := fun {a} {b} =>
-        instance_Data_Foldable_Foldable_Data_List_NonEmpty_NonEmpty_foldr ;
-      Data.Foldable.foldr'__ := fun {a} {b} =>
-        instance_Data_Foldable_Foldable_Data_List_NonEmpty_NonEmpty_foldr' ;
-      Data.Foldable.length__ := fun {a} =>
-        instance_Data_Foldable_Foldable_Data_List_NonEmpty_NonEmpty_length ;
-      Data.Foldable.null__ := fun {a} =>
-        instance_Data_Foldable_Foldable_Data_List_NonEmpty_NonEmpty_null ;
+        Foldable__NonEmpty_foldMap ;
+      Data.Foldable.foldl__ := fun {b} {a} => Foldable__NonEmpty_foldl ;
+      Data.Foldable.foldl'__ := fun {b} {a} => Foldable__NonEmpty_foldl' ;
+      Data.Foldable.foldr__ := fun {a} {b} => Foldable__NonEmpty_foldr ;
+      Data.Foldable.foldr'__ := fun {a} {b} => Foldable__NonEmpty_foldr' ;
+      Data.Foldable.length__ := fun {a} => Foldable__NonEmpty_length ;
+      Data.Foldable.null__ := fun {a} => Foldable__NonEmpty_null ;
       Data.Foldable.product__ := fun {a} `{GHC.Num.Num a} =>
-        instance_Data_Foldable_Foldable_Data_List_NonEmpty_NonEmpty_product ;
-      Data.Foldable.sum__ := fun {a} `{GHC.Num.Num a} =>
-        instance_Data_Foldable_Foldable_Data_List_NonEmpty_NonEmpty_sum ;
-      Data.Foldable.toList__ := fun {a} =>
-        instance_Data_Foldable_Foldable_Data_List_NonEmpty_NonEmpty_toList |}.
+        Foldable__NonEmpty_product ;
+      Data.Foldable.sum__ := fun {a} `{GHC.Num.Num a} => Foldable__NonEmpty_sum ;
+      Data.Foldable.toList__ := fun {a} => Foldable__NonEmpty_toList |}.
 
-Program Instance instance_Data_Traversable_Traversable_Data_List_NonEmpty_NonEmpty
-  : Data.Traversable.Traversable NonEmpty := fun _ k =>
+Program Instance Traversable__NonEmpty : Data.Traversable.Traversable
+                                         NonEmpty := fun _ k =>
     k {|Data.Traversable.mapM__ := fun {m} {a} {b} `{GHC.Base.Monad m} =>
-        instance_Data_Traversable_Traversable_Data_List_NonEmpty_NonEmpty_mapM ;
+        Traversable__NonEmpty_mapM ;
       Data.Traversable.sequence__ := fun {m} {a} `{GHC.Base.Monad m} =>
-        instance_Data_Traversable_Traversable_Data_List_NonEmpty_NonEmpty_sequence ;
+        Traversable__NonEmpty_sequence ;
       Data.Traversable.sequenceA__ := fun {f} {a} `{GHC.Base.Applicative f} =>
-        instance_Data_Traversable_Traversable_Data_List_NonEmpty_NonEmpty_sequenceA ;
+        Traversable__NonEmpty_sequenceA ;
       Data.Traversable.traverse__ := fun {f} {a} {b} `{GHC.Base.Applicative f} =>
-        instance_Data_Traversable_Traversable_Data_List_NonEmpty_NonEmpty_traverse |}.
+        Traversable__NonEmpty_traverse |}.
 
 (* Translating `instance GHC.Generics.Generic1 Data.List.NonEmpty.NonEmpty'
    failed: OOPS! Cannot find information for class Qualified "GHC.Generics"
@@ -289,12 +265,9 @@ Program Instance instance_Data_Traversable_Traversable_Data_List_NonEmpty_NonEmp
    (Data.List.NonEmpty.NonEmpty a)' failed: OOPS! Cannot find information for class
    Qualified "GHC.Show" "Show" unsupported *)
 
-(* Skipping instance
-   instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Data_List_NonEmpty_NonEmpty_a_ *)
+(* Skipping instance Ord__NonEmpty *)
 
-Local Definition instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___Data_List_NonEmpty_NonEmpty_a__op_zeze__ {inst_a}
-                                                                                                           `{GHC.Base.Eq_
-                                                                                                           inst_a}
+Local Definition Eq___NonEmpty_op_zeze__ {inst_a} `{GHC.Base.Eq_ inst_a}
     : NonEmpty inst_a -> NonEmpty inst_a -> bool :=
   fun arg_78__ arg_79__ =>
     match arg_78__ , arg_79__ with
@@ -302,24 +275,14 @@ Local Definition instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___Data_List_NonE
                                              b2)))
     end.
 
-Local Definition instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___Data_List_NonEmpty_NonEmpty_a__op_zsze__ {inst_a}
-                                                                                                           `{_
-                                                                                                             : GHC.Base.Eq_
-                                                                                                               inst_a}
+Local Definition Eq___NonEmpty_op_zsze__ {inst_a} `{GHC.Base.Eq_ inst_a}
     : NonEmpty inst_a -> NonEmpty inst_a -> bool :=
-  fun arg_198__ arg_199__ =>
-    match arg_198__ , arg_199__ with
-      | a , b => negb
-                 (instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___Data_List_NonEmpty_NonEmpty_a__op_zeze__
-                 a b)
-    end.
+  fun a b => negb (Eq___NonEmpty_op_zeze__ a b).
 
-Program Instance instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___Data_List_NonEmpty_NonEmpty_a_ {a}
-                                                                                                 `{GHC.Base.Eq_ a}
-  : GHC.Base.Eq_ (NonEmpty a) := fun _ k =>
-    k
-    {|GHC.Base.op_zeze____ := instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___Data_List_NonEmpty_NonEmpty_a__op_zeze__ ;
-    GHC.Base.op_zsze____ := instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___Data_List_NonEmpty_NonEmpty_a__op_zsze__ |}.
+Program Instance Eq___NonEmpty {a} `{GHC.Base.Eq_ a} : GHC.Base.Eq_ (NonEmpty
+                                                                    a) := fun _ k =>
+    k {|GHC.Base.op_zeze____ := Eq___NonEmpty_op_zeze__ ;
+      GHC.Base.op_zsze____ := Eq___NonEmpty_op_zsze__ |}.
 
 Definition fromList {a} : list a -> NonEmpty a :=
   fun arg_37__ =>
@@ -492,42 +455,34 @@ Definition zipWith {a} {b} {c} : (a -> b -> c) -> NonEmpty a -> NonEmpty
       | f , NEcons x xs , NEcons y ys => NEcons (f x y) (GHC.List.zipWith f xs ys)
     end.
 
-Local Definition instance_GHC_Base_Applicative_Data_List_NonEmpty_NonEmpty_op_zlztzg__
-    : forall {a} {b}, NonEmpty (a -> b) -> NonEmpty a -> NonEmpty b :=
+Local Definition Applicative__NonEmpty_op_zlztzg__ : forall {a} {b},
+                                                       NonEmpty (a -> b) -> NonEmpty a -> NonEmpty b :=
   fun {a} {b} => zipWith id.
 
-Local Definition instance_GHC_Base_Applicative_Data_List_NonEmpty_NonEmpty_op_ztzg__
-    : forall {a} {b}, NonEmpty a -> NonEmpty b -> NonEmpty b :=
+Local Definition Applicative__NonEmpty_op_ztzg__ : forall {a} {b},
+                                                     NonEmpty a -> NonEmpty b -> NonEmpty b :=
   fun {a} {b} =>
     fun x y =>
-      instance_GHC_Base_Applicative_Data_List_NonEmpty_NonEmpty_op_zlztzg__
-      (GHC.Base.fmap (GHC.Base.const GHC.Base.id) x) y.
+      Applicative__NonEmpty_op_zlztzg__ (GHC.Base.fmap (GHC.Base.const GHC.Base.id) x)
+                                        y.
 
-Program Instance instance_GHC_Base_Applicative_Data_List_NonEmpty_NonEmpty
-  : GHC.Base.Applicative NonEmpty := fun _ k =>
-    k {|GHC.Base.op_ztzg____ := fun {a} {b} =>
-        instance_GHC_Base_Applicative_Data_List_NonEmpty_NonEmpty_op_ztzg__ ;
-      GHC.Base.op_zlztzg____ := fun {a} {b} =>
-        instance_GHC_Base_Applicative_Data_List_NonEmpty_NonEmpty_op_zlztzg__ ;
-      GHC.Base.pure__ := fun {a} =>
-        instance_GHC_Base_Applicative_Data_List_NonEmpty_NonEmpty_pure |}.
+Program Instance Applicative__NonEmpty : GHC.Base.Applicative NonEmpty := fun _
+                                                                              k =>
+    k {|GHC.Base.op_ztzg____ := fun {a} {b} => Applicative__NonEmpty_op_ztzg__ ;
+      GHC.Base.op_zlztzg____ := fun {a} {b} => Applicative__NonEmpty_op_zlztzg__ ;
+      GHC.Base.pure__ := fun {a} => Applicative__NonEmpty_pure |}.
 
-Local Definition instance_GHC_Base_Monad_Data_List_NonEmpty_NonEmpty_op_zgzg__
-    : forall {a} {b}, NonEmpty a -> NonEmpty b -> NonEmpty b :=
+Local Definition Monad__NonEmpty_op_zgzg__ : forall {a} {b},
+                                               NonEmpty a -> NonEmpty b -> NonEmpty b :=
   fun {a} {b} => _GHC.Base.*>_.
 
-Local Definition instance_GHC_Base_Monad_Data_List_NonEmpty_NonEmpty_return_
-    : forall {a}, a -> NonEmpty a :=
+Local Definition Monad__NonEmpty_return_ : forall {a}, a -> NonEmpty a :=
   fun {a} => GHC.Base.pure.
 
-Program Instance instance_GHC_Base_Monad_Data_List_NonEmpty_NonEmpty
-  : GHC.Base.Monad NonEmpty := fun _ k =>
-    k {|GHC.Base.op_zgzg____ := fun {a} {b} =>
-        instance_GHC_Base_Monad_Data_List_NonEmpty_NonEmpty_op_zgzg__ ;
-      GHC.Base.op_zgzgze____ := fun {a} {b} =>
-        instance_GHC_Base_Monad_Data_List_NonEmpty_NonEmpty_op_zgzgze__ ;
-      GHC.Base.return___ := fun {a} =>
-        instance_GHC_Base_Monad_Data_List_NonEmpty_NonEmpty_return_ |}.
+Program Instance Monad__NonEmpty : GHC.Base.Monad NonEmpty := fun _ k =>
+    k {|GHC.Base.op_zgzg____ := fun {a} {b} => Monad__NonEmpty_op_zgzg__ ;
+      GHC.Base.op_zgzgze____ := fun {a} {b} => Monad__NonEmpty_op_zgzgze__ ;
+      GHC.Base.return___ := fun {a} => Monad__NonEmpty_return_ |}.
 
 Module Notations.
 Notation "'_Data.List.NonEmpty.<|_'" := (op_zlzb__).

@@ -23,62 +23,45 @@ Import GHC.Base.Notations.
 Inductive Void : Type :=.
 (* Converted value declarations: *)
 
-Local Definition instance_GHC_Base_Eq__Data_Void_Void_op_zeze__
-    : Void -> Void -> bool :=
+Local Definition Eq___Void_op_zeze__ : Void -> Void -> bool :=
   fun arg_5__ arg_6__ => true.
 
-Local Definition instance_GHC_Base_Eq__Data_Void_Void_op_zsze__
-    : Void -> Void -> bool :=
-  fun x y => negb (instance_GHC_Base_Eq__Data_Void_Void_op_zeze__ x y).
+Local Definition Eq___Void_op_zsze__ : Void -> Void -> bool :=
+  fun x y => negb (Eq___Void_op_zeze__ x y).
 
-Program Instance instance_GHC_Base_Eq__Data_Void_Void : GHC.Base.Eq_ Void :=
-  fun _ k =>
-    k {|GHC.Base.op_zeze____ := instance_GHC_Base_Eq__Data_Void_Void_op_zeze__ ;
-      GHC.Base.op_zsze____ := instance_GHC_Base_Eq__Data_Void_Void_op_zsze__ |}.
+Program Instance Eq___Void : GHC.Base.Eq_ Void := fun _ k =>
+    k {|GHC.Base.op_zeze____ := Eq___Void_op_zeze__ ;
+      GHC.Base.op_zsze____ := Eq___Void_op_zsze__ |}.
 
-Local Definition instance_GHC_Base_Ord_Data_Void_Void_compare
-    : Void -> Void -> comparison :=
+Local Definition Ord__Void_compare : Void -> Void -> comparison :=
   fun arg_3__ arg_4__ => Eq.
 
-Local Definition instance_GHC_Base_Ord_Data_Void_Void_op_zg__
-    : Void -> Void -> bool :=
-  fun x y => _GHC.Base.==_ (instance_GHC_Base_Ord_Data_Void_Void_compare x y) Gt.
+Local Definition Ord__Void_op_zg__ : Void -> Void -> bool :=
+  fun x y => _GHC.Base.==_ (Ord__Void_compare x y) Gt.
 
-Local Definition instance_GHC_Base_Ord_Data_Void_Void_op_zgze__
-    : Void -> Void -> bool :=
-  fun x y => _GHC.Base./=_ (instance_GHC_Base_Ord_Data_Void_Void_compare x y) Lt.
+Local Definition Ord__Void_op_zgze__ : Void -> Void -> bool :=
+  fun x y => _GHC.Base./=_ (Ord__Void_compare x y) Lt.
 
-Local Definition instance_GHC_Base_Ord_Data_Void_Void_op_zl__
-    : Void -> Void -> bool :=
-  fun x y => _GHC.Base.==_ (instance_GHC_Base_Ord_Data_Void_Void_compare x y) Lt.
+Local Definition Ord__Void_op_zl__ : Void -> Void -> bool :=
+  fun x y => _GHC.Base.==_ (Ord__Void_compare x y) Lt.
 
-Local Definition instance_GHC_Base_Ord_Data_Void_Void_op_zlze__
-    : Void -> Void -> bool :=
-  fun x y => _GHC.Base./=_ (instance_GHC_Base_Ord_Data_Void_Void_compare x y) Gt.
+Local Definition Ord__Void_op_zlze__ : Void -> Void -> bool :=
+  fun x y => _GHC.Base./=_ (Ord__Void_compare x y) Gt.
 
-Local Definition instance_GHC_Base_Ord_Data_Void_Void_max
-    : Void -> Void -> Void :=
-  fun x y =>
-    if instance_GHC_Base_Ord_Data_Void_Void_op_zlze__ x y : bool
-    then y
-    else x.
+Local Definition Ord__Void_max : Void -> Void -> Void :=
+  fun x y => if Ord__Void_op_zlze__ x y : bool then y else x.
 
-Local Definition instance_GHC_Base_Ord_Data_Void_Void_min
-    : Void -> Void -> Void :=
-  fun x y =>
-    if instance_GHC_Base_Ord_Data_Void_Void_op_zlze__ x y : bool
-    then x
-    else y.
+Local Definition Ord__Void_min : Void -> Void -> Void :=
+  fun x y => if Ord__Void_op_zlze__ x y : bool then x else y.
 
-Program Instance instance_GHC_Base_Ord_Data_Void_Void : GHC.Base.Ord Void :=
-  fun _ k =>
-    k {|GHC.Base.op_zl____ := instance_GHC_Base_Ord_Data_Void_Void_op_zl__ ;
-      GHC.Base.op_zlze____ := instance_GHC_Base_Ord_Data_Void_Void_op_zlze__ ;
-      GHC.Base.op_zg____ := instance_GHC_Base_Ord_Data_Void_Void_op_zg__ ;
-      GHC.Base.op_zgze____ := instance_GHC_Base_Ord_Data_Void_Void_op_zgze__ ;
-      GHC.Base.compare__ := instance_GHC_Base_Ord_Data_Void_Void_compare ;
-      GHC.Base.max__ := instance_GHC_Base_Ord_Data_Void_Void_max ;
-      GHC.Base.min__ := instance_GHC_Base_Ord_Data_Void_Void_min |}.
+Program Instance Ord__Void : GHC.Base.Ord Void := fun _ k =>
+    k {|GHC.Base.op_zl____ := Ord__Void_op_zl__ ;
+      GHC.Base.op_zlze____ := Ord__Void_op_zlze__ ;
+      GHC.Base.op_zg____ := Ord__Void_op_zg__ ;
+      GHC.Base.op_zgze____ := Ord__Void_op_zgze__ ;
+      GHC.Base.compare__ := Ord__Void_compare ;
+      GHC.Base.max__ := Ord__Void_max ;
+      GHC.Base.min__ := Ord__Void_min |}.
 
 (* Translating `instance GHC.Read.Read Data.Void.Void' failed: OOPS! Cannot find
    information for class Qualified "GHC.Read" "Read" unsupported *)

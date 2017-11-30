@@ -1,9 +1,9 @@
 redefine Definition Data.Functor.Identity.hash_compose {a} {b} {c} := @Coq.Program.Basics.compose a b c.
 
-redefine Local Definition Data.Functor.Identity.instance_Data_Foldable_Foldable_Data_Functor_Identity_Identity_foldr' :
+redefine Local Definition Data.Functor.Identity.Foldable__Identity_foldr' :
 			forall {a} {b}, (a -> (b -> b)) -> (b -> ((Data.Functor.Identity.Identity a) -> b)) :=
-         fun {a} {b} => Data.Functor.Identity.instance_Data_Foldable_Foldable_Data_Functor_Identity_Identity_foldr.
+         fun {a} {b} => Data.Functor.Identity.Foldable__Identity_foldr.
 
-order Data.Functor.Identity.instance_Data_Foldable_Foldable_Data_Functor_Identity_Identity Data.Functor.Identity.instance_Data_Traversable_Traversable_Data_Functor_Identity_Identity
+order Data.Functor.Identity.Foldable__Identity Data.Functor.Identity.Traversable__Identity
 
-order Data.Functor.Identity.instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___Data_Functor_Identity_Identity_a_ Data.Functor.Identity.instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Data_Functor_Identity_Identity_a_
+order Data.Functor.Identity.Eq___Identity Data.Functor.Identity.Ord__Identity

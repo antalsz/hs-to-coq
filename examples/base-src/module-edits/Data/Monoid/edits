@@ -19,29 +19,29 @@ add Data.Monoid Instance Unpeel_All : Unpeel All bool :=
 	 Build_Unpeel _ _ getAll Mk_All.
 
 
-order Data.Monoid.instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___Data_Monoid_Dual_a_ Data.Monoid.instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Data_Monoid_Dual_a_
-order  Unpeel_Dual Data.Monoid.instance_GHC_Base_Functor_Data_Monoid_Dual Data.Monoid.instance_GHC_Base_Applicative_Data_Monoid_Dual Data.Monoid.instance_GHC_Base_Monad_Data_Monoid_Dual
+order Data.Monoid.Eq___Dual Data.Monoid.Ord__Dual
+order  Unpeel_Dual Data.Monoid.Functor__Dual Data.Monoid.Applicative__Dual Data.Monoid.Monad__Dual
 
-order Data.Monoid.instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___Data_Monoid_Last_a_ Data.Monoid.instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Data_Monoid_Last_a_
-order Unpeel_Last Data.Monoid.instance_GHC_Base_Functor_Data_Monoid_Last Data.Monoid.instance_GHC_Base_Applicative_Data_Monoid_Last Data.Monoid.instance_GHC_Base_Monad_Data_Monoid_Last
+order Data.Monoid.Eq___Last Data.Monoid.Ord__Last
+order Unpeel_Last Data.Monoid.Functor__Last Data.Monoid.Applicative__Last Data.Monoid.Monad__Last
 
-order Data.Monoid.instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___Data_Monoid_First_a_ Data.Monoid.instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Data_Monoid_First_a_
-order Unpeel_First Data.Monoid.instance_GHC_Base_Functor_Data_Monoid_First Data.Monoid.instance_GHC_Base_Applicative_Data_Monoid_First Data.Monoid.instance_GHC_Base_Monad_Data_Monoid_First
+order Data.Monoid.Eq___First Data.Monoid.Ord__First
+order Unpeel_First Data.Monoid.Functor__First Data.Monoid.Applicative__First Data.Monoid.Monad__First
 
-order Data.Monoid.instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___Data_Monoid_Product_a_ Data.Monoid.instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Data_Monoid_Product_a_
-order Unpeel_Product Data.Monoid.instance_GHC_Base_Functor_Data_Monoid_Product Data.Monoid.instance_GHC_Base_Applicative_Data_Monoid_Product Data.Monoid.instance_GHC_Base_Monad_Data_Monoid_Product
+order Data.Monoid.Eq___Product Data.Monoid.Ord__Product
+order Unpeel_Product Data.Monoid.Functor__Product Data.Monoid.Applicative__Product Data.Monoid.Monad__Product
 
-order Data.Monoid.instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___Data_Monoid_Sum_a_ Data.Monoid.instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Data_Monoid_Sum_a_
-order Unpeel_Sum Data.Monoid.instance_GHC_Base_Functor_Data_Monoid_Sum Data.Monoid.instance_GHC_Base_Applicative_Data_Monoid_Sum Data.Monoid.instance_GHC_Base_Monad_Data_Monoid_Sum
+order Data.Monoid.Eq___Sum Data.Monoid.Ord__Sum
+order Unpeel_Sum Data.Monoid.Functor__Sum Data.Monoid.Applicative__Sum Data.Monoid.Monad__Sum
 
-order Unpeel_Any Data.Monoid.instance_GHC_Base_Eq__Data_Monoid_Any Data.Monoid.instance_GHC_Base_Ord_Data_Monoid_Any
-order Unpeel_All Data.Monoid.instance_GHC_Base_Eq__Data_Monoid_All Data.Monoid.instance_GHC_Base_Ord_Data_Monoid_All
+order Unpeel_Any Data.Monoid.Eq___Any Data.Monoid.Ord__Any
+order Unpeel_All Data.Monoid.Eq___All Data.Monoid.Ord__All
 
 
 # cannot refer to scoped type variables in instance declaration
 # defined in the midamble instance
-skip Data.Monoid.instance_forall___GHC_Num_Num_a___GHC_Base_Monoid__Data_Monoid_Product_a_
-skip Data.Monoid.instance_forall___GHC_Num_Num_a___GHC_Base_Monoid__Data_Monoid_Sum_a_
+skip Data.Monoid.Monoid__Product
+skip Data.Monoid.Monoid__Sum
 
 # <> operator already defined (as not equal)
 # in the preamble.v
@@ -49,33 +49,33 @@ skip Data.Monoid.op_zlzg__
 
 
 
-# skip Data.Monoid.instance_forall___GHC_Base_Alternative_f___GHC_Base_Monoid__Data_Monoid_Alt_f_a_
+# skip Data.Monoid.Monoid__Alt
 # scoped type variables
-redefine Local Definition Data.Monoid.instance_forall___GHC_Base_Alternative_f___GHC_Base_Monoid__Data_Monoid_Alt_f_a__mappend {inst_f} {inst_a}`{_:GHC.Base.Alternative inst_f} :
+redefine Local Definition Data.Monoid.Monoid__Alt_mappend {inst_f} {inst_a}`{_:GHC.Base.Alternative inst_f} :
 			(Alt inst_f inst_a) -> ((Alt inst_f inst_a) -> (Alt inst_f inst_a)) :=
   GHC.Prim.coerce GHC.Base.op_zlzbzg__.
 
 # issues with Alt (extra {inst_k} or {k} abstraction)
 # defined in midamble
-skip Data.Monoid.instance_forall___GHC_Base_Eq___f_a____GHC_Base_Eq___Data_Monoid_Alt_f_a_
-skip Data.Monoid.instance_forall___GHC_Base_Ord__f_a____GHC_Base_Ord__Data_Monoid_Alt_f_a_
+skip Data.Monoid.Eq___Alt
+skip Data.Monoid.Ord__Alt
 
 
 
 # Read and Show instances
-skip Data.Monoid.instance_forall___GHC_Read_Read_a___GHC_Read_Read__Data_Monoid_Last_a_
-skip Data.Monoid.instance_forall___GHC_Read_Read_a___GHC_Read_Read__Data_Monoid_First_a_
-skip Data.Monoid.instance_forall___GHC_Read_Read_a___GHC_Read_Read__Data_Monoid_Product_a_
-skip Data.Monoid.instance_forall___GHC_Read_Read_a___GHC_Read_Read__Data_Monoid_Sum_a_
-skip Data.Monoid.instance_GHC_Read_Read_Data_Monoid_Any
-skip Data.Monoid.instance_GHC_Read_Read_Data_Monoid_All
-skip Data.Monoid.instance_forall___GHC_Read_Read__f_a____GHC_Read_Read__Data_Monoid_Alt_f_a_
-skip Data.Monoid.instance_forall___GHC_Read_Read_a___GHC_Read_Read__Data_Monoid_Dual_a_
-skip Data.Monoid.instance_forall___GHC_Show_Show_a___GHC_Show_Show__Data_Monoid_Last_a_
-skip Data.Monoid.instance_forall___GHC_Show_Show_a___GHC_Show_Show__Data_Monoid_First_a_
-skip Data.Monoid.instance_forall___GHC_Show_Show_a___GHC_Show_Show__Data_Monoid_Product_a_
-skip Data.Monoid.instance_forall___GHC_Show_Show_a___GHC_Show_Show__Data_Monoid_Sum_a_
-skip Data.Monoid.instance_GHC_Show_Show_Data_Monoid_Any
-skip Data.Monoid.instance_GHC_Show_Show_Data_Monoid_All
-skip Data.Monoid.instance_forall___GHC_Show_Show__f_a____GHC_Show_Show__Data_Monoid_Alt_f_a_
-skip Data.Monoid.instance_forall___GHC_Show_Show_a___GHC_Show_Show__Data_Monoid_Dual_a_
+skip Data.Monoid.Read__Last
+skip Data.Monoid.Read__First
+skip Data.Monoid.Read__Product
+skip Data.Monoid.Read__Sum
+skip Data.Monoid.Read__Any
+skip Data.Monoid.Read__All
+skip Data.Monoid.Read__Alt
+skip Data.Monoid.Read__Dual
+skip Data.Monoid.Show__Last
+skip Data.Monoid.Show__First
+skip Data.Monoid.Show__Product
+skip Data.Monoid.Show__Sum
+skip Data.Monoid.Show__Any
+skip Data.Monoid.Show__All
+skip Data.Monoid.Show__Alt
+skip Data.Monoid.Show__Dual

@@ -1,6 +1,0 @@
-skip instance_GHC_Exception_Exception_Void
-skip instance_GHC_Arr_Ix_Void
-skip instance_GHC_Show_Show_Void
-skip instance_GHC_Read_Read_Void
-
-skip instance_Data_Data_Data_Void

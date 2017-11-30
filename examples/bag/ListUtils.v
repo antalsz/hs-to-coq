@@ -143,11 +143,11 @@ Theorem hs_coq_any_list {A} (p : A -> bool) (l : list A) :
   Data.Foldable.any p l = any p l.
 Proof.
   rewrite /Data.Foldable.any
-          /Data.Foldable.foldMap /Foldable.instance_Data_Foldable_Foldable_list /Foldable.foldMap__
-          /= /Data.Foldable.instance_Data_Foldable_Foldable_list_foldMap
-          /Data.Foldable.instance_Data_Foldable_Foldable_list_foldr /=
-          /Base.mempty /Monoid.instance_GHC_Base_Monoid_Data_Monoid_Any /Base.mempty__
-          /Monoid.instance_GHC_Base_Monoid_Data_Monoid_Any_mempty
+          /Data.Foldable.foldMap /Foldable.Foldable__list /Foldable.foldMap__
+          /= /Data.Foldable.Foldable__list_foldMap
+          /Data.Foldable.Foldable__list_foldr /=
+          /Base.mempty /Monoid.Monoid__Any /Base.mempty__
+          /Monoid.Monoid__Any_mempty
           /Foldable.hash_compose /Base.op_z2218U__.
   rewrite -(orbF (any p l)); move: false => b.
   elim: l => [|x l IH] //=.

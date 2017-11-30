@@ -54,9 +54,7 @@ Instance Unpeel_WrappedArrow {a} {b} {c} : GHC.Prim.Unpeel (WrappedArrow a b c)
                                                            (a b c) := GHC.Prim.Build_Unpeel _ _ unwrapArrow
                                                                                             Mk_WrapArrow.
 
-Local Definition instance_forall___GHC_Base_Monad_m___GHC_Base_Functor__Control_Applicative_WrappedMonad_m__fmap {inst_m}
-                                                                                                                 `{GHC.Base.Monad
-                                                                                                                 inst_m}
+Local Definition Functor__WrappedMonad_fmap {inst_m} `{GHC.Base.Monad inst_m}
     : forall {a} {b},
         (a -> b) -> (WrappedMonad inst_m) a -> (WrappedMonad inst_m) b :=
   fun {a} {b} =>
@@ -65,73 +63,53 @@ Local Definition instance_forall___GHC_Base_Monad_m___GHC_Base_Functor__Control_
         | f , Mk_WrapMonad v => Mk_WrapMonad (GHC.Base.liftM f v)
       end.
 
-Local Definition instance_forall___GHC_Base_Monad_m___GHC_Base_Functor__Control_Applicative_WrappedMonad_m__op_zlzd__ {inst_m}
-                                                                                                                      `{GHC.Base.Monad
-                                                                                                                      inst_m}
-    : forall {a} {b}, a -> (WrappedMonad inst_m) b -> (WrappedMonad inst_m) a :=
-  fun {a} {b} =>
-    fun x =>
-      instance_forall___GHC_Base_Monad_m___GHC_Base_Functor__Control_Applicative_WrappedMonad_m__fmap
-      (GHC.Base.const x).
+Local Definition Functor__WrappedMonad_op_zlzd__ {inst_m} `{GHC.Base.Monad
+                                                 inst_m} : forall {a} {b},
+                                                             a -> (WrappedMonad inst_m) b -> (WrappedMonad inst_m) a :=
+  fun {a} {b} => fun x => Functor__WrappedMonad_fmap (GHC.Base.const x).
 
-Program Instance instance_forall___GHC_Base_Monad_m___GHC_Base_Functor__Control_Applicative_WrappedMonad_m_ {m}
-                                                                                                            `{GHC.Base.Monad
-                                                                                                            m}
+Program Instance Functor__WrappedMonad {m} `{GHC.Base.Monad m}
   : GHC.Base.Functor (WrappedMonad m) := fun _ k =>
-    k {|GHC.Base.op_zlzd____ := fun {a} {b} =>
-        instance_forall___GHC_Base_Monad_m___GHC_Base_Functor__Control_Applicative_WrappedMonad_m__op_zlzd__ ;
-      GHC.Base.fmap__ := fun {a} {b} =>
-        instance_forall___GHC_Base_Monad_m___GHC_Base_Functor__Control_Applicative_WrappedMonad_m__fmap |}.
+    k {|GHC.Base.op_zlzd____ := fun {a} {b} => Functor__WrappedMonad_op_zlzd__ ;
+      GHC.Base.fmap__ := fun {a} {b} => Functor__WrappedMonad_fmap |}.
 
-Local Definition instance_forall___GHC_Base_Monad_m___GHC_Base_Applicative__Control_Applicative_WrappedMonad_m__op_zlztzg__ {inst_m}
-                                                                                                                            `{GHC.Base.Monad
-                                                                                                                            inst_m}
-    : forall {a} {b},
-        (WrappedMonad inst_m) (a -> b) -> (WrappedMonad inst_m) a -> (WrappedMonad
-        inst_m) b :=
+Local Definition Applicative__WrappedMonad_op_zlztzg__ {inst_m} `{GHC.Base.Monad
+                                                       inst_m} : forall {a} {b},
+                                                                   (WrappedMonad inst_m) (a -> b) -> (WrappedMonad
+                                                                   inst_m) a -> (WrappedMonad inst_m) b :=
   fun {a} {b} =>
     fun arg_49__ arg_50__ =>
       match arg_49__ , arg_50__ with
         | Mk_WrapMonad f , Mk_WrapMonad v => Mk_WrapMonad (GHC.Base.ap f v)
       end.
 
-Local Definition instance_forall___GHC_Base_Monad_m___GHC_Base_Applicative__Control_Applicative_WrappedMonad_m__op_ztzg__ {inst_m}
-                                                                                                                          `{GHC.Base.Monad
-                                                                                                                          inst_m}
-    : forall {a} {b},
-        (WrappedMonad inst_m) a -> (WrappedMonad inst_m) b -> (WrappedMonad inst_m) b :=
+Local Definition Applicative__WrappedMonad_op_ztzg__ {inst_m} `{GHC.Base.Monad
+                                                     inst_m} : forall {a} {b},
+                                                                 (WrappedMonad inst_m) a -> (WrappedMonad inst_m)
+                                                                 b -> (WrappedMonad inst_m) b :=
   fun {a} {b} =>
     fun x y =>
-      instance_forall___GHC_Base_Monad_m___GHC_Base_Applicative__Control_Applicative_WrappedMonad_m__op_zlztzg__
-      (GHC.Base.fmap (GHC.Base.const GHC.Base.id) x) y.
+      Applicative__WrappedMonad_op_zlztzg__ (GHC.Base.fmap (GHC.Base.const
+                                                           GHC.Base.id) x) y.
 
-Local Definition instance_forall___GHC_Base_Monad_m___GHC_Base_Applicative__Control_Applicative_WrappedMonad_m__pure {inst_m}
-                                                                                                                     `{GHC.Base.Monad
-                                                                                                                     inst_m}
-    : forall {a}, a -> (WrappedMonad inst_m) a :=
+Local Definition Applicative__WrappedMonad_pure {inst_m} `{GHC.Base.Monad
+                                                inst_m} : forall {a}, a -> (WrappedMonad inst_m) a :=
   fun {a} => Mk_WrapMonad GHC.Base.∘ GHC.Base.pure.
 
-Program Instance instance_forall___GHC_Base_Monad_m___GHC_Base_Applicative__Control_Applicative_WrappedMonad_m_ {m}
-                                                                                                                `{GHC.Base.Monad
-                                                                                                                m}
+Program Instance Applicative__WrappedMonad {m} `{GHC.Base.Monad m}
   : GHC.Base.Applicative (WrappedMonad m) := fun _ k =>
-    k {|GHC.Base.op_ztzg____ := fun {a} {b} =>
-        instance_forall___GHC_Base_Monad_m___GHC_Base_Applicative__Control_Applicative_WrappedMonad_m__op_ztzg__ ;
-      GHC.Base.op_zlztzg____ := fun {a} {b} =>
-        instance_forall___GHC_Base_Monad_m___GHC_Base_Applicative__Control_Applicative_WrappedMonad_m__op_zlztzg__ ;
-      GHC.Base.pure__ := fun {a} =>
-        instance_forall___GHC_Base_Monad_m___GHC_Base_Applicative__Control_Applicative_WrappedMonad_m__pure |}.
+    k {|GHC.Base.op_ztzg____ := fun {a} {b} => Applicative__WrappedMonad_op_ztzg__ ;
+      GHC.Base.op_zlztzg____ := fun {a} {b} => Applicative__WrappedMonad_op_zlztzg__ ;
+      GHC.Base.pure__ := fun {a} => Applicative__WrappedMonad_pure |}.
 
 (* Translating `instance forall {m}, forall `{GHC.Base.MonadPlus m},
    GHC.Base.Alternative (Control.Applicative.WrappedMonad m)' failed: OOPS! Cannot
    find information for class Qualified "GHC.Base" "Alternative" unsupported *)
 
-Local Definition instance_forall___Control_Arrow_Arrow_a___GHC_Base_Functor__Control_Applicative_WrappedArrow_a_b__fmap {inst_a}
-                                                                                                                        {inst_b}
-                                                                                                                        `{Control.Arrow.Arrow
-                                                                                                                        inst_a}
-    : forall {a} {b},
-        (a -> b) -> (WrappedArrow inst_a inst_b) a -> (WrappedArrow inst_a inst_b) b :=
+Local Definition Functor__WrappedArrow_fmap {inst_a} {inst_b}
+                                            `{Control.Arrow.Arrow inst_a} : forall {a} {b},
+                                                                              (a -> b) -> (WrappedArrow inst_a inst_b)
+                                                                              a -> (WrappedArrow inst_a inst_b) b :=
   fun {a} {b} =>
     fun arg_44__ arg_45__ =>
       match arg_44__ , arg_45__ with
@@ -139,34 +117,25 @@ Local Definition instance_forall___Control_Arrow_Arrow_a___GHC_Base_Functor__Con
                                              f)
       end.
 
-Local Definition instance_forall___Control_Arrow_Arrow_a___GHC_Base_Functor__Control_Applicative_WrappedArrow_a_b__op_zlzd__ {inst_a}
-                                                                                                                             {inst_b}
-                                                                                                                             `{Control.Arrow.Arrow
-                                                                                                                             inst_a}
-    : forall {a} {b},
-        a -> (WrappedArrow inst_a inst_b) b -> (WrappedArrow inst_a inst_b) a :=
-  fun {a} {b} =>
-    fun x =>
-      instance_forall___Control_Arrow_Arrow_a___GHC_Base_Functor__Control_Applicative_WrappedArrow_a_b__fmap
-      (GHC.Base.const x).
+Local Definition Functor__WrappedArrow_op_zlzd__ {inst_a} {inst_b}
+                                                 `{Control.Arrow.Arrow inst_a} : forall {a} {b},
+                                                                                   a -> (WrappedArrow inst_a inst_b)
+                                                                                   b -> (WrappedArrow inst_a inst_b)
+                                                                                   a :=
+  fun {a} {b} => fun x => Functor__WrappedArrow_fmap (GHC.Base.const x).
 
-Program Instance instance_forall___Control_Arrow_Arrow_a___GHC_Base_Functor__Control_Applicative_WrappedArrow_a_b_ {a}
-                                                                                                                   {b}
-                                                                                                                   `{Control.Arrow.Arrow
-                                                                                                                   a}
+Program Instance Functor__WrappedArrow {a} {b} `{Control.Arrow.Arrow a}
   : GHC.Base.Functor (WrappedArrow a b) := fun _ k =>
-    k {|GHC.Base.op_zlzd____ := fun {a} {b} =>
-        instance_forall___Control_Arrow_Arrow_a___GHC_Base_Functor__Control_Applicative_WrappedArrow_a_b__op_zlzd__ ;
-      GHC.Base.fmap__ := fun {a} {b} =>
-        instance_forall___Control_Arrow_Arrow_a___GHC_Base_Functor__Control_Applicative_WrappedArrow_a_b__fmap |}.
+    k {|GHC.Base.op_zlzd____ := fun {a} {b} => Functor__WrappedArrow_op_zlzd__ ;
+      GHC.Base.fmap__ := fun {a} {b} => Functor__WrappedArrow_fmap |}.
 
-Local Definition instance_forall___Control_Arrow_Arrow_a___GHC_Base_Applicative__Control_Applicative_WrappedArrow_a_b__op_zlztzg__ {inst_a}
-                                                                                                                                   {inst_b}
-                                                                                                                                   `{Control.Arrow.Arrow
-                                                                                                                                   inst_a}
-    : forall {a} {b},
-        (WrappedArrow inst_a inst_b) (a -> b) -> (WrappedArrow inst_a inst_b)
-        a -> (WrappedArrow inst_a inst_b) b :=
+Local Definition Applicative__WrappedArrow_op_zlztzg__ {inst_a} {inst_b}
+                                                       `{Control.Arrow.Arrow inst_a} : forall {a} {b},
+                                                                                         (WrappedArrow inst_a inst_b)
+                                                                                         (a -> b) -> (WrappedArrow
+                                                                                         inst_a inst_b)
+                                                                                         a -> (WrappedArrow inst_a
+                                                                                         inst_b) b :=
   fun {a} {b} =>
     fun arg_40__ arg_41__ =>
       match arg_40__ , arg_41__ with
@@ -175,44 +144,34 @@ Local Definition instance_forall___Control_Arrow_Arrow_a___GHC_Base_Applicative_
                                                                                                  GHC.Base.id))
       end.
 
-Local Definition instance_forall___Control_Arrow_Arrow_a___GHC_Base_Applicative__Control_Applicative_WrappedArrow_a_b__op_ztzg__ {inst_a}
-                                                                                                                                 {inst_b}
-                                                                                                                                 `{Control.Arrow.Arrow
-                                                                                                                                 inst_a}
-    : forall {a} {b},
-        (WrappedArrow inst_a inst_b) a -> (WrappedArrow inst_a inst_b)
-        b -> (WrappedArrow inst_a inst_b) b :=
+Local Definition Applicative__WrappedArrow_op_ztzg__ {inst_a} {inst_b}
+                                                     `{Control.Arrow.Arrow inst_a} : forall {a} {b},
+                                                                                       (WrappedArrow inst_a inst_b)
+                                                                                       a -> (WrappedArrow inst_a inst_b)
+                                                                                       b -> (WrappedArrow inst_a inst_b)
+                                                                                       b :=
   fun {a} {b} =>
     fun x y =>
-      instance_forall___Control_Arrow_Arrow_a___GHC_Base_Applicative__Control_Applicative_WrappedArrow_a_b__op_zlztzg__
-      (GHC.Base.fmap (GHC.Base.const GHC.Base.id) x) y.
+      Applicative__WrappedArrow_op_zlztzg__ (GHC.Base.fmap (GHC.Base.const
+                                                           GHC.Base.id) x) y.
 
-Local Definition instance_forall___Control_Arrow_Arrow_a___GHC_Base_Applicative__Control_Applicative_WrappedArrow_a_b__pure {inst_a}
-                                                                                                                            {inst_b}
-                                                                                                                            `{Control.Arrow.Arrow
-                                                                                                                            inst_a}
-    : forall {a}, a -> (WrappedArrow inst_a inst_b) a :=
+Local Definition Applicative__WrappedArrow_pure {inst_a} {inst_b}
+                                                `{Control.Arrow.Arrow inst_a} : forall {a},
+                                                                                  a -> (WrappedArrow inst_a inst_b) a :=
   fun {a} => fun x => Mk_WrapArrow (Control.Arrow.arr (GHC.Base.const x)).
 
-Program Instance instance_forall___Control_Arrow_Arrow_a___GHC_Base_Applicative__Control_Applicative_WrappedArrow_a_b_ {a}
-                                                                                                                       {b}
-                                                                                                                       `{Control.Arrow.Arrow
-                                                                                                                       a}
+Program Instance Applicative__WrappedArrow {a} {b} `{Control.Arrow.Arrow a}
   : GHC.Base.Applicative (WrappedArrow a b) := fun _ k =>
-    k {|GHC.Base.op_ztzg____ := fun {a} {b} =>
-        instance_forall___Control_Arrow_Arrow_a___GHC_Base_Applicative__Control_Applicative_WrappedArrow_a_b__op_ztzg__ ;
-      GHC.Base.op_zlztzg____ := fun {a} {b} =>
-        instance_forall___Control_Arrow_Arrow_a___GHC_Base_Applicative__Control_Applicative_WrappedArrow_a_b__op_zlztzg__ ;
-      GHC.Base.pure__ := fun {a} =>
-        instance_forall___Control_Arrow_Arrow_a___GHC_Base_Applicative__Control_Applicative_WrappedArrow_a_b__pure |}.
+    k {|GHC.Base.op_ztzg____ := fun {a} {b} => Applicative__WrappedArrow_op_ztzg__ ;
+      GHC.Base.op_zlztzg____ := fun {a} {b} => Applicative__WrappedArrow_op_zlztzg__ ;
+      GHC.Base.pure__ := fun {a} => Applicative__WrappedArrow_pure |}.
 
 (* Translating `instance forall {a} {b}, forall `{Control.Arrow.ArrowZero a}
    `{Control.Arrow.ArrowPlus a}, GHC.Base.Alternative
    (Control.Applicative.WrappedArrow a b)' failed: OOPS! Cannot find information
    for class Qualified "GHC.Base" "Alternative" unsupported *)
 
-(* Skipping instance
-   instance_GHC_Base_Applicative_Control_Applicative_ZipList *)
+(* Skipping instance Applicative__ZipList *)
 
 (* Translating `instance GHC.Generics.Generic1 Control.Applicative.ZipList'
    failed: OOPS! Cannot find information for class Qualified "GHC.Generics"
@@ -222,20 +181,17 @@ Program Instance instance_forall___Control_Arrow_Arrow_a___GHC_Base_Applicative_
    (Control.Applicative.ZipList a)' failed: OOPS! Cannot find information for class
    Qualified "GHC.Generics" "Generic" unsupported *)
 
-(* Skipping instance
-   instance_Data_Foldable_Foldable_Control_Applicative_ZipList *)
+(* Skipping instance Foldable__ZipList *)
 
-(* Skipping instance instance_GHC_Base_Functor_Control_Applicative_ZipList *)
+(* Skipping instance Functor__ZipList *)
 
 (* Translating `instance forall {a}, forall `{GHC.Read.Read a}, GHC.Read.Read
    (Control.Applicative.ZipList a)' failed: OOPS! Cannot find information for class
    Qualified "GHC.Read" "Read" unsupported *)
 
-(* Skipping instance
-   instance_forall___GHC_Base_Ord_a___GHC_Base_Ord__Control_Applicative_ZipList_a_ *)
+(* Skipping instance Ord__ZipList *)
 
-(* Skipping instance
-   instance_forall___GHC_Base_Eq__a___GHC_Base_Eq___Control_Applicative_ZipList_a_ *)
+(* Skipping instance Eq___ZipList *)
 
 (* Translating `instance forall {a}, forall `{GHC.Show.Show a}, GHC.Show.Show
    (Control.Applicative.ZipList a)' failed: OOPS! Cannot find information for class
@@ -249,37 +205,26 @@ Program Instance instance_forall___Control_Arrow_Arrow_a___GHC_Base_Applicative_
    (Control.Applicative.WrappedArrow a b c)' failed: OOPS! Cannot find information
    for class Qualified "GHC.Generics" "Generic" unsupported *)
 
-Local Definition instance_forall___GHC_Base_Monad_m___GHC_Base_Monad__Control_Applicative_WrappedMonad_m__op_zgzg__ {inst_m}
-                                                                                                                    `{GHC.Base.Monad
-                                                                                                                    inst_m}
+Local Definition Monad__WrappedMonad_op_zgzg__ {inst_m} `{GHC.Base.Monad inst_m}
     : forall {a} {b},
         WrappedMonad inst_m a -> WrappedMonad inst_m b -> WrappedMonad inst_m b :=
   fun {a} {b} => GHC.Prim.coerce _GHC.Base.>>_.
 
-Local Definition instance_forall___GHC_Base_Monad_m___GHC_Base_Monad__Control_Applicative_WrappedMonad_m__op_zgzgze__ {inst_m}
-                                                                                                                      `{GHC.Base.Monad
-                                                                                                                      inst_m}
-    : forall {a} {b},
-        WrappedMonad inst_m a -> (a -> WrappedMonad inst_m b) -> WrappedMonad inst_m
-        b :=
+Local Definition Monad__WrappedMonad_op_zgzgze__ {inst_m} `{GHC.Base.Monad
+                                                 inst_m} : forall {a} {b},
+                                                             WrappedMonad inst_m a -> (a -> WrappedMonad inst_m
+                                                             b) -> WrappedMonad inst_m b :=
   fun {a} {b} => GHC.Prim.coerce _GHC.Base.>>=_.
 
-Local Definition instance_forall___GHC_Base_Monad_m___GHC_Base_Monad__Control_Applicative_WrappedMonad_m__return_ {inst_m}
-                                                                                                                  `{GHC.Base.Monad
-                                                                                                                  inst_m}
+Local Definition Monad__WrappedMonad_return_ {inst_m} `{GHC.Base.Monad inst_m}
     : forall {a}, a -> WrappedMonad inst_m a :=
   fun {a} => GHC.Prim.coerce GHC.Base.return_.
 
-Program Instance instance_forall___GHC_Base_Monad_m___GHC_Base_Monad__Control_Applicative_WrappedMonad_m_ {m}
-                                                                                                          `{GHC.Base.Monad
-                                                                                                          m}
-  : GHC.Base.Monad (WrappedMonad m) := fun _ k =>
-    k {|GHC.Base.op_zgzg____ := fun {a} {b} =>
-        instance_forall___GHC_Base_Monad_m___GHC_Base_Monad__Control_Applicative_WrappedMonad_m__op_zgzg__ ;
-      GHC.Base.op_zgzgze____ := fun {a} {b} =>
-        instance_forall___GHC_Base_Monad_m___GHC_Base_Monad__Control_Applicative_WrappedMonad_m__op_zgzgze__ ;
-      GHC.Base.return___ := fun {a} =>
-        instance_forall___GHC_Base_Monad_m___GHC_Base_Monad__Control_Applicative_WrappedMonad_m__return_ |}.
+Program Instance Monad__WrappedMonad {m} `{GHC.Base.Monad m} : GHC.Base.Monad
+                                                               (WrappedMonad m) := fun _ k =>
+    k {|GHC.Base.op_zgzg____ := fun {a} {b} => Monad__WrappedMonad_op_zgzg__ ;
+      GHC.Base.op_zgzgze____ := fun {a} {b} => Monad__WrappedMonad_op_zgzgze__ ;
+      GHC.Base.return___ := fun {a} => Monad__WrappedMonad_return_ |}.
 
 (* Translating `instance forall {m}, GHC.Generics.Generic1
    (Control.Applicative.WrappedMonad m)' failed: OOPS! Cannot find information for

@@ -42,17 +42,6 @@ make -C rle
 make -C bag
 make -C quicksort
 
-if [[ -e ghc/ghc ]]
-then
-	echo "Regenerating ghc"
-	make -C ghc clean
-	make -C ghc
-else
-	echo "Rebuiding ghc/lib"
-	make -C ghc/lib clean
-	make -C ghc/lib
-fi
-
 if [[ -e containers/containers ]]
 then
 	echo "Regenerating containers"
@@ -62,4 +51,16 @@ else
 	echo "Rebuiding containers/lib"
 	make -C containers/lib clean
 	make -C containers/lib
+fi
+
+
+if [[ -e ghc/ghc ]]
+then
+	echo "Regenerating ghc"
+	make -C ghc clean
+	make -C ghc
+else
+	echo "Rebuiding ghc/lib"
+	make -C ghc/lib clean
+	make -C ghc/lib
 fi

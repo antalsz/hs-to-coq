@@ -300,6 +300,30 @@ Definition ord_default {a} (comp : a -> a -> comparison) `{Eq_ a} : Ord a :=
 
 Instance Ord_comparison___ : Ord comparison := ord_default compare_comparison.
 
+Definition eq_pair {t1} {t2} `{Eq_ t1} `{Eq_ t2} (a b : (t1 * t2)) := 
+  match a, b with
+  | (a1, a2), (b1, b2) =>
+    (a1 == b1) && (a2 == b2)
+  end.
+
+Definition compare_pair {t1} {t2} `{Ord t1} `{Ord t2} (a b : (t1 * t2)) :=
+  match a, b with
+  | (a1, a2), (b1, b2) =>
+    match compare a1 b1 with
+    | Lt => Lt
+    | Gt => Gt
+    | Eq => compare a2 b2
+    end
+  end.
+
+Instance Eq_pair___ {a} {b} `{Eq_ a} `{Eq_ b} : Eq_ (a * b) := fun _ k => k
+  {| op_zeze____ := eq_pair;
+     op_zsze____ := fun x y => negb (eq_pair x y)
+  |}.
+
+Instance Ord_pair___ {a} {b} `{Ord a} `{Ord b} : Ord (a * b) :=
+  ord_default compare_pair.
+
 (* TODO: are these available in a library somewhere? *)
 Definition eqlist {a} `{Eq_ a} : list a -> list a -> bool :=
 	fix eqlist xs ys :=

@@ -199,7 +199,7 @@ Proof.
   - eapply fun_step. eauto.
 Qed.
 
-(*
+
 Inductive rtc {A} (R:A -> A -> Prop) : A -> A -> Prop :=
 | rtc_refl : forall a, rtc R a a
 | rtc_step : forall a b c, R a b -> rtc R b c -> rtc R a c.
@@ -207,7 +207,7 @@ Inductive rtc {A} (R:A -> A -> Prop) : A -> A -> Prop :=
 Notation "R ^*" := (rtc R) (at level 1, format "R ^*").
 
 Definition nf (x: Expr): Prop := ~ exists y, small_step x y.
-*)
+
 
 (*
 Inductive beta_equiv : Expr -> Expr -> Prop :=

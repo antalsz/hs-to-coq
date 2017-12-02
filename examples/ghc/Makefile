@@ -37,6 +37,30 @@ MODULES = \
   CmmType \
   BooleanFormula \
   UniqSet \
+  OccName \
+  Module \
+  DynFlags \
+
+#  Literal \
+  CostCentre \
+
+#  FieldLabel \
+  DataCon \
+  Var \
+  PatSyn \
+  ConLike \
+  Name \
+  NameEnv \
+  VarEnv \
+
+
+MUTREC = \
+  TyCoRep \
+  Type \
+  TyCon \
+  Coercion \
+  CoreSyn \
+
 
 # also generated from drop-in/
 SPECIAL_MODULES =

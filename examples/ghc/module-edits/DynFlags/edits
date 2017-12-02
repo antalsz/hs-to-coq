@@ -1,0 +1,57 @@
+axiomatize module DynFlags
+
+skip module CmdLineParser
+skip module Control.Monad.Trans.Class
+skip module Control.Monad.Trans.Except
+skip module Control.Monad.Trans.Maybe
+skip module Control.Monad.Trans.Reader
+skip module Control.Monad.Trans.Writer.Lazy
+# skip module Data.IntSet.Base.
+skip module Data.Map.Base
+# skip module Data.Set.Base.
+skip module Deriving
+skip module ErrUtils
+# skip module GHC.Base.
+skip module GHC.IORef
+skip module GHC.LanguageExtensions.Type
+# skip module GHC.Num.
+# skip module GHC.Prim.
+skip module Hooks
+# skip module Module.
+skip module PackageConfig
+skip module Packages
+skip module Platform
+skip module PlatformConstants
+
+redefine Inductive DynFlags.Settings : Type := Mk_Settings.
+redefine Inductive DynFlags.FlushOut : Type := Mk_FlushOut.
+redefine Inductive DynFlags.FlushErr : Type := Mk_FlushErr.
+redefine Inductive DynFlags.DynFlags : Type := Mk_DynFlags.
+redefine Inductive DynFlags.FlagSpec (flag:Type) : Type := Mk_FlagSpec.
+
+rename value DynFlags.PackageArg = DynFlags.Mk_PackageArg
+rename value DynFlags.Option = DynFlags.Mk_Option
+rename value DynFlags.ModRenaming = DynFlags.Mk_ModRenaming
+rename value DynFlags.FlushOut = DynFlags.Mk_FlushOut
+
+skip DynFlags.FlagMaker
+skip DynFlags.FatalMessager
+skip DynFlags.DynFlagMaker
+skip DynFlags.DynP
+skip DynFlags.LogAction
+
+skip DynFlags.HasDynFlags__ReaderT
+skip DynFlags.HasDynFlags__MaybeT
+skip DynFlags.HasDynFlags__WriterT
+skip DynFlags.HasDynFlags__ExceptT
+
+# strange deriving behavior
+skip DynFlags.Ord__SseVersion
+skip DynFlags.Ord__Way
+skip DynFlags.Eq___WarningFlag
+skip DynFlags.Eq___GeneralFlag
+skip DynFlags.Eq___DumpFlag
+
+order instance DynFlags.Eq___Option DynFlags.Eq___LinkerInfo_op_zeze__
+
+order instance DynFlags.Eq___PackageArg DynFlags.Eq___ModRenaming DynFlags.Eq___PackageFlag_op_zeze__

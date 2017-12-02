@@ -12,7 +12,10 @@ Require Coq.Program.Wf.
 
 (* Converted imports: *)
 
+Require Data.Foldable.
+Require GHC.Num.
 Require UniqFM.
+Require Unique.
 
 (* Converted type declarations: *)
 
@@ -20,52 +23,89 @@ Definition UniqSet :=
   UniqFM.UniqFM%type.
 (* Converted value declarations: *)
 
-Axiom unionManyUniqSets : forall {A : Type}, A.
+Definition addOneToUniqSet {a} `{Unique.Uniquable a} : UniqSet a -> a -> UniqSet
+                                                       a :=
+  fun set x => UniqFM.addToUFM set x x.
 
-Axiom mkUniqSet : forall {A : Type}, A.
+Definition addListToUniqSet {a} `{Unique.Uniquable a} : UniqSet a -> list
+                                                        a -> UniqSet a :=
+  Data.Foldable.foldl addOneToUniqSet.
 
-Axiom emptyUniqSet : forall {A : Type}, A.
+Definition addOneToUniqSet_C {a} `{Unique.Uniquable a}
+    : (a -> a -> a) -> UniqSet a -> a -> UniqSet a :=
+  fun f set x => UniqFM.addToUFM_C f set x x.
 
-Axiom unitUniqSet : forall {A : Type}, A.
+Definition delListFromUniqSet {a} `{Unique.Uniquable a} : UniqSet a -> list
+                                                          a -> UniqSet a :=
+  UniqFM.delListFromUFM.
 
-Axiom addListToUniqSet : forall {A : Type}, A.
+Definition delOneFromUniqSet {a} `{Unique.Uniquable a} : UniqSet
+                                                         a -> a -> UniqSet a :=
+  UniqFM.delFromUFM.
 
-Axiom addOneToUniqSet : forall {A : Type}, A.
+Definition delOneFromUniqSet_Directly {a} : UniqSet
+                                            a -> Unique.Unique -> UniqSet a :=
+  UniqFM.delFromUFM_Directly.
 
-Axiom addOneToUniqSet_C : forall {A : Type}, A.
+Definition elemUniqSet_Directly {a} : Unique.Unique -> UniqSet a -> bool :=
+  UniqFM.elemUFM_Directly.
 
-Axiom delOneFromUniqSet : forall {A : Type}, A.
+Definition elementOfUniqSet {a} `{Unique.Uniquable a} : a -> UniqSet
+                                                        a -> bool :=
+  UniqFM.elemUFM.
 
-Axiom delOneFromUniqSet_Directly : forall {A : Type}, A.
+Definition emptyUniqSet {a} : UniqSet a :=
+  UniqFM.emptyUFM.
 
-Axiom delListFromUniqSet : forall {A : Type}, A.
+Definition mkUniqSet {a} `{Unique.Uniquable a} : list a -> UniqSet a :=
+  Data.Foldable.foldl addOneToUniqSet emptyUniqSet.
 
-Axiom unionUniqSets : forall {A : Type}, A.
+Definition filterUniqSet {a} : (a -> bool) -> UniqSet a -> UniqSet a :=
+  UniqFM.filterUFM.
 
-Axiom minusUniqSet : forall {A : Type}, A.
+Definition foldUniqSet {a} {b} : (a -> b -> b) -> b -> UniqSet a -> b :=
+  UniqFM.foldUFM.
 
-Axiom intersectUniqSets : forall {A : Type}, A.
+Definition intersectUniqSets {a} : UniqSet a -> UniqSet a -> UniqSet a :=
+  UniqFM.intersectUFM.
 
-Axiom foldUniqSet : forall {A : Type}, A.
+Definition isEmptyUniqSet {a} : UniqSet a -> bool :=
+  UniqFM.isNullUFM.
 
-Axiom mapUniqSet : forall {A : Type}, A.
+Definition lookupUniqSet {a} {b} `{Unique.Uniquable a} : UniqSet
+                                                         b -> a -> option b :=
+  UniqFM.lookupUFM.
 
-Axiom elementOfUniqSet : forall {A : Type}, A.
+Definition mapUniqSet {a} {b} : (a -> b) -> UniqSet a -> UniqSet b :=
+  UniqFM.mapUFM.
 
-Axiom elemUniqSet_Directly : forall {A : Type}, A.
+Definition minusUniqSet {a} : UniqSet a -> UniqSet a -> UniqSet a :=
+  UniqFM.minusUFM.
 
-Axiom filterUniqSet : forall {A : Type}, A.
+Definition sizeUniqSet {a} : UniqSet a -> GHC.Num.Int :=
+  UniqFM.sizeUFM.
 
-Axiom partitionUniqSet : forall {A : Type}, A.
+Definition unionUniqSets {a} : UniqSet a -> UniqSet a -> UniqSet a :=
+  UniqFM.plusUFM.
 
-Axiom sizeUniqSet : forall {A : Type}, A.
+Definition unionManyUniqSets {a} (xs : list (UniqSet a)) : UniqSet a :=
+  match xs with
+    | nil => emptyUniqSet
+    | cons set sets => Data.Foldable.foldr unionUniqSets set sets
+  end.
 
-Axiom isEmptyUniqSet : forall {A : Type}, A.
+Definition uniqSetToList {a} : UniqSet a -> list a :=
+  UniqFM.eltsUFM.
 
-Axiom lookupUniqSet : forall {A : Type}, A.
-
-Axiom uniqSetToList : forall {A : Type}, A.
+Definition unitUniqSet {a} `{Unique.Uniquable a} : a -> UniqSet a :=
+  fun x => UniqFM.unitUFM x x.
 
 (* Unbound variables:
-     UniqFM.UniqFM
+     bool cons list option Data.Foldable.foldl Data.Foldable.foldr GHC.Num.Int
+     UniqFM.UniqFM UniqFM.addToUFM UniqFM.addToUFM_C UniqFM.delFromUFM
+     UniqFM.delFromUFM_Directly UniqFM.delListFromUFM UniqFM.elemUFM
+     UniqFM.elemUFM_Directly UniqFM.eltsUFM UniqFM.emptyUFM UniqFM.filterUFM
+     UniqFM.foldUFM UniqFM.intersectUFM UniqFM.isNullUFM UniqFM.lookupUFM
+     UniqFM.mapUFM UniqFM.minusUFM UniqFM.plusUFM UniqFM.sizeUFM UniqFM.unitUFM
+     Unique.Uniquable Unique.Unique
 *)

@@ -1,5 +1,7 @@
-# Overall, need Sets and Maps before we can even attempt to translate this
+# Overall, need Maps before we can even attempt to translate this
 # Coq module.
+
+axiomatize module Module
 
 skip module Config
 skip module GHC.IO
@@ -7,43 +9,101 @@ skip module System.FilePath.Posix
 
 # TODO
 skip module Data.Map.Base
-skip module Data.Set.Base
+skip module Data.Map.Base.Map
 skip module FiniteMap
 
+## Need Data.Map.Base for this
+redefine Inductive Module.ModuleEnv (elt:Type) : Type := Mk_ModuleEnv.
+
+# skip Module.delModuleEnv
+# skip Module.delModuleEnvList
+# skip Module.elemModuleEnv
+# skip Module.emptyModuleEnv
+# skip Module.extendModuleEnv
+# skip Module.extendModuleEnvList
+# skip Module.extendModuleEnvList_C
+# skip Module.extendModuleEnvWith
+# skip Module.filterModuleEnv
+
 # IO.FilePath
-skip addBootSuffix
-skip addBootSuffix_maybe
-skip ModLocation
-skip ml_hi_file
-skip ml_hs_file
-skip ml_obj_file
-addBootSuffixLocn
+skip Module.addBootSuffix
+skip Module.addBootSuffix_maybe
+skip Module.ml_hi_file
+skip Module.ml_hs_file
+skip Module.ml_obj_file
+skip Module.addBootSuffixLocn
 
 # outputtable
-skip pprModuleName
-skip pprPackagePrefix
-skip pprModule
+skip Module.pprModuleName
+skip Module.pprPackagePrefix
+skip Module.pprModule
 
-add Instance default_ModuleName : Panic.Default ModuleName := { default := Mk_ModuleName default}.
-
-# need interface file for this
-add Instance instance_Uniquable_ModuleName : Unique.Uniquable ModuleName := {}. Admitted.
-
-# needs System.FilePath.Posix
-# perhaps we can just skip them? They aren't used elsewhere in this file
-redefine Definition moduleNameSlashes : ModuleName -> GHC.Base.String :=
- fun x => Panic.panic &"unimplemented".
-redefine Definition mkModuleName : GHC.Base.String -> ModuleName :=
-  fun x => Panic.panic &"unimplemented".
+# (should be) in midamble
+skip Module.moduleNameSlashes
+skip Module.mkModuleName
 
 
-# Note need type applications in instances for Eq_ UnitID and Eq_ NDModule.
-# Or we need to add these instances explicitly.
 
-# /=
-redefine Local Definition instance_GHC_Base_Eq__Module_op_zsze__
-    : Module -> Module -> bool :=
-  fun arg_210__ arg_211__ =>
-    match arg_210__ , arg_211__ with
-      | a , b => negb (instance_GHC_Base_Eq__Module_op_zeze__ a b)
+order Module.Eq___UnitId Module.Eq___ModuleName Module.Eq___Module_op_zeze__ Module.Eq___Module_op_zsze__ Module.Eq___Module Module.Eq___NDModule_op_zeze__ Module.Eq___NDModule_op_zsze__ Module.Eq___NDModule Module.Ord__UnitId Module.Ord__ModuleName Module.Ord__Module_compare Module.Ord__Module_op_zg__ Module.Ord__Module_op_zgze__ Module.Ord__Module_op_zl__ Module.Ord__Module_op_zlze__ Module.Ord__Module Module.Ord__NDModule
+
+
+# These are wrong, but when axiomatizing, we cannot put them in order
+redefine Local Definition Module.Ord__ModuleName_compare : ModuleName -> (ModuleName -> comparison) := fun nm1 nm2 => Eq.
+redefine Local Definition Module.Ord__UnitId_compare : UnitId -> (UnitId -> comparison) :=
+  fun nm1 nm2 => Eq.
+
+
+redefine Definition Module.integerUnitId : UnitId := default.
+
+# These definitions make the wrong guesses
+redefine Local Definition Module.Ord__Module_op_zg__ : Module -> (Module -> bool) :=
+  fun a b =>
+    match a with
+    | Mk_Module a1 a2 => match b with
+                        | Mk_Module b1 b2 =>
+                                            match (Ord__UnitId_compare a1 b1) with
+                                            | Lt => false
+                                            | Eq => (a2 GHC.Base.> b2)
+                                            | Gt => true
+                                            end
+                        end
+    end.
+
+redefine Local Definition Module.Ord__Module_op_zgze__ : Module -> (Module -> bool) :=
+  fun a b =>
+    match a with
+      | Mk_Module a1 a2 => match b with
+                             | Mk_Module b1 b2 =>
+                                                  match (Ord__UnitId_compare a1 b1) with
+                                                    | Lt => false
+                                                    | Eq => (a2 GHC.Base.>= b2)
+                                                    | Gt => true
+                                                  end
+                           end
+    end.
+
+redefine Local Definition Module.Ord__Module_op_zl__ : Module -> (Module -> bool) :=
+  fun a b =>
+    match a with
+      | Mk_Module a1 a2 => match b with
+                             | Mk_Module b1 b2 =>
+                                                  match (Ord__UnitId_compare a1 b1)  with
+                                                    | Lt => true
+                                                    | Eq => (a2 GHC.Base.< b2)
+                                                    | Gt => false
+                                                  end
+                           end
+    end.
+
+redefine Local Definition Module.Ord__Module_op_zlze__ : Module -> (Module -> bool) :=
+  fun a b =>
+    match a with
+      | Mk_Module a1 a2 => match b with
+                             | Mk_Module b1 b2 =>
+                                                  match (Ord__UnitId_compare a1 b1) with
+                                                    | Lt => true
+                                                    | Eq => (a2 GHC.Base.<= b2)
+                                                    | Gt => false
+                                                  end
+                           end
     end.

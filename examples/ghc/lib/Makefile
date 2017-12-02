@@ -124,7 +124,10 @@ VFILES:=Maybes.v\
   UniqFM.v\
   CmmType.v\
   BooleanFormula.v\
-  UniqSet.v
+  UniqSet.v\
+  OccName.v\
+  Module.v\
+  DynFlags.v
 
 ifneq ($(filter-out archclean clean cleanall printenv,$(MAKECMDGOALS)),)
 -include $(addsuffix .d,$(VFILES))

@@ -1,0 +1,40 @@
+skip module Deriving
+skip module Lexeme
+
+# needs Lexeme.isLexConSym
+skip OccName.isDataSymOcc
+skip OccName.isSymOcc
+
+# outputtable
+skip OccName.parenSymOcc
+skip OccName.pprNameSpace
+skip OccName.pprNonVarNameSpace
+skip OccName.pprNameSpaceBrief
+skip OccName.pprOccName
+skip OccName.pprOccEnv
+
+# nees show: Int -> String
+skip OccName.chooseUniqueOcc
+skip OccName.mkDFunOcc
+skip OccName.mkGenS
+skip OccName.mkGenC
+skip OccName.mkInstTyTcOcc
+skip OccName.mkSuperDictAuxOcc
+skip OccName.mkSuperDictSelOcc
+skip OccName.mkLocalOcc
+
+# Util.dropWhileEndLE GHC.Unicode.isDigit
+skip OccName.tidyOccName
+
+## character constant
+skip OccName.startsWithUnderscore
+skip OccName.isDerivedOccName
+
+
+rename value OccName.OccName = OccName.Mk_OccName
+
+# deriving snafu
+skip OccName.Ord__NameSpace
+skip OccName.Ord__OccName
+
+order OccName.Eq___NameSpace OccName.Eq___OccName_op_zeze__

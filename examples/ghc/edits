@@ -3,7 +3,11 @@ skip module Outputable
 skip module Panic
 skip module GHC.Show
 
-axiomatize module UniqSet
+skip module PrelNames
+skip module Deriving
+
+
+rename type GHC.IO.FilePath = GHC.Base.String
 
 # Punned
 
@@ -17,8 +21,26 @@ rename value CmmType.CmmType    = CmmType.Mk_CmmType
 rename value Pair.Pair = Pair.Mk_Pair
 rename value SourceLoc.L = SourceLoc.Mk_L
 
+rename value Module.Module = Module.Mk_Module
+rename value Module.ModuleName = Module.Mk_ModuleName
+rename value Module.NDModule = Module.Mk_NDModule
+rename value Module.ModLocation = Module.Mk_ModLocation
+rename value Module.ModuleEnv = Module.Mk_ModuleEnv
+
+
 # These constructor are named after their argument, not their return type,
 # so use a different, non-confusing convention here
 rename value SrcLoc.RealSrcLoc  = SrcLoc.ARealSrcLoc
 rename value SrcLoc.RealSrcSpan = SrcLoc.ARealSrcSpan
 rename value SrcLoc.SrcLoc      = SrcLoc.ASrcLoc
+
+
+# Note [Strict positivity]
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# These types all contain actual non-strictly-positive function members
+# that e.g. take `Type`s or `Pair`s of `Type`s or lists of `Type`s as arguments.
+
+redefine Inductive TyCon.RuntimeRepInfo     : Type := TyCon.Mk_RuntimeRepInfo_Dummy.
+redefine Inductive MkId.DataConBoxer        : Type := MkId.Mk_DataConBoxer_Dummy.
+redefine Inductive CoAxiom.CoAxiomRule      : Type := CoAxiom.Mk_CoAxiomRule_Dummy.
+redefine Inductive CoAxiom.BuiltInSynFamily : Type := CoAxiom.Mk_BuiltInSynFamily_Dummy.

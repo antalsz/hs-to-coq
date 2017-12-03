@@ -49,25 +49,17 @@ MODULES = \
   VarEnv \
   FastStringEnv \
   FieldLabel \
+  Literal \
+  Class \
+  DataCon \
+  PatSyn \
+  ConLike \
 
-#  IdInfo \
-#  Literal \
-  CostCentre \
+#  CostCentre  --- stub out Tickish so we don't need this??? \
   DataCon \
   PatSyn \
   ConLike \
   MkId \
-
-
-#  TyCon   -- AlgTyConFlav, TyCon, AlgTyConRhs
-#  Class   -- Class, ClassATItem
-#  CoAxiom -- CoAxiom, Branches,
-#  Var     -- Var
-#  Name    -- Name
-#  TyCoRep -- TyThing
-
-
-#  TyCoRep \
   Type \
   TyCon \
   Coercion \

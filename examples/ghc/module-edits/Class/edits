@@ -10,3 +10,8 @@ skip Class.classSCSelId
 
 # needs information about prelude (parameter in midamble)
 skip Class.naturallyCoherentClass
+
+# ppr
+skip Class.pprDefMethInfo
+skip Class.pprFunDep
+skip Class.pprFundeps

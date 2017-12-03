@@ -123,3 +123,25 @@ TODO: needs Util.zipEqual, Util.foldl2
 skip partial lookup function (uses show in error message)
 
 -  FieldLabel
+
+- Literal
+
+Ignoring type component of literal
+
+rename type TyCoRep.Type_   = unit
+
+Big mutual type
+================
+
+#  Name    -- Name, NameSort
+  refers to IdInfo, IdDetails
+#  Var, refers to Type/Kind, TcTyVarDetails, IdDetails, IdInfo (currently stubbed)
+
+#  TyCon    -- AlgTyConFlav, TyCon, AlgTyConRhs
+#  Class    -- Class, ClassATItem
+#  CoAxiom  -- CoAxiom, Branches, CoAxBranch
+#  TyCoRep  -- TyThing, TyBinder, UnivCoProvenance
+#  DataCon  -- DataCon, DataConRep, HsImplBang, EqSpec
+#  Coercion -- Coercion
+#  Type     -- Type_
+#  CoercionHole -- TcEvidence

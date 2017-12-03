@@ -136,7 +136,12 @@ VFILES:=Maybes.v\
   VarSet.v\
   VarEnv.v\
   FastStringEnv.v\
-  FieldLabel.v
+  FieldLabel.v\
+  Literal.v\
+  Class.v\
+  DataCon.v\
+  PatSyn.v\
+  ConLike.v
 
 ifneq ($(filter-out archclean clean cleanall printenv,$(MAKECMDGOALS)),)
 -include $(addsuffix .d,$(VFILES))

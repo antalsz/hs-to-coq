@@ -26,3 +26,6 @@ Definition LitString := String.
 Definition sLit (s : String) : LitString := s.
 
 Definition mkFastString (s : String) : FastString := s.
+
+Parameter hashByteString : FastString -> GHC.Num.Int.
+Parameter fastStringToByteString : FastString -> GHC.Base.String.

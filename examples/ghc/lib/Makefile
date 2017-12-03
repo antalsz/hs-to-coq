@@ -141,7 +141,12 @@ VFILES:=Maybes.v\
   Class.v\
   DataCon.v\
   PatSyn.v\
-  ConLike.v
+  ConLike.v\
+  CoreSyn.v\
+  CoreArity.v\
+  CoreUtils.v\
+  UnVarGraph.v\
+  CallArity.v
 
 ifneq ($(filter-out archclean clean cleanall printenv,$(MAKECMDGOALS)),)
 -include $(addsuffix .d,$(VFILES))

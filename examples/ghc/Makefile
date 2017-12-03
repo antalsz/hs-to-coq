@@ -54,15 +54,14 @@ MODULES = \
   DataCon \
   PatSyn \
   ConLike \
+  CoreSyn \
+  CoreArity \
+  CoreUtils \
+  UnVarGraph \
+  CallArity \
 
 #  CostCentre  --- stub out Tickish so we don't need this??? \
-  DataCon \
-  PatSyn \
-  ConLike \
   MkId \
-  Type \
-  TyCon \
-  Coercion \
   CoreSyn \
 
 

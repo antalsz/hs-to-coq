@@ -6,6 +6,24 @@ skip module GHC.Show
 skip module PrelNames
 skip module Deriving
 
+# skip MkId
+rename type MkId.DataConBoxer = unit
+
+# bruttaly skipping all type info
+### get rid of type information in the AST
+rename type TcType.TcTyVarDetails = unit
+rename type IdInfo.IdDetails = unit
+rename type IdInfo.IdInfo = unit
+rename type TyCon.TyCon      = unit
+rename type TyCoRep.Coercion  = unit
+rename type TyCoRep.Type_     = unit
+rename type TyCoRep.ThetaType = unit
+rename type TyCoRep.TyBinder  = unit
+rename type TyCoRep.TyThing   = unit
+rename type TyCoRep.Kind = unit
+
+
+
 # TODO: better treatment of primitive values
 skip module GHC.Int
 skip module GHC.Word
@@ -16,6 +34,9 @@ rename type GHC.IO.FilePath = GHC.Base.String
 
 rename value Outputable.pprPanic = Panic.panicStr
 rename value Outputable.ppr = Panic.noString
+rename value Outputable.<+>  = GHC.Base.mappend
+rename value Outputable.text = id
+rename value Outputable.warnPprTrace = Panic.warnPprTrace
 
 
 # Punned
@@ -45,6 +66,11 @@ rename value UniqDFM.TaggedVal = UniqDFM.Mk_TaggedVal
 rename value UniqDFM.UniqDFM   = UniqDFM.Mk_UniqDFM
 rename value Var.Id            = Var.Mk_Id
 rename value Var.TyVar         = Var.Mk_TyVar
+rename value CoreSyn.IsOrphan = CoreSyn.Mk_IsOrphan
+rename value CoreSyn.RuleEnv  = CoreSyn.Mk_RuleEnv
+rename value DataCon.HsSrcBang = DataCon.Mk_HsSrcBang
+rename value DataCon.EqSpec    = DataCon.Mk_EqSpec
+
 
 # These constructor are named after their argument, not their return type,
 # so use a different, non-confusing convention here

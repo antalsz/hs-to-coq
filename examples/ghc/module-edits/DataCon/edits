@@ -1,27 +1,9 @@
 axiomatize module DataCon
 
-# pun
-rename value DataCon.HsSrcBang = DataCon.Mk_HsSrcBang
-rename value DataCon.EqSpec    = DataCon.Mk_EqSpec
-
-# do this at toplevel?
-rename value Outputable.<+> = GHC.Base.mappend
-
 # no Word8
 skip DataCon.dataConIdentity
 
-# skip MkId
-rename type MkId.DataConBoxer = unit
-
-# bruttaly skipping all type info
-rename type TyCoRep.Coercion  = unit
-rename type TyCoRep.Type_     = unit
-rename type TyCoRep.ThetaType = unit
-rename type TyCoRep.TyBinder  = unit
-rename type TyCoRep.TyThing   = unit
-rename type TyCon.TyCon       = unit
-
-# skipped fcns as a result of above
+# skipped fcns as a result of eliminating type information
 #skip DataCon.dataConRepArgTys
 # generally these fcns return units so are easy to replace
 #not skipping b/c we axiomatized this module

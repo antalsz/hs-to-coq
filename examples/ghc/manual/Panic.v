@@ -25,3 +25,4 @@ Parameter panicStr : forall {a} `{Default a}, String -> String -> a.
 Parameter panic : forall {a} `{Default a}, String -> a.
 Parameter sorry : forall {a} `{Default a}, String -> a.
 Parameter pgmError : forall {a} `{Default a}, String -> a.
+Parameter warnPprTrace :  forall {a}, bool -> String -> Integer -> String -> a -> a.

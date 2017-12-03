@@ -11,7 +11,7 @@ skip UniqFM.joinUFM
 # not sure how that translates to map2
 skip UniqFM.plusUFM_CD
 
-# need to have set datastructure (Data.IntSet.Base)
+# need to have set datastructure Data.IntMap.Base.keysSet
 skip UniqFM.ufmToSet_Directly
 
 # need to avoid left / right as binding vars

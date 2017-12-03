@@ -4,12 +4,6 @@
 skip module TcType
 skip module IdInfo
 
-rename type TcType.TcTyVarDetails = unit
-rename type TyCoRep.Kind = unit
-rename type TyCoRep.Type_ = unit
-rename type IdInfo.IdDetails = unit
-rename type IdInfo.IdInfo = unit
-
 skip Var.idInfo
 skip Var.idDetails
 skip Var.isCoVar

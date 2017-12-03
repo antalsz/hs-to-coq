@@ -28,6 +28,11 @@ Inductive UniqFM ele : Type := UFM : (Data.IntMap.Base.IntMap ele) -> UniqFM
                                      ele.
 
 Arguments UFM {_} _.
+(* Midamble *)
+
+Require Data.IntSet.Base.
+Axiom ufmToSet_Directly : forall {elt}, UniqFM elt -> Data.IntSet.Base.IntSet.
+
 (* Converted value declarations: *)
 
 Instance Unpeel_UniqFM ele : GHC.Prim.Unpeel (UniqFM ele)

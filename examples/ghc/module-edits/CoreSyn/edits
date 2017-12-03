@@ -6,19 +6,7 @@ skip module TyCOn
 skip module Type
 skip module Coercion
 
-rename value Outputable.<+>  = GHC.Base.mappend
-rename value Outputable.text = id
-rename value Outputable.warnPprTrace = Panic.warnPprTrace
-
-
-# remove all type info
-rename type TyCoRep.Type_    = unit
-rename type TyCoRep.Coercion = unit
-rename type TyCon.TyCon      = unit
-
 # pun
-rename value CoreSyn.IsOrphan = CoreSyn.Mk_IsOrphan
-rename value CoreSyn.RuleEnv  = CoreSyn.Mk_RuleEnv
 
 redefine Inductive CoreSyn.Tickish (id : Type) : Type := Mk_Tickish_Dummy.
 redefine Local Definition CoreSyn.Eq___Tickish_op_zeze__ {inst_id} `{_:GHC.Base.Eq_ inst_id}

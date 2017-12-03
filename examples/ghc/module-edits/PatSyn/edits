@@ -1,0 +1,7 @@
+axiomatize module PatSyn
+
+rename type TyCoRep.Type_     = unit
+rename type TyCoRep.TyBinder  = unit
+rename type TyCoRep.ThetaType = unit
+
+skip pprPatSynType

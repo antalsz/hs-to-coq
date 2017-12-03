@@ -127,7 +127,16 @@ VFILES:=Maybes.v\
   UniqSet.v\
   OccName.v\
   Module.v\
-  DynFlags.v
+  DynFlags.v\
+  UniqDFM.v\
+  UniqDSet.v\
+  Name.v\
+  NameEnv.v\
+  Var.v\
+  VarSet.v\
+  VarEnv.v\
+  FastStringEnv.v\
+  FieldLabel.v
 
 ifneq ($(filter-out archclean clean cleanall printenv,$(MAKECMDGOALS)),)
 -include $(addsuffix .d,$(VFILES))

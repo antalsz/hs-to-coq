@@ -1,0 +1,47 @@
+skip module TyCoRep
+
+# needs Eq_ and Ord for OccName
+skip Name.stableNameCmp
+
+# Ignore type information
+rename type TyCoRep.TyThing = unit
+
+# cannot process error message when this fails
+redefine Definition Name.nameModule : Name -> Module.Module :=
+  fun name =>  Maybes.orElse (nameModule_maybe name)(Panic.panic default).
+
+order Name.nameModule_maybe Name.nameModule
+
+## ppr
+skip Name.isHoleName
+skip Name.pprPrefixName
+skip Name.pprNameDefnLoc
+skip Name.pprDefinedAt
+skip Name.pprInfixName
+skip Name.pprModulePrefix
+skip Name.ppr_occ_name
+skip Name.ppr_underscore_unique
+skip Name.pprSystem
+skip Name.pprInternal
+skip Name.ppr_z_occ_name
+skip Name.pprExternal
+skip Name.pprName
+
+## Eq_ instance defined in terms of Ord instance. Need to inline definition of
+## 'compare' (i.e. cmpName) to resolve.
+
+order Name.cmpName Name.Eq___Name_op_zeze__ Name.Eq___Name_op_zsze__ Name.Eq___Name Name.Ord__Name
+
+redefine Local Definition Name.Eq___Name_op_zeze__ : Name -> (Name -> bool) :=
+  fun a b =>
+    match cmpName a b with
+      | Eq => true
+      | _ => false
+    end.
+
+redefine Local Definition Name.Eq___Name_op_zsze__ : Name -> (Name -> bool) :=
+  fun a b =>
+    match cmpName a b with
+      | Eq => false
+      | _ => true
+    end.

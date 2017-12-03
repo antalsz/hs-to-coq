@@ -40,22 +40,34 @@ MODULES = \
   OccName \
   Module \
   DynFlags \
-
-#  Literal \
-  CostCentre \
-
-#  FieldLabel \
-  DataCon \
-  Var \
-  PatSyn \
-  ConLike \
+  UniqDFM \
+  UniqDSet \
   Name \
   NameEnv \
+  Var \
+  VarSet \
   VarEnv \
+  FastStringEnv \
+  FieldLabel \
+
+#  IdInfo \
+#  Literal \
+  CostCentre \
+  DataCon \
+  PatSyn \
+  ConLike \
+  MkId \
 
 
-MUTREC = \
-  TyCoRep \
+#  TyCon   -- AlgTyConFlav, TyCon, AlgTyConRhs
+#  Class   -- Class, ClassATItem
+#  CoAxiom -- CoAxiom, Branches,
+#  Var     -- Var
+#  Name    -- Name
+#  TyCoRep -- TyThing
+
+
+#  TyCoRep \
   Type \
   TyCon \
   Coercion \

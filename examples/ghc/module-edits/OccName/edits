@@ -30,9 +30,6 @@ skip OccName.tidyOccName
 skip OccName.startsWithUnderscore
 skip OccName.isDerivedOccName
 
-
-rename value OccName.OccName = OccName.Mk_OccName
-
 # deriving snafu
 skip OccName.Ord__NameSpace
 skip OccName.Ord__OccName

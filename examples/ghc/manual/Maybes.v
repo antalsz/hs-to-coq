@@ -75,26 +75,26 @@ Definition whenIsJust {m} {a} `{GHC.Base.Monad m} : option a -> (a -> m
       | None , _ => GHC.Base.return_ tt
     end.
 
-Inductive MaybeErr err val : Type := Mk_Succeeded : val -> MaybeErr err val
-                                  |  Mk_Failed : err -> MaybeErr err val.
+Inductive MaybeErr err val : Type := Succeeded : val -> MaybeErr err val
+                                  |  Failed : err -> MaybeErr err val.
 
-Arguments Mk_Succeeded {_} {_} _.
+Arguments Succeeded {_} {_} _.
 
-Arguments Mk_Failed {_} {_} _.
+Arguments Failed {_} {_} _.
 
 Definition isSuccess {err} {val} : MaybeErr err val -> bool :=
   fun arg_3__ =>
     match arg_3__ with
-      | Mk_Succeeded _ => true
-      | Mk_Failed _ => false
+      | Succeeded _ => true
+      | Failed _ => false
     end.
 
 Definition failME {err} {val} : err -> MaybeErr err val :=
-  fun arg_0__ => match arg_0__ with | e => Mk_Failed e end.
+  fun arg_0__ => match arg_0__ with | e => Failed e end.
 
 Local Definition instance_GHC_Base_Applicative__MaybeErr_err__pure {inst_err}
     : forall {a}, a -> (MaybeErr inst_err) a :=
-  fun {a} => Mk_Succeeded.
+  fun {a} => Succeeded.
 
 Local Definition instance_GHC_Base_Monad__MaybeErr_err__return_ {inst_err}
     : forall {a}, a -> (MaybeErr inst_err) a :=
@@ -107,15 +107,15 @@ Local Definition instance_GHC_Base_Monad__MaybeErr_err__op_zgzgze__ {inst_err}
   fun {a} {b} =>
     fun arg_28__ arg_29__ =>
       match arg_28__ , arg_29__ with
-        | Mk_Succeeded v , k => k v
-        | Mk_Failed e , _ => Mk_Failed e
+        | Succeeded v , k => k v
+        | Failed e , _ => Failed e
       end.
 
 Local Definition instance_GHC_Base_Functor__MaybeErr_err__fmap {inst_err}
     : forall {a} {b}, (a -> b) -> (MaybeErr inst_err) a -> (MaybeErr inst_err) b :=
   fun {a} {b} f me => match me with
-                   | Mk_Succeeded v => Mk_Succeeded (f v)
-                   | Mk_Failed e     => Mk_Failed e
+                   | Succeeded v => Succeeded (f v)
+                   | Failed e     => Failed e
                    end.
 
 
@@ -136,9 +136,9 @@ Local Definition instance_GHC_Base_Applicative__MaybeErr_err__op_zlztzg__ {inst_
         (MaybeErr inst_err) (a -> b) -> (MaybeErr inst_err) a -> (MaybeErr inst_err)
         b :=
  fun {a} {b} mf ma => match mf , ma  with
-                   | Mk_Succeeded f , Mk_Succeeded v => Mk_Succeeded (f v)
-                   | Mk_Failed e , _     => Mk_Failed e
-                   | _ , Mk_Failed e     => Mk_Failed e
+                   | Succeeded f , Succeeded v => Succeeded (f v)
+                   | Failed e , _     => Failed e
+                   | _ , Failed e     => Failed e
                    end.
 
 Local Definition instance_GHC_Base_Applicative__MaybeErr_err__op_ztzg__ {inst_err}

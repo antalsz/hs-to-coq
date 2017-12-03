@@ -6,11 +6,19 @@ skip module GHC.Show
 skip module PrelNames
 skip module Deriving
 
+# TODO: better treatment of primitive values
+skip module GHC.Int
+skip module GHC.Word
+skip module GHC.Integer.Type
+rename type GHC.Integer.Type.Integer = GHC.Num.Integer
 
 rename type GHC.IO.FilePath = GHC.Base.String
 
-# Punned
+rename value Outputable.pprPanic = Panic.panicStr
+rename value Outputable.ppr = Panic.noString
 
+
+# Punned
 rename value BasicTypes.EP   = BasicTypes.Mk_EP
 rename value BasicTypes.Fixity   = BasicTypes.Mk_Fixity
 rename value BasicTypes.InlinePragma = BasicTypes.Mk_InlinePragma
@@ -20,13 +28,23 @@ rename value BasicTypes.WarningTxt   = BasicTypes.Mk_WarningTxt
 rename value CmmType.CmmType    = CmmType.Mk_CmmType
 rename value Pair.Pair = Pair.Mk_Pair
 rename value SourceLoc.L = SourceLoc.Mk_L
-
+rename value DynFlags.PackageArg = DynFlags.Mk_PackageArg
+rename value DynFlags.Option = DynFlags.Mk_Option
+rename value DynFlags.ModRenaming = DynFlags.Mk_ModRenaming
+rename value DynFlags.FlushOut = DynFlags.Mk_FlushOut
 rename value Module.Module = Module.Mk_Module
 rename value Module.ModuleName = Module.Mk_ModuleName
 rename value Module.NDModule = Module.Mk_NDModule
 rename value Module.ModLocation = Module.Mk_ModLocation
 rename value Module.ModuleEnv = Module.Mk_ModuleEnv
-
+rename value OccName.OccName = OccName.Mk_OccName
+rename value Name.Name = Name.Mk_Name
+rename value Name.BuiltInSyntax = Name.Mk_BuiltInSyntax
+rename value FieldLabel.FieldLabel = FieldLabel.Mk_FieldLabel
+rename value UniqDFM.TaggedVal = UniqDFM.Mk_TaggedVal
+rename value UniqDFM.UniqDFM   = UniqDFM.Mk_UniqDFM
+rename value Var.Id            = Var.Mk_Id
+rename value Var.TyVar         = Var.Mk_TyVar
 
 # These constructor are named after their argument, not their return type,
 # so use a different, non-confusing convention here

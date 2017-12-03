@@ -1,7 +1,14 @@
 Import Panic.
 
-Instance default_ModuleName : Panic.Default ModuleName :=
-  { default := Mk_ModuleName default}.
+Instance Default_UnitId : Default UnitId := Build_Default _ (PId default).
+Instance Default_ModuleName : Default ModuleName :=
+  Build_Default _ (Mk_ModuleName default).
+Instance Default_Module : Default Module :=
+  Build_Default _ (Mk_Module default default).
+Instance Default_NDModule : Default NDModule :=
+  Build_Default _ (Mk_NDModule default).
+Instance Default_ModLocation : Default ModLocation :=
+  Build_Default _ (Mk_ModLocation default default default).
 
 
 Instance instance_Uniquable_ModuleName : Unique.Uniquable ModuleName := {}.
@@ -15,6 +22,9 @@ Instance Unpeel_ModuleName : Prim.Unpeel ModuleName FastString.FastString :=
   Prim.Build_Unpeel _ _ (fun arg_142__ => match arg_142__ with | Mk_ModuleName mod_ => mod_ end) Mk_ModuleName.
 Instance Unpeel_NDModule : Prim.Unpeel NDModule Module :=
   Prim.Build_Unpeel _ _ (fun arg_142__ => match arg_142__ with | Mk_NDModule mod_ => mod_ end) Mk_NDModule.
+
+
+
 
 (*
 Definition moduleNameSlashes : ModuleName -> GHC.Base.String := fun x => default.

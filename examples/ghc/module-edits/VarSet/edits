@@ -1,0 +1,10 @@
+skip VarSet.fixVarSet
+skip VarSet.transCloDVarSet
+skip VarSet.transCloVarSet
+
+# needs UniqSet.partitionUniqSet
+skip VarSet.partitionVarSet
+
+# Outputtable
+skip VarSet.pluralVarSet
+skip VarSet.pprVarSet

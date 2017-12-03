@@ -3,9 +3,6 @@ skip UniqFM.pluralUFM
 skip UniqFM.pprUFM
 
 skip module Compiler.Hoopl.Dataflow
-skip module Data.IntMap.Base
-skip module Data.IntSet.Base
-
 
 # requires Hoopl
 skip UniqFM.joinUFM
@@ -18,7 +15,7 @@ skip UniqFM.plusUFM_CD
 skip UniqFM.ufmToSet_Directly
 
 # need to avoid left / right as binding vars
-skip UniqFM.partitionUFM
+# skip UniqFM.partitionUFM
 
 order UniqFM.Functor__UniqFM UniqFM.Foldable__UniqFM UniqFM.Traversable__UniqFM
 

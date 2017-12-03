@@ -29,11 +29,6 @@ redefine Inductive DynFlags.FlushErr : Type := Mk_FlushErr.
 redefine Inductive DynFlags.DynFlags : Type := Mk_DynFlags.
 redefine Inductive DynFlags.FlagSpec (flag:Type) : Type := Mk_FlagSpec.
 
-rename value DynFlags.PackageArg = DynFlags.Mk_PackageArg
-rename value DynFlags.Option = DynFlags.Mk_Option
-rename value DynFlags.ModRenaming = DynFlags.Mk_ModRenaming
-rename value DynFlags.FlushOut = DynFlags.Mk_FlushOut
-
 skip DynFlags.FlagMaker
 skip DynFlags.FatalMessager
 skip DynFlags.DynFlagMaker

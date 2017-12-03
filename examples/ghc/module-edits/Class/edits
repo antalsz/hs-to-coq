@@ -1,0 +1,12 @@
+rename type TyCoRep.Type_    = unit
+rename type TyCon.TyCon      = unit
+rename type TyCoRep.PredType = unit
+
+# pun
+rename value Class.Class  = Class.Mk_Class
+
+# debugging, uses List.!!
+skip Class.classSCSelId
+
+# needs information about prelude (parameter in midamble)
+skip Class.naturallyCoherentClass

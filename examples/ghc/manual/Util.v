@@ -1,5 +1,9 @@
 (* Default settings (from HsToCoq.Coq.Preamble) *)
 
+(** This version has been constructed by manually editing the output.
+    It's a big, diverse module.
+*)
+
 Generalizable All Variables.
 
 Unset Implicit Arguments.
@@ -15,42 +19,43 @@ Require Coq.Program.Wf.
 Require Coq.Init.Datatypes.
 Require Coq.Lists.List.
 Require Data.Bits.
-Require Data.Data.
+(* Require Data.Data. *)
 Require Data.Either.
 Require Data.Foldable.
-Require Data.IORef.
+(* Require Data.IORef. *)
 Require Data.IntMap.Base.
 Require Data.OldList.
 Require Data.Ord.
-Require Data.Set.Base.
-Require Data.Time.Clock.UTC.
+(* Require Data.Set.Base.
+Require Data.Time.Clock.UTC. *)
 Require Data.Traversable.
 Require Data.Tuple.
-Require Exception.
+(* Require Exception. *)
 Require GHC.Base.
 Require GHC.Char.
-Require GHC.Exts.
+(* Require GHC.Exts.
 Require GHC.IO.Encoding.
 Require GHC.IO.Exception.
 Require GHC.IO.Handle.
 Require GHC.IO.Handle.Types.
 Require GHC.IO.Unsafe.
-Require GHC.IORef.
+Require GHC.IORef. *)
 Require GHC.List.
 Require GHC.Num.
 Require GHC.Prim.
-Require GHC.Read.
+(*Require GHC.Read.
 Require GHC.Real.
 Require System.Directory.
 Require System.FilePath.Posix.
 Require System.IO.Error.
 Require Text.ParserCombinators.ReadP.
-Require Text.Read.
+Require Text.Read. *)
 Import Data.Bits.Notations.
 Import GHC.Base.Notations.
 Import GHC.Num.Notations.
 Import GHC.Real.Notations.
-Import System.FilePath.Posix.Notations.
+(* Import System.FilePath.Posix.Notations. *)
+Require Panic.
 
 (* Converted type declarations: *)
 
@@ -61,23 +66,6 @@ Inductive Direction : Type := Forwards : Direction
                            |  Backwards : Direction.
 (* Converted value declarations: *)
 
-(* The Haskell code containes partial or untranslateable code, which needs the
-   following *)
-
-Axiom missingValue : forall {a}, a.
-
-Axiom patternFailure : forall {a}, a.
-
-Definition abstractConstr : GHC.Base.String -> Data.Data.Constr :=
-  fun n =>
-    Data.Data.mkConstr (abstractDataType n) (Coq.Init.Datatypes.app
-                                            (GHC.Base.hs_string__ "{abstract:") (Coq.Init.Datatypes.app n
-                                                                                                        (GHC.Base.hs_string__
-                                                                                                        "}"))) nil
-    Data.Data.Prefix.
-
-Definition abstractDataType : GHC.Base.String -> Data.Data.DataType :=
-  fun n => Data.Data.mkDataType n (cons (abstractConstr n) nil).
 
 Definition all2 {a} {b} : (a -> b -> bool) -> list a -> list b -> bool :=
   fix all2 arg_295__ arg_296__ arg_297__
@@ -117,6 +105,7 @@ Definition listLengthCmp {a} : list a -> GHC.Num.Int -> comparison :=
   let atLen := fun arg_357__ => match arg_357__ with | nil => Eq | _ => Gt end in
   let atEnd := Lt in atLength atLen atEnd.
 
+(*
 Definition charToC : GHC.Word.Word8 -> GHC.Base.String :=
   fun w =>
     let scrut_7__ := GHC.Char.chr (GHC.Real.fromIntegral w) in
@@ -140,6 +129,7 @@ Definition charToC : GHC.Word.Word8 -> GHC.Base.String :=
              then cons c nil
              else j_11__
     end.
+*)
 
 Definition chkAppend {a} : list a -> list a -> list a :=
   fun xs ys =>
@@ -148,6 +138,7 @@ Definition chkAppend {a} : list a -> list a -> list a :=
     then xs
     else j_447__.
 
+(*
 Definition chunkList {a} : GHC.Num.Int -> list a -> list (list a) :=
   fix chunkList arg_319__ arg_320__
         := match arg_319__ , arg_320__ with
@@ -156,6 +147,7 @@ Definition chunkList {a} : GHC.Num.Int -> list a -> list (list a) :=
                            | pair as_ bs => cons as_ (chunkList n bs)
                          end
            end.
+*)
 
 Definition cmpList {a} : (a -> a -> comparison) -> list a -> list
                          a -> comparison :=
@@ -189,9 +181,6 @@ Definition leLength {a} {b} : list a -> list b -> bool :=
       | Gt => false
     end.
 
-Definition consIORef {a} : GHC.IORef.IORef (list a) -> a -> GHC.Types.IO unit :=
-  fun var x => Data.IORef.atomicModifyIORef' var (fun xs => pair (cons x xs) tt).
-
 Definition count {a} : (a -> bool) -> list a -> GHC.Num.Int :=
   fix count arg_289__ arg_290__
         := match arg_289__ , arg_290__ with
@@ -205,16 +194,14 @@ Definition count {a} : (a -> bool) -> list a -> GHC.Num.Int :=
 Definition debugIsOn : bool :=
   false.
 
+(*
 Definition minWith {b} {a} `{GHC.Base.Ord b} : (a -> b) -> list a -> a :=
   fun get_key xs =>
     if andb debugIsOn (negb (negb (Data.Foldable.null xs))) : bool
     then (Panic.assertPanic (GHC.Base.hs_string__ "ghc/compiler/utils/Util.hs")
          (GHC.Num.fromInteger 559))
     else GHC.List.head (GHC.Exts.sortWith get_key xs).
-
-Definition doesDirNameExist : GHC.Base.String -> GHC.Types.IO bool :=
-  fun fpath =>
-    System.Directory.doesDirectoryExist (System.FilePath.Posix.takeDirectory fpath).
+*)
 
 Definition dropList {b} {a} : list b -> list a -> list a :=
   fix dropList arg_279__ arg_280__
@@ -241,9 +228,11 @@ Definition dropWhileEndLE {a} : (a -> bool) -> list a -> list a :=
                           then nil
                           else cons x r) nil.
 
+(*
 Definition removeSpaces : GHC.Base.String -> GHC.Base.String :=
   dropWhileEndLE GHC.Unicode.isSpace GHC.Base.∘ GHC.List.dropWhile
   GHC.Unicode.isSpace.
+*)
 
 Definition eqListBy {a} : (a -> a -> bool) -> list a -> list a -> bool :=
   fix eqListBy arg_229__ arg_230__ arg_231__
@@ -269,11 +258,13 @@ Definition equalLength {a} {b} : list a -> list b -> bool :=
              | _ , _ => false
            end.
 
+(*
 Definition escapeSpaces : GHC.Base.String -> GHC.Base.String :=
   Data.Foldable.foldr (fun c s =>
                         if GHC.Unicode.isSpace c : bool
                         then cons (GHC.Char.hs_char__ "\") (cons c s)
                         else cons c s) (GHC.Base.hs_string__ "").
+*)
 
 Definition filterByList {a} : list bool -> list a -> list a :=
   fix filterByList arg_423__ arg_424__
@@ -315,6 +306,7 @@ Definition firstM {m} {a} {c} {b} `{GHC.Base.Monad m} : (a -> m c) -> (a *
       | f , pair x y => GHC.Base.liftM (fun x' => pair x' y) (f x)
     end.
 
+(* partial
 Definition foldl2 {acc} {a} {b} : (acc -> a -> b -> acc) -> acc -> list
                                   a -> list b -> acc :=
   fix foldl2 arg_300__ arg_301__ arg_302__ arg_303__
@@ -323,6 +315,7 @@ Definition foldl2 {acc} {a} {b} : (acc -> a -> b -> acc) -> acc -> list
              | k , z , cons a as_ , cons b bs => foldl2 k (k z a b) as_ bs
              | _ , _ , _ , _ => Panic.panic (GHC.Base.hs_string__ "Util: foldl2")
            end.
+*)
 
 Definition fst3 {a} {d} {b} {c} : (a -> d) -> (a * b * c)%type -> (d * b *
                                   c)%type :=
@@ -334,6 +327,7 @@ Definition fst3 {a} {d} {b} {c} : (a -> d) -> (a * b * c)%type -> (d * b *
 Definition fstOf3 {a} {b} {c} : (a * b * c)%type -> a :=
   fun arg_510__ => match arg_510__ with | pair (pair a _) _ => a end.
 
+(*
 Definition getCmd : GHC.Base.String -> Data.Either.Either GHC.Base.String
                     (GHC.Base.String * GHC.Base.String)%type :=
   fun s =>
@@ -345,19 +339,8 @@ Definition getCmd : GHC.Base.String -> Data.Either.Either GHC.Base.String
                                                                "Couldn't find command in ") (GHC.Show.show s))
       | res => Data.Either.Right res
     end.
+*)
 
-Definition getModificationUTCTime : GHC.Base.String -> GHC.Types.IO
-                                    Data.Time.Clock.UTC.UTCTime :=
-  System.Directory.getModificationTime.
-
-Definition modificationTimeIfExists : GHC.Base.String -> GHC.Types.IO (option
-                                                                      Data.Time.Clock.UTC.UTCTime) :=
-  fun f =>
-    Exception.catchIO (getModificationUTCTime f GHC.Base.>>= (fun t =>
-                        GHC.Base.return_ (Some t))) (fun e =>
-                        if System.IO.Error.isDoesNotExistError e : bool
-                        then GHC.Base.return_ None
-                        else GHC.IO.Exception.ioError e).
 
 Definition ghciSupported : bool :=
   false.
@@ -365,29 +348,10 @@ Definition ghciSupported : bool :=
 Definition ghciTablesNextToCode : bool :=
   false.
 
-Definition global {a} : a -> GHC.IORef.IORef a :=
-  fun a => GHC.IO.Unsafe.unsafePerformIO (GHC.IORef.newIORef a).
-
-Definition globalM {a} : GHC.Types.IO a -> GHC.IORef.IORef a :=
-  fun ma => GHC.IO.Unsafe.unsafePerformIO (ma GHC.Base.>>= GHC.IORef.newIORef).
-
+(*
 Definition golden : GHC.Int.Int32 :=
   GHC.Num.fromInteger 1013904242.
-
-Definition hSetTranslit : GHC.IO.Handle.Types.Handle -> GHC.Types.IO unit :=
-  fun h =>
-    GHC.IO.Handle.hGetEncoding h GHC.Base.>>= (fun menc =>
-      let scrut_42__ := GHC.Base.fmap textEncodingName menc in
-      let j_44__ := GHC.Base.return_ tt in
-      match scrut_42__ with
-        | Some name => if Data.Foldable.notElem (GHC.Char.hs_char__ "/") name : bool
-                       then (GHC.IO.Encoding.mkTextEncoding GHC.Base.$ Coq.Init.Datatypes.app name
-                                                                                              (GHC.Base.hs_string__
-                                                                                              "//TRANSLIT"))
-                            GHC.Base.>>= (fun enc' => GHC.IO.Handle.hSetEncoding h enc')
-                       else j_44__
-        | _ => j_44__
-      end).
+*)
 
 Definition isDarwinHost : bool :=
   true.
@@ -426,6 +390,7 @@ Definition liftSnd {a} {b} {c} : (a -> b) -> (c * a)%type -> (c * b)%type :=
       | f , pair c a => pair c (f a)
     end.
 
+(*
 Definition looksLikeModuleName : GHC.Base.String -> bool :=
   fix looksLikeModuleName arg_109__
         := match arg_109__ with
@@ -443,31 +408,12 @@ Definition looksLikeModuleName : GHC.Base.String -> bool :=
                                        end in
                             andb (GHC.Unicode.isUpper c) (go cs)
            end.
+*)
 
+(* This is just wrong, but not incorrect. *)
 Definition makeRelativeTo
     : GHC.Base.String -> GHC.Base.String -> GHC.Base.String :=
-  fun this that =>
-    let f :=
-      fix f arg_17__ arg_18__
-            := let j_20__ :=
-                 match arg_17__ , arg_18__ with
-                   | xs , ys => Coq.Init.Datatypes.app (GHC.List.replicate (Data.Foldable.length
-                                                                           ys) (GHC.Base.hs_string__ "..")) xs
-                 end in
-               match arg_17__ , arg_18__ with
-                 | cons x xs , cons y ys => if x GHC.Base.== y : bool
-                                            then f xs ys
-                                            else j_20__
-                 | _ , _ => j_20__
-               end in
-    let thatDirectory := System.FilePath.Posix.dropFileName that in
-    match System.FilePath.Posix.splitFileName this with
-      | pair thisDirectory thisFilename => let directory :=
-                                             System.FilePath.Posix.joinPath GHC.Base.$ f
-                                             (System.FilePath.Posix.splitPath thisDirectory)
-                                             (System.FilePath.Posix.splitPath thatDirectory) in
-                                           directory System.FilePath.Posix.</> thisFilename
-    end.
+  fun this that => this.
 
 Definition mapAccumL2 {s1} {s2} {a} {b} : (s1 -> s2 -> a -> (s1 * s2 *
                                           b)%type) -> s1 -> s2 -> list a -> (s1 * s2 * list b)%type :=
@@ -526,39 +472,26 @@ Definition mapSnd {b} {c} {a} : (b -> c) -> list (a * b)%type -> list (a *
       end in
     Coq.Lists.List.flat_map cont_392__ xys.
 
+(* Needs more from GHC.Real.^
 Definition matchVectors {bv} `{Data.Bits.Bits bv} `{GHC.Num.Num bv}
     : GHC.Base.String -> Data.IntMap.Base.IntMap bv :=
   let go :=
     fun arg_128__ arg_129__ =>
       match arg_128__ , arg_129__ with
-        | pair ix im , char => let im' :=
-                                 Data.IntMap.Base.insertWith _Data.Bits..|._ (GHC.Char.ord char)
-                                 (GHC.Num.fromInteger 2 GHC.Real.^ ix) im in
-                               let ix' := ix GHC.Num.+ GHC.Num.fromInteger 1 in
-                               GHC.Prim.seq ix' GHC.Base.$ (GHC.Prim.seq im' GHC.Base.$ pair ix' im')
-      end in
-  Data.Tuple.snd GHC.Base.∘ Data.Foldable.foldl' go (pair (GHC.Num.fromInteger
-                                                          0 : GHC.Num.Int) Data.IntMap.Base.empty).
+        | pair ix im , char =>
+          let im' :=
+              Data.IntMap.Base.insertWith
+                _Data.Bits..|._ (GHC.Char.ord char)
+                (GHC.Num.fromInteger 2 GHC.Real.^ ix) im in
+          let ix' := ix GHC.Num.+ GHC.Num.fromInteger 1 in
+          GHC.Prim.seq ix' GHC.Base.$ (GHC.Prim.seq im' GHC.Base.$ pair ix' im')
+              end in
+          Data.Tuple.snd GHC.Base.∘ Data.Foldable.foldl' go
+                         (pair (GHC.Num.fromInteger
+                                  0 : GHC.Num.Int) Data.IntMap.Base.empty).
+*)
 
-Definition maybeRead {a} `{GHC.Read.Read a} : GHC.Base.String -> option a :=
-  fun str =>
-    let scrut_55__ := Text.Read.reads str in
-    match scrut_55__ with
-      | cons (pair x "") nil => Some x
-      | _ => None
-    end.
-
-Definition maybeReadFuzzy {a} `{GHC.Read.Read a} : GHC.Base.String -> option
-                                                   a :=
-  fun str =>
-    let scrut_51__ := Text.Read.reads str in
-    match scrut_51__ with
-      | cons (pair x s) nil => if Data.Foldable.all GHC.Unicode.isSpace s : bool
-                               then Some x
-                               else None
-      | _ => None
-    end.
-
+(*
 Definition mulHi : GHC.Int.Int32 -> GHC.Int.Int32 -> GHC.Int.Int32 :=
   fun a b =>
     let r : GHC.Int.Int64 :=
@@ -567,7 +500,6 @@ Definition mulHi : GHC.Int.Int32 -> GHC.Int.Int32 -> GHC.Int.Int32 :=
 
 Definition hashInt32 : GHC.Int.Int32 -> GHC.Int.Int32 :=
   fun x => mulHi x golden GHC.Num.+ x.
-
 Definition hashString : GHC.Base.String -> GHC.Int.Int32 :=
   let magic :=
     GHC.Real.fromIntegral (GHC.Num.fromInteger 3735928559 : GHC.Word.Word32) in
@@ -576,10 +508,13 @@ Definition hashString : GHC.Base.String -> GHC.Int.Int32 :=
       (GHC.Real.fromIntegral (GHC.Char.ord c) GHC.Num.* magic) GHC.Num.+ hashInt32
       m in
   Data.Foldable.foldl' f golden.
+*)
 
 Definition nOfThem {a} : GHC.Num.Int -> a -> list a :=
   fun n thing => GHC.List.replicate n thing.
 
+(* Termination metric for Int. *)
+(*
 Definition nTimes {a} : GHC.Num.Int -> (a -> a) -> (a -> a) :=
   fix nTimes arg_512__ arg_513__
         := let j_517__ :=
@@ -596,7 +531,7 @@ Definition nTimes {a} : GHC.Num.Int -> (a -> a) -> (a -> a) :=
              | num_514__ , _ => if num_514__ GHC.Base.== GHC.Num.fromInteger 0 : bool
                                 then GHC.Base.id
                                 else j_519__
-           end.
+           end. *)
 
 Definition ncgDebugIsOn : bool :=
   false.
@@ -607,10 +542,12 @@ Definition notNull {a} : list a -> bool :=
 Definition lengthExceeds {a} : list a -> GHC.Num.Int -> bool :=
   atLength notNull false.
 
+(* Data.Set.Base.toAscList *)
+(*
 Definition nubSort {a} `{GHC.Base.Ord a} : list a -> list a :=
   Data.Set.Base.toAscList GHC.Base.∘ Data.Set.Base.fromList.
-
-Definition only {a} : list a -> a :=
+*)
+Definition only {a}`{_:Panic.Default a} : list a -> a :=
   fun arg_326__ =>
     match arg_326__ with
       | cons a _ => a
@@ -633,88 +570,6 @@ Notation "'_<||>_'" := (op_zlzbzbzg__).
 
 Infix "<||>" := (_<||>_) (at level 99).
 
-Definition toArgs : GHC.Base.String -> Data.Either.Either GHC.Base.String (list
-                                                                          GHC.Base.String) :=
-  fun str =>
-    let readAsString : GHC.Base.String -> Data.Either.Either GHC.Base.String
-                       (GHC.Base.String * GHC.Base.String)%type :=
-      fun s =>
-        let scrut_172__ := Text.Read.reads s in
-        let j_174__ :=
-          Data.Either.Left (Coq.Init.Datatypes.app (GHC.Base.hs_string__ "Couldn't read ")
-                                                   (Coq.Init.Datatypes.app (GHC.Show.show s) (GHC.Base.hs_string__
-                                                                           " as String"))) in
-        match scrut_172__ with
-          | cons (pair arg rest) nil => if Data.Foldable.all GHC.Unicode.isSpace
-                                           (GHC.List.take (GHC.Num.fromInteger 1) rest) : bool
-                                        then Data.Either.Right (pair arg rest)
-                                        else j_174__
-          | _ => j_174__
-        end in
-    let toArgs' : GHC.Base.String -> Data.Either.Either GHC.Base.String (list
-                                                                        GHC.Base.String) :=
-      fix toArgs' s
-            := let scrut_178__ := GHC.List.dropWhile GHC.Unicode.isSpace s in
-               match scrut_178__ with
-                 | nil => Data.Either.Right nil
-                 | cons (""""%char) _ => let cont_180__ arg_181__ :=
-                                           match arg_181__ with
-                                             | pair arg rest => GHC.Base.fmap (fun arg_182__ => cons arg arg_182__)
-                                                                              (toArgs' rest)
-                                           end in
-                                         readAsString s GHC.Base.>>= cont_180__
-                 | s' => let scrut_185__ :=
-                           GHC.List.break (GHC.Unicode.isSpace <||> (fun arg_184__ =>
-                                            arg_184__ GHC.Base.== GHC.Char.hs_char__ """")) s' in
-                         match scrut_185__ with
-                           | pair argPart1 (cons (""""%char) _ as s'') => let cont_186__ arg_187__ :=
-                                                                            match arg_187__ with
-                                                                              | pair argPart2 rest => GHC.Base.fmap
-                                                                                                      (fun arg_188__ =>
-                                                                                                        cons
-                                                                                                        (Coq.Init.Datatypes.app
-                                                                                                        argPart1
-                                                                                                        (GHC.Show.show
-                                                                                                        argPart2))
-                                                                                                        arg_188__)
-                                                                                                      (toArgs' rest)
-                                                                            end in
-                                                                          readAsString s'' GHC.Base.>>= cont_186__
-                           | pair arg s'' => GHC.Base.fmap (fun arg_190__ => cons arg arg_190__) (toArgs'
-                                                           s'')
-                         end
-               end in
-    let scrut_196__ := GHC.List.dropWhile GHC.Unicode.isSpace str in
-    match scrut_196__ with
-      | (cons ("["%char) _ as s) => let scrut_197__ := Text.Read.reads s in
-                                    let j_199__ :=
-                                      Data.Either.Left (Coq.Init.Datatypes.app (GHC.Base.hs_string__ "Couldn't read ")
-                                                                               (Coq.Init.Datatypes.app (GHC.Show.show
-                                                                                                       str)
-                                                                                                       (GHC.Base.hs_string__
-                                                                                                       " as [String]"))) in
-                                    match scrut_197__ with
-                                      | cons (pair args spaces) nil => if Data.Foldable.all GHC.Unicode.isSpace
-                                                                          spaces : bool
-                                                                       then Data.Either.Right args
-                                                                       else j_199__
-                                      | _ => j_199__
-                                    end
-      | s => toArgs' s
-    end.
-
-Definition toCmdArgs : GHC.Base.String -> Data.Either.Either GHC.Base.String
-                       (GHC.Base.String * list GHC.Base.String)%type :=
-  fun s =>
-    let scrut_206__ := getCmd s in
-    match scrut_206__ with
-      | Data.Either.Left err => Data.Either.Left err
-      | Data.Either.Right (pair cmd s') => let scrut_208__ := toArgs s' in
-                                           match scrut_208__ with
-                                             | Data.Either.Left err => Data.Either.Left err
-                                             | Data.Either.Right args => Data.Either.Right (pair cmd args)
-                                           end
-    end.
 
 Definition partitionByList {a} : list bool -> list a -> (list a * list
                                  a)%type :=
@@ -742,113 +597,8 @@ Definition partitionWith {a} {b} {c} : (a -> Data.Either.Either b c) -> list
                                 end
            end.
 
-Definition readRational__ : Text.ParserCombinators.ReadP.ReadS
-                            GHC.Real.Rational :=
-  fun r =>
-    let nonnull :=
-      fun p s =>
-        let cont_59__ arg_60__ :=
-          match arg_60__ with
-            | pair (cons _ _ as cs) t => GHC.Base.return_ (pair cs t)
-            | _ => missingValue (GHC.Base.hs_string__
-                                "Partial pattern match in `do' notation")
-          end in
-        GHC.Base.return_ (GHC.List.span p s) GHC.Base.>>= cont_59__ in
-    let lexDotDigits :=
-      fun arg_62__ =>
-        match arg_62__ with
-          | cons ("."%char) s => GHC.Base.return_ (GHC.List.span GHC.Unicode.isDigit s)
-          | s => GHC.Base.return_ (pair (GHC.Base.hs_string__ "") s)
-        end in
-    let lexDecDigits := nonnull GHC.Unicode.isDigit in
-    let readDec :=
-      fun s =>
-        let cont_67__ arg_68__ :=
-          match arg_68__ with
-            | pair ds r => GHC.Base.return_ (pair (Data.Foldable.foldl1 (fun n d =>
-                                                                          (n GHC.Num.* GHC.Num.fromInteger 10) GHC.Num.+
-                                                                          d) (Coq.Lists.List.flat_map (fun d =>
-                                                                                                        cons
-                                                                                                        (GHC.Char.ord d
-                                                                                                        GHC.Num.-
-                                                                                                        GHC.Char.ord
-                                                                                                        (GHC.Char.hs_char__
-                                                                                                        "0")) nil) ds))
-                                                  r)
-          end in
-        nonnull GHC.Unicode.isDigit s GHC.Base.>>= cont_67__ in
-    let readExp' :=
-      fun arg_71__ =>
-        match arg_71__ with
-          | cons ("+"%char) s => readDec s
-          | cons ("-"%char) s => let cont_73__ arg_74__ :=
-                                   match arg_74__ with
-                                     | pair k t => GHC.Base.return_ (pair (negate k) t)
-                                   end in
-                                 readDec s GHC.Base.>>= cont_73__
-          | s => readDec s
-        end in
-    let readExp :=
-      fun arg_78__ =>
-        let j_80__ :=
-          match arg_78__ with
-            | s => GHC.Base.return_ (pair (GHC.Num.fromInteger 0) s)
-          end in
-        match arg_78__ with
-          | cons e s => if Data.Foldable.elem e (GHC.Base.hs_string__ "eE") : bool
-                        then readExp' s
-                        else j_80__
-          | _ => j_80__
-        end in
-    let readFix :=
-      fun r =>
-        let cont_83__ arg_84__ :=
-          match arg_84__ with
-            | pair ds s => let cont_85__ arg_86__ :=
-                             match arg_86__ with
-                               | pair ds' t => GHC.Base.return_ (pair (pair (Text.Read.read
-                                                                            (Coq.Init.Datatypes.app ds ds'))
-                                                                            (Data.Foldable.length ds')) t)
-                             end in
-                           lexDotDigits s GHC.Base.>>= cont_85__
-          end in
-        lexDecDigits r GHC.Base.>>= cont_83__ in
-    let cont_88__ arg_89__ :=
-      match arg_89__ with
-        | pair (pair n d) s => let cont_90__ arg_91__ :=
-                                 match arg_91__ with
-                                   | pair k t => GHC.Base.return_ (pair ((n GHC.Real.% GHC.Num.fromInteger 1)
-                                                                        GHC.Num.* (GHC.Num.fromInteger 10 GHC.Real.^^ (k
-                                                                        GHC.Num.- d))) t)
-                                 end in
-                               readExp s GHC.Base.>>= cont_90__
-      end in
-    readFix r GHC.Base.>>= cont_88__.
-
-Definition readRational : GHC.Base.String -> GHC.Real.Rational :=
-  fun top_s =>
-    let read_me :=
-      fun s =>
-        let scrut_95__ :=
-          (let cont_93__ arg_94__ :=
-            match arg_94__ with
-              | pair x "" => GHC.Base.return_ x
-              | _ => missingValue (GHC.Base.hs_string__
-                                  "Partial pattern match in `do' notation")
-            end in
-          readRational__ s GHC.Base.>>= cont_93__) in
-        match scrut_95__ with
-          | cons x nil => x
-          | nil => GHC.Err.error (Coq.Init.Datatypes.app (GHC.Base.hs_string__
-                                                         "readRational: no parse:") top_s)
-          | _ => GHC.Err.error (Coq.Init.Datatypes.app (GHC.Base.hs_string__
-                                                       "readRational: ambiguous parse:") top_s)
-        end in
-    match top_s with
-      | cons ("-"%char) xs => negate (read_me xs)
-      | xs => read_me xs
-    end.
-
+(* string constant *)
+(*
 Definition reslash : Direction -> GHC.Base.String -> GHC.Base.String :=
   fun d =>
     let slash :=
@@ -864,7 +614,7 @@ Definition reslash : Direction -> GHC.Base.String -> GHC.Base.String :=
                  | cons x xs => cons x (f xs)
                  | "" => GHC.Base.hs_string__ ""
                end in
-    f.
+    f. *)
 
 Definition seqList {a} {b} : list a -> b -> b :=
   fix seqList arg_120__ arg_121__
@@ -879,6 +629,7 @@ Definition singleton {a} : a -> list a :=
 Definition sizedComplement {bv} `{Data.Bits.Bits bv} : bv -> bv -> bv :=
   fun vector_mask vect => Data.Bits.xor vector_mask vect.
 
+(*
 Definition restrictedDamerauLevenshteinDistanceWorker {bv} `{Data.Bits.Bits bv}
                                                       `{GHC.Num.Num bv} : Data.IntMap.Base.IntMap bv -> bv -> bv -> (bv
                                                                           * bv * bv * bv *
@@ -1015,7 +766,7 @@ Definition fuzzyLookup {a} : GHC.Base.String -> list (GHC.Base.String *
 Definition fuzzyMatch : GHC.Base.String -> list GHC.Base.String -> list
                         GHC.Base.String :=
   fun key vals =>
-    fuzzyLookup key (Coq.Lists.List.flat_map (fun v => cons (pair v v) nil) vals).
+    fuzzyLookup key (Coq.Lists.List.flat_map (fun v => cons (pair v v) nil) vals). *)
 
 Definition snd3 {b} {d} {a} {c} : (b -> d) -> (a * b * c)%type -> (a * d *
                                   c)%type :=
@@ -1056,6 +807,7 @@ Definition spanEnd {a} : (a -> bool) -> list a -> (list a * list a)%type :=
                end in
     go l nil nil l.
 
+(* termination
 Definition split : GHC.Char.Char -> GHC.Base.String -> list GHC.Base.String :=
   fix split c s
         := match GHC.List.break (fun arg_239__ => arg_239__ GHC.Base.== c) s with
@@ -1064,11 +816,15 @@ Definition split : GHC.Char.Char -> GHC.Base.String -> list GHC.Base.String :=
                                     | cons _ rest => cons chunk (split c rest)
                                   end
            end.
+*)
 
-Definition looksLikePackageName : GHC.Base.String -> bool :=
+(* Unicode *)
+Parameter looksLikePackageName : GHC.Base.String -> bool.
+(*
   Data.Foldable.all (Data.Foldable.all GHC.Unicode.isAlphaNum <&&> (negb
                     GHC.Base.∘ (Data.Foldable.all GHC.Unicode.isDigit))) GHC.Base.∘ split
   (GHC.Char.hs_char__ "-").
+*)
 
 Definition splitAtList {b} {a} : list b -> list a -> (list a * list a)%type :=
   fix splitAtList arg_272__ arg_273__
@@ -1093,16 +849,17 @@ Definition splitEithers {a} {b} : list (Data.Either.Either a b) -> (list a *
                             end
            end.
 
+(* Modified to avoid tail *)
 Definition splitLongestPrefix
     : GHC.Base.String -> (GHC.Char.Char -> bool) -> (GHC.Base.String *
       GHC.Base.String)%type :=
   fun str pred =>
     match GHC.List.break pred (GHC.List.reverse str) with
-      | pair r_suf r_pre => let j_40__ :=
-                              pair (GHC.List.reverse (GHC.List.tail r_pre)) (GHC.List.reverse r_suf) in
-                            if Data.Foldable.null r_pre : bool
-                            then pair str nil
-                            else j_40__
+      | pair r_suf r_pre =>
+        match r_pre with
+        | nil => pair str nil
+        | cons x xs => pair (GHC.List.reverse xs) (GHC.List.reverse r_suf)
+        end
     end.
 
 Definition stretchZipWith {a} {b} {c}
@@ -1147,6 +904,8 @@ Definition third3 {c} {d} {a} {b} : (c -> d) -> (a * b * c)%type -> (a * b *
       | f , pair (pair a b) c => pair (pair a b) (f c)
     end.
 
+(* Termination *)
+(*
 Definition transitiveClosure {a} : (a -> list a) -> (a -> a -> bool) -> list
                                    a -> list a :=
   fun succ eq xs =>
@@ -1169,7 +928,7 @@ Definition transitiveClosure {a} : (a -> list a) -> (a -> a -> bool) -> list
                                        then go done xs
                                        else j_314__
                end in
-    go nil xs.
+    go nil xs. *)
 
 Definition uncurry3 {a} {b} {c} {d} : (a -> b -> c -> d) -> (a * b *
                                       c)%type -> d :=
@@ -1193,7 +952,7 @@ Definition zipLazy {a} {b} : list a -> list b -> list (a * b)%type :=
         := match arg_439__ , arg_440__ with
              | nil , _ => nil
              | cons x xs , cons y ys => cons (pair x y) (zipLazy xs ys)
-             | _ , _ => patternFailure
+             | _ , _ => Panic.panic (GHC.Base.hs_string__ "zipLazy")
            end.
 
 Definition zipWith3Equal {a} {b} {c} {d}
@@ -1208,7 +967,7 @@ Definition zipWith3Lazy {a} {b} {c} {d} : (a -> b -> c -> d) -> list a -> list
              | _ , nil , _ , _ => nil
              | f , cons a as_ , cons b bs , cons c cs => cons (f a b c) (zipWith3Lazy f as_
                                                               bs cs)
-             | _ , _ , _ , _ => patternFailure
+             | _ , _ , _ , _ => Panic.panic (GHC.Base.hs_string__ "zipWith3Lazy")
            end.
 
 Definition zipWith4Equal {a} {b} {c} {d} {e}
@@ -1238,7 +997,7 @@ Definition zipWithLazy {a} {b} {c} : (a -> b -> c) -> list a -> list b -> list
         := match arg_434__ , arg_435__ , arg_436__ with
              | _ , nil , _ => nil
              | f , cons a as_ , cons b bs => cons (f a b) (zipWithLazy f as_ bs)
-             | _ , _ , _ => patternFailure
+             | _ , _ , _ => Panic.panic (GHC.Base.hs_string__ "zipWithLazy")
            end.
 
 Module Notations.

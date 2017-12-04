@@ -53,6 +53,29 @@ Proof.
   * apply Included_Empty.
 Qed.
 
+Lemma goodLIs_mono : forall is lb lb', (lb' <= lb)%Z -> goodLIs is lb -> goodLIs is lb'.
+Proof.
+  intros.
+  induction is.
+  * auto.
+  * destruct a. simpl in *. intuition.
+Qed.
+
+Lemma good_sem_lb:
+  forall is lb x,
+  goodLIs is lb -> In Z (semLIs is) x -> (lb <= x)%Z.
+Proof.
+  intros.
+  unfold In in *.
+  induction is.
+  * simpl in *. exfalso. intuition.
+  * destruct a as [f t]; simpl in *; intuition.
+    destruct H0; unfold In, range in *; intuition.
+    apply IHis.
+    refine (goodLIs_mono _ _ _ _ H3). intuition.
+    auto.
+Qed.
+
 Lemma union_reorder:
   forall A s1 s2 s3 s4,
   Union A (Union A s1 s2) (Union A s3 s4) = 
@@ -64,6 +87,104 @@ Proof.
   repeat rewrite <- Union_associative.
   f_equal.
   apply Union_commutative.
+Qed.
+
+Lemma Disjoint_Intersection:
+  forall A s1 s2, Disjoint A s1 s2 -> Intersection A s1 s2 = Empty_set A.
+Proof.
+  intros. apply Extensionality_Ensembles. split.
+  * destruct H.
+    intros x H1. unfold In in *. exfalso. intuition. apply (H _ H1).
+  * intuition.
+Qed.
+
+Lemma Disjoint_Empty_set_r:
+  forall A s1, Intersection A s1 (Empty_set A) = Empty_set A.
+Proof.
+  intros. apply Extensionality_Ensembles. split.
+  * intros x H1. destruct H1. unfold In in *. assumption.
+  * intuition.
+Qed.
+
+Lemma Empty_set_zero_l:
+  forall (U : Type) (X : Ensemble U), Union U X (Empty_set U) = X.
+Proof.
+  intros.
+  rewrite Union_commutative.
+  apply Empty_set_zero.
+Qed.
+
+Lemma Distributivity_l
+     : forall (U : Type) (A B C : Ensemble U),
+       Intersection U (Union U A B) C =
+       Union U (Intersection U A C) (Intersection U B C).
+Proof.
+   intros.
+   rewrite Intersection_commutative.
+   rewrite Distributivity.
+   f_equal; apply Intersection_commutative.
+Qed.
+
+Lemma union_intersect_reorder:
+  forall A s1 s2 s3 s4,
+  Disjoint A s1 s4 ->
+  Disjoint A s3 s2 ->
+  Union A (Intersection A s1 s2) (Intersection A s3 s4) = 
+  Intersection A (Union A s1 s3) (Union A s2 s4).
+Proof.
+  intros.
+  repeat (rewrite Distributivity || rewrite Distributivity_l).
+  rewrite (Disjoint_Intersection _ _ _ H).
+  rewrite (Disjoint_Intersection _ _ _ H0).
+  rewrite Empty_set_zero.
+  rewrite Union_associative.
+  rewrite Empty_set_zero.
+  reflexivity.
+Qed.
+
+Lemma Intersection_range_range:
+  forall f1 t1 f2 t2,
+  Intersection Z (range f1 t1) (range f2 t2)
+  = range (Z.max f1 f2) (Z.min t1 t2).
+Proof.
+  intros. apply Extensionality_Ensembles. split.
+  * intros x H1. destruct H1. unfold In, range in *.
+    rewrite Z.max_lub_iff.
+    rewrite Z.min_glb_lt_iff.
+    intuition.
+  * intros x H. constructor;
+    unfold In, range in *;
+    rewrite Z.max_lub_iff in *;
+    rewrite Z.min_glb_lt_iff in *;
+    intuition.
+Qed.
+
+Lemma Intersection_range_range_empty:
+  forall f1 t1 f2 t2,
+  (t1 <= f2)%Z \/ (t2 <= f1)%Z ->
+  Intersection Z (range f1 t1) (range f2 t2) = Empty_set Z.
+Proof.
+  intros. apply Extensionality_Ensembles. split.
+  * intros x H1. destruct H1. unfold In, range in *.
+    exfalso. intuition.
+  * intuition.
+Qed.
+
+Lemma Intersection_range_semLIs_empty:
+  forall f t is lb,
+  goodLIs is lb -> (t <= lb)%Z ->
+  Intersection Z (range f t) (semLIs is) = Empty_set Z.
+Proof.
+  induction is; intros.
+  * apply Disjoint_Empty_set_r.
+  * destruct a as [f' t']. simpl in *.
+    rewrite Distributivity.
+    rewrite Intersection_range_range_empty.
+    rewrite Empty_set_zero.
+    apply IHis with (lb := t').
+    intuition.
+    intuition.
+    intuition.
 Qed.
 
 (** proofs *)
@@ -160,14 +281,6 @@ Proof.
 Qed.
 
 (** [union] *)
-
-Lemma goodLIs_mono : forall is lb lb', (lb' <= lb)%Z -> goodLIs is lb -> goodLIs is lb'.
-Proof.
-  intros.
-  induction is.
-  * auto.
-  * destruct a. simpl in *. intuition.
-Qed.
 
 Lemma union_good : forall (is1 is2 : Intervals),
     good is1 -> good is2 -> good (union is1 is2).
@@ -369,6 +482,128 @@ Proof.
     - simpl in *. repeat rewrite Z.max_le_iff. repeat rewrite Z.max_lub_lt_iff.
       intuition.
       apply IH; clear dependent u.
+      + destruct is2 as [|[f2' t2'] is].
+        -- unfold size2. simpl in *. repeat rewrite Z.ltb_irrefl.
+           destruct (Z.ltb_spec t1 t2); simpl; omega.
+        -- unfold size2. simpl in *. repeat rewrite Z.ltb_irrefl.
+           destruct (Z.ltb_spec t1 t2'), (Z.ltb_spec t1 t2); simpl; omega.
+      + simpl. intuition.
+      + simpl. intuition.
+Qed.
+
+Lemma intersection_spec : forall (is1 is2 : Intervals),
+    good is1 -> good is2 -> sem (intersect is1 is2) = Intersection Z (sem is1) (sem is2).
+Proof.
+  intros.
+  destruct is1 as [is1], is2 as [is2].
+  destruct H as [lb1 H1] , H0 as [lb2 H2].
+  unfold intersect.
+  match goal with [ |- context [unsafeFix ?f _ _]  ] => set (u := f) end.
+  apply (goodLIs_mono _ _ _ (Z.le_min_l lb1 lb2)) in H1.
+  apply (goodLIs_mono _ _ _ (Z.le_min_r lb1 lb2)) in H2.
+  simpl.
+  revert H1 H2.
+  generalize (Z.min lb1 lb2).
+  revert is1 is2.
+  refine (my_ind size2 _ _).
+  intros is1 is2 IH lb H1 H2.
+  rewrite unsafeFix_eq.
+  destruct is1 as [|i1 is1], is2 as [|i2 is2].
+  * simpl. clear dependent u. 
+    apply Extensionality_Ensembles. split.
+    - intuition.
+    - intros x H. destruct H. intuition.
+  * destruct i2. simpl in *. intuition.
+  * destruct i1. simpl in *. intuition.
+  * simpl.
+    unfold GHC.Base.op_zl__, Ord_Integer___, op_zl____ in *.
+    unfold GHC.Base.op_zgze__, Ord_Integer___, op_zgze____ in *.
+    unfold GHC.Base.op_zeze__, Eq_Integer___, op_zeze____ in *.
+    destruct i1 as [f1 t1], i2 as [f2 t2]; simpl in *.
+    destruct (Z.ltb_spec t1 t2);
+      [|destruct (Z.leb_spec t2 f1)];
+      [| |destruct (Z.eqb_spec t1 t2)].
+    - rewrite IH with (z := lb). clear dependent u.
+      + simpl.
+        apply Intersection_commutative.
+      + unfold size2. simpl in *. repeat rewrite Z.ltb_irrefl.
+        destruct (Z.ltb_spec t2 t1), (Z.ltb_spec t1 t2); simpl; omega.
+      + assumption.
+      + assumption.
+    - simpl in *. repeat rewrite Z.min_le_iff.
+      intuition.
+      rewrite IH with (z := lb). clear dependent u.
+      + simpl.
+        rewrite Distributivity.
+        repeat rewrite Distributivity_l.
+        rewrite Intersection_range_range_empty.
+        rewrite Empty_set_zero.
+        rewrite (Intersection_commutative _ (semLIs is1) (range f2 t2)).
+        rewrite (Intersection_range_semLIs_empty _ _ _ _ H6).
+        rewrite Empty_set_zero.
+        reflexivity.
+        intuition.
+        intuition.
+      + destruct is2 as [|[f2' t2'] is].
+        -- unfold size2. simpl in *. repeat rewrite Z.ltb_irrefl.
+           destruct (Z.ltb_spec t1 t2); simpl; omega.
+        -- unfold size2. simpl in *. repeat rewrite Z.ltb_irrefl.
+           destruct (Z.ltb_spec t1 t2'), (Z.ltb_spec t1 t2); simpl; omega.
+      + simpl. intuition.
+      + simpl. refine (goodLIs_mono _ _ _ _ H7). intuition.
+    - simpl in *. repeat rewrite Z.max_le_iff. repeat rewrite Z.max_lub_lt_iff.
+      intuition.
+      rewrite IH with (z := t2). clear dependent u.
+      + simpl. subst.
+        rewrite Distributivity.
+        repeat rewrite Distributivity_l.
+        rewrite Intersection_range_range.
+        rewrite (Intersection_commutative _ (semLIs is1) (range f2 t2)).
+        rewrite (Intersection_range_semLIs_empty _ _ _ _ H6).
+        rewrite Empty_set_zero_l.
+        rewrite (Intersection_range_semLIs_empty _ _ _ _ H7).
+        rewrite Empty_set_zero.
+        f_equal. f_equal.
+        rewrite Z.min_r.
+        intuition. intuition. intuition. intuition.
+      + unfold size2. simpl in *.
+        destruct is1 as [|[f1' t1'] is1];
+        destruct is2 as [|[f2' t2'] is2].
+        -- unfold size2. simpl in *. repeat rewrite Z.ltb_irrefl.
+           destruct (Z.ltb_spec t1 t2); simpl; omega.
+        -- unfold size2. simpl in *. repeat rewrite Z.ltb_irrefl.
+           destruct (Z.ltb_spec t1 t2); simpl; omega.
+        -- unfold size2. simpl in *. repeat rewrite Z.ltb_irrefl.
+           destruct (Z.ltb_spec t1 t2); simpl; omega.
+        -- unfold size2. simpl in *. repeat rewrite Z.ltb_irrefl.
+           destruct (Z.ltb_spec t1 t2), (Z.ltb_spec t1' t2'); simpl; omega.
+      + simpl. refine (goodLIs_mono _ _ _ _ H6). intuition.
+      + simpl. refine (goodLIs_mono _ _ _ _ H7). intuition.
+    - simpl in *. repeat rewrite Z.max_le_iff. repeat rewrite Z.max_lub_lt_iff.
+      intuition.
+      rewrite IH with (z := t2). clear dependent u.
+      + simpl in *.
+        rewrite Distributivity.
+        repeat rewrite Distributivity_l.
+        rewrite Intersection_range_range.
+        rewrite (Intersection_commutative _ (semLIs is1) (range f2 t2)).
+        rewrite (Intersection_range_semLIs_empty _ _ is1 _ H6) by intuition.
+        rewrite Empty_set_zero_l.
+        do 2 f_equal.
+        rewrite Z.min_r. reflexivity.
+        intuition.
+        (* lets do it by hand *)
+        apply Extensionality_Ensembles. split.
+        ++ intros x H8.
+           destruct H8. constructor.
+           -- apply (good_sem_lb _ _ _ H7) in H8.
+              unfold In, range in *. intuition.
+           -- assumption.
+        ++ intros x H8.
+           destruct H8. constructor.
+           -- apply (good_sem_lb _ _ _ H7) in H8.
+              unfold In, range in *. intuition.
+           -- assumption.
       + destruct is2 as [|[f2' t2'] is].
         -- unfold size2. simpl in *. repeat rewrite Z.ltb_irrefl.
            destruct (Z.ltb_spec t1 t2); simpl; omega.

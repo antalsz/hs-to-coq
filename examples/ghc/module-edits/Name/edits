@@ -1,10 +1,5 @@
-skip module TyCoRep
-
 # needs Eq_ and Ord for OccName
 skip Name.stableNameCmp
-
-# Ignore type information
-rename type TyCoRep.TyThing = unit
 
 # cannot process error message when this fails
 redefine Definition Name.nameModule : Name -> Module.Module :=

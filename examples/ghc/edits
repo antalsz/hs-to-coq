@@ -12,30 +12,34 @@ rename type MkId.DataConBoxer = unit
 # bruttaly skipping all type info
 ### get rid of type information in the AST
 rename type TcType.TcTyVarDetails = unit
-rename type IdInfo.IdDetails = unit
-rename type IdInfo.IdInfo = unit
-rename type TyCon.TyCon      = unit
-rename type TyCoRep.Coercion  = unit
-rename type TyCoRep.Type_     = unit
-rename type TyCoRep.ThetaType = unit
-rename type TyCoRep.TyBinder  = unit
-rename type TyCoRep.TyThing   = unit
-rename type TyCoRep.Kind = unit
-
-
+rename type IdInfo.IdDetails      = unit
+rename type IdInfo.IdInfo         = unit
+rename type TyCon.TyCon           = unit
+rename type TyCoRep.Coercion      = unit
+rename type TyCoRep.Type_         = unit
+rename type TyCoRep.ThetaType     = unit
+rename type TyCoRep.TyBinder      = unit
+rename type TyCoRep.TyThing       = unit
+rename type TyCoRep.Kind          = unit
+rename type TyCoRep.PredType      = unit
 
 # TODO: better treatment of primitive values
 skip module GHC.Int
 skip module GHC.Word
 skip module GHC.Integer.Type
-rename type GHC.Integer.Type.Integer = GHC.Num.Integer
 
 rename type GHC.IO.FilePath = GHC.Base.String
+rename type Data.ByteString.Internal.ByteString = GHC.Base.String
 
-rename value Outputable.pprPanic = Panic.panicStr
-rename value Outputable.ppr = Panic.noString
-rename value Outputable.<+>  = GHC.Base.mappend
-rename value Outputable.text = id
+## check base edits
+rename type GHC.Integer.Type.Integer = GHC.Num.Integer
+rename value GHC.Base.ord = GHC.Char.ord
+
+# don't try to format the error messages
+rename value Outputable.pprPanic     = Panic.panicStr
+rename value Outputable.ppr          = Panic.noString
+rename value Outputable.<+>          = GHC.Base.mappend
+rename value Outputable.text         = id
 rename value Outputable.warnPprTrace = Panic.warnPprTrace
 
 
@@ -70,6 +74,8 @@ rename value CoreSyn.IsOrphan = CoreSyn.Mk_IsOrphan
 rename value CoreSyn.RuleEnv  = CoreSyn.Mk_RuleEnv
 rename value DataCon.HsSrcBang = DataCon.Mk_HsSrcBang
 rename value DataCon.EqSpec    = DataCon.Mk_EqSpec
+rename value Class.Class  = Class.Mk_Class
+
 
 
 # These constructor are named after their argument, not their return type,

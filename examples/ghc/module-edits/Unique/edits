@@ -6,6 +6,4 @@ skip Unique.showUnique
 # outputtable
 skip Unique.pprUnique
 
-rename value GHC.Base.ord = GHC.Char.ord
-
 order Unique.Eq___Unique Unique.hasKey Ord__Unique

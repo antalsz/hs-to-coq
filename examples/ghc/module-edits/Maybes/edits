@@ -1,0 +1,26 @@
+## needs MonadPlus option
+skip Maybes.firstJusts
+skip Maybes.firstJust
+
+## needs Control.Monad.Trans.MaybeT
+skip Maybes.liftMaybeT
+skip Maybes.tryMaybeT
+
+## Defined in the midamble to oush the partiality of expectJust to the caller
+## (should we do this??)
+skip Maybes.expectJust
+
+
+## fmap and <*> defined in terms of liftM and ap
+redefine Local Definition Maybes.Functor__MaybeErr_fmap {inst_err} :
+  forall {a} {b},
+    (a -> b) -> (((MaybeErr inst_err) a) -> ((MaybeErr inst_err) b)) :=
+  fun {a} {b} => fun f x => match x with | Succeeded x => Succeeded (f x) | Failed e => Failed e end.
+
+redefine Local Definition Maybes.Applicative__MaybeErr_op_zlztzg__ {inst_err} :
+			forall {a} {b}, ((MaybeErr inst_err) (a -> b)) ->
+                    (((MaybeErr inst_err) a) -> ((MaybeErr inst_err) b)) :=
+  fun {a} {b} =>  fun mf mx => match mf with
+                       | Succeeded f => match mx with
+							  | Succeeded x => Succeeded (f x) | Failed e => Failed e end
+                       | Failed e => Failed e end.

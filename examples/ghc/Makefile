@@ -18,14 +18,14 @@ OUT=lib
 
 # Handwritten modules (usually by modification of generated version)
 HANDMOD = \
-  Maybes \
   FastString \
-  Util \
   Panic \
 
 # Generated modules
 # generated directly from ghc/compiler/*/
 MODULES = \
+  Maybes \
+  Util \
   MonadUtils \
   Pair \
   Bag \
@@ -59,10 +59,6 @@ MODULES = \
   CoreUtils \
   UnVarGraph \
   CallArity \
-
-#  CostCentre  --- stub out Tickish so we don't need this??? \
-  MkId \
-  CoreSyn \
 
 
 # also generated from drop-in/

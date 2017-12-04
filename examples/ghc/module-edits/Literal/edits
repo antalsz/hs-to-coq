@@ -1,10 +1,4 @@
-## move to toplevel edit
-rename type Data.ByteString.Internal.ByteString = GHC.Base.String
-## should be in base edits
-rename value GHC.Base.ord = GHC.Char.ord
-
-## Ignore type component of literals (to avoid mutrec)
-rename type TyCoRep.Type_   = unit
+# just to access type info
 skip Literal.literalType
 skip Literal.absentLiteralOf
 

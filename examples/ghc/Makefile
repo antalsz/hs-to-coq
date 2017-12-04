@@ -20,12 +20,12 @@ OUT=lib
 HANDMOD = \
   FastString \
   Panic \
+  Util \
 
 # Generated modules
 # generated directly from ghc/compiler/*/
 MODULES = \
   Maybes \
-  Util \
   MonadUtils \
   Pair \
   Bag \

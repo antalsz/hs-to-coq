@@ -52,9 +52,11 @@ intersect (Intervals is1) (Intervals is2) = Intervals $ go is1 is2
         | to i1 < to i2 = go (i2:is2) (i1:is1)
         -- disjoint
         | from i1 >= to i2 = go (i1:is1) is2
+        -- subset
+        | to i1 == to i2 = I f' (to i2) : go is1 is2
         -- overlapping
         | otherwise = I f' (to i2) : go (i1 { from = to i2} : is1) is2
-            where f' = max (from i1) (from i2)
+      where f' = max (from i1) (from i2)
 
 
 union :: Intervals -> Intervals -> Intervals
@@ -69,7 +71,7 @@ union (Intervals is1) (Intervals is2) = Intervals $ go is1 is2
         | from i1 > to i2 = i2 : go (i1:is1) is2
         -- overlapping
         | otherwise  = go (i1 { from = f'} : is1) is2
-            where f' = min (from i1) (from i2)
+      where f' = min (from i1) (from i2)
 
 subtract :: Intervals -> Intervals -> Intervals
 subtract (Intervals is1) (Intervals is2) = Intervals $ go is1 is2

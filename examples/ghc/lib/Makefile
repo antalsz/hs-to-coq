@@ -110,10 +110,10 @@ endif
 #                    #
 ######################
 
-VFILES:=Maybes.v\
-  FastString.v\
-  Util.v\
+VFILES:=FastString.v\
   Panic.v\
+  Util.v\
+  Maybes.v\
   MonadUtils.v\
   Pair.v\
   Bag.v\

@@ -14,3 +14,10 @@ Axiom uniqAway' : InScopeSet -> Var.Var -> Var.Var.
         try (GHC.Num.fromInteger 1)
     end.
 *)
+
+Require Panic.
+
+Instance Default_InScopeSet : Panic.Default InScopeSet :=
+  Panic.Build_Default _ (InScope Panic.default Panic.default).
+Instance Default_RnEnv2 : Panic.Default RnEnv2 :=
+  Panic.Build_Default _ (RV2 Panic.default Panic.default Panic.default).

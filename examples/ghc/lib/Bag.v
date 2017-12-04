@@ -13,6 +13,7 @@ Require Coq.Program.Wf.
 (* Converted imports: *)
 
 Require Control.Monad.
+Require Data.Either.
 Require Data.Foldable.
 Require Data.OldList.
 Require Data.Traversable.
@@ -20,6 +21,7 @@ Require GHC.Base.
 Require GHC.List.
 Require GHC.Num.
 Require MonadUtils.
+Require Util.
 Import GHC.Base.Notations.
 Import GHC.Num.Notations.
 
@@ -68,12 +70,12 @@ Definition anyBagM {m} {a} `{GHC.Base.Monad m} : (a -> m bool) -> Bag a -> m
            end.
 
 Definition elemBag {a} `{GHC.Base.Eq_ a} : a -> Bag a -> bool :=
-  fix elemBag arg_162__ arg_163__
-        := match arg_162__ , arg_163__ with
+  fix elemBag arg_179__ arg_180__
+        := match arg_179__ , arg_180__ with
              | _ , EmptyBag => false
              | x , UnitBag y => x GHC.Base.== y
              | x , TwoBags b1 b2 => orb (elemBag x b1) (elemBag x b2)
-             | x , ListBag ys => Data.Foldable.any (fun arg_166__ => x GHC.Base.== arg_166__)
+             | x , ListBag ys => Data.Foldable.any (fun arg_183__ => x GHC.Base.== arg_183__)
                                  ys
            end.
 
@@ -133,11 +135,20 @@ Definition foldrBagM {m} {a} {b} `{(GHC.Base.Monad m)} : (a -> b -> m
            end.
 
 Definition isEmptyBag {a} : Bag a -> bool :=
-  fun arg_105__ => match arg_105__ with | EmptyBag => true | _ => false end.
+  fun arg_108__ => match arg_108__ with | EmptyBag => true | _ => false end.
+
+Definition isSingletonBag {a} : Bag a -> bool :=
+  fun arg_105__ =>
+    match arg_105__ with
+      | EmptyBag => false
+      | UnitBag _ => true
+      | TwoBags _ _ => false
+      | ListBag xs => Util.isSingleton xs
+    end.
 
 Definition lengthBag {a} : Bag a -> GHC.Num.Int :=
-  fix lengthBag arg_169__
-        := match arg_169__ with
+  fix lengthBag arg_186__
+        := match arg_186__ with
              | EmptyBag => GHC.Num.fromInteger 0
              | UnitBag _ => GHC.Num.fromInteger 1
              | TwoBags b1 b2 => lengthBag b1 GHC.Num.+ lengthBag b2
@@ -233,8 +244,8 @@ Definition mapBagM_ {m} {a} {b} `{GHC.Base.Monad m} : (a -> m b) -> Bag a -> m
            end.
 
 Definition unionBags {a} : Bag a -> Bag a -> Bag a :=
-  fun arg_107__ arg_108__ =>
-    match arg_107__ , arg_108__ with
+  fun arg_110__ arg_111__ =>
+    match arg_110__ , arg_111__ with
       | EmptyBag , b => b
       | b , EmptyBag => b
       | b1 , b2 => TwoBags b1 b2
@@ -244,8 +255,8 @@ Definition unionManyBags {a} : list (Bag a) -> Bag a :=
   fun xs => Data.Foldable.foldr unionBags EmptyBag xs.
 
 Definition partitionBag {a} : (a -> bool) -> Bag a -> (Bag a * Bag a)%type :=
-  fix partitionBag arg_126__ arg_127__
-        := match arg_126__ , arg_127__ with
+  fix partitionBag arg_129__ arg_130__
+        := match arg_129__ , arg_130__ with
              | _ , EmptyBag => pair EmptyBag EmptyBag
              | pred , (UnitBag val as b) => if pred val : bool
                                             then pair b EmptyBag
@@ -261,40 +272,61 @@ Definition partitionBag {a} : (a -> bool) -> Bag a -> (Bag a * Bag a)%type :=
                                     end
            end.
 
+Definition partitionBagWith {a} {b} {c} : (a -> Data.Either.Either b c) -> Bag
+                                          a -> (Bag b * Bag c)%type :=
+  fix partitionBagWith arg_139__ arg_140__
+        := match arg_139__ , arg_140__ with
+             | _ , EmptyBag => pair EmptyBag EmptyBag
+             | pred , UnitBag val => let scrut_142__ := pred val in
+                                     match scrut_142__ with
+                                       | Data.Either.Left a => pair (UnitBag a) EmptyBag
+                                       | Data.Either.Right b => pair EmptyBag (UnitBag b)
+                                     end
+             | pred , TwoBags b1 b2 => match partitionBagWith pred b2 with
+                                         | pair sat2 fail2 => match partitionBagWith pred b1 with
+                                                                | pair sat1 fail1 => pair (unionBags sat1 sat2)
+                                                                                          (unionBags fail1 fail2)
+                                                              end
+                                       end
+             | pred , ListBag vs => match Util.partitionWith pred vs with
+                                      | pair sats fails => pair (listToBag sats) (listToBag fails)
+                                    end
+           end.
+
 Definition flatMapBagPairM {m} {a} {b} {c} `{GHC.Base.Monad m} : (a -> m (Bag b
                                                                          * Bag c)%type) -> Bag a -> m (Bag b * Bag
                                                                                                       c)%type :=
-  fix flatMapBagPairM arg_144__ arg_145__
-        := match arg_144__ , arg_145__ with
+  fix flatMapBagPairM arg_161__ arg_162__
+        := match arg_161__ , arg_162__ with
              | _ , EmptyBag => GHC.Base.return_ (pair EmptyBag EmptyBag)
              | f , UnitBag x => f x
-             | f , TwoBags b1 b2 => let cont_148__ arg_149__ :=
-                                      match arg_149__ with
-                                        | pair r1 s1 => let cont_150__ arg_151__ :=
-                                                          match arg_151__ with
+             | f , TwoBags b1 b2 => let cont_165__ arg_166__ :=
+                                      match arg_166__ with
+                                        | pair r1 s1 => let cont_167__ arg_168__ :=
+                                                          match arg_168__ with
                                                             | pair r2 s2 => GHC.Base.return_ (pair (unionBags r1 r2)
                                                                                                    (unionBags s1 s2))
                                                           end in
-                                                        flatMapBagPairM f b2 GHC.Base.>>= cont_150__
+                                                        flatMapBagPairM f b2 GHC.Base.>>= cont_167__
                                       end in
-                                    flatMapBagPairM f b1 GHC.Base.>>= cont_148__
+                                    flatMapBagPairM f b1 GHC.Base.>>= cont_165__
              | f , ListBag xs => let k :=
-                                   fun arg_153__ arg_154__ =>
-                                     match arg_153__ , arg_154__ with
-                                       | x , pair r2 s2 => let cont_155__ arg_156__ :=
-                                                             match arg_156__ with
+                                   fun arg_170__ arg_171__ =>
+                                     match arg_170__ , arg_171__ with
+                                       | x , pair r2 s2 => let cont_172__ arg_173__ :=
+                                                             match arg_173__ with
                                                                | pair r1 s1 => GHC.Base.return_ (pair (unionBags r1 r2)
                                                                                                       (unionBags s1 s2))
                                                              end in
-                                                           f x GHC.Base.>>= cont_155__
+                                                           f x GHC.Base.>>= cont_172__
                                      end in
                                  MonadUtils.foldrM k (pair EmptyBag EmptyBag) xs
            end.
 
 Definition flatMapBagM {m} {a} {b} `{GHC.Base.Monad m} : (a -> m (Bag b)) -> Bag
                                                          a -> m (Bag b) :=
-  fix flatMapBagM arg_136__ arg_137__
-        := match arg_136__ , arg_137__ with
+  fix flatMapBagM arg_153__ arg_154__
+        := match arg_153__ , arg_154__ with
              | _ , EmptyBag => GHC.Base.return_ EmptyBag
              | f , UnitBag x => f x
              | f , TwoBags b1 b2 => flatMapBagM f b1 GHC.Base.>>= (fun r1 =>
@@ -306,8 +338,8 @@ Definition flatMapBagM {m} {a} {b} `{GHC.Base.Monad m} : (a -> m (Bag b)) -> Bag
 
 Definition filterBagM {m} {a} `{GHC.Base.Monad m} : (a -> m bool) -> Bag a -> m
                                                     (Bag a) :=
-  fix filterBagM arg_119__ arg_120__
-        := match arg_119__ , arg_120__ with
+  fix filterBagM arg_122__ arg_123__
+        := match arg_122__ , arg_123__ with
              | _ , EmptyBag => GHC.Base.return_ EmptyBag
              | pred , (UnitBag val as b) => pred val GHC.Base.>>= (fun flag =>
                                               if flag : bool
@@ -321,8 +353,8 @@ Definition filterBagM {m} {a} `{GHC.Base.Monad m} : (a -> m bool) -> Bag a -> m
            end.
 
 Definition filterBag {a} : (a -> bool) -> Bag a -> Bag a :=
-  fix filterBag arg_111__ arg_112__
-        := match arg_111__ , arg_112__ with
+  fix filterBag arg_114__ arg_115__
+        := match arg_114__ , arg_115__ with
              | _ , EmptyBag => EmptyBag
              | pred , (UnitBag val as b) => if pred val : bool
                                             then b
@@ -347,8 +379,8 @@ Definition consBag {a} : a -> Bag a -> Bag a :=
 Definition catBagMaybes {a} : Bag (option a) -> Bag a :=
   fun bs =>
     let add :=
-      fun arg_179__ arg_180__ =>
-        match arg_179__ , arg_180__ with
+      fun arg_196__ arg_197__ =>
+        match arg_196__ , arg_197__ with
           | None , rs => rs
           | Some x , rs => consBag x rs
         end in
@@ -356,10 +388,11 @@ Definition catBagMaybes {a} : Bag (option a) -> Bag a :=
 
 (* Unbound variables:
      Some bool cons false list nil op_zt__ option orb pair true tt unit
-     Control.Monad.filterM Data.Foldable.any Data.Foldable.foldl Data.Foldable.foldr
-     Data.Foldable.length Data.Foldable.mapM_ Data.OldList.partition
-     Data.Traversable.mapM GHC.Base.Eq_ GHC.Base.Monad GHC.Base.map
-     GHC.Base.op_z2218U__ GHC.Base.op_zeze__ GHC.Base.op_zgzg__ GHC.Base.op_zgzgze__
-     GHC.Base.return_ GHC.List.filter GHC.List.unzip GHC.Num.Int GHC.Num.op_zp__
-     MonadUtils.anyM MonadUtils.foldlM MonadUtils.foldrM MonadUtils.mapAccumLM
+     Control.Monad.filterM Data.Either.Either Data.Either.Left Data.Either.Right
+     Data.Foldable.any Data.Foldable.foldl Data.Foldable.foldr Data.Foldable.length
+     Data.Foldable.mapM_ Data.OldList.partition Data.Traversable.mapM GHC.Base.Eq_
+     GHC.Base.Monad GHC.Base.map GHC.Base.op_z2218U__ GHC.Base.op_zeze__
+     GHC.Base.op_zgzg__ GHC.Base.op_zgzgze__ GHC.Base.return_ GHC.List.filter
+     GHC.List.unzip GHC.Num.Int GHC.Num.op_zp__ MonadUtils.anyM MonadUtils.foldlM
+     MonadUtils.foldrM MonadUtils.mapAccumLM Util.isSingleton Util.partitionWith
 *)

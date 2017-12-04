@@ -20,6 +20,7 @@ Require GHC.Num.
 Require Module.
 Require UniqFM.
 Require UniqSet.
+Require Util.
 Import GHC.Base.Notations.
 
 (* Converted type declarations: *)
@@ -70,9 +71,46 @@ Require Import Module.
 Instance Uniquable_OccName : Unique.Uniquable OccName := {}.
 Admitted.
 
-(* Converted value declarations: *)
+Definition compare_Namespace : NameSpace -> NameSpace -> comparison :=
+  fun x y => match x , y with
+          | VarName   , VarName   => Eq
+          | VarName   , _         => Lt
+          | _         , VarName   => Gt
+          | DataName  , DataName  => Eq
+          | _         , DataName  => Lt
+          | DataName  , _         => Gt
+          | TvName    , TvName    => Eq
+          | _         , TvName    => Lt
+          | TvName    , _         => Gt
+          | TcClsName , TcClsName => Eq
+          end.
 
-(* Skipping instance Ord__OccName *)
+Local Definition NameSpace_op_zg__ : NameSpace -> NameSpace -> bool :=
+  fun x y => match compare_Namespace x y with
+            | Gt => true
+            | _  => false
+          end.
+
+Local Definition NameSpace_op_zgze__ : NameSpace -> NameSpace -> bool :=
+  fun x y => match compare_Namespace x y with
+            | Gt => true
+            | Eq => true
+            | _  => false
+          end.
+
+Local Definition NameSpace_op_zl__ : NameSpace -> NameSpace -> bool :=
+  fun x y => match compare_Namespace x y with
+            | Lt => true
+            | _  => false
+          end.
+Local Definition NameSpace_op_zlze__ : NameSpace -> NameSpace -> bool :=
+  fun x y => match compare_Namespace x y with
+            | Lt => true
+            | Eq => true
+            | _  => false
+          end.
+
+(* Converted value declarations: *)
 
 (* Translating `instance Data.Data.Data OccName.OccName' failed: OOPS! Cannot
    find information for class Qualified "Data.Data" "Data" unsupported *)
@@ -112,7 +150,27 @@ Program Instance HasOccName__OccName : HasOccName OccName := fun _ k =>
    (OccName.OccEnv a)' failed: OOPS! Cannot find information for class Qualified
    "Data.Data" "Data" unsupported *)
 
-(* Skipping instance Ord__NameSpace *)
+Local Definition Ord__NameSpace_compare
+    : NameSpace -> NameSpace -> comparison :=
+  compare_Namespace.
+
+Local Definition Ord__NameSpace_op_zg__ :=
+  NameSpace_op_zg__.
+
+Local Definition Ord__NameSpace_op_zgze__ :=
+  NameSpace_op_zgze__.
+
+Local Definition Ord__NameSpace_op_zl__ :=
+  NameSpace_op_zl__.
+
+Local Definition Ord__NameSpace_op_zlze__ :=
+  NameSpace_op_zlze__.
+
+Local Definition Ord__NameSpace_min : NameSpace -> NameSpace -> NameSpace :=
+  fun x y => if Ord__NameSpace_op_zlze__ x y : bool then x else y.
+
+Local Definition Ord__NameSpace_max : NameSpace -> NameSpace -> NameSpace :=
+  fun x y => if Ord__NameSpace_op_zlze__ x y : bool then y else x.
 
 Local Definition Eq___NameSpace_op_zeze__ : NameSpace -> NameSpace -> bool :=
   fun arg_182__ arg_183__ =>
@@ -131,6 +189,15 @@ Program Instance Eq___NameSpace : GHC.Base.Eq_ NameSpace := fun _ k =>
     k {|GHC.Base.op_zeze____ := Eq___NameSpace_op_zeze__ ;
       GHC.Base.op_zsze____ := Eq___NameSpace_op_zsze__ |}.
 
+Program Instance Ord__NameSpace : GHC.Base.Ord NameSpace := fun _ k =>
+    k {|GHC.Base.op_zl____ := Ord__NameSpace_op_zl__ ;
+      GHC.Base.op_zlze____ := Ord__NameSpace_op_zlze__ ;
+      GHC.Base.op_zg____ := Ord__NameSpace_op_zg__ ;
+      GHC.Base.op_zgze____ := Ord__NameSpace_op_zgze__ ;
+      GHC.Base.compare__ := Ord__NameSpace_compare ;
+      GHC.Base.max__ := Ord__NameSpace_max ;
+      GHC.Base.min__ := Ord__NameSpace_min |}.
+
 Local Definition Eq___OccName_op_zeze__ : OccName -> OccName -> bool :=
   fun arg_225__ arg_226__ =>
     match arg_225__ , arg_226__ with
@@ -144,6 +211,40 @@ Local Definition Eq___OccName_op_zsze__ : OccName -> OccName -> bool :=
 Program Instance Eq___OccName : GHC.Base.Eq_ OccName := fun _ k =>
     k {|GHC.Base.op_zeze____ := Eq___OccName_op_zeze__ ;
       GHC.Base.op_zsze____ := Eq___OccName_op_zsze__ |}.
+
+Local Definition Ord__OccName_compare : OccName -> OccName -> comparison :=
+  fun arg_221__ arg_222__ =>
+    match arg_221__ , arg_222__ with
+      | Mk_OccName sp1 s1 , Mk_OccName sp2 s2 => Util.thenCmp (GHC.Base.compare s1 s2)
+                                                              (GHC.Base.compare sp1 sp2)
+    end.
+
+Local Definition Ord__OccName_op_zg__ : OccName -> OccName -> bool :=
+  fun x y => _GHC.Base.==_ (Ord__OccName_compare x y) Gt.
+
+Local Definition Ord__OccName_op_zgze__ : OccName -> OccName -> bool :=
+  fun x y => _GHC.Base./=_ (Ord__OccName_compare x y) Lt.
+
+Local Definition Ord__OccName_op_zl__ : OccName -> OccName -> bool :=
+  fun x y => _GHC.Base.==_ (Ord__OccName_compare x y) Lt.
+
+Local Definition Ord__OccName_op_zlze__ : OccName -> OccName -> bool :=
+  fun x y => _GHC.Base./=_ (Ord__OccName_compare x y) Gt.
+
+Local Definition Ord__OccName_max : OccName -> OccName -> OccName :=
+  fun x y => if Ord__OccName_op_zlze__ x y : bool then y else x.
+
+Local Definition Ord__OccName_min : OccName -> OccName -> OccName :=
+  fun x y => if Ord__OccName_op_zlze__ x y : bool then x else y.
+
+Program Instance Ord__OccName : GHC.Base.Ord OccName := fun _ k =>
+    k {|GHC.Base.op_zl____ := Ord__OccName_op_zl__ ;
+      GHC.Base.op_zlze____ := Ord__OccName_op_zlze__ ;
+      GHC.Base.op_zg____ := Ord__OccName_op_zg__ ;
+      GHC.Base.op_zgze____ := Ord__OccName_op_zgze__ ;
+      GHC.Base.compare__ := Ord__OccName_compare ;
+      GHC.Base.max__ := Ord__OccName_max ;
+      GHC.Base.min__ := Ord__OccName_min |}.
 
 Definition alterOccEnv {elt} : (option elt -> option elt) -> OccEnv
                                elt -> OccName -> OccEnv elt :=
@@ -620,19 +721,21 @@ Definition mkTyConRepOcc : OccName -> OccName :=
     mk_simple_deriv varName prefix occ.
 
 (* Unbound variables:
-     None Some andb bool false list moduleName moduleUnitId negb op_zt__ option orb
-     true Coq.Init.Datatypes.app Data.Foldable.foldl FastString.FastString
-     FastString.mkFastString FastString.unpackFS GHC.Base.Eq_ GHC.Base.String
+     Gt Lt NameSpace_op_zg__ NameSpace_op_zgze__ NameSpace_op_zl__
+     NameSpace_op_zlze__ None Some andb bool compare_Namespace comparison false list
+     moduleName moduleUnitId negb op_zt__ option orb true Coq.Init.Datatypes.app
+     Data.Foldable.foldl FastString.FastString FastString.mkFastString
+     FastString.unpackFS GHC.Base.Eq_ GHC.Base.Ord GHC.Base.String GHC.Base.compare
      GHC.Base.id GHC.Base.op_zd__ GHC.Base.op_zeze__ GHC.Base.op_zgzgze__
-     GHC.Base.return_ GHC.Num.Int Module.Module Module.moduleNameString
-     Module.unitIdString UniqFM.UniqFM UniqFM.addListToUFM UniqFM.addListToUFM_C
-     UniqFM.addToUFM UniqFM.addToUFM_Acc UniqFM.addToUFM_C UniqFM.alterUFM
-     UniqFM.delFromUFM UniqFM.delListFromUFM UniqFM.elemUFM UniqFM.eltsUFM
-     UniqFM.emptyUFM UniqFM.filterUFM UniqFM.foldUFM UniqFM.listToUFM
+     GHC.Base.op_zsze__ GHC.Base.return_ GHC.Num.Int Module.Module
+     Module.moduleNameString Module.unitIdString UniqFM.UniqFM UniqFM.addListToUFM
+     UniqFM.addListToUFM_C UniqFM.addToUFM UniqFM.addToUFM_Acc UniqFM.addToUFM_C
+     UniqFM.alterUFM UniqFM.delFromUFM UniqFM.delListFromUFM UniqFM.elemUFM
+     UniqFM.eltsUFM UniqFM.emptyUFM UniqFM.filterUFM UniqFM.foldUFM UniqFM.listToUFM
      UniqFM.lookupUFM UniqFM.mapUFM UniqFM.plusUFM UniqFM.plusUFM_C UniqFM.unitUFM
      UniqSet.UniqSet UniqSet.addListToUniqSet UniqSet.addOneToUniqSet
      UniqSet.elementOfUniqSet UniqSet.emptyUniqSet UniqSet.filterUniqSet
      UniqSet.foldUniqSet UniqSet.intersectUniqSets UniqSet.isEmptyUniqSet
      UniqSet.minusUniqSet UniqSet.mkUniqSet UniqSet.unionManyUniqSets
-     UniqSet.unionUniqSets UniqSet.uniqSetToList UniqSet.unitUniqSet
+     UniqSet.unionUniqSets UniqSet.uniqSetToList UniqSet.unitUniqSet Util.thenCmp
 *)

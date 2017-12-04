@@ -306,8 +306,8 @@ Definition firstM {m} {a} {c} {b} `{GHC.Base.Monad m} : (a -> m c) -> (a *
       | f , pair x y => GHC.Base.liftM (fun x' => pair x' y) (f x)
     end.
 
-(* partial
-Definition foldl2 {acc} {a} {b} : (acc -> a -> b -> acc) -> acc -> list
+(* partial *)
+Definition foldl2 {acc} {a} {b} `{Panic.Default acc} : (acc -> a -> b -> acc) -> acc -> list
                                   a -> list b -> acc :=
   fix foldl2 arg_300__ arg_301__ arg_302__ arg_303__
         := match arg_300__ , arg_301__ , arg_302__ , arg_303__ with
@@ -315,7 +315,6 @@ Definition foldl2 {acc} {a} {b} : (acc -> a -> b -> acc) -> acc -> list
              | k , z , cons a as_ , cons b bs => foldl2 k (k z a b) as_ bs
              | _ , _ , _ , _ => Panic.panic (GHC.Base.hs_string__ "Util: foldl2")
            end.
-*)
 
 Definition fst3 {a} {d} {b} {c} : (a -> d) -> (a * b * c)%type -> (d * b *
                                   c)%type :=

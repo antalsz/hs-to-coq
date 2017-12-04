@@ -1,12 +1,6 @@
 # Needs Data.Traversable.mapAccumL
 skip Bag.mapAccumBagL
 
-# Needs Util.partitionWith
-skip Bag.partitionBagWith
-
-# Needs Util.isSingleton
-skip Bag.isSingletonBag
-
 skip Bag.Data__Bag
 skip Bag.Outputable__Bag
 

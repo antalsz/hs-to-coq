@@ -12,12 +12,12 @@ Instance default_monoid {a} `{ Monoid a } : Default a :=
 Instance default_applicative {a}{f} `{Default a} `{Applicative f}
   : Default (f a ) := { default := pure default }.
 
-(*
+
 Instance default_arr {a}{b} `{Default b} : Default (a -> b) :=
   { default := fun x => default }.
 Instance default_option {a} : Default (option a) := { default := None }.
 Instance default_list {a} : Default (list a) := { default := nil } .
-*)
+
 
 Parameter noString : forall {a}, a -> String.
 

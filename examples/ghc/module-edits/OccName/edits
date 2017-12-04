@@ -1,4 +1,3 @@
-skip module Deriving
 skip module Lexeme
 
 # needs Lexeme.isLexConSym
@@ -31,7 +30,14 @@ skip OccName.startsWithUnderscore
 skip OccName.isDerivedOccName
 
 # deriving snafu
-skip OccName.Ord__NameSpace
-skip OccName.Ord__OccName
+# skip OccName.Ord__NameSpace
+# skip OccName.Ord__OccName
 
-order OccName.Eq___NameSpace OccName.Eq___OccName_op_zeze__
+redefine Local Definition OccName.Ord__NameSpace_compare : NameSpace -> (NameSpace -> comparison) := compare_Namespace.
+
+redefine Local Definition OccName.Ord__NameSpace_op_zg__ := NameSpace_op_zg__.
+redefine Local Definition OccName.Ord__NameSpace_op_zgze__ := NameSpace_op_zgze__.
+redefine Local Definition OccName.Ord__NameSpace_op_zl__ := NameSpace_op_zl__.
+redefine Local Definition OccName.Ord__NameSpace_op_zlze__ := NameSpace_op_zlze__.
+
+order OccName.Eq___NameSpace OccName.Ord__NameSpace OccName.Eq___OccName_op_zeze__ OccName.Eq___OccName OccName.Ord__OccName_compare OccName.Ord__OccName

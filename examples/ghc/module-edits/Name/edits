@@ -1,5 +1,3 @@
-# needs Eq_ and Ord for OccName
-skip Name.stableNameCmp
 
 # cannot process error message when this fails
 redefine Definition Name.nameModule : Name -> Module.Module :=

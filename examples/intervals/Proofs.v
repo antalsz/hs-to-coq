@@ -10,6 +10,7 @@ Require Import GHC.Base.
 
 Require Import Coq.Sets.Ensembles.
 Require Import Coq.Sets.Powerset_facts.
+Require Import Ensemble_facts.
 Import ListNotations.
 Require Import Omega.
 
@@ -76,72 +77,6 @@ Proof.
     auto.
 Qed.
 
-Lemma union_reorder:
-  forall A s1 s2 s3 s4,
-  Union A (Union A s1 s2) (Union A s3 s4) = 
-  Union A (Union A s1 s3) (Union A s2 s4).
-Proof.
-  intros.
-  repeat rewrite Union_associative.
-  f_equal.
-  repeat rewrite <- Union_associative.
-  f_equal.
-  apply Union_commutative.
-Qed.
-
-Lemma Disjoint_Intersection:
-  forall A s1 s2, Disjoint A s1 s2 -> Intersection A s1 s2 = Empty_set A.
-Proof.
-  intros. apply Extensionality_Ensembles. split.
-  * destruct H.
-    intros x H1. unfold In in *. exfalso. intuition. apply (H _ H1).
-  * intuition.
-Qed.
-
-Lemma Disjoint_Empty_set_r:
-  forall A s1, Intersection A s1 (Empty_set A) = Empty_set A.
-Proof.
-  intros. apply Extensionality_Ensembles. split.
-  * intros x H1. destruct H1. unfold In in *. assumption.
-  * intuition.
-Qed.
-
-Lemma Empty_set_zero_l:
-  forall (U : Type) (X : Ensemble U), Union U X (Empty_set U) = X.
-Proof.
-  intros.
-  rewrite Union_commutative.
-  apply Empty_set_zero.
-Qed.
-
-Lemma Distributivity_l
-     : forall (U : Type) (A B C : Ensemble U),
-       Intersection U (Union U A B) C =
-       Union U (Intersection U A C) (Intersection U B C).
-Proof.
-   intros.
-   rewrite Intersection_commutative.
-   rewrite Distributivity.
-   f_equal; apply Intersection_commutative.
-Qed.
-
-Lemma union_intersect_reorder:
-  forall A s1 s2 s3 s4,
-  Disjoint A s1 s4 ->
-  Disjoint A s3 s2 ->
-  Union A (Intersection A s1 s2) (Intersection A s3 s4) = 
-  Intersection A (Union A s1 s3) (Union A s2 s4).
-Proof.
-  intros.
-  repeat (rewrite Distributivity || rewrite Distributivity_l).
-  rewrite (Disjoint_Intersection _ _ _ H).
-  rewrite (Disjoint_Intersection _ _ _ H0).
-  rewrite Empty_set_zero.
-  rewrite Union_associative.
-  rewrite Empty_set_zero.
-  reflexivity.
-Qed.
-
 Lemma Intersection_range_range:
   forall f1 t1 f2 t2,
   Intersection Z (range f1 t1) (range f2 t2)
@@ -168,6 +103,16 @@ Proof.
   * intros x H1. destruct H1. unfold In, range in *.
     exfalso. intuition.
   * intuition.
+Qed.
+
+Lemma Included_range_range:
+  forall f1 t1 f2 t2,
+  (f2 <= f1)%Z /\ (t1 <= t2)%Z ->
+  Included Z (range f1 t1) (range f2 t2).
+Proof.
+  intros.
+  intros x H1.
+  unfold In, range in *. intuition.
 Qed.
 
 Lemma Intersection_range_semLIs_empty:
@@ -692,6 +637,188 @@ Proof.
       + simpl. refine (goodLIs_mono _ _ _ _ H8). intuition.
       + simpl. intuition.
     - simpl. intuition. apply IH with (z := f2); clear dependent u.
+      + unfold size2. simpl.
+        destruct is2 as [|[f2' t2'] is2].
+        -- unfold size2. simpl in *. repeat rewrite Z.ltb_irrefl.
+           destruct (Z.ltb_spec t1 t2); simpl; omega.
+        -- unfold size2. simpl in *. repeat rewrite Z.ltb_irrefl.
+           destruct (Z.ltb_spec t1 t2'), (Z.ltb_spec t1 t2) ; simpl; omega.
+      + simpl. intuition.
+      + simpl. refine (goodLIs_mono _ _ _ _ H9). intuition.
+Qed.
+
+
+Lemma subtract_spec : forall (is1 is2 : Intervals),
+    good is1 -> good is2 -> sem (subtract is1 is2) = Setminus Z (sem is1) (sem is2).
+Proof.
+  intros.
+  destruct is1 as [is1], is2 as [is2].
+  destruct H as [lb1 H1] , H0 as [lb2 H2].
+  unfold subtract.
+  match goal with [ |- context [unsafeFix ?f _ _] ] => set (u := f) end.
+  apply (goodLIs_mono _ _ _ (Z.le_min_l lb1 lb2)) in H1.
+  apply (goodLIs_mono _ _ _ (Z.le_min_r lb1 lb2)) in H2.
+  revert H1 H2.
+  generalize (Z.min lb1 lb2).
+  clear lb1 lb2.
+  revert is1 is2.
+  refine (my_ind size2 _ _).
+  intros is1 is2 IH lb H1 H2.
+  rewrite unsafeFix_eq.
+  destruct is1 as [|i1 is1], is2 as [|i2 is2].
+  * simpl. clear dependent u.
+    rewrite Seminus_Empty_r.
+    reflexivity.
+  * destruct i2. simpl in *. clear dependent u.
+    rewrite Seminus_Empty_l.
+    reflexivity.
+  * destruct i1. simpl in *. clear dependent u.
+    rewrite Seminus_Empty_r.
+    reflexivity.
+  * simpl.
+    unfold GHC.Base.op_zl__, Ord_Integer___, op_zl____ in *.
+    unfold GHC.Base.op_zgze__, Ord_Integer___, op_zgze____ in *.
+    unfold GHC.Base.op_zlze__, Ord_Integer___, op_zlze____ in *.
+    destruct i1 as [f1 t1], i2 as [f2 t2]; simpl in *.
+    destruct (Z.leb_spec t1 f2);
+      [| destruct (Z.leb_spec t2 f1)];
+      [| | destruct (Z.leb_spec f2 f1)];
+      [| | destruct (Z.leb_spec t1 t2) | destruct (Z.leb_spec t1 t2)].
+    - simpl. intuition. rewrite IH with (z := t1); clear dependent u.
+      + simpl.
+        rewrite Setminus_Union.
+        f_equal.
+        symmetry.
+        apply Setminus_noop.
+        rewrite Distributivity.
+        rewrite Intersection_range_range_empty by intuition.
+        rewrite (Intersection_range_semLIs_empty _ _ _ _ H6) by intuition.
+        intuition.
+      + unfold size2. simpl.
+        destruct is1 as [|[f1' t1'] is1].
+        -- unfold size2. simpl in *. repeat rewrite Z.ltb_irrefl.
+           destruct (Z.ltb_spec t1 t2); simpl; omega.
+        -- unfold size2. simpl in *. repeat rewrite Z.ltb_irrefl.
+           destruct (Z.ltb_spec t1 t2), (Z.ltb_spec t1' t2); simpl; omega.
+      + assumption.
+      + simpl. intuition.
+    - intuition. rewrite IH with (z := Z.min f1 f2); clear dependent u.
+      + simpl.
+        rewrite Setminus_Union_r.
+        f_equal.
+        symmetry.
+        apply Setminus_noop.
+        rewrite Distributivity_l.
+        rewrite Intersection_range_range_empty by intuition.
+        rewrite Intersection_commutative.
+        rewrite (Intersection_range_semLIs_empty _ _ _ _ H6) by intuition.
+        intuition.
+      + unfold size2. simpl.
+        destruct is2 as [|[f2' t2'] is2].
+        -- unfold size2. simpl in *. repeat rewrite Z.ltb_irrefl.
+           destruct (Z.ltb_spec t1 t2); simpl; omega.
+        -- unfold size2. simpl in *. repeat rewrite Z.ltb_irrefl.
+           destruct (Z.ltb_spec t1 t2), (Z.ltb_spec t1 t2'); simpl; omega.
+      + simpl. intuition.
+      + simpl. refine (goodLIs_mono _ _ _ _ H7). rewrite Z.min_le_iff. intuition.
+    - intuition. simpl. rewrite IH with (z := Z.min f1 f2); clear dependent u.
+      + simpl.
+        rewrite Setminus_Union.
+        rewrite (Setminus_empty _ (range f1 t1) (Union Z (range f2 t2) (semLIs is2))).
+        rewrite Empty_set_zero. reflexivity.
+        apply Included_Union_l.
+        apply Included_range_range.
+        intuition.
+      + unfold size2. simpl.
+        destruct is1 as [|[f1' t1'] is1].
+        -- unfold size2. simpl in *. repeat rewrite Z.ltb_irrefl.
+           destruct (Z.ltb_spec t1 t2); simpl; omega.
+        -- unfold size2. simpl in *. repeat rewrite Z.ltb_irrefl.
+           destruct (Z.ltb_spec t1' t2), (Z.ltb_spec t1 t2); simpl; omega.
+      + simpl. refine (goodLIs_mono _ _ _ _ H8). rewrite Z.min_le_iff. intuition.
+      + simpl. intuition.
+    - simpl. intuition. rewrite IH with (z := Z.min f1 f2); clear dependent u.
+      + simpl.
+        repeat rewrite Setminus_Union.
+        f_equal.
+        -- rewrite Setminus_Union_r.
+           f_equal.
+            (* lets do it by hand *)
+            apply Extensionality_Ensembles. split.
+            ++ unfold Included, Setminus, In, range.
+               intuition.
+            ++ unfold Included, Setminus, In, range.
+               intuition.
+        -- rewrite Setminus_Union_r.
+           f_equal.
+           symmetry.
+           apply Setminus_noop.          
+           rewrite Intersection_commutative.
+           apply (Intersection_range_semLIs_empty _ _ _ _ H8).
+           intuition.
+      + unfold size2. simpl.
+        destruct is2 as [|[f2' t2'] is2].
+        -- unfold size2. simpl in *. repeat rewrite Z.ltb_irrefl.
+           destruct (Z.ltb_spec t1 t2); simpl; omega.
+        -- unfold size2. simpl in *. repeat rewrite Z.ltb_irrefl.
+           destruct (Z.ltb_spec t1 t2), (Z.ltb_spec t1 t2'); simpl; omega.
+      + simpl. rewrite Z.min_le_iff.  intuition.
+      + simpl. refine (goodLIs_mono _ _ _ _ H9). rewrite Z.min_le_iff.  intuition.
+    - simpl. intuition. rewrite IH with (z := f2); clear dependent u.
+      + simpl.
+        rewrite Setminus_Union.
+        f_equal.
+        symmetry.
+        rewrite Setminus_Union_r.
+        rewrite (Setminus_noop _ (Setminus Z (range f1 t1) (range f2 t2)) (semLIs is2)).
+        -- (* lets do it by hand *)
+           apply Extensionality_Ensembles. split.
+            ++ unfold Included, Setminus, In, range.
+               intuition.
+            ++ unfold Included, Setminus, In, range.
+               intuition.
+        -- assert (Included Z (Setminus Z (range f1 t1) (range f2 t2)) (range f1 t2))
+             by (unfold Included, Setminus, In, range; intuition).
+           apply Extensionality_Ensembles; split; try intuition.
+           apply (Intersection_mono_trans_l _ _ _ _ _ H7).
+           rewrite (Intersection_range_semLIs_empty _ _ _ _ H9) by intuition.
+           intuition.           
+      + unfold size2. simpl.
+        destruct is1 as [|[f1' t1'] is1].
+        -- unfold size2. simpl in *. repeat rewrite Z.ltb_irrefl.
+           destruct (Z.ltb_spec t1 t2); simpl; omega.
+        -- unfold size2. simpl in *. repeat rewrite Z.ltb_irrefl.
+           destruct (Z.ltb_spec t1' t2), (Z.ltb_spec t1 t2); simpl; omega.
+      + simpl. refine (goodLIs_mono _ _ _ _ H8). intuition.
+      + simpl. intuition.
+    - simpl. intuition. rewrite IH with (z := f2); clear dependent u.
+      + simpl.
+        symmetry.
+        repeat rewrite Setminus_Union.
+        rewrite <- Union_associative.
+        f_equal.
+        -- rewrite Setminus_Union_r.
+           replace (range f1 f2) with (Setminus Z (range f1 f2) (semLIs is2)).
+           rewrite <- Setminus_Union.
+           f_equal.
+           ++ (* lets do it by hand *)
+               apply Extensionality_Ensembles. split.
+                ** intros x H10. inversion H10.
+                   destruct (Z.ltb_spec x f2).
+                   --- left. unfold In, range in *; intuition.
+                   --- right. unfold In, range in *; intuition.
+                ** intros X H10. inversion H10; subst.
+                   --- unfold Setminus, In, range in *; intuition.
+                   --- unfold Setminus, In, range in *; intuition.
+          ++ apply Setminus_noop.
+             apply (Intersection_range_semLIs_empty _ _ _ _ H9).
+             intuition.
+        -- rewrite Setminus_Union_r.
+           f_equal.
+           apply Setminus_noop.
+           rewrite Intersection_commutative.
+           apply (Intersection_range_semLIs_empty _ _ _ _ H8).
+           intuition.
       + unfold size2. simpl.
         destruct is2 as [|[f2' t2'] is2].
         -- unfold size2. simpl in *. repeat rewrite Z.ltb_irrefl.

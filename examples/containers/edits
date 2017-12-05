@@ -1,7 +1,7 @@
-skip module Data.Semigroup
 skip module Data.Utils.StrictFold
 skip module Data.Utils.StrictPair
 skip module GHC.Show
 
-rename value Data.Utils.StrictFold.foldlStrict = foldl
+rename value Data.Utils.StrictFold.foldlStrict = Data.Foldable.foldl
 rename value Data.Utils.StrictPair.:*: = pair
+rename value Data.Utils.StrictPair.toPair = id

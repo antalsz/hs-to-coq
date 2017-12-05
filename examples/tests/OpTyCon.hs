@@ -1,6 +1,5 @@
-module OpTyCon where
-
 {-# LANGUAGE FlexibleInstances #-}
+module OpTyCon where
 
 x :: ((->) Int Int)
 x = \y -> y

@@ -1,0 +1,2 @@
+rename value UnVarGraph.UnVarSet = UnVarGraph.Mk_UnVarSet
+rename value UnVarGraph.UnVarGraph = UnVarGraph.Mk_UnVarGraph

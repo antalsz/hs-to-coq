@@ -1,0 +1,18 @@
+# This file drastically prunes the information stored with variables
+# No types or IdInfo at all!
+
+skip module TcType
+skip module IdInfo
+
+skip Var.idInfo
+skip Var.idDetails
+skip Var.isCoVar
+skip Var.isNonCoVarId
+skip Var.tcTyVarDetails
+skip Var.mkCoVar
+skip Var.isTyCoVar
+
+
+# ppr
+skip Var.ppr_id_scope
+skip Var.ppr_debug

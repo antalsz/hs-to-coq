@@ -37,6 +37,33 @@ MODULES = \
   CmmType \
   BooleanFormula \
   UniqSet \
+  OccName \
+  Module \
+  DynFlags \
+  UniqDFM \
+  UniqDSet \
+  Name \
+  NameEnv \
+  Var \
+  VarSet \
+  VarEnv \
+  FastStringEnv \
+  FieldLabel \
+  Literal \
+  Class \
+  DataCon \
+  PatSyn \
+  ConLike \
+  CoreSyn \
+  CoreArity \
+  CoreUtils \
+  UnVarGraph \
+  CallArity \
+
+#  CostCentre  --- stub out Tickish so we don't need this??? \
+  MkId \
+  CoreSyn \
+
 
 # also generated from drop-in/
 SPECIAL_MODULES =

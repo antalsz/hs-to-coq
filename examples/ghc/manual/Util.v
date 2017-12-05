@@ -1,5 +1,7 @@
 Require Import GHC.Base.
 
+Parameter debugIsOn : bool.
+
 (*
 thenCmp EQ       ordering = ordering
 thenCmp ordering _        = ordering

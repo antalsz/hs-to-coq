@@ -124,7 +124,29 @@ VFILES:=Maybes.v\
   UniqFM.v\
   CmmType.v\
   BooleanFormula.v\
-  UniqSet.v
+  UniqSet.v\
+  OccName.v\
+  Module.v\
+  DynFlags.v\
+  UniqDFM.v\
+  UniqDSet.v\
+  Name.v\
+  NameEnv.v\
+  Var.v\
+  VarSet.v\
+  VarEnv.v\
+  FastStringEnv.v\
+  FieldLabel.v\
+  Literal.v\
+  Class.v\
+  DataCon.v\
+  PatSyn.v\
+  ConLike.v\
+  CoreSyn.v\
+  CoreArity.v\
+  CoreUtils.v\
+  UnVarGraph.v\
+  CallArity.v
 
 ifneq ($(filter-out archclean clean cleanall printenv,$(MAKECMDGOALS)),)
 -include $(addsuffix .d,$(VFILES))

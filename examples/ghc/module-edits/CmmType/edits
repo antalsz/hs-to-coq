@@ -1,48 +1,15 @@
-skip module Deriving
-skip module DynFlags
-skip module GHC.Int
-skip module GHC.Word
-skip module GHC.Integer.Type
-
-rename type GHC.Integer.Type.Integer = GHC.Num.Integer
-
-# To account for these partial functions, we may be able to define a "default value" type class
-# and then add that constraint to "Panic.panic". The default value is evidence that we *could*
-# return an answer, but the panic is a note that we don't want to do so.
-
-add CmmType Instance Default_CmmCat : Panic.Default CmmCat := { default := GcPtrCat }.
-add CmmType Instance Default_width : Panic.Default Width := { default := W80 }.
-add CmmType Instance Def_CmmType : Panic.Default CmmType := { default := Mk_CmmType Panic.default Panic.default }.
-
-order CmmType.Default_CmmCat CmmType.Default_width CmmType.inst_Def_CmmType CmmType.widthFromBytes
-
-rename value Outputable.pprPanic = Panic.panicStr
-rename value Outputable.ppr = Panic.noString
-
 # need Word8, etc.
 skip CmmType.narrowU
 skip CmmType.narrowS
 
-
-# partial
-
-# skip CmmType.widthInLog
-# skip CmmType.vecElemType
-# skip CmmType.halfWordWidth
-# skip CmmType.vecLength
-
-
 # DynFlags
-skip CmmType.wordWidth
-skip CmmType.halfWordMask
-skip CmmType.halfWordWidth
+## sPlatformConstants not included in DynFlags
 skip CmmType.rEP_CostCentreStack_mem_alloc
 skip CmmType.rEP_CostCentreStack_scc_count
 skip CmmType.rEP_StgEntCounter_allocd
 skip CmmType.rEP_StgEntCounter_allocs
-skip CmmType.gcWord
-skip CmmType.bWord
-skip CmmType.bHalfWord
+
+## show instance for error message
 skip CmmType.cIntWidth
 skip CmmType.cInt
 
@@ -55,11 +22,3 @@ skip CmmType.Ord__Width
 ## recursive instance definition! replace when we can parse
 redefine Local Definition CmmType.Eq___CmmCat_op_zeze__ : CmmCat -> (CmmCat -> bool) := fun x y => true.
 # fix cat arg_261__ arg_262__ := match arg_261__ , arg_262__ with | GcPtrCat , GcPtrCat => true | BitsCat , BitsCat => true | FloatCat , FloatCat => true| VecCat a1 a2 , VecCat b1 b2 => (andb ((GHC.Base.op_zeze__ a1 b1)) ((cat a2 b2))) | _ , _ => false end.
-
-# deriving Eq_
-
-redefine Local Definition CmmType.ForeignHint_op_zsze__ : ForeignHint -> (ForeignHint -> bool) := fun arg_272__ arg_273__ =>  match arg_272__ , arg_273__ with  | a , b => negb (instance_GHC_Base_Eq__ForeignHint_op_zeze__ a b)  end.
-
-redefine Local Definition CmmType.Eq__CmmCat_op_zsze__ : CmmCat -> (CmmCat -> bool) := fun arg_272__ arg_273__ =>  match arg_272__ , arg_273__ with  | a , b => negb (instance_GHC_Base_Eq__CmmCat_op_zeze__ a b)  end.
-
-redefine Local Definition CmmType.Eq__Width_op_zsze__ : Width -> (Width -> bool) := fun arg_272__ arg_273__ =>  match arg_272__ , arg_273__ with  | a , b => negb (instance_GHC_Base_Eq__Width_op_zeze__ a b)  end.

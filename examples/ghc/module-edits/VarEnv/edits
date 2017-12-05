@@ -1,0 +1,13 @@
+skip module StaticFlags
+
+skip VarEnv.lookupVarEnv_NF
+
+# needs Util.zipEqual
+skip VarEnv.zipVarEnv
+# needs Util.foldl2
+skip VarEnv.rnBndrs2
+
+skip VarEnv.plusVarEnv_CD
+
+# defined in midamble
+skip VarEnv.uniqAway'

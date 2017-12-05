@@ -12,6 +12,7 @@ Require Coq.Program.Wf.
 
 (* Converted imports: *)
 
+Require DynFlags.
 Require FastString.
 Require GHC.Base.
 Require GHC.Num.
@@ -43,16 +44,16 @@ Inductive CmmCat : Type := GcPtrCat : CmmCat
                         |  VecCat : Length -> CmmCat -> CmmCat.
 
 Inductive CmmType : Type := Mk_CmmType : CmmCat -> Width -> CmmType.
+(* Midamble *)
+
+Instance Default_CmmCat  : Panic.Default CmmCat :=
+	 { default := GcPtrCat }.
+Instance Default_width   : Panic.Default Width :=
+	 { default := W80 }.
+Instance Default_CmmType : Panic.Default CmmType :=
+	 { default := Mk_CmmType Panic.default Panic.default }.
+
 (* Converted value declarations: *)
-
-Instance Default_CmmCat : Panic.Default CmmCat := {
-  default := GcPtrCat }.
-
-Instance Default_width : Panic.Default Width := {
-  default := W80 }.
-
-Instance Def_CmmType : Panic.Default CmmType := {
-  default := Mk_CmmType Panic.default Panic.default }.
 
 (* Translating `instance Outputable.Outputable CmmType.CmmType' failed: OOPS!
    Cannot find information for class Qualified "Outputable" "Outputable"
@@ -68,8 +69,8 @@ Instance Def_CmmType : Panic.Default CmmType := {
 
 Local Definition Eq___ForeignHint_op_zeze__
     : ForeignHint -> ForeignHint -> bool :=
-  fun arg_177__ arg_178__ =>
-    match arg_177__ , arg_178__ with
+  fun arg_189__ arg_190__ =>
+    match arg_189__ , arg_190__ with
       | NoHint , NoHint => true
       | AddrHint , AddrHint => true
       | SignedHint , SignedHint => true
@@ -100,8 +101,8 @@ Program Instance Eq___CmmCat : GHC.Base.Eq_ CmmCat := fun _ k =>
 (* Skipping instance Ord__Width *)
 
 Local Definition Eq___Width_op_zeze__ : Width -> Width -> bool :=
-  fun arg_133__ arg_134__ =>
-    match arg_133__ , arg_134__ with
+  fun arg_145__ arg_146__ =>
+    match arg_145__ , arg_146__ with
       | W8 , W8 => true
       | W16 , W16 => true
       | W32 , W32 => true
@@ -145,19 +146,19 @@ Definition b128 : CmmType :=
   cmmBits W128.
 
 Definition cmmEqType : CmmType -> CmmType -> bool :=
-  fun arg_129__ arg_130__ =>
-    match arg_129__ , arg_130__ with
+  fun arg_141__ arg_142__ =>
+    match arg_141__ , arg_142__ with
       | Mk_CmmType c1 w1 , Mk_CmmType c2 w2 => andb (c1 GHC.Base.== c2) (w1
                                                     GHC.Base.== w2)
     end.
 
 Definition cmmEqType_ignoring_ptrhood : CmmType -> CmmType -> bool :=
-  fun arg_121__ arg_122__ =>
-    match arg_121__ , arg_122__ with
+  fun arg_133__ arg_134__ =>
+    match arg_133__ , arg_134__ with
       | Mk_CmmType c1 w1 , Mk_CmmType c2 w2 => let weak_eq
                                                  : CmmCat -> CmmCat -> bool :=
-                                                 fix weak_eq arg_123__ arg_124__
-                                                       := match arg_123__ , arg_124__ with
+                                                 fix weak_eq arg_135__ arg_136__
+                                                       := match arg_135__ , arg_136__ with
                                                             | FloatCat , FloatCat => true
                                                             | FloatCat , _other => false
                                                             | _other , FloatCat => false
@@ -180,30 +181,57 @@ Definition f32 : CmmType :=
 Definition f64 : CmmType :=
   cmmFloat W64.
 
+Definition halfWordMask : DynFlags.DynFlags -> GHC.Num.Integer :=
+  fun dflags =>
+    let j_80__ :=
+      Panic.panic (GHC.Base.hs_string__ "MachOp.halfWordMask: Unknown word size") in
+    let j_81__ :=
+      if DynFlags.wORD_SIZE dflags GHC.Base.== GHC.Num.fromInteger 8 : bool
+      then GHC.Num.fromInteger 4294967295
+      else j_80__ in
+    if DynFlags.wORD_SIZE dflags GHC.Base.== GHC.Num.fromInteger 4 : bool
+    then GHC.Num.fromInteger 65535
+    else j_81__.
+
+Definition halfWordWidth : DynFlags.DynFlags -> Width :=
+  fun dflags =>
+    let j_83__ :=
+      Panic.panic (GHC.Base.hs_string__ "MachOp.halfWordRep: Unknown word size") in
+    let j_84__ :=
+      if DynFlags.wORD_SIZE dflags GHC.Base.== GHC.Num.fromInteger 8 : bool
+      then W32
+      else j_83__ in
+    if DynFlags.wORD_SIZE dflags GHC.Base.== GHC.Num.fromInteger 4 : bool
+    then W16
+    else j_84__.
+
+Definition bHalfWord : DynFlags.DynFlags -> CmmType :=
+  fun dflags => cmmBits (halfWordWidth dflags).
+
 Definition isFloat32 : CmmType -> bool :=
-  fun arg_92__ =>
-    match arg_92__ with
+  fun arg_101__ =>
+    match arg_101__ with
       | Mk_CmmType FloatCat W32 => true
       | _other => false
     end.
 
 Definition isFloat64 : CmmType -> bool :=
-  fun arg_90__ =>
-    match arg_90__ with
+  fun arg_99__ =>
+    match arg_99__ with
       | Mk_CmmType FloatCat W64 => true
       | _other => false
     end.
 
 Definition isFloatType : CmmType -> bool :=
-  fun arg_100__ =>
-    match arg_100__ with
+  fun arg_109__ =>
+    match arg_109__ with
       | Mk_CmmType FloatCat _ => true
       | _other => false
     end.
 
 Definition isGcPtrType : CmmType -> bool :=
-  fun arg_98__ =>
-    match arg_98__ with
+  fun arg_107__ =>
+    match arg_107__ with
       | Mk_CmmType GcPtrCat _ => true
       | _other => false
     end.
@@ -216,24 +244,24 @@ Definition isVecType : CmmType -> bool :=
     end.
 
 Definition isWord32 : CmmType -> bool :=
-  fun arg_94__ =>
-    match arg_94__ with
+  fun arg_103__ =>
+    match arg_103__ with
       | Mk_CmmType BitsCat W32 => true
       | Mk_CmmType GcPtrCat W32 => true
       | _other => false
     end.
 
 Definition isWord64 : CmmType -> bool :=
-  fun arg_96__ =>
-    match arg_96__ with
+  fun arg_105__ =>
+    match arg_105__ with
       | Mk_CmmType BitsCat W64 => true
       | Mk_CmmType GcPtrCat W64 => true
       | _other => false
     end.
 
 Definition mrStr : Width -> FastString.LitString :=
-  fun arg_80__ =>
-    match arg_80__ with
+  fun arg_89__ =>
+    match arg_89__ with
       | W8 => FastString.sLit (GHC.Base.hs_string__ "W8")
       | W16 => FastString.sLit (GHC.Base.hs_string__ "W16")
       | W32 => FastString.sLit (GHC.Base.hs_string__ "W32")
@@ -245,7 +273,7 @@ Definition mrStr : Width -> FastString.LitString :=
     end.
 
 Definition typeWidth : CmmType -> Width :=
-  fun arg_119__ => match arg_119__ with | Mk_CmmType _ w => w end.
+  fun arg_131__ => match arg_131__ with | Mk_CmmType _ w => w end.
 
 Definition vecLength : CmmType -> Length :=
   fun arg_2__ =>
@@ -402,8 +430,27 @@ Definition widthInLog : Width -> GHC.Num.Int :=
       | W80 => Panic.panic (GHC.Base.hs_string__ "widthInLog: F80")
     end.
 
+Definition wordWidth : DynFlags.DynFlags -> Width :=
+  fun dflags =>
+    let j_86__ :=
+      Panic.panic (GHC.Base.hs_string__ "MachOp.wordRep: Unknown word size") in
+    let j_87__ :=
+      if DynFlags.wORD_SIZE dflags GHC.Base.== GHC.Num.fromInteger 8 : bool
+      then W64
+      else j_86__ in
+    if DynFlags.wORD_SIZE dflags GHC.Base.== GHC.Num.fromInteger 4 : bool
+    then W32
+    else j_87__.
+
+Definition gcWord : DynFlags.DynFlags -> CmmType :=
+  fun dflags => Mk_CmmType GcPtrCat (wordWidth dflags).
+
+Definition bWord : DynFlags.DynFlags -> CmmType :=
+  fun dflags => cmmBits (wordWidth dflags).
+
 (* Unbound variables:
-     andb bool false negb true FastString.LitString FastString.sLit GHC.Base.Eq_
-     GHC.Base.op_zeze__ GHC.Num.Int GHC.Num.op_zt__ GHC.Real.div Panic.Default
-     Panic.default Panic.noString Panic.panic Panic.panicStr
+     andb bool false negb true DynFlags.DynFlags DynFlags.wORD_SIZE
+     FastString.LitString FastString.sLit GHC.Base.Eq_ GHC.Base.op_zeze__ GHC.Num.Int
+     GHC.Num.Integer GHC.Num.op_zt__ GHC.Real.div Panic.noString Panic.panic
+     Panic.panicStr
 *)

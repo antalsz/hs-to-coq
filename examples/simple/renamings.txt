@@ -1,7 +1,0 @@
-type  [] = list
-value [] = nil
-value :  = ::
-
-type  Bool  = bool
-value True  = true
-value False = false

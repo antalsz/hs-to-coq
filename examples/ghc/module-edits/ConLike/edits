@@ -1,0 +1,9 @@
+# type inference. Try again when better type for PatSyn.paySynBuilder
+skip ConLike.conLikeWrapId_maybe
+
+# type components of the data structure
+skip ConLike.conLikeStupidTheta
+skip ConLike.conLikeResTy
+skip ConLike.conLikeInstOrigArgTys
+skip ConLike.conLikeFullSig
+skip ConLike.conLikeFieldType

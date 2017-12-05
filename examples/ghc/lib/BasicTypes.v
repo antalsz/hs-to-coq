@@ -418,10 +418,7 @@ Local Definition Eq___IntWithInf_op_zeze__ : IntWithInf -> IntWithInf -> bool :=
     end.
 
 Local Definition Eq___IntWithInf_op_zsze__ : IntWithInf -> IntWithInf -> bool :=
-  fun arg_400__ arg_401__ =>
-    match arg_400__ , arg_401__ with
-      | a , b => negb (Eq___IntWithInf_op_zeze__ a b)
-    end.
+  fun a b => negb (Eq___IntWithInf_op_zeze__ a b).
 
 Program Instance Eq___IntWithInf : GHC.Base.Eq_ IntWithInf := fun _ k =>
     k {|GHC.Base.op_zeze____ := Eq___IntWithInf_op_zeze__ ;
@@ -462,10 +459,7 @@ Local Definition Eq___InlineSpec_op_zeze__ : InlineSpec -> InlineSpec -> bool :=
     end.
 
 Local Definition Eq___InlineSpec_op_zsze__ : InlineSpec -> InlineSpec -> bool :=
-  fun arg_401__ arg_402__ =>
-    match arg_401__ , arg_402__ with
-      | a , b => negb (Eq___InlineSpec_op_zeze__ a b)
-    end.
+  fun a b => negb (Eq___InlineSpec_op_zeze__ a b).
 
 Program Instance Eq___InlineSpec : GHC.Base.Eq_ InlineSpec := fun _ k =>
     k {|GHC.Base.op_zeze____ := Eq___InlineSpec_op_zeze__ ;
@@ -488,10 +482,7 @@ Local Definition Eq___RuleMatchInfo_op_zeze__
 
 Local Definition Eq___RuleMatchInfo_op_zsze__
     : RuleMatchInfo -> RuleMatchInfo -> bool :=
-  fun arg_377__ arg_378__ =>
-    match arg_377__ , arg_378__ with
-      | a , b => negb (Eq___RuleMatchInfo_op_zeze__ a b)
-    end.
+  fun a b => negb (Eq___RuleMatchInfo_op_zeze__ a b).
 
 Program Instance Eq___RuleMatchInfo : GHC.Base.Eq_ RuleMatchInfo := fun _ k =>
     k {|GHC.Base.op_zeze____ := Eq___RuleMatchInfo_op_zeze__ ;
@@ -513,10 +504,7 @@ Local Definition Eq___Activation_op_zeze__ : Activation -> Activation -> bool :=
     end.
 
 Local Definition Eq___Activation_op_zsze__ : Activation -> Activation -> bool :=
-  fun arg_370__ arg_371__ =>
-    match arg_370__ , arg_371__ with
-      | a , b => negb (Eq___Activation_op_zeze__ a b)
-    end.
+  fun a b => negb (Eq___Activation_op_zeze__ a b).
 
 Program Instance Eq___Activation : GHC.Base.Eq_ Activation := fun _ k =>
     k {|GHC.Base.op_zeze____ := Eq___Activation_op_zeze__ ;
@@ -536,10 +524,7 @@ Local Definition Eq___InlinePragma_op_zeze__
 
 Local Definition Eq___InlinePragma_op_zsze__
     : InlinePragma -> InlinePragma -> bool :=
-  fun arg_370__ arg_371__ =>
-    match arg_370__ , arg_371__ with
-      | a , b => negb (Eq___InlinePragma_op_zeze__ a b)
-    end.
+  fun a b => negb (Eq___InlinePragma_op_zeze__ a b).
 
 Program Instance Eq___InlinePragma : GHC.Base.Eq_ InlinePragma := fun _ k =>
     k {|GHC.Base.op_zeze____ := Eq___InlinePragma_op_zeze__ ;
@@ -559,10 +544,7 @@ Local Definition Eq___WarningTxt_op_zeze__ : WarningTxt -> WarningTxt -> bool :=
     end.
 
 Local Definition Eq___WarningTxt_op_zsze__ : WarningTxt -> WarningTxt -> bool :=
-  fun arg_361__ arg_362__ =>
-    match arg_361__ , arg_362__ with
-      | a , b => negb (Eq___WarningTxt_op_zeze__ a b)
-    end.
+  fun a b => negb (Eq___WarningTxt_op_zeze__ a b).
 
 Program Instance Eq___WarningTxt : GHC.Base.Eq_ WarningTxt := fun _ k =>
     k {|GHC.Base.op_zeze____ := Eq___WarningTxt_op_zeze__ ;
@@ -594,10 +576,7 @@ Local Definition Eq___OverlapMode_op_zeze__
 
 Local Definition Eq___OverlapMode_op_zsze__
     : OverlapMode -> OverlapMode -> bool :=
-  fun arg_344__ arg_345__ =>
-    match arg_344__ , arg_345__ with
-      | a , b => negb (Eq___OverlapMode_op_zeze__ a b)
-    end.
+  fun a b => negb (Eq___OverlapMode_op_zeze__ a b).
 
 Program Instance Eq___OverlapMode : GHC.Base.Eq_ OverlapMode := fun _ k =>
     k {|GHC.Base.op_zeze____ := Eq___OverlapMode_op_zeze__ ;
@@ -613,10 +592,7 @@ Local Definition Eq___OverlapFlag_op_zeze__
 
 Local Definition Eq___OverlapFlag_op_zsze__
     : OverlapFlag -> OverlapFlag -> bool :=
-  fun arg_352__ arg_353__ =>
-    match arg_352__ , arg_353__ with
-      | a , b => negb (Eq___OverlapFlag_op_zeze__ a b)
-    end.
+  fun a b => negb (Eq___OverlapFlag_op_zeze__ a b).
 
 Program Instance Eq___OverlapFlag : GHC.Base.Eq_ OverlapFlag := fun _ k =>
     k {|GHC.Base.op_zeze____ := Eq___OverlapFlag_op_zeze__ ;
@@ -634,10 +610,7 @@ Local Definition Eq___OccInfo_op_zeze__ : OccInfo -> OccInfo -> bool :=
     end.
 
 Local Definition Eq___OccInfo_op_zsze__ : OccInfo -> OccInfo -> bool :=
-  fun arg_332__ arg_333__ =>
-    match arg_332__ , arg_333__ with
-      | a , b => negb (Eq___OccInfo_op_zeze__ a b)
-    end.
+  fun a b => negb (Eq___OccInfo_op_zeze__ a b).
 
 Program Instance Eq___OccInfo : GHC.Base.Eq_ OccInfo := fun _ k =>
     k {|GHC.Base.op_zeze____ := Eq___OccInfo_op_zeze__ ;
@@ -656,10 +629,7 @@ Local Definition Eq___TupleSort_op_zeze__ : TupleSort -> TupleSort -> bool :=
     end.
 
 Local Definition Eq___TupleSort_op_zsze__ : TupleSort -> TupleSort -> bool :=
-  fun arg_370__ arg_371__ =>
-    match arg_370__ , arg_371__ with
-      | a , b => negb (Eq___TupleSort_op_zeze__ a b)
-    end.
+  fun a b => negb (Eq___TupleSort_op_zeze__ a b).
 
 Program Instance Eq___TupleSort : GHC.Base.Eq_ TupleSort := fun _ k =>
     k {|GHC.Base.op_zeze____ := Eq___TupleSort_op_zeze__ ;
@@ -677,10 +647,7 @@ Local Definition Eq___Origin_op_zeze__ : Origin -> Origin -> bool :=
     end.
 
 Local Definition Eq___Origin_op_zsze__ : Origin -> Origin -> bool :=
-  fun arg_316__ arg_317__ =>
-    match arg_316__ , arg_317__ with
-      | a , b => negb (Eq___Origin_op_zeze__ a b)
-    end.
+  fun a b => negb (Eq___Origin_op_zeze__ a b).
 
 Program Instance Eq___Origin : GHC.Base.Eq_ Origin := fun _ k =>
     k {|GHC.Base.op_zeze____ := Eq___Origin_op_zeze__ ;
@@ -698,10 +665,7 @@ Local Definition Eq___RecFlag_op_zeze__ : RecFlag -> RecFlag -> bool :=
     end.
 
 Local Definition Eq___RecFlag_op_zsze__ : RecFlag -> RecFlag -> bool :=
-  fun arg_309__ arg_310__ =>
-    match arg_309__ , arg_310__ with
-      | a , b => negb (Eq___RecFlag_op_zeze__ a b)
-    end.
+  fun a b => negb (Eq___RecFlag_op_zeze__ a b).
 
 Program Instance Eq___RecFlag : GHC.Base.Eq_ RecFlag := fun _ k =>
     k {|GHC.Base.op_zeze____ := Eq___RecFlag_op_zeze__ ;
@@ -719,10 +683,7 @@ Local Definition Eq___Boxity_op_zeze__ : Boxity -> Boxity -> bool :=
     end.
 
 Local Definition Eq___Boxity_op_zsze__ : Boxity -> Boxity -> bool :=
-  fun arg_319__ arg_320__ =>
-    match arg_319__ , arg_320__ with
-      | a , b => negb (Eq___Boxity_op_zeze__ a b)
-    end.
+  fun a b => negb (Eq___Boxity_op_zeze__ a b).
 
 Program Instance Eq___Boxity : GHC.Base.Eq_ Boxity := fun _ k =>
     k {|GHC.Base.op_zeze____ := Eq___Boxity_op_zeze__ ;
@@ -744,10 +705,7 @@ Local Definition Eq___FixityDirection_op_zeze__
 
 Local Definition Eq___FixityDirection_op_zsze__
     : FixityDirection -> FixityDirection -> bool :=
-  fun arg_312__ arg_313__ =>
-    match arg_312__ , arg_313__ with
-      | a , b => negb (Eq___FixityDirection_op_zeze__ a b)
-    end.
+  fun a b => negb (Eq___FixityDirection_op_zeze__ a b).
 
 Program Instance Eq___FixityDirection : GHC.Base.Eq_ FixityDirection := fun _
                                                                             k =>
@@ -860,10 +818,7 @@ Local Definition Eq___FunctionOrData_op_zeze__
 
 Local Definition Eq___FunctionOrData_op_zsze__
     : FunctionOrData -> FunctionOrData -> bool :=
-  fun arg_243__ arg_244__ =>
-    match arg_243__ , arg_244__ with
-      | a , b => negb (Eq___FunctionOrData_op_zeze__ a b)
-    end.
+  fun a b => negb (Eq___FunctionOrData_op_zeze__ a b).
 
 Program Instance Eq___FunctionOrData : GHC.Base.Eq_ FunctionOrData := fun _ k =>
     k {|GHC.Base.op_zeze____ := Eq___FunctionOrData_op_zeze__ ;
@@ -890,10 +845,7 @@ Local Definition Eq___OneShotInfo_op_zeze__
 
 Local Definition Eq___OneShotInfo_op_zsze__
     : OneShotInfo -> OneShotInfo -> bool :=
-  fun arg_236__ arg_237__ =>
-    match arg_236__ , arg_237__ with
-      | a , b => negb (Eq___OneShotInfo_op_zeze__ a b)
-    end.
+  fun a b => negb (Eq___OneShotInfo_op_zeze__ a b).
 
 Program Instance Eq___OneShotInfo : GHC.Base.Eq_ OneShotInfo := fun _ k =>
     k {|GHC.Base.op_zeze____ := Eq___OneShotInfo_op_zeze__ ;
@@ -960,16 +912,16 @@ Definition compareFixity : Fixity -> Fixity -> (bool * bool)%type :=
     match arg_117__ , arg_118__ with
       | Mk_Fixity _ prec1 dir1 , Mk_Fixity _ prec2 dir2 => let error_please :=
                                                              pair true false in
-                                                           let left := pair false false in
-                                                           let right := pair false true in
+                                                           let left_ := pair false false in
+                                                           let right_ := pair false true in
                                                            let scrut_122__ := GHC.Base.compare prec1 prec2 in
                                                            match scrut_122__ with
-                                                             | Gt => left
-                                                             | Lt => right
+                                                             | Gt => left_
+                                                             | Lt => right_
                                                              | Eq => let scrut_123__ := pair dir1 dir2 in
                                                                      match scrut_123__ with
-                                                                       | pair InfixR InfixR => right
-                                                                       | pair InfixL InfixL => left
+                                                                       | pair InfixR InfixR => right_
+                                                                       | pair InfixL InfixL => left_
                                                                        | _ => error_please
                                                                      end
                                                            end

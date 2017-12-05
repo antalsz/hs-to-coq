@@ -1,0 +1,45 @@
+axiomatize module CoreSyn
+
+skip module CostCentre
+skip module TyCoRep
+skip module TyCOn
+skip module Type
+skip module Coercion
+
+# pun
+
+redefine Inductive CoreSyn.Tickish (id : Type) : Type := Mk_Tickish_Dummy.
+redefine Local Definition CoreSyn.Eq___Tickish_op_zeze__ {inst_id} `{_:GHC.Base.Eq_ inst_id}
+    : (Tickish inst_id) -> ((Tickish inst_id) -> bool) := fun x y => true.
+redefine Local Definition CoreSyn.Eq___Tickish_op_zsze__ {inst_id} `{_:GHC.Base.Eq_ inst_id}
+    : (Tickish inst_id) -> ((Tickish inst_id) -> bool) := fun x y => false.
+skip CoreSyn.mkNoCount
+skip CoreSyn.mkNoScope
+skip CoreSyn.tickishCanSplit
+skip CoreSyn.tickishCounts
+skip CoreSyn.tickishIsCode
+
+
+order CoreSyn.Eq___AltCon CoreSyn.Ord__AltCon
+
+redefine Definition CoreSyn.chooseOrphanAnchor (local_names : list Name.Name) : IsOrphan := Mk_IsOrphan.
+# replace with this body when Ord OccName is defined
+#    match  GHC.Base.map Name.nameOccName local_names with
+#    | cons hd tl => NotOrphan (Data.Foldable.foldr GHC.Base.min hd tl)
+#    | nil => Mk_IsOrphan
+#    end.
+
+skip CoreSyn.exprToType
+skip CoreSyn.applyTypeToArg
+
+# needs Util.count
+skip CoreSyn.valArgCount
+
+# needs GHC.Types.Double & other types ( GHC.Types.Float, GHC.Int.Int64)
+skip CoreSyn.mkDoubleLitDouble
+skip CoreSyn.mkFloatLitFloat
+skip CoreSyn.mkInt64LitInt64
+
+# needs Literal.mkMachInt
+skip CoreSyn.mkIntLit
+skip CoreSyn.mkIntLitInt

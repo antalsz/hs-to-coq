@@ -1,7 +1,6 @@
-import Prelude (Bool(..), otherwise, Show)
+module Simple where
 
---data Maybe a = Nothing | Just a deriving Show
-type Option = Maybe -- For ML programmers
+import Prelude (Bool(..), otherwise, Maybe(..), Show)
 
 data Weekday = Monday   | Tuesday | Wednesday | Thursday | Friday
              | Saturday | Sunday

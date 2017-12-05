@@ -1,3 +1,4 @@
+{-# LANGUAGE FlexibleInstances #-}
 module EqList where
 
 -- This test demonstrates the problem with recursive functions in instances

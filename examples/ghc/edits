@@ -3,10 +3,43 @@ skip module Outputable
 skip module Panic
 skip module GHC.Show
 
-axiomatize module UniqSet
+skip module PrelNames
+skip module Deriving
+
+# skip MkId
+rename type MkId.DataConBoxer = unit
+
+# bruttaly skipping all type info
+### get rid of type information in the AST
+rename type TcType.TcTyVarDetails = unit
+rename type IdInfo.IdDetails = unit
+rename type IdInfo.IdInfo = unit
+rename type TyCon.TyCon      = unit
+rename type TyCoRep.Coercion  = unit
+rename type TyCoRep.Type_     = unit
+rename type TyCoRep.ThetaType = unit
+rename type TyCoRep.TyBinder  = unit
+rename type TyCoRep.TyThing   = unit
+rename type TyCoRep.Kind = unit
+
+
+
+# TODO: better treatment of primitive values
+skip module GHC.Int
+skip module GHC.Word
+skip module GHC.Integer.Type
+rename type GHC.Integer.Type.Integer = GHC.Num.Integer
+
+rename type GHC.IO.FilePath = GHC.Base.String
+
+rename value Outputable.pprPanic = Panic.panicStr
+rename value Outputable.ppr = Panic.noString
+rename value Outputable.<+>  = GHC.Base.mappend
+rename value Outputable.text = id
+rename value Outputable.warnPprTrace = Panic.warnPprTrace
+
 
 # Punned
-
 rename value BasicTypes.EP   = BasicTypes.Mk_EP
 rename value BasicTypes.Fixity   = BasicTypes.Mk_Fixity
 rename value BasicTypes.InlinePragma = BasicTypes.Mk_InlinePragma
@@ -16,9 +49,42 @@ rename value BasicTypes.WarningTxt   = BasicTypes.Mk_WarningTxt
 rename value CmmType.CmmType    = CmmType.Mk_CmmType
 rename value Pair.Pair = Pair.Mk_Pair
 rename value SourceLoc.L = SourceLoc.Mk_L
+rename value DynFlags.PackageArg = DynFlags.Mk_PackageArg
+rename value DynFlags.Option = DynFlags.Mk_Option
+rename value DynFlags.ModRenaming = DynFlags.Mk_ModRenaming
+rename value DynFlags.FlushOut = DynFlags.Mk_FlushOut
+rename value Module.Module = Module.Mk_Module
+rename value Module.ModuleName = Module.Mk_ModuleName
+rename value Module.NDModule = Module.Mk_NDModule
+rename value Module.ModLocation = Module.Mk_ModLocation
+rename value Module.ModuleEnv = Module.Mk_ModuleEnv
+rename value OccName.OccName = OccName.Mk_OccName
+rename value Name.Name = Name.Mk_Name
+rename value Name.BuiltInSyntax = Name.Mk_BuiltInSyntax
+rename value FieldLabel.FieldLabel = FieldLabel.Mk_FieldLabel
+rename value UniqDFM.TaggedVal = UniqDFM.Mk_TaggedVal
+rename value UniqDFM.UniqDFM   = UniqDFM.Mk_UniqDFM
+rename value Var.Id            = Var.Mk_Id
+rename value Var.TyVar         = Var.Mk_TyVar
+rename value CoreSyn.IsOrphan = CoreSyn.Mk_IsOrphan
+rename value CoreSyn.RuleEnv  = CoreSyn.Mk_RuleEnv
+rename value DataCon.HsSrcBang = DataCon.Mk_HsSrcBang
+rename value DataCon.EqSpec    = DataCon.Mk_EqSpec
+
 
 # These constructor are named after their argument, not their return type,
 # so use a different, non-confusing convention here
 rename value SrcLoc.RealSrcLoc  = SrcLoc.ARealSrcLoc
 rename value SrcLoc.RealSrcSpan = SrcLoc.ARealSrcSpan
 rename value SrcLoc.SrcLoc      = SrcLoc.ASrcLoc
+
+
+# Note [Strict positivity]
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# These types all contain actual non-strictly-positive function members
+# that e.g. take `Type`s or `Pair`s of `Type`s or lists of `Type`s as arguments.
+
+redefine Inductive TyCon.RuntimeRepInfo     : Type := TyCon.Mk_RuntimeRepInfo_Dummy.
+redefine Inductive MkId.DataConBoxer        : Type := MkId.Mk_DataConBoxer_Dummy.
+redefine Inductive CoAxiom.CoAxiomRule      : Type := CoAxiom.Mk_CoAxiomRule_Dummy.
+redefine Inductive CoAxiom.BuiltInSynFamily : Type := CoAxiom.Mk_BuiltInSynFamily_Dummy.

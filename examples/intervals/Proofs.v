@@ -828,3 +828,15 @@ Proof.
       + simpl. intuition.
       + simpl. refine (goodLIs_mono _ _ _ _ H9). intuition.
 Qed.
+
+(** subsetof *)
+
+Lemma subSetOf_spec:
+  forall s1 s2, good s1 -> good s2 -> subSetOf s1 s2 = true <-> Included Z (sem s1) (sem s2).
+Proof.
+  intros.
+  unfold subSetOf.
+  rewrite isEmpty_spec by (apply subtract_good; assumption).
+  rewrite subtract_spec by assumption.
+  apply Setminus_empty_classical.
+Qed.

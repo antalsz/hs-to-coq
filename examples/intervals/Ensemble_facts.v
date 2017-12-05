@@ -91,9 +91,10 @@ Lemma Setminus_empty:
   Included A s1 s2 -> Setminus A s1 s2 = Empty_set A.
 Proof.
   intros. apply Extensionality_Ensembles. split.
-  * intros x H1. inversion_clear H1. contradiction H2. intuition.
-  * intuition.
+    * intros x H1. inversion_clear H1. contradiction H2. intuition.
+    * intuition.
 Qed.
+
 
 Lemma Included_Union_l:
   forall A s1 s2 s3,
@@ -139,4 +140,23 @@ Proof.
   rewrite Union_associative.
   rewrite Empty_set_zero.
   reflexivity.
+Qed.
+
+
+Require Import Coq.Logic.Classical_Prop.
+
+Lemma Setminus_empty_classical:
+  forall A s1 s2,
+  Setminus A s1 s2 = Empty_set A <-> Included A s1 s2.
+Proof.
+  intros. split; try apply Setminus_empty; intro.
+  intros.
+  intros x H1.
+  apply Extension in H.
+  destruct H. clear H0.
+  specialize (H x).
+  unfold Setminus, In in *. simpl in *.
+  apply Coq.Logic.Classical_Prop.NNPP.
+  intro.
+  intuition.
 Qed.

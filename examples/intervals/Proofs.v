@@ -419,6 +419,8 @@ Proof.
         refine (goodLIs_mono _ _ _ _ H7). intuition.
 Qed.
 
+(** [intersect] *)
+
 
 Lemma intersect_good : forall (is1 is2 : Intervals),
     good is1 -> good is2 -> good (intersect is1 is2).
@@ -611,4 +613,91 @@ Proof.
            destruct (Z.ltb_spec t1 t2'), (Z.ltb_spec t1 t2); simpl; omega.
       + simpl. intuition.
       + simpl. intuition.
+Qed.
+
+(** [subtract] *)
+
+Lemma subtract_good : forall (is1 is2 : Intervals),
+    good is1 -> good is2 -> good (subtract is1 is2).
+Proof.
+  intros.
+  destruct is1 as [is1], is2 as [is2].
+  destruct H as [lb1 H1] , H0 as [lb2 H2].
+  exists (Z.min lb1 lb2).
+  match goal with [ |- goodLIs (unsafeFix ?f _ _) _ ] => set (u := f) end.
+  apply (goodLIs_mono _ _ _ (Z.le_min_l lb1 lb2)) in H1.
+  apply (goodLIs_mono _ _ _ (Z.le_min_r lb1 lb2)) in H2.
+  revert H1 H2.
+  generalize (Z.min lb1 lb2).
+  revert is1 is2.
+  refine (my_ind size2 _ _).
+  intros is1 is2 IH lb H1 H2.
+  rewrite unsafeFix_eq.
+  destruct is1 as [|i1 is1], is2 as [|i2 is2].
+  * simpl. auto. 
+  * destruct i2. simpl in *. intuition.
+  * destruct i1. simpl in *. intuition.
+  * simpl.
+    unfold GHC.Base.op_zl__, Ord_Integer___, op_zl____ in *.
+    unfold GHC.Base.op_zgze__, Ord_Integer___, op_zgze____ in *.
+    unfold GHC.Base.op_zlze__, Ord_Integer___, op_zlze____ in *.
+    destruct i1 as [f1 t1], i2 as [f2 t2]; simpl in *.
+    destruct (Z.leb_spec t1 f2);
+      [| destruct (Z.leb_spec t2 f1)];
+      [| | destruct (Z.leb_spec f2 f1)];
+      [| | destruct (Z.leb_spec t1 t2) | destruct (Z.leb_spec t1 t2)].
+    - simpl. intuition. apply IH with (z := t1); clear dependent u.
+      + unfold size2. simpl.
+        destruct is1 as [|[f1' t1'] is1].
+        -- unfold size2. simpl in *. repeat rewrite Z.ltb_irrefl.
+           destruct (Z.ltb_spec t1 t2); simpl; omega.
+        -- unfold size2. simpl in *. repeat rewrite Z.ltb_irrefl.
+           destruct (Z.ltb_spec t1 t2), (Z.ltb_spec t1' t2); simpl; omega.
+      + assumption.
+      + simpl. intuition.
+    - intuition. apply IH with (z := lb); clear dependent u.
+      + unfold size2. simpl.
+        destruct is2 as [|[f2' t2'] is2].
+        -- unfold size2. simpl in *. repeat rewrite Z.ltb_irrefl.
+           destruct (Z.ltb_spec t1 t2); simpl; omega.
+        -- unfold size2. simpl in *. repeat rewrite Z.ltb_irrefl.
+           destruct (Z.ltb_spec t1 t2), (Z.ltb_spec t1 t2'); simpl; omega.
+      + simpl. intuition.
+      + simpl. refine (goodLIs_mono _ _ _ _ H7). intuition.
+    - intuition. apply IH with (z := lb); clear dependent u.
+      + unfold size2. simpl.
+        destruct is1 as [|[f1' t1'] is1].
+        -- unfold size2. simpl in *. repeat rewrite Z.ltb_irrefl.
+           destruct (Z.ltb_spec t1 t2); simpl; omega.
+        -- unfold size2. simpl in *. repeat rewrite Z.ltb_irrefl.
+           destruct (Z.ltb_spec t1' t2), (Z.ltb_spec t1 t2); simpl; omega.
+      + simpl. refine (goodLIs_mono _ _ _ _ H8). intuition.
+      + simpl. intuition.
+    - simpl. intuition. apply IH with (z := lb); clear dependent u.
+      + unfold size2. simpl.
+        destruct is2 as [|[f2' t2'] is2].
+        -- unfold size2. simpl in *. repeat rewrite Z.ltb_irrefl.
+           destruct (Z.ltb_spec t1 t2); simpl; omega.
+        -- unfold size2. simpl in *. repeat rewrite Z.ltb_irrefl.
+           destruct (Z.ltb_spec t1 t2), (Z.ltb_spec t1 t2'); simpl; omega.
+      + simpl. intuition.
+      + simpl. refine (goodLIs_mono _ _ _ _ H9). intuition.
+    - simpl. intuition. apply IH with (z := f2); clear dependent u.
+      + unfold size2. simpl.
+        destruct is1 as [|[f1' t1'] is1].
+        -- unfold size2. simpl in *. repeat rewrite Z.ltb_irrefl.
+           destruct (Z.ltb_spec t1 t2); simpl; omega.
+        -- unfold size2. simpl in *. repeat rewrite Z.ltb_irrefl.
+           destruct (Z.ltb_spec t1' t2), (Z.ltb_spec t1 t2); simpl; omega.
+      + simpl. refine (goodLIs_mono _ _ _ _ H8). intuition.
+      + simpl. intuition.
+    - simpl. intuition. apply IH with (z := f2); clear dependent u.
+      + unfold size2. simpl.
+        destruct is2 as [|[f2' t2'] is2].
+        -- unfold size2. simpl in *. repeat rewrite Z.ltb_irrefl.
+           destruct (Z.ltb_spec t1 t2); simpl; omega.
+        -- unfold size2. simpl in *. repeat rewrite Z.ltb_irrefl.
+           destruct (Z.ltb_spec t1 t2'), (Z.ltb_spec t1 t2) ; simpl; omega.
+      + simpl. intuition.
+      + simpl. refine (goodLIs_mono _ _ _ _ H9). intuition.
 Qed.

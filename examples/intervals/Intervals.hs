@@ -86,12 +86,12 @@ subtract (Intervals is1) (Intervals is2) = Intervals $ go is1 is2
         -- i1 contained in i2
         | from i2 <= from i1 , to i1 <= to i2 = go is1 (i2:is2)
         -- i2 covers beginning of i1
-        | from i1 >= from i2 = i1 { from = to i2} : go is1 is2
+        | from i1 >= from i2 = go (i1 { from = to i2} : is1) is2
         -- i2 covers end of i1
         | to i1 <= to i2     = i1 { to = from i2} : go is1 (i2:is2)
         -- i2 in the middle of i1
         | otherwise = I (from i1) (from i2) :
-                      I (to i2)   (to i1) : go is1 is2
+                      go (I (to i2) (to i1) : is1) is2
 
 
 -- setZeros :: BS.ByteString -> Intervals -> BS.ByteString

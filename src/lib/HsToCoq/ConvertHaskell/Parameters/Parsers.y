@@ -78,6 +78,8 @@ import HsToCoq.ConvertHaskell.Parameters.Parsers.Lexing
   'Definition'    { TokWord    "Definition"     }
   'Instance'      { TokWord    "Instance"       }
   'Let'           { TokWord    "Let"            }
+  'let'           { TokWord    "let"            }
+  'in'            { TokWord    "in"             }
   'Program'       { TokWord    "Program"        }
   'Fixpoint'      { TokWord    "Fixpoint"       }
   'CoFixpoint'    { TokWord    "CoFixpoint"     }
@@ -280,6 +282,8 @@ LargeTerm :: { Term }
   | fix   FixBodies            { Fix   $2 }
   | cofix CofixBodies          { Cofix $2 }
   | forall Binders ',' Term    { Forall $2 $4 }
+  | 'let' Qualid Many(Binder) Optional(TypeAnnotation) ':=' Term 'in' Term
+	 { Let $2 $3  $4 $6 $8 }
   | match SepBy1(MatchItem, ',') with Many(Equation) end { Match $2 Nothing $4 }
   | Atom QualOp Atom           { if $2 == "->" then Arrow $1 $3 else Infix $1 $2 $3 }
 

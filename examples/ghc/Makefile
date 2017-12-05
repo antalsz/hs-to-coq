@@ -21,6 +21,7 @@ HANDMOD = \
   FastString \
   Panic \
   Util \
+  CallArity \
 
 # Generated modules
 # generated directly from ghc/compiler/*/
@@ -58,7 +59,9 @@ MODULES = \
   CoreArity \
   CoreUtils \
   UnVarGraph \
-  CallArity \
+  Id \
+  Demand \
+
 
 
 # also generated from drop-in/

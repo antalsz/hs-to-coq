@@ -9,6 +9,8 @@ module HsToCoq.ConvertHaskell.Declarations.Instances (
   convertModuleClsInstDecls,
   -- * Conversion building blocks
   convertClsInstDecl, convertClsInstDeclInfo, convertInstanceName,
+  -- * Axiomatizing equivalents
+  axiomatizeModuleClsInstDecls, axiomatizeClsInstDecl,
   -- ** Utility functions
   findHsClass, topoSortInstance,
   -- * Alternative entry points (you probably don't want to use these)
@@ -170,6 +172,16 @@ decomposeForall :: Term -> ([Binder], Term)
 decomposeForall (Forall bnds ty) = first (NE.toList bnds ++) (decomposeForall ty) 
 decomposeForall t = ([], t)
 
+axiomatizeClsInstDecl :: ConversionMonad m
+                      => ClsInstDecl GHC.Name        -- Haskell instance we are converting
+                      -> m InstanceDefinition
+axiomatizeClsInstDecl cid@ClsInstDecl{..} = do
+  InstanceInfo{..} <- convertClsInstDeclInfo cid
+  pure . InstanceDefinition instanceName [] instanceHead []
+       $ if null $ classMethods instanceHsClass
+         then Nothing
+         else Just $ ProofAdmitted ""
+
 --------------------------------------------------------------------------------
 
 convertModuleClsInstDecls :: forall m. ConversionMonad m
@@ -196,6 +208,11 @@ convertModuleClsInstDecls = foldTraverse $ maybeWithCurrentModule .*^ \cid ->
           [, InstanceSentence $ InstanceDefinition
               instanceName [] instanceHead [] (Just $ ProofAdmitted "") ]
           -}
+
+axiomatizeModuleClsInstDecls :: forall m. ConversionMonad m
+                             => [(Maybe ModuleName, ClsInstDecl GHC.Name)] -> m [Sentence]
+axiomatizeModuleClsInstDecls =
+  traverse $ fmap InstanceSentence . (maybeWithCurrentModule .*^ axiomatizeClsInstDecl)
 
 --------------------------------------------------------------------------------
 

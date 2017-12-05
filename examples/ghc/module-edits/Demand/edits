@@ -1,0 +1,38 @@
+axiomatize module Demand
+
+rename value Demand.ExnStr = Demand.Mk_ExnStr
+rename value Demand.Str = Demand.Mk_Str
+rename value Demand.Use = Demand.Mk_Use
+rename value Demand.DmdType = Demand.Mk_DmdType
+rename value Demand.StrictSig = Demand.Mk_StrictSig
+
+order Demand.Eq___JointDmd_op_zeze__ Demand.Eq___JointDmd_op_zsze__ Demand.Eq___JointDmd Demand.Eq___DmdType_op_zeze__ Demand.Eq___StrictSig_op_zeze__ Demand.Eq___StrictSig_op_zsze__
+order Demand.Eq___DmdType Demand.Eq___StrictSig_op_zeze__
+
+order Demand.Eq___Count Demand.Eq___Use_op_zeze__ Demand.Eq___Use Demand.Eq___UseDmd_op_zeze__
+
+redefine Local Definition Demand.Eq___UseDmd_op_zeze__ : UseDmd -> (UseDmd -> bool) :=
+ fix UseDmd_eq x y :=
+  let eq' : GHC.Base.Eq_ UseDmd := GHC.Base.eq_default UseDmd_eq in
+    match x , y with
+      | UCall a1 a2 , UCall b1 b2 => (andb ((a1 GHC.Base.== b1)) ((a2 GHC.Base.==
+                                           b2)))
+      | UProd a1 , UProd b1 => ((a1 GHC.Base.== b1))
+      | UHead , UHead => true
+      | Used , Used => true
+      | _ , _ => false
+    end.
+
+order Demand.Eq___ExnStr Demand.Eq___Str_op_zeze__
+order Demand.Eq___Str Demand.Eq___StrDmd_op_zeze__
+
+redefine Local Definition Demand.Eq___StrDmd_op_zeze__ : StrDmd -> (StrDmd -> bool) :=
+  fix StrDmd_eq x y  :=
+    let eq' : GHC.Base.Eq_ StrDmd := GHC.Base.eq_default StrDmd_eq in
+    match x , y with
+      | HyperStr , HyperStr => true
+      | SCall a1 , SCall b1 => ((a1 GHC.Base.== b1))
+      | SProd a1 , SProd b1 => ((a1 GHC.Base.== b1))
+      | HeadStr , HeadStr => true
+      | _ , _ => false
+    end.

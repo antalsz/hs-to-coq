@@ -1,0 +1,28 @@
+skip module Data.Data
+skip module Data.Semigroup
+
+skip Data.Map.Base.Monoid__Map
+
+skip Data.Map.Base.showTree
+skip Data.Map.Base.showTreeWith
+skip Data.Map.Base.showsBars
+skip Data.Map.Base.showWide
+skip Data.Map.Base.showsTree
+skip Data.Map.Base.showsTreeHang
+
+skip Data.Map.Base.fromListConstr
+skip Data.Map.Base.mapDataType
+
+termination Data.Map.Base.link {measure (Nat.add (map_size arg_714__) (map_size arg_715__))} termination_by_omega
+
+skip Data.Map.Base.fromDistinctAscList
+skip Data.Map.Base.fromAscList
+skip Data.Map.Base.fromList
+skip Data.Map.Base.fromAscListWithKey
+skip Data.Map.Base.fromAscListWith
+
+skip Data.Map.Base.mapKeys
+
+nonterminating Data.Map.Base.merge
+
+order Data.Map.Base.Eq___Map Data.Map.Base.Ord__Map

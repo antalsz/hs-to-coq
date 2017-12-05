@@ -107,7 +107,8 @@ endif
 VFILES:=Data/IntMap.v\
   Data/IntSet/Base.v\
   Data/IntMap/Base.v\
-  Data/Set/Base.v
+  Data/Set/Base.v\
+  Data/Map/Base.v
 
 ifneq ($(filter-out archclean clean cleanall printenv,$(MAKECMDGOALS)),)
 -include $(addsuffix .d,$(VFILES))

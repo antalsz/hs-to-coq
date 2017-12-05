@@ -15,11 +15,11 @@ Antal Spector-Zabusky, Joachim Breitner, Christine Rizkallah, and Stephanie Weir
 The recommended way of building `hs-to-coq` is to use `stack`. If you have not
 setup stack before, run:
 
-   stack setup
+    stack setup
 
 To build `hs-to-coq`, then run
 
-   stack build
+    stack build
 
 # Building the `base` library
 

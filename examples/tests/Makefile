@@ -32,6 +32,7 @@ PASS = \
   OpTyCon \
   Expr  \
   Endo \
+  Type \
 
 # tests that *should* pass but currently fail
 TODO_PASS  = \
@@ -44,6 +45,7 @@ TODO_PASS  = \
   TypeAnnotations \
   Arrow \
   OpMeth \
+  TypeClient \
 
 MODULES = $(PASS) $(TODO_PASS)
 
@@ -90,7 +92,7 @@ todo_pass: $(foreach f,$(TODO_PASS),$(f).fail)
 	@coqc $*.v
 
 .SECONDEXPANSION:
-%.v : FORCE $$(wildcard $*/edits) renamings $$(wildcard $*/preamble.v) %.hs
+%.v : FORCE $$(wildcard $*/edits) $$(wildcard $*/preamble.v) %.hs
 	@rm -f $*.v
 	@if [ -e $*/preamble.v ]; then P_ARG="-p $*/preamble.v"; else P_ARG=; fi;\
 	if [ -e $*/edits ]; then E_ARG="-e $*/edits"; else E_ARG=; fi;\

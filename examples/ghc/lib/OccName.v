@@ -110,6 +110,20 @@ Local Definition NameSpace_op_zlze__ : NameSpace -> NameSpace -> bool :=
             | _  => false
           end.
 
+(* Axioms for operations that we cannot yet translate *)
+
+Axiom isDataSymOcc : OccName -> bool.
+Axiom isSymOcc : OccName -> bool.
+Axiom chooseUniqueOcc : NameSpace -> GHC.Base.String -> OccSet -> OccName.
+Axiom startsWithUnderscore : OccName -> bool.
+Axiom isDerivedOccName : OccName -> bool.
+Axiom mkGenS : Module.Module -> OccName -> GHC.Num.Int -> GHC.Num.Int -> OccName.
+Axiom mkGenC : Module.Module -> OccName -> GHC.Num.Int -> OccName .
+Axiom tidyOccName : TidyOccEnv -> OccName -> (TidyOccEnv * OccName)%type.
+Axiom mkSuperDictAuxOcc : GHC.Num.Int -> OccName -> OccName.
+Axiom mkSuperDictSelOcc : GHC.Num.Int -> OccName -> OccName.
+Axiom mkLocalOcc : Unique.Unique -> OccName -> OccName.
+
 (* Converted value declarations: *)
 
 (* Translating `instance Data.Data.Data OccName.OccName' failed: OOPS! Cannot
@@ -173,8 +187,8 @@ Local Definition Ord__NameSpace_max : NameSpace -> NameSpace -> NameSpace :=
   fun x y => if Ord__NameSpace_op_zlze__ x y : bool then y else x.
 
 Local Definition Eq___NameSpace_op_zeze__ : NameSpace -> NameSpace -> bool :=
-  fun arg_182__ arg_183__ =>
-    match arg_182__ , arg_183__ with
+  fun arg_186__ arg_187__ =>
+    match arg_186__ , arg_187__ with
       | VarName , VarName => true
       | DataName , DataName => true
       | TvName , TvName => true
@@ -199,8 +213,8 @@ Program Instance Ord__NameSpace : GHC.Base.Ord NameSpace := fun _ k =>
       GHC.Base.min__ := Ord__NameSpace_min |}.
 
 Local Definition Eq___OccName_op_zeze__ : OccName -> OccName -> bool :=
-  fun arg_225__ arg_226__ =>
-    match arg_225__ , arg_226__ with
+  fun arg_229__ arg_230__ =>
+    match arg_229__ , arg_230__ with
       | Mk_OccName sp1 s1 , Mk_OccName sp2 s2 => andb (s1 GHC.Base.== s2) (sp1
                                                       GHC.Base.== sp2)
     end.
@@ -213,8 +227,8 @@ Program Instance Eq___OccName : GHC.Base.Eq_ OccName := fun _ k =>
       GHC.Base.op_zsze____ := Eq___OccName_op_zsze__ |}.
 
 Local Definition Ord__OccName_compare : OccName -> OccName -> comparison :=
-  fun arg_221__ arg_222__ =>
-    match arg_221__ , arg_222__ with
+  fun arg_225__ arg_226__ =>
+    match arg_225__ , arg_226__ with
       | Mk_OccName sp1 s1 , Mk_OccName sp2 s2 => Util.thenCmp (GHC.Base.compare s1 s2)
                                                               (GHC.Base.compare sp1 sp2)
     end.
@@ -272,8 +286,8 @@ Definition delListFromOccEnv {a} : OccEnv a -> list OccName -> OccEnv a :=
     end.
 
 Definition demoteNameSpace : NameSpace -> option NameSpace :=
-  fun arg_114__ =>
-    match arg_114__ with
+  fun arg_117__ =>
+    match arg_117__ with
       | VarName => None
       | DataName => None
       | TvName => None
@@ -281,8 +295,8 @@ Definition demoteNameSpace : NameSpace -> option NameSpace :=
     end.
 
 Definition demoteOccName : OccName -> option OccName :=
-  fun arg_117__ =>
-    match arg_117__ with
+  fun arg_120__ =>
+    match arg_120__ with
       | Mk_OccName space name => demoteNameSpace space GHC.Base.>>= (fun space' =>
                                    GHC.Base.return_ GHC.Base.$ Mk_OccName space' name)
     end.
@@ -368,7 +382,7 @@ Definition intersectOccSet : OccSet -> OccSet -> OccSet :=
   UniqSet.intersectUniqSets.
 
 Definition isDataConNameSpace : NameSpace -> bool :=
-  fun arg_128__ => match arg_128__ with | DataName => true | _ => false end.
+  fun arg_131__ => match arg_131__ with | DataName => true | _ => false end.
 
 Definition isDataOcc : OccName -> bool :=
   fun arg_10__ =>
@@ -384,7 +398,7 @@ Definition intersectsOccSet : OccSet -> OccSet -> bool :=
   fun s1 s2 => negb (isEmptyOccSet (intersectOccSet s1 s2)).
 
 Definition isTcClsNameSpace : NameSpace -> bool :=
-  fun arg_126__ => match arg_126__ with | TcClsName => true | _ => false end.
+  fun arg_129__ => match arg_129__ with | TcClsName => true | _ => false end.
 
 Definition isTcOcc : OccName -> bool :=
   fun arg_14__ =>
@@ -394,7 +408,7 @@ Definition isTcOcc : OccName -> bool :=
     end.
 
 Definition isTvNameSpace : NameSpace -> bool :=
-  fun arg_124__ => match arg_124__ with | TvName => true | _ => false end.
+  fun arg_127__ => match arg_127__ with | TvName => true | _ => false end.
 
 Definition isTvOcc : OccName -> bool :=
   fun arg_16__ =>
@@ -404,8 +418,8 @@ Definition isTvOcc : OccName -> bool :=
     end.
 
 Definition isValNameSpace : NameSpace -> bool :=
-  fun arg_120__ =>
-    match arg_120__ with
+  fun arg_123__ =>
+    match arg_123__ with
       | DataName => true
       | VarName => true
       | _ => false
@@ -420,8 +434,8 @@ Definition isValOcc : OccName -> bool :=
     end.
 
 Definition isVarNameSpace : NameSpace -> bool :=
-  fun arg_122__ =>
-    match arg_122__ with
+  fun arg_125__ =>
+    match arg_125__ with
       | TvName => true
       | VarName => true
       | _ => false
@@ -448,6 +462,15 @@ Definition mapOccEnv {a} {b} : (a -> b) -> OccEnv a -> OccEnv b :=
 
 Definition minusOccSet : OccSet -> OccSet -> OccSet :=
   UniqSet.minusUniqSet.
+
+Definition mkDFunOcc : GHC.Base.String -> bool -> OccSet -> OccName :=
+  fun info_str is_boot set =>
+    let prefix :=
+      let j_114__ := GHC.Base.hs_string__ "$f" in
+      if is_boot : bool
+      then GHC.Base.hs_string__ "$fx"
+      else j_114__ in
+    chooseUniqueOcc VarName (Coq.Init.Datatypes.app prefix info_str) set.
 
 Definition mkModPrefix : Module.Module -> GHC.Base.String :=
   fun mod_ =>
@@ -590,6 +613,11 @@ Definition mkVectTyConOcc : option GHC.Base.String -> OccName -> OccName :=
 Definition mkNewTyCoOcc : OccName -> OccName :=
   mk_simple_deriv tcName (GHC.Base.hs_string__ "N:").
 
+Definition mkInstTyTcOcc : GHC.Base.String -> OccSet -> OccName :=
+  fun str set =>
+    chooseUniqueOcc tcName (cons (GHC.Char.hs_char__ "R") (cons (GHC.Char.hs_char__
+                                                                ":") str)) set.
+
 Definition mkInstTyCoOcc : OccName -> OccName :=
   mk_simple_deriv tcName (GHC.Base.hs_string__ "D:").
 
@@ -666,8 +694,8 @@ Definition mkVectOcc : option GHC.Base.String -> OccName -> OccName :=
   mk_simple_deriv_with varName (GHC.Base.hs_string__ "$v").
 
 Definition mkMethodOcc : OccName -> OccName :=
-  fun arg_155__ =>
-    match arg_155__ with
+  fun arg_158__ =>
+    match arg_158__ with
       | (Mk_OccName VarName _ as occ) => occ
       | occ => mk_simple_deriv varName (GHC.Base.hs_string__ "$m") occ
     end.
@@ -714,26 +742,26 @@ Definition mkBuilderOcc : OccName -> OccName :=
 Definition mkTyConRepOcc : OccName -> OccName :=
   fun occ =>
     let prefix :=
-      let j_145__ := GHC.Base.hs_string__ "$tc" in
+      let j_148__ := GHC.Base.hs_string__ "$tc" in
       if isDataOcc occ : bool
       then GHC.Base.hs_string__ "$tc'"
-      else j_145__ in
+      else j_148__ in
     mk_simple_deriv varName prefix occ.
 
 (* Unbound variables:
      Gt Lt NameSpace_op_zg__ NameSpace_op_zgze__ NameSpace_op_zl__
-     NameSpace_op_zlze__ None Some andb bool compare_Namespace comparison false list
-     moduleName moduleUnitId negb op_zt__ option orb true Coq.Init.Datatypes.app
-     Data.Foldable.foldl FastString.FastString FastString.mkFastString
-     FastString.unpackFS GHC.Base.Eq_ GHC.Base.Ord GHC.Base.String GHC.Base.compare
-     GHC.Base.id GHC.Base.op_zd__ GHC.Base.op_zeze__ GHC.Base.op_zgzgze__
-     GHC.Base.op_zsze__ GHC.Base.return_ GHC.Num.Int Module.Module
-     Module.moduleNameString Module.unitIdString UniqFM.UniqFM UniqFM.addListToUFM
-     UniqFM.addListToUFM_C UniqFM.addToUFM UniqFM.addToUFM_Acc UniqFM.addToUFM_C
-     UniqFM.alterUFM UniqFM.delFromUFM UniqFM.delListFromUFM UniqFM.elemUFM
-     UniqFM.eltsUFM UniqFM.emptyUFM UniqFM.filterUFM UniqFM.foldUFM UniqFM.listToUFM
-     UniqFM.lookupUFM UniqFM.mapUFM UniqFM.plusUFM UniqFM.plusUFM_C UniqFM.unitUFM
-     UniqSet.UniqSet UniqSet.addListToUniqSet UniqSet.addOneToUniqSet
+     NameSpace_op_zlze__ None Some andb bool chooseUniqueOcc compare_Namespace
+     comparison cons false list moduleName moduleUnitId negb op_zt__ option orb true
+     Coq.Init.Datatypes.app Data.Foldable.foldl FastString.FastString
+     FastString.mkFastString FastString.unpackFS GHC.Base.Eq_ GHC.Base.Ord
+     GHC.Base.String GHC.Base.compare GHC.Base.id GHC.Base.op_zd__ GHC.Base.op_zeze__
+     GHC.Base.op_zgzgze__ GHC.Base.op_zsze__ GHC.Base.return_ GHC.Num.Int
+     Module.Module Module.moduleNameString Module.unitIdString UniqFM.UniqFM
+     UniqFM.addListToUFM UniqFM.addListToUFM_C UniqFM.addToUFM UniqFM.addToUFM_Acc
+     UniqFM.addToUFM_C UniqFM.alterUFM UniqFM.delFromUFM UniqFM.delListFromUFM
+     UniqFM.elemUFM UniqFM.eltsUFM UniqFM.emptyUFM UniqFM.filterUFM UniqFM.foldUFM
+     UniqFM.listToUFM UniqFM.lookupUFM UniqFM.mapUFM UniqFM.plusUFM UniqFM.plusUFM_C
+     UniqFM.unitUFM UniqSet.UniqSet UniqSet.addListToUniqSet UniqSet.addOneToUniqSet
      UniqSet.elementOfUniqSet UniqSet.emptyUniqSet UniqSet.filterUniqSet
      UniqSet.foldUniqSet UniqSet.intersectUniqSets UniqSet.isEmptyUniqSet
      UniqSet.minusUniqSet UniqSet.mkUniqSet UniqSet.unionManyUniqSets

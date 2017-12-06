@@ -1,23 +1,15 @@
+## Except for Outputtable, the skipped functions are axiomatized in the midamble.
+
 skip module Lexeme
 
 # needs Lexeme.isLexConSym
 skip OccName.isDataSymOcc
 skip OccName.isSymOcc
 
-# outputtable
-skip OccName.parenSymOcc
-skip OccName.pprNameSpace
-skip OccName.pprNonVarNameSpace
-skip OccName.pprNameSpaceBrief
-skip OccName.pprOccName
-skip OccName.pprOccEnv
-
 # nees show: Int -> String
 skip OccName.chooseUniqueOcc
-skip OccName.mkDFunOcc
 skip OccName.mkGenS
 skip OccName.mkGenC
-skip OccName.mkInstTyTcOcc
 skip OccName.mkSuperDictAuxOcc
 skip OccName.mkSuperDictSelOcc
 skip OccName.mkLocalOcc
@@ -29,10 +21,6 @@ skip OccName.tidyOccName
 skip OccName.startsWithUnderscore
 skip OccName.isDerivedOccName
 
-# deriving snafu
-# skip OccName.Ord__NameSpace
-# skip OccName.Ord__OccName
-
 redefine Local Definition OccName.Ord__NameSpace_compare : NameSpace -> (NameSpace -> comparison) := compare_Namespace.
 
 redefine Local Definition OccName.Ord__NameSpace_op_zg__ := NameSpace_op_zg__.
@@ -41,3 +29,13 @@ redefine Local Definition OccName.Ord__NameSpace_op_zl__ := NameSpace_op_zl__.
 redefine Local Definition OccName.Ord__NameSpace_op_zlze__ := NameSpace_op_zlze__.
 
 order OccName.Eq___NameSpace OccName.Ord__NameSpace OccName.Eq___OccName_op_zeze__ OccName.Eq___OccName OccName.Ord__OccName_compare OccName.Ord__OccName
+
+
+
+# outputtable
+skip OccName.parenSymOcc
+skip OccName.pprNameSpace
+skip OccName.pprNonVarNameSpace
+skip OccName.pprNameSpaceBrief
+skip OccName.pprOccName
+skip OccName.pprOccEnv

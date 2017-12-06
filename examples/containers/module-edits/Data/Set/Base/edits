@@ -1,4 +1,6 @@
-skip Data.Set.Base.mappend
+skip module Data.Semigroup
+
+skip Data.Set.Base.Monoid__Set_
 
 skip Data.Set.Base.showTree
 skip Data.Set.Base.showTreeWith
@@ -6,31 +8,17 @@ skip Data.Set.Base.showsTree
 skip Data.Set.Base.showsTreeHang
 skip Data.Set.Base.showWide
 skip Data.Set.Base.showsBars
+
 skip Data.Set.Base.fromListConstr
 skip Data.Set.Base.setDataType
-skip Data.Set.Base.link
-skip Data.Set.Base.filterGt
-skip Data.Set.Base.filterLt
+
+termination Data.Set.Base.link {measure (Nat.add (set_size arg_348__) (set_size arg_349__))} termination_by_omega
+
 skip Data.Set.Base.fromDistinctAscList
 skip Data.Set.Base.fromAscList
 skip Data.Set.Base.fromList
-skip Data.Set.Base.merge
-skip Data.Set.Base.partition
-skip Data.Set.Base.filter
+
+nonterminating Data.Set.Base.merge
 skip Data.Set.Base.map
-skip Data.Set.Base.split
-skip Data.Set.Base.splitMember
-skip Data.Set.Base.isSubsetOfX
-skip Data.Set.Base.isSubsetOf
-skip Data.Set.Base.isProperSubsetOf
-skip Data.Set.Base.hedgeInt
-skip Data.Set.Base.intersection
-skip Data.Set.Base.hedgeDiff
-skip Data.Set.Base.difference
-skip Data.Set.Base.op_zrzr__
-skip Data.Set.Base.hedgeUnion
-skip Data.Set.Base.union
-skip Data.Set.Base.unions
 
 order Data.Set.Base.Eq___Set_ Data.Set.Base.Ord__Set_
-skip Data.Set.Base.Monoid__Set_

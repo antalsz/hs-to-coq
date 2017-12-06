@@ -256,7 +256,7 @@ convertExpr (RecordUpd recVal fields PlaceHolder PlaceHolder PlaceHolder PlaceHo
       toHs = freshInternalName . T.unpack
 
   let partialUpdateError con = do
-        hsCon   <- toHs (qualidBase con)
+        hsCon   <- toHs (qualidToIdent con)
         hsError <- freshInternalName "error" -- TODO RENAMER this shouldn't be fresh
         pure $ GHC.Match
           { m_fixity = NonFunBindMatch
@@ -281,7 +281,7 @@ convertExpr (RecordUpd recVal fields PlaceHolder PlaceHolder PlaceHolder PlaceHo
                                            , rec_dotdot = Nothing }
         (fieldPats, fieldVals) <- fmap (bimap useFields useFields . unzip) . for fields $ \field -> do
           fieldVar   <- gensym (qualidBase field)
-          hsField    <- toHs (qualidBase field)
+          hsField    <- toHs (qualidToIdent field)
           hsFieldVar <- toHs fieldVar
           let mkField arg = loc $ HsRecField { hsRecFieldLbl = loc hsField
                                              , hsRecFieldArg = arg
@@ -290,7 +290,7 @@ convertExpr (RecordUpd recVal fields PlaceHolder PlaceHolder PlaceHolder PlaceHo
                , mkField . fromMaybe (loc . HsVar $ loc hsField) -- NOT `fieldVar` – this was punned
                          $ M.findWithDefault (Just . loc . HsVar $ loc hsFieldVar) field updates )
 
-        hsCon <- toHs (qualidBase con)
+        hsCon <- toHs (qualidToIdent con)
         pure GHC.Match { m_fixity = NonFunBindMatch
                        , m_pats   = [ loc . ConPatIn (loc hsCon) $ RecCon fieldPats ]
                        , m_type   = Nothing

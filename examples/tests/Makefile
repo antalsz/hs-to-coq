@@ -28,6 +28,7 @@ PASS = \
   PolyInstance3 \
   MutrecInst \
   Bits \
+  Records \
 
 
 # tests that *should* pass but currently fail

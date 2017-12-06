@@ -26,6 +26,7 @@ HANDMOD = \
 # generated directly from GHC/libraries/containers
 MODULES = \
   Data/Set/Base \
+  Data/Map/Base \
 
 # generated from drop-in/
 DROPIN =

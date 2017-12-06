@@ -14,6 +14,7 @@ echo "Cleaning everything"
 make -C tests clean
 make -C base-tests clean
 make -C successors clean
+make -C intervals clean
 make -C compiler clean
 make -C rle clean
 make -C bag clean
@@ -37,6 +38,7 @@ make -C ../base-thy
 echo "Building examples"
 make -C base-tests
 make -C successors
+make -C intervals
 make -C compiler
 make -C rle
 make -C bag

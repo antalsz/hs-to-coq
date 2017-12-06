@@ -78,6 +78,7 @@ script:
  - make -C examples/quicksort
  - make -C examples/intervals
  - make -C examples/containers/lib
+ - make -C examples/containers/theories
  - make -C examples/ghc/lib
 
  # This requires a configured check-out of GHC, so lets not do that on travis

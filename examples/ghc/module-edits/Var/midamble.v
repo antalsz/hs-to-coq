@@ -1,2 +1,2 @@
-Instance Unique_Var : Unique.Uniquable Var.Var := {}.
+Instance Unique_Var : Unique.Uniquable Var := {}.
 Admitted.

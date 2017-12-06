@@ -2,15 +2,17 @@
 # No types or IdInfo at all!
 
 skip module TcType
-skip module IdInfo
+# skip module IdInfo
 
-skip Var.idInfo
-skip Var.idDetails
-skip Var.isCoVar
-skip Var.isNonCoVarId
-skip Var.tcTyVarDetails
-skip Var.mkCoVar
-skip Var.isTyCoVar
+# skip Var.idInfo
+# skip Var.idDetails
+# skip Var.isCoVar
+# skip Var.isNonCoVarId
+# skip Var.tcTyVarDetails
+# skip Var.mkCoVar
+# skip Var.isTyCoVar
+
+redefine Definition Var.tcTyVarDetails : TyVar -> unit := fun x => tt.
 
 
 # ppr

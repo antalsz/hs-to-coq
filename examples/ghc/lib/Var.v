@@ -18,6 +18,7 @@ Axiom error : forall {a:Type}, a.
 
 Require GHC.Base.
 Require GHC.Num.
+Require IdInfo.
 Require Name.
 Require Unique.
 Import GHC.Base.Notations.
@@ -32,7 +33,8 @@ Inductive IdScope : Type := GlobalId : IdScope
 
 Inductive Var : Type := Mk_TyVar : Name.Name -> GHC.Num.Int -> unit -> Var
                      |  TcTyVar : Name.Name -> GHC.Num.Int -> unit -> unit -> Var
-                     |  Mk_Id : Name.Name -> GHC.Num.Int -> unit -> IdScope -> unit -> unit -> Var.
+                     |  Mk_Id
+                       : Name.Name -> GHC.Num.Int -> unit -> IdScope -> IdInfo.IdDetails -> IdInfo.IdInfo -> Var.
 
 Definition Id :=
   Var%type.
@@ -134,7 +136,7 @@ Definition varType (arg_6__ : Var) :=
   end.
 (* Midamble *)
 
-Instance Unique_Var : Unique.Uniquable Var.Var := {}.
+Instance Unique_Var : Unique.Uniquable Var := {}.
 Admitted.
 
 (* Converted value declarations: *)
@@ -254,6 +256,28 @@ Axiom updateVarTypeM : forall {A : Type}, A.
 (* Translating `updateVarTypeM' failed: using a record pattern for the unknown
    constructor `Mk_TyVar' unsupported *)
 
+Definition idDetails : Id -> IdInfo.IdDetails :=
+  fun arg_33__ =>
+    match arg_33__ with
+      | Mk_Id _ _ _ _ details _ => details
+      | other => Panic.panicStr (GHC.Base.hs_string__ "idDetails") (Panic.noString
+                                                                   other)
+    end.
+
+Definition idInfo : Id -> IdInfo.IdInfo :=
+  fun arg_36__ =>
+    match arg_36__ with
+      | Mk_Id _ _ _ _ _ info => info
+      | other => Panic.panicStr (GHC.Base.hs_string__ "idInfo") (Panic.noString other)
+    end.
+
+Definition isCoVar : Var -> bool :=
+  fun arg_18__ =>
+    match arg_18__ with
+      | Mk_Id _ _ _ _ details _ => IdInfo.isCoVarDetails details
+      | _ => false
+    end.
+
 Definition isExportedId : Var -> bool :=
   fun arg_7__ =>
     match arg_7__ with
@@ -276,8 +300,8 @@ Definition mustHaveLocalBinding : Var -> bool :=
   fun var => isLocalVar var.
 
 Definition isId : Var -> bool :=
-  fun arg_15__ =>
-    match arg_15__ with
+  fun arg_21__ =>
+    match arg_21__ with
       | Mk_Id _ _ _ _ _ _ => true
       | _ => false
     end.
@@ -289,9 +313,16 @@ Definition isLocalId : Var -> bool :=
       | _ => false
     end.
 
+Definition isNonCoVarId : Var -> bool :=
+  fun arg_15__ =>
+    match arg_15__ with
+      | Mk_Id _ _ _ _ details _ => negb (IdInfo.isCoVarDetails details)
+      | _ => false
+    end.
+
 Definition isTKVar : Var -> bool :=
-  fun arg_19__ =>
-    match arg_19__ with
+  fun arg_25__ =>
+    match arg_25__ with
       | Mk_TyVar _ _ _ => true
       | TcTyVar _ _ _ _ => true
       | _ => false
@@ -300,8 +331,11 @@ Definition isTKVar : Var -> bool :=
 Definition isTyVar : Var -> bool :=
   isTKVar.
 
+Definition isTyCoVar : Var -> bool :=
+  fun v => orb (isTyVar v) (isCoVar v).
+
 Definition isTcTyVar : Var -> bool :=
-  fun arg_17__ => match arg_17__ with | TcTyVar _ _ _ _ => true | _ => false end.
+  fun arg_23__ => match arg_23__ with | TcTyVar _ _ _ _ => true | _ => false end.
 
 Definition mkTcTyVar : Name.Name -> unit -> unit -> TyVar :=
   fun name kind details =>
@@ -310,25 +344,36 @@ Definition mkTcTyVar : Name.Name -> unit -> unit -> TyVar :=
 Definition mkTyVar : Name.Name -> unit -> TyVar :=
   fun name kind => Mk_TyVar missingValue missingValue missingValue.
 
-Definition mk_id : Name.Name -> unit -> IdScope -> unit -> unit -> Id :=
+Definition mk_id
+    : Name.Name -> unit -> IdScope -> IdInfo.IdDetails -> IdInfo.IdInfo -> Id :=
   fun name ty scope details info =>
     Mk_Id missingValue missingValue missingValue missingValue missingValue
           missingValue.
 
-Definition mkLocalVar : unit -> Name.Name -> unit -> unit -> Id :=
+Definition mkLocalVar
+    : IdInfo.IdDetails -> Name.Name -> unit -> IdInfo.IdInfo -> Id :=
   fun details name ty info => mk_id name ty (LocalId NotExported) details info.
 
-Definition mkGlobalVar : unit -> Name.Name -> unit -> unit -> Id :=
+Definition mkGlobalVar
+    : IdInfo.IdDetails -> Name.Name -> unit -> IdInfo.IdInfo -> Id :=
   fun details name ty info => mk_id name ty GlobalId details info.
 
-Definition mkExportedLocalVar : unit -> Name.Name -> unit -> unit -> Id :=
+Definition mkExportedLocalVar
+    : IdInfo.IdDetails -> Name.Name -> unit -> IdInfo.IdInfo -> Id :=
   fun details name ty info => mk_id name ty (LocalId Exported) details info.
+
+Definition mkCoVar : Name.Name -> unit -> CoVar :=
+  fun name ty =>
+    mk_id name ty (LocalId NotExported) IdInfo.coVarDetails IdInfo.vanillaIdInfo.
 
 Definition setTyVarName : TyVar -> Name.Name -> TyVar :=
   setVarName.
 
 Definition setTyVarUnique : TyVar -> Unique.Unique -> TyVar :=
   setVarUnique.
+
+Definition tcTyVarDetails : TyVar -> unit :=
+  fun x => tt.
 
 Definition tyVarKind : TyVar -> unit :=
   varType.
@@ -355,8 +400,10 @@ Program Instance Ord__Var : GHC.Base.Ord Var := fun _ k =>
       GHC.Base.min__ := Ord__Var_min |}.
 
 (* Unbound variables:
-     bool comparison error false negb true unit GHC.Base.Eq_ GHC.Base.Ord
+     bool comparison error false negb orb true tt unit GHC.Base.Eq_ GHC.Base.Ord
      GHC.Base.op_zeze__ GHC.Base.op_zg__ GHC.Base.op_zgze__ GHC.Base.op_zl__
-     GHC.Base.op_zlze__ GHC.Num.Int Name.Name Unique.Unique Unique.mkUniqueGrimily
+     GHC.Base.op_zlze__ GHC.Num.Int IdInfo.IdDetails IdInfo.IdInfo
+     IdInfo.coVarDetails IdInfo.isCoVarDetails IdInfo.vanillaIdInfo Name.Name
+     Panic.noString Panic.panicStr Unique.Unique Unique.mkUniqueGrimily
      Unique.nonDetCmpUnique
 *)

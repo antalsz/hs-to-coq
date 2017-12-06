@@ -114,6 +114,8 @@ VFILES:=FastString.v\
   Panic.v\
   Util.v\
   CallArity.v\
+  IdInfo.v\
+  IdInfo2.v\
   Maybes.v\
   MonadUtils.v\
   Pair.v\

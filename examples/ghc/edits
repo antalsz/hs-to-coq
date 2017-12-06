@@ -12,8 +12,8 @@ rename type MkId.DataConBoxer = unit
 # bruttaly skipping all type info
 ### get rid of type information in the AST
 rename type TcType.TcTyVarDetails = unit
-rename type IdInfo.IdDetails      = unit
-rename type IdInfo.IdInfo         = unit
+# rename type IdInfo.IdDetails      = unit
+# rename type IdInfo.IdInfo         = unit
 rename type TyCon.TyCon           = unit
 rename type TyCoRep.Coercion      = unit
 rename type TyCoRep.Type_         = unit
@@ -22,6 +22,10 @@ rename type TyCoRep.TyBinder      = unit
 rename type TyCoRep.TyThing       = unit
 rename type TyCoRep.Kind          = unit
 rename type TyCoRep.PredType      = unit
+
+rename type PrimOp.PrimOp = unit
+rename type ForeignCall.ForeignCall = unit
+
 
 # TODO: better treatment of primitive values
 skip module GHC.Int
@@ -75,7 +79,7 @@ rename value CoreSyn.RuleEnv  = CoreSyn.Mk_RuleEnv
 rename value DataCon.HsSrcBang = DataCon.Mk_HsSrcBang
 rename value DataCon.EqSpec    = DataCon.Mk_EqSpec
 rename value Class.Class  = Class.Mk_Class
-
+rename value IdInfo.RuleInfo = IdInfo.Mk_RuleInfo
 
 
 # These constructor are named after their argument, not their return type,

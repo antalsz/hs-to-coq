@@ -22,6 +22,8 @@ HANDMOD = \
   Panic \
   Util \
   CallArity \
+  IdInfo \
+  IdInfo2 \
 
 # Generated modules
 # generated directly from ghc/compiler/*/
@@ -61,7 +63,6 @@ MODULES = \
   UnVarGraph \
   Id \
   Demand \
-
 
 
 # also generated from drop-in/

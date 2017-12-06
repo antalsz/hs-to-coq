@@ -1,1 +1,53 @@
-axiomatize module Id
+# axiomatize module Id
+
+rename value IdInfo.demandInfo        = IdInfo2.demandInfo
+rename value IdInfo.strictnessInfo    = IdInfo2.strictnessInfo
+rename value IdInfo.unfoldingInfo     = IdInfo2.unfoldingInfo
+rename value IdInfo.setDemandInfo     = IdInfo2.setDemandInfo
+rename value IdInfo.setStrictnessInfo = IdInfo2.setStrictnessInfo
+rename value IdInfo.setUnfoldingInfo  = IdInfo2.setUnfoldingInfo
+rename value IdInfo.setUnfoldingInfoLazily  = IdInfo2.setUnfoldingInfoLazily
+rename value IdInfo.ruleInfoFreeVars  = IdInfo2.ruleInfoFreeVars
+rename value IdInfo.ruleInfoRules     = IdInfo2.ruleInfoRules
+
+
+##############
+
+# StaticFlags
+skip Id.isStateHackType
+skip Id.typeOneShot
+
+# Demand
+# skip Id.idDemandInfo
+# skip Id.idStrictness
+# skip Id.isBottomingId
+# skip Id.isStrictId
+# skip Id.setIdDemandInfo
+# skip Id.setIdSpecialization
+# skip Id.transferPolyIdInfo
+# skip Id.zapIdStrictness
+
+# CoreSyn
+# skip Id.idUnfolding
+# skip Id.setIdUnfolding
+# skip Id.setIdUnfoldingLazily
+# skip Id.realIdUnfolding
+
+# DataCon
+# skip Id.isDataConId_maybe
+# skip Id.idDataCon
+# skip Id.isDataConWorkId_maybe
+
+# Class
+# skip Id.isClassOpId_maybe
+
+# Type
+# skip Id.isDictId
+# skip Id.idRepArity
+# skip Id.isEvVar
+# skip Id.setIdType
+
+# TyCoRep
+# skip Id.mkLocalIdOrCoVarWithInfo
+# skip Id.mkLocalCoVar
+# skip Id.mkLocalIdOrCoVar

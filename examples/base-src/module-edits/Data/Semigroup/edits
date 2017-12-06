@@ -1,8 +1,5 @@
-# These are addrssed using their local name, which is accidental and probably not ideal.
-nonterminating rep
-nonterminating g
-nonterminating f
-nonterminating go
+nonterminating Data.Semigroup.sconcat
+nonterminating Data.Semigroup.stimes
 
 # looping
 skip Data.Semigroup.cycle1

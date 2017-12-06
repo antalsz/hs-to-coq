@@ -793,23 +793,27 @@ guardTerm gs rhs failure = go gs where
 
 --------------------------------------------------------------------------------
 
-convertTypedBinding :: ConversionMonad m => Maybe Term -> HsBind GHC.Name -> m (Maybe ConvertedBinding)
-convertTypedBinding _convHsTy VarBind{}     = convUnsupported "[internal] `VarBind'"
-convertTypedBinding _convHsTy AbsBinds{}    = convUnsupported "[internal?] `AbsBinds'"
-convertTypedBinding _convHsTy AbsBindsSig{} = convUnsupported "[internal?] `AbsBindsSig'"
-convertTypedBinding _convHsTy PatSynBind{}  = convUnsupported "pattern synonym bindings"
-convertTypedBinding _convHsTy PatBind{..}   = do -- TODO use `_convHsTy`?
+withCurrentDefinitionIfTopLevel :: ConversionMonad m => TopLevelFlag -> Qualid -> m a -> m a
+withCurrentDefinitionIfTopLevel TopLevel name  = withCurrentDefinition name
+withCurrentDefinitionIfTopLevel NotTopLevel _  = id
+
+convertTypedBinding :: ConversionMonad m => TopLevelFlag -> Maybe Term -> HsBind GHC.Name -> m (Maybe ConvertedBinding)
+convertTypedBinding _ _convHsTy VarBind{}     = convUnsupported "[internal] `VarBind'"
+convertTypedBinding _ _convHsTy AbsBinds{}    = convUnsupported "[internal?] `AbsBinds'"
+convertTypedBinding _ _convHsTy AbsBindsSig{} = convUnsupported "[internal?] `AbsBindsSig'"
+convertTypedBinding _ _convHsTy PatSynBind{}  = convUnsupported "pattern synonym bindings"
+convertTypedBinding _ _convHsTy PatBind{..}   = do -- TODO use `_convHsTy`?
   -- TODO: Respect `skipped'?
   -- TODO: what if we need to rename this definition? (i.e. for a class member)
   (pat, guards) <- runWriterT $ convertLPat pat_lhs
   Just . ConvertedPatternBinding pat <$> convertGRHSs (map BoolGuard guards) pat_rhs patternFailure
-convertTypedBinding  convHsTy FunBind{..}   = runMaybeT $ do
+convertTypedBinding toplvl convHsTy FunBind{..}   = runMaybeT $ do
   name <- var ExprNS (unLoc fun_id)
 
   -- Skip it?
   guard . not =<< use (edits.skipped.contains name)
 
-  withCurrentDefinition name $ do
+  withCurrentDefinitionIfTopLevel toplvl name $ do
     let (tvs, coqTy) =
           -- The @forall@ed arguments need to be brought into scope
           let peelForall (Forall tvs body) = first (NEL.toList tvs ++) $ peelForall body
@@ -850,11 +854,12 @@ unsafeFix _ = error "unsafeFix: cannot handle annotations or types"
 
 -- TODO mutual recursion :-(
 convertTypedModuleBindings :: ConversionMonad m
-                           => [(Maybe ModuleName, HsBind GHC.Name)] -> Map Qualid Signature
+                           => TopLevelFlag -> [(Maybe ModuleName, HsBind GHC.Name)]
+                           -> Map Qualid Signature
                            -> (ConvertedBinding -> m a)
                            -> Maybe (HsBind GHC.Name -> GhcException -> m a)
                            -> m [a]
-convertTypedModuleBindings defns sigs build mhandler =
+convertTypedModuleBindings toplvl defns sigs build mhandler =
   let processed defn = runMaybeT
                      . maybe id (ghandle . (lift .: ($ defn))) mhandler . (lift . build =<<)
                      . MaybeT
@@ -864,21 +869,21 @@ convertTypedModuleBindings defns sigs build mhandler =
                  fmap sigType . (`M.lookup` sigs) <$> var ExprNS hsName
                _ ->
                  pure Nothing
-       processed defn $ convertTypedBinding ty defn
+       processed defn $ convertTypedBinding toplvl ty defn
 
 convertTypedBindings :: ConversionMonad m
-                     => [HsBind GHC.Name] -> Map Qualid Signature
+                     => TopLevelFlag -> [HsBind GHC.Name] -> Map Qualid Signature
                      -> (ConvertedBinding -> m a)
                      -> Maybe (HsBind GHC.Name -> GhcException -> m a)
                      -> m [a]
-convertTypedBindings = convertTypedModuleBindings . map (Nothing,)
+convertTypedBindings toplvl = convertTypedModuleBindings toplvl . map (Nothing,)
 
 --------------------------------------------------------------------------------
 
 convertLocalBinds :: ConversionMonad m => HsLocalBinds GHC.Name -> m Term -> m Term
 convertLocalBinds (HsValBinds (ValBindsIn binds lsigs)) body = localizeConversionState $ do
   sigs     <- convertLSigs lsigs
-  convDefs <- convertTypedBindings (map unLoc . bagToList $ binds) sigs pure Nothing
+  convDefs <- convertTypedBindings  NotTopLevel (map unLoc . bagToList $ binds) sigs pure Nothing
   let matchLet pat term body = Coq.Match [MatchItem term Nothing Nothing] Nothing
                                          [Equation [MultPattern [pat]] body]
   let toLet ConvertedDefinition{..} = Let convDefName convDefArgs convDefType convDefBody

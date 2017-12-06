@@ -16,6 +16,7 @@ import GHC hiding (Name)
 import qualified GHC
 import Bag
 import Class
+import BasicTypes (TopLevelFlag(..))
 
 import HsToCoq.Coq.Gallina as Coq
 import HsToCoq.Coq.Gallina.Util
@@ -93,7 +94,8 @@ convertClassDecl (L _ hsCtx) (L _ hsName) ltvs fds lsigs defaults types typeDefa
   -- ugh! doesnt work for operators
   -- memberSigs.at name ?= sigs
 
-  defs <- fmap M.fromList $ for (bagToList defaults) $ convertTypedBinding Nothing . unLoc >=> \case
+  defs <- fmap M.fromList $ for (bagToList defaults) $
+          convertTypedBinding TopLevel Nothing . unLoc >=> \case
             Just (ConvertedDefinitionBinding ConvertedDefinition{..}) -> do
 --                typeArgs <- getImplicitBindersForClassMember name convDefName
                 pure (convDefName, maybe id Fun (NE.nonEmpty (convDefArgs)) convDefBody)

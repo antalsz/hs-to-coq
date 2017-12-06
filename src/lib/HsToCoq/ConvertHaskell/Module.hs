@@ -36,6 +36,7 @@ import HsToCoq.Coq.Gallina.Util
 import GHC hiding (Name)
 import qualified GHC
 import HsToCoq.Util.GHC.Module
+import BasicTypes (TopLevelFlag(..))
 import Panic
 import Bag
 
@@ -75,7 +76,7 @@ convertHsGroup mod HsGroup{..} = do
       ValBindsOut binds lsigs -> do
         sigs  <- convertLSigs lsigs
         defns <- fmap M.fromList
-              .  (convertTypedBindings
+              .  (convertTypedBindings TopLevel
                    (map unLoc $ concatMap (bagToList . snd) binds)
                    sigs
                    ??

@@ -23,6 +23,7 @@ End GHC.
 
 (* Converted imports: *)
 
+Require Data.Bits.
 Require Data.Either.
 Require Data.Foldable.
 Require Data.Functor.
@@ -1331,6 +1332,251 @@ Definition filterLt {k} {v} `{GHC.Base.Ord k} : MaybeS k -> Map k v -> Map k
                        filter' b t
     end.
 
+Definition fromDistinctAscList {k} {a} : list (k * a)%type -> Map k a :=
+  fun arg_0__ =>
+    match arg_0__ with
+      | nil => Tip
+      | cons (pair kx0 x0) xs0 => let create :=
+                                    unsafeFix (fun create arg_1__ arg_2__ =>
+                                                let j_14__ :=
+                                                  match arg_1__ , arg_2__ with
+                                                    | _ , nil => pair Tip nil
+                                                    | s , (cons x' xs' as xs) => let j_10__ :=
+                                                                                   let scrut_4__ :=
+                                                                                     create (Data.Bits.shiftR s
+                                                                                                              (GHC.Num.fromInteger
+                                                                                                              1)) xs in
+                                                                                   match scrut_4__ with
+                                                                                     | (pair _ nil as res) => res
+                                                                                     | pair l (cons (pair ky y) ys) =>
+                                                                                       let scrut_5__ :=
+                                                                                         create (Data.Bits.shiftR s
+                                                                                                                  (GHC.Num.fromInteger
+                                                                                                                  1))
+                                                                                         ys in
+                                                                                       match scrut_5__ with
+                                                                                         | pair r zs => pair (link ky y
+                                                                                                             l r) zs
+                                                                                       end
+                                                                                   end in
+                                                                                 if s GHC.Base.== GHC.Num.fromInteger
+                                                                                    1 : bool
+                                                                                 then match x' with
+                                                                                        | pair kx x => pair (Bin
+                                                                                                            (GHC.Num.fromInteger
+                                                                                                            1) kx x Tip
+                                                                                                            Tip) xs'
+                                                                                      end
+                                                                                 else j_10__
+                                                  end in
+                                                match arg_1__ , arg_2__ with
+                                                  | arg , _ => if GHC.Prim.seq arg false : bool
+                                                               then GHC.Err.undefined
+                                                               else j_14__
+                                                end) in
+                                  let go :=
+                                    unsafeFix (fun go arg_17__ arg_18__ arg_19__ =>
+                                                let j_24__ :=
+                                                  match arg_17__ , arg_18__ , arg_19__ with
+                                                    | _ , t , nil => t
+                                                    | s , l , cons (pair kx x) xs => let scrut_20__ := create s xs in
+                                                                                     match scrut_20__ with
+                                                                                       | pair r ys => go
+                                                                                                      (Data.Bits.shiftL
+                                                                                                      s
+                                                                                                      (GHC.Num.fromInteger
+                                                                                                      1)) (link kx x l
+                                                                                                          r) ys
+                                                                                     end
+                                                  end in
+                                                match arg_17__ , arg_18__ , arg_19__ with
+                                                  | arg , _ , _ => if GHC.Prim.seq arg false : bool
+                                                                   then GHC.Err.undefined
+                                                                   else j_24__
+                                                end) in
+                                  go (GHC.Num.fromInteger 1 : GHC.Num.Int) (Bin (GHC.Num.fromInteger 1) kx0 x0 Tip
+                                                                           Tip) xs0
+    end.
+
+Definition fromAscListWithKey {k} {a} `{GHC.Base.Eq_ k}
+    : (k -> a -> a -> a) -> list (k * a)%type -> Map k a :=
+  fun f xs =>
+    let combineEq' :=
+      unsafeFix (fun combineEq' arg_0__ arg_1__ =>
+                  match arg_0__ , arg_1__ with
+                    | z , nil => cons z nil
+                    | (pair kz zz as z) , cons (pair kx xx as x) xs' => let j_3__ :=
+                                                                          cons z (combineEq' x xs') in
+                                                                        if kx GHC.Base.== kz : bool
+                                                                        then let yy := f kx xx zz in
+                                                                             combineEq' (pair kx yy) xs'
+                                                                        else j_3__
+                  end) in
+    let combineEq :=
+      fun arg_7__ arg_8__ =>
+        match arg_7__ , arg_8__ with
+          | _ , xs' => match xs' with
+                         | nil => nil
+                         | cons x nil => cons x nil
+                         | cons x xx => combineEq' x xx
+                       end
+        end in
+    fromDistinctAscList (combineEq f xs).
+
+Definition fromAscList {k} {a} `{GHC.Base.Eq_ k} : list (k * a)%type -> Map k
+                                                   a :=
+  fun xs =>
+    fromAscListWithKey (fun arg_0__ arg_1__ arg_2__ =>
+                         match arg_0__ , arg_1__ , arg_2__ with
+                           | _ , x , _ => x
+                         end) xs.
+
+Definition fromAscListWith {k} {a} `{GHC.Base.Eq_ k} : (a -> a -> a) -> list (k
+                                                                             * a)%type -> Map k a :=
+  fun f xs =>
+    fromAscListWithKey (fun arg_0__ arg_1__ arg_2__ =>
+                         match arg_0__ , arg_1__ , arg_2__ with
+                           | _ , x , y => f x y
+                         end) xs.
+
+Definition fromList {k} {a} `{GHC.Base.Ord k} : list (k * a)%type -> Map k a :=
+  fun arg_0__ =>
+    match arg_0__ with
+      | nil => Tip
+      | cons (pair kx x) nil => Bin (GHC.Num.fromInteger 1) kx x Tip Tip
+      | cons (pair kx0 x0) xs0 => let fromList' :=
+                                    fun t0 xs =>
+                                      let ins :=
+                                        fun arg_2__ arg_3__ =>
+                                          match arg_2__ , arg_3__ with
+                                            | t , pair k x => insert k x t
+                                          end in
+                                      Data.Foldable.foldl ins t0 xs in
+                                  let not_ordered :=
+                                    fun arg_7__ arg_8__ =>
+                                      match arg_7__ , arg_8__ with
+                                        | _ , nil => false
+                                        | kx , cons (pair ky _) _ => kx GHC.Base.>= ky
+                                      end in
+                                  let create :=
+                                    unsafeFix (fun create arg_11__ arg_12__ =>
+                                                let j_27__ :=
+                                                  match arg_11__ , arg_12__ with
+                                                    | _ , nil => pair (pair Tip nil) nil
+                                                    | s , (cons xp xss as xs) => let j_22__ :=
+                                                                                   let scrut_14__ :=
+                                                                                     create (Data.Bits.shiftR s
+                                                                                                              (GHC.Num.fromInteger
+                                                                                                              1)) xs in
+                                                                                   match scrut_14__ with
+                                                                                     | (pair (pair _ nil) _ as res) =>
+                                                                                       res
+                                                                                     | pair (pair l (cons (pair ky y)
+                                                                                                          nil)) zs =>
+                                                                                       pair (pair (insertMax ky y l)
+                                                                                                  nil) zs
+                                                                                     | pair (pair l (cons (pair ky y)
+                                                                                                          yss as ys))
+                                                                                            _ => let j_19__ :=
+                                                                                                   let scrut_16__ :=
+                                                                                                     create
+                                                                                                     (Data.Bits.shiftR s
+                                                                                                                       (GHC.Num.fromInteger
+                                                                                                                       1))
+                                                                                                     yss in
+                                                                                                   match scrut_16__ with
+                                                                                                     | pair (pair r zs)
+                                                                                                            ws => pair
+                                                                                                                  (pair
+                                                                                                                  (link
+                                                                                                                  ky y l
+                                                                                                                  r) zs)
+                                                                                                                  ws
+                                                                                                   end in
+                                                                                                 if not_ordered ky
+                                                                                                    yss : bool
+                                                                                                 then pair (pair l nil)
+                                                                                                           ys
+                                                                                                 else j_19__
+                                                                                   end in
+                                                                                 if s GHC.Base.== GHC.Num.fromInteger
+                                                                                    1 : bool
+                                                                                 then match xp with
+                                                                                        | pair kx x => let j_23__ :=
+                                                                                                         pair (pair (Bin
+                                                                                                                    (GHC.Num.fromInteger
+                                                                                                                    1)
+                                                                                                                    kx x
+                                                                                                                    Tip
+                                                                                                                    Tip)
+                                                                                                                    xss)
+                                                                                                              nil in
+                                                                                                       if not_ordered kx
+                                                                                                          xss : bool
+                                                                                                       then pair (pair
+                                                                                                                 (Bin
+                                                                                                                 (GHC.Num.fromInteger
+                                                                                                                 1) kx x
+                                                                                                                 Tip
+                                                                                                                 Tip)
+                                                                                                                 nil)
+                                                                                                                 xss
+                                                                                                       else j_23__
+                                                                                      end
+                                                                                 else j_22__
+                                                  end in
+                                                match arg_11__ , arg_12__ with
+                                                  | arg , _ => if GHC.Prim.seq arg false : bool
+                                                               then GHC.Err.undefined
+                                                               else j_27__
+                                                end) in
+                                  let go :=
+                                    unsafeFix (fun go arg_30__ arg_31__ arg_32__ =>
+                                                let j_40__ :=
+                                                  match arg_30__ , arg_31__ , arg_32__ with
+                                                    | _ , t , nil => t
+                                                    | _ , t , cons (pair kx x) nil => insertMax kx x t
+                                                    | s , l , (cons (pair kx x) xss as xs) => let j_38__ :=
+                                                                                                let scrut_34__ :=
+                                                                                                  create s xss in
+                                                                                                match scrut_34__ with
+                                                                                                  | pair (pair r ys)
+                                                                                                         nil => go
+                                                                                                                (Data.Bits.shiftL
+                                                                                                                s
+                                                                                                                (GHC.Num.fromInteger
+                                                                                                                1))
+                                                                                                                (link kx
+                                                                                                                x l r)
+                                                                                                                ys
+                                                                                                  | pair (pair r _)
+                                                                                                         ys => fromList'
+                                                                                                               (link kx
+                                                                                                               x l r) ys
+                                                                                                end in
+                                                                                              if not_ordered kx
+                                                                                                 xss : bool
+                                                                                              then fromList' l xs
+                                                                                              else j_38__
+                                                  end in
+                                                match arg_30__ , arg_31__ , arg_32__ with
+                                                  | arg , _ , _ => if GHC.Prim.seq arg false : bool
+                                                                   then GHC.Err.undefined
+                                                                   else j_40__
+                                                end) in
+                                  let j_43__ :=
+                                    go (GHC.Num.fromInteger 1 : GHC.Num.Int) (Bin (GHC.Num.fromInteger 1) kx0 x0 Tip
+                                                                             Tip) xs0 in
+                                  if not_ordered kx0 xs0 : bool
+                                  then fromList' (Bin (GHC.Num.fromInteger 1) kx0 x0 Tip Tip) xs0
+                                  else j_43__
+    end.
+
+Definition mapKeys {k2} {k1} {a} `{GHC.Base.Ord k2} : (k1 -> k2) -> Map k1
+                                                      a -> Map k2 a :=
+  fun f =>
+    fromList GHC.Base.∘ foldrWithKey (fun k x xs => cons (pair (f k) x) xs) nil.
+
 Definition split {k} {a} `{GHC.Base.Ord k} : k -> Map k a -> (Map k a * Map k
                                              a)%type :=
   fun k0 t0 =>
@@ -2177,15 +2423,15 @@ End Notations.
 
 (* Unbound variables:
      Gt Lt None Some andb bool comparison cons false id list map_size negb nil
-     op_zt__ option orb pair prod true Data.Either.Either Data.Either.Left
-     Data.Either.Right Data.Foldable.Foldable Data.Foldable.foldl
-     Data.Functor.op_zlzdzg__ Data.Set.Base.Bin Data.Set.Base.Set_ Data.Set.Base.Tip
-     Data.Traversable.Traversable Data.Tuple.snd GHC.Base.Applicative GHC.Base.Eq_
-     GHC.Base.Functor GHC.Base.Monad GHC.Base.Monoid GHC.Base.Ord GHC.Base.String
-     GHC.Base.compare GHC.Base.const GHC.Base.flip GHC.Base.id GHC.Base.mappend
-     GHC.Base.mempty GHC.Base.op_z2218U__ GHC.Base.op_zd__ GHC.Base.op_zdzn__
-     GHC.Base.op_zeze__ GHC.Base.op_zg__ GHC.Base.op_zgze__ GHC.Base.op_zl__
-     GHC.Base.op_zlze__ GHC.Base.op_zlztzg__ GHC.Base.op_zsze__ GHC.Base.pure
-     GHC.Err.error GHC.Err.undefined GHC.Num.Int GHC.Num.Num GHC.Num.op_zm__
-     GHC.Num.op_zp__ GHC.Num.op_zt__ GHC.Prim.seq Nat.add
+     op_zt__ option orb pair prod true Data.Bits.shiftL Data.Bits.shiftR
+     Data.Either.Either Data.Either.Left Data.Either.Right Data.Foldable.Foldable
+     Data.Foldable.foldl Data.Functor.op_zlzdzg__ Data.Set.Base.Bin
+     Data.Set.Base.Set_ Data.Set.Base.Tip Data.Traversable.Traversable Data.Tuple.snd
+     GHC.Base.Applicative GHC.Base.Eq_ GHC.Base.Functor GHC.Base.Monad
+     GHC.Base.Monoid GHC.Base.Ord GHC.Base.String GHC.Base.compare GHC.Base.const
+     GHC.Base.flip GHC.Base.id GHC.Base.mappend GHC.Base.mempty GHC.Base.op_z2218U__
+     GHC.Base.op_zd__ GHC.Base.op_zdzn__ GHC.Base.op_zeze__ GHC.Base.op_zg__
+     GHC.Base.op_zgze__ GHC.Base.op_zl__ GHC.Base.op_zlze__ GHC.Base.op_zlztzg__
+     GHC.Base.op_zsze__ GHC.Base.pure GHC.Err.error GHC.Err.undefined GHC.Num.Int
+     GHC.Num.Num GHC.Num.op_zm__ GHC.Num.op_zp__ GHC.Num.op_zt__ GHC.Prim.seq Nat.add
 *)

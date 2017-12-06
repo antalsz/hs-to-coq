@@ -23,6 +23,7 @@ End GHC.
 
 (* Converted imports: *)
 
+Require Data.Bits.
 Require Data.Foldable.
 Require GHC.Base.
 Require GHC.Num.
@@ -962,6 +963,183 @@ Definition filterLt {a} `{GHC.Base.Ord a} : MaybeS a -> Set_ a -> Set_ a :=
                        filter' b t
     end.
 
+Definition fromDistinctAscList {a} : list a -> Set_ a :=
+  fun arg_0__ =>
+    match arg_0__ with
+      | nil => Tip
+      | cons x0 xs0 => let create :=
+                         unsafeFix (fun create arg_1__ arg_2__ =>
+                                     let j_12__ :=
+                                       match arg_1__ , arg_2__ with
+                                         | _ , nil => pair Tip nil
+                                         | s , (cons x xs' as xs) => let j_10__ :=
+                                                                       let scrut_4__ :=
+                                                                         create (Data.Bits.shiftR s (GHC.Num.fromInteger
+                                                                                                  1)) xs in
+                                                                       match scrut_4__ with
+                                                                         | (pair _ nil as res) => res
+                                                                         | pair l (cons y ys) => let scrut_5__ :=
+                                                                                                   create
+                                                                                                   (Data.Bits.shiftR s
+                                                                                                                     (GHC.Num.fromInteger
+                                                                                                                     1))
+                                                                                                   ys in
+                                                                                                 match scrut_5__ with
+                                                                                                   | pair r zs => pair
+                                                                                                                  (link
+                                                                                                                  y l r)
+                                                                                                                  zs
+                                                                                                 end
+                                                                       end in
+                                                                     if s GHC.Base.== GHC.Num.fromInteger 1 : bool
+                                                                     then pair (Bin (GHC.Num.fromInteger 1) x Tip Tip)
+                                                                               xs'
+                                                                     else j_10__
+                                       end in
+                                     match arg_1__ , arg_2__ with
+                                       | arg , _ => if GHC.Prim.seq arg false : bool
+                                                    then GHC.Err.undefined
+                                                    else j_12__
+                                     end) in
+                       let go :=
+                         unsafeFix (fun go arg_15__ arg_16__ arg_17__ =>
+                                     let j_22__ :=
+                                       match arg_15__ , arg_16__ , arg_17__ with
+                                         | _ , t , nil => t
+                                         | s , l , cons x xs => let scrut_18__ := create s xs in
+                                                                match scrut_18__ with
+                                                                  | pair r ys => go (Data.Bits.shiftL s
+                                                                                                      (GHC.Num.fromInteger
+                                                                                                      1)) (link x l r)
+                                                                                 ys
+                                                                end
+                                       end in
+                                     match arg_15__ , arg_16__ , arg_17__ with
+                                       | arg , _ , _ => if GHC.Prim.seq arg false : bool
+                                                        then GHC.Err.undefined
+                                                        else j_22__
+                                     end) in
+                       go (GHC.Num.fromInteger 1 : GHC.Num.Int) (Bin (GHC.Num.fromInteger 1) x0 Tip
+                                                                Tip) xs0
+    end.
+
+Definition fromAscList {a} `{GHC.Base.Eq_ a} : list a -> Set_ a :=
+  fun xs =>
+    let combineEq' :=
+      unsafeFix (fun combineEq' arg_0__ arg_1__ =>
+                  match arg_0__ , arg_1__ with
+                    | z , nil => cons z nil
+                    | z , cons x xs' => let j_3__ := cons z (combineEq' x xs') in
+                                        if z GHC.Base.== x : bool
+                                        then combineEq' z xs'
+                                        else j_3__
+                  end) in
+    let combineEq :=
+      fun xs' =>
+        match xs' with
+          | nil => nil
+          | cons x nil => cons x nil
+          | cons x xx => combineEq' x xx
+        end in
+    fromDistinctAscList (combineEq xs).
+
+Definition fromList {a} `{GHC.Base.Ord a} : list a -> Set_ a :=
+  fun arg_0__ =>
+    match arg_0__ with
+      | nil => Tip
+      | cons x nil => Bin (GHC.Num.fromInteger 1) x Tip Tip
+      | cons x0 xs0 => let fromList' :=
+                         fun t0 xs =>
+                           let ins := fun t x => insert x t in Data.Foldable.foldl ins t0 xs in
+                       let not_ordered :=
+                         fun arg_4__ arg_5__ =>
+                           match arg_4__ , arg_5__ with
+                             | _ , nil => false
+                             | x , cons y _ => x GHC.Base.>= y
+                           end in
+                       let create :=
+                         unsafeFix (fun create arg_8__ arg_9__ =>
+                                     let j_21__ :=
+                                       match arg_8__ , arg_9__ with
+                                         | _ , nil => pair (pair Tip nil) nil
+                                         | s , (cons x xss as xs) => let j_19__ :=
+                                                                       let scrut_11__ :=
+                                                                         create (Data.Bits.shiftR s (GHC.Num.fromInteger
+                                                                                                  1)) xs in
+                                                                       match scrut_11__ with
+                                                                         | (pair (pair _ nil) _ as res) => res
+                                                                         | pair (pair l (cons y nil)) zs => pair (pair
+                                                                                                                 (insertMax
+                                                                                                                 y l)
+                                                                                                                 nil) zs
+                                                                         | pair (pair l (cons y yss as ys)) _ =>
+                                                                           let j_16__ :=
+                                                                             let scrut_13__ :=
+                                                                               create (Data.Bits.shiftR s
+                                                                                                        (GHC.Num.fromInteger
+                                                                                                        1)) yss in
+                                                                             match scrut_13__ with
+                                                                               | pair (pair r zs) ws => pair (pair (link
+                                                                                                                   y l
+                                                                                                                   r)
+                                                                                                                   zs)
+                                                                                                             ws
+                                                                             end in
+                                                                           if not_ordered y yss : bool
+                                                                           then pair (pair l nil) ys
+                                                                           else j_16__
+                                                                       end in
+                                                                     if s GHC.Base.== GHC.Num.fromInteger 1 : bool
+                                                                     then if not_ordered x xss : bool
+                                                                          then pair (pair (Bin (GHC.Num.fromInteger 1) x
+                                                                                          Tip Tip) nil) xss
+                                                                          else pair (pair (Bin (GHC.Num.fromInteger 1) x
+                                                                                          Tip Tip) xss) nil
+                                                                     else j_19__
+                                       end in
+                                     match arg_8__ , arg_9__ with
+                                       | arg , _ => if GHC.Prim.seq arg false : bool
+                                                    then GHC.Err.undefined
+                                                    else j_21__
+                                     end) in
+                       let go :=
+                         unsafeFix (fun go arg_24__ arg_25__ arg_26__ =>
+                                     let j_34__ :=
+                                       match arg_24__ , arg_25__ , arg_26__ with
+                                         | _ , t , nil => t
+                                         | _ , t , cons x nil => insertMax x t
+                                         | s , l , (cons x xss as xs) => let j_32__ :=
+                                                                           let scrut_28__ := create s xss in
+                                                                           match scrut_28__ with
+                                                                             | pair (pair r ys) nil => go
+                                                                                                       (Data.Bits.shiftL
+                                                                                                       s
+                                                                                                       (GHC.Num.fromInteger
+                                                                                                       1)) (link x l r)
+                                                                                                       ys
+                                                                             | pair (pair r _) ys => fromList' (link x l
+                                                                                                               r) ys
+                                                                           end in
+                                                                         if not_ordered x xss : bool
+                                                                         then fromList' l xs
+                                                                         else j_32__
+                                       end in
+                                     match arg_24__ , arg_25__ , arg_26__ with
+                                       | arg , _ , _ => if GHC.Prim.seq arg false : bool
+                                                        then GHC.Err.undefined
+                                                        else j_34__
+                                     end) in
+                       let j_37__ :=
+                         go (GHC.Num.fromInteger 1 : GHC.Num.Int) (Bin (GHC.Num.fromInteger 1) x0 Tip
+                                                                  Tip) xs0 in
+                       if not_ordered x0 xs0 : bool
+                       then fromList' (Bin (GHC.Num.fromInteger 1) x0 Tip Tip) xs0
+                       else j_37__
+    end.
+
+Definition map {b} {a} `{GHC.Base.Ord b} : (a -> b) -> Set_ a -> Set_ b :=
+  fun f => fromList GHC.Base.∘ (GHC.Base.map f GHC.Base.∘ toList).
+
 Definition split {a} `{GHC.Base.Ord a} : a -> Set_ a -> (Set_ a * Set_
                                          a)%type :=
   fun x0 t0 =>
@@ -1286,11 +1464,12 @@ End Notations.
 
 (* Unbound variables:
      Gt Lt None Some andb bool comparison cons false id list negb nil op_zt__ option
-     orb pair set_size true Data.Foldable.Foldable Data.Foldable.foldl GHC.Base.Eq_
-     GHC.Base.Monoid GHC.Base.Ord GHC.Base.String GHC.Base.compare GHC.Base.const
-     GHC.Base.flip GHC.Base.mappend GHC.Base.mempty GHC.Base.op_zd__
-     GHC.Base.op_zdzn__ GHC.Base.op_zeze__ GHC.Base.op_zg__ GHC.Base.op_zgze__
-     GHC.Base.op_zl__ GHC.Base.op_zlze__ GHC.Base.op_zsze__ GHC.Err.error
-     GHC.Err.undefined GHC.Num.Int GHC.Num.Num GHC.Num.op_zm__ GHC.Num.op_zp__
-     GHC.Num.op_zt__ GHC.Prim.seq Nat.add
+     orb pair set_size true Data.Bits.shiftL Data.Bits.shiftR Data.Foldable.Foldable
+     Data.Foldable.foldl GHC.Base.Eq_ GHC.Base.Monoid GHC.Base.Ord GHC.Base.String
+     GHC.Base.compare GHC.Base.const GHC.Base.flip GHC.Base.map GHC.Base.mappend
+     GHC.Base.mempty GHC.Base.op_z2218U__ GHC.Base.op_zd__ GHC.Base.op_zdzn__
+     GHC.Base.op_zeze__ GHC.Base.op_zg__ GHC.Base.op_zgze__ GHC.Base.op_zl__
+     GHC.Base.op_zlze__ GHC.Base.op_zsze__ GHC.Err.error GHC.Err.undefined
+     GHC.Num.Int GHC.Num.Num GHC.Num.op_zm__ GHC.Num.op_zp__ GHC.Num.op_zt__
+     GHC.Prim.seq Nat.add
 *)

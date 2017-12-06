@@ -15,13 +15,11 @@ skip Data.Map.Base.mapDataType
 
 termination Data.Map.Base.link {measure (Nat.add (map_size arg_2__) (map_size arg_3__))} termination_by_omega
 
-skip Data.Map.Base.fromDistinctAscList
-skip Data.Map.Base.fromAscList
-skip Data.Map.Base.fromList
-skip Data.Map.Base.fromAscListWithKey
-skip Data.Map.Base.fromAscListWith
-
-skip Data.Map.Base.mapKeys
+nonterminating Data.Map.Base.fromDistinctAscList
+nonterminating Data.Map.Base.fromAscList
+nonterminating Data.Map.Base.fromList
+nonterminating Data.Map.Base.fromAscListWithKey
+nonterminating Data.Map.Base.fromAscListWith
 
 nonterminating Data.Map.Base.merge
 

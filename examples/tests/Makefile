@@ -46,6 +46,7 @@ TODO_PASS  = \
   Arrow \
   OpMeth \
   TypeClient \
+  PatternGuard \
 
 MODULES = $(PASS) $(TODO_PASS)
 

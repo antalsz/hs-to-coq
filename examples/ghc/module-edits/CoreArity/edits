@@ -1,1 +1,10 @@
 axiomatize module CoreArity
+
+# This module depends strongly on Type/Coercion/TyCoRep/TyCon
+
+skip module Type
+skip module Coercion
+skip module TyCoRep
+skip module TyCon
+
+skip etaInfoAbs

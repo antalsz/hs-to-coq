@@ -17,11 +17,18 @@ This module redefines FastString as String (axiomatizing all of the operations).
 
 - Util
 
-This is a huge grab-bag. Should add definitions to this file on demand.
+This is a huge grab-bag. We should be able to translate this module, only
+laziness prevents it. Did a quick pass commenting out the *many* functions
+that we will never want to translate.
 
-- Maybes
+- IdInfo/IdInfo2/Id
 
-Should go back and generate this. Needs mtl though.
+These modules are axiomatized to avoid cyclic data structures due to, say
+class definitions.
+
+class F a where
+  foo :: F b => (a,b)
+
 
 
 Generated Modules
@@ -60,10 +67,12 @@ some definitions in midamble because of termination issue
 
 outputtable/show dependencies
 
-needs Util.dropWhileEndLE GHC.Unicode.isDigit
-character constants
+Several axiomatized functions:
+  needs GHC.Unicode.isDigit
+  character constants
+  GHC.Show.show@ Int
 
-cannot derive Ord for OccName (TODO: define by hand)
+cannot derive Ord for OccName (defined by hand)
 
 -  Module
 

@@ -48,6 +48,7 @@ MODULES = \
   UniqDSet \
   Name \
   NameEnv \
+  NameSet \
   Var \
   VarSet \
   VarEnv \

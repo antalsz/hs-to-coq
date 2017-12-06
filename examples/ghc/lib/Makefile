@@ -136,6 +136,7 @@ VFILES:=FastString.v\
   UniqDSet.v\
   Name.v\
   NameEnv.v\
+  NameSet.v\
   Var.v\
   VarSet.v\
   VarEnv.v\

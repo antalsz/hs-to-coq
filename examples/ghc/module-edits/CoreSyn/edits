@@ -37,3 +37,6 @@ skip CoreSyn.mkInt64LitInt64
 # needs Literal.mkMachInt
 skip CoreSyn.mkIntLit
 skip CoreSyn.mkIntLitInt
+
+
+skip CoreSyn.collectAnnArgs

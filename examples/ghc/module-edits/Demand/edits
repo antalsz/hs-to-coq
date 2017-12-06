@@ -1,5 +1,4 @@
-# axiomatize module Demand
-
+# puns (move to top-level edit file)
 rename value Demand.ExnStr = Demand.Mk_ExnStr
 rename value Demand.Str = Demand.Mk_Str
 rename value Demand.Use = Demand.Mk_Use

@@ -33,3 +33,16 @@ with deAnnBind {bndr} {annot} (ae : AnnBind bndr annot) {struct ae} : Bind bndr 
                                pairs)
        end.
 *)
+
+(* One way to resolve the fixpoint *)
+(*
+Fixpoint collectAnnArgs_go {b}{a}(expr : AnnExpr' b a) g as_ :=
+  match expr with
+    | AnnApp f a => collectAnnArgs_go (snd f) (fst f) (cons a as_)
+    | e          => ((g,e), as_)
+  end.
+
+Definition collectAnnArgs {b}{a} :
+  AnnExpr b a -> (AnnExpr b a * list (AnnExpr b a))%type :=
+  fun expr => collectAnnArgs_go (snd expr) (fst expr) nil.
+*)

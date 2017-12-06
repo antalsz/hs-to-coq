@@ -2,8 +2,15 @@ Require Import GHC.Base.
 Require Import Data.Set.Base.
 Require Import Coq.FSets.FSetInterface.
 
+From mathcomp Require Import ssrbool.
+
+(* LY: I think we need [OrderedType] here. *)
 Module Foo (E : DecidableType) : WSfun(E).
-  Local Instance Eq_t : GHC.Base.Eq_ E.t. Admitted.
+  Local Instance Eq_t : GHC.Base.Eq_ E.t :=
+    fun _ k => k {|
+                op_zeze____ := fun x y => E.eq_dec x y;
+                op_zsze____ := fun x y => negb (E.eq_dec x y);
+              |}.
   Local Instance Ord_t : GHC.Base.Ord E.t. Admitted.
 
   Definition elt := E.t.
@@ -16,9 +23,8 @@ Module Foo (E : DecidableType) : WSfun(E).
   Definition For_all (P : elt -> Prop) s := forall x, In x s -> P x.
   Definition Exists (P : elt -> Prop) s := exists x, In x s /\ P x.
 
-
   Definition empty : t := empty.
-  Definition is_empty : t -> bool. Admitted.
+  Definition is_empty : t -> bool := null.
   Definition mem : elt -> t -> bool. Admitted.
   Definition add : elt -> t -> t. Admitted.
   Definition singleton : elt -> t. Admitted.
@@ -50,7 +56,10 @@ Module Foo (E : DecidableType) : WSfun(E).
   Lemma equal_2 : forall s s' : t, equal s s' = true -> Equal s s'. Admitted.
   Lemma subset_1 : forall s s' : t, Subset s s' -> subset s s' = true. Admitted.
   Lemma subset_2 : forall s s' : t, subset s s' = true -> Subset s s'. Admitted.
-  Lemma empty_1 : Empty empty. Admitted.
+  
+  Lemma empty_1 : Empty empty.
+  Proof. unfold Empty; intros a H. inversion H. Qed.
+    
   Lemma is_empty_1 : forall s : t, Empty s -> is_empty s = true. Admitted.
   Lemma is_empty_2 : forall s : t, is_empty s = true -> Empty s. Admitted.
   Lemma add_1 :

@@ -48,6 +48,7 @@ TODO_PASS  = \
   TypeClient \
   PatternGuard \
   RecordConstruction \
+  PartialRecordSel \
 
 
 MODULES = $(PASS) $(TODO_PASS)

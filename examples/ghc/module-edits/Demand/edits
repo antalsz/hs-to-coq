@@ -1,4 +1,4 @@
-axiomatize module Demand
+# axiomatize module Demand
 
 rename value Demand.ExnStr = Demand.Mk_ExnStr
 rename value Demand.Str = Demand.Mk_Str
@@ -36,3 +36,78 @@ redefine Local Definition Demand.Eq___StrDmd_op_zeze__ : StrDmd -> (StrDmd -> bo
       | HeadStr , HeadStr => true
       | _ , _ => false
     end.
+
+# mutual recursion (axiomatized, not sure how to prove this)
+skip Demand.bothStr
+skip Demand.lubStr
+skip Demand.trimToType
+skip Demand.dmdTransformDataConSig
+skip Demand.lubUse
+skip Demand.bothUse
+skip Demand.zap_usg
+
+# mutual recursion (resolved in midamble)
+skip Demand.isUsedMU
+skip Demand.isUsedU
+skip Demand.markReused
+skip Demand.markReusedDmd
+
+# pattern guard
+skip Demand.splitFVs
+skip Demand.addCaseBndrDmd
+skip Demand.postProcessDmdEnv
+
+# This could be easy (GHC.Num.Int - 1)
+# and Program Fixpoint looks good. But I'm not sure how to do it.
+skip Demand.peelManyCalls
+
+skip Demand.pprIfaceStrictSig
+
+## hard metrics, but they don't do anything
+redefine Definition Demand.seqArgStr : ArgStr -> unit := fun x => tt.
+redefine Definition Demand.seqStrDmd : StrDmd -> unit := fun x => tt.
+redefine Definition Demand.seqStrDmdList : (list ArgStr) -> unit := fun x => tt.
+redefine Definition Demand.seqArgUse : ArgUse -> unit := fun x => tt.
+redefine Definition Demand.seqUseDmd : UseDmd -> unit := fun x => tt.
+redefine Definition Demand.seqArgUseList : (list ArgUse) -> unit := fun x => tt.
+redefine Definition Demand.seqDemand : Demand -> unit := fun x => tt.
+redefine Definition Demand.seqDemandList : (list Demand) -> unit := fun x => tt.
+redefine Definition Demand.seqDmdEnv : DmdEnv -> unit := fun x => tt.
+redefine Definition Demand.seqCPRResult : CPRResult -> unit := fun x => tt.
+redefine Definition Demand.seqDmdResult : DmdResult -> unit := fun x => tt.
+redefine Definition Demand.seqDmdType : DmdType -> unit := fun x => tt.
+redefine Definition Demand.seqStrictSig : StrictSig -> unit := fun x => tt.
+
+
+## Needs type info
+skip Demand.toCleanDmd
+skip Demand.strictifyDictDmd
+
+order Demand.resTypeArgDmd Demand.topRes Demand.dmdTypeDepth Demand.ensureArgs
+
+## repeat -> replicate n
+redefine Definition Demand.ensureArgs (n: BasicTypes.Arity) (d: DmdType) : DmdType :=
+  match d with
+      | Mk_DmdType fv ds r =>
+        let ds' :=
+            GHC.List.take n (Coq.Init.Datatypes.app ds
+               (GHC.List.replicate (GHC.Num.fromInteger n) (resTypeArgDmd r))) in
+        if GHC.Base.op_zeze__ n (dmdTypeDepth d)
+        then d
+        else Mk_DmdType fv ds'
+                        (match r with | Dunno _ => topRes | _ => r end)
+    end.
+
+order Demand.useTop Demand.splitUseProdDmd
+
+# debugging info
+redefine Definition Demand.splitUseProdDmd (n : GHC.Num.Int) (u: UseDmd) : option (list ArgUse) :=
+    match u with
+      | Used => Some (GHC.List.replicate n useTop)
+      | UHead => Some (GHC.List.replicate n Abs)
+      | UProd ds =>  Some ds
+      | UCall _ _ => None
+    end.
+
+## needs Default DmdType, and I'm too lazy to do it now.
+skip Demand.dmdTransformDictSelSig

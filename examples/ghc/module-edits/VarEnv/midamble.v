@@ -21,3 +21,7 @@ Instance Default_InScopeSet : Panic.Default InScopeSet :=
   Panic.Build_Default _ (InScope Panic.default Panic.default).
 Instance Default_RnEnv2 : Panic.Default RnEnv2 :=
   Panic.Build_Default _ (RV2 Panic.default Panic.default Panic.default).
+
+(* needs UniqFM.plusUFM_CD *)
+Parameter plusVarEnv_CD : forall {a}, (a -> a -> a) -> VarEnv a -> a -> VarEnv
+                               a -> a -> VarEnv a.

@@ -17,9 +17,7 @@ termination Data.Map.Base.link {measure (Nat.add (map_size arg_2__) (map_size ar
 termination Data.Map.Base.merge {measure (Nat.add (map_size arg_0__) (map_size arg_1__))} termination_by_omega
 
 nonterminating Data.Map.Base.fromDistinctAscList
-nonterminating Data.Map.Base.fromAscList
 nonterminating Data.Map.Base.fromList
 nonterminating Data.Map.Base.fromAscListWithKey
-nonterminating Data.Map.Base.fromAscListWith
 
 order Data.Map.Base.Eq___Map Data.Map.Base.Ord__Map

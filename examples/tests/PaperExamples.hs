@@ -6,7 +6,7 @@ import Prelude hiding (take)
 -- works independent of inter-module data flow
 data List a = Nil | Cons a (List a)
 
--- should ge a complete pattern match
+-- should be a complete pattern match
 mapList :: (a -> b) -> List a -> List b
 mapList f Nil = Nil
 mapList f (Cons x xs) = Cons (f x) (mapList f xs)
@@ -34,11 +34,11 @@ takeMapMaybe _ _ Nil = Nil
 class Pointed a where point :: a
 
 class Pointed a => PointedMagma a where
-    op :: a -> a -> a
-    op _ _ = point
+    oper :: a -> a -> a
+    oper _ _ = point
 
 instance Pointed Bool where point = True
 instance Pointed () where point = ()
 
-instance PointedMagma Bool where op = (&&)
+instance PointedMagma Bool where oper = (&&)
 instance PointedMagma ()

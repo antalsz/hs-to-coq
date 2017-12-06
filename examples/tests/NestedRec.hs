@@ -2,7 +2,7 @@ module NestedRec where
 
 -- Nats
 
-data N = N | S N
+data N = O | S N
 
 -- Inlined list datatype
 
@@ -24,13 +24,13 @@ goodMapList f = go
 data Tree a = Node a (List (Tree a))
 
 mx :: N -> N -> N
-mx N n = n
-mx n N = n
+mx O n = n
+mx n O = n
 mx (S n) (S m) = S (mx n m)
 
 maxmum :: List N -> N
 maxmum (Cons x xs) = mx x (maxmum xs)
-maxmum Nil         = N
+maxmum Nil         = O
 
 height :: Tree a -> N
 height (Node v ts) = S (maxmum (goodMapList height ts))

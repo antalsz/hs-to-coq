@@ -7,9 +7,9 @@ class Monoid a where
         mappend :: a -> a -> a
         mconcat :: [a] -> a
 
-newtype Endo a = Endo { appEndo :: a -> a }
+newtype Endo a = MkEndo { appEndo :: a -> a }
 
 instance Monoid (Endo a) where
-        mempty = Endo id
-        Endo f `mappend` Endo g = Endo (f . g)
+        mempty = MkEndo id
+        MkEndo f `mappend` MkEndo g = MkEndo (f . g)
         mconcat = foldr Endo.mappend Endo.mempty

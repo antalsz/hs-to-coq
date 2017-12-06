@@ -8,6 +8,9 @@ module Expr where
 -- http://coq.inria.fr/bugs/.
 --
 
+-- UGH, this file randomly started working when I added links to base.
+-- It is not showing the Coq 8.6 error anymore
+
 data Id
 
 data Expr b

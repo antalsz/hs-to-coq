@@ -47,6 +47,8 @@ TODO_PASS  = \
   OpMeth \
   TypeClient \
   PatternGuard \
+  RecordConstruction \
+
 
 MODULES = $(PASS) $(TODO_PASS)
 

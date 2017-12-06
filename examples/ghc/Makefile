@@ -24,6 +24,7 @@ HANDMOD = \
   CallArity \
   IdInfo \
   IdInfo2 \
+  Id \
 
 # Generated modules
 # generated directly from ghc/compiler/*/
@@ -61,7 +62,6 @@ MODULES = \
   CoreArity \
   CoreUtils \
   UnVarGraph \
-  Id \
   Demand \
 
 

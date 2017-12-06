@@ -228,17 +228,17 @@ Definition either {a} {c} {b} : (a -> c) -> (b -> c) -> Either a b -> c :=
 
 Definition partitionEithers {a} {b} : list (Either a b) -> (list a * list
                                       b)%type :=
-  let right :=
+  let right_ :=
     fun arg_16__ arg_17__ =>
       match arg_16__ , arg_17__ with
         | a , pair l r => pair l (cons a r)
       end in
-  let left :=
+  let left_ :=
     fun arg_20__ arg_21__ =>
       match arg_20__ , arg_21__ with
         | a , pair l r => pair (cons a l) r
       end in
-  GHC.Base.foldr (either left right) (pair nil nil).
+  GHC.Base.foldr (either left_ right_) (pair nil nil).
 
 Definition isLeft {a} {b} : Either a b -> bool :=
   fun arg_2__ => match arg_2__ with | Left _ => true | Right _ => false end.

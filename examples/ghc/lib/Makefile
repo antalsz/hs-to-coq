@@ -116,6 +116,7 @@ VFILES:=FastString.v\
   CallArity.v\
   IdInfo.v\
   IdInfo2.v\
+  Id.v\
   Maybes.v\
   MonadUtils.v\
   Pair.v\
@@ -149,7 +150,6 @@ VFILES:=FastString.v\
   CoreArity.v\
   CoreUtils.v\
   UnVarGraph.v\
-  Id.v\
   Demand.v
 
 ifneq ($(filter-out archclean clean cleanall printenv,$(MAKECMDGOALS)),)

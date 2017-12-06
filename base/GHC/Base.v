@@ -597,13 +597,13 @@ Local Definition Monoid__arrow_mappend {inst_b} {inst_a} `{Monoid inst_b}
 
 Local Definition Monoid__arrow_mempty {inst_b} {inst_a} `{Monoid inst_b}
     : (inst_a -> inst_b) :=
-  fun arg_171__ => mempty.
+  fun arg_0__ => mempty.
 
 Local Definition Monoid__unit_mappend : unit -> unit -> unit :=
-  fun arg_168__ arg_169__ => tt.
+  fun arg_0__ arg_1__ => tt.
 
 Local Definition Monoid__unit_mconcat : list unit -> unit :=
-  fun arg_170__ => tt.
+  fun arg_0__ => tt.
 
 Local Definition Monoid__unit_mempty : unit :=
   tt.
@@ -623,8 +623,8 @@ Program Instance Monoid__unit : Monoid unit := fun _ k =>
 
 Local Definition Monoid__comparison_mappend
     : comparison -> comparison -> comparison :=
-  fun arg_145__ arg_146__ =>
-    match arg_145__ , arg_146__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | Lt , _ => Lt
       | Eq , y => y
       | Gt , _ => Gt
@@ -635,8 +635,8 @@ Local Definition Monoid__comparison_mempty : comparison :=
 
 Local Definition Monoid__option_mappend {inst_a} `{Monoid inst_a} : (option
                                                                     inst_a) -> (option inst_a) -> (option inst_a) :=
-  fun arg_141__ arg_142__ =>
-    match arg_141__ , arg_142__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | None , m => m
       | m , None => m
       | Some m1 , Some m2 => Some (mappend m1 m2)
@@ -651,8 +651,8 @@ Local Definition Applicative__pair_type_op_zlztzg__ {inst_a} `{Monoid inst_a}
         (GHC.Tuple.pair_type inst_a) (a -> b) -> (GHC.Tuple.pair_type inst_a)
         a -> (GHC.Tuple.pair_type inst_a) b :=
   fun {a} {b} =>
-    fun arg_137__ arg_138__ =>
-      match arg_137__ , arg_138__ with
+    fun arg_0__ arg_1__ =>
+      match arg_0__ , arg_1__ with
         | pair u f , pair v x => pair (mappend u v) (f x)
       end.
 
@@ -675,22 +675,22 @@ Local Definition Monad__arrow_op_zgzgze__ {inst_r} : forall {a} {b},
 Local Definition Monad__arrow_op_zgzg__ {inst_r} : forall {a} {b},
                                                      (GHC.Prim.arrow inst_r) a -> (GHC.Prim.arrow inst_r)
                                                      b -> (GHC.Prim.arrow inst_r) b :=
-  fun {a} {b} => fun m k => Monad__arrow_op_zgzgze__ m (fun arg_8__ => k).
+  fun {a} {b} => fun m k => Monad__arrow_op_zgzgze__ m (fun arg_0__ => k).
 
 Local Definition Functor__pair_type_fmap {inst_a} : forall {a} {b},
                                                       (a -> b) -> (GHC.Tuple.pair_type inst_a) a -> (GHC.Tuple.pair_type
                                                       inst_a) b :=
   fun {a} {b} =>
-    fun arg_120__ arg_121__ =>
-      match arg_120__ , arg_121__ with
+    fun arg_0__ arg_1__ =>
+      match arg_0__ , arg_1__ with
         | f , pair x y => pair x (f y)
       end.
 
 Local Definition Functor__option_fmap : forall {a} {b},
                                           (a -> b) -> option a -> option b :=
   fun {a} {b} =>
-    fun arg_116__ arg_117__ =>
-      match arg_116__ , arg_117__ with
+    fun arg_0__ arg_1__ =>
+      match arg_0__ , arg_1__ with
         | _ , None => None
         | f , Some a => Some (f a)
       end.
@@ -698,8 +698,8 @@ Local Definition Functor__option_fmap : forall {a} {b},
 Local Definition Applicative__option_op_ztzg__ : forall {a} {b},
                                                    option a -> option b -> option b :=
   fun {a} {b} =>
-    fun arg_113__ arg_114__ =>
-      match arg_113__ , arg_114__ with
+    fun arg_0__ arg_1__ =>
+      match arg_0__ , arg_1__ with
         | Some _m1 , m2 => m2
         | None , _m2 => None
       end.
@@ -710,8 +710,8 @@ Local Definition Applicative__option_pure : forall {a}, a -> option a :=
 Local Definition Monad__option_op_zgzgze__ : forall {a} {b},
                                                option a -> (a -> option b) -> option b :=
   fun {a} {b} =>
-    fun arg_104__ arg_105__ =>
-      match arg_104__ , arg_105__ with
+    fun arg_0__ arg_1__ =>
+      match arg_0__ , arg_1__ with
         | Some x , k => k x
         | None , _ => None
       end.
@@ -838,8 +838,8 @@ Local Definition Ord__option_max {inst_a} `{Ord inst_a} : option
 
 Local Definition Eq___option_op_zeze__ {inst_a} `{Eq_ inst_a} : option
                                                                 inst_a -> option inst_a -> bool :=
-  fun arg_51__ arg_52__ =>
-    match arg_51__ , arg_52__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | None , None => true
       | Some a1 , Some b1 => ((a1 == b1))
       | _ , _ => false
@@ -872,10 +872,10 @@ Definition breakpoint {a} : a -> a :=
   fun r => r.
 
 Definition breakpointCond {a} : bool -> a -> a :=
-  fun arg_19__ arg_20__ => match arg_19__ , arg_20__ with | _ , r => r end.
+  fun arg_0__ arg_1__ => match arg_0__ , arg_1__ with | _ , r => r end.
 
 Definition const {a} {b} : a -> b -> a :=
-  fun arg_16__ arg_17__ => match arg_16__ , arg_17__ with | x , _ => x end.
+  fun arg_0__ arg_1__ => match arg_0__ , arg_1__ with | x , _ => x end.
 
 Definition asTypeOf {a} : a -> a -> a :=
   const.
@@ -885,8 +885,8 @@ Local Definition Applicative__arrow_pure {inst_a} : forall {a},
   fun {a} => const.
 
 Definition eqString : String -> String -> bool :=
-  fix eqString arg_22__ arg_23__
-        := match arg_22__ , arg_23__ with
+  fix eqString arg_0__ arg_1__
+        := match arg_0__ , arg_1__ with
              | nil , nil => true
              | cons c1 cs1 , cons c2 cs2 => andb (c1 == c2) (eqString cs1 cs2)
              | _ , _ => false
@@ -898,8 +898,8 @@ Definition flip {a} {b} {c} : (a -> b -> c) -> b -> a -> c :=
 Definition foldr {a} {b} : (a -> b -> b) -> b -> list a -> b :=
   fun k z =>
     let go :=
-      fix go arg_32__
-            := match arg_32__ with
+      fix go arg_0__
+            := match arg_0__ with
                  | nil => z
                  | cons y ys => k y (go ys)
                end in
@@ -1040,8 +1040,8 @@ Program Instance Functor__option : Functor option := fun _ k =>
 Local Definition Applicative__option_op_zlztzg__ : forall {a} {b},
                                                      option (a -> b) -> option a -> option b :=
   fun {a} {b} =>
-    fun arg_109__ arg_110__ =>
-      match arg_109__ , arg_110__ with
+    fun arg_0__ arg_1__ =>
+      match arg_0__ , arg_1__ with
         | Some f , m => fmap f m
         | None , _m => None
       end.
@@ -1094,10 +1094,10 @@ Local Definition Monad__pair_type_op_zgzgze__ {inst_a} `{Monoid inst_a}
         (GHC.Tuple.pair_type inst_a) a -> (a -> (GHC.Tuple.pair_type inst_a)
         b) -> (GHC.Tuple.pair_type inst_a) b :=
   fun {a} {b} =>
-    fun arg_129__ arg_130__ =>
-      match arg_129__ , arg_130__ with
-        | pair u a , k => let scrut_131__ := k a in
-                          match scrut_131__ with
+    fun arg_0__ arg_1__ =>
+      match arg_0__ , arg_1__ with
+        | pair u a , k => let scrut_2__ := k a in
+                          match scrut_2__ with
                             | pair v b => pair (mappend u v) b
                           end
       end.
@@ -1106,7 +1106,7 @@ Local Definition Monad__pair_type_op_zgzg__ {inst_a} `{Monoid inst_a}
     : forall {a} {b},
         (GHC.Tuple.pair_type inst_a) a -> (GHC.Tuple.pair_type inst_a)
         b -> (GHC.Tuple.pair_type inst_a) b :=
-  fun {a} {b} => fun m k => Monad__pair_type_op_zgzgze__ m (fun arg_8__ => k).
+  fun {a} {b} => fun m k => Monad__pair_type_op_zgzgze__ m (fun arg_0__ => k).
 
 Program Instance Monad__pair_type {a} `{Monoid a} : Monad (GHC.Tuple.pair_type
                                                           a) := fun _ k =>

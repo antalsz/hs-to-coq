@@ -160,13 +160,13 @@ Definition classATItems : Class -> list ClassATItem :=
   classATStuff.
 
 Definition classATs : Class -> list unit :=
-  fun arg_20__ =>
-    match arg_20__ with
-      | Mk_Class _ _ _ _ _ _ _ at_stuff _ _ => let cont_21__ arg_22__ :=
-                                                 match arg_22__ with
+  fun arg_0__ =>
+    match arg_0__ with
+      | Mk_Class _ _ _ _ _ _ _ at_stuff _ _ => let cont_1__ arg_2__ :=
+                                                 match arg_2__ with
                                                    | ATI tc _ => cons tc nil
                                                  end in
-                                               Coq.Lists.List.flat_map cont_21__ at_stuff
+                                               Coq.Lists.List.flat_map cont_1__ at_stuff
     end.
 
 Definition classArity : Class -> BasicTypes.Arity :=
@@ -174,16 +174,16 @@ Definition classArity : Class -> BasicTypes.Arity :=
 
 Definition classBigSig : Class -> (list Var.TyVar * list unit * list Var.Id *
                          list ClassOpItem)%type :=
-  fun arg_13__ =>
-    match arg_13__ with
+  fun arg_0__ =>
+    match arg_0__ with
       | Mk_Class _ _ _ tyvars _ sc_theta sc_sels _ op_stuff _ => pair (pair (pair
                                                                             tyvars sc_theta) sc_sels) op_stuff
     end.
 
 Definition classExtraBigSig : Class -> (list Var.TyVar * list (FunDep Var.TyVar)
                               * list unit * list Var.Id * list ClassATItem * list ClassOpItem)%type :=
-  fun arg_10__ =>
-    match arg_10__ with
+  fun arg_0__ =>
+    match arg_0__ with
       | Mk_Class _ _ _ tyvars fundeps sc_theta sc_sels ats op_stuff _ => pair (pair
                                                                               (pair (pair (pair tyvars fundeps)
                                                                                           sc_theta) sc_sels) ats)
@@ -191,24 +191,24 @@ Definition classExtraBigSig : Class -> (list Var.TyVar * list (FunDep Var.TyVar)
     end.
 
 Definition classHasFds : Class -> bool :=
-  fun arg_16__ =>
-    match arg_16__ with
+  fun arg_0__ =>
+    match arg_0__ with
       | Mk_Class _ _ _ _ fds _ _ _ _ _ => negb (Data.Foldable.null fds)
     end.
 
 Definition classMethods : Class -> list Var.Id :=
-  fun arg_25__ =>
-    match arg_25__ with
-      | Mk_Class _ _ _ _ _ _ _ _ op_stuff _ => let cont_26__ arg_27__ :=
-                                                 match arg_27__ with
+  fun arg_0__ =>
+    match arg_0__ with
+      | Mk_Class _ _ _ _ _ _ _ _ op_stuff _ => let cont_1__ arg_2__ :=
+                                                 match arg_2__ with
                                                    | pair op_sel _ => cons op_sel nil
                                                  end in
-                                               Coq.Lists.List.flat_map cont_26__ op_stuff
+                                               Coq.Lists.List.flat_map cont_1__ op_stuff
     end.
 
 Definition classAllSelIds : Class -> list Var.Id :=
-  fun arg_30__ =>
-    match arg_30__ with
+  fun arg_0__ =>
+    match arg_0__ with
       | (Mk_Class _ _ _ _ _ _ sc_sels _ _ _ as c) => Coq.Init.Datatypes.app sc_sels
                                                                             (classMethods c)
     end.

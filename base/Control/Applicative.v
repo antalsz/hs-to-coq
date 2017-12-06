@@ -57,8 +57,8 @@ Local Definition Functor__WrappedMonad_fmap {inst_m} `{GHC.Base.Monad inst_m}
     : forall {a} {b},
         (a -> b) -> (WrappedMonad inst_m) a -> (WrappedMonad inst_m) b :=
   fun {a} {b} =>
-    fun arg_53__ arg_54__ =>
-      match arg_53__ , arg_54__ with
+    fun arg_0__ arg_1__ =>
+      match arg_0__ , arg_1__ with
         | f , WrapMonad v => WrapMonad (GHC.Base.liftM f v)
       end.
 
@@ -77,8 +77,8 @@ Local Definition Applicative__WrappedMonad_op_zlztzg__ {inst_m} `{GHC.Base.Monad
                                                                    (WrappedMonad inst_m) (a -> b) -> (WrappedMonad
                                                                    inst_m) a -> (WrappedMonad inst_m) b :=
   fun {a} {b} =>
-    fun arg_49__ arg_50__ =>
-      match arg_49__ , arg_50__ with
+    fun arg_0__ arg_1__ =>
+      match arg_0__ , arg_1__ with
         | WrapMonad f , WrapMonad v => WrapMonad (GHC.Base.ap f v)
       end.
 
@@ -110,8 +110,8 @@ Local Definition Functor__WrappedArrow_fmap {inst_a} {inst_b}
                                                                               (a -> b) -> (WrappedArrow inst_a inst_b)
                                                                               a -> (WrappedArrow inst_a inst_b) b :=
   fun {a} {b} =>
-    fun arg_44__ arg_45__ =>
-      match arg_44__ , arg_45__ with
+    fun arg_0__ arg_1__ =>
+      match arg_0__ , arg_1__ with
         | f , WrapArrow a => WrapArrow (a Control.Category.>>> Control.Arrow.arr f)
       end.
 
@@ -135,8 +135,8 @@ Local Definition Applicative__WrappedArrow_op_zlztzg__ {inst_a} {inst_b}
                                                                                          a -> (WrappedArrow inst_a
                                                                                          inst_b) b :=
   fun {a} {b} =>
-    fun arg_40__ arg_41__ =>
-      match arg_40__ , arg_41__ with
+    fun arg_0__ arg_1__ =>
+      match arg_0__ , arg_1__ with
         | WrapArrow f , WrapArrow v => WrapArrow ((f Control.Arrow.&&& v)
                                                  Control.Category.>>> Control.Arrow.arr (Data.Tuple.uncurry
                                                                                         GHC.Base.id))

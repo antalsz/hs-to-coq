@@ -52,8 +52,8 @@ Program Instance Uniquable__Unique : Uniquable Unique := fun _ k =>
    information for class Qualified "GHC.Show" "Show" unsupported *)
 
 Definition eqUnique : Unique -> Unique -> bool :=
-  fun arg_12__ arg_13__ =>
-    match arg_12__ , arg_13__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | MkUnique u1 , MkUnique u2 => u1 GHC.Base.== u2
     end.
 
@@ -68,14 +68,14 @@ Program Instance Eq___Unique : GHC.Base.Eq_ Unique := fun _ k =>
       GHC.Base.op_zsze____ := Eq___Unique_op_zsze__ |}.
 
 Definition getKey : Unique -> GHC.Num.Int :=
-  fun arg_75__ => match arg_75__ with | MkUnique x => x end.
+  fun arg_0__ => match arg_0__ with | MkUnique x => x end.
 
 Definition hasKey {a} `{Uniquable a} : a -> Unique -> bool :=
   fun x k => getUnique x GHC.Base.== k.
 
 Definition incrUnique : Unique -> Unique :=
-  fun arg_70__ =>
-    match arg_70__ with
+  fun arg_0__ =>
+    match arg_0__ with
       | MkUnique i => MkUnique (i GHC.Num.+ GHC.Num.fromInteger 1)
     end.
 
@@ -86,8 +86,8 @@ Definition dataConWorkerUnique : Unique -> Unique :=
   fun u => incrUnique u.
 
 Definition leUnique : Unique -> Unique -> bool :=
-  fun arg_4__ arg_5__ =>
-    match arg_4__ , arg_5__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | MkUnique u1 , MkUnique u2 => u1 GHC.Base.<= u2
     end.
 
@@ -104,8 +104,8 @@ Local Definition Ord__Unique_op_zg__ : Unique -> Unique -> bool :=
   fun a b => negb (leUnique a b).
 
 Definition ltUnique : Unique -> Unique -> bool :=
-  fun arg_8__ arg_9__ =>
-    match arg_8__ , arg_9__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | MkUnique u1 , MkUnique u2 => u1 GHC.Base.< u2
     end.
 
@@ -154,8 +154,8 @@ Program Instance Ord__Unique : GHC.Base.Ord Unique := fun _ k =>
       GHC.Base.min__ := Ord__Unique_min |}.
 
 Definition stepUnique : Unique -> GHC.Num.Int -> Unique :=
-  fun arg_65__ arg_66__ =>
-    match arg_65__ , arg_66__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | MkUnique i , n => MkUnique (i GHC.Num.+ n)
     end.
 
@@ -167,8 +167,8 @@ Definition uniqueMask : GHC.Num.Int :=
                     GHC.Num.fromInteger 8)) GHC.Num.- GHC.Num.fromInteger 1.
 
 Definition unpkUnique : Unique -> (GHC.Char.Char * GHC.Num.Int)%type :=
-  fun arg_54__ =>
-    match arg_54__ with
+  fun arg_0__ =>
+    match arg_0__ with
       | MkUnique u => let i := u Data.Bits..&. uniqueMask in
                       let tag :=
                         GHC.Char.chr (Data.Bits.shiftR u (GHC.Num.fromInteger 64 GHC.Num.-
@@ -195,8 +195,8 @@ Definition mkTvOccUnique : FastString.FastString -> Unique :=
 
 Definition mkTupleTyConUnique
     : BasicTypes.Boxity -> BasicTypes.Arity -> Unique :=
-  fun arg_25__ arg_26__ =>
-    match arg_25__ , arg_26__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | BasicTypes.Boxed , a => mkUnique (GHC.Char.hs_char__ "4") (GHC.Num.fromInteger
                                                                   2 GHC.Num.* a)
       | BasicTypes.Unboxed , a => mkUnique (GHC.Char.hs_char__ "5")
@@ -205,8 +205,8 @@ Definition mkTupleTyConUnique
 
 Definition mkTupleDataConUnique
     : BasicTypes.Boxity -> BasicTypes.Arity -> Unique :=
-  fun arg_32__ arg_33__ =>
-    match arg_32__ , arg_33__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | BasicTypes.Boxed , a => mkUnique (GHC.Char.hs_char__ "7") (GHC.Num.fromInteger
                                                                   3 GHC.Num.* a)
       | BasicTypes.Unboxed , a => mkUnique (GHC.Char.hs_char__ "8")
@@ -277,8 +277,8 @@ Definition initTyVarUnique : Unique :=
   mkUnique (GHC.Char.hs_char__ "t") (GHC.Num.fromInteger 0).
 
 Definition deriveUnique : Unique -> GHC.Num.Int -> Unique :=
-  fun arg_61__ arg_62__ =>
-    match arg_61__ , arg_62__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | MkUnique i , delta => mkUnique (GHC.Char.hs_char__ "X") (i GHC.Num.+ delta)
     end.
 

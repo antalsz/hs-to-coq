@@ -32,7 +32,7 @@ Arguments Mk_KProxy {_}.
 
 Local Definition Eq___Proxy_op_zeze__ {inst_s} : (Proxy inst_s) -> (Proxy
                                                  inst_s) -> bool :=
-  fun arg_12__ arg_13__ => true.
+  fun arg_0__ arg_1__ => true.
 
 Local Definition Eq___Proxy_op_zsze__ {inst_s} : (Proxy inst_s) -> (Proxy
                                                  inst_s) -> bool :=
@@ -44,7 +44,7 @@ Program Instance Eq___Proxy {s} : GHC.Base.Eq_ (Proxy s) := fun _ k =>
 
 Local Definition Ord__Proxy_compare {inst_s} : (Proxy inst_s) -> (Proxy
                                                inst_s) -> comparison :=
-  fun arg_10__ arg_11__ => Eq.
+  fun arg_0__ arg_1__ => Eq.
 
 Local Definition Ord__Proxy_op_zg__ {inst_s} : (Proxy inst_s) -> (Proxy
                                                inst_s) -> bool :=
@@ -100,11 +100,11 @@ Program Instance Ord__Proxy {s} : GHC.Base.Ord (Proxy s) := fun _ k =>
 
 Local Definition Monoid__Proxy_mappend {inst_s} : (Proxy inst_s) -> (Proxy
                                                   inst_s) -> (Proxy inst_s) :=
-  fun arg_7__ arg_8__ => Mk_Proxy.
+  fun arg_0__ arg_1__ => Mk_Proxy.
 
 Local Definition Monoid__Proxy_mconcat {inst_s} : list (Proxy inst_s) -> (Proxy
                                                   inst_s) :=
-  fun arg_9__ => Mk_Proxy.
+  fun arg_0__ => Mk_Proxy.
 
 Local Definition Monoid__Proxy_mempty {inst_s} : (Proxy inst_s) :=
   Mk_Proxy.
@@ -116,7 +116,7 @@ Program Instance Monoid__Proxy {s} : GHC.Base.Monoid (Proxy s) := fun _ k =>
 
 Local Definition Functor__Proxy_fmap : forall {a} {b},
                                          (a -> b) -> Proxy a -> Proxy b :=
-  fun {a} {b} => fun arg_5__ arg_6__ => Mk_Proxy.
+  fun {a} {b} => fun arg_0__ arg_1__ => Mk_Proxy.
 
 Local Definition Functor__Proxy_op_zlzd__ : forall {a} {b},
                                               a -> Proxy b -> Proxy a :=
@@ -128,7 +128,7 @@ Program Instance Functor__Proxy : GHC.Base.Functor Proxy := fun _ k =>
 
 Local Definition Applicative__Proxy_op_zlztzg__ : forall {a} {b},
                                                     Proxy (a -> b) -> Proxy a -> Proxy b :=
-  fun {a} {b} => fun arg_3__ arg_4__ => Mk_Proxy.
+  fun {a} {b} => fun arg_0__ arg_1__ => Mk_Proxy.
 
 Local Definition Applicative__Proxy_op_ztzg__ : forall {a} {b},
                                                   Proxy a -> Proxy b -> Proxy b :=
@@ -137,7 +137,7 @@ Local Definition Applicative__Proxy_op_ztzg__ : forall {a} {b},
       Applicative__Proxy_op_zlztzg__ (GHC.Base.fmap (GHC.Base.const GHC.Base.id) x) y.
 
 Local Definition Applicative__Proxy_pure : forall {a}, a -> Proxy a :=
-  fun {a} => fun arg_2__ => Mk_Proxy.
+  fun {a} => fun arg_0__ => Mk_Proxy.
 
 Program Instance Applicative__Proxy : GHC.Base.Applicative Proxy := fun _ k =>
     k {|GHC.Base.op_ztzg____ := fun {a} {b} => Applicative__Proxy_op_ztzg__ ;

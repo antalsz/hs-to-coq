@@ -319,8 +319,8 @@ Program Instance Ord__DataCon : GHC.Base.Ord DataCon := fun _ k =>
 
 Local Definition Eq___SrcUnpackedness_op_zeze__
     : SrcUnpackedness -> SrcUnpackedness -> bool :=
-  fun arg_32__ arg_33__ =>
-    match arg_32__ , arg_33__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | SrcUnpack , SrcUnpack => true
       | SrcNoUnpack , SrcNoUnpack => true
       | NoSrcUnpack , NoSrcUnpack => true
@@ -341,8 +341,8 @@ Program Instance Eq___SrcUnpackedness : GHC.Base.Eq_ SrcUnpackedness := fun _
 
 Local Definition Eq___SrcStrictness_op_zeze__
     : SrcStrictness -> SrcStrictness -> bool :=
-  fun arg_28__ arg_29__ =>
-    match arg_28__ , arg_29__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | SrcLazy , SrcLazy => true
       | SrcStrict , SrcStrict => true
       | NoSrcStrict , NoSrcStrict => true

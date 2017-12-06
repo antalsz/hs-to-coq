@@ -31,8 +31,8 @@ Arguments Right {_} {_} _.
 Local Definition Functor__Either_fmap {inst_a} : forall {a} {b},
                                                    (a -> b) -> (Either inst_a) a -> (Either inst_a) b :=
   fun {a} {b} =>
-    fun arg_81__ arg_82__ =>
-      match arg_81__ , arg_82__ with
+    fun arg_0__ arg_1__ =>
+      match arg_0__ , arg_1__ with
         | _ , Left x => Left x
         | f , Right y => Right (f y)
       end.
@@ -49,8 +49,8 @@ Local Definition Applicative__Either_op_zlztzg__ {inst_e} : forall {a} {b},
                                                               (Either inst_e) (a -> b) -> (Either inst_e) a -> (Either
                                                               inst_e) b :=
   fun {a} {b} =>
-    fun arg_76__ arg_77__ =>
-      match arg_76__ , arg_77__ with
+    fun arg_0__ arg_1__ =>
+      match arg_0__ , arg_1__ with
         | Left e , _ => Left e
         | Right f , r => GHC.Base.fmap f r
       end.
@@ -81,8 +81,8 @@ Local Definition Monad__Either_op_zgzgze__ {inst_e} : forall {a} {b},
                                                         (Either inst_e) a -> (a -> (Either inst_e) b) -> (Either inst_e)
                                                         b :=
   fun {a} {b} =>
-    fun arg_71__ arg_72__ =>
-      match arg_71__ , arg_72__ with
+    fun arg_0__ arg_1__ =>
+      match arg_0__ , arg_1__ with
         | Left l , _ => Left l
         | Right r , k => k r
       end.
@@ -187,8 +187,8 @@ Local Definition Ord__Either_max {inst_a} {inst_b} `{GHC.Base.Ord inst_b}
 
 Local Definition Eq___Either_op_zeze__ {inst_a} {inst_b} `{GHC.Base.Eq_ inst_b}
                                        `{GHC.Base.Eq_ inst_a} : Either inst_a inst_b -> Either inst_a inst_b -> bool :=
-  fun arg_25__ arg_26__ =>
-    match arg_25__ , arg_26__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | Left a1 , Left b1 => ((a1 GHC.Base.== b1))
       | Right a1 , Right b1 => ((a1 GHC.Base.== b1))
       | _ , _ => false
@@ -220,8 +220,8 @@ Program Instance Ord__Either {a} {b} `{GHC.Base.Ord b} `{GHC.Base.Ord a}
       GHC.Base.min__ := Ord__Either_min |}.
 
 Definition either {a} {c} {b} : (a -> c) -> (b -> c) -> Either a b -> c :=
-  fun arg_10__ arg_11__ arg_12__ =>
-    match arg_10__ , arg_11__ , arg_12__ with
+  fun arg_0__ arg_1__ arg_2__ =>
+    match arg_0__ , arg_1__ , arg_2__ with
       | f , _ , Left x => f x
       | _ , g , Right y => g y
     end.
@@ -229,40 +229,40 @@ Definition either {a} {c} {b} : (a -> c) -> (b -> c) -> Either a b -> c :=
 Definition partitionEithers {a} {b} : list (Either a b) -> (list a * list
                                       b)%type :=
   let right_ :=
-    fun arg_16__ arg_17__ =>
-      match arg_16__ , arg_17__ with
+    fun arg_0__ arg_1__ =>
+      match arg_0__ , arg_1__ with
         | a , pair l r => pair l (cons a r)
       end in
   let left_ :=
-    fun arg_20__ arg_21__ =>
-      match arg_20__ , arg_21__ with
+    fun arg_4__ arg_5__ =>
+      match arg_4__ , arg_5__ with
         | a , pair l r => pair (cons a l) r
       end in
   GHC.Base.foldr (either left_ right_) (pair nil nil).
 
 Definition isLeft {a} {b} : Either a b -> bool :=
-  fun arg_2__ => match arg_2__ with | Left _ => true | Right _ => false end.
+  fun arg_0__ => match arg_0__ with | Left _ => true | Right _ => false end.
 
 Definition isRight {a} {b} : Either a b -> bool :=
   fun arg_0__ => match arg_0__ with | Left _ => false | Right _ => true end.
 
 Definition lefts {a} {b} : list (Either a b) -> list a :=
   fun x =>
-    let cont_7__ arg_8__ :=
-      match arg_8__ with
+    let cont_0__ arg_1__ :=
+      match arg_1__ with
         | Left a => cons a nil
         | _ => nil
       end in
-    Coq.Lists.List.flat_map cont_7__ x.
+    Coq.Lists.List.flat_map cont_0__ x.
 
 Definition rights {a} {b} : list (Either a b) -> list b :=
   fun x =>
-    let cont_4__ arg_5__ :=
-      match arg_5__ with
+    let cont_0__ arg_1__ :=
+      match arg_1__ with
         | Right a => cons a nil
         | _ => nil
       end in
-    Coq.Lists.List.flat_map cont_4__ x.
+    Coq.Lists.List.flat_map cont_0__ x.
 
 (* Unbound variables:
      Gt Lt bool comparison cons false list negb nil op_zt__ pair true

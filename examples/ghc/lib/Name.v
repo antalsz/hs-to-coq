@@ -52,23 +52,23 @@ Definition getName `{g : NamedThing a} : a -> Name :=
 Definition getOccName `{g : NamedThing a} : a -> OccName.OccName :=
   g _ (getOccName__ a).
 
-Definition n_loc (arg_1__ : Name) :=
-  match arg_1__ with
+Definition n_loc (arg_0__ : Name) :=
+  match arg_0__ with
     | Mk_Name _ _ _ n_loc => n_loc
   end.
 
-Definition n_occ (arg_2__ : Name) :=
-  match arg_2__ with
+Definition n_occ (arg_1__ : Name) :=
+  match arg_1__ with
     | Mk_Name _ n_occ _ _ => n_occ
   end.
 
-Definition n_sort (arg_3__ : Name) :=
-  match arg_3__ with
+Definition n_sort (arg_2__ : Name) :=
+  match arg_2__ with
     | Mk_Name n_sort _ _ _ => n_sort
   end.
 
-Definition n_uniq (arg_4__ : Name) :=
-  match arg_4__ with
+Definition n_uniq (arg_3__ : Name) :=
+  match arg_3__ with
     | Mk_Name _ _ n_uniq _ => n_uniq
   end.
 (* Midamble *)
@@ -134,8 +134,8 @@ Local Definition Ord__Name_compare : Name -> Name -> comparison :=
 
 Local Definition Ord__Name_op_zg__ : Name -> Name -> bool :=
   fun a b =>
-    let scrut_120__ := (Ord__Name_compare a b) in
-    match scrut_120__ with
+    let scrut_0__ := (Ord__Name_compare a b) in
+    match scrut_0__ with
       | Lt => false
       | Eq => false
       | Gt => true
@@ -143,8 +143,8 @@ Local Definition Ord__Name_op_zg__ : Name -> Name -> bool :=
 
 Local Definition Ord__Name_op_zgze__ : Name -> Name -> bool :=
   fun a b =>
-    let scrut_117__ := (Ord__Name_compare a b) in
-    match scrut_117__ with
+    let scrut_0__ := (Ord__Name_compare a b) in
+    match scrut_0__ with
       | Lt => false
       | Eq => true
       | Gt => true
@@ -152,8 +152,8 @@ Local Definition Ord__Name_op_zgze__ : Name -> Name -> bool :=
 
 Local Definition Ord__Name_op_zl__ : Name -> Name -> bool :=
   fun a b =>
-    let scrut_114__ := (Ord__Name_compare a b) in
-    match scrut_114__ with
+    let scrut_0__ := (Ord__Name_compare a b) in
+    match scrut_0__ with
       | Lt => true
       | Eq => false
       | Gt => false
@@ -161,8 +161,8 @@ Local Definition Ord__Name_op_zl__ : Name -> Name -> bool :=
 
 Local Definition Ord__Name_op_zlze__ : Name -> Name -> bool :=
   fun a b =>
-    let scrut_111__ := (Ord__Name_compare a b) in
-    match scrut_111__ with
+    let scrut_0__ := (Ord__Name_compare a b) in
+    match scrut_0__ with
       | Lt => true
       | Eq => true
       | Gt => false
@@ -200,15 +200,15 @@ Definition getOccString {a} `{NamedThing a} : a -> GHC.Base.String :=
   OccName.occNameString GHC.Base.∘ getOccName.
 
 Definition isBuiltInSyntax : Name -> bool :=
-  fun arg_90__ =>
-    match arg_90__ with
+  fun arg_0__ =>
+    match arg_0__ with
       | Mk_Name (WiredIn _ _ Mk_BuiltInSyntax) _ _ _ => true
       | _ => false
     end.
 
 Definition isExternalName : Name -> bool :=
-  fun arg_87__ =>
-    match arg_87__ with
+  fun arg_0__ =>
+    match arg_0__ with
       | Mk_Name (External _) _ _ _ => true
       | Mk_Name (WiredIn _ _ _) _ _ _ => true
       | _ => false
@@ -218,15 +218,15 @@ Definition isInternalName : Name -> bool :=
   fun name => negb (isExternalName name).
 
 Definition isSystemName : Name -> bool :=
-  fun arg_72__ =>
-    match arg_72__ with
+  fun arg_0__ =>
+    match arg_0__ with
       | Mk_Name System _ _ _ => true
       | _ => false
     end.
 
 Definition isWiredInName : Name -> bool :=
-  fun arg_95__ =>
-    match arg_95__ with
+  fun arg_0__ =>
+    match arg_0__ with
       | Mk_Name (WiredIn _ _ _) _ _ _ => true
       | _ => false
     end.
@@ -234,21 +234,21 @@ Definition isWiredInName : Name -> bool :=
 Definition localiseName : Name -> Name :=
   fun n =>
     match n with
-      | Mk_Name n_sort_17__ n_occ_18__ n_uniq_19__ n_loc_20__ => Mk_Name Internal
-                                                                         n_occ_18__ n_uniq_19__ n_loc_20__
+      | Mk_Name n_sort_0__ n_occ_1__ n_uniq_2__ n_loc_3__ => Mk_Name Internal
+                                                                     n_occ_1__ n_uniq_2__ n_loc_3__
     end.
 
 Definition mkClonedInternalName : Unique.Unique -> Name -> Name :=
-  fun arg_66__ arg_67__ =>
-    match arg_66__ , arg_67__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | uniq , Mk_Name _ occ _ loc => Mk_Name missingValue missingValue missingValue
                                               missingValue
     end.
 
 Definition mkDerivedInternalName
     : (OccName.OccName -> OccName.OccName) -> Unique.Unique -> Name -> Name :=
-  fun arg_61__ arg_62__ arg_63__ =>
-    match arg_61__ , arg_62__ , arg_63__ with
+  fun arg_0__ arg_1__ arg_2__ =>
+    match arg_0__ , arg_1__ , arg_2__ with
       | derive_occ , uniq , Mk_Name _ occ _ loc => Mk_Name missingValue missingValue
                                                            missingValue missingValue
     end.
@@ -284,8 +284,8 @@ Definition mkWiredInName
     Mk_Name missingValue missingValue missingValue missingValue.
 
 Definition nameModule_maybe : Name -> option Module.Module :=
-  fun arg_74__ =>
-    match arg_74__ with
+  fun arg_0__ =>
+    match arg_0__ with
       | Mk_Name (External mod_) _ _ _ => Some mod_
       | Mk_Name (WiredIn mod_ _ _) _ _ _ => Some mod_
       | _ => None
@@ -305,8 +305,8 @@ Definition nameIsHomePackageImport : Module.Module -> Name -> bool :=
   fun this_mod =>
     let this_pkg := moduleUnitId this_mod in
     fun nm =>
-      let scrut_80__ := nameModule_maybe nm in
-      match scrut_80__ with
+      let scrut_1__ := nameModule_maybe nm in
+      match scrut_1__ with
         | None => false
         | Some nm_mod => andb (nm_mod GHC.Base./= this_mod) (moduleUnitId nm_mod
                               GHC.Base.== this_pkg)
@@ -329,12 +329,12 @@ Definition mkLocalisedOccName : Module.Module -> (option
                                 GHC.Base.String -> OccName.OccName -> OccName.OccName) -> Name -> OccName.OccName :=
   fun this_mod mk_occ name =>
     let origin :=
-      let j_107__ :=
+      let j_0__ :=
         Some ((Module.moduleNameColons GHC.Base.∘ (moduleName GHC.Base.∘ nameModule))
              GHC.Base.$ name) in
       if nameIsLocalOrFrom this_mod name : bool
       then None
-      else j_107__ in
+      else j_0__ in
     mk_occ origin (nameOccName name).
 
 Definition isVarName : Name -> bool :=
@@ -360,8 +360,8 @@ Program Instance NamedThing__Name : NamedThing Name := fun _ k =>
       getOccName__ := NamedThing__Name_getOccName |}.
 
 Definition nameSortStableString : NameSort -> GHC.Base.String :=
-  fun arg_7__ =>
-    match arg_7__ with
+  fun arg_0__ =>
+    match arg_0__ with
       | System => GHC.Base.hs_string__ "$_sys"
       | Internal => GHC.Base.hs_string__ "$_in"
       | External mod_ => Module.moduleStableString mod_
@@ -369,8 +369,8 @@ Definition nameSortStableString : NameSort -> GHC.Base.String :=
     end.
 
 Definition nameStableString : Name -> GHC.Base.String :=
-  fun arg_13__ =>
-    match arg_13__ with
+  fun arg_0__ =>
+    match arg_0__ with
       | Mk_Name n_sort n_occ n_uniq n_loc => Coq.Init.Datatypes.app
                                              (nameSortStableString n_sort) (Coq.Init.Datatypes.app (GHC.Base.hs_string__
                                                                                                    "$")
@@ -396,36 +396,35 @@ Definition nameUnique : Name -> Unique.Unique :=
 Definition setNameLoc : Name -> SrcLoc.SrcSpan -> Name :=
   fun name loc =>
     match name with
-      | Mk_Name n_sort_41__ n_occ_42__ n_uniq_43__ n_loc_44__ => Mk_Name n_sort_41__
-                                                                         n_occ_42__ n_uniq_43__ loc
+      | Mk_Name n_sort_0__ n_occ_1__ n_uniq_2__ n_loc_3__ => Mk_Name n_sort_0__
+                                                                     n_occ_1__ n_uniq_2__ loc
     end.
 
 Definition setNameUnique : Name -> Unique.Unique -> Name :=
   fun name uniq =>
     match name with
-      | Mk_Name n_sort_48__ n_occ_49__ n_uniq_50__ n_loc_51__ => Mk_Name n_sort_48__
-                                                                         n_occ_49__ (Unique.getKey uniq) n_loc_51__
+      | Mk_Name n_sort_0__ n_occ_1__ n_uniq_2__ n_loc_3__ => Mk_Name n_sort_0__
+                                                                     n_occ_1__ (Unique.getKey uniq) n_loc_3__
     end.
 
 Definition tidyNameOcc : Name -> OccName.OccName -> Name :=
-  fun arg_24__ arg_25__ =>
-    match arg_24__ , arg_25__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | (Mk_Name System _ _ _ as name) , occ => match name with
-                                                  | Mk_Name n_sort_26__ n_occ_27__ n_uniq_28__ n_loc_29__ => Mk_Name
-                                                                                                             Internal
-                                                                                                             occ
-                                                                                                             n_uniq_28__
-                                                                                                             n_loc_29__
+                                                  | Mk_Name n_sort_2__ n_occ_3__ n_uniq_4__ n_loc_5__ => Mk_Name
+                                                                                                         Internal occ
+                                                                                                         n_uniq_4__
+                                                                                                         n_loc_5__
                                                 end
       | name , occ => match name with
-                        | Mk_Name n_sort_33__ n_occ_34__ n_uniq_35__ n_loc_36__ => Mk_Name n_sort_33__
-                                                                                           occ n_uniq_35__ n_loc_36__
+                        | Mk_Name n_sort_9__ n_occ_10__ n_uniq_11__ n_loc_12__ => Mk_Name n_sort_9__ occ
+                                                                                          n_uniq_11__ n_loc_12__
                       end
     end.
 
 Definition wiredInNameTyThing_maybe : Name -> option unit :=
-  fun arg_92__ =>
-    match arg_92__ with
+  fun arg_0__ =>
+    match arg_0__ with
       | Mk_Name (WiredIn _ thing _) _ _ _ => Some thing
       | _ => None
     end.

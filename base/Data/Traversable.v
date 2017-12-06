@@ -66,18 +66,18 @@ Arguments Mk_StateL {_} {_} _.
 
 Arguments Mk_Id {_} _.
 
-Definition runStateR {s} {a} (arg_2__ : StateR s a) :=
-  match arg_2__ with
+Definition runStateR {s} {a} (arg_0__ : StateR s a) :=
+  match arg_0__ with
     | Mk_StateR runStateR => runStateR
   end.
 
-Definition runStateL {s} {a} (arg_3__ : StateL s a) :=
-  match arg_3__ with
+Definition runStateL {s} {a} (arg_1__ : StateL s a) :=
+  match arg_1__ with
     | Mk_StateL runStateL => runStateL
   end.
 
-Definition getId {a} (arg_4__ : Id a) :=
-  match arg_4__ with
+Definition getId {a} (arg_2__ : Id a) :=
+  match arg_2__ with
     | Mk_Id getId => getId
   end.
 (* Converted value declarations: *)
@@ -86,8 +86,8 @@ Local Definition Traversable__option_traverse : forall {f} {a} {b},
                                                   forall `{GHC.Base.Applicative f},
                                                     (a -> f b) -> option a -> f (option b) :=
   fun {f} {a} {b} `{GHC.Base.Applicative f} =>
-    fun arg_177__ arg_178__ =>
-      match arg_177__ , arg_178__ with
+    fun arg_0__ arg_1__ =>
+      match arg_0__ , arg_1__ with
         | _ , None => GHC.Base.pure None
         | f , Some x => Some Data.Functor.<$> f x
       end.
@@ -145,8 +145,8 @@ Local Definition Traversable__Either_traverse {inst_a} : forall {f} {a} {b},
                                                              (a -> f b) -> (Data.Either.Either inst_a) a -> f
                                                              ((Data.Either.Either inst_a) b) :=
   fun {f} {a} {b} `{GHC.Base.Applicative f} =>
-    fun arg_170__ arg_171__ =>
-      match arg_170__ , arg_171__ with
+    fun arg_0__ arg_1__ =>
+      match arg_0__ , arg_1__ with
         | _ , Data.Either.Left x => GHC.Base.pure (Data.Either.Left x)
         | f , Data.Either.Right y => Data.Either.Right Data.Functor.<$> f y
       end.
@@ -187,25 +187,25 @@ Local Definition Traversable__Proxy_mapM : forall {m} {a} {b},
                                              forall `{GHC.Base.Monad m},
                                                (a -> m b) -> Data.Proxy.Proxy a -> m (Data.Proxy.Proxy b) :=
   fun {m} {a} {b} `{GHC.Base.Monad m} =>
-    fun arg_158__ arg_159__ => GHC.Base.pure Data.Proxy.Mk_Proxy.
+    fun arg_0__ arg_1__ => GHC.Base.pure Data.Proxy.Mk_Proxy.
 
 Local Definition Traversable__Proxy_sequence : forall {m} {a},
                                                  forall `{GHC.Base.Monad m},
                                                    Data.Proxy.Proxy (m a) -> m (Data.Proxy.Proxy a) :=
   fun {m} {a} `{GHC.Base.Monad m} =>
-    fun arg_162__ => GHC.Base.pure Data.Proxy.Mk_Proxy.
+    fun arg_0__ => GHC.Base.pure Data.Proxy.Mk_Proxy.
 
 Local Definition Traversable__Proxy_sequenceA : forall {f} {a},
                                                   forall `{GHC.Base.Applicative f},
                                                     Data.Proxy.Proxy (f a) -> f (Data.Proxy.Proxy a) :=
   fun {f} {a} `{GHC.Base.Applicative f} =>
-    fun arg_155__ => GHC.Base.pure Data.Proxy.Mk_Proxy.
+    fun arg_0__ => GHC.Base.pure Data.Proxy.Mk_Proxy.
 
 Local Definition Traversable__Proxy_traverse : forall {f} {a} {b},
                                                  forall `{GHC.Base.Applicative f},
                                                    (a -> f b) -> Data.Proxy.Proxy a -> f (Data.Proxy.Proxy b) :=
   fun {f} {a} {b} `{GHC.Base.Applicative f} =>
-    fun arg_151__ arg_152__ => GHC.Base.pure Data.Proxy.Mk_Proxy.
+    fun arg_0__ arg_1__ => GHC.Base.pure Data.Proxy.Mk_Proxy.
 
 Program Instance Traversable__Proxy : Traversable Data.Proxy.Proxy := fun _ k =>
     k {|mapM__ := fun {m} {a} {b} `{GHC.Base.Monad m} => Traversable__Proxy_mapM ;
@@ -220,8 +220,8 @@ Local Definition Traversable__Const_traverse {inst_m} : forall {f} {a} {b},
                                                             (a -> f b) -> (Data.Functor.Const.Const inst_m) a -> f
                                                             ((Data.Functor.Const.Const inst_m) b) :=
   fun {f} {a} {b} `{GHC.Base.Applicative f} =>
-    fun arg_147__ arg_148__ =>
-      match arg_147__ , arg_148__ with
+    fun arg_0__ arg_1__ =>
+      match arg_0__ , arg_1__ with
         | _ , Data.Functor.Const.Mk_Const m => GHC.Base.pure GHC.Base.$
                                                Data.Functor.Const.Mk_Const m
       end.
@@ -258,8 +258,8 @@ Local Definition Traversable__Dual_traverse : forall {f} {a} {b},
                                                 forall `{GHC.Base.Applicative f},
                                                   (a -> f b) -> Data.Monoid.Dual a -> f (Data.Monoid.Dual b) :=
   fun {f} {a} {b} `{GHC.Base.Applicative f} =>
-    fun arg_143__ arg_144__ =>
-      match arg_143__ , arg_144__ with
+    fun arg_0__ arg_1__ =>
+      match arg_0__ , arg_1__ with
         | f , Data.Monoid.Mk_Dual x => Data.Monoid.Mk_Dual Data.Functor.<$> f x
       end.
 
@@ -290,8 +290,8 @@ Local Definition Traversable__Sum_traverse : forall {f} {a} {b},
                                                forall `{GHC.Base.Applicative f},
                                                  (a -> f b) -> Data.Monoid.Sum a -> f (Data.Monoid.Sum b) :=
   fun {f} {a} {b} `{GHC.Base.Applicative f} =>
-    fun arg_139__ arg_140__ =>
-      match arg_139__ , arg_140__ with
+    fun arg_0__ arg_1__ =>
+      match arg_0__ , arg_1__ with
         | f , Data.Monoid.Mk_Sum x => Data.Monoid.Mk_Sum Data.Functor.<$> f x
       end.
 
@@ -322,8 +322,8 @@ Local Definition Traversable__Product_traverse : forall {f} {a} {b},
                                                    forall `{GHC.Base.Applicative f},
                                                      (a -> f b) -> Data.Monoid.Product a -> f (Data.Monoid.Product b) :=
   fun {f} {a} {b} `{GHC.Base.Applicative f} =>
-    fun arg_135__ arg_136__ =>
-      match arg_135__ , arg_136__ with
+    fun arg_0__ arg_1__ =>
+      match arg_0__ , arg_1__ with
         | f , Data.Monoid.Mk_Product x => Data.Monoid.Mk_Product Data.Functor.<$> f x
       end.
 
@@ -363,8 +363,8 @@ Program Instance Traversable__Product : Traversable Data.Monoid.Product := fun _
 Local Definition Functor__StateL_fmap {inst_s} : forall {a} {b},
                                                    (a -> b) -> (StateL inst_s) a -> (StateL inst_s) b :=
   fun {a} {b} =>
-    fun arg_103__ arg_104__ =>
-      match arg_103__ , arg_104__ with
+    fun arg_0__ arg_1__ =>
+      match arg_0__ , arg_1__ with
         | f , Mk_StateL k => Mk_StateL GHC.Base.$ (fun s =>
                                match k s with
                                  | pair s' v => pair s' (f v)
@@ -383,8 +383,8 @@ Local Definition Applicative__StateL_op_zlztzg__ {inst_s} : forall {a} {b},
                                                               (StateL inst_s) (a -> b) -> (StateL inst_s) a -> (StateL
                                                               inst_s) b :=
   fun {a} {b} =>
-    fun arg_96__ arg_97__ =>
-      match arg_96__ , arg_97__ with
+    fun arg_0__ arg_1__ =>
+      match arg_0__ , arg_1__ with
         | Mk_StateL kf , Mk_StateL kv => Mk_StateL GHC.Base.$ (fun s =>
                                            match kf s with
                                              | pair s' f => match kv s' with
@@ -414,8 +414,8 @@ Program Instance Applicative__StateL {s} : GHC.Base.Applicative (StateL s) :=
 Local Definition Functor__StateR_fmap {inst_s} : forall {a} {b},
                                                    (a -> b) -> (StateR inst_s) a -> (StateR inst_s) b :=
   fun {a} {b} =>
-    fun arg_88__ arg_89__ =>
-      match arg_88__ , arg_89__ with
+    fun arg_0__ arg_1__ =>
+      match arg_0__ , arg_1__ with
         | f , Mk_StateR k => Mk_StateR GHC.Base.$ (fun s =>
                                match k s with
                                  | pair s' v => pair s' (f v)
@@ -434,8 +434,8 @@ Local Definition Applicative__StateR_op_zlztzg__ {inst_s} : forall {a} {b},
                                                               (StateR inst_s) (a -> b) -> (StateR inst_s) a -> (StateR
                                                               inst_s) b :=
   fun {a} {b} =>
-    fun arg_81__ arg_82__ =>
-      match arg_81__ , arg_82__ with
+    fun arg_0__ arg_1__ =>
+      match arg_0__ , arg_1__ with
         | Mk_StateR kf , Mk_StateR kv => Mk_StateR GHC.Base.$ (fun s =>
                                            match kv s with
                                              | pair s' v => match kf s' with
@@ -464,8 +464,8 @@ Program Instance Applicative__StateR {s} : GHC.Base.Applicative (StateR s) :=
 
 Local Definition Functor__Id_fmap : forall {a} {b}, (a -> b) -> Id a -> Id b :=
   fun {a} {b} =>
-    fun arg_75__ arg_76__ =>
-      match arg_75__ , arg_76__ with
+    fun arg_0__ arg_1__ =>
+      match arg_0__ , arg_1__ with
         | f , Mk_Id x => Mk_Id (f x)
       end.
 
@@ -479,8 +479,8 @@ Program Instance Functor__Id : GHC.Base.Functor Id := fun _ k =>
 Local Definition Applicative__Id_op_zlztzg__ : forall {a} {b},
                                                  Id (a -> b) -> Id a -> Id b :=
   fun {a} {b} =>
-    fun arg_71__ arg_72__ =>
-      match arg_71__ , arg_72__ with
+    fun arg_0__ arg_1__ =>
+      match arg_0__ , arg_1__ with
         | Mk_Id f , Mk_Id x => Mk_Id (f x)
       end.
 

@@ -24,7 +24,7 @@ Inductive Void : Type :=.
 (* Converted value declarations: *)
 
 Local Definition Eq___Void_op_zeze__ : Void -> Void -> bool :=
-  fun arg_5__ arg_6__ => true.
+  fun arg_0__ arg_1__ => true.
 
 Local Definition Eq___Void_op_zsze__ : Void -> Void -> bool :=
   fun x y => negb (Eq___Void_op_zeze__ x y).
@@ -34,7 +34,7 @@ Program Instance Eq___Void : GHC.Base.Eq_ Void := fun _ k =>
       GHC.Base.op_zsze____ := Eq___Void_op_zsze__ |}.
 
 Local Definition Ord__Void_compare : Void -> Void -> comparison :=
-  fun arg_3__ arg_4__ => Eq.
+  fun arg_0__ arg_1__ => Eq.
 
 Local Definition Ord__Void_op_zg__ : Void -> Void -> bool :=
   fun x y => _GHC.Base.==_ (Ord__Void_compare x y) Gt.

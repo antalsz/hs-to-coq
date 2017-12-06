@@ -25,8 +25,8 @@ Import GHC.Base.Notations.
 
 Definition allM {m} {a} `{GHC.Base.Monad m} : (a -> m bool) -> list a -> m
                                               bool :=
-  fix allM arg_14__ arg_15__
-        := match arg_14__ , arg_15__ with
+  fix allM arg_0__ arg_1__
+        := match arg_0__ , arg_1__ with
              | _ , nil => GHC.Base.return_ true
              | f , cons b bs => (f b) GHC.Base.>>= (fun bv =>
                                   if bv : bool
@@ -36,8 +36,8 @@ Definition allM {m} {a} `{GHC.Base.Monad m} : (a -> m bool) -> list a -> m
 
 Definition anyM {m} {a} `{GHC.Base.Monad m} : (a -> m bool) -> list a -> m
                                               bool :=
-  fix anyM arg_20__ arg_21__
-        := match arg_20__ , arg_21__ with
+  fix anyM arg_0__ arg_1__
+        := match arg_0__ , arg_1__ with
              | _ , nil => GHC.Base.return_ false
              | f , cons x xs => f x GHC.Base.>>= (fun b =>
                                   if b : bool
@@ -52,8 +52,8 @@ Definition concatMapM {m} {a} {b} `{GHC.Base.Monad m} : (a -> m (list
 Definition fmapEitherM {m} {a} {b} {c} {d} `{GHC.Base.Monad m} : (a -> m
                                                                  b) -> (c -> m d) -> Data.Either.Either a c -> m
                                                                  (Data.Either.Either b d) :=
-  fun arg_25__ arg_26__ arg_27__ =>
-    match arg_25__ , arg_26__ , arg_27__ with
+  fun arg_0__ arg_1__ arg_2__ =>
+    match arg_0__ , arg_1__ , arg_2__ with
       | fl , _ , Data.Either.Left a => fl a GHC.Base.>>= (GHC.Base.return_ GHC.Base.∘
                                        Data.Either.Left)
       | _ , fr , Data.Either.Right b => fr b GHC.Base.>>= (GHC.Base.return_ GHC.Base.∘
@@ -62,8 +62,8 @@ Definition fmapEitherM {m} {a} {b} {c} {d} `{GHC.Base.Monad m} : (a -> m
 
 Definition fmapMaybeM {m} {a} {b} `{(GHC.Base.Monad m)} : (a -> m b) -> option
                                                           a -> m (option b) :=
-  fun arg_31__ arg_32__ =>
-    match arg_31__ , arg_32__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | _ , None => GHC.Base.return_ None
       | f , Some x => f x GHC.Base.>>= (GHC.Base.return_ GHC.Base.∘ Some)
     end.
@@ -78,8 +78,8 @@ Definition foldlM_ {m} {a} {b} `{(GHC.Base.Monad m)} : (a -> b -> m
 
 Definition foldrM {m} {b} {a} `{(GHC.Base.Monad m)} : (b -> a -> m
                                                       a) -> a -> list b -> m a :=
-  fix foldrM arg_6__ arg_7__ arg_8__
-        := match arg_6__ , arg_7__ , arg_8__ with
+  fix foldrM arg_0__ arg_1__ arg_2__
+        := match arg_0__ , arg_1__ , arg_2__ with
              | _ , z , nil => GHC.Base.return_ z
              | k , z , cons x xs => foldrM k z xs GHC.Base.>>= (fun r => k x r)
            end.
@@ -87,30 +87,30 @@ Definition foldrM {m} {b} {a} `{(GHC.Base.Monad m)} : (b -> a -> m
 Definition mapAccumLM {m} {acc} {x} {y} `{GHC.Base.Monad m} : (acc -> x -> m
                                                               (acc * y)%type) -> acc -> list x -> m (acc * list
                                                                                                     y)%type :=
-  fix mapAccumLM arg_43__ arg_44__ arg_45__
-        := match arg_43__ , arg_44__ , arg_45__ with
+  fix mapAccumLM arg_0__ arg_1__ arg_2__
+        := match arg_0__ , arg_1__ , arg_2__ with
              | _ , s , nil => GHC.Base.return_ (pair s nil)
-             | f , s , cons x xs => let cont_47__ arg_48__ :=
-                                      match arg_48__ with
-                                        | pair s1 x' => let cont_49__ arg_50__ :=
-                                                          match arg_50__ with
+             | f , s , cons x xs => let cont_4__ arg_5__ :=
+                                      match arg_5__ with
+                                        | pair s1 x' => let cont_6__ arg_7__ :=
+                                                          match arg_7__ with
                                                             | pair s2 xs' => GHC.Base.return_ (pair s2 (cons x' xs'))
                                                           end in
-                                                        mapAccumLM f s1 xs GHC.Base.>>= cont_49__
+                                                        mapAccumLM f s1 xs GHC.Base.>>= cont_6__
                                       end in
-                                    f s x GHC.Base.>>= cont_47__
+                                    f s x GHC.Base.>>= cont_4__
            end.
 
 Definition mapAndUnzip3M {m} {a} {b} {c} {d} `{GHC.Base.Monad m} : (a -> m (b *
                                                                            c * d)%type) -> list a -> m (list b * list c
                                                                                                        * list d)%type :=
-  fix mapAndUnzip3M arg_71__ arg_72__
-        := match arg_71__ , arg_72__ with
+  fix mapAndUnzip3M arg_0__ arg_1__
+        := match arg_0__ , arg_1__ with
              | _ , nil => GHC.Base.return_ (pair (pair nil nil) nil)
-             | f , cons x xs => let cont_74__ arg_75__ :=
-                                  match arg_75__ with
-                                    | pair (pair r1 r2) r3 => let cont_76__ arg_77__ :=
-                                                                match arg_77__ with
+             | f , cons x xs => let cont_3__ arg_4__ :=
+                                  match arg_4__ with
+                                    | pair (pair r1 r2) r3 => let cont_5__ arg_6__ :=
+                                                                match arg_6__ with
                                                                   | pair (pair rs1 rs2) rs3 => GHC.Base.return_ (pair
                                                                                                                 (pair
                                                                                                                 (cons r1
@@ -120,9 +120,9 @@ Definition mapAndUnzip3M {m} {a} {b} {c} {d} `{GHC.Base.Monad m} : (a -> m (b *
                                                                                                                 (cons r3
                                                                                                                       rs3))
                                                                 end in
-                                                              mapAndUnzip3M f xs GHC.Base.>>= cont_76__
+                                                              mapAndUnzip3M f xs GHC.Base.>>= cont_5__
                                   end in
-                                f x GHC.Base.>>= cont_74__
+                                f x GHC.Base.>>= cont_3__
            end.
 
 Definition mapAndUnzip4M {m} {a} {b} {c} {d} {e} `{GHC.Base.Monad m} : (a -> m
@@ -131,13 +131,13 @@ Definition mapAndUnzip4M {m} {a} {b} {c} {d} {e} `{GHC.Base.Monad m} : (a -> m
                                                                                                             list d *
                                                                                                             list
                                                                                                             e)%type :=
-  fix mapAndUnzip4M arg_62__ arg_63__
-        := match arg_62__ , arg_63__ with
+  fix mapAndUnzip4M arg_0__ arg_1__
+        := match arg_0__ , arg_1__ with
              | _ , nil => GHC.Base.return_ (pair (pair (pair nil nil) nil) nil)
-             | f , cons x xs => let cont_65__ arg_66__ :=
-                                  match arg_66__ with
-                                    | pair (pair (pair r1 r2) r3) r4 => let cont_67__ arg_68__ :=
-                                                                          match arg_68__ with
+             | f , cons x xs => let cont_3__ arg_4__ :=
+                                  match arg_4__ with
+                                    | pair (pair (pair r1 r2) r3) r4 => let cont_5__ arg_6__ :=
+                                                                          match arg_6__ with
                                                                             | pair (pair (pair rs1 rs2) rs3) rs4 =>
                                                                               GHC.Base.return_ (pair (pair (pair (cons
                                                                                                                  r1 rs1)
@@ -148,21 +148,21 @@ Definition mapAndUnzip4M {m} {a} {b} {c} {d} {e} `{GHC.Base.Monad m} : (a -> m
                                                                                                                  rs3))
                                                                                                      (cons r4 rs4))
                                                                           end in
-                                                                        mapAndUnzip4M f xs GHC.Base.>>= cont_67__
+                                                                        mapAndUnzip4M f xs GHC.Base.>>= cont_5__
                                   end in
-                                f x GHC.Base.>>= cont_65__
+                                f x GHC.Base.>>= cont_3__
            end.
 
 Definition mapAndUnzip5M {m} {a} {b} {c} {d} {e} {f} `{GHC.Base.Monad m}
     : (a -> m (b * c * d * e * f)%type) -> list a -> m (list b * list c * list d *
                                                        list e * list f)%type :=
-  fix mapAndUnzip5M arg_53__ arg_54__
-        := match arg_53__ , arg_54__ with
+  fix mapAndUnzip5M arg_0__ arg_1__
+        := match arg_0__ , arg_1__ with
              | _ , nil => GHC.Base.return_ (pair (pair (pair (pair nil nil) nil) nil) nil)
-             | f , cons x xs => let cont_56__ arg_57__ :=
-                                  match arg_57__ with
-                                    | pair (pair (pair (pair r1 r2) r3) r4) r5 => let cont_58__ arg_59__ :=
-                                                                                    match arg_59__ with
+             | f , cons x xs => let cont_3__ arg_4__ :=
+                                  match arg_4__ with
+                                    | pair (pair (pair (pair r1 r2) r3) r4) r5 => let cont_5__ arg_6__ :=
+                                                                                    match arg_6__ with
                                                                                       | pair (pair (pair (pair rs1 rs2)
                                                                                                          rs3) rs4)
                                                                                              rs5 => GHC.Base.return_
@@ -179,9 +179,9 @@ Definition mapAndUnzip5M {m} {a} {b} {c} {d} {e} {f} `{GHC.Base.Monad m}
                                                                                                           (cons r5 rs5))
                                                                                     end in
                                                                                   mapAndUnzip5M f xs GHC.Base.>>=
-                                                                                  cont_58__
+                                                                                  cont_5__
                                   end in
-                                f x GHC.Base.>>= cont_56__
+                                f x GHC.Base.>>= cont_3__
            end.
 
 Definition mapMaybeM {m} {a} {b} `{(GHC.Base.Monad m)} : (a -> m (option
@@ -190,8 +190,8 @@ Definition mapMaybeM {m} {a} {b} `{(GHC.Base.Monad m)} : (a -> m (option
 
 Definition mapSndM {m} {b} {c} {a} `{GHC.Base.Monad m} : (b -> m c) -> list (a *
                                                                             b)%type -> m (list (a * c)%type) :=
-  fix mapSndM arg_38__ arg_39__
-        := match arg_38__ , arg_39__ with
+  fix mapSndM arg_0__ arg_1__
+        := match arg_0__ , arg_1__ with
              | _ , nil => GHC.Base.return_ nil
              | f , cons (pair a b) xs => f b GHC.Base.>>= (fun c =>
                                            mapSndM f xs GHC.Base.>>= (fun rs => GHC.Base.return_ (cons (pair a c) rs)))
@@ -199,8 +199,8 @@ Definition mapSndM {m} {b} {c} {a} `{GHC.Base.Monad m} : (b -> m c) -> list (a *
 
 Definition maybeMapM {m} {a} {b} `{GHC.Base.Monad m} : (a -> m b) -> (option
                                                        a -> m (option b)) :=
-  fun arg_1__ arg_2__ =>
-    match arg_1__ , arg_2__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | _ , None => GHC.Base.return_ None
       | m , Some x => GHC.Base.liftM Some GHC.Base.$ m x
     end.
@@ -214,8 +214,8 @@ Definition whenM {m} `{GHC.Base.Monad m} : m bool -> m unit -> m unit :=
 
 Definition zipWith3M {m} {a} {b} {c} {d} `{GHC.Base.Monad m} : (a -> b -> c -> m
                                                                d) -> list a -> list b -> list c -> m (list d) :=
-  fix zipWith3M arg_101__ arg_102__ arg_103__ arg_104__
-        := match arg_101__ , arg_102__ , arg_103__ , arg_104__ with
+  fix zipWith3M arg_0__ arg_1__ arg_2__ arg_3__
+        := match arg_0__ , arg_1__ , arg_2__ , arg_3__ with
              | _ , nil , _ , _ => GHC.Base.return_ nil
              | _ , _ , nil , _ => GHC.Base.return_ nil
              | _ , _ , _ , nil => GHC.Base.return_ nil
@@ -232,8 +232,8 @@ Definition zipWith3M_ {m} {a} {b} {c} {d} `{GHC.Base.Monad m}
 Definition zipWith4M {m} {a} {b} {c} {d} {e} `{GHC.Base.Monad m}
     : (a -> b -> c -> d -> m e) -> list a -> list b -> list c -> list d -> m (list
                                                                              e) :=
-  fix zipWith4M arg_90__ arg_91__ arg_92__ arg_93__ arg_94__
-        := match arg_90__ , arg_91__ , arg_92__ , arg_93__ , arg_94__ with
+  fix zipWith4M arg_0__ arg_1__ arg_2__ arg_3__ arg_4__
+        := match arg_0__ , arg_1__ , arg_2__ , arg_3__ , arg_4__ with
              | _ , nil , _ , _ , _ => GHC.Base.return_ nil
              | _ , _ , nil , _ , _ => GHC.Base.return_ nil
              | _ , _ , _ , nil , _ => GHC.Base.return_ nil
@@ -246,18 +246,18 @@ Definition zipWith4M {m} {a} {b} {c} {d} {e} `{GHC.Base.Monad m}
 
 Definition zipWithAndUnzipM {m} {a} {b} {c} {d} `{GHC.Base.Monad m}
     : (a -> b -> m (c * d)%type) -> list a -> list b -> m (list c * list d)%type :=
-  fix zipWithAndUnzipM arg_80__ arg_81__ arg_82__
-        := match arg_80__ , arg_81__ , arg_82__ with
-             | f , cons x xs , cons y ys => let cont_83__ arg_84__ :=
-                                              match arg_84__ with
-                                                | pair c d => let cont_85__ arg_86__ :=
-                                                                match arg_86__ with
+  fix zipWithAndUnzipM arg_0__ arg_1__ arg_2__
+        := match arg_0__ , arg_1__ , arg_2__ with
+             | f , cons x xs , cons y ys => let cont_3__ arg_4__ :=
+                                              match arg_4__ with
+                                                | pair c d => let cont_5__ arg_6__ :=
+                                                                match arg_6__ with
                                                                   | pair cs ds => GHC.Base.return_ (pair (cons c cs)
                                                                                                          (cons d ds))
                                                                 end in
-                                                              zipWithAndUnzipM f xs ys GHC.Base.>>= cont_85__
+                                                              zipWithAndUnzipM f xs ys GHC.Base.>>= cont_5__
                                               end in
-                                            f x y GHC.Base.>>= cont_83__
+                                            f x y GHC.Base.>>= cont_3__
              | _ , _ , _ => GHC.Base.return_ (pair nil nil)
            end.
 

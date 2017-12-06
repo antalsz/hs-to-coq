@@ -12,7 +12,7 @@ skip Data.Set.Base.showsBars
 skip Data.Set.Base.fromListConstr
 skip Data.Set.Base.setDataType
 
-termination Data.Set.Base.link {measure (Nat.add (set_size arg_348__) (set_size arg_349__))} termination_by_omega
+termination Data.Set.Base.link {measure (Nat.add (set_size arg_1__) (set_size arg_2__))} termination_by_omega
 
 skip Data.Set.Base.fromDistinctAscList
 skip Data.Set.Base.fromAscList

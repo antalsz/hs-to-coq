@@ -47,8 +47,8 @@ Definition getUniquesM `{g : MonadUnique m} : m (list Unique.Unique) :=
 
 Arguments USM {_} _.
 
-Definition unUSM {result} (arg_2__ : UniqSM result) :=
-  match arg_2__ with
+Definition unUSM {result} (arg_0__ : UniqSM result) :=
+  match arg_0__ with
     | USM unUSM => unUSM
   end.
 (* Converted value declarations: *)
@@ -56,11 +56,11 @@ Definition unUSM {result} (arg_2__ : UniqSM result) :=
 Local Definition Functor__UniqSM_fmap : forall {a} {b},
                                           (a -> b) -> UniqSM a -> UniqSM b :=
   fun {a} {b} =>
-    fun arg_94__ arg_95__ =>
-      match arg_94__ , arg_95__ with
+    fun arg_0__ arg_1__ =>
+      match arg_0__ , arg_1__ with
         | f , USM x => USM (fun us =>
-                             let scrut_96__ := x us in
-                             match scrut_96__ with
+                             let scrut_2__ := x us in
+                             match scrut_2__ with
                                | pair r us' => pair (f r) us'
                              end)
       end.
@@ -76,13 +76,13 @@ Program Instance Functor__UniqSM : GHC.Base.Functor UniqSM := fun _ k =>
 Local Definition Applicative__UniqSM_op_zlztzg__ : forall {a} {b},
                                                      UniqSM (a -> b) -> UniqSM a -> UniqSM b :=
   fun {a} {b} =>
-    fun arg_83__ arg_84__ =>
-      match arg_83__ , arg_84__ with
+    fun arg_0__ arg_1__ =>
+      match arg_0__ , arg_1__ with
         | USM f , USM x => USM GHC.Base.$ (fun us =>
-                             let scrut_85__ := f us in
-                             match scrut_85__ with
-                               | pair ff us' => let scrut_86__ := x us' in
-                                                match scrut_86__ with
+                             let scrut_2__ := f us in
+                             match scrut_2__ with
+                               | pair ff us' => let scrut_3__ := x us' in
+                                                match scrut_3__ with
                                                   | pair xx us'' => pair (ff xx) us''
                                                 end
                              end)
@@ -99,14 +99,14 @@ Definition getUniqueSupplyM3 {m} `{MonadUnique m} : m (UniqSupply * UniqSupply *
 
 Definition initUs {a} : UniqSupply -> UniqSM a -> (a * UniqSupply)%type :=
   fun init_us m =>
-    let scrut_43__ := unUSM m init_us in
-    match scrut_43__ with
+    let scrut_0__ := unUSM m init_us in
+    match scrut_0__ with
       | pair r us => pair r us
     end.
 
 Definition initUs_ {a} : UniqSupply -> UniqSM a -> a :=
   fun init_us m =>
-    let scrut_39__ := unUSM m init_us in match scrut_39__ with | pair r _ => r end.
+    let scrut_0__ := unUSM m init_us in match scrut_0__ with | pair r _ => r end.
 
 Definition liftUs {m} {a} `{MonadUnique m} : UniqSM a -> m a :=
   fun m =>
@@ -114,10 +114,10 @@ Definition liftUs {m} {a} `{MonadUnique m} : UniqSM a -> m a :=
     m).
 
 Definition liftUSM {a} : UniqSM a -> UniqSupply -> (a * UniqSupply)%type :=
-  fun arg_22__ arg_23__ =>
-    match arg_22__ , arg_23__ with
-      | USM m , us => let scrut_24__ := m us in
-                      match scrut_24__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
+      | USM m , us => let scrut_2__ := m us in
+                      match scrut_2__ with
                         | pair a us' => pair a us'
                       end
     end.
@@ -130,8 +130,8 @@ Definition lazyThenUs {a} {b} : UniqSM a -> (a -> UniqSM b) -> UniqSM b :=
           end).
 
 Definition listSplitUniqSupply : UniqSupply -> list UniqSupply :=
-  fix listSplitUniqSupply arg_61__
-        := match arg_61__ with
+  fix listSplitUniqSupply arg_0__
+        := match arg_0__ with
              | MkSplitUniqSupply _ s1 s2 => cons s1 (listSplitUniqSupply s2)
            end.
 
@@ -139,8 +139,8 @@ Definition returnUs {a} : a -> UniqSM a :=
   fun result => USM (fun us => pair result us).
 
 Definition lazyMapUs {a} {b} : (a -> UniqSM b) -> list a -> UniqSM (list b) :=
-  fix lazyMapUs arg_32__ arg_33__
-        := match arg_32__ , arg_33__ with
+  fix lazyMapUs arg_0__ arg_1__
+        := match arg_0__ , arg_1__ with
              | _ , nil => returnUs nil
              | f , cons x xs => lazyThenUs (f x) (fun r =>
                                              lazyThenUs (lazyMapUs f xs) (fun rs => returnUs (cons r rs)))
@@ -150,10 +150,7 @@ Local Definition Applicative__UniqSM_pure : forall {a}, a -> UniqSM a :=
   fun {a} => returnUs.
 
 Definition splitUniqSupply : UniqSupply -> (UniqSupply * UniqSupply)%type :=
-  fun arg_64__ =>
-    match arg_64__ with
-      | MkSplitUniqSupply _ s1 s2 => pair s1 s2
-    end.
+  fun arg_0__ => match arg_0__ with | MkSplitUniqSupply _ s1 s2 => pair s1 s2 end.
 
 Definition splitUniqSupply3 : UniqSupply -> (UniqSupply * UniqSupply *
                               UniqSupply)%type :=
@@ -175,8 +172,8 @@ Definition splitUniqSupply4 : UniqSupply -> (UniqSupply * UniqSupply *
 
 Definition getUs : UniqSM UniqSupply :=
   USM (fun us =>
-        let scrut_73__ := splitUniqSupply us in
-        match scrut_73__ with
+        let scrut_0__ := splitUniqSupply us in
+        match scrut_0__ with
           | pair us1 us2 => pair us1 us2
         end).
 
@@ -185,15 +182,15 @@ Local Definition MonadUnique__UniqSM_getUniqueSupplyM : UniqSM UniqSupply :=
 
 Definition takeUniqFromSupply : UniqSupply -> (Unique.Unique *
                                 UniqSupply)%type :=
-  fun arg_47__ =>
-    match arg_47__ with
+  fun arg_0__ =>
+    match arg_0__ with
       | MkSplitUniqSupply n s1 _ => pair (Unique.mkUniqueGrimily n) s1
     end.
 
 Definition getUniqueUs : UniqSM Unique.Unique :=
   USM (fun us =>
-        let scrut_50__ := takeUniqFromSupply us in
-        match scrut_50__ with
+        let scrut_0__ := takeUniqFromSupply us in
+        match scrut_0__ with
           | pair u us' => pair u us'
         end).
 
@@ -201,11 +198,11 @@ Local Definition MonadUnique__UniqSM_getUniqueM : UniqSM Unique.Unique :=
   getUniqueUs.
 
 Definition thenUs {a} {b} : UniqSM a -> (a -> UniqSM b) -> UniqSM b :=
-  fun arg_14__ arg_15__ =>
-    match arg_14__ , arg_15__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | USM expr , cont => USM (fun us =>
-                                 let scrut_16__ := (expr us) in
-                                 match scrut_16__ with
+                                 let scrut_2__ := (expr us) in
+                                 match scrut_2__ with
                                    | pair result us' => unUSM (cont result) us'
                                  end)
     end.
@@ -215,10 +212,10 @@ Local Definition Monad__UniqSM_op_zgzgze__ : forall {a} {b},
   fun {a} {b} => thenUs.
 
 Definition thenUs_ {a} {b} : UniqSM a -> UniqSM b -> UniqSM b :=
-  fun arg_6__ arg_7__ =>
-    match arg_6__ , arg_7__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | USM expr , USM cont => USM (fun us =>
-                                     let scrut_8__ := (expr us) in match scrut_8__ with | pair _ us' => cont us' end)
+                                     let scrut_2__ := (expr us) in match scrut_2__ with | pair _ us' => cont us' end)
     end.
 
 Local Definition Applicative__UniqSM_op_ztzg__ : forall {a} {b},
@@ -243,22 +240,22 @@ Program Instance Monad__UniqSM : GHC.Base.Monad UniqSM := fun _ k =>
       GHC.Base.return___ := fun {a} => Monad__UniqSM_return_ |}.
 
 Definition uniqFromSupply : UniqSupply -> Unique.Unique :=
-  fun arg_58__ =>
-    match arg_58__ with
+  fun arg_0__ =>
+    match arg_0__ with
       | MkSplitUniqSupply n _ _ => Unique.mkUniqueGrimily n
     end.
 
 Definition uniqsFromSupply : UniqSupply -> list Unique.Unique :=
-  fix uniqsFromSupply arg_55__
-        := match arg_55__ with
+  fix uniqsFromSupply arg_0__
+        := match arg_0__ with
              | MkSplitUniqSupply n _ s2 => cons (Unique.mkUniqueGrimily n) (uniqsFromSupply
                                                 s2)
            end.
 
 Definition getUniquesUs : UniqSM (list Unique.Unique) :=
   USM (fun us =>
-        let scrut_78__ := splitUniqSupply us in
-        match scrut_78__ with
+        let scrut_0__ := splitUniqSupply us in
+        match scrut_0__ with
           | pair us1 us2 => pair (uniqsFromSupply us1) us2
         end).
 

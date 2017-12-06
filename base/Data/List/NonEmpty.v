@@ -54,8 +54,8 @@ Arguments NEcons {_} _ _.
 Local Definition Functor__NonEmpty_fmap : forall {a} {b},
                                             (a -> b) -> NonEmpty a -> NonEmpty b :=
   fun {a} {b} =>
-    fun arg_155__ arg_156__ =>
-      match arg_155__ , arg_156__ with
+    fun arg_0__ arg_1__ =>
+      match arg_0__ , arg_1__ with
         | f , NEcons a as_ => NEcons (f a) (GHC.Base.fmap f as_)
       end.
 
@@ -269,8 +269,8 @@ Program Instance Traversable__NonEmpty : Data.Traversable.Traversable
 
 Local Definition Eq___NonEmpty_op_zeze__ {inst_a} `{GHC.Base.Eq_ inst_a}
     : NonEmpty inst_a -> NonEmpty inst_a -> bool :=
-  fun arg_78__ arg_79__ =>
-    match arg_78__ , arg_79__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | NEcons a1 a2 , NEcons b1 b2 => (andb ((a1 GHC.Base.== b1)) ((a2 GHC.Base.==
                                              b2)))
     end.
@@ -285,8 +285,8 @@ Program Instance Eq___NonEmpty {a} `{GHC.Base.Eq_ a} : GHC.Base.Eq_ (NonEmpty
       GHC.Base.op_zsze____ := Eq___NonEmpty_op_zsze__ |}.
 
 Definition fromList {a} : list a -> NonEmpty a :=
-  fun arg_37__ =>
-    match arg_37__ with
+  fun arg_0__ =>
+    match arg_0__ with
       | cons a as_ => NEcons a as_
       | nil => GHC.Base.errorWithoutStackTrace (GHC.Base.hs_string__
                                                "NonEmpty.fromList: empty list")
@@ -320,8 +320,8 @@ Definition scanl {f} {b} {a} `{Data.Foldable.Foldable f}
     fromList GHC.Base.∘ (GHC.List.scanl f z GHC.Base.∘ Data.Foldable.toList).
 
 Definition scanl1 {a} : (a -> a -> a) -> NonEmpty a -> NonEmpty a :=
-  fun arg_49__ arg_50__ =>
-    match arg_49__ , arg_50__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | f , NEcons a as_ => fromList (GHC.List.scanl f a as_)
     end.
 
@@ -335,37 +335,37 @@ Definition tails {f} {a} `{Data.Foldable.Foldable f} : f a -> NonEmpty (list
   fromList GHC.Base.∘ (Data.OldList.tails GHC.Base.∘ Data.Foldable.toList).
 
 Definition head {a} : NonEmpty a -> a :=
-  fun arg_60__ => match arg_60__ with | NEcons a _ => a end.
+  fun arg_0__ => match arg_0__ with | NEcons a _ => a end.
 
 Definition isPrefixOf {a} `{GHC.Base.Eq_ a} : list a -> NonEmpty a -> bool :=
-  fun arg_16__ arg_17__ =>
-    match arg_16__ , arg_17__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | nil , _ => true
       | cons y ys , NEcons x xs => andb (y GHC.Base.== x) (Data.OldList.isPrefixOf ys
                                         xs)
     end.
 
 Definition length {a} : NonEmpty a -> GHC.Num.Int :=
-  fun arg_75__ =>
-    match arg_75__ with
+  fun arg_0__ =>
+    match arg_0__ with
       | NEcons _ xs => GHC.Num.fromInteger 1 GHC.Num.+ Data.Foldable.length xs
     end.
 
 Definition map {a} {b} : (a -> b) -> NonEmpty a -> NonEmpty b :=
-  fun arg_21__ arg_22__ =>
-    match arg_21__ , arg_22__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | f , NEcons a as_ => NEcons (f a) (GHC.Base.fmap f as_)
     end.
 
 Definition nonEmpty {a} : list a -> option (NonEmpty a) :=
-  fun arg_62__ =>
-    match arg_62__ with
+  fun arg_0__ =>
+    match arg_0__ with
       | nil => None
       | cons a as_ => Some (NEcons a as_)
     end.
 
 Definition uncons {a} : NonEmpty a -> (a * option (NonEmpty a))%type :=
-  fun arg_65__ => match arg_65__ with | NEcons a as_ => pair a (nonEmpty as_) end.
+  fun arg_0__ => match arg_0__ with | NEcons a as_ => pair a (nonEmpty as_) end.
 
 Definition nubBy {a} : (a -> a -> bool) -> NonEmpty a -> NonEmpty a :=
   fun arg_0__ arg_1__ =>
@@ -378,8 +378,8 @@ Definition nub {a} `{GHC.Base.Eq_ a} : NonEmpty a -> NonEmpty a :=
   nubBy _GHC.Base.==_.
 
 Definition op_zlzb__ {a} : a -> NonEmpty a -> NonEmpty a :=
-  fun arg_54__ arg_55__ =>
-    match arg_54__ , arg_55__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | a , NEcons b bs => NEcons a (cons b bs)
     end.
 
@@ -394,10 +394,10 @@ Definition some1 {f} {a} `{GHC.Base.Alternative f} : f a -> f (NonEmpty a) :=
   fun x => (NEcons Data.Functor.<$> x) GHC.Base.<*> GHC.Base.many x.
 
 Definition tail {a} : NonEmpty a -> list a :=
-  fun arg_58__ => match arg_58__ with | NEcons _ as_ => as_ end.
+  fun arg_0__ => match arg_0__ with | NEcons _ as_ => as_ end.
 
 Definition toList {a} : NonEmpty a -> list a :=
-  fun arg_25__ => match arg_25__ with | NEcons a as_ => cons a as_ end.
+  fun arg_0__ => match arg_0__ with | NEcons a as_ => cons a as_ end.
 
 Definition takeWhile {a} : (a -> bool) -> NonEmpty a -> list a :=
   fun p => GHC.List.takeWhile p GHC.Base.∘ toList.
@@ -433,11 +433,11 @@ Definition unzip {f} {a} {b} `{GHC.Base.Functor f} : f (a * b)%type -> (f a * f
     pair (Data.Tuple.fst Data.Functor.<$> xs) (Data.Tuple.snd Data.Functor.<$> xs).
 
 Definition xor : NonEmpty bool -> bool :=
-  fun arg_68__ =>
-    match arg_68__ with
+  fun arg_0__ =>
+    match arg_0__ with
       | NEcons x xs => let xor' :=
-                         fun arg_69__ arg_70__ =>
-                           match arg_69__ , arg_70__ with
+                         fun arg_1__ arg_2__ =>
+                           match arg_1__ , arg_2__ with
                              | true , y => negb y
                              | false , y => y
                            end in
@@ -445,15 +445,15 @@ Definition xor : NonEmpty bool -> bool :=
     end.
 
 Definition zip {a} {b} : NonEmpty a -> NonEmpty b -> NonEmpty (a * b)%type :=
-  fun arg_12__ arg_13__ =>
-    match arg_12__ , arg_13__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | NEcons x xs , NEcons y ys => NEcons (pair x y) (GHC.List.zip xs ys)
     end.
 
 Definition zipWith {a} {b} {c} : (a -> b -> c) -> NonEmpty a -> NonEmpty
                                  b -> NonEmpty c :=
-  fun arg_7__ arg_8__ arg_9__ =>
-    match arg_7__ , arg_8__ , arg_9__ with
+  fun arg_0__ arg_1__ arg_2__ =>
+    match arg_0__ , arg_1__ , arg_2__ with
       | f , NEcons x xs , NEcons y ys => NEcons (f x y) (GHC.List.zipWith f xs ys)
     end.
 

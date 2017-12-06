@@ -23,16 +23,16 @@ Require GHC.Base.
 
 Definition catMaybes {a} : list (option a) -> list a :=
   fun ls =>
-    let cont_12__ arg_13__ :=
-      match arg_13__ with
+    let cont_0__ arg_1__ :=
+      match arg_1__ with
         | Some x => cons x nil
         | _ => nil
       end in
-    Coq.Lists.List.flat_map cont_12__ ls.
+    Coq.Lists.List.flat_map cont_0__ ls.
 
 Definition fromJust {a} : option a -> a :=
-  fun arg_23__ =>
-    match arg_23__ with
+  fun arg_0__ =>
+    match arg_0__ with
       | None => GHC.Base.errorWithoutStackTrace (GHC.Base.hs_string__
                                                 "Maybe.fromJust: Nothing")
       | Some x => x
@@ -42,21 +42,21 @@ Definition fromMaybe {a} : a -> option a -> a :=
   fun d x => match x with | None => d | Some v => v end.
 
 Definition isJust {a} : option a -> bool :=
-  fun arg_28__ => match arg_28__ with | None => false | _ => true end.
+  fun arg_0__ => match arg_0__ with | None => false | _ => true end.
 
 Definition isNothing {a} : option a -> bool :=
-  fun arg_26__ => match arg_26__ with | None => true | _ => false end.
+  fun arg_0__ => match arg_0__ with | None => true | _ => false end.
 
 Definition listToMaybe {a} : list a -> option a :=
-  fun arg_15__ => match arg_15__ with | nil => None | cons a _ => Some a end.
+  fun arg_0__ => match arg_0__ with | nil => None | cons a _ => Some a end.
 
 Definition mapMaybe {a} {b} : (a -> option b) -> list a -> list b :=
-  fix mapMaybe arg_4__ arg_5__
-        := match arg_4__ , arg_5__ with
+  fix mapMaybe arg_0__ arg_1__
+        := match arg_0__ , arg_1__ with
              | _ , nil => nil
              | f , cons x xs => let rs := mapMaybe f xs in
-                                let scrut_7__ := f x in
-                                match scrut_7__ with
+                                let scrut_3__ := f x in
+                                match scrut_3__ with
                                   | None => rs
                                   | Some r => cons r rs
                                 end
@@ -72,14 +72,14 @@ Definition mapMaybeFB {b} {r} {a} : (b -> r -> r) -> (a -> option
     end.
 
 Definition maybe {b} {a} : b -> (a -> b) -> option a -> b :=
-  fun arg_30__ arg_31__ arg_32__ =>
-    match arg_30__ , arg_31__ , arg_32__ with
+  fun arg_0__ arg_1__ arg_2__ =>
+    match arg_0__ , arg_1__ , arg_2__ with
       | n , _ , None => n
       | _ , f , Some x => f x
     end.
 
 Definition maybeToList {a} : option a -> list a :=
-  fun arg_18__ => match arg_18__ with | None => nil | Some x => cons x nil end.
+  fun arg_0__ => match arg_0__ with | None => nil | Some x => cons x nil end.
 
 (* Unbound variables:
      None Some bool cons false list nil option true Coq.Lists.List.flat_map

@@ -246,8 +246,8 @@ Local Definition Ord__UnitId_min : UnitId -> UnitId -> UnitId :=
    "BinaryStringRep" unsupported *)
 
 Local Definition Ord__NDModule_compare : NDModule -> NDModule -> comparison :=
-  fun arg_55__ arg_56__ =>
-    match arg_55__ , arg_56__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | Mk_NDModule (Mk_Module p1 n1) , Mk_NDModule (Mk_Module p2 n2) => Util.thenCmp
                                                                          (GHC.Base.compare (Unique.getUnique p1)
                                                                                            (Unique.getUnique p2))
@@ -288,8 +288,8 @@ Program Instance Eq___ModuleName : GHC.Base.Eq_ ModuleName := fun _ k =>
       GHC.Base.op_zsze____ := Eq___ModuleName_op_zsze__ |}.
 
 Local Definition Eq___Module_op_zeze__ : Module -> Module -> bool :=
-  fun arg_8__ arg_9__ =>
-    match arg_8__ , arg_9__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | Mk_Module a1 a2 , Mk_Module b1 b2 => (andb ((a1 GHC.Base.== b1)) ((a2
                                                    GHC.Base.== b2)))
     end.
@@ -333,8 +333,8 @@ Local Definition Ord__Module_compare : Module -> Module -> comparison :=
   fun a b =>
     match a with
       | Mk_Module a1 a2 => match b with
-                             | Mk_Module b1 b2 => let scrut_13__ := (GHC.Base.compare a1 b1) in
-                                                  match scrut_13__ with
+                             | Mk_Module b1 b2 => let scrut_0__ := (GHC.Base.compare a1 b1) in
+                                                  match scrut_0__ with
                                                     | Lt => Lt
                                                     | Eq => (GHC.Base.compare a2 b2)
                                                     | Gt => Gt

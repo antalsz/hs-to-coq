@@ -328,8 +328,8 @@ Program Instance Traversable__BooleanFormula : Data.Traversable.Traversable
 
 Local Definition Eq___BooleanFormula_op_zeze__ {inst_a} `{GHC.Base.Eq_ inst_a}
     : BooleanFormula inst_a -> BooleanFormula inst_a -> bool :=
-  fun arg_70__ arg_71__ =>
-    match arg_70__ , arg_71__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | Var a1 , Var b1 => ((a1 GHC.Base.== b1))
       | And a1 , And b1 => ((a1 GHC.Base.== b1))
       | Or a1 , Or b1 => ((a1 GHC.Base.== b1))
@@ -347,8 +347,8 @@ Program Instance Eq___BooleanFormula {a} `{GHC.Base.Eq_ a} : GHC.Base.Eq_
       GHC.Base.op_zsze____ := Eq___BooleanFormula_op_zsze__ |}.
 
 Definition eval {a} : (a -> bool) -> BooleanFormula a -> bool :=
-  fix eval arg_16__ arg_17__
-        := match arg_16__ , arg_17__ with
+  fix eval arg_0__ arg_1__
+        := match arg_0__ , arg_1__ with
              | f , Var x => f x
              | f , And xs => Data.Foldable.all (eval f GHC.Base.∘ SrcLoc.unLoc) xs
              | f , Or xs => Data.Foldable.any (eval f GHC.Base.∘ SrcLoc.unLoc) xs
@@ -366,8 +366,8 @@ Definition impliesAtom {a} `{GHC.Base.Eq_ a} : BooleanFormula a -> a -> bool :=
 
 Definition implies {a} `{GHC.Base.Eq_ a} : BooleanFormula a -> BooleanFormula
                                            a -> bool :=
-  fix implies arg_9__ arg_10__
-        := match arg_9__ , arg_10__ with
+  fix implies arg_0__ arg_1__
+        := match arg_0__ , arg_1__ with
              | x , Var y => impliesAtom x y
              | x , And ys => Data.Foldable.all (implies x GHC.Base.∘ SrcLoc.unLoc) ys
              | x , Or ys => Data.Foldable.any (implies x GHC.Base.∘ SrcLoc.unLoc) ys
@@ -375,10 +375,10 @@ Definition implies {a} `{GHC.Base.Eq_ a} : BooleanFormula a -> BooleanFormula
            end.
 
 Definition isFalse {a} : BooleanFormula a -> bool :=
-  fun arg_25__ => match arg_25__ with | Or nil => true | _ => false end.
+  fun arg_0__ => match arg_0__ with | Or nil => true | _ => false end.
 
 Definition isTrue {a} : BooleanFormula a -> bool :=
-  fun arg_23__ => match arg_23__ with | And nil => true | _ => false end.
+  fun arg_0__ => match arg_0__ with | And nil => true | _ => false end.
 
 Definition mkFalse {a} : BooleanFormula a :=
   Or nil.
@@ -386,14 +386,14 @@ Definition mkFalse {a} : BooleanFormula a :=
 Definition mkAnd {a} `{GHC.Base.Eq_ a} : list (LBooleanFormula
                                               a) -> BooleanFormula a :=
   let mkAnd' :=
-    fun arg_40__ =>
-      match arg_40__ with
+    fun arg_0__ =>
+      match arg_0__ with
         | cons x nil => SrcLoc.unLoc x
         | xs => And xs
       end in
   let fromAnd {a} : LBooleanFormula a -> option (list (LBooleanFormula a)) :=
-    fun arg_44__ =>
-      match arg_44__ with
+    fun arg_4__ =>
+      match arg_4__ with
         | SrcLoc.L _ (And xs) => Some xs
         | SrcLoc.L _ (Or nil) => None
         | x => Some (cons x nil)
@@ -407,14 +407,14 @@ Definition mkTrue {a} : BooleanFormula a :=
 Definition mkOr {a} `{GHC.Base.Eq_ a} : list (LBooleanFormula
                                              a) -> BooleanFormula a :=
   let mkOr' :=
-    fun arg_28__ =>
-      match arg_28__ with
+    fun arg_0__ =>
+      match arg_0__ with
         | cons x nil => SrcLoc.unLoc x
         | xs => Or xs
       end in
   let fromOr :=
-    fun arg_32__ =>
-      match arg_32__ with
+    fun arg_4__ =>
+      match arg_4__ with
         | SrcLoc.L _ (Or xs) => Some xs
         | SrcLoc.L _ (And nil) => None
         | x => Some (cons x nil)
@@ -423,23 +423,23 @@ Definition mkOr {a} `{GHC.Base.Eq_ a} : list (LBooleanFormula
   MonadUtils.concatMapM fromOr.
 
 Definition mkBool {a} : bool -> BooleanFormula a :=
-  fun arg_38__ => match arg_38__ with | false => mkFalse | true => mkTrue end.
+  fun arg_0__ => match arg_0__ with | false => mkFalse | true => mkTrue end.
 
 Definition simplify {a} `{GHC.Base.Eq_ a} : (a -> option bool) -> BooleanFormula
                                             a -> BooleanFormula a :=
-  fix simplify arg_49__ arg_50__
-        := match arg_49__ , arg_50__ with
-             | f , Var a => let scrut_51__ := f a in
-                            match scrut_51__ with
+  fix simplify arg_0__ arg_1__
+        := match arg_0__ , arg_1__ with
+             | f , Var a => let scrut_2__ := f a in
+                            match scrut_2__ with
                               | None => Var a
                               | Some b => mkBool b
                             end
-             | f , And xs => mkAnd (GHC.Base.map (fun arg_56__ =>
-                                                   match arg_56__ with
+             | f , And xs => mkAnd (GHC.Base.map (fun arg_7__ =>
+                                                   match arg_7__ with
                                                      | SrcLoc.L l x => SrcLoc.L l (simplify f x)
                                                    end) xs)
-             | f , Or xs => mkOr (GHC.Base.map (fun arg_60__ =>
-                                                 match arg_60__ with
+             | f , Or xs => mkOr (GHC.Base.map (fun arg_11__ =>
+                                                 match arg_11__ with
                                                    | SrcLoc.L l x => SrcLoc.L l (simplify f x)
                                                  end) xs)
              | f , Parens x => simplify f (SrcLoc.unLoc x)
@@ -450,7 +450,7 @@ Definition isUnsatisfied {a} `{GHC.Base.Eq_ a} : (a -> bool) -> BooleanFormula
   fun f bf =>
     let f' := fun x => if f x : bool then Some true else None in
     let bf' := simplify f' bf in
-    let j_68__ := Some bf' in if isTrue bf' : bool then None else j_68__.
+    let j_2__ := Some bf' in if isTrue bf' : bool then None else j_2__.
 
 Definition mkVar {a} : a -> BooleanFormula a :=
   Var.

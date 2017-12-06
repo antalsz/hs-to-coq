@@ -98,16 +98,16 @@ Local Definition Foldable__Map_elem {inst_k} : forall {a},
                                                  forall `{GHC.Base.Eq_ a}, a -> (Map inst_k) a -> bool :=
   fun {a} `{GHC.Base.Eq_ a} =>
     let go :=
-      fix go arg_959__ arg_960__
-            := let j_962__ :=
-                 match arg_959__ , arg_960__ with
+      fix go arg_0__ arg_1__
+            := let j_3__ :=
+                 match arg_0__ , arg_1__ with
                    | _ , Tip => false
                    | x , Bin _ _ v l r => orb (x GHC.Base.== v) (orb (go x l) (go x r))
                  end in
-               match arg_959__ , arg_960__ with
+               match arg_0__ , arg_1__ with
                  | arg , _ => if GHC.Prim.seq arg false : bool
                               then GHC.Err.undefined
-                              else j_962__
+                              else j_3__
                end in
     go.
 
@@ -115,17 +115,17 @@ Local Definition Foldable__Map_fold {inst_k} : forall {m},
                                                  forall `{GHC.Base.Monoid m}, (Map inst_k) m -> m :=
   fun {m} `{GHC.Base.Monoid m} =>
     let go :=
-      fix go arg_946__
-            := let j_949__ :=
-                 match arg_946__ with
+      fix go arg_0__
+            := let j_3__ :=
+                 match arg_0__ with
                    | Bin _ _ v l r => GHC.Base.mappend (go l) (GHC.Base.mappend v (go r))
                    | _ => patternFailure
                  end in
-               match arg_946__ with
+               match arg_0__ with
                  | Tip => GHC.Base.mempty
-                 | Bin num_947__ _ v _ _ => if num_947__ GHC.Base.== GHC.Num.fromInteger 1 : bool
-                                            then v
-                                            else j_949__
+                 | Bin num_1__ _ v _ _ => if num_1__ GHC.Base.== GHC.Num.fromInteger 1 : bool
+                                          then v
+                                          else j_3__
                end in
     go.
 
@@ -134,17 +134,17 @@ Local Definition Foldable__Map_foldMap {inst_k} : forall {m} {a},
   fun {m} {a} `{GHC.Base.Monoid m} =>
     fun f t =>
       let go :=
-        fix go arg_952__
-              := let j_955__ :=
-                   match arg_952__ with
+        fix go arg_0__
+              := let j_3__ :=
+                   match arg_0__ with
                      | Bin _ _ v l r => GHC.Base.mappend (go l) (GHC.Base.mappend (f v) (go r))
                      | _ => patternFailure
                    end in
-                 match arg_952__ with
+                 match arg_0__ with
                    | Tip => GHC.Base.mempty
-                   | Bin num_953__ _ v _ _ => if num_953__ GHC.Base.== GHC.Num.fromInteger 1 : bool
-                                              then f v
-                                              else j_955__
+                   | Bin num_1__ _ v _ _ => if num_1__ GHC.Base.== GHC.Num.fromInteger 1 : bool
+                                            then f v
+                                            else j_3__
                  end in
       go t.
 
@@ -170,22 +170,22 @@ Definition empty {k} {a} : Map k a :=
 
 Definition find {k} {a} `{GHC.Base.Ord k} : k -> Map k a -> a :=
   let go :=
-    fix go arg_267__ arg_268__
-          := let j_275__ :=
-               match arg_267__ , arg_268__ with
+    fix go arg_0__ arg_1__
+          := let j_8__ :=
+               match arg_0__ , arg_1__ with
                  | _ , Tip => GHC.Err.error (GHC.Base.hs_string__
                                             "Map.!: given key is not an element in the map")
-                 | k , Bin _ kx x l r => let scrut_270__ := GHC.Base.compare k kx in
-                                         match scrut_270__ with
+                 | k , Bin _ kx x l r => let scrut_3__ := GHC.Base.compare k kx in
+                                         match scrut_3__ with
                                            | Lt => go k l
                                            | Gt => go k r
                                            | Eq => x
                                          end
                end in
-             match arg_267__ , arg_268__ with
+             match arg_0__ , arg_1__ with
                | arg , _ => if GHC.Prim.seq arg false : bool
                             then GHC.Err.undefined
-                            else j_275__
+                            else j_8__
              end in
   go.
 
@@ -197,8 +197,8 @@ Notation "'_!_'" := (op_zn__).
 Infix "!" := (_!_) (at level 99).
 
 Definition findMax {k} {a} : Map k a -> (k * a)%type :=
-  fix findMax arg_158__
-        := match arg_158__ with
+  fix findMax arg_0__
+        := match arg_0__ with
              | Bin _ kx x _ Tip => pair kx x
              | Bin _ _ _ _ r => findMax r
              | Tip => GHC.Err.error (GHC.Base.hs_string__
@@ -206,8 +206,8 @@ Definition findMax {k} {a} : Map k a -> (k * a)%type :=
            end.
 
 Definition findMin {k} {a} : Map k a -> (k * a)%type :=
-  fix findMin arg_163__
-        := match arg_163__ with
+  fix findMin arg_0__
+        := match arg_0__ with
              | Bin _ kx x Tip _ => pair kx x
              | Bin _ _ _ l _ => findMin l
              | Tip => GHC.Err.error (GHC.Base.hs_string__
@@ -216,27 +216,27 @@ Definition findMin {k} {a} : Map k a -> (k * a)%type :=
 
 Definition findWithDefault {k} {a} `{GHC.Base.Ord k} : a -> k -> Map k a -> a :=
   let go :=
-    fix go arg_256__ arg_257__ arg_258__
-          := let j_264__ :=
-               match arg_256__ , arg_257__ , arg_258__ with
+    fix go arg_0__ arg_1__ arg_2__
+          := let j_8__ :=
+               match arg_0__ , arg_1__ , arg_2__ with
                  | def , _ , Tip => def
-                 | def , k , Bin _ kx x l r => let scrut_259__ := GHC.Base.compare k kx in
-                                               match scrut_259__ with
+                 | def , k , Bin _ kx x l r => let scrut_3__ := GHC.Base.compare k kx in
+                                               match scrut_3__ with
                                                  | Lt => go def k l
                                                  | Gt => go def k r
                                                  | Eq => x
                                                end
                end in
-             match arg_256__ , arg_257__ , arg_258__ with
+             match arg_0__ , arg_1__ , arg_2__ with
                | _ , arg , _ => if GHC.Prim.seq arg false : bool
                                 then GHC.Err.undefined
-                                else j_264__
+                                else j_8__
              end in
   go.
 
 Definition first {a} {b} {c} : (a -> b) -> (a * c)%type -> (b * c)%type :=
-  fun arg_154__ arg_155__ =>
-    match arg_154__ , arg_155__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | f , pair x y => pair (f x) y
     end.
 
@@ -244,25 +244,25 @@ Definition foldMapWithKey {m} {k} {a} `{GHC.Base.Monoid m}
     : (k -> a -> m) -> Map k a -> m :=
   fun f =>
     let go :=
-      fix go arg_43__
-            := let j_46__ :=
-                 match arg_43__ with
+      fix go arg_0__
+            := let j_3__ :=
+                 match arg_0__ with
                    | Bin _ k v l r => GHC.Base.mappend (go l) (GHC.Base.mappend (f k v) (go r))
                    | _ => patternFailure
                  end in
-               match arg_43__ with
+               match arg_0__ with
                  | Tip => GHC.Base.mempty
-                 | Bin num_44__ k v _ _ => if num_44__ GHC.Base.== GHC.Num.fromInteger 1 : bool
-                                           then f k v
-                                           else j_46__
+                 | Bin num_1__ k v _ _ => if num_1__ GHC.Base.== GHC.Num.fromInteger 1 : bool
+                                          then f k v
+                                          else j_3__
                end in
     go.
 
 Definition foldl {a} {b} {k} : (a -> b -> a) -> a -> Map k b -> a :=
   fun f z =>
     let go :=
-      fix go arg_91__ arg_92__
-            := match arg_91__ , arg_92__ with
+      fix go arg_0__ arg_1__
+            := match arg_0__ , arg_1__ with
                  | z' , Tip => z'
                  | z' , Bin _ _ x l r => go (f (go z' l) x) r
                end in
@@ -275,16 +275,16 @@ Local Definition Foldable__Map_foldl {inst_k} : forall {b} {a},
 Definition foldl' {a} {b} {k} : (a -> b -> a) -> a -> Map k b -> a :=
   fun f z =>
     let go :=
-      fix go arg_84__ arg_85__
-            := let j_87__ :=
-                 match arg_84__ , arg_85__ with
+      fix go arg_0__ arg_1__
+            := let j_3__ :=
+                 match arg_0__ , arg_1__ with
                    | z' , Tip => z'
                    | z' , Bin _ _ x l r => go (f (go z' l) x) r
                  end in
-               match arg_84__ , arg_85__ with
+               match arg_0__ , arg_1__ with
                  | arg , _ => if GHC.Prim.seq arg false : bool
                               then GHC.Err.undefined
-                              else j_87__
+                              else j_3__
                end in
     go z.
 
@@ -303,8 +303,8 @@ Local Definition Foldable__Map_foldl' {inst_k} : forall {b} {a},
 Definition foldlWithKey {a} {k} {b} : (a -> k -> b -> a) -> a -> Map k b -> a :=
   fun f z =>
     let go :=
-      fix go arg_56__ arg_57__
-            := match arg_56__ , arg_57__ with
+      fix go arg_0__ arg_1__
+            := match arg_0__ , arg_1__ with
                  | z' , Tip => z'
                  | z' , Bin _ kx x l r => go (f (go z' l) kx x) r
                end in
@@ -320,24 +320,24 @@ Definition foldlWithKey' {a} {k} {b} : (a -> k -> b -> a) -> a -> Map k
                                        b -> a :=
   fun f z =>
     let go :=
-      fix go arg_49__ arg_50__
-            := let j_52__ :=
-                 match arg_49__ , arg_50__ with
+      fix go arg_0__ arg_1__
+            := let j_3__ :=
+                 match arg_0__ , arg_1__ with
                    | z' , Tip => z'
                    | z' , Bin _ kx x l r => go (f (go z' l) kx x) r
                  end in
-               match arg_49__ , arg_50__ with
+               match arg_0__ , arg_1__ with
                  | arg , _ => if GHC.Prim.seq arg false : bool
                               then GHC.Err.undefined
-                              else j_52__
+                              else j_3__
                end in
     go z.
 
 Definition foldr {a} {b} {k} : (a -> b -> b) -> b -> Map k a -> b :=
   fun f z =>
     let go :=
-      fix go arg_103__ arg_104__
-            := match arg_103__ , arg_104__ with
+      fix go arg_0__ arg_1__
+            := match arg_0__ , arg_1__ with
                  | z' , Tip => z'
                  | z' , Bin _ _ x l r => go (f x (go z' r)) l
                end in
@@ -357,16 +357,16 @@ Local Definition Foldable__Map_foldr {inst_k} : forall {a} {b},
 Definition foldr' {a} {b} {k} : (a -> b -> b) -> b -> Map k a -> b :=
   fun f z =>
     let go :=
-      fix go arg_96__ arg_97__
-            := let j_99__ :=
-                 match arg_96__ , arg_97__ with
+      fix go arg_0__ arg_1__
+            := let j_3__ :=
+                 match arg_0__ , arg_1__ with
                    | z' , Tip => z'
                    | z' , Bin _ _ x l r => go (f x (go z' r)) l
                  end in
-               match arg_96__ , arg_97__ with
+               match arg_0__ , arg_1__ with
                  | arg , _ => if GHC.Prim.seq arg false : bool
                               then GHC.Err.undefined
-                              else j_99__
+                              else j_3__
                end in
     go z.
 
@@ -377,16 +377,16 @@ Local Definition Foldable__Map_foldr' {inst_k} : forall {a} {b},
 Definition foldrWithKey {k} {a} {b} : (k -> a -> b -> b) -> b -> Map k a -> b :=
   fun f z =>
     let go :=
-      fix go arg_70__ arg_71__
-            := match arg_70__ , arg_71__ with
+      fix go arg_0__ arg_1__
+            := match arg_0__ , arg_1__ with
                  | z' , Tip => z'
                  | z' , Bin _ kx x l r => go (f kx x (go z' r)) l
                end in
     go z.
 
 Definition keys {k} {a} : Map k a -> list k :=
-  foldrWithKey (fun arg_75__ arg_76__ arg_77__ =>
-                 match arg_75__ , arg_76__ , arg_77__ with
+  foldrWithKey (fun arg_0__ arg_1__ arg_2__ =>
+                 match arg_0__ , arg_1__ , arg_2__ with
                    | k , _ , ks => cons k ks
                  end) nil.
 
@@ -437,50 +437,50 @@ Definition foldrWithKey' {k} {a} {b} : (k -> a -> b -> b) -> b -> Map k
                                        a -> b :=
   fun f z =>
     let go :=
-      fix go arg_63__ arg_64__
-            := let j_66__ :=
-                 match arg_63__ , arg_64__ with
+      fix go arg_0__ arg_1__
+            := let j_3__ :=
+                 match arg_0__ , arg_1__ with
                    | z' , Tip => z'
                    | z' , Bin _ kx x l r => go (f kx x (go z' r)) l
                  end in
-               match arg_63__ , arg_64__ with
+               match arg_0__ , arg_1__ with
                  | arg , _ => if GHC.Prim.seq arg false : bool
                               then GHC.Err.undefined
-                              else j_66__
+                              else j_3__
                end in
     go z.
 
 Definition fromSet {k} {a} : (k -> a) -> Data.Set.Base.Set_ k -> Map k a :=
-  fix fromSet arg_36__ arg_37__
-        := match arg_36__ , arg_37__ with
+  fix fromSet arg_0__ arg_1__
+        := match arg_0__ , arg_1__ with
              | _ , Data.Set.Base.Tip => Tip
              | f , Data.Set.Base.Bin sz x l r => Bin sz x (f x) (fromSet f l) (fromSet f r)
            end.
 
 Definition keysSet {k} {a} : Map k a -> Data.Set.Base.Set_ k :=
-  fix keysSet arg_40__
-        := match arg_40__ with
+  fix keysSet arg_0__
+        := match arg_0__ with
              | Tip => Data.Set.Base.Tip
              | Bin sz kx _ l r => Data.Set.Base.Bin sz kx (keysSet l) (keysSet r)
            end.
 
 Definition lookup {k} {a} `{GHC.Base.Ord k} : k -> Map k a -> option a :=
   let go :=
-    fix go arg_289__ arg_290__
-          := let j_297__ :=
-               match arg_289__ , arg_290__ with
+    fix go arg_0__ arg_1__
+          := let j_8__ :=
+               match arg_0__ , arg_1__ with
                  | _ , Tip => None
-                 | k , Bin _ kx x l r => let scrut_291__ := GHC.Base.compare k kx in
-                                         match scrut_291__ with
+                 | k , Bin _ kx x l r => let scrut_2__ := GHC.Base.compare k kx in
+                                         match scrut_2__ with
                                            | Lt => go k l
                                            | Gt => go k r
                                            | Eq => Some x
                                          end
                end in
-             match arg_289__ , arg_290__ with
+             match arg_0__ , arg_1__ with
                | arg , _ => if GHC.Prim.seq arg false : bool
                             then GHC.Err.undefined
-                            else j_297__
+                            else j_8__
              end in
   go.
 
@@ -488,15 +488,15 @@ Definition trimLookupLo {k} {a} `{GHC.Base.Ord k} : k -> MaybeS k -> Map k
                                                     a -> (option a * Map k a)%type :=
   fun lk0 mhk0 t0 =>
     let go :=
-      fun arg_300__ arg_301__ arg_302__ =>
-        match arg_300__ , arg_301__ , arg_302__ with
+      fun arg_0__ arg_1__ arg_2__ =>
+        match arg_0__ , arg_1__ , arg_2__ with
           | lk , NothingS , t => let greater {k} {a} `{GHC.Base.Ord k} : k -> Map k
                                                                          a -> prod (option a) (Map k a) :=
-                                   fix greater arg_303__ arg_304__
-                                         := match arg_303__ , arg_304__ with
-                                              | lo , (Bin _ kx x l r as t') => let scrut_305__ :=
+                                   fix greater arg_3__ arg_4__
+                                         := match arg_3__ , arg_4__ with
+                                              | lo , (Bin _ kx x l r as t') => let scrut_5__ :=
                                                                                  GHC.Base.compare lo kx in
-                                                                               match scrut_305__ with
+                                                                               match scrut_5__ with
                                                                                  | Lt => pair (lookup lo l) t'
                                                                                  | Eq => (pair (Some x) r)
                                                                                  | Gt => greater lo r
@@ -506,26 +506,26 @@ Definition trimLookupLo {k} {a} `{GHC.Base.Ord k} : k -> MaybeS k -> Map k
                                  greater lk t
           | lk , JustS hk , t => let lesser {k} {a} `{GHC.Base.Ord k} : k -> Map k
                                                                         a -> Map k a :=
-                                   fix lesser arg_314__ arg_315__
-                                         := let j_316__ := match arg_314__ , arg_315__ with | _ , t' => t' end in
-                                            match arg_314__ , arg_315__ with
+                                   fix lesser arg_14__ arg_15__
+                                         := let j_16__ := match arg_14__ , arg_15__ with | _ , t' => t' end in
+                                            match arg_14__ , arg_15__ with
                                               | hi , Bin _ k _ l _ => if k GHC.Base.>= hi : bool
                                                                       then lesser hi l
-                                                                      else j_316__
-                                              | _ , _ => j_316__
+                                                                      else j_16__
+                                              | _ , _ => j_16__
                                             end in
                                  let middle {k} {a} `{GHC.Base.Ord k} : k -> k -> Map k a -> prod (option a) (Map
                                                                                                              k a) :=
-                                   fix middle arg_319__ arg_320__ arg_321__
-                                         := match arg_319__ , arg_320__ , arg_321__ with
-                                              | lo , hi , (Bin _ kx x l r as t') => let scrut_322__ :=
+                                   fix middle arg_19__ arg_20__ arg_21__
+                                         := match arg_19__ , arg_20__ , arg_21__ with
+                                              | lo , hi , (Bin _ kx x l r as t') => let scrut_22__ :=
                                                                                       GHC.Base.compare lo kx in
-                                                                                    match scrut_322__ with
-                                                                                      | Lt => let j_323__ :=
+                                                                                    match scrut_22__ with
+                                                                                      | Lt => let j_23__ :=
                                                                                                 middle lo hi l in
                                                                                               if kx GHC.Base.< hi : bool
                                                                                               then pair (lookup lo l) t'
-                                                                                              else j_323__
+                                                                                              else j_23__
                                                                                       | Eq => pair (Some x) (lesser hi
                                                                                                    r)
                                                                                       | Gt => middle lo hi r
@@ -539,150 +539,150 @@ Definition trimLookupLo {k} {a} `{GHC.Base.Ord k} : k -> MaybeS k -> Map k
 Definition lookupGE {k} {v} `{GHC.Base.Ord k} : k -> Map k v -> option (k *
                                                                        v)%type :=
   let goJust :=
-    fix goJust arg_172__ arg_173__ arg_174__ arg_175__
-          := let j_183__ :=
-               match arg_172__ , arg_173__ , arg_174__ , arg_175__ with
+    fix goJust arg_0__ arg_1__ arg_2__ arg_3__
+          := let j_11__ :=
+               match arg_0__ , arg_1__ , arg_2__ , arg_3__ with
                  | _ , kx' , x' , Tip => Some (pair kx' x')
-                 | k , kx' , x' , Bin _ kx x l r => let scrut_177__ := GHC.Base.compare k kx in
-                                                    match scrut_177__ with
+                 | k , kx' , x' , Bin _ kx x l r => let scrut_5__ := GHC.Base.compare k kx in
+                                                    match scrut_5__ with
                                                       | Lt => goJust k kx x l
                                                       | Eq => Some (pair kx x)
                                                       | Gt => goJust k kx' x' r
                                                     end
                end in
-             match arg_172__ , arg_173__ , arg_174__ , arg_175__ with
+             match arg_0__ , arg_1__ , arg_2__ , arg_3__ with
                | arg , _ , _ , _ => if GHC.Prim.seq arg false : bool
                                     then GHC.Err.undefined
-                                    else j_183__
+                                    else j_11__
              end in
   let goNothing :=
-    fix goNothing arg_186__ arg_187__
-          := let j_194__ :=
-               match arg_186__ , arg_187__ with
+    fix goNothing arg_14__ arg_15__
+          := let j_22__ :=
+               match arg_14__ , arg_15__ with
                  | _ , Tip => None
-                 | k , Bin _ kx x l r => let scrut_188__ := GHC.Base.compare k kx in
-                                         match scrut_188__ with
+                 | k , Bin _ kx x l r => let scrut_16__ := GHC.Base.compare k kx in
+                                         match scrut_16__ with
                                            | Lt => goJust k kx x l
                                            | Eq => Some (pair kx x)
                                            | Gt => goNothing k r
                                          end
                end in
-             match arg_186__ , arg_187__ with
+             match arg_14__ , arg_15__ with
                | arg , _ => if GHC.Prim.seq arg false : bool
                             then GHC.Err.undefined
-                            else j_194__
+                            else j_22__
              end in
   goNothing.
 
 Definition lookupGT {k} {v} `{GHC.Base.Ord k} : k -> Map k v -> option (k *
                                                                        v)%type :=
   let goJust :=
-    fix goJust arg_222__ arg_223__ arg_224__ arg_225__
-          := let j_229__ :=
-               match arg_222__ , arg_223__ , arg_224__ , arg_225__ with
+    fix goJust arg_0__ arg_1__ arg_2__ arg_3__
+          := let j_7__ :=
+               match arg_0__ , arg_1__ , arg_2__ , arg_3__ with
                  | _ , kx' , x' , Tip => Some (pair kx' x')
-                 | k , kx' , x' , Bin _ kx x l r => let j_227__ := goJust k kx' x' r in
+                 | k , kx' , x' , Bin _ kx x l r => let j_5__ := goJust k kx' x' r in
                                                     if k GHC.Base.< kx : bool
                                                     then goJust k kx x l
-                                                    else j_227__
+                                                    else j_5__
                end in
-             match arg_222__ , arg_223__ , arg_224__ , arg_225__ with
+             match arg_0__ , arg_1__ , arg_2__ , arg_3__ with
                | arg , _ , _ , _ => if GHC.Prim.seq arg false : bool
                                     then GHC.Err.undefined
-                                    else j_229__
+                                    else j_7__
              end in
   let goNothing :=
-    fix goNothing arg_232__ arg_233__
-          := let j_236__ :=
-               match arg_232__ , arg_233__ with
+    fix goNothing arg_10__ arg_11__
+          := let j_14__ :=
+               match arg_10__ , arg_11__ with
                  | _ , Tip => None
-                 | k , Bin _ kx x l r => let j_234__ := goNothing k r in
+                 | k , Bin _ kx x l r => let j_12__ := goNothing k r in
                                          if k GHC.Base.< kx : bool
                                          then goJust k kx x l
-                                         else j_234__
+                                         else j_12__
                end in
-             match arg_232__ , arg_233__ with
+             match arg_10__ , arg_11__ with
                | arg , _ => if GHC.Prim.seq arg false : bool
                             then GHC.Err.undefined
-                            else j_236__
+                            else j_14__
              end in
   goNothing.
 
 Definition lookupLE {k} {v} `{GHC.Base.Ord k} : k -> Map k v -> option (k *
                                                                        v)%type :=
   let goJust :=
-    fix goJust arg_197__ arg_198__ arg_199__ arg_200__
-          := let j_208__ :=
-               match arg_197__ , arg_198__ , arg_199__ , arg_200__ with
+    fix goJust arg_0__ arg_1__ arg_2__ arg_3__
+          := let j_11__ :=
+               match arg_0__ , arg_1__ , arg_2__ , arg_3__ with
                  | _ , kx' , x' , Tip => Some (pair kx' x')
-                 | k , kx' , x' , Bin _ kx x l r => let scrut_202__ := GHC.Base.compare k kx in
-                                                    match scrut_202__ with
+                 | k , kx' , x' , Bin _ kx x l r => let scrut_5__ := GHC.Base.compare k kx in
+                                                    match scrut_5__ with
                                                       | Lt => goJust k kx' x' l
                                                       | Eq => Some (pair kx x)
                                                       | Gt => goJust k kx x r
                                                     end
                end in
-             match arg_197__ , arg_198__ , arg_199__ , arg_200__ with
+             match arg_0__ , arg_1__ , arg_2__ , arg_3__ with
                | arg , _ , _ , _ => if GHC.Prim.seq arg false : bool
                                     then GHC.Err.undefined
-                                    else j_208__
+                                    else j_11__
              end in
   let goNothing :=
-    fix goNothing arg_211__ arg_212__
-          := let j_219__ :=
-               match arg_211__ , arg_212__ with
+    fix goNothing arg_14__ arg_15__
+          := let j_22__ :=
+               match arg_14__ , arg_15__ with
                  | _ , Tip => None
-                 | k , Bin _ kx x l r => let scrut_213__ := GHC.Base.compare k kx in
-                                         match scrut_213__ with
+                 | k , Bin _ kx x l r => let scrut_16__ := GHC.Base.compare k kx in
+                                         match scrut_16__ with
                                            | Lt => goNothing k l
                                            | Eq => Some (pair kx x)
                                            | Gt => goJust k kx x r
                                          end
                end in
-             match arg_211__ , arg_212__ with
+             match arg_14__ , arg_15__ with
                | arg , _ => if GHC.Prim.seq arg false : bool
                             then GHC.Err.undefined
-                            else j_219__
+                            else j_22__
              end in
   goNothing.
 
 Definition lookupLT {k} {v} `{GHC.Base.Ord k} : k -> Map k v -> option (k *
                                                                        v)%type :=
   let goJust :=
-    fix goJust arg_239__ arg_240__ arg_241__ arg_242__
-          := let j_246__ :=
-               match arg_239__ , arg_240__ , arg_241__ , arg_242__ with
+    fix goJust arg_0__ arg_1__ arg_2__ arg_3__
+          := let j_7__ :=
+               match arg_0__ , arg_1__ , arg_2__ , arg_3__ with
                  | _ , kx' , x' , Tip => Some (pair kx' x')
-                 | k , kx' , x' , Bin _ kx x l r => let j_244__ := goJust k kx x r in
+                 | k , kx' , x' , Bin _ kx x l r => let j_5__ := goJust k kx x r in
                                                     if k GHC.Base.<= kx : bool
                                                     then goJust k kx' x' l
-                                                    else j_244__
+                                                    else j_5__
                end in
-             match arg_239__ , arg_240__ , arg_241__ , arg_242__ with
+             match arg_0__ , arg_1__ , arg_2__ , arg_3__ with
                | arg , _ , _ , _ => if GHC.Prim.seq arg false : bool
                                     then GHC.Err.undefined
-                                    else j_246__
+                                    else j_7__
              end in
   let goNothing :=
-    fix goNothing arg_249__ arg_250__
-          := let j_253__ :=
-               match arg_249__ , arg_250__ with
+    fix goNothing arg_10__ arg_11__
+          := let j_14__ :=
+               match arg_10__ , arg_11__ with
                  | _ , Tip => None
-                 | k , Bin _ kx x l r => let j_251__ := goJust k kx x r in
+                 | k , Bin _ kx x l r => let j_12__ := goJust k kx x r in
                                          if k GHC.Base.<= kx : bool
                                          then goNothing k l
-                                         else j_251__
+                                         else j_12__
                end in
-             match arg_249__ , arg_250__ with
+             match arg_10__ , arg_11__ with
                | arg , _ => if GHC.Prim.seq arg false : bool
                             then GHC.Err.undefined
-                            else j_253__
+                            else j_14__
              end in
   goNothing.
 
 Definition map {a} {b} {k} : (a -> b) -> Map k a -> Map k b :=
-  fix map arg_150__ arg_151__
-        := match arg_150__ , arg_151__ with
+  fix map arg_0__ arg_1__
+        := match arg_0__ , arg_1__ with
              | _ , Tip => Tip
              | f , Bin sx kx x l r => Bin sx kx (f x) (map f l) (map f r)
            end.
@@ -701,8 +701,8 @@ Program Instance Functor__Map {k} : GHC.Base.Functor (Map k) := fun _ k =>
 
 Definition mapAccumL {a} {k} {b} {c} : (a -> k -> b -> (a * c)%type) -> a -> Map
                                        k b -> (a * Map k c)%type :=
-  fix mapAccumL arg_122__ arg_123__ arg_124__
-        := match arg_122__ , arg_123__ , arg_124__ with
+  fix mapAccumL arg_0__ arg_1__ arg_2__
+        := match arg_0__ , arg_1__ , arg_2__ with
              | _ , a , Tip => pair a Tip
              | f , a , Bin sx kx x l r => match mapAccumL f a l with
                                             | pair a1 l' => match f a1 kx x with
@@ -721,15 +721,15 @@ Definition mapAccumWithKey {a} {k} {b} {c} : (a -> k -> b -> (a *
 Definition mapAccum {a} {b} {c} {k} : (a -> b -> (a * c)%type) -> a -> Map k
                                       b -> (a * Map k c)%type :=
   fun f a m =>
-    mapAccumWithKey (fun arg_132__ arg_133__ arg_134__ =>
-                      match arg_132__ , arg_133__ , arg_134__ with
+    mapAccumWithKey (fun arg_0__ arg_1__ arg_2__ =>
+                      match arg_0__ , arg_1__ , arg_2__ with
                         | a' , _ , x' => f a' x'
                       end) a m.
 
 Definition mapAccumRWithKey {a} {k} {b} {c} : (a -> k -> b -> (a *
                                               c)%type) -> a -> Map k b -> (a * Map k c)%type :=
-  fix mapAccumRWithKey arg_113__ arg_114__ arg_115__
-        := match arg_113__ , arg_114__ , arg_115__ with
+  fix mapAccumRWithKey arg_0__ arg_1__ arg_2__
+        := match arg_0__ , arg_1__ , arg_2__ with
              | _ , a , Tip => pair a Tip
              | f , a , Bin sx kx x l r => match mapAccumRWithKey f a r with
                                             | pair a1 r' => match f a1 kx x with
@@ -743,37 +743,37 @@ Definition mapAccumRWithKey {a} {k} {b} {c} : (a -> k -> b -> (a *
 
 Definition mapKeysMonotonic {k1} {k2} {a} : (k1 -> k2) -> Map k1 a -> Map k2
                                             a :=
-  fix mapKeysMonotonic arg_109__ arg_110__
-        := match arg_109__ , arg_110__ with
+  fix mapKeysMonotonic arg_0__ arg_1__
+        := match arg_0__ , arg_1__ with
              | _ , Tip => Tip
              | f , Bin sz k x l r => Bin sz (f k) x (mapKeysMonotonic f l) (mapKeysMonotonic
                                                                            f r)
            end.
 
 Definition mapWithKey {k} {a} {b} : (k -> a -> b) -> Map k a -> Map k b :=
-  fix mapWithKey arg_146__ arg_147__
-        := match arg_146__ , arg_147__ with
+  fix mapWithKey arg_0__ arg_1__
+        := match arg_0__ , arg_1__ with
              | _ , Tip => Tip
              | f , Bin sx kx x l r => Bin sx kx (f kx x) (mapWithKey f l) (mapWithKey f r)
            end.
 
 Definition member {k} {a} `{GHC.Base.Ord k} : k -> Map k a -> bool :=
   let go :=
-    fix go arg_278__ arg_279__
-          := let j_285__ :=
-               match arg_278__ , arg_279__ with
+    fix go arg_0__ arg_1__
+          := let j_7__ :=
+               match arg_0__ , arg_1__ with
                  | _ , Tip => false
-                 | k , Bin _ kx _ l r => let scrut_280__ := GHC.Base.compare k kx in
-                                         match scrut_280__ with
+                 | k , Bin _ kx _ l r => let scrut_2__ := GHC.Base.compare k kx in
+                                         match scrut_2__ with
                                            | Lt => go k l
                                            | Gt => go k r
                                            | Eq => true
                                          end
                end in
-             match arg_278__ , arg_279__ with
+             match arg_0__ , arg_1__ with
                | arg , _ => if GHC.Prim.seq arg false : bool
                             then GHC.Err.undefined
-                            else j_285__
+                            else j_7__
              end in
   go.
 
@@ -784,11 +784,7 @@ Definition node : GHC.Base.String :=
   GHC.Base.hs_string__ "+--".
 
 Definition null {k} {a} : Map k a -> bool :=
-  fun arg_942__ =>
-    match arg_942__ with
-      | Tip => true
-      | Bin _ _ _ _ _ => false
-    end.
+  fun arg_0__ => match arg_0__ with | Tip => true | Bin _ _ _ _ _ => false end.
 
 Local Definition Foldable__Map_null {inst_k} : forall {a},
                                                  (Map inst_k) a -> bool :=
@@ -820,8 +816,8 @@ Definition splitRoot {k} {b} : Map k b -> list (Map k b) :=
     end.
 
 Definition size {k} {a} : Map k a -> GHC.Num.Int :=
-  fun arg_334__ =>
-    match arg_334__ with
+  fun arg_0__ =>
+    match arg_0__ with
       | Tip => GHC.Num.fromInteger 0
       | Bin sz _ _ _ _ => sz
     end.
@@ -832,8 +828,8 @@ Definition validsize {a} {b} : Map a b -> bool :=
       fix realsize t'
             := match t' with
                  | Tip => Some (GHC.Num.fromInteger 0)
-                 | Bin sz _ _ l r => let scrut_934__ := pair (realsize l) (realsize r) in
-                                     match scrut_934__ with
+                 | Bin sz _ _ l r => let scrut_1__ := pair (realsize l) (realsize r) in
+                                     match scrut_1__ with
                                        | pair (Some n) (Some m) => if ((n GHC.Num.+ m) GHC.Num.+ GHC.Num.fromInteger 1)
                                                                       GHC.Base.== sz : bool
                                                                    then Some sz
@@ -847,75 +843,75 @@ Definition lookupIndex {k} {a} `{GHC.Base.Ord k} : k -> Map k a -> option
                                                    GHC.Num.Int :=
   let go {k} {a} `{GHC.Base.Ord k} : GHC.Num.Int -> k -> Map k a -> option
                                      GHC.Num.Int :=
-    fix go arg_353__ arg_354__ arg_355__
-          := let j_362__ :=
-               match arg_353__ , arg_354__ , arg_355__ with
+    fix go arg_0__ arg_1__ arg_2__
+          := let j_9__ :=
+               match arg_0__ , arg_1__ , arg_2__ with
                  | _ , _ , Tip => None
-                 | idx , k , Bin _ kx _ l r => let scrut_356__ := GHC.Base.compare k kx in
-                                               match scrut_356__ with
+                 | idx , k , Bin _ kx _ l r => let scrut_3__ := GHC.Base.compare k kx in
+                                               match scrut_3__ with
                                                  | Lt => go idx k l
                                                  | Gt => go ((idx GHC.Num.+ size l) GHC.Num.+ GHC.Num.fromInteger 1) k r
                                                  | Eq => Some GHC.Base.$! (idx GHC.Num.+ size l)
                                                end
                end in
-             let j_364__ :=
-               match arg_353__ , arg_354__ , arg_355__ with
+             let j_11__ :=
+               match arg_0__ , arg_1__ , arg_2__ with
                  | _ , arg , _ => if GHC.Prim.seq arg false : bool
                                   then GHC.Err.undefined
-                                  else j_362__
+                                  else j_9__
                end in
-             match arg_353__ , arg_354__ , arg_355__ with
+             match arg_0__ , arg_1__ , arg_2__ with
                | arg , _ , _ => if GHC.Prim.seq arg false : bool
                                 then GHC.Err.undefined
-                                else j_364__
+                                else j_11__
              end in
   go (GHC.Num.fromInteger 0).
 
 Definition findIndex {k} {a} `{GHC.Base.Ord k} : k -> Map k a -> GHC.Num.Int :=
   let go {k} {a} `{GHC.Base.Ord k} : GHC.Num.Int -> k -> Map k a -> GHC.Num.Int :=
-    fix go arg_337__ arg_338__ arg_339__
-          := let j_347__ :=
-               match arg_337__ , arg_338__ , arg_339__ with
+    fix go arg_0__ arg_1__ arg_2__
+          := let j_10__ :=
+               match arg_0__ , arg_1__ , arg_2__ with
                  | _ , _ , Tip => GHC.Err.error (GHC.Base.hs_string__
                                                 "Map.findIndex: element is not in the map")
-                 | idx , k , Bin _ kx _ l r => let scrut_341__ := GHC.Base.compare k kx in
-                                               match scrut_341__ with
+                 | idx , k , Bin _ kx _ l r => let scrut_4__ := GHC.Base.compare k kx in
+                                               match scrut_4__ with
                                                  | Lt => go idx k l
                                                  | Gt => go ((idx GHC.Num.+ size l) GHC.Num.+ GHC.Num.fromInteger 1) k r
                                                  | Eq => idx GHC.Num.+ size l
                                                end
                end in
-             let j_349__ :=
-               match arg_337__ , arg_338__ , arg_339__ with
+             let j_12__ :=
+               match arg_0__ , arg_1__ , arg_2__ with
                  | _ , arg , _ => if GHC.Prim.seq arg false : bool
                                   then GHC.Err.undefined
-                                  else j_347__
+                                  else j_10__
                end in
-             match arg_337__ , arg_338__ , arg_339__ with
+             match arg_0__ , arg_1__ , arg_2__ with
                | arg , _ , _ => if GHC.Prim.seq arg false : bool
                                 then GHC.Err.undefined
-                                else j_349__
+                                else j_12__
              end in
   go (GHC.Num.fromInteger 0).
 
 Definition elemAt {k} {a} : GHC.Num.Int -> Map k a -> (k * a)%type :=
-  fix elemAt arg_368__ arg_369__
-        := let j_378__ :=
-             match arg_368__ , arg_369__ with
+  fix elemAt arg_0__ arg_1__
+        := let j_10__ :=
+             match arg_0__ , arg_1__ with
                | _ , Tip => GHC.Err.error (GHC.Base.hs_string__
                                           "Map.elemAt: index out of range")
                | i , Bin _ kx x l r => let sizeL := size l in
-                                       let scrut_372__ := GHC.Base.compare i sizeL in
-                                       match scrut_372__ with
+                                       let scrut_4__ := GHC.Base.compare i sizeL in
+                                       match scrut_4__ with
                                          | Lt => elemAt i l
                                          | Gt => elemAt ((i GHC.Num.- sizeL) GHC.Num.- GHC.Num.fromInteger 1) r
                                          | Eq => pair kx x
                                        end
              end in
-           match arg_368__ , arg_369__ with
+           match arg_0__ , arg_1__ with
              | arg , _ => if GHC.Prim.seq arg false : bool
                           then GHC.Err.undefined
-                          else j_378__
+                          else j_10__
            end.
 
 Definition bin {k} {a} : k -> a -> Map k a -> Map k a -> Map k a :=
@@ -948,7 +944,7 @@ Definition balanceR {k} {a} : k -> a -> Map k a -> Map k a -> Map k a :=
                                                                                                     (GHC.Num.fromInteger
                                                                                                     1) rk rx Tip Tip)
                  | Bin rs rk rx (Bin rls rlk rlx rll rlr as rl) (Bin rrs _ _ _ _ as rr) =>
-                   let j_473__ :=
+                   let j_4__ :=
                      Bin (GHC.Num.fromInteger 1 GHC.Num.+ rs) rlk rlx (Bin (GHC.Num.fromInteger 1
                                                                            GHC.Num.+ size rll) k x Tip rll) (Bin
                                                                                                             ((GHC.Num.fromInteger
@@ -961,22 +957,22 @@ Definition balanceR {k} {a} : k -> a -> Map k a -> Map k a -> Map k a :=
                    if rls GHC.Base.< (ratio GHC.Num.* rrs) : bool
                    then Bin (GHC.Num.fromInteger 1 GHC.Num.+ rs) rk rx (Bin (GHC.Num.fromInteger 1
                                                                             GHC.Num.+ rls) k x Tip rl) rr
-                   else j_473__
+                   else j_4__
                end
       | Bin ls _ _ _ _ => match r with
                             | Tip => Bin (GHC.Num.fromInteger 1 GHC.Num.+ ls) k x l Tip
-                            | Bin rs rk rx rl rr => let j_478__ :=
+                            | Bin rs rk rx rl rr => let j_9__ :=
                                                       Bin ((GHC.Num.fromInteger 1 GHC.Num.+ ls) GHC.Num.+ rs) k x l r in
                                                     if rs GHC.Base.> (delta GHC.Num.* ls) : bool
-                                                    then let scrut_479__ := pair rl rr in
-                                                         let j_481__ :=
-                                                           match scrut_479__ with
+                                                    then let scrut_10__ := pair rl rr in
+                                                         let j_12__ :=
+                                                           match scrut_10__ with
                                                              | pair _ _ => GHC.Err.error (GHC.Base.hs_string__
                                                                                          "Failure in Data.Map.balanceR")
                                                            end in
-                                                         match scrut_479__ with
+                                                         match scrut_10__ with
                                                            | pair (Bin rls rlk rlx rll rlr) (Bin rrs _ _ _ _) =>
-                                                             let j_482__ :=
+                                                             let j_13__ :=
                                                                Bin ((GHC.Num.fromInteger 1 GHC.Num.+ ls) GHC.Num.+ rs)
                                                                rlk rlx (Bin ((GHC.Num.fromInteger 1 GHC.Num.+ ls)
                                                                             GHC.Num.+ size rll) k x l rll) (Bin
@@ -990,10 +986,10 @@ Definition balanceR {k} {a} : k -> a -> Map k a -> Map k a -> Map k a :=
                                                              then Bin ((GHC.Num.fromInteger 1 GHC.Num.+ ls) GHC.Num.+
                                                                       rs) rk rx (Bin ((GHC.Num.fromInteger 1 GHC.Num.+
                                                                                      ls) GHC.Num.+ rls) k x l rl) rr
-                                                             else j_482__
-                                                           | _ => j_481__
+                                                             else j_13__
+                                                           | _ => j_12__
                                                          end
-                                                    else j_478__
+                                                    else j_9__
                           end
     end.
 
@@ -1009,23 +1005,23 @@ Definition deleteFindMin {k} {a} : Map k a -> ((k * a)%type * Map k a)%type :=
            end.
 
 Definition minView {k} {a} : Map k a -> option (a * Map k a)%type :=
-  fun arg_593__ =>
-    match arg_593__ with
+  fun arg_0__ =>
+    match arg_0__ with
       | Tip => None
       | x => Some (first Data.Tuple.snd GHC.Base.$ deleteFindMin x)
     end.
 
 Definition minViewWithKey {k} {a} : Map k a -> option ((k * a)%type * Map k
                                                       a)%type :=
-  fun arg_590__ =>
-    match arg_590__ with
+  fun arg_0__ =>
+    match arg_0__ with
       | Tip => None
       | x => Some (deleteFindMin x)
     end.
 
 Definition deleteMin {k} {a} : Map k a -> Map k a :=
-  fix deleteMin arg_564__
-        := match arg_564__ with
+  fix deleteMin arg_0__
+        := match arg_0__ with
              | Bin _ _ _ Tip r => r
              | Bin _ kx x l r => balanceR kx x (deleteMin l) r
              | Tip => Tip
@@ -1040,11 +1036,11 @@ Definition insertMax {k} {a} : k -> a -> Map k a -> Map k a :=
 
 Definition updateMinWithKey {k} {a} : (k -> a -> option a) -> Map k a -> Map k
                                       a :=
-  fix updateMinWithKey arg_567__ arg_568__
-        := match arg_567__ , arg_568__ with
+  fix updateMinWithKey arg_0__ arg_1__
+        := match arg_0__ , arg_1__ with
              | _ , Tip => Tip
-             | f , Bin sx kx x Tip r => let scrut_569__ := f kx x in
-                                        match scrut_569__ with
+             | f , Bin sx kx x Tip r => let scrut_2__ := f kx x in
+                                        match scrut_2__ with
                                           | None => r
                                           | Some x' => Bin sx kx x' Tip r
                                         end
@@ -1053,8 +1049,8 @@ Definition updateMinWithKey {k} {a} : (k -> a -> option a) -> Map k a -> Map k
 
 Definition updateMin {a} {k} : (a -> option a) -> Map k a -> Map k a :=
   fun f m =>
-    updateMinWithKey (fun arg_575__ arg_576__ =>
-                       match arg_575__ , arg_576__ with
+    updateMinWithKey (fun arg_0__ arg_1__ =>
+                       match arg_0__ , arg_1__ with
                          | _ , x => f x
                        end) m.
 
@@ -1071,7 +1067,7 @@ Definition balanceL {k} {a} : k -> a -> Map k a -> Map k a -> Map k a :=
                  | Bin _ lk lx (Bin _ _ _ _ _ as ll) Tip => Bin (GHC.Num.fromInteger 3) lk lx ll
                                                             (Bin (GHC.Num.fromInteger 1) k x Tip Tip)
                  | Bin ls lk lx (Bin lls _ _ _ _ as ll) (Bin lrs lrk lrx lrl lrr as lr) =>
-                   let j_420__ :=
+                   let j_4__ :=
                      Bin (GHC.Num.fromInteger 1 GHC.Num.+ ls) lrk lrx (Bin ((GHC.Num.fromInteger 1
                                                                            GHC.Num.+ lls) GHC.Num.+ size lrl) lk lx ll
                                                                       lrl) (Bin (GHC.Num.fromInteger 1 GHC.Num.+ size
@@ -1079,22 +1075,22 @@ Definition balanceL {k} {a} : k -> a -> Map k a -> Map k a -> Map k a :=
                    if lrs GHC.Base.< (ratio GHC.Num.* lls) : bool
                    then Bin (GHC.Num.fromInteger 1 GHC.Num.+ ls) lk lx ll (Bin (GHC.Num.fromInteger
                                                                                1 GHC.Num.+ lrs) k x lr Tip)
-                   else j_420__
+                   else j_4__
                end
       | Bin rs _ _ _ _ => match l with
                             | Tip => Bin (GHC.Num.fromInteger 1 GHC.Num.+ rs) k x Tip r
-                            | Bin ls lk lx ll lr => let j_425__ :=
+                            | Bin ls lk lx ll lr => let j_9__ :=
                                                       Bin ((GHC.Num.fromInteger 1 GHC.Num.+ ls) GHC.Num.+ rs) k x l r in
                                                     if ls GHC.Base.> (delta GHC.Num.* rs) : bool
-                                                    then let scrut_426__ := pair ll lr in
-                                                         let j_428__ :=
-                                                           match scrut_426__ with
+                                                    then let scrut_10__ := pair ll lr in
+                                                         let j_12__ :=
+                                                           match scrut_10__ with
                                                              | pair _ _ => GHC.Err.error (GHC.Base.hs_string__
                                                                                          "Failure in Data.Map.balanceL")
                                                            end in
-                                                         match scrut_426__ with
+                                                         match scrut_10__ with
                                                            | pair (Bin lls _ _ _ _) (Bin lrs lrk lrx lrl lrr) =>
-                                                             let j_429__ :=
+                                                             let j_13__ :=
                                                                Bin ((GHC.Num.fromInteger 1 GHC.Num.+ ls) GHC.Num.+ rs)
                                                                lrk lrx (Bin ((GHC.Num.fromInteger 1 GHC.Num.+ lls)
                                                                             GHC.Num.+ size lrl) lk lx ll lrl) (Bin
@@ -1111,10 +1107,10 @@ Definition balanceL {k} {a} : k -> a -> Map k a -> Map k a -> Map k a :=
                                                                       rs) lk lx ll (Bin ((GHC.Num.fromInteger 1
                                                                                         GHC.Num.+ rs) GHC.Num.+ lrs) k x
                                                                                    lr r)
-                                                             else j_429__
-                                                           | _ => j_428__
+                                                             else j_13__
+                                                           | _ => j_12__
                                                          end
-                                                    else j_425__
+                                                    else j_9__
                           end
     end.
 
@@ -1130,23 +1126,23 @@ Definition deleteFindMax {k} {a} : Map k a -> ((k * a)%type * Map k a)%type :=
            end.
 
 Definition maxView {k} {a} : Map k a -> option (a * Map k a)%type :=
-  fun arg_466__ =>
-    match arg_466__ with
+  fun arg_0__ =>
+    match arg_0__ with
       | Tip => None
       | x => Some (first Data.Tuple.snd GHC.Base.$ deleteFindMax x)
     end.
 
 Definition maxViewWithKey {k} {a} : Map k a -> option ((k * a)%type * Map k
                                                       a)%type :=
-  fun arg_463__ =>
-    match arg_463__ with
+  fun arg_0__ =>
+    match arg_0__ with
       | Tip => None
       | x => Some (deleteFindMax x)
     end.
 
 Definition deleteMax {k} {a} : Map k a -> Map k a :=
-  fix deleteMax arg_437__
-        := match arg_437__ with
+  fix deleteMax arg_0__
+        := match arg_0__ with
              | Bin _ _ _ l Tip => l
              | Bin _ kx x l r => balanceL kx x l (deleteMax r)
              | Tip => Tip
@@ -1154,21 +1150,21 @@ Definition deleteMax {k} {a} : Map k a -> Map k a :=
 
 Definition insert {k} {a} `{GHC.Base.Ord k} : k -> a -> Map k a -> Map k a :=
   let go {k} {a} `{GHC.Base.Ord k} : k -> a -> Map k a -> Map k a :=
-    fix go arg_490__ arg_491__ arg_492__
-          := let j_500__ :=
-               match arg_490__ , arg_491__ , arg_492__ with
+    fix go arg_0__ arg_1__ arg_2__
+          := let j_10__ :=
+               match arg_0__ , arg_1__ , arg_2__ with
                  | kx , x , Tip => singleton kx x
-                 | kx , x , Bin sz ky y l r => let scrut_494__ := GHC.Base.compare kx ky in
-                                               match scrut_494__ with
+                 | kx , x , Bin sz ky y l r => let scrut_4__ := GHC.Base.compare kx ky in
+                                               match scrut_4__ with
                                                  | Lt => balanceL ky y (go kx x l) r
                                                  | Gt => balanceR ky y l (go kx x r)
                                                  | Eq => Bin sz kx x l r
                                                end
                end in
-             match arg_490__ , arg_491__ , arg_492__ with
+             match arg_0__ , arg_1__ , arg_2__ with
                | arg , _ , _ => if GHC.Prim.seq arg false : bool
                                 then GHC.Err.undefined
-                                else j_500__
+                                else j_10__
              end in
   go.
 
@@ -1176,12 +1172,12 @@ Definition insertLookupWithKey {k} {a} `{GHC.Base.Ord k}
     : (k -> a -> a -> a) -> k -> a -> Map k a -> (option a * Map k a)%type :=
   let go {k} {a} `{GHC.Base.Ord k} : (k -> a -> a -> a) -> k -> a -> Map k
                                      a -> (option a * Map k a)%type :=
-    fix go arg_548__ arg_549__ arg_550__ arg_551__
-          := let j_561__ :=
-               match arg_548__ , arg_549__ , arg_550__ , arg_551__ with
+    fix go arg_0__ arg_1__ arg_2__ arg_3__
+          := let j_13__ :=
+               match arg_0__ , arg_1__ , arg_2__ , arg_3__ with
                  | _ , kx , x , Tip => pair None (singleton kx x)
-                 | f , kx , x , Bin sy ky y l r => let scrut_553__ := GHC.Base.compare kx ky in
-                                                   match scrut_553__ with
+                 | f , kx , x , Bin sy ky y l r => let scrut_5__ := GHC.Base.compare kx ky in
+                                                   match scrut_5__ with
                                                      | Lt => match go f kx x l with
                                                                | pair found l' => pair found (balanceL ky y l' r)
                                                              end
@@ -1191,10 +1187,10 @@ Definition insertLookupWithKey {k} {a} `{GHC.Base.Ord k}
                                                      | Eq => pair (Some y) (Bin sy kx (f kx x y) l r)
                                                    end
                end in
-             match arg_548__ , arg_549__ , arg_550__ , arg_551__ with
+             match arg_0__ , arg_1__ , arg_2__ , arg_3__ with
                | _ , arg , _ , _ => if GHC.Prim.seq arg false : bool
                                     then GHC.Err.undefined
-                                    else j_561__
+                                    else j_13__
              end in
   go.
 
@@ -1207,21 +1203,21 @@ Definition insertMin {k} {a} : k -> a -> Map k a -> Map k a :=
 
 Definition insertR {k} {a} `{GHC.Base.Ord k} : k -> a -> Map k a -> Map k a :=
   let go {k} {a} `{GHC.Base.Ord k} : k -> a -> Map k a -> Map k a :=
-    fix go arg_503__ arg_504__ arg_505__
-          := let j_512__ :=
-               match arg_503__ , arg_504__ , arg_505__ with
+    fix go arg_0__ arg_1__ arg_2__
+          := let j_9__ :=
+               match arg_0__ , arg_1__ , arg_2__ with
                  | kx , x , Tip => singleton kx x
-                 | kx , x , (Bin _ ky y l r as t) => let scrut_507__ := GHC.Base.compare kx ky in
-                                                     match scrut_507__ with
+                 | kx , x , (Bin _ ky y l r as t) => let scrut_4__ := GHC.Base.compare kx ky in
+                                                     match scrut_4__ with
                                                        | Lt => balanceL ky y (go kx x l) r
                                                        | Gt => balanceR ky y l (go kx x r)
                                                        | Eq => t
                                                      end
                end in
-             match arg_503__ , arg_504__ , arg_505__ with
+             match arg_0__ , arg_1__ , arg_2__ with
                | arg , _ , _ => if GHC.Prim.seq arg false : bool
                                 then GHC.Err.undefined
-                                else j_512__
+                                else j_9__
              end in
   go.
 
@@ -1229,21 +1225,21 @@ Definition insertWithKey {k} {a} `{GHC.Base.Ord k}
     : (k -> a -> a -> a) -> k -> a -> Map k a -> Map k a :=
   let go {k} {a} `{GHC.Base.Ord k} : (k -> a -> a -> a) -> k -> a -> Map k
                                      a -> Map k a :=
-    fix go arg_515__ arg_516__ arg_517__ arg_518__
-          := let j_526__ :=
-               match arg_515__ , arg_516__ , arg_517__ , arg_518__ with
+    fix go arg_0__ arg_1__ arg_2__ arg_3__
+          := let j_11__ :=
+               match arg_0__ , arg_1__ , arg_2__ , arg_3__ with
                  | _ , kx , x , Tip => singleton kx x
-                 | f , kx , x , Bin sy ky y l r => let scrut_520__ := GHC.Base.compare kx ky in
-                                                   match scrut_520__ with
+                 | f , kx , x , Bin sy ky y l r => let scrut_5__ := GHC.Base.compare kx ky in
+                                                   match scrut_5__ with
                                                      | Lt => balanceL ky y (go f kx x l) r
                                                      | Gt => balanceR ky y l (go f kx x r)
                                                      | Eq => Bin sy kx (f kx x y) l r
                                                    end
                end in
-             match arg_515__ , arg_516__ , arg_517__ , arg_518__ with
+             match arg_0__ , arg_1__ , arg_2__ , arg_3__ with
                | _ , arg , _ , _ => if GHC.Prim.seq arg false : bool
                                     then GHC.Err.undefined
-                                    else j_526__
+                                    else j_11__
              end in
   go.
 
@@ -1251,8 +1247,8 @@ Definition fromListWithKey {k} {a} `{GHC.Base.Ord k}
     : (k -> a -> a -> a) -> list (k * a)%type -> Map k a :=
   fun f xs =>
     let ins :=
-      fun arg_535__ arg_536__ =>
-        match arg_535__ , arg_536__ with
+      fun arg_0__ arg_1__ =>
+        match arg_0__ , arg_1__ with
           | t , pair k x => insertWithKey f k x t
         end in
     Data.Foldable.foldl ins empty xs.
@@ -1260,8 +1256,8 @@ Definition fromListWithKey {k} {a} `{GHC.Base.Ord k}
 Definition fromListWith {k} {a} `{GHC.Base.Ord k} : (a -> a -> a) -> list (k *
                                                                           a)%type -> Map k a :=
   fun f xs =>
-    fromListWithKey (fun arg_540__ arg_541__ arg_542__ =>
-                      match arg_540__ , arg_541__ , arg_542__ with
+    fromListWithKey (fun arg_0__ arg_1__ arg_2__ =>
+                      match arg_0__ , arg_1__ , arg_2__ with
                         | _ , x , y => f x y
                       end) xs.
 
@@ -1274,40 +1270,40 @@ Definition mapKeysWith {k2} {a} {k1} `{GHC.Base.Ord k2}
 Definition insertWith {k} {a} `{GHC.Base.Ord k} : (a -> a -> a) -> k -> a -> Map
                                                   k a -> Map k a :=
   fun f =>
-    insertWithKey (fun arg_529__ arg_530__ arg_531__ =>
-                    match arg_529__ , arg_530__ , arg_531__ with
+    insertWithKey (fun arg_0__ arg_1__ arg_2__ =>
+                    match arg_0__ , arg_1__ , arg_2__ with
                       | _ , x' , y' => f x' y'
                     end).
 
-Program Fixpoint link {k} {a} (arg_712__ : k) (arg_713__ : a) (arg_714__ : Map k
-                                                                           a) (arg_715__ : Map k a) { measure (Nat.add
-  (map_size arg_714__) (map_size arg_715__)) } : Map k a :=
-match arg_712__ , arg_713__ , arg_714__ , arg_715__ with
+Program Fixpoint link {k} {a} (arg_0__ : k) (arg_1__ : a) (arg_2__ : Map k a)
+                      (arg_3__ : Map k a) { measure (Nat.add (map_size arg_2__) (map_size
+                                                             arg_3__)) } : Map k a :=
+match arg_0__ , arg_1__ , arg_2__ , arg_3__ with
   | kx , x , Tip , r => insertMin kx x r
   | kx , x , l , Tip => insertMax kx x l
   | kx , x , (Bin sizeL ky y ly ry as l) , (Bin sizeR kz z lz rz as r) =>
-    let j_718__ := bin kx x l r in
-    let j_719__ :=
+    let j_6__ := bin kx x l r in
+    let j_7__ :=
       if (delta GHC.Num.* sizeR) GHC.Base.< sizeL : bool
       then balanceR ky y ly (link kx x ry r)
-      else j_718__ in
+      else j_6__ in
     if (delta GHC.Num.* sizeL) GHC.Base.< sizeR : bool
     then balanceL kz z (link kx x l lz) rz
-    else j_719__
+    else j_7__
 end.
 Solve Obligations with (termination_by_omega).
 
 Definition filterGt {k} {v} `{GHC.Base.Ord k} : MaybeS k -> Map k v -> Map k
                                                 v :=
-  fun arg_789__ arg_790__ =>
-    match arg_789__ , arg_790__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | NothingS , t => t
       | JustS b , t => let filter' :=
-                         fix filter' arg_791__ arg_792__
-                               := match arg_791__ , arg_792__ with
+                         fix filter' arg_2__ arg_3__
+                               := match arg_2__ , arg_3__ with
                                     | _ , Tip => Tip
-                                    | b' , Bin _ kx x l r => let scrut_793__ := GHC.Base.compare b' kx in
-                                                             match scrut_793__ with
+                                    | b' , Bin _ kx x l r => let scrut_4__ := GHC.Base.compare b' kx in
+                                                             match scrut_4__ with
                                                                | Lt => link kx x (filter' b' l) r
                                                                | Eq => r
                                                                | Gt => filter' b' r
@@ -1318,15 +1314,15 @@ Definition filterGt {k} {v} `{GHC.Base.Ord k} : MaybeS k -> Map k v -> Map k
 
 Definition filterLt {k} {v} `{GHC.Base.Ord k} : MaybeS k -> Map k v -> Map k
                                                 v :=
-  fun arg_801__ arg_802__ =>
-    match arg_801__ , arg_802__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | NothingS , t => t
       | JustS b , t => let filter' :=
-                         fix filter' arg_803__ arg_804__
-                               := match arg_803__ , arg_804__ with
+                         fix filter' arg_2__ arg_3__
+                               := match arg_2__ , arg_3__ with
                                     | _ , Tip => Tip
-                                    | b' , Bin _ kx x l r => let scrut_805__ := GHC.Base.compare kx b' in
-                                                             match scrut_805__ with
+                                    | b' , Bin _ kx x l r => let scrut_4__ := GHC.Base.compare kx b' in
+                                                             match scrut_4__ with
                                                                | Lt => link kx x l (filter' b' r)
                                                                | Eq => l
                                                                | Gt => filter' b' l
@@ -1342,8 +1338,8 @@ Definition split {k} {a} `{GHC.Base.Ord k} : k -> Map k a -> (Map k a * Map k
       fix go k t
             := match t with
                  | Tip => (pair Tip Tip)
-                 | Bin _ kx x l r => let scrut_894__ := GHC.Base.compare k kx in
-                                     match scrut_894__ with
+                 | Bin _ kx x l r => let scrut_1__ := GHC.Base.compare k kx in
+                                     match scrut_1__ with
                                        | Lt => match go k l with
                                                  | pair lt gt => pair lt (link kx x gt r)
                                                end
@@ -1360,8 +1356,8 @@ Definition splitLookup {k} {a} `{GHC.Base.Ord k} : k -> Map k a -> (Map k a *
   fix splitLookup k t
         := GHC.Prim.seq k (match t with
                           | Tip => pair (pair Tip None) Tip
-                          | Bin _ kx x l r => let scrut_906__ := GHC.Base.compare k kx in
-                                              match scrut_906__ with
+                          | Bin _ kx x l r => let scrut_1__ := GHC.Base.compare k kx in
+                                              match scrut_1__ with
                                                 | Lt => match splitLookup k l with
                                                           | pair (pair lt z) gt => let gt' := link kx x gt r in
                                                                                    GHC.Prim.seq gt' (pair (pair lt z)
@@ -1378,8 +1374,8 @@ Definition splitLookup {k} {a} `{GHC.Base.Ord k} : k -> Map k a -> (Map k a *
 
 Definition submap' {a} {b} {c} `{GHC.Base.Ord a} : (b -> c -> bool) -> Map a
                                                    b -> Map a c -> bool :=
-  fix submap' arg_918__ arg_919__ arg_920__
-        := match arg_918__ , arg_919__ , arg_920__ with
+  fix submap' arg_0__ arg_1__ arg_2__
+        := match arg_0__ , arg_1__ , arg_2__ with
              | _ , Tip , _ => true
              | _ , _ , Tip => false
              | f , Bin _ kx x l r , t => match splitLookup kx t with
@@ -1394,11 +1390,11 @@ Definition submap' {a} {b} {c} `{GHC.Base.Ord a} : (b -> c -> bool) -> Map a
 
 Definition updateMaxWithKey {k} {a} : (k -> a -> option a) -> Map k a -> Map k
                                       a :=
-  fix updateMaxWithKey arg_440__ arg_441__
-        := match arg_440__ , arg_441__ with
+  fix updateMaxWithKey arg_0__ arg_1__
+        := match arg_0__ , arg_1__ with
              | _ , Tip => Tip
-             | f , Bin sx kx x l Tip => let scrut_442__ := f kx x in
-                                        match scrut_442__ with
+             | f , Bin sx kx x l Tip => let scrut_2__ := f kx x in
+                                        match scrut_2__ with
                                           | None => l
                                           | Some x' => Bin sx kx x' l Tip
                                         end
@@ -1407,17 +1403,17 @@ Definition updateMaxWithKey {k} {a} : (k -> a -> option a) -> Map k a -> Map k
 
 Definition updateMax {a} {k} : (a -> option a) -> Map k a -> Map k a :=
   fun f m =>
-    updateMaxWithKey (fun arg_448__ arg_449__ =>
-                       match arg_448__ , arg_449__ with
+    updateMaxWithKey (fun arg_0__ arg_1__ =>
+                       match arg_0__ , arg_1__ with
                          | _ , x => f x
                        end) m.
 
 Definition glue {k} {a} : Map k a -> Map k a -> Map k a :=
-  fun arg_596__ arg_597__ =>
-    match arg_596__ , arg_597__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | Tip , r => r
       | l , Tip => l
-      | l , r => let j_599__ :=
+      | l , r => let j_3__ :=
                    match deleteFindMin r with
                      | pair (pair km m) r' => balanceL km m l r'
                    end in
@@ -1425,62 +1421,62 @@ Definition glue {k} {a} : Map k a -> Map k a -> Map k a :=
                  then match deleteFindMax l with
                         | pair (pair km m) l' => balanceR km m l' r
                       end
-                 else j_599__
+                 else j_3__
     end.
 
 Definition delete {k} {a} `{GHC.Base.Ord k} : k -> Map k a -> Map k a :=
   let go {k} {a} `{GHC.Base.Ord k} : k -> Map k a -> Map k a :=
-    fix go arg_603__ arg_604__
-          := let j_611__ :=
-               match arg_603__ , arg_604__ with
+    fix go arg_0__ arg_1__
+          := let j_8__ :=
+               match arg_0__ , arg_1__ with
                  | _ , Tip => Tip
-                 | k , Bin _ kx x l r => let scrut_605__ := GHC.Base.compare k kx in
-                                         match scrut_605__ with
+                 | k , Bin _ kx x l r => let scrut_2__ := GHC.Base.compare k kx in
+                                         match scrut_2__ with
                                            | Lt => balanceR kx x (go k l) r
                                            | Gt => balanceL kx x l (go k r)
                                            | Eq => glue l r
                                          end
                end in
-             match arg_603__ , arg_604__ with
+             match arg_0__ , arg_1__ with
                | arg , _ => if GHC.Prim.seq arg false : bool
                             then GHC.Err.undefined
-                            else j_611__
+                            else j_8__
              end in
   go.
 
 Definition merge {k} {a} : Map k a -> Map k a -> Map k a :=
-  unsafeFix (fun merge arg_705__ arg_706__ =>
-              match arg_705__ , arg_706__ with
+  unsafeFix (fun merge arg_0__ arg_1__ =>
+              match arg_0__ , arg_1__ with
                 | Tip , r => r
                 | l , Tip => l
-                | (Bin sizeL kx x lx rx as l) , (Bin sizeR ky y ly ry as r) => let j_707__ :=
+                | (Bin sizeL kx x lx rx as l) , (Bin sizeR ky y ly ry as r) => let j_2__ :=
                                                                                  glue l r in
-                                                                               let j_708__ :=
+                                                                               let j_3__ :=
                                                                                  if (delta GHC.Num.* sizeR) GHC.Base.<
                                                                                     sizeL : bool
                                                                                  then balanceR kx x lx (merge rx r)
-                                                                                 else j_707__ in
+                                                                                 else j_2__ in
                                                                                if (delta GHC.Num.* sizeL) GHC.Base.<
                                                                                   sizeR : bool
                                                                                then balanceL ky y (merge l ly) ry
-                                                                               else j_708__
+                                                                               else j_3__
               end).
 
 Definition filterWithKey {k} {a} : (k -> a -> bool) -> Map k a -> Map k a :=
-  fix filterWithKey arg_735__ arg_736__
-        := match arg_735__ , arg_736__ with
+  fix filterWithKey arg_0__ arg_1__
+        := match arg_0__ , arg_1__ with
              | _ , Tip => Tip
-             | p , Bin _ kx x l r => let j_737__ :=
+             | p , Bin _ kx x l r => let j_2__ :=
                                        merge (filterWithKey p l) (filterWithKey p r) in
                                      if p kx x : bool
                                      then link kx x (filterWithKey p l) (filterWithKey p r)
-                                     else j_737__
+                                     else j_2__
            end.
 
 Definition filter {a} {k} : (a -> bool) -> Map k a -> Map k a :=
   fun p m =>
-    filterWithKey (fun arg_740__ arg_741__ =>
-                    match arg_740__ , arg_741__ with
+    filterWithKey (fun arg_0__ arg_1__ =>
+                    match arg_0__ , arg_1__ with
                       | _ , x => p x
                     end) m.
 
@@ -1488,13 +1484,13 @@ Definition mapEitherWithKey {k} {a} {b} {c} : (k -> a -> Data.Either.Either b
                                               c) -> Map k a -> (Map k b * Map k c)%type :=
   fun f0 t0 =>
     let go :=
-      fix go arg_772__ arg_773__
-            := match arg_772__ , arg_773__ with
+      fix go arg_0__ arg_1__
+            := match arg_0__ , arg_1__ with
                  | _ , Tip => (pair Tip Tip)
                  | f , Bin _ kx x l r => match go f r with
                                            | pair r1 r2 => match go f l with
-                                                             | pair l1 l2 => let scrut_777__ := f kx x in
-                                                                             match scrut_777__ with
+                                                             | pair l1 l2 => let scrut_5__ := f kx x in
+                                                                             match scrut_5__ with
                                                                                | Data.Either.Left y => pair (link kx y
                                                                                                             l1 r1)
                                                                                                             (merge l2
@@ -1511,18 +1507,18 @@ Definition mapEitherWithKey {k} {a} {b} {c} : (k -> a -> Data.Either.Either b
 Definition mapEither {a} {b} {c} {k} : (a -> Data.Either.Either b c) -> Map k
                                        a -> (Map k b * Map k c)%type :=
   fun f m =>
-    mapEitherWithKey (fun arg_784__ arg_785__ =>
-                       match arg_784__ , arg_785__ with
+    mapEitherWithKey (fun arg_0__ arg_1__ =>
+                       match arg_0__ , arg_1__ with
                          | _ , x => f x
                        end) m.
 
 Definition mapMaybeWithKey {k} {a} {b} : (k -> a -> option b) -> Map k a -> Map
                                          k b :=
-  fix mapMaybeWithKey arg_759__ arg_760__
-        := match arg_759__ , arg_760__ with
+  fix mapMaybeWithKey arg_0__ arg_1__
+        := match arg_0__ , arg_1__ with
              | _ , Tip => Tip
-             | f , Bin _ kx x l r => let scrut_761__ := f kx x in
-                                     match scrut_761__ with
+             | f , Bin _ kx x l r => let scrut_2__ := f kx x in
+                                     match scrut_2__ with
                                        | Some y => link kx y (mapMaybeWithKey f l) (mapMaybeWithKey f r)
                                        | None => merge (mapMaybeWithKey f l) (mapMaybeWithKey f r)
                                      end
@@ -1530,8 +1526,8 @@ Definition mapMaybeWithKey {k} {a} {b} : (k -> a -> option b) -> Map k a -> Map
 
 Definition mapMaybe {a} {b} {k} : (a -> option b) -> Map k a -> Map k b :=
   fun f =>
-    mapMaybeWithKey (fun arg_767__ arg_768__ =>
-                      match arg_767__ , arg_768__ with
+    mapMaybeWithKey (fun arg_0__ arg_1__ =>
+                      match arg_0__ , arg_1__ with
                         | _ , x => f x
                       end).
 
@@ -1539,16 +1535,16 @@ Definition partitionWithKey {k} {a} : (k -> a -> bool) -> Map k a -> (Map k a *
                                       Map k a)%type :=
   fun p0 t0 =>
     let go :=
-      fix go arg_745__ arg_746__
-            := match arg_745__ , arg_746__ with
+      fix go arg_0__ arg_1__
+            := match arg_0__ , arg_1__ with
                  | _ , Tip => (pair Tip Tip)
                  | p , Bin _ kx x l r => match go p r with
                                            | pair r1 r2 => match go p l with
-                                                             | pair l1 l2 => let j_750__ :=
+                                                             | pair l1 l2 => let j_5__ :=
                                                                                pair (merge l1 r1) (link kx x l2 r2) in
                                                                              if p kx x : bool
                                                                              then pair (link kx x l1 r1) (merge l2 r2)
-                                                                             else j_750__
+                                                                             else j_5__
                                                            end
                                          end
                end in
@@ -1557,8 +1553,8 @@ Definition partitionWithKey {k} {a} : (k -> a -> bool) -> Map k a -> (Map k a *
 Definition partition {a} {k} : (a -> bool) -> Map k a -> (Map k a * Map k
                                a)%type :=
   fun p m =>
-    partitionWithKey (fun arg_754__ arg_755__ =>
-                       match arg_754__ , arg_755__ with
+    partitionWithKey (fun arg_0__ arg_1__ =>
+                       match arg_0__ , arg_1__ with
                          | _ , x => p x
                        end) m.
 
@@ -1566,29 +1562,29 @@ Definition updateLookupWithKey {k} {a} `{GHC.Base.Ord k} : (k -> a -> option
                                                            a) -> k -> Map k a -> (option a * Map k a)%type :=
   let go {k} {a} `{GHC.Base.Ord k} : (k -> a -> option a) -> k -> Map k
                                      a -> (option a * Map k a)%type :=
-    fix go arg_642__ arg_643__ arg_644__
-          := let j_658__ :=
-               match arg_642__ , arg_643__ , arg_644__ with
+    fix go arg_0__ arg_1__ arg_2__
+          := let j_16__ :=
+               match arg_0__ , arg_1__ , arg_2__ with
                  | _ , _ , Tip => pair None Tip
-                 | f , k , Bin sx kx x l r => let scrut_646__ := GHC.Base.compare k kx in
-                                              match scrut_646__ with
+                 | f , k , Bin sx kx x l r => let scrut_4__ := GHC.Base.compare k kx in
+                                              match scrut_4__ with
                                                 | Lt => match go f k l with
                                                           | pair found l' => pair found (balanceR kx x l' r)
                                                         end
                                                 | Gt => match go f k r with
                                                           | pair found r' => pair found (balanceL kx x l r')
                                                         end
-                                                | Eq => let scrut_651__ := f kx x in
-                                                        match scrut_651__ with
+                                                | Eq => let scrut_9__ := f kx x in
+                                                        match scrut_9__ with
                                                           | Some x' => pair (Some x') (Bin sx kx x' l r)
                                                           | None => pair (Some x) (glue l r)
                                                         end
                                               end
                end in
-             match arg_642__ , arg_643__ , arg_644__ with
+             match arg_0__ , arg_1__ , arg_2__ with
                | _ , arg , _ => if GHC.Prim.seq arg false : bool
                                 then GHC.Err.undefined
-                                else j_658__
+                                else j_16__
              end in
   go.
 
@@ -1596,33 +1592,33 @@ Definition updateWithKey {k} {a} `{GHC.Base.Ord k} : (k -> a -> option
                                                      a) -> k -> Map k a -> Map k a :=
   let go {k} {a} `{GHC.Base.Ord k} : (k -> a -> option a) -> k -> Map k a -> Map k
                                      a :=
-    fix go arg_614__ arg_615__ arg_616__
-          := let j_627__ :=
-               match arg_614__ , arg_615__ , arg_616__ with
+    fix go arg_0__ arg_1__ arg_2__
+          := let j_13__ :=
+               match arg_0__ , arg_1__ , arg_2__ with
                  | _ , _ , Tip => Tip
-                 | f , k , Bin sx kx x l r => let scrut_617__ := GHC.Base.compare k kx in
-                                              match scrut_617__ with
+                 | f , k , Bin sx kx x l r => let scrut_3__ := GHC.Base.compare k kx in
+                                              match scrut_3__ with
                                                 | Lt => balanceR kx x (go f k l) r
                                                 | Gt => balanceL kx x l (go f k r)
-                                                | Eq => let scrut_620__ := f kx x in
-                                                        match scrut_620__ with
+                                                | Eq => let scrut_6__ := f kx x in
+                                                        match scrut_6__ with
                                                           | Some x' => Bin sx kx x' l r
                                                           | None => glue l r
                                                         end
                                               end
                end in
-             match arg_614__ , arg_615__ , arg_616__ with
+             match arg_0__ , arg_1__ , arg_2__ with
                | _ , arg , _ => if GHC.Prim.seq arg false : bool
                                 then GHC.Err.undefined
-                                else j_627__
+                                else j_13__
              end in
   go.
 
 Definition update {k} {a} `{GHC.Base.Ord k} : (a -> option a) -> k -> Map k
                                               a -> Map k a :=
   fun f =>
-    updateWithKey (fun arg_637__ arg_638__ =>
-                    match arg_637__ , arg_638__ with
+    updateWithKey (fun arg_0__ arg_1__ =>
+                    match arg_0__ , arg_1__ with
                       | _ , x => f x
                     end).
 
@@ -1633,8 +1629,8 @@ Definition adjustWithKey {k} {a} `{GHC.Base.Ord k} : (k -> a -> a) -> k -> Map k
 Definition adjust {k} {a} `{GHC.Base.Ord k} : (a -> a) -> k -> Map k a -> Map k
                                               a :=
   fun f =>
-    adjustWithKey (fun arg_632__ arg_633__ =>
-                    match arg_632__ , arg_633__ with
+    adjustWithKey (fun arg_0__ arg_1__ =>
+                    match arg_0__ , arg_1__ with
                       | _ , x => f x
                     end).
 
@@ -1643,8 +1639,8 @@ Definition deleteAt {k} {a} : GHC.Num.Int -> Map k a -> Map k a :=
         := GHC.Prim.seq i (match t with
                           | Tip => GHC.Err.error (GHC.Base.hs_string__ "Map.deleteAt: index out of range")
                           | Bin _ kx x l r => let sizeL := size l in
-                                              let scrut_697__ := GHC.Base.compare i sizeL in
-                                              match scrut_697__ with
+                                              let scrut_2__ := GHC.Base.compare i sizeL in
+                                              match scrut_2__ with
                                                 | Lt => balanceR kx x (deleteAt i l) r
                                                 | Gt => balanceL kx x l (deleteAt ((i GHC.Num.- sizeL) GHC.Num.-
                                                                                   GHC.Num.fromInteger 1) r)
@@ -1674,13 +1670,13 @@ Definition updateAt {k} {a} : (k -> a -> option a) -> GHC.Num.Int -> Map k
         := GHC.Prim.seq i (match t with
                           | Tip => GHC.Err.error (GHC.Base.hs_string__ "Map.updateAt: index out of range")
                           | Bin sx kx x l r => let sizeL := size l in
-                                               let scrut_683__ := GHC.Base.compare i sizeL in
-                                               match scrut_683__ with
+                                               let scrut_2__ := GHC.Base.compare i sizeL in
+                                               match scrut_2__ with
                                                  | Lt => balanceR kx x (updateAt f i l) r
                                                  | Gt => balanceL kx x l (updateAt f ((i GHC.Num.- sizeL) GHC.Num.-
                                                                                      GHC.Num.fromInteger 1) r)
-                                                 | Eq => let scrut_686__ := f kx x in
-                                                         match scrut_686__ with
+                                                 | Eq => let scrut_5__ := f kx x in
+                                                         match scrut_5__ with
                                                            | Some x' => Bin sx kx x' l r
                                                            | None => glue l r
                                                          end
@@ -1700,7 +1696,7 @@ Definition balance {k} {a} : k -> a -> Map k a -> Map k a -> Map k a :=
                                                                                                     (GHC.Num.fromInteger
                                                                                                     1) rk rx Tip Tip)
                  | Bin rs rk rx (Bin rls rlk rlx rll rlr as rl) (Bin rrs _ _ _ _ as rr) =>
-                   let j_385__ :=
+                   let j_4__ :=
                      Bin (GHC.Num.fromInteger 1 GHC.Num.+ rs) rlk rlx (Bin (GHC.Num.fromInteger 1
                                                                            GHC.Num.+ size rll) k x Tip rll) (Bin
                                                                                                             ((GHC.Num.fromInteger
@@ -1713,11 +1709,11 @@ Definition balance {k} {a} : k -> a -> Map k a -> Map k a -> Map k a :=
                    if rls GHC.Base.< (ratio GHC.Num.* rrs) : bool
                    then Bin (GHC.Num.fromInteger 1 GHC.Num.+ rs) rk rx (Bin (GHC.Num.fromInteger 1
                                                                             GHC.Num.+ rls) k x Tip rl) rr
-                   else j_385__
+                   else j_4__
                end
       | Bin ls lk lx ll lr => match r with
-                                | Tip => let scrut_389__ := pair ll lr in
-                                         match scrut_389__ with
+                                | Tip => let scrut_8__ := pair ll lr in
+                                         match scrut_8__ with
                                            | pair Tip Tip => Bin (GHC.Num.fromInteger 2) k x l Tip
                                            | pair Tip (Bin _ lrk lrx _ _) => Bin (GHC.Num.fromInteger 3) lrk lrx (Bin
                                                                                                                  (GHC.Num.fromInteger
@@ -1729,7 +1725,7 @@ Definition balance {k} {a} : k -> a -> Map k a -> Map k a -> Map k a :=
                                                                                                               (GHC.Num.fromInteger
                                                                                                               1) k x Tip
                                                                                                               Tip)
-                                           | pair (Bin lls _ _ _ _) (Bin lrs lrk lrx lrl lrr) => let j_393__ :=
+                                           | pair (Bin lls _ _ _ _) (Bin lrs lrk lrx lrl lrr) => let j_12__ :=
                                                                                                    Bin
                                                                                                    (GHC.Num.fromInteger
                                                                                                    1 GHC.Num.+ ls) lrk
@@ -1755,22 +1751,22 @@ Definition balance {k} {a} : k -> a -> Map k a -> Map k a -> Map k a :=
                                                                                                             1 GHC.Num.+
                                                                                                             lrs) k x lr
                                                                                                             Tip)
-                                                                                                 else j_393__
+                                                                                                 else j_12__
                                          end
-                                | Bin rs rk rx rl rr => let j_397__ :=
+                                | Bin rs rk rx rl rr => let j_16__ :=
                                                           Bin ((GHC.Num.fromInteger 1 GHC.Num.+ ls) GHC.Num.+ rs) k x l
                                                           r in
-                                                        let j_404__ :=
+                                                        let j_23__ :=
                                                           if ls GHC.Base.> (delta GHC.Num.* rs) : bool
-                                                          then let scrut_398__ := pair ll lr in
-                                                               let j_400__ :=
-                                                                 match scrut_398__ with
+                                                          then let scrut_17__ := pair ll lr in
+                                                               let j_19__ :=
+                                                                 match scrut_17__ with
                                                                    | pair _ _ => GHC.Err.error (GHC.Base.hs_string__
                                                                                                "Failure in Data.Map.balance")
                                                                  end in
-                                                               match scrut_398__ with
+                                                               match scrut_17__ with
                                                                  | pair (Bin lls _ _ _ _) (Bin lrs lrk lrx lrl lrr) =>
-                                                                   let j_401__ :=
+                                                                   let j_20__ :=
                                                                      Bin ((GHC.Num.fromInteger 1 GHC.Num.+ ls) GHC.Num.+
                                                                          rs) lrk lrx (Bin ((GHC.Num.fromInteger 1
                                                                                           GHC.Num.+ lls) GHC.Num.+ size
@@ -1788,20 +1784,20 @@ Definition balance {k} {a} : k -> a -> Map k a -> Map k a -> Map k a :=
                                                                                                    1 GHC.Num.+ rs)
                                                                                                    GHC.Num.+ lrs) k x lr
                                                                                                    r)
-                                                                   else j_401__
-                                                                 | _ => j_400__
+                                                                   else j_20__
+                                                                 | _ => j_19__
                                                                end
-                                                          else j_397__ in
+                                                          else j_16__ in
                                                         if rs GHC.Base.> (delta GHC.Num.* ls) : bool
-                                                        then let scrut_405__ := pair rl rr in
-                                                             let j_407__ :=
-                                                               match scrut_405__ with
+                                                        then let scrut_24__ := pair rl rr in
+                                                             let j_26__ :=
+                                                               match scrut_24__ with
                                                                  | pair _ _ => GHC.Err.error (GHC.Base.hs_string__
                                                                                              "Failure in Data.Map.balance")
                                                                end in
-                                                             match scrut_405__ with
+                                                             match scrut_24__ with
                                                                | pair (Bin rls rlk rlx rll rlr) (Bin rrs _ _ _ _) =>
-                                                                 let j_408__ :=
+                                                                 let j_27__ :=
                                                                    Bin ((GHC.Num.fromInteger 1 GHC.Num.+ ls) GHC.Num.+
                                                                        rs) rlk rlx (Bin ((GHC.Num.fromInteger 1
                                                                                         GHC.Num.+ ls) GHC.Num.+ size
@@ -1817,10 +1813,10 @@ Definition balance {k} {a} : k -> a -> Map k a -> Map k a -> Map k a :=
                                                                                                    1 GHC.Num.+ ls)
                                                                                                    GHC.Num.+ rls) k x l
                                                                                               rl) rr
-                                                                 else j_408__
-                                                               | _ => j_407__
+                                                                 else j_27__
+                                                               | _ => j_26__
                                                              end
-                                                        else j_404__
+                                                        else j_23__
                               end
     end.
 
@@ -1828,29 +1824,29 @@ Definition alter {k} {a} `{GHC.Base.Ord k} : (option a -> option a) -> k -> Map
                                              k a -> Map k a :=
   let go {k} {a} `{GHC.Base.Ord k} : (option a -> option a) -> k -> Map k a -> Map
                                      k a :=
-    fix go arg_661__ arg_662__ arg_663__
-          := let j_678__ :=
-               match arg_661__ , arg_662__ , arg_663__ with
-                 | f , k , Tip => let scrut_664__ := f None in
-                                  match scrut_664__ with
+    fix go arg_0__ arg_1__ arg_2__
+          := let j_17__ :=
+               match arg_0__ , arg_1__ , arg_2__ with
+                 | f , k , Tip => let scrut_3__ := f None in
+                                  match scrut_3__ with
                                     | None => Tip
                                     | Some x => singleton k x
                                   end
-                 | f , k , Bin sx kx x l r => let scrut_668__ := GHC.Base.compare k kx in
-                                              match scrut_668__ with
+                 | f , k , Bin sx kx x l r => let scrut_7__ := GHC.Base.compare k kx in
+                                              match scrut_7__ with
                                                 | Lt => balance kx x (go f k l) r
                                                 | Gt => balance kx x l (go f k r)
-                                                | Eq => let scrut_671__ := f (Some x) in
-                                                        match scrut_671__ with
+                                                | Eq => let scrut_10__ := f (Some x) in
+                                                        match scrut_10__ with
                                                           | Some x' => Bin sx kx x' l r
                                                           | None => glue l r
                                                         end
                                               end
                end in
-             match arg_661__ , arg_662__ , arg_663__ with
+             match arg_0__ , arg_1__ , arg_2__ with
                | _ , arg , _ => if GHC.Prim.seq arg false : bool
                                 then GHC.Err.undefined
-                                else j_678__
+                                else j_17__
              end in
   go.
 
@@ -1902,19 +1898,19 @@ Definition traverseWithKey {t} {k} {a} {b} `{GHC.Base.Applicative t}
     : (k -> a -> t b) -> Map k a -> t (Map k b) :=
   fun f =>
     let go :=
-      fix go arg_138__
-            := let j_141__ :=
-                 match arg_138__ with
+      fix go arg_0__
+            := let j_3__ :=
+                 match arg_0__ with
                    | Bin s k v l r => ((GHC.Base.flip (Bin s k) Data.Functor.<$> go l) GHC.Base.<*>
                                       f k v) GHC.Base.<*> go r
                    | _ => patternFailure
                  end in
-               match arg_138__ with
+               match arg_0__ with
                  | Tip => GHC.Base.pure Tip
-                 | Bin num_139__ k v _ _ => if num_139__ GHC.Base.== GHC.Num.fromInteger 1 : bool
-                                            then (fun v' => Bin (GHC.Num.fromInteger 1) k v' Tip Tip) Data.Functor.<$> f
-                                                 k v
-                                            else j_141__
+                 | Bin num_1__ k v _ _ => if num_1__ GHC.Base.== GHC.Num.fromInteger 1 : bool
+                                          then (fun v' => Bin (GHC.Num.fromInteger 1) k v' Tip Tip) Data.Functor.<$> f k
+                                               v
+                                          else j_3__
                end in
     go.
 
@@ -1922,7 +1918,7 @@ Local Definition Traversable__Map_traverse {inst_k} : forall {f} {a} {b},
                                                         forall `{GHC.Base.Applicative f},
                                                           (a -> f b) -> (Map inst_k) a -> f ((Map inst_k) b) :=
   fun {f} {a} {b} `{GHC.Base.Applicative f} =>
-    fun f => traverseWithKey (fun arg_987__ => f).
+    fun f => traverseWithKey (fun arg_0__ => f).
 
 Local Definition Traversable__Map_sequenceA {inst_k} : forall {f} {a},
                                                          forall `{GHC.Base.Applicative f},
@@ -1952,55 +1948,55 @@ Program Instance Traversable__Map {k} : Data.Traversable.Traversable (Map k) :=
 
 Definition trim {k} {a} `{GHC.Base.Ord k} : MaybeS k -> MaybeS k -> Map k
                                             a -> Map k a :=
-  fun arg_11__ arg_12__ arg_13__ =>
-    match arg_11__ , arg_12__ , arg_13__ with
+  fun arg_0__ arg_1__ arg_2__ =>
+    match arg_0__ , arg_1__ , arg_2__ with
       | NothingS , NothingS , t => t
       | JustS lk , NothingS , t => let greater :=
-                                     fix greater arg_14__ arg_15__
-                                           := let j_16__ := match arg_14__ , arg_15__ with | _ , t' => t' end in
-                                              match arg_14__ , arg_15__ with
+                                     fix greater arg_3__ arg_4__
+                                           := let j_5__ := match arg_3__ , arg_4__ with | _ , t' => t' end in
+                                              match arg_3__ , arg_4__ with
                                                 | lo , Bin _ k _ _ r => if k GHC.Base.<= lo : bool
                                                                         then greater lo r
-                                                                        else j_16__
-                                                | _ , _ => j_16__
+                                                                        else j_5__
+                                                | _ , _ => j_5__
                                               end in
                                    greater lk t
       | NothingS , JustS hk , t => let lesser :=
-                                     fix lesser arg_20__ arg_21__
-                                           := let j_22__ := match arg_20__ , arg_21__ with | _ , t' => t' end in
-                                              match arg_20__ , arg_21__ with
+                                     fix lesser arg_9__ arg_10__
+                                           := let j_11__ := match arg_9__ , arg_10__ with | _ , t' => t' end in
+                                              match arg_9__ , arg_10__ with
                                                 | hi , Bin _ k _ l _ => if k GHC.Base.>= hi : bool
                                                                         then lesser hi l
-                                                                        else j_22__
-                                                | _ , _ => j_22__
+                                                                        else j_11__
+                                                | _ , _ => j_11__
                                               end in
                                    lesser hk t
       | JustS lk , JustS hk , t => let middle :=
-                                     fix middle arg_26__ arg_27__ arg_28__
-                                           := let j_29__ :=
-                                                match arg_26__ , arg_27__ , arg_28__ with
+                                     fix middle arg_15__ arg_16__ arg_17__
+                                           := let j_18__ :=
+                                                match arg_15__ , arg_16__ , arg_17__ with
                                                   | _ , _ , t' => t'
                                                 end in
-                                              let j_31__ :=
-                                                match arg_26__ , arg_27__ , arg_28__ with
+                                              let j_20__ :=
+                                                match arg_15__ , arg_16__ , arg_17__ with
                                                   | lo , hi , Bin _ k _ l _ => if k GHC.Base.>= hi : bool
                                                                                then middle lo hi l
-                                                                               else j_29__
-                                                  | _ , _ , _ => j_29__
+                                                                               else j_18__
+                                                  | _ , _ , _ => j_18__
                                                 end in
-                                              match arg_26__ , arg_27__ , arg_28__ with
+                                              match arg_15__ , arg_16__ , arg_17__ with
                                                 | lo , hi , Bin _ k _ _ r => if k GHC.Base.<= lo : bool
                                                                              then middle lo hi r
-                                                                             else j_31__
-                                                | _ , _ , _ => j_31__
+                                                                             else j_20__
+                                                | _ , _ , _ => j_20__
                                               end in
                                    middle lk hk t
     end.
 
 Definition hedgeUnion {a} {b} `{GHC.Base.Ord a} : MaybeS a -> MaybeS a -> Map a
                                                   b -> Map a b -> Map a b :=
-  fix hedgeUnion arg_813__ arg_814__ arg_815__ arg_816__
-        := match arg_813__ , arg_814__ , arg_815__ , arg_816__ with
+  fix hedgeUnion arg_0__ arg_1__ arg_2__ arg_3__
+        := match arg_0__ , arg_1__ , arg_2__ , arg_3__ with
              | _ , _ , t1 , Tip => t1
              | blo , bhi , Tip , Bin _ kx x l r => link kx x (filterGt blo l) (filterLt bhi
                                                                               r)
@@ -2012,8 +2008,8 @@ Definition hedgeUnion {a} {b} `{GHC.Base.Ord a} : MaybeS a -> MaybeS a -> Map a
            end.
 
 Definition union {k} {a} `{GHC.Base.Ord k} : Map k a -> Map k a -> Map k a :=
-  fun arg_822__ arg_823__ =>
-    match arg_822__ , arg_823__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | Tip , t2 => t2
       | t1 , Tip => t1
       | t1 , t2 => hedgeUnion NothingS NothingS t1 t2
@@ -2024,8 +2020,8 @@ Definition unions {k} {a} `{GHC.Base.Ord k} : list (Map k a) -> Map k a :=
 
 Definition hedgeDiff {a} {b} {c} `{GHC.Base.Ord a} : MaybeS a -> MaybeS a -> Map
                                                      a b -> Map a c -> Map a b :=
-  fix hedgeDiff arg_827__ arg_828__ arg_829__ arg_830__
-        := match arg_827__ , arg_828__ , arg_829__ , arg_830__ with
+  fix hedgeDiff arg_0__ arg_1__ arg_2__ arg_3__
+        := match arg_0__ , arg_1__ , arg_2__ , arg_3__ with
              | _ , _ , Tip , _ => Tip
              | blo , bhi , Bin _ kx x l r , Tip => link kx x (filterGt blo l) (filterLt bhi
                                                                               r)
@@ -2037,8 +2033,8 @@ Definition hedgeDiff {a} {b} {c} `{GHC.Base.Ord a} : MaybeS a -> MaybeS a -> Map
 
 Definition difference {k} {a} {b} `{GHC.Base.Ord k} : Map k a -> Map k b -> Map
                                                       k a :=
-  fun arg_835__ arg_836__ =>
-    match arg_835__ , arg_836__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | Tip , _ => Tip
       | t1 , Tip => t1
       | t1 , t2 => hedgeDiff NothingS NothingS t1 t2
@@ -2054,8 +2050,8 @@ Infix "\\" := (_\\_) (at level 99).
 
 Definition hedgeInt {k} {a} {b} `{GHC.Base.Ord k} : MaybeS k -> MaybeS k -> Map
                                                     k a -> Map k b -> Map k a :=
-  fix hedgeInt arg_722__ arg_723__ arg_724__ arg_725__
-        := match arg_722__ , arg_723__ , arg_724__ , arg_725__ with
+  fix hedgeInt arg_0__ arg_1__ arg_2__ arg_3__
+        := match arg_0__ , arg_1__ , arg_2__ , arg_3__ with
              | _ , _ , _ , Tip => Tip
              | _ , _ , Tip , _ => Tip
              | blo , bhi , Bin _ kx x l r , t2 => let bmi := JustS kx in
@@ -2068,8 +2064,8 @@ Definition hedgeInt {k} {a} {b} `{GHC.Base.Ord k} : MaybeS k -> MaybeS k -> Map
 
 Definition intersection {k} {a} {b} `{GHC.Base.Ord k} : Map k a -> Map k
                                                         b -> Map k a :=
-  fun arg_731__ arg_732__ =>
-    match arg_731__ , arg_732__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | Tip , _ => Tip
       | _ , Tip => Tip
       | t1 , t2 => hedgeInt NothingS NothingS t1 t2
@@ -2080,8 +2076,8 @@ Definition mergeWithKey {k} {a} {b} {c} `{GHC.Base.Ord k}
       c) -> Map k a -> Map k b -> Map k c :=
   fun f g1 g2 =>
     let hedgeMerge :=
-      fix hedgeMerge arg_839__ arg_840__ arg_841__ arg_842__
-            := match arg_839__ , arg_840__ , arg_841__ , arg_842__ with
+      fix hedgeMerge arg_0__ arg_1__ arg_2__ arg_3__
+            := match arg_0__ , arg_1__ , arg_2__ , arg_3__ with
                  | _ , _ , t1 , Tip => g1 t1
                  | blo , bhi , Tip , Bin _ kx x l r => g2 GHC.Base.$ link kx x (filterGt blo l)
                                                        (filterLt bhi r)
@@ -2093,9 +2089,9 @@ Definition mergeWithKey {k} {a} {b} {c} `{GHC.Base.Ord k}
                                                                                   hedgeMerge blo bmi l (trim blo bmi
                                                                                                        t2) in
                                                                                 match found with
-                                                                                  | None => let scrut_849__ :=
+                                                                                  | None => let scrut_10__ :=
                                                                                               g1 (singleton kx x) in
-                                                                                            match scrut_849__ with
+                                                                                            match scrut_10__ with
                                                                                               | Tip => merge l' r'
                                                                                               | Bin _ _ x' Tip Tip =>
                                                                                                 link kx x' l' r'
@@ -2103,9 +2099,9 @@ Definition mergeWithKey {k} {a} {b} {c} `{GHC.Base.Ord k}
                                                                                                      (GHC.Base.hs_string__
                                                                                                      "mergeWithKey: Given function only1 does not fulfil required conditions (see documentation)")
                                                                                             end
-                                                                                  | Some x2 => let scrut_855__ :=
+                                                                                  | Some x2 => let scrut_16__ :=
                                                                                                  f kx x x2 in
-                                                                                               match scrut_855__ with
+                                                                                               match scrut_16__ with
                                                                                                  | None => merge l' r'
                                                                                                  | Some x' => link kx x'
                                                                                                               l' r'
@@ -2114,8 +2110,8 @@ Definition mergeWithKey {k} {a} {b} {c} `{GHC.Base.Ord k}
                                                       end
                end in
     let go :=
-      fun arg_863__ arg_864__ =>
-        match arg_863__ , arg_864__ with
+      fun arg_24__ arg_25__ =>
+        match arg_24__ , arg_25__ with
           | Tip , t2 => g2 t2
           | t1 , Tip => g1 t1
           | t1 , t2 => hedgeMerge NothingS NothingS t1 t2
@@ -2129,8 +2125,8 @@ Definition differenceWithKey {k} {a} {b} `{GHC.Base.Ord k}
 Definition differenceWith {k} {a} {b} `{GHC.Base.Ord k} : (a -> b -> option
                                                           a) -> Map k a -> Map k b -> Map k a :=
   fun f m1 m2 =>
-    differenceWithKey (fun arg_879__ arg_880__ arg_881__ =>
-                        match arg_879__ , arg_880__ , arg_881__ with
+    differenceWithKey (fun arg_0__ arg_1__ arg_2__ =>
+                        match arg_0__ , arg_1__ , arg_2__ with
                           | _ , x , y => f x y
                         end) m1 m2.
 
@@ -2143,8 +2139,8 @@ Definition intersectionWithKey {k} {a} {b} {c} `{GHC.Base.Ord k}
 Definition intersectionWith {k} {a} {b} {c} `{GHC.Base.Ord k}
     : (a -> b -> c) -> Map k a -> Map k b -> Map k c :=
   fun f m1 m2 =>
-    intersectionWithKey (fun arg_887__ arg_888__ arg_889__ =>
-                          match arg_887__ , arg_888__ , arg_889__ with
+    intersectionWithKey (fun arg_0__ arg_1__ arg_2__ =>
+                          match arg_0__ , arg_1__ , arg_2__ with
                             | _ , x , y => f x y
                           end) m1 m2.
 
@@ -2157,8 +2153,8 @@ Definition unionWithKey {k} {a} `{GHC.Base.Ord k} : (k -> a -> a -> a) -> Map k
 Definition unionWith {k} {a} `{GHC.Base.Ord k} : (a -> a -> a) -> Map k a -> Map
                                                  k a -> Map k a :=
   fun f m1 m2 =>
-    unionWithKey (fun arg_871__ arg_872__ arg_873__ =>
-                   match arg_871__ , arg_872__ , arg_873__ with
+    unionWithKey (fun arg_0__ arg_1__ arg_2__ =>
+                   match arg_0__ , arg_1__ , arg_2__ with
                      | _ , x , y => f x y
                    end) m1 m2.
 

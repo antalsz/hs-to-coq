@@ -92,33 +92,33 @@ Arguments Mk_First {_} _.
 
 Arguments Mk_Arg {_} {_} _ _.
 
-Definition unwrapMonoid {m} (arg_15__ : WrappedMonoid m) :=
-  match arg_15__ with
+Definition unwrapMonoid {m} (arg_0__ : WrappedMonoid m) :=
+  match arg_0__ with
     | WrapMonoid unwrapMonoid => unwrapMonoid
   end.
 
-Definition getOption {a} (arg_16__ : Option a) :=
-  match arg_16__ with
+Definition getOption {a} (arg_1__ : Option a) :=
+  match arg_1__ with
     | Mk_Option getOption => getOption
   end.
 
-Definition getMin {a} (arg_17__ : Min a) :=
-  match arg_17__ with
+Definition getMin {a} (arg_2__ : Min a) :=
+  match arg_2__ with
     | Mk_Min getMin => getMin
   end.
 
-Definition getMax {a} (arg_18__ : Max a) :=
-  match arg_18__ with
+Definition getMax {a} (arg_3__ : Max a) :=
+  match arg_3__ with
     | Mk_Max getMax => getMax
   end.
 
-Definition getLast {a} (arg_19__ : Last a) :=
-  match arg_19__ with
+Definition getLast {a} (arg_4__ : Last a) :=
+  match arg_4__ with
     | Mk_Last getLast => getLast
   end.
 
-Definition getFirst {a} (arg_20__ : First a) :=
-  match arg_20__ with
+Definition getFirst {a} (arg_5__ : First a) :=
+  match arg_5__ with
     | Mk_First getFirst => getFirst
   end.
 (* Midamble *)
@@ -139,15 +139,15 @@ Instance Unpeel_Option  a : Unpeel (Option a) (option a) := Build_Unpeel _ _ get
 Axiom unsafeFix : forall {a}, (a -> a) -> a.
 
 Local Definition Semigroup__unit_op_zlzg__ : unit -> unit -> unit :=
-  fun arg_378__ arg_379__ => tt.
+  fun arg_0__ arg_1__ => tt.
 
 Local Definition Semigroup__unit_sconcat : Data.List.NonEmpty.NonEmpty
                                            unit -> unit :=
-  fun arg_380__ => tt.
+  fun arg_0__ => tt.
 
 Local Definition Semigroup__unit_stimes : forall {b},
                                             forall `{GHC.Real.Integral b}, b -> unit -> unit :=
-  fun {b} `{GHC.Real.Integral b} => fun arg_381__ arg_382__ => tt.
+  fun {b} `{GHC.Real.Integral b} => fun arg_0__ arg_1__ => tt.
 
 Program Instance Semigroup__unit : Semigroup unit := fun _ k =>
     k {|op_zlzg____ := Semigroup__unit_op_zlzg__ ;
@@ -204,21 +204,21 @@ Local Definition Semigroup__list_stimes {inst_a} : forall {b},
   fun {b} `{GHC.Real.Integral b} =>
     fun n x =>
       let rep :=
-        unsafeFix (fun rep arg_367__ =>
-                    let j_370__ :=
-                      match arg_367__ with
+        unsafeFix (fun rep arg_0__ =>
+                    let j_3__ :=
+                      match arg_0__ with
                         | i => Coq.Init.Datatypes.app x (rep (i GHC.Num.- GHC.Num.fromInteger 1))
                       end in
-                    match arg_367__ with
-                      | num_368__ => if num_368__ GHC.Base.== GHC.Num.fromInteger 0 : bool
-                                     then nil
-                                     else j_370__
+                    match arg_0__ with
+                      | num_1__ => if num_1__ GHC.Base.== GHC.Num.fromInteger 0 : bool
+                                   then nil
+                                   else j_3__
                     end) in
-      let j_373__ := rep n in
+      let j_6__ := rep n in
       if n GHC.Base.< GHC.Num.fromInteger 0 : bool
       then GHC.Base.errorWithoutStackTrace (GHC.Base.hs_string__
                                            "stimes: [], negative multiplier")
-      else j_373__.
+      else j_6__.
 
 Program Instance Semigroup__list {a} : Semigroup (list a) := fun _ k =>
     k {|op_zlzg____ := Semigroup__list_op_zlzg__ ;
@@ -227,8 +227,8 @@ Program Instance Semigroup__list {a} : Semigroup (list a) := fun _ k =>
 
 Local Definition Semigroup__option_op_zlzg__ {inst_a} `{Semigroup inst_a}
     : (option inst_a) -> (option inst_a) -> (option inst_a) :=
-  fun arg_355__ arg_356__ =>
-    match arg_355__ , arg_356__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | None , b => b
       | a , None => a
       | Some a , Some b => Some (a <> b)
@@ -251,11 +251,11 @@ Local Definition Semigroup__option_stimes {inst_a} `{Semigroup inst_a}
     : forall {b},
         forall `{GHC.Real.Integral b}, b -> (option inst_a) -> (option inst_a) :=
   fun {b} `{GHC.Real.Integral b} =>
-    fun arg_359__ arg_360__ =>
-      match arg_359__ , arg_360__ with
+    fun arg_0__ arg_1__ =>
+      match arg_0__ , arg_1__ with
         | _ , None => None
-        | n , Some a => let scrut_361__ := GHC.Base.compare n (GHC.Num.fromInteger 0) in
-                        match scrut_361__ with
+        | n , Some a => let scrut_2__ := GHC.Base.compare n (GHC.Num.fromInteger 0) in
+                        match scrut_2__ with
                           | Lt => GHC.Base.errorWithoutStackTrace (GHC.Base.hs_string__
                                                                   "stimes: Maybe, negative multiplier")
                           | Eq => None
@@ -272,8 +272,8 @@ Program Instance Semigroup__option {a} `{Semigroup a} : Semigroup (option a) :=
 Local Definition Semigroup__Either_op_zlzg__ {inst_a} {inst_b}
     : (Data.Either.Either inst_a inst_b) -> (Data.Either.Either inst_a
       inst_b) -> (Data.Either.Either inst_a inst_b) :=
-  fun arg_352__ arg_353__ =>
-    match arg_352__ , arg_353__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | Data.Either.Left _ , b => b
       | a , _ => a
     end.
@@ -302,8 +302,8 @@ Local Definition Semigroup__Either_sconcat {inst_a} {inst_b}
 
 Local Definition Semigroup__comparison_op_zlzg__
     : comparison -> comparison -> comparison :=
-  fun arg_317__ arg_318__ =>
-    match arg_317__ , arg_318__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | Lt , _ => Lt
       | Eq , y => y
       | Gt , _ => Gt
@@ -326,8 +326,8 @@ Local Definition Semigroup__comparison_sconcat : Data.List.NonEmpty.NonEmpty
 Local Definition Semigroup__Dual_op_zlzg__ {inst_a} `{Semigroup inst_a}
     : (Data.Monoid.Dual inst_a) -> (Data.Monoid.Dual inst_a) -> (Data.Monoid.Dual
       inst_a) :=
-  fun arg_309__ arg_310__ =>
-    match arg_309__ , arg_310__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | Data.Monoid.Mk_Dual a , Data.Monoid.Mk_Dual b => Data.Monoid.Mk_Dual (b <> a)
     end.
 
@@ -350,8 +350,8 @@ Local Definition Semigroup__Dual_stimes {inst_a} `{Semigroup inst_a}
         forall `{GHC.Real.Integral b},
           b -> (Data.Monoid.Dual inst_a) -> (Data.Monoid.Dual inst_a) :=
   fun {b} `{GHC.Real.Integral b} =>
-    fun arg_313__ arg_314__ =>
-      match arg_313__ , arg_314__ with
+    fun arg_0__ arg_1__ =>
+      match arg_0__ , arg_1__ with
         | n , Data.Monoid.Mk_Dual a => Data.Monoid.Mk_Dual (stimes n a)
       end.
 
@@ -411,7 +411,7 @@ Local Definition Semigroup__Any_sconcat : Data.List.NonEmpty.NonEmpty
 
 Local Definition Semigroup__Void_op_zlzg__
     : Data.Void.Void -> Data.Void.Void -> Data.Void.Void :=
-  fun arg_281__ arg_282__ => match arg_281__ , arg_282__ with | a , _ => a end.
+  fun arg_0__ arg_1__ => match arg_0__ , arg_1__ with | a , _ => a end.
 
 Local Definition Semigroup__Void_sconcat : Data.List.NonEmpty.NonEmpty
                                            Data.Void.Void -> Data.Void.Void :=
@@ -429,8 +429,8 @@ Local Definition Semigroup__Void_sconcat : Data.List.NonEmpty.NonEmpty
 Local Definition Semigroup__NonEmpty_op_zlzg__ {inst_a}
     : (Data.List.NonEmpty.NonEmpty inst_a) -> (Data.List.NonEmpty.NonEmpty
       inst_a) -> (Data.List.NonEmpty.NonEmpty inst_a) :=
-  fun arg_277__ arg_278__ =>
-    match arg_277__ , arg_278__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | Data.List.NonEmpty.NEcons a as_ , Data.List.NonEmpty.NEcons b bs =>
         Data.List.NonEmpty.NEcons a (Coq.Init.Datatypes.app as_ (cons b bs))
     end.
@@ -457,36 +457,33 @@ Local Definition Semigroup__NonEmpty_stimes {inst_a} : forall {b},
     fun y0 x0 =>
       let g :=
         unsafeFix (fun g x y z =>
-                    let j_7__ :=
+                    let j_0__ :=
                       g (Semigroup__NonEmpty_op_zlzg__ x x) (GHC.Real.quot (GHC.Enum.pred y)
                                                                            (GHC.Num.fromInteger 2))
                       (Semigroup__NonEmpty_op_zlzg__ x z) in
-                    let j_8__ :=
+                    let j_1__ :=
                       if y GHC.Base.== GHC.Num.fromInteger 1 : bool
                       then Semigroup__NonEmpty_op_zlzg__ x z
-                      else j_7__ in
+                      else j_0__ in
                     if GHC.Real.even y : bool
                     then g (Semigroup__NonEmpty_op_zlzg__ x x) (GHC.Real.quot y (GHC.Num.fromInteger
                                                                               2)) z
-                    else j_8__) in
+                    else j_1__) in
       let f :=
         unsafeFix (fun f x y =>
-                    let j_10__ :=
+                    let j_3__ :=
                       g (Semigroup__NonEmpty_op_zlzg__ x x) (GHC.Real.quot (GHC.Enum.pred y)
                                                                            (GHC.Num.fromInteger 2)) x in
-                    let j_11__ :=
-                      if y GHC.Base.== GHC.Num.fromInteger 1 : bool
-                      then x
-                      else j_10__ in
+                    let j_4__ := if y GHC.Base.== GHC.Num.fromInteger 1 : bool then x else j_3__ in
                     if GHC.Real.even y : bool
                     then f (Semigroup__NonEmpty_op_zlzg__ x x) (GHC.Real.quot y (GHC.Num.fromInteger
                                                                               2))
-                    else j_11__) in
-      let j_13__ := f x0 y0 in
+                    else j_4__) in
+      let j_6__ := f x0 y0 in
       if y0 GHC.Base.<= GHC.Num.fromInteger 0 : bool
       then GHC.Base.errorWithoutStackTrace (GHC.Base.hs_string__
                                            "stimes: positive multiplier expected")
-      else j_13__.
+      else j_6__.
 
 Program Instance Semigroup__NonEmpty {a} : Semigroup
                                            (Data.List.NonEmpty.NonEmpty a) := fun _ k =>
@@ -509,8 +506,8 @@ Program Instance Semigroup__NonEmpty {a} : Semigroup
 Local Definition Functor__Min_fmap : forall {a} {b},
                                        (a -> b) -> Min a -> Min b :=
   fun {a} {b} =>
-    fun arg_272__ arg_273__ =>
-      match arg_272__ , arg_273__ with
+    fun arg_0__ arg_1__ =>
+      match arg_0__ , arg_1__ with
         | f , Mk_Min x => Mk_Min (f x)
       end.
 
@@ -524,10 +521,7 @@ Program Instance Functor__Min : GHC.Base.Functor Min := fun _ k =>
 Local Definition Foldable__Min_foldMap : forall {m} {a},
                                            forall `{GHC.Base.Monoid m}, (a -> m) -> Min a -> m :=
   fun {m} {a} `{GHC.Base.Monoid m} =>
-    fun arg_268__ arg_269__ =>
-      match arg_268__ , arg_269__ with
-        | f , Mk_Min a => f a
-      end.
+    fun arg_0__ arg_1__ => match arg_0__ , arg_1__ with | f , Mk_Min a => f a end.
 
 Local Definition Foldable__Min_foldl : forall {b} {a},
                                          (b -> a -> b) -> b -> Min a -> b :=
@@ -639,8 +633,8 @@ Program Instance Foldable__Min : Data.Foldable.Foldable Min := fun _ k =>
 Local Definition Traversable__Min_traverse : forall {f} {a} {b},
                                                forall `{GHC.Base.Applicative f}, (a -> f b) -> Min a -> f (Min b) :=
   fun {f} {a} {b} `{GHC.Base.Applicative f} =>
-    fun arg_264__ arg_265__ =>
-      match arg_264__ , arg_265__ with
+    fun arg_0__ arg_1__ =>
+      match arg_0__ , arg_1__ with
         | f , Mk_Min a => Mk_Min Data.Functor.<$> f a
       end.
 
@@ -670,15 +664,15 @@ Program Instance Traversable__Min : Data.Traversable.Traversable Min := fun _
 Local Definition Applicative__Min_op_zlztzg__ : forall {a} {b},
                                                   Min (a -> b) -> Min a -> Min b :=
   fun {a} {b} =>
-    fun arg_260__ arg_261__ =>
-      match arg_260__ , arg_261__ with
+    fun arg_0__ arg_1__ =>
+      match arg_0__ , arg_1__ with
         | Mk_Min f , Mk_Min x => Mk_Min (f x)
       end.
 
 Local Definition Applicative__Min_op_ztzg__ : forall {a} {b},
                                                 Min a -> Min b -> Min b :=
   fun {a} {b} =>
-    fun arg_257__ arg_258__ => match arg_257__ , arg_258__ with | _ , a => a end.
+    fun arg_0__ arg_1__ => match arg_0__ , arg_1__ with | _ , a => a end.
 
 Local Definition Applicative__Min_pure : forall {a}, a -> Min a :=
   fun {a} => Mk_Min.
@@ -695,10 +689,7 @@ Local Definition Monad__Min_op_zgzg__ : forall {a} {b},
 Local Definition Monad__Min_op_zgzgze__ : forall {a} {b},
                                             Min a -> (a -> Min b) -> Min b :=
   fun {a} {b} =>
-    fun arg_250__ arg_251__ =>
-      match arg_250__ , arg_251__ with
-        | Mk_Min a , f => f a
-      end.
+    fun arg_0__ arg_1__ => match arg_0__ , arg_1__ with | Mk_Min a , f => f a end.
 
 Local Definition Monad__Min_return_ : forall {a}, a -> Min a :=
   fun {a} => GHC.Base.pure.
@@ -731,8 +722,8 @@ Program Instance Monad__Min : GHC.Base.Monad Min := fun _ k =>
 Local Definition Functor__Max_fmap : forall {a} {b},
                                        (a -> b) -> Max a -> Max b :=
   fun {a} {b} =>
-    fun arg_245__ arg_246__ =>
-      match arg_245__ , arg_246__ with
+    fun arg_0__ arg_1__ =>
+      match arg_0__ , arg_1__ with
         | f , Mk_Max x => Mk_Max (f x)
       end.
 
@@ -746,10 +737,7 @@ Program Instance Functor__Max : GHC.Base.Functor Max := fun _ k =>
 Local Definition Foldable__Max_foldMap : forall {m} {a},
                                            forall `{GHC.Base.Monoid m}, (a -> m) -> Max a -> m :=
   fun {m} {a} `{GHC.Base.Monoid m} =>
-    fun arg_241__ arg_242__ =>
-      match arg_241__ , arg_242__ with
-        | f , Mk_Max a => f a
-      end.
+    fun arg_0__ arg_1__ => match arg_0__ , arg_1__ with | f , Mk_Max a => f a end.
 
 Local Definition Foldable__Max_foldl : forall {b} {a},
                                          (b -> a -> b) -> b -> Max a -> b :=
@@ -861,8 +849,8 @@ Program Instance Foldable__Max : Data.Foldable.Foldable Max := fun _ k =>
 Local Definition Traversable__Max_traverse : forall {f} {a} {b},
                                                forall `{GHC.Base.Applicative f}, (a -> f b) -> Max a -> f (Max b) :=
   fun {f} {a} {b} `{GHC.Base.Applicative f} =>
-    fun arg_237__ arg_238__ =>
-      match arg_237__ , arg_238__ with
+    fun arg_0__ arg_1__ =>
+      match arg_0__ , arg_1__ with
         | f , Mk_Max a => Mk_Max Data.Functor.<$> f a
       end.
 
@@ -892,15 +880,15 @@ Program Instance Traversable__Max : Data.Traversable.Traversable Max := fun _
 Local Definition Applicative__Max_op_zlztzg__ : forall {a} {b},
                                                   Max (a -> b) -> Max a -> Max b :=
   fun {a} {b} =>
-    fun arg_233__ arg_234__ =>
-      match arg_233__ , arg_234__ with
+    fun arg_0__ arg_1__ =>
+      match arg_0__ , arg_1__ with
         | Mk_Max f , Mk_Max x => Mk_Max (f x)
       end.
 
 Local Definition Applicative__Max_op_ztzg__ : forall {a} {b},
                                                 Max a -> Max b -> Max b :=
   fun {a} {b} =>
-    fun arg_230__ arg_231__ => match arg_230__ , arg_231__ with | _ , a => a end.
+    fun arg_0__ arg_1__ => match arg_0__ , arg_1__ with | _ , a => a end.
 
 Local Definition Applicative__Max_pure : forall {a}, a -> Max a :=
   fun {a} => Mk_Max.
@@ -917,10 +905,7 @@ Local Definition Monad__Max_op_zgzg__ : forall {a} {b},
 Local Definition Monad__Max_op_zgzgze__ : forall {a} {b},
                                             Max a -> (a -> Max b) -> Max b :=
   fun {a} {b} =>
-    fun arg_223__ arg_224__ =>
-      match arg_223__ , arg_224__ with
-        | Mk_Max a , f => f a
-      end.
+    fun arg_0__ arg_1__ => match arg_0__ , arg_1__ with | Mk_Max a , f => f a end.
 
 Local Definition Monad__Max_return_ : forall {a}, a -> Max a :=
   fun {a} => GHC.Base.pure.
@@ -941,8 +926,8 @@ Program Instance Monad__Max : GHC.Base.Monad Max := fun _ k =>
 Local Definition Functor__Arg_fmap {inst_a} : forall {a} {b},
                                                 (a -> b) -> (Arg inst_a) a -> (Arg inst_a) b :=
   fun {a} {b} =>
-    fun arg_219__ arg_220__ =>
-      match arg_219__ , arg_220__ with
+    fun arg_0__ arg_1__ =>
+      match arg_0__ , arg_1__ with
         | f , Mk_Arg x a => Mk_Arg x (f a)
       end.
 
@@ -957,10 +942,7 @@ Program Instance Functor__Arg {a} : GHC.Base.Functor (Arg a) := fun _ k =>
 Local Definition Foldable__Arg_foldMap {inst_a} : forall {m} {a},
                                                     forall `{GHC.Base.Monoid m}, (a -> m) -> (Arg inst_a) a -> m :=
   fun {m} {a} `{GHC.Base.Monoid m} =>
-    fun arg_215__ arg_216__ =>
-      match arg_215__ , arg_216__ with
-        | f , Mk_Arg _ a => f a
-      end.
+    fun arg_0__ arg_1__ => match arg_0__ , arg_1__ with | f , Mk_Arg _ a => f a end.
 
 Local Definition Foldable__Arg_foldl {inst_a} : forall {b} {a},
                                                   (b -> a -> b) -> b -> (Arg inst_a) a -> b :=
@@ -1077,8 +1059,8 @@ Local Definition Traversable__Arg_traverse {inst_a} : forall {f} {a} {b},
                                                         forall `{GHC.Base.Applicative f},
                                                           (a -> f b) -> (Arg inst_a) a -> f ((Arg inst_a) b) :=
   fun {f} {a} {b} `{GHC.Base.Applicative f} =>
-    fun arg_211__ arg_212__ =>
-      match arg_211__ , arg_212__ with
+    fun arg_0__ arg_1__ =>
+      match arg_0__ , arg_1__ with
         | f , Mk_Arg x a => Mk_Arg x Data.Functor.<$> f a
       end.
 
@@ -1110,8 +1092,8 @@ Program Instance Traversable__Arg {a} : Data.Traversable.Traversable (Arg a) :=
 
 Local Definition Eq___Arg_op_zeze__ {inst_a} {inst_b} `{GHC.Base.Eq_ inst_a}
     : (Arg inst_a inst_b) -> (Arg inst_a inst_b) -> bool :=
-  fun arg_207__ arg_208__ =>
-    match arg_207__ , arg_208__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | Mk_Arg a _ , Mk_Arg b _ => a GHC.Base.== b
     end.
 
@@ -1144,8 +1126,8 @@ Program Instance Eq___Arg {a} {b} `{GHC.Base.Eq_ a} : GHC.Base.Eq_ (Arg a b) :=
 Local Definition Functor__First_fmap : forall {a} {b},
                                          (a -> b) -> First a -> First b :=
   fun {a} {b} =>
-    fun arg_188__ arg_189__ =>
-      match arg_188__ , arg_189__ with
+    fun arg_0__ arg_1__ =>
+      match arg_0__ , arg_1__ with
         | f , Mk_First x => Mk_First (f x)
       end.
 
@@ -1160,10 +1142,7 @@ Program Instance Functor__First : GHC.Base.Functor First := fun _ k =>
 Local Definition Foldable__First_foldMap : forall {m} {a},
                                              forall `{GHC.Base.Monoid m}, (a -> m) -> First a -> m :=
   fun {m} {a} `{GHC.Base.Monoid m} =>
-    fun arg_184__ arg_185__ =>
-      match arg_184__ , arg_185__ with
-        | f , Mk_First a => f a
-      end.
+    fun arg_0__ arg_1__ => match arg_0__ , arg_1__ with | f , Mk_First a => f a end.
 
 Local Definition Foldable__First_foldl : forall {b} {a},
                                            (b -> a -> b) -> b -> First a -> b :=
@@ -1276,8 +1255,8 @@ Local Definition Traversable__First_traverse : forall {f} {a} {b},
                                                  forall `{GHC.Base.Applicative f},
                                                    (a -> f b) -> First a -> f (First b) :=
   fun {f} {a} {b} `{GHC.Base.Applicative f} =>
-    fun arg_180__ arg_181__ =>
-      match arg_180__ , arg_181__ with
+    fun arg_0__ arg_1__ =>
+      match arg_0__ , arg_1__ with
         | f , Mk_First a => Mk_First Data.Functor.<$> f a
       end.
 
@@ -1308,15 +1287,15 @@ Program Instance Traversable__First : Data.Traversable.Traversable First :=
 Local Definition Applicative__First_op_zlztzg__ : forall {a} {b},
                                                     First (a -> b) -> First a -> First b :=
   fun {a} {b} =>
-    fun arg_176__ arg_177__ =>
-      match arg_176__ , arg_177__ with
+    fun arg_0__ arg_1__ =>
+      match arg_0__ , arg_1__ with
         | Mk_First f , Mk_First x => Mk_First (f x)
       end.
 
 Local Definition Applicative__First_op_ztzg__ : forall {a} {b},
                                                   First a -> First b -> First b :=
   fun {a} {b} =>
-    fun arg_173__ arg_174__ => match arg_173__ , arg_174__ with | _ , a => a end.
+    fun arg_0__ arg_1__ => match arg_0__ , arg_1__ with | _ , a => a end.
 
 Local Definition Applicative__First_pure : forall {a}, a -> First a :=
   fun {a} => fun x => Mk_First x.
@@ -1333,10 +1312,7 @@ Local Definition Monad__First_op_zgzg__ : forall {a} {b},
 Local Definition Monad__First_op_zgzgze__ : forall {a} {b},
                                               First a -> (a -> First b) -> First b :=
   fun {a} {b} =>
-    fun arg_165__ arg_166__ =>
-      match arg_165__ , arg_166__ with
-        | Mk_First a , f => f a
-      end.
+    fun arg_0__ arg_1__ => match arg_0__ , arg_1__ with | Mk_First a , f => f a end.
 
 Local Definition Monad__First_return_ : forall {a}, a -> First a :=
   fun {a} => GHC.Base.pure.
@@ -1363,18 +1339,15 @@ Program Instance Monad__First : GHC.Base.Monad First := fun _ k =>
 Local Definition Functor__Last_fmap : forall {a} {b},
                                         (a -> b) -> Last a -> Last b :=
   fun {a} {b} =>
-    fun arg_154__ arg_155__ =>
-      match arg_154__ , arg_155__ with
+    fun arg_0__ arg_1__ =>
+      match arg_0__ , arg_1__ with
         | f , Mk_Last x => Mk_Last (f x)
       end.
 
 Local Definition Functor__Last_op_zlzd__ : forall {a} {b},
                                              a -> Last b -> Last a :=
   fun {a} {b} =>
-    fun arg_158__ arg_159__ =>
-      match arg_158__ , arg_159__ with
-        | a , _ => Mk_Last a
-      end.
+    fun arg_0__ arg_1__ => match arg_0__ , arg_1__ with | a , _ => Mk_Last a end.
 
 Program Instance Functor__Last : GHC.Base.Functor Last := fun _ k =>
     k {|GHC.Base.op_zlzd____ := fun {a} {b} => Functor__Last_op_zlzd__ ;
@@ -1383,10 +1356,7 @@ Program Instance Functor__Last : GHC.Base.Functor Last := fun _ k =>
 Local Definition Foldable__Last_foldMap : forall {m} {a},
                                             forall `{GHC.Base.Monoid m}, (a -> m) -> Last a -> m :=
   fun {m} {a} `{GHC.Base.Monoid m} =>
-    fun arg_150__ arg_151__ =>
-      match arg_150__ , arg_151__ with
-        | f , Mk_Last a => f a
-      end.
+    fun arg_0__ arg_1__ => match arg_0__ , arg_1__ with | f , Mk_Last a => f a end.
 
 Local Definition Foldable__Last_foldl : forall {b} {a},
                                           (b -> a -> b) -> b -> Last a -> b :=
@@ -1498,8 +1468,8 @@ Program Instance Foldable__Last : Data.Foldable.Foldable Last := fun _ k =>
 Local Definition Traversable__Last_traverse : forall {f} {a} {b},
                                                 forall `{GHC.Base.Applicative f}, (a -> f b) -> Last a -> f (Last b) :=
   fun {f} {a} {b} `{GHC.Base.Applicative f} =>
-    fun arg_146__ arg_147__ =>
-      match arg_146__ , arg_147__ with
+    fun arg_0__ arg_1__ =>
+      match arg_0__ , arg_1__ with
         | f , Mk_Last a => Mk_Last Data.Functor.<$> f a
       end.
 
@@ -1529,15 +1499,15 @@ Program Instance Traversable__Last : Data.Traversable.Traversable Last := fun _
 Local Definition Applicative__Last_op_zlztzg__ : forall {a} {b},
                                                    Last (a -> b) -> Last a -> Last b :=
   fun {a} {b} =>
-    fun arg_142__ arg_143__ =>
-      match arg_142__ , arg_143__ with
+    fun arg_0__ arg_1__ =>
+      match arg_0__ , arg_1__ with
         | Mk_Last f , Mk_Last x => Mk_Last (f x)
       end.
 
 Local Definition Applicative__Last_op_ztzg__ : forall {a} {b},
                                                  Last a -> Last b -> Last b :=
   fun {a} {b} =>
-    fun arg_139__ arg_140__ => match arg_139__ , arg_140__ with | _ , a => a end.
+    fun arg_0__ arg_1__ => match arg_0__ , arg_1__ with | _ , a => a end.
 
 Local Definition Applicative__Last_pure : forall {a}, a -> Last a :=
   fun {a} => Mk_Last.
@@ -1554,10 +1524,7 @@ Local Definition Monad__Last_op_zgzg__ : forall {a} {b},
 Local Definition Monad__Last_op_zgzgze__ : forall {a} {b},
                                              Last a -> (a -> Last b) -> Last b :=
   fun {a} {b} =>
-    fun arg_132__ arg_133__ =>
-      match arg_132__ , arg_133__ with
-        | Mk_Last a , f => f a
-      end.
+    fun arg_0__ arg_1__ => match arg_0__ , arg_1__ with | Mk_Last a , f => f a end.
 
 Local Definition Monad__Last_return_ : forall {a}, a -> Last a :=
   fun {a} => GHC.Base.pure.
@@ -1586,8 +1553,8 @@ Program Instance Monad__Last : GHC.Base.Monad Last := fun _ k =>
 Local Definition Functor__Option_fmap : forall {a} {b},
                                           (a -> b) -> Option a -> Option b :=
   fun {a} {b} =>
-    fun arg_126__ arg_127__ =>
-      match arg_126__ , arg_127__ with
+    fun arg_0__ arg_1__ =>
+      match arg_0__ , arg_1__ with
         | f , Mk_Option a => Mk_Option (GHC.Base.fmap f a)
       end.
 
@@ -1602,16 +1569,16 @@ Program Instance Functor__Option : GHC.Base.Functor Option := fun _ k =>
 Local Definition Applicative__Option_op_zlztzg__ : forall {a} {b},
                                                      Option (a -> b) -> Option a -> Option b :=
   fun {a} {b} =>
-    fun arg_118__ arg_119__ =>
-      match arg_118__ , arg_119__ with
+    fun arg_0__ arg_1__ =>
+      match arg_0__ , arg_1__ with
         | Mk_Option a , Mk_Option b => Mk_Option (a GHC.Base.<*> b)
       end.
 
 Local Definition Applicative__Option_op_ztzg__ : forall {a} {b},
                                                    Option a -> Option b -> Option b :=
   fun {a} {b} =>
-    fun arg_122__ arg_123__ =>
-      match arg_122__ , arg_123__ with
+    fun arg_0__ arg_1__ =>
+      match arg_0__ , arg_1__ with
         | Mk_Option None , _ => Mk_Option None
         | _ , b => b
       end.
@@ -1631,8 +1598,8 @@ Local Definition Monad__Option_op_zgzg__ : forall {a} {b},
 Local Definition Monad__Option_op_zgzgze__ : forall {a} {b},
                                                Option a -> (a -> Option b) -> Option b :=
   fun {a} {b} =>
-    fun arg_112__ arg_113__ =>
-      match arg_112__ , arg_113__ with
+    fun arg_0__ arg_1__ =>
+      match arg_0__ , arg_1__ with
         | Mk_Option (Some a) , k => k a
         | _ , _ => Mk_Option None
       end.
@@ -1660,8 +1627,8 @@ Program Instance Monad__Option : GHC.Base.Monad Option := fun _ k =>
 Local Definition Foldable__Option_foldMap : forall {m} {a},
                                               forall `{GHC.Base.Monoid m}, (a -> m) -> Option a -> m :=
   fun {m} {a} `{GHC.Base.Monoid m} =>
-    fun arg_108__ arg_109__ =>
-      match arg_108__ , arg_109__ with
+    fun arg_0__ arg_1__ =>
+      match arg_0__ , arg_1__ with
         | f , Mk_Option (Some m) => f m
         | _ , Mk_Option None => GHC.Base.mempty
       end.
@@ -1780,8 +1747,8 @@ Local Definition Traversable__Option_traverse : forall {f} {a} {b},
                                                   forall `{GHC.Base.Applicative f},
                                                     (a -> f b) -> Option a -> f (Option b) :=
   fun {f} {a} {b} `{GHC.Base.Applicative f} =>
-    fun arg_103__ arg_104__ =>
-      match arg_103__ , arg_104__ with
+    fun arg_0__ arg_1__ =>
+      match arg_0__ , arg_1__ with
         | f , Mk_Option (Some a) => (Mk_Option GHC.Base.∘ Some) Data.Functor.<$> f a
         | _ , Mk_Option None => GHC.Base.pure (Mk_Option None)
       end.
@@ -1817,16 +1784,16 @@ Program Instance Traversable__Option : Data.Traversable.Traversable Option :=
 Local Definition Semigroup__Proxy_op_zlzg__ {inst_s} : (Data.Proxy.Proxy
                                                        inst_s) -> (Data.Proxy.Proxy inst_s) -> (Data.Proxy.Proxy
                                                        inst_s) :=
-  fun arg_86__ arg_87__ => Data.Proxy.Mk_Proxy.
+  fun arg_0__ arg_1__ => Data.Proxy.Mk_Proxy.
 
 Local Definition Semigroup__Proxy_sconcat {inst_s} : Data.List.NonEmpty.NonEmpty
                                                      (Data.Proxy.Proxy inst_s) -> (Data.Proxy.Proxy inst_s) :=
-  fun arg_88__ => Data.Proxy.Mk_Proxy.
+  fun arg_0__ => Data.Proxy.Mk_Proxy.
 
 Local Definition Semigroup__Proxy_stimes {inst_s} : forall {b},
                                                       forall `{GHC.Real.Integral b},
                                                         b -> (Data.Proxy.Proxy inst_s) -> (Data.Proxy.Proxy inst_s) :=
-  fun {b} `{GHC.Real.Integral b} => fun arg_89__ arg_90__ => Data.Proxy.Mk_Proxy.
+  fun {b} `{GHC.Real.Integral b} => fun arg_0__ arg_1__ => Data.Proxy.Mk_Proxy.
 
 Program Instance Semigroup__Proxy {s} : Semigroup (Data.Proxy.Proxy s) := fun _
                                                                               k =>
@@ -2284,8 +2251,8 @@ Definition diff {m} `{Semigroup m} : m -> Data.Monoid.Endo m :=
   Data.Monoid.Mk_Endo GHC.Base.∘ _<>_.
 
 Definition option {b} {a} : b -> (a -> b) -> Option a -> b :=
-  fun arg_22__ arg_23__ arg_24__ =>
-    match arg_22__ , arg_23__ , arg_24__ with
+  fun arg_0__ arg_1__ arg_2__ =>
+    match arg_0__ , arg_1__ , arg_2__ with
       | n , j , Mk_Option m => Data.Maybe.maybe n j m
     end.
 
@@ -2320,8 +2287,8 @@ Program Instance Semigroup__Either {a} {b} : Semigroup (Data.Either.Either a
 Definition stimesIdempotentMonoid {b} {a} `{GHC.Real.Integral b}
                                   `{GHC.Base.Monoid a} : b -> a -> a :=
   fun n x =>
-    let scrut_28__ := GHC.Base.compare n (GHC.Num.fromInteger 0) in
-    match scrut_28__ with
+    let scrut_0__ := GHC.Base.compare n (GHC.Num.fromInteger 0) in
+    match scrut_0__ with
       | Lt => GHC.Base.errorWithoutStackTrace (GHC.Base.hs_string__
                                               "stimesIdempotentMonoid: negative multiplier")
       | Eq => GHC.Base.mempty

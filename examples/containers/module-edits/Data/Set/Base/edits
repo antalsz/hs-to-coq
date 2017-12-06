@@ -13,11 +13,10 @@ skip Data.Set.Base.fromListConstr
 skip Data.Set.Base.setDataType
 
 termination Data.Set.Base.link {measure (Nat.add (set_size arg_1__) (set_size arg_2__))} termination_by_omega
+termination Data.Set.Base.merge {measure (Nat.add (set_size arg_0__) (set_size arg_1__))} termination_by_omega
 
 nonterminating Data.Set.Base.fromDistinctAscList
 nonterminating Data.Set.Base.fromAscList
 nonterminating Data.Set.Base.fromList
-
-nonterminating Data.Set.Base.merge
 
 order Data.Set.Base.Eq___Set_ Data.Set.Base.Ord__Set_

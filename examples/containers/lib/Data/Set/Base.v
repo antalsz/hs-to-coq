@@ -1226,23 +1226,23 @@ Definition delete {a} `{GHC.Base.Ord a} : a -> Set_ a -> Set_ a :=
              end in
   go.
 
-Definition merge {a} : Set_ a -> Set_ a -> Set_ a :=
-  unsafeFix (fun merge arg_0__ arg_1__ =>
-              match arg_0__ , arg_1__ with
-                | Tip , r => r
-                | l , Tip => l
-                | (Bin sizeL x lx rx as l) , (Bin sizeR y ly ry as r) => let j_2__ :=
-                                                                           glue l r in
-                                                                         let j_3__ :=
-                                                                           if (delta GHC.Num.* sizeR) GHC.Base.<
-                                                                              sizeL : bool
-                                                                           then balanceR x lx (merge rx r)
-                                                                           else j_2__ in
-                                                                         if (delta GHC.Num.* sizeL) GHC.Base.<
-                                                                            sizeR : bool
-                                                                         then balanceL y (merge l ly) ry
-                                                                         else j_3__
-              end).
+Program Fixpoint merge {a} (arg_0__ : Set_ a) (arg_1__ : Set_
+                                                         a) { measure (Nat.add (set_size arg_0__) (set_size
+                                                                               arg_1__)) } : Set_ a :=
+match arg_0__ , arg_1__ with
+  | Tip , r => r
+  | l , Tip => l
+  | (Bin sizeL x lx rx as l) , (Bin sizeR y ly ry as r) => let j_2__ :=
+                                                             glue l r in
+                                                           let j_3__ :=
+                                                             if (delta GHC.Num.* sizeR) GHC.Base.< sizeL : bool
+                                                             then balanceR x lx (merge rx r)
+                                                             else j_2__ in
+                                                           if (delta GHC.Num.* sizeL) GHC.Base.< sizeR : bool
+                                                           then balanceL y (merge l ly) ry
+                                                           else j_3__
+end.
+Solve Obligations with (termination_by_omega).
 
 Definition filter {a} : (a -> bool) -> Set_ a -> Set_ a :=
   fix filter arg_0__ arg_1__

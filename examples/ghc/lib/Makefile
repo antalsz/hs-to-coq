@@ -130,6 +130,7 @@ VFILES:=FastString.v\
   BooleanFormula.v\
   UniqSet.v\
   OccName.v\
+  FiniteMap.v\
   Module.v\
   DynFlags.v\
   UniqDFM.v\

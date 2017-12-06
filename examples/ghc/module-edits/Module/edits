@@ -1,29 +1,13 @@
-# Overall, need Maps before we can even attempt to translate this
-# Coq module.
-
-axiomatize module Module
-
 skip module Config
 skip module GHC.IO
 skip module System.FilePath.Posix
 
-# TODO
-skip module Data.Map.Base
-skip module Data.Map.Base.Map
-skip module FiniteMap
 
-## Need Data.Map.Base for this
-redefine Inductive Module.ModuleEnv (elt:Type) : Type := Mk_ModuleEnv.
+## needs Data.Map.Base.fromList
+skip Module.delModuleEnv
+skip Module.mkModuleEnv
+skip Module.mkModuleSet
 
-# skip Module.delModuleEnv
-# skip Module.delModuleEnvList
-# skip Module.elemModuleEnv
-# skip Module.emptyModuleEnv
-# skip Module.extendModuleEnv
-# skip Module.extendModuleEnvList
-# skip Module.extendModuleEnvList_C
-# skip Module.extendModuleEnvWith
-# skip Module.filterModuleEnv
 
 # IO.FilePath
 skip Module.addBootSuffix
@@ -48,11 +32,14 @@ order Module.Eq___UnitId Module.Eq___ModuleName Module.Eq___Module_op_zeze__ Mod
 
 
 # These are wrong, but when axiomatizing, we cannot put them in order
-redefine Local Definition Module.Ord__ModuleName_compare : ModuleName -> (ModuleName -> comparison) := fun nm1 nm2 => Eq.
-redefine Local Definition Module.Ord__UnitId_compare : UnitId -> (UnitId -> comparison) :=
-  fun nm1 nm2 => Eq.
+# And it is a real pain to put them in the correct order when we are
+# not axiomatizing
+redefine Local Definition Module.Ord__ModuleName_compare :
+   ModuleName -> (ModuleName -> comparison) := fun nm1 nm2 => Eq.
+redefine Local Definition Module.Ord__UnitId_compare :
+   UnitId -> (UnitId -> comparison) := fun nm1 nm2 => Eq.
 
-
+# Uses Config.cIntegerLibraryType
 redefine Definition Module.integerUnitId : UnitId := default.
 
 # These definitions make the wrong guesses

@@ -42,6 +42,7 @@ MODULES = \
   BooleanFormula \
   UniqSet \
   OccName \
+  FiniteMap \
   Module \
   DynFlags \
   UniqDFM \

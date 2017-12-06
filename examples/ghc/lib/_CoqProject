@@ -3,5 +3,5 @@
 -Q ../../../base-thy  Proofs
 -Q ../../containers/lib   ""
 FastString.v Panic.v Util.v CallArity.v IdInfo.v IdInfo2.v Id.v
-Maybes.v MonadUtils.v Pair.v Bag.v SrcLoc.v BasicTypes.v Unique.v UniqSupply.v UniqFM.v CmmType.v BooleanFormula.v UniqSet.v OccName.v Module.v DynFlags.v UniqDFM.v UniqDSet.v Name.v NameEnv.v NameSet.v Var.v VarSet.v VarEnv.v FastStringEnv.v FieldLabel.v Literal.v Class.v DataCon.v PatSyn.v ConLike.v CoreSyn.v CoreArity.v CoreUtils.v UnVarGraph.v Demand.v
+Maybes.v MonadUtils.v Pair.v Bag.v SrcLoc.v BasicTypes.v Unique.v UniqSupply.v UniqFM.v CmmType.v BooleanFormula.v UniqSet.v OccName.v FiniteMap.v Module.v DynFlags.v UniqDFM.v UniqDSet.v Name.v NameEnv.v NameSet.v Var.v VarSet.v VarEnv.v FastStringEnv.v FieldLabel.v Literal.v Class.v DataCon.v PatSyn.v ConLike.v CoreSyn.v CoreArity.v CoreUtils.v UnVarGraph.v Demand.v
 

@@ -15,8 +15,15 @@ Require Coq.Program.Wf.
 
 (* Converted imports: *)
 
+Require Coq.Init.Datatypes.
+Require Coq.Lists.List.
+Require Data.Map.Base.
+Require Data.OldList.
+Require Data.Ord.
 Require Data.Set.Base.
+Require Data.Tuple.
 Require FastString.
+Require FiniteMap.
 Require GHC.Base.
 Require GHC.Prim.
 Require UniqFM.
@@ -34,11 +41,12 @@ Definition ModuleNameEnv :=
 Inductive ModuleName : Type := Mk_ModuleName
                               : FastString.FastString -> ModuleName.
 
-Inductive ModuleEnv (elt : Type) : Type := Mk_ModuleEnv.
-
 Inductive Module : Type := Mk_Module : UnitId -> ModuleName -> Module.
 
 Inductive NDModule : Type := Mk_NDModule : Module -> NDModule.
+
+Inductive ModuleEnv elt : Type := Mk_ModuleEnv : (Data.Map.Base.Map NDModule
+                                                 elt) -> ModuleEnv elt.
 
 Definition ModuleSet :=
   (Data.Set.Base.Set_ NDModule)%type.
@@ -67,6 +75,8 @@ Existing Class ContainsModule.
 
 Definition extractModule `{g : ContainsModule t} : t -> Module :=
   g _ (extractModule__ t).
+
+Arguments Mk_ModuleEnv {_} _.
 
 Definition moduleName (arg_0__ : Module) :=
   match arg_0__ with
@@ -246,8 +256,8 @@ Local Definition Ord__UnitId_min : UnitId -> UnitId -> UnitId :=
    "BinaryStringRep" unsupported *)
 
 Local Definition Ord__NDModule_compare : NDModule -> NDModule -> comparison :=
-  fun arg_55__ arg_56__ =>
-    match arg_55__ , arg_56__ with
+  fun arg_183__ arg_184__ =>
+    match arg_183__ , arg_184__ with
       | Mk_NDModule (Mk_Module p1 n1) , Mk_NDModule (Mk_Module p2 n2) => Util.thenCmp
                                                                          (GHC.Base.compare (Unique.getUnique p1)
                                                                                            (Unique.getUnique p2))
@@ -288,8 +298,8 @@ Program Instance Eq___ModuleName : GHC.Base.Eq_ ModuleName := fun _ k =>
       GHC.Base.op_zsze____ := Eq___ModuleName_op_zsze__ |}.
 
 Local Definition Eq___Module_op_zeze__ : Module -> Module -> bool :=
-  fun arg_8__ arg_9__ =>
-    match arg_8__ , arg_9__ with
+  fun arg_136__ arg_137__ =>
+    match arg_136__ , arg_137__ with
       | Mk_Module a1 a2 , Mk_Module b1 b2 => (andb ((a1 GHC.Base.== b1)) ((a2
                                                    GHC.Base.== b2)))
     end.
@@ -333,8 +343,8 @@ Local Definition Ord__Module_compare : Module -> Module -> comparison :=
   fun a b =>
     match a with
       | Mk_Module a1 a2 => match b with
-                             | Mk_Module b1 b2 => let scrut_13__ := (GHC.Base.compare a1 b1) in
-                                                  match scrut_13__ with
+                             | Mk_Module b1 b2 => let scrut_141__ := (GHC.Base.compare a1 b1) in
+                                                  match scrut_141__ with
                                                     | Lt => Lt
                                                     | Eq => (GHC.Base.compare a2 b2)
                                                     | Gt => Gt
@@ -417,132 +427,275 @@ Program Instance Ord__NDModule : GHC.Base.Ord NDModule := fun _ k =>
 (* Translating `instance GHC.Show.Show Module.ModLocation' failed: OOPS! Cannot
    find information for class Qualified "GHC.Show" "Show" unsupported *)
 
-Axiom addBootSuffixLocn : forall {A : Type}, A.
+Definition delModuleEnvList {a} : ModuleEnv a -> list Module -> ModuleEnv a :=
+  fun arg_53__ arg_54__ =>
+    match arg_53__ , arg_54__ with
+      | Mk_ModuleEnv e , ms => Mk_ModuleEnv (FiniteMap.deleteList (GHC.Base.map
+                                                                  Mk_NDModule ms) e)
+    end.
 
-Axiom addBootSuffix_maybe : forall {A : Type}, A.
+Definition elemModuleEnv {a} : Module -> ModuleEnv a -> bool :=
+  fun arg_86__ arg_87__ =>
+    match arg_86__ , arg_87__ with
+      | m , Mk_ModuleEnv e => Data.Map.Base.member (Mk_NDModule m) e
+    end.
 
-Axiom addBootSuffix : forall {A : Type}, A.
+Definition elemModuleSet : Module -> ModuleSet -> bool :=
+  Data.Set.Base.member GHC.Base.∘ GHC.Prim.coerce.
 
-Axiom stableModuleCmp : forall {A : Type}, A.
+Definition emptyModuleEnv {a} : ModuleEnv a :=
+  Mk_ModuleEnv Data.Map.Base.empty.
 
-Axiom stableModuleNameCmp : forall {A : Type}, A.
+Definition emptyModuleSet : ModuleSet :=
+  Data.Set.Base.empty.
 
-Axiom pprModule : forall {A : Type}, A.
+Definition extendModuleEnv {a} : ModuleEnv a -> Module -> a -> ModuleEnv a :=
+  fun arg_81__ arg_82__ arg_83__ =>
+    match arg_81__ , arg_82__ , arg_83__ with
+      | Mk_ModuleEnv e , m , x => Mk_ModuleEnv (Data.Map.Base.insert (Mk_NDModule m) x
+                                               e)
+    end.
 
-Axiom pprModuleName : forall {A : Type}, A.
+Definition extendModuleEnvList {a} : ModuleEnv a -> list (Module *
+                                                         a)%type -> ModuleEnv a :=
+  fun arg_69__ arg_70__ =>
+    match arg_69__ , arg_70__ with
+      | Mk_ModuleEnv e , xs => Mk_ModuleEnv (FiniteMap.insertList
+                                            (let cont_71__ arg_72__ :=
+                                              match arg_72__ with
+                                                | pair k v => cons (pair (Mk_NDModule k) v) nil
+                                              end in
+                                            Coq.Lists.List.flat_map cont_71__ xs) e)
+    end.
 
-Axiom moduleNameFS : forall {A : Type}, A.
+Definition extendModuleEnvList_C {a} : (a -> a -> a) -> ModuleEnv a -> list
+                                       (Module * a)%type -> ModuleEnv a :=
+  fun arg_62__ arg_63__ arg_64__ =>
+    match arg_62__ , arg_63__ , arg_64__ with
+      | f , Mk_ModuleEnv e , xs => Mk_ModuleEnv (FiniteMap.insertListWith f
+                                                (let cont_65__ arg_66__ :=
+                                                  match arg_66__ with
+                                                    | pair k v => cons (pair (Mk_NDModule k) v) nil
+                                                  end in
+                                                Coq.Lists.List.flat_map cont_65__ xs) e)
+    end.
 
-Axiom moduleNameColons : forall {A : Type}, A.
+Definition extendModuleEnvWith {a} : (a -> a -> a) -> ModuleEnv
+                                     a -> Module -> a -> ModuleEnv a :=
+  fun arg_75__ arg_76__ arg_77__ arg_78__ =>
+    match arg_75__ , arg_76__ , arg_77__ , arg_78__ with
+      | f , Mk_ModuleEnv e , m , x => Mk_ModuleEnv (Data.Map.Base.insertWith f
+                                                   (Mk_NDModule m) x e)
+    end.
 
-Axiom moduleNameSlashes : forall {A : Type}, A.
+Definition extendModuleSet : ModuleSet -> Module -> ModuleSet :=
+  fun s m => Data.Set.Base.insert (Mk_NDModule m) s.
 
-Axiom moduleStableString : forall {A : Type}, A.
+Definition filterModuleEnv {a} : (Module -> a -> bool) -> ModuleEnv
+                                 a -> ModuleEnv a :=
+  fun arg_90__ arg_91__ =>
+    match arg_90__ , arg_91__ with
+      | f , Mk_ModuleEnv e => Mk_ModuleEnv (Data.Map.Base.filterWithKey (f GHC.Base.∘
+                                                                        unNDModule) e)
+    end.
 
-Axiom moduleNameString : forall {A : Type}, A.
+Definition foldModuleEnv {a} {b} : (a -> b -> b) -> b -> ModuleEnv a -> b :=
+  fun arg_9__ arg_10__ arg_11__ =>
+    match arg_9__ , arg_10__ , arg_11__ with
+      | f , x , Mk_ModuleEnv e => FiniteMap.foldRightWithKey (fun arg_12__ arg_13__ =>
+                                                               match arg_12__ , arg_13__ with
+                                                                 | _ , v => f v
+                                                               end) x e
+    end.
 
-Axiom mkModuleName : forall {A : Type}, A.
+Definition fsToUnitId : FastString.FastString -> UnitId :=
+  PId.
 
-Axiom mkModuleNameFS : forall {A : Type}, A.
+Definition holeUnitId : UnitId :=
+  fsToUnitId (FastString.fsLit (GHC.Base.hs_string__ "hole")).
 
-Axiom mkModule : forall {A : Type}, A.
+Definition isHoleModule : Module -> bool :=
+  fun mod_ => moduleUnitId mod_ GHC.Base.== holeUnitId.
 
-Axiom pprPackagePrefix : forall {A : Type}, A.
+Definition interactiveUnitId : UnitId :=
+  fsToUnitId (FastString.fsLit (GHC.Base.hs_string__ "interactive")).
 
-Axiom stableUnitIdCmp : forall {A : Type}, A.
+Definition isInteractiveModule : Module -> bool :=
+  fun mod_ => moduleUnitId mod_ GHC.Base.== interactiveUnitId.
 
-Axiom isHoleModule : forall {A : Type}, A.
+Definition mainUnitId : UnitId :=
+  fsToUnitId (FastString.fsLit (GHC.Base.hs_string__ "main")).
 
-Axiom holeUnitId : forall {A : Type}, A.
+Definition primUnitId : UnitId :=
+  fsToUnitId (FastString.fsLit (GHC.Base.hs_string__ "ghc-prim")).
 
-Axiom mainUnitId : forall {A : Type}, A.
+Definition rtsUnitId : UnitId :=
+  fsToUnitId (FastString.fsLit (GHC.Base.hs_string__ "rts")).
 
-Axiom isInteractiveModule : forall {A : Type}, A.
+Definition stringToUnitId : GHC.Base.String -> UnitId :=
+  fsToUnitId GHC.Base.∘ FastString.mkFastString.
 
-Axiom interactiveUnitId : forall {A : Type}, A.
+Definition thUnitId : UnitId :=
+  fsToUnitId (FastString.fsLit (GHC.Base.hs_string__ "template-haskell")).
 
-Axiom wiredInUnitIds : forall {A : Type}, A.
+Definition thisGhcUnitId : UnitId :=
+  fsToUnitId (FastString.fsLit (GHC.Base.hs_string__ "ghc")).
 
-Axiom thisGhcUnitId : forall {A : Type}, A.
+Definition dphSeqUnitId : UnitId :=
+  fsToUnitId (FastString.fsLit (GHC.Base.hs_string__ "dph-seq")).
 
-Axiom dphParUnitId : forall {A : Type}, A.
+Definition dphParUnitId : UnitId :=
+  fsToUnitId (FastString.fsLit (GHC.Base.hs_string__ "dph-par")).
 
-Axiom dphSeqUnitId : forall {A : Type}, A.
+Definition baseUnitId : UnitId :=
+  fsToUnitId (FastString.fsLit (GHC.Base.hs_string__ "base")).
 
-Axiom thUnitId : forall {A : Type}, A.
+Definition integerUnitId : UnitId :=
+  default.
 
-Axiom rtsUnitId : forall {A : Type}, A.
+Definition wiredInUnitIds : list UnitId :=
+  cons primUnitId (cons integerUnitId (cons baseUnitId (cons rtsUnitId (cons
+                                                             thUnitId (cons thisGhcUnitId (cons dphSeqUnitId (cons
+                                                                                                dphParUnitId nil))))))).
 
-Axiom baseUnitId : forall {A : Type}, A.
+Definition isEmptyModuleEnv {a} : ModuleEnv a -> bool :=
+  fun arg_18__ =>
+    match arg_18__ with
+      | Mk_ModuleEnv e => Data.Map.Base.null e
+    end.
 
-Axiom integerUnitId : forall {A : Type}, A.
+Definition lookupModuleEnv {a} : ModuleEnv a -> Module -> option a :=
+  fun arg_45__ arg_46__ =>
+    match arg_45__ , arg_46__ with
+      | Mk_ModuleEnv e , m => Data.Map.Base.lookup (Mk_NDModule m) e
+    end.
 
-Axiom primUnitId : forall {A : Type}, A.
+Definition lookupWithDefaultModuleEnv {a} : ModuleEnv a -> a -> Module -> a :=
+  fun arg_40__ arg_41__ arg_42__ =>
+    match arg_40__ , arg_41__ , arg_42__ with
+      | Mk_ModuleEnv e , x , m => Data.Map.Base.findWithDefault x (Mk_NDModule m) e
+    end.
 
-Axiom stringToUnitId : forall {A : Type}, A.
+Definition mapModuleEnv {a} {b} : (a -> b) -> ModuleEnv a -> ModuleEnv b :=
+  fun arg_32__ arg_33__ =>
+    match arg_32__ , arg_33__ with
+      | f , Mk_ModuleEnv e => Mk_ModuleEnv (Data.Map.Base.mapWithKey (fun arg_34__
+                                                                          arg_35__ =>
+                                                                       match arg_34__ , arg_35__ with
+                                                                         | _ , v => f v
+                                                                       end) e)
+    end.
 
-Axiom fsToUnitId : forall {A : Type}, A.
+Definition mkModule : UnitId -> ModuleName -> Module :=
+  Mk_Module.
 
-Axiom unitIdString : forall {A : Type}, A.
+Definition mkModuleNameFS : FastString.FastString -> ModuleName :=
+  fun s => Mk_ModuleName s.
 
-Axiom unitIdFS : forall {A : Type}, A.
+Definition moduleEnvKeys {a} : ModuleEnv a -> list Module :=
+  fun arg_28__ =>
+    match arg_28__ with
+      | Mk_ModuleEnv e => Data.OldList.sort GHC.Base.$ (GHC.Base.map unNDModule
+                          GHC.Base.$ Data.Map.Base.keys e)
+    end.
 
-Axiom filterModuleEnv : forall {A : Type}, A.
+Definition moduleEnvToList {a} : ModuleEnv a -> list (Module * a)%type :=
+  fun arg_22__ =>
+    match arg_22__ with
+      | Mk_ModuleEnv e => Data.OldList.sortBy (Data.Ord.comparing Data.Tuple.fst)
+                          (let cont_23__ arg_24__ :=
+                            match arg_24__ with
+                              | pair (Mk_NDModule m) v => cons (pair m v) nil
+                            end in
+                          Coq.Lists.List.flat_map cont_23__ (Data.Map.Base.toList e))
+    end.
 
-Axiom elemModuleEnv : forall {A : Type}, A.
+Definition moduleEnvElts {a} : ModuleEnv a -> list a :=
+  fun e => GHC.Base.map Data.Tuple.snd GHC.Base.$ moduleEnvToList e.
 
-Axiom extendModuleEnv : forall {A : Type}, A.
+Definition moduleNameFS : ModuleName -> FastString.FastString :=
+  fun arg_127__ => match arg_127__ with | Mk_ModuleName mod_ => mod_ end.
 
-Axiom extendModuleEnvWith : forall {A : Type}, A.
+Definition stableModuleNameCmp : ModuleName -> ModuleName -> comparison :=
+  fun n1 n2 => GHC.Base.compare (moduleNameFS n1) (moduleNameFS n2).
 
-Axiom extendModuleEnvList : forall {A : Type}, A.
+Definition moduleNameString : ModuleName -> GHC.Base.String :=
+  fun arg_118__ =>
+    match arg_118__ with
+      | Mk_ModuleName mod_ => FastString.unpackFS mod_
+    end.
 
-Axiom extendModuleEnvList_C : forall {A : Type}, A.
+Definition moduleNameColons : ModuleName -> GHC.Base.String :=
+  let dots_to_colons :=
+    GHC.Base.map (fun c =>
+                   if c GHC.Base.== GHC.Char.hs_char__ "." : bool
+                   then GHC.Char.hs_char__ ":"
+                   else c) in
+  dots_to_colons GHC.Base.∘ moduleNameString.
 
-Axiom plusModuleEnv_C : forall {A : Type}, A.
+Definition moduleSetElts : ModuleSet -> list Module :=
+  Data.OldList.sort GHC.Base.∘ (GHC.Prim.coerce GHC.Base.∘ Data.Set.Base.toList).
 
-Axiom delModuleEnvList : forall {A : Type}, A.
+Definition plusModuleEnv {a} : ModuleEnv a -> ModuleEnv a -> ModuleEnv a :=
+  fun arg_49__ arg_50__ =>
+    match arg_49__ , arg_50__ with
+      | Mk_ModuleEnv e1 , Mk_ModuleEnv e2 => Mk_ModuleEnv (Data.Map.Base.union e1 e2)
+    end.
 
-Axiom delModuleEnv : forall {A : Type}, A.
+Definition plusModuleEnv_C {a} : (a -> a -> a) -> ModuleEnv a -> ModuleEnv
+                                 a -> ModuleEnv a :=
+  fun arg_57__ arg_58__ arg_59__ =>
+    match arg_57__ , arg_58__ , arg_59__ with
+      | f , Mk_ModuleEnv e1 , Mk_ModuleEnv e2 => Mk_ModuleEnv (Data.Map.Base.unionWith
+                                                              f e1 e2)
+    end.
 
-Axiom plusModuleEnv : forall {A : Type}, A.
+Definition unitIdFS : UnitId -> FastString.FastString :=
+  fun arg_94__ => match arg_94__ with | PId fs => fs end.
 
-Axiom lookupModuleEnv : forall {A : Type}, A.
+Definition unitIdString : UnitId -> GHC.Base.String :=
+  FastString.unpackFS GHC.Base.∘ unitIdFS.
 
-Axiom lookupWithDefaultModuleEnv : forall {A : Type}, A.
+Definition moduleStableString : Module -> GHC.Base.String :=
+  fun arg_121__ =>
+    match arg_121__ with
+      | Mk_Module moduleUnitId moduleName => Coq.Init.Datatypes.app
+                                             (GHC.Base.hs_string__ "$") (Coq.Init.Datatypes.app (unitIdString
+                                                                                                moduleUnitId)
+                                                                                                (Coq.Init.Datatypes.app
+                                                                                                (GHC.Base.hs_string__
+                                                                                                "$") (moduleNameString
+                                                                                                moduleName)))
+    end.
 
-Axiom mapModuleEnv : forall {A : Type}, A.
+Definition stableUnitIdCmp : UnitId -> UnitId -> comparison :=
+  fun p1 p2 => GHC.Base.compare (unitIdFS p1) (unitIdFS p2).
 
-Axiom mkModuleEnv : forall {A : Type}, A.
+Definition stableModuleCmp : Module -> Module -> comparison :=
+  fun arg_130__ arg_131__ =>
+    match arg_130__ , arg_131__ with
+      | Mk_Module p1 n1 , Mk_Module p2 n2 => Util.thenCmp (stableUnitIdCmp p1 p2)
+                                                          (stableModuleNameCmp n1 n2)
+    end.
 
-Axiom emptyModuleEnv : forall {A : Type}, A.
-
-Axiom moduleEnvKeys : forall {A : Type}, A.
-
-Axiom moduleEnvElts : forall {A : Type}, A.
-
-Axiom moduleEnvToList : forall {A : Type}, A.
-
-Axiom unitModuleEnv : forall {A : Type}, A.
-
-Axiom isEmptyModuleEnv : forall {A : Type}, A.
-
-Axiom foldModuleEnv : forall {A : Type}, A.
-
-Axiom emptyModuleSet : forall {A : Type}, A.
-
-Axiom mkModuleSet : forall {A : Type}, A.
-
-Axiom extendModuleSet : forall {A : Type}, A.
-
-Axiom moduleSetElts : forall {A : Type}, A.
-
-Axiom elemModuleSet : forall {A : Type}, A.
+Definition unitModuleEnv {a} : Module -> a -> ModuleEnv a :=
+  fun m x => Mk_ModuleEnv (Data.Map.Base.singleton (Mk_NDModule m) x).
 
 (* Unbound variables:
-     Eq Gt Lt Type andb bool comparison false negb option true Data.Set.Base.Set_
-     FastString.FastString GHC.Base.Eq_ GHC.Base.Ord GHC.Base.String GHC.Base.compare
-     GHC.Base.op_zeze__ GHC.Base.op_zg__ GHC.Base.op_zgze__ GHC.Base.op_zl__
-     GHC.Base.op_zlze__ GHC.Base.op_zsze__ GHC.Prim.coerce UniqFM.UniqFM
-     Unique.getUnique Util.thenCmp
+     Eq Gt Lt andb bool comparison cons default false list negb nil op_zt__ option
+     pair true Coq.Init.Datatypes.app Coq.Lists.List.flat_map Data.Map.Base.Map
+     Data.Map.Base.empty Data.Map.Base.filterWithKey Data.Map.Base.findWithDefault
+     Data.Map.Base.insert Data.Map.Base.insertWith Data.Map.Base.keys
+     Data.Map.Base.lookup Data.Map.Base.mapWithKey Data.Map.Base.member
+     Data.Map.Base.null Data.Map.Base.singleton Data.Map.Base.toList
+     Data.Map.Base.union Data.Map.Base.unionWith Data.OldList.sort
+     Data.OldList.sortBy Data.Ord.comparing Data.Set.Base.Set_ Data.Set.Base.empty
+     Data.Set.Base.insert Data.Set.Base.member Data.Set.Base.toList Data.Tuple.fst
+     Data.Tuple.snd FastString.FastString FastString.fsLit FastString.mkFastString
+     FastString.unpackFS FiniteMap.deleteList FiniteMap.foldRightWithKey
+     FiniteMap.insertList FiniteMap.insertListWith GHC.Base.Eq_ GHC.Base.Ord
+     GHC.Base.String GHC.Base.compare GHC.Base.map GHC.Base.op_z2218U__
+     GHC.Base.op_zd__ GHC.Base.op_zeze__ GHC.Base.op_zg__ GHC.Base.op_zgze__
+     GHC.Base.op_zl__ GHC.Base.op_zlze__ GHC.Base.op_zsze__ GHC.Prim.coerce
+     UniqFM.UniqFM Unique.getUnique Util.thenCmp
 *)

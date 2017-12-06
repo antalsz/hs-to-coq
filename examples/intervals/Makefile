@@ -8,7 +8,7 @@ SHELL = bash
 
 # Edit this
 GENMODS = Intervals
-MANMODS = Ensemble_facts Proofs
+MANMODS = Ensemble_facts Proofs Proofs_Function
 
 # Abstract stuff
 

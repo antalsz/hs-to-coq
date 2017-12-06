@@ -17,6 +17,7 @@ Require FastString.
 Require GHC.Base.
 Require GHC.Num.
 Require GHC.Real.
+Require Panic.
 Import GHC.Base.Notations.
 Import GHC.Num.Notations.
 

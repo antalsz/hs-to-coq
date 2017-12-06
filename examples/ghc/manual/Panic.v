@@ -21,6 +21,7 @@ Instance default_list {a} : Default (list a) := { default := nil } .
 
 Parameter noString : forall {a}, a -> String.
 
+Parameter assertPanic : forall {a} `{Default a}, String -> Int -> a.
 Parameter panicStr : forall {a} `{Default a}, String -> String -> a.
 Parameter panic : forall {a} `{Default a}, String -> a.
 Parameter sorry : forall {a} `{Default a}, String -> a.

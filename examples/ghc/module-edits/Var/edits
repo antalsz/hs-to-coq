@@ -12,7 +12,6 @@ skip Var.tcTyVarDetails
 skip Var.mkCoVar
 skip Var.isTyCoVar
 
-
 # ppr
 skip Var.ppr_id_scope
 skip Var.ppr_debug

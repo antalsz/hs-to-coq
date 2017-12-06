@@ -20,6 +20,7 @@ Require GHC.Char.
 Require GHC.Enum.
 Require GHC.Num.
 Require GHC.Real.
+Require Panic.
 Import GHC.Base.Notations.
 Import GHC.Num.Notations.
 

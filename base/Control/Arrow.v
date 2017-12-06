@@ -83,13 +83,13 @@ Definition app `{g : ArrowApply a} : forall {b} {c}, a (a b c * b)%type c :=
   g _ (app__ a).
 
 Record ArrowChoice__Dict a := ArrowChoice__Dict_Build {
-  left__ : forall {b} {c} {d},
+  left___ : forall {b} {c} {d},
     a b c -> a (Data.Either.Either b d) (Data.Either.Either c d) ;
   op_zbzbzb____ : forall {b} {d} {c},
     a b d -> a c d -> a (Data.Either.Either b c) d ;
   op_zpzpzp____ : forall {b} {c} {b'} {c'},
     a b c -> a b' c' -> a (Data.Either.Either b b') (Data.Either.Either c c') ;
-  right__ : forall {b} {c} {d},
+  right___ : forall {b} {c} {d},
     a b c -> a (Data.Either.Either d b) (Data.Either.Either d c) }.
 
 Definition ArrowChoice a `{Arrow a} :=
@@ -97,9 +97,9 @@ Definition ArrowChoice a `{Arrow a} :=
 
 Existing Class ArrowChoice.
 
-Definition left `{g : ArrowChoice a} : forall {b} {c} {d},
-                                         a b c -> a (Data.Either.Either b d) (Data.Either.Either c d) :=
-  g _ (left__ a).
+Definition left_ `{g : ArrowChoice a} : forall {b} {c} {d},
+                                          a b c -> a (Data.Either.Either b d) (Data.Either.Either c d) :=
+  g _ (left___ a).
 
 Definition op_zbzbzb__ `{g : ArrowChoice a} : forall {b} {d} {c},
                                                 a b d -> a c d -> a (Data.Either.Either b c) d :=
@@ -110,9 +110,9 @@ Definition op_zpzpzp__ `{g : ArrowChoice a} : forall {b} {c} {b'} {c'},
                                                                                                 c') :=
   g _ (op_zpzpzp____ a).
 
-Definition right `{g : ArrowChoice a} : forall {b} {c} {d},
-                                          a b c -> a (Data.Either.Either d b) (Data.Either.Either d c) :=
-  g _ (right__ a).
+Definition right_ `{g : ArrowChoice a} : forall {b} {c} {d},
+                                           a b c -> a (Data.Either.Either d b) (Data.Either.Either d c) :=
+  g _ (right___ a).
 
 Notation "'_|||_'" := (op_zbzbzb__).
 

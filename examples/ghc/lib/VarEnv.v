@@ -104,41 +104,6 @@ Axiom missingValue : forall {a}, a.
    Cannot find information for class Qualified "Outputable" "Outputable"
    unsupported *)
 
-Axiom addRnInScopeSet : forall {A : Type}, A.
-
-(* Translating `addRnInScopeSet' failed: using a record pattern for the unknown
-   constructor `RV2' unsupported *)
-
-Axiom delBndrL : forall {A : Type}, A.
-
-(* Translating `delBndrL' failed: using a record pattern for the unknown
-   constructor `RV2' unsupported *)
-
-Axiom delBndrR : forall {A : Type}, A.
-
-(* Translating `delBndrR' failed: using a record pattern for the unknown
-   constructor `RV2' unsupported *)
-
-Axiom delBndrsL : forall {A : Type}, A.
-
-(* Translating `delBndrsL' failed: using a record pattern for the unknown
-   constructor `RV2' unsupported *)
-
-Axiom delBndrsR : forall {A : Type}, A.
-
-(* Translating `delBndrsR' failed: using a record pattern for the unknown
-   constructor `RV2' unsupported *)
-
-Axiom nukeRnEnvL : forall {A : Type}, A.
-
-(* Translating `nukeRnEnvL' failed: using a record pattern for the unknown
-   constructor `RV2' unsupported *)
-
-Axiom nukeRnEnvR : forall {A : Type}, A.
-
-(* Translating `nukeRnEnvR' failed: using a record pattern for the unknown
-   constructor `RV2' unsupported *)
-
 Definition alterDVarEnv {a} : (option a -> option a) -> DVarEnv
                               a -> Var.Var -> DVarEnv a :=
   UniqDFM.alterUDFM.
@@ -163,8 +128,8 @@ Definition delVarEnv {a} : VarEnv a -> Var.Var -> VarEnv a :=
   UniqFM.delFromUFM.
 
 Definition delInScopeSet : InScopeSet -> Var.Var -> InScopeSet :=
-  fun arg_73__ arg_74__ =>
-    match arg_73__ , arg_74__ with
+  fun arg_85__ arg_86__ =>
+    match arg_85__ , arg_86__ with
       | InScope in_scope n , v => InScope (delVarEnv in_scope v) n
     end.
 
@@ -178,36 +143,36 @@ Definition elemVarEnv {a} : Var.Var -> VarEnv a -> bool :=
   UniqFM.elemUFM.
 
 Definition inRnEnvL : RnEnv2 -> Var.Var -> bool :=
-  fun arg_29__ arg_30__ =>
-    match arg_29__ , arg_30__ with
+  fun arg_41__ arg_42__ =>
+    match arg_41__ , arg_42__ with
       | RV2 env _ _ , v => elemVarEnv v env
     end.
 
 Definition inRnEnvR : RnEnv2 -> Var.Var -> bool :=
-  fun arg_25__ arg_26__ =>
-    match arg_25__ , arg_26__ with
+  fun arg_37__ arg_38__ =>
+    match arg_37__ , arg_38__ with
       | RV2 _ env _ , v => elemVarEnv v env
     end.
 
 Definition elemInScopeSet : Var.Var -> InScopeSet -> bool :=
-  fun arg_67__ arg_68__ =>
-    match arg_67__ , arg_68__ with
+  fun arg_79__ arg_80__ =>
+    match arg_79__ , arg_80__ with
       | v , InScope in_scope _ => elemVarEnv v in_scope
     end.
 
 Definition rnBndr2_var : RnEnv2 -> Var.Var -> Var.Var -> (RnEnv2 *
                          Var.Var)%type :=
-  fun arg_90__ arg_91__ arg_92__ =>
-    match arg_90__ , arg_91__ , arg_92__ with
+  fun arg_127__ arg_128__ arg_129__ =>
+    match arg_127__ , arg_128__ , arg_129__ with
       | RV2 envL envR in_scope , bL , bR => let new_b :=
-                                              let j_93__ := uniqAway' in_scope bL in
-                                              let j_94__ :=
+                                              let j_130__ := uniqAway' in_scope bL in
+                                              let j_131__ :=
                                                 if negb (elemInScopeSet bR in_scope) : bool
                                                 then bR
-                                                else j_93__ in
+                                                else j_130__ in
                                               if negb (elemInScopeSet bL in_scope) : bool
                                               then bL
-                                              else j_94__ in
+                                              else j_131__ in
                                             pair (RV2 missingValue missingValue missingValue) new_b
     end.
 
@@ -224,29 +189,29 @@ Definition uniqAway : InScopeSet -> Var.Var -> Var.Var :=
     else var.
 
 Definition rnBndrL : RnEnv2 -> Var.Var -> (RnEnv2 * Var.Var)%type :=
-  fun arg_99__ arg_100__ =>
-    match arg_99__ , arg_100__ with
+  fun arg_136__ arg_137__ =>
+    match arg_136__ , arg_137__ with
       | RV2 envL envR in_scope , bL => let new_b := uniqAway in_scope bL in
                                        pair (RV2 missingValue missingValue missingValue) new_b
     end.
 
 Definition rnBndrR : RnEnv2 -> Var.Var -> (RnEnv2 * Var.Var)%type :=
-  fun arg_104__ arg_105__ =>
-    match arg_104__ , arg_105__ with
+  fun arg_141__ arg_142__ =>
+    match arg_141__ , arg_142__ with
       | RV2 envL envR in_scope , bR => let new_b := uniqAway in_scope bR in
                                        pair (RV2 missingValue missingValue missingValue) new_b
     end.
 
 Definition rnEtaL : RnEnv2 -> Var.Var -> (RnEnv2 * Var.Var)%type :=
-  fun arg_109__ arg_110__ =>
-    match arg_109__ , arg_110__ with
+  fun arg_146__ arg_147__ =>
+    match arg_146__ , arg_147__ with
       | RV2 envL envR in_scope , bL => let new_b := uniqAway in_scope bL in
                                        pair (RV2 missingValue missingValue missingValue) new_b
     end.
 
 Definition rnEtaR : RnEnv2 -> Var.Var -> (RnEnv2 * Var.Var)%type :=
-  fun arg_114__ arg_115__ =>
-    match arg_114__ , arg_115__ with
+  fun arg_151__ arg_152__ =>
+    match arg_151__ , arg_152__ with
       | RV2 envL envR in_scope , bR => let new_b := uniqAway in_scope bR in
                                        pair (RV2 missingValue missingValue missingValue) new_b
     end.
@@ -263,6 +228,20 @@ Definition emptyInScopeSet : InScopeSet :=
 Definition emptyVarEnv {a} : VarEnv a :=
   UniqFM.emptyUFM.
 
+Definition nukeRnEnvL : RnEnv2 -> RnEnv2 :=
+  fun env =>
+    match env with
+      | RV2 envL_31__ envR_32__ in_scope_33__ => RV2 emptyVarEnv envR_32__
+                                                     in_scope_33__
+    end.
+
+Definition nukeRnEnvR : RnEnv2 -> RnEnv2 :=
+  fun env =>
+    match env with
+      | RV2 envL_25__ envR_26__ in_scope_27__ => RV2 envL_25__ emptyVarEnv
+                                                     in_scope_27__
+    end.
+
 Definition emptyTidyEnv : TidyEnv :=
   pair OccName.emptyTidyOccEnv emptyVarEnv.
 
@@ -277,19 +256,63 @@ Definition extendVarEnv {a} : VarEnv a -> Var.Var -> a -> VarEnv a :=
   UniqFM.addToUFM.
 
 Definition extendInScopeSetList : InScopeSet -> list Var.Var -> InScopeSet :=
-  fun arg_81__ arg_82__ =>
-    match arg_81__ , arg_82__ with
+  fun arg_100__ arg_101__ =>
+    match arg_100__ , arg_101__ with
       | InScope in_scope n , vs => InScope (Data.Foldable.foldl (fun s v =>
                                                                   extendVarEnv s v v) in_scope vs) (n GHC.Num.+
                                                                                                    Data.Foldable.length
                                                                                                    vs)
     end.
 
+Definition delBndrsR : RnEnv2 -> list Var.Var -> RnEnv2 :=
+  fun arg_114__ arg_115__ =>
+    match arg_114__ , arg_115__ with
+      | (RV2 _ env in_scope as rn) , v => match rn with
+                                            | RV2 envL_116__ envR_117__ in_scope_118__ => RV2 envL_116__ (delVarEnvList
+                                                                                              env v)
+                                                                                              (extendInScopeSetList
+                                                                                              in_scope v)
+                                          end
+    end.
+
+Definition delBndrsL : RnEnv2 -> list Var.Var -> RnEnv2 :=
+  fun arg_105__ arg_106__ =>
+    match arg_105__ , arg_106__ with
+      | (RV2 env _ in_scope as rn) , v => match rn with
+                                            | RV2 envL_107__ envR_108__ in_scope_109__ => RV2 (delVarEnvList env v)
+                                                                                              envR_108__
+                                                                                              (extendInScopeSetList
+                                                                                              in_scope v)
+                                          end
+    end.
+
 Definition extendInScopeSet : InScopeSet -> Var.Var -> InScopeSet :=
-  fun arg_86__ arg_87__ =>
-    match arg_86__ , arg_87__ with
+  fun arg_123__ arg_124__ =>
+    match arg_123__ , arg_124__ with
       | InScope in_scope n , v => InScope (extendVarEnv in_scope v v) (n GHC.Num.+
                                                                       GHC.Num.fromInteger 1)
+    end.
+
+Definition delBndrR : RnEnv2 -> Var.Var -> RnEnv2 :=
+  fun arg_165__ arg_166__ =>
+    match arg_165__ , arg_166__ with
+      | (RV2 _ env in_scope as rn) , v => match rn with
+                                            | RV2 envL_167__ envR_168__ in_scope_169__ => RV2 envL_167__ (delVarEnv env
+                                                                                                                    v)
+                                                                                              (extendInScopeSet in_scope
+                                                                                                                v)
+                                          end
+    end.
+
+Definition delBndrL : RnEnv2 -> Var.Var -> RnEnv2 :=
+  fun arg_156__ arg_157__ =>
+    match arg_156__ , arg_157__ with
+      | (RV2 env _ in_scope as rn) , v => match rn with
+                                            | RV2 envL_158__ envR_159__ in_scope_160__ => RV2 (delVarEnv env v)
+                                                                                              envR_159__
+                                                                                              (extendInScopeSet in_scope
+                                                                                                                v)
+                                          end
     end.
 
 Definition extendVarEnvList {a} : VarEnv a -> list (Var.Var * a)%type -> VarEnv
@@ -335,7 +358,7 @@ Definition foldVarEnv_Directly {a} {b}
   UniqFM.foldUFM_Directly.
 
 Definition getInScopeVars : InScopeSet -> VarEnv Var.Var :=
-  fun arg_120__ => match arg_120__ with | InScope vs _ => vs end.
+  fun arg_175__ => match arg_175__ with | InScope vs _ => vs end.
 
 Definition isEmptyDVarEnv {a} : DVarEnv a -> bool :=
   UniqDFM.isNullUDFM.
@@ -361,32 +384,32 @@ Definition lookupVarEnv {a} : VarEnv a -> Var.Var -> option a :=
   UniqFM.lookupUFM.
 
 Definition rnOccL : RnEnv2 -> Var.Var -> Var.Var :=
-  fun arg_45__ arg_46__ =>
-    match arg_45__ , arg_46__ with
+  fun arg_57__ arg_58__ =>
+    match arg_57__ , arg_58__ with
       | RV2 env _ _ , v => Maybes.orElse (lookupVarEnv env v) v
     end.
 
 Definition rnOccL_maybe : RnEnv2 -> Var.Var -> option Var.Var :=
-  fun arg_37__ arg_38__ =>
-    match arg_37__ , arg_38__ with
+  fun arg_49__ arg_50__ =>
+    match arg_49__ , arg_50__ with
       | RV2 env _ _ , v => lookupVarEnv env v
     end.
 
 Definition rnOccR : RnEnv2 -> Var.Var -> Var.Var :=
-  fun arg_41__ arg_42__ =>
-    match arg_41__ , arg_42__ with
+  fun arg_53__ arg_54__ =>
+    match arg_53__ , arg_54__ with
       | RV2 _ env _ , v => Maybes.orElse (lookupVarEnv env v) v
     end.
 
 Definition rnOccR_maybe : RnEnv2 -> Var.Var -> option Var.Var :=
-  fun arg_33__ arg_34__ =>
-    match arg_33__ , arg_34__ with
+  fun arg_45__ arg_46__ =>
+    match arg_45__ , arg_46__ with
       | RV2 _ env _ , v => lookupVarEnv env v
     end.
 
 Definition lookupInScope : InScopeSet -> Var.Var -> option Var.Var :=
-  fun arg_62__ arg_63__ =>
-    match arg_62__ , arg_63__ with
+  fun arg_74__ arg_75__ =>
+    match arg_74__ , arg_75__ with
       | InScope in_scope _ , v => lookupVarEnv in_scope v
     end.
 
@@ -406,8 +429,8 @@ Definition lookupVarEnv_Directly {a} : VarEnv a -> Unique.Unique -> option a :=
 
 Definition lookupInScope_Directly : InScopeSet -> Unique.Unique -> option
                                     Var.Var :=
-  fun arg_58__ arg_59__ =>
-    match arg_58__ , arg_59__ with
+  fun arg_70__ arg_71__ =>
+    match arg_70__ , arg_71__ with
       | InScope in_scope _ , uniq => lookupVarEnv_Directly in_scope uniq
     end.
 
@@ -460,17 +483,28 @@ Definition plusVarEnv {a} : VarEnv a -> VarEnv a -> VarEnv a :=
   UniqFM.plusUFM.
 
 Definition unionInScope : InScopeSet -> InScopeSet -> InScopeSet :=
-  fun arg_54__ arg_55__ =>
-    match arg_54__ , arg_55__ with
+  fun arg_66__ arg_67__ =>
+    match arg_66__ , arg_67__ with
       | InScope s1 _ , InScope s2 n2 => InScope (plusVarEnv s1 s2) n2
     end.
 
 Definition extendInScopeSetSet : InScopeSet -> VarEnv Var.Var -> InScopeSet :=
-  fun arg_77__ arg_78__ =>
-    match arg_77__ , arg_78__ with
+  fun arg_89__ arg_90__ =>
+    match arg_89__ , arg_90__ with
       | InScope in_scope n , vs => InScope (plusVarEnv in_scope vs) (n GHC.Num.+
                                                                     UniqFM.sizeUFM vs)
     end.
+
+Definition addRnInScopeSet : RnEnv2 -> VarEnv Var.Var -> RnEnv2 :=
+  fun env vs =>
+    let j_98__ :=
+      match env with
+        | RV2 envL_93__ envR_94__ in_scope_95__ => RV2 envL_93__ envR_94__
+                                                       (extendInScopeSetSet (in_scope env) vs)
+      end in
+    if isEmptyVarEnv vs : bool
+    then env
+    else j_98__.
 
 Definition plusVarEnv_C {a} : (a -> a -> a) -> VarEnv a -> VarEnv a -> VarEnv
                               a :=
@@ -507,8 +541,8 @@ Definition varEnvToList {a} : VarEnv a -> list (Unique.Unique * a)%type :=
   UniqFM.ufmToList.
 
 Definition varSetInScope : VarSet.VarSet -> InScopeSet -> bool :=
-  fun arg_50__ arg_51__ =>
-    match arg_50__ , arg_51__ with
+  fun arg_62__ arg_63__ =>
+    match arg_62__ , arg_63__ with
       | vars , InScope s1 _ => VarSet.subVarSet vars s1
     end.
 

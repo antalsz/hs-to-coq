@@ -71,6 +71,12 @@ Definition srcSpanSLine (arg_4__ : RealSrcSpan) :=
   match arg_4__ with
     | RealSrcSpan' _ srcSpanSLine _ _ _ => srcSpanSLine
   end.
+(* Midamble *)
+
+(* Default values *)
+Import Panic.
+Instance Default_SrcSpan : Default SrcSpan := Build_Default _ (UnhelpfulSpan default).
+
 (* Converted value declarations: *)
 
 (* Translating `instance Outputable.Outputable SrcLoc.RealSrcLoc' failed: OOPS!

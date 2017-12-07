@@ -2,16 +2,25 @@ Require Import GHC.Base.
 Require Import Data.Set.Base.
 Require Import Coq.FSets.FSetInterface.
 
-From mathcomp Require Import ssrbool.
+From mathcomp Require Import ssrbool ssreflect.
 
-(* LY: I think we need [OrderedType] here. *)
-Module Foo (E : DecidableType) : WSfun(E).
+Module Foo (E : OrderedType) : WSfun(E).
   Local Instance Eq_t : GHC.Base.Eq_ E.t :=
     fun _ k => k {|
                 op_zeze____ := fun x y => E.eq_dec x y;
                 op_zsze____ := fun x y => negb (E.eq_dec x y);
               |}.
-  Local Instance Ord_t : GHC.Base.Ord E.t. Admitted.
+
+  Local Definition compare (x y: E.t) : comparison :=
+    match E.compare x y with
+    | EQ _ => Eq
+    | LT _ => Lt
+    | GT _ => Gt
+    end.
+  
+  Local Instance Ord_t : GHC.Base.Ord E.t := GHC.Base.ord_default compare.
+
+  Module OrdFacts := OrderedTypeFacts(E).
 
   Definition elt := E.t.
   
@@ -53,11 +62,42 @@ Module Foo (E : DecidableType) : WSfun(E).
   Definition elements : t -> list elt. Admitted.
   Definition choose : t -> option elt. Admitted.
   Lemma In_1 :
-    forall (s : t) (x y : elt), E.eq x y -> In x s -> In y s. Admitted.
-  Lemma eq_refl : forall s : t, eq s s. Admitted.
-  Lemma eq_sym : forall s s' : t, eq s s' -> eq s' s. Admitted.
+    forall (s : t) (x y : elt), E.eq x y -> In x s -> In y s.
+  Proof.
+    (* LY: Surely this can be simplified? *)
+    unfold In; destruct s as [s']; induction s'; auto. intros.
+    simpl in H0; destruct (Base.compare x a) eqn:Hcomp;
+      vm_compute in Hcomp; destruct (E.compare x a);
+        inversion Hcomp; clear Hcomp.
+    - apply E.eq_sym in H. apply (E.eq_trans H) in e.
+      apply OrdFacts.elim_compare_eq in e; destruct e as [? Heq].
+      simpl. vm_compute. rewrite Heq; auto.
+    - apply (OrdFacts.eq_lt (E.eq_sym H)) in l.
+      apply OrdFacts.elim_compare_lt in l; destruct l as [? Hlt]. simpl.
+      assert (Hcomp: Base.compare y a = Lt).
+      { vm_compute. rewrite Hlt; auto. }
+      rewrite Hcomp. eauto.
+    - assert (Heq: E.eq x y) by apply H.
+      apply (OrdFacts.lt_eq l) in H.
+      apply OrdFacts.elim_compare_gt in H; destruct H as [? Hgt]. simpl.
+      assert (Hcomp: Base.compare y a = Gt).
+      { vm_compute. rewrite Hgt; auto. }
+      rewrite Hcomp. eauto.
+  Qed.
+      
+  Lemma eq_refl : forall s : t, eq s s.
+  Proof. intros; constructor; auto. Qed.
+    
+  Lemma eq_sym : forall s s' : t, eq s s' -> eq s' s.
+  Proof. unfold eq; unfold Equal; symmetry; auto. Qed.
+    
   Lemma eq_trans :
-    forall s s' s'' : t, eq s s' -> eq s' s'' -> eq s s''. Admitted.
+    forall s s' s'' : t, eq s s' -> eq s' s'' -> eq s s''.
+  Proof.
+    unfold eq; unfold Equal; intros s s' s'' H1 H2 a.
+    apply (iff_trans (H1 a) (H2 a)).
+  Qed.
+    
   Lemma mem_1 : forall (s : t) (x : elt), In x s -> mem x s = true. Admitted.
   Lemma mem_2 : forall (s : t) (x : elt), mem x s = true -> In x s. Admitted.
   Lemma equal_1 : forall s s' : t, Equal s s' -> equal s s' = true. Admitted.
@@ -68,8 +108,22 @@ Module Foo (E : DecidableType) : WSfun(E).
   Lemma empty_1 : Empty empty.
   Proof. unfold Empty; intros a H. inversion H. Qed.
     
-  Lemma is_empty_1 : forall s : t, Empty s -> is_empty s = true. Admitted.
-  Lemma is_empty_2 : forall s : t, is_empty s = true -> Empty s. Admitted.
+  Lemma is_empty_1 : forall s : t, Empty s -> is_empty s = true.
+  Proof.
+    unfold Empty; unfold In. destruct s; destruct x; auto.
+    intros H. specialize (H e). simpl in H.
+    assert (Heq: E.eq e e); auto.
+    assert (Hcomp: Base.compare e e = Eq).
+    { vm_compute. apply OrdFacts.elim_compare_eq in Heq.
+      destruct Heq. rewrite H0; auto. }
+    rewrite Hcomp in H. contradiction.
+  Qed.
+      
+  Lemma is_empty_2 : forall s : t, is_empty s = true -> Empty s.
+  Proof.
+    unfold Empty; unfold In. destruct s; destruct x; auto.
+  Qed.
+      
   Lemma add_1 :
     forall (s : t) (x y : elt), E.eq x y -> In y (add x s). Admitted.
   Lemma add_2 : forall (s : t) (x y : elt), In y s -> In y (add x s). Admitted.

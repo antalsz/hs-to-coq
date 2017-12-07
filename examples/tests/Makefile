@@ -29,26 +29,18 @@ PASS = \
   MutrecInst \
   Bits \
   Records \
-  OpTyCon \
-  Expr  \
-  Endo \
-  Type \
+  RecordConstruction \
 
 # tests that *should* pass but currently fail
 TODO_PASS  = \
-  EqList \
   NestedRec \
   InstVar \
   Mutrec \
-  PaperExamples \
   Existential \
   TypeAnnotations \
-  Arrow \
-  OpMeth \
-  TypeClient \
   PatternGuard \
-  RecordConstruction \
-  PartialRecordSel \
+
+
 
 
 MODULES = $(PASS) $(TODO_PASS)
@@ -58,7 +50,7 @@ VOFILES   = $(patsubst %.v,%.vo,$(VFILES))
 COQFLAGS  = ""
 
 # typecheck *quietly*
-TYPECHECK=coqc -Q ../../base "" 1>/dev/null
+TYPECHECK=coqc 1>/dev/null
 
 main:
 	# Call ourselves with -k, so that we see all test outputs,
@@ -100,7 +92,7 @@ todo_pass: $(foreach f,$(TODO_PASS),$(f).fail)
 	@rm -f $*.v
 	@if [ -e $*/preamble.v ]; then P_ARG="-p $*/preamble.v"; else P_ARG=; fi;\
 	if [ -e $*/edits ]; then E_ARG="-e $*/edits"; else E_ARG=; fi;\
-	$(HS_TO_COQ) $${E_ARG} -e ../../base/edits -o . $${P_ARG} $*.hs 1>/dev/null
+	$(HS_TO_COQ) $${E_ARG} -e renamings -o . $${P_ARG} $*.hs 1>/dev/null
 
 # We always want to re-build the .v files, to test the current build of hs-to-coq
 FORCE:

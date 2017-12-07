@@ -14,10 +14,16 @@ Module Foo (E : DecidableType) : WSfun(E).
   Definition key := E.t.
   Hint Transparent key.
 
-  Definition t : Type -> Type := Map key.
+  Section t.
+    Variable elt:Type.
+    
+    (* Well-formedness *)
+    Definition WF (m : Map key elt) := True. (* TODO. maybe simply [valid s = true]? *)
+    Definition t := {m : Map key elt | WF m}.
+    Definition pack (m : Map key elt) (H : WF m): t := exist _ m H.
+  End t.
 
   Section Types.
-
     Variable elt:Type.
 
     Definition empty : t elt := FIXME.

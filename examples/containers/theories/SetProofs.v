@@ -14,8 +14,15 @@ Module Foo (E : DecidableType) : WSfun(E).
   Local Instance Ord_t : GHC.Base.Ord E.t. Admitted.
 
   Definition elt := E.t.
-  Definition t := Set_ elt.
-  Definition In x s := member x s = true. 
+  
+  (* Well-formedness *)
+  Definition WF (s : Set_ elt) := True. (* TODO. maybe simply [valid s = true]? *)
+  Definition t := {s : Set_ elt | WF s}.
+  Definition pack (s : Set_ elt) (H : WF s): t := exist _ s H.
+
+  Definition In x (s' : t) := match s' with exist s P =>
+     member x s = true
+     end.
 
   Definition Equal s s' := forall a : elt, In a s <-> In a s'.
   Definition Subset s s' := forall a : elt, In a s -> In a s'.
@@ -23,8 +30,9 @@ Module Foo (E : DecidableType) : WSfun(E).
   Definition For_all (P : elt -> Prop) s := forall x, In x s -> P x.
   Definition Exists (P : elt -> Prop) s := exists x, In x s /\ P x.
 
-  Definition empty : t := empty.
-  Definition is_empty : t -> bool := null.
+  Definition empty : t := pack empty I.
+  Definition is_empty : t -> bool := fun s' => match s' with exist s P =>
+     null s end.
   Definition mem : elt -> t -> bool. Admitted.
   Definition add : elt -> t -> t. Admitted.
   Definition singleton : elt -> t. Admitted.

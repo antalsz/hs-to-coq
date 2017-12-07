@@ -84,6 +84,7 @@ identIsOp t = "op_" `T.isPrefixOf` t && "__" `T.isSuffixOf` t
     -- the next clause is a work-around as long as the dict accessors are named
     -- op_...____ – these do not have notations
     && not ("____" `T.isSuffixOf` t)
+    && T.length t > 5
 
 identToOp :: Ident -> Maybe Op
 identToOp t

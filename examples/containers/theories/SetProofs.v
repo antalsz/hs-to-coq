@@ -1,4 +1,6 @@
 Require Import GHC.Base.
+Import Notations.
+
 Require Import Data.Set.Base.
 Require Import Coq.FSets.FSetInterface.
 
@@ -40,19 +42,35 @@ Module Foo (E : OrderedType) : WSfun(E).
   Definition Exists (P : elt -> Prop) s := exists x, In x s /\ P x.
 
   Definition empty : t := pack empty I.
-  Definition is_empty : t -> bool := fun s' => match s' with exist s P =>
+  Definition is_empty : t -> bool := fun s' => match s' with exist s _ =>
      null s end.
-  Definition mem : elt -> t -> bool. Admitted.
-  Definition add : elt -> t -> t. Admitted.
+  Definition mem : elt -> t -> bool := fun e s' => match s' with exist s _ =>
+     member e s end.
+  Definition add : elt -> t -> t. Admitted. (* must contain a WF proof *)
   Definition singleton : elt -> t. Admitted.
   Definition remove : elt -> t -> t. Admitted.
   Definition union : t -> t -> t. Admitted.
   Definition inter : t -> t -> t. Admitted.
   Definition diff : t -> t -> t. Admitted.
   Definition eq : t -> t -> Prop := Equal.
-  Definition eq_dec : forall s s' : t, {eq s s'} + {~ eq s s'}. Admitted.
-  Definition equal : t -> t -> bool. Admitted.
-  Definition subset : t -> t -> bool. Admitted.
+  Definition eq_dec : forall s s' : t, {eq s s'} + {~ eq s s'}.
+    destruct s as [s]; destruct s' as [s']; simpl.
+    destruct (s == s') eqn:Heq.
+    (* LY: How should I proceed? *)
+  Admitted.
+    
+  Definition equal : t -> t -> bool :=
+    fun s s' =>
+      match s, s' with
+      | exist s _, exist s' _ => s == s'
+      end.
+  
+  Definition subset : t -> t -> bool :=
+    fun s s' =>
+      match s, s' with
+      | exist s _, exist s' _ => isSubsetOf s s'
+      end.
+        
   Definition fold : forall A : Type, (elt -> A -> A) -> t -> A -> A. Admitted.
   Definition for_all : (elt -> bool) -> t -> bool. Admitted.
   Definition exists_ : (elt -> bool) -> t -> bool. Admitted.
@@ -98,8 +116,12 @@ Module Foo (E : OrderedType) : WSfun(E).
     apply (iff_trans (H1 a) (H2 a)).
   Qed.
     
-  Lemma mem_1 : forall (s : t) (x : elt), In x s -> mem x s = true. Admitted.
-  Lemma mem_2 : forall (s : t) (x : elt), mem x s = true -> In x s. Admitted.
+  Lemma mem_1 : forall (s : t) (x : elt), In x s -> mem x s = true.
+  Proof. unfold In; intros; destruct s as [s]; auto. Qed.
+    
+  Lemma mem_2 : forall (s : t) (x : elt), mem x s = true -> In x s.
+  Proof. unfold In; intros; destruct s as [s]; auto. Qed.
+  
   Lemma equal_1 : forall s s' : t, Equal s s' -> equal s s' = true. Admitted.
   Lemma equal_2 : forall s s' : t, equal s s' = true -> Equal s s'. Admitted.
   Lemma subset_1 : forall s s' : t, Subset s s' -> subset s s' = true. Admitted.

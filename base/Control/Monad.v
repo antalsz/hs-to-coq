@@ -34,7 +34,7 @@ Definition filterM {m} {a} `{(GHC.Base.Applicative m)} : (a -> m bool) -> list
     GHC.Base.foldr (fun x =>
                      GHC.Base.liftA2 (fun flg =>
                                        if flg : bool
-                                       then (fun arg_11__ => cons x arg_11__)
+                                       then (fun arg_0__ => cons x arg_0__)
                                        else GHC.Base.id) (p x)) (GHC.Base.pure nil).
 
 Definition foldM {t} {m} {b} {a} `{Data.Foldable.Foldable t} `{GHC.Base.Monad m}
@@ -46,8 +46,8 @@ Definition foldM_ {t} {m} {b} {a} `{Data.Foldable.Foldable t} `{GHC.Base.Monad
   fun f a xs => Data.Foldable.foldlM f a xs GHC.Base.>> GHC.Base.return_ tt.
 
 Definition guard {f} `{(GHC.Base.Alternative f)} : bool -> f unit :=
-  fun arg_15__ =>
-    match arg_15__ with
+  fun arg_0__ =>
+    match arg_0__ with
       | true => GHC.Base.pure tt
       | false => GHC.Base.empty
     end.

@@ -17,6 +17,7 @@ Require FastString.
 Require GHC.Base.
 Require GHC.Num.
 Require GHC.Real.
+Require Panic.
 Import GHC.Base.Notations.
 Import GHC.Num.Notations.
 
@@ -69,8 +70,8 @@ Instance Default_CmmType : Panic.Default CmmType :=
 
 Local Definition Eq___ForeignHint_op_zeze__
     : ForeignHint -> ForeignHint -> bool :=
-  fun arg_189__ arg_190__ =>
-    match arg_189__ , arg_190__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | NoHint , NoHint => true
       | AddrHint , AddrHint => true
       | SignedHint , SignedHint => true
@@ -101,8 +102,8 @@ Program Instance Eq___CmmCat : GHC.Base.Eq_ CmmCat := fun _ k =>
 (* Skipping instance Ord__Width *)
 
 Local Definition Eq___Width_op_zeze__ : Width -> Width -> bool :=
-  fun arg_145__ arg_146__ =>
-    match arg_145__ , arg_146__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | W8 , W8 => true
       | W16 , W16 => true
       | W32 , W32 => true
@@ -146,19 +147,19 @@ Definition b128 : CmmType :=
   cmmBits W128.
 
 Definition cmmEqType : CmmType -> CmmType -> bool :=
-  fun arg_141__ arg_142__ =>
-    match arg_141__ , arg_142__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | Mk_CmmType c1 w1 , Mk_CmmType c2 w2 => andb (c1 GHC.Base.== c2) (w1
                                                     GHC.Base.== w2)
     end.
 
 Definition cmmEqType_ignoring_ptrhood : CmmType -> CmmType -> bool :=
-  fun arg_133__ arg_134__ =>
-    match arg_133__ , arg_134__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | Mk_CmmType c1 w1 , Mk_CmmType c2 w2 => let weak_eq
                                                  : CmmCat -> CmmCat -> bool :=
-                                                 fix weak_eq arg_135__ arg_136__
-                                                       := match arg_135__ , arg_136__ with
+                                                 fix weak_eq arg_2__ arg_3__
+                                                       := match arg_2__ , arg_3__ with
                                                             | FloatCat , FloatCat => true
                                                             | FloatCat , _other => false
                                                             | _other , FloatCat => false
@@ -183,55 +184,55 @@ Definition f64 : CmmType :=
 
 Definition halfWordMask : DynFlags.DynFlags -> GHC.Num.Integer :=
   fun dflags =>
-    let j_80__ :=
+    let j_0__ :=
       Panic.panic (GHC.Base.hs_string__ "MachOp.halfWordMask: Unknown word size") in
-    let j_81__ :=
+    let j_1__ :=
       if DynFlags.wORD_SIZE dflags GHC.Base.== GHC.Num.fromInteger 8 : bool
       then GHC.Num.fromInteger 4294967295
-      else j_80__ in
+      else j_0__ in
     if DynFlags.wORD_SIZE dflags GHC.Base.== GHC.Num.fromInteger 4 : bool
     then GHC.Num.fromInteger 65535
-    else j_81__.
+    else j_1__.
 
 Definition halfWordWidth : DynFlags.DynFlags -> Width :=
   fun dflags =>
-    let j_83__ :=
+    let j_0__ :=
       Panic.panic (GHC.Base.hs_string__ "MachOp.halfWordRep: Unknown word size") in
-    let j_84__ :=
+    let j_1__ :=
       if DynFlags.wORD_SIZE dflags GHC.Base.== GHC.Num.fromInteger 8 : bool
       then W32
-      else j_83__ in
+      else j_0__ in
     if DynFlags.wORD_SIZE dflags GHC.Base.== GHC.Num.fromInteger 4 : bool
     then W16
-    else j_84__.
+    else j_1__.
 
 Definition bHalfWord : DynFlags.DynFlags -> CmmType :=
   fun dflags => cmmBits (halfWordWidth dflags).
 
 Definition isFloat32 : CmmType -> bool :=
-  fun arg_101__ =>
-    match arg_101__ with
+  fun arg_0__ =>
+    match arg_0__ with
       | Mk_CmmType FloatCat W32 => true
       | _other => false
     end.
 
 Definition isFloat64 : CmmType -> bool :=
-  fun arg_99__ =>
-    match arg_99__ with
+  fun arg_0__ =>
+    match arg_0__ with
       | Mk_CmmType FloatCat W64 => true
       | _other => false
     end.
 
 Definition isFloatType : CmmType -> bool :=
-  fun arg_109__ =>
-    match arg_109__ with
+  fun arg_0__ =>
+    match arg_0__ with
       | Mk_CmmType FloatCat _ => true
       | _other => false
     end.
 
 Definition isGcPtrType : CmmType -> bool :=
-  fun arg_107__ =>
-    match arg_107__ with
+  fun arg_0__ =>
+    match arg_0__ with
       | Mk_CmmType GcPtrCat _ => true
       | _other => false
     end.
@@ -244,24 +245,24 @@ Definition isVecType : CmmType -> bool :=
     end.
 
 Definition isWord32 : CmmType -> bool :=
-  fun arg_103__ =>
-    match arg_103__ with
+  fun arg_0__ =>
+    match arg_0__ with
       | Mk_CmmType BitsCat W32 => true
       | Mk_CmmType GcPtrCat W32 => true
       | _other => false
     end.
 
 Definition isWord64 : CmmType -> bool :=
-  fun arg_105__ =>
-    match arg_105__ with
+  fun arg_0__ =>
+    match arg_0__ with
       | Mk_CmmType BitsCat W64 => true
       | Mk_CmmType GcPtrCat W64 => true
       | _other => false
     end.
 
 Definition mrStr : Width -> FastString.LitString :=
-  fun arg_89__ =>
-    match arg_89__ with
+  fun arg_0__ =>
+    match arg_0__ with
       | W8 => FastString.sLit (GHC.Base.hs_string__ "W8")
       | W16 => FastString.sLit (GHC.Base.hs_string__ "W16")
       | W32 => FastString.sLit (GHC.Base.hs_string__ "W32")
@@ -273,73 +274,73 @@ Definition mrStr : Width -> FastString.LitString :=
     end.
 
 Definition typeWidth : CmmType -> Width :=
-  fun arg_131__ => match arg_131__ with | Mk_CmmType _ w => w end.
+  fun arg_0__ => match arg_0__ with | Mk_CmmType _ w => w end.
 
 Definition vecLength : CmmType -> Length :=
-  fun arg_2__ =>
-    match arg_2__ with
+  fun arg_0__ =>
+    match arg_0__ with
       | Mk_CmmType (VecCat l _) _ => l
       | _ => Panic.panic (GHC.Base.hs_string__ "vecLength: not a vector")
     end.
 
 Definition widthFromBytes : GHC.Num.Int -> Width :=
-  fun arg_15__ =>
-    let j_25__ :=
-      match arg_15__ with
+  fun arg_0__ =>
+    let j_10__ :=
+      match arg_0__ with
         | n => Panic.panicStr (GHC.Base.hs_string__
                               "no width for given number of bytes") (Panic.noString n)
       end in
-    let j_27__ :=
-      match arg_15__ with
-        | num_23__ => if num_23__ GHC.Base.== GHC.Num.fromInteger 10 : bool
-                      then W80
-                      else j_25__
+    let j_12__ :=
+      match arg_0__ with
+        | num_8__ => if num_8__ GHC.Base.== GHC.Num.fromInteger 10 : bool
+                     then W80
+                     else j_10__
       end in
-    let j_29__ :=
-      match arg_15__ with
-        | num_22__ => if num_22__ GHC.Base.== GHC.Num.fromInteger 64 : bool
-                      then W512
-                      else j_27__
+    let j_14__ :=
+      match arg_0__ with
+        | num_7__ => if num_7__ GHC.Base.== GHC.Num.fromInteger 64 : bool
+                     then W512
+                     else j_12__
       end in
-    let j_31__ :=
-      match arg_15__ with
-        | num_21__ => if num_21__ GHC.Base.== GHC.Num.fromInteger 32 : bool
-                      then W256
-                      else j_29__
+    let j_16__ :=
+      match arg_0__ with
+        | num_6__ => if num_6__ GHC.Base.== GHC.Num.fromInteger 32 : bool
+                     then W256
+                     else j_14__
       end in
-    let j_33__ :=
-      match arg_15__ with
-        | num_20__ => if num_20__ GHC.Base.== GHC.Num.fromInteger 16 : bool
-                      then W128
-                      else j_31__
+    let j_18__ :=
+      match arg_0__ with
+        | num_5__ => if num_5__ GHC.Base.== GHC.Num.fromInteger 16 : bool
+                     then W128
+                     else j_16__
       end in
-    let j_35__ :=
-      match arg_15__ with
-        | num_19__ => if num_19__ GHC.Base.== GHC.Num.fromInteger 8 : bool
-                      then W64
-                      else j_33__
+    let j_20__ :=
+      match arg_0__ with
+        | num_4__ => if num_4__ GHC.Base.== GHC.Num.fromInteger 8 : bool
+                     then W64
+                     else j_18__
       end in
-    let j_37__ :=
-      match arg_15__ with
-        | num_18__ => if num_18__ GHC.Base.== GHC.Num.fromInteger 4 : bool
-                      then W32
-                      else j_35__
+    let j_22__ :=
+      match arg_0__ with
+        | num_3__ => if num_3__ GHC.Base.== GHC.Num.fromInteger 4 : bool
+                     then W32
+                     else j_20__
       end in
-    let j_39__ :=
-      match arg_15__ with
-        | num_17__ => if num_17__ GHC.Base.== GHC.Num.fromInteger 2 : bool
-                      then W16
-                      else j_37__
+    let j_24__ :=
+      match arg_0__ with
+        | num_2__ => if num_2__ GHC.Base.== GHC.Num.fromInteger 2 : bool
+                     then W16
+                     else j_22__
       end in
-    match arg_15__ with
-      | num_16__ => if num_16__ GHC.Base.== GHC.Num.fromInteger 1 : bool
-                    then W8
-                    else j_39__
+    match arg_0__ with
+      | num_1__ => if num_1__ GHC.Base.== GHC.Num.fromInteger 1 : bool
+                   then W8
+                   else j_24__
     end.
 
 Definition widthInBits : Width -> GHC.Num.Int :=
-  fun arg_70__ =>
-    match arg_70__ with
+  fun arg_0__ =>
+    match arg_0__ with
       | W8 => GHC.Num.fromInteger 8
       | W16 => GHC.Num.fromInteger 16
       | W32 => GHC.Num.fromInteger 32
@@ -351,8 +352,8 @@ Definition widthInBits : Width -> GHC.Num.Int :=
     end.
 
 Definition widthInBytes : Width -> GHC.Num.Int :=
-  fun arg_42__ =>
-    match arg_42__ with
+  fun arg_0__ =>
+    match arg_0__ with
       | W8 => GHC.Num.fromInteger 1
       | W16 => GHC.Num.fromInteger 2
       | W32 => GHC.Num.fromInteger 4
@@ -364,8 +365,8 @@ Definition widthInBytes : Width -> GHC.Num.Int :=
     end.
 
 Definition vecElemType : CmmType -> CmmType :=
-  fun arg_65__ =>
-    match arg_65__ with
+  fun arg_0__ =>
+    match arg_0__ with
       | Mk_CmmType (VecCat l cat) w => let scalw : Width :=
                                          widthFromBytes (GHC.Real.div (widthInBytes w) l) in
                                        Mk_CmmType cat scalw
@@ -373,8 +374,8 @@ Definition vecElemType : CmmType -> CmmType :=
     end.
 
 Definition vec : Length -> CmmType -> CmmType :=
-  fun arg_52__ arg_53__ =>
-    match arg_52__ , arg_53__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | l , Mk_CmmType cat w => let vecw : Width :=
                                   widthFromBytes (l GHC.Num.* widthInBytes w) in
                                 Mk_CmmType (VecCat l cat) vecw
@@ -411,15 +412,15 @@ Definition vec8b16 : CmmType :=
   vec (GHC.Num.fromInteger 8) b16.
 
 Definition cmmVec : GHC.Num.Int -> CmmType -> CmmType :=
-  fun arg_61__ arg_62__ =>
-    match arg_61__ , arg_62__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | n , Mk_CmmType cat w => Mk_CmmType (VecCat n cat) (widthFromBytes (n GHC.Num.*
                                                                           widthInBytes w))
     end.
 
 Definition widthInLog : Width -> GHC.Num.Int :=
-  fun arg_5__ =>
-    match arg_5__ with
+  fun arg_0__ =>
+    match arg_0__ with
       | W8 => GHC.Num.fromInteger 0
       | W16 => GHC.Num.fromInteger 1
       | W32 => GHC.Num.fromInteger 2
@@ -432,15 +433,15 @@ Definition widthInLog : Width -> GHC.Num.Int :=
 
 Definition wordWidth : DynFlags.DynFlags -> Width :=
   fun dflags =>
-    let j_86__ :=
+    let j_0__ :=
       Panic.panic (GHC.Base.hs_string__ "MachOp.wordRep: Unknown word size") in
-    let j_87__ :=
+    let j_1__ :=
       if DynFlags.wORD_SIZE dflags GHC.Base.== GHC.Num.fromInteger 8 : bool
       then W64
-      else j_86__ in
+      else j_0__ in
     if DynFlags.wORD_SIZE dflags GHC.Base.== GHC.Num.fromInteger 4 : bool
     then W32
-    else j_87__.
+    else j_1__.
 
 Definition gcWord : DynFlags.DynFlags -> CmmType :=
   fun dflags => Mk_CmmType GcPtrCat (wordWidth dflags).

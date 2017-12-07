@@ -4,6 +4,7 @@ Require Import Module.
 Instance Uniquable_OccName : Unique.Uniquable OccName := {}.
 Admitted.
 
+
 Definition compare_Namespace : NameSpace -> NameSpace -> comparison :=
   fun x y => match x , y with
           | VarName   , VarName   => Eq
@@ -56,3 +57,8 @@ Axiom tidyOccName : TidyOccEnv -> OccName -> (TidyOccEnv * OccName)%type.
 Axiom mkSuperDictAuxOcc : GHC.Num.Int -> OccName -> OccName.
 Axiom mkSuperDictSelOcc : GHC.Num.Int -> OccName -> OccName.
 Axiom mkLocalOcc : Unique.Unique -> OccName -> OccName.
+
+(* Default values *)
+Import Panic.
+Instance Default_NameSpace : Default NameSpace := Build_Default _ VarName.
+Instance Default_OccName : Default OccName := Build_Default _ (Mk_OccName default default).

@@ -43,8 +43,8 @@ Definition pSnd {a} (arg_1__ : Pair a) :=
 Local Definition Functor__Pair_fmap : forall {a} {b},
                                         (a -> b) -> Pair a -> Pair b :=
   fun {a} {b} =>
-    fun arg_37__ arg_38__ =>
-      match arg_37__ , arg_38__ with
+    fun arg_0__ arg_1__ =>
+      match arg_0__ , arg_1__ with
         | f , Mk_Pair x y => Mk_Pair (f x) (f y)
       end.
 
@@ -59,8 +59,8 @@ Program Instance Functor__Pair : GHC.Base.Functor Pair := fun _ k =>
 Local Definition Applicative__Pair_op_zlztzg__ : forall {a} {b},
                                                    Pair (a -> b) -> Pair a -> Pair b :=
   fun {a} {b} =>
-    fun arg_33__ arg_34__ =>
-      match arg_33__ , arg_34__ with
+    fun arg_0__ arg_1__ =>
+      match arg_0__ , arg_1__ with
         | Mk_Pair f g , Mk_Pair x y => Mk_Pair (f x) (g y)
       end.
 
@@ -81,8 +81,8 @@ Program Instance Applicative__Pair : GHC.Base.Applicative Pair := fun _ k =>
 Local Definition Foldable__Pair_foldMap : forall {m} {a},
                                             forall `{GHC.Base.Monoid m}, (a -> m) -> Pair a -> m :=
   fun {m} {a} `{GHC.Base.Monoid m} =>
-    fun arg_28__ arg_29__ =>
-      match arg_28__ , arg_29__ with
+    fun arg_0__ arg_1__ =>
+      match arg_0__ , arg_1__ with
         | f , Mk_Pair x y => GHC.Base.mappend (f x) (f y)
       end.
 
@@ -196,8 +196,8 @@ Program Instance Foldable__Pair : Data.Foldable.Foldable Pair := fun _ k =>
 Local Definition Traversable__Pair_traverse : forall {f} {a} {b},
                                                 forall `{GHC.Base.Applicative f}, (a -> f b) -> Pair a -> f (Pair b) :=
   fun {f} {a} {b} `{GHC.Base.Applicative f} =>
-    fun arg_24__ arg_25__ =>
-      match arg_24__ , arg_25__ with
+    fun arg_0__ arg_1__ =>
+      match arg_0__ , arg_1__ with
         | f , Mk_Pair x y => (Mk_Pair Data.Functor.<$> f x) GHC.Base.<*> f y
       end.
 
@@ -226,8 +226,8 @@ Program Instance Traversable__Pair : Data.Traversable.Traversable Pair := fun _
 
 Local Definition Monoid__Pair_mappend {inst_a} `{GHC.Base.Monoid inst_a} : (Pair
                                                                            inst_a) -> (Pair inst_a) -> (Pair inst_a) :=
-  fun arg_20__ arg_21__ =>
-    match arg_20__ , arg_21__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | Mk_Pair a1 b1 , Mk_Pair a2 b2 => Mk_Pair (GHC.Base.mappend a1 a2)
                                          (GHC.Base.mappend b1 b2)
     end.
@@ -251,25 +251,25 @@ Program Instance Monoid__Pair {a} `{GHC.Base.Monoid a} : GHC.Base.Monoid (Pair
    class Qualified "Outputable" "Outputable" unsupported *)
 
 Definition pLiftFst {a} : (a -> a) -> Pair a -> Pair a :=
-  fun arg_6__ arg_7__ =>
-    match arg_6__ , arg_7__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | f , Mk_Pair a b => Mk_Pair (f a) b
     end.
 
 Definition pLiftSnd {a} : (a -> a) -> Pair a -> Pair a :=
-  fun arg_2__ arg_3__ =>
-    match arg_2__ , arg_3__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | f , Mk_Pair a b => Mk_Pair a (f b)
     end.
 
 Definition swap {a} : Pair a -> Pair a :=
-  fun arg_10__ => match arg_10__ with | Mk_Pair x y => Mk_Pair y x end.
+  fun arg_0__ => match arg_0__ with | Mk_Pair x y => Mk_Pair y x end.
 
 Definition toPair {a} : (a * a)%type -> Pair a :=
-  fun arg_13__ => match arg_13__ with | pair x y => Mk_Pair x y end.
+  fun arg_0__ => match arg_0__ with | pair x y => Mk_Pair x y end.
 
 Definition unPair {a} : Pair a -> (a * a)%type :=
-  fun arg_16__ => match arg_16__ with | Mk_Pair x y => pair x y end.
+  fun arg_0__ => match arg_0__ with | Mk_Pair x y => pair x y end.
 
 (* Unbound variables:
      bool false list op_zt__ pair true Coq.Program.Basics.compose

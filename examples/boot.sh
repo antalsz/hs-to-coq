@@ -54,6 +54,7 @@ else
 	make -C containers/lib clean
 	make -C containers/lib
 fi
+make -C containers/theories
 
 
 if [[ -e ghc/ghc ]]

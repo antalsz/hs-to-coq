@@ -69,8 +69,8 @@ Definition flSelector {a} (arg_2__ : FieldLbl a) :=
 Local Definition Foldable__FieldLbl_foldMap : forall {m} {a},
                                                 forall `{GHC.Base.Monoid m}, (a -> m) -> FieldLbl a -> m :=
   fun {m} {a} `{GHC.Base.Monoid m} =>
-    fun arg_21__ arg_22__ =>
-      match arg_21__ , arg_22__ with
+    fun arg_0__ arg_1__ =>
+      match arg_0__ , arg_1__ with
         | f , Mk_FieldLabel a1 a2 a3 => f a3
       end.
 
@@ -128,8 +128,8 @@ Local Definition Foldable__FieldLbl_elem : forall {a},
 Local Definition Foldable__FieldLbl_foldr : forall {a} {b},
                                               (a -> b -> b) -> b -> FieldLbl a -> b :=
   fun {a} {b} =>
-    fun arg_16__ arg_17__ arg_18__ =>
-      match arg_16__ , arg_17__ , arg_18__ with
+    fun arg_0__ arg_1__ arg_2__ =>
+      match arg_0__ , arg_1__ , arg_2__ with
         | f , z , Mk_FieldLabel a1 a2 a3 => f a3 z
       end.
 
@@ -189,8 +189,8 @@ Program Instance Foldable__FieldLbl : Data.Foldable.Foldable FieldLbl := fun _
 Local Definition Functor__FieldLbl_fmap : forall {a} {b},
                                             (a -> b) -> FieldLbl a -> FieldLbl b :=
   fun {a} {b} =>
-    fun arg_12__ arg_13__ =>
-      match arg_12__ , arg_13__ with
+    fun arg_0__ arg_1__ =>
+      match arg_0__ , arg_1__ with
         | f , Mk_FieldLabel a1 a2 a3 => Mk_FieldLabel ((fun b1 => b1) a1) ((fun b2 =>
                                                                             b2) a2) (f a3)
       end.
@@ -207,8 +207,8 @@ Local Definition Traversable__FieldLbl_traverse : forall {f} {a} {b},
                                                     forall `{GHC.Base.Applicative f},
                                                       (a -> f b) -> FieldLbl a -> f (FieldLbl b) :=
   fun {f} {a} {b} `{GHC.Base.Applicative f} =>
-    fun arg_25__ arg_26__ =>
-      match arg_25__ , arg_26__ with
+    fun arg_0__ arg_1__ =>
+      match arg_0__ , arg_1__ with
         | f , Mk_FieldLabel a1 a2 a3 => GHC.Base.fmap (fun b3 => Mk_FieldLabel a1 a2 b3)
                                         (f a3)
       end.
@@ -241,8 +241,8 @@ Program Instance Traversable__FieldLbl : Data.Traversable.Traversable
 
 Local Definition Eq___FieldLbl_op_zeze__ {inst_a} `{GHC.Base.Eq_ inst_a}
     : FieldLbl inst_a -> FieldLbl inst_a -> bool :=
-  fun arg_7__ arg_8__ =>
-    match arg_7__ , arg_8__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | Mk_FieldLabel a1 a2 a3 , Mk_FieldLabel b1 b2 b3 => (andb (andb ((a1
                                                                        GHC.Base.== b1)) ((a2 GHC.Base.== b2))) ((a3
                                                                  GHC.Base.== b3)))
@@ -269,10 +269,10 @@ Definition mkFieldLabelOccs
                              (FastString.unpackFS lbl) (Coq.Init.Datatypes.app (GHC.Base.hs_string__ ":")
                                                                                (OccName.occNameString dc))) in
     let sel_occ :=
-      let j_4__ := OccName.mkVarOccFS lbl in
+      let j_1__ := OccName.mkVarOccFS lbl in
       if is_overloaded : bool
       then OccName.mkRecFldSelOcc str
-      else j_4__ in
+      else j_1__ in
     Mk_FieldLabel lbl is_overloaded sel_occ.
 
 (* Unbound variables:

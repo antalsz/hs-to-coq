@@ -64,8 +64,8 @@ Local Definition Foldable__Identity_foldl' : forall {b} {a},
 Local Definition Foldable__Identity_foldr : forall {a} {b},
                                               (a -> b -> b) -> b -> Identity a -> b :=
   fun {a} {b} =>
-    fun arg_22__ arg_23__ arg_24__ =>
-      match arg_22__ , arg_23__ , arg_24__ with
+    fun arg_0__ arg_1__ arg_2__ =>
+      match arg_0__ , arg_1__ , arg_2__ with
         | f , z , Mk_Identity x => f x z
       end.
 
@@ -75,10 +75,10 @@ Local Definition Foldable__Identity_foldr' : forall {a} {b},
 
 Local Definition Foldable__Identity_length : forall {a},
                                                Identity a -> GHC.Num.Int :=
-  fun {a} => fun arg_28__ => GHC.Num.fromInteger 1.
+  fun {a} => fun arg_0__ => GHC.Num.fromInteger 1.
 
 Local Definition Foldable__Identity_null : forall {a}, Identity a -> bool :=
-  fun {a} => fun arg_31__ => false.
+  fun {a} => fun arg_0__ => false.
 
 Local Definition Foldable__Identity_product : forall {a},
                                                 forall `{GHC.Num.Num a}, Identity a -> a :=
@@ -89,8 +89,7 @@ Local Definition Foldable__Identity_sum : forall {a},
   fun {a} `{GHC.Num.Num a} => runIdentity.
 
 Local Definition Foldable__Identity_toList : forall {a}, Identity a -> list a :=
-  fun {a} =>
-    fun arg_32__ => match arg_32__ with | Mk_Identity x => cons x nil end.
+  fun {a} => fun arg_0__ => match arg_0__ with | Mk_Identity x => cons x nil end.
 
 Local Definition Functor__Identity_fmap : forall {a} {b},
                                             (a -> b) -> Identity a -> Identity b :=
@@ -152,8 +151,8 @@ Local Definition Traversable__Identity_traverse : forall {f} {a} {b},
                                                     forall `{GHC.Base.Applicative f},
                                                       (a -> f b) -> Identity a -> f (Identity b) :=
   fun {f} {a} {b} `{GHC.Base.Applicative f} =>
-    fun arg_13__ arg_14__ =>
-      match arg_13__ , arg_14__ with
+    fun arg_0__ arg_1__ =>
+      match arg_0__ , arg_1__ with
         | f , Mk_Identity a1 => GHC.Base.fmap (fun b1 => Mk_Identity b1) (f a1)
       end.
 
@@ -321,7 +320,7 @@ Definition hash_compose {a} {b} {c} :=
 Local Definition Foldable__Identity_elem : forall {a},
                                              forall `{GHC.Base.Eq_ a}, a -> Identity a -> bool :=
   fun {a} `{GHC.Base.Eq_ a} =>
-    hash_compose (fun arg_19__ => arg_19__ GHC.Base.∘ runIdentity) _GHC.Base.==_.
+    hash_compose (fun arg_0__ => arg_0__ GHC.Base.∘ runIdentity) _GHC.Base.==_.
 
 Program Instance Foldable__Identity : Data.Foldable.Foldable Identity := fun _
                                                                              k =>

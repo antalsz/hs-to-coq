@@ -20,7 +20,9 @@ Require GHC.Base.
 Require GHC.Num.
 Require IdInfo.
 Require Name.
+Require Panic.
 Require Unique.
+Require Util.
 Import GHC.Base.Notations.
 
 (* Converted type declarations: *)
@@ -139,6 +141,11 @@ Definition varType (arg_6__ : Var) :=
 Instance Unique_Var : Unique.Uniquable Var := {}.
 Admitted.
 
+Require Import Panic.
+Instance Default_IdScope : Default IdScope := Build_Default _ GlobalId.
+Instance Default_Var : Default Var := Build_Default _ (Mk_Id default default default default default default).
+
+
 (* Converted value declarations: *)
 
 (* The Haskell code containes partial or untranslateable code, which needs the
@@ -186,109 +193,49 @@ Local Definition Ord__Var_max : Var -> Var -> Var :=
 (* Translating `instance Data.Data.Data Var.Var' failed: OOPS! Cannot find
    information for class Qualified "Data.Data" "Data" unsupported *)
 
-Axiom globaliseId : forall {A : Type}, A.
-
-(* Translating `globaliseId' failed: using a record pattern for the unknown
-   constructor `Mk_TyVar' unsupported *)
-
-Axiom lazySetIdInfo : forall {A : Type}, A.
-
-(* Translating `lazySetIdInfo' failed: using a record pattern for the unknown
-   constructor `Mk_TyVar' unsupported *)
-
-Axiom setIdDetails : forall {A : Type}, A.
-
-(* Translating `setIdDetails' failed: using a record pattern for the unknown
-   constructor `Mk_TyVar' unsupported *)
-
-Axiom setIdExported : forall {A : Type}, A.
-
-(* Translating `setIdExported' failed: using a record pattern for the unknown
-   constructor `Mk_TyVar' unsupported *)
-
-Axiom setIdNotExported : forall {A : Type}, A.
-
-(* Translating `setIdNotExported' failed: using a record pattern for the unknown
-   constructor `Mk_TyVar' unsupported *)
-
-Axiom setTcTyVarDetails : forall {A : Type}, A.
-
-(* Translating `setTcTyVarDetails' failed: using a record pattern for the
-   unknown constructor `Mk_TyVar' unsupported *)
-
-Axiom setTyVarKind : forall {A : Type}, A.
-
-(* Translating `setTyVarKind' failed: using a record pattern for the unknown
-   constructor `Mk_TyVar' unsupported *)
-
-Axiom setVarName : forall {A : Type}, A.
-
-(* Translating `setVarName' failed: using a record pattern for the unknown
-   constructor `Mk_TyVar' unsupported *)
-
-Axiom setVarType : forall {A : Type}, A.
-
-(* Translating `setVarType' failed: using a record pattern for the unknown
-   constructor `Mk_TyVar' unsupported *)
-
-Axiom setVarUnique : forall {A : Type}, A.
-
-(* Translating `setVarUnique' failed: using a record pattern for the unknown
-   constructor `Mk_TyVar' unsupported *)
-
-Axiom updateTyVarKind : forall {A : Type}, A.
-
-(* Translating `updateTyVarKind' failed: using a record pattern for the unknown
-   constructor `Mk_TyVar' unsupported *)
-
-Axiom updateTyVarKindM : forall {A : Type}, A.
-
-(* Translating `updateTyVarKindM' failed: using a record pattern for the unknown
-   constructor `Mk_TyVar' unsupported *)
-
-Axiom updateVarType : forall {A : Type}, A.
-
-(* Translating `updateVarType' failed: using a record pattern for the unknown
-   constructor `Mk_TyVar' unsupported *)
-
-Axiom updateVarTypeM : forall {A : Type}, A.
-
-(* Translating `updateVarTypeM' failed: using a record pattern for the unknown
-   constructor `Mk_TyVar' unsupported *)
+Definition globaliseId : Id -> Id :=
+  fun id =>
+    match id with
+      | Mk_TyVar _ _ _ => error (GHC.Base.hs_string__ "Partial record update")
+      | TcTyVar _ _ _ _ => error (GHC.Base.hs_string__ "Partial record update")
+      | Mk_Id varName_0__ realUnique_1__ varType_2__ idScope_3__ id_details_4__
+              id_info_5__ => Mk_Id varName_0__ realUnique_1__ varType_2__ GlobalId
+                                   id_details_4__ id_info_5__
+    end.
 
 Definition idDetails : Id -> IdInfo.IdDetails :=
-  fun arg_33__ =>
-    match arg_33__ with
+  fun arg_0__ =>
+    match arg_0__ with
       | Mk_Id _ _ _ _ details _ => details
       | other => Panic.panicStr (GHC.Base.hs_string__ "idDetails") (Panic.noString
                                                                    other)
     end.
 
 Definition idInfo : Id -> IdInfo.IdInfo :=
-  fun arg_36__ =>
-    match arg_36__ with
+  fun arg_0__ =>
+    match arg_0__ with
       | Mk_Id _ _ _ _ _ info => info
       | other => Panic.panicStr (GHC.Base.hs_string__ "idInfo") (Panic.noString other)
     end.
 
 Definition isCoVar : Var -> bool :=
-  fun arg_18__ =>
-    match arg_18__ with
+  fun arg_0__ =>
+    match arg_0__ with
       | Mk_Id _ _ _ _ details _ => IdInfo.isCoVarDetails details
       | _ => false
     end.
 
 Definition isExportedId : Var -> bool :=
-  fun arg_7__ =>
-    match arg_7__ with
+  fun arg_0__ =>
+    match arg_0__ with
       | Mk_Id _ _ _ GlobalId _ _ => true
       | Mk_Id _ _ _ (LocalId Exported) _ _ => true
       | _ => false
     end.
 
 Definition isGlobalId : Var -> bool :=
-  fun arg_9__ =>
-    match arg_9__ with
+  fun arg_0__ =>
+    match arg_0__ with
       | Mk_Id _ _ _ GlobalId _ _ => true
       | _ => false
     end.
@@ -300,29 +247,38 @@ Definition mustHaveLocalBinding : Var -> bool :=
   fun var => isLocalVar var.
 
 Definition isId : Var -> bool :=
-  fun arg_21__ =>
-    match arg_21__ with
-      | Mk_Id _ _ _ _ _ _ => true
-      | _ => false
-    end.
+  fun arg_0__ => match arg_0__ with | Mk_Id _ _ _ _ _ _ => true | _ => false end.
 
 Definition isLocalId : Var -> bool :=
-  fun arg_13__ =>
-    match arg_13__ with
+  fun arg_0__ =>
+    match arg_0__ with
       | Mk_Id _ _ _ (LocalId _) _ _ => true
       | _ => false
     end.
 
+Definition setIdNotExported : Id -> Id :=
+  fun id =>
+    if andb Util.debugIsOn (negb (isLocalId id)) : bool
+    then (Panic.assertPanic (GHC.Base.hs_string__ "ghc/compiler/basicTypes/Var.hs")
+         (GHC.Num.fromInteger 431))
+    else match id with
+           | Mk_TyVar _ _ _ => error (GHC.Base.hs_string__ "Partial record update")
+           | TcTyVar _ _ _ _ => error (GHC.Base.hs_string__ "Partial record update")
+           | Mk_Id varName_0__ realUnique_1__ varType_2__ idScope_3__ id_details_4__
+                   id_info_5__ => Mk_Id varName_0__ realUnique_1__ varType_2__ (LocalId
+                                        NotExported) id_details_4__ id_info_5__
+         end.
+
 Definition isNonCoVarId : Var -> bool :=
-  fun arg_15__ =>
-    match arg_15__ with
+  fun arg_0__ =>
+    match arg_0__ with
       | Mk_Id _ _ _ _ details _ => negb (IdInfo.isCoVarDetails details)
       | _ => false
     end.
 
 Definition isTKVar : Var -> bool :=
-  fun arg_25__ =>
-    match arg_25__ with
+  fun arg_0__ =>
+    match arg_0__ with
       | Mk_TyVar _ _ _ => true
       | TcTyVar _ _ _ _ => true
       | _ => false
@@ -335,7 +291,17 @@ Definition isTyCoVar : Var -> bool :=
   fun v => orb (isTyVar v) (isCoVar v).
 
 Definition isTcTyVar : Var -> bool :=
-  fun arg_23__ => match arg_23__ with | TcTyVar _ _ _ _ => true | _ => false end.
+  fun arg_0__ => match arg_0__ with | TcTyVar _ _ _ _ => true | _ => false end.
+
+Definition lazySetIdInfo : Id -> IdInfo.IdInfo -> Var :=
+  fun id info =>
+    match id with
+      | Mk_TyVar _ _ _ => error (GHC.Base.hs_string__ "Partial record update")
+      | TcTyVar _ _ _ _ => error (GHC.Base.hs_string__ "Partial record update")
+      | Mk_Id varName_0__ realUnique_1__ varType_2__ idScope_3__ id_details_4__
+              id_info_5__ => Mk_Id varName_0__ realUnique_1__ varType_2__ idScope_3__
+                                   id_details_4__ info
+    end.
 
 Definition mkTcTyVar : Name.Name -> unit -> unit -> TyVar :=
   fun name kind details =>
@@ -366,8 +332,103 @@ Definition mkCoVar : Name.Name -> unit -> CoVar :=
   fun name ty =>
     mk_id name ty (LocalId NotExported) IdInfo.coVarDetails IdInfo.vanillaIdInfo.
 
+Definition setIdDetails : Id -> IdInfo.IdDetails -> Id :=
+  fun id details =>
+    match id with
+      | Mk_TyVar _ _ _ => error (GHC.Base.hs_string__ "Partial record update")
+      | TcTyVar _ _ _ _ => error (GHC.Base.hs_string__ "Partial record update")
+      | Mk_Id varName_0__ realUnique_1__ varType_2__ idScope_3__ id_details_4__
+              id_info_5__ => Mk_Id varName_0__ realUnique_1__ varType_2__ idScope_3__ details
+                                   id_info_5__
+    end.
+
+Definition setIdExported : Id -> Id :=
+  fun arg_0__ =>
+    match arg_0__ with
+      | (Mk_Id _ _ _ (LocalId _) _ _ as id) => match id with
+                                                 | Mk_TyVar _ _ _ => error (GHC.Base.hs_string__
+                                                                           "Partial record update")
+                                                 | TcTyVar _ _ _ _ => error (GHC.Base.hs_string__
+                                                                            "Partial record update")
+                                                 | Mk_Id varName_1__ realUnique_2__ varType_3__ idScope_4__
+                                                         id_details_5__ id_info_6__ => Mk_Id varName_1__ realUnique_2__
+                                                                                             varType_3__ (LocalId
+                                                                                             Exported) id_details_5__
+                                                                                             id_info_6__
+                                               end
+      | (Mk_Id _ _ _ GlobalId _ _ as id) => id
+      | tv => Panic.panicStr (GHC.Base.hs_string__ "setIdExported") (Panic.noString
+                                                                    tv)
+    end.
+
+Definition setTcTyVarDetails : TyVar -> unit -> TyVar :=
+  fun tv details =>
+    match tv with
+      | Mk_TyVar _ _ _ => error (GHC.Base.hs_string__ "Partial record update")
+      | TcTyVar varName_0__ realUnique_1__ varType_2__ tc_tv_details_3__ => TcTyVar
+                                                                            varName_0__ realUnique_1__ varType_2__
+                                                                            details
+      | Mk_Id _ _ _ _ _ _ => error (GHC.Base.hs_string__ "Partial record update")
+    end.
+
+Definition setTyVarKind : TyVar -> unit -> TyVar :=
+  fun tv k =>
+    match tv with
+      | Mk_TyVar varName_0__ realUnique_1__ varType_2__ => Mk_TyVar varName_0__
+                                                                    realUnique_1__ k
+      | TcTyVar varName_3__ realUnique_4__ varType_5__ tc_tv_details_6__ => TcTyVar
+                                                                            varName_3__ realUnique_4__ k
+                                                                            tc_tv_details_6__
+      | Mk_Id varName_7__ realUnique_8__ varType_9__ idScope_10__ id_details_11__
+              id_info_12__ => Mk_Id varName_7__ realUnique_8__ k idScope_10__ id_details_11__
+                                    id_info_12__
+    end.
+
+Definition setVarName : Var -> Name.Name -> Var :=
+  fun var new_name =>
+    match var with
+      | Mk_TyVar varName_0__ realUnique_1__ varType_2__ => Mk_TyVar new_name
+                                                                    (Unique.getKey (Unique.getUnique new_name))
+                                                                    varType_2__
+      | TcTyVar varName_3__ realUnique_4__ varType_5__ tc_tv_details_6__ => TcTyVar
+                                                                            new_name (Unique.getKey (Unique.getUnique
+                                                                                                    new_name))
+                                                                            varType_5__ tc_tv_details_6__
+      | Mk_Id varName_7__ realUnique_8__ varType_9__ idScope_10__ id_details_11__
+              id_info_12__ => Mk_Id new_name (Unique.getKey (Unique.getUnique new_name))
+                                    varType_9__ idScope_10__ id_details_11__ id_info_12__
+    end.
+
 Definition setTyVarName : TyVar -> Name.Name -> TyVar :=
   setVarName.
+
+Definition setVarType : Id -> unit -> Id :=
+  fun id ty =>
+    match id with
+      | Mk_TyVar varName_0__ realUnique_1__ varType_2__ => Mk_TyVar varName_0__
+                                                                    realUnique_1__ ty
+      | TcTyVar varName_3__ realUnique_4__ varType_5__ tc_tv_details_6__ => TcTyVar
+                                                                            varName_3__ realUnique_4__ ty
+                                                                            tc_tv_details_6__
+      | Mk_Id varName_7__ realUnique_8__ varType_9__ idScope_10__ id_details_11__
+              id_info_12__ => Mk_Id varName_7__ realUnique_8__ ty idScope_10__ id_details_11__
+                                    id_info_12__
+    end.
+
+Definition setVarUnique : Var -> Unique.Unique -> Var :=
+  fun var uniq =>
+    match var with
+      | Mk_TyVar varName_0__ realUnique_1__ varType_2__ => Mk_TyVar
+                                                           (Name.setNameUnique (varName var) uniq) (Unique.getKey uniq)
+                                                           varType_2__
+      | TcTyVar varName_3__ realUnique_4__ varType_5__ tc_tv_details_6__ => TcTyVar
+                                                                            (Name.setNameUnique (varName var) uniq)
+                                                                            (Unique.getKey uniq) varType_5__
+                                                                            tc_tv_details_6__
+      | Mk_Id varName_7__ realUnique_8__ varType_9__ idScope_10__ id_details_11__
+              id_info_12__ => Mk_Id (Name.setNameUnique (varName var) uniq) (Unique.getKey
+                                    uniq) varType_9__ idScope_10__ id_details_11__ id_info_12__
+    end.
 
 Definition setTyVarUnique : TyVar -> Unique.Unique -> TyVar :=
   setVarUnique.
@@ -378,8 +439,65 @@ Definition tcTyVarDetails : TyVar -> unit :=
 Definition tyVarKind : TyVar -> unit :=
   varType.
 
+Definition updateTyVarKind : (unit -> unit) -> TyVar -> TyVar :=
+  fun update tv =>
+    match tv with
+      | Mk_TyVar varName_0__ realUnique_1__ varType_2__ => Mk_TyVar varName_0__
+                                                                    realUnique_1__ (update (tyVarKind tv))
+      | TcTyVar varName_3__ realUnique_4__ varType_5__ tc_tv_details_6__ => TcTyVar
+                                                                            varName_3__ realUnique_4__ (update
+                                                                            (tyVarKind tv)) tc_tv_details_6__
+      | Mk_Id varName_7__ realUnique_8__ varType_9__ idScope_10__ id_details_11__
+              id_info_12__ => Mk_Id varName_7__ realUnique_8__ (update (tyVarKind tv))
+                                    idScope_10__ id_details_11__ id_info_12__
+    end.
+
+Definition updateTyVarKindM {m} `{(GHC.Base.Monad m)} : (unit -> m
+                                                        unit) -> TyVar -> m TyVar :=
+  fun update tv =>
+    update (tyVarKind tv) GHC.Base.>>= (fun k' =>
+      GHC.Base.return_ GHC.Base.$ (match tv with
+        | Mk_TyVar varName_0__ realUnique_1__ varType_2__ => Mk_TyVar varName_0__
+                                                                      realUnique_1__ k'
+        | TcTyVar varName_3__ realUnique_4__ varType_5__ tc_tv_details_6__ => TcTyVar
+                                                                              varName_3__ realUnique_4__ k'
+                                                                              tc_tv_details_6__
+        | Mk_Id varName_7__ realUnique_8__ varType_9__ idScope_10__ id_details_11__
+                id_info_12__ => Mk_Id varName_7__ realUnique_8__ k' idScope_10__ id_details_11__
+                                      id_info_12__
+      end)).
+
 Definition tyVarName : TyVar -> Name.Name :=
   varName.
+
+Definition updateVarType : (unit -> unit) -> Id -> Id :=
+  fun f id =>
+    match id with
+      | Mk_TyVar varName_0__ realUnique_1__ varType_2__ => Mk_TyVar varName_0__
+                                                                    realUnique_1__ (f (varType id))
+      | TcTyVar varName_3__ realUnique_4__ varType_5__ tc_tv_details_6__ => TcTyVar
+                                                                            varName_3__ realUnique_4__ (f (varType id))
+                                                                            tc_tv_details_6__
+      | Mk_Id varName_7__ realUnique_8__ varType_9__ idScope_10__ id_details_11__
+              id_info_12__ => Mk_Id varName_7__ realUnique_8__ (f (varType id)) idScope_10__
+                                    id_details_11__ id_info_12__
+    end.
+
+Definition updateVarTypeM {m} `{GHC.Base.Monad m} : (unit -> m unit) -> Id -> m
+                                                    Id :=
+  fun f id =>
+    f (varType id) GHC.Base.>>= (fun ty' =>
+      GHC.Base.return_ (match id with
+                         | Mk_TyVar varName_0__ realUnique_1__ varType_2__ => Mk_TyVar varName_0__
+                                                                                       realUnique_1__ ty'
+                         | TcTyVar varName_3__ realUnique_4__ varType_5__ tc_tv_details_6__ => TcTyVar
+                                                                                               varName_3__
+                                                                                               realUnique_4__ ty'
+                                                                                               tc_tv_details_6__
+                         | Mk_Id varName_7__ realUnique_8__ varType_9__ idScope_10__ id_details_11__
+                                 id_info_12__ => Mk_Id varName_7__ realUnique_8__ ty' idScope_10__
+                                                       id_details_11__ id_info_12__
+                       end)).
 
 Definition varUnique : Var -> Unique.Unique :=
   fun var => Unique.mkUniqueGrimily (realUnique var).
@@ -400,10 +518,11 @@ Program Instance Ord__Var : GHC.Base.Ord Var := fun _ k =>
       GHC.Base.min__ := Ord__Var_min |}.
 
 (* Unbound variables:
-     bool comparison error false negb orb true tt unit GHC.Base.Eq_ GHC.Base.Ord
-     GHC.Base.op_zeze__ GHC.Base.op_zg__ GHC.Base.op_zgze__ GHC.Base.op_zl__
-     GHC.Base.op_zlze__ GHC.Num.Int IdInfo.IdDetails IdInfo.IdInfo
-     IdInfo.coVarDetails IdInfo.isCoVarDetails IdInfo.vanillaIdInfo Name.Name
-     Panic.noString Panic.panicStr Unique.Unique Unique.mkUniqueGrimily
-     Unique.nonDetCmpUnique
+     andb bool comparison error false negb orb true tt unit GHC.Base.Eq_
+     GHC.Base.Monad GHC.Base.Ord GHC.Base.op_zd__ GHC.Base.op_zeze__ GHC.Base.op_zg__
+     GHC.Base.op_zgze__ GHC.Base.op_zgzgze__ GHC.Base.op_zl__ GHC.Base.op_zlze__
+     GHC.Base.return_ GHC.Num.Int IdInfo.IdDetails IdInfo.IdInfo IdInfo.coVarDetails
+     IdInfo.isCoVarDetails IdInfo.vanillaIdInfo Name.Name Name.setNameUnique
+     Panic.assertPanic Panic.noString Panic.panicStr Unique.Unique Unique.getKey
+     Unique.getUnique Unique.mkUniqueGrimily Unique.nonDetCmpUnique Util.debugIsOn
 *)

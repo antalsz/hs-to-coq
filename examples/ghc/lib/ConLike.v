@@ -96,22 +96,22 @@ Program Instance Ord__ConLike : GHC.Base.Ord ConLike := fun _ k =>
    find information for class Qualified "Data.Data" "Data" unsupported *)
 
 Definition conLikeArity : ConLike -> BasicTypes.Arity :=
-  fun arg_20__ =>
-    match arg_20__ with
+  fun arg_0__ =>
+    match arg_0__ with
       | RealDataCon data_con => DataCon.dataConSourceArity data_con
       | PatSynCon pat_syn => PatSyn.patSynArity pat_syn
     end.
 
 Definition conLikeExTyVars : ConLike -> list Var.TyVar :=
-  fun arg_8__ =>
-    match arg_8__ with
+  fun arg_0__ =>
+    match arg_0__ with
       | RealDataCon dcon1 => DataCon.dataConExTyVars dcon1
       | PatSynCon psyn1 => PatSyn.patSynExTyVars psyn1
     end.
 
 Definition conLikeFieldLabels : ConLike -> list FieldLabel.FieldLabel :=
-  fun arg_12__ =>
-    match arg_12__ with
+  fun arg_0__ =>
+    match arg_0__ with
       | RealDataCon data_con => DataCon.dataConFieldLabels data_con
       | PatSynCon pat_syn => PatSyn.patSynFieldLabels pat_syn
     end.
@@ -135,8 +135,8 @@ Definition conLikeImplBangs : ConLike -> list DataCon.HsImplBang :=
     end.
 
 Definition conLikeName : ConLike -> Name.Name :=
-  fun arg_4__ =>
-    match arg_4__ with
+  fun arg_0__ =>
+    match arg_0__ with
       | RealDataCon data_con => DataCon.dataConName data_con
       | PatSynCon pat_syn => PatSyn.patSynName pat_syn
     end.

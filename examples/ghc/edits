@@ -1,6 +1,5 @@
 # Should skip these everywhere
 skip module Outputable
-skip module Panic
 skip module GHC.Show
 
 skip module PrelNames

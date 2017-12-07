@@ -71,17 +71,17 @@ Definition emptyUnVarSet : UnVarSet :=
   Mk_UnVarSet Data.IntSet.Base.empty.
 
 Definition isEmptyUnVarSet : UnVarSet -> bool :=
-  fun arg_11__ =>
-    match arg_11__ with
+  fun arg_0__ =>
+    match arg_0__ with
       | Mk_UnVarSet s => Data.IntSet.Base.null s
     end.
 
 Definition prune : UnVarGraph -> UnVarGraph :=
-  fun arg_14__ =>
-    match arg_14__ with
+  fun arg_0__ =>
+    match arg_0__ with
       | Mk_UnVarGraph g => let go :=
-                             fun arg_15__ =>
-                               match arg_15__ with
+                             fun arg_1__ =>
+                               match arg_1__ with
                                  | CG s => negb (isEmptyUnVarSet s)
                                  | CBPG s1 s2 => andb (negb (isEmptyUnVarSet s1)) (negb (isEmptyUnVarSet s2))
                                end in
@@ -104,23 +104,23 @@ Definition mkUnVarSet : list Var.Var -> UnVarSet :=
     Mk_UnVarSet GHC.Base.$ (Data.IntSet.Base.fromList GHC.Base.$ GHC.Base.map k vs).
 
 Definition elemUnVarSet : Var.Var -> UnVarSet -> bool :=
-  fun arg_26__ arg_27__ =>
-    match arg_26__ , arg_27__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | v , Mk_UnVarSet s => Data.IntSet.Base.member (k v) s
     end.
 
 Definition delUnVarSet : UnVarSet -> Var.Var -> UnVarSet :=
-  fun arg_38__ arg_39__ =>
-    match arg_38__ , arg_39__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | Mk_UnVarSet s , v => Mk_UnVarSet GHC.Base.$ Data.IntSet.Base.delete (k v) s
     end.
 
 Definition delNode : UnVarGraph -> Var.Var -> UnVarGraph :=
-  fun arg_42__ arg_43__ =>
-    match arg_42__ , arg_43__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | Mk_UnVarGraph g , v => let go :=
-                                 fun arg_44__ =>
-                                   match arg_44__ with
+                                 fun arg_2__ =>
+                                   match arg_2__ with
                                      | CG s => CG (delUnVarSet s v)
                                      | CBPG s1 s2 => CBPG (delUnVarSet s1 v) (delUnVarSet s2 v)
                                    end in
@@ -137,8 +137,8 @@ Definition unionUnVarGraphs : list UnVarGraph -> UnVarGraph :=
   Data.Foldable.foldl' unionUnVarGraph emptyUnVarGraph.
 
 Definition unionUnVarSet : UnVarSet -> UnVarSet -> UnVarSet :=
-  fun arg_6__ arg_7__ =>
-    match arg_6__ , arg_7__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | Mk_UnVarSet set1 , Mk_UnVarSet set2 => Mk_UnVarSet (Data.IntSet.Base.union
                                                            set1 set2)
     end.
@@ -147,11 +147,11 @@ Definition unionUnVarSets : list UnVarSet -> UnVarSet :=
   Data.Foldable.foldr unionUnVarSet emptyUnVarSet.
 
 Definition neighbors : UnVarGraph -> Var.Var -> UnVarSet :=
-  fun arg_30__ arg_31__ =>
-    match arg_30__ , arg_31__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | Mk_UnVarGraph g , v => let go :=
-                                 fun arg_32__ =>
-                                   match arg_32__ with
+                                 fun arg_2__ =>
+                                   match arg_2__ with
                                      | CG s => (if elemUnVarSet v s : bool
                                                then cons s nil
                                                else nil)

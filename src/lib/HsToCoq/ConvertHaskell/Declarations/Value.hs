@@ -15,6 +15,7 @@ import Control.Monad.IO.Class
 import GHC hiding (Name)
 import qualified GHC
 import Panic
+import BasicTypes (TopLevelFlag(..))
 
 import HsToCoq.Coq.FreeVars
 import HsToCoq.Coq.Gallina as Coq
@@ -40,7 +41,7 @@ convertModuleValDecls mdecls = do
                      (mname, SigD sig) -> Just $ Right (mname, sig)
                      _                 -> Nothing
 
-  bindings <- (fmap M.fromList . (convertTypedModuleBindings defns sigs ?? Just axiomatizeBinding))
+  bindings <- (fmap M.fromList . (convertTypedModuleBindings TopLevel defns sigs ?? Just axiomatizeBinding))
            $  withConvertedBinding
                 (\cdef@ConvertedDefinition{convDefName = name} -> ((name,) <$>) $ do
                    r <- use (edits.redefinitions.at name)

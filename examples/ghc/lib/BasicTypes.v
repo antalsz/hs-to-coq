@@ -321,8 +321,8 @@ Axiom missingValue : forall {a}, a.
 
 Local Definition Eq___StringLiteral_op_zeze__
     : StringLiteral -> StringLiteral -> bool :=
-  fun arg_275__ arg_276__ =>
-    match arg_275__ , arg_276__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | Mk_StringLiteral _ a , Mk_StringLiteral _ b => a GHC.Base.== b
     end.
 
@@ -457,8 +457,8 @@ Program Instance Ord__FractionalLit : GHC.Base.Ord FractionalLit := fun _ k =>
 
 Local Definition Ord__IntWithInf_compare
     : IntWithInf -> IntWithInf -> comparison :=
-  fun arg_265__ arg_266__ =>
-    match arg_265__ , arg_266__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | Infinity , Infinity => Eq
       | Int _ , Infinity => Lt
       | Infinity , Int _ => Gt
@@ -491,8 +491,8 @@ Local Definition Ord__IntWithInf_min : IntWithInf -> IntWithInf -> IntWithInf :=
    find information for class Qualified "GHC.Num" "Num" unsupported *)
 
 Local Definition Eq___IntWithInf_op_zeze__ : IntWithInf -> IntWithInf -> bool :=
-  fun arg_260__ arg_261__ =>
-    match arg_260__ , arg_261__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | Int a1 , Int b1 => ((a1 GHC.Base.== b1))
       | Infinity , Infinity => true
       | _ , _ => false
@@ -530,8 +530,8 @@ Program Instance Ord__IntWithInf : GHC.Base.Ord IntWithInf := fun _ k =>
    Cannot find information for class Qualified "Data.Data" "Data" unsupported *)
 
 Local Definition Eq___InlineSpec_op_zeze__ : InlineSpec -> InlineSpec -> bool :=
-  fun arg_251__ arg_252__ =>
-    match arg_251__ , arg_252__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | Inline , Inline => true
       | Inlinable , Inlinable => true
       | NoInline , NoInline => true
@@ -554,8 +554,8 @@ Program Instance Eq___InlineSpec : GHC.Base.Eq_ InlineSpec := fun _ k =>
 
 Local Definition Eq___RuleMatchInfo_op_zeze__
     : RuleMatchInfo -> RuleMatchInfo -> bool :=
-  fun arg_247__ arg_248__ =>
-    match arg_247__ , arg_248__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | ConLike , ConLike => true
       | FunLike , FunLike => true
       | _ , _ => false
@@ -573,8 +573,8 @@ Program Instance Eq___RuleMatchInfo : GHC.Base.Eq_ RuleMatchInfo := fun _ k =>
    Cannot find information for class Qualified "Data.Data" "Data" unsupported *)
 
 Local Definition Eq___Activation_op_zeze__ : Activation -> Activation -> bool :=
-  fun arg_241__ arg_242__ =>
-    match arg_241__ , arg_242__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | NeverActive , NeverActive => true
       | AlwaysActive , AlwaysActive => true
       | ActiveBefore a1 a2 , ActiveBefore b1 b2 => (andb ((a1 GHC.Base.== b1)) ((a2
@@ -593,8 +593,8 @@ Program Instance Eq___Activation : GHC.Base.Eq_ Activation := fun _ k =>
 
 Local Definition Eq___InlinePragma_op_zeze__
     : InlinePragma -> InlinePragma -> bool :=
-  fun arg_255__ arg_256__ =>
-    match arg_255__ , arg_256__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | Mk_InlinePragma a1 a2 a3 a4 a5 , Mk_InlinePragma b1 b2 b3 b4 b5 => (andb (andb
                                                                                  (andb (andb ((a1 GHC.Base.== b1)) ((a2
                                                                                              GHC.Base.== b2))) ((a3
@@ -615,8 +615,8 @@ Program Instance Eq___InlinePragma : GHC.Base.Eq_ InlinePragma := fun _ k =>
    Cannot find information for class Qualified "Data.Data" "Data" unsupported *)
 
 Local Definition Eq___WarningTxt_op_zeze__ : WarningTxt -> WarningTxt -> bool :=
-  fun arg_235__ arg_236__ =>
-    match arg_235__ , arg_236__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | Mk_WarningTxt a1 a2 , Mk_WarningTxt b1 b2 => (andb ((a1 GHC.Base.== b1)) ((a2
                                                            GHC.Base.== b2)))
       | DeprecatedTxt a1 a2 , DeprecatedTxt b1 b2 => (andb ((a1 GHC.Base.== b1)) ((a2
@@ -645,8 +645,8 @@ Program Instance Eq___WarningTxt : GHC.Base.Eq_ WarningTxt := fun _ k =>
 
 Local Definition Eq___OverlapMode_op_zeze__
     : OverlapMode -> OverlapMode -> bool :=
-  fun arg_221__ arg_222__ =>
-    match arg_221__ , arg_222__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | NoOverlap a1 , NoOverlap b1 => ((a1 GHC.Base.== b1))
       | Overlappable a1 , Overlappable b1 => ((a1 GHC.Base.== b1))
       | Overlapping a1 , Overlapping b1 => ((a1 GHC.Base.== b1))
@@ -665,8 +665,8 @@ Program Instance Eq___OverlapMode : GHC.Base.Eq_ OverlapMode := fun _ k =>
 
 Local Definition Eq___OverlapFlag_op_zeze__
     : OverlapFlag -> OverlapFlag -> bool :=
-  fun arg_230__ arg_231__ =>
-    match arg_230__ , arg_231__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | Mk_OverlapFlag a1 a2 , Mk_OverlapFlag b1 b2 => (andb ((a1 GHC.Base.== b1))
                                                              ((a2 GHC.Base.== b2)))
     end.
@@ -680,8 +680,8 @@ Program Instance Eq___OverlapFlag : GHC.Base.Eq_ OverlapFlag := fun _ k =>
       GHC.Base.op_zsze____ := Eq___OverlapFlag_op_zsze__ |}.
 
 Local Definition Eq___OccInfo_op_zeze__ : OccInfo -> OccInfo -> bool :=
-  fun arg_215__ arg_216__ =>
-    match arg_215__ , arg_216__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | NoOccInfo , NoOccInfo => true
       | IAmDead , IAmDead => true
       | OneOcc a1 a2 a3 , OneOcc b1 b2 b3 => (andb (andb ((a1 GHC.Base.== b1)) ((a2
@@ -701,8 +701,8 @@ Program Instance Eq___OccInfo : GHC.Base.Eq_ OccInfo := fun _ k =>
    Cannot find information for class Qualified "Data.Data" "Data" unsupported *)
 
 Local Definition Eq___TupleSort_op_zeze__ : TupleSort -> TupleSort -> bool :=
-  fun arg_211__ arg_212__ =>
-    match arg_211__ , arg_212__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | BoxedTuple , BoxedTuple => true
       | UnboxedTuple , UnboxedTuple => true
       | ConstraintTuple , ConstraintTuple => true
@@ -720,8 +720,8 @@ Program Instance Eq___TupleSort : GHC.Base.Eq_ TupleSort := fun _ k =>
    find information for class Qualified "Data.Data" "Data" unsupported *)
 
 Local Definition Eq___Origin_op_zeze__ : Origin -> Origin -> bool :=
-  fun arg_207__ arg_208__ =>
-    match arg_207__ , arg_208__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | FromSource , FromSource => true
       | Generated , Generated => true
       | _ , _ => false
@@ -738,8 +738,8 @@ Program Instance Eq___Origin : GHC.Base.Eq_ Origin := fun _ k =>
    find information for class Qualified "Data.Data" "Data" unsupported *)
 
 Local Definition Eq___RecFlag_op_zeze__ : RecFlag -> RecFlag -> bool :=
-  fun arg_203__ arg_204__ =>
-    match arg_203__ , arg_204__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | Recursive , Recursive => true
       | NonRecursive , NonRecursive => true
       | _ , _ => false
@@ -756,8 +756,8 @@ Program Instance Eq___RecFlag : GHC.Base.Eq_ RecFlag := fun _ k =>
    find information for class Qualified "Data.Data" "Data" unsupported *)
 
 Local Definition Eq___Boxity_op_zeze__ : Boxity -> Boxity -> bool :=
-  fun arg_199__ arg_200__ =>
-    match arg_199__ , arg_200__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | Boxed , Boxed => true
       | Unboxed , Unboxed => true
       | _ , _ => false
@@ -776,8 +776,8 @@ Program Instance Eq___Boxity : GHC.Base.Eq_ Boxity := fun _ k =>
 
 Local Definition Eq___FixityDirection_op_zeze__
     : FixityDirection -> FixityDirection -> bool :=
-  fun arg_195__ arg_196__ =>
-    match arg_195__ , arg_196__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | InfixL , InfixL => true
       | InfixR , InfixR => true
       | InfixN , InfixN => true
@@ -794,8 +794,8 @@ Program Instance Eq___FixityDirection : GHC.Base.Eq_ FixityDirection := fun _
       GHC.Base.op_zsze____ := Eq___FixityDirection_op_zsze__ |}.
 
 Local Definition Eq___Fixity_op_zeze__ : Fixity -> Fixity -> bool :=
-  fun arg_271__ arg_272__ =>
-    match arg_271__ , arg_272__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | Mk_Fixity _ p1 dir1 , Mk_Fixity _ p2 dir2 => andb (p1 GHC.Base.== p2) (dir1
                                                           GHC.Base.== dir2)
     end.
@@ -890,8 +890,8 @@ Local Definition Ord__FunctionOrData_max
 
 Local Definition Eq___FunctionOrData_op_zeze__
     : FunctionOrData -> FunctionOrData -> bool :=
-  fun arg_161__ arg_162__ =>
-    match arg_161__ , arg_162__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | IsFunction , IsFunction => true
       | IsData , IsData => true
       | _ , _ => false
@@ -916,8 +916,8 @@ Program Instance Ord__FunctionOrData : GHC.Base.Ord FunctionOrData := fun _ k =>
 
 Local Definition Eq___OneShotInfo_op_zeze__
     : OneShotInfo -> OneShotInfo -> bool :=
-  fun arg_157__ arg_158__ =>
-    match arg_157__ , arg_158__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | NoOneShotInfo , NoOneShotInfo => true
       | ProbOneShot , ProbOneShot => true
       | OneShotLam , OneShotLam => true
@@ -932,39 +932,9 @@ Program Instance Eq___OneShotInfo : GHC.Base.Eq_ OneShotInfo := fun _ k =>
     k {|GHC.Base.op_zeze____ := Eq___OneShotInfo_op_zeze__ ;
       GHC.Base.op_zsze____ := Eq___OneShotInfo_op_zsze__ |}.
 
-Axiom alwaysInlinePragma : forall {A : Type}, A.
-
-(* Translating `alwaysInlinePragma' failed: using a record pattern for the
-   unknown constructor `Mk_InlinePragma' unsupported *)
-
-Axiom dfunInlinePragma : forall {A : Type}, A.
-
-(* Translating `dfunInlinePragma' failed: using a record pattern for the unknown
-   constructor `Mk_InlinePragma' unsupported *)
-
-Axiom neverInlinePragma : forall {A : Type}, A.
-
-(* Translating `neverInlinePragma' failed: using a record pattern for the
-   unknown constructor `Mk_InlinePragma' unsupported *)
-
-Axiom setInlinePragmaActivation : forall {A : Type}, A.
-
-(* Translating `setInlinePragmaActivation' failed: using a record pattern for
-   the unknown constructor `Mk_InlinePragma' unsupported *)
-
-Axiom setInlinePragmaRuleMatchInfo : forall {A : Type}, A.
-
-(* Translating `setInlinePragmaRuleMatchInfo' failed: using a record pattern for
-   the unknown constructor `Mk_InlinePragma' unsupported *)
-
-Axiom setOverlapModeMaybe : forall {A : Type}, A.
-
-(* Translating `setOverlapModeMaybe' failed: using a record pattern for the
-   unknown constructor `Mk_OverlapFlag' unsupported *)
-
 Definition bestOneShot : OneShotInfo -> OneShotInfo -> OneShotInfo :=
-  fun arg_146__ arg_147__ =>
-    match arg_146__ , arg_147__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | NoOneShotInfo , os => os
       | ProbOneShot , OneShotLam => OneShotLam
       | ProbOneShot , _ => ProbOneShot
@@ -972,15 +942,15 @@ Definition bestOneShot : OneShotInfo -> OneShotInfo -> OneShotInfo :=
     end.
 
 Definition boolToRecFlag : bool -> RecFlag :=
-  fun arg_105__ =>
-    match arg_105__ with
+  fun arg_0__ =>
+    match arg_0__ with
       | true => Recursive
       | false => NonRecursive
     end.
 
 Definition boxityTupleSort : Boxity -> TupleSort :=
-  fun arg_95__ =>
-    match arg_95__ with
+  fun arg_0__ =>
+    match arg_0__ with
       | Boxed => BoxedTuple
       | Unboxed => UnboxedTuple
     end.
@@ -989,18 +959,18 @@ Definition bumpVersion : Version -> Version :=
   fun v => v GHC.Num.+ GHC.Num.fromInteger 1.
 
 Definition compareFixity : Fixity -> Fixity -> (bool * bool)%type :=
-  fun arg_117__ arg_118__ =>
-    match arg_117__ , arg_118__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | Mk_Fixity _ prec1 dir1 , Mk_Fixity _ prec2 dir2 => let error_please :=
                                                              pair true false in
                                                            let left_ := pair false false in
                                                            let right_ := pair false true in
-                                                           let scrut_122__ := GHC.Base.compare prec1 prec2 in
-                                                           match scrut_122__ with
+                                                           let scrut_5__ := GHC.Base.compare prec1 prec2 in
+                                                           match scrut_5__ with
                                                              | Gt => left_
                                                              | Lt => right_
-                                                             | Eq => let scrut_123__ := pair dir1 dir2 in
-                                                                     match scrut_123__ with
+                                                             | Eq => let scrut_6__ := pair dir1 dir2 in
+                                                                     match scrut_6__ with
                                                                        | pair InfixR InfixR => right_
                                                                        | pair InfixL InfixL => left_
                                                                        | _ => error_please
@@ -1009,8 +979,8 @@ Definition compareFixity : Fixity -> Fixity -> (bool * bool)%type :=
     end.
 
 Definition competesWith : Activation -> Activation -> bool :=
-  fun arg_37__ arg_38__ =>
-    match arg_37__ , arg_38__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | NeverActive , _ => false
       | _ , NeverActive => false
       | AlwaysActive , _ => true
@@ -1026,15 +996,36 @@ Definition defaultInlinePragma : InlinePragma :=
   Mk_InlinePragma missingValue missingValue missingValue missingValue
                   missingValue.
 
+Definition dfunInlinePragma : InlinePragma :=
+  match defaultInlinePragma with
+    | Mk_InlinePragma inl_src_0__ inl_inline_1__ inl_sat_2__ inl_act_3__
+                      inl_rule_4__ => Mk_InlinePragma inl_src_0__ inl_inline_1__ inl_sat_2__
+                                                      AlwaysActive ConLike
+  end.
+
+Definition neverInlinePragma : InlinePragma :=
+  match defaultInlinePragma with
+    | Mk_InlinePragma inl_src_0__ inl_inline_1__ inl_sat_2__ inl_act_3__
+                      inl_rule_4__ => Mk_InlinePragma inl_src_0__ inl_inline_1__ inl_sat_2__
+                                                      NeverActive inl_rule_4__
+  end.
+
+Definition alwaysInlinePragma : InlinePragma :=
+  match defaultInlinePragma with
+    | Mk_InlinePragma inl_src_0__ inl_inline_1__ inl_sat_2__ inl_act_3__
+                      inl_rule_4__ => Mk_InlinePragma inl_src_0__ Inline inl_sat_2__ inl_act_3__
+                                                      inl_rule_4__
+  end.
+
 Definition fIRST_TAG : ConTag :=
   GHC.Num.fromInteger 1.
 
 Definition failed : SuccessFlag -> bool :=
-  fun arg_74__ => match arg_74__ with | Succeeded => false | Failed => true end.
+  fun arg_0__ => match arg_0__ with | Succeeded => false | Failed => true end.
 
 Definition flipSwap : SwapFlag -> SwapFlag :=
-  fun arg_144__ =>
-    match arg_144__ with
+  fun arg_0__ =>
+    match arg_0__ with
       | IsSwapped => NotSwapped
       | NotSwapped => IsSwapped
     end.
@@ -1043,7 +1034,7 @@ Definition funTyFixity : Fixity :=
   Mk_Fixity (GHC.Base.hs_string__ "0") (GHC.Num.fromInteger 0) InfixR.
 
 Definition hasNoOneShotInfo : OneShotInfo -> bool :=
-  fun arg_152__ => match arg_152__ with | NoOneShotInfo => true | _ => false end.
+  fun arg_0__ => match arg_0__ with | NoOneShotInfo => true | _ => false end.
 
 Definition hasOverlappableFlag : OverlapMode -> bool :=
   fun mode =>
@@ -1070,13 +1061,13 @@ Definition initialVersion : Version :=
   GHC.Num.fromInteger 1.
 
 Definition inlinePragmaActivation : InlinePragma -> Activation :=
-  fun arg_53__ =>
-    match arg_53__ with
+  fun arg_0__ =>
+    match arg_0__ with
       | Mk_InlinePragma _ _ _ activation _ => activation
     end.
 
 Definition inlinePragmaRuleMatchInfo : InlinePragma -> RuleMatchInfo :=
-  fun arg_51__ => match arg_51__ with | Mk_InlinePragma _ _ _ _ info => info end.
+  fun arg_0__ => match arg_0__ with | Mk_InlinePragma _ _ _ _ info => info end.
 
 Definition inlinePragmaSat : InlinePragma -> option Arity :=
   inl_sat.
@@ -1088,15 +1079,15 @@ Definition insideLam : InsideLam :=
   true.
 
 Definition intGtLimit : GHC.Num.Int -> IntWithInf -> bool :=
-  fun arg_27__ arg_28__ =>
-    match arg_27__ , arg_28__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | _ , Infinity => false
       | n , Int m => n GHC.Base.> m
     end.
 
 Definition isActiveIn : PhaseNum -> Activation -> bool :=
-  fun arg_42__ arg_43__ =>
-    match arg_42__ , arg_43__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | _ , NeverActive => false
       | _ , AlwaysActive => true
       | p , ActiveAfter _ n => p GHC.Base.<= n
@@ -1104,8 +1095,8 @@ Definition isActiveIn : PhaseNum -> Activation -> bool :=
     end.
 
 Definition isActive : CompilerPhase -> Activation -> bool :=
-  fun arg_47__ arg_48__ =>
-    match arg_47__ , arg_48__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | InitialPhase , AlwaysActive => true
       | InitialPhase , ActiveBefore _ _ => true
       | InitialPhase , _ => false
@@ -1113,131 +1104,111 @@ Definition isActive : CompilerPhase -> Activation -> bool :=
     end.
 
 Definition isAlwaysActive : Activation -> bool :=
-  fun arg_33__ => match arg_33__ with | AlwaysActive => true | _ => false end.
+  fun arg_0__ => match arg_0__ with | AlwaysActive => true | _ => false end.
 
 Definition isAnyInlinePragma : InlinePragma -> bool :=
   fun prag =>
-    let scrut_55__ := inl_inline prag in
-    match scrut_55__ with
+    let scrut_0__ := inl_inline prag in
+    match scrut_0__ with
       | Inline => true
       | Inlinable => true
       | _ => false
     end.
 
 Definition isBoxed : Boxity -> bool :=
-  fun arg_111__ => match arg_111__ with | Boxed => true | Unboxed => false end.
+  fun arg_0__ => match arg_0__ with | Boxed => true | Unboxed => false end.
 
 Definition isConLike : RuleMatchInfo -> bool :=
-  fun arg_72__ => match arg_72__ with | ConLike => true | _ => false end.
+  fun arg_0__ => match arg_0__ with | ConLike => true | _ => false end.
 
 Definition isDeadOcc : OccInfo -> bool :=
-  fun arg_84__ => match arg_84__ with | IAmDead => true | _ => false end.
+  fun arg_0__ => match arg_0__ with | IAmDead => true | _ => false end.
 
 Definition isEarlyActive : Activation -> bool :=
-  fun arg_31__ =>
-    match arg_31__ with
+  fun arg_0__ =>
+    match arg_0__ with
       | AlwaysActive => true
       | ActiveBefore _ _ => true
       | _ => false
     end.
 
 Definition isEmptyInlineSpec : InlineSpec -> bool :=
-  fun arg_65__ => match arg_65__ with | EmptyInlineSpec => true | _ => false end.
+  fun arg_0__ => match arg_0__ with | EmptyInlineSpec => true | _ => false end.
 
 Definition isFunLike : RuleMatchInfo -> bool :=
-  fun arg_67__ => match arg_67__ with | FunLike => true | _ => false end.
+  fun arg_0__ => match arg_0__ with | FunLike => true | _ => false end.
 
 Definition isDefaultInlinePragma : InlinePragma -> bool :=
-  fun arg_69__ =>
-    match arg_69__ with
+  fun arg_0__ =>
+    match arg_0__ with
       | Mk_InlinePragma _ inline _ activation match_info => andb (isEmptyInlineSpec
                                                                  inline) (andb (isAlwaysActive activation) (isFunLike
                                                                                match_info))
     end.
 
 Definition isGenerated : Origin -> bool :=
-  fun arg_103__ =>
-    match arg_103__ with
-      | Generated => true
-      | FromSource => false
-    end.
+  fun arg_0__ => match arg_0__ with | Generated => true | FromSource => false end.
 
 Definition isInlinablePragma : InlinePragma -> bool :=
   fun prag =>
-    let scrut_58__ := inl_inline prag in
-    match scrut_58__ with
+    let scrut_0__ := inl_inline prag in
+    match scrut_0__ with
       | Inlinable => true
       | _ => false
     end.
 
 Definition isInlinePragma : InlinePragma -> bool :=
   fun prag =>
-    let scrut_61__ := inl_inline prag in
-    match scrut_61__ with
+    let scrut_0__ := inl_inline prag in
+    match scrut_0__ with
       | Inline => true
       | _ => false
     end.
 
 Definition isNeverActive : Activation -> bool :=
-  fun arg_35__ => match arg_35__ with | NeverActive => true | _ => false end.
+  fun arg_0__ => match arg_0__ with | NeverActive => true | _ => false end.
 
 Definition isNoOcc : OccInfo -> bool :=
-  fun arg_93__ => match arg_93__ with | NoOccInfo => true | _ => false end.
+  fun arg_0__ => match arg_0__ with | NoOccInfo => true | _ => false end.
 
 Definition isNonRec : RecFlag -> bool :=
-  fun arg_107__ =>
-    match arg_107__ with
+  fun arg_0__ =>
+    match arg_0__ with
       | Recursive => false
       | NonRecursive => true
     end.
 
 Definition isNotTopLevel : TopLevelFlag -> bool :=
-  fun arg_115__ =>
-    match arg_115__ with
-      | NotTopLevel => true
-      | TopLevel => false
-    end.
+  fun arg_0__ => match arg_0__ with | NotTopLevel => true | TopLevel => false end.
 
 Definition isOneOcc : OccInfo -> bool :=
-  fun arg_82__ => match arg_82__ with | OneOcc _ _ _ => true | _ => false end.
+  fun arg_0__ => match arg_0__ with | OneOcc _ _ _ => true | _ => false end.
 
 Definition isOneShotInfo : OneShotInfo -> bool :=
-  fun arg_154__ => match arg_154__ with | OneShotLam => true | _ => false end.
+  fun arg_0__ => match arg_0__ with | OneShotLam => true | _ => false end.
 
 Definition isRec : RecFlag -> bool :=
-  fun arg_109__ =>
-    match arg_109__ with
+  fun arg_0__ =>
+    match arg_0__ with
       | Recursive => true
       | NonRecursive => false
     end.
 
 Definition isStrongLoopBreaker : OccInfo -> bool :=
-  fun arg_86__ =>
-    match arg_86__ with
+  fun arg_0__ =>
+    match arg_0__ with
       | IAmALoopBreaker false => true
       | _ => false
     end.
 
 Definition isSwapped : SwapFlag -> bool :=
-  fun arg_142__ =>
-    match arg_142__ with
-      | IsSwapped => true
-      | NotSwapped => false
-    end.
+  fun arg_0__ => match arg_0__ with | IsSwapped => true | NotSwapped => false end.
 
 Definition isTopLevel : TopLevelFlag -> bool :=
-  fun arg_113__ =>
-    match arg_113__ with
-      | TopLevel => true
-      | NotTopLevel => false
-    end.
+  fun arg_0__ => match arg_0__ with | TopLevel => true | NotTopLevel => false end.
 
 Definition isWeakLoopBreaker : OccInfo -> bool :=
-  fun arg_88__ =>
-    match arg_88__ with
-      | IAmALoopBreaker _ => true
-      | _ => false
-    end.
+  fun arg_0__ => match arg_0__ with | IAmALoopBreaker _ => true | _ => false end.
 
 Definition maxPrecedence : GHC.Num.Int :=
   GHC.Num.fromInteger 9.
@@ -1249,8 +1220,8 @@ Definition mkIntWithInf : GHC.Num.Int -> IntWithInf :=
   Int.
 
 Definition mulWithInf : IntWithInf -> IntWithInf -> IntWithInf :=
-  fun arg_19__ arg_20__ =>
-    match arg_19__ , arg_20__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | Infinity , _ => Infinity
       | _ , Infinity => Infinity
       | Int a , Int b => Int (a GHC.Num.* b)
@@ -1272,8 +1243,8 @@ Definition oneBranch : OneBranch :=
   true.
 
 Definition plusWithInf : IntWithInf -> IntWithInf -> IntWithInf :=
-  fun arg_23__ arg_24__ =>
-    match arg_23__ , arg_24__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | Infinity , _ => Infinity
       | _ , Infinity => Infinity
       | Int a , Int b => Int (a GHC.Num.+ b)
@@ -1282,35 +1253,64 @@ Definition plusWithInf : IntWithInf -> IntWithInf -> IntWithInf :=
 Definition seqOccInfo : OccInfo -> unit :=
   fun occ => GHC.Prim.seq occ tt.
 
+Definition setInlinePragmaActivation
+    : InlinePragma -> Activation -> InlinePragma :=
+  fun prag activation =>
+    match prag with
+      | Mk_InlinePragma inl_src_0__ inl_inline_1__ inl_sat_2__ inl_act_3__
+                        inl_rule_4__ => Mk_InlinePragma inl_src_0__ inl_inline_1__ inl_sat_2__
+                                                        activation inl_rule_4__
+    end.
+
+Definition setInlinePragmaRuleMatchInfo
+    : InlinePragma -> RuleMatchInfo -> InlinePragma :=
+  fun prag info =>
+    match prag with
+      | Mk_InlinePragma inl_src_0__ inl_inline_1__ inl_sat_2__ inl_act_3__
+                        inl_rule_4__ => Mk_InlinePragma inl_src_0__ inl_inline_1__ inl_sat_2__
+                                                        inl_act_3__ info
+    end.
+
+Definition setOverlapModeMaybe : OverlapFlag -> option
+                                 OverlapMode -> OverlapFlag :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
+      | f , None => f
+      | f , Some m => match f with
+                        | Mk_OverlapFlag overlapMode_2__ isSafeOverlap_3__ => Mk_OverlapFlag m
+                                                                                             isSafeOverlap_3__
+                      end
+    end.
+
 Definition strongLoopBreaker : OccInfo :=
   IAmALoopBreaker false.
 
 Definition succeeded : SuccessFlag -> bool :=
-  fun arg_76__ => match arg_76__ with | Succeeded => true | Failed => false end.
+  fun arg_0__ => match arg_0__ with | Succeeded => true | Failed => false end.
 
 Definition successIf : bool -> SuccessFlag :=
-  fun arg_78__ => match arg_78__ with | true => Succeeded | false => Failed end.
+  fun arg_0__ => match arg_0__ with | true => Succeeded | false => Failed end.
 
 Definition treatZeroAsInf : GHC.Num.Int -> IntWithInf :=
-  fun arg_13__ =>
-    let j_16__ := match arg_13__ with | n => Int n end in
-    match arg_13__ with
-      | num_14__ => if num_14__ GHC.Base.== GHC.Num.fromInteger 0 : bool
-                    then Infinity
-                    else j_16__
+  fun arg_0__ =>
+    let j_3__ := match arg_0__ with | n => Int n end in
+    match arg_0__ with
+      | num_1__ => if num_1__ GHC.Base.== GHC.Num.fromInteger 0 : bool
+                   then Infinity
+                   else j_3__
     end.
 
 Definition tupleSortBoxity : TupleSort -> Boxity :=
-  fun arg_97__ =>
-    match arg_97__ with
+  fun arg_0__ =>
+    match arg_0__ with
       | BoxedTuple => Boxed
       | UnboxedTuple => Unboxed
       | ConstraintTuple => Boxed
     end.
 
 Definition unSwap {a} {b} : SwapFlag -> (a -> a -> b) -> a -> a -> b :=
-  fun arg_135__ arg_136__ arg_137__ arg_138__ =>
-    match arg_135__ , arg_136__ , arg_137__ , arg_138__ with
+  fun arg_0__ arg_1__ arg_2__ arg_3__ =>
+    match arg_0__ , arg_1__ , arg_2__ , arg_3__ with
       | NotSwapped , f , a , b => f a b
       | IsSwapped , f , a , b => f b a
     end.
@@ -1319,8 +1319,8 @@ Definition weakLoopBreaker : OccInfo :=
   IAmALoopBreaker true.
 
 Definition worstOneShot : OneShotInfo -> OneShotInfo -> OneShotInfo :=
-  fun arg_149__ arg_150__ =>
-    match arg_149__ , arg_150__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | NoOneShotInfo , _ => NoOneShotInfo
       | ProbOneShot , NoOneShotInfo => NoOneShotInfo
       | ProbOneShot , _ => ProbOneShot
@@ -1328,16 +1328,13 @@ Definition worstOneShot : OneShotInfo -> OneShotInfo -> OneShotInfo :=
     end.
 
 Definition zapFragileOcc : OccInfo -> OccInfo :=
-  fun arg_80__ =>
-    match arg_80__ with
-      | OneOcc _ _ _ => NoOccInfo
-      | occ => occ
-    end.
+  fun arg_0__ => match arg_0__ with | OneOcc _ _ _ => NoOccInfo | occ => occ end.
 
 (* Unbound variables:
-     Eq Gt Lt andb bool comparison false list negb op_zt__ option pair true tt unit
-     Data.Function.on FastString.FastString GHC.Base.Eq_ GHC.Base.Ord GHC.Base.String
-     GHC.Base.compare GHC.Base.op_zeze__ GHC.Base.op_zg__ GHC.Base.op_zgze__
-     GHC.Base.op_zl__ GHC.Base.op_zlze__ GHC.Base.op_zsze__ GHC.Num.Int
-     GHC.Num.op_zp__ GHC.Num.op_zt__ GHC.Prim.seq GHC.Real.Rational SrcLoc.Located
+     Eq Gt Lt Some andb bool comparison false list negb op_zt__ option pair true tt
+     unit Data.Function.on FastString.FastString GHC.Base.Eq_ GHC.Base.Ord
+     GHC.Base.String GHC.Base.compare GHC.Base.op_zeze__ GHC.Base.op_zg__
+     GHC.Base.op_zgze__ GHC.Base.op_zl__ GHC.Base.op_zlze__ GHC.Base.op_zsze__
+     GHC.Num.Int GHC.Num.op_zp__ GHC.Num.op_zt__ GHC.Prim.seq GHC.Real.Rational
+     SrcLoc.Located
 *)

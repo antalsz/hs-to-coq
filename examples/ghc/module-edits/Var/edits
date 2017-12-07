@@ -14,7 +14,6 @@ skip module TcType
 
 redefine Definition Var.tcTyVarDetails : TyVar -> unit := fun x => tt.
 
-
 # ppr
 skip Var.ppr_id_scope
 skip Var.ppr_debug

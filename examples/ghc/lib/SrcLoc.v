@@ -71,6 +71,12 @@ Definition srcSpanSLine (arg_4__ : RealSrcSpan) :=
   match arg_4__ with
     | RealSrcSpan' _ srcSpanSLine _ _ _ => srcSpanSLine
   end.
+(* Midamble *)
+
+(* Default values *)
+Import Panic.
+Instance Default_SrcSpan : Default SrcSpan := Build_Default _ (UnhelpfulSpan default).
+
 (* Converted value declarations: *)
 
 (* Translating `instance Outputable.Outputable SrcLoc.RealSrcLoc' failed: OOPS!
@@ -115,8 +121,8 @@ Local Definition Traversable__GenLocated_traverse {inst_l} : forall {f} {a} {b},
                                                                  (a -> f b) -> GenLocated inst_l a -> f (GenLocated
                                                                                                         inst_l b) :=
   fun {f} {a} {b} `{GHC.Base.Applicative f} =>
-    fun arg_205__ arg_206__ =>
-      match arg_205__ , arg_206__ with
+    fun arg_0__ arg_1__ =>
+      match arg_0__ , arg_1__ with
         | f , L a1 a2 => GHC.Base.fmap (fun b2 => L a1 b2) (f a2)
       end.
 
@@ -141,10 +147,7 @@ Local Definition Foldable__GenLocated_foldMap {inst_l} : forall {m} {a},
                                                            forall `{GHC.Base.Monoid m},
                                                              (a -> m) -> GenLocated inst_l a -> m :=
   fun {m} {a} `{GHC.Base.Monoid m} =>
-    fun arg_201__ arg_202__ =>
-      match arg_201__ , arg_202__ with
-        | f , L a1 a2 => f a2
-      end.
+    fun arg_0__ arg_1__ => match arg_0__ , arg_1__ with | f , L a1 a2 => f a2 end.
 
 Local Definition Foldable__GenLocated_foldl {inst_l} : forall {b} {a},
                                                          (b -> a -> b) -> b -> GenLocated inst_l a -> b :=
@@ -201,8 +204,8 @@ Local Definition Foldable__GenLocated_elem {inst_l} : forall {a},
 Local Definition Foldable__GenLocated_foldr {inst_l} : forall {a} {b},
                                                          (a -> b -> b) -> b -> GenLocated inst_l a -> b :=
   fun {a} {b} =>
-    fun arg_196__ arg_197__ arg_198__ =>
-      match arg_196__ , arg_197__ , arg_198__ with
+    fun arg_0__ arg_1__ arg_2__ =>
+      match arg_0__ , arg_1__ , arg_2__ with
         | f , z , L a1 a2 => f a2 z
       end.
 
@@ -245,8 +248,8 @@ Local Definition Foldable__GenLocated_length {inst_l} : forall {a},
 Local Definition Functor__GenLocated_fmap {inst_l} : forall {a} {b},
                                                        (a -> b) -> GenLocated inst_l a -> GenLocated inst_l b :=
   fun {a} {b} =>
-    fun arg_192__ arg_193__ =>
-      match arg_192__ , arg_193__ with
+    fun arg_0__ arg_1__ =>
+      match arg_0__ , arg_1__ with
         | f , L a1 a2 => L ((fun b1 => b1) a1) (f a2)
       end.
 
@@ -298,8 +301,8 @@ Program Instance Traversable__GenLocated {l} : Data.Traversable.Traversable
 Local Definition Eq___GenLocated_op_zeze__ {inst_l} {inst_e} `{GHC.Base.Eq_
                                            inst_e} `{GHC.Base.Eq_ inst_l} : GenLocated inst_l inst_e -> GenLocated
                                                                             inst_l inst_e -> bool :=
-  fun arg_147__ arg_148__ =>
-    match arg_147__ , arg_148__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | L a1 a2 , L b1 b2 => (andb ((a1 GHC.Base.== b1)) ((a2 GHC.Base.== b2)))
     end.
 
@@ -320,8 +323,8 @@ Program Instance Eq___GenLocated {l} {e} `{GHC.Base.Eq_ e} `{GHC.Base.Eq_ l}
 
 Local Definition Eq___RealSrcSpan_op_zeze__
     : RealSrcSpan -> RealSrcSpan -> bool :=
-  fun arg_96__ arg_97__ =>
-    match arg_96__ , arg_97__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | RealSrcSpan' a1 a2 a3 a4 a5 , RealSrcSpan' b1 b2 b3 b4 b5 => (andb (andb (andb
                                                                                  (andb ((a1 GHC.Base.== b1)) ((a2
                                                                                        GHC.Base.== b2))) ((a3
@@ -341,8 +344,8 @@ Program Instance Eq___RealSrcSpan : GHC.Base.Eq_ RealSrcSpan := fun _ k =>
       GHC.Base.op_zsze____ := Eq___RealSrcSpan_op_zsze__ |}.
 
 Local Definition Eq___SrcSpan_op_zeze__ : SrcSpan -> SrcSpan -> bool :=
-  fun arg_101__ arg_102__ =>
-    match arg_101__ , arg_102__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | ARealSrcSpan a1 , ARealSrcSpan b1 => ((a1 GHC.Base.== b1))
       | UnhelpfulSpan a1 , UnhelpfulSpan b1 => ((a1 GHC.Base.== b1))
       | _ , _ => false
@@ -362,8 +365,8 @@ Program Instance Eq___SrcSpan : GHC.Base.Eq_ SrcSpan := fun _ k =>
    information for class Qualified "GHC.Show" "Show" unsupported *)
 
 Definition cmpRealSrcLoc : RealSrcLoc -> RealSrcLoc -> comparison :=
-  fun arg_46__ arg_47__ =>
-    match arg_46__ , arg_47__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | ASrcLoc s1 l1 c1 , ASrcLoc s2 l2 c2 => Util.thenCmp (GHC.Base.compare s1 s2)
                                                             (Util.thenCmp (GHC.Base.compare l1 l2) (GHC.Base.compare c1
                                                                                                                      c2))
@@ -387,8 +390,8 @@ Local Definition Ord__RealSrcLoc_op_zlze__ : RealSrcLoc -> RealSrcLoc -> bool :=
 
 Local Definition Eq___RealSrcLoc_op_zeze__ : RealSrcLoc -> RealSrcLoc -> bool :=
   fun loc1 loc2 =>
-    let scrut_211__ := cmpRealSrcLoc loc1 loc2 in
-    match scrut_211__ with
+    let scrut_0__ := cmpRealSrcLoc loc1 loc2 in
+    match scrut_0__ with
       | Eq => true
       | _other => false
     end.
@@ -416,8 +419,8 @@ Program Instance Ord__RealSrcLoc : GHC.Base.Ord RealSrcLoc := fun _ k =>
       GHC.Base.min__ := Ord__RealSrcLoc_min |}.
 
 Definition cmpSrcLoc : SrcLoc -> SrcLoc -> comparison :=
-  fun arg_50__ arg_51__ =>
-    match arg_50__ , arg_51__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | UnhelpfulLoc s1 , UnhelpfulLoc s2 => GHC.Base.compare s1 s2
       | UnhelpfulLoc _ , ARealSrcLoc _ => Gt
       | ARealSrcLoc _ , UnhelpfulLoc _ => Lt
@@ -447,8 +450,8 @@ Local Definition Ord__SrcLoc_max : SrcLoc -> SrcLoc -> SrcLoc :=
 
 Local Definition Eq___SrcLoc_op_zeze__ : SrcLoc -> SrcLoc -> bool :=
   fun loc1 loc2 =>
-    let scrut_214__ := cmpSrcLoc loc1 loc2 in
-    match scrut_214__ with
+    let scrut_0__ := cmpSrcLoc loc1 loc2 in
+    match scrut_0__ with
       | Eq => true
       | _other => false
     end.
@@ -474,7 +477,7 @@ Definition generatedSrcLoc : SrcLoc :=
                                  "<compiler-generated code>")).
 
 Definition getLoc {l} {e} : GenLocated l e -> l :=
-  fun arg_6__ => match arg_6__ with | L l _ => l end.
+  fun arg_0__ => match arg_0__ with | L l _ => l end.
 
 Definition interactiveSrcLoc : SrcLoc :=
   UnhelpfulLoc (FastString.fsLit (GHC.Base.hs_string__ "<interactive>")).
@@ -483,21 +486,21 @@ Definition interactiveSrcSpan : SrcSpan :=
   UnhelpfulSpan (FastString.fsLit (GHC.Base.hs_string__ "<interactive>")).
 
 Definition isGoodSrcSpan : SrcSpan -> bool :=
-  fun arg_26__ =>
-    match arg_26__ with
+  fun arg_0__ =>
+    match arg_0__ with
       | ARealSrcSpan _ => true
       | UnhelpfulSpan _ => false
     end.
 
 Definition isOneLineRealSpan : RealSrcSpan -> bool :=
-  fun arg_31__ =>
-    match arg_31__ with
+  fun arg_0__ =>
+    match arg_0__ with
       | RealSrcSpan' _ line1 _ line2 _ => line1 GHC.Base.== line2
     end.
 
 Definition isPointRealSpan : RealSrcSpan -> bool :=
-  fun arg_28__ =>
-    match arg_28__ with
+  fun arg_0__ =>
+    match arg_0__ with
       | RealSrcSpan' _ line1 col1 line2 col2 => andb (line1 GHC.Base.== line2) (col1
                                                      GHC.Base.== col2)
     end.
@@ -529,26 +532,26 @@ Definition noLoc {e} : e -> Located e :=
   fun e => L noSrcSpan e.
 
 Definition realSrcLocSpan : RealSrcLoc -> RealSrcSpan :=
-  fun arg_34__ =>
-    match arg_34__ with
+  fun arg_0__ =>
+    match arg_0__ with
       | ASrcLoc file line col => RealSrcSpan' file line col line col
     end.
 
 Definition srcLocSpan : SrcLoc -> SrcSpan :=
-  fun arg_37__ =>
-    match arg_37__ with
+  fun arg_0__ =>
+    match arg_0__ with
       | UnhelpfulLoc str => UnhelpfulSpan str
       | ARealSrcLoc l => ARealSrcSpan (realSrcLocSpan l)
     end.
 
 Definition srcLocCol : RealSrcLoc -> GHC.Num.Int :=
-  fun arg_55__ => match arg_55__ with | ASrcLoc _ _ c => c end.
+  fun arg_0__ => match arg_0__ with | ASrcLoc _ _ c => c end.
 
 Definition srcLocFile : RealSrcLoc -> FastString.FastString :=
-  fun arg_59__ => match arg_59__ with | ASrcLoc fname _ _ => fname end.
+  fun arg_0__ => match arg_0__ with | ASrcLoc fname _ _ => fname end.
 
 Definition srcLocLine : RealSrcLoc -> GHC.Num.Int :=
-  fun arg_57__ => match arg_57__ with | ASrcLoc _ l _ => l end.
+  fun arg_0__ => match arg_0__ with | ASrcLoc _ l _ => l end.
 
 Definition mkRealSrcSpan : RealSrcLoc -> RealSrcLoc -> RealSrcSpan :=
   fun loc1 loc2 =>
@@ -559,48 +562,48 @@ Definition mkRealSrcSpan : RealSrcLoc -> RealSrcLoc -> RealSrcSpan :=
     let line1 := srcLocLine loc1 in RealSrcSpan' file line1 col1 line2 col2.
 
 Definition mkSrcSpan : SrcLoc -> SrcLoc -> SrcSpan :=
-  fun arg_67__ arg_68__ =>
-    match arg_67__ , arg_68__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | UnhelpfulLoc str , _ => UnhelpfulSpan str
       | _ , UnhelpfulLoc str => UnhelpfulSpan str
       | ARealSrcLoc loc1 , ARealSrcLoc loc2 => ARealSrcSpan (mkRealSrcSpan loc1 loc2)
     end.
 
 Definition srcSpanEndCol : RealSrcSpan -> GHC.Num.Int :=
-  fun arg_15__ => match arg_15__ with | RealSrcSpan' _ _ _ _ c => c end.
+  fun arg_0__ => match arg_0__ with | RealSrcSpan' _ _ _ _ c => c end.
 
 Definition srcSpanEndLine : RealSrcSpan -> GHC.Num.Int :=
-  fun arg_19__ => match arg_19__ with | RealSrcSpan' _ _ _ l _ => l end.
+  fun arg_0__ => match arg_0__ with | RealSrcSpan' _ _ _ l _ => l end.
 
 Definition realSrcSpanEnd : RealSrcSpan -> RealSrcLoc :=
   fun s => mkRealSrcLoc (srcSpanFile s) (srcSpanEndLine s) (srcSpanEndCol s).
 
 Definition srcSpanEnd : SrcSpan -> SrcLoc :=
-  fun arg_88__ =>
-    match arg_88__ with
+  fun arg_0__ =>
+    match arg_0__ with
       | UnhelpfulSpan str => UnhelpfulLoc str
       | ARealSrcSpan s => ARealSrcLoc (realSrcSpanEnd s)
     end.
 
 Definition srcSpanFileName_maybe : SrcSpan -> option FastString.FastString :=
-  fun arg_12__ =>
-    match arg_12__ with
+  fun arg_0__ =>
+    match arg_0__ with
       | ARealSrcSpan s => Some (srcSpanFile s)
       | UnhelpfulSpan _ => None
     end.
 
 Definition srcSpanStartCol : RealSrcSpan -> GHC.Num.Int :=
-  fun arg_17__ => match arg_17__ with | RealSrcSpan' _ _ l _ _ => l end.
+  fun arg_0__ => match arg_0__ with | RealSrcSpan' _ _ l _ _ => l end.
 
 Definition srcSpanStartLine : RealSrcSpan -> GHC.Num.Int :=
-  fun arg_21__ => match arg_21__ with | RealSrcSpan' _ l _ _ _ => l end.
+  fun arg_0__ => match arg_0__ with | RealSrcSpan' _ l _ _ _ => l end.
 
 Definition realSrcSpanStart : RealSrcSpan -> RealSrcLoc :=
   fun s => mkRealSrcLoc (srcSpanFile s) (srcSpanStartLine s) (srcSpanStartCol s).
 
 Definition srcSpanFirstCharacter : SrcSpan -> SrcSpan :=
-  fun arg_78__ =>
-    match arg_78__ with
+  fun arg_0__ =>
+    match arg_0__ with
       | (UnhelpfulSpan _ as l) => l
       | ARealSrcSpan span => match realSrcSpanStart span with
                                | (ASrcLoc f l c as loc1) => let loc2 :=
@@ -610,8 +613,8 @@ Definition srcSpanFirstCharacter : SrcSpan -> SrcSpan :=
     end.
 
 Definition srcSpanStart : SrcSpan -> SrcLoc :=
-  fun arg_83__ =>
-    match arg_83__ with
+  fun arg_0__ =>
+    match arg_0__ with
       | UnhelpfulSpan str => UnhelpfulLoc str
       | ARealSrcSpan s => ARealSrcLoc (realSrcSpanStart s)
     end.
@@ -623,12 +626,12 @@ Definition leftmost_largest : SrcSpan -> SrcSpan -> comparison :=
 
 Definition isSubspanOf : SrcSpan -> SrcSpan -> bool :=
   fun src parent =>
-    let j_93__ :=
+    let j_0__ :=
       andb (srcSpanStart parent GHC.Base.<= srcSpanStart src) (srcSpanEnd parent
            GHC.Base.>= srcSpanEnd src) in
     if srcSpanFileName_maybe parent GHC.Base./= srcSpanFileName_maybe src : bool
     then false
-    else j_93__.
+    else j_0__.
 
 Local Definition Ord__RealSrcSpan_compare
     : RealSrcSpan -> RealSrcSpan -> comparison :=
@@ -756,14 +759,14 @@ Definition leftmost_smallest : SrcSpan -> SrcSpan -> comparison :=
   GHC.Base.compare.
 
 Definition isOneLineSpan : SrcSpan -> bool :=
-  fun arg_23__ =>
-    match arg_23__ with
+  fun arg_0__ =>
+    match arg_0__ with
       | ARealSrcSpan s => srcSpanStartLine s GHC.Base.== srcSpanEndLine s
       | UnhelpfulSpan _ => false
     end.
 
 Definition unLoc {l} {e} : GenLocated l e -> e :=
-  fun arg_8__ => match arg_8__ with | L _ e => e end.
+  fun arg_0__ => match arg_0__ with | L _ e => e end.
 
 Definition eqLocated {a} `{GHC.Base.Eq_ a} : Located a -> Located a -> bool :=
   fun a b => unLoc a GHC.Base.== unLoc b.

@@ -96,8 +96,8 @@ Local Definition Monad__MaybeErr_op_zgzgze__ {inst_err} : forall {a} {b},
                                                             (MaybeErr inst_err) a -> (a -> (MaybeErr inst_err)
                                                             b) -> (MaybeErr inst_err) b :=
   fun {a} {b} =>
-    fun arg_9__ arg_10__ =>
-      match arg_9__ , arg_10__ with
+    fun arg_0__ arg_1__ =>
+      match arg_0__ , arg_1__ with
         | Succeeded v , k => k v
         | Failed e , _ => Failed e
       end.
@@ -116,15 +116,15 @@ Definition failME {err} {val} : err -> MaybeErr err val :=
   fun e => Failed e.
 
 Definition isSuccess {err} {val} : MaybeErr err val -> bool :=
-  fun arg_1__ => match arg_1__ with | Succeeded _ => true | Failed _ => false end.
+  fun arg_0__ => match arg_0__ with | Succeeded _ => true | Failed _ => false end.
 
 Definition orElse {a} : option a -> a -> a :=
   GHC.Base.flip Data.Maybe.fromMaybe.
 
 Definition whenIsJust {m} {a} `{GHC.Base.Monad m} : option a -> (a -> m
                                                     unit) -> m unit :=
-  fun arg_4__ arg_5__ =>
-    match arg_4__ , arg_5__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | Some x , f => f x
       | None , _ => GHC.Base.return_ tt
     end.

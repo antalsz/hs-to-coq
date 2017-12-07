@@ -131,8 +131,8 @@ Definition plusFV : FreeVars -> FreeVars -> FreeVars :=
 Definition findUses : DefUses -> Uses -> Uses :=
   fun dus uses =>
     let get :=
-      fun arg_25__ arg_26__ =>
-        match arg_25__ , arg_26__ with
+      fun arg_0__ arg_1__ =>
+        match arg_0__ , arg_1__ with
           | pair None rhs_uses , uses => unionNameSet rhs_uses uses
           | pair (Some defs) rhs_uses , uses => if orb (intersectsNameSet defs uses)
                                                        (Data.Foldable.any (OccName.startsWithUnderscore GHC.Base.∘
@@ -145,8 +145,8 @@ Definition findUses : DefUses -> Uses -> Uses :=
 Definition duUses : DefUses -> Uses :=
   fun dus =>
     let get :=
-      fun arg_18__ arg_19__ =>
-        match arg_18__ , arg_19__ with
+      fun arg_0__ arg_1__ =>
+        match arg_0__ , arg_1__ with
           | pair None rhs_uses , uses => unionNameSet rhs_uses uses
           | pair (Some defs) rhs_uses , uses => minusNameSet (unionNameSet rhs_uses uses)
                                                              defs
@@ -156,8 +156,8 @@ Definition duUses : DefUses -> Uses :=
 Definition duDefs : DefUses -> Defs :=
   fun dus =>
     let get :=
-      fun arg_8__ arg_9__ =>
-        match arg_8__ , arg_9__ with
+      fun arg_0__ arg_1__ =>
+        match arg_0__ , arg_1__ with
           | pair None _u1 , d2 => d2
           | pair (Some d1) _u1 , d2 => unionNameSet d1 d2
         end in
@@ -166,8 +166,8 @@ Definition duDefs : DefUses -> Defs :=
 Definition allUses : DefUses -> Uses :=
   fun dus =>
     let get :=
-      fun arg_13__ arg_14__ =>
-        match arg_13__ , arg_14__ with
+      fun arg_0__ arg_1__ =>
+        match arg_0__ , arg_1__ with
           | pair _d1 u1 , u2 => unionNameSet u1 u2
         end in
     Data.Foldable.foldr get emptyNameSet dus.

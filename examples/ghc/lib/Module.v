@@ -256,8 +256,8 @@ Local Definition Ord__UnitId_min : UnitId -> UnitId -> UnitId :=
    "BinaryStringRep" unsupported *)
 
 Local Definition Ord__NDModule_compare : NDModule -> NDModule -> comparison :=
-  fun arg_183__ arg_184__ =>
-    match arg_183__ , arg_184__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | Mk_NDModule (Mk_Module p1 n1) , Mk_NDModule (Mk_Module p2 n2) => Util.thenCmp
                                                                          (GHC.Base.compare (Unique.getUnique p1)
                                                                                            (Unique.getUnique p2))
@@ -298,8 +298,8 @@ Program Instance Eq___ModuleName : GHC.Base.Eq_ ModuleName := fun _ k =>
       GHC.Base.op_zsze____ := Eq___ModuleName_op_zsze__ |}.
 
 Local Definition Eq___Module_op_zeze__ : Module -> Module -> bool :=
-  fun arg_136__ arg_137__ =>
-    match arg_136__ , arg_137__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | Mk_Module a1 a2 , Mk_Module b1 b2 => (andb ((a1 GHC.Base.== b1)) ((a2
                                                    GHC.Base.== b2)))
     end.
@@ -343,8 +343,8 @@ Local Definition Ord__Module_compare : Module -> Module -> comparison :=
   fun a b =>
     match a with
       | Mk_Module a1 a2 => match b with
-                             | Mk_Module b1 b2 => let scrut_141__ := (GHC.Base.compare a1 b1) in
-                                                  match scrut_141__ with
+                             | Mk_Module b1 b2 => let scrut_0__ := (GHC.Base.compare a1 b1) in
+                                                  match scrut_0__ with
                                                     | Lt => Lt
                                                     | Eq => (GHC.Base.compare a2 b2)
                                                     | Gt => Gt
@@ -428,15 +428,15 @@ Program Instance Ord__NDModule : GHC.Base.Ord NDModule := fun _ k =>
    find information for class Qualified "GHC.Show" "Show" unsupported *)
 
 Definition delModuleEnvList {a} : ModuleEnv a -> list Module -> ModuleEnv a :=
-  fun arg_53__ arg_54__ =>
-    match arg_53__ , arg_54__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | Mk_ModuleEnv e , ms => Mk_ModuleEnv (FiniteMap.deleteList (GHC.Base.map
                                                                   Mk_NDModule ms) e)
     end.
 
 Definition elemModuleEnv {a} : Module -> ModuleEnv a -> bool :=
-  fun arg_86__ arg_87__ =>
-    match arg_86__ , arg_87__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | m , Mk_ModuleEnv e => Data.Map.Base.member (Mk_NDModule m) e
     end.
 
@@ -450,40 +450,40 @@ Definition emptyModuleSet : ModuleSet :=
   Data.Set.Base.empty.
 
 Definition extendModuleEnv {a} : ModuleEnv a -> Module -> a -> ModuleEnv a :=
-  fun arg_81__ arg_82__ arg_83__ =>
-    match arg_81__ , arg_82__ , arg_83__ with
+  fun arg_0__ arg_1__ arg_2__ =>
+    match arg_0__ , arg_1__ , arg_2__ with
       | Mk_ModuleEnv e , m , x => Mk_ModuleEnv (Data.Map.Base.insert (Mk_NDModule m) x
                                                e)
     end.
 
 Definition extendModuleEnvList {a} : ModuleEnv a -> list (Module *
                                                          a)%type -> ModuleEnv a :=
-  fun arg_69__ arg_70__ =>
-    match arg_69__ , arg_70__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | Mk_ModuleEnv e , xs => Mk_ModuleEnv (FiniteMap.insertList
-                                            (let cont_71__ arg_72__ :=
-                                              match arg_72__ with
+                                            (let cont_2__ arg_3__ :=
+                                              match arg_3__ with
                                                 | pair k v => cons (pair (Mk_NDModule k) v) nil
                                               end in
-                                            Coq.Lists.List.flat_map cont_71__ xs) e)
+                                            Coq.Lists.List.flat_map cont_2__ xs) e)
     end.
 
 Definition extendModuleEnvList_C {a} : (a -> a -> a) -> ModuleEnv a -> list
                                        (Module * a)%type -> ModuleEnv a :=
-  fun arg_62__ arg_63__ arg_64__ =>
-    match arg_62__ , arg_63__ , arg_64__ with
+  fun arg_0__ arg_1__ arg_2__ =>
+    match arg_0__ , arg_1__ , arg_2__ with
       | f , Mk_ModuleEnv e , xs => Mk_ModuleEnv (FiniteMap.insertListWith f
-                                                (let cont_65__ arg_66__ :=
-                                                  match arg_66__ with
+                                                (let cont_3__ arg_4__ :=
+                                                  match arg_4__ with
                                                     | pair k v => cons (pair (Mk_NDModule k) v) nil
                                                   end in
-                                                Coq.Lists.List.flat_map cont_65__ xs) e)
+                                                Coq.Lists.List.flat_map cont_3__ xs) e)
     end.
 
 Definition extendModuleEnvWith {a} : (a -> a -> a) -> ModuleEnv
                                      a -> Module -> a -> ModuleEnv a :=
-  fun arg_75__ arg_76__ arg_77__ arg_78__ =>
-    match arg_75__ , arg_76__ , arg_77__ , arg_78__ with
+  fun arg_0__ arg_1__ arg_2__ arg_3__ =>
+    match arg_0__ , arg_1__ , arg_2__ , arg_3__ with
       | f , Mk_ModuleEnv e , m , x => Mk_ModuleEnv (Data.Map.Base.insertWith f
                                                    (Mk_NDModule m) x e)
     end.
@@ -493,17 +493,17 @@ Definition extendModuleSet : ModuleSet -> Module -> ModuleSet :=
 
 Definition filterModuleEnv {a} : (Module -> a -> bool) -> ModuleEnv
                                  a -> ModuleEnv a :=
-  fun arg_90__ arg_91__ =>
-    match arg_90__ , arg_91__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | f , Mk_ModuleEnv e => Mk_ModuleEnv (Data.Map.Base.filterWithKey (f GHC.Base.∘
                                                                         unNDModule) e)
     end.
 
 Definition foldModuleEnv {a} {b} : (a -> b -> b) -> b -> ModuleEnv a -> b :=
-  fun arg_9__ arg_10__ arg_11__ =>
-    match arg_9__ , arg_10__ , arg_11__ with
-      | f , x , Mk_ModuleEnv e => FiniteMap.foldRightWithKey (fun arg_12__ arg_13__ =>
-                                                               match arg_12__ , arg_13__ with
+  fun arg_0__ arg_1__ arg_2__ =>
+    match arg_0__ , arg_1__ , arg_2__ with
+      | f , x , Mk_ModuleEnv e => FiniteMap.foldRightWithKey (fun arg_3__ arg_4__ =>
+                                                               match arg_3__ , arg_4__ with
                                                                  | _ , v => f v
                                                                end) x e
     end.
@@ -559,29 +559,26 @@ Definition wiredInUnitIds : list UnitId :=
                                                                                                 dphParUnitId nil))))))).
 
 Definition isEmptyModuleEnv {a} : ModuleEnv a -> bool :=
-  fun arg_18__ =>
-    match arg_18__ with
-      | Mk_ModuleEnv e => Data.Map.Base.null e
-    end.
+  fun arg_0__ => match arg_0__ with | Mk_ModuleEnv e => Data.Map.Base.null e end.
 
 Definition lookupModuleEnv {a} : ModuleEnv a -> Module -> option a :=
-  fun arg_45__ arg_46__ =>
-    match arg_45__ , arg_46__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | Mk_ModuleEnv e , m => Data.Map.Base.lookup (Mk_NDModule m) e
     end.
 
 Definition lookupWithDefaultModuleEnv {a} : ModuleEnv a -> a -> Module -> a :=
-  fun arg_40__ arg_41__ arg_42__ =>
-    match arg_40__ , arg_41__ , arg_42__ with
+  fun arg_0__ arg_1__ arg_2__ =>
+    match arg_0__ , arg_1__ , arg_2__ with
       | Mk_ModuleEnv e , x , m => Data.Map.Base.findWithDefault x (Mk_NDModule m) e
     end.
 
 Definition mapModuleEnv {a} {b} : (a -> b) -> ModuleEnv a -> ModuleEnv b :=
-  fun arg_32__ arg_33__ =>
-    match arg_32__ , arg_33__ with
-      | f , Mk_ModuleEnv e => Mk_ModuleEnv (Data.Map.Base.mapWithKey (fun arg_34__
-                                                                          arg_35__ =>
-                                                                       match arg_34__ , arg_35__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
+      | f , Mk_ModuleEnv e => Mk_ModuleEnv (Data.Map.Base.mapWithKey (fun arg_2__
+                                                                          arg_3__ =>
+                                                                       match arg_2__ , arg_3__ with
                                                                          | _ , v => f v
                                                                        end) e)
     end.
@@ -593,35 +590,35 @@ Definition mkModuleNameFS : FastString.FastString -> ModuleName :=
   fun s => Mk_ModuleName s.
 
 Definition moduleEnvKeys {a} : ModuleEnv a -> list Module :=
-  fun arg_28__ =>
-    match arg_28__ with
+  fun arg_0__ =>
+    match arg_0__ with
       | Mk_ModuleEnv e => Data.OldList.sort GHC.Base.$ (GHC.Base.map unNDModule
                           GHC.Base.$ Data.Map.Base.keys e)
     end.
 
 Definition moduleEnvToList {a} : ModuleEnv a -> list (Module * a)%type :=
-  fun arg_22__ =>
-    match arg_22__ with
+  fun arg_0__ =>
+    match arg_0__ with
       | Mk_ModuleEnv e => Data.OldList.sortBy (Data.Ord.comparing Data.Tuple.fst)
-                          (let cont_23__ arg_24__ :=
-                            match arg_24__ with
+                          (let cont_1__ arg_2__ :=
+                            match arg_2__ with
                               | pair (Mk_NDModule m) v => cons (pair m v) nil
                             end in
-                          Coq.Lists.List.flat_map cont_23__ (Data.Map.Base.toList e))
+                          Coq.Lists.List.flat_map cont_1__ (Data.Map.Base.toList e))
     end.
 
 Definition moduleEnvElts {a} : ModuleEnv a -> list a :=
   fun e => GHC.Base.map Data.Tuple.snd GHC.Base.$ moduleEnvToList e.
 
 Definition moduleNameFS : ModuleName -> FastString.FastString :=
-  fun arg_127__ => match arg_127__ with | Mk_ModuleName mod_ => mod_ end.
+  fun arg_0__ => match arg_0__ with | Mk_ModuleName mod_ => mod_ end.
 
 Definition stableModuleNameCmp : ModuleName -> ModuleName -> comparison :=
   fun n1 n2 => GHC.Base.compare (moduleNameFS n1) (moduleNameFS n2).
 
 Definition moduleNameString : ModuleName -> GHC.Base.String :=
-  fun arg_118__ =>
-    match arg_118__ with
+  fun arg_0__ =>
+    match arg_0__ with
       | Mk_ModuleName mod_ => FastString.unpackFS mod_
     end.
 
@@ -637,28 +634,28 @@ Definition moduleSetElts : ModuleSet -> list Module :=
   Data.OldList.sort GHC.Base.∘ (GHC.Prim.coerce GHC.Base.∘ Data.Set.Base.toList).
 
 Definition plusModuleEnv {a} : ModuleEnv a -> ModuleEnv a -> ModuleEnv a :=
-  fun arg_49__ arg_50__ =>
-    match arg_49__ , arg_50__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | Mk_ModuleEnv e1 , Mk_ModuleEnv e2 => Mk_ModuleEnv (Data.Map.Base.union e1 e2)
     end.
 
 Definition plusModuleEnv_C {a} : (a -> a -> a) -> ModuleEnv a -> ModuleEnv
                                  a -> ModuleEnv a :=
-  fun arg_57__ arg_58__ arg_59__ =>
-    match arg_57__ , arg_58__ , arg_59__ with
+  fun arg_0__ arg_1__ arg_2__ =>
+    match arg_0__ , arg_1__ , arg_2__ with
       | f , Mk_ModuleEnv e1 , Mk_ModuleEnv e2 => Mk_ModuleEnv (Data.Map.Base.unionWith
                                                               f e1 e2)
     end.
 
 Definition unitIdFS : UnitId -> FastString.FastString :=
-  fun arg_94__ => match arg_94__ with | PId fs => fs end.
+  fun arg_0__ => match arg_0__ with | PId fs => fs end.
 
 Definition unitIdString : UnitId -> GHC.Base.String :=
   FastString.unpackFS GHC.Base.∘ unitIdFS.
 
 Definition moduleStableString : Module -> GHC.Base.String :=
-  fun arg_121__ =>
-    match arg_121__ with
+  fun arg_0__ =>
+    match arg_0__ with
       | Mk_Module moduleUnitId moduleName => Coq.Init.Datatypes.app
                                              (GHC.Base.hs_string__ "$") (Coq.Init.Datatypes.app (unitIdString
                                                                                                 moduleUnitId)
@@ -672,8 +669,8 @@ Definition stableUnitIdCmp : UnitId -> UnitId -> comparison :=
   fun p1 p2 => GHC.Base.compare (unitIdFS p1) (unitIdFS p2).
 
 Definition stableModuleCmp : Module -> Module -> comparison :=
-  fun arg_130__ arg_131__ =>
-    match arg_130__ , arg_131__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | Mk_Module p1 n1 , Mk_Module p2 n2 => Util.thenCmp (stableUnitIdCmp p1 p2)
                                                           (stableModuleNameCmp n1 n2)
     end.

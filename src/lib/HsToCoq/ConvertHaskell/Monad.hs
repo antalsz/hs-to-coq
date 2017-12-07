@@ -448,10 +448,18 @@ maybeWithCurrentModule :: ConversionMonad m => Maybe ModuleName -> m a -> m a
 maybeWithCurrentModule = maybe id withCurrentModule
 
 withCurrentDefinition :: ConversionMonad m => Qualid -> m a -> m a
-withCurrentDefinition newDef = gbracket set restore . const
+withCurrentDefinition newDef = gbracket set restore . const . restartUniqCounter
   where
   set = _currentDefinition <<.= Just newDef
   restore oldDef = _currentDefinition .= oldDef
+
+-- Uniques are always (?) function-local, so restart the counter, for more reproducible output
+-- Possible refactoring: Have a separate monad state for inside local functions
+restartUniqCounter :: ConversionMonad m =>m a -> m a
+restartUniqCounter = gbracket set restore . const
+  where
+  set = _unique <<.= 0
+  restore globalCounter = _unique .= globalCounter
 
 fresh :: ConversionMonad m => m Natural
 fresh = _unique <<+= 1

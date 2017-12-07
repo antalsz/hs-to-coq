@@ -41,8 +41,8 @@ Arguments UDFM {_} _ _.
 
 Local Definition Eq___TaggedVal_op_zeze__ {inst_val} `{GHC.Base.Eq_ inst_val}
     : (TaggedVal inst_val) -> (TaggedVal inst_val) -> bool :=
-  fun arg_183__ arg_184__ =>
-    match arg_183__ , arg_184__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | Mk_TaggedVal v1 _ , Mk_TaggedVal v2 _ => v1 GHC.Base.== v2
     end.
 
@@ -58,8 +58,8 @@ Program Instance Eq___TaggedVal {val} `{GHC.Base.Eq_ val} : GHC.Base.Eq_
 Local Definition Functor__TaggedVal_fmap : forall {a} {b},
                                              (a -> b) -> TaggedVal a -> TaggedVal b :=
   fun {a} {b} =>
-    fun arg_179__ arg_180__ =>
-      match arg_179__ , arg_180__ with
+    fun arg_0__ arg_1__ =>
+      match arg_0__ , arg_1__ with
         | f , Mk_TaggedVal val i => Mk_TaggedVal (f val) i
       end.
 
@@ -78,8 +78,8 @@ Program Instance Functor__TaggedVal : GHC.Base.Functor TaggedVal := fun _ k =>
 Local Definition Functor__UniqDFM_fmap : forall {a} {b},
                                            (a -> b) -> UniqDFM a -> UniqDFM b :=
   fun {a} {b} =>
-    fun arg_175__ arg_176__ =>
-      match arg_175__ , arg_176__ with
+    fun arg_0__ arg_1__ =>
+      match arg_0__ , arg_1__ with
         | f , UDFM a1 a2 => UDFM (GHC.Base.fmap (GHC.Base.fmap f) a1) ((fun b1 => b1)
                                                                       a2)
       end.
@@ -102,8 +102,8 @@ Program Instance Functor__UniqDFM : GHC.Base.Functor UniqDFM := fun _ k =>
 
 Definition addToUDFM {key} {elt} `{Unique.Uniquable key} : UniqDFM
                                                            elt -> key -> elt -> UniqDFM elt :=
-  fun arg_111__ arg_112__ arg_113__ =>
-    match arg_111__ , arg_112__ , arg_113__ with
+  fun arg_0__ arg_1__ arg_2__ =>
+    match arg_0__ , arg_1__ , arg_2__ with
       | UDFM m i , k , v => UDFM (Data.IntMap.Base.insert (Unique.getKey GHC.Base.$
                                                           Unique.getUnique k) (Mk_TaggedVal v i) m) (i GHC.Num.+
                                                                                                     GHC.Num.fromInteger
@@ -112,11 +112,11 @@ Definition addToUDFM {key} {elt} `{Unique.Uniquable key} : UniqDFM
 
 Definition addToUDFM_C {key} {elt} `{Unique.Uniquable key}
     : (elt -> elt -> elt) -> UniqDFM elt -> key -> elt -> UniqDFM elt :=
-  fun arg_76__ arg_77__ arg_78__ arg_79__ =>
-    match arg_76__ , arg_77__ , arg_78__ , arg_79__ with
+  fun arg_0__ arg_1__ arg_2__ arg_3__ =>
+    match arg_0__ , arg_1__ , arg_2__ , arg_3__ with
       | f , UDFM m i , k , v => let tf :=
-                                  fun arg_80__ arg_81__ =>
-                                    match arg_80__ , arg_81__ with
+                                  fun arg_4__ arg_5__ =>
+                                    match arg_4__ , arg_5__ with
                                       | Mk_TaggedVal a j , Mk_TaggedVal b _ => Mk_TaggedVal (f b a) j
                                     end in
                                 UDFM (Data.IntMap.Base.insertWith tf (Unique.getKey GHC.Base.$ Unique.getUnique
@@ -126,26 +126,26 @@ Definition addToUDFM_C {key} {elt} `{Unique.Uniquable key}
 
 Definition addToUDFM_Directly {elt} : UniqDFM
                                       elt -> Unique.Unique -> elt -> UniqDFM elt :=
-  fun arg_101__ arg_102__ arg_103__ =>
-    match arg_101__ , arg_102__ , arg_103__ with
+  fun arg_0__ arg_1__ arg_2__ =>
+    match arg_0__ , arg_1__ , arg_2__ with
       | UDFM m i , u , v => UDFM (Data.IntMap.Base.insert (Unique.getKey u)
                                  (Mk_TaggedVal v i) m) (i GHC.Num.+ GHC.Num.fromInteger 1)
     end.
 
 Definition addListToUDFM_Directly {elt} : UniqDFM elt -> list (Unique.Unique *
                                                               elt)%type -> UniqDFM elt :=
-  Data.Foldable.foldl (fun arg_106__ arg_107__ =>
-                        match arg_106__ , arg_107__ with
+  Data.Foldable.foldl (fun arg_0__ arg_1__ =>
+                        match arg_0__ , arg_1__ with
                           | m , pair k v => addToUDFM_Directly m k v
                         end).
 
 Definition addToUDFM_Directly_C {elt} : (elt -> elt -> elt) -> UniqDFM
                                         elt -> Unique.Unique -> elt -> UniqDFM elt :=
-  fun arg_86__ arg_87__ arg_88__ arg_89__ =>
-    match arg_86__ , arg_87__ , arg_88__ , arg_89__ with
+  fun arg_0__ arg_1__ arg_2__ arg_3__ =>
+    match arg_0__ , arg_1__ , arg_2__ , arg_3__ with
       | f , UDFM m i , u , v => let tf :=
-                                  fun arg_90__ arg_91__ =>
-                                    match arg_90__ , arg_91__ with
+                                  fun arg_4__ arg_5__ =>
+                                    match arg_4__ , arg_5__ with
                                       | Mk_TaggedVal a j , Mk_TaggedVal b _ => Mk_TaggedVal (f a b) j
                                     end in
                                 UDFM (Data.IntMap.Base.insertWith tf (Unique.getKey u) (Mk_TaggedVal v i) m) (i
@@ -157,32 +157,32 @@ Definition addToUDFM_Directly_C {elt} : (elt -> elt -> elt) -> UniqDFM
 Definition addListToUDFM_Directly_C {elt} : (elt -> elt -> elt) -> UniqDFM
                                             elt -> list (Unique.Unique * elt)%type -> UniqDFM elt :=
   fun f =>
-    Data.Foldable.foldl (fun arg_96__ arg_97__ =>
-                          match arg_96__ , arg_97__ with
+    Data.Foldable.foldl (fun arg_0__ arg_1__ =>
+                          match arg_0__ , arg_1__ with
                             | m , pair k v => addToUDFM_Directly_C f m k v
                           end).
 
 Definition adjustUDFM {key} {elt} `{Unique.Uniquable key}
     : (elt -> elt) -> UniqDFM elt -> key -> UniqDFM elt :=
-  fun arg_16__ arg_17__ arg_18__ =>
-    match arg_16__ , arg_17__ , arg_18__ with
+  fun arg_0__ arg_1__ arg_2__ =>
+    match arg_0__ , arg_1__ , arg_2__ with
       | f , UDFM m i , k => UDFM (Data.IntMap.Base.adjust (GHC.Base.fmap f)
                                  (Unique.getKey GHC.Base.$ Unique.getUnique k) m) i
     end.
 
 Definition alterUDFM {key} {elt} `{Unique.Uniquable key} : (option elt -> option
                                                            elt) -> UniqDFM elt -> key -> UniqDFM elt :=
-  fun arg_4__ arg_5__ arg_6__ =>
-    match arg_4__ , arg_5__ , arg_6__ with
+  fun arg_0__ arg_1__ arg_2__ =>
+    match arg_0__ , arg_1__ , arg_2__ with
       | f , UDFM m i , k => let inject :=
-                              fun arg_7__ =>
-                                match arg_7__ with
+                              fun arg_3__ =>
+                                match arg_3__ with
                                   | None => None
                                   | Some v => Some GHC.Base.$ Mk_TaggedVal v i
                                 end in
                             let alterf :=
-                              fun arg_10__ =>
-                                match arg_10__ with
+                              fun arg_6__ =>
+                                match arg_6__ with
                                   | None => inject GHC.Base.$ f None
                                   | Some (Mk_TaggedVal v _) => inject GHC.Base.$ f (Some v)
                                 end in
@@ -192,8 +192,8 @@ Definition alterUDFM {key} {elt} `{Unique.Uniquable key} : (option elt -> option
 
 Definition delFromUDFM {key} {elt} `{Unique.Uniquable key} : UniqDFM
                                                              elt -> key -> UniqDFM elt :=
-  fun arg_71__ arg_72__ =>
-    match arg_71__ , arg_72__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | UDFM m i , k => UDFM (Data.IntMap.Base.delete (Unique.getKey GHC.Base.$
                                                       Unique.getUnique k) m) i
     end.
@@ -203,24 +203,24 @@ Definition delListFromUDFM {key} {elt} `{Unique.Uniquable key} : UniqDFM
   Data.Foldable.foldl delFromUDFM.
 
 Definition disjointUDFM {elt} : UniqDFM elt -> UniqDFM elt -> bool :=
-  fun arg_33__ arg_34__ =>
-    match arg_33__ , arg_34__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | UDFM x _i , UDFM y _j => Data.IntMap.Base.null (Data.IntMap.Base.intersection
                                                        x y)
     end.
 
 Definition disjointUdfmUfm {elt} {elt2} : UniqDFM elt -> UniqFM.UniqFM
                                           elt2 -> bool :=
-  fun arg_29__ arg_30__ =>
-    match arg_29__ , arg_30__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | UDFM x _i , y => Data.IntMap.Base.null (Data.IntMap.Base.intersection x
                                                (UniqFM.ufmToIntMap y))
     end.
 
 Definition elemUDFM {key} {elt} `{Unique.Uniquable key} : key -> UniqDFM
                                                           elt -> bool :=
-  fun arg_67__ arg_68__ =>
-    match arg_67__ , arg_68__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | k , UDFM m _i => Data.IntMap.Base.member (Unique.getKey GHC.Base.$
                                                  Unique.getUnique k) m
     end.
@@ -230,8 +230,8 @@ Definition emptyUDFM {elt} : UniqDFM elt :=
 
 Definition listToUDFM_Directly {elt} : list (Unique.Unique *
                                             elt)%type -> UniqDFM elt :=
-  Data.Foldable.foldl (fun arg_118__ arg_119__ =>
-                        match arg_118__ , arg_119__ with
+  Data.Foldable.foldl (fun arg_0__ arg_1__ =>
+                        match arg_0__ , arg_1__ with
                           | m , pair u v => addToUDFM_Directly m u v
                         end) emptyUDFM.
 
@@ -242,34 +242,34 @@ Local Definition Monoid__UniqDFM_mempty {inst_a} : (UniqDFM inst_a) :=
   emptyUDFM.
 
 Definition filterUDFM {elt} : (elt -> bool) -> UniqDFM elt -> UniqDFM elt :=
-  fun arg_60__ arg_61__ =>
-    match arg_60__ , arg_61__ with
-      | p , UDFM m i => UDFM (Data.IntMap.Base.filter (fun arg_62__ =>
-                                                        match arg_62__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
+      | p , UDFM m i => UDFM (Data.IntMap.Base.filter (fun arg_2__ =>
+                                                        match arg_2__ with
                                                           | Mk_TaggedVal v _ => p v
                                                         end) m) i
     end.
 
 Definition filterUDFM_Directly {elt} : (Unique.Unique -> elt -> bool) -> UniqDFM
                                        elt -> UniqDFM elt :=
-  fun arg_52__ arg_53__ =>
-    match arg_52__ , arg_53__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | p , UDFM m i => let p' :=
-                          fun arg_54__ arg_55__ =>
-                            match arg_54__ , arg_55__ with
+                          fun arg_2__ arg_3__ =>
+                            match arg_2__ , arg_3__ with
                               | k , Mk_TaggedVal v _ => p (Unique.getUnique k) v
                             end in
                         UDFM (Data.IntMap.Base.filterWithKey p' m) i
     end.
 
 Definition intersectUDFM {elt} : UniqDFM elt -> UniqDFM elt -> UniqDFM elt :=
-  fun arg_41__ arg_42__ =>
-    match arg_41__ , arg_42__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | UDFM x i , UDFM y _j => UDFM (Data.IntMap.Base.intersection x y) i
     end.
 
 Definition isNullUDFM {elt} : UniqDFM elt -> bool :=
-  fun arg_48__ => match arg_48__ with | UDFM m _ => Data.IntMap.Base.null m end.
+  fun arg_0__ => match arg_0__ with | UDFM m _ => Data.IntMap.Base.null m end.
 
 Definition intersectsUDFM {elt} : UniqDFM elt -> UniqDFM elt -> bool :=
   fun x y => isNullUDFM (intersectUDFM x y).
@@ -283,74 +283,74 @@ Definition mapUDFM {elt1} {elt2} : (elt1 -> elt2) -> UniqDFM elt1 -> UniqDFM
 
 Definition minusUDFM {elt1} {elt2} : UniqDFM elt1 -> UniqDFM elt2 -> UniqDFM
                                      elt1 :=
-  fun arg_25__ arg_26__ =>
-    match arg_25__ , arg_26__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | UDFM x i , UDFM y _j => UDFM (Data.IntMap.Base.difference x y) i
     end.
 
 Definition sizeUDFM {elt} : UniqDFM elt -> GHC.Num.Int :=
-  fun arg_45__ => match arg_45__ with | UDFM m _i => Data.IntMap.Base.size m end.
+  fun arg_0__ => match arg_0__ with | UDFM m _i => Data.IntMap.Base.size m end.
 
 Definition taggedFst {val} : TaggedVal val -> val :=
-  fun arg_126__ => match arg_126__ with | Mk_TaggedVal v _ => v end.
+  fun arg_0__ => match arg_0__ with | Mk_TaggedVal v _ => v end.
 
 Definition udfmToUfm {elt} : UniqDFM elt -> UniqFM.UniqFM elt :=
-  fun arg_166__ =>
-    match arg_166__ with
-      | UDFM m _i => UniqFM.listToUFM_Directly (let cont_167__ arg_168__ :=
-                                                 match arg_168__ with
+  fun arg_0__ =>
+    match arg_0__ with
+      | UDFM m _i => UniqFM.listToUFM_Directly (let cont_1__ arg_2__ :=
+                                                 match arg_2__ with
                                                    | pair k tv => cons (pair (Unique.getUnique k) (taggedFst tv)) nil
                                                  end in
-                                               Coq.Lists.List.flat_map cont_167__ (Data.IntMap.Base.toList m))
+                                               Coq.Lists.List.flat_map cont_1__ (Data.IntMap.Base.toList m))
     end.
 
 Definition partitionUDFM {elt} : (elt -> bool) -> UniqDFM elt -> (UniqDFM elt *
                                  UniqDFM elt)%type :=
-  fun arg_159__ arg_160__ =>
-    match arg_159__ , arg_160__ with
-      | p , UDFM m i => let scrut_161__ :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
+      | p , UDFM m i => let scrut_2__ :=
                           Data.IntMap.Base.partition (p GHC.Base.∘ taggedFst) m in
-                        match scrut_161__ with
+                        match scrut_2__ with
                           | pair left_ right_ => pair (UDFM left_ i) (UDFM right_ i)
                         end
     end.
 
 Definition nonDetFoldUDFM {elt} {a} : (elt -> a -> a) -> a -> UniqDFM
                                       elt -> a :=
-  fun arg_132__ arg_133__ arg_134__ =>
-    match arg_132__ , arg_133__ , arg_134__ with
+  fun arg_0__ arg_1__ arg_2__ =>
+    match arg_0__ , arg_1__ , arg_2__ with
       | k , z , UDFM m _i => Data.Foldable.foldr k z GHC.Base.$ (GHC.Base.map
                              taggedFst GHC.Base.$ Data.IntMap.Base.elems m)
     end.
 
 Definition lookupUDFM {key} {elt} `{Unique.Uniquable key} : UniqDFM
                                                             elt -> key -> option elt :=
-  fun arg_128__ arg_129__ =>
-    match arg_128__ , arg_129__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | UDFM m _i , k => GHC.Base.fmap taggedFst (Data.IntMap.Base.lookup
                                        (Unique.getKey GHC.Base.$ Unique.getUnique k) m)
     end.
 
 Definition anyUDFM {elt} : (elt -> bool) -> UniqDFM elt -> bool :=
-  fun arg_171__ arg_172__ =>
-    match arg_171__ , arg_172__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | p , UDFM m _i => Data.IntMap.fold (orb GHC.Base.∘ (p GHC.Base.∘ taggedFst))
                          false m
     end.
 
 Definition taggedSnd {val} : TaggedVal val -> GHC.Num.Int :=
-  fun arg_124__ => match arg_124__ with | Mk_TaggedVal _ i => i end.
+  fun arg_0__ => match arg_0__ with | Mk_TaggedVal _ i => i end.
 
 Definition udfmToList {elt} : UniqDFM elt -> list (Unique.Unique * elt)%type :=
-  fun arg_141__ =>
-    match arg_141__ with
-      | UDFM m _i => let cont_142__ arg_143__ :=
-                       match arg_143__ with
+  fun arg_0__ =>
+    match arg_0__ with
+      | UDFM m _i => let cont_1__ arg_2__ :=
+                       match arg_2__ with
                          | pair k v => cons (pair (Unique.getUnique k) (taggedFst v)) nil
                        end in
-                     Coq.Lists.List.flat_map cont_142__ (Data.OldList.sortBy (Data.Function.on
-                                                                             GHC.Base.compare (taggedSnd GHC.Base.∘
-                                                                             Data.Tuple.snd)) GHC.Base.$
+                     Coq.Lists.List.flat_map cont_1__ (Data.OldList.sortBy (Data.Function.on
+                                                                           GHC.Base.compare (taggedSnd GHC.Base.∘
+                                                                           Data.Tuple.snd)) GHC.Base.$
                                              Data.IntMap.Base.toList m)
     end.
 
@@ -361,13 +361,13 @@ Definition insertUDFMIntoLeft_C {elt} : (elt -> elt -> elt) -> UniqDFM
 
 Definition plusUDFM_C {elt} : (elt -> elt -> elt) -> UniqDFM elt -> UniqDFM
                               elt -> UniqDFM elt :=
-  fun arg_153__ arg_154__ arg_155__ =>
-    match arg_153__ , arg_154__ , arg_155__ with
-      | f , (UDFM _ i as udfml) , (UDFM _ j as udfmr) => let j_156__ :=
+  fun arg_0__ arg_1__ arg_2__ =>
+    match arg_0__ , arg_1__ , arg_2__ with
+      | f , (UDFM _ i as udfml) , (UDFM _ j as udfmr) => let j_3__ :=
                                                            insertUDFMIntoLeft_C f udfmr udfml in
                                                          if i GHC.Base.> j : bool
                                                          then insertUDFMIntoLeft_C f udfml udfmr
-                                                         else j_156__
+                                                         else j_3__
     end.
 
 Definition insertUDFMIntoLeft {elt} : UniqDFM elt -> UniqDFM elt -> UniqDFM
@@ -375,13 +375,13 @@ Definition insertUDFMIntoLeft {elt} : UniqDFM elt -> UniqDFM elt -> UniqDFM
   fun udfml udfmr => addListToUDFM_Directly udfml GHC.Base.$ udfmToList udfmr.
 
 Definition plusUDFM {elt} : UniqDFM elt -> UniqDFM elt -> UniqDFM elt :=
-  fun arg_147__ arg_148__ =>
-    match arg_147__ , arg_148__ with
-      | (UDFM _ i as udfml) , (UDFM _ j as udfmr) => let j_149__ :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
+      | (UDFM _ i as udfml) , (UDFM _ j as udfmr) => let j_2__ :=
                                                        insertUDFMIntoLeft udfmr udfml in
                                                      if i GHC.Base.> j : bool
                                                      then insertUDFMIntoLeft udfml udfmr
-                                                     else j_149__
+                                                     else j_2__
     end.
 
 Local Definition Monoid__UniqDFM_mappend {inst_a} : (UniqDFM inst_a) -> (UniqDFM
@@ -398,8 +398,8 @@ Program Instance Monoid__UniqDFM {a} : GHC.Base.Monoid (UniqDFM a) := fun _ k =>
       GHC.Base.mempty__ := Monoid__UniqDFM_mempty |}.
 
 Definition eltsUDFM {elt} : UniqDFM elt -> list elt :=
-  fun arg_137__ =>
-    match arg_137__ with
+  fun arg_0__ =>
+    match arg_0__ with
       | UDFM m _i => GHC.Base.map taggedFst GHC.Base.$ (Data.OldList.sortBy
                      (Data.Function.on GHC.Base.compare taggedSnd) GHC.Base.$ Data.IntMap.Base.elems
                      m)
@@ -410,16 +410,16 @@ Definition foldUDFM {elt} {a} : (elt -> a -> a) -> a -> UniqDFM elt -> a :=
 
 Definition udfmIntersectUFM {elt} : UniqDFM elt -> UniqFM.UniqFM elt -> UniqDFM
                                     elt :=
-  fun arg_37__ arg_38__ =>
-    match arg_37__ , arg_38__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | UDFM x i , y => UDFM (Data.IntMap.Base.intersection x (UniqFM.ufmToIntMap y))
                         i
     end.
 
 Definition udfmMinusUFM {elt1} {elt2} : UniqDFM elt1 -> UniqFM.UniqFM
                                         elt2 -> UniqDFM elt1 :=
-  fun arg_21__ arg_22__ =>
-    match arg_21__ , arg_22__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | UDFM x i , y => UDFM (Data.IntMap.Base.difference x (UniqFM.ufmToIntMap y)) i
     end.
 

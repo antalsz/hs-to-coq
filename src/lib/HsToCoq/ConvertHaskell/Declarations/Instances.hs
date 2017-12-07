@@ -33,6 +33,7 @@ import qualified Data.Set as S
 
 import GHC hiding (Name)
 import qualified GHC
+import BasicTypes (TopLevelFlag(..))
 import Bag
 import HsToCoq.Util.GHC.Exception
 import HsToCoq.Util.GHC.Module
@@ -141,7 +142,7 @@ convertClsInstDecl cid@ClsInstDecl{..} rebuild mhandler = do
   -- superclasses?  Or is the generalization backtick enough?
   maybe id (ghandle . ($ info)) mhandler $ do
 
-    cbinds   <- convertTypedBindings (map unLoc $ bagToList cid_binds) M.empty -- the type signatures (note: no InstanceSigs)
+    cbinds   <- convertTypedBindings TopLevel (map unLoc $ bagToList cid_binds) M.empty -- the type signatures (note: no InstanceSigs)
                                    (\case ConvertedDefinitionBinding cdef -> pure cdef
                                           ConvertedPatternBinding    _ _  -> convUnsupported "pattern bindings in instances")
                                    Nothing -- error handler

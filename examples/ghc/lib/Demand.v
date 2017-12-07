@@ -21,6 +21,7 @@ Require GHC.List.
 Require GHC.Num.
 Require GHC.Prim.
 Require Maybes.
+Require Panic.
 Require UniqFM.
 Require Util.
 Require Var.
@@ -291,8 +292,8 @@ Axiom missingValue : forall {a}, a.
    find information for class Qualified "GHC.Show" "Show" unsupported *)
 
 Local Definition Eq___CPRResult_op_zeze__ : CPRResult -> CPRResult -> bool :=
-  fun arg_441__ arg_442__ =>
-    match arg_441__ , arg_442__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | NoCPR , NoCPR => true
       | RetProd , RetProd => true
       | RetSum a1 , RetSum b1 => ((a1 GHC.Base.== b1))
@@ -312,8 +313,8 @@ Program Instance Eq___CPRResult : GHC.Base.Eq_ CPRResult := fun _ k =>
 
 Local Definition Eq___Termination_op_zeze__ {inst_r} `{GHC.Base.Eq_ inst_r}
     : Termination inst_r -> Termination inst_r -> bool :=
-  fun arg_436__ arg_437__ =>
-    match arg_436__ , arg_437__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | Diverges , Diverges => true
       | ThrowsExn , ThrowsExn => true
       | Dunno a1 , Dunno b1 => ((a1 GHC.Base.== b1))
@@ -340,8 +341,8 @@ Program Instance Eq___Termination {r} `{GHC.Base.Eq_ r} : GHC.Base.Eq_
    information for class Qualified "GHC.Show" "Show" unsupported *)
 
 Local Definition Eq___Count_op_zeze__ : Count -> Count -> bool :=
-  fun arg_421__ arg_422__ =>
-    match arg_421__ , arg_422__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | One , One => true
       | Many , Many => true
       | _ , _ => false
@@ -356,8 +357,8 @@ Program Instance Eq___Count : GHC.Base.Eq_ Count := fun _ k =>
 
 Local Definition Eq___Use_op_zeze__ {inst_u} `{GHC.Base.Eq_ inst_u} : Use
                                                                       inst_u -> Use inst_u -> bool :=
-  fun arg_425__ arg_426__ =>
-    match arg_425__ , arg_426__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | Abs , Abs => true
       | Mk_Use a1 a2 , Mk_Use b1 b2 => (andb ((a1 GHC.Base.== b1)) ((a2 GHC.Base.==
                                              b2)))
@@ -402,8 +403,8 @@ Program Instance Eq___UseDmd : GHC.Base.Eq_ UseDmd := fun _ k =>
    information for class Qualified "GHC.Show" "Show" unsupported *)
 
 Local Definition Eq___ExnStr_op_zeze__ : ExnStr -> ExnStr -> bool :=
-  fun arg_406__ arg_407__ =>
-    match arg_406__ , arg_407__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | VanStr , VanStr => true
       | Mk_ExnStr , Mk_ExnStr => true
       | _ , _ => false
@@ -418,8 +419,8 @@ Program Instance Eq___ExnStr : GHC.Base.Eq_ ExnStr := fun _ k =>
 
 Local Definition Eq___Str_op_zeze__ {inst_s} `{GHC.Base.Eq_ inst_s} : Str
                                                                       inst_s -> Str inst_s -> bool :=
-  fun arg_410__ arg_411__ =>
-    match arg_410__ , arg_411__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | Lazy , Lazy => true
       | Mk_Str a1 a2 , Mk_Str b1 b2 => (andb ((a1 GHC.Base.== b1)) ((a2 GHC.Base.==
                                              b2)))
@@ -460,8 +461,8 @@ Program Instance Eq___StrDmd : GHC.Base.Eq_ StrDmd := fun _ k =>
 Local Definition Eq___JointDmd_op_zeze__ {inst_s} {inst_u} `{GHC.Base.Eq_
                                          inst_u} `{GHC.Base.Eq_ inst_s} : JointDmd inst_s inst_u -> JointDmd inst_s
                                                                           inst_u -> bool :=
-  fun arg_401__ arg_402__ =>
-    match arg_401__ , arg_402__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | JD a1 a2 , JD b1 b2 => (andb ((a1 GHC.Base.== b1)) ((a2 GHC.Base.== b2)))
     end.
 
@@ -476,8 +477,8 @@ Program Instance Eq___JointDmd {s} {u} `{GHC.Base.Eq_ u} `{GHC.Base.Eq_ s}
       GHC.Base.op_zsze____ := Eq___JointDmd_op_zsze__ |}.
 
 Local Definition Eq___DmdType_op_zeze__ : DmdType -> DmdType -> bool :=
-  fun arg_448__ arg_449__ =>
-    match arg_448__ , arg_449__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | Mk_DmdType fv1 ds1 res1 , Mk_DmdType fv2 ds2 res2 => andb (UniqFM.ufmToList
                                                                   fv1 GHC.Base.== UniqFM.ufmToList fv2) (andb (ds1
                                                                                                               GHC.Base.==
@@ -507,18 +508,18 @@ Definition absDmd : Demand :=
   JD missingValue missingValue.
 
 Definition addDemand : Demand -> DmdType -> DmdType :=
-  fun arg_37__ arg_38__ =>
-    match arg_37__ , arg_38__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | dmd , Mk_DmdType fv ds res => Mk_DmdType fv (cons dmd ds) res
     end.
 
 Definition argOneShots : BasicTypes.OneShotInfo -> Demand -> list
                          BasicTypes.OneShotInfo :=
-  fun arg_10__ arg_11__ =>
-    match arg_10__ , arg_11__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | one_shot_info , JD _ usg => let go :=
-                                      fix go arg_12__
-                                            := match arg_12__ with
+                                      fix go arg_2__
+                                            := match arg_2__ with
                                                  | UCall One u => cons one_shot_info (go u)
                                                  | UCall Many u => cons BasicTypes.NoOneShotInfo (go u)
                                                  | _ => nil
@@ -531,11 +532,11 @@ Definition argOneShots : BasicTypes.OneShotInfo -> Demand -> list
 
 Definition argsOneShots : StrictSig -> BasicTypes.Arity -> list (list
                                                                 BasicTypes.OneShotInfo) :=
-  fun arg_20__ arg_21__ =>
-    match arg_20__ , arg_21__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | Mk_StrictSig (Mk_DmdType _ arg_ds _) , n_val_args => let cons_ :=
-                                                               fun arg_22__ arg_23__ =>
-                                                                 match arg_22__ , arg_23__ with
+                                                               fun arg_2__ arg_3__ =>
+                                                                 match arg_2__ , arg_3__ with
                                                                    | nil , nil => nil
                                                                    | a , as_ => cons a as_
                                                                  end in
@@ -546,8 +547,8 @@ Definition argsOneShots : StrictSig -> BasicTypes.Arity -> list (list
                                                                then BasicTypes.ProbOneShot
                                                                else BasicTypes.OneShotLam in
                                                              let go :=
-                                                               fix go arg_28__
-                                                                     := match arg_28__ with
+                                                               fix go arg_8__
+                                                                     := match arg_8__ with
                                                                           | nil => nil
                                                                           | cons arg_d arg_ds => cons_ (argOneShots
                                                                                                        good_one_shot
@@ -561,18 +562,18 @@ Definition botDmd : Demand :=
   JD missingValue missingValue.
 
 Definition defaultDmd {r} : Termination r -> Demand :=
-  fun arg_344__ => match arg_344__ with | Dunno _ => absDmd | _ => botDmd end.
+  fun arg_0__ => match arg_0__ with | Dunno _ => absDmd | _ => botDmd end.
 
 Definition findIdDemand : DmdType -> Var.Var -> Demand :=
-  fun arg_356__ arg_357__ =>
-    match arg_356__ , arg_357__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | Mk_DmdType fv _ res , id => Maybes.orElse (VarEnv.lookupVarEnv fv id)
                                                   (defaultDmd res)
     end.
 
 Definition peelFV : DmdType -> Var.Var -> (DmdType * Demand)%type :=
-  fun arg_350__ arg_351__ =>
-    match arg_350__ , arg_351__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | Mk_DmdType fv ds res , id => let dmd :=
                                        Maybes.orElse (VarEnv.lookupVarEnv fv id) (defaultDmd res) in
                                      let fv' := VarEnv.delVarEnv fv id in pair (Mk_DmdType fv' ds res) dmd
@@ -582,28 +583,28 @@ Definition botRes : DmdResult :=
   Diverges.
 
 Definition bothArgUse : ArgUse -> ArgUse -> ArgUse :=
-  fun arg_234__ arg_235__ =>
-    match arg_234__ , arg_235__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | Abs , x => x
       | x , Abs => x
       | Mk_Use _ a1 , Mk_Use _ a2 => Mk_Use Many (bothUse a1 a2)
     end.
 
 Definition bothCleanDmd : CleanDemand -> CleanDemand -> CleanDemand :=
-  fun arg_321__ arg_322__ =>
-    match arg_321__ , arg_322__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | JD s1 a1 , JD s2 a2 => JD missingValue missingValue
     end.
 
 Definition bothDmd : Demand -> Demand -> Demand :=
-  fun arg_317__ arg_318__ =>
-    match arg_317__ , arg_318__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | JD s1 a1 , JD s2 a2 => JD missingValue missingValue
     end.
 
 Definition bothDmdResult : DmdResult -> Termination unit -> DmdResult :=
-  fun arg_127__ arg_128__ =>
-    match arg_127__ , arg_128__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | _ , Diverges => Diverges
       | r , ThrowsExn => match r with
                            | Diverges => r
@@ -613,23 +614,23 @@ Definition bothDmdResult : DmdResult -> Termination unit -> DmdResult :=
     end.
 
 Definition bothDmdType : DmdType -> BothDmdArg -> DmdType :=
-  fun arg_346__ arg_347__ =>
-    match arg_346__ , arg_347__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | Mk_DmdType fv1 ds1 r1 , pair fv2 t2 => Mk_DmdType (VarEnv.plusVarEnv_CD
                                                           bothDmd fv1 (defaultDmd r1) fv2 (defaultDmd t2)) ds1
                                                (bothDmdResult r1 t2)
     end.
 
 Definition bothExnStr : ExnStr -> ExnStr -> ExnStr :=
-  fun arg_289__ arg_290__ =>
-    match arg_289__ , arg_290__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | Mk_ExnStr , Mk_ExnStr => Mk_ExnStr
       | _ , _ => VanStr
     end.
 
 Definition bothArgStr : ArgStr -> ArgStr -> ArgStr :=
-  fun arg_313__ arg_314__ =>
-    match arg_313__ , arg_314__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | Lazy , s => s
       | s , Lazy => s
       | Mk_Str x1 s1 , Mk_Str x2 s2 => Mk_Str (bothExnStr x1 x2) (bothStr s1 s2)
@@ -645,11 +646,7 @@ Definition cleanEvalProdDmd : BasicTypes.Arity -> CleanDemand :=
   fun n => JD missingValue missingValue.
 
 Definition cleanUseDmd_maybe : Demand -> option UseDmd :=
-  fun arg_143__ =>
-    match arg_143__ with
-      | JD _ (Mk_Use _ u) => Some u
-      | _ => None
-    end.
+  fun arg_0__ => match arg_0__ with | JD _ (Mk_Use _ u) => Some u | _ => None end.
 
 Definition countMany : Count :=
   Many.
@@ -685,85 +682,75 @@ Definition getUseDmd {s} {u} : JointDmd s u -> u :=
   ud.
 
 Definition isAbsDmd : Demand -> bool :=
-  fun arg_150__ => match arg_150__ with | JD _ Abs => true | _ => false end.
+  fun arg_0__ => match arg_0__ with | JD _ Abs => true | _ => false end.
 
 Definition isBotRes : DmdResult -> bool :=
-  fun arg_91__ =>
-    match arg_91__ with
+  fun arg_0__ =>
+    match arg_0__ with
       | Diverges => true
       | ThrowsExn => true
       | Dunno _ => false
     end.
 
 Definition isBottomingSig : StrictSig -> bool :=
-  fun arg_93__ =>
-    match arg_93__ with
+  fun arg_0__ =>
+    match arg_0__ with
       | Mk_StrictSig (Mk_DmdType _ _ res) => isBotRes res
     end.
 
 Definition appIsBottom : StrictSig -> GHC.Num.Int -> bool :=
-  fun arg_96__ arg_97__ =>
-    match arg_96__ , arg_97__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | Mk_StrictSig (Mk_DmdType _ ds res) , n => if isBotRes res : bool
                                                   then negb GHC.Base.$ Util.lengthExceeds ds n
                                                   else false
     end.
 
 Definition isHyperStr : ArgStr -> bool :=
-  fun arg_295__ =>
-    match arg_295__ with
-      | Mk_Str _ HyperStr => true
-      | _ => false
-    end.
+  fun arg_0__ => match arg_0__ with | Mk_Str _ HyperStr => true | _ => false end.
 
 Definition isLazy : ArgStr -> bool :=
-  fun arg_297__ => match arg_297__ with | Lazy => true | Mk_Str _ _ => false end.
+  fun arg_0__ => match arg_0__ with | Lazy => true | Mk_Str _ _ => false end.
 
 Definition isWeakDmd : Demand -> bool :=
-  fun arg_299__ =>
-    match arg_299__ with
-      | JD s a => andb (isLazy s) (isUsedMU a)
-    end.
+  fun arg_0__ => match arg_0__ with | JD s a => andb (isLazy s) (isUsedMU a) end.
 
 Definition mkSProd : list ArgStr -> StrDmd :=
   fun sx =>
-    let j_302__ := SProd sx in
-    let j_303__ :=
-      if Data.Foldable.all isLazy sx : bool
-      then HeadStr
-      else j_302__ in
+    let j_0__ := SProd sx in
+    let j_1__ := if Data.Foldable.all isLazy sx : bool then HeadStr else j_0__ in
     if Data.Foldable.any isHyperStr sx : bool
     then HyperStr
-    else j_303__.
+    else j_1__.
 
 Definition isSeqDmd : Demand -> bool :=
-  fun arg_148__ =>
-    match arg_148__ with
+  fun arg_0__ =>
+    match arg_0__ with
       | JD (Mk_Str VanStr HeadStr) (Mk_Use _ UHead) => true
       | _ => false
     end.
 
 Definition isStrictDmd : Demand -> bool :=
-  fun arg_146__ =>
-    match arg_146__ with
+  fun arg_0__ =>
+    match arg_0__ with
       | JD _ Abs => false
       | JD Lazy _ => false
       | _ => true
     end.
 
 Definition isTopDmd : Demand -> bool :=
-  fun arg_152__ =>
-    match arg_152__ with
+  fun arg_0__ =>
+    match arg_0__ with
       | JD Lazy (Mk_Use Many Used) => true
       | _ => false
     end.
 
 Definition isTopRes : DmdResult -> bool :=
-  fun arg_100__ => match arg_100__ with | Dunno NoCPR => true | _ => false end.
+  fun arg_0__ => match arg_0__ with | Dunno NoCPR => true | _ => false end.
 
 Definition isNopDmdType : DmdType -> bool :=
-  fun arg_102__ =>
-    match arg_102__ with
+  fun arg_0__ =>
+    match arg_0__ with
       | Mk_DmdType env nil res => if andb (isTopRes res) (VarEnv.isEmptyVarEnv
                                           env) : bool
                                   then true
@@ -772,20 +759,20 @@ Definition isNopDmdType : DmdType -> bool :=
     end.
 
 Definition isNopSig : StrictSig -> bool :=
-  fun arg_105__ => match arg_105__ with | Mk_StrictSig ty => isNopDmdType ty end.
+  fun arg_0__ => match arg_0__ with | Mk_StrictSig ty => isNopDmdType ty end.
 
 Definition killFlags : DynFlags.DynFlags -> option KillFlags :=
   fun dflags =>
     let kill_one_shot := DynFlags.gopt DynFlags.Opt_KillOneShot dflags in
     let kill_abs := DynFlags.gopt DynFlags.Opt_KillAbsence dflags in
-    let j_8__ := Some (pair kill_abs kill_one_shot) in
+    let j_2__ := Some (pair kill_abs kill_one_shot) in
     if andb (negb kill_abs) (negb kill_one_shot) : bool
     then None
-    else j_8__.
+    else j_2__.
 
 Definition kill_usage : KillFlags -> Demand -> Demand :=
-  fun arg_256__ arg_257__ =>
-    match arg_256__ , arg_257__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | kfs , JD s u => JD missingValue missingValue
     end.
 
@@ -800,8 +787,8 @@ Definition killUsageDemand : DynFlags.DynFlags -> Demand -> Demand :=
     end.
 
 Definition killUsageSig : DynFlags.DynFlags -> StrictSig -> StrictSig :=
-  fun arg_262__ arg_263__ =>
-    match arg_262__ , arg_263__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | dflags , (Mk_StrictSig (Mk_DmdType env ds r) as sig) => match killFlags
                                                                         dflags with
                                                                   | Some kfs => Mk_StrictSig (Mk_DmdType env
@@ -818,22 +805,22 @@ Definition lazyApply2Dmd : Demand :=
   JD missingValue missingValue.
 
 Definition lubCPR : CPRResult -> CPRResult -> CPRResult :=
-  fun arg_132__ arg_133__ =>
-    let j_134__ :=
-      match arg_132__ , arg_133__ with
+  fun arg_0__ arg_1__ =>
+    let j_2__ :=
+      match arg_0__ , arg_1__ with
         | RetProd , RetProd => RetProd
         | _ , _ => NoCPR
       end in
-    match arg_132__ , arg_133__ with
+    match arg_0__ , arg_1__ with
       | RetSum t1 , RetSum t2 => if t1 GHC.Base.== t2 : bool
                                  then RetSum t1
-                                 else j_134__
-      | _ , _ => j_134__
+                                 else j_2__
+      | _ , _ => j_2__
     end.
 
 Definition lubDmdResult : DmdResult -> DmdResult -> DmdResult :=
-  fun arg_137__ arg_138__ =>
-    match arg_137__ , arg_138__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | Diverges , r => r
       | ThrowsExn , Diverges => ThrowsExn
       | ThrowsExn , r => r
@@ -843,52 +830,52 @@ Definition lubDmdResult : DmdResult -> DmdResult -> DmdResult :=
     end.
 
 Definition lubCount : Count -> Count -> Count :=
-  fun arg_222__ arg_223__ =>
-    match arg_222__ , arg_223__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | _ , Many => Many
       | Many , _ => Many
       | x , _ => x
     end.
 
 Definition lubArgUse : ArgUse -> ArgUse -> ArgUse :=
-  fun arg_230__ arg_231__ =>
-    match arg_230__ , arg_231__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | Abs , x => x
       | x , Abs => x
       | Mk_Use c1 a1 , Mk_Use c2 a2 => Mk_Use (lubCount c1 c2) (lubUse a1 a2)
     end.
 
 Definition lubDmd : Demand -> Demand -> Demand :=
-  fun arg_309__ arg_310__ =>
-    match arg_309__ , arg_310__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | JD s1 a1 , JD s2 a2 => JD missingValue missingValue
     end.
 
 Definition lubExnStr : ExnStr -> ExnStr -> ExnStr :=
-  fun arg_292__ arg_293__ =>
-    match arg_292__ , arg_293__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | VanStr , VanStr => VanStr
       | _ , _ => Mk_ExnStr
     end.
 
 Definition lubArgStr : ArgStr -> ArgStr -> ArgStr :=
-  fun arg_305__ arg_306__ =>
-    match arg_305__ , arg_306__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | Lazy , _ => Lazy
       | _ , Lazy => Lazy
       | Mk_Str x1 s1 , Mk_Str x2 s2 => Mk_Str (lubExnStr x1 x2) (lubStr s1 s2)
     end.
 
 Definition markExnStr : ArgStr -> ArgStr :=
-  fun arg_53__ =>
-    match arg_53__ with
+  fun arg_0__ =>
+    match arg_0__ with
       | Mk_Str VanStr s => Mk_Str Mk_ExnStr s
       | s => s
     end.
 
 Definition postProcessDmd : DmdShell -> Demand -> Demand :=
-  fun arg_192__ arg_193__ =>
-    match arg_192__ , arg_193__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | JD ss us , JD s a => let a' :=
                                match us with
                                  | Abs => Abs
@@ -911,16 +898,13 @@ Definition mkBothDmdArg : DmdEnv -> BothDmdArg :=
   fun env => pair env (Dunno tt).
 
 Definition mkCallDmd : CleanDemand -> CleanDemand :=
-  fun arg_328__ =>
-    match arg_328__ with
-      | JD d u => JD missingValue missingValue
-    end.
+  fun arg_0__ => match arg_0__ with | JD d u => JD missingValue missingValue end.
 
 Definition mkDmdType : DmdEnv -> list Demand -> DmdResult -> DmdType :=
   fun fv ds res => Mk_DmdType fv ds res.
 
 Definition mkHeadStrict : CleanDemand -> CleanDemand :=
-  fun cd => match cd with | JD sd_170__ ud_171__ => JD HeadStr ud_171__ end.
+  fun cd => match cd with | JD sd_0__ ud_1__ => JD HeadStr ud_1__ end.
 
 Definition mkJointDmd {s} {u} : s -> u -> JointDmd s u :=
   fun s u => JD missingValue missingValue.
@@ -930,22 +914,16 @@ Definition mkJointDmds {s} {u} : list s -> list u -> list (JointDmd s u) :=
     Util.zipWithEqual (GHC.Base.hs_string__ "mkJointDmds") mkJointDmd ss as_.
 
 Definition mkManyUsedDmd : CleanDemand -> Demand :=
-  fun arg_164__ =>
-    match arg_164__ with
-      | JD s a => JD missingValue missingValue
-    end.
+  fun arg_0__ => match arg_0__ with | JD s a => JD missingValue missingValue end.
 
 Definition mkOnceUsedDmd : CleanDemand -> Demand :=
-  fun arg_167__ =>
-    match arg_167__ with
-      | JD s a => JD missingValue missingValue
-    end.
+  fun arg_0__ => match arg_0__ with | JD s a => JD missingValue missingValue end.
 
 Definition mkProdDmd : list Demand -> CleanDemand :=
   fun dx => JD missingValue missingValue.
 
 Definition mkSCall : StrDmd -> StrDmd :=
-  fun arg_325__ => match arg_325__ with | HyperStr => HyperStr | s => SCall s end.
+  fun arg_0__ => match arg_0__ with | HyperStr => HyperStr | s => SCall s end.
 
 Definition mkStrictSig : DmdType -> StrictSig :=
   fun dmd_ty => Mk_StrictSig dmd_ty.
@@ -958,21 +936,21 @@ Definition mkUCall : Count -> UseDmd -> UseDmd :=
 
 Definition mkUProd : list ArgUse -> UseDmd :=
   fun ux =>
-    let j_225__ := UProd ux in
-    if Data.Foldable.all (fun arg_226__ => arg_226__ GHC.Base.== Abs) ux : bool
+    let j_0__ := UProd ux in
+    if Data.Foldable.all (fun arg_1__ => arg_1__ GHC.Base.== Abs) ux : bool
     then UHead
-    else j_225__.
+    else j_0__.
 
 Definition oneifyDmd : Demand -> Demand :=
-  fun arg_154__ =>
-    match arg_154__ with
+  fun arg_0__ =>
+    match arg_0__ with
       | JD s (Mk_Use _ a) => JD missingValue missingValue
       | jd => jd
     end.
 
 Definition peelCallDmd : CleanDemand -> (CleanDemand * DmdShell)%type :=
-  fun arg_41__ =>
-    match arg_41__ with
+  fun arg_0__ =>
+    match arg_0__ with
       | JD s u => match match u with
                             | UCall c u' => pair u' (Mk_Use c tt)
                             | _ => pair Used (Mk_Use Many tt)
@@ -989,22 +967,22 @@ Definition peelCallDmd : CleanDemand -> (CleanDemand * DmdShell)%type :=
     end.
 
 Definition peelUseCall : UseDmd -> option (Count * UseDmd)%type :=
-  fun arg_219__ =>
-    match arg_219__ with
+  fun arg_0__ =>
+    match arg_0__ with
       | UCall c u => Some (pair c u)
       | _ => None
     end.
 
 Definition retCPR_maybe : CPRResult -> option BasicTypes.ConTag :=
-  fun arg_75__ =>
-    match arg_75__ with
+  fun arg_0__ =>
+    match arg_0__ with
       | RetSum t => Some t
       | RetProd => Some BasicTypes.fIRST_TAG
       | NoCPR => None
     end.
 
 Definition returnsCPR_maybe : DmdResult -> option BasicTypes.ConTag :=
-  fun arg_79__ => match arg_79__ with | Dunno c => retCPR_maybe c | _ => None end.
+  fun arg_0__ => match arg_0__ with | Dunno c => retCPR_maybe c | _ => None end.
 
 Definition seqArgStr : ArgStr -> unit :=
   fun x => tt.
@@ -1049,8 +1027,8 @@ Definition seqUseDmd : UseDmd -> unit :=
   fun x => tt.
 
 Definition splitStrictSig : StrictSig -> (list Demand * DmdResult)%type :=
-  fun arg_33__ =>
-    match arg_33__ with
+  fun arg_0__ =>
+    match arg_0__ with
       | Mk_StrictSig (Mk_DmdType _ dmds res) => pair dmds res
     end.
 
@@ -1061,8 +1039,8 @@ Definition strTop : ArgStr :=
   Lazy.
 
 Definition splitStrProdDmd : GHC.Num.Int -> StrDmd -> option (list ArgStr) :=
-  fun arg_332__ arg_333__ =>
-    match arg_332__ , arg_333__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | n , HyperStr => Some (GHC.List.replicate n strBot)
       | n , HeadStr => Some (GHC.List.replicate n strTop)
       | n , SProd ds => if andb Util.debugIsOn (negb (Util.lengthIs ds n)) : bool
@@ -1073,8 +1051,8 @@ Definition splitStrProdDmd : GHC.Num.Int -> StrDmd -> option (list ArgStr) :=
     end.
 
 Definition splitArgStrProdDmd : GHC.Num.Int -> ArgStr -> option (list ArgStr) :=
-  fun arg_338__ arg_339__ =>
-    match arg_338__ , arg_339__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | n , Lazy => Some (GHC.List.replicate n Lazy)
       | n , Mk_Str _ s => splitStrProdDmd n s
     end.
@@ -1083,21 +1061,21 @@ Definition strictApply1Dmd : Demand :=
   JD missingValue missingValue.
 
 Definition strictenDmd : Demand -> CleanDemand :=
-  fun arg_56__ =>
-    match arg_56__ with
+  fun arg_0__ =>
+    match arg_0__ with
       | JD s u => let poke_u :=
-                    fun arg_57__ => match arg_57__ with | Abs => UHead | Mk_Use _ u => u end in
+                    fun arg_1__ => match arg_1__ with | Abs => UHead | Mk_Use _ u => u end in
                   let poke_s :=
-                    fun arg_59__ => match arg_59__ with | Lazy => HeadStr | Mk_Str _ s => s end in
+                    fun arg_3__ => match arg_3__ with | Lazy => HeadStr | Mk_Str _ s => s end in
                   JD missingValue missingValue
     end.
 
 Definition toBothDmdArg : DmdType -> BothDmdArg :=
-  fun arg_68__ =>
-    match arg_68__ with
+  fun arg_0__ =>
+    match arg_0__ with
       | Mk_DmdType fv _ r => let go :=
-                               fun arg_69__ =>
-                                 match arg_69__ with
+                               fun arg_1__ =>
+                                 match arg_1__ with
                                    | Dunno _ => Dunno tt
                                    | ThrowsExn => ThrowsExn
                                    | Diverges => Diverges
@@ -1109,8 +1087,8 @@ Definition topDmd : Demand :=
   JD missingValue missingValue.
 
 Definition increaseStrictSigArity : GHC.Num.Int -> StrictSig -> StrictSig :=
-  fun arg_247__ arg_248__ =>
-    match arg_247__ , arg_248__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | arity_increase , Mk_StrictSig (Mk_DmdType env dmds res) => Mk_StrictSig
                                                                    (Mk_DmdType env (Coq.Init.Datatypes.app
                                                                                    (GHC.List.replicate arity_increase
@@ -1118,11 +1096,11 @@ Definition increaseStrictSigArity : GHC.Num.Int -> StrictSig -> StrictSig :=
     end.
 
 Definition resTypeArgDmd {r} : Termination r -> Demand :=
-  fun arg_360__ => match arg_360__ with | Dunno _ => topDmd | _ => botDmd end.
+  fun arg_0__ => match arg_0__ with | Dunno _ => topDmd | _ => botDmd end.
 
 Definition splitDmdTy : DmdType -> (Demand * DmdType)%type :=
-  fun arg_384__ =>
-    match arg_384__ with
+  fun arg_0__ =>
+    match arg_0__ with
       | Mk_DmdType fv (cons dmd dmds) res_ty => pair dmd (Mk_DmdType fv dmds res_ty)
       | (Mk_DmdType _ nil res_ty as ty) => pair (resTypeArgDmd res_ty) ty
     end.
@@ -1131,19 +1109,19 @@ Definition topRes : DmdResult :=
   Dunno NoCPR.
 
 Definition postProcessDmdResult : Str unit -> DmdResult -> DmdResult :=
-  fun arg_118__ arg_119__ =>
-    match arg_118__ , arg_119__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | Lazy , _ => topRes
       | Mk_Str Mk_ExnStr _ , ThrowsExn => topRes
       | _ , res => res
     end.
 
 Definition postProcessDmdType : DmdShell -> DmdType -> BothDmdArg :=
-  fun arg_202__ arg_203__ =>
-    match arg_202__ , arg_203__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | (JD ss _ as du) , Mk_DmdType fv _ res_ty => let term_info :=
-                                                      let scrut_204__ := postProcessDmdResult ss res_ty in
-                                                      match scrut_204__ with
+                                                      let scrut_2__ := postProcessDmdResult ss res_ty in
+                                                      match scrut_2__ with
                                                         | Dunno _ => Dunno tt
                                                         | ThrowsExn => ThrowsExn
                                                         | Diverges => Diverges
@@ -1152,16 +1130,16 @@ Definition postProcessDmdType : DmdShell -> DmdType -> BothDmdArg :=
     end.
 
 Definition postProcessUnsat : DmdShell -> DmdType -> DmdType :=
-  fun arg_211__ arg_212__ =>
-    match arg_211__ , arg_212__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | (JD ss _ as ds) , Mk_DmdType fv args res_ty => Mk_DmdType (postProcessDmdEnv
                                                                   ds fv) (GHC.Base.map (postProcessDmd ds) args)
                                                        (postProcessDmdResult ss res_ty)
     end.
 
 Definition dmdTransformSig : StrictSig -> CleanDemand -> DmdType :=
-  fun arg_215__ arg_216__ =>
-    match arg_215__ , arg_216__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | Mk_StrictSig (Mk_DmdType _ arg_ds _ as dmd_ty) , cd => postProcessUnsat
                                                                (peelManyCalls (Data.Foldable.length arg_ds) cd) dmd_ty
     end.
@@ -1173,8 +1151,8 @@ Definition nopSig : StrictSig :=
   Mk_StrictSig nopDmdType.
 
 Definition dmdTypeDepth : DmdType -> BasicTypes.Arity :=
-  fun arg_63__ =>
-    match arg_63__ with
+  fun arg_0__ =>
+    match arg_0__ with
       | Mk_DmdType _ ds _ => Data.Foldable.length ds
     end.
 
@@ -1209,12 +1187,12 @@ Definition lubDmdType : DmdType -> DmdType -> DmdType :=
     end.
 
 Definition deferAfterIO : DmdType -> DmdType :=
-  fun arg_375__ =>
-    match arg_375__ with
+  fun arg_0__ =>
+    match arg_0__ with
       | (Mk_DmdType _ _ res as d) => let defer_res :=
-                                       fun arg_376__ => match arg_376__ with | (Dunno _ as r) => r | _ => topRes end in
-                                     let scrut_378__ := lubDmdType d nopDmdType in
-                                     match scrut_378__ with
+                                       fun arg_1__ => match arg_1__ with | (Dunno _ as r) => r | _ => topRes end in
+                                     let scrut_3__ := lubDmdType d nopDmdType in
+                                     match scrut_3__ with
                                        | Mk_DmdType fv ds _ => Mk_DmdType fv ds (defer_res res)
                                      end
     end.
@@ -1222,20 +1200,20 @@ Definition deferAfterIO : DmdType -> DmdType :=
 Definition trimCPRInfo : bool -> bool -> DmdResult -> DmdResult :=
   fun trim_all trim_sums res =>
     let trimC :=
-      fun arg_82__ =>
-        match arg_82__ with
-          | RetSum n => let j_83__ := RetSum n in
+      fun arg_0__ =>
+        match arg_0__ with
+          | RetSum n => let j_1__ := RetSum n in
                         if orb trim_all trim_sums : bool
                         then NoCPR
-                        else j_83__
+                        else j_1__
           | RetProd => if trim_all : bool
                        then NoCPR
                        else RetProd
           | NoCPR => NoCPR
         end in
     let trimR :=
-      fun arg_87__ =>
-        match arg_87__ with
+      fun arg_5__ =>
+        match arg_5__ with
           | Dunno c => Dunno (trimC c)
           | res => res
         end in
@@ -1245,18 +1223,18 @@ Definition useBot : ArgUse :=
   Abs.
 
 Definition useCount {u} : Use u -> Count :=
-  fun arg_175__ =>
-    match arg_175__ with
+  fun arg_0__ =>
+    match arg_0__ with
       | Abs => One
       | Mk_Use One _ => One
       | _ => Many
     end.
 
 Definition isUsedOnce : Demand -> bool :=
-  fun arg_177__ =>
-    match arg_177__ with
-      | JD _ a => let scrut_178__ := useCount a in
-                  match scrut_178__ with
+  fun arg_0__ =>
+    match arg_0__ with
+      | JD _ a => let scrut_1__ := useCount a in
+                  match scrut_1__ with
                     | One => true
                     | Many => false
                   end
@@ -1275,31 +1253,31 @@ Definition splitUseProdDmd (n : GHC.Num.Int) (u : UseDmd) : option (list
   end.
 
 Definition splitProdDmd_maybe : Demand -> option (list Demand) :=
-  fun arg_390__ =>
-    match arg_390__ with
-      | JD s u => let scrut_391__ := pair s u in
-                  let j_393__ :=
-                    match scrut_391__ with
+  fun arg_0__ =>
+    match arg_0__ with
+      | JD s u => let scrut_1__ := pair s u in
+                  let j_3__ :=
+                    match scrut_1__ with
                       | pair Lazy (Mk_Use _ (UProd ux)) => Some (mkJointDmds (GHC.List.replicate
                                                                              (Data.Foldable.length ux) Lazy) ux)
                       | _ => None
                     end in
-                  let j_395__ :=
-                    match scrut_391__ with
+                  let j_5__ :=
+                    match scrut_1__ with
                       | pair (Mk_Str _ s) (Mk_Use _ (UProd ux)) => match splitStrProdDmd
                                                                            (Data.Foldable.length ux) s with
                                                                      | Some sx => Some (mkJointDmds sx ux)
-                                                                     | _ => j_393__
+                                                                     | _ => j_3__
                                                                    end
-                      | _ => j_393__
+                      | _ => j_3__
                     end in
-                  match scrut_391__ with
+                  match scrut_1__ with
                     | pair (Mk_Str _ (SProd sx)) (Mk_Use _ u) => match splitUseProdDmd
                                                                          (Data.Foldable.length sx) u with
                                                                    | Some ux => Some (mkJointDmds sx ux)
-                                                                   | _ => j_395__
+                                                                   | _ => j_5__
                                                                  end
-                    | _ => j_395__
+                    | _ => j_5__
                   end
     end.
 
@@ -1313,16 +1291,16 @@ Definition cprProdSig : BasicTypes.Arity -> StrictSig :=
   fun arity => Mk_StrictSig (cprProdDmdType arity).
 
 Definition zap_count : KillFlags -> Count -> Count :=
-  fun arg_2__ arg_3__ =>
-    match arg_2__ , arg_3__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | pair _ kill_one_shot , c => if kill_one_shot : bool
                                     then Many
                                     else c
     end.
 
 Definition zap_musg : KillFlags -> ArgUse -> ArgUse :=
-  fun arg_251__ arg_252__ =>
-    match arg_251__ , arg_252__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | pair kill_abs _ , Abs => if kill_abs : bool
                                  then useTop
                                  else Abs

@@ -30,7 +30,7 @@ Definition fail `{g : MonadFail m} : forall {a}, GHC.Base.String -> m a :=
 
 Local Definition MonadFail__option_fail : forall {a},
                                             GHC.Base.String -> option a :=
-  fun {a} => fun arg_1__ => None.
+  fun {a} => fun arg_0__ => None.
 
 Program Instance MonadFail__option : MonadFail option := fun _ k =>
     k {|fail__ := fun {a} => MonadFail__option_fail |}.

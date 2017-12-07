@@ -457,8 +457,8 @@ Instance Unpeel_IgnorePackageFlag : Prim.Unpeel IgnorePackageFlag GHC.Base.Strin
 
 Local Definition Eq___CompilerInfo_op_zeze__
     : CompilerInfo -> CompilerInfo -> bool :=
-  fun arg_146__ arg_147__ =>
-    match arg_146__ , arg_147__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | GCC , GCC => true
       | Clang , Clang => true
       | AppleClang , AppleClang => true
@@ -478,8 +478,8 @@ Program Instance Eq___CompilerInfo : GHC.Base.Eq_ CompilerInfo := fun _ k =>
 (* Skipping instance Ord__SseVersion *)
 
 Local Definition Eq___SseVersion_op_zeze__ : SseVersion -> SseVersion -> bool :=
-  fun arg_98__ arg_99__ =>
-    match arg_98__ , arg_99__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | SSE1 , SSE1 => true
       | SSE2 , SSE2 => true
       | SSE3 , SSE3 => true
@@ -496,8 +496,8 @@ Program Instance Eq___SseVersion : GHC.Base.Eq_ SseVersion := fun _ k =>
       GHC.Base.op_zsze____ := Eq___SseVersion_op_zsze__ |}.
 
 Local Definition Eq___Option_op_zeze__ : Option -> Option -> bool :=
-  fun arg_92__ arg_93__ =>
-    match arg_92__ , arg_93__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | FileOption a1 a2 , FileOption b1 b2 => (andb ((a1 GHC.Base.== b1)) ((a2
                                                      GHC.Base.== b2)))
       | Mk_Option a1 , Mk_Option b1 => ((a1 GHC.Base.== b1))
@@ -512,8 +512,8 @@ Program Instance Eq___Option : GHC.Base.Eq_ Option := fun _ k =>
       GHC.Base.op_zsze____ := Eq___Option_op_zsze__ |}.
 
 Local Definition Eq___LinkerInfo_op_zeze__ : LinkerInfo -> LinkerInfo -> bool :=
-  fun arg_137__ arg_138__ =>
-    match arg_137__ , arg_138__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | GnuLD a1 , GnuLD b1 => ((a1 GHC.Base.== b1))
       | GnuGold a1 , GnuGold b1 => ((a1 GHC.Base.== b1))
       | DarwinLD a1 , DarwinLD b1 => ((a1 GHC.Base.== b1))
@@ -536,8 +536,8 @@ Program Instance Eq___LinkerInfo : GHC.Base.Eq_ LinkerInfo := fun _ k =>
 (* Skipping instance Ord__Way *)
 
 Local Definition Eq___Way_op_zeze__ : Way -> Way -> bool :=
-  fun arg_75__ arg_76__ =>
-    match arg_75__ , arg_76__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | WayCustom a1 , WayCustom b1 => ((a1 GHC.Base.== b1))
       | WayThreaded , WayThreaded => true
       | WayDebug , WayDebug => true
@@ -559,8 +559,8 @@ Program Instance Eq___Way : GHC.Base.Eq_ Way := fun _ k =>
 
 Local Definition Eq___DynLibLoader_op_zeze__
     : DynLibLoader -> DynLibLoader -> bool :=
-  fun arg_71__ arg_72__ =>
-    match arg_71__ , arg_72__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | Deployable , Deployable => true
       | SystemDependent , SystemDependent => true
       | _ , _ => false
@@ -575,8 +575,8 @@ Program Instance Eq___DynLibLoader : GHC.Base.Eq_ DynLibLoader := fun _ k =>
       GHC.Base.op_zsze____ := Eq___DynLibLoader_op_zsze__ |}.
 
 Local Definition Eq___TrustFlag_op_zeze__ : TrustFlag -> TrustFlag -> bool :=
-  fun arg_59__ arg_60__ =>
-    match arg_59__ , arg_60__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | TrustPackage a1 , TrustPackage b1 => ((a1 GHC.Base.== b1))
       | DistrustPackage a1 , DistrustPackage b1 => ((a1 GHC.Base.== b1))
       | _ , _ => false
@@ -604,8 +604,8 @@ Program Instance Eq___IgnorePackageFlag : GHC.Base.Eq_ IgnorePackageFlag :=
 
 Local Definition Eq___ModRenaming_op_zeze__
     : ModRenaming -> ModRenaming -> bool :=
-  fun arg_52__ arg_53__ =>
-    match arg_52__ , arg_53__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | Mk_ModRenaming a1 a2 , Mk_ModRenaming b1 b2 => (andb ((a1 GHC.Base.== b1))
                                                              ((a2 GHC.Base.== b2)))
     end.
@@ -618,8 +618,8 @@ Local Definition Eq___ModRenaming_op_zsze__
    find information for class Qualified "GHC.Show" "Show" unsupported *)
 
 Local Definition Eq___PackageArg_op_zeze__ : PackageArg -> PackageArg -> bool :=
-  fun arg_46__ arg_47__ =>
-    match arg_46__ , arg_47__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | Mk_PackageArg a1 , Mk_PackageArg b1 => ((a1 GHC.Base.== b1))
       | UnitIdArg a1 , UnitIdArg b1 => ((a1 GHC.Base.== b1))
       | _ , _ => false
@@ -638,8 +638,8 @@ Program Instance Eq___ModRenaming : GHC.Base.Eq_ ModRenaming := fun _ k =>
 
 Local Definition Eq___PackageFlag_op_zeze__
     : PackageFlag -> PackageFlag -> bool :=
-  fun arg_65__ arg_66__ =>
-    match arg_65__ , arg_66__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | ExposePackage a1 a2 a3 , ExposePackage b1 b2 b3 => (andb (andb ((a1
                                                                        GHC.Base.== b1)) ((a2 GHC.Base.== b2))) ((a3
                                                                  GHC.Base.== b3)))
@@ -659,8 +659,8 @@ Program Instance Eq___PackageFlag : GHC.Base.Eq_ PackageFlag := fun _ k =>
    find information for class Qualified "GHC.Show" "Show" unsupported *)
 
 Local Definition Eq___GhcLink_op_zeze__ : GhcLink -> GhcLink -> bool :=
-  fun arg_42__ arg_43__ =>
-    match arg_42__ , arg_43__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | NoLink , NoLink => true
       | LinkBinary , LinkBinary => true
       | LinkInMemory , LinkInMemory => true
@@ -677,8 +677,8 @@ Program Instance Eq___GhcLink : GHC.Base.Eq_ GhcLink := fun _ k =>
       GHC.Base.op_zsze____ := Eq___GhcLink_op_zsze__ |}.
 
 Local Definition Eq___GhcMode_op_zeze__ : GhcMode -> GhcMode -> bool :=
-  fun arg_38__ arg_39__ =>
-    match arg_38__ , arg_39__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | CompManager , CompManager => true
       | OneShot , OneShot => true
       | MkDepend , MkDepend => true
@@ -696,8 +696,8 @@ Program Instance Eq___GhcMode : GHC.Base.Eq_ GhcMode := fun _ k =>
    find information for class Qualified "GHC.Show" "Show" unsupported *)
 
 Local Definition Eq___HscTarget_op_zeze__ : HscTarget -> HscTarget -> bool :=
-  fun arg_34__ arg_35__ =>
-    match arg_34__ , arg_35__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | HscC , HscC => true
       | HscAsm , HscAsm => true
       | HscLlvm , HscLlvm => true
@@ -717,8 +717,8 @@ Program Instance Eq___HscTarget : GHC.Base.Eq_ HscTarget := fun _ k =>
    `Integer' literals unsupported *)
 
 Local Definition Eq___ProfAuto_op_zeze__ : ProfAuto -> ProfAuto -> bool :=
-  fun arg_30__ arg_31__ =>
-    match arg_30__ , arg_31__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | NoProfAuto , NoProfAuto => true
       | ProfAutoAll , ProfAutoAll => true
       | ProfAutoTop , ProfAutoTop => true
@@ -736,8 +736,8 @@ Program Instance Eq___ProfAuto : GHC.Base.Eq_ ProfAuto := fun _ k =>
 
 Local Definition Eq___SafeHaskellMode_op_zeze__
     : SafeHaskellMode -> SafeHaskellMode -> bool :=
-  fun arg_26__ arg_27__ =>
-    match arg_26__ , arg_27__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | Sf_None , Sf_None => true
       | Sf_Unsafe , Sf_Unsafe => true
       | Sf_Trustworthy , Sf_Trustworthy => true

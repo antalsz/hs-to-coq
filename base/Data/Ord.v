@@ -43,8 +43,8 @@ Instance instance_Down_Eq {a} `(Eq_ a) : Eq_ (Down a) := fun _ k => k {|
 
 Local Definition Ord__Down_compare {inst_a} `{GHC.Base.Ord inst_a} : (Down
                                                                      inst_a) -> (Down inst_a) -> comparison :=
-  fun arg_3__ arg_4__ =>
-    match arg_3__ , arg_4__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | Mk_Down x , Mk_Down y => GHC.Base.compare y x
     end.
 

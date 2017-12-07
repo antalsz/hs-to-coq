@@ -165,8 +165,8 @@ Arguments Mk_Kleisli {_} {_} {_} _.
 
 Arguments Mk_ArrowMonad {_} {_} _.
 
-Definition runKleisli {m : Type -> Type} {a} {b} (arg_22__ : Kleisli m a b) :=
-  match arg_22__ with
+Definition runKleisli {m : Type -> Type} {a} {b} (arg_0__ : Kleisli m a b) :=
+  match arg_0__ with
     | Mk_Kleisli runKleisli => runKleisli
   end.
 (* Converted value declarations: *)
@@ -179,15 +179,15 @@ Local Definition Arrow__arrow_op_ztztzt__ : forall {b} {c} {b'} {c'},
                                               GHC.Prim.arrow b c -> GHC.Prim.arrow b' c' -> GHC.Prim.arrow (b * b')%type
                                               (c * c')%type :=
   fun {b} {c} {b'} {c'} =>
-    fun arg_104__ arg_105__ arg_106__ =>
-      match arg_104__ , arg_105__ , arg_106__ with
+    fun arg_0__ arg_1__ arg_2__ =>
+      match arg_0__ , arg_1__ , arg_2__ with
         | f , g , pair x y => pair (f x) (g y)
       end.
 
 Local Definition Arrow__arrow_second : forall {b} {c} {d},
                                          GHC.Prim.arrow b c -> GHC.Prim.arrow (d * b)%type (d * c)%type :=
   fun {b} {c} {d} =>
-    (fun arg_2__ => Arrow__arrow_op_ztztzt__ Control.Category.id arg_2__).
+    (fun arg_0__ => Arrow__arrow_op_ztztzt__ Control.Category.id arg_0__).
 
 Local Definition Arrow__arrow_first : forall {b} {c} {d},
                                         GHC.Prim.arrow b c -> GHC.Prim.arrow (b * d)%type (c * d)%type :=
@@ -223,7 +223,7 @@ Program Instance Arrow__arrow : Arrow GHC.Prim.arrow := fun _ k =>
 
 Local Definition ArrowApply__arrow_app : forall {b} {c},
                                            GHC.Prim.arrow (GHC.Prim.arrow b c * b)%type c :=
-  fun {b} {c} => fun arg_63__ => match arg_63__ with | pair f x => f x end.
+  fun {b} {c} => fun arg_0__ => match arg_0__ with | pair f x => f x end.
 
 Program Instance ArrowApply__arrow : ArrowApply GHC.Prim.arrow := fun _ k =>
     k {|app__ := fun {b} {c} => ArrowApply__arrow_app |}.
@@ -235,8 +235,8 @@ Local Definition Functor__ArrowMonad_fmap {inst_a} `{Arrow inst_a} : forall {a}
                                                                        (a -> b) -> (ArrowMonad inst_a) a -> (ArrowMonad
                                                                        inst_a) b :=
   fun {a} {b} =>
-    fun arg_55__ arg_56__ =>
-      match arg_55__ , arg_56__ with
+    fun arg_0__ arg_1__ =>
+      match arg_0__ , arg_1__ with
         | f , Mk_ArrowMonad m => Mk_ArrowMonad GHC.Base.$ (m Control.Category.>>> arr f)
       end.
 

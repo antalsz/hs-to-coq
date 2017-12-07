@@ -385,8 +385,8 @@ Instance Unpeel_All : Unpeel All bool := Build_Unpeel _ _ getAll Mk_All.
 
 Local Definition Monoid__Dual_mappend {inst_a} `{GHC.Base.Monoid inst_a} : (Dual
                                                                            inst_a) -> (Dual inst_a) -> (Dual inst_a) :=
-  fun arg_192__ arg_193__ =>
-    match arg_192__ , arg_193__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | Mk_Dual x , Mk_Dual y => Mk_Dual (GHC.Base.mappend y x)
     end.
 
@@ -452,8 +452,8 @@ Program Instance Monad__Dual : GHC.Base.Monad Dual := fun _ k =>
 
 Local Definition Monoid__Endo_mappend {inst_a} : (Endo inst_a) -> (Endo
                                                  inst_a) -> (Endo inst_a) :=
-  fun arg_186__ arg_187__ =>
-    match arg_186__ , arg_187__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | Mk_Endo f , Mk_Endo g => Mk_Endo (f GHC.Base.∘ g)
     end.
 
@@ -470,8 +470,8 @@ Program Instance Monoid__Endo {a} : GHC.Base.Monoid (Endo a) := fun _ k =>
       GHC.Base.mempty__ := Monoid__Endo_mempty |}.
 
 Local Definition Monoid__All_mappend : All -> All -> All :=
-  fun arg_181__ arg_182__ =>
-    match arg_181__ , arg_182__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | Mk_All x , Mk_All y => Mk_All (andb x y)
     end.
 
@@ -487,8 +487,8 @@ Program Instance Monoid__All : GHC.Base.Monoid All := fun _ k =>
       GHC.Base.mempty__ := Monoid__All_mempty |}.
 
 Local Definition Monoid__Any_mappend : Any -> Any -> Any :=
-  fun arg_176__ arg_177__ =>
-    match arg_176__ , arg_177__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | Mk_Any x , Mk_Any y => Mk_Any (orb x y)
     end.
 
@@ -602,8 +602,8 @@ Program Instance Monad__Product : GHC.Base.Monad Product := fun _ k =>
 
 Local Definition Monoid__First_mappend {inst_a} : (First inst_a) -> (First
                                                   inst_a) -> (First inst_a) :=
-  fun arg_166__ arg_167__ =>
-    match arg_166__ , arg_167__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | Mk_First None , r => r
       | l , _ => l
     end.
@@ -622,8 +622,8 @@ Program Instance Monoid__First {a} : GHC.Base.Monoid (First a) := fun _ k =>
 
 Local Definition Monoid__Last_mappend {inst_a} : (Last inst_a) -> (Last
                                                  inst_a) -> (Last inst_a) :=
-  fun arg_162__ arg_163__ =>
-    match arg_162__ , arg_163__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | l , Mk_Last None => l
       | _ , r => r
     end.

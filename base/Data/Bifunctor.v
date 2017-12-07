@@ -46,8 +46,8 @@ Local Definition Bifunctor__pair_type_bimap : forall {a} {b} {c} {d},
                                                 (a -> b) -> (c -> d) -> GHC.Tuple.pair_type a c -> GHC.Tuple.pair_type b
                                                 d :=
   fun {a} {b} {c} {d} =>
-    fun arg_44__ arg_45__ arg_46__ =>
-      match arg_44__ , arg_45__ , arg_46__ with
+    fun arg_0__ arg_1__ arg_2__ =>
+      match arg_0__ , arg_1__ , arg_2__ with
         | f , g , pair a b => pair (f a) (g b)
       end.
 
@@ -72,8 +72,8 @@ Local Definition Bifunctor__triple_type_bimap {inst_x1} : forall {a}
                                                             (a -> b) -> (c -> d) -> (GHC.Tuple.triple_type inst_x1) a
                                                             c -> (GHC.Tuple.triple_type inst_x1) b d :=
   fun {a} {b} {c} {d} =>
-    fun arg_39__ arg_40__ arg_41__ =>
-      match arg_39__ , arg_40__ , arg_41__ with
+    fun arg_0__ arg_1__ arg_2__ =>
+      match arg_0__ , arg_1__ , arg_2__ with
         | f , g , pair (pair x1 a) b => pair (pair x1 (f a)) (g b)
       end.
 
@@ -101,8 +101,8 @@ Local Definition Bifunctor__quad_type_bimap {inst_x1} {inst_x2} : forall {a}
                                                                     inst_x2) a c -> (GHC.Tuple.quad_type inst_x1
                                                                     inst_x2) b d :=
   fun {a} {b} {c} {d} =>
-    fun arg_34__ arg_35__ arg_36__ =>
-      match arg_34__ , arg_35__ , arg_36__ with
+    fun arg_0__ arg_1__ arg_2__ =>
+      match arg_0__ , arg_1__ , arg_2__ with
         | f , g , pair (pair (pair x1 x2) a) b => pair (pair (pair x1 x2) (f a)) (g b)
       end.
 
@@ -131,8 +131,8 @@ Local Definition Bifunctor__quint_type_bimap {inst_x1} {inst_x2} {inst_x3}
         (a -> b) -> (c -> d) -> (GHC.Tuple.quint_type inst_x1 inst_x2 inst_x3) a
         c -> (GHC.Tuple.quint_type inst_x1 inst_x2 inst_x3) b d :=
   fun {a} {b} {c} {d} =>
-    fun arg_29__ arg_30__ arg_31__ =>
-      match arg_29__ , arg_30__ , arg_31__ with
+    fun arg_0__ arg_1__ arg_2__ =>
+      match arg_0__ , arg_1__ , arg_2__ with
         | f , g , pair (pair (pair (pair x1 x2) x3) a) b => pair (pair (pair (pair x1
                                                                                    x2) x3) (f a)) (g b)
       end.
@@ -161,8 +161,8 @@ Local Definition Bifunctor__sext_type_bimap {inst_x1} {inst_x2} {inst_x3}
                                                           inst_x3 inst_x4) a c -> (GHC.Tuple.sext_type inst_x1 inst_x2
                                                           inst_x3 inst_x4) b d :=
   fun {a} {b} {c} {d} =>
-    fun arg_24__ arg_25__ arg_26__ =>
-      match arg_24__ , arg_25__ , arg_26__ with
+    fun arg_0__ arg_1__ arg_2__ =>
+      match arg_0__ , arg_1__ , arg_2__ with
         | f , g , pair (pair (pair (pair (pair x1 x2) x3) x4) a) b => pair (pair (pair
                                                                                  (pair (pair x1 x2) x3) x4) (f a)) (g b)
       end.
@@ -194,8 +194,8 @@ Local Definition Bifunctor__sept_type_bimap {inst_x1} {inst_x2} {inst_x3}
                                                                     c -> (GHC.Tuple.sept_type inst_x1 inst_x2 inst_x3
                                                                     inst_x4 inst_x5) b d :=
   fun {a} {b} {c} {d} =>
-    fun arg_19__ arg_20__ arg_21__ =>
-      match arg_19__ , arg_20__ , arg_21__ with
+    fun arg_0__ arg_1__ arg_2__ =>
+      match arg_0__ , arg_1__ , arg_2__ with
         | f , g , pair (pair (pair (pair (pair (pair x1 x2) x3) x4) x5) a) b => pair
                                                                                 (pair (pair (pair (pair (pair x1 x2) x3)
                                                                                                   x4) x5) (f a)) (g b)
@@ -225,8 +225,8 @@ Program Instance Bifunctor__sept_type {x1} {x2} {x3} {x4} {x5} : Bifunctor
 Local Definition Bifunctor__Either_bimap : forall {a} {b} {c} {d},
                                              (a -> b) -> (c -> d) -> Data.Either.Either a c -> Data.Either.Either b d :=
   fun {a} {b} {c} {d} =>
-    fun arg_13__ arg_14__ arg_15__ =>
-      match arg_13__ , arg_14__ , arg_15__ with
+    fun arg_0__ arg_1__ arg_2__ =>
+      match arg_0__ , arg_1__ , arg_2__ with
         | f , _ , Data.Either.Left a => Data.Either.Left (f a)
         | _ , g , Data.Either.Right b => Data.Either.Right (g b)
       end.
@@ -248,8 +248,8 @@ Local Definition Bifunctor__Const_bimap : forall {a} {b} {c} {d},
                                             (a -> b) -> (c -> d) -> Data.Functor.Const.Const a
                                             c -> Data.Functor.Const.Const b d :=
   fun {a} {b} {c} {d} =>
-    fun arg_8__ arg_9__ arg_10__ =>
-      match arg_8__ , arg_9__ , arg_10__ with
+    fun arg_0__ arg_1__ arg_2__ =>
+      match arg_0__ , arg_1__ , arg_2__ with
         | f , _ , Data.Functor.Const.Mk_Const a => Data.Functor.Const.Mk_Const (f a)
       end.
 

@@ -571,8 +571,8 @@ Definition collectAnnArgs {b}{a} :
 
 Local Definition Eq___UnfoldingGuidance_op_zeze__
     : UnfoldingGuidance -> UnfoldingGuidance -> bool :=
-  fun arg_104__ arg_105__ =>
-    match arg_104__ , arg_105__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | UnfWhen a1 a2 a3 , UnfWhen b1 b2 b3 => (andb (andb ((a1 GHC.Base.== b1)) ((a2
                                                            GHC.Base.== b2))) ((a3 GHC.Base.== b3)))
       | UnfIfGoodArgs a1 a2 a3 , UnfIfGoodArgs b1 b2 b3 => (andb (andb ((a1
@@ -596,8 +596,8 @@ Program Instance Eq___UnfoldingGuidance : GHC.Base.Eq_ UnfoldingGuidance :=
 
 Local Definition Eq___TickishPlacement_op_zeze__
     : TickishPlacement -> TickishPlacement -> bool :=
-  fun arg_100__ arg_101__ =>
-    match arg_100__ , arg_101__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | PlaceRuntime , PlaceRuntime => true
       | PlaceNonLam , PlaceNonLam => true
       | PlaceCostCentre , PlaceCostCentre => true
@@ -615,8 +615,8 @@ Program Instance Eq___TickishPlacement : GHC.Base.Eq_ TickishPlacement := fun _
 
 Local Definition Eq___TickishScoping_op_zeze__
     : TickishScoping -> TickishScoping -> bool :=
-  fun arg_96__ arg_97__ =>
-    match arg_96__ , arg_97__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | NoScope , NoScope => true
       | SoftScope , SoftScope => true
       | CostCentreScope , CostCentreScope => true
@@ -760,8 +760,8 @@ Local Definition Ord__AltCon_max : AltCon -> AltCon -> AltCon :=
   fun x y => if Ord__AltCon_op_zlze__ x y : bool then y else x.
 
 Local Definition Eq___AltCon_op_zeze__ : AltCon -> AltCon -> bool :=
-  fun arg_32__ arg_33__ =>
-    match arg_32__ , arg_33__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | DataAlt a1 , DataAlt b1 => ((a1 GHC.Base.== b1))
       | LitAlt a1 , LitAlt b1 => ((a1 GHC.Base.== b1))
       | DEFAULT , DEFAULT => true

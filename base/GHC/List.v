@@ -72,37 +72,37 @@ Import GHC.Num.Notations.
 (* Converted value declarations: *)
 
 Definition all {a} : (a -> bool) -> list a -> bool :=
-  fix all arg_61__ arg_62__
-        := match arg_61__ , arg_62__ with
+  fix all arg_0__ arg_1__
+        := match arg_0__ , arg_1__ with
              | _ , nil => true
              | p , cons x xs => andb (p x) (all p xs)
            end.
 
 Definition and : list bool -> bool :=
-  fix and arg_72__
-        := match arg_72__ with
+  fix and arg_0__
+        := match arg_0__ with
              | nil => true
              | cons x xs => andb x (and xs)
            end.
 
 Definition any {a} : (a -> bool) -> list a -> bool :=
-  fix any arg_65__ arg_66__
-        := match arg_65__ , arg_66__ with
+  fix any arg_0__ arg_1__
+        := match arg_0__ , arg_1__ with
              | _ , nil => false
              | p , cons x xs => orb (p x) (any p xs)
            end.
 
 Definition break {a} : (a -> bool) -> list a -> (list a * list a)%type :=
-  fix break arg_80__ arg_81__
-        := match arg_80__ , arg_81__ with
+  fix break arg_0__ arg_1__
+        := match arg_0__ , arg_1__ with
              | _ , (nil as xs) => pair xs xs
-             | p , (cons x xs' as xs) => let j_84__ :=
+             | p , (cons x xs' as xs) => let j_4__ :=
                                            match break p xs' with
                                              | pair ys zs => pair (cons x ys) zs
                                            end in
                                          if p x : bool
                                          then pair nil xs
-                                         else j_84__
+                                         else j_4__
            end.
 
 Definition concat {a} : list (list a) -> list a :=
@@ -112,8 +112,8 @@ Definition constScanl {a} {b} : a -> b -> a :=
   GHC.Base.const.
 
 Definition dropWhile {a} : (a -> bool) -> list a -> list a :=
-  fix dropWhile arg_101__ arg_102__
-        := match arg_101__ , arg_102__ with
+  fix dropWhile arg_0__ arg_1__
+        := match arg_0__ , arg_1__ with
              | _ , nil => nil
              | p , (cons x xs' as xs) => if p x : bool
                                          then dropWhile p xs'
@@ -121,20 +121,20 @@ Definition dropWhile {a} : (a -> bool) -> list a -> list a :=
            end.
 
 Definition elem {a} `{(GHC.Base.Eq_ a)} : a -> list a -> bool :=
-  fix elem arg_57__ arg_58__
-        := match arg_57__ , arg_58__ with
+  fix elem arg_0__ arg_1__
+        := match arg_0__ , arg_1__ with
              | _ , nil => false
              | x , cons y ys => orb (x GHC.Base.== y) (elem x ys)
            end.
 
 Definition filter {a} : (a -> bool) -> list a -> list a :=
-  fix filter arg_140__ arg_141__
-        := match arg_140__ , arg_141__ with
+  fix filter arg_0__ arg_1__
+        := match arg_0__ , arg_1__ with
              | _pred , nil => nil
-             | pred , cons x xs => let j_142__ := filter pred xs in
+             | pred , cons x xs => let j_2__ := filter pred xs in
                                    if pred x : bool
                                    then cons x (filter pred xs)
-                                   else j_142__
+                                   else j_2__
            end.
 
 Definition filterFB {a} {b} : (a -> b -> b) -> (a -> bool) -> a -> b -> b :=
@@ -150,8 +150,8 @@ Definition foldr2 {a} {b} {c} : (a -> b -> c -> c) -> c -> list a -> list
                                 b -> c :=
   fun k z =>
     let go :=
-      fix go arg_42__ arg_43__
-            := match arg_42__ , arg_43__ with
+      fix go arg_0__ arg_1__
+            := match arg_0__ , arg_1__ with
                  | nil , _ys => z
                  | _xs , nil => z
                  | cons x xs , cons y ys => k x y (go xs ys)
@@ -160,8 +160,8 @@ Definition foldr2 {a} {b} {c} : (a -> b -> c -> c) -> c -> list a -> list
 
 Definition foldr2_left {a} {b} {c} {d} : (a -> b -> c -> d) -> d -> a -> (list
                                          b -> c) -> list b -> d :=
-  fun arg_35__ arg_36__ arg_37__ arg_38__ arg_39__ =>
-    match arg_35__ , arg_36__ , arg_37__ , arg_38__ , arg_39__ with
+  fun arg_0__ arg_1__ arg_2__ arg_3__ arg_4__ =>
+    match arg_0__ , arg_1__ , arg_2__ , arg_3__ , arg_4__ with
       | _k , z , _x , _r , nil => z
       | k , _z , x , r , cons y ys => k x y (r ys)
     end.
@@ -170,8 +170,8 @@ Definition idLength : GHC.Num.Int -> GHC.Num.Int :=
   GHC.Base.id.
 
 Definition lenAcc {a} : list a -> GHC.Num.Int -> GHC.Num.Int :=
-  fix lenAcc arg_150__ arg_151__
-        := match arg_150__ , arg_151__ with
+  fix lenAcc arg_0__ arg_1__
+        := match arg_0__ , arg_1__ with
              | nil , n => n
              | cons _ ys , n => lenAcc ys (n GHC.Num.+ GHC.Num.fromInteger 1)
            end.
@@ -181,35 +181,35 @@ Definition length {a} : list a -> GHC.Num.Int :=
 
 Definition lengthFB {x}
     : x -> (GHC.Num.Int -> GHC.Num.Int) -> GHC.Num.Int -> GHC.Num.Int :=
-  fun arg_145__ arg_146__ =>
-    match arg_145__ , arg_146__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | _ , r => fun a => r (a GHC.Num.+ GHC.Num.fromInteger 1)
     end.
 
 Definition lookup {a} {b} `{(GHC.Base.Eq_ a)} : a -> list (a * b)%type -> option
                                                 b :=
-  fix lookup arg_48__ arg_49__
-        := match arg_48__ , arg_49__ with
+  fix lookup arg_0__ arg_1__
+        := match arg_0__ , arg_1__ with
              | _key , nil => None
-             | key , cons (pair x y) xys => let j_50__ := lookup key xys in
+             | key , cons (pair x y) xys => let j_2__ := lookup key xys in
                                             if key GHC.Base.== x : bool
                                             then Some y
-                                            else j_50__
+                                            else j_2__
            end.
 
 Definition notElem {a} `{(GHC.Base.Eq_ a)} : a -> list a -> bool :=
-  fix notElem arg_53__ arg_54__
-        := match arg_53__ , arg_54__ with
+  fix notElem arg_0__ arg_1__
+        := match arg_0__ , arg_1__ with
              | _ , nil => true
              | x , cons y ys => andb (x GHC.Base./= y) (notElem x ys)
            end.
 
 Definition null {a} : list a -> bool :=
-  fun arg_155__ => match arg_155__ with | nil => true | cons _ _ => false end.
+  fun arg_0__ => match arg_0__ with | nil => true | cons _ _ => false end.
 
 Definition or : list bool -> bool :=
-  fix or arg_69__
-        := match arg_69__ with
+  fix or arg_0__
+        := match arg_0__ with
              | nil => false
              | cons x xs => orb x (or xs)
            end.
@@ -227,8 +227,8 @@ Definition product {a} `{(GHC.Num.Num a)} : list a -> a :=
 Definition reverse {a} : list a -> list a :=
   fun l =>
     let rev :=
-      fix rev arg_75__ arg_76__
-            := match arg_75__ , arg_76__ with
+      fix rev arg_0__ arg_1__
+            := match arg_0__ , arg_1__ with
                  | nil , a => a
                  | cons x xs , a => rev xs (cons x a)
                end in
@@ -244,8 +244,8 @@ Definition scanl {b} {a} : (b -> a -> b) -> b -> list a -> list b :=
   scanlGo.
 
 Definition scanl1 {a} : (a -> a -> a) -> list a -> list a :=
-  fun arg_133__ arg_134__ =>
-    match arg_133__ , arg_134__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | f , cons x xs => scanl f x xs
       | _ , nil => nil
     end.
@@ -272,21 +272,21 @@ Definition scanlFB' {b} {a} {c}
 Definition scanrFB {a} {b} {c} : (a -> b -> b) -> (b -> c -> c) -> a -> (b *
                                  c)%type -> (b * c)%type :=
   fun f c =>
-    fun arg_111__ arg_112__ =>
-      match arg_111__ , arg_112__ with
+    fun arg_0__ arg_1__ =>
+      match arg_0__ , arg_1__ with
         | x , pair r est => pair (f x r) (c r est)
       end.
 
 Definition span {a} : (a -> bool) -> list a -> (list a * list a)%type :=
-  fix span arg_87__ arg_88__
-        := match arg_87__ , arg_88__ with
+  fix span arg_0__ arg_1__
+        := match arg_0__ , arg_1__ with
              | _ , (nil as xs) => pair xs xs
-             | p , (cons x xs' as xs) => let j_90__ := pair nil xs in
+             | p , (cons x xs' as xs) => let j_3__ := pair nil xs in
                                          if p x : bool
                                          then match span p xs' with
                                                 | pair ys zs => pair (cons x ys) zs
                                               end
-                                         else j_90__
+                                         else j_3__
            end.
 
 Definition strictUncurryScanr {a} {b} {c} : (a -> b -> c) -> (a *
@@ -300,16 +300,16 @@ Definition takeFB {a} {b}
     : (a -> b -> b) -> b -> a -> (GHC.Num.Int -> b) -> GHC.Num.Int -> b :=
   fun c n x xs =>
     fun m =>
-      let j_96__ := c x (xs (m GHC.Num.- GHC.Num.fromInteger 1)) in
+      let j_2__ := c x (xs (m GHC.Num.- GHC.Num.fromInteger 1)) in
       match m with
-        | num_94__ => if num_94__ GHC.Base.== GHC.Num.fromInteger 1 : bool
-                      then c x n
-                      else j_96__
+        | num_0__ => if num_0__ GHC.Base.== GHC.Num.fromInteger 1 : bool
+                     then c x n
+                     else j_2__
       end.
 
 Definition takeWhile {a} : (a -> bool) -> list a -> list a :=
-  fix takeWhile arg_107__ arg_108__
-        := match arg_107__ , arg_108__ with
+  fix takeWhile arg_0__ arg_1__
+        := match arg_0__ , arg_1__ with
              | _ , nil => nil
              | p , cons x xs => if p x : bool
                                 then cons x (takeWhile p xs)
@@ -321,29 +321,29 @@ Definition takeWhileFB {a} {b}
   fun p c n => fun x r => if p x : bool then c x r else n.
 
 Definition uncons {a} : list a -> option (a * list a)%type :=
-  fun arg_157__ =>
-    match arg_157__ with
+  fun arg_0__ =>
+    match arg_0__ with
       | nil => None
       | cons x xs => Some (pair x xs)
     end.
 
 Definition unzip {a} {b} : list (a * b)%type -> (list a * list b)%type :=
-  GHC.Base.foldr (fun arg_6__ arg_7__ =>
-                   match arg_6__ , arg_7__ with
+  GHC.Base.foldr (fun arg_0__ arg_1__ =>
+                   match arg_0__ , arg_1__ with
                      | pair a b , pair as_ bs => pair (cons a as_) (cons b bs)
                    end) (pair nil nil).
 
 Definition unzip3 {a} {b} {c} : list (a * b * c)%type -> (list a * list b * list
                                 c)%type :=
-  GHC.Base.foldr (fun arg_1__ arg_2__ =>
-                   match arg_1__ , arg_2__ with
+  GHC.Base.foldr (fun arg_0__ arg_1__ =>
+                   match arg_0__ , arg_1__ with
                      | pair (pair a b) c , pair (pair as_ bs) cs => pair (pair (cons a as_) (cons b
                                                                                                   bs)) (cons c cs)
                    end) (pair (pair nil nil) nil).
 
 Definition zip {a} {b} : list a -> list b -> list (a * b)%type :=
-  fix zip arg_31__ arg_32__
-        := match arg_31__ , arg_32__ with
+  fix zip arg_0__ arg_1__
+        := match arg_0__ , arg_1__ with
              | nil , _bs => nil
              | _as , nil => nil
              | cons a as_ , cons b bs => cons (pair a b) (zip as_ bs)
@@ -351,8 +351,8 @@ Definition zip {a} {b} : list a -> list b -> list (a * b)%type :=
 
 Definition zip3 {a} {b} {c} : list a -> list b -> list c -> list (a * b *
                                                                  c)%type :=
-  fix zip3 arg_24__ arg_25__ arg_26__
-        := match arg_24__ , arg_25__ , arg_26__ with
+  fix zip3 arg_0__ arg_1__ arg_2__
+        := match arg_0__ , arg_1__ , arg_2__ with
              | cons a as_ , cons b bs , cons c cs => cons (pair (pair a b) c) (zip3 as_ bs
                                                           cs)
              | _ , _ , _ => nil
@@ -363,8 +363,8 @@ Definition zipFB {a} {b} {c} {d} : ((a *
   fun c => fun x y r => c (pair x y) r.
 
 Definition zipWith {a} {b} {c} : (a -> b -> c) -> list a -> list b -> list c :=
-  fix zipWith arg_19__ arg_20__ arg_21__
-        := match arg_19__ , arg_20__ , arg_21__ with
+  fix zipWith arg_0__ arg_1__ arg_2__
+        := match arg_0__ , arg_1__ , arg_2__ with
              | _f , nil , _bs => nil
              | _f , _as , nil => nil
              | f , cons a as_ , cons b bs => cons (f a b) (zipWith f as_ bs)
@@ -372,8 +372,8 @@ Definition zipWith {a} {b} {c} : (a -> b -> c) -> list a -> list b -> list c :=
 
 Definition zipWith3 {a} {b} {c} {d} : (a -> b -> c -> d) -> list a -> list
                                       b -> list c -> list d :=
-  fix zipWith3 arg_11__ arg_12__ arg_13__ arg_14__
-        := match arg_11__ , arg_12__ , arg_13__ , arg_14__ with
+  fix zipWith3 arg_0__ arg_1__ arg_2__ arg_3__
+        := match arg_0__ , arg_1__ , arg_2__ , arg_3__ with
              | z , cons a as_ , cons b bs , cons c cs => cons (z a b c) (zipWith3 z as_ bs
                                                               cs)
              | _ , _ , _ , _ => nil

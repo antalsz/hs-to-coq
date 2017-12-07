@@ -19,6 +19,7 @@ Require GHC.Num.
 Require Maybes.
 Require Module.
 Require OccName.
+Require Panic.
 Require SrcLoc.
 Require Unique.
 Require Util.
@@ -52,23 +53,23 @@ Definition getName `{g : NamedThing a} : a -> Name :=
 Definition getOccName `{g : NamedThing a} : a -> OccName.OccName :=
   g _ (getOccName__ a).
 
-Definition n_loc (arg_1__ : Name) :=
-  match arg_1__ with
+Definition n_loc (arg_0__ : Name) :=
+  match arg_0__ with
     | Mk_Name _ _ _ n_loc => n_loc
   end.
 
-Definition n_occ (arg_2__ : Name) :=
-  match arg_2__ with
+Definition n_occ (arg_1__ : Name) :=
+  match arg_1__ with
     | Mk_Name _ n_occ _ _ => n_occ
   end.
 
-Definition n_sort (arg_3__ : Name) :=
-  match arg_3__ with
+Definition n_sort (arg_2__ : Name) :=
+  match arg_2__ with
     | Mk_Name n_sort _ _ _ => n_sort
   end.
 
-Definition n_uniq (arg_4__ : Name) :=
-  match arg_4__ with
+Definition n_uniq (arg_3__ : Name) :=
+  match arg_3__ with
     | Mk_Name _ _ n_uniq _ => n_uniq
   end.
 (* Midamble *)
@@ -79,6 +80,9 @@ Import Module.
 
 (* Default values *)
 Import Panic.
+Instance Default_NameSort : Default NameSort := Build_Default _ System.
+Instance Default_Name : Default Name := Build_Default _ (Mk_Name default default default default).
+
 
 Instance Unique_Name : Unique.Uniquable Name.Name := {}.
 Admitted.
@@ -123,26 +127,6 @@ Local Definition NamedThing__Name_getName : Name -> Name :=
    Cannot find information for class Qualified "Outputable" "OutputableBndr"
    unsupported *)
 
-Axiom localiseName : forall {A : Type}, A.
-
-(* Translating `localiseName' failed: using a record pattern for the unknown
-   constructor `Mk_Name' unsupported *)
-
-Axiom setNameLoc : forall {A : Type}, A.
-
-(* Translating `setNameLoc' failed: using a record pattern for the unknown
-   constructor `Mk_Name' unsupported *)
-
-Axiom setNameUnique : forall {A : Type}, A.
-
-(* Translating `setNameUnique' failed: using a record pattern for the unknown
-   constructor `Mk_Name' unsupported *)
-
-Axiom tidyNameOcc : forall {A : Type}, A.
-
-(* Translating `tidyNameOcc' failed: using a record pattern for the unknown
-   constructor `Mk_Name' unsupported *)
-
 Definition cmpName : Name -> Name -> comparison :=
   fun n1 n2 => GHC.Base.compare (n_uniq n1) (n_uniq n2).
 
@@ -151,8 +135,8 @@ Local Definition Ord__Name_compare : Name -> Name -> comparison :=
 
 Local Definition Ord__Name_op_zg__ : Name -> Name -> bool :=
   fun a b =>
-    let scrut_91__ := (Ord__Name_compare a b) in
-    match scrut_91__ with
+    let scrut_0__ := (Ord__Name_compare a b) in
+    match scrut_0__ with
       | Lt => false
       | Eq => false
       | Gt => true
@@ -160,8 +144,8 @@ Local Definition Ord__Name_op_zg__ : Name -> Name -> bool :=
 
 Local Definition Ord__Name_op_zgze__ : Name -> Name -> bool :=
   fun a b =>
-    let scrut_88__ := (Ord__Name_compare a b) in
-    match scrut_88__ with
+    let scrut_0__ := (Ord__Name_compare a b) in
+    match scrut_0__ with
       | Lt => false
       | Eq => true
       | Gt => true
@@ -169,8 +153,8 @@ Local Definition Ord__Name_op_zgze__ : Name -> Name -> bool :=
 
 Local Definition Ord__Name_op_zl__ : Name -> Name -> bool :=
   fun a b =>
-    let scrut_85__ := (Ord__Name_compare a b) in
-    match scrut_85__ with
+    let scrut_0__ := (Ord__Name_compare a b) in
+    match scrut_0__ with
       | Lt => true
       | Eq => false
       | Gt => false
@@ -178,8 +162,8 @@ Local Definition Ord__Name_op_zl__ : Name -> Name -> bool :=
 
 Local Definition Ord__Name_op_zlze__ : Name -> Name -> bool :=
   fun a b =>
-    let scrut_82__ := (Ord__Name_compare a b) in
-    match scrut_82__ with
+    let scrut_0__ := (Ord__Name_compare a b) in
+    match scrut_0__ with
       | Lt => true
       | Eq => true
       | Gt => false
@@ -217,15 +201,15 @@ Definition getOccString {a} `{NamedThing a} : a -> GHC.Base.String :=
   OccName.occNameString GHC.Base.∘ getOccName.
 
 Definition isBuiltInSyntax : Name -> bool :=
-  fun arg_61__ =>
-    match arg_61__ with
+  fun arg_0__ =>
+    match arg_0__ with
       | Mk_Name (WiredIn _ _ Mk_BuiltInSyntax) _ _ _ => true
       | _ => false
     end.
 
 Definition isExternalName : Name -> bool :=
-  fun arg_58__ =>
-    match arg_58__ with
+  fun arg_0__ =>
+    match arg_0__ with
       | Mk_Name (External _) _ _ _ => true
       | Mk_Name (WiredIn _ _ _) _ _ _ => true
       | _ => false
@@ -235,30 +219,37 @@ Definition isInternalName : Name -> bool :=
   fun name => negb (isExternalName name).
 
 Definition isSystemName : Name -> bool :=
-  fun arg_43__ =>
-    match arg_43__ with
+  fun arg_0__ =>
+    match arg_0__ with
       | Mk_Name System _ _ _ => true
       | _ => false
     end.
 
 Definition isWiredInName : Name -> bool :=
-  fun arg_66__ =>
-    match arg_66__ with
+  fun arg_0__ =>
+    match arg_0__ with
       | Mk_Name (WiredIn _ _ _) _ _ _ => true
       | _ => false
     end.
 
+Definition localiseName : Name -> Name :=
+  fun n =>
+    match n with
+      | Mk_Name n_sort_0__ n_occ_1__ n_uniq_2__ n_loc_3__ => Mk_Name Internal
+                                                                     n_occ_1__ n_uniq_2__ n_loc_3__
+    end.
+
 Definition mkClonedInternalName : Unique.Unique -> Name -> Name :=
-  fun arg_37__ arg_38__ =>
-    match arg_37__ , arg_38__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | uniq , Mk_Name _ occ _ loc => Mk_Name missingValue missingValue missingValue
                                               missingValue
     end.
 
 Definition mkDerivedInternalName
     : (OccName.OccName -> OccName.OccName) -> Unique.Unique -> Name -> Name :=
-  fun arg_32__ arg_33__ arg_34__ =>
-    match arg_32__ , arg_33__ , arg_34__ with
+  fun arg_0__ arg_1__ arg_2__ =>
+    match arg_0__ , arg_1__ , arg_2__ with
       | derive_occ , uniq , Mk_Name _ occ _ loc => Mk_Name missingValue missingValue
                                                            missingValue missingValue
     end.
@@ -294,8 +285,8 @@ Definition mkWiredInName
     Mk_Name missingValue missingValue missingValue missingValue.
 
 Definition nameModule_maybe : Name -> option Module.Module :=
-  fun arg_45__ =>
-    match arg_45__ with
+  fun arg_0__ =>
+    match arg_0__ with
       | Mk_Name (External mod_) _ _ _ => Some mod_
       | Mk_Name (WiredIn mod_ _ _) _ _ _ => Some mod_
       | _ => None
@@ -315,8 +306,8 @@ Definition nameIsHomePackageImport : Module.Module -> Name -> bool :=
   fun this_mod =>
     let this_pkg := moduleUnitId this_mod in
     fun nm =>
-      let scrut_51__ := nameModule_maybe nm in
-      match scrut_51__ with
+      let scrut_1__ := nameModule_maybe nm in
+      match scrut_1__ with
         | None => false
         | Some nm_mod => andb (nm_mod GHC.Base./= this_mod) (moduleUnitId nm_mod
                               GHC.Base.== this_pkg)
@@ -339,12 +330,12 @@ Definition mkLocalisedOccName : Module.Module -> (option
                                 GHC.Base.String -> OccName.OccName -> OccName.OccName) -> Name -> OccName.OccName :=
   fun this_mod mk_occ name =>
     let origin :=
-      let j_78__ :=
+      let j_0__ :=
         Some ((Module.moduleNameColons GHC.Base.∘ (moduleName GHC.Base.∘ nameModule))
              GHC.Base.$ name) in
       if nameIsLocalOrFrom this_mod name : bool
       then None
-      else j_78__ in
+      else j_0__ in
     mk_occ origin (nameOccName name).
 
 Definition isVarName : Name -> bool :=
@@ -370,8 +361,8 @@ Program Instance NamedThing__Name : NamedThing Name := fun _ k =>
       getOccName__ := NamedThing__Name_getOccName |}.
 
 Definition nameSortStableString : NameSort -> GHC.Base.String :=
-  fun arg_7__ =>
-    match arg_7__ with
+  fun arg_0__ =>
+    match arg_0__ with
       | System => GHC.Base.hs_string__ "$_sys"
       | Internal => GHC.Base.hs_string__ "$_in"
       | External mod_ => Module.moduleStableString mod_
@@ -379,8 +370,8 @@ Definition nameSortStableString : NameSort -> GHC.Base.String :=
     end.
 
 Definition nameStableString : Name -> GHC.Base.String :=
-  fun arg_13__ =>
-    match arg_13__ with
+  fun arg_0__ =>
+    match arg_0__ with
       | Mk_Name n_sort n_occ n_uniq n_loc => Coq.Init.Datatypes.app
                                              (nameSortStableString n_sort) (Coq.Init.Datatypes.app (GHC.Base.hs_string__
                                                                                                    "$")
@@ -403,12 +394,26 @@ Definition getSrcSpan {a} `{NamedThing a} : a -> SrcLoc.SrcSpan :=
 Definition nameUnique : Name -> Unique.Unique :=
   fun name => Unique.mkUniqueGrimily (n_uniq name).
 
+Definition setNameLoc : Name -> SrcLoc.SrcSpan -> Name :=
+  fun name loc =>
+    match name with
+      | Mk_Name n_sort_0__ n_occ_1__ n_uniq_2__ n_loc_3__ => Mk_Name n_sort_0__
+                                                                     n_occ_1__ n_uniq_2__ loc
+    end.
+
+Definition setNameUnique : Name -> Unique.Unique -> Name :=
+  fun name uniq =>
+    match name with
+      | Mk_Name n_sort_0__ n_occ_1__ n_uniq_2__ n_loc_3__ => Mk_Name n_sort_0__
+                                                                     n_occ_1__ (Unique.getKey uniq) n_loc_3__
+    end.
+
 Definition stableNameCmp : Name -> Name -> comparison :=
-  fun arg_16__ arg_17__ =>
-    match arg_16__ , arg_17__ with
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
       | Mk_Name s1 occ1 _ _ , Mk_Name s2 occ2 _ _ => let sort_cmp :=
-                                                       fun arg_18__ arg_19__ =>
-                                                         match arg_18__ , arg_19__ with
+                                                       fun arg_2__ arg_3__ =>
+                                                         match arg_2__ , arg_3__ with
                                                            | External m1 , External m2 => Module.stableModuleCmp m1 m2
                                                            | External _ , _ => Lt
                                                            | WiredIn _ _ _ , External _ => Gt
@@ -425,9 +430,24 @@ Definition stableNameCmp : Name -> Name -> comparison :=
                                                      Util.thenCmp (sort_cmp s1 s2) (GHC.Base.compare occ1 occ2)
     end.
 
+Definition tidyNameOcc : Name -> OccName.OccName -> Name :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
+      | (Mk_Name System _ _ _ as name) , occ => match name with
+                                                  | Mk_Name n_sort_2__ n_occ_3__ n_uniq_4__ n_loc_5__ => Mk_Name
+                                                                                                         Internal occ
+                                                                                                         n_uniq_4__
+                                                                                                         n_loc_5__
+                                                end
+      | name , occ => match name with
+                        | Mk_Name n_sort_9__ n_occ_10__ n_uniq_11__ n_loc_12__ => Mk_Name n_sort_9__ occ
+                                                                                          n_uniq_11__ n_loc_12__
+                      end
+    end.
+
 Definition wiredInNameTyThing_maybe : Name -> option unit :=
-  fun arg_63__ =>
-    match arg_63__ with
+  fun arg_0__ =>
+    match arg_0__ with
       | Mk_Name (WiredIn _ thing _) _ _ _ => Some thing
       | _ => None
     end.
@@ -442,6 +462,6 @@ Definition wiredInNameTyThing_maybe : Name -> option unit :=
      OccName.isDataOcc OccName.isTcOcc OccName.isTvOcc OccName.isValOcc
      OccName.isVarOcc OccName.mkOccNameFS OccName.mkVarOcc OccName.mkVarOccFS
      OccName.occNameString OccName.tvName Panic.panic SrcLoc.SrcLoc SrcLoc.SrcSpan
-     SrcLoc.noSrcSpan SrcLoc.srcSpanStart Unique.Unique Unique.mkUniqueGrimily
-     Util.thenCmp
+     SrcLoc.noSrcSpan SrcLoc.srcSpanStart Unique.Unique Unique.getKey
+     Unique.mkUniqueGrimily Util.thenCmp
 *)

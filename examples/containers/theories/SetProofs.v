@@ -24,6 +24,13 @@ Module Foo (E : OrderedType) : WSfun(E).
   
   Module OrdFacts := OrderedTypeFacts(E).
 
+  Ltac rewrite_option_eq :=
+    rewrite /op_zeze__ /Eq___option; simpl;
+    rewrite /op_zeze__; rewrite /Eq_Integer___; simpl.
+  
+  Ltac rewrite_compare_e :=
+    rewrite /Base.compare /Ord_t /ord_default; simpl; rewrite /compare.
+
   Definition elt := E.t.
   
   (* Well-formedness *)
@@ -49,10 +56,6 @@ Module Foo (E : OrderedType) : WSfun(E).
       induction s2=>//. intros. move: H5; case: and4P=>//; elim.
       intros. apply /and4P; split=>//. apply IHs2_1; auto.
   Qed.
-
-  Ltac rewrite_option_eq :=
-    rewrite /op_zeze__ /Eq___option; simpl;
-    rewrite /op_zeze__; rewrite /Eq_Integer___; simpl.
 
   Lemma validsize_children : forall {a} (s1 s2 : Set_ a) l e,
       validsize (Bin l e s1 s2) -> validsize s1 /\ validsize s2.
@@ -119,7 +122,11 @@ Module Foo (E : OrderedType) : WSfun(E).
   Definition mem : elt -> t -> bool := fun e s' => match s' with exist s _ =>
      member e s end.
   Definition add : elt -> t -> t. Admitted. (* must contain a WF proof *)
-  Definition singleton : elt -> t. Admitted.
+  Definition singleton : elt -> t.
+    refine (fun e => pack (singleton e) _).
+    rewrite /singleton /WF /valid.
+    apply /and3P; split; auto.
+  Defined.
   Definition remove : elt -> t -> t. Admitted.
   Definition union : t -> t -> t. Admitted.
   Definition inter : t -> t -> t. Admitted.
@@ -127,8 +134,14 @@ Module Foo (E : OrderedType) : WSfun(E).
   Definition eq : t -> t -> Prop := Equal.
   Definition eq_dec : forall s s' : t, {eq s s'} + {~ eq s s'}.
     destruct s as [s]; destruct s' as [s']; simpl.
-    destruct (s == s') eqn:Heq.
-    (* LY: How should I proceed? *)
+    destruct (s == s') eqn:Heq; move: Heq;
+      rewrite /_GHC.Base.==_ /Eq___Set_; simpl;
+        rewrite /Base.Eq___Set__op_zeze__;
+        rewrite /_GHC.Base.==_ /Eq_Integer___ /Eq_list; simpl;
+          case: andP=>//.
+    - elim; intros; left.
+      rewrite /eq /Equal; intros. admit.
+      (* TODO: need lemmas on [toAscList] *)
   Admitted.
     
   Definition equal : t -> t -> bool :=
@@ -205,12 +218,10 @@ Module Foo (E : OrderedType) : WSfun(E).
   Lemma is_empty_1 : forall s : t, Empty s -> is_empty s = true.
   Proof.
     unfold Empty; unfold In. destruct s; destruct x; auto.
-    intros H. specialize (H e). simpl in H.
+    intros H. specialize (H e). move: H. simpl. rewrite_compare_e.
     assert (Heq: E.eq e e); auto.
-    assert (Hcomp: Base.compare e e = Eq).
-    { vm_compute. apply OrdFacts.elim_compare_eq in Heq.
-      destruct Heq. rewrite H0; auto. }
-    rewrite Hcomp in H. contradiction.
+    apply OrdFacts.elim_compare_eq in Heq; destruct Heq.
+    rewrite H; contradiction.
   Qed.
       
   Lemma is_empty_2 : forall s : t, is_empty s = true -> Empty s.
@@ -229,10 +240,26 @@ Module Foo (E : OrderedType) : WSfun(E).
     forall (s : t) (x y : elt), ~ E.eq x y -> In y s -> In y (remove x s). Admitted.
   Lemma remove_3 :
     forall (s : t) (x y : elt), In y (remove x s) -> In y s. Admitted.
+
   Lemma singleton_1 :
-    forall x y : elt, In y (singleton x) -> E.eq x y. Admitted.
+    forall x y : elt, In y (singleton x) -> E.eq x y.
+  Proof.
+    rewrite /singleton /In; simpl.
+    rewrite_compare_e. intros.
+    destruct (E.compare y x) eqn:Hcomp=>//.
+    apply E.eq_sym=>//.
+  Qed.
+      
   Lemma singleton_2 :
-    forall x y : elt, E.eq x y -> In y (singleton x). Admitted.
+    forall x y : elt, E.eq x y -> In y (singleton x).
+  Proof.
+    rewrite /singleton /In; simpl.
+    rewrite_compare_e. intros.
+    destruct (E.compare y x) eqn:Hcomp=>//; exfalso.
+    - apply E.eq_sym in H. apply (E.lt_not_eq l)=>//.
+    - apply (E.lt_not_eq l)=>//.
+  Qed.
+      
   Lemma union_1 :
     forall (s s' : t) (x : elt), In x (union s s') -> In x s \/ In x s'. Admitted.
   Lemma union_2 :

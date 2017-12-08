@@ -6,6 +6,8 @@ Import Notations.
 Require Import Data.Set.Base.
 Require Import Coq.FSets.FSetInterface.
 
+Require Import Omega.
+
 From mathcomp Require Import ssrbool ssreflect.
 
 Local Open Scope Z_scope.
@@ -106,11 +108,17 @@ Module Foo (E : OrderedType) : WSfun(E).
   Module OrdFacts := OrderedTypeFacts(E).
 
   Ltac rewrite_option_eq :=
-    rewrite /op_zeze__ /Eq___option; simpl;
-    rewrite /op_zeze__; rewrite /Eq_Integer___; simpl.
+    rewrite /op_zeze__ /Eq___option //= /op_zeze__ /Eq_Integer___ //=.
   
   Ltac rewrite_compare_e :=
     rewrite /Base.compare /Ord_t /ord_default; simpl; rewrite /compare.
+
+  Ltac destruct_match :=
+    repeat match goal with
+           | [ H :context[_GHC.Base.==_ (match ?a with _ => _ end) _] |- _] =>
+             let Heq := fresh "Heq" in
+             destruct a eqn:Heq=>//
+           end.
 
   Definition elt := E.t.
   
@@ -179,7 +187,7 @@ Module Foo (E : OrderedType) : WSfun(E).
           destruct (f s2_2) eqn:Heqs2=>//.
         destruct (_GHC.Base.==_ (s2 + s3 + 1)%Z s) eqn:Heq=>//.
         intros. rewrite_option_eq. apply Z.eqb_refl.
-      + rewrite Heqf. simpl. rewrite_option_eq. auto.
+      + rewrite Heqf. simpl. rewrite_option_eq. 
   Qed.
       
   Lemma WF_children : forall s1 s2 l e, WF (Bin l e s1 s2) -> WF s1 /\ WF s2.
@@ -191,7 +199,54 @@ Module Foo (E : OrderedType) : WSfun(E).
       apply ordered_children in Ho;
       apply validsize_children in Hv; intuition.
   Qed.
-  
+
+  Lemma WF_size_children : forall s1 s2 l e,
+      WF (Bin l e s1 s2) -> size s1 + size s2 + 1 = l.
+  Proof.
+    rewrite /WF /valid. move=>s1 s2 l e. case: and3P=>//.
+    elim; move=>Hb Ho Hv H; clear H.
+    apply validsize_children in Hv as Hv2. destruct Hv2.
+    move: H0 H Hv. rewrite /validsize.
+    remember (fix realsize (t' : Set_ elt) : option Size :=
+             match t' with
+             | Bin sz _ l0 r =>
+                 match realsize l0 with
+                 | Some n0 =>
+                     match realsize r with
+                     | Some m =>
+                         if _GHC.Base.==_ (_GHC.Num.+_ (_GHC.Num.+_ n0 m) #1) sz
+                         then Some sz
+                         else None
+                     | None => None
+                     end
+                 | None => None
+                 end
+             | Tip => Some #0
+             end) as f. rewrite -Heqf.
+    destruct s1; destruct s2=>//.
+    - rewrite /size; rewrite_Int; intros.
+      destruct_match. move: H0 H Heq1; rewrite_option_eq.
+      rewrite /is_true !Z.eqb_eq. intros; subst; auto.
+    - rewrite /size; rewrite_Int; intros.
+      destruct_match. move: H0 H Heq1; rewrite_option_eq.
+      rewrite /is_true !Z.eqb_eq. intros; subst; auto.
+    - rewrite /size; rewrite_Int; intros.
+      destruct_match. move: H0 H Heq1; rewrite_option_eq.
+      rewrite /is_true !Z.eqb_eq. intros; subst; auto.
+    - rewrite /size; rewrite_Int; intros.
+      destruct_match. move: H0 H Heq0; rewrite_option_eq.
+      rewrite /is_true !Z.eqb_eq. intros; subst; auto.
+  Qed.
+
+  Lemma WF_size_nonneg : forall s, WF s -> size s >= 0.
+  Proof.
+    induction s; intros.
+    - apply WF_size_children in H as H2.
+      apply WF_children in H. destruct H.
+      rewrite /size. subst. apply IHs1 in H. apply IHs2 in H0. omega.
+    - simpl; omega.
+  Qed.
+    
   Definition In x (s' : t) :=
     s <-- s' ;;
     member x s = true.

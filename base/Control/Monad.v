@@ -112,11 +112,11 @@ Infix "Control.Monad.<$!>" := (_<$!>_) (at level 99).
 End Notations.
 
 (* Unbound variables:
-     bool cons list nil op_zt__ tt unit Data.Foldable.Foldable Data.Foldable.foldlM
-     Data.Foldable.sequenceA_ Data.Functor.op_zlzdzg__ Data.Traversable.sequenceA
-     Data.Traversable.traverse GHC.Base.Alternative GHC.Base.Applicative
-     GHC.Base.Monad GHC.Base.MonadPlus GHC.Base.empty GHC.Base.flip GHC.Base.foldr
-     GHC.Base.id GHC.Base.liftA2 GHC.Base.mzero GHC.Base.op_zgzg__
-     GHC.Base.op_zgzgze__ GHC.Base.pure GHC.Base.return_ GHC.List.unzip
-     GHC.List.zipWith GHC.Prim.seq
+     bool cons false list nil op_zt__ true tt unit Data.Foldable.Foldable
+     Data.Foldable.foldlM Data.Foldable.sequenceA_ Data.Functor.op_zlzdzg__
+     Data.Traversable.sequenceA Data.Traversable.traverse GHC.Base.Alternative
+     GHC.Base.Applicative GHC.Base.Monad GHC.Base.MonadPlus GHC.Base.empty
+     GHC.Base.flip GHC.Base.foldr GHC.Base.id GHC.Base.liftA2 GHC.Base.mzero
+     GHC.Base.op_zgzg__ GHC.Base.op_zgzgze__ GHC.Base.pure GHC.Base.return_
+     GHC.List.unzip GHC.List.zipWith GHC.Prim.seq
 *)

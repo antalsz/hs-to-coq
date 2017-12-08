@@ -26,5 +26,5 @@ Definition bool {a} : a -> a -> bool -> a :=
     end.
 
 (* Unbound variables:
-     bool
+     bool false true
 *)

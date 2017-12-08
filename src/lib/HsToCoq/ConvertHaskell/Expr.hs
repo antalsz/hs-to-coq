@@ -41,8 +41,6 @@ import           Data.Map.Strict (Map)
 import qualified Data.Set        as S
 import qualified Data.Map.Strict as M
 
-
-
 import GHC hiding (Name, HsChar, HsString, AsPat)
 import qualified GHC
 import Bag
@@ -612,8 +610,8 @@ chainFallThroughs cases failure = go (reverse cases) failure where
 
 
 -- A match group contains multiple alternatives, and each can have guards, and
--- there is fall-through semantics. But oftne we know that if one pattern falls-through, then the
--- next pattern will not match. In that case, we want to bind them in the same
+-- there is fall-through semantics. But often we know that if one pattern fall-through,
+-- then the next pattern will not match. In that case, we want to bind them in the same
 -- match-with clause, in the hope of obtaining a full pattern match
 --
 -- The plan is:

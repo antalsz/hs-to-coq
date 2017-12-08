@@ -250,12 +250,12 @@ newtype MultPattern = MultPattern (NonEmpty Pattern)                            
                     deriving (Eq, Ord, Show, Read, Typeable, Data)
 
 -- |@/pattern/ ::=@
-data Pattern = ArgsPat Qualid (NonEmpty Pattern)                                               -- ^@/qualid/ /pattern/ … /pattern/@
+data Pattern = ArgsPat Qualid [Pattern]                                               -- ^@/qualid/ /pattern/ … /pattern/@ – should start with a constructor
              | ExplicitArgsPat Qualid (NonEmpty Pattern)                                       -- ^@\@ /qualid/ /pattern/ … /pattern/@
              | InfixPat Pattern Op Pattern                                                     -- ^@/pattern/ /op/ /pattern/@ – extra
              | AsPat Pattern Qualid                                                            -- ^@/pattern/ as /ident/@
              | InScopePat Pattern Ident                                                        -- ^@/pattern/ % /ident/@
-             | QualidPat Qualid                                                                -- ^@/qualid/@
+             | QualidPat Qualid                                                                -- ^@/qualid/@ – should be only variables
              | UnderscorePat                                                                   -- ^@_@
              | NumPat Num                                                                      -- ^@/num/@
              | StringPat Text                                                                  -- ^@/string/@ – extra (holds the value, not the source text)

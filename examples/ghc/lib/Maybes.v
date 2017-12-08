@@ -130,7 +130,8 @@ Definition whenIsJust {m} {a} `{GHC.Base.Monad m} : option a -> (a -> m
     end.
 
 (* Unbound variables:
-     Some bool false option true tt unit Data.Maybe.fromMaybe GHC.Base.Applicative
-     GHC.Base.Functor GHC.Base.Monad GHC.Base.const GHC.Base.flip GHC.Base.fmap
-     GHC.Base.id GHC.Base.op_ztzg__ GHC.Base.pure GHC.Base.return_
+     None Some bool false option true tt unit Data.Maybe.fromMaybe
+     GHC.Base.Applicative GHC.Base.Functor GHC.Base.Monad GHC.Base.const
+     GHC.Base.flip GHC.Base.fmap GHC.Base.id GHC.Base.op_ztzg__ GHC.Base.pure
+     GHC.Base.return_
 *)

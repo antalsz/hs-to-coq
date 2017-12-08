@@ -1463,13 +1463,13 @@ Infix "Data.Set.Base.\\" := (_\\_) (at level 99).
 End Notations.
 
 (* Unbound variables:
-     Gt Lt None Some andb bool comparison cons false id list negb nil op_zt__ option
-     orb pair set_size true Data.Bits.shiftL Data.Bits.shiftR Data.Foldable.Foldable
-     Data.Foldable.foldl GHC.Base.Eq_ GHC.Base.Monoid GHC.Base.Ord GHC.Base.String
-     GHC.Base.compare GHC.Base.const GHC.Base.flip GHC.Base.map GHC.Base.mappend
-     GHC.Base.mempty GHC.Base.op_z2218U__ GHC.Base.op_zd__ GHC.Base.op_zdzn__
-     GHC.Base.op_zeze__ GHC.Base.op_zg__ GHC.Base.op_zgze__ GHC.Base.op_zl__
-     GHC.Base.op_zlze__ GHC.Base.op_zsze__ GHC.Err.error GHC.Err.undefined
-     GHC.Num.Int GHC.Num.Num GHC.Num.op_zm__ GHC.Num.op_zp__ GHC.Num.op_zt__
-     GHC.Prim.seq Nat.add
+     Eq Gt Lt None Some andb bool comparison cons false id list negb nil op_zt__
+     option orb pair set_size true Data.Bits.shiftL Data.Bits.shiftR
+     Data.Foldable.Foldable Data.Foldable.foldl GHC.Base.Eq_ GHC.Base.Monoid
+     GHC.Base.Ord GHC.Base.String GHC.Base.compare GHC.Base.const GHC.Base.flip
+     GHC.Base.map GHC.Base.mappend GHC.Base.mempty GHC.Base.op_z2218U__
+     GHC.Base.op_zd__ GHC.Base.op_zdzn__ GHC.Base.op_zeze__ GHC.Base.op_zg__
+     GHC.Base.op_zgze__ GHC.Base.op_zl__ GHC.Base.op_zlze__ GHC.Base.op_zsze__
+     GHC.Err.error GHC.Err.undefined GHC.Num.Int GHC.Num.Num GHC.Num.op_zm__
+     GHC.Num.op_zp__ GHC.Num.op_zt__ GHC.Prim.seq Nat.add
 *)

@@ -549,7 +549,7 @@ Infix "Data.OldList.\\" := (_\\_) (at level 99).
 End Notations.
 
 (* Unbound variables:
-     None Some andb bool comparison cons false list nil op_zt__ option orb pair
+     Gt None Some andb bool comparison cons false list nil op_zt__ option orb pair
      sortBy true Coq.Init.Datatypes.app Coq.Lists.List.flat_map
      Data.Maybe.listToMaybe Data.Maybe.maybe Data.Ord.comparing Data.Tuple.fst
      Data.Tuple.snd GHC.Base.Eq_ GHC.Base.Ord GHC.Base.String GHC.Base.build

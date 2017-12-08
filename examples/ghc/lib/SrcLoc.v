@@ -779,7 +779,7 @@ Definition wiredInSrcSpan : SrcSpan :=
   UnhelpfulSpan (FastString.fsLit (GHC.Base.hs_string__ "<wired into compiler>")).
 
 (* Unbound variables:
-     Gt Lt None Some Type andb bool comparison false list negb option true
+     Eq Gt Lt None Some Type andb bool comparison false list negb option true
      Coq.Program.Basics.compose Data.Foldable.Foldable Data.Foldable.hash_compose
      Data.Monoid.Mk_Any Data.Monoid.Mk_Dual Data.Monoid.Mk_Endo
      Data.Monoid.Mk_Product Data.Monoid.Mk_Sum Data.Monoid.appEndo Data.Monoid.getAny

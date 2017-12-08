@@ -14,13 +14,13 @@ PASS = \
   Expr  \
   Endo \
   Type \
+  OpMeth \
 
 
 # tests that *should* pass but currently fail
 TODO_PASS  = \
   Arrow \
   EqList \
-  OpMeth \
   TypeClient \
   PaperExamples \
   PartialRecordSel \

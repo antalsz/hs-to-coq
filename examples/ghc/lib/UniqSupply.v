@@ -269,7 +269,7 @@ Program Instance MonadUnique__UniqSM : MonadUnique UniqSM := fun _ k =>
       getUniquesM__ := MonadUnique__UniqSM_getUniquesM |}.
 
 (* Unbound variables:
-     cons list op_zt__ pair GHC.Base.Applicative GHC.Base.Functor GHC.Base.Monad
+     cons list nil op_zt__ pair GHC.Base.Applicative GHC.Base.Functor GHC.Base.Monad
      GHC.Base.const GHC.Base.flip GHC.Base.liftM3 GHC.Base.op_z2218U__
      GHC.Base.op_zd__ GHC.Base.op_zgzgze__ GHC.Base.op_ztzg__ GHC.Base.pure
      GHC.Base.return_ GHC.Num.Int GHC.Tuple.pair3 Unique.Unique

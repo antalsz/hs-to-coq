@@ -262,7 +262,7 @@ Definition zipWithAndUnzipM {m} {a} {b} {c} {d} `{GHC.Base.Monad m}
            end.
 
 (* Unbound variables:
-     Some bool cons false list nil op_zt__ option pair true tt unit
+     None Some bool cons false list nil op_zt__ option pair true tt unit
      Control.Monad.foldM Control.Monad.foldM_ Data.Either.Either Data.Either.Left
      Data.Either.Right Data.Foldable.concat Data.Maybe.catMaybes
      Data.Traversable.mapM GHC.Base.Monad GHC.Base.liftM GHC.Base.op_z2218U__

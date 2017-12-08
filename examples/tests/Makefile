@@ -30,6 +30,7 @@ PASS = \
   Bits \
   Records \
   RecordConstruction \
+  PatternGuard \
 
 # tests that *should* pass but currently fail
 TODO_PASS  = \
@@ -38,7 +39,6 @@ TODO_PASS  = \
   Mutrec \
   Existential \
   TypeAnnotations \
-  PatternGuard \
 
 
 

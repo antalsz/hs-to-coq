@@ -2328,8 +2328,8 @@ Infix "Data.Semigroup.<>" := (_<>_) (at level 70).
 End Notations.
 
 (* Unbound variables:
-     None Some andb bool comparison cons false list negb nil option orb true tt unit
-     Coq.Init.Datatypes.app Coq.Program.Basics.compose Data.Either.Either
+     Eq Gt Lt None Some andb bool comparison cons false list negb nil option orb true
+     tt unit Coq.Init.Datatypes.app Coq.Program.Basics.compose Data.Either.Either
      Data.Either.Left Data.Foldable.Foldable Data.Foldable.hash_compose
      Data.Functor.op_zlzdzg__ Data.List.NonEmpty.NEcons Data.List.NonEmpty.NonEmpty
      Data.Maybe.maybe Data.Monoid.All Data.Monoid.Any Data.Monoid.Dual

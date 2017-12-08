@@ -3,7 +3,7 @@
 module HsToCoq.Coq.Gallina.Util (
   -- * Common AST patterns
   pattern Var,    pattern App1,    pattern App2,    pattern App3,    appList,
-  pattern VarPat, pattern App1Pat, pattern App2Pat, pattern App3Pat, appListPat,
+  pattern VarPat, pattern App1Pat, pattern App2Pat, pattern App3Pat,
   pattern BName,
   maybeForall,
   ifBool,
@@ -55,13 +55,11 @@ pattern VarPat  :: Ident                                   -> Pattern
 pattern App1Pat :: Qualid -> Pattern                       -> Pattern
 pattern App2Pat :: Qualid -> Pattern -> Pattern            -> Pattern
 pattern App3Pat :: Qualid -> Pattern -> Pattern -> Pattern -> Pattern
-appListPat      :: Qualid -> [Pattern]                     -> Pattern
 
 pattern VarPat  x          = QualidPat (Bare x)
-pattern App1Pat c x        = ArgsPat c (x :| [])
-pattern App2Pat c x1 x2    = ArgsPat c (x1 :| x2 : [])
-pattern App3Pat c x1 x2 x3 = ArgsPat c (x1 :| x2 : x3 : [])
-appListPat      c          = maybe (QualidPat c) (ArgsPat c) . nonEmpty
+pattern App1Pat c x        = ArgsPat c [x]
+pattern App2Pat c x1 x2    = ArgsPat c [x1, x2]
+pattern App3Pat c x1 x2 x3 = ArgsPat c [x1, x2, x3]
 
 pattern BName :: Ident -> Name
 pattern BName  x          = Ident (Bare x)

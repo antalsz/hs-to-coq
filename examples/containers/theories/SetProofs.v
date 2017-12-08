@@ -1,10 +1,91 @@
 Require Import GHC.Base.
 Import Notations.
+Require Import GHC.Num.
+Import Notations.
 
 Require Import Data.Set.Base.
 Require Import Coq.FSets.FSetInterface.
 
 From mathcomp Require Import ssrbool ssreflect.
+
+Local Open Scope Z_scope.
+
+(** This should be in a separate file, but let's keep it here for
+    convenience for now. *)
+Section Int_And_Z.
+  Variables a b : Int.
+
+  Lemma Int_plus_is_Z_plus :
+    a GHC.Num.+ b = (a + b).
+  Proof. rewrite /_GHC.Num.+_. reflexivity. Qed.
+
+  Lemma Int_minus_is_Z_minus :
+    a GHC.Num.- b = (a - b).
+  Proof. rewrite /_GHC.Num.-_. reflexivity. Qed.
+
+  Lemma Int_mult_is_Z_mult :
+    a GHC.Num.* b = (a * b).
+  Proof. rewrite /_GHC.Num.*_. reflexivity. Qed.
+
+  Lemma Int_lt_is_Z_lt :
+    a GHC.Base.< b = (a <? b).
+  Proof. rewrite /_GHC.Base.<_. reflexivity. Qed.
+
+  Lemma Int_le_is_Z_le : 
+    a GHC.Base.<= b = (a <=? b).
+  Proof. rewrite /_GHC.Base.<=_. reflexivity. Qed.
+
+  Lemma Int_gt_is_Z_gt :
+    a GHC.Base.> b = (b <? a).
+  Proof. rewrite /_GHC.Base.>_. reflexivity. Qed.
+
+  Lemma Int_ge_is_Z_ge : 
+    a GHC.Base.>= b = (b <=? a).
+  Proof. rewrite /_GHC.Base.>=_. reflexivity. Qed.
+
+  Lemma Int_eq_is_Z_eq : 
+    a GHC.Base.== b = (a == b).
+  Proof. rewrite /_GHC.Base.==_. reflexivity. Qed.
+
+End Int_And_Z.
+
+(** LY: Is there a better way of doing this? *)
+Ltac rewrite_Int :=
+  repeat multimatch goal with
+         | [ |- context[_GHC.Num.+_] ] =>
+           rewrite !Int_plus_is_Z_plus
+         | [ |- context[_GHC.Num.-_] ] =>
+           rewrite !Int_minus_is_Z_minus
+         | [ |- context[_GHC.Num.*_] ] =>
+           rewrite !Int_mult_is_Z_mult
+         | [ |- context[_GHC.Base.<_] ] =>
+           rewrite !Int_lt_is_Z_lt
+         | [ |- context[_GHC.Base.<=_] ] =>
+           rewrite !Int_le_is_Z_le 
+         | [ |- context[_GHC.Base.>_] ] =>
+           rewrite !Int_gt_is_Z_gt
+         | [ |- context[_GHC.Base.>=_] ] =>
+           rewrite !Int_ge_is_Z_ge
+         | [ |- context[_GHC.Base.==_] ] =>
+           rewrite !Int_eq_is_Z_eq
+             
+         | [ H: context[_GHC.Num.+_] |- _ ] =>
+           rewrite !Int_plus_is_Z_plus in H
+         | [ H: context[_GHC.Num.-_] |- _ ] =>
+           rewrite !Int_minus_is_Z_minus in H
+         | [ H: context[_GHC.Num.*_] |- _ ] =>
+           rewrite !Int_mult_is_Z_mult in H
+         | [ H: context[_GHC.Base.<_] |- _ ] =>
+           rewrite !Int_lt_is_Z_lt in H
+         | [ H: context[_GHC.Base.<=_] |- _ ] =>
+           rewrite !Int_le_is_Z_le in H
+         | [ H: context[_GHC.Base.>_] |- _ ] =>
+           rewrite !Int_gt_is_Z_gt in H
+         | [ H: context[_GHC.Base.>=_] |- _ ] =>
+           rewrite !Int_ge_is_Z_ge in H
+         | [ H: context[_GHC.Base.==_] |- _ ] =>
+           rewrite !Int_eq_is_Z_eq in H
+         end.
 
 Module Foo (E : OrderedType) : WSfun(E).
   Local Instance Eq_t : GHC.Base.Eq_ E.t :=

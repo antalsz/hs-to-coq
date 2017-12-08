@@ -17,8 +17,7 @@ extra-source-files:  src/lib/HsToCoq/ConvertHaskell/Parameters/Parsers.y
 
 source-repository head
   type:     git
-  location: https://github.com/DeepSpec/corespec
-  subdir:   core-coq/hs-to-coq
+  location: https://github.com/antalsz/hs-to-coq
 
 library
   exposed-modules:     HsToCoq.Util.GHC

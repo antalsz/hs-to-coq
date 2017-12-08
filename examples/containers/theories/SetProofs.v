@@ -50,10 +50,14 @@ Module Foo (E : OrderedType) : WSfun(E).
       intros. apply /and4P; split=>//. apply IHs2_1; auto.
   Qed.
 
+  Ltac rewrite_option_eq :=
+    rewrite /op_zeze__ /Eq___option; simpl;
+    rewrite /op_zeze__; rewrite /Eq_Integer___; simpl.
+
   Lemma validsize_children : forall {a} (s1 s2 : Set_ a) l e,
       validsize (Bin l e s1 s2) -> validsize s1 /\ validsize s2.
   Proof.
-    split; move: H; rewrite /validsize=>H;
+    intros; move: H; rewrite /validsize=>H;
       remember (fix realsize (t' : Set_ a) : option Size :=
                   match t' with
                   | Bin sz _ l r =>
@@ -70,8 +74,24 @@ Module Foo (E : OrderedType) : WSfun(E).
                     end
                   | Tip => Some 0%Z
                   end) as f; move: H; rewrite -Heqf.
-  (* I'm stuck here *)
-  Admitted.
+    split; generalize dependent e; generalize dependent l.
+    - generalize dependent s2.
+      destruct s1; intros.
+      + move: H. rewrite Heqf; simpl; rewrite -Heqf.
+        destruct (f s1_1) eqn:Heqs1; destruct (f s1_2) eqn:Heqs2=>//.
+        destruct (_GHC.Base.==_ (s0 + s1 + 1)%Z s) eqn:Heq=>//.
+        intros. rewrite_option_eq. apply Z.eqb_refl.
+      + rewrite Heqf. simpl. rewrite_option_eq. auto.
+    - generalize dependent s1.
+      destruct s2; intros.
+      + move: H. rewrite Heqf; simpl; rewrite -Heqf.
+        destruct (f s1) eqn:Heqs;
+          destruct (f s2_1) eqn:Heqs1;
+          destruct (f s2_2) eqn:Heqs2=>//.
+        destruct (_GHC.Base.==_ (s2 + s3 + 1)%Z s) eqn:Heq=>//.
+        intros. rewrite_option_eq. apply Z.eqb_refl.
+      + rewrite Heqf. simpl. rewrite_option_eq. auto.
+  Qed.
       
   Lemma WF_children : forall s1 s2 l e, WF (Bin l e s1 s2) -> WF s1 /\ WF s2.
   Proof.

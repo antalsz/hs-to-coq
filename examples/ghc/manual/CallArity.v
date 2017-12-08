@@ -72,7 +72,7 @@ Definition emptyArityRes : CallArityRes :=
 Definition isInteresting : Var.Var -> bool := fun x => false.
 (*  fun v =>
     GHC.Num.fromInteger 0 GHC.Base.< Data.Foldable.length (CoreArity.typeArity
-                                                          (Id.idType v)). *)
+                                                          (Id.idType v)).  *)
 
 Definition interestingBinds : CoreSyn.CoreBind -> list Var.Var :=
   GHC.List.filter isInteresting GHC.Base.∘ CoreSyn.bindersOf.
@@ -162,7 +162,7 @@ Definition resDel : Var.Var -> CallArityRes -> CallArityRes :=
 Definition resDelList : list Var.Var -> CallArityRes -> CallArityRes :=
   fun vs ae => Data.Foldable.foldr resDel ae vs.
 
-(* minimum (cons x xs) ==> Data.Foldable.foldr GHC.Base.min x xs *)
+(* minimum (x : xs) ==> Data.Foldable.foldr GHC.Base.min x xs *)
 Parameter trimArity : Var.Id -> BasicTypes.Arity -> BasicTypes.Arity.
 (*
   fun v a =>

@@ -39,6 +39,11 @@ Module Foo (E : OrderedType) : WSfun(E).
   Definition t := {s : Set_ elt | WF s}.
   Definition pack (s : Set_ elt) (H : WF s): t := exist _ s H.
 
+  Notation "x <-- f ;; P" :=
+    (match f with
+     | exist x _ => P
+     end) (at level 99, f at next level, right associativity).
+
   Lemma balanced_children : forall {a} (s1 s2 : Set_ a) l e,
       balanced (Bin l e s1 s2) -> balanced s1 /\ balanced s2.
   Proof. split; simpl in H; move: H; case: and3P=>//; elim; done. Qed.
@@ -106,9 +111,9 @@ Module Foo (E : OrderedType) : WSfun(E).
       apply validsize_children in Hv; intuition.
   Qed.
   
-  Definition In x (s' : t) := match s' with exist s P =>
-     member x s = true
-     end.
+  Definition In x (s' : t) :=
+    s <-- s' ;;
+    member x s = true.
   
   Definition Equal s s' := forall a : elt, In a s <-> In a s'.
   Definition Subset s s' := forall a : elt, In a s -> In a s'.
@@ -117,10 +122,10 @@ Module Foo (E : OrderedType) : WSfun(E).
   Definition Exists (P : elt -> Prop) s := exists x, In x s /\ P x.
 
   Definition empty : t := pack empty eq_refl.
-  Definition is_empty : t -> bool := fun s' => match s' with exist s _ =>
-     null s end.
-  Definition mem : elt -> t -> bool := fun e s' => match s' with exist s _ =>
-     member e s end.
+  Definition is_empty : t -> bool := fun s' => 
+     s <-- s' ;; null s.
+  Definition mem : elt -> t -> bool := fun e s' =>
+     s <-- s' ;; member e s.
   Definition add : elt -> t -> t. Admitted. (* must contain a WF proof *)
   Definition singleton : elt -> t.
     refine (fun e => pack (singleton e) _).
@@ -145,16 +150,14 @@ Module Foo (E : OrderedType) : WSfun(E).
   Admitted.
     
   Definition equal : t -> t -> bool :=
-    fun s s' =>
-      match s, s' with
-      | exist s _, exist s' _ => s == s'
-      end.
+    fun ws ws' => s <-- ws ;;
+               s' <-- ws' ;;
+               s == s'.
   
   Definition subset : t -> t -> bool :=
-    fun s s' =>
-      match s, s' with
-      | exist s _, exist s' _ => isSubsetOf s s'
-      end.
+    fun ws ws' => s <-- ws ;;
+               s' <-- ws' ;;
+               isSubsetOf s s'.
         
   Definition fold : forall A : Type, (elt -> A -> A) -> t -> A -> A. Admitted.
   Definition for_all : (elt -> bool) -> t -> bool. Admitted.

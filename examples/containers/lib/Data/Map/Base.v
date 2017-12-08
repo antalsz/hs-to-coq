@@ -2422,7 +2422,7 @@ Infix "Data.Map.Base.\\" := (_\\_) (at level 99).
 End Notations.
 
 (* Unbound variables:
-     Gt Lt None Some andb bool comparison cons false id list map_size negb nil
+     Eq Gt Lt None Some andb bool comparison cons false id list map_size negb nil
      op_zt__ option orb pair prod true Data.Bits.shiftL Data.Bits.shiftR
      Data.Either.Either Data.Either.Left Data.Either.Right Data.Foldable.Foldable
      Data.Foldable.foldl Data.Functor.op_zlzdzg__ Data.Set.Base.Bin

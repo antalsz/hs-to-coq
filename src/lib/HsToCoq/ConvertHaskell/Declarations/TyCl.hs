@@ -268,7 +268,7 @@ generateRecordAccessors (IndBody tyName params resTy cons) = do
         Nothing -> throwProgramError $  "internal error: unknown constructor `"
                                      <> show con <> "' for type `"
                                      <> show tyName <> "'"
-      pure . Equation [MultPattern [appListPat con args]] $
+      pure . Equation [MultPattern [ArgsPat con args]] $
                       if hasField
                       then Qualid field
                       else App1 "error"

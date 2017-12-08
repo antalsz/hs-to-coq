@@ -386,7 +386,7 @@ Definition catBagMaybes {a} : Bag (option a) -> Bag a :=
     foldrBag add emptyBag bs.
 
 (* Unbound variables:
-     Some bool cons false list nil op_zt__ option orb pair true tt unit
+     None Some bool cons false list nil op_zt__ option orb pair true tt unit
      Control.Monad.filterM Data.Either.Either Data.Either.Left Data.Either.Right
      Data.Foldable.any Data.Foldable.foldl Data.Foldable.foldr Data.Foldable.length
      Data.Foldable.mapM_ Data.OldList.partition Data.Traversable.mapM GHC.Base.Eq_

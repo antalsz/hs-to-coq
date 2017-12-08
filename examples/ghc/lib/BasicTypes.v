@@ -1331,8 +1331,8 @@ Definition zapFragileOcc : OccInfo -> OccInfo :=
   fun arg_0__ => match arg_0__ with | OneOcc _ _ _ => NoOccInfo | occ => occ end.
 
 (* Unbound variables:
-     Eq Gt Lt Some andb bool comparison false list negb op_zt__ option pair true tt
-     unit Data.Function.on FastString.FastString GHC.Base.Eq_ GHC.Base.Ord
+     Eq Gt Lt None Some andb bool comparison false list negb op_zt__ option pair true
+     tt unit Data.Function.on FastString.FastString GHC.Base.Eq_ GHC.Base.Ord
      GHC.Base.String GHC.Base.compare GHC.Base.op_zeze__ GHC.Base.op_zg__
      GHC.Base.op_zgze__ GHC.Base.op_zl__ GHC.Base.op_zlze__ GHC.Base.op_zsze__
      GHC.Num.Int GHC.Num.op_zp__ GHC.Num.op_zt__ GHC.Prim.seq GHC.Real.Rational

@@ -471,6 +471,8 @@ instance Gallina MultPattern where
   renderGallina' _ (MultPattern pats) = spacedSepPost "," $ renderGallina <$> pats
 
 instance Gallina Pattern where
+  renderGallina' _ (ArgsPat qid []) = renderGallina qid
+
   renderGallina' p (ArgsPat qid args) = maybeParen (p > appPrec) $
     renderGallina' appPrec qid </> render_args' (appPrec + 1) H args
 

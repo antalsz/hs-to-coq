@@ -393,9 +393,12 @@ Equation :: { Equation }
 MultPattern :: { MultPattern }
   : '|' SepBy1(Pattern,',')           { MultPattern $2 }
 
+-- There is some code-smell here: It parses constructors without
+-- arguments as variables. We could hard-code common nullary constructors.
+-- But can we do better?
 Pattern :: { Pattern }
-  : Qualid Some(AtomicPattern) { ArgsPat $1 $2 }
-  | AtomicPattern            { $1 }
+  : Qualid Some(AtomicPattern) { ArgsPat $1 (NEL.toList $2) }
+  | AtomicPattern              { $1 }
 
 AtomicPattern :: { Pattern }
   : '_'                     { UnderscorePat }

@@ -15,7 +15,7 @@ import Control.Lens hiding ((<|))
 
 import Data.Maybe
 import Data.Traversable
-import Data.List.NonEmpty (NonEmpty(..), (<|), toList)
+import Data.List.NonEmpty ((<|), toList)
 import qualified Data.Text as T
 
 import Control.Monad.Trans.Maybe
@@ -79,7 +79,7 @@ convertPat (ConPatIn (L _ hsCon) conVariety) = do
 
   case conVariety of
     PrefixCon args ->
-      appListPat con <$> traverse convertLPat args
+      ArgsPat con <$> traverse convertLPat args
 
     RecCon HsRecFields{..} ->
       let recPatUnsupported what = do
@@ -98,12 +98,12 @@ convertPat (ConPatIn (L _ hsCon) conVariety) = do
                                     then pure $ Coq.VarPat (qualidBase field)
                                     else convertLPat hsPat
                            pure (field, pat)
-             pure . appListPat con
+             pure . ArgsPat con
                   $ map (\field -> M.findWithDefault (defaultPat field) field patterns) conFields
 
            Just (NonRecordFields count)
              | null rec_flds && isNothing rec_dotdot ->
-               pure . appListPat con $ replicate count UnderscorePat
+               pure . ArgsPat con $ replicate count UnderscorePat
 
              | otherwise ->
                recPatUnsupported "non-record"
@@ -192,11 +192,11 @@ isRefutable Refutable = True
 isRefutable _ = False
 
 -- Module-local
-constructor_refutability :: ConversionMonad m => Qualid -> NonEmpty Pattern -> m Refutability
+constructor_refutability :: ConversionMonad m => Qualid -> [Pattern] -> m Refutability
 constructor_refutability con args =
   isSoleConstructor con >>= \case
     Nothing    -> pure Refutable -- Error
-    Just True  -> maximum . (SoleConstructor <|) <$> traverse refutability args
+    Just True  -> maximum . (SoleConstructor :) <$> traverse refutability args
     Just False -> pure Refutable
 
 refutabilityMult :: ConversionMonad m => MultPattern -> m Refutability
@@ -205,7 +205,7 @@ refutabilityMult (MultPattern pats) =
 
 refutability :: ConversionMonad m => Pattern -> m Refutability
 refutability (ArgsPat con args)         = constructor_refutability con args
-refutability (ExplicitArgsPat con args) = constructor_refutability con args
+refutability (ExplicitArgsPat con args) = constructor_refutability con (toList args)
 refutability (InfixPat arg1 con arg2)   = constructor_refutability (Bare con) [arg1,arg2]
 refutability (Coq.AsPat pat _)          = refutability pat
 refutability (InScopePat _ _)           = pure Refutable -- TODO: Handle scopes
@@ -227,7 +227,7 @@ data PatternSummary = OtherSummary | ConApp Qualid [PatternSummary]
   deriving Show
 
 patternSummary :: MonadState ConversionState m => Pattern -> m PatternSummary
-patternSummary (ArgsPat con args)         = ConApp con <$> mapM patternSummary (toList args)
+patternSummary (ArgsPat con args)         = ConApp con <$> mapM patternSummary args
 patternSummary (ExplicitArgsPat con args) = ConApp con <$> mapM patternSummary (toList args)
 patternSummary (InfixPat _ _ _)           = pure OtherSummary
 patternSummary (Coq.AsPat pat _)          = patternSummary pat

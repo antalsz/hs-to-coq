@@ -567,7 +567,7 @@ Definition varSetInScope : VarSet.VarSet -> InScopeSet -> bool :=
     end.
 
 (* Unbound variables:
-     Some bool list negb op_zt__ option pair uniqAway' Data.Foldable.foldl
+     None Some bool list negb op_zt__ option pair uniqAway' Data.Foldable.foldl
      Data.Foldable.length Data.Tuple.fst GHC.Base.op_zd__ GHC.Num.Int GHC.Num.op_zp__
      Maybes.orElse OccName.TidyOccEnv OccName.emptyTidyOccEnv Panic.Default
      Panic.default UniqDFM.UniqDFM UniqDFM.addToUDFM UniqDFM.addToUDFM_C

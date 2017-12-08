@@ -546,7 +546,7 @@ Definition mapAccumR {t} {a} {b} {c} `{Traversable t} : (a -> b -> (a *
   fun f s t => runStateR (traverse (Mk_StateR GHC.Base.∘ GHC.Base.flip f) t) s.
 
 (* Unbound variables:
-     Some cons list nil op_zt__ option pair Data.Either.Either Data.Either.Left
+     None Some cons list nil op_zt__ option pair Data.Either.Either Data.Either.Left
      Data.Either.Right Data.Foldable.Foldable Data.Functor.op_zlzdzg__
      Data.Functor.Const.Const Data.Functor.Const.Mk_Const Data.Monoid.Dual
      Data.Monoid.Mk_Dual Data.Monoid.Mk_Product Data.Monoid.Mk_Sum

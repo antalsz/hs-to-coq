@@ -430,7 +430,7 @@ Definition unitUDFM {key} {elt} `{Unique.Uniquable key} : key -> elt -> UniqDFM
          (Mk_TaggedVal v (GHC.Num.fromInteger 0))) (GHC.Num.fromInteger 1).
 
 (* Unbound variables:
-     Some bool cons false list negb nil op_zt__ option orb pair
+     None Some bool cons false list negb nil op_zt__ option orb pair
      Coq.Lists.List.flat_map Data.Foldable.foldl Data.Foldable.foldr Data.Function.on
      Data.IntMap.fold Data.IntMap.Base.IntMap Data.IntMap.Base.adjust
      Data.IntMap.Base.alter Data.IntMap.Base.delete Data.IntMap.Base.difference

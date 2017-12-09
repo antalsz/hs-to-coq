@@ -306,10 +306,46 @@ Module Foo (E : OrderedType) : WSfun(E).
                  apply /and3P=>//. split.
                  { apply /orP=>//. right.
                    apply /andP=>//. split.
-                   { destruct Hslr. move: a.
+                   - destruct Hslr. move: a.
                      rewrite Heqrb /size /delta Hslsum.
                      rewrite /is_true !Z.leb_le.
-                     rewrite_Int. omega. }
+                     rewrite_Int. omega. 
+                   - move: a b Heq Heq0.
+                     rewrite Heqrb /size /delta /ratio Hslsum.
+                     rewrite_Int. rewrite /is_true !Z.leb_le !Z.ltb_lt.
+                     intros. omega. }
+                 { apply /and3P=>//. split.
+                   - apply balanced_children in Hbr. destruct Hbr.
+                     move: H. rewrite /balanced.
+                     case and3P=>//; elim.
+                     case orP=>//; elim; rewrite_Int;
+                       intros; apply /orP=>//; auto.
+                   - apply balanced_children in Hbr; destruct Hbr.
+                     apply balanced_children in H; destruct H.
+                     rewrite /balanced in H. assumption.
+                   - apply balanced_children in Hbr; destruct Hbr.
+                     apply balanced_children in H; destruct H.
+                     rewrite /balanced in H1. assumption. }
+                 { rewrite Heqrb. apply /and5P=>//; split.
+                   - move: Hwfl. rewrite /WF /valid.
+                     case and3P=>//; elim; intros ? ? ?. elim.
+                     move: H. rewrite /balanced.
+                     case and3P=>//; elim; intros ? ? ?. elim.
+                     move: H. rewrite /size. rewrite_Int.
+                     case orP=>//; elim.
+                     + move=>Hl1. elim.
+                       apply /orP; left.
+                       move: a b Heq Heq0 Hl1. 
+                       rewrite /size /delta /ratio.
+                       rewrite_Int. destruct Hslr.
+                       rewrite /is_true !Z.leb_le !Z.ltb_lt Hslsum. omega.
+                     + case /andP=>//. move=>Hlllr Hlrll. elim.
+                       apply /orP. right. apply /andP.
+                       move: a b Heq Heq0 Hlllr Hlrll. 
+                       rewrite /size /delta /ratio.
+                       rewrite_Int. destruct Hslr.
+                       rewrite /is_true !Z.leb_le !Z.ltb_lt Hslsum.
+                       clear H3 H2.
   Admitted.
 
   Definition empty : t := pack empty eq_refl.

@@ -49,6 +49,10 @@ Section Int_And_Z.
     a GHC.Base.== b = (a == b).
   Proof. rewrite /_GHC.Base.==_. reflexivity. Qed.
 
+  Lemma Int_is_Z : forall a : Z,
+      # a = a.
+  Proof. reflexivity. Qed.
+  
 End Int_And_Z.
 
 (** LY: Is there a better way of doing this? *)
@@ -70,6 +74,8 @@ Ltac rewrite_Int :=
            rewrite !Int_ge_is_Z_ge
          | [ |- context[_GHC.Base.==_] ] =>
            rewrite !Int_eq_is_Z_eq
+         | [ |- context[# _] ] =>
+           rewrite !Int_is_Z
              
          | [ H: context[_GHC.Num.+_] |- _ ] =>
            rewrite !Int_plus_is_Z_plus in H
@@ -87,6 +93,8 @@ Ltac rewrite_Int :=
            rewrite !Int_ge_is_Z_ge in H
          | [ H: context[_GHC.Base.==_] |- _ ] =>
            rewrite !Int_eq_is_Z_eq in H
+         | [ H: context[# _] |- _ ] =>
+           rewrite !Int_is_Z in H
          end.
 
 Module Foo (E : OrderedType) : WSfun(E).
@@ -300,18 +308,8 @@ Module Foo (E : OrderedType) : WSfun(E).
                    apply /andP=>//. split.
                    { destruct Hslr. move: a.
                      rewrite Heqrb /size /delta Hslsum.
-                     rewrite /is_true !Z.leb_le. admit.
-                   (** TODO: Arithmetic. The diffculty comes from the
-                       fact that all numbers here are [Z]. But they
-                       are really natural numbers as shown by lemma
-                       [WF_size_nonneg]. It would be much easier to
-                       prove this (in fact, just [omega]) if we can
-                       reflect the whole expression to Z. Is there an
-                       easy way of doing that? *) }
-                   { move: a b Heq. rewrite Heqrb /size /delta Hslsum.
-                     rewrite /is_true !Z.leb_le. admit.
-                   (** I haven't checked this part, but hopefully
-                           this is true. *) } }
+                     rewrite /is_true !Z.leb_le.
+                     rewrite_Int. omega. }
   Admitted.
 
   Definition empty : t := pack empty eq_refl.

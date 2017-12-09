@@ -114,11 +114,14 @@ Module Foo (E : OrderedType) : WSfun(E).
     rewrite /Base.compare /Ord_t /ord_default; simpl; rewrite /compare.
 
   Ltac destruct_match :=
-    repeat match goal with
-           | [ H :context[_GHC.Base.==_ (match ?a with _ => _ end) _] |- _] =>
-             let Heq := fresh "Heq" in
-             destruct a eqn:Heq=>//
-           end.
+    match goal with
+    | [ H :context[match ?a with _ => _ end] |- _] =>
+      let Heq := fresh "Heq" in
+      destruct a eqn:Heq=>//
+    | [ |- context[match ?a with _ => _ end]] =>
+      let Heq := fresh "Heq" in
+      destruct a eqn:Heq=>//
+    end.
 
   Definition elt := E.t.
   
@@ -224,17 +227,17 @@ Module Foo (E : OrderedType) : WSfun(E).
              | Tip => Some #0
              end) as f. rewrite -Heqf.
     destruct s1; destruct s2=>//.
-    - rewrite /size; rewrite_Int; intros.
-      destruct_match. move: H0 H Heq1; rewrite_option_eq.
+    - rewrite /size; rewrite_Int; intros. repeat destruct_match.
+      move: H0 H Heq1; rewrite_option_eq.
       rewrite /is_true !Z.eqb_eq. intros; subst; auto.
-    - rewrite /size; rewrite_Int; intros.
-      destruct_match. move: H0 H Heq1; rewrite_option_eq.
+    - rewrite /size; rewrite_Int; intros. repeat destruct_match.
+      move: H0 H Heq1; rewrite_option_eq.
       rewrite /is_true !Z.eqb_eq. intros; subst; auto.
-    - rewrite /size; rewrite_Int; intros.
-      destruct_match. move: H0 H Heq1; rewrite_option_eq.
+    - rewrite /size; rewrite_Int; intros. repeat destruct_match.
+      move: H0 H Heq1; rewrite_option_eq.
       rewrite /is_true !Z.eqb_eq. intros; subst; auto.
-    - rewrite /size; rewrite_Int; intros.
-      destruct_match. move: H0 H Heq0; rewrite_option_eq.
+    - rewrite /size; rewrite_Int; intros. repeat destruct_match.
+      move: H0 H Heq0; rewrite_option_eq.
       rewrite /is_true !Z.eqb_eq. intros; subst; auto.
   Qed.
 
@@ -256,6 +259,60 @@ Module Foo (E : OrderedType) : WSfun(E).
   Definition Empty s := forall a : elt, ~ In a s.
   Definition For_all (P : elt -> Prop) s := forall x, In x s -> P x.
   Definition Exists (P : elt -> Prop) s := exists x, In x s /\ P x.
+
+  Definition before_balancedL (l r : Set_ elt) : Prop :=
+    (size l <=? delta * (size r + 1)) &&
+    ((size r + delta) <=? delta * (size l)).
+
+  Definition balanceL (x: elt) (wl wr : t) :
+    l <-- wl ;;
+    r <-- wr ;;
+    before_balancedL l r -> t.
+    destruct wl as [l Hwfl]; destruct wr as [r Hwfr].
+    refine (fun H => pack (balanceL x l r) _).
+    have: (WF l) by done. have: (WF r) by done. rewrite /WF /valid.
+    case: and3P=>//; elim; move=>Hbl Hol Hvl; elim.
+    case: and3P=>//; elim; move=>Hbr Hor Hvr; elim.
+    apply /and3P; split.
+    - move: H.
+      destruct r as [sr xr rl rr | ]; destruct l as [sl xl ll lr | ];
+        rewrite /before_balancedL /balanceL; case /andP; intros=>//.
+      * rewrite_Int. destruct_match.
+        -- destruct ll as [sll xll lll llr | ];
+            destruct lr as [slr xlr lrl lrr | ]; rewrite_Int.
+           ++ assert (Hslsum: sl = sll + slr + 1).
+              { apply WF_size_children in Hwfl.
+                rewrite /size in Hwfl. done. }
+              assert (Hsl: sl >= 0).
+              { apply WF_size_nonneg in Hwfl. simpl in Hwfl; auto. }
+              assert (Hsr: sr >= 0).
+              { apply WF_size_nonneg in Hwfr. simpl in Hwfr; auto. }
+              assert (Hslr: sll >= 0 /\ slr >= 0).
+              { apply WF_children in Hwfl. destruct Hwfl as [Hn1 Hn2].
+                apply WF_size_nonneg in Hn1. apply WF_size_nonneg in Hn2.
+                simpl in *. auto. }
+              destruct_match.
+              ** remember (Bin (#1 + sr + slr) x
+                               (Bin slr xlr lrl lrr) (Bin sr xr rl rr)) as rb.
+                 rewrite -Heqrb /balanced. rewrite_Int.
+                 apply /and3P=>//. split.
+                 { apply /orP=>//. right.
+                   apply /andP=>//. split.
+                   { destruct Hslr. move: a.
+                     rewrite Heqrb /size /delta Hslsum.
+                     rewrite /is_true !Z.leb_le. admit.
+                   (** TODO: Arithmetic. The diffculty comes from the
+                       fact that all numbers here are [Z]. But they
+                       are really natural numbers as shown by lemma
+                       [WF_size_nonneg]. It would be much easier to
+                       prove this (in fact, just [omega]) if we can
+                       reflect the whole expression to Z. Is there an
+                       easy way of doing that? *) }
+                   { move: a b Heq. rewrite Heqrb /size /delta Hslsum.
+                     rewrite /is_true !Z.leb_le. admit.
+                   (** I haven't checked this part, but hopefully
+                           this is true. *) } }
+  Admitted.
 
   Definition empty : t := pack empty eq_refl.
   Definition is_empty : t -> bool := fun s' => 

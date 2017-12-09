@@ -268,43 +268,56 @@ Module Foo (E : OrderedType) : WSfun(E).
   Definition For_all (P : elt -> Prop) s := forall x, In x s -> P x.
   Definition Exists (P : elt -> Prop) s := exists x, In x s /\ P x.
 
-  Definition before_balancedL (l r : Set_ elt) : Prop :=
+  (** Here should be another constraint, that [x] is greater than any
+      value is [l], and smaller than any value in [r]. *)
+  Definition before_balancedL (x: elt) (l r : Set_ elt) : Prop :=
     (size l <=? delta * (size r + 1)) &&
     ((size r + delta) <=? delta * (size l)).
 
-  Definition balanceL (x: elt) (wl wr : t) :
-    l <-- wl ;;
-    r <-- wr ;;
-    before_balancedL l r -> t.
-    destruct wl as [l Hwfl]; destruct wr as [r Hwfr].
-    refine (fun H => pack (balanceL x l r) _).
-    have: (WF l) by done. have: (WF r) by done. rewrite /WF /valid.
+  Lemma balanceL_WF: forall (x: elt) (l r : Set_ elt),
+    WF l -> WF r ->
+    before_balancedL x l r -> WF (balanceL x l r).
+  Proof.
+    intros x l r Hwfl Hwfr.
+    have: WF l by done. have: WF r by done.
+    rewrite /WF /valid. 
     case: and3P=>//; elim; move=>Hbl Hol Hvl; elim.
     case: and3P=>//; elim; move=>Hbr Hor Hvr; elim.
-    apply /and3P; split.
-    - move: H.
+    move=>Hbefore. apply /and3P; split.
+    - (** the tree after [belanceL] is balanced. *)
+      move: Hbefore.
       destruct r as [sr xr rl rr | ]; destruct l as [sl xl ll lr | ];
         rewrite /before_balancedL /balanceL; case /andP; intros=>//.
-      * rewrite_Int. destruct_match.
-        -- destruct ll as [sll xll lll llr | ];
+      * (** [l] and [r] are both [Bin]s. *)
+        rewrite_Int. destruct_match.
+        -- (** The [ls > delta*rs] branch in Haskell code. *)
+          destruct ll as [sll xll lll llr | ];
             destruct lr as [slr xlr lrl lrr | ]; rewrite_Int.
-           ++ assert (Hslsum: sl = sll + slr + 1).
-              { apply WF_size_children in Hwfl.
-                rewrite /size in Hwfl. done. }
-              assert (Hsl: sl >= 0).
-              { apply WF_size_nonneg in Hwfl. simpl in Hwfl; auto. }
-              assert (Hsr: sr >= 0).
-              { apply WF_size_nonneg in Hwfr. simpl in Hwfr; auto. }
-              assert (Hslr: sll >= 0 /\ slr >= 0).
-              { apply WF_children in Hwfl. destruct Hwfl as [Hn1 Hn2].
-                apply WF_size_nonneg in Hn1. apply WF_size_nonneg in Hn2.
-                simpl in *. auto. }
-              destruct_match.
-              ** remember (Bin (#1 + sr + slr) x
+           ++ (** [ll] and [lr] are both Bins *)
+             assert (Hslsum: sl = sll + slr + 1).
+             { apply WF_size_children in Hwfl.
+               rewrite /size in Hwfl. done. }
+             assert (Hsl: sl >= 0).
+             { apply WF_size_nonneg in Hwfl. simpl in Hwfl; auto. }
+             assert (Hsr: sr >= 0).
+             { apply WF_size_nonneg in Hwfr. simpl in Hwfr; auto. }
+             assert (Hslr: sll >= 0 /\ slr >= 0).
+             { apply WF_children in Hwfl. destruct Hwfl as [Hn1 Hn2].
+               apply WF_size_nonneg in Hn1. apply WF_size_nonneg in Hn2.
+               simpl in *. auto. }
+             destruct_match.
+             ** (** [lrs < ratio*lls]: We need to prove that [Bin
+                (1+ls+rs) lx ll (Bin (1+rs+lrs) x lr r)] is
+                balanced. *)
+               remember (Bin (#1 + sr + slr) x
                                (Bin slr xlr lrl lrr) (Bin sr xr rl rr)) as rb.
                  rewrite -Heqrb /balanced. rewrite_Int.
                  apply /and3P=>//. split.
-                 { apply /orP=>//. right.
+                 { (** Top level is balanced. That is, size of [ll]
+                       and of [Bin (1+rs+lrs) x lr r] are
+                       balanced. This should be proved by
+                       arithmetics. *)
+                   apply /orP=>//. right.
                    apply /andP=>//. split.
                    - destruct Hslr. move: a.
                      rewrite Heqrb /size /delta Hslsum.
@@ -314,7 +327,12 @@ Module Foo (E : OrderedType) : WSfun(E).
                      rewrite Heqrb /size /delta /ratio Hslsum.
                      rewrite_Int. rewrite /is_true !Z.leb_le !Z.ltb_lt.
                      intros. omega. }
-                 { apply /and3P=>//. split.
+                 { (** Left child [ll] is balanced. We already know
+                       this from the precondition. All we need to do
+                       here is derive that fact from precondition. No
+                       arithmetics involved. (We shall be able to
+                       simply the proof here?) *)
+                   apply /and3P=>//. split.
                    - apply balanced_children in Hbr. destruct Hbr.
                      move: H. rewrite /balanced.
                      case and3P=>//; elim.
@@ -326,7 +344,9 @@ Module Foo (E : OrderedType) : WSfun(E).
                    - apply balanced_children in Hbr; destruct Hbr.
                      apply balanced_children in H; destruct H.
                      rewrite /balanced in H1. assumption. }
-                 { rewrite Heqrb. apply /and5P=>//; split.
+                 { (** Right child [Bin (1+rs+lrs) x lr r] is
+                       balanced. Arithmetics. *)
+                   rewrite Heqrb. apply /and5P=>//; split.
                    - move: Hwfl. rewrite /WF /valid.
                      case and3P=>//; elim; intros ? ? ?. elim.
                      move: H. rewrite /balanced.
@@ -345,7 +365,20 @@ Module Foo (E : OrderedType) : WSfun(E).
                        rewrite /size /delta /ratio.
                        rewrite_Int. destruct Hslr.
                        rewrite /is_true !Z.leb_le !Z.ltb_lt Hslsum.
-                       clear H3 H2.
+                       clear H3 H2. admit.
+                     + admit.
+                   - admit.
+                   - admit.
+                   - admit. }
+             ** (** The [otherwise] branch. *) admit.
+           ++ (** [lr] is [Tip] *) admit.
+           ++ (** [ll] is [Tip] *) admit.
+           ++ (** [ll] and [lr] are both [Tip]s. *) admit.
+        -- (** The [otherwise] branch, i.e. [ls >= delta*rs]. *) admit.
+      * (** [l] is [Tip] *) admit.
+      * (** [r] is [Tip] *) admit.
+    - (** the result is ordered. *) admit.
+    - (** the result's cached size is valid. *) admit.
   Admitted.
 
   Definition empty : t := pack empty eq_refl.

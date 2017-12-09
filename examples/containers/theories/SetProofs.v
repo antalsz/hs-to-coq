@@ -281,154 +281,170 @@ Module Foo (E : OrderedType) : WSfun(E).
   Definition before_balancedL (x: elt) (l r : Set_ elt) : Prop :=
     size l == delta * size r + 1.
   
-  Lemma balanceL_WF: forall (x: elt) (l r : Set_ elt),
+  Lemma balanceL_balanced: forall (x: elt) (l r : Set_ elt),
     WF l -> WF r ->
-    before_balancedL x l r -> WF (balanceL x l r).
+    before_balancedL x l r -> balanced (balanceL x l r).
   Proof.
     intros x l r Hwfl Hwfr.
     have: WF l by done. have: WF r by done.
     rewrite /WF /valid. 
     case: and3P=>//; elim; move=>Hbr Hor Hvr; elim.
     case: and3P=>//; elim; move=>Hbl Hol Hvl; elim.
-    move=>Hbefore. apply /and3P; split.
-    - (** the tree after [belanceL] is balanced. *)
-      move: Hbefore.
-      destruct r as [sr xr rl rr | ]; destruct l as [sl xl ll lr | ];
-        rewrite /before_balancedL /balanceL; intros=>//.
-      * (** [l] and [r] are both [Bin]s. *)
-        rewrite_Int. destruct_match.
-        -- (** The [ls > delta*rs] branch in Haskell code. *)
-          destruct ll as [sll xll lll llr | ];
-            destruct lr as [slr xlr lrl lrr | ]; rewrite_Int.
-           ++ (** [ll] and [lr] are both Bins *)
-             assert (Hslsum: sl = sll + slr + 1).
-             { apply WF_size_children in Hwfl.
-               rewrite /size in Hwfl. done. }
-             assert (Hsl: sl >= 0).
-             { apply WF_size_nonneg in Hwfl. simpl in Hwfl; auto. }
-             assert (Hsr: sr >= 0).
-             { apply WF_size_nonneg in Hwfr. simpl in Hwfr; auto. }
-             assert (Hslr: sll >= 0 /\ slr >= 0).
-             { apply WF_children in Hwfl. destruct Hwfl as [Hn1 Hn2].
-               apply WF_size_nonneg in Hn1. apply WF_size_nonneg in Hn2.
-               simpl in *. auto. }
-             destruct_match.
-             ** (** [lrs < ratio*lls] branch (single rotation): We
-                need to prove that [Bin (1+ls+rs) lx ll (Bin
-                (1+rs+lrs) x lr r)] is balanced. *)
-               remember (Bin (#1 + sr + slr) x
-                               (Bin slr xlr lrl lrr) (Bin sr xr rl rr)) as rb.
-                 rewrite -Heqrb /balanced. rewrite_Int.
-                 apply /and3P=>//. split.
-                 { (** Top level is balanced. That is, size of [ll]
-                       and of [Bin (1+rs+lrs) x lr r] are
-                       balanced. This should be proved by
-                       arithmetics. *)
-                   apply /orP=>//. right.
-                   apply /andP=>//. split.
-                   - destruct Hslr. move: Hbefore. 
-                     rewrite Heqrb /size /delta Hslsum.
-                     rewrite /is_true !Z.leb_le !Z.eqb_eq.
-                     rewrite_Int.  omega. 
-                   - move: Hbefore Heq Heq0.
-                     rewrite Heqrb /size /delta /ratio Hslsum.
-                     rewrite_Int. rewrite /is_true !Z.leb_le !Z.ltb_lt !Z.eqb_eq.
-                     intros. omega. }
-                 { (** Left child [ll] is balanced. We already know
-                       this from the precondition. All we need to do
-                       here is derive that fact from precondition. No
-                       arithmetics involved. *)
-                   apply balanced_children in Hbl; destruct Hbl.
-                   move: H. rewrite /balanced. auto. }
-                 { (** Right child [Bin (1+rs+lrs) x lr r] is
-                       balanced. Arithmetics. *)
-                   rewrite Heqrb. apply /and5P=>//; split.
-                   - move: Hwfl. rewrite /WF /valid.
-                     case and3P=>//; elim; intros ? ? ?. elim.
-                     move: H. rewrite /balanced.
-                     case and3P=>//; elim; intros ? ? ?. elim.
-                     move: H. rewrite /size. rewrite_Int.
-                     case orP=>//; elim.
-                     + move=>Hl1. elim.
-                       apply /orP; left.
-                       move: Hbefore Heq Heq0 Hl1. 
-                       rewrite /size /delta /ratio.
-                       rewrite_Int. destruct Hslr.
-                       rewrite /is_true !Z.leb_le !Z.ltb_lt !Z.eqb_eq Hslsum.
-                       omega.
-                     + case /andP=>//. move=>Hlllr Hlrll. elim.
-                       apply /orP. right. apply /andP.
-                       move: Hbefore Heq Heq0 Hlllr Hlrll. 
-                       rewrite /size /delta /ratio.
-                       rewrite_Int. destruct Hslr.
-                       rewrite /is_true !Z.leb_le !Z.ltb_lt !Z.eqb_eq Hslsum.
-                       clear H3 H2. split; omega.
-                   - apply balanced_children in Hbl; destruct Hbl.
-                     move: H0. rewrite /balanced. auto.
-                   - move: Hbr. rewrite /balanced.
-                     case and3P=>//; elim. auto.
-                   - apply balanced_children in Hbr. destruct Hbr.
-                     move: H. rewrite /balanced =>//.
-                   - apply balanced_children in Hbr. destruct Hbr.
-                     move: H0. rewrite /balanced =>//. }
-             ** (** The [otherwise] branch, i.e. [lr >= ratio * ll]
-                    (double rotation). *)
-               rewrite /balanced. apply /and3P=>//; split.
-               { (** Left child [Bin (1+lls+size lrl) lx ll lrl] and
-                     right child [Bin (1+rs+size lrr) x lrr r] are
-                     balanced wrt. to each other. *)
-                 apply /orP=>//. right.
-                 apply WF_children in Hwfl; destruct Hwfl.
-                 assert (Hblr: balanced (Bin slr xlr lrl lrr)).
-                 { move: H0. rewrite /WF /valid. case /and3P=>//. }
-                 assert (Hslrsum: slr = size lrl + size lrr + 1).
-                 { apply WF_size_children in H0. auto. }
-                 apply WF_children in H0; destruct H0.
-                 apply WF_size_nonneg in H0; apply WF_size_nonneg in H1.
-                 destruct Hslr.
-                 move: Hblr. rewrite /balanced.
-                 case /and3P=>// /orP=>//. elim.
-                 - intros.
-                   apply /andP=>//; split;
-                     move: Hsl Hsr Heq0 Hbefore H0 H1 H2 H3 H4;
-                     remember (size lrl) as slrl;
-                     remember (size lrr) as slrr;
-                     rewrite /size /delta /ratio;
-                     rewrite_Int;
-                     rewrite /is_true !Z.leb_le !Z.eqb_eq !Z.ltb_ge Hslsum Hslrsum;
+    destruct r as [sr xr rl rr | ]; destruct l as [sl xl ll lr | ];
+      rewrite /before_balancedL /balanceL; move=>Hbefore.
+    - (** [l] and [r] are both [Bin]s. *)
+      rewrite_Int. destruct_match.
+      + (** The [ls > delta*rs] branch in Haskell code. *)
+        destruct ll as [sll xll lll llr | ];
+          destruct lr as [slr xlr lrl lrr | ]; rewrite_Int.
+        * (** [ll] and [lr] are both Bins *)
+          assert (Hslsum: sl = sll + slr + 1).
+          { apply WF_size_children in Hwfl.
+            rewrite /size in Hwfl. done. }
+          assert (Hsl: sl >= 0).
+          { apply WF_size_nonneg in Hwfl. simpl in Hwfl; auto. }
+          assert (Hsr: sr >= 0).
+          { apply WF_size_nonneg in Hwfr. simpl in Hwfr; auto. }
+          assert (Hslr: sll >= 0 /\ slr >= 0).
+          { apply WF_children in Hwfl. destruct Hwfl as [Hn1 Hn2].
+            apply WF_size_nonneg in Hn1. apply WF_size_nonneg in Hn2.
+            simpl in *. auto. }
+          destruct_match.
+          -- (** [lrs < ratio*lls] branch (single rotation): We need
+                 to prove that [Bin (1+ls+rs) lx ll (Bin (1+rs+lrs) x
+                 lr r)] is balanced. *)
+            remember (Bin (#1 + sr + slr) x
+                          (Bin slr xlr lrl lrr) (Bin sr xr rl rr)) as rb.
+            rewrite -Heqrb /balanced. rewrite_Int.
+            apply /and3P=>//. split.
+            ++ (** Top level is balanced. That is, size of [ll] and of
+                   [Bin (1+rs+lrs) x lr r] are balanced. This should
+                   be proved by arithmetics. *)
+              apply /orP=>//. right.
+              apply /andP=>//. split.
+              ** destruct Hslr. move: Hbefore. 
+                 rewrite Heqrb /size /delta Hslsum.
+                 rewrite /is_true !Z.leb_le !Z.eqb_eq.
+                 rewrite_Int.  omega. 
+              ** move: Hbefore Heq Heq0.
+                 rewrite Heqrb /size /delta /ratio Hslsum.
+                 rewrite_Int. rewrite /is_true !Z.leb_le !Z.ltb_lt !Z.eqb_eq.
+                 intros. omega.
+            ++ (** Left child [ll] is balanced. We already know this
+                   from the precondition. All we need to do here is
+                   derive that fact from precondition. No arithmetics
+                   involved. *)
+              apply balanced_children in Hbl; destruct Hbl.
+              move: H. rewrite /balanced. auto.
+            ++ (** Right child [Bin (1+rs+lrs) x lr r] is
+                   balanced. Arithmetics. *)
+              rewrite Heqrb. apply /and5P=>//; split.
+              ** move: Hwfl. rewrite /WF /valid.
+                 case and3P=>//; elim; intros ? ? ?. elim.
+                 move: H. rewrite /balanced.
+                 case and3P=>//; elim; intros ? ? ?. elim.
+                 move: H. rewrite /size. rewrite_Int.
+                 case orP=>//; elim.
+                 { move=>Hl1. elim.
+                   apply /orP; left.
+                   move: Hbefore Heq Heq0 Hl1. 
+                   rewrite /size /delta /ratio.
+                   rewrite_Int. destruct Hslr.
+                   rewrite /is_true !Z.leb_le !Z.ltb_lt !Z.eqb_eq Hslsum.
+                   omega. }
+                 { case /andP=>//. move=>Hlllr Hlrll. elim.
+                   apply /orP. right. apply /andP.
+                   move: Hbefore Heq Heq0 Hlllr Hlrll. 
+                   rewrite /size /delta /ratio.
+                   rewrite_Int. destruct Hslr.
+                   rewrite /is_true !Z.leb_le !Z.ltb_lt !Z.eqb_eq Hslsum.
+                   clear H3 H2. split; omega. }
+              ** apply balanced_children in Hbl; destruct Hbl.
+                 move: H0. rewrite /balanced. auto.
+              ** move: Hbr. rewrite /balanced.
+                 case and3P=>//; elim. auto.
+              ** apply balanced_children in Hbr. destruct Hbr.
+                 move: H. rewrite /balanced =>//.
+              ** apply balanced_children in Hbr. destruct Hbr.
+                 move: H0. rewrite /balanced =>//.
+          -- (** The [otherwise] branch, i.e. [lr >= ratio * ll]
+                 (double rotation). *)
+            rewrite /balanced. apply /and3P=>//; split.
+            ++ (** Left child [Bin (1+lls+size lrl) lx ll lrl] and
+                   right child [Bin (1+rs+size lrr) x lrr r] are
+                   balanced wrt. to each other. *)
+              apply /orP=>//. right.
+              apply WF_children in Hwfl; destruct Hwfl.
+              assert (Hblr: balanced (Bin slr xlr lrl lrr)).
+              { move: H0. rewrite /WF /valid. case /and3P=>//. }
+              assert (Hslrsum: slr = size lrl + size lrr + 1).
+              { apply WF_size_children in H0. auto. }
+              apply WF_children in H0; destruct H0.
+              apply WF_size_nonneg in H0; apply WF_size_nonneg in H1.
+              destruct Hslr.
+              move: Hblr. rewrite /balanced.
+              case /and3P=>// /orP=>//. elim.
+              ** intros.
+                 apply /andP=>//; split;
+                   move: Hsl Hsr Heq0 Hbefore H0 H1 H2 H3 H4;
+                   remember (size lrl) as slrl;
+                   remember (size lrr) as slrr;
+                   rewrite /size /delta /ratio;
+                   rewrite_Int;
+                   rewrite /is_true !Z.leb_le !Z.eqb_eq !Z.ltb_ge Hslsum Hslrsum;
+                   omega.
+              ** case andP=>//; elim; intros.
+                 apply /andP=>//; split;
+                   move: Hsl Hsr Heq0 Hbefore H0 H1 H2 H3 H4 H5;
+                   remember (size lrl) as slrl;
+                   remember (size lrr) as slrr;
+                   rewrite /size /delta /ratio;
+                   rewrite_Int.
+                 { rewrite /is_true !Z.leb_le !Z.eqb_eq !Z.ltb_ge Hslsum Hslrsum;
+                     omega. }
+                 { move: Hbl. rewrite /balanced.
+                   case: and3P=>//; elim.
+                   case: orP=>//; elim; intros ? ? ? ? ?.
+                   - move: H0. rewrite_Int. rewrite /size.
+                     rewrite /is_true !Z.leb_le !Z.eqb_eq !Z.ltb_ge Hslsum Hslrsum.
                      omega.
-                 - case andP=>//; elim; intros.
-                   apply /andP=>//; split;
-                     move: Hsl Hsr Heq0 Hbefore H0 H1 H2 H3 H4 H5;
-                     remember (size lrl) as slrl;
-                     remember (size lrr) as slrr;
-                     rewrite /size /delta /ratio;
-                     rewrite_Int.
-                   + rewrite /is_true !Z.leb_le !Z.eqb_eq !Z.ltb_ge Hslsum Hslrsum;
-                       omega.
-                   + move: Hbl. rewrite /balanced.
-                     case: and3P=>//; elim.
-                     case: orP=>//; elim; intros ? ? ? ? ?.
-                     * move: H0. rewrite_Int. rewrite /size.
-                       rewrite /is_true !Z.leb_le !Z.eqb_eq !Z.ltb_ge Hslsum Hslrsum.
-                       omega.
-                     * move: H0. case andP=>//; elim. 
-                       rewrite /size /delta. rewrite_Int.
-                       rewrite /is_true !Z.leb_le !Z.eqb_eq !Z.ltb_ge Hslsum Hslrsum.
-                       omega. }
-               { (** [Bin (1+lls+size lrl) lx ll lrl] is balanced. *)
-                 admit. }
-               { (** We already know this. *) admit. }
-           ++ (** [lr] is [Tip] *) admit.
-           ++ (** [ll] is [Tip] *) admit.
-           ++ (** [ll] and [lr] are both [Tip]s. *) admit.
-        -- (** The [otherwise] branch, i.e. [ls >= delta*rs]. *) admit.
-      * (** [l] is [Tip] *) admit.
-      * (** [r] is [Tip] *) admit.
-    - (** the result is ordered. *) admit.
-    - (** the result's cached size is valid. *) admit.
+                   - move: H0. case andP=>//; elim. 
+                     rewrite /size /delta. rewrite_Int.
+                     rewrite /is_true !Z.leb_le !Z.eqb_eq !Z.ltb_ge Hslsum Hslrsum.
+                     omega. }
+            ++ (** [Bin (1+lls+size lrl) lx ll lrl] is balanced. *)
+              admit.
+            ++ (** We already know this. *) admit.
+        * (** [lr] is [Tip] *) admit.
+        * (** [ll] is [Tip] *) admit.
+        * (** [ll] and [lr] are both [Tip]s. *) admit.
+      + (** The [otherwise] branch, i.e. [ls >= delta*rs]. *) admit.
+    - (** [l] is [Tip] *) admit.
+    - (** [r] is [Tip] *) admit.
+    - (** Both [l] and [r] and [Tip]s. *) admit.
   Admitted.
 
+  Lemma balanceL_ordered: forall (x: elt) (l r : Set_ elt),
+      WF l -> WF r ->
+      before_balancedL x l r -> ordered (balanceL x l r).
+  Admitted.
+    
+  Lemma balanceL_validsize: forall (x: elt) (l r : Set_ elt),
+      WF l -> WF r ->
+      before_balancedL x l r -> validsize (balanceL x l r).
+  Admitted.
+
+  Lemma balanceL_WF: forall (x: elt) (l r : Set_ elt),
+      WF l -> WF r ->
+      before_balancedL x l r -> WF (balanceL x l r).
+  Proof with auto.
+    intros. rewrite /WF /valid.
+    apply /and3P=>//; split.
+    - apply balanceL_balanced...
+    - apply balanceL_ordered...
+    - apply balanceL_validsize...
+  Qed.
+  
   Definition empty : t := pack empty eq_refl.
   Definition is_empty : t -> bool := fun s' => 
      s <-- s' ;; null s.

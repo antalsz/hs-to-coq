@@ -233,7 +233,19 @@ Module Foo (E : OrderedType) : WSfun(E).
     apply WF_size_nonneg in H; apply WF_size_nonneg in H0.
     omega.
   Qed.
-      
+
+  Lemma WF_balanced : forall s1 s2 e l,
+      WF (Bin l e s1 s2) -> balanced (Bin l e s1 s2).
+  Proof. move=>s1 s2 e l; rewrite /WF /valid; case /and3P=>//. Qed.
+
+  Lemma WF_ordered : forall s1 s2 e l,
+      WF (Bin l e s1 s2) -> ordered (Bin l e s1 s2).
+  Proof. move=>s1 s2 e l; rewrite /WF /valid; case /and3P=>//. Qed.
+
+  Lemma WF_validsize : forall s1 s2 e l,
+      WF (Bin l e s1 s2) -> validsize (Bin l e s1 s2).
+  Proof. move=>s1 s2 e l; rewrite /WF /valid; case /and3P=>//. Qed.
+        
   Definition In x (s' : t) :=
     s <-- s' ;;
     member x s = true.
@@ -266,7 +278,21 @@ Module Foo (E : OrderedType) : WSfun(E).
                           | [H: context[ratio] |- _ ] => move: H
            end; rewrite /delta /ratio;
     rewrite_Int; rewrite_size; prepare_for_omega.
-    
+
+
+  Lemma balanced_size_constraints : forall (s1 s2 : Set_ elt) e l,
+      balanced (Bin l e s1 s2) ->
+      size s1 + size s2 <= 1 \/
+      (size s1 <= delta * size s2 /\ size s2 <= delta * size s1).
+  Proof.
+    move=>s1 s2 e l. rewrite /balanced.
+    case and3P=>//; elim; rewrite_Int.
+    case orP=>//; elim;
+      [rewrite /is_true !Z.leb_le; left; auto |
+       case andP=>//; elim; rewrite /is_true !Z.leb_le;
+       right; split; auto].
+  Qed.
+  
   Ltac derive_constraints :=
     repeat match goal with
            | [Hwf: context[WF (Bin ?s ?x ?a ?b)] |- _ ] =>
@@ -276,23 +302,17 @@ Module Foo (E : OrderedType) : WSfun(E).
              let Hpos := fresh "Hpos" in
              have: WF (Bin s x a b) by [done];
              move /WF_size_pos; rewrite_size; move=>Hpos;
+             let Hwfc := fresh "Hwfc" in
              let Hwfl := fresh "Hwfl" in
-             have Hwfl: WF a by
-                 [apply WF_children in Hwf; destruct Hwf; auto];
              let Hwfr := fresh "Hwfr" in
-             have Hwfr: WF b by
-                 [apply WF_children in Hwf; destruct Hwf; auto];
+             have Hwfc : WF a /\ WF b by
+                 [move: Hwf; move /WF_children];
+             destruct Hwfc as [Hwfl Hwfr];
              let Hbalanced := fresh "Hbalanced" in
              have Hbalanced: (size a + size b <= 1) \/
                                  (size a <= delta * size b /\
                                   size b <= delta * size a) by
-                 [ move: Hwf; rewrite /WF /valid;
-                   case and3P=>//; elim; rewrite /balanced;
-                   case and3P=>//; elim; rewrite_Int;
-                   case orP=>//; elim;
-                   [rewrite /is_true !Z.leb_le; left; auto |
-                    case andP=>//; elim; rewrite /is_true !Z.leb_le;
-                    right; split; auto] ];
+                 [ move: Hwf; move /WF_balanced /balanced_size_constraints];
              clear Hwf
            | [Hwf: context[WF ?t] |- _ ] =>
              let Hnonneg := fresh "Hnonneg" in

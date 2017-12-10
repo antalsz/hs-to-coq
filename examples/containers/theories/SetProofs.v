@@ -55,47 +55,12 @@ Section Int_And_Z.
   
 End Int_And_Z.
 
-(** LY: Is there a better way of doing this? *)
 Ltac rewrite_Int :=
-  repeat multimatch goal with
-         | [ |- context[_GHC.Num.+_] ] =>
-           rewrite !Int_plus_is_Z_plus
-         | [ |- context[_GHC.Num.-_] ] =>
-           rewrite !Int_minus_is_Z_minus
-         | [ |- context[_GHC.Num.*_] ] =>
-           rewrite !Int_mult_is_Z_mult
-         | [ |- context[_GHC.Base.<_] ] =>
-           rewrite !Int_lt_is_Z_lt
-         | [ |- context[_GHC.Base.<=_] ] =>
-           rewrite !Int_le_is_Z_le 
-         | [ |- context[_GHC.Base.>_] ] =>
-           rewrite !Int_gt_is_Z_gt
-         | [ |- context[_GHC.Base.>=_] ] =>
-           rewrite !Int_ge_is_Z_ge
-         | [ |- context[_GHC.Base.==_] ] =>
-           rewrite !Int_eq_is_Z_eq
-         | [ |- context[# _] ] =>
-           rewrite !Int_is_Z
-             
-         | [ H: context[_GHC.Num.+_] |- _ ] =>
-           rewrite !Int_plus_is_Z_plus in H
-         | [ H: context[_GHC.Num.-_] |- _ ] =>
-           rewrite !Int_minus_is_Z_minus in H
-         | [ H: context[_GHC.Num.*_] |- _ ] =>
-           rewrite !Int_mult_is_Z_mult in H
-         | [ H: context[_GHC.Base.<_] |- _ ] =>
-           rewrite !Int_lt_is_Z_lt in H
-         | [ H: context[_GHC.Base.<=_] |- _ ] =>
-           rewrite !Int_le_is_Z_le in H
-         | [ H: context[_GHC.Base.>_] |- _ ] =>
-           rewrite !Int_gt_is_Z_gt in H
-         | [ H: context[_GHC.Base.>=_] |- _ ] =>
-           rewrite !Int_ge_is_Z_ge in H
-         | [ H: context[_GHC.Base.==_] |- _ ] =>
-           rewrite !Int_eq_is_Z_eq in H
-         | [ H: context[# _] |- _ ] =>
-           rewrite !Int_is_Z in H
-         end.
+  repeat (rewrite ?Int_plus_is_Z_plus ?Int_minus_is_Z_minus
+                  ?Int_mult_is_Z_mult
+                  ?Int_lt_is_Z_lt ?Int_le_is_Z_le
+                  ?Int_ge_is_Z_ge ?Int_gt_is_Z_gt
+                  ?Int_eq_is_Z_eq ?Int_is_Z).
 
 Module Foo (E : OrderedType) : WSfun(E).
   Local Instance Eq_t : GHC.Base.Eq_ E.t :=
@@ -257,7 +222,18 @@ Module Foo (E : OrderedType) : WSfun(E).
       rewrite /size. subst. apply IHs1 in H. apply IHs2 in H0. omega.
     - simpl; omega.
   Qed.
-    
+
+  Lemma WF_size_pos : forall s1 s2 e l,
+      WF (Bin l e s1 s2) -> size (Bin l e s1 s2) >= 1.
+  Proof.
+    intros. have: WF (Bin l e s1 s2) by done.
+    apply WF_children in H; destruct H.
+    move=>Hwf. apply WF_size_children in Hwf.
+    rewrite /size -Hwf.
+    apply WF_size_nonneg in H; apply WF_size_nonneg in H0.
+    omega.
+  Qed.
+      
   Definition In x (s' : t) :=
     s <-- s' ;;
     member x s = true.
@@ -268,6 +244,68 @@ Module Foo (E : OrderedType) : WSfun(E).
   Definition For_all (P : elt -> Prop) s := forall x, In x s -> P x.
   Definition Exists (P : elt -> Prop) s := exists x, In x s /\ P x.
 
+  Ltac rewrite_size :=
+    repeat match goal with
+           | [ |- _ ] => rewrite ![size (Bin _ _ _ _)]/size
+           | [ |- _ ] => rewrite ![size Tip]/size
+           | [H: context[size (Bin _ _ _ _)] |- _ ] =>
+             rewrite ![size (Bin _ _ _ _)]/size in H
+           end.
+
+  Ltac prepare_for_omega :=
+    repeat match goal with
+                          | [H: context[_ <? _] |- _ ] => move: H
+                          | [H: context[_ <=? _] |- _ ] => move: H
+                          | [H: context[_ =? _] |- _ ] => move: H
+                          end; rewrite_Int; rewrite_size;
+    rewrite /is_true ?Z.ltb_lt ?Z.ltb_ge ?Z.leb_le ?Z.eqb_eq.
+
+  Ltac rewrite_for_omega :=
+    repeat match goal with
+                          | [H: context[delta] |- _ ] => move: H
+                          | [H: context[ratio] |- _ ] => move: H
+           end; rewrite /delta /ratio;
+    rewrite_Int; rewrite_size; prepare_for_omega.
+    
+  Ltac derive_constraints :=
+    repeat match goal with
+           | [Hwf: context[WF (Bin ?s ?x ?a ?b)] |- _ ] =>
+             let Hsum := fresh "Hsum" in
+             have: WF (Bin s x a b) by [done];
+             move /WF_size_children; rewrite_size; move=>Hsum;
+             let Hpos := fresh "Hpos" in
+             have: WF (Bin s x a b) by [done];
+             move /WF_size_pos; rewrite_size; move=>Hpos;
+             let Hwfl := fresh "Hwfl" in
+             have Hwfl: WF a by
+                 [apply WF_children in Hwf; destruct Hwf; auto];
+             let Hwfr := fresh "Hwfr" in
+             have Hwfr: WF b by
+                 [apply WF_children in Hwf; destruct Hwf; auto];
+             let Hbalanced := fresh "Hbalanced" in
+             have Hbalanced: (size a + size b <= 1) \/
+                                 (size a <= delta * size b /\
+                                  size b <= delta * size a) by
+                 [ move: Hwf; rewrite /WF /valid;
+                   case and3P=>//; elim; rewrite /balanced;
+                   case and3P=>//; elim; rewrite_Int;
+                   case orP=>//; elim;
+                   [rewrite /is_true !Z.leb_le; left; auto |
+                    case andP=>//; elim; rewrite /is_true !Z.leb_le;
+                    right; split; auto] ];
+             clear Hwf
+           | [Hwf: context[WF ?t] |- _ ] =>
+             let Hnonneg := fresh "Hnonneg" in
+             have: WF t by [done];
+             move /WF_size_nonneg; move=>Hnonneg; clear Hwf
+           end.
+
+  Ltac brute_force_solve :=
+    (repeat match goal with
+            | [H: _ \/ _ |- _ ] => destruct H
+            | [H: _ /\ _ |- _ ] => destruct H
+            end); try omega; rewrite_for_omega; omega.
+                                    
   (** The balancing condition is that [ls <= delta*rs] and [rs <=
       delta*ls].  The moment that balancing is broken because of
       insertion/deletion of one single element, we know exactly one
@@ -291,45 +329,26 @@ Module Foo (E : OrderedType) : WSfun(E).
     case: and3P=>//; elim; move=>Hbr Hor Hvr; elim.
     case: and3P=>//; elim; move=>Hbl Hol Hvl; elim.
     destruct r as [sr xr rl rr | ]; destruct l as [sl xl ll lr | ];
-      rewrite /before_balancedL /balanceL; move=>Hbefore.
+      rewrite /before_balancedL /balanceL; rewrite_Int; move=>Hbefore.
     - (** [l] and [r] are both [Bin]s. *)
       rewrite_Int. destruct_match.
       + (** The [ls > delta*rs] branch in Haskell code. *)
         destruct ll as [sll xll lll llr | ];
           destruct lr as [slr xlr lrl lrr | ]; rewrite_Int.
         * (** [ll] and [lr] are both Bins *)
-          assert (Hslsum: sl = sll + slr + 1).
-          { apply WF_size_children in Hwfl.
-            rewrite /size in Hwfl. done. }
-          assert (Hsl: sl >= 0).
-          { apply WF_size_nonneg in Hwfl. simpl in Hwfl; auto. }
-          assert (Hsr: sr >= 0).
-          { apply WF_size_nonneg in Hwfr. simpl in Hwfr; auto. }
-          assert (Hslr: sll >= 0 /\ slr >= 0).
-          { apply WF_children in Hwfl. destruct Hwfl as [Hn1 Hn2].
-            apply WF_size_nonneg in Hn1. apply WF_size_nonneg in Hn2.
-            simpl in *. auto. }
           destruct_match.
           -- (** [lrs < ratio*lls] branch (single rotation): We need
                  to prove that [Bin (1+ls+rs) lx ll (Bin (1+rs+lrs) x
                  lr r)] is balanced. *)
-            remember (Bin (#1 + sr + slr) x
-                          (Bin slr xlr lrl lrr) (Bin sr xr rl rr)) as rb.
-            rewrite -Heqrb /balanced. rewrite_Int.
+            rewrite /balanced. rewrite_Int.
             apply /and3P=>//. split.
             ++ (** Top level is balanced. That is, size of [ll] and of
                    [Bin (1+rs+lrs) x lr r] are balanced. This should
                    be proved by arithmetics. *)
               apply /orP=>//. right.
-              apply /andP=>//. split.
-              ** destruct Hslr. move: Hbefore. 
-                 rewrite Heqrb /size /delta Hslsum.
-                 rewrite /is_true !Z.leb_le !Z.eqb_eq.
-                 rewrite_Int.  omega. 
-              ** move: Hbefore Heq Heq0.
-                 rewrite Heqrb /size /delta /ratio Hslsum.
-                 rewrite_Int. rewrite /is_true !Z.leb_le !Z.ltb_lt !Z.eqb_eq.
-                 intros. omega.
+              apply /andP=>//. split; derive_constraints; subst.
+              ** destruct Hbalanced0; rewrite_for_omega; intros; omega.
+              ** rewrite_for_omega. omega.
             ++ (** Left child [ll] is balanced. We already know this
                    from the precondition. All we need to do here is
                    derive that fact from precondition. No arithmetics
@@ -338,27 +357,10 @@ Module Foo (E : OrderedType) : WSfun(E).
               move: H. rewrite /balanced. auto.
             ++ (** Right child [Bin (1+rs+lrs) x lr r] is
                    balanced. Arithmetics. *)
-              rewrite Heqrb. apply /and5P=>//; split.
-              ** move: Hwfl. rewrite /WF /valid.
-                 case and3P=>//; elim; intros ? ? ?. elim.
-                 move: H. rewrite /balanced.
-                 case and3P=>//; elim; intros ? ? ?. elim.
-                 move: H. rewrite /size. rewrite_Int.
-                 case orP=>//; elim.
-                 { move=>Hl1. elim.
-                   apply /orP; left.
-                   move: Hbefore Heq Heq0 Hl1. 
-                   rewrite /size /delta /ratio.
-                   rewrite_Int. destruct Hslr.
-                   rewrite /is_true !Z.leb_le !Z.ltb_lt !Z.eqb_eq Hslsum.
-                   omega. }
-                 { case /andP=>//. move=>Hlllr Hlrll. elim.
-                   apply /orP. right. apply /andP.
-                   move: Hbefore Heq Heq0 Hlllr Hlrll. 
-                   rewrite /size /delta /ratio.
-                   rewrite_Int. destruct Hslr.
-                   rewrite /is_true !Z.leb_le !Z.ltb_lt !Z.eqb_eq Hslsum.
-                   clear H3 H2. split; omega. }
+              apply /and5P=>//; split.
+              ** derive_constraints; subst. 
+                 apply /orP=>//. right.
+                 apply /andP=>//; split; rewrite_for_omega; omega.
               ** apply balanced_children in Hbl; destruct Hbl.
                  move: H0. rewrite /balanced. auto.
               ** move: Hbr. rewrite /balanced.
@@ -374,47 +376,31 @@ Module Foo (E : OrderedType) : WSfun(E).
                    right child [Bin (1+rs+size lrr) x lrr r] are
                    balanced wrt. to each other. *)
               apply /orP=>//. right.
-              apply WF_children in Hwfl; destruct Hwfl.
-              assert (Hblr: balanced (Bin slr xlr lrl lrr)).
-              { move: H0. rewrite /WF /valid. case /and3P=>//. }
-              assert (Hslrsum: slr = size lrl + size lrr + 1).
-              { apply WF_size_children in H0. auto. }
-              apply WF_children in H0; destruct H0.
-              apply WF_size_nonneg in H0; apply WF_size_nonneg in H1.
-              destruct Hslr.
-              move: Hblr. rewrite /balanced.
-              case /and3P=>// /orP=>//. elim.
-              ** intros.
-                 apply /andP=>//; split;
-                   move: Hsl Hsr Heq0 Hbefore H0 H1 H2 H3 H4;
-                   remember (size lrl) as slrl;
-                   remember (size lrr) as slrr;
-                   rewrite /size /delta /ratio;
-                   rewrite_Int;
-                   rewrite /is_true !Z.leb_le !Z.eqb_eq !Z.ltb_ge Hslsum Hslrsum;
-                   omega.
-              ** case andP=>//; elim; intros.
-                 apply /andP=>//; split;
-                   move: Hsl Hsr Heq0 Hbefore H0 H1 H2 H3 H4 H5;
-                   remember (size lrl) as slrl;
-                   remember (size lrr) as slrr;
-                   rewrite /size /delta /ratio;
-                   rewrite_Int.
-                 { rewrite /is_true !Z.leb_le !Z.eqb_eq !Z.ltb_ge Hslsum Hslrsum;
-                     omega. }
-                 { move: Hbl. rewrite /balanced.
-                   case: and3P=>//; elim.
-                   case: orP=>//; elim; intros ? ? ? ? ?.
-                   - move: H0. rewrite_Int. rewrite /size.
-                     rewrite /is_true !Z.leb_le !Z.eqb_eq !Z.ltb_ge Hslsum Hslrsum.
-                     omega.
-                   - move: H0. case andP=>//; elim. 
-                     rewrite /size /delta. rewrite_Int.
-                     rewrite /is_true !Z.leb_le !Z.eqb_eq !Z.ltb_ge Hslsum Hslrsum.
-                     omega. }
+              apply /andP=>//. derive_constraints; subst; rewrite_for_omega.
+              split; omega.
             ++ (** [Bin (1+lls+size lrl) lx ll lrl] is balanced. *)
-              admit.
-            ++ (** We already know this. *) admit.
+              apply /and3P=>//; split.
+              ** apply /orP=>//. destruct lrl.
+                 { right. apply /andP=>//. derive_constraints; subst.
+                   split; brute_force_solve. }
+                 { derive_constraints; subst; rewrite_size; rewrite_Int.
+                   left. rewrite_for_omega. omega. }
+              ** apply balanced_children in Hbl; destruct Hbl.
+                 move: H. rewrite /balanced. auto.
+              ** apply balanced_children in Hbl; destruct Hbl.
+                 apply balanced_children in H0; destruct H0.
+                 move: H0. rewrite /balanced. auto.
+            ++ (** [Bin (1+rs+size lrr) x lrr r] is balanced. *)
+              apply /and3P; split.
+              ** apply /orP=>//. destruct lrr.
+                 { right. apply /andP=>//. derive_constraints; subst.
+                   split; brute_force_solve. }
+                 { derive_constraints; subst; rewrite_size; rewrite_Int.
+                   left. rewrite_for_omega. omega. }
+              ** apply balanced_children in Hbl; destruct Hbl.
+                 apply balanced_children in H0; destruct H0.
+                 move: H1. rewrite /balanced. auto.
+              ** move: Hbr. rewrite /balanced. auto.
         * (** [lr] is [Tip] *) admit.
         * (** [ll] is [Tip] *) admit.
         * (** [ll] and [lr] are both [Tip]s. *) admit.

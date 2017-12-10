@@ -113,6 +113,19 @@ Module Foo (E : OrderedType) : WSfun(E).
       balanced (Bin l e s1 s2) -> balanced s1 /\ balanced s2.
   Proof. split; simpl in H; move: H; case: and3P=>//; elim; done. Qed.
 
+  Lemma balanced_size_constraints : forall (s1 s2 : Set_ elt) e l,
+      balanced (Bin l e s1 s2) ->
+      size s1 + size s2 <= 1 \/
+      (size s1 <= delta * size s2 /\ size s2 <= delta * size s1).
+  Proof.
+    move=>s1 s2 e l. rewrite /balanced.
+    case and3P=>//; elim; rewrite_Int.
+    case orP=>//; elim;
+      [rewrite /is_true !Z.leb_le; left; auto |
+       case andP=>//; elim; rewrite /is_true !Z.leb_le;
+       right; split; auto].
+  Qed.
+  
   Lemma ordered_children : forall {a} `{Eq_ a} `{Ord a} (s1 s2 : Set_ a) l e,
       ordered (Bin l e s1 s2) -> ordered s1 /\ ordered s2.
   Proof.
@@ -266,33 +279,18 @@ Module Foo (E : OrderedType) : WSfun(E).
 
   Ltac prepare_for_omega :=
     repeat match goal with
-                          | [H: context[_ <? _] |- _ ] => move: H
-                          | [H: context[_ <=? _] |- _ ] => move: H
-                          | [H: context[_ =? _] |- _ ] => move: H
-                          end; rewrite_Int; rewrite_size;
-    rewrite /is_true ?Z.ltb_lt ?Z.ltb_ge ?Z.leb_le ?Z.eqb_eq.
+           | [H: context[_ <? _] |- _ ] => move: H
+           | [H: context[_ <=? _] |- _ ] => move: H
+           | [H: context[_ =? _] |- _ ] => move: H
+           end; rewrite_size; rewrite_Int;
+    rewrite /is_true ?Z.ltb_lt ?Z.ltb_ge ?Z.leb_le ?Z.leb_gt ?Z.eqb_eq.
 
   Ltac rewrite_for_omega :=
     repeat match goal with
                           | [H: context[delta] |- _ ] => move: H
                           | [H: context[ratio] |- _ ] => move: H
-           end; rewrite /delta /ratio;
-    rewrite_Int; rewrite_size; prepare_for_omega.
+           end; rewrite /delta /ratio; prepare_for_omega.
 
-
-  Lemma balanced_size_constraints : forall (s1 s2 : Set_ elt) e l,
-      balanced (Bin l e s1 s2) ->
-      size s1 + size s2 <= 1 \/
-      (size s1 <= delta * size s2 /\ size s2 <= delta * size s1).
-  Proof.
-    move=>s1 s2 e l. rewrite /balanced.
-    case and3P=>//; elim; rewrite_Int.
-    case orP=>//; elim;
-      [rewrite /is_true !Z.leb_le; left; auto |
-       case andP=>//; elim; rewrite /is_true !Z.leb_le;
-       right; split; auto].
-  Qed.
-  
   Ltac derive_constraints :=
     repeat match goal with
            | [Hwf: context[WF (Bin ?s ?x ?a ?b)] |- _ ] =>
@@ -321,10 +319,10 @@ Module Foo (E : OrderedType) : WSfun(E).
            end.
 
   Ltac brute_force_solve :=
-    (repeat match goal with
-            | [H: _ \/ _ |- _ ] => destruct H
-            | [H: _ /\ _ |- _ ] => destruct H
-            end); try omega; rewrite_for_omega; omega.
+    repeat match goal with
+           | [H: _ \/ _ |- _ ] => destruct H
+           | [H: _ /\ _ |- _ ] => destruct H
+           end; try omega; rewrite_for_omega; omega.
                                     
   (** The balancing condition is that [ls <= delta*rs] and [rs <=
       delta*ls].  The moment that balancing is broken because of
@@ -338,7 +336,7 @@ Module Foo (E : OrderedType) : WSfun(E).
       [r]. *)
   Definition before_balancedL (x: elt) (l r : Set_ elt) : Prop :=
     size l == delta * size r + 1.
-  
+
   Lemma balanceL_balanced: forall (x: elt) (l r : Set_ elt),
     WF l -> WF r ->
     before_balancedL x l r -> balanced (balanceL x l r).

@@ -104,11 +104,118 @@ Module Foo (E : OrderedType) : WSfun(E).
   Definition t := {s : Set_ elt | WF s}.
   Definition pack (s : Set_ elt) (H : WF s): t := exist _ s H.
 
+  Lemma elt_lt : forall (e1 e2 : elt),
+      e1 GHC.Base.< e2 <-> E.lt e1 e2.
+  Proof.
+    move=>e1 e2. rewrite /_GHC.Base.<_ /Ord_t /ord_default /=.
+    rewrite /_GHC.Base.==_ /Eq_comparison___ /= /eq_comparison /compare.
+    split.
+    - destruct (E.compare e1 e2); auto; move=>Hcontra; inversion Hcontra.
+    - move /OrdFacts.elim_compare_lt; elim. move=>x H; rewrite H=>//.
+  Qed.
+
+  Lemma elt_gt : forall (e1 e2 : elt),
+      e1 GHC.Base.> e2 <-> E.lt e2 e1.
+  Proof.
+    move=>e1 e2. rewrite /_GHC.Base.>_ /Ord_t /ord_default /=.
+    rewrite /_GHC.Base.==_ /Eq_comparison___ /= /eq_comparison /compare.
+    split.
+    - destruct (E.compare e2 e1); auto; move=>Hcontra; inversion Hcontra.
+    - move /OrdFacts.elim_compare_lt; elim. move=>x H; rewrite H=>//.
+  Qed.
+
+  Lemma elt_compare_lt: forall (e1 e2 : elt),
+      GHC.Base.compare e1 e2 = Lt <-> E.lt e1 e2.
+  Proof.
+    move=>e1 e2. rewrite_compare_e.
+    destruct_match; split; move=>Hcontra; try solve [inversion Hcontra].
+    - apply (OrdFacts.eq_not_lt e) in Hcontra. inversion Hcontra.
+    - apply OrdFacts.lt_not_gt in Hcontra. contradiction.
+  Qed.
+
+  Lemma elt_compare_gt: forall (e1 e2 : elt),
+      GHC.Base.compare e1 e2 = Gt <-> E.lt e2 e1.
+  Proof.
+    move=>e1 e2. rewrite_compare_e.
+    destruct_match; split; move=>Hcontra; try solve [inversion Hcontra].
+    - apply OrdFacts.lt_not_gt in Hcontra. contradiction.
+    - clear Heq. apply E.eq_sym in e.
+      apply (OrdFacts.eq_not_lt e) in Hcontra. inversion Hcontra.
+  Qed.
+
+  Lemma elt_compare_eq: forall (e1 e2 : elt),
+      GHC.Base.compare e1 e2 = Eq <-> E.eq e1 e2.
+  Proof.
+    move=>e1 e2. rewrite /Base.compare /Ord_t /ord_default /= /compare.
+    destruct_match; split; move=>Hcontra; try solve [inversion Hcontra].
+    - apply OrdFacts.eq_not_lt in Hcontra. contradiction.
+    - apply E.eq_sym in Hcontra. apply OrdFacts.eq_not_lt in Hcontra. contradiction.
+  Qed.
+
   Notation "x <-- f ;; P" :=
     (match f with
      | exist x _ => P
      end) (at level 99, f at next level, right associativity).
 
+  Definition In_set x (s : Set_ elt) :=
+    member x s = true.
+  
+  Definition In x (s' : t) :=
+    s <-- s' ;;
+    In_set x s.
+
+  Definition Equal_set s s' := forall a : elt, In_set a s <-> In_set a s'.
+  Definition Equal s s' := forall a : elt, In a s <-> In a s'.
+  Definition Subset s s' := forall a : elt, In a s -> In a s'.
+  Definition Empty s := forall a : elt, ~ In a s.
+  Definition For_all (P : elt -> Prop) s := forall x, In x s -> P x.
+  Definition Exists (P : elt -> Prop) s := exists x, In x s /\ P x.
+
+  Definition eq_set : Set_ elt -> Set_ elt -> Prop := Equal_set.
+  Definition eq : t -> t -> Prop := Equal.
+  Definition eq_dec : forall s s' : t, {eq s s'} + {~ eq s s'}.
+    destruct s as [s]; destruct s' as [s']; simpl.
+    destruct (s == s') eqn:Heq; move: Heq;
+      rewrite /_GHC.Base.==_ /Eq___Set_; simpl;
+        rewrite /Base.Eq___Set__op_zeze__;
+        rewrite /_GHC.Base.==_ /Eq_Integer___ /Eq_list; simpl;
+          case: andP=>//.
+    - elim; intros; left.
+      rewrite /eq /Equal; intros. admit.
+      (* TODO: need lemmas on [toAscList] *)
+  Admitted.
+
+  Lemma eq_set_refl : forall s, eq_set s s.
+  Proof. intros; constructor; auto. Qed.
+    
+  Lemma eq_refl : forall s : t, eq s s.
+  Proof. destruct s. simpl. apply eq_set_refl. Qed.
+
+  Lemma eq_set_sym : forall s s', eq_set s s' -> eq_set s' s.
+  Proof. rewrite /eq_set /Equal_set; symmetry; auto. Qed.
+
+  Lemma eq_sym : forall s s' : t, eq s s' -> eq s' s.
+  Proof. destruct s; destruct s'; simpl. apply eq_set_sym. Qed.
+    
+  Lemma eq_set_trans :
+    forall s s' s'', eq_set s s' -> eq_set s' s'' -> eq_set s s''.
+  Proof.
+    rewrite /eq_set /Equal_set; intros s s' s'' H1 H2 a.
+    apply (iff_trans (H1 a) (H2 a)).
+  Qed.
+  
+  Lemma eq_trans :
+    forall s s' s'' : t, eq s s' -> eq s' s'' -> eq s s''.
+  Proof.
+    destruct s; destruct s'; destruct s''; simpl. apply eq_set_trans.
+  Qed.
+
+  Add Parametric Relation : (Set_ elt) @eq_set
+       reflexivity proved by (eq_set_refl)
+       symmetry proved by (eq_set_sym)
+       transitivity proved by (eq_set_trans)
+       as eq_set_rel.
+  
   Lemma balanced_children : forall {a} (s1 s2 : Set_ a) l e,
       balanced (Bin l e s1 s2) -> balanced s1 /\ balanced s2.
   Proof. split; simpl in H; move: H; case: and3P=>//; elim; done. Qed.
@@ -138,6 +245,25 @@ Module Foo (E : OrderedType) : WSfun(E).
       clear H4; clear Heqct; clear H2; clear H3. generalize dependent ct.
       induction s2=>//. intros. move: H5; case: and4P=>//; elim.
       intros. apply /and4P; split=>//. apply IHs2_1; auto.
+  Qed.
+
+  Lemma ordered_rewrite : forall (s1 s2: Set_ elt) l e1 e2,
+      E.eq e1 e2 -> ordered (Bin l e1 s1 s2) -> ordered (Bin l e2 s1 s2).
+  Proof.
+    move=>s1 s2 l e1 e2 Heq. rewrite /ordered.
+    case /and4P=>//; intros. apply /and4P=>//; split=>//.
+    - move: p1. remember (const true) as ct. clear Heqct p2 p0.
+      generalize dependent ct. induction s1=>//; intros.
+      apply /and4P=>//. move: p1. case /and4P=>//.
+      intros. apply elt_lt in p1; split=>//.
+      + apply elt_lt. eauto.
+      + apply IHs1_2=>//; apply elt_gt=>//.
+    - move: p2. remember (const true) as ct. clear Heqct p1 p0.
+      generalize dependent ct. induction s2=>//; intros.
+      apply /and4P=>//. move: p2. case /and4P=>//.
+      intros. apply elt_gt in p0; split=>//.
+      + apply elt_gt. symmetry in Heq. eauto.
+      + apply IHs2_1=>//; apply elt_gt=>//.
   Qed.
 
   Lemma validsize_children : forall {a} (s1 s2 : Set_ a) l e,
@@ -178,7 +304,7 @@ Module Foo (E : OrderedType) : WSfun(E).
         intros. rewrite_option_eq. apply Z.eqb_refl.
       + rewrite Heqf. simpl. rewrite_option_eq. 
   Qed.
-      
+
   Lemma WF_children : forall s1 s2 l e, WF (Bin l e s1 s2) -> WF s1 /\ WF s2.
   Proof.
     rewrite /WF /valid. move=>s1 s2 l e. case: and3P=>//.
@@ -258,16 +384,9 @@ Module Foo (E : OrderedType) : WSfun(E).
   Lemma WF_validsize : forall s1 s2 e l,
       WF (Bin l e s1 s2) -> validsize (Bin l e s1 s2).
   Proof. move=>s1 s2 e l; rewrite /WF /valid; case /and3P=>//. Qed.
-        
-  Definition In x (s' : t) :=
-    s <-- s' ;;
-    member x s = true.
-  
-  Definition Equal s s' := forall a : elt, In a s <-> In a s'.
-  Definition Subset s s' := forall a : elt, In a s -> In a s'.
-  Definition Empty s := forall a : elt, ~ In a s.
-  Definition For_all (P : elt -> Prop) s := forall x, In x s -> P x.
-  Definition Exists (P : elt -> Prop) s := exists x, In x s /\ P x.
+
+  Lemma WF_singleton : forall e, WF (singleton e).
+  Proof. intros. rewrite /WF /valid. apply /and3P=>//. Qed.
 
   Ltac rewrite_size :=
     repeat match goal with
@@ -338,7 +457,47 @@ Module Foo (E : OrderedType) : WSfun(E).
 
   Ltac step_in_balanced :=
     rewrite /balanced; apply /and3P=>//; split=>//; try solve_balanced_trivial.
-                                    
+
+  Lemma balanceL_add_size : forall (x : elt) (l r : Set_ elt),
+      WF l -> WF r ->
+      size (balanceL x l r) = size l + size r + 1.
+  Proof.
+    destruct r as [sr xr rl rr | ];
+      destruct l as [sl xl ll lr | ].
+    - rewrite /balanceL; destruct_match.
+      + destruct ll as [sll xll lll llr | ];
+          destruct lr as [slr xlr lrl lrr | ].
+        * destruct_match; intros;
+            rewrite_size; rewrite_Int; (* why can't [omega] solve it? *)
+              rewrite -Z.add_assoc [1 + _]Z.add_comm //.
+        * intros. derive_constraints; subst. rewrite_for_omega.
+          intros; omega.
+        * intros. derive_constraints; subst. rewrite_for_omega.
+          intros; omega.
+        * intros. derive_constraints; subst. rewrite_for_omega.
+          intros; omega.
+      + intros. rewrite_size; rewrite_Int.
+        rewrite -Z.add_assoc [1 + _]Z.add_comm //.
+    - intros. rewrite_size; rewrite_Int.
+      rewrite Z.add_0_l Z.add_comm //.
+    - rewrite /balanceL;
+        destruct ll as [sll xll lll llr | ];
+        destruct lr as [slr xlr lrl lrr | ].
+      + destruct_match; intros; rewrite_size; rewrite_Int;
+          rewrite -Z.add_assoc Z.add_0_l Z.add_comm //.
+      + intros. derive_constraints; subst.
+        destruct Hbalanced; rewrite_for_omega.
+        * intros. have Hs: (size lll + size llr = 0) by omega. rewrite Hs //.
+        * intros. omega.
+      + intros. derive_constraints; subst.
+        destruct Hbalanced; rewrite_for_omega.
+        * intros. have Hs: (size lrl + size lrr = 0) by omega. rewrite Hs //.
+        * intros. omega.
+      + intros; derive_constraints. move: Hsum.
+        rewrite_for_omega. intros. rewrite -Hsum. reflexivity.
+    - rewrite_size. do 2 elim. rewrite_Int. reflexivity.
+  Qed.
+
   (** The balancing condition is that [ls <= delta*rs] and [rs <=
       delta*ls].  The moment that balancing is broken because of
       insertion/deletion of one single element, we know exactly one
@@ -350,7 +509,7 @@ Module Foo (E : OrderedType) : WSfun(E).
       is greater than any value in [l], and smaller than any value in
       [r]. *)
   Definition before_balancedL (x: elt) (l r : Set_ elt) : Prop :=
-    size l + size r <= 1 \/
+    (size l + size r <= 2 /\ size r <= 1) \/
     (size l <= delta * size r + 1 /\ size r <= delta * size l).
 
   Lemma balanceL_balanced: forall (x: elt) (l r : Set_ elt),
@@ -450,12 +609,15 @@ Module Foo (E : OrderedType) : WSfun(E).
           -- step_in_balanced. derive_constraints.
              apply /orP=>//; left. rewrite_for_omega. omega.
       + step_in_balanced. derive_constraints; subst.
-          (* contradiction, doesn't matter which branch. *)
-          apply /orP=>//; left. rewrite_for_omega. omega.
+        (* contradiction, doesn't matter which branch. *)
+        destruct Hbefore; destruct H.
+        * apply /orP=>//; right. apply /andP=>//; rewrite_for_omega; split; omega.
+        * apply /orP=>//; left. rewrite_for_omega. omega. (* contradiction *)
       + step_in_balanced. 
-      + step_in_balanced. apply /orP=>//; left. rewrite_for_omega. omega.
+      + apply WF_size_children in Hwfl.
+        step_in_balanced. apply /orP=>//; left. rewrite_for_omega. omega.
     - (** Both [l] and [r] and [Tip]s. *) step_in_balanced.
-  Time Qed. (* Finished transaction in 27.762 secs (27.635u,0.101s) (successful) *)
+  Time Qed. (* Finished transaction in 31.595 secs (31.434u,0.115s) (successful) *)
 
   Lemma balanceL_ordered: forall (x: elt) (l r : Set_ elt),
       WF l -> WF r ->
@@ -478,33 +640,85 @@ Module Foo (E : OrderedType) : WSfun(E).
     - apply balanceL_validsize...
   Qed.
   
-  Definition empty : t := pack empty eq_refl.
+  Definition empty : t := pack empty Logic.eq_refl.
   Definition is_empty : t -> bool := fun s' => 
      s <-- s' ;; null s.
   Definition mem : elt -> t -> bool := fun e s' =>
      s <-- s' ;; member e s.
-  Definition add : elt -> t -> t. Admitted. (* must contain a WF proof *)
+
+  Lemma insert_prop : forall e s,
+      WF s ->
+      WF (insert e s) /\
+      (size (insert e s) = size s + 1 \/ size (insert e s) = size s).
+  Proof.
+    induction s.
+    - intros. rewrite /insert/=. destruct_match; split.
+      + (** s is Bin, e = a, prove: WF (insert e s) *)
+        apply elt_compare_eq in Heq. move: H.
+        rewrite /WF /valid. case /and3P=>//; intros.
+        apply /and3P=>//; split=>//. apply E.eq_sym in Heq.
+        eapply ordered_rewrite; eauto.
+      + (** prove [size (insert e s) = size s] *)
+        right. rewrite /size=>//.
+      + (** s is Bin, e < a, prove: WF (insert e s) *)
+        intros. apply balanceL_WF.
+        * (** WF (insert e s2) *)
+          apply WF_children in H. apply IHs1. tauto.
+        * (** WF s3 *)
+          apply WF_children in H. tauto.
+        * (** (insert e s2) and s3 satisfy [before_balancedL]'s
+              pre-condbitions. *)
+          rewrite -/insert /before_balancedL.
+          have Hs1: WF s2 by [apply WF_children in H; tauto].
+          apply IHs1 in Hs1; destruct Hs1.
+          (** cases analysis: did we insert an element to s2?  *)
+          destruct H1.
+          -- (** we did *)
+            destruct s2; destruct s3; derive_constraints; subst;
+              repeat match goal with
+                     | [H: _ \/ _ |- _ ] => destruct H
+                     | [H: _ /\ _ |- _ ] => destruct H
+                     end; rewrite_for_omega; rewrite ?H1;
+                try solve [(right + left); omega].
+          -- (** we didn't *) derive_constraints; subst.
+             rewrite H1. destruct Hbalanced; (left + right); omega.
+      + (** prove [size (insert e s) = size s + 1] *)
+        rewrite -/insert. 
+        have Hs1: WF s2 by [apply WF_children in H; tauto].
+        rewrite balanceL_add_size=>//.
+        * apply IHs1 in Hs1; destruct Hs1; destruct H1;
+            derive_constraints; subst; rewrite H1.
+          -- left.
+             rewrite [size s2 + 1]Z.add_comm [(_ + 1) + 1]Z.add_comm !Z.add_assoc //.
+          -- right. reflexivity.
+        * apply IHs1 in Hs1. tauto.
+        * apply WF_children in H. tauto.
+      + (** s is Bin, e > a, prove: WF (insert e s) *)
+        admit.
+        (** We need to prove some properties for [balanceR] in order
+            to prove this. This structure should be very much the same
+            as in the last last bullet point. *)
+      + admit.
+    - simpl. elim. rewrite /singleton. split.
+      + apply WF_singleton.
+      + left; reflexivity.
+  Admitted.        
+
+  Definition add (e: elt) (s': t) : t.
+    refine (s <-- s' ;;
+            pack (insert e s) _).
+    move: i=>H. eapply insert_prop in H. destruct H. eauto.
+  Defined.
+  
   Definition singleton : elt -> t.
     refine (fun e => pack (singleton e) _).
-    rewrite /singleton /WF /valid.
-    apply /and3P; split; auto.
+    apply WF_singleton.
   Defined.
+  
   Definition remove : elt -> t -> t. Admitted.
   Definition union : t -> t -> t. Admitted.
   Definition inter : t -> t -> t. Admitted.
   Definition diff : t -> t -> t. Admitted.
-  Definition eq : t -> t -> Prop := Equal.
-  Definition eq_dec : forall s s' : t, {eq s s'} + {~ eq s s'}.
-    destruct s as [s]; destruct s' as [s']; simpl.
-    destruct (s == s') eqn:Heq; move: Heq;
-      rewrite /_GHC.Base.==_ /Eq___Set_; simpl;
-        rewrite /Base.Eq___Set__op_zeze__;
-        rewrite /_GHC.Base.==_ /Eq_Integer___ /Eq_list; simpl;
-          case: andP=>//.
-    - elim; intros; left.
-      rewrite /eq /Equal; intros. admit.
-      (* TODO: need lemmas on [toAscList] *)
-  Admitted.
     
   Definition equal : t -> t -> bool :=
     fun ws ws' => s <-- ws ;;
@@ -524,41 +738,30 @@ Module Foo (E : OrderedType) : WSfun(E).
   Definition cardinal : t -> nat. Admitted.
   Definition elements : t -> list elt. Admitted.
   Definition choose : t -> option elt. Admitted.
+  
   Lemma In_1 :
     forall (s : t) (x y : elt), E.eq x y -> In x s -> In y s.
   Proof.
-    (* LY: Surely this can be simplified? *)
-    unfold In; destruct s as [s']; induction s'; auto. intros.
-    simpl in H0; destruct (Base.compare x a) eqn:Hcomp;
-      vm_compute in Hcomp; destruct (E.compare x a) as [HL | HE | HG];
-        inversion Hcomp; clear Hcomp.
-    - apply E.eq_sym in H. apply (E.eq_trans H) in HE.
-      apply OrdFacts.elim_compare_eq in HE; destruct HE as [? Heq].
-      simpl. vm_compute. rewrite Heq; auto.
-    - apply (OrdFacts.eq_lt (E.eq_sym H)) in HL.
-      apply OrdFacts.elim_compare_lt in HL; destruct HL as [? Hlt]. simpl.
-      assert (Hcomp: Base.compare y a = Lt).
-      { vm_compute. rewrite Hlt; auto. }
-      rewrite Hcomp. apply WF_children in i; destruct i. eauto.
-    - assert (Heq: E.eq x y) by apply H.
-      apply (OrdFacts.lt_eq HG) in H.
-      apply OrdFacts.elim_compare_gt in H; destruct H as [? Hgt]. simpl.
-      assert (Hcomp: Base.compare y a = Gt).
-      { vm_compute. rewrite Hgt; auto. }
-      rewrite Hcomp. apply WF_children in i; destruct i. eauto.
-  Qed.
-      
-  Lemma eq_refl : forall s : t, eq s s.
-  Proof. intros; constructor; auto. Qed.
-    
-  Lemma eq_sym : forall s s' : t, eq s s' -> eq s' s.
-  Proof. unfold eq; unfold Equal; symmetry; auto. Qed.
-    
-  Lemma eq_trans :
-    forall s s' s'' : t, eq s s' -> eq s' s'' -> eq s s''.
-  Proof.
-    unfold eq; unfold Equal; intros s s' s'' H1 H2 a.
-    apply (iff_trans (H1 a) (H2 a)).
+    move=>s x y. rewrite /In /In_set. elim s=>[s'].
+    elim s'=>[sl sx l IHl r IHr | ]=>Hwf Heq.
+    - simpl. destruct_match.
+      + apply elt_compare_eq in Heq0.
+        apply E.eq_sym in Heq. apply (E.eq_trans Heq) in Heq0.
+        elim. apply elt_compare_eq in Heq0; rewrite Heq0 //=.
+      + apply elt_compare_lt in Heq0. intro.
+        apply WF_children in Hwf; destruct Hwf.
+        apply (IHl H0) in Heq as Heq1=>//.
+        apply E.eq_sym in Heq. apply (OrdFacts.eq_lt Heq) in Heq0.
+        apply elt_compare_lt in Heq0. rewrite Heq0. apply Heq1.
+      + apply elt_compare_gt in Heq0. intro.
+        apply WF_children in Hwf; destruct Hwf.
+        apply (IHr H1) in Heq as Heq1=>//.
+        apply (OrdFacts.lt_eq Heq0) in Heq.
+        apply elt_compare_gt in Heq. rewrite Heq. apply Heq1.
+        (** We are using [elt_compare_lt] and [elt_comapre_gt] back
+            and forth during proofs -- maybe it's a good place to use
+            proof by reflection? *)
+    - elim. rewrite /member //.
   Qed.
     
   Lemma mem_1 : forall (s : t) (x : elt), In x s -> mem x s = true.
@@ -577,17 +780,17 @@ Module Foo (E : OrderedType) : WSfun(E).
   
   Lemma is_empty_1 : forall s : t, Empty s -> is_empty s = true.
   Proof.
-    unfold Empty; unfold In. destruct s; destruct x; auto.
-    intros H. specialize (H e). move: H. simpl. rewrite_compare_e.
-    assert (Heq: E.eq e e); auto.
+    move=>s. rewrite /Empty /In. case s=>[s'].
+    case s'=>[ls x l r | ] => Hwf Hempty=>//.
+    specialize (Hempty x). exfalso. apply Hempty.
+    rewrite /In_set /member //=. rewrite_compare_e.
+    have Heq: E.eq x x by done.
     apply OrdFacts.elim_compare_eq in Heq; destruct Heq.
-    rewrite H; contradiction.
+    rewrite H=>//.
   Qed.
       
   Lemma is_empty_2 : forall s : t, is_empty s = true -> Empty s.
-  Proof.
-    unfold Empty; unfold In. destruct s; destruct x; auto.
-  Qed.
+  Proof. move=>s. rewrite /Empty /In. elim s=>[s']. elim s'=>//. Qed.
       
   Lemma add_1 :
     forall (s : t) (x y : elt), E.eq x y -> In y (add x s). Admitted.
@@ -604,20 +807,22 @@ Module Foo (E : OrderedType) : WSfun(E).
   Lemma singleton_1 :
     forall x y : elt, In y (singleton x) -> E.eq x y.
   Proof.
-    rewrite /singleton /In; simpl.
-    rewrite_compare_e. intros.
-    destruct (E.compare y x) eqn:Hcomp=>//.
-    apply E.eq_sym=>//.
+    rewrite /singleton /In /In_set //.
+    intros. simpl in H.
+    destruct (Base.compare y x) eqn:Hcomp;
+      apply E.eq_sym; apply elt_compare_eq=>//.
   Qed.
       
   Lemma singleton_2 :
     forall x y : elt, E.eq x y -> In y (singleton x).
   Proof.
-    rewrite /singleton /In; simpl.
+    rewrite /singleton /In /In_set //.
     rewrite_compare_e. intros.
-    destruct (E.compare y x) eqn:Hcomp=>//; exfalso.
-    - apply E.eq_sym in H. apply (E.lt_not_eq l)=>//.
-    - apply (E.lt_not_eq l)=>//.
+    destruct (Base.compare y x) eqn:Hcomp=>//; exfalso.
+    - apply elt_compare_lt in Hcomp. apply E.eq_sym in H.
+      apply OrdFacts.eq_not_lt in H. contradiction.
+    - apply elt_compare_gt in Hcomp. apply E.eq_sym in H.
+      apply OrdFacts.eq_not_gt in H. contradiction.
   Qed.
       
   Lemma union_1 :

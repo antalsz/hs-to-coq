@@ -350,7 +350,8 @@ Module Foo (E : OrderedType) : WSfun(E).
       is greater than any value in [l], and smaller than any value in
       [r]. *)
   Definition before_balancedL (x: elt) (l r : Set_ elt) : Prop :=
-    size l == delta * size r + 1.
+    size l + size r <= 1 \/
+    (size l <= delta * size r + 1 /\ size r <= delta * size l).
 
   Lemma balanceL_balanced: forall (x: elt) (l r : Set_ elt),
     WF l -> WF r ->
@@ -416,11 +417,15 @@ Module Foo (E : OrderedType) : WSfun(E).
           destruct Hbalanced0; rewrite_for_omega; intros; omega.
         * (** [ll] and [lr] are both [Tip]s. *) derive_constraints; subst.
           destruct Hbalanced0; rewrite_for_omega; intros; omega.
-      + (** The [otherwise] branch, i.e. [ls >= delta*rs]. *)
+      + (** The [otherwise] branch, i.e. [ls <= delta*rs]. *)
         step_in_balanced.
         derive_constraints; subst. apply /orP; right.
         apply /andP. split; brute_force_solve.
-    - (** [l] is [Tip] *) rewrite_for_omega. omega.
+    - (** [l] is [Tip] *)
+      destruct rl; destruct rr;
+        try solve [step_in_balanced; apply /orP=>//; (right + left);
+                   derive_constraints; subst;
+                   try (apply /andP=>//; split); rewrite_for_omega; omega].
     - (** [r] is [Tip] *)
       destruct ll as [sll xll lll llr | ];
         destruct lr as [slr xlr lrl lrr | ].
@@ -449,8 +454,8 @@ Module Foo (E : OrderedType) : WSfun(E).
           apply /orP=>//; left. rewrite_for_omega. omega.
       + step_in_balanced. 
       + step_in_balanced. apply /orP=>//; left. rewrite_for_omega. omega.
-    - (** Both [l] and [r] and [Tip]s. *) rewrite_for_omega. omega.
-  Time Qed. (* Finished transaction in 21.893 secs (21.722u,0.112s) (successful) *)
+    - (** Both [l] and [r] and [Tip]s. *) step_in_balanced.
+  Time Qed. (* Finished transaction in 27.762 secs (27.635u,0.101s) (successful) *)
 
   Lemma balanceL_ordered: forall (x: elt) (l r : Set_ elt),
       WF l -> WF r ->

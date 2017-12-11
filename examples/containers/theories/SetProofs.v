@@ -84,7 +84,7 @@ Module Foo (E : OrderedType) : WSfun(E).
     rewrite /op_zeze__ /Eq___option //= /op_zeze__ /Eq_Integer___ //=.
   
   Ltac rewrite_compare_e :=
-    rewrite /Base.compare /Ord_t /ord_default; simpl; rewrite /compare.
+    rewrite /Base.compare /Ord_t /ord_default /= /compare.
 
   Ltac destruct_match :=
     match goal with
@@ -335,6 +335,9 @@ Module Foo (E : OrderedType) : WSfun(E).
                          | [H: context[balanced(Bin _ _ _ _)] |- _] =>
                            apply balanced_children in H; destruct H
                          end; auto)].
+
+  Ltac step_in_balanced :=
+    rewrite /balanced; apply /and3P=>//; split=>//; try solve_balanced_trivial.
                                     
   (** The balancing condition is that [ls <= delta*rs] and [rs <=
       delta*ls].  The moment that balancing is broken because of
@@ -370,8 +373,7 @@ Module Foo (E : OrderedType) : WSfun(E).
           -- (** [lrs < ratio*lls] branch (single rotation): We need
                  to prove that [Bin (1+ls+rs) lx ll (Bin (1+rs+lrs) x
                  lr r)] is balanced. *)
-            rewrite /balanced. rewrite_Int.
-            apply /and3P=>//. split; try solve_balanced_trivial.
+            step_in_balanced.
             ++ (** Top level is balanced. That is, size of [ll] and of
                    [Bin (1+rs+lrs) x lr r] are balanced. This should
                    be proved by arithmetics. *)
@@ -381,13 +383,13 @@ Module Foo (E : OrderedType) : WSfun(E).
               ** rewrite_for_omega. omega.
             ++ (** Right child [Bin (1+rs+lrs) x lr r] is
                    balanced. Arithmetics. *)
-              apply /and3P=>//; split=>//; try solve_balanced_trivial.
+              step_in_balanced.
               derive_constraints; subst. 
               apply /orP=>//. right.
               apply /andP=>//; split; rewrite_for_omega; omega.
           -- (** The [otherwise] branch, i.e. [lr >= ratio * ll]
                  (double rotation). *)
-            rewrite /balanced. apply /and3P=>//; split.
+            step_in_balanced.
             ++ (** Left child [Bin (1+lls+size lrl) lx ll lrl] and
                    right child [Bin (1+rs+size lrr) x lrr r] are
                    balanced wrt. to each other. *)
@@ -395,18 +397,18 @@ Module Foo (E : OrderedType) : WSfun(E).
               apply /andP=>//. derive_constraints; subst; rewrite_for_omega.
               split; omega.
             ++ (** [Bin (1+lls+size lrl) lx ll lrl] is balanced. *)
-              apply /and3P=>//; split; try solve_balanced_trivial.
+              step_in_balanced.
               apply /orP=>//. destruct lrl.
               ** right. apply /andP=>//. derive_constraints; subst.
                  split; brute_force_solve.
               ** derive_constraints; subst; rewrite_size; rewrite_Int.
                  left. rewrite_for_omega. omega.
             ++ (** [Bin (1+rs+size lrr) x lrr r] is balanced. *)
-              apply /and3P; split=>//; try solve_balanced_trivial.
+              step_in_balanced.
               apply /orP=>//. destruct lrr.
               ** right. apply /andP=>//. derive_constraints; subst.
                  split; brute_force_solve.
-              ** derive_constraints; subst; rewrite_size; rewrite_Int.
+              ** derive_constraints; subst.
                  left. rewrite_for_omega. omega.
         * (** [lr] is [Tip] *) derive_constraints; subst.
           destruct Hbalanced0; rewrite_for_omega; intros; omega.
@@ -415,7 +417,7 @@ Module Foo (E : OrderedType) : WSfun(E).
         * (** [ll] and [lr] are both [Tip]s. *) derive_constraints; subst.
           destruct Hbalanced0; rewrite_for_omega; intros; omega.
       + (** The [otherwise] branch, i.e. [ls >= delta*rs]. *)
-        rewrite /balanced. apply /and3P=>//. split=>//.
+        step_in_balanced.
         derive_constraints; subst. apply /orP; right.
         apply /andP. split; brute_force_solve.
     - (** [l] is [Tip] *) rewrite_for_omega. omega.
@@ -425,40 +427,30 @@ Module Foo (E : OrderedType) : WSfun(E).
       + (** [ll] is [Bin sll xll lll llr] *) destruct_match.
         * (** [Bin (1+ls) lx ll (Bin (1+lrs) x lr Tip)] is
               balanced. *)
-          rewrite /balanced. apply /and3P=>//; split=>//;
-                                   try solve_balanced_trivial.
+          step_in_balanced.
           -- derive_constraints; subst. apply /orP=>//; right.
              apply /andP=>//. rewrite_for_omega. omega.
-          -- apply /and3P; split=>//; try solve_balanced_trivial.
-             derive_constraints; subst.
+          -- step_in_balanced. derive_constraints; subst.
              (* contradiction, doesn't matter which branch. *)
              apply /orP=>//; left. rewrite_for_omega. omega.
         * (** [Bin (1+ls) lrx (Bin (1+lls+size lrl) lx ll lrl) (Bin
               (1+size lrr) x lrr Tip)] is balanced *)
-          rewrite /balanced. apply /and3P=>//; split.
+          step_in_balanced.
           -- derive_constraints; subst. apply /orP=>//; right.
              apply /andP=>//; split; rewrite_for_omega; omega.
-          -- apply /and3P=>//; split; try solve_balanced_trivial.
+          -- step_in_balanced.
              derive_constraints; subst.
              (* contradiction, doesn't matter which branch. *)
              apply /orP=>//; left. rewrite_for_omega. omega.
-          -- apply /and3P=>//; split=>//; try solve_balanced_trivial.
-             derive_constraints. apply /orP=>//; left.
-             rewrite_for_omega. omega.
-      + rewrite /balanced. apply /and3P=>//; split.
-        * derive_constraints; subst.
+          -- step_in_balanced. derive_constraints.
+             apply /orP=>//; left. rewrite_for_omega. omega.
+      + step_in_balanced. derive_constraints; subst.
           (* contradiction, doesn't matter which branch. *)
           apply /orP=>//; left. rewrite_for_omega. omega.
-        * apply /and3P=>//; split; try solve_balanced_trivial.
-          derive_constraints; subst.
-          (* contradiction, doesn't matter which branch. *)
-          apply /orP=>//; left. rewrite_for_omega. omega.
-        * apply /and3P=>//; split=>//.
-      + rewrite /balanced; apply /and3P=>//.
-      + rewrite /balanced. apply /and3P=>//; split=>//.
-        apply /orP=>//; left. rewrite_for_omega. omega.
+      + step_in_balanced. 
+      + step_in_balanced. apply /orP=>//; left. rewrite_for_omega. omega.
     - (** Both [l] and [r] and [Tip]s. *) rewrite_for_omega. omega.
-  Time Qed. (* Finished transaction in 24.416 secs (23.825u,0.236s) (successful) *)
+  Time Qed. (* Finished transaction in 21.893 secs (21.722u,0.112s) (successful) *)
 
   Lemma balanceL_ordered: forall (x: elt) (l r : Set_ elt),
       WF l -> WF r ->

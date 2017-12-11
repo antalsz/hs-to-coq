@@ -490,7 +490,7 @@ Module Foo (E : OrderedType) : WSfun(E).
       + rewrite /balanced. apply /and3P=>//; split=>//.
         apply /orP=>//; left. rewrite_for_omega. omega.
     - (** Both [l] and [r] and [Tip]s. *) rewrite_for_omega. omega.
-  Qed.
+  Qed. (* Finished transaction in 21.69 secs (21.588u,0.082s) (successful) *)
 
   Lemma balanceL_ordered: forall (x: elt) (l r : Set_ elt),
       WF l -> WF r ->

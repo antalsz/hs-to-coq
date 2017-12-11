@@ -275,12 +275,18 @@ Module Foo (E : OrderedType) : WSfun(E).
            | [ |- _ ] => rewrite ![size Tip]/size
            | [H: context[size (Bin _ _ _ _)] |- _ ] =>
              rewrite ![size (Bin _ _ _ _)]/size in H
+           | [H: context[size Tip] |- _ ] =>
+             rewrite ![size Tip]/size in H
            end.
 
   Ltac prepare_for_omega :=
     repeat match goal with
            | [H: context[_ <? _] |- _ ] => move: H
            | [H: context[_ <=? _] |- _ ] => move: H
+           | [H: _ < _ |- _ ] => move: H
+           | [H: _ <= _ |- _ ] => move: H
+           | [H: _ > _ |- _ ] => move: H
+           | [H: _ >= _ |- _ ] => move: H
            | [H: context[_ =? _] |- _ ] => move: H
            end; rewrite_size; rewrite_Int;
     rewrite /is_true ?Z.ltb_lt ?Z.ltb_ge ?Z.leb_le ?Z.leb_gt ?Z.eqb_eq.
@@ -419,14 +425,72 @@ Module Foo (E : OrderedType) : WSfun(E).
                  apply balanced_children in H0; destruct H0.
                  move: H1. rewrite /balanced. auto.
               ** move: Hbr. rewrite /balanced. auto.
-        * (** [lr] is [Tip] *) admit.
-        * (** [ll] is [Tip] *) admit.
-        * (** [ll] and [lr] are both [Tip]s. *) admit.
-      + (** The [otherwise] branch, i.e. [ls >= delta*rs]. *) admit.
-    - (** [l] is [Tip] *) admit.
-    - (** [r] is [Tip] *) admit.
-    - (** Both [l] and [r] and [Tip]s. *) admit.
-  Admitted.
+        * (** [lr] is [Tip] *) derive_constraints; subst.
+          destruct Hbalanced0; rewrite_for_omega; intros; omega.
+        * (** [ll] is [Tip] *) derive_constraints; subst.
+          destruct Hbalanced0; rewrite_for_omega; intros; omega.
+        * (** [ll] and [lr] are both [Tip]s. *) derive_constraints; subst.
+          destruct Hbalanced0; rewrite_for_omega; intros; omega.
+      + (** The [otherwise] branch, i.e. [ls >= delta*rs]. *)
+        rewrite /balanced. apply /and3P=>//. split.
+        * derive_constraints; subst. apply /orP; right.
+          apply /andP. split; brute_force_solve.
+        * move: Hbl. rewrite /balanced=>//.
+        * move: Hbr. rewrite /balanced=>//.
+    - (** [l] is [Tip] *) rewrite_for_omega. omega.
+    - (** [r] is [Tip] *)
+      destruct ll as [sll xll lll llr | ];
+        destruct lr as [slr xlr lrl lrr | ].
+      + (** [ll] is [Bin sll xll lll llr] *) destruct_match.
+        * (** [Bin (1+ls) lx ll (Bin (1+lrs) x lr Tip)] is
+              balanced. *)
+          rewrite /balanced. apply /and3P=>//; split.
+          -- derive_constraints; subst. apply /orP=>//; right.
+             apply /andP=>//. rewrite_for_omega. omega.
+          -- apply balanced_children in Hbl; destruct Hbl.
+             move: H. rewrite /balanced=>//.
+          -- apply /andP; split.
+             ++ derive_constraints; subst.
+                (* contradiction, doesn't matter which branch. *)
+                apply /orP=>//; left. rewrite_for_omega. omega.
+             ++ apply balanced_children in Hbl; destruct Hbl.
+                apply /andP; auto.
+        * (** [Bin (1+ls) lrx (Bin (1+lls+size lrl) lx ll lrl) (Bin
+              (1+size lrr) x lrr Tip)] is balanced *)
+          rewrite /balanced. apply /and3P=>//; split.
+          -- derive_constraints; subst. apply /orP=>//; right.
+             apply /andP=>//; split; rewrite_for_omega; omega.
+          -- apply /and3P=>//; split.
+             ++ derive_constraints; subst.
+                (* contradiction, doesn't matter which branch. *)
+                apply /orP=>//; left. rewrite_for_omega. omega.
+             ++ apply balanced_children in Hbl; destruct Hbl. auto.
+             ++ apply balanced_children in Hbl; destruct Hbl.
+                apply balanced_children in H0; destruct H0.
+                move: H0=>//.
+          -- apply /and3P=>//; split=>//.
+             ++ derive_constraints. apply /orP=>//; left.
+                rewrite_for_omega. omega.
+             ++ apply balanced_children in Hbl; destruct Hbl.
+                apply balanced_children in H0; destruct H0. auto.
+      + rewrite /balanced. apply /and3P=>//; split.
+        * derive_constraints; subst.
+          (* contradiction, doesn't matter which branch. *)
+          apply /orP=>//; left. rewrite_for_omega. omega.
+        * apply /and3P=>//; split.
+          -- derive_constraints; subst.
+             (* contradiction, doesn't matter which branch. *)
+             apply /orP=>//; left. rewrite_for_omega. omega.
+          -- apply balanced_children in Hbl; destruct Hbl.
+             apply balanced_children in H; destruct H. auto.
+          -- apply balanced_children in Hbl; destruct Hbl.
+             apply balanced_children in H; destruct H. auto.
+        * apply /and3P=>//; split=>//.
+      + rewrite /balanced; apply /and3P=>//.
+      + rewrite /balanced. apply /and3P=>//; split=>//.
+        apply /orP=>//; left. rewrite_for_omega. omega.
+    - (** Both [l] and [r] and [Tip]s. *) rewrite_for_omega. omega.
+  Qed.
 
   Lemma balanceL_ordered: forall (x: elt) (l r : Set_ elt),
       WF l -> WF r ->

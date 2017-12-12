@@ -620,9 +620,81 @@ Module Foo (E : OrderedType) : WSfun(E).
     - (** Both [l] and [r] and [Tip]s. *) step_in_balanced.
   Time Qed. (* Finished transaction in 18.177 secs (18.108u,0.045s) (successful) *)
 
-  Lemma balanceL_ordered: forall (x: elt) (l r : Set_ elt),
-      WF l -> WF r ->
-      before_balancedL x l r -> ordered (balanceL x l r).
+  Definition before_orderedL s (x : elt) (l r : Set_ elt) :=
+    ordered (Bin s x l r).
+
+  Lemma size_irrelevance_in_ordered : forall s1 s2 x (l r : Set_ elt),
+      ordered (Bin s1 x l r) -> ordered (Bin s2 x l r).
+  Proof. move=>s1 s2 x l r. rewrite /ordered; auto. Qed.
+
+  Lemma ordered_left : forall s sl x xl (ll lr r : Set_ elt),
+      ordered (Bin s x (Bin sl xl ll lr) r) ->
+      E.lt xl x.
+  Proof.
+    move=>s sl x xl ll lr r. rewrite /ordered.
+    case /and4P=>// => H1 H2. clear H1 H2.
+    case /and4P=>// => H1 Hlt. clear H1.
+    apply elt_lt in Hlt=>//.
+  Qed.
+
+  Lemma ordered_right : forall s sr x xr (l rl rr : Set_ elt),
+      ordered (Bin s x l (Bin sr xr rl rr)) ->
+      E.lt x xr.
+  Proof.
+    move=>s sr x xr l rl rr. rewrite /ordered.
+    case /and4P=>// => H1 H2 H3. clear H1 H2 H3.
+    case /and4P=>// => Hgt H1. clear H1.
+    apply elt_gt in Hgt=>//.
+  Qed.
+      
+  Lemma balanceL_ordered : forall (x: elt) (l r : Set_ elt),
+      ordered l -> ordered r ->
+      before_orderedL 0 x l r -> ordered (balanceL x l r).
+  Proof.
+    move=>x l r Hordl Hordr.
+    destruct r as [sr xr rl rr | ]; destruct l as [sl xl ll lr | ];
+      rewrite /before_orderedL /balanceL; rewrite_Int; move=>Hbefore.
+    - (** Both [r] and [l] are [Bin]s *) destruct_match.
+      + destruct ll as [sll xll lll llr | ];
+          destruct lr as [slr xlr lrl lrr | ].
+        * destruct_match; rewrite /ordered.
+          -- apply /and4P=>//; split=>//.
+             ++ apply /and4P=>//; split=>//.
+                ** apply ordered_left in Hordl. apply elt_lt=>//.
+                ** apply ordered_children in Hordl; destruct Hordl.
+                   move: H. rewrite /ordered. case /and4P=>//.
+                ** move: Hordl. rewrite /ordered.
+                   case /and4P=>// =>H1 H2. case /and4P=>//.
+             ++ apply /and4P=>//; split=>//.
+                ** apply ordered_left in Hbefore. apply elt_gt=>//.
+                ** apply /and4P=>//; split=>//.
+                   --- apply ordered_right in Hordl. apply elt_gt=>//.
+                   --- move: Hbefore. rewrite /ordered.
+                       case /and4P=>// =>H1 H2. clear H1 H2.
+                       case /and4P=>// =>H1 Hxl_l H2; clear H1 H2.
+                       case /and4P=>//.
+                   --- move: Hordl. rewrite /ordered.
+                       case /and4P=>// =>H1 H2 H3. clear H1 H2 H3.
+                       case /and4P=>//.
+                   --- move: Hbefore. rewrite /ordered.
+                       case /and4P=>// =>H1 H2. clear H1 H2.
+                       case /and4P=>// =>H1 H2 H3. clear H1 H2 H3.
+                       case /and4P=>//.
+                ** apply /and4P=>//; split=>//.
+                   --- apply ordered_right in Hbefore. apply elt_gt=>//.
+                   --- move: Hbefore. rewrite /ordered.
+                       case /and4P=>// =>H1 H2 H3. clear H1 H2 H3.
+                       case /and4P=>// =>H1 H2.
+                   --- move: Hbefore. rewrite /ordered.
+                       case /and4P=>// =>H1 H2 H3. clear H1 H2 H3.
+                       case /and4P=>// =>H1 H2.
+          -- apply /and4P=>//; split=>//.
+             ++ apply /and4P=>//; split=>//.
+                ** apply ordered_right in Hordl. apply elt_lt=>//.
+                ** move: Hordl. rewrite /ordered. case /and4P=>//.
+                ** move: Hordl. rewrite /ordered.
+                   case /and4P=>// =>H1 H2 H3. clear H1 H2 H3.
+                   case /and4P=>//.
   Admitted.
     
   Lemma balanceL_validsize: forall (x: elt) (l r : Set_ elt),

@@ -444,10 +444,11 @@ Module Foo (E : OrderedType) : WSfun(E).
            end.
 
   Ltac brute_force_solve :=
-    repeat match goal with
-           | [H: _ \/ _ |- _ ] => destruct H
-           | [H: _ /\ _ |- _ ] => destruct H
-           end; try omega; rewrite_for_omega; omega.
+    rewrite_for_omega; intros;
+    repeat (match goal with
+            | [H: _ \/ _ |- _ ] => destruct H
+            | [H: _ /\ _ |- _ ] => destruct H
+            end; try omega).
 
   Ltac solve_balanced_trivial :=
     solve [auto; repeat (match goal with
@@ -560,14 +561,14 @@ Module Foo (E : OrderedType) : WSfun(E).
               step_in_balanced.
               apply /orP=>//. destruct lrl.
               ** right. apply /andP=>//. derive_constraints; subst.
-                 split; brute_force_solve.
+                 brute_force_solve.
               ** derive_constraints; subst; rewrite_size; rewrite_Int.
                  left. rewrite_for_omega. omega.
             ++ (** [Bin (1+rs+size lrr) x lrr r] is balanced. *)
               step_in_balanced.
               apply /orP=>//. destruct lrr.
               ** right. apply /andP=>//. derive_constraints; subst.
-                 split; brute_force_solve.
+                 brute_force_solve.
               ** derive_constraints; subst.
                  left. rewrite_for_omega. omega.
         * (** [lr] is [Tip] *) derive_constraints; subst.
@@ -579,7 +580,7 @@ Module Foo (E : OrderedType) : WSfun(E).
       + (** The [otherwise] branch, i.e. [ls <= delta*rs]. *)
         step_in_balanced.
         derive_constraints; subst. apply /orP; right.
-        apply /andP. split; brute_force_solve.
+        apply /andP. brute_force_solve.
     - (** [l] is [Tip] *)
       destruct rl; destruct rr;
         try solve [step_in_balanced; apply /orP=>//; (right + left);
@@ -617,7 +618,7 @@ Module Foo (E : OrderedType) : WSfun(E).
       + apply WF_size_children in Hwfl.
         step_in_balanced. apply /orP=>//; left. rewrite_for_omega. omega.
     - (** Both [l] and [r] and [Tip]s. *) step_in_balanced.
-  Time Qed. (* Finished transaction in 31.595 secs (31.434u,0.115s) (successful) *)
+  Time Qed. (* Finished transaction in 18.177 secs (18.108u,0.045s) (successful) *)
 
   Lemma balanceL_ordered: forall (x: elt) (l r : Set_ elt),
       WF l -> WF r ->

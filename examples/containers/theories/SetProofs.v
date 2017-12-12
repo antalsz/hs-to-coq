@@ -443,6 +443,9 @@ Module Foo (E : OrderedType) : WSfun(E).
              move /WF_size_nonneg; move=>Hnonneg; clear Hwf
            end.
 
+  Ltac lucky_balanced_solve :=
+    derive_constraints; subst; rewrite_for_omega; intros; omega.
+
   Ltac brute_force_solve :=
     rewrite_for_omega; intros;
     repeat (match goal with
@@ -528,7 +531,8 @@ Module Foo (E : OrderedType) : WSfun(E).
       rewrite_Int. destruct_match.
       + (** The [ls > delta*rs] branch in Haskell code. *)
         destruct ll as [sll xll lll llr | ];
-          destruct lr as [slr xlr lrl lrr | ]; rewrite_Int.
+          destruct lr as [slr xlr lrl lrr | ]; rewrite_Int;
+            try solve [lucky_balanced_solve].
         * (** [ll] and [lr] are both Bins *)
           destruct_match.
           -- (** [lrs < ratio*lls] branch (single rotation): We need
@@ -571,12 +575,6 @@ Module Foo (E : OrderedType) : WSfun(E).
                  brute_force_solve.
               ** derive_constraints; subst.
                  left. rewrite_for_omega. omega.
-        * (** [lr] is [Tip] *) derive_constraints; subst.
-          destruct Hbalanced0; rewrite_for_omega; intros; omega.
-        * (** [ll] is [Tip] *) derive_constraints; subst.
-          destruct Hbalanced0; rewrite_for_omega; intros; omega.
-        * (** [ll] and [lr] are both [Tip]s. *) derive_constraints; subst.
-          destruct Hbalanced0; rewrite_for_omega; intros; omega.
       + (** The [otherwise] branch, i.e. [ls <= delta*rs]. *)
         step_in_balanced.
         derive_constraints; subst. apply /orP; right.
@@ -646,56 +644,48 @@ Module Foo (E : OrderedType) : WSfun(E).
     case /and4P=>// => Hgt H1. clear H1.
     apply elt_gt in Hgt=>//.
   Qed.
+
+  Ltac derive_ordering :=
+    match goal with
+    | [H: context[ordered _] |- _ ] =>
+      move: H; rewrite /ordered=>H
+    end;
+    repeat match goal with
+           | [ H: context[andb _ (andb _ (andb _ _))] |- _ ] =>
+             let Hlo := fresh "Hlo" in
+             let Hhi := fresh "Hhi" in
+             let Hboundl := fresh "Hboundl" in
+             let Hboundh := fresh "Hboundh" in
+             move: H; case /and4P=>// =>Hlo Hhi Hbouldl Hboundh
+           end.
+
+  Ltac step_in_ordered :=
+    apply /and4P=>//; split=>//; try solve [derive_ordering].
       
   Lemma balanceL_ordered : forall (x: elt) (l r : Set_ elt),
-      ordered l -> ordered r ->
+      (** We need [before_balancedL] as preconditions to eliminate the
+          impossible cases. *)
+      WF l -> WF r -> before_balancedL x l r ->
       before_orderedL 0 x l r -> ordered (balanceL x l r).
   Proof.
-    move=>x l r Hordl Hordr.
+    move=>x l r Hwfl Hwfr.
     destruct r as [sr xr rl rr | ]; destruct l as [sl xl ll lr | ];
-      rewrite /before_orderedL /balanceL; rewrite_Int; move=>Hbefore.
-    - (** Both [r] and [l] are [Bin]s *) destruct_match.
-      + destruct ll as [sll xll lll llr | ];
-          destruct lr as [slr xlr lrl lrr | ].
-        * destruct_match; rewrite /ordered.
-          -- apply /and4P=>//; split=>//.
-             ++ apply /and4P=>//; split=>//.
-                ** apply ordered_left in Hordl. apply elt_lt=>//.
-                ** apply ordered_children in Hordl; destruct Hordl.
-                   move: H. rewrite /ordered. case /and4P=>//.
-                ** move: Hordl. rewrite /ordered.
-                   case /and4P=>// =>H1 H2. case /and4P=>//.
-             ++ apply /and4P=>//; split=>//.
-                ** apply ordered_left in Hbefore. apply elt_gt=>//.
-                ** apply /and4P=>//; split=>//.
-                   --- apply ordered_right in Hordl. apply elt_gt=>//.
-                   --- move: Hbefore. rewrite /ordered.
-                       case /and4P=>// =>H1 H2. clear H1 H2.
-                       case /and4P=>// =>H1 Hxl_l H2; clear H1 H2.
-                       case /and4P=>//.
-                   --- move: Hordl. rewrite /ordered.
-                       case /and4P=>// =>H1 H2 H3. clear H1 H2 H3.
-                       case /and4P=>//.
-                   --- move: Hbefore. rewrite /ordered.
-                       case /and4P=>// =>H1 H2. clear H1 H2.
-                       case /and4P=>// =>H1 H2 H3. clear H1 H2 H3.
-                       case /and4P=>//.
-                ** apply /and4P=>//; split=>//.
-                   --- apply ordered_right in Hbefore. apply elt_gt=>//.
-                   --- move: Hbefore. rewrite /ordered.
-                       case /and4P=>// =>H1 H2 H3. clear H1 H2 H3.
-                       case /and4P=>// =>H1 H2.
-                   --- move: Hbefore. rewrite /ordered.
-                       case /and4P=>// =>H1 H2 H3. clear H1 H2 H3.
-                       case /and4P=>// =>H1 H2.
-          -- apply /and4P=>//; split=>//.
-             ++ apply /and4P=>//; split=>//.
-                ** apply ordered_right in Hordl. apply elt_lt=>//.
-                ** move: Hordl. rewrite /ordered. case /and4P=>//.
-                ** move: Hordl. rewrite /ordered.
-                   case /and4P=>// =>H1 H2 H3. clear H1 H2 H3.
-                   case /and4P=>//.
-  Admitted.
+      rewrite /before_orderedL /balanceL; rewrite_Int;
+        move=>Hbefore_balance Hbefore_ordered;
+               try solve [step_in_ordered].
+    - (** Both [r] and [l] are [Bin]s *)
+      destruct_match; try solve [step_in_ordered].
+      destruct ll as [sll xll lll llr | ];
+        destruct lr as [slr xlr lrl lrr | ];
+        try solve [lucky_balanced_solve].
+      destruct_match; rewrite /ordered;
+        do 2 step_in_ordered.
+    - (** [r] is a [Tip] *)
+      destruct ll as [sll xll lll llr | ];
+        destruct lr as [slr xlr lrl lrr | ];
+        try solve [do 2 step_in_ordered].
+      destruct_match; try solve [do 2 step_in_ordered].
+  Qed.
     
   Lemma balanceL_validsize: forall (x: elt) (l r : Set_ elt),
       WF l -> WF r ->

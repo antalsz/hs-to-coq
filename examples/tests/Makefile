@@ -34,7 +34,6 @@ PASS = \
 
 # tests that *should* pass but currently fail
 TODO_PASS  = \
-  NestedRec \
   InstVar \
   Mutrec \
   Existential \

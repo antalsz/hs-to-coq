@@ -13,6 +13,7 @@ PASS = \
   Self \
   Poly \
   Irrefutable \
+  LocalTopoSort \
   InstCtx \
   Guard2 \
   ExhaustGuard \

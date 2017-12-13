@@ -171,6 +171,49 @@ Module Foo (E : OrderedType) : WSfun(E).
   Definition For_all (P : elt -> Prop) s := forall x, In x s -> P x.
   Definition Exists (P : elt -> Prop) s := exists x, In x s /\ P x.
 
+  Definition empty : t := pack empty Logic.eq_refl.
+  Definition is_empty : t -> bool := fun s' => 
+    s <-- s' ;; null s.
+  
+  Lemma empty_1 : Empty empty.
+  Proof. unfold Empty; intros a H. inversion H. Qed.
+  
+  Lemma is_empty_1 : forall s : t, Empty s -> is_empty s = true.
+  Proof.
+    move=>s. rewrite /Empty /In. case s=>[s'].
+    case s'=>[ls x l r | ] => Hwf Hempty=>//.
+    specialize (Hempty x). exfalso. apply Hempty.
+    rewrite /In_set /member //=. rewrite_compare_e.
+    have Heq: E.eq x x by done.
+    apply OrdFacts.elim_compare_eq in Heq; destruct Heq.
+    rewrite H=>//.
+  Qed.
+      
+  Lemma is_empty_2 : forall s : t, is_empty s = true -> Empty s.
+  Proof. move=>s. rewrite /Empty /In. elim s=>[s']. elim s'=>//. Qed.
+
+  Lemma empty_not_bin : forall l e (s1 s2 : Set_ elt),
+      ~ Equal_set Tip (Bin l e s1 s2).
+  Proof.
+    intros. rewrite /Equal_set=>Heq.
+    specialize (Heq e). destruct Heq.
+    move: H0. rewrite {1}/In_set /member /=.
+    have Heq: E.eq e e by done.
+    apply elt_compare_eq in Heq. rewrite Heq=>Hcontra.
+    specialize (Hcontra Logic.eq_refl). inversion Hcontra.
+  Qed.
+
+  Lemma bin_not_empty : forall l e (s1 s2 : Set_ elt),
+      ~ Equal_set (Bin l e s1 s2) Tip.
+  Proof.
+    intros. rewrite /Equal_set=>Heq.
+    specialize (Heq e). destruct Heq.
+    move: H. rewrite {1}/In_set /member /=.
+    have Heq: E.eq e e by done.
+    apply elt_compare_eq in Heq. rewrite Heq=>Hcontra.
+    specialize (Hcontra Logic.eq_refl). inversion Hcontra.
+  Qed.
+  
   Definition eq_set : Set_ elt -> Set_ elt -> Prop := Equal_set.
   Definition eq : t -> t -> Prop := Equal.
   Definition eq_dec : forall s s' : t, {eq s s'} + {~ eq s s'}.
@@ -210,11 +253,28 @@ Module Foo (E : OrderedType) : WSfun(E).
     destruct s; destruct s'; destruct s''; simpl. apply eq_set_trans.
   Qed.
 
+  Lemma bin_compat : forall l e,
+      forall x x', eq_set x x' ->
+      forall y y', eq_set y y' ->
+      eq_set (Bin l e x y) (Bin l e x' y').
+  Proof.
+    induction x.
+    - intros. destruct x'.
+      + rewrite /eq_set /Equal_set /In_set /member //=.
+        intros. repeat destruct_match; split=>//; admit.
+      + apply bin_not_empty in H. inversion H.
+    - intros. admit.
+  Admitted.
+
   Add Parametric Relation : (Set_ elt) @eq_set
        reflexivity proved by (eq_set_refl)
        symmetry proved by (eq_set_sym)
        transitivity proved by (eq_set_trans)
-       as eq_set_rel.
+         as eq_set_rel.
+
+  Add Parametric Morphism l e : (Bin l e) with 
+        signature eq_set ==> eq_set ==> eq_set as union_mor.
+  Proof. exact (bin_compat l e). Qed.
   
   Lemma balanced_children : forall {a} (s1 s2 : Set_ a) l e,
       balanced (Bin l e s1 s2) -> balanced s1 /\ balanced s2.
@@ -233,11 +293,66 @@ Module Foo (E : OrderedType) : WSfun(E).
        right; split; auto].
   Qed.
   
+  Ltac derive_ordering :=
+    match goal with
+    | [H: context[ordered _] |- _ ] =>
+      move: H; rewrite /ordered=>H
+    end;
+    repeat match goal with
+           | [ H: context[andb _ (andb _ (andb _ _))] |- _ ] =>
+             let Hlo := fresh "Hlo" in
+             let Hhi := fresh "Hhi" in
+             let Hboundl := fresh "Hboundl" in
+             let Hboundh := fresh "Hboundh" in
+             move: H; case /and4P=>// =>Hlo Hhi Hbouldl Hboundh
+           end.
+
+  Ltac step_in_ordered :=
+    apply /and4P=>//; split=>//; try solve [derive_ordering].
+
+  (** Cannot make them polymorphic. *)
+  Lemma bounded_impl_left_const_true : forall f g s,
+      let b :=
+          (fix bounded (lo hi : E.t -> bool) (t' : Set_ E.t) {struct t'} : bool :=
+             match t' with
+             | Bin _ x l r =>
+               lo x && (hi x &&
+                       (bounded lo (fun arg_0__ : E.t => _GHC.Base.<_ arg_0__ x) l
+                        && bounded (fun arg_1__ : E.t => _GHC.Base.>_ arg_1__ x) hi r))
+             | Tip => true
+             end) in
+          b f g s -> b (const true) g s.
+  Proof.
+    intros. subst b. generalize dependent g. induction s=>//.
+    intros. move: H. case /and4P=>// => Hf Hg Hs2 Hs3.
+    apply /and4P=>//; split=>//. apply IHs1=>//.
+  Qed.
+
+  Lemma bounded_impl_right_const_true : forall f g s,
+      let b :=
+          (fix bounded (lo hi : E.t -> bool) (t' : Set_ E.t) {struct t'} : bool :=
+             match t' with
+             | Bin _ x l r =>
+               lo x && (hi x &&
+                       (bounded lo (fun arg_0__ : E.t => _GHC.Base.<_ arg_0__ x) l
+                        && bounded (fun arg_1__ : E.t => _GHC.Base.>_ arg_1__ x) hi r))
+             | Tip => true
+             end) in
+          b f g s -> b f (const true) s.
+  Proof.
+    intros. subst b. generalize dependent f. induction s=>//.
+    intros. move: H. case /and4P=>// => Hf Hg Hs2 Hs3.
+    apply /and4P=>//; split=>//. apply IHs2=>//.
+  Qed.
+  
   Lemma ordered_children : forall {a} `{Eq_ a} `{Ord a} (s1 s2 : Set_ a) l e,
       ordered (Bin l e s1 s2) -> ordered s1 /\ ordered s2.
   Proof.
     split; unfold ordered in *; move: H2; case: and4P=>//; elim; intros.
-    - remember (const true) as ct. rewrite {2}[ct] Heqct.
+    - (** Cannot use the two lemmata above, even if we have made them
+          polymorphic (they are not alpha equivalence, or unification
+          issues with dependent types? *)
+      remember (const true) as ct. rewrite {2}[ct] Heqct.
       clear H5; clear Heqct; clear H2; clear H3. generalize dependent ct.
       induction s1=>//. intros. move: H4; case: and4P=>//; elim.
       intros. apply /and4P; split=>//. apply IHs1_2; auto.
@@ -264,6 +379,60 @@ Module Foo (E : OrderedType) : WSfun(E).
       intros. apply elt_gt in p0; split=>//.
       + apply elt_gt. symmetry in Heq. eauto.
       + apply IHs2_1=>//; apply elt_gt=>//.
+  Qed.
+
+  Lemma ordered_left_rewrite : forall e1 e2 s s' x (ll lr r : Set_ elt),
+      E.eq e1 e2 ->
+      ordered (Bin s x (Bin s' e1 ll lr) r) ->
+      ordered (Bin s x (Bin s' e2 ll lr) r).
+  Proof.
+    move=>e1 e2 s s' x ll lr r Heq.
+    rewrite /ordered. case /and4P=>// => _ _.
+    case /and4P=>// => _ Hlt Hll Hlr Hr.
+    apply /and4P=>//; split=>//.
+    apply /and4P=>//; split=>//.
+    - apply elt_lt. apply E.eq_sym in Heq.
+      eapply OrdFacts.eq_lt; eauto. apply elt_lt=>//=.
+    - have H: ordered (Bin 0 e1 ll lr).
+      { rewrite /ordered. step_in_ordered.
+        eapply bounded_impl_right_const_true; eauto. }
+      have: ordered (Bin 0 e2 ll lr).
+      { eapply ordered_rewrite; eauto. }
+      rewrite /ordered. case /and4P=>//.
+    - (** I proved this, but I'm really confused about what
+          happened... *)
+      clear Hll Hr Hlt. generalize dependent x.
+      induction lr=>//. intros.
+      move: Hlr. case /and4P=>//. intros.
+      apply /and4P=>//; split=>//. apply elt_gt in p.
+      apply E.eq_sym in Heq. apply elt_gt.
+      eapply OrdFacts.eq_lt; eauto. apply IHlr1; auto.
+  Qed.
+
+  Lemma ordered_right_rewrite : forall e1 e2 s s' x (l rl rr : Set_ elt),
+      E.eq e1 e2 ->
+      ordered (Bin s x l (Bin s' e1 rl rr)) ->
+      ordered (Bin s x l (Bin s' e2 rl rr)).
+  Proof.
+    move=>e1 e2 s s' x l rl rr Heq.
+    rewrite /ordered. case /and4P=>// => _ _ Hl.
+    case /and4P=>// => Hgt _ Hrl Hrr.
+    apply /and4P=>//; split=>//.
+    apply /and4P=>//; split=>//.
+    - apply elt_gt. apply elt_gt in Hgt.
+      eapply OrdFacts.eq_lt; eauto. 
+    - clear Hgt Hl Hrr. generalize dependent x.
+      induction rl=>//. intros.
+      move: Hrl. case /and4P=>//. intros.
+      apply /and4P=>//; split=>//. apply elt_gt in p0.
+      apply elt_gt. eapply OrdFacts.eq_lt; eauto.
+      apply IHrl2; auto.
+    - have H: ordered (Bin 0 e1 rl rr).
+      { rewrite /ordered. step_in_ordered.
+        eapply bounded_impl_left_const_true; eauto. }
+      have: ordered (Bin 0 e2 rl rr).
+      { eapply ordered_rewrite; eauto. }
+      rewrite /ordered. case /and4P=>//.
   Qed.
 
   Lemma validsize_children : forall {a} (s1 s2 : Set_ a) l e,
@@ -645,23 +814,6 @@ Module Foo (E : OrderedType) : WSfun(E).
     apply elt_gt in Hgt=>//.
   Qed.
 
-  Ltac derive_ordering :=
-    match goal with
-    | [H: context[ordered _] |- _ ] =>
-      move: H; rewrite /ordered=>H
-    end;
-    repeat match goal with
-           | [ H: context[andb _ (andb _ (andb _ _))] |- _ ] =>
-             let Hlo := fresh "Hlo" in
-             let Hhi := fresh "Hhi" in
-             let Hboundl := fresh "Hboundl" in
-             let Hboundh := fresh "Hboundh" in
-             move: H; case /and4P=>// =>Hlo Hhi Hbouldl Hboundh
-           end.
-
-  Ltac step_in_ordered :=
-    apply /and4P=>//; split=>//; try solve [derive_ordering].
-      
   Lemma balanceL_ordered : forall (x: elt) (l r : Set_ elt),
       (** We need [before_balancedL] as preconditions to eliminate the
           impossible cases. *)
@@ -694,7 +846,9 @@ Module Foo (E : OrderedType) : WSfun(E).
 
   Lemma balanceL_WF: forall (x: elt) (l r : Set_ elt),
       WF l -> WF r ->
-      before_balancedL x l r -> WF (balanceL x l r).
+      before_balancedL x l r ->
+      before_orderedL 0 x l r ->
+      WF (balanceL x l r).
   Proof with auto.
     intros. rewrite /WF /valid.
     apply /and3P=>//; split.
@@ -703,24 +857,32 @@ Module Foo (E : OrderedType) : WSfun(E).
     - apply balanceL_validsize...
   Qed.
   
-  Definition empty : t := pack empty Logic.eq_refl.
-  Definition is_empty : t -> bool := fun s' => 
-     s <-- s' ;; null s.
   Definition mem : elt -> t -> bool := fun e s' =>
      s <-- s' ;; member e s.
 
+  Ltac split3 := split; [| split].
+    
   Lemma insert_prop : forall e s,
       WF s ->
       WF (insert e s) /\
+      (forall a s',
+          (E.lt e a ->
+           ordered (Bin 0 a s s') -> ordered (Bin 0 a (insert e s) s')) /\
+          (E.lt a e ->
+           ordered (Bin 0 a s' s) -> ordered (Bin 0 a s' (insert e s)))) /\
       (size (insert e s) = size s + 1 \/ size (insert e s) = size s).
   Proof.
     induction s.
-    - intros. rewrite /insert/=. destruct_match; split.
+    - intros. rewrite /insert/=. destruct_match; split3.
       + (** s is Bin, e = a, prove: WF (insert e s) *)
         apply elt_compare_eq in Heq. move: H.
         rewrite /WF /valid. case /and3P=>//; intros.
         apply /and3P=>//; split=>//. apply E.eq_sym in Heq.
         eapply ordered_rewrite; eauto.
+      + intros. apply elt_compare_eq in Heq.
+        apply E.eq_sym in Heq. split; intros.
+        * eapply ordered_left_rewrite; eauto.
+        * eapply ordered_right_rewrite; eauto.
       + (** prove [size (insert e s) = size s] *)
         right. rewrite /size=>//.
       + (** s is Bin, e < a, prove: WF (insert e s) *)
@@ -735,22 +897,32 @@ Module Foo (E : OrderedType) : WSfun(E).
           have Hs1: WF s2 by [apply WF_children in H; tauto].
           apply IHs1 in Hs1; destruct Hs1.
           (** cases analysis: did we insert an element to s2?  *)
-          destruct H1.
+          destruct H1; destruct H2.
           -- (** we did *)
             destruct s2; destruct s3; derive_constraints; subst;
               repeat match goal with
                      | [H: _ \/ _ |- _ ] => destruct H
                      | [H: _ /\ _ |- _ ] => destruct H
-                     end; rewrite_for_omega; rewrite ?H1;
+                     end; rewrite_for_omega; rewrite ?H2;
                 try solve [(right + left); omega].
           -- (** we didn't *) derive_constraints; subst.
-             rewrite H1. destruct Hbalanced; (left + right); omega.
+             rewrite H2. destruct Hbalanced; (left + right); omega.
+        * (** prove [before_orderedL] pre-conditions *)
+          rewrite -/insert /before_orderedL.
+          have Hord: ordered (Bin 0 a s2 s3).
+          { apply WF_ordered in H.
+            eapply size_irrelevance_in_ordered. eauto. }
+          apply WF_children in H; destruct H.
+          apply IHs1 in H; destruct H as [ _ [Hord' _ ]].
+          specialize (Hord' a s3); destruct Hord'.
+          apply elt_compare_lt in Heq. auto.
+      + rewrite -/insert. admit.
       + (** prove [size (insert e s) = size s + 1] *)
         rewrite -/insert. 
         have Hs1: WF s2 by [apply WF_children in H; tauto].
         rewrite balanceL_add_size=>//.
-        * apply IHs1 in Hs1; destruct Hs1; destruct H1;
-            derive_constraints; subst; rewrite H1.
+        * apply IHs1 in Hs1; destruct Hs1; destruct H1; destruct H2;
+            derive_constraints; subst; rewrite H2.
           -- left.
              rewrite [size s2 + 1]Z.add_comm [(_ + 1) + 1]Z.add_comm !Z.add_assoc //.
           -- right. reflexivity.
@@ -762,8 +934,16 @@ Module Foo (E : OrderedType) : WSfun(E).
             to prove this. This structure should be very much the same
             as in the last last bullet point. *)
       + admit.
-    - simpl. elim. rewrite /singleton. split.
+      + admit.
+    - simpl. elim. rewrite /singleton. split3.
       + apply WF_singleton.
+      + rewrite /ordered. split.
+        * move=>Hlt. case /and4P=>// =>_ _ _ H.
+          apply /and4P=>//; split=>//.
+          apply /and4P=>//; split=>//. apply elt_lt; auto.
+        * move=>Hlt. case /and4P=>// =>_ _ H _.
+          apply /and4P=>//; split=>//.
+          apply /and4P=>//; split=>//. apply elt_lt; auto.
       + left; reflexivity.
   Admitted.        
 
@@ -838,23 +1018,6 @@ Module Foo (E : OrderedType) : WSfun(E).
   Lemma subset_1 : forall s s' : t, Subset s s' -> subset s s' = true. Admitted.
   Lemma subset_2 : forall s s' : t, subset s s' = true -> Subset s s'. Admitted.
   
-  Lemma empty_1 : Empty empty.
-  Proof. unfold Empty; intros a H. inversion H. Qed.
-  
-  Lemma is_empty_1 : forall s : t, Empty s -> is_empty s = true.
-  Proof.
-    move=>s. rewrite /Empty /In. case s=>[s'].
-    case s'=>[ls x l r | ] => Hwf Hempty=>//.
-    specialize (Hempty x). exfalso. apply Hempty.
-    rewrite /In_set /member //=. rewrite_compare_e.
-    have Heq: E.eq x x by done.
-    apply OrdFacts.elim_compare_eq in Heq; destruct Heq.
-    rewrite H=>//.
-  Qed.
-      
-  Lemma is_empty_2 : forall s : t, is_empty s = true -> Empty s.
-  Proof. move=>s. rewrite /Empty /In. elim s=>[s']. elim s'=>//. Qed.
-      
   Lemma add_1 :
     forall (s : t) (x y : elt), E.eq x y -> In y (add x s). Admitted.
   Lemma add_2 : forall (s : t) (x y : elt), In y s -> In y (add x s). Admitted.

@@ -310,56 +310,42 @@ Module Foo (E : OrderedType) : WSfun(E).
   Ltac step_in_ordered :=
     apply /and4P=>//; split=>//; try solve [derive_ordering].
 
-  (** Cannot make them polymorphic. *)
-  Lemma bounded_impl_left_const_true : forall f g s,
-      let b :=
-          (fix bounded (lo hi : E.t -> bool) (t' : Set_ E.t) {struct t'} : bool :=
-             match t' with
-             | Bin _ x l r =>
-               lo x && (hi x &&
-                       (bounded lo (fun arg_0__ : E.t => _GHC.Base.<_ arg_0__ x) l
-                        && bounded (fun arg_1__ : E.t => _GHC.Base.>_ arg_1__ x) hi r))
-             | Tip => true
-             end) in
+  Lemma bounded_impl_left_const_true : forall {a} `{GHC.Base.Ord a} f g s,
+      let b := fix bounded lo hi t'
+            := match t' with
+                 | Tip => true
+                 | Bin _ x l r => andb (lo x) (andb (hi x) (andb (bounded lo (fun arg_0__ =>
+                                                                               arg_0__ GHC.Base.< x) l) (bounded
+                                                                 (fun arg_1__ => arg_1__ GHC.Base.> x) hi r)))
+               end in
           b f g s -> b (const true) g s.
   Proof.
     intros. subst b. generalize dependent g. induction s=>//.
-    intros. move: H. case /and4P=>// => Hf Hg Hs2 Hs3.
+    intros. move: H1. case /and4P=>// => Hf Hg Hs2 Hs3.
     apply /and4P=>//; split=>//. apply IHs1=>//.
   Qed.
 
-  Lemma bounded_impl_right_const_true : forall f g s,
-      let b :=
-          (fix bounded (lo hi : E.t -> bool) (t' : Set_ E.t) {struct t'} : bool :=
-             match t' with
-             | Bin _ x l r =>
-               lo x && (hi x &&
-                       (bounded lo (fun arg_0__ : E.t => _GHC.Base.<_ arg_0__ x) l
-                        && bounded (fun arg_1__ : E.t => _GHC.Base.>_ arg_1__ x) hi r))
-             | Tip => true
-             end) in
+  Lemma bounded_impl_right_const_true : forall {a} `{Ord a} f g s,
+      let b := fix bounded lo hi t'
+            := match t' with
+                 | Tip => true
+                 | Bin _ x l r => andb (lo x) (andb (hi x) (andb (bounded lo (fun arg_0__ =>
+                                                                               arg_0__ GHC.Base.< x) l) (bounded
+                                                                 (fun arg_1__ => arg_1__ GHC.Base.> x) hi r)))
+               end in
           b f g s -> b f (const true) s.
   Proof.
     intros. subst b. generalize dependent f. induction s=>//.
-    intros. move: H. case /and4P=>// => Hf Hg Hs2 Hs3.
+    intros. move: H1. case /and4P=>// => Hf Hg Hs2 Hs3.
     apply /and4P=>//; split=>//. apply IHs2=>//.
   Qed.
   
-  Lemma ordered_children : forall {a} `{Eq_ a} `{Ord a} (s1 s2 : Set_ a) l e,
+  Lemma ordered_children : forall {a} `{Ord a} (s1 s2 : Set_ a) l e,
       ordered (Bin l e s1 s2) -> ordered s1 /\ ordered s2.
   Proof.
-    split; unfold ordered in *; move: H2; case: and4P=>//; elim; intros.
-    - (** Cannot use the two lemmata above, even if we have made them
-          polymorphic (they are not alpha equivalence, or unification
-          issues with dependent types? *)
-      remember (const true) as ct. rewrite {2}[ct] Heqct.
-      clear H5; clear Heqct; clear H2; clear H3. generalize dependent ct.
-      induction s1=>//. intros. move: H4; case: and4P=>//; elim.
-      intros. apply /and4P; split=>//. apply IHs1_2; auto.
-    - remember (const true) as ct. rewrite {1}[ct] Heqct.
-      clear H4; clear Heqct; clear H2; clear H3. generalize dependent ct.
-      induction s2=>//. intros. move: H5; case: and4P=>//; elim.
-      intros. apply /and4P; split=>//. apply IHs2_1; auto.
+    split; unfold ordered in *; move: H1; case: and4P=>//; elim; intros.
+    - eapply (@bounded_impl_right_const_true a H H0). apply H3.
+    - eapply (@bounded_impl_left_const_true a H H0). apply H4.
   Qed.
 
   Lemma ordered_rewrite : forall (s1 s2: Set_ elt) l e1 e2,
@@ -395,7 +381,7 @@ Module Foo (E : OrderedType) : WSfun(E).
       eapply OrdFacts.eq_lt; eauto. apply elt_lt=>//=.
     - have H: ordered (Bin 0 e1 ll lr).
       { rewrite /ordered. step_in_ordered.
-        eapply bounded_impl_right_const_true; eauto. }
+        eapply (@bounded_impl_right_const_true E.t Eq_t Ord_t); eauto. }
       have: ordered (Bin 0 e2 ll lr).
       { eapply ordered_rewrite; eauto. }
       rewrite /ordered. case /and4P=>//.
@@ -429,7 +415,7 @@ Module Foo (E : OrderedType) : WSfun(E).
       apply IHrl2; auto.
     - have H: ordered (Bin 0 e1 rl rr).
       { rewrite /ordered. step_in_ordered.
-        eapply bounded_impl_left_const_true; eauto. }
+        eapply (@bounded_impl_left_const_true E.t Eq_t Ord_t); eauto. }
       have: ordered (Bin 0 e2 rl rr).
       { eapply ordered_rewrite; eauto. }
       rewrite /ordered. case /and4P=>//.

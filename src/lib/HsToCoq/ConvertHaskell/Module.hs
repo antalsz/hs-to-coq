@@ -138,7 +138,7 @@ axiomatizeHsGroup mod HsGroup{..} = do
           _ ->
             convUnsupported "non-type, non-class, non-value definitions in axiomatized modules"
   
-  convertedClsInstDecls <- convertModuleClsInstDecls [(Just mod, cid) | L _ (ClsInstD cid) <- hs_instds]
+  convertedClsInstDecls <- axiomatizeModuleClsInstDecls [(Just mod, cid) | L _ (ClsInstD cid) <- hs_instds]
 
   convertedAddedDecls <- use (edits.additions.at mod.non [])
 

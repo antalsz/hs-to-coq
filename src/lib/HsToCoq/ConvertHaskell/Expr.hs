@@ -24,7 +24,6 @@ import Control.Lens
 
 import Data.Bifunctor
 import Data.Traversable
-import HsToCoq.Util.Function
 import Data.Maybe
 import Data.List (intercalate)
 import HsToCoq.Util.List hiding (unsnoc)
@@ -852,43 +851,54 @@ unsafeFix _ = error "unsafeFix: cannot handle annotations or types"
 
 -- TODO mutual recursion :-(
 convertTypedModuleBindings :: ConversionMonad m
-                           => TopLevelFlag -> [(Maybe ModuleName, HsBind GHC.Name)]
+                           => TopLevelFlag
+                           -> [(Maybe ModuleName, HsBind GHC.Name)]
                            -> Map Qualid Signature
                            -> (ConvertedBinding -> m a)
                            -> Maybe (HsBind GHC.Name -> GhcException -> m a)
                            -> m [a]
 convertTypedModuleBindings toplvl defns sigs build mhandler =
-  let processed defn = runMaybeT
-                     . maybe id (ghandle . (lift .: ($ defn))) mhandler . (lift . build =<<)
-                     . MaybeT
-  in fmap catMaybes . for defns $ \(mname, defn) -> maybeWithCurrentModule mname $ do
-       ty <- case defn of
-               FunBind{fun_id = L _ hsName} ->
-                 fmap sigType . (`M.lookup` sigs) <$> var ExprNS hsName
-               _ ->
-                 pure Nothing
-       processed defn $ convertTypedBinding toplvl ty defn
+  fmap catMaybes . for defns $ \(mname, defn) ->
+    maybeWithCurrentModule mname $ runMaybeT $ do
+       let wrap = case mhandler of Just handler -> ghandle (\e ->  lift $ handler defn e)
+                                   Nothing      -> id
+       wrap $ do
+         ty <- case defn of
+                 FunBind{fun_id = L _ hsName} ->
+                   fmap sigType . (`M.lookup` sigs) <$> var ExprNS hsName
+                 _ ->
+                   pure Nothing
+         conv_bind <- MaybeT (convertTypedBinding toplvl ty defn)
+         lift $ build conv_bind
 
 convertTypedBindings :: ConversionMonad m
-                     => TopLevelFlag -> [HsBind GHC.Name] -> Map Qualid Signature
+                     => TopLevelFlag
+                     -> [HsBind GHC.Name] -> Map Qualid Signature
                      -> (ConvertedBinding -> m a)
                      -> Maybe (HsBind GHC.Name -> GhcException -> m a)
                      -> m [a]
-convertTypedBindings toplvl = convertTypedModuleBindings toplvl . map (Nothing,)
+convertTypedBindings toplvl =
+  convertTypedModuleBindings toplvl . map (Nothing,)
 
 --------------------------------------------------------------------------------
 
 convertLocalBinds :: ConversionMonad m => HsLocalBinds GHC.Name -> m Term -> m Term
-convertLocalBinds (HsValBinds (ValBindsIn binds lsigs)) body = localizeConversionState $ do
+convertLocalBinds (HsValBinds (ValBindsIn binds lsigs)) body =
+  convUnsupported "Unexpected ValBindsIn in post-renamer AST"
+
+convertLocalBinds (HsValBinds (ValBindsOut recBinds lsigs)) body = do
   sigs     <- convertLSigs lsigs
-  convDefs <- convertTypedBindings  NotTopLevel (map unLoc . bagToList $ binds) sigs pure Nothing
+  -- We are not actually using the rec_flag from GHC, because due to renamings
+  -- or `redefinition` edits, maybe the group is no longer recursive.
+  convDefss <- for recBinds $ \(_rec_flag, mut_group) ->
+    convertTypedBindings NotTopLevel (map unLoc . bagToList $ mut_group) sigs pure Nothing
+  let convDefs = concat convDefss
+
   let matchLet pat term body = Coq.Match [MatchItem term Nothing Nothing] Nothing
                                          [Equation [MultPattern [pat]] body]
   let toLet ConvertedDefinition{..} = Let convDefName convDefArgs convDefType convDefBody
   (foldr (withConvertedBinding toLet matchLet) ?? convDefs) <$> body
-convertLocalBinds (HsValBinds (ValBindsOut recBinds lsigs)) body =
-  -- TODO RENAMER use RecFlag info to do recursion stuff
-  convertLocalBinds (HsValBinds $ ValBindsIn (unionManyBags $ map snd recBinds) lsigs) body
+
 convertLocalBinds (HsIPBinds _) _ =
   convUnsupported "local implicit parameter bindings"
 convertLocalBinds EmptyLocalBinds body =

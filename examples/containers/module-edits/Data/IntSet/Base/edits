@@ -25,6 +25,15 @@ skip Data.IntSet.Base.minView
 skip Data.IntSet.Base.deleteMin
 skip Data.IntSet.Base.deleteFindMin
 
+
+# Avoid the natFromInt (and have a simpler implementation)
+redefine Definition Data.IntSet.Base.mask : GHC.Num.Int -> (Mask -> Prefix) :=
+  fun i m => Coq.ZArith.BinInt.Z.ldiff i (Coq.ZArith.BinInt.Z.ones (Coq.ZArith.BinInt.Z.succ (Coq.ZArith.BinInt.Z.log2 m))).
+
+redefine Definition Data.IntSet.Base.zero : GHC.Num.Int -> (Mask -> bool) :=
+  fun i m => Coq.ZArith.BinInt.Z.eqb (Coq.ZArith.BinInt.Z.land i m) 0.
+
+
 # A bitmask adressing the last 6 bits of an int.
 # This is the only place where otherwise the FiniteBits class is used
 skip Data.IntSet.Base.suffixBitMask

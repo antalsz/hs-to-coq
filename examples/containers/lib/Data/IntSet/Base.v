@@ -299,6 +299,17 @@ Definition foldl' {a} : (a -> Key -> a) -> a -> IntSet -> a :=
         | _ => j_7__
       end.
 
+Definition mask : GHC.Num.Int -> Mask -> Prefix :=
+  fun i m =>
+    Coq.ZArith.BinInt.Z.ldiff i (Coq.ZArith.BinInt.Z.ones (Coq.ZArith.BinInt.Z.succ
+                                                          (Coq.ZArith.BinInt.Z.log2 m))).
+
+Definition match_ : GHC.Num.Int -> Prefix -> Mask -> bool :=
+  fun i p m => (mask i m) GHC.Base.== p.
+
+Definition nomatch : GHC.Num.Int -> Prefix -> Mask -> bool :=
+  fun i p m => (mask i m) GHC.Base./= p.
+
 Definition maskW : Nat -> Nat -> Prefix :=
   fun i m =>
     Coq.ZArith.BinInt.Z.of_N (i Data.Bits..&.(**) (Data.Bits.xor
@@ -310,199 +321,10 @@ Definition natFromInt : GHC.Num.Int -> Nat :=
 Definition shorter : Mask -> Mask -> bool :=
   fun m1 m2 => (natFromInt m1) GHC.Base.> (natFromInt m2).
 
-Definition zero : GHC.Num.Int -> Mask -> bool :=
-  fun i m =>
-    ((natFromInt i) Data.Bits..&.(**) (natFromInt m)) GHC.Base.==
-    GHC.Num.fromInteger 0.
-
-Definition mask : GHC.Num.Int -> Mask -> Prefix :=
-  fun i m => maskW (natFromInt i) (natFromInt m).
-
-Definition match_ : GHC.Num.Int -> Prefix -> Mask -> bool :=
-  fun i p m => (mask i m) GHC.Base.== p.
-
-Definition nomatch : GHC.Num.Int -> Prefix -> Mask -> bool :=
-  fun i p m => (mask i m) GHC.Base./= p.
-
-Definition subsetCmp : IntSet -> IntSet -> comparison :=
-  fix subsetCmp arg_0__ arg_1__
-        := let j_12__ :=
-             match arg_0__ , arg_1__ with
-               | Bin _ _ _ _ , _ => Gt
-               | Tip kx1 bm1 , Tip kx2 bm2 => let j_2__ :=
-                                                if (bm1 Data.Bits..&.(**) Data.Bits.complement bm2) GHC.Base.==
-                                                   GHC.Num.fromInteger 0 : bool
-                                                then Lt
-                                                else Gt in
-                                              let j_3__ := if bm1 GHC.Base.== bm2 : bool then Eq else j_2__ in
-                                              if kx1 GHC.Base./= kx2 : bool
-                                              then Gt
-                                              else j_3__
-               | (Tip kx _ as t1) , Bin p m l r => let j_7__ :=
-                                                     let scrut_5__ := subsetCmp t1 r in
-                                                     match scrut_5__ with
-                                                       | Gt => Gt
-                                                       | _ => Lt
-                                                     end in
-                                                   let j_10__ :=
-                                                     if zero kx m : bool
-                                                     then let scrut_8__ := subsetCmp t1 l in
-                                                          match scrut_8__ with
-                                                            | Gt => Gt
-                                                            | _ => Lt
-                                                          end
-                                                     else j_7__ in
-                                                   if nomatch kx p m : bool
-                                                   then Gt
-                                                   else j_10__
-               | Tip _ _ , Nil => Gt
-               | Nil , Nil => Eq
-               | Nil , _ => Lt
-             end in
-           match arg_0__ , arg_1__ with
-             | (Bin p1 m1 l1 r1 as t1) , Bin p2 m2 l2 r2 => let subsetCmpEq :=
-                                                              let scrut_13__ :=
-                                                                pair (subsetCmp l1 l2) (subsetCmp r1 r2) in
-                                                              match scrut_13__ with
-                                                                | pair Gt _ => Gt
-                                                                | pair _ Gt => Gt
-                                                                | pair Eq Eq => Eq
-                                                                | _ => Lt
-                                                              end in
-                                                            let subsetCmpLt :=
-                                                              let j_16__ := subsetCmp t1 r2 in
-                                                              let j_17__ :=
-                                                                if zero p1 m2 : bool
-                                                                then subsetCmp t1 l2
-                                                                else j_16__ in
-                                                              if nomatch p1 p2 m2 : bool
-                                                              then Gt
-                                                              else j_17__ in
-                                                            let j_19__ :=
-                                                              if p1 GHC.Base.== p2 : bool
-                                                              then subsetCmpEq
-                                                              else Gt in
-                                                            let j_21__ :=
-                                                              if shorter m2 m1 : bool
-                                                              then match subsetCmpLt with
-                                                                     | Gt => Gt
-                                                                     | _ => Lt
-                                                                   end
-                                                              else j_19__ in
-                                                            if shorter m1 m2 : bool
-                                                            then Gt
-                                                            else j_21__
-             | _ , _ => j_12__
-           end.
-
-Definition isProperSubsetOf : IntSet -> IntSet -> bool :=
-  fun t1 t2 =>
-    let scrut_0__ := subsetCmp t1 t2 in
-    match scrut_0__ with
-      | Lt => true
-      | _ => false
-    end.
-
-Definition isSubsetOf : IntSet -> IntSet -> bool :=
-  fix isSubsetOf arg_0__ arg_1__
-        := let j_6__ :=
-             match arg_0__ , arg_1__ with
-               | Bin _ _ _ _ , _ => false
-               | Tip kx1 bm1 , Tip kx2 bm2 => andb (kx1 GHC.Base.== kx2) ((bm1
-                                                   Data.Bits..&.(**) Data.Bits.complement bm2) GHC.Base.==
-                                                   GHC.Num.fromInteger 0)
-               | (Tip kx _ as t1) , Bin p m l r => let j_3__ := isSubsetOf t1 r in
-                                                   let j_4__ := if zero kx m : bool then isSubsetOf t1 l else j_3__ in
-                                                   if nomatch kx p m : bool
-                                                   then false
-                                                   else j_4__
-               | Tip _ _ , Nil => false
-               | Nil , _ => true
-             end in
-           match arg_0__ , arg_1__ with
-             | (Bin p1 m1 l1 r1 as t1) , Bin p2 m2 l2 r2 => let j_7__ :=
-                                                              andb (p1 GHC.Base.== p2) (andb (isSubsetOf l1 l2)
-                                                                                             (isSubsetOf r1 r2)) in
-                                                            let j_8__ :=
-                                                              if shorter m2 m1 : bool
-                                                              then andb (match_ p1 p2 m2) (if zero p1 m2 : bool
-                                                                        then isSubsetOf t1 l2
-                                                                        else isSubsetOf t1 r2)
-                                                              else j_7__ in
-                                                            if shorter m1 m2 : bool
-                                                            then false
-                                                            else j_8__
-             | _ , _ => j_6__
-           end.
-
 Definition branchMask : Prefix -> Prefix -> Mask :=
   fun p1 p2 =>
     Coq.ZArith.BinInt.Z.of_N (highestBitMask (Data.Bits.xor (natFromInt p1)
                                                             (natFromInt p2))).
-
-Definition link : Prefix -> IntSet -> Prefix -> IntSet -> IntSet :=
-  fun p1 t1 p2 t2 =>
-    let m := branchMask p1 p2 in
-    let p := mask p1 m in
-    let j_2__ := Bin p m t2 t1 in if zero p1 m : bool then Bin p m t1 t2 else j_2__.
-
-Definition insertBM : Prefix -> BitMap -> IntSet -> IntSet :=
-  fix insertBM kx bm t
-        := GHC.Prim.seq kx (GHC.Prim.seq bm (match t with
-                                           | Bin p m l r => let j_0__ := Bin p m l (insertBM kx bm r) in
-                                                            let j_1__ :=
-                                                              if zero kx m : bool
-                                                              then Bin p m (insertBM kx bm l) r
-                                                              else j_0__ in
-                                                            if nomatch kx p m : bool
-                                                            then link kx (Tip kx bm) p t
-                                                            else j_1__
-                                           | Tip kx' bm' => let j_3__ := link kx (Tip kx bm) kx' t in
-                                                            if kx' GHC.Base.== kx : bool
-                                                            then Tip kx' (bm Data.Bits..|.(**) bm')
-                                                            else j_3__
-                                           | Nil => Tip kx bm
-                                         end)).
-
-Program Fixpoint union (arg_0__ : IntSet) (arg_1__ : IntSet) { measure (size_nat
-  arg_0__ + size_nat arg_1__) } : IntSet :=
-match arg_0__ , arg_1__ with
-  | (Bin p1 m1 l1 r1 as t1) , (Bin p2 m2 l2 r2 as t2) => let union2 :=
-                                                           let j_2__ := Bin p2 m2 l2 (union t1 r2) in
-                                                           let j_3__ :=
-                                                             if zero p1 m2 : bool
-                                                             then Bin p2 m2 (union t1 l2) r2
-                                                             else j_2__ in
-                                                           if nomatch p1 p2 m2 : bool
-                                                           then link p1 t1 p2 t2
-                                                           else j_3__ in
-                                                         let union1 :=
-                                                           let j_5__ := Bin p1 m1 l1 (union r1 t2) in
-                                                           let j_6__ :=
-                                                             if zero p2 m1 : bool
-                                                             then Bin p1 m1 (union l1 t2) r1
-                                                             else j_5__ in
-                                                           if nomatch p2 p1 m1 : bool
-                                                           then link p1 t1 p2 t2
-                                                           else j_6__ in
-                                                         let j_8__ := link p1 t1 p2 t2 in
-                                                         let j_9__ :=
-                                                           if p1 GHC.Base.== p2 : bool
-                                                           then Bin p1 m1 (union l1 l2) (union r1 r2)
-                                                           else j_8__ in
-                                                         let j_10__ := if shorter m2 m1 : bool then union2 else j_9__ in
-                                                         if shorter m1 m2 : bool
-                                                         then union1
-                                                         else j_10__
-  | (Bin _ _ _ _ as t) , Tip kx bm => insertBM kx bm t
-  | (Bin _ _ _ _ as t) , Nil => t
-  | Tip kx bm , t => insertBM kx bm t
-  | Nil , t => t
-end.
-Solve Obligations with (termination_by_omega).
-
-Definition unions : list IntSet -> IntSet :=
-  fun xs => Data.Foldable.foldl union empty xs.
 
 Definition nequal : IntSet -> IntSet -> bool :=
   fix nequal arg_0__ arg_1__
@@ -736,6 +558,192 @@ Definition suffixOf : GHC.Num.Int -> GHC.Num.Int :=
 Definition bitmapOf : GHC.Num.Int -> BitMap :=
   fun x => bitmapOfSuffix (suffixOf x).
 
+Definition singleton : Key -> IntSet :=
+  fun x => Tip (prefixOf x) (bitmapOf x).
+
+Definition tip : Prefix -> BitMap -> IntSet :=
+  fun arg_0__ arg_1__ =>
+    let j_4__ := match arg_0__ , arg_1__ with | kx , bm => Tip kx bm end in
+    match arg_0__ , arg_1__ with
+      | _ , num_2__ => if num_2__ GHC.Base.== GHC.Num.fromInteger 0 : bool
+                       then Nil
+                       else j_4__
+    end.
+
+Definition filter : (Key -> bool) -> IntSet -> IntSet :=
+  fix filter predicate t
+        := let bitPred :=
+             fun kx bm bi =>
+               if predicate (kx GHC.Num.+ bi) : bool
+               then bm Data.Bits..|.(**) bitmapOfSuffix bi
+               else bm in
+           match t with
+             | Bin p m l r => bin p m (filter predicate l) (filter predicate r)
+             | Tip kx bm => tip kx (foldl'Bits (GHC.Num.fromInteger 0) (bitPred kx)
+                                   (GHC.Num.fromInteger 0) bm)
+             | Nil => Nil
+           end.
+
+Definition partition : (Key -> bool) -> IntSet -> (IntSet * IntSet)%type :=
+  fun predicate0 t0 =>
+    let go :=
+      fix go predicate t
+            := let bitPred :=
+                 fun kx bm bi =>
+                   if predicate (kx GHC.Num.+ bi) : bool
+                   then bm Data.Bits..|.(**) bitmapOfSuffix bi
+                   else bm in
+               match t with
+                 | Bin p m l r => match go predicate r with
+                                    | pair r1 r2 => match go predicate l with
+                                                      | pair l1 l2 => pair (bin p m l1 r1) (bin p m l2 r2)
+                                                    end
+                                  end
+                 | Tip kx bm => let bm1 :=
+                                  foldl'Bits (GHC.Num.fromInteger 0) (bitPred kx) (GHC.Num.fromInteger 0) bm in
+                                pair (tip kx bm1) (tip kx (Data.Bits.xor bm bm1))
+                 | Nil => (pair Nil Nil)
+               end in
+    id GHC.Base.$ go predicate0 t0.
+
+Definition zero : GHC.Num.Int -> Mask -> bool :=
+  fun i m => Coq.ZArith.BinInt.Z.eqb (Coq.ZArith.BinInt.Z.land i m) 0.
+
+Definition subsetCmp : IntSet -> IntSet -> comparison :=
+  fix subsetCmp arg_0__ arg_1__
+        := let j_12__ :=
+             match arg_0__ , arg_1__ with
+               | Bin _ _ _ _ , _ => Gt
+               | Tip kx1 bm1 , Tip kx2 bm2 => let j_2__ :=
+                                                if (bm1 Data.Bits..&.(**) Data.Bits.complement bm2) GHC.Base.==
+                                                   GHC.Num.fromInteger 0 : bool
+                                                then Lt
+                                                else Gt in
+                                              let j_3__ := if bm1 GHC.Base.== bm2 : bool then Eq else j_2__ in
+                                              if kx1 GHC.Base./= kx2 : bool
+                                              then Gt
+                                              else j_3__
+               | (Tip kx _ as t1) , Bin p m l r => let j_7__ :=
+                                                     let scrut_5__ := subsetCmp t1 r in
+                                                     match scrut_5__ with
+                                                       | Gt => Gt
+                                                       | _ => Lt
+                                                     end in
+                                                   let j_10__ :=
+                                                     if zero kx m : bool
+                                                     then let scrut_8__ := subsetCmp t1 l in
+                                                          match scrut_8__ with
+                                                            | Gt => Gt
+                                                            | _ => Lt
+                                                          end
+                                                     else j_7__ in
+                                                   if nomatch kx p m : bool
+                                                   then Gt
+                                                   else j_10__
+               | Tip _ _ , Nil => Gt
+               | Nil , Nil => Eq
+               | Nil , _ => Lt
+             end in
+           match arg_0__ , arg_1__ with
+             | (Bin p1 m1 l1 r1 as t1) , Bin p2 m2 l2 r2 => let subsetCmpEq :=
+                                                              let scrut_13__ :=
+                                                                pair (subsetCmp l1 l2) (subsetCmp r1 r2) in
+                                                              match scrut_13__ with
+                                                                | pair Gt _ => Gt
+                                                                | pair _ Gt => Gt
+                                                                | pair Eq Eq => Eq
+                                                                | _ => Lt
+                                                              end in
+                                                            let subsetCmpLt :=
+                                                              let j_16__ := subsetCmp t1 r2 in
+                                                              let j_17__ :=
+                                                                if zero p1 m2 : bool
+                                                                then subsetCmp t1 l2
+                                                                else j_16__ in
+                                                              if nomatch p1 p2 m2 : bool
+                                                              then Gt
+                                                              else j_17__ in
+                                                            let j_19__ :=
+                                                              if p1 GHC.Base.== p2 : bool
+                                                              then subsetCmpEq
+                                                              else Gt in
+                                                            let j_21__ :=
+                                                              if shorter m2 m1 : bool
+                                                              then match subsetCmpLt with
+                                                                     | Gt => Gt
+                                                                     | _ => Lt
+                                                                   end
+                                                              else j_19__ in
+                                                            if shorter m1 m2 : bool
+                                                            then Gt
+                                                            else j_21__
+             | _ , _ => j_12__
+           end.
+
+Definition isProperSubsetOf : IntSet -> IntSet -> bool :=
+  fun t1 t2 =>
+    let scrut_0__ := subsetCmp t1 t2 in
+    match scrut_0__ with
+      | Lt => true
+      | _ => false
+    end.
+
+Definition isSubsetOf : IntSet -> IntSet -> bool :=
+  fix isSubsetOf arg_0__ arg_1__
+        := let j_6__ :=
+             match arg_0__ , arg_1__ with
+               | Bin _ _ _ _ , _ => false
+               | Tip kx1 bm1 , Tip kx2 bm2 => andb (kx1 GHC.Base.== kx2) ((bm1
+                                                   Data.Bits..&.(**) Data.Bits.complement bm2) GHC.Base.==
+                                                   GHC.Num.fromInteger 0)
+               | (Tip kx _ as t1) , Bin p m l r => let j_3__ := isSubsetOf t1 r in
+                                                   let j_4__ := if zero kx m : bool then isSubsetOf t1 l else j_3__ in
+                                                   if nomatch kx p m : bool
+                                                   then false
+                                                   else j_4__
+               | Tip _ _ , Nil => false
+               | Nil , _ => true
+             end in
+           match arg_0__ , arg_1__ with
+             | (Bin p1 m1 l1 r1 as t1) , Bin p2 m2 l2 r2 => let j_7__ :=
+                                                              andb (p1 GHC.Base.== p2) (andb (isSubsetOf l1 l2)
+                                                                                             (isSubsetOf r1 r2)) in
+                                                            let j_8__ :=
+                                                              if shorter m2 m1 : bool
+                                                              then andb (match_ p1 p2 m2) (if zero p1 m2 : bool
+                                                                        then isSubsetOf t1 l2
+                                                                        else isSubsetOf t1 r2)
+                                                              else j_7__ in
+                                                            if shorter m1 m2 : bool
+                                                            then false
+                                                            else j_8__
+             | _ , _ => j_6__
+           end.
+
+Definition link : Prefix -> IntSet -> Prefix -> IntSet -> IntSet :=
+  fun p1 t1 p2 t2 =>
+    let m := branchMask p1 p2 in
+    let p := mask p1 m in
+    let j_2__ := Bin p m t2 t1 in if zero p1 m : bool then Bin p m t1 t2 else j_2__.
+
+Definition insertBM : Prefix -> BitMap -> IntSet -> IntSet :=
+  fix insertBM kx bm t
+        := GHC.Prim.seq kx (GHC.Prim.seq bm (match t with
+                                           | Bin p m l r => let j_0__ := Bin p m l (insertBM kx bm r) in
+                                                            let j_1__ :=
+                                                              if zero kx m : bool
+                                                              then Bin p m (insertBM kx bm l) r
+                                                              else j_0__ in
+                                                            if nomatch kx p m : bool
+                                                            then link kx (Tip kx bm) p t
+                                                            else j_1__
+                                           | Tip kx' bm' => let j_3__ := link kx (Tip kx bm) kx' t in
+                                                            if kx' GHC.Base.== kx : bool
+                                                            then Tip kx' (bm Data.Bits..|.(**) bm')
+                                                            else j_3__
+                                           | Nil => Tip kx bm
+                                         end)).
+
 Definition insert : Key -> IntSet -> IntSet :=
   fun x => GHC.Prim.seq x (insertBM (prefixOf x) (bitmapOf x)).
 
@@ -744,6 +752,46 @@ Definition fromList : list Key -> IntSet :=
 
 Definition map : (Key -> Key) -> IntSet -> IntSet :=
   fun f => fromList GHC.Base.∘ (GHC.Base.map f GHC.Base.∘ toList).
+
+Program Fixpoint union (arg_0__ : IntSet) (arg_1__ : IntSet) { measure (size_nat
+  arg_0__ + size_nat arg_1__) } : IntSet :=
+match arg_0__ , arg_1__ with
+  | (Bin p1 m1 l1 r1 as t1) , (Bin p2 m2 l2 r2 as t2) => let union2 :=
+                                                           let j_2__ := Bin p2 m2 l2 (union t1 r2) in
+                                                           let j_3__ :=
+                                                             if zero p1 m2 : bool
+                                                             then Bin p2 m2 (union t1 l2) r2
+                                                             else j_2__ in
+                                                           if nomatch p1 p2 m2 : bool
+                                                           then link p1 t1 p2 t2
+                                                           else j_3__ in
+                                                         let union1 :=
+                                                           let j_5__ := Bin p1 m1 l1 (union r1 t2) in
+                                                           let j_6__ :=
+                                                             if zero p2 m1 : bool
+                                                             then Bin p1 m1 (union l1 t2) r1
+                                                             else j_5__ in
+                                                           if nomatch p2 p1 m1 : bool
+                                                           then link p1 t1 p2 t2
+                                                           else j_6__ in
+                                                         let j_8__ := link p1 t1 p2 t2 in
+                                                         let j_9__ :=
+                                                           if p1 GHC.Base.== p2 : bool
+                                                           then Bin p1 m1 (union l1 l2) (union r1 r2)
+                                                           else j_8__ in
+                                                         let j_10__ := if shorter m2 m1 : bool then union2 else j_9__ in
+                                                         if shorter m1 m2 : bool
+                                                         then union1
+                                                         else j_10__
+  | (Bin _ _ _ _ as t) , Tip kx bm => insertBM kx bm t
+  | (Bin _ _ _ _ as t) , Nil => t
+  | Tip kx bm , t => insertBM kx bm t
+  | Nil , t => t
+end.
+Solve Obligations with (termination_by_omega).
+
+Definition unions : list IntSet -> IntSet :=
+  fun xs => Data.Foldable.foldl union empty xs.
 
 Definition lookupGE : Key -> IntSet -> option Key :=
   fun x t =>
@@ -905,18 +953,6 @@ Definition member : Key -> IntSet -> bool :=
 
 Definition notMember : Key -> IntSet -> bool :=
   fun k => negb GHC.Base.∘ member k.
-
-Definition singleton : Key -> IntSet :=
-  fun x => Tip (prefixOf x) (bitmapOf x).
-
-Definition tip : Prefix -> BitMap -> IntSet :=
-  fun arg_0__ arg_1__ =>
-    let j_4__ := match arg_0__ , arg_1__ with | kx , bm => Tip kx bm end in
-    match arg_0__ , arg_1__ with
-      | _ , num_2__ => if num_2__ GHC.Base.== GHC.Num.fromInteger 0 : bool
-                       then Nil
-                       else j_4__
-    end.
 
 Definition split : Key -> IntSet -> (IntSet * IntSet)%type :=
   fun x t =>
@@ -1116,20 +1152,6 @@ Notation "'_\\_'" := (op_zrzr__).
 
 Infix "\\" := (_\\_) (at level 99).
 
-Definition filter : (Key -> bool) -> IntSet -> IntSet :=
-  fix filter predicate t
-        := let bitPred :=
-             fun kx bm bi =>
-               if predicate (kx GHC.Num.+ bi) : bool
-               then bm Data.Bits..|.(**) bitmapOfSuffix bi
-               else bm in
-           match t with
-             | Bin p m l r => bin p m (filter predicate l) (filter predicate r)
-             | Tip kx bm => tip kx (foldl'Bits (GHC.Num.fromInteger 0) (bitPred kx)
-                                   (GHC.Num.fromInteger 0) bm)
-             | Nil => Nil
-           end.
-
 Program Fixpoint intersection (arg_0__ : IntSet) (arg_1__
                                 : IntSet) { measure (size_nat arg_0__ + size_nat arg_1__) } : IntSet :=
 match arg_0__ , arg_1__ with
@@ -1201,28 +1223,6 @@ match arg_0__ , arg_1__ with
 end.
 Solve Obligations with (termination_by_omega).
 
-Definition partition : (Key -> bool) -> IntSet -> (IntSet * IntSet)%type :=
-  fun predicate0 t0 =>
-    let go :=
-      fix go predicate t
-            := let bitPred :=
-                 fun kx bm bi =>
-                   if predicate (kx GHC.Num.+ bi) : bool
-                   then bm Data.Bits..|.(**) bitmapOfSuffix bi
-                   else bm in
-               match t with
-                 | Bin p m l r => match go predicate r with
-                                    | pair r1 r2 => match go predicate l with
-                                                      | pair l1 l2 => pair (bin p m l1 r1) (bin p m l2 r2)
-                                                    end
-                                  end
-                 | Tip kx bm => let bm1 :=
-                                  foldl'Bits (GHC.Num.fromInteger 0) (bitPred kx) (GHC.Num.fromInteger 0) bm in
-                                pair (tip kx bm1) (tip kx (Data.Bits.xor bm bm1))
-                 | Nil => (pair Nil Nil)
-               end in
-    id GHC.Base.$ go predicate0 t0.
-
 Module Notations.
 Notation "'_Data.IntSet.Base.\\_'" := (op_zrzr__).
 Infix "Data.IntSet.Base.\\" := (_\\_) (at level 99).
@@ -1231,7 +1231,9 @@ End Notations.
 (* Unbound variables:
      Eq Gt Lt None Some andb bool comparison cons false highestBitMask id list negb
      nil op_zp__ op_zt__ option orb pair shiftLL shiftRL size_nat suffixBitMask true
-     Coq.ZArith.BinInt.Z.of_N Data.Bits.complement Data.Bits.op_zizazi__
+     Coq.ZArith.BinInt.Z.eqb Coq.ZArith.BinInt.Z.land Coq.ZArith.BinInt.Z.ldiff
+     Coq.ZArith.BinInt.Z.log2 Coq.ZArith.BinInt.Z.of_N Coq.ZArith.BinInt.Z.ones
+     Coq.ZArith.BinInt.Z.succ Data.Bits.complement Data.Bits.op_zizazi__
      Data.Bits.op_zizbzi__ Data.Bits.popCount Data.Bits.xor Data.Foldable.foldl
      GHC.Base.Eq_ GHC.Base.Ord GHC.Base.String GHC.Base.compare GHC.Base.flip
      GHC.Base.map GHC.Base.op_z2218U__ GHC.Base.op_zd__ GHC.Base.op_zdzn__

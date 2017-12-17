@@ -69,6 +69,18 @@ Ltac rewrite_Int :=
                   ?Int_eq_is_Z_eq ?Int_neq_is_Z_neq 
                   ?Int_is_Z).
 
+
+Lemma pos_nonneg: forall p, (0 <= N.pos p)%N. 
+Proof.
+  compute; congruence.
+Qed.
+
+Lemma pos_pos: forall p, (0 < N.pos p)%N. 
+Proof.
+  compute; congruence.
+Qed.
+
+
 Require Import Coq.Structures.OrderedTypeEx.
 
 Module Foo: WSfun(Z_as_OT).
@@ -143,6 +155,25 @@ Module Foo: WSfun(Z_as_OT).
     * apply N.bit_log2.
       unfold isBitMask in *.
       destruct bm; simpl in *; intuition; compute in H1; congruence.
+   Qed.
+   
+   Lemma isBitMask_lor:
+     forall bm1 bm2, isBitMask bm1 -> isBitMask bm2 -> isBitMask (N.lor bm1 bm2).
+   Proof.
+     intros.
+     assert (0 < N.lor bm1 bm2)%N.
+     * destruct (isBitMask_testbit bm1 H) as [j[??]].
+       assert (N.testbit (N.lor bm1 bm2) j = true) by
+         (rewrite N.lor_spec H2; auto).
+       enough (0 <> N.lor bm1 bm2)%N by 
+         (destruct (N.lor bm1 bm2); auto; try congruence; apply pos_pos).
+       contradict H3; rewrite <- H3.
+       rewrite N.bits_0. congruence.
+     split; try assumption.
+     * unfold isBitMask in *; destruct H, H0.
+       rewrite N.log2_lt_pow2; auto.
+       rewrite N.log2_lor.
+       apply N.max_lub_lt; rewrite <- N.log2_lt_pow2; auto.
    Qed.
 
   (* exists for Z, but not for N? *)
@@ -227,15 +258,6 @@ Module Foo: WSfun(Z_as_OT).
     destruct p; try reflexivity.
   Qed.
   
-  Lemma pos_nonneg: forall p, (0 <= N.pos p)%N. 
-  Proof.
-    compute; congruence.
-  Qed.
-  
-  Lemma pos_pos: forall p, (0 < N.pos p)%N. 
-  Proof.
-    compute; congruence.
-  Qed.
 
   
   (* This is a stronger version than what’s in the standard library *)
@@ -309,40 +331,80 @@ Module Foo: WSfun(Z_as_OT).
   Lemma is_empty_2 : forall s : t, is_empty s = true -> Empty s.
   Proof. move=>s. rewrite /Empty /In. elim s=>[s']. elim s'=>//. Qed.
 
+  Lemma Tip_Desc:
+    forall p bm, isPrefix p -> isBitMask bm ->
+      Desc (Tip p bm) p (fun i => testBitZ bm (i - p))  (p + Z.of_N WIDTH).
+  Proof.
+    intros ?? Hp Hbm.
+    apply DescTip; auto.
+    intro i. unfold testBitZ.
+    replace (i <? p) with (i - p <? 0).
+    replace (i <? p + Z.of_N WIDTH ) with (i - p <? Z.of_N WIDTH).
+    generalize (i - p) as j. intro.
+    destruct (Z.ltb_spec0 j 0); auto.
+    destruct (Z.ltb_spec0 j (Z.of_N WIDTH)); auto.
+    unfold bitmapOf, bitmapOfSuffix, shiftLL.
+    unfold fromInteger, Num_Word__. replace (Z.to_N 1) with (1%N) by reflexivity.
+    apply N.bits_above_log2.
+    apply N.log2_lt_pow2;[ unfold isBitMask in *; intuition|].
+    unfold isBitMask in *.
+    eapply N.lt_le_trans; [ unfold isBitMask in *; intuition; eassumption|].
+    apply N.pow_le_mono_r. compute; congruence.
+    assert (Z.of_N WIDTH <= j) by intuition; clear n0.
+    assert (0 <= j)  by intuition; clear n.
+    change (Z.to_N 64 <= Z.to_N j)%N.
+    apply Z2N.inj_le; auto.
+    compute; congruence.
+    
+    destruct (Z.ltb_spec0 (i - p) (Z.of_N WIDTH)),
+             (Z.ltb_spec0 i (p + Z.of_N WIDTH)); auto; try omega.
+    destruct (Z.ltb_spec0 (i - p) 0),
+             (Z.ltb_spec0 i p); auto; try omega.
+  Qed.
+
+  Lemma Tip_WF:
+    forall p bm, isPrefix p -> isBitMask bm -> WF (Tip p bm).
+  Proof.
+    intros ?? Hp Hbm.
+    eapply WFNonEmpty.
+    apply Tip_Desc; assumption.
+  Qed.
 
   Definition singleton : elt -> t.
     refine (fun e => pack (singleton e) _).
     unfold singleton, Prim.seq.
-    eapply WFNonEmpty.
-    apply DescTip with (f := fun i => testBitZ (bitmapOf e) (i - prefixOf e)); try reflexivity.
-    * intro i. unfold testBitZ.
-      replace (i <? prefixOf e) with (i - prefixOf e <? 0).
-      replace (i <? prefixOf e + Z.of_N WIDTH ) with (i - prefixOf e <? Z.of_N WIDTH).
-      generalize (i - prefixOf e) as j. intro.
-      destruct (Z.ltb_spec0 j 0); auto.
-      destruct (Z.ltb_spec0 j (Z.of_N WIDTH)); auto.
-      unfold bitmapOf, bitmapOfSuffix, shiftLL.
-      unfold fromInteger, Num_Word__. replace (Z.to_N 1) with (1%N) by reflexivity.
-      rewrite N.shiftl_mul_pow2 N.mul_1_l.
-      apply N.pow2_bits_false.
-      rewrite Z2N.inj_iff; try apply suffixOf_noneg; try omega.
-      assert (suffixOf e < Z.of_N WIDTH) by apply suffixOf_lt_WIDTH.
-      omega.
-      destruct (Z.ltb_spec0 (i - prefixOf e) (Z.of_N WIDTH)),
-               (Z.ltb_spec0 (i) (prefixOf e + Z.of_N WIDTH)); auto; try omega.
-      destruct (Z.ltb_spec0 (i - prefixOf e) 0),
-               (Z.ltb_spec0 (i) (prefixOf e)); auto; try omega.
-    * apply isBitMask_suffixOf.
+    apply Tip_WF.
     * apply isPrefix_prefixOf.
+    * apply isBitMask_suffixOf.
   Qed.
+  
+  Lemma insertBM_WF:
+    forall p bm s,
+    isPrefix p -> isBitMask bm -> WF s -> WF (insertBM p bm s).
+  Proof.
+    intros ??? Hp Hbm HWF.
+    destruct HWF.
+    * simpl. unfold Prim.seq.
+      apply Tip_WF; auto.
+    * induction HD.
+      + simpl; unfold Prim.seq.
+        unfold GHC.Base.op_zeze__, Eq_Integer___, op_zeze____.
+        destruct (Z.eqb_spec p0 p); subst.
+        * apply Tip_WF; auto.
+          apply isBitMask_lor; auto.
+        * 
+          
+  Admitted.
   
   Definition add (e: elt) (s': t) : t.
     refine (s <-- s' ;;
             pack (insert e s) _).
     unfold insert, Prim.seq.
-    (* now about [insertBM], move to own lemma *)
-  Admitted.
-  
+    apply insertBM_WF.
+    apply isPrefix_prefixOf.
+    apply isBitMask_suffixOf.
+    assumption.
+  Qed.   
   
   Definition remove : elt -> t -> t. Admitted.
   Definition union : t -> t -> t. Admitted.

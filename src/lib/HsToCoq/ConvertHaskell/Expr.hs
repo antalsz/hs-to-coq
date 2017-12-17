@@ -769,10 +769,15 @@ guardTerm :: ConversionMonad m =>
 guardTerm gs rhs failure = go gs where
   go [] =
     pure rhs
-  go (OtherwiseGuard : []) =
-    pure rhs
-  go (OtherwiseGuard : (_:_)) =
-    convUnsupported "unused guards after an `otherwise' (or similar)"
+  go (OtherwiseGuard : gs) =
+    go gs
+
+  -- A little innocent but useful hack: Detect the pattern
+  --     | foo `seq` False = …
+  -- And hard-code that it fails
+  go (BoolGuard (App2 "GHC.Prim.seq" _ p) : gs) = go (BoolGuard p : gs)
+  go (BoolGuard "false" : _) = pure failure
+
   go (BoolGuard cond : gs) =
     ifBool cond <$> go gs <*> pure failure
   -- if the pattern is exhaustive, don't include an otherwise case

@@ -53,5 +53,6 @@ Ltac termination_by_omega :=
   simpl;Omega.omega.
 
 
-Definition suffixBitMask : GHC.Num.Int := (Coq.ZArith.BinInt.Z.ones 64)%Z.
+(* Z.ones 6 = 64-1 *)
+Definition suffixBitMask : GHC.Num.Int := (Coq.ZArith.BinInt.Z.ones 6)%Z.
 

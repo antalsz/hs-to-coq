@@ -77,7 +77,7 @@ Module Foo: WSfun(Z_as_OT).
   Definition elt := Z.
 
   (* Well-formedness *)
-
+  
   Definition isPrefix (p : Z)  := Z.land p suffixBitMask = 0.
   
   Lemma isPrefix_suffixMask: forall p, isPrefix p -> Z.land p suffixBitMask = 0.
@@ -91,15 +91,90 @@ Module Foo: WSfun(Z_as_OT).
     + rewrite <- Z.land_lor_distr_r.
       rewrite Z.lor_lnot_diag Z.land_m1_r. reflexivity.
   Qed.
+  
+  Lemma isPrefix_prefixOf: forall e, isPrefix (prefixOf e).
+  Proof.
+    intros.
+    unfold isPrefix, prefixOf, prefixBitMask, suffixBitMask.
+    rewrite /_.&._ /Bits.complement /Bits__N /instance_Bits_Int /complement_Int.
+    rewrite Z.land_ones. rewrite <- Z.ldiff_land.
+    rewrite Z.ldiff_ones_r.
+    rewrite Z.shiftl_mul_pow2.
+    apply Z_mod_mult.
+    all: compute; congruence.
+  Qed.
+
+  Definition WIDTH := 64%N.
+  
+  Lemma suffixOf_lt_WIDTH: forall e, suffixOf e < Z.of_N WIDTH.
+    intros.
+    unfold suffixOf, suffixBitMask.
+    rewrite /_.&._ /Bits__N /instance_Bits_Int.
+    rewrite Z.land_ones.
+    change (e mod 64 < 64).
+    apply Z.mod_pos_bound.
+    reflexivity.
+    compute. congruence.
+  Qed.
+    
+  Lemma suffixOf_noneg:  forall e, 0 <= suffixOf e.
+    intros.
+    unfold suffixOf, suffixBitMask.
+    rewrite /_.&._ /Bits__N /instance_Bits_Int.
+    rewrite Z.land_ones.
+    apply Z_mod_lt.
+    reflexivity.
+    compute. congruence.
+  Qed.
 
   Definition isBitMask (bm : N) :=
-    (0 < bm /\ bm < 2 ^ 64)%N.
+    (0 < bm /\ bm < 2^WIDTH)%N.
+  
+  Definition isBitMask_testbit:
+    forall bm, isBitMask bm -> (exists i, i < WIDTH /\ N.testbit bm i = true)%N.
+    intros.
+    exists (N.log2 bm); intuition.
+    * destruct H.
+      destruct (N.lt_decidable 0%N (N.log2 bm)).
+      - apply N.log2_lt_pow2; try assumption.
+      - assert (N.log2 bm = 0%N) by 
+          (destruct (N.log2 bm); auto; contradict H1; reflexivity).
+        rewrite H2. reflexivity.
+    * apply N.bit_log2.
+      unfold isBitMask in *.
+      destruct bm; simpl in *; intuition; compute in H1; congruence.
+   Qed.
+
+  (* exists for Z, but not for N? *)
+  Lemma N_pow_pos_nonneg: forall a b : N, (0 < a -> 0 < a ^ b)%N.
+  Admitted.
+
+  Lemma isBitMask_suffixOf: forall e, isBitMask (bitmapOf e).
+    intros.
+    unfold isBitMask, bitmapOf, suffixOf, suffixBitMask, bitmapOfSuffix, shiftLL.
+    rewrite /_.&._ /Bits__N /instance_Bits_Int.
+    unfold fromInteger, Num_Word__.
+    rewrite N.shiftl_mul_pow2 N.mul_1_l.
+    rewrite Z.land_ones; [|compute; congruence].
+    constructor.
+    * apply N_pow_pos_nonneg. reflexivity.
+    * apply N.pow_lt_mono_r. reflexivity.
+      change (Z.to_N (e mod 64) < Z.to_N 64)%N.
+      apply Z2N.inj_lt.
+      apply Z.mod_pos_bound; compute; congruence.
+      compute;congruence.
+      apply Z.mod_pos_bound; compute; congruence.
+  Qed.
+
   Definition between l f u g :=
-    (forall i, f i = if i <? l then false else if i >=? u then false else g i).
+    (forall i, f i = if i <? l then false else if i <? u then g i else false).
+  
+  Definition testBitZ bm i :=
+    if i <? 0 then false else N.testbit bm (Z.to_N i).
   
   Inductive Desc : IntSet -> Z -> (Z -> bool) -> Z -> Prop :=
     | DescTip : forall p bm l f u,
-      l = p -> u = l + 64 ->
+      l = p -> u = l + Z.of_N WIDTH ->
       between l f u (fun i => N.testbit bm (Z.to_N (i - l))) ->
       isBitMask bm ->
       isPrefix p ->
@@ -144,28 +219,52 @@ Module Foo: WSfun(Z_as_OT).
     destruct i; try reflexivity.
     destruct p; try reflexivity.
   Qed.
+
+  Lemma of_N_log2: forall n, Z.of_N (N.log2 n) = Z.log2 (Z.of_N n).
+  Proof.
+    intros.
+    destruct n; try reflexivity.
+    destruct p; try reflexivity.
+  Qed.
   
+  Lemma pos_nonneg: forall p, (0 <= N.pos p)%N. 
+  Proof.
+    compute; congruence.
+  Qed.
+  
+  Lemma pos_pos: forall p, (0 < N.pos p)%N. 
+  Proof.
+    compute; congruence.
+  Qed.
+
+  
+  (* This is a stronger version than what’s in the standard library *)
+  Lemma log2_le_lin': forall a : N, (* (0 <= a)%N -> *) (N.log2 a <= a)%N.
+  Proof. intros.
+    destruct a.
+    reflexivity.
+    apply N.log2_le_lin.
+    apply pos_nonneg.
+  Qed.
+ 
   Lemma is_empty_1 : forall s : t, Empty s -> is_empty s = true.
   Proof.
     intros. unfold Empty, In, In_set, is_empty in *. destruct s. simpl.
     induction w.
     * auto.
     * induction HD.
-      + set (i := Z.lor p (Z.log2 (Z.of_N bm))).
-        specialize (H i). contradict H.
-        assert (Z.log2 (Z.log2 (Z.of_N bm)) < 64).
-        destruct (Z_lt_dec 0 (Z.log2 (Z.of_N bm))).
-        - apply Z.log2_lt_pow2; try assumption.
-          unfold isBitMask in *.
-          transitivity (Z.of_N bm).
-          apply Z.log2_lt_lin.
-          change (Z.of_N 0%N < Z.of_N bm). 
-          apply N2Z.inj_lt. intuition.
-          change (Z.of_N bm < Z.of_N (2 ^ 64)%N). 
-          apply N2Z.inj_lt. intuition.
-          replace bm with 1%N. reflexivity.
-          unfold isBitMask in *.
-          destruct bm; simpl in *; intuition; destruct p0; intuition.
+      + destruct (isBitMask_testbit _ H3) as [j[??]].
+        set (i := (Z.lor p (Z.of_N j))).
+        specialize (H i). contradict H. 
+        assert (Z.log2 (Z.of_N j) < 6).
+        - rewrite <- of_N_log2.
+          change (Z.of_N (N.log2 j) < Z.of_N 6%N).
+          apply N2Z.inj_lt.
+          destruct (N.lt_decidable 0%N j).
+          + apply N.log2_lt_pow2; assumption.
+          + enough (j = 0)%N by (subst; compute; congruence).
+            destruct j; auto; contradict H. apply pos_pos.
+
         change ((prefixOf i == p) && ((bitmapOf i .&.bm) /= #0)).
         apply/andP; constructor.
         - rewrite /_GHC.Base.==_ /Eq_Integer___ /op_zeze____.
@@ -173,7 +272,7 @@ Module Foo: WSfun(Z_as_OT).
           change (Z.land i prefixBitMask = p).
           rewrite Z.land_lor_distr_l.
           rewrite (isPrefix_prefixMask p H4).
-          enough (Z.land (Z.log2 (Z.of_N bm)) prefixBitMask = 0) as H'
+          enough (Z.land (Z.of_N j) prefixBitMask = 0) as H'
             by (rewrite H' Z.lor_0_r; reflexivity).
             unfold prefixBitMask, Bits.complement, instance_Bits_Int, complement_Int in *.
             unfold suffixBitMask.
@@ -186,17 +285,16 @@ Module Foo: WSfun(Z_as_OT).
           apply negb_true_iff.
           apply N.eqb_neq.
           unfold bitmapOf.
-          replace (suffixOf i) with (Z.log2 (Z.of_N bm)).
-          ** unfold bitmapOfSuffix, shiftLL.
-             rewrite N.shiftl_mul_pow2 N.mul_1_l to_N_log2. rewrite N2Z.id.
+          replace (suffixOf i) with (Z.of_N j).
+          ** unfold bitmapOfSuffix, shiftLL. rewrite N2Z.id.
+             rewrite N.shiftl_mul_pow2 N.mul_1_l.
              unfold fromInteger, Num_Word__.
              replace (Z.to_N 0) with 0%N by reflexivity.
-             intro.
-             apply N.bits_inj_iff in H5.
-             specialize (H5 (N.log2 bm)).
-             rewrite N.land_spec N.pow2_bits_true N.bit_log2 in H5.
-             rewrite N.bits_0 in H5. simpl in H5. congruence.
-             unfold isBitMask in *; intuition; subst; apply (N.lt_irrefl _ H6).
+             intro Hneq.
+             apply N.bits_inj_iff in Hneq.
+             specialize (Hneq j).
+             rewrite N.land_spec N.pow2_bits_true H6 N.bits_0 in Hneq.
+             simpl in Hneq. congruence.
           ** symmetry.
              unfold suffixOf.
              rewrite /_.&._ /Bits__N /instance_Bits_Int.
@@ -207,7 +305,7 @@ Module Foo: WSfun(Z_as_OT).
              (apply Z.pow_nonneg; omega) || apply Z.log2_nonneg || apply N2Z.is_nonneg.
              assumption.
   Qed.
-      
+
   Lemma is_empty_2 : forall s : t, is_empty s = true -> Empty s.
   Proof. move=>s. rewrite /Empty /In. elim s=>[s']. elim s'=>//. Qed.
 
@@ -216,8 +314,28 @@ Module Foo: WSfun(Z_as_OT).
     refine (fun e => pack (singleton e) _).
     unfold singleton, Prim.seq.
     eapply WFNonEmpty.
-  Admitted.
-
+    apply DescTip with (f := fun i => testBitZ (bitmapOf e) (i - prefixOf e)); try reflexivity.
+    * intro i. unfold testBitZ.
+      replace (i <? prefixOf e) with (i - prefixOf e <? 0).
+      replace (i <? prefixOf e + Z.of_N WIDTH ) with (i - prefixOf e <? Z.of_N WIDTH).
+      generalize (i - prefixOf e) as j. intro.
+      destruct (Z.ltb_spec0 j 0); auto.
+      destruct (Z.ltb_spec0 j (Z.of_N WIDTH)); auto.
+      unfold bitmapOf, bitmapOfSuffix, shiftLL.
+      unfold fromInteger, Num_Word__. replace (Z.to_N 1) with (1%N) by reflexivity.
+      rewrite N.shiftl_mul_pow2 N.mul_1_l.
+      apply N.pow2_bits_false.
+      rewrite Z2N.inj_iff; try apply suffixOf_noneg; try omega.
+      assert (suffixOf e < Z.of_N WIDTH) by apply suffixOf_lt_WIDTH.
+      omega.
+      destruct (Z.ltb_spec0 (i - prefixOf e) (Z.of_N WIDTH)),
+               (Z.ltb_spec0 (i) (prefixOf e + Z.of_N WIDTH)); auto; try omega.
+      destruct (Z.ltb_spec0 (i - prefixOf e) 0),
+               (Z.ltb_spec0 (i) (prefixOf e)); auto; try omega.
+    * apply isBitMask_suffixOf.
+    * apply isPrefix_prefixOf.
+  Qed.
+  
   Definition add (e: elt) (s': t) : t.
     refine (s <-- s' ;;
             pack (insert e s) _).

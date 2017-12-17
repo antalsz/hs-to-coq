@@ -883,7 +883,7 @@ convertTypedBindings toplvl =
 --------------------------------------------------------------------------------
 
 convertLocalBinds :: ConversionMonad m => HsLocalBinds GHC.Name -> m Term -> m Term
-convertLocalBinds (HsValBinds (ValBindsIn binds lsigs)) body =
+convertLocalBinds (HsValBinds (ValBindsIn _ _)) _ =
   convUnsupported "Unexpected ValBindsIn in post-renamer AST"
 
 convertLocalBinds (HsValBinds (ValBindsOut recBinds lsigs)) body = do

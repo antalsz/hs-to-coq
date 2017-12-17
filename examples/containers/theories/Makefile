@@ -111,7 +111,8 @@ endif
 ######################
 
 VFILES:=SetProofs.v\
-  MapProofs.v
+  MapProofs.v\
+  IntSetProofs.v
 
 ifneq ($(filter-out archclean clean cleanall printenv,$(MAKECMDGOALS)),)
 -include $(addsuffix .d,$(VFILES))

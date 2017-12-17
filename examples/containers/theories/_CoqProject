@@ -2,4 +2,4 @@
 -R ../../../base ""
 -Q ../../../base-thy  Proofs
 -Q ../../containers/lib   ""
-SetProofs.v MapProofs.v
+SetProofs.v MapProofs.v IntSetProofs.v

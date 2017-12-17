@@ -62,7 +62,7 @@ Definition testBitDefault {a} `{Bits a} `{Num a} : a -> Int -> bool :=
   (fun arg_27__
        arg_28__ =>
     (match arg_27__ , arg_28__ with
-      | x , i => (((x .&. bit i)) /= #0)
+      | x , i => (((x .&.(**) bit i)) /= #0)
     end)).
 
 

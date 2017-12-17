@@ -2,6 +2,8 @@ Require Import GHC.Base.
 Import Notations.
 Require Import GHC.Num.
 Import Notations.
+Require Import Data.Bits.
+
 
 Require Import Data.IntSet.Base.
 Require Import Coq.FSets.FSetInterface.
@@ -49,6 +51,10 @@ Section Int_And_Z.
     a GHC.Base.== b = (Z.eqb a b).
   Proof. rewrite /_GHC.Base.==_. reflexivity. Qed.
 
+  Lemma Int_neq_is_Z_neq : 
+    a GHC.Base./= b = negb (Z.eqb a b).
+  Proof. rewrite /_GHC.Base.==_. reflexivity. Qed.
+
   Lemma Int_is_Z : forall a : Z,
       # a = a.
   Proof. reflexivity. Qed.
@@ -60,7 +66,8 @@ Ltac rewrite_Int :=
                   ?Int_mult_is_Z_mult
                   ?Int_lt_is_Z_lt ?Int_le_is_Z_le
                   ?Int_ge_is_Z_ge ?Int_gt_is_Z_gt
-                  ?Int_eq_is_Z_eq ?Int_is_Z).
+                  ?Int_eq_is_Z_eq ?Int_neq_is_Z_neq 
+                  ?Int_is_Z).
 
 Require Import Coq.Structures.OrderedTypeEx.
 
@@ -70,8 +77,38 @@ Module Foo: WSfun(Z_as_OT).
   Definition elt := Z.
 
   (* Well-formedness *)
+
+  Definition isPrefix (p : Z)  := Z.land p suffixBitMask = 0.
+  
+  Lemma isPrefix_suffixMask: forall p, isPrefix p -> Z.land p suffixBitMask = 0.
+  Proof. intros.  apply H. Qed.
+  Lemma isPrefix_prefixMask: forall p, isPrefix p -> Z.land p prefixBitMask = p.
+  Proof.
+    intros.
+    unfold isPrefix, prefixBitMask, Bits.complement, instance_Bits_Int, complement_Int in *.
+    enough (Z.lor (Z.land p suffixBitMask)  (Z.land p (Z.lnot suffixBitMask)) = p).
+    + rewrite H Z.lor_0_l in H0. assumption.
+    + rewrite <- Z.land_lor_distr_r.
+      rewrite Z.lor_lnot_diag Z.land_m1_r. reflexivity.
+  Qed.
+
+  Definition isBitMask (bm : N) :=
+    (0 < bm /\ bm < 2 ^ 64)%N.
+  Definition between l f u g :=
+    (forall i, f i = if i <? l then false else if i >=? u then false else g i).
+  
+  Inductive Desc : IntSet -> Z -> (Z -> bool) -> Z -> Prop :=
+    | DescTip : forall p bm l f u,
+      l = p -> u = l + 64 ->
+      between l f u (fun i => N.testbit bm (Z.to_N (i - l))) ->
+      isBitMask bm ->
+      isPrefix p ->
+      Desc (Tip p bm) l f u.
+  
   Inductive WF : IntSet -> Prop :=
-    | WFNil : WF Nil.
+    | WFEmpty : WF Nil
+    | WFNonEmpty : forall s l f u (HD : Desc s l f u), WF s.
+    
   Definition t := {s : IntSet | WF s}.
   Definition pack (s : IntSet) (H : WF s): t := exist _ s H.
 
@@ -94,32 +131,100 @@ Module Foo: WSfun(Z_as_OT).
   Definition For_all (P : elt -> Prop) s := forall x, In x s -> P x.
   Definition Exists (P : elt -> Prop) s := exists x, In x s /\ P x.
 
-  Definition empty : t := pack empty WFNil.
+  Definition empty : t := pack empty WFEmpty.
   Definition is_empty : t -> bool := fun s' => 
     s <-- s' ;; null s.
   
   Lemma empty_1 : Empty empty.
   Proof. unfold Empty; intros a H. inversion H. Qed.
   
+  Lemma to_N_log2: forall i, Z.to_N (Z.log2 i) = N.log2 (Z.to_N i).
+  Proof.
+    intros.
+    destruct i; try reflexivity.
+    destruct p; try reflexivity.
+  Qed.
+  
   Lemma is_empty_1 : forall s : t, Empty s -> is_empty s = true.
   Proof.
     intros. unfold Empty, In, In_set, is_empty in *. destruct s. simpl.
-    induction w; auto.
+    induction w.
+    * auto.
+    * induction HD.
+      + set (i := Z.lor p (Z.log2 (Z.of_N bm))).
+        specialize (H i). contradict H.
+        assert (Z.log2 (Z.log2 (Z.of_N bm)) < 64).
+        destruct (Z_lt_dec 0 (Z.log2 (Z.of_N bm))).
+        - apply Z.log2_lt_pow2; try assumption.
+          unfold isBitMask in *.
+          transitivity (Z.of_N bm).
+          apply Z.log2_lt_lin.
+          change (Z.of_N 0%N < Z.of_N bm). 
+          apply N2Z.inj_lt. intuition.
+          change (Z.of_N bm < Z.of_N (2 ^ 64)%N). 
+          apply N2Z.inj_lt. intuition.
+          replace bm with 1%N. reflexivity.
+          unfold isBitMask in *.
+          destruct bm; simpl in *; intuition; destruct p0; intuition.
+        change ((prefixOf i == p) && ((bitmapOf i .&.bm) /= #0)).
+        apply/andP; constructor.
+        - rewrite /_GHC.Base.==_ /Eq_Integer___ /op_zeze____.
+          apply <- Z.eqb_eq.
+          change (Z.land i prefixBitMask = p).
+          rewrite Z.land_lor_distr_l.
+          rewrite (isPrefix_prefixMask p H4).
+          enough (Z.land (Z.log2 (Z.of_N bm)) prefixBitMask = 0) as H'
+            by (rewrite H' Z.lor_0_r; reflexivity).
+            unfold prefixBitMask, Bits.complement, instance_Bits_Int, complement_Int in *.
+            unfold suffixBitMask.
+            rewrite <- Z.ldiff_land.
+            apply Z.ldiff_ones_r_low.
+            (apply Z.pow_nonneg; omega) || apply Z.log2_nonneg || apply N2Z.is_nonneg.
+            assumption.
+        - rewrite /_GHC.Base./=_ /Eq_Char___ /op_zsze____.
+          rewrite /_.&._ /Bits__N.
+          apply negb_true_iff.
+          apply N.eqb_neq.
+          unfold bitmapOf.
+          replace (suffixOf i) with (Z.log2 (Z.of_N bm)).
+          ** unfold bitmapOfSuffix, shiftLL.
+             rewrite N.shiftl_mul_pow2 N.mul_1_l to_N_log2. rewrite N2Z.id.
+             unfold fromInteger, Num_Word__.
+             replace (Z.to_N 0) with 0%N by reflexivity.
+             intro.
+             apply N.bits_inj_iff in H5.
+             specialize (H5 (N.log2 bm)).
+             rewrite N.land_spec N.pow2_bits_true N.bit_log2 in H5.
+             rewrite N.bits_0 in H5. simpl in H5. congruence.
+             unfold isBitMask in *; intuition; subst; apply (N.lt_irrefl _ H6).
+          ** symmetry.
+             unfold suffixOf.
+             rewrite /_.&._ /Bits__N /instance_Bits_Int.
+             rewrite Z.land_lor_distr_l.
+             rewrite (isPrefix_suffixMask p H4).
+             rewrite Z.lor_0_l.
+             apply Z.land_ones_low.
+             (apply Z.pow_nonneg; omega) || apply Z.log2_nonneg || apply N2Z.is_nonneg.
+             assumption.
   Qed.
       
   Lemma is_empty_2 : forall s : t, is_empty s = true -> Empty s.
   Proof. move=>s. rewrite /Empty /In. elim s=>[s']. elim s'=>//. Qed.
 
+
+  Definition singleton : elt -> t.
+    refine (fun e => pack (singleton e) _).
+    unfold singleton, Prim.seq.
+    eapply WFNonEmpty.
+  Admitted.
+
   Definition add (e: elt) (s': t) : t.
     refine (s <-- s' ;;
             pack (insert e s) _).
-    admit.
+    unfold insert, Prim.seq.
+    (* now about [insertBM], move to own lemma *)
   Admitted.
   
-  Definition singleton : elt -> t.
-    refine (fun e => pack (singleton e) _).
-    admit.
-  Admitted.
   
   Definition remove : elt -> t -> t. Admitted.
   Definition union : t -> t -> t. Admitted.

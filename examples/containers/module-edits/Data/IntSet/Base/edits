@@ -27,8 +27,7 @@ skip Data.IntSet.Base.deleteFindMin
 
 # A bitmask adressing the last 6 bits of an int.
 # This is the only place where otherwise the FiniteBits class is used
-redefine Definition Data.IntSet.Base.suffixBitMask : GHC.Num.Int := Coq.ZArith.BinInt.Z.of_nat 63.
-
+skip Data.IntSet.Base.suffixBitMask
 
 # These are typical that they recurse left or right
 termination Data.IntSet.Base.union        {measure ((size_nat arg_0__) + (size_nat arg_1__))} termination_by_omega

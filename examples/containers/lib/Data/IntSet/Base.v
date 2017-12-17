@@ -48,7 +48,7 @@ Inductive Stack : Type := Push : Prefix -> IntSet -> Stack -> Stack
 (* Midamble *)
 
 Require Coq.ZArith.Zcomplements.
-Require Coq.Numbers.BinNums.
+Require Import Coq.Numbers.BinNums.
 
 Definition shiftLL (n: Nat) (s : BinInt.Z) : Nat :=
 	Coq.NArith.BinNat.N.shiftl n (Coq.ZArith.BinInt.Z.to_N s).
@@ -64,7 +64,6 @@ Definition bit_N := shiftLL 1%N.
 
 Definition popCount_N : N -> GHC.Num.Int := fun x => 0%Z.   (* TODO *)
 
-Locate N.lnot.
 Instance Bits__N : Data.Bits.Bits N :=  {
   op_zizazi__ := N.land ;
   op_zizbzi__ := N.lor ;
@@ -101,6 +100,9 @@ Require Omega.
 Ltac termination_by_omega :=
   Coq.Program.Tactics.program_simpl;
   simpl;Omega.omega.
+
+
+Definition suffixBitMask : GHC.Num.Int := (Coq.ZArith.BinInt.Z.ones 64)%Z.
 
 
 (* Converted value declarations: *)
@@ -525,6 +527,12 @@ Definition node : GHC.Base.String :=
 Definition null : IntSet -> bool :=
   fun arg_0__ => match arg_0__ with | Nil => true | _ => false end.
 
+Definition prefixBitMask : GHC.Num.Int :=
+  Data.Bits.complement suffixBitMask.
+
+Definition prefixOf : GHC.Num.Int -> Prefix :=
+  fun x => x Data.Bits..&.(**) prefixBitMask.
+
 Definition revNat : Nat -> Nat :=
   fun x1 =>
     let scrut_0__ :=
@@ -721,20 +729,11 @@ Definition splitRoot : IntSet -> list IntSet :=
                        else j_1__
     end.
 
-Definition suffixBitMask : GHC.Num.Int :=
-  Coq.ZArith.BinInt.Z.of_nat 63.
-
 Definition suffixOf : GHC.Num.Int -> GHC.Num.Int :=
   fun x => x Data.Bits..&.(**) suffixBitMask.
 
 Definition bitmapOf : GHC.Num.Int -> BitMap :=
   fun x => bitmapOfSuffix (suffixOf x).
-
-Definition prefixBitMask : GHC.Num.Int :=
-  Data.Bits.complement suffixBitMask.
-
-Definition prefixOf : GHC.Num.Int -> Prefix :=
-  fun x => x Data.Bits..&.(**) prefixBitMask.
 
 Definition insert : Key -> IntSet -> IntSet :=
   fun x => GHC.Prim.seq x (insertBM (prefixOf x) (bitmapOf x)).
@@ -1230,12 +1229,12 @@ End Notations.
 
 (* Unbound variables:
      Eq Gt Lt None Some andb bool comparison cons false highestBitMask id list negb
-     nil op_zp__ op_zt__ option orb pair shiftLL shiftRL size_nat true
-     Coq.ZArith.BinInt.Z.of_N Coq.ZArith.BinInt.Z.of_nat Data.Bits.complement
-     Data.Bits.op_zizazi__ Data.Bits.op_zizbzi__ Data.Bits.popCount Data.Bits.xor
-     Data.Foldable.foldl GHC.Base.Eq_ GHC.Base.Ord GHC.Base.String GHC.Base.compare
-     GHC.Base.flip GHC.Base.map GHC.Base.op_z2218U__ GHC.Base.op_zd__
-     GHC.Base.op_zdzn__ GHC.Base.op_zeze__ GHC.Base.op_zg__ GHC.Base.op_zgze__
-     GHC.Base.op_zl__ GHC.Base.op_zsze__ GHC.Num.Int GHC.Num.Word GHC.Num.negate
-     GHC.Num.op_zm__ GHC.Num.op_zp__ GHC.Prim.seq GHC.Real.fromIntegral
+     nil op_zp__ op_zt__ option orb pair shiftLL shiftRL size_nat suffixBitMask true
+     Coq.ZArith.BinInt.Z.of_N Data.Bits.complement Data.Bits.op_zizazi__
+     Data.Bits.op_zizbzi__ Data.Bits.popCount Data.Bits.xor Data.Foldable.foldl
+     GHC.Base.Eq_ GHC.Base.Ord GHC.Base.String GHC.Base.compare GHC.Base.flip
+     GHC.Base.map GHC.Base.op_z2218U__ GHC.Base.op_zd__ GHC.Base.op_zdzn__
+     GHC.Base.op_zeze__ GHC.Base.op_zg__ GHC.Base.op_zgze__ GHC.Base.op_zl__
+     GHC.Base.op_zsze__ GHC.Num.Int GHC.Num.Word GHC.Num.negate GHC.Num.op_zm__
+     GHC.Num.op_zp__ GHC.Prim.seq GHC.Real.fromIntegral
 *)

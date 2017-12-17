@@ -28,7 +28,6 @@ Require NameEnv.
 Require OccName.
 Require Var.
 Require VarEnv.
-Import GHC.Base.Notations.
 
 (* Converted type declarations: *)
 
@@ -554,235 +553,35 @@ Definition collectAnnArgs {b}{a} :
 *)
 (* Converted value declarations: *)
 
-(* Translating `instance Binary.Binary CoreSyn.IsOrphan' failed: OOPS! Cannot
-   find information for class Qualified "Binary" "Binary" unsupported *)
+Instance Eq___UnfoldingGuidance : GHC.Base.Eq_ UnfoldingGuidance := {}.
+Proof.
+Admitted.
 
-(* Translating `instance Outputable.Outputable CoreSyn.AltCon' failed: OOPS!
-   Cannot find information for class Qualified "Outputable" "Outputable"
-   unsupported *)
+Instance Eq___TickishPlacement : GHC.Base.Eq_ TickishPlacement := {}.
+Proof.
+Admitted.
 
-(* Translating `instance forall {b}, forall `{Outputable.Outputable b},
-   Outputable.Outputable (CoreSyn.TaggedBndr b)' failed: OOPS! Cannot find
-   information for class Qualified "Outputable" "Outputable" unsupported *)
+Instance Eq___TickishScoping : GHC.Base.Eq_ TickishScoping := {}.
+Proof.
+Admitted.
 
-(* Translating `instance forall {b}, forall `{Outputable.Outputable b},
-   Outputable.OutputableBndr (CoreSyn.TaggedBndr b)' failed: OOPS! Cannot find
-   information for class Qualified "Outputable" "OutputableBndr" unsupported *)
+Instance Eq___Tickish : forall {id},
+                          forall `{GHC.Base.Eq_ id}, GHC.Base.Eq_ (Tickish id) := {}.
+Proof.
+Admitted.
 
-Local Definition Eq___UnfoldingGuidance_op_zeze__
-    : UnfoldingGuidance -> UnfoldingGuidance -> bool :=
-  fun arg_0__ arg_1__ =>
-    match arg_0__ , arg_1__ with
-      | UnfWhen a1 a2 a3 , UnfWhen b1 b2 b3 => (andb (andb ((a1 GHC.Base.== b1)) ((a2
-                                                           GHC.Base.== b2))) ((a3 GHC.Base.== b3)))
-      | UnfIfGoodArgs a1 a2 a3 , UnfIfGoodArgs b1 b2 b3 => (andb (andb ((a1
-                                                                       GHC.Base.== b1)) ((a2 GHC.Base.== b2))) ((a3
-                                                                 GHC.Base.== b3)))
-      | UnfNever , UnfNever => true
-      | _ , _ => false
-    end.
+Instance Ord__Tickish : forall {id},
+                          forall `{GHC.Base.Ord id}, GHC.Base.Ord (Tickish id) := {}.
+Proof.
+Admitted.
 
-Local Definition Eq___UnfoldingGuidance_op_zsze__
-    : UnfoldingGuidance -> UnfoldingGuidance -> bool :=
-  fun a b => negb (Eq___UnfoldingGuidance_op_zeze__ a b).
+Instance Eq___AltCon : GHC.Base.Eq_ AltCon := {}.
+Proof.
+Admitted.
 
-Program Instance Eq___UnfoldingGuidance : GHC.Base.Eq_ UnfoldingGuidance :=
-  fun _ k =>
-    k {|GHC.Base.op_zeze____ := Eq___UnfoldingGuidance_op_zeze__ ;
-      GHC.Base.op_zsze____ := Eq___UnfoldingGuidance_op_zsze__ |}.
-
-(* Translating `instance Data.Data.Data CoreSyn.IsOrphan' failed: OOPS! Cannot
-   find information for class Qualified "Data.Data" "Data" unsupported *)
-
-Local Definition Eq___TickishPlacement_op_zeze__
-    : TickishPlacement -> TickishPlacement -> bool :=
-  fun arg_0__ arg_1__ =>
-    match arg_0__ , arg_1__ with
-      | PlaceRuntime , PlaceRuntime => true
-      | PlaceNonLam , PlaceNonLam => true
-      | PlaceCostCentre , PlaceCostCentre => true
-      | _ , _ => false
-    end.
-
-Local Definition Eq___TickishPlacement_op_zsze__
-    : TickishPlacement -> TickishPlacement -> bool :=
-  fun a b => negb (Eq___TickishPlacement_op_zeze__ a b).
-
-Program Instance Eq___TickishPlacement : GHC.Base.Eq_ TickishPlacement := fun _
-                                                                              k =>
-    k {|GHC.Base.op_zeze____ := Eq___TickishPlacement_op_zeze__ ;
-      GHC.Base.op_zsze____ := Eq___TickishPlacement_op_zsze__ |}.
-
-Local Definition Eq___TickishScoping_op_zeze__
-    : TickishScoping -> TickishScoping -> bool :=
-  fun arg_0__ arg_1__ =>
-    match arg_0__ , arg_1__ with
-      | NoScope , NoScope => true
-      | SoftScope , SoftScope => true
-      | CostCentreScope , CostCentreScope => true
-      | _ , _ => false
-    end.
-
-Local Definition Eq___TickishScoping_op_zsze__
-    : TickishScoping -> TickishScoping -> bool :=
-  fun a b => negb (Eq___TickishScoping_op_zeze__ a b).
-
-Program Instance Eq___TickishScoping : GHC.Base.Eq_ TickishScoping := fun _ k =>
-    k {|GHC.Base.op_zeze____ := Eq___TickishScoping_op_zeze__ ;
-      GHC.Base.op_zsze____ := Eq___TickishScoping_op_zsze__ |}.
-
-(* Translating `instance forall {b}, forall `{Data.Data.Data b}, Data.Data.Data
-   (CoreSyn.Bind b)' failed: OOPS! Cannot find information for class Qualified
-   "Data.Data" "Data" unsupported *)
-
-(* Translating `instance forall {b}, forall `{Data.Data.Data b}, Data.Data.Data
-   (CoreSyn.Expr b)' failed: OOPS! Cannot find information for class Qualified
-   "Data.Data" "Data" unsupported *)
-
-(* Translating `instance forall {id}, forall `{Data.Data.Data id},
-   Data.Data.Data (CoreSyn.Tickish id)' failed: OOPS! Cannot find information for
-   class Qualified "Data.Data" "Data" unsupported *)
-
-(* Translating `instance forall {id}, forall `{GHC.Base.Ord id}, GHC.Base.Ord
-   (CoreSyn.Tickish id)' failed: using a record pattern for the unknown constructor
-   `ProfNote' unsupported *)
-
-Local Definition Eq___Tickish_op_zsze__ {inst_id} `{_ : GHC.Base.Eq_ inst_id}
-    : Tickish inst_id -> Tickish inst_id -> bool :=
-  fun x y => false.
-
-Local Definition Eq___Tickish_op_zeze__ {inst_id} `{_ : GHC.Base.Eq_ inst_id}
-    : Tickish inst_id -> Tickish inst_id -> bool :=
-  fun x y => true.
-
-Program Instance Eq___Tickish {id} `{GHC.Base.Eq_ id} : GHC.Base.Eq_ (Tickish
-                                                                     id) := fun _ k =>
-    k {|GHC.Base.op_zeze____ := Eq___Tickish_op_zeze__ ;
-      GHC.Base.op_zsze____ := Eq___Tickish_op_zsze__ |}.
-
-(* Translating `instance Data.Data.Data CoreSyn.AltCon' failed: OOPS! Cannot
-   find information for class Qualified "Data.Data" "Data" unsupported *)
-
-Local Definition Ord__AltCon_compare : AltCon -> AltCon -> comparison :=
-  fun a b =>
-    match a with
-      | DataAlt a1 => match b with
-                        | DataAlt b1 => (GHC.Base.compare a1 b1)
-                        | _ => Lt
-                      end
-      | LitAlt a1 => match b with
-                       | DataAlt _ => Gt
-                       | LitAlt b1 => (GHC.Base.compare a1 b1)
-                       | _ => Lt
-                     end
-      | DEFAULT => match b with
-                     | DEFAULT => Eq
-                     | _ => Gt
-                   end
-    end.
-
-Local Definition Ord__AltCon_op_zg__ : AltCon -> AltCon -> bool :=
-  fun a b =>
-    match a with
-      | DataAlt a1 => match b with
-                        | DataAlt b1 => (a1 GHC.Base.> b1)
-                        | _ => false
-                      end
-      | LitAlt a1 => match b with
-                       | DataAlt _ => true
-                       | LitAlt b1 => (a1 GHC.Base.> b1)
-                       | _ => false
-                     end
-      | DEFAULT => match b with
-                     | DEFAULT => false
-                     | _ => true
-                   end
-    end.
-
-Local Definition Ord__AltCon_op_zgze__ : AltCon -> AltCon -> bool :=
-  fun a b =>
-    match a with
-      | DataAlt a1 => match b with
-                        | DataAlt b1 => (a1 GHC.Base.>= b1)
-                        | _ => false
-                      end
-      | LitAlt a1 => match b with
-                       | DataAlt _ => true
-                       | LitAlt b1 => (a1 GHC.Base.>= b1)
-                       | _ => false
-                     end
-      | DEFAULT => match b with
-                     | DEFAULT => true
-                     | _ => true
-                   end
-    end.
-
-Local Definition Ord__AltCon_op_zl__ : AltCon -> AltCon -> bool :=
-  fun a b =>
-    match a with
-      | DataAlt a1 => match b with
-                        | DataAlt b1 => (a1 GHC.Base.< b1)
-                        | _ => true
-                      end
-      | LitAlt a1 => match b with
-                       | DataAlt _ => false
-                       | LitAlt b1 => (a1 GHC.Base.< b1)
-                       | _ => true
-                     end
-      | DEFAULT => match b with
-                     | DEFAULT => false
-                     | _ => false
-                   end
-    end.
-
-Local Definition Ord__AltCon_op_zlze__ : AltCon -> AltCon -> bool :=
-  fun a b =>
-    match a with
-      | DataAlt a1 => match b with
-                        | DataAlt b1 => (a1 GHC.Base.<= b1)
-                        | _ => true
-                      end
-      | LitAlt a1 => match b with
-                       | DataAlt _ => false
-                       | LitAlt b1 => (a1 GHC.Base.<= b1)
-                       | _ => true
-                     end
-      | DEFAULT => match b with
-                     | DEFAULT => true
-                     | _ => false
-                   end
-    end.
-
-Local Definition Ord__AltCon_min : AltCon -> AltCon -> AltCon :=
-  fun x y => if Ord__AltCon_op_zlze__ x y : bool then x else y.
-
-Local Definition Ord__AltCon_max : AltCon -> AltCon -> AltCon :=
-  fun x y => if Ord__AltCon_op_zlze__ x y : bool then y else x.
-
-Local Definition Eq___AltCon_op_zeze__ : AltCon -> AltCon -> bool :=
-  fun arg_0__ arg_1__ =>
-    match arg_0__ , arg_1__ with
-      | DataAlt a1 , DataAlt b1 => ((a1 GHC.Base.== b1))
-      | LitAlt a1 , LitAlt b1 => ((a1 GHC.Base.== b1))
-      | DEFAULT , DEFAULT => true
-      | _ , _ => false
-    end.
-
-Local Definition Eq___AltCon_op_zsze__ : AltCon -> AltCon -> bool :=
-  fun a b => negb (Eq___AltCon_op_zeze__ a b).
-
-Program Instance Eq___AltCon : GHC.Base.Eq_ AltCon := fun _ k =>
-    k {|GHC.Base.op_zeze____ := Eq___AltCon_op_zeze__ ;
-      GHC.Base.op_zsze____ := Eq___AltCon_op_zsze__ |}.
-
-Program Instance Ord__AltCon : GHC.Base.Ord AltCon := fun _ k =>
-    k {|GHC.Base.op_zl____ := Ord__AltCon_op_zl__ ;
-      GHC.Base.op_zlze____ := Ord__AltCon_op_zlze__ ;
-      GHC.Base.op_zg____ := Ord__AltCon_op_zg__ ;
-      GHC.Base.op_zgze____ := Ord__AltCon_op_zgze__ ;
-      GHC.Base.compare__ := Ord__AltCon_compare ;
-      GHC.Base.max__ := Ord__AltCon_max ;
-      GHC.Base.min__ := Ord__AltCon_min |}.
+Instance Ord__AltCon : GHC.Base.Ord AltCon := {}.
+Proof.
+Admitted.
 
 Axiom mkNoCount : forall {A : Type}, A.
 
@@ -993,11 +792,9 @@ Axiom deAnnotate : forall {A : Type}, A.
 Axiom collectAnnBndrs : forall {A : Type}, A.
 
 (* Unbound variables:
-     Alt AnnAlt AnnExpr Arg Eq Gt Lt Type andb bool comparison error false list negb
-     op_zt__ option true unit BasicTypes.Activation BasicTypes.Arity
-     BasicTypes.RuleName DataCon.DataCon DynFlags.DynFlags GHC.Base.Eq_ GHC.Base.Ord
-     GHC.Base.Synonym GHC.Base.compare GHC.Base.op_zeze__ GHC.Base.op_zg__
-     GHC.Base.op_zgze__ GHC.Base.op_zl__ GHC.Base.op_zlze__ GHC.Num.Int
+     Alt AnnAlt AnnExpr Arg Type bool error list op_zt__ option unit
+     BasicTypes.Activation BasicTypes.Arity BasicTypes.RuleName DataCon.DataCon
+     DynFlags.DynFlags GHC.Base.Eq_ GHC.Base.Ord GHC.Base.Synonym GHC.Num.Int
      Literal.Literal Module.Module Module.ModuleSet Name.Name NameEnv.NameEnv
      OccName.OccName Var.Id Var.Var VarEnv.InScopeSet
 *)

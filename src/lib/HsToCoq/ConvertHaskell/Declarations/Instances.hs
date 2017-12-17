@@ -174,13 +174,19 @@ decomposeForall t = ([], t)
 
 axiomatizeClsInstDecl :: ConversionMonad m
                       => ClsInstDecl GHC.Name        -- Haskell instance we are converting
-                      -> m InstanceDefinition
+                      -> m (Maybe InstanceDefinition)
 axiomatizeClsInstDecl cid@ClsInstDecl{..} = do
   InstanceInfo{..} <- convertClsInstDeclInfo cid
-  pure . InstanceDefinition instanceName [] instanceHead []
-       $ if null $ classMethods instanceHsClass
-         then Nothing
-         else Just $ ProofAdmitted ""
+  use (classDefns.at instanceClass) >>= \case
+    Just _ -> use (edits.skipped.contains instanceName) >>= \case
+      True -> pure  Nothing
+      False -> pure . Just . InstanceDefinition instanceName [] instanceHead []
+         $ if null $ classMethods instanceHsClass
+           then Nothing
+           else Just $ ProofAdmitted ""
+    Nothing ->
+      -- convUnsupported ("OOPS! Cannot find information for class " ++ show instanceClass)
+      pure Nothing
 
 --------------------------------------------------------------------------------
 
@@ -211,8 +217,9 @@ convertModuleClsInstDecls = foldTraverse $ maybeWithCurrentModule .*^ \cid ->
 
 axiomatizeModuleClsInstDecls :: forall m. ConversionMonad m
                              => [(Maybe ModuleName, ClsInstDecl GHC.Name)] -> m [Sentence]
-axiomatizeModuleClsInstDecls =
-  traverse $ fmap InstanceSentence . (maybeWithCurrentModule .*^ axiomatizeClsInstDecl)
+axiomatizeModuleClsInstDecls insts =
+  (fmap InstanceSentence .  catMaybes) <$>
+    mapM (maybeWithCurrentModule .*^ axiomatizeClsInstDecl) insts
 
 --------------------------------------------------------------------------------
 

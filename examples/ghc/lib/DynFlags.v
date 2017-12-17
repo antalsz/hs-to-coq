@@ -13,9 +13,7 @@ Require Coq.Program.Wf.
 (* Converted imports: *)
 
 Require GHC.Base.
-Require GHC.Prim.
 Require Module.
-Import GHC.Base.Notations.
 
 (* Converted type declarations: *)
 
@@ -436,350 +434,69 @@ Instance Unpeel_IgnorePackageFlag : Prim.Unpeel IgnorePackageFlag GHC.Base.Strin
 
 (* Converted value declarations: *)
 
-(* Translating `instance GHC.Show.Show DynFlags.SafeHaskellMode' failed: OOPS!
-   Cannot find information for class Qualified "GHC.Show" "Show" unsupported *)
-
-(* Translating `instance Outputable.Outputable DynFlags.SafeHaskellMode' failed:
-   OOPS! Cannot find information for class Qualified "Outputable" "Outputable"
-   unsupported *)
-
-(* Skipping instance HasDynFlags__WriterT *)
-
-(* Skipping instance HasDynFlags__ReaderT *)
-
-(* Skipping instance HasDynFlags__MaybeT *)
-
-(* Skipping instance HasDynFlags__ExceptT *)
-
-(* Translating `instance Outputable.Outputable DynFlags.GhcMode' failed: OOPS!
-   Cannot find information for class Qualified "Outputable" "Outputable"
-   unsupported *)
-
-Local Definition Eq___CompilerInfo_op_zeze__
-    : CompilerInfo -> CompilerInfo -> bool :=
-  fun arg_0__ arg_1__ =>
-    match arg_0__ , arg_1__ with
-      | GCC , GCC => true
-      | Clang , Clang => true
-      | AppleClang , AppleClang => true
-      | AppleClang51 , AppleClang51 => true
-      | UnknownCC , UnknownCC => true
-      | _ , _ => false
-    end.
-
-Local Definition Eq___CompilerInfo_op_zsze__
-    : CompilerInfo -> CompilerInfo -> bool :=
-  fun a b => negb (Eq___CompilerInfo_op_zeze__ a b).
-
-Program Instance Eq___CompilerInfo : GHC.Base.Eq_ CompilerInfo := fun _ k =>
-    k {|GHC.Base.op_zeze____ := Eq___CompilerInfo_op_zeze__ ;
-      GHC.Base.op_zsze____ := Eq___CompilerInfo_op_zsze__ |}.
-
-(* Skipping instance Ord__SseVersion *)
-
-Local Definition Eq___SseVersion_op_zeze__ : SseVersion -> SseVersion -> bool :=
-  fun arg_0__ arg_1__ =>
-    match arg_0__ , arg_1__ with
-      | SSE1 , SSE1 => true
-      | SSE2 , SSE2 => true
-      | SSE3 , SSE3 => true
-      | SSE4 , SSE4 => true
-      | SSE42 , SSE42 => true
-      | _ , _ => false
-    end.
-
-Local Definition Eq___SseVersion_op_zsze__ : SseVersion -> SseVersion -> bool :=
-  fun a b => negb (Eq___SseVersion_op_zeze__ a b).
-
-Program Instance Eq___SseVersion : GHC.Base.Eq_ SseVersion := fun _ k =>
-    k {|GHC.Base.op_zeze____ := Eq___SseVersion_op_zeze__ ;
-      GHC.Base.op_zsze____ := Eq___SseVersion_op_zsze__ |}.
-
-Local Definition Eq___Option_op_zeze__ : Option -> Option -> bool :=
-  fun arg_0__ arg_1__ =>
-    match arg_0__ , arg_1__ with
-      | FileOption a1 a2 , FileOption b1 b2 => (andb ((a1 GHC.Base.== b1)) ((a2
-                                                     GHC.Base.== b2)))
-      | Mk_Option a1 , Mk_Option b1 => ((a1 GHC.Base.== b1))
-      | _ , _ => false
-    end.
-
-Local Definition Eq___Option_op_zsze__ : Option -> Option -> bool :=
-  fun a b => negb (Eq___Option_op_zeze__ a b).
-
-Program Instance Eq___Option : GHC.Base.Eq_ Option := fun _ k =>
-    k {|GHC.Base.op_zeze____ := Eq___Option_op_zeze__ ;
-      GHC.Base.op_zsze____ := Eq___Option_op_zsze__ |}.
-
-Local Definition Eq___LinkerInfo_op_zeze__ : LinkerInfo -> LinkerInfo -> bool :=
-  fun arg_0__ arg_1__ =>
-    match arg_0__ , arg_1__ with
-      | GnuLD a1 , GnuLD b1 => ((a1 GHC.Base.== b1))
-      | GnuGold a1 , GnuGold b1 => ((a1 GHC.Base.== b1))
-      | DarwinLD a1 , DarwinLD b1 => ((a1 GHC.Base.== b1))
-      | SolarisLD a1 , SolarisLD b1 => ((a1 GHC.Base.== b1))
-      | AixLD a1 , AixLD b1 => ((a1 GHC.Base.== b1))
-      | UnknownLD , UnknownLD => true
-      | _ , _ => false
-    end.
-
-Local Definition Eq___LinkerInfo_op_zsze__ : LinkerInfo -> LinkerInfo -> bool :=
-  fun a b => negb (Eq___LinkerInfo_op_zeze__ a b).
-
-Program Instance Eq___LinkerInfo : GHC.Base.Eq_ LinkerInfo := fun _ k =>
-    k {|GHC.Base.op_zeze____ := Eq___LinkerInfo_op_zeze__ ;
-      GHC.Base.op_zsze____ := Eq___LinkerInfo_op_zsze__ |}.
-
-(* Translating `instance GHC.Show.Show DynFlags.Way' failed: OOPS! Cannot find
-   information for class Qualified "GHC.Show" "Show" unsupported *)
-
-(* Skipping instance Ord__Way *)
-
-Local Definition Eq___Way_op_zeze__ : Way -> Way -> bool :=
-  fun arg_0__ arg_1__ =>
-    match arg_0__ , arg_1__ with
-      | WayCustom a1 , WayCustom b1 => ((a1 GHC.Base.== b1))
-      | WayThreaded , WayThreaded => true
-      | WayDebug , WayDebug => true
-      | WayProf , WayProf => true
-      | WayEventLog , WayEventLog => true
-      | WayDyn , WayDyn => true
-      | _ , _ => false
-    end.
-
-Local Definition Eq___Way_op_zsze__ : Way -> Way -> bool :=
-  fun a b => negb (Eq___Way_op_zeze__ a b).
-
-Program Instance Eq___Way : GHC.Base.Eq_ Way := fun _ k =>
-    k {|GHC.Base.op_zeze____ := Eq___Way_op_zeze__ ;
-      GHC.Base.op_zsze____ := Eq___Way_op_zsze__ |}.
-
-(* Translating `instance GHC.Show.Show DynFlags.RtsOptsEnabled' failed: OOPS!
-   Cannot find information for class Qualified "GHC.Show" "Show" unsupported *)
-
-Local Definition Eq___DynLibLoader_op_zeze__
-    : DynLibLoader -> DynLibLoader -> bool :=
-  fun arg_0__ arg_1__ =>
-    match arg_0__ , arg_1__ with
-      | Deployable , Deployable => true
-      | SystemDependent , SystemDependent => true
-      | _ , _ => false
-    end.
-
-Local Definition Eq___DynLibLoader_op_zsze__
-    : DynLibLoader -> DynLibLoader -> bool :=
-  fun a b => negb (Eq___DynLibLoader_op_zeze__ a b).
-
-Program Instance Eq___DynLibLoader : GHC.Base.Eq_ DynLibLoader := fun _ k =>
-    k {|GHC.Base.op_zeze____ := Eq___DynLibLoader_op_zeze__ ;
-      GHC.Base.op_zsze____ := Eq___DynLibLoader_op_zsze__ |}.
-
-Local Definition Eq___TrustFlag_op_zeze__ : TrustFlag -> TrustFlag -> bool :=
-  fun arg_0__ arg_1__ =>
-    match arg_0__ , arg_1__ with
-      | TrustPackage a1 , TrustPackage b1 => ((a1 GHC.Base.== b1))
-      | DistrustPackage a1 , DistrustPackage b1 => ((a1 GHC.Base.== b1))
-      | _ , _ => false
-    end.
-
-Local Definition Eq___TrustFlag_op_zsze__ : TrustFlag -> TrustFlag -> bool :=
-  fun a b => negb (Eq___TrustFlag_op_zeze__ a b).
-
-Program Instance Eq___TrustFlag : GHC.Base.Eq_ TrustFlag := fun _ k =>
-    k {|GHC.Base.op_zeze____ := Eq___TrustFlag_op_zeze__ ;
-      GHC.Base.op_zsze____ := Eq___TrustFlag_op_zsze__ |}.
-
-Local Definition Eq___IgnorePackageFlag_op_zeze__
-    : IgnorePackageFlag -> IgnorePackageFlag -> bool :=
-  GHC.Prim.coerce _GHC.Base.==_.
-
-Local Definition Eq___IgnorePackageFlag_op_zsze__
-    : IgnorePackageFlag -> IgnorePackageFlag -> bool :=
-  GHC.Prim.coerce _GHC.Base./=_.
-
-Program Instance Eq___IgnorePackageFlag : GHC.Base.Eq_ IgnorePackageFlag :=
-  fun _ k =>
-    k {|GHC.Base.op_zeze____ := Eq___IgnorePackageFlag_op_zeze__ ;
-      GHC.Base.op_zsze____ := Eq___IgnorePackageFlag_op_zsze__ |}.
-
-Local Definition Eq___ModRenaming_op_zeze__
-    : ModRenaming -> ModRenaming -> bool :=
-  fun arg_0__ arg_1__ =>
-    match arg_0__ , arg_1__ with
-      | Mk_ModRenaming a1 a2 , Mk_ModRenaming b1 b2 => (andb ((a1 GHC.Base.== b1))
-                                                             ((a2 GHC.Base.== b2)))
-    end.
-
-Local Definition Eq___ModRenaming_op_zsze__
-    : ModRenaming -> ModRenaming -> bool :=
-  fun a b => negb (Eq___ModRenaming_op_zeze__ a b).
-
-(* Translating `instance GHC.Show.Show DynFlags.PackageArg' failed: OOPS! Cannot
-   find information for class Qualified "GHC.Show" "Show" unsupported *)
-
-Local Definition Eq___PackageArg_op_zeze__ : PackageArg -> PackageArg -> bool :=
-  fun arg_0__ arg_1__ =>
-    match arg_0__ , arg_1__ with
-      | Mk_PackageArg a1 , Mk_PackageArg b1 => ((a1 GHC.Base.== b1))
-      | UnitIdArg a1 , UnitIdArg b1 => ((a1 GHC.Base.== b1))
-      | _ , _ => false
-    end.
-
-Local Definition Eq___PackageArg_op_zsze__ : PackageArg -> PackageArg -> bool :=
-  fun a b => negb (Eq___PackageArg_op_zeze__ a b).
-
-Program Instance Eq___PackageArg : GHC.Base.Eq_ PackageArg := fun _ k =>
-    k {|GHC.Base.op_zeze____ := Eq___PackageArg_op_zeze__ ;
-      GHC.Base.op_zsze____ := Eq___PackageArg_op_zsze__ |}.
-
-Program Instance Eq___ModRenaming : GHC.Base.Eq_ ModRenaming := fun _ k =>
-    k {|GHC.Base.op_zeze____ := Eq___ModRenaming_op_zeze__ ;
-      GHC.Base.op_zsze____ := Eq___ModRenaming_op_zsze__ |}.
-
-Local Definition Eq___PackageFlag_op_zeze__
-    : PackageFlag -> PackageFlag -> bool :=
-  fun arg_0__ arg_1__ =>
-    match arg_0__ , arg_1__ with
-      | ExposePackage a1 a2 a3 , ExposePackage b1 b2 b3 => (andb (andb ((a1
-                                                                       GHC.Base.== b1)) ((a2 GHC.Base.== b2))) ((a3
-                                                                 GHC.Base.== b3)))
-      | HidePackage a1 , HidePackage b1 => ((a1 GHC.Base.== b1))
-      | _ , _ => false
-    end.
-
-Local Definition Eq___PackageFlag_op_zsze__
-    : PackageFlag -> PackageFlag -> bool :=
-  fun a b => negb (Eq___PackageFlag_op_zeze__ a b).
-
-Program Instance Eq___PackageFlag : GHC.Base.Eq_ PackageFlag := fun _ k =>
-    k {|GHC.Base.op_zeze____ := Eq___PackageFlag_op_zeze__ ;
-      GHC.Base.op_zsze____ := Eq___PackageFlag_op_zsze__ |}.
-
-(* Translating `instance GHC.Show.Show DynFlags.GhcLink' failed: OOPS! Cannot
-   find information for class Qualified "GHC.Show" "Show" unsupported *)
-
-Local Definition Eq___GhcLink_op_zeze__ : GhcLink -> GhcLink -> bool :=
-  fun arg_0__ arg_1__ =>
-    match arg_0__ , arg_1__ with
-      | NoLink , NoLink => true
-      | LinkBinary , LinkBinary => true
-      | LinkInMemory , LinkInMemory => true
-      | LinkDynLib , LinkDynLib => true
-      | LinkStaticLib , LinkStaticLib => true
-      | _ , _ => false
-    end.
-
-Local Definition Eq___GhcLink_op_zsze__ : GhcLink -> GhcLink -> bool :=
-  fun a b => negb (Eq___GhcLink_op_zeze__ a b).
-
-Program Instance Eq___GhcLink : GHC.Base.Eq_ GhcLink := fun _ k =>
-    k {|GHC.Base.op_zeze____ := Eq___GhcLink_op_zeze__ ;
-      GHC.Base.op_zsze____ := Eq___GhcLink_op_zsze__ |}.
-
-Local Definition Eq___GhcMode_op_zeze__ : GhcMode -> GhcMode -> bool :=
-  fun arg_0__ arg_1__ =>
-    match arg_0__ , arg_1__ with
-      | CompManager , CompManager => true
-      | OneShot , OneShot => true
-      | MkDepend , MkDepend => true
-      | _ , _ => false
-    end.
-
-Local Definition Eq___GhcMode_op_zsze__ : GhcMode -> GhcMode -> bool :=
-  fun a b => negb (Eq___GhcMode_op_zeze__ a b).
-
-Program Instance Eq___GhcMode : GHC.Base.Eq_ GhcMode := fun _ k =>
-    k {|GHC.Base.op_zeze____ := Eq___GhcMode_op_zeze__ ;
-      GHC.Base.op_zsze____ := Eq___GhcMode_op_zsze__ |}.
-
-(* Translating `instance GHC.Show.Show DynFlags.HscTarget' failed: OOPS! Cannot
-   find information for class Qualified "GHC.Show" "Show" unsupported *)
-
-Local Definition Eq___HscTarget_op_zeze__ : HscTarget -> HscTarget -> bool :=
-  fun arg_0__ arg_1__ =>
-    match arg_0__ , arg_1__ with
-      | HscC , HscC => true
-      | HscAsm , HscAsm => true
-      | HscLlvm , HscLlvm => true
-      | HscInterpreted , HscInterpreted => true
-      | HscNothing , HscNothing => true
-      | _ , _ => false
-    end.
-
-Local Definition Eq___HscTarget_op_zsze__ : HscTarget -> HscTarget -> bool :=
-  fun a b => negb (Eq___HscTarget_op_zeze__ a b).
-
-Program Instance Eq___HscTarget : GHC.Base.Eq_ HscTarget := fun _ k =>
-    k {|GHC.Base.op_zeze____ := Eq___HscTarget_op_zeze__ ;
-      GHC.Base.op_zsze____ := Eq___HscTarget_op_zsze__ |}.
-
-(* Translating `instance GHC.Enum.Enum DynFlags.ProfAuto' failed: negative
-   `Integer' literals unsupported *)
-
-Local Definition Eq___ProfAuto_op_zeze__ : ProfAuto -> ProfAuto -> bool :=
-  fun arg_0__ arg_1__ =>
-    match arg_0__ , arg_1__ with
-      | NoProfAuto , NoProfAuto => true
-      | ProfAutoAll , ProfAutoAll => true
-      | ProfAutoTop , ProfAutoTop => true
-      | ProfAutoExports , ProfAutoExports => true
-      | ProfAutoCalls , ProfAutoCalls => true
-      | _ , _ => false
-    end.
-
-Local Definition Eq___ProfAuto_op_zsze__ : ProfAuto -> ProfAuto -> bool :=
-  fun a b => negb (Eq___ProfAuto_op_zeze__ a b).
-
-Program Instance Eq___ProfAuto : GHC.Base.Eq_ ProfAuto := fun _ k =>
-    k {|GHC.Base.op_zeze____ := Eq___ProfAuto_op_zeze__ ;
-      GHC.Base.op_zsze____ := Eq___ProfAuto_op_zsze__ |}.
-
-Local Definition Eq___SafeHaskellMode_op_zeze__
-    : SafeHaskellMode -> SafeHaskellMode -> bool :=
-  fun arg_0__ arg_1__ =>
-    match arg_0__ , arg_1__ with
-      | Sf_None , Sf_None => true
-      | Sf_Unsafe , Sf_Unsafe => true
-      | Sf_Trustworthy , Sf_Trustworthy => true
-      | Sf_Safe , Sf_Safe => true
-      | _ , _ => false
-    end.
-
-Local Definition Eq___SafeHaskellMode_op_zsze__
-    : SafeHaskellMode -> SafeHaskellMode -> bool :=
-  fun a b => negb (Eq___SafeHaskellMode_op_zeze__ a b).
-
-Program Instance Eq___SafeHaskellMode : GHC.Base.Eq_ SafeHaskellMode := fun _
-                                                                            k =>
-    k {|GHC.Base.op_zeze____ := Eq___SafeHaskellMode_op_zeze__ ;
-      GHC.Base.op_zsze____ := Eq___SafeHaskellMode_op_zsze__ |}.
-
-(* Translating `instance GHC.Enum.Enum DynFlags.Language' failed: negative
-   `Integer' literals unsupported *)
-
-(* Translating `instance GHC.Enum.Enum DynFlags.WarningFlag' failed: negative
-   `Integer' literals unsupported *)
-
-(* Translating `instance GHC.Show.Show DynFlags.WarningFlag' failed: OOPS!
-   Cannot find information for class Qualified "GHC.Show" "Show" unsupported *)
-
-(* Skipping instance Eq___WarningFlag *)
-
-(* Translating `instance GHC.Enum.Enum DynFlags.GeneralFlag' failed: negative
-   `Integer' literals unsupported *)
-
-(* Translating `instance GHC.Show.Show DynFlags.GeneralFlag' failed: OOPS!
-   Cannot find information for class Qualified "GHC.Show" "Show" unsupported *)
-
-(* Skipping instance Eq___GeneralFlag *)
-
-(* Translating `instance GHC.Enum.Enum DynFlags.DumpFlag' failed: negative
-   `Integer' literals unsupported *)
-
-(* Translating `instance GHC.Show.Show DynFlags.DumpFlag' failed: OOPS! Cannot
-   find information for class Qualified "GHC.Show" "Show" unsupported *)
-
-(* Skipping instance Eq___DumpFlag *)
+Instance Eq___CompilerInfo : GHC.Base.Eq_ CompilerInfo := {}.
+Proof.
+Admitted.
+
+Instance Eq___LinkerInfo : GHC.Base.Eq_ LinkerInfo := {}.
+Proof.
+Admitted.
+
+Instance Eq___SseVersion : GHC.Base.Eq_ SseVersion := {}.
+Proof.
+Admitted.
+
+Instance Eq___Option : GHC.Base.Eq_ Option := {}.
+Proof.
+Admitted.
+
+Instance Eq___Way : GHC.Base.Eq_ Way := {}.
+Proof.
+Admitted.
+
+Instance Eq___DynLibLoader : GHC.Base.Eq_ DynLibLoader := {}.
+Proof.
+Admitted.
+
+Instance Eq___PackageFlag : GHC.Base.Eq_ PackageFlag := {}.
+Proof.
+Admitted.
+
+Instance Eq___TrustFlag : GHC.Base.Eq_ TrustFlag := {}.
+Proof.
+Admitted.
+
+Instance Eq___IgnorePackageFlag : GHC.Base.Eq_ IgnorePackageFlag := {}.
+Proof.
+Admitted.
+
+Instance Eq___PackageArg : GHC.Base.Eq_ PackageArg := {}.
+Proof.
+Admitted.
+
+Instance Eq___ModRenaming : GHC.Base.Eq_ ModRenaming := {}.
+Proof.
+Admitted.
+
+Instance Eq___GhcLink : GHC.Base.Eq_ GhcLink := {}.
+Proof.
+Admitted.
+
+Instance Eq___GhcMode : GHC.Base.Eq_ GhcMode := {}.
+Proof.
+Admitted.
+
+Instance Eq___HscTarget : GHC.Base.Eq_ HscTarget := {}.
+Proof.
+Admitted.
+
+Instance Eq___ProfAuto : GHC.Base.Eq_ ProfAuto := {}.
+Proof.
+Admitted.
+
+Instance Eq___SafeHaskellMode : GHC.Base.Eq_ SafeHaskellMode := {}.
+Proof.
+Admitted.
 
 Axiom getSigOf : forall {A : Type}, A.
 
@@ -1654,7 +1371,6 @@ Axiom isAvx512pfEnabled : forall {A : Type}, A.
 Axiom decodeSize : forall {A : Type}, A.
 
 (* Unbound variables:
-     Type andb bool false list negb op_zt__ true GHC.Base.Eq_ GHC.Base.String
-     GHC.Base.op_zeze__ GHC.Base.op_zsze__ GHC.Prim.coerce Module.Module
+     Type bool list op_zt__ GHC.Base.Eq_ GHC.Base.String Module.Module
      Module.ModuleName Module.ModuleNameEnv
 *)

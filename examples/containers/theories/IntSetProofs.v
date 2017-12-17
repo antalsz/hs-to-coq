@@ -178,8 +178,20 @@ Module Foo: WSfun(Z_as_OT).
 
   (* exists for Z, but not for N? *)
   Lemma N_pow_pos_nonneg: forall a b : N, (0 < a -> 0 < a ^ b)%N.
-  Admitted.
-
+  Proof.
+    intros.
+    SearchAbout N "ind".
+    apply N.peano_ind with (n := b); intros.
+    * simpl. reflexivity.
+    * rewrite N.pow_succ_r; [|apply N.le_0_l].
+      SearchAbout N.lt "trans".
+      eapply N.lt_le_trans. apply H0.
+      replace (a ^ n)%N  with (1 * a^n)%N at 1 by (apply N.mul_1_l).
+      apply N.mul_le_mono_pos_r; auto.
+      rewrite <- N.le_succ_l in H.
+      apply H.
+  Qed.
+  
   Lemma isBitMask_suffixOf: forall e, isBitMask (bitmapOf e).
     intros.
     unfold isBitMask, bitmapOf, suffixOf, suffixBitMask, bitmapOfSuffix, shiftLL.

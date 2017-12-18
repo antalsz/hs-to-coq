@@ -225,10 +225,10 @@ Module Foo: WSfun(Z_as_OT).
       Desc s2 p2 b2 f2 ->
       b1 = b2 -> 
       p1 = 2* p ->
-      p2 = Z.succ (2*p) ->
+      p2 = Z.lor (2*p) 1 ->
       b = N.succ b1 ->
       p' = Z.shiftl p (Z.of_N b) ->
-      msk = (2^Z.of_N b) -> 
+      msk = (2^Z.of_N b1) -> 
       (forall i, f i = f1 i || f2 i) ->
       Desc (Bin p' msk s1 s2) p b f.
   
@@ -291,8 +291,11 @@ Module Foo: WSfun(Z_as_OT).
   Qed.
   
   Lemma N_land_pow2_testbit:
-    forall n i,
-    negb (N.land (2 ^ i) n =? 0)%N = N.testbit n i.
+    forall n i, negb (N.land (2 ^ i) n =? 0)%N = N.testbit n i.
+  Admitted.
+  
+  Lemma land_pow2_eq:
+    forall i b, (Z.land i (2 ^ b) =? 0) = (negb (testBit i b)).
   Admitted.
   
   Lemma prefixOf_le : forall i,  prefixOf i <= i.
@@ -305,6 +308,10 @@ Module Foo: WSfun(Z_as_OT).
     forall x y n,
       Z.shiftl x n = Z.shiftl y n -> x = y.
   Admitted.
+  
+   Lemma land_shiftl_ones:
+     forall i n,  Z.land (Z.shiftl i n) (Z.ones n) = 0.
+   Admitted.
   
   Lemma Z_shiftl_injb:
     forall x y n, (Z.shiftl x n =? Z.shiftl y n) = (x =? y).
@@ -334,10 +341,52 @@ Module Foo: WSfun(Z_as_OT).
      compute; congruence.
    Qed.
    
-   Lemma land_pow2_eq:
-    forall i b,
-      (Z.land i (2 ^ b) =? 0) = (negb (testBit i b)).
-   Admitted.
+
+   Lemma Desc_outside:
+     forall {s p b f i}, Desc s p b f -> Z.shiftr i (Z.of_N b) =? p = false -> f i = false.
+   Proof.
+     intros ????? HD Houtside.
+     induction HD;subst.
+     * rewrite H1.
+       rewrite Houtside.
+       reflexivity.
+     * rewrite H5.
+       rewrite orb_false_iff. split.
+       + apply IHHD1. clear IHHD1 IHHD2.
+         apply Z.eqb_neq in Houtside.
+         apply Z.eqb_neq.
+         contradict Houtside.
+         rewrite N2Z.inj_succ.
+         rewrite <- Z.add_1_r.
+         rewrite <- Z.shiftr_shiftr.
+         rewrite Houtside.
+         replace (2 * p) with (Z.shiftl p 1).
+         rewrite Z.shiftr_shiftl_l.
+         reflexivity.
+         compute; congruence.
+         rewrite Z.shiftl_mul_pow2.
+         rewrite Z.pow_1_r.
+         omega. omega. omega.
+       + apply IHHD2. clear IHHD1 IHHD2.
+         apply Z.eqb_neq in Houtside.
+         apply Z.eqb_neq.
+         contradict Houtside.
+         rewrite N2Z.inj_succ.
+         rewrite <- Z.add_1_r.
+         rewrite <- Z.shiftr_shiftr.
+         rewrite Houtside.
+         rewrite Z.shiftr_lor.
+         replace (Z.shiftr 1 1) with 0 by reflexivity.
+         rewrite Z.lor_0_r.
+         replace (2 * p) with (Z.shiftl p 1).
+         rewrite Z.shiftr_shiftl_l.
+         reflexivity.
+         compute; congruence.
+         rewrite Z.shiftl_mul_pow2.
+         rewrite Z.pow_1_r.
+         omega. omega. omega.
+   Qed.
+
 
    Lemma member_spec:
      forall {s p b f i}, Desc s p b f -> member i s = f i.
@@ -369,31 +418,74 @@ Module Foo: WSfun(Z_as_OT).
        rewrite Z.log2_pow2.
        rewrite Z.ldiff_ones_r.
        rewrite N2Z.inj_succ.
-       rewrite <- Z.add_1_l.
-       rewrite <- Z.shiftl_shiftl.
-       rewrite -> Z.add_1_l.
        rewrite Z_shiftl_injb.
-       rewrite Z.shiftl_mul_pow2.
        replace (2^1) with 2 by reflexivity.
        rewrite land_pow2_eq.
        match goal with [ |- context [?x =? ?y]] => destruct (Z.eqb_spec x y) end; simpl.
-       destruct (Z.testbit i (Z.succ (Z.of_N b2))) eqn:Htestbit; simpl.
-       * enough (f1 i = false) as Hf1 by (rewrite Hf1 IHHD2; reflexivity).
-         admit.
-       * enough (f2 i = false) as Hf2 by (rewrite Hf2 IHHD1 orb_false_r; reflexivity).
-         admit.
-       * enough (f1 i = false). enough (f2 i = false).
-         rewrite H H0; reflexivity.
-         + admit.
-         + admit.
-       all: try (compute; congruence).
+       * destruct (Z.testbit i (Z.of_N b2)) eqn:Htestbit; simpl.
+         * enough (f1 i = false) as Hf1 by (rewrite Hf1 IHHD2; reflexivity).
+           apply (Desc_outside HD1).
+           rewrite Z.eqb_neq.
+           rewrite <- Z.bits_inj_iff.
+           intro Htb; specialize (Htb 0).
+           rewrite Z.shiftr_spec in Htb.
+           rewrite Z.add_0_l  in Htb.
+           rewrite Htestbit in Htb.
+           rewrite  Z.testbit_even_0 in Htb.
+           congruence.
+           compute; congruence.
+         * enough (f2 i = false) as Hf2 by (rewrite Hf2 IHHD1 orb_false_r; reflexivity).
+           apply (Desc_outside HD2).
+           rewrite Z.eqb_neq.
+           rewrite <- Z.bits_inj_iff.
+           intro Htb; specialize (Htb 0).
+           rewrite Z.shiftr_spec in Htb.
+           rewrite Z.add_0_l  in Htb.
+           rewrite Htestbit in Htb.
+           rewrite Z.lor_spec in Htb.
+           rewrite Z.testbit_even_0 in Htb.
+           simpl in Htb.
+           congruence.
+           compute; congruence.
+       * enough (f1 i = false /\ f2 i = false); try split.
+         destruct H; rewrite H H0; reflexivity.
+         + apply (Desc_outside HD1).
+           rewrite Z.eqb_neq.
+           contradict n.
+           rewrite <- Z.add_1_r.
+           rewrite <- Z.shiftr_shiftr.
+           rewrite n.
+           replace (2 * p) with (Z.shiftl p 1).
+           rewrite Z.shiftr_shiftl_l.
+           reflexivity.
+           compute; congruence.
+           rewrite Z.shiftl_mul_pow2.
+           rewrite Z.pow_1_r.
+           omega.
+           omega.
+           omega.
+         + apply (Desc_outside HD2).
+           rewrite Z.eqb_neq.
+           contradict n.
+           rewrite <- Z.add_1_r.
+           rewrite <- Z.shiftr_shiftr.
+           rewrite n.
+           rewrite Z.shiftr_lor.
+           replace (Z.shiftr 1 1) with 0 by reflexivity.
+           rewrite Z.lor_0_r.
+           replace (2 * p) with (Z.shiftl p 1).
+           rewrite Z.shiftr_shiftl_l.
+           reflexivity.
+           compute; congruence.
+           rewrite Z.shiftl_mul_pow2.
+           rewrite Z.pow_1_r.
+           omega.
+       all: try omega.
        rewrite <- N2Z.inj_succ.
        all: apply N2Z.is_nonneg.
-    Admitted.
+   Qed.
     
-   Lemma land_shiftl_ones:
-     forall i n,  Z.land (Z.shiftl i n) (Z.ones n) = 0.
-   Admitted.
+
 
    Lemma Desc_some_f:
      forall {s p b f}, Desc s p b f -> exists i, f i = true.
@@ -517,13 +609,16 @@ Module Foo: WSfun(Z_as_OT).
     destruct HWF.
     * simpl. unfold Prim.seq.
       apply Tip_WF; auto.
-    * induction HD.
-      + simpl; unfold Prim.seq.
+    * induction HD; subst.
+      + unfold insertBM, Prim.seq.
         unfold GHC.Base.op_zeze__, Eq_Integer___, op_zeze____.
-        destruct (Z.eqb_spec p' p); subst.
+        destruct (Z.eqb_spec (Z.shiftl p0 (Z.of_N (N.log2 WIDTH))) p); subst.
         * apply Tip_WF; auto.
           apply isBitMask_lor; auto.
-        * (* calling link now *)          
+        * (* calling link now *)
+          admit.
+      + simpl. unfold Prim.seq.
+        admit.
   Admitted.
   
   Definition add (e: elt) (s': t) : t.

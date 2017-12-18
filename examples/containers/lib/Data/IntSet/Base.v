@@ -161,6 +161,11 @@ Definition size : IntSet -> GHC.Num.Int :=
 Definition bitmapOfSuffix : GHC.Num.Int -> BitMap :=
   fun s => shiftLL (GHC.Num.fromInteger 1) s.
 
+Definition branchMask : Prefix -> Prefix -> Mask :=
+  fun p1 p2 =>
+    Coq.ZArith.BinInt.Z.pow 2 (Coq.ZArith.BinInt.Z.log2 (Coq.ZArith.BinInt.Z.lxor p1
+                                                                                  p2)).
+
 Definition empty : IntSet :=
   Nil.
 
@@ -320,11 +325,6 @@ Definition natFromInt : GHC.Num.Int -> Nat :=
 
 Definition shorter : Mask -> Mask -> bool :=
   fun m1 m2 => (natFromInt m1) GHC.Base.> (natFromInt m2).
-
-Definition branchMask : Prefix -> Prefix -> Mask :=
-  fun p1 p2 =>
-    Coq.ZArith.BinInt.Z.of_N (highestBitMask (Data.Bits.xor (natFromInt p1)
-                                                            (natFromInt p2))).
 
 Definition nequal : IntSet -> IntSet -> bool :=
   fix nequal arg_0__ arg_1__
@@ -1232,12 +1232,13 @@ End Notations.
      Eq Gt Lt None Some andb bool comparison cons false highestBitMask id list negb
      nil op_zp__ op_zt__ option orb pair shiftLL shiftRL size_nat suffixBitMask true
      Coq.ZArith.BinInt.Z.eqb Coq.ZArith.BinInt.Z.land Coq.ZArith.BinInt.Z.ldiff
-     Coq.ZArith.BinInt.Z.log2 Coq.ZArith.BinInt.Z.of_N Coq.ZArith.BinInt.Z.ones
-     Coq.ZArith.BinInt.Z.succ Data.Bits.complement Data.Bits.op_zizazi__
-     Data.Bits.op_zizbzi__ Data.Bits.popCount Data.Bits.xor Data.Foldable.foldl
-     GHC.Base.Eq_ GHC.Base.Ord GHC.Base.String GHC.Base.compare GHC.Base.flip
-     GHC.Base.map GHC.Base.op_z2218U__ GHC.Base.op_zd__ GHC.Base.op_zdzn__
-     GHC.Base.op_zeze__ GHC.Base.op_zg__ GHC.Base.op_zgze__ GHC.Base.op_zl__
-     GHC.Base.op_zsze__ GHC.Num.Int GHC.Num.Word GHC.Num.negate GHC.Num.op_zm__
-     GHC.Num.op_zp__ GHC.Prim.seq GHC.Real.fromIntegral
+     Coq.ZArith.BinInt.Z.log2 Coq.ZArith.BinInt.Z.lxor Coq.ZArith.BinInt.Z.of_N
+     Coq.ZArith.BinInt.Z.ones Coq.ZArith.BinInt.Z.pow Coq.ZArith.BinInt.Z.succ
+     Data.Bits.complement Data.Bits.op_zizazi__ Data.Bits.op_zizbzi__
+     Data.Bits.popCount Data.Bits.xor Data.Foldable.foldl GHC.Base.Eq_ GHC.Base.Ord
+     GHC.Base.String GHC.Base.compare GHC.Base.flip GHC.Base.map GHC.Base.op_z2218U__
+     GHC.Base.op_zd__ GHC.Base.op_zdzn__ GHC.Base.op_zeze__ GHC.Base.op_zg__
+     GHC.Base.op_zgze__ GHC.Base.op_zl__ GHC.Base.op_zsze__ GHC.Num.Int GHC.Num.Word
+     GHC.Num.negate GHC.Num.op_zm__ GHC.Num.op_zp__ GHC.Prim.seq
+     GHC.Real.fromIntegral
 *)

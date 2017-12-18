@@ -160,6 +160,9 @@ Module Foo: WSfun(N_as_OT).
   Qed.
 
   (* We very often have to resolve non-negativity constraints *)
+  
+  Lemma succ_nonneg: forall n, 0 <= n -> 0 <= Z.succ n.
+  Proof. intros. omega. Qed.
 
   Create HintDb nonneg.
   Hint Immediate N2Z.is_nonneg : nonneg.
@@ -167,6 +170,7 @@ Module Foo: WSfun(N_as_OT).
   Hint Resolve N.le_0_l : nonneg.
   Hint Resolve prefixOf_nonneg : nonneg.
   Hint Resolve Z.log2_nonneg : nonneg.
+  Hint Resolve succ_nonneg : nonneg.
   Hint Resolve <- Z.shiftr_nonneg : nonneg.
   Hint Extern 1 (0 <= Z.succ (Z.pred (Z.of_N _))) => rewrite Z.succ_pred : nonneg.
 
@@ -777,6 +781,9 @@ Module Foo: WSfun(N_as_OT).
     omega.
   Qed.
 
+  Lemma lxor_pos:
+    forall a b, 0 <= a -> 0 <= b -> a <> b -> 0 < Z.lxor a b.
+   Admitted.
 
   Hint Resolve OMEGA2 : nonneg.
   Hint Resolve Z.log2_nonneg : nonneg.
@@ -796,34 +803,48 @@ Module Foo: WSfun(N_as_OT).
         destruct (Z.eqb_spec (Z.shiftl p0 (Z.of_N (N.log2 WIDTH))) p); subst.
         * apply Tip_WF; auto.
           apply isBitMask_lor; auto.
-        * (* calling link now *)
+        * assert (Hxor_pos : 0 < Z.lxor (Z.shiftr p 6) p0).
+            apply lxor_pos; try nonneg.
+            rewrite (isPrefix_shiftl_shiftr _ Hp) in n.
+            rewrite -> Z_shiftl_inj in n by nonneg.
+            congruence.
+
+          (* calling link now *)
           eapply WFNonEmpty.
           eapply link_Desc. 7:reflexivity.
           - apply Tip_Desc with (p := Z.shiftr p 6); auto.
             nonneg.
             apply isPrefix_shiftl_shiftr; assumption.
           - apply Tip_Desc with (p := p0); auto.
-            rewrite <- Z.shiftl_lxor.
-            rewrite Z.log2_shiftl.
-            replace (N.log2 WIDTH) with (Z.to_N (Z.of_N (N.log2 WIDTH))) at 1 by reflexivity.
-            apply Z2N.inj_lt.
-            -- nonneg.
-            -- transitivity (Z.log2 (Z.lxor (Z.shiftr p 6) p0) + Z.of_N (N.log2 WIDTH)).
-               nonneg.
-               omega.
+          all: replace (Z.of_N (N.log2 WIDTH)) with 6 in * by reflexivity.
+          all: replace (N.log2 WIDTH) with (Z.to_N 6) in * by reflexivity.
+          - rewrite <- Z.shiftl_lxor.
+            rewrite -> Z.log2_shiftl; try assumption.
+            apply Z2N.inj_lt; [nonneg|nonneg|].
             rewrite (isPrefix_shiftl_shiftr _ Hp) in n.
-            replace (Z.of_N (N.log2 WIDTH)) with 6 in * by reflexivity.
             rewrite -> Z_shiftl_inj in n by nonneg.
             enough (0 <= Z.log2 (Z.lxor (Z.shiftr p 6) p0)) by omega; nonneg.
-            replace (Z.of_N (N.log2 WIDTH)) with 6 in * by reflexivity.
-            admit. (* This can now be shown, I hope *)
-            admit.
-            admit.
-            apply isPrefix_shiftl_shiftr; assumption.
-            reflexivity.
-            admit.
-            admit.
-            intro i. reflexivity.
+            nonneg.
+          - apply Z2N.inj_lt; try nonneg.
+              rewrite <- Z.shiftl_lxor.
+              rewrite Z.log2_shiftl; try nonneg.
+              enough (0 <= Z.log2 (Z.lxor (Z.shiftr p 6) p0)) by omega; nonneg.
+           - apply isPrefix_shiftl_shiftr; assumption.
+           - reflexivity.
+           - rewrite -> Z2N.id by nonneg.
+             rewrite Z.pred_succ.
+             rewrite <- Z.shiftl_lxor.
+             rewrite  Z.log2_shiftl; try nonneg.
+             replace (Z.log2 (Z.lxor (Z.shiftr p 6) p0) + 6 - 6) with (Z.log2 (Z.lxor (Z.shiftr p 6) p0)) by omega.
+             (* log2 finds the difference *)
+             admit.
+           - rewrite -> Z2N.id by nonneg.
+             rewrite <- Z.shiftl_lxor.
+             rewrite  Z.log2_shiftl; try nonneg.
+             replace (Z.succ (Z.log2 (Z.lxor (Z.shiftr p 6) p0) + 6) - 6) with (Z.succ (Z.log2 (Z.lxor (Z.shiftr p 6) p0))) by omega.
+             (* log2 finds the largest difference *)
+             admit.
+           - intro i. reflexivity.
       + simpl. unfold Prim.seq.
         admit.
   Admitted.

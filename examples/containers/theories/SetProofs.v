@@ -33,7 +33,7 @@ Section Int_And_Z.
     a GHC.Base.< b = (a <? b).
   Proof. rewrite /_GHC.Base.<_. reflexivity. Qed.
 
-  Lemma Int_le_is_Z_le : 
+  Lemma Int_le_is_Z_le :
     a GHC.Base.<= b = (a <=? b).
   Proof. rewrite /_GHC.Base.<=_. reflexivity. Qed.
 
@@ -41,18 +41,18 @@ Section Int_And_Z.
     a GHC.Base.> b = (b <? a).
   Proof. rewrite /_GHC.Base.>_. reflexivity. Qed.
 
-  Lemma Int_ge_is_Z_ge : 
+  Lemma Int_ge_is_Z_ge :
     a GHC.Base.>= b = (b <=? a).
   Proof. rewrite /_GHC.Base.>=_. reflexivity. Qed.
 
-  Lemma Int_eq_is_Z_eq : 
+  Lemma Int_eq_is_Z_eq :
     a GHC.Base.== b = (Z.eqb a b).
   Proof. rewrite /_GHC.Base.==_. reflexivity. Qed.
 
   Lemma Int_is_Z : forall a : Z,
       # a = a.
   Proof. reflexivity. Qed.
-  
+
 End Int_And_Z.
 
 Ltac rewrite_Int :=
@@ -61,6 +61,25 @@ Ltac rewrite_Int :=
                   ?Int_lt_is_Z_lt ?Int_le_is_Z_le
                   ?Int_ge_is_Z_ge ?Int_gt_is_Z_gt
                   ?Int_eq_is_Z_eq ?Int_is_Z).
+
+Section Option_Int.
+  Variables a b : option Int.
+  
+  Ltac rewrite_option_eq :=
+    rewrite /op_zeze__ /Eq___option //= /op_zeze__ /Eq_Integer___ //=.
+
+  Lemma Maybe_eq_is_Option_eq :
+    a GHC.Base.== b <-> a = b.
+  Proof.
+    rewrite /_GHC.Base.==_ /Eq___option /= /Base.Eq___option_op_zeze__.
+    destruct a; destruct b.
+    - rewrite_Int. rewrite /is_true Z.eqb_eq.
+      split; (elim + case); done.
+    - split; discriminate.
+    - split; discriminate.
+    - split; auto.
+  Qed.
+End Option_Int.
 
 Module Foo (E : OrderedType) : WSfun(E).
   Local Instance Eq_t : GHC.Base.Eq_ E.t :=
@@ -75,14 +94,11 @@ Module Foo (E : OrderedType) : WSfun(E).
     | LT _ => Lt
     | GT _ => Gt
     end.
-  
+
   Local Instance Ord_t : GHC.Base.Ord E.t := GHC.Base.ord_default compare.
-  
+
   Module OrdFacts := OrderedTypeFacts(E).
 
-  Ltac rewrite_option_eq :=
-    rewrite /op_zeze__ /Eq___option //= /op_zeze__ /Eq_Integer___ //=.
-  
   Ltac rewrite_compare_e :=
     rewrite /Base.compare /Ord_t /ord_default /= /compare.
 
@@ -97,7 +113,7 @@ Module Foo (E : OrderedType) : WSfun(E).
     end.
 
   Definition elt := E.t.
-  
+
   (* Well-formedness *)
   Definition WF (s : Set_ elt) := valid s.
   (* Will it be easier for proof if [WF] is an inductive definition? *)
@@ -158,6 +174,16 @@ Module Foo (E : OrderedType) : WSfun(E).
   Hint Rewrite -> elt_compare_gt : elt_compare.
   Hint Rewrite -> elt_compare_eq : elt_compare.
 
+  Ltac rewrite_size :=
+    repeat match goal with
+           | [ |- _ ] => rewrite ![size (Bin _ _ _ _)]/size
+           | [ |- _ ] => rewrite ![size Tip]/size
+           | [H: context[size (Bin _ _ _ _)] |- _ ] =>
+             rewrite ![size (Bin _ _ _ _)]/size in H
+           | [H: context[size Tip] |- _ ] =>
+             rewrite ![size Tip]/size in H
+           end.
+
   Notation "x <-- f ;; P" :=
     (match f with
      | exist x _ => P
@@ -165,7 +191,7 @@ Module Foo (E : OrderedType) : WSfun(E).
 
   Definition In_set x (s : Set_ elt) :=
     member x s = true.
-  
+
   Definition In x (s' : t) :=
     s <-- s' ;;
     In_set x s.
@@ -178,12 +204,12 @@ Module Foo (E : OrderedType) : WSfun(E).
   Definition Exists (P : elt -> Prop) s := exists x, In x s /\ P x.
 
   Definition empty : t := pack empty Logic.eq_refl.
-  Definition is_empty : t -> bool := fun s' => 
+  Definition is_empty : t -> bool := fun s' =>
     s <-- s' ;; null s.
-  
+
   Lemma empty_1 : Empty empty.
   Proof. unfold Empty; intros a H. inversion H. Qed.
-  
+
   Lemma is_empty_1 : forall s : t, Empty s -> is_empty s = true.
   Proof.
     move=>s. rewrite /Empty /In. case s=>[s'].
@@ -194,7 +220,7 @@ Module Foo (E : OrderedType) : WSfun(E).
     apply OrdFacts.elim_compare_eq in Heq; destruct Heq.
     rewrite H=>//.
   Qed.
-      
+
   Lemma is_empty_2 : forall s : t, is_empty s = true -> Empty s.
   Proof. move=>s. rewrite /Empty /In. elim s=>[s']. elim s'=>//. Qed.
 
@@ -219,7 +245,7 @@ Module Foo (E : OrderedType) : WSfun(E).
     apply elt_compare_eq in Heq. rewrite Heq=>Hcontra.
     specialize (Hcontra Logic.eq_refl). inversion Hcontra.
   Qed.
-  
+
   Definition eq_set : Set_ elt -> Set_ elt -> Prop := Equal_set.
   Definition eq : t -> t -> Prop := Equal.
   Definition eq_dec : forall s s' : t, {eq s s'} + {~ eq s s'}.
@@ -236,7 +262,7 @@ Module Foo (E : OrderedType) : WSfun(E).
 
   Lemma eq_set_refl : forall s, eq_set s s.
   Proof. intros; constructor; auto. Qed.
-    
+
   Lemma eq_refl : forall s : t, eq s s.
   Proof. destruct s. simpl. apply eq_set_refl. Qed.
 
@@ -245,14 +271,14 @@ Module Foo (E : OrderedType) : WSfun(E).
 
   Lemma eq_sym : forall s s' : t, eq s s' -> eq s' s.
   Proof. destruct s; destruct s'; simpl. apply eq_set_sym. Qed.
-    
+
   Lemma eq_set_trans :
     forall s s' s'', eq_set s s' -> eq_set s' s'' -> eq_set s s''.
   Proof.
     rewrite /eq_set /Equal_set; intros s s' s'' H1 H2 a.
     apply (iff_trans (H1 a) (H2 a)).
   Qed.
-  
+
   Lemma eq_trans :
     forall s s' s'' : t, eq s s' -> eq s' s'' -> eq s s''.
   Proof.
@@ -261,8 +287,8 @@ Module Foo (E : OrderedType) : WSfun(E).
 
   Lemma bin_compat : forall l e,
       forall x x', eq_set x x' ->
-      forall y y', eq_set y y' ->
-      eq_set (Bin l e x y) (Bin l e x' y').
+              forall y y', eq_set y y' ->
+                      eq_set (Bin l e x y) (Bin l e x' y').
   Proof.
     induction x.
     - intros. destruct x'.
@@ -273,15 +299,15 @@ Module Foo (E : OrderedType) : WSfun(E).
   Admitted.
 
   Add Parametric Relation : (Set_ elt) @eq_set
-       reflexivity proved by (eq_set_refl)
-       symmetry proved by (eq_set_sym)
-       transitivity proved by (eq_set_trans)
-         as eq_set_rel.
+      reflexivity proved by (eq_set_refl)
+      symmetry proved by (eq_set_sym)
+      transitivity proved by (eq_set_trans)
+        as eq_set_rel.
 
-  Add Parametric Morphism l e : (Bin l e) with 
+  Add Parametric Morphism l e : (Bin l e) with
         signature eq_set ==> eq_set ==> eq_set as union_mor.
   Proof. exact (bin_compat l e). Qed.
-  
+
   Lemma balanced_children : forall {a} (s1 s2 : Set_ a) l e,
       balanced (Bin l e s1 s2) -> balanced s1 /\ balanced s2.
   Proof. split; simpl in H; move: H; case: and3P=>//; elim; done. Qed.
@@ -298,7 +324,7 @@ Module Foo (E : OrderedType) : WSfun(E).
        case andP=>//; elim; rewrite /is_true !Z.leb_le;
        right; split; auto].
   Qed.
-  
+
   Ltac derive_ordering :=
     match goal with
     | [H: context[ordered _] |- _ ] =>
@@ -337,7 +363,7 @@ Module Foo (E : OrderedType) : WSfun(E).
     move=>x y z [Hlt | Heq]; rewrite /partial_lt;
            autorewrite with elt_compare; intros; eauto.
   Qed.
-  
+
   Lemma partial_gt_mono : forall x y z,
       E.lt x y \/ E.eq x y ->
       partial_gt z x -> partial_gt z y.
@@ -354,7 +380,7 @@ Module Foo (E : OrderedType) : WSfun(E).
            autorewrite with elt_compare; intros; eauto.
     apply E.eq_sym in Heq; eauto.
   Qed.
-    
+
   Definition local_bounded {a} `{Ord a} :=
     fix bounded lo hi t'
       := match t' with
@@ -430,7 +456,7 @@ Module Foo (E : OrderedType) : WSfun(E).
       local_bounded f g (Bin s1 x l r) ->
       local_bounded f g (Bin s2 x l r).
   Proof. auto. Qed.
-  
+
   Lemma ordered_children : forall {a} `{Ord a} (s1 s2 : Set_ a) l e,
       ordered (Bin l e s1 s2) -> ordered s1 /\ ordered s2.
   Proof.
@@ -453,49 +479,48 @@ Module Foo (E : OrderedType) : WSfun(E).
       apply E.eq_sym in Heq. eauto.
   Qed.
 
+  Definition local_realsize {a} :=
+    fix realsize (t' : Set_ a) : option Size :=
+      match t' with
+      | Bin sz _ l r =>
+        match realsize l with
+        | Some n =>
+          match realsize r with
+          | Some m =>
+            if _GHC.Base.==_ (n + m + 1)%Z sz
+            then Some sz
+            else None
+          | None => None
+          end
+        | None => None
+        end
+      | Tip => Some 0%Z
+      end.
+
   Lemma validsize_children : forall {a} (s1 s2 : Set_ a) l e,
       validsize (Bin l e s1 s2) -> validsize s1 /\ validsize s2.
   Proof.
     intros; move: H; rewrite /validsize=>H;
-      remember (fix realsize (t' : Set_ a) : option Size :=
-                  match t' with
-                  | Bin sz _ l r =>
-                    match realsize l with
-                    | Some n =>
-                      match realsize r with
-                      | Some m =>
-                        if _GHC.Base.==_ (n + m + 1)%Z sz
-                        then Some sz
-                        else None
-                      | None => None
-                      end
-                    | None => None
-                    end
-                  | Tip => Some 0%Z
-                  end) as f; move: H; rewrite -Heqf.
+      move: H; rewrite -/local_realsize.
     split; generalize dependent e; generalize dependent l.
     - generalize dependent s2.
       destruct s1; intros.
-      + move: H. rewrite Heqf; simpl; rewrite -Heqf.
-        destruct (f s1_1) eqn:Heqs1; destruct (f s1_2) eqn:Heqs2=>//.
-        destruct (_GHC.Base.==_ (s0 + s1 + 1)%Z s) eqn:Heq=>//.
-        intros. rewrite_option_eq. apply Z.eqb_refl.
-      + rewrite Heqf. simpl. rewrite_option_eq. auto.
+      + move: H. rewrite /local_realsize /= -/local_realsize.
+        repeat destruct_match. intros.
+        apply Maybe_eq_is_Option_eq=>//.
+      + rewrite /local_realsize /=. apply Maybe_eq_is_Option_eq=>//.
     - generalize dependent s1.
       destruct s2; intros.
-      + move: H. rewrite Heqf; simpl; rewrite -Heqf.
-        destruct (f s1) eqn:Heqs;
-          destruct (f s2_1) eqn:Heqs1;
-          destruct (f s2_2) eqn:Heqs2=>//.
-        destruct (_GHC.Base.==_ (s2 + s3 + 1)%Z s) eqn:Heq=>//.
-        intros. rewrite_option_eq. apply Z.eqb_refl.
-      + rewrite Heqf. simpl. rewrite_option_eq. 
+      + move: H. rewrite /local_realsize /= -/local_realsize.
+        repeat destruct_match.
+        intros. apply Maybe_eq_is_Option_eq=>//.
+      + rewrite /local_realsize /=. apply Maybe_eq_is_Option_eq=>//.
   Qed.
 
   Lemma WF_children : forall s1 s2 l e, WF (Bin l e s1 s2) -> WF s1 /\ WF s2.
   Proof.
     rewrite /WF /valid. move=>s1 s2 l e. case: and3P=>//.
-    elim; move=>Hb Ho Hv H; clear H. 
+    elim; move=>Hb Ho Hv H; clear H.
     split; apply /and3P; split;
       apply balanced_children in Hb;
       apply ordered_children in Ho;
@@ -505,39 +530,17 @@ Module Foo (E : OrderedType) : WSfun(E).
   Lemma WF_size_children : forall s1 s2 l e,
       WF (Bin l e s1 s2) -> size s1 + size s2 + 1 = l.
   Proof.
-    rewrite /WF /valid. move=>s1 s2 l e. case: and3P=>//.
-    elim; move=>Hb Ho Hv H; clear H.
+    rewrite /WF /valid. move=>s1 s2 l e.
+    case: and3P=>//. elim; move=>Hb Ho Hv H; clear H.
     apply validsize_children in Hv as Hv2. destruct Hv2.
-    move: H0 H Hv. rewrite /validsize.
-    remember (fix realsize (t' : Set_ elt) : option Size :=
-             match t' with
-             | Bin sz _ l0 r =>
-                 match realsize l0 with
-                 | Some n0 =>
-                     match realsize r with
-                     | Some m =>
-                         if _GHC.Base.==_ (_GHC.Num.+_ (_GHC.Num.+_ n0 m) #1) sz
-                         then Some sz
-                         else None
-                     | None => None
-                     end
-                 | None => None
-                 end
-             | Tip => Some #0
-             end) as f. rewrite -Heqf.
-    destruct s1; destruct s2=>//.
-    - rewrite /size; rewrite_Int; intros. repeat destruct_match.
-      move: H0 H Heq1; rewrite_option_eq.
-      rewrite /is_true !Z.eqb_eq. intros; subst; auto.
-    - rewrite /size; rewrite_Int; intros. repeat destruct_match.
-      move: H0 H Heq1; rewrite_option_eq.
-      rewrite /is_true !Z.eqb_eq. intros; subst; auto.
-    - rewrite /size; rewrite_Int; intros. repeat destruct_match.
-      move: H0 H Heq1; rewrite_option_eq.
-      rewrite /is_true !Z.eqb_eq. intros; subst; auto.
-    - rewrite /size; rewrite_Int; intros. repeat destruct_match.
-      move: H0 H Heq0; rewrite_option_eq.
-      rewrite /is_true !Z.eqb_eq. intros; subst; auto.
+    move: H0 H Hv. rewrite /validsize -/local_realsize.
+    destruct s1; destruct s2=>//;
+      try solve [repeat destruct_match; move: Heq1;
+                 rewrite_size; rewrite_Int; move /Z.eqb_eq=>?;
+                 repeat (move /Maybe_eq_is_Option_eq; (case=>? || elim));
+                 subst; auto].
+    simpl; do 2 elim. destruct_match.
+    elim. move: Heq. move /Z.eqb_eq; auto.
   Qed.
 
   Lemma WF_size_nonneg : forall s, WF s -> size s >= 0.
@@ -560,30 +563,20 @@ Module Foo (E : OrderedType) : WSfun(E).
     omega.
   Qed.
 
-  Lemma WF_balanced : forall s1 s2 e l,
-      WF (Bin l e s1 s2) -> balanced (Bin l e s1 s2).
-  Proof. move=>s1 s2 e l; rewrite /WF /valid; case /and3P=>//. Qed.
+  Lemma WF_balanced : forall t,
+      WF t -> balanced t.
+  Proof. move=>t; rewrite /WF /valid; case /and3P=>//. Qed.
 
-  Lemma WF_ordered : forall s1 s2 e l,
-      WF (Bin l e s1 s2) -> ordered (Bin l e s1 s2).
-  Proof. move=>s1 s2 e l; rewrite /WF /valid; case /and3P=>//. Qed.
+  Lemma WF_ordered : forall t,
+      WF t -> ordered t.
+  Proof. move=>t; rewrite /WF /valid; case /and3P=>//. Qed.
 
-  Lemma WF_validsize : forall s1 s2 e l,
-      WF (Bin l e s1 s2) -> validsize (Bin l e s1 s2).
-  Proof. move=>s1 s2 e l; rewrite /WF /valid; case /and3P=>//. Qed.
+  Lemma WF_validsize : forall t,
+      WF t -> validsize t.
+  Proof. move=>t; rewrite /WF /valid; case /and3P=>//. Qed.
 
   Lemma WF_singleton : forall e, WF (singleton e).
   Proof. intros. rewrite /WF /valid. apply /and3P=>//. Qed.
-
-  Ltac rewrite_size :=
-    repeat match goal with
-           | [ |- _ ] => rewrite ![size (Bin _ _ _ _)]/size
-           | [ |- _ ] => rewrite ![size Tip]/size
-           | [H: context[size (Bin _ _ _ _)] |- _ ] =>
-             rewrite ![size (Bin _ _ _ _)]/size in H
-           | [H: context[size Tip] |- _ ] =>
-             rewrite ![size Tip]/size in H
-           end.
 
   Ltac prepare_for_omega :=
     repeat match goal with
@@ -599,16 +592,17 @@ Module Foo (E : OrderedType) : WSfun(E).
 
   Ltac rewrite_for_omega :=
     repeat match goal with
-                          | [H: context[delta] |- _ ] => move: H
-                          | [H: context[ratio] |- _ ] => move: H
+           | [H: context[delta] |- _ ] => move: H
+           | [H: context[ratio] |- _ ] => move: H
            end; rewrite /delta /ratio; prepare_for_omega.
 
   Ltac derive_constraints :=
     repeat match goal with
-           | [Hwf: context[WF (Bin ?s ?x ?a ?b)] |- _ ] =>
+           | [Hwf: is_true (WF (Bin ?s ?x ?a ?b)) |- _ ] =>
              let Hsum := fresh "Hsum" in
              have: WF (Bin s x a b) by [done];
-             move /WF_size_children; rewrite_size; move=>Hsum;
+             move /WF_size_children; rewrite_size;
+             move=>Hsum;
              let Hpos := fresh "Hpos" in
              have: WF (Bin s x a b) by [done];
              move /WF_size_pos; rewrite_size; move=>Hpos;
@@ -620,14 +614,33 @@ Module Foo (E : OrderedType) : WSfun(E).
              destruct Hwfc as [Hwfl Hwfr];
              let Hbalanced := fresh "Hbalanced" in
              have Hbalanced: (size a + size b <= 1) \/
-                                 (size a <= delta * size b /\
-                                  size b <= delta * size a) by
+                             (size a <= delta * size b /\
+                              size b <= delta * size a) by
                  [ move: Hwf; move /WF_balanced /balanced_size_constraints];
+             let Hvs := fresh "Hvs" in
+             have Hvs: validsize (Bin s x a b) by
+                 [apply WF_validsize in Hwf];
              clear Hwf
-           | [Hwf: context[WF ?t] |- _ ] =>
+           | [Hwf: is_true (WF ?t) |- _ ] =>
              let Hnonneg := fresh "Hnonneg" in
              have: WF t by [done];
-             move /WF_size_nonneg; move=>Hnonneg; clear Hwf
+             move /WF_size_nonneg; move=>Hnonneg;
+             let Hvs := fresh "Hvs" in
+             have Hvs: validsize t by
+                 [apply WF_validsize in Hwf];
+             clear Hwf
+           | [H: is_true (validsize (Bin ?s ?x ?l ?r)) |- _ ] =>
+             let Hrs := fresh "Hrealsize" in
+             have: validsize (Bin s x l r) by [done];
+             apply validsize_children in H; destruct H;
+             rewrite /validsize -/local_realsize;
+             move=>Hrs; apply Maybe_eq_is_Option_eq in Hrs;
+                  rewrite ?Hrs
+           | [H: is_true (validsize ?t) |- _ ] =>
+             let Hrs := fresh "Hrealsize" in
+             move: H; rewrite /validsize -/local_realsize;
+             move=>Hrs; apply Maybe_eq_is_Option_eq in Hrs;
+                  rewrite ?Hrs
            end.
 
   Ltac lucky_balanced_solve :=
@@ -704,12 +717,12 @@ Module Foo (E : OrderedType) : WSfun(E).
     (size l <= delta * size r + 1 /\ size r <= delta * size l).
 
   Lemma balanceL_balanced: forall (x: elt) (l r : Set_ elt),
-    WF l -> WF r ->
-    before_balancedL x l r -> balanced (balanceL x l r).
+      WF l -> WF r ->
+      before_balancedL x l r -> balanced (balanceL x l r).
   Proof.
     intros x l r Hwfl Hwfr.
     have: WF l by done. have: WF r by done.
-    rewrite /WF /valid. 
+    rewrite /WF /valid.
     case: and3P=>//; elim; move=>Hbr Hor Hvr; elim.
     case: and3P=>//; elim; move=>Hbl Hol Hvl; elim.
     destruct r as [sr xr rl rr | ]; destruct l as [sl xl ll lr | ];
@@ -736,7 +749,7 @@ Module Foo (E : OrderedType) : WSfun(E).
             ++ (** Right child [Bin (1+rs+lrs) x lr r] is
                    balanced. Arithmetics. *)
               step_in_balanced.
-              derive_constraints; subst. 
+              derive_constraints; subst.
               apply /orP=>//. right.
               apply /andP=>//; split; rewrite_for_omega; omega.
           -- (** The [otherwise] branch, i.e. [lr >= ratio * ll]
@@ -799,11 +812,11 @@ Module Foo (E : OrderedType) : WSfun(E).
         destruct Hbefore; destruct H.
         * apply /orP=>//; right. apply /andP=>//; rewrite_for_omega; split; omega.
         * apply /orP=>//; left. rewrite_for_omega. omega. (* contradiction *)
-      + step_in_balanced. 
+      + step_in_balanced.
       + apply WF_size_children in Hwfl.
         step_in_balanced. apply /orP=>//; left. rewrite_for_omega. omega.
     - (** Both [l] and [r] and [Tip]s. *) step_in_balanced.
-  Time Qed. (* Finished transaction in 18.177 secs (18.108u,0.045s) (successful) *)
+      Time Qed. (* Finished transaction in 29.63 secs (29.495u,0.12s) (successful) *)
 
   Definition before_orderedL (x : elt) (l r : Set_ elt) (f g : elt -> bool) :=
     f x /\ (forall x y, E.lt x y \/ E.eq x y -> f x -> f y) /\
@@ -862,11 +875,35 @@ Module Foo (E : OrderedType) : WSfun(E).
         try solve [solve_local_bounded].
       destruct_match; solve_local_bounded.
   Qed.
-    
+
+  Ltac solve_realsize :=
+    apply Maybe_eq_is_Option_eq;
+    rewrite /local_realsize;
+    derive_constraints; rewrite_size; rewrite_Int;
+    repeat match goal with
+           | [ |- context[if ?c then _ else _] ] =>
+             let Heq := fresh "Heq" in
+             have Heq: c by [ rewrite_for_omega; omega];
+             rewrite Heq=>//
+           end.
+
   Lemma balanceL_validsize: forall (x: elt) (l r : Set_ elt),
       WF l -> WF r ->
       before_balancedL x l r -> validsize (balanceL x l r).
-  Admitted.
+  Proof.
+    move=>x l r Hwfl Hwfr.
+    rewrite /validsize -/local_realsize.
+    destruct r as [sr xr rl rr | ]; destruct l as [sl xl ll lr | ];
+      rewrite /before_balancedL /balanceL; intros; try solve [solve_realsize].
+    - rewrite_Int. destruct_match; try solve [solve_realsize].
+      destruct ll as [sll xll lll llr | ];
+        destruct lr as [slr xlr lrl lrr | ];
+        try solve [lucky_balanced_solve].
+      destruct_match; solve_realsize.
+    - destruct ll as [sll xll lll llr | ];
+        destruct lr as [slr xlr lrl lrr | ];
+        try solve [lucky_balanced_solve || solve_realsize].
+  Qed.                              
 
   Lemma balanceL_WF: forall (x: elt) (l r : Set_ elt),
       WF l -> WF r ->
@@ -880,9 +917,9 @@ Module Foo (E : OrderedType) : WSfun(E).
     - apply balanceL_ordered...
     - apply balanceL_validsize...
   Qed.
-  
+
   Definition mem : elt -> t -> bool := fun e s' =>
-     s <-- s' ;; member e s.
+    s <-- s' ;; member e s.
 
   Ltac split3 := split; [| split].
 
@@ -898,22 +935,22 @@ Module Foo (E : OrderedType) : WSfun(E).
       (idtac + (multimatch goal with
                 | [H: E.eq _ _ |- _] => apply E.eq_sym in H
                 end)))); solve [eauto].
-    
+
   Lemma insert_prop : forall e s,
       WF s ->
       WF (insert e s) /\
       (size (insert e s) = size s + 1 \/ size (insert e s) = size s) /\
       (forall a s1 s2 l x, s = Bin l x s1 s2 ->
-          (forall (f : elt -> bool),
-              E.lt e a ->
-              (forall x y, E.lt x y \/ E.eq x y -> f x -> f y) ->
-              local_bounded f (fun arg => arg GHC.Base.< a) s ->
-              local_bounded f (fun arg => arg GHC.Base.< a) (insert e s)) /\
-          (forall (g : elt -> bool),
-              E.lt a e ->
-              (forall x y, E.lt y x \/ E.eq x y -> g x -> g y) ->
-              local_bounded (fun arg => arg GHC.Base.> a) g s ->
-              local_bounded (fun arg => arg GHC.Base.> a) g (insert e s))).
+                      (forall (f : elt -> bool),
+                          E.lt e a ->
+                          (forall x y, E.lt x y \/ E.eq x y -> f x -> f y) ->
+                          local_bounded f (fun arg => arg GHC.Base.< a) s ->
+                          local_bounded f (fun arg => arg GHC.Base.< a) (insert e s)) /\
+                      (forall (g : elt -> bool),
+                          E.lt a e ->
+                          (forall x y, E.lt y x \/ E.eq x y -> g x -> g y) ->
+                          local_bounded (fun arg => arg GHC.Base.> a) g s ->
+                          local_bounded (fun arg => arg GHC.Base.> a) g (insert e s))).
   Proof.
     induction s.
     - intros. rewrite /insert/=. destruct_match; split3.
@@ -964,7 +1001,7 @@ Module Foo (E : OrderedType) : WSfun(E).
           -- simpl. apply /andP=>//; split=>//.
              autorewrite with elt_compare in *; auto.
       + (** prove [size (insert e s) = size s + 1] *)
-        rewrite -/insert. 
+        rewrite -/insert.
         have Hs1: WF s2 by [apply WF_children in H; tauto].
         rewrite balanceL_add_size=>//.
         * apply IHs1 in Hs1.
@@ -977,7 +1014,7 @@ Module Foo (E : OrderedType) : WSfun(E).
         * apply WF_children in H. tauto.
       + (** s is Bin, e > a, prove: WF (insert e s) *)
         admit.
-        (** We need to prove some properties for [balanceR] in order
+      (** We need to prove some properties for [balanceR] in order
             to prove this. This structure should be very much the same
             as in the last last bullet point. *)
       + admit.
@@ -987,34 +1024,34 @@ Module Foo (E : OrderedType) : WSfun(E).
       + apply WF_singleton.
       + left; reflexivity.
       + intros. inversion H.
-  Admitted.        
+  Admitted.
 
   Definition add (e: elt) (s': t) : t.
     refine (s <-- s' ;;
-            pack (insert e s) _).
+              pack (insert e s) _).
     move: i=>H. eapply insert_prop in H. destruct H. eauto.
   Defined.
-  
+
   Definition singleton : elt -> t.
     refine (fun e => pack (singleton e) _).
     apply WF_singleton.
   Defined.
-  
+
   Definition remove : elt -> t -> t. Admitted.
   Definition union : t -> t -> t. Admitted.
   Definition inter : t -> t -> t. Admitted.
   Definition diff : t -> t -> t. Admitted.
-    
+
   Definition equal : t -> t -> bool :=
     fun ws ws' => s <-- ws ;;
                s' <-- ws' ;;
                s == s'.
-  
+
   Definition subset : t -> t -> bool :=
     fun ws ws' => s <-- ws ;;
                s' <-- ws' ;;
                isSubsetOf s s'.
-        
+
   Definition fold : forall A : Type, (elt -> A -> A) -> t -> A -> A. Admitted.
   Definition for_all : (elt -> bool) -> t -> bool. Admitted.
   Definition exists_ : (elt -> bool) -> t -> bool. Admitted.
@@ -1023,7 +1060,7 @@ Module Foo (E : OrderedType) : WSfun(E).
   Definition cardinal : t -> nat. Admitted.
   Definition elements : t -> list elt. Admitted.
   Definition choose : t -> option elt. Admitted.
-  
+
   Lemma In_1 :
     forall (s : t) (x y : elt), E.eq x y -> In x s -> In y s.
   Proof.
@@ -1043,23 +1080,23 @@ Module Foo (E : OrderedType) : WSfun(E).
         apply (IHr H1) in Heq as Heq1=>//.
         apply (OrdFacts.lt_eq Heq0) in Heq.
         apply elt_compare_gt in Heq. rewrite Heq. apply Heq1.
-        (** We are using [elt_compare_lt] and [elt_comapre_gt] back
+    (** We are using [elt_compare_lt] and [elt_comapre_gt] back
             and forth during proofs -- maybe it's a good place to use
             proof by reflection? *)
     - elim. rewrite /member //.
   Qed.
-    
+
   Lemma mem_1 : forall (s : t) (x : elt), In x s -> mem x s = true.
   Proof. unfold In; intros; destruct s as [s]; auto. Qed.
-    
+
   Lemma mem_2 : forall (s : t) (x : elt), mem x s = true -> In x s.
   Proof. unfold In; intros; destruct s as [s]; auto. Qed.
-  
+
   Lemma equal_1 : forall s s' : t, Equal s s' -> equal s s' = true. Admitted.
   Lemma equal_2 : forall s s' : t, equal s s' = true -> Equal s s'. Admitted.
   Lemma subset_1 : forall s s' : t, Subset s s' -> subset s s' = true. Admitted.
   Lemma subset_2 : forall s s' : t, subset s s' = true -> Subset s s'. Admitted.
-  
+
   Lemma add_1 :
     forall (s : t) (x y : elt), E.eq x y -> In y (add x s). Admitted.
   Lemma add_2 : forall (s : t) (x y : elt), In y s -> In y (add x s). Admitted.
@@ -1080,7 +1117,7 @@ Module Foo (E : OrderedType) : WSfun(E).
     destruct (Base.compare y x) eqn:Hcomp;
       apply E.eq_sym; apply elt_compare_eq=>//.
   Qed.
-      
+
   Lemma singleton_2 :
     forall x y : elt, E.eq x y -> In y (singleton x).
   Proof.
@@ -1092,7 +1129,7 @@ Module Foo (E : OrderedType) : WSfun(E).
     - apply elt_compare_gt in Hcomp. apply E.eq_sym in H.
       apply OrdFacts.eq_not_gt in H. contradiction.
   Qed.
-      
+
   Lemma union_1 :
     forall (s s' : t) (x : elt), In x (union s s') -> In x s \/ In x s'. Admitted.
   Lemma union_2 :
@@ -1113,41 +1150,41 @@ Module Foo (E : OrderedType) : WSfun(E).
     forall (s s' : t) (x : elt), In x s -> ~ In x s' -> In x (diff s s'). Admitted.
   Lemma fold_1 :
     forall (s : t) (A : Type) (i : A) (f : elt -> A -> A),
-    fold A f s i =
-    fold_left (fun (a : A) (e : elt) => f e a) (elements s) i. Admitted.
+      fold A f s i =
+      fold_left (fun (a : A) (e : elt) => f e a) (elements s) i. Admitted.
   Lemma cardinal_1 : forall s : t, cardinal s = length (elements s). Admitted.
   Lemma filter_1 :
     forall (s : t) (x : elt) (f : elt -> bool),
-    compat_bool E.eq f -> In x (filter f s) -> In x s. Admitted.
+      compat_bool E.eq f -> In x (filter f s) -> In x s. Admitted.
   Lemma filter_2 :
     forall (s : t) (x : elt) (f : elt -> bool),
-    compat_bool E.eq f -> In x (filter f s) -> f x = true. Admitted.
+      compat_bool E.eq f -> In x (filter f s) -> f x = true. Admitted.
   Lemma filter_3 :
     forall (s : t) (x : elt) (f : elt -> bool),
-    compat_bool E.eq f -> In x s -> f x = true -> In x (filter f s). Admitted.
+      compat_bool E.eq f -> In x s -> f x = true -> In x (filter f s). Admitted.
   Lemma for_all_1 :
     forall (s : t) (f : elt -> bool),
-    compat_bool E.eq f ->
-    For_all (fun x : elt => f x = true) s -> for_all f s = true. Admitted.
+      compat_bool E.eq f ->
+      For_all (fun x : elt => f x = true) s -> for_all f s = true. Admitted.
   Lemma for_all_2 :
     forall (s : t) (f : elt -> bool),
-    compat_bool E.eq f ->
-    for_all f s = true -> For_all (fun x : elt => f x = true) s. Admitted.
+      compat_bool E.eq f ->
+      for_all f s = true -> For_all (fun x : elt => f x = true) s. Admitted.
   Lemma exists_1 :
     forall (s : t) (f : elt -> bool),
-    compat_bool E.eq f ->
-    Exists (fun x : elt => f x = true) s -> exists_ f s = true. Admitted.
+      compat_bool E.eq f ->
+      Exists (fun x : elt => f x = true) s -> exists_ f s = true. Admitted.
   Lemma exists_2 :
     forall (s : t) (f : elt -> bool),
-    compat_bool E.eq f ->
-    exists_ f s = true -> Exists (fun x : elt => f x = true) s. Admitted.
+      compat_bool E.eq f ->
+      exists_ f s = true -> Exists (fun x : elt => f x = true) s. Admitted.
   Lemma partition_1 :
     forall (s : t) (f : elt -> bool),
-    compat_bool E.eq f -> Equal (fst (partition f s)) (filter f s). Admitted.
+      compat_bool E.eq f -> Equal (fst (partition f s)) (filter f s). Admitted.
   Lemma partition_2 :
     forall (s : t) (f : elt -> bool),
-    compat_bool E.eq f ->
-    Equal (snd (partition f s)) (filter (fun x : elt => negb (f x)) s). Admitted.
+      compat_bool E.eq f ->
+      Equal (snd (partition f s)) (filter (fun x : elt => negb (f x)) s). Admitted.
   Lemma elements_1 :
     forall (s : t) (x : elt), In x s -> InA E.eq x (elements s). Admitted.
   Lemma elements_2 :

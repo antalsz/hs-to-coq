@@ -97,17 +97,14 @@ Qed.
 
 Require Import Coq.Structures.OrderedTypeEx.
 
-Module Foo: WSfun(Z_as_OT).
-  Module OrdFacts := OrderedTypeFacts(Z_as_OT).
+Module Foo: WSfun(N_as_OT).
+  Module OrdFacts := OrderedTypeFacts(N_as_OT).
 
-  Definition elt := Z.
+  Definition isPrefix (p : Z) := Z.land p suffixBitMask = 0.
 
-  (* Well-formedness *)
-  
-  Definition isPrefix (p : Z)  := Z.land p suffixBitMask = 0.
-  
   Lemma isPrefix_suffixMask: forall p, isPrefix p -> Z.land p suffixBitMask = 0.
   Proof. intros.  apply H. Qed.
+
   Lemma isPrefix_prefixMask: forall p, isPrefix p -> Z.land p prefixBitMask = p.
   Proof.
     intros.
@@ -128,6 +125,15 @@ Module Foo: WSfun(Z_as_OT).
     rewrite Z.shiftl_mul_pow2.
     apply Z_mod_mult.
     all: compute; congruence.
+  Qed.
+  
+  Lemma prefixOf_nonneg: forall p,
+    0 <= p -> 0 <= prefixOf p.
+  Proof.
+    intros.
+    unfold isPrefix, prefixOf, prefixBitMask, suffixBitMask.
+    rewrite /_.&._ /Bits.complement /Bits__N /instance_Bits_Int /complement_Int.
+    rewrite Z.land_nonneg; intuition.
   Qed.
 
   Definition WIDTH := 64%N.
@@ -152,6 +158,16 @@ Module Foo: WSfun(Z_as_OT).
     reflexivity.
     compute. congruence.
   Qed.
+
+  (* We very often have to resolve non-negativity constraints *)
+
+  Create HintDb nonneg.
+  Hint Immediate N2Z.is_nonneg : nonneg.
+  Hint Immediate pos_nonneg : nonneg.
+  Hint Resolve prefixOf_nonneg : nonneg.
+  Hint Resolve <- Z.shiftr_nonneg : nonneg.
+
+  Ltac nonneg := auto with nonneg.
 
   Definition isBitMask (bm : N) :=
     (0 < bm /\ bm < 2^WIDTH)%N.
@@ -216,6 +232,7 @@ Module Foo: WSfun(Z_as_OT).
 
   Inductive Desc : IntSet -> Z -> N -> (Z -> bool) -> Prop :=
     | DescTip : forall p bm p' b f,
+      0 <= p ->
       p' = Z.shiftl p (Z.of_N b) -> b = N.log2 WIDTH ->
       prefixed p b f (fun i => N.testbit bm (Z.to_N (Z.land i (Z.ones (Z.of_N b))))) ->
       isBitMask bm ->
@@ -238,7 +255,14 @@ Module Foo: WSfun(Z_as_OT).
   Inductive WF : IntSet -> Prop :=
     | WFEmpty : WF Nil
     | WFNonEmpty : forall s p b f (HD : Desc s p b f), WF s.
-    
+
+  (* We are saying [N] instead of [Z] to force the invariant that
+     all elements have a finite number of bits. The code actually
+     works with [Z]. *)
+  Definition elt := N.
+
+  (* Well-formedness *)
+  
   Definition t := {s : IntSet | WF s}.
   Definition pack (s : IntSet) (H : WF s): t := exist _ s H.
 
@@ -252,9 +276,9 @@ Module Foo: WSfun(Z_as_OT).
   
   Definition In x (s' : t) :=
     s <-- s' ;;
-    In_set x s.
+    In_set (Z.of_N x) s.
 
-  Definition Equal_set s s' := forall a : elt, In_set a s <-> In_set a s'.
+  Definition Equal_set s s' := forall a : Z, In_set a s <-> In_set a s'.
   Definition Equal s s' := forall a : elt, In a s <-> In a s'.
   Definition Subset s s' := forall a : elt, In a s -> In a s'.
   Definition Empty s := forall a : elt, ~ In a s.
@@ -290,7 +314,7 @@ Module Foo: WSfun(Z_as_OT).
     destruct a.
     reflexivity.
     apply N.log2_le_lin.
-    apply pos_nonneg.
+    nonneg.
   Qed.
   
   Lemma N_land_pow2_testbit:
@@ -350,7 +374,7 @@ Module Foo: WSfun(Z_as_OT).
    Proof.
      intros ????? HD Houtside.
      induction HD;subst.
-     * rewrite H1.
+     * rewrite H2.
        rewrite Houtside.
        reflexivity.
      * rewrite H8.
@@ -374,7 +398,27 @@ Module Foo: WSfun(Z_as_OT).
          enough (Z.of_N b2 < Z.of_N b) by omega.
          apply N2Z.inj_lt. assumption.
    Qed.
-   
+
+    Lemma Desc_prefix_nonneg:
+      forall {s p b f}, Desc s p b f -> 0 <= p.
+    Admitted.
+    
+    Hint Extern 1 (0 <= ?p) => 
+       (try match goal with [ H : Desc _ p _ _  |- _ ] => apply (Desc_prefix_nonneg H) end)
+       : nonneg.
+
+
+    Lemma Desc_neg_false:
+     forall {s p b f i}, Desc s p b f -> ~ (0 <= i) -> f i = false.
+    Proof.
+      intros.
+      apply (Desc_outside H).
+      rewrite Z.eqb_neq.
+      contradict H0.
+      rewrite <- (Z.shiftr_nonneg i (Z.of_N b)).
+      rewrite H0.
+      nonneg.
+    Qed.
    
    Lemma nomatch_spec:
       forall i p b,
@@ -393,7 +437,7 @@ Module Foo: WSfun(Z_as_OT).
      rewrite Z.ldiff_ones_r.
      rewrite Z_shiftl_injb.
      reflexivity.
-     apply N2Z.is_nonneg.
+     nonneg.
      enough (0 < Z.of_N b) by omega.
      replace 0 with (Z.of_N 0%N) by reflexivity.
      apply N2Z.inj_lt. assumption.
@@ -425,7 +469,7 @@ Module Foo: WSfun(Z_as_OT).
        rewrite N_land_pow2_testbit.
        
        subst p'; rewrite prefixOf_eq_shiftr.
-       specialize (H1 i); rewrite H1; clear H1.
+       specialize (H2 i); rewrite H2; clear H2.
        destruct (Z.eqb_spec (Z.shiftr i (Z.of_N (N.log2 WIDTH))) p); simpl; auto.
      * simpl.
        rewrite H8. clear H8.
@@ -486,7 +530,7 @@ Module Foo: WSfun(Z_as_OT).
    Proof.
    intros ???? HD.
    induction HD; subst.
-   + destruct (isBitMask_testbit _ H2) as [j[??]].
+   + destruct (isBitMask_testbit _ H3) as [j[??]].
      set (i := (Z.lor (Z.shiftl p 6) (Z.of_N j))).
      exists i.
 
@@ -497,9 +541,9 @@ Module Foo: WSfun(Z_as_OT).
        destruct (N.lt_decidable 0%N j).
        + apply N.log2_lt_pow2; assumption.
        + enough (j = 0)%N by (subst; compute; congruence).
-         destruct j; auto; contradict H3. apply pos_pos.
+         destruct j; auto; contradict H4. apply pos_pos.
 
-    specialize (H1 i); rewrite H1; clear H1.
+    rewrite  H2; clear H2.
     replace ((Z.of_N (N.log2 WIDTH))) with 6 by reflexivity.
     replace (Z.shiftr i 6) with p.
     rewrite (Z.eqb_refl).
@@ -512,7 +556,7 @@ Module Foo: WSfun(Z_as_OT).
       rewrite land_shiftl_ones.
       rewrite Z.lor_0_l.
       rewrite Z.land_ones_low. reflexivity.
-      apply N2Z.is_nonneg.
+      nonneg.
       assumption.
     * symmetry.
       subst i.
@@ -524,7 +568,7 @@ Module Foo: WSfun(Z_as_OT).
       compute; congruence.
       symmetry.
       apply Z.shiftr_eq_0; auto.
-      apply N2Z.is_nonneg.
+      nonneg.
   + destruct IHHD1  as [j?].
     exists j.
     rewrite H8.
@@ -533,13 +577,16 @@ Module Foo: WSfun(Z_as_OT).
    Qed.
 
    Lemma Desc_has_member: 
-     forall {s p b f}, Desc s p b f -> exists i, member i s = true.
+     forall {s p b f}, Desc s p b f -> exists i, 0 <= i /\ member i s = true.
    Proof.
      intros ???? HD.
      destruct (Desc_some_f HD) as [j?].
      exists j.
-     rewrite (member_spec HD).
-     assumption.
+     rewrite (member_spec HD). intuition.
+     destruct (Z.leb_spec 0 j); auto.
+     contradict H.
+     rewrite  (Desc_neg_false HD); try congruence.
+     apply Zlt_not_le. assumption.
    Qed.
 
   Lemma is_empty_1 : forall s : t, Empty s -> is_empty s = true.
@@ -548,7 +595,8 @@ Module Foo: WSfun(Z_as_OT).
     induction w.
     * auto.
     * destruct (Desc_has_member  HD).
-      specialize (H x). intuition.
+      specialize (H (Z.to_N x)).
+      rewrite Z2N.id in H; try assumption; intuition.
   Qed.
   
   Lemma is_empty_2 : forall s : t, is_empty s = true -> Empty s.
@@ -556,6 +604,7 @@ Module Foo: WSfun(Z_as_OT).
 
   Lemma Tip_Desc:
     forall p p' bm, isBitMask bm ->
+      0 <= p ->
       p' = (Z.shiftl p 6) ->
       Desc (Tip p' bm) p (N.log2 WIDTH)
            (fun i => testBitZ p 6%N bm i).
@@ -566,13 +615,14 @@ Module Foo: WSfun(Z_as_OT).
     reflexivity.
   Qed.
   
-  
   Lemma Tip_WF:
-    forall p bm, isPrefix p -> isBitMask bm -> WF (Tip p bm).
+    forall p bm, 0 <= p -> isPrefix p -> isBitMask bm -> WF (Tip p bm).
   Proof.
-    intros ?? Hp Hbm.
+    intros ?? Hnonneg Hp Hbm.
     eapply WFNonEmpty.
-    apply Tip_Desc with (p := Z.shiftr p 6); auto. clear Hbm.
+    apply Tip_Desc with (p := Z.shiftr p 6); auto. 
+    nonneg.
+    clear Hbm bm.
     unfold isPrefix in *.
     rewrite <- Z.ldiff_ones_r.
     unfold suffixBitMask in *.
@@ -589,9 +639,10 @@ Module Foo: WSfun(Z_as_OT).
   Qed.
 
   Definition singleton : elt -> t.
-    refine (fun e => pack (singleton e) _).
+    refine (fun e => pack (singleton (Z.of_N e)) _).
     unfold singleton, Prim.seq.
     apply Tip_WF.
+    * nonneg.
     * apply isPrefix_prefixOf.
     * apply isBitMask_suffixOf.
   Qed.
@@ -670,11 +721,16 @@ Module Foo: WSfun(Z_as_OT).
     omega.
   Qed.
 
+
+  Hint Resolve OMEGA2 : nonneg.
+  Hint Resolve Z.log2_nonneg : nonneg.
+  Hint Extern 0 => try omega : nonneg.
+
   Lemma insertBM_WF:
     forall p bm s,
-    isPrefix p -> isBitMask bm -> WF s -> WF (insertBM p bm s).
+    0 <= p -> isPrefix p -> isBitMask bm -> WF s -> WF (insertBM p bm s).
   Proof.
-    intros ??? Hp Hbm HWF.
+    intros ??? Hnonneg Hp Hbm HWF.
     destruct HWF.
     * simpl. unfold Prim.seq.
       apply Tip_WF; auto.
@@ -688,17 +744,16 @@ Module Foo: WSfun(Z_as_OT).
           eapply WFNonEmpty.
           eapply link_Desc. 7:reflexivity.
           - apply Tip_Desc with (p := Z.shiftr p 6); auto.
+            nonneg.
             apply isPrefix_shiftl_shiftr; assumption.
           - apply Tip_Desc with (p := p0); auto.
             rewrite <- Z.shiftl_lxor.
             rewrite Z.log2_shiftl.
             replace (N.log2 WIDTH) with (Z.to_N (Z.of_N (N.log2 WIDTH))) at 1 by reflexivity.
             apply Z2N.inj_lt.
-            apply N2Z.is_nonneg.
-            apply OMEGA2. apply OMEGA2.
-            apply Z.log2_nonneg.
-            apply N2Z.is_nonneg.
-            omega.
+            nonneg.
+            auto 8 with nonneg.
+            apply OMEGA2. nonneg. nonneg.
             rewrite (isPrefix_shiftl_shiftr _ Hp) in n.
             replace (Z.of_N (N.log2 WIDTH)) with 6 in * by reflexivity.
             rewrite -> Z_shiftl_inj in n.
@@ -718,9 +773,10 @@ Module Foo: WSfun(Z_as_OT).
   
   Definition add (e: elt) (s': t) : t.
     refine (s <-- s' ;;
-            pack (insert e s) _).
+            pack (insert (Z.of_N e) s) _).
     unfold insert, Prim.seq.
     apply insertBM_WF.
+    nonneg.
     apply isPrefix_prefixOf.
     apply isBitMask_suffixOf.
     assumption.
@@ -749,13 +805,14 @@ Module Foo: WSfun(Z_as_OT).
   Proof. intros; constructor; auto. Qed.
     
   Lemma eq_refl : forall s : t, eq s s.
-  Proof. destruct s. simpl. apply eq_set_refl. Qed.
+  Proof. destruct s. unfold eq. unfold Equal. intro. apply eq_set_refl. Qed.
 
   Lemma eq_set_sym : forall s s', eq_set s s' -> eq_set s' s.
   Proof. rewrite /eq_set /Equal_set; symmetry; auto. Qed.
 
   Lemma eq_sym : forall s s' : t, eq s s' -> eq s' s.
-  Proof. destruct s; destruct s'; simpl. apply eq_set_sym. Qed.
+  Proof. destruct s; destruct s'; 
+    unfold eq, Equal in *. intros. rewrite H. intuition. Qed.
     
   Lemma eq_set_trans :
     forall s s' s'', eq_set s s' -> eq_set s' s'' -> eq_set s s''.
@@ -767,7 +824,8 @@ Module Foo: WSfun(Z_as_OT).
   Lemma eq_trans :
     forall s s' s'' : t, eq s s' -> eq s' s'' -> eq s s''.
   Proof.
-    destruct s; destruct s'; destruct s''; simpl. apply eq_set_trans.
+    destruct s; destruct s'; destruct s''; simpl.
+    unfold eq, Equal. intros ???. rewrite H H0. reflexivity.
   Qed.
 
 
@@ -781,11 +839,11 @@ Module Foo: WSfun(Z_as_OT).
   Definition choose : t -> option elt. Admitted.
   
   Lemma In_1 :
-    forall (s : t) (x y : elt), Z.eq x y -> In x s -> In y s.
+    forall (s : t) (x y : elt), N.eq x y -> In x s -> In y s.
   Admitted.
   
   Definition mem : elt -> t -> bool := fun e s' =>
-   s <-- s' ;; member e s.
+   s <-- s' ;; member (Z.of_N e) s.
 
 
   Lemma mem_1 : forall (s : t) (x : elt), In x s -> mem x s = true.
@@ -800,23 +858,23 @@ Module Foo: WSfun(Z_as_OT).
   Lemma subset_2 : forall s s' : t, subset s s' = true -> Subset s s'. Admitted.
   
   Lemma add_1 :
-    forall (s : t) (x y : elt), Z.eq x y -> In y (add x s). Admitted.
+    forall (s : t) (x y : elt), N.eq x y -> In y (add x s). Admitted.
   Lemma add_2 : forall (s : t) (x y : elt), In y s -> In y (add x s). Admitted.
   Lemma add_3 :
-    forall (s : t) (x y : elt), ~ Z.eq x y -> In y (add x s) -> In y s. Admitted.
+    forall (s : t) (x y : elt), ~ N.eq x y -> In y (add x s) -> In y s. Admitted.
   Lemma remove_1 :
-    forall (s : t) (x y : elt), Z.eq x y -> ~ In y (remove x s). Admitted.
+    forall (s : t) (x y : elt), N.eq x y -> ~ In y (remove x s). Admitted.
   Lemma remove_2 :
-    forall (s : t) (x y : elt), ~ Z.eq x y -> In y s -> In y (remove x s). Admitted.
+    forall (s : t) (x y : elt), ~ N.eq x y -> In y s -> In y (remove x s). Admitted.
   Lemma remove_3 :
     forall (s : t) (x y : elt), In y (remove x s) -> In y s. Admitted.
 
   Lemma singleton_1 :
-    forall x y : elt, In y (singleton x) -> Z.eq x y.
+    forall x y : elt, In y (singleton x) -> N.eq x y.
   Admitted.
         
   Lemma singleton_2 :
-    forall x y : elt, Z.eq x y -> In y (singleton x).
+    forall x y : elt, N.eq x y -> In y (singleton x).
   Admitted.
       
   Lemma union_1 :
@@ -844,41 +902,41 @@ Module Foo: WSfun(Z_as_OT).
   Lemma cardinal_1 : forall s : t, cardinal s = length (elements s). Admitted.
   Lemma filter_1 :
     forall (s : t) (x : elt) (f : elt -> bool),
-    compat_bool Z.eq f -> In x (filter f s) -> In x s. Admitted.
+    compat_bool N.eq f -> In x (filter f s) -> In x s. Admitted.
   Lemma filter_2 :
     forall (s : t) (x : elt) (f : elt -> bool),
-    compat_bool Z.eq f -> In x (filter f s) -> f x = true. Admitted.
+    compat_bool N.eq f -> In x (filter f s) -> f x = true. Admitted.
   Lemma filter_3 :
     forall (s : t) (x : elt) (f : elt -> bool),
-    compat_bool Z.eq f -> In x s -> f x = true -> In x (filter f s). Admitted.
+    compat_bool N.eq f -> In x s -> f x = true -> In x (filter f s). Admitted.
   Lemma for_all_1 :
     forall (s : t) (f : elt -> bool),
-    compat_bool Z.eq f ->
+    compat_bool N.eq f ->
     For_all (fun x : elt => f x = true) s -> for_all f s = true. Admitted.
   Lemma for_all_2 :
     forall (s : t) (f : elt -> bool),
-    compat_bool Z.eq f ->
+    compat_bool N.eq f ->
     for_all f s = true -> For_all (fun x : elt => f x = true) s. Admitted.
   Lemma exists_1 :
     forall (s : t) (f : elt -> bool),
-    compat_bool Z.eq f ->
+    compat_bool N.eq f ->
     Exists (fun x : elt => f x = true) s -> exists_ f s = true. Admitted.
   Lemma exists_2 :
     forall (s : t) (f : elt -> bool),
-    compat_bool Z.eq f ->
+    compat_bool N.eq f ->
     exists_ f s = true -> Exists (fun x : elt => f x = true) s. Admitted.
   Lemma partition_1 :
     forall (s : t) (f : elt -> bool),
-    compat_bool Z.eq f -> Equal (fst (partition f s)) (filter f s). Admitted.
+    compat_bool N.eq f -> Equal (fst (partition f s)) (filter f s). Admitted.
   Lemma partition_2 :
     forall (s : t) (f : elt -> bool),
-    compat_bool Z.eq f ->
+    compat_bool N.eq f ->
     Equal (snd (partition f s)) (filter (fun x : elt => negb (f x)) s). Admitted.
   Lemma elements_1 :
-    forall (s : t) (x : elt), In x s -> InA Z.eq x (elements s). Admitted.
+    forall (s : t) (x : elt), In x s -> InA N.eq x (elements s). Admitted.
   Lemma elements_2 :
-    forall (s : t) (x : elt), InA Z.eq x (elements s) -> In x s. Admitted.
-  Lemma elements_3w : forall s : t, NoDupA Z.eq (elements s). Admitted.
+    forall (s : t) (x : elt), InA N.eq x (elements s) -> In x s. Admitted.
+  Lemma elements_3w : forall s : t, NoDupA N.eq (elements s). Admitted.
   Lemma choose_1 :
     forall (s : t) (x : elt), choose s = Some x -> In x s. Admitted.
   Lemma choose_2 : forall s : t, choose s = None -> Empty s. Admitted.

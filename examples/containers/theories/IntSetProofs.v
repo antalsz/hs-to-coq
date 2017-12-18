@@ -164,10 +164,13 @@ Module Foo: WSfun(N_as_OT).
   Create HintDb nonneg.
   Hint Immediate N2Z.is_nonneg : nonneg.
   Hint Immediate pos_nonneg : nonneg.
+  Hint Resolve N.le_0_l : nonneg.
   Hint Resolve prefixOf_nonneg : nonneg.
+  Hint Resolve Z.log2_nonneg : nonneg.
   Hint Resolve <- Z.shiftr_nonneg : nonneg.
+  Hint Extern 1 (0 <= Z.succ (Z.pred (Z.of_N _))) => rewrite Z.succ_pred : nonneg.
 
-  Ltac nonneg := auto with nonneg.
+  Ltac nonneg := solve [auto with nonneg].
 
   Definition isBitMask (bm : N) :=
     (0 < bm /\ bm < 2^WIDTH)%N.
@@ -319,34 +322,92 @@ Module Foo: WSfun(N_as_OT).
   
   Lemma N_land_pow2_testbit:
     forall n i, negb (N.land (2 ^ i) n =? 0)%N = N.testbit n i.
-  Admitted.
+  Proof.
+    intros.
+    destruct (N.testbit n i) eqn:Htb.
+    * rewrite negb_true_iff.
+      rewrite N.eqb_neq.
+      contradict Htb.
+      assert (N.testbit (N.land (2^i)%N n) i = false).
+       by (rewrite Htb; apply N.bits_0).
+      rewrite N.land_spec in H. rewrite N.pow2_bits_true in H.
+      simpl in H. congruence.
+    * rewrite negb_false_iff.
+      rewrite N.eqb_eq.
+      apply N.bits_inj.
+      intro j.
+      rewrite N.land_spec.
+      rewrite N.pow2_bits_eqb.
+      destruct (N.eqb_spec i j); subst; intuition.
+  Qed.
   
   Lemma land_pow2_eq:
-    forall i b, (Z.land i (2 ^ b) =? 0) = (negb (Z.testbit i b)).
-  Admitted.
-  
-  Lemma prefixOf_le : forall i,  prefixOf i <= i.
-  Admitted.
-  
-  Lemma prefixOf_lt : forall i,  i < prefixOf i + 64.
-  Admitted.
-  
+    forall i b, 0 <= b -> (Z.land i (2 ^ b) =? 0) = (negb (Z.testbit i b)).
+  Proof.
+    intros ?? Hnonneg.
+    destruct (Z.testbit i b) eqn:Htb; simpl.
+    * rewrite Z.eqb_neq.
+      contradict Htb.
+      assert (Z.testbit (Z.land i (2^b)) b = false)
+       by (rewrite Htb; apply Z.bits_0).
+      rewrite Z.land_spec in H. rewrite Z.pow2_bits_true in H.
+      rewrite andb_true_r in H.
+      simpl in H. congruence.
+      nonneg.
+    * rewrite Z.eqb_eq.
+      apply Z.bits_inj'.
+      intros j ?.
+      rewrite  Z.bits_0.
+      rewrite Z.land_spec.
+      rewrite Z.pow2_bits_eqb.
+      destruct (Z.eqb_spec b j).
+      * subst. rewrite Htb. reflexivity.
+      * rewrite andb_false_r.  reflexivity.
+      nonneg.
+  Qed.
+
   Lemma Z_shiftl_inj:
     forall x y n,
+      0 <= n ->
       Z.shiftl x n = Z.shiftl y n <-> x = y.
-  Admitted.
+  Proof.
+    intros; split; intro.
+    * apply Z.bits_inj'.
+      intros i ?.
+      apply Z.bits_inj_iff in H0.
+      specialize (H0 (i + n)).
+      do 2 rewrite -> Z.shiftl_spec in H0 by omega.
+      replace (i + n - n) with i in H0 by omega.
+      assumption.
+    * apply Z.bits_inj'.
+      intros i ?.
+      apply Z.bits_inj_iff in H0.
+      specialize (H0 (i - n)).
+      do 2 rewrite -> Z.shiftl_spec by omega.
+      assumption.
+   Qed.
   
    Lemma land_shiftl_ones:
-     forall i n,  Z.land (Z.shiftl i n) (Z.ones n) = 0.
-   Admitted.
+     forall i n, 0 <= n -> Z.land (Z.shiftl i n) (Z.ones n) = 0.
+   Proof.
+     intros.
+     apply Z.bits_inj'.
+     intros j ?.
+     rewrite Z.land_spec.
+     rewrite -> Z.shiftl_spec by nonneg.
+     rewrite Z.bits_0. rewrite andb_false_iff.
+     destruct (Z.ltb_spec j n).
+     * left. apply Z.testbit_neg_r. omega.
+     * right. apply Z.ones_spec_high. omega.
+   Qed.
   
   Lemma Z_shiftl_injb:
-    forall x y n, (Z.shiftl x n =? Z.shiftl y n) = (x =? y).
+    forall x y n, 0 <= n -> (Z.shiftl x n =? Z.shiftl y n) = (x =? y).
   Proof.
     intros.
     destruct (Z.eqb_spec (Z.shiftl x n) (Z.shiftl y n)),
              (Z.eqb_spec x y); auto; try congruence; exfalso.
-    apply Z_shiftl_inj in e. congruence.
+    apply Z_shiftl_inj in e; auto.
   Qed.
 
 
@@ -360,12 +421,11 @@ Module Foo: WSfun(N_as_OT).
      unfold Bits.complement, instance_Bits_Int, complement_Int.
      rewrite /_.&._ /Bits__N /instance_Bits_Int.
      rewrite <- Z.ldiff_land.
-     rewrite Z.ldiff_ones_r.
+     rewrite -> Z.ldiff_ones_r by omega.
      replace (Z.of_N (N.log2 WIDTH)) with 6 by reflexivity.
 
-     rewrite Z_shiftl_injb.
+     rewrite -> Z_shiftl_injb by omega.
      reflexivity.
-     compute; congruence.
    Qed.
    
 
@@ -434,10 +494,9 @@ Module Foo: WSfun(N_as_OT).
      rewrite Z.log2_pow2.
      rewrite Z.succ_pred.
      f_equal.
-     rewrite Z.ldiff_ones_r.
-     rewrite Z_shiftl_injb.
+     rewrite -> Z.ldiff_ones_r by nonneg.
+     rewrite -> Z_shiftl_injb by nonneg.
      reflexivity.
-     nonneg.
      enough (0 < Z.of_N b) by omega.
      replace 0 with (Z.of_N 0%N) by reflexivity.
      apply N2Z.inj_lt. assumption.
@@ -445,10 +504,15 @@ Module Foo: WSfun(N_as_OT).
    
    Lemma zero_spec:
      forall i b,
+      (0 < b)%N ->
       zero i (2 ^ Z.pred (Z.of_N b)) = negb (Z.testbit i (Z.pred (Z.of_N b))).
    Proof.
      intros.
      apply land_pow2_eq.
+     apply Z.lt_le_pred.
+     change (Z.of_N 0%N < Z.of_N b).
+     apply N2Z.inj_lt.
+     assumption.
    Qed.
 
    Lemma member_spec:
@@ -473,8 +537,9 @@ Module Foo: WSfun(N_as_OT).
        destruct (Z.eqb_spec (Z.shiftr i (Z.of_N (N.log2 WIDTH))) p); simpl; auto.
      * simpl.
        rewrite H8. clear H8.
-       rewrite nomatch_spec.
-       rewrite zero_spec.
+       assert (Hp_pos : (0 < b)%N) by (apply N.le_lt_trans with (m := b1); nonneg).
+       rewrite -> nomatch_spec by apply Hp_pos.
+       rewrite -> zero_spec by apply Hp_pos.
        match goal with [ |- context [?x =? ?y]] => destruct (Z.eqb_spec x y) end; simpl.
        * destruct (Z.testbit i (Z.pred (Z.of_N b))) eqn:Htestbit; simpl.
          * enough (f1 i = false) as Hf1 by (rewrite Hf1 IHHD2; reflexivity).
@@ -520,8 +585,6 @@ Module Foo: WSfun(N_as_OT).
            rewrite n. congruence.
            enough (Z.of_N b2 < Z.of_N b) by omega.
            apply N2Z.inj_lt. assumption.
-
-     apply (N.le_lt_trans _ b1); auto. destruct b1; compute; congruence.
    Qed.
 
 
@@ -553,7 +616,7 @@ Module Foo: WSfun(N_as_OT).
     
     * subst i.
       rewrite Z.land_lor_distr_l.
-      rewrite land_shiftl_ones.
+      rewrite -> land_shiftl_ones by omega.
       rewrite Z.lor_0_l.
       rewrite Z.land_ones_low. reflexivity.
       nonneg.
@@ -567,8 +630,7 @@ Module Foo: WSfun(N_as_OT).
       reflexivity.
       compute; congruence.
       symmetry.
-      apply Z.shiftr_eq_0; auto.
-      nonneg.
+      apply Z.shiftr_eq_0; nonneg.
   + destruct IHHD1  as [j?].
     exists j.
     rewrite H8.
@@ -675,33 +737,27 @@ Module Foo: WSfun(N_as_OT).
     unfold link.
     subst p1' p2'.
     unfold zero, branchMask, mask.
-    rewrite land_pow2_eq.
+    rewrite -> land_pow2_eq by nonneg.
     replace (Z.log2 (Z.lxor (Z.shiftl p1 (Z.of_N b1)) (Z.shiftl p2 (Z.of_N b2))))
         with (Z.pred (Z.of_N b)).
-    rewrite Z.shiftl_spec.
+    rewrite -> Z.shiftl_spec by nonneg.
 
     destruct (Z.testbit p1 (Z.pred (Z.of_N b) - Z.of_N b1)) eqn:Htb; simpl.
     * eapply DescBin.
       apply H0. apply H.
       all:try congruence.
       destruct (Z.testbit p2 (Z.pred (Z.of_N b) - Z.of_N b2)); congruence.
-      rewrite Z.log2_pow2.
-      rewrite Z.ldiff_ones_r.
-      rewrite Z.shiftr_shiftl_r. f_equal. f_equal. omega. omega.
-      apply N2Z.is_nonneg.
-      rewrite Z.succ_pred. apply N2Z.is_nonneg.
-      assumption.
+      rewrite -> Z.log2_pow2 by assumption.
+      rewrite -> Z.ldiff_ones_r by nonneg.
+      rewrite -> Z.shiftr_shiftl_r by nonneg. f_equal. f_equal. omega. omega.
       intro i. rewrite H8. apply orb_comm.
     * eapply DescBin.
       apply H. apply H0.
       all:try congruence.
       destruct (Z.testbit p2 (Z.pred (Z.of_N b) - Z.of_N b2)); congruence.
-      rewrite Z.log2_pow2.
-      rewrite Z.ldiff_ones_r.
-      rewrite Z.shiftr_shiftl_r. f_equal. f_equal. omega. omega.
-      apply N2Z.is_nonneg.
-      rewrite Z.succ_pred. apply N2Z.is_nonneg.
-      assumption.
+      rewrite -> Z.log2_pow2 by assumption.
+      rewrite -> Z.ldiff_ones_r by nonneg.
+      rewrite -> Z.shiftr_shiftl_r by nonneg. f_equal. f_equal. omega. omega.
 
     (* Have to show that b is actually the right one *)
     symmetry.
@@ -751,15 +807,16 @@ Module Foo: WSfun(N_as_OT).
             rewrite Z.log2_shiftl.
             replace (N.log2 WIDTH) with (Z.to_N (Z.of_N (N.log2 WIDTH))) at 1 by reflexivity.
             apply Z2N.inj_lt.
-            nonneg.
-            auto 8 with nonneg.
-            apply OMEGA2. nonneg. nonneg.
+            -- nonneg.
+            -- transitivity (Z.log2 (Z.lxor (Z.shiftr p 6) p0) + Z.of_N (N.log2 WIDTH)).
+               nonneg.
+               omega.
             rewrite (isPrefix_shiftl_shiftr _ Hp) in n.
             replace (Z.of_N (N.log2 WIDTH)) with 6 in * by reflexivity.
-            rewrite -> Z_shiftl_inj in n.
-            enough (0 <= Z.log2 (Z.lxor (Z.shiftr p 6) p0)) by omega.
-            apply Z.log2_nonneg.
-            admit. (* This cannot be shown *)
+            rewrite -> Z_shiftl_inj in n by nonneg.
+            enough (0 <= Z.log2 (Z.lxor (Z.shiftr p 6) p0)) by omega; nonneg.
+            replace (Z.of_N (N.log2 WIDTH)) with 6 in * by reflexivity.
+            admit. (* This can now be shown, I hope *)
             admit.
             admit.
             apply isPrefix_shiftl_shiftr; assumption.

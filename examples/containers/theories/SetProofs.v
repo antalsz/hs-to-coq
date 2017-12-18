@@ -152,6 +152,12 @@ Module Foo (E : OrderedType) : WSfun(E).
     - apply E.eq_sym in Hcontra. apply OrdFacts.eq_not_lt in Hcontra. contradiction.
   Qed.
 
+  Hint Rewrite -> elt_gt : elt_compare.
+  Hint Rewrite -> elt_lt : elt_compare.
+  Hint Rewrite -> elt_compare_lt : elt_compare.
+  Hint Rewrite -> elt_compare_gt : elt_compare.
+  Hint Rewrite -> elt_compare_eq : elt_compare.
+
   Notation "x <-- f ;; P" :=
     (match f with
      | exist x _ => P
@@ -310,35 +316,120 @@ Module Foo (E : OrderedType) : WSfun(E).
   Ltac step_in_ordered :=
     apply /and4P=>//; split=>//; try solve [derive_ordering].
 
-  Lemma bounded_impl_left_const_true : forall {a} `{GHC.Base.Ord a} f g s,
-      let b := fix bounded lo hi t'
-            := match t' with
-                 | Tip => true
-                 | Bin _ x l r => andb (lo x) (andb (hi x) (andb (bounded lo (fun arg_0__ =>
-                                                                               arg_0__ GHC.Base.< x) l) (bounded
-                                                                 (fun arg_1__ => arg_1__ GHC.Base.> x) hi r)))
-               end in
-          b f g s -> b (const true) g s.
+  Definition partial_lt {a} `{Ord a} (x : a) : a -> bool :=
+    (fun arg => arg GHC.Base.< x).
+  Definition partial_gt {a} `{Ord a} (x : a) : a -> bool :=
+    (fun arg => arg GHC.Base.> x).
+
+  Lemma partial_lt_mono : forall x y z,
+      E.lt y x \/ E.eq x y ->
+      partial_lt z x -> partial_lt z y.
   Proof.
-    intros. subst b. generalize dependent g. induction s=>//.
-    intros. move: H1. case /and4P=>// => Hf Hg Hs2 Hs3.
-    apply /and4P=>//; split=>//. apply IHs1=>//.
+    move=>x y z [Hlt | Heq]; rewrite /partial_lt;
+           autorewrite with elt_compare; intros; eauto.
+    apply E.eq_sym in Heq; eauto.
+  Qed.
+
+  Lemma partial_lt_relax : forall x y z,
+      E.lt x y \/ E.eq x y ->
+      partial_lt x z -> partial_lt y z.
+  Proof.
+    move=>x y z [Hlt | Heq]; rewrite /partial_lt;
+           autorewrite with elt_compare; intros; eauto.
+  Qed.
+  
+  Lemma partial_gt_mono : forall x y z,
+      E.lt x y \/ E.eq x y ->
+      partial_gt z x -> partial_gt z y.
+  Proof.
+    move=>x y z [Hlt | Heq]; rewrite /partial_gt;
+           autorewrite with elt_compare; intros; eauto.
+  Qed.
+
+  Lemma partial_gt_relax : forall x y z,
+      E.lt y x \/ E.eq x y ->
+      partial_gt x z -> partial_gt y z.
+  Proof.
+    move=>x y z [Hlt | Heq]; rewrite /partial_gt;
+           autorewrite with elt_compare; intros; eauto.
+    apply E.eq_sym in Heq; eauto.
+  Qed.
+    
+  Definition local_bounded {a} `{Ord a} :=
+    fix bounded lo hi t'
+      := match t' with
+         | Tip => true
+         | Bin _ x l r => andb (lo x)
+                              (andb (hi x)
+                                    (andb
+                                       (bounded lo (partial_lt x) l)
+                                       (bounded (partial_gt x) hi r)))
+         end.
+
+  Ltac solve_local_bounded :=
+    repeat match goal with
+           | [H: is_true (local_bounded _ _ _) |- _ ] =>
+             move: H; rewrite /local_bounded=>?
+           | [ H: is_true (andb _ (andb _ (andb _ _))) |- _ ] =>
+             let Hlo := fresh "Hlo" in
+             let Hhi := fresh "Hhi" in
+             let Hboundl := fresh "Hboundl" in
+             let Hboundh := fresh "Hboundh" in
+             move: H; case /and4P=>//; move=>Hlo Hhi Hboundl Hboundh
+           | [ |- is_true (andb _ (andb _ (andb _ _))) ] =>
+             apply /and4P=>//; split=>//
+           | [H: context[partial_lt _ _] |- _ ] =>
+             move: H; rewrite /partial_lt; move=>H
+           | [H: context[partial_gt _ _] |- _ ] =>
+             move: H; rewrite /partial_gt; move=>H
+           end; autorewrite with elt_compare in *; eauto.
+
+  Lemma local_bounded_left_relax : forall {a} `{Ord a} (f g f' : a -> bool) s,
+      (forall x, f x -> f' x) ->
+      local_bounded f g s ->
+      local_bounded f' g s.
+  Proof.
+    move=>a Heq Hord f g f' s. move: f g f'.
+    induction s=>//; intros; solve_local_bounded.
+  Qed.
+
+  Lemma local_bounded_right_relax : forall {a} `{Ord a} (f g g' : a -> bool) s,
+      (forall x, g x -> g' x) ->
+      local_bounded f g s ->
+      local_bounded f g' s.
+  Proof.
+    move=>a Heq Hord f g g' s. move: f g g'.
+    induction s=>//; intros; solve_local_bounded.
+  Qed.
+
+  Lemma bounded_impl_left_const_true : forall {a} `{GHC.Base.Ord a} f g s,
+      local_bounded f g s -> local_bounded (const true) g s.
+  Proof.
+    intros. apply local_bounded_left_relax with (f0:=f); auto.
   Qed.
 
   Lemma bounded_impl_right_const_true : forall {a} `{Ord a} f g s,
-      let b := fix bounded lo hi t'
-            := match t' with
-                 | Tip => true
-                 | Bin _ x l r => andb (lo x) (andb (hi x) (andb (bounded lo (fun arg_0__ =>
-                                                                               arg_0__ GHC.Base.< x) l) (bounded
-                                                                 (fun arg_1__ => arg_1__ GHC.Base.> x) hi r)))
-               end in
-          b f g s -> b f (const true) s.
+      local_bounded f g s -> local_bounded f (const true) s.
   Proof.
-    intros. subst b. generalize dependent f. induction s=>//.
-    intros. move: H1. case /and4P=>// => Hf Hg Hs2 Hs3.
-    apply /and4P=>//; split=>//. apply IHs2=>//.
+    intros. apply local_bounded_right_relax with (g0:=g); auto.
   Qed.
+
+  Lemma local_bounded_constr : forall {a} `{Ord a} (f g : a -> bool) x l r,
+      f x ->
+      g x ->
+      local_bounded f (fun arg_0__ => arg_0__ GHC.Base.< x) l ->
+      local_bounded (fun arg_1__ => arg_1__ GHC.Base.> x) g r ->
+      local_bounded f g (Bin 0 x l r).
+  Proof.
+    intros. rewrite /local_bounded.
+    apply /and4P=>//; split=>//.
+  Qed.
+
+  Lemma local_bounded_size_irrelevance :
+    forall {a} `{Ord a} (f g : a -> bool) s1 s2 x l r,
+      local_bounded f g (Bin s1 x l r) ->
+      local_bounded f g (Bin s2 x l r).
+  Proof. auto. Qed.
   
   Lemma ordered_children : forall {a} `{Ord a} (s1 s2 : Set_ a) l e,
       ordered (Bin l e s1 s2) -> ordered s1 /\ ordered s2.
@@ -351,74 +442,15 @@ Module Foo (E : OrderedType) : WSfun(E).
   Lemma ordered_rewrite : forall (s1 s2: Set_ elt) l e1 e2,
       E.eq e1 e2 -> ordered (Bin l e1 s1 s2) -> ordered (Bin l e2 s1 s2).
   Proof.
-    move=>s1 s2 l e1 e2 Heq. rewrite /ordered.
+    move=>s1 s2 l e1 e2 Heq. rewrite /ordered -/local_bounded.
     case /and4P=>//; intros. apply /and4P=>//; split=>//.
-    - move: p1. remember (const true) as ct. clear Heqct p2 p0.
-      generalize dependent ct. induction s1=>//; intros.
-      apply /and4P=>//. move: p1. case /and4P=>//.
-      intros. apply elt_lt in p1; split=>//.
-      + apply elt_lt. eauto.
-      + apply IHs1_2=>//; apply elt_gt=>//.
-    - move: p2. remember (const true) as ct. clear Heqct p1 p0.
-      generalize dependent ct. induction s2=>//; intros.
-      apply /and4P=>//. move: p2. case /and4P=>//.
-      intros. apply elt_gt in p0; split=>//.
-      + apply elt_gt. symmetry in Heq. eauto.
-      + apply IHs2_1=>//; apply elt_gt=>//.
-  Qed.
-
-  Lemma ordered_left_rewrite : forall e1 e2 s s' x (ll lr r : Set_ elt),
-      E.eq e1 e2 ->
-      ordered (Bin s x (Bin s' e1 ll lr) r) ->
-      ordered (Bin s x (Bin s' e2 ll lr) r).
-  Proof.
-    move=>e1 e2 s s' x ll lr r Heq.
-    rewrite /ordered. case /and4P=>// => _ _.
-    case /and4P=>// => _ Hlt Hll Hlr Hr.
-    apply /and4P=>//; split=>//.
-    apply /and4P=>//; split=>//.
-    - apply elt_lt. apply E.eq_sym in Heq.
-      eapply OrdFacts.eq_lt; eauto. apply elt_lt=>//=.
-    - have H: ordered (Bin 0 e1 ll lr).
-      { rewrite /ordered. step_in_ordered.
-        eapply (@bounded_impl_right_const_true E.t Eq_t Ord_t); eauto. }
-      have: ordered (Bin 0 e2 ll lr).
-      { eapply ordered_rewrite; eauto. }
-      rewrite /ordered. case /and4P=>//.
-    - (** I proved this, but I'm really confused about what
-          happened... *)
-      clear Hll Hr Hlt. generalize dependent x.
-      induction lr=>//. intros.
-      move: Hlr. case /and4P=>//. intros.
-      apply /and4P=>//; split=>//. apply elt_gt in p.
-      apply E.eq_sym in Heq. apply elt_gt.
-      eapply OrdFacts.eq_lt; eauto. apply IHlr1; auto.
-  Qed.
-
-  Lemma ordered_right_rewrite : forall e1 e2 s s' x (l rl rr : Set_ elt),
-      E.eq e1 e2 ->
-      ordered (Bin s x l (Bin s' e1 rl rr)) ->
-      ordered (Bin s x l (Bin s' e2 rl rr)).
-  Proof.
-    move=>e1 e2 s s' x l rl rr Heq.
-    rewrite /ordered. case /and4P=>// => _ _ Hl.
-    case /and4P=>// => Hgt _ Hrl Hrr.
-    apply /and4P=>//; split=>//.
-    apply /and4P=>//; split=>//.
-    - apply elt_gt. apply elt_gt in Hgt.
-      eapply OrdFacts.eq_lt; eauto. 
-    - clear Hgt Hl Hrr. generalize dependent x.
-      induction rl=>//. intros.
-      move: Hrl. case /and4P=>//. intros.
-      apply /and4P=>//; split=>//. apply elt_gt in p0.
-      apply elt_gt. eapply OrdFacts.eq_lt; eauto.
-      apply IHrl2; auto.
-    - have H: ordered (Bin 0 e1 rl rr).
-      { rewrite /ordered. step_in_ordered.
-        eapply (@bounded_impl_left_const_true E.t Eq_t Ord_t); eauto. }
-      have: ordered (Bin 0 e2 rl rr).
-      { eapply ordered_rewrite; eauto. }
-      rewrite /ordered. case /and4P=>//.
+    - apply local_bounded_right_relax
+        with (g:=fun arg_0__ : E.t => _GHC.Base.<_ arg_0__ e1); auto.
+      move=>x. autorewrite with elt_compare. move=>Hlt. eauto.
+    - apply local_bounded_left_relax
+        with (f:=fun arg_1__ : E.t => _GHC.Base.>_ arg_1__ e1); auto.
+      move=>x. autorewrite with elt_compare. move=>Hlt.
+      apply E.eq_sym in Heq. eauto.
   Qed.
 
   Lemma validsize_children : forall {a} (s1 s2 : Set_ a) l e,
@@ -773,8 +805,11 @@ Module Foo (E : OrderedType) : WSfun(E).
     - (** Both [l] and [r] and [Tip]s. *) step_in_balanced.
   Time Qed. (* Finished transaction in 18.177 secs (18.108u,0.045s) (successful) *)
 
-  Definition before_orderedL s (x : elt) (l r : Set_ elt) :=
-    ordered (Bin s x l r).
+  Definition before_orderedL (x : elt) (l r : Set_ elt) (f g : elt -> bool) :=
+    f x /\ (forall x y, E.lt x y \/ E.eq x y -> f x -> f y) /\
+    g x /\ (forall x y, E.lt y x \/ E.eq x y -> g x -> g y) /\
+    local_bounded f (fun arg_1__ => arg_1__ GHC.Base.< x) l /\
+    local_bounded (fun arg_0__ => arg_0__ GHC.Base.> x) g r.
 
   Lemma size_irrelevance_in_ordered : forall s1 s2 x (l r : Set_ elt),
       ordered (Bin s1 x l r) -> ordered (Bin s2 x l r).
@@ -800,29 +835,32 @@ Module Foo (E : OrderedType) : WSfun(E).
     apply elt_gt in Hgt=>//.
   Qed.
 
-  Lemma balanceL_ordered : forall (x: elt) (l r : Set_ elt),
+  Lemma balanceL_ordered : forall (x: elt) (l r : Set_ elt) f g,
       (** We need [before_balancedL] as preconditions to eliminate the
           impossible cases. *)
-      WF l -> WF r -> before_balancedL x l r ->
-      before_orderedL 0 x l r -> ordered (balanceL x l r).
+      WF l ->
+      WF r ->
+      before_balancedL x l r ->
+      before_orderedL x l r f g ->
+      local_bounded f g (balanceL x l r).
   Proof.
-    move=>x l r Hwfl Hwfr.
+    move=>x l r f g Hwfl Hwfr.
     destruct r as [sr xr rl rr | ]; destruct l as [sl xl ll lr | ];
       rewrite /before_orderedL /balanceL; rewrite_Int;
         move=>Hbefore_balance Hbefore_ordered;
-               try solve [step_in_ordered].
+               destruct Hbefore_ordered as [? [? [? [? [? ?]]]]];
+               try solve [solve_local_bounded].
     - (** Both [r] and [l] are [Bin]s *)
-      destruct_match; try solve [step_in_ordered].
+      destruct_match; try solve [solve_local_bounded].
       destruct ll as [sll xll lll llr | ];
         destruct lr as [slr xlr lrl lrr | ];
         try solve [lucky_balanced_solve].
-      destruct_match; rewrite /ordered;
-        do 2 step_in_ordered.
+      destruct_match; rewrite_Int; solve_local_bounded.
     - (** [r] is a [Tip] *)
       destruct ll as [sll xll lll llr | ];
         destruct lr as [slr xlr lrl lrr | ];
-        try solve [do 2 step_in_ordered].
-      destruct_match; try solve [do 2 step_in_ordered].
+        try solve [solve_local_bounded].
+      destruct_match; solve_local_bounded.
   Qed.
     
   Lemma balanceL_validsize: forall (x: elt) (l r : Set_ elt),
@@ -833,7 +871,7 @@ Module Foo (E : OrderedType) : WSfun(E).
   Lemma balanceL_WF: forall (x: elt) (l r : Set_ elt),
       WF l -> WF r ->
       before_balancedL x l r ->
-      before_orderedL 0 x l r ->
+      before_orderedL x l r (const true) (const true) ->
       WF (balanceL x l r).
   Proof with auto.
     intros. rewrite /WF /valid.
@@ -847,16 +885,35 @@ Module Foo (E : OrderedType) : WSfun(E).
      s <-- s' ;; member e s.
 
   Ltac split3 := split; [| split].
+
+  Ltac solve_local_bounded_with_relax :=
+    solve_local_bounded; rewrite -/local_bounded;
+    ((eapply local_bounded_right_relax; [| eassumption];
+      intros; eapply partial_lt_relax;
+      (idtac + (multimatch goal with
+                | [H: E.eq _ _ |- _] => apply E.eq_sym in H
+                end))) +
+     (eapply local_bounded_left_relax; [| eassumption];
+      intros; eapply partial_gt_relax;
+      (idtac + (multimatch goal with
+                | [H: E.eq _ _ |- _] => apply E.eq_sym in H
+                end)))); solve [eauto].
     
   Lemma insert_prop : forall e s,
       WF s ->
       WF (insert e s) /\
-      (forall a s',
-          (E.lt e a ->
-           ordered (Bin 0 a s s') -> ordered (Bin 0 a (insert e s) s')) /\
-          (E.lt a e ->
-           ordered (Bin 0 a s' s) -> ordered (Bin 0 a s' (insert e s)))) /\
-      (size (insert e s) = size s + 1 \/ size (insert e s) = size s).
+      (size (insert e s) = size s + 1 \/ size (insert e s) = size s) /\
+      (forall a s1 s2 l x, s = Bin l x s1 s2 ->
+          (forall (f : elt -> bool),
+              E.lt e a ->
+              (forall x y, E.lt x y \/ E.eq x y -> f x -> f y) ->
+              local_bounded f (fun arg => arg GHC.Base.< a) s ->
+              local_bounded f (fun arg => arg GHC.Base.< a) (insert e s)) /\
+          (forall (g : elt -> bool),
+              E.lt a e ->
+              (forall x y, E.lt y x \/ E.eq x y -> g x -> g y) ->
+              local_bounded (fun arg => arg GHC.Base.> a) g s ->
+              local_bounded (fun arg => arg GHC.Base.> a) g (insert e s))).
   Proof.
     induction s.
     - intros. rewrite /insert/=. destruct_match; split3.
@@ -865,12 +922,9 @@ Module Foo (E : OrderedType) : WSfun(E).
         rewrite /WF /valid. case /and3P=>//; intros.
         apply /and3P=>//; split=>//. apply E.eq_sym in Heq.
         eapply ordered_rewrite; eauto.
-      + intros. apply elt_compare_eq in Heq.
-        apply E.eq_sym in Heq. split; intros.
-        * eapply ordered_left_rewrite; eauto.
-        * eapply ordered_right_rewrite; eauto.
       + (** prove [size (insert e s) = size s] *)
         right. rewrite /size=>//.
+      + intros. split; intros; solve_local_bounded_with_relax.
       + (** s is Bin, e < a, prove: WF (insert e s) *)
         intros. apply balanceL_WF.
         * (** WF (insert e s2) *)
@@ -883,32 +937,39 @@ Module Foo (E : OrderedType) : WSfun(E).
           have Hs1: WF s2 by [apply WF_children in H; tauto].
           apply IHs1 in Hs1; destruct Hs1.
           (** cases analysis: did we insert an element to s2?  *)
-          destruct H1; destruct H2.
+          destruct H1 as [[H1 | H1] _].
           -- (** we did *)
             destruct s2; destruct s3; derive_constraints; subst;
               repeat match goal with
                      | [H: _ \/ _ |- _ ] => destruct H
                      | [H: _ /\ _ |- _ ] => destruct H
-                     end; rewrite_for_omega; rewrite ?H2;
+                     end; rewrite_for_omega; rewrite ?H1;
                 try solve [(right + left); omega].
           -- (** we didn't *) derive_constraints; subst.
-             rewrite H2. destruct Hbalanced; (left + right); omega.
+             rewrite H1. destruct Hbalanced; (left + right); omega.
         * (** prove [before_orderedL] pre-conditions *)
           rewrite -/insert /before_orderedL.
           have Hord: ordered (Bin 0 a s2 s3).
           { apply WF_ordered in H.
             eapply size_irrelevance_in_ordered. eauto. }
+          move: Hord. rewrite /ordered. rewrite -/local_bounded.
+          case /and4P=>// => _ _ Hlo Hhi.
+          split; [| split; [| split; [| split; [| split]]]]=>//.
           apply WF_children in H; destruct H.
-          apply IHs1 in H; destruct H as [ _ [Hord' _ ]].
-          specialize (Hord' a s3); destruct Hord'.
-          apply elt_compare_lt in Heq. auto.
-      + rewrite -/insert. admit.
+          apply IHs1 in H. destruct H as [ _ [_ Hord']].
+          destruct s2.
+          -- specialize (Hord' a s2_1 s2_2 s e0 Logic.eq_refl).
+             destruct Hord' as [Hord1 _].
+             autorewrite with elt_compare in *; apply Hord1=>//.
+          -- simpl. apply /andP=>//; split=>//.
+             autorewrite with elt_compare in *; auto.
       + (** prove [size (insert e s) = size s + 1] *)
         rewrite -/insert. 
         have Hs1: WF s2 by [apply WF_children in H; tauto].
         rewrite balanceL_add_size=>//.
-        * apply IHs1 in Hs1; destruct Hs1; destruct H1; destruct H2;
-            derive_constraints; subst; rewrite H2.
+        * apply IHs1 in Hs1.
+          destruct Hs1 as [_ [[Hs | Hs] _]];
+            derive_constraints; subst; rewrite Hs.
           -- left.
              rewrite [size s2 + 1]Z.add_comm [(_ + 1) + 1]Z.add_comm !Z.add_assoc //.
           -- right. reflexivity.
@@ -921,16 +982,11 @@ Module Foo (E : OrderedType) : WSfun(E).
             as in the last last bullet point. *)
       + admit.
       + admit.
+      + admit.
     - simpl. elim. rewrite /singleton. split3.
       + apply WF_singleton.
-      + rewrite /ordered. split.
-        * move=>Hlt. case /and4P=>// =>_ _ _ H.
-          apply /and4P=>//; split=>//.
-          apply /and4P=>//; split=>//. apply elt_lt; auto.
-        * move=>Hlt. case /and4P=>// =>_ _ H _.
-          apply /and4P=>//; split=>//.
-          apply /and4P=>//; split=>//. apply elt_lt; auto.
       + left; reflexivity.
+      + intros. inversion H.
   Admitted.        
 
   Definition add (e: elt) (s': t) : t.

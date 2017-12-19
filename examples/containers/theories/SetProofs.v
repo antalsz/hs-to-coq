@@ -620,6 +620,9 @@ Module Foo (E : OrderedType) : WSfun(E).
              let Hvs := fresh "Hvs" in
              have Hvs: validsize (Bin s x a b) by
                  [apply WF_validsize in Hwf];
+             let Hbl := fresh "Hbl" in
+             have Hbl: balanced (Bin s x a b) by
+                 [apply WF_balanced in Hwf];
              clear Hwf
            | [Hwf: is_true (WF ?t) |- _ ] =>
              let Hnonneg := fresh "Hnonneg" in
@@ -646,21 +649,36 @@ Module Foo (E : OrderedType) : WSfun(E).
   Ltac lucky_balanced_solve :=
     derive_constraints; subst; rewrite_for_omega; intros; omega.
 
-  Ltac brute_force_solve :=
-    rewrite_for_omega; intros;
-    repeat (match goal with
-            | [H: _ \/ _ |- _ ] => destruct H
-            | [H: _ /\ _ |- _ ] => destruct H
-            end; try omega).
-
   Ltac solve_balanced_trivial :=
     solve [auto; repeat (match goal with
-                         | [H: context[balanced(Bin _ _ _ _)] |- _] =>
-                           apply balanced_children in H; destruct H
+                         | [H: is_true (WF (Bin _ _ _ _)) |- _] =>
+                           apply WF_balanced in H;
+                           apply balanced_children in H;
+                           destruct H
                          end; auto)].
 
   Ltac step_in_balanced :=
-    rewrite /balanced; apply /and3P=>//; split=>//; try solve_balanced_trivial.
+    rewrite /balanced; apply /and3P=>//; split=>//;
+      try solve_balanced_trivial.
+
+  Ltac solve_balanced :=
+    repeat match goal with
+           | [ |- is_true (balanced _)] =>
+             step_in_balanced
+           | [ |- is_true (andb _ (andb _ _))] =>
+             step_in_balanced
+           | [ |- is_true (orb _ (andb _ _)) ] =>
+             apply /orP=>//;
+                   ((right; apply /andP=>//) + left);
+                    solve [derive_constraints; subst;
+                           rewrite_for_omega; intros; omega]
+           end;
+    try solve [derive_constraints; subst;
+           repeat match goal with
+                  | [ H: is_true (balanced _) |- _ ] =>
+                    move: H; rewrite /balanced;
+                    case /and3P=>//; move=>? ? ?
+                  end].
 
   Lemma balanceL_add_size : forall (x : elt) (l r : Set_ elt),
       WF l -> WF r ->
@@ -670,16 +688,12 @@ Module Foo (E : OrderedType) : WSfun(E).
       destruct l as [sl xl ll lr | ].
     - rewrite /balanceL; destruct_match.
       + destruct ll as [sll xll lll llr | ];
-          destruct lr as [slr xlr lrl lrr | ].
-        * destruct_match; intros;
-            rewrite_size; rewrite_Int; (* why can't [omega] solve it? *)
-              rewrite -Z.add_assoc [1 + _]Z.add_comm //.
-        * intros. derive_constraints; subst. rewrite_for_omega.
-          intros; omega.
-        * intros. derive_constraints; subst. rewrite_for_omega.
-          intros; omega.
-        * intros. derive_constraints; subst. rewrite_for_omega.
-          intros; omega.
+          destruct lr as [slr xlr lrl lrr | ];
+          try solve [intros; derive_constraints; subst;
+                     rewrite_for_omega; intros; omega].
+        destruct_match; intros;
+          rewrite_size; rewrite_Int; (* why can't [omega] solve it? *)
+            rewrite -Z.add_assoc [1 + _]Z.add_comm //.
       + intros. rewrite_size; rewrite_Int.
         rewrite -Z.add_assoc [1 + _]Z.add_comm //.
     - intros. rewrite_size; rewrite_Int.
@@ -696,6 +710,42 @@ Module Foo (E : OrderedType) : WSfun(E).
       + intros. derive_constraints; subst.
         destruct Hbalanced; rewrite_for_omega.
         * intros. have Hs: (size lrl + size lrr = 0) by omega. rewrite Hs //.
+        * intros. omega.
+      + intros; derive_constraints. move: Hsum.
+        rewrite_for_omega. intros. rewrite -Hsum. reflexivity.
+    - rewrite_size. do 2 elim. rewrite_Int. reflexivity.
+  Qed.
+
+  Lemma balanceR_add_size : forall (x : elt) (l r : Set_ elt),
+      WF l -> WF r ->
+      size (balanceR x l r) = size l + size r + 1.
+  Proof.
+    destruct l as [sl xl ll lr | ];
+      destruct r as [sr xr rl rr | ].
+    - rewrite /balanceR; destruct_match.
+      + destruct rl as [srl xrl rll rlr | ];
+          destruct rr as [srr xrr rrl rrr | ];
+          try solve [intros; derive_constraints; subst;
+                     rewrite_for_omega; intros; omega].
+        destruct_match; intros;
+          rewrite_size; rewrite_Int; (* why can't [omega] solve it? *)
+            rewrite -Z.add_assoc [1 + _]Z.add_comm //.
+      + intros. rewrite_size; rewrite_Int.
+        rewrite -Z.add_assoc [1 + _]Z.add_comm //.
+    - intros. rewrite_size; rewrite_Int.
+      rewrite Z.add_0_r Z.add_comm //.
+    - rewrite /balanceR;
+        destruct rl as [srl xrl rll rlr | ];
+        destruct rr as [srr xrr rrl rrr | ].
+      + destruct_match; intros; rewrite_size; rewrite_Int;
+          rewrite -Z.add_assoc Z.add_0_l Z.add_comm //.
+      + intros. derive_constraints; subst.
+        destruct Hbalanced; rewrite_for_omega.
+        * intros. have Hs: (size rll + size rlr = 0) by omega. rewrite Hs //.
+        * intros. omega.
+      + intros. derive_constraints; subst.
+        destruct Hbalanced; rewrite_for_omega.
+        * intros. have Hs: (size rrl + size rrr = 0) by omega. rewrite Hs //.
         * intros. omega.
       + intros; derive_constraints. move: Hsum.
         rewrite_for_omega. intros. rewrite -Hsum. reflexivity.
@@ -721,104 +771,72 @@ Module Foo (E : OrderedType) : WSfun(E).
       before_balancedL x l r -> balanced (balanceL x l r).
   Proof.
     intros x l r Hwfl Hwfr.
-    have: WF l by done. have: WF r by done.
-    rewrite /WF /valid.
-    case: and3P=>//; elim; move=>Hbr Hor Hvr; elim.
-    case: and3P=>//; elim; move=>Hbl Hol Hvl; elim.
     destruct r as [sr xr rl rr | ]; destruct l as [sl xl ll lr | ];
       rewrite /before_balancedL /balanceL; rewrite_Int; move=>Hbefore.
     - (** [l] and [r] are both [Bin]s. *)
-      rewrite_Int. destruct_match.
+      destruct_match.
       + (** The [ls > delta*rs] branch in Haskell code. *)
         destruct ll as [sll xll lll llr | ];
           destruct lr as [slr xlr lrl lrr | ]; rewrite_Int;
             try solve [lucky_balanced_solve].
         * (** [ll] and [lr] are both Bins *)
-          destruct_match.
-          -- (** [lrs < ratio*lls] branch (single rotation): We need
-                 to prove that [Bin (1+ls+rs) lx ll (Bin (1+rs+lrs) x
-                 lr r)] is balanced. *)
-            step_in_balanced.
-            ++ (** Top level is balanced. That is, size of [ll] and of
-                   [Bin (1+rs+lrs) x lr r] are balanced. This should
-                   be proved by arithmetics. *)
-              apply /orP=>//. right.
-              apply /andP=>//. split; derive_constraints; subst.
-              ** destruct Hbalanced0; rewrite_for_omega; intros; omega.
-              ** rewrite_for_omega. omega.
-            ++ (** Right child [Bin (1+rs+lrs) x lr r] is
-                   balanced. Arithmetics. *)
-              step_in_balanced.
-              derive_constraints; subst.
-              apply /orP=>//. right.
-              apply /andP=>//; split; rewrite_for_omega; omega.
-          -- (** The [otherwise] branch, i.e. [lr >= ratio * ll]
-                 (double rotation). *)
-            step_in_balanced.
-            ++ (** Left child [Bin (1+lls+size lrl) lx ll lrl] and
-                   right child [Bin (1+rs+size lrr) x lrr r] are
-                   balanced wrt. to each other. *)
-              apply /orP=>//. right.
-              apply /andP=>//. derive_constraints; subst; rewrite_for_omega.
-              split; omega.
-            ++ (** [Bin (1+lls+size lrl) lx ll lrl] is balanced. *)
-              step_in_balanced.
-              apply /orP=>//. destruct lrl.
-              ** right. apply /andP=>//. derive_constraints; subst.
-                 brute_force_solve.
-              ** derive_constraints; subst; rewrite_size; rewrite_Int.
-                 left. rewrite_for_omega. omega.
-            ++ (** [Bin (1+rs+size lrr) x lrr r] is balanced. *)
-              step_in_balanced.
-              apply /orP=>//. destruct lrr.
-              ** right. apply /andP=>//. derive_constraints; subst.
-                 brute_force_solve.
-              ** derive_constraints; subst.
-                 left. rewrite_for_omega. omega.
+          destruct_match; solve_balanced.
+          -- (** [Bin (1+lls+size lrl) lx ll lrl] is balanced. *)
+            destruct lrl; solve_balanced.
+          -- (** [Bin (1+rs+size lrr) x lrr r] is balanced. *)
+            destruct lrr; solve_balanced.
       + (** The [otherwise] branch, i.e. [ls <= delta*rs]. *)
-        step_in_balanced.
-        derive_constraints; subst. apply /orP; right.
-        apply /andP. brute_force_solve.
+        solve_balanced.
     - (** [l] is [Tip] *)
-      destruct rl; destruct rr;
-        try solve [step_in_balanced; apply /orP=>//; (right + left);
-                   derive_constraints; subst;
-                   try (apply /andP=>//; split); rewrite_for_omega; omega].
+      destruct rl; destruct rr; solve_balanced.
     - (** [r] is [Tip] *)
       destruct ll as [sll xll lll llr | ];
-        destruct lr as [slr xlr lrl lrr | ].
-      + (** [ll] is [Bin sll xll lll llr] *) destruct_match.
-        * (** [Bin (1+ls) lx ll (Bin (1+lrs) x lr Tip)] is
-              balanced. *)
-          step_in_balanced.
-          -- derive_constraints; subst. apply /orP=>//; right.
-             apply /andP=>//. rewrite_for_omega. omega.
-          -- step_in_balanced. derive_constraints; subst.
-             (* contradiction, doesn't matter which branch. *)
-             apply /orP=>//; left. rewrite_for_omega. omega.
-        * (** [Bin (1+ls) lrx (Bin (1+lls+size lrl) lx ll lrl) (Bin
-              (1+size lrr) x lrr Tip)] is balanced *)
-          step_in_balanced.
-          -- derive_constraints; subst. apply /orP=>//; right.
-             apply /andP=>//; split; rewrite_for_omega; omega.
-          -- step_in_balanced.
-             derive_constraints; subst.
-             (* contradiction, doesn't matter which branch. *)
-             apply /orP=>//; left. rewrite_for_omega. omega.
-          -- step_in_balanced. derive_constraints.
-             apply /orP=>//; left. rewrite_for_omega. omega.
-      + step_in_balanced. derive_constraints; subst.
-        (* contradiction, doesn't matter which branch. *)
-        destruct Hbefore; destruct H.
-        * apply /orP=>//; right. apply /andP=>//; rewrite_for_omega; split; omega.
-        * apply /orP=>//; left. rewrite_for_omega. omega. (* contradiction *)
-      + step_in_balanced.
-      + apply WF_size_children in Hwfl.
-        step_in_balanced. apply /orP=>//; left. rewrite_for_omega. omega.
-    - (** Both [l] and [r] and [Tip]s. *) step_in_balanced.
-      Time Qed. (* Finished transaction in 29.63 secs (29.495u,0.12s) (successful) *)
+        destruct lr as [slr xlr lrl lrr | ];
+        solve_balanced.
+      (** [ll] is [Bin sll xll lll llr] *)
+      destruct_match; solve_balanced.
+    - (** Both [l] and [r] and [Tip]s. *)
+      step_in_balanced.
+      Time Qed. (* Finished transaction in 24.677 secs (24.357u,0.303s) (successful) *)
 
-  Definition before_orderedL (x : elt) (l r : Set_ elt) (f g : elt -> bool) :=
+    Definition before_balancedR (x: elt) (l r : Set_ elt) : Prop :=
+    (size l + size r <= 2 /\ size l <= 1) \/
+    (size r <= delta * size l + 1 /\ size l <= delta * size r).
+
+  Lemma balanceR_balanced: forall (x: elt) (l r : Set_ elt),
+      WF l -> WF r ->
+      before_balancedR x l r -> balanced (balanceR x l r).
+  Proof.
+    intros x l r Hwfl Hwfr.
+    destruct l as [sl xl ll lr | ]; destruct r as [sr xr rl rr | ];
+      rewrite /before_balancedR /balanceR; rewrite_Int; move=>Hbefore.
+    - (** [l] and [r] are both [Bin]s. *)
+      destruct_match.
+      + (** The [rs > delta*ls] branch in Haskell code. *)
+        destruct rl as [srl xrl rll rlr | ];
+          destruct rr as [srr xrr rrl rrr | ]; rewrite_Int;
+            try solve [lucky_balanced_solve].
+        * (** [rl] and [rr] are both Bins *)
+          destruct_match; solve_balanced.
+          -- (** [Bin (1+ls+size rll) x l rll] is balanced. *)
+            destruct rll; solve_balanced.
+          -- (** [Bin (1+rrs+size rlr) rx rlr rr] is balanced. *)
+            destruct rlr; solve_balanced.
+      + (** The [otherwise] branch, i.e. [ls <= delta*rs]. *)
+        solve_balanced.
+    - (** [r] is [Tip] *)
+      destruct ll; destruct lr; solve_balanced.
+    - (** [l] is [Tip] *)
+        destruct rl as [srl xrl rll rlr | ];
+          destruct rr as [srr xrr rrl rrr | ];
+          solve_balanced.
+      (** [rr] is [Bin srr xrr rrl rrr] *)
+      destruct_match; solve_balanced.
+    - (** Both [l] and [r] and [Tip]s. *)
+      step_in_balanced.
+      Time Qed. (* Finished transaction in 28.41 secs (28.006u,0.287s) (successful) *)
+
+  Definition before_ordered (x : elt) (l r : Set_ elt) (f g : elt -> bool) :=
     f x /\ (forall x y, E.lt x y \/ E.eq x y -> f x -> f y) /\
     g x /\ (forall x y, E.lt y x \/ E.eq x y -> g x -> g y) /\
     local_bounded f (fun arg_1__ => arg_1__ GHC.Base.< x) l /\
@@ -828,38 +846,18 @@ Module Foo (E : OrderedType) : WSfun(E).
       ordered (Bin s1 x l r) -> ordered (Bin s2 x l r).
   Proof. move=>s1 s2 x l r. rewrite /ordered; auto. Qed.
 
-  Lemma ordered_left : forall s sl x xl (ll lr r : Set_ elt),
-      ordered (Bin s x (Bin sl xl ll lr) r) ->
-      E.lt xl x.
-  Proof.
-    move=>s sl x xl ll lr r. rewrite /ordered.
-    case /and4P=>// => H1 H2. clear H1 H2.
-    case /and4P=>// => H1 Hlt. clear H1.
-    apply elt_lt in Hlt=>//.
-  Qed.
-
-  Lemma ordered_right : forall s sr x xr (l rl rr : Set_ elt),
-      ordered (Bin s x l (Bin sr xr rl rr)) ->
-      E.lt x xr.
-  Proof.
-    move=>s sr x xr l rl rr. rewrite /ordered.
-    case /and4P=>// => H1 H2 H3. clear H1 H2 H3.
-    case /and4P=>// => Hgt H1. clear H1.
-    apply elt_gt in Hgt=>//.
-  Qed.
-
   Lemma balanceL_ordered : forall (x: elt) (l r : Set_ elt) f g,
       (** We need [before_balancedL] as preconditions to eliminate the
           impossible cases. *)
       WF l ->
       WF r ->
       before_balancedL x l r ->
-      before_orderedL x l r f g ->
+      before_ordered x l r f g ->
       local_bounded f g (balanceL x l r).
   Proof.
     move=>x l r f g Hwfl Hwfr.
     destruct r as [sr xr rl rr | ]; destruct l as [sl xl ll lr | ];
-      rewrite /before_orderedL /balanceL; rewrite_Int;
+      rewrite /before_ordered /balanceL; rewrite_Int;
         move=>Hbefore_balance Hbefore_ordered;
                destruct Hbefore_ordered as [? [? [? [? [? ?]]]]];
                try solve [solve_local_bounded].
@@ -872,6 +870,32 @@ Module Foo (E : OrderedType) : WSfun(E).
     - (** [r] is a [Tip] *)
       destruct ll as [sll xll lll llr | ];
         destruct lr as [slr xlr lrl lrr | ];
+        try solve [solve_local_bounded].
+      destruct_match; solve_local_bounded.
+  Qed.
+
+  Lemma balanceR_ordered : forall (x: elt) (l r : Set_ elt) f g,
+      WF l ->
+      WF r ->
+      before_balancedR x l r ->
+      before_ordered x l r f g ->
+      local_bounded f g (balanceR x l r).
+  Proof.
+    move=>x l r f g Hwfl Hwfr.
+    destruct l as [sl xl ll lr | ]; destruct r as [sr xr rl rr | ];
+      rewrite /before_ordered /balanceR; rewrite_Int;
+        move=>Hbefore_balance Hbefore_ordered;
+               destruct Hbefore_ordered as [? [? [? [? [? ?]]]]];
+               try solve [solve_local_bounded].
+    - (** Both [r] and [l] are [Bin]s *)
+      destruct_match; try solve [solve_local_bounded].
+        destruct rl as [srl xrl rll rlr | ];
+          destruct rr as [srr xrr rrl rrr | ];
+          try solve [lucky_balanced_solve].
+      destruct_match; rewrite_Int; solve_local_bounded.
+    - (** [l] is a [Tip] *)
+      destruct rl as [srl xrl rll rlr | ];
+        destruct rr as [srr xrr rrl rrr | ];
         try solve [solve_local_bounded].
       destruct_match; solve_local_bounded.
   Qed.
@@ -903,12 +927,31 @@ Module Foo (E : OrderedType) : WSfun(E).
     - destruct ll as [sll xll lll llr | ];
         destruct lr as [slr xlr lrl lrr | ];
         try solve [lucky_balanced_solve || solve_realsize].
-  Qed.                              
+  Qed.
+
+  Lemma balanceR_validsize: forall (x: elt) (l r : Set_ elt),
+      WF l -> WF r ->
+      before_balancedR x l r -> validsize (balanceR x l r).
+  Proof.
+    move=>x l r Hwfl Hwfr.
+    rewrite /validsize -/local_realsize.
+    destruct l as [sl xl ll lr | ]; destruct r as [sr xr rl rr | ];
+      rewrite /before_ordered /balanceR; intros; try solve [solve_realsize].
+    - rewrite_Int. destruct_match; try solve [solve_realsize].
+      destruct rl as [srl xrl rll rlr | ];
+        destruct rr as [srr xrr rrl rrr | ];
+        try solve [lucky_balanced_solve].
+      destruct_match; solve_realsize.
+    - destruct rl as [srl xrl rll rlr | ];
+        destruct rr as [srr xrr rrl rrr | ];
+        try solve [lucky_balanced_solve || solve_realsize].
+      destruct_match; solve_realsize.
+  Qed.
 
   Lemma balanceL_WF: forall (x: elt) (l r : Set_ elt),
       WF l -> WF r ->
       before_balancedL x l r ->
-      before_orderedL x l r (const true) (const true) ->
+      before_ordered x l r (const true) (const true) ->
       WF (balanceL x l r).
   Proof with auto.
     intros. rewrite /WF /valid.
@@ -916,6 +959,19 @@ Module Foo (E : OrderedType) : WSfun(E).
     - apply balanceL_balanced...
     - apply balanceL_ordered...
     - apply balanceL_validsize...
+  Qed.
+
+  Lemma balanceR_WF: forall (x: elt) (l r : Set_ elt),
+      WF l -> WF r ->
+      before_balancedR x l r ->
+      before_ordered x l r (const true) (const true) ->
+      WF (balanceR x l r).
+  Proof with auto.
+    intros. rewrite /WF /valid.
+    apply /and3P=>//; split.
+    - apply balanceR_balanced...
+    - apply balanceR_ordered...
+    - apply balanceR_validsize...
   Qed.
 
   Definition mem : elt -> t -> bool := fun e s' =>
@@ -940,17 +996,17 @@ Module Foo (E : OrderedType) : WSfun(E).
       WF s ->
       WF (insert e s) /\
       (size (insert e s) = size s + 1 \/ size (insert e s) = size s) /\
-      (forall a s1 s2 l x, s = Bin l x s1 s2 ->
-                      (forall (f : elt -> bool),
-                          E.lt e a ->
-                          (forall x y, E.lt x y \/ E.eq x y -> f x -> f y) ->
-                          local_bounded f (fun arg => arg GHC.Base.< a) s ->
-                          local_bounded f (fun arg => arg GHC.Base.< a) (insert e s)) /\
-                      (forall (g : elt -> bool),
-                          E.lt a e ->
-                          (forall x y, E.lt y x \/ E.eq x y -> g x -> g y) ->
-                          local_bounded (fun arg => arg GHC.Base.> a) g s ->
-                          local_bounded (fun arg => arg GHC.Base.> a) g (insert e s))).
+      (forall a,
+          (forall (f : elt -> bool),
+              E.lt e a -> f e ->
+              (forall x y, E.lt x y \/ E.eq x y -> f x -> f y) ->
+              local_bounded f (fun arg => arg GHC.Base.< a) s ->
+              local_bounded f (fun arg => arg GHC.Base.< a) (insert e s)) /\
+          (forall (g : elt -> bool),
+              E.lt a e -> g e ->
+              (forall x y, E.lt y x \/ E.eq x y -> g x -> g y) ->
+              local_bounded (fun arg => arg GHC.Base.> a) g s ->
+              local_bounded (fun arg => arg GHC.Base.> a) g (insert e s))).
   Proof.
     induction s.
     - intros. rewrite /insert/=. destruct_match; split3.
@@ -984,8 +1040,8 @@ Module Foo (E : OrderedType) : WSfun(E).
                 try solve [(right + left); omega].
           -- (** we didn't *) derive_constraints; subst.
              rewrite H1. destruct Hbalanced; (left + right); omega.
-        * (** prove [before_orderedL] pre-conditions *)
-          rewrite -/insert /before_orderedL.
+        * (** prove [before_ordered] pre-conditions *)
+          rewrite -/insert /before_ordered.
           have Hord: ordered (Bin 0 a s2 s3).
           { apply WF_ordered in H.
             eapply size_irrelevance_in_ordered. eauto. }
@@ -994,12 +1050,8 @@ Module Foo (E : OrderedType) : WSfun(E).
           split; [| split; [| split; [| split; [| split]]]]=>//.
           apply WF_children in H; destruct H.
           apply IHs1 in H. destruct H as [ _ [_ Hord']].
-          destruct s2.
-          -- specialize (Hord' a s2_1 s2_2 s e0 Logic.eq_refl).
-             destruct Hord' as [Hord1 _].
-             autorewrite with elt_compare in *; apply Hord1=>//.
-          -- simpl. apply /andP=>//; split=>//.
-             autorewrite with elt_compare in *; auto.
+          specialize (Hord' a); destruct Hord'.
+          apply H=>//. autorewrite with elt_compare in *. auto.
       + (** prove [size (insert e s) = size s + 1] *)
         rewrite -/insert.
         have Hs1: WF s2 by [apply WF_children in H; tauto].
@@ -1012,19 +1064,116 @@ Module Foo (E : OrderedType) : WSfun(E).
           -- right. reflexivity.
         * apply IHs1 in Hs1. tauto.
         * apply WF_children in H. tauto.
+      + intros; split; intros;
+          apply balanceL_ordered=>//;
+          try solve [rewrite -/insert; apply WF_children in H; destruct H;
+                     apply IHs1 in H; tauto];
+          try solve [apply WF_children in H; tauto];
+          try solve [rewrite -/insert /before_balancedL;
+                     have Hwf: WF (Bin s1 a s2 s3) by [done];
+                     apply WF_children in H; destruct H;
+                     apply IHs1 in H; destruct H as [? [Hs _]];
+                     destruct Hs; derive_constraints;
+                     subst; rewrite_for_omega;
+                     rewrite H5; intros; omega].
+        * move: H3. case /and4P=>// => Hf Hlt Hlo Hhi.
+          rewrite -/insert /before_ordered.
+          split; [| split; [| split; [| split; [| split]]]]=>//.
+          -- intros. autorewrite with elt_compare in *.
+             intuition; eauto. apply E.eq_sym in H5; eauto.
+          -- apply WF_children in H; destruct H.
+             apply IHs1 in H. destruct H as [ _ [_ Hord']].
+             specialize (Hord' a); destruct Hord'.
+             apply H=>//. autorewrite with elt_compare in *. auto.
+        * move: H3. case /and4P=>// => Hf Hlt Hlo Hhi.
+          rewrite -/insert /before_ordered.
+          split; [| split; [| split; [| split; [| split]]]]=>//.
+          -- intros. autorewrite with elt_compare in *.
+             intuition; eauto. 
+          -- apply WF_children in H; destruct H.
+             apply IHs1 in H. destruct H as [ _ [_ Hord']].
+             specialize (Hord' a0); destruct Hord'.
+             apply H4=>//; try intros;
+               autorewrite with elt_compare in *; auto.
+             destruct H5; eauto. apply E.eq_sym in H5. eauto.
       + (** s is Bin, e > a, prove: WF (insert e s) *)
-        admit.
-      (** We need to prove some properties for [balanceR] in order
-            to prove this. This structure should be very much the same
-            as in the last last bullet point. *)
-      + admit.
-      + admit.
-      + admit.
+        intros. apply balanceR_WF.
+        * (** WF s2 *)
+          apply WF_children in H. tauto.
+        * (** WF (insert e s3) *)
+          apply WF_children in H. apply IHs2. tauto.
+        * (** s2 and (insert e s3) satisfy [before_balancedR]'s
+              pre-condbitions. *)
+          rewrite -/insert /before_balancedR.
+          have Hs2: WF s3 by [apply WF_children in H; tauto].
+          apply IHs2 in Hs2; destruct Hs2.
+          (** cases analysis: did we insert an element to s3?  *)
+          destruct H1 as [[H1 | H1] _].
+          -- (** we did *)
+            destruct s2; destruct s3; derive_constraints; subst;
+              rewrite_for_omega; rewrite ?H1; intros; omega.
+          -- (** we didn't *) derive_constraints; subst.
+             rewrite H1. destruct Hbalanced; (left + right); omega.
+        * (** prove [before_ordered] pre-conditions *)
+          rewrite -/insert /before_ordered.
+          have Hord: ordered (Bin 0 a s2 s3).
+          { apply WF_ordered in H.
+            eapply size_irrelevance_in_ordered. eauto. }
+          move: Hord. rewrite /ordered. rewrite -/local_bounded.
+          case /and4P=>// => _ _ Hlo Hhi.
+          split; [| split; [| split; [| split; [| split]]]]=>//.
+          apply WF_children in H; destruct H.
+          apply IHs2 in H0. destruct H0 as [ _ [_ Hord']].
+          specialize (Hord' a); destruct Hord'.
+          apply H1=>//. autorewrite with elt_compare in *. auto.
+      + rewrite -/insert.
+        have Hs2: WF s3 by [apply WF_children in H; tauto].
+        rewrite balanceR_add_size=>//.
+        * apply IHs2 in Hs2.
+          destruct Hs2 as [_ [[Hs | Hs] _]];
+            derive_constraints; subst; rewrite Hs.
+          -- left. rewrite Z.add_assoc //.
+          -- right. reflexivity.
+        * apply WF_children in H. tauto.
+        * apply IHs2 in Hs2. tauto.
+      + intros; split; intros;
+          apply balanceR_ordered=>//;
+          try solve [rewrite -/insert; apply WF_children in H; destruct H;
+                     apply IHs1 in H; tauto];
+          try solve [apply WF_children in H; tauto];
+          try solve [rewrite -/insert /before_balancedR;
+                     have Hwf: WF (Bin s1 a s2 s3) by [done];
+                     apply WF_children in H; destruct H as [_ H];
+                     apply IHs2 in H; destruct H as [? [Hs _]];
+                     destruct Hs as [Hs | Hs]; derive_constraints;
+                       subst; rewrite_for_omega;
+                         rewrite Hs; intros; omega].
+        * move: H3. case /and4P=>// => Hf Hlt Hlo Hhi.
+          rewrite -/insert /before_ordered.
+          split; [| split; [| split; [| split; [| split]]]]=>//.
+          -- intros. autorewrite with elt_compare in *.
+             intuition; eauto. apply E.eq_sym in H5; eauto.
+          -- apply WF_children in H; destruct H.
+             apply IHs2 in H3. destruct H3 as [ _ [_ Hord']].
+             specialize (Hord' a0); destruct Hord'.
+             apply H3=>//; try intros; autorewrite with elt_compare in *; auto.
+             destruct H5; eauto.
+        * move: H3. case /and4P=>// => Hf Hlt Hlo Hhi.
+          rewrite -/insert /before_ordered.
+          split; [| split; [| split; [| split; [| split]]]]=>//.
+          -- intros. autorewrite with elt_compare in *.
+             intuition; eauto. 
+          -- apply WF_children in H; destruct H.
+             apply IHs2 in H3. destruct H3 as [ _ [_ Hord']].
+             specialize (Hord' a); destruct Hord'.
+             apply H4=>//; autorewrite with elt_compare in *; auto.
     - simpl. elim. rewrite /singleton. split3.
       + apply WF_singleton.
       + left; reflexivity.
-      + intros. inversion H.
-  Admitted.
+      + intros; split; intros; apply /and3P=>//; split=>//.
+        * autorewrite with elt_compare. auto.
+        * autorewrite with elt_compare. auto.
+  Qed.
 
   Definition add (e: elt) (s': t) : t.
     refine (s <-- s' ;;

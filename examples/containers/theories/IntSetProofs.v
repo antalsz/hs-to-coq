@@ -95,6 +95,186 @@ Proof.
     apply H.
 Qed.
 
+
+  
+Lemma lor_ones_ones: forall b1 b2, Z.lor (Z.ones b1) (Z.ones b2) = Z.ones (Z.max b1 b2).
+Admitted.
+  
+
+(* We very often have to resolve non-negativity constraints *)
+
+Lemma succ_nonneg: forall n, 0 <= n -> 0 <= Z.succ n.
+Proof. intros. omega. Qed.
+
+    
+Lemma ones_nonneg: forall n, 0 <= n -> 0 <= Z.ones n.
+Proof.
+  intros.
+  unfold Z.ones.
+  rewrite -> Z.shiftl_mul_pow2 by assumption.
+  rewrite Z.mul_1_l.
+  rewrite <- Z.lt_le_pred.
+  apply Z.pow_pos_nonneg; auto.
+  omega.
+Qed.
+
+Lemma log2_ones: forall n, 0 < n -> Z.log2 (Z.ones n) = Z.pred n.
+  intros.
+  unfold Z.ones.
+  rewrite -> Z.shiftl_mul_pow2 by omega.
+  rewrite Z.mul_1_l.
+  apply Z.log2_pred_pow2.
+  assumption.
+Qed.
+
+Create HintDb nonneg.
+Hint Immediate N2Z.is_nonneg : nonneg.
+Hint Immediate pos_nonneg : nonneg.
+Hint Resolve N.le_0_l : nonneg.
+Hint Resolve Z.log2_nonneg : nonneg.
+Hint Resolve ones_nonneg : nonneg.
+Hint Resolve succ_nonneg : nonneg.
+Hint Resolve <- Z.shiftr_nonneg : nonneg.
+Hint Extern 1 (0 <= Z.succ (Z.pred (Z.of_N _))) => rewrite Z.succ_pred : nonneg.
+
+Ltac nonneg := solve [auto with nonneg].
+
+Lemma to_N_log2: forall i, Z.to_N (Z.log2 i) = N.log2 (Z.to_N i).
+Proof.
+  intros.
+  destruct i; try reflexivity.
+  destruct p; try reflexivity.
+Qed.
+
+Lemma of_N_log2: forall n, Z.of_N (N.log2 n) = Z.log2 (Z.of_N n).
+Proof.
+  intros.
+  destruct n; try reflexivity.
+  destruct p; try reflexivity.
+Qed.
+
+(* This is a stronger version than what’s in the standard library *)
+Lemma log2_le_lin': forall a : N, (* (0 <= a)%N -> *) (N.log2 a <= a)%N.
+Proof. intros.
+  destruct a.
+  reflexivity.
+  apply N.log2_le_lin.
+  nonneg.
+Qed.
+
+Lemma N_land_pow2_testbit:
+  forall n i, negb (N.land (2 ^ i) n =? 0)%N = N.testbit n i.
+Proof.
+  intros.
+  destruct (N.testbit n i) eqn:Htb.
+  * rewrite negb_true_iff.
+    rewrite N.eqb_neq.
+    contradict Htb.
+    assert (N.testbit (N.land (2^i)%N n) i = false).
+     by (rewrite Htb; apply N.bits_0).
+    rewrite N.land_spec in H. rewrite N.pow2_bits_true in H.
+    simpl in H. congruence.
+  * rewrite negb_false_iff.
+    rewrite N.eqb_eq.
+    apply N.bits_inj.
+    intro j.
+    rewrite N.land_spec.
+    rewrite N.pow2_bits_eqb.
+    destruct (N.eqb_spec i j); subst; intuition.
+Qed.
+
+Lemma land_pow2_eq:
+  forall i b, 0 <= b -> (Z.land i (2 ^ b) =? 0) = (negb (Z.testbit i b)).
+Proof.
+  intros ?? Hnonneg.
+  destruct (Z.testbit i b) eqn:Htb; simpl.
+  * rewrite Z.eqb_neq.
+    contradict Htb.
+    assert (Z.testbit (Z.land i (2^b)) b = false)
+     by (rewrite Htb; apply Z.bits_0).
+    rewrite Z.land_spec in H. rewrite Z.pow2_bits_true in H.
+    rewrite andb_true_r in H.
+    simpl in H. congruence.
+    nonneg.
+  * rewrite Z.eqb_eq.
+    apply Z.bits_inj'.
+    intros j ?.
+    rewrite  Z.bits_0.
+    rewrite Z.land_spec.
+    rewrite Z.pow2_bits_eqb.
+    destruct (Z.eqb_spec b j).
+    * subst. rewrite Htb. reflexivity.
+    * rewrite andb_false_r.  reflexivity.
+    nonneg.
+Qed.
+
+Lemma shiftr_eq_ldiff :
+forall n m b,
+    0 <= b ->
+    Z.ldiff n (Z.ones b) = Z.ldiff m (Z.ones b) ->
+    Z.shiftr n b = Z.shiftr m b.
+Proof.
+  intros.
+    * apply Z.bits_inj'.
+      intros i ?.
+      rewrite -> !Z.shiftr_spec by assumption.
+      apply Z.bits_inj_iff in H0.
+      specialize (H0 (i + b)).
+      rewrite -> !Z.ldiff_spec in H0.
+      rewrite -> !Z.ones_spec_high in H0.
+      simpl in *.
+      rewrite -> ! andb_true_r in H0.
+      assumption.
+      omega.
+Qed.
+
+
+Lemma Z_shiftl_inj:
+  forall x y n,
+    0 <= n ->
+    Z.shiftl x n = Z.shiftl y n <-> x = y.
+Proof.
+  intros; split; intro.
+  * apply Z.bits_inj'.
+    intros i ?.
+    apply Z.bits_inj_iff in H0.
+    specialize (H0 (i + n)).
+    do 2 rewrite -> Z.shiftl_spec in H0 by omega.
+    replace (i + n - n) with i in H0 by omega.
+    assumption.
+  * apply Z.bits_inj'.
+    intros i ?.
+    apply Z.bits_inj_iff in H0.
+    specialize (H0 (i - n)).
+    do 2 rewrite -> Z.shiftl_spec by omega.
+    assumption.
+ Qed.
+ 
+Lemma Z_shiftl_injb:
+  forall x y n, 0 <= n -> (Z.shiftl x n =? Z.shiftl y n) = (x =? y).
+Proof.
+  intros.
+  destruct (Z.eqb_spec (Z.shiftl x n) (Z.shiftl y n)),
+           (Z.eqb_spec x y); auto; try congruence; exfalso.
+  apply Z_shiftl_inj in e; auto.
+Qed.
+
+ Lemma land_shiftl_ones:
+   forall i n, 0 <= n -> Z.land (Z.shiftl i n) (Z.ones n) = 0.
+ Proof.
+   intros.
+   apply Z.bits_inj'.
+   intros j ?.
+   rewrite Z.land_spec.
+   rewrite -> Z.shiftl_spec by nonneg.
+   rewrite Z.bits_0. rewrite andb_false_iff.
+   destruct (Z.ltb_spec j n).
+   * left. apply Z.testbit_neg_r. omega.
+   * right. apply Z.ones_spec_high. omega.
+ Qed.
+
+
+
 Require Import Coq.Structures.OrderedTypeEx.
 
 Module Foo: WSfun(N_as_OT).
@@ -135,6 +315,7 @@ Module Foo: WSfun(N_as_OT).
     rewrite /_.&._ /Bits.complement /Bits__N /instance_Bits_Int /complement_Int.
     rewrite Z.land_nonneg; intuition.
   Qed.
+  Hint Resolve prefixOf_nonneg : nonneg.
 
   Definition WIDTH := 64%N.
   
@@ -158,23 +339,6 @@ Module Foo: WSfun(N_as_OT).
     reflexivity.
     compute. congruence.
   Qed.
-
-  (* We very often have to resolve non-negativity constraints *)
-  
-  Lemma succ_nonneg: forall n, 0 <= n -> 0 <= Z.succ n.
-  Proof. intros. omega. Qed.
-
-  Create HintDb nonneg.
-  Hint Immediate N2Z.is_nonneg : nonneg.
-  Hint Immediate pos_nonneg : nonneg.
-  Hint Resolve N.le_0_l : nonneg.
-  Hint Resolve prefixOf_nonneg : nonneg.
-  Hint Resolve Z.log2_nonneg : nonneg.
-  Hint Resolve succ_nonneg : nonneg.
-  Hint Resolve <- Z.shiftr_nonneg : nonneg.
-  Hint Extern 1 (0 <= Z.succ (Z.pred (Z.of_N _))) => rewrite Z.succ_pred : nonneg.
-
-  Ltac nonneg := solve [auto with nonneg].
 
   Definition isBitMask (bm : N) :=
     (0 < bm /\ bm < 2^WIDTH)%N.
@@ -231,37 +395,104 @@ Module Foo: WSfun(N_as_OT).
       apply Z.mod_pos_bound; compute; congruence.
   Qed.
 
-  Definition prefixed p b f g :=
-    (forall i, f i = if Z.shiftr i (Z.of_N b) =? p then g i else false).
+    
+  (* A range is described by a prefix and a shift width *)
+  Definition range := (Z * N)%type.
+  Definition rBits : range -> N := snd.
   
-  Definition testBitZ p b bm i :=
-    if Z.shiftr i (Z.of_N b) =? p then N.testbit bm (Z.to_N (Z.land i (Z.ones (Z.of_N b))))else false.
+  (* Operatons on ranges: We can get its prefix and it mask
+     (this is what we actually find in the data type) *)
+  Definition rPrefix : range -> Z :=
+     fun '(p,b) => Z.shiftl p (Z.of_N b).
+  Definition rMask   : range -> Z :=
+     fun '(p,b) => 2^(Z.of_N b).
+  
+  (* We can do various queries on segments *)
+  Definition inRange : Z -> range -> bool :=
+    fun n '(p,b) => Z.shiftr n (Z.of_N b) =? p.
+  (* Segments either disjoint or contained in each other *)
+  Definition isSubrange : range -> range -> bool :=
+    fun r1 r2 => inRange (rPrefix r2) r1 && (rBits r2 <=? rBits r1)%N.
+  Definition rangeDisjoint : range -> range -> bool :=
+    fun r1 r2 => negb (isSubrange r1 r2 || isSubrange r2 r1).
+    
+  (* The smallest range that encompasses two (disjoint) ranges *)
+  Definition commonRangeDisj : range -> range -> range :=
+    fun r1 r2 =>
+      let b := Z.succ (Z.log2 (Z.lxor (rPrefix r1) (rPrefix r2))) in
+      (Z.shiftr (rPrefix r1) b , Z.to_N b).
 
-  Inductive Desc : IntSet -> Z -> N -> (Z -> bool) -> Prop :=
-    | DescTip : forall p bm p' b f,
+  Definition eqOnRange r f g :=
+    (forall i, f i = if inRange i r then g i else false).
+  
+  Definition bitmapInRange r bm i :=
+    if inRange i r then N.testbit bm (Z.to_N (Z.land i (Z.ones (Z.of_N (rBits r)))))
+                   else false.
+    
+  (* Lemmas about range *)
+ 
+  Lemma commonRangeDis_larger_l:
+    forall r1 r2,
+    rangeDisjoint r1 r2 ->
+    (rBits r1 <= rBits (commonRangeDisj r1 r2))%N.
+  Proof.
+    intros.
+    destruct r1 as [p1 b1], r2 as [p2 b2]; simpl in *.
+    unfold rangeDisjoint, inRange, commonRangeDisj, isSubrange, inRange, rPrefix, rBits in *.
+    
+    
+
+  Lemma outside_commonRangeDis_l:
+    forall r1 r2 i,
+    rangeDisjoint r1 r2 ->
+    inRange i (commonRangeDisj r1 r2) = false ->
+    inRange i r1 = false.
+  Proof.
+    intros.
+    assert (rBits r1 <= rBits (commonRangeDisj r1 r2))%N
+      by (apply commonRangeDis_larger_l; auto).
+
+    destruct r1 as [p1 b1], r2 as [p2 b2]; simpl in *.
+    unfold rangeDisjoint, inRange, commonRangeDisj, isSubrange, inRange, rPrefix, rBits in *.
+    rewrite -> Z2N.id in * by nonneg.
+    set (b := (Z.succ (Z.log2 (Z.lxor (Z.shiftl p1 (Z.of_N b1)) (Z.shiftl p2 (Z.of_N b2)))))).
+    fold b in H0, H1.
+    apply Z.eqb_neq in H0.
+    apply Z.eqb_neq.
+    contradict H0.
+    subst p1.
+    rewrite <- Z.ldiff_ones_r by nonneg.
+    apply shiftr_eq_ldiff; try (subst b; nonneg).
+    rewrite Z.ldiff_ldiff_l.
+    rewrite lor_ones_ones.
+    replace ((Z.max (Z.of_N b1) b)) with b. reflexivity. symmetry.
+    apply Z.max_r.
+    apply N2Z.inj_le in H1. rewrite Z2N.id in H1; try (subst b; nonneg).
+  Qed.
+
+  Inductive Desc : IntSet -> range -> (Z -> bool) -> Prop :=
+    | DescTip : forall p bm r f,
       0 <= p ->
-      p' = Z.shiftl p (Z.of_N b) -> b = N.log2 WIDTH ->
-      prefixed p b f (fun i => N.testbit bm (Z.to_N (Z.land i (Z.ones (Z.of_N b))))) ->
+      p = rPrefix r ->
+      rBits r = N.log2 WIDTH ->
+      (forall i, f i = bitmapInRange r bm i) ->
       isBitMask bm ->
-      Desc (Tip p' bm) p b f
-    | DescBin : forall s1 p1 b1 f1 s2 p2 b2 f2 p msk p' b f,
-      Desc s1 p1 b1 f1 ->
-      Desc s2 p2 b2 f2 ->
-      (b1 < b)%N ->
-      (b2 < b)%N ->
-      Z.testbit p1 (Z.pred (Z.of_N b) - Z.of_N b1) = false ->
-      Z.testbit p2 (Z.pred (Z.of_N b) - Z.of_N b2) = true ->
-      Z.shiftr p1 (Z.of_N b - Z.of_N b1) = Z.shiftr p2 (Z.of_N b - Z.of_N b2) ->
-      p = Z.shiftr p1 (Z.of_N b - Z.of_N b1) ->
-      p = Z.shiftr p2 (Z.of_N b - Z.of_N b2) ->
-      p' = Z.shiftl p (Z.of_N b) ->
-      msk = (2^Z.pred (Z.of_N b)) -> 
+      Desc (Tip p bm) r f
+    | DescBin : forall s1 r1 f1 s2 r2 f2 p msk r f,
+      Desc s1 r1 f1 ->
+      Desc s2 r2 f2 ->
+      rangeDisjoint r1 r2 ->
+      r = commonRangeDisj r1 r2 -> 
+      Z.testbit (rPrefix r1) (Z.pred (Z.of_N (rBits r))) = false ->
+      Z.testbit (rPrefix r2) (Z.pred (Z.of_N (rBits r))) = true ->
+      p = rPrefix r ->
+      msk = rMask r -> 
       (forall i, f i = f1 i || f2 i) ->
-      Desc (Bin p' msk s1 s2) p b f.
+      Desc (Bin p msk s1 s2) r f.
   
   Inductive WF : IntSet -> Prop :=
     | WFEmpty : WF Nil
-    | WFNonEmpty : forall s p b f (HD : Desc s p b f), WF s.
+    | WFNonEmpty : forall s r f (HD : Desc s r f), WF s.
 
   (* We are saying [N] instead of [Z] to force the invariant that
      all elements have a finite number of bits. The code actually
@@ -299,121 +530,6 @@ Module Foo: WSfun(N_as_OT).
   Lemma empty_1 : Empty empty.
   Proof. unfold Empty; intros a H. inversion H. Qed.
   
-  Lemma to_N_log2: forall i, Z.to_N (Z.log2 i) = N.log2 (Z.to_N i).
-  Proof.
-    intros.
-    destruct i; try reflexivity.
-    destruct p; try reflexivity.
-  Qed.
-
-  Lemma of_N_log2: forall n, Z.of_N (N.log2 n) = Z.log2 (Z.of_N n).
-  Proof.
-    intros.
-    destruct n; try reflexivity.
-    destruct p; try reflexivity.
-  Qed.
-  
-
-  
-  (* This is a stronger version than what’s in the standard library *)
-  Lemma log2_le_lin': forall a : N, (* (0 <= a)%N -> *) (N.log2 a <= a)%N.
-  Proof. intros.
-    destruct a.
-    reflexivity.
-    apply N.log2_le_lin.
-    nonneg.
-  Qed.
-  
-  Lemma N_land_pow2_testbit:
-    forall n i, negb (N.land (2 ^ i) n =? 0)%N = N.testbit n i.
-  Proof.
-    intros.
-    destruct (N.testbit n i) eqn:Htb.
-    * rewrite negb_true_iff.
-      rewrite N.eqb_neq.
-      contradict Htb.
-      assert (N.testbit (N.land (2^i)%N n) i = false).
-       by (rewrite Htb; apply N.bits_0).
-      rewrite N.land_spec in H. rewrite N.pow2_bits_true in H.
-      simpl in H. congruence.
-    * rewrite negb_false_iff.
-      rewrite N.eqb_eq.
-      apply N.bits_inj.
-      intro j.
-      rewrite N.land_spec.
-      rewrite N.pow2_bits_eqb.
-      destruct (N.eqb_spec i j); subst; intuition.
-  Qed.
-  
-  Lemma land_pow2_eq:
-    forall i b, 0 <= b -> (Z.land i (2 ^ b) =? 0) = (negb (Z.testbit i b)).
-  Proof.
-    intros ?? Hnonneg.
-    destruct (Z.testbit i b) eqn:Htb; simpl.
-    * rewrite Z.eqb_neq.
-      contradict Htb.
-      assert (Z.testbit (Z.land i (2^b)) b = false)
-       by (rewrite Htb; apply Z.bits_0).
-      rewrite Z.land_spec in H. rewrite Z.pow2_bits_true in H.
-      rewrite andb_true_r in H.
-      simpl in H. congruence.
-      nonneg.
-    * rewrite Z.eqb_eq.
-      apply Z.bits_inj'.
-      intros j ?.
-      rewrite  Z.bits_0.
-      rewrite Z.land_spec.
-      rewrite Z.pow2_bits_eqb.
-      destruct (Z.eqb_spec b j).
-      * subst. rewrite Htb. reflexivity.
-      * rewrite andb_false_r.  reflexivity.
-      nonneg.
-  Qed.
-
-  Lemma Z_shiftl_inj:
-    forall x y n,
-      0 <= n ->
-      Z.shiftl x n = Z.shiftl y n <-> x = y.
-  Proof.
-    intros; split; intro.
-    * apply Z.bits_inj'.
-      intros i ?.
-      apply Z.bits_inj_iff in H0.
-      specialize (H0 (i + n)).
-      do 2 rewrite -> Z.shiftl_spec in H0 by omega.
-      replace (i + n - n) with i in H0 by omega.
-      assumption.
-    * apply Z.bits_inj'.
-      intros i ?.
-      apply Z.bits_inj_iff in H0.
-      specialize (H0 (i - n)).
-      do 2 rewrite -> Z.shiftl_spec by omega.
-      assumption.
-   Qed.
-  
-   Lemma land_shiftl_ones:
-     forall i n, 0 <= n -> Z.land (Z.shiftl i n) (Z.ones n) = 0.
-   Proof.
-     intros.
-     apply Z.bits_inj'.
-     intros j ?.
-     rewrite Z.land_spec.
-     rewrite -> Z.shiftl_spec by nonneg.
-     rewrite Z.bits_0. rewrite andb_false_iff.
-     destruct (Z.ltb_spec j n).
-     * left. apply Z.testbit_neg_r. omega.
-     * right. apply Z.ones_spec_high. omega.
-   Qed.
-  
-  Lemma Z_shiftl_injb:
-    forall x y n, 0 <= n -> (Z.shiftl x n =? Z.shiftl y n) = (x =? y).
-  Proof.
-    intros.
-    destruct (Z.eqb_spec (Z.shiftl x n) (Z.shiftl y n)),
-             (Z.eqb_spec x y); auto; try congruence; exfalso.
-    apply Z_shiftl_inj in e; auto.
-  Qed.
-
 
   Lemma prefixOf_eq_shiftr:
     forall i p, 
@@ -434,16 +550,19 @@ Module Foo: WSfun(N_as_OT).
    
 
    Lemma Desc_outside:
-     forall {s p b f i}, Desc s p b f -> Z.shiftr i (Z.of_N b) =? p = false -> f i = false.
+     forall {s r f i}, Desc s r f -> inRange i r = false -> f i = false.
    Proof.
-     intros ????? HD Houtside.
+     intros ???? HD Houtside.
      induction HD;subst.
      * rewrite H2.
+       unfold bitmapInRange.
        rewrite Houtside.
        reflexivity.
-     * rewrite H8.
+     * rewrite H5.
        rewrite orb_false_iff. split.
        + apply IHHD1. clear IHHD1 IHHD2.
+         
+       
          apply Z.eqb_neq in Houtside.
          apply Z.eqb_neq.
          contradict Houtside.
@@ -740,6 +859,7 @@ Module Foo: WSfun(N_as_OT).
 
     unfold link.
     subst p1' p2'.
+
     unfold zero, branchMask, mask.
     rewrite -> land_pow2_eq by nonneg.
     replace (Z.log2 (Z.lxor (Z.shiftl p1 (Z.of_N b1)) (Z.shiftl p2 (Z.of_N b2))))

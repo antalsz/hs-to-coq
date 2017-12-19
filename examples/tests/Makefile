@@ -13,6 +13,7 @@ PASS = \
   Self \
   Poly \
   Irrefutable \
+  LocalTopoSort \
   InstCtx \
   Guard2 \
   ExhaustGuard \
@@ -34,7 +35,6 @@ PASS = \
 
 # tests that *should* pass but currently fail
 TODO_PASS  = \
-  NestedRec \
   InstVar \
   Mutrec \
   Existential \

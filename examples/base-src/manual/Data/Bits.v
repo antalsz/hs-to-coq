@@ -62,7 +62,7 @@ Definition testBitDefault {a} `{Bits a} `{Num a} : a -> Int -> bool :=
   (fun arg_27__
        arg_28__ =>
     (match arg_27__ , arg_28__ with
-      | x , i => (((x .&. bit i)) /= #0)
+      | x , i => (((x .&.(**) bit i)) /= #0)
     end)).
 
 
@@ -303,8 +303,8 @@ Instance instance_Bits_Int : Bits Int :=  {
 }.
 
 Module Notations.
-Infix "Data.Bits..&." := (op_zizazi__) (left associativity, at level 40).
 Notation "'_Data.Bits..&._'" := (op_zizazi__).
-Infix "Data.Bits..|." := (op_zizbzi__) (left associativity, at level 61).
+Infix "Data.Bits..&." := (op_zizazi__) (at level 99).
 Notation "'_Data.Bits..|._'" := (op_zizbzi__).
+Infix "Data.Bits..|." := (op_zizbzi__) (at level 99).
 End Notations.

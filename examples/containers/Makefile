@@ -19,7 +19,6 @@ OUT=lib
 # Handwritten modules (usually by modification of generated version)
 HANDMOD = \
   Data/IntMap \
-  Data/IntSet/Base \
   Data/IntMap/Base \
 
 # Generated modules
@@ -27,6 +26,7 @@ HANDMOD = \
 MODULES = \
   Data/Set/Base \
   Data/Map/Base \
+  Data/IntSet/Base \
 
 # generated from drop-in/
 DROPIN =

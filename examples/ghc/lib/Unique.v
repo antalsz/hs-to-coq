@@ -169,7 +169,7 @@ Definition uniqueMask : GHC.Num.Int :=
 Definition unpkUnique : Unique -> (GHC.Char.Char * GHC.Num.Int)%type :=
   fun arg_0__ =>
     match arg_0__ with
-      | MkUnique u => let i := u Data.Bits..&. uniqueMask in
+      | MkUnique u => let i := u Data.Bits..&.(**) uniqueMask in
                       let tag :=
                         GHC.Char.chr (Data.Bits.shiftR u (GHC.Num.fromInteger 64 GHC.Num.-
                                                        GHC.Num.fromInteger 8)) in
@@ -178,11 +178,11 @@ Definition unpkUnique : Unique -> (GHC.Char.Char * GHC.Num.Int)%type :=
 
 Definition mkUnique : GHC.Char.Char -> GHC.Num.Int -> Unique :=
   fun c i =>
-    let bits := i Data.Bits..&. uniqueMask in
+    let bits := i Data.Bits..&.(**) uniqueMask in
     let tag :=
       Data.Bits.shiftL (GHC.Char.ord c) (GHC.Num.fromInteger 64 GHC.Num.-
                        GHC.Num.fromInteger 8) in
-    MkUnique (tag Data.Bits..|. bits).
+    MkUnique (tag Data.Bits..|.(**) bits).
 
 Definition mkVarOccUnique : FastString.FastString -> Unique :=
   fun fs => mkUnique (GHC.Char.hs_char__ "i") (FastString.uniqueOfFS fs).

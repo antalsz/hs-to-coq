@@ -40,10 +40,6 @@ Definition ae_ped_bot (arg_1__ : ArityEnv) :=
   end.
 (* Converted value declarations: *)
 
-(* Translating `instance Outputable.Outputable CoreArity.EtaInfo' failed: OOPS!
-   Cannot find information for class Qualified "Outputable" "Outputable"
-   unsupported *)
-
 Axiom manifestArity : forall {A : Type}, A.
 
 Axiom exprArity : forall {A : Type}, A.

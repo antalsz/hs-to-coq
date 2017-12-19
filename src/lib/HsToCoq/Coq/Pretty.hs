@@ -159,7 +159,8 @@ renderString = dquotes . string .: T.concatMap $ \case
                  c   -> T.singleton c
 
 renderOp :: Op -> Doc
-renderOp = text
+renderOp o = text $ o <> (if "." `T.isSuffixOf` o then "(**)" else "")
+  -- [x .&. y] would be illegal, so print [x .&.(**) y]
 
 renderQOp :: Qualid -> Doc
 renderQOp qid = case qualidToOp qid of

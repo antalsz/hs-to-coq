@@ -19,6 +19,7 @@ skip CoreSyn.tickishIsCode
 
 
 order CoreSyn.Eq___AltCon CoreSyn.Ord__AltCon
+order CoreSyn.Eq___Tickish CoreSyn.Ord__Tickish
 
 redefine Definition CoreSyn.chooseOrphanAnchor (local_names : list Name.Name) : IsOrphan :=
     match  GHC.Base.map Name.nameOccName local_names with

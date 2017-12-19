@@ -1437,47 +1437,171 @@ Module Foo (E : OrderedType) : WSfun(E).
     - apply elt_compare_gt in Hcomp. apply E.eq_sym in H.
       apply OrdFacts.eq_not_gt in H. contradiction.
   Qed.
+
+  Lemma WF_prop_l1 :
+    forall (l r : Set_ elt) (x y : elt) s,
+      WF (Bin s x l r) ->
+      E.lt y x ->
+      WF (insert y l).
+  Proof.
+    intros; apply WF_children in H; destruct H.
+    apply insert_prop with (e:=y) in H. destruct H as [? _]. auto.
+  Qed.
+
+  Lemma WF_prop_r1 :
+    forall (l r : Set_ elt) (x y : elt) s,
+      WF (Bin s x l r) ->
+      E.lt x y ->
+      WF (insert y r).
+  Proof.
+    intros; apply WF_children in H; destruct H.
+    apply insert_prop with (e:=y) in H1. destruct H1 as [? _]. auto.
+  Qed.
+
+  Lemma WF_prop_l2 :
+    forall (l r : Set_ elt) (x y : elt) s,
+      WF (Bin s x l r) ->
+      E.lt y x ->
+      before_balancedL x (insert y l) r.
+  Proof.
+    intros. have Hwf: WF (Bin s x l r) by [done].
+    apply WF_children in H; destruct H.
+    apply insert_prop with (e:=y) in H. destruct H as [_ [? _]].
+    rewrite /before_balancedL. derive_constraints; subst.
+    destruct H as [Hs | Hs]; rewrite_for_omega;
+      rewrite Hs; intros; omega.
+  Qed.
+
+  Lemma WF_prop_r2 :
+    forall (l r : Set_ elt) (x y : elt) s,
+      WF (Bin s x l r) ->
+      E.lt x y ->
+      before_balancedR x l (insert y r).
+  Proof.
+    intros. have Hwf: WF (Bin s x l r) by [done].
+    apply WF_children in H; destruct H.
+    apply insert_prop with (e:=y) in H1. destruct H1 as [_ [? _]].
+    rewrite /before_balancedR. derive_constraints; subst.
+    destruct H1 as [Hs | Hs]; rewrite_for_omega;
+      rewrite Hs; intros; omega.
+  Qed.
+
+  Lemma WF_prop_l3:
+    forall (l r : Set_ elt) (x y : elt) s,
+      WF (Bin s x l r) ->
+      E.lt y x ->
+      before_ordered x (insert y l) r (const true) (const true).
+  Proof.
+    intros. have Hord: ordered (Bin 0 x l r).
+    { apply WF_ordered in H.
+      eapply size_irrelevance_in_ordered. eauto. }
+    move: Hord. rewrite /ordered. rewrite -/local_bounded.
+    case /and4P=>//. move=>_ _ Hlo Hhi.
+    rewrite /before_ordered.
+    apply WF_children in H; destruct H.
+    apply insert_prop with (e:=y) in H. destruct H as [_ [_ ?]].
+    specialize (H x). destruct H as [Hf Hg]. repeat split=>//.
+    apply Hf=>//.
+  Qed.
+
+  Lemma WF_prop_r3:
+    forall (l r : Set_ elt) (x y : elt) s,
+      WF (Bin s x l r) ->
+      E.lt x y ->
+      before_ordered x l (insert y r) (const true) (const true).
+  Proof.
+    intros. have Hord: ordered (Bin 0 x l r).
+    { apply WF_ordered in H.
+      eapply size_irrelevance_in_ordered. eauto. }
+    move: Hord. rewrite /ordered. rewrite -/local_bounded.
+    case /and4P=>//. move=>_ _ Hlo Hhi.
+    rewrite /before_ordered.
+    apply WF_children in H; destruct H.
+    apply insert_prop with (e:=y) in H1. destruct H1 as [_ [_ ?]].
+    specialize (H1 x). destruct H1 as [Hf Hg]. repeat split=>//.
+    apply Hg=>//.
+  Qed.
+
+  Hint Resolve WF_prop_l1.
+  Hint Resolve WF_prop_l2.
+  Hint Resolve WF_prop_l3.
+  Hint Resolve WF_prop_r1.
+  Hint Resolve WF_prop_r2.
+  Hint Resolve WF_prop_r3.
+
+  Lemma inset_destruct :
+    forall (l r : Set_ elt) (x y : elt) s,
+      In_set y (Bin s x l r) ->
+      E.eq x y \/ (E.lt y x /\ In_set y l) \/ (E.lt x y /\ In_set y r).
+  Proof.
+    move=>l r x y s. rewrite /In_set /member /= -/member.
+    destruct_match; autorewrite with elt_compare in *.
+    - left. apply E.eq_sym. done.
+    - right; left. intuition.
+    - right; right; intuition.
+  Qed.
   
   Lemma add_1 :
     forall (s : t) (x y : elt), E.eq x y -> In y (add x s).
-  Proof.
-    intros. destruct s as [s]. simpl. 
-    induction s.
+  Proof with eauto.
+    intros. destruct s as [s]. simpl. induction s.
     - rewrite /insert /= -/insert. destruct_match.
       + rewrite /In_set /member /= -/member.
         apply E.eq_sym in H. apply elt_compare_eq in H. rewrite H //.
-      + apply inset_balanceL.
-        * apply WF_children in i; destruct i.
-          apply insert_prop with (e:=x) in H0. destruct H0 as [? _]. auto.
-        * apply WF_children in i. tauto.
-        * have Hwf: WF (Bin s1 a s2 s3) by [done].
-          apply WF_children in i; destruct i.
-          apply insert_prop with (e:=x) in H0. destruct H0 as [_ [? _]].
-          rewrite /before_balancedL. derive_constraints; subst.
-          destruct H0 as [Hs | Hs]; rewrite_for_omega;
-            rewrite Hs; intros; omega.
-        * autorewrite with elt_compare in *.
-          have Hord: ordered (Bin 0 a s2 s3).
-          { apply WF_ordered in i.
-            eapply size_irrelevance_in_ordered. eauto. }
-          move: Hord. rewrite /ordered. rewrite -/local_bounded.
-          case /and4P=>//. move=>_ _ Hlo Hhi.
-          rewrite /before_ordered. repeat (split=>//).
-          apply WF_children in i; destruct i.
-          apply insert_prop with (e:=x) in H0. destruct H0 as [_ [_ ?]].
-          specialize (H0 a). destruct H0 as [Hf Hg].
-          apply Hf=>//.
-        * autorewrite with elt_compare in *. right; left. split.
-          -- apply E.eq_sym in H. eauto.
-          -- apply WF_children in i. destruct i. apply IHs1 in H0. auto.
-      + admit.
+      + autorewrite with elt_compare in *; apply inset_balanceL...
+        * apply WF_children in i; tauto.
+        * right; left. split.
+          -- apply E.eq_sym in H...
+          -- apply WF_children in i. destruct i. apply IHs1 in H0...
+      + autorewrite with elt_compare in *; apply inset_balanceR...
+        * apply WF_children in i; tauto.
+        * right; right. split...
+          -- apply WF_children in i. destruct i. apply IHs2 in H1...
     - rewrite /insert /= /Base.singleton /In_set /member /=.
       apply E.eq_sym in H. apply elt_compare_eq in H. rewrite H //.
-  Admitted.
+  Qed.
         
-  Lemma add_2 : forall (s : t) (x y : elt), In y s -> In y (add x s). Admitted.
+  Lemma add_2 : forall (s : t) (x y : elt), In y s -> In y (add x s).
+  Proof with eauto.
+    destruct s as [s]. simpl. intros; induction s.
+    - rewrite /insert /= -/insert. destruct_match.
+      + move: H. rewrite /In_set /member /= -/member.
+        have Heq': (Base.compare y x = Base.compare y a).
+        { destruct (Base.compare y a) eqn:Hcomp;
+            autorewrite with elt_compare in *; eauto.
+          apply E.eq_sym in Heq. eauto. }
+        destruct_match; rewrite Heq' //.
+      + autorewrite with elt_compare in *; apply inset_balanceL...
+        * apply WF_children in i. tauto.
+        * apply inset_destruct in H. intuition.
+          apply WF_children in i; destruct i.
+          apply (IHs1 H) in H1. intuition.
+      + autorewrite with elt_compare in *; apply inset_balanceR...
+        * apply WF_children in i. tauto.
+        * apply inset_destruct in H. intuition.
+          apply WF_children in i; destruct i.
+          apply (IHs2 H2) in H1. intuition.
+    - inversion H.
+  Qed.
+    
   Lemma add_3 :
-    forall (s : t) (x y : elt), ~ E.eq x y -> In y (add x s) -> In y s. Admitted.
+    forall (s : t) (x y : elt), ~ E.eq x y -> In y (add x s) -> In y s.
+  Proof.
+    destruct s as [s]. simpl. intros; induction s.
+    - move: H0. rewrite /insert /= -/insert. destruct_match.
+      + have Heq': (Base.compare y x = Base.compare y a).
+        { destruct (Base.compare y a) eqn:Hcomp;
+            autorewrite with elt_compare in *; eauto.
+          apply E.eq_sym in Heq. eauto. }
+        rewrite /In_set /member /= -/member.
+        destruct_match; rewrite -Heq' //.
+      + admit. (** need more lemmata! *)
+      + admit. (** need more lemmata! *)
+    - inversion H0. move: H2.
+      destruct_match; autorewrite with elt_compare in *.
+      apply E.eq_sym in Heq. contradiction.
+  Admitted.
+    
   Lemma remove_1 :
     forall (s : t) (x y : elt), E.eq x y -> ~ In y (remove x s). Admitted.
   Lemma remove_2 :

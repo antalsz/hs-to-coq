@@ -415,12 +415,15 @@ Module Foo: WSfun(N_as_OT).
     fun r1 r2 => inRange (rPrefix r2) r1 && (rBits r2 <=? rBits r1)%N.
   Definition rangeDisjoint : range -> range -> bool :=
     fun r1 r2 => negb (isSubrange r1 r2 || isSubrange r2 r1).
-    
+  
+  Definition lsDiffBit : Z -> Z -> N :=
+    fun n m => Z.to_N (Z.succ (Z.log2 (Z.lxor n m))).
+  
   (* The smallest range that encompasses two (disjoint) ranges *)
   Definition commonRangeDisj : range -> range -> range :=
     fun r1 r2 =>
-      let b := Z.succ (Z.log2 (Z.lxor (rPrefix r1) (rPrefix r2))) in
-      (Z.shiftr (rPrefix r1) b , Z.to_N b).
+      let b := lsDiffBit (rPrefix r1) (rPrefix r2) in
+      (Z.shiftr (rPrefix r1) (Z.of_N b) , b).
 
   Definition eqOnRange r f g :=
     (forall i, f i = if inRange i r then g i else false).
@@ -430,6 +433,82 @@ Module Foo: WSfun(N_as_OT).
                    else false.
     
   (* Lemmas about range *)
+ 
+  Section lsDiffBit.
+    Variable p1 p2 : Z.
+    Variable (Hnonneg1 : 0 <= p1).
+    Variable (Hnonneg2 : 0 <= p2).
+    Variable (Hne : p1 <> p2).
+    
+    Local Lemma lxor_pos: 0 < Z.lxor p1 p2.
+    Proof.
+      assert (0 <= Z.lxor p1 p2) by (rewrite Z.lxor_nonneg; omega).
+      enough (Z.lxor p1 p2 <> 0) by omega.
+      rewrite Z.lxor_eq_0_iff.
+      assumption.
+    Qed.
+    
+    Lemma lsDiffBit_Different:
+          Z.testbit p1 (Z.pred (Z.of_N (lsDiffBit p1 p2)))
+       <> Z.testbit p2 (Z.pred (Z.of_N (lsDiffBit p1 p2))).
+    Proof.
+      match goal with [ |- Z.testbit ?x ?b <> Z.testbit ?y ?b] =>
+        enough (xorb (Z.testbit x b) (Z.testbit y b))
+        by (destruct (Z.testbit x b), (Z.testbit y b); simpl in *; congruence) end.
+      rewrite <- Z.lxor_spec.
+      unfold lsDiffBit.
+      rewrite -> Z2N.id by nonneg.
+      rewrite -> Z.pred_succ.
+      apply Z.bit_log2.
+      apply lxor_pos.
+    Qed.
+
+    Lemma lsDiffBit_Same:
+          Z.shiftr p1 (Z.of_N (lsDiffBit p1 p2))
+       =  Z.shiftr p2 (Z.of_N (lsDiffBit p1 p2)).
+    Proof.
+      Search
+    
+      match goal with [ |- Z.testbit ?x ?b <> Z.testbit ?y ?b] =>
+        enough (xorb (Z.testbit x b) (Z.testbit y b))
+        by (destruct (Z.testbit x b), (Z.testbit y b); simpl in *; congruence) end.
+      rewrite <- Z.lxor_spec.
+      unfold lsDiffBit.
+      rewrite -> Z2N.id by nonneg.
+      rewrite -> Z.pred_succ.
+      apply Z.bit_log2.
+      apply lxor_pos.
+    Qed.
+
+
+      SearchAbout Z.testbit Z.log2.
+ 
+  Lemma lsbDiffBit_shiftl_l:
+    forall p1 b1 p2 b2,
+       Z.shiftl p1 (Z.of_N b1) <> (Z.shiftl p2 (Z.of_N b2)) ->
+      (b1 <= lsDiffBit (Z.shiftl p1 (Z.of_N b1)) (Z.shiftl p2 (Z.of_N b2)))%N.
+  Proof.
+    intros.
+    unfold lsDiffBit.
+    replace b1 with (Z.to_N (Z.of_N b1)) at 1 by (apply N2Z.id).
+    apply Z2N.inj_le; try nonneg.
+    replace (Z.of_N b1) with (Z.succ (Z.log2 (Z.shiftl 1 (Z.of_N b1)))) at 1.
+    apply Zsucc_le_compat.
+    apply Z.log2_le_mono.
+    SearchAbout Z.testbit Z.log2.
+    SearchAbout Z.testbit Z.lxor.
+    SearchAbout Z.log2 Z.le.
+    enough (Z.pred (Z.of_N b1) <= (Z.log2 (Z.lxor (Z.shiftl p1 (Z.of_N b1)) (Z.shiftl p2 (Z.of_N b2))))) by omega.
+    
+    apply Z.log2_le_pow2.
+    * admit.
+    SearchAbout (Z.lxor) (_ <=  _).
+    SearchAbout Z.log2 Z.lxor.
+    SearchAbout (_ <= Z.log2 _).
+    SearchAbout Z.to_N "inj".
+    apply Z2N.inj.
+    Focus 2.
+    rewrite N2Z.id.
  
   Lemma commonRangeDis_larger_l:
     forall r1 r2,

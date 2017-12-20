@@ -662,6 +662,10 @@ Module Foo: WSfun(N_as_OT).
     apply Z.eqb_eq in H4.
     apply Z.eqb_eq.
     
+    subst b.
+    rewrite -> msDiffBit_shiftr_same by nonneg.
+    set (b := msDiffBit _ _) in *.
+    
     rewrite -> Z.shiftr_shiftl_r by nonneg.
     replace (Z.of_N b) with (Z.of_N b2 + (Z.of_N b - Z.of_N b2)) at 1 by omega.
     rewrite <- Z.shiftr_shiftr by omega.

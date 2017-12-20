@@ -134,8 +134,11 @@ Hint Resolve N.le_0_l : nonneg.
 Hint Resolve Z.log2_nonneg : nonneg.
 Hint Resolve ones_nonneg : nonneg.
 Hint Resolve succ_nonneg : nonneg.
+Hint Resolve <- Z.shiftl_nonneg : nonneg.
 Hint Resolve <- Z.shiftr_nonneg : nonneg.
 Hint Extern 1 (0 <= Z.succ (Z.pred (Z.of_N _))) => rewrite Z.succ_pred : nonneg.
+Hint Resolve <- Z.lxor_nonneg : nonneg.
+Hint Extern 0 => omega : nonneg.
 
 Ltac nonneg := solve [auto with nonneg].
 
@@ -407,6 +410,11 @@ Module Foo: WSfun(N_as_OT).
   Definition rMask   : range -> Z :=
      fun '(p,b) => 2^(Z.of_N b).
   
+  (* This is only needed because we restrict ourselves
+     to positive numbers *)
+  Definition rNonneg : range -> Prop :=
+    fun '(p,b) =>  0 <= p.
+    
   (* We can do various queries on segments *)
   Definition inRange : Z -> range -> bool :=
     fun n '(p,b) => Z.shiftr n (Z.of_N b) =? p.
@@ -416,13 +424,14 @@ Module Foo: WSfun(N_as_OT).
   Definition rangeDisjoint : range -> range -> bool :=
     fun r1 r2 => negb (isSubrange r1 r2 || isSubrange r2 r1).
   
-  Definition lsDiffBit : Z -> Z -> N :=
+  (* most signifiant differing bit *)
+  Definition msDiffBit : Z -> Z -> N :=
     fun n m => Z.to_N (Z.succ (Z.log2 (Z.lxor n m))).
   
   (* The smallest range that encompasses two (disjoint) ranges *)
   Definition commonRangeDisj : range -> range -> range :=
     fun r1 r2 =>
-      let b := lsDiffBit (rPrefix r1) (rPrefix r2) in
+      let b := msDiffBit (rPrefix r1) (rPrefix r2) in
       (Z.shiftr (rPrefix r1) (Z.of_N b) , b).
 
   Definition eqOnRange r f g :=
@@ -433,8 +442,26 @@ Module Foo: WSfun(N_as_OT).
                    else false.
     
   (* Lemmas about range *)
- 
-  Section lsDiffBit.
+  
+  Lemma rangeDisjoint_sym: forall r1 r2,
+    rangeDisjoint r1 r2 = rangeDisjoint r2 r1.
+  Proof.
+    intros.
+    unfold rangeDisjoint.
+    rewrite orb_comm.
+    reflexivity.
+  Qed.
+   
+ Lemma msDiffBit_sym: forall p1 p2,
+    msDiffBit p1 p2 = msDiffBit p2 p1.
+  Proof.
+    intros.
+    unfold msDiffBit.
+    rewrite Z.lxor_comm.
+    reflexivity.
+  Qed.
+
+  Section msDiffBit.
     Variable p1 p2 : Z.
     Variable (Hnonneg1 : 0 <= p1).
     Variable (Hnonneg2 : 0 <= p2).
@@ -442,112 +469,206 @@ Module Foo: WSfun(N_as_OT).
     
     Local Lemma lxor_pos: 0 < Z.lxor p1 p2.
     Proof.
-      assert (0 <= Z.lxor p1 p2) by (rewrite Z.lxor_nonneg; omega).
+      assert (0 <= Z.lxor p1 p2) by nonneg.
       enough (Z.lxor p1 p2 <> 0) by omega.
       rewrite Z.lxor_eq_0_iff.
       assumption.
     Qed.
     
-    Lemma lsDiffBit_Different:
-          Z.testbit p1 (Z.pred (Z.of_N (lsDiffBit p1 p2)))
-       <> Z.testbit p2 (Z.pred (Z.of_N (lsDiffBit p1 p2))).
+    Lemma msDiffBit_Different:
+          Z.testbit p1 (Z.pred (Z.of_N (msDiffBit p1 p2)))
+       <> Z.testbit p2 (Z.pred (Z.of_N (msDiffBit p1 p2))).
     Proof.
       match goal with [ |- Z.testbit ?x ?b <> Z.testbit ?y ?b] =>
         enough (xorb (Z.testbit x b) (Z.testbit y b))
         by (destruct (Z.testbit x b), (Z.testbit y b); simpl in *; congruence) end.
       rewrite <- Z.lxor_spec.
-      unfold lsDiffBit.
+      unfold msDiffBit.
       rewrite -> Z2N.id by nonneg.
       rewrite -> Z.pred_succ.
       apply Z.bit_log2.
       apply lxor_pos.
     Qed.
 
-    Lemma lsDiffBit_Same:
-          Z.shiftr p1 (Z.of_N (lsDiffBit p1 p2))
-       =  Z.shiftr p2 (Z.of_N (lsDiffBit p1 p2)).
+    Lemma msDiffBit_Same:
+      forall j,  Z.of_N (msDiffBit p1 p2) <= j ->
+      Z.testbit p1 j = Z.testbit p2 j.
     Proof.
-      Search
-    
-      match goal with [ |- Z.testbit ?x ?b <> Z.testbit ?y ?b] =>
-        enough (xorb (Z.testbit x b) (Z.testbit y b))
+      intros.
+      match goal with [ |- Z.testbit ?x ?b = Z.testbit ?y ?b] =>
+        enough (xorb (Z.testbit x b) (Z.testbit y b) = false)
         by (destruct (Z.testbit x b), (Z.testbit y b); simpl in *; congruence) end.
       rewrite <- Z.lxor_spec.
-      unfold lsDiffBit.
-      rewrite -> Z2N.id by nonneg.
-      rewrite -> Z.pred_succ.
-      apply Z.bit_log2.
-      apply lxor_pos.
+      unfold msDiffBit in H.
+      rewrite -> Z2N.id in H by nonneg.
+      apply Z.bits_above_log2; try nonneg.
     Qed.
 
-
-      SearchAbout Z.testbit Z.log2.
- 
-  Lemma lsbDiffBit_shiftl_l:
-    forall p1 b1 p2 b2,
-       Z.shiftl p1 (Z.of_N b1) <> (Z.shiftl p2 (Z.of_N b2)) ->
-      (b1 <= lsDiffBit (Z.shiftl p1 (Z.of_N b1)) (Z.shiftl p2 (Z.of_N b2)))%N.
+    Lemma msDiffBit_shiftr_same:
+          Z.shiftr p1 (Z.of_N (msDiffBit p1 p2))
+       =  Z.shiftr p2 (Z.of_N (msDiffBit p1 p2)).
+    Proof.
+      apply Z.bits_inj_iff'. intros j ?.
+      rewrite -> !Z.shiftr_spec by nonneg.
+      apply msDiffBit_Same.
+      omega.
+    Qed.
+  End msDiffBit.
+   
+  Lemma msDiffBit_larger_tmp:
+    forall r1 r2,
+      rNonneg r1 -> rNonneg r2 -> 
+      rangeDisjoint r1 r2 ->
+      (rBits r2 <= rBits r1)%N ->
+      (msDiffBit (rPrefix r1) (rPrefix r2) <= rBits r1)%N ->
+      False.
   Proof.
     intros.
-    unfold lsDiffBit.
-    replace b1 with (Z.to_N (Z.of_N b1)) at 1 by (apply N2Z.id).
-    apply Z2N.inj_le; try nonneg.
-    replace (Z.of_N b1) with (Z.succ (Z.log2 (Z.shiftl 1 (Z.of_N b1)))) at 1.
-    apply Zsucc_le_compat.
-    apply Z.log2_le_mono.
-    SearchAbout Z.testbit Z.log2.
-    SearchAbout Z.testbit Z.lxor.
-    SearchAbout Z.log2 Z.le.
-    enough (Z.pred (Z.of_N b1) <= (Z.log2 (Z.lxor (Z.shiftl p1 (Z.of_N b1)) (Z.shiftl p2 (Z.of_N b2))))) by omega.
-    
-    apply Z.log2_le_pow2.
-    * admit.
-    SearchAbout (Z.lxor) (_ <=  _).
-    SearchAbout Z.log2 Z.lxor.
-    SearchAbout (_ <= Z.log2 _).
-    SearchAbout Z.to_N "inj".
-    apply Z2N.inj.
-    Focus 2.
-    rewrite N2Z.id.
+    * assert (inRange (rPrefix r2) r1 = true).
+        destruct r1 as [p1 b1], r2 as [p2 b2].
+        unfold inRange, rPrefix, rBits, rNonneg,  snd in *.
+        rewrite -> N2Z.inj_le in H2, H3.
+        apply Z.eqb_eq.
+        symmetry.
+        apply Z.bits_inj_iff'. intros j ?.
+        replace j with ((j + Z.of_N b1) - Z.of_N b1) by omega.
+        rewrite <- Z.shiftl_spec by (apply OMEGA2; nonneg).
+        rewrite -> msDiffBit_Same with (p2 := (Z.shiftl p2 (Z.of_N b2))) by nonneg.
+        rewrite -> !Z.shiftl_spec by (apply OMEGA2; nonneg).
+        rewrite -> !Z.shiftr_spec by nonneg.
+        rewrite -> !Z.shiftl_spec by (apply OMEGA2; nonneg).
+        f_equal. omega.
+
+      unfold rangeDisjoint in H1.
+      apply negb_true_iff in H1.
+      rewrite -> orb_false_iff in H1.
+      unfold isSubrange in *.
+      rewrite -> !andb_false_iff in H1.
+      rewrite -> !N.leb_nle in H1.
+      intuition try congruence.
+  Qed.
+  
+    Lemma msDiffBit_larger:
+    forall r1 r2,
+      rNonneg r1 -> rNonneg r2 -> 
+      rangeDisjoint r1 r2 ->
+      (N.max (rBits r1) (rBits r2) < msDiffBit (rPrefix r1) (rPrefix r2))%N.
+    Proof.
+      intros.
+      destruct (N.leb_spec (rBits r1) (rBits r2)).
+      * rewrite -> N.max_r by assumption.
+        apply N.nle_gt.
+        intro.
+        rewrite rangeDisjoint_sym in H1.
+        rewrite msDiffBit_sym in H3.
+        apply (msDiffBit_larger_tmp r2 r1 H0 H H1 H2 H3).
+      * apply N.lt_le_incl in H2.
+        rewrite -> N.max_l by assumption.
+        apply N.nle_gt.
+        intro.
+        apply (msDiffBit_larger_tmp r1 r2 H H0 H1 H2 H3).
+  Qed.
  
+  Lemma msDiffBit_larger_l:
+     forall r1 r2,
+      rNonneg r1 -> rNonneg r2 -> 
+      rangeDisjoint r1 r2 ->
+      (rBits r1 < msDiffBit (rPrefix r1) (rPrefix r2))%N.
+  Proof.
+    intros.
+    apply N.le_lt_trans with (m := N.max (rBits r1) (rBits r2)).
+    apply N.le_max_l.
+    apply msDiffBit_larger; auto.
+  Qed.
+
+  Lemma msDiffBit_larger_r:
+     forall r1 r2,
+      rNonneg r1 -> rNonneg r2 -> 
+      rangeDisjoint r1 r2 ->
+      (rBits r2 < msDiffBit (rPrefix r1) (rPrefix r2))%N.
+  Proof.
+    intros.
+    apply N.le_lt_trans with (m := N.max (rBits r1) (rBits r2)).
+    apply N.le_max_r.
+    apply msDiffBit_larger; auto.
+  Qed.
+  
   Lemma commonRangeDis_larger_l:
     forall r1 r2,
+    rNonneg r1 -> rNonneg r2 ->
     rangeDisjoint r1 r2 ->
-    (rBits r1 <= rBits (commonRangeDisj r1 r2))%N.
+    (rBits r1 < rBits (commonRangeDisj r1 r2))%N.
   Proof.
     intros.
-    destruct r1 as [p1 b1], r2 as [p2 b2]; simpl in *.
-    unfold rangeDisjoint, inRange, commonRangeDisj, isSubrange, inRange, rPrefix, rBits in *.
-    
-    
+    unfold commonRangeDisj. simpl.
+    apply (msDiffBit_larger_l); auto.
+  Qed.
+  
+  Lemma commonRangeDis_larger_r:
+    forall r1 r2,
+    rNonneg r1 -> rNonneg r2 ->
+    rangeDisjoint r1 r2 ->
+    (rBits r2 < rBits (commonRangeDisj r1 r2))%N.
+  Proof.
+    intros.
+    unfold commonRangeDisj. simpl.
+    apply (msDiffBit_larger_r); auto.
+  Qed. 
 
   Lemma outside_commonRangeDis_l:
     forall r1 r2 i,
+    rNonneg r1 -> rNonneg r2 ->
     rangeDisjoint r1 r2 ->
     inRange i (commonRangeDisj r1 r2) = false ->
     inRange i r1 = false.
   Proof.
     intros.
     assert (rBits r1 <= rBits (commonRangeDisj r1 r2))%N
-      by (apply commonRangeDis_larger_l; auto).
+      by (apply N.lt_le_incl; apply commonRangeDis_larger_l; auto).
+    refine (contraFF _ H2 ); intro; clear H2.
+    clear H1.
+    
+    rewrite -> N2Z.inj_le in H3.
 
-    destruct r1 as [p1 b1], r2 as [p2 b2]; simpl in *.
-    unfold rangeDisjoint, inRange, commonRangeDisj, isSubrange, inRange, rPrefix, rBits in *.
-    rewrite -> Z2N.id in * by nonneg.
-    set (b := (Z.succ (Z.log2 (Z.lxor (Z.shiftl p1 (Z.of_N b1)) (Z.shiftl p2 (Z.of_N b2)))))).
-    fold b in H0, H1.
-    apply Z.eqb_neq in H0.
-    apply Z.eqb_neq.
-    contradict H0.
-    subst p1.
-    rewrite <- Z.ldiff_ones_r by nonneg.
-    apply shiftr_eq_ldiff; try (subst b; nonneg).
-    rewrite Z.ldiff_ldiff_l.
-    rewrite lor_ones_ones.
-    replace ((Z.max (Z.of_N b1) b)) with b. reflexivity. symmetry.
-    apply Z.max_r.
-    apply N2Z.inj_le in H1. rewrite Z2N.id in H1; try (subst b; nonneg).
+    destruct r1 as [p1 b1], r2 as [p2 b2]. simpl in *.
+    set (b := msDiffBit _ _) in *.
+    apply Z.eqb_eq in H4.
+    apply Z.eqb_eq.
+    
+    rewrite -> Z.shiftr_shiftl_r by nonneg.
+    replace (Z.of_N b) with (Z.of_N b1 + (Z.of_N b - Z.of_N b1)) at 1 by omega.
+    rewrite <- Z.shiftr_shiftr by omega.
+    rewrite -> H4 by omega.
+    reflexivity.
   Qed.
+
+  Lemma outside_commonRangeDis_r:
+    forall r1 r2 i,
+    rNonneg r1 -> rNonneg r2 ->
+    rangeDisjoint r1 r2 ->
+    inRange i (commonRangeDisj r1 r2) = false ->
+    inRange i r2 = false.
+  Proof.
+    intros.
+    assert (rBits r2 <= rBits (commonRangeDisj r1 r2))%N
+      by (apply N.lt_le_incl; apply commonRangeDis_larger_r; auto).
+    refine (contraFF _ H2 ); intro; clear H2.
+    clear H1.
+    
+    rewrite -> N2Z.inj_le in H3.
+
+    destruct r1 as [p1 b1], r2 as [p2 b2]. simpl in *.
+    set (b := msDiffBit _ _) in *.
+    apply Z.eqb_eq in H4.
+    apply Z.eqb_eq.
+    
+    rewrite -> Z.shiftr_shiftl_r by nonneg.
+    replace (Z.of_N b) with (Z.of_N b2 + (Z.of_N b - Z.of_N b2)) at 1 by omega.
+    rewrite <- Z.shiftr_shiftr by omega.
+    rewrite -> H4 by omega.
+    reflexivity.
+  Qed.
+
 
   Inductive Desc : IntSet -> range -> (Z -> bool) -> Prop :=
     | DescTip : forall p bm r f,

@@ -120,59 +120,106 @@ Module Foo (E : OrderedType) : WSfun(E).
   Definition t := {s : Set_ elt | WF s}.
   Definition pack (s : Set_ elt) (H : WF s): t := exist _ s H.
 
-  Lemma elt_lt : forall (e1 e2 : elt),
-      e1 GHC.Base.< e2 <-> E.lt e1 e2.
+  Lemma elt_ltP { e1 e2 } : reflect (E.lt e1 e2) (e1 GHC.Base.< e2).
   Proof.
-    move=>e1 e2. rewrite /_GHC.Base.<_ /Ord_t /ord_default /=.
+    rewrite /_GHC.Base.<_ /Ord_t /ord_default /=.
     rewrite /_GHC.Base.==_ /Eq_comparison___ /= /eq_comparison /compare.
-    split.
-    - destruct (E.compare e1 e2); auto; move=>Hcontra; inversion Hcontra.
-    - move /OrdFacts.elim_compare_lt; elim. move=>x H; rewrite H=>//.
+    do 2 destruct_match; constructor; auto.
   Qed.
 
-  Lemma elt_gt : forall (e1 e2 : elt),
-      e1 GHC.Base.> e2 <-> E.lt e2 e1.
+  Lemma elt_gtP { e1 e2 } : reflect (E.lt e2 e1) (e1 GHC.Base.> e2).
   Proof.
-    move=>e1 e2. rewrite /_GHC.Base.>_ /Ord_t /ord_default /=.
+    rewrite /_GHC.Base.>_ /Ord_t /ord_default /=.
     rewrite /_GHC.Base.==_ /Eq_comparison___ /= /eq_comparison /compare.
-    split.
-    - destruct (E.compare e2 e1); auto; move=>Hcontra; inversion Hcontra.
-    - move /OrdFacts.elim_compare_lt; elim. move=>x H; rewrite H=>//.
+    do 2 destruct_match; constructor; auto.
   Qed.
+
+  Lemma elt_compare_ltP {e1 e2} :
+    reflect (E.lt e1 e2) (eq_comparison (GHC.Base.compare e1 e2) Lt).
+  Proof.
+    rewrite_compare_e; destruct_match; constructor; auto.
+  Qed.
+
+  Lemma elt_compare_lt'P {e1 e2} :
+    reflect (GHC.Base.compare e1 e2 = Lt)
+            (eq_comparison (GHC.Base.compare e1 e2) Lt).
+  Proof.
+    rewrite_compare_e.
+    destruct_match; constructor; auto;
+      move=>Hcontra; inversion Hcontra.
+  Qed.
+
+  Lemma elt_compare_gtP {e1 e2} :
+    reflect (E.lt e2 e1) (eq_comparison (GHC.Base.compare e1 e2) Gt).
+  Proof.
+    rewrite_compare_e; destruct_match; constructor; auto.
+  Qed.
+
+  Lemma elt_compare_gt'P {e1 e2} :
+    reflect (GHC.Base.compare e1 e2 = Gt)
+            (eq_comparison (GHC.Base.compare e1 e2) Gt).
+  Proof.
+    rewrite_compare_e.
+    destruct_match; constructor; auto;
+      move=>Hcontra; inversion Hcontra.
+  Qed.
+
+  Lemma elt_compare_eqP {e1 e2} :
+    reflect (E.eq e1 e2) (eq_comparison (GHC.Base.compare e1 e2) Eq).
+  Proof.
+    rewrite_compare_e; destruct_match; constructor; auto.
+  Qed.
+
+  Lemma elt_compare_eq'P {e1 e2} :
+    reflect (GHC.Base.compare e1 e2 = Eq)
+            (eq_comparison (GHC.Base.compare e1 e2) Eq).
+  Proof.
+    rewrite_compare_e.
+    destruct_match; constructor; auto;
+      move=>Hcontra; inversion Hcontra.
+  Qed.
+
+  Hint Resolve elt_ltP.
+  Hint Resolve elt_gtP.
+  Hint Resolve elt_compare_ltP.
+  Hint Resolve elt_compare_lt'P.
+  Hint Resolve elt_compare_gtP.
+  Hint Resolve elt_compare_gt'P.
+  Hint Resolve elt_compare_eqP.
+  Hint Resolve elt_compare_eq'P.
+
+  Lemma elt_lt : forall e1 e2, E.lt e1 e2 <-> e1 GHC.Base.< e2.
+  Proof. move=>e1 e2. apply rwP =>//. Qed.
+
+  Lemma elt_gt : forall e1 e2, E.lt e2 e1 <-> e1 GHC.Base.> e2.
+  Proof. move=>e1 e2. apply rwP =>//. Qed.
 
   Lemma elt_compare_lt: forall (e1 e2 : elt),
-      GHC.Base.compare e1 e2 = Lt <-> E.lt e1 e2.
+      E.lt e1 e2 <-> GHC.Base.compare e1 e2 = Lt.
   Proof.
-    move=>e1 e2. rewrite_compare_e.
-    destruct_match; split; move=>Hcontra; try solve [inversion Hcontra].
-    - apply (OrdFacts.eq_not_lt e) in Hcontra. inversion Hcontra.
-    - apply OrdFacts.lt_not_gt in Hcontra. contradiction.
+    move=>e1 e2.
+    apply rwP2 with (b:=eq_comparison (GHC.Base.compare e1 e2) Lt) =>//.
   Qed.
 
   Lemma elt_compare_gt: forall (e1 e2 : elt),
-      GHC.Base.compare e1 e2 = Gt <-> E.lt e2 e1.
+      E.lt e2 e1 <-> GHC.Base.compare e1 e2 = Gt.
   Proof.
-    move=>e1 e2. rewrite_compare_e.
-    destruct_match; split; move=>Hcontra; try solve [inversion Hcontra].
-    - apply OrdFacts.lt_not_gt in Hcontra. contradiction.
-    - clear Heq. apply E.eq_sym in e.
-      apply (OrdFacts.eq_not_lt e) in Hcontra. inversion Hcontra.
+    move=>e1 e2.
+    apply rwP2 with (b:=eq_comparison (GHC.Base.compare e1 e2) Gt) =>//.
   Qed.
 
   Lemma elt_compare_eq: forall (e1 e2 : elt),
-      GHC.Base.compare e1 e2 = Eq <-> E.eq e1 e2.
+       E.eq e1 e2 <-> GHC.Base.compare e1 e2 = Eq.
   Proof.
-    move=>e1 e2. rewrite /Base.compare /Ord_t /ord_default /= /compare.
-    destruct_match; split; move=>Hcontra; try solve [inversion Hcontra].
-    - apply OrdFacts.eq_not_lt in Hcontra. contradiction.
-    - apply E.eq_sym in Hcontra. apply OrdFacts.eq_not_lt in Hcontra. contradiction.
+    move=>e1 e2.
+    apply rwP2 with (b:=eq_comparison (GHC.Base.compare e1 e2) Eq) =>//.
   Qed.
 
-  Hint Rewrite -> elt_gt : elt_compare.
-  Hint Rewrite -> elt_lt : elt_compare.
-  Hint Rewrite -> elt_compare_lt : elt_compare.
-  Hint Rewrite -> elt_compare_gt : elt_compare.
-  Hint Rewrite -> elt_compare_eq : elt_compare.
+  Hint Rewrite <- elt_lt : elt_compare.
+  Hint Rewrite <- elt_gt : elt_compare.
+  Hint Rewrite <- elt_compare_lt : elt_compare.
+  Hint Rewrite <- elt_compare_gt : elt_compare.
+  Hint Rewrite <- elt_compare_eq : elt_compare.
 
   Ltac rewrite_size :=
     repeat match goal with
@@ -353,7 +400,7 @@ Module Foo (E : OrderedType) : WSfun(E).
   Proof.
     move=>x y z [Hlt | Heq]; rewrite /partial_lt;
            autorewrite with elt_compare; intros; eauto.
-    apply E.eq_sym in Heq; eauto.
+      apply E.eq_sym in Heq. eauto.
   Qed.
 
   Lemma partial_lt_relax : forall x y z,
@@ -995,7 +1042,56 @@ Module Foo (E : OrderedType) : WSfun(E).
              case /and4P=>//;
              rewrite -/local_bounded /partial_gt /partial_lt;
              move=> Hc1 Hc2 Hl1 Hl2
-            end; autorewrite with elt_compare in *.
+           end; autorewrite with elt_compare in *.
+
+  Ltac rel_deriver := eauto 2.
+  
+  Ltac solve_relations_single_step :=
+    match goal with
+    | [ |- E.lt ?a ?b -> _ ] =>
+      do [move /elt_compare_gt -> =>//
+         | move /elt_compare_lt -> =>//]
+    | [ |- E.eq ?a ?b -> _ ] =>
+      move /elt_compare_eq -> =>//
+    | [ |- context[Base.compare ?a ?b]] =>
+      do [have: E.lt a b by [rel_deriver]
+         | have: E.eq a b by [rel_deriver]
+         | have: E.lt b a by [rel_deriver]]
+    end.
+
+  Ltac solve_relations :=
+    repeat solve_relations_single_step.
+
+  Ltac prepare_in_set :=
+    repeat match goal with
+    | [ H: context[In_set _ _] |- _ ] =>
+      move: H
+    end;
+    match goal with
+    | [ |- context[In_set _ _] ] =>
+      rewrite /In_set /member /= -/member
+    end.
+
+  Ltac prepare_relations :=
+    repeat match goal with
+           | [H: E.eq ?a ?b |- _ ] =>
+             first [(match goal with
+                     | [H': E.eq b a |- _ ] =>
+                       idtac
+                     end)
+                   | (have: E.eq b a by [apply E.eq_sym; apply H];
+                      move=>?)]
+           end.
+
+  Ltac solve_in_set :=
+    solve [prepare_in_set;
+           repeat (autorewrite with elt_compare in *;
+                   prepare_relations;
+                   solve_relations;
+                   match goal with
+                   | [ |- context[Base.compare ?a ?b]] =>
+                     destruct_match
+                   end)].
 
   Lemma inset_balanceL : forall (x y : elt) (l r : Set_ elt),
       WF l ->
@@ -1005,7 +1101,6 @@ Module Foo (E : OrderedType) : WSfun(E).
       E.eq x y \/ (E.lt y x /\ In_set y l) \/ (E.lt x y /\ In_set y r) ->
       In_set y (balanceL x l r).
   Proof.
-    (** The proof is very very tedious. There must be a better way! *)
     destruct r as [sr xr rl rr | ];
       destruct l as [sl xl ll lr | ].
     - rewrite /before_balancedL.
@@ -1013,127 +1108,27 @@ Module Foo (E : OrderedType) : WSfun(E).
       + destruct ll as [sll xll lll llr | ];
           destruct lr as [slr xlr lrl lrr | ];
           try solve [intros; lucky_balanced_solve].
-        move=>Hwfl Hwfr Hbeforeb Hbefore [Hxy | [Hinl | Hinr]];
+        move=>Hwfl Hwfr Hbeforeb Hbefore [? | [[? ?] | [? ?]]];
                move: Hbefore; rewrite /before_ordered;
                  move=>H; destruct H as [_ [_ [_ [_ [? ?]]]]];
-                        derive_compare.
-        * destruct_match.
-          -- rewrite /In_set /member /=.
-             have Hgt: E.lt xl y by [eauto].
-             apply elt_compare_gt in Hgt. rewrite Hgt.
-             apply E.eq_sym in Hxy. apply elt_compare_eq in Hxy.
-             rewrite Hxy //.
-          -- rewrite /In_set /member /=.
-             have Hgt: E.lt xlr y by [eauto].
-             apply elt_compare_gt in Hgt. rewrite Hgt.
-             apply E.eq_sym in Hxy. apply elt_compare_eq in Hxy.
-             rewrite Hxy //.
-        * destruct_match.
-          -- move: Hinl. rewrite /In_set /member /= -!/member //=.
-             elim. move=>Hlt.
-             do 2 destruct_match; intros;
-               apply elt_compare_lt in Hlt; rewrite Hlt //.               
-          -- move: Hinl. rewrite /In_set /member /= -!/member //=.
-             elim. move=>Hlt.
-             apply elt_compare_lt in Hlt. rewrite Hlt //.
-             destruct_match.
-             ++ autorewrite with elt_compare in *.
-                have Hlt': E.lt y xlr by [eauto].
-                apply elt_compare_lt in Hlt'. rewrite Hlt' //.
-             ++ autorewrite with elt_compare in *.
-                have Hlt': E.lt y xlr by [eauto].
-                apply elt_compare_lt in Hlt'. rewrite Hlt' //.
-        * destruct_match.
-          -- move: Hinr. rewrite /In_set /member /= -!/member //=.
-             elim. move=>Hlt.
-             have Hgt: E.lt xl y by [eauto].
-             apply elt_compare_gt in Hgt; rewrite Hgt //.
-             apply elt_compare_gt in Hlt; rewrite Hlt //.
-          -- move: Hinr. rewrite /In_set /member /= -!/member //=.
-             elim. move=>Hlt.
-             have Hgt: E.lt xl y by [eauto].
-             have Hgt': E.lt xlr y by [eauto].
-             apply elt_compare_gt in Hgt; rewrite Hgt //.
-             apply elt_compare_gt in Hlt; rewrite Hlt //.
-             apply elt_compare_gt in Hgt'; rewrite Hgt' //.
-      + move=>Hwfl Hwfr Hbeforeb Hbefore [Hxy | [Hinl | Hinr]].
-        * rewrite /In_set /member // -/member /=.
-          apply E.eq_sym in Hxy. apply elt_compare_eq in Hxy.
-          rewrite Hxy //.
-        * move: Hinl. rewrite /In_set /member /= -!/member //=.
-          elim. move=>Hlt.
-          apply elt_compare_lt in Hlt. rewrite Hlt //.
-        * move: Hinr. rewrite /In_set /member /= -!/member //=.
-          elim. move=>Hlt.
-          apply elt_compare_gt in Hlt. rewrite Hlt //.
-    - move=>Hwfl Hwfr Hbeforeb Hbefore [Hxy | [Hinl | Hinr]].
-      + move: Hbefore. rewrite /before_ordered.
-        move => [_ [_ [_ [_ [? ?]]]]]. derive_compare.
-        rewrite /balanceL /In_set /member /= -!/member //=.
-        apply E.eq_sym in Hxy. apply elt_compare_eq in Hxy. rewrite Hxy //.
-      + move: Hinl. elim. rewrite /In_set /member //.
-      + move: Hinr. elim. rewrite /In_set /member /= -!/member.
-        move=>Hgt. apply elt_compare_gt in Hgt. rewrite Hgt //.
+                        derive_compare;
+                        destruct_match; solve_in_set.
+      + move=>Hwfl Hwfr Hbeforeb Hbefore [? | [[? ?] | [? ?]]];
+               solve_in_set.
+    - move=>Hwfl Hwfr Hbeforeb Hbefore [? | [[? ?] | [? ?]]];
+             solve_in_set.
     - destruct ll as [sll xll lll llr | ];
         destruct lr as [slr xlr lrl lrr | ];
         move=>Hwfl Hwfr Hbeforeb; rewrite /before_ordered;
-        move=>[_ [_ [_ [_ [? ?]]]]]; derive_compare.
-      + move=>[Hxy | [Hinl | Hinr]]; rewrite /balanceL.
-        * destruct_match.
-          -- rewrite /In_set /member /= -!/member /=.
-             have Hgt: E.lt xl y by [eauto].
-             apply elt_compare_gt in Hgt. rewrite Hgt //.
-             apply E.eq_sym in Hxy. apply elt_compare_eq in Hxy. rewrite Hxy //.
-          -- rewrite /In_set /member /= -!/member /=.
-             have Hgt: E.lt xlr y by [eauto].
-             apply elt_compare_gt in Hgt. rewrite Hgt //.
-             apply E.eq_sym in Hxy. apply elt_compare_eq in Hxy. rewrite Hxy //.
-        * destruct_match.
-          -- move: Hinl. elim. move=>Hlt. 
-             rewrite /In_set /member /= -!/member /=.
-             apply elt_compare_lt in Hlt. rewrite Hlt //.
-          -- move: Hinl. elim. move=>Hlt.
-             rewrite /In_set /member /= -!/member /=.
-             apply elt_compare_lt in Hlt. rewrite Hlt //.
-             destruct_match; autorewrite with elt_compare in *;
-               have Hlt': E.lt y xlr by [eauto];
-               apply elt_compare_lt in Hlt'; rewrite Hlt' //.
-        * move: Hinr. rewrite /In_set /member /=. elim. done.
-      + move=>[Hxy | [Hinl | Hinr]]; rewrite /balanceL.
-        * rewrite /In_set /member /= -!/member /=.
-          have Hlt: E.lt xl y by [eauto]. apply E.eq_sym in Hxy.
-          apply elt_compare_gt in Hlt. rewrite Hlt //. 
-          apply elt_compare_eq in Hxy. rewrite Hxy //.
-        * move: Hinl. elim. move=>Hlt.
-          rewrite /In_set /member /= -!/member /=.
-          apply elt_compare_lt in Hlt. rewrite Hlt //.
-        * move: Hinr. rewrite /In_set /member /=. elim. done.
-      + move=>[Hxy | [Hinl | Hinr]]; rewrite /balanceL.
-        * rewrite /In_set /member /= -!/member /=.
-          have Hlt: E.lt xlr y by [eauto]. apply E.eq_sym in Hxy.
-          apply elt_compare_gt in Hlt. rewrite Hlt //. 
-          apply elt_compare_eq in Hxy. rewrite Hxy //.
-        * destruct lrl; destruct lrr; try solve [lucky_balanced_solve].
-          move: Hinl. elim. move=>Hlt.
-          rewrite /In_set /member /= -!/member /=.
-          apply elt_compare_lt in Hlt. rewrite Hlt //.
-          destruct_match.
-          autorewrite with elt_compare in *.
-          have Hlt': E.lt y xlr by [eauto].
-          apply elt_compare_lt in Hlt'. rewrite Hlt' //.
-        * destruct Hinr. inversion H0.
-      + move=>[Hxy | [Hinl | Hinr]]; rewrite /balanceL.
-        * rewrite /In_set /member /= -!/member /=.
-          apply E.eq_sym in Hxy. apply elt_compare_eq in Hxy. rewrite Hxy //.
-        * move: Hinl. elim. move=>Hlt.
-          rewrite /In_set /member /= -!/member /=.
-          apply elt_compare_lt in Hlt. rewrite Hlt //.
-        * destruct Hinr. inversion H0.
-    - move=>Hwfl Hwfr Hbeforeb Hbefore [Hxy | [Hinl | Hinr]].
-      + rewrite /balanceL /In_set /member /=.
-        apply E.eq_sym in Hxy. apply elt_compare_eq in Hxy. rewrite Hxy //.
-      + destruct Hinl. inversion H0.
-      + destruct Hinr. inversion H0.
+        move=>[_ [_ [_ [_ [? ?]]]]]; derive_compare;
+               move=>[? | [[? ?] | [? ?]]]; rewrite /balanceL;
+                      try solve [try match goal with
+                                     | [H: In_set _ Tip |- _ ] =>
+                                       inversion H
+                                     end; try destruct_match; solve_in_set].
+      destruct lrl; destruct lrr; try solve [lucky_balanced_solve | solve_in_set].
+    - move=>Hwfl Hwfr Hbeforeb Hbefore [? | [[? ?] | [? ?]]];
+             solve_in_set.
   Qed.
   
   Lemma inset_balanceR : forall (x y : elt) (l r : Set_ elt),
@@ -1143,7 +1138,36 @@ Module Foo (E : OrderedType) : WSfun(E).
       before_ordered x l r (const true) (const true) ->
       E.eq x y \/ (E.lt y x /\ In_set y l) \/ (E.lt x y /\ In_set y r) ->
       In_set y (balanceR x l r).
-  Admitted.
+  Proof.
+    destruct l as [sl xl ll lr | ];
+      destruct r as [sr xr rl rr | ].
+    - rewrite /before_balancedR.
+      rewrite /balanceR; destruct_match.
+      + destruct rl as [srl xrl rll rlr | ];
+          destruct rr as [srr xrr rrl rrr | ];
+          try solve [intros; lucky_balanced_solve].
+        move=>Hwfl Hwfr Hbeforeb Hbefore [? | [[? ?] | [? ?]]];
+               move: Hbefore; rewrite /before_ordered;
+                 move=> [_ [_ [_ [_ [? ?]]]]];
+                         derive_compare;
+                         destruct_match; solve_in_set.
+      + move=>Hwfl Hwfr Hbeforeb Hbefore [? | [[? ?] | [? ?]]];
+               solve_in_set.
+    - move=>Hwfl Hwfr Hbeforeb Hbefore [? | [[? ?] | [? ?]]];
+             solve_in_set.
+    - destruct rl as [srl xrl rll rlr | ];
+        destruct rr as [srr xrr rrl rrr | ];
+        move=>Hwfl Hwfr Hbeforeb; rewrite /before_ordered;
+        move=>[_ [_ [_ [_ [? ?]]]]]; derive_compare;
+               move=>[? | [[? ?] | [? ?]]]; rewrite /balanceR;
+                      try solve [try match goal with
+                                     | [H: In_set _ Tip |- _ ] =>
+                                       inversion H
+                                     end; try destruct_match; solve_in_set].
+      destruct rll; destruct rlr; try solve [lucky_balanced_solve | solve_in_set].
+    - move=>Hwfl Hwfr Hbeforeb Hbefore [? | [[? ?] | [? ?]]];
+             solve_in_set.
+  Qed.
   
   Definition mem : elt -> t -> bool := fun e s' =>
     s <-- s' ;; member e s.
@@ -1547,7 +1571,7 @@ Module Foo (E : OrderedType) : WSfun(E).
     intros. destruct s as [s]. simpl. induction s.
     - rewrite /insert /= -/insert. destruct_match.
       + rewrite /In_set /member /= -/member.
-        apply E.eq_sym in H. apply elt_compare_eq in H. rewrite H //.
+        move: H. move /E.eq_sym /elt_compare_eq -> =>//.
       + autorewrite with elt_compare in *; apply inset_balanceL...
         * apply WF_children in i; tauto.
         * right; left. split.
@@ -1558,7 +1582,7 @@ Module Foo (E : OrderedType) : WSfun(E).
         * right; right. split...
           -- apply WF_children in i. destruct i. apply IHs2 in H1...
     - rewrite /insert /= /Base.singleton /In_set /member /=.
-      apply E.eq_sym in H. apply elt_compare_eq in H. rewrite H //.
+      move: H. move /E.eq_sym /elt_compare_eq -> =>//.
   Qed.
         
   Lemma add_2 : forall (s : t) (x y : elt), In y s -> In y (add x s).
@@ -1567,7 +1591,7 @@ Module Foo (E : OrderedType) : WSfun(E).
     - rewrite /insert /= -/insert. destruct_match.
       + move: H. rewrite /In_set /member /= -/member.
         have Heq': (Base.compare y x = Base.compare y a).
-        { destruct (Base.compare y a) eqn:Hcomp;
+        {destruct (Base.compare y a) eqn:Hcomp;
             autorewrite with elt_compare in *; eauto.
           apply E.eq_sym in Heq. eauto. }
         destruct_match; rewrite Heq' //.
@@ -1601,7 +1625,7 @@ Module Foo (E : OrderedType) : WSfun(E).
       destruct_match; autorewrite with elt_compare in *.
       apply E.eq_sym in Heq. contradiction.
   Admitted.
-    
+
   Lemma remove_1 :
     forall (s : t) (x y : elt), E.eq x y -> ~ In y (remove x s). Admitted.
   Lemma remove_2 :

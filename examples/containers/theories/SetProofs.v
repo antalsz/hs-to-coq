@@ -864,7 +864,7 @@ Module Foo (E : OrderedType) : WSfun(E).
       destruct_match; solve_balanced.
     - (** Both [l] and [r] and [Tip]s. *)
       step_in_balanced.
-      Time Qed. (* Finished transaction in 24.677 secs (24.357u,0.303s) (successful) *)
+      Time Qed. (* Finished transaction in 20.068 secs (19.946u,0.053s) (successful) *)
 
     Definition before_balancedR (x: elt) (l r : Set_ elt) : Prop :=
     (size l + size r <= 2 /\ size l <= 1) \/
@@ -901,7 +901,7 @@ Module Foo (E : OrderedType) : WSfun(E).
       destruct_match; solve_balanced.
     - (** Both [l] and [r] and [Tip]s. *)
       step_in_balanced.
-      Time Qed. (* Finished transaction in 28.41 secs (28.006u,0.287s) (successful) *)
+      Time Qed. (* Finished transaction in 20.24 secs (20.106u,0.059s) (successful) *)
 
   Definition before_ordered (x : elt) (l r : Set_ elt) (f g : elt -> bool) :=
     f x /\ (forall x y, E.lt x y \/ E.eq x y -> f x -> f y) /\
@@ -939,7 +939,7 @@ Module Foo (E : OrderedType) : WSfun(E).
         destruct lr as [slr xlr lrl lrr | ];
         try solve [solve_local_bounded].
       destruct_match; solve_local_bounded.
-  Qed.
+  Time Qed. (* Finished transaction in 0.67 secs (0.668u,0.001s) (successful) *)
 
   Lemma balanceR_ordered : forall (x: elt) (l r : Set_ elt) f g,
       WF l ->
@@ -965,7 +965,7 @@ Module Foo (E : OrderedType) : WSfun(E).
         destruct rr as [srr xrr rrl rrr | ];
         try solve [solve_local_bounded].
       destruct_match; solve_local_bounded.
-  Qed.
+  Time Qed. (* Finished transaction in 0.644 secs (0.642u,0.001s) (successful) *)
 
   Ltac solve_realsize :=
     apply /option_int_eqP;
@@ -994,7 +994,7 @@ Module Foo (E : OrderedType) : WSfun(E).
     - destruct ll as [sll xll lll llr | ];
         destruct lr as [slr xlr lrl lrr | ];
         try solve [lucky_balanced_solve || solve_realsize].
-  Qed.
+  Time Qed. (* Finished transaction in 2.83 secs (2.822u,0.004s) (successful) *)
 
   Lemma balanceR_validsize: forall (x: elt) (l r : Set_ elt),
       WF l -> WF r ->
@@ -1013,7 +1013,7 @@ Module Foo (E : OrderedType) : WSfun(E).
         destruct rr as [srr xrr rrl rrr | ];
         try solve [lucky_balanced_solve || solve_realsize].
       destruct_match; solve_realsize.
-  Qed.
+  Time Qed. (* Finished transaction in 2.29 secs (2.284u,0.002s) (successful) *)
 
   Lemma balanceL_WF: forall (x: elt) (l r : Set_ elt),
       WF l -> WF r ->
@@ -1093,15 +1093,15 @@ Module Foo (E : OrderedType) : WSfun(E).
     end.
 
   Ltac prepare_relations :=
-    repeat match goal with
-           | [H: E.eq ?a ?b |- _ ] =>
-             first [(match goal with
-                     | [H': E.eq b a |- _ ] =>
-                       idtac
-                     end)
-                   | (have: E.eq b a by [apply E.eq_sym; apply H];
-                      move=>?)]
-           end.
+    try multimatch goal with
+        | [H: E.eq ?a ?b |- _ ] =>
+          first [(match goal with
+                  | [H': E.eq b a |- _ ] =>
+                    idtac
+                  end)
+                | (have: E.eq b a by [apply E.eq_sym; apply H];
+                   move=>?)]
+        end.
 
   Ltac solve_in_set :=
     solve [prepare_in_set;
@@ -1149,7 +1149,7 @@ Module Foo (E : OrderedType) : WSfun(E).
       destruct lrl; destruct lrr; try solve [lucky_balanced_solve | solve_in_set].
     - move=>Hwfl Hwfr Hbeforeb Hbefore [? | [[? ?] | [? ?]]];
              solve_in_set.
-  Qed.
+  Time Qed. (* Finished transaction in 1.573 secs (1.57u,0.002s) (successful) *)
   
   Lemma inset_balanceR : forall (x y : elt) (l r : Set_ elt),
       WF l ->
@@ -1187,7 +1187,7 @@ Module Foo (E : OrderedType) : WSfun(E).
       destruct rll; destruct rlr; try solve [lucky_balanced_solve | solve_in_set].
     - move=>Hwfl Hwfr Hbeforeb Hbefore [? | [[? ?] | [? ?]]];
              solve_in_set.
-  Qed.
+  Time Qed. (* Finished transaction in 1.74 secs (1.722u,0.008s) (successful) *)
   
   Definition mem : elt -> t -> bool := fun e s' =>
     s <-- s' ;; member e s.
@@ -1388,7 +1388,7 @@ Module Foo (E : OrderedType) : WSfun(E).
       + intros; split; intros; apply /and3P=>//; split=>//.
         * autorewrite with elt_compare. auto.
         * autorewrite with elt_compare. auto.
-  Qed.
+  Time Qed. (* Finished transaction in 1.354 secs (1.301u,0.045s) (successful) *)
 
   Definition add (e: elt) (s': t) : t.
     refine (s <-- s' ;;
@@ -1431,22 +1431,16 @@ Module Foo (E : OrderedType) : WSfun(E).
     move=>s x y. rewrite /In /In_set. elim s=>[s'].
     elim s'=>[sl sx l IHl r IHr | ]=>Hwf Heq.
     - simpl. destruct_match.
-      + apply elt_compare_eq in Heq0.
-        apply E.eq_sym in Heq. apply (E.eq_trans Heq) in Heq0.
-        elim. apply elt_compare_eq in Heq0; rewrite Heq0 //=.
-      + apply elt_compare_lt in Heq0. intro.
-        apply WF_children in Hwf; destruct Hwf.
-        apply (IHl H0) in Heq as Heq1=>//.
-        apply E.eq_sym in Heq. apply (OrdFacts.eq_lt Heq) in Heq0.
-        apply elt_compare_lt in Heq0. rewrite Heq0. apply Heq1.
-      + apply elt_compare_gt in Heq0. intro.
-        apply WF_children in Hwf; destruct Hwf.
-        apply (IHr H1) in Heq as Heq1=>//.
-        apply (OrdFacts.lt_eq Heq0) in Heq.
-        apply elt_compare_gt in Heq. rewrite Heq. apply Heq1.
-    (** We are using [elt_compare_lt] and [elt_comapre_gt] back
-            and forth during proofs -- maybe it's a good place to use
-            proof by reflection? *)
+      + move: Heq0. move /elt_compare_eq => Heq'.
+        prepare_relations. solve_relations.
+      + move: Heq0. move /elt_compare_lt => Heq'.
+        prepare_relations. solve_relations.
+        move: Hwf. move /WF_children. elim. move=>? _.
+        apply IHl=>//.
+      + move: Heq0. move /elt_compare_gt => Heq'.
+        prepare_relations. solve_relations.
+        move: Hwf. move /WF_children. elim. move=>_ ?.
+        apply IHr=>//.
     - elim. rewrite /member //.
   Qed.
 
@@ -1467,7 +1461,7 @@ Module Foo (E : OrderedType) : WSfun(E).
     rewrite /singleton /In /In_set //.
     intros. simpl in H.
     destruct (Base.compare y x) eqn:Hcomp;
-      apply E.eq_sym; apply elt_compare_eq=>//.
+      move: Hcomp =>//; move /elt_compare_eq; auto.
   Qed.
 
   Lemma singleton_2 :
@@ -1475,11 +1469,8 @@ Module Foo (E : OrderedType) : WSfun(E).
   Proof.
     rewrite /singleton /In /In_set //.
     rewrite_compare_e. intros.
-    destruct (Base.compare y x) eqn:Hcomp=>//; exfalso.
-    - apply elt_compare_lt in Hcomp. apply E.eq_sym in H.
-      apply OrdFacts.eq_not_lt in H. contradiction.
-    - apply elt_compare_gt in Hcomp. apply E.eq_sym in H.
-      apply OrdFacts.eq_not_gt in H. contradiction.
+    destruct (Base.compare y x) eqn:Hcomp=>//; exfalso; move: Hcomp;
+      prepare_relations; solve_relations.
   Qed.
 
   Lemma WF_prop_l1 :

@@ -62,23 +62,53 @@ Ltac rewrite_Int :=
                   ?Int_ge_is_Z_ge ?Int_gt_is_Z_gt
                   ?Int_eq_is_Z_eq ?Int_is_Z).
 
+Section ZReflect.
+  Variables a b : Z.
+
+  Lemma Z_eqP : reflect (a = b) (a =? b).
+  Proof.
+    destruct (a =? b) eqn:Hab; constructor; move: Hab.
+    - move /Z.eqb_eq  =>//.
+    - move /Z.eqb_neq =>//.
+  Qed.
+
+  Lemma Z_ltP : reflect (a < b) (a <? b).
+  Proof.
+    destruct (a <? b) eqn:Hab; constructor; move: Hab.
+    - move /Z.ltb_lt =>//.
+    - move /Z.ltb_nlt =>//.
+  Qed.
+End ZReflect.
+
+Arguments Z_eqP {a} {b}.
+Arguments Z_ltP {a} {b}.
+
+Lemma Z_gtP { a b }: reflect (b < a) (a >? b).
+Proof. rewrite Z.gtb_ltb. apply Z_ltP. Qed.
+
 Section Option_Int.
   Variables a b : option Int.
   
   Ltac rewrite_option_eq :=
     rewrite /op_zeze__ /Eq___option //= /op_zeze__ /Eq_Integer___ //=.
 
-  Lemma Maybe_eq_is_Option_eq :
-    a GHC.Base.== b <-> a = b.
+  Lemma option_int_eqP :
+    reflect (a = b) (a GHC.Base.== b).
   Proof.
     rewrite /_GHC.Base.==_ /Eq___option /= /Base.Eq___option_op_zeze__.
     destruct a; destruct b.
-    - rewrite_Int. rewrite /is_true Z.eqb_eq.
-      split; (elim + case); done.
-    - split; discriminate.
-    - split; discriminate.
-    - split; auto.
+    - rewrite_Int. eapply iffP.
+      + apply Z_eqP.
+      + move -> => //.
+      + case => //.
+    - constructor. discriminate.
+    - constructor. discriminate.
+    - constructor. reflexivity.
   Qed.
+  
+  Lemma option_int_eq :
+    a = b <-> a GHC.Base.== b.
+  Proof. apply rwP. apply option_int_eqP. Qed.
 End Option_Int.
 
 Module Foo (E : OrderedType) : WSfun(E).
@@ -553,15 +583,14 @@ Module Foo (E : OrderedType) : WSfun(E).
     - generalize dependent s2.
       destruct s1; intros.
       + move: H. rewrite /local_realsize /= -/local_realsize.
-        repeat destruct_match. intros.
-        apply Maybe_eq_is_Option_eq=>//.
-      + rewrite /local_realsize /=. apply Maybe_eq_is_Option_eq=>//.
+        repeat destruct_match. intro.
+        apply /option_int_eqP =>//.
+      + rewrite /local_realsize /=. apply /option_int_eqP =>//.
     - generalize dependent s1.
       destruct s2; intros.
       + move: H. rewrite /local_realsize /= -/local_realsize.
-        repeat destruct_match.
-        intros. apply Maybe_eq_is_Option_eq=>//.
-      + rewrite /local_realsize /=. apply Maybe_eq_is_Option_eq=>//.
+        repeat destruct_match. intros. apply /option_int_eqP =>//.
+      + rewrite /local_realsize /=. apply /option_int_eqP =>//.
   Qed.
 
   Lemma WF_children : forall s1 s2 l e, WF (Bin l e s1 s2) -> WF s1 /\ WF s2.
@@ -578,16 +607,11 @@ Module Foo (E : OrderedType) : WSfun(E).
       WF (Bin l e s1 s2) -> size s1 + size s2 + 1 = l.
   Proof.
     rewrite /WF /valid. move=>s1 s2 l e.
-    case: and3P=>//. elim; move=>Hb Ho Hv H; clear H.
+    case: and3P=>//. elim; move=>Hb Ho Hv _.
     apply validsize_children in Hv as Hv2. destruct Hv2.
     move: H0 H Hv. rewrite /validsize -/local_realsize.
-    destruct s1; destruct s2=>//;
-      try solve [repeat destruct_match; move: Heq1;
-                 rewrite_size; rewrite_Int; move /Z.eqb_eq=>?;
-                 repeat (move /Maybe_eq_is_Option_eq; (case=>? || elim));
-                 subst; auto].
-    simpl; do 2 elim. destruct_match.
-    elim. move: Heq. move /Z.eqb_eq; auto.
+    do 2 move /option_int_eq ->. move /option_int_eq.
+    destruct_match; move: Heq. rewrite_Int. move /Z_eqP -> =>//.
   Qed.
 
   Lemma WF_size_nonneg : forall s, WF s -> size s >= 0.
@@ -680,17 +704,13 @@ Module Foo (E : OrderedType) : WSfun(E).
                  [apply WF_validsize in Hwf];
              clear Hwf
            | [H: is_true (validsize (Bin ?s ?x ?l ?r)) |- _ ] =>
-             let Hrs := fresh "Hrealsize" in
              have: validsize (Bin s x l r) by [done];
              apply validsize_children in H; destruct H;
              rewrite /validsize -/local_realsize;
-             move=>Hrs; apply Maybe_eq_is_Option_eq in Hrs;
-                  rewrite ?Hrs
+             move /option_int_eqP ->
            | [H: is_true (validsize ?t) |- _ ] =>
-             let Hrs := fresh "Hrealsize" in
              move: H; rewrite /validsize -/local_realsize;
-             move=>Hrs; apply Maybe_eq_is_Option_eq in Hrs;
-                  rewrite ?Hrs
+             move /option_int_eqP ->
            end.
 
   Ltac lucky_balanced_solve :=
@@ -948,7 +968,7 @@ Module Foo (E : OrderedType) : WSfun(E).
   Qed.
 
   Ltac solve_realsize :=
-    apply Maybe_eq_is_Option_eq;
+    apply /option_int_eqP;
     rewrite /local_realsize;
     derive_constraints; rewrite_size; rewrite_Int;
     repeat match goal with

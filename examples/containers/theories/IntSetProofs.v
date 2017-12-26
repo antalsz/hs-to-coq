@@ -776,7 +776,23 @@ Module Foo: WSfun(N_as_OT).
   
   Lemma empty_1 : Empty empty.
   Proof. unfold Empty; intros a H. inversion H. Qed.
-  
+
+  Lemma rPrefix_shiftr:
+    forall e,
+    rPrefix (Z.shiftr e 6, (N.log2 WIDTH)) = prefixOf e.
+  Proof.
+    intros.
+    unfold rPrefix, prefixOf, prefixBitMask, suffixBitMask.
+    unfold Bits.complement, instance_Bits_Int, complement_Int.
+    rewrite /_.&._ /Bits__N /instance_Bits_Int.
+    rewrite <- Z.ldiff_land.
+    rewrite -> Z.ldiff_ones_r by omega.
+    replace (Z.of_N (N.log2 WIDTH)) with 6 by reflexivity.
+    
+    rewrite -> Z_shiftl_inj by omega.
+    reflexivity.
+  Qed.
+ 
 
   Lemma prefixOf_eq_shiftr:
     forall i p, 
@@ -834,19 +850,20 @@ Module Foo: WSfun(N_as_OT).
          refine (outside_commonRangeDis_r _ _ _ (Desc_rNonneg  HD1) (Desc_rNonneg HD2) H Houtside).
    Qed.
 
-   (* needed?b
     Lemma Desc_neg_false:
-     forall {s p b f i}, Desc s p b f -> ~ (0 <= i) -> f i = false.
+     forall {s r f i}, Desc s r f -> ~ (0 <= i) -> f i = false.
     Proof.
       intros.
+      assert (rNonneg r) by apply (Desc_rNonneg H).
       apply (Desc_outside H).
+      destruct r as [p b]; simpl in *.
+      unfold inRange.
       rewrite Z.eqb_neq.
       contradict H0.
       rewrite <- (Z.shiftr_nonneg i (Z.of_N b)).
       rewrite H0.
       nonneg.
     Qed.
-   *)
 
    (* This lemma shows that the way the code gets the upper bits above a one-bit-mask
       is correct *)
@@ -983,14 +1000,15 @@ Module Foo: WSfun(N_as_OT).
 
 
    Lemma Desc_some_f:
-     forall {s p b f}, Desc s p b f -> exists i, f i = true.
+     forall {s r f}, Desc s r f -> exists i, f i = true.
    Proof.
-   intros ???? HD.
+   intros ??? HD.
    induction HD; subst.
    + destruct (isBitMask_testbit _ H3) as [j[??]].
-     set (i := (Z.lor (Z.shiftl p 6) (Z.of_N j))).
+     set (i := (Z.lor (rPrefix r) (Z.of_N j))).
      exists i.
 
+     (* This proof looks like an Isar-proof… *)
      assert (Z.log2 (Z.of_N j) < 6).
      - rewrite <- of_N_log2.
        change (Z.of_N (N.log2 j) < Z.of_N 6%N).
@@ -998,44 +1016,53 @@ Module Foo: WSfun(N_as_OT).
        destruct (N.lt_decidable 0%N j).
        + apply N.log2_lt_pow2; assumption.
        + enough (j = 0)%N by (subst; compute; congruence).
-         destruct j; auto; contradict H4. apply pos_pos.
+         destruct j; auto; contradict H5. apply pos_pos.
 
-    rewrite  H2; clear H2.
-    replace ((Z.of_N (N.log2 WIDTH))) with 6 by reflexivity.
-    replace (Z.shiftr i 6) with p.
-    rewrite (Z.eqb_refl).
-    replace (Z.land i (Z.ones 6)) with (Z.of_N j).
-    rewrite N2Z.id.
-    assumption.
-    
-    * subst i.
+    assert (inRange i r).
+    - destruct r as [p b]; simpl in *; subst.
+      replace (Z.of_N 6%N) with 6 by reflexivity.
+      replace (Z.shiftr i 6) with p.
+      apply (Z.eqb_refl).
+      symmetry.
+
+      subst i.
+      rewrite Z.shiftr_lor.
+      replace ((Z.shiftr (Z.of_N j) 6)) with 0.
+      rewrite Z.lor_0_r.
+      rewrite -> Z.shiftr_shiftl_l by nonneg.
+      reflexivity.
+      symmetry.
+      apply Z.shiftr_eq_0; nonneg.
+
+    assert ((Z.land i (Z.ones 6) = Z.of_N j)).
+    - subst i.
+      destruct r as [p b]; simpl in *; subst.
       rewrite Z.land_lor_distr_l.
       rewrite -> land_shiftl_ones by omega.
       rewrite Z.lor_0_l.
       rewrite Z.land_ones_low. reflexivity.
       nonneg.
       assumption.
-    * symmetry.
-      subst i.
-      rewrite Z.shiftr_lor.
-      replace ((Z.shiftr (Z.of_N j) 6)) with 0.
-      rewrite Z.lor_0_r.
-      rewrite Z.shiftr_shiftl_l.
-      reflexivity.
-      compute; congruence.
-      symmetry.
-      apply Z.shiftr_eq_0; nonneg.
+
+    rewrite  H2; clear H2.
+    unfold bitmapInRange.
+    rewrite H6.
+    rewrite H1.
+    replace ((Z.of_N (N.log2 WIDTH))) with 6 by reflexivity.
+    rewrite H7.
+    rewrite N2Z.id.
+    assumption.
   + destruct IHHD1  as [j?].
     exists j.
-    rewrite H8.
-    rewrite H4.
+    rewrite H5.
+    rewrite H0.
     reflexivity.
-   Qed.
+  Qed.
 
    Lemma Desc_has_member: 
-     forall {s p b f}, Desc s p b f -> exists i, 0 <= i /\ member i s = true.
+     forall {s r f}, Desc s r f -> exists i, 0 <= i /\ member i s = true.
    Proof.
-     intros ???? HD.
+     intros ??? HD.
      destruct (Desc_some_f HD) as [j?].
      exists j.
      rewrite (member_spec HD). intuition.
@@ -1058,19 +1085,21 @@ Module Foo: WSfun(N_as_OT).
   Lemma is_empty_2 : forall s : t, is_empty s = true -> Empty s.
   Proof. move=>s. rewrite /Empty /In. elim s=>[s']. elim s'=>//. Qed.
 
+  (* This is basically DescTip
   Lemma Tip_Desc:
-    forall p p' bm, isBitMask bm ->
-      0 <= p ->
-      p' = (Z.shiftl p 6) ->
-      Desc (Tip p' bm) p (N.log2 WIDTH)
-           (fun i => testBitZ p 6%N bm i).
+    forall r p' bm, isBitMask bm ->
+      rNonneg r ->
+      rBits r = N.log2 WIDTH ->
+      p' = rPrefix r ->
+      Desc (Tip p' bm) r
+           (fun i => bitmapInRange r bm i).
   Proof.
-    intros; subst.
-    apply DescTip; auto.
-    intro i. unfold testBitZ.
-    reflexivity.
+    intros.
+    destruct r as [p b]; simpl in *; subst.
+    apply DescTip; nonneg.
   Qed.
-  
+
+  Should be done using DescTip
   Lemma Tip_WF:
     forall p bm, 0 <= p -> isPrefix p -> isBitMask bm -> WF (Tip p bm).
   Proof.
@@ -1093,14 +1122,54 @@ Module Foo: WSfun(N_as_OT).
     apply Z.land_m1_r.
     compute; congruence.
   Qed.
-
+  *)
+  
+  Lemma of_N_shiftl:
+    forall n i, Z.of_N (N.shiftl n i) = Z.shiftl (Z.of_N n) (Z.of_N i).
+  Proof.
+    intros.
+    destruct n.
+    * simpl. symmetry. apply Z.shiftl_0_l.
+    * destruct i.
+      + reflexivity.
+      + simpl.
+        SearchAbout Z.mul xO.
+        generalize p. clear p.
+        induction p0; intro.
+        - simpl.
+  Admitted.      
+    
+  Lemma bitmapInRange_bitmapOf:
+    forall e i,
+    bitmapInRange (Z.shiftr e 6, N.log2 WIDTH) (bitmapOf e) i = (i =? e).
+  Proof.
+    intros.
+    unfold bitmapInRange, inRange. simpl Z.of_N.
+    destruct (Z.eqb_spec (Z.shiftr i 6) (Z.shiftr e 6)).
+    * unfold bitmapOf, bitmapOfSuffix, fromInteger, Num_Word__, shiftLL.
+      unfold suffixOf, suffixBitMask.
+      unfold op_zizazi__, instance_Bits_Int.
+      rewrite <- Z.testbit_of_N'.
+      
+  Admitted.
+  
+  Lemma singleton_spec:
+    forall e,
+     0 <= e ->
+     Desc (singleton e) (Z.shiftr e 6, N.log2 WIDTH) (fun x => x =? e).
+  Proof.
+    intros.
+    apply DescTip; try nonneg; try apply isBitMask_suffixOf.
+    symmetry; apply rPrefix_shiftr.
+    intro i.
+    symmetry; apply bitmapInRange_bitmapOf.
+  Qed.
+  
   Definition singleton : elt -> t.
     refine (fun e => pack (singleton (Z.of_N e)) _).
     unfold singleton, Prim.seq.
-    apply Tip_WF.
-    * nonneg.
-    * apply isPrefix_prefixOf.
-    * apply isBitMask_suffixOf.
+    eapply WFNonEmpty.
+    apply singleton_spec; nonneg.
   Qed.
 
   Lemma link_Desc:

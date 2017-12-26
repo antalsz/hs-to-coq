@@ -3,7 +3,7 @@
 This repository contains a converter from Haskell code to equivalent Coq code,
 as part of the [CoreSpec] component of the [DeepSpec] project.
 
-It it described in the CPP'18 paper “Total Haskell is Reasonable Coq” by
+It it described in the CPP'18 paper [“Total Haskell is Reasonable Coq”](https://arxiv.org/abs/1711.09286) by
 Antal Spector-Zabusky, Joachim Breitner, Christine Rizkallah, and Stephanie Weirich.
 
 # Requirements

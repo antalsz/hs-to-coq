@@ -306,8 +306,8 @@ Definition foldl' {a} : (a -> Key -> a) -> a -> IntSet -> a :=
 
 Definition mask : GHC.Num.Int -> Mask -> Prefix :=
   fun i m =>
-    Coq.ZArith.BinInt.Z.ldiff i (Coq.ZArith.BinInt.Z.ones (Coq.ZArith.BinInt.Z.succ
-                                                          (Coq.ZArith.BinInt.Z.log2 m))).
+    Coq.ZArith.BinInt.Z.land i (Coq.ZArith.BinInt.Z.lxor (Coq.ZArith.BinInt.Z.lnot
+                                                         (Coq.ZArith.BinInt.Z.pred m)) m).
 
 Definition match_ : GHC.Num.Int -> Prefix -> Mask -> bool :=
   fun i p m => (mask i m) GHC.Base.== p.
@@ -1231,14 +1231,13 @@ End Notations.
 (* Unbound variables:
      Eq Gt Lt None Some andb bool comparison cons false highestBitMask id list negb
      nil op_zp__ op_zt__ option orb pair shiftLL shiftRL size_nat suffixBitMask true
-     Coq.ZArith.BinInt.Z.eqb Coq.ZArith.BinInt.Z.land Coq.ZArith.BinInt.Z.ldiff
+     Coq.ZArith.BinInt.Z.eqb Coq.ZArith.BinInt.Z.land Coq.ZArith.BinInt.Z.lnot
      Coq.ZArith.BinInt.Z.log2 Coq.ZArith.BinInt.Z.lxor Coq.ZArith.BinInt.Z.of_N
-     Coq.ZArith.BinInt.Z.ones Coq.ZArith.BinInt.Z.pow Coq.ZArith.BinInt.Z.succ
-     Data.Bits.complement Data.Bits.op_zizazi__ Data.Bits.op_zizbzi__
-     Data.Bits.popCount Data.Bits.xor Data.Foldable.foldl GHC.Base.Eq_ GHC.Base.Ord
-     GHC.Base.String GHC.Base.compare GHC.Base.flip GHC.Base.map GHC.Base.op_z2218U__
-     GHC.Base.op_zd__ GHC.Base.op_zdzn__ GHC.Base.op_zeze__ GHC.Base.op_zg__
-     GHC.Base.op_zgze__ GHC.Base.op_zl__ GHC.Base.op_zsze__ GHC.Num.Int GHC.Num.Word
-     GHC.Num.negate GHC.Num.op_zm__ GHC.Num.op_zp__ GHC.Prim.seq
-     GHC.Real.fromIntegral
+     Coq.ZArith.BinInt.Z.pow Coq.ZArith.BinInt.Z.pred Data.Bits.complement
+     Data.Bits.op_zizazi__ Data.Bits.op_zizbzi__ Data.Bits.popCount Data.Bits.xor
+     Data.Foldable.foldl GHC.Base.Eq_ GHC.Base.Ord GHC.Base.String GHC.Base.compare
+     GHC.Base.flip GHC.Base.map GHC.Base.op_z2218U__ GHC.Base.op_zd__
+     GHC.Base.op_zdzn__ GHC.Base.op_zeze__ GHC.Base.op_zg__ GHC.Base.op_zgze__
+     GHC.Base.op_zl__ GHC.Base.op_zsze__ GHC.Num.Int GHC.Num.Word GHC.Num.negate
+     GHC.Num.op_zm__ GHC.Num.op_zp__ GHC.Prim.seq GHC.Real.fromIntegral
 *)

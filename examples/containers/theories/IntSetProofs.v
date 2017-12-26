@@ -95,11 +95,24 @@ Proof.
     apply H.
 Qed.
 
+Lemma ones_spec:
+  forall n m : Z, 0 <= n -> Z.testbit (Z.ones n) m = (0 <=? m) && (m <? n).
+Proof.
+  intros.
+  destruct (Z.leb_spec 0 m), (Z.ltb_spec m n);
+    simpl; try apply not_true_is_false;
+    rewrite Z.ones_spec_iff; omega.
+Qed.
 
-  
-Lemma lor_ones_ones: forall b1 b2, Z.lor (Z.ones b1) (Z.ones b2) = Z.ones (Z.max b1 b2).
-Admitted.
-  
+Lemma lor_ones_ones: forall b1 b2, 0 <= b1 -> 0 <= b2 ->
+  Z.lor (Z.ones b1) (Z.ones b2) = Z.ones (Z.max b1 b2).
+Proof.
+  intros.
+  apply Z.bits_inj'. intros z?.
+  rewrite -> Z.lor_spec.
+  repeat rewrite -> ones_spec by (try rewrite Z.max_le_iff; auto).
+  destruct (Z.leb_spec 0 z), (Z.ltb_spec z b1), (Z.ltb_spec z b2), (Z.ltb_spec z (Z.max b1 b2)),  (Zmax_spec b1 b2); intuition; simpl; try omega.
+Qed. 
 
 (* We very often have to resolve non-negativity constraints *)
 
@@ -408,7 +421,7 @@ Module Foo: WSfun(N_as_OT).
   Definition rPrefix : range -> Z :=
      fun '(p,b) => Z.shiftl p (Z.of_N b).
   Definition rMask   : range -> Z :=
-     fun '(p,b) => 2^(Z.of_N b).
+     fun '(p,b) => 2^(Z.pred (Z.of_N b)).
   
   (* This is only needed because we restrict ourselves
      to positive numbers *)
@@ -442,6 +455,25 @@ Module Foo: WSfun(N_as_OT).
                    else false.
     
   (* Lemmas about range *)
+  
+  Lemma bit_diff_not_in_range:
+    forall r j i,
+      Z.of_N (rBits r) <= j ->
+      Z.testbit (rPrefix r) j <> Z.testbit i j ->
+      inRange i r = false.
+   Proof.
+      intros.
+      destruct r as [p b]; simpl in *.
+      apply not_true_is_false.
+      contradict H0.
+      rewrite -> Z.eqb_eq in H0.
+      apply Z.bits_inj_iff in H0.
+      specialize (H0 (j - Z.of_N b)).
+      rewrite -> Z.shiftr_spec in H0 by omega.
+      rewrite -> Z.shiftl_spec by (transitivity (Z.of_N b); nonneg).
+      replace ((j - Z.of_N b + Z.of_N b)) with j in H0 by omega.
+      rewrite H0. reflexivity.
+  Qed.
   
   Lemma rangeDisjoint_sym: forall r1 r2,
     rangeDisjoint r1 r2 = rangeDisjoint r2 r1.
@@ -592,7 +624,18 @@ Module Foo: WSfun(N_as_OT).
     apply N.le_max_r.
     apply msDiffBit_larger; auto.
   Qed.
-  
+
+  Lemma msDiffBit_pos:
+     forall r1 r2, (0 < msDiffBit (rPrefix r1) (rPrefix r2))%N.
+  Proof.
+    intros.
+    unfold msDiffBit.
+    replace 0%N with (Z.to_N 0) by reflexivity.
+    apply Z2N.inj_lt; try nonneg.
+    apply Zle_lt_succ.
+    nonneg.
+  Qed.
+
   Lemma commonRangeDis_larger_l:
     forall r1 r2,
     rNonneg r1 -> rNonneg r2 ->
@@ -751,7 +794,28 @@ Module Foo: WSfun(N_as_OT).
      rewrite -> Z_shiftl_injb by omega.
      reflexivity.
    Qed.
-   
+
+
+    Lemma commonRangeDisj_rNonneg:
+      forall r1 r2,
+        rNonneg r1 -> rNonneg r2 ->
+        rNonneg (commonRangeDisj r1 r2).
+    Proof.
+      intros.
+      destruct r1 as [p1 b1], r2 as [p2 b2].
+      simpl in *.
+      rewrite Z.shiftr_nonneg Z.shiftl_nonneg.
+      assumption.
+    Qed.
+
+    Lemma Desc_rNonneg:
+      forall {s r f}, Desc s r f -> rNonneg r.
+    Proof.
+      intros ??? HD.
+      induction HD; subst.
+      * destruct r. simpl in *. apply Z.shiftl_nonneg in H. assumption.
+      * apply commonRangeDisj_rNonneg; auto.
+    Qed.
 
    Lemma Desc_outside:
      forall {s r f i}, Desc s r f -> inRange i r = false -> f i = false.
@@ -765,36 +829,12 @@ Module Foo: WSfun(N_as_OT).
      * rewrite H5.
        rewrite orb_false_iff. split.
        + apply IHHD1. clear IHHD1 IHHD2.
-         
-       
-         apply Z.eqb_neq in Houtside.
-         apply Z.eqb_neq.
-         contradict Houtside.
-         replace (Z.of_N b) with ((Z.of_N b1) + (Z.of_N b - Z.of_N b1)) at 1 by omega.
-         rewrite <- Z.shiftr_shiftr.
-         rewrite Houtside. reflexivity.
-         enough (Z.of_N b1 < Z.of_N b) by omega.
-         apply N2Z.inj_lt. assumption.
+         refine (outside_commonRangeDis_l _ _ _ (Desc_rNonneg  HD1) (Desc_rNonneg HD2) H Houtside).
        + apply IHHD2. clear IHHD1 IHHD2.
-         apply Z.eqb_neq in Houtside.
-         apply Z.eqb_neq.
-         contradict Houtside.
-         replace (Z.of_N b) with ((Z.of_N b2) + (Z.of_N b - Z.of_N b2)) at 1 by omega.
-         rewrite <- Z.shiftr_shiftr.
-         rewrite Houtside. congruence.
-         enough (Z.of_N b2 < Z.of_N b) by omega.
-         apply N2Z.inj_lt. assumption.
+         refine (outside_commonRangeDis_r _ _ _ (Desc_rNonneg  HD1) (Desc_rNonneg HD2) H Houtside).
    Qed.
 
-    Lemma Desc_prefix_nonneg:
-      forall {s p b f}, Desc s p b f -> 0 <= p.
-    Admitted.
-    
-    Hint Extern 1 (0 <= ?p) => 
-       (try match goal with [ H : Desc _ p _ _  |- _ ] => apply (Desc_prefix_nonneg H) end)
-       : nonneg.
-
-
+   (* needed?b
     Lemma Desc_neg_false:
      forall {s p b f i}, Desc s p b f -> ~ (0 <= i) -> f i = false.
     Proof.
@@ -806,35 +846,63 @@ Module Foo: WSfun(N_as_OT).
       rewrite H0.
       nonneg.
     Qed.
-   
+   *)
+
+   (* This lemma shows that the way the code gets the upper bits above a one-bit-mask
+      is correct *)
+   Lemma mask_to_upper_bits:
+    forall b, 
+      0 <= b ->
+      (Z.lxor (Z.lnot (Z.pred (2 ^ b))) (2 ^ b)) =
+      Z.lnot (Z.ones (Z.succ b)).
+   Proof.
+    intros.
+     rewrite <- Z.ones_equiv.
+     rewrite <- Z.lnot_lxor_l.
+     apply Z.bits_inj_iff'. intros j?.
+     rewrite -> Z.lnot_spec by nonneg.
+     rewrite -> Z.lnot_spec by nonneg.
+     rewrite -> Z.lxor_spec.
+     rewrite -> ones_spec by nonneg.
+     rewrite -> ones_spec by nonneg.
+     rewrite -> Z.pow2_bits_eqb by nonneg.
+     destruct (Z.leb_spec 0 j), (Z.ltb_spec j b), (Z.ltb_spec j (Z.succ b)), (Z.eqb_spec b j);
+        simpl; try congruence; omega.
+   Qed.
+
    Lemma nomatch_spec:
-      forall i p b,
-      (0 < b)%N ->
-      nomatch i (Z.shiftl p (Z.of_N b)) (2 ^ Z.pred (Z.of_N b)) =
-      negb (Z.shiftr i (Z.of_N b) =? p).
+      forall i r,
+      (0 < rBits r)%N ->
+      nomatch i (rPrefix r) (rMask r) =
+      negb (inRange i r).
    Proof.
      intros.
-     unfold nomatch, zero.
+     destruct r as [p b]. simpl in *.
+     unfold nomatch, zero, inRange.
      rewrite /_GHC.Base./=_ /_GHC.Base.==_ /Eq_Char___ /Eq_Integer___ /op_zsze____ /op_zeze____.
      rewrite /_.&._ /Bits__N /instance_Bits_Int.
      unfold mask.
-     rewrite Z.log2_pow2.
-     rewrite Z.succ_pred.
+     rewrite -> mask_to_upper_bits.
      f_equal.
+     rewrite <- Z.ldiff_land.
      rewrite -> Z.ldiff_ones_r by nonneg.
+     rewrite Z.succ_pred.
      rewrite -> Z_shiftl_injb by nonneg.
      reflexivity.
+
      enough (0 < Z.of_N b) by omega.
      replace 0 with (Z.of_N 0%N) by reflexivity.
      apply N2Z.inj_lt. assumption.
    Qed.
-   
+
    Lemma zero_spec:
-     forall i b,
-      (0 < b)%N ->
-      zero i (2 ^ Z.pred (Z.of_N b)) = negb (Z.testbit i (Z.pred (Z.of_N b))).
+     forall i r,
+      (0 < rBits r)%N ->
+      zero i (rMask r) = negb (Z.testbit i (Z.pred (Z.of_N (rBits r)))).
    Proof.
      intros.
+     destruct r as [p b]. simpl in *.
+     unfold zero.
      apply land_pow2_eq.
      apply Z.lt_le_pred.
      change (Z.of_N 0%N < Z.of_N b).
@@ -842,76 +910,75 @@ Module Foo: WSfun(N_as_OT).
      assumption.
    Qed.
 
-   Lemma member_spec:
-     forall {s p b f i}, Desc s p b f -> member i s = f i.
+   Lemma prefixOf_eqb_spec:
+      forall r i,
+      (rBits r = N.log2 WIDTH)%N ->
+      prefixOf i =? rPrefix r = inRange i r.
    Proof.
-     intros ????? HD.
+    intros.
+    destruct r; simpl in *; subst.
+    rewrite prefixOf_eq_shiftr.
+    reflexivity.
+   Qed.
+
+   Lemma member_spec:
+     forall {s r f i}, Desc s r f -> member i s = f i.
+   Proof.
+     intros ???? HD.
      induction HD; subst.
      * simpl.
-       set (p' := Z.shiftl p (Z.of_N (N.log2 WIDTH))).
-       change (((prefixOf i == p') && ((bitmapOf i .&.bm) /= #0)) = f i).
+       change (((prefixOf i == rPrefix r) && ((bitmapOf i .&.bm) /= #0)) = f i).
 
        rewrite /_GHC.Base.==_ /Eq_Integer___ /op_zeze____.
        rewrite /_GHC.Base./=_ /Eq_Char___ /op_zsze____.
-       unfold bitmapOf, bitmapOfSuffix, suffixOf, suffixBitMask, shiftLL.
+       rewrite -> prefixOf_eqb_spec by assumption.
+
+       rewrite H2.
+
+       unfold bitmapOf, bitmapOfSuffix, suffixOf, suffixBitMask, shiftLL, bitmapInRange.
        rewrite /_.&._ /Bits__N /instance_Bits_Int.
        unfold fromInteger, Num_Word__.
        rewrite N.shiftl_mul_pow2 N.mul_1_l.
        rewrite N_land_pow2_testbit.
-       
-       subst p'; rewrite prefixOf_eq_shiftr.
-       specialize (H2 i); rewrite H2; clear H2.
-       destruct (Z.eqb_spec (Z.shiftr i (Z.of_N (N.log2 WIDTH))) p); simpl; auto.
-     * simpl.
-       rewrite H8. clear H8.
-       assert (Hp_pos : (0 < b)%N) by (apply N.le_lt_trans with (m := b1); nonneg).
-       rewrite -> nomatch_spec by apply Hp_pos.
-       rewrite -> zero_spec by apply Hp_pos.
-       match goal with [ |- context [?x =? ?y]] => destruct (Z.eqb_spec x y) end; simpl.
-       * destruct (Z.testbit i (Z.pred (Z.of_N b))) eqn:Htestbit; simpl.
-         * enough (f1 i = false) as Hf1 by (rewrite Hf1 IHHD2; reflexivity).
+
+       rewrite H1.
+       reflexivity.
+     * rewrite H5. clear H5.
+       simpl member.
+       (* undo some unwanted unfolding *)
+       replace (2 ^ Z.pred (Z.of_N (msDiffBit (rPrefix r1) (rPrefix r2)))) with
+        (rMask (commonRangeDisj r1 r2)) by reflexivity.
+       replace (Z.shiftl
+         (Z.shiftr (rPrefix r1) (Z.of_N (msDiffBit (rPrefix r1) (rPrefix r2))))
+         (Z.of_N (msDiffBit (rPrefix r1) (rPrefix r2)))) with
+         (rPrefix (commonRangeDisj r1 r2)) by reflexivity.
+       rewrite -> nomatch_spec by apply msDiffBit_pos.
+
+       rewrite IHHD1 IHHD2. clear IHHD1 IHHD2.
+       rewrite -> zero_spec by apply msDiffBit_pos.
+       repeat rewrite if_negb.
+
+       destruct (inRange i (commonRangeDisj r1 r2)) eqn:HIR; simpl negb.
+       * destruct (Z.testbit i (Z.pred (Z.of_N (rBits (commonRangeDisj r1 r2))))) eqn:Hbit.
+         + enough (f1 i = false) as Hf1 by (rewrite Hf1 orb_false_l; reflexivity).
            apply (Desc_outside HD1).
-           rewrite Z.eqb_neq.
-           rewrite <- Z.bits_inj_iff.
-           intro Htb; specialize (Htb (Z.pred (Z.of_N b) - Z.of_N b1)).
-           rewrite Z.shiftr_spec in Htb.
-           replace (Z.pred (Z.of_N b) - Z.of_N b1 + Z.of_N b1) with (Z.pred (Z.of_N b)) in Htb by omega.
-           rewrite Htestbit in Htb.
-           congruence.
-           enough (Z.of_N b1 < Z.of_N b) by omega.
-           apply N2Z.inj_lt. assumption.
-
-         * enough (f2 i = false) as Hf2 by (rewrite Hf2 IHHD1 orb_false_r; reflexivity).
+           apply bit_diff_not_in_range with (j := (Z.pred (Z.of_N (rBits (commonRangeDisj r1 r2))))).
+           -- apply Z.lt_le_pred.
+              apply N2Z.inj_lt.
+              apply (commonRangeDis_larger_l _ _ (Desc_rNonneg  HD1) (Desc_rNonneg HD2) H).
+           -- congruence.
+         + enough (f2 i = false) as Hf2 by (rewrite Hf2 orb_false_r; reflexivity).
            apply (Desc_outside HD2).
-           rewrite Z.eqb_neq.
-           rewrite <- Z.bits_inj_iff.
-           intro Htb; specialize (Htb (Z.pred (Z.of_N b) - Z.of_N b2)).
-           rewrite Z.shiftr_spec in Htb.
-           replace (Z.pred (Z.of_N b) - Z.of_N b2 + Z.of_N b2) with (Z.pred (Z.of_N b)) in Htb by omega.
-           rewrite Htestbit in Htb.
-           congruence.
-           enough (Z.of_N b2 < Z.of_N b) by omega.
-           apply N2Z.inj_lt. assumption.
-
-       * enough (f1 i = false /\ f2 i = false); try split.
-         destruct H4 as [Hf1 Hf2]; rewrite Hf1 Hf2; reflexivity.
-         + apply (Desc_outside HD1).
-           rewrite Z.eqb_neq.
-           contradict n.
-           replace (Z.of_N b) with ((Z.of_N b1) + (Z.of_N b - Z.of_N b1)) at 1 by omega.
-           rewrite <- Z.shiftr_shiftr.
-           rewrite n. reflexivity.
-           enough (Z.of_N b1 < Z.of_N b) by omega.
-           apply N2Z.inj_lt. assumption.
-
-         + apply (Desc_outside HD2).
-           rewrite Z.eqb_neq.
-           contradict n.
-           replace (Z.of_N b) with ((Z.of_N b2) + (Z.of_N b - Z.of_N b2)) at 1 by omega.
-           rewrite <- Z.shiftr_shiftr.
-           rewrite n. congruence.
-           enough (Z.of_N b2 < Z.of_N b) by omega.
-           apply N2Z.inj_lt. assumption.
+           apply bit_diff_not_in_range with (j := (Z.pred (Z.of_N (rBits (commonRangeDisj r1 r2))))).
+           -- apply Z.lt_le_pred.
+              apply N2Z.inj_lt.
+              apply (commonRangeDis_larger_r _ _ (Desc_rNonneg  HD1) (Desc_rNonneg HD2) H).
+           -- congruence.
+       * rewrite -> (Desc_outside HD1)
+          by refine (outside_commonRangeDis_l _ _ _ (Desc_rNonneg  HD1) (Desc_rNonneg HD2) H HIR).
+         rewrite -> (Desc_outside HD2)
+          by refine (outside_commonRangeDis_r _ _ _ (Desc_rNonneg  HD1) (Desc_rNonneg HD2) H HIR).
+         reflexivity.
    Qed.
 
 

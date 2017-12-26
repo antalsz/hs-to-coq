@@ -25,6 +25,8 @@ HANDMOD = \
   IdInfo \
   IdInfo2 \
   Id \
+  ClassSpec \
+  Var \
 
 # Generated modules
 # generated directly from ghc/compiler/*/
@@ -50,13 +52,11 @@ MODULES = \
   Name \
   NameEnv \
   NameSet \
-  Var \
   VarSet \
   VarEnv \
   FastStringEnv \
   FieldLabel \
   Literal \
-  Class \
   DataCon \
   PatSyn \
   ConLike \
@@ -65,6 +65,11 @@ MODULES = \
   CoreUtils \
   UnVarGraph \
   Demand \
+  TyCoRep \
+  TyCon \
+  CoAxiom \
+
+
 
 
 # also generated from drop-in/

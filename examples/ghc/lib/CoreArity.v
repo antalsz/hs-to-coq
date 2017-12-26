@@ -19,10 +19,10 @@ Require Var.
 (* Converted type declarations: *)
 
 Inductive EtaInfo : Type := EtaVar : Var.Var -> EtaInfo
-                         |  EtaCo : unit -> EtaInfo.
+                         |  EtaCo : TyCoRep.Coercion -> EtaInfo.
 
 Definition CheapFun :=
-  (CoreSyn.CoreExpr -> option unit -> bool)%type.
+  (CoreSyn.CoreExpr -> option TyCoRep.Type_ -> bool)%type.
 
 Inductive ArityType : Type := ATop : list BasicTypes.OneShotInfo -> ArityType
                            |  ABot : BasicTypes.Arity -> ArityType.
@@ -87,6 +87,6 @@ Axiom subst_bind : forall {A : Type}, A.
 Axiom freshEtaVar : forall {A : Type}, A.
 
 (* Unbound variables:
-     bool list option unit BasicTypes.Arity BasicTypes.OneShotInfo CoreSyn.CoreExpr
-     Var.Var
+     bool list option BasicTypes.Arity BasicTypes.OneShotInfo CoreSyn.CoreExpr
+     TyCoRep.Coercion TyCoRep.Type_ Var.Var
 *)

@@ -1,3 +1,9 @@
+# break the cycle with TyThing
+# we may need to axiomatize these two functions in a separate module.
+rename type TyCoRep.TyThing = unit
+skip Name.mkWiredInName
+skip Name.wiredInNameTyThing_maybe
+
 
 # cannot process error message when this fails
 redefine Definition Name.nameModule : Name -> Module.Module :=

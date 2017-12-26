@@ -1,24 +1,24 @@
-axiomatize module DataCon
+# axiomatize module DataCon
 
 # no Word8
 skip DataCon.dataConIdentity
 
 # skipped fcns as a result of eliminating type information
-#skip DataCon.dataConRepArgTys
+skip DataCon.dataConRepArgTys
 # generally these fcns return units so are easy to replace
 #not skipping b/c we axiomatized this module
-#skip DataCon.buildAlgTyCon
-#skip DataCon.classDataCon
-#skip DataCon.dataFieldType
-#skip DataCon.dataConImplicitTyThings
-#skip DataCon.dataConInstOrigArgTys
-#skip DataCon.dataConOrigTyCon
-#skip DataCon.dataConInstArgTys
-#skip DataCon.splitDataProductType_maybe
-#skip DataCon.dataConRepRepArity
-#skip DataCon.specialPromotedDc
-#skip DataCon.eqSpecPreds
-#skip DataCon.dataConTheta
+skip DataCon.buildAlgTyCon
+skip DataCon.classDataCon
+skip DataCon.dataFieldType
+skip DataCon.dataConImplicitTyThings
+skip DataCon.dataConInstOrigArgTys
+skip DataCon.dataConOrigTyCon
+skip DataCon.dataConInstArgTys
+skip DataCon.splitDataProductType_maybe
+skip DataCon.dataConRepRepArity
+skip DataCon.specialPromotedDc
+skip DataCon.eqSpecPreds
+skip DataCon.dataConTheta
 
 skip module CoAxiom
 skip module Coercion

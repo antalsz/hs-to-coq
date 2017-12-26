@@ -10,21 +10,27 @@ rename type MkId.DataConBoxer = unit
 
 # bruttaly skipping all type info
 ### get rid of type information in the AST
-rename type TcType.TcTyVarDetails = unit
 # rename type IdInfo.IdDetails      = unit
 # rename type IdInfo.IdInfo         = unit
-rename type TyCon.TyCon           = unit
-rename type TyCoRep.Coercion      = unit
-rename type TyCoRep.Type_         = unit
-rename type TyCoRep.ThetaType     = unit
-rename type TyCoRep.TyBinder      = unit
-rename type TyCoRep.TyThing       = unit
-rename type TyCoRep.Kind          = unit
-rename type TyCoRep.PredType      = unit
+rename type TcType.TcTyVarDetails = unit
+#rename type TyCon.TyCon           = unit
+#rename type TyCoRep.Coercion      = unit
+#rename type TyCoRep.Type_         = unit
+#rename type TyCoRep.ThetaType     = unit
+#rename type TyCoRep.TyBinder      = unit
+#rename type TyCoRep.TyThing       = unit
+#rename type TyCoRep.Kind          = unit
+#rename type TyCoRep.PredType      = unit
 
 rename type PrimOp.PrimOp = unit
 rename type ForeignCall.ForeignCall = unit
 
+rename type Class.Class      = ClassSpec.Class
+rename value Class.className = ClassSpec.className
+rename value Class.classKey = ClassSpec.classKey
+rename value Class.classTyVars = ClassSpec.classTyVars
+rename value Class.classMethods = ClassSpec.classMethods
+rename value Class.classAllSelIds = ClassSpec.classAllSelIds
 
 # TODO: better treatment of primitive values
 skip module GHC.Int

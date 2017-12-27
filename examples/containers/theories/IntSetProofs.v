@@ -494,6 +494,7 @@ Module Foo: WSfun(N_as_OT).
     reflexivity.
   Qed.
 
+
   Section msDiffBit.
     Variable p1 p2 : Z.
     Variable (Hnonneg1 : 0 <= p1).
@@ -635,6 +636,20 @@ Module Foo: WSfun(N_as_OT).
     apply Z2N.inj_lt; try nonneg.
     apply Zle_lt_succ.
     nonneg.
+  Qed.
+
+  Lemma commonRangeDisj_sym:
+    forall r1 r2,
+     rNonneg r1 -> rNonneg r2 ->
+     commonRangeDisj r1 r2 = commonRangeDisj r2 r1.
+  Proof.
+    intros.
+    unfold commonRangeDisj.
+    rewrite msDiffBit_sym.
+    rewrite msDiffBit_shiftr_same.
+    reflexivity.
+    destruct r1, r2. unfold rNonneg, rPrefix in *. nonneg.
+    destruct r1, r2. unfold rNonneg, rPrefix in *. nonneg.
   Qed.
 
   Lemma commonRangeDis_larger_l:
@@ -812,6 +827,15 @@ Module Foo: WSfun(N_as_OT).
      reflexivity.
    Qed.
 
+    Lemma commonRangeDisj_rBits_pos:
+      forall r1 r2,
+        rNonneg r1 -> rNonneg r2 ->
+        (0 < rBits (commonRangeDisj r1 r2))%N.
+    Proof.
+      intros.
+      destruct r1 as [p1 b1], r2 as [p2 b2].
+      apply msDiffBit_pos.
+    Qed.
 
     Lemma commonRangeDisj_rNonneg:
       forall r1 r2,
@@ -823,6 +847,42 @@ Module Foo: WSfun(N_as_OT).
       simpl in *.
       rewrite Z.shiftr_nonneg Z.shiftl_nonneg.
       assumption.
+    Qed.
+
+    Lemma commonRangeDisj_rBits_Different:
+      forall r1 r2,
+        rNonneg r1 -> rNonneg r2 ->
+        rangeDisjoint r1 r2 ->
+          Z.testbit (rPrefix r1) (Z.pred (Z.of_N (rBits (commonRangeDisj r1 r2))))
+       <> Z.testbit (rPrefix r2) (Z.pred (Z.of_N (rBits (commonRangeDisj r1 r2)))).
+    Proof.
+      intros.
+      destruct r1 as [p1 b1], r2 as [p2 b2]. simpl in *.
+      apply msDiffBit_Different; try nonneg.
+      (* From here on might be worth a lemma of its own *)
+      unfold rangeDisjoint in H1.
+      apply negb_true_iff in H1.
+      apply not_true_iff_false in H1.
+      contradict H1.
+      unfold isSubrange. simpl.
+      apply orb_true_iff.
+      destruct (N.le_ge_cases b1 b2).
+      * right.
+        rewrite andb_true_iff.
+        rewrite N.leb_le. constructor; auto.
+        rewrite Z.eqb_eq.
+        rewrite H1.
+        rewrite -> Z.shiftr_shiftl_l by nonneg.
+        replace ((Z.of_N b2 - Z.of_N b2)) with 0 by omega.
+        reflexivity.
+      * left.
+        rewrite andb_true_iff.
+        rewrite N.leb_le. constructor; auto.
+        rewrite Z.eqb_eq.
+        rewrite <- H1.
+        rewrite -> Z.shiftr_shiftl_l by nonneg.
+        replace ((Z.of_N b1 - Z.of_N b1)) with 0 by omega.
+        reflexivity.
     Qed.
 
     Lemma Desc_rNonneg:
@@ -1213,33 +1273,52 @@ Module Foo: WSfun(N_as_OT).
   Qed.
 
   Lemma link_Desc:
-      forall p1' s1 p1 b1 f1 s2 p2' p2 b2 f2 b f,
-      Desc s1 p1 b1 f1 ->
-      Desc s2 p2 b2 f2 ->
-      (b1 < b)%N ->
-      (b2 < b)%N ->
-      p1' = Z.shiftl p1 (Z.of_N b1) ->
-      p2' = Z.shiftl p2 (Z.of_N b2) ->
-      b = Z.to_N (Z.succ (Z.log2 (Z.lxor (Z.shiftl p1 (Z.of_N b1)) (Z.shiftl p2 (Z.of_N b2))))) ->
-      Z.testbit p1 (Z.pred (Z.of_N b) - Z.of_N b1) <> Z.testbit p2 (Z.pred (Z.of_N b) - Z.of_N b2) ->
-      Z.shiftr p1 (Z.of_N b - Z.of_N b1) = Z.shiftr p2 (Z.of_N b - Z.of_N b2) ->
+      forall p1' s1 r1 f1 p2' s2 r2 f2 r f,
+      Desc s1 r1 f1 ->
+      Desc s2 r2 f2 ->
+      p1' = rPrefix r1 ->
+      p2' = rPrefix r2 ->
+      rangeDisjoint r1 r2 ->
+      r = commonRangeDisj r1 r2 ->
       (forall i, f i = f1 i || f2 i) ->
-    Desc (link p1' s1 p2' s2)
-         (Z.shiftr p1 (Z.of_N b - Z.of_N b1)) b f.
+    Desc (link p1' s1 p2' s2) r f.
   Proof.
-    intros.
-    
-    assert (0 <= Z.pred (Z.of_N b)).
+    intros; subst.
+
+(*     assert (0 <= Z.pred (Z.of_N b)).
     + enough (0 < Z.of_N b) by omega.
       enough (0 <= Z.of_N b1 /\ Z.of_N b1 < Z.of_N b) by omega.
       split.
       apply N2Z.is_nonneg.
       apply N2Z.inj_lt. assumption.
-
+ *)
 
     unfold link.
-    subst p1' p2'.
-
+    SearchAbout branchMask.
+    SearchAbout zero.
+    replace (branchMask (rPrefix r1) (rPrefix r2)) with (rMask (commonRangeDisj r1 r2)).
+    * Focus 2.
+      admit. (* eigenes Lemma machen *)
+    replace (mask (rPrefix r1) (rMask (commonRangeDisj r1 r2))) with (rPrefix (commonRangeDisj r1 r2)).
+    * Focus 2.
+      admit. (* eigenes Lemma machen *)
+    rewrite -> zero_spec by (apply commonRangeDisj_rBits_pos; eapply Desc_rNonneg; eassumption).
+    rewrite if_negb.
+    match goal with [ |- context [Z.testbit ?i ?b] ]  => destruct (Z.testbit i b) eqn:Hbit end.
+    * rewrite rangeDisjoint_sym in H3.
+      rewrite -> commonRangeDisj_sym in * by (eapply Desc_rNonneg; eassumption).
+      apply (DescBin _ _ _ _ _ _ _ _ _ f H0 H); auto.
+      + apply not_true_iff_false.
+        rewrite <- Hbit.
+        apply commonRangeDisj_rBits_Different; auto; try (eapply Desc_rNonneg; eassumption).
+      + intro i. specialize (H5 i). rewrite orb_comm. assumption.
+    * apply (DescBin _ _ _ _ _ _ _ _ _ f H H0); auto.
+      + apply not_false_iff_true.
+        rewrite <- Hbit.
+        intro Htmp. symmetry in Htmp. revert Htmp.
+        apply commonRangeDisj_rBits_Different; auto; try (eapply Desc_rNonneg; eassumption).
+  Admitted.
+(*    
     unfold zero, branchMask, mask.
     rewrite -> land_pow2_eq by nonneg.
     replace (Z.log2 (Z.lxor (Z.shiftl p1 (Z.of_N b1)) (Z.shiftl p2 (Z.of_N b2))))
@@ -1269,7 +1348,7 @@ Module Foo: WSfun(N_as_OT).
     rewrite Z2N.id. rewrite Z.pred_succ. reflexivity.
     apply  Z.le_le_succ_r; apply Z.log2_nonneg.
   Qed.
- 
+ *) 
   Lemma isPrefix_shiftl_shiftr:
      forall p, isPrefix p -> p = Z.shiftl (Z.shiftr p 6) 6.
   Proof.

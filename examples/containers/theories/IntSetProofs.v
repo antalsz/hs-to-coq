@@ -149,6 +149,7 @@ Hint Resolve ones_nonneg : nonneg.
 Hint Resolve succ_nonneg : nonneg.
 Hint Resolve <- Z.shiftl_nonneg : nonneg.
 Hint Resolve <- Z.shiftr_nonneg : nonneg.
+Hint Resolve <- Z.land_nonneg : nonneg.
 Hint Extern 1 (0 <= Z.succ (Z.pred (Z.of_N _))) => rewrite Z.succ_pred : nonneg.
 Hint Resolve <- Z.lxor_nonneg : nonneg.
 Hint Extern 0 => omega : nonneg.
@@ -1137,22 +1138,61 @@ Module Foo: WSfun(N_as_OT).
         generalize p. clear p.
         induction p0; intro.
         - simpl.
-  Admitted.      
-    
+  Admitted.
+  
+  Lemma Z_eq_shiftr_land_ones:
+    forall i1 i2 b,
+    (i1 =? i2) = (Z.shiftr i1 b =? Z.shiftr i2 b) && (Z.land i1 (Z.ones b) =? Z.land i2 (Z.ones b)).
+  Proof.
+    intros.
+    match goal with [ |- ?b1 = ?b2 ] => destruct b1 eqn:?, b2 eqn:? end; try congruence.
+    * contradict Heqb1.
+      rewrite not_false_iff_true.
+      rewrite andb_true_iff.
+      repeat rewrite -> Z.eqb_eq in *; subst.
+      auto.
+    * contradict Heqb0.
+      rewrite not_false_iff_true.
+      rewrite -> andb_true_iff in Heqb1.
+      destruct Heqb1.
+      repeat rewrite -> Z.eqb_eq in *; subst.
+      apply Z.bits_inj_iff'. intros j ?.
+      destruct (Z.ltb_spec j b).
+      * apply Z.bits_inj_iff in H0.
+        specialize (H0 j).
+        repeat rewrite -> Z.land_spec in H0.
+        rewrite -> Z.ones_spec_low in H0.
+        do 2 rewrite andb_true_r in H0.
+        assumption.
+        omega.
+      * apply Z.bits_inj_iff in H.
+        specialize (H (j - b)).
+        do 2 rewrite -> Z.shiftr_spec in H by omega.
+        replace (j - b + b) with j in H by omega.
+        assumption.
+   Qed.
+
   Lemma bitmapInRange_bitmapOf:
     forall e i,
     bitmapInRange (Z.shiftr e 6, N.log2 WIDTH) (bitmapOf e) i = (i =? e).
   Proof.
     intros.
     unfold bitmapInRange, inRange. simpl Z.of_N.
-    destruct (Z.eqb_spec (Z.shiftr i 6) (Z.shiftr e 6)).
-    * unfold bitmapOf, bitmapOfSuffix, fromInteger, Num_Word__, shiftLL.
-      unfold suffixOf, suffixBitMask.
-      unfold op_zizazi__, instance_Bits_Int.
-      rewrite <- Z.testbit_of_N'.
-      
-  Admitted.
-  
+    rewrite <- andb_lazy_alt.
+    unfold bitmapOf, bitmapOfSuffix, fromInteger, Num_Word__, shiftLL.
+    unfold suffixOf, suffixBitMask.
+    unfold op_zizazi__, instance_Bits_Int.
+    rewrite <- Z.testbit_of_N' by nonneg.
+    rewrite of_N_shiftl.
+    rewrite -> Z2N.id by nonneg.
+    rewrite -> Z2N.id by nonneg.
+    rewrite Z.shiftl_1_l.
+    rewrite -> Z.pow2_bits_eqb by nonneg.
+    rewrite -> Z.eqb_sym.
+    rewrite <- Z_eq_shiftr_land_ones.
+    apply Z.eqb_sym.
+  Qed.
+    
   Lemma singleton_spec:
     forall e,
      0 <= e ->

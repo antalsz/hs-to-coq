@@ -447,6 +447,12 @@ Module Foo: WSfun(N_as_OT).
     fun r1 r2 =>
       let b := msDiffBit (rPrefix r1) (rPrefix r2) in
       (Z.shiftr (rPrefix r1) (Z.of_N b) , b).
+  
+  Definition commonRange : range -> range -> range :=
+    fun r1 r2 =>
+      if isSubrange r1 r2 then r2 else
+      if isSubrange r2 r1 then r1 else
+      commonRangeDisj r1 r2.
 
   Definition eqOnRange r f g :=
     (forall i, f i = if inRange i r then g i else false).
@@ -1351,13 +1357,49 @@ Module Foo: WSfun(N_as_OT).
     omega.
   Qed.
 
-  Lemma lxor_pos:
-    forall a b, 0 <= a -> 0 <= b -> a <> b -> 0 < Z.lxor a b.
-   Admitted.
-
-  Hint Resolve OMEGA2 : nonneg.
-  Hint Resolve Z.log2_nonneg : nonneg.
-  Hint Extern 0 => try omega : nonneg.
+  Lemma insertBM_Desc:
+    forall p' bm r1 f1,
+    forall s2 r2 f2,
+    forall r f, 
+    Desc (Tip p' bm) r1 f1 ->
+    Desc s2 r2 f2 ->
+    r = commonRange r1 r2 ->
+    (forall i, f i = f1 i || f2 i) ->
+    Desc (insertBM p' bm s2) r f.
+  Proof.
+    intros ????????? HDTip HD ??; subst.
+    Print Desc.
+    generalize dependent f.
+    induction HD as [p2' bm2 r2 f2|s2 r2 f2 s3 r3 f3 p2' r]; subst; intros f' Hf.
+    * simpl.
+      unfold Prim.seq.
+      unfold GHC.Base.op_zeze__, Eq_Integer___, op_zeze____.
+      destruct (Z.eqb_spec (rPrefix r2) p'); subst.
+      + replace r1 with r2 in * by admit. clear r1.
+        replace (commonRange r2 r2) with r2 by admit.
+        apply DescTip; auto.
+        - intro j. rewrite Hf. admit. (* bitmapInRange orb *)
+        - admit. (* isBitMask  lor *)
+      + assert (rangeDisjoint r1 r2) by admit.
+        eapply link_Desc; try apply HDTip; auto.
+        - apply DescTip; auto.
+        - inversion HDTip. congruence.
+        - replace (commonRange r1 r2) with (commonRangeDisj r1 r2) by admit. (* due to rangeDisjoint *)
+          reflexivity.
+    * Print insertBM.
+      simpl. unfold Prim.seq.
+      (* Find out how to avoid this: *)
+      replace (Z.shiftl _ _) with 
+         (rPrefix (commonRangeDisj r2 r3)) by reflexivity.
+      replace (2 ^ _) with (rMask (commonRangeDisj r2 r3)) by reflexivity.
+      rewrite nomatch_spec. rewrite if_negb.
+      destruct (inRange p' (commonRangeDisj r2 r3)) eqn:HinRange.
+      + rewrite zero_spec. rewrite if_negb.
+        destruct (Z.testbit p' (Z.pred (Z.of_N (rBits (commonRangeDisj r2 r3))))) eqn:Hbit.
+        - assert (rangeDisjoint r2 (commonRange r1 r3)) by admit.
+          eapply DescBin; try apply HD1; try apply IHHD2 with (f := fun j => f1 j || f3 j); auto.
+          admit. (* commonRange assoc *)
+         
 
   Lemma insertBM_WF:
     forall p bm s,

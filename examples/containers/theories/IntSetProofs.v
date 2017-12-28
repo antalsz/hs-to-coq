@@ -1271,6 +1271,40 @@ Module Foo: WSfun(N_as_OT).
     eapply WFNonEmpty.
     apply singleton_spec; nonneg.
   Qed.
+  
+  Lemma branchMask_spec:
+    forall r1 r2,
+    branchMask (rPrefix r1) (rPrefix r2) = rMask (commonRangeDisj r1 r2).
+  Proof.
+    intros.
+    destruct r1 as [p1 b1], r2 as [p2 b2].
+    simpl.
+    unfold branchMask.
+    unfold msDiffBit.
+    rewrite -> Z2N.id by nonneg.
+    rewrite Z.pred_succ.
+    reflexivity.
+  Qed.
+  
+  Lemma branch_spec:
+    forall r1 r2,
+    mask (rPrefix r1) (rMask (commonRangeDisj r1 r2)) = rPrefix (commonRangeDisj r1 r2).
+  Proof.
+    intros.
+    assert (0 < msDiffBit (rPrefix r1) (rPrefix r2))%N by apply msDiffBit_pos.
+    destruct r1 as [p1 b1], r2 as [p2 b2].
+    unfold mask.
+    simpl.
+    rewrite <- Z.ldiff_ones_r by nonneg.
+    rewrite -> mask_to_upper_bits.
+    rewrite <- Z.ldiff_land.
+    rewrite Z.succ_pred.
+    reflexivity.
+    apply Zlt_0_le_0_pred.
+    replace 0 with (Z.of_N 0%N) by reflexivity.
+    apply N2Z.inj_lt.
+    assumption.
+  Qed.
 
   Lemma link_Desc:
       forall p1' s1 r1 f1 p2' s2 r2 f2 r f,
@@ -1284,24 +1318,11 @@ Module Foo: WSfun(N_as_OT).
     Desc (link p1' s1 p2' s2) r f.
   Proof.
     intros; subst.
-
-(*     assert (0 <= Z.pred (Z.of_N b)).
-    + enough (0 < Z.of_N b) by omega.
-      enough (0 <= Z.of_N b1 /\ Z.of_N b1 < Z.of_N b) by omega.
-      split.
-      apply N2Z.is_nonneg.
-      apply N2Z.inj_lt. assumption.
- *)
-
     unfold link.
     SearchAbout branchMask.
     SearchAbout zero.
-    replace (branchMask (rPrefix r1) (rPrefix r2)) with (rMask (commonRangeDisj r1 r2)).
-    * Focus 2.
-      admit. (* eigenes Lemma machen *)
-    replace (mask (rPrefix r1) (rMask (commonRangeDisj r1 r2))) with (rPrefix (commonRangeDisj r1 r2)).
-    * Focus 2.
-      admit. (* eigenes Lemma machen *)
+    rewrite branchMask_spec.
+    rewrite branch_spec.
     rewrite -> zero_spec by (apply commonRangeDisj_rBits_pos; eapply Desc_rNonneg; eassumption).
     rewrite if_negb.
     match goal with [ |- context [Z.testbit ?i ?b] ]  => destruct (Z.testbit i b) eqn:Hbit end.
@@ -1317,38 +1338,8 @@ Module Foo: WSfun(N_as_OT).
         rewrite <- Hbit.
         intro Htmp. symmetry in Htmp. revert Htmp.
         apply commonRangeDisj_rBits_Different; auto; try (eapply Desc_rNonneg; eassumption).
-  Admitted.
-(*    
-    unfold zero, branchMask, mask.
-    rewrite -> land_pow2_eq by nonneg.
-    replace (Z.log2 (Z.lxor (Z.shiftl p1 (Z.of_N b1)) (Z.shiftl p2 (Z.of_N b2))))
-        with (Z.pred (Z.of_N b)).
-    rewrite -> Z.shiftl_spec by nonneg.
-
-    destruct (Z.testbit p1 (Z.pred (Z.of_N b) - Z.of_N b1)) eqn:Htb; simpl.
-    * eapply DescBin.
-      apply H0. apply H.
-      all:try congruence.
-      destruct (Z.testbit p2 (Z.pred (Z.of_N b) - Z.of_N b2)); congruence.
-      rewrite -> Z.log2_pow2 by assumption.
-      rewrite -> Z.ldiff_ones_r by nonneg.
-      rewrite -> Z.shiftr_shiftl_r by nonneg. f_equal. f_equal. omega. omega.
-      intro i. rewrite H8. apply orb_comm.
-    * eapply DescBin.
-      apply H. apply H0.
-      all:try congruence.
-      destruct (Z.testbit p2 (Z.pred (Z.of_N b) - Z.of_N b2)); congruence.
-      rewrite -> Z.log2_pow2 by assumption.
-      rewrite -> Z.ldiff_ones_r by nonneg.
-      rewrite -> Z.shiftr_shiftl_r by nonneg. f_equal. f_equal. omega. omega.
-
-    (* Have to show that b is actually the right one *)
-    symmetry.
-    subst b.
-    rewrite Z2N.id. rewrite Z.pred_succ. reflexivity.
-    apply  Z.le_le_succ_r; apply Z.log2_nonneg.
   Qed.
- *) 
+
   Lemma isPrefix_shiftl_shiftr:
      forall p, isPrefix p -> p = Z.shiftl (Z.shiftr p 6) 6.
   Proof.

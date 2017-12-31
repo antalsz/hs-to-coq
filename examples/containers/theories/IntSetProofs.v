@@ -1298,7 +1298,7 @@ Module Foo: WSfun(N_as_OT).
     unfold singleton, Prim.seq.
     eapply WFNonEmpty.
     apply singleton_spec; nonneg.
-  Qed.
+  Defined.
   
   Lemma branchMask_spec:
     forall r1 r2,
@@ -1698,12 +1698,30 @@ Module Foo: WSfun(N_as_OT).
 
   Lemma singleton_1 :
     forall x y : elt, In y (singleton x) -> N.eq x y.
-  Admitted.
-        
+  Proof.
+    intros.
+    unfold In, In_set, singleton, pack in *.
+    erewrite member_spec in H.
+    Focus 2. apply singleton_spec; nonneg.
+    simpl in H.
+    rewrite -> Z.eqb_eq in H.
+    apply N2Z.inj.
+    symmetry.
+    assumption.
+  Qed.
+
   Lemma singleton_2 :
     forall x y : elt, N.eq x y -> In y (singleton x).
-  Admitted.
-      
+  Proof.
+    intros.
+    unfold In, In_set, singleton, pack in *.
+    erewrite member_spec.
+    Focus 2. apply singleton_spec; nonneg.
+    simpl.
+    rewrite -> Z.eqb_eq.
+    congruence.
+  Qed.
+
   Lemma union_1 :
     forall (s s' : t) (x : elt), In x (union s s') -> In x s \/ In x s'. Admitted.
   Lemma union_2 :

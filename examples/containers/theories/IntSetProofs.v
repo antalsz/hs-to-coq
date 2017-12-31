@@ -707,7 +707,7 @@ Module Foo: WSfun(N_as_OT).
     reflexivity.
   Qed.
 
-  Lemma outside_commonRangeDis_r:
+  Lemma outside_commonRangeDisj_r:
     forall r1 r2 i,
     rNonneg r1 -> rNonneg r2 ->
     rangeDisjoint r1 r2 ->
@@ -735,6 +735,29 @@ Module Foo: WSfun(N_as_OT).
     replace (Z.of_N b) with (Z.of_N b2 + (Z.of_N b - Z.of_N b2)) at 1 by omega.
     rewrite <- Z.shiftr_shiftr by omega.
     rewrite -> H4 by omega.
+    reflexivity.
+  Qed.
+  
+  Lemma isSubrange_refl:
+    forall r, isSubrange r r = true.
+  Proof.
+    intros r.
+    unfold isSubrange.
+    destruct r as [p b]; simpl.
+    rewrite -> Z.shiftr_shiftl_l by nonneg.
+    replace (Z.of_N b - Z.of_N b) with 0 by omega.
+    simpl.
+    rewrite N.leb_refl.
+    rewrite Z.eqb_refl.
+    reflexivity.
+  Qed.
+
+  Lemma commonRange_idem:
+    forall r, commonRange r r = r.
+  Proof.
+    intros r.
+    unfold commonRange.
+    rewrite isSubrange_refl.
     reflexivity.
   Qed.
 
@@ -914,7 +937,7 @@ Module Foo: WSfun(N_as_OT).
        + apply IHHD1. clear IHHD1 IHHD2.
          refine (outside_commonRangeDis_l _ _ _ (Desc_rNonneg  HD1) (Desc_rNonneg HD2) H Houtside).
        + apply IHHD2. clear IHHD1 IHHD2.
-         refine (outside_commonRangeDis_r _ _ _ (Desc_rNonneg  HD1) (Desc_rNonneg HD2) H Houtside).
+         refine (outside_commonRangeDisj_r _ _ _ (Desc_rNonneg  HD1) (Desc_rNonneg HD2) H Houtside).
    Qed.
 
     Lemma Desc_neg_false:
@@ -1061,7 +1084,7 @@ Module Foo: WSfun(N_as_OT).
        * rewrite -> (Desc_outside HD1)
           by refine (outside_commonRangeDis_l _ _ _ (Desc_rNonneg  HD1) (Desc_rNonneg HD2) H HIR).
          rewrite -> (Desc_outside HD2)
-          by refine (outside_commonRangeDis_r _ _ _ (Desc_rNonneg  HD1) (Desc_rNonneg HD2) H HIR).
+          by refine (outside_commonRangeDisj_r _ _ _ (Desc_rNonneg  HD1) (Desc_rNonneg HD2) H HIR).
          reflexivity.
    Qed.
 
@@ -1354,6 +1377,84 @@ Module Foo: WSfun(N_as_OT).
     omega.
   Qed.
 
+
+  Lemma different_prefix_same_bits_not_subrange:
+    forall r1 r2,
+      rPrefix r1 <> rPrefix r2 -> rBits r1 = rBits r2 -> isSubrange r1 r2 = false.
+   Proof.
+     intros.
+     unfold isSubrange.
+     destruct r1 as [p1 b1], r2 as [p2 b2]. simpl in *; subst.
+     rewrite N.leb_refl.
+     rewrite andb_true_r.
+     rewrite -> Z_shiftl_inj in H by nonneg.
+     rewrite -> Z.shiftr_shiftl_l by nonneg.
+     replace ((Z.of_N b2 - Z.of_N b2)) with 0 by omega. simpl.
+     rewrite Z.eqb_neq.
+     congruence.
+   Qed.
+
+  Lemma different_prefix_same_bits_disjoint:
+    forall r1 r2,
+      rPrefix r1 <> rPrefix r2 -> rBits r1 = rBits r2 -> rangeDisjoint r1 r2 = true.
+   Proof.
+     intros.
+     unfold rangeDisjoint.
+     rewrite -> different_prefix_same_bits_not_subrange; try congruence.
+     rewrite -> different_prefix_same_bits_not_subrange; try congruence.
+     reflexivity.
+  Qed.
+  
+  Lemma disjoint_commonRange:
+    forall r1 r2,
+    rangeDisjoint r1 r2 ->
+    commonRange r1 r2 = commonRangeDisj r1 r2.
+  Proof.
+    intros.
+    unfold rangeDisjoint in H. unfold commonRange.
+    apply negb_true_iff in H.
+    rewrite -> orb_false_iff in H.
+    destruct H.
+    rewrite H H0.
+    reflexivity.
+  Qed.
+
+  Lemma isSubrange_commonRange_r:
+    forall r1 r2,
+    isSubrange r1 r2 ->
+    commonRange r1 r2 = r2.
+  Proof.
+    intros.
+    unfold commonRange.
+    rewrite H.
+    reflexivity.
+  Qed.
+  
+  Lemma isSubrange_commonRange_l:
+    forall r1 r2,
+    isSubrange r2 r1 ->
+    commonRange r1 r2 = r1.
+  Proof.
+    intros.
+    unfold commonRange.
+    destruct (isSubrange r1 r2) eqn:?.
+    * destruct r1 as [p1 b1], r2 as [p2 b2]; unfold isSubrange in *; simpl in *.
+      apply andb_true_iff in H.
+      apply andb_true_iff in Heqb.
+      intuition.
+      SearchAbout (N.leb  _ _ = true).
+      apply N.leb_le in H1.
+      apply N.leb_le in H2.
+      assert (b1 = b2) by (apply N.le_antisymm; auto); subst.
+      rewrite -> Z.shiftr_shiftl_l in H by nonneg.
+      rewrite -> Z.shiftr_shiftl_l in H0 by nonneg.
+      replace (Z.of_N b2 - Z.of_N b2) with 0 in * by omega.
+      simpl in *.
+      rewrite -> Z.eqb_eq in *.
+      congruence.
+    * rewrite H. reflexivity.
+  Qed.
+
   Lemma insertBM_Desc:
     forall p' bm r1 f1,
     forall s2 r2 f2,
@@ -1365,48 +1466,101 @@ Module Foo: WSfun(N_as_OT).
     Desc (insertBM p' bm s2) r f.
   Proof.
     intros ????????? HDTip HD ??; subst.
+    assert (p' = rPrefix r1) by (inversion HDTip; auto); subst.
+    assert (rBits r1 = N.log2 WIDTH)  by (inversion HDTip; auto).
     generalize dependent f.
     induction HD as [p2' bm2 r2 f2|s2 r2 f2 s3 r3 f3 p2' r]; subst; intros f' Hf.
     * simpl.
       unfold Prim.seq.
       unfold GHC.Base.op_zeze__, Eq_Integer___, op_zeze____.
-      destruct (Z.eqb_spec (rPrefix r2) p'); subst.
-      + replace r1 with r2 in * by admit. clear r1.
-        replace (commonRange r2 r2) with r2 by admit.
+      destruct (Z.eqb_spec (rPrefix r2) (rPrefix r1)); subst.
+      + assert (r1 = r2) 
+          by (inversion HDTip; destruct r1, r2; subst; simpl in *; subst; 
+              rewrite -> Z_shiftl_inj in * by nonneg; congruence).
+        subst.
+        rewrite commonRange_idem.
         apply DescTip; auto.
-        - intro j. rewrite Hf. admit. (* bitmapInRange orb *)
-        - admit. (* isBitMask  lor *)
-      + assert (rangeDisjoint r1 r2) by admit.
+        - intro j.
+            rewrite Hf.
+            rewrite H3.
+            inversion HDTip.
+            rewrite H9.
+            unfold bitmapInRange.
+            rewrite N.lor_spec.
+            destruct (inRange j r2); reflexivity.
+        - apply isBitMask_lor; auto; (inversion HDTip; auto).
+      + SearchAbout rangeDisjoint.
+        assert (rangeDisjoint r1 r2) by (apply different_prefix_same_bits_disjoint; try congruence).
         eapply link_Desc; try apply HDTip; auto.
         - apply DescTip; auto.
-        - inversion HDTip. congruence.
-        - replace (commonRange r1 r2) with (commonRangeDisj r1 r2) by admit. (* due to rangeDisjoint *)
-          reflexivity.
+        - apply disjoint_commonRange; auto.
     * simpl. unfold Prim.seq.
-      (* Find out how to avoid this: *)
+      (* TODO: Find out how to avoid this: *)
       replace (Z.shiftl _ _) with 
          (rPrefix (commonRangeDisj r2 r3)) by reflexivity.
       replace (2 ^ _) with (rMask (commonRangeDisj r2 r3)) by reflexivity.
-      rewrite -> nomatch_spec  by (apply commonRangeDisj_rBits_pos; eapply Desc_rNonneg; eassumption).
+      rewrite -> nomatch_spec by (apply commonRangeDisj_rBits_pos; eapply Desc_rNonneg; eassumption).
       rewrite if_negb.
-      destruct (inRange p' (commonRangeDisj r2 r3)) eqn:HinRange.
+      replace (inRange (rPrefix r1) (commonRangeDisj r2 r3))
+         with (isSubrange r1 (commonRangeDisj r2 r3)) by admit.
+      destruct (isSubrange r1 (commonRangeDisj r2 r3)) eqn:Hsubrange.
       + rewrite -> zero_spec by (apply commonRangeDisj_rBits_pos; eapply Desc_rNonneg; eassumption).
         rewrite if_negb.
-        replace ((commonRange r1 (commonRangeDisj r2 r3))) with (commonRangeDisj r2 r3) in * by admit.
-        destruct (Z.testbit p' (Z.pred (Z.of_N (rBits (commonRangeDisj r2 r3))))) eqn:Hbit.
-        - assert (inRange p' r3 = true) by admit.
+        rewrite -> (isSubrange_commonRange_r _ _ Hsubrange) in *.
+        destruct (Z.testbit (rPrefix r1) (Z.pred (Z.of_N (rBits (commonRangeDisj r2 r3))))) eqn:Hbit.
+        - assert (inRange (rPrefix r1) r3 = true) by admit.
+          assert (Hsubrange2: isSubrange r1 r3) by admit.
+          clear H1.
           eapply DescBin; try apply HD1; try apply IHHD2 with (f := fun j => f1 j || f3 j);
-            replace (commonRange r1 r3) with r3 by admit; auto.
-          intro i. simpl. rewrite Hf. rewrite H5. destruct (f1 i), (f2 i), (f3 i); reflexivity.
-        - assert (inRange p' r2 = true) by admit.
+            replace (commonRange r1 r3) with r3 by (symmetry; apply isSubrange_commonRange_r; auto); auto.
+          intro i. simpl. rewrite Hf. rewrite H6. destruct (f1 i), (f2 i), (f3 i); reflexivity.
+        - assert (inRange (rPrefix r1) r2 = true) by admit.
+          assert (Hsubrange2: isSubrange r1 r2) by admit.
           eapply DescBin; try apply HD2; try apply IHHD1 with (f := fun j => f1 j || f2 j);
-            replace (commonRange r1 r2) with r2 by admit; auto.
-          intro i. simpl. rewrite Hf. rewrite H5. destruct (f1 i), (f2 i), (f3 i); reflexivity.
+            replace (commonRange r1 r2) with r2 by (symmetry; apply isSubrange_commonRange_r; auto); auto.
+          intro i. simpl. rewrite Hf. rewrite H6. destruct (f1 i), (f2 i), (f3 i); reflexivity.
       + assert (rangeDisjoint r1 (commonRangeDisj r2 r3)) by admit.
+        clear Hsubrange.
         eapply link_Desc; eauto; try (inversion HDTip; auto).
         eapply DescBin; eauto.
-        admit. (* commonRange to commonRangeDisj *)
+        apply disjoint_commonRange; assumption.
   Admitted.
+
+  Lemma insert_Desc:
+    forall e r1,
+    forall s2 r2 f2,
+    forall r f, 
+    0 <= e ->
+    Desc s2 r2 f2 ->
+    r1 = (Z.shiftr e 6, N.log2 WIDTH) ->
+    r = commonRange r1 r2 ->
+    (forall i, f i = (i =? e) || f2 i) ->
+    Desc (insert e s2) r f.
+  Proof.
+    intros.
+    eapply insertBM_Desc.
+    eapply DescTip; try nonneg.
+    symmetry. apply rPrefix_shiftr. reflexivity.
+    apply isBitMask_suffixOf.
+    eassumption.
+    congruence.
+    intros j. rewrite H3. f_equal.
+    symmetry. apply bitmapInRange_bitmapOf.
+  Qed.
+  
+  Lemma insert_Nil_Desc:
+    forall e r f,
+    0 <= e ->
+    r = (Z.shiftr e 6, N.log2 WIDTH) ->
+    (forall i, f i = (i =? e)) ->
+    Desc (insert e Nil) r f.
+  Proof.
+    intros; subst.
+    apply DescTip; try nonneg.
+    symmetry. apply rPrefix_shiftr.
+    intros j. rewrite H1. symmetry. apply bitmapInRange_bitmapOf.
+    apply isBitMask_suffixOf.
+  Qed.
 
   Lemma insertBM_WF:
     forall p bm s,
@@ -1435,7 +1589,7 @@ Module Foo: WSfun(N_as_OT).
     apply isPrefix_prefixOf.
     apply isBitMask_suffixOf.
     assumption.
-  Qed.
+  Defined.
 
   Definition remove : elt -> t -> t. Admitted.
   Definition union : t -> t -> t. Admitted.
@@ -1513,7 +1667,25 @@ Module Foo: WSfun(N_as_OT).
   Lemma subset_2 : forall s s' : t, subset s s' = true -> Subset s s'. Admitted.
   
   Lemma add_1 :
-    forall (s : t) (x y : elt), N.eq x y -> In y (add x s). Admitted.
+    forall (s : t) (x y : elt), N.eq x y -> In y (add x s).
+  Proof.
+    intros.
+    inversion_clear H; subst.
+    unfold In, add, pack, In_set; intros; destruct s as [s].
+    destruct w.
+    * (* Not nice that we cannot have Desc x f for empty trees. *)
+      erewrite member_spec.
+      Focus 2.
+      apply insert_Nil_Desc; try nonneg.
+      intro. reflexivity.
+      simpl. rewrite Z.eqb_refl. reflexivity.
+    * erewrite member_spec.
+      Focus 2.
+      eapply insert_Desc; try nonneg; try eassumption.
+      intro. reflexivity.
+      simpl. rewrite Z.eqb_refl. reflexivity.
+  Qed.
+
   Lemma add_2 : forall (s : t) (x y : elt), In y s -> In y (add x s). Admitted.
   Lemma add_3 :
     forall (s : t) (x y : elt), ~ N.eq x y -> In y (add x s) -> In y s. Admitted.

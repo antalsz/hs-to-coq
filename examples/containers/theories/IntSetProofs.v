@@ -1200,7 +1200,6 @@ Module Foo: WSfun(N_as_OT).
     * destruct i.
       + reflexivity.
       + simpl.
-        SearchAbout Z.mul xO.
         generalize p. clear p.
         induction p0; intro.
         - simpl.
@@ -1325,8 +1324,6 @@ Module Foo: WSfun(N_as_OT).
   Proof.
     intros; subst.
     unfold link.
-    SearchAbout branchMask.
-    SearchAbout zero.
     rewrite branchMask_spec.
     rewrite branch_spec.
     rewrite -> zero_spec by (apply commonRangeDisj_rBits_pos; eapply Desc_rNonneg; eassumption).
@@ -1368,7 +1365,6 @@ Module Foo: WSfun(N_as_OT).
     Desc (insertBM p' bm s2) r f.
   Proof.
     intros ????????? HDTip HD ??; subst.
-    Print Desc.
     generalize dependent f.
     induction HD as [p2' bm2 r2 f2|s2 r2 f2 s3 r3 f3 p2' r]; subst; intros f' Hf.
     * simpl.
@@ -1386,80 +1382,49 @@ Module Foo: WSfun(N_as_OT).
         - inversion HDTip. congruence.
         - replace (commonRange r1 r2) with (commonRangeDisj r1 r2) by admit. (* due to rangeDisjoint *)
           reflexivity.
-    * Print insertBM.
-      simpl. unfold Prim.seq.
+    * simpl. unfold Prim.seq.
       (* Find out how to avoid this: *)
       replace (Z.shiftl _ _) with 
          (rPrefix (commonRangeDisj r2 r3)) by reflexivity.
       replace (2 ^ _) with (rMask (commonRangeDisj r2 r3)) by reflexivity.
-      rewrite nomatch_spec. rewrite if_negb.
+      rewrite -> nomatch_spec  by (apply commonRangeDisj_rBits_pos; eapply Desc_rNonneg; eassumption).
+      rewrite if_negb.
       destruct (inRange p' (commonRangeDisj r2 r3)) eqn:HinRange.
-      + rewrite zero_spec. rewrite if_negb.
+      + rewrite -> zero_spec by (apply commonRangeDisj_rBits_pos; eapply Desc_rNonneg; eassumption).
+        rewrite if_negb.
+        replace ((commonRange r1 (commonRangeDisj r2 r3))) with (commonRangeDisj r2 r3) in * by admit.
         destruct (Z.testbit p' (Z.pred (Z.of_N (rBits (commonRangeDisj r2 r3))))) eqn:Hbit.
-        - assert (rangeDisjoint r2 (commonRange r1 r3)) by admit.
-          eapply DescBin; try apply HD1; try apply IHHD2 with (f := fun j => f1 j || f3 j); auto.
-          admit. (* commonRange assoc *)
-         
+        - assert (inRange p' r3 = true) by admit.
+          eapply DescBin; try apply HD1; try apply IHHD2 with (f := fun j => f1 j || f3 j);
+            replace (commonRange r1 r3) with r3 by admit; auto.
+          intro i. simpl. rewrite Hf. rewrite H5. destruct (f1 i), (f2 i), (f3 i); reflexivity.
+        - assert (inRange p' r2 = true) by admit.
+          eapply DescBin; try apply HD2; try apply IHHD1 with (f := fun j => f1 j || f2 j);
+            replace (commonRange r1 r2) with r2 by admit; auto.
+          intro i. simpl. rewrite Hf. rewrite H5. destruct (f1 i), (f2 i), (f3 i); reflexivity.
+      + assert (rangeDisjoint r1 (commonRangeDisj r2 r3)) by admit.
+        eapply link_Desc; eauto; try (inversion HDTip; auto).
+        eapply DescBin; eauto.
+        admit. (* commonRange to commonRangeDisj *)
+  Admitted.
 
   Lemma insertBM_WF:
     forall p bm s,
     0 <= p -> isPrefix p -> isBitMask bm -> WF s -> WF (insertBM p bm s).
   Proof.
     intros ??? Hnonneg Hp Hbm HWF.
+    set (r1 := (Z.shiftr p 6, N.log2 WIDTH)).
+    assert (Desc (Tip p bm) r1 (bitmapInRange r1 bm)).
+    * apply DescTip; subst r1; auto.
+      apply isPrefix_shiftl_shiftr; assumption.
+
     destruct HWF.
     * simpl. unfold Prim.seq.
-      apply Tip_WF; auto.
-    * induction HD; subst.
-      + unfold insertBM, Prim.seq.
-        unfold GHC.Base.op_zeze__, Eq_Integer___, op_zeze____.
-        destruct (Z.eqb_spec (Z.shiftl p0 (Z.of_N (N.log2 WIDTH))) p); subst.
-        * apply Tip_WF; auto.
-          apply isBitMask_lor; auto.
-        * assert (Hxor_pos : 0 < Z.lxor (Z.shiftr p 6) p0).
-            apply lxor_pos; try nonneg.
-            rewrite (isPrefix_shiftl_shiftr _ Hp) in n.
-            rewrite -> Z_shiftl_inj in n by nonneg.
-            congruence.
-
-          (* calling link now *)
-          eapply WFNonEmpty.
-          eapply link_Desc. 7:reflexivity.
-          - apply Tip_Desc with (p := Z.shiftr p 6); auto.
-            nonneg.
-            apply isPrefix_shiftl_shiftr; assumption.
-          - apply Tip_Desc with (p := p0); auto.
-          all: replace (Z.of_N (N.log2 WIDTH)) with 6 in * by reflexivity.
-          all: replace (N.log2 WIDTH) with (Z.to_N 6) in * by reflexivity.
-          - rewrite <- Z.shiftl_lxor.
-            rewrite -> Z.log2_shiftl; try assumption.
-            apply Z2N.inj_lt; [nonneg|nonneg|].
-            rewrite (isPrefix_shiftl_shiftr _ Hp) in n.
-            rewrite -> Z_shiftl_inj in n by nonneg.
-            enough (0 <= Z.log2 (Z.lxor (Z.shiftr p 6) p0)) by omega; nonneg.
-            nonneg.
-          - apply Z2N.inj_lt; try nonneg.
-              rewrite <- Z.shiftl_lxor.
-              rewrite Z.log2_shiftl; try nonneg.
-              enough (0 <= Z.log2 (Z.lxor (Z.shiftr p 6) p0)) by omega; nonneg.
-           - apply isPrefix_shiftl_shiftr; assumption.
-           - reflexivity.
-           - rewrite -> Z2N.id by nonneg.
-             rewrite Z.pred_succ.
-             rewrite <- Z.shiftl_lxor.
-             rewrite  Z.log2_shiftl; try nonneg.
-             replace (Z.log2 (Z.lxor (Z.shiftr p 6) p0) + 6 - 6) with (Z.log2 (Z.lxor (Z.shiftr p 6) p0)) by omega.
-             (* log2 finds the difference *)
-             admit.
-           - rewrite -> Z2N.id by nonneg.
-             rewrite <- Z.shiftl_lxor.
-             rewrite  Z.log2_shiftl; try nonneg.
-             replace (Z.succ (Z.log2 (Z.lxor (Z.shiftr p 6) p0) + 6) - 6) with (Z.succ (Z.log2 (Z.lxor (Z.shiftr p 6) p0))) by omega.
-             (* log2 finds the largest difference *)
-             admit.
-           - intro i. reflexivity.
-      + simpl. unfold Prim.seq.
-        admit.
-  Admitted.
+      eapply WFNonEmpty; eauto.
+    * eapply WFNonEmpty. 
+      eapply insertBM_Desc; eauto.
+      intro i. reflexivity.
+  Qed.
   
   Definition add (e: elt) (s': t) : t.
     refine (s <-- s' ;;
@@ -1470,8 +1435,8 @@ Module Foo: WSfun(N_as_OT).
     apply isPrefix_prefixOf.
     apply isBitMask_suffixOf.
     assumption.
-  Qed.   
-  
+  Qed.
+
   Definition remove : elt -> t -> t. Admitted.
   Definition union : t -> t -> t. Admitted.
   Definition inter : t -> t -> t. Admitted.

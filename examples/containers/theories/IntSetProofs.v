@@ -1508,6 +1508,7 @@ Module Foo: WSfun(N_as_OT).
         rewrite if_negb.
         rewrite -> (isSubrange_commonRange_r _ _ Hsubrange) in *.
         destruct (Z.testbit (rPrefix r1) (Z.pred (Z.of_N (rBits (commonRangeDisj r2 r3))))) eqn:Hbit.
+        (* This is probably wrong: r1 might still be disjoint from both r2 and r3 :-( *)
         - assert (inRange (rPrefix r1) r3 = true) by admit.
           assert (Hsubrange2: isSubrange r1 r3) by admit.
           clear H1.

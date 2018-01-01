@@ -1494,7 +1494,8 @@ Module Foo: WSfun(N_as_OT).
         eapply link_Desc; try apply HDTip; auto.
         - apply DescTip; auto.
         - apply disjoint_commonRange; auto.
-    * simpl. unfold Prim.seq.
+    * set (b := Z.pred _) in *.
+      simpl. unfold Prim.seq.
       (* TODO: Find out how to avoid this: *)
       replace (Z.shiftl _ _) with 
          (rPrefix (commonRangeDisj r2 r3)) by reflexivity.
@@ -1506,20 +1507,23 @@ Module Foo: WSfun(N_as_OT).
       destruct (isSubrange r1 (commonRangeDisj r2 r3)) eqn:Hsubrange.
       + rewrite -> zero_spec by (apply commonRangeDisj_rBits_pos; eapply Desc_rNonneg; eassumption).
         rewrite if_negb.
+        fold b.
         rewrite -> (isSubrange_commonRange_r _ _ Hsubrange) in *.
-        destruct (Z.testbit (rPrefix r1) (Z.pred (Z.of_N (rBits (commonRangeDisj r2 r3))))) eqn:Hbit.
+        destruct (Z.testbit (rPrefix r1) b) eqn:Hbit.
         - assert (inRange (rPrefix r1) r2 = false) by admit.
           assert (Hdis: rangeDisjoint r1 r2) by admit.
           assert (rangeDisjoint r2 (commonRange r1 r3)) by admit.
           assert (commonRangeDisj r2 r3 = commonRangeDisj r2 (commonRange r1 r3)) by admit.
-          assert (Z.testbit (rPrefix (commonRange r1 r3)) (Z.pred (Z.of_N (rBits (commonRangeDisj r2 r3)))) = true) by admit.
+          assert (Z.testbit (rPrefix (commonRange r1 r3)) b = Z.testbit (rPrefix r3) b) by admit.
+          rewrite <- H7 in H3.
           eapply DescBin; try apply HD1; try apply IHHD2 with (f := fun j => f1 j || f3 j); auto.
           intro i. simpl. rewrite Hf. rewrite H6. destruct (f1 i), (f2 i), (f3 i); reflexivity.
         - assert (inRange (rPrefix r1) r3 = false) by admit.
           assert (Hdis: rangeDisjoint r1 r3) by admit.
           assert (rangeDisjoint (commonRange r1 r2) r3) by admit.
           assert (commonRangeDisj r2 r3 = commonRangeDisj (commonRange r1 r2) r3) by admit.
-          assert (Z.testbit (rPrefix (commonRange r1 r2)) (Z.pred (Z.of_N (rBits (commonRangeDisj r2 r3)))) = false) by admit.
+          assert (Z.testbit (rPrefix (commonRange r1 r2)) b = Z.testbit (rPrefix r2) b) by admit.
+          rewrite <- H7 in H2.
           eapply DescBin; try apply HD2; try apply IHHD1 with (f := fun j => f1 j || f2 j); auto.
           intro i. simpl. rewrite Hf. rewrite H6. destruct (f1 i), (f2 i), (f3 i); reflexivity.
       + assert (rangeDisjoint r1 (commonRangeDisj r2 r3)) by admit.

@@ -1508,17 +1508,19 @@ Module Foo: WSfun(N_as_OT).
         rewrite if_negb.
         rewrite -> (isSubrange_commonRange_r _ _ Hsubrange) in *.
         destruct (Z.testbit (rPrefix r1) (Z.pred (Z.of_N (rBits (commonRangeDisj r2 r3))))) eqn:Hbit.
-        (* This is probably wrong: r1 might still be disjoint from both r2 and r3 :-( *)
-        - assert (inRange (rPrefix r1) r3 = true) by admit.
-          assert (Hsubrange2: isSubrange r1 r3) by admit.
-          clear H1.
-          eapply DescBin; try apply HD1; try apply IHHD2 with (f := fun j => f1 j || f3 j);
-            replace (commonRange r1 r3) with r3 by (symmetry; apply isSubrange_commonRange_r; auto); auto.
+        - assert (inRange (rPrefix r1) r2 = false) by admit.
+          assert (Hdis: rangeDisjoint r1 r2) by admit.
+          assert (rangeDisjoint r2 (commonRange r1 r3)) by admit.
+          assert (commonRangeDisj r2 r3 = commonRangeDisj r2 (commonRange r1 r3)) by admit.
+          assert (Z.testbit (rPrefix (commonRange r1 r3)) (Z.pred (Z.of_N (rBits (commonRangeDisj r2 r3)))) = true) by admit.
+          eapply DescBin; try apply HD1; try apply IHHD2 with (f := fun j => f1 j || f3 j); auto.
           intro i. simpl. rewrite Hf. rewrite H6. destruct (f1 i), (f2 i), (f3 i); reflexivity.
-        - assert (inRange (rPrefix r1) r2 = true) by admit.
-          assert (Hsubrange2: isSubrange r1 r2) by admit.
-          eapply DescBin; try apply HD2; try apply IHHD1 with (f := fun j => f1 j || f2 j);
-            replace (commonRange r1 r2) with r2 by (symmetry; apply isSubrange_commonRange_r; auto); auto.
+        - assert (inRange (rPrefix r1) r3 = false) by admit.
+          assert (Hdis: rangeDisjoint r1 r3) by admit.
+          assert (rangeDisjoint (commonRange r1 r2) r3) by admit.
+          assert (commonRangeDisj r2 r3 = commonRangeDisj (commonRange r1 r2) r3) by admit.
+          assert (Z.testbit (rPrefix (commonRange r1 r2)) (Z.pred (Z.of_N (rBits (commonRangeDisj r2 r3)))) = false) by admit.
+          eapply DescBin; try apply HD2; try apply IHHD1 with (f := fun j => f1 j || f2 j); auto.
           intro i. simpl. rewrite Hf. rewrite H6. destruct (f1 i), (f2 i), (f3 i); reflexivity.
       + assert (rangeDisjoint r1 (commonRangeDisj r2 r3)) by admit.
         clear Hsubrange.

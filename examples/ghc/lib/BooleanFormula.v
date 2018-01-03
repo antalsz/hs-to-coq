@@ -429,8 +429,7 @@ Definition simplify {a} `{GHC.Base.Eq_ a} : (a -> option bool) -> BooleanFormula
                                             a -> BooleanFormula a :=
   fix simplify arg_0__ arg_1__
         := match arg_0__ , arg_1__ with
-             | f , Var a => let scrut_2__ := f a in
-                            match scrut_2__ with
+             | f , Var a => match f a with
                               | None => Var a
                               | Some b => mkBool b
                             end
@@ -449,8 +448,7 @@ Definition isUnsatisfied {a} `{GHC.Base.Eq_ a} : (a -> bool) -> BooleanFormula
                                                  a -> option (BooleanFormula a) :=
   fun f bf =>
     let f' := fun x => if f x : bool then Some true else None in
-    let bf' := simplify f' bf in
-    let j_2__ := Some bf' in if isTrue bf' : bool then None else j_2__.
+    let bf' := simplify f' bf in if isTrue bf' : bool then None else Some bf'.
 
 Definition mkVar {a} : a -> BooleanFormula a :=
   Var.

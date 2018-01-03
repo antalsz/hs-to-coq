@@ -77,7 +77,7 @@ VFILES_SPECIAL = $(addprefix $(OUT)/,$(addsuffix .v,$(SPECIAL_MODULES)))
 
 VFILES   = $(VFILES_GEN) $(VFILES_MAN) $(VFILES_SPECIAL)
 
-all:  $(VFILES) coq $(OUT)/edits $(OUT)/README.md
+all: $(OUT)/edits $(OUT)/README.md $(VFILES) coq
 
 $(OUT)/_CoqProject : Makefile
 	mkdir -p $(OUT)

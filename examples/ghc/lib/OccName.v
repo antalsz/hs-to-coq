@@ -472,10 +472,9 @@ Definition minusOccSet : OccSet -> OccSet -> OccSet :=
 Definition mkDFunOcc : GHC.Base.String -> bool -> OccSet -> OccName :=
   fun info_str is_boot set =>
     let prefix :=
-      let j_0__ := GHC.Base.hs_string__ "$f" in
       if is_boot : bool
       then GHC.Base.hs_string__ "$fx"
-      else j_0__ in
+      else GHC.Base.hs_string__ "$f" in
     chooseUniqueOcc VarName (Coq.Init.Datatypes.app prefix info_str) set.
 
 Definition mkModPrefix : Module.Module -> GHC.Base.String :=
@@ -745,10 +744,9 @@ Definition mkBuilderOcc : OccName -> OccName :=
 Definition mkTyConRepOcc : OccName -> OccName :=
   fun occ =>
     let prefix :=
-      let j_0__ := GHC.Base.hs_string__ "$tc" in
       if isDataOcc occ : bool
       then GHC.Base.hs_string__ "$tc'"
-      else j_0__ in
+      else GHC.Base.hs_string__ "$tc" in
     mk_simple_deriv varName prefix occ.
 
 (* Unbound variables:

@@ -678,10 +678,9 @@ Local Definition Monoid__Max_mappend {inst_a} `{GHC.Base.Ord inst_a} : (Max
     match arg_0__ , arg_1__ with
       | m , Mk_Max None => m
       | Mk_Max None , n => n
-      | Mk_Max (Some x as m) , Mk_Max (Some y as n) => let j_2__ := Mk_Max n in
-                                                       if x GHC.Base.>= y : bool
+      | Mk_Max (Some x as m) , Mk_Max (Some y as n) => if x GHC.Base.>= y : bool
                                                        then Mk_Max m
-                                                       else j_2__
+                                                       else Mk_Max n
     end.
 
 Local Definition Monoid__Max_mempty {inst_a} `{GHC.Base.Ord inst_a} : (Max
@@ -704,10 +703,9 @@ Local Definition Monoid__Min_mappend {inst_a} `{GHC.Base.Ord inst_a} : (Min
     match arg_0__ , arg_1__ with
       | m , Mk_Min None => m
       | Mk_Min None , n => n
-      | Mk_Min (Some x as m) , Mk_Min (Some y as n) => let j_2__ := Mk_Min n in
-                                                       if x GHC.Base.<= y : bool
+      | Mk_Min (Some x as m) , Mk_Min (Some y as n) => if x GHC.Base.<= y : bool
                                                        then Mk_Min m
-                                                       else j_2__
+                                                       else Mk_Min n
     end.
 
 Local Definition Monoid__Min_mempty {inst_a} `{GHC.Base.Ord inst_a} : (Min

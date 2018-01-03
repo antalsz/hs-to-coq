@@ -135,8 +135,7 @@ Local Definition Ord__Name_compare : Name -> Name -> comparison :=
 
 Local Definition Ord__Name_op_zg__ : Name -> Name -> bool :=
   fun a b =>
-    let scrut_0__ := (Ord__Name_compare a b) in
-    match scrut_0__ with
+    match (Ord__Name_compare a b) with
       | Lt => false
       | Eq => false
       | Gt => true
@@ -144,8 +143,7 @@ Local Definition Ord__Name_op_zg__ : Name -> Name -> bool :=
 
 Local Definition Ord__Name_op_zgze__ : Name -> Name -> bool :=
   fun a b =>
-    let scrut_0__ := (Ord__Name_compare a b) in
-    match scrut_0__ with
+    match (Ord__Name_compare a b) with
       | Lt => false
       | Eq => true
       | Gt => true
@@ -153,8 +151,7 @@ Local Definition Ord__Name_op_zgze__ : Name -> Name -> bool :=
 
 Local Definition Ord__Name_op_zl__ : Name -> Name -> bool :=
   fun a b =>
-    let scrut_0__ := (Ord__Name_compare a b) in
-    match scrut_0__ with
+    match (Ord__Name_compare a b) with
       | Lt => true
       | Eq => false
       | Gt => false
@@ -162,8 +159,7 @@ Local Definition Ord__Name_op_zl__ : Name -> Name -> bool :=
 
 Local Definition Ord__Name_op_zlze__ : Name -> Name -> bool :=
   fun a b =>
-    let scrut_0__ := (Ord__Name_compare a b) in
-    match scrut_0__ with
+    match (Ord__Name_compare a b) with
       | Lt => true
       | Eq => true
       | Gt => false
@@ -306,8 +302,7 @@ Definition nameIsHomePackageImport : Module.Module -> Name -> bool :=
   fun this_mod =>
     let this_pkg := moduleUnitId this_mod in
     fun nm =>
-      let scrut_1__ := nameModule_maybe nm in
-      match scrut_1__ with
+      match nameModule_maybe nm with
         | None => false
         | Some nm_mod => andb (nm_mod GHC.Base./= this_mod) (moduleUnitId nm_mod
                               GHC.Base.== this_pkg)
@@ -330,12 +325,10 @@ Definition mkLocalisedOccName : Module.Module -> (option
                                 GHC.Base.String -> OccName.OccName -> OccName.OccName) -> Name -> OccName.OccName :=
   fun this_mod mk_occ name =>
     let origin :=
-      let j_0__ :=
-        Some ((Module.moduleNameColons GHC.Base.∘ (moduleName GHC.Base.∘ nameModule))
-             GHC.Base.$ name) in
       if nameIsLocalOrFrom this_mod name : bool
       then None
-      else j_0__ in
+      else Some ((Module.moduleNameColons GHC.Base.∘ (moduleName GHC.Base.∘
+                nameModule)) GHC.Base.$ name) in
     mk_occ origin (nameOccName name).
 
 Definition isVarName : Name -> bool :=

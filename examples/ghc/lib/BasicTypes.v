@@ -965,12 +965,10 @@ Definition compareFixity : Fixity -> Fixity -> (bool * bool)%type :=
                                                              pair true false in
                                                            let left_ := pair false false in
                                                            let right_ := pair false true in
-                                                           let scrut_5__ := GHC.Base.compare prec1 prec2 in
-                                                           match scrut_5__ with
+                                                           match GHC.Base.compare prec1 prec2 with
                                                              | Gt => left_
                                                              | Lt => right_
-                                                             | Eq => let scrut_6__ := pair dir1 dir2 in
-                                                                     match scrut_6__ with
+                                                             | Eq => match pair dir1 dir2 with
                                                                        | pair InfixR InfixR => right_
                                                                        | pair InfixL InfixL => left_
                                                                        | _ => error_please
@@ -1108,8 +1106,7 @@ Definition isAlwaysActive : Activation -> bool :=
 
 Definition isAnyInlinePragma : InlinePragma -> bool :=
   fun prag =>
-    let scrut_0__ := inl_inline prag in
-    match scrut_0__ with
+    match inl_inline prag with
       | Inline => true
       | Inlinable => true
       | _ => false
@@ -1150,20 +1147,10 @@ Definition isGenerated : Origin -> bool :=
   fun arg_0__ => match arg_0__ with | Generated => true | FromSource => false end.
 
 Definition isInlinablePragma : InlinePragma -> bool :=
-  fun prag =>
-    let scrut_0__ := inl_inline prag in
-    match scrut_0__ with
-      | Inlinable => true
-      | _ => false
-    end.
+  fun prag => match inl_inline prag with | Inlinable => true | _ => false end.
 
 Definition isInlinePragma : InlinePragma -> bool :=
-  fun prag =>
-    let scrut_0__ := inl_inline prag in
-    match scrut_0__ with
-      | Inline => true
-      | _ => false
-    end.
+  fun prag => match inl_inline prag with | Inline => true | _ => false end.
 
 Definition isNeverActive : Activation -> bool :=
   fun arg_0__ => match arg_0__ with | NeverActive => true | _ => false end.

@@ -390,8 +390,7 @@ Local Definition Ord__RealSrcLoc_op_zlze__ : RealSrcLoc -> RealSrcLoc -> bool :=
 
 Local Definition Eq___RealSrcLoc_op_zeze__ : RealSrcLoc -> RealSrcLoc -> bool :=
   fun loc1 loc2 =>
-    let scrut_0__ := cmpRealSrcLoc loc1 loc2 in
-    match scrut_0__ with
+    match cmpRealSrcLoc loc1 loc2 with
       | Eq => true
       | _other => false
     end.
@@ -450,8 +449,7 @@ Local Definition Ord__SrcLoc_max : SrcLoc -> SrcLoc -> SrcLoc :=
 
 Local Definition Eq___SrcLoc_op_zeze__ : SrcLoc -> SrcLoc -> bool :=
   fun loc1 loc2 =>
-    let scrut_0__ := cmpSrcLoc loc1 loc2 in
-    match scrut_0__ with
+    match cmpSrcLoc loc1 loc2 with
       | Eq => true
       | _other => false
     end.
@@ -626,12 +624,10 @@ Definition leftmost_largest : SrcSpan -> SrcSpan -> comparison :=
 
 Definition isSubspanOf : SrcSpan -> SrcSpan -> bool :=
   fun src parent =>
-    let j_0__ :=
-      andb (srcSpanStart parent GHC.Base.<= srcSpanStart src) (srcSpanEnd parent
-           GHC.Base.>= srcSpanEnd src) in
     if srcSpanFileName_maybe parent GHC.Base./= srcSpanFileName_maybe src : bool
     then false
-    else j_0__.
+    else andb (srcSpanStart parent GHC.Base.<= srcSpanStart src) (srcSpanEnd parent
+              GHC.Base.>= srcSpanEnd src).
 
 Local Definition Ord__RealSrcSpan_compare
     : RealSrcSpan -> RealSrcSpan -> comparison :=

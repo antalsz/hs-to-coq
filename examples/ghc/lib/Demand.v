@@ -517,13 +517,12 @@ Definition argOneShots : BasicTypes.OneShotInfo -> Demand -> list
                          BasicTypes.OneShotInfo :=
   fun arg_0__ arg_1__ =>
     match arg_0__ , arg_1__ with
-      | one_shot_info , JD _ usg => let go :=
-                                      fix go arg_2__
-                                            := match arg_2__ with
-                                                 | UCall One u => cons one_shot_info (go u)
-                                                 | UCall Many u => cons BasicTypes.NoOneShotInfo (go u)
-                                                 | _ => nil
-                                               end in
+      | one_shot_info , JD _ usg => let fix go arg_2__
+                                              := match arg_2__ with
+                                                   | UCall One u => cons one_shot_info (go u)
+                                                   | UCall Many u => cons BasicTypes.NoOneShotInfo (go u)
+                                                   | _ => nil
+                                                 end in
                                     match usg with
                                       | Mk_Use _ arg_usg => go arg_usg
                                       | _ => nil
@@ -546,15 +545,14 @@ Definition argsOneShots : StrictSig -> BasicTypes.Arity -> list (list
                                                                if unsaturated_call : bool
                                                                then BasicTypes.ProbOneShot
                                                                else BasicTypes.OneShotLam in
-                                                             let go :=
-                                                               fix go arg_8__
-                                                                     := match arg_8__ with
-                                                                          | nil => nil
-                                                                          | cons arg_d arg_ds => cons_ (argOneShots
-                                                                                                       good_one_shot
-                                                                                                       arg_d) (go
-                                                                                                       arg_ds)
-                                                                        end in
+                                                             let fix go arg_8__
+                                                                       := match arg_8__ with
+                                                                            | nil => nil
+                                                                            | cons arg_d arg_ds => cons_ (argOneShots
+                                                                                                         good_one_shot
+                                                                                                         arg_d) (go
+                                                                                                         arg_ds)
+                                                                          end in
                                                              go arg_ds
     end.
 
@@ -717,11 +715,11 @@ Definition isWeakDmd : Demand -> bool :=
 
 Definition mkSProd : list ArgStr -> StrDmd :=
   fun sx =>
-    let j_0__ := SProd sx in
-    let j_1__ := if Data.Foldable.all isLazy sx : bool then HeadStr else j_0__ in
     if Data.Foldable.any isHyperStr sx : bool
     then HyperStr
-    else j_1__.
+    else if Data.Foldable.all isLazy sx : bool
+         then HeadStr
+         else SProd sx.
 
 Definition isSeqDmd : Demand -> bool :=
   fun arg_0__ =>
@@ -765,10 +763,9 @@ Definition killFlags : DynFlags.DynFlags -> option KillFlags :=
   fun dflags =>
     let kill_one_shot := DynFlags.gopt DynFlags.Opt_KillOneShot dflags in
     let kill_abs := DynFlags.gopt DynFlags.Opt_KillAbsence dflags in
-    let j_2__ := Some (pair kill_abs kill_one_shot) in
     if andb (negb kill_abs) (negb kill_one_shot) : bool
     then None
-    else j_2__.
+    else Some (pair kill_abs kill_one_shot).
 
 Definition kill_usage : KillFlags -> Demand -> Demand :=
   fun arg_0__ arg_1__ =>
@@ -936,10 +933,9 @@ Definition mkUCall : Count -> UseDmd -> UseDmd :=
 
 Definition mkUProd : list ArgUse -> UseDmd :=
   fun ux =>
-    let j_0__ := UProd ux in
     if Data.Foldable.all (fun arg_1__ => arg_1__ GHC.Base.== Abs) ux : bool
     then UHead
-    else j_0__.
+    else UProd ux.
 
 Definition oneifyDmd : Demand -> Demand :=
   fun arg_0__ =>
@@ -1120,8 +1116,7 @@ Definition postProcessDmdType : DmdShell -> DmdType -> BothDmdArg :=
   fun arg_0__ arg_1__ =>
     match arg_0__ , arg_1__ with
       | (JD ss _ as du) , Mk_DmdType fv _ res_ty => let term_info :=
-                                                      let scrut_2__ := postProcessDmdResult ss res_ty in
-                                                      match scrut_2__ with
+                                                      match postProcessDmdResult ss res_ty with
                                                         | Dunno _ => Dunno tt
                                                         | ThrowsExn => ThrowsExn
                                                         | Diverges => Diverges
@@ -1191,8 +1186,7 @@ Definition deferAfterIO : DmdType -> DmdType :=
     match arg_0__ with
       | (Mk_DmdType _ _ res as d) => let defer_res :=
                                        fun arg_1__ => match arg_1__ with | (Dunno _ as r) => r | _ => topRes end in
-                                     let scrut_3__ := lubDmdType d nopDmdType in
-                                     match scrut_3__ with
+                                     match lubDmdType d nopDmdType with
                                        | Mk_DmdType fv ds _ => Mk_DmdType fv ds (defer_res res)
                                      end
     end.
@@ -1202,10 +1196,9 @@ Definition trimCPRInfo : bool -> bool -> DmdResult -> DmdResult :=
     let trimC :=
       fun arg_0__ =>
         match arg_0__ with
-          | RetSum n => let j_1__ := RetSum n in
-                        if orb trim_all trim_sums : bool
+          | RetSum n => if orb trim_all trim_sums : bool
                         then NoCPR
-                        else j_1__
+                        else RetSum n
           | RetProd => if trim_all : bool
                        then NoCPR
                        else RetProd
@@ -1233,8 +1226,7 @@ Definition useCount {u} : Use u -> Count :=
 Definition isUsedOnce : Demand -> bool :=
   fun arg_0__ =>
     match arg_0__ with
-      | JD _ a => let scrut_1__ := useCount a in
-                  match scrut_1__ with
+      | JD _ a => match useCount a with
                     | One => true
                     | Many => false
                   end

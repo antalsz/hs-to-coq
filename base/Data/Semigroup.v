@@ -214,11 +214,10 @@ Local Definition Semigroup__list_stimes {inst_a} : forall {b},
                                    then nil
                                    else j_3__
                     end) in
-      let j_6__ := rep n in
       if n GHC.Base.< GHC.Num.fromInteger 0 : bool
       then GHC.Base.errorWithoutStackTrace (GHC.Base.hs_string__
                                            "stimes: [], negative multiplier")
-      else j_6__.
+      else rep n.
 
 Program Instance Semigroup__list {a} : Semigroup (list a) := fun _ k =>
     k {|op_zlzg____ := Semigroup__list_op_zlzg__ ;
@@ -254,8 +253,7 @@ Local Definition Semigroup__option_stimes {inst_a} `{Semigroup inst_a}
     fun arg_0__ arg_1__ =>
       match arg_0__ , arg_1__ with
         | _ , None => None
-        | n , Some a => let scrut_2__ := GHC.Base.compare n (GHC.Num.fromInteger 0) in
-                        match scrut_2__ with
+        | n , Some a => match GHC.Base.compare n (GHC.Num.fromInteger 0) with
                           | Lt => GHC.Base.errorWithoutStackTrace (GHC.Base.hs_string__
                                                                   "stimes: Maybe, negative multiplier")
                           | Eq => None
@@ -457,33 +455,27 @@ Local Definition Semigroup__NonEmpty_stimes {inst_a} : forall {b},
     fun y0 x0 =>
       let g :=
         unsafeFix (fun g x y z =>
-                    let j_0__ :=
-                      g (Semigroup__NonEmpty_op_zlzg__ x x) (GHC.Real.quot (GHC.Enum.pred y)
-                                                                           (GHC.Num.fromInteger 2))
-                      (Semigroup__NonEmpty_op_zlzg__ x z) in
-                    let j_1__ :=
-                      if y GHC.Base.== GHC.Num.fromInteger 1 : bool
-                      then Semigroup__NonEmpty_op_zlzg__ x z
-                      else j_0__ in
                     if GHC.Real.even y : bool
                     then g (Semigroup__NonEmpty_op_zlzg__ x x) (GHC.Real.quot y (GHC.Num.fromInteger
                                                                               2)) z
-                    else j_1__) in
+                    else if y GHC.Base.== GHC.Num.fromInteger 1 : bool
+                         then Semigroup__NonEmpty_op_zlzg__ x z
+                         else g (Semigroup__NonEmpty_op_zlzg__ x x) (GHC.Real.quot (GHC.Enum.pred y)
+                                                                                   (GHC.Num.fromInteger 2))
+                              (Semigroup__NonEmpty_op_zlzg__ x z)) in
       let f :=
         unsafeFix (fun f x y =>
-                    let j_3__ :=
-                      g (Semigroup__NonEmpty_op_zlzg__ x x) (GHC.Real.quot (GHC.Enum.pred y)
-                                                                           (GHC.Num.fromInteger 2)) x in
-                    let j_4__ := if y GHC.Base.== GHC.Num.fromInteger 1 : bool then x else j_3__ in
                     if GHC.Real.even y : bool
                     then f (Semigroup__NonEmpty_op_zlzg__ x x) (GHC.Real.quot y (GHC.Num.fromInteger
                                                                               2))
-                    else j_4__) in
-      let j_6__ := f x0 y0 in
+                    else if y GHC.Base.== GHC.Num.fromInteger 1 : bool
+                         then x
+                         else g (Semigroup__NonEmpty_op_zlzg__ x x) (GHC.Real.quot (GHC.Enum.pred y)
+                                                                                   (GHC.Num.fromInteger 2)) x) in
       if y0 GHC.Base.<= GHC.Num.fromInteger 0 : bool
       then GHC.Base.errorWithoutStackTrace (GHC.Base.hs_string__
                                            "stimes: positive multiplier expected")
-      else j_6__.
+      else f x0 y0.
 
 Program Instance Semigroup__NonEmpty {a} : Semigroup
                                            (Data.List.NonEmpty.NonEmpty a) := fun _ k =>
@@ -2287,8 +2279,7 @@ Program Instance Semigroup__Either {a} {b} : Semigroup (Data.Either.Either a
 Definition stimesIdempotentMonoid {b} {a} `{GHC.Real.Integral b}
                                   `{GHC.Base.Monoid a} : b -> a -> a :=
   fun n x =>
-    let scrut_0__ := GHC.Base.compare n (GHC.Num.fromInteger 0) in
-    match scrut_0__ with
+    match GHC.Base.compare n (GHC.Num.fromInteger 0) with
       | Lt => GHC.Base.errorWithoutStackTrace (GHC.Base.hs_string__
                                               "stimesIdempotentMonoid: negative multiplier")
       | Eq => GHC.Base.mempty

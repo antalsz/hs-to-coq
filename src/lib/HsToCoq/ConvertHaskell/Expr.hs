@@ -162,7 +162,7 @@ convertExpr (HsCase e mg) = do
 
 convertExpr (HsIf overloaded c t f) =
   if maybe True isNoSyntaxExpr overloaded
-  then ifBool <$> convertLExpr c <*> convertLExpr t <*> convertLExpr f
+  then IfBool <$> convertLExpr c <*> convertLExpr t <*> convertLExpr f
   else convUnsupported "overloaded if-then-else"
 
 convertExpr (HsMultiIf PlaceHolder lgrhsList) =
@@ -492,7 +492,7 @@ convertPatternBinding hsPat hsExp buildTrivial buildNontrivial fallback = do
             | SoleConstructor <- nontrivial = []
             | otherwise                     = [ Equation [MultPattern [UnderscorePat]] fallback ]
           guarded tm | null guards = tm
-                     | otherwise   = ifBool (foldr1 (App2 "andb") guards)
+                     | otherwise   = IfBool (foldr1 (App2 "andb") guards)
                                             tm
                                             fallback
 
@@ -548,7 +548,7 @@ convertListComprehension allStmts = case fmap unLoc <$> unsnoc allStmts of
     toExpr (BodyStmt e _bind _guard _PlaceHolder) rest =
       isTrueLExpr e >>= \case
         True  -> rest
-        False -> ifBool <$> convertLExpr e
+        False -> IfBool <$> convertLExpr e
                         <*> rest
                         <*> pure (Var "nil")
 
@@ -779,7 +779,7 @@ guardTerm gs rhs failure = go gs where
   go (BoolGuard "false" : _) = pure failure
 
   go (BoolGuard cond : gs) =
-    ifBool cond <$> go gs <*> pure failure
+    IfBool cond <$> go gs <*> pure failure
   -- if the pattern is exhaustive, don't include an otherwise case
   go (PatternGuard pat exp : gs) | isWildCoq pat = do
     guarded' <- go gs
@@ -924,7 +924,12 @@ bindIn tmpl rhs genBody = do
 
 -- This prevents the pattern conversion code to create
 -- `let j_24__ := … in j_24__`
+-- and a few other common and obviously stupid forms
 smartLet :: Qualid -> Term -> Term -> Term
+smartLet ident rhs (IfBool c t e)
+    | ident `S.notMember` getFreeVars c
+    , ident `S.notMember` getFreeVars t
+    = IfBool c t (smartLet ident rhs e)
 smartLet ident rhs (Qualid v) | ident == v = rhs
 smartLet ident rhs body = Let ident [] Nothing rhs body
 

@@ -6,7 +6,7 @@ module HsToCoq.Coq.Gallina.Util (
   pattern VarPat, pattern App1Pat, pattern App2Pat, pattern App3Pat,
   pattern BName,
   maybeForall,
-  ifBool,
+  pattern IfBool,
 
   -- * Manipulating 'Term's
   termHead,
@@ -70,8 +70,8 @@ maybeForall = maybe id Forall . nonEmpty . toList
 {-# SPECIALIZE maybeForall :: [Binder]        -> Term -> Term #-}
 {-# SPECIALIZE maybeForall :: NonEmpty Binder -> Term -> Term #-}
 
-ifBool :: Term -> Term -> Term -> Term
-ifBool c = If (HasType c $ Var "bool") Nothing
+pattern IfBool :: Term -> Term -> Term -> Term
+pattern IfBool c t e = If (HasType c (Var "bool")) Nothing t e
 
 termHead :: Term -> Maybe Qualid
 termHead (Forall _ t)         = termHead t

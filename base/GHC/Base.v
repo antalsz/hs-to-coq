@@ -897,12 +897,11 @@ Definition flip {a} {b} {c} : (a -> b -> c) -> b -> a -> c :=
 
 Definition foldr {a} {b} : (a -> b -> b) -> b -> list a -> b :=
   fun k z =>
-    let go :=
-      fix go arg_0__
-            := match arg_0__ with
-                 | nil => z
-                 | cons y ys => k y (go ys)
-               end in
+    let fix go arg_0__
+              := match arg_0__ with
+                   | nil => z
+                   | cons y ys => k y (go ys)
+                 end in
     go.
 
 Definition mapM {m} {a} {b} `{Monad m} : (a -> m b) -> list a -> m (list b) :=

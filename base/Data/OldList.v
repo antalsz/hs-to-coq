@@ -177,15 +177,13 @@ Definition elem_by {a} : (a -> a -> bool) -> a -> list a -> bool :=
 
 Definition nubBy {a} : (a -> a -> bool) -> list a -> list a :=
   fun eq l =>
-    let nubBy' :=
-      fix nubBy' arg_0__ arg_1__
-            := match arg_0__ , arg_1__ with
-                 | nil , _ => nil
-                 | cons y ys , xs => let j_2__ := cons y (nubBy' ys (cons y xs)) in
-                                     if elem_by eq y xs : bool
-                                     then nubBy' ys xs
-                                     else j_2__
-               end in
+    let fix nubBy' arg_0__ arg_1__
+              := match arg_0__ , arg_1__ with
+                   | nil , _ => nil
+                   | cons y ys , xs => if elem_by eq y xs : bool
+                                       then nubBy' ys xs
+                                       else cons y (nubBy' ys (cons y xs))
+                 end in
     nubBy' l nil.
 
 Definition nub {a} `{(GHC.Base.Eq_ a)} : list a -> list a :=
@@ -338,10 +336,9 @@ Definition select {a} : (a -> bool) -> a -> (list a * list a)%type -> (list a *
                         list a)%type :=
   fun arg_0__ arg_1__ arg_2__ =>
     match arg_0__ , arg_1__ , arg_2__ with
-      | p , x , pair ts fs => let j_3__ := pair ts (cons x fs) in
-                              if p x : bool
+      | p , x , pair ts fs => if p x : bool
                               then pair (cons x ts) fs
-                              else j_3__
+                              else pair ts (cons x fs)
     end.
 
 Definition partition {a} : (a -> bool) -> list a -> (list a * list a)%type :=
@@ -360,13 +357,12 @@ Definition sortOn {b} {a} `{GHC.Base.Ord b} : (a -> b) -> list a -> list a :=
 
 Definition strictGenericLength {i} {b} `{(GHC.Num.Num i)} : list b -> i :=
   fun l =>
-    let gl :=
-      fix gl arg_0__ arg_1__
-            := match arg_0__ , arg_1__ with
-                 | nil , a => a
-                 | cons _ xs , a => let a' := a GHC.Num.+ GHC.Num.fromInteger 1 in
-                                    GHC.Prim.seq a' (gl xs a')
-               end in
+    let fix gl arg_0__ arg_1__
+              := match arg_0__ , arg_1__ with
+                   | nil , a => a
+                   | cons _ xs , a => let a' := a GHC.Num.+ GHC.Num.fromInteger 1 in
+                                      GHC.Prim.seq a' (gl xs a')
+                 end in
     gl l (GHC.Num.fromInteger 0).
 
 Definition stripPrefix {a} `{GHC.Base.Eq_ a} : list a -> list a -> option (list
@@ -386,9 +382,8 @@ Definition tailUnwords : GHC.Base.String -> GHC.Base.String :=
 Definition tails {a} : list a -> list (list a) :=
   fun lst =>
     GHC.Base.build (fun c n =>
-                     let tailsGo :=
-                       fix tailsGo xs
-                             := c xs (match xs with | nil => n | cons _ xs' => tailsGo xs' end) in
+                     let fix tailsGo xs
+                               := c xs (match xs with | nil => n | cons _ xs' => tailsGo xs' end) in
                      tailsGo lst).
 
 Definition toListSB {a} : SnocBuilder a -> list a :=
@@ -401,12 +396,11 @@ Definition unwords : list GHC.Base.String -> GHC.Base.String :=
   fun arg_0__ =>
     match arg_0__ with
       | nil => GHC.Base.hs_string__ ""
-      | cons w ws => let go :=
-                       fix go arg_2__
-                             := match arg_2__ with
-                                  | nil => GHC.Base.hs_string__ ""
-                                  | cons v vs => cons (GHC.Char.hs_char__ " ") (Coq.Init.Datatypes.app v (go vs))
-                                end in
+      | cons w ws => let fix go arg_2__
+                               := match arg_2__ with
+                                    | nil => GHC.Base.hs_string__ ""
+                                    | cons v vs => cons (GHC.Char.hs_char__ " ") (Coq.Init.Datatypes.app v (go vs))
+                                  end in
                      Coq.Init.Datatypes.app w (go ws)
     end.
 

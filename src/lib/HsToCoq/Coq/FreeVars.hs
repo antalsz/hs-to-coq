@@ -283,14 +283,6 @@ instance FreeVars Term where
     binding' args $ freeVars oty *> freeVars val
     binding' x    $ freeVars body
 
-  freeVars (LetFix fb body) = do
-    freeVars fb
-    binding' (names fb) $ freeVars body
-
-  freeVars (LetCofix cb body) = do
-    freeVars cb
-    binding' (names cb) $ freeVars body
-
   freeVars (LetTuple xs oret val body) = do
     freeVars oret *> freeVars val
     binding' xs $ freeVars body

@@ -192,10 +192,6 @@ instance Subst Term where
 
   subst f  (Let x args oty val body) = Let x (subst f args) (subst f oty) (subst f val) (subst f body)
 
-  subst f  (LetFix fb body) = LetFix (subst f fb) (subst f body)
-
-  subst f  (LetCofix cb body) = LetCofix (subst f cb) (subst f body)
-
   subst f  (LetTuple xs oret val body) = LetTuple xs (subst f oret) (subst f val) (subst f body)
 
   subst f  (LetTick pat def body) = LetTick (subst f pat) (subst f def) (subst f body)

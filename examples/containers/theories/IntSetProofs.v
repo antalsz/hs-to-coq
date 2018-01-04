@@ -434,10 +434,10 @@ Module Foo: WSfun(N_as_OT).
     fun n '(p,b) => Z.shiftr n (Z.of_N b) =? p.
   (* Segments either disjoint or contained in each other *)
   Definition isSubrange : range -> range -> bool :=
-    fun r1 r2 => inRange (rPrefix r2) r1 && (rBits r1 <=? rBits r2)%N.
+    fun r1 r2 => inRange (rPrefix r1) r2 && (rBits r1 <=? rBits r2)%N.
   Definition rangeDisjoint : range -> range -> bool :=
     fun r1 r2 => negb (isSubrange r1 r2 || isSubrange r2 r1).
-  SearchAbout Z.setbit.
+
   Definition halfRange : range -> bool -> range :=
     fun '(p,b) h =>
       let b' := N.pred b in
@@ -482,16 +482,15 @@ Module Foo: WSfun(N_as_OT).
     rewrite -> andb_true_iff in H. destruct H.
     rewrite -> N.leb_le in H1.
     rewrite -> Z.eqb_eq in *.
-    rewrite -> Z.shiftr_shiftl_l in H by nonneg.
     apply N2Z.inj_le in H1.
     subst.
-    apply f_equal with (f := fun i => Z.shiftr i (Z.of_N b2 - Z.of_N b1))  in H0.
-    rewrite -> Z.shiftr_shiftr in H0 by omega.
-    replace (Z.of_N b1 + (Z.of_N b2 - Z.of_N b1)) with (Z.of_N b2) in H0 by omega.
-    rewrite H0. clear H0.
-    rewrite -> Z.shiftr_shiftl_l by omega.
-    replace (Z.of_N b2 - Z.of_N b1 - (Z.of_N b2 - Z.of_N b1)) with 0 by omega.
-    reflexivity.
+    apply Z.bits_inj_iff'.
+    intros j Hnonneg.
+    repeat rewrite -> Z.shiftr_spec by nonneg.
+    rewrite -> Z.shiftl_spec by (apply OMEGA2; nonneg).
+    repeat rewrite -> Z.shiftr_spec by nonneg.
+    f_equal.
+    omega.
   Qed.
 
   Lemma inRange_isSubrange_false:
@@ -701,21 +700,21 @@ Module Foo: WSfun(N_as_OT).
     forall r1 r2,
       rNonneg r1 -> rNonneg r2 -> 
       rangeDisjoint r1 r2 ->
-      (rBits r2 <= rBits r1)%N ->
-      (msDiffBit (rPrefix r1) (rPrefix r2) <= rBits r1)%N ->
+      (rBits r1 <= rBits r2)%N ->
+      (msDiffBit (rPrefix r1) (rPrefix r2) <= rBits r2)%N ->
       False.
   Proof.
     intros.
-    * assert (inRange (rPrefix r2) r1 = true).
+    * assert (inRange (rPrefix r1) r2 = true).
         destruct r1 as [p1 b1], r2 as [p2 b2].
         unfold inRange, rPrefix, rBits, rNonneg,  snd in *.
         rewrite -> N2Z.inj_le in H2, H3.
         apply Z.eqb_eq.
         symmetry.
-        apply Z.bits_inj_iff'. intros j ?.
-        replace j with ((j + Z.of_N b1) - Z.of_N b1) by omega.
+        apply Z.bits_inj_iff'. intros j?.
+        replace j with ((j + Z.of_N b2) - Z.of_N b2) by omega.
         rewrite <- Z.shiftl_spec by (apply OMEGA2; nonneg).
-        rewrite -> msDiffBit_Same with (p2 := (Z.shiftl p2 (Z.of_N b2))) by nonneg.
+        rewrite <- msDiffBit_Same with (p1 := (Z.shiftl p1 (Z.of_N b1))) (p2 := (Z.shiftl p2 (Z.of_N b2))); try nonneg.
         rewrite -> !Z.shiftl_spec by (apply OMEGA2; nonneg).
         rewrite -> !Z.shiftr_spec by nonneg.
         rewrite -> !Z.shiftl_spec by (apply OMEGA2; nonneg).
@@ -727,9 +726,10 @@ Module Foo: WSfun(N_as_OT).
       unfold isSubrange in *.
       rewrite -> !andb_false_iff in H1.
       rewrite -> !N.leb_nle in H1.
+      destruct H1.
       intuition try congruence.
   Qed.
-  
+
     Lemma msDiffBit_larger:
     forall r1 r2,
       rNonneg r1 -> rNonneg r2 -> 
@@ -737,15 +737,15 @@ Module Foo: WSfun(N_as_OT).
       (N.max (rBits r1) (rBits r2) < msDiffBit (rPrefix r1) (rPrefix r2))%N.
     Proof.
       intros.
-      destruct (N.leb_spec (rBits r1) (rBits r2)).
-      * rewrite -> N.max_r by assumption.
+      destruct (N.leb_spec (rBits r2) (rBits r1)).
+      * rewrite -> N.max_l by assumption.
         apply N.nle_gt.
         intro.
         rewrite rangeDisjoint_sym in H1.
         rewrite msDiffBit_sym in H3.
         apply (msDiffBit_larger_tmp r2 r1 H0 H H1 H2 H3).
       * apply N.lt_le_incl in H2.
-        rewrite -> N.max_l by assumption.
+        rewrite -> N.max_r by assumption.
         apply N.nle_gt.
         intro.
         apply (msDiffBit_larger_tmp r1 r2 H H0 H1 H2 H3).
@@ -822,7 +822,7 @@ Module Foo: WSfun(N_as_OT).
     apply (msDiffBit_larger_r); auto.
   Qed. 
 
-  Lemma outside_commonRangeDis_l:
+  Lemma outside_commonRangeDisj_l:
     forall r1 r2 i,
     rNonneg r1 -> rNonneg r2 ->
     rangeDisjoint r1 r2 ->
@@ -861,7 +861,7 @@ Module Foo: WSfun(N_as_OT).
       by (apply N.lt_le_incl; apply commonRangeDis_larger_r; auto).
     refine (contraFF _ H2 ); intro; clear H2.
     clear H1.
-    
+
     rewrite -> N2Z.inj_le in H3.
 
     destruct r1 as [p1 b1], r2 as [p2 b2]. simpl in *.
@@ -1036,22 +1036,22 @@ Module Foo: WSfun(N_as_OT).
       contradict H1.
       unfold isSubrange. simpl.
       apply orb_true_iff.
-      destruct (N.le_ge_cases b1 b2).
+      destruct (N.le_ge_cases b2 b1).
       * right.
-        rewrite andb_true_iff.
-        rewrite N.leb_le. constructor; auto.
-        rewrite Z.eqb_eq.
-        rewrite H1.
-        rewrite -> Z.shiftr_shiftl_l by nonneg.
-        replace ((Z.of_N b2 - Z.of_N b2)) with 0 by omega.
-        reflexivity.
-      * left.
         rewrite andb_true_iff.
         rewrite N.leb_le. constructor; auto.
         rewrite Z.eqb_eq.
         rewrite <- H1.
         rewrite -> Z.shiftr_shiftl_l by nonneg.
-        replace ((Z.of_N b1 - Z.of_N b1)) with 0 by omega.
+        replace (Z.of_N b1 - Z.of_N b1) with 0 by omega.
+        reflexivity.
+      * left.
+        rewrite andb_true_iff.
+        rewrite N.leb_le. constructor; auto.
+        rewrite Z.eqb_eq.
+        rewrite -> H1.
+        rewrite -> Z.shiftr_shiftl_l by nonneg.
+        replace ((Z.of_N b2 - Z.of_N b2)) with 0 by omega.
         reflexivity.
     Qed.
 
@@ -1063,7 +1063,7 @@ Module Foo: WSfun(N_as_OT).
       * destruct r. simpl in *. apply Z.shiftl_nonneg in H. assumption.
       * assert (r = commonRangeDisj r1 r2) by admit. subst.
         apply commonRangeDisj_rNonneg; auto.
-    Qed.
+    Admitted.
 
    Lemma Desc_outside:
      forall {s r f i}, Desc s r f -> inRange i r = false -> f i = false.
@@ -1074,13 +1074,15 @@ Module Foo: WSfun(N_as_OT).
        unfold bitmapInRange.
        rewrite Houtside.
        reflexivity.
-     * rewrite H5.
+     * assert (Hdisj : rangeDisjoint r1 r2) by admit.
+       assert (r = commonRangeDisj r1 r2) by admit. subst.
+       rewrite H4.
        rewrite orb_false_iff. split.
        + apply IHHD1. clear IHHD1 IHHD2.
-         refine (outside_commonRangeDis_l _ _ _ (Desc_rNonneg  HD1) (Desc_rNonneg HD2) H Houtside).
+         refine (outside_commonRangeDisj_l _ _ _ (Desc_rNonneg  HD1) (Desc_rNonneg HD2) Hdisj Houtside).
        + apply IHHD2. clear IHHD1 IHHD2.
-         refine (outside_commonRangeDisj_r _ _ _ (Desc_rNonneg  HD1) (Desc_rNonneg HD2) H Houtside).
-   Qed.
+         refine (outside_commonRangeDisj_r _ _ _ (Desc_rNonneg  HD1) (Desc_rNonneg HD2) Hdisj Houtside).
+   Admitted.
 
     Lemma Desc_neg_false:
      forall {s r f i}, Desc s r f -> ~ (0 <= i) -> f i = false.
@@ -1287,8 +1289,8 @@ Module Foo: WSfun(N_as_OT).
     assumption.
   + destruct IHHD1  as [j?].
     exists j.
-    rewrite H5.
-    rewrite H0.
+    rewrite H4.
+    rewrite H2.
     reflexivity.
   Qed.
 
@@ -1498,16 +1500,15 @@ Module Foo: WSfun(N_as_OT).
     * rewrite rangeDisjoint_sym in H3.
       rewrite -> commonRangeDisj_sym in * by (eapply Desc_rNonneg; eassumption).
       apply (DescBin _ _ _ _ _ _ _ _ _ f H0 H); auto.
-      + apply not_true_iff_false.
-        rewrite <- Hbit.
-        apply commonRangeDisj_rBits_Different; auto; try (eapply Desc_rNonneg; eassumption).
+      + apply commonRangeDisj_rBits_pos; (eapply Desc_rNonneg; eassumption).
+      + admit.
+      + admit.
       + intro i. specialize (H5 i). rewrite orb_comm. assumption.
     * apply (DescBin _ _ _ _ _ _ _ _ _ f H H0); auto.
-      + apply not_false_iff_true.
-        rewrite <- Hbit.
-        intro Htmp. symmetry in Htmp. revert Htmp.
-        apply commonRangeDisj_rBits_Different; auto; try (eapply Desc_rNonneg; eassumption).
-  Qed.
+      + apply commonRangeDisj_rBits_pos; (eapply Desc_rNonneg; eassumption).
+      + admit.
+      + admit.
+  Admitted.
 
   Lemma isPrefix_shiftl_shiftr:
      forall p, isPrefix p -> p = Z.shiftl (Z.shiftr p 6) 6.
@@ -1585,7 +1586,6 @@ Module Foo: WSfun(N_as_OT).
       apply andb_true_iff in H.
       apply andb_true_iff in Heqb.
       intuition.
-      SearchAbout (N.leb  _ _ = true).
       apply N.leb_le in H1.
       apply N.leb_le in H2.
       assert (b1 = b2) by (apply N.le_antisymm; auto); subst.
@@ -1632,44 +1632,28 @@ Module Foo: WSfun(N_as_OT).
             rewrite N.lor_spec.
             destruct (inRange j r2); reflexivity.
         - apply isBitMask_lor; auto; (inversion HDTip; auto).
-      + SearchAbout rangeDisjoint.
-        assert (rangeDisjoint r1 r2) by (apply different_prefix_same_bits_disjoint; try congruence).
+      + assert (rangeDisjoint r1 r2) by (apply different_prefix_same_bits_disjoint; try congruence).
         eapply link_Desc; try apply HDTip; auto.
         - apply DescTip; auto.
         - apply disjoint_commonRange; auto.
-    * set (b := Z.pred _) in *.
-      simpl. unfold Prim.seq.
-      (* TODO: Find out how to avoid this: *)
-      replace (Z.shiftl _ _) with 
-         (rPrefix (commonRangeDisj r2 r3)) by reflexivity.
-      replace (2 ^ _) with (rMask (commonRangeDisj r2 r3)) by reflexivity.
-      rewrite -> nomatch_spec by (apply commonRangeDisj_rBits_pos; eapply Desc_rNonneg; eassumption).
+    * simpl. unfold Prim.seq.
+      rewrite -> nomatch_spec by assumption.
       rewrite if_negb.
-      replace (inRange (rPrefix r1) (commonRangeDisj r2 r3))
-         with (isSubrange r1 (commonRangeDisj r2 r3)) by admit.
-      destruct (isSubrange r1 (commonRangeDisj r2 r3)) eqn:Hsubrange.
-      + rewrite -> zero_spec by (apply commonRangeDisj_rBits_pos; eapply Desc_rNonneg; eassumption).
+      replace (inRange (rPrefix r1) r0) with (isSubrange r1 r0) by admit.
+      destruct (isSubrange r1 r0) eqn:Hsubrange.
+      + rewrite -> zero_spec by assumption.
         rewrite if_negb.
-        fold b.
         rewrite -> (isSubrange_commonRange_r _ _ Hsubrange) in *.
-        destruct (Z.testbit (rPrefix r1) b) eqn:Hbit.
-        - assert (inRange (rPrefix r1) r2 = false) by admit.
-          assert (Hdis: rangeDisjoint r1 r2) by admit.
-          assert (rangeDisjoint r2 (commonRange r1 r3)) by admit.
-          assert (commonRangeDisj r2 r3 = commonRangeDisj r2 (commonRange r1 r3)) by admit.
-          assert (Z.testbit (rPrefix (commonRange r1 r3)) b = Z.testbit (rPrefix r3) b) by admit.
-          rewrite <- H7 in H3.
+        destruct (Z.testbit (rPrefix r1) (Z.pred (Z.of_N (rBits r0)))) eqn:Hbit.
+        - assert (isSubrange r1 (halfRange r0 true)) by admit.
+          assert (isSubrange (commonRange r1 r3) (halfRange r0 true)) by admit.
           eapply DescBin; try apply HD1; try apply IHHD2 with (f := fun j => f1 j || f3 j); auto.
-          intro i. simpl. rewrite Hf. rewrite H6. destruct (f1 i), (f2 i), (f3 i); reflexivity.
-        - assert (inRange (rPrefix r1) r3 = false) by admit.
-          assert (Hdis: rangeDisjoint r1 r3) by admit.
-          assert (rangeDisjoint (commonRange r1 r2) r3) by admit.
-          assert (commonRangeDisj r2 r3 = commonRangeDisj (commonRange r1 r2) r3) by admit.
-          assert (Z.testbit (rPrefix (commonRange r1 r2)) b = Z.testbit (rPrefix r2) b) by admit.
-          rewrite <- H7 in H2.
+          intro i. simpl. rewrite Hf. rewrite H5. destruct (f1 i), (f2 i), (f3 i); reflexivity.
+        - assert (isSubrange r1 (halfRange r0 false)) by admit.
+          assert (isSubrange (commonRange r1 r2) (halfRange r0 false)) by admit.
           eapply DescBin; try apply HD2; try apply IHHD1 with (f := fun j => f1 j || f2 j); auto.
-          intro i. simpl. rewrite Hf. rewrite H6. destruct (f1 i), (f2 i), (f3 i); reflexivity.
-      + assert (rangeDisjoint r1 (commonRangeDisj r2 r3)) by admit.
+          intro i. simpl. rewrite Hf. rewrite H5. destruct (f1 i), (f2 i), (f3 i); reflexivity.
+      + assert (rangeDisjoint r1 r0) by admit.
         clear Hsubrange.
         eapply link_Desc; eauto; try (inversion HDTip; auto).
         eapply DescBin; eauto.

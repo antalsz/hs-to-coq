@@ -1055,13 +1055,45 @@ Module Foo: WSfun(N_as_OT).
         reflexivity.
     Qed.
 
+    Lemma halves_disj:
+      forall r1 r2 r,
+      isSubrange r1 (halfRange r false) ->
+      isSubrange r2 (halfRange r true) ->
+      rangeDisjoint r1 r2.
+    Admitted.
+
+
+    Lemma common_of_halves:
+      forall r1 r2 r,
+      isSubrange r1 (halfRange r false) ->
+      isSubrange r2 (halfRange r true) ->
+      r = commonRangeDisj r1 r2.
+    Admitted.
+
+    Lemma smaller_not_subrange_disjoint:
+      forall r1 r2,
+      (rBits r1 < rBits r2)%N ->
+      isSubrange r1 r2 = false ->
+      rangeDisjoint r1 r2.
+    Proof.
+      intros.
+      unfold rangeDisjoint.
+      rewrite H0. simpl.
+      unfold isSubrange.
+      replace (rBits r2 <=? rBits r1)%N with false.
+      rewrite andb_false_r. reflexivity.
+      symmetry.
+      apply N.leb_gt.
+      assumption.
+    Qed.
+
     Lemma Desc_rNonneg:
       forall {s r f}, Desc s r f -> rNonneg r.
     Proof.
       intros ??? HD.
       induction HD; subst.
       * destruct r. simpl in *. apply Z.shiftl_nonneg in H. assumption.
-      * assert (r = commonRangeDisj r1 r2) by admit. subst.
+      * assert (r = commonRangeDisj r1 r2) by (apply common_of_halves; auto). subst.
         apply commonRangeDisj_rNonneg; auto.
     Admitted.
 
@@ -1074,15 +1106,15 @@ Module Foo: WSfun(N_as_OT).
        unfold bitmapInRange.
        rewrite Houtside.
        reflexivity.
-     * assert (Hdisj : rangeDisjoint r1 r2) by admit.
-       assert (r = commonRangeDisj r1 r2) by admit. subst.
+     * assert (Hdisj : rangeDisjoint r1 r2) by (eapply halves_disj; eauto).
+       assert (r = commonRangeDisj r1 r2) by (apply common_of_halves; auto). subst.
        rewrite H4.
        rewrite orb_false_iff. split.
        + apply IHHD1. clear IHHD1 IHHD2.
          refine (outside_commonRangeDisj_l _ _ _ (Desc_rNonneg  HD1) (Desc_rNonneg HD2) Hdisj Houtside).
        + apply IHHD2. clear IHHD1 IHHD2.
          refine (outside_commonRangeDisj_r _ _ _ (Desc_rNonneg  HD1) (Desc_rNonneg HD2) Hdisj Houtside).
-   Admitted.
+   Qed.
 
     Lemma Desc_neg_false:
      forall {s r f i}, Desc s r f -> ~ (0 <= i) -> f i = false.
@@ -1653,7 +1685,12 @@ Module Foo: WSfun(N_as_OT).
           assert (isSubrange (commonRange r1 r2) (halfRange r0 false)) by admit.
           eapply DescBin; try apply HD2; try apply IHHD1 with (f := fun j => f1 j || f2 j); auto.
           intro i. simpl. rewrite Hf. rewrite H5. destruct (f1 i), (f2 i), (f3 i); reflexivity.
-      + assert (rangeDisjoint r1 r0) by admit.
+      + assert (rBits r1 <= rBits r2)%N by admit.
+        SearchAbout rBits Desc.
+        assert (rBits r2 <= rBits (halfRange r0 false))%N by admit.
+        assert (rBits (halfRange r0 false) < rBits r0)%N by admit.
+        assert (rBits r1 < rBits r0)%N by (eapply N.le_lt_trans; eauto; eapply N.le_lt_trans; eauto).
+        assert (rangeDisjoint r1 r0) by (apply smaller_not_subrange_disjoint; auto).
         clear Hsubrange.
         eapply link_Desc; eauto; try (inversion HDTip; auto).
         eapply DescBin; eauto.

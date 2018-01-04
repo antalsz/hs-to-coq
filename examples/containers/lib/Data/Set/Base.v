@@ -296,8 +296,7 @@ Definition lookupGE {a} `{GHC.Base.Ord a} : a -> Set_ a -> option a :=
             := let j_10__ :=
                  match arg_0__ , arg_1__ , arg_2__ with
                    | _ , best , Tip => Some best
-                   | x , best , Bin _ y l r => let scrut_4__ := GHC.Base.compare x y in
-                                               match scrut_4__ with
+                   | x , best , Bin _ y l r => match GHC.Base.compare x y with
                                                  | Lt => goJust x y l
                                                  | Eq => Some y
                                                  | Gt => goJust x best r
@@ -310,8 +309,7 @@ Definition lookupGE {a} `{GHC.Base.Ord a} : a -> Set_ a -> option a :=
             := let j_20__ :=
                  match arg_12__ , arg_13__ with
                    | _ , Tip => None
-                   | x , Bin _ y l r => let scrut_14__ := GHC.Base.compare x y in
-                                        match scrut_14__ with
+                   | x , Bin _ y l r => match GHC.Base.compare x y with
                                           | Lt => goJust x y l
                                           | Eq => Some y
                                           | Gt => goNothing x r
@@ -352,8 +350,7 @@ Definition lookupLE {a} `{GHC.Base.Ord a} : a -> Set_ a -> option a :=
             := let j_10__ :=
                  match arg_0__ , arg_1__ , arg_2__ with
                    | _ , best , Tip => Some best
-                   | x , best , Bin _ y l r => let scrut_4__ := GHC.Base.compare x y in
-                                               match scrut_4__ with
+                   | x , best , Bin _ y l r => match GHC.Base.compare x y with
                                                  | Lt => goJust x best l
                                                  | Eq => Some y
                                                  | Gt => goJust x y r
@@ -366,8 +363,7 @@ Definition lookupLE {a} `{GHC.Base.Ord a} : a -> Set_ a -> option a :=
             := let j_20__ :=
                  match arg_12__ , arg_13__ with
                    | _ , Tip => None
-                   | x , Bin _ y l r => let scrut_14__ := GHC.Base.compare x y in
-                                        match scrut_14__ with
+                   | x , Bin _ y l r => match GHC.Base.compare x y with
                                           | Lt => goNothing x l
                                           | Eq => Some y
                                           | Gt => goJust x y r
@@ -415,8 +411,7 @@ Definition member {a} `{GHC.Base.Ord a} : a -> Set_ a -> bool :=
             := let j_7__ :=
                  match arg_0__ , arg_1__ with
                    | _ , Tip => false
-                   | x , Bin _ y l r => let scrut_2__ := GHC.Base.compare x y in
-                                        match scrut_2__ with
+                   | x , Bin _ y l r => match GHC.Base.compare x y with
                                           | Lt => go x l
                                           | Gt => go x r
                                           | Eq => true
@@ -475,8 +470,7 @@ Definition validsize {a} : Set_ a -> bool :=
     let fix realsize t'
               := match t' with
                    | Tip => Some (GHC.Num.fromInteger 0)
-                   | Bin sz _ l r => let scrut_1__ := pair (realsize l) (realsize r) in
-                                     match scrut_1__ with
+                   | Bin sz _ l r => match pair (realsize l) (realsize r) with
                                        | pair (Some n) (Some m) => if ((n GHC.Num.+ m) GHC.Num.+ GHC.Num.fromInteger 1)
                                                                       GHC.Base.== sz : bool
                                                                    then Some sz
@@ -494,8 +488,7 @@ Definition lookupIndex {a} `{GHC.Base.Ord a} : a -> Set_ a -> option
           := let j_9__ :=
                match arg_0__ , arg_1__ , arg_2__ with
                  | _ , _ , Tip => None
-                 | idx , x , Bin _ kx l r => let scrut_3__ := GHC.Base.compare x kx in
-                                             match scrut_3__ with
+                 | idx , x , Bin _ kx l r => match GHC.Base.compare x kx with
                                                | Lt => go idx x l
                                                | Gt => go ((idx GHC.Num.+ size l) GHC.Num.+ GHC.Num.fromInteger 1) x r
                                                | Eq => Some GHC.Base.$! (idx GHC.Num.+ size l)
@@ -517,8 +510,7 @@ Definition findIndex {a} `{GHC.Base.Ord a} : a -> Set_ a -> GHC.Num.Int :=
                match arg_0__ , arg_1__ , arg_2__ with
                  | _ , _ , Tip => GHC.Err.error (GHC.Base.hs_string__
                                                 "Set.findIndex: element is not in the set")
-                 | idx , x , Bin _ kx l r => let scrut_4__ := GHC.Base.compare x kx in
-                                             match scrut_4__ with
+                 | idx , x , Bin _ kx l r => match GHC.Base.compare x kx with
                                                | Lt => go idx x l
                                                | Gt => go ((idx GHC.Num.+ size l) GHC.Num.+ GHC.Num.fromInteger 1) x r
                                                | Eq => idx GHC.Num.+ size l
@@ -540,8 +532,7 @@ Definition elemAt {a} : GHC.Num.Int -> Set_ a -> a :=
                | _ , Tip => GHC.Err.error (GHC.Base.hs_string__
                                           "Set.elemAt: index out of range")
                | i , Bin _ x l r => let sizeL := size l in
-                                    let scrut_4__ := GHC.Base.compare i sizeL in
-                                    match scrut_4__ with
+                                    match GHC.Base.compare i sizeL with
                                       | Lt => elemAt i l
                                       | Gt => elemAt ((i GHC.Num.- sizeL) GHC.Num.- GHC.Num.fromInteger 1) r
                                       | Eq => x
@@ -802,8 +793,7 @@ Definition insert {a} `{GHC.Base.Ord a} : a -> Set_ a -> Set_ a :=
           := let j_9__ :=
                match arg_0__ , arg_1__ with
                  | x , Tip => singleton x
-                 | x , Bin sz y l r => let scrut_3__ := GHC.Base.compare x y in
-                                       match scrut_3__ with
+                 | x , Bin sz y l r => match GHC.Base.compare x y with
                                          | Lt => balanceL y (go x l) r
                                          | Gt => balanceR y l (go x r)
                                          | Eq => Bin sz x l r
@@ -827,8 +817,7 @@ Definition insertR {a} `{GHC.Base.Ord a} : a -> Set_ a -> Set_ a :=
           := let j_8__ :=
                match arg_0__ , arg_1__ with
                  | x , Tip => singleton x
-                 | x , (Bin _ y l r as t) => let scrut_3__ := GHC.Base.compare x y in
-                                             match scrut_3__ with
+                 | x , (Bin _ y l r as t) => match GHC.Base.compare x y with
                                                | Lt => balanceL y (go x l) r
                                                | Gt => balanceR y l (go x r)
                                                | Eq => t
@@ -861,8 +850,7 @@ Definition filterGt {a} `{GHC.Base.Ord a} : MaybeS a -> Set_ a -> Set_ a :=
       | JustS b , t => let fix filter' arg_2__ arg_3__
                                  := match arg_2__ , arg_3__ with
                                       | _ , Tip => Tip
-                                      | b' , Bin _ x l r => let scrut_4__ := GHC.Base.compare b' x in
-                                                            match scrut_4__ with
+                                      | b' , Bin _ x l r => match GHC.Base.compare b' x with
                                                               | Lt => link x (filter' b' l) r
                                                               | Eq => r
                                                               | Gt => filter' b' r
@@ -878,8 +866,7 @@ Definition filterLt {a} `{GHC.Base.Ord a} : MaybeS a -> Set_ a -> Set_ a :=
       | JustS b , t => let fix filter' arg_2__ arg_3__
                                  := match arg_2__ , arg_3__ with
                                       | _ , Tip => Tip
-                                      | b' , Bin _ x l r => let scrut_4__ := GHC.Base.compare x b' in
-                                                            match scrut_4__ with
+                                      | b' , Bin _ x l r => match GHC.Base.compare x b' with
                                                               | Lt => link x l (filter' b' r)
                                                               | Eq => l
                                                               | Gt => filter' b' l
@@ -900,19 +887,15 @@ Definition fromDistinctAscList {a} : list a -> Set_ a :=
                                          | s , (cons x xs' as xs) => if s GHC.Base.== GHC.Num.fromInteger 1 : bool
                                                                      then pair (Bin (GHC.Num.fromInteger 1) x Tip Tip)
                                                                                xs'
-                                                                     else let scrut_4__ :=
-                                                                            create (Data.Bits.shiftR s
-                                                                                                     (GHC.Num.fromInteger
-                                                                                                     1)) xs in
-                                                                          match scrut_4__ with
+                                                                     else match create (Data.Bits.shiftR s
+                                                                                                         (GHC.Num.fromInteger
+                                                                                                         1)) xs with
                                                                             | (pair _ nil as res) => res
-                                                                            | pair l (cons y ys) => let scrut_5__ :=
-                                                                                                      create
-                                                                                                      (Data.Bits.shiftR
-                                                                                                      s
-                                                                                                      (GHC.Num.fromInteger
-                                                                                                      1)) ys in
-                                                                                                    match scrut_5__ with
+                                                                            | pair l (cons y ys) => match create
+                                                                                                            (Data.Bits.shiftR
+                                                                                                            s
+                                                                                                            (GHC.Num.fromInteger
+                                                                                                            1)) ys with
                                                                                                       | pair r zs =>
                                                                                                         pair (link y l
                                                                                                              r) zs
@@ -927,8 +910,7 @@ Definition fromDistinctAscList {a} : list a -> Set_ a :=
                                      let j_21__ :=
                                        match arg_14__ , arg_15__ , arg_16__ with
                                          | _ , t , nil => t
-                                         | s , l , cons x xs => let scrut_17__ := create s xs in
-                                                                match scrut_17__ with
+                                         | s , l , cons x xs => match create s xs with
                                                                   | pair r ys => go (Data.Bits.shiftL s
                                                                                                       (GHC.Num.fromInteger
                                                                                                       1)) (link x l r)
@@ -986,11 +968,9 @@ Definition fromList {a} `{GHC.Base.Ord a} : list a -> Set_ a :=
                                                                                           Tip Tip) nil) xss
                                                                           else pair (pair (Bin (GHC.Num.fromInteger 1) x
                                                                                           Tip Tip) xss) nil
-                                                                     else let scrut_11__ :=
-                                                                            create (Data.Bits.shiftR s
-                                                                                                     (GHC.Num.fromInteger
-                                                                                                     1)) xs in
-                                                                          match scrut_11__ with
+                                                                     else match create (Data.Bits.shiftR s
+                                                                                                         (GHC.Num.fromInteger
+                                                                                                         1)) xs with
                                                                             | (pair (pair _ nil) _ as res) => res
                                                                             | pair (pair l (cons y nil)) zs => pair
                                                                                                                (pair
@@ -1000,11 +980,10 @@ Definition fromList {a} `{GHC.Base.Ord a} : list a -> Set_ a :=
                                                                             | pair (pair l (cons y yss as ys)) _ =>
                                                                               if not_ordered y yss : bool
                                                                               then pair (pair l nil) ys
-                                                                              else let scrut_13__ :=
-                                                                                     create (Data.Bits.shiftR s
-                                                                                                              (GHC.Num.fromInteger
-                                                                                                              1)) yss in
-                                                                                   match scrut_13__ with
+                                                                              else match create (Data.Bits.shiftR s
+                                                                                                                  (GHC.Num.fromInteger
+                                                                                                                  1))
+                                                                                           yss with
                                                                                      | pair (pair r zs) ws => pair (pair
                                                                                                                    (link
                                                                                                                    y l
@@ -1025,8 +1004,7 @@ Definition fromList {a} `{GHC.Base.Ord a} : list a -> Set_ a :=
                                          | _ , t , cons x nil => insertMax x t
                                          | s , l , (cons x xss as xs) => if not_ordered x xss : bool
                                                                          then fromList' l xs
-                                                                         else let scrut_27__ := create s xss in
-                                                                              match scrut_27__ with
+                                                                         else match create s xss with
                                                                                 | pair (pair r ys) nil => go
                                                                                                           (Data.Bits.shiftL
                                                                                                           s
@@ -1056,8 +1034,7 @@ Definition split {a} `{GHC.Base.Ord a} : a -> Set_ a -> (Set_ a * Set_
     let fix go arg_0__ arg_1__
               := match arg_0__ , arg_1__ with
                    | _ , Tip => (pair Tip Tip)
-                   | x , Bin _ y l r => let scrut_3__ := GHC.Base.compare x y in
-                                        match scrut_3__ with
+                   | x , Bin _ y l r => match GHC.Base.compare x y with
                                           | Lt => match go x l with
                                                     | pair lt gt => (pair lt (link y gt r))
                                                   end
@@ -1074,8 +1051,7 @@ Definition splitMember {a} `{GHC.Base.Ord a} : a -> Set_ a -> (Set_ a * bool *
   fix splitMember arg_0__ arg_1__
         := match arg_0__ , arg_1__ with
              | _ , Tip => pair (pair Tip false) Tip
-             | x , Bin _ y l r => let scrut_3__ := GHC.Base.compare x y in
-                                  match scrut_3__ with
+             | x , Bin _ y l r => match GHC.Base.compare x y with
                                     | Lt => match splitMember x l with
                                               | pair (pair lt found) gt => let gt' := link y gt r in
                                                                            GHC.Prim.seq gt' (pair (pair lt found) gt')
@@ -1119,8 +1095,7 @@ Definition delete {a} `{GHC.Base.Ord a} : a -> Set_ a -> Set_ a :=
           := let j_8__ :=
                match arg_0__ , arg_1__ with
                  | _ , Tip => Tip
-                 | x , Bin _ y l r => let scrut_2__ := GHC.Base.compare x y in
-                                      match scrut_2__ with
+                 | x , Bin _ y l r => match GHC.Base.compare x y with
                                         | Lt => balanceR y (go x l) r
                                         | Gt => balanceL y l (go x r)
                                         | Eq => glue l r
@@ -1160,8 +1135,7 @@ Definition partition {a} : (a -> bool) -> Set_ a -> (Set_ a * Set_ a)%type :=
     let fix go arg_0__ arg_1__
               := match arg_0__ , arg_1__ with
                    | _ , Tip => (pair Tip Tip)
-                   | p , Bin _ x l r => let scrut_3__ := pair (go p l) (go p r) in
-                                        match scrut_3__ with
+                   | p , Bin _ x l r => match pair (go p l) (go p r) with
                                           | pair (pair l1 l2) (pair r1 r2) => if p x : bool
                                                                               then pair (link x l1 r1) (merge l2 r2)
                                                                               else pair (merge l1 r1) (link x l2 r2)
@@ -1174,8 +1148,7 @@ Definition deleteAt {a} : GHC.Num.Int -> Set_ a -> Set_ a :=
         := GHC.Prim.seq i (match t with
                           | Tip => GHC.Err.error (GHC.Base.hs_string__ "Set.deleteAt: index out of range")
                           | Bin _ x l r => let sizeL := size l in
-                                           let scrut_2__ := GHC.Base.compare i sizeL in
-                                           match scrut_2__ with
+                                           match GHC.Base.compare i sizeL with
                                              | Lt => balanceR x (deleteAt i l) r
                                              | Gt => balanceL x l (deleteAt ((i GHC.Num.- sizeL) GHC.Num.-
                                                                             GHC.Num.fromInteger 1) r)

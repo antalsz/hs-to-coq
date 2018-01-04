@@ -215,10 +215,8 @@ Definition foldlBits {a}
       unsafeFix (fun go bm acc =>
                   if bm GHC.Base.== GHC.Num.fromInteger 0 : bool
                   then acc
-                  else let scrut_0__ := lowestBitMask bm in
-                       match scrut_0__ with
-                         | bitmask => GHC.Prim.seq bitmask (let scrut_1__ := indexOfTheOnlyBit bitmask in
-                                                   match scrut_1__ with
+                  else match lowestBitMask bm with
+                         | bitmask => GHC.Prim.seq bitmask (match indexOfTheOnlyBit bitmask with
                                                      | bi => GHC.Prim.seq bi (go (Data.Bits.xor bm bitmask) ((f acc)
                                                                                                             GHC.Base.$!
                                                                                                             (prefix
@@ -260,11 +258,8 @@ Definition foldl'Bits {a}
                     match arg_0__ , arg_1__ with
                       | bm , acc => if bm GHC.Base.== GHC.Num.fromInteger 0 : bool
                                     then acc
-                                    else let scrut_2__ := lowestBitMask bm in
-                                         match scrut_2__ with
-                                           | bitmask => GHC.Prim.seq bitmask (let scrut_3__ :=
-                                                                       indexOfTheOnlyBit bitmask in
-                                                                     match scrut_3__ with
+                                    else match lowestBitMask bm with
+                                           | bitmask => GHC.Prim.seq bitmask (match indexOfTheOnlyBit bitmask with
                                                                        | bi => GHC.Prim.seq bi (go (Data.Bits.xor bm
                                                                                                                   bitmask)
                                                                                             ((f acc) GHC.Base.$! (prefix
@@ -352,39 +347,38 @@ Definition prefixOf : GHC.Num.Int -> Prefix :=
 
 Definition revNat : Nat -> Nat :=
   fun x1 =>
-    let scrut_0__ :=
-      ((shiftRL x1 (GHC.Num.fromInteger 1)) Data.Bits..&.(**) GHC.Num.fromInteger
-      6148914691236517205) Data.Bits..|.(**) (shiftLL (x1 Data.Bits..&.(**)
-                                                      GHC.Num.fromInteger 6148914691236517205) (GHC.Num.fromInteger
-                                                      1)) in
-    match scrut_0__ with
-      | x2 => let scrut_1__ :=
-                ((shiftRL x2 (GHC.Num.fromInteger 2)) Data.Bits..&.(**) GHC.Num.fromInteger
-                3689348814741910323) Data.Bits..|.(**) (shiftLL (x2 Data.Bits..&.(**)
-                                                                GHC.Num.fromInteger 3689348814741910323)
-                                                                (GHC.Num.fromInteger 2)) in
-              match scrut_1__ with
-                | x3 => let scrut_2__ :=
-                          ((shiftRL x3 (GHC.Num.fromInteger 4)) Data.Bits..&.(**) GHC.Num.fromInteger
-                          1085102592571150095) Data.Bits..|.(**) (shiftLL (x3 Data.Bits..&.(**)
-                                                                          GHC.Num.fromInteger 1085102592571150095)
-                                                                          (GHC.Num.fromInteger 4)) in
-                        match scrut_2__ with
-                          | x4 => let scrut_3__ :=
-                                    ((shiftRL x4 (GHC.Num.fromInteger 8)) Data.Bits..&.(**) GHC.Num.fromInteger
-                                    71777214294589695) Data.Bits..|.(**) (shiftLL (x4 Data.Bits..&.(**)
-                                                                                  GHC.Num.fromInteger 71777214294589695)
-                                                                                  (GHC.Num.fromInteger 8)) in
-                                  match scrut_3__ with
-                                    | x5 => let scrut_4__ :=
-                                              ((shiftRL x5 (GHC.Num.fromInteger 16)) Data.Bits..&.(**)
-                                              GHC.Num.fromInteger 281470681808895) Data.Bits..|.(**) (shiftLL (x5
-                                                                                                              Data.Bits..&.(**)
-                                                                                                              GHC.Num.fromInteger
-                                                                                                              281470681808895)
-                                                                                                              (GHC.Num.fromInteger
-                                                                                                              16)) in
-                                            match scrut_4__ with
+    match ((shiftRL x1 (GHC.Num.fromInteger 1)) Data.Bits..&.(**)
+            GHC.Num.fromInteger 6148914691236517205) Data.Bits..|.(**) (shiftLL (x1
+                                                                                Data.Bits..&.(**) GHC.Num.fromInteger
+                                                                                6148914691236517205)
+                                                                                (GHC.Num.fromInteger 1)) with
+      | x2 => match ((shiftRL x2 (GHC.Num.fromInteger 2)) Data.Bits..&.(**)
+                      GHC.Num.fromInteger 3689348814741910323) Data.Bits..|.(**) (shiftLL (x2
+                                                                                          Data.Bits..&.(**)
+                                                                                          GHC.Num.fromInteger
+                                                                                          3689348814741910323)
+                                                                                          (GHC.Num.fromInteger 2)) with
+                | x3 => match ((shiftRL x3 (GHC.Num.fromInteger 4)) Data.Bits..&.(**)
+                                GHC.Num.fromInteger 1085102592571150095) Data.Bits..|.(**) (shiftLL (x3
+                                                                                                    Data.Bits..&.(**)
+                                                                                                    GHC.Num.fromInteger
+                                                                                                    1085102592571150095)
+                                                                                                    (GHC.Num.fromInteger
+                                                                                                    4)) with
+                          | x4 => match ((shiftRL x4 (GHC.Num.fromInteger 8)) Data.Bits..&.(**)
+                                          GHC.Num.fromInteger 71777214294589695) Data.Bits..|.(**) (shiftLL (x4
+                                                                                                            Data.Bits..&.(**)
+                                                                                                            GHC.Num.fromInteger
+                                                                                                            71777214294589695)
+                                                                                                            (GHC.Num.fromInteger
+                                                                                                            8)) with
+                                    | x5 => match ((shiftRL x5 (GHC.Num.fromInteger 16)) Data.Bits..&.(**)
+                                                    GHC.Num.fromInteger 281470681808895) Data.Bits..|.(**) (shiftLL (x5
+                                                                                                                    Data.Bits..&.(**)
+                                                                                                                    GHC.Num.fromInteger
+                                                                                                                    281470681808895)
+                                                                                                                    (GHC.Num.fromInteger
+                                                                                                                    16)) with
                                               | x6 => (shiftRL x6 (GHC.Num.fromInteger 32)) Data.Bits..|.(**) (shiftLL
                                                       x6 (GHC.Num.fromInteger 32))
                                             end
@@ -400,10 +394,8 @@ Definition foldrBits {a}
       unsafeFix (fun go bm acc =>
                   if bm GHC.Base.== GHC.Num.fromInteger 0 : bool
                   then acc
-                  else let scrut_0__ := lowestBitMask bm in
-                       match scrut_0__ with
-                         | bitmask => GHC.Prim.seq bitmask (let scrut_1__ := indexOfTheOnlyBit bitmask in
-                                                   match scrut_1__ with
+                  else match lowestBitMask bm with
+                         | bitmask => GHC.Prim.seq bitmask (match indexOfTheOnlyBit bitmask with
                                                      | bi => GHC.Prim.seq bi (go (Data.Bits.xor bm bitmask) ((f
                                                                                                             GHC.Base.$!
                                                                                                             ((prefix
@@ -489,11 +481,8 @@ Definition foldr'Bits {a}
                     match arg_0__ , arg_1__ with
                       | bm , acc => if bm GHC.Base.== GHC.Num.fromInteger 0 : bool
                                     then acc
-                                    else let scrut_2__ := lowestBitMask bm in
-                                         match scrut_2__ with
-                                           | bitmask => GHC.Prim.seq bitmask (let scrut_3__ :=
-                                                                       indexOfTheOnlyBit bitmask in
-                                                                     match scrut_3__ with
+                                    else match lowestBitMask bm with
+                                           | bitmask => GHC.Prim.seq bitmask (match indexOfTheOnlyBit bitmask with
                                                                        | bi => GHC.Prim.seq bi (go (Data.Bits.xor bm
                                                                                                                   bitmask)
                                                                                             ((f GHC.Base.$! ((prefix
@@ -613,13 +602,11 @@ Definition subsetCmp : IntSet -> IntSet -> comparison :=
                | (Tip kx _ as t1) , Bin p m l r => if nomatch kx p m : bool
                                                    then Gt
                                                    else if zero kx m : bool
-                                                        then let scrut_8__ := subsetCmp t1 l in
-                                                             match scrut_8__ with
+                                                        then match subsetCmp t1 l with
                                                                | Gt => Gt
                                                                | _ => Lt
                                                              end
-                                                        else let scrut_5__ := subsetCmp t1 r in
-                                                             match scrut_5__ with
+                                                        else match subsetCmp t1 r with
                                                                | Gt => Gt
                                                                | _ => Lt
                                                              end
@@ -629,9 +616,7 @@ Definition subsetCmp : IntSet -> IntSet -> comparison :=
              end in
            match arg_0__ , arg_1__ with
              | (Bin p1 m1 l1 r1 as t1) , Bin p2 m2 l2 r2 => let subsetCmpEq :=
-                                                              let scrut_13__ :=
-                                                                pair (subsetCmp l1 l2) (subsetCmp r1 r2) in
-                                                              match scrut_13__ with
+                                                              match pair (subsetCmp l1 l2) (subsetCmp r1 r2) with
                                                                 | pair Gt _ => Gt
                                                                 | pair _ Gt => Gt
                                                                 | pair Eq Eq => Eq
@@ -657,12 +642,7 @@ Definition subsetCmp : IntSet -> IntSet -> comparison :=
            end.
 
 Definition isProperSubsetOf : IntSet -> IntSet -> bool :=
-  fun t1 t2 =>
-    let scrut_0__ := subsetCmp t1 t2 in
-    match scrut_0__ with
-      | Lt => true
-      | _ => false
-    end.
+  fun t1 t2 => match subsetCmp t1 t2 with | Lt => true | _ => false end.
 
 Definition isSubsetOf : IntSet -> IntSet -> bool :=
   fix isSubsetOf arg_0__ arg_1__
@@ -902,12 +882,10 @@ Definition split : Key -> IntSet -> (IntSet * IntSet)%type :=
               := match arg_0__ , arg_1__ with
                    | x' , (Bin p m l r as t') => if match_ x' p m : bool
                                                  then if zero x' m : bool
-                                                      then let scrut_3__ := go x' l in
-                                                           match scrut_3__ with
+                                                      then match go x' l with
                                                              | pair lt gt => pair lt (union gt r)
                                                            end
-                                                      else let scrut_6__ := go x' r in
-                                                           match scrut_6__ with
+                                                      else match go x' r with
                                                              | pair lt gt => pair (union lt l) gt
                                                            end
                                                  else if x' GHC.Base.< p : bool
@@ -926,20 +904,14 @@ Definition split : Key -> IntSet -> (IntSet * IntSet)%type :=
                                                                                                                      higherBitmap))
                    | _ , Nil => (pair Nil Nil)
                  end in
-    let j_21__ :=
-      let scrut_17__ := go x t in
-      match scrut_17__ with
-        | pair lt gt => pair lt gt
-      end in
+    let j_21__ := match go x t with | pair lt gt => pair lt gt end in
     match t with
       | Bin _ m l r => if m GHC.Base.< GHC.Num.fromInteger 0 : bool
                        then if x GHC.Base.>= GHC.Num.fromInteger 0 : bool
-                            then let scrut_22__ := go x l in
-                                 match scrut_22__ with
+                            then match go x l with
                                    | pair lt gt => let lt' := union lt r in GHC.Prim.seq lt' (pair lt' gt)
                                  end
-                            else let scrut_26__ := go x r in
-                                 match scrut_26__ with
+                            else match go x r with
                                    | pair lt gt => let gt' := union gt l in GHC.Prim.seq gt' (pair lt gt')
                                  end
                        else j_21__
@@ -952,12 +924,10 @@ Definition splitMember : Key -> IntSet -> (IntSet * bool * IntSet)%type :=
               := match arg_0__ , arg_1__ with
                    | x' , (Bin p m l r as t') => if match_ x' p m : bool
                                                  then if zero x' m : bool
-                                                      then let scrut_3__ := go x' l in
-                                                           match scrut_3__ with
+                                                      then match go x' l with
                                                              | pair (pair lt fnd) gt => pair (pair lt fnd) (union gt r)
                                                            end
-                                                      else let scrut_6__ := go x' r in
-                                                           match scrut_6__ with
+                                                      else match go x' r with
                                                              | pair (pair lt fnd) gt => pair (pair (union lt l) fnd) gt
                                                            end
                                                  else if x' GHC.Base.< p : bool
@@ -986,13 +956,11 @@ Definition splitMember : Key -> IntSet -> (IntSet * bool * IntSet)%type :=
     match t with
       | Bin _ m l r => if m GHC.Base.< GHC.Num.fromInteger 0 : bool
                        then if x GHC.Base.>= GHC.Num.fromInteger 0 : bool
-                            then let scrut_23__ := go x l in
-                                 match scrut_23__ with
+                            then match go x l with
                                    | pair (pair lt fnd) gt => let lt' := union lt r in
                                                               GHC.Prim.seq lt' (pair (pair lt' fnd) gt)
                                  end
-                            else let scrut_27__ := go x r in
-                                 match scrut_27__ with
+                            else match go x r with
                                    | pair (pair lt fnd) gt => let gt' := union gt l in
                                                               GHC.Prim.seq gt' (pair (pair lt fnd) gt')
                                  end

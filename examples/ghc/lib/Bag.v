@@ -276,8 +276,7 @@ Definition partitionBagWith {a} {b} {c} : (a -> Data.Either.Either b c) -> Bag
   fix partitionBagWith arg_0__ arg_1__
         := match arg_0__ , arg_1__ with
              | _ , EmptyBag => pair EmptyBag EmptyBag
-             | pred , UnitBag val => let scrut_3__ := pred val in
-                                     match scrut_3__ with
+             | pred , UnitBag val => match pred val with
                                        | Data.Either.Left a => pair (UnitBag a) EmptyBag
                                        | Data.Either.Right b => pair EmptyBag (UnitBag b)
                                      end

@@ -308,9 +308,8 @@ Definition partitionUDFM {elt} : (elt -> bool) -> UniqDFM elt -> (UniqDFM elt *
                                  UniqDFM elt)%type :=
   fun arg_0__ arg_1__ =>
     match arg_0__ , arg_1__ with
-      | p , UDFM m i => let scrut_2__ :=
-                          Data.IntMap.Base.partition (p GHC.Base.∘ taggedFst) m in
-                        match scrut_2__ with
+      | p , UDFM m i => match Data.IntMap.Base.partition (p GHC.Base.∘ taggedFst)
+                                m with
                           | pair left_ right_ => pair (UDFM left_ i) (UDFM right_ i)
                         end
     end.
@@ -363,11 +362,9 @@ Definition plusUDFM_C {elt} : (elt -> elt -> elt) -> UniqDFM elt -> UniqDFM
                               elt -> UniqDFM elt :=
   fun arg_0__ arg_1__ arg_2__ =>
     match arg_0__ , arg_1__ , arg_2__ with
-      | f , (UDFM _ i as udfml) , (UDFM _ j as udfmr) => let j_3__ :=
-                                                           insertUDFMIntoLeft_C f udfmr udfml in
-                                                         if i GHC.Base.> j : bool
+      | f , (UDFM _ i as udfml) , (UDFM _ j as udfmr) => if i GHC.Base.> j : bool
                                                          then insertUDFMIntoLeft_C f udfml udfmr
-                                                         else j_3__
+                                                         else insertUDFMIntoLeft_C f udfmr udfml
     end.
 
 Definition insertUDFMIntoLeft {elt} : UniqDFM elt -> UniqDFM elt -> UniqDFM
@@ -377,11 +374,9 @@ Definition insertUDFMIntoLeft {elt} : UniqDFM elt -> UniqDFM elt -> UniqDFM
 Definition plusUDFM {elt} : UniqDFM elt -> UniqDFM elt -> UniqDFM elt :=
   fun arg_0__ arg_1__ =>
     match arg_0__ , arg_1__ with
-      | (UDFM _ i as udfml) , (UDFM _ j as udfmr) => let j_2__ :=
-                                                       insertUDFMIntoLeft udfmr udfml in
-                                                     if i GHC.Base.> j : bool
+      | (UDFM _ i as udfml) , (UDFM _ j as udfmr) => if i GHC.Base.> j : bool
                                                      then insertUDFMIntoLeft udfml udfmr
-                                                     else j_2__
+                                                     else insertUDFMIntoLeft udfmr udfml
     end.
 
 Local Definition Monoid__UniqDFM_mappend {inst_a} : (UniqDFM inst_a) -> (UniqDFM

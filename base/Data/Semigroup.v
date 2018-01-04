@@ -253,8 +253,7 @@ Local Definition Semigroup__option_stimes {inst_a} `{Semigroup inst_a}
     fun arg_0__ arg_1__ =>
       match arg_0__ , arg_1__ with
         | _ , None => None
-        | n , Some a => let scrut_2__ := GHC.Base.compare n (GHC.Num.fromInteger 0) in
-                        match scrut_2__ with
+        | n , Some a => match GHC.Base.compare n (GHC.Num.fromInteger 0) with
                           | Lt => GHC.Base.errorWithoutStackTrace (GHC.Base.hs_string__
                                                                   "stimes: Maybe, negative multiplier")
                           | Eq => None
@@ -2280,8 +2279,7 @@ Program Instance Semigroup__Either {a} {b} : Semigroup (Data.Either.Either a
 Definition stimesIdempotentMonoid {b} {a} `{GHC.Real.Integral b}
                                   `{GHC.Base.Monoid a} : b -> a -> a :=
   fun n x =>
-    let scrut_0__ := GHC.Base.compare n (GHC.Num.fromInteger 0) in
-    match scrut_0__ with
+    match GHC.Base.compare n (GHC.Num.fromInteger 0) with
       | Lt => GHC.Base.errorWithoutStackTrace (GHC.Base.hs_string__
                                               "stimesIdempotentMonoid: negative multiplier")
       | Eq => GHC.Base.mempty

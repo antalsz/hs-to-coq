@@ -156,11 +156,10 @@ Definition int2WordLit : DynFlags.DynFlags -> Literal -> Literal :=
                                                                        l)
       end in
     match arg_0__ , arg_1__ with
-      | dflags , MachInt i => let j_4__ := MachWord i in
-                              if i GHC.Base.< GHC.Num.fromInteger 0 : bool
+      | dflags , MachInt i => if i GHC.Base.< GHC.Num.fromInteger 0 : bool
                               then MachWord ((GHC.Num.fromInteger 1 GHC.Num.+ DynFlags.tARGET_MAX_WORD dflags)
                                             GHC.Num.+ i)
-                              else j_4__
+                              else MachWord i
       | _ , _ => j_3__
     end.
 
@@ -248,8 +247,7 @@ Local Definition Ord__Literal_compare : Literal -> Literal -> comparison :=
 
 Local Definition Ord__Literal_op_zg__ : Literal -> Literal -> bool :=
   fun a b =>
-    let scrut_0__ := (Ord__Literal_compare a b) in
-    match scrut_0__ with
+    match (Ord__Literal_compare a b) with
       | Lt => false
       | Eq => false
       | Gt => true
@@ -257,8 +255,7 @@ Local Definition Ord__Literal_op_zg__ : Literal -> Literal -> bool :=
 
 Local Definition Ord__Literal_op_zgze__ : Literal -> Literal -> bool :=
   fun a b =>
-    let scrut_0__ := (Ord__Literal_compare a b) in
-    match scrut_0__ with
+    match (Ord__Literal_compare a b) with
       | Lt => false
       | Eq => true
       | Gt => true
@@ -266,8 +263,7 @@ Local Definition Ord__Literal_op_zgze__ : Literal -> Literal -> bool :=
 
 Local Definition Ord__Literal_op_zl__ : Literal -> Literal -> bool :=
   fun a b =>
-    let scrut_0__ := (Ord__Literal_compare a b) in
-    match scrut_0__ with
+    match (Ord__Literal_compare a b) with
       | Lt => true
       | Eq => false
       | Gt => false
@@ -275,8 +271,7 @@ Local Definition Ord__Literal_op_zl__ : Literal -> Literal -> bool :=
 
 Local Definition Ord__Literal_op_zlze__ : Literal -> Literal -> bool :=
   fun a b =>
-    let scrut_0__ := (Ord__Literal_compare a b) in
-    match scrut_0__ with
+    match (Ord__Literal_compare a b) with
       | Lt => true
       | Eq => true
       | Gt => false
@@ -353,11 +348,10 @@ Definition word2IntLit : DynFlags.DynFlags -> Literal -> Literal :=
                                                                        l)
       end in
     match arg_0__ , arg_1__ with
-      | dflags , MachWord w => let j_4__ := MachInt w in
-                               if w GHC.Base.> DynFlags.tARGET_MAX_INT dflags : bool
+      | dflags , MachWord w => if w GHC.Base.> DynFlags.tARGET_MAX_INT dflags : bool
                                then MachInt ((w GHC.Num.- DynFlags.tARGET_MAX_WORD dflags) GHC.Num.-
                                             GHC.Num.fromInteger 1)
-                               else j_4__
+                               else MachInt w
       | _ , _ => j_3__
     end.
 

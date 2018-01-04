@@ -925,11 +925,17 @@ bindIn tmpl rhs genBody = do
 -- This prevents the pattern conversion code to create
 -- `let j_24__ := … in j_24__`
 -- and a few other common and obviously stupid forms
+-- But it is crucial that the `rhs` is not moved past a binder, so
+-- we cannot push it into the equations of a match
 smartLet :: Qualid -> Term -> Term -> Term
 smartLet ident rhs (IfBool c t e)
     | ident `S.notMember` getFreeVars c
     , ident `S.notMember` getFreeVars t
     = IfBool c t (smartLet ident rhs e)
+smartLet ident rhs
+    (Coq.Match [MatchItem t Nothing Nothing] Nothing eqns)
+    | ident `S.notMember` getFreeVars eqns
+    = Coq.Match [MatchItem (smartLet ident rhs t) Nothing Nothing] Nothing eqns
 smartLet ident rhs (Qualid v) | ident == v = rhs
 smartLet ident rhs body = Let ident [] Nothing rhs body
 

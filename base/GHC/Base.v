@@ -1095,8 +1095,7 @@ Local Definition Monad__pair_type_op_zgzgze__ {inst_a} `{Monoid inst_a}
   fun {a} {b} =>
     fun arg_0__ arg_1__ =>
       match arg_0__ , arg_1__ with
-        | pair u a , k => let scrut_2__ := k a in
-                          match scrut_2__ with
+        | pair u a , k => match k a with
                             | pair v b => pair (mappend u v) b
                           end
       end.

@@ -259,8 +259,7 @@ Definition insertBy {a} : (a -> a -> comparison) -> a -> list a -> list a :=
   fix insertBy arg_0__ arg_1__ arg_2__
         := match arg_0__ , arg_1__ , arg_2__ with
              | _ , x , nil => cons x nil
-             | cmp , x , (cons y ys' as ys) => let scrut_4__ := cmp x y in
-                                               match scrut_4__ with
+             | cmp , x , (cons y ys' as ys) => match cmp x y with
                                                  | Gt => cons y (insertBy cmp x ys')
                                                  | _ => cons x ys
                                                end

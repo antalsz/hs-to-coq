@@ -2,7 +2,7 @@ HAVE_STACK := $(shell command -v stack 2> /dev/null)
 ifdef HAVE_STACK
 HS_TO_COQ = stack exec hs-to-coq --
 else
-HS_TO_COQ = cabal new-run exe:hs-to-coq --
+HS_TO_COQ = cabal new-run -v0 exe:hs-to-coq --
 endif
 SHELL = bash
 
@@ -77,7 +77,7 @@ VFILES_SPECIAL = $(addprefix $(OUT)/,$(addsuffix .v,$(SPECIAL_MODULES)))
 
 VFILES   = $(VFILES_GEN) $(VFILES_MAN) $(VFILES_SPECIAL)
 
-all:  $(VFILES) coq $(OUT)/edits $(OUT)/README.md
+all: $(OUT)/edits $(OUT)/README.md $(VFILES) coq
 
 $(OUT)/_CoqProject : Makefile
 	mkdir -p $(OUT)

@@ -14,62 +14,6 @@ From mathcomp Require Import ssrbool ssreflect.
 
 Local Open Scope Z_scope.
 
-(** This should be in a separate file, but let's keep it here for
-    convenience for now. *)
-Section Int_And_Z.
-  Variables a b : Int.
-
-  Lemma Int_plus_is_Z_plus :
-    a GHC.Num.+ b = (a + b).
-  Proof. rewrite /_GHC.Num.+_. reflexivity. Qed.
-
-  Lemma Int_minus_is_Z_minus :
-    a GHC.Num.- b = (a - b).
-  Proof. rewrite /_GHC.Num.-_. reflexivity. Qed.
-
-  Lemma Int_mult_is_Z_mult :
-    a GHC.Num.* b = (a * b).
-  Proof. rewrite /_GHC.Num.*_. reflexivity. Qed.
-
-  Lemma Int_lt_is_Z_lt :
-    a GHC.Base.< b = (a <? b).
-  Proof. rewrite /_GHC.Base.<_. reflexivity. Qed.
-
-  Lemma Int_le_is_Z_le : 
-    a GHC.Base.<= b = (a <=? b).
-  Proof. rewrite /_GHC.Base.<=_. reflexivity. Qed.
-
-  Lemma Int_gt_is_Z_gt :
-    a GHC.Base.> b = (b <? a).
-  Proof. rewrite /_GHC.Base.>_. reflexivity. Qed.
-
-  Lemma Int_ge_is_Z_ge : 
-    a GHC.Base.>= b = (b <=? a).
-  Proof. rewrite /_GHC.Base.>=_. reflexivity. Qed.
-
-  Lemma Int_eq_is_Z_eq : 
-    a GHC.Base.== b = (Z.eqb a b).
-  Proof. rewrite /_GHC.Base.==_. reflexivity. Qed.
-
-  Lemma Int_neq_is_Z_neq : 
-    a GHC.Base./= b = negb (Z.eqb a b).
-  Proof. rewrite /_GHC.Base.==_. reflexivity. Qed.
-
-  Lemma Int_is_Z : forall a : Z,
-      # a = a.
-  Proof. reflexivity. Qed.
-  
-End Int_And_Z.
-
-Ltac rewrite_Int :=
-  repeat (rewrite ?Int_plus_is_Z_plus ?Int_minus_is_Z_minus
-                  ?Int_mult_is_Z_mult
-                  ?Int_lt_is_Z_lt ?Int_le_is_Z_le
-                  ?Int_ge_is_Z_ge ?Int_gt_is_Z_gt
-                  ?Int_eq_is_Z_eq ?Int_neq_is_Z_neq 
-                  ?Int_is_Z).
-
-
 Lemma pos_nonneg: forall p, (0 <= N.pos p)%N. 
 Proof.
   compute; congruence.
@@ -1686,7 +1630,6 @@ Module Foo: WSfun(N_as_OT).
           eapply DescBin; try apply HD2; try apply IHHD1 with (f := fun j => f1 j || f2 j); auto.
           intro i. simpl. rewrite Hf. rewrite H5. destruct (f1 i), (f2 i), (f3 i); reflexivity.
       + assert (rBits r1 <= rBits r2)%N by admit.
-        SearchAbout rBits Desc.
         assert (rBits r2 <= rBits (halfRange r0 false))%N by admit.
         assert (rBits (halfRange r0 false) < rBits r0)%N by admit.
         assert (rBits r1 < rBits r0)%N by (eapply N.le_lt_trans; eauto; eapply N.le_lt_trans; eauto).

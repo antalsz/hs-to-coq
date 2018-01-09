@@ -533,13 +533,50 @@ Module Foo: WSfun(N_as_OT).
         rewrite -> Z.shiftl_spec by nonneg.
         apply Z.testbit_neg_r; omega.
   Qed.
-  
+
   Lemma testbit_halfRange_true_false:
    forall r i,
       (0 < rBits r)%N ->
       inRange i r = true ->
       inRange i (halfRange r true) = false <-> Z.testbit i (Z.pred (Z.of_N (rBits r))) = false.
    Proof. intros ??. apply testbit_halfRange_false. Qed.
+
+  Lemma testbit_halfRange_true:
+   forall r i,
+      (0 < rBits r)%N ->
+      inRange i r = true ->
+      inRange i (halfRange r true) = Z.testbit i (Z.pred (Z.of_N (rBits r))).
+   Proof. intros.
+    pose proof (testbit_halfRange_true_false r i H H0).
+    match goal with [ |- ?x = ?y ] =>
+      destruct x, y end; intuition.
+   Qed.
+
+  Lemma rBits_halfRange:
+    forall r h, rBits (halfRange r h) = N.pred (rBits r).
+  Proof.
+    intros.
+    destruct r as [p b]. simpl. reflexivity.
+  Qed.
+
+  Lemma testbit_halfRange_isSubrange:
+   forall r1 r2,
+      (rBits r1 < rBits r2)%N ->
+      isSubrange r1 r2 = true ->
+      isSubrange r1 (halfRange r2 true) = Z.testbit (rPrefix r1) (Z.pred (Z.of_N (rBits r2))).
+  Proof.
+    intros.
+    unfold isSubrange in *.
+    apply andb_true_iff in H0; destruct H0.
+    assert ((0 < rBits r2)%N) by  (eapply N.le_lt_trans; try nonneg; eassumption).
+    replace ((rBits r1 <=? rBits (halfRange r2 true))%N) with true.
+    + rewrite andb_true_r.
+      apply testbit_halfRange_true; auto.
+    + symmetry.
+      rewrite N.leb_le.
+      rewrite rBits_halfRange.
+      apply N.lt_le_pred; auto.
+   Qed.
 
   Lemma testbit_halfRange_false_false:
    forall r i,
@@ -1040,6 +1077,11 @@ Module Foo: WSfun(N_as_OT).
       * assert (r = commonRangeDisj r1 r2) by (apply common_of_halves; auto). subst.
         apply commonRangeDisj_rNonneg; auto.
     Admitted.
+
+    Lemma Desc_larger_WIDTH:
+      forall {s r f}, Desc s r f -> (N.log2 WIDTH <= rBits r)%N.
+    Admitted.
+
 
    Lemma Desc_outside:
      forall {s r f i}, Desc s r f -> inRange i r = false -> f i = false.
@@ -1667,6 +1709,28 @@ Module Foo: WSfun(N_as_OT).
     apply N.lt_le_incl.
     auto.
   Qed.
+  
+  Lemma subRange_smaller:
+    forall r1 r2, isSubrange r1 r2 -> (rBits r1 <= rBits r2)%N.
+  Proof.
+    intros.
+    unfold isSubrange in H.
+    apply andb_true_iff in H.
+    destruct H.
+    rewrite -> N.leb_le in H0.
+    assumption.
+  Qed.
+  
+  Lemma halfRange_smaller:
+    forall r h, (0 < rBits r)%N -> (rBits (halfRange r h) < rBits r)%N.
+  Proof.
+    intros.
+    destruct r as [p b].
+    unfold halfRange.
+    simpl in *.
+    apply N.lt_pred_l.
+    intro. subst. inversion H.
+  Qed.
 
   Lemma insertBM_Desc:
     forall p' bm r1 f1,
@@ -1709,26 +1773,25 @@ Module Foo: WSfun(N_as_OT).
     * simpl. unfold Prim.seq.
       rewrite -> nomatch_spec by assumption.
       rewrite if_negb.
-      assert (rBits r1 < rBits r0)%N by admit.
+      assert (N.log2 WIDTH <= rBits r2)%N by (eapply Desc_larger_WIDTH; eauto).
+      assert (rBits r2 <= rBits (halfRange r0 false))%N by (apply subRange_smaller; auto).
+      assert (rBits (halfRange r0 false) < rBits r0)%N by (apply halfRange_smaller; auto).
+      assert (rBits r1 < rBits r0)%N by (rewrite H; eapply N.le_lt_trans; eauto; eapply N.le_lt_trans; eauto).
       rewrite -> smaller_inRange_iff_subRange by auto.
       destruct (isSubrange r1 r0) eqn:Hsubrange.
       + rewrite -> zero_spec by assumption.
         rewrite if_negb.
         rewrite -> (isSubrange_commonRange_r _ _ Hsubrange) in *.
-        destruct (Z.testbit (rPrefix r1) (Z.pred (Z.of_N (rBits r0)))) eqn:Hbit.
-        - assert (isSubrange r1 (halfRange r0 true)) by admit.
-          assert (isSubrange (commonRange r1 r3) (halfRange r0 true)) by admit.
+        rewrite <- testbit_halfRange_isSubrange; auto.
+        destruct (isSubrange r1 (halfRange r0 true)) eqn:Hbit.
+        - assert (isSubrange (commonRange r1 r3) (halfRange r0 true)) by admit.
           eapply DescBin; try apply HD1; try apply IHHD2 with (f := fun j => f1 j || f3 j); auto.
           intro i. simpl. rewrite Hf. rewrite H5. destruct (f1 i), (f2 i), (f3 i); reflexivity.
         - assert (isSubrange r1 (halfRange r0 false)) by admit.
           assert (isSubrange (commonRange r1 r2) (halfRange r0 false)) by admit.
           eapply DescBin; try apply HD2; try apply IHHD1 with (f := fun j => f1 j || f2 j); auto.
           intro i. simpl. rewrite Hf. rewrite H5. destruct (f1 i), (f2 i), (f3 i); reflexivity.
-      + assert (rBits r1 <= rBits r2)%N by admit.
-        assert (rBits r2 <= rBits (halfRange r0 false))%N by admit.
-        assert (rBits (halfRange r0 false) < rBits r0)%N by admit.
-        assert (rBits r1 < rBits r0)%N by (eapply N.le_lt_trans; eauto; eapply N.le_lt_trans; eauto).
-        assert (rangeDisjoint r1 r0) by (apply smaller_not_subrange_disjoint; auto).
+      + assert (rangeDisjoint r1 r0) by (apply smaller_not_subrange_disjoint; auto).
         clear Hsubrange.
         eapply link_Desc; eauto; try (inversion HDTip; auto).
         eapply DescBin; eauto.

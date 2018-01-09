@@ -1655,6 +1655,19 @@ Module Foo: WSfun(N_as_OT).
     * rewrite H. reflexivity.
   Qed.
 
+  Lemma smaller_inRange_iff_subRange:
+    forall r1 r2,
+      (rBits r1 < rBits r2)%N ->
+      inRange (rPrefix r1) r2 = isSubrange r1 r2.
+  Proof.
+    intros.
+    unfold isSubrange.
+    enough (Htmp : (rBits r1 <=? rBits r2)%N) by (rewrite Htmp; rewrite andb_true_r; reflexivity).
+    apply N.leb_le.
+    apply N.lt_le_incl.
+    auto.
+  Qed.
+
   Lemma insertBM_Desc:
     forall p' bm r1 f1,
     forall s2 r2 f2,
@@ -1696,7 +1709,8 @@ Module Foo: WSfun(N_as_OT).
     * simpl. unfold Prim.seq.
       rewrite -> nomatch_spec by assumption.
       rewrite if_negb.
-      replace (inRange (rPrefix r1) r0) with (isSubrange r1 r0) by admit.
+      assert (rBits r1 < rBits r0)%N by admit.
+      rewrite -> smaller_inRange_iff_subRange by auto.
       destruct (isSubrange r1 r0) eqn:Hsubrange.
       + rewrite -> zero_spec by assumption.
         rewrite if_negb.

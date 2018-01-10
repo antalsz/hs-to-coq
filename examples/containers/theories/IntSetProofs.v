@@ -451,13 +451,47 @@ Module Foo: WSfun(N_as_OT).
   Qed.
   
   Lemma isSubrange_halfRange:
-    forall r b,
-      isSubrange (halfRange r b) r.
-   Admitted.
-  
+    forall r h,
+      (0 < rBits r)%N ->
+      isSubrange (halfRange r h) r = true.
+   Proof.
+      intros.
+      destruct r as [p b].
+      unfold isSubrange, inRange, halfRange, rPrefix, rBits, snd in *.
+      rewrite andb_true_iff; split.
+      * rewrite -> N2Z.inj_pred by assumption.
+        rewrite Z.eqb_eq.
+        destruct h.
+        - rewrite Z.shiftl_lor.
+          rewrite -> Z.shiftl_shiftl by omega.
+          replace ((1 + Z.pred (Z.of_N b))) with (Z.of_N b) by omega.
+          rewrite Z.shiftr_lor.
+          rewrite -> Z.shiftr_shiftl_l by nonneg.
+          replace (Z.of_N b - Z.of_N b) with 0 by omega.
+          simpl.
+          rewrite -> Z.shiftr_shiftl_r
+           by (apply Z.lt_le_pred; replace 0 with (Z.of_N  0%N) by reflexivity;  apply N2Z.inj_lt; assumption).
+          replace ((Z.of_N b - Z.pred (Z.of_N b))) with 1 by omega.
+          replace (Z.shiftr 1 1) with 0 by reflexivity.
+          rewrite Z.lor_0_r.
+          reflexivity.
+        - rewrite -> Z.shiftl_shiftl by omega.
+          replace ((1 + Z.pred (Z.of_N b))) with (Z.of_N b) by omega.
+          rewrite -> Z.shiftr_shiftl_l by nonneg.
+          replace (Z.of_N b - Z.of_N b) with 0 by omega.
+          reflexivity.
+      * rewrite N.leb_le.
+        apply N.le_pred_l.
+  Qed.
+
   Lemma testbit_1:
     forall i, Z.testbit 1 i = (i =? 0).
-  Admitted.
+  Proof.
+    intros.
+    replace 1 with (2^0) by reflexivity.
+    rewrite -> Z.pow2_bits_eqb by reflexivity.
+    apply Z.eqb_sym.
+  Qed.
   
   Lemma testbit_halfRange_false:
    forall r i h,
@@ -552,12 +586,44 @@ Module Foo: WSfun(N_as_OT).
       destruct x, y end; intuition.
    Qed.
 
+  Lemma halfRange_inRange_testbit:
+   forall r i h,
+      (0 < rBits r)%N ->
+      inRange i r = true ->
+      inRange i (halfRange r h) = negb (xorb h (Z.testbit i (Z.pred (Z.of_N (rBits r))))).
+  Proof.
+    intros.
+    pose proof (testbit_halfRange_false r i h H H0).
+    match goal with [ |- ?x = negb (xorb _ ?y) ] =>
+      destruct x, y, h end; intuition.
+  Qed.
+
+
   Lemma rBits_halfRange:
     forall r h, rBits (halfRange r h) = N.pred (rBits r).
   Proof.
     intros.
     destruct r as [p b]. simpl. reflexivity.
   Qed.
+
+  Lemma halfRange_isSubrange_testbit:
+    forall r1 r2 h,
+     (rBits r1 < rBits r2)%N ->
+     isSubrange r1 r2 = true ->
+     isSubrange r1 (halfRange r2 h) = negb (xorb h (Z.testbit (rPrefix r1) (Z.pred (Z.of_N (rBits r2))))).
+  Proof.
+    intros.
+    unfold isSubrange in *.
+    apply andb_true_iff in H0; destruct H0.
+    assert ((0 < rBits r2)%N) by  (eapply N.le_lt_trans; try nonneg; eassumption).
+    replace ((rBits r1 <=? rBits (halfRange r2 h))%N) with true.
+    + rewrite andb_true_r.
+      apply halfRange_inRange_testbit; auto.
+    + symmetry.
+      rewrite N.leb_le.
+      rewrite rBits_halfRange.
+      apply N.lt_le_pred; auto.
+   Qed.
 
   Lemma testbit_halfRange_isSubrange:
    forall r1 r2,
@@ -566,18 +632,12 @@ Module Foo: WSfun(N_as_OT).
       isSubrange r1 (halfRange r2 true) = Z.testbit (rPrefix r1) (Z.pred (Z.of_N (rBits r2))).
   Proof.
     intros.
-    unfold isSubrange in *.
-    apply andb_true_iff in H0; destruct H0.
-    assert ((0 < rBits r2)%N) by  (eapply N.le_lt_trans; try nonneg; eassumption).
-    replace ((rBits r1 <=? rBits (halfRange r2 true))%N) with true.
-    + rewrite andb_true_r.
-      apply testbit_halfRange_true; auto.
-    + symmetry.
-      rewrite N.leb_le.
-      rewrite rBits_halfRange.
-      apply N.lt_le_pred; auto.
-   Qed.
-
+    rewrite -> halfRange_isSubrange_testbit by auto.
+    rewrite xorb_true_l.
+    rewrite negb_involutive.
+    reflexivity.
+  Qed.
+  
   Lemma testbit_halfRange_false_false:
    forall r i,
       (0 < rBits r)%N ->
@@ -1035,6 +1095,56 @@ Module Foo: WSfun(N_as_OT).
         replace ((Z.of_N b2 - Z.of_N b2)) with 0 by omega.
         reflexivity.
     Qed.
+    
+    Lemma testbit_halfRange:
+      forall r h,
+      (0 < rBits r)%N ->
+      Z.testbit (rPrefix (halfRange r h)) (Z.pred (Z.of_N (rBits r))) = h.
+    Proof.
+      intros.
+      destruct r as [p b].
+      unfold rPrefix, halfRange, rBits, snd in *.
+      assert (0 <= Z.pred (Z.of_N b)).
+      * apply Z.lt_le_pred.
+        replace 0 with (Z.of_N 0)%N by reflexivity.
+        apply N2Z.inj_lt.
+        assumption.
+      rewrite -> Z.shiftl_spec by auto.
+      rewrite -> N2Z.inj_pred by auto.
+      replace ((Z.pred (Z.of_N b) - Z.pred (Z.of_N b))) with 0 by omega.
+      destruct h;
+        try rewrite Z.lor_spec;
+        rewrite -> Z.shiftl_spec by omega;
+        rewrite -> Z.testbit_neg_r by omega;
+        reflexivity.
+    Qed.
+    
+    Lemma halves_disj_aux_aux:
+      forall r h1 h2,
+      (0 < rBits r)%N ->
+      h2 = negb h1 ->
+      isSubrange (halfRange r h1) (halfRange r h2) = false.
+    Proof.
+      intros. subst.
+      assert ((rBits (halfRange r h1) < rBits r)%N).
+        by (rewrite -> rBits_halfRange; apply N.lt_pred_l; intro; rewrite H0 in H; eapply N.lt_irrefl; eassumption).
+      rewrite -> halfRange_isSubrange_testbit by (auto; apply isSubrange_halfRange; auto).
+      rewrite -> testbit_halfRange by assumption.
+      destruct h1; reflexivity.
+    Qed.
+
+    Lemma halves_disj_aux:
+      forall r,
+      (0 < rBits r)%N  ->
+      rangeDisjoint (halfRange r false) (halfRange r true).
+    Proof.
+      intros.
+      unfold rangeDisjoint.
+      erewrite halves_disj_aux_aux by auto.
+      erewrite halves_disj_aux_aux by auto.
+      reflexivity.
+    Qed.
+
 
     Lemma halves_disj:
       forall r1 r2 r,
@@ -1042,7 +1152,6 @@ Module Foo: WSfun(N_as_OT).
       isSubrange r2 (halfRange r true) ->
       rangeDisjoint r1 r2.
     Admitted.
-
 
     Lemma common_of_halves:
       forall r1 r2 r,
@@ -1249,13 +1358,11 @@ Module Foo: WSfun(N_as_OT).
            eapply inRange_isSubrange_false; [eassumption|].
            apply testbit_halfRange_true_false; auto.
        * assert (inRange i r2 = false).
-         * eapply inRange_isSubrange_false; [eassumption|].
-           eapply inRange_isSubrange_false; [apply isSubrange_halfRange|].
-           assumption.
+         * eapply inRange_isSubrange_false; try eassumption.
+           eapply inRange_isSubrange_false; [apply isSubrange_halfRange|]; try assumption.
          assert (inRange i r1 = false).
-         * eapply inRange_isSubrange_false; [eassumption|].
-           eapply inRange_isSubrange_false; [apply isSubrange_halfRange|].
-           assumption.
+         * eapply inRange_isSubrange_false; try eassumption.
+           eapply inRange_isSubrange_false; [apply isSubrange_halfRange|]; assumption.
          rewrite -> (Desc_outside HD1), -> (Desc_outside HD2) by auto.
          reflexivity.
    Qed.
@@ -2081,4 +2188,5 @@ Module Foo: WSfun(N_as_OT).
   Lemma choose_1 :
     forall (s : t) (x : elt), choose s = Some x -> In x s. Admitted.
   Lemma choose_2 : forall s : t, choose s = None -> Empty s. Admitted.
+
 End Foo.

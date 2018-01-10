@@ -1080,8 +1080,18 @@ Module Foo: WSfun(N_as_OT).
 
     Lemma Desc_larger_WIDTH:
       forall {s r f}, Desc s r f -> (N.log2 WIDTH <= rBits r)%N.
+    Proof.
+      intros ??? HD.
+      induction HD; subst.
+      * destruct r. simpl in *. subst. reflexivity.
+      * assert (r = commonRangeDisj r1 r2) by (apply common_of_halves; auto). subst.
+        apply N.lt_le_incl.
+        eapply N.le_lt_trans.
+        apply IHHD1.
+        apply commonRangeDis_larger_l; try (eapply Desc_rNonneg; eassumption).
+        SearchAbout rangeDisjoint halfRange.
+        SearchAbout rBits commonRangeDisj.
     Admitted.
-
 
    Lemma Desc_outside:
      forall {s r f i}, Desc s r f -> inRange i r = false -> f i = false.
@@ -2072,5 +2082,4 @@ Module Foo: WSfun(N_as_OT).
   Lemma choose_1 :
     forall (s : t) (x : elt), choose s = Some x -> In x s. Admitted.
   Lemma choose_2 : forall s : t, choose s = None -> Empty s. Admitted.
-
 End Foo.

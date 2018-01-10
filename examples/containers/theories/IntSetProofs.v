@@ -1089,9 +1089,8 @@ Module Foo: WSfun(N_as_OT).
         eapply N.le_lt_trans.
         apply IHHD1.
         apply commonRangeDis_larger_l; try (eapply Desc_rNonneg; eassumption).
-        SearchAbout rangeDisjoint halfRange.
-        SearchAbout rBits commonRangeDisj.
-    Admitted.
+        eapply halves_disj; eassumption.
+    Qed.
 
    Lemma Desc_outside:
      forall {s r f i}, Desc s r f -> inRange i r = false -> f i = false.

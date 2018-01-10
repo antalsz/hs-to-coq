@@ -1709,6 +1709,13 @@ Module Foo: WSfun(N_as_OT).
     apply N.lt_le_incl.
     auto.
   Qed.
+
+  Lemma smaller_subRange_other_half :
+    forall r1 r2,
+      (rBits r1 < rBits r2)%N ->
+      isSubrange r1 r2 = true ->
+      isSubrange r1 (halfRange r2 true) = negb (isSubrange r1 (halfRange r2 false)).
+  Admitted.
   
   Lemma subRange_smaller:
     forall r1 r2, isSubrange r1 r2 -> (rBits r1 <= rBits r2)%N.
@@ -1731,6 +1738,11 @@ Module Foo: WSfun(N_as_OT).
     apply N.lt_pred_l.
     intro. subst. inversion H.
   Qed.
+  
+  Lemma isSubrange_commonRange:
+    forall r1 r2 r3,
+    isSubrange (commonRange r1 r2) r3 = isSubrange r1 r3 && isSubrange r2 r3.
+  Admitted.
 
   Lemma insertBM_Desc:
     forall p' bm r1 f1,
@@ -1784,19 +1796,22 @@ Module Foo: WSfun(N_as_OT).
         rewrite -> (isSubrange_commonRange_r _ _ Hsubrange) in *.
         rewrite <- testbit_halfRange_isSubrange; auto.
         destruct (isSubrange r1 (halfRange r0 true)) eqn:Hbit.
-        - assert (isSubrange (commonRange r1 r3) (halfRange r0 true)) by admit.
+        - assert (isSubrange (commonRange r1 r3) (halfRange r0 true) = true)
+            by (rewrite -> isSubrange_commonRange; intuition).
           eapply DescBin; try apply HD1; try apply IHHD2 with (f := fun j => f1 j || f3 j); auto.
           intro i. simpl. rewrite Hf. rewrite H5. destruct (f1 i), (f2 i), (f3 i); reflexivity.
-        - assert (isSubrange r1 (halfRange r0 false)) by admit.
-          assert (isSubrange (commonRange r1 r2) (halfRange r0 false)) by admit.
-          eapply DescBin; try apply HD2; try apply IHHD1 with (f := fun j => f1 j || f2 j); auto.
+        - assert (isSubrange r1 (halfRange r0 false) = true)
+            by (rewrite -> smaller_subRange_other_half in Hbit by auto; apply negbFE; auto).
+          assert (isSubrange (commonRange r1 r2) (halfRange r0 false) = true)
+            by (rewrite -> isSubrange_commonRange; intuition).
+           eapply DescBin; try apply HD2; try apply IHHD1 with (f := fun j => f1 j || f2 j); auto.
           intro i. simpl. rewrite Hf. rewrite H5. destruct (f1 i), (f2 i), (f3 i); reflexivity.
       + assert (rangeDisjoint r1 r0) by (apply smaller_not_subrange_disjoint; auto).
         clear Hsubrange.
         eapply link_Desc; eauto; try (inversion HDTip; auto).
         eapply DescBin; eauto.
         apply disjoint_commonRange; assumption.
-  Admitted.
+  Qed.
 
   Lemma insert_Desc:
     forall e r1,

@@ -1076,7 +1076,7 @@ Module Foo: WSfun(N_as_OT).
       * destruct r. simpl in *. apply Z.shiftl_nonneg in H. assumption.
       * assert (r = commonRangeDisj r1 r2) by (apply common_of_halves; auto). subst.
         apply commonRangeDisj_rNonneg; auto.
-    Admitted.
+    Qed.
 
     Lemma Desc_larger_WIDTH:
       forall {s r f}, Desc s r f -> (N.log2 WIDTH <= rBits r)%N.

@@ -1150,14 +1150,58 @@ Module Foo: WSfun(N_as_OT).
       isSubrange r1 r2 = true ->
       isSubrange r2 r3 = true ->
       isSubrange r1 r3 = true.
-    Admitted.
-    
+    Proof.
+      intros.
+      unfold isSubrange.
+      rewrite -> andb_true_iff; split.
+      * unfold isSubrange in H.
+        rewrite -> andb_true_iff in H; intuition.
+        eapply inRange_isSubrange_true; eauto.
+      * unfold isSubrange in *.
+        rewrite -> andb_true_iff in *; intuition.
+        rewrite -> N.leb_le in *.
+        eapply N.le_trans; eauto.
+    Qed.
+
+    Lemma inRange_both_smaller_subRange:
+      forall i r1 r2,
+      inRange i r1 = true ->
+      inRange i r2 = true ->
+      (rBits r1 <= rBits r2)%N ->
+      isSubrange r1 r2 = true.
+    Proof.
+      intros.
+      unfold isSubrange.
+      rewrite -> andb_true_iff in *.
+      rewrite N.leb_le; intuition.
+      destruct r1 as [p1 b1], r2 as [p2 b2].
+      simpl in *.
+      assert (Z.of_N b1 <= Z.of_N b2) by (apply N2Z.inj_le; auto).
+      rewrite -> Z.eqb_eq in *.
+      apply Z.bits_inj_iff'; intros j ?.
+      apply Z.bits_inj_iff in H; specialize (H (j + Z.of_N b2 - Z.of_N b1)).
+      apply Z.bits_inj_iff in H0; specialize (H0 j).
+      rewrite -> Z.shiftr_spec in * by nonneg.
+      rewrite -> Z.shiftl_spec in * by (apply OMEGA2; nonneg).
+      rewrite <- H.
+      rewrite <- H0.
+      replace ((j + Z.of_N b2 - Z.of_N b1 + Z.of_N b1)) with (j + Z.of_N b2) by omega.
+      reflexivity.
+    Qed.
+
     Lemma inRange_both_not_disj:
       forall i r1 r2,
       inRange i r1 = true ->
       inRange i r2 = true ->
       rangeDisjoint r1 r2 = false.
-    Admitted.
+    Proof.
+      intros.
+      unfold rangeDisjoint.
+      rewrite negb_false_iff.
+      rewrite orb_true_iff.
+      destruct (N.le_ge_cases (rBits r1) (rBits r2));
+        [left|right]; eapply inRange_both_smaller_subRange; eauto.
+    Qed.
 
     Lemma isSubrange_disj_disj_r:
       forall r1 r2 r3,

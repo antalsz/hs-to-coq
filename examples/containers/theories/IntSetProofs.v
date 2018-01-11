@@ -1253,6 +1253,54 @@ Module Foo: WSfun(N_as_OT).
     Qed.
 
     Lemma common_of_halves:
+      forall r,
+      (0 < rBits r)%N ->
+      r = commonRangeDisj (halfRange r false) (halfRange r true).
+    Proof.
+      intros.
+      destruct r as [p b].
+      unfold commonRangeDisj, halfRange, rPrefix, rBits, snd in *.
+      assert (0 <= Z.pred (Z.of_N b)).
+      * apply Z.lt_le_pred.
+        replace 0 with (Z.of_N 0)%N by reflexivity.
+        apply N2Z.inj_lt.
+        assumption.
+
+      replace (msDiffBit _ _) with b.
+      * f_equal.
+        rewrite -> Z.shiftl_shiftl by omega.
+        rewrite -> N2Z.inj_pred by assumption.
+        replace (1 + Z.pred (Z.of_N b)) with (Z.of_N b) by omega.
+        rewrite -> Z.shiftr_shiftl_l by nonneg.
+        replace ((Z.of_N b - Z.of_N b)) with 0 by omega.
+        reflexivity.
+      * unfold msDiffBit.
+        rewrite -> N2Z.inj_pred by assumption.
+        replace (Z.lxor _ _) with (2^Z.pred (Z.of_N b)).
+        + rewrite -> Z.log2_pow2 by assumption.
+          rewrite Z.succ_pred.
+          rewrite N2Z.id.
+          reflexivity.
+
+        rewrite Z.shiftl_lor.
+        rewrite -> Z.shiftl_shiftl by omega.
+        replace (1 + Z.pred (Z.of_N b)) with (Z.of_N b) by omega.
+        rewrite Z.shiftl_1_l.
+
+        apply Z.bits_inj_iff'; intros j ?.
+        rewrite Z.lxor_spec.
+        rewrite Z.lor_spec.
+        rewrite -> Z.pow2_bits_eqb by assumption.
+        rewrite -> Z.shiftl_spec by assumption.
+
+        match goal with [ |- context [?x =? ?y]] => destruct (Z.eqb_spec x y) end.
+        * subst.
+          rewrite -> Z.testbit_neg_r by omega.
+          reflexivity.
+        * destruct (Z.testbit p (j - Z.of_N b)); simpl; auto.
+    Qed.
+
+    Lemma common_of_halves_subrange:
       forall r1 r2 r,
       isSubrange r1 (halfRange r false) ->
       isSubrange r2 (halfRange r true) ->
@@ -1282,7 +1330,7 @@ Module Foo: WSfun(N_as_OT).
       intros ??? HD.
       induction HD; subst.
       * destruct r. simpl in *. apply Z.shiftl_nonneg in H. assumption.
-      * assert (r = commonRangeDisj r1 r2) by (apply common_of_halves; auto). subst.
+      * assert (r = commonRangeDisj r1 r2) by (apply common_of_halves_subrange; auto). subst.
         apply commonRangeDisj_rNonneg; auto.
     Qed.
 
@@ -1292,7 +1340,7 @@ Module Foo: WSfun(N_as_OT).
       intros ??? HD.
       induction HD; subst.
       * destruct r. simpl in *. subst. reflexivity.
-      * assert (r = commonRangeDisj r1 r2) by (apply common_of_halves; auto). subst.
+      * assert (r = commonRangeDisj r1 r2) by (apply common_of_halves_subrange; auto). subst.
         apply N.lt_le_incl.
         eapply N.le_lt_trans.
         apply IHHD1.
@@ -1310,7 +1358,7 @@ Module Foo: WSfun(N_as_OT).
        rewrite Houtside.
        reflexivity.
      * assert (Hdisj : rangeDisjoint r1 r2) by (eapply halves_disj; eauto).
-       assert (r = commonRangeDisj r1 r2) by (apply common_of_halves; auto). subst.
+       assert (r = commonRangeDisj r1 r2) by (apply common_of_halves_subrange; auto). subst.
        rewrite H4.
        rewrite orb_false_iff. split.
        + apply IHHD1. clear IHHD1 IHHD2.

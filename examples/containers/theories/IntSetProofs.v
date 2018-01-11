@@ -1144,14 +1144,69 @@ Module Foo: WSfun(N_as_OT).
       erewrite halves_disj_aux_aux by auto.
       reflexivity.
     Qed.
+    
+    Lemma isSubrange_trans:
+      forall r1 r2 r3,
+      isSubrange r1 r2 = true ->
+      isSubrange r2 r3 = true ->
+      isSubrange r1 r3 = true.
+    Admitted.
+    
+    Lemma inRange_both_not_disj:
+      forall i r1 r2,
+      inRange i r1 = true ->
+      inRange i r2 = true ->
+      rangeDisjoint r1 r2 = false.
+    Admitted.
 
+    Lemma isSubrange_disj_disj_r:
+      forall r1 r2 r3,
+      isSubrange r2 r3 = true ->
+      rangeDisjoint r1 r3 = true ->
+      rangeDisjoint r1 r2 = true.
+    Proof.
+      intros.
+      unfold rangeDisjoint in *.
+      rewrite -> negb_true_iff in *.
+      eapply contraFF; [|apply H0]; clear H0; intro; unfold is_true in *.
+      rewrite -> orb_true_iff in *.
+      destruct H0; [left|].
+      eapply isSubrange_trans; eauto.
+      unfold isSubrange in H, H0.
+      rewrite -> andb_true_iff in *.
+      intuition. clear H2 H3.
+      enough (rangeDisjoint r1 r3 = false).
+        unfold rangeDisjoint in *.
+        rewrite -> negb_false_iff in *.
+        rewrite -> orb_true_iff in *.
+        assumption.
+      eapply inRange_both_not_disj; eassumption.
+    Qed.
+
+    Lemma isSubrange_disj_disj_l:
+      forall r1 r2 r3,
+      isSubrange r1 r2 = true ->
+      rangeDisjoint r2 r3 = true ->
+      rangeDisjoint r1 r3 = true.
+    Proof.
+      intros.
+      rewrite -> rangeDisjoint_sym in *.
+      eapply isSubrange_disj_disj_r; eauto.
+    Qed.
 
     Lemma halves_disj:
       forall r1 r2 r,
+      (0 < rBits r)%N ->
       isSubrange r1 (halfRange r false) ->
       isSubrange r2 (halfRange r true) ->
       rangeDisjoint r1 r2.
-    Admitted.
+    Proof.
+      intros.
+      eapply isSubrange_disj_disj_l; [eassumption|].
+      eapply isSubrange_disj_disj_r; [eassumption|].
+      apply halves_disj_aux.
+      auto.
+    Qed.
 
     Lemma common_of_halves:
       forall r1 r2 r,

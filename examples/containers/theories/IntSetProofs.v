@@ -426,7 +426,7 @@ Qed.
 A dyadic interval is a set of the form
 
 <<
-   [a⋅2^n,…,(a+1)⋅2^n−1)] where a∈Z,n≥0
+   [a⋅2^n,…,(a+1)⋅2^n-1)] where a∈Z,n≥0
 >>
 
 which can be described by the prefix [p] and the shift width [a].
@@ -1648,6 +1648,8 @@ Local Open Scope Z_scope.
 (** We hardcode the width of the leafe bit maps to 64 bits *)
 
 Definition WIDTH := 64%N.
+Definition tip_width := N.log2 WIDTH.
+Definition tip_widthZ := Z.of_N tip_width.
 
 (** *** Lemmas about [prefixOf] *)
 
@@ -1663,7 +1665,7 @@ Hint Resolve prefixOf_nonneg : nonneg.
 
 Lemma rPrefix_shiftr:
   forall e,
-  rPrefix (Z.shiftr e 6, (N.log2 WIDTH)) = prefixOf e.
+  rPrefix (Z.shiftr e tip_widthZ, tip_width) = prefixOf e.
 Proof.
   intros.
   unfold rPrefix, prefixOf, prefixBitMask, suffixBitMask.
@@ -1671,28 +1673,25 @@ Proof.
   unfold op_zizazi__, Bits.complement, Bits__N, instance_Bits_Int, complement_Int.
   rewrite <- Z.ldiff_land.
   rewrite -> Z.ldiff_ones_r by omega.
-  replace (Z.of_N (N.log2 WIDTH)) with 6 by reflexivity.
-
-  rewrite -> Z_shiftl_inj by omega.
   reflexivity.
 Qed.
 
 Lemma prefixOf_eq_shiftr:
   forall i p, 
-    (prefixOf i =? Z.shiftl p (Z.of_N (N.log2 WIDTH))) =
-    (Z.shiftr i (Z.of_N (N.log2 WIDTH)) =? p).
- Proof.
-   intros.
-   unfold prefixOf, prefixBitMask, suffixBitMask.
-   unfold Bits.complement, instance_Bits_Int, complement_Int.
-   unfold op_zizazi__, Bits.complement, Bits__N, instance_Bits_Int, complement_Int.
-   rewrite <- Z.ldiff_land.
-   rewrite -> Z.ldiff_ones_r by omega.
-   replace (Z.of_N (N.log2 WIDTH)) with 6 by reflexivity.
+  (prefixOf i =? Z.shiftl p tip_widthZ) = ((Z.shiftr i tip_widthZ) =? p).
+Proof.
+  intros.
+  unfold prefixOf, prefixBitMask, suffixBitMask.
+  unfold Bits.complement, instance_Bits_Int, complement_Int.
+  unfold op_zizazi__, Bits.complement, Bits__N, instance_Bits_Int, complement_Int.
+  rewrite <- Z.ldiff_land.
+  rewrite -> Z.ldiff_ones_r by omega.
 
-   rewrite -> Z_shiftl_injb by omega.
-   reflexivity.
- Qed.
+  replace tip_widthZ with 6 by reflexivity.
+
+  rewrite -> Z_shiftl_injb by omega.
+  reflexivity.
+Qed.
 
 (** This lemma indicaes that [prefixOf] implements the check of whether
     the number is part of a tip-sized range. *)
@@ -2328,7 +2327,7 @@ Lemma insert_Desc:
   forall r f, 
   0 <= e ->
   Desc s2 r2 f2 ->
-  r1 = (Z.shiftr e 6, N.log2 WIDTH) ->
+  r1 = (Z.shiftr e tip_widthZ, tip_width) ->
   r = commonRange r1 r2 ->
   (forall i, f i = (i =? e) || f2 i) ->
   Desc (insert e s2) r f.
@@ -2347,7 +2346,7 @@ Qed.
 Lemma insert_Nil_Desc:
   forall e r f,
   0 <= e ->
-  r = (Z.shiftr e 6, N.log2 WIDTH) ->
+  r = (Z.shiftr e tip_widthZ, tip_width) ->
   (forall i, f i = (i =? e)) ->
   Desc (insert e Nil) r f.
 Proof.
@@ -2363,7 +2362,7 @@ Lemma insertBM_WF:
   0 <= p -> isTipPrefix p -> isBitMask bm -> WF s -> WF (insertBM p bm s).
 Proof.
   intros ??? Hnonneg Hp Hbm HWF.
-  set (r1 := (Z.shiftr p 6, N.log2 WIDTH)).
+  set (r1 := (Z.shiftr p tip_widthZ, tip_width)).
   assert (Desc (Tip p bm) r1 (bitmapInRange r1 bm)).
   * apply DescTip; subst r1; auto.
     apply isTipPrefix_shiftl_shiftr; assumption.

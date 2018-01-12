@@ -1328,51 +1328,6 @@ Module Foo: WSfun(N_as_OT).
         * destruct (Z.testbit p (j - Z.of_N b)); simpl; auto.
     Qed.
 
-
-    Lemma common_of_subrange_l:
-      forall r1 r2 r3,
-      rangeDisjoint r2 r3 ->
-      isSubrange r1 r2 ->
-      commonRangeDisj r1 r3 = commonRangeDisj r2 r3.
-    Admitted.
-
-    Lemma common_of_subrange_r:
-      forall r1 r2 r3,
-      rNonneg r1 ->
-      rNonneg r2 ->
-      rNonneg r3 ->
-      rangeDisjoint r1 r3 ->
-      isSubrange r2 r3 ->
-      commonRangeDisj r1 r2 = commonRangeDisj r1 r3.
-    Proof.
-      intros.
-      rewrite -> commonRangeDisj_sym at 1 by auto.
-      rewrite -> common_of_subrange_l with (r2 := r3); try auto.
-      apply commonRangeDisj_sym; auto.
-      rewrite -> rangeDisjoint_sym at 1 by auto.
-      assumption.
-    Qed.
-
-
-    Lemma common_of_halves_subrange:
-      forall r1 r2 r,
-      rNonneg r ->
-      (0 < rBits r)%N ->
-      isSubrange r1 (halfRange r false) ->
-      isSubrange r2 (halfRange r true) ->
-      r = commonRangeDisj r1 r2.
-    Proof.
-      intros.
-      erewrite -> common_of_subrange_l.
-      erewrite -> common_of_subrange_r.
-      apply common_of_halves; auto.
-      all: try rewrite (rNonneg_subrange _ _ H2).
-      all: try rewrite rNonneg_halfRange; auto.
-      apply halves_disj_aux; auto.
-      eapply isSubrange_disj_disj_r. eassumption.
-      apply halves_disj_aux; auto.
-    Qed.
-
     Lemma smaller_not_subrange_disjoint:
       forall r1 r2,
       (rBits r1 < rBits r2)%N ->

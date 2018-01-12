@@ -1478,7 +1478,29 @@ Module Foo: WSfun(N_as_OT).
     rewrite H.
     reflexivity.
   Qed.
-  
+
+  Lemma isSubrange_antisym:
+    forall r1 r2,
+    isSubrange r1 r2 = true ->
+    isSubrange r2 r1 = true ->
+    r1 = r2.
+  Proof.
+    intros.
+    destruct r1 as [p1 b1], r2 as [p2 b2]; unfold isSubrange in *; simpl in *.
+    apply andb_true_iff in H.
+    apply andb_true_iff in H0.
+    intuition.
+    apply N.leb_le in H2.
+    apply N.leb_le in H3.
+    assert (b1 = b2) by (apply N.le_antisymm; auto); subst.
+    rewrite -> Z.shiftr_shiftl_l in H by nonneg.
+    rewrite -> Z.shiftr_shiftl_l in H1 by nonneg.
+    replace (Z.of_N b2 - Z.of_N b2) with 0 in * by omega.
+    simpl in *.
+    rewrite -> Z.eqb_eq in *.
+    congruence.
+  Qed.
+
   Lemma isSubrange_commonRange_l:
     forall r1 r2,
     isSubrange r2 r1 ->
@@ -1487,19 +1509,7 @@ Module Foo: WSfun(N_as_OT).
     intros.
     unfold commonRange.
     destruct (isSubrange r1 r2) eqn:?.
-    * destruct r1 as [p1 b1], r2 as [p2 b2]; unfold isSubrange in *; simpl in *.
-      apply andb_true_iff in H.
-      apply andb_true_iff in Heqb.
-      intuition.
-      apply N.leb_le in H1.
-      apply N.leb_le in H2.
-      assert (b1 = b2) by (apply N.le_antisymm; auto); subst.
-      rewrite -> Z.shiftr_shiftl_l in H by nonneg.
-      rewrite -> Z.shiftr_shiftl_l in H0 by nonneg.
-      replace (Z.of_N b2 - Z.of_N b2) with 0 in * by omega.
-      simpl in *.
-      rewrite -> Z.eqb_eq in *.
-      congruence.
+    * apply isSubrange_antisym; auto. 
     * rewrite H. reflexivity.
   Qed.
 
@@ -1552,15 +1562,57 @@ Module Foo: WSfun(N_as_OT).
 
   Lemma isSubrange_commonRange_l':
     forall r1 r2,
+    rNonneg r1 ->
+    rNonneg r2 ->
     isSubrange r1 (commonRange r1 r2) = true.
-  Admitted.
+  Proof.
+    intros.
+    unfold commonRange.
+    destruct (isSubrange r1 r2) eqn:H12.
+    * assumption.
+    destruct (isSubrange r2 r1) eqn:H21.
+    * apply isSubrange_refl.
+
+    assert (rangeDisjoint r1 r2 = true)
+      by (unfold rangeDisjoint; rewrite H12 H21; reflexivity).
+    clear H12 H21.
+
+    destruct r1 as [p1 b1], r2 as [p2 b2].
+    unfold isSubrange, commonRangeDisj, isSubrange, inRange, rPrefix, rBits, snd.
+ 
+    apply andb_true_iff; split.
+    * remember (msDiffBit _ _) as b.
+      rewrite Z.eqb_eq.
+      reflexivity.
+    * rewrite N.leb_le.
+      change (rBits (p1, b1) <= msDiffBit (rPrefix (p1, b1)) (rPrefix (p2, b2)))%N.
+      apply N.lt_le_incl.
+      apply msDiffBit_larger_l; auto.
+  Qed.
+  
+  Lemma commonRange_sym:
+    forall r1 r2,
+    rNonneg r1 ->
+    rNonneg r2 ->
+    commonRange r1 r2 = commonRange r2 r1.
+  Proof.
+    intros.
+    unfold commonRange.
+    destruct (isSubrange r1 r2) eqn:H12, (isSubrange r2 r1) eqn:H21; auto.
+    * apply isSubrange_antisym; auto.
+    * apply commonRangeDisj_sym; auto.
+  Qed.
 
   Lemma isSubrange_commonRange_r':
     forall r1 r2,
+    rNonneg r1 ->
+    rNonneg r2 ->
     isSubrange r2 (commonRange r1 r2) = true.
   Proof.
     intros.
-  Admitted.
+    rewrite commonRange_sym; auto.
+    rewrite isSubrange_commonRange_l'; auto.
+  Qed.
   
   Lemma msDiffBit_less:
     forall z1 z2 b,
@@ -1581,16 +1633,18 @@ Module Foo: WSfun(N_as_OT).
 
   Lemma isSubrange_commonRange:
     forall r1 r2 r3,
+    rNonneg r1 ->
+    rNonneg r2 ->
     isSubrange (commonRange r1 r2) r3 = isSubrange r1 r3 && isSubrange r2 r3.
   Proof.
-    intros.
+    intros ??? Hnn1 Hnn2.
     enough (isSubrange (commonRange r1 r2) r3 = true <-> isSubrange r1 r3 && isSubrange r2 r3 = true)
       by (match goal with [ |- ?x = ?y ] => destruct x, y end; intuition; try congruence; symmetry; intuition).
     split; intro.
     * rewrite -> andb_true_iff.
       split.
-      + eapply isSubrange_trans; [apply isSubrange_commonRange_l'|eassumption].
-      + eapply isSubrange_trans; [apply isSubrange_commonRange_r'|eassumption].
+      + eapply isSubrange_trans; [apply isSubrange_commonRange_l'|eassumption]; auto.
+      + eapply isSubrange_trans; [apply isSubrange_commonRange_r'|eassumption]; auto.
     * rewrite -> andb_true_iff in H. destruct H.
       unfold commonRange.
       destruct (isSubrange r1 r2) eqn:H12.
@@ -2239,14 +2293,14 @@ Module Foo: WSfun(N_as_OT).
         rewrite -> (isSubrange_commonRange_r _ _ Hsubrange) in *.
         rewrite <- testbit_halfRange_isSubrange; auto.
         destruct (isSubrange r1 (halfRange r0 true)) eqn:Hbit.
-        - assert (isSubrange (commonRange r1 r3) (halfRange r0 true) = true)
-            by (rewrite -> isSubrange_commonRange; intuition).
+        - assert (isSubrange (commonRange r1 r3) (halfRange r0 true) = true).
+            by (rewrite -> isSubrange_commonRange; intuition; eapply Desc_rNonneg; eassumption).
           eapply DescBin; try apply HD1; try apply IHHD2 with (f := fun j => f1 j || f3 j); auto.
           intro i. simpl. rewrite Hf. rewrite H5. destruct (f1 i), (f2 i), (f3 i); reflexivity.
         - assert (isSubrange r1 (halfRange r0 false) = true)
             by (rewrite -> smaller_subRange_other_half in Hbit by auto; apply negbFE; auto).
           assert (isSubrange (commonRange r1 r2) (halfRange r0 false) = true)
-            by (rewrite -> isSubrange_commonRange; intuition).
+            by (rewrite -> isSubrange_commonRange; intuition; eapply Desc_rNonneg; eassumption).
            eapply DescBin; try apply HD2; try apply IHHD1 with (f := fun j => f1 j || f2 j); auto.
           intro i. simpl. rewrite Hf. rewrite H5. destruct (f1 i), (f2 i), (f3 i); reflexivity.
       + assert (rangeDisjoint r1 r0) by (apply smaller_not_subrange_disjoint; auto).

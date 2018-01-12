@@ -2013,16 +2013,21 @@ Module Foo: WSfun(N_as_OT).
     forall n i, Z.of_N (N.shiftl n i) = Z.shiftl (Z.of_N n) (Z.of_N i).
   Proof.
     intros.
-    destruct n.
-    * simpl. symmetry. apply Z.shiftl_0_l.
-    * destruct i.
-      + reflexivity.
-      + simpl.
-        generalize p. clear p.
-        induction p0; intro.
-        - simpl.
-  Admitted.
-  
+    apply Z.bits_inj_iff'; intros j?.
+    replace j with (Z.of_N (Z.to_N j))
+      by (rewrite -> Z2N.id by assumption; reflexivity).
+    rewrite N2Z.inj_testbit.
+    destruct (N.leb_spec i (Z.to_N j)).
+    * rewrite -> N.shiftl_spec_high' by assumption.
+      rewrite -> Z.shiftl_spec by nonneg.
+      rewrite <- N2Z.inj_sub by assumption.
+      rewrite N2Z.inj_testbit.
+      reflexivity.
+    * rewrite -> N.shiftl_spec_low by assumption.
+      rewrite -> Z.shiftl_spec_low by (rewrite <- N2Z.inj_lt; assumption).
+      reflexivity.
+  Qed.
+
   Lemma Z_eq_shiftr_land_ones:
     forall i1 i2 b,
     (i1 =? i2) = (Z.shiftr i1 b =? Z.shiftr i2 b) && (Z.land i1 (Z.ones b) =? Z.land i2 (Z.ones b)).

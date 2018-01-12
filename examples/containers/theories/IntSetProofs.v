@@ -1924,45 +1924,6 @@ Module Foo: WSfun(N_as_OT).
   
   Lemma is_empty_2 : forall s : t, is_empty s = true -> Empty s.
   Proof. move=>s. rewrite /Empty /In. elim s=>[s']. elim s'=>//. Qed.
-
-  (* This is basically DescTip
-  Lemma Tip_Desc:
-    forall r p' bm, isBitMask bm ->
-      rNonneg r ->
-      rBits r = N.log2 WIDTH ->
-      p' = rPrefix r ->
-      Desc (Tip p' bm) r
-           (fun i => bitmapInRange r bm i).
-  Proof.
-    intros.
-    destruct r as [p b]; simpl in *; subst.
-    apply DescTip; nonneg.
-  Qed.
-
-  Should be done using DescTip
-  Lemma Tip_WF:
-    forall p bm, 0 <= p -> isPrefix p -> isBitMask bm -> WF (Tip p bm).
-  Proof.
-    intros ?? Hnonneg Hp Hbm.
-    eapply WFNonEmpty.
-    apply Tip_Desc with (p := Z.shiftr p 6); auto. 
-    nonneg.
-    clear Hbm bm.
-    unfold isPrefix in *.
-    rewrite <- Z.ldiff_ones_r.
-    unfold suffixBitMask in *.
-    symmetry.
-    rewrite Z.ldiff_land.
-    enough (Z.lor (Z.land p (Z.lnot (Z.ones 6))) (Z.land p (Z.ones 6)) = p).
-    rewrite Hp in H.
-    rewrite Z.lor_0_r in H.
-    assumption.
-    rewrite <- Z.land_lor_distr_r.
-    rewrite Z.lor_lnot_diag.
-    apply Z.land_m1_r.
-    compute; congruence.
-  Qed.
-  *)
   
   Lemma of_N_shiftl:
     forall n i, Z.of_N (N.shiftl n i) = Z.shiftl (Z.of_N n) (Z.of_N i).

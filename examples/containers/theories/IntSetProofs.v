@@ -2391,9 +2391,48 @@ Module Foo: WSfun(N_as_OT).
       simpl. rewrite Z.eqb_refl. reflexivity.
   Qed.
 
-  Lemma add_2 : forall (s : t) (x y : elt), In y s -> In y (add x s). Admitted.
+  Lemma add_2 : forall (s : t) (x y : elt), In y s -> In y (add x s).
+  Proof.
+    intros.
+    unfold In, add, pack, In_set in *; intros; destruct s as [s].
+    destruct w.
+    * inversion H.
+    * erewrite member_spec.
+      Focus 2.
+      eapply insert_Desc; try nonneg; try eassumption.
+      intro. reflexivity.
+      simpl. rewrite orb_true_iff. right.
+      erewrite  <- member_spec. eassumption. eassumption.
+  Qed.
+
   Lemma add_3 :
-    forall (s : t) (x y : elt), ~ N.eq x y -> In y (add x s) -> In y s. Admitted.
+    forall (s : t) (x y : elt), ~ N.eq x y -> In y (add x s) -> In y s.
+  Proof.
+    intros.
+    unfold In, add, pack, In_set in *; intros; destruct s as [s].
+    destruct w.
+    * erewrite member_spec in H0.
+        Focus 2.
+        eapply insert_Nil_Desc; try nonneg.
+        intro. reflexivity. simpl in *.
+      rewrite -> Z.eqb_eq in H0.
+      rewrite -> N2Z.inj_iff in H0.
+      congruence.
+    * erewrite member_spec in H0.
+        Focus 2.
+        eapply insert_Desc; try nonneg; try eassumption.
+        intro. reflexivity. simpl in *.
+      rewrite -> orb_true_iff in H0.
+      rewrite -> Z.eqb_eq in H0.
+      rewrite -> N2Z.inj_iff in H0.
+      destruct H0. congruence.
+
+      erewrite member_spec.
+        Focus 2.
+        eassumption.
+      assumption.
+  Qed.
+  
   Lemma remove_1 :
     forall (s : t) (x y : elt), N.eq x y -> ~ In y (remove x s). Admitted.
   Lemma remove_2 :

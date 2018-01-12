@@ -1039,7 +1039,7 @@ Proof.
 Qed.
 
 
-(** *** Operation: [rNoneg]
+(** *** Operation: [rNonneg]
 
 This predicate inciates that the range covers non-negative numbers. We 
 often have to restrict ourselves to these as negative numbers have
@@ -1095,33 +1095,34 @@ Lemma msDiffBit_larger_tmp:
     False.
 Proof.
   intros.
-  * assert (inRange (rPrefix r1) r2 = true).
-      destruct r1 as [p1 b1], r2 as [p2 b2].
-      unfold inRange, rPrefix, rBits, rNonneg,  snd in *.
-      rewrite -> N2Z.inj_le in H2, H3.
-      apply Z.eqb_eq.
-      symmetry.
-      apply Z.bits_inj_iff'. intros j?.
-      replace j with ((j + Z.of_N b2) - Z.of_N b2) by omega.
-      rewrite <- Z.shiftl_spec by (apply OMEGA2; nonneg).
-      rewrite <- msDiffBit_Same with (p1 := (Z.shiftl p1 (Z.of_N b1))) (p2 := (Z.shiftl p2 (Z.of_N b2))); try nonneg.
-      rewrite -> !Z.shiftl_spec by (apply OMEGA2; nonneg).
-      rewrite -> !Z.shiftr_spec by nonneg.
-      rewrite -> !Z.shiftl_spec by (apply OMEGA2; nonneg).
-      f_equal. omega.
+  assert (inRange (rPrefix r1) r2 = true).
+  { destruct r1 as [p1 b1], r2 as [p2 b2].
+    unfold inRange, rPrefix, rBits, rNonneg,  snd in *.
+    rewrite -> N2Z.inj_le in H2, H3.
+    apply Z.eqb_eq.
+    symmetry.
+    apply Z.bits_inj_iff'. intros j?.
+    replace j with ((j + Z.of_N b2) - Z.of_N b2) by omega.
+    rewrite <- Z.shiftl_spec by (apply OMEGA2; nonneg).
+    rewrite <- msDiffBit_Same with (p1 := (Z.shiftl p1 (Z.of_N b1))) (p2 := (Z.shiftl p2 (Z.of_N b2))); try nonneg.
+    rewrite -> !Z.shiftl_spec by (apply OMEGA2; nonneg).
+    rewrite -> !Z.shiftr_spec by nonneg.
+    rewrite -> !Z.shiftl_spec by (apply OMEGA2; nonneg).
+    f_equal. omega.
+  }
 
-    unfold rangeDisjoint in H1.
-    apply negb_true_iff in H1.
-    rewrite -> orb_false_iff in H1.
-    unfold isSubrange in *.
-    rewrite -> !andb_false_iff in H1.
-    rewrite -> !N.leb_nle in H1.
-    destruct H1.
-    intuition try congruence.
+  unfold rangeDisjoint in H1.
+  apply negb_true_iff in H1.
+  rewrite -> orb_false_iff in H1.
+  unfold isSubrange in *.
+  rewrite -> !andb_false_iff in H1.
+  rewrite -> !N.leb_nle in H1.
+  destruct H1.
+  intuition try congruence.
 Qed.
 
 Lemma msDiffBit_larger:
-forall r1 r2,
+  forall r1 r2,
   rNonneg r1 -> rNonneg r2 -> 
   rangeDisjoint r1 r2 = true ->
   (N.max (rBits r1) (rBits r2) < msDiffBit (rPrefix r1) (rPrefix r2))%N.
@@ -1904,8 +1905,9 @@ A Tip bit mask is a number with [WIDTH] bits.
 Definition isBitMask (bm : N) :=
   (0 < bm /\ bm < 2^WIDTH)%N.
 
-Definition isBitMask_testbit:
+Lemma isBitMask_testbit:
   forall bm, isBitMask bm -> (exists i, i < WIDTH /\ N.testbit bm i = true)%N.
+Proof.
   intros.
   exists (N.log2 bm); intuition.
   * destruct H.
@@ -1917,29 +1919,30 @@ Definition isBitMask_testbit:
   * apply N.bit_log2.
     unfold isBitMask in *.
     destruct bm; simpl in *; intuition; compute in H1; congruence.
- Qed.
+Qed.
  
- Lemma isBitMask_lor:
-   forall bm1 bm2, isBitMask bm1 -> isBitMask bm2 -> isBitMask (N.lor bm1 bm2).
- Proof.
-   intros.
-   assert (0 < N.lor bm1 bm2)%N.
-   * destruct (isBitMask_testbit bm1 H) as [j[??]].
-     assert (N.testbit (N.lor bm1 bm2) j = true) by
-       (rewrite N.lor_spec, H2; auto).
-     enough (0 <> N.lor bm1 bm2)%N by 
-       (destruct (N.lor bm1 bm2); auto; try congruence; apply pos_pos).
-     contradict H3; rewrite <- H3.
-     rewrite N.bits_0. congruence.
-   split; try assumption.
-   * unfold isBitMask in *; destruct H, H0.
-     rewrite N.log2_lt_pow2; auto.
-     rewrite N.log2_lor.
-     apply N.max_lub_lt; rewrite <- N.log2_lt_pow2; auto.
- Qed.
+Lemma isBitMask_lor:
+  forall bm1 bm2, isBitMask bm1 -> isBitMask bm2 -> isBitMask (N.lor bm1 bm2).
+Proof.
+  intros.
+  assert (0 < N.lor bm1 bm2)%N.
+  * destruct (isBitMask_testbit bm1 H) as [j[??]].
+    assert (N.testbit (N.lor bm1 bm2) j = true) by
+     (rewrite N.lor_spec, H2; auto).
+    enough (0 <> N.lor bm1 bm2)%N by 
+     (destruct (N.lor bm1 bm2); auto; try congruence; apply pos_pos).
+    contradict H3; rewrite <- H3.
+    rewrite N.bits_0. congruence.
+    split; try assumption.
+  * unfold isBitMask in *; destruct H, H0.
+    rewrite N.log2_lt_pow2; auto.
+    rewrite N.log2_lor.
+    apply N.max_lub_lt; rewrite <- N.log2_lt_pow2; auto.
+Qed.
 
 
-Lemma isBitMask_suffixOf: forall e, isBitMask (bitmapOf e).
+Lemma isBitMask_bitmapOf: forall e, isBitMask (bitmapOf e).
+Proof.
   intros.
   unfold isBitMask, bitmapOf, suffixOf, suffixBitMask, bitmapOfSuffix, shiftLL.
   unfold op_zizazi__, Bits.complement, Bits__N, instance_Bits_Int, complement_Int.
@@ -2186,7 +2189,7 @@ Lemma singleton_spec:
    Desc (singleton e) (Z.shiftr e 6, N.log2 WIDTH) (fun x => x =? e).
 Proof.
   intros.
-  apply DescTip; try nonneg; try apply isBitMask_suffixOf.
+  apply DescTip; try nonneg; try apply isBitMask_bitmapOf.
   symmetry; apply rPrefix_shiftr.
   intro i.
   symmetry; apply bitmapInRange_bitmapOf.
@@ -2331,7 +2334,7 @@ Proof.
   eapply insertBM_Desc.
   eapply DescTip; try nonneg.
   symmetry. apply rPrefix_shiftr. reflexivity.
-  apply isBitMask_suffixOf.
+  apply isBitMask_bitmapOf.
   eassumption.
   congruence.
   intros j. rewrite H3. f_equal.
@@ -2349,7 +2352,7 @@ Proof.
   apply DescTip; try nonneg.
   symmetry. apply rPrefix_shiftr.
   intros j. rewrite H1. symmetry. apply bitmapInRange_bitmapOf.
-  apply isBitMask_suffixOf.
+  apply isBitMask_bitmapOf.
 Qed.
 
 Lemma insertBM_WF:
@@ -2371,7 +2374,7 @@ Proof.
 Qed.
 
 
-(** *** Instantiationg the [FSetInterface] *)
+(** *** Instantiating the [FSetInterface] *)
 
 Require Import Coq.FSets.FSetInterface.
 Require Import Coq.Structures.OrderedTypeEx.
@@ -2446,7 +2449,7 @@ Module Foo: WSfun(N_as_OT).
     apply insertBM_WF.
     nonneg.
     apply isTipPrefix_prefixOf.
-    apply isBitMask_suffixOf.
+    apply isBitMask_bitmapOf.
     assumption.
   Defined.
 

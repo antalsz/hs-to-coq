@@ -2,7 +2,7 @@
 
 * The IntSet formalization
 
-This module contains a formalization of Haskell’s Data.IntSet which implements a set of
+This module contains a formalization of Haskell's Data.IntSet which implements a set of
 integers as a patricia trie.
 
 *)
@@ -421,13 +421,16 @@ Qed.
 
 
 
-(** ** Range sets (TODO: find name!)
+(** ** Dyadic intervals
 
-A range set is a set of the form
+A dyadic interval is a set of the form
 
-   [a⋅2^n,…,(a+1)⋅2^n−)] where a∈Z,n≥0
+<<
+   [a⋅2^n,…,(a+1)⋅2^n−1)] where a∈Z,n≥0
+>>
 
-which can be described by the prefix a and the shift width a.
+which can be described by the prefix [p] and the shift width [a].
+In the folloing, we just say “range” for a dyadic interval.
 *)
 
 Definition range := (Z * N)%type.

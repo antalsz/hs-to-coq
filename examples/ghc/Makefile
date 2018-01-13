@@ -79,8 +79,10 @@ VFILES   = $(VFILES_GEN) $(VFILES_MAN) $(VFILES_SPECIAL)
 
 all: $(OUT)/edits $(OUT)/README.md $(VFILES) coq
 
-$(OUT)/_CoqProject : Makefile
+$(OUT):
 	mkdir -p $(OUT)
+
+$(OUT)/_CoqProject: $(OUT) Makefile
 	> $@
 	echo "-Q . \"\"" >> $@
 	echo "-R ../../../base \"\"" >> $@
@@ -90,10 +92,10 @@ $(OUT)/_CoqProject : Makefile
 	echo $(addsuffix .v,$(MODULES)) >> $@
 	echo $(addsuffix .v,$(SPECIAL_MODULES)) >> $@
 
-$(OUT)/Makefile: $(OUT)/_CoqProject $(VFILES)
+$(OUT)/Makefile: $(OUT) $(OUT)/_CoqProject $(VFILES)
 	cd $(OUT); coq_makefile -f _CoqProject -o Makefile
 
-$(OUT)/edits:
+$(OUT)/edits: $(OUT)
 	ln -fs ../edits $(OUT)/edits
 
 $(OUT)/README.md:

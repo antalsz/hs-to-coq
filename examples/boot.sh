@@ -18,7 +18,6 @@ make -C intervals clean
 make -C compiler clean
 make -C rle clean
 make -C bag clean
-make -C ghc/lib clean
 make -C ../base-thy clean
 
 if [[ -e base-src/base ]]

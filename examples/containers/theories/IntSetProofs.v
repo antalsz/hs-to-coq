@@ -1900,12 +1900,25 @@ Qed.
 
 (** *** Operation: [isBitMask]
 
-A Tip bit mask is a number with [WIDTH] bits.
+A Tip bit mask is a non-zero number with [WIDTH] bits.
 *)
-
 
 Definition isBitMask (bm : N) :=
   (0 < bm /\ bm < 2^WIDTH)%N.
+
+(** Sometimes, we need to allow zero. *)
+
+Definition isBitMask0 (bm : N) := (bm < 2^WIDTH)%N.
+
+Lemma isBitMask0_zero_or_isBitMask:
+  forall bm, isBitMask0 bm <-> (bm = 0%N \/ isBitMask bm).
+Proof.
+  intros.
+  unfold isBitMask, isBitMask0.
+  assert (0 <= bm)%N by nonneg.
+  rewrite N.lt_eq_cases in H.
+  intuition; subst; reflexivity.
+Qed.
 
 Lemma isBitMask_testbit:
   forall bm, isBitMask bm -> (exists i, i < WIDTH /\ N.testbit bm i = true)%N.
@@ -1942,6 +1955,19 @@ Proof.
     apply N.max_lub_lt; rewrite <- N.log2_lt_pow2; auto.
 Qed.
 
+Lemma isBitMask0_land:
+  forall bm1 bm2, isBitMask0 bm1 -> isBitMask0 bm2 -> isBitMask0 (N.land bm1 bm2).
+Proof.
+  intros.
+  unfold isBitMask0 in *.
+Admitted.
+
+Lemma isBitMask0_lxor:
+  forall bm1 bm2, isBitMask0 bm1 -> isBitMask0 bm2 -> isBitMask0 (N.lxor bm1 bm2).
+Proof.
+  intros.
+  unfold isBitMask0 in *.
+Admitted.
 
 Lemma isBitMask_bitmapOf: forall e, isBitMask (bitmapOf e).
 Proof.
@@ -2439,6 +2465,61 @@ Proof.
   * eapply WFNonEmpty; eassumption.
 Qed.
 
+(* MOVE *)
+Lemma bitmapInRange_0:
+  forall r i, bitmapInRange r 0%N i = false.
+Proof.
+  intros.
+  unfold bitmapInRange.
+  destruct (inRange i r); auto.
+Qed.
+
+(* MOVE *)
+Lemma tip_Desc0:
+  forall p bm r f,
+    0 <= p ->
+    p = rPrefix r ->
+    rBits r = N.log2 WIDTH ->
+    (forall i, f i = bitmapInRange r bm i) ->
+    isBitMask0 bm ->
+    Desc0 (tip p bm) r f.
+Proof.
+  intros.
+  unfold tip.
+  unfold op_zsze__, op_zeze__, Eq_Char___, Eq_Integer___, op_zsze____, op_zeze____.
+  unfold fromInteger, Num_Word__.
+  replace (Z.to_N 0) with 0%N by reflexivity.
+  rewrite isBitMask0_zero_or_isBitMask in H3.
+  destruct H3; subst.
+  * rewrite N.eqb_refl.
+    apply Desc0Nil.
+    intro j. rewrite H2.
+    apply bitmapInRange_0.
+  * replace (bm =? 0)%N with false
+      by (symmetry; apply N.eqb_neq; intro; subst; inversion H3; inversion H0).
+    apply Desc0NotNil with (r := r).
+    apply DescTip; auto.
+    apply isSubrange_refl.
+Qed.
+
+(* Move *)
+Lemma bitmapInRange_lxor:
+  forall r bm1 bm2 i,
+    bitmapInRange r (N.lxor bm1 bm2) i =
+    xorb (bitmapInRange r bm1 i) (bitmapInRange r bm2 i).
+Admitted.
+
+Lemma bitmapInRange_land:
+  forall r bm1 bm2 i,
+    bitmapInRange r (N.land bm1 bm2) i =
+    andb (bitmapInRange r bm1 i) (bitmapInRange r bm2 i).
+Admitted.
+
+(* MOVE *)
+Lemma isBitMask_isBitMask0:
+  forall bm, isBitMask bm -> isBitMask0 bm.
+Proof. intros. unfold isBitMask0, isBitMask in *. intuition. Qed.
+
 Lemma deleteBM_Desc:
   forall p' bm s2 r1 r2 f1 f2 f,
   Desc (Tip p' bm) r1 f1 ->
@@ -2452,7 +2533,23 @@ Proof.
     unfold op_zsze__, op_zeze__, Eq_Char___, Eq_Integer___, op_zsze____, op_zeze____.
     destruct (Z.eqb_spec (rPrefix r) p').
     + subst.
-      admit.
+      assert (r1 = r); subst.
+      { inversion_clear HTip.
+        destruct r as [p1 b1], r1 as [p2 b2]. simpl in *. subst.
+        rewrite Z_shiftl_inj in * by nonneg.
+        congruence. }
+      apply tip_Desc0; auto.
+      - intro i. rewrite Hf. clear Hf.
+        rewrite bitmapInRange_lxor.
+        rewrite bitmapInRange_land.
+        rewrite <- H2.
+        replace (bitmapInRange r bm i) with (f1 i) by (inversion HTip; intuition).
+        destruct (f1 i), (f0 i); reflexivity.
+      - assert (isBitMask bm) by (inversion HTip; intuition).
+        apply isBitMask0_lxor; auto.
+        apply isBitMask_isBitMask0; auto.
+        apply isBitMask0_land; apply isBitMask_isBitMask0; auto.
+    + admit.
   * unfold deleteBM, Prim.seq.
 Admitted.
 

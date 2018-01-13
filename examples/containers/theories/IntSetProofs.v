@@ -2439,12 +2439,6 @@ Proof.
   * eapply WFNonEmpty; eassumption.
 Qed.
 
-(* At this point we need to fix
-    (_.&._ bm' (complement bm))
-   by replacing that with
-    (N.ldiff bm' bm)
-   but there is no ldiff in the Bits type class. Hmpf.
-*)
 Lemma deleteBM_Desc:
   forall p' bm s2 r1 r2 f1 f2 f,
   Desc (Tip p' bm) r1 f1 ->

@@ -25,6 +25,14 @@ skip Data.IntSet.Base.minView
 skip Data.IntSet.Base.deleteMin
 skip Data.IntSet.Base.deleteFindMin
 
+# The idiom `x .&. complement y` does not work at type `nat`, as the complement of
+# a natural number is negative. But the expression [x `xor` (x .&. y)] is equivalent:
+#
+#	 quickCheck $ \x y -> (x .&. complement y) == (x `xor` (x.&.y))
+#	 +++ OK, passed 100 tests.
+#
+# so we can use that:
+rewrite forall x y, (x .&. (complement y)) = (xor x (x .&. y))
 
 # Avoid the natFromInt
 redefine Definition Data.IntSet.Base.mask : GHC.Num.Int -> (Mask -> Prefix) :=

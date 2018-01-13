@@ -1965,7 +1965,7 @@ Qed.
 
 This section introduces the predicate to describe the well-formedness of
 an IntSet. It has parameters that describe the range that this set covers,
-and a function that carries it denotation. This way, invariant preserveratin
+and a function that carries it denotation. This way, invariant preservation
 and functional correctness of an operation can be expressed in one go.
 *)
 
@@ -1987,6 +1987,19 @@ Inductive Desc : IntSet -> range -> (Z -> bool) -> Prop :=
     msk = rMask r -> 
     (forall i, f i = f1 i || f2 i) ->
     Desc (Bin p msk s1 s2) r f.
+
+(** A variant that also allows [Nil], or sets that do not
+    cover the full given range, but are certainly contained in them.
+    This is used to describe operations that may delete elements.
+ *)
+
+Inductive Desc0 : IntSet -> range -> (Z -> bool) -> Prop :=
+  | Desc0Nil : forall r f, (forall i, f i = false) -> Desc0 Nil r f
+  | Desc0NotNil :
+      forall s r f r',
+      forall (HD : Desc s r f),
+      forall (Hsubrange: isSubrange r r' = true),
+      Desc0 s r' f.
 
 Inductive WF : IntSet -> Prop :=
   | WFEmpty : WF Nil
@@ -2038,6 +2051,15 @@ Proof.
      auto.
 Qed.
 
+Lemma Desc0_outside:
+  forall {s r f i}, Desc0 s r f -> inRange i r = false -> f i = false.
+Proof.
+  intros.
+  destruct H; auto.
+  eapply Desc_outside; eauto.
+  eapply inRange_isSubrange_false; eauto.
+Qed.
+
 Lemma Desc_neg_false:
  forall {s r f i}, Desc s r f -> ~ (0 <= i) -> f i = false.
 Proof.
@@ -2051,6 +2073,14 @@ Proof.
   rewrite <- (Z.shiftr_nonneg i (Z.of_N b)).
   rewrite H0.
   nonneg.
+Qed.
+
+Lemma Desc0_neg_false:
+ forall {s r f i}, Desc0 s r f -> ~ (0 <= i) -> f i = false.
+Proof.
+  intros.
+  destruct H; auto.
+  eapply Desc_neg_false; eauto.
 Qed.
 
 (** The [Desc] predicate only holds for non-empty sets. *)
@@ -2168,6 +2198,14 @@ Proof.
        eapply inRange_isSubrange_false; [apply isSubrange_halfRange|]; assumption.
      rewrite -> (Desc_outside HD1), -> (Desc_outside HD2) by auto.
      reflexivity.
+Qed.
+
+Lemma member_spec0:
+  forall {s r f i}, Desc0 s r f -> member i s = f i.
+Proof.
+  intros.
+  destruct H; simpl; auto.
+  eapply member_spec; eauto.
 Qed.
 
 Lemma Desc_has_member: 
@@ -2375,6 +2413,86 @@ Proof.
     intro i. reflexivity.
 Qed.
 
+Lemma insert_WF:
+  forall n s,
+  WF s -> 0 <= n ->
+  WF (insert n s).
+Proof.
+  intros.
+  unfold insert, Prim.seq.
+  apply insertBM_WF.
+  nonneg.
+  apply isTipPrefix_prefixOf.
+  apply isBitMask_bitmapOf.
+  assumption.
+Qed.
+
+(** *** Specifying [remove] *)
+
+(* MOVE *)
+Lemma Desc0_WF:
+  forall s r f, Desc0 s r f -> WF s.
+Proof.
+  intros.
+  destruct H.
+  * apply WFEmpty.
+  * eapply WFNonEmpty; eassumption.
+Qed.
+
+(* At this point we need to fix
+    (_.&._ bm' (complement bm))
+   by replacing that with
+    (N.ldiff bm' bm)
+   but there is no ldiff in the Bits type class. Hmpf.
+*)
+Lemma deleteBM_Desc:
+  forall p' bm s2 r1 r2 f1 f2 f,
+  Desc (Tip p' bm) r1 f1 ->
+  Desc s2 r2 f2 ->
+  (forall i, f i = negb (f1 i) && f2 i) ->
+  Desc0 (deleteBM p' bm s2) r2 f.
+Proof.
+  intros ???????? HTip HD Hf.
+  induction HD; subst.
+  * simpl deleteBM; unfold Prim.seq.
+    unfold op_zsze__, op_zeze__, Eq_Char___, Eq_Integer___, op_zsze____, op_zeze____.
+    destruct (Z.eqb_spec (rPrefix r) p').
+    + subst.
+      rewrite N.land_0_r.
+      admit.
+  * unfold deleteBM, Prim.seq.
+Admitted.
+
+Lemma delete_Desc:
+  forall e s r f f',
+  0 <= e ->
+  Desc s r f ->
+  (forall i, f' i = negb (i =? e) && f i) ->
+  Desc0 (delete e s) r f'.
+Proof.
+  intros.
+  unfold delete, Prim.seq.
+  eapply deleteBM_Desc.
+  * eapply DescTip; try nonneg.
+    + symmetry. apply rPrefix_shiftr. reflexivity.
+    + apply isBitMask_bitmapOf.
+  * eassumption.
+  * intros j. rewrite H1. f_equal.
+    rewrite bitmapInRange_bitmapOf.
+    reflexivity.
+Qed.
+
+Lemma delte_WF:
+  forall n s,
+  WF s -> 0 <= n ->
+  WF (delete n s).
+Proof.
+  intros.
+  destruct H.
+  * apply WFEmpty.
+  * eapply Desc0_WF; eapply delete_Desc; try eassumption.
+    intro. reflexivity.
+Qed.
 
 (** *** Instantiating the [FSetInterface] *)
 
@@ -2444,18 +2562,20 @@ Module Foo: WSfun(N_as_OT).
     apply singleton_spec; nonneg.
   Defined.
 
+
+
   Definition add (e: elt) (s': t) : t.
     refine (s <-- s' ;;
             pack (insert (Z.of_N e) s) _).
-    unfold insert, Prim.seq.
-    apply insertBM_WF.
-    nonneg.
-    apply isTipPrefix_prefixOf.
-    apply isBitMask_bitmapOf.
-    assumption.
+    apply insert_WF; nonneg.
   Defined.
 
-  Definition remove : elt -> t -> t. Admitted.
+  Definition remove  (e: elt) (s': t) : t.
+    refine (s <-- s' ;;
+            pack (delete (Z.of_N e) s) _).
+    apply delte_WF; nonneg.
+  Defined.
+
   Definition union : t -> t -> t. Admitted.
   Definition inter : t -> t -> t. Admitted.
   Definition diff : t -> t -> t. Admitted.

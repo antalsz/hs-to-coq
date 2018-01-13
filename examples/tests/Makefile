@@ -29,6 +29,7 @@ PASS = \
   PolyInstance3 \
   MutrecInst \
   Bits \
+  BitsRewrite \
   Records \
   RecordConstruction \
   PatternGuard \

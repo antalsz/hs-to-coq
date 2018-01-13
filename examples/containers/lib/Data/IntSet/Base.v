@@ -595,7 +595,7 @@ Definition subsetCmp : IntSet -> IntSet -> comparison :=
                                               then Gt
                                               else if bm1 GHC.Base.== bm2 : bool
                                                    then Eq
-                                                   else if (bm1 Data.Bits..&.(**) Data.Bits.complement bm2) GHC.Base.==
+                                                   else if Data.Bits.xor bm1 (bm1 Data.Bits..&.(**) bm2) GHC.Base.==
                                                            GHC.Num.fromInteger 0 : bool
                                                         then Lt
                                                         else Gt
@@ -649,9 +649,9 @@ Definition isSubsetOf : IntSet -> IntSet -> bool :=
         := let j_6__ :=
              match arg_0__ , arg_1__ with
                | Bin _ _ _ _ , _ => false
-               | Tip kx1 bm1 , Tip kx2 bm2 => andb (kx1 GHC.Base.== kx2) ((bm1
-                                                   Data.Bits..&.(**) Data.Bits.complement bm2) GHC.Base.==
-                                                   GHC.Num.fromInteger 0)
+               | Tip kx1 bm1 , Tip kx2 bm2 => andb (kx1 GHC.Base.== kx2) (Data.Bits.xor bm1
+                                                                                        (bm1 Data.Bits..&.(**) bm2)
+                                                   GHC.Base.== GHC.Num.fromInteger 0)
                | (Tip kx _ as t1) , Bin p m l r => if nomatch kx p m : bool
                                                    then false
                                                    else if zero kx m : bool
@@ -977,7 +977,7 @@ Definition deleteBM : Prefix -> BitMap -> IntSet -> IntSet :=
                                                                  then bin p m (deleteBM kx bm l) r
                                                                  else bin p m l (deleteBM kx bm r)
                                            | Tip kx' bm' => if kx' GHC.Base.== kx : bool
-                                                            then tip kx (bm' Data.Bits..&.(**) Data.Bits.complement bm)
+                                                            then tip kx (Data.Bits.xor bm' (bm' Data.Bits..&.(**) bm))
                                                             else t
                                            | Nil => Nil
                                          end)).
@@ -1017,8 +1017,7 @@ match arg_0__ , arg_1__ with
                                                                        then differenceTip l2
                                                                        else differenceTip r2
                                              | Tip kx2 bm2 => if kx GHC.Base.== kx2 : bool
-                                                              then tip kx (bm Data.Bits..&.(**) Data.Bits.complement
-                                                                          bm2)
+                                                              then tip kx (Data.Bits.xor bm (bm Data.Bits..&.(**) bm2))
                                                               else t1
                                              | Nil => t1
                                            end in

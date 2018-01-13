@@ -32,7 +32,7 @@ skip Data.IntSet.Base.deleteFindMin
 #	 +++ OK, passed 100 tests.
 #
 # so we can use that:
-rewrite forall x y, (x .&. (complement y)) = (xor x (x .&. y))
+rewrite forall x y, (x Data.Bits..&. (Data.Bits.complement y)) = (Data.Bits.xor x (x Data.Bits..&. y))
 
 # Avoid the natFromInt
 redefine Definition Data.IntSet.Base.mask : GHC.Num.Int -> (Mask -> Prefix) :=

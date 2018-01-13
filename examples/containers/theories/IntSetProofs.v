@@ -2452,7 +2452,6 @@ Proof.
     unfold op_zsze__, op_zeze__, Eq_Char___, Eq_Integer___, op_zsze____, op_zeze____.
     destruct (Z.eqb_spec (rPrefix r) p').
     + subst.
-      rewrite N.land_0_r.
       admit.
   * unfold deleteBM, Prim.seq.
 Admitted.

@@ -6,7 +6,7 @@ module HsToCoq.ConvertHaskell.Parameters.Edits (
   DataTypeArguments(..), dtParameters, dtIndices,
   CoqDefinition(..), definitionSentence,
   ScopePlace(..),
-  Rewrite(..),
+  Rewrite(..), Rewrites,
   Edit(..), addEdit, buildEdits,
   addFresh
 ) where
@@ -29,6 +29,7 @@ import HsToCoq.Util.GHC.Module
 
 import HsToCoq.Coq.Gallina
 import HsToCoq.Coq.Gallina.Util
+import HsToCoq.Coq.Gallina.Rewrite (Rewrite(..), Rewrites)
 
 --------------------------------------------------------------------------------
 
@@ -54,13 +55,6 @@ definitionSentence (CoqInstanceDef        ind) = InstanceSentence         ind
 -- Add more as needed
 data ScopePlace = SPValue | SPConstructor
                 deriving (Eq, Ord, Enum, Bounded, Show, Read)
-
-data Rewrite = Rewrite
-    { patternVars :: [Ident]
-    , lhs :: Term
-    , rhs :: Term
-    }
-  deriving (Eq, Ord, Show)
 
 data Edit = TypeSynonymTypeEdit   Ident Ident
           | DataTypeArgumentsEdit Qualid DataTypeArguments

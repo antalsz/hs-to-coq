@@ -1980,9 +1980,11 @@ Proof.
     rewrite N.bits_0. congruence.
     split; try assumption.
   * unfold isBitMask in *; destruct H, H0.
-    rewrite N.log2_lt_pow2; auto.
-    rewrite N.log2_lor.
-    apply N.max_lub_lt; rewrite <- N.log2_lt_pow2; auto.
+    rewrite N_lt_pow2_testbits in *.
+    intros j?.
+    rewrite N.lor_spec.
+    rewrite H2, H3 by assumption.
+    reflexivity.
 Qed.
 
 Lemma isBitMask0_land:
@@ -1990,14 +1992,24 @@ Lemma isBitMask0_land:
 Proof.
   intros.
   unfold isBitMask0 in *.
-Admitted.
+  rewrite N_lt_pow2_testbits in *.
+  intros j?.
+  rewrite N.land_spec.
+  rewrite H, H0 by assumption.
+  reflexivity.
+Qed.
 
 Lemma isBitMask0_lxor:
   forall bm1 bm2, isBitMask0 bm1 -> isBitMask0 bm2 -> isBitMask0 (N.lxor bm1 bm2).
 Proof.
   intros.
   unfold isBitMask0 in *.
-Admitted.
+  rewrite N_lt_pow2_testbits in *.
+  intros j?.
+  rewrite N.lxor_spec.
+  rewrite H, H0 by assumption.
+  reflexivity.
+Qed.
 
 Lemma isBitMask_bitmapOf: forall e, isBitMask (bitmapOf e).
 Proof.

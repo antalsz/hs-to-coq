@@ -2549,13 +2549,24 @@ Lemma bitmapInRange_lxor:
   forall r bm1 bm2 i,
     bitmapInRange r (N.lxor bm1 bm2) i =
     xorb (bitmapInRange r bm1 i) (bitmapInRange r bm2 i).
-Admitted.
+Proof.
+  intros.
+  unfold bitmapInRange.
+  destruct (inRange i r); try reflexivity.
+  rewrite N.lxor_spec; reflexivity.
+Qed.
 
+(* Move *)
 Lemma bitmapInRange_land:
   forall r bm1 bm2 i,
     bitmapInRange r (N.land bm1 bm2) i =
     andb (bitmapInRange r bm1 i) (bitmapInRange r bm2 i).
-Admitted.
+Proof.
+  intros.
+  unfold bitmapInRange.
+  destruct (inRange i r); try reflexivity.
+  rewrite N.land_spec; reflexivity.
+Qed.
 
 (* MOVE *)
 Lemma isBitMask_isBitMask0:

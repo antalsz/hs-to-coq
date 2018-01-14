@@ -91,25 +91,20 @@ Lemma N_lt_pow2_testbits:
   forall n p, (n < 2^p)%N <-> (forall j, (p <= j)%N -> N.testbit n j = false).
 Proof.
   intros.
-  destruct (N.eqb_spec n 0).
-  * subst. intuition.
-    apply N_gt_0_neq.
+  etransitivity.
+  * symmetry. apply N.div_small_iff.
     apply N.pow_nonzero; congruence.
-  * split; intro.
-    + intros.
-      apply N.bits_above_log2.
-      apply N.log2_lt_pow2; auto.
-      apply N_gt_0_neq; auto.
-      eapply N.lt_le_trans.
-      eassumption.
-      apply N.pow_le_mono_r; auto; congruence.
-    + rewrite <- N.div_small_iff
-        by (apply N.pow_nonzero; congruence).
-      rewrite <- N.shiftr_div_pow2.
-      apply N.bits_inj_0; intro.
-      rewrite -> N.shiftr_spec by nonneg.
+  * rewrite <- N.shiftr_div_pow2.
+    rewrite <- N.bits_inj_iff.
+    split; intros H j.
+    + intro.
+      specialize (H (j - p)%N).
+      rewrite N.shiftr_spec, N.bits_0 in * by nonneg.
+      rewrite N.sub_add in H by assumption.
+      assumption.
+    + rewrite N.shiftr_spec, N.bits_0 by nonneg.
       apply H.
-      change (0 + p <= n1 + p)%N.
+      change (0 + p <= j + p)%N.
       apply N.add_le_mono_r.
       nonneg.
 Qed.

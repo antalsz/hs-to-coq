@@ -3056,11 +3056,59 @@ Module Foo: WSfun(N_as_OT).
   Qed.
   
   Lemma remove_1 :
-    forall (s : t) (x y : elt), N.eq x y -> ~ In y (remove x s). Admitted.
+    forall (s : t) (x y : elt), N.eq x y -> ~ In y (remove x s).
+  Proof.
+    intros.
+    unfold In, remove, pack, In_set in *; intros; destruct s as [s].
+    destruct H.
+    destruct w.
+    * simpl. congruence.
+    * erewrite member_spec0.
+        Focus 2.
+        eapply delete_Desc; try nonneg.
+        eassumption.
+      intro i. reflexivity.
+      simpl.
+      rewrite Z.eqb_refl; simpl.
+      congruence.
+  Qed.
+
   Lemma remove_2 :
-    forall (s : t) (x y : elt), ~ N.eq x y -> In y s -> In y (remove x s). Admitted.
+    forall (s : t) (x y : elt), ~ N.eq x y -> In y s -> In y (remove x s).
+  Proof.
+    intros.
+    unfold In, remove, pack, In_set in *; intros; destruct s as [s].
+    apply not_false_iff_true.
+    contradict H.
+    destruct w.
+    * inversion H0.
+    * erewrite member_spec0 in H.
+          Focus 2.
+          eapply delete_Desc; try nonneg.
+          eassumption.
+        intro i. reflexivity.
+      erewrite member_spec in H0; try eassumption.
+      simpl in *.
+      destruct (Z.eqb_spec (Z.of_N y) (Z.of_N x)); simpl in *; try congruence.
+      apply N2Z.inj in e. subst. reflexivity.
+  Qed.
+
   Lemma remove_3 :
-    forall (s : t) (x y : elt), In y (remove x s) -> In y s. Admitted.
+    forall (s : t) (x y : elt), In y (remove x s) -> In y s.
+  Proof.
+    intros.
+    unfold In, remove, pack, In_set in *; intros; destruct s as [s].
+    destruct w.
+    * inversion H.
+    * erewrite member_spec0 in H.
+          Focus 2.
+          eapply delete_Desc; try nonneg.
+          eassumption.
+        intro i. reflexivity.
+      erewrite member_spec; [|eassumption].
+      simpl in *.
+      rewrite andb_true_iff in H. intuition.
+  Qed.
 
   Lemma singleton_1 :
     forall x y : elt, In y (singleton x) -> N.eq x y.

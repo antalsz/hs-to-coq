@@ -2835,7 +2835,148 @@ Proof.
     intro. reflexivity.
 Qed.
 
-(** *** Instantiating the [FSetInterface] *)
+(** ** Speciyfing [union] *)
+
+(** The following is copied from the body of [union] *)
+
+Definition union_bin_bin p1 m1 t1 p2 m2 t2 l1 r1 l2 r2 :=
+   let union2 :=
+     if nomatch p1 p2 m2 : bool
+     then link p1 t1 p2 t2
+     else if zero p1 m2 : bool
+          then Bin p2 m2 (union t1 l2) r2
+          else Bin p2 m2 l2 (union t1 r2) in
+   let union1 :=
+     if nomatch p2 p1 m1 : bool
+     then link p1 t1 p2 t2
+     else if zero p2 m1 : bool
+          then Bin p1 m1 (union l1 t2) r1
+          else Bin p1 m1 l1 (union r1 t2) in
+   if shorter m1 m2 : bool
+   then union1
+   else if shorter m2 m1 : bool
+        then union2
+        else if p1 == p2 : bool
+                 then Bin p1 m1 (union l1 l2) (union r1 r2)
+                 else link p1 t1 p2 t2.
+
+Definition union_body s1 s2 := match s1, s2 with
+  | (Bin p1 m1 l1 r1 as t1) , (Bin p2 m2 l2 r2 as t2) => 
+     union_bin_bin p1 m1 t1 p2 m2 t2 l1 r1 l2 r2
+  | (Bin _ _ _ _ as t) , Tip kx bm => insertBM kx bm t
+  | (Bin _ _ _ _ as t) , Nil => t
+  | Tip kx bm , t => insertBM kx bm t
+  | Nil , t => t
+  end.
+
+Lemma union_eq s1 s2 :
+  union s1 s2 = union_body s1 s2.
+Proof.
+  SearchAbout Wf.Fix_sub.
+  unfold union, union_func, union_body.
+  simpl.
+  rewrite Wf.fix_sub_eq.
+  destruct s1, s2; try reflexivity.
+  intros.
+  destruct x; try reflexivity.
+  destruct x; try reflexivity.
+  destruct i; try reflexivity.
+  simpl.
+  rewrite H.
+Admitted.
+
+Lemma shorter_spec:
+  forall r1 r2,
+  (0 < rBits r1)%N ->
+  (0 < rBits r2)%N ->
+  shorter (rMask r1) (rMask r2) = (rBits r2 <? rBits r1)%N.
+Proof.
+  intros.
+  destruct r1 as [p1 b1], r2 as [p2 b2]. simpl in *.
+  rewrite N2Z.inj_lt in H.
+  rewrite N2Z.inj_lt in H0.
+  replace (Z.of_N 0%N) with 0 in * by reflexivity.
+
+  change ((Z.to_N (2 ^ Z.pred (Z.of_N b2))%Z <? Z.to_N (2 ^ Z.pred (Z.of_N b1))%Z)%N = (b2 <? b1)%N).
+  apply eq_true_iff_eq.
+  rewrite !N.ltb_lt.
+  rewrite <- Z2N.inj_lt by (apply Z.pow_nonneg; omega).
+  rewrite <- Z.pow_lt_mono_r_iff by omega.
+  rewrite <- Z.pred_lt_mono.
+  rewrite <- N2Z.inj_lt.
+  intuition.
+Qed.
+
+Program Fixpoint union_Desc
+  s1 r1 f1 s2 r2 f2 f
+  { measure (size_nat s1 + size_nat s2) } :
+  Desc s1 r1 f1 ->
+  Desc s2 r2 f2 ->
+  (forall i, f i = f1 i || f2 i) ->
+  Desc (union s1 s2) (commonRange r1 r2) f 
+  := fun HD1 HD2 Hf => _.
+Next Obligation.
+  rewrite union_eq.
+  unfold union_body.
+  inversion HD1; subst.
+  * eapply insertBM_Desc; try eassumption; try reflexivity.
+  * set (sl := Bin (rPrefix r1) (rMask r1) s0 s3) in *.
+    inversion HD2; subst.
+    + rewrite commonRange_sym by (eapply Desc_rNonneg; eassumption).
+      eapply insertBM_Desc; try eassumption; try reflexivity.
+      intro i. rewrite Hf. apply orb_comm.
+    + set (sr := Bin (rPrefix r2) (rMask r2) s1 s4) in *.
+      unfold union_bin_bin.
+      rewrite !shorter_spec by assumption.
+      destruct (N.ltb_spec (rBits r2) (rBits r1)).
+      * admit.
+      * destruct (N.ltb_spec (rBits r1) (rBits r2)).
+        - admit.
+        - assert (rBits r1 = rBits r2) by admit.
+          unfold op_zeze__, Eq_Integer___, op_zeze____.
+          destruct (Z.eqb_spec (rPrefix r1) (rPrefix r2)).
+          assert (r2 = r1) by admit.
+          subst.
+          eapply DescBin; try rewrite commonRange_idem; try assumption; try reflexivity.
+          ++ eapply union_Desc.
+             -- subst sl sr. simpl. omega.
+             -- eassumption.
+             -- eassumption.
+             -- intro i. reflexivity.
+          ++ eapply union_Desc.
+             -- subst sl sr. simpl. omega.
+             -- eassumption.
+             -- eassumption.
+             -- intro i. reflexivity.
+          ++ rewrite isSubrange_commonRange by (eapply Desc_rNonneg; eassumption).
+             rewrite H2, H8. reflexivity.
+          ++ rewrite isSubrange_commonRange by (eapply Desc_rNonneg; eassumption).
+             rewrite H3, H9. reflexivity.
+          ++ intro i. simpl. rewrite Hf, H6, H12.
+             destruct (f0 i), (f3 i), (f4 i), (f5 i); reflexivity.
+        - assert (rangeDisjoint r1 r2 = true) by admit.
+          rewrite disjoint_commonRange in * by assumption.
+          eapply link_Desc;
+            [ eapply DescBin with (r := r1); try eassumption; try reflexivity
+            | eapply DescBin with (r := r2); try eassumption; try reflexivity
+            |..]; auto.
+Admitted.
+
+
+Lemma union_WF:
+  forall s1 s2, WF s1 ->  WF s2 -> WF (union s1 s2).
+Proof.
+  intros.
+  destruct H; try assumption.
+  destruct H0.
+  * replace (union s Nil) with s by (destruct s; reflexivity).
+    eapply WFNonEmpty; eassumption.
+  * eapply WFNonEmpty.
+    eapply union_Desc; try eassumption.
+    intro. reflexivity.
+Qed.
+
+(** ** Instantiating the [FSetInterface] *)
 
 Require Import Coq.FSets.FSetInterface.
 Require Import Coq.Structures.OrderedTypeEx.

@@ -3124,7 +3124,13 @@ Module Foo: WSfun(N_as_OT).
     apply delte_WF; nonneg.
   Defined.
 
-  Definition union : t -> t -> t. Admitted.
+  Definition union (s1' s2' : t) : t.
+    refine (s1 <-- s1' ;;
+            s2 <-- s2' ;;
+            pack (union s1 s2) _).
+    apply union_WF; assumption.
+  Defined.
+
   Definition inter : t -> t -> t. Admitted.
   Definition diff : t -> t -> t. Admitted.
 
@@ -3188,7 +3194,7 @@ Module Foo: WSfun(N_as_OT).
 
   Lemma mem_1 : forall (s : t) (x : elt), In x s -> mem x s = true.
   Proof. unfold In; intros; destruct s as [s]; auto. Qed.
-    
+
   Lemma mem_2 : forall (s : t) (x : elt), mem x s = true -> In x s.
   Proof. unfold In; intros; destruct s as [s]; auto. Qed.
   
@@ -3341,11 +3347,62 @@ Module Foo: WSfun(N_as_OT).
   Qed.
 
   Lemma union_1 :
-    forall (s s' : t) (x : elt), In x (union s s') -> In x s \/ In x s'. Admitted.
+    forall (s s' : t) (x : elt), In x (union s s') -> In x s \/ In x s'.
+  Proof.
+    intros.
+    destruct s, s'.
+    unfold In, In_set, union, pack in *.
+    destruct w, w0.
+    * simpl in *. congruence.
+    * right. assumption.
+    * left. replace (Base.union s Nil) with s in * by (destruct s; reflexivity).
+      assumption.
+    * erewrite !member_spec by eassumption.
+      erewrite member_spec in H
+       by (eapply union_Desc; try eassumption; intro; reflexivity).
+      simpl in *.
+      rewrite orb_true_iff in H.
+      assumption.
+  Qed.
+
   Lemma union_2 :
-    forall (s s' : t) (x : elt), In x s -> In x (union s s'). Admitted.
+    forall (s s' : t) (x : elt), In x s -> In x (union s s').
+  Proof.
+    intros.
+    destruct s, s'.
+    unfold In, In_set, union, pack in *.
+    destruct w, w0.
+    * simpl in *. congruence.
+    * simpl in *. congruence.
+    * replace (Base.union s Nil) with s in * by (destruct s; reflexivity).
+      assumption.
+    * erewrite !member_spec in H by eassumption.
+      erewrite member_spec
+       by (eapply union_Desc; try eassumption; intro; reflexivity).
+      simpl in *.
+      rewrite orb_true_iff.
+      intuition.
+  Qed.
+
   Lemma union_3 :
-    forall (s s' : t) (x : elt), In x s' -> In x (union s s'). Admitted.
+    forall (s s' : t) (x : elt), In x s' -> In x (union s s').
+  Proof.
+    intros.
+    destruct s, s'.
+    unfold In, In_set, union, pack in *.
+    destruct w, w0.
+    * simpl in *. congruence.
+    * replace (Base.union Nil s) with s in * by (destruct s; reflexivity).
+      assumption.
+    * simpl in *. congruence.
+    * erewrite !member_spec in H by eassumption.
+      erewrite member_spec
+       by (eapply union_Desc; try eassumption; intro; reflexivity).
+      simpl in *.
+      rewrite orb_true_iff.
+      intuition.
+  Qed.
+
   Lemma inter_1 :
     forall (s s' : t) (x : elt), In x (inter s s') -> In x s. Admitted.
   Lemma inter_2 :

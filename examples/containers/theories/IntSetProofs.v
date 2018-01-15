@@ -1869,6 +1869,29 @@ Proof.
   assumption.
 Qed.
 
+(** *** Lemmas about [shorter] *)
+
+Lemma shorter_spec:
+  forall r1 r2,
+  (0 < rBits r1)%N ->
+  (0 < rBits r2)%N ->
+  shorter (rMask r1) (rMask r2) = (rBits r2 <? rBits r1)%N.
+Proof.
+  intros.
+  destruct r1 as [p1 b1], r2 as [p2 b2]. simpl in *.
+  rewrite N2Z.inj_lt in H.
+  rewrite N2Z.inj_lt in H0.
+  replace (Z.of_N 0%N) with 0 in * by reflexivity.
+
+  change ((Z.to_N (2 ^ Z.pred (Z.of_N b2))%Z <? Z.to_N (2 ^ Z.pred (Z.of_N b1))%Z)%N = (b2 <? b1)%N).
+  apply eq_true_iff_eq.
+  rewrite !N.ltb_lt.
+  rewrite <- Z2N.inj_lt by (apply Z.pow_nonneg; omega).
+  rewrite <- Z.pow_lt_mono_r_iff by omega.
+  rewrite <- Z.pred_lt_mono.
+  rewrite <- N2Z.inj_lt.
+  intuition.
+Qed.
 
 
 (** *** Operation: [bitmapInRange]
@@ -1978,6 +2001,7 @@ Proof.
   apply isTipPrefix_prefixMask. assumption.
   omega.
 Qed.
+
 
 
 (** *** Operation: [isBitMask]
@@ -2920,30 +2944,27 @@ Qed.
 
 (** The following is copied from the body of [union] *)
 
-Definition union_bin_bin p1 m1 t1 p2 m2 t2 l1 r1 l2 r2 :=
-   let union2 :=
-     if nomatch p1 p2 m2 : bool
-     then link p1 t1 p2 t2
-     else if zero p1 m2 : bool
-          then Bin p2 m2 (union t1 l2) r2
-          else Bin p2 m2 l2 (union t1 r2) in
-   let union1 :=
-     if nomatch p2 p1 m1 : bool
-     then link p1 t1 p2 t2
-     else if zero p2 m1 : bool
-          then Bin p1 m1 (union l1 t2) r1
-          else Bin p1 m1 l1 (union r1 t2) in
-   if shorter m1 m2 : bool
-   then union1
-   else if shorter m2 m1 : bool
-        then union2
-        else if p1 == p2 : bool
-                 then Bin p1 m1 (union l1 l2) (union r1 r2)
-                 else link p1 t1 p2 t2.
-
 Definition union_body s1 s2 := match s1, s2 with
   | (Bin p1 m1 l1 r1 as t1) , (Bin p2 m2 l2 r2 as t2) => 
-     union_bin_bin p1 m1 t1 p2 m2 t2 l1 r1 l2 r2
+     let union2 :=
+       if nomatch p1 p2 m2 : bool
+       then link p1 t1 p2 t2
+       else if zero p1 m2 : bool
+            then Bin p2 m2 (union t1 l2) r2
+            else Bin p2 m2 l2 (union t1 r2) in
+     let union1 :=
+       if nomatch p2 p1 m1 : bool
+       then link p1 t1 p2 t2
+       else if zero p2 m1 : bool
+            then Bin p1 m1 (union l1 t2) r1
+            else Bin p1 m1 l1 (union r1 t2) in
+     if shorter m1 m2 : bool
+     then union1
+     else if shorter m2 m1 : bool
+          then union2
+          else if p1 == p2 : bool
+                   then Bin p1 m1 (union l1 l2) (union r1 r2)
+                   else link p1 t1 p2 t2
   | (Bin _ _ _ _ as t) , Tip kx bm => insertBM kx bm t
   | (Bin _ _ _ _ as t) , Nil => t
   | Tip kx bm , t => insertBM kx bm t
@@ -2953,7 +2974,7 @@ Definition union_body s1 s2 := match s1, s2 with
 Lemma union_eq s1 s2 :
   union s1 s2 = union_body s1 s2.
 Proof.
-  unfold union, union_func, union_body.
+(*   unfold union, union_func, union_body.
   simpl.
   rewrite Wf.fix_sub_eq.
   destruct s1, s2; try reflexivity.
@@ -2962,30 +2983,8 @@ Proof.
   destruct x; try reflexivity.
   destruct i; try reflexivity.
   simpl.
-  rewrite H.
+  rewrite H. *)
 Admitted.
-
-Lemma shorter_spec:
-  forall r1 r2,
-  (0 < rBits r1)%N ->
-  (0 < rBits r2)%N ->
-  shorter (rMask r1) (rMask r2) = (rBits r2 <? rBits r1)%N.
-Proof.
-  intros.
-  destruct r1 as [p1 b1], r2 as [p2 b2]. simpl in *.
-  rewrite N2Z.inj_lt in H.
-  rewrite N2Z.inj_lt in H0.
-  replace (Z.of_N 0%N) with 0 in * by reflexivity.
-
-  change ((Z.to_N (2 ^ Z.pred (Z.of_N b2))%Z <? Z.to_N (2 ^ Z.pred (Z.of_N b1))%Z)%N = (b2 <? b1)%N).
-  apply eq_true_iff_eq.
-  rewrite !N.ltb_lt.
-  rewrite <- Z2N.inj_lt by (apply Z.pow_nonneg; omega).
-  rewrite <- Z.pow_lt_mono_r_iff by omega.
-  rewrite <- Z.pred_lt_mono.
-  rewrite <- N2Z.inj_lt.
-  intuition.
-Qed.
 
 Program Fixpoint union_Desc
   s1 r1 f1 s2 r2 f2 f
@@ -3006,7 +3005,6 @@ Next Obligation.
       eapply insertBM_Desc; try eassumption; try reflexivity.
       intro i. rewrite Hf. apply orb_comm.
     + set (sr := Bin (rPrefix r2) (rMask r2) s1 s4) in *.
-      unfold union_bin_bin.
       rewrite !shorter_spec by assumption.
       destruct (N.ltb_spec (rBits r2) (rBits r1)).
       * rewrite nomatch_spec by assumption.

@@ -3212,8 +3212,11 @@ Next Obligation.
   rewrite intersection_eq.
   unfold intersection_body.
   unfold op_zizazi__, Bits__N.
-  inversion HD1; subst.
-  * clear intersection_Desc.
+
+  inversion HD1.
+  * (* s1 is a Tip *)
+    subst.
+    clear intersection_Desc.
     generalize dependent f.
     induction HD2; intros f' Hf'; subst.
     + unfold op_zeze__, Eq_Integer___, op_zeze____.
@@ -3314,10 +3317,129 @@ Next Obligation.
              simpl. rewrite andb_false_r. reflexivity.
           -- rewrite (Desc_outside HD1) by assumption.
              rewrite andb_false_l. reflexivity.
-  * set (sl := Bin (rPrefix r1) (rMask r1) s0 s3) in *.
-    inversion HD2; subst.
-    + admit.
-    + set (sr := Bin (rPrefix r2) (rMask r2) s1 s4) in *.
+  * (* s1 is a Bin *)
+    inversion HD2.
+    + (* s2 is a Tip *)
+      (* Need to undo the split of s1 *)
+      change (Desc0 ((fix intersectBM (arg_11__ : IntSet) : IntSet :=
+        match arg_11__ with
+        | Bin p1 m1 l1 r5 =>
+            if nomatch p0 p1 m1
+            then Nil
+            else if zero p0 m1 then intersectBM l1 else intersectBM r5
+        | Tip kx1 bm1 =>
+            if _GHC.Base.==_ kx1 p0 then tip kx1 (N.land bm1 bm) else Nil
+        | Nil => Nil
+        end) (Bin p msk s0 s3)) (commonRange r1 r2) f).
+      rewrite  H7.
+      clear dependent s0. clear dependent s3. clear dependent r0. clear dependent r3. clear dependent f0. clear dependent f3.
+      clear H1.
+      subst.
+      (* Now it is a copy of the above. *)
+      clear intersection_Desc.
+      generalize dependent f.
+      induction HD1; intros f' Hf'; subst.
+      + unfold op_zeze__, Eq_Integer___, op_zeze____.
+        destruct (Z.eqb_spec (rPrefix r) (rPrefix r2)).
+        -- assert (r = r2) by (apply rPrefix_rBits_range_eq; try congruence); subst.
+           rewrite commonRange_idem in *.
+           apply tip_Desc0; auto.
+           intro i. rewrite Hf', H2, H13.
+           rewrite bitmapInRange_land. reflexivity.
+           apply isBitMask0_land; apply isBitMask_isBitMask0; assumption.
+        -- apply Desc0Nil.
+           intro i. rewrite Hf', H2, H13.
+           destruct (inRange i r) eqn:Hir.
+           ** assert (rangeDisjoint r r2 = true)
+                by (apply different_prefix_same_bits_disjoint; congruence).
+              assert (inRange i r2 = false)
+                by (eapply rangeDisjoint_inRange_false; eassumption).
+              rewrite bitmapInRange_outside with (r := r2) by  assumption.
+              rewrite andb_false_r.
+              reflexivity.
+           ** rewrite bitmapInRange_outside with (r := r) by  assumption.
+              rewrite andb_false_l.
+              reflexivity.
+      + assert (N.log2 WIDTH <= rBits r1)%N by (eapply Desc_larger_WIDTH; eauto).
+        assert (rBits r1 <= rBits (halfRange r false))%N by (apply subRange_smaller; auto).
+        assert (rBits (halfRange r false) < rBits r)%N by (apply halfRange_smaller; auto).
+        assert (rBits r2 < rBits r)%N by (rewrite H12; eapply N.le_lt_trans; eauto; eapply N.le_lt_trans; eauto).
+        rewrite nomatch_spec by assumption.
+        rewrite if_negb.
+        rewrite smaller_inRange_iff_subRange by assumption.
+        destruct (isSubrange r2 r) eqn:Hsr.
+        - rewrite zero_spec by assumption.
+          rewrite if_negb.
+          rewrite <- testbit_halfRange_isSubrange by auto.
+          rewrite isSubrange_commonRange_l in * by assumption.
+          destruct (isSubrange r2 (halfRange r true)) eqn:Hsr1.
+          ++ assert (isSubrange (commonRange r0 r2) r = true).
+             { rewrite isSubrange_commonRange by (eapply Desc_rNonneg; eassumption).
+               apply andb_true_intro. split.
+               -- eapply isSubrange_trans; try eassumption. apply isSubrange_halfRange; auto.
+               -- assumption.
+             }
+             eapply Desc0_subRange; [apply IHHD1_2|assumption]. clear IHHD1_1 IHHD1_2.
+             intro i. rewrite Hf', H4.
+             destruct (inRange i (halfRange r true)) eqn:Hir.
+             -- rewrite (Desc_outside HD1_1).
+                  Focus 2.
+                  eapply inRange_isSubrange_false; try eassumption.
+                  eapply rangeDisjoint_inRange_false.
+                  rewrite rangeDisjoint_sym; apply halves_disj_aux; eassumption.
+                  assumption.
+                rewrite orb_false_l. reflexivity.
+             -- rewrite (Desc_outside HD2).
+                  Focus 2.
+                  eapply inRange_isSubrange_false; try eassumption.
+                rewrite !andb_false_r. reflexivity.
+          ++ assert (isSubrange r2 (halfRange r false) = true).
+             { rewrite smaller_subRange_other_half in Hsr1 by auto.
+               rewrite negb_false_iff in Hsr1.
+               assumption.
+             }
+             assert (isSubrange (commonRange r1 r2) r = true).
+             { rewrite isSubrange_commonRange by (eapply Desc_rNonneg; eassumption).
+               apply andb_true_intro. split.
+               -- eapply isSubrange_trans; try eassumption. apply isSubrange_halfRange; auto.
+               -- assumption.
+             }
+             clear Hsr.
+             eapply Desc0_subRange; [apply IHHD1_1|assumption].  clear IHHD1_1 IHHD1_2.
+             intro i. rewrite Hf', H4.
+             destruct (inRange i (halfRange r false)) eqn:Hir.
+             -- rewrite (Desc_outside HD1_2).
+                  Focus 2.
+                  eapply inRange_isSubrange_false; try eassumption.
+                  eapply rangeDisjoint_inRange_false.
+                  apply halves_disj_aux; eassumption.
+                  assumption.
+                rewrite orb_false_r. reflexivity.
+             -- rewrite (Desc_outside HD2).
+                  Focus 2.
+                  eapply inRange_isSubrange_false; try eassumption.
+                rewrite !andb_false_r. reflexivity.
+        - assert (Hdis : rangeDisjoint r2 r = true) by (apply smaller_not_subrange_disjoint; auto).
+          apply Desc0Nil.
+          clear IHHD1_2 IHHD1_1.
+          intro i. rewrite Hf', H4.
+            destruct (inRange i r2) eqn: Hir.
+            -- rewrite (Desc_outside HD1_1).
+                 Focus 2.
+                 eapply inRange_isSubrange_false; try eassumption.
+                 eapply inRange_isSubrange_false; [apply isSubrange_halfRange; auto|].
+                 eapply rangeDisjoint_inRange_false; eassumption.
+               rewrite (Desc_outside HD1_2).
+                 Focus 2.
+                 eapply inRange_isSubrange_false; try eassumption.
+                 eapply inRange_isSubrange_false; [apply isSubrange_halfRange; auto|].
+                 eapply rangeDisjoint_inRange_false; eassumption.
+               simpl. reflexivity.
+            -- rewrite (Desc_outside HD2) by assumption.
+               rewrite andb_false_r. reflexivity.
+    + subst.
+      set (sl := Bin (rPrefix r1) (rMask r1) s0 s3) in *.
+      set (sr := Bin (rPrefix r2) (rMask r2) s4 s5) in *.
       rewrite !shorter_spec by assumption.
       destruct (N.ltb_spec (rBits r2) (rBits r1)).
       * (* s2 is smaller than s1 *)
@@ -3335,7 +3457,7 @@ Next Obligation.
              eapply Desc0_subRange.
              eapply intersection_Desc; clear intersection_Desc; try eassumption.
              ** subst sl sr. simpl. omega.
-             ** intro i. simpl. rewrite Hf, H6, H12.
+             ** intro i. simpl. rewrite Hf, H6, H17.
                 destruct (inRange i (halfRange r1 true)) eqn: Hir.
                 -- rewrite (Desc_outside H).
                      Focus 2.
@@ -3347,12 +3469,12 @@ Next Obligation.
                      Focus 2.
                      eapply inRange_isSubrange_false; try eassumption.
                    rewrite orb_false_r.
-                   rewrite (Desc_outside H4).
+                   rewrite (Desc_outside H10).
                      Focus 2.
                      eapply inRange_isSubrange_false; try eassumption.
                      eapply inRange_isSubrange_false; [apply isSubrange_halfRange|]; try assumption.
                      eapply inRange_isSubrange_false; try eassumption.
-                   rewrite (Desc_outside H5).
+                   rewrite (Desc_outside H11).
                      Focus 2.
                      eapply inRange_isSubrange_false; try eassumption.
                      eapply inRange_isSubrange_false; [apply isSubrange_halfRange|]; try assumption.
@@ -3367,7 +3489,7 @@ Next Obligation.
              eapply Desc0_subRange.
              eapply intersection_Desc; clear intersection_Desc; try eassumption.
              ** subst sl sr. simpl. omega.
-             ** intro i. simpl. rewrite Hf, H6, H12.
+             ** intro i. simpl. rewrite Hf, H6, H17.
                 destruct (inRange i (halfRange r1 false)) eqn: Hir.
                 -- rewrite (Desc_outside H0).
                      Focus 2.
@@ -3379,12 +3501,12 @@ Next Obligation.
                      Focus 2.
                      eapply inRange_isSubrange_false; try eassumption.
                    rewrite orb_false_l.
-                   rewrite (Desc_outside H4).
+                   rewrite (Desc_outside H10).
                      Focus 2.
                      eapply inRange_isSubrange_false; try eassumption.
                      eapply inRange_isSubrange_false; [apply isSubrange_halfRange|]; try assumption.
                      eapply inRange_isSubrange_false; try eassumption.
-                   rewrite (Desc_outside H5).
+                   rewrite (Desc_outside H11).
                      Focus 2.
                      eapply inRange_isSubrange_false; try eassumption.
                      eapply inRange_isSubrange_false; [apply isSubrange_halfRange|]; try assumption.
@@ -3396,15 +3518,15 @@ Next Obligation.
         - (* s2 is not part of s1, but smaller, so disjoint *)
           assert (Hdis : rangeDisjoint r2 r1 = true) by (apply smaller_not_subrange_disjoint; auto).
           apply Desc0Nil.
-          intro i. rewrite Hf, H6, H12.
+          intro i. rewrite Hf, H6, H17.
           destruct (inRange i r1) eqn: Hir.
-          -- rewrite (Desc_outside H4).
+          -- rewrite (Desc_outside H10).
                Focus 2.
                eapply inRange_isSubrange_false; try eassumption.
                eapply inRange_isSubrange_false; [apply isSubrange_halfRange|]; try assumption.
                eapply rangeDisjoint_inRange_false; try (rewrite rangeDisjoint_sym; eassumption).
                assumption.
-            rewrite (Desc_outside H5).
+            rewrite (Desc_outside H11).
                Focus 2.
                eapply inRange_isSubrange_false; try eassumption.
                eapply inRange_isSubrange_false; [apply isSubrange_halfRange|]; try assumption.
@@ -3437,15 +3559,15 @@ Next Obligation.
                eapply Desc0_subRange.
                eapply intersection_Desc; clear intersection_Desc; try eassumption.
                ** subst sl sr. simpl. omega.
-               ** intro i. simpl. rewrite Hf, H6, H12.
+               ** intro i. simpl. rewrite Hf, H6, H17.
                   destruct (inRange i (halfRange r2 true)) eqn: Hir.
-                  -- rewrite (Desc_outside H4).
+                  -- rewrite (Desc_outside H10).
                        Focus 2.
                        eapply inRange_isSubrange_false; try eassumption.
                        eapply rangeDisjoint_inRange_false; try (rewrite rangeDisjoint_sym; apply halves_disj_aux; eassumption).
                        assumption.
                      rewrite orb_false_l. reflexivity.
-                  -- rewrite (Desc_outside H5).
+                  -- rewrite (Desc_outside H11).
                        Focus 2.
                        eapply inRange_isSubrange_false; try eassumption.
                      rewrite orb_false_r.
@@ -3469,15 +3591,15 @@ Next Obligation.
                eapply Desc0_subRange.
                eapply intersection_Desc; clear intersection_Desc; try eassumption.
                ** subst sl sr. simpl. omega.
-               ** intro i. simpl. rewrite Hf, H6, H12.
+               ** intro i. simpl. rewrite Hf, H6, H17.
                   destruct (inRange i (halfRange r2 false)) eqn: Hir.
-                  -- rewrite (Desc_outside H5).
+                  -- rewrite (Desc_outside H11).
                        Focus 2.
                        eapply inRange_isSubrange_false; try eassumption.
                        eapply rangeDisjoint_inRange_false; try (apply halves_disj_aux; eassumption).
                        assumption.
                      rewrite orb_false_r. reflexivity.
-                  -- rewrite (Desc_outside H4).
+                  -- rewrite (Desc_outside H10).
                        Focus 2.
                        eapply inRange_isSubrange_false; try eassumption.
                      rewrite orb_false_l.
@@ -3498,7 +3620,7 @@ Next Obligation.
           - (* s1 is not part of s2, but smaller, so disjoint *)
             assert (Hdis : rangeDisjoint r1 r2 = true) by (apply smaller_not_subrange_disjoint; auto).
             apply Desc0Nil.
-            intro i. rewrite Hf, H6, H12.
+            intro i. rewrite Hf, H6, H17.
             destruct (inRange i r2) eqn: Hir.
             -- rewrite (Desc_outside H).
                  Focus 2.
@@ -3513,11 +3635,11 @@ Next Obligation.
                  eapply rangeDisjoint_inRange_false; try (rewrite rangeDisjoint_sym; eassumption).
                  assumption.
                rewrite orb_false_l. rewrite andb_false_l. reflexivity.
-            -- rewrite (Desc_outside H4).
+            -- rewrite (Desc_outside H10).
                  Focus 2.
                  eapply inRange_isSubrange_false; try eassumption.
                  eapply inRange_isSubrange_false; [apply isSubrange_halfRange|]; try assumption.
-              rewrite (Desc_outside H5).
+              rewrite (Desc_outside H11).
                  Focus 2.
                  eapply inRange_isSubrange_false; try eassumption.
                  eapply inRange_isSubrange_false; [apply isSubrange_halfRange|]; try assumption.
@@ -3544,30 +3666,30 @@ Next Obligation.
                apply andb_true_intro; intuition.
             ++ rewrite isSubrange_commonRange by (eapply Desc_rNonneg; eassumption).
                apply andb_true_intro; intuition.
-            ++ intro i. simpl. rewrite Hf, H6, H12.
+            ++ intro i. simpl. rewrite Hf, H6, H17.
                destruct (inRange i (halfRange r1 false)) eqn: Hir.
                -- rewrite (Desc_outside H0).
                     Focus 2.
                     eapply inRange_isSubrange_false; try eassumption.
                     eapply rangeDisjoint_inRange_false; try (apply halves_disj_aux; eassumption).
                     assumption.
-                  rewrite (Desc_outside H5).
+                  rewrite (Desc_outside H11).
                     Focus 2.
                     eapply inRange_isSubrange_false; try eassumption.
                     eapply rangeDisjoint_inRange_false; try (apply halves_disj_aux; eassumption).
                     assumption.
-                  destruct (f0 i),(f4 i); try reflexivity.
+                  destruct (f0 i),(f5 i); reflexivity.
                -- rewrite (Desc_outside H).
                     Focus 2.
                     eapply inRange_isSubrange_false; try eassumption.
-                 rewrite (Desc_outside H4).
+                 rewrite (Desc_outside H10).
                     Focus 2.
                     eapply inRange_isSubrange_false; try eassumption.
-                  destruct (f3 i),(f5 i); try reflexivity.
+                  destruct (f3 i),(f5 i); reflexivity.
           - assert (rangeDisjoint r1 r2 = true)
               by (apply different_prefix_same_bits_disjoint; auto).
             apply Desc0Nil.
-            intro i. rewrite Hf, H6, H12.
+            intro i. rewrite Hf, H6, H17.
             destruct (inRange i r2) eqn: Hir.
             -- rewrite (Desc_outside H).
                  Focus 2.
@@ -3582,16 +3704,16 @@ Next Obligation.
                  eapply rangeDisjoint_inRange_false; try (rewrite rangeDisjoint_sym; eassumption).
                  assumption.
                rewrite orb_false_l. rewrite andb_false_l. reflexivity.
-            -- rewrite (Desc_outside H4).
+            -- rewrite (Desc_outside H10).
                  Focus 2.
                  eapply inRange_isSubrange_false; try eassumption.
                  eapply inRange_isSubrange_false; [apply isSubrange_halfRange|]; try assumption.
-              rewrite (Desc_outside H5).
+              rewrite (Desc_outside H11).
                  Focus 2.
                  eapply inRange_isSubrange_false; try eassumption.
                  eapply inRange_isSubrange_false; [apply isSubrange_halfRange|]; try assumption.
                rewrite orb_false_l. rewrite andb_false_r. reflexivity.
-Admitted.
+Qed.
 
 Lemma intersection_Sem:
   forall s1 f1 s2 f2,

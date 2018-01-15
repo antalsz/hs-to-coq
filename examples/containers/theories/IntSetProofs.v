@@ -1874,6 +1874,37 @@ Lemma bitmapInRange_outside:
   forall r bm i, inRange i r = false -> bitmapInRange r bm i = false.
 Proof. intros. unfold bitmapInRange. rewrite H. reflexivity. Qed.
 
+Lemma bitmapInRange_0:
+  forall r i, bitmapInRange r 0%N i = false.
+Proof.
+  intros.
+  unfold bitmapInRange.
+  destruct (inRange i r); auto.
+Qed.
+
+Lemma bitmapInRange_lxor:
+  forall r bm1 bm2 i,
+    bitmapInRange r (N.lxor bm1 bm2) i =
+    xorb (bitmapInRange r bm1 i) (bitmapInRange r bm2 i).
+Proof.
+  intros.
+  unfold bitmapInRange.
+  destruct (inRange i r); try reflexivity.
+  rewrite N.lxor_spec; reflexivity.
+Qed.
+
+Lemma bitmapInRange_land:
+  forall r bm1 bm2 i,
+    bitmapInRange r (N.land bm1 bm2) i =
+    andb (bitmapInRange r bm1 i) (bitmapInRange r bm2 i).
+Proof.
+  intros.
+  unfold bitmapInRange.
+  destruct (inRange i r); try reflexivity.
+  rewrite N.land_spec; reflexivity.
+Qed.
+
+
 Lemma bitmapInRange_bitmapOf:
   forall e i,
   bitmapInRange (Z.shiftr e 6, N.log2 WIDTH) (bitmapOf e) i = (i =? e).
@@ -1950,6 +1981,11 @@ Definition isBitMask (bm : N) :=
 (** Sometimes, we need to allow zero. *)
 
 Definition isBitMask0 (bm : N) := (bm < 2^WIDTH)%N.
+
+Lemma isBitMask_isBitMask0:
+  forall bm, isBitMask bm -> isBitMask0 bm.
+Proof. intros. unfold isBitMask0, isBitMask in *. intuition. Qed.
+
 
 Lemma isBitMask0_zero_or_isBitMask:
   forall bm, isBitMask0 bm <-> (bm = 0%N \/ isBitMask bm).
@@ -2093,6 +2129,15 @@ Proof. intros.
   * eassumption.
   * apply isSubrange_refl.
   * intro. reflexivity.
+Qed.
+
+Lemma Desc0_WF:
+  forall s r f, Desc0 s r f -> WF s.
+Proof.
+  intros.
+  destruct H.
+  * apply WFEmpty.
+  * eapply WFNonEmpty; eassumption.
 Qed.
 
 Lemma Desc_rNonneg:
@@ -2567,28 +2612,8 @@ Proof.
   assumption.
 Qed.
 
-(** *** Specifying [remove] *)
+(** *** Specifying the smart constructors [tip] and [bin] *)
 
-(* MOVE *)
-Lemma Desc0_WF:
-  forall s r f, Desc0 s r f -> WF s.
-Proof.
-  intros.
-  destruct H.
-  * apply WFEmpty.
-  * eapply WFNonEmpty; eassumption.
-Qed.
-
-(* MOVE *)
-Lemma bitmapInRange_0:
-  forall r i, bitmapInRange r 0%N i = false.
-Proof.
-  intros.
-  unfold bitmapInRange.
-  destruct (inRange i r); auto.
-Qed.
-
-(* MOVE *)
 Lemma tip_Desc0:
   forall p bm r f,
     0 <= p ->
@@ -2615,7 +2640,6 @@ Proof.
     apply DescTip; auto.
 Qed.
 
-(* MOVE *)
 Lemma bin_Desc0:
   forall s1 r1 f1 s2 r2 f2 p msk r f,
     Desc0 s1 r1 f1 ->
@@ -2653,34 +2677,7 @@ Proof.
     + intro i. rewrite H6, Hf, Hf0. reflexivity.
 Qed.
 
-(* Move *)
-Lemma bitmapInRange_lxor:
-  forall r bm1 bm2 i,
-    bitmapInRange r (N.lxor bm1 bm2) i =
-    xorb (bitmapInRange r bm1 i) (bitmapInRange r bm2 i).
-Proof.
-  intros.
-  unfold bitmapInRange.
-  destruct (inRange i r); try reflexivity.
-  rewrite N.lxor_spec; reflexivity.
-Qed.
-
-(* Move *)
-Lemma bitmapInRange_land:
-  forall r bm1 bm2 i,
-    bitmapInRange r (N.land bm1 bm2) i =
-    andb (bitmapInRange r bm1 i) (bitmapInRange r bm2 i).
-Proof.
-  intros.
-  unfold bitmapInRange.
-  destruct (inRange i r); try reflexivity.
-  rewrite N.land_spec; reflexivity.
-Qed.
-
-(* MOVE *)
-Lemma isBitMask_isBitMask0:
-  forall bm, isBitMask bm -> isBitMask0 bm.
-Proof. intros. unfold isBitMask0, isBitMask in *. intuition. Qed.
+(** *** Specifying [remove] *)
 
 Lemma deleteBM_Desc:
   forall p' bm s2 r1 r2 f1 f2 f,

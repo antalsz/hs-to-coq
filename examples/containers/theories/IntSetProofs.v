@@ -3552,33 +3552,28 @@ Next Obligation.
                  eapply inRange_isSubrange_false; try eassumption.
                  eapply inRange_isSubrange_false; [apply isSubrange_halfRange|]; try assumption.
                rewrite orb_false_l. rewrite andb_false_r. reflexivity.
-Qed.
+Admitted.
 
-Lemma union_Sem:
+Lemma intersection_Sem:
   forall s1 f1 s2 f2,
   Sem s1 f1 ->
   Sem s2 f2 ->
-  Sem (union s1 s2) (fun i => f1 i || f2 i).
+  Sem (intersection s1 s2) (fun i => f1 i && f2 i).
 Proof.
   intros.
   destruct H; [|destruct H0].
-  * eapply Sem_change_f. apply H0.
-    intro i. rewrite H. rewrite orb_false_l. reflexivity.
-  * eapply Sem_change_f. eapply DescSem.
-    replace (union s Nil) with s by (destruct s; reflexivity).
-    eapply HD.
-    intro i. rewrite H. rewrite orb_false_r. reflexivity.
-  * eapply DescSem.
-    eapply union_Desc; try eassumption.
-    intro i. reflexivity.
+  * apply SemNil. intro i. rewrite H. reflexivity.
+  * replace (intersection s Nil) with Nil by (destruct s; reflexivity).
+    apply SemNil. intro i. rewrite H. rewrite andb_false_r. reflexivity.
+  * eapply Desc0_Sem. eapply intersection_Desc; try eauto.
 Qed.
 
-Lemma union_WF:
-  forall s1 s2, WF s1 ->  WF s2 -> WF (union s1 s2).
+Lemma intersection_WF:
+  forall s1 s2, WF s1 ->  WF s2 -> WF (intersection s1 s2).
 Proof.
   intros.
   destruct H, H0.
-  eexists. apply union_Sem; eassumption.
+  eexists. apply intersection_Sem; eassumption.
 Qed.
 
 
@@ -3671,7 +3666,13 @@ Module Foo: WSfun(N_as_OT).
     apply union_WF; assumption.
   Defined.
 
-  Definition inter : t -> t -> t. Admitted.
+  Definition inter (s1' s2' : t) : t.
+    refine (s1 <-- s1' ;;
+            s2 <-- s2' ;;
+            pack (intersection s1 s2) _).
+    apply intersection_WF; assumption.
+  Defined.
+
   Definition diff : t -> t -> t. Admitted.
 
   Definition equal : t -> t -> bool :=
@@ -3915,11 +3916,51 @@ Module Foo: WSfun(N_as_OT).
   Qed.
 
   Lemma inter_1 :
-    forall (s s' : t) (x : elt), In x (inter s s') -> In x s. Admitted.
+    forall (s s' : t) (x : elt), In x (inter s s') -> In x s.
+  Proof.
+    intros.
+    destruct s, s'.
+    unfold In, In_set, inter, pack in *.
+    destruct w as [f1 HSem1], w0 as [f2 HSem2].
+    erewrite !member_Sem by eassumption.
+    erewrite member_Sem in H
+     by (eapply intersection_Sem; try eassumption; intro; reflexivity).
+    simpl in *.
+    rewrite andb_true_iff in H.
+    intuition.
+  Qed.
+
   Lemma inter_2 :
-    forall (s s' : t) (x : elt), In x (inter s s') -> In x s'. Admitted.
+    forall (s s' : t) (x : elt), In x (inter s s') -> In x s'.
+  Proof.
+    intros.
+    destruct s, s'.
+    unfold In, In_set, inter, pack in *.
+    destruct w as [f1 HSem1], w0 as [f2 HSem2].
+    erewrite !member_Sem by eassumption.
+    erewrite member_Sem in H
+     by (eapply intersection_Sem; try eassumption; intro; reflexivity).
+    simpl in *.
+    rewrite andb_true_iff in H.
+    intuition.
+  Qed.
+  
   Lemma inter_3 :
-    forall (s s' : t) (x : elt), In x s -> In x s' -> In x (inter s s'). Admitted.
+    forall (s s' : t) (x : elt), In x s -> In x s' -> In x (inter s s').
+  Proof.
+    intros.
+    destruct s, s'.
+    unfold In, In_set, inter, pack in *.
+    destruct w as [f1 HSem1], w0 as [f2 HSem2].
+    erewrite !member_Sem in H by eassumption.
+    erewrite !member_Sem in H0 by eassumption.
+    erewrite member_Sem
+     by (eapply intersection_Sem; try eassumption; intro; reflexivity).
+    simpl in *.
+    rewrite andb_true_iff.
+    intuition.
+  Qed.
+
   Lemma diff_1 :
     forall (s s' : t) (x : elt), In x (diff s s') -> In x s. Admitted.
   Lemma diff_2 :

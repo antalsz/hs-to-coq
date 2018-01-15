@@ -2067,6 +2067,7 @@ Inductive Desc : IntSet -> range -> (Z -> bool) -> Prop :=
     (forall i, f i = f1 i || f2 i) ->
     Desc (Bin p msk s1 s2) r f.
 
+
 (** A variant that also allows [Nil], or sets that do not
     cover the full given range, but are certainly contained in them.
     This is used to describe operations that may delete elements.
@@ -2236,6 +2237,55 @@ Proof.
     reflexivity.
 Qed.
 
+(** A smart constructor that has more convenient requirements about [f] *)
+
+Lemma DescBin' : forall s1 r1 f1 s2 r2 f2 p msk r f,
+    Desc s1 r1 f1 ->
+    Desc s2 r2 f2 ->
+    (0 < rBits r)%N ->
+    isSubrange r1 (halfRange r false) = true ->
+    isSubrange r2 (halfRange r true) = true ->
+    p = rPrefix r ->
+    msk = rMask r -> 
+    (forall i, inRange i (halfRange r false) = true  -> f i = f1 i) ->
+    (forall i, inRange i (halfRange r true)  = true  -> f i = f2 i) ->
+    (forall i, inRange i r                   = false -> f i = false) ->
+    Desc (Bin p msk s1 s2) r f.
+Proof.
+  intros.
+  eapply DescBin; try eassumption.
+  intro i.
+  destruct (inRange i r) eqn:Hir.
+  * destruct (inRange i (halfRange r false)) eqn: Hir1.
+    + assert (Hir2 : inRange i (halfRange r true) = false).
+      { eapply rangeDisjoint_inRange_false.
+        eapply halves_disj_aux; auto.
+        assumption.
+      }
+      rewrite H6 by assumption.
+      rewrite (Desc_outside H0) by (eapply inRange_isSubrange_false; eassumption).
+      rewrite orb_false_r. reflexivity.
+    + assert (Hir2 : inRange i (halfRange r true) = true).
+      { rewrite halfRange_inRange_testbit in Hir1 by auto.
+        rewrite halfRange_inRange_testbit by auto.
+        destruct (Z.testbit _ _); simpl in *; congruence.
+      }
+      rewrite H7 by assumption.
+      rewrite (Desc_outside H) by (eapply inRange_isSubrange_false; eassumption).
+      rewrite orb_false_l. reflexivity.
+  * rewrite H8 by assumption.
+    assert (inRange i r1 = false).
+    { eapply inRange_isSubrange_false; try eassumption.
+      eapply inRange_isSubrange_false; try (apply isSubrange_halfRange; auto).
+      assumption. }
+    assert (inRange i r2 = false).
+    { eapply inRange_isSubrange_false; try eassumption.
+      eapply inRange_isSubrange_false; try (apply isSubrange_halfRange; auto).
+      assumption. }
+    rewrite (Desc_outside H) by assumption.
+    rewrite (Desc_outside H0) by assumption.
+    reflexivity.
+Qed.
 
 (** *** Specifying [member] *)
 

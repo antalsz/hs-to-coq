@@ -3237,7 +3237,10 @@ Next Obligation.
          ** rewrite bitmapInRange_outside with (r := r) by  assumption.
             rewrite andb_false_r.
             reflexivity.
-    + assert ((rBits r1 < rBits r)%N) by admit. 
+    + assert (N.log2 WIDTH <= rBits r0)%N by (eapply Desc_larger_WIDTH; eauto).
+      assert (rBits r0 <= rBits (halfRange r false))%N by (apply subRange_smaller; auto).
+      assert (rBits (halfRange r false) < rBits r)%N by (apply halfRange_smaller; auto).
+      assert (rBits r1 < rBits r)%N by (rewrite H1; eapply N.le_lt_trans; eauto; eapply N.le_lt_trans; eauto).
       rewrite nomatch_spec by assumption.
       rewrite if_negb.
       rewrite smaller_inRange_iff_subRange by assumption.
@@ -3247,16 +3250,52 @@ Next Obligation.
         rewrite <- testbit_halfRange_isSubrange by auto.
         rewrite isSubrange_commonRange_r in * by assumption.
         destruct (isSubrange r1 (halfRange r true)) eqn:Hsr1.
-        ++ assert (isSubrange (commonRange r1 r2) r = true) by admit.
-           eapply Desc0_subRange.
-           apply IHHD2_2.
-           intro i. rewrite Hf', H8. admit.
-           assumption.
-        ++ assert (isSubrange (commonRange r1 r0) r = true) by admit.
-           eapply Desc0_subRange.
-           apply IHHD2_1.
-           intro i. rewrite Hf', H8. admit.
-           assumption.
+        ++ assert (isSubrange (commonRange r1 r2) r = true).
+           { rewrite isSubrange_commonRange by (eapply Desc_rNonneg; eassumption).
+             apply andb_true_intro. split.
+             -- assumption.
+             -- eapply isSubrange_trans; try eassumption. apply isSubrange_halfRange; auto.
+           }
+           eapply Desc0_subRange; [apply IHHD2_2|assumption]. clear IHHD2_1 IHHD2_2.
+           intro i. rewrite Hf', H8.
+           destruct (inRange i (halfRange r true)) eqn:Hir.
+           -- rewrite (Desc_outside HD2_1).
+                Focus 2.
+                eapply inRange_isSubrange_false; try eassumption.
+                eapply rangeDisjoint_inRange_false.
+                rewrite rangeDisjoint_sym; apply halves_disj_aux; eassumption.
+                assumption.
+              rewrite orb_false_l. reflexivity.
+           -- rewrite (Desc_outside HD1).
+                Focus 2.
+                eapply inRange_isSubrange_false; try eassumption.
+              rewrite andb_false_l. reflexivity.
+        ++ assert (isSubrange r1 (halfRange r false) = true).
+           { rewrite smaller_subRange_other_half in Hsr1 by auto.
+             rewrite negb_false_iff in Hsr1.
+             assumption.
+           }
+           assert (isSubrange (commonRange r1 r0) r = true).
+           { rewrite isSubrange_commonRange by (eapply Desc_rNonneg; eassumption).
+             apply andb_true_intro. split.
+             -- assumption.
+             -- eapply isSubrange_trans; try eassumption. apply isSubrange_halfRange; auto.
+           }
+           clear Hsr.
+           eapply Desc0_subRange; [apply IHHD2_1|assumption].
+           intro i. rewrite Hf', H8.
+           destruct (inRange i (halfRange r false)) eqn:Hir.
+           -- rewrite (Desc_outside HD2_2).
+                Focus 2.
+                eapply inRange_isSubrange_false; try eassumption.
+                eapply rangeDisjoint_inRange_false.
+                apply halves_disj_aux; eassumption.
+                assumption.
+              rewrite orb_false_r. reflexivity.
+           -- rewrite (Desc_outside HD1).
+                Focus 2.
+                eapply inRange_isSubrange_false; try eassumption.
+              rewrite andb_false_l. reflexivity.
       - assert (Hdis : rangeDisjoint r1 r = true) by (apply smaller_not_subrange_disjoint; auto).
         apply Desc0Nil.
         clear IHHD2_2 IHHD2_1.

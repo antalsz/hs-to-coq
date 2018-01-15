@@ -467,6 +467,16 @@ Definition range := (Z * N)%type.
 Definition rPrefix : range -> Z := fun '(p,b) => Z.shiftl p (Z.of_N b).
 Definition rBits : range -> N   := snd.
 
+Lemma rPrefix_rBits_range_eq:
+  forall r1 r2, rPrefix r1 = rPrefix r2 -> rBits r1 = rBits r2 -> r1 = r2.
+Proof.
+  intros.
+  destruct r1 as [p1 b1], r2 as [p2 b2].
+  simpl in *; subst.
+  rewrite Z_shiftl_inj in H by nonneg.
+  congruence.
+Qed.
+
 (** *** Operation: [inRange]
 
 This operation checks if a value is in the range of the range set.
@@ -2872,7 +2882,6 @@ Definition union_body s1 s2 := match s1, s2 with
 Lemma union_eq s1 s2 :
   union s1 s2 = union_body s1 s2.
 Proof.
-  SearchAbout Wf.Fix_sub.
   unfold union, union_func, union_body.
   simpl.
   rewrite Wf.fix_sub_eq.
@@ -2929,39 +2938,96 @@ Next Obligation.
       unfold union_bin_bin.
       rewrite !shorter_spec by assumption.
       destruct (N.ltb_spec (rBits r2) (rBits r1)).
-      * admit.
-      * destruct (N.ltb_spec (rBits r1) (rBits r2)).
-        - admit.
-        - assert (rBits r1 = rBits r2) by admit.
-          unfold op_zeze__, Eq_Integer___, op_zeze____.
-          destruct (Z.eqb_spec (rPrefix r1) (rPrefix r2)).
-          assert (r2 = r1) by admit.
-          subst.
-          eapply DescBin; try rewrite commonRange_idem; try assumption; try reflexivity.
-          ++ eapply union_Desc.
-             -- subst sl sr. simpl. omega.
-             -- eassumption.
-             -- eassumption.
-             -- intro i. reflexivity.
-          ++ eapply union_Desc.
-             -- subst sl sr. simpl. omega.
-             -- eassumption.
-             -- eassumption.
-             -- intro i. reflexivity.
-          ++ rewrite isSubrange_commonRange by (eapply Desc_rNonneg; eassumption).
-             rewrite H2, H8. reflexivity.
-          ++ rewrite isSubrange_commonRange by (eapply Desc_rNonneg; eassumption).
-             rewrite H3, H9. reflexivity.
-          ++ intro i. simpl. rewrite Hf, H6, H12.
-             destruct (f0 i), (f3 i), (f4 i), (f5 i); reflexivity.
-        - assert (rangeDisjoint r1 r2 = true) by admit.
+      * rewrite nomatch_spec by assumption.
+        rewrite if_negb.
+        rewrite smaller_inRange_iff_subRange by assumption.
+        destruct (isSubrange r2 r1) eqn:Hsr.
+        - rewrite zero_spec by assumption.
+          rewrite if_negb.
+          rewrite <- testbit_halfRange_isSubrange by assumption.
+          rewrite isSubrange_commonRange_l in * by assumption.
+          destruct (isSubrange r2 (halfRange r1 true)) eqn:Hsr1.
+          ++ eapply DescBin; [eassumption|eapply union_Desc|..]; try eassumption; try reflexivity.
+             ** subst sl sr. simpl. omega.
+             ** rewrite isSubrange_commonRange by (eapply Desc_rNonneg; eassumption).
+                apply andb_true_intro; intuition.
+             ** intro i. simpl. rewrite Hf, H6.
+                destruct (f0 i), (f3 i), (f2 i); reflexivity.
+          ++ assert (isSubrange r2 (halfRange r1 false) = true)
+               by (rewrite -> smaller_subRange_other_half, -> negb_false_iff in Hsr1 by auto; assumption).
+            eapply DescBin; [eapply union_Desc|eassumption|..]; try eassumption; try reflexivity.
+             ** subst sl sr. simpl. omega.
+             ** rewrite isSubrange_commonRange by (eapply Desc_rNonneg; eassumption).
+                apply andb_true_intro; intuition.
+             ** intro i. simpl. rewrite Hf, H6.
+                destruct (f0 i), (f3 i), (f2 i); reflexivity.
+        - assert (Hdis : rangeDisjoint r2 r1 = true) by (apply smaller_not_subrange_disjoint; auto).
+          rewrite rangeDisjoint_sym in Hdis.
           rewrite disjoint_commonRange in * by assumption.
           eapply link_Desc;
             [ eapply DescBin with (r := r1); try eassumption; try reflexivity
             | eapply DescBin with (r := r2); try eassumption; try reflexivity
             |..]; auto.
-Admitted.
-
+      * destruct (N.ltb_spec (rBits r1) (rBits r2)).
+        - rewrite nomatch_spec by assumption.
+          rewrite if_negb.
+          rewrite smaller_inRange_iff_subRange by assumption.
+          destruct (isSubrange r1 r2) eqn:Hsr.
+          - rewrite zero_spec by assumption.
+            rewrite if_negb.
+            rewrite <- testbit_halfRange_isSubrange by assumption.
+            rewrite isSubrange_commonRange_r in * by assumption.
+            destruct (isSubrange r1 (halfRange r2 true)) eqn:Hsr1.
+            ++ eapply DescBin; [eassumption|eapply union_Desc|..]; try eassumption; try reflexivity.
+               ** subst sl sr. simpl. omega.
+               ** rewrite isSubrange_commonRange by (eapply Desc_rNonneg; eassumption).
+                  apply andb_true_intro; intuition.
+               ** intro i. simpl. rewrite Hf, H12.
+                  destruct (f1 i), (f4 i), (f5 i); reflexivity.
+            ++ assert (isSubrange r1 (halfRange r2 false) = true)
+                 by (rewrite -> smaller_subRange_other_half, -> negb_false_iff in Hsr1 by auto; assumption).
+              eapply DescBin; [eapply union_Desc|eassumption|..]; try eassumption; try reflexivity.
+               ** subst sl sr. simpl. omega.
+               ** rewrite isSubrange_commonRange by (eapply Desc_rNonneg; eassumption).
+                  apply andb_true_intro; intuition.
+               ** intro i. simpl. rewrite Hf, H12.
+                  destruct (f1 i), (f4 i), (f5 i); reflexivity.
+          - assert (Hdis : rangeDisjoint r1 r2 = true) by (apply smaller_not_subrange_disjoint; auto).
+            rewrite disjoint_commonRange in * by assumption.
+            eapply link_Desc;
+              [ eapply DescBin with (r := r1); try eassumption; try reflexivity
+              | eapply DescBin with (r := r2); try eassumption; try reflexivity
+              |..]; auto.
+        - assert (rBits r1 = rBits r2) by (apply N.le_antisymm; auto).
+          unfold op_zeze__, Eq_Integer___, op_zeze____.
+          destruct (Z.eqb_spec (rPrefix r1) (rPrefix r2)).
+          assert (r2 = r1) by (apply rPrefix_rBits_range_eq; auto); subst.
+          rewrite commonRange_idem in *.
+          eapply DescBin; try assumption; try reflexivity.
+          ++ eapply union_Desc.
+             -- subst sl sr. simpl. omega.
+             -- eassumption.
+             -- eassumption.
+             -- intro i. reflexivity.
+          ++ eapply union_Desc.
+             -- subst sl sr. simpl. omega.
+             -- eassumption.
+             -- eassumption.
+             -- intro i. reflexivity.
+          ++ rewrite isSubrange_commonRange by (eapply Desc_rNonneg; eassumption).
+             apply andb_true_intro; intuition.
+          ++ rewrite isSubrange_commonRange by (eapply Desc_rNonneg; eassumption).
+             apply andb_true_intro; intuition.
+          ++ intro i. simpl. rewrite Hf, H6, H12.
+             destruct (f0 i), (f3 i), (f4 i), (f5 i); reflexivity.
+        - assert (rangeDisjoint r1 r2 = true)
+            by (apply different_prefix_same_bits_disjoint; auto).
+          rewrite disjoint_commonRange in * by assumption.
+          eapply link_Desc;
+            [ eapply DescBin with (r := r1); try eassumption; try reflexivity
+            | eapply DescBin with (r := r2); try eassumption; try reflexivity
+            |..]; auto.
+Qed.
 
 Lemma union_WF:
   forall s1 s2, WF s1 ->  WF s2 -> WF (union s1 s2).

@@ -2114,6 +2114,7 @@ Inductive Desc : IntSet -> range -> (Z -> bool) -> Prop :=
     Desc (Bin p msk s1 s2) r f.
 
 
+
 (** A variant that also allows [Nil], or sets that do not
     cover the full given range, but are certainly contained in them.
     This is used to describe operations that may delete elements.
@@ -2128,9 +2129,45 @@ Inductive Desc0 : IntSet -> range -> (Z -> bool) -> Prop :=
       (Hf : forall i, f' i = f i),
       Desc0 s r' f'.
 
-Inductive WF : IntSet -> Prop :=
-  | WFEmpty : WF Nil
-  | WFNonEmpty : forall s r f (HD : Desc s r f), WF s.
+(** A variant that also allows [Nil] and does not reqiure a range. Used
+    for the top-level specification.
+ *)
+
+Inductive Sem : IntSet -> (Z -> bool) -> Prop :=
+  | SemNil : forall f, (forall i, f i = false) -> Sem Nil f
+  | DescSem : forall s r f (HD : Desc s r f), Sem s f.
+
+(** The highest level: Just well-formedness.
+ *)
+
+Definition WF (s : IntSet) : Prop := exists f, Sem s f.
+
+(** All of these respect extensionality of [f] *)
+
+Lemma Desc_change_f:
+  forall s r f f',
+  Desc s r f -> (forall i, f' i = f i) -> Desc s r f'.
+Proof.
+  intros.
+  induction H.
+  * eapply DescTip; try eassumption.
+    intro i. rewrite H0, H3. reflexivity.
+  * eapply DescBin; try eassumption.
+    intro i. rewrite H0, H7. reflexivity.
+Qed.
+
+Lemma Sem_change_f:
+  forall s f f',
+  Sem s f -> (forall i, f' i = f i) -> Sem s f'.
+Proof.
+  intros.
+  destruct H.
+  * apply SemNil.
+    intro i. rewrite H0, H. reflexivity.
+  * eapply DescSem. eapply Desc_change_f. eassumption.
+    intro i. rewrite H0. reflexivity.
+Qed.
+
 
 Lemma Desc_Desc0:
   forall s r f, Desc s r f -> Desc0 s r f.
@@ -2141,13 +2178,19 @@ Proof. intros.
   * intro. reflexivity.
 Qed.
 
-Lemma Desc0_WF:
-  forall s r f, Desc0 s r f -> WF s.
+Lemma Desc0_Sem:
+  forall s r f, Desc0 s r f -> Sem s f.
 Proof.
   intros.
   destruct H.
-  * apply WFEmpty.
-  * eapply WFNonEmpty; eassumption.
+  * apply SemNil; eassumption.
+  * eapply DescSem. eapply Desc_change_f. eassumption. assumption.
+Qed.
+
+Lemma Desc0_WF:
+  forall s r f, Desc0 s r f -> WF s.
+Proof.
+  intros. eexists. eapply Desc0_Sem. eassumption.
 Qed.
 
 Lemma Desc_rNonneg:
@@ -2344,7 +2387,7 @@ Qed.
 
 (** *** Specifying [member] *)
 
-Lemma member_spec:
+Lemma member_Desc:
  forall {s r f i}, Desc s r f -> member i s = f i.
 Proof.
  intros ???? HD.
@@ -2394,13 +2437,22 @@ Proof.
      reflexivity.
 Qed.
 
-Lemma member_spec0:
+Lemma member_Desc0:
   forall {s r f i}, Desc0 s r f -> member i s = f i.
 Proof.
   intros.
   destruct H; simpl; auto.
   rewrite Hf.
-  eapply member_spec; eauto.
+  eapply member_Desc; eauto.
+Qed.
+
+Lemma member_Sem:
+  forall {s f i}, Sem s f -> member i s = f i.
+Proof.
+  intros.
+  destruct H.
+  * rewrite H. reflexivity.
+  * erewrite member_Desc; eauto.
 Qed.
 
 Lemma Desc_has_member: 
@@ -2409,7 +2461,7 @@ Proof.
   intros ??? HD.
   destruct (Desc_some_f HD) as [j?].
   exists j.
-  rewrite (member_spec HD). intuition.
+  rewrite (member_Desc HD). intuition.
   destruct (Z.leb_spec 0 j); auto.
   contradict H.
   rewrite  (Desc_neg_false HD); try congruence.
@@ -2418,7 +2470,7 @@ Qed.
 
 (** *** Specifying [singleton] *)
 
-Lemma singleton_spec:
+Lemma singleton_Desc:
   forall e,
    0 <= e ->
    Desc (singleton e) (Z.shiftr e 6, N.log2 WIDTH) (fun x => x =? e).
@@ -2429,6 +2481,18 @@ Proof.
   intro i.
   symmetry; apply bitmapInRange_bitmapOf.
 Qed.
+
+Lemma singleton_Sem:
+  forall e, 0 <= e -> Sem (singleton e) (fun x => x =? e).
+Proof.
+  intros.
+  eapply DescSem.
+  apply singleton_Desc; assumption.
+Qed.
+
+Lemma singleton_WF:
+  forall e, 0 <= e -> WF (singleton e).
+Proof. intros. eexists. apply singleton_Sem; auto. Qed.
 
 (** *** Specifying [insert] *)
 
@@ -2590,36 +2654,28 @@ Proof.
   apply isBitMask_bitmapOf.
 Qed.
 
-Lemma insertBM_WF:
-  forall p bm s,
-  0 <= p -> isTipPrefix p -> isBitMask bm -> WF s -> WF (insertBM p bm s).
+Lemma insert_Sem:
+  forall e s2 f2 f,
+  0 <= e ->
+  Sem s2 f2 ->
+  (forall i, f i = (i =? e) || f2 i) ->
+  Sem (insert e s2) f.
 Proof.
-  intros ??? Hnonneg Hp Hbm HWF.
-  set (r1 := (Z.shiftr p tip_widthZ, tip_width)).
-  assert (Desc (Tip p bm) r1 (bitmapInRange r1 bm)).
-  * apply DescTip; subst r1; auto.
-    apply isTipPrefix_shiftl_shiftr; assumption.
-
-  destruct HWF.
-  * simpl. unfold Prim.seq.
-    eapply WFNonEmpty; eauto.
-  * eapply WFNonEmpty. 
-    eapply insertBM_Desc; eauto.
-    intro i. reflexivity.
+  intros.
+  destruct H0.
+  * eapply DescSem. apply insert_Nil_Desc; auto.
+    intro i. rewrite H1, H0. rewrite orb_false_r. reflexivity.
+  * eapply DescSem. eapply insert_Desc; eauto.
 Qed.
 
 Lemma insert_WF:
-  forall n s,
-  WF s -> 0 <= n ->
-  WF (insert n s).
+  forall n s, WF s -> 0 <= n -> WF (insert n s).
 Proof.
   intros.
-  unfold insert, Prim.seq.
-  apply insertBM_WF.
-  nonneg.
-  apply isTipPrefix_prefixOf.
-  apply isBitMask_bitmapOf.
-  assumption.
+  destruct H.
+  eexists.
+  eapply insert_Sem; eauto.
+  intro i; reflexivity.
 Qed.
 
 (** *** Specifying the smart constructors [tip] and [bin] *)
@@ -2833,16 +2889,31 @@ Proof.
     reflexivity.
 Qed.
 
-Lemma delte_WF:
+Lemma delete_Sem:
+  forall e s f f',
+  0 <= e ->
+  Sem s f ->
+  (forall i, f' i = negb (i =? e) && f i) ->
+  Sem (delete e s) f'.
+Proof.
+  intros.
+  destruct H0.
+  * apply SemNil.
+    intro i. rewrite H1, H0. rewrite andb_false_r. reflexivity.
+  * eapply Desc0_Sem.
+    eapply delete_Desc; try eassumption.
+Qed.
+
+Lemma delete_WF:
   forall n s,
   WF s -> 0 <= n ->
   WF (delete n s).
 Proof.
   intros.
   destruct H.
-  * apply WFEmpty.
-  * eapply Desc0_WF; eapply delete_Desc; try eassumption.
-    intro. reflexivity.
+  eexists.
+  eapply delete_Sem; try eassumption.
+  intro i. reflexivity.
 Qed.
 
 (** ** Speciyfing [union] *)
@@ -3029,17 +3100,31 @@ Next Obligation.
             |..]; auto.
 Qed.
 
+Lemma union_Sem:
+  forall s1 f1 s2 f2,
+  Sem s1 f1 ->
+  Sem s2 f2 ->
+  Sem (union s1 s2) (fun i => f1 i || f2 i).
+Proof.
+  intros.
+  destruct H; [|destruct H0].
+  * eapply Sem_change_f. apply H0.
+    intro i. rewrite H. rewrite orb_false_l. reflexivity.
+  * eapply Sem_change_f. eapply DescSem.
+    replace (union s Nil) with s by (destruct s; reflexivity).
+    eapply HD.
+    intro i. rewrite H. rewrite orb_false_r. reflexivity.
+  * eapply DescSem.
+    eapply union_Desc; try eassumption.
+    intro i. reflexivity.
+Qed.
+
 Lemma union_WF:
   forall s1 s2, WF s1 ->  WF s2 -> WF (union s1 s2).
 Proof.
   intros.
-  destruct H; try assumption.
-  destruct H0.
-  * replace (union s Nil) with s by (destruct s; reflexivity).
-    eapply WFNonEmpty; eassumption.
-  * eapply WFNonEmpty.
-    eapply union_Desc; try eassumption.
-    intro. reflexivity.
+  destruct H, H0.
+  eexists. apply union_Sem; eassumption.
 Qed.
 
 (** ** Instantiating the [FSetInterface] *)
@@ -3079,7 +3164,10 @@ Module Foo: WSfun(N_as_OT).
   Definition For_all (P : elt -> Prop) s := forall x, In x s -> P x.
   Definition Exists (P : elt -> Prop) s := exists x, In x s /\ P x.
 
-  Definition empty : t := pack empty WFEmpty.
+  Definition empty : t.
+    eexists. eexists. apply SemNil. intro. reflexivity.
+  Defined.
+  
   Definition is_empty : t -> bool := fun s' => 
     s <-- s' ;; null s.
 
@@ -3089,7 +3177,8 @@ Module Foo: WSfun(N_as_OT).
   Lemma is_empty_1 : forall s : t, Empty s -> is_empty s = true.
   Proof.
     intros. unfold Empty, In, In_set, is_empty in *. destruct s. simpl.
-    induction w.
+    destruct w as [s HSem].
+    induction HSem.
     * auto.
     * destruct (Desc_has_member  HD).
       specialize (H (Z.to_N x)).
@@ -3105,12 +3194,8 @@ Module Foo: WSfun(N_as_OT).
 
   Definition singleton : elt -> t.
     refine (fun e => pack (singleton (Z.of_N e)) _).
-    unfold singleton, Prim.seq.
-    eapply WFNonEmpty.
-    apply singleton_spec; nonneg.
+    apply singleton_WF; nonneg.
   Defined.
-
-
 
   Definition add (e: elt) (s': t) : t.
     refine (s <-- s' ;;
@@ -3121,7 +3206,7 @@ Module Foo: WSfun(N_as_OT).
   Definition remove  (e: elt) (s': t) : t.
     refine (s <-- s' ;;
             pack (delete (Z.of_N e) s) _).
-    apply delte_WF; nonneg.
+    apply delete_WF; nonneg.
   Defined.
 
   Definition union (s1' s2' : t) : t.
@@ -3209,32 +3294,25 @@ Module Foo: WSfun(N_as_OT).
     intros.
     inversion_clear H; subst.
     unfold In, add, pack, In_set; intros; destruct s as [s].
-    destruct w.
-    * (* Not nice that we cannot have Desc x f for empty trees. *)
-      erewrite member_spec.
+    destruct w as [f HSem].
+    erewrite member_Sem.
       Focus 2.
-      apply insert_Nil_Desc; try nonneg.
+      eapply insert_Sem; try nonneg; try eassumption.
       intro. reflexivity.
-      simpl. rewrite Z.eqb_refl. reflexivity.
-    * erewrite member_spec.
-      Focus 2.
-      eapply insert_Desc; try nonneg; try eassumption.
-      intro. reflexivity.
-      simpl. rewrite Z.eqb_refl. reflexivity.
+    simpl. rewrite Z.eqb_refl. reflexivity.
   Qed.
 
   Lemma add_2 : forall (s : t) (x y : elt), In y s -> In y (add x s).
   Proof.
     intros.
     unfold In, add, pack, In_set in *; intros; destruct s as [s].
-    destruct w.
-    * inversion H.
-    * erewrite member_spec.
+    destruct w as [f HSem].
+    erewrite member_Sem.
       Focus 2.
-      eapply insert_Desc; try nonneg; try eassumption.
+      eapply insert_Sem; try nonneg; try eassumption.
       intro. reflexivity.
       simpl. rewrite orb_true_iff. right.
-      erewrite  <- member_spec. eassumption. eassumption.
+    erewrite <- member_Sem. eassumption. eassumption.
   Qed.
 
   Lemma add_3 :
@@ -3242,45 +3320,37 @@ Module Foo: WSfun(N_as_OT).
   Proof.
     intros.
     unfold In, add, pack, In_set in *; intros; destruct s as [s].
-    destruct w.
-    * erewrite member_spec in H0.
-        Focus 2.
-        eapply insert_Nil_Desc; try nonneg.
-        intro. reflexivity. simpl in *.
-      rewrite -> Z.eqb_eq in H0.
-      rewrite -> N2Z.inj_iff in H0.
-      congruence.
-    * erewrite member_spec in H0.
-        Focus 2.
-        eapply insert_Desc; try nonneg; try eassumption.
-        intro. reflexivity. simpl in *.
-      rewrite -> orb_true_iff in H0.
-      rewrite -> Z.eqb_eq in H0.
-      rewrite -> N2Z.inj_iff in H0.
-      destruct H0. congruence.
+    destruct w as [f HSem].
+    erewrite member_Sem in H0.
+      Focus 2.
+      eapply insert_Sem; try nonneg; try eassumption.
+      intro. reflexivity. simpl in *.
+    rewrite -> orb_true_iff in H0.
+    rewrite -> Z.eqb_eq in H0.
+    rewrite -> N2Z.inj_iff in H0.
+    destruct H0. congruence.
 
-      erewrite member_spec.
-        Focus 2.
-        eassumption.
-      assumption.
+    erewrite member_Sem.
+      Focus 2.
+      eassumption.
+    assumption.
   Qed.
-  
+
   Lemma remove_1 :
     forall (s : t) (x y : elt), N.eq x y -> ~ In y (remove x s).
   Proof.
     intros.
     unfold In, remove, pack, In_set in *; intros; destruct s as [s].
     destruct H.
-    destruct w.
-    * simpl. congruence.
-    * erewrite member_spec0.
-        Focus 2.
-        eapply delete_Desc; try nonneg.
-        eassumption.
+    destruct w as [f HSem].
+    erewrite member_Sem.
+      Focus 2.
+      eapply delete_Sem; try nonneg.
+      eassumption.
       intro i. reflexivity.
-      simpl.
-      rewrite Z.eqb_refl; simpl.
-      congruence.
+    simpl.
+    rewrite Z.eqb_refl; simpl.
+    congruence.
   Qed.
 
   Lemma remove_2 :
@@ -3290,17 +3360,16 @@ Module Foo: WSfun(N_as_OT).
     unfold In, remove, pack, In_set in *; intros; destruct s as [s].
     apply not_false_iff_true.
     contradict H.
-    destruct w.
-    * inversion H0.
-    * erewrite member_spec0 in H.
-          Focus 2.
-          eapply delete_Desc; try nonneg.
-          eassumption.
-        intro i. reflexivity.
-      erewrite member_spec in H0; try eassumption.
-      simpl in *.
-      destruct (Z.eqb_spec (Z.of_N y) (Z.of_N x)); simpl in *; try congruence.
-      apply N2Z.inj in e. subst. reflexivity.
+    destruct w as [f HSem].
+    erewrite member_Sem in H.
+        Focus 2.
+        eapply delete_Sem; try nonneg.
+        eassumption.
+      intro i. reflexivity.
+    erewrite member_Sem in H0 by eassumption.
+    simpl in *.
+    destruct (Z.eqb_spec (Z.of_N y) (Z.of_N x)); simpl in *; try congruence.
+    apply N2Z.inj in e. subst. reflexivity.
   Qed.
 
   Lemma remove_3 :
@@ -3308,16 +3377,15 @@ Module Foo: WSfun(N_as_OT).
   Proof.
     intros.
     unfold In, remove, pack, In_set in *; intros; destruct s as [s].
-    destruct w.
-    * inversion H.
-    * erewrite member_spec0 in H.
-          Focus 2.
-          eapply delete_Desc; try nonneg.
-          eassumption.
-        intro i. reflexivity.
-      erewrite member_spec; [|eassumption].
-      simpl in *.
-      rewrite andb_true_iff in H. intuition.
+    destruct w as [f HSem].
+    erewrite member_Sem in H.
+        Focus 2.
+        eapply delete_Sem; try nonneg.
+        eassumption.
+      intro i. reflexivity.
+    erewrite member_Sem by eassumption.
+    simpl in *.
+    rewrite andb_true_iff in H. intuition.
   Qed.
 
   Lemma singleton_1 :
@@ -3325,8 +3393,8 @@ Module Foo: WSfun(N_as_OT).
   Proof.
     intros.
     unfold In, In_set, singleton, pack in *.
-    erewrite member_spec in H.
-    Focus 2. apply singleton_spec; nonneg.
+    erewrite member_Sem in H.
+    Focus 2. apply singleton_Sem; nonneg.
     simpl in H.
     rewrite -> Z.eqb_eq in H.
     apply N2Z.inj.
@@ -3339,8 +3407,8 @@ Module Foo: WSfun(N_as_OT).
   Proof.
     intros.
     unfold In, In_set, singleton, pack in *.
-    erewrite member_spec.
-    Focus 2. apply singleton_spec; nonneg.
+    erewrite member_Sem.
+    Focus 2. apply singleton_Sem; nonneg.
     simpl.
     rewrite -> Z.eqb_eq.
     congruence.
@@ -3352,17 +3420,13 @@ Module Foo: WSfun(N_as_OT).
     intros.
     destruct s, s'.
     unfold In, In_set, union, pack in *.
-    destruct w, w0.
-    * simpl in *. congruence.
-    * right. assumption.
-    * left. replace (Base.union s Nil) with s in * by (destruct s; reflexivity).
-      assumption.
-    * erewrite !member_spec by eassumption.
-      erewrite member_spec in H
-       by (eapply union_Desc; try eassumption; intro; reflexivity).
-      simpl in *.
-      rewrite orb_true_iff in H.
-      assumption.
+    destruct w as [f1 HSem1], w0 as [f2 HSem2].
+    erewrite !member_Sem by eassumption.
+    erewrite member_Sem in H
+     by (eapply union_Sem; try eassumption; intro; reflexivity).
+    simpl in *.
+    rewrite orb_true_iff in H.
+    assumption.
   Qed.
 
   Lemma union_2 :
@@ -3371,17 +3435,13 @@ Module Foo: WSfun(N_as_OT).
     intros.
     destruct s, s'.
     unfold In, In_set, union, pack in *.
-    destruct w, w0.
-    * simpl in *. congruence.
-    * simpl in *. congruence.
-    * replace (Base.union s Nil) with s in * by (destruct s; reflexivity).
-      assumption.
-    * erewrite !member_spec in H by eassumption.
-      erewrite member_spec
-       by (eapply union_Desc; try eassumption; intro; reflexivity).
-      simpl in *.
-      rewrite orb_true_iff.
-      intuition.
+    destruct w as [f1 HSem1], w0 as [f2 HSem2].
+    erewrite !member_Sem in H by eassumption.
+    erewrite member_Sem
+     by (eapply union_Sem; try eassumption; intro; reflexivity).
+    simpl in *.
+    rewrite orb_true_iff.
+    intuition.
   Qed.
 
   Lemma union_3 :
@@ -3390,17 +3450,13 @@ Module Foo: WSfun(N_as_OT).
     intros.
     destruct s, s'.
     unfold In, In_set, union, pack in *.
-    destruct w, w0.
-    * simpl in *. congruence.
-    * replace (Base.union Nil s) with s in * by (destruct s; reflexivity).
-      assumption.
-    * simpl in *. congruence.
-    * erewrite !member_spec in H by eassumption.
-      erewrite member_spec
-       by (eapply union_Desc; try eassumption; intro; reflexivity).
-      simpl in *.
-      rewrite orb_true_iff.
-      intuition.
+    destruct w as [f1 HSem1], w0 as [f2 HSem2].
+    erewrite !member_Sem in H by eassumption.
+    erewrite member_Sem
+     by (eapply union_Sem; try eassumption; intro; reflexivity).
+    simpl in *.
+    rewrite orb_true_iff.
+    intuition.
   Qed.
 
   Lemma inter_1 :

@@ -3901,9 +3901,13 @@ Module Foo: WSfun(N_as_OT).
   Definition filter : (elt -> bool) -> t -> t. Admitted.
   Definition partition : (elt -> bool) -> t -> t * t. Admitted.
   Definition cardinal : t -> nat. Admitted.
-  Definition elements : t -> list elt. Admitted.
+
+  Definition elements (ws : t) : list elt :=
+    s <-- ws;;
+    List.map Z.to_N (toList s).
+
   Definition choose : t -> option elt. Admitted.
-  
+
   Lemma In_1 :
     forall (s : t) (x y : elt), N.eq x y -> In x s -> In y s.
   Proof. intros. destruct H. assumption. Qed.

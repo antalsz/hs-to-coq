@@ -14,6 +14,17 @@ Local Open Scope Z_scope.
 
 (**
 
+** An omega that works for [N]
+
+This is mostly to work around https://github.com/coq/coq/issues/6602.
+
+*)
+
+Ltac Nomega := rewrite ?N.pred_sub in *; zify; omega.
+
+
+(**
+
 ** Utility lemmas about [Z], [N] and bits.
 
 Some of these certainly could live in the standard library.
@@ -323,7 +334,7 @@ Proof.
     rewrite N2Z.inj_testbit.
     reflexivity.
   * rewrite -> N.shiftl_spec_low by assumption.
-    rewrite -> Z.shiftl_spec_low by (rewrite <- N2Z.inj_lt; assumption).
+    rewrite -> Z.shiftl_spec_low by Nomega.
     reflexivity.
 Qed.
 
@@ -512,7 +523,7 @@ Lemma bit_diff_not_in_range:
     specialize (H0 (j - Z.of_N b)).
     rewrite -> Z.shiftr_spec in H0 by omega.
     rewrite -> Z.shiftl_spec by (transitivity (Z.of_N b); nonneg).
-    replace ((j - Z.of_N b + Z.of_N b)) with j in H0 by omega.
+    replace (j - Z.of_N b + Z.of_N b) with j in H0 by omega.
     rewrite H0. reflexivity.
 Qed.
 
@@ -588,7 +599,7 @@ Proof.
   * unfold isSubrange in *.
     rewrite -> andb_true_iff in *; intuition.
     rewrite -> N.leb_le in *.
-    eapply N.le_trans; eauto.
+    Nomega.
 Qed.
 
 Lemma isSubrange_antisym:
@@ -604,7 +615,7 @@ Proof.
   intuition.
   apply N.leb_le in H2.
   apply N.leb_le in H3.
-  assert (b1 = b2) by (apply N.le_antisymm; auto); subst.
+  assert (b1 = b2) by (zify; omega); subst.
   rewrite -> Z.shiftr_shiftl_l in H by nonneg.
   rewrite -> Z.shiftr_shiftl_l in H1 by nonneg.
   replace (Z.of_N b2 - Z.of_N b2) with 0 in * by omega.
@@ -627,13 +638,12 @@ Proof.
   rewrite N.leb_le; intuition.
   destruct r1 as [p1 b1], r2 as [p2 b2].
   simpl in *.
-  assert (Z.of_N b1 <= Z.of_N b2) by (apply N2Z.inj_le; auto).
   rewrite -> Z.eqb_eq in *.
   apply Z.bits_inj_iff'; intros j ?.
   apply Z.bits_inj_iff in H; specialize (H (j + Z.of_N b2 - Z.of_N b1)).
   apply Z.bits_inj_iff in H0; specialize (H0 j).
-  rewrite -> Z.shiftr_spec in * by nonneg.
-  rewrite -> Z.shiftl_spec in * by (apply OMEGA2; nonneg).
+  rewrite -> Z.shiftr_spec in * by Nomega.
+  rewrite -> Z.shiftl_spec in * by Nomega.
   rewrite <- H.
   rewrite <- H0.
   replace ((j + Z.of_N b2 - Z.of_N b1 + Z.of_N b1)) with (j + Z.of_N b2) by omega.
@@ -651,7 +661,7 @@ Proof.
   rewrite andb_true_r.
   rewrite -> Z_shiftl_inj in H by nonneg.
   rewrite -> Z.shiftr_shiftl_l by nonneg.
-  replace ((Z.of_N b2 - Z.of_N b2)) with 0 by omega. simpl.
+  replace (Z.of_N b2 - Z.of_N b2) with 0 by omega. simpl.
   rewrite Z.eqb_neq.
   congruence.
 Qed.
@@ -834,24 +844,22 @@ Lemma isSubrange_halfRange:
     destruct r as [p b].
     unfold isSubrange, inRange, halfRange, rPrefix, rBits, snd in *.
     rewrite andb_true_iff; split.
-    * rewrite -> N2Z.inj_pred by assumption.
-      rewrite Z.eqb_eq.
+    * rewrite Z.eqb_eq.
       destruct h.
       - rewrite Z.shiftl_lor.
         rewrite -> Z.shiftl_shiftl by omega.
-        replace ((1 + Z.pred (Z.of_N b))) with (Z.of_N b) by omega.
+        replace (1 + Z.of_N (N.pred b)) with (Z.of_N b) by Nomega.
         rewrite Z.shiftr_lor.
         rewrite -> Z.shiftr_shiftl_l by nonneg.
         replace (Z.of_N b - Z.of_N b) with 0 by omega.
         simpl.
-        rewrite -> Z.shiftr_shiftl_r
-         by (apply Z.lt_le_pred; replace 0 with (Z.of_N  0%N) by reflexivity;  apply N2Z.inj_lt; assumption).
-        replace ((Z.of_N b - Z.pred (Z.of_N b))) with 1 by omega.
+        rewrite -> Z.shiftr_shiftl_r by Nomega.
+        replace (Z.of_N b - Z.of_N (N.pred b)) with 1 by Nomega.
         replace (Z.shiftr 1 1) with 0 by reflexivity.
         rewrite Z.lor_0_r.
         reflexivity.
       - rewrite -> Z.shiftl_shiftl by omega.
-        replace ((1 + Z.pred (Z.of_N b))) with (Z.of_N b) by omega.
+        replace (1 + Z.of_N (N.pred b)) with (Z.of_N b) by Nomega.
         rewrite -> Z.shiftr_shiftl_l by nonneg.
         replace (Z.of_N b - Z.of_N b) with 0 by omega.
         reflexivity.
@@ -984,14 +992,14 @@ Proof.
   intros.
   unfold isSubrange in *.
   apply andb_true_iff in H0; destruct H0.
-  assert ((0 < rBits r2)%N) by  (eapply N.le_lt_trans; try nonneg; eassumption).
   replace ((rBits r1 <=? rBits (halfRange r2 h))%N) with true.
   + rewrite andb_true_r.
-    apply halfRange_inRange_testbit; auto.
+    rewrite halfRange_inRange_testbit by (assumption || Nomega).
+    reflexivity.
   + symmetry.
     rewrite N.leb_le.
     rewrite rBits_halfRange.
-    apply N.lt_le_pred; auto.
+    Nomega.
  Qed.
 
 Lemma testbit_halfRange_isSubrange:
@@ -1022,19 +1030,13 @@ Proof.
   intros.
   destruct r as [p b].
   unfold rPrefix, halfRange, rBits, snd in *.
-  assert (0 <= Z.pred (Z.of_N b)).
-  * apply Z.lt_le_pred.
-    replace 0 with (Z.of_N 0)%N by reflexivity.
-    apply N2Z.inj_lt.
-    assumption.
-  * rewrite -> Z.shiftl_spec by auto.
-    rewrite -> N2Z.inj_pred by auto.
-    replace ((Z.pred (Z.of_N b) - Z.pred (Z.of_N b))) with 0 by omega.
-    destruct h;
-      try rewrite Z.lor_spec;
-      rewrite -> Z.shiftl_spec by omega;
-      rewrite -> Z.testbit_neg_r by omega;
-      reflexivity.
+  rewrite -> Z.shiftl_spec by Nomega.
+  replace (Z.pred (Z.of_N b) - Z.of_N (N.pred b)) with 0 by Nomega.
+  destruct h;
+    try rewrite Z.lor_spec;
+    rewrite -> Z.shiftl_spec by omega;
+    rewrite -> Z.testbit_neg_r by omega;
+    reflexivity.
 Qed.
 
 Lemma halves_disj_aux_aux:
@@ -1045,7 +1047,7 @@ Lemma halves_disj_aux_aux:
 Proof.
   intros. subst.
   assert ((rBits (halfRange r h1) < rBits r)%N)
-    by (rewrite -> rBits_halfRange; apply N.lt_pred_l; intro; rewrite H0 in H; eapply N.lt_irrefl; eassumption).
+    by (rewrite -> rBits_halfRange; Nomega).
   rewrite -> halfRange_isSubrange_testbit by (auto; apply isSubrange_halfRange; auto).
   rewrite -> testbit_halfRange by assumption.
   destruct h1; reflexivity.
@@ -1096,8 +1098,7 @@ Proof.
   destruct r as [p b].
   unfold halfRange.
   simpl in *.
-  apply N.lt_pred_l.
-  intro. subst. inversion H.
+  Nomega.
 Qed.
 
 
@@ -1165,11 +1166,11 @@ Proof.
     symmetry.
     apply Z.bits_inj_iff'. intros j?.
     replace j with ((j + Z.of_N b2) - Z.of_N b2) by omega.
-    rewrite <- Z.shiftl_spec by (apply OMEGA2; nonneg).
+    rewrite <- Z.shiftl_spec by Nomega.
     rewrite <- msDiffBit_Same with (p1 := (Z.shiftl p1 (Z.of_N b1))) (p2 := (Z.shiftl p2 (Z.of_N b2))); try nonneg.
-    rewrite -> !Z.shiftl_spec by (apply OMEGA2; nonneg).
-    rewrite -> !Z.shiftr_spec by nonneg.
-    rewrite -> !Z.shiftl_spec by (apply OMEGA2; nonneg).
+    rewrite -> !Z.shiftl_spec by Nomega.
+    rewrite -> !Z.shiftr_spec by Nomega.
+    rewrite -> !Z.shiftl_spec by Nomega.
     f_equal. omega.
   }
 
@@ -1211,8 +1212,7 @@ Lemma msDiffBit_larger_l:
     (rBits r1 < msDiffBit (rPrefix r1) (rPrefix r2))%N.
 Proof.
   intros.
-  apply N.le_lt_trans with (m := N.max (rBits r1) (rBits r2)).
-  apply N.le_max_l.
+  apply N.le_lt_trans with (m := N.max (rBits r1) (rBits r2)); try Nomega.
   apply msDiffBit_larger; auto.
 Qed.
 
@@ -1223,8 +1223,7 @@ Lemma msDiffBit_larger_r:
     (rBits r2 < msDiffBit (rPrefix r1) (rPrefix r2))%N.
 Proof.
   intros.
-  apply N.le_lt_trans with (m := N.max (rBits r1) (rBits r2)).
-  apply N.le_max_r.
+  apply N.le_lt_trans with (m := N.max (rBits r1) (rBits r2)); try Nomega.
   apply msDiffBit_larger; auto.
 Qed.
 
@@ -1238,7 +1237,6 @@ Proof.
   apply Zle_lt_succ.
   nonneg.
 Qed.
-
 
 
 (** *** Operation: [commonRangeDisj]
@@ -1417,19 +1415,13 @@ Proof.
   intros.
   destruct r as [p b].
   unfold commonRangeDisj, halfRange, rPrefix, rBits, snd in *.
-  assert (0 <= Z.pred (Z.of_N b)).
-  { apply Z.lt_le_pred.
-    replace 0 with (Z.of_N 0)%N by reflexivity.
-    apply N2Z.inj_lt.
-    assumption.
-  }
+  assert (0 <= Z.pred (Z.of_N b)) by Nomega.
   replace (msDiffBit _ _) with b.
   * f_equal.
     rewrite -> Z.shiftl_shiftl by omega.
-    rewrite -> N2Z.inj_pred by assumption.
-    replace (1 + Z.pred (Z.of_N b)) with (Z.of_N b) by omega.
+    replace (1 + Z.of_N (N.pred b)) with (Z.of_N b) by Nomega.
     rewrite -> Z.shiftr_shiftl_l by nonneg.
-    replace ((Z.of_N b - Z.of_N b)) with 0 by omega.
+    replace (Z.of_N b - Z.of_N b) with 0 by omega.
     reflexivity.
   * unfold msDiffBit.
     rewrite -> N2Z.inj_pred by assumption.
@@ -1483,8 +1475,7 @@ Proof.
     rewrite -> Z.shiftr_shiftl_r by nonneg.
     rewrite -> Z.shiftr_shiftl_r by nonneg.
     rewrite -> Z.shiftr_spec by nonneg.
-    rewrite -> Z.shiftl_spec
-      by (apply Z.lt_le_pred; replace 0 with (Z.of_N 0%N) by reflexivity; apply N2Z.inj_lt; assumption).
+    rewrite -> Z.shiftl_spec by Nomega.
     match goal with [ |- context [if ?c then _ else _] ] => destruct c eqn:Htestbit end.
     + rewrite Z.lor_spec.
       rewrite testbit_1.
@@ -1514,11 +1505,8 @@ Proof.
         rewrite -> Z.shiftr_spec by assumption.
         f_equal.
         omega. 
-  * rewrite N.leb_le.
-    apply N.lt_le_pred.
-    assumption.
+  * rewrite N.leb_le. Nomega.
 Qed.
-
 
 (** *** Operation: [commonRange]
 
@@ -1847,17 +1835,13 @@ Proof.
   unfold nomatch, zero, inRange.
   unfold op_zsze__, op_zeze__, Eq_Char___, Eq_Integer___, op_zsze____, op_zeze____.
   unfold mask.
-  rewrite -> mask_to_upper_bits.
+  rewrite -> mask_to_upper_bits by Nomega.
   f_equal.
   rewrite <- Z.ldiff_land.
   rewrite -> Z.ldiff_ones_r by nonneg.
   rewrite Z.succ_pred.
   rewrite -> Z_shiftl_injb by nonneg.
   reflexivity.
-
-  enough (0 < Z.of_N b) by omega.
-  replace 0 with (Z.of_N 0%N) by reflexivity.
-  apply N2Z.inj_lt. assumption.
 Qed.
 
 Lemma zero_spec:
@@ -1869,10 +1853,7 @@ Proof.
   destruct r as [p b]. simpl in *.
   unfold zero.
   apply land_pow2_eq.
-  apply Z.lt_le_pred.
-  change (Z.of_N 0%N < Z.of_N b).
-  apply N2Z.inj_lt.
-  assumption.
+  Nomega.
 Qed.
 
 (**
@@ -1915,13 +1896,13 @@ Lemma nomatch_zero_smaller:
      if zero (rPrefix r1) (rMask r) then left else right).
 Proof.
   intros ????????.
-  assert (rBits r1 <= rBits r)%N by (apply N.lt_le_incl; auto).
+  assert (rBits r1 <= rBits r)%N by Nomega.
   assert (forall h, rBits r1 <= rBits (halfRange r h))%N
-    by (intros; rewrite rBits_halfRange; apply N.lt_le_pred; auto).
+    by (intros; rewrite rBits_halfRange; Nomega).
   rewrite <- smaller_not_subrange_disjoint_iff; auto.
   repeat rewrite <- smaller_inRange_iff_subRange by auto.
   apply nomatch_zero.
-  eapply N.le_lt_trans; [|eassumption]. nonneg.
+  Nomega.
 Qed.
 
 (** *** Lemmas about [branchMask] *)
@@ -1972,20 +1953,13 @@ Lemma shorter_spec:
 Proof.
   intros.
   destruct r1 as [p1 b1], r2 as [p2 b2]. simpl in *.
-  rewrite N2Z.inj_lt in H.
-  rewrite N2Z.inj_lt in H0.
-  replace (Z.of_N 0%N) with 0 in * by reflexivity.
-
   change ((Z.to_N (2 ^ Z.pred (Z.of_N b2))%Z <? Z.to_N (2 ^ Z.pred (Z.of_N b1))%Z)%N = (b2 <? b1)%N).
   apply eq_true_iff_eq.
   rewrite !N.ltb_lt.
   rewrite <- Z2N.inj_lt by (apply Z.pow_nonneg; omega).
-  rewrite <- Z.pow_lt_mono_r_iff by omega.
-  rewrite <- Z.pred_lt_mono.
-  rewrite <- N2Z.inj_lt.
-  intuition.
+  rewrite <- Z.pow_lt_mono_r_iff by Nomega.
+  Nomega.
 Qed.
-
 
 (** *** Operation: [bitmapInRange]
 
@@ -2426,7 +2400,7 @@ Proof.
 
       subst i.
       rewrite Z.shiftr_lor.
-      replace ((Z.shiftr (Z.of_N j) 6)) with 0.
+      replace (Z.shiftr (Z.of_N j) 6) with 0.
       rewrite Z.lor_0_r.
       rewrite -> Z.shiftr_shiftl_l by nonneg.
       reflexivity.

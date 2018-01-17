@@ -1149,7 +1149,7 @@ convenience; maybe they should be expressed in plain values and calls to
 [Z.shiftl]...
 *)
 
-Lemma msDiffBit_larger_tmp:
+Lemma msDiffBit_lt_tmp:
   forall r1 r2,
     rNonneg r1 -> rNonneg r2 -> 
     rangeDisjoint r1 r2 = true ->
@@ -1184,7 +1184,7 @@ Proof.
   intuition try congruence.
 Qed.
 
-Lemma msDiffBit_larger:
+Lemma msDiffBit_lt:
   forall r1 r2,
   rNonneg r1 -> rNonneg r2 -> 
   rangeDisjoint r1 r2 = true ->
@@ -1197,15 +1197,15 @@ Proof.
     intro.
     rewrite rangeDisjoint_sym in H1.
     rewrite msDiffBit_sym in H3.
-    apply (msDiffBit_larger_tmp r2 r1 H0 H H1 H2 H3).
+    apply (msDiffBit_lt_tmp r2 r1 H0 H H1 H2 H3).
   * apply N.lt_le_incl in H2.
     rewrite -> N.max_r by assumption.
     apply N.nle_gt.
     intro.
-    apply (msDiffBit_larger_tmp r1 r2 H H0 H1 H2 H3).
+    apply (msDiffBit_lt_tmp r1 r2 H H0 H1 H2 H3).
 Qed.
 
-Lemma msDiffBit_larger_l:
+Lemma msDiffBit_lt_l:
    forall r1 r2,
     rNonneg r1 -> rNonneg r2 -> 
     rangeDisjoint r1 r2 = true ->
@@ -1213,10 +1213,10 @@ Lemma msDiffBit_larger_l:
 Proof.
   intros.
   apply N.le_lt_trans with (m := N.max (rBits r1) (rBits r2)); try Nomega.
-  apply msDiffBit_larger; auto.
+  apply msDiffBit_lt; auto.
 Qed.
 
-Lemma msDiffBit_larger_r:
+Lemma msDiffBit_lt_r:
    forall r1 r2,
     rNonneg r1 -> rNonneg r2 -> 
     rangeDisjoint r1 r2 = true ->
@@ -1224,7 +1224,7 @@ Lemma msDiffBit_larger_r:
 Proof.
   intros.
   apply N.le_lt_trans with (m := N.max (rBits r1) (rBits r2)); try Nomega.
-  apply msDiffBit_larger; auto.
+  apply msDiffBit_lt; auto.
 Qed.
 
 Lemma msDiffBit_pos:
@@ -1265,7 +1265,7 @@ Proof.
   destruct r1, r2. unfold rNonneg, rPrefix in *. nonneg.
 Qed.
 
-Lemma commonRangeDis_larger_l:
+Lemma commonRangeDisj_rBits_lt_l:
   forall r1 r2,
   rNonneg r1 -> rNonneg r2 ->
   rangeDisjoint r1 r2 = true ->
@@ -1273,10 +1273,10 @@ Lemma commonRangeDis_larger_l:
 Proof.
   intros.
   unfold commonRangeDisj. simpl.
-  apply (msDiffBit_larger_l); auto.
+  apply (msDiffBit_lt_l); auto.
 Qed.
 
-Lemma commonRangeDis_larger_r:
+Lemma commonRangeDisj_rBits_lt_r:
   forall r1 r2,
   rNonneg r1 -> rNonneg r2 ->
   rangeDisjoint r1 r2 = true ->
@@ -1284,8 +1284,31 @@ Lemma commonRangeDis_larger_r:
 Proof.
   intros.
   unfold commonRangeDisj. simpl.
-  apply (msDiffBit_larger_r); auto.
+  apply (msDiffBit_lt_r); auto.
 Qed.
+
+Lemma commonRangeDisj_rBits_le_l:
+  forall r1 r2,
+  rNonneg r1 -> rNonneg r2 ->
+  rangeDisjoint r1 r2 = true ->
+  (rBits r1 <= rBits (commonRangeDisj r1 r2))%N.
+Proof.
+  intros.
+  apply N.lt_le_incl.
+  apply commonRangeDisj_rBits_lt_l; auto.
+Qed.
+
+Lemma commonRangeDisj_rBits_le_r:
+  forall r1 r2,
+  rNonneg r1 -> rNonneg r2 ->
+  rangeDisjoint r1 r2 = true ->
+  (rBits r2 <= rBits (commonRangeDisj r1 r2))%N.
+Proof.
+  intros.
+  apply N.lt_le_incl.
+  apply commonRangeDisj_rBits_lt_r; auto.
+Qed.
+
 
 Lemma outside_commonRangeDisj_l:
   forall r1 r2 i,
@@ -1296,7 +1319,7 @@ Lemma outside_commonRangeDisj_l:
 Proof.
   intros.
   assert (rBits r1 <= rBits (commonRangeDisj r1 r2))%N
-    by (apply N.lt_le_incl; apply commonRangeDis_larger_l; auto).
+    by (apply commonRangeDisj_rBits_le_l; auto).
   rewrite <- not_true_iff_false in H2.
   rewrite <- not_true_iff_false.
   contradict H2.
@@ -1325,7 +1348,7 @@ Lemma outside_commonRangeDisj_r:
 Proof.
   intros.
   assert (rBits r2 <= rBits (commonRangeDisj r1 r2))%N
-    by (apply N.lt_le_incl; apply commonRangeDis_larger_r; auto).
+    by (apply commonRangeDisj_rBits_le_r; auto).
   rewrite <- not_true_iff_false in H2.
   rewrite <- not_true_iff_false.
   contradict H2.
@@ -1462,7 +1485,7 @@ Lemma isSubrange_halfRange_commonRangeDisj:
 Proof.
   intros.
   assert (Hbitslt: (rBits r1 < rBits (commonRangeDisj r1 r2))%N) by
-        (apply msDiffBit_larger_l; auto).
+        (apply msDiffBit_lt_l; auto).
   assert (Hbitspos: (0 < rBits (commonRangeDisj r1 r2))%N) by
         (apply msDiffBit_pos; auto).
 
@@ -1593,7 +1616,7 @@ Proof.
   * rewrite N.leb_le.
     change (rBits (p1, b1) <= msDiffBit (rPrefix (p1, b1)) (rPrefix (p2, b2)))%N.
     apply N.lt_le_incl.
-    apply msDiffBit_larger_l; auto.
+    apply msDiffBit_lt_l; auto.
 Qed.
 
 Lemma commonRange_sym:

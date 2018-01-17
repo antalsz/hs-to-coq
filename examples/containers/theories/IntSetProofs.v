@@ -3592,11 +3592,6 @@ Lemma difference_eq s1 s2 :
   difference s1 s2 = difference_body s1 s2.
 Admitted.
 
-(* MOVE *)
-Lemma rPrefix_rNonneg:
-  forall r, 0 <= rPrefix r -> rNonneg r.
-Admitted.
-
 Program Fixpoint difference_Desc
   s1 r1 f1 s2 r2 f2 f
   { measure (size_nat s1 + size_nat s2) } :

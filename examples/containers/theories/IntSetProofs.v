@@ -3104,7 +3104,7 @@ Next Obligation.
              apply andb_true_intro; intuition.
           ** intro i. simpl. rewrite Hf, H12.
              destruct (f1 i), (f4 i), (f5 i); reflexivity.
-      * assert (rBits r1 = rBits r2) by (apply N.le_antisymm; auto).
+      * assert (rBits r1 = rBits r2) by Nomega.
         unfold op_zeze__, Eq_Integer___, op_zeze____.
         destruct (Z.eqb_spec (rPrefix r1) (rPrefix r2)).
         assert (r2 = r1) by (apply rPrefix_rBits_range_eq; auto); subst.
@@ -3516,7 +3516,7 @@ Next Obligation.
             ** eapply isSubrange_trans; [ eassumption| apply isSubrange_halfRange; auto].
 
         * (* s1 and s2 are the same size *)
-          assert (rBits r1 = rBits r2) by (apply N.le_antisymm; auto).
+          assert (rBits r1 = rBits r2) by Nomega.
           unfold op_zeze__, Eq_Integer___, op_zeze____.
           destruct (Z.eqb_spec (rPrefix r1) (rPrefix r2)).
           - assert (r2 = r1) by (apply rPrefix_rBits_range_eq; auto); subst.

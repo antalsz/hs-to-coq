@@ -3238,7 +3238,7 @@ Qed.
 
 (** ** Specifing [intersection] *)
 
-(** The following is copied from the body of [union] *)
+(** The following is copied from the body of [intersection] *)
 
 Definition intersection_body s1 s2 := match s1, s2 with
   | (Bin p1 m1 l1 r1 as t1) , (Bin p2 m2 l2 r2 as t2) =>
@@ -3544,6 +3544,216 @@ Proof.
   eexists. apply intersection_Sem; eassumption.
 Qed.
 
+(** ** Specifing [difference] *)
+
+(** The following is copied from the body of [difference] *)
+
+Definition difference_body s1 s2 := match s1, s2 with
+  | (Bin p1 m1 l1 r1 as t1) , (Bin p2 m2 l2 r2 as t2) =>
+     let difference2 :=
+       if nomatch p1 p2 m2 : bool
+       then t1
+       else if zero p1 m2 : bool
+            then difference t1 l2
+            else difference t1 r2 in
+     let difference1 :=
+       if nomatch p2 p1 m1 : bool
+       then t1
+       else if zero p2 m1 : bool
+            then bin p1 m1 (difference l1 t2) r1
+            else bin p1 m1 l1 (difference r1 t2) in
+     if shorter m1 m2 : bool
+     then difference1
+     else if shorter m2 m1 : bool
+          then difference2
+          else if p1 GHC.Base.== p2 : bool
+               then bin p1 m1 (difference l1 l2) (difference r1 r2)
+               else t1
+  | (Bin _ _ _ _ as t) , Tip kx bm => deleteBM kx bm t
+  | (Bin _ _ _ _ as t) , Nil => t
+  | (Tip kx bm as t1) , t2 =>
+     let fix differenceTip arg_12__
+        := match arg_12__ with
+             | Bin p2 m2 l2 r2 => if nomatch kx p2 m2 : bool
+                                  then t1
+                                  else if zero kx m2 : bool
+                                       then differenceTip l2
+                                       else differenceTip r2
+             | Tip kx2 bm2 => if kx GHC.Base.== kx2 : bool
+                              then tip kx (Data.Bits.xor bm (bm Data.Bits..&.(**) bm2))
+                              else t1
+             | Nil => t1
+           end in
+    differenceTip t2
+  | Nil , _ => Nil
+  end.
+
+Lemma difference_eq s1 s2 :
+  difference s1 s2 = difference_body s1 s2.
+Admitted.
+
+(* MOVE *)
+Lemma rPrefix_rNonneg:
+  forall r, 0 <= rPrefix r -> rNonneg r.
+Admitted.
+
+Program Fixpoint difference_Desc
+  s1 r1 f1 s2 r2 f2 f
+  { measure (size_nat s1 + size_nat s2) } :
+  Desc s1 r1 f1 ->
+  Desc s2 r2 f2 ->
+  (forall i, f i = f1 i && negb (f2 i)) ->
+  Desc0 (difference s1 s2) r1 f 
+  := fun HD1 HD2 Hf => _.
+Next Obligation.
+  rewrite difference_eq.
+  unfold difference_body.
+  unfold op_zizazi__, Bits__N.
+
+  inversion HD1.
+  * (* s1 is a Tip *)
+    subst.
+    clear difference_Desc.
+    generalize dependent f.
+    induction HD2; intros f' Hf'; subst.
+    + unfold op_zeze__, Eq_Integer___, op_zeze____.
+      unfold xor.
+      destruct (Z.eqb_spec (rPrefix r1) (rPrefix r)).
+      -- assert (r1 = r) by (apply rPrefix_rBits_range_eq; try congruence); subst.
+         apply tip_Desc0; auto.
+         ** solve_f_eq.
+         ** apply isBitMask0_lxor; try apply isBitMask0_land; apply isBitMask_isBitMask0; assumption.
+      -- assert (rangeDisjoint r r1 = true)
+            by (apply different_prefix_same_bits_disjoint; congruence).
+         eapply Desc0NotNil; try eassumption.
+         ** apply isSubrange_refl.
+         ** solve_f_eq_disjoint.
+    + assert (N.log2 WIDTH <= rBits r0)%N by (eapply Desc_larger_WIDTH; eauto).
+      assert (rBits r0 <= rBits (halfRange r false))%N by (apply subRange_smaller; auto).
+      assert (rBits (halfRange r false) < rBits r)%N by (apply halfRange_smaller; auto).
+      assert (rBits r1 < rBits r)%N by Nomega.
+
+      apply nomatch_zero_smaller; try assumption; intros.
+      - eapply Desc0NotNil; try eassumption.
+        ** apply isSubrange_refl.
+        ** solve_f_eq_disjoint.
+      - eapply Desc0_subRange; [apply IHHD2_1|apply isSubrange_refl]. clear IHHD2_1 IHHD2_2.
+        solve_f_eq_disjoint.
+      - eapply Desc0_subRange; [apply IHHD2_2|apply isSubrange_refl]. clear IHHD2_1 IHHD2_2.
+        solve_f_eq_disjoint.
+
+  * (* s1 is a Bin *)
+    inversion HD2.
+    + (* s2 is a Tip *)
+      subst.
+      eapply deleteBM_Desc; try eassumption.
+      solve_f_eq.
+    + subst.
+      set (sl := Bin (rPrefix r1) (rMask r1) s0 s3) in *.
+      set (sr := Bin (rPrefix r2) (rMask r2) s4 s5) in *.
+      rewrite !shorter_spec by assumption.
+      destruct (N.ltb_spec (rBits r2) (rBits r1)).
+      * (* s2 is smaller than s1 *)
+        apply nomatch_zero_smaller; try assumption; intros.
+        - (* s2 is disjoint of s1 *)
+          eapply Desc_Desc0; eapply DescBin; try eassumption; try reflexivity.
+          solve_f_eq_disjoint.
+
+        - (* s2 is part of the left half of s1 *)
+          eapply bin_Desc0.
+          ++ eapply difference_Desc; clear difference_Desc; try eassumption.
+             subst sl sr. simpl. omega.
+             intro i; reflexivity.
+          ++ apply Desc_Desc0; eassumption.
+          ++ eassumption.
+          ++ eassumption.
+          ++ eassumption.
+          ++ reflexivity.
+          ++ reflexivity.
+          ++ solve_f_eq_disjoint.
+        - (* s2 is part of the right half of s1 *)
+          eapply bin_Desc0.
+          ++ apply Desc_Desc0; eassumption.
+          ++ eapply difference_Desc; clear difference_Desc; try eassumption.
+             subst sl sr. simpl. omega.
+             intro i; reflexivity.
+          ++ eassumption.
+          ++ eassumption.
+          ++ eassumption.
+          ++ reflexivity.
+          ++ reflexivity.
+          ++ solve_f_eq_disjoint.
+
+      * (* s2 is not smaller than s1 *)
+        destruct (N.ltb_spec (rBits r1) (rBits r2)).
+        * (* s2 is smaller than s1 *)
+          apply nomatch_zero_smaller; try assumption; intros.
+          - (* s1 is disjoint of s2 *)
+            eapply Desc_Desc0; eapply DescBin; try eassumption; try reflexivity.
+            solve_f_eq_disjoint.
+          - (* s1 is part of the left half of s2 *)
+            eapply Desc0_subRange.
+            eapply difference_Desc; clear difference_Desc; try eassumption.
+            ** subst sl sr. simpl. omega.
+            ** solve_f_eq_disjoint.
+            ** apply isSubrange_refl.
+          - (* s1 is part of the right half of s2 *)
+            eapply Desc0_subRange.
+            eapply difference_Desc; clear difference_Desc; try eassumption.
+            ** subst sl sr. simpl. omega.
+            ** solve_f_eq_disjoint.
+            ** apply isSubrange_refl.
+
+        * (* s1 and s2 are the same size *)
+          assert (rBits r1 = rBits r2) by Nomega.
+          unfold op_zeze__, Eq_Integer___, op_zeze____.
+          destruct (Z.eqb_spec (rPrefix r1) (rPrefix r2)).
+          - assert (r2 = r1) by (apply rPrefix_rBits_range_eq; auto); subst.
+            eapply bin_Desc0; try assumption; try reflexivity.
+            ++ eapply difference_Desc.
+               -- subst sl sr. simpl. omega.
+               -- eassumption.
+               -- eassumption.
+               -- intro i. reflexivity.
+            ++ eapply difference_Desc.
+               -- subst sl sr. simpl. omega.
+               -- eassumption.
+               -- eassumption.
+               -- intro i. reflexivity.
+            ++ assumption.
+            ++ assumption.
+            ++ solve_f_eq_disjoint.
+          - assert (rangeDisjoint r1 r2 = true)
+              by (apply different_prefix_same_bits_disjoint; auto).
+            eapply Desc_Desc0; eapply DescBin; try eassumption; try reflexivity.
+            solve_f_eq_disjoint.
+Qed.
+
+Lemma difference_Sem:
+  forall s1 f1 s2 f2,
+  Sem s1 f1 ->
+  Sem s2 f2 ->
+  Sem (difference s1 s2) (fun i => f1 i && negb (f2 i)).
+Proof.
+  intros.
+  destruct H; [|destruct H0].
+  * apply SemNil. solve_f_eq.
+  * replace (difference s Nil) with s by (destruct s; reflexivity).
+    eapply DescSem.
+    eapply Desc_change_f.
+    eassumption.
+    solve_f_eq.
+  * eapply Desc0_Sem. eapply difference_Desc; try eauto.
+Qed.
+
+Lemma difference_WF:
+  forall s1 s2, WF s1 ->  WF s2 -> WF (difference s1 s2).
+Proof.
+  intros.
+  destruct H, H0.
+  eexists. apply difference_Sem; eassumption.
+Qed.
+
 
 (** ** Instantiating the [FSetInterface] *)
 
@@ -3641,7 +3851,13 @@ Module Foo: WSfun(N_as_OT).
     apply intersection_WF; assumption.
   Defined.
 
-  Definition diff : t -> t -> t. Admitted.
+  Definition diff (s1' s2' : t) : t.
+    refine (s1 <-- s1' ;;
+          s2 <-- s2' ;;
+          pack (difference s1 s2) _).
+  apply difference_WF; assumption.
+  Defined.
+
 
   Definition equal : t -> t -> bool :=
     fun ws ws' => s <-- ws ;;
@@ -3930,11 +4146,52 @@ Module Foo: WSfun(N_as_OT).
   Qed.
 
   Lemma diff_1 :
-    forall (s s' : t) (x : elt), In x (diff s s') -> In x s. Admitted.
+    forall (s s' : t) (x : elt), In x (diff s s') -> In x s.
+  Proof.
+    intros.
+    destruct s, s'.
+    unfold In, In_set, diff, pack in *.
+    destruct w as [f1 HSem1], w0 as [f2 HSem2].
+    erewrite !member_Sem by eassumption.
+    erewrite member_Sem in H
+     by (eapply difference_Sem; try eassumption; intro; reflexivity).
+    simpl in *.
+    rewrite andb_true_iff in H.
+    intuition.
+  Qed.
+
   Lemma diff_2 :
-    forall (s s' : t) (x : elt), In x (diff s s') -> ~ In x s'. Admitted.
+    forall (s s' : t) (x : elt), In x (diff s s') -> ~ In x s'.
+  Proof.
+    intros.
+    destruct s, s'.
+    unfold In, In_set, diff, pack in *.
+    destruct w as [f1 HSem1], w0 as [f2 HSem2].
+    erewrite !member_Sem by eassumption.
+    erewrite member_Sem in H
+     by (eapply difference_Sem; try eassumption; intro; reflexivity).
+    simpl in *.
+    rewrite andb_true_iff in H.
+    rewrite negb_true_iff in H.
+    intuition congruence.
+  Qed.
+
   Lemma diff_3 :
-    forall (s s' : t) (x : elt), In x s -> ~ In x s' -> In x (diff s s'). Admitted.
+    forall (s s' : t) (x : elt), In x s -> ~ In x s' -> In x (diff s s').
+  Proof.
+    intros.
+    destruct s, s'.
+    unfold In, In_set, diff, pack in *.
+    destruct w as [f1 HSem1], w0 as [f2 HSem2].
+    erewrite !member_Sem in H by eassumption.
+    erewrite !member_Sem in H0 by eassumption.
+    erewrite member_Sem
+     by (eapply difference_Sem; try eassumption; intro; reflexivity).
+    simpl in *.
+    rewrite andb_true_iff.
+    intuition.
+  Qed.
+
   Lemma fold_1 :
     forall (s : t) (A : Type) (i : A) (f : elt -> A -> A),
     fold A f s i =

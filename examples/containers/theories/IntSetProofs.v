@@ -1039,7 +1039,7 @@ Proof.
     reflexivity.
 Qed.
 
-Lemma halves_disj_aux_aux:
+Lemma halves_disj_aux:
   forall r h1 h2,
   (0 < rBits r)%N ->
   h2 = negb h1 ->
@@ -1053,30 +1053,16 @@ Proof.
   destruct h1; reflexivity.
 Qed.
 
-Lemma halves_disj_aux:
+Lemma halves_disj:
   forall r,
   (0 < rBits r)%N ->
   rangeDisjoint (halfRange r false) (halfRange r true) = true.
 Proof.
   intros.
   unfold rangeDisjoint.
-  erewrite halves_disj_aux_aux by auto.
-  erewrite halves_disj_aux_aux by auto.
+  erewrite halves_disj_aux by auto.
+  erewrite halves_disj_aux by auto.
   reflexivity.
-Qed.
-
-Lemma halves_disj:
-  forall r1 r2 r,
-  (0 < rBits r)%N ->
-  isSubrange r1 (halfRange r false) = true ->
-  isSubrange r2 (halfRange r true) = true ->
-  rangeDisjoint r1 r2 = true.
-Proof.
-  intros.
-  eapply isSubrange_disj_disj_l; [eassumption|].
-  eapply isSubrange_disj_disj_r; [eassumption|].
-  apply halves_disj_aux.
-  auto.
 Qed.
 
 Lemma smaller_subRange_other_half :
@@ -1707,7 +1693,15 @@ Qed.
 (** This heavily backracking tactic solves goals of the form [inRange i r = false],
   by exploring all [isSubrange r r2 = true] assumptions, as well
   as some known lemmas about [isSubrange]. *)
-  
+
+Ltac inRange_true :=
+  assumption || 
+  multimatch goal with 
+    | [ H : isSubrange ?r1 ?r2 = true
+        |- inRange ?i ?r2 = true ] =>
+        apply (inRange_isSubrange_true i r1 r2 H)
+  end; try inRange_true.
+
 Ltac inRange_false :=
   assumption || 
   multimatch goal with 
@@ -1724,14 +1718,12 @@ Ltac inRange_false :=
         |- inRange ?i ?r2 = false ] =>
         rewrite rangeDisjoint_sym in Hdis;
         apply (rangeDisjoint_inRange_false i r1 r2 Hdis H)
-    | [ H: inRange ?i (halfRange ?r false) = true
-        |- inRange ?i (halfRange ?r true) = false ] =>
+    | [ |- inRange ?i (halfRange ?r true) = false ] =>
         eapply rangeDisjoint_inRange_false;
-        [apply halves_disj_aux; auto | apply H]
-    | [ H: inRange ?i (halfRange ?r true) = true
-        |- inRange ?i (halfRange ?r false) = false ] =>
+        [apply halves_disj; auto | inRange_true ]
+    | [ |- inRange ?i (halfRange ?r false) = false ] =>
         eapply rangeDisjoint_inRange_false;
-        [rewrite rangeDisjoint_sym; apply halves_disj_aux; auto | apply H]
+        [rewrite rangeDisjoint_sym; apply halves_disj; auto | inRange_true ]
   end; try inRange_false.
 
 
@@ -2003,6 +1995,17 @@ Proof.
   intros.
   unfold bitmapInRange.
   destruct (inRange i r); auto.
+Qed.
+
+Lemma bitmapInRange_lor:
+  forall r bm1 bm2 i,
+    bitmapInRange r (N.lor bm1 bm2) i =
+    orb (bitmapInRange r bm1 i) (bitmapInRange r bm2 i).
+Proof.
+  intros.
+  unfold bitmapInRange.
+  destruct (inRange i r); try reflexivity.
+  rewrite N.lor_spec; reflexivity.
 Qed.
 
 Lemma bitmapInRange_lxor:
@@ -2340,8 +2343,7 @@ Proof.
  induction HD;subst.
  * rewrite H2.
    apply bitmapInRange_outside; auto.
- * assert (Hdisj : rangeDisjoint r1 r2 = true) by (eapply halves_disj; eauto).
-   rewrite H4; clear H4.
+ * rewrite H4; clear H4.
    rewrite IHHD1 by inRange_false.
    rewrite IHHD2 by inRange_false.
    reflexivity.
@@ -2479,7 +2481,7 @@ Proof.
   * destruct (inRange i (halfRange r false)) eqn: Hir1.
     + assert (Hir2 : inRange i (halfRange r true) = false).
       { eapply rangeDisjoint_inRange_false.
-        eapply halves_disj_aux; auto.
+        eapply halves_disj; auto.
         assumption.
       }
       rewrite H6 by assumption.
@@ -2498,6 +2500,49 @@ Proof.
     rewrite (Desc_outside H0) by inRange_false.
     reflexivity.
 Qed.
+
+(** *** Tactics *)
+
+(** This auxillary tactic destructs one boolean atom in the argument *)
+
+Ltac split_bool_go expr :=
+  lazymatch expr with 
+    | true       => fail
+    | false      => fail
+    | negb ?x    => split_bool_go x
+    | ?x && ?y   => split_bool_go x || split_bool_go y
+    | ?x || ?y   => split_bool_go x || split_bool_go y
+    | xorb ?x ?y => split_bool_go x || split_bool_go y
+    | ?bexpr     => destruct bexpr eqn:?
+  end.
+
+(** This auxillary tactic destructs one boolean atom in the goal *)
+
+Ltac split_bool :=
+  match goal with 
+    | [ |- ?lhs = ?rhs] => split_bool_go lhs || split_bool_go rhs
+  end.
+
+(** This tactic solves goal of the forms
+ [ forall i, f1 i = f2 i || f3 i ]
+ by introducing [i], rewriting with all premises of the form
+ [forall i, f1 i = … ]
+ and then destructing on all boolean atoms. It leaves unsolved cases
+ as subgoal.
+*)
+
+Ltac solve_f_eq :=
+  let i := fresh "i" in
+  intro i; simpl;
+  repeat
+    ( rewrite bitmapInRange_lxor
+    + rewrite bitmapInRange_land
+    + rewrite bitmapInRange_lor
+    + match goal with 
+      | [ H : forall i : Z, ?f i = _ |- context [?f i] ] => rewrite H
+      end);
+  repeat split_bool;
+  try reflexivity.
 
 (** *** Specifying [member] *)
 
@@ -2630,7 +2675,7 @@ Proof.
       rewrite rangeDisjoint_sym in H3.
       apply isSubrange_halfRange_commonRangeDisj;
         try (eapply Desc_rNonneg; eassumption); auto.
-    + intro i. specialize (H5 i). rewrite orb_comm. assumption.
+    + solve_f_eq.
   * assert (Hbit2 : Z.testbit (rPrefix r2) (Z.pred (Z.of_N (rBits (commonRangeDisj r1 r2)))) = true).
     + apply not_false_iff_true.
       rewrite <- Hbit.
@@ -2673,14 +2718,8 @@ Proof.
       subst.
       rewrite commonRange_idem.
       apply DescTip; auto.
-      - intro j.
-          rewrite Hf.
-          rewrite H3.
-          inversion HDTip.
-          rewrite H9.
-          unfold bitmapInRange.
-          rewrite N.lor_spec.
-          destruct (inRange j r2); reflexivity.
+      - inversion_clear HDTip.
+        solve_f_eq.
       - apply isBitMask_lor; auto; (inversion HDTip; auto).
     + assert (rangeDisjoint r1 r2 = true) by (apply different_prefix_same_bits_disjoint; try congruence).
       eapply link_Desc; try apply HDTip; auto.
@@ -2702,14 +2741,14 @@ Proof.
       assert (isSubrange (commonRange r1 r2) (halfRange r0 false) = true)
           by (rewrite -> isSubrange_commonRange; intuition; eapply Desc_rNonneg; eassumption).
       eapply DescBin; try apply HD2; try apply IHHD1 with (f := fun j => f1 j || f2 j); auto.
-      intro i. simpl. rewrite Hf. rewrite H5. destruct (f1 i), (f2 i), (f3 i); reflexivity.
+      solve_f_eq.
 
     + rewrite -> (isSubrange_commonRange_r r1 r0) in *
         by (eapply isSubrange_trans; [ eassumption| apply isSubrange_halfRange; auto]).
       assert (isSubrange (commonRange r1 r3) (halfRange r0 true) = true)
           by (rewrite -> isSubrange_commonRange; intuition; eapply Desc_rNonneg; eassumption).
       eapply DescBin; try apply HD1; try apply IHHD2 with (f := fun j => f1 j || f3 j); auto.
-       intro i. simpl. rewrite Hf. rewrite H5. destruct (f1 i), (f2 i), (f3 i); reflexivity.
+      solve_f_eq.
 Qed.
 
 Lemma insert_Desc:
@@ -2758,7 +2797,7 @@ Proof.
   intros.
   destruct H0.
   * eapply DescSem. apply insert_Nil_Desc; auto.
-    intro i. rewrite H1, H0. rewrite orb_false_r. reflexivity.
+    solve_f_eq.
   * eapply DescSem. eapply insert_Desc; eauto.
 Qed.
 
@@ -2821,20 +2860,20 @@ Proof.
     + eapply isSubrange_trans; try eassumption.
       eapply isSubrange_trans; try (apply isSubrange_halfRange; auto).
       eassumption.
-    + intro i. rewrite H6, Hf, H. rewrite orb_false_l. reflexivity.
+    + solve_f_eq.
   * replace (bin _ _ _ _) with s by (destruct s; reflexivity).
     eapply Desc0NotNil; try eassumption.
     + eapply isSubrange_trans; try eassumption.
       eapply isSubrange_trans; try (apply isSubrange_halfRange; auto).
       eassumption.
-    + intro i. rewrite H6, Hf, H. rewrite orb_false_r. reflexivity.
+    + solve_f_eq.
   * replace (bin p msk s s0) with (Bin p msk s s0)
       by (destruct s, s0; try reflexivity; try inversion HD; try inversion HD0).
     apply Desc_Desc0.
     eapply DescBin; try eassumption.
     + eapply isSubrange_trans; try eassumption.
     + eapply isSubrange_trans; try eassumption.
-    + intro i. rewrite H6, Hf, Hf0. reflexivity.
+    + solve_f_eq.
 Qed.
 
 (** *** Specifying [remove] *)
@@ -2859,12 +2898,8 @@ Proof.
         rewrite Z_shiftl_inj in * by nonneg.
         congruence. }
       apply tip_Desc0; auto.
-      - intro i. rewrite Hf'. clear Hf'.
-        rewrite bitmapInRange_lxor.
-        rewrite bitmapInRange_land.
-        rewrite <- H2.
-        replace (bitmapInRange r bm i) with (f1 i) by (inversion HTip; intuition).
-        destruct (f1 i), (f i); reflexivity.
+      - inversion_clear HTip.
+        solve_f_eq.
       - assert (isBitMask bm) by (inversion HTip; intuition).
         apply isBitMask0_lxor; auto.
         apply isBitMask_isBitMask0; auto.
@@ -2877,16 +2912,18 @@ Proof.
       apply DescTip; auto.
       intros j.
       rewrite Hf', H2.
-      unfold bitmapInRange. destruct (inRange j r) eqn:Hir; try rewrite andb_false_r; auto.
-      erewrite Desc_outside; [reflexivity|eassumption|..].
-      eapply rangeDisjoint_inRange_false; eauto.
+      destruct (inRange j r) eqn:Hir.
+      + erewrite Desc_outside; [reflexivity|eassumption|..].
+        eapply rangeDisjoint_inRange_false; eauto.
+      + rewrite bitmapInRange_outside by assumption.
+        split_bool; reflexivity.
   * simpl. unfold Prim.seq.
     inversion_clear HTip; subst.
 
     assert (N.log2 WIDTH <= rBits r2)%N by (eapply Desc_larger_WIDTH; eauto).
     assert (rBits r2 <= rBits (halfRange r true))%N by (apply subRange_smaller; auto).
     assert (rBits (halfRange r true) < rBits r)%N by (apply halfRange_smaller; auto).
-    assert (rBits r1 < rBits r)%N by (rewrite H5; eapply N.le_lt_trans; eauto; eapply N.le_lt_trans; eauto).
+    assert (rBits r1 < rBits r)%N by Nomega.
 
     apply nomatch_zero_smaller; try assumption; intros.
     + rewrite rangeDisjoint_sym in *.
@@ -2895,13 +2932,11 @@ Proof.
       intro.
         rewrite Hf'. rewrite H4. rewrite H6.
         destruct (inRange i r) eqn:Hir.
-        * assert (Hir1 : inRange i r1 = false) by (apply rangeDisjoint_inRange_false with (r1 := r); auto).
-          rewrite bitmapInRange_outside by assumption.
+        * rewrite bitmapInRange_outside by inRange_false.
           reflexivity.
-        * enough (Htmp : f0 i || f2 i = false) by (rewrite Htmp; apply andb_false_r).
-          rewrite (Desc_outside HD1) by inRange_false.
+        * rewrite (Desc_outside HD1) by inRange_false.
           rewrite (Desc_outside HD2) by inRange_false.
-          reflexivity.
+          split_bool; reflexivity.
     + eapply bin_Desc0.
       ** apply IHHD1.
          intro. reflexivity.
@@ -2913,17 +2948,10 @@ Proof.
       ** reflexivity.
       ** intro i. rewrite Hf', H4, H6.
          destruct (inRange i r2) eqn:Hir.
-         -- assert (rangeDisjoint r1 r2 = true)
-              by (eapply isSubrange_disj_disj_l; try eassumption;
-                  eapply isSubrange_disj_disj_r; try eassumption;
-                  apply halves_disj_aux; assumption).
-            rewrite rangeDisjoint_sym in *.
-            assert (inRange i r1 = false) by (apply rangeDisjoint_inRange_false with (r1 := r2); auto).
-            rewrite bitmapInRange_outside by assumption.
+         -- rewrite bitmapInRange_outside by inRange_false.
             reflexivity.
          -- rewrite (Desc_outside HD2) by assumption.
-            rewrite !orb_false_r.
-            reflexivity.
+            split_bool;reflexivity.
     - eapply bin_Desc0.
       ** apply Desc_Desc0; eassumption.
       ** apply IHHD2.
@@ -2935,14 +2963,9 @@ Proof.
       ** reflexivity.
       ** intro i. rewrite Hf', H4, H6.
          destruct (inRange i r0) eqn:Hir.
-         -- assert (rangeDisjoint r0 r1 = true)
-              by (eapply isSubrange_disj_disj_l; try eassumption;
-                  eapply isSubrange_disj_disj_r; try eassumption;
-                  apply halves_disj_aux; assumption).
-            assert (inRange i r1 = false) by (apply rangeDisjoint_inRange_false with (r1 := r0); auto).
-            rewrite bitmapInRange_outside by assumption.
+         -- rewrite bitmapInRange_outside by inRange_false.
             reflexivity.
-         -- rewrite (Desc_outside HD1) by assumption.
+         -- rewrite (Desc_outside HD1) by inRange_false.
             reflexivity.
 Qed.
 
@@ -3255,15 +3278,13 @@ Next Obligation.
          ** assert (rangeDisjoint r r1 = true)
               by (apply different_prefix_same_bits_disjoint; congruence).
             rewrite bitmapInRange_outside with (r := r1) by inRange_false.
-            rewrite andb_false_l.
-            reflexivity.
+            split_bool; reflexivity.
          ** rewrite bitmapInRange_outside with (r := r) by inRange_false.
-            rewrite andb_false_r.
-            reflexivity.
+            split_bool; reflexivity.
     + assert (N.log2 WIDTH <= rBits r0)%N by (eapply Desc_larger_WIDTH; eauto).
       assert (rBits r0 <= rBits (halfRange r false))%N by (apply subRange_smaller; auto).
       assert (rBits (halfRange r false) < rBits r)%N by (apply halfRange_smaller; auto).
-      assert (rBits r1 < rBits r)%N by (rewrite H1; eapply N.le_lt_trans; eauto; eapply N.le_lt_trans; eauto).
+      assert (rBits r1 < rBits r)%N by Nomega.
 
       apply nomatch_zero_smaller; try assumption; intros.
       - apply Desc0Nil.
@@ -3274,7 +3295,7 @@ Next Obligation.
              rewrite (Desc_outside HD2_2) by inRange_false.
              simpl. rewrite andb_false_r. reflexivity.
           -- rewrite (Desc_outside HD1) by inRange_false.
-             rewrite andb_false_l. reflexivity.
+             split_bool; reflexivity.
       - rewrite -> (isSubrange_commonRange_r r1 r) in *
           by (eapply isSubrange_trans; [ eassumption| apply isSubrange_halfRange; auto]).
         assert (isSubrange (commonRange r1 r0) r = true).
@@ -3289,7 +3310,7 @@ Next Obligation.
          -- rewrite (Desc_outside HD2_2) by inRange_false.
             rewrite orb_false_r. reflexivity.
          -- rewrite (Desc_outside HD1) by inRange_false.
-            rewrite andb_false_l. reflexivity.
+            rewrite !andb_false_l. reflexivity.
       - rewrite -> (isSubrange_commonRange_r r1 r) in *
           by (eapply isSubrange_trans; [ eassumption| apply isSubrange_halfRange; auto]).
         assert (isSubrange (commonRange r1 r2) r = true).

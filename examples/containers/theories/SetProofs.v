@@ -1014,48 +1014,44 @@ Module Foo (E : OrderedType) : WSfun(E).
     - reflexivity.
   Qed.
 
-  Lemma balanceL_preserves_membership : forall s y x l r f g,
+  Lemma balanceL_preserves_membership : forall s y x l r,
       WF l ->
       WF r ->
       before_balancedL x l r ->
-      before_ordered x l r f g ->
+      before_ordered x l r (const true) (const true) ->
       (In_set y (Bin s x l r) <-> In_set y (balanceL x l r)).
   Proof.
-    prepare_bst. split.
-    - solve_bst.
-      + have Hs0: size s1_1 <= 0.
-        { derive_constraints; rewrite_for_omega; intros; omega. }
-        apply WF_children in H; destruct H.
-        apply WF_children in H2; destruct H2.
-        apply (size_zero _ H2) in Hs0; subst; auto.
-      + have Hs0: size s1_2 <= 0.
-        { derive_constraints; rewrite_for_omega; intros; omega. }
-        apply WF_children in H; destruct H.
-        apply WF_children in H2; destruct H2.
-        apply (size_zero _ H3) in Hs0; subst; auto.
-    - solve_bst.
+    prepare_bst. split; solve_bst.
+    - have Hs0: size s1_1 <= 0.
+      { derive_constraints; rewrite_for_omega; intros; omega. }
+      apply WF_children in H; destruct H.
+      apply WF_children in H2; destruct H2.
+      apply (size_zero _ H2) in Hs0; subst; auto.
+    - have Hs0: size s1_2 <= 0.
+      { derive_constraints; rewrite_for_omega; intros; omega. }
+      apply WF_children in H; destruct H.
+      apply WF_children in H2; destruct H2.
+      apply (size_zero _ H3) in Hs0; subst; auto.
   Qed.
 
-  Lemma balanceR_preserves_membership : forall s y x l r f g,
+  Lemma balanceR_preserves_membership : forall s y x l r,
       WF l ->
       WF r ->
       before_balancedR x l r ->
-      before_ordered x l r f g ->
+      before_ordered x l r (const true) (const true) ->
       (In_set y (Bin s x l r) <-> In_set y (balanceR x l r)).
   Proof.
-    prepare_bst. split.
-    - solve_bst.
-      + have Hs0: size s1_1 <= 0.
-        { derive_constraints; rewrite_for_omega; intros; omega. }
-        apply WF_children in H0; destruct H0.
-        apply WF_children in H0; destruct H0.
-        apply (size_zero _ H0) in Hs0; subst; auto.
-      + have Hs0: size s1_2 <= 0.
-        { derive_constraints; rewrite_for_omega; intros; omega. }
-        apply WF_children in H0; destruct H0.
-        apply WF_children in H0; destruct H0.
-        apply (size_zero _ H3) in Hs0; subst; auto.
-    - solve_bst.
+    prepare_bst. split; solve_bst.
+    - have Hs0: size s1_1 <= 0.
+      { derive_constraints; rewrite_for_omega; intros; omega. }
+      apply WF_children in H0; destruct H0.
+      apply WF_children in H0; destruct H0.
+      apply (size_zero _ H0) in Hs0; subst; auto.
+    - have Hs0: size s1_2 <= 0.
+      { derive_constraints; rewrite_for_omega; intros; omega. }
+      apply WF_children in H0; destruct H0.
+      apply WF_children in H0; destruct H0.
+      apply (size_zero _ H3) in Hs0; subst; auto.
   Qed.
 
   Lemma size_irrelevance_in_ordered : forall s1 s2 x (l r : Set_ elt),
@@ -1434,6 +1430,34 @@ Module Foo (E : OrderedType) : WSfun(E).
         * autorewrite with elt_compare. auto.
   Time Qed. (* Finished transaction in 1.354 secs (1.301u,0.045s) (successful) *)
 
+  Lemma left_insert_before_balancedL : forall e s l r x,
+      WF (Bin s e l r) ->
+      E.lt x e ->
+      before_balancedL e (insert x l) r.
+  Proof.
+    intros; rewrite -/insert /before_balancedL.
+    have Hs: size (insert x l) = size l + 1 \/ size (insert x l) = size l
+      by [ apply WF_children in H; destruct H;
+           apply insert_prop with (e:=x) in H; tauto ].
+    derive_constraints.
+    destruct Hs; rewrite H; destruct Hbalanced;
+      solve [(left + right); split; rewrite_for_omega; intros; omega].
+  Qed.
+
+  Lemma right_insert_before_balancedR : forall e s l r x,
+      WF (Bin s e l r) ->
+      E.lt e x ->
+      before_balancedR e l (insert x r).
+  Proof.
+    intros; rewrite -/insert /before_balancedR.
+    have Hs: size (insert x r) = size r + 1 \/ size (insert x r) = size r
+      by [ apply WF_children in H; destruct H;
+           apply insert_prop with (e:=x) in H1; tauto ].
+    derive_constraints.
+    destruct Hs; rewrite H; destruct Hbalanced;
+      solve [(left + right); split; rewrite_for_omega; intros; omega].
+  Qed.
+
   Definition add (e: elt) (s': t) : t.
     refine (s <-- s' ;;
               pack (insert e s) _).
@@ -1674,12 +1698,38 @@ Module Foo (E : OrderedType) : WSfun(E).
           apply E.eq_sym in Heq. eauto. }
         rewrite /In_set /member /= -/member.
         destruct_match; rewrite -Heq' //.
-      + admit. (** need more lemmata! *)
-      + admit. (** need more lemmata! *)
+      + move=>Hb. apply balanceL_preserves_membership with (s:=0) in Hb.
+        * move: Hb. rewrite /In_set /=.
+          destruct_match; auto. apply IHs1.
+          apply WF_children in i; tauto.
+        * apply insert_prop. apply WF_children in i; tauto.
+        * apply WF_children in i. tauto.
+        * rewrite_relations. eapply left_insert_before_balancedL; eauto.
+        * rewrite_relations. rewrite /before_ordered. repeat split; auto.
+          -- apply insert_prop; auto.
+             ++ apply WF_children in i; tauto.
+             ++ move: i. rewrite /WF /valid. case /and3P => _ Hord _.
+                move: Hord. rewrite /ordered. case /and4P => _ _ ? ?. auto.
+          -- move: i. rewrite /WF /valid. case /and3P => _ Hord _.
+             move: Hord. rewrite /ordered. case /and4P => _ _ ? ?. auto.
+      + move=>Hb. apply balanceR_preserves_membership with (s:=0) in Hb.
+        * move: Hb. rewrite /In_set /=.
+          destruct_match; auto. apply IHs2.
+          apply WF_children in i; tauto.
+        * apply WF_children in i. tauto.
+        * apply insert_prop. apply WF_children in i; tauto.
+        * rewrite_relations. eapply right_insert_before_balancedR; eauto.
+        * rewrite_relations. rewrite /before_ordered. repeat split; auto.
+          -- move: i. rewrite /WF /valid. case /and3P => _ Hord _.
+             move: Hord. rewrite /ordered. case /and4P => _ _ ? ?. auto.
+          -- apply insert_prop; auto.
+             ++ apply WF_children in i; tauto.
+             ++ move: i. rewrite /WF /valid. case /and3P => _ Hord _.
+                move: Hord. rewrite /ordered. case /and4P => _ _ ? ?. auto.
     - inversion H0. move: H2.
       destruct_match; autorewrite with elt_compare in *.
       apply E.eq_sym in Heq. contradiction.
-  Admitted.
+  Qed.
 
   Lemma remove_1 :
     forall (s : t) (x y : elt), E.eq x y -> ~ In y (remove x s). Admitted.

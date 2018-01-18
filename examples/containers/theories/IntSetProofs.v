@@ -2244,6 +2244,18 @@ Proof.
     apply Z.mod_pos_bound; compute; congruence.
 Qed.
 
+Ltac isBitMask' :=
+  repeat (apply isBitMask_lor || apply isBitMask_bitmapOf);
+  try assumption.
+
+Ltac isBitMask0 :=
+  repeat (apply isBitMask0_lxor || apply isBitMask0_land);
+  try (apply isBitMask_isBitMask0; isBitMask'; fail);
+  try assumption.
+
+Ltac isBitMask := isBitMask' || isBitMask0.
+
+
 (** ** Well-formed IntSets.
 
 This section introduces the predicate to describe the well-formedness of
@@ -2717,7 +2729,7 @@ Lemma singleton_Desc:
    Desc (singleton e) (Z.shiftr e 6, N.log2 WIDTH) (fun x => x =? e).
 Proof.
   intros.
-  apply DescTip; try nonneg; try apply isBitMask_bitmapOf.
+  apply DescTip; try nonneg; try isBitMask.
   symmetry; apply rPrefix_shiftr.
   intro i.
   symmetry; apply bitmapInRange_bitmapOf.
@@ -2811,10 +2823,10 @@ Proof.
     apply same_size_compare; try Nomega; intros.
     + subst.
       rewrite commonRange_idem.
+      inversion_clear HDTip.
       apply DescTip; auto.
-      - inversion_clear HDTip.
-        solve_f_eq.
-      - apply isBitMask_lor; auto; (inversion HDTip; auto).
+      - solve_f_eq.
+      - isBitMask.
     + rewrite rangeDisjoint_sym in *.
       eapply link_Desc; try apply HDTip; auto.
       - apply DescTip; auto.
@@ -2857,12 +2869,13 @@ Proof.
   intros.
   eapply insertBM_Desc.
   eapply DescTip; try nonneg.
-  symmetry. apply rPrefix_shiftr. reflexivity.
-  apply isBitMask_bitmapOf.
-  eassumption.
-  congruence.
-  intros j. rewrite H3. f_equal.
-  symmetry. apply bitmapInRange_bitmapOf.
+  * symmetry. apply rPrefix_shiftr.
+  * reflexivity.
+  * isBitMask.
+  * eassumption.
+  * congruence.
+  * intros j. rewrite H3. f_equal.
+    symmetry. apply bitmapInRange_bitmapOf.
 Qed.
 
 Lemma insert_Nil_Desc:
@@ -2874,9 +2887,9 @@ Lemma insert_Nil_Desc:
 Proof.
   intros; subst.
   apply DescTip; try nonneg.
-  symmetry. apply rPrefix_shiftr.
-  intros j. rewrite H1. symmetry. apply bitmapInRange_bitmapOf.
-  apply isBitMask_bitmapOf.
+  * symmetry. apply rPrefix_shiftr.
+  * intros j. rewrite H1. symmetry. apply bitmapInRange_bitmapOf.
+  * isBitMask.
 Qed.
 
 Lemma insert_Sem:
@@ -2983,9 +2996,7 @@ Proof.
     + subst.
       apply tip_Desc0; auto.
       - solve_f_eq.
-      - apply isBitMask0_lxor; auto.
-        apply isBitMask_isBitMask0; auto.
-        apply isBitMask0_land; apply isBitMask_isBitMask0; auto.
+      - isBitMask.
     + apply Desc_Desc0.
       apply DescTip; auto.
       solve_f_eq_disjoint.
@@ -3043,7 +3054,7 @@ Proof.
   eapply deleteBM_Desc.
   * eapply DescTip; try nonneg.
     + symmetry. apply rPrefix_shiftr. reflexivity.
-    + apply isBitMask_bitmapOf.
+    + isBitMask.
   * eassumption.
   * setoid_rewrite bitmapInRange_bitmapOf. assumption.
 Qed.
@@ -3316,7 +3327,7 @@ Next Obligation.
          rewrite commonRange_idem in *.
          apply tip_Desc0; auto.
          ** solve_f_eq.
-         ** apply isBitMask0_land; apply isBitMask_isBitMask0; assumption.
+         ** isBitMask.
       -- apply Desc0Nil.
          solve_f_eq_disjoint.
     + assert (N.log2 WIDTH <= rBits r0)%N by (eapply Desc_larger_WIDTH; eauto).
@@ -3374,8 +3385,8 @@ Next Obligation.
         - subst.
           rewrite commonRange_idem in *.
           apply tip_Desc0; auto.
-          solve_f_eq_disjoint.
-          apply isBitMask0_land; apply isBitMask_isBitMask0; assumption.
+          ** solve_f_eq_disjoint.
+          ** isBitMask.
         - apply Desc0Nil.
           solve_f_eq_disjoint.
 
@@ -3579,7 +3590,7 @@ Next Obligation.
       -- subst.
          apply tip_Desc0; auto.
          ** solve_f_eq.
-         ** apply isBitMask0_lxor; try apply isBitMask0_land; apply isBitMask_isBitMask0; assumption.
+         ** isBitMask.
       -- eapply Desc0NotNil; try eassumption.
          ** apply isSubrange_refl.
          ** solve_f_eq_disjoint.

@@ -1927,6 +1927,23 @@ Proof.
   Nomega.
 Qed.
 
+(** Two ranges with the same size, are either the same, or they are disjoint *)
+Lemma same_size_compare:
+  forall {a} r1 r2 (P : a -> Prop) same different,
+  (rBits r1 = rBits r2) ->
+  (r1 = r2 -> P same) ->
+  (rangeDisjoint r1 r2 = true -> P different) ->
+  P (if rPrefix r1 =? rPrefix r2 then same else different).
+Proof.
+  intros.
+  destruct (Z.eqb_spec (rPrefix r1) (rPrefix r2)).
+  * apply H0.
+    apply rPrefix_rBits_range_eq; auto.
+  * apply H1.
+    apply different_prefix_same_bits_disjoint; auto.
+Qed.
+
+
 (** *** Lemmas about [branchMask] *)
 
 Lemma branchMask_spec:
@@ -2779,17 +2796,14 @@ Proof.
   * simpl.
     unfold Prim.seq.
     unfold GHC.Base.op_zeze__, Eq_Integer___, op_zeze____.
-    destruct (Z.eqb_spec (rPrefix r2) (rPrefix r1)); subst.
-    + assert (r1 = r2) 
-        by (inversion HDTip; destruct r1, r2; subst; simpl in *; subst; 
-            rewrite -> Z_shiftl_inj in * by nonneg; congruence).
-      subst.
+    apply same_size_compare; try Nomega; intros.
+    + subst.
       rewrite commonRange_idem.
       apply DescTip; auto.
       - inversion_clear HDTip.
         solve_f_eq.
       - apply isBitMask_lor; auto; (inversion HDTip; auto).
-    + assert (rangeDisjoint r1 r2 = true) by (apply different_prefix_same_bits_disjoint; try congruence).
+    + rewrite rangeDisjoint_sym in *.
       eapply link_Desc; try apply HDTip; auto.
       - apply DescTip; auto.
       - apply disjoint_commonRange; auto.
@@ -2798,7 +2812,7 @@ Proof.
     assert (N.log2 WIDTH <= rBits r2)%N by (eapply Desc_larger_WIDTH; eauto).
     assert (rBits r2 <= rBits (halfRange r0 false))%N by (apply subRange_smaller; auto).
     assert (rBits (halfRange r0 false) < rBits r0)%N by (apply halfRange_smaller; auto).
-    assert (rBits r1 < rBits r0)%N by (rewrite H; eapply N.le_lt_trans; eauto; eapply N.le_lt_trans; eauto).
+    assert (rBits r1 < rBits r0)%N by Nomega.
 
     apply nomatch_zero_smaller; try assumption; intros.
     + eapply link_Desc; eauto; try (inversion HDTip; auto).
@@ -2957,34 +2971,18 @@ Proof.
   revert dependent f.
   induction HD; intros f' Hf'; subst.
   * simpl deleteBM; unfold Prim.seq.
+    inversion_clear HTip; subst.
     unfold op_zsze__, op_zeze__, Eq_Char___, Eq_Integer___, op_zsze____, op_zeze____.
-    destruct (Z.eqb_spec (rPrefix r) p').
+    apply same_size_compare; try Nomega; intros.
     + subst.
-      assert (r1 = r); subst.
-      { inversion_clear HTip.
-        destruct r as [p1 b1], r1 as [p2 b2]. simpl in *. subst.
-        rewrite Z_shiftl_inj in * by nonneg.
-        congruence. }
       apply tip_Desc0; auto.
-      - inversion_clear HTip.
-        solve_f_eq.
-      - assert (isBitMask bm) by (inversion HTip; intuition).
-        apply isBitMask0_lxor; auto.
+      - solve_f_eq.
+      - apply isBitMask0_lxor; auto.
         apply isBitMask_isBitMask0; auto.
         apply isBitMask0_land; apply isBitMask_isBitMask0; auto.
-    + assert (rangeDisjoint r r1 = true)
-        by (apply different_prefix_same_bits_disjoint;
-            inversion HTip; subst; intuition congruence).
-
-      apply Desc_Desc0.
+    + apply Desc_Desc0.
       apply DescTip; auto.
-      intros j.
-      rewrite Hf', H2.
-      destruct (inRange j r) eqn:Hir.
-      + erewrite Desc_outside; [reflexivity|eassumption|..].
-        eapply rangeDisjoint_inRange_false; eauto.
-      + rewrite bitmapInRange_outside by assumption.
-        split_bool; reflexivity.
+      solve_f_eq_disjoint.
   * simpl. unfold Prim.seq.
     inversion_clear HTip; subst.
 
@@ -3181,28 +3179,26 @@ Next Obligation.
           ** solve_f_eq.
       * assert (rBits r1 = rBits r2) by Nomega.
         unfold op_zeze__, Eq_Integer___, op_zeze____.
-        destruct (Z.eqb_spec (rPrefix r1) (rPrefix r2)).
-        assert (r2 = r1) by (apply rPrefix_rBits_range_eq; auto); subst.
-        rewrite commonRange_idem in *.
-        eapply DescBin; try assumption; try reflexivity.
-        ++ eapply union_Desc.
-           -- subst sl sr. simpl. omega.
-           -- eassumption.
-           -- eassumption.
-           -- intro i. reflexivity.
-        ++ eapply union_Desc.
-           -- subst sl sr. simpl. omega.
-           -- eassumption.
-           -- eassumption.
-           -- intro i. reflexivity.
-        ++ rewrite isSubrange_commonRange by (eapply Desc_rNonneg; eassumption).
-           apply andb_true_intro; intuition.
-        ++ rewrite isSubrange_commonRange by (eapply Desc_rNonneg; eassumption).
-           apply andb_true_intro; intuition.
-        ++ solve_f_eq.
-      - assert (rangeDisjoint r1 r2 = true)
-          by (apply different_prefix_same_bits_disjoint; auto).
-        rewrite disjoint_commonRange in * by assumption.
+        apply same_size_compare; try Nomega; intros.
+        - subst.
+          rewrite commonRange_idem in *.
+          eapply DescBin; try assumption; try reflexivity.
+          ++ eapply union_Desc.
+             -- subst sl sr. simpl. omega.
+             -- eassumption.
+             -- eassumption.
+             -- intro i. reflexivity.
+          ++ eapply union_Desc.
+             -- subst sl sr. simpl. omega.
+             -- eassumption.
+             -- eassumption.
+             -- intro i. reflexivity.
+          ++ rewrite isSubrange_commonRange by (eapply Desc_rNonneg; eassumption).
+             apply andb_true_intro; intuition.
+          ++ rewrite isSubrange_commonRange by (eapply Desc_rNonneg; eassumption).
+             apply andb_true_intro; intuition.
+          ++ solve_f_eq.
+      - rewrite disjoint_commonRange in * by assumption.
         eapply link_Desc;
           [ eapply DescBin with (r := r1); try eassumption; try reflexivity
           | eapply DescBin with (r := r2); try eassumption; try reflexivity
@@ -3316,15 +3312,13 @@ Next Obligation.
     generalize dependent f.
     induction HD2; intros f' Hf'; subst.
     + unfold op_zeze__, Eq_Integer___, op_zeze____.
-      destruct (Z.eqb_spec (rPrefix r1) (rPrefix r)).
-      -- assert (r1 = r) by (apply rPrefix_rBits_range_eq; try congruence); subst.
+      apply same_size_compare; try Nomega; intros.
+      -- subst.
          rewrite commonRange_idem in *.
          apply tip_Desc0; auto.
          ** solve_f_eq.
          ** apply isBitMask0_land; apply isBitMask_isBitMask0; assumption.
       -- apply Desc0Nil.
-         assert (rangeDisjoint r r1 = true)
-            by (apply different_prefix_same_bits_disjoint; congruence).
          solve_f_eq_disjoint.
     + assert (N.log2 WIDTH <= rBits r0)%N by (eapply Desc_larger_WIDTH; eauto).
       assert (rBits r0 <= rBits (halfRange r false))%N by (apply subRange_smaller; auto).
@@ -3383,21 +3377,19 @@ Next Obligation.
       generalize dependent f.
       induction HD1; intros f' Hf'; subst.
       + unfold op_zeze__, Eq_Integer___, op_zeze____.
-        destruct (Z.eqb_spec (rPrefix r) (rPrefix r2)).
-        -- assert (r = r2) by (apply rPrefix_rBits_range_eq; try congruence); subst.
-           rewrite commonRange_idem in *.
-           apply tip_Desc0; auto.
-           solve_f_eq_disjoint.
-           apply isBitMask0_land; apply isBitMask_isBitMask0; assumption.
-        -- assert (rangeDisjoint r r2 = true)
-             by (apply different_prefix_same_bits_disjoint; congruence).
-           apply Desc0Nil.
-           solve_f_eq_disjoint.
+        apply same_size_compare; try Nomega; intros.
+        - subst.
+          rewrite commonRange_idem in *.
+          apply tip_Desc0; auto.
+          solve_f_eq_disjoint.
+          apply isBitMask0_land; apply isBitMask_isBitMask0; assumption.
+        - apply Desc0Nil.
+          solve_f_eq_disjoint.
 
     + assert (N.log2 WIDTH <= rBits r1)%N by (eapply Desc_larger_WIDTH; eauto).
       assert (rBits r1 <= rBits (halfRange r false))%N by (apply subRange_smaller; auto).
       assert (rBits (halfRange r false) < rBits r)%N by (apply halfRange_smaller; auto).
-      assert (rBits r2 < rBits r)%N by (rewrite H12; eapply N.le_lt_trans; eauto; eapply N.le_lt_trans; eauto).
+      assert (rBits r2 < rBits r)%N by Nomega.
 
       apply nomatch_zero_smaller; try assumption; intros.
       - apply Desc0Nil.
@@ -3497,8 +3489,8 @@ Next Obligation.
         * (* s1 and s2 are the same size *)
           assert (rBits r1 = rBits r2) by Nomega.
           unfold op_zeze__, Eq_Integer___, op_zeze____.
-          destruct (Z.eqb_spec (rPrefix r1) (rPrefix r2)).
-          - assert (r2 = r1) by (apply rPrefix_rBits_range_eq; auto); subst.
+          apply same_size_compare; try Nomega; intros.
+          - subst.
             rewrite commonRange_idem in *.
             eapply bin_Desc0; try assumption; try reflexivity.
             ++ eapply intersection_Desc.
@@ -3516,9 +3508,7 @@ Next Obligation.
             ++ rewrite isSubrange_commonRange by (eapply Desc_rNonneg; eassumption).
                apply andb_true_intro; intuition.
             ++ solve_f_eq_disjoint.
-          - assert (rangeDisjoint r1 r2 = true)
-              by (apply different_prefix_same_bits_disjoint; auto).
-            apply Desc0Nil.
+          - apply Desc0Nil.
             solve_f_eq_disjoint.
 Qed.
 
@@ -3613,14 +3603,12 @@ Next Obligation.
     induction HD2; intros f' Hf'; subst.
     + unfold op_zeze__, Eq_Integer___, op_zeze____.
       unfold xor.
-      destruct (Z.eqb_spec (rPrefix r1) (rPrefix r)).
-      -- assert (r1 = r) by (apply rPrefix_rBits_range_eq; try congruence); subst.
+      apply same_size_compare; try Nomega; intros.
+      -- subst.
          apply tip_Desc0; auto.
          ** solve_f_eq.
          ** apply isBitMask0_lxor; try apply isBitMask0_land; apply isBitMask_isBitMask0; assumption.
-      -- assert (rangeDisjoint r r1 = true)
-            by (apply different_prefix_same_bits_disjoint; congruence).
-         eapply Desc0NotNil; try eassumption.
+      -- eapply Desc0NotNil; try eassumption.
          ** apply isSubrange_refl.
          ** solve_f_eq_disjoint.
     + assert (N.log2 WIDTH <= rBits r0)%N by (eapply Desc_larger_WIDTH; eauto).
@@ -3702,8 +3690,8 @@ Next Obligation.
         * (* s1 and s2 are the same size *)
           assert (rBits r1 = rBits r2) by Nomega.
           unfold op_zeze__, Eq_Integer___, op_zeze____.
-          destruct (Z.eqb_spec (rPrefix r1) (rPrefix r2)).
-          - assert (r2 = r1) by (apply rPrefix_rBits_range_eq; auto); subst.
+          apply same_size_compare; try Nomega; intros.
+          - subst.
             eapply bin_Desc0; try assumption; try reflexivity.
             ++ eapply difference_Desc.
                -- subst sl sr. simpl. omega.
@@ -3718,9 +3706,7 @@ Next Obligation.
             ++ assumption.
             ++ assumption.
             ++ solve_f_eq_disjoint.
-          - assert (rangeDisjoint r1 r2 = true)
-              by (apply different_prefix_same_bits_disjoint; auto).
-            eapply Desc_Desc0; eapply DescBin; try eassumption; try reflexivity.
+          - eapply Desc_Desc0; eapply DescBin; try eassumption; try reflexivity.
             solve_f_eq_disjoint.
 Qed.
 

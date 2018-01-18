@@ -1733,6 +1733,18 @@ Ltac inRange_false :=
         [rewrite rangeDisjoint_sym; apply halves_disj; auto | inRange_true ]
   end; try inRange_false.
 
+Ltac isSubrange_true :=
+  assumption || 
+  multimatch goal with 
+    | [ |- isSubrange ?r1 ?r1 = true ] =>
+        apply (isSubrange_refl r1)
+    | [ H : isSubrange ?r1 ?r2 = true  |- isSubrange ?r1 ?r3 = true ] =>
+        apply (isSubrange_trans r1 r2 r3 H)
+    | [ |- isSubrange (halfRange ?r1 ?b) ?r2 = true ] =>
+        apply (isSubrange_trans (halfRange r1 b) r1 r2);
+          [apply isSubrange_halfRange; assumption |]
+  end; try isSubrange_true.
+
 
 (** ** IntMap-specific operations
 
@@ -2429,7 +2441,7 @@ Proof.
   induction H.
   * apply Desc0Nil; assumption.
   * eapply Desc0NotNil; try eassumption.
-    eapply isSubrange_trans; eassumption.
+    isSubrange_true.
 Qed.
 
 
@@ -2818,17 +2830,15 @@ Proof.
     + eapply link_Desc; eauto; try (inversion HDTip; auto).
       eapply DescBin; eauto.
       apply disjoint_commonRange; assumption.
-    + rewrite -> (isSubrange_commonRange_r r1 r0) in *
-        by (eapply isSubrange_trans; [ eassumption| apply isSubrange_halfRange; auto]).
+    + rewrite -> (isSubrange_commonRange_r r1 r0) in * by isSubrange_true.
       assert (isSubrange (commonRange r1 r2) (halfRange r0 false) = true)
-          by (rewrite -> isSubrange_commonRange; intuition; eapply Desc_rNonneg; eassumption).
+          by (rewrite -> isSubrange_commonRange by (eapply Desc_rNonneg; eassumption); intuition).
       eapply DescBin; try apply HD2; try apply IHHD1 with (f := fun j => f1 j || f2 j); auto.
       solve_f_eq.
 
-    + rewrite -> (isSubrange_commonRange_r r1 r0) in *
-        by (eapply isSubrange_trans; [ eassumption| apply isSubrange_halfRange; auto]).
+    + rewrite -> (isSubrange_commonRange_r r1 r0) in * by isSubrange_true.
       assert (isSubrange (commonRange r1 r3) (halfRange r0 true) = true)
-          by (rewrite -> isSubrange_commonRange; intuition; eapply Desc_rNonneg; eassumption).
+          by (rewrite -> isSubrange_commonRange by (eapply Desc_rNonneg; eassumption); intuition).
       eapply DescBin; try apply HD1; try apply IHHD2 with (f := fun j => f1 j || f3 j); auto.
       solve_f_eq.
 Qed.
@@ -2939,22 +2949,18 @@ Proof.
     intro j. rewrite H6, H, H0. reflexivity.
   * replace (bin _ _ _ _) with s by (destruct s; reflexivity).
     eapply Desc0NotNil; eauto.
-    + eapply isSubrange_trans; try eassumption.
-      eapply isSubrange_trans; try (apply isSubrange_halfRange; auto).
-      eassumption.
+    + isSubrange_true.
     + solve_f_eq.
   * replace (bin _ _ _ _) with s by (destruct s; reflexivity).
     eapply Desc0NotNil; try eassumption.
-    + eapply isSubrange_trans; try eassumption.
-      eapply isSubrange_trans; try (apply isSubrange_halfRange; auto).
-      eassumption.
+    + isSubrange_true.
     + solve_f_eq.
   * replace (bin p msk s s0) with (Bin p msk s s0)
       by (destruct s, s0; try reflexivity; try inversion HD; try inversion HD0).
     apply Desc_Desc0.
     eapply DescBin; try eassumption.
-    + eapply isSubrange_trans; try eassumption.
-    + eapply isSubrange_trans; try eassumption.
+    + isSubrange_true.
+    + isSubrange_true.
     + solve_f_eq.
 Qed.
 
@@ -3143,15 +3149,13 @@ Next Obligation.
             [ eapply DescBin with (r := r1); try eassumption; try reflexivity
             | eapply DescBin with (r := r2); try eassumption; try reflexivity
             |..]; auto.
-        - rewrite -> (isSubrange_commonRange_l r1 r2) in *
-            by (eapply isSubrange_trans; [ eassumption| apply isSubrange_halfRange; auto]).
+        - rewrite -> (isSubrange_commonRange_l r1 r2) in * by isSubrange_true.
           eapply DescBin; [eapply union_Desc|eassumption|..]; try eassumption; try reflexivity.
           ** subst sl sr. simpl. omega.
           ** rewrite isSubrange_commonRange by (eapply Desc_rNonneg; eassumption).
              apply andb_true_intro; intuition.
           ** solve_f_eq.
-        - rewrite -> (isSubrange_commonRange_l r1 r2) in *
-            by (eapply isSubrange_trans; [ eassumption| apply isSubrange_halfRange; auto]).
+        - rewrite -> (isSubrange_commonRange_l r1 r2) in *  by isSubrange_true.
           eapply DescBin; [eassumption|eapply union_Desc|..]; try eassumption; try reflexivity.
           ** subst sl sr. simpl. omega.
           ** rewrite isSubrange_commonRange by (eapply Desc_rNonneg; eassumption).
@@ -3163,15 +3167,13 @@ Next Obligation.
             [ eapply DescBin with (r := r1); try eassumption; try reflexivity
             | eapply DescBin with (r := r2); try eassumption; try reflexivity
             |..]; auto.
-        - rewrite -> (isSubrange_commonRange_r r1 r2) in *
-            by (eapply isSubrange_trans; [ eassumption| apply isSubrange_halfRange; auto]).
+        - rewrite -> (isSubrange_commonRange_r r1 r2) in * by isSubrange_true.
           eapply DescBin; [eapply union_Desc|eassumption|..]; try eassumption; try reflexivity.
           ** subst sl sr. simpl. omega.
           ** rewrite isSubrange_commonRange by (eapply Desc_rNonneg; eassumption).
              apply andb_true_intro; intuition.
           ** solve_f_eq.
-        - rewrite -> (isSubrange_commonRange_r r1 r2) in *
-            by (eapply isSubrange_trans; [ eassumption| apply isSubrange_halfRange; auto]).
+        - rewrite -> (isSubrange_commonRange_r r1 r2) in *  by isSubrange_true.
           eapply DescBin; [eassumption|eapply union_Desc|..]; try eassumption; try reflexivity.
           ** subst sl sr. simpl. omega.
           ** rewrite isSubrange_commonRange by (eapply Desc_rNonneg; eassumption).
@@ -3328,13 +3330,10 @@ Next Obligation.
       apply nomatch_zero_smaller; try assumption; intros.
       - apply Desc0Nil.
         solve_f_eq_disjoint.
-      - rewrite -> (isSubrange_commonRange_r r1 r) in *
-          by (eapply isSubrange_trans; [ eassumption| apply isSubrange_halfRange; auto]).
+      - rewrite -> (isSubrange_commonRange_r r1 r) in *  by isSubrange_true.
         assert (isSubrange (commonRange r1 r0) r = true).
         { rewrite isSubrange_commonRange by (eapply Desc_rNonneg; eassumption).
-          apply andb_true_intro. split.
-          -- eapply isSubrange_trans; try eassumption. apply isSubrange_halfRange; auto.
-          -- eapply isSubrange_trans; try eassumption. apply isSubrange_halfRange; auto.
+          apply andb_true_intro. split; isSubrange_true.
         }
         eapply Desc0_subRange; [apply IHHD2_1|assumption]. clear IHHD2_1 IHHD2_2.
         solve_f_eq_disjoint.
@@ -3342,9 +3341,7 @@ Next Obligation.
           by (eapply isSubrange_trans; [ eassumption| apply isSubrange_halfRange; auto]).
         assert (isSubrange (commonRange r1 r2) r = true).
         { rewrite isSubrange_commonRange by (eapply Desc_rNonneg; eassumption).
-          apply andb_true_intro. split.
-          -- eapply isSubrange_trans; try eassumption. apply isSubrange_halfRange; auto.
-          -- eapply isSubrange_trans; try eassumption. apply isSubrange_halfRange; auto.
+          apply andb_true_intro. split; isSubrange_true.
         }
         eapply Desc0_subRange; [apply IHHD2_2|assumption]. clear IHHD2_1 IHHD2_2.
         solve_f_eq_disjoint.
@@ -3395,26 +3392,20 @@ Next Obligation.
       - apply Desc0Nil.
         solve_f_eq_disjoint.
 
-      - rewrite -> (isSubrange_commonRange_l r r2) in *
-          by (eapply isSubrange_trans; [ eassumption| apply isSubrange_halfRange; auto]).
+      - rewrite -> (isSubrange_commonRange_l r r2) in * by isSubrange_true.
 
         assert (isSubrange (commonRange r1 r2) r = true).
         { rewrite isSubrange_commonRange by (eapply Desc_rNonneg; eassumption).
-          apply andb_true_intro. split.
-          -- eapply isSubrange_trans; try eassumption. apply isSubrange_halfRange; auto.
-          -- eapply isSubrange_trans; try eassumption. apply isSubrange_halfRange; auto.
+          apply andb_true_intro. split; isSubrange_true.
         }
         eapply Desc0_subRange; [apply IHHD1_1|assumption].  clear IHHD1_1 IHHD1_2.
         solve_f_eq_disjoint.
 
-      - rewrite -> (isSubrange_commonRange_l r r2) in *
-          by (eapply isSubrange_trans; [ eassumption| apply isSubrange_halfRange; auto]).
+      - rewrite -> (isSubrange_commonRange_l r r2) in * by isSubrange_true.
 
         assert (isSubrange (commonRange r0 r2) r = true).
         { rewrite isSubrange_commonRange by (eapply Desc_rNonneg; eassumption).
-          apply andb_true_intro. split.
-          -- eapply isSubrange_trans; try eassumption. apply isSubrange_halfRange; auto.
-          -- eapply isSubrange_trans; try eassumption. apply isSubrange_halfRange; auto.
+          apply andb_true_intro. split; isSubrange_true.
         }
         eapply Desc0_subRange; [apply IHHD1_2|assumption]. clear IHHD1_1 IHHD1_2.
         solve_f_eq_disjoint.
@@ -3431,28 +3422,22 @@ Next Obligation.
           solve_f_eq_disjoint.
 
         - (* s2 is part of the left half of s1 *)
-          rewrite -> (isSubrange_commonRange_l r1 r2) in *
-            by (eapply isSubrange_trans; [ eassumption| apply isSubrange_halfRange; auto]).
+          rewrite -> (isSubrange_commonRange_l r1 r2) in * by isSubrange_true.
           eapply Desc0_subRange.
           eapply intersection_Desc; clear intersection_Desc; try eassumption.
           ** subst sl sr. simpl. omega.
           ** solve_f_eq_disjoint.
           ** rewrite isSubrange_commonRange by (eapply Desc_rNonneg; eassumption).
-             apply andb_true_intro; split; try assumption.
-             eapply isSubrange_trans; try eassumption. apply isSubrange_halfRange; auto.
-          ** eapply isSubrange_trans; [ eassumption| apply isSubrange_halfRange; auto].
+             apply andb_true_intro; split; isSubrange_true.
         - (* s2 is part of the right half of s1 *)
-          rewrite -> (isSubrange_commonRange_l r1 r2) in *
-            by (eapply isSubrange_trans; [ eassumption| apply isSubrange_halfRange; auto]).
+          rewrite -> (isSubrange_commonRange_l r1 r2) in * by isSubrange_true.
 
           eapply Desc0_subRange.
           eapply intersection_Desc; clear intersection_Desc; try eassumption.
           ** subst sl sr. simpl. omega.
           ** solve_f_eq_disjoint.
           ** rewrite isSubrange_commonRange by (eapply Desc_rNonneg; eassumption).
-             apply andb_true_intro; split; try assumption.
-             eapply isSubrange_trans; try eassumption. apply isSubrange_halfRange; auto.
-          ** eapply isSubrange_trans; [ eassumption| apply isSubrange_halfRange; auto].
+             apply andb_true_intro; split; isSubrange_true.
 
       * (* s2 is not smaller than s1 *)
         destruct (N.ltb_spec (rBits r1) (rBits r2)).
@@ -3462,29 +3447,23 @@ Next Obligation.
             apply Desc0Nil.
             solve_f_eq_disjoint.
           - (* s1 is part of the left half of s2 *)
-            rewrite -> (isSubrange_commonRange_r r1 r2) in *
-              by (eapply isSubrange_trans; [ eassumption| apply isSubrange_halfRange; auto]).
+            rewrite -> (isSubrange_commonRange_r r1 r2) in * by isSubrange_true.
             eapply Desc0_subRange.
             eapply intersection_Desc; clear intersection_Desc; try eassumption.
             ** subst sl sr. simpl. omega.
             ** solve_f_eq_disjoint.
             ** rewrite isSubrange_commonRange by (eapply Desc_rNonneg; eassumption).
-               apply andb_true_intro; split; try assumption.
-               eapply isSubrange_trans; try eassumption. apply isSubrange_halfRange; auto.
-            ** eapply isSubrange_trans; [ eassumption| apply isSubrange_halfRange; auto].
+               apply andb_true_intro; split; isSubrange_true.
 
           - (* s1 is part of the right half of s2 *)
-            rewrite -> (isSubrange_commonRange_r r1 r2) in *
-              by (eapply isSubrange_trans; [ eassumption| apply isSubrange_halfRange; auto]).
+            rewrite -> (isSubrange_commonRange_r r1 r2) in * by isSubrange_true.
 
             eapply Desc0_subRange.
             eapply intersection_Desc; clear intersection_Desc; try eassumption.
             ** subst sl sr. simpl. omega.
             ** solve_f_eq_disjoint.
             ** rewrite isSubrange_commonRange by (eapply Desc_rNonneg; eassumption).
-               apply andb_true_intro; split; try assumption.
-               eapply isSubrange_trans; try eassumption. apply isSubrange_halfRange; auto.
-            ** eapply isSubrange_trans; [ eassumption| apply isSubrange_halfRange; auto].
+               apply andb_true_intro; split; isSubrange_true.
 
         * (* s1 and s2 are the same size *)
           assert (rBits r1 = rBits r2) by Nomega.

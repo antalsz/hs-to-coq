@@ -3179,9 +3179,7 @@ Next Obligation.
           ** rewrite isSubrange_commonRange by (eapply Desc_rNonneg; eassumption).
              apply andb_true_intro; intuition.
           ** solve_f_eq.
-      * assert (rBits r1 = rBits r2) by Nomega.
-        unfold op_zeze__, Eq_Integer___, op_zeze____.
-        apply same_size_compare; try Nomega; intros.
+      * apply same_size_compare; try Nomega; intros.
         - subst.
           rewrite commonRange_idem in *.
           eapply DescBin; try assumption; try reflexivity.
@@ -3313,8 +3311,7 @@ Next Obligation.
     clear intersection_Desc.
     generalize dependent f.
     induction HD2; intros f' Hf'; subst.
-    + unfold op_zeze__, Eq_Integer___, op_zeze____.
-      apply same_size_compare; try Nomega; intros.
+    + apply same_size_compare; try Nomega; intros.
       -- subst.
          rewrite commonRange_idem in *.
          apply tip_Desc0; auto.
@@ -3373,8 +3370,7 @@ Next Obligation.
       clear intersection_Desc.
       generalize dependent f.
       induction HD1; intros f' Hf'; subst.
-      + unfold op_zeze__, Eq_Integer___, op_zeze____.
-        apply same_size_compare; try Nomega; intros.
+      + apply same_size_compare; try Nomega; intros.
         - subst.
           rewrite commonRange_idem in *.
           apply tip_Desc0; auto.
@@ -3466,8 +3462,6 @@ Next Obligation.
                apply andb_true_intro; split; isSubrange_true.
 
         * (* s1 and s2 are the same size *)
-          assert (rBits r1 = rBits r2) by Nomega.
-          unfold op_zeze__, Eq_Integer___, op_zeze____.
           apply same_size_compare; try Nomega; intros.
           - subst.
             rewrite commonRange_idem in *.
@@ -3580,8 +3574,7 @@ Next Obligation.
     clear difference_Desc.
     generalize dependent f.
     induction HD2; intros f' Hf'; subst.
-    + unfold op_zeze__, Eq_Integer___, op_zeze____.
-      unfold xor.
+    + unfold xor.
       apply same_size_compare; try Nomega; intros.
       -- subst.
          apply tip_Desc0; auto.
@@ -3668,7 +3661,6 @@ Next Obligation.
 
         * (* s1 and s2 are the same size *)
           assert (rBits r1 = rBits r2) by Nomega.
-          unfold op_zeze__, Eq_Integer___, op_zeze____.
           apply same_size_compare; try Nomega; intros.
           - subst.
             eapply bin_Desc0; try assumption; try reflexivity.

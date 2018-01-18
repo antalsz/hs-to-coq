@@ -12,7 +12,7 @@ Require Coq.Program.Wf.
 
 (* Preamble *)
 
-Axiom error : forall {a}, a.
+(* Axiom error : forall {a}, a. *)
 
 (* Converted imports: *)
 
@@ -239,7 +239,7 @@ Parameter zapFragileInfo : IdInfo -> option IdInfo.
 (* The Haskell code containes partial or untranslateable code, which needs the
    following *)
 
-Axiom missingValue : forall {a}, a.
+(* Axiom missingValue : forall {a}, a. *)
 
 (* Translating `instance Outputable.Outputable IdInfo.RecSelParent' failed:
    OOPS! Cannot find information for class Qualified "Outputable" "Outputable"

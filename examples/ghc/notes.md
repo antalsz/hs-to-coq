@@ -1,15 +1,60 @@
 First goal is to produce *some* part of as many modules related to call-arity
 analysis as possible.  Then, we will go back to fill in the details.
 
+Current status:
 
-HANDMOD
-=======
+  The main type definition of the type/coercion part of the AST is in
+  "manual/Core.v". This file includes mutual type definitions from several
+  modules brought into a single file so that they can be defined
+  simultaneously.
+
+  Core type definitions from:
+    TyCoRep / CoAxiom / TyCon / Var
+
+  Parameterized operations from:
+    TysPrim
+	DataCon
+	PatSyn
+	ConLike
+	Class
+
+  Some parts of this big mutual definition have not been brought in. Instead,
+  we make those types abstract.  In that case, the Core file includes
+  accessors for the mutual parts as parameters.  This prohibits recursive
+  calls from continuing through these components.
+
+    IdInfo
+    Name
+
+    ConLike
+	CoAxiom
+	DataCon
+    PatSyn
+
+    TyCon / Var / CoAxiom  / VarSet / VarEnv
+
+    TyCoRep  (Coercion, Type)
+
+	CoreSyn
+
+
+  The "big ball of stuff" is isolated to Coercion/Type/TyCoRep
+  These three modules are axiomatized/hand merged into a manual TyCoRep.
+
+
+
+HANDMOD (NEW MODULES)
+=====================
+
 - Panic
 
 To account for some partial functions, define a "default value" type class and
 then add that constraint to "Panic.panic". The default value is evidence that
 we *could* return an answer, but the panic is a note that we don't want to do
 so.
+
+HANDMOD (Axiomatized)
+=====================
 
 - FastString
 
@@ -25,6 +70,7 @@ that we will never want to translate.
 
 These modules are axiomatized to avoid cyclic data structures due to, say
 class definitions.
+
 
 class F a where
   foo :: F b => (a,b)
@@ -135,7 +181,7 @@ skip partial lookup function (uses show in error message)
 
 - Literal
 
-Ignoring type component of literal
+Ignoring type component of literal(?)
 
 rename type TyCoRep.Type_   = unit
 
@@ -143,14 +189,20 @@ Big mutual type
 ================
 
 #  Name    -- Name, NameSort
-  refers to IdInfo, IdDetails
-#  Var, refers to Type/Kind, TcTyVarDetails, IdDetails, IdInfo (currently stubbed)
+    refers to IdInfo, IdDetails
+#  Var, refers to Type/Kind, TcTyVarDetails,
+	IdDetails, IdInfo (currently stubbed)
+#  Class    -- Class, ClassATItem
+
+
 
 #  TyCon    -- AlgTyConFlav, TyCon, AlgTyConRhs
-#  Class    -- Class, ClassATItem
 #  CoAxiom  -- CoAxiom, Branches, CoAxBranch
 #  TyCoRep  -- TyThing, TyBinder, UnivCoProvenance
 #  DataCon  -- DataCon, DataConRep, HsImplBang, EqSpec
 #  Coercion -- Coercion
 #  Type     -- Type_
 #  CoercionHole -- TcEvidence
+
+
+===> TyCon / CoAxiom / TyCoRep / Coercion /

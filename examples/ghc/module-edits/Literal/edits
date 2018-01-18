@@ -1,6 +1,6 @@
 # just to access type info
-skip Literal.literalType
-skip Literal.absentLiteralOf
+# skip Literal.literalType
+# skip Literal.absentLiteralOf
 
 ## declared as a parameter in the midamble.
 # is a list of specific prelude names

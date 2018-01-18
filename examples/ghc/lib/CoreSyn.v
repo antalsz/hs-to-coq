@@ -12,21 +12,31 @@ Require Coq.Program.Wf.
 
 (* Preamble *)
 
-Parameter error : forall {a}, a.
+Require Import Core.
+Definition error {a} `{Panic.Default a} := Panic.panic.
 
 (* Converted imports: *)
 
 Require BasicTypes.
+Require Coq.Init.Datatypes.
+Require Coq.Lists.List.
+Require Core.
+Require Data.Foldable.
 Require DataCon.
 Require DynFlags.
 Require GHC.Base.
+Require GHC.Char.
+Require GHC.List.
 Require GHC.Num.
+Require GHC.Real.
 Require Literal.
 Require Module.
 Require Name.
 Require NameEnv.
 Require OccName.
-Require TyCon.
+Require Panic.
+Require TyCoRep.
+Require Util.
 Require Var.
 Require VarEnv.
 Import GHC.Base.Notations.
@@ -57,7 +67,7 @@ Inductive IsOrphan : Type := Mk_IsOrphan : IsOrphan
                           |  NotOrphan : OccName.OccName -> IsOrphan.
 
 Definition CoreBndr :=
-  Var.Var%type.
+  Core.Var%type.
 
 Inductive TaggedBndr t : Type := TB : CoreBndr -> t -> TaggedBndr t.
 
@@ -77,15 +87,15 @@ Inductive AnnExpr' bndr annot : Type := AnnVar : Var.Id -> AnnExpr' bndr annot
                                      |  AnnLit : Literal.Literal -> AnnExpr' bndr annot
                                      |  AnnLam : bndr -> (AnnExpr bndr annot) -> AnnExpr' bndr annot
                                      |  AnnApp : (AnnExpr bndr annot) -> (AnnExpr bndr annot) -> AnnExpr' bndr annot
-                                     |  AnnCase : (AnnExpr bndr annot) -> bndr -> TyCoRep.Type_ -> list (AnnAlt bndr
-                                                                                                        annot) -> AnnExpr'
+                                     |  AnnCase : (AnnExpr bndr annot) -> bndr -> Core.Type_ -> list (AnnAlt bndr
+                                                                                                     annot) -> AnnExpr'
                                                   bndr annot
                                      |  AnnLet : (AnnBind bndr annot) -> (AnnExpr bndr annot) -> AnnExpr' bndr annot
-                                     |  AnnCast : (AnnExpr bndr annot) -> (annot * TyCoRep.Coercion)%type -> AnnExpr'
+                                     |  AnnCast : (AnnExpr bndr annot) -> (annot * Core.Coercion)%type -> AnnExpr'
                                                   bndr annot
                                      |  AnnTick : (Tickish Var.Id) -> (AnnExpr bndr annot) -> AnnExpr' bndr annot
-                                     |  AnnType : TyCoRep.Type_ -> AnnExpr' bndr annot
-                                     |  AnnCoercion : TyCoRep.Coercion -> AnnExpr' bndr annot
+                                     |  AnnType : Core.Type_ -> AnnExpr' bndr annot
+                                     |  AnnCoercion : Core.Coercion -> AnnExpr' bndr annot
 with AnnBind bndr annot : Type := AnnNonRec : bndr -> (AnnExpr bndr
                                               annot) -> AnnBind bndr annot
                                |  AnnRec : list (bndr * AnnExpr bndr annot)%type -> AnnBind bndr annot
@@ -107,11 +117,11 @@ Inductive Expr b : Type := Var : Var.Id -> Expr b
                         |  App : (Expr b) -> (Arg b) -> Expr b
                         |  Lam : b -> (Expr b) -> Expr b
                         |  Let : (Bind b) -> (Expr b) -> Expr b
-                        |  Case : (Expr b) -> b -> TyCoRep.Type_ -> list (Alt b) -> Expr b
-                        |  Cast : (Expr b) -> TyCoRep.Coercion -> Expr b
+                        |  Case : (Expr b) -> b -> Core.Type_ -> list (Alt b) -> Expr b
+                        |  Cast : (Expr b) -> Core.Coercion -> Expr b
                         |  Tick : (Tickish Var.Id) -> (Expr b) -> Expr b
-                        |  Type_ : TyCoRep.Type_ -> Expr b
-                        |  Coercion : TyCoRep.Coercion -> Expr b
+                        |  Type_ : Core.Type_ -> Expr b
+                        |  Coercion : Core.Coercion -> Expr b
 with Bind b : Type := NonRec : b -> (Expr b) -> Bind b
                    |  Rec : list (b * (Expr b))%type -> Bind b
 where "'Arg'" := (GHC.Base.Synonym Arg__raw Expr%type)
@@ -141,13 +151,14 @@ Definition CoreExpr :=
 
 Inductive CoreVect : Type := Vect : Var.Id -> CoreExpr -> CoreVect
                           |  NoVect : Var.Id -> CoreVect
-                          |  VectType : bool -> TyCon.TyCon -> (option TyCon.TyCon) -> CoreVect
-                          |  VectClass : TyCon.TyCon -> CoreVect
+                          |  VectType : bool -> Core.TyCon -> (option Core.TyCon) -> CoreVect
+                          |  VectClass : Core.TyCon -> CoreVect
                           |  VectInst : Var.Id -> CoreVect.
 
 Inductive Unfolding : Type := NoUnfolding : Unfolding
                            |  OtherCon : list AltCon -> Unfolding
-                           |  DFunUnfolding : list Var.Var -> DataCon.DataCon -> list CoreExpr -> Unfolding
+                           |  DFunUnfolding : list Core.Var -> DataCon.DataCon -> list
+                                              CoreExpr -> Unfolding
                            |  CoreUnfolding
                              : CoreExpr -> UnfoldingSource -> bool -> bool -> bool -> bool -> bool -> UnfoldingGuidance -> Unfolding.
 
@@ -506,6 +517,46 @@ Definition re_visible_orphs (arg_31__ : RuleEnv) :=
   end.
 (* Midamble *)
 
+Parameter tickishCounts : forall {id}, Tickish id -> bool.
+Parameter tickishIsCode : forall {id}, Tickish id -> bool.
+
+
+
+
+Fixpoint deAnnotate' {bndr} {annot} (arg_0__ : AnnExpr' bndr annot) : Expr bndr :=
+  let deAnnotate {bndr} {annot} : AnnExpr bndr annot -> Expr bndr :=
+       fun arg_0__ =>  match arg_0__ with | pair _ e => deAnnotate' e end in
+  let deAnnAlt {bndr} {annot} : AnnAlt bndr annot -> Alt bndr :=
+      fun arg_0__ =>
+        match arg_0__ with
+        | pair (pair con args) rhs => pair (pair con args) (deAnnotate rhs)
+        end in
+    match arg_0__ with
+      | AnnType t => Type_ t
+      | AnnCoercion co => Coercion co
+      | AnnVar v => Var v
+      | AnnLit lit => Lit lit
+      | AnnLam binder body => Lam binder (deAnnotate body)
+      | AnnApp fun_ arg => App (deAnnotate fun_) (deAnnotate arg)
+      | AnnCast e (pair _ co) => Cast (deAnnotate e) co
+      | AnnTick tick body => Tick tick (deAnnotate body)
+      | AnnLet bind body =>
+        let deAnnBind :=
+            fun arg_9__ =>
+              match arg_9__ with
+              | AnnNonRec var rhs => NonRec var (deAnnotate rhs)
+              | AnnRec pairs => Rec (let cont_11__ arg_12__ :=
+                                        match arg_12__ with
+                                        | pair v rhs => cons (pair v (deAnnotate rhs)) nil
+                                        end in
+                                    Coq.Lists.List.flat_map cont_11__ pairs)
+              end in
+        Let (deAnnBind bind) (deAnnotate body)
+      | AnnCase scrut v t alts => Case (deAnnotate scrut) v t (GHC.Base.map deAnnAlt
+                                                                           alts)
+    end.
+
+
 (*
 Fixpoint deAnnotate' {bndr} {annot} (ae : AnnExpr' bndr annot)
          {struct ae} : Expr bndr :=
@@ -543,7 +594,7 @@ with deAnnBind {bndr} {annot} (ae : AnnBind bndr annot) {struct ae} : Bind bndr 
 *)
 
 (* One way to resolve the fixpoint *)
-(*
+
 Fixpoint collectAnnArgs_go {b}{a}(expr : AnnExpr' b a) g as_ :=
   match expr with
     | AnnApp f a => collectAnnArgs_go (snd f) (fst f) (cons a as_)
@@ -553,8 +604,62 @@ Fixpoint collectAnnArgs_go {b}{a}(expr : AnnExpr' b a) g as_ :=
 Definition collectAnnArgs {b}{a} :
   AnnExpr b a -> (AnnExpr b a * list (AnnExpr b a))%type :=
   fun expr => collectAnnArgs_go (snd expr) (fst expr) nil.
-*)
+
+
+Fixpoint deTagExpr {t} (arg_0__ : TaggedExpr t) : CoreExpr :=
+  let deTagAlt {t} : TaggedAlt t -> CoreAlt :=
+  fun arg_0__ =>
+    match arg_0__ with
+      | pair (pair con bndrs) rhs =>
+        pair (pair con (let cont_1__ arg_2__ :=
+                            match arg_2__ with
+                            | TB b _ => cons b nil
+                            end in
+                        Coq.Lists.List.flat_map cont_1__ bndrs)) (deTagExpr rhs)
+    end in
+  let deTagBind {t} : TaggedBind t -> CoreBind :=
+      fun arg_0__ =>
+        match arg_0__ with
+        | NonRec (TB b _) rhs => NonRec b (deTagExpr rhs)
+        | Rec prs => Rec (let cont_2__ arg_3__ :=
+                             match arg_3__ with
+                             | pair (TB b _) rhs => cons (pair b (deTagExpr rhs)) nil
+                             end in
+                         Coq.Lists.List.flat_map cont_2__ prs)
+        end
+  in match arg_0__ with
+     | Var v => Var v
+     | Lit l => Lit l
+     | Type_ ty => Type_ ty
+     | Coercion co => Coercion co
+     | App e1 e2 => App (deTagExpr e1) (deTagExpr e2)
+     | Lam (TB b _) e => Lam b (deTagExpr e)
+     | Let bind body => Let (deTagBind bind) (deTagExpr body)
+     | Case e (TB b _) ty alts => Case (deTagExpr e) b ty (GHC.Base.map deTagAlt
+                                                                       alts)
+     | Tick t e => Tick t (deTagExpr e)
+     | Cast e co => Cast (deTagExpr e) co
+     end.
+
+Definition exprToType : CoreExpr -> Core.Type_ :=
+  fun arg_0__ =>
+    match arg_0__ with
+      | Type_ ty => ty
+      | _bad => Panic.panic (GHC.Base.hs_string__ "exprToType")
+    end.
+
+Definition applyTypeToArg : Core.Type_ -> (CoreExpr -> Core.Type_) :=
+  fun fun_ty arg => TyCoRep.piResultTy fun_ty (exprToType arg).
+
+Instance Default_Expr {b} : Panic.Default (Expr b).
+Admitted.
+
 (* Converted value declarations: *)
+
+(* The Haskell code containes partial or untranslateable code, which needs the
+   following *)
+
+Axiom unsafeFix : forall {a}, (a -> a) -> a.
 
 (* Translating `instance Binary.Binary CoreSyn.IsOrphan' failed: OOPS! Cannot
    find information for class Qualified "Binary" "Binary" unsupported *)
@@ -786,220 +891,545 @@ Program Instance Ord__AltCon : GHC.Base.Ord AltCon := fun _ k =>
       GHC.Base.max__ := Ord__AltCon_max ;
       GHC.Base.min__ := Ord__AltCon_min |}.
 
-Axiom mkNoCount : forall {A : Type}, A.
+Axiom tickishPlace : forall {A : Type}, A.
 
-Axiom tickishFloatable : forall {A : Type}, A.
-
-Axiom tickishCounts : forall {A : Type}, A.
-
-Axiom mkNoScope : forall {A : Type}, A.
-
-Axiom tickishScopesLike : forall {A : Type}, A.
+(* Translating `tickishPlace' failed: using a record pattern for the unknown
+   constructor `ProfNote' unsupported *)
 
 Axiom tickishScoped : forall {A : Type}, A.
 
-Axiom tickishCanSplit : forall {A : Type}, A.
-
-Axiom tickishIsCode : forall {A : Type}, A.
-
-Axiom tickishPlace : forall {A : Type}, A.
-
-Axiom tickishContains : forall {A : Type}, A.
-
-Axiom isOrphan : forall {A : Type}, A.
-
-Axiom notOrphan : forall {A : Type}, A.
-
-Axiom chooseOrphanAnchor : forall {A : Type}, A.
-
-Axiom mkRuleEnv : forall {A : Type}, A.
-
-Axiom emptyRuleEnv : forall {A : Type}, A.
-
-Axiom isBuiltinRule : forall {A : Type}, A.
-
-Axiom isAutoRule : forall {A : Type}, A.
-
-Axiom ruleArity : forall {A : Type}, A.
-
-Axiom ruleName : forall {A : Type}, A.
-
-Axiom ruleActivation : forall {A : Type}, A.
-
-Axiom ruleIdName : forall {A : Type}, A.
-
-Axiom isLocalRule : forall {A : Type}, A.
-
-Axiom setRuleIdName : forall {A : Type}, A.
-
-Axiom needSaturated : forall {A : Type}, A.
-
-Axiom unSaturatedOk : forall {A : Type}, A.
-
-Axiom boringCxtOk : forall {A : Type}, A.
-
-Axiom boringCxtNotOk : forall {A : Type}, A.
-
-Axiom noUnfolding : forall {A : Type}, A.
-
-Axiom evaldUnfolding : forall {A : Type}, A.
-
-Axiom mkOtherCon : forall {A : Type}, A.
-
-Axiom isStableUnfolding : forall {A : Type}, A.
-
-Axiom hasStableCoreUnfolding_maybe : forall {A : Type}, A.
-
-Axiom isStableSource : forall {A : Type}, A.
-
-Axiom unfoldingTemplate : forall {A : Type}, A.
-
-Axiom maybeUnfoldingTemplate : forall {A : Type}, A.
-
-Axiom otherCons : forall {A : Type}, A.
-
-Axiom isValueUnfolding : forall {A : Type}, A.
-
-Axiom isEvaldUnfolding : forall {A : Type}, A.
-
-Axiom isConLikeUnfolding : forall {A : Type}, A.
-
-Axiom isCheapUnfolding : forall {A : Type}, A.
-
-Axiom isExpandableUnfolding : forall {A : Type}, A.
-
-Axiom expandUnfolding_maybe : forall {A : Type}, A.
-
-Axiom isCompulsoryUnfolding : forall {A : Type}, A.
-
-Axiom isClosedUnfolding : forall {A : Type}, A.
-
-Axiom hasSomeUnfolding : forall {A : Type}, A.
-
-Axiom canUnfold : forall {A : Type}, A.
-
-Axiom neverUnfoldGuidance : forall {A : Type}, A.
-
-Axiom ltAlt : forall {A : Type}, A.
-
-Axiom cmpAlt : forall {A : Type}, A.
-
-Axiom cmpAltCon : forall {A : Type}, A.
-
-Axiom deTagAlt : forall {A : Type}, A.
-
-Axiom deTagBind : forall {A : Type}, A.
-
-Axiom deTagExpr : forall {A : Type}, A.
-
-Axiom mkConApp2 : forall {A : Type}, A.
-
-Axiom mkConApp : forall {A : Type}, A.
-
-Axiom mkApps : forall {A : Type}, A.
-
-Axiom mkCoApps : forall {A : Type}, A.
-
-Axiom mkVarApps : forall {A : Type}, A.
-
-Axiom mkTyApps : forall {A : Type}, A.
-
-Axiom mkIntLit : forall {A : Type}, A.
-
-Axiom mkIntLitInt : forall {A : Type}, A.
-
-Axiom mkWordLit : forall {A : Type}, A.
-
-Axiom mkWordLitWord : forall {A : Type}, A.
-
-Axiom mkWord64LitWord64 : forall {A : Type}, A.
-
-Axiom mkInt64LitInt64 : forall {A : Type}, A.
-
-Axiom mkCharLit : forall {A : Type}, A.
-
-Axiom mkStringLit : forall {A : Type}, A.
-
-Axiom mkFloatLit : forall {A : Type}, A.
-
-Axiom mkFloatLitFloat : forall {A : Type}, A.
-
-Axiom mkDoubleLit : forall {A : Type}, A.
-
-Axiom mkDoubleLitDouble : forall {A : Type}, A.
-
-Axiom mkLams : forall {A : Type}, A.
-
-Axiom mkLets : forall {A : Type}, A.
-
-Axiom mkTyBind : forall {A : Type}, A.
-
-Axiom mkCoBind : forall {A : Type}, A.
-
-Axiom varsToCoreExprs : forall {A : Type}, A.
-
-Axiom varToCoreExpr : forall {A : Type}, A.
-
-Axiom applyTypeToArg : forall {A : Type}, A.
-
-Axiom exprToType : forall {A : Type}, A.
-
-Axiom exprToCoercion_maybe : forall {A : Type}, A.
-
-Axiom bindersOfBinds : forall {A : Type}, A.
-
-Axiom bindersOf : forall {A : Type}, A.
-
-Axiom rhssOfBind : forall {A : Type}, A.
-
-Axiom rhssOfAlts : forall {A : Type}, A.
-
-Axiom flattenBinds : forall {A : Type}, A.
-
-Axiom collectBinders : forall {A : Type}, A.
-
-Axiom collectTyAndValBinders : forall {A : Type}, A.
-
-Axiom collectTyBinders : forall {A : Type}, A.
-
-Axiom collectValBinders : forall {A : Type}, A.
-
-Axiom collectArgs : forall {A : Type}, A.
-
-Axiom collectArgsTicks : forall {A : Type}, A.
-
-Axiom isRuntimeVar : forall {A : Type}, A.
-
-Axiom isRuntimeArg : forall {A : Type}, A.
-
-Axiom valArgCount : forall {A : Type}, A.
-
-Axiom isValArg : forall {A : Type}, A.
-
-Axiom isTyCoArg : forall {A : Type}, A.
-
-Axiom isTypeArg : forall {A : Type}, A.
-
-Axiom valBndrCount : forall {A : Type}, A.
-
-Axiom collectAnnArgs : forall {A : Type}, A.
-
-Axiom collectAnnArgsTicks : forall {A : Type}, A.
-
-Axiom deAnnAlt : forall {A : Type}, A.
-
-Axiom deAnnotate' : forall {A : Type}, A.
-
-Axiom deAnnotate : forall {A : Type}, A.
-
-Axiom collectAnnBndrs : forall {A : Type}, A.
+(* Translating `tickishScoped' failed: using a record pattern for the unknown
+   constructor `ProfNote' unsupported *)
+
+Definition bindersOf {b} : Bind b -> list b :=
+  fun arg_0__ =>
+    match arg_0__ with
+      | NonRec binder _ => cons binder nil
+      | Rec pairs => let cont_2__ arg_3__ :=
+                       match arg_3__ with
+                         | pair binder _ => cons binder nil
+                       end in
+                     Coq.Lists.List.flat_map cont_2__ pairs
+    end.
+
+Definition bindersOfBinds {b} : list (Bind b) -> list b :=
+  fun binds =>
+    Data.Foldable.foldr (Coq.Init.Datatypes.app GHC.Base.∘ bindersOf) nil binds.
+
+Definition boringCxtNotOk : bool :=
+  false.
+
+Definition boringCxtOk : bool :=
+  true.
+
+Definition chooseOrphanAnchor (local_names : list Name.Name) : IsOrphan :=
+  match GHC.Base.map Name.nameOccName local_names with
+    | cons hd tl => NotOrphan (Data.Foldable.foldr GHC.Base.min hd tl)
+    | nil => Mk_IsOrphan
+  end.
+
+Definition cmpAltCon : AltCon -> AltCon -> comparison :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
+      | DEFAULT , DEFAULT => Eq
+      | DEFAULT , _ => Lt
+      | DataAlt d1 , DataAlt d2 => GHC.Base.compare (DataCon.dataConTag d1)
+                                                    (DataCon.dataConTag d2)
+      | DataAlt _ , DEFAULT => Gt
+      | LitAlt l1 , LitAlt l2 => GHC.Base.compare l1 l2
+      | LitAlt _ , DEFAULT => Gt
+      | con1 , con2 => (Panic.warnPprTrace (true) (GHC.Base.hs_string__
+                                                  "ghc/compiler/coreSyn/CoreSyn.hs") (GHC.Num.fromInteger 1339)
+                       (GHC.Base.mappend (GHC.Base.mappend (id (GHC.Base.hs_string__
+                                                               "Comparing incomparable AltCons")) (Panic.noString con1))
+                                         (Panic.noString con2))) GHC.Base.$ Lt
+    end.
+
+Definition cmpAlt {a} {b} : (AltCon * a * b)%type -> (AltCon * a *
+                            b)%type -> comparison :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
+      | pair (pair con1 _) _ , pair (pair con2 _) _ => cmpAltCon con1 con2
+    end.
+
+Definition ltAlt {a} {b} : (AltCon * a * b)%type -> (AltCon * a *
+                           b)%type -> bool :=
+  fun a1 a2 => (cmpAlt a1 a2) GHC.Base.== Lt.
+
+Definition collectAnnArgsTicks {b} {a} : (Tickish Core.Var -> bool) -> AnnExpr b
+                                         a -> (AnnExpr b a * list (AnnExpr b a) * list (Tickish Core.Var))%type :=
+  fun tickishOk expr =>
+    let go :=
+      unsafeFix (fun go arg_0__ arg_1__ arg_2__ =>
+                  let j_4__ :=
+                    match arg_0__ , arg_1__ , arg_2__ with
+                      | e , as_ , ts => pair (pair e as_) (GHC.List.reverse ts)
+                    end in
+                  match arg_0__ , arg_1__ , arg_2__ with
+                    | pair _ (AnnApp f a) , as_ , ts => go f (cons a as_) ts
+                    | pair _ (AnnTick t e) , as_ , ts => if tickishOk t : bool
+                                                         then go e as_ (cons t ts)
+                                                         else j_4__
+                    | _ , _ , _ => j_4__
+                  end) in
+    go expr nil nil.
+
+Definition collectAnnBndrs {bndr} {annot} : AnnExpr bndr annot -> (list bndr *
+                                            AnnExpr bndr annot)%type :=
+  fun e =>
+    let collect :=
+      unsafeFix (fun collect arg_0__ arg_1__ =>
+                  match arg_0__ , arg_1__ with
+                    | bs , pair _ (AnnLam b body) => collect (cons b bs) body
+                    | bs , body => pair (GHC.List.reverse bs) body
+                  end) in
+    collect nil e.
+
+Definition collectArgs {b} : Expr b -> (Expr b * list (Arg b))%type :=
+  fun expr =>
+    let go :=
+      fix go arg_0__ arg_1__
+            := match arg_0__ , arg_1__ with
+                 | App f a , as_ => go f (cons a as_)
+                 | e , as_ => pair e as_
+               end in
+    go expr nil.
+
+Definition collectArgsTicks {b} : (Tickish Var.Id -> bool) -> Expr b -> (Expr b
+                                  * list (Arg b) * list (Tickish Var.Id))%type :=
+  fun skipTick expr =>
+    let go :=
+      fix go arg_0__ arg_1__ arg_2__
+            := let j_4__ :=
+                 match arg_0__ , arg_1__ , arg_2__ with
+                   | e , as_ , ts => pair (pair e as_) (GHC.List.reverse ts)
+                 end in
+               match arg_0__ , arg_1__ , arg_2__ with
+                 | App f a , as_ , ts => go f (cons a as_) ts
+                 | Tick t e , as_ , ts => if skipTick t : bool
+                                          then go e as_ (cons t ts)
+                                          else j_4__
+                 | _ , _ , _ => j_4__
+               end in
+    go expr nil nil.
+
+Definition collectBinders {b} : Expr b -> (list b * Expr b)%type :=
+  fun expr =>
+    let go :=
+      fix go arg_0__ arg_1__
+            := match arg_0__ , arg_1__ with
+                 | bs , Lam b e => go (cons b bs) e
+                 | bs , e => pair (GHC.List.reverse bs) e
+               end in
+    go nil expr.
+
+Definition collectTyBinders : CoreExpr -> (list TyVar * CoreExpr)%type :=
+  fun expr =>
+    let go :=
+      fix go arg_0__ arg_1__
+            := let j_3__ :=
+                 match arg_0__ , arg_1__ with
+                   | tvs , e => pair (GHC.List.reverse tvs) e
+                 end in
+               match arg_0__ , arg_1__ with
+                 | tvs , Lam b e => if Var.isTyVar b : bool
+                                    then go (cons b tvs) e
+                                    else j_3__
+                 | _ , _ => j_3__
+               end in
+    go nil expr.
+
+Definition collectValBinders : CoreExpr -> (list Var.Id * CoreExpr)%type :=
+  fun expr =>
+    let go :=
+      fix go arg_0__ arg_1__
+            := let j_3__ :=
+                 match arg_0__ , arg_1__ with
+                   | ids , body => pair (GHC.List.reverse ids) body
+                 end in
+               match arg_0__ , arg_1__ with
+                 | ids , Lam b e => if Var.isId b : bool
+                                    then go (cons b ids) e
+                                    else j_3__
+                 | _ , _ => j_3__
+               end in
+    go nil expr.
+
+Definition collectTyAndValBinders : CoreExpr -> (list TyVar * list Var.Id *
+                                    CoreExpr)%type :=
+  fun expr =>
+    match collectTyBinders expr with
+      | pair tvs body1 => match collectValBinders body1 with
+                            | pair ids body => pair (pair tvs ids) body
+                          end
+    end.
+
+Definition deAnnotate {bndr} {annot} : AnnExpr bndr annot -> Expr bndr :=
+  fun arg_0__ => match arg_0__ with | pair _ e => deAnnotate' e end.
+
+Definition deAnnAlt {bndr} {annot} : AnnAlt bndr annot -> Alt bndr :=
+  fun arg_0__ =>
+    match arg_0__ with
+      | pair (pair con args) rhs => pair (pair con args) (deAnnotate rhs)
+    end.
+
+Definition deTagAlt {t} : TaggedAlt t -> CoreAlt :=
+  fun arg_0__ =>
+    match arg_0__ with
+      | pair (pair con bndrs) rhs => pair (pair con (let cont_1__ arg_2__ :=
+                                                  match arg_2__ with
+                                                    | TB b _ => cons b nil
+                                                  end in
+                                                Coq.Lists.List.flat_map cont_1__ bndrs)) (deTagExpr rhs)
+    end.
+
+Definition deTagBind {t} : TaggedBind t -> CoreBind :=
+  fun arg_0__ =>
+    match arg_0__ with
+      | NonRec (TB b _) rhs => NonRec b (deTagExpr rhs)
+      | Rec prs => Rec (let cont_2__ arg_3__ :=
+                         match arg_3__ with
+                           | pair (TB b _) rhs => cons (pair b (deTagExpr rhs)) nil
+                         end in
+                       Coq.Lists.List.flat_map cont_2__ prs)
+    end.
+
+Definition emptyRuleEnv : RuleEnv :=
+  Mk_RuleEnv NameEnv.emptyNameEnv Module.emptyModuleSet.
+
+Definition evaldUnfolding : Unfolding :=
+  OtherCon nil.
+
+Definition expandUnfolding_maybe : Unfolding -> option CoreExpr :=
+  fun arg_0__ =>
+    match arg_0__ with
+      | CoreUnfolding rhs _ _ _ _ _ true _ => Some rhs
+      | _ => None
+    end.
+
+Definition exprToCoercion_maybe : CoreExpr -> option Core.Coercion :=
+  fun arg_0__ => match arg_0__ with | Coercion co => Some co | _ => None end.
+
+Definition flattenBinds {b} : list (Bind b) -> list (b * Expr b)%type :=
+  fix flattenBinds arg_0__
+        := match arg_0__ with
+             | cons (NonRec b r) binds => cons (pair b r) (flattenBinds binds)
+             | cons (Rec prs1) binds => Coq.Init.Datatypes.app prs1 (flattenBinds binds)
+             | nil => nil
+           end.
+
+Definition hasSomeUnfolding : Unfolding -> bool :=
+  fun arg_0__ => match arg_0__ with | NoUnfolding => false | _ => true end.
+
+Definition isAutoRule : CoreRule -> bool :=
+  fun arg_0__ =>
+    match arg_0__ with
+      | BuiltinRule _ _ _ _ => false
+      | Rule _ _ _ _ _ _ _ is_auto _ _ _ => is_auto
+    end.
+
+Definition isBuiltinRule : CoreRule -> bool :=
+  fun arg_0__ =>
+    match arg_0__ with
+      | BuiltinRule _ _ _ _ => true
+      | _ => false
+    end.
+
+Definition isCheapUnfolding : Unfolding -> bool :=
+  fun arg_0__ =>
+    match arg_0__ with
+      | CoreUnfolding _ _ _ _ _ is_wf _ _ => is_wf
+      | _ => false
+    end.
+
+Definition isClosedUnfolding : Unfolding -> bool :=
+  fun arg_0__ =>
+    match arg_0__ with
+      | CoreUnfolding _ _ _ _ _ _ _ _ => false
+      | DFunUnfolding _ _ _ => false
+      | _ => true
+    end.
+
+Definition isCompulsoryUnfolding : Unfolding -> bool :=
+  fun arg_0__ =>
+    match arg_0__ with
+      | CoreUnfolding _ InlineCompulsory _ _ _ _ _ _ => true
+      | _ => false
+    end.
+
+Definition isConLikeUnfolding : Unfolding -> bool :=
+  fun arg_0__ =>
+    match arg_0__ with
+      | OtherCon _ => true
+      | CoreUnfolding _ _ _ _ con _ _ _ => con
+      | _ => false
+    end.
+
+Definition isEvaldUnfolding : Unfolding -> bool :=
+  fun arg_0__ =>
+    match arg_0__ with
+      | OtherCon _ => true
+      | CoreUnfolding _ _ _ is_evald _ _ _ _ => is_evald
+      | _ => false
+    end.
+
+Definition isExpandableUnfolding : Unfolding -> bool :=
+  fun arg_0__ =>
+    match arg_0__ with
+      | CoreUnfolding _ _ _ _ _ _ is_expable _ => is_expable
+      | _ => false
+    end.
+
+Definition isLocalRule : CoreRule -> bool :=
+  ru_local.
+
+Definition isOrphan : IsOrphan -> bool :=
+  fun arg_0__ => match arg_0__ with | Mk_IsOrphan => true | _ => false end.
+
+Definition isRuntimeVar : Core.Var -> bool :=
+  Var.isId.
+
+Definition isStableSource : UnfoldingSource -> bool :=
+  fun arg_0__ =>
+    match arg_0__ with
+      | InlineCompulsory => true
+      | InlineStable => true
+      | InlineRhs => false
+    end.
+
+Definition isStableUnfolding : Unfolding -> bool :=
+  fun arg_0__ =>
+    match arg_0__ with
+      | CoreUnfolding _ src _ _ _ _ _ _ => isStableSource src
+      | DFunUnfolding _ _ _ => true
+      | _ => false
+    end.
+
+Definition hasStableCoreUnfolding_maybe : Unfolding -> option bool :=
+  fun arg_0__ =>
+    match arg_0__ with
+      | CoreUnfolding _ src _ _ _ _ _ guide => if isStableSource src : bool
+                                               then match guide with
+                                                      | UnfWhen _ _ _ => Some true
+                                                      | UnfIfGoodArgs _ _ _ => Some false
+                                                      | UnfNever => None
+                                                    end
+                                               else None
+      | _ => None
+    end.
+
+Definition isTyCoArg {b} : Expr b -> bool :=
+  fun arg_0__ =>
+    match arg_0__ with
+      | Type_ _ => true
+      | Coercion _ => true
+      | _ => false
+    end.
+
+Definition isTypeArg {b} : Expr b -> bool :=
+  fun arg_0__ => match arg_0__ with | Type_ _ => true | _ => false end.
+
+Definition isValArg {b} : Expr b -> bool :=
+  fun e => negb (isTypeArg e).
+
+Definition valArgCount {b} : list (Arg b) -> GHC.Num.Int :=
+  Util.count isValArg.
+
+Definition isRuntimeArg : CoreExpr -> bool :=
+  isValArg.
+
+Definition isValueUnfolding : Unfolding -> bool :=
+  fun arg_0__ =>
+    match arg_0__ with
+      | CoreUnfolding _ _ _ is_evald _ _ _ _ => is_evald
+      | _ => false
+    end.
+
+Definition mkApps {b} : Expr b -> list (Arg b) -> Expr b :=
+  fun f args => Data.Foldable.foldl App f args.
+
+Definition mkConApp {b} : DataCon.DataCon -> list (Arg b) -> Expr b :=
+  fun con args => mkApps (Var (Core.dataConWorkId con)) args.
+
+Definition mkCharLit {b} : GHC.Char.Char -> Expr b :=
+  fun c => Lit (Literal.mkMachChar c).
+
+Definition mkCoApps {b} : Expr b -> list Core.Coercion -> Expr b :=
+  fun f args => Data.Foldable.foldl (fun e a => App e (Coercion a)) f args.
+
+Definition mkCoBind : CoVar -> Core.Coercion -> CoreBind :=
+  fun cv co => NonRec cv (Coercion co).
+
+Definition mkDoubleLit {b} : GHC.Real.Rational -> Expr b :=
+  fun d => Lit (Literal.mkMachDouble d).
+
+Definition mkFloatLit {b} : GHC.Real.Rational -> Expr b :=
+  fun f => Lit (Literal.mkMachFloat f).
+
+Definition mkLams {b} : list b -> Expr b -> Expr b :=
+  fun binders body => Data.Foldable.foldr Lam body binders.
+
+Definition maybeUnfoldingTemplate : Unfolding -> option CoreExpr :=
+  fun arg_0__ =>
+    match arg_0__ with
+      | CoreUnfolding expr _ _ _ _ _ _ _ => Some expr
+      | DFunUnfolding bndrs con args => Some (mkLams bndrs (mkApps (Var
+                                                                   (Core.dataConWorkId con)) args))
+      | _ => None
+    end.
+
+Definition mkLets {b} : list (Bind b) -> Expr b -> Expr b :=
+  fun binds body => Data.Foldable.foldr Let body binds.
+
+Definition mkOtherCon : list AltCon -> Unfolding :=
+  OtherCon.
+
+Definition mkRuleEnv : RuleBase -> list Module.Module -> RuleEnv :=
+  fun rules vis_orphs => Mk_RuleEnv rules (Module.mkModuleSet vis_orphs).
+
+Definition mkStringLit {b} : GHC.Base.String -> Expr b :=
+  fun s => Lit (Literal.mkMachString s).
+
+Definition mkTyApps {b} : Expr b -> list Core.Type_ -> Expr b :=
+  fun f args =>
+    let typeOrCoercion :=
+      fun ty =>
+        let j_0__ := Type_ ty in
+        match TyCoRep.Type_isCoercionTy_maybe ty with
+          | Some co => Coercion co
+          | _ => j_0__
+        end in
+    Data.Foldable.foldl (fun e a => App e (typeOrCoercion a)) f args.
+
+Definition mkTyBind : TyVar -> Core.Type_ -> CoreBind :=
+  fun tv ty => NonRec tv (Type_ ty).
+
+Definition needSaturated : bool :=
+  false.
+
+Definition neverUnfoldGuidance : UnfoldingGuidance -> bool :=
+  fun arg_0__ => match arg_0__ with | UnfNever => true | _ => false end.
+
+Definition canUnfold : Unfolding -> bool :=
+  fun arg_0__ =>
+    match arg_0__ with
+      | CoreUnfolding _ _ _ _ _ _ _ g => negb (neverUnfoldGuidance g)
+      | _ => false
+    end.
+
+Definition noUnfolding : Unfolding :=
+  NoUnfolding.
+
+Definition notOrphan : IsOrphan -> bool :=
+  fun arg_0__ => match arg_0__ with | NotOrphan _ => true | _ => false end.
+
+Definition otherCons : Unfolding -> list AltCon :=
+  fun arg_0__ => match arg_0__ with | OtherCon cons_ => cons_ | _ => nil end.
+
+Definition rhssOfAlts {b} : list (Alt b) -> list (Expr b) :=
+  fun alts =>
+    let cont_0__ arg_1__ :=
+      match arg_1__ with
+        | pair (pair _ _) e => cons e nil
+      end in
+    Coq.Lists.List.flat_map cont_0__ alts.
+
+Definition rhssOfBind {b} : Bind b -> list (Expr b) :=
+  fun arg_0__ =>
+    match arg_0__ with
+      | NonRec _ rhs => cons rhs nil
+      | Rec pairs => let cont_2__ arg_3__ :=
+                       match arg_3__ with
+                         | pair _ rhs => cons rhs nil
+                       end in
+                     Coq.Lists.List.flat_map cont_2__ pairs
+    end.
+
+Definition ruleActivation : CoreRule -> BasicTypes.Activation :=
+  fun arg_0__ =>
+    match arg_0__ with
+      | BuiltinRule _ _ _ _ => BasicTypes.AlwaysActive
+      | Rule _ act _ _ _ _ _ _ _ _ _ => act
+    end.
+
+Definition ruleArity : CoreRule -> GHC.Num.Int :=
+  fun arg_0__ =>
+    match arg_0__ with
+      | BuiltinRule _ _ n _ => n
+      | Rule _ _ _ _ _ args _ _ _ _ _ => Data.Foldable.length args
+    end.
+
+Definition ruleIdName : CoreRule -> Name.Name :=
+  ru_fn.
+
+Definition ruleName : CoreRule -> BasicTypes.RuleName :=
+  ru_name.
+
+Definition setRuleIdName : Name.Name -> CoreRule -> CoreRule :=
+  fun nm ru =>
+    match ru with
+      | Rule ru_name_0__ ru_act_1__ ru_fn_2__ ru_rough_3__ ru_bndrs_4__ ru_args_5__
+             ru_rhs_6__ ru_auto_7__ ru_origin_8__ ru_orphan_9__ ru_local_10__ => Rule
+                                                                                 ru_name_0__ ru_act_1__ nm ru_rough_3__
+                                                                                 ru_bndrs_4__ ru_args_5__ ru_rhs_6__
+                                                                                 ru_auto_7__ ru_origin_8__ ru_orphan_9__
+                                                                                 ru_local_10__
+      | BuiltinRule ru_name_11__ ru_fn_12__ ru_nargs_13__ ru_try_14__ => BuiltinRule
+                                                                         ru_name_11__ nm ru_nargs_13__ ru_try_14__
+    end.
+
+Definition unSaturatedOk : bool :=
+  true.
+
+Definition unfoldingTemplate : Unfolding -> CoreExpr :=
+  uf_tmpl.
+
+Definition valBndrCount : list CoreBndr -> GHC.Num.Int :=
+  Util.count Var.isId.
+
+Definition varToCoreExpr {b} : CoreBndr -> Expr b :=
+  fun v =>
+    let j_0__ :=
+      if andb Util.debugIsOn (negb (Var.isId v)) : bool
+      then (Panic.assertPanic (GHC.Base.hs_string__ "ghc/compiler/coreSyn/CoreSyn.hs")
+           (GHC.Num.fromInteger 1549))
+      else Var v in
+    let j_1__ :=
+      if Var.isCoVar v : bool
+      then Coercion (TyCoRep.mkCoVarCo v)
+      else j_0__ in
+    if Var.isTyVar v : bool
+    then Type_ (TyCoRep.mkTyVarTy v)
+    else j_1__.
+
+Definition varsToCoreExprs {b} : list CoreBndr -> list (Expr b) :=
+  fun vs => GHC.Base.map varToCoreExpr vs.
+
+Definition mkVarApps {b} : Expr b -> list Core.Var -> Expr b :=
+  fun f vars => Data.Foldable.foldl (fun e a => App e (varToCoreExpr a)) f vars.
+
+Definition mkConApp2 {b} : DataCon.DataCon -> list Core.Type_ -> list
+                           Core.Var -> Expr b :=
+  fun con tys arg_ids =>
+    mkApps (mkApps (Var (Core.dataConWorkId con)) (GHC.Base.map Type_ tys))
+           (GHC.Base.map varToCoreExpr arg_ids).
 
 (* Unbound variables:
-     Alt AnnAlt AnnExpr Arg Eq Gt Lt Type andb bool comparison error false list negb
-     op_zt__ option true BasicTypes.Activation BasicTypes.Arity BasicTypes.RuleName
-     DataCon.DataCon DynFlags.DynFlags GHC.Base.Eq_ GHC.Base.Ord GHC.Base.Synonym
-     GHC.Base.compare GHC.Base.op_zeze__ GHC.Base.op_zg__ GHC.Base.op_zgze__
-     GHC.Base.op_zl__ GHC.Base.op_zlze__ GHC.Num.Int Literal.Literal Module.Module
-     Module.ModuleSet Name.Name NameEnv.NameEnv OccName.OccName TyCoRep.Coercion
-     TyCoRep.Type_ TyCon.TyCon Var.Id Var.Var VarEnv.InScopeSet
+     Alt AnnAlt AnnExpr Arg CoVar Eq Gt Lt None Some TyVar Type andb bool comparison
+     cons deAnnotate' deTagExpr error false list negb nil op_zt__ option pair true
+     BasicTypes.Activation BasicTypes.AlwaysActive BasicTypes.Arity
+     BasicTypes.RuleName Coq.Init.Datatypes.app Coq.Lists.List.flat_map Core.Coercion
+     Core.TyCon Core.Type_ Core.Var Core.dataConWorkId Data.Foldable.foldl
+     Data.Foldable.foldr Data.Foldable.length DataCon.DataCon DataCon.dataConTag
+     DynFlags.DynFlags GHC.Base.Eq_ GHC.Base.Ord GHC.Base.String GHC.Base.Synonym
+     GHC.Base.compare GHC.Base.map GHC.Base.mappend GHC.Base.min GHC.Base.op_z2218U__
+     GHC.Base.op_zd__ GHC.Base.op_zeze__ GHC.Base.op_zg__ GHC.Base.op_zgze__
+     GHC.Base.op_zl__ GHC.Base.op_zlze__ GHC.Char.Char GHC.List.reverse GHC.Num.Int
+     GHC.Real.Rational Literal.Literal Literal.mkMachChar Literal.mkMachDouble
+     Literal.mkMachFloat Literal.mkMachString Module.Module Module.ModuleSet
+     Module.emptyModuleSet Module.mkModuleSet Name.Name Name.nameOccName
+     NameEnv.NameEnv NameEnv.emptyNameEnv OccName.OccName Panic.assertPanic
+     Panic.noString Panic.warnPprTrace TyCoRep.Type_isCoercionTy_maybe
+     TyCoRep.mkCoVarCo TyCoRep.mkTyVarTy Util.count Util.debugIsOn Var.Id Var.isCoVar
+     Var.isId Var.isTyVar VarEnv.InScopeSet
 *)

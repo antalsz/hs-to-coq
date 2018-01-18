@@ -1,0 +1,147 @@
+## These are the edits directly related to the Core syntax
+## Not all files need to see these edits
+
+# skip MkId
+# type used in DataCon
+rename type MkId.DataConBoxer = unit
+
+### get rid of some information in the AST
+rename type TcType.TcTyVarDetails = Core.TcTyVarDetails
+rename type PrimOp.PrimOp = unit
+rename type ForeignCall.ForeignCall = unit
+
+
+## Punning
+rename value Var.Id            = Var.Mk_Id
+rename value Var.TyVar         = Var.Mk_TyVar
+rename value CoreSyn.IsOrphan  = CoreSyn.Mk_IsOrphan
+rename value CoreSyn.RuleEnv   = CoreSyn.Mk_RuleEnv
+rename value DataCon.HsSrcBang = DataCon.Mk_HsSrcBang
+rename value DataCon.EqSpec    = DataCon.Mk_EqSpec
+rename value Class.Class       = Class.Mk_Class
+rename value IdInfo.RuleInfo   = IdInfo.Mk_RuleInfo
+
+# Note [Strict positivity]
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# These types all contain actual non-strictly-positive function members
+# that e.g. take `Type`s or `Pair`s of `Type`s or lists of `Type`s as arguments.
+
+redefine Inductive TyCon.RuntimeRepInfo     : Type := TyCon.Mk_RuntimeRepInfo_Dummy.
+
+
+# notations in Core (must import Core)
+rename type TyCoRep.KindOrType   = KindOrType
+rename type TyCoRep.CoercionN    = CoercionN
+rename type TyCoRep.KindCoercion = KindCoercion
+rename type TyCoRep.Kind         = Kind
+rename type TyCoRep.PredType     = PredType
+rename type TyCoRep.ThetaType    = ThetaType
+## don't use notation that is same as some module name
+#rename type Var.Id               = Id
+rename type Var.TyVar            = TyVar
+rename type Var.CoVar            = CoVar
+
+# Definitions moved to Core
+rename type Var.Var          = Core.Var
+
+rename type TyCoRep.Type_    = Core.Type_
+rename type TyCoRep.Coercion = Core.Coercion
+# rename type TyCoRep.TCvSubst = Core.TCvSubst
+rename type TyCoRep.TyBinder = Core.TyBinder
+
+rename type CoAxiom.CoAxiom  = Core.CoAxiom
+rename type CoAxiom.Role     = Core.Role
+rename value CoAxiom.Nominal = Core.Nominal
+rename value CoAxiom.Representational = Core.Representational
+rename value CoAxiom.Phantom          = Core.Phantom
+rename type CoAxiom.CoAxiomRule       = Core.CoAxiomRule
+rename type CoAxiom.BuiltInSynFamily  = Core.BuiltInSynFamily
+rename type CoAxiom.BranchIndex = Core.BranchIndex
+rename type CoAxiom.BranchFlag  = Core.BranchFlag
+rename value CoAxiom.Unbranched = Core.Unbranched
+rename value CoAxiom.Branched   = Core.Branched
+## for promotion
+rename type CoAxiom.Branched   = Core.Branched
+rename type CoAxiom.Unbranched = Core.Unbranched
+
+rename type ForeignCall.CType = Core.CType
+
+
+rename type TyCon.TyConRepName = Core.TyConRepName
+rename type TyCon.RuntimeRepInfo = Core.RuntimeRepInfo
+rename type TyCon.Injectivity  = Core.Injectivity
+rename type TyCon.TyCon        = Core.TyCon
+rename type TyCon.AlgTyConFlav = Core.AlgTyConFlav
+rename type TyCoRep.VisibilityFlag = Core.VisibilityFlag
+rename type TyCoRep.TyPrec = Core.TyPrec
+rename type TyCoRep.TyLit  = Core.TyLit
+rename type TyCoRep.LeftOrRight = Core.LeftOrRight
+
+rename type TyCoRep.CoercionHold = Core.CoercionHole
+rename type TyCoRep.UnivCoProvenance = Core.UnivCoProvenance
+
+rename value TyCoRep.Refl        = Core.Refl
+rename value TyCoRep.CoVarCo     = Core.CoVarCo
+rename value TyCoRep.SubCo       = Core.SubCo
+rename value TyCoRep.TyConAppCo  = Core.TyConAppCo
+rename value TyCoRep.SymCo       = Core.SymCo
+rename value TyCoRep.TransCo     = Core.TransCo
+rename value TyCoRep.AppCo       = Core.AppCo
+rename value TyCoRep.ForAllCo    = Core.ForAllCo
+rename value TyCoRep.NthCo       = Core.NthCo
+rename value TyCoRep.InstCo      = Core.InstCo
+rename value TyCoRep.CoherenceCo = Core.CoherenceCo
+rename value TyCoRep.UnivCo      = Core.UnivCo
+rename value TyCoRep.AxiomInstCo = Core.AxiomInstCo
+rename value TyCoRep.LRCo        = Core.LRCo
+rename value TyCoRep.AxiomRuleCo = Core.AxiomRuleCo
+rename value TyCoRep.KindCo      = Core.KindCo
+
+rename value TyCoRep.UnsafeCoerceProv = Core.UnsafeCoerceProv
+rename value TyCoRep.PhantomProv      = Core.PhantomProv
+rename value TyCoRep.ProofIrrelProv   = Core.ProofIrrelProv
+rename value TyCoRep.PluginProv       = Core.PluginProv
+rename value TyCoRep.HoleProv         = Core.HoleProv
+
+# rename value TyCoRep.mkEmptyTCvSubst = Core.mkEmptyTCvSubst
+# rename value TyCoRep.emptyTvSubstEnv = Core.emptyTvSubstEnv
+# rename value TyCoRep.emptyCvSubstEnv = Core.emptyCvSubstEnv
+
+rename value TyCoRep.Named = Core.Named
+rename value TyCoRep.Anon = Core.Anon
+
+rename value TyCoRep.TyVarTy     = Core.TyVarTy
+rename value TyCoRep.AppTy       = Core.AppTy
+rename value TyCoRep.TyConApp    = Core.TyConApp
+rename value TyCoRep.ForAllTy    = Core.ForAllTy
+rename value TyCoRep.LitTy       = Core.LitTy
+rename value TyCoRep.CastTy      = Core.CastTy
+rename value TyCoRep.CoercionTy  = Core.CoercionTy
+
+
+rename value TysPrim.addrPrimTy   = Core.addrPrimTy
+rename value TysPrim.charPrimTy   = Core.charPrimTy
+rename value TysPrim.intPrimTy    = Core.intPrimTy
+rename value TysPrim.wordPrimTy   = Core.wordPrimTy
+rename value TysPrim.int64PrimTy  = Core.int64PrimTy
+rename value TysPrim.word64PrimTy = Core.word64PrimTy
+rename value TysPrim.floatPrimTy  = Core.floatPrimTy
+rename value TysPrim.doublePrimTy = Core.doublePrimTy
+
+
+
+rename type Var.ExportFlag = Core.ExportFlag
+rename value Var.NotExported = Core.NotExported
+rename value Var.Exported = Core.Exported
+
+rename value DataCon.dataConWorkId = Core.dataConWorkId
+rename value DataCon.dataConExTyVars = Core.dataConExTyVars
+
+rename value PatSyn.patSynExTyVars = Core.patSynExTyVars
+
+rename value ConLike.conLikeExTyVars = Core.conLikExTyVars
+
+rename value Class.classTyVars = Core.classTyVars
+rename value Class.classMethods = Core.classMethods
+rename value Class.classAllSelIds = Core.classAllSelIds
+rename value Class.classArity = Core.classArity

@@ -1,31 +1,51 @@
 # axiomatize module DataCon
 
+# redefine Inductive DataCon.HsImplBang : Type := .
+# redefine Inductive DataCon.EqSpec     : Type := .
+# redefine Inductive DataCon.DataConRep : Type := .
+# redefine Inductive DataCon.DataCon    : Type := .
+
 # no Word8
 skip DataCon.dataConIdentity
 
 # skipped fcns as a result of eliminating type information
-skip DataCon.dataConRepArgTys
+# skip DataCon.dataConRepArgTys
 # generally these fcns return units so are easy to replace
 #not skipping b/c we axiomatized this module
-skip DataCon.buildAlgTyCon
-skip DataCon.classDataCon
-skip DataCon.dataFieldType
-skip DataCon.dataConImplicitTyThings
-skip DataCon.dataConInstOrigArgTys
-skip DataCon.dataConOrigTyCon
-skip DataCon.dataConInstArgTys
-skip DataCon.splitDataProductType_maybe
-skip DataCon.dataConRepRepArity
-skip DataCon.specialPromotedDc
-skip DataCon.eqSpecPreds
-skip DataCon.dataConTheta
+# skip DataCon.buildAlgTyCon
+# skip DataCon.classDataCon
+# skip DataCon.dataFieldType
+# skip DataCon.dataConImplicitTyThings
+# skip DataCon.dataConInstOrigArgTys
+# skip DataCon.dataConOrigTyCon
+# skip DataCon.dataConInstArgTys
+# skip DataCon.splitDataProductType_maybe
+# skip DataCon.dataConRepRepArity
+# skip DataCon.specialPromotedDc
+# skip DataCon.eqSpecPreds
+# skip DataCon.dataConTheta
 
-skip module CoAxiom
-skip module Coercion
-skip module ForeignCall
-skip module ListSetOps
-skip module TyCoRep
-skip module TyCon
-skip module Type
-skip module TysWiredIn
-skip module Unify
+# still refer to TyCoRep
+# skip DataCon.dataConCanotMatch
+# skip DataCon.dataConExTyBinders
+# skip DataCon.dataConExTyVars
+# skip DataCon.dataConFieldLabels
+# skip DataCon.dataConFieldType
+# skip DataCon.dataConOrigArgTys
+# skip DataCon.dataConOrigResTy
+
+#skip module CoAxiom
+#skip module Coercion
+#skip module ForeignCall
+#skip module ListSetOps
+#skip module TyCoRep
+#skip module TyCon
+#skip module Type
+#skip module TysWiredIn
+#skip module Unify
+
+skip module Var
+
+# in Core
+skip Core.dataConWorkId
+skip Core.dataConExTyVars

@@ -1,1 +1,19 @@
 axiomatize module CoreUtils
+
+skip module Type
+skip module Coercion
+skip module PprCore
+skip module PrimOp
+skip module TysPrim
+
+
+skip CoreUtils.applyTypeToArgs
+skip CoreUtils.exprType
+skip CoreUtils.coreAltType
+skip CoreUtils.mkCast
+skip CoreUtils.dataConInstPat
+
+skip CoreUtils.dataConRepInstPat
+
+## pattern matching is non-exhaustive?
+skip CoreUtils.exprIsHNFlike

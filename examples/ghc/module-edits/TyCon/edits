@@ -1,0 +1,47 @@
+
+skip module Type
+skip module TysPrim
+skip module TyCoRep
+
+skip TyCon.tyConATs
+skip module ForeignCall
+
+#### specific to TyCon
+skip Core.TyConRepName
+skip Core.Injectivity
+skip Core.RuntimeRepInfo
+skip Core.TyCon
+skip Core.AlgTyConFlav
+
+order TyCon.Ord__TyCon_compare TyCon.Eq___TyCon_op_zeze__ TyCon.Eq___TyCon_op_zsze__ TyCon.Eq___TyCon TyCon.Ord__TyCon
+
+redefine Local Definition TyCon.Eq___TyCon_op_zeze__ : Core.TyCon -> (Core.TyCon -> bool) :=
+  fun a b =>
+    match Ord__TyCon_compare a b with
+      | Eq => true
+      | _ => false
+    end.
+redefine Local Definition TyCon.Eq___TyCon_op_zsze__ : Core.TyCon -> (Core.TyCon -> bool) :=
+  fun a b =>
+    let scrut_0__ := Ord__TyCon_compare a b in
+    match scrut_0__ with
+      | Eq => false
+      | _ => true
+    end.
+
+order TyCon.Eq___PrimElemRep TyCon.Eq___PrimRep_op_zeze__
+
+## can't use Applicative ((->)A)
+skip TyCon.isLiftedTypeKindTyConName
+
+redefine Definition TyCon.tyConAssoc_maybe : Core.TyCon -> (option ClassSpec.Class)  :=
+  fun x => match x with
+        | FamilyTyCon _ _ _ _ _ _ _ _ _ mb_cls _ => mb_cls
+        | _ => None
+        end.
+
+# in preamble
+skip TyCon.isTyConAssoc
+skip TyCon.makeTyConAbstract
+skip TyCon.mkClassTyCon
+skip TyCon.fieldsOfAlgTcRhs

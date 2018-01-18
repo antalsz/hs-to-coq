@@ -3,12 +3,6 @@ skip module GHC.IO
 skip module System.FilePath.Posix
 
 
-## needs Data.Map.Base.fromList
-skip Module.delModuleEnv
-skip Module.mkModuleEnv
-skip Module.mkModuleSet
-
-
 # IO.FilePath
 skip Module.addBootSuffix
 skip Module.addBootSuffix_maybe

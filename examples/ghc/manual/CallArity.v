@@ -51,7 +51,7 @@ Definition addCrossCoCalls
     Control.Arrow.first f.
 
 
-Definition calledWith : CallArityRes -> Var.Var -> UnVarGraph.UnVarSet :=
+Definition calledWith : CallArityRes -> Core.Var -> UnVarGraph.UnVarSet :=
   fun arg_7__ arg_8__ =>
     match arg_7__ , arg_8__ with
       | pair g _ , v => UnVarGraph.neighbors g v
@@ -69,12 +69,12 @@ Definition emptyArityRes : CallArityRes :=
   pair UnVarGraph.emptyUnVarGraph VarEnv.emptyVarEnv.
 
 (* UGH we do need type information!!! *)
-Definition isInteresting : Var.Var -> bool := fun x => false.
+Definition isInteresting : Core.Var -> bool := fun x => false.
 (*  fun v =>
     GHC.Num.fromInteger 0 GHC.Base.< Data.Foldable.length (CoreArity.typeArity
                                                           (Id.idType v)).  *)
 
-Definition interestingBinds : CoreSyn.CoreBind -> list Var.Var :=
+Definition interestingBinds : CoreSyn.CoreBind -> list Core.Var :=
   GHC.List.filter isInteresting GHC.Base.∘ CoreSyn.bindersOf.
 
 Definition addInterestingBinds
@@ -87,7 +87,7 @@ Definition boringBinds : CoreSyn.CoreBind -> VarSet.VarSet :=
   VarSet.mkVarSet GHC.Base.∘ (GHC.List.filter (negb GHC.Base.∘ isInteresting)
   GHC.Base.∘ CoreSyn.bindersOf).
 
-Definition lookupCallArityRes : CallArityRes -> Var.Var -> (BasicTypes.Arity *
+Definition lookupCallArityRes : CallArityRes -> Core.Var -> (BasicTypes.Arity *
                                 bool)%type :=
   fun arg_11__ arg_12__ =>
     match arg_11__ , arg_12__ with
@@ -113,7 +113,7 @@ Definition lubRess : list CallArityRes -> CallArityRes :=
   Data.Foldable.foldl lubRes emptyArityRes.
 
 (* Had to get rid of $ and lift fcn argument to Arrow.first so that it wouldn't hang. *)
-Definition callArityRecEnv : bool -> list (Var.Var *
+Definition callArityRecEnv : bool -> list (Core.Var *
                                           CallArityRes)%type -> CallArityRes -> CallArityRes :=
   fun any_boring ae_rhss ae_body =>
     let ae_combined :=
@@ -153,13 +153,13 @@ Definition callArityRecEnv : bool -> list (Var.Var *
 Definition both : CallArityRes -> CallArityRes -> CallArityRes :=
   fun r1 r2 => addCrossCoCalls (domRes r1) (domRes r2) GHC.Base.$ lubRes r1 r2.
 
-Definition resDel : Var.Var -> CallArityRes -> CallArityRes :=
+Definition resDel : Core.Var -> CallArityRes -> CallArityRes :=
   fun arg_24__ arg_25__ =>
     match arg_24__ , arg_25__ with
       | v , pair g ae => pair (UnVarGraph.delNode g v) (VarEnv.delVarEnv ae v)
     end.
 
-Definition resDelList : list Var.Var -> CallArityRes -> CallArityRes :=
+Definition resDelList : list Core.Var -> CallArityRes -> CallArityRes :=
   fun vs ae => Data.Foldable.foldr resDel ae vs.
 
 (* minimum (x : xs) ==> Data.Foldable.foldr GHC.Base.min x xs *)
@@ -177,7 +177,7 @@ Parameter trimArity : Var.Id -> BasicTypes.Arity -> BasicTypes.Arity.
                                                                                                 nil))
     end. *)
 
-Definition unitArityRes : Var.Var -> BasicTypes.Arity -> CallArityRes :=
+Definition unitArityRes : Core.Var -> BasicTypes.Arity -> CallArityRes :=
   fun v arity => pair UnVarGraph.emptyUnVarGraph (VarEnv.unitVarEnv v arity).
 
 Axiom abort : forall {a}, a.
@@ -516,7 +516,7 @@ Fixpoint callArityBind
                                                                   end
     end.
 *)
-Definition callArityTopLvl : list Var.Var -> VarSet.VarSet -> list
+Definition callArityTopLvl : list Core.Var -> VarSet.VarSet -> list
                              CoreSyn.CoreBind -> (CallArityRes * list CoreSyn.CoreBind)%type :=
   fix callArityTopLvl arg_155__ arg_156__ arg_157__
         := match arg_155__ , arg_156__ , arg_157__ with
@@ -565,7 +565,7 @@ Definition callArityRHS : CoreSyn.CoreExpr -> CoreSyn.CoreExpr :=
      UnVarGraph.delNode UnVarGraph.delUnVarSet UnVarGraph.elemUnVarSet
      UnVarGraph.emptyUnVarGraph UnVarGraph.neighbors UnVarGraph.unionUnVarGraph
      UnVarGraph.unionUnVarGraphs UnVarGraph.unionUnVarSets UnVarGraph.varEnvDom
-     Var.Id Var.Var Var.isExportedId Var.isId VarEnv.VarEnv VarEnv.delVarEnv
+     Var.Id Core.Var Var.isExportedId Var.isId VarEnv.VarEnv VarEnv.delVarEnv
      VarEnv.emptyVarEnv VarEnv.lookupVarEnv VarEnv.mkVarEnv VarEnv.plusVarEnv_C
      VarEnv.unitVarEnv VarSet.VarSet VarSet.delVarSet VarSet.delVarSetList
      VarSet.elemVarSet VarSet.emptyVarSet VarSet.extendVarSetList VarSet.mkVarSet

@@ -13,16 +13,16 @@ Require Coq.Program.Wf.
 (* Converted imports: *)
 
 Require BasicTypes.
+Require Core.
 Require CoreSyn.
-Require Var.
 
 (* Converted type declarations: *)
 
-Inductive EtaInfo : Type := EtaVar : Var.Var -> EtaInfo
-                         |  EtaCo : TyCoRep.Coercion -> EtaInfo.
+Inductive EtaInfo : Type := EtaVar : Core.Var -> EtaInfo
+                         |  EtaCo : Core.Coercion -> EtaInfo.
 
 Definition CheapFun :=
-  (CoreSyn.CoreExpr -> option TyCoRep.Type_ -> bool)%type.
+  (CoreSyn.CoreExpr -> option Core.Type_ -> bool)%type.
 
 Inductive ArityType : Type := ATop : list BasicTypes.OneShotInfo -> ArityType
                            |  ABot : BasicTypes.Arity -> ArityType.
@@ -87,6 +87,6 @@ Axiom subst_bind : forall {A : Type}, A.
 Axiom freshEtaVar : forall {A : Type}, A.
 
 (* Unbound variables:
-     bool list option BasicTypes.Arity BasicTypes.OneShotInfo CoreSyn.CoreExpr
-     TyCoRep.Coercion TyCoRep.Type_ Var.Var
+     bool list option BasicTypes.Arity BasicTypes.OneShotInfo Core.Coercion
+     Core.Type_ Core.Var CoreSyn.CoreExpr
 *)

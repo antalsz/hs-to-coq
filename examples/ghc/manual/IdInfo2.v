@@ -10,7 +10,6 @@ Unset Printing Implicit Defensive.
 
 Require Coq.Program.Tactics.
 Require Coq.Program.Wf.
-
 Require BasicTypes.
 Require Class.
 Require CoreSyn.

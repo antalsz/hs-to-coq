@@ -1,5 +1,4 @@
-Axiom uniqAway' : InScopeSet -> Var.Var -> Var.Var.
-
+Axiom uniqAway' : InScopeSet -> Core.Var -> Core.Var.
 (*
   fun arg_55__ arg_56__ =>
     match arg_55__ , arg_56__ with
@@ -21,6 +20,9 @@ Instance Default_InScopeSet : Panic.Default InScopeSet :=
   Panic.Build_Default _ (InScope Panic.default Panic.default).
 Instance Default_RnEnv2 : Panic.Default RnEnv2 :=
   Panic.Build_Default _ (RV2 Panic.default Panic.default Panic.default).
+Instance Default_TidyEnv : Panic.Default TidyEnv.
+Admitted.
+
 
 (* needs UniqFM.plusUFM_CD *)
 Parameter plusVarEnv_CD : forall {a}, (a -> a -> a) -> VarEnv a -> a -> VarEnv

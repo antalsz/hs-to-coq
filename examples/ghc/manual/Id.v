@@ -44,6 +44,9 @@ Import GHC.Num.Notations.
 Import IdInfo.
 Import IdInfo2.
 
+(* Notations *)
+Require Import Core.
+
 (* Converted value declarations: *)
 
 Parameter isDFunId : Var.Id -> bool.
@@ -130,7 +133,7 @@ Definition isOneShotLambda : Var.Id -> bool :=
       | _ => false
     end.
 
-Definition isOneShotBndr : Var.Var -> bool :=
+Definition isOneShotBndr : Var -> bool :=
   fun var =>
     let j_4__ := isOneShotLambda var in
     if Var.isTyVar var : bool
@@ -161,12 +164,13 @@ Definition idStrictness : Var.Id -> Demand.StrictSig :=
 Definition isBottomingId : Var.Id -> bool :=
   fun id => Demand.isBottomingSig (idStrictness id).
 
-Definition idType : Var.Id -> unit :=
+Definition idType : Var.Id -> Core.Type_ :=
   Var.varType.
 
 Parameter isDictId : Var.Id -> bool.
 
-Definition localiseId : Var.Id -> Var.Id :=
+Parameter localiseId : Var.Id -> Var.Id.
+(*
   fun id =>
     let name := idName id in
     let j_150__ :=
@@ -177,7 +181,7 @@ Definition localiseId : Var.Id -> Var.Id :=
             (GHC.Num.fromInteger 193))
        else andb (Var.isLocalId id) (Name.isInternalName name)) : bool
     then id
-    else j_150__.
+    else j_150__. *)
 
 Parameter isStrictId : Var.Id -> bool.
 (*  fun id =>
@@ -217,7 +221,7 @@ Definition isConLikeId : Var.Id -> bool :=
 
 Parameter isDataConWorkId_maybe : Var.Id -> option DataCon.DataCon.
 
-Parameter isEvVar : Var.Var -> bool.
+Parameter isEvVar : Var -> bool.
 
 Parameter isFCallId : Var.Id -> bool.
 
@@ -338,7 +342,7 @@ Definition setOneShotLambda : Var.Id -> Var.Id :=
     modifyIdInfo (fun arg_116__ =>
                    IdInfo.setOneShotInfo arg_116__ BasicTypes.OneShotLam) id.
 
-Definition transferPolyIdInfo : Var.Id -> list Var.Var -> Var.Id -> Var.Id :=
+Definition transferPolyIdInfo : Var.Id -> list Var -> Var.Id -> Var.Id :=
   fun old_id abstract_wrt new_id =>
     let old_info := Var.idInfo old_id in
     let old_arity := arityInfo old_info in
@@ -366,16 +370,18 @@ Definition clearOneShotLambda : Var.Id -> Var.Id :=
     modifyIdInfo (fun arg_118__ =>
                    IdInfo.setOneShotInfo arg_118__ BasicTypes.NoOneShotInfo) id.
 
-Definition mkExportedLocalId
-    : IdInfo.IdDetails -> Name.Name -> unit -> Var.Id :=
+Parameter mkExportedLocalId
+    : IdInfo.IdDetails -> Name.Name -> unit -> Var.Id.
+(* :=
   fun details name ty =>
-    Var.mkExportedLocalVar details name ty IdInfo.vanillaIdInfo.
+    Var.mkExportedLocalVar details name ty IdInfo.vanillaIdInfo. *)
 
 Parameter mkExportedVanillaId : Name.Name -> unit -> Var.Id.
 
-Definition mkGlobalId
-    : IdInfo.IdDetails -> Name.Name -> unit -> IdInfo.IdInfo -> Var.Id :=
-  Var.mkGlobalVar.
+Parameter mkGlobalId
+    : IdInfo.IdDetails -> Name.Name -> unit -> IdInfo.IdInfo -> Var.Id.
+(*  :=
+  Var.mkGlobalVar. *)
 
 Parameter mkVanillaGlobalWithInfo
     : Name.Name -> unit -> IdInfo.IdInfo -> Var.Id.
@@ -383,7 +389,7 @@ Parameter mkVanillaGlobalWithInfo
 Definition mkVanillaGlobal : Name.Name -> unit -> Var.Id :=
   fun name ty => mkVanillaGlobalWithInfo name ty IdInfo.vanillaIdInfo.
 
-Parameter mkLocalCoVar : Name.Name -> unit -> Var.CoVar.
+Parameter mkLocalCoVar : Name.Name -> unit -> CoVar.
 
 Parameter mkLocalIdOrCoVarWithInfo
     : Name.Name -> unit -> IdInfo.IdInfo -> Var.Id.
@@ -487,7 +493,7 @@ Definition stateHackOneShot : BasicTypes.OneShotInfo :=
      SrcLoc.SrcSpan TyCoRep.isCoercionType Type.isDictTy Type.isPredTy
      Type.isStrictType Type.seqType Type.typeRepArity UniqSupply.MonadUnique
      UniqSupply.getUniqueM Unique.Unique Unique.mkBuiltinUnique Util.count
-     Util.debugIsOn Var.CoVar Var.Id Var.Var Var.idDetails Var.idInfo Var.isId
+     Util.debugIsOn CoVar Var.Id Var Var.idDetails Var.idInfo Var.isId
      Var.isLocalId Var.isTyVar Var.lazySetIdInfo Var.mkExportedLocalVar
      Var.mkGlobalVar Var.mkLocalVar Var.setIdExported Var.setIdNotExported
      Var.setVarName Var.setVarType Var.setVarUnique Var.varUnique

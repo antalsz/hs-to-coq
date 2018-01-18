@@ -1,10 +1,4 @@
-axiomatize module CoreSyn
-
 skip module CostCentre
-skip module TyCoRep
-skip module TyCOn
-skip module Type
-skip module Coercion
 
 redefine Inductive CoreSyn.Tickish (id : Type) : Type := Mk_Tickish_Dummy.
 redefine Local Definition CoreSyn.Eq___Tickish_op_zeze__ {inst_id} `{_:GHC.Base.Eq_ inst_id}
@@ -16,6 +10,10 @@ skip CoreSyn.mkNoScope
 skip CoreSyn.tickishCanSplit
 skip CoreSyn.tickishCounts
 skip CoreSyn.tickishIsCode
+skip CoreSyn.tickishContains
+skip CoreSyn.tickishScopesLike
+skip CoreSyn.tickishFloatable
+
 
 
 order CoreSyn.Eq___AltCon CoreSyn.Ord__AltCon
@@ -27,8 +25,14 @@ redefine Definition CoreSyn.chooseOrphanAnchor (local_names : list Name.Name) : 
     | nil => Mk_IsOrphan
     end.
 
+# uses Outputtable.empty in panicStr
+# in midamble
 skip CoreSyn.exprToType
+
+# piResultTy is in module Type
+# in midamble
 skip CoreSyn.applyTypeToArg
+
 
 # needs GHC.Types.Double & other types ( GHC.Types.Float, GHC.Int.Int64)
 skip CoreSyn.mkDoubleLitDouble
@@ -38,6 +42,18 @@ skip CoreSyn.mkInt64LitInt64
 # needs Literal.mkMachInt
 skip CoreSyn.mkIntLit
 skip CoreSyn.mkIntLitInt
+# Literal.mlMachWord64, Literal.mkMachWOrd
+skip CoreSyn.mkWord64LitWord64
+skip CoreSyn.mkWordLit
+skip CoreSyn.mkWordLitWord
 
-
+# in midamble (due to mutual recursion)
+skip CoreSyn.deAnnotate'
 skip CoreSyn.collectAnnArgs
+skip CoreSyn.deTagExpr
+
+nonterminating CoreSyn.collectAnnArgsTicks
+nonterminating CoreSyn.collectAnnBndrs
+
+rename value Type.isCoercionTy_maybe = TyCoRep.Type_isCoercionTy_maybe
+rename value Coercion.mkCoVarCo      = TyCoRep.mkCoVarCo

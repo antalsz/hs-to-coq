@@ -1,0 +1,1 @@
+../manual/Class.v

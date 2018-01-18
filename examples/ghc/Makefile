@@ -21,12 +21,21 @@ HANDMOD = \
   FastString \
   Panic \
   Util \
-  CallArity \
   IdInfo \
-  IdInfo2 \
-  Id \
-  ClassSpec \
+  Class \
   Var \
+  DataCon \
+  PatSyn \
+  CoAxiom \
+  ListSetOps \
+  Core \
+  TyCoRep \
+  PrelNames \
+  TysWiredIn \
+  Digraph \
+  CallArity \
+  Id \
+  IdInfo2 \
 
 # Generated modules
 # generated directly from ghc/compiler/*/
@@ -36,44 +45,40 @@ MODULES = \
   Pair \
   Bag \
   SrcLoc \
-  BasicTypes \
   Unique \
   UniqSupply \
   UniqFM \
   CmmType \
   BooleanFormula \
   UniqSet \
-  OccName \
+  BasicTypes \
   FiniteMap \
-  Module \
-  DynFlags \
   UniqDFM \
   UniqDSet \
+  FastStringEnv \
+  DynFlags \
+  Module \
+  OrdList \
+  OccName \
   Name \
   NameEnv \
   NameSet \
+  FieldLabel \
+  Constants \
+
+SPECIAL_MODULES = \
   VarSet \
   VarEnv \
-  FastStringEnv \
-  FieldLabel \
-  Literal \
-  DataCon \
-  PatSyn \
   ConLike \
+  FV \
+  TyCon \
+  Literal \
   CoreSyn \
   CoreArity \
-  CoreUtils \
   UnVarGraph \
   Demand \
-  TyCoRep \
-  TyCon \
-  CoAxiom \
+  CoreUtils \
 
-
-
-
-# also generated from drop-in/
-SPECIAL_MODULES =
 
 
 VFILES_GEN = $(addprefix $(OUT)/,$(addsuffix .v,$(MODULES)))
@@ -130,6 +135,28 @@ $(VFILES_GEN): $(OUT)/%.v : $$(wildcard module-edits/$$*/preamble.v) $$(wildcard
 		     ghc/compiler/*/$*.hs
 	test -e $@
 # We added the `test` because `hs-to-coq` doesn't return an error
+
+
+$(VFILES_SPECIAL): $(OUT)/%.v : $$(wildcard module-edits/$$*/preamble.v) $$(wildcard module-edits/$$*/midamble.v)  $$(wildcard module-edits/$$*/edits) edits special-edits
+	$(HS_TO_COQ) $(addprefix -e , $(wildcard module-edits/$*/edits)) \
+	             $(addprefix -p , $(wildcard module-edits/$*/preamble.v)) \
+	             $(addprefix --midamble , $(wildcard module-edits/$*/midamble.v)) \
+                     --ghc-tree ghc \
+                     -I ghc/includes \
+                     -I ghc/compiler \
+                     -I ghc/compiler/stage2 \
+                     -I ghc/compiler/stage2/build \
+                     --ghc -DSTAGE=2 \
+                     --ghc -package=ghc-boot-th \
+                     -e ../../base/edits \
+                     -e ../containers/edits \
+                     -e edits \
+                     -e special-edits \
+                     -N \
+                     -o $(OUT) \
+		     ghc/compiler/*/$*.hs
+	test -e $@
+
 
 
 $(VFILES_MAN): $(OUT)/%.v : manual/%.v

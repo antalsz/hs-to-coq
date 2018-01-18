@@ -7,3 +7,13 @@ skip ConLike.conLikeResTy
 skip ConLike.conLikeInstOrigArgTys
 skip ConLike.conLikeFullSig
 skip ConLike.conLikeFieldType
+
+# Needs DataCon2 and PatSyn2
+skip ConLike.conLikeImplBangs
+
+# in Core
+skip ConLike.conLikeExTyVars
+skip Core.conLikExTyVars
+
+skip module Var
+skip module Core

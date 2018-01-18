@@ -3,7 +3,7 @@ skip VarEnv.plusVarEnv_CD
 skip VarEnv.uniqAway'
 
 redefine Definition VarEnv.lookupVarEnv_NF {a} `{_ : Panic.Default a} (env : VarEnv a) (id
-                             : Var.Var) : a :=
+                             : Core.Var) : a :=
       match lookupVarEnv env id with
       | Some xx => xx
       | None => Panic.default

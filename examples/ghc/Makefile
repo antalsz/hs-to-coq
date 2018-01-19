@@ -64,7 +64,7 @@ MODULES = \
   FieldLabel \
   Constants \
 
-SPECIAL_MODULES = \
+CORE_MODULES = \
   Var \
   VarSet \
   VarEnv \
@@ -82,9 +82,9 @@ SPECIAL_MODULES = \
 
 VFILES_GEN = $(addprefix $(OUT)/,$(addsuffix .v,$(MODULES)))
 VFILES_MAN = $(addprefix $(OUT)/,$(addsuffix .v,$(HANDMOD)))
-VFILES_SPECIAL = $(addprefix $(OUT)/,$(addsuffix .v,$(SPECIAL_MODULES)))
+VFILES_CORE = $(addprefix $(OUT)/,$(addsuffix .v,$(CORE_MODULES)))
 
-VFILES   = $(VFILES_GEN) $(VFILES_MAN) $(VFILES_SPECIAL)
+VFILES   = $(VFILES_GEN) $(VFILES_MAN) $(VFILES_CORE)
 
 all:  $(VFILES) coq $(OUT)/edits $(OUT)/README.md
 
@@ -97,7 +97,7 @@ $(OUT)/_CoqProject : Makefile
 	echo "-Q ../../containers/lib   \"\"" >> $@
 	echo $(addsuffix .v,$(HANDMOD)) >> $@
 	echo $(addsuffix .v,$(MODULES)) >> $@
-	echo $(addsuffix .v,$(SPECIAL_MODULES)) >> $@
+	echo $(addsuffix .v,$(CORE_MODULES)) >> $@
 
 $(OUT)/Makefile: $(OUT)/_CoqProject $(VFILES)
 	cd $(OUT); coq_makefile -f _CoqProject -o Makefile
@@ -136,7 +136,7 @@ $(VFILES_GEN): $(OUT)/%.v : $$(wildcard module-edits/$$*/preamble.v) $$(wildcard
 # We added the `test` because `hs-to-coq` doesn't return an error
 
 
-$(VFILES_SPECIAL): $(OUT)/%.v : $$(wildcard module-edits/$$*/preamble.v) $$(wildcard module-edits/$$*/midamble.v)  $$(wildcard module-edits/$$*/edits) edits special-edits
+$(VFILES_CORE): $(OUT)/%.v : $$(wildcard module-edits/$$*/preamble.v) $$(wildcard module-edits/$$*/midamble.v)  $$(wildcard module-edits/$$*/edits) edits core-edits
 	$(HS_TO_COQ) $(addprefix -e , $(wildcard module-edits/$*/edits)) \
 	             $(addprefix -p , $(wildcard module-edits/$*/preamble.v)) \
 	             $(addprefix --midamble , $(wildcard module-edits/$*/midamble.v)) \
@@ -150,7 +150,7 @@ $(VFILES_SPECIAL): $(OUT)/%.v : $$(wildcard module-edits/$$*/preamble.v) $$(wild
                      -e ../../base/edits \
                      -e ../containers/edits \
                      -e edits \
-                     -e special-edits \
+                     -e core-edits \
                      -N \
                      -o $(OUT) \
 		     ghc/compiler/*/$*.hs

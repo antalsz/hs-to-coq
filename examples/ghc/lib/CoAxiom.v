@@ -203,8 +203,7 @@ Local Definition Ord__CoAxiom_compare {inst_br} : (Core.CoAxiom
 Local Definition Ord__CoAxiom_op_zg__ {inst_br} : (Core.CoAxiom
                                                   inst_br) -> (Core.CoAxiom inst_br) -> bool :=
   fun a b =>
-    let scrut_0__ := (Ord__CoAxiom_compare a b) in
-    match scrut_0__ with
+    match (Ord__CoAxiom_compare a b) with
       | Lt => false
       | Eq => false
       | Gt => true
@@ -213,8 +212,7 @@ Local Definition Ord__CoAxiom_op_zg__ {inst_br} : (Core.CoAxiom
 Local Definition Ord__CoAxiom_op_zgze__ {inst_br} : (Core.CoAxiom
                                                     inst_br) -> (Core.CoAxiom inst_br) -> bool :=
   fun a b =>
-    let scrut_0__ := (Ord__CoAxiom_compare a b) in
-    match scrut_0__ with
+    match (Ord__CoAxiom_compare a b) with
       | Lt => false
       | Eq => true
       | Gt => true
@@ -223,8 +221,7 @@ Local Definition Ord__CoAxiom_op_zgze__ {inst_br} : (Core.CoAxiom
 Local Definition Ord__CoAxiom_op_zl__ {inst_br} : (Core.CoAxiom
                                                   inst_br) -> (Core.CoAxiom inst_br) -> bool :=
   fun a b =>
-    let scrut_0__ := (Ord__CoAxiom_compare a b) in
-    match scrut_0__ with
+    match (Ord__CoAxiom_compare a b) with
       | Lt => true
       | Eq => false
       | Gt => false
@@ -233,8 +230,7 @@ Local Definition Ord__CoAxiom_op_zl__ {inst_br} : (Core.CoAxiom
 Local Definition Ord__CoAxiom_op_zlze__ {inst_br} : (Core.CoAxiom
                                                     inst_br) -> (Core.CoAxiom inst_br) -> bool :=
   fun a b =>
-    let scrut_0__ := (Ord__CoAxiom_compare a b) in
-    match scrut_0__ with
+    match (Ord__CoAxiom_compare a b) with
       | Lt => true
       | Eq => true
       | Gt => false

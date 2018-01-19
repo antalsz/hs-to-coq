@@ -987,72 +987,67 @@ Definition collectAnnBndrs {bndr} {annot} : AnnExpr bndr annot -> (list bndr *
 
 Definition collectArgs {b} : Expr b -> (Expr b * list (Arg b))%type :=
   fun expr =>
-    let go :=
-      fix go arg_0__ arg_1__
-            := match arg_0__ , arg_1__ with
-                 | App f a , as_ => go f (cons a as_)
-                 | e , as_ => pair e as_
-               end in
+    let fix go arg_0__ arg_1__
+              := match arg_0__ , arg_1__ with
+                   | App f a , as_ => go f (cons a as_)
+                   | e , as_ => pair e as_
+                 end in
     go expr nil.
 
 Definition collectArgsTicks {b} : (Tickish Var.Id -> bool) -> Expr b -> (Expr b
                                   * list (Arg b) * list (Tickish Var.Id))%type :=
   fun skipTick expr =>
-    let go :=
-      fix go arg_0__ arg_1__ arg_2__
-            := let j_4__ :=
+    let fix go arg_0__ arg_1__ arg_2__
+              := let j_4__ :=
+                   match arg_0__ , arg_1__ , arg_2__ with
+                     | e , as_ , ts => pair (pair e as_) (GHC.List.reverse ts)
+                   end in
                  match arg_0__ , arg_1__ , arg_2__ with
-                   | e , as_ , ts => pair (pair e as_) (GHC.List.reverse ts)
+                   | App f a , as_ , ts => go f (cons a as_) ts
+                   | Tick t e , as_ , ts => if skipTick t : bool
+                                            then go e as_ (cons t ts)
+                                            else j_4__
+                   | _ , _ , _ => j_4__
                  end in
-               match arg_0__ , arg_1__ , arg_2__ with
-                 | App f a , as_ , ts => go f (cons a as_) ts
-                 | Tick t e , as_ , ts => if skipTick t : bool
-                                          then go e as_ (cons t ts)
-                                          else j_4__
-                 | _ , _ , _ => j_4__
-               end in
     go expr nil nil.
 
 Definition collectBinders {b} : Expr b -> (list b * Expr b)%type :=
   fun expr =>
-    let go :=
-      fix go arg_0__ arg_1__
-            := match arg_0__ , arg_1__ with
-                 | bs , Lam b e => go (cons b bs) e
-                 | bs , e => pair (GHC.List.reverse bs) e
-               end in
+    let fix go arg_0__ arg_1__
+              := match arg_0__ , arg_1__ with
+                   | bs , Lam b e => go (cons b bs) e
+                   | bs , e => pair (GHC.List.reverse bs) e
+                 end in
     go nil expr.
 
 Definition collectTyBinders : CoreExpr -> (list TyVar * CoreExpr)%type :=
   fun expr =>
-    let go :=
-      fix go arg_0__ arg_1__
-            := let j_3__ :=
+    let fix go arg_0__ arg_1__
+              := let j_3__ :=
+                   match arg_0__ , arg_1__ with
+                     | tvs , e => pair (GHC.List.reverse tvs) e
+                   end in
                  match arg_0__ , arg_1__ with
-                   | tvs , e => pair (GHC.List.reverse tvs) e
+                   | tvs , Lam b e => if Var.isTyVar b : bool
+                                      then go (cons b tvs) e
+                                      else j_3__
+                   | _ , _ => j_3__
                  end in
-               match arg_0__ , arg_1__ with
-                 | tvs , Lam b e => if Var.isTyVar b : bool
-                                    then go (cons b tvs) e
-                                    else j_3__
-                 | _ , _ => j_3__
-               end in
     go nil expr.
 
 Definition collectValBinders : CoreExpr -> (list Var.Id * CoreExpr)%type :=
   fun expr =>
-    let go :=
-      fix go arg_0__ arg_1__
-            := let j_3__ :=
+    let fix go arg_0__ arg_1__
+              := let j_3__ :=
+                   match arg_0__ , arg_1__ with
+                     | ids , body => pair (GHC.List.reverse ids) body
+                   end in
                  match arg_0__ , arg_1__ with
-                   | ids , body => pair (GHC.List.reverse ids) body
+                   | ids , Lam b e => if Var.isId b : bool
+                                      then go (cons b ids) e
+                                      else j_3__
+                   | _ , _ => j_3__
                  end in
-               match arg_0__ , arg_1__ with
-                 | ids , Lam b e => if Var.isId b : bool
-                                    then go (cons b ids) e
-                                    else j_3__
-                 | _ , _ => j_3__
-               end in
     go nil expr.
 
 Definition collectTyAndValBinders : CoreExpr -> (list TyVar * list Var.Id *
@@ -1389,18 +1384,14 @@ Definition valBndrCount : list CoreBndr -> GHC.Num.Int :=
 
 Definition varToCoreExpr {b} : CoreBndr -> Expr b :=
   fun v =>
-    let j_0__ :=
-      if andb Util.debugIsOn (negb (Var.isId v)) : bool
-      then (Panic.assertPanic (GHC.Base.hs_string__ "ghc/compiler/coreSyn/CoreSyn.hs")
-           (GHC.Num.fromInteger 1549))
-      else Var v in
-    let j_1__ :=
-      if Var.isCoVar v : bool
-      then Coercion (TyCoRep.mkCoVarCo v)
-      else j_0__ in
     if Var.isTyVar v : bool
     then Type_ (TyCoRep.mkTyVarTy v)
-    else j_1__.
+    else if Var.isCoVar v : bool
+         then Coercion (TyCoRep.mkCoVarCo v)
+         else if andb Util.debugIsOn (negb (Var.isId v)) : bool
+              then (Panic.assertPanic (GHC.Base.hs_string__ "ghc/compiler/coreSyn/CoreSyn.hs")
+                   (GHC.Num.fromInteger 1549))
+              else Var v.
 
 Definition varsToCoreExprs {b} : list CoreBndr -> list (Expr b) :=
   fun vs => GHC.Base.map varToCoreExpr vs.

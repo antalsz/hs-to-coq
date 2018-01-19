@@ -197,8 +197,7 @@ Local Definition Ord__TyCon_compare : Core.TyCon -> Core.TyCon -> comparison :=
 
 Local Definition Ord__TyCon_op_zg__ : Core.TyCon -> Core.TyCon -> bool :=
   fun a b =>
-    let scrut_0__ := (Ord__TyCon_compare a b) in
-    match scrut_0__ with
+    match (Ord__TyCon_compare a b) with
       | Lt => false
       | Eq => false
       | Gt => true
@@ -206,8 +205,7 @@ Local Definition Ord__TyCon_op_zg__ : Core.TyCon -> Core.TyCon -> bool :=
 
 Local Definition Ord__TyCon_op_zgze__ : Core.TyCon -> Core.TyCon -> bool :=
   fun a b =>
-    let scrut_0__ := (Ord__TyCon_compare a b) in
-    match scrut_0__ with
+    match (Ord__TyCon_compare a b) with
       | Lt => false
       | Eq => true
       | Gt => true
@@ -215,8 +213,7 @@ Local Definition Ord__TyCon_op_zgze__ : Core.TyCon -> Core.TyCon -> bool :=
 
 Local Definition Ord__TyCon_op_zl__ : Core.TyCon -> Core.TyCon -> bool :=
   fun a b =>
-    let scrut_0__ := (Ord__TyCon_compare a b) in
-    match scrut_0__ with
+    match (Ord__TyCon_compare a b) with
       | Lt => true
       | Eq => false
       | Gt => false
@@ -224,8 +221,7 @@ Local Definition Ord__TyCon_op_zl__ : Core.TyCon -> Core.TyCon -> bool :=
 
 Local Definition Ord__TyCon_op_zlze__ : Core.TyCon -> Core.TyCon -> bool :=
   fun a b =>
-    let scrut_0__ := (Ord__TyCon_compare a b) in
-    match scrut_0__ with
+    match (Ord__TyCon_compare a b) with
       | Lt => true
       | Eq => true
       | Gt => false
@@ -727,23 +723,16 @@ Definition checkRecTc : RecTcChecker -> Core.TyCon -> option RecTcChecker :=
   fun arg_0__ arg_1__ =>
     match arg_0__ , arg_1__ with
       | (RC bound rec_nts as rc) , tc => let tc_name := tyConName tc in
-                                         let j_8__ :=
-                                           let scrut_3__ := NameEnv.lookupNameEnv rec_nts tc_name in
-                                           match scrut_3__ with
-                                             | Some n => let j_4__ :=
-                                                           Some (RC bound (NameEnv.extendNameEnv rec_nts tc_name (n
-                                                                                                                 GHC.Num.+
-                                                                                                                 GHC.Num.fromInteger
-                                                                                                                 1))) in
-                                                         if n GHC.Base.>= bound : bool
-                                                         then None
-                                                         else j_4__
-                                             | None => Some (RC bound (NameEnv.extendNameEnv rec_nts tc_name
-                                                                      (GHC.Num.fromInteger 1)))
-                                           end in
                                          if negb (isRecursiveTyCon tc) : bool
                                          then Some rc
-                                         else j_8__
+                                         else match NameEnv.lookupNameEnv rec_nts tc_name with
+                                                | Some n => if n GHC.Base.>= bound : bool
+                                                            then None
+                                                            else Some (RC bound (NameEnv.extendNameEnv rec_nts tc_name
+                                                                                (n GHC.Num.+ GHC.Num.fromInteger 1)))
+                                                | None => Some (RC bound (NameEnv.extendNameEnv rec_nts tc_name
+                                                                         (GHC.Num.fromInteger 1)))
+                                              end
     end.
 
 Definition initRecTc : RecTcChecker :=
@@ -774,8 +763,7 @@ Definition mkKindTyCon : Name.Name -> list Core.TyBinder -> Kind -> list
 
 Definition newTyConCo : Core.TyCon -> Core.CoAxiom Core.Unbranched :=
   fun tc =>
-    let scrut_0__ := newTyConCo_maybe tc in
-    match scrut_0__ with
+    match newTyConCo_maybe tc with
       | Some co => co
       | None => Panic.panicStr (GHC.Base.hs_string__ "newTyConCo") (Panic.noString tc)
     end.
@@ -873,10 +861,9 @@ Definition mkPrelTyConRepName : Name.Name -> Core.TyConRepName :=
     let name_mod := Name.nameModule tc_name in
     let name_occ := Name.nameOccName tc_name in
     let rep_uniq :=
-      let j_3__ := Unique.dataConRepNameUnique name_uniq in
       if OccName.isTcOcc name_occ : bool
       then Unique.tyConRepNameUnique name_uniq
-      else j_3__ in
+      else Unique.dataConRepNameUnique name_uniq in
     match tyConRepModOcc name_mod name_occ with
       | pair rep_mod rep_occ => Name.mkExternalName rep_uniq rep_mod rep_occ
                                 (Name.nameSrcSpan tc_name)
@@ -896,8 +883,7 @@ Definition mkLiftedPrimTyCon : Name.Name -> list Core.TyBinder -> Kind -> list
 
 Definition tyConSingleDataCon : Core.TyCon -> DataCon.DataCon :=
   fun tc =>
-    let scrut_0__ := tyConSingleDataCon_maybe tc in
-    match scrut_0__ with
+    match tyConSingleDataCon_maybe tc with
       | Some c => c
       | None => Panic.panicStr (GHC.Base.hs_string__ "tyConDataCon") (Panic.noString
                                                                      tc)

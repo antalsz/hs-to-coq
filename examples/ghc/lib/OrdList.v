@@ -94,16 +94,15 @@ Definition foldrOL {a} {b} : (a -> b -> b) -> b -> OrdList a -> b :=
 
 Definition fromOL {a} : OrdList a -> list a :=
   fun a =>
-    let go :=
-      fix go arg_0__ arg_1__
-            := match arg_0__ , arg_1__ with
-                 | None , acc => acc
-                 | One a , acc => cons a acc
-                 | Cons a b , acc => cons a (go b acc)
-                 | Snoc a b , acc => go a (cons b acc)
-                 | Two a b , acc => go a (go b acc)
-                 | Many xs , acc => Coq.Init.Datatypes.app xs acc
-               end in
+    let fix go arg_0__ arg_1__
+              := match arg_0__ , arg_1__ with
+                   | None , acc => acc
+                   | One a , acc => cons a acc
+                   | Cons a b , acc => cons a (go b acc)
+                   | Snoc a b , acc => go a (cons b acc)
+                   | Two a b , acc => go a (go b acc)
+                   | Many xs , acc => Coq.Init.Datatypes.app xs acc
+                 end in
     go a nil.
 
 Definition isNilOL {a} : OrdList a -> bool :=

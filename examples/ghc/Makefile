@@ -23,18 +23,17 @@ HANDMOD = \
   Util \
   ListSetOps \
   Digraph \
-  Id \
   IdInfo \
   IdInfo2 \
   Class \
   DataCon \
   PatSyn \
   Core \
-  Var \
   TyCoRep \
   PrelNames \
   TysWiredIn \
   CallArity \
+
 
 # Generated modules
 # generated directly from ghc/compiler/*/
@@ -66,6 +65,7 @@ MODULES = \
   Constants \
 
 SPECIAL_MODULES = \
+  Var \
   VarSet \
   VarEnv \
   ConLike \
@@ -78,7 +78,7 @@ SPECIAL_MODULES = \
   Demand \
   CoreUtils \
   CoAxiom \
-
+  Id \
 
 VFILES_GEN = $(addprefix $(OUT)/,$(addsuffix .v,$(MODULES)))
 VFILES_MAN = $(addprefix $(OUT)/,$(addsuffix .v,$(HANDMOD)))

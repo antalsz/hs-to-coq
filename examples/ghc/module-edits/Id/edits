@@ -1,5 +1,7 @@
 # axiomatize module Id
 
+skip module Type
+
 rename value IdInfo.demandInfo        = IdInfo2.demandInfo
 rename value IdInfo.strictnessInfo    = IdInfo2.strictnessInfo
 rename value IdInfo.unfoldingInfo     = IdInfo2.unfoldingInfo
@@ -10,12 +12,46 @@ rename value IdInfo.setUnfoldingInfoLazily  = IdInfo2.setUnfoldingInfoLazily
 rename value IdInfo.ruleInfoFreeVars  = IdInfo2.ruleInfoFreeVars
 rename value IdInfo.ruleInfoRules     = IdInfo2.ruleInfoRules
 
-
 ##############
+
+## enumFrom
+skip Id.mkTemplateLocalsNum
 
 # StaticFlags
 skip Id.isStateHackType
 skip Id.typeOneShot
+
+# IdInfo
+skip Id.hasNoBinding
+skip Id.isClassOpId_maybe
+skip Id.isDataConId_maybe
+skip Id.isDataConWorkId
+skip Id.isDataConWorkId_maybe
+skip Id.isFCallId
+skip Id.isFCallId_maybe
+skip Id.isPrimOpId
+skip Id.isPrimOpId_maybe
+skip Id.mkExportedVanillaId
+skip Id.mkVanillaGlobalWithInfo
+skip Id.mkVanillaGlobal
+skip Id.mkLocalId
+skip Id.mkSysLocal
+skip Id.mkLocalIdWithInfo
+
+
+
+# Type/TyCoRep
+skip Id.isStrictId
+skip Id.isDictId
+skip Id.idRepArity
+skip Id.isEvVar
+skip Id.setIdType
+
+# TyCoRep
+skip Id.mkLocalIdOrCoVarWithInfo
+skip Id.mkLocalCoVar
+skip Id.mkLocalIdOrCoVar
+
 
 # Demand
 # skip Id.idDemandInfo
@@ -40,14 +76,3 @@ skip Id.typeOneShot
 
 # Class
 # skip Id.isClassOpId_maybe
-
-# Type
-# skip Id.isDictId
-# skip Id.idRepArity
-# skip Id.isEvVar
-# skip Id.setIdType
-
-# TyCoRep
-# skip Id.mkLocalIdOrCoVarWithInfo
-# skip Id.mkLocalCoVar
-# skip Id.mkLocalIdOrCoVar

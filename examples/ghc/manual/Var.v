@@ -115,6 +115,8 @@ Instance Default_Var : Default Var := {}. Admitted.
 
 Instance Name_NamedThing_TyCoVar : Name.NamedThing TyCoVar.
 Admitted.
+Instance Name_NamedThing_VarId : Name.NamedThing Var.Id.
+Admitted.
 
 
 (* Converted value declarations: *)

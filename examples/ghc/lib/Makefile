@@ -115,14 +115,12 @@ VFILES:=FastString.v\
   Util.v\
   ListSetOps.v\
   Digraph.v\
-  Id.v\
   IdInfo.v\
   IdInfo2.v\
   Class.v\
   DataCon.v\
   PatSyn.v\
   Core.v\
-  Var.v\
   TyCoRep.v\
   PrelNames.v\
   TysWiredIn.v\
@@ -152,6 +150,7 @@ VFILES:=FastString.v\
   NameSet.v\
   FieldLabel.v\
   Constants.v\
+  Var.v\
   VarSet.v\
   VarEnv.v\
   ConLike.v\
@@ -163,7 +162,8 @@ VFILES:=FastString.v\
   UnVarGraph.v\
   Demand.v\
   CoreUtils.v\
-  CoAxiom.v
+  CoAxiom.v\
+  Id.v
 
 ifneq ($(filter-out archclean clean cleanall printenv,$(MAKECMDGOALS)),)
 -include $(addsuffix .d,$(VFILES))

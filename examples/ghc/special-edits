@@ -14,6 +14,8 @@ rename type ForeignCall.ForeignCall = unit
 ## Punning
 rename value Var.Id            = Var.Mk_Id
 rename value Var.TyVar         = Var.Mk_TyVar
+rename value Var.TcTyVar       = Var.Mk_TcTyVar
+
 rename value CoreSyn.IsOrphan  = CoreSyn.Mk_IsOrphan
 rename value CoreSyn.RuleEnv   = CoreSyn.Mk_RuleEnv
 rename value DataCon.HsSrcBang = DataCon.Mk_HsSrcBang

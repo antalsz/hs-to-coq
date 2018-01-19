@@ -1,0 +1,55 @@
+## moved to Core
+skip Core.Role
+skip Core.BranchIndex
+skip Core.BranchFlag
+skip Core.Branched
+skip Core.Unbranched
+skip Core.CoAxiomRule
+skip Core.BuiltInSynFamily
+skip Core.CoAxiom
+skip Core.Branches
+skip Core.CoAxBranch
+
+## defined in midamble
+## uses deriving
+skip CoAxiom.Ord__Role_compare
+skip CoAxiom.Ord__Role_op_zg__
+skip CoAxiom.Ord__Role_op_zgze__
+skip CoAxiom.Ord__Role_op_zl__
+skip CoAxiom.Ord__Role_op_zlze__
+skip CoAxiom.Ord__Role
+
+order CoAxiom.Ord__CoAxiom_compare CoAxiom.Eq___CoAxiom_op_zeze__ CoAxiom.Eq___CoAxiom_op_zsze__ CoAxiom.Eq___CoAxiom CoAxiom.Ord__CoAxiom
+order CoAxiom.Eq___Role CoAxiom.Ord__Role
+
+redefine Definition CoAxiom.Eq___CoAxiom_op_zeze__ {inst_br} : (Core.CoAxiom inst_br) -> ((Core.CoAxiom inst_br) -> bool) :=
+  fun a b =>
+    let scrut_0__ := (Ord__CoAxiom_compare a b) in
+    match scrut_0__ with
+      | Eq => true
+      | _ => false
+    end.
+
+redefine Definition CoAxiom.Eq___CoAxiom_op_zsze__ {inst_br} : (Core.CoAxiom
+                                                    inst_br) -> ((Core.CoAxiom inst_br) -> bool) :=
+  fun a b =>
+    let scrut_0__ := (Ord__CoAxiom_compare a b) in
+    match scrut_0__ with
+      | Eq => false
+      | _ => true
+    end.
+
+
+## defined in midamble
+## change from arr to list
+skip CoAxiom.branchesNth
+skip CoAxiom.fromBranches
+skip CoAxiom.manyBranches
+skip CoAxiom.mapAccumBranches
+skip CoAxiom.numBranches
+skip CoAxiom.toBranched
+skip CoAxiom.toUnbranched
+skip CoAxiom.unbranched
+
+skip CoAxiom.toBranchedAxiom
+skip CoAxiom.toUnbranchedAxiom

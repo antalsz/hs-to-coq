@@ -2,7 +2,14 @@
 # No types or IdInfo at all!
 
 skip module TcType
-# skip module IdInfo
+skip module Type
+
+skip Core.ExportFlag
+skip Core.Var
+
+skip TyVar
+skip CoVar
+
 
 # skip Var.idInfo
 # skip Var.idDetails

@@ -21,21 +21,20 @@ HANDMOD = \
   FastString \
   Panic \
   Util \
+  ListSetOps \
+  Digraph \
+  Id \
   IdInfo \
+  IdInfo2 \
   Class \
-  Var \
   DataCon \
   PatSyn \
-  CoAxiom \
-  ListSetOps \
   Core \
+  Var \
   TyCoRep \
   PrelNames \
   TysWiredIn \
-  Digraph \
   CallArity \
-  Id \
-  IdInfo2 \
 
 # Generated modules
 # generated directly from ghc/compiler/*/
@@ -78,7 +77,7 @@ SPECIAL_MODULES = \
   UnVarGraph \
   Demand \
   CoreUtils \
-
+  CoAxiom \
 
 
 VFILES_GEN = $(addprefix $(OUT)/,$(addsuffix .v,$(MODULES)))

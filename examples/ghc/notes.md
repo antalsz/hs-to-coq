@@ -8,7 +8,7 @@ Current status:
   modules brought into a single file so that they can be defined
   simultaneously.
 
-  Core type definitions from:
+  Core type definitions come from:
     TyCoRep / CoAxiom / TyCon / Var
 
   Parameterized operations from:

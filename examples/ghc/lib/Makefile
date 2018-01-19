@@ -113,21 +113,20 @@ endif
 VFILES:=FastString.v\
   Panic.v\
   Util.v\
+  ListSetOps.v\
+  Digraph.v\
+  Id.v\
   IdInfo.v\
+  IdInfo2.v\
   Class.v\
-  Var.v\
   DataCon.v\
   PatSyn.v\
-  CoAxiom.v\
-  ListSetOps.v\
   Core.v\
+  Var.v\
   TyCoRep.v\
   PrelNames.v\
   TysWiredIn.v\
-  Digraph.v\
   CallArity.v\
-  Id.v\
-  IdInfo2.v\
   Maybes.v\
   MonadUtils.v\
   Pair.v\
@@ -163,7 +162,8 @@ VFILES:=FastString.v\
   CoreArity.v\
   UnVarGraph.v\
   Demand.v\
-  CoreUtils.v
+  CoreUtils.v\
+  CoAxiom.v
 
 ifneq ($(filter-out archclean clean cleanall printenv,$(MAKECMDGOALS)),)
 -include $(addsuffix .d,$(VFILES))

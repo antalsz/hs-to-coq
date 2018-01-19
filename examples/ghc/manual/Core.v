@@ -200,7 +200,7 @@ with CoAxBranch : Type := Mk_CoAxBranch :
                                     list Type_ -> Type_ -> list (CoAxBranch) -> CoAxBranch
 
 with Branches : BranchFlag -> Type := MkBranches :
-                                       forall br, list (BranchIndex * CoAxBranch)%type -> Branches br
+                                       forall br, list CoAxBranch -> Branches br
 
 with CoAxiom : BranchFlag -> Type := Mk_CoAxiom
                                     : forall br, Unique.Unique -> Name.Name -> Role -> TyCon ->

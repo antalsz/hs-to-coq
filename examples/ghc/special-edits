@@ -20,6 +20,8 @@ rename value DataCon.HsSrcBang = DataCon.Mk_HsSrcBang
 rename value DataCon.EqSpec    = DataCon.Mk_EqSpec
 rename value Class.Class       = Class.Mk_Class
 rename value IdInfo.RuleInfo   = IdInfo.Mk_RuleInfo
+rename value CoAxiom           = Core.Mk_CoAxiom
+
 
 # Note [Strict positivity]
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -63,6 +65,10 @@ rename value CoAxiom.Branched   = Core.Branched
 ## for promotion
 rename type CoAxiom.Branched   = Core.Branched
 rename type CoAxiom.Unbranched = Core.Unbranched
+rename type CoAxiom.Branches = Core.Branches
+rename value CoAxiom.MkBranches = Core.MkBranches
+rename type CoAxiom.CoAxBranch = Core.CoAxBranch
+rename value CoAxiom.CoAxBranch = Core.Mk_CoAxBranch
 
 rename type ForeignCall.CType = Core.CType
 

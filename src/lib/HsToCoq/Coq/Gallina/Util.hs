@@ -1,4 +1,4 @@
-{-# LANGUAGE PatternSynonyms, OverloadedStrings, LambdaCase, TemplateHaskell #-}
+{-# LANGUAGE PatternSynonyms, OverloadedStrings, LambdaCase, TemplateHaskell, ViewPatterns #-}
 
 module HsToCoq.Coq.Gallina.Util (
   -- * Common AST patterns
@@ -6,7 +6,8 @@ module HsToCoq.Coq.Gallina.Util (
   pattern VarPat, pattern App1Pat, pattern App2Pat, pattern App3Pat,
   pattern BName,
   maybeForall,
-  ifBool,
+  pattern IfBool,
+  pattern LetFix, pattern LetCofix,
 
   -- * Manipulating 'Term's
   termHead,
@@ -70,8 +71,26 @@ maybeForall = maybe id Forall . nonEmpty . toList
 {-# SPECIALIZE maybeForall :: [Binder]        -> Term -> Term #-}
 {-# SPECIALIZE maybeForall :: NonEmpty Binder -> Term -> Term #-}
 
-ifBool :: Term -> Term -> Term -> Term
-ifBool c = If (HasType c $ Var "bool") Nothing
+pattern IfBool :: Term -> Term -> Term -> Term
+pattern IfBool c t e = If (HasType c (Var "bool")) Nothing t e
+
+isLetFix :: Term -> Maybe (FixBody, Term)
+isLetFix (Let f [] Nothing (Fix (FixOne fb@(FixBody f' _ _ _ _))) body)
+    | f == f'   = Just (fb, body)
+isLetFix _ = Nothing
+
+pattern LetFix :: FixBody -> Term -> Term
+pattern LetFix fb body <- (isLetFix -> Just (fb, body))
+  where LetFix fb@(FixBody f _ _ _ _) body = Let f [] Nothing (Fix (FixOne fb)) body
+
+isLetCofix :: Term -> Maybe (CofixBody, Term)
+isLetCofix (Let f [] Nothing (Cofix (CofixOne fb@(CofixBody f' _ _ _))) body)
+    | f == f'   = Just (fb, body)
+isLetCofix _ = Nothing
+
+pattern LetCofix :: CofixBody -> Term -> Term
+pattern LetCofix fb body <- (isLetCofix -> Just (fb, body))
+  where LetCofix fb@(CofixBody f _ _ _) body = Let f [] Nothing (Cofix (CofixOne fb)) body
 
 termHead :: Term -> Maybe Qualid
 termHead (Forall _ t)         = termHead t

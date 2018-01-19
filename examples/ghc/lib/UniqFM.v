@@ -439,8 +439,7 @@ Definition partitionUFM {elt} : (elt -> bool) -> UniqFM elt -> (UniqFM elt *
                                 UniqFM elt)%type :=
   fun arg_0__ arg_1__ =>
     match arg_0__ , arg_1__ with
-      | p , UFM m => let scrut_2__ := Data.IntMap.Base.partition p m in
-                     match scrut_2__ with
+      | p , UFM m => match Data.IntMap.Base.partition p m with
                        | pair left_ right_ => pair (UFM left_) (UFM right_)
                      end
     end.
@@ -478,9 +477,8 @@ Definition splitUFM {key} {elt} `{Unique.Uniquable key} : UniqFM
                                                           elt -> key -> (UniqFM elt * option elt * UniqFM elt)%type :=
   fun arg_0__ arg_1__ =>
     match arg_0__ , arg_1__ with
-      | UFM m , k => let scrut_2__ :=
-                       Data.IntMap.Base.splitLookup (Unique.getKey GHC.Base.$ Unique.getUnique k) m in
-                     match scrut_2__ with
+      | UFM m , k => match Data.IntMap.Base.splitLookup (Unique.getKey GHC.Base.$
+                                                        Unique.getUnique k) m with
                        | pair (pair less equal) greater => pair (pair (UFM less) equal) (UFM greater)
                      end
     end.

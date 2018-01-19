@@ -343,8 +343,7 @@ Local Definition Ord__Module_compare : Module -> Module -> comparison :=
   fun a b =>
     match a with
       | Mk_Module a1 a2 => match b with
-                             | Mk_Module b1 b2 => let scrut_0__ := (GHC.Base.compare a1 b1) in
-                                                  match scrut_0__ with
+                             | Mk_Module b1 b2 => match (GHC.Base.compare a1 b1) with
                                                     | Lt => Lt
                                                     | Eq => (GHC.Base.compare a2 b2)
                                                     | Gt => Gt

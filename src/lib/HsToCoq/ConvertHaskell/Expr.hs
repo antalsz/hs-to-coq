@@ -53,6 +53,7 @@ import HsToCoq.Util.GHC.Name hiding (Name)
 import HsToCoq.Util.GHC.HsExpr
 import HsToCoq.Coq.Gallina as Coq
 import HsToCoq.Coq.Gallina.Util
+import HsToCoq.Coq.Gallina.Rewrite as Coq
 import HsToCoq.Coq.FreeVars
 
 import HsToCoq.ConvertHaskell.Parameters.Edits
@@ -67,28 +68,33 @@ import HsToCoq.ConvertHaskell.Sigs
 --------------------------------------------------------------------------------
 
 convertExpr :: ConversionMonad m => HsExpr GHC.Name -> m Term
-convertExpr (HsVar (L _ x)) =
+convertExpr hsExpr = do
+  rws <- use (edits.rewrites)
+  Coq.rewrite rws <$> convertExpr' hsExpr
+
+convertExpr' :: ConversionMonad m => HsExpr GHC.Name -> m Term
+convertExpr' (HsVar (L _ x)) =
   Qualid <$> var ExprNS x
 
-convertExpr (HsUnboundVar x) =
+convertExpr' (HsUnboundVar x) =
   Var <$> freeVar (unboundVarOcc x)
 
-convertExpr (HsRecFld fld) =
+convertExpr' (HsRecFld fld) =
   Qualid <$> recordField (rdrNameAmbiguousFieldOcc fld)
 
-convertExpr (HsOverLabel _) =
+convertExpr' (HsOverLabel _) =
   convUnsupported "overloaded labels"
 
-convertExpr (HsIPVar _) =
+convertExpr' (HsIPVar _) =
   convUnsupported "implicit parameters"
 
-convertExpr (HsOverLit OverLit{..}) =
+convertExpr' (HsOverLit OverLit{..}) =
   case ol_val of
     HsIntegral   _src int -> PolyNum <$> convertInteger "integer literals" int
     HsFractional fr  -> convertFractional fr
     HsIsString   _src str -> pure $ convertFastString str
 
-convertExpr (HsLit lit) =
+convertExpr' (HsLit lit) =
   case lit of
     GHC.HsChar   _ c       -> pure $ HsChar c
     HsCharPrim   _ _       -> convUnsupported "`Char#' literals"
@@ -104,24 +110,24 @@ convertExpr (HsLit lit) =
     HsFloatPrim  _         -> convUnsupported "`Float#' literals"
     HsDoublePrim _         -> convUnsupported "`Double#' literals"
 
-convertExpr (HsLam mg) =
+convertExpr' (HsLam mg) =
   uncurry Fun <$> convertFunction mg
 
-convertExpr (HsLamCase PlaceHolder mg) =
+convertExpr' (HsLamCase PlaceHolder mg) =
   uncurry Fun <$> convertFunction mg
 
-convertExpr (HsApp e1 e2) =
+convertExpr' (HsApp e1 e2) =
   App1 <$> convertLExpr e1 <*> convertLExpr e2
 
-convertExpr (HsAppType e1 _) =
+convertExpr' (HsAppType e1 _) =
   convertLExpr e1
 --  convUnsupported "type applications"
 --  SCW: just ignore them for now, and let the user figure it out.
 
-convertExpr (HsAppTypeOut _ _) =
+convertExpr' (HsAppTypeOut _ _) =
   convUnsupported "`HsAppTypeOut' constructor"
 
-convertExpr (OpApp el eop _fixity er) =
+convertExpr' (OpApp el eop _fixity er) =
   case eop of
     L _ (HsVar (L _ hsOp)) -> do
       op <- var ExprNS hsOp
@@ -133,20 +139,20 @@ convertExpr (OpApp el eop _fixity er) =
     _ ->
       convUnsupported "non-variable infix operators"
 
-convertExpr (NegApp e1 _) =
+convertExpr' (NegApp e1 _) =
   App1 <$> pure "GHC.Num.negate" <*> convertLExpr e1
 
-convertExpr (HsPar e) =
+convertExpr' (HsPar e) =
   Parens <$> convertLExpr e
 
-convertExpr (SectionL l opE) =
+convertExpr' (SectionL l opE) =
   convert_section (Just l) opE Nothing
 
-convertExpr (SectionR opE r) =
+convertExpr' (SectionR opE r) =
   convert_section Nothing opE (Just r)
 
 -- TODO: Mark converted unboxed tuples specially?
-convertExpr (ExplicitTuple exprs _boxity) = do
+convertExpr' (ExplicitTuple exprs _boxity) = do
   -- TODO A tuple constructor in the Gallina grammar?
   (tuple, args) <- runWriterT
                 .  fmap (foldl1 . App2 $ "pair")
@@ -156,22 +162,22 @@ convertExpr (ExplicitTuple exprs _boxity) = do
                                                Qualid arg <$ tell [arg]
   pure $ maybe id Fun (nonEmpty $ map (Inferred Coq.Explicit . Ident) args) tuple
 
-convertExpr (HsCase e mg) = do
+convertExpr' (HsCase e mg) = do
   scrut <- convertLExpr e
   bindIn "scrut" scrut $ \scrut -> convertMatchGroup [scrut] mg
 
-convertExpr (HsIf overloaded c t f) =
+convertExpr' (HsIf overloaded c t f) =
   if maybe True isNoSyntaxExpr overloaded
-  then ifBool <$> convertLExpr c <*> convertLExpr t <*> convertLExpr f
+  then IfBool <$> convertLExpr c <*> convertLExpr t <*> convertLExpr f
   else convUnsupported "overloaded if-then-else"
 
-convertExpr (HsMultiIf PlaceHolder lgrhsList) =
+convertExpr' (HsMultiIf PlaceHolder lgrhsList) =
   convertLGRHSList [] lgrhsList patternFailure
 
-convertExpr (HsLet (L _ binds) body) =
+convertExpr' (HsLet (L _ binds) body) =
   convertLocalBinds binds $ convertLExpr body
 
-convertExpr (HsDo sty (L _ stmts) PlaceHolder) =
+convertExpr' (HsDo sty (L _ stmts) PlaceHolder) =
   case sty of
     ListComp        -> convertListComprehension stmts
     DoExpr          -> convertDoBlock stmts
@@ -185,17 +191,17 @@ convertExpr (HsDo sty (L _ stmts) PlaceHolder) =
     ParStmtCtxt _   -> convUnsupported "parallel statement expressions"
     TransStmtCtxt _ -> convUnsupported "transform statement expressions"
 
-convertExpr (ExplicitList PlaceHolder overloaded exprs) =
+convertExpr' (ExplicitList PlaceHolder overloaded exprs) =
   if maybe True isNoSyntaxExpr overloaded
   then foldr (App2 "cons") "nil" <$> traverse convertLExpr exprs
   else convUnsupported "overloaded lists"
 
-convertExpr (ExplicitPArr _ _) =
+convertExpr' (ExplicitPArr _ _) =
   convUnsupported "explicit parallel arrays"
 
 -- TODO: Unify with the `RecCon` case in `ConPatIn` for `convertPat` (in
 -- `HsToCoq.ConvertHaskell.Pattern`)
-convertExpr (RecordCon (L _ hsCon) PlaceHolder conExpr HsRecFields{..}) = do
+convertExpr' (RecordCon (L _ hsCon) PlaceHolder conExpr HsRecFields{..}) = do
   unless (isNoPostTcExpr conExpr) $
     convUnsupported "unexpected post-typechecker record constructor"
 
@@ -229,7 +235,7 @@ convertExpr (RecordCon (L _ hsCon) PlaceHolder conExpr HsRecFields{..}) = do
 
     Nothing -> recConUnsupported "unknown"
 
-convertExpr (RecordUpd recVal fields PlaceHolder PlaceHolder PlaceHolder PlaceHolder) = do
+convertExpr' (RecordUpd recVal fields PlaceHolder PlaceHolder PlaceHolder PlaceHolder) = do
   updates <- fmap M.fromList . for fields $ \(L _ HsRecField{..}) -> do
                field <- recordField . rdrNameAmbiguousFieldOcc $ unLoc hsRecFieldLbl
                pure (field, if hsRecPun then Nothing else Just hsRecFieldArg)
@@ -309,13 +315,13 @@ convertExpr (RecordUpd recVal fields PlaceHolder PlaceHolder PlaceHolder PlaceHo
                                    , mg_origin  = Generated }
 
 
-convertExpr (ExprWithTySig e sigWcTy) =
+convertExpr' (ExprWithTySig e sigWcTy) =
   HasType <$> convertLExpr e <*> convertLHsSigWcType sigWcTy
 
-convertExpr (ExprWithTySigOut e sigWcTy) =
+convertExpr' (ExprWithTySigOut e sigWcTy) =
   HasType <$> convertLExpr e <*> convertLHsSigWcType sigWcTy
 
-convertExpr (ArithSeq _postTc _overloadedLists info) =
+convertExpr' (ArithSeq _postTc _overloadedLists info) =
   -- TODO: Special-case infinite lists?
   -- TODO: `enumFrom{,Then}{,To}` is really…?
   -- TODO: Add Coq syntax sugar?  Something like
@@ -332,61 +338,61 @@ convertExpr (ArithSeq _postTc _overloadedLists info) =
     FromTo     low      high -> App2 "enumFromTo"     <$> convertLExpr low                       <*> convertLExpr high
     FromThenTo low next high -> App3 "enumFromThenTo" <$> convertLExpr low <*> convertLExpr next <*> convertLExpr high
 
-convertExpr (PArrSeq _ _) =
+convertExpr' (PArrSeq _ _) =
   convUnsupported "parallel array arithmetic sequences"
 
-convertExpr (HsSCC _ _ e) =
+convertExpr' (HsSCC _ _ e) =
   convertLExpr e
 
-convertExpr (HsCoreAnn _ _ e) =
+convertExpr' (HsCoreAnn _ _ e) =
   convertLExpr e
 
-convertExpr (HsBracket _) =
+convertExpr' (HsBracket _) =
   convUnsupported "Template Haskell brackets"
 
-convertExpr (HsRnBracketOut _ _) =
+convertExpr' (HsRnBracketOut _ _) =
   convUnsupported "`HsRnBracketOut' constructor"
 
-convertExpr (HsTcBracketOut _ _) =
+convertExpr' (HsTcBracketOut _ _) =
   convUnsupported "`HsTcBracketOut' constructor"
 
-convertExpr (HsSpliceE _) =
+convertExpr' (HsSpliceE _) =
   convUnsupported "Quasiquoters and Template Haskell splices"
 
-convertExpr (HsProc _ _) =
+convertExpr' (HsProc _ _) =
   convUnsupported "`proc' expressions"
 
-convertExpr (HsStatic _) =
+convertExpr' (HsStatic _) =
   convUnsupported "static pointers"
 
-convertExpr (HsArrApp _ _ _ _ _) =
+convertExpr' (HsArrApp _ _ _ _ _) =
   convUnsupported "arrow application command"
 
-convertExpr (HsArrForm _ _ _) =
+convertExpr' (HsArrForm _ _ _) =
   convUnsupported "arrow command formation"
 
-convertExpr (HsTick _ e) =
+convertExpr' (HsTick _ e) =
   convertLExpr e
 
-convertExpr (HsBinTick _ _ e) =
+convertExpr' (HsBinTick _ _ e) =
   convertLExpr e
 
-convertExpr (HsTickPragma _ _ _ e) =
+convertExpr' (HsTickPragma _ _ _ e) =
   convertLExpr e
 
-convertExpr EWildPat =
+convertExpr' EWildPat =
   convUnsupported "wildcard pattern in expression"
 
-convertExpr (EAsPat _ _) =
+convertExpr' (EAsPat _ _) =
   convUnsupported "as-pattern in expression"
 
-convertExpr (EViewPat _ _) =
+convertExpr' (EViewPat _ _) =
   convUnsupported "view-pattern in expression"
 
-convertExpr (ELazyPat _) =
+convertExpr' (ELazyPat _) =
   convUnsupported "lazy pattern in expression"
 
-convertExpr (HsWrap _ _) =
+convertExpr' (HsWrap _ _) =
   convUnsupported "`HsWrap' constructor"
 
 --------------------------------------------------------------------------------
@@ -492,7 +498,7 @@ convertPatternBinding hsPat hsExp buildTrivial buildNontrivial fallback = do
             | SoleConstructor <- nontrivial = []
             | otherwise                     = [ Equation [MultPattern [UnderscorePat]] fallback ]
           guarded tm | null guards = tm
-                     | otherwise   = ifBool (foldr1 (App2 "andb") guards)
+                     | otherwise   = IfBool (foldr1 (App2 "andb") guards)
                                             tm
                                             fallback
 
@@ -548,7 +554,7 @@ convertListComprehension allStmts = case fmap unLoc <$> unsnoc allStmts of
     toExpr (BodyStmt e _bind _guard _PlaceHolder) rest =
       isTrueLExpr e >>= \case
         True  -> rest
-        False -> ifBool <$> convertLExpr e
+        False -> IfBool <$> convertLExpr e
                         <*> rest
                         <*> pure (Var "nil")
 
@@ -779,7 +785,7 @@ guardTerm gs rhs failure = go gs where
   go (BoolGuard "false" : _) = pure failure
 
   go (BoolGuard cond : gs) =
-    ifBool cond <$> go gs <*> pure failure
+    IfBool cond <$> go gs <*> pure failure
   -- if the pattern is exhaustive, don't include an otherwise case
   go (PatternGuard pat exp : gs) | isWildCoq pat = do
     guarded' <- go gs
@@ -924,7 +930,18 @@ bindIn tmpl rhs genBody = do
 
 -- This prevents the pattern conversion code to create
 -- `let j_24__ := … in j_24__`
+-- and a few other common and obviously stupid forms
+-- But it is crucial that the `rhs` is not moved past a binder, so
+-- we cannot push it into the equations of a match
 smartLet :: Qualid -> Term -> Term -> Term
+smartLet ident rhs (IfBool c t e)
+    | ident `S.notMember` getFreeVars c
+    , ident `S.notMember` getFreeVars t
+    = IfBool c t (smartLet ident rhs e)
+smartLet ident rhs
+    (Coq.Match [MatchItem t Nothing Nothing] Nothing eqns)
+    | ident `S.notMember` getFreeVars eqns
+    = Coq.Match [MatchItem (smartLet ident rhs t) Nothing Nothing] Nothing eqns
 smartLet ident rhs (Qualid v) | ident == v = rhs
 smartLet ident rhs body = Let ident [] Nothing rhs body
 

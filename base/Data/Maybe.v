@@ -55,8 +55,7 @@ Definition mapMaybe {a} {b} : (a -> option b) -> list a -> list b :=
         := match arg_0__ , arg_1__ with
              | _ , nil => nil
              | f , cons x xs => let rs := mapMaybe f xs in
-                                let scrut_3__ := f x in
-                                match scrut_3__ with
+                                match f x with
                                   | None => rs
                                   | Some r => cons r rs
                                 end
@@ -65,8 +64,7 @@ Definition mapMaybe {a} {b} : (a -> option b) -> list a -> list b :=
 Definition mapMaybeFB {b} {r} {a} : (b -> r -> r) -> (a -> option
                                     b) -> a -> r -> r :=
   fun cons_ f x next =>
-    let scrut_0__ := f x in
-    match scrut_0__ with
+    match f x with
       | None => next
       | Some r => cons_ r next
     end.

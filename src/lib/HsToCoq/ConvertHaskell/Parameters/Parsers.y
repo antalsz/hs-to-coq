@@ -55,6 +55,7 @@ import HsToCoq.ConvertHaskell.Parameters.Parsers.Lexing
   termination     { TokWord    "termination"    }
   method          { TokWord    "method"         }
   rename          { TokWord    "rename"         }
+  rewrite         { TokWord    "rewrite"        }
   order           { TokWord    "order"          }
   module          { TokWord    "module"         }
   add             { TokWord    "add"            }
@@ -241,6 +242,7 @@ Edit :: { Edit }
   | order Some(Qualid)                            { OrderEdit             $2                              }
   | class kinds Qualid SepBy1(Term,',')           { ClassKindEdit         $3 $4                           }
   | data  kinds Qualid SepBy1(Term,',')           { DataKindEdit          $3 $4                           }
+  | rewrite Rewrite                               { RewriteEdit           $2                              }
 
 Edits :: { [Edit] }
   : Lines(Edit)    { $1 }
@@ -405,6 +407,9 @@ AtomicPattern :: { Pattern }
   | Num                     { NumPat $1 }
   | Qualid                  { QualidPat $1  }
   | '(' Pattern ')'         { $2 }
+
+Rewrite :: { Rewrite }
+  : forall Many(Word) ',' Term '=' Term  { Rewrite $2 $4 $6 }
 
 --------------------------------------------------------------------------------
 -- Vernacular

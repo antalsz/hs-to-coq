@@ -25,17 +25,25 @@ skip Data.IntSet.Base.minView
 skip Data.IntSet.Base.deleteMin
 skip Data.IntSet.Base.deleteFindMin
 
+# The idiom `x .&. complement y` does not work at type `nat`, as the complement of
+# a natural number is negative. But the expression [x `xor` (x .&. y)] is equivalent:
+#
+#	 quickCheck $ \x y -> (x .&. complement y) == (x `xor` (x.&.y))
+#	 +++ OK, passed 100 tests.
+#
+# so we can use that:
+rewrite forall x y, (x Data.Bits..&. (Data.Bits.complement y)) = (Data.Bits.xor x (x Data.Bits..&. y))
 
-# Avoid the natFromInt (and have a simpler implementation)
+# Avoid the natFromInt
 redefine Definition Data.IntSet.Base.mask : GHC.Num.Int -> (Mask -> Prefix) :=
-  fun i m => Coq.ZArith.BinInt.Z.ldiff i (Coq.ZArith.BinInt.Z.ones (Coq.ZArith.BinInt.Z.succ (Coq.ZArith.BinInt.Z.log2 m))).
-
-# This is the right definition, if it were well-defined if one input is positive and one input is negative!
-redefine Definition Data.IntSet.Base.branchMask : Prefix -> (Prefix -> Mask) :=
-  fun p1 p2 => Coq.ZArith.BinInt.Z.pow 2 (Coq.ZArith.BinInt.Z.log2 (Coq.ZArith.BinInt.Z.lxor p1 p2)).
-
+  fun i m => Coq.ZArith.BinInt.Z.land i (Coq.ZArith.BinInt.Z.lxor (Coq.ZArith.BinInt.Z.lnot (Coq.ZArith.BinInt.Z.pred m)) m).
+# Avoid the natFromInt
 redefine Definition Data.IntSet.Base.zero : GHC.Num.Int -> (Mask -> bool) :=
   fun i m => Coq.ZArith.BinInt.Z.eqb (Coq.ZArith.BinInt.Z.land i m) 0.
+# Avoid the natFromInt, and come up with a simpler definition
+# (correctness checked by hand for small values).
+redefine Definition Data.IntSet.Base.branchMask : Prefix -> (Prefix -> Mask) :=
+  fun p1 p2 => Coq.ZArith.BinInt.Z.pow 2 (Coq.ZArith.BinInt.Z.log2 (Coq.ZArith.BinInt.Z.lxor p1 p2)).
 
 
 # A bitmask adressing the last 6 bits of an int.

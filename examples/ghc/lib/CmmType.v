@@ -184,27 +184,20 @@ Definition f64 : CmmType :=
 
 Definition halfWordMask : DynFlags.DynFlags -> GHC.Num.Integer :=
   fun dflags =>
-    let j_0__ :=
-      Panic.panic (GHC.Base.hs_string__ "MachOp.halfWordMask: Unknown word size") in
-    let j_1__ :=
-      if DynFlags.wORD_SIZE dflags GHC.Base.== GHC.Num.fromInteger 8 : bool
-      then GHC.Num.fromInteger 4294967295
-      else j_0__ in
     if DynFlags.wORD_SIZE dflags GHC.Base.== GHC.Num.fromInteger 4 : bool
     then GHC.Num.fromInteger 65535
-    else j_1__.
+    else if DynFlags.wORD_SIZE dflags GHC.Base.== GHC.Num.fromInteger 8 : bool
+         then GHC.Num.fromInteger 4294967295
+         else Panic.panic (GHC.Base.hs_string__
+                          "MachOp.halfWordMask: Unknown word size").
 
 Definition halfWordWidth : DynFlags.DynFlags -> Width :=
   fun dflags =>
-    let j_0__ :=
-      Panic.panic (GHC.Base.hs_string__ "MachOp.halfWordRep: Unknown word size") in
-    let j_1__ :=
-      if DynFlags.wORD_SIZE dflags GHC.Base.== GHC.Num.fromInteger 8 : bool
-      then W32
-      else j_0__ in
     if DynFlags.wORD_SIZE dflags GHC.Base.== GHC.Num.fromInteger 4 : bool
     then W16
-    else j_1__.
+    else if DynFlags.wORD_SIZE dflags GHC.Base.== GHC.Num.fromInteger 8 : bool
+         then W32
+         else Panic.panic (GHC.Base.hs_string__ "MachOp.halfWordRep: Unknown word size").
 
 Definition bHalfWord : DynFlags.DynFlags -> CmmType :=
   fun dflags => cmmBits (halfWordWidth dflags).
@@ -433,15 +426,11 @@ Definition widthInLog : Width -> GHC.Num.Int :=
 
 Definition wordWidth : DynFlags.DynFlags -> Width :=
   fun dflags =>
-    let j_0__ :=
-      Panic.panic (GHC.Base.hs_string__ "MachOp.wordRep: Unknown word size") in
-    let j_1__ :=
-      if DynFlags.wORD_SIZE dflags GHC.Base.== GHC.Num.fromInteger 8 : bool
-      then W64
-      else j_0__ in
     if DynFlags.wORD_SIZE dflags GHC.Base.== GHC.Num.fromInteger 4 : bool
     then W32
-    else j_1__.
+    else if DynFlags.wORD_SIZE dflags GHC.Base.== GHC.Num.fromInteger 8 : bool
+         then W64
+         else Panic.panic (GHC.Base.hs_string__ "MachOp.wordRep: Unknown word size").
 
 Definition gcWord : DynFlags.DynFlags -> CmmType :=
   fun dflags => Mk_CmmType GcPtrCat (wordWidth dflags).

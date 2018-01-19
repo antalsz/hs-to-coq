@@ -248,18 +248,19 @@ instance Gallina Term where
   renderGallina' p (Cofix cbs) = group $ maybeParen (p > fixPrec) $
     "cofix" <+> renderGallina cbs
 
+  -- the following are pattern synonyms and need to preceed the general Let case.
+  renderGallina' p (LetFix def body) = group $ maybeParen (p > letPrec) $
+    "let fix" <+> renderGallina def <+> "in" <!> align (renderGallina body)
+
+  renderGallina' p (LetCofix def body) = group $ maybeParen (p > letPrec) $
+    "let cofix" <+> renderGallina def <+> "in" <!> align (renderGallina body)
+
   renderGallina' p (Let var args oty val body) = group $ maybeParen (p > letPrec) $
          "let" <+> group (   renderGallina var
                          <>  spaceIf args <> render_args_oty V args oty
                          <+> nest 2 (":=" <!> renderGallina val))
                <+> "in"
     <!>  align (renderGallina body)
-
-  renderGallina' p (LetFix def body) = group $ maybeParen (p > letPrec) $
-    "let fix" <+> renderGallina def <+> "in" <!> align (renderGallina body)
-
-  renderGallina' p (LetCofix def body) = group $ maybeParen (p > letPrec) $
-    "let cofix" <+> renderGallina def <+> "in" <!> align (renderGallina body)
 
   renderGallina' p (LetTuple vars orty val body) = group $ maybeParen (p > letPrec) $
         "let" <+> group (   (parens . align . vsep . punctuate "," $ renderGallina <$> vars)

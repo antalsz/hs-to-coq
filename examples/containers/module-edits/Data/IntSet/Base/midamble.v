@@ -33,7 +33,7 @@ Instance Bits__N : Data.Bits.Bits N :=  {
   shiftL := shiftLL;
   shiftR := shiftRL;
   testBit := fun x i => N.testbit x (Coq.ZArith.BinInt.Z.to_N i);
-  unsafeShiftL := shiftRL;
+  unsafeShiftL := shiftLL;
   unsafeShiftR := shiftRL;
   xor := N.lxor;
   zeroBits := 0;

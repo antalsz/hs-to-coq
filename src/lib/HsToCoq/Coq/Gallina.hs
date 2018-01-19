@@ -134,8 +134,6 @@ data Term = Forall Binders Term                                                 
           | Fix FixBodies                                                                      -- ^@fix /fix_bodies/@
           | Cofix CofixBodies                                                                  -- ^@cofix /cofix_bodies/@
           | Let Qualid [Binder] (Maybe Term) Term Term                                          -- ^@let /ident/ [/binders/] [: /term/] := /term/ in /term/@
-          | LetFix FixBody Term                                                                -- ^@let fix /fix_body/ in /term/@
-          | LetCofix CofixBody Term                                                            -- ^@let cofix /cofix_body/ in /term/@
           | LetTuple [Name] (Maybe DepRetType) Term Term                                       -- ^@let ( [/name/ , … , /name/] ) [/dep_ret_type/] := /term/ in /term/@
           | LetTick Pattern Term Term                                                          -- ^@let ' /pattern/ := /term/ in /term/@
           | LetTickDep Pattern (Maybe (Qualid, [Pattern])) Term ReturnType Term                -- ^@let ' /pattern/ [in /qualid/ [/pattern/ … /pattern/]] := /term/ /return_type/ in /term/@

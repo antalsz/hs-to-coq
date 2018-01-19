@@ -96,13 +96,11 @@ Definition break {a} : (a -> bool) -> list a -> (list a * list a)%type :=
   fix break arg_0__ arg_1__
         := match arg_0__ , arg_1__ with
              | _ , (nil as xs) => pair xs xs
-             | p , (cons x xs' as xs) => let j_4__ :=
-                                           match break p xs' with
-                                             | pair ys zs => pair (cons x ys) zs
-                                           end in
-                                         if p x : bool
+             | p , (cons x xs' as xs) => if p x : bool
                                          then pair nil xs
-                                         else j_4__
+                                         else match break p xs' with
+                                                | pair ys zs => pair (cons x ys) zs
+                                              end
            end.
 
 Definition concat {a} : list (list a) -> list a :=
@@ -131,10 +129,9 @@ Definition filter {a} : (a -> bool) -> list a -> list a :=
   fix filter arg_0__ arg_1__
         := match arg_0__ , arg_1__ with
              | _pred , nil => nil
-             | pred , cons x xs => let j_2__ := filter pred xs in
-                                   if pred x : bool
+             | pred , cons x xs => if pred x : bool
                                    then cons x (filter pred xs)
-                                   else j_2__
+                                   else filter pred xs
            end.
 
 Definition filterFB {a} {b} : (a -> b -> b) -> (a -> bool) -> a -> b -> b :=
@@ -149,13 +146,12 @@ Definition flipSeqTake {a} : a -> GHC.Num.Int -> a :=
 Definition foldr2 {a} {b} {c} : (a -> b -> c -> c) -> c -> list a -> list
                                 b -> c :=
   fun k z =>
-    let go :=
-      fix go arg_0__ arg_1__
-            := match arg_0__ , arg_1__ with
-                 | nil , _ys => z
-                 | _xs , nil => z
-                 | cons x xs , cons y ys => k x y (go xs ys)
-               end in
+    let fix go arg_0__ arg_1__
+              := match arg_0__ , arg_1__ with
+                   | nil , _ys => z
+                   | _xs , nil => z
+                   | cons x xs , cons y ys => k x y (go xs ys)
+                 end in
     go.
 
 Definition foldr2_left {a} {b} {c} {d} : (a -> b -> c -> d) -> d -> a -> (list
@@ -191,10 +187,9 @@ Definition lookup {a} {b} `{(GHC.Base.Eq_ a)} : a -> list (a * b)%type -> option
   fix lookup arg_0__ arg_1__
         := match arg_0__ , arg_1__ with
              | _key , nil => None
-             | key , cons (pair x y) xys => let j_2__ := lookup key xys in
-                                            if key GHC.Base.== x : bool
+             | key , cons (pair x y) xys => if key GHC.Base.== x : bool
                                             then Some y
-                                            else j_2__
+                                            else lookup key xys
            end.
 
 Definition notElem {a} `{(GHC.Base.Eq_ a)} : a -> list a -> bool :=
@@ -226,12 +221,11 @@ Definition product {a} `{(GHC.Num.Num a)} : list a -> a :=
 
 Definition reverse {a} : list a -> list a :=
   fun l =>
-    let rev :=
-      fix rev arg_0__ arg_1__
-            := match arg_0__ , arg_1__ with
-                 | nil , a => a
-                 | cons x xs , a => rev xs (cons x a)
-               end in
+    let fix rev arg_0__ arg_1__
+              := match arg_0__ , arg_1__ with
+                   | nil , a => a
+                   | cons x xs , a => rev xs (cons x a)
+                 end in
     rev l nil.
 
 Definition scanl {b} {a} : (b -> a -> b) -> b -> list a -> list b :=
@@ -281,12 +275,11 @@ Definition span {a} : (a -> bool) -> list a -> (list a * list a)%type :=
   fix span arg_0__ arg_1__
         := match arg_0__ , arg_1__ with
              | _ , (nil as xs) => pair xs xs
-             | p , (cons x xs' as xs) => let j_3__ := pair nil xs in
-                                         if p x : bool
+             | p , (cons x xs' as xs) => if p x : bool
                                          then match span p xs' with
                                                 | pair ys zs => pair (cons x ys) zs
                                               end
-                                         else j_3__
+                                         else pair nil xs
            end.
 
 Definition strictUncurryScanr {a} {b} {c} : (a -> b -> c) -> (a *

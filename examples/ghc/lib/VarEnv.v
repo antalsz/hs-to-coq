@@ -185,14 +185,11 @@ Definition rnBndr2_var : RnEnv2 -> Core.Var -> Core.Var -> (RnEnv2 *
   fun arg_0__ arg_1__ arg_2__ =>
     match arg_0__ , arg_1__ , arg_2__ with
       | RV2 envL envR in_scope , bL , bR => let new_b :=
-                                              let j_3__ := uniqAway' in_scope bL in
-                                              let j_4__ :=
-                                                if negb (elemInScopeSet bR in_scope) : bool
-                                                then bR
-                                                else j_3__ in
                                               if negb (elemInScopeSet bL in_scope) : bool
                                               then bL
-                                              else j_4__ in
+                                              else if negb (elemInScopeSet bR in_scope) : bool
+                                                   then bR
+                                                   else uniqAway' in_scope bL in
                                             pair (RV2 missingValue missingValue missingValue) new_b
     end.
 
@@ -389,8 +386,7 @@ Definition lookupDVarEnv {a} : DVarEnv a -> Core.Var -> option a :=
 
 Definition modifyDVarEnv {a} : (a -> a) -> DVarEnv a -> Core.Var -> DVarEnv a :=
   fun mangle_fn env key =>
-    let scrut_0__ := (lookupDVarEnv env key) in
-    match scrut_0__ with
+    match (lookupDVarEnv env key) with
       | None => env
       | Some xx => extendDVarEnv env key (mangle_fn xx)
     end.
@@ -433,8 +429,7 @@ Definition lookupRnInScope : RnEnv2 -> Core.Var -> Core.Var :=
 
 Definition modifyVarEnv {a} : (a -> a) -> VarEnv a -> Core.Var -> VarEnv a :=
   fun mangle_fn env key =>
-    let scrut_0__ := (lookupVarEnv env key) in
-    match scrut_0__ with
+    match (lookupVarEnv env key) with
       | None => env
       | Some xx => extendVarEnv env key (mangle_fn xx)
     end.
@@ -487,8 +482,7 @@ Definition mkVarEnv_Directly {a} : list (Unique.Unique * a)%type -> VarEnv a :=
 Definition modifyVarEnv_Directly {a} : (a -> a) -> UniqFM.UniqFM
                                        a -> Unique.Unique -> UniqFM.UniqFM a :=
   fun mangle_fn env key =>
-    let scrut_0__ := (UniqFM.lookupUFM_Directly env key) in
-    match scrut_0__ with
+    match (UniqFM.lookupUFM_Directly env key) with
       | None => env
       | Some xx => UniqFM.addToUFM_Directly env key (mangle_fn xx)
     end.
@@ -523,14 +517,12 @@ Definition extendInScopeSetSet : InScopeSet -> VarEnv Core.Var -> InScopeSet :=
 
 Definition addRnInScopeSet : RnEnv2 -> VarEnv Core.Var -> RnEnv2 :=
   fun env vs =>
-    let j_5__ :=
-      match env with
-        | RV2 envL_0__ envR_1__ in_scope_2__ => RV2 envL_0__ envR_1__
-                                                    (extendInScopeSetSet (in_scope env) vs)
-      end in
     if isEmptyVarEnv vs : bool
     then env
-    else j_5__.
+    else match env with
+           | RV2 envL_0__ envR_1__ in_scope_2__ => RV2 envL_0__ envR_1__
+                                                       (extendInScopeSetSet (in_scope env) vs)
+         end.
 
 Definition plusVarEnv_C {a} : (a -> a -> a) -> VarEnv a -> VarEnv a -> VarEnv
                               a :=

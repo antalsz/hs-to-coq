@@ -909,6 +909,151 @@ Module Foo (E : OrderedType) : WSfun(E).
     local_bounded f (fun arg_1__ => arg_1__ GHC.Base.< x) l /\
     local_bounded (fun arg_0__ => arg_0__ GHC.Base.> x) g r.
 
+  Ltac derive_compare :=
+    repeat match goal with
+           | [H: is_true
+                   (andb _ (andb _ (andb (local_bounded _ _ _)
+                                         (local_bounded _ _ _)))) |- _] =>
+             let Hc1 := fresh "Hcomp" in
+             let Hc2 := fresh "Hcomp" in
+             let Hl1 := fresh "Hlb" in
+             let Hl2 := fresh "Hlb" in
+             move: H; case /and4P=>//;
+             rewrite -/local_bounded /partial_gt /partial_lt;
+             move=> Hc1 Hc2 Hl1 Hl2
+           | [H: is_true (local_bounded _ _ _) |- _ ] =>
+             let Hc1 := fresh "Hcomp" in
+             let Hc2 := fresh "Hcomp" in
+             let Hl1 := fresh "Hlb" in
+             let Hl2 := fresh "Hlb" in
+             move: H; rewrite /local_bounded;
+             case /and4P=>//;
+             rewrite -/local_bounded /partial_gt /partial_lt;
+             move=> Hc1 Hc2 Hl1 Hl2
+           end; autorewrite with elt_compare in *.
+
+  Ltac rel_deriver := eauto 2.
+  
+  Ltac solve_relations_single_step :=
+    match goal with
+    | [ |- E.lt ?a ?b -> _ ] =>
+      do [move /elt_compare_gt -> =>//
+         | move /elt_compare_lt -> =>//]
+    | [ |- E.eq ?a ?b -> _ ] =>
+      move /elt_compare_eq -> =>//
+    | [ |- context[Base.compare ?a ?b]] =>
+      do [have: E.lt a b by [rel_deriver]
+         | have: E.eq a b by [rel_deriver]
+         | have: E.lt b a by [rel_deriver]]
+    end.
+
+  Ltac solve_relations :=
+    repeat solve_relations_single_step.
+
+  Ltac prepare_relations :=
+    try multimatch goal with
+        | [H: E.eq ?a ?b |- _ ] =>
+          first [(match goal with
+                  | [H': E.eq b a |- _ ] =>
+                    idtac
+                  end)
+                | (have: E.eq b a by [apply E.eq_sym; apply H];
+                   move=>?)]
+        end.
+
+  Ltac rewrite_relations :=
+    repeat (autorewrite with elt_compare in *;
+            prepare_relations;
+            solve_relations;
+            try match goal with
+                | [ |- context[Base.compare ?a ?b]] =>
+                  destruct_match
+                end).
+  
+  Ltac solve_membership :=
+    solve [derive_compare; rewrite_relations].
+    
+  Lemma membership_prop : forall s y x l r,
+      member y (Bin s x l r) ->
+      (E.eq y x \/ member y l \/ member y r).
+  Proof.
+    move=>s y x l r. rewrite /member.
+    destruct_match;
+      try (right; (left + right); solve [auto]).
+    left. apply /elt_compare_eq =>//.
+  Qed.
+
+  Ltac prepare_bst :=
+    intros;
+    repeat match goal with
+           | [H: context[member _ _] |- _] => move: H
+           | [H: context[In_set _ _] |- _] => move: H
+           end;
+    rewrite /In_set /balanceL /balanceR /member;
+    repeat match goal with
+           | [H: before_ordered _ _ _ _ _ |- _ ] =>
+             move: H; rewrite /before_ordered; move=>[? [? [? [? [? ?]]]]]
+           end;
+    repeat match goal with
+           | [H: before_balancedL _ _ _ |- _ ] =>
+             move: H; rewrite /before_balancedL; move=>H
+           | [H: before_balancedR _ _ _ |- _ ] =>
+             move: H; rewrite /before_balancedR; move=>H
+           end.
+
+  Ltac solve_bst :=
+    repeat (destruct_match; rewrite_relations;
+            try solve [lucky_balanced_solve]);
+    try solve [derive_compare; OrdFacts.order].
+
+  Lemma size_zero : forall (s : Set_ elt),
+      WF s -> size s <= 0 -> s = Tip.
+  Proof.
+    destruct s; intros.
+    - derive_constraints. omega.
+    - reflexivity.
+  Qed.
+
+  Lemma balanceL_preserves_membership : forall s y x l r,
+      WF l ->
+      WF r ->
+      before_balancedL x l r ->
+      before_ordered x l r (const true) (const true) ->
+      (In_set y (Bin s x l r) <-> In_set y (balanceL x l r)).
+  Proof.
+    prepare_bst. split; solve_bst.
+    - have Hs0: size s1_1 <= 0.
+      { derive_constraints; rewrite_for_omega; intros; omega. }
+      apply WF_children in H; destruct H.
+      apply WF_children in H2; destruct H2.
+      apply (size_zero _ H2) in Hs0; subst; auto.
+    - have Hs0: size s1_2 <= 0.
+      { derive_constraints; rewrite_for_omega; intros; omega. }
+      apply WF_children in H; destruct H.
+      apply WF_children in H2; destruct H2.
+      apply (size_zero _ H3) in Hs0; subst; auto.
+  Qed.
+
+  Lemma balanceR_preserves_membership : forall s y x l r,
+      WF l ->
+      WF r ->
+      before_balancedR x l r ->
+      before_ordered x l r (const true) (const true) ->
+      (In_set y (Bin s x l r) <-> In_set y (balanceR x l r)).
+  Proof.
+    prepare_bst. split; solve_bst.
+    - have Hs0: size s1_1 <= 0.
+      { derive_constraints; rewrite_for_omega; intros; omega. }
+      apply WF_children in H0; destruct H0.
+      apply WF_children in H0; destruct H0.
+      apply (size_zero _ H0) in Hs0; subst; auto.
+    - have Hs0: size s1_2 <= 0.
+      { derive_constraints; rewrite_for_omega; intros; omega. }
+      apply WF_children in H0; destruct H0.
+      apply WF_children in H0; destruct H0.
+      apply (size_zero _ H3) in Hs0; subst; auto.
+  Qed.
+
   Lemma size_irrelevance_in_ordered : forall s1 s2 x (l r : Set_ elt),
       ordered (Bin s1 x l r) -> ordered (Bin s2 x l r).
   Proof. move=>s1 s2 x l r. rewrite /ordered; auto. Qed.
@@ -1041,77 +1186,6 @@ Module Foo (E : OrderedType) : WSfun(E).
     - apply balanceR_validsize...
   Qed.
 
-  Ltac derive_compare :=
-    repeat match goal with
-           | [H: is_true
-                   (andb _ (andb _ (andb (local_bounded _ _ _)
-                                         (local_bounded _ _ _)))) |- _] =>
-             let Hc1 := fresh "Hcomp" in
-             let Hc2 := fresh "Hcomp" in
-             let Hl1 := fresh "Hlb" in
-             let Hl2 := fresh "Hlb" in
-             move: H; case /and4P=>//;
-             rewrite -/local_bounded /partial_gt /partial_lt;
-             move=> Hc1 Hc2 Hl1 Hl2
-           | [H: is_true (local_bounded _ _ _) |- _ ] =>
-             let Hc1 := fresh "Hcomp" in
-             let Hc2 := fresh "Hcomp" in
-             let Hl1 := fresh "Hlb" in
-             let Hl2 := fresh "Hlb" in
-             move: H; rewrite /local_bounded;
-             case /and4P=>//;
-             rewrite -/local_bounded /partial_gt /partial_lt;
-             move=> Hc1 Hc2 Hl1 Hl2
-           end; autorewrite with elt_compare in *.
-
-  Ltac rel_deriver := eauto 2.
-  
-  Ltac solve_relations_single_step :=
-    match goal with
-    | [ |- E.lt ?a ?b -> _ ] =>
-      do [move /elt_compare_gt -> =>//
-         | move /elt_compare_lt -> =>//]
-    | [ |- E.eq ?a ?b -> _ ] =>
-      move /elt_compare_eq -> =>//
-    | [ |- context[Base.compare ?a ?b]] =>
-      do [have: E.lt a b by [rel_deriver]
-         | have: E.eq a b by [rel_deriver]
-         | have: E.lt b a by [rel_deriver]]
-    end.
-
-  Ltac solve_relations :=
-    repeat solve_relations_single_step.
-
-  Ltac prepare_in_set :=
-    repeat match goal with
-    | [ H: context[In_set _ _] |- _ ] =>
-      move: H
-    end;
-    match goal with
-    | [ |- context[In_set _ _] ] =>
-      rewrite /In_set /member /= -/member
-    end.
-
-  Ltac prepare_relations :=
-    try multimatch goal with
-        | [H: E.eq ?a ?b |- _ ] =>
-          first [(match goal with
-                  | [H': E.eq b a |- _ ] =>
-                    idtac
-                  end)
-                | (have: E.eq b a by [apply E.eq_sym; apply H];
-                   move=>?)]
-        end.
-
-  Ltac solve_in_set :=
-    solve [prepare_in_set;
-           repeat (autorewrite with elt_compare in *;
-                   prepare_relations;
-                   solve_relations;
-                   match goal with
-                   | [ |- context[Base.compare ?a ?b]] =>
-                     destruct_match
-                   end)].
 
   Lemma inset_balanceL : forall (x y : elt) (l r : Set_ elt),
       WF l ->
@@ -1121,35 +1195,18 @@ Module Foo (E : OrderedType) : WSfun(E).
       E.eq x y \/ (E.lt y x /\ In_set y l) \/ (E.lt x y /\ In_set y r) ->
       In_set y (balanceL x l r).
   Proof.
-    destruct r as [sr xr rl rr | ];
-      destruct l as [sl xl ll lr | ].
-    - rewrite /before_balancedL.
-      rewrite /balanceL; destruct_match.
-      + destruct ll as [sll xll lll llr | ];
-          destruct lr as [slr xlr lrl lrr | ];
-          try solve [intros; lucky_balanced_solve].
-        move=>Hwfl Hwfr Hbeforeb Hbefore [? | [[? ?] | [? ?]]];
-               move: Hbefore; rewrite /before_ordered;
-                 move=>H; destruct H as [_ [_ [_ [_ [? ?]]]]];
-                        derive_compare;
-                        destruct_match; solve_in_set.
-      + move=>Hwfl Hwfr Hbeforeb Hbefore [? | [[? ?] | [? ?]]];
-               solve_in_set.
-    - move=>Hwfl Hwfr Hbeforeb Hbefore [? | [[? ?] | [? ?]]];
-             solve_in_set.
-    - destruct ll as [sll xll lll llr | ];
-        destruct lr as [slr xlr lrl lrr | ];
-        move=>Hwfl Hwfr Hbeforeb; rewrite /before_ordered;
-        move=>[_ [_ [_ [_ [? ?]]]]]; derive_compare;
-               move=>[? | [[? ?] | [? ?]]]; rewrite /balanceL;
-                      try solve [try match goal with
-                                     | [H: In_set _ Tip |- _ ] =>
-                                       inversion H
-                                     end; try destruct_match; solve_in_set].
-      destruct lrl; destruct lrr; try solve [lucky_balanced_solve | solve_in_set].
-    - move=>Hwfl Hwfr Hbeforeb Hbefore [? | [[? ?] | [? ?]]];
-             solve_in_set.
-  Time Qed. (* Finished transaction in 1.573 secs (1.57u,0.002s) (successful) *)
+    prepare_bst. move=>[? | [[? ?] | [? ?]]]; solve_bst.
+    - have Hs0: size s5 <= 0.
+      { derive_constraints; rewrite_for_omega; intros; omega. }
+      apply WF_children in H; destruct H.
+      apply WF_children in H2; destruct H2.
+      apply (size_zero _ H2) in Hs0; subst; auto.
+    - have Hs0: size s6 <= 0.
+      { derive_constraints; rewrite_for_omega; intros; omega. }
+      apply WF_children in H; destruct H.
+      apply WF_children in H2; destruct H2.
+      apply (size_zero _ H3) in Hs0; subst; auto.
+  Time Qed. (* Finished transaction in 5.667 secs (5.626u,0.035s) (successful) *)
   
   Lemma inset_balanceR : forall (x y : elt) (l r : Set_ elt),
       WF l ->
@@ -1159,35 +1216,18 @@ Module Foo (E : OrderedType) : WSfun(E).
       E.eq x y \/ (E.lt y x /\ In_set y l) \/ (E.lt x y /\ In_set y r) ->
       In_set y (balanceR x l r).
   Proof.
-    destruct l as [sl xl ll lr | ];
-      destruct r as [sr xr rl rr | ].
-    - rewrite /before_balancedR.
-      rewrite /balanceR; destruct_match.
-      + destruct rl as [srl xrl rll rlr | ];
-          destruct rr as [srr xrr rrl rrr | ];
-          try solve [intros; lucky_balanced_solve].
-        move=>Hwfl Hwfr Hbeforeb Hbefore [? | [[? ?] | [? ?]]];
-               move: Hbefore; rewrite /before_ordered;
-                 move=> [_ [_ [_ [_ [? ?]]]]];
-                         derive_compare;
-                         destruct_match; solve_in_set.
-      + move=>Hwfl Hwfr Hbeforeb Hbefore [? | [[? ?] | [? ?]]];
-               solve_in_set.
-    - move=>Hwfl Hwfr Hbeforeb Hbefore [? | [[? ?] | [? ?]]];
-             solve_in_set.
-    - destruct rl as [srl xrl rll rlr | ];
-        destruct rr as [srr xrr rrl rrr | ];
-        move=>Hwfl Hwfr Hbeforeb; rewrite /before_ordered;
-        move=>[_ [_ [_ [_ [? ?]]]]]; derive_compare;
-               move=>[? | [[? ?] | [? ?]]]; rewrite /balanceR;
-                      try solve [try match goal with
-                                     | [H: In_set _ Tip |- _ ] =>
-                                       inversion H
-                                     end; try destruct_match; solve_in_set].
-      destruct rll; destruct rlr; try solve [lucky_balanced_solve | solve_in_set].
-    - move=>Hwfl Hwfr Hbeforeb Hbefore [? | [[? ?] | [? ?]]];
-             solve_in_set.
-  Time Qed. (* Finished transaction in 1.74 secs (1.722u,0.008s) (successful) *)
+    prepare_bst. move=>[? | [[? ?] | [? ?]]]; solve_bst.
+    - have Hs0: size s5 <= 0.
+      { derive_constraints; rewrite_for_omega; intros; omega. }
+      apply WF_children in H0; destruct H0.
+      apply WF_children in H0; destruct H0.
+      apply (size_zero _ H0) in Hs0; subst; auto.
+    - have Hs0: size s6 <= 0.
+      { derive_constraints; rewrite_for_omega; intros; omega. }
+      apply WF_children in H0; destruct H0.
+      apply WF_children in H0; destruct H0.
+      apply (size_zero _ H3) in Hs0; subst; auto.
+  Time Qed. (* Finished transaction in 5.877 secs (5.847u,0.014s) (successful) *)
   
   Definition mem : elt -> t -> bool := fun e s' =>
     s <-- s' ;; member e s.
@@ -1389,6 +1429,34 @@ Module Foo (E : OrderedType) : WSfun(E).
         * autorewrite with elt_compare. auto.
         * autorewrite with elt_compare. auto.
   Time Qed. (* Finished transaction in 1.354 secs (1.301u,0.045s) (successful) *)
+
+  Lemma left_insert_before_balancedL : forall e s l r x,
+      WF (Bin s e l r) ->
+      E.lt x e ->
+      before_balancedL e (insert x l) r.
+  Proof.
+    intros; rewrite -/insert /before_balancedL.
+    have Hs: size (insert x l) = size l + 1 \/ size (insert x l) = size l
+      by [ apply WF_children in H; destruct H;
+           apply insert_prop with (e:=x) in H; tauto ].
+    derive_constraints.
+    destruct Hs; rewrite H; destruct Hbalanced;
+      solve [(left + right); split; rewrite_for_omega; intros; omega].
+  Qed.
+
+  Lemma right_insert_before_balancedR : forall e s l r x,
+      WF (Bin s e l r) ->
+      E.lt e x ->
+      before_balancedR e l (insert x r).
+  Proof.
+    intros; rewrite -/insert /before_balancedR.
+    have Hs: size (insert x r) = size r + 1 \/ size (insert x r) = size r
+      by [ apply WF_children in H; destruct H;
+           apply insert_prop with (e:=x) in H1; tauto ].
+    derive_constraints.
+    destruct Hs; rewrite H; destruct Hbalanced;
+      solve [(left + right); split; rewrite_for_omega; intros; omega].
+  Qed.
 
   Definition add (e: elt) (s': t) : t.
     refine (s <-- s' ;;
@@ -1630,12 +1698,38 @@ Module Foo (E : OrderedType) : WSfun(E).
           apply E.eq_sym in Heq. eauto. }
         rewrite /In_set /member /= -/member.
         destruct_match; rewrite -Heq' //.
-      + admit. (** need more lemmata! *)
-      + admit. (** need more lemmata! *)
+      + move=>Hb. apply balanceL_preserves_membership with (s:=0) in Hb.
+        * move: Hb. rewrite /In_set /=.
+          destruct_match; auto. apply IHs1.
+          apply WF_children in i; tauto.
+        * apply insert_prop. apply WF_children in i; tauto.
+        * apply WF_children in i. tauto.
+        * rewrite_relations. eapply left_insert_before_balancedL; eauto.
+        * rewrite_relations. rewrite /before_ordered. repeat split; auto.
+          -- apply insert_prop; auto.
+             ++ apply WF_children in i; tauto.
+             ++ move: i. rewrite /WF /valid. case /and3P => _ Hord _.
+                move: Hord. rewrite /ordered. case /and4P => _ _ ? ?. auto.
+          -- move: i. rewrite /WF /valid. case /and3P => _ Hord _.
+             move: Hord. rewrite /ordered. case /and4P => _ _ ? ?. auto.
+      + move=>Hb. apply balanceR_preserves_membership with (s:=0) in Hb.
+        * move: Hb. rewrite /In_set /=.
+          destruct_match; auto. apply IHs2.
+          apply WF_children in i; tauto.
+        * apply WF_children in i. tauto.
+        * apply insert_prop. apply WF_children in i; tauto.
+        * rewrite_relations. eapply right_insert_before_balancedR; eauto.
+        * rewrite_relations. rewrite /before_ordered. repeat split; auto.
+          -- move: i. rewrite /WF /valid. case /and3P => _ Hord _.
+             move: Hord. rewrite /ordered. case /and4P => _ _ ? ?. auto.
+          -- apply insert_prop; auto.
+             ++ apply WF_children in i; tauto.
+             ++ move: i. rewrite /WF /valid. case /and3P => _ Hord _.
+                move: Hord. rewrite /ordered. case /and4P => _ _ ? ?. auto.
     - inversion H0. move: H2.
       destruct_match; autorewrite with elt_compare in *.
       apply E.eq_sym in Heq. contradiction.
-  Admitted.
+  Qed.
 
   Lemma remove_1 :
     forall (s : t) (x y : elt), E.eq x y -> ~ In y (remove x s). Admitted.

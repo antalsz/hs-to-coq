@@ -269,10 +269,9 @@ Definition mkFieldLabelOccs
                              (FastString.unpackFS lbl) (Coq.Init.Datatypes.app (GHC.Base.hs_string__ ":")
                                                                                (OccName.occNameString dc))) in
     let sel_occ :=
-      let j_1__ := OccName.mkVarOccFS lbl in
       if is_overloaded : bool
       then OccName.mkRecFldSelOcc str
-      else j_1__ in
+      else OccName.mkVarOccFS lbl in
     Mk_FieldLabel lbl is_overloaded sel_occ.
 
 (* Unbound variables:

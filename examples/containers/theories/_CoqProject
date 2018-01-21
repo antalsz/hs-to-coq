@@ -2,4 +2,9 @@
 -R ../../../base ""
 -Q ../../../base-thy  Proofs
 -Q ../../containers/lib   ""
-SetProofs.v MapProofs.v IntSetProofs.v
+Tactics.v
+IntToZ.v
+OrdTheories.v
+SetProofs.v
+MapProofs.v
+IntSetProofs.v

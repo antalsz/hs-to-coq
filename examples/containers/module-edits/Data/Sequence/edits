@@ -1,0 +1,401 @@
+### hard ones, come back
+
+rename type GHC.Num.Int = Nat
+rename value GHC.Num.op_zp__ = Nat.add
+rename value GHC.Num.op_zt__ = Nat.mul
+rename value GHC.Num.op_zm__ = Nat.sub
+rename value GHC.Num.fromInteger = id
+
+
+# skip Data.Sequence.applicativeTree   # causes Coq to StackOverflow
+
+# skip Data.Sequence.fromFunction      # causes Coq to hang
+
+# skip Data.Sequence.fromList          # prove termination in midamble
+
+# skip Data.Sequence.mapWithIndex      # polyrec local fcn, hard to redefine
+
+# skip Data.Sequence.unrollPQ          # mutrec in local helpers
+
+# skip Data.Sequence.aptyMiddle        # polyrec
+# skip Data.Sequence.toPQ
+# skip Data.Sequence.cycleNMiddle
+
+# skip Data.Sequence.initsTree         # non-exhaustive pattern match
+
+# skip Data.Sequence.viewLTree         # mutrec, in midamble
+# skip Data.Sequence.viewRTree         # mutrec, in midamble
+
+# unstableSortBy
+# unstableSort
+
+#################################
+skip Data.Sequence.unfoldl
+skip Data.Sequence.unfoldr
+
+
+skip module Data.Data
+
+# in preamble
+rename value GHC.Err.error = error
+
+rename value Data.Sequence.State  = Data.Sequence.Mk_State
+rename value Data.Sequence.Split  = Data.Sequence.Mk_Split
+rename value Data.Sequence.Place  = Data.Sequence.Mk_Place
+rename value Data.Sequence.PQueue = Data.Sequence.Mk_PQueue
+rename value Data.Sequence.Elem   = Data.Sequence.Mk_Elem
+rename value Data.Sequence.Rigid  = Data.Sequence.Mk_Rigid
+rename value Data.Sequence.Seq    = Data.Sequence.Mk_Seq
+
+## Update Data.Foldable to include foldl1?
+rename value Data.Foldable.foldl1 = Data.Sequence.foldl1
+
+## need class info for SemiGroup
+skip Data.Sequence.Monoid__Seq
+
+## Functor and Applicative before Monad
+order Data.Sequence.Functor__Seq Data.Sequence.Applicative__Seq Data.Sequence.Monad__Seq_op_zgzg__ Data.Sequence.Monad__Seq_return_  Data.Sequence.Monad__Seq
+
+## Digit and Node before FingerTree
+order Data.Sequence.Foldable__Digit Data.Sequence.Foldable__Node Data.Sequence.Foldable__FingerTree_foldMap Data.Sequence.Foldable__FingerTree_foldl Data.Sequence.Foldable__FingerTree_foldr
+
+order Data.Sequence.Functor__Digit Data.Sequence.Functor__Node Data.Sequence.Functor__FingerTree_fmap
+order Data.Sequence.Traversable__Digit Data.Sequence.Traversable__Node Data.Sequence.Traversable__FingerTree_traverse
+
+## relationship between Seq instances
+order Data.Sequence.Foldable__Seq Data.Sequence.Ord__Seq_compare Data.Sequence.foldrWithIndex Data.Sequence.foldlWithIndex Data.Sequence.Eq___Seq_op_zeze__
+
+order Data.Sequence.Functor__Seq Data.Sequence.Traversable__Seq Data.Sequence.scanl
+
+## Elem and FingerTree before Seq
+
+order Data.Sequence.Foldable__Elem Data.Sequence.Foldable__FingerTree Data.Sequence.Foldable__Seq_foldMap Data.Sequence.Foldable__Seq_foldl Data.Sequence.Foldable__Seq_foldr Data.Sequence.Foldable__Seq
+
+order Data.Sequence.Traversable__Elem Data.Sequence.Traversable__FingerTree Data.Sequence.Traversable__Seq_traverse Data.Sequence.Traversable__Seq
+
+## Seq before ViewL && ViewR
+
+order Data.Sequence.Functor__Seq Data.Sequence.Foldable__Seq Data.Sequence.Traversable__Seq Data.Sequence.Functor__ViewL_fmap Data.Sequence.Functor__ViewL Data.Sequence.Functor__ViewR_fmap Data.Sequence.Functor__ViewR_op_zlzd__ Data.Sequence.Functor__ViewR Data.Sequence.Foldable__ViewL_foldl Data.Sequence.Foldable__ViewL_foldr Data.Sequence.Traversable__ViewL_traverse Data.Sequence.Functor__ViewR_fmap Data.Sequence.Foldable__ViewR_foldMap Data.Sequence.Foldable__ViewR_foldl Data.Sequence.Foldable__ViewR_foldr Data.Sequence.Foldable__ViewR Data.Sequence.Traversable__ViewR Data.Sequence.Traversable__ViewR_traverse
+
+order Data.Sequence.Eq__Seq Data.Sequence.Ord__Seq Data.Sequence.Eq___ViewR_op_zeze__ Data.Sequence.Eq___ViewL_op_zeze__ Data.Sequence.Eq___ViewR Data.Sequence.Ord__ViewR_compare Data.Sequence.Ord__ViewL_compare Data.Sequence.Ord__ViewR_op_zlze__ Data.Sequence.Ord__ViewR_op_zl__ Data.Sequence.Ord__ViewR_op_zg__ Data.Sequence.Ord__ViewR_op_zgze__ Data.Sequence.Ord__ViewL_op_zlze__ Data.Sequence.Ord__ViewL_op_zl__ Data.Sequence.Ord__ViewL_op_zg__ Data.Sequence.Ord__ViewL_op_zgze__
+
+### Polymorphic recursion
+
+redefine Fixpoint Data.Sequence.Foldable__FingerTree_foldMap {m} {a} `{_:GHC.Base.Monoid m} (f : (a -> m)) (t :FingerTree a) : m :=
+      match t with
+        | Empty => GHC.Base.mempty
+        | Single x => f x
+        | Deep _ pr m sf =>
+          GHC.Base.mappend
+            (Data.Foldable.foldMap f pr)
+            (GHC.Base.mappend (Foldable__FingerTree_foldMap (Data.Foldable.foldMap f) m)
+                              (Data.Foldable.foldMap f sf))
+      end.
+
+redefine Fixpoint Data.Sequence.Foldable__FingerTree_foldl {b} {a} (f : (b -> (a -> b))) (z:b) (t: FingerTree a) : b :=
+      match t with
+        | Empty => z
+        | Single x => f z x
+        | Deep _ pr m sf =>
+          Data.Foldable.foldl f
+                              (Foldable__FingerTree_foldl
+                                 (Data.Foldable.foldl f) (Data.Foldable.foldl f z pr) m) sf
+      end.
+
+
+redefine Fixpoint Data.Sequence.Foldable__FingerTree_foldr {a} {b}
+			(f : a -> (b -> b)) (z : b)(t : FingerTree a) : b
+  := match t with
+     | Empty => z
+     | Single x => f x z
+     | Deep _ pr m sf =>
+       Data.Foldable.foldr
+         f
+         (Foldable__FingerTree_foldr (GHC.Base.flip
+                                 (Data.Foldable.foldr f))
+                              (Data.Foldable.foldr f z sf) m) pr
+     end.
+
+redefine Fixpoint Data.Sequence.Functor__FingerTree_fmap {a} {b} (f : a -> b) (t: FingerTree a) : FingerTree b :=
+      match t with
+        | Empty => Empty
+        | Single x => Single (f x)
+        | Deep v pr m sf => Deep v (GHC.Base.fmap f pr)
+                                (Functor__FingerTree_fmap
+                                   (GHC.Base.fmap f) m)
+                                (GHC.Base.fmap f sf)
+      end.
+
+redefine Fixpoint Data.Sequence.Traversable__FingerTree_traverse {t:Type -> Type} {a} {b}
+  `{_ : GHC.Base.Applicative t}
+   (f: (a -> (t b))) (ft:FingerTree a) : t (FingerTree b) :=
+      match ft with
+        | Empty => GHC.Base.pure Empty
+        | Single x => GHC.Base.fmap Single (f x)
+        | Deep v pr m sf =>
+          (GHC.Base.op_zlztzg__
+             (GHC.Base.op_zlztzg__
+                (GHC.Base.fmap (Deep v) (Data.Traversable.traverse f pr))
+                ((Traversable__FingerTree_traverse (Data.Traversable.traverse f) m)))
+             (Data.Traversable.traverse f sf))
+      end.
+
+### more poly
+
+redefine Fixpoint Data.Sequence.adjustTree {a} `{_ : Sized a}
+     (f : (GHC.Num.Int -> (a -> a))) (i : GHC.Num.Int) (ft : FingerTree a)
+  : FingerTree a :=
+  match ft with
+  | Empty => error
+  | Single x => Single (f i x)
+  | Deep s pr m sf =>
+    let spr := size pr in
+    let spm := GHC.Num.op_zp__ spr (size m) in
+    if GHC.Base.op_zl__ i spr
+    then Deep s (adjustDigit f i pr) m sf
+    else if GHC.Base.op_zl__ i spm
+         then Deep s pr (adjustTree (adjustNode f) (GHC.Num.op_zm__ i spr) m) sf
+         else Deep s pr m (adjustDigit f (GHC.Num.op_zm__ i spm) sf)
+  end.
+
+redefine Fixpoint Data.Sequence.lookupTree {a} `{_ :Sized a} (i:GHC.Num.Int) (ft: FingerTree a) : Place a :=
+    match ft with
+    | Empty => error
+    | Single x => Mk_Place i x
+    | Deep totalSize pr m sf =>
+      let spm := GHC.Num.op_zm__ totalSize (size sf) in
+      let spr := size pr in
+      if GHC.Base.op_zl__ i spr
+      then lookupDigit i pr
+      else if  GHC.Base.op_zl__ i spm
+           then (match lookupTree (GHC.Num.op_zm__ i spr) m with
+                | Mk_Place i' xs => lookupNode i' xs
+                end)
+           else lookupDigit (GHC.Num.op_zm__ i spm) sf
+    end.
+
+order Data.Sequence.mapMulNode Data.Sequence.mapMulFT
+
+redefine Fixpoint Data.Sequence.mapMulFT {a} {b} (mul : GHC.Num.Int) (f : a -> b)
+           (ft : FingerTree a) : FingerTree b :=
+  match ft with
+  | Empty => Empty
+  | Single a => Single (f a)
+  | Deep s pr m sf => Deep (GHC.Num.op_zt__ mul s)
+                          (GHC.Base.fmap f pr)
+                          (mapMulFT mul (mapMulNode mul f) m) (GHC.Base.fmap f sf)
+  end.
+
+order Data.Sequence.deep Data.Sequence.node3 Data.Sequence.consTree Data.Sequence.snocTree
+
+redefine Fixpoint Data.Sequence.snocTree {a} `{_:Sized a} (arg_0__ : FingerTree a) (arg_1__ : a) : FingerTree a
+        :=
+		  match arg_0__ , arg_1__ with
+             | Empty , a => Single a
+             | Single a , b => deep (One a) Empty (One b)
+             | Deep s pr m (Four a b c d) , e => GHC.Prim.seq m (Deep (GHC.Num.op_zp__ s (size e)) pr
+                                                              (snocTree m (node3 a b c)) (Two d e))
+             | Deep s pr m (Three a b c) , d => Deep (GHC.Num.op_zp__ s (size d)) pr m (Four a b c d)
+             | Deep s pr m (Two a b) , c => Deep (GHC.Num.op_zp__ s (size c)) pr m (Three a b c)
+             | Deep s pr m (One a) , b => Deep (GHC.Num.op_zp__ s (size b)) pr m (Two a b)
+           end.
+
+
+redefine Fixpoint Data.Sequence.consTree {a} `{_: Sized a} (arg_0__ : a) (ft : FingerTree a) : FingerTree a :=
+        match arg_0__ , ft with
+             | a , Empty => Single a
+             | a , Single b => deep (One a) Empty (One b)
+             | a , Deep s (Four b c d e) m sf => GHC.Prim.seq m (Deep (GHC.Num.op_zp__ (size a) s)
+                                                              (Two a b) (consTree (node3 c d e) m) sf)
+             | a , Deep s (Three b c d) m sf => Deep (GHC.Num.op_zp__ (size a) s) (Four a b c d) m sf
+             | a , Deep s (Two b c) m sf => Deep (GHC.Num.op_zp__ (size a)  s) (Three a b c) m sf
+             | a , Deep s (One b) m sf => Deep (GHC.Num.op_zp__ (size a)  s) (Two a b) m sf
+           end.
+
+
+
+
+### State
+
+redefine Definition Data.Sequence.Applicative__State_op_zlztzg__ :
+			forall {s} {a} {b},
+    (State s (a -> b)) -> ((State s a) -> (State s b)) :=
+  fun {s} {a} {b} =>
+    fun m1 m2 =>
+      Monad__State_op_zgzgze__ m1
+        (fun x1 =>
+           Monad__State_op_zgzgze__ m2 (fun x2 =>
+                                          Applicative__State_pure (x1 x2))).
+
+redefine Definition Data.Sequence.Functor__State_fmap : forall {inst_s}
+		{a} {b}, (a -> b) -> ((State inst_s a) -> (State inst_s b)) :=
+ fun {inst_s} {a} {b} f sa => Monad__State_op_zgzgze__ sa (fun a => Applicative__State_pure (f a)).
+
+order Data.Sequence.Monad__State_op_zgzgze__ Data.Sequence.Applicative__State_pure  Data.Sequence.Functor__State_fmap Data.Sequence.Functor__State Data.Sequence.Applicative__State_op_ztzg__ Data.Sequence.Applicative__State_op_zlztzg__ Data.Sequence.Functor__State Data.Sequence.Applicative__State Data.Sequence.Monad__State_op_zgzg__ Data.Sequence.Monad__State_return_ Data.Sequence.Monad__State
+
+####
+## Data.Data
+skip Data.Sequence.consConstr
+skip Data.Sequence.seqDataType
+skip Data.Sequence.emptyConstr
+
+## arrays
+skip Data.Sequence.fromArray
+
+### type inference issue --- need to specialize fmap
+redefine Definition Data.Sequence.fmapSeq {a} {b} : (a -> b) -> ((Seq a) -> (Seq b)) :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
+      | f , Mk_Seq xs => Mk_Seq (Functor__FingerTree_fmap (GHC.Base.fmap f) xs)
+    end.
+
+#################
+
+
+
+redefine Local Definition Data.Sequence.Ord__ViewR_op_zg__ {inst_a}
+			`{_:GHC.Base.Ord inst_a} : (ViewR inst_a) -> ((ViewR inst_a) -> bool) :=
+  fun a b =>
+    match a with
+      | EmptyR => match b with
+                    | EmptyR => false
+                    | _ => false
+                  end
+      | op_ZCzg__ a1 a2 => match b with
+                             | op_ZCzg__ b1 b2 => match (GHC.Base.compare a1 b1) with
+                                                    | Lt => false
+                                                    | Eq => (GHC.Base.op_zg__ a2 b2)
+                                                    | Gt => true
+                                                  end
+                             | _ => true
+                           end
+    end.
+
+redefine Local Definition Data.Sequence.Ord__ViewR_op_zgze__ {inst_a}
+			`{_:GHC.Base.Ord inst_a} : (ViewR inst_a) -> ((ViewR inst_a) -> bool) :=
+  fun a b =>
+    match a with
+      | EmptyR => match b with
+                    | EmptyR => true
+                    | _ => false
+                  end
+      | op_ZCzg__ a1 a2 => match b with
+                             | op_ZCzg__ b1 b2 => match (GHC.Base.compare a1 b1) with
+                                                    | Lt => false
+                                                    | Eq => (GHC.Base.op_zgze__ a2 b2)
+                                                    | Gt => true
+                                                  end
+                             | _ => true
+                           end
+    end.
+
+redefine Definition Data.Sequence.Ord__ViewR_op_zl__ {inst_a}
+			`{_ :GHC.Base.Ord inst_a} : (ViewR inst_a) -> ((ViewR inst_a) -> bool) :=
+  fun a b =>
+    match a with
+      | EmptyR => match b with
+                    | EmptyR => false
+                    | _ => true
+                  end
+      | op_ZCzg__ a1 a2 => match b with
+                             | op_ZCzg__ b1 b2 => match (GHC.Base.compare a1 b1) with
+                                                    | Lt => true
+                                                    | Eq => (GHC.Base.op_zl__ a2 b2)
+                                                    | Gt => false
+                                                  end
+                             | _ => false
+                           end
+    end.
+
+redefine Local Definition Data.Sequence.Ord__ViewR_op_zlze__ {inst_a}
+			`{_:GHC.Base.Ord inst_a} : (ViewR inst_a) -> ((ViewR inst_a) -> bool) :=
+  fun a b =>
+    match a with
+      | EmptyR => match b with
+                    | EmptyR => true
+                    | _ => true
+                  end
+      | op_ZCzg__ a1 a2 => match b with
+                             | op_ZCzg__ b1 b2 => match (GHC.Base.compare a1 b1) with
+                                                    | Lt => true
+                                                    | Eq =>
+																	 (GHC.Base.op_zlze__ a2 b2)
+                                                    | Gt => false
+                                                  end
+                             | _ => false
+                           end
+    end.
+
+
+
+redefine Definition Data.Sequence.Ord__ViewL_op_zg__ {inst_a}
+			`{_: GHC.Base.Ord inst_a} : (ViewL inst_a) -> ((ViewL inst_a) -> bool) :=
+  fun a b =>
+    match a with
+      | EmptyL => match b with
+                    | EmptyL => false
+                    | _ => false
+                  end
+      | op_ZCzl__ a1 a2 => match b with
+                             | op_ZCzl__ b1 b2 =>
+                               match (GHC.Base.compare a1 b1) with
+                               | Lt => false
+                               | Eq => (GHC.Base.op_zg__ a2 b2)
+                               | Gt => true
+                               end
+                             | _ => true
+                          end
+    end.
+
+redefine Definition Data.Sequence.Ord__ViewL_op_zgze__ {inst_a}
+			`{_ :GHC.Base.Ord inst_a} : (ViewL inst_a) -> ((ViewL inst_a) -> bool) :=
+  fun a b =>
+    match a with
+      | EmptyL => match b with
+                    | EmptyL => true
+                    | _ => false
+                  end
+      | op_ZCzl__ a1 a2 => match b with
+                             | op_ZCzl__ b1 b2 => match (GHC.Base.compare a1 b1) with
+                                                    | Lt => false
+                                                    | Eq => (GHC.Base.op_zgze__ a2 b2)
+                                                    | Gt => true
+                                                  end
+                             | _ => true
+                           end
+    end.
+
+redefine Definition Data.Sequence.Ord__ViewL_op_zl__ {inst_a} `{_: GHC.Base.Ord inst_a} : (ViewL inst_a) -> ((ViewL inst_a) -> bool) :=
+  fun a b =>
+    match a with
+      | EmptyL => match b with
+                    | EmptyL => false
+                    | _ => true
+                  end
+      | op_ZCzl__ a1 a2 => match b with
+                             | op_ZCzl__ b1 b2 => match (GHC.Base.compare a1 b1) with
+                                                    | Lt => true
+                                                    | Eq => (GHC.Base.op_zl__ a2 b2)
+                                                    | Gt => false
+                                                  end
+                             | _ => false
+                           end
+    end.
+
+redefine Definition Data.Sequence.Ord__ViewL_op_zlze__ {inst_a}
+			`{_ : GHC.Base.Ord inst_a}: (ViewL inst_a) -> ((ViewL inst_a) -> bool) :=
+  fun a b =>
+    match a with
+      | EmptyL => match b with
+                    | EmptyL => true
+                    | _ => true
+                  end
+      | op_ZCzl__ a1 a2 => match b with
+                             | op_ZCzl__ b1 b2 => match (GHC.Base.compare a1 b1) with
+                                                    | Lt => true
+                                                    | Eq => (GHC.Base.op_zlze__ a2 b2)
+                                                    | Gt => false
+                                                  end
+                             | _ => false
+                           end
+    end.

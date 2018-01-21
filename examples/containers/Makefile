@@ -20,6 +20,7 @@ OUT=lib
 HANDMOD = \
   Data/IntMap \
   Data/IntMap/Base \
+  Data/SequenceManual \
 
 # Generated modules
 # generated directly from GHC/libraries/containers
@@ -27,6 +28,7 @@ MODULES = \
   Data/Set/Base \
   Data/Map/Base \
   Data/IntSet/Base \
+
 
 # generated from drop-in/
 DROPIN =

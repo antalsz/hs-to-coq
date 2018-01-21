@@ -106,6 +106,7 @@ endif
 
 VFILES:=Data/IntMap.v\
   Data/IntMap/Base.v\
+  Data/SequenceManual.v\
   Data/Set/Base.v\
   Data/Map/Base.v\
   Data/IntSet/Base.v

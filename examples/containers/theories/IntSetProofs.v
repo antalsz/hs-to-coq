@@ -3119,17 +3119,10 @@ Definition union_body s1 s2 := match s1, s2 with
 Lemma union_eq s1 s2 :
   union s1 s2 = union_body s1 s2.
 Proof.
-(*   unfold union, union_func, union_body.
-  simpl.
-  rewrite Wf.fix_sub_eq.
-  destruct s1, s2; try reflexivity.
-  intros.
-  destruct x; try reflexivity.
-  destruct x; try reflexivity.
-  destruct i; try reflexivity.
-  simpl.
-  rewrite H. *)
-Admitted.
+  unfold union, union_func.
+  rewrite Wf.WfExtensionality.fix_sub_eq_ext.
+  destruct s1, s2; reflexivity.
+Qed.
 
 Program Fixpoint union_Desc
   s1 r1 f1 s2 r2 f2 f
@@ -3263,38 +3256,46 @@ Definition intersection_body s1 s2 := match s1, s2 with
                                                      r2)
                  else Nil
   | (Bin _ _ _ _ as t1) , Tip kx2 bm2 =>
-    let fix intersectBM arg_11__
-         := match arg_11__ with
-              | Bin p1 m1 l1 r1 => if nomatch kx2 p1 m1 : bool
-                                   then Nil
-                                   else if zero kx2 m1 : bool
-                                        then intersectBM l1
-                                        else intersectBM r1
-              | Tip kx1 bm1 => if kx1 GHC.Base.== kx2 : bool
-                               then tip kx1 (bm1 Data.Bits..&.(**) bm2)
-                               else Nil
-              | Nil => Nil
-            end in  intersectBM t1
+     (fix intersectBM arg_11__
+     := match arg_11__ as arg_11__' return (arg_11__' = arg_11__ -> IntSet) with
+          | Bin p1 m1 l1 r1 => fun _ =>
+                               if nomatch kx2 p1 m1 : bool
+                               then Nil
+                               else if zero kx2 m1 : bool
+                                    then intersectBM l1
+                                    else intersectBM r1
+          | Tip kx1 bm1 => fun _ =>
+                           if kx1 GHC.Base.== kx2 : bool
+                           then tip kx1 (bm1 Data.Bits..&.(**) bm2)
+                           else Nil
+          | Nil => fun _ => Nil
+      end eq_refl) t1
   | Bin _ _ _ _ , Nil => Nil
   | Tip kx1 bm1 , t2 =>
-      let fix intersectBM arg_18__
-          := match arg_18__ with
-               | Bin p2 m2 l2 r2 => if nomatch kx1 p2 m2 : bool
+      (fix intersectBM arg_18__
+          := match arg_18__  as arg_18__' return (arg_18__' = arg_18__ -> IntSet) with
+               | Bin p2 m2 l2 r2 => fun _ =>
+                                    if nomatch kx1 p2 m2 : bool
                                     then Nil
                                     else if zero kx1 m2 : bool
                                          then intersectBM l2
                                          else intersectBM r2
-               | Tip kx2 bm2 => if kx1 GHC.Base.== kx2 : bool
+               | Tip kx2 bm2 => fun _ =>
+                                if kx1 GHC.Base.== kx2 : bool
                                 then tip kx1 (bm1 Data.Bits..&.(**) bm2)
                                 else Nil
-               | Nil => Nil
-             end in intersectBM t2
+               | Nil => fun _ => Nil
+             end eq_refl) t2
   | Nil , _ => Nil
   end.
 
 Lemma intersection_eq s1 s2 :
   intersection s1 s2 = intersection_body s1 s2.
-Admitted.
+Proof.
+  unfold intersection, intersection_func.
+  rewrite Wf.WfExtensionality.fix_sub_eq_ext.
+  destruct s1, s2; try reflexivity.
+Qed.
 
 Program Fixpoint intersection_Desc
   s1 r1 f1 s2 r2 f2 f
@@ -3348,15 +3349,17 @@ Next Obligation.
 
       (* Need to undo the split of s1 *)
       change (Desc0 ((fix intersectBM (arg_11__ : IntSet) : IntSet :=
-        match arg_11__ with
+        match arg_11__  as arg_11__' return (arg_11__' = arg_11__ -> IntSet) with
         | Bin p1 m1 l1 r5 =>
+            fun _ =>
             if nomatch p0 p1 m1
             then Nil
             else if zero p0 m1 then intersectBM l1 else intersectBM r5
         | Tip kx1 bm1 =>
+            fun _ =>
             if _GHC.Base.==_ kx1 p0 then tip kx1 (N.land bm1 bm) else Nil
-        | Nil => Nil
-        end) (Bin p msk s0 s3)) (commonRange r1 r2) f).
+        | Nil => fun _ => Nil
+        end eq_refl) (Bin p msk s0 s3)) (commonRange r1 r2) f).
       rewrite  H7.
       clear dependent s0. clear dependent s3. clear dependent r0. clear dependent r3. clear dependent f0. clear dependent f3.
       clear H1.
@@ -3522,25 +3525,30 @@ Definition difference_body s1 s2 := match s1, s2 with
   | (Bin _ _ _ _ as t) , Tip kx bm => deleteBM kx bm t
   | (Bin _ _ _ _ as t) , Nil => t
   | (Tip kx bm as t1) , t2 =>
-     let fix differenceTip arg_12__
-        := match arg_12__ with
-             | Bin p2 m2 l2 r2 => if nomatch kx p2 m2 : bool
+     (fix differenceTip arg_12__
+        := match arg_12__ as arg_12__' return (arg_12__' = arg_12__ -> IntSet) with 
+             | Bin p2 m2 l2 r2 => fun _ =>
+                                  if nomatch kx p2 m2 : bool
                                   then t1
                                   else if zero kx m2 : bool
                                        then differenceTip l2
                                        else differenceTip r2
-             | Tip kx2 bm2 => if kx GHC.Base.== kx2 : bool
+             | Tip kx2 bm2 => fun _ =>
+                              if kx GHC.Base.== kx2 : bool
                               then tip kx (Data.Bits.xor bm (bm Data.Bits..&.(**) bm2))
                               else t1
-             | Nil => t1
-           end in
-    differenceTip t2
+             | Nil => fun _ => t1
+           end eq_refl) t2
   | Nil , _ => Nil
   end.
 
 Lemma difference_eq s1 s2 :
   difference s1 s2 = difference_body s1 s2.
-Admitted.
+Proof.
+  unfold difference, difference_func.
+  rewrite Wf.WfExtensionality.fix_sub_eq_ext.
+  destruct s1, s2; reflexivity.
+Qed.
 
 Program Fixpoint difference_Desc
   s1 r1 f1 s2 r2 f2 f

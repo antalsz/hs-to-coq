@@ -51,6 +51,7 @@ Module Foo (E : OrderedType) : WSfun(E).
   Definition pack (s : Set_ elt) (H : WF s): t := exist _ s H.
 
   Ltac rewrite_size :=
+    unfold Size in *;
     repeat match goal with
            | [ |- _ ] => rewrite ![size (Bin _ _ _ _)]/size
            | [ |- _ ] => rewrite ![size Tip]/size
@@ -548,27 +549,19 @@ Module Foo (E : OrderedType) : WSfun(E).
           try solve [intros; derive_constraints; subst;
                      rewrite_for_omega; intros; omega].
         destruct_match; intros;
-          rewrite_size; rewrite_Int; (* why can't [omega] solve it? *)
-            rewrite -Z.add_assoc [1 + _]Z.add_comm //.
-      + intros. rewrite_size; rewrite_Int.
-        rewrite -Z.add_assoc [1 + _]Z.add_comm //.
-    - intros. rewrite_size; rewrite_Int.
-      rewrite Z.add_0_l Z.add_comm //.
+          rewrite_size; rewrite_Int; omega.
+      + intros. rewrite_size; rewrite_Int; omega.
+    - intros. rewrite_size; rewrite_Int; omega.
     - rewrite /balanceL;
         destruct ll as [sll xll lll llr | ];
         destruct lr as [slr xlr lrl lrr | ].
-      + destruct_match; intros; rewrite_size; rewrite_Int;
-          rewrite -Z.add_assoc Z.add_0_l Z.add_comm //.
+      + destruct_match; intros; rewrite_size; rewrite_Int; omega.
       + intros. derive_constraints; subst.
-        destruct Hbalanced; rewrite_for_omega.
-        * intros. have Hs: (size lll + size llr = 0) by omega. rewrite Hs //.
-        * intros. omega.
+        destruct Hbalanced; rewrite_for_omega; intros; omega.
       + intros. derive_constraints; subst.
-        destruct Hbalanced; rewrite_for_omega.
-        * intros. have Hs: (size lrl + size lrr = 0) by omega. rewrite Hs //.
-        * intros. omega.
+        destruct Hbalanced; rewrite_for_omega; intros; omega.
       + intros; derive_constraints. move: Hsum.
-        rewrite_for_omega. intros. rewrite -Hsum. reflexivity.
+        rewrite_for_omega. intros; omega.
     - rewrite_size. do 2 elim. rewrite_Int. reflexivity.
   Qed.
 

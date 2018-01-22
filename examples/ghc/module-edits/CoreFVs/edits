@@ -1,0 +1,20 @@
+skip module Coercion
+skip module Type
+skip module	FamInstEnv
+
+rename value CoreFVs.FVAnn = CoreFVs.Mk_FVAnn
+
+
+# notation
+rename type CoreSyn.AnnExpr = AnnExpr
+rename type CoreSyn.AnnAlt = AnnAlt
+
+skip CoreFVs.orphNamesOfFamInst  # needs FamInstEnv
+
+skip CoreFVs.tickish_fvs
+
+## mutual recursion /
+skip CoreFVs.exprOrphNames
+skip CoreFVs.orphNamesOfCo
+skip CoreFVs.freeVars
+skip CoreFVs.expr_fvs

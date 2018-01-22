@@ -111,11 +111,11 @@ Parameter mkKindCo : forall {A}, A.
 Definition Type_isCoercionTy (t : Type_) : bool :=
   match t with
   | CoercionTy _ => true | _ => false end.
+Parameter Type_isCoercionTy_maybe : forall {A}, A.
 Definition Type_isPredTy : Type_ -> bool. Admitted.
 Axiom piResultTys : forall {A : Type}, A.
 Axiom piResultTy : forall {A : Type}, A.
-Parameter Type_isCoercionTy_maybe : forall {A}, A.
-
+Parameter eqType : Core.Type_ -> Core.Type_ -> bool.
 
 Definition Type_mkTyConApp : Core.TyCon -> list Core.Type_ -> Core.Type_ :=
   fun tycon tys =>

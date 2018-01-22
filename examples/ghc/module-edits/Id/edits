@@ -2,15 +2,6 @@
 
 skip module Type
 
-rename value IdInfo.demandInfo        = IdInfo2.demandInfo
-rename value IdInfo.strictnessInfo    = IdInfo2.strictnessInfo
-rename value IdInfo.unfoldingInfo     = IdInfo2.unfoldingInfo
-rename value IdInfo.setDemandInfo     = IdInfo2.setDemandInfo
-rename value IdInfo.setStrictnessInfo = IdInfo2.setStrictnessInfo
-rename value IdInfo.setUnfoldingInfo  = IdInfo2.setUnfoldingInfo
-rename value IdInfo.setUnfoldingInfoLazily  = IdInfo2.setUnfoldingInfoLazily
-rename value IdInfo.ruleInfoFreeVars  = IdInfo2.ruleInfoFreeVars
-rename value IdInfo.ruleInfoRules     = IdInfo2.ruleInfoRules
 
 ##############
 

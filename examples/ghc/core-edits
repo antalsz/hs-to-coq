@@ -23,6 +23,10 @@ rename value DataCon.EqSpec    = DataCon.Mk_EqSpec
 rename value Class.Class       = Class.Mk_Class
 rename value IdInfo.RuleInfo   = IdInfo.Mk_RuleInfo
 rename value CoAxiom           = Core.Mk_CoAxiom
+rename value TyCoRep.TCvSubst  = TyCoRep.Mk_TCvSubst
+rename value CoreFVs.FVAnn = CoreFVs.Mk_FVAnn
+rename value CoreSubst.Subst = CoreSubst.Mk_Subst
+
 
 
 # Note [Strict positivity]
@@ -153,3 +157,30 @@ rename value Class.classTyVars = Core.classTyVars
 rename value Class.classMethods = Core.classMethods
 rename value Class.classAllSelIds = Core.classAllSelIds
 rename value Class.classArity = Core.classArity
+
+rename value IdInfo.demandInfo        = IdInfo2.demandInfo
+rename value IdInfo.strictnessInfo    = IdInfo2.strictnessInfo
+rename value IdInfo.unfoldingInfo     = IdInfo2.unfoldingInfo
+rename value IdInfo.setDemandInfo     = IdInfo2.setDemandInfo
+rename value IdInfo.setStrictnessInfo = IdInfo2.setStrictnessInfo
+rename value IdInfo.setUnfoldingInfo  = IdInfo2.setUnfoldingInfo
+rename value IdInfo.setUnfoldingInfoLazily  = IdInfo2.setUnfoldingInfoLazily
+rename value IdInfo.ruleInfoFreeVars  = IdInfo2.ruleInfoFreeVars
+rename value IdInfo.ruleInfoRules     = IdInfo2.ruleInfoRules
+
+####
+
+rename value Type.isCoercionTy_maybe = TyCoRep.Type_isCoercionTy_maybe
+rename value Type.isCoercionTy       = TyCoRep.Type_isCoercionTy
+rename value Type.eqType             = TyCoRep.eqType
+
+
+rename value Coercion.coercionKind   = TyCoRep.coercionKind
+rename value Coercion.mkCoercionType = TyCoRep.mkCoercionType
+rename value Coercion.mkSymCo        = TyCoRep.mkSymCo
+rename value Coercion.mkTransCo      = TyCoRep.mkTransCo
+rename value Coercion.mkCoVarCo      = TyCoRep.mkCoVarCo
+rename value Coercion.isReflCo       = TyCoRep.isReflCo
+rename value Coercion.mkTyConAppCo   = TyCoRep.mkTyConAppCo
+rename value Coercion.mkAppCo        = TyCoRep.mkAppCo
+rename value Coercion.mkForAllCo     = TyCoRep.mkForAllCo

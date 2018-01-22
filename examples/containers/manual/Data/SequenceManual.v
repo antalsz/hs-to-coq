@@ -3585,10 +3585,8 @@ Definition aptyMiddle {c} {d} {a} {b}
                                     (GHC.Base.fmap lastf q))
   end. *)
 
-Local Definition Applicative__Seq_op_zlztzg__ : forall {a} {b}, Seq (a -> b) -> Seq a -> Seq b := error.
-(*
-  fun {a} {b} =>
-    fun arg_0__ arg_1__ =>
+Local Definition Applicative__Seq_op_zlztzg__ : forall {a} {b}, Seq (a -> b) -> Seq a -> Seq b := error. (*
+  fun {a} {b} arg_0__ arg_1__ =>
       match arg_0__ , arg_1__ with
         | fs , (Mk_Seq xsFT as xs) =>
           match viewl fs with
@@ -3599,10 +3597,7 @@ Local Definition Applicative__Seq_op_zlztzg__ : forall {a} {b}, Seq (a -> b) -> 
             | op_ZCzg__ (Mk_Seq fs''FT) lastf =>
               match rigidify xsFT with
               | RigidEmpty => empty
-              | RigidOne (Mk_Elem x) => GHC.Base.fmap   (fun arg_6__ =>
-                                                          arg_6__
-                                                            GHC.Base.$
-                                                            x) fs
+              | RigidOne (Mk_Elem x) => GHC.Base.fmap   (fun arg_6__ => arg_6__ x) fs
               | RigidTwo (Mk_Elem x1) (Mk_Elem x2) =>
                 Mk_Seq
                   GHC.Base.$
@@ -3622,14 +3617,21 @@ Local Definition Applicative__Seq_op_zlztzg__ : forall {a} {b}, Seq (a -> b) -> 
                               x2)
                            x3)
               | RigidFull (Mk_Rigid s pr _m sf as r) =>
+                (* firstf : a -> b
+                   lastf : a -> b
+                   fs''FT : FingerTree (Elem (a -> b))
+                   r : Rigid (Elem a)
+                 *)
                 Mk_Seq
                   (Deep (s * length fs)
-                        (GHC.Base.fmap (GHC.Base.fmap firstf) (nodeToDigit pr))
-                        (aptyMiddle
-                           (GHC.Base.fmap  firstf)
+                        (GHC.Base.fmap (GHC.Base.fmap firstf) (nodeToDigit pr))  (* Digit (Elem b) *)
+                        (@aptyMiddle (Elem a) (Elem b) a b   (* FingerTree (Node (Elem b)) *)
+                           (GHC.Base.fmap firstf)
                            (GHC.Base.fmap  lastf)
-                           GHC.Base.fmap  fs''FT r)
-                        (GHC.Base.fmap (GHC.Base.fmap  lastf) (nodeToDigit sf)))
+                           GHC.Base.fmap
+                           fs''FT
+                           r)
+                        (GHC.Base.fmap (GHC.Base.fmap  lastf) (nodeToDigit sf))) (* Digit (Elem b) *)
               end
             end
           end

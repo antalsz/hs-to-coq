@@ -186,23 +186,17 @@ Definition idOneShotInfo : Var.Id -> BasicTypes.OneShotInfo :=
 
 Definition isOneShotLambda : Var.Id -> bool :=
   fun id =>
-    let scrut_0__ := idOneShotInfo id in
-    match scrut_0__ with
+    match idOneShotInfo id with
       | BasicTypes.OneShotLam => true
       | _ => false
     end.
 
 Definition isOneShotBndr : Core.Var -> bool :=
-  fun var =>
-    let j_0__ := isOneShotLambda var in
-    if Var.isTyVar var : bool
-    then true
-    else j_0__.
+  fun var => if Var.isTyVar var : bool then true else isOneShotLambda var.
 
 Definition isProbablyOneShotLambda : Var.Id -> bool :=
   fun id =>
-    let scrut_0__ := idOneShotInfo id in
-    match scrut_0__ with
+    match idOneShotInfo id with
       | BasicTypes.OneShotLam => true
       | BasicTypes.ProbOneShot => true
       | BasicTypes.NoOneShotInfo => false
@@ -229,23 +223,20 @@ Definition idType : Var.Id -> Kind :=
 Definition localiseId : Var.Id -> Var.Id :=
   fun id =>
     let name := idName id in
-    let j_1__ :=
-      Var.mkLocalVar (Var.idDetails id) (Name.localiseName name) (idType id)
-      (Var.idInfo id) in
     if (if andb Util.debugIsOn (negb (Var.isId id)) : bool
        then (Panic.assertPanic (GHC.Base.hs_string__ "ghc/compiler/basicTypes/Id.hs")
             (GHC.Num.fromInteger 193))
        else andb (Var.isLocalId id) (Name.isInternalName name)) : bool
     then id
-    else j_1__.
+    else Var.mkLocalVar (Var.idDetails id) (Name.localiseName name) (idType id)
+         (Var.idInfo id).
 
 Definition idUnfolding : Var.Id -> CoreSyn.Unfolding :=
   fun id =>
     let info := Var.idInfo id in
-    let j_1__ := unfoldingInfo info in
     if BasicTypes.isStrongLoopBreaker (occInfo info) : bool
     then CoreSyn.NoUnfolding
-    else j_1__.
+    else unfoldingInfo info.
 
 Definition idUnique : Var.Id -> Unique.Unique :=
   Var.varUnique.
@@ -324,8 +315,7 @@ Definition setIdOneShotInfo : Var.Id -> BasicTypes.OneShotInfo -> Var.Id :=
 Definition updOneShotInfo : Var.Id -> BasicTypes.OneShotInfo -> Var.Id :=
   fun id one_shot =>
     let do_upd :=
-      let scrut_0__ := pair (idOneShotInfo id) one_shot in
-      match scrut_0__ with
+      match pair (idOneShotInfo id) one_shot with
         | pair BasicTypes.NoOneShotInfo _ => true
         | pair BasicTypes.OneShotLam _ => false
         | pair _ BasicTypes.NoOneShotInfo => false

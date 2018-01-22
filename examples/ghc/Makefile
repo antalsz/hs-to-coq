@@ -79,6 +79,8 @@ CORE_MODULES = \
   CoreUtils \
   CoAxiom \
   Id \
+  CoreFVs \
+
 
 VFILES_GEN = $(addprefix $(OUT)/,$(addsuffix .v,$(MODULES)))
 VFILES_MAN = $(addprefix $(OUT)/,$(addsuffix .v,$(HANDMOD)))

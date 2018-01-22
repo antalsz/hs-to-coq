@@ -163,7 +163,8 @@ VFILES:=FastString.v\
   Demand.v\
   CoreUtils.v\
   CoAxiom.v\
-  Id.v
+  Id.v\
+  CoreFVs.v
 
 ifneq ($(filter-out archclean clean cleanall printenv,$(MAKECMDGOALS)),)
 -include $(addsuffix .d,$(VFILES))

@@ -135,10 +135,6 @@ Axiom unsafeFix : forall {a}, (a -> a) -> a.
    OOPS! Cannot find information for class Qualified "Control.DeepSeq" "NFData"
    unsupported *)
 
-Axiom indexOfTheOnlyBit : forall {A : Type}, A.
-
-(* Translating `indexOfTheOnlyBit' failed: `Addr#' literals unsupported *)
-
 Definition bin : Prefix -> Mask -> IntSet -> IntSet -> IntSet :=
   fun arg_0__ arg_1__ arg_2__ arg_3__ =>
     match arg_0__ , arg_1__ , arg_2__ , arg_3__ with
@@ -184,7 +180,7 @@ Local Definition Eq___IntSet_op_zeze__ : IntSet -> IntSet -> bool :=
   fun t1 t2 => equal t1 t2.
 
 Definition highestBitSet : Nat -> GHC.Num.Int :=
-  fun x => indexOfTheOnlyBit (highestBitMask x).
+  fun x => Coq.ZArith.BinInt.Z.of_N (Coq.NArith.BinNat.N.log2 (highestBitMask x)).
 
 Definition unsafeFindMax : IntSet -> option Key :=
   fix unsafeFindMax arg_0__
@@ -198,7 +194,7 @@ Definition lowestBitMask : Nat -> Nat :=
   fun x => x Data.Bits..&.(**) GHC.Num.negate x.
 
 Definition lowestBitSet : Nat -> GHC.Num.Int :=
-  fun x => indexOfTheOnlyBit (lowestBitMask x).
+  fun x => Coq.ZArith.BinInt.Z.of_N (Coq.NArith.BinNat.N.log2 (lowestBitMask x)).
 
 Definition unsafeFindMin : IntSet -> option Key :=
   fix unsafeFindMin arg_0__
@@ -216,7 +212,8 @@ Definition foldlBits {a}
                   if bm GHC.Base.== GHC.Num.fromInteger 0 : bool
                   then acc
                   else match lowestBitMask bm with
-                         | bitmask => GHC.Prim.seq bitmask (match indexOfTheOnlyBit bitmask with
+                         | bitmask => GHC.Prim.seq bitmask (match Coq.ZArith.BinInt.Z.of_N
+                                                                    (Coq.NArith.BinNat.N.log2 bitmask) with
                                                      | bi => GHC.Prim.seq bi (go (Data.Bits.xor bm bitmask) ((f acc)
                                                                                                             GHC.Base.$!
                                                                                                             (prefix
@@ -259,7 +256,9 @@ Definition foldl'Bits {a}
                       | bm , acc => if bm GHC.Base.== GHC.Num.fromInteger 0 : bool
                                     then acc
                                     else match lowestBitMask bm with
-                                           | bitmask => GHC.Prim.seq bitmask (match indexOfTheOnlyBit bitmask with
+                                           | bitmask => GHC.Prim.seq bitmask (match Coq.ZArith.BinInt.Z.of_N
+                                                                                      (Coq.NArith.BinNat.N.log2
+                                                                                      bitmask) with
                                                                        | bi => GHC.Prim.seq bi (go (Data.Bits.xor bm
                                                                                                                   bitmask)
                                                                                             ((f acc) GHC.Base.$! (prefix
@@ -395,7 +394,8 @@ Definition foldrBits {a}
                   if bm GHC.Base.== GHC.Num.fromInteger 0 : bool
                   then acc
                   else match lowestBitMask bm with
-                         | bitmask => GHC.Prim.seq bitmask (match indexOfTheOnlyBit bitmask with
+                         | bitmask => GHC.Prim.seq bitmask (match Coq.ZArith.BinInt.Z.of_N
+                                                                    (Coq.NArith.BinNat.N.log2 bitmask) with
                                                      | bi => GHC.Prim.seq bi (go (Data.Bits.xor bm bitmask) ((f
                                                                                                             GHC.Base.$!
                                                                                                             ((prefix
@@ -482,7 +482,9 @@ Definition foldr'Bits {a}
                       | bm , acc => if bm GHC.Base.== GHC.Num.fromInteger 0 : bool
                                     then acc
                                     else match lowestBitMask bm with
-                                           | bitmask => GHC.Prim.seq bitmask (match indexOfTheOnlyBit bitmask with
+                                           | bitmask => GHC.Prim.seq bitmask (match Coq.ZArith.BinInt.Z.of_N
+                                                                                      (Coq.NArith.BinNat.N.log2
+                                                                                      bitmask) with
                                                                        | bi => GHC.Prim.seq bi (go (Data.Bits.xor bm
                                                                                                                   bitmask)
                                                                                             ((f GHC.Base.$! ((prefix
@@ -1095,13 +1097,14 @@ End Notations.
 (* Unbound variables:
      Eq Gt Lt None Some andb bool comparison cons false highestBitMask id list negb
      nil op_zp__ op_zt__ option orb pair shiftLL shiftRL size_nat suffixBitMask true
-     Coq.ZArith.BinInt.Z.eqb Coq.ZArith.BinInt.Z.land Coq.ZArith.BinInt.Z.lnot
-     Coq.ZArith.BinInt.Z.log2 Coq.ZArith.BinInt.Z.lxor Coq.ZArith.BinInt.Z.of_N
-     Coq.ZArith.BinInt.Z.pow Coq.ZArith.BinInt.Z.pred Data.Bits.complement
-     Data.Bits.op_zizazi__ Data.Bits.op_zizbzi__ Data.Bits.popCount Data.Bits.xor
-     Data.Foldable.foldl GHC.Base.Eq_ GHC.Base.Ord GHC.Base.String GHC.Base.compare
-     GHC.Base.flip GHC.Base.map GHC.Base.op_z2218U__ GHC.Base.op_zd__
-     GHC.Base.op_zdzn__ GHC.Base.op_zeze__ GHC.Base.op_zg__ GHC.Base.op_zgze__
-     GHC.Base.op_zl__ GHC.Base.op_zsze__ GHC.Num.Int GHC.Num.Word GHC.Num.negate
-     GHC.Num.op_zm__ GHC.Num.op_zp__ GHC.Prim.seq GHC.Real.fromIntegral
+     Coq.NArith.BinNat.N.log2 Coq.ZArith.BinInt.Z.eqb Coq.ZArith.BinInt.Z.land
+     Coq.ZArith.BinInt.Z.lnot Coq.ZArith.BinInt.Z.log2 Coq.ZArith.BinInt.Z.lxor
+     Coq.ZArith.BinInt.Z.of_N Coq.ZArith.BinInt.Z.pow Coq.ZArith.BinInt.Z.pred
+     Data.Bits.complement Data.Bits.op_zizazi__ Data.Bits.op_zizbzi__
+     Data.Bits.popCount Data.Bits.xor Data.Foldable.foldl GHC.Base.Eq_ GHC.Base.Ord
+     GHC.Base.String GHC.Base.compare GHC.Base.flip GHC.Base.map GHC.Base.op_z2218U__
+     GHC.Base.op_zd__ GHC.Base.op_zdzn__ GHC.Base.op_zeze__ GHC.Base.op_zg__
+     GHC.Base.op_zgze__ GHC.Base.op_zl__ GHC.Base.op_zsze__ GHC.Num.Int GHC.Num.Word
+     GHC.Num.negate GHC.Num.op_zm__ GHC.Num.op_zp__ GHC.Prim.seq
+     GHC.Real.fromIntegral
 *)

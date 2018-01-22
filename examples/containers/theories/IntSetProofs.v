@@ -3776,10 +3776,14 @@ Lemma inRange_bounds_true:
   inRange i r = true.
 Admitted.
 
+Lemma isBitMask0_lowestBitMask:
+  forall bm, isBitMask0 bm -> isBitMask0 (lowestBitMask bm).
+Admitted.
 
 Lemma In_foldrBits_cons:
   forall i r bm l,
   isBitMask0 bm ->
+  rBits r = N.log2 WIDTH ->
   In i (foldrBits (rPrefix r) cons l bm) <-> (bitmapInRange r bm i = true \/ In i l).
 Proof.
   intros.
@@ -3808,19 +3812,39 @@ Proof.
   * rewrite -> IH by admit.
     unfold bitmapInRange.
     destruct (inRange i r) eqn:Hir.
-    + rewrite revNat_lxor; try assumption.
-      rewrite N.lxor_spec.
-      admit.
-      admit.
+    + assert (Z.to_N (Z.land i (Z.ones (Z.of_N (rBits r)))) < WIDTH)%N.
+      { replace (rBits r). simpl Z.ones.
+        apply N2Z.inj_lt.
+        rewrite Z2N.id by nonneg.
+        rewrite Z.land_ones by omega.
+        apply Z_mod_lt.
+        reflexivity.
+      }
+      rewrite revNat_lxor by (try apply isBitMask0_lowestBitMask; assumption).
+      rewrite N.lxor_spec by (apply isBitMask0_lowestBitMask; assumption).
+      rewrite revNat_spec by assumption.
+      rewrite revNat_spec by (try apply isBitMask0_lowestBitMask; assumption).
+      rewrite Z.land_ones by nonneg.
+      simpl In.
+
+      destruct (Z.eqb_spec (rPrefix r + 63 - Z.of_N (N.log2 (lowestBitMask bm))) i).
+      -- subst i. admit.
+      -- admit. 
     + intuition.
-      destruct H0.
+      destruct H1.
       -- exfalso.
          subst.
          rewrite <- not_true_iff_false in Hir.
          contradiction Hir; clear Hir.
-         assert (0 <= @indexOfTheOnlyBit (Nat -> Int) (lowestBitMask bm)) by admit.
-         assert (@indexOfTheOnlyBit (Nat -> Int) (lowestBitMask bm) < 64) by admit.
-         apply inRange_bounds_true; simpl Z.of_N; try omega.
+         assert (Z.of_N (N.log2 (lowestBitMask bm)) < 64).
+         {
+           change (Z.of_N (N.log2 (lowestBitMask bm)) < Z.of_N 64%N).
+           apply N2Z.inj_lt.
+           apply N.log2_lt_pow2.
+           * admit.
+           * apply isBitMask0_lowestBitMask; assumption.
+         }
+         apply inRange_bounds_true; simpl Z.of_N; Nomega.
       -- intuition.
 Admitted.
 
@@ -3841,9 +3865,9 @@ Proof.
   destruct HS.
   * intuition. rewrite H in H1. congruence.
   * induction HD; intros; simpl; subst.
-    + rewrite In_foldrBits_cons by (apply isBitMask_isBitMask0; auto).
-      rewrite H2.
-      reflexivity.
+    + rewrite In_foldrBits_cons
+        by (try apply isBitMask_isBitMask0; assumption).
+      rewrite H2; reflexivity.
     + unfold op_zl__, Ord_Integer___, op_zl____.
       rewrite <- IHHD1.
       rewrite <- IHHD2.

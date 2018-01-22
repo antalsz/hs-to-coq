@@ -3,6 +3,10 @@ Import Notations.
 Require Import GHC.Num.
 Import Notations.
 
+Require Import IntToZ.
+Require OrdTheories.
+Require Import Tactics.
+
 Require Import Data.Set.Base.
 Require Import Coq.FSets.FSetInterface.
 
@@ -11,80 +15,6 @@ Require Import Omega.
 From mathcomp Require Import ssrbool ssreflect.
 
 Local Open Scope Z_scope.
-
-(** This should be in a separate file, but let's keep it here for
-    convenience for now. *)
-Section Int_And_Z.
-  Variables a b : Int.
-
-  Lemma Int_plus_is_Z_plus :
-    a GHC.Num.+ b = (a + b).
-  Proof. rewrite /_GHC.Num.+_. reflexivity. Qed.
-
-  Lemma Int_minus_is_Z_minus :
-    a GHC.Num.- b = (a - b).
-  Proof. rewrite /_GHC.Num.-_. reflexivity. Qed.
-
-  Lemma Int_mult_is_Z_mult :
-    a GHC.Num.* b = (a * b).
-  Proof. rewrite /_GHC.Num.*_. reflexivity. Qed.
-
-  Lemma Int_lt_is_Z_lt :
-    a GHC.Base.< b = (a <? b).
-  Proof. rewrite /_GHC.Base.<_. reflexivity. Qed.
-
-  Lemma Int_le_is_Z_le :
-    a GHC.Base.<= b = (a <=? b).
-  Proof. rewrite /_GHC.Base.<=_. reflexivity. Qed.
-
-  Lemma Int_gt_is_Z_gt :
-    a GHC.Base.> b = (b <? a).
-  Proof. rewrite /_GHC.Base.>_. reflexivity. Qed.
-
-  Lemma Int_ge_is_Z_ge :
-    a GHC.Base.>= b = (b <=? a).
-  Proof. rewrite /_GHC.Base.>=_. reflexivity. Qed.
-
-  Lemma Int_eq_is_Z_eq :
-    a GHC.Base.== b = (Z.eqb a b).
-  Proof. rewrite /_GHC.Base.==_. reflexivity. Qed.
-
-  Lemma Int_is_Z : forall a : Z,
-      # a = a.
-  Proof. reflexivity. Qed.
-
-End Int_And_Z.
-
-Ltac rewrite_Int :=
-  repeat (rewrite ?Int_plus_is_Z_plus ?Int_minus_is_Z_minus
-                  ?Int_mult_is_Z_mult
-                  ?Int_lt_is_Z_lt ?Int_le_is_Z_le
-                  ?Int_ge_is_Z_ge ?Int_gt_is_Z_gt
-                  ?Int_eq_is_Z_eq ?Int_is_Z).
-
-Section ZReflect.
-  Variables a b : Z.
-
-  Lemma Z_eqP : reflect (a = b) (a =? b).
-  Proof.
-    destruct (a =? b) eqn:Hab; constructor; move: Hab.
-    - move /Z.eqb_eq  =>//.
-    - move /Z.eqb_neq =>//.
-  Qed.
-
-  Lemma Z_ltP : reflect (a < b) (a <? b).
-  Proof.
-    destruct (a <? b) eqn:Hab; constructor; move: Hab.
-    - move /Z.ltb_lt =>//.
-    - move /Z.ltb_nlt =>//.
-  Qed.
-End ZReflect.
-
-Arguments Z_eqP {a} {b}.
-Arguments Z_ltP {a} {b}.
-
-Lemma Z_gtP { a b }: reflect (b < a) (a >? b).
-Proof. rewrite Z.gtb_ltb. apply Z_ltP. Qed.
 
 Section Option_Int.
   Variables a b : option Int.
@@ -112,144 +42,13 @@ Section Option_Int.
 End Option_Int.
 
 Module Foo (E : OrderedType) : WSfun(E).
-  Local Instance Eq_t : GHC.Base.Eq_ E.t :=
-    fun _ k => k {|
-                op_zeze____ := fun x y => E.eq_dec x y;
-                op_zsze____ := fun x y => negb (E.eq_dec x y);
-              |}.
-
-  Local Definition compare (x y: E.t) : comparison :=
-    match E.compare x y with
-    | EQ _ => Eq
-    | LT _ => Lt
-    | GT _ => Gt
-    end.
-
-  Local Instance Ord_t : GHC.Base.Ord E.t := GHC.Base.ord_default compare.
-
-  Module OrdFacts := OrderedTypeFacts(E).
-
-  Ltac rewrite_compare_e :=
-    rewrite /Base.compare /Ord_t /ord_default /= /compare.
-
-  Ltac destruct_match :=
-    match goal with
-    | [ H :context[match ?a with _ => _ end] |- _] =>
-      let Heq := fresh "Heq" in
-      destruct a eqn:Heq=>//
-    | [ |- context[match ?a with _ => _ end]] =>
-      let Heq := fresh "Heq" in
-      destruct a eqn:Heq=>//
-    end.
-
-  Definition elt := E.t.
+  Include OrdTheories.OrdTheories E.
 
   (* Well-formedness *)
   Definition WF (s : Set_ elt) := valid s.
   (* Will it be easier for proof if [WF] is an inductive definition? *)
   Definition t := {s : Set_ elt | WF s}.
   Definition pack (s : Set_ elt) (H : WF s): t := exist _ s H.
-
-  Lemma elt_ltP { e1 e2 } : reflect (E.lt e1 e2) (e1 GHC.Base.< e2).
-  Proof.
-    rewrite /_GHC.Base.<_ /Ord_t /ord_default /=.
-    rewrite /_GHC.Base.==_ /Eq_comparison___ /= /eq_comparison /compare.
-    do 2 destruct_match; constructor; auto.
-  Qed.
-
-  Lemma elt_gtP { e1 e2 } : reflect (E.lt e2 e1) (e1 GHC.Base.> e2).
-  Proof.
-    rewrite /_GHC.Base.>_ /Ord_t /ord_default /=.
-    rewrite /_GHC.Base.==_ /Eq_comparison___ /= /eq_comparison /compare.
-    do 2 destruct_match; constructor; auto.
-  Qed.
-
-  Lemma elt_compare_ltP {e1 e2} :
-    reflect (E.lt e1 e2) (eq_comparison (GHC.Base.compare e1 e2) Lt).
-  Proof.
-    rewrite_compare_e; destruct_match; constructor; auto.
-  Qed.
-
-  Lemma elt_compare_lt'P {e1 e2} :
-    reflect (GHC.Base.compare e1 e2 = Lt)
-            (eq_comparison (GHC.Base.compare e1 e2) Lt).
-  Proof.
-    rewrite_compare_e.
-    destruct_match; constructor; auto;
-      move=>Hcontra; inversion Hcontra.
-  Qed.
-
-  Lemma elt_compare_gtP {e1 e2} :
-    reflect (E.lt e2 e1) (eq_comparison (GHC.Base.compare e1 e2) Gt).
-  Proof.
-    rewrite_compare_e; destruct_match; constructor; auto.
-  Qed.
-
-  Lemma elt_compare_gt'P {e1 e2} :
-    reflect (GHC.Base.compare e1 e2 = Gt)
-            (eq_comparison (GHC.Base.compare e1 e2) Gt).
-  Proof.
-    rewrite_compare_e.
-    destruct_match; constructor; auto;
-      move=>Hcontra; inversion Hcontra.
-  Qed.
-
-  Lemma elt_compare_eqP {e1 e2} :
-    reflect (E.eq e1 e2) (eq_comparison (GHC.Base.compare e1 e2) Eq).
-  Proof.
-    rewrite_compare_e; destruct_match; constructor; auto.
-  Qed.
-
-  Lemma elt_compare_eq'P {e1 e2} :
-    reflect (GHC.Base.compare e1 e2 = Eq)
-            (eq_comparison (GHC.Base.compare e1 e2) Eq).
-  Proof.
-    rewrite_compare_e.
-    destruct_match; constructor; auto;
-      move=>Hcontra; inversion Hcontra.
-  Qed.
-
-  Hint Resolve elt_ltP.
-  Hint Resolve elt_gtP.
-  Hint Resolve elt_compare_ltP.
-  Hint Resolve elt_compare_lt'P.
-  Hint Resolve elt_compare_gtP.
-  Hint Resolve elt_compare_gt'P.
-  Hint Resolve elt_compare_eqP.
-  Hint Resolve elt_compare_eq'P.
-
-  Lemma elt_lt : forall e1 e2, E.lt e1 e2 <-> e1 GHC.Base.< e2.
-  Proof. move=>e1 e2. apply rwP =>//. Qed.
-
-  Lemma elt_gt : forall e1 e2, E.lt e2 e1 <-> e1 GHC.Base.> e2.
-  Proof. move=>e1 e2. apply rwP =>//. Qed.
-
-  Lemma elt_compare_lt: forall (e1 e2 : elt),
-      E.lt e1 e2 <-> GHC.Base.compare e1 e2 = Lt.
-  Proof.
-    move=>e1 e2.
-    apply rwP2 with (b:=eq_comparison (GHC.Base.compare e1 e2) Lt) =>//.
-  Qed.
-
-  Lemma elt_compare_gt: forall (e1 e2 : elt),
-      E.lt e2 e1 <-> GHC.Base.compare e1 e2 = Gt.
-  Proof.
-    move=>e1 e2.
-    apply rwP2 with (b:=eq_comparison (GHC.Base.compare e1 e2) Gt) =>//.
-  Qed.
-
-  Lemma elt_compare_eq: forall (e1 e2 : elt),
-       E.eq e1 e2 <-> GHC.Base.compare e1 e2 = Eq.
-  Proof.
-    move=>e1 e2.
-    apply rwP2 with (b:=eq_comparison (GHC.Base.compare e1 e2) Eq) =>//.
-  Qed.
-
-  Hint Rewrite <- elt_lt : elt_compare.
-  Hint Rewrite <- elt_gt : elt_compare.
-  Hint Rewrite <- elt_compare_lt : elt_compare.
-  Hint Rewrite <- elt_compare_gt : elt_compare.
-  Hint Rewrite <- elt_compare_eq : elt_compare.
 
   Ltac rewrite_size :=
     repeat match goal with
@@ -374,16 +173,6 @@ Module Foo (E : OrderedType) : WSfun(E).
       + apply bin_not_empty in H. inversion H.
     - intros. admit.
   Admitted.
-
-  Add Parametric Relation : (Set_ elt) @eq_set
-      reflexivity proved by (eq_set_refl)
-      symmetry proved by (eq_set_sym)
-      transitivity proved by (eq_set_trans)
-        as eq_set_rel.
-
-  Add Parametric Morphism l e : (Bin l e) with
-        signature eq_set ==> eq_set ==> eq_set as union_mor.
-  Proof. exact (bin_compat l e). Qed.
 
   Lemma balanced_children : forall {a} (s1 s2 : Set_ a) l e,
       balanced (Bin l e s1 s2) -> balanced s1 /\ balanced s2.

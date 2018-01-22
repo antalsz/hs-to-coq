@@ -2423,7 +2423,6 @@ Proof.
   reflexivity.
 Qed.
 
-
 Lemma Desc_neg_false:
  forall {s r f i}, Desc s r f -> ~ (0 <= i) -> f i = false.
 Proof.
@@ -2437,6 +2436,25 @@ Proof.
   rewrite <- (Z.shiftr_nonneg i (Z.of_N b)).
   rewrite H0.
   nonneg.
+Qed.
+
+Lemma Desc_nonneg:
+  forall {s r f i}, Desc s r f -> f i = true -> 0 <= i.
+Proof.
+  intros.
+  destruct (Z.leb_spec 0 i); try auto.
+  assert (~ (0 <= i)) by omega.
+  erewrite Desc_neg_false in H0 by eassumption.
+  congruence.
+Qed.
+
+Lemma Sem_nonneg:
+  forall {s f i}, Sem s f -> f i = true -> 0 <= i.
+Proof.
+  intros.
+  destruct H.
+  * rewrite H in H0. congruence.
+  * eapply Desc_nonneg; eassumption.
 Qed.
 
 Lemma Desc0_neg_false:
@@ -3701,6 +3719,78 @@ Proof.
   eexists. apply difference_Sem; eassumption.
 Qed.
 
+(** ** Specifing [foldr] *)
+
+
+
+(** ** Specifing [toList] *)
+
+Lemma In_foldrBits_cons:
+  forall i r bm l,
+  In i (foldrBits (rPrefix r) cons l bm) <-> (bitmapInRange r bm i = true \/ In i l).
+Admitted.
+
+Definition toList_go :=
+  fix go (arg_0__ : list Key) (arg_1__ : IntSet) {struct arg_1__} :
+      list Key :=
+      match arg_1__ with
+      | Bin _ _ l0 r0 => go (go arg_0__ r0) l0
+      | Tip kx bm => foldrBits kx cons arg_0__ bm
+      | Nil => arg_0__
+      end.
+
+Lemma toList_go_In:
+  forall s f, Sem s f ->
+  forall l i, (f i = true \/ In i l) <-> In i (toList_go l s).
+Proof.
+  intros ?? HS.
+  destruct HS.
+  * intuition. rewrite H in H1. congruence.
+  * induction HD; intros; simpl; subst.
+    + rewrite In_foldrBits_cons.
+      rewrite H2.
+      reflexivity.
+    + unfold op_zl__, Ord_Integer___, op_zl____.
+      rewrite <- IHHD1.
+      rewrite <- IHHD2.
+      rewrite H4.
+      rewrite orb_true_iff.
+      intuition.
+Qed.
+
+Lemma toList_go_In_nil:
+  forall s f, Sem s f ->
+  forall i, f i = true <-> In i (toList_go nil s).
+Proof.
+  intros.
+  rewrite <- toList_go_In by eassumption.
+  intuition.
+Qed.
+
+Lemma toList_In:
+  forall s f, Sem s f ->
+  forall i, f i = true <-> In i (toList s).
+Proof.
+  intros.
+  pose proof (toList_go_In_nil s f H i) as Hgo.
+  destruct H.
+  * apply Hgo.
+  * destruct HD.
+    + apply Hgo.
+    + subst. simpl.
+      unfold op_zl__, Ord_Integer___, op_zl____.
+      destruct (Z.ltb_spec (rMask r) 0).
+      - rewrite <- toList_go_In by (eapply DescSem; eassumption).
+        rewrite <- toList_go_In by (eapply DescSem; eassumption).
+        rewrite H4.
+        rewrite orb_true_iff.
+        intuition.
+      - rewrite <- toList_go_In by (eapply DescSem; eassumption).
+        rewrite <- toList_go_In by (eapply DescSem; eassumption).
+        rewrite H4.
+        rewrite orb_true_iff.
+        intuition.
+Qed.
 
 (** ** Instantiating the [FSetInterface] *)
 
@@ -4180,11 +4270,43 @@ Module Foo: WSfun(N_as_OT).
     forall (s : t) (f : elt -> bool),
     compat_bool N.eq f ->
     Equal (snd (partition f s)) (filter (fun x : elt => negb (f x)) s). Admitted.
+
   Lemma elements_1 :
-    forall (s : t) (x : elt), In x s -> InA N.eq x (elements s). Admitted.
+    forall (s : t) (x : elt), In x s -> InA N.eq x (elements s).
+  Proof.
+    intros.
+    destruct s as [s Hwf].
+    destruct Hwf as [f HSem].
+    simpl in *.
+    unfold In_set in *.
+    erewrite member_Sem in H by eassumption.
+    apply OrdFacts.ListIn_In.
+    replace x with (Z.to_N (Z.of_N x)) by (rewrite N2Z.id; reflexivity).
+    apply in_map.
+    rewrite <- toList_In by eassumption.
+    assumption.
+  Qed.
+
   Lemma elements_2 :
-    forall (s : t) (x : elt), InA N.eq x (elements s) -> In x s. Admitted.
+    forall (s : t) (x : elt), InA N.eq x (elements s) -> In x s.
+  Proof.
+    intros.
+    destruct s as [s Hwf].
+    destruct Hwf as [f HSem].
+    simpl in *.
+    unfold In_set in *.
+    erewrite member_Sem by eassumption.
+    rewrite InA_alt in H.
+    destruct H as [_[[]?]].
+    rewrite in_map_iff in H.
+    destruct H as [?[[]?]].
+    rewrite <- toList_In in H by eassumption.
+    rewrite Z2N.id by (eapply Sem_nonneg; eassumption).
+    assumption.
+  Qed.
+
   Lemma elements_3w : forall s : t, NoDupA N.eq (elements s). Admitted.
+
   Lemma choose_1 :
     forall (s : t) (x : elt), choose s = Some x -> In x s. Admitted.
   Lemma choose_2 : forall s : t, choose s = None -> Empty s. Admitted.

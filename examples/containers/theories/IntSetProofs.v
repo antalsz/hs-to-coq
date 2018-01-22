@@ -2228,6 +2228,19 @@ Proof.
   reflexivity.
 Qed.
 
+Lemma isBitMask0_lor:
+  forall bm1 bm2, isBitMask0 bm1 -> isBitMask0 bm2 -> isBitMask0 (N.lor bm1 bm2).
+Proof.
+  intros.
+  unfold isBitMask0 in *.
+  rewrite N_lt_pow2_testbits in *.
+  intros j?.
+  rewrite N.lor_spec.
+  rewrite H, H0 by assumption.
+  reflexivity.
+Qed.
+
+
 Lemma isBitMask_bitmapOf: forall e, isBitMask (bitmapOf e).
 Proof.
   intros.
@@ -3737,16 +3750,25 @@ Qed.
 
 Lemma revNat_spec:
   forall n i, isBitMask0 n -> (i < WIDTH)%N ->
-  N.testbit (revNat n) i = N.testbit n (WIDTH - i)%N.
-Admitted.
-
-Lemma revNat_revNat:
-  forall n, isBitMask0 n -> revNat (revNat n) = n.
+  N.testbit (revNat n) i = N.testbit n (WIDTH - 1 - i)%N.
 Admitted.
 
 Lemma isBitMask0_revNat:
   forall n, isBitMask0 n -> isBitMask0 (revNat n).
 Admitted.
+
+Lemma revNat_revNat:
+  forall n, isBitMask0 n -> revNat (revNat n) = n.
+Proof.
+  intros.
+  apply N.bits_inj_iff; intro i.
+  destruct (N.ltb_spec i WIDTH).
+  * rewrite !revNat_spec; try apply isBitMask0_revNat; auto.
+    replace (WIDTH - 1 - (WIDTH - 1 - i))%N with i by Nomega.
+    reflexivity.
+    Nomega.
+  * rewrite !isBitMask0_outside; repeat apply isBitMask0_revNat; auto.
+Qed.
 
 Lemma revNat_lxor:
   forall n m, isBitMask0 n -> isBitMask0 m ->
@@ -3780,6 +3802,22 @@ Lemma isBitMask0_lowestBitMask:
   forall bm, isBitMask0 bm -> isBitMask0 (lowestBitMask bm).
 Admitted.
 
+Ltac unfoldMethods :=
+  unfold op_zeze__, Eq_Char___, op_zeze____,
+         fromInteger, Num_Word__,
+         op_zm__, op_zp__, Num_Integer__,
+         Prim.seq,
+         op_zdzn__,
+         xor, Bits__N.
+
+(* We can extract the argument to [unsafeFix] from the definition of [foldrBits]. *)
+Definition foldrBits_go {a} (p : Int) (f : Int -> a -> a)
+  : (Nat -> a -> a) -> Nat -> a -> a.
+Proof.
+  let foldrBits_rhs := eval unfold foldrBits in (foldrBits p f) in
+  match foldrBits_rhs with context[ unsafeFix ?f _ ] => exact f end.
+Defined.
+
 Lemma In_foldrBits_cons:
   forall i r bm l,
   isBitMask0 bm ->
@@ -3788,13 +3826,11 @@ Lemma In_foldrBits_cons:
 Proof.
   intros.
   unfold foldrBits.
-  unfold op_zeze__, Eq_Char___, op_zeze____.
-  unfold fromInteger, Num_Word__.
-  unfold op_zm__, op_zp__, Num_Integer__.
-  unfold Prim.seq.
-  unfold op_zdzn__.
-  unfold xor, Bits__N.
-  match goal with [ |- context [unsafeFix ?f'] ] => set (f := f') end.
+
+  match goal with [ |- context [unsafeFix ?f'] ] =>
+    replace f' with (foldrBits_go (rPrefix r) cons) by reflexivity
+  end.
+
   rewrite <- (revNat_revNat bm) at 2 by assumption.
   apply isBitMask0_revNat in H.
   revert H.
@@ -3804,7 +3840,7 @@ Proof.
   apply well_founded_ind with (R := N.lt) (a := bm); try apply N.lt_wf_0.
   clear bm.
   intros bm IH l Hsmall.
-  rewrite unsafeFix_eq; unfold f at 1.
+  rewrite unsafeFix_eq; unfold foldrBits_go at 1. unfoldMethods.
   destruct (N.eqb_spec bm (Z.to_N 0)).
   * subst.
     replace (revNat (Z.to_N 0)) with 0%N by reflexivity.

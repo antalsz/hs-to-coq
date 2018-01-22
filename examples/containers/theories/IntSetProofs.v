@@ -2246,6 +2246,16 @@ Proof.
     apply Z.mod_pos_bound; compute; congruence.
 Qed.
 
+Lemma isBitMask0_outside:
+  forall bm i,
+    isBitMask0 bm -> (WIDTH <= i)%N -> N.testbit bm i = false.
+Proof.
+  intros.
+  unfold isBitMask0 in H.
+  rewrite N_lt_pow2_testbits in H.
+  intuition.
+Qed.
+
 Ltac isBitMask' :=
   repeat (apply isBitMask_lor || apply isBitMask_bitmapOf);
   try assumption.
@@ -3725,9 +3735,93 @@ Qed.
 
 (** ** Specifing [toList] *)
 
+Lemma revNat_spec:
+  forall n i, isBitMask0 n -> (i < WIDTH)%N ->
+  N.testbit (revNat n) i = N.testbit n (WIDTH - i)%N.
+Admitted.
+
+Lemma revNat_revNat:
+  forall n, isBitMask0 n -> revNat (revNat n) = n.
+Admitted.
+
+Lemma isBitMask0_revNat:
+  forall n, isBitMask0 n -> isBitMask0 (revNat n).
+Admitted.
+
+Lemma revNat_lxor:
+  forall n m, isBitMask0 n -> isBitMask0 m ->
+    revNat (N.lxor n m) = N.lxor (revNat n) (revNat m).
+Proof.
+  intros.
+  apply N.bits_inj_iff; intro i.
+  destruct (N.ltb_spec i WIDTH).
+  * rewrite !revNat_spec, !N.lxor_spec, !revNat_spec;
+      try reflexivity;
+      try apply isBitMask0_lxor;
+      try assumption.
+  * rewrite N.lxor_spec.
+    rewrite !isBitMask0_outside;
+      try apply isBitMask0_revNat;
+      try apply isBitMask0_lxor;
+      auto.
+Qed.
+
+Axiom unsafeFix_eq : forall a (f : a -> a),
+  unsafeFix f = f (unsafeFix f).
+
+Lemma inRange_bounds_true:
+  forall r i,
+  rPrefix r <= i ->
+  i < rPrefix r + Z.of_N WIDTH ->
+  inRange i r = true.
+Admitted.
+
+
 Lemma In_foldrBits_cons:
   forall i r bm l,
+  isBitMask0 bm ->
   In i (foldrBits (rPrefix r) cons l bm) <-> (bitmapInRange r bm i = true \/ In i l).
+Proof.
+  intros.
+  unfold foldrBits.
+  unfold op_zeze__, Eq_Char___, op_zeze____.
+  unfold fromInteger, Num_Word__.
+  unfold op_zm__, op_zp__, Num_Integer__.
+  unfold Prim.seq.
+  unfold op_zdzn__.
+  unfold xor, Bits__N.
+  match goal with [ |- context [unsafeFix ?f'] ] => set (f := f') end.
+  rewrite <- (revNat_revNat bm) at 2 by assumption.
+  apply isBitMask0_revNat in H.
+  revert H.
+  generalize (revNat bm). clear bm.
+  intro bm.
+  revert l.
+  apply well_founded_ind with (R := N.lt) (a := bm); try apply N.lt_wf_0.
+  clear bm.
+  intros bm IH l Hsmall.
+  rewrite unsafeFix_eq; unfold f at 1.
+  destruct (N.eqb_spec bm (Z.to_N 0)).
+  * subst.
+    replace (revNat (Z.to_N 0)) with 0%N by reflexivity.
+    rewrite bitmapInRange_0. intuition congruence.
+  * rewrite -> IH by admit.
+    unfold bitmapInRange.
+    destruct (inRange i r) eqn:Hir.
+    + rewrite revNat_lxor; try assumption.
+      rewrite N.lxor_spec.
+      admit.
+      admit.
+    + intuition.
+      destruct H0.
+      -- exfalso.
+         subst.
+         rewrite <- not_true_iff_false in Hir.
+         contradiction Hir; clear Hir.
+         assert (0 <= @indexOfTheOnlyBit (Nat -> Int) (lowestBitMask bm)) by admit.
+         assert (@indexOfTheOnlyBit (Nat -> Int) (lowestBitMask bm) < 64) by admit.
+         apply inRange_bounds_true; simpl Z.of_N; try omega.
+      -- intuition.
 Admitted.
 
 Definition toList_go :=
@@ -3747,7 +3841,7 @@ Proof.
   destruct HS.
   * intuition. rewrite H in H1. congruence.
   * induction HD; intros; simpl; subst.
-    + rewrite In_foldrBits_cons.
+    + rewrite In_foldrBits_cons by (apply isBitMask_isBitMask0; auto).
       rewrite H2.
       reflexivity.
     + unfold op_zl__, Ord_Integer___, op_zl____.

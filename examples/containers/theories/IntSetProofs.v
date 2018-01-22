@@ -2073,6 +2073,17 @@ Proof.
   rewrite N.land_spec; reflexivity.
 Qed.
 
+Lemma bitmapInRange_ldiff:
+  forall r bm1 bm2 i,
+    bitmapInRange r (N.ldiff bm1 bm2) i =
+    andb (bitmapInRange r bm1 i) (negb (bitmapInRange r bm2 i)).
+Proof.
+  intros.
+  unfold bitmapInRange.
+  destruct (inRange i r); try reflexivity.
+  rewrite N.ldiff_spec; reflexivity.
+Qed.
+
 
 Lemma bitmapInRange_bitmapOf:
   forall e i,
@@ -2225,6 +2236,18 @@ Proof.
   intros j?.
   rewrite N.lxor_spec.
   rewrite H, H0 by assumption.
+  reflexivity.
+Qed.
+
+Lemma isBitMask0_ldiff:
+  forall bm1 bm2, isBitMask0 bm1 -> isBitMask0 (N.ldiff bm1 bm2).
+Proof.
+  intros.
+  unfold isBitMask0 in *.
+  rewrite N_lt_pow2_testbits in *.
+  intros j?.
+  rewrite N.ldiff_spec.
+  rewrite H by assumption.
   reflexivity.
 Qed.
 
@@ -3802,6 +3825,11 @@ Lemma isBitMask0_lowestBitMask:
   forall bm, isBitMask0 bm -> isBitMask0 (lowestBitMask bm).
 Admitted.
 
+Lemma isBitMask_highestBitMask:
+  forall bm, isBitMask bm -> isBitMask (highestBitMask bm).
+Admitted.
+
+
 Ltac unfoldMethods :=
   unfold op_zeze__, Eq_Char___, op_zeze____,
          fromInteger, Num_Word__,
@@ -3818,6 +3846,22 @@ Proof.
   match foldrBits_rhs with context[ unsafeFix ?f _ ] => exact f end.
 Defined.
 
+Lemma In_cons_iff:
+  forall {a} (y x : a) xs, In y (x :: xs) <-> x = y \/ In y xs.
+Proof. intros. reflexivity. Qed.
+
+Lemma lowestBitMask_revNat:
+  forall bm,
+  isBitMask bm ->
+  (lowestBitMask (revNat bm)) = revNat (highestBitMask bm).
+Admitted.
+
+Lemma lxor_highestBitMask:
+  forall bm,
+  isBitMask bm ->
+  N.lxor bm (highestBitMask bm) = N.ldiff bm (highestBitMask bm).
+Admitted.
+
 Lemma In_foldrBits_cons:
   forall i r bm l,
   isBitMask0 bm ->
@@ -3831,57 +3875,35 @@ Proof.
     replace f' with (foldrBits_go (rPrefix r) cons) by reflexivity
   end.
 
-  rewrite <- (revNat_revNat bm) at 2 by assumption.
-  apply isBitMask0_revNat in H.
   revert H.
-  generalize (revNat bm). clear bm.
-  intro bm.
   revert l.
   apply well_founded_ind with (R := N.lt) (a := bm); try apply N.lt_wf_0.
-  clear bm.
-  intros bm IH l Hsmall.
-  rewrite unsafeFix_eq; unfold foldrBits_go at 1. unfoldMethods.
-  destruct (N.eqb_spec bm (Z.to_N 0)).
-  * subst.
-    replace (revNat (Z.to_N 0)) with 0%N by reflexivity.
-    rewrite bitmapInRange_0. intuition congruence.
-  * rewrite -> IH by admit.
-    unfold bitmapInRange.
-    destruct (inRange i r) eqn:Hir.
-    + assert (Z.to_N (Z.land i (Z.ones (Z.of_N (rBits r)))) < WIDTH)%N.
-      { replace (rBits r). simpl Z.ones.
-        apply N2Z.inj_lt.
-        rewrite Z2N.id by nonneg.
-        rewrite Z.land_ones by omega.
-        apply Z_mod_lt.
-        reflexivity.
-      }
-      rewrite revNat_lxor by (try apply isBitMask0_lowestBitMask; assumption).
-      rewrite N.lxor_spec by (apply isBitMask0_lowestBitMask; assumption).
-      rewrite revNat_spec by assumption.
-      rewrite revNat_spec by (try apply isBitMask0_lowestBitMask; assumption).
-      rewrite Z.land_ones by nonneg.
-      simpl In.
+  clear bm. intros bm IH l Hsmall.
 
-      destruct (Z.eqb_spec (rPrefix r + 63 - Z.of_N (N.log2 (lowestBitMask bm))) i).
-      -- subst i. admit.
-      -- admit. 
-    + intuition.
-      destruct H1.
-      -- exfalso.
-         subst.
-         rewrite <- not_true_iff_false in Hir.
-         contradiction Hir; clear Hir.
-         assert (Z.of_N (N.log2 (lowestBitMask bm)) < 64).
-         {
-           change (Z.of_N (N.log2 (lowestBitMask bm)) < Z.of_N 64%N).
-           apply N2Z.inj_lt.
-           apply N.log2_lt_pow2.
-           * admit.
-           * apply isBitMask0_lowestBitMask; assumption.
-         }
-         apply inRange_bounds_true; simpl Z.of_N; Nomega.
-      -- intuition.
+  rewrite unsafeFix_eq; unfold foldrBits_go at 1. unfoldMethods.
+  destruct (N.eqb_spec (revNat bm) (Z.to_N 0)).
+  * assert (bm = 0)%N by admit. subst.
+    rewrite bitmapInRange_0.
+    intuition congruence.
+  * assert (0 < bm)%N by admit.
+    assert (Hbm : isBitMask bm) by (unfold isBitMask in Hsmall; unfold isBitMask; auto).
+    clear H.
+    rewrite lowestBitMask_revNat by assumption.
+    rewrite <- revNat_lxor by (try apply isBitMask_highestBitMask; assumption).
+    rewrite lxor_highestBitMask.
+    assert (Htermination : (N.ldiff bm (highestBitMask bm) < bm)%N) by admit.
+    rewrite -> IH by (apply Htermination || apply isBitMask0_ldiff; assumption).
+    rewrite bitmapInRange_ldiff.
+    rewrite andb_true_iff.
+    rewrite negb_true_iff.
+    rewrite In_cons_iff.
+    replace (rPrefix r + (64 - 1) - Z.of_N (N.log2 (lowestBitMask (revNat bm))))
+        with (rPrefix r + Z.of_N (N.log2 (highestBitMask bm))) by admit.
+    replace (bitmapInRange r (highestBitMask bm) i)
+        with (rPrefix r + Z.of_N (N.log2 (highestBitMask bm)) =? i) by admit.
+    destruct (Z.eqb_spec (rPrefix r + Z.of_N (N.log2 (highestBitMask bm))) i); try solve [intuition].
+    subst. intuition.
+    left. admit.
 Admitted.
 
 Definition toList_go :=

@@ -40,6 +40,7 @@ TODO_PASS  = \
   Mutrec \
   Existential \
   TypeAnnotations \
+  StrictPair \
 
 
 

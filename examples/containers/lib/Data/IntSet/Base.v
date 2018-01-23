@@ -55,9 +55,7 @@ Definition shiftLL (n: Nat) (s : BinInt.Z) : Nat :=
 Definition shiftRL (n: Nat) (s : BinInt.Z) : Nat :=
 	Coq.NArith.BinNat.N.shiftr n (Coq.ZArith.BinInt.Z.to_N s).
 
-Definition highestBitMask (n: Nat) : Nat := match n with
- | Coq.Numbers.BinNums.N0 => Coq.Numbers.BinNums.N0
- | Coq.Numbers.BinNums.Npos p => Coq.Numbers.BinNums.Npos (Coq.ZArith.Zcomplements.floor_pos p) end.
+Definition highestBitMask (n: Nat) : Nat := Coq.NArith.BinNat.N.pow 2 (Coq.NArith.BinNat.N.log2 n).
 
 Require Import NArith.
 Definition bit_N := shiftLL 1%N.

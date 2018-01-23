@@ -2178,6 +2178,13 @@ Proof.
   intuition; subst; reflexivity.
 Qed.
 
+Lemma isBitMask_isBitMask_and_noneg:
+  forall bm, isBitMask bm <-> (bm <> 0%N /\ isBitMask0 bm).
+Proof.
+  intros.
+  unfold isBitMask, isBitMask0. Nomega.
+Qed.
+
 Lemma isBitMask_testbit:
   forall bm, isBitMask bm -> (exists i, i < WIDTH /\ N.testbit bm i = true)%N.
 Proof.
@@ -3771,18 +3778,58 @@ Qed.
 
 (** ** Specifing [toList] *)
 
-Lemma revNat_spec:
+(** At the moment I do not see a way of proving this. So let
+use take it as the specification for [revNat] (and build the rest on top of it).
+*)
+
+Axiom revNat_spec:
   forall n i, isBitMask0 n -> (i < WIDTH)%N ->
   N.testbit (revNat n) i = N.testbit n (WIDTH - 1 - i)%N.
-Admitted.
 
-Lemma isBitMask0_revNat:
+
+Axiom isBitMask0_revNat:
   forall n, isBitMask0 n -> isBitMask0 (revNat n).
-Admitted.
+
+Lemma revNat_eq_0:
+  forall bm,
+  isBitMask0 bm ->
+  (revNat bm = 0)%N <->  (bm = 0)%N.
+Proof.
+  intros. split; intro.
+  * apply N.bits_inj; intro j.
+    destruct (N.ltb_spec j WIDTH).
+    - apply N.bits_inj_iff in H0. specialize (H0 (WIDTH - 1 - j)%N).
+      rewrite N.bits_0 in *.
+      rewrite revNat_spec in H0 by (assumption || Nomega).
+      replace (WIDTH - 1 - (WIDTH - 1 - j))%N with j in H0 by Nomega.
+      assumption.
+    - rewrite N.bits_0 in *.
+      apply isBitMask0_outside; auto.
+  * subst. reflexivity.
+Qed.
+
+Lemma revNat_eqb_0:
+  forall bm,
+  isBitMask0 bm ->
+  (revNat bm =? 0)%N = (bm =? 0)%N.
+Proof.
+  intros.
+  rewrite eq_iff_eq_true.
+  rewrite !N.eqb_eq.
+  apply revNat_eq_0.
+  assumption.
+Qed.
+
 
 Lemma isBitMask_revNat:
   forall n, isBitMask n -> isBitMask (revNat n).
-Admitted.
+Proof.
+  intros.
+  rewrite isBitMask_isBitMask_and_noneg in *.
+  intuition.
+  * rewrite revNat_eq_0 in H by assumption. intuition.
+  * apply isBitMask0_revNat. assumption.
+Qed.
 
 Lemma revNat_revNat:
   forall n, isBitMask0 n -> revNat (revNat n) = n.
@@ -3818,18 +3865,14 @@ Qed.
 Axiom unsafeFix_eq : forall a (f : a -> a),
   unsafeFix f = f (unsafeFix f).
 
-Lemma inRange_bounds_true:
-  forall r i,
-  rPrefix r <= i ->
-  i < rPrefix r + Z.of_N WIDTH ->
-  inRange i r = true.
-Admitted.
-
 Lemma highestBitMask_pow:
   forall bm,
     isBitMask bm ->
     highestBitMask bm = (2^N.log2 bm)%N.
-Admitted.
+Proof.
+  intros.
+  reflexivity.
+Qed.
 
 (* Let’s phrase stuff in terms of the highest bit mask,
    as that is based on [N.log2], which is presumably
@@ -3956,7 +3999,6 @@ Proof.
         rewrite !Pos_0_testbit_succ in H.
         assumption.
       + exfalso.
-        SearchAbout Pos.testbit_nat.
         refine (Pbit_faithful_0 p _).
         intro j.
         specialize (H (N.succ (N.of_nat j))).
@@ -4023,27 +4065,6 @@ Proof.
 Qed.
 
 
-Lemma revNat_eqb_0:
-  forall bm,
-  isBitMask0 bm ->
-  (revNat bm =? 0)%N = (bm =? 0)%N.
-Proof.
-  intros.
-  destruct (N.eqb_spec bm 0%N).
-  * subst; reflexivity.
-  * destruct (N.eqb_spec (revNat bm) 0%N); try reflexivity; exfalso.
-    contradict n.
-    apply N.bits_inj; intro j.
-    destruct (N.ltb_spec j WIDTH).
-    - apply N.bits_inj_iff in e. specialize (e (WIDTH - 1 - j)%N).
-      rewrite N.bits_0 in *.
-      rewrite revNat_spec in e by (assumption || Nomega).
-      replace (WIDTH - 1 - (WIDTH - 1 - j))%N with j in e by Nomega.
-      assumption.
-    - rewrite N.bits_0 in *.
-      apply isBitMask0_outside; auto.
-Qed.
-
 Lemma In_foldrBits_cons:
   forall i r bm l,
   isBitMask0 bm ->
@@ -4089,7 +4110,6 @@ Proof.
     rewrite In_cons_iff.
     rewrite highestBitMask_pow by assumption.
     rewrite revNat_pow by assumption.
-    SearchAbout N.log2 N.pow.
     assert (N.log2 bm < WIDTH)%N by (apply N.log2_lt_pow2; try apply Hbm).
     rewrite N.log2_pow2 by Nomega.
     replace (rPrefix r + (64 - 1) - Z.of_N (WIDTH - 1 - N.log2 bm)%N)

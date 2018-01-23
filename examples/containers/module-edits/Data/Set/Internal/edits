@@ -1,0 +1,29 @@
+skip module Data.Semigroup
+skip module Data.Data
+
+skip Data.Set.Internal.Monoid__Set_
+
+skip Data.Set.Internal.showTree
+skip Data.Set.Internal.showTreeWith
+skip Data.Set.Internal.showsTree
+skip Data.Set.Internal.showsTreeHang
+skip Data.Set.Internal.showWide
+skip Data.Set.Internal.showsBars
+
+skip Data.Set.Internal.fromListConstr
+skip Data.Set.Internal.setDataType
+
+termination Data.Set.Internal.link {measure (Nat.add (set_size arg_1__) (set_size arg_2__))} termination_by_omega
+termination Data.Set.Internal.merge {measure (Nat.add (set_size arg_0__) (set_size arg_1__))} termination_by_omega
+
+nonterminating Data.Set.Internal.fromDistinctAscList
+nonterminating Data.Set.Internal.fromAscList
+nonterminating Data.Set.Internal.fromList
+
+nonterminating Data.Set.Internal.fromDistinctDescList
+
+order Data.Set.Internal.Eq___Set_ Data.Set.Internal.Ord__Set_
+
+## fix notation issue
+
+rename value GHC.Magic.lazy = id

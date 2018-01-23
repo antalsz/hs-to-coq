@@ -1,0 +1,83 @@
+# not a TODO
+skip module Data.Data
+
+# These are TODOs:
+
+# mutual recursion
+skip Data.IntSet.Internal.fromDistinctAscList
+skip Data.IntSet.Internal.fromAscList
+
+# local termination via the bit mask
+nonterminating Data.IntSet.Internal.foldlBits
+nonterminating Data.IntSet.Internal.foldl'Bits
+nonterminating Data.IntSet.Internal.foldrBits
+nonterminating Data.IntSet.Internal.foldr'Bits
+
+# Need to be implemented
+rename value Data.Utils.BitUtil.shiftLL = Data.IntSet.Internal.shiftLL
+rename value Data.Utils.BitUtil.shiftRL = Data.IntSet.Internal.shiftRL
+rename value Data.Utils.BitUtil.highestBitMask = Data.IntSet.Internal.highestBitMask
+
+# partial
+skip Data.IntSet.Internal.findMax
+skip Data.IntSet.Internal.findMin
+skip Data.IntSet.Internal.maxView
+skip Data.IntSet.Internal.deleteMax
+skip Data.IntSet.Internal.deleteFindMax
+skip Data.IntSet.Internal.minView
+skip Data.IntSet.Internal.deleteMin
+skip Data.IntSet.Internal.deleteFindMin
+
+# The idiom `x .&. complement y` does not work at type `nat`, as the complement of
+# a natural number is negative. But the expression [x `xor` (x .&. y)] is equivalent:
+#
+#	 quickCheck $ \x y -> (x .&. complement y) == (x `xor` (x.&.y))
+#	 +++ OK, passed 100 tests.
+#
+# so we can use that:
+rewrite forall x y, (x Data.Bits..&. (Data.Bits.complement y)) = (Data.Bits.xor x (x Data.Bits..&. y))
+
+# Avoid the natFromInt
+redefine Definition Data.IntSet.Internal.mask : GHC.Num.Int -> (Mask -> Prefix) :=
+  fun i m => Coq.ZArith.BinInt.Z.land i (Coq.ZArith.BinInt.Z.lxor (Coq.ZArith.BinInt.Z.lnot (Coq.ZArith.BinInt.Z.pred m)) m).
+# Avoid the natFromInt
+redefine Definition Data.IntSet.Internal.zero : GHC.Num.Int -> (Mask -> bool) :=
+  fun i m => Coq.ZArith.BinInt.Z.eqb (Coq.ZArith.BinInt.Z.land i m) 0.
+# Avoid the natFromInt, and come up with a simpler definition
+# (correctness checked by hand for small values).
+redefine Definition Data.IntSet.Internal.branchMask : Prefix -> (Prefix -> Mask) :=
+  fun p1 p2 => Coq.ZArith.BinInt.Z.pow 2 (Coq.ZArith.BinInt.Z.log2 (Coq.ZArith.BinInt.Z.lxor p1 p2)).
+
+
+# A bitmask adressing the last 6 bits of an int.
+# This is the only place where otherwise the FiniteBits class is used
+skip Data.IntSet.Internal.suffixBitMask
+
+# These are typical that they recurse left or right
+termination Data.IntSet.Internal.union        {measure ((size_nat arg_0__) + (size_nat arg_1__))} termination_by_omega
+termination Data.IntSet.Internal.difference   {measure ((size_nat arg_0__) + (size_nat arg_1__))} termination_by_omega
+termination Data.IntSet.Internal.intersection {measure ((size_nat arg_0__) + (size_nat arg_1__))} termination_by_omega
+
+# Show stuff
+skip Data.IntSet.Internal.showsBars
+skip Data.IntSet.Internal.showsBitMap
+skip Data.IntSet.Internal.showBitMap
+skip Data.IntSet.Internal.showsTreeHang
+skip Data.IntSet.Internal.showTreeWith
+skip Data.IntSet.Internal.showBin
+skip Data.IntSet.Internal.showWide
+skip Data.IntSet.Internal.withBar
+skip Data.IntSet.Internal.withEmpty
+skip Data.IntSet.Internal.showsTree
+skip Data.IntSet.Internal.showTree
+
+# Data stuff
+skip Data.IntSet.Internal.fromListConstr
+skip Data.IntSet.Internal.intSetDataType
+skip Data.IntSet.Internal.Monoid__IntSet
+
+
+# We need Integral N to use GHC.Real.fromIntegral to go from N to Z
+skip module Coq.ZArith.BinInt.Z
+rename value Data.IntSet.Internal.intFromNat = Coq.ZArith.BinInt.Z.of_N
+skip Coq.ZArith.BinInt.Z.of_N

@@ -1,9 +1,11 @@
-skip module Data.Utils.StrictFold
-skip module Data.Utils.StrictPair
+skip module Utils.Containers.Internal.StrictFold
+skip module Utils.Containers.Internal.StrictPair
 skip module GHC.Show
 
-rename type Data.Utils.StrictPair.StrictPair = prod
+rename type Utils.Containers.Internal.StrictPair.StrictPair = prod
 
-rename value Data.Utils.StrictFold.foldlStrict = Data.Foldable.foldl
-rename value Data.Utils.StrictPair.:*: = pair
-rename value Data.Utils.StrictPair.toPair = id
+rename value Utils.Containers.Internal.StrictFold.foldlStrict = Data.Foldable.foldl
+rename value Utils.Containers.Internal.StrictPair.:*: = pair
+rename value Utils.Containers.Internal.StrictPair.toPair = id
+
+axiomatize module Utils.Containers.Internal.BitQueue

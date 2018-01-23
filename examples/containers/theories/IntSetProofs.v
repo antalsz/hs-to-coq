@@ -3895,12 +3895,88 @@ Lemma bitmapInRange_pow:
   bitmapInRange r (2 ^ e)%N i = (rPrefix r + Z.of_N e =? i).
 Admitted.
 
+
+
+Lemma Pos_1_testbit_succ:
+  forall p i,
+  Pos.testbit p~1 (N.succ i) = Pos.testbit p i.
+Admitted.
+
+Lemma Pos_0_testbit_succ:
+  forall p i,
+  Pos.testbit p~0 (N.succ i) = Pos.testbit p i.
+Admitted.
+
+Lemma bits_impl_le:
+  forall a b,
+  (forall i, N.testbit a i = true -> N.testbit b i = true) ->
+  (a <= b)%N.
+Proof.
+  intros.
+  induction a; try apply N.le_0_l.
+  destruct b.
+  * exfalso.
+    refine (Pbit_faithful_0 p _).
+    intro j.
+    specialize (H (N.of_nat j)).
+    rewrite N.bits_0 in H.
+    simpl in H; rewrite Ptestbit_Pbit in H. 
+    destruct (Pos.testbit_nat p j) eqn:?; intuition.
+  * simpl in *.
+    change (Pos.le p p0).
+    revert p0 H.
+    induction p; intros p0 H.
+    * destruct p0 eqn:?.
+      + change (p <= p1)%positive.
+        apply IHp. intro i.
+        specialize (H (N.succ i)).
+        rewrite !Pos_1_testbit_succ in H.
+        assumption.
+      + exfalso.
+        specialize (H 0%N).
+        simpl in H. intuition congruence.
+      + exfalso.
+        refine (Pbit_faithful_0 p _).
+        intro j.
+        specialize (H (N.succ (N.of_nat j))).
+        rewrite <- Nat2N.inj_succ in H at 2.
+        rewrite Pos_1_testbit_succ, Ptestbit_Pbit in H. 
+        destruct (Pos.testbit_nat p j) eqn:?; intuition.
+    * destruct p0 eqn:?.
+      + transitivity (p1~0)%positive.
+        * change (p <= p1)%positive.
+          apply IHp. intro i.
+          specialize (H (N.succ i)).
+          rewrite Pos_0_testbit_succ, Pos_1_testbit_succ in H.
+          assumption.
+        * zify. omega.
+      + change (p <= p1)%positive.
+        apply IHp. intro i.
+        specialize (H (N.succ i)).
+        rewrite !Pos_0_testbit_succ in H.
+        assumption.
+      + exfalso.
+        SearchAbout Pos.testbit_nat.
+        refine (Pbit_faithful_0 p _).
+        intro j.
+        specialize (H (N.succ (N.of_nat j))).
+        rewrite <- Nat2N.inj_succ in H at 2.
+        rewrite Pos_0_testbit_succ, Ptestbit_Pbit in H. 
+        destruct (Pos.testbit_nat p j) eqn:?; intuition.
+     * apply Pos.le_1_l.
+Qed.
+
+
 Lemma ldiff_le:
   forall a b,
   (N.ldiff a b <= a)%N.
 Proof.
   intros.
-Admitted.
+  apply bits_impl_le; intros i H.
+  rewrite N.ldiff_spec in *.
+  rewrite andb_true_iff in *.
+  intuition.
+Qed.
 
 Lemma ldiff_lt:
   forall a b i,

@@ -3781,10 +3781,56 @@ Qed.
 (** At the moment I do not see a way of proving this. So let
 use take it as the specification for [revNat] (and build the rest on top of it).
 *)
+Ltac unfoldMethods :=
+  unfold op_zeze__, Eq_Char___, op_zeze____,
+         fromInteger, Num_Word__,
+         op_zm__, op_zp__, Num_Integer__,
+         Prim.seq,
+         op_zdzn__,
+         xor, op_zizazi__, op_zizbzi__, Bits__N.
 
-Axiom revNat_spec:
+Lemma N_shiftl_spec_eq:
+  forall n i j,
+  N.testbit (N.shiftl n i) j =
+    (if j <? i then false else N.testbit n (j - i))%N.
+Proof.
+  intros.
+  destruct (N.ltb_spec j i).
+  * apply N.shiftl_spec_low; assumption.
+  * apply N.shiftl_spec_high'; assumption.
+Qed.
+
+Lemma revNat_spec:
   forall n i, isBitMask0 n -> (i < WIDTH)%N ->
   N.testbit (revNat n) i = N.testbit n (WIDTH - 1 - i)%N.
+Proof.
+  intros.
+  unfold WIDTH in *.
+  Ltac next :=
+    match goal with [ H : (?i < ?n)%N |- _ ] =>
+      let m := eval simpl in (n - 1)%N in
+      idtac "Now solving i = " m;
+      assert (Hor : (i = m \/ i < m)%N) by Nomega; clear H; destruct Hor
+    end.
+
+  Ltac solve := subst;
+    unfold revNat;
+    unfold shiftRL, shiftLL;
+    unfoldMethods;
+    repeat ltac:(simpl N.add; simpl N.sub; simpl Z.to_N; simpl N.ltb; first
+           [ rewrite andb_false_r
+           | rewrite andb_true_r
+           | rewrite orb_false_r 
+           | rewrite N.lor_spec
+           | rewrite N.land_spec
+           | rewrite N.shiftr_spec by Nomega
+           | rewrite N_shiftl_spec_eq
+           ]);
+    reflexivity.
+
+  Time do 64 (next; [solve|]).
+  Nomega.
+Qed.
 
 
 Axiom isBitMask0_revNat:
@@ -3905,13 +3951,7 @@ Proof.
   assumption.
 Qed.  
 
-Ltac unfoldMethods :=
-  unfold op_zeze__, Eq_Char___, op_zeze____,
-         fromInteger, Num_Word__,
-         op_zm__, op_zp__, Num_Integer__,
-         Prim.seq,
-         op_zdzn__,
-         xor, Bits__N.
+
 
 (* We can extract the argument to [unsafeFix] from the definition of [foldrBits]. *)
 Definition foldrBits_go {a} (p : Int) (f : Int -> a -> a)

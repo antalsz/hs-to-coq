@@ -3895,12 +3895,28 @@ Lemma bitmapInRange_pow:
   bitmapInRange r (2 ^ e)%N i = (rPrefix r + Z.of_N e =? i).
 Admitted.
 
+Lemma ldiff_le:
+  forall a b,
+  (N.ldiff a b <= a)%N.
+Proof.
+  intros.
+Admitted.
+
 Lemma ldiff_lt:
   forall a b i,
   N.testbit a i = true ->
   N.testbit b i = true ->
   (N.ldiff a b < a)%N.
-Admitted.
+Proof.
+  intros.
+  apply N.le_neq; split.
+  * apply ldiff_le.
+  * intro.
+    apply N.bits_inj_iff in H1. specialize (H1 i).
+    rewrite N.ldiff_spec in H1.
+    rewrite H, H0 in H1.
+    inversion H1.
+Qed.
 
 Lemma ldiff_pow2_lt:
   forall a i,
@@ -3941,8 +3957,16 @@ Proof.
   * subst; reflexivity.
   * destruct (N.eqb_spec (revNat bm) 0%N); try reflexivity; exfalso.
     contradict n.
-    admit.
-Admitted.
+    apply N.bits_inj; intro j.
+    destruct (N.ltb_spec j WIDTH).
+    - apply N.bits_inj_iff in e. specialize (e (WIDTH - 1 - j)%N).
+      rewrite N.bits_0 in *.
+      rewrite revNat_spec in e by (assumption || Nomega).
+      replace (WIDTH - 1 - (WIDTH - 1 - j))%N with j in e by Nomega.
+      assumption.
+    - rewrite N.bits_0 in *.
+      apply isBitMask0_outside; auto.
+Qed.
 
 Lemma In_foldrBits_cons:
   forall i r bm l,

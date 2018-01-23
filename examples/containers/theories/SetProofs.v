@@ -457,51 +457,73 @@ Module Foo (E : OrderedType) : WSfun(E).
            | [H: context[ratio] |- _ ] => move: H
            end; rewrite /delta /ratio; prepare_for_omega.
 
-  Ltac derive_constraints :=
+  Ltac derive_constraints_rec Hwf :=
+    match type of Hwf with
+    | is_true (WF (Bin ?s ?x ?a ?b)) =>
+      let Hsum := fresh "Hsum" in
+      have: WF (Bin s x a b) by [done];
+      move /WF_size_children; rewrite_size;
+      move=>Hsum;
+      let Hpos := fresh "Hpos" in
+      have: WF (Bin s x a b) by [done];
+      move /WF_size_pos; rewrite_size; move=>Hpos;
+      let Hwfc := fresh "Hwfc" in
+      let Hwfl := fresh "Hwfl" in
+      let Hwfr := fresh "Hwfr" in
+      have Hwfc : WF a /\ WF b by
+          [move: Hwf; move /WF_children];
+      destruct Hwfc as [Hwfl Hwfr];
+      let Hbalanced := fresh "Hbalanced" in
+      have Hbalanced: (size a + size b <= 1) \/
+                      (size a <= delta * size b /\
+                       size b <= delta * size a) by
+          [ move: Hwf; move /WF_balanced /balanced_size_constraints];
+      let Hvs := fresh "Hvs" in
+      have Hvs: validsize (Bin s x a b) by
+          [apply WF_validsize in Hwf];
+      let Hbl := fresh "Hbl" in
+      have Hbl: balanced (Bin s x a b) by
+          [apply WF_balanced in Hwf];
+      let Hord := fresh "Hord" in
+      have Hord: ordered (Bin s x a b) by
+          [apply WF_ordered in Hwf];
+      derive_constraints_rec Hwfl;
+      derive_constraints_rec Hwfr
+    | is_true (WF ?t) =>
+      let Hnonneg := fresh "Hnonneg" in
+      have: WF t by [done];
+      move /WF_size_nonneg; move=>Hnonneg;
+      let Hvs := fresh "Hvs" in
+      have Hvs: validsize t by
+          [apply WF_validsize in Hwf]
+    end.
+
+  Ltac derive_validsize :=
     repeat match goal with
-           | [Hwf: is_true (WF (Bin ?s ?x ?a ?b)) |- _ ] =>
-             let Hsum := fresh "Hsum" in
-             have: WF (Bin s x a b) by [done];
-             move /WF_size_children; rewrite_size;
-             move=>Hsum;
-             let Hpos := fresh "Hpos" in
-             have: WF (Bin s x a b) by [done];
-             move /WF_size_pos; rewrite_size; move=>Hpos;
-             let Hwfc := fresh "Hwfc" in
-             let Hwfl := fresh "Hwfl" in
-             let Hwfr := fresh "Hwfr" in
-             have Hwfc : WF a /\ WF b by
-                 [move: Hwf; move /WF_children];
-             destruct Hwfc as [Hwfl Hwfr];
-             let Hbalanced := fresh "Hbalanced" in
-             have Hbalanced: (size a + size b <= 1) \/
-                             (size a <= delta * size b /\
-                              size b <= delta * size a) by
-                 [ move: Hwf; move /WF_balanced /balanced_size_constraints];
-             let Hvs := fresh "Hvs" in
-             have Hvs: validsize (Bin s x a b) by
-                 [apply WF_validsize in Hwf];
-             let Hbl := fresh "Hbl" in
-             have Hbl: balanced (Bin s x a b) by
-                 [apply WF_balanced in Hwf];
-             clear Hwf
+    | [H: is_true (validsize (Bin ?s ?x ?l ?r)) |- _ ] =>
+      have: validsize (Bin s x l r) by [done];
+      apply validsize_children in H; destruct H;
+      rewrite /validsize -/local_realsize;
+      move /option_int_eqP ->
+    | [H: is_true (validsize ?t) |- _ ] =>
+      move: H; rewrite /validsize -/local_realsize;
+      move /option_int_eqP ->
+    end.
+
+  Ltac move_wf_back_to_goal :=
+    repeat match goal with
            | [Hwf: is_true (WF ?t) |- _ ] =>
-             let Hnonneg := fresh "Hnonneg" in
-             have: WF t by [done];
-             move /WF_size_nonneg; move=>Hnonneg;
-             let Hvs := fresh "Hvs" in
-             have Hvs: validsize t by
-                 [apply WF_validsize in Hwf];
-             clear Hwf
-           | [H: is_true (validsize (Bin ?s ?x ?l ?r)) |- _ ] =>
-             have: validsize (Bin s x l r) by [done];
-             apply validsize_children in H; destruct H;
-             rewrite /validsize -/local_realsize;
-             move /option_int_eqP ->
-           | [H: is_true (validsize ?t) |- _ ] =>
-             move: H; rewrite /validsize -/local_realsize;
-             move /option_int_eqP ->
+             move: Hwf
            end.
+
+  Ltac derive_constraints :=
+    move_wf_back_to_goal;
+    repeat match goal with
+    | [ |- is_true (WF ?t) -> _ ] =>
+      let Hwf := fresh "Hwf" in
+      move=>Hwf;
+      derive_constraints_rec Hwf
+    end; derive_validsize.
 
   Ltac lucky_balanced_solve :=
     derive_constraints; subst; rewrite_for_omega; intros; omega.
@@ -577,27 +599,19 @@ Module Foo (E : OrderedType) : WSfun(E).
           try solve [intros; derive_constraints; subst;
                      rewrite_for_omega; intros; omega].
         destruct_match; intros;
-          rewrite_size; rewrite_Int; (* why can't [omega] solve it? *)
-            rewrite -Z.add_assoc [1 + _]Z.add_comm //.
-      + intros. rewrite_size; rewrite_Int.
-        rewrite -Z.add_assoc [1 + _]Z.add_comm //.
-    - intros. rewrite_size; rewrite_Int.
-      rewrite Z.add_0_r Z.add_comm //.
+          rewrite_size; rewrite_Int; omega.
+      + intros. rewrite_size; rewrite_Int; omega.
+    - intros. rewrite_size; rewrite_Int; omega.
     - rewrite /balanceR;
         destruct rl as [srl xrl rll rlr | ];
         destruct rr as [srr xrr rrl rrr | ].
-      + destruct_match; intros; rewrite_size; rewrite_Int;
-          rewrite -Z.add_assoc Z.add_0_l Z.add_comm //.
+      + destruct_match; intros; rewrite_size; rewrite_Int; omega.
       + intros. derive_constraints; subst.
-        destruct Hbalanced; rewrite_for_omega.
-        * intros. have Hs: (size rll + size rlr = 0) by omega. rewrite Hs //.
-        * intros. omega.
+        destruct Hbalanced; rewrite_for_omega; intros; omega.
       + intros. derive_constraints; subst.
-        destruct Hbalanced; rewrite_for_omega.
-        * intros. have Hs: (size rrl + size rrr = 0) by omega. rewrite Hs //.
-        * intros. omega.
+        destruct Hbalanced; rewrite_for_omega; intros; omega.
       + intros; derive_constraints. move: Hsum.
-        rewrite_for_omega. intros. rewrite -Hsum. reflexivity.
+        rewrite_for_omega. intros; omega.
     - rewrite_size. do 2 elim. rewrite_Int. reflexivity.
   Qed.
 
@@ -646,7 +660,7 @@ Module Foo (E : OrderedType) : WSfun(E).
       destruct_match; solve_balanced.
     - (** Both [l] and [r] and [Tip]s. *)
       step_in_balanced.
-      Time Qed. (* Finished transaction in 20.068 secs (19.946u,0.053s) (successful) *)
+      Time Qed. (* Finished transaction in 20.936 secs (20.87u,0.044s) (successful) *)
 
     Definition before_balancedR (x: elt) (l r : Set_ elt) : Prop :=
     (size l + size r <= 2 /\ size l <= 1) \/
@@ -702,7 +716,9 @@ Module Foo (E : OrderedType) : WSfun(E).
              let Hl2 := fresh "Hlb" in
              move: H; case /and4P=>//;
              rewrite -/local_bounded /partial_gt /partial_lt;
-             move=> Hc1 Hc2 Hl1 Hl2
+             move=> Hc1 Hc2 Hl1 Hl2;
+             autorewrite with elt_compare in Hc1;
+             autorewrite with elt_compare in Hc2
            | [H: is_true (local_bounded _ _ _) |- _ ] =>
              let Hc1 := fresh "Hcomp" in
              let Hc2 := fresh "Hcomp" in
@@ -711,10 +727,12 @@ Module Foo (E : OrderedType) : WSfun(E).
              move: H; rewrite /local_bounded;
              case /and4P=>//;
              rewrite -/local_bounded /partial_gt /partial_lt;
-             move=> Hc1 Hc2 Hl1 Hl2
-           end; autorewrite with elt_compare in *.
+             move=> Hc1 Hc2 Hl1 Hl2;
+             autorewrite with elt_compare in Hc1;
+             autorewrite with elt_compare in Hc2
+           end.
 
-  Ltac rel_deriver := eauto 2.
+    Ltac rel_deriver := eauto 2.
   
   Ltac solve_relations_single_step :=
     match goal with
@@ -744,17 +762,15 @@ Module Foo (E : OrderedType) : WSfun(E).
         end.
 
   Ltac rewrite_relations :=
-    repeat (autorewrite with elt_compare in *;
-            prepare_relations;
+    repeat (prepare_relations;
             solve_relations;
             try match goal with
                 | [ |- context[Base.compare ?a ?b]] =>
-                  destruct_match
+                  let H := fresh "Hcomp" in
+                  destruct (Base.compare a b) eqn:H;
+                  autorewrite with elt_compare in H
                 end).
   
-  Ltac solve_membership :=
-    solve [derive_compare; rewrite_relations].
-    
   Lemma membership_prop : forall s y x l r,
       member y (Bin s x l r) ->
       (E.eq y x \/ member y l \/ member y r).
@@ -784,9 +800,9 @@ Module Foo (E : OrderedType) : WSfun(E).
            end.
 
   Ltac solve_bst :=
-    repeat (destruct_match; rewrite_relations;
-            try solve [lucky_balanced_solve]);
-    try solve [derive_compare; OrdFacts.order].
+    rewrite_relations;
+    repeat (destruct_match; rewrite_relations; derive_compare);
+    auto 1; try solve [OrdFacts.order | lucky_balanced_solve].
 
   Lemma size_zero : forall (s : Set_ elt),
       WF s -> size s <= 0 -> s = Tip.
@@ -803,17 +819,13 @@ Module Foo (E : OrderedType) : WSfun(E).
       before_ordered x l r (const true) (const true) ->
       (In_set y (Bin s x l r) <-> In_set y (balanceL x l r)).
   Proof.
-    prepare_bst. split; solve_bst.
+    prepare_bst. split; solve_bst; derive_constraints.
     - have Hs0: size s1_1 <= 0.
-      { derive_constraints; rewrite_for_omega; intros; omega. }
-      apply WF_children in H; destruct H.
-      apply WF_children in H2; destruct H2.
-      apply (size_zero _ H2) in Hs0; subst; auto.
+      { rewrite_for_omega; intros; omega. }
+      apply (size_zero _ Hwfl0) in Hs0; subst; auto.
     - have Hs0: size s1_2 <= 0.
-      { derive_constraints; rewrite_for_omega; intros; omega. }
-      apply WF_children in H; destruct H.
-      apply WF_children in H2; destruct H2.
-      apply (size_zero _ H3) in Hs0; subst; auto.
+      { rewrite_for_omega; intros; omega. }
+      apply (size_zero _ Hwfr0) in Hs0; subst; auto.
   Qed.
 
   Lemma balanceR_preserves_membership : forall s y x l r,
@@ -823,17 +835,13 @@ Module Foo (E : OrderedType) : WSfun(E).
       before_ordered x l r (const true) (const true) ->
       (In_set y (Bin s x l r) <-> In_set y (balanceR x l r)).
   Proof.
-    prepare_bst. split; solve_bst.
+    prepare_bst. split; solve_bst; derive_constraints.
     - have Hs0: size s1_1 <= 0.
-      { derive_constraints; rewrite_for_omega; intros; omega. }
-      apply WF_children in H0; destruct H0.
-      apply WF_children in H0; destruct H0.
-      apply (size_zero _ H0) in Hs0; subst; auto.
+      { rewrite_for_omega; intros; omega. }
+      apply (size_zero _ Hwfl0) in Hs0; subst; auto.
     - have Hs0: size s1_2 <= 0.
-      { derive_constraints; rewrite_for_omega; intros; omega. }
-      apply WF_children in H0; destruct H0.
-      apply WF_children in H0; destruct H0.
-      apply (size_zero _ H3) in Hs0; subst; auto.
+      { rewrite_for_omega; intros; omega. }
+      apply (size_zero _ Hwfr0) in Hs0; subst; auto.
   Qed.
 
   Lemma size_irrelevance_in_ordered : forall s1 s2 x (l r : Set_ elt),
@@ -968,7 +976,6 @@ Module Foo (E : OrderedType) : WSfun(E).
     - apply balanceR_validsize...
   Qed.
 
-
   Lemma inset_balanceL : forall (x y : elt) (l r : Set_ elt),
       WF l ->
       WF r ->
@@ -977,18 +984,16 @@ Module Foo (E : OrderedType) : WSfun(E).
       E.eq x y \/ (E.lt y x /\ In_set y l) \/ (E.lt x y /\ In_set y r) ->
       In_set y (balanceL x l r).
   Proof.
-    prepare_bst. move=>[? | [[? ?] | [? ?]]]; solve_bst.
+    prepare_bst.
+    move=>[Hrel | [[Hrel Hcom] | [Hrel Hcom]]]; try move: Hcom;
+           solve_bst; derive_constraints.
     - have Hs0: size s5 <= 0.
-      { derive_constraints; rewrite_for_omega; intros; omega. }
-      apply WF_children in H; destruct H.
-      apply WF_children in H2; destruct H2.
-      apply (size_zero _ H2) in Hs0; subst; auto.
+      { rewrite_for_omega; intros; omega. }
+      apply (size_zero _ Hwfl0) in Hs0; subst; auto.
     - have Hs0: size s6 <= 0.
-      { derive_constraints; rewrite_for_omega; intros; omega. }
-      apply WF_children in H; destruct H.
-      apply WF_children in H2; destruct H2.
-      apply (size_zero _ H3) in Hs0; subst; auto.
-  Time Qed. (* Finished transaction in 5.667 secs (5.626u,0.035s) (successful) *)
+      { rewrite_for_omega; intros; omega. }
+      apply (size_zero _ Hwfr0) in Hs0; subst; auto.
+  Time Qed. (* Finished transaction in 4.718 secs (4.648u,0.053s) (successful) *)
   
   Lemma inset_balanceR : forall (x y : elt) (l r : Set_ elt),
       WF l ->
@@ -998,18 +1003,16 @@ Module Foo (E : OrderedType) : WSfun(E).
       E.eq x y \/ (E.lt y x /\ In_set y l) \/ (E.lt x y /\ In_set y r) ->
       In_set y (balanceR x l r).
   Proof.
-    prepare_bst. move=>[? | [[? ?] | [? ?]]]; solve_bst.
+    prepare_bst.
+    move=>[? | [[? Hcom] | [? Hcom]]]; try move: Hcom;
+           solve_bst; derive_constraints.
     - have Hs0: size s5 <= 0.
-      { derive_constraints; rewrite_for_omega; intros; omega. }
-      apply WF_children in H0; destruct H0.
-      apply WF_children in H0; destruct H0.
-      apply (size_zero _ H0) in Hs0; subst; auto.
+      { rewrite_for_omega; intros; omega. }
+      apply (size_zero _ Hwfl0) in Hs0; subst; auto.
     - have Hs0: size s6 <= 0.
-      { derive_constraints; rewrite_for_omega; intros; omega. }
-      apply WF_children in H0; destruct H0.
-      apply WF_children in H0; destruct H0.
-      apply (size_zero _ H3) in Hs0; subst; auto.
-  Time Qed. (* Finished transaction in 5.877 secs (5.847u,0.014s) (successful) *)
+      { rewrite_for_omega; intros; omega. }
+      apply (size_zero _ Hwfr0) in Hs0; subst; auto.
+  Time Qed. (* Finished transaction in 4.768 secs (4.737u,0.011s) (successful) *)
   
   Definition mem : elt -> t -> bool := fun e s' =>
     s <-- s' ;; member e s.
@@ -1046,9 +1049,9 @@ Module Foo (E : OrderedType) : WSfun(E).
               local_bounded (fun arg => arg GHC.Base.> a) g (insert e s))).
   Proof.
     induction s.
-    - intros. rewrite /insert/=. destruct_match; split3.
+    - intros. rewrite /insert/=. destruct_match; split3; derive_constraints.
       + (** s is Bin, e = a, prove: WF (insert e s) *)
-        apply elt_compare_eq in Heq. move: H.
+        apply elt_compare_eq in Heq. move: Hwf.
         rewrite /WF /valid. case /and3P=>//; intros.
         apply /and3P=>//; split=>//. apply E.eq_sym in Heq.
         eapply ordered_rewrite; eauto.
@@ -1056,154 +1059,118 @@ Module Foo (E : OrderedType) : WSfun(E).
         right. rewrite /size=>//.
       + intros. split; intros; solve_local_bounded_with_relax.
       + (** s is Bin, e < a, prove: WF (insert e s) *)
-        intros. apply balanceL_WF.
+        intros. apply balanceL_WF; auto.
         * (** WF (insert e s2) *)
-          apply WF_children in H. apply IHs1. tauto.
-        * (** WF s3 *)
-          apply WF_children in H. tauto.
+            by apply IHs1.
         * (** (insert e s2) and s3 satisfy [before_balancedL]'s
               pre-condbitions. *)
           rewrite -/insert /before_balancedL.
-          have Hs1: WF s2 by [apply WF_children in H; tauto].
-          apply IHs1 in Hs1; destruct Hs1.
+          apply IHs1 in Hwfl; destruct Hwfl.
           (** cases analysis: did we insert an element to s2?  *)
-          destruct H1 as [[H1 | H1] _].
+          destruct H0 as [[H0 | H0] _].
           -- (** we did *)
             destruct s2; destruct s3; derive_constraints; subst;
               repeat match goal with
                      | [H: _ \/ _ |- _ ] => destruct H
                      | [H: _ /\ _ |- _ ] => destruct H
-                     end; rewrite_for_omega; rewrite ?H1;
+                     end; rewrite_for_omega; rewrite ?H0;
                 try solve [(right + left); omega].
           -- (** we didn't *) derive_constraints; subst.
-             rewrite H1. destruct Hbalanced; (left + right); omega.
+             rewrite H0. destruct Hbalanced; (left + right); omega.
         * (** prove [before_ordered] pre-conditions *)
           rewrite -/insert /before_ordered.
-          have Hord: ordered (Bin 0 a s2 s3).
-          { apply WF_ordered in H.
-            eapply size_irrelevance_in_ordered. eauto. }
-          move: Hord. rewrite /ordered. rewrite -/local_bounded.
+          derive_constraints. move: Hord0. rewrite /ordered.
           case /and4P=>// => _ _ Hlo Hhi.
           split; [| split; [| split; [| split; [| split]]]]=>//.
-          apply WF_children in H; destruct H.
-          apply IHs1 in H. destruct H as [ _ [_ Hord']].
+          apply IHs1 in Hwfl. destruct Hwfl as [ _ [_ Hord']].
           specialize (Hord' a); destruct Hord'.
           apply H=>//. autorewrite with elt_compare in *. auto.
       + (** prove [size (insert e s) = size s + 1] *)
-        rewrite -/insert.
-        have Hs1: WF s2 by [apply WF_children in H; tauto].
-        rewrite balanceL_add_size=>//.
-        * apply IHs1 in Hs1.
-          destruct Hs1 as [_ [[Hs | Hs] _]];
+        rewrite -/insert. rewrite balanceL_add_size=>//.
+        * apply IHs1 in Hwfl.
+          destruct Hwfl as [_ [[Hs | Hs] _]];
             derive_constraints; subst; rewrite Hs.
-          -- left.
-             rewrite [size s2 + 1]Z.add_comm [(_ + 1) + 1]Z.add_comm !Z.add_assoc //.
+          -- left. rewrite_size; rewrite_Int. omega.
           -- right. reflexivity.
-        * apply IHs1 in Hs1. tauto.
-        * apply WF_children in H. tauto.
+        * apply IHs1 in Hwfl. tauto.
       + intros; split; intros;
           apply balanceL_ordered=>//;
-          try solve [rewrite -/insert; apply WF_children in H; destruct H;
-                     apply IHs1 in H; tauto];
-          try solve [apply WF_children in H; tauto];
+          try solve [rewrite -/insert; by apply IHs1];
           try solve [rewrite -/insert /before_balancedL;
-                     have Hwf: WF (Bin s1 a s2 s3) by [done];
-                     apply WF_children in H; destruct H;
-                     apply IHs1 in H; destruct H as [? [Hs _]];
-                     destruct Hs; derive_constraints;
-                     subst; rewrite_for_omega;
-                     rewrite H5; intros; omega].
-        * move: H3. case /and4P=>// => Hf Hlt Hlo Hhi.
+                     apply IHs1 in Hwfl; destruct Hwfl as [? [Hs _]];
+                     destruct Hs; subst; rewrite_for_omega;
+                     rewrite H4; intros; omega].
+        * move: H2. case /and4P=>// => Hf Hlt Hlo Hhi.
           rewrite -/insert /before_ordered.
           split; [| split; [| split; [| split; [| split]]]]=>//.
           -- intros. autorewrite with elt_compare in *.
-             intuition; eauto. apply E.eq_sym in H5; eauto.
-          -- apply WF_children in H; destruct H.
-             apply IHs1 in H. destruct H as [ _ [_ Hord']].
+             intuition; OrdFacts.order.
+          -- apply IHs1 in Hwfl. destruct Hwfl as [ _ [_ Hord']].
              specialize (Hord' a); destruct Hord'.
-             apply H=>//. autorewrite with elt_compare in *. auto.
-        * move: H3. case /and4P=>// => Hf Hlt Hlo Hhi.
+             apply H2=>//. autorewrite with elt_compare in *. auto.
+        * move: H2. case /and4P=>// => Hf Hlt Hlo Hhi.
           rewrite -/insert /before_ordered.
           split; [| split; [| split; [| split; [| split]]]]=>//.
           -- intros. autorewrite with elt_compare in *.
-             intuition; eauto. 
-          -- apply WF_children in H; destruct H.
-             apply IHs1 in H. destruct H as [ _ [_ Hord']].
+             intuition; OrdFacts.order.
+          -- apply IHs1 in Hwfl. destruct Hwfl as [ _ [_ Hord']].
              specialize (Hord' a0); destruct Hord'.
-             apply H4=>//; try intros;
+             apply H3=>//; try intros;
                autorewrite with elt_compare in *; auto.
-             destruct H5; eauto. apply E.eq_sym in H5. eauto.
+             intuition; OrdFacts.order.
       + (** s is Bin, e > a, prove: WF (insert e s) *)
-        intros. apply balanceR_WF.
-        * (** WF s2 *)
-          apply WF_children in H. tauto.
+        intros. apply balanceR_WF; auto.
         * (** WF (insert e s3) *)
-          apply WF_children in H. apply IHs2. tauto.
+          by apply IHs2.
         * (** s2 and (insert e s3) satisfy [before_balancedR]'s
               pre-condbitions. *)
           rewrite -/insert /before_balancedR.
-          have Hs2: WF s3 by [apply WF_children in H; tauto].
-          apply IHs2 in Hs2; destruct Hs2.
+          apply IHs2 in Hwfr; destruct Hwfr.
           (** cases analysis: did we insert an element to s3?  *)
-          destruct H1 as [[H1 | H1] _].
+          destruct H0 as [[H1 | H1] _].
           -- (** we did *)
-            destruct s2; destruct s3; derive_constraints; subst;
+            destruct s2; destruct s3; subst;
               rewrite_for_omega; rewrite ?H1; intros; omega.
-          -- (** we didn't *) derive_constraints; subst.
+          -- (** we didn't *) subst.
              rewrite H1. destruct Hbalanced; (left + right); omega.
         * (** prove [before_ordered] pre-conditions *)
           rewrite -/insert /before_ordered.
-          have Hord: ordered (Bin 0 a s2 s3).
-          { apply WF_ordered in H.
-            eapply size_irrelevance_in_ordered. eauto. }
           move: Hord. rewrite /ordered. rewrite -/local_bounded.
           case /and4P=>// => _ _ Hlo Hhi.
           split; [| split; [| split; [| split; [| split]]]]=>//.
-          apply WF_children in H; destruct H.
-          apply IHs2 in H0. destruct H0 as [ _ [_ Hord']].
+          apply IHs2 in Hwfr. destruct Hwfr as [ _ [_ Hord']].
           specialize (Hord' a); destruct Hord'.
-          apply H1=>//. autorewrite with elt_compare in *. auto.
-      + rewrite -/insert.
-        have Hs2: WF s3 by [apply WF_children in H; tauto].
-        rewrite balanceR_add_size=>//.
-        * apply IHs2 in Hs2.
-          destruct Hs2 as [_ [[Hs | Hs] _]];
-            derive_constraints; subst; rewrite Hs.
+          apply H0=>//. autorewrite with elt_compare in *. auto.
+      + rewrite -/insert balanceR_add_size=>//.
+        * apply IHs2 in Hwfr.
+          destruct Hwfr as [_ [[Hs | Hs] _]]; subst; rewrite Hs.
           -- left. rewrite Z.add_assoc //.
           -- right. reflexivity.
-        * apply WF_children in H. tauto.
-        * apply IHs2 in Hs2. tauto.
+        * by apply IHs2.
       + intros; split; intros;
           apply balanceR_ordered=>//;
-          try solve [rewrite -/insert; apply WF_children in H; destruct H;
-                     apply IHs1 in H; tauto];
-          try solve [apply WF_children in H; tauto];
+          try solve [rewrite -/insert; by apply IHs2];
           try solve [rewrite -/insert /before_balancedR;
-                     have Hwf: WF (Bin s1 a s2 s3) by [done];
-                     apply WF_children in H; destruct H as [_ H];
-                     apply IHs2 in H; destruct H as [? [Hs _]];
-                     destruct Hs as [Hs | Hs]; derive_constraints;
-                       subst; rewrite_for_omega;
-                         rewrite Hs; intros; omega].
-        * move: H3. case /and4P=>// => Hf Hlt Hlo Hhi.
+                     apply IHs2 in Hwfr; destruct Hwfr as [? [Hs _]];
+                     destruct Hs as [Hs | Hs]; subst; rewrite_for_omega;
+                       rewrite Hs; intros; omega].
+        * move: H2. case /and4P=>// => Hf Hlt Hlo Hhi.
           rewrite -/insert /before_ordered.
           split; [| split; [| split; [| split; [| split]]]]=>//.
           -- intros. autorewrite with elt_compare in *.
-             intuition; eauto. apply E.eq_sym in H5; eauto.
-          -- apply WF_children in H; destruct H.
-             apply IHs2 in H3. destruct H3 as [ _ [_ Hord']].
+             intuition; OrdFacts.order.
+          -- apply IHs2 in Hwfr. destruct Hwfr as [ _ [_ Hord']].
              specialize (Hord' a0); destruct Hord'.
-             apply H3=>//; try intros; autorewrite with elt_compare in *; auto.
-             destruct H5; eauto.
-        * move: H3. case /and4P=>// => Hf Hlt Hlo Hhi.
+             apply H2=>//; try intros; autorewrite with elt_compare in *; auto.
+             intuition; OrdFacts.order.
+        * move: H2. case /and4P=>// => Hf Hlt Hlo Hhi.
           rewrite -/insert /before_ordered.
           split; [| split; [| split; [| split; [| split]]]]=>//.
           -- intros. autorewrite with elt_compare in *.
-             intuition; eauto. 
-          -- apply WF_children in H; destruct H.
-             apply IHs2 in H3. destruct H3 as [ _ [_ Hord']].
+             intuition; OrdFacts.order.
+          -- apply IHs2 in Hwfr. destruct Hwfr as [ _ [_ Hord']].
              specialize (Hord' a); destruct Hord'.
-             apply H4=>//; autorewrite with elt_compare in *; auto.
+             apply H3=>//; autorewrite with elt_compare in *; auto.
     - simpl. elim. rewrite /singleton. split3.
       + apply WF_singleton.
       + left; reflexivity.
@@ -1217,12 +1184,10 @@ Module Foo (E : OrderedType) : WSfun(E).
       E.lt x e ->
       before_balancedL e (insert x l) r.
   Proof.
-    intros; rewrite -/insert /before_balancedL.
+    intros; rewrite -/insert /before_balancedL. derive_constraints.
     have Hs: size (insert x l) = size l + 1 \/ size (insert x l) = size l
-      by [ apply WF_children in H; destruct H;
-           apply insert_prop with (e:=x) in H; tauto ].
-    derive_constraints.
-    destruct Hs; rewrite H; destruct Hbalanced;
+      by [ apply insert_prop with (e:=x) ].
+    destruct Hs as [H | H]; rewrite H; destruct Hbalanced;
       solve [(left + right); split; rewrite_for_omega; intros; omega].
   Qed.
 
@@ -1231,12 +1196,10 @@ Module Foo (E : OrderedType) : WSfun(E).
       E.lt e x ->
       before_balancedR e l (insert x r).
   Proof.
-    intros; rewrite -/insert /before_balancedR.
+    intros; rewrite -/insert /before_balancedR. derive_constraints.
     have Hs: size (insert x r) = size r + 1 \/ size (insert x r) = size r
-      by [ apply WF_children in H; destruct H;
-           apply insert_prop with (e:=x) in H1; tauto ].
-    derive_constraints.
-    destruct Hs; rewrite H; destruct Hbalanced;
+      by [apply insert_prop with (e:=x) ].
+    destruct Hs as [H | H]; rewrite H; destruct Hbalanced;
       solve [(left + right); split; rewrite_for_omega; intros; omega].
   Qed.
 
@@ -1279,18 +1242,16 @@ Module Foo (E : OrderedType) : WSfun(E).
     forall (s : t) (x y : elt), E.eq x y -> In x s -> In y s.
   Proof.
     move=>s x y. rewrite /In /In_set. elim s=>[s'].
-    elim s'=>[sl sx l IHl r IHr | ]=>Hwf Heq.
+    elim s'=>[sl sx l IHl r IHr | ]=>Hwf Heq; derive_constraints.
     - simpl. destruct_match.
       + move: Heq0. move /elt_compare_eq => Heq'.
         prepare_relations. solve_relations.
       + move: Heq0. move /elt_compare_lt => Heq'.
         prepare_relations. solve_relations.
-        move: Hwf. move /WF_children. elim. move=>? _.
-        apply IHl=>//.
+        by apply IHl.
       + move: Heq0. move /elt_compare_gt => Heq'.
         prepare_relations. solve_relations.
-        move: Hwf. move /WF_children. elim. move=>_ ?.
-        apply IHr=>//.
+        by apply IHr.
     - elim. rewrite /member //.
   Qed.
 
@@ -1329,8 +1290,7 @@ Module Foo (E : OrderedType) : WSfun(E).
       E.lt y x ->
       WF (insert y l).
   Proof.
-    intros; apply WF_children in H; destruct H.
-    apply insert_prop with (e:=y) in H. destruct H as [? _]. auto.
+    intros; derive_constraints. by apply insert_prop.
   Qed.
 
   Lemma WF_prop_r1 :
@@ -1339,8 +1299,7 @@ Module Foo (E : OrderedType) : WSfun(E).
       E.lt x y ->
       WF (insert y r).
   Proof.
-    intros; apply WF_children in H; destruct H.
-    apply insert_prop with (e:=y) in H1. destruct H1 as [? _]. auto.
+    intros; derive_constraints. by apply insert_prop.
   Qed.
 
   Lemma WF_prop_l2 :
@@ -1349,10 +1308,9 @@ Module Foo (E : OrderedType) : WSfun(E).
       E.lt y x ->
       before_balancedL x (insert y l) r.
   Proof.
-    intros. have Hwf: WF (Bin s x l r) by [done].
-    apply WF_children in H; destruct H.
-    apply insert_prop with (e:=y) in H. destruct H as [_ [? _]].
-    rewrite /before_balancedL. derive_constraints; subst.
+    intros; derive_constraints.
+    apply insert_prop with (e:=y) in Hwfl.
+    destruct Hwfl as [_ [? _]]. rewrite /before_balancedL. 
     destruct H as [Hs | Hs]; rewrite_for_omega;
       rewrite Hs; intros; omega.
   Qed.
@@ -1363,11 +1321,10 @@ Module Foo (E : OrderedType) : WSfun(E).
       E.lt x y ->
       before_balancedR x l (insert y r).
   Proof.
-    intros. have Hwf: WF (Bin s x l r) by [done].
-    apply WF_children in H; destruct H.
-    apply insert_prop with (e:=y) in H1. destruct H1 as [_ [? _]].
-    rewrite /before_balancedR. derive_constraints; subst.
-    destruct H1 as [Hs | Hs]; rewrite_for_omega;
+    intros; derive_constraints.
+    apply insert_prop with (e:=y) in Hwfr.
+    destruct Hwfr as [_ [? _]]. rewrite /before_balancedR. 
+    destruct H as [Hs | Hs]; rewrite_for_omega;
       rewrite Hs; intros; omega.
   Qed.
 
@@ -1377,14 +1334,11 @@ Module Foo (E : OrderedType) : WSfun(E).
       E.lt y x ->
       before_ordered x (insert y l) r (const true) (const true).
   Proof.
-    intros. have Hord: ordered (Bin 0 x l r).
-    { apply WF_ordered in H.
-      eapply size_irrelevance_in_ordered. eauto. }
+    intros; derive_constraints.
     move: Hord. rewrite /ordered. rewrite -/local_bounded.
     case /and4P=>//. move=>_ _ Hlo Hhi.
     rewrite /before_ordered.
-    apply WF_children in H; destruct H.
-    apply insert_prop with (e:=y) in H. destruct H as [_ [_ ?]].
+    apply insert_prop with (e:=y) in Hwfl. destruct Hwfl as [_ [_ ?]].
     specialize (H x). destruct H as [Hf Hg]. repeat split=>//.
     apply Hf=>//.
   Qed.
@@ -1395,15 +1349,12 @@ Module Foo (E : OrderedType) : WSfun(E).
       E.lt x y ->
       before_ordered x l (insert y r) (const true) (const true).
   Proof.
-    intros. have Hord: ordered (Bin 0 x l r).
-    { apply WF_ordered in H.
-      eapply size_irrelevance_in_ordered. eauto. }
+    intros; derive_constraints.
     move: Hord. rewrite /ordered. rewrite -/local_bounded.
     case /and4P=>//. move=>_ _ Hlo Hhi.
     rewrite /before_ordered.
-    apply WF_children in H; destruct H.
-    apply insert_prop with (e:=y) in H1. destruct H1 as [_ [_ ?]].
-    specialize (H1 x). destruct H1 as [Hf Hg]. repeat split=>//.
+    apply insert_prop with (e:=y) in Hwfr. destruct Hwfr as [_ [_ ?]].
+    specialize (H x). destruct H as [Hf Hg]. repeat split=>//.
     apply Hg=>//.
   Qed.
 
@@ -1429,19 +1380,15 @@ Module Foo (E : OrderedType) : WSfun(E).
   Lemma add_1 :
     forall (s : t) (x y : elt), E.eq x y -> In y (add x s).
   Proof with eauto.
-    intros. destruct s as [s]. simpl. induction s.
+    intros. destruct s as [s]. simpl. induction s; derive_constraints.
     - rewrite /insert /= -/insert. destruct_match.
       + rewrite /In_set /member /= -/member.
         move: H. move /E.eq_sym /elt_compare_eq -> =>//.
       + autorewrite with elt_compare in *; apply inset_balanceL...
-        * apply WF_children in i; tauto.
         * right; left. split.
           -- apply E.eq_sym in H...
-          -- apply WF_children in i. destruct i. apply IHs1 in H0...
+          -- by apply IHs1.
       + autorewrite with elt_compare in *; apply inset_balanceR...
-        * apply WF_children in i; tauto.
-        * right; right. split...
-          -- apply WF_children in i. destruct i. apply IHs2 in H1...
     - rewrite /insert /= /Base.singleton /In_set /member /=.
       move: H. move /E.eq_sym /elt_compare_eq -> =>//.
   Qed.
@@ -1449,7 +1396,7 @@ Module Foo (E : OrderedType) : WSfun(E).
   Lemma add_2 : forall (s : t) (x y : elt), In y s -> In y (add x s).
   Proof with eauto.
     destruct s as [s]. simpl. intros; induction s.
-    - rewrite /insert /= -/insert. destruct_match.
+    - rewrite /insert /= -/insert. destruct_match; derive_constraints.
       + move: H. rewrite /In_set /member /= -/member.
         have Heq': (Base.compare y x = Base.compare y a).
         {destruct (Base.compare y a) eqn:Hcomp;
@@ -1457,60 +1404,40 @@ Module Foo (E : OrderedType) : WSfun(E).
           apply E.eq_sym in Heq. eauto. }
         destruct_match; rewrite Heq' //.
       + autorewrite with elt_compare in *; apply inset_balanceL...
-        * apply WF_children in i. tauto.
-        * apply inset_destruct in H. intuition.
-          apply WF_children in i; destruct i.
-          apply (IHs1 H) in H1. intuition.
+        apply inset_destruct in H. intuition.
       + autorewrite with elt_compare in *; apply inset_balanceR...
-        * apply WF_children in i. tauto.
-        * apply inset_destruct in H. intuition.
-          apply WF_children in i; destruct i.
-          apply (IHs2 H2) in H1. intuition.
-    - inversion H.
+        apply inset_destruct in H. intuition.
+    - discriminate.
   Qed.
     
   Lemma add_3 :
     forall (s : t) (x y : elt), ~ E.eq x y -> In y (add x s) -> In y s.
   Proof.
-    destruct s as [s]. simpl. intros; induction s.
-    - move: H0. rewrite /insert /= -/insert. destruct_match.
-      + have Heq': (Base.compare y x = Base.compare y a).
-        { destruct (Base.compare y a) eqn:Hcomp;
-            autorewrite with elt_compare in *; eauto.
-          apply E.eq_sym in Heq. eauto. }
-        rewrite /In_set /member /= -/member.
-        destruct_match; rewrite -Heq' //.
-      + move=>Hb. apply balanceL_preserves_membership with (s:=0) in Hb.
+    destruct s as [s]. simpl.
+    intros; induction s; move: H0; rewrite /insert /= -/insert.
+    - rewrite_relations; derive_constraints.
+      + move /inset_destruct; intuition;
+          rewrite /In_set /member /= -/member; solve_relations.
+      + move=>Hb. apply balanceL_preserves_membership with (s:=0) in Hb; auto.
         * move: Hb. rewrite /In_set /=.
-          destruct_match; auto. apply IHs1.
-          apply WF_children in i; tauto.
-        * apply insert_prop. apply WF_children in i; tauto.
-        * apply WF_children in i. tauto.
-        * rewrite_relations. eapply left_insert_before_balancedL; eauto.
-        * rewrite_relations. rewrite /before_ordered. repeat split; auto.
+          destruct_match; auto. by apply IHs1.
+        * by apply insert_prop.
+        * by apply left_insert_before_balancedL with (s:=s1).
+        * rewrite /before_ordered. repeat split; auto.
           -- apply insert_prop; auto.
-             ++ apply WF_children in i; tauto.
-             ++ move: i. rewrite /WF /valid. case /and3P => _ Hord _.
-                move: Hord. rewrite /ordered. case /and4P => _ _ ? ?. auto.
-          -- move: i. rewrite /WF /valid. case /and3P => _ Hord _.
              move: Hord. rewrite /ordered. case /and4P => _ _ ? ?. auto.
-      + move=>Hb. apply balanceR_preserves_membership with (s:=0) in Hb.
+          -- move: Hord. rewrite /ordered. case /and4P => _ _ ? ?. auto.
+      + move=>Hb. apply balanceR_preserves_membership with (s:=0) in Hb; auto.
         * move: Hb. rewrite /In_set /=.
-          destruct_match; auto. apply IHs2.
-          apply WF_children in i; tauto.
-        * apply WF_children in i. tauto.
-        * apply insert_prop. apply WF_children in i; tauto.
-        * rewrite_relations. eapply right_insert_before_balancedR; eauto.
-        * rewrite_relations. rewrite /before_ordered. repeat split; auto.
-          -- move: i. rewrite /WF /valid. case /and3P => _ Hord _.
-             move: Hord. rewrite /ordered. case /and4P => _ _ ? ?. auto.
+          destruct_match; auto. by apply IHs2.
+        * by apply insert_prop. 
+        * by eapply right_insert_before_balancedR with (s:=s1).
+        * rewrite /before_ordered. repeat split; auto.
+          -- move: Hord. rewrite /ordered. case /and4P => _ _ ? ?. auto.
           -- apply insert_prop; auto.
-             ++ apply WF_children in i; tauto.
-             ++ move: i. rewrite /WF /valid. case /and3P => _ Hord _.
-                move: Hord. rewrite /ordered. case /and4P => _ _ ? ?. auto.
-    - inversion H0. move: H2.
-      destruct_match; autorewrite with elt_compare in *.
-      apply E.eq_sym in Heq. contradiction.
+             move: Hord. rewrite /ordered. case /and4P => _ _ ? ?. auto.
+    - rewrite /In_set /member /Base.singleton.
+      rewrite_relations; auto.
   Qed.
 
   Lemma remove_1 :

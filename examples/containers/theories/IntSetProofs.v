@@ -3888,22 +3888,21 @@ Proof.
   * assert (0 < bm)%N by admit.
     assert (Hbm : isBitMask bm) by (unfold isBitMask in Hsmall; unfold isBitMask; auto).
     clear H.
-    rewrite lowestBitMask_revNat by assumption.
+    rewrite !lowestBitMask_revNat by assumption.
     rewrite <- revNat_lxor by (try apply isBitMask_highestBitMask; assumption).
-    rewrite lxor_highestBitMask.
+    rewrite lxor_highestBitMask by assumption.
     assert (Htermination : (N.ldiff bm (highestBitMask bm) < bm)%N) by admit.
     rewrite -> IH by (apply Htermination || apply isBitMask0_ldiff; assumption).
-    rewrite bitmapInRange_ldiff.
-    rewrite andb_true_iff.
-    rewrite negb_true_iff.
+    replace bm with (N.lor (N.ldiff bm (highestBitMask bm)) (highestBitMask bm)) at 4 by admit.
+    rewrite bitmapInRange_lor.
+    rewrite orb_true_iff.
     rewrite In_cons_iff.
-    replace (rPrefix r + (64 - 1) - Z.of_N (N.log2 (lowestBitMask (revNat bm))))
+    replace (rPrefix r + (64 - 1) - Z.of_N (N.log2 (revNat (highestBitMask bm))))
         with (rPrefix r + Z.of_N (N.log2 (highestBitMask bm))) by admit.
     replace (bitmapInRange r (highestBitMask bm) i)
         with (rPrefix r + Z.of_N (N.log2 (highestBitMask bm)) =? i) by admit.
-    destruct (Z.eqb_spec (rPrefix r + Z.of_N (N.log2 (highestBitMask bm))) i); try solve [intuition].
-    subst. intuition.
-    left. admit.
+    rewrite Z.eqb_eq.
+    tauto.
 Admitted.
 
 Definition toList_go :=

@@ -51,6 +51,7 @@ Section Int_And_Z.
 End Int_And_Z.
 
 Ltac rewrite_Int :=
+  unfold Int;
   repeat (rewrite ?Int_plus_is_Z_plus ?Int_minus_is_Z_minus
                   ?Int_mult_is_Z_mult
                   ?Int_lt_is_Z_lt ?Int_le_is_Z_le

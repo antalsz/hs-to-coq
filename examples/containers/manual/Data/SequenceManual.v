@@ -312,7 +312,20 @@ Definition getNodes {a} : nat -> a -> list a -> (list (Node a) * Digit a)%type :
              | arg , _ , _ => j_9__
              end.
 
-
+Lemma getNodes_length:
+  forall {a} s x (xs : list a),
+  length (fst (getNodes s x xs)) <= length xs.
+Proof.
+  fix IH 4.
+  intros.
+  destruct xs as [|? xs]; simpl; auto.
+  destruct xs as [|? xs]; simpl; auto.
+  destruct xs as [|? xs]; simpl; auto.
+  specialize (IH _ s a2 xs).
+  destruct (getNodes _ _ _).
+  simpl in *.
+  omega.
+Qed.
 
 Program Fixpoint  mkTree {a} `{(Sized a)} (s:nat) (x : list a) {measure (length x)} : FingerTree a :=
     match x with
@@ -331,8 +344,11 @@ Program Fixpoint  mkTree {a} `{(Sized a)} (s:nat) (x : list a) {measure (length 
       end
     end.
 Obligation 1.
-admit.
-Admitted.
+  clear mkTree.
+  pose proof (getNodes_length (s + (s + (s + 0))) x4 xs).
+  destruct (getNodes _ _ _). simpl in *. inversion_clear Heq_anonymous. omega.
+Qed.
+
 
 Definition fromList {a} : list a -> Seq a :=
   Mk_Seq GHC.Base.∘ ((@mkTree (Elem a) _ 1) GHC.Base.∘ map_elem).

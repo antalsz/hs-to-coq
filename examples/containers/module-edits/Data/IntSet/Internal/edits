@@ -49,6 +49,19 @@ redefine Definition Data.IntSet.Internal.zero : GHC.Num.Int -> (Mask -> bool) :=
 redefine Definition Data.IntSet.Internal.branchMask : Prefix -> (Prefix -> Mask) :=
   fun p1 p2 => Coq.ZArith.BinInt.Z.pow 2 (Coq.ZArith.BinInt.Z.log2 (Coq.ZArith.BinInt.Z.lxor p1 p2)).
 
+# indexOfTheOnlyBit uses pointers and ugly stuff
+redefine Definition Data.IntSet.Internal.indexOfTheOnlyBit :=
+ fun x => Coq.ZArith.BinInt.Z.of_N (Coq.NArith.BinNat.N.log2 x).
+
+redefine Definition Data.IntSet.Internal.lowestBitMask : Nat -> Nat :=
+  fun n => Data.IntSet.Internal.revNatSafe (Data.IntSet.Internal.highestBitMask (Data.IntSet.Internal.revNatSafe n)).
+
+# the revNat function is only correct if its result is cropped to 64 bits.
+add Data.IntSet.Internal Definition Data.IntSet.Internal.revNatSafe n := Coq.NArith.BinNat.N.modulo (Data.IntSet.Internal.revNat n) (Coq.NArith.BinNat.N.pow 2 64).
+# Use rewrite, not rename, to not change the name of the actual definition
+rewrite forall, Data.IntSet.Internal.revNat = Data.IntSet.Internal.revNatSafe
+
+
 
 # A bitmask adressing the last 6 bits of an int.
 # This is the only place where otherwise the FiniteBits class is used
@@ -80,6 +93,8 @@ skip Data.IntSet.Internal.Monoid__IntSet
 
 
 # We need Integral N to use GHC.Real.fromIntegral to go from N to Z
-skip module Coq.ZArith.BinInt.Z
 rename value Data.IntSet.Internal.intFromNat = Coq.ZArith.BinInt.Z.of_N
 skip Coq.ZArith.BinInt.Z.of_N
+
+skip module Coq.ZArith.BinInt.Z
+skip module Coq.NArith.BinNat.N

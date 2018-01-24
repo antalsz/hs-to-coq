@@ -21,20 +21,20 @@ Inductive BitQueueB : Type := BQB : GHC.Num.Word -> GHC.Num.Word -> BitQueueB.
 Inductive BitQueue : Type := BQ : BitQueueB -> BitQueue.
 (* Converted value declarations: *)
 
-Axiom emptyQB : forall {A : Type}, A.
+Axiom emptyQB : BitQueueB.
 
-Axiom toListQ : forall {A : Type}, A.
+Axiom toListQ : BitQueue -> list bool.
 
-Axiom unconsQ : forall {A : Type}, A.
+Axiom unconsQ : BitQueue -> option (bool * BitQueue)%type.
 
-Axiom snocQB : forall {A : Type}, A.
+Axiom snocQB : BitQueueB -> bool -> BitQueueB.
 
-Axiom shiftQBR1 : forall {A : Type}, A.
+Axiom shiftQBR1 : BitQueueB -> BitQueueB.
 
-Axiom buildQ : forall {A : Type}, A.
+Axiom buildQ : BitQueueB -> BitQueue.
 
-Axiom nullQ : forall {A : Type}, A.
+Axiom nullQ : BitQueue -> bool.
 
 (* Unbound variables:
-     GHC.Num.Word
+     bool list op_zt__ option GHC.Num.Word
 *)

@@ -54,9 +54,7 @@ Definition shiftLL (n: Nat) (s : BinInt.Z) : Nat :=
 Definition shiftRL (n: Nat) (s : BinInt.Z) : Nat :=
 	Coq.NArith.BinNat.N.shiftr n (Coq.ZArith.BinInt.Z.to_N s).
 
-Definition highestBitMask (n: Nat) : Nat := match n with
- | Coq.Numbers.BinNums.N0 => Coq.Numbers.BinNums.N0
- | Coq.Numbers.BinNums.Npos p => Coq.Numbers.BinNums.Npos (Coq.ZArith.Zcomplements.floor_pos p) end.
+Definition highestBitMask (n: Nat) : Nat := Coq.NArith.BinNat.N.pow 2 (Coq.NArith.BinNat.N.log2 n).
 
 Require Import NArith.
 Definition bit_N := shiftLL 1%N.
@@ -139,10 +137,6 @@ Axiom unsafeFix : forall {a}, (a -> a) -> a.
    failed: OOPS! Cannot find information for class Qualified "Control.DeepSeq"
    "NFData" unsupported *)
 
-Axiom indexOfTheOnlyBit : forall {A : Type}, A.
-
-(* Translating `indexOfTheOnlyBit' failed: `Addr#' literals unsupported *)
-
 Definition bin : Prefix -> Mask -> IntSet -> IntSet -> IntSet :=
   fun arg_0__ arg_1__ arg_2__ arg_3__ =>
     match arg_0__ , arg_1__ , arg_2__ , arg_3__ with
@@ -176,6 +170,9 @@ Definition equal : IntSet -> IntSet -> bool :=
 Local Definition Eq___IntSet_op_zeze__ : IntSet -> IntSet -> bool :=
   fun t1 t2 => equal t1 t2.
 
+Definition indexOfTheOnlyBit :=
+  fun x => Coq.ZArith.BinInt.Z.of_N (Coq.NArith.BinNat.N.log2 x).
+
 Definition highestBitSet : Nat -> GHC.Num.Int :=
   fun x => indexOfTheOnlyBit (highestBitMask x).
 
@@ -186,102 +183,6 @@ Definition unsafeFindMax : IntSet -> option Key :=
              | Tip kx bm => Some GHC.Base.$ (kx GHC.Num.+ highestBitSet bm)
              | Bin _ _ _ r => unsafeFindMax r
            end.
-
-Definition lowestBitMask : Nat -> Nat :=
-  fun x => x Data.Bits..&.(**) GHC.Num.negate x.
-
-Definition lowestBitSet : Nat -> GHC.Num.Int :=
-  fun x => indexOfTheOnlyBit (lowestBitMask x).
-
-Definition unsafeFindMin : IntSet -> option Key :=
-  fix unsafeFindMin arg_0__
-        := match arg_0__ with
-             | Nil => None
-             | Tip kx bm => Some GHC.Base.$ (kx GHC.Num.+ lowestBitSet bm)
-             | Bin _ _ l _ => unsafeFindMin l
-           end.
-
-Definition foldlBits {a}
-    : GHC.Num.Int -> (a -> GHC.Num.Int -> a) -> a -> Nat -> a :=
-  fun prefix f z bitmap =>
-    let go :=
-      unsafeFix (fun go arg_0__ arg_1__ =>
-                  let j_6__ :=
-                    match arg_0__ , arg_1__ with
-                      | bm , acc => match lowestBitMask bm with
-                                      | bitmask => match indexOfTheOnlyBit bitmask with
-                                                     | bi => go (Data.Bits.xor bm bitmask) ((f acc) GHC.Base.$! (prefix
-                                                                                           GHC.Num.+ bi))
-                                                   end
-                                    end
-                    end in
-                  match arg_0__ , arg_1__ with
-                    | num_2__ , acc => if num_2__ GHC.Base.== GHC.Num.fromInteger 0 : bool
-                                       then acc
-                                       else j_6__
-                  end) in
-    go bitmap z.
-
-Definition foldl {a} : (a -> Key -> a) -> a -> IntSet -> a :=
-  fun f z =>
-    let fix go arg_0__ arg_1__
-              := match arg_0__ , arg_1__ with
-                   | z' , Nil => z'
-                   | z' , Tip kx bm => foldlBits kx f z' bm
-                   | z' , Bin _ _ l r => go (go z' l) r
-                 end in
-    fun t =>
-      let j_6__ := go z t in
-      match t with
-        | Bin _ m l r => if m GHC.Base.< GHC.Num.fromInteger 0 : bool
-                         then go (go z r) l
-                         else go (go z l) r
-        | _ => j_6__
-      end.
-
-Definition foldlFB {a} : (a -> Key -> a) -> a -> IntSet -> a :=
-  foldl.
-
-Definition toDescList : IntSet -> list Key :=
-  foldl (GHC.Base.flip cons) nil.
-
-Definition foldl'Bits {a}
-    : GHC.Num.Int -> (a -> GHC.Num.Int -> a) -> a -> Nat -> a :=
-  fun prefix f z bitmap =>
-    let go :=
-      unsafeFix (fun go arg_0__ arg_1__ =>
-                  let j_6__ :=
-                    match arg_0__ , arg_1__ with
-                      | bm , acc => match lowestBitMask bm with
-                                      | bitmask => match indexOfTheOnlyBit bitmask with
-                                                     | bi => go (Data.Bits.xor bm bitmask) ((f acc) GHC.Base.$! (prefix
-                                                                                           GHC.Num.+ bi))
-                                                   end
-                                    end
-                    end in
-                  match arg_0__ , arg_1__ with
-                    | num_2__ , acc => if num_2__ GHC.Base.== GHC.Num.fromInteger 0 : bool
-                                       then acc
-                                       else j_6__
-                  end) in
-    go bitmap z.
-
-Definition foldl' {a} : (a -> Key -> a) -> a -> IntSet -> a :=
-  fun f z =>
-    let fix go arg_0__ arg_1__
-              := match arg_0__ , arg_1__ with
-                   | z' , Nil => z'
-                   | z' , Tip kx bm => foldl'Bits kx f z' bm
-                   | z' , Bin _ _ l r => go (go z' l) r
-                 end in
-    fun t =>
-      let j_6__ := go z t in
-      match t with
-        | Bin _ m l r => if m GHC.Base.< GHC.Num.fromInteger 0 : bool
-                         then go (go z r) l
-                         else go (go z l) r
-        | _ => j_6__
-      end.
 
 Definition mask : GHC.Num.Int -> Mask -> Prefix :=
   fun i m =>
@@ -377,6 +278,105 @@ Definition revNat : Nat -> Nat :=
               end
     end.
 
+Definition revNatSafe n :=
+  Coq.NArith.BinNat.N.modulo (revNat n) (Coq.NArith.BinNat.N.pow 2 64).
+
+Definition lowestBitMask : Nat -> Nat :=
+  fun n => revNatSafe (highestBitMask (revNatSafe n)).
+
+Definition lowestBitSet : Nat -> GHC.Num.Int :=
+  fun x => indexOfTheOnlyBit (lowestBitMask x).
+
+Definition unsafeFindMin : IntSet -> option Key :=
+  fix unsafeFindMin arg_0__
+        := match arg_0__ with
+             | Nil => None
+             | Tip kx bm => Some GHC.Base.$ (kx GHC.Num.+ lowestBitSet bm)
+             | Bin _ _ l _ => unsafeFindMin l
+           end.
+
+Definition foldlBits {a}
+    : GHC.Num.Int -> (a -> GHC.Num.Int -> a) -> a -> Nat -> a :=
+  fun prefix f z bitmap =>
+    let go :=
+      unsafeFix (fun go arg_0__ arg_1__ =>
+                  let j_6__ :=
+                    match arg_0__ , arg_1__ with
+                      | bm , acc => match lowestBitMask bm with
+                                      | bitmask => match indexOfTheOnlyBit bitmask with
+                                                     | bi => go (Data.Bits.xor bm bitmask) ((f acc) GHC.Base.$! (prefix
+                                                                                           GHC.Num.+ bi))
+                                                   end
+                                    end
+                    end in
+                  match arg_0__ , arg_1__ with
+                    | num_2__ , acc => if num_2__ GHC.Base.== GHC.Num.fromInteger 0 : bool
+                                       then acc
+                                       else j_6__
+                  end) in
+    go bitmap z.
+
+Definition foldl {a} : (a -> Key -> a) -> a -> IntSet -> a :=
+  fun f z =>
+    let fix go arg_0__ arg_1__
+              := match arg_0__ , arg_1__ with
+                   | z' , Nil => z'
+                   | z' , Tip kx bm => foldlBits kx f z' bm
+                   | z' , Bin _ _ l r => go (go z' l) r
+                 end in
+    fun t =>
+      let j_6__ := go z t in
+      match t with
+        | Bin _ m l r => if m GHC.Base.< GHC.Num.fromInteger 0 : bool
+                         then go (go z r) l
+                         else go (go z l) r
+        | _ => j_6__
+      end.
+
+Definition foldlFB {a} : (a -> Key -> a) -> a -> IntSet -> a :=
+  foldl.
+
+Definition toDescList : IntSet -> list Key :=
+  foldl (GHC.Base.flip cons) nil.
+
+Definition foldl'Bits {a}
+    : GHC.Num.Int -> (a -> GHC.Num.Int -> a) -> a -> Nat -> a :=
+  fun prefix f z bitmap =>
+    let go :=
+      unsafeFix (fun go arg_0__ arg_1__ =>
+                  let j_6__ :=
+                    match arg_0__ , arg_1__ with
+                      | bm , acc => match lowestBitMask bm with
+                                      | bitmask => match indexOfTheOnlyBit bitmask with
+                                                     | bi => go (Data.Bits.xor bm bitmask) ((f acc) GHC.Base.$! (prefix
+                                                                                           GHC.Num.+ bi))
+                                                   end
+                                    end
+                    end in
+                  match arg_0__ , arg_1__ with
+                    | num_2__ , acc => if num_2__ GHC.Base.== GHC.Num.fromInteger 0 : bool
+                                       then acc
+                                       else j_6__
+                  end) in
+    go bitmap z.
+
+Definition foldl' {a} : (a -> Key -> a) -> a -> IntSet -> a :=
+  fun f z =>
+    let fix go arg_0__ arg_1__
+              := match arg_0__ , arg_1__ with
+                   | z' , Nil => z'
+                   | z' , Tip kx bm => foldl'Bits kx f z' bm
+                   | z' , Bin _ _ l r => go (go z' l) r
+                 end in
+    fun t =>
+      let j_6__ := go z t in
+      match t with
+        | Bin _ m l r => if m GHC.Base.< GHC.Num.fromInteger 0 : bool
+                         then go (go z r) l
+                         else go (go z l) r
+        | _ => j_6__
+      end.
+
 Definition foldrBits {a}
     : GHC.Num.Int -> (GHC.Num.Int -> a -> a) -> a -> Nat -> a :=
   fun prefix f z bitmap =>
@@ -399,7 +399,7 @@ Definition foldrBits {a}
                                        then acc
                                        else j_6__
                   end) in
-    go (revNat bitmap) z.
+    go (revNatSafe bitmap) z.
 
 Definition foldr {b} : (Key -> b -> b) -> b -> IntSet -> b :=
   fun f z =>
@@ -485,7 +485,7 @@ Definition foldr'Bits {a}
                                        then acc
                                        else j_6__
                   end) in
-    go (revNat bitmap) z.
+    go (revNatSafe bitmap) z.
 
 Definition foldr' {b} : (Key -> b -> b) -> b -> IntSet -> b :=
   fun f z =>
@@ -1149,7 +1149,8 @@ End Notations.
 (* Unbound variables:
      Eq Gt Lt None Some andb bitCount_N bool comparison cons false highestBitMask id
      list negb nil op_zp__ op_zt__ option orb pair shiftLL shiftRL size_nat
-     suffixBitMask true Coq.ZArith.BinInt.Z.eqb Coq.ZArith.BinInt.Z.land
+     suffixBitMask true Coq.NArith.BinNat.N.log2 Coq.NArith.BinNat.N.modulo
+     Coq.NArith.BinNat.N.pow Coq.ZArith.BinInt.Z.eqb Coq.ZArith.BinInt.Z.land
      Coq.ZArith.BinInt.Z.lnot Coq.ZArith.BinInt.Z.log2 Coq.ZArith.BinInt.Z.lxor
      Coq.ZArith.BinInt.Z.of_N Coq.ZArith.BinInt.Z.pow Coq.ZArith.BinInt.Z.pred
      Data.Bits.complement Data.Bits.op_zizazi__ Data.Bits.op_zizbzi__ Data.Bits.xor

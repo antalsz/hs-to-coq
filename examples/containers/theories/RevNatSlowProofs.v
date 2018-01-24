@@ -4,524 +4,492 @@ Require Import Bool.Bool.
 
 Definition WIDTH : N := 64%N.
 
-Local Definition revNat n :=
-  N.lor
-     (N.shiftr
-        (N.lor
-           (N.land
-              (N.shiftr
-                 (N.lor
-                    (N.land
-                       (N.shiftr
-                          (N.lor
-                             (N.land
-                                (N.shiftr
-                                   (N.lor
-                                      (N.land
-                                         (N.shiftr
-                                            (N.lor
-                                               (N.land
-                                                  (N.shiftr n (Z.to_N 1))
-                                                  (Z.to_N 6148914691236517205))
-                                               (N.shiftl
-                                                  (N.land n
-                                                     (Z.to_N
-                                                        6148914691236517205))
-                                                  (Z.to_N 1))) (Z.to_N 2))
-                                         (Z.to_N 3689348814741910323))
-                                      (N.shiftl
-                                         (N.land
-                                            (N.lor
-                                               (N.land
-                                                  (N.shiftr n (Z.to_N 1))
-                                                  (Z.to_N 6148914691236517205))
-                                               (N.shiftl
-                                                  (N.land n
-                                                     (Z.to_N
-                                                        6148914691236517205))
-                                                  (Z.to_N 1)))
-                                            (Z.to_N 3689348814741910323))
-                                         (Z.to_N 2))) (Z.to_N 4))
-                                (Z.to_N 1085102592571150095))
-                             (N.shiftl
-                                (N.land
-                                   (N.lor
-                                      (N.land
-                                         (N.shiftr
-                                            (N.lor
-                                               (N.land
-                                                  (N.shiftr n (Z.to_N 1))
-                                                  (Z.to_N 6148914691236517205))
-                                               (N.shiftl
-                                                  (N.land n
-                                                     (Z.to_N
-                                                        6148914691236517205))
-                                                  (Z.to_N 1))) (Z.to_N 2))
-                                         (Z.to_N 3689348814741910323))
-                                      (N.shiftl
-                                         (N.land
-                                            (N.lor
-                                               (N.land
-                                                  (N.shiftr n (Z.to_N 1))
-                                                  (Z.to_N 6148914691236517205))
-                                               (N.shiftl
-                                                  (N.land n
-                                                     (Z.to_N
-                                                        6148914691236517205))
-                                                  (Z.to_N 1)))
-                                            (Z.to_N 3689348814741910323))
-                                         (Z.to_N 2)))
-                                   (Z.to_N 1085102592571150095)) (Z.to_N 4)))
-                          (Z.to_N 8)) (Z.to_N 71777214294589695))
-                    (N.shiftl
-                       (N.land
-                          (N.lor
-                             (N.land
-                                (N.shiftr
-                                   (N.lor
-                                      (N.land
-                                         (N.shiftr
-                                            (N.lor
-                                               (N.land
-                                                  (N.shiftr n (Z.to_N 1))
-                                                  (Z.to_N 6148914691236517205))
-                                               (N.shiftl
-                                                  (N.land n
-                                                     (Z.to_N
-                                                        6148914691236517205))
-                                                  (Z.to_N 1))) (Z.to_N 2))
-                                         (Z.to_N 3689348814741910323))
-                                      (N.shiftl
-                                         (N.land
-                                            (N.lor
-                                               (N.land
-                                                  (N.shiftr n (Z.to_N 1))
-                                                  (Z.to_N 6148914691236517205))
-                                               (N.shiftl
-                                                  (N.land n
-                                                     (Z.to_N
-                                                        6148914691236517205))
-                                                  (Z.to_N 1)))
-                                            (Z.to_N 3689348814741910323))
-                                         (Z.to_N 2))) (Z.to_N 4))
-                                (Z.to_N 1085102592571150095))
-                             (N.shiftl
-                                (N.land
-                                   (N.lor
-                                      (N.land
-                                         (N.shiftr
-                                            (N.lor
-                                               (N.land
-                                                  (N.shiftr n (Z.to_N 1))
-                                                  (Z.to_N 6148914691236517205))
-                                               (N.shiftl
-                                                  (N.land n
-                                                     (Z.to_N
-                                                        6148914691236517205))
-                                                  (Z.to_N 1))) (Z.to_N 2))
-                                         (Z.to_N 3689348814741910323))
-                                      (N.shiftl
-                                         (N.land
-                                            (N.lor
-                                               (N.land
-                                                  (N.shiftr n (Z.to_N 1))
-                                                  (Z.to_N 6148914691236517205))
-                                               (N.shiftl
-                                                  (N.land n
-                                                     (Z.to_N
-                                                        6148914691236517205))
-                                                  (Z.to_N 1)))
-                                            (Z.to_N 3689348814741910323))
-                                         (Z.to_N 2)))
-                                   (Z.to_N 1085102592571150095)) (Z.to_N 4)))
-                          (Z.to_N 71777214294589695)) (Z.to_N 8)))
-                 (Z.to_N 16)) (Z.to_N 281470681808895))
-           (N.shiftl
-              (N.land
-                 (N.lor
-                    (N.land
-                       (N.shiftr
-                          (N.lor
-                             (N.land
-                                (N.shiftr
-                                   (N.lor
-                                      (N.land
-                                         (N.shiftr
-                                            (N.lor
-                                               (N.land
-                                                  (N.shiftr n (Z.to_N 1))
-                                                  (Z.to_N 6148914691236517205))
-                                               (N.shiftl
-                                                  (N.land n
-                                                     (Z.to_N
-                                                        6148914691236517205))
-                                                  (Z.to_N 1))) (Z.to_N 2))
-                                         (Z.to_N 3689348814741910323))
-                                      (N.shiftl
-                                         (N.land
-                                            (N.lor
-                                               (N.land
-                                                  (N.shiftr n (Z.to_N 1))
-                                                  (Z.to_N 6148914691236517205))
-                                               (N.shiftl
-                                                  (N.land n
-                                                     (Z.to_N
-                                                        6148914691236517205))
-                                                  (Z.to_N 1)))
-                                            (Z.to_N 3689348814741910323))
-                                         (Z.to_N 2))) (Z.to_N 4))
-                                (Z.to_N 1085102592571150095))
-                             (N.shiftl
-                                (N.land
-                                   (N.lor
-                                      (N.land
-                                         (N.shiftr
-                                            (N.lor
-                                               (N.land
-                                                  (N.shiftr n (Z.to_N 1))
-                                                  (Z.to_N 6148914691236517205))
-                                               (N.shiftl
-                                                  (N.land n
-                                                     (Z.to_N
-                                                        6148914691236517205))
-                                                  (Z.to_N 1))) (Z.to_N 2))
-                                         (Z.to_N 3689348814741910323))
-                                      (N.shiftl
-                                         (N.land
-                                            (N.lor
-                                               (N.land
-                                                  (N.shiftr n (Z.to_N 1))
-                                                  (Z.to_N 6148914691236517205))
-                                               (N.shiftl
-                                                  (N.land n
-                                                     (Z.to_N
-                                                        6148914691236517205))
-                                                  (Z.to_N 1)))
-                                            (Z.to_N 3689348814741910323))
-                                         (Z.to_N 2)))
-                                   (Z.to_N 1085102592571150095)) (Z.to_N 4)))
-                          (Z.to_N 8)) (Z.to_N 71777214294589695))
-                    (N.shiftl
-                       (N.land
-                          (N.lor
-                             (N.land
-                                (N.shiftr
-                                   (N.lor
-                                      (N.land
-                                         (N.shiftr
-                                            (N.lor
-                                               (N.land
-                                                  (N.shiftr n (Z.to_N 1))
-                                                  (Z.to_N 6148914691236517205))
-                                               (N.shiftl
-                                                  (N.land n
-                                                     (Z.to_N
-                                                        6148914691236517205))
-                                                  (Z.to_N 1))) (Z.to_N 2))
-                                         (Z.to_N 3689348814741910323))
-                                      (N.shiftl
-                                         (N.land
-                                            (N.lor
-                                               (N.land
-                                                  (N.shiftr n (Z.to_N 1))
-                                                  (Z.to_N 6148914691236517205))
-                                               (N.shiftl
-                                                  (N.land n
-                                                     (Z.to_N
-                                                        6148914691236517205))
-                                                  (Z.to_N 1)))
-                                            (Z.to_N 3689348814741910323))
-                                         (Z.to_N 2))) (Z.to_N 4))
-                                (Z.to_N 1085102592571150095))
-                             (N.shiftl
-                                (N.land
-                                   (N.lor
-                                      (N.land
-                                         (N.shiftr
-                                            (N.lor
-                                               (N.land
-                                                  (N.shiftr n (Z.to_N 1))
-                                                  (Z.to_N 6148914691236517205))
-                                               (N.shiftl
-                                                  (N.land n
-                                                     (Z.to_N
-                                                        6148914691236517205))
-                                                  (Z.to_N 1))) (Z.to_N 2))
-                                         (Z.to_N 3689348814741910323))
-                                      (N.shiftl
-                                         (N.land
-                                            (N.lor
-                                               (N.land
-                                                  (N.shiftr n (Z.to_N 1))
-                                                  (Z.to_N 6148914691236517205))
-                                               (N.shiftl
-                                                  (N.land n
-                                                     (Z.to_N
-                                                        6148914691236517205))
-                                                  (Z.to_N 1)))
-                                            (Z.to_N 3689348814741910323))
-                                         (Z.to_N 2)))
-                                   (Z.to_N 1085102592571150095)) (Z.to_N 4)))
-                          (Z.to_N 71777214294589695)) (Z.to_N 8)))
-                 (Z.to_N 281470681808895)) (Z.to_N 16))) (Z.to_N 32))
-     (N.shiftl
-        (N.lor
-           (N.land
-              (N.shiftr
-                 (N.lor
-                    (N.land
-                       (N.shiftr
-                          (N.lor
-                             (N.land
-                                (N.shiftr
-                                   (N.lor
-                                      (N.land
-                                         (N.shiftr
-                                            (N.lor
-                                               (N.land
-                                                  (N.shiftr n (Z.to_N 1))
-                                                  (Z.to_N 6148914691236517205))
-                                               (N.shiftl
-                                                  (N.land n
-                                                     (Z.to_N
-                                                        6148914691236517205))
-                                                  (Z.to_N 1))) (Z.to_N 2))
-                                         (Z.to_N 3689348814741910323))
-                                      (N.shiftl
-                                         (N.land
-                                            (N.lor
-                                               (N.land
-                                                  (N.shiftr n (Z.to_N 1))
-                                                  (Z.to_N 6148914691236517205))
-                                               (N.shiftl
-                                                  (N.land n
-                                                     (Z.to_N
-                                                        6148914691236517205))
-                                                  (Z.to_N 1)))
-                                            (Z.to_N 3689348814741910323))
-                                         (Z.to_N 2))) (Z.to_N 4))
-                                (Z.to_N 1085102592571150095))
-                             (N.shiftl
-                                (N.land
-                                   (N.lor
-                                      (N.land
-                                         (N.shiftr
-                                            (N.lor
-                                               (N.land
-                                                  (N.shiftr n (Z.to_N 1))
-                                                  (Z.to_N 6148914691236517205))
-                                               (N.shiftl
-                                                  (N.land n
-                                                     (Z.to_N
-                                                        6148914691236517205))
-                                                  (Z.to_N 1))) (Z.to_N 2))
-                                         (Z.to_N 3689348814741910323))
-                                      (N.shiftl
-                                         (N.land
-                                            (N.lor
-                                               (N.land
-                                                  (N.shiftr n (Z.to_N 1))
-                                                  (Z.to_N 6148914691236517205))
-                                               (N.shiftl
-                                                  (N.land n
-                                                     (Z.to_N
-                                                        6148914691236517205))
-                                                  (Z.to_N 1)))
-                                            (Z.to_N 3689348814741910323))
-                                         (Z.to_N 2)))
-                                   (Z.to_N 1085102592571150095)) (Z.to_N 4)))
-                          (Z.to_N 8)) (Z.to_N 71777214294589695))
-                    (N.shiftl
-                       (N.land
-                          (N.lor
-                             (N.land
-                                (N.shiftr
-                                   (N.lor
-                                      (N.land
-                                         (N.shiftr
-                                            (N.lor
-                                               (N.land
-                                                  (N.shiftr n (Z.to_N 1))
-                                                  (Z.to_N 6148914691236517205))
-                                               (N.shiftl
-                                                  (N.land n
-                                                     (Z.to_N
-                                                        6148914691236517205))
-                                                  (Z.to_N 1))) (Z.to_N 2))
-                                         (Z.to_N 3689348814741910323))
-                                      (N.shiftl
-                                         (N.land
-                                            (N.lor
-                                               (N.land
-                                                  (N.shiftr n (Z.to_N 1))
-                                                  (Z.to_N 6148914691236517205))
-                                               (N.shiftl
-                                                  (N.land n
-                                                     (Z.to_N
-                                                        6148914691236517205))
-                                                  (Z.to_N 1)))
-                                            (Z.to_N 3689348814741910323))
-                                         (Z.to_N 2))) (Z.to_N 4))
-                                (Z.to_N 1085102592571150095))
-                             (N.shiftl
-                                (N.land
-                                   (N.lor
-                                      (N.land
-                                         (N.shiftr
-                                            (N.lor
-                                               (N.land
-                                                  (N.shiftr n (Z.to_N 1))
-                                                  (Z.to_N 6148914691236517205))
-                                               (N.shiftl
-                                                  (N.land n
-                                                     (Z.to_N
-                                                        6148914691236517205))
-                                                  (Z.to_N 1))) (Z.to_N 2))
-                                         (Z.to_N 3689348814741910323))
-                                      (N.shiftl
-                                         (N.land
-                                            (N.lor
-                                               (N.land
-                                                  (N.shiftr n (Z.to_N 1))
-                                                  (Z.to_N 6148914691236517205))
-                                               (N.shiftl
-                                                  (N.land n
-                                                     (Z.to_N
-                                                        6148914691236517205))
-                                                  (Z.to_N 1)))
-                                            (Z.to_N 3689348814741910323))
-                                         (Z.to_N 2)))
-                                   (Z.to_N 1085102592571150095)) (Z.to_N 4)))
-                          (Z.to_N 71777214294589695)) (Z.to_N 8)))
-                 (Z.to_N 16)) (Z.to_N 281470681808895))
-           (N.shiftl
-              (N.land
-                 (N.lor
-                    (N.land
-                       (N.shiftr
-                          (N.lor
-                             (N.land
-                                (N.shiftr
-                                   (N.lor
-                                      (N.land
-                                         (N.shiftr
-                                            (N.lor
-                                               (N.land
-                                                  (N.shiftr n (Z.to_N 1))
-                                                  (Z.to_N 6148914691236517205))
-                                               (N.shiftl
-                                                  (N.land n
-                                                     (Z.to_N
-                                                        6148914691236517205))
-                                                  (Z.to_N 1))) (Z.to_N 2))
-                                         (Z.to_N 3689348814741910323))
-                                      (N.shiftl
-                                         (N.land
-                                            (N.lor
-                                               (N.land
-                                                  (N.shiftr n (Z.to_N 1))
-                                                  (Z.to_N 6148914691236517205))
-                                               (N.shiftl
-                                                  (N.land n
-                                                     (Z.to_N
-                                                        6148914691236517205))
-                                                  (Z.to_N 1)))
-                                            (Z.to_N 3689348814741910323))
-                                         (Z.to_N 2))) (Z.to_N 4))
-                                (Z.to_N 1085102592571150095))
-                             (N.shiftl
-                                (N.land
-                                   (N.lor
-                                      (N.land
-                                         (N.shiftr
-                                            (N.lor
-                                               (N.land
-                                                  (N.shiftr n (Z.to_N 1))
-                                                  (Z.to_N 6148914691236517205))
-                                               (N.shiftl
-                                                  (N.land n
-                                                     (Z.to_N
-                                                        6148914691236517205))
-                                                  (Z.to_N 1))) (Z.to_N 2))
-                                         (Z.to_N 3689348814741910323))
-                                      (N.shiftl
-                                         (N.land
-                                            (N.lor
-                                               (N.land
-                                                  (N.shiftr n (Z.to_N 1))
-                                                  (Z.to_N 6148914691236517205))
-                                               (N.shiftl
-                                                  (N.land n
-                                                     (Z.to_N
-                                                        6148914691236517205))
-                                                  (Z.to_N 1)))
-                                            (Z.to_N 3689348814741910323))
-                                         (Z.to_N 2)))
-                                   (Z.to_N 1085102592571150095)) (Z.to_N 4)))
-                          (Z.to_N 8)) (Z.to_N 71777214294589695))
-                    (N.shiftl
-                       (N.land
-                          (N.lor
-                             (N.land
-                                (N.shiftr
-                                   (N.lor
-                                      (N.land
-                                         (N.shiftr
-                                            (N.lor
-                                               (N.land
-                                                  (N.shiftr n (Z.to_N 1))
-                                                  (Z.to_N 6148914691236517205))
-                                               (N.shiftl
-                                                  (N.land n
-                                                     (Z.to_N
-                                                        6148914691236517205))
-                                                  (Z.to_N 1))) (Z.to_N 2))
-                                         (Z.to_N 3689348814741910323))
-                                      (N.shiftl
-                                         (N.land
-                                            (N.lor
-                                               (N.land
-                                                  (N.shiftr n (Z.to_N 1))
-                                                  (Z.to_N 6148914691236517205))
-                                               (N.shiftl
-                                                  (N.land n
-                                                     (Z.to_N
-                                                        6148914691236517205))
-                                                  (Z.to_N 1)))
-                                            (Z.to_N 3689348814741910323))
-                                         (Z.to_N 2))) (Z.to_N 4))
-                                (Z.to_N 1085102592571150095))
-                             (N.shiftl
-                                (N.land
-                                   (N.lor
-                                      (N.land
-                                         (N.shiftr
-                                            (N.lor
-                                               (N.land
-                                                  (N.shiftr n (Z.to_N 1))
-                                                  (Z.to_N 6148914691236517205))
-                                               (N.shiftl
-                                                  (N.land n
-                                                     (Z.to_N
-                                                        6148914691236517205))
-                                                  (Z.to_N 1))) (Z.to_N 2))
-                                         (Z.to_N 3689348814741910323))
-                                      (N.shiftl
-                                         (N.land
-                                            (N.lor
-                                               (N.land
-                                                  (N.shiftr n (Z.to_N 1))
-                                                  (Z.to_N 6148914691236517205))
-                                               (N.shiftl
-                                                  (N.land n
-                                                     (Z.to_N
-                                                        6148914691236517205))
-                                                  (Z.to_N 1)))
-                                            (Z.to_N 3689348814741910323))
-                                         (Z.to_N 2)))
-                                   (Z.to_N 1085102592571150095)) (Z.to_N 4)))
-                          (Z.to_N 71777214294589695)) (Z.to_N 8)))
-                 (Z.to_N 281470681808895)) (Z.to_N 16))) (Z.to_N 32)).
+Local Definition revNat n := (N.lor
+   (N.shiftr
+      (N.lor
+         (N.land
+            (N.shiftr
+               (N.lor
+                  (N.land
+                     (N.shiftr
+                        (N.lor
+                           (N.land
+                              (N.shiftr
+                                 (N.lor
+                                    (N.land
+                                       (N.shiftr
+                                          (N.lor
+                                             (N.land (N.shiftr n (Z.to_N 1))
+                                                (Z.to_N 6148914691236517205))
+                                             (N.shiftl
+                                                (N.land n
+                                                   (Z.to_N
+                                                      6148914691236517205))
+                                                (Z.to_N 1))) (Z.to_N 2))
+                                       (Z.to_N 3689348814741910323))
+                                    (N.shiftl
+                                       (N.land
+                                          (N.lor
+                                             (N.land (N.shiftr n (Z.to_N 1))
+                                                (Z.to_N 6148914691236517205))
+                                             (N.shiftl
+                                                (N.land n
+                                                   (Z.to_N
+                                                      6148914691236517205))
+                                                (Z.to_N 1)))
+                                          (Z.to_N 3689348814741910323))
+                                       (Z.to_N 2))) (Z.to_N 4))
+                              (Z.to_N 1085102592571150095))
+                           (N.shiftl
+                              (N.land
+                                 (N.lor
+                                    (N.land
+                                       (N.shiftr
+                                          (N.lor
+                                             (N.land (N.shiftr n (Z.to_N 1))
+                                                (Z.to_N 6148914691236517205))
+                                             (N.shiftl
+                                                (N.land n
+                                                   (Z.to_N
+                                                      6148914691236517205))
+                                                (Z.to_N 1))) (Z.to_N 2))
+                                       (Z.to_N 3689348814741910323))
+                                    (N.shiftl
+                                       (N.land
+                                          (N.lor
+                                             (N.land (N.shiftr n (Z.to_N 1))
+                                                (Z.to_N 6148914691236517205))
+                                             (N.shiftl
+                                                (N.land n
+                                                   (Z.to_N
+                                                      6148914691236517205))
+                                                (Z.to_N 1)))
+                                          (Z.to_N 3689348814741910323))
+                                       (Z.to_N 2)))
+                                 (Z.to_N 1085102592571150095)) (Z.to_N 4)))
+                        (Z.to_N 8)) (Z.to_N 71777214294589695))
+                  (N.shiftl
+                     (N.land
+                        (N.lor
+                           (N.land
+                              (N.shiftr
+                                 (N.lor
+                                    (N.land
+                                       (N.shiftr
+                                          (N.lor
+                                             (N.land (N.shiftr n (Z.to_N 1))
+                                                (Z.to_N 6148914691236517205))
+                                             (N.shiftl
+                                                (N.land n
+                                                   (Z.to_N
+                                                      6148914691236517205))
+                                                (Z.to_N 1))) (Z.to_N 2))
+                                       (Z.to_N 3689348814741910323))
+                                    (N.shiftl
+                                       (N.land
+                                          (N.lor
+                                             (N.land (N.shiftr n (Z.to_N 1))
+                                                (Z.to_N 6148914691236517205))
+                                             (N.shiftl
+                                                (N.land n
+                                                   (Z.to_N
+                                                      6148914691236517205))
+                                                (Z.to_N 1)))
+                                          (Z.to_N 3689348814741910323))
+                                       (Z.to_N 2))) (Z.to_N 4))
+                              (Z.to_N 1085102592571150095))
+                           (N.shiftl
+                              (N.land
+                                 (N.lor
+                                    (N.land
+                                       (N.shiftr
+                                          (N.lor
+                                             (N.land (N.shiftr n (Z.to_N 1))
+                                                (Z.to_N 6148914691236517205))
+                                             (N.shiftl
+                                                (N.land n
+                                                   (Z.to_N
+                                                      6148914691236517205))
+                                                (Z.to_N 1))) (Z.to_N 2))
+                                       (Z.to_N 3689348814741910323))
+                                    (N.shiftl
+                                       (N.land
+                                          (N.lor
+                                             (N.land (N.shiftr n (Z.to_N 1))
+                                                (Z.to_N 6148914691236517205))
+                                             (N.shiftl
+                                                (N.land n
+                                                   (Z.to_N
+                                                      6148914691236517205))
+                                                (Z.to_N 1)))
+                                          (Z.to_N 3689348814741910323))
+                                       (Z.to_N 2)))
+                                 (Z.to_N 1085102592571150095)) (Z.to_N 4)))
+                        (Z.to_N 71777214294589695)) (Z.to_N 8))) (Z.to_N 16))
+            (Z.to_N 281470681808895))
+         (N.shiftl
+            (N.land
+               (N.lor
+                  (N.land
+                     (N.shiftr
+                        (N.lor
+                           (N.land
+                              (N.shiftr
+                                 (N.lor
+                                    (N.land
+                                       (N.shiftr
+                                          (N.lor
+                                             (N.land (N.shiftr n (Z.to_N 1))
+                                                (Z.to_N 6148914691236517205))
+                                             (N.shiftl
+                                                (N.land n
+                                                   (Z.to_N
+                                                      6148914691236517205))
+                                                (Z.to_N 1))) (Z.to_N 2))
+                                       (Z.to_N 3689348814741910323))
+                                    (N.shiftl
+                                       (N.land
+                                          (N.lor
+                                             (N.land (N.shiftr n (Z.to_N 1))
+                                                (Z.to_N 6148914691236517205))
+                                             (N.shiftl
+                                                (N.land n
+                                                   (Z.to_N
+                                                      6148914691236517205))
+                                                (Z.to_N 1)))
+                                          (Z.to_N 3689348814741910323))
+                                       (Z.to_N 2))) (Z.to_N 4))
+                              (Z.to_N 1085102592571150095))
+                           (N.shiftl
+                              (N.land
+                                 (N.lor
+                                    (N.land
+                                       (N.shiftr
+                                          (N.lor
+                                             (N.land (N.shiftr n (Z.to_N 1))
+                                                (Z.to_N 6148914691236517205))
+                                             (N.shiftl
+                                                (N.land n
+                                                   (Z.to_N
+                                                      6148914691236517205))
+                                                (Z.to_N 1))) (Z.to_N 2))
+                                       (Z.to_N 3689348814741910323))
+                                    (N.shiftl
+                                       (N.land
+                                          (N.lor
+                                             (N.land (N.shiftr n (Z.to_N 1))
+                                                (Z.to_N 6148914691236517205))
+                                             (N.shiftl
+                                                (N.land n
+                                                   (Z.to_N
+                                                      6148914691236517205))
+                                                (Z.to_N 1)))
+                                          (Z.to_N 3689348814741910323))
+                                       (Z.to_N 2)))
+                                 (Z.to_N 1085102592571150095)) (Z.to_N 4)))
+                        (Z.to_N 8)) (Z.to_N 71777214294589695))
+                  (N.shiftl
+                     (N.land
+                        (N.lor
+                           (N.land
+                              (N.shiftr
+                                 (N.lor
+                                    (N.land
+                                       (N.shiftr
+                                          (N.lor
+                                             (N.land (N.shiftr n (Z.to_N 1))
+                                                (Z.to_N 6148914691236517205))
+                                             (N.shiftl
+                                                (N.land n
+                                                   (Z.to_N
+                                                      6148914691236517205))
+                                                (Z.to_N 1))) (Z.to_N 2))
+                                       (Z.to_N 3689348814741910323))
+                                    (N.shiftl
+                                       (N.land
+                                          (N.lor
+                                             (N.land (N.shiftr n (Z.to_N 1))
+                                                (Z.to_N 6148914691236517205))
+                                             (N.shiftl
+                                                (N.land n
+                                                   (Z.to_N
+                                                      6148914691236517205))
+                                                (Z.to_N 1)))
+                                          (Z.to_N 3689348814741910323))
+                                       (Z.to_N 2))) (Z.to_N 4))
+                              (Z.to_N 1085102592571150095))
+                           (N.shiftl
+                              (N.land
+                                 (N.lor
+                                    (N.land
+                                       (N.shiftr
+                                          (N.lor
+                                             (N.land (N.shiftr n (Z.to_N 1))
+                                                (Z.to_N 6148914691236517205))
+                                             (N.shiftl
+                                                (N.land n
+                                                   (Z.to_N
+                                                      6148914691236517205))
+                                                (Z.to_N 1))) (Z.to_N 2))
+                                       (Z.to_N 3689348814741910323))
+                                    (N.shiftl
+                                       (N.land
+                                          (N.lor
+                                             (N.land (N.shiftr n (Z.to_N 1))
+                                                (Z.to_N 6148914691236517205))
+                                             (N.shiftl
+                                                (N.land n
+                                                   (Z.to_N
+                                                      6148914691236517205))
+                                                (Z.to_N 1)))
+                                          (Z.to_N 3689348814741910323))
+                                       (Z.to_N 2)))
+                                 (Z.to_N 1085102592571150095)) (Z.to_N 4)))
+                        (Z.to_N 71777214294589695)) (Z.to_N 8)))
+               (Z.to_N 281470681808895)) (Z.to_N 16))) (Z.to_N 32))
+   (N.shiftl
+      (N.lor
+         (N.land
+            (N.shiftr
+               (N.lor
+                  (N.land
+                     (N.shiftr
+                        (N.lor
+                           (N.land
+                              (N.shiftr
+                                 (N.lor
+                                    (N.land
+                                       (N.shiftr
+                                          (N.lor
+                                             (N.land (N.shiftr n (Z.to_N 1))
+                                                (Z.to_N 6148914691236517205))
+                                             (N.shiftl
+                                                (N.land n
+                                                   (Z.to_N
+                                                      6148914691236517205))
+                                                (Z.to_N 1))) (Z.to_N 2))
+                                       (Z.to_N 3689348814741910323))
+                                    (N.shiftl
+                                       (N.land
+                                          (N.lor
+                                             (N.land (N.shiftr n (Z.to_N 1))
+                                                (Z.to_N 6148914691236517205))
+                                             (N.shiftl
+                                                (N.land n
+                                                   (Z.to_N
+                                                      6148914691236517205))
+                                                (Z.to_N 1)))
+                                          (Z.to_N 3689348814741910323))
+                                       (Z.to_N 2))) (Z.to_N 4))
+                              (Z.to_N 1085102592571150095))
+                           (N.shiftl
+                              (N.land
+                                 (N.lor
+                                    (N.land
+                                       (N.shiftr
+                                          (N.lor
+                                             (N.land (N.shiftr n (Z.to_N 1))
+                                                (Z.to_N 6148914691236517205))
+                                             (N.shiftl
+                                                (N.land n
+                                                   (Z.to_N
+                                                      6148914691236517205))
+                                                (Z.to_N 1))) (Z.to_N 2))
+                                       (Z.to_N 3689348814741910323))
+                                    (N.shiftl
+                                       (N.land
+                                          (N.lor
+                                             (N.land (N.shiftr n (Z.to_N 1))
+                                                (Z.to_N 6148914691236517205))
+                                             (N.shiftl
+                                                (N.land n
+                                                   (Z.to_N
+                                                      6148914691236517205))
+                                                (Z.to_N 1)))
+                                          (Z.to_N 3689348814741910323))
+                                       (Z.to_N 2)))
+                                 (Z.to_N 1085102592571150095)) (Z.to_N 4)))
+                        (Z.to_N 8)) (Z.to_N 71777214294589695))
+                  (N.shiftl
+                     (N.land
+                        (N.lor
+                           (N.land
+                              (N.shiftr
+                                 (N.lor
+                                    (N.land
+                                       (N.shiftr
+                                          (N.lor
+                                             (N.land (N.shiftr n (Z.to_N 1))
+                                                (Z.to_N 6148914691236517205))
+                                             (N.shiftl
+                                                (N.land n
+                                                   (Z.to_N
+                                                      6148914691236517205))
+                                                (Z.to_N 1))) (Z.to_N 2))
+                                       (Z.to_N 3689348814741910323))
+                                    (N.shiftl
+                                       (N.land
+                                          (N.lor
+                                             (N.land (N.shiftr n (Z.to_N 1))
+                                                (Z.to_N 6148914691236517205))
+                                             (N.shiftl
+                                                (N.land n
+                                                   (Z.to_N
+                                                      6148914691236517205))
+                                                (Z.to_N 1)))
+                                          (Z.to_N 3689348814741910323))
+                                       (Z.to_N 2))) (Z.to_N 4))
+                              (Z.to_N 1085102592571150095))
+                           (N.shiftl
+                              (N.land
+                                 (N.lor
+                                    (N.land
+                                       (N.shiftr
+                                          (N.lor
+                                             (N.land (N.shiftr n (Z.to_N 1))
+                                                (Z.to_N 6148914691236517205))
+                                             (N.shiftl
+                                                (N.land n
+                                                   (Z.to_N
+                                                      6148914691236517205))
+                                                (Z.to_N 1))) (Z.to_N 2))
+                                       (Z.to_N 3689348814741910323))
+                                    (N.shiftl
+                                       (N.land
+                                          (N.lor
+                                             (N.land (N.shiftr n (Z.to_N 1))
+                                                (Z.to_N 6148914691236517205))
+                                             (N.shiftl
+                                                (N.land n
+                                                   (Z.to_N
+                                                      6148914691236517205))
+                                                (Z.to_N 1)))
+                                          (Z.to_N 3689348814741910323))
+                                       (Z.to_N 2)))
+                                 (Z.to_N 1085102592571150095)) (Z.to_N 4)))
+                        (Z.to_N 71777214294589695)) (Z.to_N 8))) (Z.to_N 16))
+            (Z.to_N 281470681808895))
+         (N.shiftl
+            (N.land
+               (N.lor
+                  (N.land
+                     (N.shiftr
+                        (N.lor
+                           (N.land
+                              (N.shiftr
+                                 (N.lor
+                                    (N.land
+                                       (N.shiftr
+                                          (N.lor
+                                             (N.land (N.shiftr n (Z.to_N 1))
+                                                (Z.to_N 6148914691236517205))
+                                             (N.shiftl
+                                                (N.land n
+                                                   (Z.to_N
+                                                      6148914691236517205))
+                                                (Z.to_N 1))) (Z.to_N 2))
+                                       (Z.to_N 3689348814741910323))
+                                    (N.shiftl
+                                       (N.land
+                                          (N.lor
+                                             (N.land (N.shiftr n (Z.to_N 1))
+                                                (Z.to_N 6148914691236517205))
+                                             (N.shiftl
+                                                (N.land n
+                                                   (Z.to_N
+                                                      6148914691236517205))
+                                                (Z.to_N 1)))
+                                          (Z.to_N 3689348814741910323))
+                                       (Z.to_N 2))) (Z.to_N 4))
+                              (Z.to_N 1085102592571150095))
+                           (N.shiftl
+                              (N.land
+                                 (N.lor
+                                    (N.land
+                                       (N.shiftr
+                                          (N.lor
+                                             (N.land (N.shiftr n (Z.to_N 1))
+                                                (Z.to_N 6148914691236517205))
+                                             (N.shiftl
+                                                (N.land n
+                                                   (Z.to_N
+                                                      6148914691236517205))
+                                                (Z.to_N 1))) (Z.to_N 2))
+                                       (Z.to_N 3689348814741910323))
+                                    (N.shiftl
+                                       (N.land
+                                          (N.lor
+                                             (N.land (N.shiftr n (Z.to_N 1))
+                                                (Z.to_N 6148914691236517205))
+                                             (N.shiftl
+                                                (N.land n
+                                                   (Z.to_N
+                                                      6148914691236517205))
+                                                (Z.to_N 1)))
+                                          (Z.to_N 3689348814741910323))
+                                       (Z.to_N 2)))
+                                 (Z.to_N 1085102592571150095)) (Z.to_N 4)))
+                        (Z.to_N 8)) (Z.to_N 71777214294589695))
+                  (N.shiftl
+                     (N.land
+                        (N.lor
+                           (N.land
+                              (N.shiftr
+                                 (N.lor
+                                    (N.land
+                                       (N.shiftr
+                                          (N.lor
+                                             (N.land (N.shiftr n (Z.to_N 1))
+                                                (Z.to_N 6148914691236517205))
+                                             (N.shiftl
+                                                (N.land n
+                                                   (Z.to_N
+                                                      6148914691236517205))
+                                                (Z.to_N 1))) (Z.to_N 2))
+                                       (Z.to_N 3689348814741910323))
+                                    (N.shiftl
+                                       (N.land
+                                          (N.lor
+                                             (N.land (N.shiftr n (Z.to_N 1))
+                                                (Z.to_N 6148914691236517205))
+                                             (N.shiftl
+                                                (N.land n
+                                                   (Z.to_N
+                                                      6148914691236517205))
+                                                (Z.to_N 1)))
+                                          (Z.to_N 3689348814741910323))
+                                       (Z.to_N 2))) (Z.to_N 4))
+                              (Z.to_N 1085102592571150095))
+                           (N.shiftl
+                              (N.land
+                                 (N.lor
+                                    (N.land
+                                       (N.shiftr
+                                          (N.lor
+                                             (N.land (N.shiftr n (Z.to_N 1))
+                                                (Z.to_N 6148914691236517205))
+                                             (N.shiftl
+                                                (N.land n
+                                                   (Z.to_N
+                                                      6148914691236517205))
+                                                (Z.to_N 1))) (Z.to_N 2))
+                                       (Z.to_N 3689348814741910323))
+                                    (N.shiftl
+                                       (N.land
+                                          (N.lor
+                                             (N.land (N.shiftr n (Z.to_N 1))
+                                                (Z.to_N 6148914691236517205))
+                                             (N.shiftl
+                                                (N.land n
+                                                   (Z.to_N
+                                                      6148914691236517205))
+                                                (Z.to_N 1)))
+                                          (Z.to_N 3689348814741910323))
+                                       (Z.to_N 2)))
+                                 (Z.to_N 1085102592571150095)) (Z.to_N 4)))
+                        (Z.to_N 71777214294589695)) (Z.to_N 8)))
+               (Z.to_N 281470681808895)) (Z.to_N 16))) (Z.to_N 32))
+ mod 2 ^ 64)%N.
 
 (* This proof of revNat_or could be used
    in a more efficient proof of revNat_spec, where
@@ -621,6 +589,8 @@ Proof.
       end.
 
   unfold revNat.
+  
+  rewrite N.mod_pow2_bits_low by assumption.
 
   Ltac solve :=
       subst;
@@ -638,9 +608,12 @@ Proof.
   apply N.nlt_0_r in H. contradiction.
 Qed.
 
-Lemma isBitMask0_revNat:
-  forall n, (n < 2^WIDTH)%N -> (revNat n < 2^WIDTH)%N.
-Admitted.
 
-(* Unfortunately, not true: *)
-Eval compute in (revNat (2^WIDTH - 1) <? 2^WIDTH)%N.
+(* Only true due to the edit which adds a [_ % 2^64] at the end *)
+Lemma isBitMask0_revNat:
+  forall n, (revNat n < 2^WIDTH)%N.
+Proof.
+  intros.
+  apply N.mod_lt.
+  intro. inversion H.
+Qed.

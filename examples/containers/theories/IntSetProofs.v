@@ -3802,14 +3802,14 @@ Require RevNatSlowProofs.
 
 Lemma revNat_spec:
   forall n i, (i < WIDTH)%N ->
-  N.testbit (revNat n) i = N.testbit n (WIDTH - 1 - i)%N.
+  N.testbit (revNatSafe n) i = N.testbit n (WIDTH - 1 - i)%N.
 Proof.
   exact (RevNatSlowProofs.revNat_spec).
 Qed.
 
 
 Lemma isBitMask0_revNat:
-  forall n, isBitMask0 n -> isBitMask0 (revNat n).
+  forall n, isBitMask0 (revNatSafe n).
 Proof.
   exact (RevNatSlowProofs.isBitMask0_revNat).
 Qed.
@@ -3817,7 +3817,7 @@ Qed.
 Lemma revNat_eq_0:
   forall bm,
   isBitMask0 bm ->
-  (revNat bm = 0)%N <->  (bm = 0)%N.
+  (revNatSafe bm = 0)%N <-> (bm = 0)%N.
 Proof.
   intros. split; intro.
   * apply N.bits_inj; intro j.
@@ -3835,7 +3835,7 @@ Qed.
 Lemma revNat_eqb_0:
   forall bm,
   isBitMask0 bm ->
-  (revNat bm =? 0)%N = (bm =? 0)%N.
+  (revNatSafe bm =? 0)%N = (bm =? 0)%N.
 Proof.
   intros.
   rewrite eq_iff_eq_true.
@@ -3846,17 +3846,17 @@ Qed.
 
 
 Lemma isBitMask_revNat:
-  forall n, isBitMask n -> isBitMask (revNat n).
+  forall n, isBitMask n -> isBitMask (revNatSafe n).
 Proof.
   intros.
   rewrite isBitMask_isBitMask_and_noneg in *.
   intuition.
   * rewrite revNat_eq_0 in H by assumption. intuition.
-  * apply isBitMask0_revNat. assumption.
+  * apply isBitMask0_revNat.
 Qed.
 
 Lemma revNat_revNat:
-  forall n, isBitMask0 n -> revNat (revNat n) = n.
+  forall n, isBitMask0 n -> revNatSafe (revNatSafe n) = n.
 Proof.
   intros.
   apply N.bits_inj_iff; intro i.
@@ -3870,7 +3870,7 @@ Qed.
 
 Lemma revNat_lxor:
   forall n m, isBitMask0 n -> isBitMask0 m ->
-    revNat (N.lxor n m) = N.lxor (revNat n) (revNat m).
+    revNatSafe (N.lxor n m) = N.lxor (revNatSafe n) (revNatSafe m).
 Proof.
   intros.
   apply N.bits_inj_iff; intro i.
@@ -3904,14 +3904,29 @@ Qed.
 Lemma lowestBitMask_highestBitMask:
   forall bm,
     isBitMask bm ->
-    lowestBitMask bm = revNat (highestBitMask (revNat bm)).
+    lowestBitMask bm = revNatSafe (highestBitMask (revNatSafe bm)).
 Admitted.
 
 Lemma revNat_pow:
   forall bm,
   isBitMask bm ->
-  (revNat (2 ^ N.log2 bm) = 2 ^ (WIDTH - 1 - N.log2 bm))%N.
-Admitted.
+  (revNatSafe (2 ^ N.log2 bm) = 2 ^ (WIDTH - 1 - N.log2 bm))%N.
+Proof.
+  intros.
+  assert (N.log2 bm < WIDTH)%N by (apply N.log2_lt_pow2; apply H).
+
+  apply N.bits_inj_iff; intro i.
+  destruct (N.ltb_spec i WIDTH).
+  * rewrite !revNat_spec by assumption.
+    rewrite !N.pow2_bits_eqb.
+    rewrite eq_iff_eq_true.
+    rewrite !N.eqb_eq.
+    Nomega.
+  * rewrite isBitMask0_outside by (assumption || apply isBitMask0_revNat).
+    symmetry.
+    apply N.pow2_bits_false.
+    Nomega.
+Qed.
 
 Lemma isBitMask_highestBitMask:
   forall bm, isBitMask bm -> isBitMask (highestBitMask bm).

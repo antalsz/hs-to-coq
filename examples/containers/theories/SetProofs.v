@@ -128,7 +128,7 @@ Module Foo (E : OrderedType) : WSfun(E).
     destruct s as [s]; destruct s' as [s']; simpl.
     destruct (s == s') eqn:Heq; move: Heq;
       rewrite /_GHC.Base.==_ /Eq___Set_; simpl;
-        rewrite /Base.Eq___Set__op_zeze__;
+        rewrite /Internal.Eq___Set__op_zeze__;
         rewrite /_GHC.Base.==_ /Eq_Integer___ /Eq_list; simpl;
           case: andP=>//.
     - elim; intros; left.
@@ -1055,13 +1055,21 @@ Module Foo (E : OrderedType) : WSfun(E).
     induction s.
     - intros. rewrite /insert/=. destruct_match; split3.
       + (** s is Bin, e = a, prove: WF (insert e s) *)
+        destruct (PtrEquality.ptrEq e a). auto.
+        replace (Datatypes.id e) with e; auto.
         apply elt_compare_eq in Heq. move: H.
         rewrite /WF /valid. case /and3P=>//; intros.
-        apply /and3P=>//; split=>//. apply E.eq_sym in Heq.
+        apply /and3P=>//; split=>//.
+        apply E.eq_sym in Heq.
         eapply ordered_rewrite; eauto.
       + (** prove [size (insert e s) = size s] *)
-        right. rewrite /size=>//.
-      + intros. split; intros; solve_local_bounded_with_relax.
+        destruct (PtrEquality.ptrEq e a). auto.
+        replace (Datatypes.id e) with e.
+        right. rewrite /size=>//. auto.
+      + intros.
+        destruct (PtrEquality.ptrEq e a). auto.
+        replace (Datatypes.id e) with e; auto.
+        split; intros; solve_local_bounded_with_relax.
       + (** s is Bin, e < a, prove: WF (insert e s) *)
         intros. apply balanceL_WF.
         * (** WF (insert e s2) *)

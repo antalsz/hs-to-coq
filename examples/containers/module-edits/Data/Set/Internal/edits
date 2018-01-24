@@ -36,3 +36,14 @@ skip Data.Set.Internal.cartesianProduct
 ## bug???
 rename value GHC.Tuple.pair_type = pair
 order Data.Set.Internal.Foldable__Set_ Data.Set.Internal.cartesianProduct
+
+## partial, bleh
+skip Data.Set.Internal.findMax
+skip Data.Set.Internal.findMin
+skip Data.Set.Internal.findIndex
+skip Data.Set.Internal.deleteFindMin
+skip Data.Set.Internal.deleteFindMax
+
+### also partial, and no Maybe alternative
+skip Data.Set.Internal.elemAt
+skip Data.Set.Internal.deleteAt

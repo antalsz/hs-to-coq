@@ -386,16 +386,6 @@ Definition lookupMax {a} : Set_ a -> option a :=
       | Bin _ x _ r => Some GHC.Base.$! lookupMaxSure x r
     end.
 
-Definition findMax {a} : Set_ a -> a :=
-  fun t =>
-    let j_0__ :=
-      GHC.Err.error (GHC.Base.hs_string__
-                    "Set.findMax: empty set has no maximal element") in
-    match lookupMax t with
-      | Some r => r
-      | _ => j_0__
-    end.
-
 Definition lookupMinSure {a} : a -> Set_ a -> a :=
   fix lookupMinSure arg_0__ arg_1__
         := match arg_0__ , arg_1__ with
@@ -408,16 +398,6 @@ Definition lookupMin {a} : Set_ a -> option a :=
     match arg_0__ with
       | Tip => None
       | Bin _ x l _ => Some GHC.Base.$! lookupMinSure x l
-    end.
-
-Definition findMin {a} : Set_ a -> a :=
-  fun t =>
-    let j_0__ :=
-      GHC.Err.error (GHC.Base.hs_string__
-                    "Set.findMin: empty set has no minimal element") in
-    match lookupMin t with
-      | Some r => r
-      | _ => j_0__
     end.
 
 Definition mapMonotonic {a} {b} : (a -> b) -> Set_ a -> Set_ b :=
@@ -511,33 +491,6 @@ Definition lookupIndex {a} `{GHC.Base.Ord a} : a -> Set_ a -> option
                                            end
              end in
   go (GHC.Num.fromInteger 0).
-
-Definition findIndex {a} `{GHC.Base.Ord a} : a -> Set_ a -> GHC.Num.Int :=
-  let go {a} `{GHC.Base.Ord a} : GHC.Num.Int -> a -> Set_ a -> GHC.Num.Int :=
-    fix go arg_0__ arg_1__ arg_2__
-          := match arg_0__ , arg_1__ , arg_2__ with
-               | _ , _ , Tip => GHC.Err.error (GHC.Base.hs_string__
-                                              "Set.findIndex: element is not in the set")
-               | idx , x , Bin _ kx l r => match GHC.Base.compare x kx with
-                                             | Lt => go idx x l
-                                             | Gt => go ((idx GHC.Num.+ size l) GHC.Num.+ GHC.Num.fromInteger 1) x r
-                                             | Eq => idx GHC.Num.+ size l
-                                           end
-             end in
-  go (GHC.Num.fromInteger 0).
-
-Definition elemAt {a} : GHC.Num.Int -> Set_ a -> a :=
-  fix elemAt arg_0__ arg_1__
-        := match arg_0__ , arg_1__ with
-             | _ , Tip => GHC.Err.error (GHC.Base.hs_string__
-                                        "Set.elemAt: index out of range")
-             | i , Bin _ x l r => let sizeL := size l in
-                                  match GHC.Base.compare i sizeL with
-                                    | Lt => elemAt i l
-                                    | Gt => elemAt ((i GHC.Num.- sizeL) GHC.Num.- GHC.Num.fromInteger 1) r
-                                    | Eq => x
-                                  end
-           end.
 
 Definition bin {a} : a -> Set_ a -> Set_ a -> Set_ a :=
   fun x l r =>
@@ -671,16 +624,6 @@ Definition minView {a} : Set_ a -> option (a * Set_ a)%type :=
     match arg_0__ with
       | Tip => None
       | Bin _ x l r => Some GHC.Base.$! (id GHC.Base.$ minViewSure x l r)
-    end.
-
-Definition deleteFindMin {a} : Set_ a -> (a * Set_ a)%type :=
-  fun t =>
-    let j_0__ :=
-      pair (GHC.Err.error (GHC.Base.hs_string__
-                          "Set.deleteFindMin: can not return the minimal element of an empty set")) Tip in
-    match minView t with
-      | Some r => r
-      | _ => j_0__
     end.
 
 Definition balanceL {a} : a -> Set_ a -> Set_ a -> Set_ a :=
@@ -1153,16 +1096,6 @@ Definition maxView {a} : Set_ a -> option (a * Set_ a)%type :=
       | Bin _ x l r => Some GHC.Base.$! (id GHC.Base.$ maxViewSure x l r)
     end.
 
-Definition deleteFindMax {a} : Set_ a -> (a * Set_ a)%type :=
-  fun t =>
-    let j_0__ :=
-      pair (GHC.Err.error (GHC.Base.hs_string__
-                          "Set.deleteFindMax: can not return the maximal element of an empty set")) Tip in
-    match maxView t with
-      | Some r => r
-      | _ => j_0__
-    end.
-
 Definition glue {a} : Set_ a -> Set_ a -> Set_ a :=
   fun arg_0__ arg_1__ =>
     match arg_0__ , arg_1__ with
@@ -1385,19 +1318,6 @@ Definition take {a} : GHC.Num.Int -> Set_ a -> Set_ a :=
                  then m
                  else j_14__
     end.
-
-Definition deleteAt {a} : GHC.Num.Int -> Set_ a -> Set_ a :=
-  fix deleteAt i t
-        := match t with
-             | Tip => GHC.Err.error (GHC.Base.hs_string__ "Set.deleteAt: index out of range")
-             | Bin _ x l r => let sizeL := size l in
-                              match GHC.Base.compare i sizeL with
-                                | Lt => balanceR x (deleteAt i l) r
-                                | Gt => balanceL x l (deleteAt ((i GHC.Num.- sizeL) GHC.Num.-
-                                                               GHC.Num.fromInteger 1) r)
-                                | Eq => glue l r
-                              end
-           end.
 
 Definition difference {a} `{GHC.Base.Ord a} : Set_ a -> Set_ a -> Set_ a :=
   fix difference arg_0__ arg_1__

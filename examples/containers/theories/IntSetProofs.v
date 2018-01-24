@@ -3975,7 +3975,18 @@ Lemma lxor_highestBitMask:
   forall bm,
   isBitMask bm ->
   N.lxor bm (highestBitMask bm) = N.ldiff bm (highestBitMask bm).
-Admitted.
+Proof.
+  intros.
+  unfold highestBitMask.
+  apply N.bits_inj. intro j.
+  rewrite N.lxor_spec, N.ldiff_spec, N.pow2_bits_eqb.
+  destruct (N.eqb_spec (N.log2 bm) j).
+  * subst.
+    split_bool; try reflexivity; exfalso.
+    rewrite N.bit_log2 in Heqb by (unfold isBitMask in H; Nomega).
+    congruence.
+  * split_bool; try reflexivity.
+Qed.
 
 Lemma bitmapInRange_pow:
   forall r e i,

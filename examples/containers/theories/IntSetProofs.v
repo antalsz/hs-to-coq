@@ -3778,9 +3778,6 @@ Qed.
 
 (** ** Specifing [toList] *)
 
-(** At the moment I do not see a way of proving this. So let
-use take it as the specification for [revNat] (and build the rest on top of it).
-*)
 Ltac unfoldMethods :=
   unfold op_zeze__, Eq_Char___, op_zeze____,
          fromInteger, Num_Word__,
@@ -3801,109 +3798,21 @@ Proof.
   * apply N.shiftl_spec_high'; assumption.
 Qed.
 
-Definition hidden_lor := N.lor.
-
-Lemma land_hidden_lor:
-  forall a b x,
-  N.land (hidden_lor a b) x = hidden_lor (N.land a x) (N.land b x).
-Proof.
-  intros.
-  unfold hidden_lor.
-  apply N.bits_inj_iff; intro i.
-  repeat first [rewrite N.land_spec | rewrite N.lor_spec].
-  repeat split_bool; reflexivity.
-Qed.
-
-Lemma lor_hidden_lor:
-  forall a b c d,
-  N.lor (hidden_lor a b) (hidden_lor c d) = hidden_lor (N.lor a c) (N.lor b d).
-Proof.
-  intros.
-  unfold hidden_lor.
-  apply N.bits_inj_iff; intro i.
-  repeat first [rewrite N.lor_spec | rewrite N.lxor_spec].
-  repeat split_bool; try reflexivity.
-Qed.
-
-Lemma shiftr_hidden_lor:
-  forall a b n,
-  N.shiftr (hidden_lor a b) n = hidden_lor (N.shiftr a n) (N.shiftr b n).
-Proof.
-  exact N.shiftr_lor.
-Qed.
-
-Lemma shiftl_hidden_lor:
-  forall a b n,
-  N.shiftl (hidden_lor a b) n = hidden_lor (N.shiftl a n) (N.shiftl b n).
-Proof.
-  exact N.shiftl_lor.
-Qed.
-
-
-Lemma revNat_or:
-  forall a b,
-  revNat (N.lor a b) = N.lor (revNat a) (revNat b).
-Proof.
-  intros.
-  fold hidden_lor.
-  unfold revNat.
-  unfoldMethods.
-  repeat match goal with
-  | [ |- _ = hidden_lor (N.lor _ _) (N.lor _ _) ] =>
-      rewrite <- lor_hidden_lor; f_equal
-  | [ |- _ = hidden_lor (N.land _ _) (N.land _ _) ] =>
-      rewrite <- land_hidden_lor; f_equal
-  | [ |- _ = hidden_lor (N.shiftr _ _) (N.shiftr _ _) ] =>
-      rewrite <- shiftr_hidden_lor; f_equal
-  | [ |- _ = hidden_lor (N.shiftl _ _) (N.shiftl _ _) ] =>
-      rewrite <- shiftl_hidden_lor; f_equal
-  end.
-Qed.
+Require RevNatSlowProofs.
 
 Lemma revNat_spec:
   forall n i, (i < WIDTH)%N ->
   N.testbit (revNat n) i = N.testbit n (WIDTH - 1 - i)%N.
 Proof.
-  intros.
-  unfold WIDTH in *.
-  Ltac next :=
-    match goal with [ H : (?i < ?n)%N |- _ ] =>
-      let m := eval simpl in (n - 1)%N in
-      idtac "Now solving i =" m;
-      assert (Hor : (i = m \/ i < m)%N) by Nomega; clear H; destruct Hor
-    end.
-
-  Ltac rewrite_land_smart := 
-      match goal with [ |- context [N.testbit (N.land ?x ?y) ?i] ] =>
-        rewrite N.land_spec;
-        simpl (N.testbit y i); (* The right side is always constant, so simplify right away *)
-        rewrite andb_false_r || rewrite andb_true_r
-      end.
-
-  unfold revNat.
-  unfold shiftRL, shiftLL;
-  unfoldMethods.
- 
-  Ltac solve :=
-      subst;
-      repeat ltac:(simpl N.add; simpl N.sub; simpl N.ltb; first
-             [ rewrite andb_false_r
-             | rewrite andb_true_r
-             | rewrite orb_false_r 
-             | rewrite N.lor_spec
-             | rewrite_land_smart
-             | rewrite N.shiftr_spec by (intro Htmp; inversion Htmp)
-             | rewrite N_shiftl_spec_eq
-             ]);
-      reflexivity.
-
-  Time do 64 (next; [solve|]).
-  Nomega.
+  exact (RevNatSlowProofs.revNat_spec).
 Qed.
 
 
-Axiom isBitMask0_revNat:
+Lemma isBitMask0_revNat:
   forall n, isBitMask0 n -> isBitMask0 (revNat n).
+Proof.
+  exact (RevNatSlowProofs.isBitMask0_revNat).
+Qed.
 
 Lemma revNat_eq_0:
   forall bm,

@@ -1105,8 +1105,7 @@ Module Foo (E : OrderedType) : WSfun(E).
           try solve [rewrite -/insert; by apply IHs1];
           try solve [rewrite -/insert /before_balancedL;
                      apply IHs1 in Hwfl; destruct Hwfl as [? [Hs _]];
-                     destruct Hs; subst; rewrite_for_omega;
-                     rewrite H4; intros; omega].
+                     case Hs; rewrite_for_omega; intros; omega].
         * move: H2. case /and4P=>// => Hf Hlt Hlo Hhi.
           rewrite -/insert /before_ordered.
           split; [| split; [| split; [| split; [| split]]]]=>//.
@@ -1159,8 +1158,7 @@ Module Foo (E : OrderedType) : WSfun(E).
           try solve [rewrite -/insert; by apply IHs2];
           try solve [rewrite -/insert /before_balancedR;
                      apply IHs2 in Hwfr; destruct Hwfr as [? [Hs _]];
-                     destruct Hs as [Hs | Hs]; subst; rewrite_for_omega;
-                       rewrite Hs; intros; omega].
+                     case Hs; rewrite_for_omega; intros; omega].
         * move: H2. case /and4P=>// => Hf Hlt Hlo Hhi.
           rewrite -/insert /before_ordered.
           split; [| split; [| split; [| split; [| split]]]]=>//.
@@ -1184,7 +1182,7 @@ Module Foo (E : OrderedType) : WSfun(E).
       + intros; split; intros; apply /and3P=>//; split=>//.
         * autorewrite with elt_compare. auto.
         * autorewrite with elt_compare. auto.
-  Time Qed. (* Finished transaction in 1.354 secs (1.301u,0.045s) (successful) *)
+  Time Qed. (* Finished transaction in 3.175 secs (3.165u,0.007s) (successful) *)
 
   Lemma left_insert_before_balancedL : forall e s l r x,
       WF (Bin s e l r) ->
@@ -1317,9 +1315,8 @@ Module Foo (E : OrderedType) : WSfun(E).
   Proof.
     intros; derive_constraints.
     apply insert_prop with (e:=y) in Hwfl.
-    destruct Hwfl as [_ [? _]]. rewrite /before_balancedL. 
-    destruct H as [Hs | Hs]; rewrite_for_omega;
-      rewrite Hs; intros; omega.
+    destruct Hwfl as [_ [? _]]. rewrite /before_balancedL.
+    case H; rewrite_for_omega; intros; omega.
   Qed.
 
   Lemma WF_prop_r2 :
@@ -1331,8 +1328,7 @@ Module Foo (E : OrderedType) : WSfun(E).
     intros; derive_constraints.
     apply insert_prop with (e:=y) in Hwfr.
     destruct Hwfr as [_ [? _]]. rewrite /before_balancedR. 
-    destruct H as [Hs | Hs]; rewrite_for_omega;
-      rewrite Hs; intros; omega.
+    case H; rewrite_for_omega; intros; omega.
   Qed.
 
   Lemma WF_prop_l3:

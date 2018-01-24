@@ -1,0 +1,102 @@
+# not a TODO
+skip module Data.Data
+
+rename value Data.IntMap.Internal.WhenMatched = Data.IntMap.Internal.Mk_WhenMatched
+rename value Data.IntMap.Internal.WhenMissing = Data.IntMap.Internal.Mk_WhenMissing
+rename value Data.IntMap.Internal.SplitLookup = Data.IntMap.Internal.Mk_SplitLookup
+rename value Data.IntMap.Internal.View = Data.IntMap.Internal.Mk_View
+
+rename value Data.IntMap.Internal.bool = Data.IntMap.Internal.boolITE
+
+# Has an GHC.Err.error for code unreachable when the input is well-formed
+skip Data.IntMap.Internal.keysSet
+
+nonterminating Data.IntMap.Internal.fromSet
+nonterminating Data.IntMap.Internal.mergeWithKey'
+
+skip Data.IntMap.Internal.Ord__IntMap
+skip Data.IntMap.Internal.Functor__IntMap
+skip Data.IntMap.Internal.Functor__WhenMatched
+skip Data.IntMap.Internal.Functor__WhenMissing
+skip Data.IntMap.Internal.Eq___IntMap
+skip Data.IntMap.Internal.Foldable__IntMap
+skip Data.IntMap.Internal.Monad__WhenMissing
+skip Data.IntMap.Internal.Applicative__WhenMissing
+skip Data.IntMap.Internal.Category__WhenMissing
+skip Data.IntMap.Internal.Traversable__IntMap
+skip Data.IntMap.Internal.Monad__WhenMatched
+skip Data.IntMap.Internal.Applicative__WhenMatched
+skip Data.IntMap.Internal.Category__WhenMatched
+
+
+
+# These are TODOs:
+
+# Weird type error
+skip Data.IntMap.Internal.mergeA
+skip Data.IntMap.Internal.merge
+
+# mutual recursion
+skip Data.IntMap.Internal.fromDistinctAscListWithKey
+skip Data.IntMap.Internal.fromDistinctAscList
+skip Data.IntMap.Internal.fromAscListWithKey
+skip Data.IntMap.Internal.fromAscListWith
+skip Data.IntMap.Internal.fromAscList
+skip Data.IntMap.Internal.mapKeysMonotonic
+
+# partial
+skip Data.IntMap.Internal.find
+skip Data.IntMap.Internal.op_zn__
+skip Data.IntMap.Internal.findMax
+skip Data.IntMap.Internal.findMin
+skip Data.IntMap.Internal.maxView
+skip Data.IntMap.Internal.maxViewWithKeySure
+skip Data.IntMap.Internal.maxViewWithKey
+skip Data.IntMap.Internal.updateMaxWithKey
+skip Data.IntMap.Internal.updateMax
+skip Data.IntMap.Internal.deleteMax
+skip Data.IntMap.Internal.deleteFindMax
+skip Data.IntMap.Internal.minView
+skip Data.IntMap.Internal.minViewWithKeySure
+skip Data.IntMap.Internal.minViewWithKey
+skip Data.IntMap.Internal.updateMinWithKey
+skip Data.IntMap.Internal.updateMin
+skip Data.IntMap.Internal.deleteMin
+skip Data.IntMap.Internal.deleteFindMin
+
+# Bit-fiddly stuff, punt for now
+skip Data.IntMap.Internal.restrictBM
+skip Data.IntMap.Internal.restrictKeys
+skip Data.IntMap.Internal.withoutBM
+skip Data.IntMap.Internal.withoutKeys
+
+# These are typical that they recurse left or right
+termination Data.IntMap.Internal.union        {measure ((size_nat arg_0__) + (size_nat arg_1__))} termination_by_omega
+termination Data.IntMap.Internal.difference   {measure ((size_nat arg_0__) + (size_nat arg_1__))} termination_by_omega
+termination Data.IntMap.Internal.intersection {measure ((size_nat arg_0__) + (size_nat arg_1__))} termination_by_omega
+termination Data.IntMap.Internal.disjoint     {measure ((size_nat arg_0__) + (size_nat arg_1__))} termination_by_omega
+
+# Show stuff
+skip Data.IntMap.Internal.showsBars
+skip Data.IntMap.Internal.showsBitMap
+skip Data.IntMap.Internal.showBitMap
+skip Data.IntMap.Internal.showsTreeHang
+skip Data.IntMap.Internal.showTreeWith
+skip Data.IntMap.Internal.showBin
+skip Data.IntMap.Internal.showWide
+skip Data.IntMap.Internal.withBar
+skip Data.IntMap.Internal.withEmpty
+skip Data.IntMap.Internal.showsTree
+skip Data.IntMap.Internal.showTree
+
+# Data stuff
+skip Data.IntMap.Internal.fromListConstr
+skip Data.IntMap.Internal.intMapDataType
+skip Data.IntMap.Internal.Monoid__IntMap
+
+# We need Integral N to use GHC.Real.fromIntegral to go from N to Z
+rename value Data.IntMap.Internal.intFromNat = Coq.ZArith.BinInt.Z.of_N
+skip Coq.ZArith.BinInt.Z.of_N
+
+skip module Coq.ZArith.BinInt.Z
+skip module Coq.NArith.BinNat.N

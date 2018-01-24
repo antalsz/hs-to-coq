@@ -1762,6 +1762,7 @@ Require Import Data.Bits.
 Import Data.Bits.Notations.
 Require Import Data.IntSet.Base.
 Local Open Scope Z_scope.
+Set Bullet Behavior "Strict Subproofs".
 
 (** We hardcode the width of the leafe bit maps to 64 bits *)
 
@@ -2213,8 +2214,8 @@ Proof.
      (destruct (N.lor bm1 bm2); auto; try congruence; apply pos_pos).
     contradict H3; rewrite <- H3.
     rewrite N.bits_0. congruence.
-    split; try assumption.
-  * unfold isBitMask in *; destruct H, H0.
+  * split; try assumption.
+    unfold isBitMask in *; destruct H, H0.
     rewrite N_lt_pow2_testbits in *.
     intros j?.
     rewrite N.lor_spec.
@@ -2841,10 +2842,11 @@ Proof.
   rewrite if_negb.
   match goal with [ |- context [Z.testbit ?i ?b] ]  => destruct (Z.testbit i b) eqn:Hbit end.
   * assert (Hbit2 : Z.testbit (rPrefix r2) (Z.pred (Z.of_N (rBits (commonRangeDisj r1 r2)))) = false).
-    + apply not_true_is_false.
+    { apply not_true_is_false.
       rewrite <- Hbit.
       apply not_eq_sym.
       apply commonRangeDisj_rBits_Different; try (eapply Desc_rNonneg; eassumption); auto.
+    }
     rewrite rangeDisjoint_sym in H3.
     rewrite -> commonRangeDisj_sym in * by (eapply Desc_rNonneg; eassumption).
     apply (DescBin _ _ _ _ _ _ _ _ _ f H0 H); auto.
@@ -2859,10 +2861,11 @@ Proof.
         try (eapply Desc_rNonneg; eassumption); auto.
     + solve_f_eq.
   * assert (Hbit2 : Z.testbit (rPrefix r2) (Z.pred (Z.of_N (rBits (commonRangeDisj r1 r2)))) = true).
-    + apply not_false_iff_true.
+    { apply not_false_iff_true.
       rewrite <- Hbit.
       apply not_eq_sym.
       apply commonRangeDisj_rBits_Different; try (eapply Desc_rNonneg; eassumption); auto.
+    }
     apply (DescBin _ _ _ _ _ _ _ _ _ f H H0); auto.
     + apply commonRangeDisj_rBits_pos; (eapply Desc_rNonneg; eassumption).
     + rewrite <- Hbit.
@@ -3085,9 +3088,9 @@ Proof.
       intro.
         rewrite Hf'. rewrite H4. rewrite H6.
         destruct (inRange i r) eqn:Hir.
-        * rewrite bitmapInRange_outside by inRange_false.
+        - rewrite bitmapInRange_outside by inRange_false.
           reflexivity.
-        * rewrite (Desc_outside HD1) by inRange_false.
+        - rewrite (Desc_outside HD1) by inRange_false.
           rewrite (Desc_outside HD2) by inRange_false.
           split_bool; reflexivity.
     + eapply bin_Desc0.
@@ -3100,7 +3103,7 @@ Proof.
       ** reflexivity.
       ** reflexivity.
       ** solve_f_eq_disjoint.
-    - eapply bin_Desc0.
+    + eapply bin_Desc0.
       ** apply Desc_Desc0; eassumption.
       ** apply IHHD2.
          intro. reflexivity.
@@ -3123,7 +3126,8 @@ Proof.
   unfold delete, Prim.seq.
   eapply deleteBM_Desc.
   * eapply DescTip; try nonneg.
-    + symmetry. apply rPrefix_shiftr. reflexivity.
+    + symmetry. apply rPrefix_shiftr.
+    + reflexivity.
     + isBitMask.
   * eassumption.
   * setoid_rewrite bitmapInRange_bitmapOf. assumption.
@@ -3216,7 +3220,7 @@ Next Obligation.
     + set (sr := Bin (rPrefix r2) (rMask r2) s1 s4) in *.
       rewrite !shorter_spec by assumption.
       destruct (N.ltb_spec (rBits r2) (rBits r1)); [|destruct (N.ltb_spec (rBits r1) (rBits r2))].
-      * apply nomatch_zero_smaller; try assumption; intros.
+      ++ apply nomatch_zero_smaller; try assumption; intros.
         - rewrite rangeDisjoint_sym in *.
           rewrite disjoint_commonRange in * by assumption.
           eapply link_Desc;
@@ -3233,7 +3237,7 @@ Next Obligation.
           ** subst sl sr. simpl. omega.
           ** isSubrange_true; eapply Desc_rNonneg; eassumption.
           ** solve_f_eq.
-      * apply nomatch_zero_smaller; try assumption; intros.
+      ++ apply nomatch_zero_smaller; try assumption; intros.
         - rewrite disjoint_commonRange in * by assumption.
           eapply link_Desc;
             [ eapply DescBin with (r := r1); try eassumption; try reflexivity
@@ -3249,23 +3253,23 @@ Next Obligation.
           ** subst sl sr. simpl. omega.
           ** isSubrange_true; eapply Desc_rNonneg; eassumption.
           ** solve_f_eq.
-      * apply same_size_compare; try Nomega; intros.
+      ++ apply same_size_compare; try Nomega; intros.
         - subst.
           rewrite commonRange_idem in *.
           eapply DescBin; try assumption; try reflexivity.
-          ++ eapply union_Desc.
+          ** eapply union_Desc.
              -- subst sl sr. simpl. omega.
              -- eassumption.
              -- eassumption.
              -- intro i. reflexivity.
-          ++ eapply union_Desc.
+          ** eapply union_Desc.
              -- subst sl sr. simpl. omega.
              -- eassumption.
              -- eassumption.
              -- intro i. reflexivity.
-          ++ isSubrange_true; eapply Desc_rNonneg; eassumption.
-          ++ isSubrange_true; eapply Desc_rNonneg; eassumption.
-          ++ solve_f_eq.
+          ** isSubrange_true; eapply Desc_rNonneg; eassumption.
+          ** isSubrange_true; eapply Desc_rNonneg; eassumption.
+          ** solve_f_eq.
       - rewrite disjoint_commonRange in * by assumption.
         eapply link_Desc;
           [ eapply DescBin with (r := r1); try eassumption; try reflexivity
@@ -3411,7 +3415,7 @@ Next Obligation.
           by (eapply isSubrange_trans; [ eassumption| apply isSubrange_halfRange; auto]).
         eapply Desc0_subRange.
         ** apply IHHD2_2.
-        ** solve_f_eq_disjoint.
+           solve_f_eq_disjoint.
         ** isSubrange_true; eapply Desc_rNonneg; eassumption.
 
   * (* s1 is a Bin *)
@@ -3443,16 +3447,16 @@ Next Obligation.
       clear intersection_Desc.
       generalize dependent f.
       induction HD1; intros f' Hf'; subst.
-      + apply same_size_compare; try Nomega; intros.
-        - subst.
-          rewrite commonRange_idem in *.
-          apply tip_Desc0; auto.
-          ** solve_f_eq_disjoint.
-          ** isBitMask.
-        - apply Desc0Nil.
-          solve_f_eq_disjoint.
+      ++ apply same_size_compare; try Nomega; intros.
+        subst.
+        rewrite commonRange_idem in *.
+        apply tip_Desc0; auto.
+        ** solve_f_eq_disjoint.
+        ** isBitMask.
+        ** apply Desc0Nil.
+           solve_f_eq_disjoint.
 
-    + assert (N.log2 WIDTH <= rBits r1)%N by (eapply Desc_larger_WIDTH; eauto).
+    ++ assert (N.log2 WIDTH <= rBits r1)%N by (eapply Desc_larger_WIDTH; eauto).
       assert (rBits r1 <= rBits (halfRange r false))%N by (apply subRange_smaller; auto).
       assert (rBits (halfRange r false) < rBits r)%N by (apply halfRange_smaller; auto).
       assert (rBits r2 < rBits r)%N by Nomega.
@@ -3464,13 +3468,13 @@ Next Obligation.
       - rewrite -> (isSubrange_commonRange_l r r2) in * by isSubrange_true.
         eapply Desc0_subRange.
         ** apply IHHD1_1.
-        ** solve_f_eq_disjoint.
+           solve_f_eq_disjoint.
         ** isSubrange_true; eapply Desc_rNonneg; eassumption.
 
       - rewrite -> (isSubrange_commonRange_l r r2) in * by isSubrange_true.
         eapply Desc0_subRange.
         ** apply IHHD1_2.
-        ** solve_f_eq_disjoint.
+           solve_f_eq_disjoint.
         ** isSubrange_true; eapply Desc_rNonneg; eassumption.
 
     + subst.
@@ -3478,7 +3482,7 @@ Next Obligation.
       set (sr := Bin (rPrefix r2) (rMask r2) s4 s5) in *.
       rewrite !shorter_spec by assumption.
       destruct (N.ltb_spec (rBits r2) (rBits r1)).
-      * (* s2 is smaller than s1 *)
+      ++ (* s2 is smaller than s1 *)
         apply nomatch_zero_smaller; try assumption; intros.
         - (* s2 is disjoint of s1 *)
           apply Desc0Nil.
@@ -3500,9 +3504,9 @@ Next Obligation.
           ** solve_f_eq_disjoint.
           ** isSubrange_true; eapply Desc_rNonneg; eassumption.
 
-      * (* s2 is not smaller than s1 *)
+      ++ (* s2 is not smaller than s1 *)
         destruct (N.ltb_spec (rBits r1) (rBits r2)).
-        * (* s2 is smaller than s1 *)
+        -- (* s2 is smaller than s1 *)
           apply nomatch_zero_smaller; try assumption; intros.
           - (* s1 is disjoint of s2 *)
             apply Desc0Nil.
@@ -3524,24 +3528,24 @@ Next Obligation.
             ** solve_f_eq_disjoint.
             ** isSubrange_true; eapply Desc_rNonneg; eassumption.
 
-        * (* s1 and s2 are the same size *)
+        -- (* s1 and s2 are the same size *)
           apply same_size_compare; try Nomega; intros.
           - subst.
             rewrite commonRange_idem in *.
             eapply bin_Desc0; try assumption; try reflexivity.
-            ++ eapply intersection_Desc.
-               -- subst sl sr. simpl. omega.
-               -- eassumption.
-               -- eassumption.
-               -- intro i. reflexivity.
-            ++ eapply intersection_Desc.
-               -- subst sl sr. simpl. omega.
-               -- eassumption.
-               -- eassumption.
-               -- intro i. reflexivity.
-            ++ isSubrange_true; eapply Desc_rNonneg; eassumption.
-            ++ isSubrange_true; eapply Desc_rNonneg; eassumption.
-            ++ solve_f_eq_disjoint.
+            ** eapply intersection_Desc.
+               --- subst sl sr. simpl. omega.
+               --- eassumption.
+               --- eassumption.
+               --- intro i. reflexivity.
+            ** eapply intersection_Desc.
+               --- subst sl sr. simpl. omega.
+               --- eassumption.
+               --- eassumption.
+               --- intro i. reflexivity.
+            ** isSubrange_true; eapply Desc_rNonneg; eassumption.
+            ** isSubrange_true; eapply Desc_rNonneg; eassumption.
+            ** solve_f_eq_disjoint.
           - apply Desc0Nil.
             solve_f_eq_disjoint.
 Qed.
@@ -3674,7 +3678,7 @@ Next Obligation.
       set (sr := Bin (rPrefix r2) (rMask r2) s4 s5) in *.
       rewrite !shorter_spec by assumption.
       destruct (N.ltb_spec (rBits r2) (rBits r1)).
-      * (* s2 is smaller than s1 *)
+      ** (* s2 is smaller than s1 *)
         apply nomatch_zero_smaller; try assumption; intros.
         - (* s2 is disjoint of s1 *)
           eapply Desc_Desc0; eapply DescBin; try eassumption; try reflexivity.
@@ -3705,9 +3709,9 @@ Next Obligation.
           ++ reflexivity.
           ++ solve_f_eq_disjoint.
 
-      * (* s2 is not smaller than s1 *)
+      ** (* s2 is not smaller than s1 *)
         destruct (N.ltb_spec (rBits r1) (rBits r2)).
-        * (* s2 is smaller than s1 *)
+        -- (* s2 is smaller than s1 *)
           apply nomatch_zero_smaller; try assumption; intros.
           - (* s1 is disjoint of s2 *)
             eapply Desc_Desc0; eapply DescBin; try eassumption; try reflexivity.
@@ -3715,31 +3719,31 @@ Next Obligation.
           - (* s1 is part of the left half of s2 *)
             eapply Desc0_subRange.
             eapply difference_Desc; clear difference_Desc; try eassumption.
-            ** subst sl sr. simpl. omega.
-            ** solve_f_eq_disjoint.
-            ** apply isSubrange_refl.
+            *** subst sl sr. simpl. omega.
+            *** solve_f_eq_disjoint.
+            *** apply isSubrange_refl.
           - (* s1 is part of the right half of s2 *)
             eapply Desc0_subRange.
             eapply difference_Desc; clear difference_Desc; try eassumption.
-            ** subst sl sr. simpl. omega.
-            ** solve_f_eq_disjoint.
-            ** apply isSubrange_refl.
+            *** subst sl sr. simpl. omega.
+            *** solve_f_eq_disjoint.
+            *** apply isSubrange_refl.
 
-        * (* s1 and s2 are the same size *)
+        -- (* s1 and s2 are the same size *)
           assert (rBits r1 = rBits r2) by Nomega.
           apply same_size_compare; try Nomega; intros.
           - subst.
             eapply bin_Desc0; try assumption; try reflexivity.
             ++ eapply difference_Desc.
-               -- subst sl sr. simpl. omega.
-               -- eassumption.
-               -- eassumption.
-               -- intro i. reflexivity.
+               --- subst sl sr. simpl. omega.
+               --- eassumption.
+               --- eassumption.
+               --- intro i. reflexivity.
             ++ eapply difference_Desc.
-               -- subst sl sr. simpl. omega.
-               -- eassumption.
-               -- eassumption.
-               -- intro i. reflexivity.
+               --- subst sl sr. simpl. omega.
+               --- eassumption.
+               --- eassumption.
+               --- intro i. reflexivity.
             ++ assumption.
             ++ assumption.
             ++ solve_f_eq_disjoint.
@@ -4003,7 +4007,7 @@ Proof.
     change (Pos.le p p0).
     revert p0 H.
     induction p; intros p0 H.
-    * destruct p0 eqn:?.
+    - destruct p0 eqn:?.
       + change (p <= p1)%positive.
         apply IHp. intro i.
         specialize (H (N.succ i)).
@@ -4019,14 +4023,14 @@ Proof.
         rewrite <- Nat2N.inj_succ in H at 2.
         rewrite Pos_1_testbit_succ, Ptestbit_Pbit in H. 
         destruct (Pos.testbit_nat p j) eqn:?; intuition.
-    * destruct p0 eqn:?.
+    - destruct p0 eqn:?.
       + transitivity (p1~0)%positive.
-        * change (p <= p1)%positive.
+        ** change (p <= p1)%positive.
           apply IHp. intro i.
           specialize (H (N.succ i)).
           rewrite Pos_0_testbit_succ, Pos_1_testbit_succ in H.
           assumption.
-        * zify. omega.
+        ** zify. omega.
       + change (p <= p1)%positive.
         apply IHp. intro i.
         specialize (H (N.succ i)).
@@ -4039,7 +4043,7 @@ Proof.
         rewrite <- Nat2N.inj_succ in H at 2.
         rewrite Pos_0_testbit_succ, Ptestbit_Pbit in H. 
         destruct (Pos.testbit_nat p j) eqn:?; intuition.
-     * apply Pos.le_1_l.
+     - apply Pos.le_1_l.
 Qed.
 
 

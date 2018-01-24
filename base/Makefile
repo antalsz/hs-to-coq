@@ -110,6 +110,7 @@ VFILES:=GHC/Num.v\
   GHC/Tuple.v\
   Data/Type/Equality.v\
   Data/Functor/Const.v\
+  GHC/Err.v\
   Prelude.v\
   GHC/Base.v\
   Data/Maybe.v\

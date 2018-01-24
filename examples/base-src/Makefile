@@ -27,6 +27,7 @@ HANDMOD = \
   GHC/Tuple \
   Data/Type/Equality \
   Data/Functor/Const \
+  GHC/Err \
   Prelude\
 
 # Generated modules

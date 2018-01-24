@@ -15,6 +15,8 @@ Definition bit_N := shiftLL 1%N.
 
 Definition popCount_N : N -> GHC.Num.Int := fun x => 0%Z.   (* TODO *)
 
+Definition bitCount_N (a : GHC.Num.Int) (x : N) := a GHC.Num.+ (popCount_N x).
+
 Instance Bits__N : Data.Bits.Bits N :=  {
   op_zizazi__ := N.land ;
   op_zizbzi__ := N.lor ;
@@ -55,4 +57,3 @@ Ltac termination_by_omega :=
 
 (* Z.ones 6 = 64-1 *)
 Definition suffixBitMask : GHC.Num.Int := (Coq.ZArith.BinInt.Z.ones 6)%Z.
-

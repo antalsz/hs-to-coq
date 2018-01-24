@@ -23,6 +23,7 @@ End GHC.
 (* Converted imports: *)
 
 Require Data.Bits.
+Require Data.Either.
 Require Data.Foldable.
 Require GHC.Base.
 Require GHC.Num.
@@ -39,9 +40,18 @@ Definition Size :=
 Inductive Set_ a : Type := Bin : Size -> a -> (Set_ a) -> (Set_ a) -> Set_ a
                         |  Tip : Set_ a.
 
+Inductive MergeSet a : Type := Mk_MergeSet : Set_ a -> MergeSet a.
+
 Arguments Bin {_} _ _ _ _.
 
 Arguments Tip {_}.
+
+Arguments Mk_MergeSet {_} _.
+
+Definition getMergeSet {a} (arg_0__ : MergeSet a) :=
+  match arg_0__ with
+    | Mk_MergeSet getMergeSet => getMergeSet
+  end.
 (* Midamble *)
 
 Require Omega.
@@ -147,6 +157,12 @@ Local Definition Foldable__Set__foldMap : forall {m} {a},
 (* Translating `instance forall {a}, forall `{Control.DeepSeq.NFData a},
    Control.DeepSeq.NFData (Data.Set.Internal.Set_ a)' failed: OOPS! Cannot find
    information for class Qualified "Control.DeepSeq" "NFData" unsupported *)
+
+(* Translating `instance forall {a}, Data.Semigroup.Semigroup
+   (Data.Set.Internal.MergeSet a)' failed: OOPS! Cannot find information for class
+   Qualified "Data.Semigroup" "Semigroup" unsupported *)
+
+(* Skipping instance Monoid__MergeSet *)
 
 Definition combineEq {a} `{GHC.Base.Eq_ a} : list a -> list a :=
   fun arg_0__ =>
@@ -1044,6 +1060,17 @@ Definition splitMember {a} `{GHC.Base.Ord a} : a -> Set_ a -> (Set_ a * bool *
                                   end
            end.
 
+Definition disjoint {a} `{GHC.Base.Ord a} : Set_ a -> Set_ a -> bool :=
+  fix disjoint arg_0__ arg_1__
+        := match arg_0__ , arg_1__ with
+             | Tip , _ => true
+             | _ , Tip => true
+             | Bin _ x l r , t => match splitMember x t with
+                                    | pair (pair lt found) gt => andb (negb found) (andb (disjoint l lt) (disjoint r
+                                                                                         gt))
+                                  end
+           end.
+
 Definition isSubsetOfX {a} `{GHC.Base.Ord a} : Set_ a -> Set_ a -> bool :=
   fix isSubsetOfX arg_0__ arg_1__
         := match arg_0__ , arg_1__ with
@@ -1150,6 +1177,13 @@ Definition glue {a} : Set_ a -> Set_ a -> Set_ a :=
                                                                 end
     end.
 
+Definition powerSet {a} : Set_ a -> Set_ (Set_ a) :=
+  fun xs0 =>
+    let step :=
+      fun x pxs =>
+        glue (insertMin (singleton x) (mapMonotonic (insertMin x) pxs)) pxs in
+    insertMin empty (foldr' step Tip xs0).
+
 Definition delete {a} `{GHC.Base.Ord a} : a -> Set_ a -> Set_ a :=
   let go {a} `{GHC.Base.Ord a} : a -> Set_ a -> Set_ a :=
     fix go arg_0__ arg_1__
@@ -1187,6 +1221,11 @@ match arg_0__ , arg_1__ with
                                                                 else glue l r
 end.
 Solve Obligations with (termination_by_omega).
+
+Definition disjointUnion {a} {b} : Set_ a -> Set_ b -> Set_ (Data.Either.Either
+                                                            a b) :=
+  fun as_ bs =>
+    merge (mapMonotonic Data.Either.Left as_) (mapMonotonic Data.Either.Right bs).
 
 Definition filter {a} : (a -> bool) -> Set_ a -> Set_ a :=
   fix filter arg_0__ arg_1__
@@ -1440,11 +1479,12 @@ End Notations.
 (* Unbound variables:
      Eq Gt Lt None Some andb bool comparison cons false id list negb nil op_zt__
      option orb pair prod set_size true Data.Bits.shiftL Data.Bits.shiftR
-     Data.Foldable.Foldable Data.Foldable.foldl GHC.Base.Eq_ GHC.Base.Monoid
-     GHC.Base.Ord GHC.Base.String GHC.Base.compare GHC.Base.const GHC.Base.flip
-     GHC.Base.map GHC.Base.mappend GHC.Base.mempty GHC.Base.op_z2218U__
-     GHC.Base.op_zd__ GHC.Base.op_zdzn__ GHC.Base.op_zeze__ GHC.Base.op_zg__
-     GHC.Base.op_zgze__ GHC.Base.op_zl__ GHC.Base.op_zlze__ GHC.Base.op_zsze__
-     GHC.Err.error GHC.Num.Int GHC.Num.Num GHC.Num.op_zm__ GHC.Num.op_zp__
-     GHC.Num.op_zt__ Nat.add Utils.Containers.Internal.PtrEquality.ptrEq
+     Data.Either.Either Data.Either.Left Data.Either.Right Data.Foldable.Foldable
+     Data.Foldable.foldl GHC.Base.Eq_ GHC.Base.Monoid GHC.Base.Ord GHC.Base.String
+     GHC.Base.compare GHC.Base.const GHC.Base.flip GHC.Base.map GHC.Base.mappend
+     GHC.Base.mempty GHC.Base.op_z2218U__ GHC.Base.op_zd__ GHC.Base.op_zdzn__
+     GHC.Base.op_zeze__ GHC.Base.op_zg__ GHC.Base.op_zgze__ GHC.Base.op_zl__
+     GHC.Base.op_zlze__ GHC.Base.op_zsze__ GHC.Err.error GHC.Num.Int GHC.Num.Num
+     GHC.Num.op_zm__ GHC.Num.op_zp__ GHC.Num.op_zt__ Nat.add
+     Utils.Containers.Internal.PtrEquality.ptrEq
 *)

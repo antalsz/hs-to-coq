@@ -1,7 +1,12 @@
-skip module Data.Semigroup
+# punned
+rename value Data.Set.Internal.MergeSet = Data.Set.Internal.Mk_MergeSet
+
 skip module Data.Data
 
+## can't handle semigroup??
+skip module Data.Semigroup
 skip Data.Set.Internal.Monoid__Set_
+skip Data.Set.Internal.Monoid__MergeSet
 
 skip Data.Set.Internal.showTree
 skip Data.Set.Internal.showTreeWith
@@ -16,14 +21,18 @@ skip Data.Set.Internal.setDataType
 termination Data.Set.Internal.link {measure (Nat.add (set_size arg_1__) (set_size arg_2__))} termination_by_omega
 termination Data.Set.Internal.merge {measure (Nat.add (set_size arg_0__) (set_size arg_1__))} termination_by_omega
 
+## local functions
 nonterminating Data.Set.Internal.fromDistinctAscList
 nonterminating Data.Set.Internal.fromAscList
 nonterminating Data.Set.Internal.fromList
-
 nonterminating Data.Set.Internal.fromDistinctDescList
 
 order Data.Set.Internal.Eq___Set_ Data.Set.Internal.Ord__Set_
 
-## fix notation issue
-
 rename value GHC.Magic.lazy = id
+
+## needs monoid instance
+skip Data.Set.Internal.cartesianProduct
+## bug???
+rename value GHC.Tuple.pair_type = pair
+order Data.Set.Internal.Foldable__Set_ Data.Set.Internal.cartesianProduct

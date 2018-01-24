@@ -7,7 +7,7 @@ Require Import IntToZ.
 Require OrdTheories.
 Require Import Tactics.
 
-Require Import Data.Set.Base.
+Require Import Data.Set.Internal.
 Require Import Coq.FSets.FSetInterface.
 
 Require Import Omega.
@@ -18,7 +18,7 @@ Local Open Scope Z_scope.
 
 Section Option_Int.
   Variables a b : option Int.
-  
+
   Ltac rewrite_option_eq :=
     rewrite /op_zeze__ /Eq___option //= /op_zeze__ /Eq_Integer___ //=.
 
@@ -35,7 +35,7 @@ Section Option_Int.
     - constructor. discriminate.
     - constructor. reflexivity.
   Qed.
-  
+
   Lemma option_int_eq :
     a = b <-> a GHC.Base.== b.
   Proof. apply rwP. apply option_int_eqP. Qed.
@@ -722,7 +722,7 @@ Module Foo (E : OrderedType) : WSfun(E).
            end; autorewrite with elt_compare in *.
 
   Ltac rel_deriver := eauto 2.
-  
+
   Ltac solve_relations_single_step :=
     match goal with
     | [ |- E.lt ?a ?b -> _ ] =>
@@ -758,10 +758,10 @@ Module Foo (E : OrderedType) : WSfun(E).
                 | [ |- context[Base.compare ?a ?b]] =>
                   destruct_match
                 end).
-  
+
   Ltac solve_membership :=
     solve [derive_compare; rewrite_relations].
-    
+
   Lemma membership_prop : forall s y x l r,
       member y (Bin s x l r) ->
       (E.eq y x \/ member y l \/ member y r).
@@ -996,7 +996,7 @@ Module Foo (E : OrderedType) : WSfun(E).
       apply WF_children in H2; destruct H2.
       apply (size_zero _ H3) in Hs0; subst; auto.
   Time Qed. (* Finished transaction in 5.667 secs (5.626u,0.035s) (successful) *)
-  
+
   Lemma inset_balanceR : forall (x y : elt) (l r : Set_ elt),
       WF l ->
       WF r ->
@@ -1017,7 +1017,7 @@ Module Foo (E : OrderedType) : WSfun(E).
       apply WF_children in H0; destruct H0.
       apply (size_zero _ H3) in Hs0; subst; auto.
   Time Qed. (* Finished transaction in 5.877 secs (5.847u,0.014s) (successful) *)
-  
+
   Definition mem : elt -> t -> bool := fun e s' =>
     s <-- s' ;; member e s.
 
@@ -1133,7 +1133,7 @@ Module Foo (E : OrderedType) : WSfun(E).
           rewrite -/insert /before_ordered.
           split; [| split; [| split; [| split; [| split]]]]=>//.
           -- intros. autorewrite with elt_compare in *.
-             intuition; eauto. 
+             intuition; eauto.
           -- apply WF_children in H; destruct H.
              apply IHs1 in H. destruct H as [ _ [_ Hord']].
              specialize (Hord' a0); destruct Hord'.
@@ -1206,7 +1206,7 @@ Module Foo (E : OrderedType) : WSfun(E).
           rewrite -/insert /before_ordered.
           split; [| split; [| split; [| split; [| split]]]]=>//.
           -- intros. autorewrite with elt_compare in *.
-             intuition; eauto. 
+             intuition; eauto.
           -- apply WF_children in H; destruct H.
              apply IHs2 in H3. destruct H3 as [ _ [_ Hord']].
              specialize (Hord' a); destruct Hord'.
@@ -1432,7 +1432,7 @@ Module Foo (E : OrderedType) : WSfun(E).
     - right; left. intuition.
     - right; right; intuition.
   Qed.
-  
+
   Lemma add_1 :
     forall (s : t) (x y : elt), E.eq x y -> In y (add x s).
   Proof with eauto.
@@ -1452,7 +1452,7 @@ Module Foo (E : OrderedType) : WSfun(E).
     - rewrite /insert /= /Base.singleton /In_set /member /=.
       move: H. move /E.eq_sym /elt_compare_eq -> =>//.
   Qed.
-        
+
   Lemma add_2 : forall (s : t) (x y : elt), In y s -> In y (add x s).
   Proof with eauto.
     destruct s as [s]. simpl. intros; induction s.
@@ -1475,7 +1475,7 @@ Module Foo (E : OrderedType) : WSfun(E).
           apply (IHs2 H2) in H1. intuition.
     - inversion H.
   Qed.
-    
+
   Lemma add_3 :
     forall (s : t) (x y : elt), ~ E.eq x y -> In y (add x s) -> In y s.
   Proof.

@@ -17,7 +17,6 @@ Require Data.Foldable.
 Require GHC.Base.
 Require GHC.Num.
 Require GHC.Real.
-Require Utils.Containers.Internal.BitUtil.
 Import Data.Bits.Notations.
 Import GHC.Base.Notations.
 Import GHC.Num.Notations.
@@ -64,6 +63,8 @@ Definition bit_N := shiftLL 1%N.
 
 Definition popCount_N : N -> GHC.Num.Int := fun x => 0%Z.   (* TODO *)
 
+Definition bitCount_N (a : GHC.Num.Int) (x : N) := a GHC.Num.+ (popCount_N x).
+
 Instance Bits__N : Data.Bits.Bits N :=  {
   op_zizazi__ := N.land ;
   op_zizbzi__ := N.lor ;
@@ -104,7 +105,6 @@ Ltac termination_by_omega :=
 
 (* Z.ones 6 = 64-1 *)
 Definition suffixBitMask : GHC.Num.Int := (Coq.ZArith.BinInt.Z.ones 6)%Z.
-
 
 (* Converted value declarations: *)
 
@@ -151,20 +151,8 @@ Definition bin : Prefix -> Mask -> IntSet -> IntSet -> IntSet :=
       | p , m , l , r => Bin p m l r
     end.
 
-Definition bitcount : GHC.Num.Int -> GHC.Num.Word -> GHC.Num.Int :=
-  fun a x => a GHC.Num.+ Data.Bits.popCount x.
-
-Definition size : IntSet -> GHC.Num.Int :=
-  let fix go arg_0__ arg_1__
-            := match arg_0__ , arg_1__ with
-                 | acc , Bin _ _ l r => go (go acc l) r
-                 | acc , Tip _ bm => acc GHC.Num.+ bitcount (GHC.Num.fromInteger 0) bm
-                 | acc , Nil => acc
-               end in
-  go (GHC.Num.fromInteger 0).
-
 Definition bitmapOfSuffix : GHC.Num.Int -> BitMap :=
-  fun s => Utils.Containers.Internal.BitUtil.shiftLL (GHC.Num.fromInteger 1) s.
+  fun s => shiftLL (GHC.Num.fromInteger 1) s.
 
 Definition branchMask : Prefix -> Prefix -> Mask :=
   fun p1 p2 =>
@@ -189,7 +177,7 @@ Local Definition Eq___IntSet_op_zeze__ : IntSet -> IntSet -> bool :=
   fun t1 t2 => equal t1 t2.
 
 Definition highestBitSet : Nat -> GHC.Num.Int :=
-  fun x => indexOfTheOnlyBit (Utils.Containers.Internal.BitUtil.highestBitMask x).
+  fun x => indexOfTheOnlyBit (highestBitMask x).
 
 Definition unsafeFindMax : IntSet -> option Key :=
   fix unsafeFindMax arg_0__
@@ -349,43 +337,40 @@ Definition prefixOf : GHC.Num.Int -> Prefix :=
 
 Definition revNat : Nat -> Nat :=
   fun x1 =>
-    match ((Utils.Containers.Internal.BitUtil.shiftRL x1 (GHC.Num.fromInteger 1))
-            Data.Bits..&.(**) GHC.Num.fromInteger 6148914691236517205) Data.Bits..|.(**)
-            (Utils.Containers.Internal.BitUtil.shiftLL (x1 Data.Bits..&.(**)
-                                                       GHC.Num.fromInteger 6148914691236517205) (GHC.Num.fromInteger
-                                                       1)) with
-      | x2 => match ((Utils.Containers.Internal.BitUtil.shiftRL x2
-                                                                (GHC.Num.fromInteger 2)) Data.Bits..&.(**)
-                      GHC.Num.fromInteger 3689348814741910323) Data.Bits..|.(**)
-                      (Utils.Containers.Internal.BitUtil.shiftLL (x2 Data.Bits..&.(**)
-                                                                 GHC.Num.fromInteger 3689348814741910323)
-                                                                 (GHC.Num.fromInteger 2)) with
-                | x3 => match ((Utils.Containers.Internal.BitUtil.shiftRL x3
-                                                                          (GHC.Num.fromInteger 4)) Data.Bits..&.(**)
-                                GHC.Num.fromInteger 1085102592571150095) Data.Bits..|.(**)
-                                (Utils.Containers.Internal.BitUtil.shiftLL (x3 Data.Bits..&.(**)
-                                                                           GHC.Num.fromInteger 1085102592571150095)
-                                                                           (GHC.Num.fromInteger 4)) with
-                          | x4 => match ((Utils.Containers.Internal.BitUtil.shiftRL x4
-                                                                                    (GHC.Num.fromInteger 8))
-                                          Data.Bits..&.(**) GHC.Num.fromInteger 71777214294589695) Data.Bits..|.(**)
-                                          (Utils.Containers.Internal.BitUtil.shiftLL (x4 Data.Bits..&.(**)
-                                                                                     GHC.Num.fromInteger
-                                                                                     71777214294589695)
-                                                                                     (GHC.Num.fromInteger 8)) with
-                                    | x5 => match ((Utils.Containers.Internal.BitUtil.shiftRL x5
-                                                                                              (GHC.Num.fromInteger 16))
-                                                    Data.Bits..&.(**) GHC.Num.fromInteger 281470681808895)
-                                                    Data.Bits..|.(**) (Utils.Containers.Internal.BitUtil.shiftLL (x5
-                                                                                                                 Data.Bits..&.(**)
-                                                                                                                 GHC.Num.fromInteger
-                                                                                                                 281470681808895)
-                                                                                                                 (GHC.Num.fromInteger
-                                                                                                                 16)) with
-                                              | x6 => (Utils.Containers.Internal.BitUtil.shiftRL x6 (GHC.Num.fromInteger
-                                                                                                 32)) Data.Bits..|.(**)
-                                                      (Utils.Containers.Internal.BitUtil.shiftLL x6 (GHC.Num.fromInteger
-                                                                                                 32))
+    match ((shiftRL x1 (GHC.Num.fromInteger 1)) Data.Bits..&.(**)
+            GHC.Num.fromInteger 6148914691236517205) Data.Bits..|.(**) (shiftLL (x1
+                                                                                Data.Bits..&.(**) GHC.Num.fromInteger
+                                                                                6148914691236517205)
+                                                                                (GHC.Num.fromInteger 1)) with
+      | x2 => match ((shiftRL x2 (GHC.Num.fromInteger 2)) Data.Bits..&.(**)
+                      GHC.Num.fromInteger 3689348814741910323) Data.Bits..|.(**) (shiftLL (x2
+                                                                                          Data.Bits..&.(**)
+                                                                                          GHC.Num.fromInteger
+                                                                                          3689348814741910323)
+                                                                                          (GHC.Num.fromInteger 2)) with
+                | x3 => match ((shiftRL x3 (GHC.Num.fromInteger 4)) Data.Bits..&.(**)
+                                GHC.Num.fromInteger 1085102592571150095) Data.Bits..|.(**) (shiftLL (x3
+                                                                                                    Data.Bits..&.(**)
+                                                                                                    GHC.Num.fromInteger
+                                                                                                    1085102592571150095)
+                                                                                                    (GHC.Num.fromInteger
+                                                                                                    4)) with
+                          | x4 => match ((shiftRL x4 (GHC.Num.fromInteger 8)) Data.Bits..&.(**)
+                                          GHC.Num.fromInteger 71777214294589695) Data.Bits..|.(**) (shiftLL (x4
+                                                                                                            Data.Bits..&.(**)
+                                                                                                            GHC.Num.fromInteger
+                                                                                                            71777214294589695)
+                                                                                                            (GHC.Num.fromInteger
+                                                                                                            8)) with
+                                    | x5 => match ((shiftRL x5 (GHC.Num.fromInteger 16)) Data.Bits..&.(**)
+                                                    GHC.Num.fromInteger 281470681808895) Data.Bits..|.(**) (shiftLL (x5
+                                                                                                                    Data.Bits..&.(**)
+                                                                                                                    GHC.Num.fromInteger
+                                                                                                                    281470681808895)
+                                                                                                                    (GHC.Num.fromInteger
+                                                                                                                    16)) with
+                                              | x6 => (shiftRL x6 (GHC.Num.fromInteger 32)) Data.Bits..|.(**) (shiftLL
+                                                      x6 (GHC.Num.fromInteger 32))
                                             end
                                   end
                         end
@@ -518,6 +503,15 @@ Definition foldr' {b} : (Key -> b -> b) -> b -> IntSet -> b :=
                          else go (go z r) l
         | _ => j_6__
       end.
+
+Definition size : IntSet -> GHC.Num.Int :=
+  let fix go arg_0__ arg_1__
+            := match arg_0__ , arg_1__ with
+                 | acc , Bin _ _ l r => go (go acc l) r
+                 | acc , Tip _ bm => acc GHC.Num.+ bitCount_N (GHC.Num.fromInteger 0) bm
+                 | acc , Nil => acc
+               end in
+  go (GHC.Num.fromInteger 0).
 
 Definition splitRoot : IntSet -> list IntSet :=
   fun arg_0__ =>
@@ -671,6 +665,61 @@ Definition isSubsetOf : IntSet -> IntSet -> bool :=
              | _ , _ => j_6__
            end.
 
+Program Fixpoint disjoint (arg_0__ : IntSet) (arg_1__
+                            : IntSet) { measure (size_nat arg_0__ + size_nat arg_1__) } : bool :=
+match arg_0__ , arg_1__ with
+  | (Bin p1 m1 l1 r1 as t1) , (Bin p2 m2 l2 r2 as t2) => let disjoint2 :=
+                                                           if nomatch p1 p2 m2 : bool
+                                                           then true
+                                                           else if zero p1 m2 : bool
+                                                                then disjoint t1 l2
+                                                                else disjoint t1 r2 in
+                                                         let disjoint1 :=
+                                                           if nomatch p2 p1 m1 : bool
+                                                           then true
+                                                           else if zero p2 m1 : bool
+                                                                then disjoint l1 t2
+                                                                else disjoint r1 t2 in
+                                                         if shorter m1 m2 : bool
+                                                         then disjoint1
+                                                         else if shorter m2 m1 : bool
+                                                              then disjoint2
+                                                              else if p1 GHC.Base.== p2 : bool
+                                                                   then andb (disjoint l1 l2) (disjoint r1 r2)
+                                                                   else true
+  | (Bin _ _ _ _ as t1) , Tip kx2 bm2 => let fix disjointBM arg_11__
+                                                   := match arg_11__ with
+                                                        | Bin p1 m1 l1 r1 => if nomatch kx2 p1 m1 : bool
+                                                                             then true
+                                                                             else if zero kx2 m1 : bool
+                                                                                  then disjointBM l1
+                                                                                  else disjointBM r1
+                                                        | Tip kx1 bm1 => if kx1 GHC.Base.== kx2 : bool
+                                                                         then (bm1 Data.Bits..&.(**) bm2) GHC.Base.==
+                                                                              GHC.Num.fromInteger 0
+                                                                         else true
+                                                        | Nil => true
+                                                      end in
+                                         disjointBM t1
+  | Bin _ _ _ _ , Nil => true
+  | Tip kx1 bm1 , t2 => let fix disjointBM arg_18__
+                                  := match arg_18__ with
+                                       | Bin p2 m2 l2 r2 => if nomatch kx1 p2 m2 : bool
+                                                            then true
+                                                            else if zero kx1 m2 : bool
+                                                                 then disjointBM l2
+                                                                 else disjointBM r2
+                                       | Tip kx2 bm2 => if kx1 GHC.Base.== kx2 : bool
+                                                        then (bm1 Data.Bits..&.(**) bm2) GHC.Base.== GHC.Num.fromInteger
+                                                             0
+                                                        else true
+                                       | Nil => true
+                                     end in
+                        disjointBM t2
+  | Nil , _ => true
+end.
+Solve Obligations with (termination_by_omega).
+
 Definition link : Prefix -> IntSet -> Prefix -> IntSet -> IntSet :=
   fun p1 t1 p2 t2 =>
     let m := branchMask p1 p2 in
@@ -774,9 +823,7 @@ Definition lookupGT : Key -> IntSet -> option Key :=
                                                then go r l
                                                else go def r
                    | def , Tip kx bm => let maskGT :=
-                                          (GHC.Num.negate (Utils.Containers.Internal.BitUtil.shiftLL (bitmapOf x)
-                                                                                                     (GHC.Num.fromInteger
-                                                                                                     1)))
+                                          (GHC.Num.negate (shiftLL (bitmapOf x) (GHC.Num.fromInteger 1)))
                                           Data.Bits..&.(**) bm in
                                         if prefixOf x GHC.Base.< kx : bool
                                         then Some GHC.Base.$ (kx GHC.Num.+ lowestBitSet bm)
@@ -808,8 +855,7 @@ Definition lookupLE : Key -> IntSet -> option Key :=
                                                then go def l
                                                else go l r
                    | def , Tip kx bm => let maskLE :=
-                                          ((Utils.Containers.Internal.BitUtil.shiftLL (bitmapOf x) (GHC.Num.fromInteger
-                                                                                      1)) GHC.Num.- GHC.Num.fromInteger
+                                          ((shiftLL (bitmapOf x) (GHC.Num.fromInteger 1)) GHC.Num.- GHC.Num.fromInteger
                                           1) Data.Bits..&.(**) bm in
                                         if prefixOf x GHC.Base.> kx : bool
                                         then Some GHC.Base.$ (kx GHC.Num.+ highestBitSet bm)
@@ -1101,18 +1147,15 @@ Infix "Data.IntSet.Internal.\\" := (_\\_) (at level 99).
 End Notations.
 
 (* Unbound variables:
-     Eq Gt Lt None Some andb bool comparison cons false id list negb nil op_zp__
-     op_zt__ option orb pair size_nat suffixBitMask true Coq.ZArith.BinInt.Z.eqb
-     Coq.ZArith.BinInt.Z.land Coq.ZArith.BinInt.Z.lnot Coq.ZArith.BinInt.Z.log2
-     Coq.ZArith.BinInt.Z.lxor Coq.ZArith.BinInt.Z.of_N Coq.ZArith.BinInt.Z.pow
-     Coq.ZArith.BinInt.Z.pred Data.Bits.complement Data.Bits.op_zizazi__
-     Data.Bits.op_zizbzi__ Data.Bits.popCount Data.Bits.xor Data.Foldable.foldl
-     GHC.Base.Eq_ GHC.Base.Ord GHC.Base.String GHC.Base.compare GHC.Base.flip
-     GHC.Base.map GHC.Base.op_z2218U__ GHC.Base.op_zd__ GHC.Base.op_zdzn__
-     GHC.Base.op_zeze__ GHC.Base.op_zg__ GHC.Base.op_zgze__ GHC.Base.op_zl__
-     GHC.Base.op_zsze__ GHC.Num.Int GHC.Num.Word GHC.Num.negate GHC.Num.op_zm__
-     GHC.Num.op_zp__ GHC.Real.fromIntegral
-     Utils.Containers.Internal.BitUtil.highestBitMask
-     Utils.Containers.Internal.BitUtil.shiftLL
-     Utils.Containers.Internal.BitUtil.shiftRL
+     Eq Gt Lt None Some andb bitCount_N bool comparison cons false highestBitMask id
+     list negb nil op_zp__ op_zt__ option orb pair shiftLL shiftRL size_nat
+     suffixBitMask true Coq.ZArith.BinInt.Z.eqb Coq.ZArith.BinInt.Z.land
+     Coq.ZArith.BinInt.Z.lnot Coq.ZArith.BinInt.Z.log2 Coq.ZArith.BinInt.Z.lxor
+     Coq.ZArith.BinInt.Z.of_N Coq.ZArith.BinInt.Z.pow Coq.ZArith.BinInt.Z.pred
+     Data.Bits.complement Data.Bits.op_zizazi__ Data.Bits.op_zizbzi__ Data.Bits.xor
+     Data.Foldable.foldl GHC.Base.Eq_ GHC.Base.Ord GHC.Base.String GHC.Base.compare
+     GHC.Base.flip GHC.Base.map GHC.Base.op_z2218U__ GHC.Base.op_zd__
+     GHC.Base.op_zdzn__ GHC.Base.op_zeze__ GHC.Base.op_zg__ GHC.Base.op_zgze__
+     GHC.Base.op_zl__ GHC.Base.op_zsze__ GHC.Num.Int GHC.Num.Word GHC.Num.negate
+     GHC.Num.op_zm__ GHC.Num.op_zp__ GHC.Real.fromIntegral
 *)

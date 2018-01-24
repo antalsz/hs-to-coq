@@ -14,9 +14,10 @@ nonterminating Data.IntSet.Internal.foldrBits
 nonterminating Data.IntSet.Internal.foldr'Bits
 
 # Need to be implemented
-rename value Data.Utils.BitUtil.shiftLL = Data.IntSet.Internal.shiftLL
-rename value Data.Utils.BitUtil.shiftRL = Data.IntSet.Internal.shiftRL
-rename value Data.Utils.BitUtil.highestBitMask = Data.IntSet.Internal.highestBitMask
+rename value Utils.Containers.Internal.BitUtil.shiftLL = Data.IntSet.Internal.shiftLL
+rename value Utils.Containers.Internal.BitUtil.shiftRL = Data.IntSet.Internal.shiftRL
+rename value Utils.Containers.Internal.BitUtil.highestBitMask = Data.IntSet.Internal.highestBitMask
+rename value Utils.Containers.Internal.BitUtil.bitcount = Data.IntSet.Internal.bitCount_N
 
 # partial
 skip Data.IntSet.Internal.findMax
@@ -57,6 +58,7 @@ skip Data.IntSet.Internal.suffixBitMask
 termination Data.IntSet.Internal.union        {measure ((size_nat arg_0__) + (size_nat arg_1__))} termination_by_omega
 termination Data.IntSet.Internal.difference   {measure ((size_nat arg_0__) + (size_nat arg_1__))} termination_by_omega
 termination Data.IntSet.Internal.intersection {measure ((size_nat arg_0__) + (size_nat arg_1__))} termination_by_omega
+termination Data.IntSet.Internal.disjoint     {measure ((size_nat arg_0__) + (size_nat arg_1__))} termination_by_omega
 
 # Show stuff
 skip Data.IntSet.Internal.showsBars

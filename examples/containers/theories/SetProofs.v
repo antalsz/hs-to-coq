@@ -1138,10 +1138,9 @@ Module Foo (E : OrderedType) : WSfun(E).
           split; [| split; [| split; [| split; [| split]]]]=>//.
           -- intros. autorewrite with elt_compare in *.
              intuition; OrdFacts.order.
-          -- apply WF_children in Hwf; destruct Hwf.
-             apply IHs1 in Hwfl. destruct Hwfl as [ _ [_ Hord']].
+          -- apply IHs1 in Hwfl. destruct Hwfl as [ _ [_ Hord']].
              specialize (Hord' a0); destruct Hord'.
-             apply H5=>//; try intros;
+             apply H3=>//; try intros;
                autorewrite with elt_compare in *; auto.
              intuition; OrdFacts.order.
       + (** s is Bin, e > a, prove: WF (insert e s) *)
@@ -1199,10 +1198,9 @@ Module Foo (E : OrderedType) : WSfun(E).
           split; [| split; [| split; [| split; [| split]]]]=>//.
           -- intros. autorewrite with elt_compare in *.
              intuition; OrdFacts.order.
-          -- apply WF_children in Hwf; destruct Hwf.
-             apply IHs2 in Hwfr. destruct Hwfr as [ _ [_ Hord']].
+          -- apply IHs2 in Hwfr. destruct Hwfr as [ _ [_ Hord']].
              specialize (Hord' a); destruct Hord'.
-             apply H5=>//; autorewrite with elt_compare in *; auto.
+             apply H3=>//; autorewrite with elt_compare in *; auto.
     - simpl. elim. rewrite /singleton. split3.
       + apply WF_singleton.
       + left; reflexivity.

@@ -1760,7 +1760,7 @@ Require Import GHC.Num.
 Import GHC.Num.Notations.
 Require Import Data.Bits.
 Import Data.Bits.Notations.
-Require Import Data.IntSet.Base.
+Require Import Data.IntSet.Internal.
 Local Open Scope Z_scope.
 Set Bullet Behavior "Strict Subproofs".
 

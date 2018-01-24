@@ -3935,8 +3935,15 @@ Qed.
 
 Lemma isBitMask_highestBitMask:
   forall bm, isBitMask bm -> isBitMask (highestBitMask bm).
-Admitted.
-
+Proof.
+  intros.
+  split.
+  * change (0 < 2^N.log2 bm)%N.
+    apply N_pow_pos_nonneg; Nomega.
+  * apply N.pow_lt_mono_r.
+    Nomega.
+    (apply N.log2_lt_pow2; apply H).
+Qed.
 
 Lemma isBitMask0_lowestBitMask:
   forall bm, isBitMask bm -> isBitMask (lowestBitMask bm).

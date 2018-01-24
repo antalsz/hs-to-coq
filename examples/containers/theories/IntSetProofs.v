@@ -4030,12 +4030,21 @@ Qed.
 Lemma Pos_1_testbit_succ:
   forall p i,
   Pos.testbit p~1 (N.succ i) = Pos.testbit p i.
-Admitted.
+Proof.
+  induction i.
+  * reflexivity.
+  * simpl. rewrite Pos.pred_N_succ. reflexivity.
+Qed.
+
 
 Lemma Pos_0_testbit_succ:
   forall p i,
   Pos.testbit p~0 (N.succ i) = Pos.testbit p i.
-Admitted.
+Proof.
+  induction i.
+  * reflexivity.
+  * simpl. rewrite Pos.pred_N_succ. reflexivity.
+Qed.
 
 Lemma bits_impl_le:
   forall a b,

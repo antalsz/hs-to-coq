@@ -14,6 +14,8 @@ Require Import Omega.
 
 From mathcomp Require Import ssrbool ssreflect.
 
+Set Bullet Behavior "Strict Subproofs".
+
 Local Open Scope Z_scope.
 
 Section Option_Int.
@@ -448,6 +450,13 @@ Module Foo (E : OrderedType) : WSfun(E).
            | [H: _ > _ |- _ ] => move: H
            | [H: _ >= _ |- _ ] => move: H
            | [H: context[_ =? _] |- _ ] => move: H
+           | [H: ?a = ?b |- _ ] =>
+             first [match a with
+                    | context [_ + _] => idtac
+                    end |
+                    match b with
+                    | context [_ + _] => idtac
+                    end ]; move: H
            end; rewrite_size; rewrite_Int;
     rewrite /is_true ?Z.ltb_lt ?Z.ltb_ge ?Z.leb_le ?Z.leb_gt ?Z.eqb_eq.
 
@@ -512,7 +521,7 @@ Module Foo (E : OrderedType) : WSfun(E).
 
   Ltac move_wf_back_to_goal :=
     repeat match goal with
-           | [Hwf: is_true (WF ?t) |- _ ] =>
+           | [Hwf: is_true (WF (Bin ?s ?a ?l ?r)) |- _ ] =>
              move: Hwf
            end.
 
@@ -547,40 +556,39 @@ Module Foo (E : OrderedType) : WSfun(E).
            | [ |- is_true (andb _ (andb _ _))] =>
              step_in_balanced
            | [ |- is_true (orb _ (andb _ _)) ] =>
+             derive_constraints;
              apply /orP=>//;
                    ((right; apply /andP=>//) + left);
-                    solve [derive_constraints; subst;
-                           rewrite_for_omega; intros; omega]
+             solve [rewrite_for_omega; omega]
            end;
-    try solve [derive_constraints; subst;
-           repeat match goal with
-                  | [ H: is_true (balanced _) |- _ ] =>
-                    move: H; rewrite /balanced;
-                    case /and3P=>//; move=>? ? ?
-                  end].
+    try solve [derive_constraints;
+               repeat match goal with
+                      | [ H: is_true (balanced _) |- _ ] =>
+                        move: H; rewrite /balanced;
+                        case /and3P=>//; move=>? ? ?
+                      end].
 
   Lemma balanceL_add_size : forall (x : elt) (l r : Set_ elt),
       WF l -> WF r ->
       size (balanceL x l r) = size l + size r + 1.
   Proof.
     destruct r as [sr xr rl rr | ];
-      destruct l as [sl xl ll lr | ].
+      destruct l as [sl xl ll lr | ]. 
     - rewrite /balanceL; destruct_match.
       + destruct ll as [sll xll lll llr | ];
           destruct lr as [slr xlr lrl lrr | ];
-          try solve [intros; derive_constraints; subst;
+          try solve [derive_constraints; 
                      rewrite_for_omega; intros; omega].
-        destruct_match; intros;
-          rewrite_size; rewrite_Int; omega.
+        destruct_match; rewrite_for_omega; omega.
       + intros. rewrite_size; rewrite_Int; omega.
     - intros. rewrite_size; rewrite_Int; omega.
     - rewrite /balanceL;
         destruct ll as [sll xll lll llr | ];
         destruct lr as [slr xlr lrl lrr | ].
       + destruct_match; intros; rewrite_size; rewrite_Int; omega.
-      + intros. derive_constraints; subst.
+      + intros. derive_constraints;
         destruct Hbalanced; rewrite_for_omega; intros; omega.
-      + intros. derive_constraints; subst.
+      + intros. derive_constraints;
         destruct Hbalanced; rewrite_for_omega; intros; omega.
       + intros; derive_constraints. move: Hsum.
         rewrite_for_omega. intros; omega.
@@ -596,19 +604,17 @@ Module Foo (E : OrderedType) : WSfun(E).
     - rewrite /balanceR; destruct_match.
       + destruct rl as [srl xrl rll rlr | ];
           destruct rr as [srr xrr rrl rrr | ];
-          try solve [intros; derive_constraints; subst;
-                     rewrite_for_omega; intros; omega].
-        destruct_match; intros;
-          rewrite_size; rewrite_Int; omega.
+          try solve [derive_constraints; rewrite_for_omega; intros; omega].
+        destruct_match; rewrite_for_omega; omega.
       + intros. rewrite_size; rewrite_Int; omega.
     - intros. rewrite_size; rewrite_Int; omega.
     - rewrite /balanceR;
         destruct rl as [srl xrl rll rlr | ];
         destruct rr as [srr xrr rrl rrr | ].
       + destruct_match; intros; rewrite_size; rewrite_Int; omega.
-      + intros. derive_constraints; subst.
+      + intros. derive_constraints; 
         destruct Hbalanced; rewrite_for_omega; intros; omega.
-      + intros. derive_constraints; subst.
+      + intros. derive_constraints; 
         destruct Hbalanced; rewrite_for_omega; intros; omega.
       + intros; derive_constraints. move: Hsum.
         rewrite_for_omega. intros; omega.
@@ -634,7 +640,8 @@ Module Foo (E : OrderedType) : WSfun(E).
       before_balancedL x l r -> balanced (balanceL x l r).
   Proof.
     intros x l r Hwfl Hwfr.
-    destruct r as [sr xr rl rr | ]; destruct l as [sl xl ll lr | ];
+    destruct r as [sr xr rl rr | ];
+      destruct l as [sl xl ll lr | ];
       rewrite /before_balancedL /balanceL; rewrite_Int; move=>Hbefore.
     - (** [l] and [r] are both [Bin]s. *)
       destruct_match.
@@ -660,7 +667,7 @@ Module Foo (E : OrderedType) : WSfun(E).
       destruct_match; solve_balanced.
     - (** Both [l] and [r] and [Tip]s. *)
       step_in_balanced.
-      Time Qed. (* Finished transaction in 20.936 secs (20.87u,0.044s) (successful) *)
+      Time Qed. (* Finished transaction in 8.423 secs (8.39u,0.023s) (successful) *)
 
     Definition before_balancedR (x: elt) (l r : Set_ elt) : Prop :=
     (size l + size r <= 2 /\ size l <= 1) \/
@@ -697,7 +704,7 @@ Module Foo (E : OrderedType) : WSfun(E).
       destruct_match; solve_balanced.
     - (** Both [l] and [r] and [Tip]s. *)
       step_in_balanced.
-      Time Qed. (* Finished transaction in 20.24 secs (20.106u,0.059s) (successful) *)
+      Time Qed. (* Finished transaction in 8.689 secs (8.652u,0.024s) (successful) *)
 
   Definition before_ordered (x : elt) (l r : Set_ elt) (f g : elt -> bool) :=
     f x /\ (forall x y, E.lt x y \/ E.eq x y -> f x -> f y) /\
@@ -1198,7 +1205,7 @@ Module Foo (E : OrderedType) : WSfun(E).
   Proof.
     intros; rewrite -/insert /before_balancedR. derive_constraints.
     have Hs: size (insert x r) = size r + 1 \/ size (insert x r) = size r
-      by [apply insert_prop with (e:=x) ].
+      by [ apply insert_prop with (e:=x) ].
     destruct Hs as [H | H]; rewrite H; destruct Hbalanced;
       solve [(left + right); split; rewrite_for_omega; intros; omega].
   Qed.

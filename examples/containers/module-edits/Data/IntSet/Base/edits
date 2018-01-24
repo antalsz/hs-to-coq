@@ -46,8 +46,8 @@ redefine Definition Data.IntSet.Base.branchMask : Prefix -> (Prefix -> Mask) :=
   fun p1 p2 => Coq.ZArith.BinInt.Z.pow 2 (Coq.ZArith.BinInt.Z.log2 (Coq.ZArith.BinInt.Z.lxor p1 p2)).
 
 # indexOfTheOnlyBit uses pointers and ugly stuff
-skip Data.IntSet.Base.indexOfTheOnlyBit
-rewrite forall x, Data.IntSet.Base.indexOfTheOnlyBit x = Coq.ZArith.BinInt.Z.of_N (Coq.NArith.BinNat.N.log2 x)
+redefine Definition Data.IntSet.Base.indexOfTheOnlyBit :=
+ fun x => Coq.ZArith.BinInt.Z.of_N (Coq.NArith.BinNat.N.log2 x).
 
 redefine Definition Data.IntSet.Base.lowestBitMask : Nat -> Nat :=
   fun n => Data.IntSet.Base.revNatSafe (Data.IntSet.Base.highestBitMask (Data.IntSet.Base.revNatSafe n)).

@@ -20,6 +20,8 @@ import Data.Monoid
 import Data.List.NonEmpty (NonEmpty(..))
 import HsToCoq.Util.Containers
 
+import Debug.Trace
+
 import Data.Generics
 
 import Control.Monad.IO.Class
@@ -75,24 +77,15 @@ convertHsGroup mod HsGroup{..} = do
         convUnsupported "pre-renaming `ValBindsIn' construct post renaming"
       ValBindsOut binds lsigs -> do
         sigs  <- convertLSigs lsigs
-        defns <- fmap M.fromList
-              .  (convertTypedBindings TopLevel
+        defns <- (convertTypedBindings TopLevel
                    (map unLoc $ concatMap (bagToList . snd) binds)
                    sigs
                    ??
                    (Just axiomatizeBinding))
               $  withConvertedBinding
                    (\cdef@ConvertedDefinition{convDefName = name} -> ((name,) <$>) $ do
-                       r <- use (edits.redefinitions.at name)
                        t <- use (edits.termination.at name)
-                       if | Just def <- r               -- redefined
-                          -> [definitionSentence def] <$ case def of
-                              CoqInductiveDef        _ -> editFailure "cannot redefine a value definition into an Inductive"
-                              CoqDefinitionDef       _ -> pure ()
-                              CoqFixpointDef         _ -> pure ()
-                              CoqProgramFixpointDef  _ -> pure ()
-                              CoqInstanceDef         _ -> editFailure "cannot redefine a value definition into an Instance"
-                          | Just (order, tactic) <- t  -- turn into Program Fixpoint
+                       if | Just (order, tactic) <- t  -- turn into Program Fixpoint
                           ->  pure <$> toProgramFixpointSentence cdef order tactic
                           | otherwise                   -- no edit
                           -> let def = DefinitionDef Global (convDefName cdef)
@@ -104,20 +97,36 @@ convertHsGroup mod HsGroup{..} = do
                                 [ NotationSentence n | n <- buildInfixNotations sigs (convDefName cdef) ]
                    ) (\_ _ -> convUnsupported "top-level pattern bindings")
 
+        defns' <- mapM applyRedefines defns
+        let defnsMap = M.fromList defns'
+
         -- TODO RENAMER use RecFlag info to do recursion stuff
-        pure . foldMap (foldMap (defns M.!)) . topoSortEnvironment $ NoBinding <$> defns
+        pure . foldMap (foldMap (defnsMap M.!)) . topoSortEnvironment $ NoBinding <$> defnsMap
+
   convertedClsInstDecls <- convertModuleClsInstDecls [(Just mod, cid) | L _ (ClsInstD cid) <- hs_instds]
 
   convertedAddedDecls <- use (edits.additions.at mod.non [])
 
   pure ConvertedModuleDeclarations{..}
 
-  where axiomatizeBinding :: GhcMonad m => HsBind GHC.Name -> GhcException -> m (Qualid, [Sentence])
+  where axiomatizeBinding :: ConversionMonad m => HsBind GHC.Name -> GhcException -> m (Qualid, [Sentence])
         axiomatizeBinding FunBind{..} exn = do
-          name <- freeVar $ unLoc fun_id
-          pure (Bare name, [translationFailedComment name exn, axiom (Bare name)])
+          name <- var ExprNS (unLoc fun_id)
+          pure (name, [translationFailedComment (qualidBase name) exn, axiom name])
         axiomatizeBinding _ exn =
           liftIO $ throwGhcExceptionIO exn
+
+        applyRedefines :: ConversionMonad m => (Qualid, [Sentence]) -> m (Qualid, [Sentence])
+        applyRedefines (name, sentences)
+            = traceShow (name) $ use (edits.redefinitions.at name) >>= ((name,) <$>) . \case
+                Just def ->
+                     [definitionSentence def] <$ case def of
+                      CoqInductiveDef        _ -> editFailure "cannot redefine a value definition into an Inductive"
+                      CoqDefinitionDef       _ -> pure ()
+                      CoqFixpointDef         _ -> pure ()
+                      CoqProgramFixpointDef  _ -> pure ()
+                      CoqInstanceDef         _ -> editFailure "cannot redefine a value definition into an Instance"
+                Nothing -> pure sentences
 
 axiomatizeHsGroup :: ConversionMonad m => ModuleName -> HsGroup GHC.Name -> m ConvertedModuleDeclarations
 axiomatizeHsGroup mod HsGroup{..} = do
@@ -133,8 +142,8 @@ axiomatizeHsGroup mod HsGroup{..} = do
         sigs  <- convertLSigs lsigs `gcatch` const @_ @SomeException (pure M.empty)
         for (map unLoc $ concatMap (bagToList . snd) binds) $ \case
           FunBind{..} -> do
-            name <- freeVar $ unLoc fun_id
-            pure . typedAxiom (Bare name) $ sigs^.at (Bare name).to (fmap sigType).non bottomType
+            name <- var ExprNS (unLoc fun_id)
+            pure . typedAxiom name $ sigs^.at name.to (fmap sigType).non bottomType
           _ ->
             convUnsupported "non-type, non-class, non-value definitions in axiomatized modules"
   

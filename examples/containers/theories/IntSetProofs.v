@@ -4145,6 +4145,7 @@ Proof.
     rewrite highestBitMask_pow by assumption.
     rewrite revNat_pow by assumption.
     assert (N.log2 bm < WIDTH)%N by (apply N.log2_lt_pow2; try apply Hbm).
+    unfold indexOfTheOnlyBit.
     rewrite N.log2_pow2 by Nomega.
     replace (rPrefix r + (64 - 1) - Z.of_N (WIDTH - 1 - N.log2 bm)%N)
         with (rPrefix r + Z.of_N (N.log2 bm)) by (unfold WIDTH in *; Nomega).

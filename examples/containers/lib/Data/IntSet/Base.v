@@ -177,8 +177,11 @@ Definition equal : IntSet -> IntSet -> bool :=
 Local Definition Eq___IntSet_op_zeze__ : IntSet -> IntSet -> bool :=
   fun t1 t2 => equal t1 t2.
 
+Definition indexOfTheOnlyBit :=
+  fun x => Coq.ZArith.BinInt.Z.of_N (Coq.NArith.BinNat.N.log2 x).
+
 Definition highestBitSet : Nat -> GHC.Num.Int :=
-  fun x => Coq.ZArith.BinInt.Z.of_N (Coq.NArith.BinNat.N.log2 (highestBitMask x)).
+  fun x => indexOfTheOnlyBit (highestBitMask x).
 
 Definition unsafeFindMax : IntSet -> option Key :=
   fix unsafeFindMax arg_0__
@@ -289,7 +292,7 @@ Definition lowestBitMask : Nat -> Nat :=
   fun n => revNatSafe (highestBitMask (revNatSafe n)).
 
 Definition lowestBitSet : Nat -> GHC.Num.Int :=
-  fun x => Coq.ZArith.BinInt.Z.of_N (Coq.NArith.BinNat.N.log2 (lowestBitMask x)).
+  fun x => indexOfTheOnlyBit (lowestBitMask x).
 
 Definition unsafeFindMin : IntSet -> option Key :=
   fix unsafeFindMin arg_0__
@@ -307,8 +310,7 @@ Definition foldlBits {a}
                   if bm GHC.Base.== GHC.Num.fromInteger 0 : bool
                   then acc
                   else match lowestBitMask bm with
-                         | bitmask => GHC.Prim.seq bitmask (match Coq.ZArith.BinInt.Z.of_N
-                                                                    (Coq.NArith.BinNat.N.log2 bitmask) with
+                         | bitmask => GHC.Prim.seq bitmask (match indexOfTheOnlyBit bitmask with
                                                      | bi => GHC.Prim.seq bi (go (Data.Bits.xor bm bitmask) ((f acc)
                                                                                                             GHC.Base.$!
                                                                                                             (prefix
@@ -351,9 +353,7 @@ Definition foldl'Bits {a}
                       | bm , acc => if bm GHC.Base.== GHC.Num.fromInteger 0 : bool
                                     then acc
                                     else match lowestBitMask bm with
-                                           | bitmask => GHC.Prim.seq bitmask (match Coq.ZArith.BinInt.Z.of_N
-                                                                                      (Coq.NArith.BinNat.N.log2
-                                                                                      bitmask) with
+                                           | bitmask => GHC.Prim.seq bitmask (match indexOfTheOnlyBit bitmask with
                                                                        | bi => GHC.Prim.seq bi (go (Data.Bits.xor bm
                                                                                                                   bitmask)
                                                                                             ((f acc) GHC.Base.$! (prefix
@@ -395,8 +395,7 @@ Definition foldrBits {a}
                   if bm GHC.Base.== GHC.Num.fromInteger 0 : bool
                   then acc
                   else match lowestBitMask bm with
-                         | bitmask => GHC.Prim.seq bitmask (match Coq.ZArith.BinInt.Z.of_N
-                                                                    (Coq.NArith.BinNat.N.log2 bitmask) with
+                         | bitmask => GHC.Prim.seq bitmask (match indexOfTheOnlyBit bitmask with
                                                      | bi => GHC.Prim.seq bi (go (Data.Bits.xor bm bitmask) ((f
                                                                                                             GHC.Base.$!
                                                                                                             ((prefix
@@ -483,9 +482,7 @@ Definition foldr'Bits {a}
                       | bm , acc => if bm GHC.Base.== GHC.Num.fromInteger 0 : bool
                                     then acc
                                     else match lowestBitMask bm with
-                                           | bitmask => GHC.Prim.seq bitmask (match Coq.ZArith.BinInt.Z.of_N
-                                                                                      (Coq.NArith.BinNat.N.log2
-                                                                                      bitmask) with
+                                           | bitmask => GHC.Prim.seq bitmask (match indexOfTheOnlyBit bitmask with
                                                                        | bi => GHC.Prim.seq bi (go (Data.Bits.xor bm
                                                                                                                   bitmask)
                                                                                             ((f GHC.Base.$! ((prefix

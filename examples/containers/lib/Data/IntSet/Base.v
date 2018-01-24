@@ -188,8 +188,105 @@ Definition unsafeFindMax : IntSet -> option Key :=
              | Bin _ _ _ r => unsafeFindMax r
            end.
 
+Definition mask : GHC.Num.Int -> Mask -> Prefix :=
+  fun i m =>
+    Coq.ZArith.BinInt.Z.land i (Coq.ZArith.BinInt.Z.lxor (Coq.ZArith.BinInt.Z.lnot
+                                                         (Coq.ZArith.BinInt.Z.pred m)) m).
+
+Definition match_ : GHC.Num.Int -> Prefix -> Mask -> bool :=
+  fun i p m => (mask i m) GHC.Base.== p.
+
+Definition nomatch : GHC.Num.Int -> Prefix -> Mask -> bool :=
+  fun i p m => (mask i m) GHC.Base./= p.
+
+Definition maskW : Nat -> Nat -> Prefix :=
+  fun i m =>
+    Coq.ZArith.BinInt.Z.of_N (i Data.Bits..&.(**) (Data.Bits.xor
+                             (Data.Bits.complement (m GHC.Num.- GHC.Num.fromInteger 1)) m)).
+
+Definition natFromInt : GHC.Num.Int -> Nat :=
+  fun i => GHC.Real.fromIntegral i.
+
+Definition shorter : Mask -> Mask -> bool :=
+  fun m1 m2 => (natFromInt m1) GHC.Base.> (natFromInt m2).
+
+Definition nequal : IntSet -> IntSet -> bool :=
+  fix nequal arg_0__ arg_1__
+        := match arg_0__ , arg_1__ with
+             | Bin p1 m1 l1 r1 , Bin p2 m2 l2 r2 => orb (m1 GHC.Base./= m2) (orb (p1
+                                                                                 GHC.Base./= p2) (orb (nequal l1 l2)
+                                                                                                      (nequal r1 r2)))
+             | Tip kx1 bm1 , Tip kx2 bm2 => orb (kx1 GHC.Base./= kx2) (bm1 GHC.Base./= bm2)
+             | Nil , Nil => false
+             | _ , _ => true
+           end.
+
+Local Definition Eq___IntSet_op_zsze__ : IntSet -> IntSet -> bool :=
+  fun t1 t2 => nequal t1 t2.
+
+Program Instance Eq___IntSet : GHC.Base.Eq_ IntSet := fun _ k =>
+    k {|GHC.Base.op_zeze____ := Eq___IntSet_op_zeze__ ;
+      GHC.Base.op_zsze____ := Eq___IntSet_op_zsze__ |}.
+
+Definition node : GHC.Base.String :=
+  GHC.Base.hs_string__ "+--".
+
+Definition null : IntSet -> bool :=
+  fun arg_0__ => match arg_0__ with | Nil => true | _ => false end.
+
+Definition prefixBitMask : GHC.Num.Int :=
+  Data.Bits.complement suffixBitMask.
+
+Definition prefixOf : GHC.Num.Int -> Prefix :=
+  fun x => x Data.Bits..&.(**) prefixBitMask.
+
+Definition revNat : Nat -> Nat :=
+  fun x1 =>
+    match ((shiftRL x1 (GHC.Num.fromInteger 1)) Data.Bits..&.(**)
+            GHC.Num.fromInteger 6148914691236517205) Data.Bits..|.(**) (shiftLL (x1
+                                                                                Data.Bits..&.(**) GHC.Num.fromInteger
+                                                                                6148914691236517205)
+                                                                                (GHC.Num.fromInteger 1)) with
+      | x2 => match ((shiftRL x2 (GHC.Num.fromInteger 2)) Data.Bits..&.(**)
+                      GHC.Num.fromInteger 3689348814741910323) Data.Bits..|.(**) (shiftLL (x2
+                                                                                          Data.Bits..&.(**)
+                                                                                          GHC.Num.fromInteger
+                                                                                          3689348814741910323)
+                                                                                          (GHC.Num.fromInteger 2)) with
+                | x3 => match ((shiftRL x3 (GHC.Num.fromInteger 4)) Data.Bits..&.(**)
+                                GHC.Num.fromInteger 1085102592571150095) Data.Bits..|.(**) (shiftLL (x3
+                                                                                                    Data.Bits..&.(**)
+                                                                                                    GHC.Num.fromInteger
+                                                                                                    1085102592571150095)
+                                                                                                    (GHC.Num.fromInteger
+                                                                                                    4)) with
+                          | x4 => match ((shiftRL x4 (GHC.Num.fromInteger 8)) Data.Bits..&.(**)
+                                          GHC.Num.fromInteger 71777214294589695) Data.Bits..|.(**) (shiftLL (x4
+                                                                                                            Data.Bits..&.(**)
+                                                                                                            GHC.Num.fromInteger
+                                                                                                            71777214294589695)
+                                                                                                            (GHC.Num.fromInteger
+                                                                                                            8)) with
+                                    | x5 => match ((shiftRL x5 (GHC.Num.fromInteger 16)) Data.Bits..&.(**)
+                                                    GHC.Num.fromInteger 281470681808895) Data.Bits..|.(**) (shiftLL (x5
+                                                                                                                    Data.Bits..&.(**)
+                                                                                                                    GHC.Num.fromInteger
+                                                                                                                    281470681808895)
+                                                                                                                    (GHC.Num.fromInteger
+                                                                                                                    16)) with
+                                              | x6 => (shiftRL x6 (GHC.Num.fromInteger 32)) Data.Bits..|.(**) (shiftLL
+                                                      x6 (GHC.Num.fromInteger 32))
+                                            end
+                                  end
+                        end
+              end
+    end.
+
+Definition revNatSafe n :=
+  Coq.NArith.BinNat.N.modulo (revNat n) (Coq.NArith.BinNat.N.pow 2 64).
+
 Definition lowestBitMask : Nat -> Nat :=
-  fun x => x Data.Bits..&.(**) GHC.Num.negate x.
+  fun n => revNatSafe (highestBitMask (revNatSafe n)).
 
 Definition lowestBitSet : Nat -> GHC.Num.Int :=
   fun x => Coq.ZArith.BinInt.Z.of_N (Coq.NArith.BinNat.N.log2 (lowestBitMask x)).
@@ -289,103 +386,6 @@ Definition foldl' {a} : (a -> Key -> a) -> a -> IntSet -> a :=
                          else go (go z l) r
         | _ => j_7__
       end.
-
-Definition mask : GHC.Num.Int -> Mask -> Prefix :=
-  fun i m =>
-    Coq.ZArith.BinInt.Z.land i (Coq.ZArith.BinInt.Z.lxor (Coq.ZArith.BinInt.Z.lnot
-                                                         (Coq.ZArith.BinInt.Z.pred m)) m).
-
-Definition match_ : GHC.Num.Int -> Prefix -> Mask -> bool :=
-  fun i p m => (mask i m) GHC.Base.== p.
-
-Definition nomatch : GHC.Num.Int -> Prefix -> Mask -> bool :=
-  fun i p m => (mask i m) GHC.Base./= p.
-
-Definition maskW : Nat -> Nat -> Prefix :=
-  fun i m =>
-    Coq.ZArith.BinInt.Z.of_N (i Data.Bits..&.(**) (Data.Bits.xor
-                             (Data.Bits.complement (m GHC.Num.- GHC.Num.fromInteger 1)) m)).
-
-Definition natFromInt : GHC.Num.Int -> Nat :=
-  fun i => GHC.Real.fromIntegral i.
-
-Definition shorter : Mask -> Mask -> bool :=
-  fun m1 m2 => (natFromInt m1) GHC.Base.> (natFromInt m2).
-
-Definition nequal : IntSet -> IntSet -> bool :=
-  fix nequal arg_0__ arg_1__
-        := match arg_0__ , arg_1__ with
-             | Bin p1 m1 l1 r1 , Bin p2 m2 l2 r2 => orb (m1 GHC.Base./= m2) (orb (p1
-                                                                                 GHC.Base./= p2) (orb (nequal l1 l2)
-                                                                                                      (nequal r1 r2)))
-             | Tip kx1 bm1 , Tip kx2 bm2 => orb (kx1 GHC.Base./= kx2) (bm1 GHC.Base./= bm2)
-             | Nil , Nil => false
-             | _ , _ => true
-           end.
-
-Local Definition Eq___IntSet_op_zsze__ : IntSet -> IntSet -> bool :=
-  fun t1 t2 => nequal t1 t2.
-
-Program Instance Eq___IntSet : GHC.Base.Eq_ IntSet := fun _ k =>
-    k {|GHC.Base.op_zeze____ := Eq___IntSet_op_zeze__ ;
-      GHC.Base.op_zsze____ := Eq___IntSet_op_zsze__ |}.
-
-Definition node : GHC.Base.String :=
-  GHC.Base.hs_string__ "+--".
-
-Definition null : IntSet -> bool :=
-  fun arg_0__ => match arg_0__ with | Nil => true | _ => false end.
-
-Definition prefixBitMask : GHC.Num.Int :=
-  Data.Bits.complement suffixBitMask.
-
-Definition prefixOf : GHC.Num.Int -> Prefix :=
-  fun x => x Data.Bits..&.(**) prefixBitMask.
-
-Definition revNat : Nat -> Nat :=
-  fun x1 =>
-    match ((shiftRL x1 (GHC.Num.fromInteger 1)) Data.Bits..&.(**)
-            GHC.Num.fromInteger 6148914691236517205) Data.Bits..|.(**) (shiftLL (x1
-                                                                                Data.Bits..&.(**) GHC.Num.fromInteger
-                                                                                6148914691236517205)
-                                                                                (GHC.Num.fromInteger 1)) with
-      | x2 => match ((shiftRL x2 (GHC.Num.fromInteger 2)) Data.Bits..&.(**)
-                      GHC.Num.fromInteger 3689348814741910323) Data.Bits..|.(**) (shiftLL (x2
-                                                                                          Data.Bits..&.(**)
-                                                                                          GHC.Num.fromInteger
-                                                                                          3689348814741910323)
-                                                                                          (GHC.Num.fromInteger 2)) with
-                | x3 => match ((shiftRL x3 (GHC.Num.fromInteger 4)) Data.Bits..&.(**)
-                                GHC.Num.fromInteger 1085102592571150095) Data.Bits..|.(**) (shiftLL (x3
-                                                                                                    Data.Bits..&.(**)
-                                                                                                    GHC.Num.fromInteger
-                                                                                                    1085102592571150095)
-                                                                                                    (GHC.Num.fromInteger
-                                                                                                    4)) with
-                          | x4 => match ((shiftRL x4 (GHC.Num.fromInteger 8)) Data.Bits..&.(**)
-                                          GHC.Num.fromInteger 71777214294589695) Data.Bits..|.(**) (shiftLL (x4
-                                                                                                            Data.Bits..&.(**)
-                                                                                                            GHC.Num.fromInteger
-                                                                                                            71777214294589695)
-                                                                                                            (GHC.Num.fromInteger
-                                                                                                            8)) with
-                                    | x5 => match ((shiftRL x5 (GHC.Num.fromInteger 16)) Data.Bits..&.(**)
-                                                    GHC.Num.fromInteger 281470681808895) Data.Bits..|.(**) (shiftLL (x5
-                                                                                                                    Data.Bits..&.(**)
-                                                                                                                    GHC.Num.fromInteger
-                                                                                                                    281470681808895)
-                                                                                                                    (GHC.Num.fromInteger
-                                                                                                                    16)) with
-                                              | x6 => (shiftRL x6 (GHC.Num.fromInteger 32)) Data.Bits..|.(**) (shiftLL
-                                                      x6 (GHC.Num.fromInteger 32))
-                                            end
-                                  end
-                        end
-              end
-    end.
-
-Definition revNatSafe n :=
-  Coq.NArith.BinNat.N.modulo (revNat n) (Coq.NArith.BinNat.N.pow 2 64).
 
 Definition foldrBits {a}
     : GHC.Num.Int -> (GHC.Num.Int -> a -> a) -> a -> Nat -> a :=

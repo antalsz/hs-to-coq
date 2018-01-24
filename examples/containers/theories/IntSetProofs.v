@@ -3898,14 +3898,15 @@ Proof.
   reflexivity.
 Qed.
 
-(* Let’s phrase stuff in terms of the highest bit mask,
-   as that is based on [N.log2], which is presumably
-   easier to reason about. *)
+(* This lemma essentially repeats the edit that we made.
+   A stretch-goal would be to retain the original definintion
+   (with [negate] replaced by [2^WIDTH - _]) and prove this lemma.
+ *)
 Lemma lowestBitMask_highestBitMask:
   forall bm,
     isBitMask bm ->
     lowestBitMask bm = revNatSafe (highestBitMask (revNatSafe bm)).
-Admitted.
+Proof. intros. reflexivity. Qed.
 
 Lemma revNat_pow:
   forall bm,

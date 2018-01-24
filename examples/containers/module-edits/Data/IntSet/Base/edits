@@ -49,6 +49,9 @@ redefine Definition Data.IntSet.Base.branchMask : Prefix -> (Prefix -> Mask) :=
 skip Data.IntSet.Base.indexOfTheOnlyBit
 rewrite forall x, Data.IntSet.Base.indexOfTheOnlyBit x = Coq.ZArith.BinInt.Z.of_N (Coq.NArith.BinNat.N.log2 x)
 
+redefine Definition Data.IntSet.Base.lowestBitMask : Nat -> Nat :=
+  fun n => Data.IntSet.Base.revNatSafe (Data.IntSet.Base.highestBitMask (Data.IntSet.Base.revNatSafe n)).
+
 # the revNat function is only correct if its result is cropped to 64 bits.
 add Data.IntSet.Base Definition Data.IntSet.Base.revNatSafe n := Coq.NArith.BinNat.N.modulo (Data.IntSet.Base.revNat n) (Coq.NArith.BinNat.N.pow 2 64).
 # Use rewrite, not rename, to not change the name of the actual definition

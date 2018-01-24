@@ -3981,9 +3981,40 @@ Lemma bitmapInRange_pow:
   forall r e i,
   (e < 2^rBits r)%N ->
   bitmapInRange r (2 ^ e)%N i = (rPrefix r + Z.of_N e =? i).
-Admitted.
-
-
+Proof.
+  intros.
+  destruct r as [p b].
+  unfold bitmapInRange.
+  simpl in *.
+  destruct (Z.eqb_spec (Z.shiftr i (Z.of_N b)) p).
+  * rewrite N.pow2_bits_eqb.
+    transitivity (Z.of_N e =? Z.land i (Z.ones (Z.of_N b))).
+    - rewrite eq_iff_eq_true.
+      rewrite N.eqb_eq, Z.eqb_eq.
+      intuition.
+      subst. rewrite Z2N.id by nonneg. reflexivity.
+      rewrite <- H0. rewrite N2Z.id. reflexivity.
+    - rewrite eq_iff_eq_true.
+      rewrite !Z.eqb_eq.
+      rewrite Z.land_ones by nonneg.
+      rewrite Z.shiftr_div_pow2 in e0 by nonneg.
+      rewrite Z.div_mod with (a := i) (b := 2^Z.of_N b) at 2
+        by (apply Z.pow_nonzero; Nomega).
+      rewrite Z.shiftl_mul_pow2 by nonneg.
+      rewrite Z.mul_comm.
+      subst; omega.
+  * symmetry.
+    rewrite Z.eqb_neq.
+    contradict n.
+    subst.
+    rewrite Z.shiftr_div_pow2 by nonneg.
+    rewrite Z.shiftl_mul_pow2 by nonneg.
+    rewrite Z_div_plus_full_l by (apply Z.pow_nonzero; Nomega).
+    enough (Z.of_N e / 2 ^ Z.of_N b = 0) by omega.
+    apply Z.div_small.
+    split; try nonneg.
+    zify.  rewrite -> N2Z.inj_pow in H. apply H.
+Qed.
 
 Lemma Pos_1_testbit_succ:
   forall p i,

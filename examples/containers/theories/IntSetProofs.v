@@ -1764,6 +1764,21 @@ Require Import Data.IntSet.Internal.
 Local Open Scope Z_scope.
 Set Bullet Behavior "Strict Subproofs".
 
+(** A tactic to remove all relevant Haskell type class methods, and
+exposes the underlying Coq concepts.
+*)
+
+Ltac unfoldMethods :=
+  unfold op_zsze__, op_zeze__, Eq_Char___, Eq_Integer___, op_zsze____, op_zeze____,
+         fromInteger, Num_Word__,
+         op_zm__, op_zp__, Num_Integer__,
+         shiftRL, shiftLL,
+         Prim.seq,
+         op_zdzn__,
+         xor, op_zizazi__, op_zizbzi__, Bits.complement,
+         Bits__N,  instance_Bits_Int, complement_Int.
+
+
 (** We hardcode the width of the leafe bit maps to 64 bits *)
 
 Definition WIDTH := 64%N.
@@ -1777,7 +1792,7 @@ Lemma prefixOf_nonneg: forall p,
 Proof.
   intros.
   unfold prefixOf, prefixBitMask, suffixBitMask.
-  unfold op_zizazi__, Bits.complement, Bits__N, instance_Bits_Int, complement_Int.
+  unfoldMethods.
   rewrite Z.land_nonneg; intuition.
 Qed.
 Hint Resolve prefixOf_nonneg : nonneg.
@@ -1788,8 +1803,7 @@ Lemma rPrefix_shiftr:
 Proof.
   intros.
   unfold rPrefix, prefixOf, prefixBitMask, suffixBitMask.
-  unfold Bits.complement, instance_Bits_Int, complement_Int.
-  unfold op_zizazi__, Bits.complement, Bits__N, instance_Bits_Int, complement_Int.
+  unfoldMethods.
   rewrite <- Z.ldiff_land.
   rewrite -> Z.ldiff_ones_r by omega.
   reflexivity.
@@ -1801,13 +1815,10 @@ Lemma prefixOf_eq_shiftr:
 Proof.
   intros.
   unfold prefixOf, prefixBitMask, suffixBitMask.
-  unfold Bits.complement, instance_Bits_Int, complement_Int.
-  unfold op_zizazi__, Bits.complement, Bits__N, instance_Bits_Int, complement_Int.
+  unfoldMethods.
   rewrite <- Z.ldiff_land.
   rewrite -> Z.ldiff_ones_r by omega.
-
   replace tip_widthZ with 6 by reflexivity.
-
   rewrite -> Z_shiftl_injb by omega.
   reflexivity.
 Qed.
@@ -1830,7 +1841,7 @@ Qed.
 Lemma suffixOf_lt_WIDTH: forall e, suffixOf e < Z.of_N WIDTH.
   intros.
   unfold suffixOf, suffixBitMask.
-  unfold op_zizazi__, Bits.complement, Bits__N, instance_Bits_Int, complement_Int.
+  unfoldMethods.
   rewrite Z.land_ones.
   change (e mod 64 < 64).
   apply Z.mod_pos_bound.
@@ -1841,7 +1852,7 @@ Qed.
 Lemma suffixOf_noneg:  forall e, 0 <= suffixOf e.
   intros.
   unfold suffixOf, suffixBitMask.
-  unfold op_zizazi__, Bits.complement, Bits__N, instance_Bits_Int, complement_Int.
+  unfoldMethods.
   rewrite Z.land_ones.
   apply Z_mod_lt.
   reflexivity.
@@ -1870,7 +1881,7 @@ Proof.
   intros.
   destruct r as [p b]. simpl in *.
   unfold nomatch, zero, inRange.
-  unfold op_zsze__, op_zeze__, Eq_Char___, Eq_Integer___, op_zsze____, op_zeze____.
+  unfoldMethods.
   unfold mask.
   rewrite -> mask_to_upper_bits by Nomega.
   f_equal.
@@ -2093,9 +2104,8 @@ Proof.
   intros.
   unfold bitmapInRange, inRange. simpl Z.of_N.
   rewrite <- andb_lazy_alt.
-  unfold bitmapOf, bitmapOfSuffix, fromInteger, Num_Word__, shiftLL.
-  unfold suffixOf, suffixBitMask.
-  unfold op_zizazi__, instance_Bits_Int.
+  unfold bitmapOf, bitmapOfSuffix, suffixOf, suffixBitMask.
+  unfoldMethods.
   rewrite <- Z.testbit_of_N' by nonneg.
   rewrite of_N_shiftl.
   rewrite -> Z2N.id by nonneg.
@@ -2120,7 +2130,8 @@ Proof. intros.  apply H. Qed.
 Lemma isTipPrefix_prefixMask: forall p, isTipPrefix p -> Z.land p prefixBitMask = p.
 Proof.
   intros.
-  unfold isTipPrefix, prefixBitMask, Bits.complement, instance_Bits_Int, complement_Int in *.
+  unfold isTipPrefix, prefixBitMask in *.
+  unfoldMethods.
   enough (Z.lor (Z.land p suffixBitMask)  (Z.land p (Z.lnot suffixBitMask)) = p).
   + rewrite H, Z.lor_0_l in H0. assumption.
   + rewrite <- Z.land_lor_distr_r.
@@ -2131,7 +2142,7 @@ Lemma isTipPrefix_prefixOf: forall e, isTipPrefix (prefixOf e).
 Proof.
   intros.
   unfold isTipPrefix, prefixOf, prefixBitMask, suffixBitMask.
-  unfold op_zizazi__, Bits.complement, Bits__N, instance_Bits_Int, complement_Int.
+  unfoldMethods.
   rewrite Z.land_ones. rewrite <- Z.ldiff_land.
   rewrite Z.ldiff_ones_r.
   rewrite Z.shiftl_mul_pow2.
@@ -2736,15 +2747,12 @@ Proof.
  induction HD; subst.
  * simpl.
    change (((prefixOf i == rPrefix r) && ((bitmapOf i .&.bm) /= #0)) = f i).
-
-   unfold op_zsze__, op_zeze__, Eq_Char___, Eq_Integer___, op_zsze____, op_zeze____.
+   unfoldMethods.
    rewrite -> prefixOf_eqb_spec by assumption.
-
    rewrite H2.
 
-   unfold bitmapOf, bitmapOfSuffix, suffixOf, suffixBitMask, shiftLL, bitmapInRange.
-   unfold op_zizazi__, Bits.complement, Bits__N, instance_Bits_Int, complement_Int.
-   unfold fromInteger, Num_Word__.
+   unfold bitmapOf, bitmapOfSuffix, suffixOf, suffixBitMask, bitmapInRange.
+   unfoldMethods.
    rewrite N.shiftl_mul_pow2, N.mul_1_l.
    rewrite N_land_pow2_testbit.
 
@@ -2894,8 +2902,7 @@ Proof.
   generalize dependent f.
   induction HD as [p2' bm2 r2 f2|s2 r2 f2 s3 r3 f3 p2' r]; subst; intros f' Hf.
   * simpl.
-    unfold Prim.seq.
-    unfold GHC.Base.op_zeze__, Eq_Integer___, op_zeze____.
+    unfoldMethods.
     apply same_size_compare; try Nomega; intros.
     + subst.
       rewrite commonRange_idem.
@@ -2907,7 +2914,8 @@ Proof.
       eapply link_Desc; try apply HDTip; auto.
       - apply DescTip; auto.
       - apply disjoint_commonRange; auto.
-  * simpl. unfold Prim.seq.
+  * simpl. unfoldMethods.
+
 
     assert (N.log2 WIDTH <= rBits r2)%N by (eapply Desc_larger_WIDTH; eauto).
     assert (rBits r2 <= rBits (halfRange r0 false))%N by (apply subRange_smaller; auto).
@@ -3002,9 +3010,8 @@ Lemma tip_Desc0:
 Proof.
   intros.
   unfold tip.
-  unfold op_zsze__, op_zeze__, Eq_Char___, Eq_Integer___, op_zsze____, op_zeze____.
-  unfold fromInteger, Num_Word__.
-  replace (Z.to_N 0) with 0%N by reflexivity.
+  unfoldMethods.
+  simpl (Z.to_N 0).
   rewrite isBitMask0_zero_or_isBitMask in H3.
   destruct H3; subst.
   * rewrite N.eqb_refl.
@@ -3064,7 +3071,7 @@ Proof.
   induction HD; intros f' Hf'; subst.
   * simpl deleteBM; unfold Prim.seq.
     inversion_clear HTip; subst.
-    unfold op_zsze__, op_zeze__, Eq_Char___, Eq_Integer___, op_zsze____, op_zeze____.
+    unfoldMethods.
     apply same_size_compare; try Nomega; intros.
     + subst.
       apply tip_Desc0; auto.
@@ -3383,7 +3390,7 @@ Program Fixpoint intersection_Desc
 Next Obligation.
   rewrite intersection_eq.
   unfold intersection_body.
-  unfold op_zizazi__, Bits__N.
+  unfoldMethods.
 
   inversion HD1.
   * (* s1 is a Tip *)
@@ -3636,7 +3643,7 @@ Program Fixpoint difference_Desc
 Next Obligation.
   rewrite difference_eq.
   unfold difference_body.
-  unfold op_zizazi__, Bits__N.
+  unfoldMethods.
 
   inversion HD1.
   * (* s1 is a Tip *)
@@ -3781,15 +3788,6 @@ Qed.
 
 
 (** ** Specifing [toList] *)
-
-Ltac unfoldMethods :=
-  unfold op_zeze__, Eq_Char___, op_zeze____,
-         fromInteger, Num_Word__,
-         op_zm__, op_zp__, Num_Integer__,
-         shiftRL, shiftLL,
-         Prim.seq,
-         op_zdzn__,
-         xor, op_zizazi__, op_zizbzi__, Bits__N.
 
 Lemma N_shiftl_spec_eq:
   forall n i j,

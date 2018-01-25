@@ -31,7 +31,7 @@ MODULES = \
   Utils/Containers/Internal/BitQueue\
   Data/IntSet/Internal \
   Data/IntMap/Internal \
-#  Data/Map/Internal \
+  Data/Map/Internal \
 
 # generated from drop-in/
 DROPIN =

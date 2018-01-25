@@ -4153,6 +4153,59 @@ Lemma foldrBits_go_eq {a} (p : Int) (f : Int -> a -> a) :
   unsafeFix (foldrBits_go p f) = foldrBits_go p f (unsafeFix (foldrBits_go p f)).
 Proof. apply unsafeFix_eq. Qed.
 
+Lemma foldrBits_go_0:
+  forall {a} p (f : Int -> a -> a) x,
+  unsafeFix (foldrBits_go p f) 0%N x = x.
+Proof.
+  intros.
+  rewrite foldrBits_go_eq.
+  reflexivity.
+Qed.
+
+Lemma foldrBits_go_bm:
+  forall {a} p (f : Int -> a -> a) bm x,
+  isBitMask bm ->
+  unsafeFix (foldrBits_go p f) bm x =
+    unsafeFix (foldrBits_go p f) (N.lxor bm (lowestBitMask bm))
+             (f (p + Z.of_N (N.log2 (revNatSafe bm))) x).
+Proof.
+  intros.
+  etransitivity; [rewrite foldrBits_go_eq; reflexivity|].
+  unfold foldrBits_go at 1.
+  unfoldMethods.
+
+  replace (bm =? Z.to_N 0)%N with false
+    by (symmetry; apply N.eqb_neq; unfold isBitMask in *; zify; rewrite Z2N.id; omega).
+
+  rewrite lowestBitMask_highestBitMask at 2 by isBitMask.
+(*   rewrite split_highestBitMask with (bm := revNatSafe bm)  by isBitMask.
+   *)
+   unfold indexOfTheOnlyBit, highestBitMask.
+   rewrite revNat_pow by isBitMask.
+   rewrite N.log2_pow2 by Nomega.
+   assert (N.log2 (revNatSafe bm) < WIDTH)%N
+    by (apply N.log2_lt_pow2; apply isBitMask_revNat; assumption).
+   replace (p + (64 - 1) - Z.of_N (WIDTH - 1 - N.log2 (revNatSafe bm))%N)
+      with (p + Z.of_N (N.log2 (revNatSafe bm)))  by (unfold WIDTH in *; Nomega).
+  reflexivity.
+Qed.
+
+Lemma foldrBits_go_revNat_bm:
+  forall {a} p (f : Int -> a -> a) bm x,
+  isBitMask bm ->
+  unsafeFix (foldrBits_go p f) (revNatSafe bm) x =
+    unsafeFix (foldrBits_go p f) (revNatSafe (N.ldiff bm (highestBitMask bm)))
+             (f (p + Z.of_N (N.log2 bm)) x).
+Proof.
+  intros.
+  rewrite foldrBits_go_bm by isBitMask.
+  rewrite lowestBitMask_highestBitMask by isBitMask.
+  rewrite <- revNat_lxor by isBitMask.
+  rewrite revNat_revNat by isBitMask.
+  rewrite lxor_highestBitMask by assumption.
+  reflexivity.
+Qed.
+
 Definition foldr_go {a} k :=
    (fix go (arg_0__ : a) (arg_1__ : IntSet) {struct arg_1__} : a :=
      match arg_1__ with
@@ -4164,6 +4217,38 @@ Definition foldr_go {a} k :=
      end).
 
 (** *** Specifing [toList] *)
+
+Lemma bits_ind:
+  forall bm (P : N -> Prop),
+  isBitMask0 bm ->
+  P (0%N) ->
+  (forall bm, isBitMask bm -> P (N.ldiff bm (highestBitMask bm)) -> P bm) ->
+  P bm.
+Proof.
+  intros bm P Hbm HP0 HPstep.
+  
+  revert Hbm.
+  apply well_founded_ind with (R := N.lt) (a := bm); try apply N.lt_wf_0.
+  clear bm. intros bm IH Hbm0.
+
+  destruct (N.eqb_spec bm 0%N).
+  * subst. apply HP0.
+  * assert (0 < bm)%N by Nomega.
+    assert (Hbm : isBitMask bm) by (unfold isBitMask in Hbm0; unfold isBitMask; auto).
+    clear H Hbm0.
+    assert (Htermination : (N.ldiff bm (highestBitMask bm) < bm)%N).
+    {
+      rewrite highestBitMask_pow by assumption.
+      apply ldiff_pow2_lt.
+      apply N.bit_log2.
+      unfold isBitMask in *; Nomega.
+    }
+    apply HPstep; auto.
+    apply IH.
+    - apply Htermination.
+    - isBitMask.
+Qed.
+
 
 Lemma In_cons_iff:
   forall {a} (y x : a) xs, In y (x :: xs) <-> x = y \/ In y xs.
@@ -4182,43 +4267,21 @@ Proof.
     replace f' with (foldrBits_go (rPrefix r) cons) by reflexivity
   end.
 
-  revert H.
   revert l.
-  apply well_founded_ind with (R := N.lt) (a := bm); try apply N.lt_wf_0.
-  clear bm. intros bm IH l Hsmall.
-
-  rewrite foldrBits_go_eq; unfold foldrBits_go at 1. unfoldMethods.
-  rewrite revNat_eqb_0 by assumption.
-  destruct (N.eqb_spec bm 0%N).
-  * subst. 
-    rewrite bitmapInRange_0.
-    intuition congruence.
-  * assert (0 < bm)%N by Nomega.
-    assert (Hbm : isBitMask bm) by (unfold isBitMask in Hsmall; unfold isBitMask; auto).
-    clear H.
-    rewrite !lowestBitMask_highestBitMask by isBitMask.
-    rewrite revNat_revNat by assumption.
-    rewrite <- revNat_lxor by isBitMask.
-    rewrite lxor_highestBitMask by assumption.
-    assert (Htermination : (N.ldiff bm (highestBitMask bm) < bm)%N).
-    {
-      rewrite highestBitMask_pow by assumption.
-      apply ldiff_pow2_lt.
-      apply N.bit_log2.
-      unfold isBitMask in *; Nomega.
-    }
-    rewrite -> IH by (try isBitMask; apply Htermination; assumption).
+  apply bits_ind with (bm := bm).
+  * assumption.
+  * intros.
+    rewrite foldrBits_go_0.
+    rewrite bitmapInRange_0. intuition congruence.
+  * clear bm H. intros bm Hbm IH l.
+    rewrite foldrBits_go_revNat_bm by isBitMask.
+    rewrite -> IH.
     rewrite split_highestBitMask with (bm := bm) at 4 by assumption.
     rewrite bitmapInRange_lor.
     rewrite orb_true_iff.
     rewrite In_cons_iff.
-    rewrite highestBitMask_pow by assumption.
-    rewrite revNat_pow by assumption.
+    rewrite highestBitMask_pow at 3 by assumption.
     assert (N.log2 bm < WIDTH)%N by (apply N.log2_lt_pow2; try apply Hbm).
-    unfold indexOfTheOnlyBit.
-    rewrite N.log2_pow2 by Nomega.
-    replace (rPrefix r + (64 - 1) - Z.of_N (WIDTH - 1 - N.log2 bm)%N)
-        with (rPrefix r + Z.of_N (N.log2 bm)) by (unfold WIDTH in *; Nomega).
     rewrite bitmapInRange_pow by (replace (rBits r); apply H).
     rewrite Z.eqb_eq.
     solve [tauto].
@@ -4331,7 +4394,23 @@ Qed.
 Lemma fold_right_foldrBits_go:
   forall {a} f (x : a) p bm xs, isBitMask0 bm -> 
   fold_right f x (foldrBits p cons xs bm) = foldrBits p f (fold_right f x xs) bm.
-Admitted.
+Proof.
+  intros.
+  unfold foldrBits.
+  fold (foldrBits_go p cons).
+  fold (foldrBits_go p f).
+
+  revert xs.
+  apply bits_ind with (bm := bm).
+  - assumption.
+  - intros xs.
+    rewrite !foldrBits_go_0.
+    reflexivity.
+  - clear bm H. intros bm Hbm IH xs.
+    rewrite !@foldrBits_go_revNat_bm with (bm := bm) by isBitMask.
+    rewrite IH.
+    reflexivity.
+Qed.
 
 Lemma fold_right_toList_go:
   forall {a} f (x : a) s r f' xs, Desc s r f' -> 

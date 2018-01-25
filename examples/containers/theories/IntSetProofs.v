@@ -1892,6 +1892,7 @@ exposes the underlying Coq concepts.
 
 Ltac unfoldMethods :=
   unfold op_zsze__, op_zeze__, Eq_Char___, Eq_Integer___, op_zsze____, op_zeze____,
+         op_zl__, Ord_Integer___, op_zl____,
          fromInteger, Num_Word__,
          op_zm__, op_zp__, Num_Integer__,
          shiftRL, shiftLL,
@@ -4152,6 +4153,16 @@ Lemma foldrBits_go_eq {a} (p : Int) (f : Int -> a -> a) :
   unsafeFix (foldrBits_go p f) = foldrBits_go p f (unsafeFix (foldrBits_go p f)).
 Proof. apply unsafeFix_eq. Qed.
 
+Definition foldr_go {a} k :=
+   (fix go (arg_0__ : a) (arg_1__ : IntSet) {struct arg_1__} : a :=
+     match arg_1__ with
+     | Bin _ _ l r0 => go (go arg_0__ r0) l
+     | Tip kx bm =>
+         foldrBits kx k
+           arg_0__ bm
+     | Nil => arg_0__
+     end).
+
 (** *** Specifing [toList] *)
 
 Lemma In_cons_iff:
@@ -4213,14 +4224,7 @@ Proof.
     solve [tauto].
 Qed.
 
-Definition toList_go :=
-  fix go (arg_0__ : list Key) (arg_1__ : IntSet) {struct arg_1__} :
-      list Key :=
-      match arg_1__ with
-      | Bin _ _ l0 r0 => go (go arg_0__ r0) l0
-      | Tip kx bm => foldrBits kx cons arg_0__ bm
-      | Nil => arg_0__
-      end.
+Definition toList_go := foldr_go cons.
 
 Lemma toList_go_In:
   forall s f, Sem s f ->
@@ -4276,10 +4280,103 @@ Qed.
 
 (** *** Specifying [foldl] *)
 
+Definition foldl_go {a} k :=
+  fix go (arg_0__ : a) (arg_1__ : IntSet) {struct arg_1__} : a :=
+   match arg_1__ with
+   | Bin _ _ l r0 => go (go arg_0__ l) r0
+   | Tip kx bm => foldlBits kx k arg_0__ bm
+   | Nil => arg_0__
+   end.
+
+Lemma foldl_go_foldr_go:
+  forall {a b}  k (x : a) s r f (k' : a -> b), Desc s r f ->
+    k' (foldl_go k x s) = foldr_go (fun x g a => g (k a x)) k' s x.
+Proof.
+  intros.
+  revert x k'; induction H; intros.
+  * simpl.
+    admit.
+  * simpl.
+    rewrite IHDesc2 with (k' := k').
+    rewrite IHDesc1 with (k' := foldr_go _ k' s2).
+    reflexivity.
+Admitted.
+
+Lemma foldl_foldr:
+  forall {a} k (x : a) s, WF s ->
+    foldl k x s = foldr (fun x g a => g (k a x)) id s x.
+Proof.
+ intros.
+ destruct H as [f HSem].
+ destruct HSem.
+ * reflexivity.
+ * revert x; destruct HD; intros.
+   + admit.
+   + simpl.
+     fold (foldl_go k).
+     fold (foldr_go (fun (x0 : Key) (g : a -> a) (a0 : a) => g (k a0 x0))).
+     unfoldMethods.
+     destruct (Z.ltb_spec msk 0).
+     - erewrite foldl_go_foldr_go with (k' := fun x => x) by eassumption.
+       eapply foldl_go_foldr_go; eassumption.
+     - erewrite foldl_go_foldr_go with (k' := fun x => x) by eassumption.
+       eapply foldl_go_foldr_go; eassumption.
+Admitted.
+
+
+Lemma fold_right_toList_go:
+  forall {a} f (x : a) s r f' xs, Desc s r f' -> 
+  fold_right f x (foldr_go cons xs s) = foldr_go f (fold_right f x xs) s.
+Proof.
+  intros. 
+  revert xs; induction H; intros.
+  * admit.
+  * simpl.
+    rewrite IHDesc1.
+    rewrite IHDesc2.
+    reflexivity.
+Admitted.
+
+Lemma fold_right_toList:
+  forall {a} f (x : a) s xs, WF s-> 
+  fold_right f x (foldr cons xs s) = foldr f (fold_right f x xs) s.
+Proof.
+  intros.
+  destruct H as [f' HSem].
+  destruct HSem.
+  * reflexivity.
+  * destruct HD.
+    + simpl. admit.
+    + simpl.
+      unfoldMethods.
+      fold (foldr_go (@cons Key)). 
+      fold (foldr_go f).
+      destruct (Z.ltb_spec msk 0).
+      - do 2 erewrite fold_right_toList_go by eassumption. reflexivity.
+      - do 2 erewrite fold_right_toList_go by eassumption. reflexivity.
+Admitted.
+
+Lemma List_foldl_foldr:
+  forall {a b} f (x : b) (xs : list a),
+    fold_left f xs x = List.fold_right (fun x g a => g (f a x)) id xs x.
+Proof.
+  intros. revert x.
+  induction xs; intro.
+  * reflexivity.
+  * simpl. rewrite IHxs. reflexivity.
+Qed.
+
 Lemma foldl_spec:
   forall {a} f (x : a) s, WF s ->
     foldl f x s = fold_left f (toList s) x.
-Admitted.
+Proof.
+  intros.
+  unfold toList, toAscList.
+  rewrite foldl_foldr by assumption.
+  rewrite List_foldl_foldr.
+  rewrite fold_right_toList by assumption.
+  reflexivity.
+Qed.
 
 (** ** Instantiating the [FSetInterface] *)
 

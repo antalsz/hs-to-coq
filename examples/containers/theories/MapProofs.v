@@ -1,7 +1,8 @@
 Set Implicit Arguments.
 Unset Strict Implicit.
 
-Require Import Data.Map.Base.
+(*
+Require Import Data.Map.Internal.
 
 Require Import Coq.FSets.FMapInterface.
 
@@ -202,3 +203,4 @@ Module Foo (E : DecidableType) : WSfun(E).
 	(x:key)(f:option elt->option elt'->option elt''),
         In x (map2 f m m') -> In x m \/ In x m' := FIXME.
 End Foo.
+*)

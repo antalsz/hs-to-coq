@@ -1760,7 +1760,7 @@ Require Import GHC.Num.
 Import GHC.Num.Notations.
 Require Import Data.Bits.
 Import Data.Bits.Notations.
-Require Import Data.IntSet.Base.
+Require Import Data.IntSet.Internal.
 Local Open Scope Z_scope.
 Set Bullet Behavior "Strict Subproofs".
 
@@ -3935,8 +3935,15 @@ Qed.
 
 Lemma isBitMask_highestBitMask:
   forall bm, isBitMask bm -> isBitMask (highestBitMask bm).
-Admitted.
-
+Proof.
+  intros.
+  split.
+  * change (0 < 2^N.log2 bm)%N.
+    apply N_pow_pos_nonneg; Nomega.
+  * apply N.pow_lt_mono_r.
+    Nomega.
+    (apply N.log2_lt_pow2; apply H).
+Qed.
 
 Lemma isBitMask0_lowestBitMask:
   forall bm, isBitMask bm -> isBitMask (lowestBitMask bm).
@@ -3968,25 +3975,76 @@ Lemma lxor_highestBitMask:
   forall bm,
   isBitMask bm ->
   N.lxor bm (highestBitMask bm) = N.ldiff bm (highestBitMask bm).
-Admitted.
+Proof.
+  intros.
+  unfold highestBitMask.
+  apply N.bits_inj. intro j.
+  rewrite N.lxor_spec, N.ldiff_spec, N.pow2_bits_eqb.
+  destruct (N.eqb_spec (N.log2 bm) j).
+  * subst.
+    split_bool; try reflexivity; exfalso.
+    rewrite N.bit_log2 in Heqb by (unfold isBitMask in H; Nomega).
+    congruence.
+  * split_bool; try reflexivity.
+Qed.
 
 Lemma bitmapInRange_pow:
   forall r e i,
   (e < 2^rBits r)%N ->
   bitmapInRange r (2 ^ e)%N i = (rPrefix r + Z.of_N e =? i).
-Admitted.
-
-
+Proof.
+  intros.
+  destruct r as [p b].
+  unfold bitmapInRange.
+  simpl in *.
+  destruct (Z.eqb_spec (Z.shiftr i (Z.of_N b)) p).
+  * rewrite N.pow2_bits_eqb.
+    transitivity (Z.of_N e =? Z.land i (Z.ones (Z.of_N b))).
+    - rewrite eq_iff_eq_true.
+      rewrite N.eqb_eq, Z.eqb_eq.
+      intuition.
+      subst. rewrite Z2N.id by nonneg. reflexivity.
+      rewrite <- H0. rewrite N2Z.id. reflexivity.
+    - rewrite eq_iff_eq_true.
+      rewrite !Z.eqb_eq.
+      rewrite Z.land_ones by nonneg.
+      rewrite Z.shiftr_div_pow2 in e0 by nonneg.
+      rewrite Z.div_mod with (a := i) (b := 2^Z.of_N b) at 2
+        by (apply Z.pow_nonzero; Nomega).
+      rewrite Z.shiftl_mul_pow2 by nonneg.
+      rewrite Z.mul_comm.
+      subst; omega.
+  * symmetry.
+    rewrite Z.eqb_neq.
+    contradict n.
+    subst.
+    rewrite Z.shiftr_div_pow2 by nonneg.
+    rewrite Z.shiftl_mul_pow2 by nonneg.
+    rewrite Z_div_plus_full_l by (apply Z.pow_nonzero; Nomega).
+    enough (Z.of_N e / 2 ^ Z.of_N b = 0) by omega.
+    apply Z.div_small.
+    split; try nonneg.
+    zify.  rewrite -> N2Z.inj_pow in H. apply H.
+Qed.
 
 Lemma Pos_1_testbit_succ:
   forall p i,
   Pos.testbit p~1 (N.succ i) = Pos.testbit p i.
-Admitted.
+Proof.
+  induction i.
+  * reflexivity.
+  * simpl. rewrite Pos.pred_N_succ. reflexivity.
+Qed.
+
 
 Lemma Pos_0_testbit_succ:
   forall p i,
   Pos.testbit p~0 (N.succ i) = Pos.testbit p i.
-Admitted.
+Proof.
+  induction i.
+  * reflexivity.
+  * simpl. rewrite Pos.pred_N_succ. reflexivity.
+Qed.
 
 Lemma bits_impl_le:
   forall a b,

@@ -20,8 +20,6 @@ import Data.Monoid
 import Data.List.NonEmpty (NonEmpty(..))
 import HsToCoq.Util.Containers
 
-import Debug.Trace
-
 import Data.Generics
 
 import Control.Monad.IO.Class
@@ -118,7 +116,7 @@ convertHsGroup mod HsGroup{..} = do
 
         applyRedefines :: ConversionMonad m => (Qualid, [Sentence]) -> m (Qualid, [Sentence])
         applyRedefines (name, sentences)
-            = traceShow (name) $ use (edits.redefinitions.at name) >>= ((name,) <$>) . \case
+            = use (edits.redefinitions.at name) >>= ((name,) <$>) . \case
                 Just def ->
                      [definitionSentence def] <$ case def of
                       CoqInductiveDef        _ -> editFailure "cannot redefine a value definition into an Inductive"

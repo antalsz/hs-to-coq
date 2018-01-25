@@ -21,14 +21,16 @@ HANDMOD = \
   Data/IntMap \
   Data/IntMap/Base \
   Data/SequenceManual \
+  Utils/Containers/Internal/PtrEquality \
+  Utils/Containers/Internal/BitUtil \
 
 # Generated modules
 # generated directly from GHC/libraries/containers
 MODULES = \
-  Data/Set/Base \
-  Data/Map/Base \
-  Data/IntSet/Base \
-
+  Data/Set/Internal \
+  Utils/Containers/Internal/BitQueue\
+  Data/IntSet/Internal \
+#  Data/Map/Internal \
 
 # generated from drop-in/
 DROPIN =

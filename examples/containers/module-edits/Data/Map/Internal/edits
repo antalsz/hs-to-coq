@@ -1,0 +1,30 @@
+skip module Data.Data
+skip module Data.Semigroup
+
+skip Data.Map.Internal.Monoid__Map
+
+skip Data.Map.Internal.showTree
+skip Data.Map.Internal.showTreeWith
+skip Data.Map.Internal.showsBars
+skip Data.Map.Internal.showWide
+skip Data.Map.Internal.showsTree
+skip Data.Map.Internal.showsTreeHang
+
+skip Data.Map.Internal.fromListConstr
+skip Data.Map.Internal.mapDataType
+
+termination Data.Map.Internal.link {measure (Nat.add (map_size arg_2__) (map_size arg_3__))} termination_by_omega
+termination Data.Map.Internal.merge {measure (Nat.add (map_size arg_0__) (map_size arg_1__))} termination_by_omega
+
+nonterminating Data.Map.Internal.fromDistinctAscList
+nonterminating Data.Map.Internal.fromList
+nonterminating Data.Map.Internal.fromAscListWithKey
+
+order Data.Map.Internal.Eq___Map Data.Map.Internal.Ord__Map
+
+rename value Data.Map.Internal.WhenMatched = Data.Map.Internal.Mk_WhenMatched
+rename value Data.Map.Internal.TraceResult = Data.Map.Internal.Mk_TraceResult
+rename value Data.Map.Internal.StrictTriple = Data.Map.Internal.Mk_StrictTriple
+rename value Data.Map.Internal.MaxView = Data.Map.Internal.Mk_MaxView
+rename value Data.Map.Internal.MinView = Data.Map.Internal.Mk_MinView
+rename value Data.Map.Internal.WhenMissing = Data.Map.Internal.Mk_WhenMissing

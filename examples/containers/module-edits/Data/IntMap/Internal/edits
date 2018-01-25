@@ -8,29 +8,23 @@ rename value Data.IntMap.Internal.View = Data.IntMap.Internal.Mk_View
 
 rename value Data.IntMap.Internal.bool = Data.IntMap.Internal.boolITE
 
-# Has an GHC.Err.error for code unreachable when the input is well-formed
-skip Data.IntMap.Internal.keysSet
-
 nonterminating Data.IntMap.Internal.fromSet
 nonterminating Data.IntMap.Internal.mergeWithKey'
 
-skip Data.IntMap.Internal.Ord__IntMap
-skip Data.IntMap.Internal.Functor__IntMap
-skip Data.IntMap.Internal.Functor__WhenMatched
+## get the type classes working
+order Data.IntMap.Internal.Eq___IntMap Data.IntMap.Internal.Ord__IntMap
+redefine Definition Data.IntMap.Internal.Functor__IntMap_op_zlzd__ {a}{b}:= @Data.IntMap.Internal.IntMap_op_zlzd__ a b.
+
+#### These are TODOs:
+
 skip Data.IntMap.Internal.Functor__WhenMissing
-skip Data.IntMap.Internal.Eq___IntMap
-skip Data.IntMap.Internal.Foldable__IntMap
-skip Data.IntMap.Internal.Monad__WhenMissing
 skip Data.IntMap.Internal.Applicative__WhenMissing
+skip Data.IntMap.Internal.Monad__WhenMissing
 skip Data.IntMap.Internal.Category__WhenMissing
-skip Data.IntMap.Internal.Traversable__IntMap
+skip Data.IntMap.Internal.Functor__WhenMatched
 skip Data.IntMap.Internal.Monad__WhenMatched
 skip Data.IntMap.Internal.Applicative__WhenMatched
 skip Data.IntMap.Internal.Category__WhenMatched
-
-
-
-# These are TODOs:
 
 # Weird type error
 skip Data.IntMap.Internal.mergeA
@@ -71,9 +65,6 @@ skip Data.IntMap.Internal.withoutBM
 skip Data.IntMap.Internal.withoutKeys
 
 # These are typical that they recurse left or right
-termination Data.IntMap.Internal.union        {measure ((size_nat arg_0__) + (size_nat arg_1__))} termination_by_omega
-termination Data.IntMap.Internal.difference   {measure ((size_nat arg_0__) + (size_nat arg_1__))} termination_by_omega
-termination Data.IntMap.Internal.intersection {measure ((size_nat arg_0__) + (size_nat arg_1__))} termination_by_omega
 termination Data.IntMap.Internal.disjoint     {measure ((size_nat arg_0__) + (size_nat arg_1__))} termination_by_omega
 
 # Show stuff

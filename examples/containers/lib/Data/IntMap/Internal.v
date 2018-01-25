@@ -19,6 +19,7 @@ Require Data.Functor.
 Require Data.Functor.Identity.
 Require Data.IntSet.Internal.
 Require Data.Maybe.
+Require Data.Traversable.
 Require GHC.Base.
 Require GHC.Num.
 Require GHC.Real.
@@ -105,6 +106,20 @@ Definition missingSubtree {f} {x} {y} (arg_2__ : WhenMissing f x y) :=
   match arg_2__ with
     | Mk_WhenMissing missingSubtree _ => missingSubtree
   end.
+(* Midamble *)
+
+Require GHC.Err.
+
+Instance Default_Map {a} : Err.Default (IntMap a) := {| Err.default := Nil |}.
+
+Fixpoint IntMap_op_zlzd__ {a} {b} (x: a) (m: IntMap b): IntMap a :=
+      match x , m with
+        | a , Bin p m l r => Bin p m (IntMap_op_zlzd__ a l)
+                                (IntMap_op_zlzd__ a r)
+        | a , Tip k _ => Tip k a
+        | _ , Nil => Nil
+      end.
+
 (* Converted value declarations: *)
 
 (* The Haskell code containes partial or untranslateable code, which needs the
@@ -122,9 +137,39 @@ Axiom unsafeFix : forall {a}, (a -> a) -> a.
    (Data.IntMap.Internal.IntMap a)' failed: OOPS! Cannot find information for class
    Qualified "Data.Semigroup" "Semigroup" unsupported *)
 
-(* Skipping instance Foldable__IntMap *)
+Local Definition Foldable__IntMap_elem : forall {a},
+                                           forall `{GHC.Base.Eq_ a}, a -> IntMap a -> bool :=
+  fun {a} `{GHC.Base.Eq_ a} =>
+    let fix go arg_0__ arg_1__
+              := match arg_0__ , arg_1__ with
+                   | _ , Nil => false
+                   | x , Tip _ y => x GHC.Base.== y
+                   | x , Bin _ _ l r => orb (go x l) (go x r)
+                 end in
+    go.
 
-(* Skipping instance Traversable__IntMap *)
+Local Definition Foldable__IntMap_fold : forall {m},
+                                           forall `{GHC.Base.Monoid m}, IntMap m -> m :=
+  fun {m} `{GHC.Base.Monoid m} =>
+    let fix go arg_0__
+              := match arg_0__ with
+                   | Nil => GHC.Base.mempty
+                   | Tip _ v => v
+                   | Bin _ _ l r => GHC.Base.mappend (go l) (go r)
+                 end in
+    go.
+
+Local Definition Foldable__IntMap_foldMap : forall {m} {a},
+                                              forall `{GHC.Base.Monoid m}, (a -> m) -> IntMap a -> m :=
+  fun {m} {a} `{GHC.Base.Monoid m} =>
+    fun f t =>
+      let fix go arg_0__
+                := match arg_0__ with
+                     | Nil => GHC.Base.mempty
+                     | Tip _ v => f v
+                     | Bin _ _ l r => GHC.Base.mappend (go l) (go r)
+                   end in
+      go t.
 
 (* Translating `instance forall {a}, forall `{Control.DeepSeq.NFData a},
    Control.DeepSeq.NFData (Data.IntMap.Internal.IntMap a)' failed: OOPS! Cannot
@@ -154,19 +199,16 @@ Axiom unsafeFix : forall {a}, (a -> a) -> a.
    (Data.IntMap.Internal.IntMap a)' failed: OOPS! Cannot find information for class
    Qualified "GHC.Exts" "IsList" unsupported *)
 
-(* Skipping instance Eq___IntMap *)
-
 (* Translating `instance Data.Functor.Classes.Eq1 Data.IntMap.Internal.IntMap'
    failed: OOPS! Cannot find information for class Qualified "Data.Functor.Classes"
    "Eq1" unsupported *)
-
-(* Skipping instance Ord__IntMap *)
 
 (* Translating `instance Data.Functor.Classes.Ord1 Data.IntMap.Internal.IntMap'
    failed: OOPS! Cannot find information for class Qualified "Data.Functor.Classes"
    "Ord1" unsupported *)
 
-(* Skipping instance Functor__IntMap *)
+Definition Functor__IntMap_op_zlzd__ {a} {b} :=
+  (@IntMap_op_zlzd__ a b).
 
 (* Translating `instance forall {a}, forall `{GHC.Show.Show a}, GHC.Show.Show
    (Data.IntMap.Internal.IntMap a)' failed: OOPS! Cannot find information for class
@@ -335,18 +377,6 @@ Definition boolITE {a} : a -> a -> bool -> a :=
       | _ , t , true => t
     end.
 
-Axiom difference : forall {A : Type}, A.
-
-Definition op_zrzr__ {a} {b} : IntMap a -> IntMap b -> IntMap a :=
-  fun m1 m2 => difference m1 m2.
-
-Notation "'_\\_'" := (op_zrzr__).
-
-Infix "\\" := (_\\_) (at level 99).
-
-(* Translating `difference' failed: Could not apply edit: cannot "termination" a
-   definition that is not a recursive function *)
-
 Definition dropMissing {f} {x} {y} `{GHC.Base.Applicative f} : WhenMissing f x
                                                                y :=
   Mk_WhenMissing missingValue missingValue.
@@ -364,6 +394,10 @@ Definition equal {a} `{GHC.Base.Eq_ a} : IntMap a -> IntMap a -> bool :=
              | Nil , Nil => true
              | _ , _ => false
            end.
+
+Local Definition Eq___IntMap_op_zeze__ {inst_a} `{GHC.Base.Eq_ inst_a} : (IntMap
+                                                                         inst_a) -> (IntMap inst_a) -> bool :=
+  fun t1 t2 => equal t1 t2.
 
 Definition filterAMissing {f} {x} `{GHC.Base.Applicative f}
     : (Data.IntSet.Internal.Key -> x -> f bool) -> WhenMissing f x x :=
@@ -401,6 +435,10 @@ Definition foldl {a} {b} : (a -> b -> a) -> a -> IntMap b -> a :=
         | _ => j_6__
       end.
 
+Local Definition Foldable__IntMap_foldl : forall {b} {a},
+                                            (b -> a -> b) -> b -> IntMap a -> b :=
+  fun {b} {a} => foldl.
+
 Definition foldl' {a} {b} : (a -> b -> a) -> a -> IntMap b -> a :=
   fun f z =>
     let fix go arg_0__ arg_1__
@@ -417,6 +455,18 @@ Definition foldl' {a} {b} : (a -> b -> a) -> a -> IntMap b -> a :=
                          else go (go z l) r
         | _ => j_6__
       end.
+
+Local Definition Foldable__IntMap_sum : forall {a},
+                                          forall `{GHC.Num.Num a}, IntMap a -> a :=
+  fun {a} `{GHC.Num.Num a} => foldl' _GHC.Num.+_ (GHC.Num.fromInteger 0).
+
+Local Definition Foldable__IntMap_product : forall {a},
+                                              forall `{GHC.Num.Num a}, IntMap a -> a :=
+  fun {a} `{GHC.Num.Num a} => foldl' _GHC.Num.*_ (GHC.Num.fromInteger 1).
+
+Local Definition Foldable__IntMap_foldl' : forall {b} {a},
+                                             (b -> a -> b) -> b -> IntMap a -> b :=
+  fun {b} {a} => foldl'.
 
 Definition foldlWithKey {a} {b}
     : (a -> Data.IntSet.Internal.Key -> b -> a) -> a -> IntMap b -> a :=
@@ -482,6 +532,13 @@ Definition foldr {a} {b} : (a -> b -> b) -> b -> IntMap a -> b :=
 Definition elems {a} : IntMap a -> list a :=
   foldr cons nil.
 
+Local Definition Foldable__IntMap_toList : forall {a}, IntMap a -> list a :=
+  fun {a} => elems.
+
+Local Definition Foldable__IntMap_foldr : forall {a} {b},
+                                            (a -> b -> b) -> b -> IntMap a -> b :=
+  fun {a} {b} => foldr.
+
 Definition foldr' {a} {b} : (a -> b -> b) -> b -> IntMap a -> b :=
   fun f z =>
     let fix go arg_0__ arg_1__
@@ -498,6 +555,10 @@ Definition foldr' {a} {b} : (a -> b -> b) -> b -> IntMap a -> b :=
                          else go (go z r) l
         | _ => j_6__
       end.
+
+Local Definition Foldable__IntMap_foldr' : forall {a} {b},
+                                             (a -> b -> b) -> b -> IntMap a -> b :=
+  fun {a} {b} => foldr'.
 
 Definition foldrWithKey {a} {b}
     : (Data.IntSet.Internal.Key -> a -> b -> b) -> b -> IntMap a -> b :=
@@ -530,6 +591,34 @@ Definition toAscList {a} : IntMap a -> list (Data.IntSet.Internal.Key *
 Definition toList {a} : IntMap a -> list (Data.IntSet.Internal.Key * a)%type :=
   toAscList.
 
+Local Definition Ord__IntMap_compare {inst_a} `{GHC.Base.Ord inst_a} : (IntMap
+                                                                       inst_a) -> (IntMap inst_a) -> comparison :=
+  fun m1 m2 => GHC.Base.compare (toList m1) (toList m2).
+
+Local Definition Ord__IntMap_op_zg__ {inst_a} `{GHC.Base.Ord inst_a} : (IntMap
+                                                                       inst_a) -> (IntMap inst_a) -> bool :=
+  fun x y => _GHC.Base.==_ (Ord__IntMap_compare x y) Gt.
+
+Local Definition Ord__IntMap_op_zgze__ {inst_a} `{GHC.Base.Ord inst_a} : (IntMap
+                                                                         inst_a) -> (IntMap inst_a) -> bool :=
+  fun x y => _GHC.Base./=_ (Ord__IntMap_compare x y) Lt.
+
+Local Definition Ord__IntMap_op_zl__ {inst_a} `{GHC.Base.Ord inst_a} : (IntMap
+                                                                       inst_a) -> (IntMap inst_a) -> bool :=
+  fun x y => _GHC.Base.==_ (Ord__IntMap_compare x y) Lt.
+
+Local Definition Ord__IntMap_op_zlze__ {inst_a} `{GHC.Base.Ord inst_a} : (IntMap
+                                                                         inst_a) -> (IntMap inst_a) -> bool :=
+  fun x y => _GHC.Base./=_ (Ord__IntMap_compare x y) Gt.
+
+Local Definition Ord__IntMap_max {inst_a} `{GHC.Base.Ord inst_a} : (IntMap
+                                                                   inst_a) -> (IntMap inst_a) -> (IntMap inst_a) :=
+  fun x y => if Ord__IntMap_op_zlze__ x y : bool then y else x.
+
+Local Definition Ord__IntMap_min {inst_a} `{GHC.Base.Ord inst_a} : (IntMap
+                                                                   inst_a) -> (IntMap inst_a) -> (IntMap inst_a) :=
+  fun x y => if Ord__IntMap_op_zlze__ x y : bool then x else y.
+
 Definition assocs {a} : IntMap a -> list (Data.IntSet.Internal.Key * a)%type :=
   toAscList.
 
@@ -555,10 +644,26 @@ Definition foldrWithKey' {a} {b}
         | _ => j_6__
       end.
 
-Axiom intersection : forall {A : Type}, A.
-
-(* Translating `intersection' failed: Could not apply edit: cannot "termination"
-   a definition that is not a recursive function *)
+Definition keysSet {a} : IntMap a -> Data.IntSet.Internal.IntSet :=
+  fix keysSet arg_0__
+        := match arg_0__ with
+             | Nil => Data.IntSet.Internal.Nil
+             | Tip kx _ => Data.IntSet.Internal.singleton kx
+             | Bin p m l r => let fix computeBm arg_2__ arg_3__
+                                        := match arg_2__ , arg_3__ with
+                                             | acc , Bin _ _ l' r' => computeBm (computeBm acc l') r'
+                                             | acc , Tip kx _ => acc Data.Bits..|.(**) Data.IntSet.Internal.bitmapOf kx
+                                             | _ , Nil => GHC.Err.error (GHC.Base.hs_string__
+                                                                        "Data.IntSet.keysSet: Nil")
+                                           end in
+                              if (m Data.Bits..&.(**) Data.IntSet.Internal.suffixBitMask) GHC.Base.==
+                                 GHC.Num.fromInteger 0 : bool
+                              then Data.IntSet.Internal.Bin p m (keysSet l) (keysSet r)
+                              else Data.IntSet.Internal.Tip (p Data.Bits..&.(**)
+                                                            Data.IntSet.Internal.prefixBitMask) (computeBm (computeBm
+                                                                                                           (GHC.Num.fromInteger
+                                                                                                           0) l) r)
+           end.
 
 Definition lmapWhenMissing {b} {a} {f} {x} : (b -> a) -> WhenMissing f a
                                              x -> WhenMissing f b x :=
@@ -607,6 +712,14 @@ Definition map {a} {b} : (a -> b) -> IntMap a -> IntMap b :=
                    | Nil => Nil
                  end in
     go.
+
+Local Definition Functor__IntMap_fmap : forall {a} {b},
+                                          (a -> b) -> IntMap a -> IntMap b :=
+  fun {a} {b} => map.
+
+Program Instance Functor__IntMap : GHC.Base.Functor IntMap := fun _ k =>
+    k {|GHC.Base.op_zlzd____ := fun {a} {b} => Functor__IntMap_op_zlzd__ ;
+      GHC.Base.fmap__ := fun {a} {b} => Functor__IntMap_fmap |}.
 
 Definition mapAccumL {a} {b} {c} : (a -> Data.IntSet.Internal.Key -> b -> (a *
                                    c)%type) -> a -> IntMap b -> (a * IntMap c)%type :=
@@ -1283,178 +1396,8 @@ Definition mergeWithKey' {c} {a} {b} : (Prefix -> Mask -> IntMap c -> IntMap
                   end) in
     go.
 
-Definition unionWithKey {a}
-    : (Data.IntSet.Internal.Key -> a -> a -> a) -> IntMap a -> IntMap a -> IntMap
-      a :=
-  fun f m1 m2 =>
-    mergeWithKey' Bin (fun arg_0__ arg_1__ =>
-                        match arg_0__ , arg_1__ with
-                          | Tip k1 x1 , Tip _k2 x2 => Tip k1 (f k1 x1 x2)
-                          | _ , _ => patternFailure
-                        end) GHC.Base.id GHC.Base.id m1 m2.
-
-Definition unionWith {a} : (a -> a -> a) -> IntMap a -> IntMap a -> IntMap a :=
-  fun f m1 m2 =>
-    unionWithKey (fun arg_0__ arg_1__ arg_2__ =>
-                   match arg_0__ , arg_1__ , arg_2__ with
-                     | _ , x , y => f x y
-                   end) m1 m2.
-
-Definition unionsWith {a} : (a -> a -> a) -> list (IntMap a) -> IntMap a :=
-  fun f ts => Data.Foldable.foldl (unionWith f) empty ts.
-
-Definition intersectionWithKey {a} {b} {c}
-    : (Data.IntSet.Internal.Key -> a -> b -> c) -> IntMap a -> IntMap b -> IntMap
-      c :=
-  fun f m1 m2 =>
-    mergeWithKey' bin (fun arg_0__ arg_1__ =>
-                        match arg_0__ , arg_1__ with
-                          | Tip k1 x1 , Tip _k2 x2 => Tip k1 (f k1 x1 x2)
-                          | _ , _ => patternFailure
-                        end) (GHC.Base.const Nil) (GHC.Base.const Nil) m1 m2.
-
-Definition intersectionWith {a} {b} {c} : (a -> b -> c) -> IntMap a -> IntMap
-                                          b -> IntMap c :=
-  fun f m1 m2 =>
-    intersectionWithKey (fun arg_0__ arg_1__ arg_2__ =>
-                          match arg_0__ , arg_1__ , arg_2__ with
-                            | _ , x , y => f x y
-                          end) m1 m2.
-
-Definition mergeWithKey {a} {b} {c}
-    : (Data.IntSet.Internal.Key -> a -> b -> option c) -> (IntMap a -> IntMap
-      c) -> (IntMap b -> IntMap c) -> IntMap a -> IntMap b -> IntMap c :=
-  fun f g1 g2 =>
-    let combine :=
-      fun arg_0__ arg_1__ =>
-        match arg_0__ , arg_1__ with
-          | Tip k1 x1 , Tip _k2 x2 => match f k1 x1 x2 with
-                                        | None => Nil
-                                        | Some x => Tip k1 x
-                                      end
-          | _ , _ => patternFailure
-        end in
-    mergeWithKey' bin combine g1 g2.
-
-Definition differenceWithKey {a} {b}
-    : (Data.IntSet.Internal.Key -> a -> b -> option a) -> IntMap a -> IntMap
-      b -> IntMap a :=
-  fun f m1 m2 => mergeWithKey f GHC.Base.id (GHC.Base.const Nil) m1 m2.
-
-Definition differenceWith {a} {b} : (a -> b -> option a) -> IntMap a -> IntMap
-                                    b -> IntMap a :=
-  fun f m1 m2 =>
-    differenceWithKey (fun arg_0__ arg_1__ arg_2__ =>
-                        match arg_0__ , arg_1__ , arg_2__ with
-                          | _ , x , y => f x y
-                        end) m1 m2.
-
-Definition alter {a} : (option a -> option
-                       a) -> Data.IntSet.Internal.Key -> IntMap a -> IntMap a :=
-  fix alter arg_0__ arg_1__ arg_2__
-        := match arg_0__ , arg_1__ , arg_2__ with
-             | f , k , (Bin p m l r as t) => if nomatch k p m : bool
-                                             then match f None with
-                                                    | None => t
-                                                    | Some x => link k (Tip k x) p t
-                                                  end
-                                             else if zero k m : bool
-                                                  then binCheckLeft p m (alter f k l) r
-                                                  else binCheckRight p m l (alter f k r)
-             | f , k , (Tip ky y as t) => if k GHC.Base.== ky : bool
-                                          then match f (Some y) with
-                                                 | Some x => Tip ky x
-                                                 | None => Nil
-                                               end
-                                          else match f None with
-                                                 | Some x => link k (Tip k x) ky t
-                                                 | None => Tip ky y
-                                               end
-             | f , k , Nil => match f None with
-                                | Some x => Tip k x
-                                | None => Nil
-                              end
-           end.
-
-Definition nequal {a} `{GHC.Base.Eq_ a} : IntMap a -> IntMap a -> bool :=
-  fix nequal arg_0__ arg_1__
-        := match arg_0__ , arg_1__ with
-             | Bin p1 m1 l1 r1 , Bin p2 m2 l2 r2 => orb (m1 GHC.Base./= m2) (orb (p1
-                                                                                 GHC.Base./= p2) (orb (nequal l1 l2)
-                                                                                                      (nequal r1 r2)))
-             | Tip kx x , Tip ky y => orb (kx GHC.Base./= ky) (x GHC.Base./= y)
-             | Nil , Nil => false
-             | _ , _ => true
-           end.
-
-Definition node : GHC.Base.String :=
-  GHC.Base.hs_string__ "+--".
-
-Definition null {a} : IntMap a -> bool :=
-  fun arg_0__ => match arg_0__ with | Nil => true | _ => false end.
-
-Definition preserveMissing {f} {x} `{GHC.Base.Applicative f} : WhenMissing f x
-                                                               x :=
-  Mk_WhenMissing missingValue missingValue.
-
-Definition runWhenMatched {f} {x} {y} {z} : WhenMatched f x y
-                                            z -> Data.IntSet.Internal.Key -> x -> y -> f (option z) :=
-  matchedKey.
-
-Definition contramapSecondWhenMatched {b} {a} {f} {x} {z}
-    : (b -> a) -> WhenMatched f x a z -> WhenMatched f x b z :=
-  fun f t => Mk_WhenMatched GHC.Base.$ (fun k x y => runWhenMatched t k x (f y)).
-
-Definition contramapFirstWhenMatched {b} {a} {f} {y} {z}
-    : (b -> a) -> WhenMatched f a y z -> WhenMatched f b y z :=
-  fun f t => Mk_WhenMatched GHC.Base.$ (fun k x y => runWhenMatched t k (f x) y).
-
-Definition runWhenMissing {f} {x} {y} : WhenMissing f x
-                                        y -> Data.IntSet.Internal.Key -> x -> f (option y) :=
-  missingKey.
-
-Definition singleton {a} : Data.IntSet.Internal.Key -> a -> IntMap a :=
-  fun k x => Tip k x.
-
-Definition size {a} : IntMap a -> GHC.Num.Int :=
-  let fix go arg_0__ arg_1__
-            := match arg_0__ , arg_1__ with
-                 | acc , Bin _ _ l r => go (go acc l) r
-                 | acc , Tip _ _ => GHC.Num.fromInteger 1 GHC.Num.+ acc
-                 | acc , Nil => acc
-               end in
-  go (GHC.Num.fromInteger 0).
-
-Definition splitRoot {a} : IntMap a -> list (IntMap a) :=
-  fun orig =>
-    match orig with
-      | Nil => nil
-      | (Tip _ _ as x) => cons x nil
-      | Bin _ m l r => if m GHC.Base.< GHC.Num.fromInteger 0 : bool
-                       then cons r (cons l nil)
-                       else cons l (cons r nil)
-    end.
-
-Definition traverseMaybeMissing {f} {x} {y} `{GHC.Base.Applicative f}
-    : (Data.IntSet.Internal.Key -> x -> f (option y)) -> WhenMissing f x y :=
-  fun f => Mk_WhenMissing missingValue missingValue.
-
-Definition traverseMissing {f} {x} {y} `{GHC.Base.Applicative f}
-    : (Data.IntSet.Internal.Key -> x -> f y) -> WhenMissing f x y :=
-  fun f => Mk_WhenMissing missingValue missingValue.
-
-Definition traverseWithKey {t} {a} {b} `{GHC.Base.Applicative t}
-    : (Data.IntSet.Internal.Key -> a -> t b) -> IntMap a -> t (IntMap b) :=
-  fun f =>
-    let fix go arg_0__
-              := match arg_0__ with
-                   | Nil => GHC.Base.pure Nil
-                   | Tip k v => Tip k Data.Functor.<$> f k v
-                   | Bin p m l r => GHC.Base.liftA2 (Bin p m) (go l) (go r)
-                 end in
-    go.
-
-Axiom union : forall {A : Type}, A.
+Definition union {a} : IntMap a -> IntMap a -> IntMap a :=
+  fun m1 m2 => mergeWithKey' Bin GHC.Base.const GHC.Base.id GHC.Base.id m1 m2.
 
 Definition split {a} : Data.IntSet.Internal.Key -> IntMap a -> (IntMap a *
                        IntMap a)%type :=
@@ -1531,8 +1474,265 @@ Definition splitLookup {a} : Data.IntSet.Internal.Key -> IntMap a -> (IntMap a *
 Definition unions {a} : list (IntMap a) -> IntMap a :=
   fun xs => Data.Foldable.foldl union empty xs.
 
-(* Translating `union' failed: Could not apply edit: cannot "termination" a
-   definition that is not a recursive function *)
+Definition unionWithKey {a}
+    : (Data.IntSet.Internal.Key -> a -> a -> a) -> IntMap a -> IntMap a -> IntMap
+      a :=
+  fun f m1 m2 =>
+    mergeWithKey' Bin (fun arg_0__ arg_1__ =>
+                        match arg_0__ , arg_1__ with
+                          | Tip k1 x1 , Tip _k2 x2 => Tip k1 (f k1 x1 x2)
+                          | _ , _ => patternFailure
+                        end) GHC.Base.id GHC.Base.id m1 m2.
+
+Definition unionWith {a} : (a -> a -> a) -> IntMap a -> IntMap a -> IntMap a :=
+  fun f m1 m2 =>
+    unionWithKey (fun arg_0__ arg_1__ arg_2__ =>
+                   match arg_0__ , arg_1__ , arg_2__ with
+                     | _ , x , y => f x y
+                   end) m1 m2.
+
+Definition unionsWith {a} : (a -> a -> a) -> list (IntMap a) -> IntMap a :=
+  fun f ts => Data.Foldable.foldl (unionWith f) empty ts.
+
+Definition intersection {a} {b} : IntMap a -> IntMap b -> IntMap a :=
+  fun m1 m2 =>
+    mergeWithKey' bin GHC.Base.const (GHC.Base.const Nil) (GHC.Base.const Nil) m1
+    m2.
+
+Definition intersectionWithKey {a} {b} {c}
+    : (Data.IntSet.Internal.Key -> a -> b -> c) -> IntMap a -> IntMap b -> IntMap
+      c :=
+  fun f m1 m2 =>
+    mergeWithKey' bin (fun arg_0__ arg_1__ =>
+                        match arg_0__ , arg_1__ with
+                          | Tip k1 x1 , Tip _k2 x2 => Tip k1 (f k1 x1 x2)
+                          | _ , _ => patternFailure
+                        end) (GHC.Base.const Nil) (GHC.Base.const Nil) m1 m2.
+
+Definition intersectionWith {a} {b} {c} : (a -> b -> c) -> IntMap a -> IntMap
+                                          b -> IntMap c :=
+  fun f m1 m2 =>
+    intersectionWithKey (fun arg_0__ arg_1__ arg_2__ =>
+                          match arg_0__ , arg_1__ , arg_2__ with
+                            | _ , x , y => f x y
+                          end) m1 m2.
+
+Definition mergeWithKey {a} {b} {c}
+    : (Data.IntSet.Internal.Key -> a -> b -> option c) -> (IntMap a -> IntMap
+      c) -> (IntMap b -> IntMap c) -> IntMap a -> IntMap b -> IntMap c :=
+  fun f g1 g2 =>
+    let combine :=
+      fun arg_0__ arg_1__ =>
+        match arg_0__ , arg_1__ with
+          | Tip k1 x1 , Tip _k2 x2 => match f k1 x1 x2 with
+                                        | None => Nil
+                                        | Some x => Tip k1 x
+                                      end
+          | _ , _ => patternFailure
+        end in
+    mergeWithKey' bin combine g1 g2.
+
+Definition difference {a} {b} : IntMap a -> IntMap b -> IntMap a :=
+  fun m1 m2 =>
+    mergeWithKey (fun arg_0__ arg_1__ arg_2__ => None) GHC.Base.id (GHC.Base.const
+                                                                   Nil) m1 m2.
+
+Definition op_zrzr__ {a} {b} : IntMap a -> IntMap b -> IntMap a :=
+  fun m1 m2 => difference m1 m2.
+
+Notation "'_\\_'" := (op_zrzr__).
+
+Infix "\\" := (_\\_) (at level 99).
+
+Definition differenceWithKey {a} {b}
+    : (Data.IntSet.Internal.Key -> a -> b -> option a) -> IntMap a -> IntMap
+      b -> IntMap a :=
+  fun f m1 m2 => mergeWithKey f GHC.Base.id (GHC.Base.const Nil) m1 m2.
+
+Definition differenceWith {a} {b} : (a -> b -> option a) -> IntMap a -> IntMap
+                                    b -> IntMap a :=
+  fun f m1 m2 =>
+    differenceWithKey (fun arg_0__ arg_1__ arg_2__ =>
+                        match arg_0__ , arg_1__ , arg_2__ with
+                          | _ , x , y => f x y
+                        end) m1 m2.
+
+Definition alter {a} : (option a -> option
+                       a) -> Data.IntSet.Internal.Key -> IntMap a -> IntMap a :=
+  fix alter arg_0__ arg_1__ arg_2__
+        := match arg_0__ , arg_1__ , arg_2__ with
+             | f , k , (Bin p m l r as t) => if nomatch k p m : bool
+                                             then match f None with
+                                                    | None => t
+                                                    | Some x => link k (Tip k x) p t
+                                                  end
+                                             else if zero k m : bool
+                                                  then binCheckLeft p m (alter f k l) r
+                                                  else binCheckRight p m l (alter f k r)
+             | f , k , (Tip ky y as t) => if k GHC.Base.== ky : bool
+                                          then match f (Some y) with
+                                                 | Some x => Tip ky x
+                                                 | None => Nil
+                                               end
+                                          else match f None with
+                                                 | Some x => link k (Tip k x) ky t
+                                                 | None => Tip ky y
+                                               end
+             | f , k , Nil => match f None with
+                                | Some x => Tip k x
+                                | None => Nil
+                              end
+           end.
+
+Definition nequal {a} `{GHC.Base.Eq_ a} : IntMap a -> IntMap a -> bool :=
+  fix nequal arg_0__ arg_1__
+        := match arg_0__ , arg_1__ with
+             | Bin p1 m1 l1 r1 , Bin p2 m2 l2 r2 => orb (m1 GHC.Base./= m2) (orb (p1
+                                                                                 GHC.Base./= p2) (orb (nequal l1 l2)
+                                                                                                      (nequal r1 r2)))
+             | Tip kx x , Tip ky y => orb (kx GHC.Base./= ky) (x GHC.Base./= y)
+             | Nil , Nil => false
+             | _ , _ => true
+           end.
+
+Local Definition Eq___IntMap_op_zsze__ {inst_a} `{GHC.Base.Eq_ inst_a} : (IntMap
+                                                                         inst_a) -> (IntMap inst_a) -> bool :=
+  fun t1 t2 => nequal t1 t2.
+
+Program Instance Eq___IntMap {a} `{GHC.Base.Eq_ a} : GHC.Base.Eq_ (IntMap a) :=
+  fun _ k =>
+    k {|GHC.Base.op_zeze____ := Eq___IntMap_op_zeze__ ;
+      GHC.Base.op_zsze____ := Eq___IntMap_op_zsze__ |}.
+
+Program Instance Ord__IntMap {a} `{GHC.Base.Ord a} : GHC.Base.Ord (IntMap a) :=
+  fun _ k =>
+    k {|GHC.Base.op_zl____ := Ord__IntMap_op_zl__ ;
+      GHC.Base.op_zlze____ := Ord__IntMap_op_zlze__ ;
+      GHC.Base.op_zg____ := Ord__IntMap_op_zg__ ;
+      GHC.Base.op_zgze____ := Ord__IntMap_op_zgze__ ;
+      GHC.Base.compare__ := Ord__IntMap_compare ;
+      GHC.Base.max__ := Ord__IntMap_max ;
+      GHC.Base.min__ := Ord__IntMap_min |}.
+
+Definition node : GHC.Base.String :=
+  GHC.Base.hs_string__ "+--".
+
+Definition null {a} : IntMap a -> bool :=
+  fun arg_0__ => match arg_0__ with | Nil => true | _ => false end.
+
+Local Definition Foldable__IntMap_null : forall {a}, IntMap a -> bool :=
+  fun {a} => null.
+
+Definition preserveMissing {f} {x} `{GHC.Base.Applicative f} : WhenMissing f x
+                                                               x :=
+  Mk_WhenMissing missingValue missingValue.
+
+Definition runWhenMatched {f} {x} {y} {z} : WhenMatched f x y
+                                            z -> Data.IntSet.Internal.Key -> x -> y -> f (option z) :=
+  matchedKey.
+
+Definition contramapSecondWhenMatched {b} {a} {f} {x} {z}
+    : (b -> a) -> WhenMatched f x a z -> WhenMatched f x b z :=
+  fun f t => Mk_WhenMatched GHC.Base.$ (fun k x y => runWhenMatched t k x (f y)).
+
+Definition contramapFirstWhenMatched {b} {a} {f} {y} {z}
+    : (b -> a) -> WhenMatched f a y z -> WhenMatched f b y z :=
+  fun f t => Mk_WhenMatched GHC.Base.$ (fun k x y => runWhenMatched t k (f x) y).
+
+Definition runWhenMissing {f} {x} {y} : WhenMissing f x
+                                        y -> Data.IntSet.Internal.Key -> x -> f (option y) :=
+  missingKey.
+
+Definition singleton {a} : Data.IntSet.Internal.Key -> a -> IntMap a :=
+  fun k x => Tip k x.
+
+Definition size {a} : IntMap a -> GHC.Num.Int :=
+  let fix go arg_0__ arg_1__
+            := match arg_0__ , arg_1__ with
+                 | acc , Bin _ _ l r => go (go acc l) r
+                 | acc , Tip _ _ => GHC.Num.fromInteger 1 GHC.Num.+ acc
+                 | acc , Nil => acc
+               end in
+  go (GHC.Num.fromInteger 0).
+
+Local Definition Foldable__IntMap_length : forall {a},
+                                             IntMap a -> GHC.Num.Int :=
+  fun {a} => size.
+
+Program Instance Foldable__IntMap : Data.Foldable.Foldable IntMap := fun _ k =>
+    k {|Data.Foldable.elem__ := fun {a} `{GHC.Base.Eq_ a} => Foldable__IntMap_elem ;
+      Data.Foldable.fold__ := fun {m} `{GHC.Base.Monoid m} => Foldable__IntMap_fold ;
+      Data.Foldable.foldMap__ := fun {m} {a} `{GHC.Base.Monoid m} =>
+        Foldable__IntMap_foldMap ;
+      Data.Foldable.foldl__ := fun {b} {a} => Foldable__IntMap_foldl ;
+      Data.Foldable.foldl'__ := fun {b} {a} => Foldable__IntMap_foldl' ;
+      Data.Foldable.foldr__ := fun {a} {b} => Foldable__IntMap_foldr ;
+      Data.Foldable.foldr'__ := fun {a} {b} => Foldable__IntMap_foldr' ;
+      Data.Foldable.length__ := fun {a} => Foldable__IntMap_length ;
+      Data.Foldable.null__ := fun {a} => Foldable__IntMap_null ;
+      Data.Foldable.product__ := fun {a} `{GHC.Num.Num a} =>
+        Foldable__IntMap_product ;
+      Data.Foldable.sum__ := fun {a} `{GHC.Num.Num a} => Foldable__IntMap_sum ;
+      Data.Foldable.toList__ := fun {a} => Foldable__IntMap_toList |}.
+
+Definition splitRoot {a} : IntMap a -> list (IntMap a) :=
+  fun orig =>
+    match orig with
+      | Nil => nil
+      | (Tip _ _ as x) => cons x nil
+      | Bin _ m l r => if m GHC.Base.< GHC.Num.fromInteger 0 : bool
+                       then cons r (cons l nil)
+                       else cons l (cons r nil)
+    end.
+
+Definition traverseMaybeMissing {f} {x} {y} `{GHC.Base.Applicative f}
+    : (Data.IntSet.Internal.Key -> x -> f (option y)) -> WhenMissing f x y :=
+  fun f => Mk_WhenMissing missingValue missingValue.
+
+Definition traverseMissing {f} {x} {y} `{GHC.Base.Applicative f}
+    : (Data.IntSet.Internal.Key -> x -> f y) -> WhenMissing f x y :=
+  fun f => Mk_WhenMissing missingValue missingValue.
+
+Definition traverseWithKey {t} {a} {b} `{GHC.Base.Applicative t}
+    : (Data.IntSet.Internal.Key -> a -> t b) -> IntMap a -> t (IntMap b) :=
+  fun f =>
+    let fix go arg_0__
+              := match arg_0__ with
+                   | Nil => GHC.Base.pure Nil
+                   | Tip k v => Tip k Data.Functor.<$> f k v
+                   | Bin p m l r => GHC.Base.liftA2 (Bin p m) (go l) (go r)
+                 end in
+    go.
+
+Local Definition Traversable__IntMap_traverse : forall {f} {a} {b},
+                                                  forall `{GHC.Base.Applicative f},
+                                                    (a -> f b) -> IntMap a -> f (IntMap b) :=
+  fun {f} {a} {b} `{GHC.Base.Applicative f} =>
+    fun f => traverseWithKey (fun arg_0__ => f).
+
+Local Definition Traversable__IntMap_sequenceA : forall {f} {a},
+                                                   forall `{GHC.Base.Applicative f}, IntMap (f a) -> f (IntMap a) :=
+  fun {f} {a} `{GHC.Base.Applicative f} =>
+    Traversable__IntMap_traverse GHC.Base.id.
+
+Local Definition Traversable__IntMap_sequence : forall {m} {a},
+                                                  forall `{GHC.Base.Monad m}, IntMap (m a) -> m (IntMap a) :=
+  fun {m} {a} `{GHC.Base.Monad m} => Traversable__IntMap_sequenceA.
+
+Local Definition Traversable__IntMap_mapM : forall {m} {a} {b},
+                                              forall `{GHC.Base.Monad m}, (a -> m b) -> IntMap a -> m (IntMap b) :=
+  fun {m} {a} {b} `{GHC.Base.Monad m} => Traversable__IntMap_traverse.
+
+Program Instance Traversable__IntMap : Data.Traversable.Traversable IntMap :=
+  fun _ k =>
+    k {|Data.Traversable.mapM__ := fun {m} {a} {b} `{GHC.Base.Monad m} =>
+        Traversable__IntMap_mapM ;
+      Data.Traversable.sequence__ := fun {m} {a} `{GHC.Base.Monad m} =>
+        Traversable__IntMap_sequence ;
+      Data.Traversable.sequenceA__ := fun {f} {a} `{GHC.Base.Applicative f} =>
+        Traversable__IntMap_sequenceA ;
+      Data.Traversable.traverse__ := fun {f} {a} {b} `{GHC.Base.Applicative f} =>
+        Traversable__IntMap_traverse |}.
 
 Definition unsafeFindMax {a} : IntMap a -> option (Data.IntSet.Internal.Key *
                                                   a)%type :=
@@ -1686,27 +1886,29 @@ Definition zipWithMaybeMatched {f} {x} {y} {z} `{GHC.Base.Applicative f}
     Mk_WhenMatched GHC.Base.$ (fun k x y => GHC.Base.pure GHC.Base.$ f k x y).
 
 Module Notations.
-Notation "'_Data.IntMap.Internal.\\_'" := (op_zrzr__).
-Infix "Data.IntMap.Internal.\\" := (_\\_) (at level 99).
 Notation "'_Data.IntMap.Internal.!?_'" := (op_znz3fU__).
 Infix "Data.IntMap.Internal.!?" := (_!?_) (at level 99).
+Notation "'_Data.IntMap.Internal.\\_'" := (op_zrzr__).
+Infix "Data.IntMap.Internal.\\" := (_\\_) (at level 99).
 End Notations.
 
 (* Unbound variables:
-     Eq Gt Lt None Some andb bool comparison cons false id list negb nil op_zt__
-     option orb pair true Coq.ZArith.BinInt.Z.of_N Data.Bits.complement
-     Data.Bits.op_zizazi__ Data.Bits.xor Data.Either.Either Data.Either.Left
-     Data.Either.Right Data.Foldable.foldl Data.Functor.op_zlzdzg__
-     Data.Functor.Identity.Identity Data.IntSet.Internal.Bin
+     Eq Gt IntMap_op_zlzd__ Lt None Some andb bool comparison cons false id list negb
+     nil op_zt__ option orb pair true Coq.ZArith.BinInt.Z.of_N Data.Bits.complement
+     Data.Bits.op_zizazi__ Data.Bits.op_zizbzi__ Data.Bits.xor Data.Either.Either
+     Data.Either.Left Data.Either.Right Data.Foldable.Foldable Data.Foldable.foldl
+     Data.Functor.op_zlzdzg__ Data.Functor.Identity.Identity Data.IntSet.Internal.Bin
      Data.IntSet.Internal.IntSet Data.IntSet.Internal.Key Data.IntSet.Internal.Nil
-     Data.IntSet.Internal.Tip Data.IntSet.Internal.prefixBitMask
-     Data.IntSet.Internal.suffixBitMask Data.Maybe.maybe GHC.Base.Applicative
-     GHC.Base.Eq_ GHC.Base.Functor GHC.Base.Monad GHC.Base.Monoid GHC.Base.String
-     GHC.Base.const GHC.Base.fmap GHC.Base.id GHC.Base.liftA2 GHC.Base.mappend
-     GHC.Base.mempty GHC.Base.op_z2218U__ GHC.Base.op_zd__ GHC.Base.op_zeze__
-     GHC.Base.op_zg__ GHC.Base.op_zgze__ GHC.Base.op_zl__ GHC.Base.op_zlze__
-     GHC.Base.op_zsze__ GHC.Base.pure GHC.Num.Int GHC.Num.Word GHC.Num.op_zm__
-     GHC.Num.op_zp__ GHC.Real.fromIntegral
+     Data.IntSet.Internal.Tip Data.IntSet.Internal.bitmapOf
+     Data.IntSet.Internal.prefixBitMask Data.IntSet.Internal.singleton
+     Data.IntSet.Internal.suffixBitMask Data.Maybe.maybe Data.Traversable.Traversable
+     GHC.Base.Applicative GHC.Base.Eq_ GHC.Base.Functor GHC.Base.Monad
+     GHC.Base.Monoid GHC.Base.Ord GHC.Base.String GHC.Base.compare GHC.Base.const
+     GHC.Base.fmap GHC.Base.id GHC.Base.liftA2 GHC.Base.mappend GHC.Base.mempty
+     GHC.Base.op_z2218U__ GHC.Base.op_zd__ GHC.Base.op_zeze__ GHC.Base.op_zg__
+     GHC.Base.op_zgze__ GHC.Base.op_zl__ GHC.Base.op_zlze__ GHC.Base.op_zsze__
+     GHC.Base.pure GHC.Err.error GHC.Num.Int GHC.Num.Num GHC.Num.Word GHC.Num.op_zm__
+     GHC.Num.op_zp__ GHC.Num.op_zt__ GHC.Real.fromIntegral
      Utils.Containers.Internal.BitUtil.highestBitMask
      Utils.Containers.Internal.BitUtil.shiftLL
      Utils.Containers.Internal.BitUtil.shiftRL

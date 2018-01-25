@@ -14,7 +14,14 @@ Require Coq.Program.Wf.
 
 Require BasicTypes.
 Require Core.
+Require CoreSubst.
 Require CoreSyn.
+Require CoreUtils.
+Require Demand.
+Require DynFlags.
+Require GHC.Num.
+Require Var.
+Require VarEnv.
 
 (* Converted type declarations: *)
 
@@ -40,53 +47,65 @@ Definition ae_ped_bot (arg_1__ : ArityEnv) :=
   end.
 (* Converted value declarations: *)
 
-Axiom manifestArity : forall {A : Type}, A.
+Axiom manifestArity : CoreSyn.CoreExpr -> BasicTypes.Arity.
 
-Axiom exprArity : forall {A : Type}, A.
+Axiom exprArity : CoreSyn.CoreExpr -> BasicTypes.Arity.
 
-Axiom findRhsArity : forall {A : Type}, A.
+Axiom findRhsArity
+        : DynFlags.DynFlags -> Var.Id -> CoreSyn.CoreExpr -> BasicTypes.Arity -> BasicTypes.Arity.
 
-Axiom rhsEtaExpandArity : forall {A : Type}, A.
+Axiom rhsEtaExpandArity
+        : DynFlags.DynFlags -> CoreUtils.CheapAppFun -> CoreSyn.CoreExpr -> BasicTypes.Arity.
 
-Axiom exprEtaExpandArity : forall {A : Type}, A.
+Axiom exprEtaExpandArity
+        : DynFlags.DynFlags -> CoreSyn.CoreExpr -> BasicTypes.Arity.
 
-Axiom exprBotStrictness_maybe : forall {A : Type}, A.
+Axiom exprBotStrictness_maybe : CoreSyn.CoreExpr -> option (BasicTypes.Arity *
+                                                           Demand.StrictSig)%type.
 
-Axiom arityType : forall {A : Type}, A.
+Axiom arityType : ArityEnv -> CoreSyn.CoreExpr -> ArityType.
 
-Axiom typeArity : forall {A : Type}, A.
+Axiom typeArity : Core.Type_ -> list BasicTypes.OneShotInfo.
 
-Axiom vanillaArityType : forall {A : Type}, A.
+Axiom vanillaArityType : ArityType.
 
-Axiom getBotArity : forall {A : Type}, A.
+Axiom getBotArity : ArityType -> option BasicTypes.Arity.
 
-Axiom mk_cheap_fn : forall {A : Type}, A.
+Axiom mk_cheap_fn : DynFlags.DynFlags -> CoreUtils.CheapAppFun -> CheapFun.
 
-Axiom arityLam : forall {A : Type}, A.
+Axiom arityLam : Var.Id -> ArityType -> ArityType.
 
-Axiom arityApp : forall {A : Type}, A.
+Axiom arityApp : ArityType -> bool -> ArityType.
 
-Axiom floatIn : forall {A : Type}, A.
+Axiom floatIn : bool -> ArityType -> ArityType.
 
-Axiom andArityType : forall {A : Type}, A.
+Axiom andArityType : ArityType -> ArityType -> ArityType.
 
-Axiom etaExpand : forall {A : Type}, A.
+Axiom etaExpand : BasicTypes.Arity -> CoreSyn.CoreExpr -> CoreSyn.CoreExpr.
 
-Axiom etaInfoApp : forall {A : Type}, A.
+Axiom etaInfoApp : CoreSubst.Subst -> CoreSyn.CoreExpr -> list
+                   EtaInfo -> CoreSyn.CoreExpr.
 
-Axiom pushCoercion : forall {A : Type}, A.
+Axiom pushCoercion : Core.Coercion -> list EtaInfo -> list EtaInfo.
 
-Axiom etaInfoAbs : forall {A : Type}, A.
+Axiom etaInfoAbs : list EtaInfo -> CoreSyn.CoreExpr -> CoreSyn.CoreExpr.
 
-Axiom mkEtaWW : forall {A : Type}, A.
+Axiom mkEtaWW
+        : BasicTypes.Arity -> CoreSyn.CoreExpr -> VarEnv.InScopeSet -> Core.Type_ -> (VarEnv.InScopeSet
+          * list EtaInfo)%type.
 
-Axiom subst_expr : forall {A : Type}, A.
+Axiom subst_expr : CoreSubst.Subst -> CoreSyn.CoreExpr -> CoreSyn.CoreExpr.
 
-Axiom subst_bind : forall {A : Type}, A.
+Axiom subst_bind : CoreSubst.Subst -> CoreSyn.CoreBind -> (CoreSubst.Subst *
+                   CoreSyn.CoreBind)%type.
 
-Axiom freshEtaVar : forall {A : Type}, A.
+Axiom freshEtaVar
+        : GHC.Num.Int -> TyCoRep.TCvSubst -> Core.Type_ -> (TyCoRep.TCvSubst *
+          Core.Var)%type.
 
 (* Unbound variables:
-     bool list option BasicTypes.Arity BasicTypes.OneShotInfo Core.Coercion
-     Core.Type_ Core.Var CoreSyn.CoreExpr
+     bool list op_zt__ option BasicTypes.Arity BasicTypes.OneShotInfo Core.Coercion
+     Core.Type_ Core.Var CoreSubst.Subst CoreSyn.CoreBind CoreSyn.CoreExpr
+     CoreUtils.CheapAppFun Demand.StrictSig DynFlags.DynFlags GHC.Num.Int
+     TyCoRep.TCvSubst Var.Id VarEnv.InScopeSet
 *)

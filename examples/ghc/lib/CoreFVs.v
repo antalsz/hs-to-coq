@@ -153,46 +153,6 @@ Fixpoint orphNamesOfCo (arg_0__ : Core.Coercion): NameSet.NameSet :=
 *)
 (* Converted value declarations: *)
 
-Axiom idRuleRhsVars : forall {A : Type}, A.
-
-(* Translating `idRuleRhsVars' failed: using a record pattern for the unknown
-   constructor `Rule' unsupported *)
-
-Axiom orphNamesOfCoAxBranch : forall {A : Type}, A.
-
-(* Translating `orphNamesOfCoAxBranch' failed: using a record pattern for the
-   unknown constructor `CoAxBranch' unsupported *)
-
-Axiom orphNamesOfCoCon : forall {A : Type}, A.
-
-(* Translating `orphNamesOfCoCon' failed: using a record pattern for the unknown
-   constructor `CoAxiom' unsupported *)
-
-Axiom orphNamesOfType : forall {A : Type}, A.
-
-(* Translating `orphNamesOfType' failed: using a record pattern for the unknown
-   constructor `LitTy' unsupported *)
-
-Axiom ruleFVs : forall {A : Type}, A.
-
-(* Translating `ruleFVs' failed: using a record pattern for the unknown
-   constructor `BuiltinRule' unsupported *)
-
-Axiom ruleLhsFVIds : forall {A : Type}, A.
-
-(* Translating `ruleLhsFVIds' failed: using a record pattern for the unknown
-   constructor `BuiltinRule' unsupported *)
-
-Axiom ruleRhsFreeVars : forall {A : Type}, A.
-
-(* Translating `ruleRhsFreeVars' failed: using a record pattern for the unknown
-   constructor `BuiltinRule' unsupported *)
-
-Axiom stableUnfoldingFVs : forall {A : Type}, A.
-
-(* Translating `stableUnfoldingFVs' failed: using a record pattern for the
-   unknown constructor `CoreUnfolding' unsupported *)
-
 Definition aFreeVar : Core.Var -> VarSet.DVarSet :=
   VarSet.unitDVarSet.
 
@@ -299,6 +259,120 @@ Definition idRuleFVs : Var.Id -> FV.FV :=
 Definition idRuleVars : Var.Id -> VarSet.VarSet :=
   fun id => FV.fvVarSet GHC.Base.$ idRuleFVs id.
 
+Axiom idRuleRhsVars : forall {A : Type}, A.
+
+(* Translating `idRuleRhsVars' failed: using a record pattern for the unknown
+   constructor `Rule' unsupported *)
+
+Definition noFVs : VarSet.VarSet :=
+  VarSet.emptyVarSet.
+
+Definition vectsFreeVars : list CoreSyn.CoreVect -> VarSet.VarSet :=
+  let vectFreeVars :=
+    fun arg_0__ =>
+      match arg_0__ with
+        | CoreSyn.Vect _ rhs => FV.fvVarSet GHC.Base.$ (FV.filterFV Var.isLocalId
+                                GHC.Base.$ expr_fvs rhs)
+        | CoreSyn.NoVect _ => noFVs
+        | CoreSyn.VectType _ _ _ => noFVs
+        | CoreSyn.VectClass _ => noFVs
+        | CoreSyn.VectInst _ => noFVs
+      end in
+  VarSet.mapUnionVarSet vectFreeVars.
+
+Axiom orphNamesOfCoAxBranch : forall {A : Type}, A.
+
+Definition orphNamesOfCoAxBranches {br} : Core.Branches br -> NameSet.NameSet :=
+  Data.Foldable.foldr (NameSet.unionNameSet GHC.Base.∘ orphNamesOfCoAxBranch)
+  NameSet.emptyNameSet GHC.Base.∘ CoAxiom.fromBranches.
+
+(* Translating `orphNamesOfCoAxBranch' failed: using a record pattern for the
+   unknown constructor `CoAxBranch' unsupported *)
+
+Axiom orphNamesOfCoCon : forall {A : Type}, A.
+
+(* Translating `orphNamesOfCoCon' failed: using a record pattern for the unknown
+   constructor `CoAxiom' unsupported *)
+
+Definition orphNamesOfProv : Core.UnivCoProvenance -> NameSet.NameSet :=
+  fun arg_0__ =>
+    match arg_0__ with
+      | Core.UnsafeCoerceProv => NameSet.emptyNameSet
+      | Core.PhantomProv co => orphNamesOfCo co
+      | Core.ProofIrrelProv co => orphNamesOfCo co
+      | Core.PluginProv _ => NameSet.emptyNameSet
+      | Core.HoleProv _ => NameSet.emptyNameSet
+    end.
+
+Definition orphNamesOfThings {a} : (a -> NameSet.NameSet) -> list
+                                   a -> NameSet.NameSet :=
+  fun f =>
+    Data.Foldable.foldr (NameSet.unionNameSet GHC.Base.∘ f) NameSet.emptyNameSet.
+
+Definition orphNamesOfCos : list Core.Coercion -> NameSet.NameSet :=
+  orphNamesOfThings orphNamesOfCo.
+
+Definition orphNamesOfTyCon : Core.TyCon -> NameSet.NameSet :=
+  fun tycon =>
+    NameSet.unionNameSet (NameSet.unitNameSet (Name.getName tycon))
+                         (match TyCon.tyConClass_maybe tycon with
+                           | None => NameSet.emptyNameSet
+                           | Some cls => NameSet.unitNameSet (Name.getName cls)
+                         end).
+
+Axiom orphNamesOfType : forall {A : Type}, A.
+
+Definition orphNamesOfTypes : list Core.Type_ -> NameSet.NameSet :=
+  orphNamesOfThings orphNamesOfType.
+
+Definition orphNamesOfAxiom {br} : Core.CoAxiom br -> NameSet.NameSet :=
+  fun axiom =>
+    NameSet.extendNameSet (orphNamesOfTypes (Data.Foldable.concatMap
+                                            CoAxiom.coAxBranchLHS GHC.Base.$ (CoAxiom.fromBranches GHC.Base.$
+                                            CoAxiom.coAxiomBranches axiom))) (Name.getName (CoAxiom.coAxiomTyCon
+                                                                                           axiom)).
+
+(* Translating `orphNamesOfType' failed: using a record pattern for the unknown
+   constructor `LitTy' unsupported *)
+
+Axiom ruleFVs : forall {A : Type}, A.
+
+Definition ruleFreeVars : CoreSyn.CoreRule -> VarSet.VarSet :=
+  FV.fvVarSet GHC.Base.∘ ruleFVs.
+
+Definition rulesFreeVars : list CoreSyn.CoreRule -> VarSet.VarSet :=
+  fun rules => VarSet.mapUnionVarSet ruleFreeVars rules.
+
+Definition rulesFVs : list CoreSyn.CoreRule -> FV.FV :=
+  FV.mapUnionFV ruleFVs.
+
+Definition rulesFreeVarsDSet : list CoreSyn.CoreRule -> VarSet.DVarSet :=
+  fun rules => FV.fvDVarSet GHC.Base.$ rulesFVs rules.
+
+(* Translating `ruleFVs' failed: using a record pattern for the unknown
+   constructor `BuiltinRule' unsupported *)
+
+Axiom ruleLhsFVIds : forall {A : Type}, A.
+
+Definition ruleLhsFreeIds : CoreSyn.CoreRule -> VarSet.VarSet :=
+  FV.fvVarSet GHC.Base.∘ ruleLhsFVIds.
+
+Definition ruleLhsFreeIdsList : CoreSyn.CoreRule -> list Core.Var :=
+  FV.fvVarList GHC.Base.∘ ruleLhsFVIds.
+
+(* Translating `ruleLhsFVIds' failed: using a record pattern for the unknown
+   constructor `BuiltinRule' unsupported *)
+
+Axiom ruleRhsFreeVars : forall {A : Type}, A.
+
+(* Translating `ruleRhsFreeVars' failed: using a record pattern for the unknown
+   constructor `BuiltinRule' unsupported *)
+
+Axiom stableUnfoldingFVs : forall {A : Type}, A.
+
+Definition stableUnfoldingVars : CoreSyn.Unfolding -> option VarSet.VarSet :=
+  fun unf => GHC.Base.fmap FV.fvVarSet (stableUnfoldingFVs unf).
+
 Definition idUnfoldingFVs : Var.Id -> FV.FV :=
   fun id => Maybes.orElse (stableUnfoldingFVs (Id.realIdUnfolding id)) FV.emptyFV.
 
@@ -327,82 +401,8 @@ Definition rhs_fvs : (Var.Id * CoreSyn.CoreExpr)%type -> FV.FV :=
       | pair bndr rhs => FV.unionFV (expr_fvs rhs) (bndrRuleAndUnfoldingFVs bndr)
     end.
 
-Definition noFVs : VarSet.VarSet :=
-  VarSet.emptyVarSet.
-
-Definition vectsFreeVars : list CoreSyn.CoreVect -> VarSet.VarSet :=
-  let vectFreeVars :=
-    fun arg_0__ =>
-      match arg_0__ with
-        | CoreSyn.Vect _ rhs => FV.fvVarSet GHC.Base.$ (FV.filterFV Var.isLocalId
-                                GHC.Base.$ expr_fvs rhs)
-        | CoreSyn.NoVect _ => noFVs
-        | CoreSyn.VectType _ _ _ => noFVs
-        | CoreSyn.VectClass _ => noFVs
-        | CoreSyn.VectInst _ => noFVs
-      end in
-  VarSet.mapUnionVarSet vectFreeVars.
-
-Definition orphNamesOfCoAxBranches {br} : Core.Branches br -> NameSet.NameSet :=
-  Data.Foldable.foldr (NameSet.unionNameSet GHC.Base.∘ orphNamesOfCoAxBranch)
-  NameSet.emptyNameSet GHC.Base.∘ CoAxiom.fromBranches.
-
-Definition orphNamesOfProv : Core.UnivCoProvenance -> NameSet.NameSet :=
-  fun arg_0__ =>
-    match arg_0__ with
-      | Core.UnsafeCoerceProv => NameSet.emptyNameSet
-      | Core.PhantomProv co => orphNamesOfCo co
-      | Core.ProofIrrelProv co => orphNamesOfCo co
-      | Core.PluginProv _ => NameSet.emptyNameSet
-      | Core.HoleProv _ => NameSet.emptyNameSet
-    end.
-
-Definition orphNamesOfThings {a} : (a -> NameSet.NameSet) -> list
-                                   a -> NameSet.NameSet :=
-  fun f =>
-    Data.Foldable.foldr (NameSet.unionNameSet GHC.Base.∘ f) NameSet.emptyNameSet.
-
-Definition orphNamesOfTypes : list Core.Type_ -> NameSet.NameSet :=
-  orphNamesOfThings orphNamesOfType.
-
-Definition orphNamesOfAxiom {br} : Core.CoAxiom br -> NameSet.NameSet :=
-  fun axiom =>
-    NameSet.extendNameSet (orphNamesOfTypes (Data.Foldable.concatMap
-                                            CoAxiom.coAxBranchLHS GHC.Base.$ (CoAxiom.fromBranches GHC.Base.$
-                                            CoAxiom.coAxiomBranches axiom))) (Name.getName (CoAxiom.coAxiomTyCon
-                                                                                           axiom)).
-
-Definition orphNamesOfCos : list Core.Coercion -> NameSet.NameSet :=
-  orphNamesOfThings orphNamesOfCo.
-
-Definition orphNamesOfTyCon : Core.TyCon -> NameSet.NameSet :=
-  fun tycon =>
-    NameSet.unionNameSet (NameSet.unitNameSet (Name.getName tycon))
-                         (match TyCon.tyConClass_maybe tycon with
-                           | None => NameSet.emptyNameSet
-                           | Some cls => NameSet.unitNameSet (Name.getName cls)
-                         end).
-
-Definition ruleFreeVars : CoreSyn.CoreRule -> VarSet.VarSet :=
-  FV.fvVarSet GHC.Base.∘ ruleFVs.
-
-Definition rulesFreeVars : list CoreSyn.CoreRule -> VarSet.VarSet :=
-  fun rules => VarSet.mapUnionVarSet ruleFreeVars rules.
-
-Definition ruleLhsFreeIds : CoreSyn.CoreRule -> VarSet.VarSet :=
-  FV.fvVarSet GHC.Base.∘ ruleLhsFVIds.
-
-Definition ruleLhsFreeIdsList : CoreSyn.CoreRule -> list Core.Var :=
-  FV.fvVarList GHC.Base.∘ ruleLhsFVIds.
-
-Definition rulesFVs : list CoreSyn.CoreRule -> FV.FV :=
-  FV.mapUnionFV ruleFVs.
-
-Definition rulesFreeVarsDSet : list CoreSyn.CoreRule -> VarSet.DVarSet :=
-  fun rules => FV.fvDVarSet GHC.Base.$ rulesFVs rules.
-
-Definition stableUnfoldingVars : CoreSyn.Unfolding -> option VarSet.VarSet :=
-  fun unf => GHC.Base.fmap FV.fvVarSet (stableUnfoldingFVs unf).
+(* Translating `stableUnfoldingFVs' failed: using a record pattern for the
+   unknown constructor `CoreUnfolding' unsupported *)
 
 Definition unionFVs : VarSet.DVarSet -> VarSet.DVarSet -> VarSet.DVarSet :=
   VarSet.unionDVarSet.

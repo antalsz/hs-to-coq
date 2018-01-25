@@ -18,8 +18,6 @@ OUT=lib
 
 # Handwritten modules (usually by modification of generated version)
 HANDMOD = \
-  Data/IntMap \
-  Data/IntMap/Base \
   Data/SequenceManual \
   Utils/Containers/Internal/PtrEquality \
   Utils/Containers/Internal/BitUtil \
@@ -30,7 +28,8 @@ MODULES = \
   Data/Set/Internal \
   Utils/Containers/Internal/BitQueue\
   Data/IntSet/Internal \
-#  Data/Map/Internal \
+  Data/IntMap/Internal \
+  Data/Map/Internal \
 
 # generated from drop-in/
 DROPIN =

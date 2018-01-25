@@ -1,1 +1,0 @@
-rename value Data.Map.fold = Data.Map.Base.foldr

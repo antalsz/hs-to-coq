@@ -6,6 +6,9 @@ skip module TyCoRep
 skip TyCon.tyConATs
 skip module ForeignCall
 
+# Needs ClassSpec
+skip TyCon.tyConAssoc_maybe
+
 #### specific to TyCon
 skip Core.TyConRepName
 skip Core.Injectivity

@@ -1,7 +1,37 @@
 skip module Data.Data
 skip module Data.Semigroup
+skip module GHC.Prim
+
+# Proxy#
+skip Data.Map.Internal.bogus
+skip Data.Map.Internal.deleteAlong
+skip Data.Map.Internal.atKeyImpl
+skip Data.Map.Internal.alterF
+
+rename value Data.Map.Internal.bool = Data.Map.Internal.boolITE
+rewrite forall x, GHC.Magic.lazy x = x
+
+nonterminating Data.Map.Internal.link2
+
+# Type inference fail
+skip Data.Map.Internal.differenceWithKey
+skip Data.Map.Internal.differenceWith
 
 skip Data.Map.Internal.Monoid__Map
+skip Data.Map.Internal.Functor__Map
+skip Data.Map.Internal.Functor__WhenMatched
+skip Data.Map.Internal.Functor__WhenMissing
+skip Data.Map.Internal.Foldable__Map
+skip Data.Map.Internal.Eq___Map
+skip Data.Map.Internal.Ord__Map
+skip Data.Map.Internal.Monad__WhenMissing
+skip Data.Map.Internal.Applicative__WhenMissing
+skip Data.Map.Internal.Category__WhenMissing
+skip Data.Map.Internal.Traversable__Map
+skip Data.Map.Internal.Monad__WhenMatched
+skip Data.Map.Internal.Applicative__WhenMatched
+skip Data.Map.Internal.Category__WhenMatched
+
 
 skip Data.Map.Internal.showTree
 skip Data.Map.Internal.showTreeWith
@@ -17,8 +47,8 @@ termination Data.Map.Internal.link {measure (Nat.add (map_size arg_2__) (map_siz
 termination Data.Map.Internal.merge {measure (Nat.add (map_size arg_0__) (map_size arg_1__))} termination_by_omega
 
 nonterminating Data.Map.Internal.fromDistinctAscList
+nonterminating Data.Map.Internal.fromDistinctDescList
 nonterminating Data.Map.Internal.fromList
-nonterminating Data.Map.Internal.fromAscListWithKey
 
 order Data.Map.Internal.Eq___Map Data.Map.Internal.Ord__Map
 

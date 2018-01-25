@@ -332,14 +332,14 @@ instance Gallina Term where
              <> line)
     <> "end"
 
-  renderGallina' _ (Qualid qid)
+  renderGallina' p (Qualid qid)
     | qualidIsOp qid = renderQPrefix qid
-    | otherwise      = renderGallina qid
+    | otherwise      = renderGallina' p qid
 
-  renderGallina' _ (RawQualid qid) = renderGallina qid
+  renderGallina' p (RawQualid qid) = renderGallina' p qid
 
-  renderGallina' _ (Sort sort) =
-    renderGallina sort
+  renderGallina' p (Sort sort) =
+    renderGallina' p sort
 
   renderGallina' _ (Num num) =
     renderNum num
@@ -454,7 +454,7 @@ instance Gallina Annotation where
 instance Gallina MatchItem where
   renderGallina' _ (MatchItem scrutinee oas oin) =
     hang 2 $
-      renderGallina scrutinee
+      renderGallina' (letPrec + 1) scrutinee
         <> maybe mempty (\as -> softline <> "as" <+> renderGallina as) oas
         <> render_in_annot oin
 

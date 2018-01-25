@@ -79,7 +79,10 @@ script:
  - make -C examples/intervals
  - make -C examples/containers/lib
  - make -C examples/containers/theories
- - make -C examples/ghc/lib
+
+ # disabled 2018-07-24 due to too big of a fall-out, and the
+ # focus is somewhere on containers right now
+ #- make -C examples/ghc/lib
 
  # This requires a configured check-out of GHC, so lets not do that on travis
  # - make -C examples/ghc

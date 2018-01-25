@@ -73,9 +73,9 @@ CORE_MODULES = \
   TyCon \
   Literal \
   CoreSyn \
-  CoreArity \
   UnVarGraph \
   Demand \
+  CoreArity \
   CoreUtils \
   CoAxiom \
   Id \

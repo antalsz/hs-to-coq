@@ -385,31 +385,6 @@ Program Instance Eq___Role : GHC.Base.Eq_ Core.Role := fun _ k =>
     k {|GHC.Base.op_zeze____ := Eq___Role_op_zeze__ ;
       GHC.Base.op_zsze____ := Eq___Role_op_zsze__ |}.
 
-Axiom coAxiomArity : forall {A : Type}, A.
-
-(* Translating `coAxiomArity' failed: using a record pattern for the unknown
-   constructor `CoAxBranch' unsupported *)
-
-Axiom coAxiomNthBranch : forall {A : Type}, A.
-
-(* Translating `coAxiomNthBranch' failed: using a record pattern for the unknown
-   constructor `CoAxiom' unsupported *)
-
-Axiom coAxiomSingleBranch : forall {A : Type}, A.
-
-(* Translating `coAxiomSingleBranch' failed: using a record pattern for the
-   unknown constructor `CoAxiom' unsupported *)
-
-Axiom coAxiomSingleBranch_maybe : forall {A : Type}, A.
-
-(* Translating `coAxiomSingleBranch_maybe' failed: using a record pattern for
-   the unknown constructor `CoAxiom' unsupported *)
-
-Axiom trivialBuiltInFamily : forall {A : Type}, A.
-
-(* Translating `trivialBuiltInFamily' failed: creating a record with the unknown
-   constructor `BuiltInSynFamily' unsupported *)
-
 Definition coAxBranchCoVars : Core.CoAxBranch -> list CoVar :=
   cab_cvs.
 
@@ -418,10 +393,6 @@ Definition coAxBranchIncomps : Core.CoAxBranch -> list Core.CoAxBranch :=
 
 Definition coAxBranchLHS : Core.CoAxBranch -> list Core.Type_ :=
   cab_lhs.
-
-Definition coAxiomNumPats {br} : Core.CoAxiom br -> GHC.Num.Int :=
-  Data.Foldable.length GHC.Base.∘ (coAxBranchLHS GHC.Base.∘ (GHC.Base.flip
-  coAxiomNthBranch (GHC.Num.fromInteger 0))).
 
 Definition coAxBranchRHS : Core.CoAxBranch -> Core.Type_ :=
   cab_rhs.
@@ -435,14 +406,38 @@ Definition coAxBranchSpan : Core.CoAxBranch -> SrcLoc.SrcSpan :=
 Definition coAxBranchTyVars : Core.CoAxBranch -> list TyVar :=
   cab_tvs.
 
+Axiom coAxiomArity : forall {A : Type}, A.
+
+(* Translating `coAxiomArity' failed: using a record pattern for the unknown
+   constructor `CoAxBranch' unsupported *)
+
 Definition coAxiomBranches {br} : Core.CoAxiom br -> Core.Branches br :=
   co_ax_branches.
 
 Definition coAxiomName {br} : Core.CoAxiom br -> Name.Name :=
   co_ax_name.
 
+Axiom coAxiomNthBranch : forall {A : Type}, A.
+
+Definition coAxiomNumPats {br} : Core.CoAxiom br -> GHC.Num.Int :=
+  Data.Foldable.length GHC.Base.∘ (coAxBranchLHS GHC.Base.∘ (GHC.Base.flip
+  coAxiomNthBranch (GHC.Num.fromInteger 0))).
+
+(* Translating `coAxiomNthBranch' failed: using a record pattern for the unknown
+   constructor `CoAxiom' unsupported *)
+
 Definition coAxiomRole {br} : Core.CoAxiom br -> Core.Role :=
   co_ax_role.
+
+Axiom coAxiomSingleBranch : forall {A : Type}, A.
+
+(* Translating `coAxiomSingleBranch' failed: using a record pattern for the
+   unknown constructor `CoAxiom' unsupported *)
+
+Axiom coAxiomSingleBranch_maybe : forall {A : Type}, A.
+
+(* Translating `coAxiomSingleBranch_maybe' failed: using a record pattern for
+   the unknown constructor `CoAxiom' unsupported *)
 
 Definition coAxiomTyCon {br} : Core.CoAxiom br -> Core.TyCon :=
   co_ax_tc.
@@ -461,6 +456,11 @@ Definition isImplicitCoAxiom {br} : Core.CoAxiom br -> bool :=
 
 Definition placeHolderIncomps : list Core.CoAxBranch :=
   Panic.panic (GHC.Base.hs_string__ "placeHolderIncomps").
+
+Axiom trivialBuiltInFamily : forall {A : Type}, A.
+
+(* Translating `trivialBuiltInFamily' failed: creating a record with the unknown
+   constructor `BuiltInSynFamily' unsupported *)
 
 (* Unbound variables:
      CoVar Eq Gt Lt TyVar bool cab_cvs cab_incomps cab_lhs cab_loc cab_rhs cab_roles

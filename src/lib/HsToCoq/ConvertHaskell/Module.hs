@@ -141,7 +141,9 @@ axiomatizeHsGroup mod HsGroup{..} = do
         for (map unLoc $ concatMap (bagToList . snd) binds) $ \case
           FunBind{..} -> do
             name <- var ExprNS (unLoc fun_id)
-            pure . typedAxiom name $ sigs^.at name.to (fmap sigType).non bottomType
+            use (edits.skipped.contains name) >>= \case
+                True -> pure (CommentSentence . Comment $ qualidBase name <> " skipped")
+                False -> pure . typedAxiom name $ sigs^.at name.to (fmap sigType).non bottomType
           _ ->
             convUnsupported "non-type, non-class, non-value definitions in axiomatized modules"
   

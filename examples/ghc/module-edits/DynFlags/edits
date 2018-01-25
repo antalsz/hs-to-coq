@@ -1,23 +1,31 @@
 axiomatize module DynFlags
 
+
+
 skip module CmdLineParser
 skip module Control.Monad.Trans.Class
 skip module Control.Monad.Trans.Except
 skip module Control.Monad.Trans.Maybe
 skip module Control.Monad.Trans.Reader
 skip module Control.Monad.Trans.Writer.Lazy
-# skip module Data.IntSet.Base.
+skip module Control.Monad.IO.Class
+skip module Control.Monad.IO
+skip module Data.IntSet.Base
 skip module Data.Map.Base
-# skip module Data.Set.Base.
+# skip module Data.Set.Base
 skip module Deriving
 skip module ErrUtils
-# skip module GHC.Base.
+# skip module GHC.Base
 skip module GHC.IORef
+skip module GHC.IO.Handle
+skip module GHC.IO.Handle.Types
+skip module Text.ParserCombinators
+skip module Text.ParserCombinators.ReadP
 skip module GHC.LanguageExtensions.Type
-# skip module GHC.Num.
-# skip module GHC.Prim.
+# skip module GHC.Num
+# skip module GHC.Prim
 skip module Hooks
-# skip module Module.
+# skip module Module
 skip module PackageConfig
 skip module Packages
 skip module Platform
@@ -39,6 +47,159 @@ skip DynFlags.HasDynFlags__ReaderT
 skip DynFlags.HasDynFlags__MaybeT
 skip DynFlags.HasDynFlags__WriterT
 skip DynFlags.HasDynFlags__ExceptT
+
+skip DynFlags.parseDynamicFilePragma
+skip DynFlags.parseDynamicFlagsCmdLine
+skip DynFlags.parseDynamicFlagsFull
+skip DynFlags.flagsDynamic
+skip DynFlags.flagsAll
+skip DynFlags.flagsAllDeps
+skip DynFlags.dynamic_flags_deps
+skip DynFlags.setTarget
+skip DynFlags.setTargetWithPlatform
+skip DynFlags.addWay
+skip DynFlags.targetPlatform
+skip DynFlags.interpretPackageEnv
+skip DynFlags.versionedAppDir
+skip DynFlags.setObjTarget
+skip DynFlags.setVerboseCore2Core
+skip DynFlags.initDynFlags
+skip DynFlags.setDumpFlag
+skip DynFlags.setDumpFlag'
+skip DynFlags.forceRecompile
+skip DynFlags.setUnsafeGlobalDynFlags
+skip DynFlags.v_unsafeGlobalDynFlags
+skip DynFlags.defaultHscTarget
+skip DynFlags.defaultObjectTarget
+skip DynFlags.wayGeneralFlags
+skip DynFlags.wayUnsetGeneralFlags
+skip DynFlags.wayOptc
+skip DynFlags.wayOptl
+skip DynFlags.wayOptP
+skip DynFlags.whenGeneratingDynamicToo
+skip DynFlags.default_PIC
+skip DynFlags.ifGeneratingDynamicToo
+skip DynFlags.whenCannotGenerateDynamicToo
+skip DynFlags.ifCannotGenerateDynamicToo
+skip DynFlags.generateDynamicTooConditional
+skip DynFlags.defaultLogActionHPrintDoc
+skip DynFlags.defaultLogActionHPutStrDoc
+skip DynFlags.interpreterDynamic
+skip DynFlags.defaultFatalMessager
+skip DynFlags.defaultLogAction
+skip DynFlags.defaultFlushErr
+skip DynFlags.setLanguage
+skip DynFlags.lang_set
+skip DynFlags.enableGlasgowExts
+skip DynFlags.setExtensionFlag
+skip DynFlags.setExtensionFlag'
+skip DynFlags.disableGlasgowExts
+skip DynFlags.unSetExtensionFlag
+skip DynFlags.unSetExtensionFlag'
+#skip DynFlags.gopt
+skip DynFlags.unSetGeneralFlag
+skip DynFlags.setPackageTrust
+skip DynFlags.flagsPackage
+skip DynFlags.setGeneralFlag
+skip DynFlags.unSetGeneralFlag'
+skip DynFlags.setGeneralFlag'
+skip DynFlags.setDPHOpt
+skip DynFlags.setOptLevel
+skip DynFlags.updOptLevel
+skip DynFlags.wopt
+skip DynFlags.enableUnusedBinds
+skip DynFlags.setWarningFlag
+skip DynFlags.wopt_set
+skip DynFlags.disableUnusedBinds
+skip DynFlags.unSetWarningFlag
+skip DynFlags.wopt_unset
+skip DynFlags.safeImportsOn
+skip DynFlags.setSafeHaskell
+skip DynFlags.combineSafeFlags
+skip DynFlags.depFlagSpecOp
+skip DynFlags.flagSpec'
+skip DynFlags.depFlagSpecOp'
+skip DynFlags.flagGhciSpec'
+skip DynFlags.flagHiddenSpec'
+skip DynFlags.mkFlag
+skip DynFlags.useInstead
+skip DynFlags.nop
+skip DynFlags.dynamicGhc
+skip DynFlags.setWarnSafe
+skip DynFlags.setWarnUnsafe
+skip DynFlags.setGenDeriving
+skip DynFlags.setOverlappingInsts
+skip DynFlags.setIncoherentInsts
+skip DynFlags.checkTemplateHaskellOk
+skip DynFlags.setOptHpcDir
+skip DynFlags.setRtsOptsEnabled
+skip DynFlags.setRtsOpts
+skip DynFlags.addFrameworkPath
+skip DynFlags.addIncludePath
+skip DynFlags.addLibraryPath
+skip DynFlags.addImportPath
+skip DynFlags.setMainIs
+skip DynFlags.distrustPackage
+skip DynFlags.trustPackage
+skip DynFlags.ignorePackage
+skip DynFlags.hidePackage
+skip DynFlags.exposePluginPackageId
+skip DynFlags.exposePluginPackage
+skip DynFlags.exposePackageId
+skip DynFlags.exposePackage
+skip DynFlags.clearPkgConf
+skip DynFlags.removeGlobalPkgConf
+skip DynFlags.removeUserPkgConf
+skip DynFlags.addPkgConfRef
+skip DynFlags.setDebugLevel
+skip DynFlags.setVerbosity
+skip DynFlags.removeWayDyn
+skip DynFlags.floatSuffix
+skip DynFlags.upd
+skip DynFlags.optIntSuffixM
+skip DynFlags.intSuffixM
+skip DynFlags.noArgM
+skip DynFlags.updM
+skip DynFlags.setTmpDir
+skip DynFlags.parseModuleName
+skip DynFlags.setUnitId
+
+
+# CmdLineParser
+skip DynFlags.package_flags_deps
+skip DynFlags.gopt_unset
+skip DynFlags.unrecognisedWarning
+skip DynFlags.make_ord_flag
+skip DynFlags.make_dep_flag
+skip DynFlags.add_dep_message
+skip DynFlags.intSuffix
+skip DynFlags.sepArg
+skip DynFlags.hasArg
+skip DynFlags.noArg
+
+
+# Language Extension
+skip DynFlags.xopt_unset
+skip DynFlags.xopt_set
+skip DynFlags.flattenExtensionFlags
+skip DynFlags.languageExtensions
+skip DynFlags.dopt
+skip DynFlags.xopt
+skip DynFlags.dynFlagDependencies
+skip DynFlags.impliedXFlags
+skip DynFlags.impliedGFlags
+skip DynFlags.supportedExtensions
+skip DynFlags.xFlags
+skip DynFlags.xFlagsDeps
+skip DynFlags.supportedLanguageOverlays
+skip DynFlags.fLangFlags
+skip DynFlags.fLangFlagsDeps
+skip DynFlags.depFlagSpec'
+skip DynFlags.unusedBindsFlags
+skip DynFlags.glasgowExtsFlags
+skip DynFlags.rtsIsProfiled
+
+
 
 # strange deriving behavior
 skip DynFlags.Ord__SseVersion

@@ -4274,6 +4274,13 @@ Proof.
         intuition.
 Qed.
 
+(** *** Specifying [foldl] *)
+
+Lemma foldl_spec:
+  forall {a} f (x : a) s, WF s ->
+    foldl f x s = fold_left f (toList s) x.
+Admitted.
+
 (** ** Instantiating the [FSetInterface] *)
 
 Require Import Coq.FSets.FSetInterface.
@@ -4419,7 +4426,10 @@ Module Foo: WSfun(N_as_OT).
     unfold eq, Equal. intros ???. rewrite H, H0. reflexivity.
   Qed.
 
-  Definition fold : forall A : Type, (elt -> A -> A) -> t -> A -> A. Admitted.
+  Definition fold (A : Type) (f : elt -> A -> A) (ws : t) (x : A) : A :=
+    s <-- ws;;
+    foldl (fun x a => f (Z.to_N a) x) x s.
+
   Definition for_all : (elt -> bool) -> t -> bool. Admitted.
   Definition exists_ : (elt -> bool) -> t -> bool. Admitted.
   Definition filter : (elt -> bool) -> t -> t. Admitted.
@@ -4715,10 +4725,30 @@ Module Foo: WSfun(N_as_OT).
     intuition.
   Qed.
 
+  Lemma fold_left_map:
+    forall {a b c} f (g : a -> b) (x : c) xs,
+    fold_left (fun a e => f a e) (List.map g xs) x
+      = fold_left (fun a e => f a (g e)) xs x.
+  Proof.
+    intros.
+    revert x.
+    induction xs; intros.
+    * reflexivity.
+    * simpl. rewrite IHxs. reflexivity.
+  Qed.
+
   Lemma fold_1 :
     forall (s : t) (A : Type) (i : A) (f : elt -> A -> A),
     fold A f s i =
-    fold_left (fun (a : A) (e : elt) => f e a) (elements s) i. Admitted.
+    fold_left (fun (a : A) (e : elt) => f e a) (elements s) i.
+  Proof.
+    intros.
+    destruct s as [s Hwf].
+    simpl.
+    rewrite fold_left_map.
+    apply foldl_spec; assumption.
+  Qed.
+
   Lemma cardinal_1 : forall s : t, cardinal s = length (elements s). Admitted.
   Lemma filter_1 :
     forall (s : t) (x : elt) (f : elt -> bool),

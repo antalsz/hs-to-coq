@@ -271,7 +271,7 @@ generateRecordAccessors (IndBody tyName params resTy cons) = do
       pure . Equation [MultPattern [ArgsPat con args]] $
                       if hasField
                       then Qualid field
-                      else App1 "error"
+                      else App1 "GHC.Err.error"
                                 (HsString $  "Partial record selector: field `"
                                           <> qualidBase field <> "' has no match in constructor `"
                                           <> qualidBase con <> "' of type `"

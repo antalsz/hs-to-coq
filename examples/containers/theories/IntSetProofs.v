@@ -1,6 +1,4 @@
-(**
-
-* The IntSet formalization
+(** * The IntSet formalization
 
 This module contains a formalization of Haskell's Data.IntSet which implements a set of
 integers as a patricia trie.
@@ -9,12 +7,11 @@ integers as a patricia trie.
 
 Require Import Omega.
 Require Import Coq.ZArith.ZArith.
+Require Import Coq.NArith.NArith.
 Require Import Coq.Bool.Bool.
 Local Open Scope Z_scope.
 
-(**
-
-** An omega that works for [N]
+(** ** An omega that works for [N]
 
 This is mostly to work around https://github.com/coq/coq/issues/6602.
 
@@ -23,9 +20,7 @@ This is mostly to work around https://github.com/coq/coq/issues/6602.
 Ltac Nomega := rewrite ?N.pred_sub in *; zify; omega.
 
 
-(**
-
-** Utility lemmas about [Z], [N] and bits.
+(** ** Utility lemmas about [Z], [N] and bits.
 
 Some of these certainly could live in the standard library.
 
@@ -382,6 +377,121 @@ Proof.
       assumption.
 Qed.
 
+Lemma Pos_1_testbit_succ:
+  forall p i,
+  Pos.testbit p~1 (N.succ i) = Pos.testbit p i.
+Proof.
+  induction i.
+  * reflexivity.
+  * simpl. rewrite Pos.pred_N_succ. reflexivity.
+Qed.
+
+
+Lemma Pos_0_testbit_succ:
+  forall p i,
+  Pos.testbit p~0 (N.succ i) = Pos.testbit p i.
+Proof.
+  induction i.
+  * reflexivity.
+  * simpl. rewrite Pos.pred_N_succ. reflexivity.
+Qed.
+
+Lemma N_bits_impl_le:
+  forall a b,
+  (forall i, N.testbit a i = true -> N.testbit b i = true) ->
+  (a <= b)%N.
+Proof.
+  intros.
+  induction a; try apply N.le_0_l.
+  destruct b.
+  * exfalso.
+    refine (Pbit_faithful_0 p _).
+    intro j.
+    specialize (H (N.of_nat j)).
+    rewrite N.bits_0 in H.
+    simpl in H; rewrite Ptestbit_Pbit in H. 
+    destruct (Pos.testbit_nat p j) eqn:?; intuition.
+  * simpl in *.
+    change (Pos.le p p0).
+    revert p0 H.
+    induction p; intros p0 H.
+    - destruct p0 eqn:?.
+      + change (p <= p1)%positive.
+        apply IHp. intro i.
+        specialize (H (N.succ i)).
+        rewrite !Pos_1_testbit_succ in H.
+        assumption.
+      + exfalso.
+        specialize (H 0%N).
+        simpl in H. intuition congruence.
+      + exfalso.
+        refine (Pbit_faithful_0 p _).
+        intro j.
+        specialize (H (N.succ (N.of_nat j))).
+        rewrite <- Nat2N.inj_succ in H at 2.
+        rewrite Pos_1_testbit_succ, Ptestbit_Pbit in H. 
+        destruct (Pos.testbit_nat p j) eqn:?; intuition.
+    - destruct p0 eqn:?.
+      + transitivity (p1~0)%positive.
+        ** change (p <= p1)%positive.
+          apply IHp. intro i.
+          specialize (H (N.succ i)).
+          rewrite Pos_0_testbit_succ, Pos_1_testbit_succ in H.
+          assumption.
+        ** zify. omega.
+      + change (p <= p1)%positive.
+        apply IHp. intro i.
+        specialize (H (N.succ i)).
+        rewrite !Pos_0_testbit_succ in H.
+        assumption.
+      + exfalso.
+        refine (Pbit_faithful_0 p _).
+        intro j.
+        specialize (H (N.succ (N.of_nat j))).
+        rewrite <- Nat2N.inj_succ in H at 2.
+        rewrite Pos_0_testbit_succ, Ptestbit_Pbit in H. 
+        destruct (Pos.testbit_nat p j) eqn:?; intuition.
+     - apply Pos.le_1_l.
+Qed.
+
+
+Lemma ldiff_le:
+  forall a b,
+  (N.ldiff a b <= a)%N.
+Proof.
+  intros.
+  apply N_bits_impl_le; intros i H.
+  rewrite N.ldiff_spec in *.
+  rewrite andb_true_iff in *.
+  intuition.
+Qed.
+
+Lemma ldiff_lt:
+  forall a b i,
+  N.testbit a i = true ->
+  N.testbit b i = true ->
+  (N.ldiff a b < a)%N.
+Proof.
+  intros.
+  apply N.le_neq; split.
+  * apply ldiff_le.
+  * intro.
+    apply N.bits_inj_iff in H1. specialize (H1 i).
+    rewrite N.ldiff_spec in H1.
+    rewrite H, H0 in H1.
+    inversion H1.
+Qed.
+
+Lemma ldiff_pow2_lt:
+  forall a i,
+  N.testbit a i = true ->
+  (N.ldiff a (2^i) < a)%N.
+Proof.
+  intros.
+  apply ldiff_lt with (i := i); auto.
+  apply N.pow2_bits_true.
+Qed.
+
 
 (** ** Most significant differing bit
 
@@ -627,7 +737,7 @@ Proof.
   intuition.
   apply N.leb_le in H2.
   apply N.leb_le in H3.
-  assert (b1 = b2) by (zify; omega); subst.
+  assert (b1 = b2) by Nomega; subst.
   rewrite -> Z.shiftr_shiftl_l in H by nonneg.
   rewrite -> Z.shiftr_shiftl_l in H1 by nonneg.
   replace (Z.of_N b2 - Z.of_N b2) with 0 in * by omega.
@@ -1873,7 +1983,7 @@ Qed.
 
 
 
-(** *** [rMask]
+(** *** Operation: [rMask]
 Calculates a mask in the sense of the IntSet implementation:
 A single bit set just to the right of the prefix.
 (Somewhat illdefined for singleton ranges).
@@ -2129,6 +2239,45 @@ Proof.
   apply Z.eqb_sym.
 Qed.
 
+Lemma bitmapInRange_pow:
+  forall r e i,
+  (e < 2^rBits r)%N ->
+  bitmapInRange r (2 ^ e)%N i = (rPrefix r + Z.of_N e =? i).
+Proof.
+  intros.
+  destruct r as [p b].
+  unfold bitmapInRange.
+  simpl in *.
+  destruct (Z.eqb_spec (Z.shiftr i (Z.of_N b)) p).
+  * rewrite N.pow2_bits_eqb.
+    transitivity (Z.of_N e =? Z.land i (Z.ones (Z.of_N b))).
+    - rewrite eq_iff_eq_true.
+      rewrite N.eqb_eq, Z.eqb_eq.
+      intuition.
+      subst. rewrite Z2N.id by nonneg. reflexivity.
+      rewrite <- H0. rewrite N2Z.id. reflexivity.
+    - rewrite eq_iff_eq_true.
+      rewrite !Z.eqb_eq.
+      rewrite Z.land_ones by nonneg.
+      rewrite Z.shiftr_div_pow2 in e0 by nonneg.
+      rewrite Z.div_mod with (a := i) (b := 2^Z.of_N b) at 2
+        by (apply Z.pow_nonzero; Nomega).
+      rewrite Z.shiftl_mul_pow2 by nonneg.
+      rewrite Z.mul_comm.
+      subst; omega.
+  * symmetry.
+    rewrite Z.eqb_neq.
+    contradict n.
+    subst.
+    rewrite Z.shiftr_div_pow2 by nonneg.
+    rewrite Z.shiftl_mul_pow2 by nonneg.
+    rewrite Z_div_plus_full_l by (apply Z.pow_nonzero; Nomega).
+    enough (Z.of_N e / 2 ^ Z.of_N b = 0) by omega.
+    apply Z.div_small.
+    split; try nonneg.
+    zify. rewrite -> N2Z.inj_pow in H. apply H.
+Qed.
+
 (** *** Operation: [isTipPrefix]
 
 A Tip prefix is a number with [N.log2 WIDTH] zeros at the end.
@@ -2334,7 +2483,7 @@ Proof.
   intuition.
 Qed.
 
-(** ** Lemmas about [revNat] *)
+(** *** Lemmas about [revNat] *)
 
 Require RevNatSlowProofs.
 
@@ -2438,6 +2587,86 @@ Proof.
     symmetry.
     apply N.pow2_bits_false.
     Nomega.
+Qed.
+
+(** *** Lemmas about [highestBitMask] and [lowestBitMask] *)
+
+Lemma highestBitMask_pow:
+  forall bm,
+    isBitMask bm ->
+    highestBitMask bm = (2^N.log2 bm)%N.
+Proof.
+  intros.
+  reflexivity.
+Qed.
+
+(**
+   This lemma essentially repeats the edit that we made.
+   A stretch-goal would be to retain the original definintion
+   (with [negate] replaced by [2^WIDTH - _]) and prove this lemma.
+ *)
+Lemma lowestBitMask_highestBitMask:
+  forall bm,
+    isBitMask bm ->
+    lowestBitMask bm = revNatSafe (highestBitMask (revNatSafe bm)).
+Proof. intros. reflexivity. Qed.
+
+
+Lemma isBitMask_highestBitMask:
+  forall bm, isBitMask bm -> isBitMask (highestBitMask bm).
+Proof.
+  intros.
+  split.
+  * change (0 < 2^N.log2 bm)%N.
+    apply N_pow_pos_nonneg; Nomega.
+  * apply N.pow_lt_mono_r.
+    Nomega.
+    (apply N.log2_lt_pow2; apply H).
+Qed.
+Hint Resolve isBitMask_highestBitMask : isBitMask.
+
+Lemma isBitMask0_lowestBitMask:
+  forall bm, isBitMask bm -> isBitMask (lowestBitMask bm).
+Proof.
+  intros.
+  rewrite lowestBitMask_highestBitMask by assumption.
+  isBitMask.
+Qed.
+
+Lemma lxor_highestBitMask:
+  forall bm,
+  isBitMask bm ->
+  N.lxor bm (highestBitMask bm) = N.ldiff bm (highestBitMask bm).
+Proof.
+  intros.
+  unfold highestBitMask.
+  apply N.bits_inj. intro j.
+  rewrite N.lxor_spec, N.ldiff_spec, N.pow2_bits_eqb.
+  destruct (N.eqb_spec (N.log2 bm) j).
+  * subst.
+    destruct (N.testbit _ _) eqn:?; try reflexivity; exfalso.
+    rewrite N.bit_log2 in Heqb by (unfold isBitMask in H; Nomega).
+    congruence.
+  * destruct (N.testbit _ _) eqn:?; try reflexivity.
+Qed.
+
+
+Lemma split_highestBitMask:
+  forall bm,
+  isBitMask bm ->
+  bm = N.lor (N.ldiff bm (highestBitMask bm)) (highestBitMask bm).
+Proof.
+  intros.
+  rewrite !highestBitMask_pow by assumption.
+  apply N.bits_inj; intro j.
+  rewrite N.lor_spec, N.ldiff_spec.
+  rewrite !N.pow2_bits_eqb.
+  destruct (N.eqb_spec (N.log2 bm) j).
+  * subst.
+    destruct (N.testbit _ _) eqn:?; try reflexivity; exfalso.
+    rewrite N.bit_log2 in Heqb by (unfold isBitMask in *; Nomega).
+    congruence.
+  * destruct (N.testbit _ _) eqn:?; try reflexivity.
 Qed.
 
 
@@ -3285,7 +3514,7 @@ Proof.
   intro i. reflexivity.
 Qed.
 
-(** ** Specifing [union] *)
+(** *** Specifing [union] *)
 
 (** The following is copied from the body of [union] *)
 
@@ -3429,7 +3658,7 @@ Proof.
   eexists. apply union_Sem; eassumption.
 Qed.
 
-(** ** Specifing [intersection] *)
+(** *** Specifing [intersection] *)
 
 (** The following is copied from the body of [intersection] *)
 
@@ -3697,7 +3926,7 @@ Proof.
   eexists. apply intersection_Sem; eassumption.
 Qed.
 
-(** ** Specifing [difference] *)
+(** *** Specifing [difference] *)
 
 (** The following is copied from the body of [difference] *)
 
@@ -3901,58 +4130,12 @@ Proof.
   eexists. apply difference_Sem; eassumption.
 Qed.
 
-(** ** Specifing [foldr] *)
+(** *** Specifing [foldr] *)
 
 
-
-
-(** ** Specifing [toList] *)
-
-
+(** Until we switch to [deferredFix], this will have to do. *)
 Axiom unsafeFix_eq : forall a (f : a -> a),
   unsafeFix f = f (unsafeFix f).
-
-Lemma highestBitMask_pow:
-  forall bm,
-    isBitMask bm ->
-    highestBitMask bm = (2^N.log2 bm)%N.
-Proof.
-  intros.
-  reflexivity.
-Qed.
-
-(* This lemma essentially repeats the edit that we made.
-   A stretch-goal would be to retain the original definintion
-   (with [negate] replaced by [2^WIDTH - _]) and prove this lemma.
- *)
-Lemma lowestBitMask_highestBitMask:
-  forall bm,
-    isBitMask bm ->
-    lowestBitMask bm = revNatSafe (highestBitMask (revNatSafe bm)).
-Proof. intros. reflexivity. Qed.
-
-
-Lemma isBitMask_highestBitMask:
-  forall bm, isBitMask bm -> isBitMask (highestBitMask bm).
-Proof.
-  intros.
-  split.
-  * change (0 < 2^N.log2 bm)%N.
-    apply N_pow_pos_nonneg; Nomega.
-  * apply N.pow_lt_mono_r.
-    Nomega.
-    (apply N.log2_lt_pow2; apply H).
-Qed.
-Hint Resolve isBitMask_highestBitMask : isBitMask.
-
-Lemma isBitMask0_lowestBitMask:
-  forall bm, isBitMask bm -> isBitMask (lowestBitMask bm).
-Proof.
-  intros.
-  rewrite lowestBitMask_highestBitMask by assumption.
-  isBitMask.
-Qed.
-
 
 
 (* We can extract the argument to [unsafeFix] from the definition of [foldrBits]. *)
@@ -3963,200 +4146,17 @@ Proof.
   match foldrBits_rhs with context[ unsafeFix ?f _ ] => exact f end.
 Defined.
 
+(** This lemma will encapsulate the termination proof, so that the rest of the proof
+ will not have to be modified. *)
+Lemma foldrBits_go_eq {a} (p : Int) (f : Int -> a -> a) :
+  unsafeFix (foldrBits_go p f) = foldrBits_go p f (unsafeFix (foldrBits_go p f)).
+Proof. apply unsafeFix_eq. Qed.
+
+(** *** Specifing [toList] *)
+
 Lemma In_cons_iff:
   forall {a} (y x : a) xs, In y (x :: xs) <-> x = y \/ In y xs.
 Proof. intros. reflexivity. Qed.
-
-
-Lemma lxor_highestBitMask:
-  forall bm,
-  isBitMask bm ->
-  N.lxor bm (highestBitMask bm) = N.ldiff bm (highestBitMask bm).
-Proof.
-  intros.
-  unfold highestBitMask.
-  apply N.bits_inj. intro j.
-  rewrite N.lxor_spec, N.ldiff_spec, N.pow2_bits_eqb.
-  destruct (N.eqb_spec (N.log2 bm) j).
-  * subst.
-    split_bool; try reflexivity; exfalso.
-    rewrite N.bit_log2 in Heqb by (unfold isBitMask in H; Nomega).
-    congruence.
-  * split_bool; try reflexivity.
-Qed.
-
-Lemma bitmapInRange_pow:
-  forall r e i,
-  (e < 2^rBits r)%N ->
-  bitmapInRange r (2 ^ e)%N i = (rPrefix r + Z.of_N e =? i).
-Proof.
-  intros.
-  destruct r as [p b].
-  unfold bitmapInRange.
-  simpl in *.
-  destruct (Z.eqb_spec (Z.shiftr i (Z.of_N b)) p).
-  * rewrite N.pow2_bits_eqb.
-    transitivity (Z.of_N e =? Z.land i (Z.ones (Z.of_N b))).
-    - rewrite eq_iff_eq_true.
-      rewrite N.eqb_eq, Z.eqb_eq.
-      intuition.
-      subst. rewrite Z2N.id by nonneg. reflexivity.
-      rewrite <- H0. rewrite N2Z.id. reflexivity.
-    - rewrite eq_iff_eq_true.
-      rewrite !Z.eqb_eq.
-      rewrite Z.land_ones by nonneg.
-      rewrite Z.shiftr_div_pow2 in e0 by nonneg.
-      rewrite Z.div_mod with (a := i) (b := 2^Z.of_N b) at 2
-        by (apply Z.pow_nonzero; Nomega).
-      rewrite Z.shiftl_mul_pow2 by nonneg.
-      rewrite Z.mul_comm.
-      subst; omega.
-  * symmetry.
-    rewrite Z.eqb_neq.
-    contradict n.
-    subst.
-    rewrite Z.shiftr_div_pow2 by nonneg.
-    rewrite Z.shiftl_mul_pow2 by nonneg.
-    rewrite Z_div_plus_full_l by (apply Z.pow_nonzero; Nomega).
-    enough (Z.of_N e / 2 ^ Z.of_N b = 0) by omega.
-    apply Z.div_small.
-    split; try nonneg.
-    zify.  rewrite -> N2Z.inj_pow in H. apply H.
-Qed.
-
-Lemma Pos_1_testbit_succ:
-  forall p i,
-  Pos.testbit p~1 (N.succ i) = Pos.testbit p i.
-Proof.
-  induction i.
-  * reflexivity.
-  * simpl. rewrite Pos.pred_N_succ. reflexivity.
-Qed.
-
-
-Lemma Pos_0_testbit_succ:
-  forall p i,
-  Pos.testbit p~0 (N.succ i) = Pos.testbit p i.
-Proof.
-  induction i.
-  * reflexivity.
-  * simpl. rewrite Pos.pred_N_succ. reflexivity.
-Qed.
-
-Lemma N_bits_impl_le:
-  forall a b,
-  (forall i, N.testbit a i = true -> N.testbit b i = true) ->
-  (a <= b)%N.
-Proof.
-  intros.
-  induction a; try apply N.le_0_l.
-  destruct b.
-  * exfalso.
-    refine (Pbit_faithful_0 p _).
-    intro j.
-    specialize (H (N.of_nat j)).
-    rewrite N.bits_0 in H.
-    simpl in H; rewrite Ptestbit_Pbit in H. 
-    destruct (Pos.testbit_nat p j) eqn:?; intuition.
-  * simpl in *.
-    change (Pos.le p p0).
-    revert p0 H.
-    induction p; intros p0 H.
-    - destruct p0 eqn:?.
-      + change (p <= p1)%positive.
-        apply IHp. intro i.
-        specialize (H (N.succ i)).
-        rewrite !Pos_1_testbit_succ in H.
-        assumption.
-      + exfalso.
-        specialize (H 0%N).
-        simpl in H. intuition congruence.
-      + exfalso.
-        refine (Pbit_faithful_0 p _).
-        intro j.
-        specialize (H (N.succ (N.of_nat j))).
-        rewrite <- Nat2N.inj_succ in H at 2.
-        rewrite Pos_1_testbit_succ, Ptestbit_Pbit in H. 
-        destruct (Pos.testbit_nat p j) eqn:?; intuition.
-    - destruct p0 eqn:?.
-      + transitivity (p1~0)%positive.
-        ** change (p <= p1)%positive.
-          apply IHp. intro i.
-          specialize (H (N.succ i)).
-          rewrite Pos_0_testbit_succ, Pos_1_testbit_succ in H.
-          assumption.
-        ** zify. omega.
-      + change (p <= p1)%positive.
-        apply IHp. intro i.
-        specialize (H (N.succ i)).
-        rewrite !Pos_0_testbit_succ in H.
-        assumption.
-      + exfalso.
-        refine (Pbit_faithful_0 p _).
-        intro j.
-        specialize (H (N.succ (N.of_nat j))).
-        rewrite <- Nat2N.inj_succ in H at 2.
-        rewrite Pos_0_testbit_succ, Ptestbit_Pbit in H. 
-        destruct (Pos.testbit_nat p j) eqn:?; intuition.
-     - apply Pos.le_1_l.
-Qed.
-
-
-Lemma ldiff_le:
-  forall a b,
-  (N.ldiff a b <= a)%N.
-Proof.
-  intros.
-  apply N_bits_impl_le; intros i H.
-  rewrite N.ldiff_spec in *.
-  rewrite andb_true_iff in *.
-  intuition.
-Qed.
-
-Lemma ldiff_lt:
-  forall a b i,
-  N.testbit a i = true ->
-  N.testbit b i = true ->
-  (N.ldiff a b < a)%N.
-Proof.
-  intros.
-  apply N.le_neq; split.
-  * apply ldiff_le.
-  * intro.
-    apply N.bits_inj_iff in H1. specialize (H1 i).
-    rewrite N.ldiff_spec in H1.
-    rewrite H, H0 in H1.
-    inversion H1.
-Qed.
-
-Lemma ldiff_pow2_lt:
-  forall a i,
-  N.testbit a i = true ->
-  (N.ldiff a (2^i) < a)%N.
-Proof.
-  intros.
-  apply ldiff_lt with (i := i); auto.
-  apply N.pow2_bits_true.
-Qed.
-
-Lemma split_highestBitMask:
-  forall bm,
-  isBitMask bm ->
-  bm = N.lor (N.ldiff bm (highestBitMask bm)) (highestBitMask bm).
-Proof.
-  intros.
-  rewrite !highestBitMask_pow by assumption.
-  apply N.bits_inj; intro j.
-  rewrite N.lor_spec, N.ldiff_spec.
-  rewrite !N.pow2_bits_eqb.
-  destruct (N.eqb_spec (N.log2 bm) j).
-  * subst.
-    split_bool; try reflexivity; exfalso.
-    rewrite N.bit_log2 in Heqb by (unfold isBitMask in *; Nomega).
-    congruence.
-  * split_bool; try reflexivity.
-Qed.
-
 
 Lemma In_foldrBits_cons:
   forall i r bm l,
@@ -4176,7 +4176,7 @@ Proof.
   apply well_founded_ind with (R := N.lt) (a := bm); try apply N.lt_wf_0.
   clear bm. intros bm IH l Hsmall.
 
-  rewrite unsafeFix_eq; unfold foldrBits_go at 1. unfoldMethods.
+  rewrite foldrBits_go_eq; unfold foldrBits_go at 1. unfoldMethods.
   rewrite revNat_eqb_0 by assumption.
   destruct (N.eqb_spec bm 0%N).
   * subst. 
@@ -4210,7 +4210,7 @@ Proof.
         with (rPrefix r + Z.of_N (N.log2 bm)) by (unfold WIDTH in *; Nomega).
     rewrite bitmapInRange_pow by (replace (rBits r); apply H).
     rewrite Z.eqb_eq.
-    tauto.
+    solve [tauto].
 Qed.
 
 Definition toList_go :=

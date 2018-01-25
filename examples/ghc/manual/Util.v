@@ -23,7 +23,7 @@ Require Data.Bits.
 Require Data.Either.
 Require Data.Foldable.
 (* Require Data.IORef. *)
-Require Data.IntMap.Base.
+Require Data.IntMap.Internal.
 Require Data.OldList.
 Require Data.Ord.
 (* Require Data.Set.Base.
@@ -473,13 +473,13 @@ Definition mapSnd {b} {c} {a} : (b -> c) -> list (a * b)%type -> list (a *
 
 (* Needs more from GHC.Real.^
 Definition matchVectors {bv} `{Data.Bits.Bits bv} `{GHC.Num.Num bv}
-    : GHC.Base.String -> Data.IntMap.Base.IntMap bv :=
+    : GHC.Base.String -> Data.IntMap.Internal.IntMap bv :=
   let go :=
     fun arg_128__ arg_129__ =>
       match arg_128__ , arg_129__ with
         | pair ix im , char =>
           let im' :=
-              Data.IntMap.Base.insertWith
+              Data.IntMap.Internal.insertWith
                 _Data.Bits..|._ (GHC.Char.ord char)
                 (GHC.Num.fromInteger 2 GHC.Real.^ ix) im in
           let ix' := ix GHC.Num.+ GHC.Num.fromInteger 1 in
@@ -487,7 +487,7 @@ Definition matchVectors {bv} `{Data.Bits.Bits bv} `{GHC.Num.Num bv}
               end in
           Data.Tuple.snd GHC.Base.∘ Data.Foldable.foldl' go
                          (pair (GHC.Num.fromInteger
-                                  0 : GHC.Num.Int) Data.IntMap.Base.empty).
+                                  0 : GHC.Num.Int) Data.IntMap.Internal.empty).
 *)
 
 (*

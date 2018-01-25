@@ -17,10 +17,10 @@ Require Coq.Program.Wf.
 
 Require Coq.Init.Datatypes.
 Require Coq.Lists.List.
-Require Data.Map.Base.
+Require Data.Map.Internal.
 Require Data.OldList.
 Require Data.Ord.
-Require Data.Set.Base.
+Require Data.Set.Internal.
 Require Data.Tuple.
 Require FastString.
 Require FiniteMap.
@@ -45,11 +45,11 @@ Inductive Module : Type := Mk_Module : UnitId -> ModuleName -> Module.
 
 Inductive NDModule : Type := Mk_NDModule : Module -> NDModule.
 
-Inductive ModuleEnv elt : Type := Mk_ModuleEnv : (Data.Map.Base.Map NDModule
+Inductive ModuleEnv elt : Type := Mk_ModuleEnv : (Data.Map.Internal.Map NDModule
                                                  elt) -> ModuleEnv elt.
 
 Definition ModuleSet :=
-  (Data.Set.Base.Set_ NDModule)%type.
+  (Data.Set.Internal.Set_ NDModule)%type.
 
 Inductive ModLocation : Type := Mk_ModLocation : option
                                                  GHC.Base.String -> GHC.Base.String -> GHC.Base.String -> ModLocation.
@@ -429,7 +429,8 @@ Program Instance Ord__NDModule : GHC.Base.Ord NDModule := fun _ k =>
 Definition delModuleEnv {a} : ModuleEnv a -> Module -> ModuleEnv a :=
   fun arg_0__ arg_1__ =>
     match arg_0__ , arg_1__ with
-      | Mk_ModuleEnv e , m => Mk_ModuleEnv (Data.Map.Base.delete (Mk_NDModule m) e)
+      | Mk_ModuleEnv e , m => Mk_ModuleEnv (Data.Map.Internal.delete (Mk_NDModule m)
+                                           e)
     end.
 
 Definition delModuleEnvList {a} : ModuleEnv a -> list Module -> ModuleEnv a :=
@@ -442,23 +443,23 @@ Definition delModuleEnvList {a} : ModuleEnv a -> list Module -> ModuleEnv a :=
 Definition elemModuleEnv {a} : Module -> ModuleEnv a -> bool :=
   fun arg_0__ arg_1__ =>
     match arg_0__ , arg_1__ with
-      | m , Mk_ModuleEnv e => Data.Map.Base.member (Mk_NDModule m) e
+      | m , Mk_ModuleEnv e => Data.Map.Internal.member (Mk_NDModule m) e
     end.
 
 Definition elemModuleSet : Module -> ModuleSet -> bool :=
-  Data.Set.Base.member GHC.Base.∘ GHC.Prim.coerce.
+  Data.Set.Internal.member GHC.Base.∘ GHC.Prim.coerce.
 
 Definition emptyModuleEnv {a} : ModuleEnv a :=
-  Mk_ModuleEnv Data.Map.Base.empty.
+  Mk_ModuleEnv Data.Map.Internal.empty.
 
 Definition emptyModuleSet : ModuleSet :=
-  Data.Set.Base.empty.
+  Data.Set.Internal.empty.
 
 Definition extendModuleEnv {a} : ModuleEnv a -> Module -> a -> ModuleEnv a :=
   fun arg_0__ arg_1__ arg_2__ =>
     match arg_0__ , arg_1__ , arg_2__ with
-      | Mk_ModuleEnv e , m , x => Mk_ModuleEnv (Data.Map.Base.insert (Mk_NDModule m) x
-                                               e)
+      | Mk_ModuleEnv e , m , x => Mk_ModuleEnv (Data.Map.Internal.insert (Mk_NDModule
+                                                                         m) x e)
     end.
 
 Definition extendModuleEnvList {a} : ModuleEnv a -> list (Module *
@@ -489,19 +490,19 @@ Definition extendModuleEnvWith {a} : (a -> a -> a) -> ModuleEnv
                                      a -> Module -> a -> ModuleEnv a :=
   fun arg_0__ arg_1__ arg_2__ arg_3__ =>
     match arg_0__ , arg_1__ , arg_2__ , arg_3__ with
-      | f , Mk_ModuleEnv e , m , x => Mk_ModuleEnv (Data.Map.Base.insertWith f
+      | f , Mk_ModuleEnv e , m , x => Mk_ModuleEnv (Data.Map.Internal.insertWith f
                                                    (Mk_NDModule m) x e)
     end.
 
 Definition extendModuleSet : ModuleSet -> Module -> ModuleSet :=
-  fun s m => Data.Set.Base.insert (Mk_NDModule m) s.
+  fun s m => Data.Set.Internal.insert (Mk_NDModule m) s.
 
 Definition filterModuleEnv {a} : (Module -> a -> bool) -> ModuleEnv
                                  a -> ModuleEnv a :=
   fun arg_0__ arg_1__ =>
     match arg_0__ , arg_1__ with
-      | f , Mk_ModuleEnv e => Mk_ModuleEnv (Data.Map.Base.filterWithKey (f GHC.Base.∘
-                                                                        unNDModule) e)
+      | f , Mk_ModuleEnv e => Mk_ModuleEnv (Data.Map.Internal.filterWithKey (f
+                                                                            GHC.Base.∘ unNDModule) e)
     end.
 
 Definition foldModuleEnv {a} {b} : (a -> b -> b) -> b -> ModuleEnv a -> b :=
@@ -564,28 +565,32 @@ Definition wiredInUnitIds : list UnitId :=
                                                                                                 dphParUnitId nil))))))).
 
 Definition isEmptyModuleEnv {a} : ModuleEnv a -> bool :=
-  fun arg_0__ => match arg_0__ with | Mk_ModuleEnv e => Data.Map.Base.null e end.
+  fun arg_0__ =>
+    match arg_0__ with
+      | Mk_ModuleEnv e => Data.Map.Internal.null e
+    end.
 
 Definition lookupModuleEnv {a} : ModuleEnv a -> Module -> option a :=
   fun arg_0__ arg_1__ =>
     match arg_0__ , arg_1__ with
-      | Mk_ModuleEnv e , m => Data.Map.Base.lookup (Mk_NDModule m) e
+      | Mk_ModuleEnv e , m => Data.Map.Internal.lookup (Mk_NDModule m) e
     end.
 
 Definition lookupWithDefaultModuleEnv {a} : ModuleEnv a -> a -> Module -> a :=
   fun arg_0__ arg_1__ arg_2__ =>
     match arg_0__ , arg_1__ , arg_2__ with
-      | Mk_ModuleEnv e , x , m => Data.Map.Base.findWithDefault x (Mk_NDModule m) e
+      | Mk_ModuleEnv e , x , m => Data.Map.Internal.findWithDefault x (Mk_NDModule m)
+                                  e
     end.
 
 Definition mapModuleEnv {a} {b} : (a -> b) -> ModuleEnv a -> ModuleEnv b :=
   fun arg_0__ arg_1__ =>
     match arg_0__ , arg_1__ with
-      | f , Mk_ModuleEnv e => Mk_ModuleEnv (Data.Map.Base.mapWithKey (fun arg_2__
-                                                                          arg_3__ =>
-                                                                       match arg_2__ , arg_3__ with
-                                                                         | _ , v => f v
-                                                                       end) e)
+      | f , Mk_ModuleEnv e => Mk_ModuleEnv (Data.Map.Internal.mapWithKey (fun arg_2__
+                                                                              arg_3__ =>
+                                                                           match arg_2__ , arg_3__ with
+                                                                             | _ , v => f v
+                                                                           end) e)
     end.
 
 Definition mkModule : UnitId -> ModuleName -> Module :=
@@ -593,23 +598,23 @@ Definition mkModule : UnitId -> ModuleName -> Module :=
 
 Definition mkModuleEnv {a} : list (Module * a)%type -> ModuleEnv a :=
   fun xs =>
-    Mk_ModuleEnv (Data.Map.Base.fromList (let cont_0__ arg_1__ :=
-                                           match arg_1__ with
-                                             | pair k v => cons (pair (Mk_NDModule k) v) nil
-                                           end in
-                                         Coq.Lists.List.flat_map cont_0__ xs)).
+    Mk_ModuleEnv (Data.Map.Internal.fromList (let cont_0__ arg_1__ :=
+                                               match arg_1__ with
+                                                 | pair k v => cons (pair (Mk_NDModule k) v) nil
+                                               end in
+                                             Coq.Lists.List.flat_map cont_0__ xs)).
 
 Definition mkModuleNameFS : FastString.FastString -> ModuleName :=
   fun s => Mk_ModuleName s.
 
 Definition mkModuleSet : list Module -> ModuleSet :=
-  Data.Set.Base.fromList GHC.Base.∘ GHC.Prim.coerce.
+  Data.Set.Internal.fromList GHC.Base.∘ GHC.Prim.coerce.
 
 Definition moduleEnvKeys {a} : ModuleEnv a -> list Module :=
   fun arg_0__ =>
     match arg_0__ with
       | Mk_ModuleEnv e => Data.OldList.sort GHC.Base.$ (GHC.Base.map unNDModule
-                          GHC.Base.$ Data.Map.Base.keys e)
+                          GHC.Base.$ Data.Map.Internal.keys e)
     end.
 
 Definition moduleEnvToList {a} : ModuleEnv a -> list (Module * a)%type :=
@@ -620,7 +625,7 @@ Definition moduleEnvToList {a} : ModuleEnv a -> list (Module * a)%type :=
                             match arg_2__ with
                               | pair (Mk_NDModule m) v => cons (pair m v) nil
                             end in
-                          Coq.Lists.List.flat_map cont_1__ (Data.Map.Base.toList e))
+                          Coq.Lists.List.flat_map cont_1__ (Data.Map.Internal.toList e))
     end.
 
 Definition moduleEnvElts {a} : ModuleEnv a -> list a :=
@@ -647,20 +652,22 @@ Definition moduleNameColons : ModuleName -> GHC.Base.String :=
   dots_to_colons GHC.Base.∘ moduleNameString.
 
 Definition moduleSetElts : ModuleSet -> list Module :=
-  Data.OldList.sort GHC.Base.∘ (GHC.Prim.coerce GHC.Base.∘ Data.Set.Base.toList).
+  Data.OldList.sort GHC.Base.∘ (GHC.Prim.coerce GHC.Base.∘
+  Data.Set.Internal.toList).
 
 Definition plusModuleEnv {a} : ModuleEnv a -> ModuleEnv a -> ModuleEnv a :=
   fun arg_0__ arg_1__ =>
     match arg_0__ , arg_1__ with
-      | Mk_ModuleEnv e1 , Mk_ModuleEnv e2 => Mk_ModuleEnv (Data.Map.Base.union e1 e2)
+      | Mk_ModuleEnv e1 , Mk_ModuleEnv e2 => Mk_ModuleEnv (Data.Map.Internal.union e1
+                                                          e2)
     end.
 
 Definition plusModuleEnv_C {a} : (a -> a -> a) -> ModuleEnv a -> ModuleEnv
                                  a -> ModuleEnv a :=
   fun arg_0__ arg_1__ arg_2__ =>
     match arg_0__ , arg_1__ , arg_2__ with
-      | f , Mk_ModuleEnv e1 , Mk_ModuleEnv e2 => Mk_ModuleEnv (Data.Map.Base.unionWith
-                                                              f e1 e2)
+      | f , Mk_ModuleEnv e1 , Mk_ModuleEnv e2 => Mk_ModuleEnv
+                                                 (Data.Map.Internal.unionWith f e1 e2)
     end.
 
 Definition unitIdFS : UnitId -> FastString.FastString :=
@@ -692,20 +699,21 @@ Definition stableModuleCmp : Module -> Module -> comparison :=
     end.
 
 Definition unitModuleEnv {a} : Module -> a -> ModuleEnv a :=
-  fun m x => Mk_ModuleEnv (Data.Map.Base.singleton (Mk_NDModule m) x).
+  fun m x => Mk_ModuleEnv (Data.Map.Internal.singleton (Mk_NDModule m) x).
 
 (* Unbound variables:
      Eq Gt Lt andb bool comparison cons default false list negb nil op_zt__ option
-     pair true Coq.Init.Datatypes.app Coq.Lists.List.flat_map Data.Map.Base.Map
-     Data.Map.Base.delete Data.Map.Base.empty Data.Map.Base.filterWithKey
-     Data.Map.Base.findWithDefault Data.Map.Base.fromList Data.Map.Base.insert
-     Data.Map.Base.insertWith Data.Map.Base.keys Data.Map.Base.lookup
-     Data.Map.Base.mapWithKey Data.Map.Base.member Data.Map.Base.null
-     Data.Map.Base.singleton Data.Map.Base.toList Data.Map.Base.union
-     Data.Map.Base.unionWith Data.OldList.sort Data.OldList.sortBy Data.Ord.comparing
-     Data.Set.Base.Set_ Data.Set.Base.empty Data.Set.Base.fromList
-     Data.Set.Base.insert Data.Set.Base.member Data.Set.Base.toList Data.Tuple.fst
-     Data.Tuple.snd FastString.FastString FastString.fsLit FastString.mkFastString
+     pair true Coq.Init.Datatypes.app Coq.Lists.List.flat_map Data.Map.Internal.Map
+     Data.Map.Internal.delete Data.Map.Internal.empty Data.Map.Internal.filterWithKey
+     Data.Map.Internal.findWithDefault Data.Map.Internal.fromList
+     Data.Map.Internal.insert Data.Map.Internal.insertWith Data.Map.Internal.keys
+     Data.Map.Internal.lookup Data.Map.Internal.mapWithKey Data.Map.Internal.member
+     Data.Map.Internal.null Data.Map.Internal.singleton Data.Map.Internal.toList
+     Data.Map.Internal.union Data.Map.Internal.unionWith Data.OldList.sort
+     Data.OldList.sortBy Data.Ord.comparing Data.Set.Internal.Set_
+     Data.Set.Internal.empty Data.Set.Internal.fromList Data.Set.Internal.insert
+     Data.Set.Internal.member Data.Set.Internal.toList Data.Tuple.fst Data.Tuple.snd
+     FastString.FastString FastString.fsLit FastString.mkFastString
      FastString.unpackFS FiniteMap.deleteList FiniteMap.foldRightWithKey
      FiniteMap.insertList FiniteMap.insertListWith GHC.Base.Eq_ GHC.Base.Ord
      GHC.Base.String GHC.Base.compare GHC.Base.map GHC.Base.op_z2218U__

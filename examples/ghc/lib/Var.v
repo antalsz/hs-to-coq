@@ -173,6 +173,12 @@ Axiom isExportedId : forall {A : Type}, A.
 
 Axiom isGlobalId : forall {A : Type}, A.
 
+Definition isLocalVar : Core.Var -> bool :=
+  fun v => negb (isGlobalId v).
+
+Definition mustHaveLocalBinding : Core.Var -> bool :=
+  fun var => isLocalVar var.
+
 (* Translating `isGlobalId' failed: using a record pattern for the unknown
    constructor `Id' unsupported *)
 
@@ -192,6 +198,12 @@ Axiom isNonCoVarId : forall {A : Type}, A.
    constructor `Id' unsupported *)
 
 Axiom isTKVar : forall {A : Type}, A.
+
+Definition isTyVar : Core.Var -> bool :=
+  isTKVar.
+
+Definition isTyCoVar : Core.Var -> bool :=
+  fun v => orb (isTyVar v) (isCoVar v).
 
 (* Translating `isTKVar' failed: using a record pattern for the unknown
    constructor `TyVar' unsupported *)
@@ -217,6 +229,24 @@ Axiom mkTyVar : forall {A : Type}, A.
    `TyVar' unsupported *)
 
 Axiom mk_id : forall {A : Type}, A.
+
+Definition mkLocalVar
+    : IdInfo.IdDetails -> Name.Name -> Core.Type_ -> IdInfo.IdInfo -> Id :=
+  fun details name ty info =>
+    mk_id name ty (LocalId Core.NotExported) details info.
+
+Definition mkGlobalVar
+    : IdInfo.IdDetails -> Name.Name -> Core.Type_ -> IdInfo.IdInfo -> Id :=
+  fun details name ty info => mk_id name ty GlobalId details info.
+
+Definition mkExportedLocalVar
+    : IdInfo.IdDetails -> Name.Name -> Core.Type_ -> IdInfo.IdInfo -> Id :=
+  fun details name ty info => mk_id name ty (LocalId Core.Exported) details info.
+
+Definition mkCoVar : Name.Name -> Core.Type_ -> CoVar :=
+  fun name ty =>
+    mk_id name ty (LocalId Core.NotExported) IdInfo.coVarDetails
+    IdInfo.vanillaIdInfo.
 
 (* Translating `mk_id' failed: creating a record with the unknown constructor
    `Id' unsupported *)
@@ -248,6 +278,9 @@ Axiom setTyVarKind : forall {A : Type}, A.
 
 Axiom setVarName : forall {A : Type}, A.
 
+Definition setTyVarName : TyVar -> Name.Name -> TyVar :=
+  setVarName.
+
 (* Translating `setVarName' failed: invalid record upate with non-record-fields
    `realUnique' and `varName' unsupported *)
 
@@ -258,13 +291,20 @@ Axiom setVarType : forall {A : Type}, A.
 
 Axiom setVarUnique : forall {A : Type}, A.
 
+Definition setTyVarUnique : TyVar -> Unique.Unique -> TyVar :=
+  setVarUnique.
+
 (* Translating `setVarUnique' failed: invalid record upate with
    non-record-fields `realUnique' and `varName' unsupported *)
 
-Axiom tcTyVarDetails : forall {A : Type}, A.
+Definition tcTyVarDetails : TyVar -> unit :=
+  fun x => tt.
 
-(* Translating `tcTyVarDetails' failed: using a record pattern for the unknown
-   constructor `TcTyVar' unsupported *)
+Definition tyVarKind : TyVar -> Kind :=
+  varType.
+
+Definition tyVarName : TyVar -> Name.Name :=
+  varName.
 
 Axiom updateTyVarKind : forall {A : Type}, A.
 
@@ -286,48 +326,6 @@ Axiom updateVarTypeM : forall {A : Type}, A.
 (* Translating `updateVarTypeM' failed: invalid record upate with
    non-record-field `varType' unsupported *)
 
-Definition isLocalVar : Core.Var -> bool :=
-  fun v => negb (isGlobalId v).
-
-Definition mustHaveLocalBinding : Core.Var -> bool :=
-  fun var => isLocalVar var.
-
-Definition isTyVar : Core.Var -> bool :=
-  isTKVar.
-
-Definition isTyCoVar : Core.Var -> bool :=
-  fun v => orb (isTyVar v) (isCoVar v).
-
-Definition mkCoVar : Name.Name -> Core.Type_ -> CoVar :=
-  fun name ty =>
-    mk_id name ty (LocalId Core.NotExported) IdInfo.coVarDetails
-    IdInfo.vanillaIdInfo.
-
-Definition mkExportedLocalVar
-    : IdInfo.IdDetails -> Name.Name -> Core.Type_ -> IdInfo.IdInfo -> Id :=
-  fun details name ty info => mk_id name ty (LocalId Core.Exported) details info.
-
-Definition mkGlobalVar
-    : IdInfo.IdDetails -> Name.Name -> Core.Type_ -> IdInfo.IdInfo -> Id :=
-  fun details name ty info => mk_id name ty GlobalId details info.
-
-Definition mkLocalVar
-    : IdInfo.IdDetails -> Name.Name -> Core.Type_ -> IdInfo.IdInfo -> Id :=
-  fun details name ty info =>
-    mk_id name ty (LocalId Core.NotExported) details info.
-
-Definition setTyVarName : TyVar -> Name.Name -> TyVar :=
-  setVarName.
-
-Definition setTyVarUnique : TyVar -> Unique.Unique -> TyVar :=
-  setVarUnique.
-
-Definition tyVarKind : TyVar -> Kind :=
-  varType.
-
-Definition tyVarName : TyVar -> Name.Name :=
-  varName.
-
 Definition varUnique : Core.Var -> Unique.Unique :=
   fun var => Unique.mkUniqueGrimily (realUnique var).
 
@@ -347,7 +345,7 @@ Program Instance Ord__Var : GHC.Base.Ord Core.Var := fun _ k =>
       GHC.Base.min__ := Ord__Var_min |}.
 
 (* Unbound variables:
-     CoVar Kind TyVar bool comparison negb orb realUnique varName varType
+     CoVar Kind TyVar bool comparison negb orb realUnique tt unit varName varType
      Core.ExportFlag Core.Exported Core.NotExported Core.Type_ Core.Var GHC.Base.Eq_
      GHC.Base.Ord GHC.Base.op_zeze__ GHC.Base.op_zg__ GHC.Base.op_zgze__
      GHC.Base.op_zl__ GHC.Base.op_zlze__ IdInfo.IdDetails IdInfo.IdInfo

@@ -104,9 +104,7 @@ endif
 #                    #
 ######################
 
-VFILES:=Data/IntMap.v\
-  Data/IntMap/Base.v\
-  Data/SequenceManual.v\
+VFILES:=Data/SequenceManual.v\
   Utils/Containers/Internal/PtrEquality.v\
   Utils/Containers/Internal/BitUtil.v\
   Data/Set/Internal.v\

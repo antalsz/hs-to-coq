@@ -364,12 +364,24 @@ Axiom familyTyConInjectivityInfo : forall {A : Type}, A.
 (* Translating `familyTyConInjectivityInfo' failed: using a record pattern for
    the unknown constructor `FamilyTyCon' unsupported *)
 
+Definition initRecTc : RecTcChecker :=
+  RC (GHC.Num.fromInteger 100) NameEnv.emptyNameEnv.
+
 Axiom isAbstractTyCon : forall {A : Type}, A.
 
 (* Translating `isAbstractTyCon' failed: using a record pattern for the unknown
    constructor `AlgTyCon' unsupported *)
 
 Axiom isAlgTyCon : forall {A : Type}, A.
+
+Definition tyConFieldLabelEnv : Core.TyCon -> FieldLabel.FieldLabelEnv :=
+  fun tc =>
+    if isAlgTyCon tc : bool
+    then algTcFields tc
+    else FastStringEnv.emptyFsEnv.
+
+Definition tyConFieldLabels : Core.TyCon -> list FieldLabel.FieldLabel :=
+  fun tc => FastStringEnv.fsEnvElts GHC.Base.$ tyConFieldLabelEnv tc.
 
 (* Translating `isAlgTyCon' failed: using a record pattern for the unknown
    constructor `AlgTyCon' unsupported *)
@@ -393,6 +405,9 @@ Axiom isClosedSynFamilyTyConWithAxiom_maybe : forall {A : Type}, A.
 
 (* Translating `isClosedSynFamilyTyConWithAxiom_maybe' failed: using a record
    pattern for the unknown constructor `FamilyTyCon' unsupported *)
+
+Definition isDataFamFlav : FamTyConFlav -> bool :=
+  fun arg_0__ => match arg_0__ with | DataFamilyTyCon _ => true | _ => false end.
 
 Axiom isDataFamilyTyCon : forall {A : Type}, A.
 
@@ -433,6 +448,18 @@ Axiom isGadtSyntaxTyCon : forall {A : Type}, A.
 
 (* Translating `isGadtSyntaxTyCon' failed: using a record pattern for the
    unknown constructor `AlgTyCon' unsupported *)
+
+Definition isGcPtrRep : PrimRep -> bool :=
+  fun arg_0__ => match arg_0__ with | PtrRep => true | _ => false end.
+
+Definition isGenInjAlgRhs : AlgTyConRhs -> bool :=
+  fun arg_0__ =>
+    match arg_0__ with
+      | TupleTyCon _ _ => true
+      | DataTyCon _ _ => true
+      | AbstractTyCon distinct => distinct
+      | NewTyCon _ _ _ _ => false
+    end.
 
 Axiom isGenerativeTyCon : forall {A : Type}, A.
 
@@ -491,6 +518,22 @@ Axiom isPromotedDataCon_maybe : forall {A : Type}, A.
 
 Axiom isRecursiveTyCon : forall {A : Type}, A.
 
+Definition checkRecTc : RecTcChecker -> Core.TyCon -> option RecTcChecker :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
+      | (RC bound rec_nts as rc) , tc => let tc_name := tyConName tc in
+                                         if negb (isRecursiveTyCon tc) : bool
+                                         then Some rc
+                                         else match NameEnv.lookupNameEnv rec_nts tc_name with
+                                                | Some n => if n GHC.Base.>= bound : bool
+                                                            then None
+                                                            else Some (RC bound (NameEnv.extendNameEnv rec_nts tc_name
+                                                                                (n GHC.Num.+ GHC.Num.fromInteger 1)))
+                                                | None => Some (RC bound (NameEnv.extendNameEnv rec_nts tc_name
+                                                                         (GHC.Num.fromInteger 1)))
+                                              end
+    end.
+
 (* Translating `isRecursiveTyCon' failed: using a record pattern for the unknown
    constructor `AlgTyCon' unsupported *)
 
@@ -534,6 +577,9 @@ Axiom isVanillaAlgTyCon : forall {A : Type}, A.
 (* Translating `isVanillaAlgTyCon' failed: using a record pattern for the
    unknown constructor `AlgTyCon' unsupported *)
 
+Definition isVoidRep : PrimRep -> bool :=
+  fun arg_0__ => match arg_0__ with | VoidRep => true | _other => false end.
+
 Axiom mightBeUnsaturatedTyCon : forall {A : Type}, A.
 
 (* Translating `mightBeUnsaturatedTyCon' failed: using a record pattern for the
@@ -555,6 +601,11 @@ Axiom mkFunTyCon : forall {A : Type}, A.
    constructor `FunTyCon' unsupported *)
 
 Axiom mkPrimTyCon' : forall {A : Type}, A.
+
+Definition mkKindTyCon : Name.Name -> list Core.TyBinder -> Kind -> list
+                         Core.Role -> Name.Name -> Core.TyCon :=
+  fun name binders res_kind roles rep_nm =>
+    let tc := mkPrimTyCon' name binders res_kind roles false (Some rep_nm) in tc.
 
 (* Translating `mkPrimTyCon'' failed: creating a record with the unknown
    constructor `PrimTyCon' unsupported *)
@@ -580,6 +631,13 @@ Axiom mkTupleTyCon : forall {A : Type}, A.
    constructor `AlgTyCon' unsupported *)
 
 Axiom newTyConCo_maybe : forall {A : Type}, A.
+
+Definition newTyConCo : Core.TyCon -> Core.CoAxiom Core.Unbranched :=
+  fun tc =>
+    match newTyConCo_maybe tc with
+      | Some co => co
+      | None => Panic.panicStr (GHC.Base.hs_string__ "newTyConCo") (Panic.noString tc)
+    end.
 
 (* Translating `newTyConCo_maybe' failed: using a record pattern for the unknown
    constructor `AlgTyCon' unsupported *)
@@ -613,160 +671,6 @@ Axiom pprPromotionQuote : forall {A : Type}, A.
 
 (* Translating `pprPromotionQuote' failed: using a record pattern for the
    unknown constructor `PromotedDataCon' unsupported *)
-
-Axiom synTyConDefn_maybe : forall {A : Type}, A.
-
-(* Translating `synTyConDefn_maybe' failed: using a record pattern for the
-   unknown constructor `SynonymTyCon' unsupported *)
-
-Axiom synTyConRhs_maybe : forall {A : Type}, A.
-
-(* Translating `synTyConRhs_maybe' failed: using a record pattern for the
-   unknown constructor `SynonymTyCon' unsupported *)
-
-Axiom tyConAssoc_maybe : forall {A : Type}, A.
-
-(* Translating `tyConAssoc_maybe' failed: using a record pattern for the unknown
-   constructor `FamilyTyCon' unsupported *)
-
-Axiom tyConCType_maybe : forall {A : Type}, A.
-
-(* Translating `tyConCType_maybe' failed: using a record pattern for the unknown
-   constructor `AlgTyCon' unsupported *)
-
-Axiom tyConClass_maybe : forall {A : Type}, A.
-
-(* Translating `tyConClass_maybe' failed: using a record pattern for the unknown
-   constructor `AlgTyCon' unsupported *)
-
-Axiom tyConDataCons_maybe : forall {A : Type}, A.
-
-(* Translating `tyConDataCons_maybe' failed: using a record pattern for the
-   unknown constructor `AlgTyCon' unsupported *)
-
-Axiom tyConFamInstSig_maybe : forall {A : Type}, A.
-
-(* Translating `tyConFamInstSig_maybe' failed: using a record pattern for the
-   unknown constructor `AlgTyCon' unsupported *)
-
-Axiom tyConFamInst_maybe : forall {A : Type}, A.
-
-(* Translating `tyConFamInst_maybe' failed: using a record pattern for the
-   unknown constructor `AlgTyCon' unsupported *)
-
-Axiom tyConFamilyCoercion_maybe : forall {A : Type}, A.
-
-(* Translating `tyConFamilyCoercion_maybe' failed: using a record pattern for
-   the unknown constructor `AlgTyCon' unsupported *)
-
-Axiom tyConFamilyResVar_maybe : forall {A : Type}, A.
-
-(* Translating `tyConFamilyResVar_maybe' failed: using a record pattern for the
-   unknown constructor `FamilyTyCon' unsupported *)
-
-Axiom tyConFamilySize : forall {A : Type}, A.
-
-(* Translating `tyConFamilySize' failed: using a record pattern for the unknown
-   constructor `AlgTyCon' unsupported *)
-
-Axiom tyConFlavour : forall {A : Type}, A.
-
-(* Translating `tyConFlavour' failed: using a record pattern for the unknown
-   constructor `AlgTyCon' unsupported *)
-
-Axiom tyConRepName_maybe : forall {A : Type}, A.
-
-(* Translating `tyConRepName_maybe' failed: using a record pattern for the
-   unknown constructor `FunTyCon' unsupported *)
-
-Axiom tyConRoles : forall {A : Type}, A.
-
-(* Translating `tyConRoles' failed: using a record pattern for the unknown
-   constructor `FunTyCon' unsupported *)
-
-Axiom tyConRuntimeRepInfo : forall {A : Type}, A.
-
-(* Translating `tyConRuntimeRepInfo' failed: using a record pattern for the
-   unknown constructor `PromotedDataCon' unsupported *)
-
-Axiom tyConSingleAlgDataCon_maybe : forall {A : Type}, A.
-
-(* Translating `tyConSingleAlgDataCon_maybe' failed: using a record pattern for
-   the unknown constructor `AlgTyCon' unsupported *)
-
-Axiom tyConSingleDataCon_maybe : forall {A : Type}, A.
-
-(* Translating `tyConSingleDataCon_maybe' failed: using a record pattern for the
-   unknown constructor `AlgTyCon' unsupported *)
-
-Axiom tyConStupidTheta : forall {A : Type}, A.
-
-(* Translating `tyConStupidTheta' failed: using a record pattern for the unknown
-   constructor `AlgTyCon' unsupported *)
-
-Axiom tyConTuple_maybe : forall {A : Type}, A.
-
-(* Translating `tyConTuple_maybe' failed: using a record pattern for the unknown
-   constructor `AlgTyCon' unsupported *)
-
-Axiom unwrapNewTyConEtad_maybe : forall {A : Type}, A.
-
-(* Translating `unwrapNewTyConEtad_maybe' failed: using a record pattern for the
-   unknown constructor `AlgTyCon' unsupported *)
-
-Axiom unwrapNewTyCon_maybe : forall {A : Type}, A.
-
-(* Translating `unwrapNewTyCon_maybe' failed: using a record pattern for the
-   unknown constructor `AlgTyCon' unsupported *)
-
-Definition checkRecTc : RecTcChecker -> Core.TyCon -> option RecTcChecker :=
-  fun arg_0__ arg_1__ =>
-    match arg_0__ , arg_1__ with
-      | (RC bound rec_nts as rc) , tc => let tc_name := tyConName tc in
-                                         if negb (isRecursiveTyCon tc) : bool
-                                         then Some rc
-                                         else match NameEnv.lookupNameEnv rec_nts tc_name with
-                                                | Some n => if n GHC.Base.>= bound : bool
-                                                            then None
-                                                            else Some (RC bound (NameEnv.extendNameEnv rec_nts tc_name
-                                                                                (n GHC.Num.+ GHC.Num.fromInteger 1)))
-                                                | None => Some (RC bound (NameEnv.extendNameEnv rec_nts tc_name
-                                                                         (GHC.Num.fromInteger 1)))
-                                              end
-    end.
-
-Definition initRecTc : RecTcChecker :=
-  RC (GHC.Num.fromInteger 100) NameEnv.emptyNameEnv.
-
-Definition isDataFamFlav : FamTyConFlav -> bool :=
-  fun arg_0__ => match arg_0__ with | DataFamilyTyCon _ => true | _ => false end.
-
-Definition isGcPtrRep : PrimRep -> bool :=
-  fun arg_0__ => match arg_0__ with | PtrRep => true | _ => false end.
-
-Definition isGenInjAlgRhs : AlgTyConRhs -> bool :=
-  fun arg_0__ =>
-    match arg_0__ with
-      | TupleTyCon _ _ => true
-      | DataTyCon _ _ => true
-      | AbstractTyCon distinct => distinct
-      | NewTyCon _ _ _ _ => false
-    end.
-
-Definition isVoidRep : PrimRep -> bool :=
-  fun arg_0__ => match arg_0__ with | VoidRep => true | _other => false end.
-
-Definition mkKindTyCon : Name.Name -> list Core.TyBinder -> Kind -> list
-                         Core.Role -> Name.Name -> Core.TyCon :=
-  fun name binders res_kind roles rep_nm =>
-    let tc := mkPrimTyCon' name binders res_kind roles false (Some rep_nm) in tc.
-
-Definition newTyConCo : Core.TyCon -> Core.CoAxiom Core.Unbranched :=
-  fun tc =>
-    match newTyConCo_maybe tc with
-      | Some co => co
-      | None => Panic.panicStr (GHC.Base.hs_string__ "newTyConCo") (Panic.noString tc)
-    end.
 
 Definition primElemRepSizeB : PrimElemRep -> GHC.Num.Int :=
   fun arg_0__ =>
@@ -811,6 +715,28 @@ Definition primRepIsFloat : PrimRep -> option bool :=
       | _ => Some false
     end.
 
+Axiom synTyConDefn_maybe : forall {A : Type}, A.
+
+(* Translating `synTyConDefn_maybe' failed: using a record pattern for the
+   unknown constructor `SynonymTyCon' unsupported *)
+
+Axiom synTyConRhs_maybe : forall {A : Type}, A.
+
+(* Translating `synTyConRhs_maybe' failed: using a record pattern for the
+   unknown constructor `SynonymTyCon' unsupported *)
+
+Axiom tyConCType_maybe : forall {A : Type}, A.
+
+(* Translating `tyConCType_maybe' failed: using a record pattern for the unknown
+   constructor `AlgTyCon' unsupported *)
+
+Axiom tyConClass_maybe : forall {A : Type}, A.
+
+(* Translating `tyConClass_maybe' failed: using a record pattern for the unknown
+   constructor `AlgTyCon' unsupported *)
+
+Axiom tyConDataCons_maybe : forall {A : Type}, A.
+
 Definition tyConDataCons : Core.TyCon -> list DataCon.DataCon :=
   fun tycon => Maybes.orElse (tyConDataCons_maybe tycon) nil.
 
@@ -837,14 +763,38 @@ Definition kindTyConKeys : UniqSet.UniqSet Unique.Unique :=
 Definition isKindTyCon : Core.TyCon -> bool :=
   fun tc => UniqSet.elementOfUniqSet (Unique.getUnique tc) kindTyConKeys.
 
-Definition tyConFieldLabelEnv : Core.TyCon -> FieldLabel.FieldLabelEnv :=
-  fun tc =>
-    if isAlgTyCon tc : bool
-    then algTcFields tc
-    else FastStringEnv.emptyFsEnv.
+(* Translating `tyConDataCons_maybe' failed: using a record pattern for the
+   unknown constructor `AlgTyCon' unsupported *)
 
-Definition tyConFieldLabels : Core.TyCon -> list FieldLabel.FieldLabel :=
-  fun tc => FastStringEnv.fsEnvElts GHC.Base.$ tyConFieldLabelEnv tc.
+Axiom tyConFamInstSig_maybe : forall {A : Type}, A.
+
+(* Translating `tyConFamInstSig_maybe' failed: using a record pattern for the
+   unknown constructor `AlgTyCon' unsupported *)
+
+Axiom tyConFamInst_maybe : forall {A : Type}, A.
+
+(* Translating `tyConFamInst_maybe' failed: using a record pattern for the
+   unknown constructor `AlgTyCon' unsupported *)
+
+Axiom tyConFamilyCoercion_maybe : forall {A : Type}, A.
+
+(* Translating `tyConFamilyCoercion_maybe' failed: using a record pattern for
+   the unknown constructor `AlgTyCon' unsupported *)
+
+Axiom tyConFamilyResVar_maybe : forall {A : Type}, A.
+
+(* Translating `tyConFamilyResVar_maybe' failed: using a record pattern for the
+   unknown constructor `FamilyTyCon' unsupported *)
+
+Axiom tyConFamilySize : forall {A : Type}, A.
+
+(* Translating `tyConFamilySize' failed: using a record pattern for the unknown
+   constructor `AlgTyCon' unsupported *)
+
+Axiom tyConFlavour : forall {A : Type}, A.
+
+(* Translating `tyConFlavour' failed: using a record pattern for the unknown
+   constructor `AlgTyCon' unsupported *)
 
 Definition tyConRepModOcc : Module.Module -> OccName.OccName -> (Module.Module *
                             OccName.OccName)%type :=
@@ -881,6 +831,28 @@ Definition mkLiftedPrimTyCon : Name.Name -> list Core.TyBinder -> Kind -> list
     let rep_nm := mkPrelTyConRepName name in
     mkPrimTyCon' name binders res_kind roles false (Some rep_nm).
 
+Axiom tyConRepName_maybe : forall {A : Type}, A.
+
+(* Translating `tyConRepName_maybe' failed: using a record pattern for the
+   unknown constructor `FunTyCon' unsupported *)
+
+Axiom tyConRoles : forall {A : Type}, A.
+
+(* Translating `tyConRoles' failed: using a record pattern for the unknown
+   constructor `FunTyCon' unsupported *)
+
+Axiom tyConRuntimeRepInfo : forall {A : Type}, A.
+
+(* Translating `tyConRuntimeRepInfo' failed: using a record pattern for the
+   unknown constructor `PromotedDataCon' unsupported *)
+
+Axiom tyConSingleAlgDataCon_maybe : forall {A : Type}, A.
+
+(* Translating `tyConSingleAlgDataCon_maybe' failed: using a record pattern for
+   the unknown constructor `AlgTyCon' unsupported *)
+
+Axiom tyConSingleDataCon_maybe : forall {A : Type}, A.
+
 Definition tyConSingleDataCon : Core.TyCon -> DataCon.DataCon :=
   fun tc =>
     match tyConSingleDataCon_maybe tc with
@@ -888,6 +860,29 @@ Definition tyConSingleDataCon : Core.TyCon -> DataCon.DataCon :=
       | None => Panic.panicStr (GHC.Base.hs_string__ "tyConDataCon") (Panic.noString
                                                                      tc)
     end.
+
+(* Translating `tyConSingleDataCon_maybe' failed: using a record pattern for the
+   unknown constructor `AlgTyCon' unsupported *)
+
+Axiom tyConStupidTheta : forall {A : Type}, A.
+
+(* Translating `tyConStupidTheta' failed: using a record pattern for the unknown
+   constructor `AlgTyCon' unsupported *)
+
+Axiom tyConTuple_maybe : forall {A : Type}, A.
+
+(* Translating `tyConTuple_maybe' failed: using a record pattern for the unknown
+   constructor `AlgTyCon' unsupported *)
+
+Axiom unwrapNewTyConEtad_maybe : forall {A : Type}, A.
+
+(* Translating `unwrapNewTyConEtad_maybe' failed: using a record pattern for the
+   unknown constructor `AlgTyCon' unsupported *)
+
+Axiom unwrapNewTyCon_maybe : forall {A : Type}, A.
+
+(* Translating `unwrapNewTyCon_maybe' failed: using a record pattern for the
+   unknown constructor `AlgTyCon' unsupported *)
 
 Definition visibleDataCons : AlgTyConRhs -> list DataCon.DataCon :=
   fun arg_0__ =>

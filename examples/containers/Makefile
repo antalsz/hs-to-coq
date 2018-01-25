@@ -18,8 +18,6 @@ OUT=lib
 
 # Handwritten modules (usually by modification of generated version)
 HANDMOD = \
-  Data/IntMap \
-  Data/IntMap/Base \
   Data/SequenceManual \
   Utils/Containers/Internal/PtrEquality \
   Utils/Containers/Internal/BitUtil \

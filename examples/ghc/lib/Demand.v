@@ -947,15 +947,15 @@ Definition oneifyDmd : Demand -> Demand :=
 Definition peelCallDmd : CleanDemand -> (CleanDemand * DmdShell)%type :=
   fun arg_0__ =>
     match arg_0__ with
-      | JD s u => match match u with
+      | JD s u => match (match u with
                             | UCall c u' => pair u' (Mk_Use c tt)
                             | _ => pair Used (Mk_Use Many tt)
-                          end with
-                    | pair u' us => match match s with
+                          end) with
+                    | pair u' us => match (match s with
                                               | SCall s' => pair s' (Mk_Str VanStr tt)
                                               | HyperStr => pair HyperStr (Mk_Str VanStr tt)
                                               | _ => pair HeadStr Lazy
-                                            end with
+                                            end) with
                                       | pair s' ss => pair (JD missingValue missingValue) (JD missingValue
                                                                                               missingValue)
                                     end

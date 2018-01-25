@@ -5,6 +5,9 @@ skip module Coercion
 skip module PprCore
 skip module PrimOp
 skip module TysPrim
+skip module Platform
+
+skip CoreUtils.rhsIsStatic
 
 
 skip CoreUtils.applyTypeToArgs

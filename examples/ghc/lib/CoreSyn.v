@@ -891,16 +891,6 @@ Program Instance Ord__AltCon : GHC.Base.Ord AltCon := fun _ k =>
       GHC.Base.max__ := Ord__AltCon_max ;
       GHC.Base.min__ := Ord__AltCon_min |}.
 
-Axiom tickishPlace : forall {A : Type}, A.
-
-(* Translating `tickishPlace' failed: using a record pattern for the unknown
-   constructor `ProfNote' unsupported *)
-
-Axiom tickishScoped : forall {A : Type}, A.
-
-(* Translating `tickishScoped' failed: using a record pattern for the unknown
-   constructor `ProfNote' unsupported *)
-
 Definition bindersOf {b} : Bind b -> list b :=
   fun arg_0__ =>
     match arg_0__ with
@@ -1372,6 +1362,16 @@ Definition setRuleIdName : Name.Name -> CoreRule -> CoreRule :=
       | BuiltinRule ru_name_11__ ru_fn_12__ ru_nargs_13__ ru_try_14__ => BuiltinRule
                                                                          ru_name_11__ nm ru_nargs_13__ ru_try_14__
     end.
+
+Axiom tickishPlace : forall {A : Type}, A.
+
+(* Translating `tickishPlace' failed: using a record pattern for the unknown
+   constructor `ProfNote' unsupported *)
+
+Axiom tickishScoped : forall {A : Type}, A.
+
+(* Translating `tickishScoped' failed: using a record pattern for the unknown
+   constructor `ProfNote' unsupported *)
 
 Definition unSaturatedOk : bool :=
   true.

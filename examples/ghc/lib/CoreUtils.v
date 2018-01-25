@@ -16,8 +16,16 @@ Require Import Core.
 
 (* Converted imports: *)
 
+Require Core.
+Require CoreSyn.
+Require DataCon.
+Require DynFlags.
+Require FastString.
+Require GHC.Base.
 Require GHC.Num.
+Require Unique.
 Require Var.
+Require VarEnv.
 
 (* Converted type declarations: *)
 
@@ -44,134 +52,182 @@ Parameter dataConInstPat : list FastString.FastString -> list
 *)
 (* Converted value declarations: *)
 
-Axiom tryEtaReduce : forall {A : Type}, A.
+Axiom tryEtaReduce : list Core.Var -> CoreSyn.CoreExpr -> option
+                     CoreSyn.CoreExpr.
 
-Axiom exprIsBottom : forall {A : Type}, A.
+Axiom exprIsBottom : CoreSyn.CoreExpr -> bool.
 
-Axiom bindNonRec : forall {A : Type}, A.
+Axiom bindNonRec
+        : Var.Id -> CoreSyn.CoreExpr -> CoreSyn.CoreExpr -> CoreSyn.CoreExpr.
 
-Axiom mkCast : forall {A : Type}, A.
+(* mkCast skipped *)
 
-Axiom coreAltsType : forall {A : Type}, A.
+Axiom coreAltsType : list CoreSyn.CoreAlt -> Core.Type_.
 
-Axiom coreAltType : forall {A : Type}, A.
+(* coreAltType skipped *)
 
-Axiom exprType : forall {A : Type}, A.
+(* exprType skipped *)
 
-Axiom applyTypeToArgs : forall {A : Type}, A.
+(* applyTypeToArgs skipped *)
 
-Axiom mkTickNoHNF : forall {A : Type}, A.
+Axiom mkTickNoHNF : CoreSyn.Tickish
+                    Var.Id -> CoreSyn.CoreExpr -> CoreSyn.CoreExpr.
 
-Axiom combineIdenticalAlts : forall {A : Type}, A.
+Axiom combineIdenticalAlts : list CoreSyn.AltCon -> list
+                             CoreSyn.CoreAlt -> (bool * list CoreSyn.AltCon * list CoreSyn.CoreAlt)%type.
 
-Axiom mkTicks : forall {A : Type}, A.
+Axiom mkTicks : list (CoreSyn.Tickish
+                     Var.Id) -> CoreSyn.CoreExpr -> CoreSyn.CoreExpr.
 
-Axiom tickHNFArgs : forall {A : Type}, A.
+Axiom tickHNFArgs : CoreSyn.Tickish
+                    Var.Id -> CoreSyn.CoreExpr -> CoreSyn.CoreExpr.
 
-Axiom mkTick : forall {A : Type}, A.
+Axiom mkTick : CoreSyn.Tickish Var.Id -> CoreSyn.CoreExpr -> CoreSyn.CoreExpr.
 
-Axiom isSaturatedConApp : forall {A : Type}, A.
+Axiom isSaturatedConApp : CoreSyn.CoreExpr -> bool.
 
-Axiom stripTicksTop : forall {A : Type}, A.
+Axiom stripTicksTop : forall {b},
+                        (CoreSyn.Tickish Var.Id -> bool) -> CoreSyn.Expr b -> (list (CoreSyn.Tickish
+                                                                                    Var.Id) * CoreSyn.Expr b)%type.
 
-Axiom cheapEqExpr : forall {A : Type}, A.
+Axiom cheapEqExpr : forall {b}, CoreSyn.Expr b -> CoreSyn.Expr b -> bool.
 
-Axiom cheapEqExpr' : forall {A : Type}, A.
+Axiom cheapEqExpr' : forall {b},
+                       (CoreSyn.Tickish Var.Id -> bool) -> CoreSyn.Expr b -> CoreSyn.Expr b -> bool.
 
-Axiom exprOkForSideEffects : forall {A : Type}, A.
+Axiom exprOkForSideEffects : forall {b}, CoreSyn.Expr b -> bool.
 
-Axiom needsCaseBinding : forall {A : Type}, A.
+Axiom needsCaseBinding : Core.Type_ -> CoreSyn.CoreExpr -> bool.
 
-Axiom exprOkForSpeculation : forall {A : Type}, A.
+Axiom exprOkForSpeculation : forall {b}, CoreSyn.Expr b -> bool.
 
-Axiom app_ok : forall {A : Type}, A.
+Axiom app_ok : forall {b},
+                 (unit -> bool) -> Var.Id -> list (CoreSyn.Expr b) -> bool.
 
-Axiom expr_ok : forall {A : Type}, A.
+Axiom expr_ok : forall {b}, (unit -> bool) -> CoreSyn.Expr b -> bool.
 
-Axiom stripTicksTopE : forall {A : Type}, A.
+Axiom stripTicksTopE : forall {b},
+                         (CoreSyn.Tickish Var.Id -> bool) -> CoreSyn.Expr b -> CoreSyn.Expr b.
 
-Axiom stripTicksTopT : forall {A : Type}, A.
+Axiom stripTicksTopT : forall {b},
+                         (CoreSyn.Tickish Var.Id -> bool) -> CoreSyn.Expr b -> list (CoreSyn.Tickish
+                                                                                    Var.Id).
 
-Axiom stripTicksE : forall {A : Type}, A.
+Axiom stripTicksE : forall {b},
+                      (CoreSyn.Tickish Var.Id -> bool) -> CoreSyn.Expr b -> CoreSyn.Expr b.
 
-Axiom stripTicksT : forall {A : Type}, A.
+Axiom stripTicksT : forall {b},
+                      (CoreSyn.Tickish Var.Id -> bool) -> CoreSyn.Expr b -> list (CoreSyn.Tickish
+                                                                                 Var.Id).
 
-Axiom mkAltExpr : forall {A : Type}, A.
+Axiom mkAltExpr : CoreSyn.AltCon -> list CoreSyn.CoreBndr -> list
+                  Core.Type_ -> CoreSyn.CoreExpr.
 
-Axiom filterAlts : forall {A : Type}, A.
+Axiom filterAlts : forall {a},
+                     Core.TyCon -> list Core.Type_ -> list CoreSyn.AltCon -> list (CoreSyn.AltCon *
+                                                                                  list Core.Var * a)%type -> (list
+                     CoreSyn.AltCon * list (CoreSyn.AltCon * list Core.Var * a)%type)%type.
 
-Axiom findDefault : forall {A : Type}, A.
+Axiom findDefault : forall {a} {b},
+                      list (CoreSyn.AltCon * list a * b)%type -> (list (CoreSyn.AltCon * list a *
+                                                                       b)%type * option b)%type.
 
-Axiom addDefault : forall {A : Type}, A.
+Axiom addDefault : forall {a} {b},
+                     list (CoreSyn.AltCon * list a * b)%type -> option b -> list (CoreSyn.AltCon *
+                                                                                 list a * b)%type.
 
-Axiom isDefaultAlt : forall {A : Type}, A.
+Axiom isDefaultAlt : forall {a} {b}, (CoreSyn.AltCon * a * b)%type -> bool.
 
-Axiom findAlt : forall {A : Type}, A.
+Axiom findAlt : forall {a} {b},
+                  CoreSyn.AltCon -> list (CoreSyn.AltCon * a * b)%type -> option (CoreSyn.AltCon *
+                                                                                 a * b)%type.
 
-Axiom refineDefaultAlt : forall {A : Type}, A.
+Axiom refineDefaultAlt : list Unique.Unique -> Core.TyCon -> list
+                         Core.Type_ -> list CoreSyn.AltCon -> list CoreSyn.CoreAlt -> (bool * list
+                         CoreSyn.CoreAlt)%type.
 
-Axiom mergeAlts : forall {A : Type}, A.
+Axiom mergeAlts : forall {a} {b},
+                    list (CoreSyn.AltCon * a * b)%type -> list (CoreSyn.AltCon * a * b)%type -> list
+                    (CoreSyn.AltCon * a * b)%type.
 
-Axiom trimConArgs : forall {A : Type}, A.
+Axiom trimConArgs : CoreSyn.AltCon -> list CoreSyn.CoreArg -> list
+                    CoreSyn.CoreArg.
 
-Axiom exprIsTrivial : forall {A : Type}, A.
+Axiom exprIsTrivial : CoreSyn.CoreExpr -> bool.
 
-Axiom getIdFromTrivialExpr : forall {A : Type}, A.
+Axiom getIdFromTrivialExpr : CoreSyn.CoreExpr -> Var.Id.
 
-Axiom getIdFromTrivialExpr_maybe : forall {A : Type}, A.
+Axiom getIdFromTrivialExpr_maybe : CoreSyn.CoreExpr -> option Var.Id.
 
-Axiom exprIsDupable : forall {A : Type}, A.
+Axiom exprIsDupable : DynFlags.DynFlags -> CoreSyn.CoreExpr -> bool.
 
-Axiom dupAppSize : forall {A : Type}, A.
+Axiom dupAppSize : GHC.Num.Int.
 
-Axiom exprIsWorkFree : forall {A : Type}, A.
+Axiom exprIsWorkFree : CoreSyn.CoreExpr -> bool.
 
-Axiom exprIsCheap : forall {A : Type}, A.
+Axiom exprIsCheap : CoreSyn.CoreExpr -> bool.
 
-Axiom exprIsExpandable : forall {A : Type}, A.
+Axiom exprIsExpandable : CoreSyn.CoreExpr -> bool.
 
-Axiom exprIsCheap' : forall {A : Type}, A.
+Axiom exprIsCheap' : CheapAppFun -> CoreSyn.CoreExpr -> bool.
 
-Axiom isCheapApp : forall {A : Type}, A.
+Axiom isCheapApp : CheapAppFun.
 
-Axiom isExpandableApp : forall {A : Type}, A.
+Axiom isExpandableApp : CheapAppFun.
 
-Axiom altsAreExhaustive : forall {A : Type}, A.
+Axiom altsAreExhaustive : forall {b}, list (CoreSyn.Alt b) -> bool.
 
-Axiom isDivOp : forall {A : Type}, A.
+Axiom isDivOp : unit -> bool.
 
-Axiom exprIsHNF : forall {A : Type}, A.
+Axiom exprIsHNF : CoreSyn.CoreExpr -> bool.
 
-Axiom exprIsConLike : forall {A : Type}, A.
+Axiom exprIsConLike : CoreSyn.CoreExpr -> bool.
 
-Axiom exprIsHNFlike : forall {A : Type}, A.
+(* exprIsHNFlike skipped *)
 
-Axiom dataConRepInstPat : forall {A : Type}, A.
+(* dataConRepInstPat skipped *)
 
-Axiom dataConRepFSInstPat : forall {A : Type}, A.
+Axiom dataConRepFSInstPat : list FastString.FastString -> list
+                            Unique.Unique -> DataCon.DataCon -> list Core.Type_ -> (list TyVar * list
+                            Var.Id)%type.
 
-Axiom dataConInstPat : forall {A : Type}, A.
+(* dataConInstPat skipped *)
 
-Axiom exprIsBig : forall {A : Type}, A.
+Axiom exprIsBig : forall {b}, CoreSyn.Expr b -> bool.
 
-Axiom eqExpr : forall {A : Type}, A.
+Axiom eqExpr
+        : VarEnv.InScopeSet -> CoreSyn.CoreExpr -> CoreSyn.CoreExpr -> bool.
 
-Axiom diffUnfold : forall {A : Type}, A.
+Axiom diffUnfold
+        : VarEnv.RnEnv2 -> CoreSyn.Unfolding -> CoreSyn.Unfolding -> list
+          Outputable.SDoc.
 
-Axiom diffIdInfo : forall {A : Type}, A.
+Axiom diffIdInfo : VarEnv.RnEnv2 -> Core.Var -> Core.Var -> list
+                   Outputable.SDoc.
 
-Axiom diffBinds : forall {A : Type}, A.
+Axiom diffBinds : bool -> VarEnv.RnEnv2 -> list (Core.Var *
+                                                CoreSyn.CoreExpr)%type -> list (Core.Var *
+                                                                               CoreSyn.CoreExpr)%type -> (list
+                  Outputable.SDoc * VarEnv.RnEnv2)%type.
 
-Axiom diffExpr : forall {A : Type}, A.
+Axiom diffExpr
+        : bool -> VarEnv.RnEnv2 -> CoreSyn.CoreExpr -> CoreSyn.CoreExpr -> list
+          Outputable.SDoc.
 
-Axiom eqTickish : forall {A : Type}, A.
+Axiom eqTickish : VarEnv.RnEnv2 -> CoreSyn.Tickish Var.Id -> CoreSyn.Tickish
+                  Var.Id -> bool.
 
-Axiom locBind : forall {A : Type}, A.
+Axiom locBind : GHC.Base.String -> Core.Var -> Core.Var -> list
+                Outputable.SDoc -> list Outputable.SDoc.
 
-Axiom rhsIsStatic : forall {A : Type}, A.
+(* rhsIsStatic skipped *)
 
-Axiom isEmptyTy : forall {A : Type}, A.
+Axiom isEmptyTy : Core.Type_ -> bool.
 
 (* Unbound variables:
-     bool GHC.Num.Int Var.Id
+     TyVar bool list op_zt__ option unit Core.TyCon Core.Type_ Core.Var CoreSyn.Alt
+     CoreSyn.AltCon CoreSyn.CoreAlt CoreSyn.CoreArg CoreSyn.CoreBndr CoreSyn.CoreExpr
+     CoreSyn.Expr CoreSyn.Tickish CoreSyn.Unfolding DataCon.DataCon DynFlags.DynFlags
+     FastString.FastString GHC.Base.String GHC.Num.Int Outputable.SDoc Unique.Unique
+     Var.Id VarEnv.InScopeSet VarEnv.RnEnv2
 *)

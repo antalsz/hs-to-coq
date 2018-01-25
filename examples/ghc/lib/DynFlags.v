@@ -12,8 +12,12 @@ Require Coq.Program.Wf.
 
 (* Converted imports: *)
 
+Require Data.Either.
 Require GHC.Base.
+Require GHC.Char.
+Require GHC.Num.
 Require Module.
+Require SrcLoc.
 
 (* Converted type declarations: *)
 
@@ -498,879 +502,894 @@ Instance Eq___SafeHaskellMode : GHC.Base.Eq_ SafeHaskellMode := {}.
 Proof.
 Admitted.
 
-Axiom getSigOf : forall {A : Type}, A.
+Axiom getSigOf : DynFlags -> Module.ModuleName -> option Module.Module.
 
-Axiom isSse2Enabled : forall {A : Type}, A.
+Axiom isSse2Enabled : DynFlags -> bool.
 
-Axiom isSseEnabled : forall {A : Type}, A.
+Axiom isSseEnabled : DynFlags -> bool.
 
-Axiom parseDynamicFilePragma : forall {A : Type}, A.
+(* parseDynamicFilePragma skipped *)
 
-Axiom parseDynamicFlagsCmdLine : forall {A : Type}, A.
+(* parseDynamicFlagsCmdLine skipped *)
 
-Axiom parseDynamicFlagsFull : forall {A : Type}, A.
+(* parseDynamicFlagsFull skipped *)
 
-Axiom makeDynFlagsConsistent : forall {A : Type}, A.
+Axiom makeDynFlagsConsistent : DynFlags -> (DynFlags * list (SrcLoc.Located
+                                                            GHC.Base.String))%type.
 
-Axiom tARGET_MAX_WORD : forall {A : Type}, A.
+Axiom tARGET_MAX_WORD : DynFlags -> GHC.Num.Integer.
 
-Axiom tARGET_MAX_INT : forall {A : Type}, A.
+Axiom tARGET_MAX_INT : DynFlags -> GHC.Num.Integer.
 
-Axiom tARGET_MIN_INT : forall {A : Type}, A.
+Axiom tARGET_MIN_INT : DynFlags -> GHC.Num.Integer.
 
-Axiom compilerInfo : forall {A : Type}, A.
+Axiom compilerInfo : DynFlags -> list (GHC.Base.String * GHC.Base.String)%type.
 
-Axiom picCCOpts : forall {A : Type}, A.
+Axiom picCCOpts : DynFlags -> list GHC.Base.String.
 
-Axiom flagsDynamic : forall {A : Type}, A.
+(* flagsDynamic skipped *)
 
-Axiom flagsForCompletion : forall {A : Type}, A.
+Axiom flagsForCompletion : bool -> list GHC.Base.String.
 
-Axiom flagsAll : forall {A : Type}, A.
+(* flagsAll skipped *)
 
-Axiom allNonDeprecatedFlags : forall {A : Type}, A.
+Axiom allNonDeprecatedFlags : list GHC.Base.String.
 
-Axiom allFlagsDeps : forall {A : Type}, A.
+Axiom allFlagsDeps : bool -> list GHC.Base.String.
 
-Axiom flagsAllDeps : forall {A : Type}, A.
+(* flagsAllDeps skipped *)
 
-Axiom dynamic_flags_deps : forall {A : Type}, A.
+(* dynamic_flags_deps skipped *)
 
-Axiom setTarget : forall {A : Type}, A.
+(* setTarget skipped *)
 
-Axiom setTargetWithPlatform : forall {A : Type}, A.
+(* setTargetWithPlatform skipped *)
 
-Axiom addWay : forall {A : Type}, A.
+(* addWay skipped *)
 
-Axiom dynamicTooMkDynamicDynFlags : forall {A : Type}, A.
+Axiom dynamicTooMkDynamicDynFlags : DynFlags -> DynFlags.
 
-Axiom addWay' : forall {A : Type}, A.
+Axiom addWay' : Way -> DynFlags -> DynFlags.
 
-Axiom initDynFlags : forall {A : Type}, A.
+(* initDynFlags skipped *)
 
-Axiom tablesNextToCode : forall {A : Type}, A.
+Axiom tablesNextToCode : DynFlags -> bool.
 
-Axiom opt_l : forall {A : Type}, A.
+Axiom opt_l : DynFlags -> list GHC.Base.String.
 
-Axiom opt_c : forall {A : Type}, A.
+Axiom opt_c : DynFlags -> list GHC.Base.String.
 
-Axiom opt_P : forall {A : Type}, A.
+Axiom opt_P : DynFlags -> list GHC.Base.String.
 
-Axiom targetPlatform : forall {A : Type}, A.
+(* targetPlatform skipped *)
 
-Axiom interpretPackageEnv : forall {A : Type}, A.
+(* interpretPackageEnv skipped *)
 
-Axiom versionedAppDir : forall {A : Type}, A.
+(* versionedAppDir skipped *)
 
-Axiom programName : forall {A : Type}, A.
+Axiom programName : DynFlags -> GHC.Base.String.
 
-Axiom versionedFilePath : forall {A : Type}, A.
+Axiom versionedFilePath : DynFlags -> GHC.Base.String.
 
-Axiom projectVersion : forall {A : Type}, A.
+Axiom projectVersion : DynFlags -> GHC.Base.String.
 
-Axiom ghcUsagePath : forall {A : Type}, A.
+Axiom ghcUsagePath : DynFlags -> GHC.Base.String.
 
-Axiom ghciUsagePath : forall {A : Type}, A.
+Axiom ghciUsagePath : DynFlags -> GHC.Base.String.
 
-Axiom topDir : forall {A : Type}, A.
+Axiom topDir : DynFlags -> GHC.Base.String.
 
-Axiom tmpDir : forall {A : Type}, A.
+Axiom tmpDir : DynFlags -> GHC.Base.String.
 
-Axiom rawSettings : forall {A : Type}, A.
+Axiom rawSettings : DynFlags -> list (GHC.Base.String * GHC.Base.String)%type.
 
-Axiom extraGccViaCFlags : forall {A : Type}, A.
+Axiom extraGccViaCFlags : DynFlags -> list GHC.Base.String.
 
-Axiom systemPackageConfig : forall {A : Type}, A.
+Axiom systemPackageConfig : DynFlags -> GHC.Base.String.
 
-Axiom pgm_L : forall {A : Type}, A.
+Axiom pgm_L : DynFlags -> GHC.Base.String.
 
-Axiom pgm_P : forall {A : Type}, A.
+Axiom pgm_P : DynFlags -> (GHC.Base.String * list Option)%type.
 
-Axiom pgm_F : forall {A : Type}, A.
+Axiom pgm_F : DynFlags -> GHC.Base.String.
 
-Axiom pgm_c : forall {A : Type}, A.
+Axiom pgm_c : DynFlags -> (GHC.Base.String * list Option)%type.
 
-Axiom pgm_s : forall {A : Type}, A.
+Axiom pgm_s : DynFlags -> (GHC.Base.String * list Option)%type.
 
-Axiom pgm_a : forall {A : Type}, A.
+Axiom pgm_a : DynFlags -> (GHC.Base.String * list Option)%type.
 
-Axiom pgm_l : forall {A : Type}, A.
+Axiom pgm_l : DynFlags -> (GHC.Base.String * list Option)%type.
 
-Axiom pgm_dll : forall {A : Type}, A.
+Axiom pgm_dll : DynFlags -> (GHC.Base.String * list Option)%type.
 
-Axiom pgm_T : forall {A : Type}, A.
+Axiom pgm_T : DynFlags -> GHC.Base.String.
 
-Axiom pgm_windres : forall {A : Type}, A.
+Axiom pgm_windres : DynFlags -> GHC.Base.String.
 
-Axiom pgm_libtool : forall {A : Type}, A.
+Axiom pgm_libtool : DynFlags -> GHC.Base.String.
 
-Axiom pgm_lo : forall {A : Type}, A.
+Axiom pgm_lo : DynFlags -> (GHC.Base.String * list Option)%type.
 
-Axiom pgm_lc : forall {A : Type}, A.
+Axiom pgm_lc : DynFlags -> (GHC.Base.String * list Option)%type.
 
-Axiom pgm_i : forall {A : Type}, A.
+Axiom pgm_i : DynFlags -> GHC.Base.String.
 
-Axiom opt_L : forall {A : Type}, A.
+Axiom opt_L : DynFlags -> list GHC.Base.String.
 
-Axiom opt_F : forall {A : Type}, A.
+Axiom opt_F : DynFlags -> list GHC.Base.String.
 
-Axiom opt_a : forall {A : Type}, A.
+Axiom opt_a : DynFlags -> list GHC.Base.String.
 
-Axiom opt_windres : forall {A : Type}, A.
+Axiom opt_windres : DynFlags -> list GHC.Base.String.
 
-Axiom opt_lo : forall {A : Type}, A.
+Axiom opt_lo : DynFlags -> list GHC.Base.String.
 
-Axiom opt_lc : forall {A : Type}, A.
+Axiom opt_lc : DynFlags -> list GHC.Base.String.
 
-Axiom opt_i : forall {A : Type}, A.
+Axiom opt_i : DynFlags -> list GHC.Base.String.
 
-Axiom setObjTarget : forall {A : Type}, A.
+(* setObjTarget skipped *)
 
-Axiom isObjectTarget : forall {A : Type}, A.
+Axiom isObjectTarget : HscTarget -> bool.
 
-Axiom targetRetainsAllBindings : forall {A : Type}, A.
+Axiom targetRetainsAllBindings : HscTarget -> bool.
 
-Axiom setVerboseCore2Core : forall {A : Type}, A.
+(* setVerboseCore2Core skipped *)
 
-Axiom setDumpFlag : forall {A : Type}, A.
+(* setDumpFlag skipped *)
 
-Axiom setDumpFlag' : forall {A : Type}, A.
+(* setDumpFlag' skipped *)
 
-Axiom forceRecompile : forall {A : Type}, A.
+(* forceRecompile skipped *)
 
-Axiom isOneShot : forall {A : Type}, A.
+Axiom isOneShot : GhcMode -> bool.
 
-Axiom isNoLink : forall {A : Type}, A.
+Axiom isNoLink : GhcLink -> bool.
 
-Axiom setUnsafeGlobalDynFlags : forall {A : Type}, A.
+(* setUnsafeGlobalDynFlags skipped *)
 
-Axiom unsafeGlobalDynFlags : forall {A : Type}, A.
+Axiom unsafeGlobalDynFlags : DynFlags.
 
-Axiom v_unsafeGlobalDynFlags : forall {A : Type}, A.
+(* v_unsafeGlobalDynFlags skipped *)
 
-Axiom defaultGlobalDynFlags : forall {A : Type}, A.
+Axiom defaultGlobalDynFlags : DynFlags.
 
-Axiom defaultDynFlags : forall {A : Type}, A.
+Axiom defaultDynFlags : Settings -> DynFlags.
 
-Axiom defaultHscTarget : forall {A : Type}, A.
+(* defaultHscTarget skipped *)
 
-Axiom defaultObjectTarget : forall {A : Type}, A.
+(* defaultObjectTarget skipped *)
 
-Axiom mkTablesNextToCode : forall {A : Type}, A.
+Axiom mkTablesNextToCode : bool -> bool.
 
-Axiom allowed_combination : forall {A : Type}, A.
+Axiom allowed_combination : list Way -> bool.
 
-Axiom updateWays : forall {A : Type}, A.
+Axiom updateWays : DynFlags -> DynFlags.
 
-Axiom mkBuildTag : forall {A : Type}, A.
+Axiom mkBuildTag : list Way -> GHC.Base.String.
 
-Axiom wayTag : forall {A : Type}, A.
+Axiom wayTag : Way -> GHC.Base.String.
 
-Axiom wayRTSOnly : forall {A : Type}, A.
+Axiom wayRTSOnly : Way -> bool.
 
-Axiom wayDesc : forall {A : Type}, A.
+Axiom wayDesc : Way -> GHC.Base.String.
 
-Axiom defaultFlags : forall {A : Type}, A.
+Axiom defaultFlags : Settings -> list GeneralFlag.
 
-Axiom wayGeneralFlags : forall {A : Type}, A.
+(* wayGeneralFlags skipped *)
 
-Axiom wayUnsetGeneralFlags : forall {A : Type}, A.
+(* wayUnsetGeneralFlags skipped *)
 
-Axiom wayOptc : forall {A : Type}, A.
+(* wayOptc skipped *)
 
-Axiom wayOptl : forall {A : Type}, A.
+(* wayOptl skipped *)
 
-Axiom wayOptP : forall {A : Type}, A.
+(* wayOptP skipped *)
 
-Axiom whenGeneratingDynamicToo : forall {A : Type}, A.
+(* whenGeneratingDynamicToo skipped *)
 
-Axiom ifGeneratingDynamicToo : forall {A : Type}, A.
+(* ifGeneratingDynamicToo skipped *)
 
-Axiom whenCannotGenerateDynamicToo : forall {A : Type}, A.
+(* whenCannotGenerateDynamicToo skipped *)
 
-Axiom ifCannotGenerateDynamicToo : forall {A : Type}, A.
+(* ifCannotGenerateDynamicToo skipped *)
 
-Axiom generateDynamicTooConditional : forall {A : Type}, A.
+(* generateDynamicTooConditional skipped *)
 
-Axiom defaultWays : forall {A : Type}, A.
+Axiom defaultWays : Settings -> list Way.
 
-Axiom interpWays : forall {A : Type}, A.
+Axiom interpWays : list Way.
 
-Axiom interpreterProfiled : forall {A : Type}, A.
+Axiom interpreterProfiled : DynFlags -> bool.
 
-Axiom interpreterDynamic : forall {A : Type}, A.
+(* interpreterDynamic skipped *)
 
-Axiom defaultFatalMessager : forall {A : Type}, A.
+(* defaultFatalMessager skipped *)
 
-Axiom defaultLogAction : forall {A : Type}, A.
+(* defaultLogAction skipped *)
 
-Axiom defaultLogActionHPrintDoc : forall {A : Type}, A.
+(* defaultLogActionHPrintDoc skipped *)
 
-Axiom defaultLogActionHPutStrDoc : forall {A : Type}, A.
+(* defaultLogActionHPutStrDoc skipped *)
 
-Axiom defaultFlushOut : forall {A : Type}, A.
+Axiom defaultFlushOut : FlushOut.
 
-Axiom defaultFlushErr : forall {A : Type}, A.
+(* defaultFlushErr skipped *)
 
-Axiom setLanguage : forall {A : Type}, A.
+(* setLanguage skipped *)
 
-Axiom lang_set : forall {A : Type}, A.
+(* lang_set skipped *)
 
-Axiom enableGlasgowExts : forall {A : Type}, A.
+(* enableGlasgowExts skipped *)
 
-Axiom setExtensionFlag : forall {A : Type}, A.
+(* setExtensionFlag skipped *)
 
-Axiom setExtensionFlag' : forall {A : Type}, A.
+(* setExtensionFlag' skipped *)
 
-Axiom disableGlasgowExts : forall {A : Type}, A.
+(* disableGlasgowExts skipped *)
 
-Axiom unSetExtensionFlag : forall {A : Type}, A.
+(* unSetExtensionFlag skipped *)
 
-Axiom unSetExtensionFlag' : forall {A : Type}, A.
+(* unSetExtensionFlag' skipped *)
 
-Axiom safeFlagCheck : forall {A : Type}, A.
+Axiom safeFlagCheck : bool -> DynFlags -> (DynFlags * list (SrcLoc.Located
+                                                           GHC.Base.String))%type.
 
-Axiom unsafeFlagsForInfer : forall {A : Type}, A.
+Axiom unsafeFlagsForInfer : list (GHC.Base.String * (DynFlags -> SrcLoc.SrcSpan)
+                                 * (DynFlags -> bool) * (DynFlags -> DynFlags))%type.
 
-Axiom unsafeFlags : forall {A : Type}, A.
+Axiom unsafeFlags : list (GHC.Base.String * (DynFlags -> SrcLoc.SrcSpan) *
+                         (DynFlags -> bool) * (DynFlags -> DynFlags))%type.
 
-Axiom xopt_unset : forall {A : Type}, A.
+(* xopt_unset skipped *)
 
-Axiom xopt_set : forall {A : Type}, A.
+(* xopt_set skipped *)
 
-Axiom flattenExtensionFlags : forall {A : Type}, A.
+(* flattenExtensionFlags skipped *)
 
-Axiom languageExtensions : forall {A : Type}, A.
+(* languageExtensions skipped *)
 
-Axiom dopt : forall {A : Type}, A.
+(* dopt skipped *)
 
-Axiom dopt_set : forall {A : Type}, A.
+Axiom dopt_set : DynFlags -> DumpFlag -> DynFlags.
 
-Axiom dopt_unset : forall {A : Type}, A.
+Axiom dopt_unset : DynFlags -> DumpFlag -> DynFlags.
 
-Axiom picPOpts : forall {A : Type}, A.
+Axiom picPOpts : DynFlags -> list GHC.Base.String.
 
-Axiom packageTrustOn : forall {A : Type}, A.
+Axiom packageTrustOn : DynFlags -> bool.
 
-Axiom useUnicodeSyntax : forall {A : Type}, A.
+Axiom useUnicodeSyntax : DynFlags -> bool.
 
-Axiom gopt : forall {A : Type}, A.
+Axiom gopt : GeneralFlag -> DynFlags -> bool.
 
-Axiom unSetGeneralFlag : forall {A : Type}, A.
+(* unSetGeneralFlag skipped *)
 
-Axiom setPackageTrust : forall {A : Type}, A.
+(* setPackageTrust skipped *)
 
-Axiom flagsPackage : forall {A : Type}, A.
+(* flagsPackage skipped *)
 
-Axiom package_flags_deps : forall {A : Type}, A.
+(* package_flags_deps skipped *)
 
-Axiom setGeneralFlag : forall {A : Type}, A.
+(* setGeneralFlag skipped *)
 
-Axiom unSetGeneralFlag' : forall {A : Type}, A.
+(* unSetGeneralFlag' skipped *)
 
-Axiom setGeneralFlag' : forall {A : Type}, A.
+(* setGeneralFlag' skipped *)
 
-Axiom setDPHOpt : forall {A : Type}, A.
+(* setDPHOpt skipped *)
 
-Axiom setOptLevel : forall {A : Type}, A.
+(* setOptLevel skipped *)
 
-Axiom updOptLevel : forall {A : Type}, A.
+(* updOptLevel skipped *)
 
-Axiom gopt_set : forall {A : Type}, A.
+Axiom gopt_set : DynFlags -> GeneralFlag -> DynFlags.
 
-Axiom gopt_unset : forall {A : Type}, A.
+(* gopt_unset skipped *)
 
-Axiom unrecognisedWarning : forall {A : Type}, A.
+(* unrecognisedWarning skipped *)
 
-Axiom wopt : forall {A : Type}, A.
+(* wopt skipped *)
 
-Axiom enableUnusedBinds : forall {A : Type}, A.
+(* enableUnusedBinds skipped *)
 
-Axiom setWarningFlag : forall {A : Type}, A.
+(* setWarningFlag skipped *)
 
-Axiom wopt_set : forall {A : Type}, A.
+(* wopt_set skipped *)
 
-Axiom disableUnusedBinds : forall {A : Type}, A.
+(* disableUnusedBinds skipped *)
 
-Axiom unSetWarningFlag : forall {A : Type}, A.
+(* unSetWarningFlag skipped *)
 
-Axiom wopt_unset : forall {A : Type}, A.
+(* wopt_unset skipped *)
 
-Axiom xopt : forall {A : Type}, A.
+(* xopt skipped *)
 
-Axiom dynFlagDependencies : forall {A : Type}, A.
+(* dynFlagDependencies skipped *)
 
-Axiom safeHaskellOn : forall {A : Type}, A.
+Axiom safeHaskellOn : DynFlags -> bool.
 
-Axiom safeImplicitImpsReq : forall {A : Type}, A.
+Axiom safeImplicitImpsReq : DynFlags -> bool.
 
-Axiom safeDirectImpsReq : forall {A : Type}, A.
+Axiom safeDirectImpsReq : DynFlags -> bool.
 
-Axiom safeLanguageOn : forall {A : Type}, A.
+Axiom safeLanguageOn : DynFlags -> bool.
 
-Axiom safeInferOn : forall {A : Type}, A.
+Axiom safeInferOn : DynFlags -> bool.
 
-Axiom safeImportsOn : forall {A : Type}, A.
+(* safeImportsOn skipped *)
 
-Axiom setSafeHaskell : forall {A : Type}, A.
+(* setSafeHaskell skipped *)
 
-Axiom combineSafeFlags : forall {A : Type}, A.
+(* combineSafeFlags skipped *)
 
-Axiom getOpts : forall {A : Type}, A.
+Axiom getOpts : forall {a}, DynFlags -> (DynFlags -> list a) -> list a.
 
-Axiom getVerbFlags : forall {A : Type}, A.
+Axiom getVerbFlags : DynFlags -> list GHC.Base.String.
 
-Axiom setOutputDir : forall {A : Type}, A.
+Axiom setOutputDir : GHC.Base.String -> DynFlags -> DynFlags.
 
-Axiom setObjectDir : forall {A : Type}, A.
+Axiom setObjectDir : GHC.Base.String -> DynFlags -> DynFlags.
 
-Axiom setHiDir : forall {A : Type}, A.
+Axiom setHiDir : GHC.Base.String -> DynFlags -> DynFlags.
 
-Axiom setStubDir : forall {A : Type}, A.
+Axiom setStubDir : GHC.Base.String -> DynFlags -> DynFlags.
 
-Axiom setDumpDir : forall {A : Type}, A.
+Axiom setDumpDir : GHC.Base.String -> DynFlags -> DynFlags.
 
-Axiom setDylibInstallName : forall {A : Type}, A.
+Axiom setDylibInstallName : GHC.Base.String -> DynFlags -> DynFlags.
 
-Axiom setObjectSuf : forall {A : Type}, A.
+Axiom setObjectSuf : GHC.Base.String -> DynFlags -> DynFlags.
 
-Axiom setDynObjectSuf : forall {A : Type}, A.
+Axiom setDynObjectSuf : GHC.Base.String -> DynFlags -> DynFlags.
 
-Axiom setHiSuf : forall {A : Type}, A.
+Axiom setHiSuf : GHC.Base.String -> DynFlags -> DynFlags.
 
-Axiom setDynHiSuf : forall {A : Type}, A.
+Axiom setDynHiSuf : GHC.Base.String -> DynFlags -> DynFlags.
 
-Axiom setHcSuf : forall {A : Type}, A.
+Axiom setHcSuf : GHC.Base.String -> DynFlags -> DynFlags.
 
-Axiom setOutputFile : forall {A : Type}, A.
+Axiom setOutputFile : option GHC.Base.String -> DynFlags -> DynFlags.
 
-Axiom setDynOutputFile : forall {A : Type}, A.
+Axiom setDynOutputFile : option GHC.Base.String -> DynFlags -> DynFlags.
 
-Axiom setOutputHi : forall {A : Type}, A.
+Axiom setOutputHi : option GHC.Base.String -> DynFlags -> DynFlags.
 
-Axiom setSigOf : forall {A : Type}, A.
+Axiom setSigOf : GHC.Base.String -> DynFlags -> DynFlags.
 
-Axiom parseSigOf : forall {A : Type}, A.
+Axiom parseSigOf : GHC.Base.String -> SigOf.
 
-Axiom addPluginModuleName : forall {A : Type}, A.
+Axiom addPluginModuleName : GHC.Base.String -> DynFlags -> DynFlags.
 
-Axiom addPluginModuleNameOption : forall {A : Type}, A.
+Axiom addPluginModuleNameOption : GHC.Base.String -> DynFlags -> DynFlags.
 
-Axiom addFrontendPluginOption : forall {A : Type}, A.
+Axiom addFrontendPluginOption : GHC.Base.String -> DynFlags -> DynFlags.
 
-Axiom parseDynLibLoaderMode : forall {A : Type}, A.
+Axiom parseDynLibLoaderMode : GHC.Base.String -> DynFlags -> DynFlags.
 
-Axiom setDumpPrefixForce : forall {A : Type}, A.
+Axiom setDumpPrefixForce : option GHC.Base.String -> DynFlags -> DynFlags.
 
-Axiom setPgmP : forall {A : Type}, A.
+Axiom setPgmP : GHC.Base.String -> DynFlags -> DynFlags.
 
-Axiom addOptl : forall {A : Type}, A.
+Axiom addOptl : GHC.Base.String -> DynFlags -> DynFlags.
 
-Axiom addOptc : forall {A : Type}, A.
+Axiom addOptc : GHC.Base.String -> DynFlags -> DynFlags.
 
-Axiom addOptP : forall {A : Type}, A.
+Axiom addOptP : GHC.Base.String -> DynFlags -> DynFlags.
 
-Axiom setDepMakefile : forall {A : Type}, A.
+Axiom setDepMakefile : GHC.Base.String -> DynFlags -> DynFlags.
 
-Axiom setDepIncludePkgDeps : forall {A : Type}, A.
+Axiom setDepIncludePkgDeps : bool -> DynFlags -> DynFlags.
 
-Axiom addDepExcludeMod : forall {A : Type}, A.
+Axiom addDepExcludeMod : GHC.Base.String -> DynFlags -> DynFlags.
 
-Axiom addDepSuffix : forall {A : Type}, A.
+Axiom addDepSuffix : GHC.Base.String -> DynFlags -> DynFlags.
 
-Axiom addCmdlineFramework : forall {A : Type}, A.
+Axiom addCmdlineFramework : GHC.Base.String -> DynFlags -> DynFlags.
 
-Axiom addHaddockOpts : forall {A : Type}, A.
+Axiom addHaddockOpts : GHC.Base.String -> DynFlags -> DynFlags.
 
-Axiom addGhciScript : forall {A : Type}, A.
+Axiom addGhciScript : GHC.Base.String -> DynFlags -> DynFlags.
 
-Axiom setInteractivePrint : forall {A : Type}, A.
+Axiom setInteractivePrint : GHC.Base.String -> DynFlags -> DynFlags.
 
-Axiom showOpt : forall {A : Type}, A.
+Axiom showOpt : Option -> GHC.Base.String.
 
-Axiom make_ord_flag : forall {A : Type}, A.
+(* make_ord_flag skipped *)
 
-Axiom make_dep_flag : forall {A : Type}, A.
+(* make_dep_flag skipped *)
 
-Axiom add_dep_message : forall {A : Type}, A.
+(* add_dep_message skipped *)
 
-Axiom impliedXFlags : forall {A : Type}, A.
+(* impliedXFlags skipped *)
 
-Axiom impliedGFlags : forall {A : Type}, A.
+(* impliedGFlags skipped *)
 
-Axiom turnOn : forall {A : Type}, A.
+Axiom turnOn : TurnOnFlag.
 
-Axiom impliedOffGFlags : forall {A : Type}, A.
+Axiom impliedOffGFlags : list (GeneralFlag * TurnOnFlag * GeneralFlag)%type.
 
-Axiom turnOff : forall {A : Type}, A.
+Axiom turnOff : TurnOnFlag.
 
-Axiom supportedLanguagesAndExtensions : forall {A : Type}, A.
+Axiom supportedLanguagesAndExtensions : list GHC.Base.String.
 
-Axiom supportedExtensions : forall {A : Type}, A.
+(* supportedExtensions skipped *)
 
-Axiom xFlags : forall {A : Type}, A.
+(* xFlags skipped *)
 
-Axiom xFlagsDeps : forall {A : Type}, A.
+(* xFlagsDeps skipped *)
 
-Axiom supportedLanguageOverlays : forall {A : Type}, A.
+(* supportedLanguageOverlays skipped *)
 
-Axiom safeHaskellFlagsDeps : forall {A : Type}, A.
+Axiom safeHaskellFlagsDeps : list (Deprecation * FlagSpec SafeHaskellMode)%type.
 
-Axiom supportedLanguages : forall {A : Type}, A.
+Axiom supportedLanguages : list GHC.Base.String.
 
-Axiom languageFlagsDeps : forall {A : Type}, A.
+Axiom languageFlagsDeps : list (Deprecation * FlagSpec Language)%type.
 
-Axiom fFlags : forall {A : Type}, A.
+Axiom fFlags : list (FlagSpec GeneralFlag).
 
-Axiom fFlagsDeps : forall {A : Type}, A.
+Axiom fFlagsDeps : list (Deprecation * FlagSpec GeneralFlag)%type.
 
-Axiom dFlagsDeps : forall {A : Type}, A.
+Axiom dFlagsDeps : list (Deprecation * FlagSpec GeneralFlag)%type.
 
-Axiom flagSpecOf : forall {A : Type}, A.
+Axiom flagSpecOf : WarningFlag -> option (FlagSpec WarningFlag).
 
-Axiom wWarningFlags : forall {A : Type}, A.
+Axiom wWarningFlags : list (FlagSpec WarningFlag).
 
-Axiom wWarningFlagsDeps : forall {A : Type}, A.
+Axiom wWarningFlagsDeps : list (Deprecation * FlagSpec WarningFlag)%type.
 
-Axiom flagSpec : forall {A : Type}, A.
+Axiom flagSpec : forall {flag},
+                   GHC.Base.String -> flag -> (Deprecation * FlagSpec flag)%type.
 
-Axiom depFlagSpec : forall {A : Type}, A.
+Axiom depFlagSpec : forall {flag},
+                      GHC.Base.String -> flag -> GHC.Base.String -> (Deprecation * FlagSpec
+                      flag)%type.
 
-Axiom depFlagSpecOp : forall {A : Type}, A.
+(* depFlagSpecOp skipped *)
 
-Axiom flagSpec' : forall {A : Type}, A.
+(* flagSpec' skipped *)
 
-Axiom fLangFlags : forall {A : Type}, A.
+(* fLangFlags skipped *)
 
-Axiom fLangFlagsDeps : forall {A : Type}, A.
+(* fLangFlagsDeps skipped *)
 
-Axiom depFlagSpec' : forall {A : Type}, A.
+(* depFlagSpec' skipped *)
 
-Axiom depFlagSpecOp' : forall {A : Type}, A.
+(* depFlagSpecOp' skipped *)
 
-Axiom depFlagSpecCond : forall {A : Type}, A.
+Axiom depFlagSpecCond : forall {flag},
+                          GHC.Base.String -> flag -> (TurnOnFlag -> bool) -> GHC.Base.String -> (Deprecation
+                          * FlagSpec flag)%type.
 
-Axiom negatableFlagsDeps : forall {A : Type}, A.
+Axiom negatableFlagsDeps : list (Deprecation * FlagSpec GeneralFlag)%type.
 
-Axiom flagGhciSpec : forall {A : Type}, A.
+Axiom flagGhciSpec : forall {flag},
+                       GHC.Base.String -> flag -> (Deprecation * FlagSpec flag)%type.
 
-Axiom flagGhciSpec' : forall {A : Type}, A.
+(* flagGhciSpec' skipped *)
 
-Axiom flagHiddenSpec : forall {A : Type}, A.
+Axiom flagHiddenSpec : forall {flag},
+                         GHC.Base.String -> flag -> (Deprecation * FlagSpec flag)%type.
 
-Axiom flagHiddenSpec' : forall {A : Type}, A.
+(* flagHiddenSpec' skipped *)
 
-Axiom hideFlag : forall {A : Type}, A.
+Axiom hideFlag : forall {a},
+                   (Deprecation * FlagSpec a)%type -> (Deprecation * FlagSpec a)%type.
 
-Axiom mkFlag : forall {A : Type}, A.
+(* mkFlag skipped *)
 
-Axiom deprecatedForExtension : forall {A : Type}, A.
+Axiom deprecatedForExtension : GHC.Base.String -> TurnOnFlag -> GHC.Base.String.
 
-Axiom useInstead : forall {A : Type}, A.
+(* useInstead skipped *)
 
-Axiom nop : forall {A : Type}, A.
+(* nop skipped *)
 
-Axiom default_PIC : forall {A : Type}, A.
+(* default_PIC skipped *)
 
-Axiom optLevelFlags : forall {A : Type}, A.
+Axiom optLevelFlags : list (list GHC.Num.Int * GeneralFlag)%type.
 
-Axiom smallestGroups : forall {A : Type}, A.
+Axiom smallestGroups : WarningFlag -> list GHC.Base.String.
 
-Axiom warningHierarchies : forall {A : Type}, A.
+Axiom warningHierarchies : list (list GHC.Base.String).
 
-Axiom warningGroups : forall {A : Type}, A.
+Axiom warningGroups : list (GHC.Base.String * list WarningFlag)%type.
 
-Axiom minusWallOpts : forall {A : Type}, A.
+Axiom minusWallOpts : list WarningFlag.
 
-Axiom minusWOpts : forall {A : Type}, A.
+Axiom minusWOpts : list WarningFlag.
 
-Axiom standardWarnings : forall {A : Type}, A.
+Axiom standardWarnings : list WarningFlag.
 
-Axiom minusWeverythingOpts : forall {A : Type}, A.
+Axiom minusWeverythingOpts : list WarningFlag.
 
-Axiom minusWcompatOpts : forall {A : Type}, A.
+Axiom minusWcompatOpts : list WarningFlag.
 
-Axiom unusedBindsFlags : forall {A : Type}, A.
+(* unusedBindsFlags skipped *)
 
-Axiom glasgowExtsFlags : forall {A : Type}, A.
+(* glasgowExtsFlags skipped *)
 
-Axiom rtsIsProfiled : forall {A : Type}, A.
+(* rtsIsProfiled skipped *)
 
-Axiom dynamicGhc : forall {A : Type}, A.
+(* dynamicGhc skipped *)
 
-Axiom setWarnSafe : forall {A : Type}, A.
+(* setWarnSafe skipped *)
 
-Axiom setWarnUnsafe : forall {A : Type}, A.
+(* setWarnUnsafe skipped *)
 
-Axiom setGenDeriving : forall {A : Type}, A.
+(* setGenDeriving skipped *)
 
-Axiom setOverlappingInsts : forall {A : Type}, A.
+(* setOverlappingInsts skipped *)
 
-Axiom setIncoherentInsts : forall {A : Type}, A.
+(* setIncoherentInsts skipped *)
 
-Axiom checkTemplateHaskellOk : forall {A : Type}, A.
+(* checkTemplateHaskellOk skipped *)
 
-Axiom setOptHpcDir : forall {A : Type}, A.
+(* setOptHpcDir skipped *)
 
-Axiom setRtsOptsEnabled : forall {A : Type}, A.
+(* setRtsOptsEnabled skipped *)
 
-Axiom setRtsOpts : forall {A : Type}, A.
+(* setRtsOpts skipped *)
 
-Axiom addFrameworkPath : forall {A : Type}, A.
+(* addFrameworkPath skipped *)
 
-Axiom addIncludePath : forall {A : Type}, A.
+(* addIncludePath skipped *)
 
-Axiom addLibraryPath : forall {A : Type}, A.
+(* addLibraryPath skipped *)
 
-Axiom addImportPath : forall {A : Type}, A.
+(* addImportPath skipped *)
 
-Axiom setMainIs : forall {A : Type}, A.
+(* setMainIs skipped *)
 
-Axiom distrustPackage : forall {A : Type}, A.
+(* distrustPackage skipped *)
 
-Axiom trustPackage : forall {A : Type}, A.
+(* trustPackage skipped *)
 
-Axiom ignorePackage : forall {A : Type}, A.
+(* ignorePackage skipped *)
 
-Axiom hidePackage : forall {A : Type}, A.
+(* hidePackage skipped *)
 
-Axiom exposePluginPackageId : forall {A : Type}, A.
+(* exposePluginPackageId skipped *)
 
-Axiom exposePluginPackage : forall {A : Type}, A.
+(* exposePluginPackage skipped *)
 
-Axiom exposePackageId : forall {A : Type}, A.
+(* exposePackageId skipped *)
 
-Axiom exposePackage : forall {A : Type}, A.
+(* exposePackage skipped *)
 
-Axiom clearPkgConf : forall {A : Type}, A.
+(* clearPkgConf skipped *)
 
-Axiom removeGlobalPkgConf : forall {A : Type}, A.
+(* removeGlobalPkgConf skipped *)
 
-Axiom removeUserPkgConf : forall {A : Type}, A.
+(* removeUserPkgConf skipped *)
 
-Axiom addPkgConfRef : forall {A : Type}, A.
+(* addPkgConfRef skipped *)
 
-Axiom setDebugLevel : forall {A : Type}, A.
+(* setDebugLevel skipped *)
 
-Axiom setVerbosity : forall {A : Type}, A.
+(* setVerbosity skipped *)
 
-Axiom removeWayDyn : forall {A : Type}, A.
+(* removeWayDyn skipped *)
 
-Axiom floatSuffix : forall {A : Type}, A.
+(* floatSuffix skipped *)
 
-Axiom intSuffix : forall {A : Type}, A.
+(* intSuffix skipped *)
 
-Axiom sepArg : forall {A : Type}, A.
+(* sepArg skipped *)
 
-Axiom hasArg : forall {A : Type}, A.
+(* hasArg skipped *)
 
-Axiom noArg : forall {A : Type}, A.
+(* noArg skipped *)
 
-Axiom upd : forall {A : Type}, A.
+(* upd skipped *)
 
-Axiom optIntSuffixM : forall {A : Type}, A.
+(* optIntSuffixM skipped *)
 
-Axiom intSuffixM : forall {A : Type}, A.
+(* intSuffixM skipped *)
 
-Axiom noArgM : forall {A : Type}, A.
+(* noArgM skipped *)
 
-Axiom updM : forall {A : Type}, A.
+(* updM skipped *)
 
-Axiom setTmpDir : forall {A : Type}, A.
+(* setTmpDir skipped *)
 
-Axiom alterSettings : forall {A : Type}, A.
+Axiom alterSettings : (Settings -> Settings) -> DynFlags -> DynFlags.
 
-Axiom exposePackage' : forall {A : Type}, A.
+Axiom exposePackage' : GHC.Base.String -> DynFlags -> DynFlags.
 
-Axiom parsePackageFlag : forall {A : Type}, A.
+Axiom parsePackageFlag
+        : GHC.Base.String -> (GHC.Base.String -> PackageArg) -> GHC.Base.String -> PackageFlag.
 
-Axiom parseModuleName : forall {A : Type}, A.
+(* parseModuleName skipped *)
 
-Axiom setUnitId : forall {A : Type}, A.
+(* setUnitId skipped *)
 
-Axiom checkOptLevel : forall {A : Type}, A.
+Axiom checkOptLevel : GHC.Num.Int -> DynFlags -> Data.Either.Either
+                      GHC.Base.String DynFlags.
 
-Axiom addLdInputs : forall {A : Type}, A.
+Axiom addLdInputs : Option -> DynFlags -> DynFlags.
 
-Axiom splitPathList : forall {A : Type}, A.
+Axiom splitPathList : GHC.Base.String -> list GHC.Base.String.
 
-Axiom split_marker : forall {A : Type}, A.
+Axiom split_marker : GHC.Char.Char.
 
-Axiom can_split : forall {A : Type}, A.
+Axiom can_split : bool.
 
-Axiom cONTROL_GROUP_CONST_291 : forall {A : Type}, A.
+Axiom cONTROL_GROUP_CONST_291 : DynFlags -> GHC.Num.Int.
 
-Axiom sTD_HDR_SIZE : forall {A : Type}, A.
+Axiom sTD_HDR_SIZE : DynFlags -> GHC.Num.Int.
 
-Axiom pROF_HDR_SIZE : forall {A : Type}, A.
+Axiom pROF_HDR_SIZE : DynFlags -> GHC.Num.Int.
 
-Axiom bLOCK_SIZE_W : forall {A : Type}, A.
+Axiom bLOCK_SIZE_W : DynFlags -> GHC.Num.Int.
 
-Axiom bLOCK_SIZE : forall {A : Type}, A.
+Axiom bLOCK_SIZE : DynFlags -> GHC.Num.Int.
 
-Axiom bLOCKS_PER_MBLOCK : forall {A : Type}, A.
+Axiom bLOCKS_PER_MBLOCK : DynFlags -> GHC.Num.Int.
 
-Axiom tICKY_BIN_COUNT : forall {A : Type}, A.
+Axiom tICKY_BIN_COUNT : DynFlags -> GHC.Num.Int.
 
-Axiom oFFSET_StgRegTable_rR1 : forall {A : Type}, A.
+Axiom oFFSET_StgRegTable_rR1 : DynFlags -> GHC.Num.Int.
 
-Axiom oFFSET_StgRegTable_rR2 : forall {A : Type}, A.
+Axiom oFFSET_StgRegTable_rR2 : DynFlags -> GHC.Num.Int.
 
-Axiom oFFSET_StgRegTable_rR3 : forall {A : Type}, A.
+Axiom oFFSET_StgRegTable_rR3 : DynFlags -> GHC.Num.Int.
 
-Axiom oFFSET_StgRegTable_rR4 : forall {A : Type}, A.
+Axiom oFFSET_StgRegTable_rR4 : DynFlags -> GHC.Num.Int.
 
-Axiom oFFSET_StgRegTable_rR5 : forall {A : Type}, A.
+Axiom oFFSET_StgRegTable_rR5 : DynFlags -> GHC.Num.Int.
 
-Axiom oFFSET_StgRegTable_rR6 : forall {A : Type}, A.
+Axiom oFFSET_StgRegTable_rR6 : DynFlags -> GHC.Num.Int.
 
-Axiom oFFSET_StgRegTable_rR7 : forall {A : Type}, A.
+Axiom oFFSET_StgRegTable_rR7 : DynFlags -> GHC.Num.Int.
 
-Axiom oFFSET_StgRegTable_rR8 : forall {A : Type}, A.
+Axiom oFFSET_StgRegTable_rR8 : DynFlags -> GHC.Num.Int.
 
-Axiom oFFSET_StgRegTable_rR9 : forall {A : Type}, A.
+Axiom oFFSET_StgRegTable_rR9 : DynFlags -> GHC.Num.Int.
 
-Axiom oFFSET_StgRegTable_rR10 : forall {A : Type}, A.
+Axiom oFFSET_StgRegTable_rR10 : DynFlags -> GHC.Num.Int.
 
-Axiom oFFSET_StgRegTable_rF1 : forall {A : Type}, A.
+Axiom oFFSET_StgRegTable_rF1 : DynFlags -> GHC.Num.Int.
 
-Axiom oFFSET_StgRegTable_rF2 : forall {A : Type}, A.
+Axiom oFFSET_StgRegTable_rF2 : DynFlags -> GHC.Num.Int.
 
-Axiom oFFSET_StgRegTable_rF3 : forall {A : Type}, A.
+Axiom oFFSET_StgRegTable_rF3 : DynFlags -> GHC.Num.Int.
 
-Axiom oFFSET_StgRegTable_rF4 : forall {A : Type}, A.
+Axiom oFFSET_StgRegTable_rF4 : DynFlags -> GHC.Num.Int.
 
-Axiom oFFSET_StgRegTable_rF5 : forall {A : Type}, A.
+Axiom oFFSET_StgRegTable_rF5 : DynFlags -> GHC.Num.Int.
 
-Axiom oFFSET_StgRegTable_rF6 : forall {A : Type}, A.
+Axiom oFFSET_StgRegTable_rF6 : DynFlags -> GHC.Num.Int.
 
-Axiom oFFSET_StgRegTable_rD1 : forall {A : Type}, A.
+Axiom oFFSET_StgRegTable_rD1 : DynFlags -> GHC.Num.Int.
 
-Axiom oFFSET_StgRegTable_rD2 : forall {A : Type}, A.
+Axiom oFFSET_StgRegTable_rD2 : DynFlags -> GHC.Num.Int.
 
-Axiom oFFSET_StgRegTable_rD3 : forall {A : Type}, A.
+Axiom oFFSET_StgRegTable_rD3 : DynFlags -> GHC.Num.Int.
 
-Axiom oFFSET_StgRegTable_rD4 : forall {A : Type}, A.
+Axiom oFFSET_StgRegTable_rD4 : DynFlags -> GHC.Num.Int.
 
-Axiom oFFSET_StgRegTable_rD5 : forall {A : Type}, A.
+Axiom oFFSET_StgRegTable_rD5 : DynFlags -> GHC.Num.Int.
 
-Axiom oFFSET_StgRegTable_rD6 : forall {A : Type}, A.
+Axiom oFFSET_StgRegTable_rD6 : DynFlags -> GHC.Num.Int.
 
-Axiom oFFSET_StgRegTable_rXMM1 : forall {A : Type}, A.
+Axiom oFFSET_StgRegTable_rXMM1 : DynFlags -> GHC.Num.Int.
 
-Axiom oFFSET_StgRegTable_rXMM2 : forall {A : Type}, A.
+Axiom oFFSET_StgRegTable_rXMM2 : DynFlags -> GHC.Num.Int.
 
-Axiom oFFSET_StgRegTable_rXMM3 : forall {A : Type}, A.
+Axiom oFFSET_StgRegTable_rXMM3 : DynFlags -> GHC.Num.Int.
 
-Axiom oFFSET_StgRegTable_rXMM4 : forall {A : Type}, A.
+Axiom oFFSET_StgRegTable_rXMM4 : DynFlags -> GHC.Num.Int.
 
-Axiom oFFSET_StgRegTable_rXMM5 : forall {A : Type}, A.
+Axiom oFFSET_StgRegTable_rXMM5 : DynFlags -> GHC.Num.Int.
 
-Axiom oFFSET_StgRegTable_rXMM6 : forall {A : Type}, A.
+Axiom oFFSET_StgRegTable_rXMM6 : DynFlags -> GHC.Num.Int.
 
-Axiom oFFSET_StgRegTable_rYMM1 : forall {A : Type}, A.
+Axiom oFFSET_StgRegTable_rYMM1 : DynFlags -> GHC.Num.Int.
 
-Axiom oFFSET_StgRegTable_rYMM2 : forall {A : Type}, A.
+Axiom oFFSET_StgRegTable_rYMM2 : DynFlags -> GHC.Num.Int.
 
-Axiom oFFSET_StgRegTable_rYMM3 : forall {A : Type}, A.
+Axiom oFFSET_StgRegTable_rYMM3 : DynFlags -> GHC.Num.Int.
 
-Axiom oFFSET_StgRegTable_rYMM4 : forall {A : Type}, A.
+Axiom oFFSET_StgRegTable_rYMM4 : DynFlags -> GHC.Num.Int.
 
-Axiom oFFSET_StgRegTable_rYMM5 : forall {A : Type}, A.
+Axiom oFFSET_StgRegTable_rYMM5 : DynFlags -> GHC.Num.Int.
 
-Axiom oFFSET_StgRegTable_rYMM6 : forall {A : Type}, A.
+Axiom oFFSET_StgRegTable_rYMM6 : DynFlags -> GHC.Num.Int.
 
-Axiom oFFSET_StgRegTable_rZMM1 : forall {A : Type}, A.
+Axiom oFFSET_StgRegTable_rZMM1 : DynFlags -> GHC.Num.Int.
 
-Axiom oFFSET_StgRegTable_rZMM2 : forall {A : Type}, A.
+Axiom oFFSET_StgRegTable_rZMM2 : DynFlags -> GHC.Num.Int.
 
-Axiom oFFSET_StgRegTable_rZMM3 : forall {A : Type}, A.
+Axiom oFFSET_StgRegTable_rZMM3 : DynFlags -> GHC.Num.Int.
 
-Axiom oFFSET_StgRegTable_rZMM4 : forall {A : Type}, A.
+Axiom oFFSET_StgRegTable_rZMM4 : DynFlags -> GHC.Num.Int.
 
-Axiom oFFSET_StgRegTable_rZMM5 : forall {A : Type}, A.
+Axiom oFFSET_StgRegTable_rZMM5 : DynFlags -> GHC.Num.Int.
 
-Axiom oFFSET_StgRegTable_rZMM6 : forall {A : Type}, A.
+Axiom oFFSET_StgRegTable_rZMM6 : DynFlags -> GHC.Num.Int.
 
-Axiom oFFSET_StgRegTable_rL1 : forall {A : Type}, A.
+Axiom oFFSET_StgRegTable_rL1 : DynFlags -> GHC.Num.Int.
 
-Axiom oFFSET_StgRegTable_rSp : forall {A : Type}, A.
+Axiom oFFSET_StgRegTable_rSp : DynFlags -> GHC.Num.Int.
 
-Axiom oFFSET_StgRegTable_rSpLim : forall {A : Type}, A.
+Axiom oFFSET_StgRegTable_rSpLim : DynFlags -> GHC.Num.Int.
 
-Axiom oFFSET_StgRegTable_rHp : forall {A : Type}, A.
+Axiom oFFSET_StgRegTable_rHp : DynFlags -> GHC.Num.Int.
 
-Axiom oFFSET_StgRegTable_rHpLim : forall {A : Type}, A.
+Axiom oFFSET_StgRegTable_rHpLim : DynFlags -> GHC.Num.Int.
 
-Axiom oFFSET_StgRegTable_rCCCS : forall {A : Type}, A.
+Axiom oFFSET_StgRegTable_rCCCS : DynFlags -> GHC.Num.Int.
 
-Axiom oFFSET_StgRegTable_rCurrentTSO : forall {A : Type}, A.
+Axiom oFFSET_StgRegTable_rCurrentTSO : DynFlags -> GHC.Num.Int.
 
-Axiom oFFSET_StgRegTable_rCurrentNursery : forall {A : Type}, A.
+Axiom oFFSET_StgRegTable_rCurrentNursery : DynFlags -> GHC.Num.Int.
 
-Axiom oFFSET_StgRegTable_rHpAlloc : forall {A : Type}, A.
+Axiom oFFSET_StgRegTable_rHpAlloc : DynFlags -> GHC.Num.Int.
 
-Axiom oFFSET_stgEagerBlackholeInfo : forall {A : Type}, A.
+Axiom oFFSET_stgEagerBlackholeInfo : DynFlags -> GHC.Num.Int.
 
-Axiom oFFSET_stgGCEnter1 : forall {A : Type}, A.
+Axiom oFFSET_stgGCEnter1 : DynFlags -> GHC.Num.Int.
 
-Axiom oFFSET_stgGCFun : forall {A : Type}, A.
+Axiom oFFSET_stgGCFun : DynFlags -> GHC.Num.Int.
 
-Axiom oFFSET_Capability_r : forall {A : Type}, A.
+Axiom oFFSET_Capability_r : DynFlags -> GHC.Num.Int.
 
-Axiom oFFSET_bdescr_start : forall {A : Type}, A.
+Axiom oFFSET_bdescr_start : DynFlags -> GHC.Num.Int.
 
-Axiom oFFSET_bdescr_free : forall {A : Type}, A.
+Axiom oFFSET_bdescr_free : DynFlags -> GHC.Num.Int.
 
-Axiom oFFSET_bdescr_blocks : forall {A : Type}, A.
+Axiom oFFSET_bdescr_blocks : DynFlags -> GHC.Num.Int.
 
-Axiom sIZEOF_CostCentreStack : forall {A : Type}, A.
+Axiom sIZEOF_CostCentreStack : DynFlags -> GHC.Num.Int.
 
-Axiom oFFSET_CostCentreStack_mem_alloc : forall {A : Type}, A.
+Axiom oFFSET_CostCentreStack_mem_alloc : DynFlags -> GHC.Num.Int.
 
-Axiom oFFSET_CostCentreStack_scc_count : forall {A : Type}, A.
+Axiom oFFSET_CostCentreStack_scc_count : DynFlags -> GHC.Num.Int.
 
-Axiom oFFSET_StgHeader_ccs : forall {A : Type}, A.
+Axiom oFFSET_StgHeader_ccs : DynFlags -> GHC.Num.Int.
 
-Axiom oFFSET_StgHeader_ldvw : forall {A : Type}, A.
+Axiom oFFSET_StgHeader_ldvw : DynFlags -> GHC.Num.Int.
 
-Axiom sIZEOF_StgSMPThunkHeader : forall {A : Type}, A.
+Axiom sIZEOF_StgSMPThunkHeader : DynFlags -> GHC.Num.Int.
 
-Axiom oFFSET_StgEntCounter_allocs : forall {A : Type}, A.
+Axiom oFFSET_StgEntCounter_allocs : DynFlags -> GHC.Num.Int.
 
-Axiom oFFSET_StgEntCounter_allocd : forall {A : Type}, A.
+Axiom oFFSET_StgEntCounter_allocd : DynFlags -> GHC.Num.Int.
 
-Axiom oFFSET_StgEntCounter_registeredp : forall {A : Type}, A.
+Axiom oFFSET_StgEntCounter_registeredp : DynFlags -> GHC.Num.Int.
 
-Axiom oFFSET_StgEntCounter_link : forall {A : Type}, A.
+Axiom oFFSET_StgEntCounter_link : DynFlags -> GHC.Num.Int.
 
-Axiom oFFSET_StgEntCounter_entry_count : forall {A : Type}, A.
+Axiom oFFSET_StgEntCounter_entry_count : DynFlags -> GHC.Num.Int.
 
-Axiom sIZEOF_StgUpdateFrame_NoHdr : forall {A : Type}, A.
+Axiom sIZEOF_StgUpdateFrame_NoHdr : DynFlags -> GHC.Num.Int.
 
-Axiom sIZEOF_StgMutArrPtrs_NoHdr : forall {A : Type}, A.
+Axiom sIZEOF_StgMutArrPtrs_NoHdr : DynFlags -> GHC.Num.Int.
 
-Axiom oFFSET_StgMutArrPtrs_ptrs : forall {A : Type}, A.
+Axiom oFFSET_StgMutArrPtrs_ptrs : DynFlags -> GHC.Num.Int.
 
-Axiom oFFSET_StgMutArrPtrs_size : forall {A : Type}, A.
+Axiom oFFSET_StgMutArrPtrs_size : DynFlags -> GHC.Num.Int.
 
-Axiom sIZEOF_StgSmallMutArrPtrs_NoHdr : forall {A : Type}, A.
+Axiom sIZEOF_StgSmallMutArrPtrs_NoHdr : DynFlags -> GHC.Num.Int.
 
-Axiom oFFSET_StgSmallMutArrPtrs_ptrs : forall {A : Type}, A.
+Axiom oFFSET_StgSmallMutArrPtrs_ptrs : DynFlags -> GHC.Num.Int.
 
-Axiom sIZEOF_StgArrBytes_NoHdr : forall {A : Type}, A.
+Axiom sIZEOF_StgArrBytes_NoHdr : DynFlags -> GHC.Num.Int.
 
-Axiom oFFSET_StgArrBytes_bytes : forall {A : Type}, A.
+Axiom oFFSET_StgArrBytes_bytes : DynFlags -> GHC.Num.Int.
 
-Axiom oFFSET_StgTSO_alloc_limit : forall {A : Type}, A.
+Axiom oFFSET_StgTSO_alloc_limit : DynFlags -> GHC.Num.Int.
 
-Axiom oFFSET_StgTSO_cccs : forall {A : Type}, A.
+Axiom oFFSET_StgTSO_cccs : DynFlags -> GHC.Num.Int.
 
-Axiom oFFSET_StgTSO_stackobj : forall {A : Type}, A.
+Axiom oFFSET_StgTSO_stackobj : DynFlags -> GHC.Num.Int.
 
-Axiom oFFSET_StgStack_sp : forall {A : Type}, A.
+Axiom oFFSET_StgStack_sp : DynFlags -> GHC.Num.Int.
 
-Axiom oFFSET_StgStack_stack : forall {A : Type}, A.
+Axiom oFFSET_StgStack_stack : DynFlags -> GHC.Num.Int.
 
-Axiom oFFSET_StgUpdateFrame_updatee : forall {A : Type}, A.
+Axiom oFFSET_StgUpdateFrame_updatee : DynFlags -> GHC.Num.Int.
 
-Axiom oFFSET_StgFunInfoExtraFwd_arity : forall {A : Type}, A.
+Axiom oFFSET_StgFunInfoExtraFwd_arity : DynFlags -> GHC.Num.Int.
 
-Axiom sIZEOF_StgFunInfoExtraRev : forall {A : Type}, A.
+Axiom sIZEOF_StgFunInfoExtraRev : DynFlags -> GHC.Num.Int.
 
-Axiom oFFSET_StgFunInfoExtraRev_arity : forall {A : Type}, A.
+Axiom oFFSET_StgFunInfoExtraRev_arity : DynFlags -> GHC.Num.Int.
 
-Axiom mAX_SPEC_SELECTEE_SIZE : forall {A : Type}, A.
+Axiom mAX_SPEC_SELECTEE_SIZE : DynFlags -> GHC.Num.Int.
 
-Axiom mAX_SPEC_AP_SIZE : forall {A : Type}, A.
+Axiom mAX_SPEC_AP_SIZE : DynFlags -> GHC.Num.Int.
 
-Axiom mIN_PAYLOAD_SIZE : forall {A : Type}, A.
+Axiom mIN_PAYLOAD_SIZE : DynFlags -> GHC.Num.Int.
 
-Axiom mIN_INTLIKE : forall {A : Type}, A.
+Axiom mIN_INTLIKE : DynFlags -> GHC.Num.Int.
 
-Axiom mAX_INTLIKE : forall {A : Type}, A.
+Axiom mAX_INTLIKE : DynFlags -> GHC.Num.Int.
 
-Axiom mIN_CHARLIKE : forall {A : Type}, A.
+Axiom mIN_CHARLIKE : DynFlags -> GHC.Num.Int.
 
-Axiom mAX_CHARLIKE : forall {A : Type}, A.
+Axiom mAX_CHARLIKE : DynFlags -> GHC.Num.Int.
 
-Axiom mUT_ARR_PTRS_CARD_BITS : forall {A : Type}, A.
+Axiom mUT_ARR_PTRS_CARD_BITS : DynFlags -> GHC.Num.Int.
 
-Axiom mAX_Vanilla_REG : forall {A : Type}, A.
+Axiom mAX_Vanilla_REG : DynFlags -> GHC.Num.Int.
 
-Axiom mAX_Float_REG : forall {A : Type}, A.
+Axiom mAX_Float_REG : DynFlags -> GHC.Num.Int.
 
-Axiom mAX_Double_REG : forall {A : Type}, A.
+Axiom mAX_Double_REG : DynFlags -> GHC.Num.Int.
 
-Axiom mAX_Long_REG : forall {A : Type}, A.
+Axiom mAX_Long_REG : DynFlags -> GHC.Num.Int.
 
-Axiom mAX_XMM_REG : forall {A : Type}, A.
+Axiom mAX_XMM_REG : DynFlags -> GHC.Num.Int.
 
-Axiom mAX_Real_Vanilla_REG : forall {A : Type}, A.
+Axiom mAX_Real_Vanilla_REG : DynFlags -> GHC.Num.Int.
 
-Axiom mAX_Real_Float_REG : forall {A : Type}, A.
+Axiom mAX_Real_Float_REG : DynFlags -> GHC.Num.Int.
 
-Axiom mAX_Real_Double_REG : forall {A : Type}, A.
+Axiom mAX_Real_Double_REG : DynFlags -> GHC.Num.Int.
 
-Axiom mAX_Real_XMM_REG : forall {A : Type}, A.
+Axiom mAX_Real_XMM_REG : DynFlags -> GHC.Num.Int.
 
-Axiom mAX_Real_Long_REG : forall {A : Type}, A.
+Axiom mAX_Real_Long_REG : DynFlags -> GHC.Num.Int.
 
-Axiom rESERVED_C_STACK_BYTES : forall {A : Type}, A.
+Axiom rESERVED_C_STACK_BYTES : DynFlags -> GHC.Num.Int.
 
-Axiom rESERVED_STACK_WORDS : forall {A : Type}, A.
+Axiom rESERVED_STACK_WORDS : DynFlags -> GHC.Num.Int.
 
-Axiom aP_STACK_SPLIM : forall {A : Type}, A.
+Axiom aP_STACK_SPLIM : DynFlags -> GHC.Num.Int.
 
-Axiom wORD_SIZE_IN_BITS : forall {A : Type}, A.
+Axiom wORD_SIZE_IN_BITS : DynFlags -> GHC.Num.Int.
 
-Axiom wORD_SIZE : forall {A : Type}, A.
+Axiom wORD_SIZE : DynFlags -> GHC.Num.Int.
 
-Axiom dOUBLE_SIZE : forall {A : Type}, A.
+Axiom dOUBLE_SIZE : DynFlags -> GHC.Num.Int.
 
-Axiom cINT_SIZE : forall {A : Type}, A.
+Axiom cINT_SIZE : DynFlags -> GHC.Num.Int.
 
-Axiom cLONG_SIZE : forall {A : Type}, A.
+Axiom cLONG_SIZE : DynFlags -> GHC.Num.Int.
 
-Axiom cLONG_LONG_SIZE : forall {A : Type}, A.
+Axiom cLONG_LONG_SIZE : DynFlags -> GHC.Num.Int.
 
-Axiom bITMAP_BITS_SHIFT : forall {A : Type}, A.
+Axiom bITMAP_BITS_SHIFT : DynFlags -> GHC.Num.Int.
 
-Axiom mAX_PTR_TAG : forall {A : Type}, A.
+Axiom mAX_PTR_TAG : DynFlags -> GHC.Num.Int.
 
-Axiom tAG_MASK : forall {A : Type}, A.
+Axiom tAG_MASK : DynFlags -> GHC.Num.Int.
 
-Axiom tAG_BITS : forall {A : Type}, A.
+Axiom tAG_BITS : DynFlags -> GHC.Num.Int.
 
-Axiom wORDS_BIGENDIAN : forall {A : Type}, A.
+Axiom wORDS_BIGENDIAN : DynFlags -> bool.
 
-Axiom dYNAMIC_BY_DEFAULT : forall {A : Type}, A.
+Axiom dYNAMIC_BY_DEFAULT : DynFlags -> bool.
 
-Axiom lDV_SHIFT : forall {A : Type}, A.
+Axiom lDV_SHIFT : DynFlags -> GHC.Num.Int.
 
-Axiom iLDV_CREATE_MASK : forall {A : Type}, A.
+Axiom iLDV_CREATE_MASK : DynFlags -> GHC.Num.Integer.
 
-Axiom iLDV_STATE_CREATE : forall {A : Type}, A.
+Axiom iLDV_STATE_CREATE : DynFlags -> GHC.Num.Integer.
 
-Axiom iLDV_STATE_USE : forall {A : Type}, A.
+Axiom iLDV_STATE_USE : DynFlags -> GHC.Num.Integer.
 
-Axiom isSse4_2Enabled : forall {A : Type}, A.
+Axiom isSse4_2Enabled : DynFlags -> bool.
 
-Axiom isAvxEnabled : forall {A : Type}, A.
+Axiom isAvxEnabled : DynFlags -> bool.
 
-Axiom isAvx2Enabled : forall {A : Type}, A.
+Axiom isAvx2Enabled : DynFlags -> bool.
 
-Axiom isAvx512cdEnabled : forall {A : Type}, A.
+Axiom isAvx512cdEnabled : DynFlags -> bool.
 
-Axiom isAvx512erEnabled : forall {A : Type}, A.
+Axiom isAvx512erEnabled : DynFlags -> bool.
 
-Axiom isAvx512fEnabled : forall {A : Type}, A.
+Axiom isAvx512fEnabled : DynFlags -> bool.
 
-Axiom isAvx512pfEnabled : forall {A : Type}, A.
+Axiom isAvx512pfEnabled : DynFlags -> bool.
 
-Axiom decodeSize : forall {A : Type}, A.
+Axiom decodeSize : GHC.Base.String -> GHC.Num.Integer.
 
 (* Unbound variables:
-     Type bool list op_zt__ GHC.Base.Eq_ GHC.Base.String Module.Module
-     Module.ModuleName Module.ModuleNameEnv
+     Type bool list op_zt__ option Data.Either.Either GHC.Base.Eq_ GHC.Base.String
+     GHC.Char.Char GHC.Num.Int GHC.Num.Integer Module.Module Module.ModuleName
+     Module.ModuleNameEnv SrcLoc.Located SrcLoc.SrcSpan
 *)

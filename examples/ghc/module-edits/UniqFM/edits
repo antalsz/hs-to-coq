@@ -7,17 +7,21 @@ skip module Compiler.Hoopl.Dataflow
 # requires Hoopl
 skip UniqFM.joinUFM
 
-# requires Data.IntMap.Base.mergeWithKey
+# requires Data.IntMap.Internal.mergeWithKey
 # not sure how that translates to map2
 skip UniqFM.plusUFM_CD
 
-# need to have set datastructure Data.IntMap.Base.keysSet
+# need to have set datastructure Data.IntMap.Internal.keysSet
 skip UniqFM.ufmToSet_Directly
 
 # need to avoid left / right as binding vars
 # skip UniqFM.partitionUFM
 
-order UniqFM.Functor__UniqFM UniqFM.Foldable__UniqFM UniqFM.Traversable__UniqFM
+# These instances need the corresponding stuff in IntMap.
+# order UniqFM.Functor__UniqFM UniqFM.Foldable__UniqFM UniqFM.Traversable__UniqFM
+skip UniqFM.Functor__UniqFM
+skip UniqFM.Foldable__UniqFM
+skip UniqFM.Traversable__UniqFM
 
-add UniqFM Instance Unpeel_UniqFM ele : GHC.Prim.Unpeel (UniqFM ele) (Data.IntMap.Base.IntMap ele) :=
+add UniqFM Instance Unpeel_UniqFM ele : GHC.Prim.Unpeel (UniqFM ele) (Data.IntMap.Internal.IntMap ele) :=
   GHC.Prim.Build_Unpeel _ _ (fun x => match x with | UFM y => y end) UFM.

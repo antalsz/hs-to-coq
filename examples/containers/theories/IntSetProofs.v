@@ -4288,19 +4288,23 @@ Definition foldl_go {a} k :=
    | Nil => arg_0__
    end.
 
+Lemma foldlBits_foldrBits:
+  forall {a b}  k (x : a) p bm (k' : a -> b), isBitMask0 bm ->
+    k' (foldlBits p k x bm) = foldrBits p (fun x g a => g (k a x)) k' bm x.
+Admitted.
+
 Lemma foldl_go_foldr_go:
   forall {a b}  k (x : a) s r f (k' : a -> b), Desc s r f ->
     k' (foldl_go k x s) = foldr_go (fun x g a => g (k a x)) k' s x.
 Proof.
   intros.
   revert x k'; induction H; intros.
-  * simpl.
-    admit.
+  * apply foldlBits_foldrBits; isBitMask.
   * simpl.
     rewrite IHDesc2 with (k' := k').
     rewrite IHDesc1 with (k' := foldr_go _ k' s2).
     reflexivity.
-Admitted.
+Qed.
 
 Lemma foldl_foldr:
   forall {a} k (x : a) s, WF s ->
@@ -4311,7 +4315,8 @@ Proof.
  destruct HSem.
  * reflexivity.
  * revert x; destruct HD; intros.
-   + admit.
+   + simpl.
+     apply foldlBits_foldrBits with (k' :=  fun x => x); isBitMask.
    + simpl.
      fold (foldl_go k).
      fold (foldr_go (fun (x0 : Key) (g : a -> a) (a0 : a) => g (k a0 x0))).
@@ -4321,8 +4326,12 @@ Proof.
        eapply foldl_go_foldr_go; eassumption.
      - erewrite foldl_go_foldr_go with (k' := fun x => x) by eassumption.
        eapply foldl_go_foldr_go; eassumption.
-Admitted.
+Qed.
 
+Lemma fold_right_foldrBits_go:
+  forall {a} f (x : a) p bm xs, isBitMask0 bm -> 
+  fold_right f x (foldrBits p cons xs bm) = foldrBits p f (fold_right f x xs) bm.
+Admitted.
 
 Lemma fold_right_toList_go:
   forall {a} f (x : a) s r f' xs, Desc s r f' -> 
@@ -4330,12 +4339,12 @@ Lemma fold_right_toList_go:
 Proof.
   intros. 
   revert xs; induction H; intros.
-  * admit.
+  * apply fold_right_foldrBits_go; isBitMask.
   * simpl.
     rewrite IHDesc1.
     rewrite IHDesc2.
     reflexivity.
-Admitted.
+Qed.
 
 Lemma fold_right_toList:
   forall {a} f (x : a) s xs, WF s-> 
@@ -4346,7 +4355,7 @@ Proof.
   destruct HSem.
   * reflexivity.
   * destruct HD.
-    + simpl. admit.
+    + apply fold_right_foldrBits_go; isBitMask.
     + simpl.
       unfoldMethods.
       fold (foldr_go (@cons Key)). 
@@ -4354,7 +4363,7 @@ Proof.
       destruct (Z.ltb_spec msk 0).
       - do 2 erewrite fold_right_toList_go by eassumption. reflexivity.
       - do 2 erewrite fold_right_toList_go by eassumption. reflexivity.
-Admitted.
+Qed.
 
 Lemma List_foldl_foldr:
   forall {a b} f (x : b) (xs : list a),

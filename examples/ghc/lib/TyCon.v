@@ -17,7 +17,7 @@ Require Name.
 Require Class.
 Require Var.
 
-Definition error {a} `{Panic.Default a} := Panic.panic.
+Require Import GHC.Err.
 
 (* Record selectors *)
 Parameter tyConName    : TyCon -> Name.Name.
@@ -106,78 +106,78 @@ Inductive AlgTyConRhs : Type := AbstractTyCon : bool -> AlgTyConRhs
 
 Definition data_con (arg_0__ : AlgTyConRhs) :=
   match arg_0__ with
-    | AbstractTyCon _ => error (GHC.Base.hs_string__
-                               "Partial record selector: field `data_con' has no match in constructor `AbstractTyCon' of type `AlgTyConRhs'")
-    | DataTyCon _ _ => error (GHC.Base.hs_string__
-                             "Partial record selector: field `data_con' has no match in constructor `DataTyCon' of type `AlgTyConRhs'")
+    | AbstractTyCon _ => GHC.Err.error (GHC.Base.hs_string__
+                                       "Partial record selector: field `data_con' has no match in constructor `AbstractTyCon' of type `AlgTyConRhs'")
+    | DataTyCon _ _ => GHC.Err.error (GHC.Base.hs_string__
+                                     "Partial record selector: field `data_con' has no match in constructor `DataTyCon' of type `AlgTyConRhs'")
     | TupleTyCon data_con _ => data_con
     | NewTyCon data_con _ _ _ => data_con
   end.
 
 Definition data_cons (arg_1__ : AlgTyConRhs) :=
   match arg_1__ with
-    | AbstractTyCon _ => error (GHC.Base.hs_string__
-                               "Partial record selector: field `data_cons' has no match in constructor `AbstractTyCon' of type `AlgTyConRhs'")
+    | AbstractTyCon _ => GHC.Err.error (GHC.Base.hs_string__
+                                       "Partial record selector: field `data_cons' has no match in constructor `AbstractTyCon' of type `AlgTyConRhs'")
     | DataTyCon data_cons _ => data_cons
-    | TupleTyCon _ _ => error (GHC.Base.hs_string__
-                              "Partial record selector: field `data_cons' has no match in constructor `TupleTyCon' of type `AlgTyConRhs'")
-    | NewTyCon _ _ _ _ => error (GHC.Base.hs_string__
-                                "Partial record selector: field `data_cons' has no match in constructor `NewTyCon' of type `AlgTyConRhs'")
+    | TupleTyCon _ _ => GHC.Err.error (GHC.Base.hs_string__
+                                      "Partial record selector: field `data_cons' has no match in constructor `TupleTyCon' of type `AlgTyConRhs'")
+    | NewTyCon _ _ _ _ => GHC.Err.error (GHC.Base.hs_string__
+                                        "Partial record selector: field `data_cons' has no match in constructor `NewTyCon' of type `AlgTyConRhs'")
   end.
 
 Definition is_enum (arg_2__ : AlgTyConRhs) :=
   match arg_2__ with
-    | AbstractTyCon _ => error (GHC.Base.hs_string__
-                               "Partial record selector: field `is_enum' has no match in constructor `AbstractTyCon' of type `AlgTyConRhs'")
+    | AbstractTyCon _ => GHC.Err.error (GHC.Base.hs_string__
+                                       "Partial record selector: field `is_enum' has no match in constructor `AbstractTyCon' of type `AlgTyConRhs'")
     | DataTyCon _ is_enum => is_enum
-    | TupleTyCon _ _ => error (GHC.Base.hs_string__
-                              "Partial record selector: field `is_enum' has no match in constructor `TupleTyCon' of type `AlgTyConRhs'")
-    | NewTyCon _ _ _ _ => error (GHC.Base.hs_string__
-                                "Partial record selector: field `is_enum' has no match in constructor `NewTyCon' of type `AlgTyConRhs'")
+    | TupleTyCon _ _ => GHC.Err.error (GHC.Base.hs_string__
+                                      "Partial record selector: field `is_enum' has no match in constructor `TupleTyCon' of type `AlgTyConRhs'")
+    | NewTyCon _ _ _ _ => GHC.Err.error (GHC.Base.hs_string__
+                                        "Partial record selector: field `is_enum' has no match in constructor `NewTyCon' of type `AlgTyConRhs'")
   end.
 
 Definition nt_co (arg_3__ : AlgTyConRhs) :=
   match arg_3__ with
-    | AbstractTyCon _ => error (GHC.Base.hs_string__
-                               "Partial record selector: field `nt_co' has no match in constructor `AbstractTyCon' of type `AlgTyConRhs'")
-    | DataTyCon _ _ => error (GHC.Base.hs_string__
-                             "Partial record selector: field `nt_co' has no match in constructor `DataTyCon' of type `AlgTyConRhs'")
-    | TupleTyCon _ _ => error (GHC.Base.hs_string__
-                              "Partial record selector: field `nt_co' has no match in constructor `TupleTyCon' of type `AlgTyConRhs'")
+    | AbstractTyCon _ => GHC.Err.error (GHC.Base.hs_string__
+                                       "Partial record selector: field `nt_co' has no match in constructor `AbstractTyCon' of type `AlgTyConRhs'")
+    | DataTyCon _ _ => GHC.Err.error (GHC.Base.hs_string__
+                                     "Partial record selector: field `nt_co' has no match in constructor `DataTyCon' of type `AlgTyConRhs'")
+    | TupleTyCon _ _ => GHC.Err.error (GHC.Base.hs_string__
+                                      "Partial record selector: field `nt_co' has no match in constructor `TupleTyCon' of type `AlgTyConRhs'")
     | NewTyCon _ _ _ nt_co => nt_co
   end.
 
 Definition nt_etad_rhs (arg_4__ : AlgTyConRhs) :=
   match arg_4__ with
-    | AbstractTyCon _ => error (GHC.Base.hs_string__
-                               "Partial record selector: field `nt_etad_rhs' has no match in constructor `AbstractTyCon' of type `AlgTyConRhs'")
-    | DataTyCon _ _ => error (GHC.Base.hs_string__
-                             "Partial record selector: field `nt_etad_rhs' has no match in constructor `DataTyCon' of type `AlgTyConRhs'")
-    | TupleTyCon _ _ => error (GHC.Base.hs_string__
-                              "Partial record selector: field `nt_etad_rhs' has no match in constructor `TupleTyCon' of type `AlgTyConRhs'")
+    | AbstractTyCon _ => GHC.Err.error (GHC.Base.hs_string__
+                                       "Partial record selector: field `nt_etad_rhs' has no match in constructor `AbstractTyCon' of type `AlgTyConRhs'")
+    | DataTyCon _ _ => GHC.Err.error (GHC.Base.hs_string__
+                                     "Partial record selector: field `nt_etad_rhs' has no match in constructor `DataTyCon' of type `AlgTyConRhs'")
+    | TupleTyCon _ _ => GHC.Err.error (GHC.Base.hs_string__
+                                      "Partial record selector: field `nt_etad_rhs' has no match in constructor `TupleTyCon' of type `AlgTyConRhs'")
     | NewTyCon _ _ nt_etad_rhs _ => nt_etad_rhs
   end.
 
 Definition nt_rhs (arg_5__ : AlgTyConRhs) :=
   match arg_5__ with
-    | AbstractTyCon _ => error (GHC.Base.hs_string__
-                               "Partial record selector: field `nt_rhs' has no match in constructor `AbstractTyCon' of type `AlgTyConRhs'")
-    | DataTyCon _ _ => error (GHC.Base.hs_string__
-                             "Partial record selector: field `nt_rhs' has no match in constructor `DataTyCon' of type `AlgTyConRhs'")
-    | TupleTyCon _ _ => error (GHC.Base.hs_string__
-                              "Partial record selector: field `nt_rhs' has no match in constructor `TupleTyCon' of type `AlgTyConRhs'")
+    | AbstractTyCon _ => GHC.Err.error (GHC.Base.hs_string__
+                                       "Partial record selector: field `nt_rhs' has no match in constructor `AbstractTyCon' of type `AlgTyConRhs'")
+    | DataTyCon _ _ => GHC.Err.error (GHC.Base.hs_string__
+                                     "Partial record selector: field `nt_rhs' has no match in constructor `DataTyCon' of type `AlgTyConRhs'")
+    | TupleTyCon _ _ => GHC.Err.error (GHC.Base.hs_string__
+                                      "Partial record selector: field `nt_rhs' has no match in constructor `TupleTyCon' of type `AlgTyConRhs'")
     | NewTyCon _ nt_rhs _ _ => nt_rhs
   end.
 
 Definition tup_sort (arg_6__ : AlgTyConRhs) :=
   match arg_6__ with
-    | AbstractTyCon _ => error (GHC.Base.hs_string__
-                               "Partial record selector: field `tup_sort' has no match in constructor `AbstractTyCon' of type `AlgTyConRhs'")
-    | DataTyCon _ _ => error (GHC.Base.hs_string__
-                             "Partial record selector: field `tup_sort' has no match in constructor `DataTyCon' of type `AlgTyConRhs'")
+    | AbstractTyCon _ => GHC.Err.error (GHC.Base.hs_string__
+                                       "Partial record selector: field `tup_sort' has no match in constructor `AbstractTyCon' of type `AlgTyConRhs'")
+    | DataTyCon _ _ => GHC.Err.error (GHC.Base.hs_string__
+                                     "Partial record selector: field `tup_sort' has no match in constructor `DataTyCon' of type `AlgTyConRhs'")
     | TupleTyCon _ tup_sort => tup_sort
-    | NewTyCon _ _ _ _ => error (GHC.Base.hs_string__
-                                "Partial record selector: field `tup_sort' has no match in constructor `NewTyCon' of type `AlgTyConRhs'")
+    | NewTyCon _ _ _ _ => GHC.Err.error (GHC.Base.hs_string__
+                                        "Partial record selector: field `tup_sort' has no match in constructor `NewTyCon' of type `AlgTyConRhs'")
   end.
 (* Converted value declarations: *)
 
@@ -895,14 +895,14 @@ Definition visibleDataCons : AlgTyConRhs -> list DataCon.DataCon :=
 
 (* Unbound variables:
      Eq Gt Injective Kind Lt None NotInjective Some TyVar algTcFields andb bool
-     comparison cons error false list negb nil op_zt__ option pair true tyConName
+     comparison cons false list negb nil op_zt__ option pair true tyConName
      BasicTypes.TupleSort Constants.wORD64_SIZE Core.Branched Core.BuiltInSynFamily
      Core.CoAxiom Core.Injectivity Core.Role Core.TyBinder Core.TyCon
      Core.TyConRepName Core.Type_ Core.Unbranched DataCon.DataCon DynFlags.DynFlags
      DynFlags.dOUBLE_SIZE DynFlags.wORD_SIZE FastStringEnv.emptyFsEnv
      FastStringEnv.fsEnvElts FieldLabel.FieldLabel FieldLabel.FieldLabelEnv
      GHC.Base.Eq_ GHC.Base.Ord GHC.Base.compare GHC.Base.map GHC.Base.op_z2218U__
-     GHC.Base.op_zd__ GHC.Base.op_zeze__ GHC.Base.op_zgze__ GHC.Num.Int
+     GHC.Base.op_zd__ GHC.Base.op_zeze__ GHC.Base.op_zgze__ GHC.Err.error GHC.Num.Int
      GHC.Num.op_zp__ GHC.Num.op_zt__ GHC.Real.quot Maybes.orElse Module.Module
      Name.Name Name.mkExternalName Name.nameModule Name.nameOccName Name.nameSrcSpan
      Name.nameUnique NameEnv.NameEnv NameEnv.emptyNameEnv NameEnv.extendNameEnv

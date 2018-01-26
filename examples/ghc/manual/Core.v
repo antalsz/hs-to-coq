@@ -23,9 +23,6 @@ Require DataCon.
 Require BasicTypes.
 Require IdInfo.
 
-(* Move elsewhere *)
-Instance Panic_Default_datacon : Panic.Default DataCon.DataCon.
-Admitted.
 
 (* Some information we don't care about *)
 
@@ -323,15 +320,15 @@ Instance namedTyCon : Name.NamedThing TyCon.
 Admitted.
 
 
-Instance defaultCoAxiom {br} : Panic.Default (CoAxiom br).
+Instance DefaultCoAxiom {br} : GHC.Err.Default (CoAxiom br).
 Admitted.
-Instance defaultType_ : Panic.Default Type_.
+Instance DefaultType_ : GHC.Err.Default Type_.
 Admitted.
-Instance defaultCoercion : Panic.Default Coercion.
+Instance DefaultCoercion : GHC.Err.Default Coercion.
 Admitted.
-Instance defaultTyCon : Panic.Default TyCon.
+Instance DefaultTyCon : GHC.Err.Default TyCon.
 Admitted.
-Instance defaultTCvSubst : Panic.Default TCvSubst.
+Instance DefaultTCvSubst : GHC.Err.Default TCvSubst.
 Admitted.
-Instance Panic_Default_CoAxiom {br} : Panic.Default (CoAxiom br).
+Instance Default_CoAxiom {br} : GHC.Err.Default (CoAxiom br).
 Admitted.

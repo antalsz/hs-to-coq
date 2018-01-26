@@ -3,7 +3,7 @@
    from other files. *)
 
 Require Import GHC.Base.
-Require Import Panic.
+Require Import GHC.Err.
 
 Definition FastString := String.
 
@@ -13,7 +13,7 @@ Admitted.
 Instance instance_FastString_Ord : Ord FastString := {}.
 Admitted.
 
-Instance instance_FastString_Default : Panic.Default FastString := {}.
+Instance instance_FastString_Default : GHC.Err.Default FastString := {}.
 Admitted.
 
 Definition fsLit (s : String) : FastString := s.

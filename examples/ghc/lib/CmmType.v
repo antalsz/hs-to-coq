@@ -47,12 +47,12 @@ Inductive CmmCat : Type := GcPtrCat : CmmCat
 Inductive CmmType : Type := Mk_CmmType : CmmCat -> Width -> CmmType.
 (* Midamble *)
 
-Instance Default_CmmCat  : Panic.Default CmmCat :=
+Instance Default_CmmCat  : GHC.Err.Default CmmCat :=
 	 { default := GcPtrCat }.
-Instance Default_width   : Panic.Default Width :=
+Instance Default_width   : GHC.Err.Default Width :=
 	 { default := W80 }.
-Instance Default_CmmType : Panic.Default CmmType :=
-	 { default := Mk_CmmType Panic.default Panic.default }.
+Instance Default_CmmType : GHC.Err.Default CmmType :=
+	 { default := Mk_CmmType GHC.Err.default GHC.Err.default }.
 
 (* Converted value declarations: *)
 

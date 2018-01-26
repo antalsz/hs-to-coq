@@ -74,7 +74,7 @@ Definition srcSpanSLine (arg_4__ : RealSrcSpan) :=
 (* Midamble *)
 
 (* Default values *)
-Import Panic.
+Require Import GHC.Err.
 Instance Default_SrcSpan : Default SrcSpan := Build_Default _ (UnhelpfulSpan default).
 
 (* Converted value declarations: *)

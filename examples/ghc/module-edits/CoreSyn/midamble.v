@@ -126,11 +126,11 @@ Definition exprToType : CoreExpr -> Core.Type_ :=
   fun arg_0__ =>
     match arg_0__ with
       | Type_ ty => ty
-      | _bad => Panic.panic (GHC.Base.hs_string__ "exprToType")
+      | _bad => GHC.Err.error (GHC.Base.hs_string__ "exprToType")
     end.
 
 Definition applyTypeToArg : Core.Type_ -> (CoreExpr -> Core.Type_) :=
   fun fun_ty arg => TyCoRep.piResultTy fun_ty (exprToType arg).
 
-Instance Default_Expr {b} : Panic.Default (Expr b).
+Instance Default_Expr {b} : GHC.Err.Default (Expr b).
 Admitted.

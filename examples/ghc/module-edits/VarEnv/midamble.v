@@ -14,13 +14,13 @@ Axiom uniqAway' : InScopeSet -> Core.Var -> Core.Var.
     end.
 *)
 
-Require Panic.
+Require GHC.Err.
 
-Instance Default_InScopeSet : Panic.Default InScopeSet :=
-  Panic.Build_Default _ (InScope Panic.default Panic.default).
-Instance Default_RnEnv2 : Panic.Default RnEnv2 :=
-  Panic.Build_Default _ (RV2 Panic.default Panic.default Panic.default).
-Instance Default_TidyEnv : Panic.Default TidyEnv.
+Instance Default_InScopeSet : GHC.Err.Default InScopeSet :=
+  GHC.Err.Build_Default _ (InScope GHC.Err.default GHC.Err.default).
+Instance Default_RnEnv2 : GHC.Err.Default RnEnv2 :=
+  GHC.Err.Build_Default _ (RV2 GHC.Err.default GHC.Err.default GHC.Err.default).
+Instance Default_TidyEnv : GHC.Err.Default TidyEnv.
 Admitted.
 
 

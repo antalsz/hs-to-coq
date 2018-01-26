@@ -2,9 +2,9 @@
 skip VarEnv.plusVarEnv_CD
 skip VarEnv.uniqAway'
 
-redefine Definition VarEnv.lookupVarEnv_NF {a} `{_ : Panic.Default a} (env : VarEnv a) (id
+redefine Definition VarEnv.lookupVarEnv_NF {a} `{_ : GHC.Err.Default a} (env : VarEnv a) (id
                              : Core.Var) : a :=
       match lookupVarEnv env id with
       | Some xx => xx
-      | None => Panic.default
+      | None => GHC.Err.default
     end.

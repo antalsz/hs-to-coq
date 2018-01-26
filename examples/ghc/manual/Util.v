@@ -55,7 +55,7 @@ Import GHC.Base.Notations.
 Import GHC.Num.Notations.
 Import GHC.Real.Notations.
 (* Import System.FilePath.Posix.Notations. *)
-Require Panic.
+Require GHC.Err.
 
 (* Converted type declarations: *)
 
@@ -198,7 +198,7 @@ Definition debugIsOn : bool :=
 Definition minWith {b} {a} `{GHC.Base.Ord b} : (a -> b) -> list a -> a :=
   fun get_key xs =>
     if andb debugIsOn (negb (negb (Data.Foldable.null xs))) : bool
-    then (Panic.assertPanic (GHC.Base.hs_string__ "ghc/compiler/utils/Util.hs")
+    then (GHC.Err.assertPanic (GHC.Base.hs_string__ "ghc/compiler/utils/Util.hs")
          (GHC.Num.fromInteger 559))
     else GHC.List.head (GHC.Exts.sortWith get_key xs).
 *)
@@ -307,13 +307,13 @@ Definition firstM {m} {a} {c} {b} `{GHC.Base.Monad m} : (a -> m c) -> (a *
     end.
 
 (* partial *)
-Definition foldl2 {acc} {a} {b} `{Panic.Default acc} : (acc -> a -> b -> acc) -> acc -> list
+Definition foldl2 {acc} {a} {b} `{GHC.Err.Default acc} : (acc -> a -> b -> acc) -> acc -> list
                                   a -> list b -> acc :=
   fix foldl2 arg_300__ arg_301__ arg_302__ arg_303__
         := match arg_300__ , arg_301__ , arg_302__ , arg_303__ with
              | _ , z , nil , nil => z
              | k , z , cons a as_ , cons b bs => foldl2 k (k z a b) as_ bs
-             | _ , _ , _ , _ => Panic.panic (GHC.Base.hs_string__ "Util: foldl2")
+             | _ , _ , _ , _ => GHC.Err.error (GHC.Base.hs_string__ "Util: foldl2")
            end.
 
 Definition fst3 {a} {d} {b} {c} : (a -> d) -> (a * b * c)%type -> (d * b *
@@ -546,11 +546,11 @@ Definition lengthExceeds {a} : list a -> GHC.Num.Int -> bool :=
 Definition nubSort {a} `{GHC.Base.Ord a} : list a -> list a :=
   Data.Set.Base.toAscList GHC.Base.∘ Data.Set.Base.fromList.
 *)
-Definition only {a}`{_:Panic.Default a} : list a -> a :=
+Definition only {a}`{_:GHC.Err.Default a} : list a -> a :=
   fun arg_326__ =>
     match arg_326__ with
       | cons a _ => a
-      | _ => Panic.panic (GHC.Base.hs_string__ "Util: only")
+      | _ => GHC.Err.error (GHC.Base.hs_string__ "Util: only")
     end.
 
 Definition op_zlzazazg__ {f} `{GHC.Base.Applicative f} : f bool -> f bool -> f
@@ -786,7 +786,7 @@ Definition snocView {a} : list a -> option (list a * a)%type :=
                       := match arg_247__ , arg_248__ with
                            | acc , cons x nil => Some (pair (GHC.List.reverse acc) x)
                            | acc , cons x xs => go (cons x acc) xs
-                           | _ , nil => Panic.panic (GHC.Base.hs_string__ "Util: snocView")
+                           | _ , nil => GHC.Err.error (GHC.Base.hs_string__ "Util: snocView")
                          end in
               go nil xs
     end.
@@ -951,7 +951,7 @@ Definition zipLazy {a} {b} : list a -> list b -> list (a * b)%type :=
         := match arg_439__ , arg_440__ with
              | nil , _ => nil
              | cons x xs , cons y ys => cons (pair x y) (zipLazy xs ys)
-             | _ , _ => Panic.panic (GHC.Base.hs_string__ "zipLazy")
+             | _ , _ => GHC.Err.error (GHC.Base.hs_string__ "zipLazy")
            end.
 
 Definition zipWith3Equal {a} {b} {c} {d}
@@ -966,7 +966,7 @@ Definition zipWith3Lazy {a} {b} {c} {d} : (a -> b -> c -> d) -> list a -> list
              | _ , nil , _ , _ => nil
              | f , cons a as_ , cons b bs , cons c cs => cons (f a b c) (zipWith3Lazy f as_
                                                               bs cs)
-             | _ , _ , _ , _ => Panic.panic (GHC.Base.hs_string__ "zipWith3Lazy")
+             | _ , _ , _ , _ => GHC.Err.error (GHC.Base.hs_string__ "zipWith3Lazy")
            end.
 
 Definition zipWith4Equal {a} {b} {c} {d} {e}
@@ -996,7 +996,7 @@ Definition zipWithLazy {a} {b} {c} : (a -> b -> c) -> list a -> list b -> list
         := match arg_434__ , arg_435__ , arg_436__ with
              | _ , nil , _ => nil
              | f , cons a as_ , cons b bs => cons (f a b) (zipWithLazy f as_ bs)
-             | _ , _ , _ => Panic.panic (GHC.Base.hs_string__ "zipWithLazy")
+             | _ , _ , _ => GHC.Err.error (GHC.Base.hs_string__ "zipWithLazy")
            end.
 
 Module Notations.
@@ -1038,7 +1038,7 @@ End Notations.
      GHC.Real.op_zc__ GHC.Real.op_zczc__ GHC.Real.op_zs__ GHC.Real.op_zv__
      GHC.Real.truncate GHC.Show.show GHC.Types.IO GHC.Unicode.isAlphaNum
      GHC.Unicode.isDigit GHC.Unicode.isSpace GHC.Unicode.isUpper GHC.Word.Word32
-     GHC.Word.Word8 Panic.assertPanic Panic.panic System.Directory.doesDirectoryExist
+     GHC.Word.Word8 Error.assertError Error.error System.Directory.doesDirectoryExist
      System.Directory.getModificationTime System.FilePath.Posix.dropFileName
      System.FilePath.Posix.joinPath System.FilePath.Posix.op_zlzszg__
      System.FilePath.Posix.splitFileName System.FilePath.Posix.splitPath

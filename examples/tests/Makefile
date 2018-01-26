@@ -15,7 +15,6 @@ PASS = \
   Irrefutable \
   LocalTopoSort \
   InstCtx \
-  Guard2 \
   ExhaustGuard \
   PartialAppliedPolyDataCon \
   NonStructuralRec \
@@ -33,6 +32,7 @@ PASS = \
   Records \
   RecordConstruction \
   PatternGuard \
+  Guards2 \
 
 # tests that *should* pass but currently fail
 TODO_PASS  = \

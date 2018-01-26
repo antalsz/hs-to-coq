@@ -1,4 +1,4 @@
-Import Panic.
+Require Import GHC.Err.
 
 Instance Default_UnitId : Default UnitId := Build_Default _ (PId default).
 Instance Default_ModuleName : Default ModuleName :=

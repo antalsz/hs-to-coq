@@ -23,7 +23,6 @@ Require GHC.Base.
 Require GHC.Num.
 Require Maybes.
 Require OccName.
-Require Panic.
 Require UniqDFM.
 Require UniqFM.
 Require Unique.
@@ -99,13 +98,13 @@ Axiom uniqAway' : InScopeSet -> Core.Var -> Core.Var.
     end.
 *)
 
-Require Panic.
+Require GHC.Err.
 
-Instance Default_InScopeSet : Panic.Default InScopeSet :=
-  Panic.Build_Default _ (InScope Panic.default Panic.default).
-Instance Default_RnEnv2 : Panic.Default RnEnv2 :=
-  Panic.Build_Default _ (RV2 Panic.default Panic.default Panic.default).
-Instance Default_TidyEnv : Panic.Default TidyEnv.
+Instance Default_InScopeSet : GHC.Err.Default InScopeSet :=
+  GHC.Err.Build_Default _ (InScope GHC.Err.default GHC.Err.default).
+Instance Default_RnEnv2 : GHC.Err.Default RnEnv2 :=
+  GHC.Err.Build_Default _ (RV2 GHC.Err.default GHC.Err.default GHC.Err.default).
+Instance Default_TidyEnv : GHC.Err.Default TidyEnv.
 Admitted.
 
 
@@ -444,11 +443,11 @@ Definition lookupInScope_Directly : InScopeSet -> Unique.Unique -> option
       | InScope in_scope _ , uniq => lookupVarEnv_Directly in_scope uniq
     end.
 
-Definition lookupVarEnv_NF {a} `{_ : Panic.Default a} (env : VarEnv a) (id
+Definition lookupVarEnv_NF {a} `{_ : GHC.Err.Default a} (env : VarEnv a) (id
                              : Core.Var) : a :=
   match lookupVarEnv env id with
     | Some xx => xx
-    | None => Panic.default
+    | None => GHC.Err.default
   end.
 
 Definition lookupWithDefaultVarEnv {a} : VarEnv a -> a -> Core.Var -> a :=
@@ -567,21 +566,21 @@ Definition varSetInScope : VarSet.VarSet -> InScopeSet -> bool :=
 (* Unbound variables:
      None Some bool list negb op_zt__ option pair uniqAway' Core.Var
      Data.Foldable.foldl Data.Foldable.length Data.Tuple.fst GHC.Base.op_zd__
-     GHC.Num.Int GHC.Num.op_zp__ Maybes.orElse OccName.TidyOccEnv
-     OccName.emptyTidyOccEnv Panic.Default Panic.default UniqDFM.UniqDFM
-     UniqDFM.addToUDFM UniqDFM.addToUDFM_C UniqDFM.alterUDFM UniqDFM.anyUDFM
-     UniqDFM.delFromUDFM UniqDFM.delListFromUDFM UniqDFM.eltsUDFM UniqDFM.emptyUDFM
-     UniqDFM.foldUDFM UniqDFM.isNullUDFM UniqDFM.lookupUDFM UniqDFM.mapUDFM
-     UniqDFM.partitionUDFM UniqDFM.plusUDFM_C UniqDFM.unitUDFM UniqFM.UniqFM
-     UniqFM.addListToUFM UniqFM.addToUFM UniqFM.addToUFM_Acc UniqFM.addToUFM_C
-     UniqFM.addToUFM_Directly UniqFM.alterUFM UniqFM.delFromUFM
-     UniqFM.delFromUFM_Directly UniqFM.delListFromUFM UniqFM.elemUFM
-     UniqFM.elemUFM_Directly UniqFM.eltsUFM UniqFM.emptyUFM UniqFM.filterUFM
-     UniqFM.filterUFM_Directly UniqFM.foldUFM UniqFM.foldUFM_Directly
-     UniqFM.intersectUFM UniqFM.isNullUFM UniqFM.keysUFM UniqFM.listToUFM
-     UniqFM.listToUFM_Directly UniqFM.lookupUFM UniqFM.lookupUFM_Directly
-     UniqFM.lookupWithDefaultUFM UniqFM.mapUFM UniqFM.minusUFM UniqFM.partitionUFM
-     UniqFM.plusUFM UniqFM.plusUFM_C UniqFM.sizeUFM UniqFM.ufmToList UniqFM.unitUFM
-     Unique.Unique Util.foldl2 Util.zipEqual VarSet.VarSet VarSet.elemVarSetByKey
-     VarSet.emptyVarSet VarSet.subVarSet
+     GHC.Err.Default GHC.Err.default GHC.Num.Int GHC.Num.op_zp__ Maybes.orElse
+     OccName.TidyOccEnv OccName.emptyTidyOccEnv UniqDFM.UniqDFM UniqDFM.addToUDFM
+     UniqDFM.addToUDFM_C UniqDFM.alterUDFM UniqDFM.anyUDFM UniqDFM.delFromUDFM
+     UniqDFM.delListFromUDFM UniqDFM.eltsUDFM UniqDFM.emptyUDFM UniqDFM.foldUDFM
+     UniqDFM.isNullUDFM UniqDFM.lookupUDFM UniqDFM.mapUDFM UniqDFM.partitionUDFM
+     UniqDFM.plusUDFM_C UniqDFM.unitUDFM UniqFM.UniqFM UniqFM.addListToUFM
+     UniqFM.addToUFM UniqFM.addToUFM_Acc UniqFM.addToUFM_C UniqFM.addToUFM_Directly
+     UniqFM.alterUFM UniqFM.delFromUFM UniqFM.delFromUFM_Directly
+     UniqFM.delListFromUFM UniqFM.elemUFM UniqFM.elemUFM_Directly UniqFM.eltsUFM
+     UniqFM.emptyUFM UniqFM.filterUFM UniqFM.filterUFM_Directly UniqFM.foldUFM
+     UniqFM.foldUFM_Directly UniqFM.intersectUFM UniqFM.isNullUFM UniqFM.keysUFM
+     UniqFM.listToUFM UniqFM.listToUFM_Directly UniqFM.lookupUFM
+     UniqFM.lookupUFM_Directly UniqFM.lookupWithDefaultUFM UniqFM.mapUFM
+     UniqFM.minusUFM UniqFM.partitionUFM UniqFM.plusUFM UniqFM.plusUFM_C
+     UniqFM.sizeUFM UniqFM.ufmToList UniqFM.unitUFM Unique.Unique Util.foldl2
+     Util.zipEqual VarSet.VarSet VarSet.elemVarSetByKey VarSet.emptyVarSet
+     VarSet.subVarSet
 *)

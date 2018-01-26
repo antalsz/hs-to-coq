@@ -74,22 +74,7 @@ Program Instance Functor__TaggedVal : GHC.Base.Functor TaggedVal := fun _ k =>
    Outputable.Outputable (UniqDFM.UniqDFM a)' failed: OOPS! Cannot find information
    for class Qualified "Outputable" "Outputable" unsupported *)
 
-Local Definition Functor__UniqDFM_fmap : forall {a} {b},
-                                           (a -> b) -> UniqDFM a -> UniqDFM b :=
-  fun {a} {b} =>
-    fun arg_0__ arg_1__ =>
-      match arg_0__ , arg_1__ with
-        | f , UDFM a1 a2 => UDFM (GHC.Base.fmap (GHC.Base.fmap f) a1) ((fun b1 => b1)
-                                                                      a2)
-      end.
-
-Local Definition Functor__UniqDFM_op_zlzd__ : forall {a} {b},
-                                                a -> UniqDFM b -> UniqDFM a :=
-  fun {a} {b} => fun x => Functor__UniqDFM_fmap (GHC.Base.const x).
-
-Program Instance Functor__UniqDFM : GHC.Base.Functor UniqDFM := fun _ k =>
-    k {|GHC.Base.op_zlzd____ := fun {a} {b} => Functor__UniqDFM_op_zlzd__ ;
-      GHC.Base.fmap__ := fun {a} {b} => Functor__UniqDFM_fmap |}.
+(* Skipping instance Functor__UniqDFM *)
 
 (* Translating `instance forall {ele}, forall `{Data.Data.Data ele},
    Data.Data.Data (UniqDFM.UniqDFM ele)' failed: OOPS! Cannot find information for
@@ -337,8 +322,8 @@ Definition lookupUDFM {key} {elt} `{Unique.Uniquable key} : UniqDFM
 Definition anyUDFM {elt} : (elt -> bool) -> UniqDFM elt -> bool :=
   fun arg_0__ arg_1__ =>
     match arg_0__ , arg_1__ with
-      | p , UDFM m _i => Data.IntMap.Internal.fold (orb GHC.Base.∘ (p GHC.Base.∘
-                                                   taggedFst)) false m
+      | p , UDFM m _i => Data.IntMap.Internal.foldr (orb GHC.Base.∘ (p GHC.Base.∘
+                                                    taggedFst)) false m
     end.
 
 Definition taggedSnd {val} : TaggedVal val -> GHC.Num.Int :=
@@ -436,7 +421,7 @@ Definition unitUDFM {key} {elt} `{Unique.Uniquable key} : key -> elt -> UniqDFM
      Data.IntMap.Internal.alter Data.IntMap.Internal.delete
      Data.IntMap.Internal.difference Data.IntMap.Internal.elems
      Data.IntMap.Internal.empty Data.IntMap.Internal.filter
-     Data.IntMap.Internal.filterWithKey Data.IntMap.Internal.fold
+     Data.IntMap.Internal.filterWithKey Data.IntMap.Internal.foldr
      Data.IntMap.Internal.insert Data.IntMap.Internal.insertWith
      Data.IntMap.Internal.intersection Data.IntMap.Internal.lookup
      Data.IntMap.Internal.map Data.IntMap.Internal.member Data.IntMap.Internal.null

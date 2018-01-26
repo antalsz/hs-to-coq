@@ -16,7 +16,7 @@ Require Bag.
 Require Coq.Init.Datatypes.
 Require Core.
 Require Data.Foldable.
-Require Data.IntSet.Base.
+Require Data.IntSet.Internal.
 Require GHC.Base.
 Require GHC.Num.
 Require GHC.Prim.
@@ -28,7 +28,7 @@ Import GHC.Base.Notations.
 (* Converted type declarations: *)
 
 Inductive UnVarSet : Type := Mk_UnVarSet
-                            : (Data.IntSet.Base.IntSet) -> UnVarSet.
+                            : (Data.IntSet.Internal.IntSet) -> UnVarSet.
 
 Inductive Gen : Type := CBPG : UnVarSet -> UnVarSet -> Gen
                      |  CG : UnVarSet -> Gen.
@@ -36,7 +36,7 @@ Inductive Gen : Type := CBPG : UnVarSet -> UnVarSet -> Gen
 Inductive UnVarGraph : Type := Mk_UnVarGraph : (Bag.Bag Gen) -> UnVarGraph.
 (* Midamble *)
 
-Instance Unpeel_UnVarSet : Prim.Unpeel UnVarSet Data.IntSet.Base.IntSet :=
+Instance Unpeel_UnVarSet : Prim.Unpeel UnVarSet Data.IntSet.Internal.IntSet :=
   Prim.Build_Unpeel _ _ (fun x => match x with | Mk_UnVarSet y => y end) Mk_UnVarSet.
 Instance Unpeel_UnVarGraph : Prim.Unpeel UnVarGraph (Bag.Bag Gen) :=
   Prim.Build_Unpeel _ _ (fun x => match x with | Mk_UnVarGraph y => y end) Mk_UnVarGraph.
@@ -68,12 +68,12 @@ Definition emptyUnVarGraph : UnVarGraph :=
   Mk_UnVarGraph Bag.emptyBag.
 
 Definition emptyUnVarSet : UnVarSet :=
-  Mk_UnVarSet Data.IntSet.Base.empty.
+  Mk_UnVarSet Data.IntSet.Internal.empty.
 
 Definition isEmptyUnVarSet : UnVarSet -> bool :=
   fun arg_0__ =>
     match arg_0__ with
-      | Mk_UnVarSet s => Data.IntSet.Base.null s
+      | Mk_UnVarSet s => Data.IntSet.Internal.null s
     end.
 
 Definition prune : UnVarGraph -> UnVarGraph :=
@@ -101,18 +101,20 @@ Definition k : Core.Var -> GHC.Num.Int :=
 
 Definition mkUnVarSet : list Core.Var -> UnVarSet :=
   fun vs =>
-    Mk_UnVarSet GHC.Base.$ (Data.IntSet.Base.fromList GHC.Base.$ GHC.Base.map k vs).
+    Mk_UnVarSet GHC.Base.$ (Data.IntSet.Internal.fromList GHC.Base.$ GHC.Base.map k
+    vs).
 
 Definition elemUnVarSet : Core.Var -> UnVarSet -> bool :=
   fun arg_0__ arg_1__ =>
     match arg_0__ , arg_1__ with
-      | v , Mk_UnVarSet s => Data.IntSet.Base.member (k v) s
+      | v , Mk_UnVarSet s => Data.IntSet.Internal.member (k v) s
     end.
 
 Definition delUnVarSet : UnVarSet -> Core.Var -> UnVarSet :=
   fun arg_0__ arg_1__ =>
     match arg_0__ , arg_1__ with
-      | Mk_UnVarSet s , v => Mk_UnVarSet GHC.Base.$ Data.IntSet.Base.delete (k v) s
+      | Mk_UnVarSet s , v => Mk_UnVarSet GHC.Base.$ Data.IntSet.Internal.delete (k v)
+                                                                                s
     end.
 
 Definition delNode : UnVarGraph -> Core.Var -> UnVarGraph :=
@@ -139,7 +141,7 @@ Definition unionUnVarGraphs : list UnVarGraph -> UnVarGraph :=
 Definition unionUnVarSet : UnVarSet -> UnVarSet -> UnVarSet :=
   fun arg_0__ arg_1__ =>
     match arg_0__ , arg_1__ with
-      | Mk_UnVarSet set1 , Mk_UnVarSet set2 => Mk_UnVarSet (Data.IntSet.Base.union
+      | Mk_UnVarSet set1 , Mk_UnVarSet set2 => Mk_UnVarSet (Data.IntSet.Internal.union
                                                            set1 set2)
     end.
 
@@ -172,9 +174,10 @@ Definition varEnvDom {a} : VarEnv.VarEnv a -> UnVarSet :=
      andb bool cons list negb nil Bag.Bag Bag.bagToList Bag.emptyBag Bag.filterBag
      Bag.mapBag Bag.unionBags Bag.unitBag Coq.Init.Datatypes.app Core.Var
      Data.Foldable.concatMap Data.Foldable.foldl' Data.Foldable.foldr
-     Data.IntSet.Base.IntSet Data.IntSet.Base.delete Data.IntSet.Base.empty
-     Data.IntSet.Base.fromList Data.IntSet.Base.member Data.IntSet.Base.null
-     Data.IntSet.Base.union GHC.Base.Eq_ GHC.Base.map GHC.Base.op_zd__
-     GHC.Base.op_zeze__ GHC.Base.op_zsze__ GHC.Num.Int GHC.Prim.coerce
-     UniqFM.ufmToSet_Directly Unique.getKey Unique.getUnique VarEnv.VarEnv
+     Data.IntSet.Internal.IntSet Data.IntSet.Internal.delete
+     Data.IntSet.Internal.empty Data.IntSet.Internal.fromList
+     Data.IntSet.Internal.member Data.IntSet.Internal.null Data.IntSet.Internal.union
+     GHC.Base.Eq_ GHC.Base.map GHC.Base.op_zd__ GHC.Base.op_zeze__ GHC.Base.op_zsze__
+     GHC.Num.Int GHC.Prim.coerce UniqFM.ufmToSet_Directly Unique.getKey
+     Unique.getUnique VarEnv.VarEnv
 *)

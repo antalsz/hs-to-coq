@@ -34,7 +34,6 @@ HANDMOD = \
   TysWiredIn \
   CallArity \
 
-
 # Generated modules
 # generated directly from ghc/compiler/*/
 MODULES = \
@@ -64,6 +63,7 @@ MODULES = \
   FieldLabel \
   Constants \
 
+## These are the modules most directly related to the core language
 CORE_MODULES = \
   Var \
   VarSet \
@@ -75,11 +75,12 @@ CORE_MODULES = \
   CoreSyn \
   UnVarGraph \
   Demand \
-  CoreArity \
+  CoreSubst \
   CoreUtils \
   CoAxiom \
   Id \
   CoreFVs \
+  CoreArity \
 
 
 VFILES_GEN = $(addprefix $(OUT)/,$(addsuffix .v,$(MODULES)))

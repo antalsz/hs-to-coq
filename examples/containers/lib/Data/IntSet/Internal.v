@@ -44,6 +44,11 @@ Inductive IntSet : Type := Bin : Prefix -> Mask -> IntSet -> IntSet -> IntSet
 
 Inductive Stack : Type := Push : Prefix -> IntSet -> Stack -> Stack
                        |  Nada : Stack.
+
+(* The Haskell code containes partial or untranslateable code, which needs the
+   following *)
+
+Axiom unsafeFix : forall {a}, (a -> a) -> a.
 (* Midamble *)
 
 Require Coq.ZArith.Zcomplements.
@@ -59,7 +64,10 @@ Definition highestBitMask (n: Nat) : Nat := Coq.NArith.BinNat.N.pow 2 (Coq.NArit
 Require Import NArith.
 Definition bit_N := shiftLL 1%N.
 
-Definition popCount_N : N -> GHC.Num.Int := fun x => 0%Z.   (* TODO *)
+Definition popCount_N : N -> Z := unsafeFix (fun popCount x =>
+  if Coq.NArith.BinNat.N.eqb x 0
+  then 0%Z
+  else Coq.ZArith.BinInt.Z.succ (popCount (Coq.NArith.BinNat.N.ldiff x (Coq.NArith.BinNat.N.pow 2 (Coq.NArith.BinNat.N.log2 x))))).
 
 Definition bitCount_N (a : GHC.Num.Int) (x : N) := a GHC.Num.+ (popCount_N x).
 
@@ -105,11 +113,6 @@ Ltac termination_by_omega :=
 Definition suffixBitMask : GHC.Num.Int := (Coq.ZArith.BinInt.Z.ones 6)%Z.
 
 (* Converted value declarations: *)
-
-(* The Haskell code containes partial or untranslateable code, which needs the
-   following *)
-
-Axiom unsafeFix : forall {a}, (a -> a) -> a.
 
 (* Skipping instance Monoid__IntSet *)
 

@@ -11,7 +11,10 @@ Definition highestBitMask (n: Nat) : Nat := Coq.NArith.BinNat.N.pow 2 (Coq.NArit
 Require Import NArith.
 Definition bit_N := shiftLL 1%N.
 
-Definition popCount_N : N -> GHC.Num.Int := fun x => 0%Z.   (* TODO *)
+Definition popCount_N : N -> Z := unsafeFix (fun popCount x =>
+  if Coq.NArith.BinNat.N.eqb x 0
+  then 0%Z
+  else Coq.ZArith.BinInt.Z.succ (popCount (Coq.NArith.BinNat.N.ldiff x (Coq.NArith.BinNat.N.pow 2 (Coq.NArith.BinNat.N.log2 x))))).
 
 Definition bitCount_N (a : GHC.Num.Int) (x : N) := a GHC.Num.+ (popCount_N x).
 

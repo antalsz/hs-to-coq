@@ -5234,6 +5234,152 @@ Proof.
   reflexivity.
 Qed.
 
+(** *** Specifying [size] *)
+
+Definition sizeGo : Int -> IntSet -> Int.
+Proof.
+  let size_rhs := eval unfold size in size in
+  match size_rhs with ?f #0 => exact f end.
+Defined.
+
+
+Lemma toList_Bits_append:
+  forall p l bm,
+  isBitMask0 bm ->
+  foldrBits p cons l bm = foldrBits p cons nil bm  ++ l.
+Proof.
+  intros.
+  unfold foldrBits.
+  fold (foldrBits_go p cons).
+  revert l.
+  apply bits_ind_up with (bm := revNatSafe bm).
+  - isBitMask.
+  - intros xs.
+    rewrite !foldrBits_go_0.
+    reflexivity.
+  - clear bm H. intros bm Hbm IH xs.
+    rewrite !@foldrBits_go_bm with (bm := bm) by isBitMask.
+    rewrite lxor_lowestBitMask by isBitMask.
+    rewrite IH.
+    rewrite IH with (l := _ :: nil).
+    rewrite <- app_assoc.
+    reflexivity.
+Qed.
+
+Lemma toList_go_append:
+  forall l s r f,
+  Desc s r f ->
+  toList_go l s = toList_go nil s ++ l.
+Proof.
+  intros. revert l.
+  induction H; intro l.
+  * simpl.
+    apply toList_Bits_append; isBitMask.
+  * simpl.
+    rewrite IHDesc2.
+    rewrite IHDesc1.
+    rewrite IHDesc2 at 2.
+    rewrite IHDesc1 with (l := toList_go nil s2 ++ nil).
+    rewrite app_nil_r.
+    rewrite app_assoc.
+    reflexivity.
+Qed.
+  
+
+Lemma length_append:
+  forall {a} (xs ys : list a),
+  (length (xs ++ ys) = length xs + length ys)%nat.
+Proof.
+  intros. induction xs; try reflexivity.
+  simpl. rewrite IHxs. reflexivity.
+Qed.
+
+Lemma popCount_N_length_toList_go:
+  forall bm p,
+  isBitMask0 bm ->
+  popCount_N bm = Z.of_nat (length (foldrBits p cons nil bm)).
+Admitted.
+
+
+Lemma sizeGo_spec':
+  forall x s r f, Desc s r f ->
+  sizeGo x s = x + Z.of_nat (length (toList_go nil s)).
+Proof.
+  intros.
+  intros.
+  revert x; induction H; intro x.
+  + simpl.
+    unfold bitCount_N.
+    rewrite <- popCount_N_length_toList_go by isBitMask.
+    reflexivity.
+  + simpl.
+    erewrite toList_go_append with (s := s1) by eassumption.
+    erewrite toList_go_append with (s := s2) by eassumption.
+    rewrite IHDesc1.
+    rewrite IHDesc2.
+    rewrite !length_append.
+    simpl length.
+    unfold Int in *.
+    (* Why does Omega not solve this? *)
+    rewrite plus_0_r.
+    rewrite !Nat2Z.inj_add.
+    rewrite <- !Z.add_assoc.
+    f_equal.
+Qed.
+
+Lemma sizeGo_spec:
+  forall x s, WF s ->
+  sizeGo x s = x + Z.of_nat (length (toList s)).
+Proof.
+  intros.
+  destruct H as [f HSem].
+  destruct HSem.
+  * simpl. rewrite Z.add_0_r. reflexivity.
+  * destruct HD.
+    + simpl.
+      unfold bitCount_N.
+      rewrite <- popCount_N_length_toList_go by isBitMask.
+      reflexivity.
+    + subst. simpl.
+      unfoldMethods.
+      destruct (Z.ltb_spec (rMask r) 0).
+      -- erewrite toList_go_append with (s := s1) by eassumption.
+         erewrite toList_go_append with (s := s2) by eassumption.
+         erewrite sizeGo_spec' by eassumption.
+         erewrite sizeGo_spec' by eassumption.
+         rewrite !length_append.
+         simpl length.
+         unfold Int in *.
+         (* Why does Omega not solve this? *)
+         rewrite plus_0_r.
+         rewrite !Nat2Z.inj_add.
+         rewrite <- !Z.add_assoc.
+         f_equal.
+         apply Z.add_comm.
+      -- erewrite toList_go_append with (s := s1) by eassumption.
+         erewrite toList_go_append with (s := s2) by eassumption.
+         erewrite sizeGo_spec' by eassumption.
+         erewrite sizeGo_spec' by eassumption.
+         rewrite !length_append.
+         simpl length.
+         unfold Int in *.
+         (* Why does Omega not solve this? *)
+         rewrite plus_0_r.
+         rewrite !Nat2Z.inj_add.
+         rewrite <- !Z.add_assoc.
+         f_equal.
+Qed.
+
+Lemma size_spec:
+  forall s, WF s ->
+  size s = Z.of_nat (length (toList s)).
+Proof.
+  intros.
+  unfold size.
+  rewrite sizeGo_spec by assumption.
+  reflexivity.
+Qed.
+
 (** ** Instantiating the [FSetInterface] *)
 
 Require Import Coq.FSets.FSetInterface.
@@ -5403,7 +5549,10 @@ Module Foo: WSfun(N_as_OT).
   Definition exists_ : (elt -> bool) -> t -> bool. Admitted.
   Definition filter : (elt -> bool) -> t -> t. Admitted.
   Definition partition : (elt -> bool) -> t -> t * t. Admitted.
-  Definition cardinal : t -> nat. Admitted.
+
+  Definition cardinal : t -> nat :=
+    fun ws => s <-- ws;;
+              Z.to_nat (size s).
 
   Definition elements (ws : t) : list elt :=
     s <-- ws;;
@@ -5747,7 +5896,26 @@ Module Foo: WSfun(N_as_OT).
     apply foldl_spec; assumption.
   Qed.
 
-  Lemma cardinal_1 : forall s : t, cardinal s = length (elements s). Admitted.
+
+  Lemma length_map:
+    forall {a b} (f : a->b) (xs : list a),
+    length (List.map f xs) = length xs.
+  Proof.
+    intros. induction xs.
+    * reflexivity.
+    * simpl. rewrite IHxs. reflexivity.
+  Qed.
+
+  Lemma cardinal_1 : forall s : t, cardinal s = length (elements s).
+  Proof.
+    intros.
+    destruct s as [s Hwf].
+    simpl.
+    rewrite length_map.
+    rewrite size_spec by assumption.
+    apply Nat2Z.id.
+  Qed.
+
   Lemma filter_1 :
     forall (s : t) (x : elt) (f : elt -> bool),
     compat_bool N.eq f -> In x (filter f s) -> In x s. Admitted.

@@ -5386,6 +5386,7 @@ Proof.
     + simpl.
       unfold bitCount_N.
       rewrite <- popCount_N_length_toList_go by isBitMask.
+      simpl. rewrite Z.add_0_r.
       reflexivity.
     + subst. simpl.
       unfoldMethods.

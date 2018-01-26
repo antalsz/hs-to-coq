@@ -772,6 +772,19 @@ Proof.
   reflexivity.
 Qed.
 
+Lemma inRange_both_same:
+  forall i r1 r2,
+  inRange i r1 = true ->
+  inRange i r2 = true ->
+  (rBits r1 = rBits r2)%N ->
+  r1 = r2.
+Proof.
+  intros.
+  apply isSubrange_antisym.
+  * apply inRange_both_smaller_subRange with (i := i); try assumption; Nomega.
+  * apply inRange_both_smaller_subRange with (i := i); try assumption; Nomega.
+Qed.  
+
 Lemma different_prefix_same_bits_not_subrange:
   forall r1 r2,
     rPrefix r1 <> rPrefix r2 -> rBits r1 = rBits r2 -> isSubrange r1 r2 = false.
@@ -872,6 +885,17 @@ Proof.
   intros.
   pose proof (rangeDisjoint_inRange_false i r1 r2). intuition congruence.
 Qed.
+
+Lemma rangeDisjoint_isSubrange_false_false:
+  forall r r1 r2, rangeDisjoint r1 r2 = true -> isSubrange r r1 = true -> isSubrange r r2 = true -> False.
+Proof.
+  intros.
+  eapply rangeDisjoint_inRange_false_false with (i := rPrefix r).
+  * eassumption.
+  * eapply inRange_isSubrange_true; try eassumption; apply rPrefix_inRange.
+  * eapply inRange_isSubrange_true; try eassumption; apply rPrefix_inRange.
+Qed.
+
 
 Lemma disjoint_rPrefix_differ:
   forall r1 r2,
@@ -3191,62 +3215,66 @@ Proof.
 Qed.
 
 
+Lemma isBitMask_bitmapInRange:
+  forall r bm, rBits r = Nlog2 WIDTH -> isBitMask bm ->
+    exists i, (bitmapInRange r bm i = true).
+Proof.
+  intros.
+  destruct (isBitMask_testbit _ H0) as [j[??]].
+  set (i := (Z.lor (rPrefix r) (Z.of_N j))).
+  exists i.
+
+  (* This proof looks like an Isar-proof… *)
+  assert (Hlog : Z.log2 (Z.of_N j) < 6).
+  { rewrite <- of_N_log2.
+    change (Z.of_N (N.log2 j) < Z.of_N 6%N).
+    apply N2Z.inj_lt.
+    destruct (N.lt_decidable 0%N j).
+    + apply N.log2_lt_pow2; assumption.
+    + enough (j = 0)%N by (subst; compute; congruence).
+      destruct j; auto; contradict H3. apply pos_pos.
+  }
+
+  assert (inRange i r = true).
+  { destruct r as [p b]; simpl in *; subst.
+    subst i.
+    rewrite Z.shiftr_lor.
+    rewrite Z.shiftr_shiftl_l by nonneg.
+    replace (_ - _) with 0 by Nomega.
+    rewrite Z.shiftr_div_pow2 by nonneg.
+    replace (2 ^ Z.of_N 6%N) with (Z.of_N WIDTH) by reflexivity.
+    rewrite Zdiv_small by Nomega.
+    rewrite Z.lor_0_r.
+    simpl Z.shiftl.
+    apply Z.eqb_refl.
+  } 
+
+  assert ((Z.land i (Z.ones (Z.of_N (rBits r))) = Z.of_N j)).
+  { subst i.
+    destruct r as [p b]; simpl in *; subst.
+    rewrite Z.land_lor_distr_l.
+    rewrite -> land_shiftl_ones by Nomega.
+    rewrite Z.lor_0_l.
+    rewrite Z.land_ones_low by (nonneg || assumption).
+    reflexivity.
+  }
+
+  unfold bitmapInRange.
+  rewrite H3.
+  rewrite H4.
+  rewrite N2Z.id.
+  assumption.
+Qed.
+
 (** The [Desc] predicate only holds for non-empty sets. *)
 Lemma Desc_some_f:
   forall {s r f}, Desc s r f -> exists i, f i = true.
 Proof.
   intros ??? HD.
   induction HD; subst.
-  + destruct (isBitMask_testbit _ H3) as [j[??]].
-    set (i := (Z.lor (rPrefix r) (Z.of_N j))).
-    exists i.
-
-    (* This proof looks like an Isar-proof… *)
-    assert (Z.log2 (Z.of_N j) < 6).
-    { rewrite <- of_N_log2.
-      change (Z.of_N (N.log2 j) < Z.of_N 6%N).
-      apply N2Z.inj_lt.
-      destruct (N.lt_decidable 0%N j).
-      + apply N.log2_lt_pow2; assumption.
-      + enough (j = 0)%N by (subst; compute; congruence).
-        destruct j; auto; contradict H5. apply pos_pos.
-    }
-
-    assert (inRange i r = true).
-    { destruct r as [p b]; simpl in *; subst.
-      replace (Z.of_N 6%N) with 6 by reflexivity.
-      replace (Z.shiftr i 6) with p.
-      apply (Z.eqb_refl).
-      symmetry.
-
-      subst i.
-      rewrite Z.shiftr_lor.
-      replace (Z.shiftr (Z.of_N j) 6) with 0.
-      rewrite Z.lor_0_r.
-      rewrite -> Z.shiftr_shiftl_l by nonneg.
-      reflexivity.
-      symmetry.
-      apply Z.shiftr_eq_0; nonneg.
-    } 
-
-    assert ((Z.land i (Z.ones 6) = Z.of_N j)).
-    { subst i.
-      destruct r as [p b]; simpl in *; subst.
-      rewrite Z.land_lor_distr_l.
-      rewrite -> land_shiftl_ones by omega.
-      rewrite Z.lor_0_l.
-      rewrite Z.land_ones_low. reflexivity.
-      nonneg.
-      assumption.
-    }
-
-    rewrite  H2; clear H2.
-    unfold bitmapInRange.
-    rewrite H6.
-    rewrite H1.
-    replace ((Z.of_N (N.log2 WIDTH))) with 6 by reflexivity.
-    rewrite H7.
-    rewrite N2Z.id.
+  + destruct (isBitMask_bitmapInRange _ _ H1 H3) as [j ?].
+    exists j.
+    rewrite H2.
     assumption.
   + destruct IHHD1  as [j?].
     exists j.
@@ -3370,6 +3398,11 @@ Ltac inRange_disjoint :=
      => exfalso;
         refine (rangeDisjoint_inRange_false_false i _ _ _ H1 H2);
         apply halves_disj; auto
+   | [ H1 : isSubrange ?r (halfRange ?r2 false) = true,
+       H2 : isSubrange ?r (halfRange ?r2 true) = true |- _ ]
+     => exfalso;
+        refine (rangeDisjoint_isSubrange_false_false r _ _ _ H1 H2);
+        apply halves_disj; auto
    | [ H  : rangeDisjoint ?r1 ?r2 = true,
        H1 : inRange ?i ?r1 = true,
        H2 : inRange ?i ?r2 = true |- _ ]
@@ -3386,6 +3419,231 @@ Ltac solve_f_eq_disjoint :=
   repeat point_to_inRange;
   repeat saturate_inRange;
   try inRange_disjoint. (* Only try this, so that we see wher we are stuck. *)
+
+(** *** Uniqueness of representation *)
+
+
+Lemma criss_cross:
+  forall i1 i2 i3 i4 r1 r2,
+  (0 < rBits r1)%N ->
+  (0 < rBits r2)%N ->
+  inRange i1 (halfRange r1 false) = true ->
+  inRange i2 (halfRange r1 true) = true ->
+  inRange i3 (halfRange r2 false) = true ->
+  inRange i4 (halfRange r2 true) = true ->
+  inRange i1 r2 = true ->
+  inRange i2 r2 = true ->
+  inRange i3 r1 = true ->
+  inRange i4 r1 = true ->
+  r1 = r2.
+Proof.
+  intros.
+  destruct (N.lt_trichotomy (rBits r1) (rBits r2)) as [?|[?|?]].
+  * exfalso.
+    assert (isSubrange r1 (halfRange r2 false) = true)
+      by (apply inRange_both_smaller_subRange with (i := i3);
+          try assumption; rewrite rBits_halfRange; Nomega).
+    assert (isSubrange r1 (halfRange r2 true) = true)
+      by (apply inRange_both_smaller_subRange with (i := i4);
+          try assumption; rewrite rBits_halfRange; Nomega).
+    assert (isSubrange r1 r2 = true) by isSubrange_true.
+    pose proof (smaller_subRange_other_half _ _ H9).
+    rewrite H10, H11, H12 in H13. intuition.
+  * apply inRange_both_same with (i := i1).
+    + eapply inRange_isSubrange_true; [apply isSubrange_halfRange; assumption|eassumption].
+    + assumption.
+    + assumption.
+  * exfalso.
+    assert (isSubrange r2 (halfRange r1 false) = true)
+      by (apply inRange_both_smaller_subRange with (i := i1);
+          try assumption; rewrite rBits_halfRange; Nomega).
+    assert (isSubrange r2 (halfRange r1 true) = true)
+      by (apply inRange_both_smaller_subRange with (i := i2);
+          try assumption; rewrite rBits_halfRange; Nomega).
+    assert (isSubrange r2 r1 = true) by isSubrange_true.
+    pose proof (smaller_subRange_other_half _ _ H9).
+    rewrite H10, H11, H12 in H13. intuition.
+Qed.
+
+
+Lemma Desc_uniqe:
+  forall s1 r1 f1 s2 r2 f2,
+  Desc s1 r1 f1 -> Desc s2 r2 f2 ->
+  (forall i, f1 i = f2 i) ->
+  s1 = s2 /\ r1 = r2.
+Proof.
+  intros ?????? HD1.
+  revert s2 r2 f2.
+  induction HD1.
+  * intros s2 r2 f2 HD2 Hf.
+    destruct HD2.
+    + subst.
+      assert (r = r0).
+      { destruct (isBitMask_bitmapInRange r bm H1 H3) as [i Hbit].
+        assert (Hir : inRange i r = true)
+          by (eapply bitmapInRange_inside; eassumption).
+        specialize (Hf i).
+        specialize (H2 i).
+        specialize (H7 i).
+        rewrite H2 in Hf; clear H2.
+        rewrite H7 in Hf; clear H7.
+        rewrite Hbit in Hf; symmetry in Hf.
+        apply bitmapInRange_inside in Hf.
+        apply inRange_both_same with (i := i); try assumption; Nomega.
+      }
+      subst. split; try reflexivity.
+      f_equal.
+      apply N.bits_inj; intro j.
+      destruct (N.ltb_spec j WIDTH).
+      - set (i := Z.lor (rPrefix r0) (Z.of_N j)).
+        assert (Hir : inRange i r0 = true).
+        { unfold inRange.
+          destruct r0 as [p b].
+          unfold rPrefix, rBits, snd in *; subst.
+          subst i.
+          rewrite Z.shiftr_lor.
+          rewrite Z.shiftr_shiftl_l by nonneg.
+          replace (_ - _) with 0 by Nomega.
+          rewrite Z.shiftr_div_pow2 by nonneg.
+          replace (2 ^ Z.of_N (N.log2 WIDTH)) with (Z.of_N WIDTH) by reflexivity.
+          rewrite Zdiv_small by Nomega.
+          rewrite Z.lor_0_r.
+          simpl Z.shiftl.
+          apply Z.eqb_refl.
+        }
+        specialize (H2 i).
+        specialize (H7 i).
+        specialize (Hf i).
+        rewrite Hf in H2 by assumption; clear Hf.
+        rewrite H2 in H7; clear H2.
+        unfold bitmapInRange in H7.
+        rewrite Hir in H7.
+        replace (Z.to_N (Z.land i (Z.ones (Z.of_N (rBits r0))))) with j in H7; [assumption|].
+        { subst i.
+          destruct r0 as [p b].
+          unfold rPrefix, rBits, snd in *; subst.
+          rewrite Z.land_lor_distr_l.
+          rewrite land_shiftl_ones by nonneg.
+          rewrite Z.lor_0_l.
+          rewrite Z.land_ones by nonneg.
+          rewrite Z.mod_small
+            by (replace (Z.pow _ _) with (Z.of_N WIDTH) by reflexivity; Nomega).
+          rewrite N2Z.id.
+          reflexivity.
+        }
+      - rewrite !isBitMask0_outside by isBitMask.
+        reflexivity.
+    + exfalso. subst.
+      assert (isSubrange r r1 = true).
+      { destruct (Desc_some_f HD2_1) as [i Hi].
+        pose proof (Desc_inside HD2_1 Hi).
+        specialize (H9 i).
+        rewrite (Desc_outside HD2_2) in H9 by inRange_false.
+        rewrite orb_false_r in H9.
+        rewrite <- H9 in Hi; clear H9.
+        rewrite <- Hf in Hi; clear Hf.
+        rewrite H2 in Hi; clear H2.
+        apply bitmapInRange_inside in Hi.
+        apply inRange_both_smaller_subRange with (i := i); try assumption.
+        assert (N.log2 WIDTH <= rBits r1)%N by (eapply Desc_larger_WIDTH; eauto).
+        Nomega.
+      }
+      assert (isSubrange r r2 = true).
+      { destruct (Desc_some_f HD2_2) as [i Hi].
+        pose proof (Desc_inside HD2_2 Hi).
+        specialize (H9 i).
+        rewrite (Desc_outside HD2_1) in H9 by inRange_false.
+        rewrite orb_false_l in H9.
+        rewrite <- H9 in Hi; clear H9.
+        rewrite <- Hf in Hi; clear Hf.
+        rewrite H2 in Hi; clear H2.
+        apply bitmapInRange_inside in Hi.
+        apply inRange_both_smaller_subRange with (i := i); try assumption.
+        assert (N.log2 WIDTH <= rBits r2)%N by (eapply Desc_larger_WIDTH; eauto).
+        Nomega.
+      }
+      assert (isSubrange r (halfRange r0 true) = true) by isSubrange_true.
+      assert (isSubrange r (halfRange r0 false) = true) by isSubrange_true.
+      inRange_disjoint.
+  * intros s3 r3 f3 HD3 Hf.
+    destruct HD3.
+    + exfalso. subst.
+      assert (isSubrange r0 r1 = true).
+      { destruct (Desc_some_f HD1_1) as [i Hi].
+        pose proof (Desc_inside HD1_1 Hi).
+        specialize (H4 i).
+        rewrite (Desc_outside HD1_2) in H4 by inRange_false.
+        rewrite orb_false_r in H4.
+        rewrite <- H4 in Hi; clear H4.
+        rewrite Hf in Hi; clear Hf.
+        rewrite H8 in Hi; clear H8.
+        apply bitmapInRange_inside in Hi.
+        apply inRange_both_smaller_subRange with (i := i); try assumption.
+        assert (N.log2 WIDTH <= rBits r1)%N by (eapply Desc_larger_WIDTH; eauto).
+        Nomega.
+      }
+      assert (isSubrange r0 r2 = true).
+      { destruct (Desc_some_f HD1_2) as [i Hi].
+        pose proof (Desc_inside HD1_2 Hi).
+        specialize (H4 i).
+        rewrite (Desc_outside HD1_1) in H4 by inRange_false.
+        rewrite orb_false_l in H4.
+        rewrite <- H4 in Hi; clear H4.
+        rewrite Hf in Hi; clear Hf.
+        rewrite H8 in Hi; clear H8.
+        apply bitmapInRange_inside in Hi.
+        apply inRange_both_smaller_subRange with (i := i); try assumption.
+        assert (N.log2 WIDTH <= rBits r2)%N by (eapply Desc_larger_WIDTH; eauto).
+        Nomega.
+      }
+      assert (isSubrange r0 (halfRange r true) = true) by isSubrange_true.
+      assert (isSubrange r0 (halfRange r false) = true) by isSubrange_true.
+      inRange_disjoint.
+    + subst.
+      assert (r4 = r). {
+        eapply criss_cross; admit.
+      }
+      subst.
+      assert (IH_prem_1 : (forall i : Z, f1 i = f0 i)). {
+        intro i.
+        specialize (H4 i). specialize (H10 i). specialize (Hf i).
+        destruct (inRange i (halfRange r false)) eqn:?.
+        -- rewrite (Desc_outside HD1_2) in H4 by inRange_false.
+           rewrite orb_false_r in H4.
+           rewrite <- H4; clear H4.
+           
+           rewrite (Desc_outside HD3_2) in H10 by inRange_false.
+           rewrite orb_false_r in H10.
+           rewrite <- H10; clear H10.
+           
+           assumption.
+        -- rewrite (Desc_outside HD1_1) by inRange_false.
+           rewrite (Desc_outside HD3_1) by inRange_false.
+           reflexivity.
+      }
+      assert (IH_prem_2 : (forall i : Z, f2 i = f3 i)). {
+        intro i.
+        specialize (H4 i). specialize (H10 i). specialize (Hf i).
+        destruct (inRange i (halfRange r true)) eqn:?.
+        -- rewrite (Desc_outside HD1_1) in H4 by inRange_false.
+           rewrite orb_false_l in H4.
+           rewrite <- H4; clear H4.
+           
+           rewrite (Desc_outside HD3_1) in H10 by inRange_false.
+           rewrite orb_false_l in H10.
+           rewrite <- H10; clear H10.
+           
+           assumption.
+        -- rewrite (Desc_outside HD1_2) by inRange_false.
+           rewrite (Desc_outside HD3_2) by inRange_false.
+           reflexivity.
+      }
+      specialize (IHHD1_1 _ _ _ HD3_1 IH_prem_1).
+      destruct IHHD1_1; subst.
+      specialize (IHHD1_2 _ _ _ HD3_2 IH_prem_2).
+      destruct IHHD1_2; subst.
+      subst. split; reflexivity.
+Admitted.
 
 (** *** Specifying [member] *)
 
@@ -3564,7 +3822,6 @@ Proof.
       - apply DescTip; auto.
       - apply disjoint_commonRange; auto.
   * simpl. unfoldMethods.
-
 
     assert (N.log2 WIDTH <= rBits r2)%N by (eapply Desc_larger_WIDTH; eauto).
     assert (rBits r2 <= rBits (halfRange r0 false))%N by (apply subRange_smaller; auto).

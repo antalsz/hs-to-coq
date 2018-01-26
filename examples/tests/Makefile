@@ -32,7 +32,7 @@ PASS = \
   Records \
   RecordConstruction \
   PatternGuard \
-  Guards2 \
+  Guard2 \
 
 # tests that *should* pass but currently fail
 TODO_PASS  = \

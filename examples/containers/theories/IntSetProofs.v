@@ -2484,6 +2484,13 @@ Proof.
   intuition.
 Qed.
 
+
+Lemma isBitMask_log2_lt_WIDTH:
+  forall bm,
+  isBitMask bm -> (N.log2 bm < WIDTH)%N.
+Proof. intros. apply N.log2_lt_pow2; apply H. Qed.
+Hint Resolve isBitMask_log2_lt_WIDTH : isBitMask.
+
 (** *** Lemmas about [revNat] *)
 
 Require RevNatSlowProofs.
@@ -2569,16 +2576,36 @@ Proof.
     rewrite !isBitMask0_outside; isBitMask.
 Qed.
 
-Lemma revNat_pow:
-  forall bm,
-  isBitMask bm ->
-  (revNatSafe (2 ^ N.log2 bm) = 2 ^ (WIDTH - 1 - N.log2 bm))%N.
+Lemma revNat_ldiff:
+  forall n m, isBitMask0 n -> isBitMask0 m ->
+    revNatSafe (N.ldiff n m) = N.ldiff (revNatSafe n) (revNatSafe m).
 Proof.
   intros.
-  assert (N.log2 bm < WIDTH)%N by (apply N.log2_lt_pow2; apply H).
-
   apply N.bits_inj_iff; intro i.
   destruct (N.ltb_spec i WIDTH).
+  * rewrite !revNat_spec, !N.ldiff_spec, !revNat_spec; isBitMask.
+  * rewrite N.ldiff_spec.
+    rewrite !isBitMask0_outside; isBitMask.
+Qed.
+
+Lemma pow_isBitMask:
+  forall i, (i < WIDTH)%N -> isBitMask (2^i)%N.
+Proof.
+  intros.
+  split.
+  * apply N_pow_pos_nonneg; Nomega.
+  * apply N.pow_lt_mono_r; Nomega.
+Qed.
+Hint Resolve pow_isBitMask : isBitMask.
+
+Lemma revNat_pow:
+  forall i,
+  (i < WIDTH)%N ->
+  (revNatSafe (2 ^ i) = 2 ^ (WIDTH - 1 - i))%N.
+Proof.
+  intros.
+  apply N.bits_inj_iff; intro j.
+  destruct (N.ltb_spec j WIDTH).
   * rewrite !revNat_spec by assumption.
     rewrite !N.pow2_bits_eqb.
     rewrite eq_iff_eq_true.
@@ -2601,6 +2628,19 @@ Proof.
   reflexivity.
 Qed.
 
+
+Lemma highestBitMask_pow_id:
+  forall i,
+    (i < WIDTH)%N ->
+    (highestBitMask (2^i) = 2^i)%N.
+Proof.
+  intros.
+  unfold highestBitMask.
+  rewrite N.log2_pow2 by nonneg.
+  reflexivity.
+Qed.
+
+
 (**
    This lemma essentially repeats the edit that we made.
    A stretch-goal would be to retain the original definintion
@@ -2612,6 +2652,21 @@ Lemma lowestBitMask_highestBitMask:
     lowestBitMask bm = revNatSafe (highestBitMask (revNatSafe bm)).
 Proof. intros. reflexivity. Qed.
 
+Lemma lowestBitMask_pow_id:
+  forall i,
+    (i < WIDTH)%N ->
+    (lowestBitMask (2^i) = 2^i)%N.
+Proof.
+  intros.
+  rewrite lowestBitMask_highestBitMask by isBitMask.
+  rewrite revNat_pow by assumption.
+  unfold highestBitMask.
+  rewrite N.log2_pow2 by nonneg.
+  rewrite revNat_pow by Nomega.
+  f_equal.
+  Nomega.
+Qed.
+
 
 Lemma isBitMask_highestBitMask:
   forall bm, isBitMask bm -> isBitMask (highestBitMask bm).
@@ -2622,7 +2677,7 @@ Proof.
     apply N_pow_pos_nonneg; Nomega.
   * apply N.pow_lt_mono_r.
     Nomega.
-    (apply N.log2_lt_pow2; apply H).
+    isBitMask.
 Qed.
 Hint Resolve isBitMask_highestBitMask : isBitMask.
 
@@ -2651,6 +2706,30 @@ Proof.
   * destruct (N.testbit _ _) eqn:?; try reflexivity.
 Qed.
 
+Lemma lxor_lowestBitMask:
+  forall bm,
+  isBitMask bm ->
+  N.lxor bm (lowestBitMask bm) = N.ldiff bm (lowestBitMask bm).
+Proof.
+  intros.
+  rewrite lowestBitMask_highestBitMask by isBitMask.
+  unfold highestBitMask.
+  apply N.bits_inj. intro j.
+  destruct (N.ltb_spec j WIDTH).
+  * rewrite N.lxor_spec, N.ldiff_spec, revNat_spec, N.pow2_bits_eqb by assumption.
+    destruct (N.eqb_spec (N.log2 (revNatSafe bm)) (WIDTH - 1 - j)%N).
+    + destruct (N.testbit _ _) eqn:?; try reflexivity; exfalso.
+      rewrite <- revNat_revNat with (n := bm) in Heqb by isBitMask.
+      rewrite revNat_spec in Heqb by assumption.
+      rewrite <- e in Heqb.
+      rewrite N.bit_log2 in Heqb
+        by (unfold isBitMask in H; rewrite revNat_eq_0 in * by isBitMask; Nomega).
+      congruence.
+    + destruct (N.testbit _ _) eqn:?; try reflexivity.
+  * rewrite N.lxor_spec, N.ldiff_spec.
+    rewrite !isBitMask0_outside by isBitMask.
+    reflexivity.
+Qed.
 
 Lemma split_highestBitMask:
   forall bm,
@@ -4178,15 +4257,12 @@ Proof.
     by (symmetry; apply N.eqb_neq; unfold isBitMask in *; zify; rewrite Z2N.id; omega).
 
   rewrite lowestBitMask_highestBitMask at 2 by isBitMask.
-(*   rewrite split_highestBitMask with (bm := revNatSafe bm)  by isBitMask.
-   *)
-   unfold indexOfTheOnlyBit, highestBitMask.
-   rewrite revNat_pow by isBitMask.
-   rewrite N.log2_pow2 by Nomega.
-   assert (N.log2 (revNatSafe bm) < WIDTH)%N
-    by (apply N.log2_lt_pow2; apply isBitMask_revNat; assumption).
-   replace (p + (64 - 1) - Z.of_N (WIDTH - 1 - N.log2 (revNatSafe bm))%N)
-      with (p + Z.of_N (N.log2 (revNatSafe bm)))  by (unfold WIDTH in *; Nomega).
+  unfold indexOfTheOnlyBit, highestBitMask.
+  rewrite revNat_pow by isBitMask.
+  rewrite N.log2_pow2 by Nomega.
+  assert (N.log2 (revNatSafe bm) < WIDTH)%N by isBitMask.
+  replace (p + (64 - 1) - Z.of_N (WIDTH - 1 - N.log2 (revNatSafe bm))%N)
+     with (p + Z.of_N (N.log2 (revNatSafe bm)))  by (unfold WIDTH in *; Nomega).
   reflexivity.
 Qed.
 
@@ -4249,6 +4325,26 @@ Proof.
     - isBitMask.
 Qed.
 
+Lemma bits_ind_up:
+  forall bm (P : N -> Prop),
+  isBitMask0 bm ->
+  P (0%N) ->
+  (forall bm, isBitMask bm -> P (N.ldiff bm (lowestBitMask bm)) -> P bm) ->
+  P bm.
+Proof.
+  intros bm P Hbm HP0 HPstep.
+  rewrite <- revNat_revNat by assumption.
+  apply bits_ind with (bm := revNatSafe bm).
+  * isBitMask.
+  * apply HP0.
+  * clear bm Hbm. intros bm Hbm IH.
+    apply HPstep.
+    - isBitMask.
+    - rewrite lowestBitMask_highestBitMask by isBitMask.
+      rewrite <- revNat_ldiff by isBitMask.
+      rewrite revNat_revNat by isBitMask.
+      apply IH.
+Qed.
 
 Lemma In_cons_iff:
   forall {a} (y x : a) xs, In y (x :: xs) <-> x = y \/ In y xs.
@@ -4281,8 +4377,7 @@ Proof.
     rewrite orb_true_iff.
     rewrite In_cons_iff.
     rewrite highestBitMask_pow at 3 by assumption.
-    assert (N.log2 bm < WIDTH)%N by (apply N.log2_lt_pow2; try apply Hbm).
-    rewrite bitmapInRange_pow by (replace (rBits r); apply H).
+    rewrite bitmapInRange_pow by (replace (rBits r); isBitMask).
     rewrite Z.eqb_eq.
     solve [tauto].
 Qed.
@@ -4351,10 +4446,317 @@ Definition foldl_go {a} k :=
    | Nil => arg_0__
    end.
 
+(* We can extract the argument to [unsafeFix] from the definition of [foldrBits]. *)
+Definition foldlBits_go {a} (p : Int) (f : a -> Int -> a)
+  : (Nat -> a -> a) -> Nat -> a -> a.
+Proof.
+  let foldlBits_rhs := eval unfold foldlBits in (foldlBits p f) in
+  match foldlBits_rhs with context[ unsafeFix ?f _ ] => exact f end.
+Defined.
+
+(** This lemma will encapsulate the termination proof, so that the rest of the proof
+ will not have to be modified. *)
+Lemma foldlBits_go_eq {a} (p : Int) (f : a -> Int -> a) :
+  unsafeFix (foldlBits_go p f) = foldlBits_go p f (unsafeFix (foldlBits_go p f)).
+Proof. apply unsafeFix_eq. Qed.
+
+Lemma foldlBits_go_0:
+  forall {a} p (f : a -> Int -> a) x,
+  unsafeFix (foldlBits_go p f) 0%N x = x.
+Proof.
+  intros.
+  rewrite foldlBits_go_eq.
+  reflexivity.
+Qed.
+
+Lemma foldlBits_go_bm:
+  forall {a} p (f : a -> Int -> a) bm x,
+  isBitMask bm ->
+  unsafeFix (foldlBits_go p f) bm x =
+    unsafeFix (foldlBits_go p f) (N.ldiff bm (lowestBitMask bm))
+             (f x (p + Z.of_N WIDTH - 1 - Z.of_N (N.log2 (revNatSafe bm)))).
+Proof.
+  intros.
+  etransitivity; [rewrite foldlBits_go_eq; reflexivity|].
+  unfold foldlBits_go at 1.
+  unfoldMethods.
+
+  replace (bm =? Z.to_N 0)%N with false
+    by (symmetry; apply N.eqb_neq; unfold isBitMask in *; zify; rewrite Z2N.id; omega).
+
+  rewrite lowestBitMask_highestBitMask at 2 by isBitMask.
+(*   rewrite split_highestBitMask with (bm := revNatSafe bm)  by isBitMask.
+   *)
+   unfold indexOfTheOnlyBit, highestBitMask.
+   rewrite revNat_pow by isBitMask.
+   rewrite N.log2_pow2 by Nomega.
+   assert (N.log2 (revNatSafe bm) < WIDTH)%N by isBitMask.
+   replace (p + Z.of_N (WIDTH - 1 - N.log2 (revNatSafe bm))%N)
+      with (p + Z.of_N WIDTH - 1 - Z.of_N (N.log2 (revNatSafe bm)))  by (unfold WIDTH in *; Nomega).
+  rewrite lxor_lowestBitMask by assumption.
+  reflexivity.
+Qed.
+
+Definition hasTwoBits bm := isBitMask bm /\ N.ldiff bm (lowestBitMask bm) <> 0%N.
+
+Lemma isBitMask_twoBits:
+  forall bm,
+  hasTwoBits bm -> isBitMask bm.
+Proof. intros. apply H. Qed.
+Hint Immediate isBitMask_twoBits : isBitMask.
+
+
+Lemma lowestBitMask_revNatSafe:
+  forall bm,
+  isBitMask bm ->
+  lowestBitMask (revNatSafe bm) = revNatSafe (highestBitMask bm).
+Proof.
+  intros.
+  rewrite lowestBitMask_highestBitMask by isBitMask.
+  rewrite revNat_revNat by isBitMask.
+  reflexivity.
+Qed.
+
+Lemma ldiff_highestBitMask_0:
+  forall bm,
+  isBitMask bm ->
+  N.ldiff bm (highestBitMask bm) = 0%N  ->
+  bm = (2^N.log2 bm)%N.
+Proof.
+  intros.
+  unfold highestBitMask in *.
+  apply N.bits_inj; intro j.
+  rewrite N.pow2_bits_eqb.
+  apply N.bits_inj_iff in H0. specialize (H0 j).
+  rewrite N.ldiff_spec in H0.
+  rewrite N.bits_0 in H0.
+  rewrite N.pow2_bits_eqb in H0.
+  destruct (N.eqb_spec (N.log2 bm) j).
+  * subst.
+    apply N.bit_log2.
+    destruct H; Nomega.
+  * simpl in H0. rewrite andb_true_r in H0.
+    assumption.
+Qed.
+
+Lemma ldiff_lowestBitMask_0:
+  forall bm,
+  isBitMask bm ->
+  N.ldiff bm (lowestBitMask bm) = 0%N  ->
+  bm = (2^N.log2 bm)%N.
+Proof.
+  intros.
+  rewrite <- revNat_revNat with (n := bm) in H0 at 1 by isBitMask.
+  rewrite lowestBitMask_highestBitMask in H0 by isBitMask.
+  rewrite <- revNat_ldiff in H0 by isBitMask.
+  rewrite revNat_eq_0 in H0 by isBitMask.
+  apply ldiff_highestBitMask_0 in H0; try isBitMask.
+  assert (revNatSafe (revNatSafe bm) = revNatSafe (2 ^ N.log2 (revNatSafe bm))%N) by congruence.
+  clear H0.
+  rewrite revNat_revNat in H1 by isBitMask.
+  rewrite H1; clear H1.
+  rewrite revNat_pow by isBitMask.
+  rewrite N.log2_pow2 by Nomega.
+  reflexivity.
+Qed.
+
+Lemma hasTwoBits_revNat:
+  forall bm,
+  hasTwoBits bm ->
+  hasTwoBits (revNatSafe bm).
+Proof.
+  intros.
+  unfold hasTwoBits in *. destruct H.
+  split; try isBitMask.
+  contradict H0.
+
+  rewrite lowestBitMask_revNatSafe in H0 by isBitMask.
+  rewrite <- revNat_ldiff  in H0 by isBitMask.
+  rewrite revNat_eq_0 in H0 by isBitMask.
+  apply ldiff_highestBitMask_0 in H0; try isBitMask.
+  rewrite H0.
+
+  rewrite lowestBitMask_pow_id by isBitMask.
+  apply N.ldiff_diag.
+Qed.
+
+Lemma log2_ldiff:
+  forall bm,
+  hasTwoBits bm ->
+  N.log2 (N.ldiff bm (lowestBitMask bm)) = N.log2 bm.
+Proof.
+  intros. destruct H.
+  apply N.log2_bits_unique.
+  * 
+    rewrite N.ldiff_spec.
+    rewrite N.bit_log2 by (unfold isBitMask in H; Nomega).
+    rewrite andb_true_l.
+    rewrite negb_true_iff.
+    rewrite lowestBitMask_highestBitMask in * by isBitMask.
+    rewrite revNat_spec by isBitMask.
+    unfold highestBitMask in *.
+    apply N.pow2_bits_false.
+    contradict H0.
+    apply N.bits_inj. intro j.
+    rewrite N.bits_0.
+    rewrite N.ldiff_spec.
+    destruct (N.ltb_spec j WIDTH).
+    - rewrite revNat_spec by assumption.
+      destruct (N.eqb_spec j (N.log2 bm)).
+      + subst.
+        rewrite N.pow2_bits_eqb.
+        rewrite H0.
+        rewrite N.eqb_refl.
+        simpl.
+        apply andb_false_r.
+      + enough (N.testbit bm j = false) by (replace (N.testbit bm j); apply andb_false_l).
+        destruct (N.ltb_spec j (N.log2 bm)).
+        ** rewrite <- revNat_revNat with (n := bm) by isBitMask.
+           rewrite revNat_spec by Nomega.
+           apply N.bits_above_log2.
+           assert (N.log2 bm < WIDTH)%N by isBitMask.
+           Nomega.
+        ** apply N.bits_above_log2. Nomega.
+    - rewrite isBitMask0_outside by isBitMask.
+      apply andb_false_l.
+  * intros j Hj.
+    rewrite N.ldiff_spec.
+    rewrite N.bits_above_log2 by assumption.
+    reflexivity.
+Qed.
+
+Lemma highestBitMask_ldiff:
+  forall bm,
+  hasTwoBits bm ->
+  highestBitMask (N.ldiff bm (lowestBitMask bm)) = highestBitMask bm.
+Proof. intros. unfold highestBitMask. rewrite log2_ldiff by assumption. reflexivity. Qed.
+
+Lemma isBitMask_ldiff_twoBits:
+  forall bm,
+  hasTwoBits bm -> isBitMask (N.ldiff bm (highestBitMask bm)).
+Proof.
+  intros.
+  rewrite isBitMask_isBitMask_and_noneg; split.
+  * destruct H.
+    contradict H0.
+    apply ldiff_highestBitMask_0 in H0; try isBitMask.
+    rewrite H0.
+    rewrite lowestBitMask_pow_id by isBitMask.
+    rewrite N.ldiff_diag.
+    reflexivity.
+  * destruct H. isBitMask.
+Qed.
+Hint Resolve isBitMask_ldiff_twoBits : isBitMask.
+
+Lemma lowestBitMask_ldiff:
+  forall bm,
+  hasTwoBits bm ->
+  lowestBitMask (N.ldiff bm (highestBitMask bm)) = lowestBitMask bm.
+Proof.
+  intros.
+  rewrite !lowestBitMask_highestBitMask by isBitMask.
+  f_equal.
+  rewrite revNat_ldiff by isBitMask.
+  rewrite <- lowestBitMask_revNatSafe by isBitMask.
+  apply highestBitMask_ldiff.
+  apply hasTwoBits_revNat.
+  assumption.
+Qed.
+
+
+Lemma foldlBits_go_high_bm_aux:
+  forall {a} p (f : a -> Int -> a) bm,
+  isBitMask0 bm ->
+  (bm <> 0)%N ->
+  (forall x, unsafeFix (foldlBits_go p f) bm x =
+    f (unsafeFix (foldlBits_go p f) (N.ldiff bm (highestBitMask bm)) x)
+       (p + Z.of_N (N.log2 bm))).
+Proof.
+  intros.
+  pose proof H.
+  revert H1 H0 x.
+  apply bits_ind_up with (bm := bm).
+  - isBitMask.
+  - clear bm H. intros Hbm Hpos x.
+    Nomega.
+  - clear bm H. intros bm Hbm IH _ Hpos x.
+    destruct (N.eqb_spec (N.ldiff bm (lowestBitMask bm)) (0%N)).
+    * clear IH.
+    
+      rewrite foldlBits_go_bm by isBitMask.
+      rewrite e.
+      rewrite foldlBits_go_0.
+
+      apply ldiff_lowestBitMask_0 in e; try isBitMask.
+      rewrite e.
+      rewrite highestBitMask_pow_id by isBitMask.
+      rewrite N.ldiff_diag.
+      rewrite foldlBits_go_0.
+      rewrite N.log2_pow2 by nonneg.
+
+      replace bm with (2^N.log2 bm)%N by (apply H0).
+      rewrite revNat_pow by isBitMask.
+      rewrite N.log2_pow2 by Nomega.
+      rewrite N.log2_pow2 by Nomega.
+      f_equal.
+      assert (Hlog : (N.log2 bm < WIDTH)%N) by isBitMask.
+      Nomega.
+    * assert (hasTwoBits bm) by (split; auto; isBitMask).
+      rewrite foldlBits_go_bm by isBitMask.
+      rewrite IH by (isBitMask || assumption).
+      rewrite log2_ldiff by assumption.
+      f_equal.
+      etransitivity; [|rewrite foldlBits_go_bm by isBitMask;  reflexivity].
+      rewrite lowestBitMask_ldiff by assumption.
+      rewrite highestBitMask_ldiff by assumption.
+      rewrite !N.ldiff_ldiff_l.
+      rewrite N.lor_comm.
+      rewrite revNat_ldiff by isBitMask.
+      replace (revNatSafe (highestBitMask bm))
+         with (lowestBitMask (revNatSafe bm))
+         by (rewrite lowestBitMask_highestBitMask by isBitMask; rewrite revNat_revNat by isBitMask; reflexivity).
+      rewrite log2_ldiff by (apply hasTwoBits_revNat; assumption).
+      reflexivity.
+Qed.
+
+
+Lemma foldlBits_go_high_bm:
+  forall {a} p (f : a -> Int -> a) bm x,
+  isBitMask bm ->
+  unsafeFix (foldlBits_go p f) bm x =
+    f (unsafeFix (foldlBits_go p f) (N.ldiff bm (highestBitMask bm)) x)
+       (p + Z.of_N (N.log2 bm)).
+Proof.
+  intros.
+  unfold isBitMask in H.
+  apply foldlBits_go_high_bm_aux.
+  * apply H.
+  * Nomega.
+Qed.
+
 Lemma foldlBits_foldrBits:
   forall {a b}  k (x : a) p bm (k' : a -> b), isBitMask0 bm ->
     k' (foldlBits p k x bm) = foldrBits p (fun x g a => g (k a x)) k' bm x.
-Admitted.
+Proof.
+  intros.
+  unfold foldrBits.
+  fold (@foldrBits_go (a->b) p (fun x g a => g (k a x))).
+  unfold foldlBits.
+  fold (@foldlBits_go _ p k).
+
+  revert k'.
+  apply bits_ind with (bm := bm).
+  - assumption.
+  - intros.
+    rewrite foldrBits_go_0.
+    rewrite foldlBits_go_0.
+    reflexivity.
+  - clear bm H. intros bm Hbm IH k'.
+    rewrite !@foldrBits_go_revNat_bm with (bm := bm) by isBitMask.
+    rewrite !@foldlBits_go_high_bm with (bm := bm) by isBitMask.
+    rewrite <- IH.
+    reflexivity.
+Qed.
 
 Lemma foldl_go_foldr_go:
   forall {a b}  k (x : a) s r f (k' : a -> b), Desc s r f ->

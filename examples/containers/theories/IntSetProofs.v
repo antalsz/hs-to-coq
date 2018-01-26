@@ -3204,6 +3204,15 @@ Proof.
   eapply Desc_neg_false; eauto.
 Qed.
 
+Lemma Sem_neg_false:
+ forall {s f i}, Sem s  f -> i < 0 -> f i = false.
+Proof.
+  intros.
+  destruct (f i) eqn:?; try auto; exfalso.
+  enough (0 <= i) by omega.
+  apply (Sem_nonneg H Heqb).
+Qed.
+
 Lemma Desc0_subRange:
   forall {s r r' f}, Desc0 s r f -> isSubrange r r' = true -> Desc0 s r' f.
 Proof.
@@ -3466,11 +3475,11 @@ Proof.
 Qed.
 
 
-Lemma Desc_uniqe:
+Lemma Desc_unique:
   forall s1 r1 f1 s2 r2 f2,
   Desc s1 r1 f1 -> Desc s2 r2 f2 ->
   (forall i, f1 i = f2 i) ->
-  s1 = s2 /\ r1 = r2.
+  s1 = s2.
 Proof.
   intros ?????? HD1.
   revert s2 r2 f2.
@@ -3491,7 +3500,7 @@ Proof.
         apply bitmapInRange_inside in Hf.
         apply inRange_both_same with (i := i); try assumption; Nomega.
       }
-      subst. split; try reflexivity.
+      subst.
       f_equal.
       apply N.bits_inj; intro j.
       destruct (N.ltb_spec j WIDTH).
@@ -3694,7 +3703,50 @@ Proof.
       destruct IHHD1_1; subst.
       specialize (IHHD1_2 _ _ _ HD3_2 IH_prem_2).
       destruct IHHD1_2; subst.
-      subst. split; reflexivity.
+      reflexivity.
+Qed.
+
+
+Lemma Sem_unique:
+  forall s1 f1 s2 f2,
+  Sem s1 f1 -> Sem s2 f2 ->
+  (forall i, f1 i = f2 i) ->
+  s1 = s2.
+Proof.
+  intros.
+  destruct H, H0.
+  * reflexivity.
+  * exfalso.
+    destruct (Desc_some_f HD) as [i Hi]. 
+    rewrite <- H1 in Hi.
+    rewrite H in Hi.
+    congruence.
+  * exfalso.
+    destruct (Desc_some_f HD) as [i Hi]. 
+    rewrite -> H1 in Hi.
+    rewrite H in Hi.
+    congruence.
+  * eapply Desc_unique; eassumption.
+Qed.
+
+(** *** Specifying [equal] *)
+
+Lemma equal_spec:
+  forall s1 s2, equal s1 s2 = true <-> s1 = s2.
+Proof.
+  induction s1; intro s2; destruct s2;
+    try solve [simpl; intuition congruence].
+  * simpl. unfoldMethods.
+    rewrite !andb_true_iff.
+    rewrite !Z.eqb_eq.
+    rewrite IHs1_1.
+    rewrite IHs1_2.
+    intuition congruence.
+  * simpl. unfoldMethods.
+    rewrite !andb_true_iff.
+    rewrite !Z.eqb_eq.
+    rewrite !N.eqb_eq.
+    intuition congruence.
 Qed.
 
 (** *** Specifying [member] *)
@@ -5298,7 +5350,37 @@ Module Foo: WSfun(N_as_OT).
 
   Definition eq_set : IntSet -> IntSet -> Prop := Equal_set.
   Definition eq : t -> t -> Prop := Equal.
-  Definition eq_dec : forall s s' : t, {eq s s'} + {~ eq s s'}. Admitted.
+
+  Definition eq_dec : forall s s' : t, {eq s s'} + {~ eq s s'}.
+  Proof.
+    intros.
+    destruct s as [s1 Hwf1].
+    destruct s' as [s2 Hwf2].   
+    destruct (Internal.equal s1 s2) eqn:?.
+    * left.
+      rewrite equal_spec in Heqb.
+      subst.
+      intro. unfold In. reflexivity.
+    * right.
+      apply not_true_iff_false in Heqb.
+      contradict Heqb.
+      rewrite equal_spec.
+      destruct Hwf1 as [f1 HSem1].
+      destruct Hwf2 as [f2 HSem2].
+      eapply Sem_unique; try eassumption.
+      intro i.
+      apply eq_iff_eq_true.
+      destruct (Z.leb_spec 0 i).
+      + specialize (Heqb (Z.to_N i)).
+        unfold eq, In, In_set in Heqb.
+        erewrite (member_Sem HSem1) in Heqb.
+        erewrite (member_Sem HSem2) in Heqb.
+        rewrite Z2N.id in Heqb by assumption.
+        assumption.
+      + rewrite (Sem_neg_false HSem1) by assumption.
+        rewrite (Sem_neg_false HSem2) by assumption.
+        intuition.
+  Defined.
 
   Lemma eq_set_refl : forall s, eq_set s s.
   Proof. intros; constructor; auto. Qed.

@@ -3601,7 +3601,59 @@ Proof.
       inRange_disjoint.
     + subst.
       assert (r4 = r). {
-        eapply criss_cross; admit.
+        destruct (Desc_some_f HD3_1) as [i1 Hi1].
+        destruct (Desc_some_f HD3_2) as [i2 Hi2].
+        destruct (Desc_some_f HD1_1) as [i3 Hi3].
+        destruct (Desc_some_f HD1_2) as [i4 Hi4].
+        apply criss_cross with i1 i2 i3 i4; try assumption.
+        * apply (Desc_inside HD3_1) in Hi1; inRange_true.
+        * apply (Desc_inside HD3_2) in Hi2; inRange_true.
+        * apply (Desc_inside HD1_1) in Hi3; inRange_true.
+        * apply (Desc_inside HD1_2) in Hi4; inRange_true.
+        * specialize (H10 i1); rewrite Hi1 in H10.
+          rewrite orb_true_l in H10.
+          rewrite <- Hf in H10.
+          specialize (H4 i1); rewrite H10 in H4; clear H10; symmetry in H4.
+          rewrite orb_true_iff in H4; destruct H4.
+          + apply (Desc_inside HD1_1) in H2.
+            eapply inRange_isSubrange_true; [|eassumption].
+            isSubrange_true.
+          + apply (Desc_inside HD1_2) in H2.
+            eapply inRange_isSubrange_true; [|eassumption].
+            isSubrange_true.
+        * specialize (H10 i2); rewrite Hi2 in H10.
+          rewrite orb_true_r in H10.
+          rewrite <- Hf in H10.
+          specialize (H4 i2); rewrite H10 in H4; clear H10; symmetry in H4.
+          rewrite orb_true_iff in H4; destruct H4.
+          + apply (Desc_inside HD1_1) in H2.
+            eapply inRange_isSubrange_true; [|eassumption].
+            isSubrange_true.
+          + apply (Desc_inside HD1_2) in H2.
+            eapply inRange_isSubrange_true; [|eassumption].
+            isSubrange_true.
+        * specialize (H4 i3); rewrite Hi3 in H4.
+          rewrite orb_true_l in H4.
+          rewrite -> Hf in H4.
+          specialize (H10 i3); rewrite H4 in H10; clear H4; symmetry in H10.
+          rewrite orb_true_iff in H10; destruct H10.
+          + apply (Desc_inside HD3_1) in H2.
+            eapply inRange_isSubrange_true; [|eassumption].
+            isSubrange_true.
+          + apply (Desc_inside HD3_2) in H2.
+            eapply inRange_isSubrange_true; [|eassumption].
+            isSubrange_true.
+        * specialize (H4 i4); rewrite Hi4 in H4.
+          rewrite orb_true_r in H4.
+          rewrite -> Hf in H4.
+          specialize (H10 i4); rewrite H4 in H10; clear H4; symmetry in H10.
+          rewrite orb_true_iff in H10; destruct H10.
+          + apply (Desc_inside HD3_1) in H2.
+            eapply inRange_isSubrange_true; [|eassumption].
+            isSubrange_true.
+          + apply (Desc_inside HD3_2) in H2.
+            eapply inRange_isSubrange_true; [|eassumption].
+            isSubrange_true.
       }
       subst.
       assert (IH_prem_1 : (forall i : Z, f1 i = f0 i)). {
@@ -3611,11 +3663,11 @@ Proof.
         -- rewrite (Desc_outside HD1_2) in H4 by inRange_false.
            rewrite orb_false_r in H4.
            rewrite <- H4; clear H4.
-           
+
            rewrite (Desc_outside HD3_2) in H10 by inRange_false.
            rewrite orb_false_r in H10.
            rewrite <- H10; clear H10.
-           
+
            assumption.
         -- rewrite (Desc_outside HD1_1) by inRange_false.
            rewrite (Desc_outside HD3_1) by inRange_false.
@@ -3643,7 +3695,7 @@ Proof.
       specialize (IHHD1_2 _ _ _ HD3_2 IH_prem_2).
       destruct IHHD1_2; subst.
       subst. split; reflexivity.
-Admitted.
+Qed.
 
 (** *** Specifying [member] *)
 

@@ -1,0 +1,13 @@
+skip module PprCore
+skip module Data.ByteString
+skip module Coercion
+skip module ErrUtils
+skip module Type
+skip module OccurAnal
+skip module CoreSeq
+
+axiomatize module CoreSubst
+
+rename type Outputable.SDoc = unit
+
+skip CoreSubst.simpleOptPgm

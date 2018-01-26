@@ -19,6 +19,7 @@ PASS = \
 
 # tests that *should* pass but currently fail
 TODO_PASS  = \
+  Guard2 \
   Arrow \
   EqList \
   TypeClient \
@@ -69,11 +70,12 @@ todo_pass: $(foreach f,$(TODO_PASS),$(f).fail)
 	$(TYPECHECK) $*.v
 
 .SECONDEXPANSION:
-%.v : FORCE $$(wildcard $*/edits) $$(wildcard $*/preamble.v) %.hs
+%.v : FORCE $$(wildcard $*/edits) $$(wildcard $*/preamble.v)  $$(wildcard $*/midamble.v) %.hs
 	@rm -f $*.v
-	@if [ -e $*/preamble.v ]; then P_ARG="-p $*/preamble.v"; else P_ARG=; fi;\
+	@if [ -e $*/preamble.v ]; then P_ARG="-p $*/preamble.v"; else P_ARG=; fi; \
+	if [ -e $*/midamble.v ]; then M_ARG="-m $*/midamble.v"; else M_ARG=; fi; \
 	if [ -e $*/edits ]; then E_ARG="-e $*/edits"; else E_ARG=; fi;\
-	$(HS_TO_COQ) $${E_ARG} -e ../../base/edits -o . $${P_ARG} $*.hs 1>/dev/null
+	$(HS_TO_COQ) $${E_ARG} -e ../../base/edits -o . $${P_ARG} $${M_ARG} $*.hs 1>/dev/null
 
 # We always want to re-build the .v files, to test the current build of hs-to-coq
 FORCE:

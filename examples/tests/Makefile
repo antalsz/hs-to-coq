@@ -15,7 +15,6 @@ PASS = \
   Irrefutable \
   LocalTopoSort \
   InstCtx \
-  Guard2 \
   ExhaustGuard \
   PartialAppliedPolyDataCon \
   NonStructuralRec \

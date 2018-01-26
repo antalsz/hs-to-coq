@@ -159,7 +159,13 @@ VFILES:=FastString.v\
   Literal.v\
   CoreSyn.v\
   UnVarGraph.v\
-  Demand.v
+  Demand.v\
+  CoreSubst.v\
+  CoreUtils.v\
+  CoAxiom.v\
+  Id.v\
+  CoreFVs.v\
+  CoreArity.v
 
 ifneq ($(filter-out archclean clean cleanall printenv,$(MAKECMDGOALS)),)
 -include $(addsuffix .d,$(VFILES))

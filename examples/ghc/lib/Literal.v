@@ -46,8 +46,8 @@ Inductive Literal : Type := MachChar : GHC.Char.Char -> Literal
                          |  LitInteger : GHC.Num.Integer -> Core.Type_ -> Literal.
 (* Midamble *)
 
-Instance Default_Literal : Panic.Default Literal :=
-  Panic.Build_Default _ MachNullAddr.
+Instance Default_Literal : GHC.Err.Default Literal :=
+  GHC.Err.Build_Default _ MachNullAddr.
 
 Parameter absent_lits :  UniqFM.UniqFM Literal.
 

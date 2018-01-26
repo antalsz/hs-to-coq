@@ -26,14 +26,14 @@ Arguments Succeeded {_} {_} _.
 Arguments Failed {_} {_} _.
 (* Midamble *)
 
-Require Panic.
+Require GHC.Err.
 
-Definition expectJust {a}`{_:Panic.Default a} :
+Definition expectJust {a}`{_:GHC.Err.Default a} :
 			GHC.Base.String -> ((option a) -> a) :=
   fun arg_14__ arg_15__ =>
     match arg_14__ , arg_15__ with
       | _ , Some x => x
-      | err , None => Panic.panic (GHC.Base.hs_string__ "expectJust ")
+      | err , None => GHC.Err.error (GHC.Base.hs_string__ "expectJust ")
     end.
 
 (* Converted value declarations: *)

@@ -53,9 +53,12 @@ rename value Data.Map.Base.toList = Data.Map.Internal.toList
 rename value Data.Map.Base.union = Data.Map.Internal.union
 rename value Data.Map.Base.unionWith = Data.Map.Internal.unionWith
 
+
 rename type Data.IntMap.Base.IntMap = Data.IntMap.Internal.IntMap
-rename value Data.IntMap.fold = Data.IntMap.Internal.fold
-rename value Data.IntMap.foldWithKey = Data.IntMap.Internal.foldWithKey
+rename value Data.IntMap.fold = Data.IntMap.Internal.foldr
+rename value Data.IntMap.foldWithKey = Data.IntMap.Internal.foldrWithKey
+rename value Data.IntMap.Base.foldr = Data.IntMap.Internal.foldr
+rename value Data.IntMap.Base.foldWithKey = Data.IntMap.Internal.foldrWithKey
 rename value Data.IntMap.Base.adjust = Data.IntMap.Internal.adjust
 rename value Data.IntMap.Base.alter = Data.IntMap.Internal.alter
 rename value Data.IntMap.Base.delete = Data.IntMap.Internal.delete
@@ -82,8 +85,16 @@ rename value Data.IntMap.Base.splitLookup = Data.IntMap.Internal.splitLookup
 rename value Data.IntMap.Base.toList = Data.IntMap.Internal.toList
 rename value Data.IntMap.Base.union = Data.IntMap.Internal.union
 rename value Data.IntMap.Base.unionWith = Data.IntMap.Internal.unionWith
+rename value Data.IntMap.Base.mergeWithKey = Data.IntMap.Internal.mergeWithKey
+rename value Data.IntMap.Base.keysSet = Data.IntMap.Internal.keysSet
 
-
+rename type Data.IntSet.Base.IntSet = Data.IntSet.Internal.IntSet
+rename value Data.IntSet.Base.empty = Data.IntSet.Internal.empty
+rename value Data.IntSet.Base.null = Data.IntSet.Internal.null
+rename value Data.IntSet.Base.fromList = Data.IntSet.Internal.fromList
+rename value Data.IntSet.Base.member = Data.IntSet.Internal.member
+rename value Data.IntSet.Base.delete = Data.IntSet.Internal.delete
+rename value Data.IntSet.Base.union = Data.IntSet.Internal.union
 
 # Punned
 rename value BasicTypes.EP   = BasicTypes.Mk_EP

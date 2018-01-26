@@ -26,7 +26,7 @@ Require GHC.Base.
 Require GHC.List.
 Require Name.
 Require NameEnv.
-Require Panic.
+
 (* Require Var. *)
 Import GHC.Base.Notations.
 
@@ -64,6 +64,10 @@ Parameter dataConTag          : DataCon -> BasicTypes.ConTag.
 Parameter dataConRepStrictness : DataCon -> SrcStrictness.
 (* Midamble *)
 
+
+Require GHC.Err.
+Instance Default_DataCon : GHC.Err.Default DataCon := {}.
+Admitted.
 
 
 Instance Uniqable_DataCon : Unique.Uniquable DataCon := {}.

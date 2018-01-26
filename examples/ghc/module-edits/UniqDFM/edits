@@ -1,1 +1,17 @@
+skip module Data.IntMap
 skip UniqDFM.pprUniqDFM
+
+
+skip UniqDFM.Functor__UniqDFM
+
+## type inference issue
+## but this redefine does nothing
+redefine Local Definition UniqDFM.Functor__UniqDFM_fmap : forall {a} {b},
+                                           (a -> b) -> ((UniqDFM a) -> (UniqDFM b)) :=
+  fun {a} {b} =>
+    fun f arg_1__ =>
+      match arg_1__ with
+        | UDFM a1 a2 =>
+          UDFM (@GHC.Base.fmap Data.IntMap.Internal.IntMap _ _ _ (GHC.Base.fmap f) a1)
+               ((fun b1 => b1) a2)
+      end.

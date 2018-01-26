@@ -3,7 +3,7 @@ Require Name.
 Require Class.
 Require Var.
 
-Definition error {a} `{Panic.Default a} := Panic.panic.
+Require Import GHC.Err.
 
 (* Record selectors *)
 Parameter tyConName    : TyCon -> Name.Name.

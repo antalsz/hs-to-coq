@@ -207,24 +207,24 @@ Definition unfoldingInfo (arg_11__ : IdInfo) :=
 
 (* Midamble *)
 
-Require Panic.
+Require GHC.Err.
 
-Instance Default_IdDetails : Panic.Default IdDetails := {}.
+Instance Default_IdDetails : GHC.Err.Default IdDetails := {}.
 Admitted.
 
-Instance Default_RuleInfo : Panic.Default RuleInfo := {}.
+Instance Default_RuleInfo : GHC.Err.Default RuleInfo := {}.
 Admitted.
 
-Instance Default_RecSelParent : Panic.Default RecSelParent := {}.
+Instance Default_RecSelParent : GHC.Err.Default RecSelParent := {}.
 Admitted.
 
-Instance Default_TickBoxOp : Panic.Default TickBoxOp :=
-  Panic.Build_Default _ (TickBox Panic.default Panic.default).
+Instance Default_TickBoxOp : GHC.Err.Default TickBoxOp :=
+  GHC.Err.Build_Default _ (TickBox GHC.Err.default GHC.Err.default).
 
-Instance Default_CafInfo : Panic.Default CafInfo :=
-  Panic.Build_Default _ MayHaveCafRefs.
+Instance Default_CafInfo : GHC.Err.Default CafInfo :=
+  GHC.Err.Build_Default _ MayHaveCafRefs.
 
-Instance Default_IdInfo : Panic.Default IdInfo := {}.
+Instance Default_IdInfo : GHC.Err.Default IdInfo := {}.
 Admitted.
 
 (* Converted value declarations: *)

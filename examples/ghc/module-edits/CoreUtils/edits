@@ -1,5 +1,8 @@
 axiomatize module CoreUtils
 
+## notation!!!
+rename type CoreSyn.Alt = Alt
+
 skip module Type
 skip module Coercion
 skip module PprCore
@@ -20,3 +23,9 @@ skip CoreUtils.dataConRepInstPat
 
 ## pattern matching is non-exhaustive?
 skip CoreUtils.exprIsHNFlike
+
+skip CoreUtils.diffUnfold
+skip CoreUtils.diffIdInfo
+skip CoreUtils.diffBinds
+skip CoreUtils.diffExpr
+skip CoreUtils.locBind

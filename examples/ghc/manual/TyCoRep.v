@@ -40,7 +40,7 @@ Require GHC.Real.
 Require Name.
 Require OccName.
 Require Pair.
-Require Panic.
+Require GHC.Err.
 Require UniqFM.
 Require UniqSupply.
 Require Unique.
@@ -171,7 +171,7 @@ Definition typeKind : Core.Type_ -> Kind :=
 
 (*--- end from Type *)
 
-Instance DefaultPair {a:Type}{b:Type}`{Panic.Default a}`{Panic.Default b} : Panic.Default (a * b)%type.
+Instance DefaultPair {a:Type}{b:Type}`{GHC.Err.Default a}`{GHC.Err.Default b} : GHC.Err.Default (a * b)%type.
 Admitted.
 
 Instance Uniq_TyCon : Unique.Uniquable TyCon.

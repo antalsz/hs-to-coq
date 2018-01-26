@@ -1,1 +1,8 @@
 # axiomatize module CallArity
+
+## specialize generic method to (->) constructor
+## to make type inference easier
+rename value Control.Arrow.first = arrow_first
+rename value Control.Arrow.first = arrow_second
+
+rewrite forall x y, Data.Foldable.minimum (cons x y) = Data.Foldable.foldr GHC.Base.min x y

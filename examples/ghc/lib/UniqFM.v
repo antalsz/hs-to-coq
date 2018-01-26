@@ -14,6 +14,7 @@ Require Coq.Program.Wf.
 
 Require Data.Foldable.
 Require Data.IntMap.Internal.
+Require Data.IntSet.Internal.
 Require GHC.Base.
 Require GHC.Num.
 Require GHC.Prim.
@@ -28,14 +29,10 @@ Inductive UniqFM ele : Type := UFM : (Data.IntMap.Internal.IntMap ele) -> UniqFM
 Arguments UFM {_} _.
 (* Midamble *)
 
-Require Data.IntSet.Internal.
+Require GHC.Err.
 
-Axiom ufmToSet_Directly : forall {elt}, UniqFM elt -> Data.IntSet.Internal.IntSet.
-
-Require Panic.
-
-Instance Default_UniqFM {a} : Panic.Default (UniqFM a) :=
-  Panic.Build_Default _ (UFM Data.IntMap.Internal.empty).
+Instance Default_UniqFM {a} : Err.Default (UniqFM a) :=
+  Err.Build_Default _ (UFM Data.IntMap.Internal.empty).
 
 (* Converted value declarations: *)
 
@@ -247,15 +244,15 @@ Definition filterUFM_Directly {elt} : (Unique.Unique -> elt -> bool) -> UniqFM
 Definition foldUFM {elt} {a} : (elt -> a -> a) -> a -> UniqFM elt -> a :=
   fun arg_0__ arg_1__ arg_2__ =>
     match arg_0__ , arg_1__ , arg_2__ with
-      | k , z , UFM m => Data.IntMap.Internal.fold k z m
+      | k , z , UFM m => Data.IntMap.Internal.foldr k z m
     end.
 
 Definition foldUFM_Directly {elt} {a}
     : (Unique.Unique -> elt -> a -> a) -> a -> UniqFM elt -> a :=
   fun arg_0__ arg_1__ arg_2__ =>
     match arg_0__ , arg_1__ , arg_2__ with
-      | k , z , UFM m => Data.IntMap.Internal.foldWithKey (k GHC.Base.∘
-                                                          Unique.getUnique) z m
+      | k , z , UFM m => Data.IntMap.Internal.foldrWithKey (k GHC.Base.∘
+                                                           Unique.getUnique) z m
     end.
 
 Definition intersectUFM {elt} : UniqFM elt -> UniqFM elt -> UniqFM elt :=
@@ -369,6 +366,19 @@ Definition plusUFM_C {elt} : (elt -> elt -> elt) -> UniqFM elt -> UniqFM
       | f , UFM x , UFM y => UFM (Data.IntMap.Internal.unionWith f x y)
     end.
 
+Definition plusUFM_CD {elt} : (elt -> elt -> elt) -> UniqFM elt -> elt -> UniqFM
+                              elt -> elt -> UniqFM elt :=
+  fun arg_0__ arg_1__ arg_2__ arg_3__ arg_4__ =>
+    match arg_0__ , arg_1__ , arg_2__ , arg_3__ , arg_4__ with
+      | f , UFM xm , dx , UFM ym , dy => UFM GHC.Base.$
+                                         Data.IntMap.Internal.mergeWithKey (fun arg_5__ arg_6__ arg_7__ =>
+                                                                             match arg_5__ , arg_6__ , arg_7__ with
+                                                                               | _ , x , y => Some (f x y)
+                                                                             end) (Data.IntMap.Internal.map (fun x =>
+                                                                                                              f x dy))
+                                         (Data.IntMap.Internal.map (fun y => f dx y)) xm ym
+    end.
+
 Definition sizeUFM {elt} : UniqFM elt -> GHC.Num.Int :=
   fun arg_0__ => match arg_0__ with | UFM m => Data.IntMap.Internal.size m end.
 
@@ -394,6 +404,10 @@ Definition ufmToList {elt} : UniqFM elt -> list (Unique.Unique * elt)%type :=
                                 end) GHC.Base.$ Data.IntMap.Internal.toList m
     end.
 
+Definition ufmToSet_Directly {elt} : UniqFM
+                                     elt -> Data.IntSet.Internal.IntSet :=
+  fun arg_0__ => match arg_0__ with | UFM m => Data.IntMap.Internal.keysSet m end.
+
 Definition unitDirectlyUFM {elt} : Unique.Unique -> elt -> UniqFM elt :=
   fun u v => UFM (Data.IntMap.Internal.singleton (Unique.getKey u) v).
 
@@ -404,21 +418,23 @@ Definition unitUFM {key} {elt} `{Unique.Uniquable key} : key -> elt -> UniqFM
                                         k) v).
 
 (* Unbound variables:
-     bool list op_zt__ option pair Data.Foldable.foldl Data.IntMap.Internal.IntMap
-     Data.IntMap.Internal.adjust Data.IntMap.Internal.alter
-     Data.IntMap.Internal.delete Data.IntMap.Internal.difference
-     Data.IntMap.Internal.elems Data.IntMap.Internal.empty
-     Data.IntMap.Internal.filter Data.IntMap.Internal.filterWithKey
-     Data.IntMap.Internal.findWithDefault Data.IntMap.Internal.fold
-     Data.IntMap.Internal.foldWithKey Data.IntMap.Internal.insert
-     Data.IntMap.Internal.insertWith Data.IntMap.Internal.intersection
-     Data.IntMap.Internal.intersectionWith Data.IntMap.Internal.keys
+     Some bool list op_zt__ option pair Data.Foldable.foldl
+     Data.IntMap.Internal.IntMap Data.IntMap.Internal.adjust
+     Data.IntMap.Internal.alter Data.IntMap.Internal.delete
+     Data.IntMap.Internal.difference Data.IntMap.Internal.elems
+     Data.IntMap.Internal.empty Data.IntMap.Internal.filter
+     Data.IntMap.Internal.filterWithKey Data.IntMap.Internal.findWithDefault
+     Data.IntMap.Internal.foldr Data.IntMap.Internal.foldrWithKey
+     Data.IntMap.Internal.insert Data.IntMap.Internal.insertWith
+     Data.IntMap.Internal.intersection Data.IntMap.Internal.intersectionWith
+     Data.IntMap.Internal.keys Data.IntMap.Internal.keysSet
      Data.IntMap.Internal.lookup Data.IntMap.Internal.map
      Data.IntMap.Internal.mapWithKey Data.IntMap.Internal.member
-     Data.IntMap.Internal.null Data.IntMap.Internal.partition
-     Data.IntMap.Internal.singleton Data.IntMap.Internal.size
-     Data.IntMap.Internal.splitLookup Data.IntMap.Internal.toList
-     Data.IntMap.Internal.union Data.IntMap.Internal.unionWith GHC.Base.Eq_
+     Data.IntMap.Internal.mergeWithKey Data.IntMap.Internal.null
+     Data.IntMap.Internal.partition Data.IntMap.Internal.singleton
+     Data.IntMap.Internal.size Data.IntMap.Internal.splitLookup
+     Data.IntMap.Internal.toList Data.IntMap.Internal.union
+     Data.IntMap.Internal.unionWith Data.IntSet.Internal.IntSet GHC.Base.Eq_
      GHC.Base.Monoid GHC.Base.flip GHC.Base.foldr GHC.Base.map GHC.Base.op_z2218U__
      GHC.Base.op_zd__ GHC.Base.op_zeze__ GHC.Base.op_zsze__ GHC.Num.Int
      GHC.Prim.Build_Unpeel GHC.Prim.Unpeel GHC.Prim.coerce Unique.Uniquable

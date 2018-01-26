@@ -1,6 +1,8 @@
 Require Import  GHC.Base.
 Require Import GHC.Num.
+Require Import GHC.Err.
 
+(*
 Class Default (a :Type) := {
   default : a
 }.
@@ -17,7 +19,7 @@ Instance default_arr {a}{b} `{Default b} : Default (a -> b) :=
   { default := fun x => default }.
 Instance default_option {a} : Default (option a) := { default := None }.
 Instance default_list {a} : Default (list a) := { default := nil } .
-
+*)
 
 Parameter noString : forall {a}, a -> String.
 

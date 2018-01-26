@@ -3,7 +3,7 @@ Import OccName.
 Import Module.
 
 (* Default values *)
-Import Panic.
+Require Import GHC.Err.
 Instance Default_NameSort : Default NameSort := Build_Default _ System.
 Instance Default_Name : Default Name := Build_Default _ (Mk_Name default default default default).
 

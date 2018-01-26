@@ -30,7 +30,7 @@ Require Data.Traversable.
 Require GHC.Base.
 Require GHC.List.
 Require GHC.Num.
-Require Panic.
+Require GHC.Err.
 Require UniqFM.
 Require Unique.
 Require Util.
@@ -55,21 +55,21 @@ Definition assocDefaultUsing {a} {b} :
          else assocDefaultUsing eq deflt rest key
        end.
 
-Definition assocUsing {a} {b} `{Panic.Default b}:
+Definition assocUsing {a} {b} `{GHC.Err.Default b}:
   (a -> a -> bool) -> String -> Assoc a b -> a -> b :=
   fun eq crash_msg list key =>
-    assocDefaultUsing eq (Panic.panic (Coq.Init.Datatypes.app (hs_string__
+    assocDefaultUsing eq (GHC.Err.error (Coq.Init.Datatypes.app (hs_string__
                                                               "Failed in assoc: ") crash_msg)) list key.
 
 Definition assocDefault {a} {b} `{(Eq_ a)} : b -> Assoc a
                                                       b -> a -> b :=
   fun deflt list key => assocDefaultUsing _==_ deflt list key.
 
-Definition assoc {a} {b} `{(Eq_ a)}`{Panic.Default b}
+Definition assoc {a} {b} `{(Eq_ a)}`{GHC.Err.Default b}
  : String -> Assoc a b -> a -> b :=
   fun crash_msg list key =>
     assocDefaultUsing _==_
-                           (Panic.panic (Coq.Init.Datatypes.app
+                           (GHC.Err.error (Coq.Init.Datatypes.app
                                            (hs_string__ "Failed in assoc: ")
                                            crash_msg)) list key.
 
@@ -109,9 +109,9 @@ Next Obligation.
 Admitted.
 
 
-Fixpoint getNth {a} `{Panic.Default a} (xs : list a) (n: Int) : a :=
+Fixpoint getNth {a} `{GHC.Err.Default a} (xs : list a) (n: Int) : a :=
   match xs with
-    | nil => Panic.panic (hs_string__ "not found!")
+    | nil => GHC.Err.error (hs_string__ "not found!")
     | cons y ys => if (n == #0) then y else
                     getNth ys (n - #1)
   end.
@@ -174,7 +174,7 @@ Definition equivClasses {a} : (a -> a -> comparison) -> list a -> list (list a) 
 (* mapAccumR :: ([[a]] -> [a] -> ([[a]], a)) -> [[a]] -> [[a]] -> ([[a]], [a]) *)
 
 Definition removeDups {a} (cmp : a -> a -> comparison) (l : list a)
-        `{Panic.Default a}
+        `{GHC.Err.Default a}
   : (list a * list (list a))%type :=
     match l with
       | nil        => pair nil nil
@@ -183,7 +183,7 @@ Definition removeDups {a} (cmp : a -> a -> comparison) (l : list a)
         let collect_dups : list (list a) -> list a -> (list (list a) *  a) :=
             fun dups_so_far arg_5__ =>
               match arg_5__ with
-              | nil => Panic.panic (hs_string__ "ListSetOps: removeDups")
+              | nil => GHC.Err.error (hs_string__ "ListSetOps: removeDups")
               | cons x nil => pair dups_so_far x
               | (cons x _ as dups) => pair (cons dups dups_so_far) x
               end in

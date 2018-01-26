@@ -1,6 +1,8 @@
 (* Record selector *)
 Require Import Pair.
 
+Require Import CoreSyn.
+
 (* Uses functions from Type. Also recursion is tricky *)
 (*
 Parameter applyTypeToArgs : CoreSyn.CoreExpr -> Core.Type_ -> list

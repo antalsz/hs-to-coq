@@ -21,7 +21,6 @@ Require CoreSyn.
 Require DataCon.
 Require DynFlags.
 Require FastString.
-Require GHC.Base.
 Require GHC.Num.
 Require Unique.
 Require Var.
@@ -35,6 +34,8 @@ Definition CheapAppFun :=
 
 (* Record selector *)
 Require Import Pair.
+
+Require Import CoreSyn.
 
 (* Uses functions from Type. Also recursion is tricky *)
 (*
@@ -175,7 +176,7 @@ Axiom isCheapApp : CheapAppFun.
 
 Axiom isExpandableApp : CheapAppFun.
 
-Axiom altsAreExhaustive : forall {b}, list (CoreSyn.Alt b) -> bool.
+Axiom altsAreExhaustive : forall {b}, list (Alt b) -> bool.
 
 Axiom isDivOp : unit -> bool.
 
@@ -198,36 +199,27 @@ Axiom exprIsBig : forall {b}, CoreSyn.Expr b -> bool.
 Axiom eqExpr
         : VarEnv.InScopeSet -> CoreSyn.CoreExpr -> CoreSyn.CoreExpr -> bool.
 
-Axiom diffUnfold
-        : VarEnv.RnEnv2 -> CoreSyn.Unfolding -> CoreSyn.Unfolding -> list
-          Outputable.SDoc.
+(* diffUnfold skipped *)
 
-Axiom diffIdInfo : VarEnv.RnEnv2 -> Core.Var -> Core.Var -> list
-                   Outputable.SDoc.
+(* diffIdInfo skipped *)
 
-Axiom diffBinds : bool -> VarEnv.RnEnv2 -> list (Core.Var *
-                                                CoreSyn.CoreExpr)%type -> list (Core.Var *
-                                                                               CoreSyn.CoreExpr)%type -> (list
-                  Outputable.SDoc * VarEnv.RnEnv2)%type.
+(* diffBinds skipped *)
 
-Axiom diffExpr
-        : bool -> VarEnv.RnEnv2 -> CoreSyn.CoreExpr -> CoreSyn.CoreExpr -> list
-          Outputable.SDoc.
+(* diffExpr skipped *)
 
 Axiom eqTickish : VarEnv.RnEnv2 -> CoreSyn.Tickish Var.Id -> CoreSyn.Tickish
                   Var.Id -> bool.
 
-Axiom locBind : GHC.Base.String -> Core.Var -> Core.Var -> list
-                Outputable.SDoc -> list Outputable.SDoc.
+(* locBind skipped *)
 
 (* rhsIsStatic skipped *)
 
 Axiom isEmptyTy : Core.Type_ -> bool.
 
 (* Unbound variables:
-     TyVar bool list op_zt__ option unit Core.TyCon Core.Type_ Core.Var CoreSyn.Alt
+     Alt TyVar bool list op_zt__ option unit Core.TyCon Core.Type_ Core.Var
      CoreSyn.AltCon CoreSyn.CoreAlt CoreSyn.CoreArg CoreSyn.CoreBndr CoreSyn.CoreExpr
-     CoreSyn.Expr CoreSyn.Tickish CoreSyn.Unfolding DataCon.DataCon DynFlags.DynFlags
-     FastString.FastString GHC.Base.String GHC.Num.Int Outputable.SDoc Unique.Unique
-     Var.Id VarEnv.InScopeSet VarEnv.RnEnv2
+     CoreSyn.Expr CoreSyn.Tickish DataCon.DataCon DynFlags.DynFlags
+     FastString.FastString GHC.Num.Int Unique.Unique Var.Id VarEnv.InScopeSet
+     VarEnv.RnEnv2
 *)

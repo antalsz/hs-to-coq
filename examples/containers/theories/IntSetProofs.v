@@ -5294,12 +5294,57 @@ Proof.
   simpl. rewrite IHxs. reflexivity.
 Qed.
 
-Lemma popCount_N_length_toList_go:
-  forall bm p,
-  isBitMask0 bm ->
-  popCount_N bm = Z.of_nat (length (foldrBits p cons nil bm)).
-Admitted.
+(** This lemma will encapsulate the termination proof, so that the rest of the proof
+ will not have to be modified. *)
+Lemma popCount_N_eq :
+  popCount_N = fun x =>
+  if (x =? 0)%N then 0 else Z.succ (popCount_N (N.ldiff x (2 ^ N.log2 x)%N)).
+Proof. apply unsafeFix_eq. Qed.
 
+Lemma popCount_N_0:
+  popCount_N 0%N = 0.
+Proof.
+  rewrite popCount_N_eq.
+  rewrite N.eqb_refl.
+  reflexivity.
+Qed.
+
+Lemma popCount_N_bm:
+  forall bm,
+  isBitMask bm ->
+  popCount_N bm = Z.succ (popCount_N (N.ldiff bm (2 ^ N.log2 bm)%N)).
+Proof.
+  intros.
+  etransitivity; [rewrite popCount_N_eq; reflexivity|].
+  replace (bm =? 0)%N with false
+    by (symmetry; apply N.eqb_neq; unfold isBitMask in *; Nomega).
+  reflexivity.
+Qed.
+
+
+Lemma popCount_N_length_toList_go:
+  forall bm p l,
+  isBitMask0 bm ->
+  popCount_N bm + Z.of_nat (length l) = Z.of_nat (length (foldrBits p cons l bm)).
+Proof.
+  intros.
+  unfold foldrBits.
+  fold (foldrBits_go p cons).
+  revert l.
+  apply bits_ind with (bm := bm).
+  - isBitMask.
+  - intros.
+    rewrite foldrBits_go_0.
+    rewrite popCount_N_0.
+    reflexivity.
+  - clear bm H. intros bm Hbm IH l.
+    rewrite !@foldrBits_go_revNat_bm with (bm := bm) by isBitMask.
+    rewrite popCount_N_bm by isBitMask.
+    unfold highestBitMask in *.
+    rewrite <- IH; clear IH.
+    simpl.
+    Nomega.
+Qed.
 
 Lemma sizeGo_spec':
   forall x s r f, Desc s r f ->
@@ -5311,6 +5356,8 @@ Proof.
   + simpl.
     unfold bitCount_N.
     rewrite <- popCount_N_length_toList_go by isBitMask.
+    simpl.
+    rewrite Z.add_0_r.
     reflexivity.
   + simpl.
     erewrite toList_go_append with (s := s1) by eassumption.

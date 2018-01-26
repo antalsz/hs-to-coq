@@ -1915,7 +1915,7 @@ exposes the underlying Coq concepts.
 *)
 
 Ltac unfoldMethods :=
-  unfold op_zsze__, op_zeze__, Eq_Char___, Eq_Integer___, op_zsze____, op_zeze____,
+  unfold op_zsze__, op_zeze__, Eq_Char___, Eq___IntSet, Eq_Integer___, op_zsze____, op_zeze____,
          op_zl__, Ord_Integer___, op_zl____,
          fromInteger, Num_Word__,
          op_zm__, op_zp__, Num_Integer__,
@@ -5348,7 +5348,6 @@ Module Foo: WSfun(N_as_OT).
                s' <-- ws' ;;
                isSubsetOf s s'.
 
-  Definition eq_set : IntSet -> IntSet -> Prop := Equal_set.
   Definition eq : t -> t -> Prop := Equal.
 
   Definition eq_dec : forall s s' : t, {eq s s'} + {~ eq s s'}.
@@ -5382,25 +5381,12 @@ Module Foo: WSfun(N_as_OT).
         intuition.
   Defined.
 
-  Lemma eq_set_refl : forall s, eq_set s s.
-  Proof. intros; constructor; auto. Qed.
-
   Lemma eq_refl : forall s : t, eq s s.
-  Proof. destruct s. unfold eq. unfold Equal. intro. apply eq_set_refl. Qed.
-
-  Lemma eq_set_sym : forall s s', eq_set s s' -> eq_set s' s.
-  Proof. intros. unfold eq_set, Equal_set in *. intro a. specialize (H a). intuition. Qed.
+  Proof. destruct s. unfold eq. unfold Equal. intro. reflexivity. Qed.
 
   Lemma eq_sym : forall s s' : t, eq s s' -> eq s' s.
   Proof. destruct s; destruct s'; 
     unfold eq, Equal in *. intros. rewrite H. intuition. Qed.
-
-  Lemma eq_set_trans :
-    forall s s' s'', eq_set s s' -> eq_set s' s'' -> eq_set s s''.
-  Proof.
-    intros ??? H1 H2 a.
-    apply (iff_trans (H1 a) (H2 a)).
-  Qed.
 
   Lemma eq_trans :
     forall s s' s'' : t, eq s s' -> eq s' s'' -> eq s s''.
@@ -5439,11 +5425,40 @@ Module Foo: WSfun(N_as_OT).
   Lemma mem_2 : forall (s : t) (x : elt), mem x s = true -> In x s.
   Proof. unfold In; intros; destruct s as [s]; auto. Qed.
   
-  Lemma equal_1 : forall s s' : t, Equal s s' -> equal s s' = true. Admitted.
-  Lemma equal_2 : forall s s' : t, equal s s' = true -> Equal s s'. Admitted.
+  Lemma equal_1 : forall s s' : t, Equal s s' -> equal s s' = true.
+  Proof.
+    intros.
+    destruct s as [s1 [f1 HSem1]].
+    destruct s' as [s2 [f2 HSem2]].
+    apply equal_spec.
+    eapply Sem_unique; try eassumption.
+    intro i.
+    apply eq_iff_eq_true.
+    destruct (Z.leb_spec 0 i).
+    + specialize (H (Z.to_N i)).
+      unfold eq, In, In_set in H.
+      erewrite (member_Sem HSem1) in H.
+      erewrite (member_Sem HSem2) in H.
+      rewrite Z2N.id in H by assumption.
+      assumption.
+    + rewrite (Sem_neg_false HSem1) by assumption.
+      rewrite (Sem_neg_false HSem2) by assumption.
+      intuition.
+  Qed.
+
+  Lemma equal_2 : forall s s' : t, equal s s' = true -> Equal s s'.
+  Proof.
+    intros.
+    destruct s as [s1 [f1 HSem1]].
+    destruct s' as [s2 [f2 HSem2]].
+    apply equal_spec in H.
+    subst.
+    intro i; intuition.
+  Qed.
+
   Lemma subset_1 : forall s s' : t, Subset s s' -> subset s s' = true. Admitted.
   Lemma subset_2 : forall s s' : t, subset s s' = true -> Subset s s'. Admitted.
-  
+
   Lemma add_1 :
     forall (s : t) (x y : elt), N.eq x y -> In y (add x s).
   Proof.

@@ -5428,6 +5428,99 @@ Proof.
   reflexivity.
 Qed.
 
+(** ** Specifying [filter] *)
+
+Definition filterBits p o bm :=
+  (foldl'Bits 0
+     (fun (bm0 : BitMap) (bi : Key) =>
+      if p (o + bi) : bool then N.lor bm0 (bitmapOfSuffix bi) else bm0)
+      0%N
+      bm).
+
+Lemma testbit_filterBits:
+  forall p o bm i,
+  isBitMask0 bm ->
+  N.testbit (filterBits p o bm) i =
+  (N.testbit bm i && p (o + Z.of_N i)).
+Admitted.
+
+Lemma isBitMask_filterBits:
+  forall p o bm,
+  isBitMask0 bm -> isBitMask0 (filterBits p o bm).
+Proof.
+  intros.
+  unfold isBitMask0.
+  rewrite N_lt_pow2_testbits.
+  intros j Hj.
+  rewrite testbit_filterBits by isBitMask.
+  rewrite isBitMask0_outside by assumption.
+  rewrite andb_false_l.
+  reflexivity.
+Qed.
+Hint Resolve isBitMask_filterBits : isBitMask.
+
+Lemma filter_Desc:
+  forall p s r f f',
+  Desc s r f -> 
+  (forall i, f' i = f i && p i) ->
+  Desc0 (filter p s) r f'.
+Proof.
+  intros.
+  revert f' H0.
+  induction H.
+  * intros.
+    simpl. subst.
+    fold (filterBits p (rPrefix r) bm).
+    eapply tip_Desc0; try assumption; try reflexivity.
+    + intro i.
+      rewrite H4.
+      rewrite H2.
+      unfold bitmapInRange.
+      destruct (inRange i r) eqn:Hir.
+      - rewrite testbit_filterBits by isBitMask.
+        f_equal. f_equal.
+        admit.
+      - rewrite andb_false_l. reflexivity.
+    + isBitMask.
+  * intros. subst. simpl.
+    eapply bin_Desc0.
+    + apply IHDesc1; intro; reflexivity.
+    + apply IHDesc2; intro; reflexivity.
+    + assumption.
+    + assumption.
+    + assumption.
+    + reflexivity.
+    + reflexivity.
+    + solve_f_eq.
+Admitted.
+
+Lemma filter_Sem:
+  forall p s f f',
+  Sem s f -> 
+  (forall i, f' i = f i && p i) ->
+  Sem (filter p s) f'.
+Proof.
+  intros.
+  destruct H.
+  * apply SemNil.
+    solve_f_eq.
+  * eapply Desc0_Sem.
+    eapply filter_Desc.
+    eassumption.
+    eassumption.
+Qed.
+
+Lemma filter_WF:
+  forall p s, WF s -> WF (filter p s).
+Proof.
+  intros.
+  destruct H.
+  eexists.
+  eapply filter_Sem.
+  eassumption.
+  intro. reflexivity.
+Qed.
+
 (** ** Instantiating the [FSetInterface] *)
 
 Require Import Coq.FSets.FSetInterface.
@@ -5595,7 +5688,15 @@ Module Foo: WSfun(N_as_OT).
 
   Definition for_all : (elt -> bool) -> t -> bool. Admitted.
   Definition exists_ : (elt -> bool) -> t -> bool. Admitted.
-  Definition filter : (elt -> bool) -> t -> t. Admitted.
+
+  Definition filter : (elt -> bool) -> t -> t.
+    refine (fun p ws =>
+       s <-- ws;;
+       pack (filter (fun x => p (Z.to_N x)) s) _).
+    apply filter_WF; assumption.
+  Defined.
+  
+  
   Definition partition : (elt -> bool) -> t -> t * t. Admitted.
 
   Definition cardinal : t -> nat :=

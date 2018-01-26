@@ -18,7 +18,9 @@ Fixpoint hs_string__ (s : String.string) : String :=
   | String.String c s  => hs_char__ c :: hs_string__ s
   end.
 End Base.
+Module Err.
+Axiom error : forall {A : Type}, String -> A.
+End Err.
 End GHC.
 
-Axiom error : forall {A : Type}, String -> A.
 

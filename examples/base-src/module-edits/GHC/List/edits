@@ -35,3 +35,4 @@ skip GHC.List.maximum
 skip GHC.List.minimum
 skip GHC.List.tail
 skip GHC.List.scanr1
+skip GHC.List.negIndex

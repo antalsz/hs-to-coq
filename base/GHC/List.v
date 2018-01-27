@@ -212,10 +212,6 @@ Definition or : list bool -> bool :=
 Definition prel_list_str : GHC.Base.String :=
   GHC.Base.hs_string__ "Prelude.".
 
-Definition negIndex {a} : a :=
-  GHC.Base.errorWithoutStackTrace GHC.Base.$ Coq.Init.Datatypes.app prel_list_str
-                                                                    (GHC.Base.hs_string__ "!!: negative index").
-
 Definition product {a} `{(GHC.Num.Num a)} : list a -> a :=
   GHC.Base.foldl _GHC.Num.*_ (GHC.Num.fromInteger 1).
 
@@ -379,7 +375,7 @@ Definition zipWithFB {a} {b} {c} {d} {e}
 (* Unbound variables:
      None Some andb bool cons false list nil op_zt__ option orb pair true
      Coq.Init.Datatypes.app GHC.Base.Eq_ GHC.Base.String GHC.Base.const
-     GHC.Base.errorWithoutStackTrace GHC.Base.foldl GHC.Base.foldr GHC.Base.id
-     GHC.Base.oneShot GHC.Base.op_zd__ GHC.Base.op_zeze__ GHC.Base.op_zsze__
-     GHC.Num.Int GHC.Num.Num GHC.Num.op_zm__ GHC.Num.op_zp__ GHC.Num.op_zt__
+     GHC.Base.foldl GHC.Base.foldr GHC.Base.id GHC.Base.oneShot GHC.Base.op_zeze__
+     GHC.Base.op_zsze__ GHC.Num.Int GHC.Num.Num GHC.Num.op_zm__ GHC.Num.op_zp__
+     GHC.Num.op_zt__
 *)

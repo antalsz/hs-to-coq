@@ -5001,6 +5001,14 @@ Proof.
   reflexivity.
 Qed.
 
+Lemma foldlBits_0:
+  forall {a} p (f : a -> Int -> a) x,
+  foldlBits p f x 0%N = x.
+Proof.
+  intros.
+  apply foldlBits_go_0.
+Qed.
+
 Lemma foldlBits_go_bm:
   forall {a} p (f : a -> Int -> a) bm x,
   isBitMask bm ->
@@ -5017,8 +5025,6 @@ Proof.
     by (symmetry; apply N.eqb_neq; unfold isBitMask in *; zify; rewrite Z2N.id; omega).
 
   rewrite lowestBitMask_highestBitMask at 2 by isBitMask.
-(*   rewrite split_highestBitMask with (bm := revNatSafe bm)  by isBitMask.
-   *)
    unfold indexOfTheOnlyBit, highestBitMask.
    rewrite revNat_pow by isBitMask.
    rewrite N.log2_pow2 by Nomega.
@@ -5029,6 +5035,17 @@ Proof.
   reflexivity.
 Qed.
 
+Lemma foldlBits_bm:
+  forall {a} p (f : a -> Int -> a) bm x,
+  isBitMask bm ->
+  foldlBits p f x bm =
+    foldlBits p f 
+       (f x (p + Z.of_N WIDTH - 1 - Z.of_N (N.log2 (revNatSafe bm))))
+       (N.ldiff bm (lowestBitMask bm)).
+Proof.
+  intros.
+  apply foldlBits_go_bm; assumption.
+Qed.
 
 Lemma foldlBits_go_high_bm_aux:
   forall {a} p (f : a -> Int -> a) bm,
@@ -5100,6 +5117,17 @@ Proof.
   * Nomega.
 Qed.
 
+Lemma foldlBits_high_bm:
+  forall {a} p (f : a -> Int -> a) bm x,
+  isBitMask bm ->
+  foldlBits p f x bm =
+    f (foldlBits p f x  (N.ldiff bm (highestBitMask bm))) (p + Z.of_N (N.log2 bm)).
+Proof.
+  intros.
+  apply foldlBits_go_high_bm; assumption.
+Qed.
+
+
 Lemma foldlBits_foldrBits:
   forall {a b}  k (x : a) p bm (k' : a -> b), isBitMask0 bm ->
     k' (foldlBits p k x bm) = foldrBits p (fun x g a => g (k a x)) k' bm x.
@@ -5107,19 +5135,17 @@ Proof.
   intros.
   unfold foldrBits.
   fold (@foldrBits_go (a->b) p (fun x g a => g (k a x))).
-  unfold foldlBits.
-  fold (@foldlBits_go _ p k).
 
   revert k'.
   apply bits_ind with (bm := bm).
   - assumption.
   - intros.
     rewrite foldrBits_go_0.
-    rewrite foldlBits_go_0.
+    rewrite foldlBits_0.
     reflexivity.
   - clear bm H. intros bm Hbm IH k'.
     rewrite !@foldrBits_go_revNat_bm with (bm := bm) by isBitMask.
-    rewrite !@foldlBits_go_high_bm with (bm := bm) by isBitMask.
+    rewrite !@foldlBits_high_bm with (bm := bm) by isBitMask.
     rewrite <- IH.
     reflexivity.
 Qed.
@@ -5431,7 +5457,7 @@ Qed.
 (** ** Specifying [filter] *)
 
 Definition filterBits p o bm :=
-  (foldl'Bits 0
+  (foldlBits 0
      (fun (bm0 : BitMap) (bi : Key) =>
       if p (o + bi) : bool then N.lor bm0 (bitmapOfSuffix bi) else bm0)
       0%N
@@ -5442,7 +5468,49 @@ Lemma testbit_filterBits:
   isBitMask0 bm ->
   N.testbit (filterBits p o bm) i =
   (N.testbit bm i && p (o + Z.of_N i)).
-Admitted.
+Proof.
+  intros.
+
+  unfold filterBits.
+  transitivity ((N.testbit bm i && p (o + Z.of_N i)) || N.testbit 0%N i);
+    try (rewrite N.bits_0; rewrite orb_false_r; reflexivity).
+  generalize (0%N) as a.
+  apply bits_ind with (bm := bm).
+  * assumption.
+  * intros a.
+    rewrite foldlBits_0.
+    rewrite N.bits_0.
+    rewrite andb_false_l.
+    rewrite orb_false_l.
+    reflexivity.
+  * intros.
+    unfold filterBits.
+    rewrite foldlBits_high_bm by isBitMask.
+    lazymatch goal with [|- N.testbit (if ?x then N.lor ?z ?y else ?z) ?i = _]  =>
+      transitivity (N.testbit (N.lor z (if x then y else 0%N)) i);
+        [destruct x; try rewrite N.lor_0_r; reflexivity|]
+    end.
+    rewrite N.lor_spec.
+    rewrite H1; clear H1.
+    rewrite N.ldiff_spec.
+    unfold highestBitMask.
+
+    lazymatch goal with [|- context [N.testbit (if ?x then ?y else 0%N) ?i] ] =>
+      replace (N.testbit (if x then y else 0%N) i)
+         with (x && N.testbit y i)
+           by (destruct x; try rewrite N.bits_0; repeat split_bool; reflexivity)
+    end.
+    rewrite Z.add_0_l.
+    unfold bitmapOfSuffix; unfoldMethods; rewrite N.shiftl_1_l.
+    rewrite !N.pow2_bits_eqb.
+    rewrite N2Z.id.
+
+    destruct (N.eqb_spec (N.log2 bm0) i).
+    + subst; repeat split_bool; try reflexivity; exfalso.
+      rewrite N.bit_log2 in Heqb by (unfold isBitMask in *; Nomega).
+      congruence.
+    + repeat split_bool; try reflexivity; exfalso.
+Qed.
 
 Lemma isBitMask_filterBits:
   forall p o bm,
@@ -5470,6 +5538,7 @@ Proof.
   induction H.
   * intros.
     simpl. subst.
+    replace @foldl'Bits with @foldlBits by reflexivity.
     fold (filterBits p (rPrefix r) bm).
     eapply tip_Desc0; try assumption; try reflexivity.
     + intro i.
@@ -5479,7 +5548,21 @@ Proof.
       destruct (inRange i r) eqn:Hir.
       - rewrite testbit_filterBits by isBitMask.
         f_equal. f_equal.
-        admit.
+        clear p H4.
+        rewrite Z.div_mod with (a := i) (b := Z.of_N WIDTH) at 1
+          by (intro Htmp; inversion Htmp).
+        f_equal.
+        ** destruct r as [p b]. unfold inRange, rPrefix, rBits, snd in *.
+           rewrite Z.eqb_eq in Hir.
+           subst.
+           rewrite Z.shiftl_mul_pow2 by nonneg.
+           rewrite Z.shiftr_div_pow2 by nonneg.
+           rewrite Z.mul_comm.
+           reflexivity.
+        ** rewrite Z2N.id by nonneg.
+           rewrite Z.land_ones by nonneg.
+           rewrite H1.
+           reflexivity.
       - rewrite andb_false_l. reflexivity.
     + isBitMask.
   * intros. subst. simpl.
@@ -5492,7 +5575,7 @@ Proof.
     + reflexivity.
     + reflexivity.
     + solve_f_eq.
-Admitted.
+Qed.
 
 Lemma filter_Sem:
   forall p s f f',

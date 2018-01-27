@@ -254,7 +254,7 @@ moduleDeclarations ConvertedModule{..} = do
         convModValDecls ++ convModClsInstDecls ++ convModAddedDecls
   ax_decls <- usedAxioms sorted
   not_decls <- qualifiedNotations convModName (convModTyClDecls ++ sorted)
-  return $ deQualifyLocalNames convModName $ (convModTyClDecls, ax_decls ++ sorted ++ not_decls)
+  return $ deQualifyLocalNames convModName $ (convModTyClDecls ++ ax_decls, sorted ++ not_decls)
 
 -- | This un-qualifies all variable names in the current module.
 -- It should be called very late, just before pretty-printing.

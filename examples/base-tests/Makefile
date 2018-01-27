@@ -19,7 +19,6 @@ PASS = \
 # tests that *should* pass but currently fail
 TODO_PASS  = \
   Pair \
-  Guard2 \
   Arrow \
   EqList \
   TypeClient \

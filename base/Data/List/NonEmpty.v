@@ -12,7 +12,7 @@ Require Coq.Program.Wf.
 
 (* Preamble *)
 
-Open Scope type_scope.
+
 
 (* Converted imports: *)
 
@@ -37,6 +37,14 @@ Import GHC.Num.Notations.
 Inductive NonEmpty a : Type := NEcons : a -> list a -> NonEmpty a.
 
 Arguments NEcons {_} _ _.
+(* Midamble *)
+
+Definition NonEmpty_foldr1 {a} (f : a -> a -> a) (x: Data.List.NonEmpty.NonEmpty a) : a :=
+  match x with 
+    | Data.List.NonEmpty.NEcons a as_ => List.fold_right f a as_
+  end.
+
+
 (* Converted value declarations: *)
 
 (* Translating `instance forall {a}, GHC.Exts.IsList

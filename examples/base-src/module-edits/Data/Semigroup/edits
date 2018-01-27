@@ -1,12 +1,37 @@
-nonterminating Data.Semigroup.sconcat
-nonterminating Data.Semigroup.stimes
+## all instances in this file for stimes are partial
+skip method Data.Semigroup.Semigroup stimes
+
+# needs stimes
+skip Data.Semigroup.mtimesDefault 
+
+# partial (and type inference can't handle it, and termination is tricky)
+skip Data.Semigroup.stimesMonoid
+
+# needs stimesMonoid, Alternative
+skip Data.Semigroup.Semigroup__Alt 
 
 # looping
 skip Data.Semigroup.cycle1
 
-#type error?
-skip Data.Semigroup.stimesMonoid
 
+
+## Cannot make instances for two different types with the same name
+## in the same module. (We don't mangle enough)
+## not sure why we can skip one of the two instances with each name
+## these are defined in the midamble
+skip Data.Semigroup.Semigroup__First
+skip Data.Semigroup.Semigroup__Last
+
+# Picks wrong methods in methods
+skip Data.Semigroup.Ord__Arg
+
+## needs Bounded Min/Bounded Max
+skip Data.Semigroup.Monoid__Min
+skip Data.Semigroup.Monoid__Max
+
+
+
+##################################
 
 order Data.Semigroup.Eq___Option Data.Semigroup.Ord__Option
 order Data.Semigroup.Eq___WrappedMonoid Data.Semigroup.Ord__WrappedMonoid
@@ -20,26 +45,36 @@ order Data.Semigroup.Eq___Min Data.Semigroup.Ord__Min
 skip Data.Semigroup.Semigroup__op_zt__
 
 # https://github.com/antalsz/hs-to-coq/issues/51
-skip Data.Semigroup.Semigroup__Endo
-skip Data.Semigroup.Semigroup__Sum
-skip Data.Semigroup.Semigroup__Product
-skip Data.Semigroup.Semigroup__Const
-skip Data.Semigroup.Semigroup__Min
-skip Data.Semigroup.Semigroup__Max
-skip Data.Semigroup.Semigroup__First
-skip Data.Semigroup.Semigroup__Last
-skip Data.Semigroup.Semigroup__Option
-skip Data.Semigroup.Semigroup__WrappedMonoid
+# doing these by hand
+redefine Local Definition Data.Semigroup.Semigroup__Endo_op_zlzg__ {a} : 
+			(Data.Monoid.Endo a) -> ((Data.Monoid.Endo a) -> (Data.Monoid.Endo a)) :=
+  GHC.Prim.coerce (@GHC.Base.op_z2218U__ a a a).
+redefine Local Definition Data.Semigroup.Semigroup__Sum_op_zlzg__ {inst_a} `{_: GHC.Num.Num inst_a}
+    : (Data.Monoid.Sum inst_a) -> ((Data.Monoid.Sum inst_a) -> ((Data.Monoid.Sum
+      inst_a))) :=
+  GHC.Prim.coerce (@GHC.Num.op_zp__ inst_a _).
+redefine Local Definition Data.Semigroup.Semigroup__Product_op_zlzg__ {inst_a} `{_:GHC.Num.Num inst_a}
+    : (Data.Monoid.Product inst_a) -> 
+	 ((Data.Monoid.Product inst_a) -> (Data.Monoid.Product inst_a)) :=
+  GHC.Prim.coerce (@GHC.Num.op_zm__ inst_a _).
 
-# Picks wrong methods in methods
-skip Data.Semigroup.Ord__Arg
+redefine Local Definition Data.Semigroup.Semigroup__Const_op_zlzg__ {inst_a} {inst_b} `{_:Semigroup  inst_a} : 
+  (Data.Functor.Const.Const inst_a inst_b) -> 
+  ((Data.Functor.Const.Const inst_a inst_b) -> 
+   (Data.Functor.Const.Const inst_a inst_b)) :=
+  GHC.Prim.coerce (@op_zlzg__ inst_a _).
 
-# Because of the above
-skip Data.Semigroup.Monoid__Min
-skip Data.Semigroup.Monoid__Max
-skip Data.Semigroup.Monoid__WrappedMonoid
-skip Data.Semigroup.Monoid__Option
+redefine Local Definition Data.Semigroup.Semigroup__Min_op_zlzg__ {inst_a} `{_:GHC.Base.Ord inst_a} : (Min inst_a) -> ((Min inst_a) -> (Min inst_a)) :=
+  GHC.Prim.coerce (@GHC.Base.min inst_a _ _).
 
-skip Data.Semigroup.mtimesDefault # needs Semigroup__WrapMonoid
+redefine Local Definition Data.Semigroup.Semigroup__Max_op_zlzg__ {inst_a} `{_:GHC.Base.Ord inst_a} : (Max inst_a) -> ((Max inst_a) -> (Max inst_a)) :=
+  GHC.Prim.coerce (@GHC.Base.max inst_a _ _).
 
-skip Data.Semigroup.Semigroup__Alt # needs stimesMonoid
+redefine Local Definition Data.Semigroup.Semigroup__WrappedMonoid_op_zlzg__ {inst_m} `{_:GHC.Base.Monoid inst_m} : (WrappedMonoid inst_m) -> ((WrappedMonoid inst_m) -> (WrappedMonoid inst_m)) :=
+  GHC.Prim.coerce (@GHC.Base.mappend inst_m _).
+
+redefine Local Definition Data.Semigroup.Semigroup__Option_op_zlzg__ {inst_a} `{_: Semigroup inst_a}
+    : (Option inst_a) -> ((Option inst_a) -> (Option inst_a)) :=
+  GHC.Prim.coerce (@op_zlzg__ (option inst_a) _).
+
+

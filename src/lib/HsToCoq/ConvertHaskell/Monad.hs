@@ -129,6 +129,10 @@ builtInClasses =
         , "GHC.Base.mconcat" =: ("list" `App1` "a") `Arrow` "a"
         , "GHC.Base.mempty"  =: "a"
         ]
+    , ClassDefinition "Data.Semigroup" ["a"] Nothing
+        [ "Data.Semigroup.op_zlzg____" =: "a" `Arrow` "a" `Arrow` "a" 
+        , "Data.Semigroup.sconcat__"   =: ("Data.List.NonEmpty.NonEmpty" `App1` "a") `Arrow` "a"
+        ]
     , ClassDefinition "GHC.Base.Functor" ["f"] Nothing
         [ "GHC.Base.op_zlzd__" =: (Forall [ Inferred Implicit (Ident "a")
                             , Inferred Implicit (Ident "b")] $
@@ -195,18 +199,6 @@ builtInClasses =
                     App1 "f" "a")
         -}
         ]
-{-    , ClassDefinition "Data.Foldable"
-        [ "t"
-        ]
-        Nothing
-        ["foldMap" =:
-            (Forall [ Inferred Implicit (Ident "a")
-                    , Inferred Implicit (Ident "m")
-                    , Generalized Implicit (App1 "Monoid" "m") ] $
-                     ("a" `Arrow` "m") `Arrow`
-                     App1 "t" "a" `Arrow`
-                     "m")
-        ] -}
 
     , ClassDefinition "Data.Foldable.Foldable" ["t"] Nothing
       [("Data.Foldable.elem",Forall (Inferred Implicit (Ident "a") :| []) (Forall (Generalized Implicit (App "GHC.Base.Eq_" (PosArg "a" :| [])) :| []) (Arrow "a" (Arrow (App "t" (PosArg "a" :| [])) "bool")))),
@@ -223,22 +215,6 @@ builtInClasses =
         ("Data.Foldable.toList",Forall (Inferred Implicit (Ident "a") :| []) (Arrow (App "t" (PosArg "a" :| [])) (App "list" (PosArg "a" :| []))))]
 
 
-{-    , ClassDefinition "Data.Traversable"
-        [ "t"
-        , Generalized Implicit (App1 "Functor" "t")
-        , Generalized Implicit (App1 "Foldable" "t")
-        ]
-        Nothing
-        ["traverse" =:
-            (Forall [ Inferred Implicit (Ident "a")
-                    , Inferred Implicit (Ident "b")
-                    , Inferred Implicit (Ident "f")
-                    , Generalized Implicit (App1 "Applicative" "f") ] $
-                     ("a" `Arrow` App1 "f" "b") `Arrow`
-                     App1 "t" "a" `Arrow`
-                     App1 "f" (App1 "t" "b"))
-        ]
--}
 
     , ClassDefinition "Data.Traversable.Traversable"
       ["t",
@@ -343,6 +319,9 @@ builtInDefaultMethods = fmap M.fromList $ M.fromList $
             (let const    = "GHC.Base.const" in
             App2 "op_zlztzg__" (App2 "GHC.Base.fmap" const    "x") "y")
         -}
+        ]
+    , "Data.Semigroup"  =:
+        [ "Data.Semigroup.stimes" ~> App "Data.List.NonEmpty.NonEmpty_foldr1" (PosArg "Data.Semigroup.op_zlzg__" :| [])
         ]
     , "GHC.Base.Monoid" =:
         [ "GHC.Base.mconcat" ~> App2 "GHC.Base.foldr" "GHC.Base.mappend" "GHC.Base.mempty"

@@ -17,6 +17,7 @@ Require Coq.Program.Basics.
 Require Data.Either.
 Require Data.Foldable.
 Require Data.Functor.
+Require Data.Functor.Const.
 Require Data.List.NonEmpty.
 Require Data.Maybe.
 Require Data.Monoid.
@@ -24,7 +25,6 @@ Require Data.Proxy.
 Require Data.Traversable.
 Require Data.Void.
 Require GHC.Base.
-Require GHC.Enum.
 Require GHC.Num.
 Require GHC.Prim.
 Require GHC.Real.
@@ -38,8 +38,7 @@ Inductive WrappedMonoid m : Type := WrapMonoid : m -> WrappedMonoid m.
 
 Record Semigroup__Dict a := Semigroup__Dict_Build {
   op_zlzg____ : a -> a -> a ;
-  sconcat__ : Data.List.NonEmpty.NonEmpty a -> a ;
-  stimes__ : forall {b}, forall `{GHC.Real.Integral b}, b -> a -> a }.
+  sconcat__ : Data.List.NonEmpty.NonEmpty a -> a }.
 
 Definition Semigroup a :=
   forall r, (Semigroup__Dict a -> r) -> r.
@@ -51,10 +50,6 @@ Definition op_zlzg__ `{g : Semigroup a} : a -> a -> a :=
 
 Definition sconcat `{g : Semigroup a} : Data.List.NonEmpty.NonEmpty a -> a :=
   g _ (sconcat__ a).
-
-Definition stimes `{g : Semigroup a} : forall {b},
-                                         forall `{GHC.Real.Integral b}, b -> a -> a :=
-  g _ (stimes__ a).
 
 Notation "'_<>_'" := (op_zlzg__).
 
@@ -131,12 +126,58 @@ Instance Unpeel_Max  a : Unpeel (Max a) a := Build_Unpeel _ _ getMax Mk_Max.
 Instance Unpeel_Min  a : Unpeel (Min a) a := Build_Unpeel _ _ getMin Mk_Min.
 Instance Unpeel_Option  a : Unpeel (Option a) (option a) := Build_Unpeel _ _ getOption Mk_Option.
 
+(* ------------------------- *)
+
+(* These two instances are here because we don't mangle the instance names
+   enough. This file creates instances for Monoid.First and Semigroup.First
+   (which are different types.) But we produce the same names for them.
+*)
+
+Local Definition Semigroup__SFirst_op_zlzg__ {inst_a} : (First inst_a) -> (First
+                                                       inst_a) -> (First inst_a) :=
+  fun arg_0__ arg_1__ => match arg_0__ , arg_1__ with | a , _ => a end.
+
+Local Definition Semigroup__SFirst_sconcat {inst_a} : Data.List.NonEmpty.NonEmpty
+                                                     (First inst_a) -> (First inst_a) :=
+  fun arg_0__ =>
+    match arg_0__ with
+      | Data.List.NonEmpty.NEcons a as_ => let fix go arg_1__ arg_2__
+                                                     := match arg_1__ , arg_2__ with
+                                                          | b , cons c cs => Semigroup__SFirst_op_zlzg__ b (go c cs)
+                                                          | b , nil => b
+                                                        end in
+                                           go a as_
+    end.
+
+
+
+Program Instance Semigroup__SFirst {a} : Semigroup (First a) := fun _ k =>
+    k {|op_zlzg____ := Semigroup__SFirst_op_zlzg__ ;
+      sconcat__ := Semigroup__SFirst_sconcat |}.
+
+Local Definition Semigroup__SLast_op_zlzg__ {inst_a} : (Last inst_a) -> (Last
+                                                      inst_a) -> (Last inst_a) :=
+  fun arg_0__ arg_1__ => match arg_0__ , arg_1__ with | _ , b => b end.
+
+Local Definition Semigroup__SLast_sconcat {inst_a} : Data.List.NonEmpty.NonEmpty
+                                                    (Last inst_a) -> (Last inst_a) :=
+  fun arg_0__ =>
+    match arg_0__ with
+      | Data.List.NonEmpty.NEcons a as_ => let fix go arg_1__ arg_2__
+                                                     := match arg_1__ , arg_2__ with
+                                                          | b , cons c cs => Semigroup__SLast_op_zlzg__ b (go c cs)
+                                                          | b , nil => b
+                                                        end in
+                                           go a as_
+    end.
+
+
+Program Instance Semigroup__SLast {a} : Semigroup (Last a) := fun _ k =>
+    k {|op_zlzg____ := Semigroup__SLast_op_zlzg__ ;
+      sconcat__ := Semigroup__SLast_sconcat |}.
+
+(* ------------------------- *)
 (* Converted value declarations: *)
-
-(* The Haskell code containes partial or untranslateable code, which needs the
-   following *)
-
-Axiom unsafeFix : forall {a}, (a -> a) -> a.
 
 Local Definition Semigroup__unit_op_zlzg__ : unit -> unit -> unit :=
   fun arg_0__ arg_1__ => tt.
@@ -145,14 +186,9 @@ Local Definition Semigroup__unit_sconcat : Data.List.NonEmpty.NonEmpty
                                            unit -> unit :=
   fun arg_0__ => tt.
 
-Local Definition Semigroup__unit_stimes : forall {b},
-                                            forall `{GHC.Real.Integral b}, b -> unit -> unit :=
-  fun {b} `{GHC.Real.Integral b} => fun arg_0__ arg_1__ => tt.
-
 Program Instance Semigroup__unit : Semigroup unit := fun _ k =>
     k {|op_zlzg____ := Semigroup__unit_op_zlzg__ ;
-      sconcat__ := Semigroup__unit_sconcat ;
-      stimes__ := fun {b} `{GHC.Real.Integral b} => Semigroup__unit_stimes |}.
+      sconcat__ := Semigroup__unit_sconcat |}.
 
 Local Definition Semigroup__arrow_op_zlzg__ {inst_b} {inst_a} `{Semigroup
                                             inst_b} : (inst_a -> inst_b) -> (inst_a -> inst_b) -> (inst_a -> inst_b) :=
@@ -162,25 +198,18 @@ Local Definition Semigroup__arrow_sconcat {inst_b} {inst_a} `{Semigroup inst_b}
     : Data.List.NonEmpty.NonEmpty (inst_a -> inst_b) -> (inst_a -> inst_b) :=
   fun arg_0__ =>
     match arg_0__ with
-      | Data.List.NonEmpty.NEcons a as_ => let go :=
-                                             unsafeFix (fun go arg_1__ arg_2__ =>
-                                                         match arg_1__ , arg_2__ with
-                                                           | b , cons c cs => Semigroup__arrow_op_zlzg__ b (go c cs)
-                                                           | b , nil => b
-                                                         end) in
+      | Data.List.NonEmpty.NEcons a as_ => let fix go arg_1__ arg_2__
+                                                     := match arg_1__ , arg_2__ with
+                                                          | b , cons c cs => Semigroup__arrow_op_zlzg__ b (go c cs)
+                                                          | b , nil => b
+                                                        end in
                                            go a as_
     end.
-
-Local Definition Semigroup__arrow_stimes {inst_b} {inst_a} `{Semigroup inst_b}
-    : forall {b},
-        forall `{GHC.Real.Integral b}, b -> (inst_a -> inst_b) -> (inst_a -> inst_b) :=
-  fun {b} `{GHC.Real.Integral b} => fun n f e => stimes n (f e).
 
 Program Instance Semigroup__arrow {b} {a} `{Semigroup b} : Semigroup (a -> b) :=
   fun _ k =>
     k {|op_zlzg____ := Semigroup__arrow_op_zlzg__ ;
-      sconcat__ := Semigroup__arrow_sconcat ;
-      stimes__ := fun {b} `{GHC.Real.Integral b} => Semigroup__arrow_stimes |}.
+      sconcat__ := Semigroup__arrow_sconcat |}.
 
 Local Definition Semigroup__list_op_zlzg__ {inst_a} : list inst_a -> list
                                                       inst_a -> list inst_a :=
@@ -190,39 +219,17 @@ Local Definition Semigroup__list_sconcat {inst_a} : Data.List.NonEmpty.NonEmpty
                                                     (list inst_a) -> list inst_a :=
   fun arg_0__ =>
     match arg_0__ with
-      | Data.List.NonEmpty.NEcons a as_ => let go :=
-                                             unsafeFix (fun go arg_1__ arg_2__ =>
-                                                         match arg_1__ , arg_2__ with
-                                                           | b , cons c cs => Semigroup__list_op_zlzg__ b (go c cs)
-                                                           | b , nil => b
-                                                         end) in
+      | Data.List.NonEmpty.NEcons a as_ => let fix go arg_1__ arg_2__
+                                                     := match arg_1__ , arg_2__ with
+                                                          | b , cons c cs => Semigroup__list_op_zlzg__ b (go c cs)
+                                                          | b , nil => b
+                                                        end in
                                            go a as_
     end.
 
-Local Definition Semigroup__list_stimes {inst_a} : forall {b},
-                                                     forall `{GHC.Real.Integral b}, b -> list inst_a -> list inst_a :=
-  fun {b} `{GHC.Real.Integral b} =>
-    fun n x =>
-      let rep :=
-        unsafeFix (fun rep arg_0__ =>
-                    let j_3__ :=
-                      match arg_0__ with
-                        | i => Coq.Init.Datatypes.app x (rep (i GHC.Num.- GHC.Num.fromInteger 1))
-                      end in
-                    match arg_0__ with
-                      | num_1__ => if num_1__ GHC.Base.== GHC.Num.fromInteger 0 : bool
-                                   then nil
-                                   else j_3__
-                    end) in
-      if n GHC.Base.< GHC.Num.fromInteger 0 : bool
-      then GHC.Base.errorWithoutStackTrace (GHC.Base.hs_string__
-                                           "stimes: [], negative multiplier")
-      else rep n.
-
 Program Instance Semigroup__list {a} : Semigroup (list a) := fun _ k =>
     k {|op_zlzg____ := Semigroup__list_op_zlzg__ ;
-      sconcat__ := Semigroup__list_sconcat ;
-      stimes__ := fun {b} `{GHC.Real.Integral b} => Semigroup__list_stimes |}.
+      sconcat__ := Semigroup__list_sconcat |}.
 
 Local Definition Semigroup__option_op_zlzg__ {inst_a} `{Semigroup inst_a}
     : (option inst_a) -> (option inst_a) -> (option inst_a) :=
@@ -237,35 +244,18 @@ Local Definition Semigroup__option_sconcat {inst_a} `{Semigroup inst_a}
     : Data.List.NonEmpty.NonEmpty (option inst_a) -> (option inst_a) :=
   fun arg_0__ =>
     match arg_0__ with
-      | Data.List.NonEmpty.NEcons a as_ => let go :=
-                                             unsafeFix (fun go arg_1__ arg_2__ =>
-                                                         match arg_1__ , arg_2__ with
-                                                           | b , cons c cs => Semigroup__option_op_zlzg__ b (go c cs)
-                                                           | b , nil => b
-                                                         end) in
+      | Data.List.NonEmpty.NEcons a as_ => let fix go arg_1__ arg_2__
+                                                     := match arg_1__ , arg_2__ with
+                                                          | b , cons c cs => Semigroup__option_op_zlzg__ b (go c cs)
+                                                          | b , nil => b
+                                                        end in
                                            go a as_
     end.
-
-Local Definition Semigroup__option_stimes {inst_a} `{Semigroup inst_a}
-    : forall {b},
-        forall `{GHC.Real.Integral b}, b -> (option inst_a) -> (option inst_a) :=
-  fun {b} `{GHC.Real.Integral b} =>
-    fun arg_0__ arg_1__ =>
-      match arg_0__ , arg_1__ with
-        | _ , None => None
-        | n , Some a => match GHC.Base.compare n (GHC.Num.fromInteger 0) with
-                          | Lt => GHC.Base.errorWithoutStackTrace (GHC.Base.hs_string__
-                                                                  "stimes: Maybe, negative multiplier")
-                          | Eq => None
-                          | Gt => Some (stimes n a)
-                        end
-      end.
 
 Program Instance Semigroup__option {a} `{Semigroup a} : Semigroup (option a) :=
   fun _ k =>
     k {|op_zlzg____ := Semigroup__option_op_zlzg__ ;
-      sconcat__ := Semigroup__option_sconcat ;
-      stimes__ := fun {b} `{GHC.Real.Integral b} => Semigroup__option_stimes |}.
+      sconcat__ := Semigroup__option_sconcat |}.
 
 Local Definition Semigroup__Either_op_zlzg__ {inst_a} {inst_b}
     : (Data.Either.Either inst_a inst_b) -> (Data.Either.Either inst_a
@@ -281,14 +271,18 @@ Local Definition Semigroup__Either_sconcat {inst_a} {inst_b}
                                   inst_b) -> (Data.Either.Either inst_a inst_b) :=
   fun arg_0__ =>
     match arg_0__ with
-      | Data.List.NonEmpty.NEcons a as_ => let go :=
-                                             unsafeFix (fun go arg_1__ arg_2__ =>
-                                                         match arg_1__ , arg_2__ with
-                                                           | b , cons c cs => Semigroup__Either_op_zlzg__ b (go c cs)
-                                                           | b , nil => b
-                                                         end) in
+      | Data.List.NonEmpty.NEcons a as_ => let fix go arg_1__ arg_2__
+                                                     := match arg_1__ , arg_2__ with
+                                                          | b , cons c cs => Semigroup__Either_op_zlzg__ b (go c cs)
+                                                          | b , nil => b
+                                                        end in
                                            go a as_
     end.
+
+Program Instance Semigroup__Either {a} {b} : Semigroup (Data.Either.Either a
+                                                       b) := fun _ k =>
+    k {|op_zlzg____ := Semigroup__Either_op_zlzg__ ;
+      sconcat__ := Semigroup__Either_sconcat |}.
 
 (* Skipping instance Semigroup__op_zt__ *)
 
@@ -311,15 +305,17 @@ Local Definition Semigroup__comparison_sconcat : Data.List.NonEmpty.NonEmpty
                                                  comparison -> comparison :=
   fun arg_0__ =>
     match arg_0__ with
-      | Data.List.NonEmpty.NEcons a as_ => let go :=
-                                             unsafeFix (fun go arg_1__ arg_2__ =>
-                                                         match arg_1__ , arg_2__ with
-                                                           | b , cons c cs => Semigroup__comparison_op_zlzg__ b (go c
-                                                                                                              cs)
-                                                           | b , nil => b
-                                                         end) in
+      | Data.List.NonEmpty.NEcons a as_ => let fix go arg_1__ arg_2__
+                                                     := match arg_1__ , arg_2__ with
+                                                          | b , cons c cs => Semigroup__comparison_op_zlzg__ b (go c cs)
+                                                          | b , nil => b
+                                                        end in
                                            go a as_
     end.
+
+Program Instance Semigroup__comparison : Semigroup comparison := fun _ k =>
+    k {|op_zlzg____ := Semigroup__comparison_op_zlzg__ ;
+      sconcat__ := Semigroup__comparison_sconcat |}.
 
 Local Definition Semigroup__Dual_op_zlzg__ {inst_a} `{Semigroup inst_a}
     : (Data.Monoid.Dual inst_a) -> (Data.Monoid.Dual inst_a) -> (Data.Monoid.Dual
@@ -334,32 +330,39 @@ Local Definition Semigroup__Dual_sconcat {inst_a} `{Semigroup inst_a}
       inst_a) :=
   fun arg_0__ =>
     match arg_0__ with
-      | Data.List.NonEmpty.NEcons a as_ => let go :=
-                                             unsafeFix (fun go arg_1__ arg_2__ =>
-                                                         match arg_1__ , arg_2__ with
-                                                           | b , cons c cs => Semigroup__Dual_op_zlzg__ b (go c cs)
-                                                           | b , nil => b
-                                                         end) in
+      | Data.List.NonEmpty.NEcons a as_ => let fix go arg_1__ arg_2__
+                                                     := match arg_1__ , arg_2__ with
+                                                          | b , cons c cs => Semigroup__Dual_op_zlzg__ b (go c cs)
+                                                          | b , nil => b
+                                                        end in
                                            go a as_
     end.
-
-Local Definition Semigroup__Dual_stimes {inst_a} `{Semigroup inst_a}
-    : forall {b},
-        forall `{GHC.Real.Integral b},
-          b -> (Data.Monoid.Dual inst_a) -> (Data.Monoid.Dual inst_a) :=
-  fun {b} `{GHC.Real.Integral b} =>
-    fun arg_0__ arg_1__ =>
-      match arg_0__ , arg_1__ with
-        | n , Data.Monoid.Mk_Dual a => Data.Monoid.Mk_Dual (stimes n a)
-      end.
 
 Program Instance Semigroup__Dual {a} `{Semigroup a} : Semigroup
                                                       (Data.Monoid.Dual a) := fun _ k =>
     k {|op_zlzg____ := Semigroup__Dual_op_zlzg__ ;
-      sconcat__ := Semigroup__Dual_sconcat ;
-      stimes__ := fun {b} `{GHC.Real.Integral b} => Semigroup__Dual_stimes |}.
+      sconcat__ := Semigroup__Dual_sconcat |}.
 
-(* Skipping instance Semigroup__Endo *)
+Local Definition Semigroup__Endo_op_zlzg__ {a} : Data.Monoid.Endo
+                                                 a -> Data.Monoid.Endo a -> Data.Monoid.Endo a :=
+  GHC.Prim.coerce (@GHC.Base.op_z2218U__ a a a).
+
+Local Definition Semigroup__Endo_sconcat {inst_a} : Data.List.NonEmpty.NonEmpty
+                                                    (Data.Monoid.Endo inst_a) -> (Data.Monoid.Endo inst_a) :=
+  fun arg_0__ =>
+    match arg_0__ with
+      | Data.List.NonEmpty.NEcons a as_ => let fix go arg_1__ arg_2__
+                                                     := match arg_1__ , arg_2__ with
+                                                          | b , cons c cs => Semigroup__Endo_op_zlzg__ b (go c cs)
+                                                          | b , nil => b
+                                                        end in
+                                           go a as_
+    end.
+
+Program Instance Semigroup__Endo {a} : Semigroup (Data.Monoid.Endo a) := fun _
+                                                                             k =>
+    k {|op_zlzg____ := Semigroup__Endo_op_zlzg__ ;
+      sconcat__ := Semigroup__Endo_sconcat |}.
 
 Local Definition Semigroup__All_op_zlzg__
     : Data.Monoid.All -> Data.Monoid.All -> Data.Monoid.All :=
@@ -369,14 +372,17 @@ Local Definition Semigroup__All_sconcat : Data.List.NonEmpty.NonEmpty
                                           Data.Monoid.All -> Data.Monoid.All :=
   fun arg_0__ =>
     match arg_0__ with
-      | Data.List.NonEmpty.NEcons a as_ => let go :=
-                                             unsafeFix (fun go arg_1__ arg_2__ =>
-                                                         match arg_1__ , arg_2__ with
-                                                           | b , cons c cs => Semigroup__All_op_zlzg__ b (go c cs)
-                                                           | b , nil => b
-                                                         end) in
+      | Data.List.NonEmpty.NEcons a as_ => let fix go arg_1__ arg_2__
+                                                     := match arg_1__ , arg_2__ with
+                                                          | b , cons c cs => Semigroup__All_op_zlzg__ b (go c cs)
+                                                          | b , nil => b
+                                                        end in
                                            go a as_
     end.
+
+Program Instance Semigroup__All : Semigroup Data.Monoid.All := fun _ k =>
+    k {|op_zlzg____ := Semigroup__All_op_zlzg__ ;
+      sconcat__ := Semigroup__All_sconcat |}.
 
 Local Definition Semigroup__Any_op_zlzg__
     : Data.Monoid.Any -> Data.Monoid.Any -> Data.Monoid.Any :=
@@ -386,20 +392,87 @@ Local Definition Semigroup__Any_sconcat : Data.List.NonEmpty.NonEmpty
                                           Data.Monoid.Any -> Data.Monoid.Any :=
   fun arg_0__ =>
     match arg_0__ with
-      | Data.List.NonEmpty.NEcons a as_ => let go :=
-                                             unsafeFix (fun go arg_1__ arg_2__ =>
-                                                         match arg_1__ , arg_2__ with
-                                                           | b , cons c cs => Semigroup__Any_op_zlzg__ b (go c cs)
-                                                           | b , nil => b
-                                                         end) in
+      | Data.List.NonEmpty.NEcons a as_ => let fix go arg_1__ arg_2__
+                                                     := match arg_1__ , arg_2__ with
+                                                          | b , cons c cs => Semigroup__Any_op_zlzg__ b (go c cs)
+                                                          | b , nil => b
+                                                        end in
                                            go a as_
     end.
 
-(* Skipping instance Semigroup__Sum *)
+Program Instance Semigroup__Any : Semigroup Data.Monoid.Any := fun _ k =>
+    k {|op_zlzg____ := Semigroup__Any_op_zlzg__ ;
+      sconcat__ := Semigroup__Any_sconcat |}.
 
-(* Skipping instance Semigroup__Product *)
+Local Definition Semigroup__Sum_op_zlzg__ {inst_a} `{_ : GHC.Num.Num inst_a}
+    : Data.Monoid.Sum inst_a -> Data.Monoid.Sum inst_a -> Data.Monoid.Sum inst_a :=
+  GHC.Prim.coerce (@GHC.Num.op_zp__ inst_a _).
 
-(* Skipping instance Semigroup__Const *)
+Local Definition Semigroup__Sum_sconcat {inst_a} `{GHC.Num.Num inst_a}
+    : Data.List.NonEmpty.NonEmpty (Data.Monoid.Sum inst_a) -> (Data.Monoid.Sum
+      inst_a) :=
+  fun arg_0__ =>
+    match arg_0__ with
+      | Data.List.NonEmpty.NEcons a as_ => let fix go arg_1__ arg_2__
+                                                     := match arg_1__ , arg_2__ with
+                                                          | b , cons c cs => Semigroup__Sum_op_zlzg__ b (go c cs)
+                                                          | b , nil => b
+                                                        end in
+                                           go a as_
+    end.
+
+Program Instance Semigroup__Sum {a} `{GHC.Num.Num a} : Semigroup
+                                                       (Data.Monoid.Sum a) := fun _ k =>
+    k {|op_zlzg____ := Semigroup__Sum_op_zlzg__ ;
+      sconcat__ := Semigroup__Sum_sconcat |}.
+
+Local Definition Semigroup__Product_op_zlzg__ {inst_a} `{_ : GHC.Num.Num inst_a}
+    : Data.Monoid.Product inst_a -> Data.Monoid.Product
+      inst_a -> Data.Monoid.Product inst_a :=
+  GHC.Prim.coerce (@GHC.Num.op_zm__ inst_a _).
+
+Local Definition Semigroup__Product_sconcat {inst_a} `{GHC.Num.Num inst_a}
+    : Data.List.NonEmpty.NonEmpty (Data.Monoid.Product
+                                  inst_a) -> (Data.Monoid.Product inst_a) :=
+  fun arg_0__ =>
+    match arg_0__ with
+      | Data.List.NonEmpty.NEcons a as_ => let fix go arg_1__ arg_2__
+                                                     := match arg_1__ , arg_2__ with
+                                                          | b , cons c cs => Semigroup__Product_op_zlzg__ b (go c cs)
+                                                          | b , nil => b
+                                                        end in
+                                           go a as_
+    end.
+
+Program Instance Semigroup__Product {a} `{GHC.Num.Num a} : Semigroup
+                                                           (Data.Monoid.Product a) := fun _ k =>
+    k {|op_zlzg____ := Semigroup__Product_op_zlzg__ ;
+      sconcat__ := Semigroup__Product_sconcat |}.
+
+Local Definition Semigroup__Const_op_zlzg__ {inst_a} {inst_b} `{_ : Semigroup
+                                                                    inst_a} : Data.Functor.Const.Const inst_a
+                                                                                                       inst_b -> Data.Functor.Const.Const
+                                                                              inst_a inst_b -> Data.Functor.Const.Const
+                                                                              inst_a inst_b :=
+  GHC.Prim.coerce (@op_zlzg__ inst_a _).
+
+Local Definition Semigroup__Const_sconcat {inst_a} {inst_b} `{Semigroup inst_a}
+    : Data.List.NonEmpty.NonEmpty (Data.Functor.Const.Const inst_a
+                                  inst_b) -> (Data.Functor.Const.Const inst_a inst_b) :=
+  fun arg_0__ =>
+    match arg_0__ with
+      | Data.List.NonEmpty.NEcons a as_ => let fix go arg_1__ arg_2__
+                                                     := match arg_1__ , arg_2__ with
+                                                          | b , cons c cs => Semigroup__Const_op_zlzg__ b (go c cs)
+                                                          | b , nil => b
+                                                        end in
+                                           go a as_
+    end.
+
+Program Instance Semigroup__Const {a} {b} `{Semigroup a} : Semigroup
+                                                           (Data.Functor.Const.Const a b) := fun _ k =>
+    k {|op_zlzg____ := Semigroup__Const_op_zlzg__ ;
+      sconcat__ := Semigroup__Const_sconcat |}.
 
 (* Skipping instance Semigroup__First *)
 
@@ -415,14 +488,17 @@ Local Definition Semigroup__Void_sconcat : Data.List.NonEmpty.NonEmpty
                                            Data.Void.Void -> Data.Void.Void :=
   fun arg_0__ =>
     match arg_0__ with
-      | Data.List.NonEmpty.NEcons a as_ => let go :=
-                                             unsafeFix (fun go arg_1__ arg_2__ =>
-                                                         match arg_1__ , arg_2__ with
-                                                           | b , cons c cs => Semigroup__Void_op_zlzg__ b (go c cs)
-                                                           | b , nil => b
-                                                         end) in
+      | Data.List.NonEmpty.NEcons a as_ => let fix go arg_1__ arg_2__
+                                                     := match arg_1__ , arg_2__ with
+                                                          | b , cons c cs => Semigroup__Void_op_zlzg__ b (go c cs)
+                                                          | b , nil => b
+                                                        end in
                                            go a as_
     end.
+
+Program Instance Semigroup__Void : Semigroup Data.Void.Void := fun _ k =>
+    k {|op_zlzg____ := Semigroup__Void_op_zlzg__ ;
+      sconcat__ := Semigroup__Void_sconcat |}.
 
 Local Definition Semigroup__NonEmpty_op_zlzg__ {inst_a}
     : (Data.List.NonEmpty.NonEmpty inst_a) -> (Data.List.NonEmpty.NonEmpty
@@ -438,50 +514,18 @@ Local Definition Semigroup__NonEmpty_sconcat {inst_a}
                                   inst_a) -> (Data.List.NonEmpty.NonEmpty inst_a) :=
   fun arg_0__ =>
     match arg_0__ with
-      | Data.List.NonEmpty.NEcons a as_ => let go :=
-                                             unsafeFix (fun go arg_1__ arg_2__ =>
-                                                         match arg_1__ , arg_2__ with
-                                                           | b , cons c cs => Semigroup__NonEmpty_op_zlzg__ b (go c cs)
-                                                           | b , nil => b
-                                                         end) in
+      | Data.List.NonEmpty.NEcons a as_ => let fix go arg_1__ arg_2__
+                                                     := match arg_1__ , arg_2__ with
+                                                          | b , cons c cs => Semigroup__NonEmpty_op_zlzg__ b (go c cs)
+                                                          | b , nil => b
+                                                        end in
                                            go a as_
     end.
-
-Local Definition Semigroup__NonEmpty_stimes {inst_a} : forall {b},
-                                                         forall `{GHC.Real.Integral b},
-                                                           b -> (Data.List.NonEmpty.NonEmpty
-                                                           inst_a) -> (Data.List.NonEmpty.NonEmpty inst_a) :=
-  fun {b} `{GHC.Real.Integral b} =>
-    fun y0 x0 =>
-      let g :=
-        unsafeFix (fun g x y z =>
-                    if GHC.Real.even y : bool
-                    then g (Semigroup__NonEmpty_op_zlzg__ x x) (GHC.Real.quot y (GHC.Num.fromInteger
-                                                                              2)) z
-                    else if y GHC.Base.== GHC.Num.fromInteger 1 : bool
-                         then Semigroup__NonEmpty_op_zlzg__ x z
-                         else g (Semigroup__NonEmpty_op_zlzg__ x x) (GHC.Real.quot (GHC.Enum.pred y)
-                                                                                   (GHC.Num.fromInteger 2))
-                              (Semigroup__NonEmpty_op_zlzg__ x z)) in
-      let f :=
-        unsafeFix (fun f x y =>
-                    if GHC.Real.even y : bool
-                    then f (Semigroup__NonEmpty_op_zlzg__ x x) (GHC.Real.quot y (GHC.Num.fromInteger
-                                                                              2))
-                    else if y GHC.Base.== GHC.Num.fromInteger 1 : bool
-                         then x
-                         else g (Semigroup__NonEmpty_op_zlzg__ x x) (GHC.Real.quot (GHC.Enum.pred y)
-                                                                                   (GHC.Num.fromInteger 2)) x) in
-      if y0 GHC.Base.<= GHC.Num.fromInteger 0 : bool
-      then GHC.Base.errorWithoutStackTrace (GHC.Base.hs_string__
-                                           "stimes: positive multiplier expected")
-      else f x0 y0.
 
 Program Instance Semigroup__NonEmpty {a} : Semigroup
                                            (Data.List.NonEmpty.NonEmpty a) := fun _ k =>
     k {|op_zlzg____ := Semigroup__NonEmpty_op_zlzg__ ;
-      sconcat__ := Semigroup__NonEmpty_sconcat ;
-      stimes__ := fun {b} `{GHC.Real.Integral b} => Semigroup__NonEmpty_stimes |}.
+      sconcat__ := Semigroup__NonEmpty_sconcat |}.
 
 (* Translating `instance forall {a}, forall `{GHC.Enum.Bounded a},
    GHC.Enum.Bounded (Data.Semigroup.Min a)' failed: OOPS! Cannot find information
@@ -491,7 +535,26 @@ Program Instance Semigroup__NonEmpty {a} : Semigroup
    (Data.Semigroup.Min a)' failed: OOPS! Cannot find information for class
    Qualified "GHC.Enum" "Enum" unsupported *)
 
-(* Skipping instance Semigroup__Min *)
+Local Definition Semigroup__Min_op_zlzg__ {inst_a} `{_ : GHC.Base.Ord inst_a}
+    : Min inst_a -> Min inst_a -> Min inst_a :=
+  GHC.Prim.coerce (@GHC.Base.min inst_a _ _).
+
+Local Definition Semigroup__Min_sconcat {inst_a} `{GHC.Base.Ord inst_a}
+    : Data.List.NonEmpty.NonEmpty (Min inst_a) -> (Min inst_a) :=
+  fun arg_0__ =>
+    match arg_0__ with
+      | Data.List.NonEmpty.NEcons a as_ => let fix go arg_1__ arg_2__
+                                                     := match arg_1__ , arg_2__ with
+                                                          | b , cons c cs => Semigroup__Min_op_zlzg__ b (go c cs)
+                                                          | b , nil => b
+                                                        end in
+                                           go a as_
+    end.
+
+Program Instance Semigroup__Min {a} `{GHC.Base.Ord a} : Semigroup (Min a) :=
+  fun _ k =>
+    k {|op_zlzg____ := Semigroup__Min_op_zlzg__ ;
+      sconcat__ := Semigroup__Min_sconcat |}.
 
 (* Skipping instance Monoid__Min *)
 
@@ -707,7 +770,26 @@ Program Instance Monad__Min : GHC.Base.Monad Min := fun _ k =>
    (Data.Semigroup.Max a)' failed: OOPS! Cannot find information for class
    Qualified "GHC.Enum" "Enum" unsupported *)
 
-(* Skipping instance Semigroup__Max *)
+Local Definition Semigroup__Max_op_zlzg__ {inst_a} `{_ : GHC.Base.Ord inst_a}
+    : Max inst_a -> Max inst_a -> Max inst_a :=
+  GHC.Prim.coerce (@GHC.Base.max inst_a _ _).
+
+Local Definition Semigroup__Max_sconcat {inst_a} `{GHC.Base.Ord inst_a}
+    : Data.List.NonEmpty.NonEmpty (Max inst_a) -> (Max inst_a) :=
+  fun arg_0__ =>
+    match arg_0__ with
+      | Data.List.NonEmpty.NEcons a as_ => let fix go arg_1__ arg_2__
+                                                     := match arg_1__ , arg_2__ with
+                                                          | b , cons c cs => Semigroup__Max_op_zlzg__ b (go c cs)
+                                                          | b , nil => b
+                                                        end in
+                                           go a as_
+    end.
+
+Program Instance Semigroup__Max {a} `{GHC.Base.Ord a} : Semigroup (Max a) :=
+  fun _ k =>
+    k {|op_zlzg____ := Semigroup__Max_op_zlzg__ ;
+      sconcat__ := Semigroup__Max_sconcat |}.
 
 (* Skipping instance Monoid__Max *)
 
@@ -1530,9 +1612,49 @@ Program Instance Monad__Last : GHC.Base.Monad Last := fun _ k =>
    OOPS! Cannot find information for class Qualified "Control.Monad.Fix" "MonadFix"
    unsupported *)
 
-(* Skipping instance Semigroup__WrappedMonoid *)
+Local Definition Semigroup__WrappedMonoid_op_zlzg__ {inst_m} `{_
+                                                      : GHC.Base.Monoid inst_m} : WrappedMonoid inst_m -> WrappedMonoid
+                                                                                  inst_m -> WrappedMonoid inst_m :=
+  GHC.Prim.coerce (@GHC.Base.mappend inst_m _).
 
-(* Skipping instance Monoid__WrappedMonoid *)
+Local Definition Semigroup__WrappedMonoid_sconcat {inst_m} `{GHC.Base.Monoid
+                                                  inst_m} : Data.List.NonEmpty.NonEmpty (WrappedMonoid
+                                                                                        inst_m) -> (WrappedMonoid
+                                                            inst_m) :=
+  fun arg_0__ =>
+    match arg_0__ with
+      | Data.List.NonEmpty.NEcons a as_ => let fix go arg_1__ arg_2__
+                                                     := match arg_1__ , arg_2__ with
+                                                          | b , cons c cs => Semigroup__WrappedMonoid_op_zlzg__ b (go c
+                                                                                                                cs)
+                                                          | b , nil => b
+                                                        end in
+                                           go a as_
+    end.
+
+Program Instance Semigroup__WrappedMonoid {m} `{GHC.Base.Monoid m} : Semigroup
+                                                                     (WrappedMonoid m) := fun _ k =>
+    k {|op_zlzg____ := Semigroup__WrappedMonoid_op_zlzg__ ;
+      sconcat__ := Semigroup__WrappedMonoid_sconcat |}.
+
+Local Definition Monoid__WrappedMonoid_mappend {inst_m} `{GHC.Base.Monoid
+                                               inst_m} : (WrappedMonoid inst_m) -> (WrappedMonoid
+                                                         inst_m) -> (WrappedMonoid inst_m) :=
+  _<>_.
+
+Local Definition Monoid__WrappedMonoid_mempty {inst_m} `{GHC.Base.Monoid inst_m}
+    : (WrappedMonoid inst_m) :=
+  WrapMonoid GHC.Base.mempty.
+
+Local Definition Monoid__WrappedMonoid_mconcat {inst_m} `{GHC.Base.Monoid
+                                               inst_m} : list (WrappedMonoid inst_m) -> (WrappedMonoid inst_m) :=
+  GHC.Base.foldr Monoid__WrappedMonoid_mappend Monoid__WrappedMonoid_mempty.
+
+Program Instance Monoid__WrappedMonoid {m} `{GHC.Base.Monoid m}
+  : GHC.Base.Monoid (WrappedMonoid m) := fun _ k =>
+    k {|GHC.Base.mappend__ := Monoid__WrappedMonoid_mappend ;
+      GHC.Base.mconcat__ := Monoid__WrappedMonoid_mconcat ;
+      GHC.Base.mempty__ := Monoid__WrappedMonoid_mempty |}.
 
 (* Translating `instance forall {a}, forall `{GHC.Enum.Bounded a},
    GHC.Enum.Bounded (Data.Semigroup.WrappedMonoid a)' failed: OOPS! Cannot find
@@ -1769,9 +1891,44 @@ Program Instance Traversable__Option : Data.Traversable.Traversable Option :=
       Data.Traversable.traverse__ := fun {f} {a} {b} `{GHC.Base.Applicative f} =>
         Traversable__Option_traverse |}.
 
-(* Skipping instance Semigroup__Option *)
+Local Definition Semigroup__Option_op_zlzg__ {inst_a} `{_ : Semigroup inst_a}
+    : Option inst_a -> Option inst_a -> Option inst_a :=
+  GHC.Prim.coerce (@op_zlzg__ (option inst_a) _).
 
-(* Skipping instance Monoid__Option *)
+Local Definition Semigroup__Option_sconcat {inst_a} `{Semigroup inst_a}
+    : Data.List.NonEmpty.NonEmpty (Option inst_a) -> (Option inst_a) :=
+  fun arg_0__ =>
+    match arg_0__ with
+      | Data.List.NonEmpty.NEcons a as_ => let fix go arg_1__ arg_2__
+                                                     := match arg_1__ , arg_2__ with
+                                                          | b , cons c cs => Semigroup__Option_op_zlzg__ b (go c cs)
+                                                          | b , nil => b
+                                                        end in
+                                           go a as_
+    end.
+
+Program Instance Semigroup__Option {a} `{Semigroup a} : Semigroup (Option a) :=
+  fun _ k =>
+    k {|op_zlzg____ := Semigroup__Option_op_zlzg__ ;
+      sconcat__ := Semigroup__Option_sconcat |}.
+
+Local Definition Monoid__Option_mappend {inst_a} `{Semigroup inst_a} : (Option
+                                                                       inst_a) -> (Option inst_a) -> (Option inst_a) :=
+  _<>_.
+
+Local Definition Monoid__Option_mempty {inst_a} `{Semigroup inst_a} : (Option
+                                                                      inst_a) :=
+  Mk_Option None.
+
+Local Definition Monoid__Option_mconcat {inst_a} `{Semigroup inst_a} : list
+                                                                       (Option inst_a) -> (Option inst_a) :=
+  GHC.Base.foldr Monoid__Option_mappend Monoid__Option_mempty.
+
+Program Instance Monoid__Option {a} `{Semigroup a} : GHC.Base.Monoid (Option
+                                                                     a) := fun _ k =>
+    k {|GHC.Base.mappend__ := Monoid__Option_mappend ;
+      GHC.Base.mconcat__ := Monoid__Option_mconcat ;
+      GHC.Base.mempty__ := Monoid__Option_mempty |}.
 
 Local Definition Semigroup__Proxy_op_zlzg__ {inst_s} : (Data.Proxy.Proxy
                                                        inst_s) -> (Data.Proxy.Proxy inst_s) -> (Data.Proxy.Proxy
@@ -1782,16 +1939,10 @@ Local Definition Semigroup__Proxy_sconcat {inst_s} : Data.List.NonEmpty.NonEmpty
                                                      (Data.Proxy.Proxy inst_s) -> (Data.Proxy.Proxy inst_s) :=
   fun arg_0__ => Data.Proxy.Mk_Proxy.
 
-Local Definition Semigroup__Proxy_stimes {inst_s} : forall {b},
-                                                      forall `{GHC.Real.Integral b},
-                                                        b -> (Data.Proxy.Proxy inst_s) -> (Data.Proxy.Proxy inst_s) :=
-  fun {b} `{GHC.Real.Integral b} => fun arg_0__ arg_1__ => Data.Proxy.Mk_Proxy.
-
 Program Instance Semigroup__Proxy {s} : Semigroup (Data.Proxy.Proxy s) := fun _
                                                                               k =>
     k {|op_zlzg____ := Semigroup__Proxy_op_zlzg__ ;
-      sconcat__ := Semigroup__Proxy_sconcat ;
-      stimes__ := fun {b} `{GHC.Real.Integral b} => Semigroup__Proxy_stimes |}.
+      sconcat__ := Semigroup__Proxy_sconcat |}.
 
 (* Translating `instance GHC.Generics.Generic1 Data.Semigroup.Option' failed:
    OOPS! Cannot find information for class Qualified "GHC.Generics" "Generic1"
@@ -2242,6 +2393,13 @@ Program Instance Ord__Min {a} `{GHC.Base.Ord a} : GHC.Base.Ord (Min a) := fun _
 Definition diff {m} `{Semigroup m} : m -> Data.Monoid.Endo m :=
   Data.Monoid.Mk_Endo GHC.Base.∘ _<>_.
 
+Definition mtimesDefault {b} {a} `{GHC.Real.Integral b} `{GHC.Base.Monoid a}
+    : b -> a -> a :=
+  fun n x =>
+    if n GHC.Base.== GHC.Num.fromInteger 0 : bool
+    then GHC.Base.mempty
+    else unwrapMonoid (stimes n (WrapMonoid x)).
+
 Definition option {b} {a} : b -> (a -> b) -> Option a -> b :=
   fun arg_0__ arg_1__ arg_2__ =>
     match arg_0__ , arg_1__ , arg_2__ with
@@ -2255,27 +2413,6 @@ Definition stimesIdempotent {b} {a} `{GHC.Real.Integral b} : b -> a -> a :=
                                          "stimesIdempotent: positive multiplier expected")
     else x.
 
-Local Definition Semigroup__Void_stimes : forall {b},
-                                            forall `{GHC.Real.Integral b}, b -> Data.Void.Void -> Data.Void.Void :=
-  fun {b} `{GHC.Real.Integral b} => stimesIdempotent.
-
-Program Instance Semigroup__Void : Semigroup Data.Void.Void := fun _ k =>
-    k {|op_zlzg____ := Semigroup__Void_op_zlzg__ ;
-      sconcat__ := Semigroup__Void_sconcat ;
-      stimes__ := fun {b} `{GHC.Real.Integral b} => Semigroup__Void_stimes |}.
-
-Local Definition Semigroup__Either_stimes {inst_a} {inst_b} : forall {b},
-                                                                forall `{GHC.Real.Integral b},
-                                                                  b -> (Data.Either.Either inst_a
-                                                                  inst_b) -> (Data.Either.Either inst_a inst_b) :=
-  fun {b} `{GHC.Real.Integral b} => stimesIdempotent.
-
-Program Instance Semigroup__Either {a} {b} : Semigroup (Data.Either.Either a
-                                                       b) := fun _ k =>
-    k {|op_zlzg____ := Semigroup__Either_op_zlzg__ ;
-      sconcat__ := Semigroup__Either_sconcat ;
-      stimes__ := fun {b} `{GHC.Real.Integral b} => Semigroup__Either_stimes |}.
-
 Definition stimesIdempotentMonoid {b} {a} `{GHC.Real.Integral b}
                                   `{GHC.Base.Monoid a} : b -> a -> a :=
   fun n x =>
@@ -2286,55 +2423,29 @@ Definition stimesIdempotentMonoid {b} {a} `{GHC.Real.Integral b}
       | Gt => x
     end.
 
-Local Definition Semigroup__Any_stimes : forall {b},
-                                           forall `{GHC.Real.Integral b}, b -> Data.Monoid.Any -> Data.Monoid.Any :=
-  fun {b} `{GHC.Real.Integral b} => stimesIdempotentMonoid.
-
-Program Instance Semigroup__Any : Semigroup Data.Monoid.Any := fun _ k =>
-    k {|op_zlzg____ := Semigroup__Any_op_zlzg__ ;
-      sconcat__ := Semigroup__Any_sconcat ;
-      stimes__ := fun {b} `{GHC.Real.Integral b} => Semigroup__Any_stimes |}.
-
-Local Definition Semigroup__All_stimes : forall {b},
-                                           forall `{GHC.Real.Integral b}, b -> Data.Monoid.All -> Data.Monoid.All :=
-  fun {b} `{GHC.Real.Integral b} => stimesIdempotentMonoid.
-
-Program Instance Semigroup__All : Semigroup Data.Monoid.All := fun _ k =>
-    k {|op_zlzg____ := Semigroup__All_op_zlzg__ ;
-      sconcat__ := Semigroup__All_sconcat ;
-      stimes__ := fun {b} `{GHC.Real.Integral b} => Semigroup__All_stimes |}.
-
-Local Definition Semigroup__comparison_stimes : forall {b},
-                                                  forall `{GHC.Real.Integral b}, b -> comparison -> comparison :=
-  fun {b} `{GHC.Real.Integral b} => stimesIdempotentMonoid.
-
-Program Instance Semigroup__comparison : Semigroup comparison := fun _ k =>
-    k {|op_zlzg____ := Semigroup__comparison_op_zlzg__ ;
-      sconcat__ := Semigroup__comparison_sconcat ;
-      stimes__ := fun {b} `{GHC.Real.Integral b} => Semigroup__comparison_stimes |}.
-
 Module Notations.
 Notation "'_Data.Semigroup.<>_'" := (op_zlzg__).
 Infix "Data.Semigroup.<>" := (_<>_) (at level 70).
 End Notations.
 
 (* Unbound variables:
-     Eq Gt Lt None Some andb bool comparison cons false list negb nil option orb true
-     tt unit Coq.Init.Datatypes.app Coq.Program.Basics.compose Data.Either.Either
-     Data.Either.Left Data.Foldable.Foldable Data.Foldable.hash_compose
-     Data.Functor.op_zlzdzg__ Data.List.NonEmpty.NEcons Data.List.NonEmpty.NonEmpty
-     Data.Maybe.maybe Data.Monoid.All Data.Monoid.Any Data.Monoid.Dual
-     Data.Monoid.Endo Data.Monoid.Mk_Any Data.Monoid.Mk_Dual Data.Monoid.Mk_Endo
-     Data.Monoid.Mk_Product Data.Monoid.Mk_Sum Data.Monoid.appEndo Data.Monoid.getAny
-     Data.Monoid.getDual Data.Monoid.getProduct Data.Monoid.getSum
-     Data.Proxy.Mk_Proxy Data.Proxy.Proxy Data.Traversable.Traversable Data.Void.Void
-     GHC.Base.Applicative GHC.Base.Eq_ GHC.Base.Functor GHC.Base.Monad
-     GHC.Base.Monoid GHC.Base.Ord GHC.Base.build GHC.Base.compare GHC.Base.const
-     GHC.Base.errorWithoutStackTrace GHC.Base.flip GHC.Base.fmap GHC.Base.id
-     GHC.Base.max GHC.Base.mempty GHC.Base.min GHC.Base.op_z2218U__
-     GHC.Base.op_zdzn__ GHC.Base.op_zeze__ GHC.Base.op_zg__ GHC.Base.op_zgze__
-     GHC.Base.op_zl__ GHC.Base.op_zlze__ GHC.Base.op_zlztzg__ GHC.Base.op_zsze__
-     GHC.Base.op_ztzg__ GHC.Base.pure GHC.Enum.pred GHC.Num.Int GHC.Num.Num
-     GHC.Num.op_zm__ GHC.Num.op_zp__ GHC.Prim.coerce GHC.Real.Integral GHC.Real.even
-     GHC.Real.quot
+     Eq Gt Lt None Some andb bool comparison cons false list negb nil option orb
+     stimes true tt unit Coq.Init.Datatypes.app Coq.Program.Basics.compose
+     Data.Either.Either Data.Either.Left Data.Foldable.Foldable
+     Data.Foldable.hash_compose Data.Functor.op_zlzdzg__ Data.Functor.Const.Const
+     Data.List.NonEmpty.NEcons Data.List.NonEmpty.NonEmpty Data.Maybe.maybe
+     Data.Monoid.All Data.Monoid.Any Data.Monoid.Dual Data.Monoid.Endo
+     Data.Monoid.Mk_Any Data.Monoid.Mk_Dual Data.Monoid.Mk_Endo
+     Data.Monoid.Mk_Product Data.Monoid.Mk_Sum Data.Monoid.Product Data.Monoid.Sum
+     Data.Monoid.appEndo Data.Monoid.getAny Data.Monoid.getDual
+     Data.Monoid.getProduct Data.Monoid.getSum Data.Proxy.Mk_Proxy Data.Proxy.Proxy
+     Data.Traversable.Traversable Data.Void.Void GHC.Base.Applicative GHC.Base.Eq_
+     GHC.Base.Functor GHC.Base.Monad GHC.Base.Monoid GHC.Base.Ord GHC.Base.build
+     GHC.Base.compare GHC.Base.const GHC.Base.errorWithoutStackTrace GHC.Base.flip
+     GHC.Base.fmap GHC.Base.foldr GHC.Base.id GHC.Base.mappend GHC.Base.max
+     GHC.Base.mempty GHC.Base.min GHC.Base.op_z2218U__ GHC.Base.op_zdzn__
+     GHC.Base.op_zeze__ GHC.Base.op_zg__ GHC.Base.op_zgze__ GHC.Base.op_zl__
+     GHC.Base.op_zlze__ GHC.Base.op_zlztzg__ GHC.Base.op_zsze__ GHC.Base.op_ztzg__
+     GHC.Base.pure GHC.Num.Int GHC.Num.Num GHC.Num.op_zm__ GHC.Num.op_zp__
+     GHC.Prim.coerce GHC.Real.Integral
 *)

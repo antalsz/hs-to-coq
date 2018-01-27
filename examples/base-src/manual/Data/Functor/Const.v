@@ -36,6 +36,9 @@ Definition getConst {a} {b} (arg_0__ : Const a b) :=
     | (Mk_Const getConst) => getConst
   end.
 
+Import GHC.Prim.
+Instance Unpeel_Const a b : Unpeel (Const a b) a := Build_Unpeel _ _ getConst Mk_Const.
+
 Local Definition instance_forall___GHC_Base_Monoid_m___GHC_Base_Applicative__Const_m__pure `{GHC.Base.Monoid
                                                                                                  m} : forall {a},
                                                                                                         a -> (Const m)

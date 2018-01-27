@@ -92,6 +92,8 @@
   Data/BiFunctor
     - skip GHC.Generics instances
 
+  Data/List/NonEmpty
+
 * What stops these modules from being generated?
 
 - Data/Type/Equality
@@ -285,7 +287,6 @@ Unsafe.Coerce
 - What are these?
 
 GHC.Desugar
-GHC.Err
 GHC.Exception
 
 
@@ -320,7 +321,7 @@ Data.Functor.Sum
 Data.Int
 Data.Kind  -- completely ignored
 X Data.List
-Data.List.NonEmpty -- partial functions aren't really partial, :| constructor
+X Data.List.NonEmpty -- partial functions aren't really partial, :| constructor
 X Data.Maybe
 X Data.Monoid
 X Data.Ord

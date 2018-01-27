@@ -18,6 +18,7 @@ PASS = \
 
 # tests that *should* pass but currently fail
 TODO_PASS  = \
+  NestTup \
   Pair \
   Arrow \
   EqList \

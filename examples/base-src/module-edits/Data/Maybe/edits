@@ -1,2 +1,2 @@
 # partial
-skip fromJust
+skip Data.Maybe.fromJust

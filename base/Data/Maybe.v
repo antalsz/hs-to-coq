@@ -16,7 +16,6 @@ Require Coq.Program.Wf.
 (* Converted imports: *)
 
 Require Coq.Lists.List.
-Require GHC.Base.
 
 (* No type declarations to convert. *)
 (* Converted value declarations: *)
@@ -29,14 +28,6 @@ Definition catMaybes {a} : list (option a) -> list a :=
         | _ => nil
       end in
     Coq.Lists.List.flat_map cont_0__ ls.
-
-Definition fromJust {a} : option a -> a :=
-  fun arg_0__ =>
-    match arg_0__ with
-      | None => GHC.Base.errorWithoutStackTrace (GHC.Base.hs_string__
-                                                "Maybe.fromJust: Nothing")
-      | Some x => x
-    end.
 
 Definition fromMaybe {a} : a -> option a -> a :=
   fun d x => match x with | None => d | Some v => v end.
@@ -81,5 +72,4 @@ Definition maybeToList {a} : option a -> list a :=
 
 (* Unbound variables:
      None Some bool cons false list nil option true Coq.Lists.List.flat_map
-     GHC.Base.errorWithoutStackTrace
 *)

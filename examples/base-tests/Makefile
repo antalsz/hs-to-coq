@@ -16,10 +16,10 @@ PASS = \
   Type \
   OpMeth \
   NestTup \
+  Pair \
 
 # tests that *should* pass but currently fail
 TODO_PASS  = \
-  Pair \
   Arrow \
   EqList \
   TypeClient \

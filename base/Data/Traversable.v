@@ -19,6 +19,7 @@ Require Data.Functor.Const.
 Require Data.Monoid.
 Require Data.Proxy.
 Require GHC.Base.
+Require GHC.Tuple.
 Import Data.Functor.Notations.
 Import GHC.Base.Notations.
 
@@ -179,7 +180,45 @@ Program Instance Traversable__Either {a} : Traversable (Data.Either.Either a) :=
       traverse__ := fun {f} {a} {b} `{GHC.Base.Applicative f} =>
         Traversable__Either_traverse |}.
 
-(* Skipping instance Traversable__pair_type *)
+Local Definition Traversable__pair_type_traverse {inst_a} : forall {f} {a} {b},
+                                                              forall `{GHC.Base.Applicative f},
+                                                                (a -> f b) -> (GHC.Tuple.pair_type inst_a) a -> f
+                                                                ((GHC.Tuple.pair_type inst_a) b) :=
+  fun {f} {a} {b} `{GHC.Base.Applicative f} =>
+    fun arg_0__ arg_1__ =>
+      match arg_0__ , arg_1__ with
+        | f , pair x y => GHC.Tuple.pair2 x Data.Functor.<$> f y
+      end.
+
+Local Definition Traversable__pair_type_sequenceA {inst_a} : forall {f} {a},
+                                                               forall `{GHC.Base.Applicative f},
+                                                                 (GHC.Tuple.pair_type inst_a) (f a) -> f
+                                                                 ((GHC.Tuple.pair_type inst_a) a) :=
+  fun {f} {a} `{GHC.Base.Applicative f} =>
+    Traversable__pair_type_traverse GHC.Base.id.
+
+Local Definition Traversable__pair_type_sequence {inst_a} : forall {m} {a},
+                                                              forall `{GHC.Base.Monad m},
+                                                                (GHC.Tuple.pair_type inst_a) (m a) -> m
+                                                                ((GHC.Tuple.pair_type inst_a) a) :=
+  fun {m} {a} `{GHC.Base.Monad m} => Traversable__pair_type_sequenceA.
+
+Local Definition Traversable__pair_type_mapM {inst_a} : forall {m} {a} {b},
+                                                          forall `{GHC.Base.Monad m},
+                                                            (a -> m b) -> (GHC.Tuple.pair_type inst_a) a -> m
+                                                            ((GHC.Tuple.pair_type inst_a) b) :=
+  fun {m} {a} {b} `{GHC.Base.Monad m} => Traversable__pair_type_traverse.
+
+Program Instance Traversable__pair_type {a} : Traversable (GHC.Tuple.pair_type
+                                                          a) := fun _ k =>
+    k {|mapM__ := fun {m} {a} {b} `{GHC.Base.Monad m} =>
+        Traversable__pair_type_mapM ;
+      sequence__ := fun {m} {a} `{GHC.Base.Monad m} =>
+        Traversable__pair_type_sequence ;
+      sequenceA__ := fun {f} {a} `{GHC.Base.Applicative f} =>
+        Traversable__pair_type_sequenceA ;
+      traverse__ := fun {f} {a} {b} `{GHC.Base.Applicative f} =>
+        Traversable__pair_type_traverse |}.
 
 (* Skipping instance Traversable__Array *)
 
@@ -553,5 +592,6 @@ Definition mapAccumR {t} {a} {b} {c} `{Traversable t} : (a -> b -> (a *
      Data.Monoid.Product Data.Monoid.Sum Data.Proxy.Mk_Proxy Data.Proxy.Proxy
      GHC.Base.Applicative GHC.Base.Functor GHC.Base.Monad GHC.Base.const
      GHC.Base.flip GHC.Base.fmap GHC.Base.foldr GHC.Base.id GHC.Base.op_z2218U__
-     GHC.Base.op_zd__ GHC.Base.op_zlztzg__ GHC.Base.pure
+     GHC.Base.op_zd__ GHC.Base.op_zlztzg__ GHC.Base.pure GHC.Tuple.pair2
+     GHC.Tuple.pair_type
 *)

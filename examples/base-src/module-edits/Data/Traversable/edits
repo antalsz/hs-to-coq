@@ -1,8 +1,5 @@
 order Data.Traversable.Functor__Id Data.Traversable.Applicative__Id
 
-# incorrectly makes pair section (uses type name instead of term name)
-skip Data.Traversable.Traversable__pair_type
-
 # instance method requires another instance of the same class
 # also needs Foldable instance
 skip Data.Traversable.Traversable__First

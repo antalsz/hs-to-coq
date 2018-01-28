@@ -118,6 +118,15 @@ Definition missingSubtree {f} {k} {x} {y} (arg_2__ : WhenMissing f k x y) :=
   match arg_2__ with
     | Mk_WhenMissing missingSubtree _ => missingSubtree
   end.
+
+(* The Haskell code containes partial or untranslateable code, which needs the
+   following *)
+
+Axiom missingValue : forall {a}, a.
+
+Axiom patternFailure : forall {a}, a.
+
+Axiom unsafeFix : forall {a}, (a -> a) -> a.
 (* Midamble *)
 
 Require Omega.
@@ -133,15 +142,6 @@ Fixpoint map_size {a} {b} (s : Map a b) : nat :=
   end.
 
 (* Converted value declarations: *)
-
-(* The Haskell code containes partial or untranslateable code, which needs the
-   following *)
-
-Axiom missingValue : forall {a}, a.
-
-Axiom patternFailure : forall {a}, a.
-
-Axiom unsafeFix : forall {a}, (a -> a) -> a.
 
 (* Skipping instance Monoid__Map *)
 

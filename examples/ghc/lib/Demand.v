@@ -127,6 +127,11 @@ Definition ud {s} {u} (arg_1__ : JointDmd s u) :=
   match arg_1__ with
     | JD _ ud => ud
   end.
+
+(* The Haskell code containes partial or untranslateable code, which needs the
+   following *)
+
+Axiom missingValue : forall {a}, a.
 (* Midamble *)
 
 Instance Unpeel_StrictSig : Prim.Unpeel StrictSig DmdType :=
@@ -203,11 +208,6 @@ Fixpoint StrDmd_size (s1 : StrDmd): nat :=
 Definition ArgStrDmd_size := Str_size StrDmd_size.
 
 (* Converted value declarations: *)
-
-(* The Haskell code containes partial or untranslateable code, which needs the
-   following *)
-
-Axiom missingValue : forall {a}, a.
 
 (* Translating `instance forall {s} {u}, forall `{Outputable.Outputable s}
    `{Outputable.Outputable u}, Outputable.Outputable (Demand.JointDmd s u)' failed:

@@ -1,10 +1,6 @@
 * TODO (hs-to-coq):
   axiomize instances
-  special case for functions that do not match their args
-  edit for redefining default class definitions
   Alt instances in Data.Monoid
-  Only rename data constructors when specified by edits? (i.e. don't
-    automatically add the Mk_ in front.)
 
 
 * Generated modules, what are we skipping in them and why?
@@ -93,6 +89,8 @@
     - skip GHC.Generics instances
 
   Data/List/NonEmpty
+  
+  Data/Semigroup
 
 * What stops these modules from being generated?
 
@@ -327,7 +325,7 @@ X Data.Monoid
 X Data.Ord
 X Data.Proxy
 Data.Ratio
-Data.Semigroup
+X Data.Semigroup
 Data.String
 X Data.Traversable
 X Data.Tuple

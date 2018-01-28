@@ -72,6 +72,11 @@ Definition n_uniq (arg_3__ : Name) :=
   match arg_3__ with
     | Mk_Name _ _ n_uniq _ => n_uniq
   end.
+
+(* The Haskell code containes partial or untranslateable code, which needs the
+   following *)
+
+Axiom missingValue : forall {a}, a.
 (* Midamble *)
 
 (* BUG: record selctors are not fully qualified. *)
@@ -88,11 +93,6 @@ Instance Unique_Name : Unique.Uniquable Name.Name := {}.
 Admitted.
 
 (* Converted value declarations: *)
-
-(* The Haskell code containes partial or untranslateable code, which needs the
-   following *)
-
-Axiom missingValue : forall {a}, a.
 
 (* Translating `instance Outputable.Outputable Name.NameSort' failed: OOPS!
    Cannot find information for class Qualified "Outputable" "Outputable"

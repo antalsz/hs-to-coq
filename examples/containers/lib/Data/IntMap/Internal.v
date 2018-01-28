@@ -106,6 +106,15 @@ Definition missingSubtree {f} {x} {y} (arg_2__ : WhenMissing f x y) :=
   match arg_2__ with
     | Mk_WhenMissing missingSubtree _ => missingSubtree
   end.
+
+(* The Haskell code containes partial or untranslateable code, which needs the
+   following *)
+
+Axiom missingValue : forall {a}, a.
+
+Axiom patternFailure : forall {a}, a.
+
+Axiom unsafeFix : forall {a}, (a -> a) -> a.
 (* Midamble *)
 
 Require GHC.Err.
@@ -121,15 +130,6 @@ Fixpoint IntMap_op_zlzd__ {a} {b} (x: a) (m: IntMap b): IntMap a :=
       end.
 
 (* Converted value declarations: *)
-
-(* The Haskell code containes partial or untranslateable code, which needs the
-   following *)
-
-Axiom missingValue : forall {a}, a.
-
-Axiom patternFailure : forall {a}, a.
-
-Axiom unsafeFix : forall {a}, (a -> a) -> a.
 
 (* Skipping instance Monoid__IntMap *)
 

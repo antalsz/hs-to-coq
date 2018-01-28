@@ -65,15 +65,38 @@ Fixpoint mergePairs {a0} (cmp: a0 -> a0 -> comparison) xs
              | xs => xs
            end.
 
-(* TODO: prove that this terminates! *)
-Definition mergeAll {a0} (cmp: a0 -> a0 -> comparison) (xs : list (list a0)) : list a0. Admitted.
-(*
-Program Fixpoint mergeAll {a0} (cmp: a0 -> a0 -> comparison) (xs : list (list a0)) : list a0 :=
+Require Import Omega.
+Lemma mergePairs_length : forall n, forall a cmp (xs : list (list a)) x y, 
+      length xs <= n ->                                                                
+      length (mergePairs cmp (cons x (cons y xs))) < 2 + n.
+induction n. intros; simpl. destruct xs; inversion H. simpl. auto.
+intros.
+destruct xs.
+simpl in *. omega.
+destruct xs.
+simpl in *. omega.
+assert (L : length xs <= n).
+simpl in H. omega.
+specialize (IHn a cmp xs l l0 L).
+simpl in *. omega.
+Qed.
+
+Program Fixpoint mergeAll {a0} (cmp: a0 -> a0 -> comparison) 
+        (xs : list (list a0)) {measure (length xs) } : list a0 :=
   match xs with
+  | nil        => nil
   | cons x nil => x
-  | xs         => mergeAll cmp (mergePairs cmp xs)
+  | cons x (cons y xs) => mergeAll cmp (mergePairs cmp (cons x (cons y xs)))
   end.
-*)
+Next Obligation.
+simpl.
+destruct xs. simpl. auto.
+destruct xs. simpl. auto.
+apply lt_n_S. 
+pose (MP := mergePairs_length (length xs) a0 cmp xs l l0 ltac:(auto)). clearbody MP.
+simpl in *.
+omega.
+Defined.
 
 Definition sortBy {a} (cmp : a -> a -> comparison) (xs : list a): list a :=
      mergeAll cmp (sequences cmp xs).

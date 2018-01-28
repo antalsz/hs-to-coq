@@ -615,11 +615,81 @@ Program Instance Monoid__unit : Monoid unit := fun _ k =>
 
 (* Skipping instance Monoid__op_zt__ *)
 
-(* Skipping instance Monoid__op_zt__ *)
+Local Definition Monoid__op_zt____op_zt___mappend {inst_a} {inst_b} {inst_c}
+                                                  `{Monoid inst_a} `{Monoid inst_b} `{Monoid inst_c} : (inst_a * inst_b
+                                                                                                       *
+                                                                                                       inst_c)%type -> (inst_a
+                                                                                                       * inst_b *
+                                                                                                       inst_c)%type -> (inst_a
+                                                                                                       * inst_b *
+                                                                                                       inst_c)%type :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
+      | pair (pair a1 b1) c1 , pair (pair a2 b2) c2 => pair (pair (mappend a1 a2)
+                                                                  (mappend b1 b2)) (mappend c1 c2)
+    end.
 
-(* Skipping instance Monoid__op_zt__ *)
+Local Definition Monoid__op_zt____op_zt___mempty {inst_a} {inst_b} {inst_c}
+                                                 `{Monoid inst_a} `{Monoid inst_b} `{Monoid inst_c} : (inst_a * inst_b *
+                                                                                                      inst_c)%type :=
+  pair (pair mempty mempty) mempty.
 
-(* Skipping instance Monoid__op_zt__ *)
+Local Definition Monoid__op_zt____op_zt____op_zt____23_mappend {inst_a} {inst_b}
+                                                               {inst_c} {inst_d} `{Monoid inst_a} `{Monoid inst_b}
+                                                               `{Monoid inst_c} `{Monoid inst_d} : (inst_a * inst_b *
+                                                                                                   inst_c *
+                                                                                                   inst_d)%type -> (inst_a
+                                                                                                   * inst_b * inst_c *
+                                                                                                   inst_d)%type -> (inst_a
+                                                                                                   * inst_b * inst_c *
+                                                                                                   inst_d)%type :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
+      | pair (pair (pair a1 b1) c1) d1 , pair (pair (pair a2 b2) c2) d2 => pair (pair
+                                                                                (pair (mappend a1 a2) (mappend b1 b2))
+                                                                                (mappend c1 c2)) (mappend d1 d2)
+    end.
+
+Local Definition Monoid__op_zt____op_zt____op_zt____23_mempty {inst_a} {inst_b}
+                                                              {inst_c} {inst_d} `{Monoid inst_a} `{Monoid inst_b}
+                                                              `{Monoid inst_c} `{Monoid inst_d} : (inst_a * inst_b *
+                                                                                                  inst_c *
+                                                                                                  inst_d)%type :=
+  pair (pair (pair mempty mempty) mempty) mempty.
+
+Local Definition Monoid__op_zt____op_zt____op_zt____op_zt____87_mappend {inst_a}
+                                                                        {inst_b} {inst_c} {inst_d} {inst_e} `{Monoid
+                                                                        inst_a} `{Monoid inst_b} `{Monoid inst_c}
+                                                                        `{Monoid inst_d} `{Monoid inst_e} : (inst_a *
+                                                                                                            inst_b *
+                                                                                                            inst_c *
+                                                                                                            inst_d *
+                                                                                                            inst_e)%type -> (inst_a
+                                                                                                            * inst_b *
+                                                                                                            inst_c *
+                                                                                                            inst_d *
+                                                                                                            inst_e)%type -> (inst_a
+                                                                                                            * inst_b *
+                                                                                                            inst_c *
+                                                                                                            inst_d *
+                                                                                                            inst_e)%type :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
+      | pair (pair (pair (pair a1 b1) c1) d1) e1 , pair (pair (pair (pair a2 b2) c2)
+                                                              d2) e2 => pair (pair (pair (pair (mappend a1 a2) (mappend
+                                                                                               b1 b2)) (mappend c1 c2))
+                                                                                   (mappend d1 d2)) (mappend e1 e2)
+    end.
+
+Local Definition Monoid__op_zt____op_zt____op_zt____op_zt____87_mempty {inst_a}
+                                                                       {inst_b} {inst_c} {inst_d} {inst_e} `{Monoid
+                                                                       inst_a} `{Monoid inst_b} `{Monoid inst_c}
+                                                                       `{Monoid inst_d} `{Monoid inst_e} : (inst_a *
+                                                                                                           inst_b *
+                                                                                                           inst_c *
+                                                                                                           inst_d *
+                                                                                                           inst_e)%type :=
+  pair (pair (pair (pair mempty mempty) mempty) mempty) mempty.
 
 Local Definition Monoid__comparison_mappend
     : comparison -> comparison -> comparison :=
@@ -927,6 +997,65 @@ Program Instance Monoid__comparison : Monoid comparison := fun _ k =>
       mconcat__ := Monoid__comparison_mconcat ;
       mempty__ := Monoid__comparison_mempty |}.
 
+Local Definition Monoid__op_zt____op_zt____op_zt____op_zt____87_mconcat {inst_a}
+                                                                        {inst_b} {inst_c} {inst_d} {inst_e} `{Monoid
+                                                                        inst_a} `{Monoid inst_b} `{Monoid inst_c}
+                                                                        `{Monoid inst_d} `{Monoid inst_e} : list (inst_a
+                                                                                                                 *
+                                                                                                                 inst_b
+                                                                                                                 *
+                                                                                                                 inst_c
+                                                                                                                 *
+                                                                                                                 inst_d
+                                                                                                                 *
+                                                                                                                 inst_e)%type -> (inst_a
+                                                                                                            * inst_b *
+                                                                                                            inst_c *
+                                                                                                            inst_d *
+                                                                                                            inst_e)%type :=
+  foldr Monoid__op_zt____op_zt____op_zt____op_zt____87_mappend
+  Monoid__op_zt____op_zt____op_zt____op_zt____87_mempty.
+
+Program Instance Monoid__op_zt____op_zt____op_zt____op_zt____87 {a} {b} {c} {d}
+                                                                {e} `{Monoid a} `{Monoid b} `{Monoid c} `{Monoid d}
+                                                                `{Monoid e} : Monoid (a * b * c * d * e)%type := fun _
+                                                                                                                     k =>
+    k {|mappend__ := Monoid__op_zt____op_zt____op_zt____op_zt____87_mappend ;
+      mconcat__ := Monoid__op_zt____op_zt____op_zt____op_zt____87_mconcat ;
+      mempty__ := Monoid__op_zt____op_zt____op_zt____op_zt____87_mempty |}.
+
+Local Definition Monoid__op_zt____op_zt____op_zt____23_mconcat {inst_a} {inst_b}
+                                                               {inst_c} {inst_d} `{Monoid inst_a} `{Monoid inst_b}
+                                                               `{Monoid inst_c} `{Monoid inst_d} : list (inst_a * inst_b
+                                                                                                        * inst_c *
+                                                                                                        inst_d)%type -> (inst_a
+                                                                                                   * inst_b * inst_c *
+                                                                                                   inst_d)%type :=
+  foldr Monoid__op_zt____op_zt____op_zt____23_mappend
+  Monoid__op_zt____op_zt____op_zt____23_mempty.
+
+Program Instance Monoid__op_zt____op_zt____op_zt____23 {a} {b} {c} {d} `{Monoid
+                                                       a} `{Monoid b} `{Monoid c} `{Monoid d} : Monoid (a * b * c *
+                                                                                                       d)%type := fun _
+                                                                                                                      k =>
+    k {|mappend__ := Monoid__op_zt____op_zt____op_zt____23_mappend ;
+      mconcat__ := Monoid__op_zt____op_zt____op_zt____23_mconcat ;
+      mempty__ := Monoid__op_zt____op_zt____op_zt____23_mempty |}.
+
+Local Definition Monoid__op_zt____op_zt___mconcat {inst_a} {inst_b} {inst_c}
+                                                  `{Monoid inst_a} `{Monoid inst_b} `{Monoid inst_c} : list (inst_a *
+                                                                                                            inst_b *
+                                                                                                            inst_c)%type -> (inst_a
+                                                                                                       * inst_b *
+                                                                                                       inst_c)%type :=
+  foldr Monoid__op_zt____op_zt___mappend Monoid__op_zt____op_zt___mempty.
+
+Program Instance Monoid__op_zt____op_zt__ {a} {b} {c} `{Monoid a} `{Monoid b}
+                                          `{Monoid c} : Monoid (a * b * c)%type := fun _ k =>
+    k {|mappend__ := Monoid__op_zt____op_zt___mappend ;
+      mconcat__ := Monoid__op_zt____op_zt___mconcat ;
+      mempty__ := Monoid__op_zt____op_zt___mempty |}.
+
 Local Definition Monoid__arrow_mconcat {inst_b} {inst_a} `{Monoid inst_b} : list
                                                                             (inst_a -> inst_b) -> (inst_a -> inst_b) :=
   foldr Monoid__arrow_mappend Monoid__arrow_mempty.
@@ -1207,7 +1336,7 @@ End Notations.
 
 (* Unbound variables:
      Eq Eq_ Gt Lt None Ord Some String Type andb bool compare comparison cons false
-     list negb nil op_zeze__ op_zg__ op_zgze__ op_zl__ op_zlze__ option pair true tt
-     unit Coq.Init.Datatypes.app Coq.Lists.List.flat_map Coq.Lists.List.map
+     list negb nil op_zeze__ op_zg__ op_zgze__ op_zl__ op_zlze__ op_zt__ option pair
+     true tt unit Coq.Init.Datatypes.app Coq.Lists.List.flat_map Coq.Lists.List.map
      GHC.Prim.arrow GHC.Tuple.pair_type
 *)

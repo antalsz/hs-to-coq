@@ -740,17 +740,17 @@ Program Instance Monoid__Min {a} `{GHC.Base.Ord a} : GHC.Base.Monoid (Min a) :=
 
 (* Skipping instance Foldable__op_ZCziZC__ *)
 
-(* Skipping instance Foldable__URec *)
+(* Skipping instance Foldable__URec__Ptr__unit *)
 
-(* Skipping instance Foldable__URec *)
+(* Skipping instance Foldable__URec__Char *)
 
-(* Skipping instance Foldable__URec *)
+(* Skipping instance Foldable__URec__Double *)
 
-(* Skipping instance Foldable__URec *)
+(* Skipping instance Foldable__URec__Float *)
 
-(* Skipping instance Foldable__URec *)
+(* Skipping instance Foldable__URec__Int *)
 
-(* Skipping instance Foldable__URec *)
+(* Skipping instance Foldable__URec__Word *)
 
 Definition asum {t} {f} {a} `{Foldable t} `{GHC.Base.Alternative f} : t (f
                                                                         a) -> f a :=

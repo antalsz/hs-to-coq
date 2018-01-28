@@ -285,11 +285,122 @@ Program Instance Semigroup__Either {a} {b} : Semigroup (Data.Either.Either a
 
 (* Skipping instance Semigroup__op_zt__ *)
 
-(* Skipping instance Semigroup__op_zt__ *)
+Local Definition Semigroup__op_zt____op_zt___op_zlzg__ {inst_a} {inst_b}
+                                                       {inst_c} `{Semigroup inst_a} `{Semigroup inst_b} `{Semigroup
+                                                       inst_c} : (inst_a * inst_b * inst_c)%type -> (inst_a * inst_b *
+                                                                 inst_c)%type -> (inst_a * inst_b * inst_c)%type :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
+      | pair (pair a b) c , pair (pair a' b') c' => pair (pair (a <> a') (b <> b')) (c
+                                                         <> c')
+    end.
 
-(* Skipping instance Semigroup__op_zt__ *)
+Local Definition Semigroup__op_zt____op_zt___sconcat {inst_a} {inst_b} {inst_c}
+                                                     `{Semigroup inst_a} `{Semigroup inst_b} `{Semigroup inst_c}
+    : Data.List.NonEmpty.NonEmpty (inst_a * inst_b * inst_c)%type -> (inst_a *
+      inst_b * inst_c)%type :=
+  fun arg_0__ =>
+    match arg_0__ with
+      | Data.List.NonEmpty.NEcons a as_ => let fix go arg_1__ arg_2__
+                                                     := match arg_1__ , arg_2__ with
+                                                          | b , cons c cs => Semigroup__op_zt____op_zt___op_zlzg__ b (go
+                                                                                                                   c cs)
+                                                          | b , nil => b
+                                                        end in
+                                           go a as_
+    end.
 
-(* Skipping instance Semigroup__op_zt__ *)
+Program Instance Semigroup__op_zt____op_zt__ {a} {b} {c} `{Semigroup a}
+                                             `{Semigroup b} `{Semigroup c} : Semigroup (a * b * c)%type := fun _ k =>
+    k {|op_zlzg____ := Semigroup__op_zt____op_zt___op_zlzg__ ;
+      sconcat__ := Semigroup__op_zt____op_zt___sconcat |}.
+
+Local Definition Semigroup__op_zt____op_zt____op_zt____23_op_zlzg__ {inst_a}
+                                                                    {inst_b} {inst_c} {inst_d} `{Semigroup inst_a}
+                                                                    `{Semigroup inst_b} `{Semigroup inst_c} `{Semigroup
+                                                                    inst_d} : (inst_a * inst_b * inst_c *
+                                                                              inst_d)%type -> (inst_a * inst_b * inst_c
+                                                                              * inst_d)%type -> (inst_a * inst_b *
+                                                                              inst_c * inst_d)%type :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
+      | pair (pair (pair a b) c) d , pair (pair (pair a' b') c') d' => pair (pair
+                                                                            (pair (a <> a') (b <> b')) (c <> c')) (d <>
+                                                                            d')
+    end.
+
+Local Definition Semigroup__op_zt____op_zt____op_zt____23_sconcat {inst_a}
+                                                                  {inst_b} {inst_c} {inst_d} `{Semigroup inst_a}
+                                                                  `{Semigroup inst_b} `{Semigroup inst_c} `{Semigroup
+                                                                  inst_d} : Data.List.NonEmpty.NonEmpty (inst_a * inst_b
+                                                                                                        * inst_c *
+                                                                                                        inst_d)%type -> (inst_a
+                                                                            * inst_b * inst_c * inst_d)%type :=
+  fun arg_0__ =>
+    match arg_0__ with
+      | Data.List.NonEmpty.NEcons a as_ => let fix go arg_1__ arg_2__
+                                                     := match arg_1__ , arg_2__ with
+                                                          | b , cons c cs =>
+                                                            Semigroup__op_zt____op_zt____op_zt____23_op_zlzg__ b (go c
+                                                                                                               cs)
+                                                          | b , nil => b
+                                                        end in
+                                           go a as_
+    end.
+
+Program Instance Semigroup__op_zt____op_zt____op_zt____23 {a} {b} {c} {d}
+                                                          `{Semigroup a} `{Semigroup b} `{Semigroup c} `{Semigroup d}
+  : Semigroup (a * b * c * d)%type := fun _ k =>
+    k {|op_zlzg____ := Semigroup__op_zt____op_zt____op_zt____23_op_zlzg__ ;
+      sconcat__ := Semigroup__op_zt____op_zt____op_zt____23_sconcat |}.
+
+Local Definition Semigroup__op_zt____op_zt____op_zt____op_zt____87_op_zlzg__ {inst_a}
+                                                                             {inst_b} {inst_c} {inst_d} {inst_e}
+                                                                             `{Semigroup inst_a} `{Semigroup inst_b}
+                                                                             `{Semigroup inst_c} `{Semigroup inst_d}
+                                                                             `{Semigroup inst_e} : (inst_a * inst_b *
+                                                                                                   inst_c * inst_d *
+                                                                                                   inst_e)%type -> (inst_a
+                                                                                                   * inst_b * inst_c *
+                                                                                                   inst_d *
+                                                                                                   inst_e)%type -> (inst_a
+                                                                                                   * inst_b * inst_c *
+                                                                                                   inst_d *
+                                                                                                   inst_e)%type :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
+      | pair (pair (pair (pair a b) c) d) e , pair (pair (pair (pair a' b') c') d')
+                                                   e' => pair (pair (pair (pair (a <> a') (b <> b')) (c <> c')) (d <>
+                                                                    d')) (e <> e')
+    end.
+
+Local Definition Semigroup__op_zt____op_zt____op_zt____op_zt____87_sconcat {inst_a}
+                                                                           {inst_b} {inst_c} {inst_d} {inst_e}
+                                                                           `{Semigroup inst_a} `{Semigroup inst_b}
+                                                                           `{Semigroup inst_c} `{Semigroup inst_d}
+                                                                           `{Semigroup inst_e}
+    : Data.List.NonEmpty.NonEmpty (inst_a * inst_b * inst_c * inst_d *
+                                  inst_e)%type -> (inst_a * inst_b * inst_c * inst_d * inst_e)%type :=
+  fun arg_0__ =>
+    match arg_0__ with
+      | Data.List.NonEmpty.NEcons a as_ => let fix go arg_1__ arg_2__
+                                                     := match arg_1__ , arg_2__ with
+                                                          | b , cons c cs =>
+                                                            Semigroup__op_zt____op_zt____op_zt____op_zt____87_op_zlzg__
+                                                            b (go c cs)
+                                                          | b , nil => b
+                                                        end in
+                                           go a as_
+    end.
+
+Program Instance Semigroup__op_zt____op_zt____op_zt____op_zt____87 {a} {b} {c}
+                                                                   {d} {e} `{Semigroup a} `{Semigroup b} `{Semigroup c}
+                                                                   `{Semigroup d} `{Semigroup e} : Semigroup (a * b * c
+                                                                                                             * d *
+                                                                                                             e)%type :=
+  fun _ k =>
+    k {|op_zlzg____ := Semigroup__op_zt____op_zt____op_zt____op_zt____87_op_zlzg__ ;
+      sconcat__ := Semigroup__op_zt____op_zt____op_zt____op_zt____87_sconcat |}.
 
 Local Definition Semigroup__comparison_op_zlzg__
     : comparison -> comparison -> comparison :=
@@ -2404,22 +2515,22 @@ Infix "Data.Semigroup.<>" := (_<>_) (at level 70).
 End Notations.
 
 (* Unbound variables:
-     Eq Gt Lt None Some andb bool comparison cons false list negb nil option orb true
-     tt unit Coq.Init.Datatypes.app Coq.Program.Basics.compose Data.Either.Either
-     Data.Either.Left Data.Foldable.Foldable Data.Foldable.hash_compose
-     Data.Functor.op_zlzdzg__ Data.Functor.Const.Const Data.List.NonEmpty.NEcons
-     Data.List.NonEmpty.NonEmpty Data.Maybe.maybe Data.Monoid.All Data.Monoid.Any
-     Data.Monoid.Dual Data.Monoid.Endo Data.Monoid.Mk_Any Data.Monoid.Mk_Dual
-     Data.Monoid.Mk_Endo Data.Monoid.Mk_Product Data.Monoid.Mk_Sum
-     Data.Monoid.Product Data.Monoid.Sum Data.Monoid.appEndo Data.Monoid.getAny
-     Data.Monoid.getDual Data.Monoid.getProduct Data.Monoid.getSum
-     Data.Proxy.Mk_Proxy Data.Proxy.Proxy Data.Traversable.Traversable Data.Void.Void
-     GHC.Base.Applicative GHC.Base.Eq_ GHC.Base.Functor GHC.Base.Monad
-     GHC.Base.Monoid GHC.Base.Ord GHC.Base.build GHC.Base.compare GHC.Base.const
-     GHC.Base.flip GHC.Base.fmap GHC.Base.foldr GHC.Base.id GHC.Base.mappend
-     GHC.Base.max GHC.Base.mempty GHC.Base.min GHC.Base.op_z2218U__
-     GHC.Base.op_zdzn__ GHC.Base.op_zeze__ GHC.Base.op_zg__ GHC.Base.op_zgze__
-     GHC.Base.op_zl__ GHC.Base.op_zlze__ GHC.Base.op_zlztzg__ GHC.Base.op_zsze__
-     GHC.Base.op_ztzg__ GHC.Base.pure GHC.Num.Int GHC.Num.Num GHC.Num.op_zm__
-     GHC.Num.op_zp__ GHC.Prim.coerce
+     Eq Gt Lt None Some andb bool comparison cons false list negb nil op_zt__ option
+     orb pair true tt unit Coq.Init.Datatypes.app Coq.Program.Basics.compose
+     Data.Either.Either Data.Either.Left Data.Foldable.Foldable
+     Data.Foldable.hash_compose Data.Functor.op_zlzdzg__ Data.Functor.Const.Const
+     Data.List.NonEmpty.NEcons Data.List.NonEmpty.NonEmpty Data.Maybe.maybe
+     Data.Monoid.All Data.Monoid.Any Data.Monoid.Dual Data.Monoid.Endo
+     Data.Monoid.Mk_Any Data.Monoid.Mk_Dual Data.Monoid.Mk_Endo
+     Data.Monoid.Mk_Product Data.Monoid.Mk_Sum Data.Monoid.Product Data.Monoid.Sum
+     Data.Monoid.appEndo Data.Monoid.getAny Data.Monoid.getDual
+     Data.Monoid.getProduct Data.Monoid.getSum Data.Proxy.Mk_Proxy Data.Proxy.Proxy
+     Data.Traversable.Traversable Data.Void.Void GHC.Base.Applicative GHC.Base.Eq_
+     GHC.Base.Functor GHC.Base.Monad GHC.Base.Monoid GHC.Base.Ord GHC.Base.build
+     GHC.Base.compare GHC.Base.const GHC.Base.flip GHC.Base.fmap GHC.Base.foldr
+     GHC.Base.id GHC.Base.mappend GHC.Base.max GHC.Base.mempty GHC.Base.min
+     GHC.Base.op_z2218U__ GHC.Base.op_zdzn__ GHC.Base.op_zeze__ GHC.Base.op_zg__
+     GHC.Base.op_zgze__ GHC.Base.op_zl__ GHC.Base.op_zlze__ GHC.Base.op_zlztzg__
+     GHC.Base.op_zsze__ GHC.Base.op_ztzg__ GHC.Base.pure GHC.Num.Int GHC.Num.Num
+     GHC.Num.op_zm__ GHC.Num.op_zp__ GHC.Prim.coerce
 *)

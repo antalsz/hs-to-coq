@@ -514,17 +514,17 @@ Program Instance Applicative__Id : GHC.Base.Applicative Id := fun _ k =>
 
 (* Skipping instance Traversable__op_ZCziZC__ *)
 
-(* Skipping instance Traversable__URec *)
+(* Skipping instance Traversable__URec__Ptr__unit *)
 
-(* Skipping instance Traversable__URec *)
+(* Skipping instance Traversable__URec__Char *)
 
-(* Skipping instance Traversable__URec *)
+(* Skipping instance Traversable__URec__Double *)
 
-(* Skipping instance Traversable__URec *)
+(* Skipping instance Traversable__URec__Float *)
 
-(* Skipping instance Traversable__URec *)
+(* Skipping instance Traversable__URec__Int *)
 
-(* Skipping instance Traversable__URec *)
+(* Skipping instance Traversable__URec__Word *)
 
 Definition fmapDefault {t} {a} {b} `{Traversable t} : (a -> b) -> t a -> t b :=
   fun f => getId GHC.Base.∘ traverse (Mk_Id GHC.Base.∘ f).

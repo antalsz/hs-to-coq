@@ -27,7 +27,6 @@ Require Data.Void.
 Require GHC.Base.
 Require GHC.Num.
 Require GHC.Prim.
-Require GHC.Real.
 Import Data.Functor.Notations.
 Import GHC.Base.Notations.
 Import GHC.Num.Notations.
@@ -2393,34 +2392,10 @@ Program Instance Ord__Min {a} `{GHC.Base.Ord a} : GHC.Base.Ord (Min a) := fun _
 Definition diff {m} `{Semigroup m} : m -> Data.Monoid.Endo m :=
   Data.Monoid.Mk_Endo GHC.Base.∘ _<>_.
 
-Definition mtimesDefault {b} {a} `{GHC.Real.Integral b} `{GHC.Base.Monoid a}
-    : b -> a -> a :=
-  fun n x =>
-    if n GHC.Base.== GHC.Num.fromInteger 0 : bool
-    then GHC.Base.mempty
-    else unwrapMonoid (stimes n (WrapMonoid x)).
-
 Definition option {b} {a} : b -> (a -> b) -> Option a -> b :=
   fun arg_0__ arg_1__ arg_2__ =>
     match arg_0__ , arg_1__ , arg_2__ with
       | n , j , Mk_Option m => Data.Maybe.maybe n j m
-    end.
-
-Definition stimesIdempotent {b} {a} `{GHC.Real.Integral b} : b -> a -> a :=
-  fun n x =>
-    if n GHC.Base.<= GHC.Num.fromInteger 0 : bool
-    then GHC.Base.errorWithoutStackTrace (GHC.Base.hs_string__
-                                         "stimesIdempotent: positive multiplier expected")
-    else x.
-
-Definition stimesIdempotentMonoid {b} {a} `{GHC.Real.Integral b}
-                                  `{GHC.Base.Monoid a} : b -> a -> a :=
-  fun n x =>
-    match GHC.Base.compare n (GHC.Num.fromInteger 0) with
-      | Lt => GHC.Base.errorWithoutStackTrace (GHC.Base.hs_string__
-                                              "stimesIdempotentMonoid: negative multiplier")
-      | Eq => GHC.Base.mempty
-      | Gt => x
     end.
 
 Module Notations.
@@ -2429,23 +2404,22 @@ Infix "Data.Semigroup.<>" := (_<>_) (at level 70).
 End Notations.
 
 (* Unbound variables:
-     Eq Gt Lt None Some andb bool comparison cons false list negb nil option orb
-     stimes true tt unit Coq.Init.Datatypes.app Coq.Program.Basics.compose
-     Data.Either.Either Data.Either.Left Data.Foldable.Foldable
-     Data.Foldable.hash_compose Data.Functor.op_zlzdzg__ Data.Functor.Const.Const
-     Data.List.NonEmpty.NEcons Data.List.NonEmpty.NonEmpty Data.Maybe.maybe
-     Data.Monoid.All Data.Monoid.Any Data.Monoid.Dual Data.Monoid.Endo
-     Data.Monoid.Mk_Any Data.Monoid.Mk_Dual Data.Monoid.Mk_Endo
-     Data.Monoid.Mk_Product Data.Monoid.Mk_Sum Data.Monoid.Product Data.Monoid.Sum
-     Data.Monoid.appEndo Data.Monoid.getAny Data.Monoid.getDual
-     Data.Monoid.getProduct Data.Monoid.getSum Data.Proxy.Mk_Proxy Data.Proxy.Proxy
-     Data.Traversable.Traversable Data.Void.Void GHC.Base.Applicative GHC.Base.Eq_
-     GHC.Base.Functor GHC.Base.Monad GHC.Base.Monoid GHC.Base.Ord GHC.Base.build
-     GHC.Base.compare GHC.Base.const GHC.Base.errorWithoutStackTrace GHC.Base.flip
-     GHC.Base.fmap GHC.Base.foldr GHC.Base.id GHC.Base.mappend GHC.Base.max
-     GHC.Base.mempty GHC.Base.min GHC.Base.op_z2218U__ GHC.Base.op_zdzn__
-     GHC.Base.op_zeze__ GHC.Base.op_zg__ GHC.Base.op_zgze__ GHC.Base.op_zl__
-     GHC.Base.op_zlze__ GHC.Base.op_zlztzg__ GHC.Base.op_zsze__ GHC.Base.op_ztzg__
-     GHC.Base.pure GHC.Num.Int GHC.Num.Num GHC.Num.op_zm__ GHC.Num.op_zp__
-     GHC.Prim.coerce GHC.Real.Integral
+     Eq Gt Lt None Some andb bool comparison cons false list negb nil option orb true
+     tt unit Coq.Init.Datatypes.app Coq.Program.Basics.compose Data.Either.Either
+     Data.Either.Left Data.Foldable.Foldable Data.Foldable.hash_compose
+     Data.Functor.op_zlzdzg__ Data.Functor.Const.Const Data.List.NonEmpty.NEcons
+     Data.List.NonEmpty.NonEmpty Data.Maybe.maybe Data.Monoid.All Data.Monoid.Any
+     Data.Monoid.Dual Data.Monoid.Endo Data.Monoid.Mk_Any Data.Monoid.Mk_Dual
+     Data.Monoid.Mk_Endo Data.Monoid.Mk_Product Data.Monoid.Mk_Sum
+     Data.Monoid.Product Data.Monoid.Sum Data.Monoid.appEndo Data.Monoid.getAny
+     Data.Monoid.getDual Data.Monoid.getProduct Data.Monoid.getSum
+     Data.Proxy.Mk_Proxy Data.Proxy.Proxy Data.Traversable.Traversable Data.Void.Void
+     GHC.Base.Applicative GHC.Base.Eq_ GHC.Base.Functor GHC.Base.Monad
+     GHC.Base.Monoid GHC.Base.Ord GHC.Base.build GHC.Base.compare GHC.Base.const
+     GHC.Base.flip GHC.Base.fmap GHC.Base.foldr GHC.Base.id GHC.Base.mappend
+     GHC.Base.max GHC.Base.mempty GHC.Base.min GHC.Base.op_z2218U__
+     GHC.Base.op_zdzn__ GHC.Base.op_zeze__ GHC.Base.op_zg__ GHC.Base.op_zgze__
+     GHC.Base.op_zl__ GHC.Base.op_zlze__ GHC.Base.op_zlztzg__ GHC.Base.op_zsze__
+     GHC.Base.op_ztzg__ GHC.Base.pure GHC.Num.Int GHC.Num.Num GHC.Num.op_zm__
+     GHC.Num.op_zp__ GHC.Prim.coerce
 *)

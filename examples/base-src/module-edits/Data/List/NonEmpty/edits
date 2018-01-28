@@ -1,8 +1,23 @@
-# axiomatize module Data.List.NonEmpty
-# poor treatment of <| and !! when axiomatized (notation, cannot rename them either)
 
 # still partial
 skip Data.List.NonEmpty.!!
+
+skip Data.List.NonEmpty.fromList
+skip Data.List.NonEmpty.lift
+skip Data.List.NonEmpty.tails
+skip Data.List.NonEmpty.scanl
+skip Data.List.NonEmpty.scanr
+
+## in midamble, redefine to prove total
+skip Data.List.NonEmpty.toList
+skip Data.List.NonEmpty.insert
+skip Data.List.NonEmpty.sort
+skip Data.List.NonEmpty.sortBy
+
+## todo
+skip Data.List.NonEmpty.scanl1
+skip Data.List.NonEmpty.reverse
+
 
 order Data.List.NonEmpty.zipWith Data.List.NonEmpty.Applicative__NonEmpty_op_zlztzg__ Data.List.NonEmpty.Applicative__NonEmpty Data.List.NonEmpty.Monad__NonEmpty_op_zgzg__ Data.List.NonEmpty.Monad__NonEmpty_return_ Data.List.NonEmpty.Monad__NonEmpty
 

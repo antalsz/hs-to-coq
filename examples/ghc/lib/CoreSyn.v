@@ -515,6 +515,11 @@ Definition re_visible_orphs (arg_31__ : RuleEnv) :=
   match arg_31__ with
     | Mk_RuleEnv _ re_visible_orphs => re_visible_orphs
   end.
+
+(* The Haskell code containes partial or untranslateable code, which needs the
+   following *)
+
+Axiom unsafeFix : forall {a}, (a -> a) -> a.
 (* Midamble *)
 
 Parameter tickishCounts : forall {id}, Tickish id -> bool.
@@ -655,11 +660,6 @@ Instance Default_Expr {b} : GHC.Err.Default (Expr b).
 Admitted.
 
 (* Converted value declarations: *)
-
-(* The Haskell code containes partial or untranslateable code, which needs the
-   following *)
-
-Axiom unsafeFix : forall {a}, (a -> a) -> a.
 
 (* Translating `instance Binary.Binary CoreSyn.IsOrphan' failed: OOPS! Cannot
    find information for class Qualified "Binary" "Binary" unsupported *)

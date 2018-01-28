@@ -13,6 +13,8 @@ skip Data.Semigroup.Semigroup__Alt
 # looping
 skip Data.Semigroup.cycle1
 
+skip Data.Semigroup.stimesIdempotent
+skip Data.Semigroup.stimesIdempotentMonoid 
 
 
 ## Cannot make instances for two different types with the same name

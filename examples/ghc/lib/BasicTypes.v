@@ -219,6 +219,11 @@ Definition inl_src (arg_12__ : InlinePragma) :=
   match arg_12__ with
     | Mk_InlinePragma inl_src _ _ _ _ => inl_src
   end.
+
+(* The Haskell code containes partial or untranslateable code, which needs the
+   following *)
+
+Axiom missingValue : forall {a}, a.
 (* Midamble *)
 
 Require GHC.Err.
@@ -301,11 +306,6 @@ Instance Default_InlinePragma : GHC.Err.Default InlinePragma :=
   GHC.Err.Build_Default _ (Mk_InlinePragma GHC.Err.default GHC.Err.default GHC.Err.default GHC.Err.default GHC.Err.default).
 
 (* Converted value declarations: *)
-
-(* The Haskell code containes partial or untranslateable code, which needs the
-   following *)
-
-Axiom missingValue : forall {a}, a.
 
 (* Translating `instance Outputable.Outputable BasicTypes.OneShotInfo' failed:
    OOPS! Cannot find information for class Qualified "Outputable" "Outputable"

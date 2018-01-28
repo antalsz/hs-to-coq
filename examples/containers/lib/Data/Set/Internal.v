@@ -52,6 +52,13 @@ Definition getMergeSet {a} (arg_0__ : MergeSet a) :=
   match arg_0__ with
     | Mk_MergeSet getMergeSet => getMergeSet
   end.
+
+(* The Haskell code containes partial or untranslateable code, which needs the
+   following *)
+
+Axiom patternFailure : forall {a}, a.
+
+Axiom unsafeFix : forall {a}, (a -> a) -> a.
 (* Midamble *)
 
 Require Omega.
@@ -67,13 +74,6 @@ Fixpoint set_size {a} (s : Set_ a) : nat :=
   end.
 
 (* Converted value declarations: *)
-
-(* The Haskell code containes partial or untranslateable code, which needs the
-   following *)
-
-Axiom patternFailure : forall {a}, a.
-
-Axiom unsafeFix : forall {a}, (a -> a) -> a.
 
 (* Skipping instance Monoid__Set_ *)
 

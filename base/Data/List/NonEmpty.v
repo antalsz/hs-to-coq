@@ -39,10 +39,64 @@ Inductive NonEmpty a : Type := NEcons : a -> list a -> NonEmpty a.
 Arguments NEcons {_} _ _.
 (* Midamble *)
 
-Definition NonEmpty_foldr1 {a} (f : a -> a -> a) (x: Data.List.NonEmpty.NonEmpty a) : a :=
+Definition NonEmpty_foldr1 {a} (f : a -> a -> a) (x: NonEmpty a) : a :=
   match x with 
-    | Data.List.NonEmpty.NEcons a as_ => List.fold_right f a as_
+    | NEcons a as_ => List.fold_right f a as_
   end.
+
+Definition NonEmpty_maximum {a} `{GHC.Base.Ord a} (x:NonEmpty a) : a :=
+  NonEmpty_foldr1 GHC.Base.max x.
+
+Definition NonEmpty_minimum {a} `{GHC.Base.Ord a} (x:NonEmpty a) : a :=
+  NonEmpty_foldr1 GHC.Base.min x.
+
+Definition toList {a} : NonEmpty a -> list a :=
+  fun arg_0__ => match arg_0__ with | NEcons a as_ => cons a as_ end.
+
+
+Definition List_size {a} : list a -> nat :=
+List.fold_right (fun x y => S y) O .
+Definition NonEmpty_size {a} : NonEmpty a -> nat :=
+  fun arg_0__ =>
+    match arg_0__ with
+      | NEcons _ xs => 1 + List_size xs
+    end.
+
+Program Fixpoint insertBy {a} (cmp: a -> a -> comparison) (x : a)
+        (xs : NonEmpty a) {measure (NonEmpty_size xs)} : NonEmpty a :=
+  match xs with
+  | NEcons x nil => NEcons x nil
+  | (NEcons y ((cons y1 ys') as ys)) => 
+    match cmp x y with
+    | Gt  => NEcons y (toList (insertBy cmp x (NEcons y1 ys')))
+    | _   => NEcons x ys
+    end
+  end.
+
+Program Fixpoint insertBy' {a} (cmp: a -> a -> comparison) (x : a)
+        (xs : list a) {measure (List_size xs)} : NonEmpty a :=
+  match xs with
+  | nil => NEcons x nil
+  | cons x nil => NEcons x nil
+  | (cons y ((cons y1 ys') as ys)) => 
+    match cmp x y with
+    | Gt  => NEcons y (toList (insertBy' cmp x (cons y1 ys')))
+    | _   => NEcons x ys
+    end
+  end.
+
+
+Definition insert {a} `{GHC.Base.Ord a} : a ->  NonEmpty a -> NonEmpty a :=
+  insertBy GHC.Base.compare.
+
+Definition sortBy {a} : (a -> a -> comparison) -> NonEmpty a -> NonEmpty a :=
+  fun f ne => match ne with
+           | NEcons x xs => insertBy' f x (Data.OldList.sortBy f xs)
+           end.
+
+Definition sort {a} `{GHC.Base.Ord a} : NonEmpty a -> NonEmpty a :=
+             sortBy GHC.Base.compare.
+
 
 
 (* Converted value declarations: *)
@@ -292,55 +346,14 @@ Program Instance Eq___NonEmpty {a} `{GHC.Base.Eq_ a} : GHC.Base.Eq_ (NonEmpty
     k {|GHC.Base.op_zeze____ := Eq___NonEmpty_op_zeze__ ;
       GHC.Base.op_zsze____ := Eq___NonEmpty_op_zsze__ |}.
 
-Definition fromList {a} : list a -> NonEmpty a :=
-  fun arg_0__ =>
-    match arg_0__ with
-      | cons a as_ => NEcons a as_
-      | nil => GHC.Base.errorWithoutStackTrace (GHC.Base.hs_string__
-                                               "NonEmpty.fromList: empty list")
-    end.
+Definition drop {a} : GHC.Num.Int -> NonEmpty a -> list a :=
+  fun n => GHC.List.drop n GHC.Base.∘ toList.
 
-Definition insert {f} {a} `{Data.Foldable.Foldable f} `{GHC.Base.Ord a} : a -> f
-                                                                          a -> NonEmpty a :=
-  fun a =>
-    fromList GHC.Base.∘ (Data.OldList.insert a GHC.Base.∘ Data.Foldable.toList).
+Definition dropWhile {a} : (a -> bool) -> NonEmpty a -> list a :=
+  fun p => GHC.List.dropWhile p GHC.Base.∘ toList.
 
-Definition lift {f} {a} {b} `{Data.Foldable.Foldable f} : (list a -> list
-                                                          b) -> f a -> NonEmpty b :=
-  fun f => fromList GHC.Base.∘ (f GHC.Base.∘ Data.Foldable.toList).
-
-Definition reverse {a} : NonEmpty a -> NonEmpty a :=
-  lift GHC.List.reverse.
-
-Definition sort {a} `{GHC.Base.Ord a} : NonEmpty a -> NonEmpty a :=
-  lift Data.OldList.sort.
-
-Definition sortBy {a} : (a -> a -> comparison) -> NonEmpty a -> NonEmpty a :=
-  fun f => lift (Data.OldList.sortBy f).
-
-Definition sortWith {o} {a} `{GHC.Base.Ord o} : (a -> o) -> NonEmpty
-                                                a -> NonEmpty a :=
-  sortBy GHC.Base.∘ Data.Ord.comparing.
-
-Definition scanl {f} {b} {a} `{Data.Foldable.Foldable f}
-    : (b -> a -> b) -> b -> f a -> NonEmpty b :=
-  fun f z =>
-    fromList GHC.Base.∘ (GHC.List.scanl f z GHC.Base.∘ Data.Foldable.toList).
-
-Definition scanl1 {a} : (a -> a -> a) -> NonEmpty a -> NonEmpty a :=
-  fun arg_0__ arg_1__ =>
-    match arg_0__ , arg_1__ with
-      | f , NEcons a as_ => fromList (GHC.List.scanl f a as_)
-    end.
-
-Definition scanr {f} {a} {b} `{Data.Foldable.Foldable f}
-    : (a -> b -> b) -> b -> f a -> NonEmpty b :=
-  fun f z =>
-    fromList GHC.Base.∘ (GHC.List.scanr f z GHC.Base.∘ Data.Foldable.toList).
-
-Definition tails {f} {a} `{Data.Foldable.Foldable f} : f a -> NonEmpty (list
-                                                                       a) :=
-  fromList GHC.Base.∘ (Data.OldList.tails GHC.Base.∘ Data.Foldable.toList).
+Definition filter {a} : (a -> bool) -> NonEmpty a -> list a :=
+  fun p => GHC.List.filter p GHC.Base.∘ toList.
 
 Definition head {a} : NonEmpty a -> a :=
   fun arg_0__ => match arg_0__ with | NEcons a _ => a end.
@@ -398,23 +411,16 @@ Infix "<|" := (_<|_) (at level 99).
 Definition cons_ {a} : a -> NonEmpty a -> NonEmpty a :=
   _<|_.
 
+Definition partition {a} : (a -> bool) -> NonEmpty a -> (list a * list
+                           a)%type :=
+  fun p => Data.OldList.partition p GHC.Base.∘ toList.
+
 Definition some1 {f} {a} `{GHC.Base.Alternative f} : f a -> f (NonEmpty a) :=
   fun x => (NEcons Data.Functor.<$> x) GHC.Base.<*> GHC.Base.many x.
 
-Definition tail {a} : NonEmpty a -> list a :=
-  fun arg_0__ => match arg_0__ with | NEcons _ as_ => as_ end.
-
-Definition toList {a} : NonEmpty a -> list a :=
-  fun arg_0__ => match arg_0__ with | NEcons a as_ => cons a as_ end.
-
-Definition takeWhile {a} : (a -> bool) -> NonEmpty a -> list a :=
-  fun p => GHC.List.takeWhile p GHC.Base.∘ toList.
-
-Definition take {a} : GHC.Num.Int -> NonEmpty a -> list a :=
-  fun n => GHC.List.take n GHC.Base.∘ toList.
-
-Definition splitAt {a} : GHC.Num.Int -> NonEmpty a -> (list a * list a)%type :=
-  fun n => GHC.List.splitAt n GHC.Base.∘ toList.
+Definition sortWith {o} {a} `{GHC.Base.Ord o} : (a -> o) -> NonEmpty
+                                                a -> NonEmpty a :=
+  sortBy GHC.Base.∘ Data.Ord.comparing.
 
 Definition span {a} : (a -> bool) -> NonEmpty a -> (list a * list a)%type :=
   fun p => GHC.List.span p GHC.Base.∘ toList.
@@ -422,18 +428,17 @@ Definition span {a} : (a -> bool) -> NonEmpty a -> (list a * list a)%type :=
 Definition break {a} : (a -> bool) -> NonEmpty a -> (list a * list a)%type :=
   fun p => span (negb GHC.Base.∘ p).
 
-Definition partition {a} : (a -> bool) -> NonEmpty a -> (list a * list
-                           a)%type :=
-  fun p => Data.OldList.partition p GHC.Base.∘ toList.
+Definition splitAt {a} : GHC.Num.Int -> NonEmpty a -> (list a * list a)%type :=
+  fun n => GHC.List.splitAt n GHC.Base.∘ toList.
 
-Definition filter {a} : (a -> bool) -> NonEmpty a -> list a :=
-  fun p => GHC.List.filter p GHC.Base.∘ toList.
+Definition tail {a} : NonEmpty a -> list a :=
+  fun arg_0__ => match arg_0__ with | NEcons _ as_ => as_ end.
 
-Definition dropWhile {a} : (a -> bool) -> NonEmpty a -> list a :=
-  fun p => GHC.List.dropWhile p GHC.Base.∘ toList.
+Definition take {a} : GHC.Num.Int -> NonEmpty a -> list a :=
+  fun n => GHC.List.take n GHC.Base.∘ toList.
 
-Definition drop {a} : GHC.Num.Int -> NonEmpty a -> list a :=
-  fun n => GHC.List.drop n GHC.Base.∘ toList.
+Definition takeWhile {a} : (a -> bool) -> NonEmpty a -> list a :=
+  fun p => GHC.List.takeWhile p GHC.Base.∘ toList.
 
 Definition unzip {f} {a} {b} `{GHC.Base.Functor f} : f (a * b)%type -> (f a * f
                                                      b)%type :=
@@ -500,22 +505,21 @@ Infix "Data.List.NonEmpty.<|" := (_<|_) (at level 99).
 End Notations.
 
 (* Unbound variables:
-     None Some andb bool comparison cons false id list negb nil op_zt__ option pair
-     true Coq.Init.Datatypes.app Coq.Program.Basics.compose Data.Foldable.Foldable
-     Data.Foldable.fold Data.Foldable.foldMap Data.Foldable.foldl Data.Foldable.foldr
-     Data.Foldable.hash_compose Data.Foldable.length Data.Foldable.toList
-     Data.Functor.op_zlzdzg__ Data.Monoid.Mk_Any Data.Monoid.Mk_Product
-     Data.Monoid.Mk_Sum Data.Monoid.getAny Data.Monoid.getProduct Data.Monoid.getSum
-     Data.OldList.insert Data.OldList.isPrefixOf Data.OldList.nubBy
-     Data.OldList.partition Data.OldList.sort Data.OldList.sortBy Data.OldList.tails
-     Data.Ord.comparing Data.Traversable.Traversable Data.Traversable.traverse
-     Data.Tuple.fst Data.Tuple.snd GHC.Base.Alternative GHC.Base.Applicative
-     GHC.Base.Eq_ GHC.Base.Functor GHC.Base.Monad GHC.Base.Monoid GHC.Base.Ord
-     GHC.Base.build GHC.Base.const GHC.Base.errorWithoutStackTrace GHC.Base.fmap
-     GHC.Base.id GHC.Base.many GHC.Base.mappend GHC.Base.op_z2218U__
-     GHC.Base.op_zdzn__ GHC.Base.op_zeze__ GHC.Base.op_zgzgze__ GHC.Base.op_zlzd__
-     GHC.Base.op_zlztzg__ GHC.Base.op_ztzg__ GHC.Base.pure GHC.List.drop
-     GHC.List.dropWhile GHC.List.filter GHC.List.reverse GHC.List.scanl
-     GHC.List.scanr GHC.List.span GHC.List.splitAt GHC.List.take GHC.List.takeWhile
-     GHC.List.zip GHC.List.zipWith GHC.Num.Int GHC.Num.Num GHC.Num.op_zp__
+     None Some andb bool cons false id list negb nil op_zt__ option pair sortBy
+     toList true Coq.Init.Datatypes.app Coq.Program.Basics.compose
+     Data.Foldable.Foldable Data.Foldable.fold Data.Foldable.foldMap
+     Data.Foldable.foldl Data.Foldable.foldr Data.Foldable.hash_compose
+     Data.Foldable.length Data.Functor.op_zlzdzg__ Data.Monoid.Mk_Any
+     Data.Monoid.Mk_Product Data.Monoid.Mk_Sum Data.Monoid.getAny
+     Data.Monoid.getProduct Data.Monoid.getSum Data.OldList.isPrefixOf
+     Data.OldList.nubBy Data.OldList.partition Data.Ord.comparing
+     Data.Traversable.Traversable Data.Traversable.traverse Data.Tuple.fst
+     Data.Tuple.snd GHC.Base.Alternative GHC.Base.Applicative GHC.Base.Eq_
+     GHC.Base.Functor GHC.Base.Monad GHC.Base.Monoid GHC.Base.Ord GHC.Base.build
+     GHC.Base.const GHC.Base.fmap GHC.Base.id GHC.Base.many GHC.Base.mappend
+     GHC.Base.op_z2218U__ GHC.Base.op_zdzn__ GHC.Base.op_zeze__ GHC.Base.op_zgzgze__
+     GHC.Base.op_zlzd__ GHC.Base.op_zlztzg__ GHC.Base.op_ztzg__ GHC.Base.pure
+     GHC.List.drop GHC.List.dropWhile GHC.List.filter GHC.List.span GHC.List.splitAt
+     GHC.List.take GHC.List.takeWhile GHC.List.zip GHC.List.zipWith GHC.Num.Int
+     GHC.Num.Num GHC.Num.op_zp__
 *)

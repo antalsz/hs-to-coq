@@ -80,6 +80,11 @@ Definition in_scope (arg_2__ : RnEnv2) :=
   match arg_2__ with
     | RV2 _ _ in_scope => in_scope
   end.
+
+(* The Haskell code containes partial or untranslateable code, which needs the
+   following *)
+
+Axiom missingValue : forall {a}, a.
 (* Midamble *)
 
 Axiom uniqAway' : InScopeSet -> Core.Var -> Core.Var.
@@ -113,11 +118,6 @@ Parameter plusVarEnv_CD : forall {a}, (a -> a -> a) -> VarEnv a -> a -> VarEnv
                                a -> a -> VarEnv a.
 
 (* Converted value declarations: *)
-
-(* The Haskell code containes partial or untranslateable code, which needs the
-   following *)
-
-Axiom missingValue : forall {a}, a.
 
 (* Translating `instance Outputable.Outputable VarEnv.InScopeSet' failed: OOPS!
    Cannot find information for class Qualified "Outputable" "Outputable"

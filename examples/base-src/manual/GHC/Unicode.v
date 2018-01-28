@@ -110,8 +110,8 @@ Definition isUpper : Char -> bool := (fun arg_15__ =>
 Definition isSpace : Char -> bool := (fun arg_5__ =>
     (match arg_5__ with
       | c => (let uc := (fromIntegral (ord c) : Word)
-             in (if (uc <=? #887)
-                then (orb (orb (uc == #32) ((uc - #9) <=? #4)) (uc == #160))
+             in (if (uc <= #887)
+                then (orb (orb (uc == #32) ((uc - #9) <= #4)) (uc == #160))
                 else (iswspace (ord c) /= #0)))
     end)).
 
@@ -122,7 +122,7 @@ Definition isPrint : Char -> bool := (fun arg_14__ =>
 
 Definition isOctDigit : Char -> bool := (fun arg_7__ =>
     (match arg_7__ with
-      | c => (((fromIntegral (ord c - ord &#"0") : Word)) <=? #7)
+      | c => (((fromIntegral (ord c - ord &#"0") : Word)) <= #7)
     end)).
 
 Definition isLower : Char -> bool := (fun arg_16__ =>
@@ -132,18 +132,18 @@ Definition isLower : Char -> bool := (fun arg_16__ =>
 
 Definition isLatin1 : Char -> bool := (fun arg_2__ =>
     (match arg_2__ with
-      | c => (c <=? #152)  (* "ÿ" *)
+      | c => (c <= #152)  (* "ÿ" *)
     end)).
 
 Definition isDigit : Char -> bool := (fun arg_6__ =>
     (match arg_6__ with
-      | c => (((fromIntegral (ord c - ord &#"0") : Word)) <=? #9)
+      | c => (((fromIntegral (ord c - ord &#"0") : Word)) <= #9)
     end)).
 
 Definition isHexDigit : Char -> bool := (fun arg_8__ =>
     (match arg_8__ with
-      | c => (orb (orb (isDigit c) (((fromIntegral (ord c - ord &#"A") : Word)) <=? #5))
-                  (((fromIntegral (ord c - ord &#"a") : Word)) <=? #5))
+      | c => (orb (orb (isDigit c) (((fromIntegral (ord c - ord &#"A") : Word)) <= #5))
+                  (((fromIntegral (ord c - ord &#"a") : Word)) <= #5))
     end)).
 
 Definition isControl : Char -> bool := (fun arg_13__ =>
@@ -153,17 +153,17 @@ Definition isControl : Char -> bool := (fun arg_13__ =>
 
 Definition isAsciiUpper : Char -> bool := (fun arg_4__ =>
     (match arg_4__ with
-      | c => (andb (c >=? &#"A") (c <=? &#"Z"))
+      | c => (andb (c >= &#"A") (c <= &#"Z"))
     end)).
 
 Definition isAsciiLower : Char -> bool := (fun arg_3__ =>
     (match arg_3__ with
-      | c => (andb (c >=? &#"a") (c <=? &#"z"))
+      | c => (andb (c >= &#"a") (c <= &#"z"))
     end)).
 
 Definition isAscii : Char -> bool := (fun arg_1__ =>
     (match arg_1__ with
-      | c => (c <? #200)  (* &#"" *)
+      | c => (c < #200)  (* &#"" *)
     end)).
 
 Definition isAlphaNum : Char -> bool := (fun arg_12__ =>
@@ -209,7 +209,7 @@ Definition isSymbol : Char -> bool := (fun arg_10__ =>
 (* No type class instance declarations to convert. *)
 
 (* Unbound variables:
-     $ - /= <=? <? == >=? Char Word andb bool chr false fromIntegral iswalnum
+     $ - /= <= < == >=? Char Word andb bool chr false fromIntegral iswalnum
      iswalpha iswcntrl iswlower iswprint iswspace iswupper orb ord toEnum towlower
      towtitle towupper true wgencat
 *)

@@ -28,6 +28,7 @@ HANDMOD = \
   Data/Type/Equality \
   Data/Functor/Const \
   GHC/Err \
+  GHC/Unicode \
   Prelude\
 
 # Generated modules
@@ -141,10 +142,11 @@ clean:
 	rm -f counts.pdf *.aux *.log
 
 todo:
-	grep -a Axiom $(OUT)/*.v $(OUT)/*/*.v $(OUT)/*/*/*.v
-	grep -a Admitted $(OUT)/*.v $(OUT)/*/*.v $(OUT)/*/*/*.v
-	grep -a errorWithout $(OUT)/*.v $(OUT)/*/*.v $(OUT)/*/*/*.v
-	grep -a Parameter $(OUT)/*.v $(OUT)/*/*.v $(OUT)/*/*/*.v
+	-grep -a Parameter $(OUT)/*.v $(OUT)/*/*.v $(OUT)/*/*/*.v
+	-grep -a Axiom $(OUT)/*.v $(OUT)/*/*.v $(OUT)/*/*/*.v
+	-grep -a Admitted $(OUT)/*.v $(OUT)/*/*.v $(OUT)/*/*/*.v
+	-grep -a errorWithout $(OUT)/*.v $(OUT)/*/*.v $(OUT)/*/*/*.v
+
 
 counts.pdf: counts.fig
 	pdflatex counts

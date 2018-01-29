@@ -101,7 +101,8 @@ endif
 #                    #
 ######################
 
-VFILES:=GHC/Num.v\
+VFILES:=GHC/Wf.v\
+  GHC/Num.v\
   GHC/Char.v\
   GHC/Real.v\
   GHC/Enum.v\

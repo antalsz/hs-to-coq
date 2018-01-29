@@ -29,6 +29,7 @@ import Data.List (intercalate)
 import HsToCoq.Util.List hiding (unsnoc)
 import Data.List.NonEmpty (nonEmpty, NonEmpty)
 import qualified Data.List.NonEmpty as NEL
+import qualified HsToCoq.Util.List as NEL ((|>))
 import Data.Text (Text)
 import qualified Data.Text as T
 
@@ -839,8 +840,10 @@ convertTypedBinding toplvl convHsTy FunBind{..}   = runMaybeT $ do
         whichFix <- use currentDefinition >>= \case
             Nothing -> pure $ Fix . FixOne
             Just n -> use (edits.nonterminating.contains n) >>= \case
-                False -> pure $ Fix . FixOne
                 True  -> pure $ unsafeFix
+                False ->  use (edits.local_termination.at n.non M.empty.at (qualidBase name)) >>= \case
+                    Just ta -> pure $ wfFix ta
+                    Nothing -> pure $ Fix . FixOne
         (argBinders, match) <- convertFunction fun_matches
         pure $ let bodyVars = getFreeVars match
                in if name `S.member` bodyVars
@@ -857,6 +860,23 @@ unsafeFix (FixBody ident argBinders Nothing Nothing rhs)
  = App1 (Qualid (Bare "unsafeFix"))
         (Fun (Inferred Explicit (Ident ident) NEL.<| argBinders) rhs)
 unsafeFix _ = error "unsafeFix: cannot handle annotations or types"
+
+wfFix :: TerminationArgument -> FixBody -> Term
+wfFix (TerminationArgument order _) (FixBody ident argBinders Nothing Nothing rhs)
+ = appList (Qualid wfFixN) $ map PosArg
+    [ rel
+    , Fun argBinders measure
+    , Underscore
+    , Fun (argBinders NEL.|> Inferred Explicit (Ident ident)) rhs
+    ]
+  where
+    wfFixN = qualidMapBase (<> T.pack (show (NEL.length argBinders)))
+        "GHC.Wf.wfFix"
+    (rel, measure) = case order of
+        MeasureOrder measure Nothing    -> ("Coq.Init.Peano.lt", measure)
+        MeasureOrder measure (Just rel) -> (rel, measure)
+        WFOrder rel arg                 -> (rel, Qualid arg)
+wfFix _ _ = error "unsafeFix: cannot handle annotations or types"
 
 --------------------------------------------------------------------------------
 

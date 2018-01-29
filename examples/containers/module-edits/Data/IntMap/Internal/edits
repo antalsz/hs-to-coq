@@ -65,7 +65,8 @@ skip Data.IntMap.Internal.withoutBM
 skip Data.IntMap.Internal.withoutKeys
 
 # These are typical that they recurse left or right
-termination Data.IntMap.Internal.disjoint     {measure ((size_nat arg_0__) + (size_nat arg_1__))} termination_by_omega
+termination Data.IntMap.Internal.disjoint {measure ((size_nat arg_0__) + (size_nat arg_1__))}
+obligations Data.IntMap.Internal.disjoint termination_by_omega
 
 # Show stuff
 skip Data.IntMap.Internal.showsBars

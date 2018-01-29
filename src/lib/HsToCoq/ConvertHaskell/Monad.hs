@@ -10,6 +10,7 @@ module HsToCoq.ConvertHaskell.Monad (
   ConversionState(),
   currentModule, currentDefinition, edits, constructors, constructorTypes, constructorFields, recordFieldTypes, classDefns, defaultMethods, fixities, typecheckerEnvironment, renamed, axioms,
   ConstructorFields(..), _NonRecordFields, _RecordFields,
+  useProgramHere, 
   -- * Operations
   maybeWithCurrentModule, withCurrentModule, withNoCurrentModule, withCurrentModuleOrNone,
   withCurrentDefinition,
@@ -88,6 +89,12 @@ currentModule = _currentModule
 currentDefinition :: Getter ConversionState (Maybe Qualid)
 currentDefinition = _currentDefinition
 {-# INLINABLE currentDefinition #-}
+
+useProgramHere :: Getter ConversionState Bool
+useProgramHere = to $ \cs ->
+    case __currentDefinition cs of
+        Just n -> useProgram n (_edits cs)
+        Nothing -> False
 
 renamed :: HsNamespace -> Qualid -> Lens' ConversionState (Maybe Qualid)
 renamed ns x = edits.renamings.at (NamespacedIdent ns x)

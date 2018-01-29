@@ -448,9 +448,6 @@ instance Gallina CofixBody where
     renderGallina f </> render_args_oty H args oty
                     </> ":=" <+> align (renderGallina def)
 
-instance Gallina Annotation where
-  renderGallina' _ (Annotation var) = braces $ "struct" <+> renderGallina var
-
 instance Gallina MatchItem where
   renderGallina' _ (MatchItem scrutinee oas oin) =
     hang 2 $
@@ -516,7 +513,7 @@ instance Gallina Sentence where
   renderGallina' p (DefinitionSentence      def)    = renderGallina' p def
   renderGallina' p (InductiveSentence       ind)    = renderGallina' p ind
   renderGallina' p (FixpointSentence        fix)    = renderGallina' p fix
-  renderGallina' p (ProgramFixpointSentence pfx pf) = renderGallina' p pfx <!>
+  renderGallina' p (ProgramSentence         sen pf) = "Program" <+> renderGallina' p sen <!>
                                                       maybe "Admit Obligations." (\t -> "Solve Obligations with ("<> text t <>").") pf
   renderGallina' p (AssertionSentence       ass pf) = renderGallina' p ass <!> renderGallina' p pf
   renderGallina' p (ModuleSentence          mod)    = renderGallina' p mod
@@ -524,7 +521,6 @@ instance Gallina Sentence where
   renderGallina' _ (ExistingClassSentence   qid)  = "Existing Class" <+> renderGallina qid <> "."
   renderGallina' p (RecordSentence          rcd)    = renderGallina' p rcd
   renderGallina' p (InstanceSentence        ins)    = renderGallina' p ins
-  renderGallina' p (ProgramInstanceSentence ins)    = "Program" <+> renderGallina' p ins
   renderGallina' p (NotationSentence        not)    = renderGallina' p not
   renderGallina' p (ArgumentsSentence       arg)    = renderGallina' p arg
   renderGallina' p (CommentSentence         com)    = renderGallina' p com
@@ -593,18 +589,13 @@ instance Gallina Fixpoint where
   renderGallina' _ (Fixpoint   bodies nots) = render_mutual_def "Fixpoint"   bodies nots
   renderGallina' _ (CoFixpoint bodies nots) = render_mutual_def "CoFixpoint" bodies nots
 
-instance Gallina ProgramFixpoint where
-  renderGallina' _ (ProgramFixpoint name params order ty body) =
-    hang 2 ("Program Fixpoint" <+> renderGallina name
-                               <> spaceIf params <> render_args H params
-                               <+> renderGallina order
-                               <+> ":" <+> renderGallina ty <+> ":=") <$$> renderGallina body <> "."
-
 instance Gallina Order where
-  renderGallina' _ (MeasureOrder expr rel) =
-    "{" <+> "measure" <+> renderGallina' (appPrec+1) expr <+> maybe empty (parens . renderGallina) rel <+> "}"
-  renderGallina' _ (WFOrder rel ident) =
-    "{" <+> "wf" <+> renderGallina' (appPrec+1) rel <+> renderGallina ident <+> "}"
+  renderGallina' _ (StructOrder var) = braces $
+    "struct" <+> renderGallina var
+  renderGallina' _ (MeasureOrder expr rel) = braces $
+    "measure" <+> renderGallina' (appPrec+1) expr <+> maybe empty (parens . renderGallina) rel
+  renderGallina' _ (WFOrder rel ident) = braces $
+    "wf" <+> renderGallina' (appPrec+1) rel <+> renderGallina ident
 
 
 instance Gallina Assertion where

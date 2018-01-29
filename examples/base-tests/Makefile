@@ -17,6 +17,7 @@ PASS = \
   OpMeth \
   NestTup \
   Pair \
+  SplitAt
 
 # tests that *should* pass but currently fail
 TODO_PASS  = \

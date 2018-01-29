@@ -43,8 +43,10 @@ skip Data.Map.Internal.showsTreeHang
 skip Data.Map.Internal.fromListConstr
 skip Data.Map.Internal.mapDataType
 
-termination Data.Map.Internal.link {measure (Nat.add (map_size arg_2__) (map_size arg_3__))} termination_by_omega
-termination Data.Map.Internal.merge {measure (Nat.add (map_size arg_0__) (map_size arg_1__))} termination_by_omega
+termination Data.Map.Internal.link {measure (Nat.add (map_size arg_2__) (map_size arg_3__))}
+obligations Data.Map.Internal.link termination_by_omega
+termination Data.Map.Internal.merge {measure (Nat.add (map_size arg_0__) (map_size arg_1__))}
+obligations Data.Map.Internal.merge termination_by_omega
 
 nonterminating Data.Map.Internal.fromDistinctAscList
 nonterminating Data.Map.Internal.fromDistinctDescList

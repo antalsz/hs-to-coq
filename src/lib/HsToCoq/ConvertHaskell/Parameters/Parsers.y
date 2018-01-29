@@ -58,6 +58,7 @@ import HsToCoq.ConvertHaskell.Parameters.Parsers.Lexing
   axiomatize      { TokWord    "axiomatize"     }
   nonterminating  { TokWord    "nonterminating" }
   termination     { TokWord    "termination"    }
+  obligations     { TokWord    "obligations"    }
   method          { TokWord    "method"         }
   rename          { TokWord    "rename"         }
   rewrite         { TokWord    "rewrite"        }
@@ -86,7 +87,6 @@ import HsToCoq.ConvertHaskell.Parameters.Parsers.Lexing
   'Let'           { TokWord    "Let"            }
   'let'           { TokWord    "let"            }
   'in'            { TokWord    "in"             }
-  'Program'       { TokWord    "Program"        }
   'Fixpoint'      { TokWord    "Fixpoint"       }
   'CoFixpoint'    { TokWord    "CoFixpoint"     }
   'Local'         { TokWord    "Local"          }
@@ -217,7 +217,6 @@ CoqDefinitionRaw :: { CoqDefinition }
   | Definition      { CoqDefinitionDef      $1 }
   | Fixpoint        { CoqFixpointDef        $1 }
   | Instance        { CoqInstanceDef        $1 }
-  | ProgramFixpoint { CoqProgramFixpointDef $1 }
 
 CoqDefinition :: { CoqDefinition }
   : Coq(CoqDefinitionRaw) '.' { $1 }
@@ -230,28 +229,26 @@ Scope :: { Ident }
   : Word    { $1     }
   | type    { "type" } -- This is so common, we have to special-case it
 
-TerminationArgument :: { TerminationArgument }
- : Order Optional(Word) { TerminationArgument $1 $2 }
-
 Edit :: { Edit }
-  : type synonym Word ':->' Word                      { TypeSynonymTypeEdit   $3 $5                            }
-  | data type arguments Qualid DataTypeArguments      { DataTypeArgumentsEdit $4 $5                            }
-  | redefine CoqDefinition                            { RedefinitionEdit      $2                               }
-  | add Word CoqDefinition                            { AddEdit               (mkModuleName (T.unpack $2)) $3  }
-  | skip Qualid                                       { SkipEdit              $2                               }
-  | skip method Qualid Word                           { SkipMethodEdit        $3 $4                            }
-  | skip module Word                                  { SkipModuleEdit        (mkModuleName (T.unpack $3))     }
-  | manual notation Word                              { HasManualNotationEdit (mkModuleName (T.unpack $3))     }
-  | nonterminating Qualid                             { NonterminatingEdit    $2                               }
-  | termination Qualid TerminationArgument            { TerminationEdit       $2 Nothing $3                    }
-  | termination Word 'in' Qualid TerminationArgument  { TerminationEdit       $4 (Just $2) $5                  }
-  | rename Renaming                                   { RenameEdit            (fst $2) (snd $2)                }
-  | axiomatize module Word                            { AxiomatizeModuleEdit  (mkModuleName (T.unpack $3))     }
-  | add scope Scope for ScopePlace Qualid             { AdditionalScopeEdit   $5 $6 $3                         }
-  | order Some(Qualid)                                { OrderEdit             $2                               }
-  | class kinds Qualid SepBy1(Term,',')               { ClassKindEdit         $3 $4                            }
-  | data  kinds Qualid SepBy1(Term,',')               { DataKindEdit          $3 $4                            }
-  | rewrite Rewrite                                   { RewriteEdit           $2                               }
+  : type synonym Word ':->' Word                 { TypeSynonymTypeEdit   $3 $5                            }
+  | data type arguments Qualid DataTypeArguments { DataTypeArgumentsEdit $4 $5                            }
+  | redefine CoqDefinition                       { RedefinitionEdit      $2                               }
+  | add Word CoqDefinition                       { AddEdit               (mkModuleName (T.unpack $2)) $3  }
+  | skip Qualid                                  { SkipEdit              $2                               }
+  | skip method Qualid Word                      { SkipMethodEdit        $3 $4                            }
+  | skip module Word                             { SkipModuleEdit        (mkModuleName (T.unpack $3))     }
+  | manual notation Word                         { HasManualNotationEdit (mkModuleName (T.unpack $3))     }
+  | nonterminating Qualid                        { NonterminatingEdit    $2                               }
+  | termination Qualid Order                     { TerminationEdit       $2 Nothing $3                    }
+  | termination Word 'in' Qualid Order           { TerminationEdit       $4 (Just $2) $5                  }
+  | obligations Qualid Word                      { ObligationsEdit       $2 $3 }
+  | rename Renaming                              { RenameEdit            (fst $2) (snd $2)                }
+  | axiomatize module Word                       { AxiomatizeModuleEdit  (mkModuleName (T.unpack $3))     }
+  | add scope Scope for ScopePlace Qualid        { AdditionalScopeEdit   $5 $6 $3                         }
+  | order Some(Qualid)                           { OrderEdit             $2                               }
+  | class kinds Qualid SepBy1(Term,',')          { ClassKindEdit         $3 $4                            }
+  | data  kinds Qualid SepBy1(Term,',')          { DataKindEdit          $3 $4                            }
+  | rewrite Rewrite                              { RewriteEdit           $2                               }
 
 Edits :: { [Edit] }
   : Lines(Edit)    { $1 }
@@ -342,15 +339,12 @@ FixBody :: { FixBody }
 CofixBody :: { CofixBody }
   : Qualid Binders Optional(TypeAnnotation) ':=' Term    { CofixBody $1 $2 $3 $5 }
 
-Annotation :: { Annotation }
-  : '{' struct Qualid '}'    { Annotation $3 }
-
 -- There is an ambiguity between @{implicitVar : ty}@ and @{struct x}@.  Our
 -- options are either (a) use right-recursion and incur stack space blowup, or
 -- (b) parse any mix of binders and annotations, then parse them out.  I chose
 -- option (b).
-FixBinders :: { (NonEmpty Binder, Maybe Annotation) }
-  : Some(Or(Binder,Annotation))
+FixBinders :: { (NonEmpty Binder, Maybe Order) }
+  : Some(Or(Binder,Order))
       {% case partitionEithers $ toList $1 of
            (b : bs, [ann]) | isRight (NEL.last $1) -> pure (b :| bs, Just ann)
                            | otherwise             -> throwError "decreasing argument for fixpoint specified too early"
@@ -454,13 +448,10 @@ Fixpoint :: { Fixpoint }
   : 'Fixpoint'   MutualDefinitions(FixBody)      { uncurry Fixpoint   $2 }
   | 'CoFixpoint' MutualDefinitions(CofixBody)    { uncurry CoFixpoint $2 }
 
-ProgramFixpoint :: { ProgramFixpoint }
-  : 'Program' 'Fixpoint' Qualid Many(Binder) Order TypeAnnotation ':=' Term  { ProgramFixpoint $3 $4 $5 $6 $8 }
-
 Order :: { Order }
-  : '{' 'measure' Atom OptionalParens(Term) '}'    { MeasureOrder $3 $4 }
+  : '{' struct Qualid '}'                          { StructOrder $3 }
+  | '{' 'measure' Atom OptionalParens(Term) '}'    { MeasureOrder $3 $4 }
   | '{' 'wf' Atom Qualid '}'                       { WFOrder $3 $4 }
-
 
 Instance :: { InstanceDefinition }
   : 'Instance' Qualid Many(Binder) TypeAnnotation ':=' '{' SepBy(FieldDefinition, ';')  '}'

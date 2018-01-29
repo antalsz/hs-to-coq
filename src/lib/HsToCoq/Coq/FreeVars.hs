@@ -84,9 +84,6 @@ instance Binding Binder where
     freeVars ty
     getFVs
 
-instance Binding Annotation where
-  binding f (Annotation x) = binding f x
-
 instance Binding MatchItem where
   binding f (MatchItem t oas oin) = (freeVars t *>) . binding f oas . binding f oin
 
@@ -160,14 +157,13 @@ instance Binding Sentence where
   binding f (DefinitionSentence       def)       = binding f def
   binding f (InductiveSentence        ind)       = binding f ind
   binding f (FixpointSentence         fix)       = binding f fix
-  binding f (ProgramFixpointSentence  pfx _)     = binding f pfx
+  binding f (ProgramSentence          sen _)     = binding f sen
   binding f (AssertionSentence        assert pf) = binding f assert . (freeVars pf *>)
   binding _ (ModuleSentence           mod)       = (freeVars mod *>)
   binding f (ClassSentence            cls)       = binding f cls
   binding _ (ExistingClassSentence    name)      = (occurrence name *>)
   binding f (RecordSentence           rcd)       = binding f rcd
   binding f (InstanceSentence         ins)       = binding f ins
-  binding f (ProgramInstanceSentence  ins)       = binding f ins
   binding _ (NotationSentence         not)       = (freeVars not *>)
   binding f (LocalModuleSentence      lmd)       = binding f lmd
   binding _ (ArgumentsSentence        arg)       = (freeVars arg *>)
@@ -203,11 +199,6 @@ instance Binding Inductive where
 instance Binding Fixpoint where
   binding f (Fixpoint   fbs nots) = binding f (foldMap names fbs) . (freeVars fbs *> freeVars nots *>)
   binding f (CoFixpoint cbs nots) = binding f (foldMap names cbs) . (freeVars cbs *> freeVars nots *>)
-
-instance Binding ProgramFixpoint where
-  binding f (ProgramFixpoint name args order ty body) =
-    (binding f args (freeVars order *> freeVars ty *> binding f name (freeVars body)) *>) .
-    binding f name
 
 instance Binding Assertion where
   binding f (Assertion kwd name args ty) =
@@ -371,6 +362,7 @@ instance FreeVars Arg where
     -- of a Gallina-level variable.
 
 instance FreeVars Order where
+  freeVars (StructOrder qid) = occurrence qid
   freeVars (MeasureOrder expr rel) = freeVars expr *> freeVars rel
   freeVars (WFOrder rel qid) = freeVars rel *> occurrence qid
 
@@ -405,8 +397,9 @@ instance FreeVars CofixBodies where
     in binding' (x `S.insert` foldMap names cbs) $ freeVars cbs
 
 instance FreeVars FixBody where
-  freeVars (FixBody f args annot oty def) =
-    binding' f . binding' args . binding' annot $ do
+  freeVars (FixBody f args order oty def) =
+    binding' f . binding' args $ do
+      freeVars order
       freeVars oty
       freeVars def
 

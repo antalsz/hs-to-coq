@@ -18,8 +18,10 @@ skip Data.Set.Internal.showsBars
 skip Data.Set.Internal.fromListConstr
 skip Data.Set.Internal.setDataType
 
-termination Data.Set.Internal.link {measure (Nat.add (set_size arg_1__) (set_size arg_2__))} termination_by_omega
-termination Data.Set.Internal.merge {measure (Nat.add (set_size arg_0__) (set_size arg_1__))} termination_by_omega
+termination Data.Set.Internal.link {measure (Nat.add (set_size arg_1__) (set_size arg_2__))}
+obligations Data.Set.Internal.link termination_by_omega
+termination Data.Set.Internal.merge {measure (Nat.add (set_size arg_0__) (set_size arg_1__))}
+obligations Data.Set.Internal.merge termination_by_omega
 
 ## local functions
 nonterminating Data.Set.Internal.fromDistinctAscList

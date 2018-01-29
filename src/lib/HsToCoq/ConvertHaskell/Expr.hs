@@ -169,7 +169,7 @@ convertExpr' (HsCase e mg) = do
 
 convertExpr' (HsIf overloaded c t f) =
   if maybe True isNoSyntaxExpr overloaded
-  then IfBool <$> convertLExpr c <*> convertLExpr t <*> convertLExpr f
+  then ifThenElse <*> convertLExpr c <*> convertLExpr t <*> convertLExpr f
   else convUnsupported "overloaded if-then-else"
 
 convertExpr' (HsMultiIf PlaceHolder lgrhsList) =
@@ -485,6 +485,8 @@ convertPatternBinding hsPat hsExp buildTrivial buildNontrivial fallback = do
   (pat, guards) <- runWriterT $ convertLPat hsPat
   exp <- convertLExpr hsExp
 
+  ib <- ifThenElse
+
   refutability pat >>= \case
     Trivial tpat | null guards ->
       buildTrivial exp $ Fun [Inferred Coq.Explicit $ maybe UnderscoreName Ident tpat]
@@ -499,9 +501,7 @@ convertPatternBinding hsPat hsExp buildTrivial buildNontrivial fallback = do
             | SoleConstructor <- nontrivial = []
             | otherwise                     = [ Equation [MultPattern [UnderscorePat]] fallback ]
           guarded tm | null guards = tm
-                     | otherwise   = IfBool (foldr1 (App2 "andb") guards)
-                                            tm
-                                            fallback
+                     | otherwise   = ib (foldr1 (App2 "andb") guards) tm fallback
 
       buildNontrivial exp cont $ \body rest ->
         Let cont [Inferred Coq.Explicit $ Ident arg] Nothing
@@ -555,9 +555,9 @@ convertListComprehension allStmts = case fmap unLoc <$> unsnoc allStmts of
     toExpr (BodyStmt e _bind _guard _PlaceHolder) rest =
       isTrueLExpr e >>= \case
         True  -> rest
-        False -> IfBool <$> convertLExpr e
-                        <*> rest
-                        <*> pure (Var "nil")
+        False -> ifThenElse <*> convertLExpr e
+                            <*> rest
+                            <*> pure (Var "nil")
 
     -- TODO: `concatMap` is really…?
     toExpr (BindStmt pat exp _bind _fail PlaceHolder) rest =
@@ -786,7 +786,7 @@ guardTerm gs rhs failure = go gs where
   go (BoolGuard "false" : _) = pure failure
 
   go (BoolGuard cond : gs) =
-    IfBool cond <$> go gs <*> pure failure
+    ifThenElse <*> pure cond <*> go gs <*> pure failure
   -- if the pattern is exhaustive, don't include an otherwise case
   go (PatternGuard pat exp : gs) | isWildCoq pat = do
     guarded' <- go gs
@@ -842,8 +842,8 @@ convertTypedBinding toplvl convHsTy FunBind{..}   = runMaybeT $ do
             Just n -> use (edits.nonterminating.contains n) >>= \case
                 True  -> pure $ unsafeFix
                 False ->  use (edits.local_termination.at n.non M.empty.at (qualidBase name)) >>= \case
-                    Just ta -> pure $ wfFix ta
-                    Nothing -> pure $ Fix . FixOne
+                    Just order -> pure $ wfFix order
+                    Nothing    -> pure $ Fix . FixOne
         (argBinders, match) <- convertFunction fun_matches
         pure $ let bodyVars = getFreeVars match
                in if name `S.member` bodyVars
@@ -861,8 +861,8 @@ unsafeFix (FixBody ident argBinders Nothing Nothing rhs)
         (Fun (Inferred Explicit (Ident ident) NEL.<| argBinders) rhs)
 unsafeFix _ = error "unsafeFix: cannot handle annotations or types"
 
-wfFix :: TerminationArgument -> FixBody -> Term
-wfFix (TerminationArgument order _) (FixBody ident argBinders Nothing Nothing rhs)
+wfFix :: Order -> FixBody -> Term
+wfFix order (FixBody ident argBinders Nothing Nothing rhs)
  = appList (Qualid wfFixN) $ map PosArg
     [ rel
     , Fun argBinders measure
@@ -873,6 +873,7 @@ wfFix (TerminationArgument order _) (FixBody ident argBinders Nothing Nothing rh
     wfFixN = qualidMapBase (<> T.pack (show (NEL.length argBinders)))
         "GHC.Wf.wfFix"
     (rel, measure) = case order of
+        StructOrder _                   -> error "wfFix cannot handle structural recursion"
         MeasureOrder measure Nothing    -> ("Coq.Init.Peano.lt", measure)
         MeasureOrder measure (Just rel) -> (rel, measure)
         WFOrder rel arg                 -> (rel, Qualid arg)
@@ -958,6 +959,10 @@ smartLet ident rhs (IfBool c t e)
     | ident `S.notMember` getFreeVars c
     , ident `S.notMember` getFreeVars t
     = IfBool c t (smartLet ident rhs e)
+smartLet ident rhs (IfCase c t e)
+    | ident `S.notMember` getFreeVars c
+    , ident `S.notMember` getFreeVars t
+    = IfCase c t (smartLet ident rhs e)
 smartLet ident rhs
     (Coq.Match [MatchItem t Nothing Nothing] Nothing eqns)
     | ident `S.notMember` getFreeVars eqns
@@ -970,3 +975,13 @@ patternFailure = Var "patternFailure"
 
 missingValue :: Term
 missingValue = Var "missingValue"
+
+-- | Program does not work nicely with if-then-else, so if we believe we are
+-- producing a term that ends up in a Program Fixpoint or Program Definition,
+-- then desguar if-then-else using case statements.
+ifThenElse :: ConversionMonad m => m (Term -> Term -> Term -> Term)
+ifThenElse =
+    use useProgramHere >>= \case
+        False -> pure $ IfBool
+        True ->  pure $ IfCase
+

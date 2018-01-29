@@ -68,10 +68,14 @@ rewrite forall, Data.IntSet.Internal.revNat = Data.IntSet.Internal.revNatSafe
 skip Data.IntSet.Internal.suffixBitMask
 
 # These are typical that they recurse left or right
-termination Data.IntSet.Internal.union        {measure ((size_nat arg_0__) + (size_nat arg_1__))} termination_by_omega
-termination Data.IntSet.Internal.difference   {measure ((size_nat arg_0__) + (size_nat arg_1__))} termination_by_omega
-termination Data.IntSet.Internal.intersection {measure ((size_nat arg_0__) + (size_nat arg_1__))} termination_by_omega
-termination Data.IntSet.Internal.disjoint     {measure ((size_nat arg_0__) + (size_nat arg_1__))} termination_by_omega
+termination Data.IntSet.Internal.union        {measure ((size_nat arg_0__) + (size_nat arg_1__))}
+obligations Data.IntSet.Internal.union        termination_by_omega
+termination Data.IntSet.Internal.difference   {measure ((size_nat arg_0__) + (size_nat arg_1__))}
+obligations Data.IntSet.Internal.difference   termination_by_omega
+termination Data.IntSet.Internal.intersection {measure ((size_nat arg_0__) + (size_nat arg_1__))}
+obligations Data.IntSet.Internal.intersection termination_by_omega
+termination Data.IntSet.Internal.disjoint     {measure ((size_nat arg_0__) + (size_nat arg_1__))}
+obligations Data.IntSet.Internal.disjoint     termination_by_omega
 
 # Show stuff
 skip Data.IntSet.Internal.showsBars

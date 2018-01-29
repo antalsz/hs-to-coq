@@ -37,9 +37,6 @@ instance Subst Binder where
   subst f (BindLet x oty val)  = BindLet x (subst f oty) (subst f val)
   subst f (Generalized ex ty)  = Generalized ex (subst f ty)
 
-instance Subst Annotation where
-  subst _f (Annotation x) = Annotation x
-
 instance Subst MatchItem where
   subst f (MatchItem t oas oin) = MatchItem (subst f t) oas oin
 
@@ -79,13 +76,12 @@ instance Subst Sentence where
   subst f (DefinitionSentence      def)       = DefinitionSentence        (subst f def)
   subst f (InductiveSentence       ind)       = InductiveSentence         (subst f ind)
   subst f (FixpointSentence        fix)       = FixpointSentence          (subst f fix)
-  subst f (ProgramFixpointSentence pfx pf)    = ProgramFixpointSentence   (subst f pfx) pf
+  subst f (ProgramSentence         sen pf)    = ProgramSentence           (subst f sen) pf
   subst f (AssertionSentence       assert pf) = AssertionSentence         (subst f assert) pf
   subst f (ModuleSentence          mod)       = ModuleSentence            (subst f mod)
   subst f (ClassSentence           cls)       = ClassSentence             (subst f cls)
   subst f (RecordSentence          rcd)       = RecordSentence            (subst f rcd)
   subst f (InstanceSentence        ins)       = InstanceSentence          (subst f ins)
-  subst f (ProgramInstanceSentence ins)       = ProgramInstanceSentence   (subst f ins)
   subst f (NotationSentence        not)       = NotationSentence          (subst f not)
   subst f (LocalModuleSentence     lmd)       = LocalModuleSentence       (subst f lmd)
   subst _ s@(ExistingClassSentence  _)        = s
@@ -120,12 +116,9 @@ instance Subst Fixpoint where
   subst f (CoFixpoint cbs nots) = CoFixpoint (subst f cbs) (subst f nots)
 
 instance Subst Order where
-  subst f (MeasureOrder expr rel) = MeasureOrder (subst f expr) (subst f rel)
-  subst f (WFOrder rel ident)     = WFOrder      (subst f rel)  ident
-
-instance Subst ProgramFixpoint where
-  subst f (ProgramFixpoint name args order ty body) =
-   ProgramFixpoint name (subst f args) (subst f order) (subst f ty) (subst f body)
+  subst _f (StructOrder ident)     = StructOrder ident
+  subst f  (MeasureOrder expr rel) = MeasureOrder (subst f expr) (subst f rel)
+  subst f  (WFOrder rel ident)     = WFOrder      (subst f rel)  ident
 
 instance Subst Assertion where
   subst f (Assertion kwd name args ty) = Assertion kwd name (subst f args) (subst f ty)

@@ -1,1 +1,2 @@
-termination QuickSort2.quicksort {measure (length arg_0__)} solve_quicksort_termination
+termination QuickSort2.quicksort {measure (length arg_0__)}
+obligations QuickSort2.quicksort solve_quicksort_termination

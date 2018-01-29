@@ -455,7 +455,7 @@ topoSortInstance (InstanceDefinition instanceName params ty members mp) = go sor
             let instTerm = Fun (Inferred Explicit UnderscoreName NE.:| [Inferred Explicit (Ident "k")])
                                (App1 (Var "k") body)
 
-            pure [ProgramInstanceSentence (InstanceTerm instanceName params ty instTerm mp)]
+            pure [ProgramSentence (InstanceSentence (InstanceTerm instanceName params ty instTerm mp)) Nothing]
 
 --------------------------------------------------------------------------------
 

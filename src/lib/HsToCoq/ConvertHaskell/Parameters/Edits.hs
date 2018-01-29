@@ -1,14 +1,14 @@
-{-# LANGUAGE LambdaCase, TemplateHaskell, RecordWildCards, OverloadedStrings, FlexibleContexts #-}
+{-# LANGUAGE LambdaCase, TemplateHaskell, RecordWildCards, OverloadedStrings, FlexibleContexts, RankNTypes #-}
 
 module HsToCoq.ConvertHaskell.Parameters.Edits (
-  Edits(..), typeSynonymTypes, dataTypeArguments, nonterminating, termination,  local_termination, redefinitions, additions, skipped, hasManualNotation, skippedMethods, skippedModules, axiomatizedModules, additionalScopes, orders, renamings, classKinds, dataKinds, rewrites,
+  Edits(..), typeSynonymTypes, dataTypeArguments, nonterminating, termination,  local_termination, redefinitions, additions, skipped, hasManualNotation, skippedMethods, skippedModules, axiomatizedModules, additionalScopes, orders, renamings, classKinds, dataKinds, rewrites, obligations,
   HsNamespace(..), NamespacedIdent(..), Renamings,
   DataTypeArguments(..), dtParameters, dtIndices,
   CoqDefinition(..), definitionSentence,
   ScopePlace(..),
-  TerminationArgument(..),
   Rewrite(..), Rewrites,
   Edit(..), addEdit, buildEdits,
+  useProgram,
 ) where
 
 import Prelude hiding (tail)
@@ -19,10 +19,9 @@ import Control.Monad
 import Control.Monad.Except
 import Data.Semigroup
 import Data.List.NonEmpty (NonEmpty(..), toList, tail)
-import Data.Text (Text)
 import qualified Data.Text as T
 
-import Data.Map (Map, singleton, unionWith)
+import Data.Map (Map, singleton, unionWith, member)
 import Data.Set (Set, singleton, union)
 import Data.Tuple
 
@@ -41,7 +40,6 @@ makeLenses ''DataTypeArguments
 
 data CoqDefinition = CoqDefinitionDef      Definition
                    | CoqFixpointDef        Fixpoint
-                   | CoqProgramFixpointDef ProgramFixpoint
                    | CoqInductiveDef       Inductive
                    | CoqInstanceDef        InstanceDefinition
                    deriving (Eq, Ord, Show, Read)
@@ -49,7 +47,6 @@ data CoqDefinition = CoqDefinitionDef      Definition
 definitionSentence :: CoqDefinition -> Sentence
 definitionSentence (CoqDefinitionDef      def) = DefinitionSentence       def
 definitionSentence (CoqFixpointDef        fix) = FixpointSentence         fix
-definitionSentence (CoqProgramFixpointDef pfx) = ProgramFixpointSentence  pfx Nothing
 definitionSentence (CoqInductiveDef       ind) = InductiveSentence        ind
 definitionSentence (CoqInstanceDef        ind) = InstanceSentence         ind
 
@@ -57,16 +54,11 @@ definitionSentence (CoqInstanceDef        ind) = InstanceSentence         ind
 data ScopePlace = SPValue | SPConstructor
                 deriving (Eq, Ord, Enum, Bounded, Show, Read)
 
-data TerminationArgument = TerminationArgument
-    { taOrder :: Order
-    , taTactic :: Maybe Text
-    }
-                deriving (Eq, Ord, Show, Read)
-
 data Edit = TypeSynonymTypeEdit   Ident Ident
           | DataTypeArgumentsEdit Qualid DataTypeArguments
           | NonterminatingEdit    Qualid
-          | TerminationEdit       Qualid (Maybe Ident) TerminationArgument
+          | TerminationEdit       Qualid (Maybe Ident) Order
+          | ObligationsEdit       Qualid Tactics
           | RedefinitionEdit      CoqDefinition
           | AddEdit               ModuleName CoqDefinition
           | SkipEdit              Qualid
@@ -99,8 +91,8 @@ type Renamings = Map NamespacedIdent Qualid
 data Edits = Edits { _typeSynonymTypes   :: !(Map Ident Ident)
                    , _dataTypeArguments  :: !(Map Qualid DataTypeArguments)
                    , _nonterminating     :: !(Set Qualid)
-                   , _termination        :: !(Map Qualid TerminationArgument)
-                   , _local_termination  :: !(Map Qualid (Map Ident TerminationArgument))
+                   , _termination        :: !(Map Qualid Order)
+                   , _local_termination  :: !(Map Qualid (Map Ident Order))
                    , _redefinitions      :: !(Map Qualid CoqDefinition)
                    , _additions          :: !(Map ModuleName [Sentence])
                    , _skipped            :: !(Set Qualid)
@@ -114,17 +106,26 @@ data Edits = Edits { _typeSynonymTypes   :: !(Map Ident Ident)
                    , _dataKinds          :: !(Map Qualid (NonEmpty Term))
                    , _renamings          :: !Renamings
                    , _rewrites           :: ![Rewrite]
+                   , _obligations        :: !(Map Qualid Tactics)
                    }
            deriving (Eq, Ord, Show)
 makeLenses ''Edits
 
+-- Derived edits
+useProgram :: Qualid -> Edits -> Bool
+useProgram name edits = or
+    [ name `member` _termination edits
+    , name `member` _local_termination edits
+    , name `member`_obligations edits
+    ]
+
 instance Semigroup Edits where
-  (<>) (Edits tst1 dta1 ntm1 trm1 ltm1 rdf1 add1 skp1 smth1 smod1 axm1 hmn1 ads1 ord1 rnm1 clk1 dk1 rws1)
-       (Edits tst2 dta2 ntm2 trm2 ltm2 rdf2 add2 skp2 smth2 smod2 axm2 hmn2 ads2 ord2 rnm2 clk2 dk2 rws2) =
-    Edits (tst1 <> tst2) (dta1 <> dta2) (ntm1 <> ntm2) (trm1 <> trm2) (ltm1 <> ltm2) (rdf1 <> rdf2) (add1 <> add2) (skp1 <> skp2) (smth1 <> smth2) (smod1 <> smod2) (axm1 <> axm2) (hmn1 <> hmn2) (ads1 <> ads2) (ord1 <> ord2) (rnm1 <> rnm2) (clk1 <> clk2) (dk1 <> dk2) (rws1 <> rws2)
+  (<>) (Edits tst1 dta1 ntm1 trm1 ltm1 rdf1 add1 skp1 smth1 smod1 axm1 hmn1 ads1 ord1 rnm1 clk1 dk1 rws1 obl1)
+       (Edits tst2 dta2 ntm2 trm2 ltm2 rdf2 add2 skp2 smth2 smod2 axm2 hmn2 ads2 ord2 rnm2 clk2 dk2 rws2 obl2) =
+    Edits (tst1 <> tst2) (dta1 <> dta2) (ntm1 <> ntm2) (trm1 <> trm2) (ltm1 <> ltm2) (rdf1 <> rdf2) (add1 <> add2) (skp1 <> skp2) (smth1 <> smth2) (smod1 <> smod2) (axm1 <> axm2) (hmn1 <> hmn2) (ads1 <> ads2) (ord1 <> ord2) (rnm1 <> rnm2) (clk1 <> clk2) (dk1 <> dk2) (rws1 <> rws2) (obl1 <> obl2)
 
 instance Monoid Edits where
-  mempty  = Edits mempty mempty mempty mempty mempty mempty mempty mempty mempty mempty mempty mempty mempty mempty mempty mempty mempty mempty
+  mempty  = Edits mempty mempty mempty mempty mempty mempty mempty mempty mempty mempty mempty mempty mempty mempty mempty mempty mempty mempty mempty
   mappend = (<>)
 
 -- Module-local'
@@ -161,6 +162,7 @@ descDuplEdit = \case
   RenameEdit            hs _               -> duplicate_for   "renamings"                         (prettyNSIdent hs)
   ClassKindEdit         cls _              -> duplicateQ_for  "class kinds"                       cls
   DataKindEdit          dat _              -> duplicateQ_for  "data kinds"                        dat
+  ObligationsEdit       what _             -> duplicateQ_for  "obligation kinds"                  what
   AddEdit               _ _                -> error "Add edits are never duplicate"
   RewriteEdit           _                  -> error "Rewrites are never duplicate"
   OrderEdit             _                  -> error "Order edits are never duplicate"
@@ -187,6 +189,7 @@ addEdit e = case e of
   AxiomatizeModuleEdit  mod                -> addFresh e axiomatizedModules                     mod          ()
   AdditionalScopeEdit   place name scope   -> addFresh e additionalScopes                       (place,name) scope
   RenameEdit            hs to              -> addFresh e renamings                              hs           to
+  ObligationsEdit       what tac           -> addFresh e obligations                            what         tac
   ClassKindEdit         cls kinds          -> addFresh e classKinds                             cls          kinds
   DataKindEdit          cls kinds          -> addFresh e dataKinds                              cls          kinds
   AddEdit               mod def            -> return . (additions.at mod.non mempty %~ (definitionSentence def:))
@@ -199,7 +202,6 @@ defName (CoqDefinitionDef (DefinitionDef _ x _ _ _))                  = x
 defName (CoqDefinitionDef (LetDef          x _ _ _))                  = x
 defName (CoqFixpointDef   (Fixpoint    (FixBody   x _ _ _ _ :| _) _)) = x
 defName (CoqFixpointDef   (CoFixpoint  (CofixBody x _ _ _   :| _) _)) = x
-defName (CoqProgramFixpointDef  (ProgramFixpoint x _ _ _ _))          = x
 defName (CoqInductiveDef  (Inductive   (IndBody   x _ _ _   :| _) _)) = x
 defName (CoqInductiveDef  (CoInductive (IndBody   x _ _ _   :| _) _)) = x
 defName (CoqInstanceDef   (InstanceDefinition x _ _ _ _))             = x

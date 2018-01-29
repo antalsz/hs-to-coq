@@ -6,7 +6,7 @@ module HsToCoq.Coq.Gallina.Util (
   pattern VarPat, pattern App1Pat, pattern App2Pat, pattern App3Pat,
   pattern BName,
   maybeForall,
-  pattern IfBool,
+  pattern IfBool, pattern IfCase,
   pattern LetFix, pattern LetCofix,
 
   -- * Manipulating 'Term's
@@ -71,8 +71,17 @@ maybeForall = maybe id Forall . nonEmpty . toList
 {-# SPECIALIZE maybeForall :: [Binder]        -> Term -> Term #-}
 {-# SPECIALIZE maybeForall :: NonEmpty Binder -> Term -> Term #-}
 
+-- Two possible desugarings of if-then-else
 pattern IfBool :: Term -> Term -> Term -> Term
 pattern IfBool c t e = If (HasType c (Var "bool")) Nothing t e
+
+pattern IfCase :: Term -> Term -> Term -> Term
+pattern IfCase c t e =
+    Match (MatchItem c Nothing Nothing :| []) Nothing
+        [ Equation (MultPattern ( QualidPat (Bare "true")  :| []) :| []) t
+        , Equation (MultPattern ( QualidPat (Bare "false") :| []) :| []) e
+        ]
+
 
 isLetFix :: Term -> Maybe (FixBody, Term)
 isLetFix (Let f [] Nothing (Fix (FixOne fb@(FixBody f' _ _ _ _))) body)

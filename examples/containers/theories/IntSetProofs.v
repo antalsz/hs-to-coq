@@ -4213,7 +4213,12 @@ Lemma union_eq s1 s2 :
 Proof.
   unfold union, union_func.
   rewrite Wf.WfExtensionality.fix_sub_eq_ext.
-  destruct s1, s2; reflexivity.
+  unfold projT1, projT2.
+  unfold union_body.
+  repeat lazymatch goal with
+    | [ |- _ = match ?x with _ => _ end ] => destruct x
+    | _ => reflexivity
+  end.
 Qed.
 
 Program Fixpoint union_Desc
@@ -4386,8 +4391,15 @@ Lemma intersection_eq s1 s2 :
 Proof.
   unfold intersection, intersection_func.
   rewrite Wf.WfExtensionality.fix_sub_eq_ext.
-  destruct s1, s2; try reflexivity.
+  unfold projT1, projT2.
+  unfold intersection_body.
+  repeat match goal with
+    | [ |- _ = match ?x with _ => _ end ] => destruct x
+    | _ => assumption || reflexivity
+    | [ |- _ ?x = _ ?x ] => induction x
+  end.
 Qed.
+
 
 Program Fixpoint intersection_Desc
   s1 r1 f1 s2 r2 f2 f
@@ -4639,7 +4651,13 @@ Lemma difference_eq s1 s2 :
 Proof.
   unfold difference, difference_func.
   rewrite Wf.WfExtensionality.fix_sub_eq_ext.
-  destruct s1, s2; reflexivity.
+  unfold projT1, projT2.
+  unfold difference_body.
+  repeat match goal with
+    | [ |- _ = match ?x with _ => _ end ] => destruct x
+    | _ => assumption || reflexivity
+    | [ |- _ ?x = _ ?x ] => induction x
+  end.
 Qed.
 
 Program Fixpoint difference_Desc

@@ -1,5 +1,10 @@
 {
-{-# LANGUAGE TupleSections, OverloadedStrings #-}
+
+{-# LANGUAGE TupleSections, OverloadedStrings, CPP #-}
+
+--work around https://github.com/simonmar/happy/issues/109
+#undef __GLASGOW_HASKELL__
+#define __GLASGOW_HASKELL__ 709
 
 module HsToCoq.ConvertHaskell.Parameters.Parsers (
   parseTerm, parseSentence, parseEditList
@@ -474,7 +479,7 @@ ifMaybe Nothing  _j  n = n
 uncurry3 :: (a -> b -> c -> d) -> (a,b,c) -> d
 uncurry3 f = \(a,b,c) -> f a b c
 
-unexpected :: MonadError String m => Token -> m a
+unexpected :: Token -> NewlinesParse a
 unexpected tok = throwError $ "unexpected " ++ tokenDescription tok
 
 forceIdentToQualid :: Ident -> Qualid

@@ -180,6 +180,7 @@ Local Definition Eq___Name_op_zsze__ : Name -> Name -> bool :=
 Program Instance Eq___Name : GHC.Base.Eq_ Name := fun _ k =>
     k {|GHC.Base.op_zeze____ := Eq___Name_op_zeze__ ;
       GHC.Base.op_zsze____ := Eq___Name_op_zsze__ |}.
+Admit Obligations.
 
 Program Instance Ord__Name : GHC.Base.Ord Name := fun _ k =>
     k {|GHC.Base.op_zl____ := Ord__Name_op_zl__ ;
@@ -189,6 +190,7 @@ Program Instance Ord__Name : GHC.Base.Ord Name := fun _ k =>
       GHC.Base.compare__ := Ord__Name_compare ;
       GHC.Base.max__ := Ord__Name_max ;
       GHC.Base.min__ := Ord__Name_min |}.
+Admit Obligations.
 
 Definition getOccFS {a} `{NamedThing a} : a -> FastString.FastString :=
   occNameFS GHC.Base.∘ getOccName.
@@ -347,6 +349,7 @@ Local Definition NamedThing__Name_getOccName : Name -> OccName.OccName :=
 Program Instance NamedThing__Name : NamedThing Name := fun _ k =>
     k {|getName__ := NamedThing__Name_getName ;
       getOccName__ := NamedThing__Name_getOccName |}.
+Admit Obligations.
 
 Definition nameSortStableString : NameSort -> GHC.Base.String :=
   fun arg_0__ =>

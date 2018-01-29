@@ -102,6 +102,7 @@ Local Definition Functor__Identity_op_zlzd__ : forall {a} {b},
 Program Instance Functor__Identity : GHC.Base.Functor Identity := fun _ k =>
     k {|GHC.Base.op_zlzd____ := fun {a} {b} => Functor__Identity_op_zlzd__ ;
       GHC.Base.fmap__ := fun {a} {b} => Functor__Identity_fmap |}.
+Admit Obligations.
 
 Local Definition Applicative__Identity_op_zlztzg__ : forall {a} {b},
                                                        Identity (a -> b) -> Identity a -> Identity b :=
@@ -122,6 +123,7 @@ Program Instance Applicative__Identity : GHC.Base.Applicative Identity := fun _
     k {|GHC.Base.op_ztzg____ := fun {a} {b} => Applicative__Identity_op_ztzg__ ;
       GHC.Base.op_zlztzg____ := fun {a} {b} => Applicative__Identity_op_zlztzg__ ;
       GHC.Base.pure__ := fun {a} => Applicative__Identity_pure |}.
+Admit Obligations.
 
 Local Definition Monad__Identity_op_zgzg__ : forall {a} {b},
                                                Identity a -> Identity b -> Identity b :=
@@ -138,6 +140,7 @@ Program Instance Monad__Identity : GHC.Base.Monad Identity := fun _ k =>
     k {|GHC.Base.op_zgzg____ := fun {a} {b} => Monad__Identity_op_zgzg__ ;
       GHC.Base.op_zgzgze____ := fun {a} {b} => Monad__Identity_op_zgzgze__ ;
       GHC.Base.return___ := fun {a} => Monad__Identity_return_ |}.
+Admit Obligations.
 
 (* Translating `instance Control.Monad.Fix.MonadFix
    Data.Functor.Identity.Identity' failed: OOPS! Cannot find information for class
@@ -242,6 +245,7 @@ Program Instance Monoid__Identity {a} `{GHC.Base.Monoid a} : GHC.Base.Monoid
     k {|GHC.Base.mappend__ := Monoid__Identity_mappend ;
       GHC.Base.mconcat__ := Monoid__Identity_mconcat ;
       GHC.Base.mempty__ := Monoid__Identity_mempty |}.
+Admit Obligations.
 
 (* Translating `instance forall {a}, forall `{GHC.Arr.Ix a}, GHC.Arr.Ix
    (Data.Functor.Identity.Identity a)' failed: OOPS! Cannot find information for
@@ -287,6 +291,7 @@ Program Instance Eq___Identity {a} `{GHC.Base.Eq_ a} : GHC.Base.Eq_ (Identity
                                                                     a) := fun _ k =>
     k {|GHC.Base.op_zeze____ := Eq___Identity_op_zeze__ ;
       GHC.Base.op_zsze____ := Eq___Identity_op_zsze__ |}.
+Admit Obligations.
 
 Program Instance Ord__Identity {a} `{GHC.Base.Ord a} : GHC.Base.Ord (Identity
                                                                     a) := fun _ k =>
@@ -297,6 +302,7 @@ Program Instance Ord__Identity {a} `{GHC.Base.Ord a} : GHC.Base.Ord (Identity
       GHC.Base.compare__ := Ord__Identity_compare ;
       GHC.Base.max__ := Ord__Identity_max ;
       GHC.Base.min__ := Ord__Identity_min |}.
+Admit Obligations.
 
 (* Translating `instance forall {a}, forall `{GHC.Enum.Enum a}, GHC.Enum.Enum
    (Data.Functor.Identity.Identity a)' failed: OOPS! Cannot find information for
@@ -340,6 +346,7 @@ Program Instance Foldable__Identity : Data.Foldable.Foldable Identity := fun _
         Foldable__Identity_product ;
       Data.Foldable.sum__ := fun {a} `{GHC.Num.Num a} => Foldable__Identity_sum ;
       Data.Foldable.toList__ := fun {a} => Foldable__Identity_toList |}.
+Admit Obligations.
 
 Program Instance Traversable__Identity : Data.Traversable.Traversable
                                          Identity := fun _ k =>
@@ -351,6 +358,7 @@ Program Instance Traversable__Identity : Data.Traversable.Traversable
         Traversable__Identity_sequenceA ;
       Data.Traversable.traverse__ := fun {f} {a} {b} `{GHC.Base.Applicative f} =>
         Traversable__Identity_traverse |}.
+Admit Obligations.
 
 (* Unbound variables:
      bool comparison cons false list nil Coq.Program.Basics.compose

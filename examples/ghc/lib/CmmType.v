@@ -85,6 +85,7 @@ Local Definition Eq___ForeignHint_op_zsze__
 Program Instance Eq___ForeignHint : GHC.Base.Eq_ ForeignHint := fun _ k =>
     k {|GHC.Base.op_zeze____ := Eq___ForeignHint_op_zeze__ ;
       GHC.Base.op_zsze____ := Eq___ForeignHint_op_zsze__ |}.
+Admit Obligations.
 
 Local Definition Eq___CmmCat_op_zeze__ : CmmCat -> CmmCat -> bool :=
   fun x y => true.
@@ -95,6 +96,7 @@ Local Definition Eq___CmmCat_op_zsze__ : CmmCat -> CmmCat -> bool :=
 Program Instance Eq___CmmCat : GHC.Base.Eq_ CmmCat := fun _ k =>
     k {|GHC.Base.op_zeze____ := Eq___CmmCat_op_zeze__ ;
       GHC.Base.op_zsze____ := Eq___CmmCat_op_zsze__ |}.
+Admit Obligations.
 
 (* Translating `instance GHC.Show.Show CmmType.Width' failed: OOPS! Cannot find
    information for class Qualified "GHC.Show" "Show" unsupported *)
@@ -121,6 +123,7 @@ Local Definition Eq___Width_op_zsze__ : Width -> Width -> bool :=
 Program Instance Eq___Width : GHC.Base.Eq_ Width := fun _ k =>
     k {|GHC.Base.op_zeze____ := Eq___Width_op_zeze__ ;
       GHC.Base.op_zsze____ := Eq___Width_op_zsze__ |}.
+Admit Obligations.
 
 Definition cmmBits : Width -> CmmType :=
   Mk_CmmType BitsCat.

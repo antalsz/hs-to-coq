@@ -776,19 +776,27 @@ Definition insertR {a} `{GHC.Base.Ord a} : a -> Set_ a -> Set_ a :=
                end in
     go x0 x0.
 
-Program Fixpoint link {a} (arg_0__ : a) (arg_1__ : Set_ a) (arg_2__ : Set_
-                                                                      a) { measure (Nat.add (set_size arg_1__) (set_size
-                                                                                            arg_2__)) } : Set_ a :=
-match arg_0__ , arg_1__ , arg_2__ with
-  | x , Tip , r => insertMin x r
-  | x , l , Tip => insertMax x l
-  | x , (Bin sizeL y ly ry as l) , (Bin sizeR z lz rz as r) => if (delta GHC.Num.*
-                                                                  sizeL) GHC.Base.< sizeR : bool
-                                                               then balanceL z (link x l lz) rz
-                                                               else if (delta GHC.Num.* sizeR) GHC.Base.< sizeL : bool
-                                                                    then balanceR y ly (link x ry r)
-                                                                    else bin x l r
-end.
+Program Fixpoint link {a} (arg_0__ : a) (arg_1__ : Set_ a) (arg_2__ : Set_ a)
+                      {measure (Nat.add (set_size arg_1__) (set_size arg_2__))} : Set_ a
+                   := match arg_0__ , arg_1__ , arg_2__ with
+                        | x , Tip , r => insertMin x r
+                        | x , l , Tip => insertMax x l
+                        | x , (Bin sizeL y ly ry as l) , (Bin sizeR z lz rz as r) => match (delta
+                                                                                             GHC.Num.* sizeL) GHC.Base.<
+                                                                                             sizeR with
+                                                                                       | true => balanceL z (link x l
+                                                                                                            lz) rz
+                                                                                       | false => match (delta GHC.Num.*
+                                                                                                          sizeR)
+                                                                                                          GHC.Base.<
+                                                                                                          sizeL with
+                                                                                                    | true => balanceR y
+                                                                                                              ly (link x
+                                                                                                                 ry r)
+                                                                                                    | false => bin x l r
+                                                                                                  end
+                                                                                     end
+                      end.
 Solve Obligations with (termination_by_omega).
 
 Definition dropWhileAntitone {a} : (a -> bool) -> Set_ a -> Set_ a :=
@@ -1140,19 +1148,23 @@ Definition delete {a} `{GHC.Base.Ord a} : a -> Set_ a -> Set_ a :=
              end in
   go.
 
-Program Fixpoint merge {a} (arg_0__ : Set_ a) (arg_1__ : Set_
-                                                         a) { measure (Nat.add (set_size arg_0__) (set_size
-                                                                               arg_1__)) } : Set_ a :=
-match arg_0__ , arg_1__ with
-  | Tip , r => r
-  | l , Tip => l
-  | (Bin sizeL x lx rx as l) , (Bin sizeR y ly ry as r) => if (delta GHC.Num.*
-                                                              sizeL) GHC.Base.< sizeR : bool
-                                                           then balanceL y (merge l ly) ry
-                                                           else if (delta GHC.Num.* sizeR) GHC.Base.< sizeL : bool
-                                                                then balanceR x lx (merge rx r)
-                                                                else glue l r
-end.
+Program Fixpoint merge {a} (arg_0__ : Set_ a) (arg_1__ : Set_ a)
+                       {measure (Nat.add (set_size arg_0__) (set_size arg_1__))} : Set_ a
+                   := match arg_0__ , arg_1__ with
+                        | Tip , r => r
+                        | l , Tip => l
+                        | (Bin sizeL x lx rx as l) , (Bin sizeR y ly ry as r) => match (delta GHC.Num.*
+                                                                                         sizeL) GHC.Base.< sizeR with
+                                                                                   | true => balanceL y (merge l ly) ry
+                                                                                   | false => match (delta GHC.Num.*
+                                                                                                      sizeR) GHC.Base.<
+                                                                                                      sizeL with
+                                                                                                | true => balanceR x lx
+                                                                                                          (merge rx r)
+                                                                                                | false => glue l r
+                                                                                              end
+                                                                                 end
+                      end.
 Solve Obligations with (termination_by_omega).
 
 Definition disjointUnion {a} {b} : Set_ a -> Set_ b -> Set_ (Data.Either.Either
@@ -1356,6 +1368,7 @@ Program Instance Eq___Set_ {a} `{GHC.Base.Eq_ a} : GHC.Base.Eq_ (Set_ a) :=
   fun _ k =>
     k {|GHC.Base.op_zeze____ := Eq___Set__op_zeze__ ;
       GHC.Base.op_zsze____ := Eq___Set__op_zsze__ |}.
+Admit Obligations.
 
 Program Instance Ord__Set_ {a} `{GHC.Base.Ord a} : GHC.Base.Ord (Set_ a) :=
   fun _ k =>
@@ -1366,6 +1379,7 @@ Program Instance Ord__Set_ {a} `{GHC.Base.Ord a} : GHC.Base.Ord (Set_ a) :=
       GHC.Base.compare__ := Ord__Set__compare ;
       GHC.Base.max__ := Ord__Set__max ;
       GHC.Base.min__ := Ord__Set__min |}.
+Admit Obligations.
 
 Local Definition Foldable__Set__length : forall {a}, Set_ a -> GHC.Num.Int :=
   fun {a} => size.
@@ -1384,6 +1398,7 @@ Program Instance Foldable__Set_ : Data.Foldable.Foldable Set_ := fun _ k =>
       Data.Foldable.product__ := fun {a} `{GHC.Num.Num a} => Foldable__Set__product ;
       Data.Foldable.sum__ := fun {a} `{GHC.Num.Num a} => Foldable__Set__sum ;
       Data.Foldable.toList__ := fun {a} => Foldable__Set__toList |}.
+Admit Obligations.
 
 Definition withBar : list GHC.Base.String -> list GHC.Base.String :=
   fun bars => cons (GHC.Base.hs_string__ "|  ") bars.

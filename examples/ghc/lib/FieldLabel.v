@@ -185,6 +185,7 @@ Program Instance Foldable__FieldLbl : Data.Foldable.Foldable FieldLbl := fun _
         Foldable__FieldLbl_product ;
       Data.Foldable.sum__ := fun {a} `{GHC.Num.Num a} => Foldable__FieldLbl_sum ;
       Data.Foldable.toList__ := fun {a} => Foldable__FieldLbl_toList |}.
+Admit Obligations.
 
 Local Definition Functor__FieldLbl_fmap : forall {a} {b},
                                             (a -> b) -> FieldLbl a -> FieldLbl b :=
@@ -202,6 +203,7 @@ Local Definition Functor__FieldLbl_op_zlzd__ : forall {a} {b},
 Program Instance Functor__FieldLbl : GHC.Base.Functor FieldLbl := fun _ k =>
     k {|GHC.Base.op_zlzd____ := fun {a} {b} => Functor__FieldLbl_op_zlzd__ ;
       GHC.Base.fmap__ := fun {a} {b} => Functor__FieldLbl_fmap |}.
+Admit Obligations.
 
 Local Definition Traversable__FieldLbl_traverse : forall {f} {a} {b},
                                                     forall `{GHC.Base.Applicative f},
@@ -238,6 +240,7 @@ Program Instance Traversable__FieldLbl : Data.Traversable.Traversable
         Traversable__FieldLbl_sequenceA ;
       Data.Traversable.traverse__ := fun {f} {a} {b} `{GHC.Base.Applicative f} =>
         Traversable__FieldLbl_traverse |}.
+Admit Obligations.
 
 Local Definition Eq___FieldLbl_op_zeze__ {inst_a} `{GHC.Base.Eq_ inst_a}
     : FieldLbl inst_a -> FieldLbl inst_a -> bool :=
@@ -256,6 +259,7 @@ Program Instance Eq___FieldLbl {a} `{GHC.Base.Eq_ a} : GHC.Base.Eq_ (FieldLbl
                                                                     a) := fun _ k =>
     k {|GHC.Base.op_zeze____ := Eq___FieldLbl_op_zeze__ ;
       GHC.Base.op_zsze____ := Eq___FieldLbl_op_zsze__ |}.
+Admit Obligations.
 
 (* Translating `instance forall {a}, forall `{Data.Data.Data a}, Data.Data.Data
    (FieldLabel.FieldLbl a)' failed: OOPS! Cannot find information for class

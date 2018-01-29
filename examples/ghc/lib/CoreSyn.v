@@ -697,6 +697,7 @@ Program Instance Eq___UnfoldingGuidance : GHC.Base.Eq_ UnfoldingGuidance :=
   fun _ k =>
     k {|GHC.Base.op_zeze____ := Eq___UnfoldingGuidance_op_zeze__ ;
       GHC.Base.op_zsze____ := Eq___UnfoldingGuidance_op_zsze__ |}.
+Admit Obligations.
 
 (* Translating `instance Data.Data.Data CoreSyn.IsOrphan' failed: OOPS! Cannot
    find information for class Qualified "Data.Data" "Data" unsupported *)
@@ -719,6 +720,7 @@ Program Instance Eq___TickishPlacement : GHC.Base.Eq_ TickishPlacement := fun _
                                                                               k =>
     k {|GHC.Base.op_zeze____ := Eq___TickishPlacement_op_zeze__ ;
       GHC.Base.op_zsze____ := Eq___TickishPlacement_op_zsze__ |}.
+Admit Obligations.
 
 Local Definition Eq___TickishScoping_op_zeze__
     : TickishScoping -> TickishScoping -> bool :=
@@ -737,6 +739,7 @@ Local Definition Eq___TickishScoping_op_zsze__
 Program Instance Eq___TickishScoping : GHC.Base.Eq_ TickishScoping := fun _ k =>
     k {|GHC.Base.op_zeze____ := Eq___TickishScoping_op_zeze__ ;
       GHC.Base.op_zsze____ := Eq___TickishScoping_op_zsze__ |}.
+Admit Obligations.
 
 (* Translating `instance forall {b}, forall `{Data.Data.Data b}, Data.Data.Data
    (CoreSyn.Bind b)' failed: OOPS! Cannot find information for class Qualified
@@ -766,6 +769,7 @@ Program Instance Eq___Tickish {id} `{GHC.Base.Eq_ id} : GHC.Base.Eq_ (Tickish
                                                                      id) := fun _ k =>
     k {|GHC.Base.op_zeze____ := Eq___Tickish_op_zeze__ ;
       GHC.Base.op_zsze____ := Eq___Tickish_op_zsze__ |}.
+Admit Obligations.
 
 (* Translating `instance Data.Data.Data CoreSyn.AltCon' failed: OOPS! Cannot
    find information for class Qualified "Data.Data" "Data" unsupported *)
@@ -881,6 +885,7 @@ Local Definition Eq___AltCon_op_zsze__ : AltCon -> AltCon -> bool :=
 Program Instance Eq___AltCon : GHC.Base.Eq_ AltCon := fun _ k =>
     k {|GHC.Base.op_zeze____ := Eq___AltCon_op_zeze__ ;
       GHC.Base.op_zsze____ := Eq___AltCon_op_zsze__ |}.
+Admit Obligations.
 
 Program Instance Ord__AltCon : GHC.Base.Ord AltCon := fun _ k =>
     k {|GHC.Base.op_zl____ := Ord__AltCon_op_zl__ ;
@@ -890,6 +895,7 @@ Program Instance Ord__AltCon : GHC.Base.Ord AltCon := fun _ k =>
       GHC.Base.compare__ := Ord__AltCon_compare ;
       GHC.Base.max__ := Ord__AltCon_max ;
       GHC.Base.min__ := Ord__AltCon_min |}.
+Admit Obligations.
 
 Definition bindersOf {b} : Bind b -> list b :=
   fun arg_0__ =>

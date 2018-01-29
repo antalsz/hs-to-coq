@@ -122,6 +122,7 @@ Local Definition Eq___Var_op_zsze__ : Core.Var -> Core.Var -> bool :=
 Program Instance Eq___Var : GHC.Base.Eq_ Core.Var := fun _ k =>
     k {|GHC.Base.op_zeze____ := Eq___Var_op_zeze__ ;
       GHC.Base.op_zsze____ := Eq___Var_op_zsze__ |}.
+Admit Obligations.
 
 Local Definition Ord__Var_op_zg__ : Core.Var -> Core.Var -> bool :=
   fun a b => realUnique a GHC.Base.> realUnique b.
@@ -341,6 +342,7 @@ Program Instance Ord__Var : GHC.Base.Ord Core.Var := fun _ k =>
       GHC.Base.compare__ := Ord__Var_compare ;
       GHC.Base.max__ := Ord__Var_max ;
       GHC.Base.min__ := Ord__Var_min |}.
+Admit Obligations.
 
 (* Unbound variables:
      CoVar Kind TyVar bool comparison negb orb realUnique tt unit varName varType

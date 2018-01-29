@@ -292,10 +292,12 @@ Local Definition Eq___UnitId_op_zsze__ : UnitId -> UnitId -> bool :=
 Program Instance Eq___UnitId : GHC.Base.Eq_ UnitId := fun _ k =>
     k {|GHC.Base.op_zeze____ := Eq___UnitId_op_zeze__ ;
       GHC.Base.op_zsze____ := Eq___UnitId_op_zsze__ |}.
+Admit Obligations.
 
 Program Instance Eq___ModuleName : GHC.Base.Eq_ ModuleName := fun _ k =>
     k {|GHC.Base.op_zeze____ := Eq___ModuleName_op_zeze__ ;
       GHC.Base.op_zsze____ := Eq___ModuleName_op_zsze__ |}.
+Admit Obligations.
 
 Local Definition Eq___Module_op_zeze__ : Module -> Module -> bool :=
   fun arg_0__ arg_1__ =>
@@ -310,6 +312,7 @@ Local Definition Eq___Module_op_zsze__ : Module -> Module -> bool :=
 Program Instance Eq___Module : GHC.Base.Eq_ Module := fun _ k =>
     k {|GHC.Base.op_zeze____ := Eq___Module_op_zeze__ ;
       GHC.Base.op_zsze____ := Eq___Module_op_zsze__ |}.
+Admit Obligations.
 
 Local Definition Eq___NDModule_op_zeze__ : NDModule -> NDModule -> bool :=
   GHC.Prim.coerce _GHC.Base.==_.
@@ -320,6 +323,7 @@ Local Definition Eq___NDModule_op_zsze__ : NDModule -> NDModule -> bool :=
 Program Instance Eq___NDModule : GHC.Base.Eq_ NDModule := fun _ k =>
     k {|GHC.Base.op_zeze____ := Eq___NDModule_op_zeze__ ;
       GHC.Base.op_zsze____ := Eq___NDModule_op_zsze__ |}.
+Admit Obligations.
 
 Program Instance Ord__UnitId : GHC.Base.Ord UnitId := fun _ k =>
     k {|GHC.Base.op_zl____ := Ord__UnitId_op_zl__ ;
@@ -329,6 +333,7 @@ Program Instance Ord__UnitId : GHC.Base.Ord UnitId := fun _ k =>
       GHC.Base.compare__ := Ord__UnitId_compare ;
       GHC.Base.max__ := Ord__UnitId_max ;
       GHC.Base.min__ := Ord__UnitId_min |}.
+Admit Obligations.
 
 Program Instance Ord__ModuleName : GHC.Base.Ord ModuleName := fun _ k =>
     k {|GHC.Base.op_zl____ := Ord__ModuleName_op_zl__ ;
@@ -338,6 +343,7 @@ Program Instance Ord__ModuleName : GHC.Base.Ord ModuleName := fun _ k =>
       GHC.Base.compare__ := Ord__ModuleName_compare ;
       GHC.Base.max__ := Ord__ModuleName_max ;
       GHC.Base.min__ := Ord__ModuleName_min |}.
+Admit Obligations.
 
 Local Definition Ord__Module_compare : Module -> Module -> comparison :=
   fun a b =>
@@ -413,6 +419,7 @@ Program Instance Ord__Module : GHC.Base.Ord Module := fun _ k =>
       GHC.Base.compare__ := Ord__Module_compare ;
       GHC.Base.max__ := Ord__Module_max ;
       GHC.Base.min__ := Ord__Module_min |}.
+Admit Obligations.
 
 Program Instance Ord__NDModule : GHC.Base.Ord NDModule := fun _ k =>
     k {|GHC.Base.op_zl____ := Ord__NDModule_op_zl__ ;
@@ -422,6 +429,7 @@ Program Instance Ord__NDModule : GHC.Base.Ord NDModule := fun _ k =>
       GHC.Base.compare__ := Ord__NDModule_compare ;
       GHC.Base.max__ := Ord__NDModule_max ;
       GHC.Base.min__ := Ord__NDModule_min |}.
+Admit Obligations.
 
 (* Translating `instance GHC.Show.Show Module.ModLocation' failed: OOPS! Cannot
    find information for class Qualified "GHC.Show" "Show" unsupported *)

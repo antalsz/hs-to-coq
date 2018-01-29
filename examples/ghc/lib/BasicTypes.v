@@ -333,6 +333,7 @@ Local Definition Eq___StringLiteral_op_zsze__
 Program Instance Eq___StringLiteral : GHC.Base.Eq_ StringLiteral := fun _ k =>
     k {|GHC.Base.op_zeze____ := Eq___StringLiteral_op_zeze__ ;
       GHC.Base.op_zsze____ := Eq___StringLiteral_op_zsze__ |}.
+Admit Obligations.
 
 (* Translating `instance Outputable.Outputable BasicTypes.WarningTxt' failed:
    OOPS! Cannot find information for class Qualified "Outputable" "Outputable"
@@ -413,6 +414,7 @@ Local Definition Eq___FractionalLit_op_zsze__
 Program Instance Eq___FractionalLit : GHC.Base.Eq_ FractionalLit := fun _ k =>
     k {|GHC.Base.op_zeze____ := Eq___FractionalLit_op_zeze__ ;
       GHC.Base.op_zsze____ := Eq___FractionalLit_op_zsze__ |}.
+Admit Obligations.
 
 Local Definition Ord__FractionalLit_compare
     : FractionalLit -> FractionalLit -> comparison :=
@@ -450,6 +452,7 @@ Program Instance Ord__FractionalLit : GHC.Base.Ord FractionalLit := fun _ k =>
       GHC.Base.compare__ := Ord__FractionalLit_compare ;
       GHC.Base.max__ := Ord__FractionalLit_max ;
       GHC.Base.min__ := Ord__FractionalLit_min |}.
+Admit Obligations.
 
 (* Translating `instance Outputable.Outputable BasicTypes.FractionalLit' failed:
    OOPS! Cannot find information for class Qualified "Outputable" "Outputable"
@@ -504,6 +507,7 @@ Local Definition Eq___IntWithInf_op_zsze__ : IntWithInf -> IntWithInf -> bool :=
 Program Instance Eq___IntWithInf : GHC.Base.Eq_ IntWithInf := fun _ k =>
     k {|GHC.Base.op_zeze____ := Eq___IntWithInf_op_zeze__ ;
       GHC.Base.op_zsze____ := Eq___IntWithInf_op_zsze__ |}.
+Admit Obligations.
 
 Program Instance Ord__IntWithInf : GHC.Base.Ord IntWithInf := fun _ k =>
     k {|GHC.Base.op_zl____ := Ord__IntWithInf_op_zl__ ;
@@ -513,6 +517,7 @@ Program Instance Ord__IntWithInf : GHC.Base.Ord IntWithInf := fun _ k =>
       GHC.Base.compare__ := Ord__IntWithInf_compare ;
       GHC.Base.max__ := Ord__IntWithInf_max ;
       GHC.Base.min__ := Ord__IntWithInf_min |}.
+Admit Obligations.
 
 (* Translating `instance GHC.Show.Show BasicTypes.FractionalLit' failed: OOPS!
    Cannot find information for class Qualified "GHC.Show" "Show" unsupported *)
@@ -545,6 +550,7 @@ Local Definition Eq___InlineSpec_op_zsze__ : InlineSpec -> InlineSpec -> bool :=
 Program Instance Eq___InlineSpec : GHC.Base.Eq_ InlineSpec := fun _ k =>
     k {|GHC.Base.op_zeze____ := Eq___InlineSpec_op_zeze__ ;
       GHC.Base.op_zsze____ := Eq___InlineSpec_op_zsze__ |}.
+Admit Obligations.
 
 (* Translating `instance GHC.Show.Show BasicTypes.RuleMatchInfo' failed: OOPS!
    Cannot find information for class Qualified "GHC.Show" "Show" unsupported *)
@@ -568,6 +574,7 @@ Local Definition Eq___RuleMatchInfo_op_zsze__
 Program Instance Eq___RuleMatchInfo : GHC.Base.Eq_ RuleMatchInfo := fun _ k =>
     k {|GHC.Base.op_zeze____ := Eq___RuleMatchInfo_op_zeze__ ;
       GHC.Base.op_zsze____ := Eq___RuleMatchInfo_op_zsze__ |}.
+Admit Obligations.
 
 (* Translating `instance Data.Data.Data BasicTypes.Activation' failed: OOPS!
    Cannot find information for class Qualified "Data.Data" "Data" unsupported *)
@@ -590,6 +597,7 @@ Local Definition Eq___Activation_op_zsze__ : Activation -> Activation -> bool :=
 Program Instance Eq___Activation : GHC.Base.Eq_ Activation := fun _ k =>
     k {|GHC.Base.op_zeze____ := Eq___Activation_op_zeze__ ;
       GHC.Base.op_zsze____ := Eq___Activation_op_zsze__ |}.
+Admit Obligations.
 
 Local Definition Eq___InlinePragma_op_zeze__
     : InlinePragma -> InlinePragma -> bool :=
@@ -610,6 +618,7 @@ Local Definition Eq___InlinePragma_op_zsze__
 Program Instance Eq___InlinePragma : GHC.Base.Eq_ InlinePragma := fun _ k =>
     k {|GHC.Base.op_zeze____ := Eq___InlinePragma_op_zeze__ ;
       GHC.Base.op_zsze____ := Eq___InlinePragma_op_zsze__ |}.
+Admit Obligations.
 
 (* Translating `instance Data.Data.Data BasicTypes.WarningTxt' failed: OOPS!
    Cannot find information for class Qualified "Data.Data" "Data" unsupported *)
@@ -630,6 +639,7 @@ Local Definition Eq___WarningTxt_op_zsze__ : WarningTxt -> WarningTxt -> bool :=
 Program Instance Eq___WarningTxt : GHC.Base.Eq_ WarningTxt := fun _ k =>
     k {|GHC.Base.op_zeze____ := Eq___WarningTxt_op_zeze__ ;
       GHC.Base.op_zsze____ := Eq___WarningTxt_op_zsze__ |}.
+Admit Obligations.
 
 (* Translating `instance Data.Data.Data BasicTypes.StringLiteral' failed: OOPS!
    Cannot find information for class Qualified "Data.Data" "Data" unsupported *)
@@ -662,6 +672,7 @@ Local Definition Eq___OverlapMode_op_zsze__
 Program Instance Eq___OverlapMode : GHC.Base.Eq_ OverlapMode := fun _ k =>
     k {|GHC.Base.op_zeze____ := Eq___OverlapMode_op_zeze__ ;
       GHC.Base.op_zsze____ := Eq___OverlapMode_op_zsze__ |}.
+Admit Obligations.
 
 Local Definition Eq___OverlapFlag_op_zeze__
     : OverlapFlag -> OverlapFlag -> bool :=
@@ -678,6 +689,7 @@ Local Definition Eq___OverlapFlag_op_zsze__
 Program Instance Eq___OverlapFlag : GHC.Base.Eq_ OverlapFlag := fun _ k =>
     k {|GHC.Base.op_zeze____ := Eq___OverlapFlag_op_zeze__ ;
       GHC.Base.op_zsze____ := Eq___OverlapFlag_op_zsze__ |}.
+Admit Obligations.
 
 Local Definition Eq___OccInfo_op_zeze__ : OccInfo -> OccInfo -> bool :=
   fun arg_0__ arg_1__ =>
@@ -696,6 +708,7 @@ Local Definition Eq___OccInfo_op_zsze__ : OccInfo -> OccInfo -> bool :=
 Program Instance Eq___OccInfo : GHC.Base.Eq_ OccInfo := fun _ k =>
     k {|GHC.Base.op_zeze____ := Eq___OccInfo_op_zeze__ ;
       GHC.Base.op_zsze____ := Eq___OccInfo_op_zsze__ |}.
+Admit Obligations.
 
 (* Translating `instance Data.Data.Data BasicTypes.TupleSort' failed: OOPS!
    Cannot find information for class Qualified "Data.Data" "Data" unsupported *)
@@ -715,6 +728,7 @@ Local Definition Eq___TupleSort_op_zsze__ : TupleSort -> TupleSort -> bool :=
 Program Instance Eq___TupleSort : GHC.Base.Eq_ TupleSort := fun _ k =>
     k {|GHC.Base.op_zeze____ := Eq___TupleSort_op_zeze__ ;
       GHC.Base.op_zsze____ := Eq___TupleSort_op_zsze__ |}.
+Admit Obligations.
 
 (* Translating `instance Data.Data.Data BasicTypes.Origin' failed: OOPS! Cannot
    find information for class Qualified "Data.Data" "Data" unsupported *)
@@ -733,6 +747,7 @@ Local Definition Eq___Origin_op_zsze__ : Origin -> Origin -> bool :=
 Program Instance Eq___Origin : GHC.Base.Eq_ Origin := fun _ k =>
     k {|GHC.Base.op_zeze____ := Eq___Origin_op_zeze__ ;
       GHC.Base.op_zsze____ := Eq___Origin_op_zsze__ |}.
+Admit Obligations.
 
 (* Translating `instance Data.Data.Data BasicTypes.RecFlag' failed: OOPS! Cannot
    find information for class Qualified "Data.Data" "Data" unsupported *)
@@ -751,6 +766,7 @@ Local Definition Eq___RecFlag_op_zsze__ : RecFlag -> RecFlag -> bool :=
 Program Instance Eq___RecFlag : GHC.Base.Eq_ RecFlag := fun _ k =>
     k {|GHC.Base.op_zeze____ := Eq___RecFlag_op_zeze__ ;
       GHC.Base.op_zsze____ := Eq___RecFlag_op_zsze__ |}.
+Admit Obligations.
 
 (* Translating `instance Data.Data.Data BasicTypes.Boxity' failed: OOPS! Cannot
    find information for class Qualified "Data.Data" "Data" unsupported *)
@@ -769,6 +785,7 @@ Local Definition Eq___Boxity_op_zsze__ : Boxity -> Boxity -> bool :=
 Program Instance Eq___Boxity : GHC.Base.Eq_ Boxity := fun _ k =>
     k {|GHC.Base.op_zeze____ := Eq___Boxity_op_zeze__ ;
       GHC.Base.op_zsze____ := Eq___Boxity_op_zsze__ |}.
+Admit Obligations.
 
 (* Translating `instance Data.Data.Data BasicTypes.FixityDirection' failed:
    OOPS! Cannot find information for class Qualified "Data.Data" "Data"
@@ -792,6 +809,7 @@ Program Instance Eq___FixityDirection : GHC.Base.Eq_ FixityDirection := fun _
                                                                             k =>
     k {|GHC.Base.op_zeze____ := Eq___FixityDirection_op_zeze__ ;
       GHC.Base.op_zsze____ := Eq___FixityDirection_op_zsze__ |}.
+Admit Obligations.
 
 Local Definition Eq___Fixity_op_zeze__ : Fixity -> Fixity -> bool :=
   fun arg_0__ arg_1__ =>
@@ -806,6 +824,7 @@ Local Definition Eq___Fixity_op_zsze__ : Fixity -> Fixity -> bool :=
 Program Instance Eq___Fixity : GHC.Base.Eq_ Fixity := fun _ k =>
     k {|GHC.Base.op_zeze____ := Eq___Fixity_op_zeze__ ;
       GHC.Base.op_zsze____ := Eq___Fixity_op_zsze__ |}.
+Admit Obligations.
 
 (* Translating `instance Data.Data.Data BasicTypes.FunctionOrData' failed: OOPS!
    Cannot find information for class Qualified "Data.Data" "Data" unsupported *)
@@ -904,6 +923,7 @@ Local Definition Eq___FunctionOrData_op_zsze__
 Program Instance Eq___FunctionOrData : GHC.Base.Eq_ FunctionOrData := fun _ k =>
     k {|GHC.Base.op_zeze____ := Eq___FunctionOrData_op_zeze__ ;
       GHC.Base.op_zsze____ := Eq___FunctionOrData_op_zsze__ |}.
+Admit Obligations.
 
 Program Instance Ord__FunctionOrData : GHC.Base.Ord FunctionOrData := fun _ k =>
     k {|GHC.Base.op_zl____ := Ord__FunctionOrData_op_zl__ ;
@@ -913,6 +933,7 @@ Program Instance Ord__FunctionOrData : GHC.Base.Ord FunctionOrData := fun _ k =>
       GHC.Base.compare__ := Ord__FunctionOrData_compare ;
       GHC.Base.max__ := Ord__FunctionOrData_max ;
       GHC.Base.min__ := Ord__FunctionOrData_min |}.
+Admit Obligations.
 
 Local Definition Eq___OneShotInfo_op_zeze__
     : OneShotInfo -> OneShotInfo -> bool :=
@@ -931,6 +952,7 @@ Local Definition Eq___OneShotInfo_op_zsze__
 Program Instance Eq___OneShotInfo : GHC.Base.Eq_ OneShotInfo := fun _ k =>
     k {|GHC.Base.op_zeze____ := Eq___OneShotInfo_op_zeze__ ;
       GHC.Base.op_zsze____ := Eq___OneShotInfo_op_zsze__ |}.
+Admit Obligations.
 
 Definition bestOneShot : OneShotInfo -> OneShotInfo -> OneShotInfo :=
   fun arg_0__ arg_1__ =>

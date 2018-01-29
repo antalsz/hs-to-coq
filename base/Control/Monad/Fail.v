@@ -34,12 +34,14 @@ Local Definition MonadFail__option_fail : forall {a},
 
 Program Instance MonadFail__option : MonadFail option := fun _ k =>
     k {|fail__ := fun {a} => MonadFail__option_fail |}.
+Admit Obligations.
 
 Local Definition MonadFail__list_fail : forall {a}, GHC.Base.String -> list a :=
   fun {a} => fun arg_0__ => nil.
 
 Program Instance MonadFail__list : MonadFail list := fun _ k =>
     k {|fail__ := fun {a} => MonadFail__list_fail |}.
+Admit Obligations.
 
 (* Skipping instance MonadFail__IO *)
 

@@ -1306,18 +1306,20 @@ Definition insertWithR {k} {a} `{GHC.Base.Ord k}
   go.
 
 Program Fixpoint link {k} {a} (arg_0__ : k) (arg_1__ : a) (arg_2__ : Map k a)
-                      (arg_3__ : Map k a) { measure (Nat.add (map_size arg_2__) (map_size
-                                                             arg_3__)) } : Map k a :=
-match arg_0__ , arg_1__ , arg_2__ , arg_3__ with
-  | kx , x , Tip , r => insertMin kx x r
-  | kx , x , l , Tip => insertMax kx x l
-  | kx , x , (Bin sizeL ky y ly ry as l) , (Bin sizeR kz z lz rz as r) =>
-    if (delta GHC.Num.* sizeL) GHC.Base.< sizeR : bool
-    then balanceL kz z (link kx x l lz) rz
-    else if (delta GHC.Num.* sizeR) GHC.Base.< sizeL : bool
-         then balanceR ky y ly (link kx x ry r)
-         else bin kx x l r
-end.
+                      (arg_3__ : Map k a) {measure (Nat.add (map_size arg_2__) (map_size arg_3__))}
+                   : Map k a
+                   := match arg_0__ , arg_1__ , arg_2__ , arg_3__ with
+                        | kx , x , Tip , r => insertMin kx x r
+                        | kx , x , l , Tip => insertMax kx x l
+                        | kx , x , (Bin sizeL ky y ly ry as l) , (Bin sizeR kz z lz rz as r) =>
+                          match (delta GHC.Num.* sizeL) GHC.Base.< sizeR with
+                            | true => balanceL kz z (link kx x l lz) rz
+                            | false => match (delta GHC.Num.* sizeR) GHC.Base.< sizeL with
+                                         | true => balanceR ky y ly (link kx x ry r)
+                                         | false => bin kx x l r
+                                       end
+                          end
+                      end.
 Solve Obligations with (termination_by_omega).
 
 Definition dropWhileAntitone {k} {a} : (k -> bool) -> Map k a -> Map k a :=

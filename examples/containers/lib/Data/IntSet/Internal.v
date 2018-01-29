@@ -226,6 +226,7 @@ Local Definition Eq___IntSet_op_zsze__ : IntSet -> IntSet -> bool :=
 Program Instance Eq___IntSet : GHC.Base.Eq_ IntSet := fun _ k =>
     k {|GHC.Base.op_zeze____ := Eq___IntSet_op_zeze__ ;
       GHC.Base.op_zsze____ := Eq___IntSet_op_zsze__ |}.
+Admit Obligations.
 
 Definition node : GHC.Base.String :=
   GHC.Base.hs_string__ "+--".
@@ -462,6 +463,7 @@ Program Instance Ord__IntSet : GHC.Base.Ord IntSet := fun _ k =>
       GHC.Base.compare__ := Ord__IntSet_compare ;
       GHC.Base.max__ := Ord__IntSet_max ;
       GHC.Base.min__ := Ord__IntSet_min |}.
+Admit Obligations.
 
 Definition fold {b} : (Key -> b -> b) -> b -> IntSet -> b :=
   foldr.
@@ -668,59 +670,94 @@ Definition isSubsetOf : IntSet -> IntSet -> bool :=
              | _ , _ => j_6__
            end.
 
-Program Fixpoint disjoint (arg_0__ : IntSet) (arg_1__
-                            : IntSet) { measure (size_nat arg_0__ + size_nat arg_1__) } : bool :=
-match arg_0__ , arg_1__ with
-  | (Bin p1 m1 l1 r1 as t1) , (Bin p2 m2 l2 r2 as t2) => let disjoint2 :=
-                                                           if nomatch p1 p2 m2 : bool
-                                                           then true
-                                                           else if zero p1 m2 : bool
-                                                                then disjoint t1 l2
-                                                                else disjoint t1 r2 in
-                                                         let disjoint1 :=
-                                                           if nomatch p2 p1 m1 : bool
-                                                           then true
-                                                           else if zero p2 m1 : bool
-                                                                then disjoint l1 t2
-                                                                else disjoint r1 t2 in
-                                                         if shorter m1 m2 : bool
-                                                         then disjoint1
-                                                         else if shorter m2 m1 : bool
-                                                              then disjoint2
-                                                              else if p1 GHC.Base.== p2 : bool
-                                                                   then andb (disjoint l1 l2) (disjoint r1 r2)
-                                                                   else true
-  | (Bin _ _ _ _ as t1) , Tip kx2 bm2 => let fix disjointBM arg_11__
-                                                   := match arg_11__ with
-                                                        | Bin p1 m1 l1 r1 => if nomatch kx2 p1 m1 : bool
-                                                                             then true
-                                                                             else if zero kx2 m1 : bool
-                                                                                  then disjointBM l1
-                                                                                  else disjointBM r1
-                                                        | Tip kx1 bm1 => if kx1 GHC.Base.== kx2 : bool
-                                                                         then (bm1 Data.Bits..&.(**) bm2) GHC.Base.==
-                                                                              GHC.Num.fromInteger 0
-                                                                         else true
-                                                        | Nil => true
-                                                      end in
-                                         disjointBM t1
-  | Bin _ _ _ _ , Nil => true
-  | Tip kx1 bm1 , t2 => let fix disjointBM arg_18__
-                                  := match arg_18__ with
-                                       | Bin p2 m2 l2 r2 => if nomatch kx1 p2 m2 : bool
-                                                            then true
-                                                            else if zero kx1 m2 : bool
-                                                                 then disjointBM l2
-                                                                 else disjointBM r2
-                                       | Tip kx2 bm2 => if kx1 GHC.Base.== kx2 : bool
-                                                        then (bm1 Data.Bits..&.(**) bm2) GHC.Base.== GHC.Num.fromInteger
-                                                             0
-                                                        else true
-                                       | Nil => true
-                                     end in
-                        disjointBM t2
-  | Nil , _ => true
-end.
+Program Fixpoint disjoint (arg_0__ : IntSet) (arg_1__ : IntSet)
+                          {measure (size_nat arg_0__ + size_nat arg_1__)} : bool
+                   := match arg_0__ , arg_1__ with
+                        | (Bin p1 m1 l1 r1 as t1) , (Bin p2 m2 l2 r2 as t2) => let disjoint2 :=
+                                                                                 match nomatch p1 p2 m2 with
+                                                                                   | true => true
+                                                                                   | false => match zero p1 m2 with
+                                                                                                | true => disjoint t1 l2
+                                                                                                | false => disjoint t1
+                                                                                                           r2
+                                                                                              end
+                                                                                 end in
+                                                                               let disjoint1 :=
+                                                                                 match nomatch p2 p1 m1 with
+                                                                                   | true => true
+                                                                                   | false => match zero p2 m1 with
+                                                                                                | true => disjoint l1 t2
+                                                                                                | false => disjoint r1
+                                                                                                           t2
+                                                                                              end
+                                                                                 end in
+                                                                               match shorter m1 m2 with
+                                                                                 | true => disjoint1
+                                                                                 | false => match shorter m2 m1 with
+                                                                                              | true => disjoint2
+                                                                                              | false => match p1
+                                                                                                                 GHC.Base.==
+                                                                                                                 p2 with
+                                                                                                           | true =>
+                                                                                                             andb
+                                                                                                             (disjoint
+                                                                                                             l1 l2)
+                                                                                                             (disjoint
+                                                                                                             r1 r2)
+                                                                                                           | false =>
+                                                                                                             true
+                                                                                                         end
+                                                                                            end
+                                                                               end
+                        | (Bin _ _ _ _ as t1) , Tip kx2 bm2 => let fix disjointBM arg_11__
+                                                                         := match arg_11__ with
+                                                                              | Bin p1 m1 l1 r1 => match nomatch kx2 p1
+                                                                                                           m1 with
+                                                                                                     | true => true
+                                                                                                     | false =>
+                                                                                                       match zero kx2
+                                                                                                               m1 with
+                                                                                                         | true =>
+                                                                                                           disjointBM l1
+                                                                                                         | false =>
+                                                                                                           disjointBM r1
+                                                                                                       end
+                                                                                                   end
+                                                                              | Tip kx1 bm1 => match kx1 GHC.Base.==
+                                                                                                       kx2 with
+                                                                                                 | true => (bm1
+                                                                                                           Data.Bits..&.(**)
+                                                                                                           bm2)
+                                                                                                           GHC.Base.==
+                                                                                                           GHC.Num.fromInteger
+                                                                                                           0
+                                                                                                 | false => true
+                                                                                               end
+                                                                              | Nil => true
+                                                                            end in
+                                                               disjointBM t1
+                        | Bin _ _ _ _ , Nil => true
+                        | Tip kx1 bm1 , t2 => let fix disjointBM arg_18__
+                                                        := match arg_18__ with
+                                                             | Bin p2 m2 l2 r2 => match nomatch kx1 p2 m2 with
+                                                                                    | true => true
+                                                                                    | false => match zero kx1 m2 with
+                                                                                                 | true => disjointBM l2
+                                                                                                 | false => disjointBM
+                                                                                                            r2
+                                                                                               end
+                                                                                  end
+                                                             | Tip kx2 bm2 => match kx1 GHC.Base.== kx2 with
+                                                                                | true => (bm1 Data.Bits..&.(**) bm2)
+                                                                                          GHC.Base.==
+                                                                                          GHC.Num.fromInteger 0
+                                                                                | false => true
+                                                                              end
+                                                             | Nil => true
+                                                           end in
+                                              disjointBM t2
+                        | Nil , _ => true
+                      end.
 Solve Obligations with (termination_by_omega).
 
 Definition link : Prefix -> IntSet -> Prefix -> IntSet -> IntSet :=
@@ -751,33 +788,58 @@ Definition fromList : list Key -> IntSet :=
 Definition map : (Key -> Key) -> IntSet -> IntSet :=
   fun f => fromList GHC.Base.∘ (GHC.Base.map f GHC.Base.∘ toList).
 
-Program Fixpoint union (arg_0__ : IntSet) (arg_1__ : IntSet) { measure (size_nat
-  arg_0__ + size_nat arg_1__) } : IntSet :=
-match arg_0__ , arg_1__ with
-  | (Bin p1 m1 l1 r1 as t1) , (Bin p2 m2 l2 r2 as t2) => let union2 :=
-                                                           if nomatch p1 p2 m2 : bool
-                                                           then link p1 t1 p2 t2
-                                                           else if zero p1 m2 : bool
-                                                                then Bin p2 m2 (union t1 l2) r2
-                                                                else Bin p2 m2 l2 (union t1 r2) in
-                                                         let union1 :=
-                                                           if nomatch p2 p1 m1 : bool
-                                                           then link p1 t1 p2 t2
-                                                           else if zero p2 m1 : bool
-                                                                then Bin p1 m1 (union l1 t2) r1
-                                                                else Bin p1 m1 l1 (union r1 t2) in
-                                                         if shorter m1 m2 : bool
-                                                         then union1
-                                                         else if shorter m2 m1 : bool
-                                                              then union2
-                                                              else if p1 GHC.Base.== p2 : bool
-                                                                   then Bin p1 m1 (union l1 l2) (union r1 r2)
-                                                                   else link p1 t1 p2 t2
-  | (Bin _ _ _ _ as t) , Tip kx bm => insertBM kx bm t
-  | (Bin _ _ _ _ as t) , Nil => t
-  | Tip kx bm , t => insertBM kx bm t
-  | Nil , t => t
-end.
+Program Fixpoint union (arg_0__ : IntSet) (arg_1__ : IntSet) {measure (size_nat
+                       arg_0__ + size_nat arg_1__)} : IntSet
+                   := match arg_0__ , arg_1__ with
+                        | (Bin p1 m1 l1 r1 as t1) , (Bin p2 m2 l2 r2 as t2) => let union2 :=
+                                                                                 match nomatch p1 p2 m2 with
+                                                                                   | true => link p1 t1 p2 t2
+                                                                                   | false => match zero p1 m2 with
+                                                                                                | true => Bin p2 m2
+                                                                                                          (union t1 l2)
+                                                                                                          r2
+                                                                                                | false => Bin p2 m2 l2
+                                                                                                           (union t1 r2)
+                                                                                              end
+                                                                                 end in
+                                                                               let union1 :=
+                                                                                 match nomatch p2 p1 m1 with
+                                                                                   | true => link p1 t1 p2 t2
+                                                                                   | false => match zero p2 m1 with
+                                                                                                | true => Bin p1 m1
+                                                                                                          (union l1 t2)
+                                                                                                          r1
+                                                                                                | false => Bin p1 m1 l1
+                                                                                                           (union r1 t2)
+                                                                                              end
+                                                                                 end in
+                                                                               match shorter m1 m2 with
+                                                                                 | true => union1
+                                                                                 | false => match shorter m2 m1 with
+                                                                                              | true => union2
+                                                                                              | false => match p1
+                                                                                                                 GHC.Base.==
+                                                                                                                 p2 with
+                                                                                                           | true => Bin
+                                                                                                                     p1
+                                                                                                                     m1
+                                                                                                                     (union
+                                                                                                                     l1
+                                                                                                                     l2)
+                                                                                                                     (union
+                                                                                                                     r1
+                                                                                                                     r2)
+                                                                                                           | false =>
+                                                                                                             link p1 t1
+                                                                                                             p2 t2
+                                                                                                         end
+                                                                                            end
+                                                                               end
+                        | (Bin _ _ _ _ as t) , Tip kx bm => insertBM kx bm t
+                        | (Bin _ _ _ _ as t) , Nil => t
+                        | Tip kx bm , t => insertBM kx bm t
+                        | Nil , t => t
+                      end.
 Solve Obligations with (termination_by_omega).
 
 Definition unions : list IntSet -> IntSet :=
@@ -1042,45 +1104,79 @@ Definition deleteBM : Prefix -> BitMap -> IntSet -> IntSet :=
 Definition delete : Key -> IntSet -> IntSet :=
   fun x => deleteBM (prefixOf x) (bitmapOf x).
 
-Program Fixpoint difference (arg_0__ : IntSet) (arg_1__
-                              : IntSet) { measure (size_nat arg_0__ + size_nat arg_1__) } : IntSet :=
-match arg_0__ , arg_1__ with
-  | (Bin p1 m1 l1 r1 as t1) , (Bin p2 m2 l2 r2 as t2) => let difference2 :=
-                                                           if nomatch p1 p2 m2 : bool
-                                                           then t1
-                                                           else if zero p1 m2 : bool
-                                                                then difference t1 l2
-                                                                else difference t1 r2 in
-                                                         let difference1 :=
-                                                           if nomatch p2 p1 m1 : bool
-                                                           then t1
-                                                           else if zero p2 m1 : bool
-                                                                then bin p1 m1 (difference l1 t2) r1
-                                                                else bin p1 m1 l1 (difference r1 t2) in
-                                                         if shorter m1 m2 : bool
-                                                         then difference1
-                                                         else if shorter m2 m1 : bool
-                                                              then difference2
-                                                              else if p1 GHC.Base.== p2 : bool
-                                                                   then bin p1 m1 (difference l1 l2) (difference r1 r2)
-                                                                   else t1
-  | (Bin _ _ _ _ as t) , Tip kx bm => deleteBM kx bm t
-  | (Bin _ _ _ _ as t) , Nil => t
-  | (Tip kx bm as t1) , t2 => let fix differenceTip arg_12__
-                                        := match arg_12__ with
-                                             | Bin p2 m2 l2 r2 => if nomatch kx p2 m2 : bool
-                                                                  then t1
-                                                                  else if zero kx m2 : bool
-                                                                       then differenceTip l2
-                                                                       else differenceTip r2
-                                             | Tip kx2 bm2 => if kx GHC.Base.== kx2 : bool
-                                                              then tip kx (Data.Bits.xor bm (bm Data.Bits..&.(**) bm2))
-                                                              else t1
-                                             | Nil => t1
-                                           end in
-                              differenceTip t2
-  | Nil , _ => Nil
-end.
+Program Fixpoint difference (arg_0__ : IntSet) (arg_1__ : IntSet)
+                            {measure (size_nat arg_0__ + size_nat arg_1__)} : IntSet
+                   := match arg_0__ , arg_1__ with
+                        | (Bin p1 m1 l1 r1 as t1) , (Bin p2 m2 l2 r2 as t2) => let difference2 :=
+                                                                                 match nomatch p1 p2 m2 with
+                                                                                   | true => t1
+                                                                                   | false => match zero p1 m2 with
+                                                                                                | true => difference t1
+                                                                                                          l2
+                                                                                                | false => difference t1
+                                                                                                           r2
+                                                                                              end
+                                                                                 end in
+                                                                               let difference1 :=
+                                                                                 match nomatch p2 p1 m1 with
+                                                                                   | true => t1
+                                                                                   | false => match zero p2 m1 with
+                                                                                                | true => bin p1 m1
+                                                                                                          (difference l1
+                                                                                                          t2) r1
+                                                                                                | false => bin p1 m1 l1
+                                                                                                           (difference
+                                                                                                           r1 t2)
+                                                                                              end
+                                                                                 end in
+                                                                               match shorter m1 m2 with
+                                                                                 | true => difference1
+                                                                                 | false => match shorter m2 m1 with
+                                                                                              | true => difference2
+                                                                                              | false => match p1
+                                                                                                                 GHC.Base.==
+                                                                                                                 p2 with
+                                                                                                           | true => bin
+                                                                                                                     p1
+                                                                                                                     m1
+                                                                                                                     (difference
+                                                                                                                     l1
+                                                                                                                     l2)
+                                                                                                                     (difference
+                                                                                                                     r1
+                                                                                                                     r2)
+                                                                                                           | false => t1
+                                                                                                         end
+                                                                                            end
+                                                                               end
+                        | (Bin _ _ _ _ as t) , Tip kx bm => deleteBM kx bm t
+                        | (Bin _ _ _ _ as t) , Nil => t
+                        | (Tip kx bm as t1) , t2 => let fix differenceTip arg_12__
+                                                              := match arg_12__ with
+                                                                   | Bin p2 m2 l2 r2 => match nomatch kx p2 m2 with
+                                                                                          | true => t1
+                                                                                          | false => match zero kx
+                                                                                                             m2 with
+                                                                                                       | true =>
+                                                                                                         differenceTip
+                                                                                                         l2
+                                                                                                       | false =>
+                                                                                                         differenceTip
+                                                                                                         r2
+                                                                                                     end
+                                                                                        end
+                                                                   | Tip kx2 bm2 => match kx GHC.Base.== kx2 with
+                                                                                      | true => tip kx (Data.Bits.xor bm
+                                                                                                                      (bm
+                                                                                                                      Data.Bits..&.(**)
+                                                                                                                      bm2))
+                                                                                      | false => t1
+                                                                                    end
+                                                                   | Nil => t1
+                                                                 end in
+                                                    differenceTip t2
+                        | Nil , _ => Nil
+                      end.
 Solve Obligations with (termination_by_omega).
 
 Definition op_zrzr__ : IntSet -> IntSet -> IntSet :=
@@ -1090,58 +1186,98 @@ Notation "'_\\_'" := (op_zrzr__).
 
 Infix "\\" := (_\\_) (at level 99).
 
-Program Fixpoint intersection (arg_0__ : IntSet) (arg_1__
-                                : IntSet) { measure (size_nat arg_0__ + size_nat arg_1__) } : IntSet :=
-match arg_0__ , arg_1__ with
-  | (Bin p1 m1 l1 r1 as t1) , (Bin p2 m2 l2 r2 as t2) => let intersection2 :=
-                                                           if nomatch p1 p2 m2 : bool
-                                                           then Nil
-                                                           else if zero p1 m2 : bool
-                                                                then intersection t1 l2
-                                                                else intersection t1 r2 in
-                                                         let intersection1 :=
-                                                           if nomatch p2 p1 m1 : bool
-                                                           then Nil
-                                                           else if zero p2 m1 : bool
-                                                                then intersection l1 t2
-                                                                else intersection r1 t2 in
-                                                         if shorter m1 m2 : bool
-                                                         then intersection1
-                                                         else if shorter m2 m1 : bool
-                                                              then intersection2
-                                                              else if p1 GHC.Base.== p2 : bool
-                                                                   then bin p1 m1 (intersection l1 l2) (intersection r1
-                                                                                                       r2)
-                                                                   else Nil
-  | (Bin _ _ _ _ as t1) , Tip kx2 bm2 => let fix intersectBM arg_11__
-                                                   := match arg_11__ with
-                                                        | Bin p1 m1 l1 r1 => if nomatch kx2 p1 m1 : bool
-                                                                             then Nil
-                                                                             else if zero kx2 m1 : bool
-                                                                                  then intersectBM l1
-                                                                                  else intersectBM r1
-                                                        | Tip kx1 bm1 => if kx1 GHC.Base.== kx2 : bool
-                                                                         then tip kx1 (bm1 Data.Bits..&.(**) bm2)
-                                                                         else Nil
-                                                        | Nil => Nil
-                                                      end in
-                                         intersectBM t1
-  | Bin _ _ _ _ , Nil => Nil
-  | Tip kx1 bm1 , t2 => let fix intersectBM arg_18__
-                                  := match arg_18__ with
-                                       | Bin p2 m2 l2 r2 => if nomatch kx1 p2 m2 : bool
-                                                            then Nil
-                                                            else if zero kx1 m2 : bool
-                                                                 then intersectBM l2
-                                                                 else intersectBM r2
-                                       | Tip kx2 bm2 => if kx1 GHC.Base.== kx2 : bool
-                                                        then tip kx1 (bm1 Data.Bits..&.(**) bm2)
-                                                        else Nil
-                                       | Nil => Nil
-                                     end in
-                        intersectBM t2
-  | Nil , _ => Nil
-end.
+Program Fixpoint intersection (arg_0__ : IntSet) (arg_1__ : IntSet)
+                              {measure (size_nat arg_0__ + size_nat arg_1__)} : IntSet
+                   := match arg_0__ , arg_1__ with
+                        | (Bin p1 m1 l1 r1 as t1) , (Bin p2 m2 l2 r2 as t2) => let intersection2 :=
+                                                                                 match nomatch p1 p2 m2 with
+                                                                                   | true => Nil
+                                                                                   | false => match zero p1 m2 with
+                                                                                                | true => intersection
+                                                                                                          t1 l2
+                                                                                                | false => intersection
+                                                                                                           t1 r2
+                                                                                              end
+                                                                                 end in
+                                                                               let intersection1 :=
+                                                                                 match nomatch p2 p1 m1 with
+                                                                                   | true => Nil
+                                                                                   | false => match zero p2 m1 with
+                                                                                                | true => intersection
+                                                                                                          l1 t2
+                                                                                                | false => intersection
+                                                                                                           r1 t2
+                                                                                              end
+                                                                                 end in
+                                                                               match shorter m1 m2 with
+                                                                                 | true => intersection1
+                                                                                 | false => match shorter m2 m1 with
+                                                                                              | true => intersection2
+                                                                                              | false => match p1
+                                                                                                                 GHC.Base.==
+                                                                                                                 p2 with
+                                                                                                           | true => bin
+                                                                                                                     p1
+                                                                                                                     m1
+                                                                                                                     (intersection
+                                                                                                                     l1
+                                                                                                                     l2)
+                                                                                                                     (intersection
+                                                                                                                     r1
+                                                                                                                     r2)
+                                                                                                           | false =>
+                                                                                                             Nil
+                                                                                                         end
+                                                                                            end
+                                                                               end
+                        | (Bin _ _ _ _ as t1) , Tip kx2 bm2 => let fix intersectBM arg_11__
+                                                                         := match arg_11__ with
+                                                                              | Bin p1 m1 l1 r1 => match nomatch kx2 p1
+                                                                                                           m1 with
+                                                                                                     | true => Nil
+                                                                                                     | false =>
+                                                                                                       match zero kx2
+                                                                                                               m1 with
+                                                                                                         | true =>
+                                                                                                           intersectBM
+                                                                                                           l1
+                                                                                                         | false =>
+                                                                                                           intersectBM
+                                                                                                           r1
+                                                                                                       end
+                                                                                                   end
+                                                                              | Tip kx1 bm1 => match kx1 GHC.Base.==
+                                                                                                       kx2 with
+                                                                                                 | true => tip kx1 (bm1
+                                                                                                                   Data.Bits..&.(**)
+                                                                                                                   bm2)
+                                                                                                 | false => Nil
+                                                                                               end
+                                                                              | Nil => Nil
+                                                                            end in
+                                                               intersectBM t1
+                        | Bin _ _ _ _ , Nil => Nil
+                        | Tip kx1 bm1 , t2 => let fix intersectBM arg_18__
+                                                        := match arg_18__ with
+                                                             | Bin p2 m2 l2 r2 => match nomatch kx1 p2 m2 with
+                                                                                    | true => Nil
+                                                                                    | false => match zero kx1 m2 with
+                                                                                                 | true => intersectBM
+                                                                                                           l2
+                                                                                                 | false => intersectBM
+                                                                                                            r2
+                                                                                               end
+                                                                                  end
+                                                             | Tip kx2 bm2 => match kx1 GHC.Base.== kx2 with
+                                                                                | true => tip kx1 (bm1 Data.Bits..&.(**)
+                                                                                                  bm2)
+                                                                                | false => Nil
+                                                                              end
+                                                             | Nil => Nil
+                                                           end in
+                                              intersectBM t2
+                        | Nil , _ => Nil
+                      end.
 Solve Obligations with (termination_by_omega).
 
 Module Notations.

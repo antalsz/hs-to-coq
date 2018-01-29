@@ -720,6 +720,7 @@ Local Definition Functor__IntMap_fmap : forall {a} {b},
 Program Instance Functor__IntMap : GHC.Base.Functor IntMap := fun _ k =>
     k {|GHC.Base.op_zlzd____ := fun {a} {b} => Functor__IntMap_op_zlzd__ ;
       GHC.Base.fmap__ := fun {a} {b} => Functor__IntMap_fmap |}.
+Admit Obligations.
 
 Definition mapAccumL {a} {b} {c} : (a -> Data.IntSet.Internal.Key -> b -> (a *
                                    c)%type) -> a -> IntMap b -> (a * IntMap c)%type :=
@@ -1603,6 +1604,7 @@ Program Instance Eq___IntMap {a} `{GHC.Base.Eq_ a} : GHC.Base.Eq_ (IntMap a) :=
   fun _ k =>
     k {|GHC.Base.op_zeze____ := Eq___IntMap_op_zeze__ ;
       GHC.Base.op_zsze____ := Eq___IntMap_op_zsze__ |}.
+Admit Obligations.
 
 Program Instance Ord__IntMap {a} `{GHC.Base.Ord a} : GHC.Base.Ord (IntMap a) :=
   fun _ k =>
@@ -1613,6 +1615,7 @@ Program Instance Ord__IntMap {a} `{GHC.Base.Ord a} : GHC.Base.Ord (IntMap a) :=
       GHC.Base.compare__ := Ord__IntMap_compare ;
       GHC.Base.max__ := Ord__IntMap_max ;
       GHC.Base.min__ := Ord__IntMap_min |}.
+Admit Obligations.
 
 Definition node : GHC.Base.String :=
   GHC.Base.hs_string__ "+--".
@@ -1674,6 +1677,7 @@ Program Instance Foldable__IntMap : Data.Foldable.Foldable IntMap := fun _ k =>
         Foldable__IntMap_product ;
       Data.Foldable.sum__ := fun {a} `{GHC.Num.Num a} => Foldable__IntMap_sum ;
       Data.Foldable.toList__ := fun {a} => Foldable__IntMap_toList |}.
+Admit Obligations.
 
 Definition splitRoot {a} : IntMap a -> list (IntMap a) :=
   fun orig =>
@@ -1733,6 +1737,7 @@ Program Instance Traversable__IntMap : Data.Traversable.Traversable IntMap :=
         Traversable__IntMap_sequenceA ;
       Data.Traversable.traverse__ := fun {f} {a} {b} `{GHC.Base.Applicative f} =>
         Traversable__IntMap_traverse |}.
+Admit Obligations.
 
 Definition unsafeFindMax {a} : IntMap a -> option (Data.IntSet.Internal.Key *
                                                   a)%type :=

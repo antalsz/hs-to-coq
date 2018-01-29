@@ -247,6 +247,7 @@ Local Definition Eq___TyCon_op_zsze__ : Core.TyCon -> Core.TyCon -> bool :=
 Program Instance Eq___TyCon : GHC.Base.Eq_ Core.TyCon := fun _ k =>
     k {|GHC.Base.op_zeze____ := Eq___TyCon_op_zeze__ ;
       GHC.Base.op_zsze____ := Eq___TyCon_op_zsze__ |}.
+Admit Obligations.
 
 Program Instance Ord__TyCon : GHC.Base.Ord Core.TyCon := fun _ k =>
     k {|GHC.Base.op_zl____ := Ord__TyCon_op_zl__ ;
@@ -256,6 +257,7 @@ Program Instance Ord__TyCon : GHC.Base.Ord Core.TyCon := fun _ k =>
       GHC.Base.compare__ := Ord__TyCon_compare ;
       GHC.Base.max__ := Ord__TyCon_max ;
       GHC.Base.min__ := Ord__TyCon_min |}.
+Admit Obligations.
 
 (* Translating `instance Unique.Uniquable Core.TyCon' failed: OOPS! Cannot find
    information for class Qualified "Unique" "Uniquable" unsupported *)
@@ -302,6 +304,7 @@ Local Definition Eq___PrimElemRep_op_zsze__
 Program Instance Eq___PrimElemRep : GHC.Base.Eq_ PrimElemRep := fun _ k =>
     k {|GHC.Base.op_zeze____ := Eq___PrimElemRep_op_zeze__ ;
       GHC.Base.op_zsze____ := Eq___PrimElemRep_op_zsze__ |}.
+Admit Obligations.
 
 Local Definition Eq___PrimRep_op_zeze__ : PrimRep -> PrimRep -> bool :=
   fun arg_0__ arg_1__ =>
@@ -326,6 +329,7 @@ Local Definition Eq___PrimRep_op_zsze__ : PrimRep -> PrimRep -> bool :=
 Program Instance Eq___PrimRep : GHC.Base.Eq_ PrimRep := fun _ k =>
     k {|GHC.Base.op_zeze____ := Eq___PrimRep_op_zeze__ ;
       GHC.Base.op_zsze____ := Eq___PrimRep_op_zsze__ |}.
+Admit Obligations.
 
 Local Definition Eq___Injectivity_op_zeze__
     : Core.Injectivity -> Core.Injectivity -> bool :=
@@ -343,6 +347,7 @@ Local Definition Eq___Injectivity_op_zsze__
 Program Instance Eq___Injectivity : GHC.Base.Eq_ Core.Injectivity := fun _ k =>
     k {|GHC.Base.op_zeze____ := Eq___Injectivity_op_zeze__ ;
       GHC.Base.op_zsze____ := Eq___Injectivity_op_zsze__ |}.
+Admit Obligations.
 
 Axiom algTyConRhs : forall {A : Type}, A.
 

@@ -41,6 +41,7 @@ Local Definition Eq___Proxy_op_zsze__ {inst_s} : (Proxy inst_s) -> (Proxy
 Program Instance Eq___Proxy {s} : GHC.Base.Eq_ (Proxy s) := fun _ k =>
     k {|GHC.Base.op_zeze____ := Eq___Proxy_op_zeze__ ;
       GHC.Base.op_zsze____ := Eq___Proxy_op_zsze__ |}.
+Admit Obligations.
 
 Local Definition Ord__Proxy_compare {inst_s} : (Proxy inst_s) -> (Proxy
                                                inst_s) -> comparison :=
@@ -78,6 +79,7 @@ Program Instance Ord__Proxy {s} : GHC.Base.Ord (Proxy s) := fun _ k =>
       GHC.Base.compare__ := Ord__Proxy_compare ;
       GHC.Base.max__ := Ord__Proxy_max ;
       GHC.Base.min__ := Ord__Proxy_min |}.
+Admit Obligations.
 
 (* Translating `instance forall {s}, GHC.Show.Show (Data.Proxy.Proxy s)' failed:
    OOPS! Cannot find information for class Qualified "GHC.Show" "Show"
@@ -113,6 +115,7 @@ Program Instance Monoid__Proxy {s} : GHC.Base.Monoid (Proxy s) := fun _ k =>
     k {|GHC.Base.mappend__ := Monoid__Proxy_mappend ;
       GHC.Base.mconcat__ := Monoid__Proxy_mconcat ;
       GHC.Base.mempty__ := Monoid__Proxy_mempty |}.
+Admit Obligations.
 
 Local Definition Functor__Proxy_fmap : forall {a} {b},
                                          (a -> b) -> Proxy a -> Proxy b :=
@@ -125,6 +128,7 @@ Local Definition Functor__Proxy_op_zlzd__ : forall {a} {b},
 Program Instance Functor__Proxy : GHC.Base.Functor Proxy := fun _ k =>
     k {|GHC.Base.op_zlzd____ := fun {a} {b} => Functor__Proxy_op_zlzd__ ;
       GHC.Base.fmap__ := fun {a} {b} => Functor__Proxy_fmap |}.
+Admit Obligations.
 
 Local Definition Applicative__Proxy_op_zlztzg__ : forall {a} {b},
                                                     Proxy (a -> b) -> Proxy a -> Proxy b :=
@@ -143,6 +147,7 @@ Program Instance Applicative__Proxy : GHC.Base.Applicative Proxy := fun _ k =>
     k {|GHC.Base.op_ztzg____ := fun {a} {b} => Applicative__Proxy_op_ztzg__ ;
       GHC.Base.op_zlztzg____ := fun {a} {b} => Applicative__Proxy_op_zlztzg__ ;
       GHC.Base.pure__ := fun {a} => Applicative__Proxy_pure |}.
+Admit Obligations.
 
 (* Translating `instance GHC.Base.Alternative Data.Proxy.Proxy' failed: OOPS!
    Cannot find information for class Qualified "GHC.Base" "Alternative"
@@ -163,6 +168,7 @@ Program Instance Monad__Proxy : GHC.Base.Monad Proxy := fun _ k =>
     k {|GHC.Base.op_zgzg____ := fun {a} {b} => Monad__Proxy_op_zgzg__ ;
       GHC.Base.op_zgzgze____ := fun {a} {b} => Monad__Proxy_op_zgzgze__ ;
       GHC.Base.return___ := fun {a} => Monad__Proxy_return_ |}.
+Admit Obligations.
 
 (* Translating `instance GHC.Base.MonadPlus Data.Proxy.Proxy' failed: OOPS!
    Cannot find information for class Qualified "GHC.Base" "MonadPlus"

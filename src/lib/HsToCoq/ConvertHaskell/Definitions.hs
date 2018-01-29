@@ -10,9 +10,9 @@ import HsToCoq.Coq.Gallina
 
 import Data.List.NonEmpty (toList )
 
-import Data.Text (Text)
 import Data.Bifunctor
 import HsToCoq.ConvertHaskell.Monad
+import HsToCoq.ConvertHaskell.Parameters.Edits (TerminationArgument(..))
 
 
 --------------------------------------------------------------------------------
@@ -36,8 +36,8 @@ withConvertedBinding _withDef  withPat (ConvertedPatternBinding    pat def) = wi
 
 toProgramFixpointSentence ::
     ConversionMonad m =>
-    ConvertedDefinition -> Order -> Maybe Text -> m Sentence
-toProgramFixpointSentence (ConvertedDefinition{..}) order tac
+    ConvertedDefinition -> TerminationArgument -> m Sentence
+toProgramFixpointSentence (ConvertedDefinition{..}) (TerminationArgument order tac)
     | Nothing <- convDefType
     = editFailure "cannot \"termination\" a definition without a type signature"
     | Just ty <- convDefType

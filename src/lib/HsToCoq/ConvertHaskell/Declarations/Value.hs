@@ -53,8 +53,8 @@ convertModuleValDecls mdecls = do
                           CoqFixpointDef         _ -> pure ()
                           CoqProgramFixpointDef  _ -> pure ()
                           CoqInstanceDef         _ -> editFailure "cannot redefine a value definition into an Instance"
-                      | Just (order, tactic) <- t  -- turn into Program Fixpoint
-                      ->  pure <$> toProgramFixpointSentence cdef order tactic
+                      | Just ta <- t  -- turn into Program Fixpoint
+                      ->  pure <$> toProgramFixpointSentence cdef ta
                       | otherwise                   -- no edit
                       -> let def = DefinitionDef Global (convDefName cdef)
                                                         (convDefArgs cdef)

@@ -83,8 +83,8 @@ convertHsGroup mod HsGroup{..} = do
               $  withConvertedBinding
                    (\cdef@ConvertedDefinition{convDefName = name} -> ((name,) <$>) $ do
                        t <- use (edits.termination.at name)
-                       if | Just (order, tactic) <- t  -- turn into Program Fixpoint
-                          ->  pure <$> toProgramFixpointSentence cdef order tactic
+                       if | Just ta <- t  -- turn into Program Fixpoint
+                          ->  pure <$> toProgramFixpointSentence cdef ta
                           | otherwise                   -- no edit
                           -> let def = DefinitionDef Global (convDefName cdef)
                                                             (convDefArgs cdef)

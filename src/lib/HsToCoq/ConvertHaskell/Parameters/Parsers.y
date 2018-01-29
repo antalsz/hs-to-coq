@@ -230,24 +230,28 @@ Scope :: { Ident }
   : Word    { $1     }
   | type    { "type" } -- This is so common, we have to special-case it
 
+TerminationArgument :: { TerminationArgument }
+ : Order Optional(Word) { TerminationArgument $1 $2 }
+
 Edit :: { Edit }
-  : type synonym Word ':->' Word                  { TypeSynonymTypeEdit   $3 $5                           }
-  | data type arguments Qualid DataTypeArguments  { DataTypeArgumentsEdit $4 $5                           }
-  | redefine CoqDefinition                        { RedefinitionEdit      $2                              }
-  | add Word CoqDefinition                        { AddEdit               (mkModuleName (T.unpack $2)) $3 }
-  | skip Qualid                                   { SkipEdit              $2                              }
-  | skip method Qualid Word                       { SkipMethodEdit        $3 $4                           }
-  | skip module Word                              { SkipModuleEdit        (mkModuleName (T.unpack $3))    }
-  | manual notation Word                          { HasManualNotationEdit (mkModuleName (T.unpack $3))    }
-  | nonterminating Qualid                         { NonterminatingEdit    $2                              }
-  | termination Qualid Order Optional(Word)       { TerminationEdit       $2 $3 $4                        }
-  | rename Renaming                               { RenameEdit            (fst $2) (snd $2)               }
-  | axiomatize module Word                        { AxiomatizeModuleEdit  (mkModuleName (T.unpack $3))    }
-  | add scope Scope for ScopePlace Qualid         { AdditionalScopeEdit   $5 $6 $3                        }
-  | order Some(Qualid)                            { OrderEdit             $2                              }
-  | class kinds Qualid SepBy1(Term,',')           { ClassKindEdit         $3 $4                           }
-  | data  kinds Qualid SepBy1(Term,',')           { DataKindEdit          $3 $4                           }
-  | rewrite Rewrite                               { RewriteEdit           $2                              }
+  : type synonym Word ':->' Word                      { TypeSynonymTypeEdit   $3 $5                            }
+  | data type arguments Qualid DataTypeArguments      { DataTypeArgumentsEdit $4 $5                            }
+  | redefine CoqDefinition                            { RedefinitionEdit      $2                               }
+  | add Word CoqDefinition                            { AddEdit               (mkModuleName (T.unpack $2)) $3  }
+  | skip Qualid                                       { SkipEdit              $2                               }
+  | skip method Qualid Word                           { SkipMethodEdit        $3 $4                            }
+  | skip module Word                                  { SkipModuleEdit        (mkModuleName (T.unpack $3))     }
+  | manual notation Word                              { HasManualNotationEdit (mkModuleName (T.unpack $3))     }
+  | nonterminating Qualid                             { NonterminatingEdit    $2                               }
+  | termination Qualid TerminationArgument            { TerminationEdit       $2 Nothing $3                    }
+  | termination Word 'in' Qualid TerminationArgument  { TerminationEdit       $4 (Just $2) $5                  }
+  | rename Renaming                                   { RenameEdit            (fst $2) (snd $2)                }
+  | axiomatize module Word                            { AxiomatizeModuleEdit  (mkModuleName (T.unpack $3))     }
+  | add scope Scope for ScopePlace Qualid             { AdditionalScopeEdit   $5 $6 $3                         }
+  | order Some(Qualid)                                { OrderEdit             $2                               }
+  | class kinds Qualid SepBy1(Term,',')               { ClassKindEdit         $3 $4                            }
+  | data  kinds Qualid SepBy1(Term,',')               { DataKindEdit          $3 $4                            }
+  | rewrite Rewrite                                   { RewriteEdit           $2                               }
 
 Edits :: { [Edit] }
   : Lines(Edit)    { $1 }

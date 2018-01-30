@@ -6162,13 +6162,53 @@ Module Foo: WSfun(N_as_OT).
 
   Lemma filter_1 :
     forall (s : t) (x : elt) (f : elt -> bool),
-    compat_bool N.eq f -> In x (filter f s) -> In x s. Admitted.
+    compat_bool N.eq f -> In x (filter f s) -> In x s.
+  Proof.
+    intros s x P Heq Hin.
+    destruct s as [s [f HSem]].
+    unfold filter, In, In_set in *.
+    simpl in *.
+    erewrite member_Sem by eassumption.
+    erewrite member_Sem in Hin
+      by (eapply filter_Sem; try eassumption; intro i; reflexivity).
+    simpl in *.
+    rewrite N2Z.id in *.
+    rewrite andb_true_iff in Hin.
+    intuition.
+  Qed.
+
   Lemma filter_2 :
     forall (s : t) (x : elt) (f : elt -> bool),
-    compat_bool N.eq f -> In x (filter f s) -> f x = true. Admitted.
+    compat_bool N.eq f -> In x (filter f s) -> f x = true.
+  Proof.
+    intros s x P Heq Hin.
+    destruct s as [s [f HSem]].
+    unfold filter, In, In_set in *.
+    simpl in *.
+    erewrite member_Sem in Hin
+      by (eapply filter_Sem; try eassumption; intro i; reflexivity).
+    simpl in *.
+    rewrite N2Z.id in *.
+    rewrite andb_true_iff in Hin.
+    intuition.
+  Qed.
+
   Lemma filter_3 :
     forall (s : t) (x : elt) (f : elt -> bool),
-    compat_bool N.eq f -> In x s -> f x = true -> In x (filter f s). Admitted.
+    compat_bool N.eq f -> In x s -> f x = true -> In x (filter f s).
+  Proof.
+    intros s x P Heq Hin HP.
+    destruct s as [s [f HSem]].
+    unfold filter, In, In_set in *.
+    simpl in *.
+    erewrite member_Sem in Hin by eassumption.
+    erewrite member_Sem
+      by (eapply filter_Sem; try eassumption; intro i; reflexivity).
+    simpl in *.
+    rewrite N2Z.id in *.
+    rewrite andb_true_iff.
+    intuition.
+  Qed.
 
   Lemma partition_1 :
     forall (s : t) (f : elt -> bool),

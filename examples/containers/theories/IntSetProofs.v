@@ -5803,7 +5803,6 @@ Module Foo: WSfun(N_as_OT).
     s <-- ws;;
     List.map Z.to_N (toList s).
 
-  Definition choose : t -> option elt. Admitted.
 
   Lemma In_1 :
     forall (s : t) (x y : elt), N.eq x y -> In x s -> In y s.
@@ -6215,10 +6214,6 @@ Module Foo: WSfun(N_as_OT).
 
   Lemma elements_3w : forall s : t, NoDupA N.eq (elements s). Admitted.
 
-  Lemma choose_1 :
-    forall (s : t) (x : elt), choose s = Some x -> In x s. Admitted.
-  Lemma choose_2 : forall s : t, choose s = None -> Empty s. Admitted.
-
 (**
   These portions of the [FMapInterface] have no counterpart in the [IntSet] interface.
   We implement them generically.
@@ -6293,5 +6288,42 @@ Module Foo: WSfun(N_as_OT).
     apply OrdFacts.ListIn_In.
     assumption.
   Qed.
+
+  (** One could implement [choose] with [minView]. We currenlty do not
+  translate [minView], because of a call to [error] in a branch that is inaccessible
+  in well-formed trees. Stretch goal: translate that and use it here.
+  *)
+
+  Definition choose : t -> option elt :=
+    fun s => match elements s with
+                | nil => None
+                | x :: _ => Some x
+              end.
+
+
+  Lemma choose_1 :
+    forall (s : t) (x : elt), choose s = Some x -> In x s.
+  Proof.
+    intros.
+    unfold choose in *.
+    destruct (elements s) eqn:?; try congruence.
+    inversion H; subst.
+    apply elements_2.
+    rewrite Heql.
+    left.
+    reflexivity.
+  Qed.
+
+  Lemma choose_2 : forall s : t, choose s = None -> Empty s.
+  Proof.
+    intros.
+    unfold choose in *.
+    destruct (elements s) eqn:?; try congruence.
+    intros x ?.
+    apply elements_1 in H0.
+    rewrite Heql in H0.
+    inversion H0.
+  Qed.
+
 
 End Foo.

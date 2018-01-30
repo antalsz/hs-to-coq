@@ -77,6 +77,7 @@ Hint Resolve succ_nonneg : nonneg.
 Hint Resolve <- Z.shiftl_nonneg : nonneg.
 Hint Resolve <- Z.shiftr_nonneg : nonneg.
 Hint Resolve <- Z.land_nonneg : nonneg.
+Hint Resolve Z.pow_nonneg : nonneg.
 Hint Extern 1 (0 <= Z.succ (Z.pred (Z.of_N _))) => rewrite Z.succ_pred : nonneg.
 Hint Resolve <- Z.lxor_nonneg : nonneg.
 Hint Extern 0 => omega : nonneg.
@@ -909,6 +910,26 @@ Lemma disjoint_rPrefix_differ:
    apply rPrefix_inRange.
 Qed.
 
+Lemma disjoint_rPrefix_eqb:
+  forall r1 r2,
+    rBits r1 = rBits r2 ->
+    (rPrefix r1 =? rPrefix r2) = negb (rangeDisjoint r1 r2).
+Proof.
+  intros.
+  rewrite eq_iff_eq_true.
+  rewrite negb_true_iff.
+  split; intro.
+  * rewrite Z.eqb_eq in *.
+    apply not_true_iff_false.
+    contradict H0.
+    apply disjoint_rPrefix_differ.
+    assumption.
+  * apply not_true_iff_false in H0.
+    apply not_false_iff_true.
+    contradict H0.
+    rewrite Z.eqb_neq in *.
+    apply different_prefix_same_bits_disjoint; assumption.
+Qed.
 
 Lemma isSubrange_disj_disj_r:
   forall r1 r2 r3,
@@ -3747,6 +3768,141 @@ Proof.
     rewrite !Z.eqb_eq.
     rewrite !N.eqb_eq.
     intuition congruence.
+Qed.
+
+(** *** Specifying [isSubsetOf] *)
+
+Lemma isSubsetOf_disjoint:
+  forall s1 r1 f1 s2 r2 f2,
+  rangeDisjoint r1 r2 = true ->
+  Desc s1 r1 f1 -> Desc s2 r2 f2 ->
+  (forall i : Z, f1 i = true -> f2 i = true) <-> False.
+Proof.
+  intros ??? ??? Hdis HD1 HD2.
+  intuition.
+  destruct (Desc_some_f HD1) as [i Hi].
+  eapply rangeDisjoint_inRange_false_false with (i := i).
+  ** eassumption.
+  ** eapply Desc_inside; eassumption.
+  ** apply H in Hi.
+     apply (Desc_inside HD2) in Hi.
+     assumption.
+Qed.
+
+Lemma isSubsetOf_Desc:
+  forall s1 r1 f1 s2 r2 f2,
+  Desc s1 r1 f1 -> Desc s2 r2 f2 ->
+  isSubsetOf s1 s2 = true <-> (forall i, f1 i = true -> f2 i = true).
+Proof.
+  intros ??? ??? HD1 HD2.
+  revert s2 r2 f2 HD2.
+  induction HD1; intros s3 r3 f3 HD3.
+  * destruct HD3. 
+    + (* Both are tips *)
+      simpl; subst. unfoldMethods.
+      rewrite andb_true_iff.
+      rewrite N.eqb_eq.
+      destruct (Z.eqb_spec (rPrefix r) (rPrefix r0)).
+      - replace r0 with r in * by (apply rPrefix_rBits_range_eq; congruence). clear r0.
+        intuition.
+        ** rewrite H2 in H0.
+           rewrite H7.
+           unfold bitmapInRange. unfold bitmapInRange in H0.
+           destruct (inRange i r); try congruence.
+           set (j := Z.to_N _) in *.
+           apply N.bits_inj_iff in H9; specialize (H9 j).
+           rewrite N.lxor_spec, N.land_spec, N.bits_0 in H9.
+           destruct (N.testbit bm j), (N.testbit bm0 j); simpl in *; congruence.
+        ** apply N.bits_inj_iff; intro j.
+           rewrite N.bits_0.
+           destruct (N.ltb_spec j WIDTH).
+           ++ rewrite N.lxor_spec, N.land_spec.
+              do 2 split_bool; try reflexivity; exfalso.
+              apply not_true_iff_false in Heqb0.
+              contradict Heqb0.
+              set (i := Z.lor (rPrefix r) (Z.of_N j)).
+              assert (Hir :  inRange i r = true).
+              { subst i.
+                destruct r as [p b]; unfold inRange, rPrefix, rBits, snd in *; subst.
+                rewrite Z.shiftr_lor.
+                rewrite Z.shiftr_shiftl_l by nonneg.
+                replace (_ - _) with 0 by omega.
+                rewrite Z.shiftr_div_pow2 by nonneg.
+                rewrite Z.div_small.
+                rewrite Z.lor_0_r. apply Z.eqb_refl.
+                split; try nonneg.
+                replace (_ ^ _) with (Z.of_N WIDTH) by reflexivity.
+                Nomega.
+              } 
+              assert (Hij : Z.to_N (Z.land i (Z.ones (Z.of_N (rBits r)))) = j).
+              { subst i.
+                destruct r as [p b]; unfold inRange, rPrefix, rBits, snd in *; subst.
+
+                rewrite Z.land_lor_distr_l.
+                rewrite land_shiftl_ones by nonneg.
+                rewrite Z.lor_0_l.
+                rewrite !Z.land_ones by nonneg.
+                rewrite Z.mod_small.
+                rewrite N2Z.id. reflexivity.
+                split; try nonneg.
+                replace (_ ^ _) with (Z.of_N WIDTH) by reflexivity.
+                Nomega.
+              }
+              assert (Hbmir : bitmapInRange r bm0 i = N.testbit bm0 j)
+                by (unfold bitmapInRange; rewrite Hir; rewrite Hij; reflexivity).
+              rewrite <- Hbmir; clear Hbmir.
+              rewrite <- H7.
+              apply H0.
+              rewrite H2.
+              assert (Hbmir : bitmapInRange r bm i = N.testbit bm j)
+                by (unfold bitmapInRange; rewrite Hir; rewrite Hij; reflexivity).
+              rewrite Hbmir.
+              assumption.
+           ++ apply isBitMask0_outside. isBitMask. assumption.
+      - rewrite isSubsetOf_disjoint.
+        ** intuition.
+        ** apply different_prefix_same_bits_disjoint; try eassumption; congruence.
+        ** eapply DescTip with (p := rPrefix r) (r := r) (bm := bm); try eassumption; try congruence.
+        ** eapply DescTip with (p := rPrefix r0) (r := r0) (bm := bm0); try eassumption; try congruence.
+
+    + simpl; subst.
+      apply nomatch_zero_smaller.
+      - admit.
+      - intros Hdisj.
+        rewrite isSubsetOf_disjoint.
+        ** intuition.
+        ** eassumption.
+        ** eapply DescTip; try eassumption; try reflexivity.
+        ** eapply (DescBin s1 _ _ s2); try eassumption; try reflexivity.
+       - admit.
+       - admit.
+  * destruct HD3. 
+    + intuition; exfalso.
+      admit.
+    + subst; simpl; unfoldMethods.
+      rewrite shorter_spec by assumption.
+      rewrite shorter_spec by assumption.
+      admit.
+Admitted.
+      
+Lemma isSubsetOf_Sem:
+  forall s1 f1 s2 f2,
+  Sem s1 f1 -> Sem s2 f2 ->
+  isSubsetOf s1 s2 = true <-> (forall i, f1 i = true -> f2 i = true).
+Proof.
+  intros ???? HSem1 HSem2.
+  destruct HSem1.
+  * replace (isSubsetOf Nil s2) with true by (destruct s2; reflexivity).
+    intuition; exfalso.
+    rewrite H in H1; congruence.
+  * destruct HSem2.
+    + replace (isSubsetOf s Nil) with false by (destruct HD; reflexivity).
+      intuition; exfalso.
+      destruct (Desc_some_f HD) as [i Hi].
+      apply H0 in Hi.
+      rewrite H in Hi.
+      congruence.
+    + eapply isSubsetOf_Desc; eassumption.
 Qed.
 
 (** *** Specifying [member] *)

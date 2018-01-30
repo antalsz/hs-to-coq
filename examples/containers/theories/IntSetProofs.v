@@ -5656,8 +5656,6 @@ Module Foo: WSfun(N_as_OT).
   Definition Equal s s' := forall a : elt, In a s <-> In a s'.
   Definition Subset s s' := forall a : elt, In a s -> In a s'.
   Definition Empty s := forall a : elt, ~ In a s.
-  Definition For_all (P : elt -> Prop) s := forall x, In x s -> P x.
-  Definition Exists (P : elt -> Prop) s := exists x, In x s /\ P x.
 
   Definition empty : t.
     eexists. eexists. apply SemNil. intro. reflexivity.
@@ -5786,9 +5784,6 @@ Module Foo: WSfun(N_as_OT).
   Definition fold (A : Type) (f : elt -> A -> A) (ws : t) (x : A) : A :=
     s <-- ws;;
     foldl (fun x a => f (Z.to_N a) x) x s.
-
-  Definition for_all : (elt -> bool) -> t -> bool. Admitted.
-  Definition exists_ : (elt -> bool) -> t -> bool. Admitted.
 
   Definition filter : (elt -> bool) -> t -> t.
     refine (fun p ws =>
@@ -6175,22 +6170,7 @@ Module Foo: WSfun(N_as_OT).
   Lemma filter_3 :
     forall (s : t) (x : elt) (f : elt -> bool),
     compat_bool N.eq f -> In x s -> f x = true -> In x (filter f s). Admitted.
-  Lemma for_all_1 :
-    forall (s : t) (f : elt -> bool),
-    compat_bool N.eq f ->
-    For_all (fun x : elt => f x = true) s -> for_all f s = true. Admitted.
-  Lemma for_all_2 :
-    forall (s : t) (f : elt -> bool),
-    compat_bool N.eq f ->
-    for_all f s = true -> For_all (fun x : elt => f x = true) s. Admitted.
-  Lemma exists_1 :
-    forall (s : t) (f : elt -> bool),
-    compat_bool N.eq f ->
-    Exists (fun x : elt => f x = true) s -> exists_ f s = true. Admitted.
-  Lemma exists_2 :
-    forall (s : t) (f : elt -> bool),
-    compat_bool N.eq f ->
-    exists_ f s = true -> Exists (fun x : elt => f x = true) s. Admitted.
+
   Lemma partition_1 :
     forall (s : t) (f : elt -> bool),
     compat_bool N.eq f -> Equal (fst (partition f s)) (filter f s). Admitted.
@@ -6238,5 +6218,80 @@ Module Foo: WSfun(N_as_OT).
   Lemma choose_1 :
     forall (s : t) (x : elt), choose s = Some x -> In x s. Admitted.
   Lemma choose_2 : forall s : t, choose s = None -> Empty s. Admitted.
+
+(**
+  These portions of the [FMapInterface] have no counterpart in the [IntSet] interface.
+  We implement them generically.
+  *)
+
+  Definition For_all (P : elt -> Prop) s := forall x, In x s -> P x.
+  Definition Exists (P : elt -> Prop) s := exists x, In x s /\ P x.
+
+  Definition for_all : (elt -> bool) -> t -> bool :=
+    fun P s => forallb P (elements s).
+  Definition exists_ : (elt -> bool) -> t -> bool :=
+    fun P s => existsb P (elements s).
+
+  Lemma for_all_1 :
+    forall (s : t) (f : elt -> bool),
+    compat_bool N.eq f ->
+    For_all (fun x : elt => f x = true) s -> for_all f s = true.
+  Proof.
+    intros.
+    unfold For_all, for_all in *.
+    rewrite forallb_forall.
+    intros. apply H0.
+    apply elements_2.
+    apply OrdFacts.ListIn_In.
+    assumption.
+  Qed.
+
+  Lemma for_all_2 :
+    forall (s : t) (f : elt -> bool),
+    compat_bool N.eq f ->
+    for_all f s = true -> For_all (fun x : elt => f x = true) s.
+  Proof.
+    intros.
+    unfold For_all, for_all in *.
+    rewrite forallb_forall in H0.
+    intros. apply H0.
+    apply elements_1 in H1.
+    rewrite InA_alt in H1.
+    destruct H1 as [?[[]?]].
+    assumption.
+  Qed.
+
+  Lemma exists_1 :
+    forall (s : t) (f : elt -> bool),
+    compat_bool N.eq f ->
+    Exists (fun x : elt => f x = true) s -> exists_ f s = true.
+  Proof.
+    intros.
+    unfold Exists, exists_ in *.
+    rewrite existsb_exists.
+    destruct H0 as [x[??]].
+    exists x.
+    split; auto.
+    apply elements_1 in H0.
+    rewrite InA_alt in H0.
+    destruct H0 as [?[[]?]].
+    assumption.
+  Qed.
+
+  Lemma exists_2 :
+    forall (s : t) (f : elt -> bool),
+    compat_bool N.eq f ->
+    exists_ f s = true -> Exists (fun x : elt => f x = true) s.
+  Proof.
+    intros.
+    unfold Exists, exists_ in *.
+    rewrite existsb_exists in H0.
+    destruct H0 as [x[??]].
+    exists x.
+    split; auto.
+    apply elements_2.
+    apply OrdFacts.ListIn_In.
+    assumption.
+  Qed.
 
 End Foo.

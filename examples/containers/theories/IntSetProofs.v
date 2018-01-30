@@ -5472,7 +5472,7 @@ Proof.
   reflexivity.
 Qed.
 
-(** ** Specifying [filter] *)
+(** *** Specifying [filter] *)
 
 Definition filterBits p o bm :=
   (foldlBits 0
@@ -5620,6 +5620,65 @@ Proof.
   eapply filter_Sem.
   eassumption.
   intro. reflexivity.
+Qed.
+
+(** *** Specifying [partition] *)
+
+(** Conveniently, [partition] uses [filterBits] *)
+
+Lemma partition_fst:
+  forall p s,
+  fst (partition p s) = filter p s.
+Proof.
+  intros.
+  induction s.
+  * simpl.
+    rewrite (surjective_pairing (partition p s1)).
+    rewrite (surjective_pairing (partition p s2)).
+    simpl.
+    rewrite IHs1, IHs2.
+    reflexivity.
+  * reflexivity.
+  * reflexivity.
+Qed.
+
+Lemma filterBits_neg:
+  forall P p bm,
+  isBitMask0 bm ->
+  N.lxor bm (filterBits P p bm) = filterBits (fun x => negb (P x)) p bm.
+Proof.
+  intros.
+  apply N.bits_inj; intro i.
+  rewrite N.lxor_spec.
+  rewrite testbit_filterBits by isBitMask.
+  rewrite testbit_filterBits by isBitMask.
+  repeat split_bool; reflexivity.
+Qed.
+
+(* We could do this without the WF requirements if we used bounded Nats;
+   as we only need it for the [isBitMask0] requiremenet *)
+Lemma partition_snd:
+  forall p s,
+  WF s ->
+  snd (partition p s) = filter (fun x => negb (p x)) s.
+Proof.
+  intros P s Hwf.
+  destruct Hwf as [f HSem].
+  destruct HSem.
+  * reflexivity.
+  * intros.
+    induction HD.
+    + simpl.
+      replace @foldl'Bits with @foldlBits by reflexivity.
+      f_equal.
+      change (N.lxor bm (filterBits P p bm) = filterBits (fun x => negb (P x)) p bm).
+      apply filterBits_neg; isBitMask.
+    + simpl.
+      rewrite (surjective_pairing (partition P s1)).
+      rewrite (surjective_pairing (partition P s2)).
+      simpl.
+      rewrite IHHD1, IHHD2.
+      reflexivity.
 Qed.
 
 (** ** Instantiating the [FSetInterface] *)
@@ -5793,7 +5852,19 @@ Module Foo: WSfun(N_as_OT).
   Defined.
   
   
-  Definition partition : (elt -> bool) -> t -> t * t. Admitted.
+  Program Definition partition : (elt -> bool) -> t -> t * t :=
+     (fun p ws => Data.IntSet.Internal.partition (fun x => p (Z.to_N x)) ws).
+  Next Obligation.
+    rewrite partition_snd.
+    apply filter_WF.
+    destruct ws; auto.
+    destruct ws; auto.
+  Qed.
+  Next Obligation.
+    rewrite partition_fst.
+    apply filter_WF.
+    destruct ws; auto.
+  Qed.
 
   Definition cardinal : t -> nat :=
     fun ws => s <-- ws;;
@@ -6212,11 +6283,26 @@ Module Foo: WSfun(N_as_OT).
 
   Lemma partition_1 :
     forall (s : t) (f : elt -> bool),
-    compat_bool N.eq f -> Equal (fst (partition f s)) (filter f s). Admitted.
+    compat_bool N.eq f -> Equal (fst (partition f s)) (filter f s).
+  Proof.
+    intros.
+    destruct s.
+    unfold Equal, partition; simpl.
+    rewrite partition_fst.
+    reflexivity.
+  Qed.
+
   Lemma partition_2 :
     forall (s : t) (f : elt -> bool),
     compat_bool N.eq f ->
-    Equal (snd (partition f s)) (filter (fun x : elt => negb (f x)) s). Admitted.
+    Equal (snd (partition f s)) (filter (fun x : elt => negb (f x)) s).
+  Proof.
+    intros.
+    destruct s.
+    unfold Equal, partition; simpl.
+    rewrite partition_snd by assumption.
+    reflexivity.
+  Qed.
 
   Lemma elements_1 :
     forall (s : t) (x : elt), In x s -> InA N.eq x (elements s).

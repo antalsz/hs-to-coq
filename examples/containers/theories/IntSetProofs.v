@@ -1947,7 +1947,7 @@ Ltac unfoldMethods :=
          Bits__N,  instance_Bits_Int, complement_Int.
 
 
-(** We hardcode the width of the leafe bit maps to 64 bits *)
+(** We hardcode the width of the leaf bit maps to 64 bits *)
 
 Definition WIDTH := 64%N.
 Definition tip_width := N.log2 WIDTH.
@@ -2026,7 +2026,6 @@ Lemma suffixOf_noneg:  forall e, 0 <= suffixOf e.
   reflexivity.
   compute. congruence.
 Qed.
-
 
 
 (** *** Operation: [rMask]
@@ -2322,6 +2321,56 @@ Proof.
     apply Z.div_small.
     split; try nonneg.
     zify. rewrite -> N2Z.inj_pow in H. apply H.
+Qed.
+
+(** *** Operation: [intoRange]
+
+This is the inverse of bitmapInRange, in a way.
+*)
+
+Definition intoRange r i := Z.lor (rPrefix r) (Z.of_N i).
+
+Definition inRange_intoRange:
+  forall r i,
+  (i < 2^(rBits r))%N ->
+  inRange (intoRange r i) r = true.
+Proof.
+  intros.
+  destruct r as [p b]; unfold intoRange, inRange, rPrefix, rBits, snd in *; subst.
+  rewrite Z.shiftr_lor.
+  rewrite Z.shiftr_shiftl_l by nonneg.
+  replace (_ - _) with 0 by omega.
+  rewrite Z.shiftr_div_pow2 by nonneg.
+  rewrite Z.div_small.
+  rewrite Z.lor_0_r. apply Z.eqb_refl.
+  split; try nonneg.
+  change (Z.of_N i < Z.of_N 2%N ^ Z.of_N b).
+  rewrite <- N2Z.inj_pow.
+  apply N2Z.inj_lt.
+  assumption.
+Qed.
+
+Definition bitmapInRange_intoRange:
+  forall r i bm,
+  (i < 2^(rBits r))%N ->
+  bitmapInRange r bm (intoRange r i) = N.testbit bm i.
+Proof.
+  intros.
+  unfold bitmapInRange.
+  rewrite inRange_intoRange by assumption.
+  f_equal.
+  destruct r as [p b]; unfold intoRange, inRange, rPrefix, rBits, snd in *; subst.
+  rewrite Z.land_lor_distr_l.
+  rewrite land_shiftl_ones by nonneg.
+  rewrite Z.lor_0_l.
+  rewrite !Z.land_ones by nonneg.
+  rewrite Z.mod_small.
+  rewrite N2Z.id. reflexivity.
+  split; try nonneg.
+  change (Z.of_N i < Z.of_N 2%N ^ Z.of_N b).
+  rewrite <- N2Z.inj_pow.
+  apply N2Z.inj_lt.
+  assumption.
 Qed.
 
 (** *** Operation: [isTipPrefix]
@@ -3247,53 +3296,13 @@ Qed.
 
 Lemma isBitMask_bitmapInRange:
   forall r bm, rBits r = Nlog2 WIDTH -> isBitMask bm ->
-    exists i, (bitmapInRange r bm i = true).
+    exists i, bitmapInRange r bm i = true.
 Proof.
   intros.
   destruct (isBitMask_testbit _ H0) as [j[??]].
-  set (i := (Z.lor (rPrefix r) (Z.of_N j))).
-  exists i.
-
-  (* This proof looks like an Isar-proof… *)
-  assert (Hlog : Z.log2 (Z.of_N j) < 6).
-  { rewrite <- of_N_log2.
-    change (Z.of_N (N.log2 j) < Z.of_N 6%N).
-    apply N2Z.inj_lt.
-    destruct (N.lt_decidable 0%N j).
-    + apply N.log2_lt_pow2; assumption.
-    + enough (j = 0)%N by (subst; compute; congruence).
-      destruct j; auto; contradict H3. apply pos_pos.
-  }
-
-  assert (inRange i r = true).
-  { destruct r as [p b]; simpl in *; subst.
-    subst i.
-    rewrite Z.shiftr_lor.
-    rewrite Z.shiftr_shiftl_l by nonneg.
-    replace (_ - _) with 0 by Nomega.
-    rewrite Z.shiftr_div_pow2 by nonneg.
-    replace (2 ^ Z.of_N 6%N) with (Z.of_N WIDTH) by reflexivity.
-    rewrite Zdiv_small by Nomega.
-    rewrite Z.lor_0_r.
-    simpl Z.shiftl.
-    apply Z.eqb_refl.
-  } 
-
-  assert ((Z.land i (Z.ones (Z.of_N (rBits r))) = Z.of_N j)).
-  { subst i.
-    destruct r as [p b]; simpl in *; subst.
-    rewrite Z.land_lor_distr_l.
-    rewrite -> land_shiftl_ones by Nomega.
-    rewrite Z.lor_0_l.
-    rewrite Z.land_ones_low by (nonneg || assumption).
-    reflexivity.
-  }
-
-  unfold bitmapInRange.
-  rewrite H3.
-  rewrite H4.
-  rewrite N2Z.id.
-  assumption.
+  exists (intoRange r j).
+  rewrite bitmapInRange_intoRange; try assumption.
+  replace (rBits r); assumption.
 Qed.
 
 (** The [Desc] predicate only holds for non-empty sets. *)
@@ -3525,42 +3534,16 @@ Proof.
       f_equal.
       apply N.bits_inj; intro j.
       destruct (N.ltb_spec j WIDTH).
-      - set (i := Z.lor (rPrefix r0) (Z.of_N j)).
-        assert (Hir : inRange i r0 = true).
-        { unfold inRange.
-          destruct r0 as [p b].
-          unfold rPrefix, rBits, snd in *; subst.
-          subst i.
-          rewrite Z.shiftr_lor.
-          rewrite Z.shiftr_shiftl_l by nonneg.
-          replace (_ - _) with 0 by Nomega.
-          rewrite Z.shiftr_div_pow2 by nonneg.
-          replace (2 ^ Z.of_N (N.log2 WIDTH)) with (Z.of_N WIDTH) by reflexivity.
-          rewrite Zdiv_small by Nomega.
-          rewrite Z.lor_0_r.
-          simpl Z.shiftl.
-          apply Z.eqb_refl.
-        }
+      - set (i := intoRange r0 j).
         specialize (H2 i).
         specialize (H7 i).
         specialize (Hf i).
         rewrite Hf in H2 by assumption; clear Hf.
         rewrite H2 in H7; clear H2.
-        unfold bitmapInRange in H7.
-        rewrite Hir in H7.
-        replace (Z.to_N (Z.land i (Z.ones (Z.of_N (rBits r0))))) with j in H7; [assumption|].
-        { subst i.
-          destruct r0 as [p b].
-          unfold rPrefix, rBits, snd in *; subst.
-          rewrite Z.land_lor_distr_l.
-          rewrite land_shiftl_ones by nonneg.
-          rewrite Z.lor_0_l.
-          rewrite Z.land_ones by nonneg.
-          rewrite Z.mod_small
-            by (replace (Z.pow _ _) with (Z.of_N WIDTH) by reflexivity; Nomega).
-          rewrite N2Z.id.
-          reflexivity.
-        }
+        subst i.
+        rewrite !bitmapInRange_intoRange in H7
+          by (replace (rBits r0); assumption).
+        assumption.
       - rewrite !isBitMask0_outside by isBitMask.
         reflexivity.
     + exfalso. subst.
@@ -3820,42 +3803,15 @@ Proof.
               do 2 split_bool; try reflexivity; exfalso.
               apply not_true_iff_false in Heqb0.
               contradict Heqb0.
-              set (i := Z.lor (rPrefix r) (Z.of_N j)).
-              assert (Hir :  inRange i r = true).
-              { subst i.
-                destruct r as [p b]; unfold inRange, rPrefix, rBits, snd in *; subst.
-                rewrite Z.shiftr_lor.
-                rewrite Z.shiftr_shiftl_l by nonneg.
-                replace (_ - _) with 0 by omega.
-                rewrite Z.shiftr_div_pow2 by nonneg.
-                rewrite Z.div_small.
-                rewrite Z.lor_0_r. apply Z.eqb_refl.
-                split; try nonneg.
-                replace (_ ^ _) with (Z.of_N WIDTH) by reflexivity.
-                Nomega.
-              } 
-              assert (Hij : Z.to_N (Z.land i (Z.ones (Z.of_N (rBits r)))) = j).
-              { subst i.
-                destruct r as [p b]; unfold inRange, rPrefix, rBits, snd in *; subst.
-
-                rewrite Z.land_lor_distr_l.
-                rewrite land_shiftl_ones by nonneg.
-                rewrite Z.lor_0_l.
-                rewrite !Z.land_ones by nonneg.
-                rewrite Z.mod_small.
-                rewrite N2Z.id. reflexivity.
-                split; try nonneg.
-                replace (_ ^ _) with (Z.of_N WIDTH) by reflexivity.
-                Nomega.
-              }
+              set (i := intoRange r j).
               assert (Hbmir : bitmapInRange r bm0 i = N.testbit bm0 j)
-                by (unfold bitmapInRange; rewrite Hir; rewrite Hij; reflexivity).
+                by (apply bitmapInRange_intoRange; replace (rBits r); assumption).
               rewrite <- Hbmir; clear Hbmir.
               rewrite <- H7.
               apply H0.
               rewrite H2.
               assert (Hbmir : bitmapInRange r bm i = N.testbit bm j)
-                by (unfold bitmapInRange; rewrite Hir; rewrite Hij; reflexivity).
+                by (apply bitmapInRange_intoRange; replace (rBits r); assumption).
               rewrite Hbmir.
               assumption.
            ++ apply isBitMask0_outside. isBitMask. assumption.
@@ -3884,7 +3840,7 @@ Proof.
       rewrite shorter_spec by assumption.
       admit.
 Admitted.
-      
+
 Lemma isSubsetOf_Sem:
   forall s1 f1 s2 f2,
   Sem s1 f1 -> Sem s2 f2 ->

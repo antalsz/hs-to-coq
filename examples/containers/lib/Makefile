@@ -111,7 +111,8 @@ VFILES:=Data/SequenceManual.v\
   Utils/Containers/Internal/BitQueue.v\
   Data/IntSet/Internal.v\
   Data/IntMap/Internal.v\
-  Data/Map/Internal.v
+  Data/Map/Internal.v\
+  IntSetValidity.v
 
 ifneq ($(filter-out archclean clean cleanall printenv,$(MAKECMDGOALS)),)
 -include $(addsuffix .d,$(VFILES))

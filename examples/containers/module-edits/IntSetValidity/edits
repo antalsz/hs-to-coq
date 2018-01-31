@@ -1,0 +1,15 @@
+skip module Test.QuickCheck
+skip module Test.QuickCheck.Property
+skip module Utils.Containers.Internal.BitUtil
+
+rename type Test.QuickCheck.Property.Property = bool
+rename value Test.QuickCheck.Property..&&. = andb
+
+rewrite forall s x, Test.QuickCheck.Property.counterexample s x = x
+
+# copied from IntSet.Internal’s edit file, needs to be moved to a central place
+rename value Utils.Containers.Internal.BitUtil.shiftLL = Data.IntSet.Internal.shiftLL
+rename value Utils.Containers.Internal.BitUtil.shiftRL = Data.IntSet.Internal.shiftRL
+rename value Utils.Containers.Internal.BitUtil.highestBitMask = Data.IntSet.Internal.highestBitMask
+rename value Utils.Containers.Internal.BitUtil.bitcount = Data.IntSet.Internal.bitCount_N
+

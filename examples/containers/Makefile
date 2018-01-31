@@ -30,6 +30,11 @@ MODULES = \
   Data/IntSet/Internal \
   Data/IntMap/Internal \
   Data/Map/Internal \
+  IntSetValidity \
+
+# Generated modules
+# generated directly from GHC/libraries/containers/tests
+TEST_MODULES = \
 
 # generated from drop-in/
 DROPIN =
@@ -39,11 +44,12 @@ SPECIAL_MODULES =
 
 
 VFILES_GEN = $(addprefix $(OUT)/,$(addsuffix .v,$(MODULES)))
+VFILES_GEN_TEST = $(addprefix $(OUT)/,$(addsuffix .v,$(TEST_MODULES)))
 VFILES_MAN = $(addprefix $(OUT)/,$(addsuffix .v,$(HANDMOD)))
 VFILES_SPECIAL = $(addprefix $(OUT)/,$(addsuffix .v,$(SPECIAL_MODULES)))
 VFILES_DROPIN = $(addprefix $(OUT)/,$(addsuffix .v,$(DROPIN)))
 
-VFILES   = $(VFILES_GEN) $(VFILES_MAN) $(VFILES_SPECIAL) $(VFILES_DROPIN)
+VFILES = $(VFILES_GEN_TEST) $(VFILES_GEN) $(VFILES_MAN) $(VFILES_SPECIAL) $(VFILES_DROPIN)
 
 all:  $(VFILES) coq $(OUT)/edits $(OUT)/README.md
 
@@ -81,11 +87,13 @@ $(VFILES_GEN): $(OUT)/%.v : $$(wildcard module-edits/$$*/preamble.v) $$(wildcard
                      -e edits \
                      -N \
 		     -i containers \
+		     -i containers/tests \
 		     -i containers/dist-install/build \
 		     -I containers/include \
+		     --ghc -package --ghc QuickCheck \
 		     --ghc -this-unit-id --ghc containers \
                      -o $(OUT) \
-		     containers/$*.hs
+		     containers/**/$*.hs
 	test -e $@
 
 $(VFILES_MAN): $(OUT)/%.v : manual/%.v

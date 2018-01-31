@@ -77,7 +77,8 @@ script:
  - make -C examples/bag
  - make -C examples/quicksort
  - make -C examples/intervals
- - make -C examples/containers/lib
+ - make -C examples/containers clean
+ - make -C examples/containers
  - make -C examples/containers/theories
 
  # disabled 2018-07-24 due to too big of a fall-out, and the

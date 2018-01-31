@@ -26,7 +26,64 @@ Some of these certainly could live in the standard library.
 
 *)
 
+(** ** Utilities about sorted (specialized to [Z.lt]) *)
 
+Require Import Coq.Lists.List.
+
+Require Import Coq.Sorting.Sorted.
+
+Lemma sorted_append:
+  forall l1 l2 x,
+  StronglySorted Z.lt l1 ->
+  StronglySorted Z.lt l2 ->
+  (forall y, In y l1 -> y < x) ->
+  (forall y, In y l2 -> x <= y) ->
+  StronglySorted Z.lt (l1 ++ l2).
+Proof.
+  intros ??? Hsorted1 Hsorted2 Hlt Hge.
+  induction Hsorted1.
+  * apply Hsorted2.
+  * simpl. apply SSorted_cons.
+    + apply IHHsorted1.
+      intros y Hy.
+      apply Hlt.
+      right.
+      assumption.
+    + rewrite Forall_forall.
+      intros z Hz.
+      rewrite in_app_iff in Hz.
+      destruct Hz.
+      - rewrite Forall_forall in H.
+        apply H; auto.
+      - apply Z.lt_le_trans with (m := x).
+        apply Hlt. left. reflexivity.
+        apply Hge. assumption.
+Qed.
+
+
+Lemma StronglySorted_map:
+  forall a b (R1 : a -> a -> Prop) (R2 : b -> b -> Prop) (f : a -> b) (l : list a),
+    StronglySorted R1 l ->
+    (forall (x y : a), In x l -> In y l -> R1 x y -> R2 (f x) (f y)) ->
+    StronglySorted R2 (List.map f l).
+Proof.
+  intros.
+  induction H.
+  * simpl. constructor.
+  * simpl. constructor.
+    + apply IHStronglySorted; intuition.
+    + clear IHStronglySorted.
+      rewrite Forall_forall.
+      intros.
+      rewrite in_map_iff in H2.
+      destruct H2 as [?[[]?]].
+      apply H0.
+      left. reflexivity.
+      right. assumption.
+      rewrite Forall_forall in H1.
+      apply H1.
+      assumption.
+Qed.
 
 (**
 We very often have to resolve non-negativity constraints, so we build
@@ -295,6 +352,17 @@ Proof.
   * apply N.shiftl_spec_high'; assumption.
 Qed.
 
+Lemma Z_shiftl_add:
+  forall x y i,
+  (0 <= i) ->
+  Z.shiftl (x + y) i = Z.shiftl x i + Z.shiftl y i.
+Proof.
+  intros.
+  rewrite !Z.shiftl_mul_pow2 by assumption.
+  rewrite Z.mul_add_distr_r.
+  reflexivity.
+Qed.
+
 
 Lemma testbit_1:
   forall i, Z.testbit 1 i = (i =? 0).
@@ -493,6 +561,26 @@ Proof.
   apply N.pow2_bits_true.
 Qed.
 
+Lemma ldiff_pow2_log2_mod:
+  forall bm,
+  (0 < bm)%N ->
+  N.ldiff bm (2 ^ N.log2 bm)%N = (bm mod (2 ^ N.log2 bm))%N.
+Proof.
+  intros.
+  apply N.bits_inj. intro i.
+  rewrite N.ldiff_spec.
+  rewrite N.pow2_bits_eqb.
+  destruct (N.eqb_spec (N.log2 bm) i); simpl negb; [|destruct (N.ltb_spec i (N.log2 bm))].
+  * rewrite N.mod_pow2_bits_high by Nomega.
+    simpl negb.
+    apply andb_false_r.
+  * rewrite N.mod_pow2_bits_low by assumption.
+    apply andb_true_r.
+  * rewrite N.mod_pow2_bits_high by assumption.
+    rewrite N.bits_above_log2 by Nomega.
+    apply andb_true_r.
+Qed.
+
 
 (** ** Most significant differing bit
 
@@ -648,6 +736,22 @@ Lemma bit_diff_not_in_range:
     rewrite -> Z.shiftl_spec by (transitivity (Z.of_N b); nonneg).
     replace (j - Z.of_N b + Z.of_N b) with j in H0 by omega.
     rewrite H0. reflexivity.
+Qed.
+
+Lemma inRange_bounded:
+  forall i r , inRange i r = true -> rPrefix r <= i < rPrefix r + 2^(Z.of_N (rBits r)).
+Proof.
+  intros.
+  destruct r as [p b].
+  unfold inRange, rPrefix, rBits, snd in *.
+  rewrite Z.eqb_eq in H.
+  rewrite !Z.shiftl_mul_pow2 by nonneg.
+  rewrite Z.shiftr_div_pow2 in H by nonneg.
+  subst.
+  assert (0 < 2 ^ Z.of_N b) by (apply Z.pow_pos_nonneg; nonneg).
+  enough (0 <= i - i / 2 ^ Z.of_N b * 2 ^ Z.of_N b < 2^(Z.of_N b)) by omega.
+  rewrite <- Zmod_eq by omega.
+  apply Z_mod_lt; omega.
 Qed.
 
 (** *** Operation: [isSubrange] *)
@@ -1155,6 +1259,40 @@ Lemma rBits_halfRange:
 Proof.
   intros.
   destruct r as [p b]. simpl. reflexivity.
+Qed.
+
+Lemma rPrefix_halfRange_otherhalf:
+  forall r,
+  (0 < rBits r)%N ->
+  rPrefix (halfRange r true) = rPrefix (halfRange r false) + 2^(Z.of_N (rBits (halfRange r false))).
+Proof.
+  intros.
+  destruct r as [p b].
+  unfold halfRange, rPrefix, rBits, snd in *.
+  rewrite <- Z.shiftl_1_l.
+  rewrite <- Z_shiftl_add by nonneg.
+  f_equal.
+  rewrite Z.shiftl_mul_pow2 by omega.
+  replace (2 ^ 1) with 2 by reflexivity.
+  apply Z.bits_inj_iff'. intros i ?.
+  rewrite Z.lor_spec.
+  assert (i = 0 \/ 0 < i) by omega.
+  rewrite Z.mul_comm.
+  rewrite testbit_1.
+  destruct H1.
+  * subst.
+    rewrite Z.testbit_odd_0.
+    rewrite Z.eqb_refl.
+    rewrite orb_true_r.
+    reflexivity.
+  * subst.
+    replace i with (Z.succ (Z.pred i)) by omega.
+    rewrite Z.testbit_odd_succ by omega.
+    rewrite Z.testbit_even_succ by omega.
+    replace (_ =? _) with false
+      by (symmetry; rewrite Z.eqb_neq; omega).
+    rewrite orb_false_r.
+    reflexivity.
 Qed.
 
 Lemma halfRange_isSubrange_testbit:
@@ -5254,6 +5392,16 @@ Proof.
         intuition.
 Qed.
 
+Lemma toList_In_nonneg:
+  forall s, WF s ->
+  forall i, In i (toList s) ->
+  0 <= i.
+Proof.
+   intros.
+   destruct H as [f HSem].
+   rewrite <- toList_In in H0 by eassumption.
+   eapply Sem_nonneg; eassumption.
+Qed.
 
 Lemma toList_Bits_append:
   forall p l bm,
@@ -5294,101 +5442,8 @@ Proof.
     reflexivity.
 Qed.
 
-(** *** Utilities about sorted (specialized to [Z.lt]) *)
-
-Require Import Coq.Sorting.Sorted.
-
-Lemma sorted_append:
-  forall l1 l2 x,
-  StronglySorted Z.lt l1 ->
-  StronglySorted Z.lt l2 ->
-  (forall y, In y l1 -> y < x) ->
-  (forall y, In y l2 -> x <= y) ->
-  StronglySorted Z.lt (l1 ++ l2).
-Proof.
-  intros ??? Hsorted1 Hsorted2 Hlt Hge.
-  induction Hsorted1.
-  * apply Hsorted2.
-  * simpl. apply SSorted_cons.
-    + apply IHHsorted1.
-      intros y Hy.
-      apply Hlt.
-      right.
-      assumption.
-    + rewrite Forall_forall.
-      intros z Hz.
-      rewrite in_app_iff in Hz.
-      destruct Hz.
-      - rewrite Forall_forall in H.
-        apply H; auto.
-      - apply Z.lt_le_trans with (m := x).
-        apply Hlt. left. reflexivity.
-        apply Hge. assumption.
-Qed.
-
 (** *** Sortedness of [toList] *)
 
-Lemma inRange_bounded:
-  forall i r , inRange i r = true -> rPrefix r <= i < rPrefix r + 2^(Z.of_N (rBits r)).
-Proof.
-  intros.
-  destruct r as [p b].
-  unfold inRange, rPrefix, rBits, snd in *.
-  rewrite Z.eqb_eq in H.
-  rewrite !Z.shiftl_mul_pow2 by nonneg.
-  rewrite Z.shiftr_div_pow2 in H by nonneg.
-  subst.
-  assert (0 < 2 ^ Z.of_N b) by (apply Z.pow_pos_nonneg; nonneg).
-  enough (0 <= i - i / 2 ^ Z.of_N b * 2 ^ Z.of_N b < 2^(Z.of_N b)) by omega.
-  rewrite <- Zmod_eq by omega.
-  apply Z_mod_lt; omega.
-Qed.
-
-
-Lemma Z_shiftl_add:
-  forall x y i,
-  (0 <= i) ->
-  Z.shiftl (x + y) i = Z.shiftl x i + Z.shiftl y i.
-Proof.
-  intros.
-  rewrite !Z.shiftl_mul_pow2 by assumption.
-  rewrite Z.mul_add_distr_r.
-  reflexivity.
-Qed.
-
-Lemma rPrefix_halfRange_otherhalf:
-  forall r,
-  (0 < rBits r)%N ->
-  rPrefix (halfRange r true) = rPrefix (halfRange r false) + 2^(Z.of_N (rBits (halfRange r false))).
-Proof.
-  intros.
-  destruct r as [p b].
-  unfold halfRange, rPrefix, rBits, snd in *.
-  rewrite <- Z.shiftl_1_l.
-  rewrite <- Z_shiftl_add by nonneg.
-  f_equal.
-  rewrite Z.shiftl_mul_pow2 by omega.
-  replace (2 ^ 1) with 2 by reflexivity.
-  apply Z.bits_inj_iff'. intros i ?.
-  rewrite Z.lor_spec.
-  assert (i = 0 \/ 0 < i) by omega.
-  rewrite Z.mul_comm.
-  rewrite testbit_1.
-  destruct H1.
-  * subst.
-    rewrite Z.testbit_odd_0.
-    rewrite Z.eqb_refl.
-    rewrite orb_true_r.
-    reflexivity.
-  * subst.
-    replace i with (Z.succ (Z.pred i)) by omega.
-    rewrite Z.testbit_odd_succ by omega.
-    rewrite Z.testbit_even_succ by omega.
-    replace (_ =? _) with false
-      by (symmetry; rewrite Z.eqb_neq; omega).
-    rewrite orb_false_r.
-    reflexivity.
-Qed.
 
 Lemma to_List_Bits_below:
   forall p bm,
@@ -5415,27 +5470,6 @@ Proof.
       apply ldiff_le.
     + destruct H2 as [?|[]]. subst.
       reflexivity.
-Qed.
-
-Lemma ldiff_pow2_log2_mod:
-  forall bm,
-  (0 < bm)%N ->
-  N.ldiff bm (2 ^ N.log2 bm)%N = (bm mod (2 ^ N.log2 bm))%N.
-Proof.
-  intros.
-  apply N.bits_inj. intro i.
-  rewrite N.ldiff_spec.
-  rewrite N.pow2_bits_eqb.
-  SearchAbout N "trich".
-  destruct (N.eqb_spec (N.log2 bm) i); simpl negb; [|destruct (N.ltb_spec i (N.log2 bm))].
-  * rewrite N.mod_pow2_bits_high by Nomega.
-    simpl negb.
-    apply andb_false_r.
-  * rewrite N.mod_pow2_bits_low by assumption.
-    apply andb_true_r.
-  * rewrite N.mod_pow2_bits_high by assumption.
-    rewrite N.bits_above_log2 by Nomega.
-    apply andb_true_r.
 Qed.
 
 Lemma to_List_Bits_sorted:
@@ -5479,7 +5513,7 @@ Lemma to_List_go_Desc_sorted:
 Proof.
   intros ??? HD.
   induction HD.
-  * simpl. apply to_ListBits_sorted. isBitMask.
+  * simpl. apply to_List_Bits_sorted. isBitMask.
   * simpl. subst.
     unfoldMethods.
     erewrite toList_go_append by (apply HD1).
@@ -5506,7 +5540,7 @@ Lemma to_List_Desc_sorted:
 Proof.
   intros ??? HD.
   destruct HD.
-  * simpl. apply to_ListBits_sorted. isBitMask.
+  * simpl. apply to_List_Bits_sorted. isBitMask.
   * simpl. subst.
     unfoldMethods.
     destruct (Z.ltb_spec (rMask r) 0).
@@ -6883,7 +6917,20 @@ Module Foo: WSfun(N_as_OT).
     assumption.
   Qed.
 
-  Lemma elements_3w : forall s : t, NoDupA N.eq (elements s). Admitted.
+  Lemma elements_3w : forall s : t, NoDupA N.eq (elements s).
+  Proof.
+    intros.
+    destruct s as [s Hwf].
+    simpl.
+    apply OrdFacts.Sort_NoDup.
+    apply StronglySorted_Sorted.
+    eapply StronglySorted_map.
+    * apply to_List_sorted; assumption.
+    * intros.
+      assert (0 <= x) by (eapply toList_In_nonneg; eassumption).
+      assert (0 <= y) by (eapply toList_In_nonneg; eassumption).
+      apply Z2N.inj_lt; assumption.
+  Qed.
 
 (**
   These portions of the [FMapInterface] have no counterpart in the [IntSet] interface.

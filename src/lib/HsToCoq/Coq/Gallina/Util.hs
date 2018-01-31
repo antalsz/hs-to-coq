@@ -8,10 +8,11 @@ module HsToCoq.Coq.Gallina.Util (
   maybeForall,
   pattern IfBool, pattern IfCase,
   pattern LetFix, pattern LetCofix,
+  collectArgs,
 
   -- * Manipulating 'Term's
   termHead,
-  
+
   -- * Manipulating 'Binder's, 'Name's, and 'Qualid's
   -- ** Optics
   _Ident, _UnderscoreName, nameToIdent,
@@ -32,6 +33,7 @@ import Data.Semigroup ((<>))
 import Data.Foldable
 import Data.Maybe
 import Data.List.NonEmpty (NonEmpty(..), nonEmpty)
+import qualified Data.List.NonEmpty as NE (toList)
 
 import qualified Data.Text as T
 
@@ -194,4 +196,20 @@ binderArgs = map (PosArg . nameToTerm) . foldMap (toListOf binderNames)
 
 unsafeIdentToQualid :: HasCallStack => Ident -> Qualid
 unsafeIdentToQualid i = fromMaybe (error $ "unsafeIdentToQualid: " ++ show i) (identToQualid i)
+
+collectArgs :: Monad m => Term -> m (Qualid, [Term])
+collectArgs (Qualid qid) = return (qid, [])
+collectArgs (App t args) = do
+    (f, args1) <- collectArgs t
+    args2 <- mapM fromArg (NE.toList args)
+    return $ (f, args1 ++ args2)
+  where
+    fromArg (PosArg t) = return t
+    fromArg _          = fail "non-positional argument"
+collectArgs (Infix a1 f a2) = return (f, [a1, a2])
+collectArgs (Arrow a1 a2) = return (arrow_qid, [a1, a2])
+  where arrow_qid = Qualified "GHC.Prim" "arrow"
+collectArgs (Parens t)    = collectArgs t
+collectArgs (InScope t _) = collectArgs t
+collectArgs t             = fail $ "collectArgs: " ++ show t
 

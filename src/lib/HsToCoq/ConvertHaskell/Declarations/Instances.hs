@@ -111,22 +111,6 @@ convertInstanceName n = do
             subtrees <- mapM go args
             return $ [f] : foldr merge [] subtrees
 
-    collectArgs :: Monad m => Term -> m (Qualid, [Term])
-    collectArgs (Qualid qid) = return (qid, [])
-    collectArgs (App t args) = do
-        (f, args1) <- collectArgs t
-        args2 <- mapM fromArg (NE.toList args)
-        return $ (f, args1 ++ args2)
-      where
-        fromArg (PosArg t) = return t
-        fromArg _          = fail "non-positional argument"
-    collectArgs (Infix a1 f a2) = return (f, [a1, a2])
-    collectArgs (Arrow a1 a2) = return (arrow_qid, [a1, a2])
-      where arrow_qid = Qualified "GHC.Prim" "arrow"
-    collectArgs (Parens t)    = collectArgs t
-    collectArgs (InScope t _) = collectArgs t
-    collectArgs t             = fail $ "collectArgs: " ++ show t
-
     merge :: [[a]] -> [[a]] -> [[a]]
     merge xs     []     = xs
     merge []     ys     = ys

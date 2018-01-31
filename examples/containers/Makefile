@@ -93,7 +93,7 @@ $(VFILES_GEN): $(OUT)/%.v : $$(wildcard module-edits/$$*/preamble.v) $$(wildcard
 		     --ghc -package --ghc QuickCheck \
 		     --ghc -this-unit-id --ghc containers \
                      -o $(OUT) \
-		     containers/**/$*.hs
+		     $(wildcard containers/$*.hs) $(wildcard containers/tests/$*.hs)
 	test -e $@
 
 $(VFILES_MAN): $(OUT)/%.v : manual/%.v

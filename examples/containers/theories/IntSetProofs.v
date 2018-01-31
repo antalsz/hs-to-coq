@@ -3304,6 +3304,55 @@ Proof.
       apply IH.
 Qed.
 
+(** *** Lemmas about [popCount_N] *)
+
+(** Until we switch to [deferredFix], this will have to do. *)
+Axiom unsafeFix_eq : forall a (f : a -> a),
+  unsafeFix f = f (unsafeFix f).
+
+
+
+(** This lemma will encapsulate the termination proof, so that the rest of the proof
+ will not have to be modified. *)
+Lemma popCount_N_eq :
+  popCount_N = fun x =>
+  if (x =? 0)%N then 0 else Z.succ (popCount_N (N.ldiff x (2 ^ N.log2 x)%N)).
+Proof. apply unsafeFix_eq. Qed.
+
+Lemma popCount_N_0:
+  popCount_N 0%N = 0.
+Proof.
+  rewrite popCount_N_eq.
+  rewrite N.eqb_refl.
+  reflexivity.
+Qed.
+
+Lemma popCount_N_bm:
+  forall bm,
+  (0 < bm)%N ->
+  popCount_N bm = Z.succ (popCount_N (N.ldiff bm (2 ^ N.log2 bm)%N)).
+Proof.
+  intros.
+  etransitivity; [rewrite popCount_N_eq; reflexivity|].
+  replace (bm =? 0)%N with false
+    by (symmetry; apply N.eqb_neq; Nomega).
+  reflexivity.
+Qed.
+
+Lemma popCount_N_pow2_1:
+  forall b,
+  popCount_N (2 ^ b)%N = 1.
+Proof.
+  intros.
+  rewrite popCount_N_bm.
+  rewrite N.log2_pow2 by nonneg.
+  rewrite N.ldiff_diag.
+  rewrite popCount_N_0.
+  reflexivity.
+  apply N_pow_pos_nonneg; Nomega.
+Qed.
+
+
 (** ** Well-formed IntSets.
 
 This section introduces the predicate to describe the well-formedness of
@@ -3985,6 +4034,7 @@ Proof.
     rewrite !N.eqb_eq.
     intuition congruence.
 Qed.
+
 
 (** *** Specifying [isSubsetOf] *)
 
@@ -5311,11 +5361,6 @@ Qed.
 (** *** Specifing [foldr] *)
 
 
-(** Until we switch to [deferredFix], this will have to do. *)
-Axiom unsafeFix_eq : forall a (f : a -> a),
-  unsafeFix f = f (unsafeFix f).
-
-
 (* We can extract the argument to [unsafeFix] from the definition of [foldrBits]. *)
 Definition foldrBits_go {a} (p : Int) (f : Int -> a -> a)
   : (Nat -> a -> a) -> Nat -> a -> a.
@@ -5999,33 +6044,6 @@ Proof.
   simpl. rewrite IHxs. reflexivity.
 Qed.
 
-(** This lemma will encapsulate the termination proof, so that the rest of the proof
- will not have to be modified. *)
-Lemma popCount_N_eq :
-  popCount_N = fun x =>
-  if (x =? 0)%N then 0 else Z.succ (popCount_N (N.ldiff x (2 ^ N.log2 x)%N)).
-Proof. apply unsafeFix_eq. Qed.
-
-Lemma popCount_N_0:
-  popCount_N 0%N = 0.
-Proof.
-  rewrite popCount_N_eq.
-  rewrite N.eqb_refl.
-  reflexivity.
-Qed.
-
-Lemma popCount_N_bm:
-  forall bm,
-  isBitMask bm ->
-  popCount_N bm = Z.succ (popCount_N (N.ldiff bm (2 ^ N.log2 bm)%N)).
-Proof.
-  intros.
-  etransitivity; [rewrite popCount_N_eq; reflexivity|].
-  replace (bm =? 0)%N with false
-    by (symmetry; apply N.eqb_neq; unfold isBitMask in *; Nomega).
-  reflexivity.
-Qed.
-
 
 Lemma popCount_N_length_toList_go:
   forall bm p l,
@@ -6044,7 +6062,7 @@ Proof.
     reflexivity.
   - clear bm H. intros bm Hbm IH l.
     rewrite !@foldrBits_go_revNat_bm with (bm := bm) by isBitMask.
-    rewrite popCount_N_bm by isBitMask.
+    rewrite popCount_N_bm by (unfold isBitMask in Hbm; Nomega).
     unfold highestBitMask in *.
     rewrite <- IH; clear IH.
     simpl.
@@ -6341,6 +6359,203 @@ Proof.
       rewrite IHHD1, IHHD2.
       reflexivity.
 Qed.
+
+
+(** *** Correctness of [valid] *)
+
+(** The [valid] function is used in the test suite to detect whether
+   functions return valid trees. It should be equivalent to our [WF].
+   
+   For now it is not complete (see https://github.com/haskell/containers/issues/522)
+   and even with that fixed we might have a problem due to too wide types.
+*)
+
+Require Import IntSetValidity.
+
+Definition noNilInSet : IntSet -> bool :=
+    (fix noNilInSet (t' : IntSet) : bool :=
+        match t' with
+        | Bin _ _ l' r' => noNilInSet l' && noNilInSet r'
+        | Tip _ _ => true
+        | Nil => false
+        end).
+
+Lemma valid_noNilInSet: forall s r f, Desc s r f -> noNilInSet s = true.
+Proof.
+  intros.
+  induction H.
+  * reflexivity.
+  * simpl. rewrite IHDesc1, IHDesc2. reflexivity.
+Qed.
+
+Lemma valid_nilNeverChildOfBin: forall s, WF s -> nilNeverChildOfBin s = true.
+Proof.
+  intros.
+  destruct H as [f HSem].
+  destruct HSem.
+  * reflexivity.
+  * pose proof (valid_noNilInSet _ _ _ HD).
+    destruct HD; apply H.
+Qed.
+
+Lemma valid_maskPowerOfTwo: forall s, WF s -> maskPowerOfTwo s = true.
+  intros.
+  destruct H as [f HSem].
+  destruct HSem.
+  * reflexivity.
+  * induction HD.
+    - reflexivity.
+    - simpl. unfold bitCount_N. unfoldMethods.
+      rewrite IHHD1, IHHD2.
+      subst. simpl.
+      rewrite andb_true_r.
+      rewrite Z.eqb_eq.
+      destruct r as [p b].
+      unfold rMask, rBits, snd in *.
+      unfold id.
+      rewrite Z2N.inj_pow; try nonneg; try Nomega.
+      simpl Z.to_N.
+      rewrite Z2N.inj_pred.
+      rewrite N2Z.id.
+      apply popCount_N_pow2_1.
+Qed.
+
+Lemma Foldable_all_forallb:
+  forall {a} p (l : list a), Foldable.all p l = forallb p l.
+Proof.
+  intros.
+  induction l.
+  * reflexivity.
+  * simpl. rewrite <- IHl.
+    compute.
+    match goal with [ |- _ = match ?x with _ => _ end ] => destruct x end.
+    match goal with [ |- _ = match ?x with _ => _ end ] => destruct x end.
+    reflexivity.
+    match goal with [ |- match ?x with _ => _ end = _ ] => destruct x eqn:? end.
+    match goal with [ H : match ?x with _ => _ end = _ |- _] => destruct x eqn:? end.
+    congruence.
+Qed.
+
+Lemma valid_commonPrefix: forall s, WF s -> commonPrefix s = true.
+Proof.
+  intros.
+  destruct H as [f HSem].
+  destruct HSem.
+  * reflexivity.
+  * destruct HD.
+    - reflexivity.
+    - unfold commonPrefix.
+      unfoldMethods.
+      set (s := Bin p msk s1 s2).
+      assert (Desc s r f) by (eapply DescBin; eassumption).
+      
+      replace elems with toList by reflexivity.
+      rewrite Foldable_all_forallb.
+      rewrite forallb_forall.
+      intros i Hi.
+      rewrite <- toList_In in Hi by (eapply DescSem; eassumption).
+      eapply Desc_inside in Hi; try eassumption.
+      rewrite Z.eqb_eq.
+      symmetry.
+      apply Z.lxor_eq_0_iff.
+      subst p.
+      clear - Hi.
+      destruct r as [p b].
+      unfold inRange, rPrefix in *.
+      rewrite Z.eqb_eq in Hi.
+      subst.
+      apply Z.bits_inj_iff'.
+      intros j Hi.
+      rewrite Z.land_spec.
+      rewrite !Z.shiftl_spec by assumption.
+      destruct (Z.ltb_spec j (Z.of_N b)).
+      + rewrite Z.testbit_neg_r by Nomega.
+        rewrite andb_false_l.
+        reflexivity.
+      + rewrite !Z.shiftr_spec by Nomega.
+        replace (j - Z.of_N b + Z.of_N b) with j by Nomega.
+        rewrite andb_diag.
+        reflexivity.
+Qed.
+
+Lemma valid_maskRespected: forall s, WF s -> maskRespected s = true.
+Proof.
+  intros.
+  destruct H as [f HSem].
+  destruct HSem.
+  * reflexivity.
+  * destruct HD.
+    - reflexivity.
+    - unfold maskRespected.
+      unfoldMethods.
+      replace elems with toList by reflexivity.
+      rewrite !Foldable_all_forallb.
+      rewrite andb_true_iff; split.
+      + rewrite forallb_forall.
+        intros i Hi.
+        rewrite <- toList_In in Hi by (eapply DescSem; eassumption).
+        eapply Desc_inside in Hi; try eassumption.
+        subst msk.
+        rewrite zero_spec by assumption.
+        rewrite negb_true_iff.
+        apply testbit_halfRange_true_false; try assumption.
+        eapply inRange_isSubrange_true; [|eassumption]; isSubrange_true.
+        inRange_false; fail.
+      + rewrite forallb_forall.
+        intros i Hi.
+        rewrite <- toList_In in Hi by (eapply DescSem; eassumption).
+        eapply Desc_inside in Hi; try eassumption.
+        subst msk.
+        rewrite zero_spec by assumption.
+        rewrite negb_involutive.
+        apply testbit_halfRange_false_false; try assumption.
+        eapply inRange_isSubrange_true; [|eassumption]; isSubrange_true.
+        inRange_false; fail.
+Qed.
+
+Lemma valid_tipsValid: forall s, WF s -> tipsValid s = true.
+Proof.
+  intros.
+  destruct H as [f HSem].
+  destruct HSem.
+  * reflexivity.
+  * induction HD.
+    + simpl.
+      unfold validTipPrefix.
+      unfoldMethods.
+      destruct r as [p' b]. unfold rPrefix, rBits, snd in *. subst.
+      rewrite Z.eqb_eq.
+      apply Z.bits_inj_iff'. intros i?.
+      rewrite Z.bits_0.
+      rewrite Z.land_spec.
+      rewrite Z.shiftl_spec by assumption.
+      destruct (Z.ltb_spec i (Z.of_N (N.log2 WIDTH))).
+      - rewrite Z.testbit_neg_r with (a := p') by omega.
+        apply andb_false_r.
+      - rewrite Z.bits_above_log2.
+        apply andb_false_l.
+        omega.
+        unfold WIDTH in *.
+        simpl Z.log2 in *.
+        simpl Z.of_N in H1.
+        omega.
+    + simpl.
+      rewrite IHHD1, IHHD2.
+      reflexivity.
+Qed.
+
+Lemma valid_correct: forall s, WF s -> valid s = true.
+Proof.
+  intros.
+  unfold valid.
+  rewrite valid_nilNeverChildOfBin by assumption.
+  rewrite valid_maskPowerOfTwo by assumption.
+  rewrite valid_commonPrefix by assumption.
+  rewrite valid_maskRespected by assumption.
+  rewrite valid_tipsValid by assumption.
+  reflexivity.
+Qed.
+
 
 (** ** Instantiating the [FSetInterface] *)
 

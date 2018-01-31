@@ -3,6 +3,101 @@
 This module contains a formalization of Haskell's Data.IntSet which implements a set of
 integers as a patricia trie.
 
+** Status
+
+This is the annotated export list of IntSet. The first column says:
+
+ V verified
+ F verified according to the FMapInterface specification
+ P skipped, because of partiality
+ S skipped, for other reasons
+ N nothing to be done
+
+    -- * Set type
+ V    IntSet(..), Key -- instance Eq,Show
+ N  , Prefix, Mask, BitMap
+
+    -- * Operators
+ F  , (\\)
+
+    -- * Query
+ F  , null
+ F  , size
+ F  , member
+    , notMember
+    , lookupLT
+    , lookupGT
+    , lookupLE
+    , lookupGE
+ F  , isSubsetOf
+    , isProperSubsetOf
+    , disjoint
+
+    -- * Construction
+ F  , empty
+ F  , singleton
+ F  , insert
+ F  , delete
+
+    -- * Combine
+ F  , union
+    , unions
+ F  , difference
+ F  , intersection
+
+    -- * Filter
+ F  , filter
+ F  , partition
+    , split
+    , splitMember
+    , splitRoot
+
+    -- * Map
+    , map
+
+    -- * Folds
+ V  , foldr
+ F  , foldl
+    -- ** Strict folds
+ V  , foldr'
+ V  , foldl'
+    -- ** Legacy folds
+ V  , fold
+
+    -- * Min\/Max
+ P  , findMin
+ P  , findMax
+ P  , deleteMin
+ P  , deleteMax
+ P  , deleteFindMin
+ P  , deleteFindMax
+ P  , maxView
+ P  , minView
+
+    -- * Conversion
+
+    -- ** List
+ F  , elems
+ F  , toList
+    , fromList
+
+    -- ** Ordered list
+ V  , toAscList
+    , toDescList
+    , fromAscList
+    , fromDistinctAscList
+
+    -- * Debugging
+ S  , showTree
+ S  , showTreeWith
+
+    -- * Internals
+ V  , match
+ V  , suffixBitMask
+ V  , prefixBitMask
+ V  , bitmapOf
+ V  , zero
+
 *)
 
 Require Import Omega.

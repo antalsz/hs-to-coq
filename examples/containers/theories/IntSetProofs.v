@@ -24,7 +24,7 @@ This is the annotated export list of IntSet. The first column says:
  F  , null
  F  , size
  F  , member
-    , notMember
+ V  , notMember
     , lookupLT
     , lookupGT
     , lookupLE
@@ -4297,6 +4297,19 @@ Proof.
   rewrite  (Desc_neg_false HD); try congruence.
   apply Zlt_not_le. assumption.
 Qed.
+
+(** *** Specifying [notMember] *)
+
+Lemma notMember_Sem:
+  forall {s f i}, Sem s f -> notMember i s = negb (f i).
+Proof.
+  intros.
+  change (negb (member i s) = negb (f i)).
+  f_equal.
+  apply member_Sem.
+  assumption.
+Qed.
+
 
 (** *** Specifying [singleton] *)
 

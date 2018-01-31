@@ -5141,7 +5141,6 @@ Definition foldr_go {a} k :=
 
 (** *** Specifing [toList] *)
 
-
 Lemma In_cons_iff:
   forall {a} (y x : a) xs, In y (x :: xs) <-> x = y \/ In y xs.
 Proof. intros. reflexivity. Qed.
@@ -5230,6 +5229,226 @@ Proof.
         rewrite H4.
         rewrite orb_true_iff.
         intuition.
+Qed.
+
+
+Lemma toList_Bits_append:
+  forall p l bm,
+  isBitMask0 bm ->
+  foldrBits p cons l bm = foldrBits p cons nil bm  ++ l.
+Proof.
+  intros.
+  unfold foldrBits.
+  fold (foldrBits_go p cons).
+  revert l.
+  apply bits_ind_up with (bm := revNatSafe bm).
+  - isBitMask.
+  - intros xs.
+    rewrite !foldrBits_go_0.
+    reflexivity.
+  - clear bm H. intros bm Hbm IH xs.
+    rewrite !@foldrBits_go_bm with (bm := bm) by isBitMask.
+    rewrite lxor_lowestBitMask by isBitMask.
+    rewrite IH.
+    rewrite IH with (l := _ :: nil).
+    rewrite <- app_assoc.
+    reflexivity.
+Qed.
+
+Lemma toList_go_append:
+  forall l s r f,
+  Desc s r f ->
+  toList_go l s = toList_go nil s ++ l.
+Proof.
+  intros. revert l.
+  induction H; intro l.
+  * simpl.
+    apply toList_Bits_append; isBitMask.
+  * simpl.
+    rewrite IHDesc2.
+    rewrite IHDesc1.
+    rewrite IHDesc2 at 2.
+    rewrite IHDesc1 with (l := toList_go nil s2 ++ nil).
+    rewrite app_nil_r.
+    rewrite app_assoc.
+    reflexivity.
+Qed.
+
+(** *** Utilities about sorted (specialized to [Z.lt]) *)
+
+Require Import Coq.Sorting.Sorted.
+
+Lemma sorted_append:
+  forall l1 l2 x,
+  StronglySorted Z.lt l1 ->
+  StronglySorted Z.lt l2 ->
+  (forall y, In y l1 -> y < x) ->
+  (forall y, In y l2 -> x <= y) ->
+  StronglySorted Z.lt (l1 ++ l2).
+Proof.
+  intros ??? Hsorted1 Hsorted2 Hlt Hge.
+  induction Hsorted1.
+  * apply Hsorted2.
+  * simpl. apply SSorted_cons.
+    + apply IHHsorted1.
+      intros y Hy.
+      apply Hlt.
+      right.
+      assumption.
+    + rewrite Forall_forall.
+      intros z Hz.
+      rewrite in_app_iff in Hz.
+      destruct Hz.
+      - rewrite Forall_forall in H.
+        apply H; auto.
+      - apply Z.lt_le_trans with (m := x).
+        apply Hlt. left. reflexivity.
+        apply Hge. assumption.
+Qed.
+
+(** *** Sortedness of [toList] *)
+
+Lemma inRange_bounded:
+  forall i r , inRange i r = true -> rPrefix r <= i < rPrefix r + 2^(Z.of_N (rBits r)).
+Proof.
+  intros.
+  destruct r as [p b].
+  unfold inRange, rPrefix, rBits, snd in *.
+  rewrite Z.eqb_eq in H.
+  rewrite !Z.shiftl_mul_pow2 by nonneg.
+  rewrite Z.shiftr_div_pow2 in H by nonneg.
+  subst.
+  assert (0 < 2 ^ Z.of_N b) by (apply Z.pow_pos_nonneg; nonneg).
+  enough (0 <= i - i / 2 ^ Z.of_N b * 2 ^ Z.of_N b < 2^(Z.of_N b)) by omega.
+  rewrite <- Zmod_eq by omega.
+  apply Z_mod_lt; omega.
+Qed.
+
+
+Lemma Z_shiftl_add:
+  forall x y i,
+  (0 <= i) ->
+  Z.shiftl (x + y) i = Z.shiftl x i + Z.shiftl y i.
+Proof.
+  intros.
+  rewrite !Z.shiftl_mul_pow2 by assumption.
+  rewrite Z.mul_add_distr_r.
+  reflexivity.
+Qed.
+
+Lemma rPrefix_halfRange_otherhalf:
+  forall r,
+  (0 < rBits r)%N ->
+  rPrefix (halfRange r true) = rPrefix (halfRange r false) + 2^(Z.of_N (rBits (halfRange r false))).
+Proof.
+  intros.
+  destruct r as [p b].
+  unfold halfRange, rPrefix, rBits, snd in *.
+  rewrite <- Z.shiftl_1_l.
+  rewrite <- Z_shiftl_add by nonneg.
+  f_equal.
+  rewrite Z.shiftl_mul_pow2 by omega.
+  replace (2 ^ 1) with 2 by reflexivity.
+  apply Z.bits_inj_iff'. intros i ?.
+  rewrite Z.lor_spec.
+  assert (i = 0 \/ 0 < i) by omega.
+  rewrite Z.mul_comm.
+  rewrite testbit_1.
+  destruct H1.
+  * subst.
+    rewrite Z.testbit_odd_0.
+    rewrite Z.eqb_refl.
+    rewrite orb_true_r.
+    reflexivity.
+  * subst.
+    replace i with (Z.succ (Z.pred i)) by omega.
+    rewrite Z.testbit_odd_succ by omega.
+    rewrite Z.testbit_even_succ by omega.
+    replace (_ =? _) with false
+      by (symmetry; rewrite Z.eqb_neq; omega).
+    rewrite orb_false_r.
+    reflexivity.
+Qed.
+
+Lemma to_ListBits_sorted:
+  forall p bm,
+  isBitMask0 bm ->
+  StronglySorted Z.lt (foldrBits p cons nil bm).
+Admitted.
+
+Lemma to_List_go_Desc_sorted:
+  forall s r f, Desc s r f -> StronglySorted Z.lt (toList_go nil s).
+Proof.
+  intros ??? HD.
+  induction HD.
+  * simpl. apply to_ListBits_sorted. isBitMask.
+  * simpl. subst.
+    unfoldMethods.
+    erewrite toList_go_append by (apply HD1).
+    apply sorted_append with (x := rPrefix (halfRange r true)).
+    + eapply IHHD1; eassumption.
+    + eapply IHHD2; eassumption.
+    + intros i Hi.
+      rewrite rPrefix_halfRange_otherhalf by assumption.
+      rewrite <- toList_go_In_nil in Hi by (eapply DescSem; eassumption).
+      apply (Desc_inside HD1) in Hi.
+      eapply inRange_isSubrange_true in Hi; try eassumption.
+      apply inRange_bounded.
+      assumption.
+    + intros i Hi.
+      rewrite <- toList_go_In_nil in Hi by (eapply DescSem; eassumption).
+      apply (Desc_inside HD2) in Hi.
+      eapply inRange_isSubrange_true in Hi; try eassumption.
+      apply inRange_bounded.
+      assumption.
+Qed.
+
+Lemma to_List_Desc_sorted:
+  forall s r f, Desc s r f -> StronglySorted Z.lt (toList s).
+Proof.
+  intros ??? HD.
+  destruct HD.
+  * simpl. apply to_ListBits_sorted. isBitMask.
+  * simpl. subst.
+    unfoldMethods.
+    destruct (Z.ltb_spec (rMask r) 0).
+    - (* This branch is inaccessible becase we only store non-negative numbers.
+         This would chnage if we would switch to bounded numbers. *)
+      exfalso.
+      contradict H2.
+      apply Zle_not_lt.
+      destruct r as [p b].
+      unfold rMask.
+      nonneg.
+    - fold (foldr_go (@cons Key)).
+      erewrite toList_go_append by (apply HD1).
+      change (StronglySorted Z.lt (toList_go nil s1 ++ toList_go nil s2)).
+      apply sorted_append with (x := rPrefix (halfRange r true)).
+      + eapply to_List_go_Desc_sorted; eassumption.
+      + eapply to_List_go_Desc_sorted; eassumption.
+      + intros i Hi.
+        rewrite rPrefix_halfRange_otherhalf by assumption.
+        rewrite <- toList_go_In_nil in Hi by (eapply DescSem; eassumption).
+        apply (Desc_inside HD1) in Hi.
+        eapply inRange_isSubrange_true in Hi; try eassumption.
+        apply inRange_bounded.
+        assumption.
+      + intros i Hi.
+        rewrite <- toList_go_In_nil in Hi by (eapply DescSem; eassumption).
+        apply (Desc_inside HD2) in Hi.
+        eapply inRange_isSubrange_true in Hi; try eassumption.
+        apply inRange_bounded.
+        assumption.
+Qed.
+
+Lemma to_List_sorted:
+  forall s, WF s -> StronglySorted Z.lt (toList s).
+Proof.
+  intros.
+  destruct H as [f HSem].
+  destruct HSem.
+  * apply SSorted_nil.
+  * eapply to_List_Desc_sorted; eassumption.
 Qed.
 
 (** *** Specifying [foldl] *)
@@ -5531,50 +5750,6 @@ Proof.
   let size_rhs := eval unfold size in size in
   match size_rhs with ?f #0 => exact f end.
 Defined.
-
-
-Lemma toList_Bits_append:
-  forall p l bm,
-  isBitMask0 bm ->
-  foldrBits p cons l bm = foldrBits p cons nil bm  ++ l.
-Proof.
-  intros.
-  unfold foldrBits.
-  fold (foldrBits_go p cons).
-  revert l.
-  apply bits_ind_up with (bm := revNatSafe bm).
-  - isBitMask.
-  - intros xs.
-    rewrite !foldrBits_go_0.
-    reflexivity.
-  - clear bm H. intros bm Hbm IH xs.
-    rewrite !@foldrBits_go_bm with (bm := bm) by isBitMask.
-    rewrite lxor_lowestBitMask by isBitMask.
-    rewrite IH.
-    rewrite IH with (l := _ :: nil).
-    rewrite <- app_assoc.
-    reflexivity.
-Qed.
-
-Lemma toList_go_append:
-  forall l s r f,
-  Desc s r f ->
-  toList_go l s = toList_go nil s ++ l.
-Proof.
-  intros. revert l.
-  induction H; intro l.
-  * simpl.
-    apply toList_Bits_append; isBitMask.
-  * simpl.
-    rewrite IHDesc2.
-    rewrite IHDesc1.
-    rewrite IHDesc2 at 2.
-    rewrite IHDesc1 with (l := toList_go nil s2 ++ nil).
-    rewrite app_nil_r.
-    rewrite app_assoc.
-    reflexivity.
-Qed.
-  
 
 Lemma length_append:
   forall {a} (xs ys : list a),

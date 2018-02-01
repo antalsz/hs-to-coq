@@ -28,6 +28,11 @@ rename value Utils.Containers.Internal.BitUtil.shiftRL = Data.IntSet.Internal.sh
 rename value Utils.Containers.Internal.BitUtil.highestBitMask = Data.IntSet.Internal.highestBitMask
 rewrite forall x y, Utils.Containers.Internal.BitUtil.bitcount x y = GHC.Num.op_zp__ x (Data.Bits.popCount x)
 
+# Avoid the natFromInt, and avoid using N’s complement
+skip Data.IntSet.Internal.maskW
+redefine Definition Data.IntSet.Internal.mask : GHC.Num.Int -> (GHC.Num.Int -> Prefix) :=
+  fun i m => Coq.ZArith.BinInt.Z.land i (Coq.ZArith.BinInt.Z.lxor (Coq.ZArith.BinInt.Z.lnot (Coq.ZArith.BinInt.Z.pred m)) m).
+
 
 # We need to change or remove the type signature (body untouched)
 redefine Definition Data.IntSet.Internal.maskW :=

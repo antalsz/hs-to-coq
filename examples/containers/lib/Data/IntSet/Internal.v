@@ -344,10 +344,16 @@ Definition foldl' {a} : (a -> Key -> a) -> a -> IntSet -> a :=
         | _ => j_6__
       end.
 
-Definition maskW :=
+Definition mask : GHC.Num.Int -> GHC.Num.Int -> Prefix :=
   fun i m =>
-    Coq.ZArith.BinInt.Z.of_N (i Data.Bits..&.(**) Data.Bits.xor
-                             (Data.Bits.complement (m GHC.Num.- GHC.Num.fromInteger 1)) m).
+    Coq.ZArith.BinInt.Z.land i (Coq.ZArith.BinInt.Z.lxor (Coq.ZArith.BinInt.Z.lnot
+                                                         (Coq.ZArith.BinInt.Z.pred m)) m).
+
+Definition match_ : GHC.Num.Int -> Prefix -> GHC.Num.Int -> bool :=
+  fun i p m => (mask i m) GHC.Base.== p.
+
+Definition nomatch : GHC.Num.Int -> Prefix -> GHC.Num.Int -> bool :=
+  fun i p m => (mask i m) GHC.Base./= p.
 
 Definition natFromInt : GHC.Num.Int -> N :=
   fun i => GHC.Real.fromIntegral i.
@@ -359,15 +365,6 @@ Definition zero : GHC.Num.Int -> GHC.Num.Int -> bool :=
   fun i m =>
     ((natFromInt i) Data.Bits..&.(**) (natFromInt m)) GHC.Base.==
     GHC.Num.fromInteger 0.
-
-Definition mask : GHC.Num.Int -> GHC.Num.Int -> Prefix :=
-  fun i m => maskW (natFromInt i) (natFromInt m).
-
-Definition match_ : GHC.Num.Int -> Prefix -> GHC.Num.Int -> bool :=
-  fun i p m => (mask i m) GHC.Base.== p.
-
-Definition nomatch : GHC.Num.Int -> Prefix -> GHC.Num.Int -> bool :=
-  fun i p m => (mask i m) GHC.Base./= p.
 
 Definition subsetCmp : IntSet -> IntSet -> comparison :=
   fix subsetCmp arg_0__ arg_1__
@@ -1347,12 +1344,13 @@ End Notations.
 (* Unbound variables:
      Eq Gt Lt N None Some andb bool comparison cons false highestBitMask id
      indexOfTheOnlyBit list negb nil op_zp__ op_zt__ option orb pair shiftLL shiftRL
-     size_nat suffixBitMask true Coq.ZArith.BinInt.Z.log2 Coq.ZArith.BinInt.Z.lxor
-     Coq.ZArith.BinInt.Z.of_N Coq.ZArith.BinInt.Z.pow Data.Bits.complement
-     Data.Bits.op_zizazi__ Data.Bits.op_zizbzi__ Data.Bits.popCount Data.Bits.xor
-     Data.Foldable.foldl GHC.Base.Eq_ GHC.Base.Ord GHC.Base.String GHC.Base.compare
-     GHC.Base.flip GHC.Base.map GHC.Base.op_z2218U__ GHC.Base.op_zd__
-     GHC.Base.op_zdzn__ GHC.Base.op_zeze__ GHC.Base.op_zg__ GHC.Base.op_zgze__
-     GHC.Base.op_zl__ GHC.Base.op_zsze__ GHC.Num.Int GHC.Num.fromInteger
-     GHC.Num.negate GHC.Num.op_zm__ GHC.Num.op_zp__ GHC.Real.fromIntegral Int64.int
+     size_nat suffixBitMask true Coq.ZArith.BinInt.Z.land Coq.ZArith.BinInt.Z.lnot
+     Coq.ZArith.BinInt.Z.log2 Coq.ZArith.BinInt.Z.lxor Coq.ZArith.BinInt.Z.pow
+     Coq.ZArith.BinInt.Z.pred Data.Bits.complement Data.Bits.op_zizazi__
+     Data.Bits.op_zizbzi__ Data.Bits.popCount Data.Bits.xor Data.Foldable.foldl
+     GHC.Base.Eq_ GHC.Base.Ord GHC.Base.String GHC.Base.compare GHC.Base.flip
+     GHC.Base.map GHC.Base.op_z2218U__ GHC.Base.op_zd__ GHC.Base.op_zdzn__
+     GHC.Base.op_zeze__ GHC.Base.op_zg__ GHC.Base.op_zgze__ GHC.Base.op_zl__
+     GHC.Base.op_zsze__ GHC.Num.Int GHC.Num.negate GHC.Num.op_zm__ GHC.Num.op_zp__
+     GHC.Real.fromIntegral Int64.int
 *)

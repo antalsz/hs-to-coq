@@ -98,6 +98,11 @@ This is the annotated export list of IntSet. The first column says:
  V  , bitmapOf
  V  , zero
 
+Additionally we prove:
+ * That the representation is unique.
+ * That the [valid] function from [IntSetValidity] is accepts
+   very well-formed IntSet.
+
 *)
 
 Require Import Omega.
@@ -370,6 +375,31 @@ Proof.
     + rewrite andb_false_r.  reflexivity.
     + nonneg.
 Qed.
+
+Lemma N_land_pow2_eq:
+  forall i b, (0 <= b)%N -> (N.land i (2 ^ b) =? 0)%N = (negb (N.testbit i b)).
+Proof.
+  intros ?? Hnonneg.
+  destruct (N.testbit i b) eqn:Htb; simpl.
+  * rewrite N.eqb_neq.
+    rewrite <- not_false_iff_true in Htb.
+    contradict Htb.
+    assert (N.testbit (N.land i (2^b)) b = false)%N
+     by (rewrite Htb; apply N.bits_0).
+    rewrite N.land_spec in H. rewrite N.pow2_bits_true in H.
+    rewrite andb_true_r in H.
+    assumption.
+  * rewrite N.eqb_eq.
+    apply N.bits_inj.
+    intros j.
+    rewrite N.bits_0.
+    rewrite N.land_spec.
+    rewrite N.pow2_bits_eqb.
+    destruct (N.eqb_spec b j).
+    + subst. rewrite Htb. reflexivity.
+    + rewrite andb_false_r.  reflexivity.
+Qed.
+
 
 Lemma shiftr_eq_ldiff :
 forall n m b,
@@ -1534,6 +1564,15 @@ Proof.
   auto.
 Qed.
 
+Lemma rNonneg_rPrefix:
+  forall r, rNonneg r <-> 0 <= rPrefix r.
+Proof.
+  intros.
+  destruct r as [p b].
+  unfold rNonneg, rPrefix in *.
+  rewrite Z.shiftl_nonneg.
+  reflexivity.
+Qed.
 
 (** *** Lemmas about [msDiffBit]
 
@@ -2171,13 +2210,16 @@ exposes the underlying Coq concepts.
 Ltac unfoldMethods :=
   unfold op_zsze__, op_zeze__, Eq_Char___, Eq___IntSet, Eq_Integer___, op_zsze____, op_zeze____,
          op_zl__, Ord_Integer___, op_zl____,
-         fromInteger, Num_Word__,
+         GHC.Real.fromIntegral, GHC.Real.instance__Integral_Int__74__,
+         fromInteger, GHC.Real.toInteger,
+         Num_Word__,
          op_zm__, op_zp__, Num_Integer__,
          shiftRL, shiftLL,
          Prim.seq,
          op_zdzn__,
          xor, op_zizazi__, op_zizbzi__, Bits.complement,
-         Bits__N,  instance_Bits_Int, complement_Int.
+         Bits__N,  instance_Bits_Int, complement_Int,
+         id, op_z2218U__.
 
 
 (** We hardcode the width of the leaf bit maps to 64 bits *)
@@ -2294,14 +2336,19 @@ Qed.
 
 Lemma zero_spec:
   forall i r,
+  (0 <= i) ->
   (0 < rBits r)%N ->
   zero i (rMask r) = negb (Z.testbit i (Z.pred (Z.of_N (rBits r)))).
 Proof.
   intros.
   destruct r as [p b]. simpl in *.
-  unfold zero.
-  apply land_pow2_eq.
-  Nomega.
+  unfold zero, natFromInt.
+  unfoldMethods.
+  rewrite Z2N.inj_pow by Nomega.
+  rewrite N_land_pow2_eq by Nomega.
+  rewrite <- Z2N.inj_testbit by Nomega.
+  rewrite Z2N.id by assumption.
+  reflexivity.
 Qed.
 
 (**
@@ -2311,6 +2358,7 @@ The following two lemmas capture that pattern concisely.
 
 Lemma nomatch_zero:
   forall {a} i r (P : a -> Prop) left right otherwise,
+  (0 <= i) ->
   (0 < rBits r)%N ->
   (inRange i r = false -> P otherwise) ->
   (inRange i (halfRange r false) = true -> inRange i (halfRange r true) = false -> P left) ->
@@ -2325,17 +2373,18 @@ Proof.
   * rewrite zero_spec by auto. 
     rewrite if_negb.
     destruct (Z.testbit i (Z.pred (Z.of_N (rBits r)))) eqn:Hbit.
+    + apply H3.
+      rewrite halfRange_inRange_testbit by auto. rewrite Hbit. reflexivity.
+      rewrite halfRange_inRange_testbit by auto. rewrite Hbit. reflexivity.
     + apply H2.
       rewrite halfRange_inRange_testbit by auto. rewrite Hbit. reflexivity.
       rewrite halfRange_inRange_testbit by auto. rewrite Hbit. reflexivity.
-    + apply H1.
-      rewrite halfRange_inRange_testbit by auto. rewrite Hbit. reflexivity.
-      rewrite halfRange_inRange_testbit by auto. rewrite Hbit. reflexivity.
-  * apply H0; reflexivity.
+  * apply H1; reflexivity.
 Qed.
 
 Lemma nomatch_zero_smaller:
   forall {a} r1 r (P : a -> Prop) left right otherwise,
+  rNonneg r1 ->
   (rBits r1 < rBits r)%N ->
   (rangeDisjoint r1 r = true -> P otherwise) ->
   (isSubrange r1 (halfRange r false) = true  -> isSubrange r1 (halfRange r true) = false -> P left) ->
@@ -2343,13 +2392,14 @@ Lemma nomatch_zero_smaller:
   P (if nomatch (rPrefix r1) (rPrefix r) (rMask r) then otherwise else 
      if zero (rPrefix r1) (rMask r) then left else right).
 Proof.
-  intros ????????.
+  intros ?????????.
   assert (rBits r1 <= rBits r)%N by Nomega.
   assert (forall h, rBits r1 <= rBits (halfRange r h))%N
     by (intros; rewrite rBits_halfRange; Nomega).
   rewrite <- smaller_not_subrange_disjoint_iff; auto.
   repeat rewrite <- smaller_inRange_iff_subRange by auto.
   apply nomatch_zero.
+  apply rNonneg_rPrefix; assumption.
   Nomega.
 Qed.
 
@@ -2432,7 +2482,7 @@ Looks up values, which are in the given range, as bits in the given bitmap.
 *)
 
 Definition bitmapInRange r bm i :=
-  if inRange i r then N.testbit bm (Z.to_N (Z.land i (Z.ones (Z.of_N (rBits r)))))
+  if inRange i r then Int64.testbit bm (Z.land i (Z.ones (Z.of_N (rBits r))))
                  else false.
 
 Lemma bitmapInRange_outside:
@@ -2445,22 +2495,23 @@ Proof. intros. unfold bitmapInRange in *. destruct (inRange i r); auto.  Qed.
 
 
 Lemma bitmapInRange_0:
-  forall r i, bitmapInRange r 0%N i = false.
+  forall r i, bitmapInRange r Int64.zero i = false.
 Proof.
   intros.
   unfold bitmapInRange.
   destruct (inRange i r); auto.
+  apply Int64.bits_zero.
 Qed.
 
 Lemma bitmapInRange_lor:
   forall r bm1 bm2 i,
-    bitmapInRange r (N.lor bm1 bm2) i =
+    bitmapInRange r (Int64.or bm1 bm2) i =
     orb (bitmapInRange r bm1 i) (bitmapInRange r bm2 i).
 Proof.
   intros.
   unfold bitmapInRange.
   destruct (inRange i r); try reflexivity.
-  rewrite N.lor_spec; reflexivity.
+  rewrite Int64.bits_or; try reflexivity.
 Qed.
 
 Lemma bitmapInRange_lxor:

@@ -61,7 +61,7 @@ install:
  # Build dependencies
  - stack --no-terminal --install-ghc test --only-dependencies
  # dependencies of the continers code that we translate
- - stack --install-ghc install quickcheck
+ - stack --no-terminal --install-ghc install QuickCheck
 
 script:
  - stack --no-terminal --install-ghc install

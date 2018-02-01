@@ -63,6 +63,10 @@ install:
  - stack --no-terminal --install-ghc test --only-dependencies
  # dependencies of the continers code that we translate
  - stack --no-terminal --install-ghc install QuickCheck
+ # Build bundled libraries
+ - (cd vendor/CompCert ; ./configure x86_64-linux)
+ - make -C vendor/CompCert depend1
+ - make -C vendor/CompCert lib/Integers.vo
 
 script:
  - stack --no-terminal --install-ghc install

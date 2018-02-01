@@ -2212,14 +2212,14 @@ Ltac unfoldMethods :=
          op_zl__, Ord_Integer___, op_zl____,
          GHC.Real.fromIntegral, GHC.Real.instance__Integral_Int__74__,
          fromInteger, GHC.Real.toInteger,
-         Num_Word__,
+         Num_Word__, Num__Int64,
          op_zm__, op_zp__, Num_Integer__,
          shiftRL, shiftLL,
          Prim.seq,
          op_zdzn__,
          xor, op_zizazi__, op_zizbzi__, Bits.complement,
          Bits__N,  instance_Bits_Int, complement_Int,
-         id, op_z2218U__.
+         id, op_z2218U__ in *.
 
 
 (** We hardcode the width of the leaf bit maps to 64 bits *)
@@ -2302,6 +2302,26 @@ Lemma suffixOf_noneg:  forall e, 0 <= suffixOf e.
   compute. congruence.
 Qed.
 
+
+Definition suffixOf_wordsize:
+  forall i,
+  0 <= suffixOf i < Int64.zwordsize.
+Proof.
+  intros.
+  split.
+  apply suffixOf_noneg.
+  apply suffixOf_lt_WIDTH.
+Qed.
+
+Lemma suffixOf_max_unsigned:
+  forall e, 0 <= suffixOf e <= Int64.max_unsigned.
+Proof.
+  split. apply suffixOf_wordsize.
+  transitivity Int64.zwordsize.
+  apply Z.lt_le_incl.
+  apply suffixOf_wordsize.
+  compute; congruence.
+Qed.
 
 (** *** Operation: [rMask]
 Calculates a mask in the sense of the IntSet implementation:
@@ -2482,7 +2502,7 @@ Looks up values, which are in the given range, as bits in the given bitmap.
 *)
 
 Definition bitmapInRange r bm i :=
-  if inRange i r then Int64.testbit bm (Z.land i (Z.ones (Z.of_N (rBits r))))
+  if inRange i r then Int64.testbit bm (suffixOf i)
                  else false.
 
 Lemma bitmapInRange_outside:
@@ -2511,42 +2531,30 @@ Proof.
   intros.
   unfold bitmapInRange.
   destruct (inRange i r); try reflexivity.
-  rewrite Int64.bits_or; try reflexivity.
+  rewrite Int64.bits_or by apply suffixOf_wordsize; reflexivity.
 Qed.
 
 Lemma bitmapInRange_lxor:
   forall r bm1 bm2 i,
-    bitmapInRange r (N.lxor bm1 bm2) i =
+    bitmapInRange r (Int64.xor bm1 bm2) i =
     xorb (bitmapInRange r bm1 i) (bitmapInRange r bm2 i).
 Proof.
   intros.
   unfold bitmapInRange.
   destruct (inRange i r); try reflexivity.
-  rewrite N.lxor_spec; reflexivity.
+  rewrite Int64.bits_xor by apply suffixOf_wordsize; reflexivity.
 Qed.
 
 Lemma bitmapInRange_land:
   forall r bm1 bm2 i,
-    bitmapInRange r (N.land bm1 bm2) i =
+    bitmapInRange r (Int64.and bm1 bm2) i =
     andb (bitmapInRange r bm1 i) (bitmapInRange r bm2 i).
 Proof.
   intros.
   unfold bitmapInRange.
   destruct (inRange i r); try reflexivity.
-  rewrite N.land_spec; reflexivity.
+  rewrite Int64.bits_and by apply suffixOf_wordsize; reflexivity.
 Qed.
-
-Lemma bitmapInRange_ldiff:
-  forall r bm1 bm2 i,
-    bitmapInRange r (N.ldiff bm1 bm2) i =
-    andb (bitmapInRange r bm1 i) (negb (bitmapInRange r bm2 i)).
-Proof.
-  intros.
-  unfold bitmapInRange.
-  destruct (inRange i r); try reflexivity.
-  rewrite N.ldiff_spec; reflexivity.
-Qed.
-
 
 Lemma bitmapInRange_bitmapOf:
   forall e i,
@@ -2555,17 +2563,42 @@ Proof.
   intros.
   unfold bitmapInRange, inRange. simpl Z.of_N.
   rewrite <- andb_lazy_alt.
-  unfold bitmapOf, bitmapOfSuffix, suffixOf, suffixBitMask.
+  unfold bitmapOf, bitmapOfSuffix, suffixBitMask.
   unfoldMethods.
-  rewrite <- Z.testbit_of_N' by nonneg.
-  rewrite of_N_shiftl.
-  rewrite -> Z2N.id by nonneg.
-  rewrite -> Z2N.id by nonneg.
-  rewrite Z.shiftl_1_l.
-  rewrite -> Z.pow2_bits_eqb by nonneg.
-  rewrite -> Z.eqb_sym.
-  rewrite <- Z_eq_shiftr_land_ones.
-  apply Z.eqb_sym.
+  destruct (Z.eqb_spec i e).
+  * subst.
+    rewrite Z.eqb_refl. rewrite andb_true_l.
+    rewrite Int64.bits_shl by apply suffixOf_wordsize.
+    rewrite Int64.unsigned_repr by apply suffixOf_max_unsigned.
+    destruct (Coqlib.zlt _ _).
+    - omega.
+    - replace (suffixOf e - suffixOf e) with 0 by omega.
+      rewrite Int64.bits_one.
+      destruct (Coqlib.zeq _ _); auto.
+  * rewrite <- not_true_iff_false.
+    contradict n.
+    rewrite andb_true_iff in n.
+    destruct n.
+    rewrite Z.eqb_eq in H.
+    apply Z.bits_inj_iff'. intros j ?.
+    destruct (Z.ltb_spec j 6).
+    - rewrite Int64.bits_shl in H0 by apply suffixOf_wordsize.
+      rewrite Int64.unsigned_repr in H0 by apply suffixOf_max_unsigned.
+      destruct (Coqlib.zlt _ _); try congruence.
+      rewrite Int64.bits_one in H0.
+      destruct (Coqlib.zeq _ _); inversion H0.
+      assert (suffixOf i = suffixOf e) by (unfold Int in *; omega). clear g e0 H0.
+      apply Z.bits_inj_iff in H3. specialize (H3 j).
+      unfold suffixOf, suffixBitMask in *.
+      unfoldMethods.
+      rewrite !Z.land_spec in *.
+      rewrite !Z.ones_spec_low in * by omega.
+      rewrite !andb_true_r in *.
+      assumption.
+    - apply Z.bits_inj_iff in H. specialize (H (j - 6)).
+      rewrite !Z.shiftr_spec in H by omega.
+      replace (j -6 + 6) with j in H by omega.
+      assumption.
 Qed.
 
 Lemma bitmapInRange_pow:

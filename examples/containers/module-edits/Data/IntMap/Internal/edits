@@ -8,6 +8,9 @@ rename value Data.IntMap.Internal.View = Data.IntMap.Internal.Mk_View
 
 rename value Data.IntMap.Internal.bool = Data.IntMap.Internal.boolITE
 
+# until we migrate this module to Int64, we cannot do [fromSet]
+skip Data.IntMap.Internal.fromSet
+
 nonterminating Data.IntMap.Internal.fromSet
 nonterminating Data.IntMap.Internal.mergeWithKey'
 

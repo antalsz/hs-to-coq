@@ -1118,60 +1118,6 @@ Definition adjust {a} : (a -> a) -> Data.IntSet.Internal.Key -> IntMap
                       | _ , x => f x
                     end) k m.
 
-Definition fromSet {a}
-    : (Data.IntSet.Internal.Key -> a) -> Data.IntSet.Internal.IntSet -> IntMap a :=
-  unsafeFix (fun fromSet arg_0__ arg_1__ =>
-              match arg_0__ , arg_1__ with
-                | _ , Data.IntSet.Internal.Nil => Nil
-                | f , Data.IntSet.Internal.Bin p m l r => Bin p m (fromSet f l) (fromSet f r)
-                | f , Data.IntSet.Internal.Tip kx bm => let buildTree :=
-                                                          unsafeFix (fun buildTree g prefix bmask bits =>
-                                                                      let j_10__ :=
-                                                                        match Coq.ZArith.BinInt.Z.of_N
-                                                                                (Utils.Containers.Internal.BitUtil.shiftRL
-                                                                                (natFromInt bits) (GHC.Num.fromInteger
-                                                                                1)) with
-                                                                          | bits2 => if (bmask Data.Bits..&.(**)
-                                                                                        ((Utils.Containers.Internal.BitUtil.shiftLL
-                                                                                        (GHC.Num.fromInteger 1) bits2)
-                                                                                        GHC.Num.- GHC.Num.fromInteger
-                                                                                        1)) GHC.Base.==
-                                                                                        GHC.Num.fromInteger 0 : bool
-                                                                                     then buildTree g (prefix GHC.Num.+
-                                                                                                      bits2)
-                                                                                          (Utils.Containers.Internal.BitUtil.shiftRL
-                                                                                          bmask bits2) bits2
-                                                                                     else if ((Utils.Containers.Internal.BitUtil.shiftRL
-                                                                                             bmask bits2)
-                                                                                             Data.Bits..&.(**)
-                                                                                             ((Utils.Containers.Internal.BitUtil.shiftLL
-                                                                                             (GHC.Num.fromInteger 1)
-                                                                                             bits2) GHC.Num.-
-                                                                                             GHC.Num.fromInteger 1))
-                                                                                             GHC.Base.==
-                                                                                             GHC.Num.fromInteger
-                                                                                             0 : bool
-                                                                                          then buildTree g prefix bmask
-                                                                                               bits2
-                                                                                          else Bin prefix bits2
-                                                                                               (buildTree g prefix bmask
-                                                                                               bits2) (buildTree g
-                                                                                                      (prefix GHC.Num.+
-                                                                                                      bits2)
-                                                                                                      (Utils.Containers.Internal.BitUtil.shiftRL
-                                                                                                      bmask bits2)
-                                                                                                      bits2)
-                                                                        end in
-                                                                      match bits with
-                                                                        | num_3__ => if num_3__ GHC.Base.==
-                                                                                        GHC.Num.fromInteger 0 : bool
-                                                                                     then Tip prefix (g prefix)
-                                                                                     else j_10__
-                                                                      end) in
-                                                        buildTree f kx bm (Data.IntSet.Internal.suffixBitMask GHC.Num.+
-                                                                          GHC.Num.fromInteger 1)
-              end).
-
 Definition branchMask : Prefix -> Prefix -> Mask :=
   fun p1 p2 =>
     Coq.ZArith.BinInt.Z.of_N (Utils.Containers.Internal.BitUtil.highestBitMask
@@ -1916,5 +1862,4 @@ End Notations.
      GHC.Num.op_zp__ GHC.Num.op_zt__ GHC.Real.fromIntegral
      Utils.Containers.Internal.BitUtil.highestBitMask
      Utils.Containers.Internal.BitUtil.shiftLL
-     Utils.Containers.Internal.BitUtil.shiftRL
 *)

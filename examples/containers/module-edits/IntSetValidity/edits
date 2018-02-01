@@ -11,5 +11,5 @@ rewrite forall s x, Test.QuickCheck.Property.counterexample s x = x
 rename value Utils.Containers.Internal.BitUtil.shiftLL = Data.IntSet.Internal.shiftLL
 rename value Utils.Containers.Internal.BitUtil.shiftRL = Data.IntSet.Internal.shiftRL
 rename value Utils.Containers.Internal.BitUtil.highestBitMask = Data.IntSet.Internal.highestBitMask
-rename value Utils.Containers.Internal.BitUtil.bitcount = Data.IntSet.Internal.bitCount_N
+rewrite forall x y, Utils.Containers.Internal.BitUtil.bitcount x y = GHC.Num.op_zp__ x (Data.Bits.popCount x)
 

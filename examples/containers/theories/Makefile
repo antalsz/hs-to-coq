@@ -58,16 +58,25 @@ COQLIBS?=\
   -Q "." ""\
   -Q "../../../base-thy" Proofs\
   -Q "../../containers/lib" ""\
+  -Q "../../../vendor/CompCert/lib" compcert.lib\
+  -Q "../../../vendor/CompCert/flocq" compcert.flocq\
+  -Q "../../../vendor/CompCert/x86_64" compcert.x86_64\
   -R "../../../base" ""
 COQCHKLIBS?=\
   -R "." ""\
   -R "../../../base-thy" Proofs\
   -R "../../containers/lib" ""\
+  -R "../../../vendor/CompCert/lib" compcert.lib\
+  -R "../../../vendor/CompCert/flocq" compcert.flocq\
+  -R "../../../vendor/CompCert/x86_64" compcert.x86_64\
   -R "../../../base" ""
 COQDOCLIBS?=\
   -R "." ""\
   -R "../../../base-thy" Proofs\
   -R "../../containers/lib" ""\
+  -R "../../../vendor/CompCert/lib" compcert.lib\
+  -R "../../../vendor/CompCert/flocq" compcert.flocq\
+  -R "../../../vendor/CompCert/x86_64" compcert.x86_64\
   -R "../../../base" ""
 
 ##########################

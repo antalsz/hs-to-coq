@@ -58,6 +58,9 @@ $(OUT)/_CoqProject : Makefile
 	> $@
 	echo "-Q . \"\"" >> $@
 	echo "-R ../../../base \"\"" >> $@
+	echo "-R ../../../vendor/CompCert/lib  compcert.lib" >> $@
+	echo "-R ../../../vendor/CompCert/flocq compcert.flocq" >> $@
+	echo "-R ../../../vendor/CompCert/x86_64 compcert.x86_64" >> $@
 	echo $(addsuffix .v,$(HANDMOD)) >> $@
 	echo $(addsuffix .v,$(MODULES)) >> $@
 	echo $(addsuffix .v,$(SPECIAL_MODULES)) >> $@

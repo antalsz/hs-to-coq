@@ -1,5 +1,8 @@
 -Q . ""
 -R ../../../base ""
+-R ../../../vendor/CompCert/lib  compcert.lib
+-R ../../../vendor/CompCert/flocq compcert.flocq
+-R ../../../vendor/CompCert/x86_64 compcert.x86_64
 Data/SequenceManual.v Utils/Containers/Internal/PtrEquality.v Utils/Containers/Internal/BitUtil.v
 Data/Set/Internal.v Utils/Containers/Internal/BitQueue.v Data/IntSet/Internal.v Data/IntMap/Internal.v Data/Map/Internal.v IntSetValidity.v
 

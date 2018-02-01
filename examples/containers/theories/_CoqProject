@@ -2,6 +2,9 @@
 -R ../../../base ""
 -Q ../../../base-thy  Proofs
 -Q ../../containers/lib   ""
+-Q ../../../vendor/CompCert/lib  compcert.lib
+-Q ../../../vendor/CompCert/flocq compcert.flocq
+-Q ../../../vendor/CompCert/x86_64 compcert.x86_64
 Tactics.v
 IntToZ.v
 OrdTheories.v

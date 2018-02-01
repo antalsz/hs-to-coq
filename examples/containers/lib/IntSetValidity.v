@@ -17,9 +17,9 @@ Require Data.Foldable.
 Require Data.IntSet.Internal.
 Require GHC.Base.
 Require GHC.Num.
-Require GHC.Real.
 Import Data.Bits.Notations.
 Import GHC.Base.Notations.
+Import GHC.Num.Notations.
 
 (* No type declarations to convert. *)
 (* Converted value declarations: *)
@@ -41,10 +41,10 @@ Definition maskPowerOfTwo : Data.IntSet.Internal.IntSet -> bool :=
         := match t with
              | Data.IntSet.Internal.Nil => true
              | Data.IntSet.Internal.Tip _ _ => true
-             | Data.IntSet.Internal.Bin _ m l r => andb (Data.IntSet.Internal.bitCount_N
-                                                        (GHC.Num.fromInteger 0) (GHC.Real.fromIntegral m) GHC.Base.==
-                                                        GHC.Num.fromInteger 1) (andb (maskPowerOfTwo l) (maskPowerOfTwo
-                                                                                     r))
+             | Data.IntSet.Internal.Bin _ m l r => andb (_GHC.Num.+_ (GHC.Num.fromInteger 0)
+                                                                     (Data.Bits.popCount (GHC.Num.fromInteger 0))
+                                                        GHC.Base.== GHC.Num.fromInteger 1) (andb (maskPowerOfTwo l)
+                                                                                                 (maskPowerOfTwo r))
            end.
 
 Definition maskRespected : Data.IntSet.Internal.IntSet -> bool :=
@@ -93,9 +93,9 @@ Definition valid : Data.IntSet.Internal.IntSet -> bool :=
                                                                (andb (maskRespected t) (tipsValid t)))).
 
 (* Unbound variables:
-     andb bool false negb true Data.Bits.op_zizazi__ Data.Bits.xor Data.Foldable.all
-     Data.IntSet.Internal.Bin Data.IntSet.Internal.IntSet Data.IntSet.Internal.Nil
-     Data.IntSet.Internal.Prefix Data.IntSet.Internal.Tip
-     Data.IntSet.Internal.bitCount_N Data.IntSet.Internal.elems
-     Data.IntSet.Internal.zero GHC.Base.op_zeze__ GHC.Num.Int GHC.Real.fromIntegral
+     andb bool false negb true Data.Bits.op_zizazi__ Data.Bits.popCount Data.Bits.xor
+     Data.Foldable.all Data.IntSet.Internal.Bin Data.IntSet.Internal.IntSet
+     Data.IntSet.Internal.Nil Data.IntSet.Internal.Prefix Data.IntSet.Internal.Tip
+     Data.IntSet.Internal.elems Data.IntSet.Internal.zero GHC.Base.op_zeze__
+     GHC.Num.Int GHC.Num.op_zp__
 *)

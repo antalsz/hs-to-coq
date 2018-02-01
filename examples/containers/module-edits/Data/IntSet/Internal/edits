@@ -1,6 +1,15 @@
 # not a TODO
 skip module Data.Data
 
+# Use compcert’s fixed width integers for the bit arrays in the Tip,
+# but not for the mask in the Bin
+rename type Data.IntSet.Internal.Nat = Int64.int
+rename type Data.IntSet.Internal.BitMap = Int64.int
+skip Int64.int
+skip module Int64
+rename type Data.IntSet.Internal.Mask = GHC.Num.Int
+skip GHC.Num.Int
+
 # These are TODOs:
 
 # mutual recursion
@@ -17,7 +26,16 @@ nonterminating Data.IntSet.Internal.foldr'Bits
 rename value Utils.Containers.Internal.BitUtil.shiftLL = Data.IntSet.Internal.shiftLL
 rename value Utils.Containers.Internal.BitUtil.shiftRL = Data.IntSet.Internal.shiftRL
 rename value Utils.Containers.Internal.BitUtil.highestBitMask = Data.IntSet.Internal.highestBitMask
-rename value Utils.Containers.Internal.BitUtil.bitcount = Data.IntSet.Internal.bitCount_N
+rewrite forall x y, Utils.Containers.Internal.BitUtil.bitcount x y = GHC.Num.op_zp__ x (Data.Bits.popCount x)
+
+
+# We need to change or remove the type signature (body untouched)
+redefine Definition Data.IntSet.Internal.maskW :=
+  fun i m =>
+    Coq.ZArith.BinInt.Z.of_N (i Data.Bits..&. (Data.Bits.xor
+                             (Data.Bits.complement (m GHC.Num.- (GHC.Num.fromInteger 1))) m)).
+redefine Definition Data.IntSet.Internal.natFromInt : GHC.Num.Int ->  Z :=
+  fun i => GHC.Real.fromIntegral i.
 
 # partial
 skip Data.IntSet.Internal.findMax
@@ -39,27 +57,26 @@ skip Data.IntSet.Internal.deleteFindMin
 rewrite forall x y, (x Data.Bits..&. (Data.Bits.complement y)) = (Data.Bits.xor x (x Data.Bits..&. y))
 
 # Avoid the natFromInt
-redefine Definition Data.IntSet.Internal.mask : GHC.Num.Int -> (Mask -> Prefix) :=
+redefine Definition Data.IntSet.Internal.mask : GHC.Num.Int -> (GHC.Num.Int -> Prefix) :=
   fun i m => Coq.ZArith.BinInt.Z.land i (Coq.ZArith.BinInt.Z.lxor (Coq.ZArith.BinInt.Z.lnot (Coq.ZArith.BinInt.Z.pred m)) m).
 # Avoid the natFromInt
-redefine Definition Data.IntSet.Internal.zero : GHC.Num.Int -> (Mask -> bool) :=
+redefine Definition Data.IntSet.Internal.zero : GHC.Num.Int -> (GHC.Num.Int -> bool) :=
   fun i m => Coq.ZArith.BinInt.Z.eqb (Coq.ZArith.BinInt.Z.land i m) 0.
 # Avoid the natFromInt, and come up with a simpler definition
 # (correctness checked by hand for small values).
-redefine Definition Data.IntSet.Internal.branchMask : Prefix -> (Prefix -> Mask) :=
+redefine Definition Data.IntSet.Internal.branchMask : Prefix -> (Prefix -> GHC.Num.Int) :=
   fun p1 p2 => Coq.ZArith.BinInt.Z.pow 2 (Coq.ZArith.BinInt.Z.log2 (Coq.ZArith.BinInt.Z.lxor p1 p2)).
 
-# indexOfTheOnlyBit uses pointers and ugly stuff
-redefine Definition Data.IntSet.Internal.indexOfTheOnlyBit :=
- fun x => Coq.ZArith.BinInt.Z.of_N (Coq.NArith.BinNat.N.log2 x).
+# Defined inthe midabmle
+skip Data.IntSet.Internal.indexOfTheOnlyBit
 
-redefine Definition Data.IntSet.Internal.lowestBitMask : Nat -> Nat :=
-  fun n => Data.IntSet.Internal.revNatSafe (Data.IntSet.Internal.highestBitMask (Data.IntSet.Internal.revNatSafe n)).
+#redefine Definition Data.IntSet.Internal.lowestBitMask : Nat -> Nat :=
+#  fun n => Data.IntSet.Internal.revNatSafe (Data.IntSet.Internal.highestBitMask (Data.IntSet.Internal.revNatSafe n)).
 
 # the revNat function is only correct if its result is cropped to 64 bits.
-add Data.IntSet.Internal Definition Data.IntSet.Internal.revNatSafe n := Coq.NArith.BinNat.N.modulo (Data.IntSet.Internal.revNat n) (Coq.NArith.BinNat.N.pow 2 64).
+#add Data.IntSet.Internal Definition Data.IntSet.Internal.revNatSafe n := Coq.NArith.BinNat.N.modulo (Data.IntSet.Internal.revNat n) (Coq.NArith.BinNat.N.pow 2 64).
 # Use rewrite, not rename, to not change the name of the actual definition
-rewrite forall, Data.IntSet.Internal.revNat = Data.IntSet.Internal.revNatSafe
+#rewrite forall, Data.IntSet.Internal.revNat = Data.IntSet.Internal.revNatSafe
 
 
 

@@ -56,13 +56,22 @@ vo_to_obj = $(addsuffix .o,\
 
 COQLIBS?=\
   -Q "." ""\
-  -R "../../../base" ""
+  -R "../../../base" ""\
+  -R "../../../vendor/CompCert/lib" compcert.lib\
+  -R "../../../vendor/CompCert/flocq" compcert.flocq\
+  -R "../../../vendor/CompCert/x86_64" compcert.x86_64
 COQCHKLIBS?=\
   -R "." ""\
-  -R "../../../base" ""
+  -R "../../../base" ""\
+  -R "../../../vendor/CompCert/lib" compcert.lib\
+  -R "../../../vendor/CompCert/flocq" compcert.flocq\
+  -R "../../../vendor/CompCert/x86_64" compcert.x86_64
 COQDOCLIBS?=\
   -R "." ""\
-  -R "../../../base" ""
+  -R "../../../base" ""\
+  -R "../../../vendor/CompCert/lib" compcert.lib\
+  -R "../../../vendor/CompCert/flocq" compcert.flocq\
+  -R "../../../vendor/CompCert/x86_64" compcert.x86_64
 
 ##########################
 #                        #

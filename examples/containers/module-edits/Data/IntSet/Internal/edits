@@ -34,7 +34,7 @@ redefine Definition Data.IntSet.Internal.maskW :=
   fun i m =>
     Coq.ZArith.BinInt.Z.of_N (i Data.Bits..&. (Data.Bits.xor
                              (Data.Bits.complement (m GHC.Num.- (GHC.Num.fromInteger 1))) m)).
-redefine Definition Data.IntSet.Internal.natFromInt : GHC.Num.Int ->  Z :=
+redefine Definition Data.IntSet.Internal.natFromInt : GHC.Num.Int -> N :=
   fun i => GHC.Real.fromIntegral i.
 
 # partial
@@ -47,23 +47,9 @@ skip Data.IntSet.Internal.minView
 skip Data.IntSet.Internal.deleteMin
 skip Data.IntSet.Internal.deleteFindMin
 
-# The idiom `x .&. complement y` does not work at type `nat`, as the complement of
-# a natural number is negative. But the expression [x `xor` (x .&. y)] is equivalent:
-#
-#	 quickCheck $ \x y -> (x .&. complement y) == (x `xor` (x.&.y))
-#	 +++ OK, passed 100 tests.
-#
-# so we can use that:
-rewrite forall x y, (x Data.Bits..&. (Data.Bits.complement y)) = (Data.Bits.xor x (x Data.Bits..&. y))
-
-# Avoid the natFromInt
-redefine Definition Data.IntSet.Internal.mask : GHC.Num.Int -> (GHC.Num.Int -> Prefix) :=
-  fun i m => Coq.ZArith.BinInt.Z.land i (Coq.ZArith.BinInt.Z.lxor (Coq.ZArith.BinInt.Z.lnot (Coq.ZArith.BinInt.Z.pred m)) m).
-# Avoid the natFromInt
-redefine Definition Data.IntSet.Internal.zero : GHC.Num.Int -> (GHC.Num.Int -> bool) :=
-  fun i m => Coq.ZArith.BinInt.Z.eqb (Coq.ZArith.BinInt.Z.land i m) 0.
-# Avoid the natFromInt, and come up with a simpler definition
-# (correctness checked by hand for small values).
+# Redefine branchMask. It uses [highestBitMask], which is usually used on the
+# bitmasks (Int64), but branchMask is used on the unbounded integers that we store in the
+# map.
 redefine Definition Data.IntSet.Internal.branchMask : Prefix -> (Prefix -> GHC.Num.Int) :=
   fun p1 p2 => Coq.ZArith.BinInt.Z.pow 2 (Coq.ZArith.BinInt.Z.log2 (Coq.ZArith.BinInt.Z.lxor p1 p2)).
 

@@ -6036,15 +6036,6 @@ Proof.
   match size_rhs with ?f #0 => exact f end.
 Defined.
 
-Lemma length_append:
-  forall {a} (xs ys : list a),
-  (length (xs ++ ys) = length xs + length ys)%nat.
-Proof.
-  intros. induction xs; try reflexivity.
-  simpl. rewrite IHxs. reflexivity.
-Qed.
-
-
 Lemma popCount_N_length_toList_go:
   forall bm p l,
   isBitMask0 bm ->
@@ -6087,7 +6078,7 @@ Proof.
     erewrite toList_go_append with (s := s2) by eassumption.
     rewrite IHDesc1.
     rewrite IHDesc2.
-    rewrite !length_append.
+    rewrite !app_length.
     simpl length.
     unfold Int in *.
     (* Why does Omega not solve this? *)
@@ -7113,22 +7104,12 @@ Module Foo: WSfun(N_as_OT).
     apply foldl_spec; assumption.
   Qed.
 
-
-  Lemma length_map:
-    forall {a b} (f : a->b) (xs : list a),
-    length (List.map f xs) = length xs.
-  Proof.
-    intros. induction xs.
-    * reflexivity.
-    * simpl. rewrite IHxs. reflexivity.
-  Qed.
-
   Lemma cardinal_1 : forall s : t, cardinal s = length (elements s).
   Proof.
     intros.
     destruct s as [s Hwf].
     simpl.
-    rewrite length_map.
+    rewrite map_length.
     rewrite size_spec by assumption.
     apply Nat2Z.id.
   Qed.

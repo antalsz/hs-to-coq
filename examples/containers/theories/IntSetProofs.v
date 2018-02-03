@@ -6109,7 +6109,7 @@ Proof.
          erewrite toList_go_append with (s := s2) by eassumption.
          erewrite sizeGo_spec' by eassumption.
          erewrite sizeGo_spec' by eassumption.
-         rewrite !length_append.
+         rewrite !app_length.
          simpl length.
          unfold Int in *.
          (* Why does Omega not solve this? *)

@@ -4954,7 +4954,7 @@ Program Fixpoint intersection_Desc
   Desc s1 r1 f1 ->
   Desc s2 r2 f2 ->
   (forall i, f i = f1 i && f2 i) ->
-  Desc0 (intersection s1 s2) (commonRange r1 r2) f 
+  Desc0 (intersection s1 s2) r1 f 
   := fun HD1 HD2 Hf => _.
 Next Obligation.
   rewrite intersection_eq.
@@ -4969,7 +4969,6 @@ Next Obligation.
     induction HD2; intros f' Hf'; subst.
     + apply same_size_compare; try Nomega; intros.
       -- subst.
-         rewrite commonRange_idem in *.
          apply tip_Desc0; auto.
          ** solve_f_eq.
          ** isBitMask.
@@ -4983,13 +4982,10 @@ Next Obligation.
       apply nomatch_zero_smaller; try assumption; intros.
       - apply Desc0Nil.
         solve_f_eq_disjoint.
-      - rewrite -> (isSubrange_commonRange_r r1 r) in *  by isSubrange_true.
-        eapply Desc0_subRange; [apply IHHD2_1|]. clear IHHD2_1 IHHD2_2.
+      - eapply Desc0_subRange; [apply IHHD2_1|]. clear IHHD2_1 IHHD2_2.
         ** solve_f_eq_disjoint.
         ** isSubrange_true; eapply Desc_rNonneg; eassumption.
-      - rewrite -> (isSubrange_commonRange_r r1 r) in *
-          by (eapply isSubrange_trans; [ eassumption| apply isSubrange_halfRange; auto]).
-        eapply Desc0_subRange.
+      - eapply Desc0_subRange.
         ** apply IHHD2_2.
            solve_f_eq_disjoint.
         ** isSubrange_true; eapply Desc_rNonneg; eassumption.
@@ -5010,7 +5006,7 @@ Next Obligation.
             fun _ =>
             if _GHC.Base.==_ kx1 p0 then tip kx1 (N.land bm1 bm) else Nil
         | Nil => fun _ => Nil
-        end eq_refl) (Bin p msk s0 s3)) (commonRange r1 r2) f).
+        end eq_refl) (Bin p msk s0 s3)) r1 f).
       rewrite  H7.
       clear dependent s0. clear dependent s3. clear dependent r0. clear dependent r3. clear dependent f0. clear dependent f3.
       clear H1.
@@ -5025,7 +5021,6 @@ Next Obligation.
       induction HD1; intros f' Hf'; subst.
       ++ apply same_size_compare; try Nomega; intros.
         subst.
-        rewrite commonRange_idem in *.
         apply tip_Desc0; auto.
         ** solve_f_eq_disjoint.
         ** isBitMask.
@@ -5041,14 +5036,12 @@ Next Obligation.
       - apply Desc0Nil.
         solve_f_eq_disjoint.
 
-      - rewrite -> (isSubrange_commonRange_l r r2) in * by isSubrange_true.
-        eapply Desc0_subRange.
+      - eapply Desc0_subRange.
         ** apply IHHD1_1.
            solve_f_eq_disjoint.
         ** isSubrange_true; eapply Desc_rNonneg; eassumption.
 
-      - rewrite -> (isSubrange_commonRange_l r r2) in * by isSubrange_true.
-        eapply Desc0_subRange.
+      - eapply Desc0_subRange.
         ** apply IHHD1_2.
            solve_f_eq_disjoint.
         ** isSubrange_true; eapply Desc_rNonneg; eassumption.
@@ -5065,15 +5058,12 @@ Next Obligation.
           solve_f_eq_disjoint.
 
         - (* s2 is part of the left half of s1 *)
-          rewrite -> (isSubrange_commonRange_l r1 r2) in * by isSubrange_true.
           eapply Desc0_subRange.
           eapply intersection_Desc; clear intersection_Desc; try eassumption.
           ** subst sl sr. simpl. omega.
           ** solve_f_eq_disjoint.
           ** isSubrange_true; eapply Desc_rNonneg; eassumption.
         - (* s2 is part of the right half of s1 *)
-          rewrite -> (isSubrange_commonRange_l r1 r2) in * by isSubrange_true.
-
           eapply Desc0_subRange.
           eapply intersection_Desc; clear intersection_Desc; try eassumption.
           ** subst sl sr. simpl. omega.
@@ -5088,7 +5078,6 @@ Next Obligation.
             apply Desc0Nil.
             solve_f_eq_disjoint.
           - (* s1 is part of the left half of s2 *)
-            rewrite -> (isSubrange_commonRange_r r1 r2) in * by isSubrange_true.
             eapply Desc0_subRange.
             eapply intersection_Desc; clear intersection_Desc; try eassumption.
             ** subst sl sr. simpl. omega.
@@ -5096,7 +5085,6 @@ Next Obligation.
             ** isSubrange_true; eapply Desc_rNonneg; eassumption.
 
           - (* s1 is part of the right half of s2 *)
-            rewrite -> (isSubrange_commonRange_r r1 r2) in * by isSubrange_true.
 
             eapply Desc0_subRange.
             eapply intersection_Desc; clear intersection_Desc; try eassumption.
@@ -5107,7 +5095,6 @@ Next Obligation.
         -- (* s1 and s2 are the same size *)
           apply same_size_compare; try Nomega; intros.
           - subst.
-            rewrite commonRange_idem in *.
             eapply bin_Desc0; try assumption; try reflexivity.
             ** eapply intersection_Desc.
                --- subst sl sr. simpl. omega.

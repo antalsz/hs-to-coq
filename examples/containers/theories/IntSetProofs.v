@@ -3748,6 +3748,32 @@ Ltac solve_f_eq_disjoint :=
 
 (** *** Uniqueness of representation *)
 
+Lemma both_halfs:
+  forall i1 i2 r1 r2,
+  (0 < rBits r2)%N ->
+  inRange i1 r1 = true ->
+  inRange i2 r1 = true ->
+  inRange i1 (halfRange r2 false) = true ->
+  inRange i2 (halfRange r2 true) = true ->
+  isSubrange r2 r1 = true.
+Proof.
+  intros.
+  destruct (N.ltb_spec (rBits r1) (rBits r2)).
+  * exfalso.
+    assert (isSubrange r1 (halfRange r2 false) = true)
+      by (apply inRange_both_smaller_subRange with (i := i1);
+          try assumption; rewrite rBits_halfRange; Nomega).
+    assert (isSubrange r1 (halfRange r2 true) = true)
+      by (apply inRange_both_smaller_subRange with (i := i2);
+          try assumption; rewrite rBits_halfRange; Nomega).
+    assert (isSubrange r1 r2 = true) by isSubrange_true.
+    pose proof (smaller_subRange_other_half _ _ H4).
+    rewrite H7, H6, H5 in H8. intuition.
+  * apply inRange_both_smaller_subRange with (i := i1).
+    + eapply inRange_isSubrange_true; [apply isSubrange_halfRange; assumption|eassumption].
+    + assumption.
+    + assumption.
+Qed.
 
 Lemma criss_cross:
   forall i1 i2 i3 i4 r1 r2,
@@ -3764,31 +3790,9 @@ Lemma criss_cross:
   r1 = r2.
 Proof.
   intros.
-  destruct (N.lt_trichotomy (rBits r1) (rBits r2)) as [?|[?|?]].
-  * exfalso.
-    assert (isSubrange r1 (halfRange r2 false) = true)
-      by (apply inRange_both_smaller_subRange with (i := i3);
-          try assumption; rewrite rBits_halfRange; Nomega).
-    assert (isSubrange r1 (halfRange r2 true) = true)
-      by (apply inRange_both_smaller_subRange with (i := i4);
-          try assumption; rewrite rBits_halfRange; Nomega).
-    assert (isSubrange r1 r2 = true) by isSubrange_true.
-    pose proof (smaller_subRange_other_half _ _ H9).
-    rewrite H10, H11, H12 in H13. intuition.
-  * apply inRange_both_same with (i := i1).
-    + eapply inRange_isSubrange_true; [apply isSubrange_halfRange; assumption|eassumption].
-    + assumption.
-    + assumption.
-  * exfalso.
-    assert (isSubrange r2 (halfRange r1 false) = true)
-      by (apply inRange_both_smaller_subRange with (i := i1);
-          try assumption; rewrite rBits_halfRange; Nomega).
-    assert (isSubrange r2 (halfRange r1 true) = true)
-      by (apply inRange_both_smaller_subRange with (i := i2);
-          try assumption; rewrite rBits_halfRange; Nomega).
-    assert (isSubrange r2 r1 = true) by isSubrange_true.
-    pose proof (smaller_subRange_other_half _ _ H9).
-    rewrite H10, H11, H12 in H13. intuition.
+  apply isSubrange_antisym.
+  + eapply both_halfs with (i1 := i1) (i2 := i2); eassumption.
+  + eapply both_halfs with (i1 := i3) (i2 := i4); eassumption.  
 Qed.
 
 Lemma larger_f_imp:

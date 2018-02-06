@@ -5,6 +5,7 @@ Import Notations.
 
 Require Import IntToZ.
 Require OrdTheories.
+Import OrdTheories.CompareTactics.
 Require Import Tactics.
 
 Require Import Data.Set.Internal.
@@ -751,6 +752,8 @@ Module Foo (E : OrderedType) : WSfun(E).
 
   Ltac rel_deriver := eauto 2.
 
+  Ltac rel_deriver' := OrdFacts.order.
+
   Ltac solve_relations_single_step :=
     match goal with
     | [ |- E.lt ?a ?b -> _ ] =>
@@ -762,6 +765,10 @@ Module Foo (E : OrderedType) : WSfun(E).
       do [have: E.lt a b by [rel_deriver]
          | have: E.eq a b by [rel_deriver]
          | have: E.lt b a by [rel_deriver]]
+    | [ |- context[Base.compare ?a ?b]] =>
+      do [have: E.lt a b by [rel_deriver']
+         | have: E.eq a b by [rel_deriver']
+         | have: E.lt b a by [rel_deriver']]
     end.
 
   Ltac solve_relations :=
@@ -1444,60 +1451,113 @@ Module Foo (E : OrderedType) : WSfun(E).
     forall (s : t) (x y : elt), E.eq x y -> In y (add x s).
   Proof with eauto.
     intros. destruct s as [s]. simpl. induction s; derive_constraints.
-    - rewrite /insert /= -/insert. destruct_match.
-      + let H := fresh "Hpe" in destruct (PtrEquality.ptrEq _ _) eqn:H; [admit|clear H].
-        rewrite /In_set /member /= -/member.
-        move: H. move /E.eq_sym /elt_compare_eq -> =>//.
-      + let H := fresh "Hpe" in destruct (PtrEquality.ptrEq _ _) eqn:H; [admit|clear H].
-        autorewrite with elt_compare in *; apply inset_balanceL...
-        * admit.
-        * admit.
-        * admit.
-        * right; left. split.
-          -- apply E.eq_sym in H...
-          -- by apply IHs1.
-      + let H := fresh "Hpe" in destruct (PtrEquality.ptrEq _ _) eqn:H; [admit|clear H].
-        autorewrite with elt_compare in *; apply inset_balanceR...
-        * admit.
-        * admit.
-        * admit.
+    - rewrite /insert /= -/insert. destruct_compare.
+      + destruct_match.
+        all: rewrite /In_set /member /= -/member;
+             solve_relations. 
+      + destruct_match.
+        * apply IHs1 in Hwfl. move: Hwfl. rewrite /insert.
+          apply PtrEquality.ptrEq_eq in Heq0. rewrite Heq0.
+          rewrite /In_set /member /= -/member. solve_relations.
+        * apply insert_prop with (e:=x) in Hwfl.
+          destruct Hwfl as [H0 H1].
+          apply inset_balanceL...
+          -- eapply left_insert_before_balancedL...
+          -- rewrite /before_ordered.
+             move: Hord. rewrite /ordered. rewrite -/local_bounded.
+             case /and4P=>// => _ _ Hlo Hhi.
+             split; [| split; [| split; [| split; [| split]]]]=>//.
+             destruct H1 as [_ Hord'].
+             specialize (Hord' a); destruct Hord'.
+             apply H1=>//.
+          -- right; left. split.
+             ++ apply E.eq_sym in H...
+             ++ apply WF_children in Hwf. apply IHs1. tauto.
+      + destruct_match.
+        * apply IHs2 in Hwfr. move: Hwfr. rewrite /insert.
+          apply PtrEquality.ptrEq_eq in Heq0. rewrite Heq0.
+          rewrite /In_set /member /= -/member. solve_relations.
+        * apply insert_prop with (e:=x) in Hwfr.
+          destruct Hwfr as [H0 H1].
+          apply inset_balanceR...
+          -- eapply right_insert_before_balancedR...
+          -- rewrite /before_ordered.
+             move: Hord. rewrite /ordered. rewrite -/local_bounded.
+             case /and4P=>// => _ _ Hlo Hhi.
+             split; [| split; [| split; [| split; [| split]]]]=>//.
+             destruct H1 as [_ Hord'].
+             specialize (Hord' a); destruct Hord'.
+             apply H2=>//.
+          -- right; right. split.
+             ++ OrdFacts.order.
+             ++ apply WF_children in Hwf. apply IHs2. tauto.
     - rewrite /insert /= /Internal.singleton /In_set /member /=.
       move: H. move /E.eq_sym /elt_compare_eq -> =>//.
-  Admitted.
+  Qed.
 
   Lemma add_2 : forall (s : t) (x y : elt), In y s -> In y (add x s).
   Proof with eauto.
     destruct s as [s]. simpl. intros; induction s.
-    - rewrite /insert /= -/insert. destruct_match; derive_constraints.
-      + (let H := fresh "Hpe" in destruct (PtrEquality.ptrEq _ _) eqn:H; [admit|clear H]).
+    - rewrite /insert /= -/insert. destruct_compare; derive_constraints.
+      + destruct_match.
         move: H. rewrite /In_set /member /= -/member.
         have Heq': (Base.compare y x = Base.compare y a).
         {destruct (Base.compare y a) eqn:Hcomp;
             autorewrite with elt_compare in *; eauto.
           apply E.eq_sym in Heq. eauto. }
         destruct_match; rewrite Heq' //.
-      + (let H := fresh "Hpe" in destruct (PtrEquality.ptrEq _ _) eqn:H; [admit|clear H]).
-        autorewrite with elt_compare in *; apply inset_balanceL...
-        apply inset_destruct in H. intuition.
-        1-9: admit.
-      + (let H := fresh "Hpe" in destruct (PtrEquality.ptrEq _ _) eqn:H; [admit|clear H]).
-        autorewrite with elt_compare in *; apply inset_balanceR...
-        apply inset_destruct in H. intuition.
-        1-9: admit.
+      + destruct_match.
+        apply insert_prop with (e:=x) in Hwfl.
+        destruct Hwfl as [H0 H1].
+        apply inset_balanceL...
+        * eapply left_insert_before_balancedL...
+        * rewrite /before_ordered.
+          move: Hord. rewrite /ordered. rewrite -/local_bounded.
+          case /and4P=>// => _ _ Hlo Hhi.
+          split; [| split; [| split; [| split; [| split]]]]=>//.
+          destruct H1 as [_ Hord'].
+          specialize (Hord' a); destruct Hord'.
+          apply H1=>//.
+        * apply inset_destruct in H. destruct H as [Hr | [Hr | Hr]].
+          -- intuition.
+          -- right; left. split; try tauto.
+             have Hwfl: WF s2.
+             { apply WF_children in Hwf. tauto. }
+             destruct Hr. apply (IHs1 Hwfl) in H2.
+             move: H2. by rewrite /insert.
+          -- right; right. split; tauto.
+      + destruct_match.
+        apply insert_prop with (e:=x) in Hwfr.
+        destruct Hwfr as [H0 H1].
+        apply inset_balanceR...
+        * eapply right_insert_before_balancedR...
+        * rewrite /before_ordered.
+          move: Hord. rewrite /ordered. rewrite -/local_bounded.
+          case /and4P=>// => _ _ Hlo Hhi.
+          split; [| split; [| split; [| split; [| split]]]]=>//.
+          destruct H1 as [_ Hord'].
+          specialize (Hord' a); destruct Hord'.
+          apply H2=>//.
+        * apply inset_destruct in H. destruct H as [Hr | [Hr | Hr]].
+          -- intuition.
+          -- right; left. split; tauto.
+          -- right; right. split; try tauto.
+             have Hwfr: WF s3.
+             { apply WF_children in Hwf. tauto. }
+             destruct Hr. apply (IHs2 Hwfr) in H2.
+             move: H2. by rewrite /insert.
     - discriminate.
-  Admitted.
+  Qed.
 
   Lemma add_3 :
     forall (s : t) (x y : elt), ~ E.eq x y -> In y (add x s) -> In y s.
   Proof.
     destruct s as [s]. simpl.
     intros; induction s; move: H0; rewrite /insert /= -/insert.
-    - rewrite_relations; derive_constraints.
-      + (let H := fresh "Hpe" in destruct (PtrEquality.ptrEq _ _) eqn:H; [admit|clear H]).
-        move /inset_destruct; intuition;
+    - rewrite_relations; derive_constraints; destruct_match.
+      + move /inset_destruct; intuition;
           rewrite /In_set /member /= -/member; solve_relations.
-      + (let H := fresh "Hpe" in destruct (PtrEquality.ptrEq _ _) eqn:H; [admit|clear H]).
-        move=>Hb. apply balanceL_preserves_membership with (s:=0) in Hb; auto.
+      + move=>Hb. apply balanceL_preserves_membership with (s:=0) in Hb; auto.
         * move: Hb. rewrite /In_set /=.
           destruct_match; auto. by apply IHs1.
         * by apply insert_prop.
@@ -1506,8 +1566,7 @@ Module Foo (E : OrderedType) : WSfun(E).
           -- apply insert_prop; auto.
              move: Hord. rewrite /ordered. case /and4P => _ _ ? ?. auto.
           -- move: Hord. rewrite /ordered. case /and4P => _ _ ? ?. auto.
-      + (let H := fresh "Hpe" in destruct (PtrEquality.ptrEq _ _) eqn:H; [admit|clear H]). 
-        move=>Hb. apply balanceR_preserves_membership with (s:=0) in Hb; auto.
+      + move=>Hb. apply balanceR_preserves_membership with (s:=0) in Hb; auto.
         * move: Hb. rewrite /In_set /=.
           destruct_match; auto. by apply IHs2.
         * by apply insert_prop. 
@@ -1518,7 +1577,7 @@ Module Foo (E : OrderedType) : WSfun(E).
              move: Hord. rewrite /ordered. case /and4P => _ _ ? ?. auto.
     - rewrite /In_set /member /Internal.singleton.
       rewrite_relations; auto.
-  Admitted.
+  Qed.
 
   Lemma remove_1 :
     forall (s : t) (x y : elt), E.eq x y -> ~ In y (remove x s). Admitted.

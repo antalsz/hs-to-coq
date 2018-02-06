@@ -132,3 +132,17 @@ Module OrdTheories(E: OrderedType).
   Hint Rewrite <- elt_compare_gt : elt_compare.
   Hint Rewrite <- elt_compare_eq : elt_compare.
 End OrdTheories.
+
+Module CompareTactics.
+Ltac destruct_compare :=
+  match goal with
+  | [ H :context[match (GHC.Base.compare ?a ?b) with _ => _ end] |- _] =>
+    let Heq := fresh "Heq" in
+    destruct (GHC.Base.compare a b) eqn:Heq=>//;
+    autorewrite with elt_compare in Heq
+  | [ |- context[match (GHC.Base.compare ?a ?b) with _ => _ end]] =>
+    let Heq := fresh "Heq" in
+    destruct (GHC.Base.compare a b) eqn:Heq=>//;
+    autorewrite with elt_compare in Heq
+  end.
+End CompareTactics.

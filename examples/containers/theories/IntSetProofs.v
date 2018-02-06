@@ -30,7 +30,7 @@ This is the annotated export list of IntSet. The first column says:
     , lookupLE
     , lookupGE
  F  , isSubsetOf
-    , isProperSubsetOf
+ V  , isProperSubsetOf
     , disjoint
 
     -- * Construction
@@ -4034,7 +4034,6 @@ Proof.
       reflexivity.
 Qed.
 
-
 Lemma Sem_unique:
   forall s1 f1 s2 f2,
   Sem s1 f1 -> Sem s2 f2 ->
@@ -4324,6 +4323,34 @@ Proof.
       congruence.
     + eapply isSubsetOf_Desc; eassumption.
 Qed.
+
+
+Lemma isSubsetOf_refl:
+  forall s f,
+  Sem s f ->
+  isSubsetOf s s = true.
+Proof.
+  intros.
+  rewrite isSubsetOf_Sem by eassumption.
+  intuition.
+Qed.
+
+Lemma isSubsetOf_antisym:
+  forall s1 f1 s2 f2,
+  Sem s1 f1 -> Sem s2 f2 ->
+  isSubsetOf s1 s2 = true ->
+  isSubsetOf s2 s1 = true ->
+  s1 = s2.
+Proof.
+  intros.
+  rewrite isSubsetOf_Sem in H1 by eassumption.
+  rewrite isSubsetOf_Sem in H2 by eassumption.
+  eapply Sem_unique; try eassumption.
+  intro i. specialize (H1 i). specialize (H2 i).
+  apply eq_true_iff_eq.
+  intuition.
+Qed.
+
 
 (** *** Specifying [member] *)
 
@@ -5388,159 +5415,6 @@ Proof.
 Qed.
 
 
-(** *** Specifying [isProperSubsetOf] *)
-
-(** [subsetCmp] is a strange beast, as it returns an [ordering], but does not totally
-order the sets. We first relate it to [equal] and [isSubsetOf], and then stich the specification
-for [isProperSubsetOf] together using that. We use [difference] in the stiching,
-hence the position of this section. *)
-
-Program Fixpoint subsetCmp_equal
-  s1 r1 f1 s2 r2 f2
-  { measure (size_nat s1 + size_nat s2) } :
-  Desc s1 r1 f1 ->
-  Desc s2 r2 f2 ->
-  subsetCmp s1 s2 = Eq <-> equal s1 s2 = true := _.
-Next Obligation.
-  revert subsetCmp_equal H H0.
-  intros IH HD1 HD2.
-  destruct HD1, HD2.
-  * (* Both are tips *)
-    simpl; subst. unfoldMethods.
-    rewrite if_negb.
-    destruct (Z.eqb_spec (rPrefix r) (rPrefix r0)).
-    - destruct (N.eqb_spec bm bm0); try intuition congruence.
-      destruct (N.lxor bm (N.land bm bm0) =? 0)%N;
-      intuition; rewrite ?andb_false_r in *; try congruence.
-    - destruct (N.eqb_spec bm bm0); intuition; rewrite ?andb_true_r, ?andb_false_r in *; try congruence.
-  * (* Tip left, Bin right *)
-    simpl; subst.
-    repeat (match goal with [ |- (match ?scrut with _ => _ end) = Eq <-> _ ] => destruct scrut end;
-            try intuition congruence).
-  * (* Bin right, Tip left *)
-    simpl; subst.
-    intuition congruence.
-  * (* Bin both sides *)
-    simpl; subst; unfold shorter, natFromInt; unfoldMethods.
-    repeat rewrite andb_true_iff.
-    repeat rewrite !N.eqb_eq.
-    repeat rewrite !Z.eqb_eq.
-    unfold op_zg__, Ord_Char___, op_zg____.
-    destruct (N.ltb_spec (Z.to_N (rMask r4)) (Z.to_N (rMask r)));
-      only 2: destruct (N.ltb_spec (Z.to_N (rMask r)) (Z.to_N (rMask r4))).
-    - (* left is bigger than right *)
-      rewrite <- Z2N.inj_lt in H2 by nonneg.
-      intuition try (congruence||omega).
-    - (* right is bigger than left *)
-      rewrite <- Z2N.inj_lt in H3 by nonneg.
-      repeat (match goal with [ |- (match ?scrut with _ => _ end) = Eq <-> _ ] => destruct scrut end);
-      intuition try (congruence||omega).
-    - (* same sized bins *)
-      rewrite <- Z2N.inj_le in H2 by nonneg.
-      rewrite <- Z2N.inj_le in H3 by nonneg.
-      unfoldMethods.
-      rewrite <- IH by ((simpl; omega) || eassumption).
-      rewrite <- IH by ((simpl; omega) || eassumption).
-      destruct (Z.eqb_spec (rPrefix r) (rPrefix r4));
-      repeat (match goal with [ |- (match ?scrut with _ => _ end) = Eq <-> _ ] => destruct scrut eqn:? end);
-        intuition try (congruence || omega).
-Qed.
-
-Program Fixpoint subsetCmp_isSubsetOf
-  s1 r1 f1 s2 r2 f2
-  { measure (size_nat s1 + size_nat s2) } :
-  Desc s1 r1 f1 ->
-  Desc s2 r2 f2 ->
-  negb (eq_comparison (subsetCmp s1 s2) Gt) = isSubsetOf s1 s2 := _.
-Next Obligation.
-  revert subsetCmp_isSubsetOf H H0.
-  intros IH HD1 HD2.
-  destruct HD1, HD2.
-  * (* Both are tips *)
-    simpl; subst. unfoldMethods.
-    rewrite if_negb.
-    destruct (Z.eqb_spec (rPrefix r) (rPrefix r0)).
-    - destruct (N.eqb_spec bm bm0); try intuition congruence.
-      + subst. rewrite N.land_diag, N.lxor_nilpotent, N.eqb_refl. intuition congruence.
-      + destruct (N.lxor bm (N.land bm bm0) =? 0)%N;
-        intuition; rewrite ?andb_false_r in *; try congruence.
-    - destruct (N.lxor bm (N.land bm bm0) =? 0)%N;
-      intuition; rewrite ?andb_false_r in *; try congruence.
-  * (* Tip left, Bin right *)
-    simpl; subst.
-    do 2 erewrite <- IH by (first [ simpl; omega
-                                  | apply DescTip; try eassumption; reflexivity
-                                  | eassumption ]).
-    repeat (match goal with [ |- context [match ?scrut with _ => _ end] ] => destruct scrut end;
-            try intuition congruence).
-  * (* Bin right, Tip left *)
-    simpl; subst.
-    intuition congruence.
-  * (* Bin both sides *)
-    simpl; subst; unfold shorter, natFromInt; unfoldMethods.
-    repeat rewrite andb_true_iff.
-    repeat rewrite !N.eqb_eq.
-    repeat rewrite !Z.eqb_eq.
-    destruct (N.ltb_spec (Z.to_N (rMask r4)) (Z.to_N (rMask r)));
-      only 2: destruct (N.ltb_spec (Z.to_N (rMask r)) (Z.to_N (rMask r4))).
-    - (* left is bigger than right *)
-      reflexivity.
-    - (* right is bigger than left *)
-      unfold match_, nomatch. unfoldMethods.
-      rewrite if_negb.
-      do 2 erewrite <- IH by (first [ simpl; omega
-                                    | eapply DescBin; try beassumption; reflexivity
-                                    | eassumption ]).
-      destruct (mask _ _ =? _), (zero _ _);
-      repeat (match goal with [ |- context [match ?scrut with _ => _ end] ] => destruct scrut eqn:? end); intuition.
-    - (* same sized bins *)
-      unfoldMethods.
-      do 2 erewrite <- IH by (first [ simpl; omega
-                                    | eapply DescBin; try beassumption; reflexivity
-                                    | eassumption ]).
-      destruct (Z.eqb_spec (rPrefix r) (rPrefix r4));
-        repeat (match goal with [ |- context [match ?scrut with _ => _ end] ] => destruct scrut eqn:? end); intuition.
-Qed.
-
-Lemma isProperSubsetOf_Sem:
-  forall s1 f1 s2 f2,
-  Sem s1 f1 -> Sem s2 f2 ->
-  isProperSubsetOf s1 s2 = true <-> ((forall i, f1 i = true -> f2 i = true) /\ (exists i, f1 i <> f2 i)).
-Proof.
-  intros ???? HSem1 HSem2.
-  destruct HSem1, HSem2.
-  * replace (isProperSubsetOf _ _) with false by reflexivity.
-    intuition try congruence; exfalso.
-    destruct H3 as [i Hi]. apply Hi; clear Hi.
-    rewrite H, H0. reflexivity.
-  * replace (isProperSubsetOf Nil s) with true by (destruct HD; reflexivity).
-    intuition try congruence.
-    destruct (Desc_some_f HD) as [i Hi].
-    exists i.
-    rewrite H, Hi. intuition.
-  * replace (isProperSubsetOf s Nil) with false by (destruct s; reflexivity).
-    intuition try congruence; exfalso.
-    destruct (Desc_some_f HD) as [i Hi].
-    apply H1 in Hi.
-    rewrite H in Hi.
-    intuition.
-  * pose proof (subsetCmp_isSubsetOf _ _ _ _ _ _ HD HD0).
-    rewrite eq_iff_eq_true in H.
-    rewrite isSubsetOf_Desc in H by eassumption.
-    pose proof (subsetCmp_equal _ _ _ _ _ _ HD HD0).
-    rewrite equal_spec in H0.
-    unfold isProperSubsetOf.
-    destruct (subsetCmp s s0) eqn:Hssc; simpl in *.
-    + intuition try congruence; exfalso. subst.
-      destruct H5 as [i Hi]. apply Hi.
-      eapply Desc_unique_f; eassumption.
-    + symmetry in H.
-      intuition.
-      assert (s <> s0) by intuition try congruence.
-      admit.
-    + intuition try congruence.
-Admitted.
-
 (** *** Specifing [foldr] *)
 
 
@@ -6532,6 +6406,208 @@ Proof.
       simpl.
       rewrite IHHD1, IHHD2.
       reflexivity.
+Qed.
+
+(** *** Constructiveness of inequality *)
+
+(** I found this easiest to specify once we have [toList]: If two sets are not
+equal, we find an element where they differ.*)
+
+Lemma Sem_notSubset_witness:
+  forall s1 f1 s2 f2,
+    Sem s1 f1 -> Sem s2 f2 ->
+    isSubsetOf s1 s2 = false <-> (exists i, f1 i = true /\ f2 i = false).
+Proof.
+  intros.
+  split; intro.
+  * assert (~ (Forall (fun i => f2 i = true) (toList s1))).
+    { intro.
+      rewrite <- not_true_iff_false in H1.
+      contradict H1.
+      rewrite Forall_forall in H2.
+      rewrite isSubsetOf_Sem by eassumption. 
+      intros i Hi.
+      apply H2.
+      rewrite <- toList_In by eassumption.
+      assumption.
+    }
+    rewrite <- Exists_Forall_neg in H2 by (intro i; destruct (f2 i); intuition).
+    rewrite Exists_exists in H2.
+    destruct H2 as [i [Hin Hf2]].
+    rewrite not_true_iff_false in Hf2.
+    rewrite <- toList_In in Hin by eassumption.
+    exists i; intuition.
+  * apply  not_true_iff_false.
+    intro.
+    rewrite isSubsetOf_Sem in H2 by eassumption.
+    destruct H1 as [i [Hin Hf2]].
+    specialize (H2 i).
+    intuition congruence.
+Qed.
+
+Lemma Sem_differ_witness:
+  forall s1 f1 s2 f2,
+    Sem s1 f1 -> Sem s2 f2 ->
+    s1 <> s2 <-> (exists i, f1 i <> f2 i).
+Proof.
+  intros.
+  transitivity (isSubsetOf s1 s2 = false \/ isSubsetOf s2 s1 = false).
+  * destruct (isSubsetOf s1 s2) eqn:?, (isSubsetOf s2 s1) eqn:?; intuition try congruence.
+    + exfalso. apply H1.
+      eapply isSubsetOf_antisym; eassumption.
+    + subst. erewrite isSubsetOf_refl in Heqb by eassumption. congruence.
+    + subst. erewrite isSubsetOf_refl in Heqb by eassumption. congruence.
+  * do 2 rewrite Sem_notSubset_witness by eassumption.
+    intuition.
+    + destruct H2 as [i?]. exists i. intuition congruence.
+    + destruct H2 as [i?]. exists i. intuition congruence.    
+    + destruct H1 as [i?].
+      destruct (f1 i) eqn:?, (f2 i) eqn:?; try congruence.
+      - left. exists i. intuition congruence.
+      - right. exists i. intuition congruence.
+Qed.
+
+
+(** *** Specifying [isProperSubsetOf] *)
+
+(** [subsetCmp] is a strange beast, as it returns an [ordering], but does not totally
+order the sets. We first relate it to [equal] and [isSubsetOf], and then stich the specification
+for [isProperSubsetOf] together using that. We use [difference] in the stiching,
+hence the position of this section. *)
+
+Program Fixpoint subsetCmp_equal
+  s1 r1 f1 s2 r2 f2
+  { measure (size_nat s1 + size_nat s2) } :
+  Desc s1 r1 f1 ->
+  Desc s2 r2 f2 ->
+  subsetCmp s1 s2 = Eq <-> equal s1 s2 = true := _.
+Next Obligation.
+  revert subsetCmp_equal H H0.
+  intros IH HD1 HD2.
+  destruct HD1, HD2.
+  * (* Both are tips *)
+    simpl; subst. unfoldMethods.
+    rewrite if_negb.
+    destruct (Z.eqb_spec (rPrefix r) (rPrefix r0)).
+    - destruct (N.eqb_spec bm bm0); try intuition congruence.
+      destruct (N.lxor bm (N.land bm bm0) =? 0)%N;
+      intuition; rewrite ?andb_false_r in *; try congruence.
+    - destruct (N.eqb_spec bm bm0); intuition; rewrite ?andb_true_r, ?andb_false_r in *; try congruence.
+  * (* Tip left, Bin right *)
+    simpl; subst.
+    repeat (match goal with [ |- (match ?scrut with _ => _ end) = Eq <-> _ ] => destruct scrut end;
+            try intuition congruence).
+  * (* Bin right, Tip left *)
+    simpl; subst.
+    intuition congruence.
+  * (* Bin both sides *)
+    simpl; subst; unfold shorter, natFromInt; unfoldMethods.
+    repeat rewrite andb_true_iff.
+    repeat rewrite !N.eqb_eq.
+    repeat rewrite !Z.eqb_eq.
+    unfold op_zg__, Ord_Char___, op_zg____.
+    destruct (N.ltb_spec (Z.to_N (rMask r4)) (Z.to_N (rMask r)));
+      only 2: destruct (N.ltb_spec (Z.to_N (rMask r)) (Z.to_N (rMask r4))).
+    - (* left is bigger than right *)
+      rewrite <- Z2N.inj_lt in H2 by nonneg.
+      intuition try (congruence||omega).
+    - (* right is bigger than left *)
+      rewrite <- Z2N.inj_lt in H3 by nonneg.
+      repeat (match goal with [ |- (match ?scrut with _ => _ end) = Eq <-> _ ] => destruct scrut end);
+      intuition try (congruence||omega).
+    - (* same sized bins *)
+      rewrite <- Z2N.inj_le in H2 by nonneg.
+      rewrite <- Z2N.inj_le in H3 by nonneg.
+      unfoldMethods.
+      rewrite <- IH by ((simpl; omega) || eassumption).
+      rewrite <- IH by ((simpl; omega) || eassumption).
+      destruct (Z.eqb_spec (rPrefix r) (rPrefix r4));
+      repeat (match goal with [ |- (match ?scrut with _ => _ end) = Eq <-> _ ] => destruct scrut eqn:? end);
+        intuition try (congruence || omega).
+Qed.
+
+Program Fixpoint subsetCmp_isSubsetOf
+  s1 r1 f1 s2 r2 f2
+  { measure (size_nat s1 + size_nat s2) } :
+  Desc s1 r1 f1 ->
+  Desc s2 r2 f2 ->
+  negb (eq_comparison (subsetCmp s1 s2) Gt) = isSubsetOf s1 s2 := _.
+Next Obligation.
+  revert subsetCmp_isSubsetOf H H0.
+  intros IH HD1 HD2.
+  destruct HD1, HD2.
+  * (* Both are tips *)
+    simpl; subst. unfoldMethods.
+    rewrite if_negb.
+    destruct (Z.eqb_spec (rPrefix r) (rPrefix r0)).
+    - destruct (N.eqb_spec bm bm0); try intuition congruence.
+      + subst. rewrite N.land_diag, N.lxor_nilpotent, N.eqb_refl. intuition congruence.
+      + destruct (N.lxor bm (N.land bm bm0) =? 0)%N;
+        intuition; rewrite ?andb_false_r in *; try congruence.
+    - destruct (N.lxor bm (N.land bm bm0) =? 0)%N;
+      intuition; rewrite ?andb_false_r in *; try congruence.
+  * (* Tip left, Bin right *)
+    simpl; subst.
+    do 2 erewrite <- IH by (first [ simpl; omega
+                                  | apply DescTip; try eassumption; reflexivity
+                                  | eassumption ]).
+    repeat (match goal with [ |- context [match ?scrut with _ => _ end] ] => destruct scrut end;
+            try intuition congruence).
+  * (* Bin right, Tip left *)
+    simpl; subst.
+    intuition congruence.
+  * (* Bin both sides *)
+    simpl; subst; unfold shorter, natFromInt; unfoldMethods.
+    repeat rewrite andb_true_iff.
+    repeat rewrite !N.eqb_eq.
+    repeat rewrite !Z.eqb_eq.
+    destruct (N.ltb_spec (Z.to_N (rMask r4)) (Z.to_N (rMask r)));
+      only 2: destruct (N.ltb_spec (Z.to_N (rMask r)) (Z.to_N (rMask r4))).
+    - (* left is bigger than right *)
+      reflexivity.
+    - (* right is bigger than left *)
+      unfold match_, nomatch. unfoldMethods.
+      rewrite if_negb.
+      do 2 erewrite <- IH by (first [ simpl; omega
+                                    | eapply DescBin; try beassumption; reflexivity
+                                    | eassumption ]).
+      destruct (mask _ _ =? _), (zero _ _);
+      repeat (match goal with [ |- context [match ?scrut with _ => _ end] ] => destruct scrut eqn:? end); intuition.
+    - (* same sized bins *)
+      unfoldMethods.
+      do 2 erewrite <- IH by (first [ simpl; omega
+                                    | eapply DescBin; try beassumption; reflexivity
+                                    | eassumption ]).
+      destruct (Z.eqb_spec (rPrefix r) (rPrefix r4));
+        repeat (match goal with [ |- context [match ?scrut with _ => _ end] ] => destruct scrut eqn:? end); intuition.
+Qed.
+
+Lemma isProperSubsetOf_Sem:
+  forall s1 f1 s2 f2,
+  Sem s1 f1 -> Sem s2 f2 ->
+  isProperSubsetOf s1 s2 = true <-> ((forall i, f1 i = true -> f2 i = true) /\ (exists i, f1 i <> f2 i)).
+Proof.
+  intros ???? HSem1 HSem2.
+  rewrite <- Sem_differ_witness by eassumption.
+  rewrite <- isSubsetOf_Sem by eassumption.
+  destruct HSem1, HSem2.
+  * replace (isProperSubsetOf _ _) with false by reflexivity.
+    replace (isSubsetOf _ _) with true by reflexivity.
+    intuition try congruence.
+  * replace (isProperSubsetOf Nil s) with true by (destruct HD; reflexivity).
+    replace (isSubsetOf Nil s) with true by (destruct s; reflexivity).
+    intuition try congruence.
+    subst; inversion HD.
+  * replace (isProperSubsetOf s Nil) with false by (destruct s; reflexivity).
+    replace (isSubsetOf s Nil) with false by (destruct HD; reflexivity).
+    intuition try congruence.
+  * pose proof (subsetCmp_isSubsetOf _ _ _ _ _ _ HD HD0).
+    rewrite eq_iff_eq_true in H.
+    pose proof (subsetCmp_equal _ _ _ _ _ _ HD HD0).
+    rewrite equal_spec in H0.
+    unfold isProperSubsetOf.
+    destruct (subsetCmp s s0) eqn:Hssc; simpl in *;
+    intuition try congruence.
 Qed.
 
 

@@ -1079,6 +1079,24 @@ Module Foo (E : OrderedType) : WSfun(E).
     move=>a b H1 H2. rewrite -H2 in H1. by apply H1.
   Qed.
 
+  Section LocalBounded.
+
+    Variable f : E.t -> bool.
+    Variable e : E.t.
+    
+    Definition non_strict_increasing : Prop :=
+      forall x y, E.lt x y \/ E.eq x y -> f x -> f y.
+
+    Definition non_strict_decreasing : Prop :=
+      forall x y, E.lt y x \/ E.eq x y -> f x -> f y.
+
+    Definition with_invariant_upper_bounded_by s a : Prop :=
+      local_bounded f (fun arg => arg GHC.Base.< a) s.
+
+    Definition with_invariant_lower_bounded_by s a : Prop :=
+      local_bounded (fun arg => arg GHC.Base.> a) f s.
+End LocalBounded.
+
   Lemma insert_prop : forall e s,
       WF s ->
       WF (insert e s) /\
@@ -1086,14 +1104,14 @@ Module Foo (E : OrderedType) : WSfun(E).
       (forall a,
           (forall (f : elt -> bool),
               E.lt e a -> f e ->
-              (forall x y, E.lt x y \/ E.eq x y -> f x -> f y) ->
-              local_bounded f (fun arg => arg GHC.Base.< a) s ->
-              local_bounded f (fun arg => arg GHC.Base.< a) (insert e s)) /\
+              non_strict_increasing f ->
+              with_invariant_upper_bounded_by f s a ->
+              with_invariant_upper_bounded_by f (insert e s) a) /\
           (forall (g : elt -> bool),
               E.lt a e -> g e ->
-              (forall x y, E.lt y x \/ E.eq x y -> g x -> g y) ->
-              local_bounded (fun arg => arg GHC.Base.> a) g s ->
-              local_bounded (fun arg => arg GHC.Base.> a) g (insert e s))).
+              non_strict_decreasing g ->
+              with_invariant_lower_bounded_by g s a ->
+              with_invariant_lower_bounded_by g (insert e s) a)).
   Proof.
     induction s.
     - intros. rewrite /insert/=. destruct_match; split3; derive_constraints.
@@ -1109,13 +1127,12 @@ Module Foo (E : OrderedType) : WSfun(E).
         destruct_match; [solve [auto]|].
         replace (Datatypes.id e) with e.
         right. rewrite /size=>//. auto.
-      + intros.
-        destruct (PtrEquality.ptrEq e a); [solve [auto]|].
+      + intros. destruct_match.
         replace (Datatypes.id e) with e; auto.
+        rewrite /with_invariant_upper_bounded_by /with_invariant_lower_bounded_by.
         split; intros; solve_local_bounded_with_relax.
       + (** s is Bin, e < a, prove: WF (insert e s) *)
-        intros.
-        destruct (PtrEquality.ptrEq _ _) eqn:Hpe; [assumption|clear Hpe].
+        intros. destruct_match.
         apply balanceL_WF; auto.
         * (** WF (insert e s2) *)
             by apply IHs1.
@@ -1134,7 +1151,7 @@ Module Foo (E : OrderedType) : WSfun(E).
                         (apply IHs1 in Hwfl;
                          destruct Hwfl as [_ [Hwlf' _]];
                          move: Hwlf'; rewrite /insert;
-                         move: Heq0 ->; move: Heq1 ->;
+                         move: Heq1 ->; move: Heq2 ->;
                          rewrite_for_omega; intros; omega)].
           -- (** we didn't *) derive_constraints; subst.
              rewrite H0. destruct Hbalanced; (left + right); omega.
@@ -1161,7 +1178,8 @@ Module Foo (E : OrderedType) : WSfun(E).
           destruct Hwfl as [? [Hs _]].
           move: Hs. rewrite /insert.
           rewrite_for_omega; intros; omega.
-        * derive_compare. rewrite /before_ordered.
+        * rewrite /with_invariant_upper_bounded_by in H2.
+          derive_compare. rewrite /before_ordered.
           split; [| split; [| split; [| split; [| split]]]]=>//.
           -- autorewrite with elt_compare =>//.
           -- intros. autorewrite with elt_compare in *.
@@ -1173,14 +1191,15 @@ Module Foo (E : OrderedType) : WSfun(E).
           destruct Hwfl as [? [Hs _]].
           move: Hs. rewrite /insert.
           rewrite_for_omega; intros; omega.
-        * derive_compare. rewrite /before_ordered.
+        * rewrite /with_invariant_lower_bounded_by in H2.
+          derive_compare. rewrite /before_ordered.
           split; [| split; [| split; [| split; [| split]]]]=>//.
           -- autorewrite with elt_compare =>//.
           -- intros. autorewrite with elt_compare in *.
              intuition; OrdFacts.order.
           -- apply IHs1 in Hwfl. destruct Hwfl as [ _ [_ Hord']].
              specialize (Hord' a0); destruct Hord'.
-             apply H3=>//; try intros;
+             apply H3=>//; rewrite /non_strict_decreasing; try intros;
                autorewrite with elt_compare in *; auto.
              intuition; OrdFacts.order.
       + (** s is Bin, e > a, prove: WF (insert e s) *)
@@ -1202,7 +1221,7 @@ Module Foo (E : OrderedType) : WSfun(E).
           -- (** we didn't *) subst.
              rewrite H1. destruct Hbalanced; (left + right); omega.
         * (** prove [before_ordered] pre-conditions *)
-          rewrite -/insert /before_ordered.
+          rewrite /before_ordered.
           move: Hord. rewrite /ordered. rewrite -/local_bounded.
           case /and4P=>// => _ _ Hlo Hhi.
           split; [| split; [| split; [| split; [| split]]]]=>//.
@@ -1223,18 +1242,21 @@ Module Foo (E : OrderedType) : WSfun(E).
         * rewrite /before_balancedR. apply IHs2 in Hwfr.
           destruct Hwfr as [? [Hs _]]. move: Hs. rewrite /insert.
           rewrite_for_omega; intros; omega.
-        * derive_compare. rewrite /before_ordered.
+        * rewrite /with_invariant_upper_bounded_by in H2.
+          derive_compare. rewrite /before_ordered.
           split; [| split; [| split; [| split; [| split]]]]=>//.
           all: try (intros; autorewrite with elt_compare in *;
                     intuition; OrdFacts.order).
           apply IHs2 in Hwfr. destruct Hwfr as [ _ [_ Hord']].
           specialize (Hord' a0); destruct Hord'.
-          apply H2=>//; try intros; autorewrite with elt_compare in *; auto.
+          apply H2=>//; rewrite /non_strict_increasing; try intros;
+            autorewrite with elt_compare in *; auto.
           intuition; OrdFacts.order.
         * rewrite /before_balancedR. apply IHs2 in Hwfr.
           destruct Hwfr as [? [Hs _]]. move: Hs. rewrite /insert.
           rewrite_for_omega; intros; omega.
-        * derive_compare. rewrite /before_ordered.
+        * rewrite /with_invariant_lower_bounded_by in H2.
+          derive_compare. rewrite /before_ordered.
           split; [| split; [| split; [| split; [| split]]]]=>//.
           -- autorewrite with elt_compare =>//.
           -- intros. autorewrite with elt_compare in *.
@@ -1249,7 +1271,7 @@ Module Foo (E : OrderedType) : WSfun(E).
       + intros; split; intros; apply /and3P=>//; split=>//.
         * autorewrite with elt_compare. auto.
         * autorewrite with elt_compare. auto.
-  Time Qed. (* Finished transaction in 9.742 secs (9.695u,0.028s) (successful) *)
+  Time Qed. (* Finished transaction in 10.382 secs (10.101u,0.266s) (successful) *)
 
   Lemma left_insert_before_balancedL : forall e s l r x,
       WF (Bin s e l r) ->
@@ -1563,7 +1585,7 @@ Module Foo (E : OrderedType) : WSfun(E).
         * by apply insert_prop.
         * by apply left_insert_before_balancedL with (s:=s1).
         * rewrite /before_ordered. repeat split; auto.
-          -- apply insert_prop; auto.
+          -- apply insert_prop; rewrite /non_strict_increasing; auto.
              move: Hord. rewrite /ordered. case /and4P => _ _ ? ?. auto.
           -- move: Hord. rewrite /ordered. case /and4P => _ _ ? ?. auto.
       + move=>Hb. apply balanceR_preserves_membership with (s:=0) in Hb; auto.
@@ -1573,7 +1595,7 @@ Module Foo (E : OrderedType) : WSfun(E).
         * by eapply right_insert_before_balancedR with (s:=s1).
         * rewrite /before_ordered. repeat split; auto.
           -- move: Hord. rewrite /ordered. case /and4P => _ _ ? ?. auto.
-          -- apply insert_prop; auto.
+          -- apply insert_prop; rewrite /non_strict_decreasing; auto.
              move: Hord. rewrite /ordered. case /and4P => _ _ ? ?. auto.
     - rewrite /In_set /member /Internal.singleton.
       rewrite_relations; auto.

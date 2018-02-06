@@ -442,7 +442,7 @@ end.
 Definition ord_default {a} (comp : a -> a -> comparison) `{Eq_ a} : Ord a :=
   fun _ k => k (Ord__Dict_Build _
   (fun x y => (comp x y) == Lt)
-  ( fun x y => negb ((comp x y) == Lt))
+  ( fun x y => negb ((comp y x) == Lt))
   (fun x y => (comp y x) == Lt)
   (fun x y => negb ((comp x y) == Lt))
   comp

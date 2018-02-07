@@ -83,7 +83,7 @@ This is the annotated export list of IntSet. The first column says:
 
     -- ** Ordered list
  V  , toAscList
-    , toDescList
+ V  , toDescList
     , fromAscList
     , fromDistinctAscList
 
@@ -6197,6 +6197,24 @@ Proof.
   unfold size.
   rewrite sizeGo_spec by assumption.
   reflexivity.
+Qed.
+
+(** *** Specifing [toDescList] *)
+
+(** The easiest complete specification simply relates this to [toList] *)
+
+Lemma toDescList_spec:
+  forall s, WF s -> toDescList s = rev (toList s).
+Proof.
+  intros.
+  unfold toDescList.
+  rewrite foldl_spec by assumption.
+  rewrite <- fold_left_rev_right.
+  generalize (rev (toList s)).
+  intro xs.
+  induction xs.
+  * reflexivity.
+  * simpl. rewrite IHxs. reflexivity.
 Qed.
 
 (** *** Specifying [filter] *)

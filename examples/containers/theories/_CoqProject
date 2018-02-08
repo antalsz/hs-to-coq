@@ -8,4 +8,5 @@ OrdTheories.v
 SetProofs.v
 MapProofs.v
 IntSetProofs.v
+IntMapProofs.v
 RevNatSlowProofs.v

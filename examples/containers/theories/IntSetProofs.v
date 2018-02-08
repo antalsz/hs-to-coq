@@ -187,6 +187,14 @@ Proof.
       assumption.
 Qed.
 
+(** *** Stuff about [option] *)
+
+Definition oro {a} : option a -> option a -> option a :=
+  fun x y => match x with
+    | Some v => Some v
+    | None => y
+    end.
+
 (**
 We very often have to resolve non-negativity constraints, so we build
 a tactic library for that.
@@ -3399,7 +3407,6 @@ Inductive Desc : IntSet -> range -> (Z -> bool) -> Prop :=
     Desc (Bin p msk s1 s2) r f.
 
 
-
 (** A variant that also allows [Nil], or sets that do not
     cover the full given range, but are certainly contained in them.
     This is used to describe operations that may delete elements.
@@ -3697,14 +3704,18 @@ Ltac split_bool_go expr :=
   lazymatch expr with 
     | true       => fail
     | false      => fail
+    | Some _     => fail
+    | None       => fail
+    | match ?x with _ => _ end => split_bool_go x || (simpl x; cbv match)
     | negb ?x    => split_bool_go x
     | ?x && ?y   => split_bool_go x || split_bool_go y
     | ?x || ?y   => split_bool_go x || split_bool_go y
     | xorb ?x ?y => split_bool_go x || split_bool_go y
+    | oro ?x ?y  => split_bool_go x || split_bool_go y
     | ?bexpr     => destruct bexpr eqn:?
   end.
 
-(** This auxillary tactic destructs one boolean atom in the goal *)
+(** This auxillary tactic destructs one boolean or option atom in the goal *)
 
 Ltac split_bool :=
   match goal with 
@@ -7623,6 +7634,5 @@ Module Foo: WSfun(N_as_OT).
     rewrite Heql in H0.
     inversion H0.
   Qed.
-
 
 End Foo.

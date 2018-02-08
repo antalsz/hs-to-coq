@@ -7626,3 +7626,45 @@ Module Foo: WSfun(N_as_OT).
 
 
 End Foo.
+
+(** * The IntMap formalization *)
+
+Require Import Data.IntMap.Internal.
+
+Module IntMap.
+
+(** ** Well-formed IntSets.
+
+This section introduces the predicate to describe the well-formedness of
+an IntSet. It has parameters that describe the range that this set covers,
+and a function that carries it denotation. This way, invariant preservation
+and functional correctness of an operation can be expressed in one go.
+*)
+
+Definition singletonRange k : range := (k, 0%N).
+
+Definition oro {a} : option a -> option a -> option a :=
+  fun x y => match x with
+    | Some v => Some v
+    | None => y
+    end.
+
+Inductive Desc : forall {a}, IntMap a -> range -> (Z -> option a) -> Prop :=
+  | DescTip : forall a k (v : a) r f,
+    (forall i, f i = if i =? k then Some v else None) ->
+    r = singletonRange k ->
+    Desc (Tip k v) r f
+  | DescBin : forall a s1 r1 f1 s2 r2 f2 p msk r (f : Z  -> option a),
+    Desc s1 r1 f1 ->
+    Desc s2 r2 f2 ->
+    (0 < rBits r)%N ->
+    isSubrange r1 (halfRange r false) = true ->
+    isSubrange r2 (halfRange r true) = true ->
+    p = rPrefix r ->
+    msk = rMask r -> 
+    (forall i, f i = oro (f1 i) (f2 i)) ->
+    Desc (Bin p msk s1 s2) r f.
+
+
+
+End IntMap.

@@ -58,15 +58,17 @@ skip Data.IntMap.Internal.updateMin
 skip Data.IntMap.Internal.deleteMin
 skip Data.IntMap.Internal.deleteFindMin
 
-# Bit-fiddly stuff, punt for now
-skip Data.IntMap.Internal.restrictBM
-skip Data.IntMap.Internal.restrictKeys
-skip Data.IntMap.Internal.withoutBM
-skip Data.IntMap.Internal.withoutKeys
-
 # These are typical that they recurse left or right
-termination Data.IntMap.Internal.disjoint {measure ((size_nat arg_0__) + (size_nat arg_1__))}
-obligations Data.IntMap.Internal.disjoint termination_by_omega
+# Because of https://github.com/coq/coq/issues/6715 we cannot use Program
+# Fixpoint here until we upgrade to Coq 8.7. Therefore use unsafeFix for now.
+#termination Data.IntMap.Internal.restrictKeys {measure ((size_nat arg_0__) + (Data.IntSet.Internal.size_nat arg_1__))}
+#obligations Data.IntMap.Internal.restrictKeys termination_by_omega
+nonterminating Data.IntMap.Internal.restrictKeys
+nonterminating Data.IntMap.Internal.withoutKeys
+
+# non-structural recursion
+nonterminating Data.IntMap.Internal.restrictBM
+nonterminating Data.IntMap.Internal.withoutBM
 
 # Show stuff
 skip Data.IntMap.Internal.showsBars
@@ -92,3 +94,9 @@ skip Coq.ZArith.BinInt.Z.of_N
 
 skip module Coq.ZArith.BinInt.Z
 skip module Coq.NArith.BinNat.N
+
+# `complement x` does not work at type `N`, as the complement of a natural
+# number is negative. But in this module, all uses of `complement` are meant to be
+# 64bit numbers anyways, so we can complement just these bits.
+rewrite forall x, (Data.Bits.complement x) = (Coq.NArith.BinNat.N.lxor x (Coq.NArith.BinNat.N.ones (64%N)))
+

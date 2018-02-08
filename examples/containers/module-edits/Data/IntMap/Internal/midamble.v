@@ -9,3 +9,18 @@ Fixpoint IntMap_op_zlzd__ {a} {b} (x: a) (m: IntMap b): IntMap a :=
         | a , Tip k _ => Tip k a
         | _ , Nil => Nil
       end.
+
+Fixpoint size_nat {a} (t : IntMap a) : nat :=
+  match t with
+  | Bin _ _ l r => S (size_nat l + size_nat r)%nat
+  | Tip _ _ => 0
+  | Nil => 0
+  end.
+
+Require Omega.
+Ltac termination_by_omega :=
+  Coq.Program.Tactics.program_simpl;
+  simpl;Omega.omega.
+
+
+Require Import Coq.Numbers.BinNums.

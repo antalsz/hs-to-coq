@@ -129,6 +129,21 @@ Fixpoint IntMap_op_zlzd__ {a} {b} (x: a) (m: IntMap b): IntMap a :=
         | _ , Nil => Nil
       end.
 
+Fixpoint size_nat {a} (t : IntMap a) : nat :=
+  match t with
+  | Bin _ _ l r => S (size_nat l + size_nat r)%nat
+  | Tip _ _ => 0
+  | Nil => 0
+  end.
+
+Require Omega.
+Ltac termination_by_omega :=
+  Coq.Program.Tactics.program_simpl;
+  simpl;Omega.omega.
+
+
+Require Import Coq.Numbers.BinNums.
+
 (* Converted value declarations: *)
 
 (* Skipping instance Monoid__IntMap *)
@@ -369,6 +384,50 @@ Definition bitmapOf : GHC.Num.Int -> IntSetBitMap :=
     Utils.Containers.Internal.BitUtil.shiftLL (GHC.Num.fromInteger 1) (x
                                                                       Data.Bits..&.(**)
                                                                       Data.IntSet.Internal.suffixBitMask).
+
+Definition restrictBM {a} : IntSetBitMap -> IntMap a -> IntMap a :=
+  unsafeFix (fun restrictBM arg_0__ arg_1__ =>
+              let j_8__ :=
+                match arg_0__ , arg_1__ with
+                  | bm , Bin p m l r => let leftBits :=
+                                          bitmapOf (p Data.Bits..|.(**) m) GHC.Num.- GHC.Num.fromInteger 1 in
+                                        let bmL := bm Data.Bits..&.(**) leftBits in
+                                        let bmR := Data.Bits.xor bm bmL in bin p m (restrictBM bmL l) (restrictBM bmR r)
+                  | bm , (Tip k _ as t) => if Data.IntSet.Internal.member k
+                                                                          (Data.IntSet.Internal.Tip (k Data.Bits..&.(**)
+                                                                                                    Data.IntSet.Internal.prefixBitMask)
+                                                                          bm) : bool
+                                           then t
+                                           else Nil
+                  | _ , Nil => Nil
+                end in
+              match arg_0__ , arg_1__ with
+                | num_2__ , _ => if num_2__ GHC.Base.== GHC.Num.fromInteger 0 : bool
+                                 then Nil
+                                 else j_8__
+              end).
+
+Definition withoutBM {a} : IntSetBitMap -> IntMap a -> IntMap a :=
+  unsafeFix (fun withoutBM arg_0__ arg_1__ =>
+              let j_8__ :=
+                match arg_0__ , arg_1__ with
+                  | bm , Bin p m l r => let leftBits :=
+                                          bitmapOf (p Data.Bits..|.(**) m) GHC.Num.- GHC.Num.fromInteger 1 in
+                                        let bmL := bm Data.Bits..&.(**) leftBits in
+                                        let bmR := Data.Bits.xor bm bmL in bin p m (withoutBM bmL l) (withoutBM bmR r)
+                  | bm , (Tip k _ as t) => if Data.IntSet.Internal.member k
+                                                                          (Data.IntSet.Internal.Tip (k Data.Bits..&.(**)
+                                                                                                    Data.IntSet.Internal.prefixBitMask)
+                                                                          bm) : bool
+                                           then Nil
+                                           else t
+                  | _ , Nil => Nil
+                end in
+              match arg_0__ , arg_1__ with
+                | num_2__ , t => if num_2__ GHC.Base.== GHC.Num.fromInteger 0 : bool
+                                 then t
+                                 else j_8__
+              end).
 
 Definition boolITE {a} : a -> a -> bool -> a :=
   fun arg_0__ arg_1__ arg_2__ =>
@@ -816,7 +875,8 @@ Definition mapWithKey {a} {b} : (Data.IntSet.Internal.Key -> a -> b) -> IntMap
 Definition maskW : Nat -> Nat -> Prefix :=
   fun i m =>
     Coq.ZArith.BinInt.Z.of_N (i Data.Bits..&.(**) (Data.Bits.xor
-                             (Data.Bits.complement (m GHC.Num.- GHC.Num.fromInteger 1)) m)).
+                             (Coq.NArith.BinNat.N.lxor (_GHC.Num.-_ m (GHC.Num.fromInteger 1))
+                                                       (Coq.NArith.BinNat.N.ones (64 % N))) m)).
 
 Definition natFromInt : Data.IntSet.Internal.Key -> Nat :=
   GHC.Real.fromIntegral.
@@ -1093,6 +1153,104 @@ Definition update {a} : (a -> option a) -> Data.IntSet.Internal.Key -> IntMap
                     match arg_0__ , arg_1__ with
                       | _ , x => f x
                     end).
+
+Definition restrictKeys {a} : IntMap a -> Data.IntSet.Internal.IntSet -> IntMap
+                              a :=
+  unsafeFix (fun restrictKeys arg_0__ arg_1__ =>
+              match arg_0__ , arg_1__ with
+                | (Bin p1 m1 l1 r1 as t1) , (Data.IntSet.Internal.Bin p2 m2 l2 r2 as t2) =>
+                  let intersection2 :=
+                    if nomatch p1 p2 m2 : bool
+                    then Nil
+                    else if zero p1 m2 : bool
+                         then restrictKeys t1 l2
+                         else restrictKeys t1 r2 in
+                  let intersection1 :=
+                    if nomatch p2 p1 m1 : bool
+                    then Nil
+                    else if zero p2 m1 : bool
+                         then restrictKeys l1 t2
+                         else restrictKeys r1 t2 in
+                  if shorter m1 m2 : bool
+                  then intersection1
+                  else if shorter m2 m1 : bool
+                       then intersection2
+                       else if p1 GHC.Base.== p2 : bool
+                            then bin p1 m1 (restrictKeys l1 l2) (restrictKeys r1 r2)
+                            else Nil
+                | (Bin p1 m1 _ _ as t1) , Data.IntSet.Internal.Tip p2 bm2 => let maxbit :=
+                                                                               bitmapOf (p1 Data.Bits..|.(**) (m1
+                                                                                        Data.Bits..|.(**) (m1 GHC.Num.-
+                                                                                        GHC.Num.fromInteger 1))) in
+                                                                             let le_maxbit :=
+                                                                               maxbit Data.Bits..|.(**) (maxbit
+                                                                               GHC.Num.- GHC.Num.fromInteger 1) in
+                                                                             let minbit := bitmapOf p1 in
+                                                                             let ge_minbit :=
+                                                                               Coq.NArith.BinNat.N.lxor (_GHC.Num.-_
+                                                                                                        minbit
+                                                                                                        (GHC.Num.fromInteger
+                                                                                                        1))
+                                                                                                        (Coq.NArith.BinNat.N.ones
+                                                                                                        (64 % N)) in
+                                                                             restrictBM ((bm2 Data.Bits..&.(**)
+                                                                                        ge_minbit) Data.Bits..&.(**)
+                                                                                        le_maxbit) (lookupPrefix p2 t1)
+                | Bin _ _ _ _ , Data.IntSet.Internal.Nil => Nil
+                | (Tip k1 _ as t1) , t2 => if Data.IntSet.Internal.member k1 t2 : bool
+                                           then t1
+                                           else Nil
+                | Nil , _ => Nil
+              end).
+
+Definition withoutKeys {a} : IntMap a -> Data.IntSet.Internal.IntSet -> IntMap
+                             a :=
+  unsafeFix (fun withoutKeys arg_0__ arg_1__ =>
+              match arg_0__ , arg_1__ with
+                | (Bin p1 m1 l1 r1 as t1) , (Data.IntSet.Internal.Bin p2 m2 l2 r2 as t2) =>
+                  let difference2 :=
+                    if nomatch p1 p2 m2 : bool
+                    then t1
+                    else if zero p1 m2 : bool
+                         then withoutKeys t1 l2
+                         else withoutKeys t1 r2 in
+                  let difference1 :=
+                    if nomatch p2 p1 m1 : bool
+                    then t1
+                    else if zero p2 m1 : bool
+                         then binCheckLeft p1 m1 (withoutKeys l1 t2) r1
+                         else binCheckRight p1 m1 l1 (withoutKeys r1 t2) in
+                  if shorter m1 m2 : bool
+                  then difference1
+                  else if shorter m2 m1 : bool
+                       then difference2
+                       else if p1 GHC.Base.== p2 : bool
+                            then bin p1 m1 (withoutKeys l1 l2) (withoutKeys r1 r2)
+                            else t1
+                | (Bin p1 m1 _ _ as t1) , Data.IntSet.Internal.Tip p2 bm2 => let maxbit :=
+                                                                               bitmapOf (p1 Data.Bits..|.(**) (m1
+                                                                                        Data.Bits..|.(**) (m1 GHC.Num.-
+                                                                                        GHC.Num.fromInteger 1))) in
+                                                                             let gt_maxbit :=
+                                                                               Data.Bits.xor maxbit
+                                                                                             (Coq.NArith.BinNat.N.lxor
+                                                                                             (_GHC.Num.-_ maxbit
+                                                                                                          (GHC.Num.fromInteger
+                                                                                                          1))
+                                                                                             (Coq.NArith.BinNat.N.ones
+                                                                                             (64 % N))) in
+                                                                             let minbit := bitmapOf p1 in
+                                                                             let lt_minbit :=
+                                                                               minbit GHC.Num.- GHC.Num.fromInteger 1 in
+                                                                             updatePrefix p2 t1 GHC.Base.$ withoutBM
+                                                                             ((bm2 Data.Bits..|.(**) lt_minbit)
+                                                                             Data.Bits..|.(**) gt_maxbit)
+                | (Bin _ _ _ _ as t1) , Data.IntSet.Internal.Nil => t1
+                | (Tip k1 _ as t1) , t2 => if Data.IntSet.Internal.member k1 t2 : bool
+                                           then Nil
+                                           else t1
+                | Nil , _ => Nil
+              end).
 
 Definition adjustWithKey {a}
     : (Data.IntSet.Internal.Key -> a -> a) -> Data.IntSet.Internal.Key -> IntMap
@@ -1898,23 +2056,24 @@ Infix "Data.IntMap.Internal.\\" := (_\\_) (at level 99).
 End Notations.
 
 (* Unbound variables:
-     Eq Gt IntMap_op_zlzd__ Lt None Some andb bool comparison cons false id list negb
-     nil op_zt__ option orb pair true Coq.ZArith.BinInt.Z.of_N Data.Bits.complement
-     Data.Bits.op_zizazi__ Data.Bits.op_zizbzi__ Data.Bits.xor Data.Either.Either
-     Data.Either.Left Data.Either.Right Data.Foldable.Foldable Data.Foldable.foldl
+     Eq Gt IntMap_op_zlzd__ Lt N None Some andb bool comparison cons false id list
+     negb nil op_zt__ op_zv__ option orb pair true Coq.NArith.BinNat.N.lxor
+     Coq.NArith.BinNat.N.ones Coq.ZArith.BinInt.Z.of_N Data.Bits.op_zizazi__
+     Data.Bits.op_zizbzi__ Data.Bits.xor Data.Either.Either Data.Either.Left
+     Data.Either.Right Data.Foldable.Foldable Data.Foldable.foldl
      Data.Functor.op_zlzdzg__ Data.Functor.Identity.Identity Data.IntSet.Internal.Bin
      Data.IntSet.Internal.IntSet Data.IntSet.Internal.Key Data.IntSet.Internal.Nil
      Data.IntSet.Internal.Tip Data.IntSet.Internal.bitmapOf
-     Data.IntSet.Internal.prefixBitMask Data.IntSet.Internal.singleton
-     Data.IntSet.Internal.suffixBitMask Data.Maybe.maybe Data.Traversable.Traversable
-     GHC.Base.Applicative GHC.Base.Eq_ GHC.Base.Functor GHC.Base.Monad
-     GHC.Base.Monoid GHC.Base.Ord GHC.Base.String GHC.Base.compare GHC.Base.const
-     GHC.Base.fmap GHC.Base.id GHC.Base.liftA2 GHC.Base.mappend GHC.Base.mempty
-     GHC.Base.op_z2218U__ GHC.Base.op_zd__ GHC.Base.op_zeze__ GHC.Base.op_zg__
-     GHC.Base.op_zgze__ GHC.Base.op_zl__ GHC.Base.op_zlze__ GHC.Base.op_zsze__
-     GHC.Base.pure GHC.Err.error GHC.Num.Int GHC.Num.Num GHC.Num.Word GHC.Num.op_zm__
-     GHC.Num.op_zp__ GHC.Num.op_zt__ GHC.Real.fromIntegral
-     Utils.Containers.Internal.BitUtil.highestBitMask
+     Data.IntSet.Internal.member Data.IntSet.Internal.prefixBitMask
+     Data.IntSet.Internal.singleton Data.IntSet.Internal.suffixBitMask
+     Data.Maybe.maybe Data.Traversable.Traversable GHC.Base.Applicative GHC.Base.Eq_
+     GHC.Base.Functor GHC.Base.Monad GHC.Base.Monoid GHC.Base.Ord GHC.Base.String
+     GHC.Base.compare GHC.Base.const GHC.Base.fmap GHC.Base.id GHC.Base.liftA2
+     GHC.Base.mappend GHC.Base.mempty GHC.Base.op_z2218U__ GHC.Base.op_zd__
+     GHC.Base.op_zeze__ GHC.Base.op_zg__ GHC.Base.op_zgze__ GHC.Base.op_zl__
+     GHC.Base.op_zlze__ GHC.Base.op_zsze__ GHC.Base.pure GHC.Err.error GHC.Num.Int
+     GHC.Num.Num GHC.Num.Word GHC.Num.op_zm__ GHC.Num.op_zp__ GHC.Num.op_zt__
+     GHC.Real.fromIntegral Utils.Containers.Internal.BitUtil.highestBitMask
      Utils.Containers.Internal.BitUtil.shiftLL
      Utils.Containers.Internal.BitUtil.shiftRL
 *)

@@ -116,6 +116,7 @@ VFILES:=Tactics.v\
   SetProofs.v\
   MapProofs.v\
   IntSetProofs.v\
+  IntMapProofs.v\
   RevNatSlowProofs.v
 
 ifneq ($(filter-out archclean clean cleanall printenv,$(MAKECMDGOALS)),)

@@ -532,128 +532,23 @@ Proof.
         apply elt_lt in Hhi.
         apply elt_lt in Hhi2.
         eapply E.lt_trans; eauto.
-    +  
+    + admit.
+    + admit.
+    + admit.
+
+      (*try solve [lucky_balanced_solve].
+      solve_bounded'.
       destruct_match; try solve [solve_local_bounded].
       destruct ll as [sll xll lll llr | ];
         destruct lr as [slr xlr lrl lrr | ];
         try solve [lucky_balanced_solve].
       destruct_match; rewrite_Int; solve_local_bounded.
-      
-  - split; auto.
-    intros.
-    apply elt_lt.
-        rewrite 
-        rewrite partial_lt_eq.
-        rewrite partial_lt_eq in Hhi.
-        clear Hwfl Hwfr Hbb Hlo Hboundl0
-              Hboundh0 Hboundl2 Hboundh Hboundl
-              Hboundh1.
-      destruct_match ; lucky_balanced_solve.
-    try solve [solve_bounded'];
-    try solve [lucky_balanced_solve].
-    destruct_match; rewrite_Int; solve_bounded'.
+      *)
   - (** [r] is a [Tip] *)
     destruct ll as [sll xll lll llr | ];
       destruct lr as [slr xlr lrl lrr | ];
-      try solve [solve_local_bounded].
-    destruct_match; solve_local_bounded.
-  Time Qed.
-
- Lemma balanceL_ordered : forall s (x: elt) (l r : Set_ elt) lo hi,
-      WF l ->
-      WF r ->
-      before_balancedL x l r ->
-      bounded' (Bin s x l r) lo hi  ->
-      bounded' (balanceL x l r) lo hi .
-  Proof.
-    move=> s x l r lo hi Hwfl Hwfr.
-    destruct r as [sr xr rl rr | ];
-      destruct l as [sl xl ll lr | ];
-      move=>Hbb Hb.
-    - 
-      destruct lo as [lo'|];
-        destruct hi as [hi'|].
-      + admit.
-      + admit.
-      + admit.
-      + move: Hb. rewrite /bounded'.
-        case /and2P.
-        do 6 rewrite andb_assoc.
-        case /and3P.
-        repeat apply andb_true_l.
-        repeat apply andb_true_r.
-        
-        Check andb_true_iff.
-        Check andb_true_l.
-        intros && H2]
-        repeat rewrite andb_true_l.
-        Check  eq_iff_eq_true.
-        repeat rewrite eq_iff_eq_true.
-        simpl.
-        match goal with
-           | [H: is_true (bounded' _ _ _) |- _ ] =>
-             move: H; rewrite /bounded'=>?
-         end.
-         
-           | [ H: is_true (andb _ (andb _ (andb _ ))) |- _ ] =>
-             let Hlo := fresh "Hlo" in
-             let Hhi := fresh "Hhi" in
-             let Hboundl := fresh "Hboundl" in
-             let Hboundh := fresh "Hboundh" in
-             move: H; case /and4P=>//; move=>Hlo Hhi Hboundl Hboundh
-           | [ |- is_true (andb _ (andb _ (andb _ _))) ] =>
-             apply /and4P=>//; split=>//
-           | [H: context[partial_lt _ _] |- _ ] =>
-             move: H; rewrite /partial_lt; move=>H
-           | [H: context[partial_gt _ _] |- _ ] =>
-             move: H; rewrite /partial_gt; move=>H
-           end. autorewrite with elt_compare in *; eauto.
-        unfold bounded' in *.
-        do 2 rewrite andb_true_r in Hb.
-        do 2 rewrite andb_true_l in Hb.
-        move : Hb.
-        case /and3P.
-        case /andP.
-        case /andP.
-        intros Hb1 Hb2 Hb3 Hb4 Hb5.
-        move : Hb4.
-        case /andP.
-        intros Hb4 Hb6.
-        rewrite /balanceL; rewrite_Int.
-        
-        destruct_match.
-        destruct ll as [sll xll lll llr | ];
-        destruct lr as [slr xlr lrl lrr | ].
-      + destruct_match.
-        * destruct lo as [lo'|].
-          dest
-          simpl in Hb.
-      auto.
-      try solve [solve_local_bounded].
-      destruct ll as [sll xll lll llr | ];
-        destruct lr as [slr xlr lrl lrr | ];
-        try solve [lucky_balanced_solve].
-          
-      rewrite /bounded' /balanceL; rewrite_Int.
-       
-               
-               try solve [solve_local_bounded].
-    - (** Both [r] and [l] are [Bin]s *)
-      destruct_match; try solve [solve_local_bounded].
-      destruct ll as [sll xll lll llr | ];
-        destruct lr as [slr xlr lrl lrr | ];
-        try solve [lucky_balanced_solve].
-      destruct_match; rewrite_Int; solve_local_bounded.
-    - (** [r] is a [Tip] *)
-      destruct ll as [sll xll lll llr | ];
-        destruct lr as [slr xlr lrl lrr | ];
-        try solve [solve_local_bounded].
-      destruct_match; solve_local_bounded.
-  Time Qed. (* Finished transaction in 0.67 secs (0.668u,0.001s) (successful) *)
-
-
- 
-  Definition WF (s : Set_ elt) := valid s.
-  (* Will it be easier for proof if [WF] is an inductive definition? *)
-  Definition t := {s : Set_ elt | WF s}.
-  Definition pack (s : Set_ elt) (H : WF s): t := exist _ s H.
+      try solve [solve_bounded'].
+    (*destruct_match; solve_bounded'.*)
+    admit.
+  Admitted.
+  

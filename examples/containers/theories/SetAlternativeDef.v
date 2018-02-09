@@ -182,45 +182,52 @@ Ltac solve_bounded' :=
            apply /andP=>//; split=>//
          end; autorewrite with elt_compare in *; eauto.
 
-(* Lemmas about bounded *)
-
-Lemma bounded_impl_left_None : forall t l r,
-      bounded' t l r -> bounded' t None r.
-Proof.
-  induction t; intros; auto.
-  solve_bounded'.
-Qed.
-
-Lemma bounded_impl_right_None : forall t l r,
-      bounded' t l r -> bounded' t l None.
-Proof.
-  induction t; intros; auto.
-  solve_bounded'.
-Qed.
-
 Lemma bounded_Bin_iff: forall s x l r lo hi,
-    (match lo with
-    | None => True
-    | Some lo' => E.lt lo' x
-    end) ->
-    (match hi with
-    | None => True
-    | Some hi' => E.lt x hi'
-    end) ->
-    bounded' l lo (Some x) -> bounded' r (Some x) hi ->
-    bounded' (Bin s x l r) lo hi.
+  (forall lo', lo = Some lo' ->  E.lt lo' x) ->
+  (forall hi', hi = Some hi' -> E.lt x hi') ->
+  bounded' l lo (Some x) -> bounded' r (Some x) hi ->
+  bounded' (Bin s x l r) lo hi.
 Proof.
   intros.
   solve_bounded'.
   - destruct lo as [lo'|]; auto.
     rewrite <- partial_lt_eq.
-    apply elt_lt in H.
-    auto.
+    specialize (H lo').
+    apply elt_lt in H; auto.
   - destruct hi as [hi'|]; auto.
     rewrite <- partial_gt_eq.
-    apply elt_lt in H0.
-    auto.
+    specialize (H0 hi').
+    apply elt_lt in H0; auto.
 Qed.
+(*
+Ltac solve_bounded' :=
+  repeat match goal with
+         | [H: is_true (bounded' _ _ _) |- _ ] =>
+           move: H; rewrite /bounded'=>?
+         | [ |- is_true(bounded' _ _ _) ] =>
+           apply bounded_Bin_iff
+         | [ |- is_true(andb _ _) ] => 
+           apply /andP=>//; split=>//
+         end; autorewrite with elt_compare in *; eauto.
+*)
+(* Lemmas about bounded *)
+
+Lemma bounded_impl_left_None : forall t l r,
+   bounded' t l r -> bounded' t None r.
+Proof.
+  induction t; intros; auto.
+  
+  solve_bounded'.
+Qed.
+
+Lemma bounded_impl_right_None : forall t l r,
+  bounded' t l r -> bounded' t l None.
+Proof.
+  induction t; intros; auto.
+  solve_bounded'.
+Qed.
+
+
 
 Lemma ordered'_children : forall s x l r,
     ordered' (Bin s x l r) ->
@@ -433,7 +440,7 @@ Ltac derive_constraints_rec Hwf :=
       have Hbl: balanced (Bin s x a b) by
           [apply WF_balanced in Hwf];
       let Hord := fresh "Hord" in
-      have Hord: ordered (Bin s x a b) by
+      have Hord: ordered' (Bin s x a b) by
           [apply WF_ordered' in Hwf];
       derive_constraints_rec Hwfl;
       derive_constraints_rec Hwfr
@@ -478,15 +485,27 @@ Proof.
     rewrite -elt_lt; auto.
 Qed.
 
-(*
+
 Ltac rewrite_lt_dec:=
   repeat match goal with
-    | [H: is_true (OrdFacts.lt_dec _ _) |- _ ] =>
-      rewrite -partial_lt_eq in H
-    | [|- is_true (OrdFacts.lt_dec _ _)] =>
-      rewrite -partial_lt_eq
+    | [H: is_true (is_left (OrdFacts.lt_dec _ _)) |- _ ] =>
+      apply lt_dec_eq in H
+    | [|- is_true (is_left (OrdFacts.lt_dec _ _))] =>
+      rewrite lt_dec_eq
          end.
-*)
+
+Ltac solve_lt_dec:=
+  rewrite_lt_dec; try OrdFacts.order.
+
+Ltac solve_option_lt_dec:=
+  match goal with
+  | [|- is_true (match ?g with | _ => _ end )] =>
+    match type of g with
+    | option _ =>  destruct g; auto;
+                  solve_lt_dec
+    end
+  end.
+
 Lemma balanceL_ordered : forall s (x: elt) (l r : Set_ elt) lo hi,
     WF l ->
     WF r ->
@@ -501,54 +520,464 @@ Proof.
       move=>Hbb Hb;
        try solve [solve_bounded'].
   - (** Both [r] and [l] are [Bin]s *)
-    destruct_match. 
+    destruct_match.
     destruct ll as [sll xll lll llr | ];
-      destruct lr as [slr xlr lrl lrr | ].
-    + destruct_match; rewrite_Int; solve_bounded'.
-      * destruct g; auto.
-        clear -Hhi1 Hhi.
-        rewrite -partial_lt_eq.
-        rewrite -partial_lt_eq in Hhi.
-        rewrite -partial_lt_eq in Hhi1.
-        rewrite -elt_lt.
-        apply elt_lt in Hhi.
-        apply elt_lt in Hhi1.
-        eapply E.lt_trans; eauto.
-      * destruct f; auto.
-        clear -Hlo1 Hlo2.
-        rewrite -partial_lt_eq.
-        rewrite -partial_lt_eq in Hlo1.
-        rewrite -partial_lt_eq in Hlo2.
-        rewrite -elt_lt.
-        apply elt_lt in Hlo1.
-        apply elt_lt in Hlo2.
-        eapply E.lt_trans; eauto.
-      * destruct g; auto.
-        clear -Hhi2 Hhi.
-        rewrite -partial_lt_eq.
-        rewrite -partial_lt_eq in Hhi.
-        rewrite -partial_lt_eq in Hhi2.
-        rewrite -elt_lt.
-        apply elt_lt in Hhi.
-        apply elt_lt in Hhi2.
-        eapply E.lt_trans; eauto.
-    + admit.
-    + admit.
-    + admit.
-
-      (*try solve [lucky_balanced_solve].
-      solve_bounded'.
-      destruct_match; try solve [solve_local_bounded].
-      destruct ll as [sll xll lll llr | ];
-        destruct lr as [slr xlr lrl lrr | ];
-        try solve [lucky_balanced_solve].
-      destruct_match; rewrite_Int; solve_local_bounded.
-      *)
+      destruct lr as [slr xlr lrl lrr | ];
+      try solve [lucky_balanced_solve].
+    destruct_match; rewrite_Int;
+      solve_bounded'; solve_option_lt_dec.
   - (** [r] is a [Tip] *)
     destruct ll as [sll xll lll llr | ];
       destruct lr as [slr xlr lrl lrr | ];
-      try solve [solve_bounded'].
-    (*destruct_match; solve_bounded'.*)
-    admit.
-  Admitted.
-  
+     try solve [solve_bounded'; solve_option_lt_dec].
+    destruct_match; solve_bounded'; solve_option_lt_dec.
+Qed.
+
+Definition before_balancedR (x: elt) (l r : Set_ elt) : Prop :=
+  (size l + size r <= 2 /\ size l <= 1) \/
+  (size r <= delta * size l + 1 /\ size l <= delta * size r).
+    
+Lemma balanceR_ordered : forall s (x: elt) (l r : Set_ elt) lo hi,
+  WF l ->
+  WF r ->
+  before_balancedR x l r ->
+  bounded' (Bin s x l r) lo hi ->
+  bounded' (balanceR x l r) lo hi.
+Proof.
+  move=>s x l r f g Hwfl Hwfr.
+  destruct l as [sl xl ll lr | ];
+    destruct r as [sr xr rl rr | ];
+    rewrite /balanceR; rewrite_Int;
+    move=>Hbb Hb;
+           try solve [solve_bounded'].
+  - (** Both [r] and [l] are [Bin]s *)
+      destruct_match; try solve [solve_bounded'].
+      destruct rl as [srl xrl rll rlr | ];
+        destruct rr as [srr xrr rrl rrr | ];
+        try solve [lucky_balanced_solve].
+      destruct_match; rewrite_Int;
+        solve_bounded'; solve_option_lt_dec.
+  - (** [l] is a [Tip] *)
+    destruct rl as [srl xrl rll rlr | ];
+      destruct rr as [srr xrr rrl rrr | ];
+      try solve [solve_bounded'; solve_option_lt_dec].
+    destruct_match; solve_bounded'; solve_option_lt_dec.
+Qed.
+
+Ltac derive_compare_rec H :=
+  match type of H with
+  | is_true (andb (andb  (andb _ _) _) _) =>
+    let Hc1 := fresh "Hcomp" in
+    let Hc2 := fresh "Hcomp" in
+    let Hl1 := fresh "Hlb" in
+    let Hl2 := fresh "Hlb" in
+    move: H; do 3 case /andP=>//;
+     rewrite -/bounded';
+    move=> Hc1 Hc2 Hl1 Hl2;
+          autorewrite with elt_compare in Hc1;
+          autorewrite with elt_compare in Hc2;
+          derive_compare_rec Hl1;
+          derive_compare_rec Hl2
+    | is_true (bounded' _ _ _) =>
+      idtac
+  end.
+
+
+
+
+Ltac derive_compare :=
+  repeat match goal with
+         | [H: is_true (andb (andb (andb _ _) _) _) |- _] =>
+           derive_compare_rec H
+         | [H: is_true (bounded' _ _ _) |- _ ] =>
+           let Hc1 := fresh "Hcomp" in
+             let Hc2 := fresh "Hcomp" in
+             let Hl1 := fresh "Hlb" in
+             let Hl2 := fresh "Hlb" in
+             move: H; rewrite /bounded';
+             do 3 case /andP=>//;
+                rewrite -/bounded';
+             move=> Hc1 Hc2 Hl1 Hl2;
+                   autorewrite with elt_compare in Hc1;
+                   autorewrite with elt_compare in Hc2
+         end.
+ 
+Ltac rel_deriver := eauto 2.
+
+Ltac rel_deriver' := OrdFacts.order.
+
+
+
+Ltac solve_relations_single_step :=
+  match goal with
+    | [ |- E.lt ?a ?b -> _ ] =>
+      do [move /elt_compare_gt -> =>//
+         | move /elt_compare_lt -> =>//]
+    | [ |- E.eq ?a ?b -> _ ] =>
+      move /elt_compare_eq -> =>//
+    | [ |- context[Base.compare ?a ?b]] =>
+      do [have: E.lt a b by [rel_deriver]
+         | have: E.eq a b by [rel_deriver]
+         | have: E.lt b a by [rel_deriver]]
+    | [ |- context[Base.compare ?a ?b]] =>
+      do [have: E.lt a b by [rel_deriver']
+         | have: E.eq a b by [rel_deriver']
+         | have: E.lt b a by [rel_deriver']]
+  end.
+
+Ltac solve_relations :=
+  repeat solve_relations_single_step.
+
+Ltac prepare_relations :=
+  try multimatch goal with
+      | [H: E.eq ?a ?b |- _ ] =>
+        first [(match goal with
+                | [H': E.eq b a |- _ ] =>
+                  idtac
+                end)
+              | (have: E.eq b a by [apply E.eq_sym; apply H];
+                 move=>?)]
+      end.
+
+Ltac rewrite_relations :=
+  repeat (prepare_relations;
+          solve_relations;
+          try match goal with
+              | [ |- context[Base.compare ?a ?b]] =>
+                  let H := fresh "Hcomp" in
+                  destruct (Base.compare a b) eqn:H;
+                  autorewrite with elt_compare in H
+              end).
+
+
+Ltac solve_realsize :=
+  apply /option_int_eqP;
+  rewrite /local_realsize;
+  derive_constraints; rewrite_size; rewrite_Int;
+  repeat match goal with
+         | [ |- context[if ?c then _ else _] ] =>
+           let Heq := fresh "Heq" in
+             have Heq: c by [ rewrite_for_omega; omega];
+             rewrite Heq=>//
+           end.
+
+Lemma balanceL_validsize: forall (x: elt) (l r : Set_ elt),
+    WF l -> WF r ->
+      before_balancedL x l r -> validsize (balanceL x l r).
+Proof.
+  move=>x l r Hwfl Hwfr.
+  rewrite /validsize -/local_realsize.
+    destruct r as [sr xr rl rr | ]; destruct l as [sl xl ll lr | ];
+      rewrite /before_balancedL /balanceL; intros; try solve [solve_realsize].
+  - rewrite_Int. destruct_match; try solve [solve_realsize].
+      destruct ll as [sll xll lll llr | ];
+        destruct lr as [slr xlr lrl lrr | ];
+        try solve [lucky_balanced_solve].
+      destruct_match; solve_realsize.
+  - destruct ll as [sll xll lll llr | ];
+      destruct lr as [slr xlr lrl lrr | ];
+      try solve [lucky_balanced_solve || solve_realsize].
+    Time Qed. (* Finished transaction in 2.83 secs (2.822u,0.004s) (successful) *)
+
+Lemma balanceR_validsize: forall (x: elt) (l r : Set_ elt),
+    WF l -> WF r ->
+    before_balancedR x l r -> validsize (balanceR x l r).
+Proof.
+    move=>x l r Hwfl Hwfr.
+    rewrite /validsize -/local_realsize.
+    destruct l as [sl xl ll lr | ]; destruct r as [sr xr rl rr | ];
+      rewrite /balanceR; intros; try solve [solve_realsize].
+    - rewrite_Int. destruct_match; try solve [solve_realsize].
+      destruct rl as [srl xrl rll rlr | ];
+        destruct rr as [srr xrr rrl rrr | ];
+        try solve [lucky_balanced_solve].
+      destruct_match; solve_realsize.
+    - destruct rl as [srl xrl rll rlr | ];
+        destruct rr as [srr xrr rrl rrr | ];
+        try solve [lucky_balanced_solve || solve_realsize].
+      destruct_match; solve_realsize.
+ Time Qed. (* Finished transaction in 2.29 secs (2.284u,0.002s) (successful) *)
+
+Ltac solve_balanced_trivial :=
+  solve [auto; repeat (match goal with
+                       | [H: is_true (WF (Bin _ _ _ _)) |- _] =>
+                         apply WF_balanced in H;
+                         apply balanced_children in H;
+                           destruct H
+                       end; auto)].
+
+Ltac step_in_balanced :=
+  rewrite /balanced; apply /and3P=>//; split=>//;
+                           try solve_balanced_trivial.
+
+Ltac solve_balanced :=
+  repeat match goal with
+         | [ |- is_true (balanced _)] =>
+           step_in_balanced
+         | [ |- is_true (andb _ (andb _ _))] =>
+           step_in_balanced
+           | [ |- is_true (orb _ (andb _ _)) ] =>
+             derive_constraints;
+             apply /orP=>//;
+                   ((right; apply /andP=>//) + left);
+             solve [rewrite_for_omega; omega]
+         end;
+  try solve [derive_constraints;
+             repeat match goal with
+                    | [ H: is_true (balanced _) |- _ ] =>
+                      move: H; rewrite /balanced;
+                      case /and3P=>//; move=>? ? ?
+                    end].
+
+Lemma balanceL_add_size : forall (x : elt) (l r : Set_ elt),
+    WF l -> WF r ->
+    size (balanceL x l r) = size l + size r + 1.
+Proof.
+  destruct r as [sr xr rl rr | ];
+    destruct l as [sl xl ll lr | ]. 
+  - rewrite /balanceL; destruct_match.
+      + destruct ll as [sll xll lll llr | ];
+          destruct lr as [slr xlr lrl lrr | ];
+          try solve [derive_constraints; 
+                     rewrite_for_omega; intros; omega].
+        destruct_match; rewrite_for_omega; omega.
+      + intros. rewrite_size; rewrite_Int; omega.
+  - intros. rewrite_size; rewrite_Int; omega.
+  - rewrite /balanceL;
+        destruct ll as [sll xll lll llr | ];
+        destruct lr as [slr xlr lrl lrr | ].
+    + destruct_match; intros; rewrite_size; rewrite_Int; omega.
+    + intros. derive_constraints;
+                destruct Hbalanced; rewrite_for_omega; intros; omega.
+      + intros. derive_constraints;
+                  destruct Hbalanced; rewrite_for_omega; intros; omega.
+      + intros; derive_constraints. move: Hsum.
+        rewrite_for_omega. intros; omega.
+  - rewrite_size. do 2 elim. rewrite_Int. reflexivity.
+Qed.
+
+Lemma balanceR_add_size : forall (x : elt) (l r : Set_ elt),
+    WF l -> WF r ->
+    size (balanceR x l r) = size l + size r + 1.
+Proof.
+  destruct l as [sl xl ll lr | ];
+    destruct r as [sr xr rl rr | ].
+    - rewrite /balanceR; destruct_match.
+      + destruct rl as [srl xrl rll rlr | ];
+          destruct rr as [srr xrr rrl rrr | ];
+          try solve [derive_constraints; rewrite_for_omega; intros; omega].
+        destruct_match; rewrite_for_omega; omega.
+      + intros. rewrite_size; rewrite_Int; omega.
+    - intros. rewrite_size; rewrite_Int; omega.
+    - rewrite /balanceR;
+        destruct rl as [srl xrl rll rlr | ];
+        destruct rr as [srr xrr rrl rrr | ].
+      + destruct_match; intros; rewrite_size; rewrite_Int; omega.
+      + intros. derive_constraints; 
+        destruct Hbalanced; rewrite_for_omega; intros; omega.
+      + intros. derive_constraints; 
+        destruct Hbalanced; rewrite_for_omega; intros; omega.
+      + intros; derive_constraints. move: Hsum.
+        rewrite_for_omega. intros; omega.
+    - rewrite_size. do 2 elim. rewrite_Int. reflexivity.
+Qed.
+
+
+Lemma balanceL_balanced: forall (x: elt) (l r : Set_ elt),
+      WF l -> WF r ->
+      before_balancedL x l r -> balanced (balanceL x l r).
+Proof.
+  intros x l r Hwfl Hwfr.
+  destruct r as [sr xr rl rr | ];
+    destruct l as [sl xl ll lr | ];
+    rewrite /before_balancedL /balanceL; rewrite_Int; move=>Hbefore.
+  - (** [l] and [r] are both [Bin]s. *)
+    destruct_match.
+    + (** The [ls > delta*rs] branch in Haskell code. *)
+      destruct ll as [sll xll lll llr | ];
+          destruct lr as [slr xlr lrl lrr | ]; rewrite_Int;
+            try solve [lucky_balanced_solve].
+      * (** [ll] and [lr] are both Bins *)
+        destruct_match; solve_balanced.
+        -- (** [Bin (1+lls+size lrl) lx ll lrl] is balanced. *)
+          destruct lrl; solve_balanced.
+        -- (** [Bin (1+rs+size lrr) x lrr r] is balanced. *)
+          destruct lrr; solve_balanced.
+    + (** The [otherwise] branch, i.e. [ls <= delta*rs]. *)
+      solve_balanced.
+    - (** [l] is [Tip] *)
+      destruct rl; destruct rr; solve_balanced.
+    - (** [r] is [Tip] *)
+      destruct ll as [sll xll lll llr | ];
+        destruct lr as [slr xlr lrl lrr | ];
+        solve_balanced.
+      (** [ll] is [Bin sll xll lll llr] *)
+      destruct_match; solve_balanced.
+    - (** Both [l] and [r] and [Tip]s. *)
+      step_in_balanced.
+Time Qed. (* Finished transaction in 8.423 secs (8.39u,0.023s) (successful) *)
+
+Lemma balanceR_balanced: forall (x: elt) (l r : Set_ elt),
+    WF l -> WF r ->
+    before_balancedR x l r -> balanced (balanceR x l r).
+Proof.
+  intros x l r Hwfl Hwfr.
+  destruct l as [sl xl ll lr | ]; destruct r as [sr xr rl rr | ];
+    rewrite /before_balancedR /balanceR; rewrite_Int; move=>Hbefore.
+  - (** [l] and [r] are both [Bin]s. *)
+    destruct_match.
+      + (** The [rs > delta*ls] branch in Haskell code. *)
+        destruct rl as [srl xrl rll rlr | ];
+          destruct rr as [srr xrr rrl rrr | ]; rewrite_Int;
+            try solve [lucky_balanced_solve].
+        * (** [rl] and [rr] are both Bins *)
+          destruct_match; solve_balanced.
+          -- (** [Bin (1+ls+size rll) x l rll] is balanced. *)
+            destruct rll; solve_balanced.
+          -- (** [Bin (1+rrs+size rlr) rx rlr rr] is balanced. *)
+            destruct rlr; solve_balanced.
+      + (** The [otherwise] branch, i.e. [ls <= delta*rs]. *)
+        solve_balanced.
+  - (** [r] is [Tip] *)
+    destruct ll; destruct lr; solve_balanced.
+  - (** [l] is [Tip] *)
+        destruct rl as [srl xrl rll rlr | ];
+          destruct rr as [srr xrr rrl rrr | ];
+          solve_balanced.
+        (** [rr] is [Bin srr xrr rrl rrr] *)
+        destruct_match; solve_balanced.
+    - (** Both [l] and [r] and [Tip]s. *)
+      step_in_balanced.
+Time Qed. (* Finished transaction in 8.689 secs (8.652u,0.024s) (successful) *)
+
+
+Lemma balanceL_WF: forall s (x: elt) (l r : Set_ elt),
+    WF l -> WF r ->
+    before_balancedL x l r ->
+    bounded' (Bin s x l r) None None ->
+    WF (balanceL x l r).
+Proof with auto.
+  intros. rewrite /WF /valid'.
+  repeat (apply /andP=>//; split).
+  - apply balanceL_balanced...
+  - unfold ordered'. apply balanceL_ordered with (s:=0)...
+  - apply balanceL_validsize...
+Qed.
+
+Lemma balanceR_WF: forall s (x: elt) (l r : Set_ elt),
+    WF l -> WF r ->
+    before_balancedR x l r ->
+    ordered' (Bin s x l r) ->
+    WF (balanceR x l r).
+Proof with auto.
+  intros. rewrite /WF /valid.
+  repeat (apply /andP=>//; split).
+  - apply balanceR_balanced...
+  - unfold ordered' in  *. apply balanceR_ordered with (s:=0)...
+  - apply balanceR_validsize...
+Qed.
+
+Lemma bounded_left_relax : forall s lo hi lo',
+    (E.lt lo' lo \/  E.eq lo' lo)  ->
+    bounded' s (Some lo) hi ->
+    bounded' s (Some lo') hi.
+Proof.
+  induction s; intros; auto; 
+    solve_bounded'.
+  destruct H;
+    solve_lt_dec.
+Qed.
+
+Lemma bounded_right_relax : forall s lo hi hi',
+    (E.lt hi hi' \/  E.eq hi' hi)  ->
+    bounded' s lo (Some hi) ->
+    bounded' s lo (Some hi').
+Proof.
+  induction s; intros; auto; 
+    solve_bounded'.
+  destruct H;
+    solve_lt_dec.
+Qed.
+
+Lemma bounded_rewrite : forall (s1 s2: Set_ elt) l e1 e2 lo hi,
+    E.eq e1 e2 -> bounded' (Bin l e1 s1 s2) lo hi ->
+    bounded' (Bin l e2 s1 s2) lo hi.
+Proof.
+  move=>s1 s2 l e1 e2 lo hi Heq.
+  rewrite -/bounded'.
+  do 3 case /andP=>//; intros.
+  repeat (apply /andP=>//; split=>//);
+    try solve_option_lt_dec.
+  - apply bounded_right_relax with (hi:=e1); auto. 
+  - apply bounded_left_relax with (lo:=e1); auto.
+Qed.
+
+Lemma insert_prop : forall e s,
+    WF s ->
+    WF (insert e s) /\
+    (size (insert e s) = size s + 1 \/ size (insert e s) = size s).
+Proof.
+  intros e s.
+  induction s.
+  - intros H.
+    rewrite /insert/=.
+    destruct_match; split; derive_constraints.
+    + (** s is Bin, e = a, prove: WF (insert e s) *)
+      destruct (PtrEquality.ptrEq e a); [assumption|].
+        replace (Datatypes.id e) with e; auto.
+        apply elt_compare_eq in Heq. move: Hwf.
+        rewrite /WF /valid'.
+        do 2 case /andP=>//; intros.
+        repeat (apply /andP=>//; split=>//).
+      * unfold ordered' in b.
+        eapply bounded_right_relax;
+          try solve [right; apply Heq].
+        solve_bounded'.
+      * unfold ordered' in b.
+        eapply bounded_left_relax;
+          try solve [right; apply Heq].
+        solve_bounded'.
+    + (** prove [size (insert e s) = size s] *)
+      destruct_match; [solve [auto]|].
+      replace (Datatypes.id e) with e.
+      right. rewrite /size=>//. auto.
+    + intros. destruct_match.
+      replace (Datatypes.id e) with e; auto.
+
+(*
+      
+      split; intros. solve_local_bounded_with_relax.
+    + (** s is Bin, e < a, prove: WF (insert e s) *)
+      intros. destruct_match.
+      apply balanceL_WF; auto.
+      * (** WF (insert e s2) *)
+          by apply IHs1.
+      * (** (insert e s2) and s3 satisfy [before_balancedL]'s
+              pre-condbitions. *)
+        rewrite -/insert /before_balancedL.
+        apply IHs1 in Hwfl; destruct Hwfl.
+          (** cases analysis: did we insert an element to s2?  *)
+        destruct H0 as [[H0 | H0] _].
+        -- (** we did *)
+          destruct s2; destruct s3; derive_constraints.
+          all: try (rewrite_for_omega; intros; omega).
+          all: derive_compare;
+            destruct_match; destruct_match;
+              first [(rewrite_for_omega; intros; omega) |
+                     (apply IHs1 in Hwfl;
+                      destruct Hwfl as [_ [Hwlf' _]];
+                         move: Hwlf'; rewrite /insert;
+                         move: Heq1 ->; move: Heq2 ->;
+                                                   rewrite_for_omega; intros; omega)].
+        -- (** we didn't *) derive_constraints; subst.
+                            rewrite H0. destruct Hbalanced; (left + right); omega.
+      * (** prove [before_ordered] pre-conditions *)
+          rewrite -/insert /before_ordered.
+          derive_constraints. move: Hord0. rewrite /ordered.
+          case /and4P=>// => _ _ Hlo Hhi.
+          split; [| split; [| split; [| split; [| split]]]]=>//.
+          apply IHs1 in Hwfl. destruct Hwfl as [ _ [_ Hord']].
+          specialize (Hord' a); destruct Hord'.
+          apply H=>//. autorewrite with elt_compare in *. auto.
+
+*)

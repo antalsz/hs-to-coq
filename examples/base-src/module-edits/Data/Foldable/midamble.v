@@ -64,17 +64,17 @@ Definition default_foldable_foldMap {f : Type -> Type}
   (foldMap : forall {m} {a}, forall `{GHC.Base.Monoid m}, (a -> m) -> f a -> m)
  :=
   let foldr : forall {a} {b}, (a -> b -> b) -> b -> f a -> b :=
-  fun {a} {b} f z t =>
+  fun a b f z t =>
     Data.Monoid.appEndo
       (foldMap
          (Coq.Program.Basics.compose Data.Monoid.Mk_Endo f) t) z
   in
-  default_foldable (fun {m}{a}`{GHC.Base.Monoid m} => foldMap) foldr.
+  default_foldable (fun {m}{a} `{GHC.Base.Monoid m} => foldMap) foldr.
 
 Definition default_foldable_foldr (f : Type -> Type)
   (foldr : forall {a} {b}, (a -> b -> b) -> b -> f a -> b) :=
   let foldMap :  forall {m} {a} `{GHC.Base.Monoid m}, (a -> m) -> f a -> m :=
-  fun {m} {a} `{GHC.Base.Monoid m} =>
+  fun m a (H : GHC.Base.Monoid m) =>
     fun f => foldr
             (Coq.Program.Basics.compose GHC.Base.mappend
                                         f) GHC.Base.mempty

@@ -54,7 +54,7 @@ before_install:
  # Install COQ
  - if ! [ -e $HOME/.opam/config ]; then opam init -j 2 --compiler=system -n -y; fi
  - opam repo add coq-released http://coq.inria.fr/opam/released || true
- - opam list -i coq.8.7.1 || { opam install -y  coq.8.7.1 && opam pin add coq 8.7.1 ; }
+ - opam list -i coq.8.7.1 || { opam unpin coq && opam install -y  coq.8.7.1 && opam pin add coq 8.7.1 ; }
  - opam list -i coq-mathcomp-ssreflect || opam install -y coq-mathcomp-ssreflect
  - eval $(opam config env)
 

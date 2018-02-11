@@ -8,6 +8,7 @@ skip Data.IntSet.Internal.fromDistinctAscList
 skip Data.IntSet.Internal.fromAscList
 
 # local termination via the bit mask
+#termination go in Data.IntSet.Internal.foldlBits {measure (Coq.NArith.BinNat.N.to_nat arg_0__)}
 nonterminating Data.IntSet.Internal.foldlBits
 nonterminating Data.IntSet.Internal.foldl'Bits
 nonterminating Data.IntSet.Internal.foldrBits

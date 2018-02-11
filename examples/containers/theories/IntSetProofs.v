@@ -5021,6 +5021,10 @@ Proof.
   unfold projT1, projT2.
   unfold intersection_body.
   repeat match goal with
+    | _ => progress replace (Sumbool.sumbool_of_bool false) with (@right (false = true) (false = false) (@eq_refl bool false))
+by reflexivity
+    | _ => progress replace (Sumbool.sumbool_of_bool true) with (@left (true = true) (true = false) (@eq_refl bool true))
+by reflexivity
     | [ |- _ = match ?x with _ => _ end ] => destruct x
     | _ => assumption || reflexivity
     | [ |- _ ?x = _ ?x ] => induction x
@@ -5268,6 +5272,10 @@ Proof.
   unfold projT1, projT2.
   unfold difference_body.
   repeat match goal with
+    | _ => progress replace (Sumbool.sumbool_of_bool false) with (@right (false = true) (false = false) (@eq_refl bool false))
+by reflexivity
+    | _ => progress replace (Sumbool.sumbool_of_bool true) with (@left (true = true) (true = false) (@eq_refl bool true))
+by reflexivity
     | [ |- _ = match ?x with _ => _ end ] => destruct x
     | _ => assumption || reflexivity
     | [ |- _ ?x = _ ?x ] => induction x
@@ -5822,80 +5830,32 @@ Definition foldl_go {a} k :=
     local [go] function, but also the (unused) parameters of the enclosing [foldlBits]
     function.
 *)
-
-(* This is copied from the generated file. I tried to extract it using tactics,
-but then we get all the Program Fixpoint cruft in the way. *)
-Definition foldlBits_go {a} (prefix : Int) (f : a -> Int -> a)
-  : (Nat -> a -> (N -> a -> a) -> a)
-  :=
-  (fun arg_0__ arg_1__ go =>
-    match arg_0__ , arg_1__ with
-      | num_2__ , acc => match num_2__ GHC.Base.== GHC.Num.fromInteger 0 with
-                           | true => acc
-                           | false => match arg_0__ , arg_1__ with
-                                        | bm , acc => match lowestBitMask bm with
-                                                        | bitmask => match indexOfTheOnlyBit
-                                                                             bitmask with
-                                                                       | bi => go
-                                                                               (Data.Bits.xor
-                                                                               bm bitmask) ((f
-                                                                                           acc)
-                                                                                           GHC.Base.$!
-                                                                                           (prefix
-                                                                                           GHC.Num.+
-                                                                                           bi))
-                                                                     end
-                                                      end
-                                      end
-                         end
-    end).
-
-(* Alternative approach
 Definition foldlBits_go {a} (p : Int) (f : a -> Int -> a) (x : a) (bm : Nat)
   : ((forall x' : N, {_ : a | (N.to_nat x' < N.to_nat bm)%nat} -> a) -> a).
 Proof.
   let rhs := eval unfold foldlBits in (foldlBits p f x bm) in
-  idtac rhs;
   match rhs with context[ GHC.Wf.wfFix2 _ _ _ ?f ] => exact (f bm x) end.
 Defined.
-*)
-
 
 Require Import Logic.FunctionalExtensionality.
 
 Lemma foldlBits_eq:
   forall {a} p (f : a -> Int -> a) x bm,
-  foldlBits p f x bm = @foldlBits_go a p f bm x (fun x y => foldlBits p f y x).
+  foldlBits p f x bm = @foldlBits_go a p f x bm (fun x y => foldlBits p f (proj1_sig y) x).
 Proof.
   intros.
   unfold foldlBits.
   unfold foldlBits_go.
   etransitivity; only 1: apply GHC.Wf.wfFix2_eq.
-  Fail destruct (@op_zeze__ N Eq_Char___ bm (@fromInteger N Num_Word__ Z0)).
-
-  (* At this point we are stuck with:
-
-
-      Abstracting over the term "b" leads to a term
-      …
-      which is ill-typed.
-      Reason is: Illegal application: 
-      The term "Internal.foldlBits_obligation_2" of type
-      …
-      cannot be applied to the terms
-      …
-      The 13th term has type "false = b0" which should be coercible to "false = _GHC.Base.==_ bm #0".
-
-   I am starting to have my doubts about Program Fixpoint.
-   *)
-Admitted.
-
-
-(** This used to be the case definitionally until
-we switched to Program Fixpoint. Maybe it will be the case again
-once we do not admit the termination proofs. *)
-Lemma foldl'Bits_foldlBits : @foldl'Bits = @foldlBits.
-Admitted.
+  destruct (Sumbool.sumbool_of_bool _); try reflexivity.
+  f_equal.
+  extensionality x'.
+  extensionality y'.
+  extensionality go'.
+  destruct (Sumbool.sumbool_of_bool _); try reflexivity.
+  f_equal. f_equal.
+  apply ProofIrrelevance.proof_irrelevance.
+Qed.
 
 
 Lemma foldlBits_0:
@@ -5919,6 +5879,9 @@ Proof.
   unfoldMethods.
   replace (bm =? Z.to_N 0)%N with false
     by (symmetry; apply N.eqb_neq; unfold isBitMask in *; zify; rewrite Z2N.id; omega).
+  (* eek *)
+  replace (Sumbool.sumbool_of_bool false) with (@right (false = true) (false = false) (@eq_refl bool false))
+    by reflexivity.
   f_equal.
   * rewrite lowestBitMask_highestBitMask at 1 by isBitMask.
     unfold indexOfTheOnlyBit, highestBitMask.
@@ -5931,6 +5894,31 @@ Proof.
   * rewrite lxor_lowestBitMask by assumption.
     reflexivity.
 Qed.
+
+
+(**
+This used to be the case definitionally until we switched to Program Fixpoint.
+Maybe it will be the case again once we do not admit the termination proofs.
+Until then, let’s throw axioms (functional extensionality, proof irrelevance) at it. *)
+Lemma foldl'Bits_foldlBits : @foldl'Bits = @foldlBits.
+Proof.
+  unfold foldl'Bits.
+  unfold foldlBits.
+  intros.
+  extensionality a.
+  extensionality p.
+  extensionality f.
+  extensionality z.
+  extensionality bm.
+  f_equal.
+  extensionality x'.
+  extensionality y'.
+  extensionality go'.
+  destruct (Sumbool.sumbool_of_bool _); try reflexivity.
+  f_equal. f_equal.
+  apply ProofIrrelevance.proof_irrelevance.
+Qed.
+
 
 Lemma foldlBits_high_bm_aux:
   forall {a} p (f : a -> Int -> a) bm,

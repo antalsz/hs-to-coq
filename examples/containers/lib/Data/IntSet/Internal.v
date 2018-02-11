@@ -308,24 +308,20 @@ Program Definition foldlBits {a}
               GHC.Wf.wfFix2 Coq.Init.Peano.lt (fun arg_0__ arg_1__ =>
                               Coq.NArith.BinNat.N.to_nat arg_0__) _ (fun arg_0__ arg_1__ go =>
                               match arg_0__ , arg_1__ with
-                                | num_2__ , acc => match num_2__ GHC.Base.== GHC.Num.fromInteger 0 with
-                                                     | true => acc
-                                                     | false => match arg_0__ , arg_1__ with
-                                                                  | bm , acc => match lowestBitMask bm with
-                                                                                  | bitmask => match indexOfTheOnlyBit
-                                                                                                       bitmask with
-                                                                                                 | bi => go
-                                                                                                         (Data.Bits.xor
-                                                                                                         bm bitmask) ((f
-                                                                                                                     acc)
-                                                                                                                     GHC.Base.$!
-                                                                                                                     (prefix
-                                                                                                                     GHC.Num.+
-                                                                                                                     bi))
-                                                                                               end
-                                                                                end
-                                                                end
-                                                   end
+                                | num_2__ , acc => if Bool.Sumbool.sumbool_of_bool (num_2__ GHC.Base.==
+                                                                                   GHC.Num.fromInteger 0)
+                                                   then acc
+                                                   else match arg_0__ , arg_1__ with
+                                                          | bm , acc => match lowestBitMask bm with
+                                                                          | bitmask => match indexOfTheOnlyBit
+                                                                                               bitmask with
+                                                                                         | bi => go (Data.Bits.xor bm
+                                                                                                                   bitmask)
+                                                                                                 ((f acc) GHC.Base.$!
+                                                                                                 (prefix GHC.Num.+ bi))
+                                                                                       end
+                                                                        end
+                                                        end
                               end) in
             go bitmap z.
 Admit Obligations.
@@ -359,24 +355,20 @@ Program Definition foldl'Bits {a}
               GHC.Wf.wfFix2 Coq.Init.Peano.lt (fun arg_0__ arg_1__ =>
                               Coq.NArith.BinNat.N.to_nat arg_0__) _ (fun arg_0__ arg_1__ go =>
                               match arg_0__ , arg_1__ with
-                                | num_2__ , acc => match num_2__ GHC.Base.== GHC.Num.fromInteger 0 with
-                                                     | true => acc
-                                                     | false => match arg_0__ , arg_1__ with
-                                                                  | bm , acc => match lowestBitMask bm with
-                                                                                  | bitmask => match indexOfTheOnlyBit
-                                                                                                       bitmask with
-                                                                                                 | bi => go
-                                                                                                         (Data.Bits.xor
-                                                                                                         bm bitmask) ((f
-                                                                                                                     acc)
-                                                                                                                     GHC.Base.$!
-                                                                                                                     (prefix
-                                                                                                                     GHC.Num.+
-                                                                                                                     bi))
-                                                                                               end
-                                                                                end
-                                                                end
-                                                   end
+                                | num_2__ , acc => if Bool.Sumbool.sumbool_of_bool (num_2__ GHC.Base.==
+                                                                                   GHC.Num.fromInteger 0)
+                                                   then acc
+                                                   else match arg_0__ , arg_1__ with
+                                                          | bm , acc => match lowestBitMask bm with
+                                                                          | bitmask => match indexOfTheOnlyBit
+                                                                                               bitmask with
+                                                                                         | bi => go (Data.Bits.xor bm
+                                                                                                                   bitmask)
+                                                                                                 ((f acc) GHC.Base.$!
+                                                                                                 (prefix GHC.Num.+ bi))
+                                                                                       end
+                                                                        end
+                                                        end
                               end) in
             go bitmap z.
 Admit Obligations.
@@ -697,85 +689,69 @@ Program Fixpoint disjoint (arg_0__ : IntSet) (arg_1__ : IntSet)
                           {measure (size_nat arg_0__ + size_nat arg_1__)} : bool
                    := match arg_0__ , arg_1__ with
                         | (Bin p1 m1 l1 r1 as t1) , (Bin p2 m2 l2 r2 as t2) => let disjoint2 :=
-                                                                                 match nomatch p1 p2 m2 with
-                                                                                   | true => true
-                                                                                   | false => match zero p1 m2 with
-                                                                                                | true => disjoint t1 l2
-                                                                                                | false => disjoint t1
-                                                                                                           r2
-                                                                                              end
-                                                                                 end in
+                                                                                 if Bool.Sumbool.sumbool_of_bool
+                                                                                    (nomatch p1 p2 m2)
+                                                                                 then true
+                                                                                 else if Bool.Sumbool.sumbool_of_bool
+                                                                                         (zero p1 m2)
+                                                                                      then disjoint t1 l2
+                                                                                      else disjoint t1 r2 in
                                                                                let disjoint1 :=
-                                                                                 match nomatch p2 p1 m1 with
-                                                                                   | true => true
-                                                                                   | false => match zero p2 m1 with
-                                                                                                | true => disjoint l1 t2
-                                                                                                | false => disjoint r1
-                                                                                                           t2
-                                                                                              end
-                                                                                 end in
-                                                                               match shorter m1 m2 with
-                                                                                 | true => disjoint1
-                                                                                 | false => match shorter m2 m1 with
-                                                                                              | true => disjoint2
-                                                                                              | false => match p1
-                                                                                                                 GHC.Base.==
-                                                                                                                 p2 with
-                                                                                                           | true =>
-                                                                                                             andb
-                                                                                                             (disjoint
-                                                                                                             l1 l2)
-                                                                                                             (disjoint
-                                                                                                             r1 r2)
-                                                                                                           | false =>
-                                                                                                             true
-                                                                                                         end
-                                                                                            end
-                                                                               end
+                                                                                 if Bool.Sumbool.sumbool_of_bool
+                                                                                    (nomatch p2 p1 m1)
+                                                                                 then true
+                                                                                 else if Bool.Sumbool.sumbool_of_bool
+                                                                                         (zero p2 m1)
+                                                                                      then disjoint l1 t2
+                                                                                      else disjoint r1 t2 in
+                                                                               if Bool.Sumbool.sumbool_of_bool (shorter
+                                                                                                               m1 m2)
+                                                                               then disjoint1
+                                                                               else if Bool.Sumbool.sumbool_of_bool
+                                                                                       (shorter m2 m1)
+                                                                                    then disjoint2
+                                                                                    else if Bool.Sumbool.sumbool_of_bool
+                                                                                            (p1 GHC.Base.== p2)
+                                                                                         then andb (disjoint l1 l2)
+                                                                                                   (disjoint r1 r2)
+                                                                                         else true
                         | (Bin _ _ _ _ as t1) , Tip kx2 bm2 => let fix disjointBM arg_11__
                                                                          := match arg_11__ with
-                                                                              | Bin p1 m1 l1 r1 => match nomatch kx2 p1
-                                                                                                           m1 with
-                                                                                                     | true => true
-                                                                                                     | false =>
-                                                                                                       match zero kx2
-                                                                                                               m1 with
-                                                                                                         | true =>
-                                                                                                           disjointBM l1
-                                                                                                         | false =>
-                                                                                                           disjointBM r1
-                                                                                                       end
-                                                                                                   end
-                                                                              | Tip kx1 bm1 => match kx1 GHC.Base.==
-                                                                                                       kx2 with
-                                                                                                 | true => (bm1
-                                                                                                           Data.Bits..&.(**)
-                                                                                                           bm2)
-                                                                                                           GHC.Base.==
-                                                                                                           GHC.Num.fromInteger
-                                                                                                           0
-                                                                                                 | false => true
-                                                                                               end
+                                                                              | Bin p1 m1 l1 r1 =>
+                                                                                if Bool.Sumbool.sumbool_of_bool (nomatch
+                                                                                                                kx2 p1
+                                                                                                                m1)
+                                                                                then true
+                                                                                else if Bool.Sumbool.sumbool_of_bool
+                                                                                        (zero kx2 m1)
+                                                                                     then disjointBM l1
+                                                                                     else disjointBM r1
+                                                                              | Tip kx1 bm1 =>
+                                                                                if Bool.Sumbool.sumbool_of_bool (kx1
+                                                                                                                GHC.Base.==
+                                                                                                                kx2)
+                                                                                then (bm1 Data.Bits..&.(**) bm2)
+                                                                                     GHC.Base.== GHC.Num.fromInteger 0
+                                                                                else true
                                                                               | Nil => true
                                                                             end in
                                                                disjointBM t1
                         | Bin _ _ _ _ , Nil => true
                         | Tip kx1 bm1 , t2 => let fix disjointBM arg_18__
                                                         := match arg_18__ with
-                                                             | Bin p2 m2 l2 r2 => match nomatch kx1 p2 m2 with
-                                                                                    | true => true
-                                                                                    | false => match zero kx1 m2 with
-                                                                                                 | true => disjointBM l2
-                                                                                                 | false => disjointBM
-                                                                                                            r2
-                                                                                               end
-                                                                                  end
-                                                             | Tip kx2 bm2 => match kx1 GHC.Base.== kx2 with
-                                                                                | true => (bm1 Data.Bits..&.(**) bm2)
-                                                                                          GHC.Base.==
-                                                                                          GHC.Num.fromInteger 0
-                                                                                | false => true
-                                                                              end
+                                                             | Bin p2 m2 l2 r2 => if Bool.Sumbool.sumbool_of_bool
+                                                                                     (nomatch kx1 p2 m2)
+                                                                                  then true
+                                                                                  else if Bool.Sumbool.sumbool_of_bool
+                                                                                          (zero kx1 m2)
+                                                                                       then disjointBM l2
+                                                                                       else disjointBM r2
+                                                             | Tip kx2 bm2 => if Bool.Sumbool.sumbool_of_bool (kx1
+                                                                                                              GHC.Base.==
+                                                                                                              kx2)
+                                                                              then (bm1 Data.Bits..&.(**) bm2)
+                                                                                   GHC.Base.== GHC.Num.fromInteger 0
+                                                                              else true
                                                              | Nil => true
                                                            end in
                                               disjointBM t2
@@ -815,49 +791,32 @@ Program Fixpoint union (arg_0__ : IntSet) (arg_1__ : IntSet) {measure (size_nat
                        arg_0__ + size_nat arg_1__)} : IntSet
                    := match arg_0__ , arg_1__ with
                         | (Bin p1 m1 l1 r1 as t1) , (Bin p2 m2 l2 r2 as t2) => let union2 :=
-                                                                                 match nomatch p1 p2 m2 with
-                                                                                   | true => link p1 t1 p2 t2
-                                                                                   | false => match zero p1 m2 with
-                                                                                                | true => Bin p2 m2
-                                                                                                          (union t1 l2)
-                                                                                                          r2
-                                                                                                | false => Bin p2 m2 l2
-                                                                                                           (union t1 r2)
-                                                                                              end
-                                                                                 end in
+                                                                                 if Bool.Sumbool.sumbool_of_bool
+                                                                                    (nomatch p1 p2 m2)
+                                                                                 then link p1 t1 p2 t2
+                                                                                 else if Bool.Sumbool.sumbool_of_bool
+                                                                                         (zero p1 m2)
+                                                                                      then Bin p2 m2 (union t1 l2) r2
+                                                                                      else Bin p2 m2 l2 (union t1 r2) in
                                                                                let union1 :=
-                                                                                 match nomatch p2 p1 m1 with
-                                                                                   | true => link p1 t1 p2 t2
-                                                                                   | false => match zero p2 m1 with
-                                                                                                | true => Bin p1 m1
-                                                                                                          (union l1 t2)
-                                                                                                          r1
-                                                                                                | false => Bin p1 m1 l1
-                                                                                                           (union r1 t2)
-                                                                                              end
-                                                                                 end in
-                                                                               match shorter m1 m2 with
-                                                                                 | true => union1
-                                                                                 | false => match shorter m2 m1 with
-                                                                                              | true => union2
-                                                                                              | false => match p1
-                                                                                                                 GHC.Base.==
-                                                                                                                 p2 with
-                                                                                                           | true => Bin
-                                                                                                                     p1
-                                                                                                                     m1
-                                                                                                                     (union
-                                                                                                                     l1
-                                                                                                                     l2)
-                                                                                                                     (union
-                                                                                                                     r1
-                                                                                                                     r2)
-                                                                                                           | false =>
-                                                                                                             link p1 t1
-                                                                                                             p2 t2
-                                                                                                         end
-                                                                                            end
-                                                                               end
+                                                                                 if Bool.Sumbool.sumbool_of_bool
+                                                                                    (nomatch p2 p1 m1)
+                                                                                 then link p1 t1 p2 t2
+                                                                                 else if Bool.Sumbool.sumbool_of_bool
+                                                                                         (zero p2 m1)
+                                                                                      then Bin p1 m1 (union l1 t2) r1
+                                                                                      else Bin p1 m1 l1 (union r1 t2) in
+                                                                               if Bool.Sumbool.sumbool_of_bool (shorter
+                                                                                                               m1 m2)
+                                                                               then union1
+                                                                               else if Bool.Sumbool.sumbool_of_bool
+                                                                                       (shorter m2 m1)
+                                                                                    then union2
+                                                                                    else if Bool.Sumbool.sumbool_of_bool
+                                                                                            (p1 GHC.Base.== p2)
+                                                                                         then Bin p1 m1 (union l1 l2)
+                                                                                              (union r1 r2)
+                                                                                         else link p1 t1 p2 t2
                         | (Bin _ _ _ _ as t) , Tip kx bm => insertBM kx bm t
                         | (Bin _ _ _ _ as t) , Nil => t
                         | Tip kx bm , t => insertBM kx bm t
@@ -1131,70 +1090,53 @@ Program Fixpoint difference (arg_0__ : IntSet) (arg_1__ : IntSet)
                             {measure (size_nat arg_0__ + size_nat arg_1__)} : IntSet
                    := match arg_0__ , arg_1__ with
                         | (Bin p1 m1 l1 r1 as t1) , (Bin p2 m2 l2 r2 as t2) => let difference2 :=
-                                                                                 match nomatch p1 p2 m2 with
-                                                                                   | true => t1
-                                                                                   | false => match zero p1 m2 with
-                                                                                                | true => difference t1
-                                                                                                          l2
-                                                                                                | false => difference t1
-                                                                                                           r2
-                                                                                              end
-                                                                                 end in
+                                                                                 if Bool.Sumbool.sumbool_of_bool
+                                                                                    (nomatch p1 p2 m2)
+                                                                                 then t1
+                                                                                 else if Bool.Sumbool.sumbool_of_bool
+                                                                                         (zero p1 m2)
+                                                                                      then difference t1 l2
+                                                                                      else difference t1 r2 in
                                                                                let difference1 :=
-                                                                                 match nomatch p2 p1 m1 with
-                                                                                   | true => t1
-                                                                                   | false => match zero p2 m1 with
-                                                                                                | true => bin p1 m1
-                                                                                                          (difference l1
-                                                                                                          t2) r1
-                                                                                                | false => bin p1 m1 l1
-                                                                                                           (difference
-                                                                                                           r1 t2)
-                                                                                              end
-                                                                                 end in
-                                                                               match shorter m1 m2 with
-                                                                                 | true => difference1
-                                                                                 | false => match shorter m2 m1 with
-                                                                                              | true => difference2
-                                                                                              | false => match p1
-                                                                                                                 GHC.Base.==
-                                                                                                                 p2 with
-                                                                                                           | true => bin
-                                                                                                                     p1
-                                                                                                                     m1
-                                                                                                                     (difference
-                                                                                                                     l1
-                                                                                                                     l2)
-                                                                                                                     (difference
-                                                                                                                     r1
-                                                                                                                     r2)
-                                                                                                           | false => t1
-                                                                                                         end
-                                                                                            end
-                                                                               end
+                                                                                 if Bool.Sumbool.sumbool_of_bool
+                                                                                    (nomatch p2 p1 m1)
+                                                                                 then t1
+                                                                                 else if Bool.Sumbool.sumbool_of_bool
+                                                                                         (zero p2 m1)
+                                                                                      then bin p1 m1 (difference l1 t2)
+                                                                                           r1
+                                                                                      else bin p1 m1 l1 (difference r1
+                                                                                                        t2) in
+                                                                               if Bool.Sumbool.sumbool_of_bool (shorter
+                                                                                                               m1 m2)
+                                                                               then difference1
+                                                                               else if Bool.Sumbool.sumbool_of_bool
+                                                                                       (shorter m2 m1)
+                                                                                    then difference2
+                                                                                    else if Bool.Sumbool.sumbool_of_bool
+                                                                                            (p1 GHC.Base.== p2)
+                                                                                         then bin p1 m1 (difference l1
+                                                                                                        l2) (difference
+                                                                                                            r1 r2)
+                                                                                         else t1
                         | (Bin _ _ _ _ as t) , Tip kx bm => deleteBM kx bm t
                         | (Bin _ _ _ _ as t) , Nil => t
                         | (Tip kx bm as t1) , t2 => let fix differenceTip arg_12__
                                                               := match arg_12__ with
-                                                                   | Bin p2 m2 l2 r2 => match nomatch kx p2 m2 with
-                                                                                          | true => t1
-                                                                                          | false => match zero kx
-                                                                                                             m2 with
-                                                                                                       | true =>
-                                                                                                         differenceTip
-                                                                                                         l2
-                                                                                                       | false =>
-                                                                                                         differenceTip
-                                                                                                         r2
-                                                                                                     end
-                                                                                        end
-                                                                   | Tip kx2 bm2 => match kx GHC.Base.== kx2 with
-                                                                                      | true => tip kx (Data.Bits.xor bm
-                                                                                                                      (bm
-                                                                                                                      Data.Bits..&.(**)
-                                                                                                                      bm2))
-                                                                                      | false => t1
-                                                                                    end
+                                                                   | Bin p2 m2 l2 r2 => if Bool.Sumbool.sumbool_of_bool
+                                                                                           (nomatch kx p2 m2)
+                                                                                        then t1
+                                                                                        else if Bool.Sumbool.sumbool_of_bool
+                                                                                                (zero kx m2)
+                                                                                             then differenceTip l2
+                                                                                             else differenceTip r2
+                                                                   | Tip kx2 bm2 => if Bool.Sumbool.sumbool_of_bool (kx
+                                                                                                                    GHC.Base.==
+                                                                                                                    kx2)
+                                                                                    then tip kx (Data.Bits.xor bm (bm
+                                                                                                               Data.Bits..&.(**)
+                                                                                                               bm2))
+                                                                                    else t1
                                                                    | Nil => t1
                                                                  end in
                                                     differenceTip t2
@@ -1213,89 +1155,68 @@ Program Fixpoint intersection (arg_0__ : IntSet) (arg_1__ : IntSet)
                               {measure (size_nat arg_0__ + size_nat arg_1__)} : IntSet
                    := match arg_0__ , arg_1__ with
                         | (Bin p1 m1 l1 r1 as t1) , (Bin p2 m2 l2 r2 as t2) => let intersection2 :=
-                                                                                 match nomatch p1 p2 m2 with
-                                                                                   | true => Nil
-                                                                                   | false => match zero p1 m2 with
-                                                                                                | true => intersection
-                                                                                                          t1 l2
-                                                                                                | false => intersection
-                                                                                                           t1 r2
-                                                                                              end
-                                                                                 end in
+                                                                                 if Bool.Sumbool.sumbool_of_bool
+                                                                                    (nomatch p1 p2 m2)
+                                                                                 then Nil
+                                                                                 else if Bool.Sumbool.sumbool_of_bool
+                                                                                         (zero p1 m2)
+                                                                                      then intersection t1 l2
+                                                                                      else intersection t1 r2 in
                                                                                let intersection1 :=
-                                                                                 match nomatch p2 p1 m1 with
-                                                                                   | true => Nil
-                                                                                   | false => match zero p2 m1 with
-                                                                                                | true => intersection
-                                                                                                          l1 t2
-                                                                                                | false => intersection
-                                                                                                           r1 t2
-                                                                                              end
-                                                                                 end in
-                                                                               match shorter m1 m2 with
-                                                                                 | true => intersection1
-                                                                                 | false => match shorter m2 m1 with
-                                                                                              | true => intersection2
-                                                                                              | false => match p1
-                                                                                                                 GHC.Base.==
-                                                                                                                 p2 with
-                                                                                                           | true => bin
-                                                                                                                     p1
-                                                                                                                     m1
-                                                                                                                     (intersection
-                                                                                                                     l1
-                                                                                                                     l2)
-                                                                                                                     (intersection
-                                                                                                                     r1
-                                                                                                                     r2)
-                                                                                                           | false =>
-                                                                                                             Nil
-                                                                                                         end
-                                                                                            end
-                                                                               end
+                                                                                 if Bool.Sumbool.sumbool_of_bool
+                                                                                    (nomatch p2 p1 m1)
+                                                                                 then Nil
+                                                                                 else if Bool.Sumbool.sumbool_of_bool
+                                                                                         (zero p2 m1)
+                                                                                      then intersection l1 t2
+                                                                                      else intersection r1 t2 in
+                                                                               if Bool.Sumbool.sumbool_of_bool (shorter
+                                                                                                               m1 m2)
+                                                                               then intersection1
+                                                                               else if Bool.Sumbool.sumbool_of_bool
+                                                                                       (shorter m2 m1)
+                                                                                    then intersection2
+                                                                                    else if Bool.Sumbool.sumbool_of_bool
+                                                                                            (p1 GHC.Base.== p2)
+                                                                                         then bin p1 m1 (intersection l1
+                                                                                                        l2)
+                                                                                              (intersection r1 r2)
+                                                                                         else Nil
                         | (Bin _ _ _ _ as t1) , Tip kx2 bm2 => let fix intersectBM arg_11__
                                                                          := match arg_11__ with
-                                                                              | Bin p1 m1 l1 r1 => match nomatch kx2 p1
-                                                                                                           m1 with
-                                                                                                     | true => Nil
-                                                                                                     | false =>
-                                                                                                       match zero kx2
-                                                                                                               m1 with
-                                                                                                         | true =>
-                                                                                                           intersectBM
-                                                                                                           l1
-                                                                                                         | false =>
-                                                                                                           intersectBM
-                                                                                                           r1
-                                                                                                       end
-                                                                                                   end
-                                                                              | Tip kx1 bm1 => match kx1 GHC.Base.==
-                                                                                                       kx2 with
-                                                                                                 | true => tip kx1 (bm1
-                                                                                                                   Data.Bits..&.(**)
-                                                                                                                   bm2)
-                                                                                                 | false => Nil
-                                                                                               end
+                                                                              | Bin p1 m1 l1 r1 =>
+                                                                                if Bool.Sumbool.sumbool_of_bool (nomatch
+                                                                                                                kx2 p1
+                                                                                                                m1)
+                                                                                then Nil
+                                                                                else if Bool.Sumbool.sumbool_of_bool
+                                                                                        (zero kx2 m1)
+                                                                                     then intersectBM l1
+                                                                                     else intersectBM r1
+                                                                              | Tip kx1 bm1 =>
+                                                                                if Bool.Sumbool.sumbool_of_bool (kx1
+                                                                                                                GHC.Base.==
+                                                                                                                kx2)
+                                                                                then tip kx1 (bm1 Data.Bits..&.(**) bm2)
+                                                                                else Nil
                                                                               | Nil => Nil
                                                                             end in
                                                                intersectBM t1
                         | Bin _ _ _ _ , Nil => Nil
                         | Tip kx1 bm1 , t2 => let fix intersectBM arg_18__
                                                         := match arg_18__ with
-                                                             | Bin p2 m2 l2 r2 => match nomatch kx1 p2 m2 with
-                                                                                    | true => Nil
-                                                                                    | false => match zero kx1 m2 with
-                                                                                                 | true => intersectBM
-                                                                                                           l2
-                                                                                                 | false => intersectBM
-                                                                                                            r2
-                                                                                               end
-                                                                                  end
-                                                             | Tip kx2 bm2 => match kx1 GHC.Base.== kx2 with
-                                                                                | true => tip kx1 (bm1 Data.Bits..&.(**)
-                                                                                                  bm2)
-                                                                                | false => Nil
-                                                                              end
+                                                             | Bin p2 m2 l2 r2 => if Bool.Sumbool.sumbool_of_bool
+                                                                                     (nomatch kx1 p2 m2)
+                                                                                  then Nil
+                                                                                  else if Bool.Sumbool.sumbool_of_bool
+                                                                                          (zero kx1 m2)
+                                                                                       then intersectBM l2
+                                                                                       else intersectBM r2
+                                                             | Tip kx2 bm2 => if Bool.Sumbool.sumbool_of_bool (kx1
+                                                                                                              GHC.Base.==
+                                                                                                              kx2)
+                                                                              then tip kx1 (bm1 Data.Bits..&.(**) bm2)
+                                                                              else Nil
                                                              | Nil => Nil
                                                            end in
                                               intersectBM t2
@@ -1309,17 +1230,17 @@ Infix "Data.IntSet.Internal.\\" := (_\\_) (at level 99).
 End Notations.
 
 (* Unbound variables:
-     Eq Gt Lt None Some andb bitCount_N bool comparison cons false highestBitMask id
-     list negb nil op_zp__ op_zt__ option orb pair shiftLL shiftRL size_nat
-     suffixBitMask true Coq.Init.Peano.lt Coq.NArith.BinNat.N.log2
-     Coq.NArith.BinNat.N.modulo Coq.NArith.BinNat.N.pow Coq.NArith.BinNat.N.to_nat
-     Coq.ZArith.BinInt.Z.eqb Coq.ZArith.BinInt.Z.land Coq.ZArith.BinInt.Z.lnot
-     Coq.ZArith.BinInt.Z.log2 Coq.ZArith.BinInt.Z.lxor Coq.ZArith.BinInt.Z.of_N
-     Coq.ZArith.BinInt.Z.pow Coq.ZArith.BinInt.Z.pred Data.Bits.complement
-     Data.Bits.op_zizazi__ Data.Bits.op_zizbzi__ Data.Bits.xor Data.Foldable.foldl
-     GHC.Base.Eq_ GHC.Base.Ord GHC.Base.String GHC.Base.compare GHC.Base.flip
-     GHC.Base.map GHC.Base.op_z2218U__ GHC.Base.op_zd__ GHC.Base.op_zdzn__
-     GHC.Base.op_zeze__ GHC.Base.op_zg__ GHC.Base.op_zgze__ GHC.Base.op_zl__
-     GHC.Base.op_zsze__ GHC.Num.Int GHC.Num.Word GHC.Num.negate GHC.Num.op_zm__
-     GHC.Num.op_zp__ GHC.Real.fromIntegral GHC.Wf.wfFix2
+     Bool.Sumbool.sumbool_of_bool Eq Gt Lt None Some andb bitCount_N bool comparison
+     cons false highestBitMask id list negb nil op_zp__ op_zt__ option orb pair
+     shiftLL shiftRL size_nat suffixBitMask true Coq.Init.Peano.lt
+     Coq.NArith.BinNat.N.log2 Coq.NArith.BinNat.N.modulo Coq.NArith.BinNat.N.pow
+     Coq.NArith.BinNat.N.to_nat Coq.ZArith.BinInt.Z.eqb Coq.ZArith.BinInt.Z.land
+     Coq.ZArith.BinInt.Z.lnot Coq.ZArith.BinInt.Z.log2 Coq.ZArith.BinInt.Z.lxor
+     Coq.ZArith.BinInt.Z.of_N Coq.ZArith.BinInt.Z.pow Coq.ZArith.BinInt.Z.pred
+     Data.Bits.complement Data.Bits.op_zizazi__ Data.Bits.op_zizbzi__ Data.Bits.xor
+     Data.Foldable.foldl GHC.Base.Eq_ GHC.Base.Ord GHC.Base.String GHC.Base.compare
+     GHC.Base.flip GHC.Base.map GHC.Base.op_z2218U__ GHC.Base.op_zd__
+     GHC.Base.op_zdzn__ GHC.Base.op_zeze__ GHC.Base.op_zg__ GHC.Base.op_zgze__
+     GHC.Base.op_zl__ GHC.Base.op_zsze__ GHC.Num.Int GHC.Num.Word GHC.Num.negate
+     GHC.Num.op_zm__ GHC.Num.op_zp__ GHC.Real.fromIntegral GHC.Wf.wfFix2
 *)

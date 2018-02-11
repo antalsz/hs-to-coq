@@ -78,12 +78,7 @@ pattern IfBool :: Term -> Term -> Term -> Term
 pattern IfBool c t e = If (HasType c (Var "bool")) Nothing t e
 
 pattern IfCase :: Term -> Term -> Term -> Term
-pattern IfCase c t e =
-    Match (MatchItem c Nothing Nothing :| []) Nothing
-        [ Equation (MultPattern ( QualidPat (Bare "true")  :| []) :| []) t
-        , Equation (MultPattern ( QualidPat (Bare "false") :| []) :| []) e
-        ]
-
+pattern IfCase c t e = If (App1 (Var "Bool.Sumbool.sumbool_of_bool") c) Nothing t e
 
 isLetFix :: Term -> Maybe (FixBody, Term)
 isLetFix (Let f [] Nothing (Fix (FixOne fb@(FixBody f' _ _ _ _))) body)

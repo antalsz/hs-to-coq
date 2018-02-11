@@ -24,9 +24,9 @@ $(VFILES_GEN): %.v : %.hs edits  ../../base/edits
 
 _CoqProject : Makefile
 	> $@
-	echo "-Q .               \"\""		>> $@
+	echo "-Q .               ''"		>> $@
 	echo "-Q ../../base-thy/ Proofs" >> $@
-	echo "-Q ../../base/     \"\""		>> $@
+	echo "-Q ../../base/     ''"		>> $@
 	echo $(VFILES)										>> $@
 
 Makefile.coq: _CoqProject

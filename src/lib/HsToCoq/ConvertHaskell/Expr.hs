@@ -952,21 +952,44 @@ bindIn tmpl rhs genBody = do
 -- This prevents the pattern conversion code to create
 -- `let j_24__ := … in j_24__`
 -- and a few other common and obviously stupid forms
--- But it is crucial that the `rhs` is not moved past a binder, so
--- we cannot push it into the equations of a match
+--
+-- Originally, we avoided pushing the `rhs` past a binder. But it turned out
+-- that we need to do that to get useful termination proof obligations out of
+-- program fixpoint. So now we move the `rhs` past a binder if that binder is fresh (i.e. cannot be captured).
+-- Let’s cross our fingers that we calculate all free variables properly.
 smartLet :: Qualid -> Term -> Term -> Term
+-- Move into the else branch
 smartLet ident rhs (IfBool c t e)
     | ident `S.notMember` getFreeVars c
     , ident `S.notMember` getFreeVars t
     = IfBool c t (smartLet ident rhs e)
+-- Move into the else branch
 smartLet ident rhs (IfCase c t e)
     | ident `S.notMember` getFreeVars c
     , ident `S.notMember` getFreeVars t
     = IfCase c t (smartLet ident rhs e)
+-- Move into the scrutinee
 smartLet ident rhs
     (Coq.Match [MatchItem t Nothing Nothing] Nothing eqns)
     | ident `S.notMember` getFreeVars eqns
     = Coq.Match [MatchItem (smartLet ident rhs t) Nothing Nothing] Nothing eqns
+-- Move into the last equation
+-- (only if not mentioned in any earlier equation and only if no matched
+-- variables is caught)
+smartLet ident rhs
+    (Coq.Match scruts Nothing eqns)
+    | ident `S.notMember` getFreeVars (NoBinding scruts)
+    , let intoEqns [] = Just []
+          intoEqns [Equation pats body] = do
+            let bound = S.fromList $ definedBy pats
+            guard $ ident `S.notMember` bound
+            guard $ S.null $ bound `S.intersection` getFreeVars rhs
+            return [Equation pats (smartLet ident rhs body)]
+          intoEqns (e:es) = do
+            guard $ ident `S.notMember` getFreeVars e
+            (e:) <$> intoEqns es
+    , Just eqns' <- intoEqns eqns
+    = Coq.Match scruts Nothing eqns'
 smartLet ident rhs (Qualid v) | ident == v = rhs
 smartLet ident rhs body = Let ident [] Nothing rhs body
 

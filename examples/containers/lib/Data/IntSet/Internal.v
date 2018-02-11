@@ -307,21 +307,24 @@ Program Definition foldlBits {a}
             let go :=
               GHC.Wf.wfFix2 Coq.Init.Peano.lt (fun arg_0__ arg_1__ =>
                               Coq.NArith.BinNat.N.to_nat arg_0__) _ (fun arg_0__ arg_1__ go =>
-                              let j_6__ :=
-                                match arg_0__ , arg_1__ with
-                                  | bm , acc => match lowestBitMask bm with
-                                                  | bitmask => match indexOfTheOnlyBit bitmask with
-                                                                 | bi => go (Data.Bits.xor bm bitmask) ((f acc)
-                                                                                                       GHC.Base.$!
-                                                                                                       (prefix GHC.Num.+
-                                                                                                       bi))
-                                                               end
-                                                end
-                                end in
                               match arg_0__ , arg_1__ with
                                 | num_2__ , acc => match num_2__ GHC.Base.== GHC.Num.fromInteger 0 with
                                                      | true => acc
-                                                     | false => j_6__
+                                                     | false => match arg_0__ , arg_1__ with
+                                                                  | bm , acc => match lowestBitMask bm with
+                                                                                  | bitmask => match indexOfTheOnlyBit
+                                                                                                       bitmask with
+                                                                                                 | bi => go
+                                                                                                         (Data.Bits.xor
+                                                                                                         bm bitmask) ((f
+                                                                                                                     acc)
+                                                                                                                     GHC.Base.$!
+                                                                                                                     (prefix
+                                                                                                                     GHC.Num.+
+                                                                                                                     bi))
+                                                                                               end
+                                                                                end
+                                                                end
                                                    end
                               end) in
             go bitmap z.
@@ -336,12 +339,11 @@ Definition foldl {a} : (a -> Key -> a) -> a -> IntSet -> a :=
                    | z' , Bin _ _ l r => go (go z' l) r
                  end in
     fun t =>
-      let j_6__ := go z t in
       match t with
         | Bin _ m l r => if m GHC.Base.< GHC.Num.fromInteger 0 : bool
                          then go (go z r) l
                          else go (go z l) r
-        | _ => j_6__
+        | _ => go z t
       end.
 
 Definition foldlFB {a} : (a -> Key -> a) -> a -> IntSet -> a :=
@@ -350,26 +352,34 @@ Definition foldlFB {a} : (a -> Key -> a) -> a -> IntSet -> a :=
 Definition toDescList : IntSet -> list Key :=
   foldl (GHC.Base.flip cons) nil.
 
-Definition foldl'Bits {a}
-    : GHC.Num.Int -> (a -> GHC.Num.Int -> a) -> a -> Nat -> a :=
-  fun prefix f z bitmap =>
-    let go :=
-      unsafeFix (fun go arg_0__ arg_1__ =>
-                  let j_6__ :=
-                    match arg_0__ , arg_1__ with
-                      | bm , acc => match lowestBitMask bm with
-                                      | bitmask => match indexOfTheOnlyBit bitmask with
-                                                     | bi => go (Data.Bits.xor bm bitmask) ((f acc) GHC.Base.$! (prefix
-                                                                                           GHC.Num.+ bi))
+Program Definition foldl'Bits {a}
+            : GHC.Num.Int -> (a -> GHC.Num.Int -> a) -> a -> Nat -> a :=
+          fun prefix f z bitmap =>
+            let go :=
+              GHC.Wf.wfFix2 Coq.Init.Peano.lt (fun arg_0__ arg_1__ =>
+                              Coq.NArith.BinNat.N.to_nat arg_0__) _ (fun arg_0__ arg_1__ go =>
+                              match arg_0__ , arg_1__ with
+                                | num_2__ , acc => match num_2__ GHC.Base.== GHC.Num.fromInteger 0 with
+                                                     | true => acc
+                                                     | false => match arg_0__ , arg_1__ with
+                                                                  | bm , acc => match lowestBitMask bm with
+                                                                                  | bitmask => match indexOfTheOnlyBit
+                                                                                                       bitmask with
+                                                                                                 | bi => go
+                                                                                                         (Data.Bits.xor
+                                                                                                         bm bitmask) ((f
+                                                                                                                     acc)
+                                                                                                                     GHC.Base.$!
+                                                                                                                     (prefix
+                                                                                                                     GHC.Num.+
+                                                                                                                     bi))
+                                                                                               end
+                                                                                end
+                                                                end
                                                    end
-                                    end
-                    end in
-                  match arg_0__ , arg_1__ with
-                    | num_2__ , acc => if num_2__ GHC.Base.== GHC.Num.fromInteger 0 : bool
-                                       then acc
-                                       else j_6__
-                  end) in
-    go bitmap z.
+                              end) in
+            go bitmap z.
+Admit Obligations.
 
 Definition foldl' {a} : (a -> Key -> a) -> a -> IntSet -> a :=
   fun f z =>
@@ -380,12 +390,11 @@ Definition foldl' {a} : (a -> Key -> a) -> a -> IntSet -> a :=
                    | z' , Bin _ _ l r => go (go z' l) r
                  end in
     fun t =>
-      let j_6__ := go z t in
       match t with
         | Bin _ m l r => if m GHC.Base.< GHC.Num.fromInteger 0 : bool
                          then go (go z r) l
                          else go (go z l) r
-        | _ => j_6__
+        | _ => go z t
       end.
 
 Definition foldrBits {a}
@@ -393,22 +402,27 @@ Definition foldrBits {a}
   fun prefix f z bitmap =>
     let go :=
       unsafeFix (fun go arg_0__ arg_1__ =>
-                  let j_6__ :=
-                    match arg_0__ , arg_1__ with
-                      | bm , acc => match lowestBitMask bm with
-                                      | bitmask => match indexOfTheOnlyBit bitmask with
-                                                     | bi => go (Data.Bits.xor bm bitmask) ((f GHC.Base.$! ((prefix
-                                                                                           GHC.Num.+
-                                                                                           (GHC.Num.fromInteger 64
-                                                                                           GHC.Num.- GHC.Num.fromInteger
-                                                                                           1)) GHC.Num.- bi)) acc)
-                                                   end
-                                    end
-                    end in
                   match arg_0__ , arg_1__ with
                     | num_2__ , acc => if num_2__ GHC.Base.== GHC.Num.fromInteger 0 : bool
                                        then acc
-                                       else j_6__
+                                       else match arg_0__ , arg_1__ with
+                                              | bm , acc => match lowestBitMask bm with
+                                                              | bitmask => match indexOfTheOnlyBit bitmask with
+                                                                             | bi => go (Data.Bits.xor bm bitmask) ((f
+                                                                                                                   GHC.Base.$!
+                                                                                                                   ((prefix
+                                                                                                                   GHC.Num.+
+                                                                                                                   (GHC.Num.fromInteger
+                                                                                                                   64
+                                                                                                                   GHC.Num.-
+                                                                                                                   GHC.Num.fromInteger
+                                                                                                                   1))
+                                                                                                                   GHC.Num.-
+                                                                                                                   bi))
+                                                                                                                   acc)
+                                                                           end
+                                                            end
+                                            end
                   end) in
     go (revNatSafe bitmap) z.
 
@@ -421,12 +435,11 @@ Definition foldr {b} : (Key -> b -> b) -> b -> IntSet -> b :=
                    | z' , Bin _ _ l r => go (go z' r) l
                  end in
     fun t =>
-      let j_6__ := go z t in
       match t with
         | Bin _ m l r => if m GHC.Base.< GHC.Num.fromInteger 0 : bool
                          then go (go z l) r
                          else go (go z r) l
-        | _ => j_6__
+        | _ => go z t
       end.
 
 Definition foldrFB {b} : (Key -> b -> b) -> b -> IntSet -> b :=
@@ -480,22 +493,27 @@ Definition foldr'Bits {a}
   fun prefix f z bitmap =>
     let go :=
       unsafeFix (fun go arg_0__ arg_1__ =>
-                  let j_6__ :=
-                    match arg_0__ , arg_1__ with
-                      | bm , acc => match lowestBitMask bm with
-                                      | bitmask => match indexOfTheOnlyBit bitmask with
-                                                     | bi => go (Data.Bits.xor bm bitmask) ((f GHC.Base.$! ((prefix
-                                                                                           GHC.Num.+
-                                                                                           (GHC.Num.fromInteger 64
-                                                                                           GHC.Num.- GHC.Num.fromInteger
-                                                                                           1)) GHC.Num.- bi)) acc)
-                                                   end
-                                    end
-                    end in
                   match arg_0__ , arg_1__ with
                     | num_2__ , acc => if num_2__ GHC.Base.== GHC.Num.fromInteger 0 : bool
                                        then acc
-                                       else j_6__
+                                       else match arg_0__ , arg_1__ with
+                                              | bm , acc => match lowestBitMask bm with
+                                                              | bitmask => match indexOfTheOnlyBit bitmask with
+                                                                             | bi => go (Data.Bits.xor bm bitmask) ((f
+                                                                                                                   GHC.Base.$!
+                                                                                                                   ((prefix
+                                                                                                                   GHC.Num.+
+                                                                                                                   (GHC.Num.fromInteger
+                                                                                                                   64
+                                                                                                                   GHC.Num.-
+                                                                                                                   GHC.Num.fromInteger
+                                                                                                                   1))
+                                                                                                                   GHC.Num.-
+                                                                                                                   bi))
+                                                                                                                   acc)
+                                                                           end
+                                                            end
+                                            end
                   end) in
     go (revNatSafe bitmap) z.
 
@@ -508,12 +526,11 @@ Definition foldr' {b} : (Key -> b -> b) -> b -> IntSet -> b :=
                    | z' , Bin _ _ l r => go (go z' r) l
                  end in
     fun t =>
-      let j_6__ := go z t in
       match t with
         | Bin _ m l r => if m GHC.Base.< GHC.Num.fromInteger 0 : bool
                          then go (go z l) r
                          else go (go z r) l
-        | _ => j_6__
+        | _ => go z t
       end.
 
 Definition size : IntSet -> GHC.Num.Int :=
@@ -546,11 +563,12 @@ Definition singleton : Key -> IntSet :=
 
 Definition tip : Prefix -> BitMap -> IntSet :=
   fun arg_0__ arg_1__ =>
-    let j_4__ := match arg_0__ , arg_1__ with | kx , bm => Tip kx bm end in
     match arg_0__ , arg_1__ with
       | _ , num_2__ => if num_2__ GHC.Base.== GHC.Num.fromInteger 0 : bool
                        then Nil
-                       else j_4__
+                       else match arg_0__ , arg_1__ with
+                              | kx , bm => Tip kx bm
+                            end
     end.
 
 Definition filter : (Key -> bool) -> IntSet -> IntSet :=
@@ -593,33 +611,7 @@ Definition zero : GHC.Num.Int -> Mask -> bool :=
 
 Definition subsetCmp : IntSet -> IntSet -> comparison :=
   fix subsetCmp arg_0__ arg_1__
-        := let j_12__ :=
-             match arg_0__ , arg_1__ with
-               | Bin _ _ _ _ , _ => Gt
-               | Tip kx1 bm1 , Tip kx2 bm2 => if kx1 GHC.Base./= kx2 : bool
-                                              then Gt
-                                              else if bm1 GHC.Base.== bm2 : bool
-                                                   then Eq
-                                                   else if Data.Bits.xor bm1 (bm1 Data.Bits..&.(**) bm2) GHC.Base.==
-                                                           GHC.Num.fromInteger 0 : bool
-                                                        then Lt
-                                                        else Gt
-               | (Tip kx _ as t1) , Bin p m l r => if nomatch kx p m : bool
-                                                   then Gt
-                                                   else if zero kx m : bool
-                                                        then match subsetCmp t1 l with
-                                                               | Gt => Gt
-                                                               | _ => Lt
-                                                             end
-                                                        else match subsetCmp t1 r with
-                                                               | Gt => Gt
-                                                               | _ => Lt
-                                                             end
-               | Tip _ _ , Nil => Gt
-               | Nil , Nil => Eq
-               | Nil , _ => Lt
-             end in
-           match arg_0__ , arg_1__ with
+        := match arg_0__ , arg_1__ with
              | (Bin p1 m1 l1 r1 as t1) , Bin p2 m2 l2 r2 => let subsetCmpEq :=
                                                               match pair (subsetCmp l1 l2) (subsetCmp r1 r2) with
                                                                 | pair Gt _ => Gt
@@ -643,7 +635,31 @@ Definition subsetCmp : IntSet -> IntSet -> comparison :=
                                                                  else if p1 GHC.Base.== p2 : bool
                                                                       then subsetCmpEq
                                                                       else Gt
-             | _ , _ => j_12__
+             | _ , _ => match arg_0__ , arg_1__ with
+                          | Bin _ _ _ _ , _ => Gt
+                          | Tip kx1 bm1 , Tip kx2 bm2 => if kx1 GHC.Base./= kx2 : bool
+                                                         then Gt
+                                                         else if bm1 GHC.Base.== bm2 : bool
+                                                              then Eq
+                                                              else if Data.Bits.xor bm1 (bm1 Data.Bits..&.(**) bm2)
+                                                                      GHC.Base.== GHC.Num.fromInteger 0 : bool
+                                                                   then Lt
+                                                                   else Gt
+                          | (Tip kx _ as t1) , Bin p m l r => if nomatch kx p m : bool
+                                                              then Gt
+                                                              else if zero kx m : bool
+                                                                   then match subsetCmp t1 l with
+                                                                          | Gt => Gt
+                                                                          | _ => Lt
+                                                                        end
+                                                                   else match subsetCmp t1 r with
+                                                                          | Gt => Gt
+                                                                          | _ => Lt
+                                                                        end
+                          | Tip _ _ , Nil => Gt
+                          | Nil , Nil => Eq
+                          | Nil , _ => Lt
+                        end
            end.
 
 Definition isProperSubsetOf : IntSet -> IntSet -> bool :=
@@ -651,21 +667,7 @@ Definition isProperSubsetOf : IntSet -> IntSet -> bool :=
 
 Definition isSubsetOf : IntSet -> IntSet -> bool :=
   fix isSubsetOf arg_0__ arg_1__
-        := let j_6__ :=
-             match arg_0__ , arg_1__ with
-               | Bin _ _ _ _ , _ => false
-               | Tip kx1 bm1 , Tip kx2 bm2 => andb (kx1 GHC.Base.== kx2) (Data.Bits.xor bm1
-                                                                                        (bm1 Data.Bits..&.(**) bm2)
-                                                   GHC.Base.== GHC.Num.fromInteger 0)
-               | (Tip kx _ as t1) , Bin p m l r => if nomatch kx p m : bool
-                                                   then false
-                                                   else if zero kx m : bool
-                                                        then isSubsetOf t1 l
-                                                        else isSubsetOf t1 r
-               | Tip _ _ , Nil => false
-               | Nil , _ => true
-             end in
-           match arg_0__ , arg_1__ with
+        := match arg_0__ , arg_1__ with
              | (Bin p1 m1 l1 r1 as t1) , Bin p2 m2 l2 r2 => if shorter m1 m2 : bool
                                                             then false
                                                             else if shorter m2 m1 : bool
@@ -674,7 +676,21 @@ Definition isSubsetOf : IntSet -> IntSet -> bool :=
                                                                            else isSubsetOf t1 r2)
                                                                  else andb (p1 GHC.Base.== p2) (andb (isSubsetOf l1 l2)
                                                                                                      (isSubsetOf r1 r2))
-             | _ , _ => j_6__
+             | _ , _ => match arg_0__ , arg_1__ with
+                          | Bin _ _ _ _ , _ => false
+                          | Tip kx1 bm1 , Tip kx2 bm2 => andb (kx1 GHC.Base.== kx2) (Data.Bits.xor bm1
+                                                                                                   (bm1
+                                                                                                   Data.Bits..&.(**)
+                                                                                                   bm2) GHC.Base.==
+                                                              GHC.Num.fromInteger 0)
+                          | (Tip kx _ as t1) , Bin p m l r => if nomatch kx p m : bool
+                                                              then false
+                                                              else if zero kx m : bool
+                                                                   then isSubsetOf t1 l
+                                                                   else isSubsetOf t1 r
+                          | Tip _ _ , Nil => false
+                          | Nil , _ => true
+                        end
            end.
 
 Program Fixpoint disjoint (arg_0__ : IntSet) (arg_1__ : IntSet)

@@ -5823,6 +5823,34 @@ Definition foldl_go {a} k :=
     function.
 *)
 
+(* This is copied from the generated file. I tried to extract it using tactics,
+but then we get all the Program Fixpoint cruft in the way. *)
+Definition foldlBits_go {a} (prefix : Int) (f : a -> Int -> a)
+  : (Nat -> a -> (N -> a -> a) -> a)
+  :=
+  (fun arg_0__ arg_1__ go =>
+    match arg_0__ , arg_1__ with
+      | num_2__ , acc => match num_2__ GHC.Base.== GHC.Num.fromInteger 0 with
+                           | true => acc
+                           | false => match arg_0__ , arg_1__ with
+                                        | bm , acc => match lowestBitMask bm with
+                                                        | bitmask => match indexOfTheOnlyBit
+                                                                             bitmask with
+                                                                       | bi => go
+                                                                               (Data.Bits.xor
+                                                                               bm bitmask) ((f
+                                                                                           acc)
+                                                                                           GHC.Base.$!
+                                                                                           (prefix
+                                                                                           GHC.Num.+
+                                                                                           bi))
+                                                                     end
+                                                      end
+                                      end
+                         end
+    end).
+
+(* Alternative approach
 Definition foldlBits_go {a} (p : Int) (f : a -> Int -> a) (x : a) (bm : Nat)
   : ((forall x' : N, {_ : a | (N.to_nat x' < N.to_nat bm)%nat} -> a) -> a).
 Proof.
@@ -5830,27 +5858,45 @@ Proof.
   idtac rhs;
   match rhs with context[ GHC.Wf.wfFix2 _ _ _ ?f ] => exact (f bm x) end.
 Defined.
+*)
+
 
 Require Import Logic.FunctionalExtensionality.
 
 Lemma foldlBits_eq:
   forall {a} p (f : a -> Int -> a) x bm,
-  foldlBits p f x bm = @foldlBits_go a p f x bm (fun x yH => foldlBits p f (proj1_sig yH) x).
+  foldlBits p f x bm = @foldlBits_go a p f bm x (fun x y => foldlBits p f y x).
 Proof.
   intros.
   unfold foldlBits.
   unfold foldlBits_go.
   etransitivity; only 1: apply GHC.Wf.wfFix2_eq.
-  unfoldMethods.
-  destruct (bm =? Z.to_N 0)%N; try reflexivity.
-  f_equal.
-  extensionality x'.
-  extensionality y'.
-  extensionality go'.
-  destruct (x' =? Z.to_N 0)%N; try reflexivity.
-  f_equal. f_equal.
-  apply ProofIrrelevance.proof_irrelevance.
-Qed.
+  Fail destruct (@op_zeze__ N Eq_Char___ bm (@fromInteger N Num_Word__ Z0)).
+
+  (* At this point we are stuck with:
+
+
+      Abstracting over the term "b" leads to a term
+      …
+      which is ill-typed.
+      Reason is: Illegal application: 
+      The term "Internal.foldlBits_obligation_2" of type
+      …
+      cannot be applied to the terms
+      …
+      The 13th term has type "false = b0" which should be coercible to "false = _GHC.Base.==_ bm #0".
+
+   I am starting to have my doubts about Program Fixpoint.
+   *)
+Admitted.
+
+
+(** This used to be the case definitionally until
+we switched to Program Fixpoint. Maybe it will be the case again
+once we do not admit the termination proofs. *)
+Lemma foldl'Bits_foldlBits : @foldl'Bits = @foldlBits.
+Admitted.
+
 
 Lemma foldlBits_0:
   forall {a} p (f : a -> Int -> a) x,
@@ -6302,7 +6348,7 @@ Proof.
   induction H.
   * intros.
     simpl. subst.
-    replace @foldl'Bits with @foldlBits by reflexivity.
+    rewrite foldl'Bits_foldlBits.
     fold (filterBits p (rPrefix r) bm).
     eapply tip_Desc0; try assumption; try reflexivity.
     + intro i.
@@ -6415,7 +6461,7 @@ Proof.
   * intros.
     induction HD.
     + simpl.
-      replace @foldl'Bits with @foldlBits by reflexivity.
+      rewrite foldl'Bits_foldlBits.
       f_equal.
       change (N.lxor bm (filterBits P p bm) = filterBits (fun x => negb (P x)) p bm).
       apply filterBits_neg; isBitMask.

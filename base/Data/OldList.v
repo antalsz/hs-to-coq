@@ -206,15 +206,13 @@ Definition find {a} : (a -> bool) -> list a -> option a :=
 Definition genericDrop {i} {a} `{(GHC.Real.Integral i)} : i -> list a -> list
                                                           a :=
   fix genericDrop arg_0__ arg_1__
-        := let j_3__ :=
-             match arg_0__ , arg_1__ with
-               | _ , nil => nil
-               | n , cons _ xs => genericDrop (n GHC.Num.- GHC.Num.fromInteger 1) xs
-             end in
-           match arg_0__ , arg_1__ with
+        := match arg_0__ , arg_1__ with
              | n , xs => if n GHC.Base.<= GHC.Num.fromInteger 0 : bool
                          then xs
-                         else j_3__
+                         else match arg_0__ , arg_1__ with
+                                | _ , nil => nil
+                                | n , cons _ xs => genericDrop (n GHC.Num.- GHC.Num.fromInteger 1) xs
+                              end
            end.
 
 Definition genericLength {i} {a} `{(GHC.Num.Num i)} : list a -> i :=
@@ -227,32 +225,28 @@ Definition genericLength {i} {a} `{(GHC.Num.Num i)} : list a -> i :=
 Definition genericSplitAt {i} {a} `{(GHC.Real.Integral i)} : i -> list
                                                              a -> (list a * list a)%type :=
   fix genericSplitAt arg_0__ arg_1__
-        := let j_5__ :=
-             match arg_0__ , arg_1__ with
-               | _ , nil => pair nil nil
-               | n , cons x xs => match genericSplitAt (n GHC.Num.- GHC.Num.fromInteger 1)
-                                          xs with
-                                    | pair xs' xs'' => pair (cons x xs') xs''
-                                  end
-             end in
-           match arg_0__ , arg_1__ with
+        := match arg_0__ , arg_1__ with
              | n , xs => if n GHC.Base.<= GHC.Num.fromInteger 0 : bool
                          then pair nil xs
-                         else j_5__
+                         else match arg_0__ , arg_1__ with
+                                | _ , nil => pair nil nil
+                                | n , cons x xs => match genericSplitAt (n GHC.Num.- GHC.Num.fromInteger 1)
+                                                           xs with
+                                                     | pair xs' xs'' => pair (cons x xs') xs''
+                                                   end
+                              end
            end.
 
 Definition genericTake {i} {a} `{(GHC.Real.Integral i)} : i -> list a -> list
                                                           a :=
   fix genericTake arg_0__ arg_1__
-        := let j_3__ :=
-             match arg_0__ , arg_1__ with
-               | _ , nil => nil
-               | n , cons x xs => cons x (genericTake (n GHC.Num.- GHC.Num.fromInteger 1) xs)
-             end in
-           match arg_0__ , arg_1__ with
+        := match arg_0__ , arg_1__ with
              | n , _ => if n GHC.Base.<= GHC.Num.fromInteger 0 : bool
                         then nil
-                        else j_3__
+                        else match arg_0__ , arg_1__ with
+                               | _ , nil => nil
+                               | n , cons x xs => cons x (genericTake (n GHC.Num.- GHC.Num.fromInteger 1) xs)
+                             end
            end.
 
 Definition insertBy {a} : (a -> a -> comparison) -> a -> list a -> list a :=

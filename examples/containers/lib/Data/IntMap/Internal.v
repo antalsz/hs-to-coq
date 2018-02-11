@@ -387,46 +387,48 @@ Definition bitmapOf : GHC.Num.Int -> IntSetBitMap :=
 
 Definition restrictBM {a} : IntSetBitMap -> IntMap a -> IntMap a :=
   unsafeFix (fun restrictBM arg_0__ arg_1__ =>
-              let j_8__ :=
-                match arg_0__ , arg_1__ with
-                  | bm , Bin p m l r => let leftBits :=
-                                          bitmapOf (p Data.Bits..|.(**) m) GHC.Num.- GHC.Num.fromInteger 1 in
-                                        let bmL := bm Data.Bits..&.(**) leftBits in
-                                        let bmR := Data.Bits.xor bm bmL in bin p m (restrictBM bmL l) (restrictBM bmR r)
-                  | bm , (Tip k _ as t) => if Data.IntSet.Internal.member k
-                                                                          (Data.IntSet.Internal.Tip (k Data.Bits..&.(**)
-                                                                                                    Data.IntSet.Internal.prefixBitMask)
-                                                                          bm) : bool
-                                           then t
-                                           else Nil
-                  | _ , Nil => Nil
-                end in
               match arg_0__ , arg_1__ with
                 | num_2__ , _ => if num_2__ GHC.Base.== GHC.Num.fromInteger 0 : bool
                                  then Nil
-                                 else j_8__
+                                 else match arg_0__ , arg_1__ with
+                                        | bm , Bin p m l r => let leftBits :=
+                                                                bitmapOf (p Data.Bits..|.(**) m) GHC.Num.-
+                                                                GHC.Num.fromInteger 1 in
+                                                              let bmL := bm Data.Bits..&.(**) leftBits in
+                                                              let bmR := Data.Bits.xor bm bmL in
+                                                              bin p m (restrictBM bmL l) (restrictBM bmR r)
+                                        | bm , (Tip k _ as t) => if Data.IntSet.Internal.member k
+                                                                                                (Data.IntSet.Internal.Tip
+                                                                                                (k Data.Bits..&.(**)
+                                                                                                Data.IntSet.Internal.prefixBitMask)
+                                                                                                bm) : bool
+                                                                 then t
+                                                                 else Nil
+                                        | _ , Nil => Nil
+                                      end
               end).
 
 Definition withoutBM {a} : IntSetBitMap -> IntMap a -> IntMap a :=
   unsafeFix (fun withoutBM arg_0__ arg_1__ =>
-              let j_8__ :=
-                match arg_0__ , arg_1__ with
-                  | bm , Bin p m l r => let leftBits :=
-                                          bitmapOf (p Data.Bits..|.(**) m) GHC.Num.- GHC.Num.fromInteger 1 in
-                                        let bmL := bm Data.Bits..&.(**) leftBits in
-                                        let bmR := Data.Bits.xor bm bmL in bin p m (withoutBM bmL l) (withoutBM bmR r)
-                  | bm , (Tip k _ as t) => if Data.IntSet.Internal.member k
-                                                                          (Data.IntSet.Internal.Tip (k Data.Bits..&.(**)
-                                                                                                    Data.IntSet.Internal.prefixBitMask)
-                                                                          bm) : bool
-                                           then Nil
-                                           else t
-                  | _ , Nil => Nil
-                end in
               match arg_0__ , arg_1__ with
                 | num_2__ , t => if num_2__ GHC.Base.== GHC.Num.fromInteger 0 : bool
                                  then t
-                                 else j_8__
+                                 else match arg_0__ , arg_1__ with
+                                        | bm , Bin p m l r => let leftBits :=
+                                                                bitmapOf (p Data.Bits..|.(**) m) GHC.Num.-
+                                                                GHC.Num.fromInteger 1 in
+                                                              let bmL := bm Data.Bits..&.(**) leftBits in
+                                                              let bmR := Data.Bits.xor bm bmL in
+                                                              bin p m (withoutBM bmL l) (withoutBM bmR r)
+                                        | bm , (Tip k _ as t) => if Data.IntSet.Internal.member k
+                                                                                                (Data.IntSet.Internal.Tip
+                                                                                                (k Data.Bits..&.(**)
+                                                                                                Data.IntSet.Internal.prefixBitMask)
+                                                                                                bm) : bool
+                                                                 then Nil
+                                                                 else t
+                                        | _ , Nil => Nil
+                                      end
               end).
 
 Definition boolITE {a} : a -> a -> bool -> a :=
@@ -486,12 +488,11 @@ Definition foldl {a} {b} : (a -> b -> a) -> a -> IntMap b -> a :=
                    | z' , Bin _ _ l r => go (go z' l) r
                  end in
     fun t =>
-      let j_6__ := go z t in
       match t with
         | Bin _ m l r => if m GHC.Base.< GHC.Num.fromInteger 0 : bool
                          then go (go z r) l
                          else go (go z l) r
-        | _ => j_6__
+        | _ => go z t
       end.
 
 Local Definition Foldable__IntMap_foldl : forall {b} {a},
@@ -507,12 +508,11 @@ Definition foldl' {a} {b} : (a -> b -> a) -> a -> IntMap b -> a :=
                    | z' , Bin _ _ l r => go (go z' l) r
                  end in
     fun t =>
-      let j_6__ := go z t in
       match t with
         | Bin _ m l r => if m GHC.Base.< GHC.Num.fromInteger 0 : bool
                          then go (go z r) l
                          else go (go z l) r
-        | _ => j_6__
+        | _ => go z t
       end.
 
 Local Definition Foldable__IntMap_sum : forall {a},
@@ -537,12 +537,11 @@ Definition foldlWithKey {a} {b}
                    | z' , Bin _ _ l r => go (go z' l) r
                  end in
     fun t =>
-      let j_6__ := go z t in
       match t with
         | Bin _ m l r => if m GHC.Base.< GHC.Num.fromInteger 0 : bool
                          then go (go z r) l
                          else go (go z l) r
-        | _ => j_6__
+        | _ => go z t
       end.
 
 Definition toDescList {a} : IntMap a -> list (Data.IntSet.Internal.Key *
@@ -563,12 +562,11 @@ Definition foldlWithKey' {a} {b}
                    | z' , Bin _ _ l r => go (go z' l) r
                  end in
     fun t =>
-      let j_6__ := go z t in
       match t with
         | Bin _ m l r => if m GHC.Base.< GHC.Num.fromInteger 0 : bool
                          then go (go z r) l
                          else go (go z l) r
-        | _ => j_6__
+        | _ => go z t
       end.
 
 Definition foldr {a} {b} : (a -> b -> b) -> b -> IntMap a -> b :=
@@ -580,12 +578,11 @@ Definition foldr {a} {b} : (a -> b -> b) -> b -> IntMap a -> b :=
                    | z' , Bin _ _ l r => go (go z' r) l
                  end in
     fun t =>
-      let j_6__ := go z t in
       match t with
         | Bin _ m l r => if m GHC.Base.< GHC.Num.fromInteger 0 : bool
                          then go (go z l) r
                          else go (go z r) l
-        | _ => j_6__
+        | _ => go z t
       end.
 
 Definition elems {a} : IntMap a -> list a :=
@@ -607,12 +604,11 @@ Definition foldr' {a} {b} : (a -> b -> b) -> b -> IntMap a -> b :=
                    | z' , Bin _ _ l r => go (go z' r) l
                  end in
     fun t =>
-      let j_6__ := go z t in
       match t with
         | Bin _ m l r => if m GHC.Base.< GHC.Num.fromInteger 0 : bool
                          then go (go z l) r
                          else go (go z r) l
-        | _ => j_6__
+        | _ => go z t
       end.
 
 Local Definition Foldable__IntMap_foldr' : forall {a} {b},
@@ -629,12 +625,11 @@ Definition foldrWithKey {a} {b}
                    | z' , Bin _ _ l r => go (go z' r) l
                  end in
     fun t =>
-      let j_6__ := go z t in
       match t with
         | Bin _ m l r => if m GHC.Base.< GHC.Num.fromInteger 0 : bool
                          then go (go z l) r
                          else go (go z r) l
-        | _ => j_6__
+        | _ => go z t
       end.
 
 Definition keys {a} : IntMap a -> list Data.IntSet.Internal.Key :=
@@ -695,12 +690,11 @@ Definition foldrWithKey' {a} {b}
                    | z' , Bin _ _ l r => go (go z' r) l
                  end in
     fun t =>
-      let j_6__ := go z t in
       match t with
         | Bin _ m l r => if m GHC.Base.< GHC.Num.fromInteger 0 : bool
                          then go (go z l) r
                          else go (go z r) l
-        | _ => j_6__
+        | _ => go z t
       end.
 
 Definition keysSet {a} : IntMap a -> Data.IntSet.Internal.IntSet :=
@@ -895,47 +889,69 @@ Definition fromSet {a}
                 | f , Data.IntSet.Internal.Bin p m l r => Bin p m (fromSet f l) (fromSet f r)
                 | f , Data.IntSet.Internal.Tip kx bm => let buildTree :=
                                                           unsafeFix (fun buildTree g prefix bmask bits =>
-                                                                      let j_10__ :=
-                                                                        match Coq.ZArith.BinInt.Z.of_N
-                                                                                (Utils.Containers.Internal.BitUtil.shiftRL
-                                                                                (natFromInt bits) (GHC.Num.fromInteger
-                                                                                1)) with
-                                                                          | bits2 => if (bmask Data.Bits..&.(**)
-                                                                                        ((Utils.Containers.Internal.BitUtil.shiftLL
-                                                                                        (GHC.Num.fromInteger 1) bits2)
-                                                                                        GHC.Num.- GHC.Num.fromInteger
-                                                                                        1)) GHC.Base.==
-                                                                                        GHC.Num.fromInteger 0 : bool
-                                                                                     then buildTree g (prefix GHC.Num.+
-                                                                                                      bits2)
-                                                                                          (Utils.Containers.Internal.BitUtil.shiftRL
-                                                                                          bmask bits2) bits2
-                                                                                     else if ((Utils.Containers.Internal.BitUtil.shiftRL
-                                                                                             bmask bits2)
-                                                                                             Data.Bits..&.(**)
-                                                                                             ((Utils.Containers.Internal.BitUtil.shiftLL
-                                                                                             (GHC.Num.fromInteger 1)
-                                                                                             bits2) GHC.Num.-
-                                                                                             GHC.Num.fromInteger 1))
-                                                                                             GHC.Base.==
-                                                                                             GHC.Num.fromInteger
-                                                                                             0 : bool
-                                                                                          then buildTree g prefix bmask
-                                                                                               bits2
-                                                                                          else Bin prefix bits2
-                                                                                               (buildTree g prefix bmask
-                                                                                               bits2) (buildTree g
-                                                                                                      (prefix GHC.Num.+
-                                                                                                      bits2)
-                                                                                                      (Utils.Containers.Internal.BitUtil.shiftRL
-                                                                                                      bmask bits2)
-                                                                                                      bits2)
-                                                                        end in
                                                                       match bits with
                                                                         | num_3__ => if num_3__ GHC.Base.==
                                                                                         GHC.Num.fromInteger 0 : bool
                                                                                      then Tip prefix (g prefix)
-                                                                                     else j_10__
+                                                                                     else match Coq.ZArith.BinInt.Z.of_N
+                                                                                                  (Utils.Containers.Internal.BitUtil.shiftRL
+                                                                                                  (natFromInt bits)
+                                                                                                  (GHC.Num.fromInteger
+                                                                                                  1)) with
+                                                                                            | bits2 => if (bmask
+                                                                                                          Data.Bits..&.(**)
+                                                                                                          ((Utils.Containers.Internal.BitUtil.shiftLL
+                                                                                                          (GHC.Num.fromInteger
+                                                                                                          1) bits2)
+                                                                                                          GHC.Num.-
+                                                                                                          GHC.Num.fromInteger
+                                                                                                          1))
+                                                                                                          GHC.Base.==
+                                                                                                          GHC.Num.fromInteger
+                                                                                                          0 : bool
+                                                                                                       then buildTree g
+                                                                                                            (prefix
+                                                                                                            GHC.Num.+
+                                                                                                            bits2)
+                                                                                                            (Utils.Containers.Internal.BitUtil.shiftRL
+                                                                                                            bmask bits2)
+                                                                                                            bits2
+                                                                                                       else if ((Utils.Containers.Internal.BitUtil.shiftRL
+                                                                                                               bmask
+                                                                                                               bits2)
+                                                                                                               Data.Bits..&.(**)
+                                                                                                               ((Utils.Containers.Internal.BitUtil.shiftLL
+                                                                                                               (GHC.Num.fromInteger
+                                                                                                               1) bits2)
+                                                                                                               GHC.Num.-
+                                                                                                               GHC.Num.fromInteger
+                                                                                                               1))
+                                                                                                               GHC.Base.==
+                                                                                                               GHC.Num.fromInteger
+                                                                                                               0 : bool
+                                                                                                            then buildTree
+                                                                                                                 g
+                                                                                                                 prefix
+                                                                                                                 bmask
+                                                                                                                 bits2
+                                                                                                            else Bin
+                                                                                                                 prefix
+                                                                                                                 bits2
+                                                                                                                 (buildTree
+                                                                                                                 g
+                                                                                                                 prefix
+                                                                                                                 bmask
+                                                                                                                 bits2)
+                                                                                                                 (buildTree
+                                                                                                                 g
+                                                                                                                 (prefix
+                                                                                                                 GHC.Num.+
+                                                                                                                 bits2)
+                                                                                                                 (Utils.Containers.Internal.BitUtil.shiftRL
+                                                                                                                 bmask
+                                                                                                                 bits2)
+                                                                                                                 bits2)
+                                                                                          end
                                                                       end) in
                                                         buildTree f kx bm (Data.IntSet.Internal.suffixBitMask GHC.Num.+
                                                                           GHC.Num.fromInteger 1)
@@ -1057,16 +1073,7 @@ Infix "!?" := (_!?_) (at level 99).
 Definition isSubmapOfBy {a} {b} : (a -> b -> bool) -> IntMap a -> IntMap
                                   b -> bool :=
   fix isSubmapOfBy arg_0__ arg_1__ arg_2__
-        := let j_7__ :=
-             match arg_0__ , arg_1__ , arg_2__ with
-               | _ , Bin _ _ _ _ , _ => false
-               | predicate , Tip k x , t => match lookup k t with
-                                              | Some y => predicate x y
-                                              | None => false
-                                            end
-               | _ , Nil , _ => true
-             end in
-           match arg_0__ , arg_1__ , arg_2__ with
+        := match arg_0__ , arg_1__ , arg_2__ with
              | predicate , (Bin p1 m1 l1 r1 as t1) , Bin p2 m2 l2 r2 => if shorter m1
                                                                            m2 : bool
                                                                         then false
@@ -1080,7 +1087,14 @@ Definition isSubmapOfBy {a} {b} : (a -> b -> bool) -> IntMap a -> IntMap
                                                                              else andb (p1 GHC.Base.== p2) (andb
                                                                                        (isSubmapOfBy predicate l1 l2)
                                                                                        (isSubmapOfBy predicate r1 r2))
-             | _ , _ , _ => j_7__
+             | _ , _ , _ => match arg_0__ , arg_1__ , arg_2__ with
+                              | _ , Bin _ _ _ _ , _ => false
+                              | predicate , Tip k x , t => match lookup k t with
+                                                             | Some y => predicate x y
+                                                             | None => false
+                                                           end
+                              | _ , Nil , _ => true
+                            end
            end.
 
 Definition isSubmapOf {a} `{GHC.Base.Eq_ a} : IntMap a -> IntMap a -> bool :=
@@ -1089,28 +1103,7 @@ Definition isSubmapOf {a} `{GHC.Base.Eq_ a} : IntMap a -> IntMap a -> bool :=
 Definition submapCmp {a} {b} : (a -> b -> bool) -> IntMap a -> IntMap
                                b -> comparison :=
   fix submapCmp arg_0__ arg_1__ arg_2__
-        := let j_7__ :=
-             match arg_0__ , arg_1__ , arg_2__ with
-               | predicate , Tip k x , t => match lookup k t with
-                                              | Some y => if predicate x y : bool
-                                                          then Lt
-                                                          else Gt
-                                              | _ => Gt
-                                            end
-               | _ , Nil , Nil => Eq
-               | _ , Nil , _ => Lt
-               | _ , _ , _ => patternFailure
-             end in
-           let j_9__ :=
-             match arg_0__ , arg_1__ , arg_2__ with
-               | _ , Bin _ _ _ _ , _ => Gt
-               | predicate , Tip kx x , Tip ky y => if andb (kx GHC.Base.== ky) (predicate x
-                                                            y) : bool
-                                                    then Eq
-                                                    else Gt
-               | _ , _ , _ => j_7__
-             end in
-           match arg_0__ , arg_1__ , arg_2__ with
+        := match arg_0__ , arg_1__ , arg_2__ with
              | predicate , (Bin p1 m1 l1 r1 as t1) , Bin p2 m2 l2 r2 => let submapCmpEq :=
                                                                           match pair (submapCmp predicate l1 l2)
                                                                                      (submapCmp predicate r1 r2) with
@@ -1132,7 +1125,24 @@ Definition submapCmp {a} {b} : (a -> b -> bool) -> IntMap a -> IntMap
                                                                              else if p1 GHC.Base.== p2 : bool
                                                                                   then submapCmpEq
                                                                                   else Gt
-             | _ , _ , _ => j_9__
+             | _ , _ , _ => match arg_0__ , arg_1__ , arg_2__ with
+                              | _ , Bin _ _ _ _ , _ => Gt
+                              | predicate , Tip kx x , Tip ky y => if andb (kx GHC.Base.== ky) (predicate x
+                                                                           y) : bool
+                                                                   then Eq
+                                                                   else Gt
+                              | _ , _ , _ => match arg_0__ , arg_1__ , arg_2__ with
+                                               | predicate , Tip k x , t => match lookup k t with
+                                                                              | Some y => if predicate x y : bool
+                                                                                          then Lt
+                                                                                          else Gt
+                                                                              | _ => Gt
+                                                                            end
+                                               | _ , Nil , Nil => Eq
+                                               | _ , Nil , _ => Lt
+                                               | _ , _ , _ => patternFailure
+                                             end
+                            end
            end.
 
 Definition isProperSubmapOfBy {a} {b} : (a -> b -> bool) -> IntMap a -> IntMap

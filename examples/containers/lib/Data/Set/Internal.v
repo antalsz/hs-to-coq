@@ -774,21 +774,12 @@ Program Fixpoint link {a} (arg_0__ : a) (arg_1__ : Set_ a) (arg_2__ : Set_ a)
                    := match arg_0__ , arg_1__ , arg_2__ with
                         | x , Tip , r => insertMin x r
                         | x , l , Tip => insertMax x l
-                        | x , (Bin sizeL y ly ry as l) , (Bin sizeR z lz rz as r) => match (delta
-                                                                                             GHC.Num.* sizeL) GHC.Base.<
-                                                                                             sizeR with
-                                                                                       | true => balanceL z (link x l
-                                                                                                            lz) rz
-                                                                                       | false => match (delta GHC.Num.*
-                                                                                                          sizeR)
-                                                                                                          GHC.Base.<
-                                                                                                          sizeL with
-                                                                                                    | true => balanceR y
-                                                                                                              ly (link x
-                                                                                                                 ry r)
-                                                                                                    | false => bin x l r
-                                                                                                  end
-                                                                                     end
+                        | x , (Bin sizeL y ly ry as l) , (Bin sizeR z lz rz as r) =>
+                          if Bool.Sumbool.sumbool_of_bool ((delta GHC.Num.* sizeL) GHC.Base.< sizeR)
+                          then balanceL z (link x l lz) rz
+                          else if Bool.Sumbool.sumbool_of_bool ((delta GHC.Num.* sizeR) GHC.Base.< sizeL)
+                               then balanceR y ly (link x ry r)
+                               else bin x l r
                       end.
 Solve Obligations with (termination_by_omega).
 
@@ -1146,17 +1137,12 @@ Program Fixpoint merge {a} (arg_0__ : Set_ a) (arg_1__ : Set_ a)
                    := match arg_0__ , arg_1__ with
                         | Tip , r => r
                         | l , Tip => l
-                        | (Bin sizeL x lx rx as l) , (Bin sizeR y ly ry as r) => match (delta GHC.Num.*
-                                                                                         sizeL) GHC.Base.< sizeR with
-                                                                                   | true => balanceL y (merge l ly) ry
-                                                                                   | false => match (delta GHC.Num.*
-                                                                                                      sizeR) GHC.Base.<
-                                                                                                      sizeL with
-                                                                                                | true => balanceR x lx
-                                                                                                          (merge rx r)
-                                                                                                | false => glue l r
-                                                                                              end
-                                                                                 end
+                        | (Bin sizeL x lx rx as l) , (Bin sizeR y ly ry as r) =>
+                          if Bool.Sumbool.sumbool_of_bool ((delta GHC.Num.* sizeL) GHC.Base.< sizeR)
+                          then balanceL y (merge l ly) ry
+                          else if Bool.Sumbool.sumbool_of_bool ((delta GHC.Num.* sizeR) GHC.Base.< sizeL)
+                               then balanceR x lx (merge rx r)
+                               else glue l r
                       end.
 Solve Obligations with (termination_by_omega).
 
@@ -1403,14 +1389,14 @@ Infix "Data.Set.Internal.\\" := (_\\_) (at level 99).
 End Notations.
 
 (* Unbound variables:
-     Eq Gt Lt None Some andb bool comparison cons false id list negb nil op_zt__
-     option orb pair prod set_size true Data.Bits.shiftL Data.Bits.shiftR
-     Data.Either.Either Data.Either.Left Data.Either.Right Data.Foldable.Foldable
-     Data.Foldable.foldl GHC.Base.Eq_ GHC.Base.Monoid GHC.Base.Ord GHC.Base.String
-     GHC.Base.compare GHC.Base.const GHC.Base.flip GHC.Base.map GHC.Base.mappend
-     GHC.Base.mempty GHC.Base.op_z2218U__ GHC.Base.op_zd__ GHC.Base.op_zdzn__
-     GHC.Base.op_zeze__ GHC.Base.op_zg__ GHC.Base.op_zgze__ GHC.Base.op_zl__
-     GHC.Base.op_zlze__ GHC.Base.op_zsze__ GHC.Err.error GHC.Num.Int GHC.Num.Num
-     GHC.Num.op_zm__ GHC.Num.op_zp__ GHC.Num.op_zt__ Nat.add
-     Utils.Containers.Internal.PtrEquality.ptrEq
+     Bool.Sumbool.sumbool_of_bool Eq Gt Lt None Some andb bool comparison cons false
+     id list negb nil op_zt__ option orb pair prod set_size true Data.Bits.shiftL
+     Data.Bits.shiftR Data.Either.Either Data.Either.Left Data.Either.Right
+     Data.Foldable.Foldable Data.Foldable.foldl GHC.Base.Eq_ GHC.Base.Monoid
+     GHC.Base.Ord GHC.Base.String GHC.Base.compare GHC.Base.const GHC.Base.flip
+     GHC.Base.map GHC.Base.mappend GHC.Base.mempty GHC.Base.op_z2218U__
+     GHC.Base.op_zd__ GHC.Base.op_zdzn__ GHC.Base.op_zeze__ GHC.Base.op_zg__
+     GHC.Base.op_zgze__ GHC.Base.op_zl__ GHC.Base.op_zlze__ GHC.Base.op_zsze__
+     GHC.Err.error GHC.Num.Int GHC.Num.Num GHC.Num.op_zm__ GHC.Num.op_zp__
+     GHC.Num.op_zt__ Nat.add Utils.Containers.Internal.PtrEquality.ptrEq
 *)

@@ -1285,10 +1285,9 @@ Definition mkTyApps {b} : Expr b -> list Core.Type_ -> Expr b :=
   fun f args =>
     let typeOrCoercion :=
       fun ty =>
-        let j_0__ := Type_ ty in
         match TyCoRep.Type_isCoercionTy_maybe ty with
           | Some co => Coercion co
-          | _ => j_0__
+          | _ => Type_ ty
         end in
     Data.Foldable.foldl (fun e a => App e (typeOrCoercion a)) f args.
 

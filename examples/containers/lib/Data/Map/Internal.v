@@ -1303,13 +1303,11 @@ Program Fixpoint link {k} {a} (arg_0__ : k) (arg_1__ : a) (arg_2__ : Map k a)
                         | kx , x , Tip , r => insertMin kx x r
                         | kx , x , l , Tip => insertMax kx x l
                         | kx , x , (Bin sizeL ky y ly ry as l) , (Bin sizeR kz z lz rz as r) =>
-                          match (delta GHC.Num.* sizeL) GHC.Base.< sizeR with
-                            | true => balanceL kz z (link kx x l lz) rz
-                            | false => match (delta GHC.Num.* sizeR) GHC.Base.< sizeL with
-                                         | true => balanceR ky y ly (link kx x ry r)
-                                         | false => bin kx x l r
-                                       end
-                          end
+                          if Bool.Sumbool.sumbool_of_bool ((delta GHC.Num.* sizeL) GHC.Base.< sizeR)
+                          then balanceL kz z (link kx x l lz) rz
+                          else if Bool.Sumbool.sumbool_of_bool ((delta GHC.Num.* sizeR) GHC.Base.< sizeL)
+                               then balanceR ky y ly (link kx x ry r)
+                               else bin kx x l r
                       end.
 Solve Obligations with (termination_by_omega).
 
@@ -2801,19 +2799,19 @@ Infix "Data.Map.Internal.\\" := (_\\_) (at level 99).
 End Notations.
 
 (* Unbound variables:
-     Eq Gt Lt None Some andb bool cons false id list map_size negb nil op_zt__ option
-     pair prod true Data.Bits.shiftL Data.Bits.shiftR Data.Either.Either
-     Data.Either.Left Data.Either.Right Data.Foldable.foldl Data.Functor.op_zlzdzg__
-     Data.Functor.Identity.Identity Data.Functor.Identity.Mk_Identity
-     Data.Maybe.maybe Data.Set.Internal.Bin Data.Set.Internal.Set_
-     Data.Set.Internal.Tip Data.Set.Internal.splitMember GHC.Base.Applicative
-     GHC.Base.Eq_ GHC.Base.Functor GHC.Base.Monad GHC.Base.Monoid GHC.Base.Ord
-     GHC.Base.compare GHC.Base.flip GHC.Base.fmap GHC.Base.liftA3 GHC.Base.mappend
-     GHC.Base.mempty GHC.Base.op_z2218U__ GHC.Base.op_zd__ GHC.Base.op_zdzn__
-     GHC.Base.op_zeze__ GHC.Base.op_zg__ GHC.Base.op_zgze__ GHC.Base.op_zl__
-     GHC.Base.op_zlze__ GHC.Base.pure GHC.Err.error GHC.Num.Int GHC.Num.op_zm__
-     GHC.Num.op_zp__ GHC.Num.op_zt__ GHC.Prim.coerce GHC.Prim.seq Nat.add
-     Utils.Containers.Internal.BitQueue.BitQueue
+     Bool.Sumbool.sumbool_of_bool Eq Gt Lt None Some andb bool cons false id list
+     map_size negb nil op_zt__ option pair prod true Data.Bits.shiftL
+     Data.Bits.shiftR Data.Either.Either Data.Either.Left Data.Either.Right
+     Data.Foldable.foldl Data.Functor.op_zlzdzg__ Data.Functor.Identity.Identity
+     Data.Functor.Identity.Mk_Identity Data.Maybe.maybe Data.Set.Internal.Bin
+     Data.Set.Internal.Set_ Data.Set.Internal.Tip Data.Set.Internal.splitMember
+     GHC.Base.Applicative GHC.Base.Eq_ GHC.Base.Functor GHC.Base.Monad
+     GHC.Base.Monoid GHC.Base.Ord GHC.Base.compare GHC.Base.flip GHC.Base.fmap
+     GHC.Base.liftA3 GHC.Base.mappend GHC.Base.mempty GHC.Base.op_z2218U__
+     GHC.Base.op_zd__ GHC.Base.op_zdzn__ GHC.Base.op_zeze__ GHC.Base.op_zg__
+     GHC.Base.op_zgze__ GHC.Base.op_zl__ GHC.Base.op_zlze__ GHC.Base.pure
+     GHC.Err.error GHC.Num.Int GHC.Num.op_zm__ GHC.Num.op_zp__ GHC.Num.op_zt__
+     GHC.Prim.coerce GHC.Prim.seq Nat.add Utils.Containers.Internal.BitQueue.BitQueue
      Utils.Containers.Internal.BitQueue.BitQueueB
      Utils.Containers.Internal.BitQueue.buildQ
      Utils.Containers.Internal.BitQueue.emptyQB

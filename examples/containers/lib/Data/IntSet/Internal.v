@@ -12,11 +12,13 @@ Require Coq.Program.Wf.
 
 (* Converted imports: *)
 
+Require Coq.Init.Peano.
 Require Data.Bits.
 Require Data.Foldable.
 Require GHC.Base.
 Require GHC.Num.
 Require GHC.Real.
+Require GHC.Wf.
 Import Data.Bits.Notations.
 Import GHC.Base.Notations.
 Import GHC.Num.Notations.
@@ -299,26 +301,31 @@ Definition unsafeFindMin : IntSet -> option Key :=
              | Bin _ _ l _ => unsafeFindMin l
            end.
 
-Definition foldlBits {a}
-    : GHC.Num.Int -> (a -> GHC.Num.Int -> a) -> a -> Nat -> a :=
-  fun prefix f z bitmap =>
-    let go :=
-      unsafeFix (fun go arg_0__ arg_1__ =>
-                  let j_6__ :=
-                    match arg_0__ , arg_1__ with
-                      | bm , acc => match lowestBitMask bm with
-                                      | bitmask => match indexOfTheOnlyBit bitmask with
-                                                     | bi => go (Data.Bits.xor bm bitmask) ((f acc) GHC.Base.$! (prefix
-                                                                                           GHC.Num.+ bi))
+Program Definition foldlBits {a}
+            : GHC.Num.Int -> (a -> GHC.Num.Int -> a) -> a -> Nat -> a :=
+          fun prefix f z bitmap =>
+            let go :=
+              GHC.Wf.wfFix2 Coq.Init.Peano.lt (fun arg_0__ arg_1__ =>
+                              Coq.NArith.BinNat.N.to_nat arg_0__) _ (fun arg_0__ arg_1__ go =>
+                              let j_6__ :=
+                                match arg_0__ , arg_1__ with
+                                  | bm , acc => match lowestBitMask bm with
+                                                  | bitmask => match indexOfTheOnlyBit bitmask with
+                                                                 | bi => go (Data.Bits.xor bm bitmask) ((f acc)
+                                                                                                       GHC.Base.$!
+                                                                                                       (prefix GHC.Num.+
+                                                                                                       bi))
+                                                               end
+                                                end
+                                end in
+                              match arg_0__ , arg_1__ with
+                                | num_2__ , acc => match num_2__ GHC.Base.== GHC.Num.fromInteger 0 with
+                                                     | true => acc
+                                                     | false => j_6__
                                                    end
-                                    end
-                    end in
-                  match arg_0__ , arg_1__ with
-                    | num_2__ , acc => if num_2__ GHC.Base.== GHC.Num.fromInteger 0 : bool
-                                       then acc
-                                       else j_6__
-                  end) in
-    go bitmap z.
+                              end) in
+            go bitmap z.
+Admit Obligations.
 
 Definition foldl {a} : (a -> Key -> a) -> a -> IntSet -> a :=
   fun f z =>
@@ -1288,14 +1295,15 @@ End Notations.
 (* Unbound variables:
      Eq Gt Lt None Some andb bitCount_N bool comparison cons false highestBitMask id
      list negb nil op_zp__ op_zt__ option orb pair shiftLL shiftRL size_nat
-     suffixBitMask true Coq.NArith.BinNat.N.log2 Coq.NArith.BinNat.N.modulo
-     Coq.NArith.BinNat.N.pow Coq.ZArith.BinInt.Z.eqb Coq.ZArith.BinInt.Z.land
-     Coq.ZArith.BinInt.Z.lnot Coq.ZArith.BinInt.Z.log2 Coq.ZArith.BinInt.Z.lxor
-     Coq.ZArith.BinInt.Z.of_N Coq.ZArith.BinInt.Z.pow Coq.ZArith.BinInt.Z.pred
-     Data.Bits.complement Data.Bits.op_zizazi__ Data.Bits.op_zizbzi__ Data.Bits.xor
-     Data.Foldable.foldl GHC.Base.Eq_ GHC.Base.Ord GHC.Base.String GHC.Base.compare
-     GHC.Base.flip GHC.Base.map GHC.Base.op_z2218U__ GHC.Base.op_zd__
-     GHC.Base.op_zdzn__ GHC.Base.op_zeze__ GHC.Base.op_zg__ GHC.Base.op_zgze__
-     GHC.Base.op_zl__ GHC.Base.op_zsze__ GHC.Num.Int GHC.Num.Word GHC.Num.negate
-     GHC.Num.op_zm__ GHC.Num.op_zp__ GHC.Real.fromIntegral
+     suffixBitMask true Coq.Init.Peano.lt Coq.NArith.BinNat.N.log2
+     Coq.NArith.BinNat.N.modulo Coq.NArith.BinNat.N.pow Coq.NArith.BinNat.N.to_nat
+     Coq.ZArith.BinInt.Z.eqb Coq.ZArith.BinInt.Z.land Coq.ZArith.BinInt.Z.lnot
+     Coq.ZArith.BinInt.Z.log2 Coq.ZArith.BinInt.Z.lxor Coq.ZArith.BinInt.Z.of_N
+     Coq.ZArith.BinInt.Z.pow Coq.ZArith.BinInt.Z.pred Data.Bits.complement
+     Data.Bits.op_zizazi__ Data.Bits.op_zizbzi__ Data.Bits.xor Data.Foldable.foldl
+     GHC.Base.Eq_ GHC.Base.Ord GHC.Base.String GHC.Base.compare GHC.Base.flip
+     GHC.Base.map GHC.Base.op_z2218U__ GHC.Base.op_zd__ GHC.Base.op_zdzn__
+     GHC.Base.op_zeze__ GHC.Base.op_zg__ GHC.Base.op_zgze__ GHC.Base.op_zl__
+     GHC.Base.op_zsze__ GHC.Num.Int GHC.Num.Word GHC.Num.negate GHC.Num.op_zm__
+     GHC.Num.op_zp__ GHC.Real.fromIntegral GHC.Wf.wfFix2
 *)

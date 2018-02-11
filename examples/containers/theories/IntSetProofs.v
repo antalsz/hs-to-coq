@@ -5814,27 +5814,42 @@ Definition foldl_go {a} k :=
    | Nil => arg_0__
    end.
 
-(* We can extract the argument to [unsafeFix] from the definition of [foldrBits]. *)
-Definition foldlBits_go {a} (p : Int) (f : a -> Int -> a)
-  : (Nat -> a -> a) -> Nat -> a -> a.
+(** This is a bit ugly, but it get’s the job done. From [foldlBits_0] and
+    [foldlBits_bm], everything is pretty again.
+
+    Part of the ugliness is that when solving the termination obligation using
+    [Program Definition], the resulting prove captures not only the parameters of the
+    local [go] function, but also the (unused) parameters of the enclosing [foldlBits]
+    function.
+*)
+
+Definition foldlBits_go {a} (p : Int) (f : a -> Int -> a) (x : a) (bm : Nat)
+  : ((forall x' : N, {_ : a | (N.to_nat x' < N.to_nat bm)%nat} -> a) -> a).
 Proof.
-  let foldlBits_rhs := eval unfold foldlBits in (foldlBits p f) in
-  match foldlBits_rhs with context[ unsafeFix ?f _ ] => exact f end.
+  let rhs := eval unfold foldlBits in (foldlBits p f x bm) in
+  idtac rhs;
+  match rhs with context[ GHC.Wf.wfFix2 _ _ _ ?f ] => exact (f bm x) end.
 Defined.
 
-(** This lemma will encapsulate the termination proof, so that the rest of the proof
- will not have to be modified. *)
-Lemma foldlBits_go_eq {a} (p : Int) (f : a -> Int -> a) :
-  unsafeFix (foldlBits_go p f) = foldlBits_go p f (unsafeFix (foldlBits_go p f)).
-Proof. apply unsafeFix_eq. Qed.
+Require Import Logic.FunctionalExtensionality.
 
-Lemma foldlBits_go_0:
-  forall {a} p (f : a -> Int -> a) x,
-  unsafeFix (foldlBits_go p f) 0%N x = x.
+Lemma foldlBits_eq:
+  forall {a} p (f : a -> Int -> a) x bm,
+  foldlBits p f x bm = @foldlBits_go a p f x bm (fun x yH => foldlBits p f (proj1_sig yH) x).
 Proof.
   intros.
-  rewrite foldlBits_go_eq.
-  reflexivity.
+  unfold foldlBits.
+  unfold foldlBits_go.
+  etransitivity; only 1: apply GHC.Wf.wfFix2_eq.
+  unfoldMethods.
+  destruct (bm =? Z.to_N 0)%N; try reflexivity.
+  f_equal.
+  extensionality x'.
+  extensionality y'.
+  extensionality go'.
+  destruct (x' =? Z.to_N 0)%N; try reflexivity.
+  f_equal. f_equal.
+  apply ProofIrrelevance.proof_irrelevance.
 Qed.
 
 Lemma foldlBits_0:
@@ -5842,33 +5857,7 @@ Lemma foldlBits_0:
   foldlBits p f x 0%N = x.
 Proof.
   intros.
-  apply foldlBits_go_0.
-Qed.
-
-Lemma foldlBits_go_bm:
-  forall {a} p (f : a -> Int -> a) bm x,
-  isBitMask bm ->
-  unsafeFix (foldlBits_go p f) bm x =
-    unsafeFix (foldlBits_go p f) (N.ldiff bm (lowestBitMask bm))
-             (f x (p + Z.of_N WIDTH - 1 - Z.of_N (N.log2 (revNatSafe bm)))).
-Proof.
-  intros.
-  etransitivity; [rewrite foldlBits_go_eq; reflexivity|].
-  unfold foldlBits_go at 1.
-  unfoldMethods.
-
-  replace (bm =? Z.to_N 0)%N with false
-    by (symmetry; apply N.eqb_neq; unfold isBitMask in *; zify; rewrite Z2N.id; omega).
-
-  rewrite lowestBitMask_highestBitMask at 2 by isBitMask.
-   unfold indexOfTheOnlyBit, highestBitMask.
-   rewrite revNat_pow by isBitMask.
-   rewrite N.log2_pow2 by Nomega.
-   assert (N.log2 (revNatSafe bm) < WIDTH)%N by isBitMask.
-   replace (p + Z.of_N (WIDTH - 1 - N.log2 (revNatSafe bm))%N)
-      with (p + Z.of_N WIDTH - 1 - Z.of_N (N.log2 (revNatSafe bm)))  by (unfold WIDTH in *; Nomega).
-  rewrite lxor_lowestBitMask by assumption.
-  reflexivity.
+  apply foldlBits_eq.
 Qed.
 
 Lemma foldlBits_bm:
@@ -5880,16 +5869,29 @@ Lemma foldlBits_bm:
        (N.ldiff bm (lowestBitMask bm)).
 Proof.
   intros.
-  apply foldlBits_go_bm; assumption.
+  rewrite foldlBits_eq at 1. unfold foldlBits_go, proj1_sig.
+  unfoldMethods.
+  replace (bm =? Z.to_N 0)%N with false
+    by (symmetry; apply N.eqb_neq; unfold isBitMask in *; zify; rewrite Z2N.id; omega).
+  f_equal.
+  * rewrite lowestBitMask_highestBitMask at 1 by isBitMask.
+    unfold indexOfTheOnlyBit, highestBitMask.
+    rewrite revNat_pow by isBitMask.
+    rewrite N.log2_pow2 by Nomega.
+    assert (N.log2 (revNatSafe bm) < WIDTH)%N by isBitMask.
+    replace (p + Z.of_N (WIDTH - 1 - N.log2 (revNatSafe bm))%N)
+       with (p + Z.of_N WIDTH - 1 - Z.of_N (N.log2 (revNatSafe bm)))  by (unfold WIDTH in *; Nomega).
+    reflexivity.
+  * rewrite lxor_lowestBitMask by assumption.
+    reflexivity.
 Qed.
 
-Lemma foldlBits_go_high_bm_aux:
+Lemma foldlBits_high_bm_aux:
   forall {a} p (f : a -> Int -> a) bm,
   isBitMask0 bm ->
   (bm <> 0)%N ->
-  (forall x, unsafeFix (foldlBits_go p f) bm x =
-    f (unsafeFix (foldlBits_go p f) (N.ldiff bm (highestBitMask bm)) x)
-       (p + Z.of_N (N.log2 bm))).
+  (forall x, foldlBits p f x bm =
+    f (foldlBits p f x (N.ldiff bm (highestBitMask bm))) (p + Z.of_N (N.log2 bm))).
 Proof.
   intros.
   pose proof H.
@@ -5902,15 +5904,15 @@ Proof.
     destruct (N.eqb_spec (N.ldiff bm (lowestBitMask bm)) (0%N)).
     * clear IH.
     
-      rewrite foldlBits_go_bm by isBitMask.
+      rewrite foldlBits_bm by isBitMask.
       rewrite e.
-      rewrite foldlBits_go_0.
+      rewrite foldlBits_0.
 
       apply ldiff_lowestBitMask_0 in e; try isBitMask.
       rewrite e.
       rewrite highestBitMask_pow_id by isBitMask.
       rewrite N.ldiff_diag.
-      rewrite foldlBits_go_0.
+      rewrite foldlBits_0.
       rewrite N.log2_pow2 by nonneg.
 
       replace bm with (2^N.log2 bm)%N by (apply H0).
@@ -5921,11 +5923,11 @@ Proof.
       assert (Hlog : (N.log2 bm < WIDTH)%N) by isBitMask.
       Nomega.
     * assert (hasTwoBits bm) by (split; auto; isBitMask).
-      rewrite foldlBits_go_bm by isBitMask.
+      rewrite foldlBits_bm by isBitMask.
       rewrite IH by (isBitMask || assumption).
       rewrite log2_ldiff by assumption.
       f_equal.
-      etransitivity; [|rewrite foldlBits_go_bm by isBitMask;  reflexivity].
+      etransitivity; [|rewrite foldlBits_bm by isBitMask;  reflexivity].
       rewrite lowestBitMask_ldiff by assumption.
       rewrite highestBitMask_ldiff by assumption.
       rewrite !N.ldiff_ldiff_l.
@@ -5939,30 +5941,18 @@ Proof.
 Qed.
 
 
-Lemma foldlBits_go_high_bm:
-  forall {a} p (f : a -> Int -> a) bm x,
-  isBitMask bm ->
-  unsafeFix (foldlBits_go p f) bm x =
-    f (unsafeFix (foldlBits_go p f) (N.ldiff bm (highestBitMask bm)) x)
-       (p + Z.of_N (N.log2 bm)).
-Proof.
-  intros.
-  unfold isBitMask in H.
-  apply foldlBits_go_high_bm_aux.
-  * apply H.
-  * Nomega.
-Qed.
-
 Lemma foldlBits_high_bm:
   forall {a} p (f : a -> Int -> a) bm x,
   isBitMask bm ->
   foldlBits p f x bm =
-    f (foldlBits p f x  (N.ldiff bm (highestBitMask bm))) (p + Z.of_N (N.log2 bm)).
+    f (foldlBits p f x (N.ldiff bm (highestBitMask bm))) (p + Z.of_N (N.log2 bm)).
 Proof.
   intros.
-  apply foldlBits_go_high_bm; assumption.
+  unfold isBitMask in H.
+  apply foldlBits_high_bm_aux.
+  * apply H.
+  * Nomega.
 Qed.
-
 
 Lemma foldlBits_foldrBits:
   forall {a b}  k (x : a) p bm (k' : a -> b), isBitMask0 bm ->

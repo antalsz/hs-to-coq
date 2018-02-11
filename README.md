@@ -33,7 +33,7 @@ these tools:
   1. `opam repo add coq-released https://coq.inria.fr/opam/released` (for
      SSReflect and MathComp)
   2. `opam update`
-  3. `opam install coq.8.7.1 coq-mathcomp-ssreflect.1.6.1`
+  3. `opam install coq.8.7.1 coq-mathcomp-ssreflect.1.6.4`
 
 Once installed, you can build the base library with
 

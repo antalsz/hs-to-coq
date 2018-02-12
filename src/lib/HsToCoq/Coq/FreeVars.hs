@@ -6,7 +6,7 @@ module HsToCoq.Coq.FreeVars (
   -- * Things that contain free variables
   getFreeVars, FreeVars(..),
   -- * Binders
-  Binding(..), binding',
+  Binding(..), binding', definedBy,
   -- * Converting binders to things that contain free variables
   NoBinding(..),
   -- * Utility methods
@@ -15,7 +15,7 @@ module HsToCoq.Coq.FreeVars (
   -- 'Binders'
   Names(..),
   -- * Default type class method definitions
-  bindingTelescope, foldableFreeVars
+  bindingTelescope, foldableFreeVars,
   ) where
 
 import Prelude hiding (Num)

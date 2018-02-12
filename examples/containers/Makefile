@@ -20,13 +20,15 @@ OUT=lib
 HANDMOD = \
   Data/SequenceManual \
   Utils/Containers/Internal/PtrEquality \
-  Utils/Containers/Internal/BitUtil \
+  CTZ \
+  Popcount \
 
 # Generated modules
 # generated directly from GHC/libraries/containers
 MODULES = \
   Data/Set/Internal \
   Utils/Containers/Internal/BitQueue\
+  Utils/Containers/Internal/BitUtil \
   Data/IntSet/Internal \
   Data/IntMap/Internal \
   Data/Map/Internal \
@@ -56,8 +58,8 @@ all:  $(VFILES) coq $(OUT)/edits $(OUT)/README.md
 $(OUT)/_CoqProject : Makefile
 	mkdir -p $(OUT)
 	> $@
-	echo "-Q . \"\"" >> $@
-	echo "-R ../../../base \"\"" >> $@
+	echo "-Q . ''" >> $@
+	echo "-R ../../../base ''" >> $@
 	echo $(addsuffix .v,$(HANDMOD)) >> $@
 	echo $(addsuffix .v,$(MODULES)) >> $@
 	echo $(addsuffix .v,$(SPECIAL_MODULES)) >> $@

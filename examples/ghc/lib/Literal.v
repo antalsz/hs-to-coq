@@ -159,17 +159,15 @@ Definition int2FloatLit : Literal -> Literal :=
 
 Definition int2WordLit : DynFlags.DynFlags -> Literal -> Literal :=
   fun arg_0__ arg_1__ =>
-    let j_3__ :=
-      match arg_0__ , arg_1__ with
-        | _ , l => Panic.panicStr (GHC.Base.hs_string__ "int2WordLit") (Panic.noString
-                                                                       l)
-      end in
     match arg_0__ , arg_1__ with
       | dflags , MachInt i => if i GHC.Base.< GHC.Num.fromInteger 0 : bool
                               then MachWord ((GHC.Num.fromInteger 1 GHC.Num.+ DynFlags.tARGET_MAX_WORD dflags)
                                             GHC.Num.+ i)
                               else MachWord i
-      | _ , _ => j_3__
+      | _ , _ => match arg_0__ , arg_1__ with
+                   | _ , l => Panic.panicStr (GHC.Base.hs_string__ "int2WordLit") (Panic.noString
+                                                                                  l)
+                 end
     end.
 
 Definition isZeroLit : Literal -> bool :=
@@ -369,17 +367,15 @@ Definition nullAddrLit : Literal :=
 
 Definition word2IntLit : DynFlags.DynFlags -> Literal -> Literal :=
   fun arg_0__ arg_1__ =>
-    let j_3__ :=
-      match arg_0__ , arg_1__ with
-        | _ , l => Panic.panicStr (GHC.Base.hs_string__ "word2IntLit") (Panic.noString
-                                                                       l)
-      end in
     match arg_0__ , arg_1__ with
       | dflags , MachWord w => if w GHC.Base.> DynFlags.tARGET_MAX_INT dflags : bool
                                then MachInt ((w GHC.Num.- DynFlags.tARGET_MAX_WORD dflags) GHC.Num.-
                                             GHC.Num.fromInteger 1)
                                else MachInt w
-      | _ , _ => j_3__
+      | _ , _ => match arg_0__ , arg_1__ with
+                   | _ , l => Panic.panicStr (GHC.Base.hs_string__ "word2IntLit") (Panic.noString
+                                                                                  l)
+                 end
     end.
 
 (* Unbound variables:

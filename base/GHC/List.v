@@ -289,11 +289,10 @@ Definition takeFB {a} {b}
     : (a -> b -> b) -> b -> a -> (GHC.Num.Int -> b) -> GHC.Num.Int -> b :=
   fun c n x xs =>
     fun m =>
-      let j_2__ := c x (xs (m GHC.Num.- GHC.Num.fromInteger 1)) in
       match m with
         | num_0__ => if num_0__ GHC.Base.== GHC.Num.fromInteger 1 : bool
                      then c x n
-                     else j_2__
+                     else c x (xs (m GHC.Num.- GHC.Num.fromInteger 1))
       end.
 
 Definition takeWhile {a} : (a -> bool) -> list a -> list a :=

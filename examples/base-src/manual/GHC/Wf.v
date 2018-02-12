@@ -50,3 +50,30 @@ Definition wfFix3 {a b c n r}
                      rec (exist _ (x',y',z') H)
                 in F x y z rec'
       in wfFix1 R m' Hwf F' (x, y, z).
+
+Lemma wfFix1_eq:
+  forall (a n r : Type) (R : n -> n -> Prop) (m : a -> n) (Hwf : well_founded R),
+  forall F x,
+  @wfFix1 a n r R m Hwf F x = F x (fun xH => wfFix1 R m Hwf F (proj1_sig xH)).
+Proof.
+  intros.
+  apply Coq.Program.Wf.WfExtensionality.fix_sub_eq_ext with (P := fun _ : a => r).
+Qed.
+
+Lemma wfFix2_eq:
+  forall (a b n r : Type) (R : n -> n -> Prop) (m : a -> b -> n) (Hwf : well_founded R),
+  forall F x y,
+  @wfFix2 a b n r R m Hwf F x y = F x y (fun x yH => wfFix2 R m Hwf F x (proj1_sig yH)).
+Proof.
+  intros.
+  apply wfFix1_eq.
+Qed.
+
+Lemma wfFix3_eq:
+  forall (a b c n r : Type) (R : n -> n -> Prop) (m : a -> b -> c -> n) (Hwf : well_founded R),
+  forall F x y z,
+  @wfFix3 a b c n r R m Hwf F x y z = F x y z (fun x y zH => wfFix3 R m Hwf F x y (proj1_sig zH)).
+Proof.
+  intros.
+  apply wfFix1_eq.
+Qed.

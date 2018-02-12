@@ -1,17 +1,3 @@
-(* Default settings (from HsToCoq.Coq.Preamble) *)
-
-Generalizable All Variables.
-
-Unset Implicit Arguments.
-Set Maximal Implicit Insertion.
-Unset Strict Implicit.
-Unset Printing Implicit Defensive.
-
-Require Coq.Program.Tactics.
-Require Coq.Program.Wf.
-
-(* Preamble *)
-
 
 Require Import CTZ.
 Require Import Popcount.
@@ -51,19 +37,3 @@ Instance Bits__N : Data.Bits.Bits N :=  {
   xor := N.lxor;
   zeroBits := 0;
 }.
-
-(* Converted imports: *)
-
-Require Data.Bits.
-Require GHC.Num.
-Import GHC.Num.Notations.
-
-(* No type declarations to convert. *)
-(* Converted value declarations: *)
-
-Definition bitcount : GHC.Num.Int -> GHC.Num.Word -> GHC.Num.Int :=
-  fun a x => a GHC.Num.+ Data.Bits.popCount x.
-
-(* Unbound variables:
-     Data.Bits.popCount GHC.Num.Int GHC.Num.Word GHC.Num.op_zp__
-*)

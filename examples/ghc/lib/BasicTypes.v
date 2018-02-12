@@ -1302,11 +1302,12 @@ Definition successIf : bool -> SuccessFlag :=
 
 Definition treatZeroAsInf : GHC.Num.Int -> IntWithInf :=
   fun arg_0__ =>
-    let j_3__ := match arg_0__ with | n => Int n end in
     match arg_0__ with
       | num_1__ => if num_1__ GHC.Base.== GHC.Num.fromInteger 0 : bool
                    then Infinity
-                   else j_3__
+                   else match arg_0__ with
+                          | n => Int n
+                        end
     end.
 
 Definition tupleSortBoxity : TupleSort -> Boxity :=

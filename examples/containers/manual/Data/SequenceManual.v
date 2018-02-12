@@ -3314,7 +3314,7 @@ Definition splitMap {s} {a} {b} : (nat -> s -> (s * s)%type) -> (s -> a -> b) ->
     let go :=
       fun arg_34__ arg_35__ arg_36__ =>
         match arg_34__ , arg_35__ , arg_36__ with
-          | f , s , Mk_Seq xs => Mk_Seq (splitMapTree _ _ _ _ splt' (fun arg_37__
+          | f , s , Mk_Seq xs => Mk_Seq (splitMapTree splt' (fun arg_37__
                                                                            arg_38__ =>
                                                                         match arg_37__ , arg_38__ with
                                                                           | s' , Mk_Elem a => Mk_Elem (f s' a)

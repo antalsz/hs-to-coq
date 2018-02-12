@@ -2176,6 +2176,9 @@ Import GHC.Num.Notations.
 Require Import Data.Bits.
 Import Data.Bits.Notations.
 Require Import Data.IntSet.Internal.
+Require Import Utils.Containers.Internal.BitUtil.
+Require Import CTZ.
+Require Import Popcount.
 Local Open Scope Z_scope.
 Set Bullet Behavior "Strict Subproofs".
 
@@ -2994,15 +2997,34 @@ Qed.
 
 
 (**
-   This lemma essentially repeats the edit that we made.
-   A stretch-goal would be to retain the original definintion
-   (with [negate] replaced by [2^WIDTH - _]) and prove this lemma.
+  Originally, I defined [lowestBitMask bm = revNatSafe (highestBitMask (revNatSafe bm))]
+  which is why many lemmas about [lowestBitMask] are proven using this lemma (although
+  they could not be proven differently and more directly, maybe).
+
+  A stretch-goal would be to retain the original definintion
+  (with [negate] replaced by [2^WIDTH - _]) and prove this lemma.
  *)
 Lemma lowestBitMask_highestBitMask:
   forall bm,
     isBitMask bm ->
     lowestBitMask bm = revNatSafe (highestBitMask (revNatSafe bm)).
-Proof. intros. reflexivity. Qed.
+Proof. 
+  intros.
+  unfold lowestBitMask, highestBitMask.
+  rewrite revNat_pow by isBitMask.
+  f_equal.
+  apply N_ctz_bits_unique.
+  * apply H.
+  * rewrite <- revNat_spec by isBitMask.
+    apply N.bit_log2.
+    rewrite revNat_eq_0 by isBitMask.
+    unfold isBitMask in H; Nomega.
+  * intros.
+    rewrite <- (revNat_revNat bm) by isBitMask.
+    rewrite revNat_spec by Nomega.
+    apply N.bits_above_log2.
+    Nomega.
+Qed.
 
 Lemma lowestBitMask_pow_id:
   forall i,
@@ -3330,52 +3352,48 @@ Proof.
       apply IH.
 Qed.
 
-(** *** Lemmas about [popCount_N] *)
+(** *** Lemmas about [popcount] *)
 
 (** Until we switch to [deferredFix], this will have to do. *)
 Axiom unsafeFix_eq : forall a (f : a -> a),
   unsafeFix f = f (unsafeFix f).
 
-
-
-(** This lemma will encapsulate the termination proof, so that the rest of the proof
- will not have to be modified. *)
-Lemma popCount_N_eq :
-  popCount_N = fun x =>
-  if (x =? 0)%N then 0 else Z.succ (popCount_N (N.ldiff x (2 ^ N.log2 x)%N)).
-Proof. apply unsafeFix_eq. Qed.
-
-Lemma popCount_N_0:
-  popCount_N 0%N = 0.
+Lemma popcount_N_0:
+  N_popcount 0%N = 0%N.
 Proof.
-  rewrite popCount_N_eq.
-  rewrite N.eqb_refl.
   reflexivity.
 Qed.
 
 Lemma popCount_N_bm:
   forall bm,
   (0 < bm)%N ->
-  popCount_N bm = Z.succ (popCount_N (N.ldiff bm (2 ^ N.log2 bm)%N)).
+  N_popcount bm = N.succ (N_popcount (N.ldiff bm (2 ^ N.log2 bm)%N)).
 Proof.
   intros.
-  etransitivity; [rewrite popCount_N_eq; reflexivity|].
-  replace (bm =? 0)%N with false
-    by (symmetry; apply N.eqb_neq; Nomega).
-  reflexivity.
-Qed.
-
-Lemma popCount_N_pow2_1:
-  forall b,
-  popCount_N (2 ^ b)%N = 1.
-Proof.
-  intros.
-  rewrite popCount_N_bm.
-  rewrite N.log2_pow2 by nonneg.
-  rewrite N.ldiff_diag.
-  rewrite popCount_N_0.
-  reflexivity.
-  apply N_pow_pos_nonneg; Nomega.
+  pose proof (N_popcount_diff bm (2^N.log2 bm)%N).
+  replace (N.land (2 ^ N.log2 bm) bm)%N with (2 ^ N.log2 bm)%N in *;
+  only 1: replace (N.ldiff (2 ^ N.log2 bm) bm)%N with 0%N in *.
+  * rewrite N_popcount_pow2 in *.
+    simpl N_popcount in *.
+    simpl N.double in *.
+    Nomega.
+  * symmetry.
+    apply N.bits_inj; intro j.
+    rewrite N.bits_0.
+    rewrite N.ldiff_spec.
+    rewrite N.pow2_bits_eqb.
+    destruct (N.eqb_spec (N.log2 bm) j).
+    + subst.
+      rewrite N.bit_log2 by Nomega. reflexivity.
+    + reflexivity.
+  * symmetry.
+    apply N.bits_inj; intro j.
+    rewrite N.land_spec.
+    rewrite N.pow2_bits_eqb.
+    destruct (N.eqb_spec (N.log2 bm) j).
+    + subst.
+      rewrite N.bit_log2 by Nomega. reflexivity.
+    + reflexivity.
 Qed.
 
 
@@ -5021,6 +5039,10 @@ Proof.
   unfold projT1, projT2.
   unfold intersection_body.
   repeat match goal with
+    | _ => progress replace (Sumbool.sumbool_of_bool false) with (@right (false = true) (false = false) (@eq_refl bool false))
+by reflexivity
+    | _ => progress replace (Sumbool.sumbool_of_bool true) with (@left (true = true) (true = false) (@eq_refl bool true))
+by reflexivity
     | [ |- _ = match ?x with _ => _ end ] => destruct x
     | _ => assumption || reflexivity
     | [ |- _ ?x = _ ?x ] => induction x
@@ -5268,6 +5290,10 @@ Proof.
   unfold projT1, projT2.
   unfold difference_body.
   repeat match goal with
+    | _ => progress replace (Sumbool.sumbool_of_bool false) with (@right (false = true) (false = false) (@eq_refl bool false))
+by reflexivity
+    | _ => progress replace (Sumbool.sumbool_of_bool true) with (@left (true = true) (true = false) (@eq_refl bool true))
+by reflexivity
     | [ |- _ = match ?x with _ => _ end ] => destruct x
     | _ => assumption || reflexivity
     | [ |- _ ?x = _ ?x ] => induction x
@@ -5814,61 +5840,48 @@ Definition foldl_go {a} k :=
    | Nil => arg_0__
    end.
 
-(* We can extract the argument to [unsafeFix] from the definition of [foldrBits]. *)
-Definition foldlBits_go {a} (p : Int) (f : a -> Int -> a)
-  : (Nat -> a -> a) -> Nat -> a -> a.
+(** This is a bit ugly, but it get’s the job done. From [foldlBits_0] and
+    [foldlBits_bm], everything is pretty again.
+
+    Part of the ugliness is that when solving the termination obligation using
+    [Program Definition], the resulting prove captures not only the parameters of the
+    local [go] function, but also the (unused) parameters of the enclosing [foldlBits]
+    function.
+*)
+Definition foldlBits_go {a} (p : Int) (f : a -> Int -> a) (x : a) (bm : Nat)
+  : ((forall x' : N, {_ : a | (N.to_nat x' < N.to_nat bm)%nat} -> a) -> a).
 Proof.
-  let foldlBits_rhs := eval unfold foldlBits in (foldlBits p f) in
-  match foldlBits_rhs with context[ unsafeFix ?f _ ] => exact f end.
+  let rhs := eval unfold foldlBits in (foldlBits p f x bm) in
+  match rhs with context[ GHC.Wf.wfFix2 _ _ _ ?f ] => exact (f bm x) end.
 Defined.
 
-(** This lemma will encapsulate the termination proof, so that the rest of the proof
- will not have to be modified. *)
-Lemma foldlBits_go_eq {a} (p : Int) (f : a -> Int -> a) :
-  unsafeFix (foldlBits_go p f) = foldlBits_go p f (unsafeFix (foldlBits_go p f)).
-Proof. apply unsafeFix_eq. Qed.
+Require Import Logic.FunctionalExtensionality.
 
-Lemma foldlBits_go_0:
-  forall {a} p (f : a -> Int -> a) x,
-  unsafeFix (foldlBits_go p f) 0%N x = x.
+Lemma foldlBits_eq:
+  forall {a} p (f : a -> Int -> a) x bm,
+  foldlBits p f x bm = @foldlBits_go a p f x bm (fun x y => foldlBits p f (proj1_sig y) x).
 Proof.
   intros.
-  rewrite foldlBits_go_eq.
-  reflexivity.
+  unfold foldlBits.
+  unfold foldlBits_go.
+  etransitivity; only 1: apply GHC.Wf.wfFix2_eq.
+  destruct (Sumbool.sumbool_of_bool _); try reflexivity.
+  f_equal.
+  extensionality x'.
+  extensionality y'.
+  extensionality go'.
+  destruct (Sumbool.sumbool_of_bool _); try reflexivity.
+  f_equal. f_equal.
+  apply ProofIrrelevance.proof_irrelevance.
 Qed.
+
 
 Lemma foldlBits_0:
   forall {a} p (f : a -> Int -> a) x,
   foldlBits p f x 0%N = x.
 Proof.
   intros.
-  apply foldlBits_go_0.
-Qed.
-
-Lemma foldlBits_go_bm:
-  forall {a} p (f : a -> Int -> a) bm x,
-  isBitMask bm ->
-  unsafeFix (foldlBits_go p f) bm x =
-    unsafeFix (foldlBits_go p f) (N.ldiff bm (lowestBitMask bm))
-             (f x (p + Z.of_N WIDTH - 1 - Z.of_N (N.log2 (revNatSafe bm)))).
-Proof.
-  intros.
-  etransitivity; [rewrite foldlBits_go_eq; reflexivity|].
-  unfold foldlBits_go at 1.
-  unfoldMethods.
-
-  replace (bm =? Z.to_N 0)%N with false
-    by (symmetry; apply N.eqb_neq; unfold isBitMask in *; zify; rewrite Z2N.id; omega).
-
-  rewrite lowestBitMask_highestBitMask at 2 by isBitMask.
-   unfold indexOfTheOnlyBit, highestBitMask.
-   rewrite revNat_pow by isBitMask.
-   rewrite N.log2_pow2 by Nomega.
-   assert (N.log2 (revNatSafe bm) < WIDTH)%N by isBitMask.
-   replace (p + Z.of_N (WIDTH - 1 - N.log2 (revNatSafe bm))%N)
-      with (p + Z.of_N WIDTH - 1 - Z.of_N (N.log2 (revNatSafe bm)))  by (unfold WIDTH in *; Nomega).
-  rewrite lxor_lowestBitMask by assumption.
-  reflexivity.
+  apply foldlBits_eq.
 Qed.
 
 Lemma foldlBits_bm:
@@ -5880,16 +5893,57 @@ Lemma foldlBits_bm:
        (N.ldiff bm (lowestBitMask bm)).
 Proof.
   intros.
-  apply foldlBits_go_bm; assumption.
+  rewrite foldlBits_eq at 1. unfold foldlBits_go, proj1_sig.
+  unfoldMethods.
+  replace (bm =? Z.to_N 0)%N with false
+    by (symmetry; apply N.eqb_neq; unfold isBitMask in *; zify; rewrite Z2N.id; omega).
+  (* eek *)
+  replace (Sumbool.sumbool_of_bool false) with (@right (false = true) (false = false) (@eq_refl bool false))
+    by reflexivity.
+  f_equal.
+  * rewrite lowestBitMask_highestBitMask at 1 by isBitMask.
+    unfold indexOfTheOnlyBit, highestBitMask.
+    rewrite revNat_pow by isBitMask.
+    rewrite N.log2_pow2 by Nomega.
+    assert (N.log2 (revNatSafe bm) < WIDTH)%N by isBitMask.
+    replace (p + Z.of_N (WIDTH - 1 - N.log2 (revNatSafe bm))%N)
+       with (p + Z.of_N WIDTH - 1 - Z.of_N (N.log2 (revNatSafe bm)))  by (unfold WIDTH in *; Nomega).
+    reflexivity.
+  * rewrite lxor_lowestBitMask by assumption.
+    reflexivity.
 Qed.
 
-Lemma foldlBits_go_high_bm_aux:
+
+(**
+This used to be the case definitionally until we switched to Program Fixpoint.
+Maybe it will be the case again once we do not admit the termination proofs.
+Until then, let’s throw axioms (functional extensionality, proof irrelevance) at it. *)
+Lemma foldl'Bits_foldlBits : @foldl'Bits = @foldlBits.
+Proof.
+  unfold foldl'Bits.
+  unfold foldlBits.
+  intros.
+  extensionality a.
+  extensionality p.
+  extensionality f.
+  extensionality z.
+  extensionality bm.
+  f_equal.
+  extensionality x'.
+  extensionality y'.
+  extensionality go'.
+  destruct (Sumbool.sumbool_of_bool _); try reflexivity.
+  f_equal. f_equal.
+  apply ProofIrrelevance.proof_irrelevance.
+Qed.
+
+
+Lemma foldlBits_high_bm_aux:
   forall {a} p (f : a -> Int -> a) bm,
   isBitMask0 bm ->
   (bm <> 0)%N ->
-  (forall x, unsafeFix (foldlBits_go p f) bm x =
-    f (unsafeFix (foldlBits_go p f) (N.ldiff bm (highestBitMask bm)) x)
-       (p + Z.of_N (N.log2 bm))).
+  (forall x, foldlBits p f x bm =
+    f (foldlBits p f x (N.ldiff bm (highestBitMask bm))) (p + Z.of_N (N.log2 bm))).
 Proof.
   intros.
   pose proof H.
@@ -5902,15 +5956,15 @@ Proof.
     destruct (N.eqb_spec (N.ldiff bm (lowestBitMask bm)) (0%N)).
     * clear IH.
     
-      rewrite foldlBits_go_bm by isBitMask.
+      rewrite foldlBits_bm by isBitMask.
       rewrite e.
-      rewrite foldlBits_go_0.
+      rewrite foldlBits_0.
 
       apply ldiff_lowestBitMask_0 in e; try isBitMask.
       rewrite e.
       rewrite highestBitMask_pow_id by isBitMask.
       rewrite N.ldiff_diag.
-      rewrite foldlBits_go_0.
+      rewrite foldlBits_0.
       rewrite N.log2_pow2 by nonneg.
 
       replace bm with (2^N.log2 bm)%N by (apply H0).
@@ -5921,11 +5975,11 @@ Proof.
       assert (Hlog : (N.log2 bm < WIDTH)%N) by isBitMask.
       Nomega.
     * assert (hasTwoBits bm) by (split; auto; isBitMask).
-      rewrite foldlBits_go_bm by isBitMask.
+      rewrite foldlBits_bm by isBitMask.
       rewrite IH by (isBitMask || assumption).
       rewrite log2_ldiff by assumption.
       f_equal.
-      etransitivity; [|rewrite foldlBits_go_bm by isBitMask;  reflexivity].
+      etransitivity; [|rewrite foldlBits_bm by isBitMask;  reflexivity].
       rewrite lowestBitMask_ldiff by assumption.
       rewrite highestBitMask_ldiff by assumption.
       rewrite !N.ldiff_ldiff_l.
@@ -5939,30 +5993,18 @@ Proof.
 Qed.
 
 
-Lemma foldlBits_go_high_bm:
-  forall {a} p (f : a -> Int -> a) bm x,
-  isBitMask bm ->
-  unsafeFix (foldlBits_go p f) bm x =
-    f (unsafeFix (foldlBits_go p f) (N.ldiff bm (highestBitMask bm)) x)
-       (p + Z.of_N (N.log2 bm)).
-Proof.
-  intros.
-  unfold isBitMask in H.
-  apply foldlBits_go_high_bm_aux.
-  * apply H.
-  * Nomega.
-Qed.
-
 Lemma foldlBits_high_bm:
   forall {a} p (f : a -> Int -> a) bm x,
   isBitMask bm ->
   foldlBits p f x bm =
-    f (foldlBits p f x  (N.ldiff bm (highestBitMask bm))) (p + Z.of_N (N.log2 bm)).
+    f (foldlBits p f x (N.ldiff bm (highestBitMask bm))) (p + Z.of_N (N.log2 bm)).
 Proof.
   intros.
-  apply foldlBits_go_high_bm; assumption.
+  unfold isBitMask in H.
+  apply foldlBits_high_bm_aux.
+  * apply H.
+  * Nomega.
 Qed.
-
 
 Lemma foldlBits_foldrBits:
   forall {a b}  k (x : a) p bm (k' : a -> b), isBitMask0 bm ->
@@ -6107,7 +6149,7 @@ Defined.
 Lemma popCount_N_length_toList_go:
   forall bm p l,
   isBitMask0 bm ->
-  popCount_N bm + Z.of_nat (length l) = Z.of_nat (length (foldrBits p cons l bm)).
+  Z.of_N (N_popcount bm) + Z.of_nat (length l) = Z.of_nat (length (foldrBits p cons l bm)).
 Proof.
   intros.
   unfold foldrBits.
@@ -6117,7 +6159,6 @@ Proof.
   - isBitMask.
   - intros.
     rewrite foldrBits_go_0.
-    rewrite popCount_N_0.
     reflexivity.
   - clear bm H. intros bm Hbm IH l.
     rewrite !@foldrBits_go_revNat_bm with (bm := bm) by isBitMask.
@@ -6136,7 +6177,7 @@ Proof.
   intros.
   revert x; induction H; intro x.
   + simpl.
-    unfold bitCount_N.
+    unfold bitcount.
     rewrite <- popCount_N_length_toList_go by isBitMask.
     simpl.
     rewrite Z.add_0_r.
@@ -6166,7 +6207,7 @@ Proof.
   * simpl. rewrite Z.add_0_r. reflexivity.
   * destruct HD.
     + simpl.
-      unfold bitCount_N.
+      unfold bitcount.
       rewrite <- popCount_N_length_toList_go by isBitMask.
       simpl. rewrite Z.add_0_r.
       reflexivity.
@@ -6180,12 +6221,7 @@ Proof.
          rewrite !app_length.
          simpl length.
          unfold Int in *.
-         (* Why does Omega not solve this? *)
-         rewrite plus_0_r.
-         rewrite !Nat2Z.inj_add.
-         rewrite <- !Z.add_assoc.
-         f_equal.
-         apply Z.add_comm.
+         Nomega.
       -- erewrite toList_go_append with (s := s1) by eassumption.
          erewrite toList_go_append with (s := s2) by eassumption.
          erewrite sizeGo_spec' by eassumption.
@@ -6193,11 +6229,7 @@ Proof.
          rewrite !app_length.
          simpl length.
          unfold Int in *.
-         (* Why does Omega not solve this? *)
-         rewrite plus_0_r.
-         rewrite !Nat2Z.inj_add.
-         rewrite <- !Z.add_assoc.
-         f_equal.
+         Nomega.
 Qed.
 
 Lemma size_spec:
@@ -6312,7 +6344,7 @@ Proof.
   induction H.
   * intros.
     simpl. subst.
-    replace @foldl'Bits with @foldlBits by reflexivity.
+    rewrite foldl'Bits_foldlBits.
     fold (filterBits p (rPrefix r) bm).
     eapply tip_Desc0; try assumption; try reflexivity.
     + intro i.
@@ -6425,7 +6457,7 @@ Proof.
   * intros.
     induction HD.
     + simpl.
-      replace @foldl'Bits with @foldlBits by reflexivity.
+      rewrite foldl'Bits_foldlBits.
       f_equal.
       change (N.lxor bm (filterBits P p bm) = filterBits (fun x => negb (P x)) p bm).
       apply filterBits_neg; isBitMask.
@@ -6684,7 +6716,7 @@ Lemma valid_maskPowerOfTwo: forall s, WF s -> maskPowerOfTwo s = true.
   * reflexivity.
   * induction HD.
     - reflexivity.
-    - simpl. unfold bitCount_N. unfoldMethods.
+    - simpl. unfold bitcount. unfoldMethods.
       rewrite IHHD1, IHHD2.
       subst. simpl.
       rewrite andb_true_r.
@@ -6696,7 +6728,8 @@ Lemma valid_maskPowerOfTwo: forall s, WF s -> maskPowerOfTwo s = true.
       simpl Z.to_N.
       rewrite Z2N.inj_pred.
       rewrite N2Z.id.
-      apply popCount_N_pow2_1.
+      rewrite N_popcount_pow2.
+      reflexivity.
 Qed.
 
 Lemma Foldable_all_forallb:

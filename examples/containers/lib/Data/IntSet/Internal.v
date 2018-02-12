@@ -10,6 +10,10 @@ Unset Printing Implicit Defensive.
 Require Coq.Program.Tactics.
 Require Coq.Program.Wf.
 
+(* Preamble *)
+
+Require BitTerminationProofs.
+
 (* Converted imports: *)
 
 Require Coq.Init.Peano.
@@ -184,7 +188,7 @@ Program Definition foldlBits {a}
                                                         end
                               end) in
             go bitmap z.
-Admit Obligations.
+Solve Obligations with (BitTerminationProofs.termination_foldl).
 
 Definition foldl {a} : (a -> Key -> a) -> a -> IntSet -> a :=
   fun f z =>
@@ -234,7 +238,7 @@ Program Definition foldl'Bits {a}
                                                         end
                               end) in
             go bitmap z.
-Admit Obligations.
+Solve Obligations with (BitTerminationProofs.termination_foldl).
 
 Definition foldl' {a} : (a -> Key -> a) -> a -> IntSet -> a :=
   fun f z =>

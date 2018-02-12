@@ -22,6 +22,7 @@ HANDMOD = \
   Utils/Containers/Internal/PtrEquality \
   CTZ \
   Popcount \
+  BitTerminationProofs \
 
 # Generated modules
 # generated directly from GHC/libraries/containers

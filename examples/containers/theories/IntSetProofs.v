@@ -5859,17 +5859,7 @@ Lemma foldlBits_eq:
   foldlBits p f x bm = @foldlBits_go a p f x bm (fun x y => foldlBits p f (proj1_sig y) x).
 Proof.
   intros.
-  unfold foldlBits.
-  unfold foldlBits_go.
-  etransitivity; only 1: apply GHC.Wf.wfFix2_eq.
-  destruct (Sumbool.sumbool_of_bool _); try reflexivity.
-  f_equal.
-  extensionality x'.
-  extensionality y'.
-  extensionality go'.
-  destruct (Sumbool.sumbool_of_bool _); try reflexivity.
-  f_equal. f_equal.
-  apply ProofIrrelevance.proof_irrelevance.
+  apply GHC.Wf.wfFix2_eq.
 Qed.
 
 
@@ -5906,28 +5896,9 @@ Proof.
     reflexivity.
 Qed.
 
-
-(**
-This used to be the case definitionally until we switched to Program Fixpoint.
-Maybe it will be the case again once we do not admit the termination proofs.
-Until then, let’s throw axioms (functional extensionality, proof irrelevance) at it. *)
 Lemma foldl'Bits_foldlBits : @foldl'Bits = @foldlBits.
 Proof.
-  unfold foldl'Bits.
-  unfold foldlBits.
-  intros.
-  extensionality a.
-  extensionality p.
-  extensionality f.
-  extensionality z.
-  extensionality bm.
-  f_equal.
-  extensionality x'.
-  extensionality y'.
-  extensionality go'.
-  destruct (Sumbool.sumbool_of_bool _); try reflexivity.
-  f_equal. f_equal.
-  apply ProofIrrelevance.proof_irrelevance.
+  reflexivity.
 Qed.
 
 Lemma foldlBits_high_bm_aux:

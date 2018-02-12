@@ -941,43 +941,48 @@ Proof.
       destruct_match; [solve [auto]|].
       replace (Datatypes.id e) with e.
       right. rewrite /size=>//. auto.
-    + intros. destruct_match.
-      replace (Datatypes.id e) with e; auto.
-
-(*
-      
-      split; intros. solve_local_bounded_with_relax.
     + (** s is Bin, e < a, prove: WF (insert e s) *)
       intros. destruct_match.
-      apply balanceL_WF; auto.
+      apply balanceL_WF with (s:=0); auto.
       * (** WF (insert e s2) *)
           by apply IHs1.
       * (** (insert e s2) and s3 satisfy [before_balancedL]'s
               pre-condbitions. *)
         rewrite -/insert /before_balancedL.
         apply IHs1 in Hwfl; destruct Hwfl.
-          (** cases analysis: did we insert an element to s2?  *)
-        destruct H0 as [[H0 | H0] _].
+        (** cases analysis: 
+             did we insert an element to s2?  *)
+        destruct H0 as [H0 | H0].
         -- (** we did *)
           destruct s2; destruct s3; derive_constraints.
-          all: try (rewrite_for_omega; intros; omega).
-          all: derive_compare;
-            destruct_match; destruct_match;
-              first [(rewrite_for_omega; intros; omega) |
-                     (apply IHs1 in Hwfl;
-                      destruct Hwfl as [_ [Hwlf' _]];
-                         move: Hwlf'; rewrite /insert;
-                         move: Heq1 ->; move: Heq2 ->;
-                                                   rewrite_for_omega; intros; omega)].
-        -- (** we didn't *) derive_constraints; subst.
-                            rewrite H0. destruct Hbalanced; (left + right); omega.
+            all: try (rewrite_for_omega; intros; omega).
+            all: derive_compare;
+                 destruct_match; destruct_match;
+                 first
+                   [(rewrite_for_omega; intros; omega) |
+                    (apply IHs1 in Hwfl;
+                     destruct Hwfl as [_ [Hwlf' | Hwlf']];
+                     move: Hwlf'; rewrite /insert;
+                     move: Heq1 ->; move: Heq2 ->;
+                      rewrite_for_omega; intros; omega)].
+        -- (** we didn't *)
+          derive_constraints; subst.
+          rewrite H0.
+          destruct Hbalanced;
+            (left + right); omega.
       * (** prove [before_ordered] pre-conditions *)
-          rewrite -/insert /before_ordered.
-          derive_constraints. move: Hord0. rewrite /ordered.
-          case /and4P=>// => _ _ Hlo Hhi.
-          split; [| split; [| split; [| split; [| split]]]]=>//.
-          apply IHs1 in Hwfl. destruct Hwfl as [ _ [_ Hord']].
-          specialize (Hord' a); destruct Hord'.
+        rewrite -/insert.
+        unfold ordered' in *.
+        (*move: Hord0.*)
+        apply IHs1 in Hwfl.
+        destruct Hwfl as [ _ [_ Hord']]
+          specialize (Hord' a)
+          derive_constraints.
+          solve_bounded'.
+          ; destruct Hord'.
           apply H=>//. autorewrite with elt_compare in *. auto.
-
-*)
+          unfold bounded'
+           (*case /andP=>// => _ _ Hlo Hhi.          
+          split; [| split; [| split;
+                              [| split; [| split]]]]=>//.*)
+         

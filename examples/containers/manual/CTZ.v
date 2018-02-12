@@ -81,6 +81,17 @@ Proof.
     + apply H0 in H1. inversion H1.
 Qed.
 
+Lemma Pos_ctz_pow2:
+  forall n, Pos_ctz (Pos.pow 2 n) = N.pos n.
+Proof.
+  apply Pos.peano_ind; intros.
+  * reflexivity.
+  * rewrite Pos.pow_succ_r.
+    simpl.
+    rewrite H.
+    reflexivity.
+Qed.
+
 
 (** And now for [N], returning [0] for [0]. *)
 
@@ -121,4 +132,13 @@ Proof.
   destruct a.
   * inversion H. 
   * apply Pos_ctz_bits_unique; assumption.
+Qed.
+
+Lemma N_ctz_pow2:
+  forall n, N_ctz (N.pow 2 n) = n.
+Proof.
+  intros.
+  destruct n.
+  * reflexivity.
+  * simpl. apply Pos_ctz_pow2.
 Qed.

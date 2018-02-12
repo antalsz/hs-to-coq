@@ -13,12 +13,6 @@ termination go in Data.IntSet.Internal.foldl'Bits {measure (Coq.NArith.BinNat.N.
 nonterminating Data.IntSet.Internal.foldrBits
 nonterminating Data.IntSet.Internal.foldr'Bits
 
-# Need to be implemented
-rename value Utils.Containers.Internal.BitUtil.shiftLL = Data.IntSet.Internal.shiftLL
-rename value Utils.Containers.Internal.BitUtil.shiftRL = Data.IntSet.Internal.shiftRL
-rename value Utils.Containers.Internal.BitUtil.highestBitMask = Data.IntSet.Internal.highestBitMask
-rename value Utils.Containers.Internal.BitUtil.bitcount = Data.IntSet.Internal.bitCount_N
-
 # partial
 skip Data.IntSet.Internal.findMax
 skip Data.IntSet.Internal.findMin
@@ -52,9 +46,6 @@ redefine Definition Data.IntSet.Internal.branchMask : Prefix -> (Prefix -> Mask)
 # indexOfTheOnlyBit uses pointers and ugly stuff
 redefine Definition Data.IntSet.Internal.indexOfTheOnlyBit :=
  fun x => Coq.ZArith.BinInt.Z.of_N (Coq.NArith.BinNat.N.log2 x).
-
-redefine Definition Data.IntSet.Internal.lowestBitMask : Nat -> Nat :=
-  fun n => Data.IntSet.Internal.revNatSafe (Data.IntSet.Internal.highestBitMask (Data.IntSet.Internal.revNatSafe n)).
 
 # the revNat function is only correct if its result is cropped to 64 bits.
 add Data.IntSet.Internal Definition Data.IntSet.Internal.revNatSafe n := Coq.NArith.BinNat.N.modulo (Data.IntSet.Internal.revNat n) (Coq.NArith.BinNat.N.pow 2 64).

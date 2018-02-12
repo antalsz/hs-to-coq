@@ -20,13 +20,14 @@ OUT=lib
 HANDMOD = \
   Data/SequenceManual \
   Utils/Containers/Internal/PtrEquality \
-  Utils/Containers/Internal/BitUtil \
+  CTZ \
 
 # Generated modules
 # generated directly from GHC/libraries/containers
 MODULES = \
   Data/Set/Internal \
   Utils/Containers/Internal/BitQueue\
+  Utils/Containers/Internal/BitUtil \
   Data/IntSet/Internal \
   Data/IntMap/Internal \
   Data/Map/Internal \

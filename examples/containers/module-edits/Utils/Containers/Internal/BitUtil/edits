@@ -1,0 +1,5 @@
+skip Utils.Containers.Internal.BitUtil.shiftLL
+skip Utils.Containers.Internal.BitUtil.shiftRL
+skip Utils.Containers.Internal.BitUtil.highestBitMask
+skip Utils.Containers.Internal.BitUtil.lowestBitMask
+skip Utils.Containers.Internal.BitUtil.wordSize

@@ -21,6 +21,7 @@ HANDMOD = \
   Data/SequenceManual \
   Utils/Containers/Internal/PtrEquality \
   CTZ \
+  Popcount \
 
 # Generated modules
 # generated directly from GHC/libraries/containers

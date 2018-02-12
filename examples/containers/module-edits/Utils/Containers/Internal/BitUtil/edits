@@ -1,5 +1,10 @@
 skip Utils.Containers.Internal.BitUtil.shiftLL
 skip Utils.Containers.Internal.BitUtil.shiftRL
 skip Utils.Containers.Internal.BitUtil.highestBitMask
-skip Utils.Containers.Internal.BitUtil.lowestBitMask
 skip Utils.Containers.Internal.BitUtil.wordSize
+
+# lowestBitMask is actually defined in
+# Data/IntSet/Internal.hs
+# but it conceptually belongs here, so we put it in the preamble.v
+# of this module
+skip Utils.Containers.Internal.BitUtil.lowestBitMask

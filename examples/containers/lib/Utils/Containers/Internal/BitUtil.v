@@ -13,6 +13,8 @@ Require Coq.Program.Wf.
 (* Preamble *)
 
 
+Require Import CTZ.
+Require Import Popcount.
 Require Import Coq.ZArith.ZArith.
 Require Data.Bits.
 
@@ -22,18 +24,9 @@ Definition shiftRL (n: N) (s : Z) : N :=
 	Coq.NArith.BinNat.N.shiftr n (Coq.ZArith.BinInt.Z.to_N s).
 
 Definition highestBitMask (n: N) : N := N.pow 2 (N.log2 n).
+Definition lowestBitMask  (n: N) : N := N.pow 2 (N_ctz n).
 
 Definition bit_N := shiftLL 1%N.
-
-Definition popCount_N : N -> Z :=  fun _ => 0%Z.
-(*
-Definition popCount_N : N -> Z := unsafeFix (fun popCount x =>
-  if Coq.NArith.BinNat.N.eqb x 0
-  then 0%Z
-  else Coq.ZArith.BinInt.Z.succ (popCount (Coq.NArith.BinNat.N.ldiff x (Coq.NArith.BinNat.N.pow 2 (Coq.NArith.BinNat.N.log2 x))))).
-
-Definition bitCount_N (a : Z) (x : N) :=  Coq.ZArith.BinInt.Z.add a (popCount_N x).
-*)
 
 Instance Bits__N : Data.Bits.Bits N :=  {
   op_zizazi__ := N.land ;
@@ -44,7 +37,7 @@ Instance Bits__N : Data.Bits.Bits N :=  {
   complement := fun _ => 0%N  ; (* Not legally possible with N *)
   complementBit := fun x i => N.lxor x (bit_N i) ;
   isSigned := fun x => true ;
-  popCount := popCount_N ;
+  popCount := fun n => Z.of_N (N_popcount n);
   rotate := shiftLL;
   rotateL := shiftRL;
   rotateR := shiftRL;

@@ -2176,6 +2176,9 @@ Import GHC.Num.Notations.
 Require Import Data.Bits.
 Import Data.Bits.Notations.
 Require Import Data.IntSet.Internal.
+Require Import Utils.Containers.Internal.BitUtil.
+Require Import CTZ.
+Require Import Popcount.
 Local Open Scope Z_scope.
 Set Bullet Behavior "Strict Subproofs".
 
@@ -2994,15 +2997,34 @@ Qed.
 
 
 (**
-   This lemma essentially repeats the edit that we made.
-   A stretch-goal would be to retain the original definintion
-   (with [negate] replaced by [2^WIDTH - _]) and prove this lemma.
+  Originally, I defined [lowestBitMask bm = revNatSafe (highestBitMask (revNatSafe bm))]
+  which is why many lemmas about [lowestBitMask] are proven using this lemma (although
+  they could not be proven differently and more directly, maybe).
+
+  A stretch-goal would be to retain the original definintion
+  (with [negate] replaced by [2^WIDTH - _]) and prove this lemma.
  *)
 Lemma lowestBitMask_highestBitMask:
   forall bm,
     isBitMask bm ->
     lowestBitMask bm = revNatSafe (highestBitMask (revNatSafe bm)).
-Proof. intros. reflexivity. Qed.
+Proof. 
+  intros.
+  unfold lowestBitMask, highestBitMask.
+  rewrite revNat_pow by isBitMask.
+  f_equal.
+  apply N_ctz_bits_unique.
+  * apply H.
+  * rewrite <- revNat_spec by isBitMask.
+    apply N.bit_log2.
+    rewrite revNat_eq_0 by isBitMask.
+    unfold isBitMask in H; Nomega.
+  * intros.
+    rewrite <- (revNat_revNat bm) by isBitMask.
+    rewrite revNat_spec by Nomega.
+    apply N.bits_above_log2.
+    Nomega.
+Qed.
 
 Lemma lowestBitMask_pow_id:
   forall i,
@@ -3330,52 +3352,48 @@ Proof.
       apply IH.
 Qed.
 
-(** *** Lemmas about [popCount_N] *)
+(** *** Lemmas about [popcount] *)
 
 (** Until we switch to [deferredFix], this will have to do. *)
 Axiom unsafeFix_eq : forall a (f : a -> a),
   unsafeFix f = f (unsafeFix f).
 
-
-
-(** This lemma will encapsulate the termination proof, so that the rest of the proof
- will not have to be modified. *)
-Lemma popCount_N_eq :
-  popCount_N = fun x =>
-  if (x =? 0)%N then 0 else Z.succ (popCount_N (N.ldiff x (2 ^ N.log2 x)%N)).
-Proof. apply unsafeFix_eq. Qed.
-
-Lemma popCount_N_0:
-  popCount_N 0%N = 0.
+Lemma popcount_N_0:
+  N_popcount 0%N = 0%N.
 Proof.
-  rewrite popCount_N_eq.
-  rewrite N.eqb_refl.
   reflexivity.
 Qed.
 
 Lemma popCount_N_bm:
   forall bm,
   (0 < bm)%N ->
-  popCount_N bm = Z.succ (popCount_N (N.ldiff bm (2 ^ N.log2 bm)%N)).
+  N_popcount bm = N.succ (N_popcount (N.ldiff bm (2 ^ N.log2 bm)%N)).
 Proof.
   intros.
-  etransitivity; [rewrite popCount_N_eq; reflexivity|].
-  replace (bm =? 0)%N with false
-    by (symmetry; apply N.eqb_neq; Nomega).
-  reflexivity.
-Qed.
-
-Lemma popCount_N_pow2_1:
-  forall b,
-  popCount_N (2 ^ b)%N = 1.
-Proof.
-  intros.
-  rewrite popCount_N_bm.
-  rewrite N.log2_pow2 by nonneg.
-  rewrite N.ldiff_diag.
-  rewrite popCount_N_0.
-  reflexivity.
-  apply N_pow_pos_nonneg; Nomega.
+  pose proof (N_popcount_diff bm (2^N.log2 bm)%N).
+  replace (N.land (2 ^ N.log2 bm) bm)%N with (2 ^ N.log2 bm)%N in *;
+  only 1: replace (N.ldiff (2 ^ N.log2 bm) bm)%N with 0%N in *.
+  * rewrite N_popcount_pow2 in *.
+    simpl N_popcount in *.
+    simpl N.double in *.
+    Nomega.
+  * symmetry.
+    apply N.bits_inj; intro j.
+    rewrite N.bits_0.
+    rewrite N.ldiff_spec.
+    rewrite N.pow2_bits_eqb.
+    destruct (N.eqb_spec (N.log2 bm) j).
+    + subst.
+      rewrite N.bit_log2 by Nomega. reflexivity.
+    + reflexivity.
+  * symmetry.
+    apply N.bits_inj; intro j.
+    rewrite N.land_spec.
+    rewrite N.pow2_bits_eqb.
+    destruct (N.eqb_spec (N.log2 bm) j).
+    + subst.
+      rewrite N.bit_log2 by Nomega. reflexivity.
+    + reflexivity.
 Qed.
 
 
@@ -6131,7 +6149,7 @@ Defined.
 Lemma popCount_N_length_toList_go:
   forall bm p l,
   isBitMask0 bm ->
-  popCount_N bm + Z.of_nat (length l) = Z.of_nat (length (foldrBits p cons l bm)).
+  Z.of_N (N_popcount bm) + Z.of_nat (length l) = Z.of_nat (length (foldrBits p cons l bm)).
 Proof.
   intros.
   unfold foldrBits.
@@ -6141,7 +6159,6 @@ Proof.
   - isBitMask.
   - intros.
     rewrite foldrBits_go_0.
-    rewrite popCount_N_0.
     reflexivity.
   - clear bm H. intros bm Hbm IH l.
     rewrite !@foldrBits_go_revNat_bm with (bm := bm) by isBitMask.
@@ -6160,7 +6177,7 @@ Proof.
   intros.
   revert x; induction H; intro x.
   + simpl.
-    unfold bitCount_N.
+    unfold bitcount.
     rewrite <- popCount_N_length_toList_go by isBitMask.
     simpl.
     rewrite Z.add_0_r.
@@ -6190,7 +6207,7 @@ Proof.
   * simpl. rewrite Z.add_0_r. reflexivity.
   * destruct HD.
     + simpl.
-      unfold bitCount_N.
+      unfold bitcount.
       rewrite <- popCount_N_length_toList_go by isBitMask.
       simpl. rewrite Z.add_0_r.
       reflexivity.
@@ -6204,12 +6221,7 @@ Proof.
          rewrite !app_length.
          simpl length.
          unfold Int in *.
-         (* Why does Omega not solve this? *)
-         rewrite plus_0_r.
-         rewrite !Nat2Z.inj_add.
-         rewrite <- !Z.add_assoc.
-         f_equal.
-         apply Z.add_comm.
+         Nomega.
       -- erewrite toList_go_append with (s := s1) by eassumption.
          erewrite toList_go_append with (s := s2) by eassumption.
          erewrite sizeGo_spec' by eassumption.
@@ -6217,11 +6229,7 @@ Proof.
          rewrite !app_length.
          simpl length.
          unfold Int in *.
-         (* Why does Omega not solve this? *)
-         rewrite plus_0_r.
-         rewrite !Nat2Z.inj_add.
-         rewrite <- !Z.add_assoc.
-         f_equal.
+         Nomega.
 Qed.
 
 Lemma size_spec:
@@ -6708,7 +6716,7 @@ Lemma valid_maskPowerOfTwo: forall s, WF s -> maskPowerOfTwo s = true.
   * reflexivity.
   * induction HD.
     - reflexivity.
-    - simpl. unfold bitCount_N. unfoldMethods.
+    - simpl. unfold bitcount. unfoldMethods.
       rewrite IHHD1, IHHD2.
       subst. simpl.
       rewrite andb_true_r.
@@ -6720,7 +6728,8 @@ Lemma valid_maskPowerOfTwo: forall s, WF s -> maskPowerOfTwo s = true.
       simpl Z.to_N.
       rewrite Z2N.inj_pred.
       rewrite N2Z.id.
-      apply popCount_N_pow2_1.
+      rewrite N_popcount_pow2.
+      reflexivity.
 Qed.
 
 Lemma Foldable_all_forallb:

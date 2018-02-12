@@ -136,6 +136,17 @@ Local Definition Eq___IntSet_op_zeze__ : IntSet -> IntSet -> bool :=
 Definition indexOfTheOnlyBit :=
   fun x => Coq.ZArith.BinInt.Z.of_N (Coq.NArith.BinNat.N.log2 x).
 
+Definition lowestBitSet : Nat -> GHC.Num.Int :=
+  fun x => indexOfTheOnlyBit (Utils.Containers.Internal.BitUtil.lowestBitMask x).
+
+Definition unsafeFindMin : IntSet -> option Key :=
+  fix unsafeFindMin arg_0__
+        := match arg_0__ with
+             | Nil => None
+             | Tip kx bm => Some GHC.Base.$ (kx GHC.Num.+ lowestBitSet bm)
+             | Bin _ _ l _ => unsafeFindMin l
+           end.
+
 Definition highestBitSet : Nat -> GHC.Num.Int :=
   fun x => indexOfTheOnlyBit (Utils.Containers.Internal.BitUtil.highestBitMask x).
 
@@ -145,20 +156,6 @@ Definition unsafeFindMax : IntSet -> option Key :=
              | Nil => None
              | Tip kx bm => Some GHC.Base.$ (kx GHC.Num.+ highestBitSet bm)
              | Bin _ _ _ r => unsafeFindMax r
-           end.
-
-Definition lowestBitMask : Nat -> Nat :=
-  fun x => x Data.Bits..&.(**) GHC.Num.negate x.
-
-Definition lowestBitSet : Nat -> GHC.Num.Int :=
-  fun x => indexOfTheOnlyBit (lowestBitMask x).
-
-Definition unsafeFindMin : IntSet -> option Key :=
-  fix unsafeFindMin arg_0__
-        := match arg_0__ with
-             | Nil => None
-             | Tip kx bm => Some GHC.Base.$ (kx GHC.Num.+ lowestBitSet bm)
-             | Bin _ _ l _ => unsafeFindMin l
            end.
 
 Program Definition foldlBits {a}
@@ -172,15 +169,18 @@ Program Definition foldlBits {a}
                                                                                    GHC.Num.fromInteger 0)
                                                    then acc
                                                    else match arg_0__ , arg_1__ with
-                                                          | bm , acc => match lowestBitMask bm with
-                                                                          | bitmask => match indexOfTheOnlyBit
-                                                                                               bitmask with
-                                                                                         | bi => go (Data.Bits.xor bm
-                                                                                                                   bitmask)
-                                                                                                 ((f acc) GHC.Base.$!
-                                                                                                 (prefix GHC.Num.+ bi))
-                                                                                       end
-                                                                        end
+                                                          | bm , acc =>
+                                                            match Utils.Containers.Internal.BitUtil.lowestBitMask
+                                                                    bm with
+                                                              | bitmask => match indexOfTheOnlyBit bitmask with
+                                                                             | bi => go (Data.Bits.xor bm bitmask) ((f
+                                                                                                                   acc)
+                                                                                                                   GHC.Base.$!
+                                                                                                                   (prefix
+                                                                                                                   GHC.Num.+
+                                                                                                                   bi))
+                                                                           end
+                                                            end
                                                         end
                               end) in
             go bitmap z.
@@ -219,15 +219,18 @@ Program Definition foldl'Bits {a}
                                                                                    GHC.Num.fromInteger 0)
                                                    then acc
                                                    else match arg_0__ , arg_1__ with
-                                                          | bm , acc => match lowestBitMask bm with
-                                                                          | bitmask => match indexOfTheOnlyBit
-                                                                                               bitmask with
-                                                                                         | bi => go (Data.Bits.xor bm
-                                                                                                                   bitmask)
-                                                                                                 ((f acc) GHC.Base.$!
-                                                                                                 (prefix GHC.Num.+ bi))
-                                                                                       end
-                                                                        end
+                                                          | bm , acc =>
+                                                            match Utils.Containers.Internal.BitUtil.lowestBitMask
+                                                                    bm with
+                                                              | bitmask => match indexOfTheOnlyBit bitmask with
+                                                                             | bi => go (Data.Bits.xor bm bitmask) ((f
+                                                                                                                   acc)
+                                                                                                                   GHC.Base.$!
+                                                                                                                   (prefix
+                                                                                                                   GHC.Num.+
+                                                                                                                   bi))
+                                                                           end
+                                                            end
                                                         end
                               end) in
             go bitmap z.
@@ -359,7 +362,8 @@ Definition foldrBits {a}
                     | num_2__ , acc => if num_2__ GHC.Base.== GHC.Num.fromInteger 0 : bool
                                        then acc
                                        else match arg_0__ , arg_1__ with
-                                              | bm , acc => match lowestBitMask bm with
+                                              | bm , acc => match Utils.Containers.Internal.BitUtil.lowestBitMask
+                                                                    bm with
                                                               | bitmask => match indexOfTheOnlyBit bitmask with
                                                                              | bi => go (Data.Bits.xor bm bitmask) ((f
                                                                                                                    GHC.Base.$!
@@ -450,7 +454,8 @@ Definition foldr'Bits {a}
                     | num_2__ , acc => if num_2__ GHC.Base.== GHC.Num.fromInteger 0 : bool
                                        then acc
                                        else match arg_0__ , arg_1__ with
-                                              | bm , acc => match lowestBitMask bm with
+                                              | bm , acc => match Utils.Containers.Internal.BitUtil.lowestBitMask
+                                                                    bm with
                                                               | bitmask => match indexOfTheOnlyBit bitmask with
                                                                              | bi => go (Data.Bits.xor bm bitmask) ((f
                                                                                                                    GHC.Base.$!
@@ -1209,6 +1214,7 @@ End Notations.
      GHC.Num.Int GHC.Num.Word GHC.Num.negate GHC.Num.op_zm__ GHC.Num.op_zp__
      GHC.Real.fromIntegral GHC.Wf.wfFix2 Utils.Containers.Internal.BitUtil.bitcount
      Utils.Containers.Internal.BitUtil.highestBitMask
+     Utils.Containers.Internal.BitUtil.lowestBitMask
      Utils.Containers.Internal.BitUtil.shiftLL
      Utils.Containers.Internal.BitUtil.shiftRL
 *)

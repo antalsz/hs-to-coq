@@ -2892,7 +2892,20 @@ Hint Resolve isBitMask_log2_lt_WIDTH : isBitMask.
 Lemma isBitMask_ctz_lt_WIDTH:
   forall bm,
   isBitMask0 bm -> (N_ctz bm < WIDTH)%N.
-Admitted.
+Proof.
+  intros.
+  destruct (N.ltb_spec (N_ctz bm) WIDTH); try assumption; exfalso.
+  assert (bm = 0%N).
+  { apply N.bits_inj; intro j.
+    rewrite N.bits_0.
+    destruct (N.ltb_spec j WIDTH).
+    + apply N_bits_below_ctz; Nomega.
+    + apply isBitMask0_outside; assumption.
+  }
+  subst. unfold WIDTH in H0.
+  simpl in H0.
+  Nomega.
+Qed.
 Hint Resolve isBitMask_ctz_lt_WIDTH : isBitMask.
 
 
@@ -2916,11 +2929,16 @@ Qed.
 Hint Resolve isBitMask0_revNat : isBitMask.
 
 
-
 Lemma isBitMask0_clearbit:
   forall n i,
   isBitMask0 n -> isBitMask0 (N.clearbit n i).
-Admitted.
+Proof.
+  intros.
+  unfold isBitMask0 in *.
+  eapply N.le_lt_trans.
+  apply clearbit_le.
+  assumption.
+Qed.
 Hint Resolve isBitMask0_clearbit : isBitMask.
 
 Lemma clearbit_revNat:

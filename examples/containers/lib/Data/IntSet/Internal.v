@@ -51,11 +51,6 @@ Inductive IntSet : Type := Bin : Prefix -> Mask -> IntSet -> IntSet -> IntSet
 
 Inductive Stack : Type := Push : Prefix -> IntSet -> Stack -> Stack
                        |  Nada : Stack.
-
-(* The Haskell code containes partial or untranslateable code, which needs the
-   following *)
-
-Axiom unsafeFix : forall {a}, (a -> a) -> a.
 (* Midamble *)
 
 
@@ -357,16 +352,19 @@ Definition revNat : Nat -> Nat :=
 Definition revNatSafe n :=
   Coq.NArith.BinNat.N.modulo (revNat n) (Coq.NArith.BinNat.N.pow 2 64).
 
-Definition foldrBits {a}
-    : GHC.Num.Int -> (GHC.Num.Int -> a -> a) -> a -> Nat -> a :=
-  fun prefix f z bitmap =>
-    let go :=
-      unsafeFix (fun go arg_0__ arg_1__ =>
-                  match arg_0__ , arg_1__ with
-                    | num_2__ , acc => if num_2__ GHC.Base.== GHC.Num.fromInteger 0 : bool
-                                       then acc
-                                       else match arg_0__ , arg_1__ with
-                                              | bm , acc => match Utils.Containers.Internal.BitUtil.lowestBitMask
+Program Definition foldrBits {a}
+            : GHC.Num.Int -> (GHC.Num.Int -> a -> a) -> a -> Nat -> a :=
+          fun prefix f z bitmap =>
+            let go :=
+              GHC.Wf.wfFix2 Coq.Init.Peano.lt (fun arg_0__ arg_1__ =>
+                              Coq.NArith.BinNat.N.to_nat arg_0__) _ (fun arg_0__ arg_1__ go =>
+                              match arg_0__ , arg_1__ with
+                                | num_2__ , acc => if Bool.Sumbool.sumbool_of_bool (num_2__ GHC.Base.==
+                                                                                   GHC.Num.fromInteger 0)
+                                                   then acc
+                                                   else match arg_0__ , arg_1__ with
+                                                          | bm , acc =>
+                                                            match Utils.Containers.Internal.BitUtil.lowestBitMask
                                                                     bm with
                                                               | bitmask => match indexOfTheOnlyBit bitmask with
                                                                              | bi => go (Data.Bits.xor bm bitmask) ((f
@@ -383,9 +381,10 @@ Definition foldrBits {a}
                                                                                                                    acc)
                                                                            end
                                                             end
-                                            end
-                  end) in
-    go (revNatSafe bitmap) z.
+                                                        end
+                              end) in
+            go (revNatSafe bitmap) z.
+Solve Obligations with (BitTerminationProofs.termination_foldl).
 
 Definition foldr {b} : (Key -> b -> b) -> b -> IntSet -> b :=
   fun f z =>
@@ -449,16 +448,19 @@ Admit Obligations.
 Definition fold {b} : (Key -> b -> b) -> b -> IntSet -> b :=
   foldr.
 
-Definition foldr'Bits {a}
-    : GHC.Num.Int -> (GHC.Num.Int -> a -> a) -> a -> Nat -> a :=
-  fun prefix f z bitmap =>
-    let go :=
-      unsafeFix (fun go arg_0__ arg_1__ =>
-                  match arg_0__ , arg_1__ with
-                    | num_2__ , acc => if num_2__ GHC.Base.== GHC.Num.fromInteger 0 : bool
-                                       then acc
-                                       else match arg_0__ , arg_1__ with
-                                              | bm , acc => match Utils.Containers.Internal.BitUtil.lowestBitMask
+Program Definition foldr'Bits {a}
+            : GHC.Num.Int -> (GHC.Num.Int -> a -> a) -> a -> Nat -> a :=
+          fun prefix f z bitmap =>
+            let go :=
+              GHC.Wf.wfFix2 Coq.Init.Peano.lt (fun arg_0__ arg_1__ =>
+                              Coq.NArith.BinNat.N.to_nat arg_0__) _ (fun arg_0__ arg_1__ go =>
+                              match arg_0__ , arg_1__ with
+                                | num_2__ , acc => if Bool.Sumbool.sumbool_of_bool (num_2__ GHC.Base.==
+                                                                                   GHC.Num.fromInteger 0)
+                                                   then acc
+                                                   else match arg_0__ , arg_1__ with
+                                                          | bm , acc =>
+                                                            match Utils.Containers.Internal.BitUtil.lowestBitMask
                                                                     bm with
                                                               | bitmask => match indexOfTheOnlyBit bitmask with
                                                                              | bi => go (Data.Bits.xor bm bitmask) ((f
@@ -475,9 +477,10 @@ Definition foldr'Bits {a}
                                                                                                                    acc)
                                                                            end
                                                             end
-                                            end
-                  end) in
-    go (revNatSafe bitmap) z.
+                                                        end
+                              end) in
+            go (revNatSafe bitmap) z.
+Solve Obligations with (BitTerminationProofs.termination_foldl).
 
 Definition foldr' {b} : (Key -> b -> b) -> b -> IntSet -> b :=
   fun f z =>

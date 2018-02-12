@@ -16,8 +16,10 @@ termination go in Data.IntSet.Internal.foldlBits {measure (Coq.NArith.BinNat.N.t
 obligations Data.IntSet.Internal.foldlBits BitTerminationProofs.termination_foldl
 termination go in Data.IntSet.Internal.foldl'Bits {measure (Coq.NArith.BinNat.N.to_nat arg_0__)}
 obligations Data.IntSet.Internal.foldl'Bits BitTerminationProofs.termination_foldl
-nonterminating Data.IntSet.Internal.foldrBits
-nonterminating Data.IntSet.Internal.foldr'Bits
+termination go in Data.IntSet.Internal.foldrBits {measure (Coq.NArith.BinNat.N.to_nat arg_0__)}
+obligations Data.IntSet.Internal.foldrBits BitTerminationProofs.termination_foldl
+termination go in Data.IntSet.Internal.foldr'Bits {measure (Coq.NArith.BinNat.N.to_nat arg_0__)}
+obligations Data.IntSet.Internal.foldr'Bits BitTerminationProofs.termination_foldl
 
 # partial
 skip Data.IntSet.Internal.findMax

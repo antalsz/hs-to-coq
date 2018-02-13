@@ -98,6 +98,11 @@ This is the annotated export list of IntSet. The first column says:
  V  , bitmapOf
  V  , zero
 
+Additionall stuff:
+ 
+ * valid: (from the test suite): correctness (but not completeness of)
+ * Eq IntSet: Lawfulness.
+
 *)
 
 Require Import Omega.
@@ -4130,6 +4135,22 @@ Proof.
     intuition congruence.
 Qed.
 
+(** *** Specifying [nequal] *)
+
+Lemma nequal_spec:
+  forall s1 s2, nequal s1 s2 = negb (equal s1 s2).
+Proof.
+  induction s1; intro s2; destruct s2;
+    try solve [simpl; intuition congruence].
+  * simpl. unfoldMethods.
+    rewrite !negb_andb.
+    rewrite IHs1_1.
+    rewrite IHs1_2.
+    intuition congruence.
+  * simpl. unfoldMethods.
+    rewrite !negb_andb.
+    intuition congruence.
+Qed.
 
 (** *** Specifying [isSubsetOf] *)
 
@@ -7666,3 +7687,40 @@ Module Foo: WSfun(N_as_OT).
   Qed.
 
 End Foo.
+
+(** ** Type class laws *)
+
+(** *** [Eq] *)
+
+Require Import Proofs.GHC.Base.
+
+(* It is a bit stupid to have to prove these when they follow from [EqExact] *)
+Instance EqLaws_IntSet : EqLaws IntSet.
+Proof.
+  split.
+  * change (forall x, equal x x = true).
+    intros. rewrite equal_spec. reflexivity.
+  * change (forall x y, equal x y = equal y x).
+    intros.
+    apply eq_iff_eq_true.
+    rewrite !equal_spec.
+    intuition congruence.
+  * change (forall y x z, equal x y = true -> equal y z = true -> equal x z = true).
+    intros. rewrite !equal_spec in *. congruence.
+  * intros.
+    unfoldMethods.
+    unfold Internal.Eq___IntSet_op_zsze__.
+    rewrite !nequal_spec.
+    rewrite negb_involutive.
+    reflexivity.
+Qed.
+
+Instance EqExact_IntSet : EqExact IntSet.
+Proof.
+  split.
+  intros x y.
+  change (reflect (x = y) (equal x y)).
+  apply iff_reflect.
+  rewrite equal_spec.
+  reflexivity.
+Qed.

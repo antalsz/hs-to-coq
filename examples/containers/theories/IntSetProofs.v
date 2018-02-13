@@ -79,7 +79,7 @@ This is the annotated export list of IntSet. The first column says:
     -- ** List
  F  , elems
  F  , toList
-    , fromList
+ V  , fromList
 
     -- ** Ordered list
  V  , toAscList
@@ -6194,6 +6194,68 @@ Proof.
   induction xs.
   * reflexivity.
   * simpl. rewrite IHxs. reflexivity.
+Qed.
+
+(** *** Specifying [fromList] *)
+
+Require Import Proofs.Data.Foldable.
+
+Lemma Forall_rev:
+  forall A P (l : list A), Forall P (rev l) <-> Forall P l.
+Proof.
+  intros.
+  rewrite !Forall_forall.
+  setoid_rewrite <- in_rev.
+  reflexivity.
+Qed.
+
+Lemma fromList_Sem:
+  forall l,
+  Forall (fun i => 0 <= i) l ->
+  exists f,
+  Sem (fromList l) f /\ (forall i, f i = true <-> In i l).
+Proof.
+  intros l.
+  unfold fromList.
+  rewrite hs_coq_foldl_list.
+  (* Rewrite to use fold_right instead of fold_left *)
+  enough (forall l,
+    Forall (fun i => 0 <= i) l ->
+    exists f : Z -> bool,
+    Sem (fold_right (fun (x : Key) (t : IntSet) => insert x t) empty l) f /\
+    (forall i : Z, f i = true <-> In i l)).
+  {  specialize (H (rev l)).
+     rewrite fold_left_rev_right in H.
+     setoid_rewrite <- in_rev in H.
+     rewrite Forall_rev in H.
+     assumption.
+  }
+  (* Now induction *)
+  clear l.
+  intros l H.
+  induction H; intros.
+  * exists (fun _ => false).
+    split.
+    + constructor. auto.
+    + intuition. congruence.
+  * destruct IHForall as [?[??]].
+    eexists.
+    split.
+    + simpl.
+      eapply insert_Sem; try eassumption.
+      intro; reflexivity.
+    + intro i. specialize (H2 i).
+      simpl.
+      destruct (Z.eqb_spec i x); intuition.
+Qed.
+
+Lemma fromList_WF:
+  forall l, Forall (fun i => 0 <= i) l -> WF (fromList l).
+Proof.
+  intros.
+  destruct (fromList_Sem l H) as [?[??]].
+  econstructor.
+  eassumption.
 Qed.
 
 (** *** Specifying [filter] *)

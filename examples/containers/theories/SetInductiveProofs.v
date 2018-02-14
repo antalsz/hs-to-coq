@@ -34,24 +34,23 @@ Definition isUB : bound -> e -> bool :=
     | None => true
   end.
 
-Inductive Desc : Set_ e -> Size -> bound -> bound -> (e -> bool) -> Prop :=
-  | DescTip : forall lb ub, Desc Tip 0%Z lb ub (fun _ => false)
+Inductive Desc : Set_ e -> bound -> bound -> (e -> bool) -> Prop :=
+  | DescTip : forall lb ub, Desc Tip lb ub (fun _ => false)
   | DescBin :
     forall lb ub,
-    forall s1 sz1 f1,
-    forall s2 sz2 f2,
-    forall x sz sz' f,
-    Desc s1 sz1 lb (Some x) f1 ->
-    Desc s2 sz2 (Some x) ub f2 ->
+    forall s1 f1,
+    forall s2 f2,
+    forall x sz f,
+    Desc s1 lb (Some x) f1 ->
+    Desc s2 (Some x) ub f2 ->
     isLB lb x = true ->
     isUB ub x = true->
-    sz = (1 + sz1 + sz2)%Z ->
-    sz' = sz ->
+    sz = (1 + size s1 + size s2)%Z ->
     (forall i, f i = (i == x) || f1 i || f2 i) ->
-    Desc (Bin sz' x s1 s2) sz lb ub f.
+    Desc (Bin sz x s1 s2) lb ub f.
 
 Inductive Sem : Set_ e -> (e -> bool) -> Prop :=
-  | DescSem : forall s sz lb ub f (HD : Desc s sz lb ub f), Sem s f.
+  | DescSem : forall s lb ub f (HD : Desc s lb ub f), Sem s f.
 
 (** The highest level: Just well-formedness.
  *)
@@ -60,42 +59,46 @@ Definition WF (s : Set_ e) : Prop := exists f, Sem s f.
 
 
 Lemma Desc_outside_below:
- forall {s sz lb ub f i},
-  Desc s sz (Some lb) ub f ->
+ forall {s lb ub f i},
+  Desc s (Some lb) ub f ->
   i < lb = true ->
   f i = false.
 Admitted.
 
 Lemma Desc_outside_above:
- forall {s sz lb ub f i},
-  Desc s sz lb (Some ub) f ->
+ forall {s lb ub f i},
+  Desc s lb (Some ub) f ->
   i > ub = true ->
   f i = false.
 Admitted.
 
-(* This has all the preconditions of [Bin], besides the one about [sz'] *)
+(* This has all the preconditions of [Bin], besides the one about size *)
+(* probably misses some post-conditions about size *)
 Axiom balanceL_Desc:
     forall lb ub,
-    forall s1 sz1 f1,
-    forall s2 sz2 f2,
-    forall x sz f,
-    Desc s1 sz1 lb (Some x) f1 ->
-    Desc s2 sz2 (Some x) ub f2 ->
+    forall s1 f1,
+    forall s2 f2,
+    forall x f,
+    Desc s1 lb (Some x) f1 ->
+    Desc s2 (Some x) ub f2 ->
     isLB lb x = true ->
     isUB ub x = true->
-    sz = (1 + sz1 + sz2)%Z ->
     (forall i, f i = (i == x) || f1 i || f2 i) ->
-    Desc (balanceL x s1 s2) sz lb ub f.
+    Desc (balanceL x s1 s2) lb ub f.
+    
+Axiom size_balanceL:
+  forall x (s1 s2 : Set_ e),
+  size (balanceL x s1 s2) = (1 + size s1 + size s2)%Z.
 
 
 Lemma member_Desc:
- forall {s sz lb ub f i}, Desc s sz lb ub f -> member i s = f i.
+ forall {s lb ub f i}, Desc s lb ub f -> member i s = f i.
 Proof.
   intros.
   induction H1.
   * reflexivity.
   * subst; simpl.
-    rewrite H5; clear H5.
+    rewrite H4; clear H4.
     destruct (compare i x) eqn:?.
     + rewrite compare_Eq in *.
       rewrite Heqc.
@@ -114,12 +117,13 @@ Proof.
       reflexivity.
 Qed.
 
+
 Lemma singleton_Desc:
-  forall x  lb ub f',
+  forall x lb ub f',
   isLB lb x = true ->
   isUB ub x = true ->
   (forall i, f' i = (i == x)) ->
-  Desc (singleton x) 1%Z lb ub f'.
+  Desc (singleton x) lb ub f'.
 Proof.
   intros.
   unfold singleton.
@@ -129,7 +133,6 @@ Proof.
   * apply DescTip.
   * assumption.
   * assumption.
-  * omega.
   * reflexivity.
   * intro i. rewrite H3.
     rewrite !orb_false_r.
@@ -164,91 +167,87 @@ Proof.
   * reflexivity.
 Qed.
 
-Lemma insert'_unchanged:
-  forall y,
-  forall s sz lb ub f,
-  Desc s sz lb ub f ->
-(*
-  isLB lb y = true ->
-  isUB ub y = true ->
-*)
-  insert' y s = s ->
-  f y = true.
-Admitted.
-
 Lemma insert_Desc:
   forall y,
-  forall s sz lb ub f f',
-  Desc s sz lb ub f ->
+  forall s lb ub f f',
+  Desc s lb ub f ->
   isLB lb y = true ->
   isUB ub y = true ->
   (forall i, f' i = (i == y) || f i) ->
-  Desc (insert y s) (if f y then sz else (1 + sz)%Z) lb ub f'.
+  Desc (insert y s) lb ub f' /\
+  size (insert y s) = (if f y then size s else (1 + size s)%Z).
 Proof.
-  intros ??????? HD HLB HUB Hf.
+  intros ?????? HD HLB HUB Hf.
   rewrite insert_insert'.
   revert f' Hf.
   induction HD; intros.
   * unfold insert, Datatypes.id.
+    split; try reflexivity.
     apply singleton_Desc; try assumption.
     intro i. rewrite Hf. rewrite orb_false_r. reflexivity.
   * subst; cbn -[Z.add].
     destruct (compare y x) eqn:?.
     + rewrite compare_Eq in *.
-      replace (f y) with true by (rewrite H5; rewrite Heqc; reflexivity).
+      replace (f y) with true by (rewrite H4; rewrite Heqc; reflexivity).
       destruct (PtrEquality.ptrEq _ _) eqn:Hpe; only 2: clear Hpe.
       - apply PtrEquality.ptrEq_eq in Hpe; subst.
+        split; try reflexivity.
         eapply DescBin; try eassumption; try reflexivity.
-        intro i. rewrite Hf, H5. rewrite !orb_assoc, orb_diag. reflexivity.
+        intro i. rewrite Hf, H4. rewrite !orb_assoc, orb_diag. reflexivity.
       - unfold Datatypes.id.
+        split; try reflexivity.
         eapply DescBin. 
-        ** assert (Desc s1 sz1 lb (Some y) f1) by admit.
+        ** assert (Desc s1 lb (Some y) f1) by admit.
            eassumption.
-        ** assert (Desc s2 sz2 (Some y) ub f2) by admit.
+        ** assert (Desc s2 (Some y) ub f2) by admit.
            eassumption.
         ** assumption.
         ** assumption.
         ** reflexivity.
-        ** reflexivity.
-        ** intro i. rewrite Hf. rewrite H5.
+        ** intro i. rewrite Hf. rewrite H4.
            replace (i == x) with (i == y) by admit. (* transitivity of == *)
            rewrite !orb_assoc.
            rewrite orb_diag.
            reflexivity.
     + rewrite compare_Lt in *.
+      edestruct IHHD1; try assumption; try (intro; reflexivity).
+      rename H3 into IHHD1_Desc, H5 into IHHD1_size.
       destruct (PtrEquality.ptrEq _ _) eqn:Hpe; only 2: clear Hpe.
       - apply PtrEquality.ptrEq_eq in Hpe; subst.
-        rewrite H5.
+        rewrite Hpe in IHHD1_size.
+        assert (Hf1 : f1 y = true). {
+          destruct (f1 y) eqn:?; auto; try omega.
+          contradict IHHD1_size.
+          generalize (size s1); unfold Int; intros; omega.
+        }
+        rewrite H4.
         rewrite lt_not_eq by assumption.
-        erewrite (insert'_unchanged y s1) by eassumption.
+        rewrite Hf1.
         rewrite (Desc_outside_below HD2) by assumption.
         rewrite orb_false_r, orb_false_l.
+        split; try reflexivity.
         eapply DescBin; try eassumption; try reflexivity.
-        intro i. rewrite Hf, H5. rewrite !orb_assoc.
-        assert (f1 y = true) by (eapply (insert'_unchanged y s1); try eassumption).
+        intro i. rewrite Hf, H4. rewrite !orb_assoc.
         (* can be automated from here *)
         assert (i == y = true -> f1 i = true) by admit.
         destruct (i == y) eqn:?, (i == x)  eqn:?, (f1 i)  eqn:?, (f2 i)  eqn:?; 
           intuition congruence.
-      - eapply balanceL_Desc. 
-        ** apply IHHD1.
-           -- assumption.
-           -- simpl. assumption.
-           -- intro i. reflexivity.
-        ** eassumption.
-        ** assumption.
-        ** assumption.
-        ** rewrite H5.
-           rewrite (Desc_outside_below HD2) by assumption.
-           rewrite lt_not_eq by assumption.
-           rewrite orb_false_r, orb_false_l.
-           destruct (f1 y); omega.
+      - split; try reflexivity.
+        eapply balanceL_Desc; try eassumption.
         ** intro i.
            rewrite Hf.
-           rewrite H5.
+           rewrite H4.
            rewrite !orb_assoc.
            (* here I can use some tactics from IntSet *)
            destruct (i == y), (i == x); reflexivity.
+        ** rewrite size_balanceL.
+           rewrite IHHD1_size.
+           rewrite H4.
+           rewrite (Desc_outside_below HD2) by assumption.
+           rewrite lt_not_eq by assumption.
+           rewrite orb_false_r, orb_false_l.
+           generalize (size s1), (size s2); intros; unfold Int in *.
+           destruct (f1 y); omega.
     + (* analogue, to be done when the rest is complete *)
       admit.
 Admitted.

@@ -10,7 +10,6 @@ Require Import Tactics.
 
 Require Import Data.Set.Internal.
 Require Import Coq.FSets.FSetInterface.
-Require Import SetProofs.
 Require Import Omega.
 
 From mathcomp Require Import ssrbool ssreflect.
@@ -18,6 +17,31 @@ From mathcomp Require Import ssrbool ssreflect.
 Set Bullet Behavior "Strict Subproofs".
 
 Local Open Scope Z_scope.
+
+Section Option_Int.
+  Variables a b : option Int.
+
+  Ltac rewrite_option_eq :=
+    rewrite /op_zeze__ /Eq___option //= /op_zeze__ /Eq_Integer___ //=.
+
+  Lemma option_int_eqP :
+    reflect (a = b) (a GHC.Base.== b).
+  Proof.
+    rewrite /_GHC.Base.==_ /Eq___option /= /Base.Eq___option_op_zeze__.
+    destruct a; destruct b.
+    - rewrite_Int. eapply iffP.
+      + apply Z_eqP.
+      + move -> => //.
+      + case => //.
+    - constructor. discriminate.
+    - constructor. discriminate.
+    - constructor. reflexivity.
+  Qed.
+
+  Lemma option_int_eq :
+    a = b <-> a GHC.Base.== b.
+  Proof. apply rwP. apply option_int_eqP. Qed.
+End Option_Int.
 
 Definition partial_lt {a} `{GHC.Base.Ord a}
   (x : a) : a -> bool  :=
@@ -912,6 +936,141 @@ Proof.
   - apply bounded_left_relax with (lo:=e1); auto.
 Qed.
 
+
+Lemma insert_prop_helper : forall e s a b,
+    balanced s /\ bounded' s a b /\ validsize s ->
+    balanced (insert e s) /\ bounded' (insert e s) a b /\
+    validsize (insert e s) /\
+    (size (insert e s) = size s + 1 \/
+     size (insert e s) = size s).
+Proof.
+  intros e s.
+  induction s; intros a' b.
+  - intros [Hba [Hbo Hvs]].
+    rewrite /insert/=.
+    destruct_match; derive_constraints.
+    + destruct (PtrEquality.ptrEq e a); [intuition|].
+      replace (Datatypes.id e) with e; auto.
+      intuition.
+      solve_bounded';
+        [solve_option_lt_dec|
+         solve_option_lt_dec |
+         eapply bounded_right_relax;[right; eassumption| auto] |
+         eapply bounded_left_relax; [right; eassumption| auto]].
+    + destruct_match; intuition.
+      * apply balanceL_balanced.
+        Search WF.
+        --  IHs1.
+      * (** WF (insert e s2) *)
+          by apply IHs1.
+      * (** (insert e s2) and s3 satisfy [before_balancedL]'s
+              pre-condbitions. *)
+        rewrite -/insert /before_balancedL.
+        apply IHs1 in Hwfl; destruct Hwfl.
+        (** cases analysis: 
+             did we insert an element to s2?  *)
+        destruct H0 as [H0 | H0].
+        -- (** we did *)
+          destruct s2; destruct s3; derive_constraints.
+            all: try (rewrite_for_omega; intros; omega).
+            all: derive_compare;
+                 destruct_match; destruct_match;
+                 first
+                   [(rewrite_for_omega; intros; omega) |
+                    (apply IHs1 in Hwfl;
+                     destruct Hwfl as [_ [Hwlf' | Hwlf']];
+                     move: Hwlf'; rewrite /insert;
+                     move: Heq1 ->; move: Heq2 ->;
+                      rewrite_for_omega; intros; omega)].
+        -- (** we didn't *)
+          derive_constraints; subst.
+          rewrite H0.
+          destruct Hbalanced;
+            (left + right); omega.
+      * (** prove [ordered'] pre-condition *)
+      admit.
+    +
+      autorewrite with elt_compare. intros; eauto.
+      Search Base.compare.
+      solve_bounded'.
+      Check bounded_Bin_iff.
+    + destruct (PtrEquality.ptrEq e a) eqn:HH.
+      * admit.
+      * exfalso.
+        clear -Heq HH.
+        derive_constraints.
+        derive_compare.
+        replace (Datatypes.id e) with e; auto.
+        
+        derive_constraints. [assumption|].
+       split; derive_constraints.
+    
+    +
+      intuition.
+    + 
+      replace (Datatypes.id e) with e; auto.
+    + eapply bounded_right_relax;
+          try solve [right; apply Heq].
+        solve_bounded'.
+    + (** s is Bin, e = a, prove: WF (insert e s) *)
+      destruct (PtrEquality.ptrEq e a); [assumption|].
+        replace (Datatypes.id e) with e; auto.
+        apply elt_compare_eq in Heq. move: Hwf.
+        rewrite /WF /valid'.
+        do 2 case /andP=>//; intros.
+        repeat (apply /andP=>//; split=>//).
+      * unfold ordered' in b.
+        eapply bounded_right_relax;
+          try solve [right; apply Heq].
+        solve_bounded'.
+      * unfold ordered' in b.
+        eapply bounded_left_relax;
+          try solve [right; apply Heq].
+        solve_bounded'.
+    + (** prove [size (insert e s) = size s] *)
+      destruct_match; [solve [auto]|].
+      replace (Datatypes.id e) with e.
+      right. rewrite /size=>//. auto.
+    + (** s is Bin, e < a, prove: WF (insert e s) *)
+      intros. destruct_match.
+      apply balanceL_WF with (s:=0); auto.
+      * (** WF (insert e s2) *)
+          by apply IHs1.
+      * (** (insert e s2) and s3 satisfy [before_balancedL]'s
+              pre-condbitions. *)
+        rewrite -/insert /before_balancedL.
+        apply IHs1 in Hwfl; destruct Hwfl.
+        (** cases analysis: 
+             did we insert an element to s2?  *)
+        destruct H0 as [H0 | H0].
+        -- (** we did *)
+          destruct s2; destruct s3; derive_constraints.
+            all: try (rewrite_for_omega; intros; omega).
+            all: derive_compare;
+                 destruct_match; destruct_match;
+                 first
+                   [(rewrite_for_omega; intros; omega) |
+                    (apply IHs1 in Hwfl;
+                     destruct Hwfl as [_ [Hwlf' | Hwlf']];
+                     move: Hwlf'; rewrite /insert;
+                     move: Heq1 ->; move: Heq2 ->;
+                      rewrite_for_omega; intros; omega)].
+        -- (** we didn't *)
+          derive_constraints; subst.
+          rewrite H0.
+          destruct Hbalanced;
+            (left + right); omega.
+      * (** prove [ordered'] pre-condition *)
+        
+        apply IHs1 in Hwfl.
+        destruct Hwfl as [Hord' _].
+        move: Hord'.
+        do 2 case /andP.
+        unfold ordered' in *.
+        intros _ Hord' _.
+        solve_bounded'.
+        eapply bounded_right_relax.
+
 Lemma insert_prop : forall e s,
     WF s ->
     WF (insert e s) /\
@@ -970,19 +1129,97 @@ Proof.
           rewrite H0.
           destruct Hbalanced;
             (left + right); omega.
-      * (** prove [before_ordered] pre-conditions *)
-        rewrite -/insert.
-        unfold ordered' in *.
-        (*move: Hord0.*)
+      * (** prove [ordered'] pre-condition *)
+        
         apply IHs1 in Hwfl.
-        destruct Hwfl as [ _ [_ Hord']]
-          specialize (Hord' a)
-          derive_constraints.
-          solve_bounded'.
-          ; destruct Hord'.
-          apply H=>//. autorewrite with elt_compare in *. auto.
-          unfold bounded'
-           (*case /andP=>// => _ _ Hlo Hhi.          
-          split; [| split; [| split;
-                              [| split; [| split]]]]=>//.*)
+        destruct Hwfl as [Hord' _].
+        move: Hord'.
+        do 2 case /andP.
+        unfold ordered' in *.
+        intros _ Hord' _.
+        solve_bounded'.
+        eapply bounded_right_relax.
+        
+          Ltac solve_local_bounded_with_relax :=
+    solve_local_bounded; rewrite -/local_bounded;
+    ((eapply local_bounded_right_relax; [| eassumption];
+      intros; eapply partial_lt_relax;
+      (idtac + (multimatch goal with
+                | [H: E.eq _ _ |- _] => apply E.eq_sym in H
+                end))) +
+     (eapply local_bounded_left_relax; [| eassumption];
+      intros; eapply partial_gt_relax;
+      (idtac + (multimatch goal with
+                | [H: E.eq _ _ |- _] => apply E.eq_sym in H
+                end)))); solve [eauto].
+        clear -Hord' Hord.        
+        unfold WF, valid' in *.
+        derive_constraints.
+        unfold ordered' in *.
+        solve_bounded'.
+        ordered'  (insert e s2 s3))
+        move: Hord0.
          
+        
+        apply IHs1 in Hwfl.
+        destruct Hwfl as [Hord' _].
+       
+        
+        
+        autorewrite with elt_compare in *.
+        solve_bounded'.
+        
+
+
+        * (** prove [before_ordered] pre-conditions *)
+          rewrite /before_ordered.
+          move: Hord. rewrite /ordered. rewrite -/local_bounded.
+          case /and4P=>// => _ _ Hlo Hhi.
+          split; [| split; [| split; [| split; [| split]]]]=>//.
+          apply IHs2 in Hwfr. destruct Hwfr as [ _ [_ Hord']].
+          specialize (Hord' a); destruct Hord'.
+          apply H0=>//. autorewrite with elt_compare in *. auto.
+      + destruct_match.
+        * rewrite_for_omega. intros. omega.
+        * rewrite balanceR_add_size=>//.
+          -- apply IHs2 in Hwfr.
+             destruct Hwfr as [_ [Hwfr' _]];
+             move: Hwfr'; rewrite /insert.
+             rewrite_for_omega. intros. omega.
+          -- apply IHs2 in Hwfr. tauto.
+      + intros; split; intros; destruct_match;
+          apply balanceR_ordered=>//;
+                try solve [by apply IHs2].
+        * rewrite /before_balancedR. apply IHs2 in Hwfr.
+          destruct Hwfr as [? [Hs _]]. move: Hs. rewrite /insert.
+          rewrite_for_omega; intros; omega.
+        * rewrite /with_invariant_upper_bounded_by in H2.
+          derive_compare. rewrite /before_ordered.
+          split; [| split; [| split; [| split; [| split]]]]=>//.
+          all: try (intros; autorewrite with elt_compare in *;
+                    intuition; OrdFacts.order).
+          apply IHs2 in Hwfr. destruct Hwfr as [ _ [_ Hord']].
+          specialize (Hord' a0); destruct Hord'.
+          apply H2=>//; rewrite /non_strict_increasing; try intros;
+            autorewrite with elt_compare in *; auto.
+          intuition; OrdFacts.order.
+        * rewrite /before_balancedR. apply IHs2 in Hwfr.
+          destruct Hwfr as [? [Hs _]]. move: Hs. rewrite /insert.
+          rewrite_for_omega; intros; omega.
+        * rewrite /with_invariant_lower_bounded_by in H2.
+          derive_compare. rewrite /before_ordered.
+          split; [| split; [| split; [| split; [| split]]]]=>//.
+          -- autorewrite with elt_compare =>//.
+          -- intros. autorewrite with elt_compare in *.
+             intuition; OrdFacts.order.
+          -- apply IHs2 in Hwfr. destruct Hwfr as [ _ [_ Hord']].
+             specialize (Hord' a); destruct Hord'.
+             apply H3=>//; try intros;
+               autorewrite with elt_compare in *; auto.
+    - simpl. elim. rewrite /singleton. split3.
+      + apply WF_singleton.
+      + left; reflexivity.
+      + intros; split; intros; apply /and3P=>//; split=>//.
+        * autorewrite with elt_compare. auto.
+        * autorewrite with elt_compare. auto.
+  Time Qed. (* Finished transaction in 10.382 secs (10.101u,0.266s) (successful) *)

@@ -46,7 +46,7 @@ Inductive Desc : Set_ e -> bound -> bound -> (e -> bool) -> Prop :=
     isLB lb x = true ->
     isUB ub x = true->
     sz = (1 + size s1 + size s2)%Z ->
-    (forall i, f i = (i == x) || f1 i || f2 i) ->
+    (forall i, f i = f1 i || (i == x) || f2 i) ->
     Desc (Bin sz x s1 s2) lb ub f.
 
 Inductive Sem : Set_ e -> (e -> bool) -> Prop :=
@@ -72,9 +72,10 @@ Lemma Desc_outside_above:
   f i = false.
 Admitted.
 
+
 (* This has all the preconditions of [Bin], besides the one about size *)
 (* probably misses some post-conditions about size *)
-Axiom balanceL_Desc:
+Lemma balanceL_Desc:
     forall lb ub,
     forall s1 f1,
     forall s2 f2,
@@ -83,9 +84,50 @@ Axiom balanceL_Desc:
     Desc s2 (Some x) ub f2 ->
     isLB lb x = true ->
     isUB ub x = true->
-    (forall i, f i = (i == x) || f1 i || f2 i) ->
+    (forall i, f i = f1 i || (i == x) || f2 i) ->
     Desc (balanceL x s1 s2) lb ub f.
-    
+Proof.
+  intros.
+  unfold balanceL.
+  inversion H1; inversion H2; subst.
+  * eapply DescBin.
+    - apply DescTip.
+    - apply DescTip.
+    - assumption.
+    - assumption.
+    - reflexivity.
+    - intro i. rewrite H5. subst.
+      reflexivity.
+  * eapply DescBin.
+    - apply DescTip.
+    - eapply DescBin; try eassumption; reflexivity.
+    - assumption.
+    - assumption.
+    - change (1 + (1 + size s0 + size s3) = (1 + 0 + (1 + size s0 + size s3)))%Z. omega.
+    - intro i. subst. rewrite H5.  reflexivity.
+  * subst.
+    inversion H6; inversion H7; subst.
+    + eapply DescBin; try eapply DescBin; try apply DescTip; try assumption; try reflexivity.
+      intro i. rewrite H5, H11. reflexivity.
+    + assert (s1 = Tip) by admit. (* If the input is well-balanced *)
+      assert (s2 = Tip) by admit. (* If the input is well-balanced *) 
+      subst.
+      inversion H15; subst. inversion H16; subst.
+      eapply DescBin; try eapply DescBin; try apply DescTip; try assumption; try reflexivity.
+      ** admit.
+      ** admit.
+      ** intro i. rewrite H5, H11, H20. rewrite !orb_assoc.
+         reflexivity.
+    + assert (s1 = Tip) by admit. (* If the input is well-balanced *)
+      assert (s2 = Tip) by admit. (* If the input is well-balanced *) 
+      subst.
+      inversion H10; subst. inversion H12; subst.
+      eapply DescBin; try eapply DescBin; try apply DescTip; try assumption; try reflexivity.
+      ** admit.
+      ** intro i. rewrite H5, H11, H16. rewrite !orb_assoc.
+         reflexivity.
+Admitted.
+
 Axiom size_balanceL:
   forall x (s1 s2 : Set_ e),
   size (balanceL x s1 s2) = (1 + size s1 + size s2)%Z.

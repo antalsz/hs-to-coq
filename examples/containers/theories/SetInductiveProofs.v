@@ -20,6 +20,9 @@ Axiom gt_not_eq : forall (x y : e),
   x > y = true -> x == y = false.
 Axiom lt_gt : forall (x y : e),
   (x > y) = (y < x).
+Axiom lt_trans : forall (x y z : e),
+  x < y = true -> y < z = true -> x < z = true.
+
 
 (** This is just like size, but with a type signature that does not confuse [omega] *)
 Definition size (s : Set_ e) : Z :=
@@ -140,14 +143,22 @@ Lemma isLB_lt:
   isLB lb x = true->
   x < y = true ->
   isLB lb y = true.
-Admitted.
+Proof.
+  intros.
+  destruct lb; auto; simpl in *.
+  eapply lt_trans; eassumption.
+Qed.
 
 Lemma isUB_lt:
   forall ub x y,
   isUB ub x = true->
   y < x = true ->
   isUB ub y = true.
-Admitted.
+Proof.
+  intros.
+  destruct ub; auto; simpl in *.
+  eapply lt_trans; eassumption.
+Qed.
 
 (* In order to stay sane and speed things up, here is
  a tactic that solves [Desc] goals *)

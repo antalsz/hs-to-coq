@@ -6,7 +6,9 @@ Set Bullet Behavior "Strict Subproofs".
 Section WF.
 Context (e : Type) `{Ord e}.
 
-(* This needs to be in an OrdLawful class *)
+(* We don’t have a OrdLawful class yet. We need to introduce that,
+   add it to the context, and derive all axioms from that.
+ *)
 Axiom compare_Eq : forall (x y : e),
   compare x y = Eq <-> x == y = true.
 Axiom compare_Lt : forall (x y : e),
@@ -41,8 +43,11 @@ Definition size (s : Set_ e) : Z :=
 
 Lemma size_size: Internal.size = size. Proof. reflexivity. Qed.
 
+(* Bounds may be absent (infinity) *)
 Definition bound := (option e)%type.
 
+(** A suitable comparision operator for bounds.
+   If someone feels like it, then you may introduce nice notation. *)
 Definition isLB : bound -> e -> bool :=
   fun lb e => match lb with
     | Some lb => lb < e
@@ -55,9 +60,15 @@ Definition isUB : bound -> e -> bool :=
     | None => true
   end.
 
+(** The balancing property of a binary node *)
 Definition balance_prop sz1 sz2 :=
   (sz1 + sz2 <= 1 \/ sz1 <= (delta * sz2) /\ sz2 <= delta * sz1)%Z.
 
+(** This is the low-level, all in one predicate that says:
+   - the set is well-formed (balanced, sizes valid, in order)
+   - is within the bounds (exclusive)
+   - describes the function
+*)
 Inductive Desc : Set_ e -> bound -> bound -> (e -> bool) -> Prop :=
   | DescTip : forall lb ub, Desc Tip lb ub (fun _ => false)
   | DescBin :
@@ -74,19 +85,52 @@ Inductive Desc : Set_ e -> bound -> bound -> (e -> bool) -> Prop :=
     (forall i, f i = f1 i || (i == x) || f2 i) ->
     Desc (Bin sz x s1 s2) lb ub f.
 
+(** For the meaning of a set we do not care about the bounds *)
 Definition Sem (s : Set_ e) (f : e -> bool) := Desc s None None f.
 
-(** The highest level: Just well-formedness.
- *)
-
+(** And any set that has a meaning is well-formed *)
 Definition WF (s : Set_ e) : Prop := exists f, Sem s f.
 
 
+(** There are no values outside the bounds *)
+Lemma Desc_outside_below_aux:
+  forall {s lb ub f i},
+  Desc s lb ub f ->
+  isLB lb i = false ->
+  f i = false.
+Proof.
+  intros ????? HD ?.
+  induction HD; intros; subst; simpl in *; intuition.
+  rewrite H6.
+  rewrite H4.
+  rewrite IHHD2 by admit. (* here we need a generic tactic to reason about < and isLB *)
+  admit. (* here we need a generic tactic to reason about < and isLB *)
+Admitted.
+
 Lemma Desc_outside_below:
- forall {s lb ub f i},
+  forall {s lb ub f i},
   Desc s (Some lb) ub f ->
   i < lb = true ->
   f i = false.
+Proof.
+  intros ????? HD Hlt.
+  eapply Desc_outside_below_aux; try eassumption.
+  simpl.
+  admit.
+Admitted.
+
+Lemma Desc_outside_above_aux:
+  forall {s lb ub f i},
+  Desc s lb ub f ->
+  isUB ub i = false ->
+  f i = false.
+Proof.
+  intros ????? HD ?.
+  induction HD; intros; subst; simpl in *; intuition.
+  rewrite H6.
+  rewrite H4.
+  rewrite IHHD1 by admit. (* here we need a generic tactic to reason about < and isLB *)
+  admit. (* here we need a generic tactic to reason about < and isLB *)
 Admitted.
 
 Lemma Desc_outside_above:
@@ -94,7 +138,13 @@ Lemma Desc_outside_above:
   Desc s lb (Some ub) f ->
   i > ub = true ->
   f i = false.
+Proof.
+  intros ????? HD Hlt.
+  eapply Desc_outside_above_aux; try eassumption.
+  simpl.
+  admit.
 Admitted.
+
 
 Lemma size_Bin: forall sz x (s1 s2 : Set_ e),
   size (Bin sz x s1 s2) = sz.

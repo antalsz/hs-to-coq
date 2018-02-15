@@ -60,6 +60,30 @@ Definition isUB : bound -> e -> bool :=
     | None => true
   end.
 
+
+Lemma isLB_lt:
+  forall lb x y,
+  isLB lb x = true->
+  x < y = true ->
+  isLB lb y = true.
+Proof.
+  intros.
+  destruct lb; auto; simpl in *.
+  eapply lt_trans; eassumption.
+Qed.
+
+Lemma isUB_lt:
+  forall ub x y,
+  isUB ub x = true->
+  y < x = true ->
+  isUB ub y = true.
+Proof.
+  intros.
+  destruct ub; auto; simpl in *.
+  eapply lt_trans; eassumption.
+Qed.
+
+
 (** The balancing property of a binary node *)
 Definition balance_prop sz1 sz2 :=
   (sz1 + sz2 <= 1 \/ sz1 <= (delta * sz2) /\ sz2 <= delta * sz1)%Z.
@@ -145,11 +169,14 @@ Proof.
   admit.
 Admitted.
 
-
+(* We use this as a rewrite rule because
+   [simpl (size (Bin _ _ _ _ ))]
+   simplifies the [ 1 + _ ] which is annoying. *)
 Lemma size_Bin: forall sz x (s1 s2 : Set_ e),
   size (Bin sz x s1 s2) = sz.
 Proof. intros. reflexivity. Qed.
 
+(* Pose the proof [prf], unless it already exists. *)
 Ltac pose_new prf :=
   let prop := type of prf in
   match goal with 
@@ -157,18 +184,26 @@ Ltac pose_new prf :=
     | _ => pose proof prf
   end.
 
+(* Pose the [prop], using [prf], unless it already exists. *)
 Ltac assert_new prop prf :=
   match goal with 
     | [ H : prop |- _] => fail 1
     | _ => assert prop by prf
   end.
 
-
 Lemma size_nonneg:
   forall {s lb ub f},
   Desc s lb ub f -> (0 <= size s)%Z.
-Admitted.
+Proof.
+  intros ???? HD.
+  induction HD.
+  * simpl. omega.
+  * simpl. omega.
+Qed.
 
+
+Ltac postive_sizes :=
+  repeat match goal with [ H : Desc ?s _ _ _ |- _ ] => pose_new (size_nonneg H) end.
 
 Lemma size_0_iff_tip:
   forall {s lb ub f},
@@ -177,7 +212,7 @@ Proof.
   intros.
   induction H1.
   * intuition.
-  * repeat match goal with [ H : Desc ?s _ _ _ |- _ ] => pose_new (size_nonneg H) end;
+  * postive_sizes;
     rewrite size_Bin in *.
     intuition try (congruence || omega).
 Qed.
@@ -194,31 +229,6 @@ Ltac f_solver  :=
   repeat match goal with [ H : (forall i, ?f i = _) |- context [?f i] ] => rewrite H; clear H end;
   rewrite ?orb_assoc, ?orb_false_r, ?orb_false_l;
   try reflexivity.
-
-Ltac postive_sizes :=
-  repeat match goal with [ H : Desc ?s _ _ _ |- _ ] => pose_new (size_nonneg H) end.
-
-Lemma isLB_lt:
-  forall lb x y,
-  isLB lb x = true->
-  x < y = true ->
-  isLB lb y = true.
-Proof.
-  intros.
-  destruct lb; auto; simpl in *.
-  eapply lt_trans; eassumption.
-Qed.
-
-Lemma isUB_lt:
-  forall ub x y,
-  isUB ub x = true->
-  y < x = true ->
-  isUB ub y = true.
-Proof.
-  intros.
-  destruct ub; auto; simpl in *.
-  eapply lt_trans; eassumption.
-Qed.
 
 Lemma Desc_change_ub:
   forall s lb ub ub' f,
@@ -252,9 +262,12 @@ Proof.
     eapply lt_eq_l; eassumption.
 Qed.
 
-(* In order to stay sane and speed things up, here is
- a tactic that solves [Desc] goals *)
+(** In order to stay sane and speed things up, here is
+ a tactic that solves [Desc] goals, which runs 
+ the right auxillary tactic on the corresponding goals. *)
 
+(** Solve [isLB] and [isUB] goals. This could be subsumed by a more general
+   linear order solver that knows about these two. *)
 Ltac solve_Bounds := first
   [ assumption
   | lazymatch goal with [ H2 : isLB ?lb ?x = true, H1 : ?x < ?y = true |- isLB ?lb ?y = true] => apply (isLB_lt _ _ _ H2 H1) end
@@ -262,12 +275,15 @@ Ltac solve_Bounds := first
   | idtac "solve_Bounds gave up"
   ].
 
+(** A variant of [omega] that unfolds a few specific things and knows that
+   the size of a well-formed tree is positive. *)
 Ltac omega_Desc :=
   postive_sizes;
   unfold balance_prop, delta, fromInteger, Num_Integer__ in *;
   rewrite ?size_Bin in *; simpl (size Tip) in *;
   omega.
 
+(** A tactic to solve questions about size. *)
 Ltac solve_size := first
   [ assumption
   | reflexivity
@@ -275,6 +291,7 @@ Ltac solve_size := first
   | idtac "solve_size gave up"
   ].
 
+(** Solve goals of Desc. Should be back-tracking free, I think. *)
 Ltac solve_Desc := eassumption || lazymatch goal with
   | [ H : Desc ?s ?lb (Some ?ub) _, H2 : ?ub' == ?ub = true  |- Desc ?s ?lb (Some ?ub') _ ]
     => apply (Desc_change_ub _ _ _ _ _ H H2)
@@ -295,6 +312,7 @@ Ltac solve_Desc := eassumption || lazymatch goal with
   | |- ?H => fail "solve_Desc gave up on" H
   end.
 
+(** For every set in the context, try to see if [omega] knows it is empty. *)
 Ltac find_Tip :=
   match goal with [ H : Desc ?s _ _ _ |- _ ] =>
     assert_new (size s = 0)%Z omega_Desc;

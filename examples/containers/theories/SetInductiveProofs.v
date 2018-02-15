@@ -95,7 +95,9 @@ Definition balance_prop sz1 sz2 :=
    - describes the function
 *)
 Inductive Desc : Set_ e -> bound -> bound -> (e -> bool) -> Prop :=
-  | DescTip : forall lb ub, Desc Tip lb ub (fun _ => false)
+| DescTip : forall lb ub f,
+    (forall i, f i = false) ->
+    Desc Tip lb ub f
   | DescBin :
     forall lb ub,
     forall s1 f1,
@@ -240,7 +242,7 @@ Proof.
   intros ????? HD Heq.
   remember (Some ub) as ubo.
   induction HD; subst.
-  * apply DescTip.
+  * apply DescTip; auto.
   * intuition.
     eapply DescBin; try eassumption; try reflexivity.
     simpl in *.
@@ -256,7 +258,7 @@ Proof.
   intros ????? HD Heq.
   remember (Some lb) as lbo.
   induction HD; subst.
-  * apply DescTip.
+  * apply DescTip; f_solver.
   * intuition.
     eapply DescBin; try eassumption; try reflexivity.
     simpl in *.
@@ -296,10 +298,14 @@ Ltac solve_size := first
 Ltac solve_Desc := eassumption || lazymatch goal with
   | [ H : Desc ?s ?lb (Some ?ub) _, H2 : ?ub' == ?ub = true  |- Desc ?s ?lb (Some ?ub') _ ]
     => apply (Desc_change_ub _ _ _ _ _ H H2)
+  | [ H : Desc ?s ?lb (Some ?ub) _, H2 : isUB ?ub' ?ub = true  |- Desc ?s ?lb ?ub' _ ]
+    => admit
   | [ H : Desc ?s (Some ?lb) ?ub _, H2 : ?lb' == ?lb = true  |- Desc ?s (Some ?lb') ?ub _ ]
     => apply (Desc_change_lb _ _ _ _ _ H H2)
+  | [ H : Desc ?s (Some ?lb) ?ub _, H2 : isLB ?lb' ?lb = true  |- Desc ?s ?lb' ?ub _ ]
+    => admit
   | [ |- Desc Tip _ _ _ ]
-    => apply DescTip
+    => apply DescTip; f_solver
   | [ |- Desc (Bin _ _ _ _) _ _ _ ]
     => eapply DescBin;
         [ solve_Desc
@@ -326,11 +332,13 @@ Ltac find_Tip :=
 
 Require Import Coq.Program.Tactics.
 
+Open Scope Z_scope.
+
 Lemma balanceL_Desc:
     forall lb ub,
     forall s1 f1,
     forall s2 f2,
-    forall x f,
+    forall x f sz,
     Desc s1 lb (Some x) f1 ->
     Desc s2 (Some x) ub f2 ->
     isLB lb x = true ->
@@ -339,7 +347,8 @@ Lemma balanceL_Desc:
     balance_prop (size s1) (size s2) \/
     balance_prop (size s1 - 1)%Z (size s2) /\ (1 <= size s1)%Z  \/
     balance_prop (size s1)%Z (size s2 + 1) ->
-    Desc (balanceL x s1 s2) lb ub f /\ size (balanceL x s1 s2) = (1 + size s1 + size s2)%Z.
+    sz = 1 + size s1 + size s2 ->
+    Desc (balanceL x s1 s2) lb ub f /\ size (balanceL x s1 s2) = sz.
 Proof.
   intros.
 
@@ -366,7 +375,7 @@ Lemma balanceR_Desc:
     forall lb ub,
     forall s1 f1,
     forall s2 f2,
-    forall x f,
+    forall x f sz,
     Desc s1 lb (Some x) f1 ->
     Desc s2 (Some x) ub f2 ->
     isLB lb x = true ->
@@ -375,7 +384,8 @@ Lemma balanceR_Desc:
     balance_prop (size s1) (size s2) \/
     balance_prop (size s1) (size s2 - 1)%Z /\ (1 <= size s2)%Z  \/
     balance_prop (size s1 + 1) (size s2) ->
-    Desc (balanceR x s1 s2) lb ub f /\ size (balanceR x s1 s2) = (1 + size s1 + size s2)%Z.
+    sz = 1 + size s1 + size s2 ->
+    Desc (balanceR x s1 s2) lb ub f /\ size (balanceR x s1 s2) = sz.
 Proof.
   intros.
 
@@ -406,7 +416,7 @@ Lemma member_Desc:
 Proof.
   intros.
   induction H1.
-  * reflexivity.
+  * simpl. rewrite H1; reflexivity.
   * subst; simpl.
     rewrite H5; clear H5.
     destruct (compare i x) eqn:?.
@@ -503,9 +513,9 @@ Proof.
   revert f' Hf.
   induction HD; intros.
   * unfold insert, Datatypes.id.
-    split; try reflexivity.
+    split; try (rewrite H1; reflexivity).
     apply singleton_Desc; try assumption.
-    intro i. rewrite Hf. rewrite orb_false_r. reflexivity.
+    intro i. rewrite Hf. rewrite H1. rewrite orb_false_r. reflexivity.
   * subst; cbn -[Z.add].
     destruct (compare y x) eqn:?.
     + rewrite compare_Eq in *.
@@ -552,9 +562,7 @@ Proof.
         destruct (i == y) eqn:?, (i == x)  eqn:?, (f1 i)  eqn:?, (f2 i)  eqn:?; 
           intuition congruence.
 
-      - replace ((if f1 y then (1 + size s1 + size s2)%Z else (1 + (1 + size s1 + size s2))%Z))
-           with (1 + size (insert' y s1) + size s2)%Z.
-        eapply balanceL_Desc; try eassumption.
+      - eapply balanceL_Desc; try eassumption.
         ** intro i.
            rewrite Hf.
            rewrite !orb_assoc.
@@ -586,9 +594,7 @@ Proof.
         assert (i == y = true -> f2 y = true -> f2 i = true) by admit.
         destruct (i == y) eqn:?, (i == x)  eqn:?, (f1 i)  eqn:?, (f2 i)  eqn:?; 
           intuition congruence.
-      - replace ((if f2 y then (1 + size s1 + size s2)%Z else (1 + (1 + size s1 + size s2))%Z))
-           with (1 + size s1 + size (insert' y s2))%Z.
-        eapply balanceR_Desc; try eassumption.
+      - eapply balanceR_Desc; try eassumption.
         ** intro i.
            rewrite Hf.
            rewrite !orb_assoc.
@@ -614,28 +620,95 @@ Proof.
 Qed.
 
 (* verification of maxViewSure *)
-Print maxViewSure.
-Print glue.
-Check @maxViewSure.
 
 Lemma maxViewSure_Desc:
-  forall y,
-  forall s lb ub f f',
-  Desc s lb ub f ->
-  isLB lb y = true ->
-  isUB ub y = true ->
-  (forall i, f' i = (i == y) || f i) ->
-  Desc (insert y s) lb ub f' /\
-  size (insert y s) = (if f y then size s else (1 + size s)%Z).
+  forall sz x l r lb ub f f',
+    Desc (Bin sz x l r) lb ub f ->
+    let y := fst (maxViewSure x l r) in
+    (forall i, f' i = (f i && negb (i == y))) ->
+    f y = true /\
+    isUB ub y = true /\
+    isLB lb y = true /\
+    Desc (snd (maxViewSure x l r)) lb (Some y) f' /\
+    size (snd (maxViewSure x l r)) = sz - 1%Z.
 Proof.
+Admitted.
+
+Lemma minViewSure_Desc:
+  forall sz x l r lb ub f f',
+    Desc (Bin sz x l r) lb ub f ->
+    let y := fst (minViewSure x l r) in
+    (forall i, f' i = (negb (i == y) && f i)) ->
+    f y = true /\
+    isUB ub y = true /\
+    isLB lb y = true /\
+    Desc (snd (minViewSure x l r)) (Some y) ub f' /\
+    size (snd (minViewSure x l r)) = sz - 1%Z.
+Proof.
+Admitted.
+
+Ltac solve_Desc ::= eassumption || lazymatch goal with
+  | [ H : Desc ?s ?lb (Some ?ub) _, H2 : ?ub' == ?ub = true  |- Desc ?s ?lb (Some ?ub') _ ]
+    => apply (Desc_change_ub _ _ _ _ _ H H2)
+  | [ H : Desc ?s ?lb (Some ?ub) _, H2 : isUB ?ub' ?ub = true  |- Desc ?s ?lb ?ub' _ ]
+    => admit
+  | [ H : Desc ?s (Some ?lb) ?ub _, H2 : ?lb' == ?lb = true  |- Desc ?s (Some ?lb') ?ub _ ]
+    => apply (Desc_change_lb _ _ _ _ _ H H2)
+  | [ H : Desc ?s (Some ?lb) ?ub _, H2 : isLB ?lb' ?lb = true  |- Desc ?s ?lb' ?ub _ ]
+    => admit
+  | [ |- Desc Tip _ _ _ ]
+    => apply DescTip; f_solver
+  | [ |- Desc (Bin _ _ _ _) _ _ _ ]
+    => eapply DescBin;
+        [ solve_Desc
+        | solve_Desc
+        | solve_Bounds
+        | solve_Bounds
+        | solve_size
+        | solve_size
+        | try solve [f_solver]
+        ]
+  | |- ?H => fail "solve_Desc gave up on" H
+  end.
+
+Ltac expand_pairs := match goal with |- context[let (_,_) := ?e in _] => rewrite (surjective_pairing e) end.
+
+Lemma glue_Desc:
+  forall s1 s2 lb ub x f1 f2 f,
+  Desc s1 lb (Some x) f1 ->
+  Desc s2 (Some x) ub f2 ->
+  isLB lb x = true ->
+  isUB ub x = true ->
+  balance_prop (size s1) (size s2) ->
+  (forall i : e, f i = f1 i || f2 i) ->
+  Desc (glue s1 s2) lb ub f /\
+  size (glue s1 s2) = (size s1 + size s2)%Z.
+Proof.
+  intros ???????? HD1 HD2. intros.
+  inversion HD1; inversion HD2; subst; cbn -[size Z.add].
+  1-3: (split; [solve_Desc|solve_size]).
+  destruct (Z.ltb_spec (1 + size s4 + size s5) (1 + size s0 + size s3)).
+  - expand_pairs.
+    rewrite !size_Bin.
+    (* epose proof (maxViewSure_Desc _ x0 s0 s3 lb (Some x)) as Hm. *)
+    eapply balanceR_Desc with (f2:=f2).
+    + eapply maxViewSure_Desc.
+      * solve_Desc.
+      * f_solver.
+    + assert (isUB (Some x) (fst (maxViewSure x0 s0 s3)) = true).
+      { eapply maxViewSure_Desc. solve_Desc. f_solver. }
+      assert (isLB (Some (fst (maxViewSure x0 s0 s3))) x = true) by assumption.
+      solve_Desc.
+    + eapply maxViewSure_Desc. solve_Desc. f_solver.
+    + assert (isUB (Some x) (fst (maxViewSure x0 s0 s3)) = true).
+      { eapply maxViewSure_Desc. solve_Desc. f_solver. }
+      admit.
+    + set ( y := fst (maxViewSure x0 s0 s3)).
+      assert (f1 y = true) by admit.
+      admit.
+    + solve_size. admit.
+    + solve_size. admit.
+  - admit.
+Admitted.
   
-Lemma maxViewSure_WF:
-  forall y s, WF s -> WF (maxViewSure y s).
-Proof.
-  intros ?? HWF. destruct HWF. eexists.
-  eapply maxViewSure_Sem. eassumption. reflexivity.
-Qed.
-
-(* verification of glue *)
-
 End WF.

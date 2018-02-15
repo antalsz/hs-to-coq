@@ -144,12 +144,13 @@ Proof.
     destruct (compare i x) eqn:?.
     + rewrite compare_Eq in *.
       rewrite Heqc.
+      rewrite orb_true_r.
       reflexivity.
     + rewrite compare_Lt in *.
       rewrite lt_not_eq by assumption.
       rewrite IHDesc1.
       rewrite (Desc_outside_below H1_0) by assumption.
-      rewrite orb_false_l, orb_false_r.
+      rewrite !orb_false_r.
       reflexivity.
     + rewrite compare_Gt in *.
       rewrite gt_not_eq by assumption.
@@ -230,12 +231,13 @@ Proof.
   * subst; cbn -[Z.add].
     destruct (compare y x) eqn:?.
     + rewrite compare_Eq in *.
-      replace (f y) with true by (rewrite H4; rewrite Heqc; reflexivity).
+      replace (f y) with true
+       by (rewrite H4; rewrite Heqc; rewrite orb_true_r; reflexivity).
       destruct (PtrEquality.ptrEq _ _) eqn:Hpe; only 2: clear Hpe.
       - apply PtrEquality.ptrEq_eq in Hpe; subst.
         split; try reflexivity.
         eapply DescBin; try eassumption; try reflexivity.
-        intro i. rewrite Hf, H4. rewrite !orb_assoc, orb_diag. reflexivity.
+        intro i. rewrite Hf, H4. destruct (i == x), (f1 i), (f2 i); reflexivity.
       - unfold Datatypes.id.
         split; try reflexivity.
         eapply DescBin. 
@@ -248,9 +250,7 @@ Proof.
         ** reflexivity.
         ** intro i. rewrite Hf. rewrite H4.
            replace (i == x) with (i == y) by admit. (* transitivity of == *)
-           rewrite !orb_assoc.
-           rewrite orb_diag.
-           reflexivity.
+           destruct (i == y), (f1 i), (f2 i); reflexivity.
     + rewrite compare_Lt in *.
       edestruct IHHD1; try assumption; try (intro; reflexivity).
       rename H3 into IHHD1_Desc, H5 into IHHD1_size.
@@ -266,7 +266,7 @@ Proof.
         rewrite lt_not_eq by assumption.
         rewrite Hf1.
         rewrite (Desc_outside_below HD2) by assumption.
-        rewrite orb_false_r, orb_false_l.
+        rewrite !orb_false_r.
         split; try reflexivity.
         eapply DescBin; try eassumption; try reflexivity.
         intro i. rewrite Hf, H4. rewrite !orb_assoc.
@@ -287,7 +287,7 @@ Proof.
            rewrite H4.
            rewrite (Desc_outside_below HD2) by assumption.
            rewrite lt_not_eq by assumption.
-           rewrite orb_false_r, orb_false_l.
+           rewrite !orb_false_r.
            generalize (size s1), (size s2); intros; unfold Int in *.
            destruct (f1 y); omega.
     + (* analogue, to be done when the rest is complete *)

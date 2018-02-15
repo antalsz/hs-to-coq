@@ -388,87 +388,78 @@ Proof.
         ** assumption.
         ** assumption.
         ** reflexivity.
-        ** unfold balance_prop, delta, fromInteger, Num_Integer__  in *. omega.
-        ** intro i. rewrite Hf. rewrite H5.
+        ** solve_size.
+        ** f_solver.
            replace (i == x) with (i == y) by admit. (* transitivity of == *)
            destruct (i == y), (f1 i), (f2 i); reflexivity.
     + rewrite compare_Lt in *.
       edestruct IHHD1; try assumption; try (intro; reflexivity).
       rename H3 into IH_Desc, H6 into IH_size.
+
+      rewrite H5; setoid_rewrite H5 in Hf; clear H5.
+      rewrite (Desc_outside_below HD2) by assumption.
+      rewrite lt_not_eq by assumption.
+      rewrite ?orb_false_r, ?orb_false_l.
+
       destruct (PtrEquality.ptrEq _ _) eqn:Hpe; only 2: clear Hpe.
       - apply PtrEquality.ptrEq_eq in Hpe; subst.
         rewrite Hpe in IH_size.
         assert (Hf' : f1 y = true). {
           destruct (f1 y) eqn:?; auto; try omega.
         }
-        rewrite H5.
-        rewrite lt_not_eq by assumption.
         rewrite Hf'.
-        rewrite (Desc_outside_below HD2) by assumption.
-        rewrite !orb_false_r.
         split; try reflexivity.
-        eapply DescBin; try eassumption; try reflexivity.
-        intro i. rewrite Hf, H5. rewrite !orb_assoc.
+        solve_Desc.
+        f_solver.
         (* can be automated from here *)
-        assert (i == y = true -> f1 i = true) by admit.
+        assert (i == y = true -> f1 y = true -> f1 i = true) by admit.
         destruct (i == y) eqn:?, (i == x)  eqn:?, (f1 i)  eqn:?, (f2 i)  eqn:?; 
           intuition congruence.
-      - replace ((if f y then (1 + size s1 + size s2)%Z else (1 + (1 + size s1 + size s2))%Z))
+
+      - replace ((if f1 y then (1 + size s1 + size s2)%Z else (1 + (1 + size s1 + size s2))%Z))
            with (1 + size (insert' y s1) + size s2)%Z.
         eapply balanceL_Desc; try eassumption.
         ** intro i.
            rewrite Hf.
-           rewrite H5.
            rewrite !orb_assoc.
            (* here I can use some tactics from IntSet *)
            destruct (i == y), (i == x); reflexivity.
-        ** postive_sizes. unfold balance_prop, delta, fromInteger, Num_Integer__  in *.
-           destruct (f1 y) eqn:?; omega.
-        ** rewrite IH_size.
-           rewrite H5.
-           rewrite (Desc_outside_below HD2) by assumption.
-           rewrite lt_not_eq by assumption.
-           rewrite !orb_false_r.
-           destruct (f1 y); omega.
+        ** destruct (f1 y); solve_size.
+        ** destruct (f1 y); solve_size.
     + (* more or less a copy-n-paste from above *)
       rewrite compare_Gt in *.
       edestruct IHHD2; only 1: rewrite lt_gt in *; try assumption. try (intro; reflexivity).
       rename H3 into IH_Desc, H6 into IH_size.
+
+      rewrite H5; setoid_rewrite H5 in Hf; clear H5.
+      rewrite (Desc_outside_above HD1) by assumption.
+      rewrite gt_not_eq by assumption.
+      rewrite !orb_false_l.
+
       destruct (PtrEquality.ptrEq _ _) eqn:Hpe; only 2: clear Hpe.
       - apply PtrEquality.ptrEq_eq in Hpe; subst.
         rewrite Hpe in IH_size.
         assert (Hf' : f2 y = true). {
           destruct (f2 y) eqn:?; auto; try omega.
         }
-        rewrite H5.
-        rewrite gt_not_eq by assumption.
         rewrite Hf'.
-        rewrite (Desc_outside_above HD1) by assumption.
-        rewrite !orb_false_r.
         split; try reflexivity.
         eapply DescBin; try eassumption; try reflexivity.
-        intro i. rewrite Hf, H5. rewrite !orb_assoc.
+        intro i. rewrite Hf. rewrite !orb_assoc.
         (* can be automated from here *)
-        assert (i == y = true -> f1 i = true) by admit.
+        assert (i == y = true -> f2 y = true -> f2 i = true) by admit.
         destruct (i == y) eqn:?, (i == x)  eqn:?, (f1 i)  eqn:?, (f2 i)  eqn:?; 
           intuition congruence.
-      - replace ((if f y then (1 + size s1 + size s2)%Z else (1 + (1 + size s1 + size s2))%Z))
+      - replace ((if f2 y then (1 + size s1 + size s2)%Z else (1 + (1 + size s1 + size s2))%Z))
            with (1 + size s1 + size (insert' y s2))%Z.
         eapply balanceR_Desc; try eassumption.
         ** intro i.
            rewrite Hf.
-           rewrite H5.
            rewrite !orb_assoc.
            (* here I can use some tactics from IntSet *)
            destruct (i == y), (i == x), (f1 i); reflexivity.
-        ** postive_sizes. unfold balance_prop, delta, fromInteger, Num_Integer__  in *.
-           destruct (f2 y) eqn:?; omega.
-        ** rewrite IH_size.
-           rewrite H5.
-           rewrite (Desc_outside_above HD1) by assumption.
-           rewrite gt_not_eq by assumption.
-           rewrite !orb_false_l.
-           destruct (f2 y); try omega.
+        ** destruct (f2 y); solve_size.
+        ** destruct (f2 y); solve_size.
 Admitted.
 
 Lemma insert_Sem:

@@ -211,7 +211,8 @@ Lemma balanceL_Desc:
     isUB ub x = true->
     (forall i, f i = f1 i || (i == x) || f2 i) ->
     balance_prop (size s1) (size s2) \/
-    balance_prop (size s1 - 1)%Z (size s2) /\ (1 <= size s1)%Z  ->
+    balance_prop (size s1 - 1)%Z (size s2) /\ (1 <= size s1)%Z  \/
+    balance_prop (size s1)%Z (size s2 + 1) ->
     Desc (balanceL x s1 s2) lb ub f /\ size (balanceL x s1 s2) = (1 + size s1 + size s2)%Z.
 Proof.
   intros.
@@ -240,7 +241,8 @@ Lemma balanceR_Desc:
     isUB ub x = true->
     (forall i, f i = f1 i || (i == x) || f2 i) ->
     balance_prop (size s1) (size s2) \/
-    balance_prop (size s1) (size s2 - 1)%Z /\ (1 <= size s2)%Z  ->
+    balance_prop (size s1) (size s2 - 1)%Z /\ (1 <= size s2)%Z  \/
+    balance_prop (size s1 + 1) (size s2) ->
     Desc (balanceR x s1 s2) lb ub f /\ size (balanceR x s1 s2) = (1 + size s1 + size s2)%Z.
 Proof.
   intros.

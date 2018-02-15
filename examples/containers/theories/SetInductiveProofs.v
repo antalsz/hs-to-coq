@@ -41,7 +41,8 @@ Definition size (s : Set_ e) : Z :=
   match s with | Bin sz _ _ _ => sz
                | Tip => 0 end.
 
-Lemma size_size: Internal.size = size. Proof. reflexivity. Qed.
+Lemma size_size: Internal.size = size.
+Proof. reflexivity. Qed.
 
 (* Bounds may be absent (infinity) *)
 Definition bound := (option e)%type.
@@ -398,6 +399,8 @@ Proof.
 Qed.
 
 
+(* verification of member *)
+
 Lemma member_Desc:
  forall {s lb ub f i}, Desc s lb ub f -> member i s = f i.
 Proof.
@@ -429,6 +432,8 @@ Lemma member_Sem:
  forall {s f i}, Sem s f -> member i s = f i.
 Proof. intros. eapply member_Desc; eassumption. Qed.
 
+(* verification of singleton *)
+                 
 Lemma singleton_Desc:
   forall x lb ub f',
   isLB lb x = true ->
@@ -439,16 +444,7 @@ Proof.
   intros.
   unfold singleton.
   unfold fromInteger, Num_Integer__.
-  eapply DescBin.
-  * apply DescTip.
-  * apply DescTip.
-  * assumption.
-  * assumption.
-  * reflexivity.
-  * unfold balance_prop, delta, fromInteger, Num_Integer__  in *. simpl size. omega.
-  * intro i. rewrite H3.
-    rewrite !orb_false_r.
-    reflexivity.
+  solve_Desc.
 Qed.
 
 Lemma singleton_Sem:
@@ -461,6 +457,9 @@ Lemma singleton_WF:
   forall y, WF (singleton y).
 Proof. intros. eexists. eapply singleton_Sem. reflexivity. Qed.
 
+
+(* verification of insert *)
+                   
 (* The [orig] passing and the local fixpoint in insert is plain ugly, so let’s to this instead *)
 
 Fixpoint insert' (x : e) (s : Set_ e ) : Set_ e :=
@@ -609,7 +608,34 @@ Proof. intros. eapply insert_Desc; try eassumption; try reflexivity. Qed.
 
 Lemma insert_WF:
   forall y s, WF s -> WF (insert y s).
-Proof. intros ?? HWF. destruct HWF. eexists. eapply insert_Sem. eassumption. reflexivity. Qed.
+Proof.
+  intros ?? HWF. destruct HWF. eexists.
+  eapply insert_Sem. eassumption. reflexivity.
+Qed.
 
+(* verification of maxViewSure *)
+Print maxViewSure.
+Print glue.
+Check @maxViewSure.
+
+Lemma maxViewSure_Desc:
+  forall y,
+  forall s lb ub f f',
+  Desc s lb ub f ->
+  isLB lb y = true ->
+  isUB ub y = true ->
+  (forall i, f' i = (i == y) || f i) ->
+  Desc (insert y s) lb ub f' /\
+  size (insert y s) = (if f y then size s else (1 + size s)%Z).
+Proof.
+  
+Lemma maxViewSure_WF:
+  forall y s, WF s -> WF (maxViewSure y s).
+Proof.
+  intros ?? HWF. destruct HWF. eexists.
+  eapply maxViewSure_Sem. eassumption. reflexivity.
+Qed.
+
+(* verification of glue *)
 
 End WF.

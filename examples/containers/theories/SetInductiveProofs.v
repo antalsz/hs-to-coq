@@ -55,14 +55,13 @@ Inductive Desc : Set_ e -> bound -> bound -> (e -> bool) -> Prop :=
     Desc s1 lb (Some x) f1 ->
     Desc s2 (Some x) ub f2 ->
     isLB lb x = true ->
-    isUB ub x = true->
+    isUB ub x = true ->
     sz = (1 + size s1 + size s2)%Z ->
     balance_prop (size s1) (size s2) ->
     (forall i, f i = f1 i || (i == x) || f2 i) ->
     Desc (Bin sz x s1 s2) lb ub f.
 
-Inductive Sem : Set_ e -> (e -> bool) -> Prop :=
-  | DescSem : forall s lb ub f (HD : Desc s lb ub f), Sem s f.
+Definition Sem (s : Set_ e) (f : e -> bool) := Desc s None None f.
 
 (** The highest level: Just well-formedness.
  *)
@@ -287,6 +286,9 @@ Proof.
       reflexivity.
 Qed.
 
+Lemma member_Sem:
+ forall {s f i}, Sem s f -> member i s = f i.
+Proof. intros. eapply member_Desc; eassumption. Qed.
 
 Lemma singleton_Desc:
   forall x lb ub f',
@@ -309,6 +311,16 @@ Proof.
     rewrite !orb_false_r.
     reflexivity.
 Qed.
+
+Lemma singleton_Sem:
+  forall f x,
+  (forall i, f i = (i == x)) ->
+  Sem (singleton x) f.
+Proof. intros. apply singleton_Desc; try eassumption; try reflexivity. Qed.
+
+Lemma singleton_WF:
+  forall y, WF (singleton y).
+Proof. intros. eexists. eapply singleton_Sem. reflexivity. Qed.
 
 (* The [orig] passing and the local fixpoint in insert is plain ugly, so let’s to this instead *)
 
@@ -458,5 +470,18 @@ Proof.
            rewrite !orb_false_l.
            destruct (f2 y); try omega.
 Admitted.
+
+Lemma insert_Sem:
+  forall y,
+  forall s f f',
+  Sem s f ->
+  (forall i, f' i = (i == y) || f i) ->
+  Sem (insert y s) f'.
+Proof. intros. eapply insert_Desc; try eassumption; try reflexivity. Qed.
+
+Lemma insert_WF:
+  forall y s, WF s -> WF (insert y s).
+Proof. intros ?? HWF. destruct HWF. eexists. eapply insert_Sem. eassumption. reflexivity. Qed.
+
 
 End WF.

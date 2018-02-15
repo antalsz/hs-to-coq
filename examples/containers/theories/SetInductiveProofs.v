@@ -216,10 +216,16 @@ Lemma balanceL_Desc:
     Desc (balanceL x s1 s2) lb ub f /\ size (balanceL x s1 s2) = (1 + size s1 + size s2)%Z.
 Proof.
   intros.
+
+  (* Clean up the precondition a bit; makes omega go much faster *)
+  assert (size s1 + size s2 <= 2 /\ size s2 <= 1 \/
+        size s1 <= delta * (size s2 + 1) /\ size s2 <= delta * size s1)%Z by omega_Desc.
+  clear H6.
+
   unfold balanceL, balance_prop, delta, ratio in *.
   unfold fromInteger, op_zg__, op_zl__, op_zt__, op_zp__, Num_Integer__, Ord_Integer___, op_zg____, op_zl____.
   rewrite ?size_size.
-
+  
   repeat lazymatch goal with [ H : Desc ?s _ _ _ |- context [match ?s with _ => _ end] ] => inversion H;subst; clear H end;
   repeat lazymatch goal with [ |- context [if (?x <? ?y)%Z then _ else _] ] => destruct (Z.ltb_spec x y) end;
   rewrite ?size_Bin in *; simpl (size Tip) in *;
@@ -246,6 +252,12 @@ Lemma balanceR_Desc:
     Desc (balanceR x s1 s2) lb ub f /\ size (balanceR x s1 s2) = (1 + size s1 + size s2)%Z.
 Proof.
   intros.
+
+  (* Clean up the precondition a bit; makes omega go much faster *)
+  assert (size s1 + size s2 <= 2 /\ size s1 <= 1 \/
+        size s1 <= delta * size s2 /\ size s2 <= delta * (size s1 + 1))%Z by omega_Desc.
+  clear H6.
+
   unfold balanceR, balance_prop, delta, ratio in *.
   unfold fromInteger, op_zg__, op_zl__, op_zt__, op_zp__, Num_Integer__, Ord_Integer___, op_zg____, op_zl____.
   rewrite ?size_size.

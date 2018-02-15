@@ -39,6 +39,9 @@ Definition isUB : bound -> e -> bool :=
     | None => true
   end.
 
+Definition balance_prop sz1 sz2 :=
+  (sz1 + sz2 <= 1 \/ sz1 <= (delta * sz2) /\ sz2 <= delta * sz1)%Z.
+
 Inductive Desc : Set_ e -> bound -> bound -> (e -> bool) -> Prop :=
   | DescTip : forall lb ub, Desc Tip lb ub (fun _ => false)
   | DescBin :
@@ -51,7 +54,7 @@ Inductive Desc : Set_ e -> bound -> bound -> (e -> bool) -> Prop :=
     isLB lb x = true ->
     isUB ub x = true->
     sz = (1 + size s1 + size s2)%Z ->
-    (size s1 + size s2 <= 1 \/ size s1 <= delta * size s2 /\ size s2 <= delta * size s1)%Z ->
+    balance_prop (size s1) (size s2) ->
     (forall i, f i = f1 i || (i == x) || f2 i) ->
     Desc (Bin sz x s1 s2) lb ub f.
 
@@ -143,12 +146,6 @@ Lemma isUB_lt:
   isUB ub y = true.
 Admitted.
 
-Definition balance_prop sz1 sz2 :=
-  (sz1 + sz2 <= 1 \/ sz1 <= (delta * sz2) + 1 /\ sz2 <= delta * sz1)%Z.
-
-
-(* This has all the preconditions of [Bin], besides the one about size *)
-(* probably misses some post-conditions about size *)
 Lemma balanceL_Desc:
     forall lb ub,
     forall s1 f1,
@@ -159,9 +156,8 @@ Lemma balanceL_Desc:
     isLB lb x = true ->
     isUB ub x = true->
     (forall i, f i = f1 i || (i == x) || f2 i) ->
-    forall sz,
-    (0 <= sz)%Z /\ (size s1 = sz \/ size s1 = (sz + 1)%Z) ->
-    balance_prop sz (size s2) ->
+    balance_prop (size s1) (size s2) \/
+    balance_prop (size s1 - 1)%Z (size s2) /\ (1 <= size s1)%Z  ->
     Desc (balanceL x s1 s2) lb ub f /\ size (balanceL x s1 s2) = (1 + size s1 + size s2)%Z.
 Proof.
   intros.
@@ -176,7 +172,7 @@ Proof.
   postive_sizes;
   try apply DescTip;
   try eassumption;
-  unfold delta, fromInteger, Num_Integer__ in *;
+  unfold balance_prop, delta, fromInteger, Num_Integer__ in *;
   rewrite ?size_Bin in *; simpl (size Tip) in *;
   simpl isLB in *;
   simpl isUB in *;
@@ -192,6 +188,50 @@ Proof.
       assert_new (size s = 0)%Z omega; rewrite (size_0_iff_tip H) in *; subst s; inversion H; clear H; subst end;
     try f_solver.
 Qed.
+
+Lemma balanceR_Desc:
+    forall lb ub,
+    forall s1 f1,
+    forall s2 f2,
+    forall x f,
+    Desc s1 lb (Some x) f1 ->
+    Desc s2 (Some x) ub f2 ->
+    isLB lb x = true ->
+    isUB ub x = true->
+    (forall i, f i = f1 i || (i == x) || f2 i) ->
+    balance_prop (size s1) (size s2) \/
+    balance_prop (size s1) (size s2 - 1)%Z /\ (1 <= size s2)%Z  ->
+    Desc (balanceR x s1 s2) lb ub f /\ size (balanceR x s1 s2) = (1 + size s1 + size s2)%Z.
+Proof.
+  intros.
+  unfold balanceR, balance_prop, delta, ratio in *.
+  unfold fromInteger, op_zg__, op_zl__, op_zt__, op_zp__, Num_Integer__, Ord_Integer___, op_zg____, op_zl____.
+  rewrite size_size.
+
+  repeat lazymatch goal with [ H : Desc ?s _ _ _ |- context [match ?s with _ => _ end] ] => inversion H;subst end;
+  repeat lazymatch goal with [ |- context [if (?x <? ?y)%Z then _ else _] ] => destruct (Z.ltb_spec x y) end;
+  split;
+  repeat lazymatch goal with [ |- Desc (Bin _ _ _ _) _ _ _ ] => eapply DescBin end;
+  postive_sizes;
+  try apply DescTip;
+  try eassumption;
+  unfold balance_prop, delta, fromInteger, Num_Integer__ in *;
+  rewrite ?size_Bin in *; simpl (size Tip) in *;
+  simpl isLB in *;
+  simpl isUB in *;
+  repeat lazymatch goal with [ H2 : isLB ?lb ?x = true, H1 : ?x < ?y = true |- isLB ?lb ?y = true] => apply (isLB_lt _ _ _ H2 H1) end;
+  repeat lazymatch goal with [ H2 : isUB ?ub ?x = true, H1 : ?y < ?x = true |- isUB ?ub ?y = true] => apply (isUB_lt _ _ _ H2 H1) end;
+  try reflexivity;
+  try omega;
+  try solve [f_solver].
+  all: (* For the remaining cases, we hae learn that some sets are actually empty, i.e. Tips.
+     To learn this we opportunistially call omega, which is kinda expensive,
+     so lets try this only at the end *)
+    repeat match goal with [ H : Desc ?s _ _ _ |- _ ] =>
+      assert_new (size s = 0)%Z omega; rewrite (size_0_iff_tip H) in *; subst s; inversion H; clear H; subst end;
+    try f_solver.
+Qed.
+
 
 Lemma member_Desc:
  forall {s lb ub f i}, Desc s lb ub f -> member i s = f i.
@@ -237,7 +277,7 @@ Proof.
   * assumption.
   * assumption.
   * reflexivity.
-  * simpl size. omega.
+  * unfold balance_prop, delta, fromInteger, Num_Integer__  in *. simpl size. omega.
   * intro i. rewrite H3.
     rewrite !orb_false_r.
     reflexivity.
@@ -309,22 +349,22 @@ Proof.
         ** assumption.
         ** assumption.
         ** reflexivity.
-        ** omega.
+        ** unfold balance_prop, delta, fromInteger, Num_Integer__  in *. omega.
         ** intro i. rewrite Hf. rewrite H5.
            replace (i == x) with (i == y) by admit. (* transitivity of == *)
            destruct (i == y), (f1 i), (f2 i); reflexivity.
     + rewrite compare_Lt in *.
       edestruct IHHD1; try assumption; try (intro; reflexivity).
-      rename H3 into IHHD1_Desc, H6 into IHHD1_size.
+      rename H3 into IH_Desc, H6 into IH_size.
       destruct (PtrEquality.ptrEq _ _) eqn:Hpe; only 2: clear Hpe.
       - apply PtrEquality.ptrEq_eq in Hpe; subst.
-        rewrite Hpe in IHHD1_size.
-        assert (Hf1 : f1 y = true). {
+        rewrite Hpe in IH_size.
+        assert (Hf' : f1 y = true). {
           destruct (f1 y) eqn:?; auto; try omega.
         }
         rewrite H5.
         rewrite lt_not_eq by assumption.
-        rewrite Hf1.
+        rewrite Hf'.
         rewrite (Desc_outside_below HD2) by assumption.
         rewrite !orb_false_r.
         split; try reflexivity.
@@ -336,24 +376,61 @@ Proof.
           intuition congruence.
       - replace ((if f y then (1 + size s1 + size s2)%Z else (1 + (1 + size s1 + size s2))%Z))
            with (1 + size (insert' y s1) + size s2)%Z.
-        eapply balanceL_Desc with (sz := size s1); try eassumption.
+        eapply balanceL_Desc; try eassumption.
         ** intro i.
            rewrite Hf.
            rewrite H5.
            rewrite !orb_assoc.
            (* here I can use some tactics from IntSet *)
            destruct (i == y), (i == x); reflexivity.
-        ** postive_sizes. destruct (f1 y) eqn:?; try omega.
-        ** postive_sizes. unfold balance_prop; destruct (f1 y) eqn:?; try omega.
-        ** rewrite IHHD1_size.
+        ** postive_sizes. unfold balance_prop, delta, fromInteger, Num_Integer__  in *.
+           destruct (f1 y) eqn:?; omega.
+        ** rewrite IH_size.
            rewrite H5.
            rewrite (Desc_outside_below HD2) by assumption.
            rewrite lt_not_eq by assumption.
            rewrite !orb_false_r.
-           generalize (size s1), (size s2); intros; unfold Int in *.
            destruct (f1 y); omega.
-    + (* analogue, to be done when the rest is complete *)
-      admit.
+    + (* more or less a copy-n-paste from above *)
+      rewrite compare_Gt in *.
+      edestruct IHHD2; try assumption; try (intro; reflexivity).
+      admit. (* < vs. > *)
+      rename H3 into IH_Desc, H6 into IH_size.
+      destruct (PtrEquality.ptrEq _ _) eqn:Hpe; only 2: clear Hpe.
+      - apply PtrEquality.ptrEq_eq in Hpe; subst.
+        rewrite Hpe in IH_size.
+        assert (Hf' : f2 y = true). {
+          destruct (f2 y) eqn:?; auto; try omega.
+        }
+        rewrite H5.
+        rewrite gt_not_eq by assumption.
+        rewrite Hf'.
+        rewrite (Desc_outside_above HD1) by assumption.
+        rewrite !orb_false_r.
+        split; try reflexivity.
+        eapply DescBin; try eassumption; try reflexivity.
+        intro i. rewrite Hf, H5. rewrite !orb_assoc.
+        (* can be automated from here *)
+        assert (i == y = true -> f1 i = true) by admit.
+        destruct (i == y) eqn:?, (i == x)  eqn:?, (f1 i)  eqn:?, (f2 i)  eqn:?; 
+          intuition congruence.
+      - replace ((if f y then (1 + size s1 + size s2)%Z else (1 + (1 + size s1 + size s2))%Z))
+           with (1 + size s1 + size (insert' y s2))%Z.
+        eapply balanceR_Desc; try eassumption.
+        ** intro i.
+           rewrite Hf.
+           rewrite H5.
+           rewrite !orb_assoc.
+           (* here I can use some tactics from IntSet *)
+           destruct (i == y), (i == x), (f1 i); reflexivity.
+        ** postive_sizes. unfold balance_prop, delta, fromInteger, Num_Integer__  in *.
+           destruct (f2 y) eqn:?; omega.
+        ** rewrite IH_size.
+           rewrite H5.
+           rewrite (Desc_outside_above HD1) by assumption.
+           rewrite gt_not_eq by assumption.
+           rewrite !orb_false_l.
+           destruct (f2 y); try omega.
 Admitted.
 
 End WF.

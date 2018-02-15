@@ -14,6 +14,16 @@ Axiom compare_Lt : forall (x y : e),
 Axiom compare_Gt : forall (x y : e),
   compare x y = Gt <-> x > y = true.
 
+Axiom lt_eq_r : forall x y z,
+  x < y = true ->
+  z == y = true ->
+  x < z = true.
+
+Axiom lt_eq_l : forall x y z,
+  x < y = true ->
+  z == x = true ->
+  z < y = true.
+
 Axiom lt_not_eq : forall (x y : e),
   x < y = true -> x == y = false.
 Axiom gt_not_eq : forall (x y : e),
@@ -160,6 +170,38 @@ Proof.
   eapply lt_trans; eassumption.
 Qed.
 
+Lemma Desc_change_ub:
+  forall s lb ub ub' f,
+  Desc s lb (Some ub) f ->
+  ub' == ub = true ->
+  Desc s lb (Some ub') f.
+Proof.
+  intros ????? HD Heq.
+  remember (Some ub) as ubo.
+  induction HD; subst.
+  * apply DescTip.
+  * intuition.
+    eapply DescBin; try eassumption; try reflexivity.
+    simpl in *.
+    eapply lt_eq_r; eassumption.
+Qed.
+
+Lemma Desc_change_lb:
+  forall s lb lb' ub f,
+  Desc s (Some lb) ub f ->
+  lb' == lb = true ->
+  Desc s (Some lb') ub f.
+Proof.
+  intros ????? HD Heq.
+  remember (Some lb) as lbo.
+  induction HD; subst.
+  * apply DescTip.
+  * intuition.
+    eapply DescBin; try eassumption; try reflexivity.
+    simpl in *.
+    eapply lt_eq_l; eassumption.
+Qed.
+
 (* In order to stay sane and speed things up, here is
  a tactic that solves [Desc] goals *)
 
@@ -184,6 +226,10 @@ Ltac solve_size := first
   ].
 
 Ltac solve_Desc := eassumption || lazymatch goal with
+  | [ H : Desc ?s ?lb (Some ?ub) _, H2 : ?ub' == ?ub = true  |- Desc ?s ?lb (Some ?ub') _ ]
+    => apply (Desc_change_ub _ _ _ _ _ H H2)
+  | [ H : Desc ?s (Some ?lb) ?ub _, H2 : ?lb' == ?lb = true  |- Desc ?s (Some ?lb') ?ub _ ]
+    => apply (Desc_change_lb _ _ _ _ _ H H2)
   | [ |- Desc Tip _ _ _ ]
     => apply DescTip
   | [ |- Desc (Bin _ _ _ _) _ _ _ ]
@@ -405,11 +451,9 @@ Proof.
         intro i. rewrite Hf, H5. destruct (i == x), (f1 i), (f2 i); reflexivity.
       - unfold Datatypes.id.
         split; try reflexivity.
-        eapply DescBin. 
-        ** assert (Desc s1 lb (Some y) f1) by admit. (* transitivity of the bound *)
-           eassumption.
-        ** assert (Desc s2 (Some y) ub f2) by admit. (* transitivity of the bound *)
-           eassumption.
+        eapply DescBin.
+        ** solve_Desc.
+        ** solve_Desc.
         ** assumption.
         ** assumption.
         ** reflexivity.

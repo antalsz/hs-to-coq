@@ -18,6 +18,9 @@ Axiom lt_not_eq : forall (x y : e),
   x < y = true -> x == y = false.
 Axiom gt_not_eq : forall (x y : e),
   x > y = true -> x == y = false.
+Axiom lt_gt : forall (x y : e),
+  (x > y) = (y < x).
+
 
 Definition size (s : Set_ e) : Z :=
   match s with | Bin sz _ _ _ => sz
@@ -393,8 +396,7 @@ Proof.
            destruct (f1 y); omega.
     + (* more or less a copy-n-paste from above *)
       rewrite compare_Gt in *.
-      edestruct IHHD2; try assumption; try (intro; reflexivity).
-      admit. (* < vs. > *)
+      edestruct IHHD2; only 1: rewrite lt_gt in *; try assumption. try (intro; reflexivity).
       rename H3 into IH_Desc, H6 into IH_size.
       destruct (PtrEquality.ptrEq _ _) eqn:Hpe; only 2: clear Hpe.
       - apply PtrEquality.ptrEq_eq in Hpe; subst.

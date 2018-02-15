@@ -31,11 +31,20 @@ Module OrdTheories(E: OrderedType).
 
   Definition elt := E.t.
 
-    Lemma elt_ltP { e1 e2 } : reflect (E.lt e1 e2) (e1 GHC.Base.< e2).
+  Lemma elt_ltP { e1 e2 } : reflect (E.lt e1 e2) (e1 GHC.Base.< e2).
   Proof.
     rewrite /_GHC.Base.<_ /Ord_t /ord_default /=.
     rewrite /_GHC.Base.==_ /Eq_comparison___ /= /eq_comparison /compare.
     do 2 destruct_match; constructor; auto.
+  Qed.
+
+  Lemma elt_leP { e1 e2 } : reflect (OrdFacts.TO.le e1 e2) (e1 GHC.Base.<= e2).
+  Proof.
+    rewrite /_GHC.Base.<=_ /Ord_t /ord_default /=.
+    rewrite /_GHC.Base.==_ /Eq_comparison___ /= /eq_comparison /compare.
+    do 2 destruct_match; constructor; auto;
+      rewrite /OrdFacts.TO.le /OrdFacts.TO.eq /OrdFacts.TO.lt;
+      intuition; OrdFacts.order.
   Qed.
 
   Lemma elt_gtP { e1 e2 } : reflect (E.lt e2 e1) (e1 GHC.Base.> e2).
@@ -43,6 +52,15 @@ Module OrdTheories(E: OrderedType).
     rewrite /_GHC.Base.>_ /Ord_t /ord_default /=.
     rewrite /_GHC.Base.==_ /Eq_comparison___ /= /eq_comparison /compare.
     do 2 destruct_match; constructor; auto.
+  Qed.
+
+  Lemma elt_geP { e1 e2 } : reflect (OrdFacts.TO.le e2 e1) (e1 GHC.Base.>= e2).
+  Proof.
+    rewrite /_GHC.Base.>=_ /Ord_t /ord_default /=.
+    rewrite /_GHC.Base.==_ /Eq_comparison___ /= /eq_comparison /compare.
+    do 2 destruct_match; constructor; auto;
+      rewrite /OrdFacts.TO.le /OrdFacts.TO.eq /OrdFacts.TO.lt;
+      intuition; OrdFacts.order.
   Qed.
 
   Lemma elt_compare_ltP {e1 e2} :
@@ -92,6 +110,8 @@ Module OrdTheories(E: OrderedType).
 
   Hint Resolve elt_ltP.
   Hint Resolve elt_gtP.
+  Hint Resolve elt_leP.
+  Hint Resolve elt_geP.
   Hint Resolve elt_compare_ltP.
   Hint Resolve elt_compare_lt'P.
   Hint Resolve elt_compare_gtP.
@@ -103,6 +123,12 @@ Module OrdTheories(E: OrderedType).
   Proof. move=>e1 e2. apply rwP =>//. Qed.
 
   Lemma elt_gt : forall e1 e2, E.lt e2 e1 <-> e1 GHC.Base.> e2.
+  Proof. move=>e1 e2. apply rwP =>//. Qed.
+
+  Lemma elt_le : forall e1 e2, OrdFacts.TO.le e1 e2 <-> e1 GHC.Base.<= e2.
+  Proof. move=>e1 e2. apply rwP =>//. Qed.
+
+  Lemma elt_ge : forall e1 e2, OrdFacts.TO.le e2 e1 <-> e1 GHC.Base.>= e2.
   Proof. move=>e1 e2. apply rwP =>//. Qed.
 
   Lemma elt_compare_lt: forall (e1 e2 : elt),
@@ -128,6 +154,8 @@ Module OrdTheories(E: OrderedType).
 
   Hint Rewrite <- elt_lt : elt_compare.
   Hint Rewrite <- elt_gt : elt_compare.
+  Hint Rewrite <- elt_le : elt_compare.
+  Hint Rewrite <- elt_ge : elt_compare.
   Hint Rewrite <- elt_compare_lt : elt_compare.
   Hint Rewrite <- elt_compare_gt : elt_compare.
   Hint Rewrite <- elt_compare_eq : elt_compare.

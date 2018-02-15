@@ -1090,11 +1090,14 @@ Module Foo (E : OrderedType) : WSfun(E).
     Definition non_strict_decreasing : Prop :=
       forall x y, E.lt y x \/ E.eq x y -> f x -> f y.
 
+    Definition lt_than a arg := arg GHC.Base.< a.
+    Definition gt_than a arg := arg GHC.Base.> a.
+
     Definition with_invariant_upper_bounded_by s a : Prop :=
-      local_bounded f (fun arg => arg GHC.Base.< a) s.
+      local_bounded f (lt_than a) s.
 
     Definition with_invariant_lower_bounded_by s a : Prop :=
-      local_bounded (fun arg => arg GHC.Base.> a) f s.
+      local_bounded (gt_than a) f s.
 End LocalBounded.
 
   Lemma insert_prop : forall e s,
@@ -1308,7 +1311,121 @@ End LocalBounded.
     apply WF_singleton.
   Defined.
 
-  Definition remove : elt -> t -> t. Admitted.
+  Lemma inset_destruct :
+    forall (l r : Set_ elt) (x y : elt) s,
+      In_set y (Bin s x l r) ->
+      E.eq x y \/ (E.lt y x /\ In_set y l) \/ (E.lt x y /\ In_set y r).
+  Proof.
+    move=>l r x y s. rewrite /In_set /member /= -/member.
+    destruct_match; autorewrite with elt_compare in *.
+    - left. apply E.eq_sym. done.
+    - right; left. intuition.
+    - right; right; intuition.
+  Qed.
+
+  Lemma inset_left : forall x y l r s,
+      E.lt x y ->
+      In_set x l ->
+      In_set x (Bin s y l r).
+  Proof.
+    move=>x y l r s H.
+    rewrite /In_set /member -/member.
+    solve_relations.
+  Qed.
+
+  Lemma inset_right : forall x y l r s,
+      E.lt y x ->
+      In_set x r ->
+      In_set x (Bin s y l r).
+  Proof.
+    move=>x y l r s H.
+    rewrite /In_set /member -/member.
+    solve_relations.
+  Qed.
+
+  Lemma minViewSure_prop : forall x l r,
+      WF l ->
+      WF r ->
+      with_invariant_upper_bounded_by (const true) l x ->
+      with_invariant_lower_bounded_by (const true) r x ->
+      let: (y, t) := minViewSure x l r in
+      local_bounded (fun a => a GHC.Base.>= y) (const true) (Bin 0 x l r) /\
+      In_set y (Bin 0 x l r).
+  Proof.
+    rewrite /minViewSure. move=>x l.
+    generalize dependent x.
+    induction l.
+    - destruct ((fix go (arg_0__ : E.t) (arg_1__ arg_2__ : Set_ E.t) {struct arg_1__} :
+                   E.t * Set_ E.t :=
+                   match arg_1__ with
+                   | Bin _ xl ll lr =>
+                     let (xm, l') := go xl ll lr in (xm, balanceR arg_0__ l' arg_2__)
+                   | Tip => (arg_0__, arg_2__)
+                   end) a l1 l2) eqn:Heq.
+      repeat split; move: H1 H2;
+        rewrite /with_invariant_lower_bounded_by /with_invariant_upper_bounded_by;
+        intros; derive_constraints; specialize (IHl1 a l2);
+        rewrite Heq in IHl1;
+        rewrite /with_invariant_lower_bounded_by /with_invariant_upper_bounded_by in IHl1;
+        derive_compare;
+        have Hlb3: local_bounded (gt_than a) (lt_than x) l2 by [done];
+        apply bounded_impl_right_const_true in Hlb2;
+        specialize (IHl1 Hwfl Hwfr Hlb1 Hlb2);
+        destruct IHl1 as [Hlb' His]; derive_compare.
+      + apply /and4P=>//; repeat split=>//.
+        * autorewrite with elt_compare. OrdFacts.order.
+        * apply /and4P=>//; repeat split=>//;
+                autorewrite with elt_compare=>//.
+      + apply inset_left=>//. OrdFacts.order.
+    - intros. split.
+      move: H1 H2.
+      rewrite /with_invariant_lower_bounded_by /with_invariant_upper_bounded_by.
+      intros. apply local_bounded_constr =>//. 
+      + autorewrite with elt_compare. OrdFacts.order.
+      + rewrite /In_set /member.
+        have: E.eq x x by [done].
+        by move /elt_compare_eq ->.
+  Qed.
+        
+  Lemma WF_glue : forall l r,
+      WF l ->
+      WF r ->
+      forall x, balanced (Bin 0 x l r) ->
+      WF (glue l r).
+  Proof.
+    induction l.
+    - destruct r.
+      + rewrite /glue. destruct_match.
+        * rewrite /maxViewSure //. intros.
+          destruct_match. apply balanceR_WF.
+  Admitted.
+          
+  Lemma delete_prop : forall e s,
+      WF s ->
+      WF (delete e s) /\
+      (size (delete e s) + 1 = size s \/ size (delete e s) = size s) /\
+      (forall a,
+          (forall (f : elt -> bool),
+              E.lt e a -> f e ->
+              (forall x y, E.lt x y \/ E.eq x y -> f x -> f y) ->
+              local_bounded f (fun arg => arg GHC.Base.< a) s ->
+              local_bounded f (fun arg => arg GHC.Base.< a) (insert e s)) /\
+          (forall (g : elt -> bool),
+              E.lt a e -> g e ->
+              (forall x y, E.lt y x \/ E.eq x y -> g x -> g y) ->
+              local_bounded (fun arg => arg GHC.Base.> a) g s ->
+              local_bounded (fun arg => arg GHC.Base.> a) g (insert e s))).
+  Proof.
+    induction s.
+    - intros. rewrite /insert/=. destruct_match; split3; derive_constraints.
+  Admitted.
+  
+  Definition remove : elt -> t -> t.
+    refine (fun e s' =>
+              s <-- s' ;;
+                pack (delete e s) _).
+  Admitted.
+  
   Definition union : t -> t -> t. Admitted.
   Definition inter : t -> t -> t. Admitted.
   Definition diff : t -> t -> t. Admitted.
@@ -1456,18 +1573,6 @@ End LocalBounded.
   Hint Resolve WF_prop_r1.
   Hint Resolve WF_prop_r2.
   Hint Resolve WF_prop_r3.
-
-  Lemma inset_destruct :
-    forall (l r : Set_ elt) (x y : elt) s,
-      In_set y (Bin s x l r) ->
-      E.eq x y \/ (E.lt y x /\ In_set y l) \/ (E.lt x y /\ In_set y r).
-  Proof.
-    move=>l r x y s. rewrite /In_set /member /= -/member.
-    destruct_match; autorewrite with elt_compare in *.
-    - left. apply E.eq_sym. done.
-    - right; left. intuition.
-    - right; right; intuition.
-  Qed.
 
   Lemma add_1 :
     forall (s : t) (x y : elt), E.eq x y -> In y (add x s).

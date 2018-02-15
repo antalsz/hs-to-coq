@@ -19,6 +19,11 @@ Axiom lt_not_eq : forall (x y : e),
 Axiom gt_not_eq : forall (x y : e),
   x > y = true -> x == y = false.
 
+Definition size (s : Set_ e) : Z :=
+  match s with | Bin sz _ _ _ => sz
+               | Tip => 0 end.
+
+Lemma size_size: Internal.size = size. Proof. reflexivity. Qed.
 
 Definition bound := (option e)%type.
 
@@ -46,6 +51,7 @@ Inductive Desc : Set_ e -> bound -> bound -> (e -> bool) -> Prop :=
     isLB lb x = true ->
     isUB ub x = true->
     sz = (1 + size s1 + size s2)%Z ->
+    (size s1 + size s2 <= 1 \/ size s1 <= delta * size s2 /\ size s2 <= delta * size s1)%Z ->
     (forall i, f i = f1 i || (i == x) || f2 i) ->
     Desc (Bin sz x s1 s2) lb ub f.
 
@@ -72,6 +78,74 @@ Lemma Desc_outside_above:
   f i = false.
 Admitted.
 
+Lemma size_Bin: forall sz x (s1 s2 : Set_ e),
+  size (Bin sz x s1 s2) = sz.
+Proof. intros. reflexivity. Qed.
+
+Ltac pose_new prf :=
+  let prop := type of prf in
+  match goal with 
+    | [ H : prop |- _] => fail 1
+    | _ => pose proof prf
+  end.
+
+Ltac assert_new prop prf :=
+  match goal with 
+    | [ H : prop |- _] => fail 1
+    | _ => assert prop by prf
+  end.
+
+
+Lemma size_nonneg:
+  forall {s lb ub f},
+  Desc s lb ub f -> (0 <= size s)%Z.
+Admitted.
+
+
+Lemma size_0_iff_tip:
+  forall {s lb ub f},
+  Desc s lb ub f -> (size s = 0)%Z <-> s = Tip.
+Proof.
+  intros.
+  induction H1.
+  * intuition.
+  * repeat match goal with [ H : Desc ?s _ _ _ |- _ ] => pose_new (size_nonneg H) end;
+    rewrite size_Bin in *.
+    intuition try (congruence || omega).
+Qed.
+
+(* Solve equations of the form
+     forall i, f i = f0 i || f1 i
+   possibly using equations from the context.
+   Fails if it does not start with [forall i,], but may leave a partially solve goal.
+    *)
+Ltac f_solver  :=
+  let i := fresh "i" in 
+  intro i;
+  repeat match goal with [ H : (forall i, ?f i = _) |- context [?f i] ] => rewrite H; clear H end;
+  rewrite ?orb_assoc, ?orb_false_r, ?orb_false_l;
+  try reflexivity.
+
+Ltac postive_sizes :=
+  repeat match goal with [ H : Desc ?s _ _ _ |- _ ] => pose_new (size_nonneg H) end.
+
+Lemma isLB_lt:
+  forall lb x y,
+  isLB lb x = true->
+  x < y = true ->
+  isLB lb y = true.
+Admitted.
+
+Lemma isUB_lt:
+  forall ub x y,
+  isUB ub x = true->
+  y < x = true ->
+  isUB ub y = true.
+Admitted.
+
+Definition balance_prop sz1 sz2 :=
+  (sz1 + sz2 <= 1 \/ sz1 <= (delta * sz2) + 1 /\ sz2 <= delta * sz1)%Z.
+
 
 (* This has all the preconditions of [Bin], besides the one about size *)
 (* probably misses some post-conditions about size *)
@@ -85,53 +159,39 @@ Lemma balanceL_Desc:
     isLB lb x = true ->
     isUB ub x = true->
     (forall i, f i = f1 i || (i == x) || f2 i) ->
-    Desc (balanceL x s1 s2) lb ub f.
+    forall sz,
+    (0 <= sz)%Z /\ (size s1 = sz \/ size s1 = (sz + 1)%Z) ->
+    balance_prop sz (size s2) ->
+    Desc (balanceL x s1 s2) lb ub f /\ size (balanceL x s1 s2) = (1 + size s1 + size s2)%Z.
 Proof.
   intros.
-  unfold balanceL.
-  inversion H1; inversion H2; subst.
-  * eapply DescBin.
-    - apply DescTip.
-    - apply DescTip.
-    - assumption.
-    - assumption.
-    - reflexivity.
-    - intro i. rewrite H5. subst.
-      reflexivity.
-  * eapply DescBin.
-    - apply DescTip.
-    - eapply DescBin; try eassumption; reflexivity.
-    - assumption.
-    - assumption.
-    - change (1 + (1 + size s0 + size s3) = (1 + 0 + (1 + size s0 + size s3)))%Z. omega.
-    - intro i. subst. rewrite H5.  reflexivity.
-  * subst.
-    inversion H6; inversion H7; subst.
-    + eapply DescBin; try eapply DescBin; try apply DescTip; try assumption; try reflexivity.
-      intro i. rewrite H5, H11. reflexivity.
-    + assert (s1 = Tip) by admit. (* If the input is well-balanced *)
-      assert (s2 = Tip) by admit. (* If the input is well-balanced *) 
-      subst.
-      inversion H15; subst. inversion H16; subst.
-      eapply DescBin; try eapply DescBin; try apply DescTip; try assumption; try reflexivity.
-      ** admit.
-      ** admit.
-      ** intro i. rewrite H5, H11, H20. rewrite !orb_assoc.
-         reflexivity.
-    + assert (s1 = Tip) by admit. (* If the input is well-balanced *)
-      assert (s2 = Tip) by admit. (* If the input is well-balanced *) 
-      subst.
-      inversion H10; subst. inversion H12; subst.
-      eapply DescBin; try eapply DescBin; try apply DescTip; try assumption; try reflexivity.
-      ** admit.
-      ** intro i. rewrite H5, H11, H16. rewrite !orb_assoc.
-         reflexivity.
-Admitted.
+  unfold balanceL, balance_prop, delta, ratio in *.
+  unfold fromInteger, op_zg__, op_zl__, op_zt__, op_zp__, Num_Integer__, Ord_Integer___, op_zg____, op_zl____.
+  rewrite size_size.
 
-Axiom size_balanceL:
-  forall x (s1 s2 : Set_ e),
-  size (balanceL x s1 s2) = (1 + size s1 + size s2)%Z.
-
+  repeat lazymatch goal with [ H : Desc ?s _ _ _ |- context [match ?s with _ => _ end] ] => inversion H;subst end;
+  repeat lazymatch goal with [ |- context [if (?x <? ?y)%Z then _ else _] ] => destruct (Z.ltb_spec x y) end;
+  split;
+  repeat lazymatch goal with [ |- Desc (Bin _ _ _ _) _ _ _ ] => eapply DescBin end;
+  postive_sizes;
+  try apply DescTip;
+  try eassumption;
+  unfold delta, fromInteger, Num_Integer__ in *;
+  rewrite ?size_Bin in *; simpl (size Tip) in *;
+  simpl isLB in *;
+  simpl isUB in *;
+  repeat lazymatch goal with [ H2 : isLB ?lb ?x = true, H1 : ?x < ?y = true |- isLB ?lb ?y = true] => apply (isLB_lt _ _ _ H2 H1) end;
+  repeat lazymatch goal with [ H2 : isUB ?ub ?x = true, H1 : ?y < ?x = true |- isUB ?ub ?y = true] => apply (isUB_lt _ _ _ H2 H1) end;
+  try reflexivity;
+  try omega;
+  try solve [f_solver].
+  all: (* For the remaining cases, we hae learn that some sets are actually empty, i.e. Tips.
+     To learn this we opportunistially call omega, which is kinda expensive,
+     so lets try this only at the end *)
+    repeat match goal with [ H : Desc ?s _ _ _ |- _ ] =>
+      assert_new (size s = 0)%Z omega; rewrite (size_0_iff_tip H) in *; subst s; inversion H; clear H; subst end;
+    try f_solver.
+Qed.
 
 Lemma member_Desc:
  forall {s lb ub f i}, Desc s lb ub f -> member i s = f i.
@@ -140,7 +200,7 @@ Proof.
   induction H1.
   * reflexivity.
   * subst; simpl.
-    rewrite H4; clear H4.
+    rewrite H5; clear H5.
     destruct (compare i x) eqn:?.
     + rewrite compare_Eq in *.
       rewrite Heqc.
@@ -177,6 +237,7 @@ Proof.
   * assumption.
   * assumption.
   * reflexivity.
+  * simpl size. omega.
   * intro i. rewrite H3.
     rewrite !orb_false_r.
     reflexivity.
@@ -232,59 +293,60 @@ Proof.
     destruct (compare y x) eqn:?.
     + rewrite compare_Eq in *.
       replace (f y) with true
-       by (rewrite H4; rewrite Heqc; rewrite orb_true_r; reflexivity).
+       by (rewrite H5; rewrite Heqc; rewrite orb_true_r; reflexivity).
       destruct (PtrEquality.ptrEq _ _) eqn:Hpe; only 2: clear Hpe.
       - apply PtrEquality.ptrEq_eq in Hpe; subst.
         split; try reflexivity.
         eapply DescBin; try eassumption; try reflexivity.
-        intro i. rewrite Hf, H4. destruct (i == x), (f1 i), (f2 i); reflexivity.
+        intro i. rewrite Hf, H5. destruct (i == x), (f1 i), (f2 i); reflexivity.
       - unfold Datatypes.id.
         split; try reflexivity.
         eapply DescBin. 
-        ** assert (Desc s1 lb (Some y) f1) by admit.
+        ** assert (Desc s1 lb (Some y) f1) by admit. (* transitivity of the bound *)
            eassumption.
-        ** assert (Desc s2 (Some y) ub f2) by admit.
+        ** assert (Desc s2 (Some y) ub f2) by admit. (* transitivity of the bound *)
            eassumption.
         ** assumption.
         ** assumption.
         ** reflexivity.
-        ** intro i. rewrite Hf. rewrite H4.
+        ** omega.
+        ** intro i. rewrite Hf. rewrite H5.
            replace (i == x) with (i == y) by admit. (* transitivity of == *)
            destruct (i == y), (f1 i), (f2 i); reflexivity.
     + rewrite compare_Lt in *.
       edestruct IHHD1; try assumption; try (intro; reflexivity).
-      rename H3 into IHHD1_Desc, H5 into IHHD1_size.
+      rename H3 into IHHD1_Desc, H6 into IHHD1_size.
       destruct (PtrEquality.ptrEq _ _) eqn:Hpe; only 2: clear Hpe.
       - apply PtrEquality.ptrEq_eq in Hpe; subst.
         rewrite Hpe in IHHD1_size.
         assert (Hf1 : f1 y = true). {
           destruct (f1 y) eqn:?; auto; try omega.
-          contradict IHHD1_size.
-          generalize (size s1); unfold Int; intros; omega.
         }
-        rewrite H4.
+        rewrite H5.
         rewrite lt_not_eq by assumption.
         rewrite Hf1.
         rewrite (Desc_outside_below HD2) by assumption.
         rewrite !orb_false_r.
         split; try reflexivity.
         eapply DescBin; try eassumption; try reflexivity.
-        intro i. rewrite Hf, H4. rewrite !orb_assoc.
+        intro i. rewrite Hf, H5. rewrite !orb_assoc.
         (* can be automated from here *)
         assert (i == y = true -> f1 i = true) by admit.
         destruct (i == y) eqn:?, (i == x)  eqn:?, (f1 i)  eqn:?, (f2 i)  eqn:?; 
           intuition congruence.
-      - split; try reflexivity.
-        eapply balanceL_Desc; try eassumption.
+      - replace ((if f y then (1 + size s1 + size s2)%Z else (1 + (1 + size s1 + size s2))%Z))
+           with (1 + size (insert' y s1) + size s2)%Z.
+        eapply balanceL_Desc with (sz := size s1); try eassumption.
         ** intro i.
            rewrite Hf.
-           rewrite H4.
+           rewrite H5.
            rewrite !orb_assoc.
            (* here I can use some tactics from IntSet *)
            destruct (i == y), (i == x); reflexivity.
-        ** rewrite size_balanceL.
-           rewrite IHHD1_size.
-           rewrite H4.
+        ** postive_sizes. destruct (f1 y) eqn:?; try omega.
+        ** postive_sizes. unfold balance_prop; destruct (f1 y) eqn:?; try omega.
+        ** rewrite IHHD1_size.
+           rewrite H5.
            rewrite (Desc_outside_below HD2) by assumption.
            rewrite lt_not_eq by assumption.
            rewrite !orb_false_r.

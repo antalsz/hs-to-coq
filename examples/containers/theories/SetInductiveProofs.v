@@ -21,7 +21,7 @@ Axiom gt_not_eq : forall (x y : e),
 Axiom lt_gt : forall (x y : e),
   (x > y) = (y < x).
 
-
+(** This is just like size, but with a type signature that does not confuse [omega] *)
 Definition size (s : Set_ e) : Z :=
   match s with | Bin sz _ _ _ => sz
                | Tip => 0 end.
@@ -128,6 +128,7 @@ Qed.
 Ltac f_solver  :=
   let i := fresh "i" in 
   intro i;
+  try reflexivity; (* for when we have an existential variable *)
   repeat match goal with [ H : (forall i, ?f i = _) |- context [?f i] ] => rewrite H; clear H end;
   rewrite ?orb_assoc, ?orb_false_r, ?orb_false_l;
   try reflexivity.
@@ -149,6 +150,57 @@ Lemma isUB_lt:
   isUB ub y = true.
 Admitted.
 
+(* In order to stay sane and speed things up, here is
+ a tactic that solves [Desc] goals *)
+
+Ltac solve_Bounds := first
+  [ assumption
+  | lazymatch goal with [ H2 : isLB ?lb ?x = true, H1 : ?x < ?y = true |- isLB ?lb ?y = true] => apply (isLB_lt _ _ _ H2 H1) end
+  | lazymatch goal with [ H2 : isUB ?ub ?x = true, H1 : ?y < ?x = true |- isUB ?ub ?y = true] => apply (isUB_lt _ _ _ H2 H1) end
+  | idtac "solve_Bounds gave up"
+  ].
+
+Ltac omega_Desc :=
+  postive_sizes;
+  unfold balance_prop, delta, fromInteger, Num_Integer__ in *;
+  rewrite ?size_Bin in *; simpl (size Tip) in *;
+  omega.
+
+Ltac solve_size := first
+  [ assumption
+  | reflexivity
+  | omega_Desc
+  | idtac "solve_size gave up"
+  ].
+
+Ltac solve_Desc := eassumption || lazymatch goal with
+  | [ |- Desc Tip _ _ _ ]
+    => apply DescTip
+  | [ |- Desc (Bin _ _ _ _) _ _ _ ]
+    => eapply DescBin;
+        [ solve_Desc
+        | solve_Desc
+        | solve_Bounds
+        | solve_Bounds
+        | solve_size
+        | solve_size
+        | try solve [f_solver]
+        ]
+  | |- ?H => fail "solve_Desc gave up on" H
+  end.
+
+Ltac find_Tip :=
+  match goal with [ H : Desc ?s _ _ _ |- _ ] =>
+    assert_new (size s = 0)%Z omega_Desc;
+    rewrite (size_0_iff_tip H) in *;
+    subst s;
+    inversion H;
+    clear H;
+    subst
+  end.
+
+Require Import Coq.Program.Tactics.
+
 Lemma balanceL_Desc:
     forall lb ub,
     forall s1 f1,
@@ -166,30 +218,16 @@ Proof.
   intros.
   unfold balanceL, balance_prop, delta, ratio in *.
   unfold fromInteger, op_zg__, op_zl__, op_zt__, op_zp__, Num_Integer__, Ord_Integer___, op_zg____, op_zl____.
-  rewrite size_size.
+  rewrite ?size_size.
 
-  repeat lazymatch goal with [ H : Desc ?s _ _ _ |- context [match ?s with _ => _ end] ] => inversion H;subst end;
+  repeat lazymatch goal with [ H : Desc ?s _ _ _ |- context [match ?s with _ => _ end] ] => inversion H;subst; clear H end;
   repeat lazymatch goal with [ |- context [if (?x <? ?y)%Z then _ else _] ] => destruct (Z.ltb_spec x y) end;
-  split;
-  repeat lazymatch goal with [ |- Desc (Bin _ _ _ _) _ _ _ ] => eapply DescBin end;
-  postive_sizes;
-  try apply DescTip;
-  try eassumption;
-  unfold balance_prop, delta, fromInteger, Num_Integer__ in *;
   rewrite ?size_Bin in *; simpl (size Tip) in *;
   simpl isLB in *;
-  simpl isUB in *;
-  repeat lazymatch goal with [ H2 : isLB ?lb ?x = true, H1 : ?x < ?y = true |- isLB ?lb ?y = true] => apply (isLB_lt _ _ _ H2 H1) end;
-  repeat lazymatch goal with [ H2 : isUB ?ub ?x = true, H1 : ?y < ?x = true |- isUB ?ub ?y = true] => apply (isUB_lt _ _ _ H2 H1) end;
-  try reflexivity;
-  try omega;
-  try solve [f_solver].
-  all: (* For the remaining cases, we hae learn that some sets are actually empty, i.e. Tips.
-     To learn this we opportunistially call omega, which is kinda expensive,
-     so lets try this only at the end *)
-    repeat match goal with [ H : Desc ?s _ _ _ |- _ ] =>
-      assert_new (size s = 0)%Z omega; rewrite (size_0_iff_tip H) in *; subst s; inversion H; clear H; subst end;
-    try f_solver.
+  simpl isUB in *.
+  all: try solve [exfalso; omega_Desc]. (* Some are simply impossible *)
+  all: repeat find_Tip.
+  all: split; [solve_Desc | solve_size].
 Qed.
 
 Lemma balanceR_Desc:
@@ -209,30 +247,16 @@ Proof.
   intros.
   unfold balanceR, balance_prop, delta, ratio in *.
   unfold fromInteger, op_zg__, op_zl__, op_zt__, op_zp__, Num_Integer__, Ord_Integer___, op_zg____, op_zl____.
-  rewrite size_size.
+  rewrite ?size_size.
 
-  repeat lazymatch goal with [ H : Desc ?s _ _ _ |- context [match ?s with _ => _ end] ] => inversion H;subst end;
+  repeat lazymatch goal with [ H : Desc ?s _ _ _ |- context [match ?s with _ => _ end] ] => inversion H;subst; clear H end;
   repeat lazymatch goal with [ |- context [if (?x <? ?y)%Z then _ else _] ] => destruct (Z.ltb_spec x y) end;
-  split;
-  repeat lazymatch goal with [ |- Desc (Bin _ _ _ _) _ _ _ ] => eapply DescBin end;
-  postive_sizes;
-  try apply DescTip;
-  try eassumption;
-  unfold balance_prop, delta, fromInteger, Num_Integer__ in *;
   rewrite ?size_Bin in *; simpl (size Tip) in *;
   simpl isLB in *;
-  simpl isUB in *;
-  repeat lazymatch goal with [ H2 : isLB ?lb ?x = true, H1 : ?x < ?y = true |- isLB ?lb ?y = true] => apply (isLB_lt _ _ _ H2 H1) end;
-  repeat lazymatch goal with [ H2 : isUB ?ub ?x = true, H1 : ?y < ?x = true |- isUB ?ub ?y = true] => apply (isUB_lt _ _ _ H2 H1) end;
-  try reflexivity;
-  try omega;
-  try solve [f_solver].
-  all: (* For the remaining cases, we hae learn that some sets are actually empty, i.e. Tips.
-     To learn this we opportunistially call omega, which is kinda expensive,
-     so lets try this only at the end *)
-    repeat match goal with [ H : Desc ?s _ _ _ |- _ ] =>
-      assert_new (size s = 0)%Z omega; rewrite (size_0_iff_tip H) in *; subst s; inversion H; clear H; subst end;
-    try f_solver.
+  simpl isUB in *.
+  all: try solve [exfalso; omega_Desc]. (* Some are simply impossible *)
+  all: repeat find_Tip.
+  all: split; [solve_Desc | solve_size].
 Qed.
 
 

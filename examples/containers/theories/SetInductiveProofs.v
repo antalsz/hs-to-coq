@@ -106,7 +106,7 @@ Inductive Desc : Set_ e -> bound -> bound -> (e -> bool) -> Prop :=
     isUB ub x = true ->
     sz = (1 + size s1 + size s2)%Z ->
     balance_prop (size s1) (size s2) ->
-    (forall i, f i = f1 i || (i == x) || f2 i) ->
+    (forall i, f i = (f1 i || (i == x) || f2 i)) ->
     Desc (Bin sz x s1 s2) lb ub f.
 
 (** For the meaning of a set we do not care about the bounds *)
@@ -511,8 +511,8 @@ Proof.
     destruct (compare y x) eqn:?.
     + rewrite compare_Eq in *.
       replace (f y) with true
-       by (rewrite H5; rewrite Heqc; rewrite orb_true_r; reflexivity).
-      destruct (PtrEquality.ptrEq _ _) eqn:Hpe; only 2: clear Hpe.
+        by (rewrite H5; rewrite Heqc; rewrite orb_true_r; reflexivity).
+      destruct (PtrEquality.ptrEq _ _) eqn:Hpe; [| clear Hpe]. 
       - apply PtrEquality.ptrEq_eq in Hpe; subst.
         split; try reflexivity.
         eapply DescBin; try eassumption; try reflexivity.

@@ -296,6 +296,8 @@ Ltac solve_size := first
 
 (** Solve goals of Desc. Should be back-tracking free, I think. *)
 Ltac solve_Desc := eassumption || lazymatch goal with
+  | [ |- Desc Tip _ _ _ ]
+    => apply DescTip; f_solver
   | [ H : Desc ?s ?lb (Some ?ub) _, H2 : ?ub' == ?ub = true  |- Desc ?s ?lb (Some ?ub') _ ]
     => apply (Desc_change_ub _ _ _ _ _ H H2)
   | [ H : Desc ?s ?lb (Some ?ub) _, H2 : isUB ?ub' ?ub = true  |- Desc ?s ?lb ?ub' _ ]
@@ -304,8 +306,6 @@ Ltac solve_Desc := eassumption || lazymatch goal with
     => apply (Desc_change_lb _ _ _ _ _ H H2)
   | [ H : Desc ?s (Some ?lb) ?ub _, H2 : isLB ?lb' ?lb = true  |- Desc ?s ?lb' ?ub _ ]
     => admit
-  | [ |- Desc Tip _ _ _ ]
-    => apply DescTip; f_solver
   | [ |- Desc (Bin _ _ _ _) _ _ _ ]
     => eapply DescBin;
         [ solve_Desc

@@ -79,11 +79,13 @@ Ltac order_Bounds :=
   intros;
   simpl isUB in *;
   simpl isLB in *;
+  (* We only destruct [isUB] and [isLB] occurrences in the goal,
+     those in the context are not helpful (as in one of the two cases
+     one of them is [None], and if that can be solved, then so can the
+     other one. *)
   repeat (congruence || lazymatch goal with
-    | H : context [isUB ?ub _] |- _ => destruct ub; simpl isUB in *
-    | |-  context [isUB ?ub _]      => destruct ub; simpl isUB in *
-    | H : context [isLB ?lb _] |- _ => destruct lb; simpl isLB in *
-    | |-  context [isLB ?lb _]      => destruct lb; simpl isLB in *
+    | |- context [isUB ?ub _] => destruct ub; simpl isUB in *
+    | |- context [isLB ?lb _] => destruct lb; simpl isLB in *
    end);
    order e.
 

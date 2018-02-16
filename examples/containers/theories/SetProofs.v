@@ -535,8 +535,10 @@ Module Foo (E : OrderedType) : WSfun(E).
       derive_constraints_rec Hwf
     end; derive_validsize.
 
+  Require Import Psatz.
+
   Ltac lucky_balanced_solve :=
-    derive_constraints; subst; rewrite_for_omega; intros; omega.
+    derive_constraints; subst; rewrite_for_omega; intros; lia.
 
   Ltac solve_balanced_trivial :=
     solve [auto; repeat (match goal with
@@ -560,7 +562,7 @@ Module Foo (E : OrderedType) : WSfun(E).
              derive_constraints;
              apply /orP=>//;
                    ((right; apply /andP=>//) + left);
-             solve [rewrite_for_omega; omega]
+             solve [rewrite_for_omega; lia]
            end;
     try solve [derive_constraints;
                repeat match goal with
@@ -580,7 +582,7 @@ Module Foo (E : OrderedType) : WSfun(E).
           destruct lr as [slr xlr lrl lrr | ];
           try solve [derive_constraints; 
                      rewrite_for_omega; intros; omega].
-        destruct_match; rewrite_for_omega; omega.
+        time (destruct_match; rewrite_for_omega; omega).
       + intros. rewrite_size; rewrite_Int; omega.
     - intros. rewrite_size; rewrite_Int; omega.
     - rewrite /balanceL;
@@ -668,7 +670,7 @@ Module Foo (E : OrderedType) : WSfun(E).
       destruct_match; solve_balanced.
     - (** Both [l] and [r] and [Tip]s. *)
       step_in_balanced.
-      Time Qed. (* Finished transaction in 8.423 secs (8.39u,0.023s) (successful) *)
+      Time Qed. (* Finished transaction in 2.245 secs (2.236u,0.007s) (successful) *)
 
     Definition before_balancedR (x: elt) (l r : Set_ elt) : Prop :=
     (size l + size r <= 2 /\ size l <= 1) \/
@@ -705,7 +707,7 @@ Module Foo (E : OrderedType) : WSfun(E).
       destruct_match; solve_balanced.
     - (** Both [l] and [r] and [Tip]s. *)
       step_in_balanced.
-      Time Qed. (* Finished transaction in 8.689 secs (8.652u,0.024s) (successful) *)
+      Time Qed. (* Finished transaction in 2.548 secs (2.53u,0.013s) (successful) *)
 
   Definition before_ordered (x : elt) (l r : Set_ elt) (f g : elt -> bool) :=
     f x /\ (forall x y, E.lt x y \/ E.eq x y -> f x -> f y) /\

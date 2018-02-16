@@ -192,6 +192,18 @@ Proof.
   rewrite orb_false_l. rewrite orb_false_r. order_Bounds.
 Qed.
 
+Lemma Desc_inside:
+  forall {s lb ub i},
+  Bounded s lb ub ->
+  sem s i = true ->
+  isLB lb i = true /\ isUB ub i = true.
+Proof.
+  intros ???? HD ?.
+  induction HD; intros; subst; simpl in *; rewrite ?orb_true_iff in *; intuition;
+  order_Bounds.  
+Qed.
+
+
 (* We use this as a rewrite rule because
    [simpl (size (Bin _ _ _ _ ))]
    simplifies the [ 1 + _ ] which is annoying. *)
@@ -829,6 +841,43 @@ Admitted.
 From Coq Require Import ssreflect.
 Require Import Tactics.
 
+(** This auxillary tactic destructs one boolean atom in the argument *)
+
+Ltac split_bool_go expr :=
+  lazymatch expr with 
+    | true       => fail
+    | false      => fail
+    | Some _     => fail
+    | None       => fail
+    | match ?x with _ => _ end => split_bool_go x || (simpl x; cbv match)
+    | negb ?x    => split_bool_go x
+    | ?x && ?y   => split_bool_go x || split_bool_go y
+    | ?x || ?y   => split_bool_go x || split_bool_go y
+    | xorb ?x ?y => split_bool_go x || split_bool_go y
+    | ?bexpr     => destruct bexpr eqn:?
+  end.
+
+(** This auxillary tactic destructs one boolean or option atom in the goal *)
+
+Ltac split_bool :=
+  match goal with 
+    | [ |- ?lhs = ?rhs] => split_bool_go lhs || split_bool_go rhs
+  end.
+  
+Ltac f_solver_strong := f_solver;
+  repeat (try solve [exfalso; order_Bounds];
+          rewrite ?andb_true_r ?andb_true_l ?andb_false_r ?andb_false_l
+                  ?orb_true_r ?orb_true_l ?orb_false_r ?orb_false_l
+                  ?orb_assoc ?and_assoc;
+          try lazymatch goal with
+            | H : Bounded ?s _ _, H2 : sem ?s ?i = true |- _ =>
+               apply (Desc_inside H) in H2; destruct H2
+          end;
+          try reflexivity;
+          split_bool || exfalso
+          ).
+
+
 Lemma delete_Desc :
   forall s lb ub sz f x,
   Bounded s lb ub ->
@@ -847,13 +896,7 @@ Proof.
   - rewrite /delete -/delete.
     destruct (compare x x0) eqn:Heq.
     + eapply glue_Desc; eauto.
-      * f_solver. destruct (i == x) eqn:Heq0.
-        -- rewrite -> (Desc_outside_above HB1) by solve_Bounds.
-           rewrite -> (Desc_outside_below HB2) by solve_Bounds.
-           simpl. rewrite andb_false_r. reflexivity.
-        -- simpl. rewrite andb_true_r.
-           replace (i == x0) with false by (symmetry; solve_Bounds).
-           rewrite orb_false_r. reflexivity.
+      * f_solver_strong.
       * simpl sem. rewrite size_Bin.
         replace (x == x0) with true by (symmetry; solve_Bounds).
         rewrite orb_true_r. cbn -[Z.add]. solve_size.
@@ -870,21 +913,9 @@ Proof.
         rewrite -> (Desc_outside_below HB2) by solve_Bounds.
         cbn -[Z.add].
         solve_Desc.
-        f_solver. 
-        destruct (i == x) eqn:?.
-        -- simpl. rewrite ?andb_false_r.
-           replace (i == x0) with false  by (symmetry; solve_Bounds).
-           rewrite -> (Desc_outside_below HB2) by solve_Bounds.
-           reflexivity.
-        -- simpl. rewrite !andb_true_r. reflexivity.
+        f_solver_strong. 
       * eapply balanceR_Desc; try first [eassumption|reflexivity].
-        -- f_solver.
-           destruct (i == x) eqn:Hcomp0.
-           ++ simpl. rewrite ?andb_false_r.
-              replace (i == x0) with false  by (symmetry; solve_Bounds).
-              rewrite -> (Desc_outside_below HB2) by solve_Bounds.
-              reflexivity.
-           ++ simpl. rewrite ?andb_true_r. reflexivity.
+        -- f_solver_strong.
         -- destruct (sem s1 x); solve_size.
         -- cbn -[Z.add].
            replace (x == x0) with false  by (symmetry; solve_Bounds).
@@ -903,21 +934,9 @@ Proof.
         rewrite -> (Desc_outside_above HB1) by solve_Bounds.
         cbn -[Z.add].
         solve_Desc.
-        f_solver. 
-        destruct (i == x) eqn:?.
-        -- simpl. rewrite !andb_false_r.
-           replace (i == x0) with false  by (symmetry; solve_Bounds).
-           rewrite -> (Desc_outside_above HB1) by solve_Bounds.
-           reflexivity.
-        -- simpl. rewrite !andb_true_r. reflexivity.
+        f_solver_strong.
       * eapply balanceL_Desc; try first [eassumption|reflexivity].
-        -- f_solver.
-           destruct (i == x) eqn:Hcomp0.
-           ++ simpl. rewrite ?andb_false_r.
-              replace (i == x0) with false  by (symmetry; solve_Bounds).
-              rewrite -> (Desc_outside_above HB1) by solve_Bounds.
-              reflexivity.
-           ++ simpl. rewrite ?andb_true_r. reflexivity.
+        -- f_solver_strong.
         -- destruct (sem s2 x); solve_size.
         -- cbn -[Z.add].
            replace (x == x0) with false  by (symmetry; solve_Bounds).

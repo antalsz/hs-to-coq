@@ -4,7 +4,7 @@ Require Import Data.Set.Internal.
 Set Bullet Behavior "Strict Subproofs".
 
 Section WF.
-Context (e : Type) `{Ord e}.
+Context (e : Type) {HEq : Eq_ e} {HOrd : Ord e} {HEqLaws : EqLaws e}.
 
 (* We don’t have a OrdLawful class yet. We need to introduce that,
    add it to the context, and derive all axioms from that.
@@ -128,8 +128,8 @@ Lemma Desc_outside_below_aux:
 Proof.
   intros ????? HD ?.
   induction HD; intros; subst; simpl in *; intuition.
-  rewrite H6.
   rewrite H4.
+  rewrite H2.
   rewrite IHHD2 by admit. (* here we need a generic tactic to reason about < and isLB *)
   admit. (* here we need a generic tactic to reason about < and isLB *)
 Admitted.
@@ -154,8 +154,8 @@ Lemma Desc_outside_above_aux:
 Proof.
   intros ????? HD ?.
   induction HD; intros; subst; simpl in *; intuition.
-  rewrite H6.
   rewrite H4.
+  rewrite H2.
   rewrite IHHD1 by admit. (* here we need a generic tactic to reason about < and isLB *)
   admit. (* here we need a generic tactic to reason about < and isLB *)
 Admitted.
@@ -213,7 +213,7 @@ Lemma size_0_iff_tip:
   Desc s lb ub f -> (size s = 0)%Z <-> s = Tip.
 Proof.
   intros.
-  induction H1.
+  induction H.
   * intuition.
   * postive_sizes;
     rewrite size_Bin in *.
@@ -421,8 +421,8 @@ Lemma member_Desc:
  forall {s lb ub f i}, Desc s lb ub f -> member i s = f i.
 Proof.
   intros.
-  induction H1.
-  * simpl. rewrite H1; reflexivity.
+  induction H.
+  * simpl. rewrite H; reflexivity.
   * subst; simpl.
     rewrite H5; clear H5.
     destruct (compare i x) eqn:?.
@@ -433,13 +433,13 @@ Proof.
     + rewrite compare_Lt in *.
       rewrite lt_not_eq by assumption.
       rewrite IHDesc1.
-      rewrite (Desc_outside_below H1_0) by assumption.
+      rewrite (Desc_outside_below H0) by assumption.
       rewrite !orb_false_r.
       reflexivity.
     + rewrite compare_Gt in *.
       rewrite gt_not_eq by assumption.
       rewrite IHDesc2.
-      rewrite (Desc_outside_above H1_) by assumption.
+      rewrite (Desc_outside_above H) by assumption.
       rewrite orb_false_l.
       reflexivity.
 Qed.
@@ -519,19 +519,19 @@ Proof.
   revert f' Hf.
   induction HD; intros.
   * unfold insert, Datatypes.id.
-    split; try (rewrite H1; reflexivity).
+    split; try (rewrite H; reflexivity).
     apply singleton_Desc; try assumption.
-    intro i. rewrite Hf. rewrite H1. rewrite orb_false_r. reflexivity.
+    intro i. rewrite Hf. rewrite H. rewrite orb_false_r. reflexivity.
   * subst; cbn -[Z.add].
     destruct (compare y x) eqn:?.
     + rewrite compare_Eq in *.
       replace (f y) with true
-        by (rewrite H5; rewrite Heqc; rewrite orb_true_r; reflexivity).
+        by (rewrite H3; rewrite Heqc; rewrite orb_true_r; reflexivity).
       destruct (PtrEquality.ptrEq _ _) eqn:Hpe; [| clear Hpe]. 
       - apply PtrEquality.ptrEq_eq in Hpe; subst.
         split; try reflexivity.
         eapply DescBin; try eassumption; try reflexivity.
-        intro i. rewrite Hf, H5. destruct (i == x), (f1 i), (f2 i); reflexivity.
+        intro i. rewrite Hf, H3. destruct (i == x), (f1 i), (f2 i); reflexivity.
       - unfold Datatypes.id.
         split; try reflexivity.
         eapply DescBin.
@@ -546,9 +546,9 @@ Proof.
            destruct (i == y), (f1 i), (f2 i); reflexivity.
     + rewrite compare_Lt in *.
       edestruct IHHD1; try assumption; try (intro; reflexivity).
-      rename H3 into IH_Desc, H6 into IH_size.
+      rename H1 into IH_Desc, H4 into IH_size.
 
-      rewrite H5; setoid_rewrite H5 in Hf; clear H5.
+      rewrite H3; setoid_rewrite H3 in Hf; clear H3.
       rewrite (Desc_outside_below HD2) by assumption.
       rewrite lt_not_eq by assumption.
       rewrite ?orb_false_r, ?orb_false_l.
@@ -579,9 +579,9 @@ Proof.
     + (* more or less a copy-n-paste from above *)
       rewrite compare_Gt in *.
       edestruct IHHD2; only 1: rewrite lt_gt in *; try assumption. try (intro; reflexivity).
-      rename H3 into IH_Desc, H6 into IH_size.
+      rename H1 into IH_Desc, H4 into IH_size.
 
-      rewrite H5; setoid_rewrite H5 in Hf; clear H5.
+      rewrite H3; setoid_rewrite H3 in Hf; clear H3.
       rewrite (Desc_outside_above HD1) by assumption.
       rewrite gt_not_eq by assumption.
       rewrite !orb_false_l.
@@ -641,21 +641,21 @@ Proof.
   intros sz x l r.
   revert sz x l.
   induction r; intros sz x l lb ub f f' HD.
-  - inversion HD; subst. intros.
+  - inversion HD; subst; clear HD. intros.
     edestruct IHr2 with
     (f':= fun i => f2 i && negb (_==_ i y))
       as [Hf1 [Hub1 [Hlb1 [HD1 Hsz1]]]];
-      [apply H6 |
+      [apply H4 |
        intros; simpl; subst y; simpl;
        expand_pairs; reflexivity | ].
-    inversion H6; subst.
-    intros.
+    clear IHr1 IHr2.
+    inversion H4; subst; clear H4.
     subst y.
     cbn -[Z.add size].
     expand_pairs.
     cbn -[Z.add size].
-    repeat split. 
-    + rewrite H14, Hf1.
+    split; only 2: split; only 3: split.
+    + rewrite H12, Hf1.
       rewrite orb_true_r.
       reflexivity.
     + solve_Bounds. 
@@ -664,33 +664,32 @@ Proof.
     + eapply balanceL_Desc; try eassumption. 
       * f_solver. simpl.
         expand_pairs. simpl.
-        destruct ((_==_ i (fst (maxViewSure a r1 r2)))).
+        destruct (i == (fst (maxViewSure a r1 r2))) eqn:?.
         -- simpl. rewrite !andb_false_r. admit. (*check this*)
         -- simpl. rewrite !andb_true_r.
            repeat rewrite orb_assoc.
            reflexivity.
       * solve_size.
       * solve_size.
-    + admit.
   - inversion HD; subst.
     cbn -[Z.add]. intro Hf'.
-    rewrite H7, H8.
+    rewrite H5, H6.
     repeat split; try assumption.
-    + rewrite H14.
-      rewrite !orb_true_iff.
-      left. right.
-      admit.
-    + inversion H6; subst.
-      inversion H5; subst.
+    + rewrite H12.
+      rewrite Eq_refl.
+      rewrite ?orb_true_r, ?orb_true_l.
+      reflexivity.
+    + inversion H4; subst.
+      inversion H3; subst.
       * solve_Desc.
-        destruct (_==_ i x); reflexivity.
+        destruct (i == x); reflexivity.
       * find_Tip.
         find_Tip.
         solve_Desc. f_solver.
-        destruct (_==_ i x0) eqn:Hi; simpl.
+        destruct (i == x0) eqn:Hi; simpl.
         -- clear -H9 Hi.
            admit.
-        -- destruct (_==_ i x); reflexivity.
+        -- destruct (i == x); reflexivity.
     + solve_size.
 Admitted.
 

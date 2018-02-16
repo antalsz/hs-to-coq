@@ -80,13 +80,11 @@ Ltac order_Bounds :=
   intros;
   simpl isUB in *;
   simpl isLB in *;
-  (* We only destruct [isUB] and [isLB] occurrences in the goal,
-     those in the context are not helpful (as in one of the two cases
-     one of them is [None], and if that can be solved, then so can the
-     other one. *)
   repeat (congruence || lazymatch goal with
-    | |- context [isUB ?ub _] => destruct ub; simpl isUB in *
-    | |- context [isLB ?lb _] => destruct lb; simpl isLB in *
+    | H : context [isUB ?ub _] |- _ => destruct ub; simpl isUB in *
+    | |-  context [isUB ?ub _]      => destruct ub; simpl isUB in *
+    | H : context [isLB ?lb _] |- _ => destruct lb; simpl isLB in *
+    | |-  context [isLB ?lb _]      => destruct lb; simpl isLB in *
    end);
    order e.
 
@@ -103,7 +101,6 @@ Lemma isUB_lt:
   y < x = true ->
   isUB ub y = true.
 Proof. order_Bounds. Qed.
-
 
 (** The balancing property of a binary node *)
 Definition balance_prop sz1 sz2 :=
@@ -150,9 +147,9 @@ Proof.
   induction HD; intros; subst; simpl in *; intuition.
   rewrite H4.
   rewrite H2.
-  rewrite IHHD2 by admit. (* here we need a generic tactic to reason about < and isLB *)
-  admit. (* here we need a generic tactic to reason about < and isLB *)
-Admitted.
+  rewrite IHHD2 by order_Bounds.
+  rewrite orb_false_l. rewrite orb_false_r. order_Bounds.
+Qed.
 
 Lemma Desc_outside_above:
   forall {s lb ub f i},
@@ -164,10 +161,9 @@ Proof.
   induction HD; intros; subst; simpl in *; intuition.
   rewrite H4.
   rewrite H2.
-  rewrite IHHD1 by admit. (* here we need a generic tactic to reason about < and isLB *)
-  admit. (* here we need a generic tactic to reason about < and isLB *)
-Admitted.
-
+  rewrite IHHD1 by order_Bounds.
+  rewrite orb_false_l. rewrite orb_false_r. order_Bounds.
+Qed.
 
 (* We use this as a rewrite rule because
    [simpl (size (Bin _ _ _ _ ))]

@@ -2,6 +2,7 @@ Require Import GHC.Base.
 Require Import Proofs.GHC.Base.
 Require Import Data.Set.Internal.
 Require Import OrdTactic.
+Require Import Psatz.
 Set Bullet Behavior "Strict Subproofs".
 
 
@@ -50,7 +51,7 @@ Lemma lt_trans : forall (x y z : e),
 Proof. intuition; order e. Qed.
 
 
-(** This is just like size, but with a type signature that does not confuse [omega] *)
+(** This is just like size, but with a type signature that does not confuse [lia] *)
 Definition size (s : Set_ e) : Z :=
   match s with | Bin sz _ _ _ => sz
                | Tip => 0 end.
@@ -196,8 +197,8 @@ Lemma size_nonneg:
 Proof.
   intros ???? HD.
   induction HD.
-  * simpl. omega.
-  * simpl. omega.
+  * simpl. lia.
+  * simpl. lia.
 Qed.
 
 
@@ -213,7 +214,7 @@ Proof.
   * intuition.
   * postive_sizes;
     rewrite size_Bin in *.
-    intuition try (congruence || omega).
+    intuition try (congruence || lia).
 Qed.
 
 (* Solve equations of the form
@@ -278,19 +279,19 @@ Ltac solve_Bounds := first
   | idtac "solve_Bounds gave up"
   ].
 
-(** A variant of [omega] that unfolds a few specific things and knows that
+(** A variant of [lia] that unfolds a few specific things and knows that
    the size of a well-formed tree is positive. *)
-Ltac omega_Desc :=
+Ltac lia_Desc :=
   postive_sizes;
   unfold balance_prop, delta, fromInteger, Num_Integer__ in *;
   rewrite ?size_Bin in *; simpl (size Tip) in *;
-  omega.
+  lia.
 
 (** A tactic to solve questions about size. *)
 Ltac solve_size := first
   [ assumption
   | reflexivity
-  | omega_Desc
+  | lia_Desc
   | idtac "solve_size gave up"
   ].
 
@@ -319,10 +320,10 @@ Ltac solve_Desc := eassumption || lazymatch goal with
   | |- ?H => fail "solve_Desc gave up on" H
   end.
 
-(** For every set in the context, try to see if [omega] knows it is empty. *)
+(** For every set in the context, try to see if [lia] knows it is empty. *)
 Ltac find_Tip :=
   match goal with [ H : Desc ?s _ _ _ |- _ ] =>
-    assert_new (size s = 0)%Z omega_Desc;
+    assert_new (size s = 0)%Z lia_Desc;
     rewrite (size_0_iff_tip H) in *;
     subst s;
     inversion H;
@@ -352,9 +353,9 @@ Lemma balanceL_Desc:
 Proof.
   intros.
 
-  (* Clean up the precondition a bit; makes omega go much faster *)
+  (* Clean up the precondition a bit; makes lia go much faster *)
   assert (size s1 + size s2 <= 2 /\ size s2 <= 1 \/
-        size s1 <= delta * (size s2 + 1) /\ size s2 <= delta * size s1)%Z by omega_Desc.
+        size s1 <= delta * (size s2 + 1) /\ size s2 <= delta * size s1)%Z by lia_Desc.
   clear H6.
 
   unfold balanceL, balance_prop, delta, ratio in *.
@@ -366,7 +367,7 @@ Proof.
   rewrite ?size_Bin in *; simpl (size Tip) in *;
   simpl isLB in *;
   simpl isUB in *.
-  all: try solve [exfalso; omega_Desc]. (* Some are simply impossible *)
+  all: try solve [exfalso; lia_Desc]. (* Some are simply impossible *)
   3: repeat find_Tip.
   all: split; [solve_Desc | solve_size].
 Qed.
@@ -390,9 +391,9 @@ Lemma balanceR_Desc:
 Proof.
   intros.
 
-  (* Clean up the precondition a bit; makes omega go much faster *)
+  (* Clean up the precondition a bit; makes lia go much faster *)
   assert (size s1 + size s2 <= 2 /\ size s1 <= 1 \/
-        size s1 <= delta * size s2 /\ size s2 <= delta * (size s1 + 1))%Z by omega_Desc.
+        size s1 <= delta * size s2 /\ size s2 <= delta * (size s1 + 1))%Z by lia_Desc.
   clear H6.
 
   unfold balanceR, balance_prop, delta, ratio in *.
@@ -404,7 +405,7 @@ Proof.
   rewrite ?size_Bin in *; simpl (size Tip) in *;
   simpl isLB in *;
   simpl isUB in *.
-  all: try solve [exfalso; omega_Desc]. (* Some are simply impossible *)
+  all: try solve [exfalso; lia_Desc]. (* Some are simply impossible *)
   4: repeat find_Tip.
   all: split; [solve_Desc | solve_size].
 Qed.
@@ -549,7 +550,7 @@ Proof.
       - apply PtrEquality.ptrEq_eq in Hpe; subst.
         rewrite Hpe in IH_size.
         assert (Hf' : f1 y = true). {
-          destruct (f1 y) eqn:?; auto; try omega.
+          destruct (f1 y) eqn:?; auto; try lia.
         }
         rewrite Hf'.
         split; try reflexivity.
@@ -582,7 +583,7 @@ Proof.
       - apply PtrEquality.ptrEq_eq in Hpe; subst.
         rewrite Hpe in IH_size.
         assert (Hf' : f2 y = true). {
-          destruct (f2 y) eqn:?; auto; try omega.
+          destruct (f2 y) eqn:?; auto; try lia.
         }
         rewrite Hf'.
         split; try reflexivity.

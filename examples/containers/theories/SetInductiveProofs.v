@@ -269,6 +269,12 @@ Qed.
  a tactic that solves [Desc] goals, which runs 
  the right auxillary tactic on the corresponding goals. *)
 
+Ltac expand_pairs :=
+  match goal with
+    |- context[let (_,_) := ?e in _] =>
+    rewrite (surjective_pairing e)
+  end.
+
 (** Solve [isLB] and [isUB] goals. This could be subsumed by a more general
    linear order solver that knows about these two. *)
 Ltac solve_Bounds := first
@@ -620,35 +626,6 @@ Proof.
 Qed.
 
 (* verification of maxViewSure *)
-Ltac expand_pairs :=
-  match goal with
-    |- context[let (_,_) := ?e in _] =>
-    rewrite (surjective_pairing e)
-  end.
-
-Ltac solve_Desc ::= eassumption || lazymatch goal with
-  | [ H : Desc ?s ?lb (Some ?ub) _, H2 : ?ub' == ?ub = true  |- Desc ?s ?lb (Some ?ub') _ ]
-    => apply (Desc_change_ub _ _ _ _ _ H H2)
-  | [ H : Desc ?s ?lb (Some ?ub) _, H2 : isUB ?ub' ?ub = true  |- Desc ?s ?lb ?ub' _ ]
-    => admit
-  | [ H : Desc ?s (Some ?lb) ?ub _, H2 : ?lb' == ?lb = true  |- Desc ?s (Some ?lb') ?ub _ ]
-    => apply (Desc_change_lb _ _ _ _ _ H H2)
-  | [ H : Desc ?s (Some ?lb) ?ub _, H2 : isLB ?lb' ?lb = true  |- Desc ?s ?lb' ?ub _ ]
-    => admit
-  | [ |- Desc Tip _ _ _ ]
-    => apply DescTip; f_solver
-  | [ |- Desc (Bin _ _ _ _) _ _ _ ]
-    => eapply DescBin;
-        [ solve_Desc
-        | solve_Desc
-        | solve_Bounds
-        | solve_Bounds
-        | solve_size
-        | solve_size
-        | try solve [f_solver]
-        ]
-  | |- ?H => fail "solve_Desc gave up on" H
-  end.
 
 Lemma maxViewSure_Desc:
   forall sz x l r lb ub f f',

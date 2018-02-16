@@ -631,12 +631,8 @@ Proof.
   revert sz x l.
   induction r; intros sz x l lb ub f f' HD.
   - inversion HD; subst; clear HD. intros.
-    edestruct IHr2 with
-    (f':= fun i => f2 i && negb (_==_ i y))
-      as [Hf1 [Hub1 [Hlb1 [HD1 Hsz1]]]];
-      [apply H4 |
-       intros; simpl; subst y; simpl;
-       expand_pairs; reflexivity | ].
+    edestruct IHr2 as [Hf1 [Hub1 [Hlb1 [HD1 Hsz1]]]];
+      [apply H4 |intro;reflexivity | ].
     clear IHr1 IHr2.
     inversion H4; subst; clear H4.
     subst y.
@@ -655,11 +651,9 @@ Proof.
         expand_pairs. simpl.
         destruct (i == (fst (maxViewSure a r1 r2))) eqn:?.
         -- simpl.
-           (* first rewrite with [i == _ ] *)
-           rewrite (Desc_outside_above H3).
-           Focus 2. order_Bounds.
-           rewrite !andb_false_r.
-           admit. (*check this*)
+           rewrite (Desc_outside_above H3) by order_Bounds.
+           replace (i == x)  with false by (symmetry; solve_Bounds).
+           reflexivity.
         -- simpl. rewrite !andb_true_r.
            repeat rewrite orb_assoc.
            reflexivity.

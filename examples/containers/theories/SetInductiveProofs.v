@@ -620,32 +620,11 @@ Proof.
 Qed.
 
 (* verification of maxViewSure *)
-
-Lemma maxViewSure_Desc:
-  forall sz x l r lb ub f f',
-    Desc (Bin sz x l r) lb ub f ->
-    let y := fst (maxViewSure x l r) in
-    (forall i, f' i = (f i && negb (i == y))) ->
-    f y = true /\
-    isUB ub y = true /\
-    isLB lb y = true /\
-    Desc (snd (maxViewSure x l r)) lb (Some y) f' /\
-    size (snd (maxViewSure x l r)) = sz - 1%Z.
-Proof.
-Admitted.
-
-Lemma minViewSure_Desc:
-  forall sz x l r lb ub f f',
-    Desc (Bin sz x l r) lb ub f ->
-    let y := fst (minViewSure x l r) in
-    (forall i, f' i = (negb (i == y) && f i)) ->
-    f y = true /\
-    isUB ub y = true /\
-    isLB lb y = true /\
-    Desc (snd (minViewSure x l r)) (Some y) ub f' /\
-    size (snd (minViewSure x l r)) = sz - 1%Z.
-Proof.
-Admitted.
+Ltac expand_pairs :=
+  match goal with
+    |- context[let (_,_) := ?e in _] =>
+    rewrite (surjective_pairing e)
+  end.
 
 Ltac solve_Desc ::= eassumption || lazymatch goal with
   | [ H : Desc ?s ?lb (Some ?ub) _, H2 : ?ub' == ?ub = true  |- Desc ?s ?lb (Some ?ub') _ ]
@@ -671,7 +650,89 @@ Ltac solve_Desc ::= eassumption || lazymatch goal with
   | |- ?H => fail "solve_Desc gave up on" H
   end.
 
-Ltac expand_pairs := match goal with |- context[let (_,_) := ?e in _] => rewrite (surjective_pairing e) end.
+Lemma maxViewSure_Desc:
+  forall sz x l r lb ub f f',
+    Desc (Bin sz x l r) lb ub f ->
+    let y := fst (maxViewSure x l r) in
+    (forall i, f' i = (f i && negb (i == y))) ->
+    f y = true /\
+    isUB ub y = true /\
+    isLB lb y = true /\
+    Desc (snd (maxViewSure x l r)) lb (Some y) f' /\
+    size (snd (maxViewSure x l r)) = sz - 1%Z.
+Proof.
+  intros sz x l r.
+  revert sz x l.
+  induction r; intros sz x l lb ub f f' HD.
+  - inversion HD; subst. intros.
+    edestruct IHr2 with
+    (f':= fun i => f2 i && negb (_==_ i y))
+      as [Hf1 [Hub1 [Hlb1 [HD1 Hsz1]]]];
+      [apply H6 |
+       intros; simpl; subst y; simpl;
+       expand_pairs; reflexivity | ].
+    inversion H6; subst.
+    intros.
+    subst y.
+    cbn -[Z.add size].
+    expand_pairs.
+    cbn -[Z.add size].
+    repeat split. 
+    + rewrite H14, Hf1.
+      rewrite orb_true_r.
+      reflexivity.
+    + solve_Bounds. 
+    + simpl isLB in *.
+      solve_Bounds.
+    + eapply balanceL_Desc; try eassumption. 
+      * f_solver. simpl.
+        expand_pairs. simpl.
+        destruct ((_==_ i (fst (maxViewSure a r1 r2)))).
+        -- simpl. rewrite !andb_false_r. admit. (*check this*)
+        -- simpl. rewrite !andb_true_r.
+           repeat rewrite orb_assoc.
+           reflexivity.
+      * solve_size.
+      * solve_size.
+    + admit.
+  - inversion HD; subst.
+    cbn -[Z.add]. intro Hf'.
+    rewrite H7, H8.
+    repeat split; try assumption.
+    + rewrite H14.
+      rewrite !orb_true_iff.
+      left. right.
+      admit.
+    + inversion H6; subst.
+      inversion H5; subst.
+      * solve_Desc.
+        destruct (_==_ i x); reflexivity.
+      * find_Tip.
+        find_Tip.
+        solve_Desc. f_solver.
+        destruct (_==_ i x0) eqn:Hi; simpl.
+        -- clear -H9 Hi.
+           admit.
+        -- destruct (_==_ i x); reflexivity.
+    + solve_size.
+Admitted.
+
+(* verification of minViewSure *)
+
+Lemma minViewSure_Desc:
+  forall sz x l r lb ub f f',
+    Desc (Bin sz x l r) lb ub f ->
+    let y := fst (minViewSure x l r) in
+    (forall i, f' i = (negb (i == y) && f i)) ->
+    f y = true /\
+    isUB ub y = true /\
+    isLB lb y = true /\
+    Desc (snd (minViewSure x l r)) (Some y) ub f' /\
+    size (snd (minViewSure x l r)) = sz - 1%Z.
+Proof.
+Admitted.
+
+(* verification of glue *)
 
 Lemma glue_Desc:
   forall s1 s2 lb ub x f1 f2 f,

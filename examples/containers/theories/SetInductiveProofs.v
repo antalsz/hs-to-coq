@@ -367,9 +367,10 @@ Proof.
   simpl isLB in *;
   simpl isUB in *.
   all: try solve [exfalso; omega_Desc]. (* Some are simply impossible *)
-  all: repeat find_Tip.
+  3: repeat find_Tip.
   all: split; [solve_Desc | solve_size].
 Qed.
+
 
 Lemma balanceR_Desc:
     forall lb ub,
@@ -404,10 +405,9 @@ Proof.
   simpl isLB in *;
   simpl isUB in *.
   all: try solve [exfalso; omega_Desc]. (* Some are simply impossible *)
-  all: repeat find_Tip.
+  4: repeat find_Tip.
   all: split; [solve_Desc | solve_size].
 Qed.
-
 
 (* verification of member *)
 

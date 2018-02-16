@@ -815,7 +815,8 @@ Proof.
            rewrite HD1 HD2 !orb_false_l !orb_false_r. simpl. order e.
         -- rewrite orb_false_r.
            destruct (f1 i || f2 i); simpl; try reflexivity; order e.
-      * admit.
+      * specialize (H3 x). rewrite H3. have: x == x0 = true by [order e].
+        move ->. rewrite orb_true_r orb_true_l. solve_size.
     + rewrite -/delete. destruct (PtrEquality.ptrEq (delete x s1) s1) eqn:Heq0.
       * apply PtrEquality.ptrEq_eq in Heq0; subst.
         symmetry in Heq0.
@@ -831,7 +832,11 @@ Proof.
                  apply (@Desc_outside_below s2 _ ub f2 i) in HD2; [| solve_Bounds].
                  auto.
               ** simpl. rewrite !andb_true_r. reflexivity.
-        -- admit.
+        -- rewrite -Heq0 in H4.
+           specialize (H3 x). rewrite H3.
+           apply (@Desc_outside_below s2 _ ub f2 x) in HD2; [| solve_Bounds].
+           rewrite HD2 orb_false_r. have: x == x0 = false by [order e].
+           move ->. rewrite orb_false_r. destruct (f1 x); solve_size.
       * intros; subst. eapply balanceR_Desc; try first [eassumption|reflexivity].
         -- apply IHHD1; auto. f_solver.
         -- f_solver.
@@ -843,6 +848,15 @@ Proof.
                  apply (@Desc_outside_below s2 _ ub f2 i) in HD2; [| solve_Bounds].
                  auto.
               ** simpl. rewrite !andb_true_r. reflexivity.
+        -- specialize (IHHD1 (fun i => f1 i && negb (_==_ i x)) (fun _ => eq_refl)).
+           destruct IHHD1. rewrite H4. destruct (f1 x); solve_size.
+        -- specialize (IHHD1 (fun i => f1 i && negb (_==_ i x)) (fun _ => eq_refl)).
+           destruct IHHD1. rewrite H4.
+           specialize (H3 x). rewrite H3.
+           apply (@Desc_outside_below s2 _ ub f2 x) in HD2; [| solve_Bounds].
+           rewrite HD2 orb_false_r. have: x == x0 = false by [order e].
+           move ->. rewrite orb_false_r. destruct (f1 x); solve_size.
+    + admit.
 Admitted.
                  
 End WF.

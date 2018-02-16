@@ -662,8 +662,10 @@ Proof.
         expand_pairs. simpl.
         destruct (i == (fst (maxViewSure a r1 r2))) eqn:?.
         -- simpl.
-           rewrite (Desc_outside_above H3) by order_Bounds.
-           replace (i == x)  with false by (symmetry; solve_Bounds).
+           rewrite (Desc_outside_above H3)
+             by order_Bounds.
+           replace (i == x)  with false
+             by (symmetry; solve_Bounds).
            reflexivity.
         -- simpl. rewrite !andb_true_r.
            repeat rewrite orb_assoc.
@@ -688,7 +690,6 @@ Qed.
 
 (* verification of minViewSure *)
 
-Print minViewSure.
 Lemma minViewSure_Desc:
   forall sz x l r lb ub f f',
     Desc (Bin sz x l r) lb ub f ->
@@ -707,7 +708,7 @@ Proof.
     edestruct IHl1 as [Hf1 [Hub1 [Hlb1 [HD1 Hsz1]]]];
       [apply H3 |intro;reflexivity | ].
     clear IHl1 IHl2.
-    inversion H4; subst; clear H4.
+    inversion H3; subst; clear H3.
     subst y.
     cbn -[Z.add size].
     expand_pairs.
@@ -718,17 +719,15 @@ Proof.
     + simpl isLB in *.
       solve_Bounds.
     + eapply balanceR_Desc; try eassumption.
-      * constructor; eassumption.
       * f_solver. simpl.
         expand_pairs. simpl.
-        destruct (i == (fst (maxViewSure a l1 l2))) eqn:?.
-        -- unfold negb. simpl. Heqb. Check @Desc_outside_above. simpl.
-           rewrite (Desc_outside_above H3) by order_Bounds.
-           replace (i == x)  with false by (symmetry; solve_Bounds).
-           reflexivity.
-        -- simpl. rewrite !andb_true_r.
-           repeat rewrite orb_assoc.
-           reflexivity.
+        destruct (i == (fst (minViewSure a l1 l2))) eqn:?.
+        -- simpl.
+           rewrite (Desc_outside_below H4) by order_Bounds.
+           rewrite orb_false_r.
+           symmetry.
+           order_Bounds.
+        -- reflexivity. 
       * solve_size.
       * solve_size.
   - inversion HD; subst; clear HD.
@@ -739,15 +738,16 @@ Proof.
       rewrite Eq_refl.
       rewrite ?orb_true_r, ?orb_true_l.
       reflexivity.
-    + inversion H4; subst; clear H4.
-      assert (forall i, f' i = f1 i).
-      { f_solver. destruct (i == x) eqn:?, (f1 i) eqn:?; try reflexivity; exfalso.
-        rewrite (Desc_outside_above H3) in Heqb0. congruence.
-        order_Bounds.
-      }
-      admit. (* Need lemma about changing f in Desc extensionally  *)
+    + inversion H3; subst; clear H3.
+      eapply Desc_change_f; only 1: eassumption.
+      f_solver.
+      destruct (i == x) eqn:?, (f2 i) eqn:?;
+               try reflexivity; exfalso.
+      rewrite (Desc_outside_below H4) in Heqb0.
+      congruence.
+      order_Bounds.
     + solve_size.
-Admitted.
+Qed.
 
 (* verification of glue *)
 

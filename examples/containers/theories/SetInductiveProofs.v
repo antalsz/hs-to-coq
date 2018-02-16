@@ -767,8 +767,8 @@ Proof.
     + set ( y := fst (maxViewSure x0 s0 s3)).
       assert (f1 y = true) by admit.
       admit.
-    + solve_size. admit.
-    + solve_size. admit.
+    + admit.
+    + admit.
   - admit.
 Admitted.
   

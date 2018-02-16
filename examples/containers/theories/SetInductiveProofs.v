@@ -695,17 +695,19 @@ Admitted.
 (* verification of glue *)
 
 Lemma glue_Desc:
-  forall s1 s2 lb ub x f1 f2 f,
+  forall s1 s2 sz s lb ub x f1 f2 f,
   Desc s1 lb (Some x) f1 ->
   Desc s2 (Some x) ub f2 ->
   isLB lb x = true ->
   isUB ub x = true ->
   balance_prop (size s1) (size s2) ->
   (forall i : e, f i = f1 i || f2 i) ->
-  Desc (glue s1 s2) lb ub f /\
-  size (glue s1 s2) = (size s1 + size s2)%Z.
+  s = glue s1 s2 ->
+  sz = (size s1 + size s2)%Z ->
+  Desc s lb ub f /\
+  size s = sz.
 Proof.
-  intros ???????? HD1 HD2. intros.
+  intros ?????????? HD1 HD2. intros.
   inversion HD1; inversion HD2; subst; cbn -[size Z.add].
   1-3: solve [split; [solve_Desc|solve_size]].
   destruct (Z.ltb_spec (1 + size s4 + size s5) (1 + size s0 + size s3)).
@@ -731,5 +733,59 @@ Proof.
     + admit.
   - admit.
 Admitted.
-  
+
+From Coq Require Import ssreflect.
+Require Import Tactics.
+
+Lemma delete_Desc :
+  forall s lb ub x f f',
+  Desc s lb ub f ->
+  (forall i, f' i = f i && negb (i == x)) ->
+  Desc (delete x s) lb ub f' /\
+  size (delete x s) = (if f x then (size s - 1) else size s).
+Proof.
+  intros s lb ub x f f' HD. revert f'.
+  induction HD; intros f' Hf'.
+  - rewrite /delete. split.
+    + constructor. f_solver.
+    + rewrite H. reflexivity.
+  - rewrite /delete -/delete.
+    destruct (compare x x0) eqn:Heq.
+    + eapply glue_Desc; eauto.
+      * f_solver. destruct (i == x0) eqn:Heq0.
+        -- apply (@Desc_outside_above s1 lb _ f1 i) in HD1; [| solve_Bounds].
+           apply (@Desc_outside_below s2 _ ub f2 i) in HD2; [| solve_Bounds].
+           rewrite HD1 HD2 !orb_false_l !orb_false_r. simpl. order e.
+        -- rewrite orb_false_r.
+           destruct (f1 i || f2 i); simpl; try reflexivity; order e.
+      * admit.
+    + rewrite -/delete. destruct (PtrEquality.ptrEq (delete x s1) s1) eqn:Heq0.
+      * apply PtrEquality.ptrEq_eq in Heq0; subst.
+        symmetry in Heq0.
+        specialize (IHHD1 (fun i => f1 i && negb (_==_ i x)) (fun _ => eq_refl)).
+        destruct IHHD1. rewrite -Heq0 in H1.
+        intros; subst. split.
+        -- solve_Desc. f_solver. 
+           destruct (i == x0) eqn:Hcomp0.
+           ++ rewrite !orb_true_r orb_true_l andb_true_l. order e.
+           ++ rewrite !orb_false_r.
+              destruct (i == x) eqn:Hcomp1.
+              ** simpl. rewrite !andb_false_r. simpl. symmetry.
+                 apply (@Desc_outside_below s2 _ ub f2 i) in HD2; [| solve_Bounds].
+                 auto.
+              ** simpl. rewrite !andb_true_r. reflexivity.
+        -- admit.
+      * intros; subst. eapply balanceR_Desc; try first [eassumption|reflexivity].
+        -- apply IHHD1; auto. f_solver.
+        -- f_solver.
+        destruct (i == x0) eqn:Hcomp0.
+           ++ rewrite !orb_true_r orb_true_l andb_true_l. order e.
+           ++ rewrite !orb_false_r.
+              destruct (i == x) eqn:Hcomp1.
+              ** simpl. rewrite !andb_false_r. simpl. symmetry.
+                 apply (@Desc_outside_below s2 _ ub f2 i) in HD2; [| solve_Bounds].
+                 auto.
+              ** simpl. rewrite !andb_true_r. reflexivity.
+Admitted.
+                 
 End WF.

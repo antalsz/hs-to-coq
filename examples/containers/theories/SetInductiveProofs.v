@@ -675,8 +675,10 @@ Proof.
       * f_solver.
         destruct (i == (fst (maxViewSure a s2_1 s2_2))) eqn:?.
         -- simpl.
-           rewrite (Desc_outside_above H3) by order_Bounds.
-           replace (i == x)  with false by (symmetry; solve_Bounds).
+           rewrite (Desc_outside_above H3)
+             by order_Bounds.
+           replace (i == x)  with false
+             by (symmetry; solve_Bounds).
            reflexivity.
         -- simpl. rewrite !andb_true_r.
            repeat rewrite orb_assoc.
@@ -696,56 +698,230 @@ Qed.
 (* verification of minViewSure *)
 
 Lemma minViewSure_Desc:
-  forall sz x l r slb ub f f',
-    Desc (Bin sz x l r) lb ub f ->
-    let y := fst (minViewSure x l r) in
-    (forall i, f' i = (negb (i == y) && f i)) ->
-    f y = true /\
+  forall sz' sz x s1 s2 lb ub f,
+    Bounded (Bin sz' x s1 s2) lb ub ->
+
+    let y := fst (minViewSure x s1 s2) in
+    let r := snd (minViewSure x s1 s2) in
+    (forall i, f i = ((sem s1 i || (i == x) || sem s2 i) && negb (i == y))) ->
+    sz = size s1 + size s2 ->
+    (* we know that y is in the input, and we actually know more: it is x or in s1 *)
+    (sem s1 y || (y == x)) = true /\
+     (* These two are obsolete, they follow from the above *)
     isUB ub y = true /\
     isLB lb y = true /\
-    Desc (snd (minViewSure x l r)) (Some y) ub f' /\
-    size (snd (minViewSure x l r)) = sz - 1%Z.
+    Desc r (Some y) ub sz f.
 Proof.
-Admitted.
+  intros sz' sz x s1 s2 lb ub f HB y r  Hf Hsz.
+  subst sz.
+
+  (* Get rid of the [f] variable (maybe worth a tactic?) *)
+  erewrite Desc_change_f by apply Hf; clear dependent f.
+
+  revert sz' x s2 lb ub HB y r.
+  induction s1; intros;subst.
+  - clear IHs1_2.
+    inversion HB; subst; clear HB.
+    inversion H3; subst.
+    cbn -[Z.add size] in *. subst y r. expand_pairs. cbn -[Z.add size] in *.
+
+    edestruct IHs1_1 as [Hthere [IHUB [IHLB [IHB [IHsz IHf]]]]]; try eassumption; try reflexivity; subst.
+    clear IHs1_1.
+
+    split;[|split;[|split]].
+    + rewrite <- orb_assoc. rewrite Hthere.
+      rewrite !orb_true_l. reflexivity.
+    + solve_Bounds.
+    + assumption.
+    + apply balanceR_Desc; try assumption.
+      * f_solver.
+        destruct (i == (fst (minViewSure a s1_1 s1_2))) eqn:?.
+        -- simpl.
+           rewrite (Desc_outside_below H4)
+             by order_Bounds.
+           replace (i == x)  with false
+             by (symmetry; solve_Bounds).
+           rewrite !andb_false_r.
+           reflexivity.
+        -- simpl. rewrite !andb_true_r.
+           repeat rewrite orb_assoc.
+           reflexivity.
+       * solve_size.
+       * solve_size.
+  - cbn -[Z.add size] in *; subst y r.
+    inversion HB; subst; clear HB.
+    split;[|split;[|split]]; try assumption.
+    + rewrite Eq_refl. rewrite ?orb_true_r, ?orb_true_l. reflexivity.
+    + solve_Desc.
+      f_solver.
+      destruct (sem s2 i) eqn:?, (i == x) eqn:?; try reflexivity; exfalso.
+      rewrite (Desc_outside_below H4) in Heqb by solve_Bounds. congruence.
+Qed.
 
 (* verification of glue *)
 
 Lemma glue_Desc:
-  forall s1 s2 lb ub x f1 f2 f,
-  Desc s1 lb (Some x) f1 ->
-  Desc s2 (Some x) ub f2 ->
+  forall s1 s2 sz lb ub x f,
+  Bounded s1 lb (Some x) ->
+  Bounded s2 (Some x) ub ->
   isLB lb x = true ->
   isUB ub x = true ->
   balance_prop (size s1) (size s2) ->
-  (forall i : e, f i = f1 i || f2 i) ->
-  Desc (glue s1 s2) lb ub f /\
-  size (glue s1 s2) = (size s1 + size s2)%Z.
+  (forall i : e, f i = sem s1 i || sem s2 i) ->
+  sz = (size s1 + size s2)%Z ->
+  Desc (glue s1 s2) lb ub sz f.
 Proof.
-  intros ???????? [HD1 Hf1] [HD2 Hf2]. intros.
-  inversion HD1; inversion HD2; subst; cbn -[size Z.add].
-  1-3: solve [split; [solve_Desc|solve_size]].
+  intros ??????? HB1 HB2 ??? Hf ?.
+  subst.
+
+  (* Get rid of the [f] variable (maybe worth a tactic?) *)
+  erewrite Desc_change_f by apply Hf; clear dependent f.
+
+  inversion HB1; inversion HB2; subst; cbn -[size Z.add]; clear HB1 HB2.
+  1-3: solve [solve_Desc|solve_size].
   destruct (Z.ltb_spec (1 + size s4 + size s5) (1 + size s0 + size s3)).
   - expand_pairs.
     rewrite !size_Bin.
-    (* epose proof (maxViewSure_Desc _ x0 s0 s3 lb (Some x)) as Hm. *)
-    eapply balanceR_Desc with (f2:=f2).
-    + eapply maxViewSure_Desc.
-      * solve_Desc.
-      * f_solver.
-    + assert (isUB (Some x) (fst (maxViewSure x0 s0 s3)) = true).
-      { eapply maxViewSure_Desc. solve_Desc. f_solver. }
-      assert (isLB (Some (fst (maxViewSure x0 s0 s3))) x = true) by assumption.
-      solve_Desc.
-    + eapply maxViewSure_Desc. solve_Desc. f_solver.
-    + assert (isUB (Some x) (fst (maxViewSure x0 s0 s3)) = true).
-      { eapply maxViewSure_Desc. solve_Desc. f_solver. }
-      admit.
-    + set ( y := fst (maxViewSure x0 s0 s3)).
-      assert (f1 y = true) by admit.
-      admit.
-    + admit.
-    + admit.
-  - admit.
+
+    epose proof (maxViewSure_Desc _ _ x0 s0 s3 _ _ _) as Hmvs.
+    destruct Hmvs as [Hthere [HUB [HLB [HBounded [Hsize Hf]]]]];
+      [solve_Bounded|reflexivity|reflexivity|].
+
+    assert (isLB (Some (fst (maxViewSure x0 s0 s3))) x = true) by assumption.
+
+    eapply balanceR_Desc.
+    + eassumption.
+    + solve_Bounded.
+    + solve_Bounds.
+    + solve_Bounds.
+    + simpl.
+      f_solver. (* a sufficient smart [f_solver] should handle this *)
+      destruct (i == fst (maxViewSure x0 s0 s3)) eqn:?.
+      * simpl. rewrite andb_false_r, ?orb_true_l.
+        admit.
+      * simpl. rewrite andb_true_r, ?orb_false_r. reflexivity.
+    + solve_size.
+    + solve_size.
+  - expand_pairs.
+    rewrite !size_Bin.
+
+    epose proof (minViewSure_Desc _ _ x1 s4 s5 _ _ _) as Hmvs.
+    destruct Hmvs as [Hthere [HUB [HLB [HBounded [Hsize Hf]]]]];
+      [solve_Bounded|reflexivity|reflexivity|].
+
+    assert (isUB (Some (fst (minViewSure x1 s4 s5))) x = true) by assumption.
+
+    eapply balanceL_Desc.
+    + solve_Bounded.
+    + eassumption.
+    + solve_Bounds.
+    + solve_Bounds.
+    + simpl.
+      f_solver. (* a sufficient smart [f_solver] should handle this *)
+      destruct (i == fst (minViewSure x1 s4 s5)) eqn:?.
+      * simpl. rewrite andb_false_r, ?orb_true_r, ?orb_false_r.
+        admit.
+      * simpl. rewrite andb_true_r, ?orb_false_r, ?orb_assoc. reflexivity.
+    + solve_size.
+    + solve_size.
 Admitted.
-  
+
+From Coq Require Import ssreflect.
+Require Import Tactics.
+
+Lemma delete_Desc :
+  forall s lb ub sz f x,
+  Bounded s lb ub ->
+  sz = (if sem s x then (size s - 1) else size s) ->
+  (forall i, f i = sem s i && negb (i == x)) ->
+  Desc (delete x s) lb ub sz f.
+Proof.
+  intros ?????? HB ? Hf.
+  subst sz.
+  (* Get rid of the [f] variable (maybe worth a tactic?) *)
+  erewrite Desc_change_f by apply Hf; clear dependent f.
+
+  induction HB; intros; subst.
+  - rewrite /delete.
+    solve_Desc.
+  - rewrite /delete -/delete.
+    destruct (compare x x0) eqn:Heq.
+    + eapply glue_Desc; eauto.
+      * f_solver. destruct (i == x) eqn:Heq0.
+        -- rewrite -> (Desc_outside_above HB1) by solve_Bounds.
+           rewrite -> (Desc_outside_below HB2) by solve_Bounds.
+           simpl. rewrite andb_false_r. reflexivity.
+        -- simpl. rewrite andb_true_r.
+           replace (i == x0) with false by (symmetry; solve_Bounds).
+           rewrite orb_false_r. reflexivity.
+      * simpl sem. rewrite size_Bin.
+        replace (x == x0) with true by (symmetry; solve_Bounds).
+        rewrite orb_true_r. cbn -[Z.add]. solve_size.
+    + destruct IHHB1 as [IHD1 [IHsz1 IHsem1]].
+      destruct IHHB2 as [IHD2 [IHsz2 IHsem2]].
+      destruct (PtrEquality.ptrEq (delete x s1) s1) eqn:Heq0.
+      * apply PtrEquality.ptrEq_eq in Heq0; subst.
+        rewrite -> Heq0 in *. clear Heq0.
+        simpl sem. rewrite size_Bin.
+        assert (Hnot_there: sem s1 x = false)
+          by (destruct (sem s1 x); try congruence; lia).
+        rewrite Hnot_there.
+        replace (x == x0) with false by (symmetry; solve_Bounds).
+        rewrite -> (Desc_outside_below HB2) by solve_Bounds.
+        cbn -[Z.add].
+        solve_Desc.
+        f_solver. 
+        destruct (i == x) eqn:?.
+        -- simpl. rewrite ?andb_false_r.
+           replace (i == x0) with false  by (symmetry; solve_Bounds).
+           rewrite -> (Desc_outside_below HB2) by solve_Bounds.
+           reflexivity.
+        -- simpl. rewrite !andb_true_r. reflexivity.
+      * eapply balanceR_Desc; try first [eassumption|reflexivity].
+        -- f_solver.
+           destruct (i == x) eqn:Hcomp0.
+           ++ simpl. rewrite ?andb_false_r.
+              replace (i == x0) with false  by (symmetry; solve_Bounds).
+              rewrite -> (Desc_outside_below HB2) by solve_Bounds.
+              reflexivity.
+           ++ simpl. rewrite ?andb_true_r. reflexivity.
+        -- destruct (sem s1 x); solve_size.
+        -- cbn -[Z.add].
+           replace (x == x0) with false  by (symmetry; solve_Bounds).
+           rewrite -> (Desc_outside_below HB2) by solve_Bounds.
+           destruct (sem s1 x); cbn -[Z.add]; solve_size.
+    + destruct IHHB1 as [IHD1 [IHsz1 IHsem1]].
+      destruct IHHB2 as [IHD2 [IHsz2 IHsem2]].
+      destruct (PtrEquality.ptrEq (delete x s2) s2) eqn:Heq0.
+      * apply PtrEquality.ptrEq_eq in Heq0; subst.
+        rewrite -> Heq0 in *. clear Heq0.
+        simpl sem. rewrite size_Bin.
+        assert (Hnot_there: sem s2 x = false)
+          by (destruct (sem s2 x); try congruence; lia).
+        rewrite Hnot_there.
+        replace (x == x0) with false by (symmetry; solve_Bounds).
+        rewrite -> (Desc_outside_above HB1) by solve_Bounds.
+        cbn -[Z.add].
+        solve_Desc.
+        f_solver. 
+        destruct (i == x) eqn:?.
+        -- simpl. rewrite !andb_false_r.
+           replace (i == x0) with false  by (symmetry; solve_Bounds).
+           rewrite -> (Desc_outside_above HB1) by solve_Bounds.
+           reflexivity.
+        -- simpl. rewrite !andb_true_r. reflexivity.
+      * eapply balanceL_Desc; try first [eassumption|reflexivity].
+        -- f_solver.
+           destruct (i == x) eqn:Hcomp0.
+           ++ simpl. rewrite ?andb_false_r.
+              replace (i == x0) with false  by (symmetry; solve_Bounds).
+              rewrite -> (Desc_outside_above HB1) by solve_Bounds.
+              reflexivity.
+           ++ simpl. rewrite ?andb_true_r. reflexivity.
+        -- destruct (sem s2 x); solve_size.
+        -- cbn -[Z.add].
+           replace (x == x0) with false  by (symmetry; solve_Bounds).
+           rewrite -> (Desc_outside_above HB1) by solve_Bounds.
+           destruct (sem s2 x); cbn -[Z.add]; solve_size.
+Qed.
 End WF.

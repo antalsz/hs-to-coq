@@ -679,6 +679,7 @@ Admitted.
 
 (* verification of minViewSure *)
 
+Print minViewSure.
 Lemma minViewSure_Desc:
   forall sz x l r lb ub f f',
     Desc (Bin sz x l r) lb ub f ->
@@ -690,6 +691,53 @@ Lemma minViewSure_Desc:
     Desc (snd (minViewSure x l r)) (Some y) ub f' /\
     size (snd (minViewSure x l r)) = sz - 1%Z.
 Proof.
+  intros sz x l.
+  revert sz x.
+  induction l; intros sz x r lb ub f f' HD.
+  - inversion HD; subst; clear HD. intros.
+    edestruct IHl1 as [Hf1 [Hub1 [Hlb1 [HD1 Hsz1]]]];
+      [apply H3 |intro;reflexivity | ].
+    clear IHl1 IHl2.
+    inversion H4; subst; clear H4.
+    subst y.
+    cbn -[Z.add size].
+    expand_pairs.
+    cbn -[Z.add size].
+    split; only 2: split; only 3: split.
+    + rewrite H12, Hf1. reflexivity.
+    + solve_Bounds. 
+    + simpl isLB in *.
+      solve_Bounds.
+    + eapply balanceR_Desc; try eassumption.
+      * constructor; eassumption.
+      * f_solver. simpl.
+        expand_pairs. simpl.
+        destruct (i == (fst (maxViewSure a l1 l2))) eqn:?.
+        -- unfold negb. simpl. Heqb. Check @Desc_outside_above. simpl.
+           rewrite (Desc_outside_above H3) by order_Bounds.
+           replace (i == x)  with false by (symmetry; solve_Bounds).
+           reflexivity.
+        -- simpl. rewrite !andb_true_r.
+           repeat rewrite orb_assoc.
+           reflexivity.
+      * solve_size.
+      * solve_size.
+  - inversion HD; subst; clear HD.
+    cbn -[Z.add]. intro Hf'.
+    rewrite H5, H6.
+    repeat split; try assumption.
+    + rewrite H12.
+      rewrite Eq_refl.
+      rewrite ?orb_true_r, ?orb_true_l.
+      reflexivity.
+    + inversion H4; subst; clear H4.
+      assert (forall i, f' i = f1 i).
+      { f_solver. destruct (i == x) eqn:?, (f1 i) eqn:?; try reflexivity; exfalso.
+        rewrite (Desc_outside_above H3) in Heqb0. congruence.
+        order_Bounds.
+      }
+      admit. (* Need lemma about changing f in Desc extensionally  *)
+    + solve_size.
 Admitted.
 
 (* verification of glue *)

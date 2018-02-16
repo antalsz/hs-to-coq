@@ -752,19 +752,18 @@ Qed.
 (* verification of glue *)
 
 Lemma glue_Desc:
-  forall s1 s2 sz s lb ub x f1 f2 f,
+  forall s1 s2 sz lb ub x f1 f2 f,
   Desc s1 lb (Some x) f1 ->
   Desc s2 (Some x) ub f2 ->
   isLB lb x = true ->
   isUB ub x = true ->
   balance_prop (size s1) (size s2) ->
   (forall i : e, f i = f1 i || f2 i) ->
-  s = glue s1 s2 ->
   sz = (size s1 + size s2)%Z ->
-  Desc s lb ub f /\
-  size s = sz.
+  Desc (glue s1 s2) lb ub f /\
+  size (glue s1 s2) = sz.
 Proof.
-  intros ?????????? HD1 HD2. intros.
+  intros ????????? HD1 HD2. intros.
   inversion HD1; inversion HD2; subst; cbn -[size Z.add].
   1-3: solve [split; [solve_Desc|solve_size]].
   destruct (Z.ltb_spec (1 + size s4 + size s5) (1 + size s0 + size s3)).

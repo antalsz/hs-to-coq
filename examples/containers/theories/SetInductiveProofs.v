@@ -1,39 +1,53 @@
 Require Import GHC.Base.
 Require Import Proofs.GHC.Base.
 Require Import Data.Set.Internal.
+Require Import OrdTactic.
 Set Bullet Behavior "Strict Subproofs".
 
+
 Section WF.
-Context (e : Type) {HEq : Eq_ e} {HOrd : Ord e} {HEqLaws : EqLaws e}.
+Context (e : Type) {HEq : Eq_ e} {HOrd : Ord e} {HEqLaws : EqLaws e}  {HOrdLaws : OrdLaws e}.
 
 (* We don’t have a OrdLawful class yet. We need to introduce that,
    add it to the context, and derive all axioms from that.
  *)
-Axiom compare_Eq : forall (x y : e),
+Lemma compare_Eq : forall (x y : e),
   compare x y = Eq <-> x == y = true.
-Axiom compare_Lt : forall (x y : e),
+Proof. intuition; order e. Qed.
+Lemma compare_Lt : forall (x y : e),
   compare x y = Lt <-> x < y = true.
-Axiom compare_Gt : forall (x y : e),
+Proof. intuition; order e. Qed.
+Lemma compare_Gt : forall (x y : e),
   compare x y = Gt <-> x > y = true.
+Proof. intuition; order e. Qed.
 
-Axiom lt_eq_r : forall x y z,
+Lemma lt_eq_r : forall x y z,
   x < y = true ->
   z == y = true ->
   x < z = true.
+Proof. intuition; order e. Qed.
 
-Axiom lt_eq_l : forall x y z,
+Lemma lt_eq_l : forall x y z,
   x < y = true ->
   z == x = true ->
   z < y = true.
+Proof. intuition; order e. Qed.
 
-Axiom lt_not_eq : forall (x y : e),
+Lemma lt_not_eq : forall (x y : e),
   x < y = true -> x == y = false.
-Axiom gt_not_eq : forall (x y : e),
-  x > y = true -> x == y = false.
-Axiom lt_gt : forall (x y : e),
-  (x > y) = (y < x).
-Axiom lt_trans : forall (x y z : e),
+Proof. intuition; order e. Qed.
+
+Lemma gt_not_eq : forall (x y : e),
+ x > y = true -> x == y = false.
+Proof. intuition; order e. Qed.
+
+
+Lemma lt_gt : forall (x y : e), (x > y) = (y < x).
+Proof. intros. rewrite eq_iff_eq_true. intuition; order e. Qed.
+
+Lemma lt_trans : forall (x y z : e),
   x < y = true -> y < z = true -> x < z = true.
+Proof. intuition; order e. Qed.
 
 
 (** This is just like size, but with a type signature that does not confuse [omega] *)

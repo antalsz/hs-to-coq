@@ -18,7 +18,7 @@ Class OrdLaws (t : Type) {HEq : Eq_ t} {HOrd : Ord t} {HEqLaw : EqLaws t} :=
     Ord_total    : forall a b, a <= b = true \/ b <= a = true;
     (* The other operations, in terms of <= or == *)
     Ord_compare_Lt : forall a b, compare a b = Lt <-> b <= a = false;
-    Ord_compare_Eq : forall a b, compare a b = Eq <-> b == a = true;
+    Ord_compare_Eq : forall a b, compare a b = Eq <-> a == b = true;
     Ord_compare_Gt : forall a b, compare a b = Gt <-> a <= b = false;
     Ord_lt_le : forall a b, a < b = negb (b <= a);
     Ord_ge_le : forall a b, a >= b = (b <= a);
@@ -82,6 +82,12 @@ Ltac order_prepare t :=
  | H : @op_zl__   t _ _ ?x ?y = ?b |- _ => rewrite Ord_lt_le in H; order_prepare t
  | H : @op_zgze__ t _ _ ?x ?y = ?b |- _ => rewrite Ord_ge_le in H; order_prepare t
  | H : @op_zg__   t _ _ ?x ?y = ?b |- _ => rewrite Ord_gt_le in H; order_prepare t
+ | H : @compare   t _ _ ?x ?y = Eq |- _ => rewrite Ord_compare_Eq in H; order_prepare t
+ | H : @compare   t _ _ ?x ?y = Lt |- _ => rewrite Ord_compare_Lt in H; order_prepare t
+ | H : @compare   t _ _ ?x ?y = Gt |- _ => rewrite Ord_compare_Gt in H; order_prepare t
+ | |- @compare   t _ _ ?x ?y = Eq => rewrite Ord_compare_Eq; order_prepare t
+ | |- @compare   t _ _ ?x ?y = Lt => rewrite Ord_compare_Lt; order_prepare t
+ | |- @compare   t _ _ ?x ?y = Gt => rewrite Ord_compare_Gt; order_prepare t
  | |- _ = true  => apply not_false_is_true; intro; order_prepare t
  | |- _ = false => apply not_true_is_false; intro; order_prepare t
  | _ => exfalso
@@ -117,9 +123,10 @@ Ltac order_loop t :=
  lazymatch goal with
  | H1 : ?x = true, H2 : ?x = false |- _  => congruence
  (* First, successful situations *)
- | H : @op_zeze__ t _ ?x ?x   = false |- _ => rewrite Lemmas.Eq_eq_refl in H; congruence
+ | H : @op_zeze__ t _   ?x ?x = false |- _ => rewrite Lemmas.Eq_eq_refl in H; congruence
  | H : @op_zlze__ t _ _ ?x ?x = false |- _ => rewrite Lemmas.Ord_le_refl in H; congruence
  (* Second, useless hyps *)
+ | H : @op_zeze__ t _   ?x ?x = true |- _ => clear H; order_loop t
  | H : @op_zlze__ t _ _ ?x ?x = true |- _ => clear H; order_loop t
  (* Third, we eliminate equalities *)
  | H : @op_zeze__ t _ ?x ?y = true |- _ =>
@@ -210,5 +217,7 @@ Proof. order Z. Qed.
 Lemma test13 : forall x y z a: Z, x < y = true -> y <= z = true -> z < a = true -> a <= x = true -> False.
 Proof. order Z. Qed.
 
+Lemma test14 : forall x y : Z, compare x y = Eq <-> x == y = true.
+Proof. intuition; order Z. Qed.
 
 End Tests.

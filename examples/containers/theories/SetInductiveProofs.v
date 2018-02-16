@@ -723,7 +723,7 @@ Lemma glue_Desc:
 Proof.
   intros ???????? HD1 HD2. intros.
   inversion HD1; inversion HD2; subst; cbn -[size Z.add].
-  1-3: (split; [solve_Desc|solve_size]).
+  1-3: solve [split; [solve_Desc|solve_size]].
   destruct (Z.ltb_spec (1 + size s4 + size s5) (1 + size s0 + size s3)).
   - expand_pairs.
     rewrite !size_Bin.

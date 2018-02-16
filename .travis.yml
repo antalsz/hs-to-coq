@@ -82,6 +82,7 @@ script:
  - make -C examples/intervals
  - make -C examples/containers clean
  - make -C examples/containers
+ - touch examples/containers/theories/Makefile.conf # hack until Coq 8.7.2
  - make -C examples/containers/theories
 
  # disabled 2018-07-24 due to too big of a fall-out, and the

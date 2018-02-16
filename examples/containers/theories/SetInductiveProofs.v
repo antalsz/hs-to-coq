@@ -75,28 +75,31 @@ Definition isUB : bound -> e -> bool :=
     | None => true
   end.
 
+Ltac order_Bounds :=
+  intros;
+  simpl isUB in *;
+  simpl isLB in *;
+  repeat (congruence || lazymatch goal with
+    | H : context [isUB ?ub _] |- _ => destruct ub; simpl isUB in *
+    | |-  context [isUB ?ub _]      => destruct ub; simpl isUB in *
+    | H : context [isLB ?lb _] |- _ => destruct lb; simpl isLB in *
+    | |-  context [isLB ?lb _]      => destruct lb; simpl isLB in *
+   end);
+   order e.
 
 Lemma isLB_lt:
   forall lb x y,
   isLB lb x = true->
   x < y = true ->
   isLB lb y = true.
-Proof.
-  intros.
-  destruct lb; auto; simpl in *.
-  eapply lt_trans; eassumption.
-Qed.
+Proof. order_Bounds. Qed.
 
 Lemma isUB_lt:
   forall ub x y,
   isUB ub x = true->
   y < x = true ->
   isUB ub y = true.
-Proof.
-  intros.
-  destruct ub; auto; simpl in *.
-  eapply lt_trans; eassumption.
-Qed.
+Proof. order_Bounds. Qed.
 
 
 (** The balancing property of a binary node *)
@@ -134,7 +137,7 @@ Definition WF (s : Set_ e) : Prop := exists f, Sem s f.
 
 
 (** There are no values outside the bounds *)
-Lemma Desc_outside_below_aux:
+Lemma Desc_outside_below:
   forall {s lb ub f i},
   Desc s lb ub f ->
   isLB lb i = false ->
@@ -148,19 +151,7 @@ Proof.
   admit. (* here we need a generic tactic to reason about < and isLB *)
 Admitted.
 
-Lemma Desc_outside_below:
-  forall {s lb ub f i},
-  Desc s (Some lb) ub f ->
-  i < lb = true ->
-  f i = false.
-Proof.
-  intros ????? HD Hlt.
-  eapply Desc_outside_below_aux; try eassumption.
-  simpl.
-  admit.
-Admitted.
-
-Lemma Desc_outside_above_aux:
+Lemma Desc_outside_above:
   forall {s lb ub f i},
   Desc s lb ub f ->
   isUB ub i = false ->
@@ -174,17 +165,6 @@ Proof.
   admit. (* here we need a generic tactic to reason about < and isLB *)
 Admitted.
 
-Lemma Desc_outside_above:
- forall {s lb ub f i},
-  Desc s lb (Some ub) f ->
-  i > ub = true ->
-  f i = false.
-Proof.
-  intros ????? HD Hlt.
-  eapply Desc_outside_above_aux; try eassumption.
-  simpl.
-  admit.
-Admitted.
 
 (* We use this as a rewrite rule because
    [simpl (size (Bin _ _ _ _ ))]
@@ -289,12 +269,10 @@ Ltac expand_pairs :=
     rewrite (surjective_pairing e)
   end.
 
-(** Solve [isLB] and [isUB] goals. This could be subsumed by a more general
-   linear order solver that knows about these two. *)
+(** Solve [isLB] and [isUB] goals.  *)
 Ltac solve_Bounds := first
   [ assumption
-  | lazymatch goal with [ H2 : isLB ?lb ?x = true, H1 : ?x < ?y = true |- isLB ?lb ?y = true] => apply (isLB_lt _ _ _ H2 H1) end
-  | lazymatch goal with [ H2 : isUB ?ub ?x = true, H1 : ?y < ?x = true |- isUB ?ub ?y = true] => apply (isUB_lt _ _ _ H2 H1) end
+  | solve [order_Bounds]
   | idtac "solve_Bounds gave up"
   ].
 
@@ -440,20 +418,17 @@ Proof.
   * subst; simpl.
     rewrite H5; clear H5.
     destruct (compare i x) eqn:?.
-    + rewrite compare_Eq in *.
-      rewrite Heqc.
+    + replace (i == x) with true by (symmetry; order_Bounds).
       rewrite orb_true_r.
       reflexivity.
-    + rewrite compare_Lt in *.
-      rewrite lt_not_eq by assumption.
+    + replace (i == x) with false by (symmetry; order_Bounds).
       rewrite IHDesc1.
-      rewrite (Desc_outside_below H0) by assumption.
+      rewrite (Desc_outside_below H0) by order_Bounds.
       rewrite !orb_false_r.
       reflexivity.
-    + rewrite compare_Gt in *.
-      rewrite gt_not_eq by assumption.
+    + replace (i == x) with false by (symmetry; order_Bounds).
       rewrite IHDesc2.
-      rewrite (Desc_outside_above H) by assumption.
+      rewrite (Desc_outside_above H) by order_Bounds.
       rewrite orb_false_l.
       reflexivity.
 Qed.
@@ -556,14 +531,15 @@ Proof.
         ** reflexivity.
         ** solve_size.
         ** f_solver.
-           replace (i == x) with (i == y) by admit. (* transitivity of == *)
+           (* Ideally, the f_solver destructs these equalities, and knows that [f] respects them *)
+           replace (i == x) with (i == y) by (apply eq_true_iff_eq; split; order e).
            destruct (i == y), (f1 i), (f2 i); reflexivity.
     + rewrite compare_Lt in *.
       edestruct IHHD1; try assumption; try (intro; reflexivity).
       rename H1 into IH_Desc, H4 into IH_size.
 
       rewrite H3; setoid_rewrite H3 in Hf; clear H3.
-      rewrite (Desc_outside_below HD2) by assumption.
+      rewrite (Desc_outside_below HD2) by order_Bounds.
       rewrite lt_not_eq by assumption.
       rewrite ?orb_false_r, ?orb_false_l.
 
@@ -596,7 +572,7 @@ Proof.
       rename H1 into IH_Desc, H4 into IH_size.
 
       rewrite H3; setoid_rewrite H3 in Hf; clear H3.
-      rewrite (Desc_outside_above HD1) by assumption.
+      rewrite (Desc_outside_above HD1) by order_Bounds.
       rewrite gt_not_eq by assumption.
       rewrite !orb_false_l.
 
@@ -679,13 +655,18 @@ Proof.
       * f_solver. simpl.
         expand_pairs. simpl.
         destruct (i == (fst (maxViewSure a r1 r2))) eqn:?.
-        -- simpl. rewrite !andb_false_r. admit. (*check this*)
+        -- simpl.
+           (* first rewrite with [i == _ ] *)
+           rewrite (Desc_outside_above H3).
+           Focus 2. order_Bounds.
+           rewrite !andb_false_r.
+           admit. (*check this*)
         -- simpl. rewrite !andb_true_r.
            repeat rewrite orb_assoc.
            reflexivity.
       * solve_size.
       * solve_size.
-  - inversion HD; subst.
+  - inversion HD; subst; clear HD.
     cbn -[Z.add]. intro Hf'.
     rewrite H5, H6.
     repeat split; try assumption.
@@ -693,17 +674,13 @@ Proof.
       rewrite Eq_refl.
       rewrite ?orb_true_r, ?orb_true_l.
       reflexivity.
-    + inversion H4; subst.
-      inversion H3; subst.
-      * solve_Desc.
-        destruct (i == x); reflexivity.
-      * find_Tip.
-        find_Tip.
-        solve_Desc. f_solver.
-        destruct (i == x0) eqn:Hi; simpl.
-        -- clear -H9 Hi.
-           admit.
-        -- destruct (i == x); reflexivity.
+    + inversion H4; subst; clear H4.
+      assert (forall i, f' i = f1 i).
+      { f_solver. destruct (i == x) eqn:?, (f1 i) eqn:?; try reflexivity; exfalso.
+        rewrite (Desc_outside_above H3) in Heqb0. congruence.
+        order_Bounds.
+      }
+      admit. (* Need lemma about changing f in Desc extensionally  *)
     + solve_size.
 Admitted.
 

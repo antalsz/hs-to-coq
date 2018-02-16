@@ -135,6 +135,17 @@ Definition Sem (s : Set_ e) (f : e -> bool) := Desc s None None f.
 (** And any set that has a meaning is well-formed *)
 Definition WF (s : Set_ e) : Prop := exists f, Sem s f.
 
+Lemma Desc_change_f:
+  forall {s lb ub f f'},
+  Desc s lb ub f ->
+  (forall i, f' i = f i) ->
+  Desc s lb ub f'.
+Proof.
+  intros ????? HD Hf.
+  induction HD.
+  * apply DescTip. intro i. rewrite Hf, H. reflexivity.
+  * eapply DescBin; try eassumption. intro i. rewrite Hf, H3. reflexivity.
+Qed.
 
 (** There are no values outside the bounds *)
 Lemma Desc_outside_below:
@@ -668,14 +679,12 @@ Proof.
       rewrite ?orb_true_r, ?orb_true_l.
       reflexivity.
     + inversion H4; subst; clear H4.
-      assert (forall i, f' i = f1 i).
-      { f_solver. destruct (i == x) eqn:?, (f1 i) eqn:?; try reflexivity; exfalso.
-        rewrite (Desc_outside_above H3) in Heqb0. congruence.
-        order_Bounds.
-      }
-      admit. (* Need lemma about changing f in Desc extensionally  *)
+      eapply Desc_change_f; only 1: eassumption.
+      f_solver. destruct (i == x) eqn:?, (f1 i) eqn:?; try reflexivity; exfalso.
+      rewrite (Desc_outside_above H3) in Heqb0. congruence.
+      order_Bounds.
     + solve_size.
-Admitted.
+Qed.
 
 (* verification of minViewSure *)
 

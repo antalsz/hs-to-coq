@@ -15,6 +15,7 @@ cabal.project.local
 *.v.d
 Makefile.coq.conf
 Makefile.bak
+.lia.cache
 
 # Haskell
 *.o

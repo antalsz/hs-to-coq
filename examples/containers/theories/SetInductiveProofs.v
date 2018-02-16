@@ -135,6 +135,17 @@ Definition Sem (s : Set_ e) (f : e -> bool) := Desc s None None f.
 (** And any set that has a meaning is well-formed *)
 Definition WF (s : Set_ e) : Prop := exists f, Sem s f.
 
+Lemma Desc_change_f:
+  forall {s lb ub f f'},
+  Desc s lb ub f ->
+  (forall i, f' i = f i) ->
+  Desc s lb ub f'.
+Proof.
+  intros ????? HD Hf.
+  induction HD.
+  * apply DescTip. intro i. rewrite Hf, H. reflexivity.
+  * eapply DescBin; try eassumption. intro i. rewrite Hf, H3. reflexivity.
+Qed.
 
 (** There are no values outside the bounds *)
 Lemma Desc_outside_below:
@@ -651,8 +662,10 @@ Proof.
         expand_pairs. simpl.
         destruct (i == (fst (maxViewSure a r1 r2))) eqn:?.
         -- simpl.
-           rewrite (Desc_outside_above H3) by order_Bounds.
-           replace (i == x)  with false by (symmetry; solve_Bounds).
+           rewrite (Desc_outside_above H3)
+             by order_Bounds.
+           replace (i == x)  with false
+             by (symmetry; solve_Bounds).
            reflexivity.
         -- simpl. rewrite !andb_true_r.
            repeat rewrite orb_assoc.
@@ -668,14 +681,12 @@ Proof.
       rewrite ?orb_true_r, ?orb_true_l.
       reflexivity.
     + inversion H4; subst; clear H4.
-      assert (forall i, f' i = f1 i).
-      { f_solver. destruct (i == x) eqn:?, (f1 i) eqn:?; try reflexivity; exfalso.
-        rewrite (Desc_outside_above H3) in Heqb0. congruence.
-        order_Bounds.
-      }
-      admit. (* Need lemma about changing f in Desc extensionally  *)
+      eapply Desc_change_f; only 1: eassumption.
+      f_solver. destruct (i == x) eqn:?, (f1 i) eqn:?; try reflexivity; exfalso.
+      rewrite (Desc_outside_above H3) in Heqb0. congruence.
+      order_Bounds.
     + solve_size.
-Admitted.
+Qed.
 
 (* verification of minViewSure *)
 
@@ -690,7 +701,53 @@ Lemma minViewSure_Desc:
     Desc (snd (minViewSure x l r)) (Some y) ub f' /\
     size (snd (minViewSure x l r)) = sz - 1%Z.
 Proof.
-Admitted.
+  intros sz x l.
+  revert sz x.
+  induction l; intros sz x r lb ub f f' HD.
+  - inversion HD; subst; clear HD. intros.
+    edestruct IHl1 as [Hf1 [Hub1 [Hlb1 [HD1 Hsz1]]]];
+      [apply H3 |intro;reflexivity | ].
+    clear IHl1 IHl2.
+    inversion H3; subst; clear H3.
+    subst y.
+    cbn -[Z.add size].
+    expand_pairs.
+    cbn -[Z.add size].
+    split; only 2: split; only 3: split.
+    + rewrite H12, Hf1. reflexivity.
+    + solve_Bounds. 
+    + simpl isLB in *.
+      solve_Bounds.
+    + eapply balanceR_Desc; try eassumption.
+      * f_solver. simpl.
+        expand_pairs. simpl.
+        destruct (i == (fst (minViewSure a l1 l2))) eqn:?.
+        -- simpl.
+           rewrite (Desc_outside_below H4) by order_Bounds.
+           rewrite orb_false_r.
+           symmetry.
+           order_Bounds.
+        -- reflexivity. 
+      * solve_size.
+      * solve_size.
+  - inversion HD; subst; clear HD.
+    cbn -[Z.add]. intro Hf'.
+    rewrite H5, H6.
+    repeat split; try assumption.
+    + rewrite H12.
+      rewrite Eq_refl.
+      rewrite ?orb_true_r, ?orb_true_l.
+      reflexivity.
+    + inversion H3; subst; clear H3.
+      eapply Desc_change_f; only 1: eassumption.
+      f_solver.
+      destruct (i == x) eqn:?, (f2 i) eqn:?;
+               try reflexivity; exfalso.
+      rewrite (Desc_outside_below H4) in Heqb0.
+      congruence.
+      order_Bounds.
+    + solve_size.
+Qed.
 
 (* verification of glue *)
 

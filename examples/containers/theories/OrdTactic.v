@@ -178,46 +178,46 @@ Proof.
     try omega.
 Qed.
 
-Lemma test1 : forall x : Z, x == x = true.
+Goal forall x : Z, x == x = true.
 Proof. order Z. Qed.
 
-Lemma test2 : forall x : Z, (x /= x) = true -> False.
+Goal forall x : Z, (x /= x) = true -> False.
 Proof. order Z. Qed.
 
-Lemma test3 : forall x : Z, ~ (x /= x = false) -> False.
+Goal forall x : Z, ~ (x /= x = false) -> False.
 Proof. order Z. Qed.
 
-Lemma test4 : forall x : Z, (x <= x) = false -> False.
+Goal forall x : Z, (x <= x) = false -> False.
 Proof. order Z. Qed.
 
-Lemma test5 : forall x : Z, x < x = false.
+Goal forall x : Z, x < x = false.
 Proof. order Z. Qed.
 
-Lemma test6 : forall x y : Z, x <= y = true -> y <= x = true -> x == y = true.
+Goal forall x y : Z, x <= y = true -> y <= x = true -> x == y = true.
 Proof. order Z. Qed.
 
-Lemma test7 : forall x y z : Z, x <= y = true -> y <= z = true -> x <= z = true.
+Goal forall x y z : Z, x <= y = true -> y <= z = true -> x <= z = true.
 Proof. order Z. Qed.
 
-Lemma test8 : forall x y z : Z, x <= y = true -> x == y = false -> y <= x = false.
+Goal forall x y z : Z, x <= y = true -> x == y = false -> y <= x = false.
 Proof. order Z. Qed.
 
-Lemma test9 : forall x y z : Z, x <= y = true -> y <= x = true -> y <= z = true -> x <= z = true.
+Goal forall x y z : Z, x <= y = true -> y <= x = true -> y <= z = true -> x <= z = true.
 Proof. order Z. Qed.
 
-Lemma test10 : forall x y z : Z, x < y = true -> y < z = true -> x < z = true.
+Goal forall x y z : Z, x < y = true -> y < z = true -> x < z = true.
 Proof. order Z. Qed.
 
-Lemma test11 : forall x y z : Z, x < y = true -> x <= y = true.
+Goal forall x y z : Z, x < y = true -> x <= y = true.
 Proof. order Z. Qed.
 
-Lemma test12 : forall x y z a: Z, x < y = true -> y <= z = true -> z < a = true -> x < a = true.
+Goal forall x y z a: Z, x < y = true -> y <= z = true -> z < a = true -> x < a = true.
 Proof. order Z. Qed.
 
-Lemma test13 : forall x y z a: Z, x < y = true -> y <= z = true -> z < a = true -> a <= x = true -> False.
+Goal forall x y z a: Z, x < y = true -> y <= z = true -> z < a = true -> a <= x = true -> False.
 Proof. order Z. Qed.
 
-Lemma test14 : forall x y : Z, compare x y = Eq <-> x == y = true.
+Goal forall x y : Z, compare x y = Eq <-> x == y = true.
 Proof. intuition; order Z. Qed.
 
 End Tests.

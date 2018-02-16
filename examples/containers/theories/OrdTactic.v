@@ -26,7 +26,10 @@ Class OrdLaws (t : Type) {HEq : Eq_ t} {HOrd : Ord t} {HEqLaw : EqLaws t} :=
   }.
 
 Section Lemmas.
-  Context {t : Type} {HEq : Eq_ t} {HOrd : Ord t} {HEqLaw : EqLaws t}.
+  Context {t : Type} {HEq : Eq_ t} {HOrd : Ord t} {HEqLaw : EqLaws t} {HOrdLaw : OrdLaws t}.
+
+  Lemma Eq_neq_sym : forall x y : t, (x == y) = false -> (y == x) = false.
+  Admitted.
 
   Lemma Eq_ne_eq : forall x y : t, (x /= y) = negb (x == y).
   Admitted.
@@ -37,11 +40,37 @@ Section Lemmas.
   Lemma Ord_le_refl : forall x : t, (x <= x) = true.
   Admitted.
 
+  Lemma Eq_trans_l : forall x y z : t, (x == y) = true -> (x == z) = (y == z).
+  Admitted.
+
+  Lemma Eq_trans_r : forall x y z : t, (x == y) = true -> (z == x) = (z == y).
+  Admitted.
+
+  Lemma Eq_le_l : forall x y z : t, (x == y) = true -> (x <= z) = (y <= z).
+  Admitted.
+
+  Lemma Eq_le_r : forall x y z : t, (x == y) = true -> (z <= x) = (z <= y).
+  Admitted.
+
+  Lemma NEq_le_l : forall x y : t, (x == y) = false -> (x <= y) = true -> (y <= x) = false.
+  Admitted.
+
+  Lemma NEq_le_r : forall x y : t, (x == y) = false -> (y <= x) = true -> (x <= y) = false.
+  Admitted.
+
+  Lemma Ord_trans_lt : forall x y z, y <= x = false -> z <= y = false -> z <= x = false.
+  Admitted.
+
+  Lemma Ord_trans_lt_le : forall x y z, y <= x = false -> y <= z = true -> z <= x = false.
+  Admitted.
+
+  Lemma Ord_trans_le_lt : forall x y z, x <= y = true -> z <= y = false -> z <= x = false.
+  Admitted.
 
 End Lemmas.
 
 Ltac order_prepare t :=
- match goal with
+ lazymatch goal with
  | H : ?A -> False |- _ => change (~A) in H; order_prepare t
  | H : _ <> true   |- _ => rewrite not_true_iff_false in H; order_prepare t
  | H : _ <> false  |- _ => rewrite not_false_iff_true in H; order_prepare t
@@ -51,85 +80,76 @@ Ltac order_prepare t :=
  | H : @op_zl__   t _ _ ?x ?y = ?b |- _ => rewrite Ord_lt_le in H; order_prepare t
  | H : @op_zgze__ t _ _ ?x ?y = ?b |- _ => rewrite Ord_ge_le in H; order_prepare t
  | H : @op_zg__   t _ _ ?x ?y = ?b |- _ => rewrite Ord_gt_le in H; order_prepare t
-
- (*
- | H : ~(?R ?x ?y) |- _ =>
-   match R with
-   | eq => fail 1 (* if already using [eq], we leave it this ways *)
-   | _ => (change (~x==y) in H ||
-           apply not_gt_le in H ||
-           apply not_ge_lt in H ||
-           clear H || fail 1); order_prepare
-   end
- | H : ?R ?x ?y |- _ =>
-   match R with
-   | eq => fail 1
-   | lt => fail 1
-   | le => fail 1
-   | _ => (change (x==y) in H ||
-           change (x<y) in H ||
-           change (x<=y) in H ||
-           clear H || fail 1); order_prepare
-   end
- | |- ~ _ => intro; order_prepare
- | |- _ ?x ?x =>
-   exact (eq_refl x) || exact (le_refl x) || exfalso
- | _ =>
-   (apply not_neq_eq; intro) ||
-   (apply not_ge_lt; intro) ||
-   (apply not_gt_le; intro) || exfalso
- *)
  | |- _ = true  => apply not_false_is_true; intro; order_prepare t
  | |- _ = false => apply not_true_is_false; intro; order_prepare t
  | _ => exfalso
  end.
 
+Definition HIDE (P : Prop) := P.
+Lemma hide : forall {P : Prop},  P -> HIDE P. Proof. intuition. Qed.
+Lemma unhide : forall {P : Prop},  HIDE P -> P. Proof. intuition. Qed.
+
+Ltac order_eq t x y Heq :=
+  apply hide in Heq;
+  repeat lazymatch goal with
+  | H : @op_zeze__ t _ x ?z = ?b |- _ =>
+    rewrite (@Eq_trans_l t _ _ _ _ x y z (unhide Heq)) in H
+  | H : @op_zeze__ t _ ?z x = ?b |- _ =>
+    rewrite (@Eq_trans_r t _ _ _ _ x y z (unhide Heq)) in H
+  | H : @op_zlze__ t _ _ x ?z = ?b |- _ =>
+    rewrite (@Eq_le_l t _ _ _ _ x y z (unhide Heq)) in H
+  | H : @op_zlze__ t _ _ ?z x = ?b |- _ =>
+    rewrite (@Eq_le_r t _ _ _ _ x y z (unhide Heq)) in H
+  end;
+  clear Heq.
+
+Ltac pose_new prf :=
+  let prop := type of prf in
+  match goal with 
+    | [ H : prop |- _] => fail 1
+    | _ => pose proof prf
+  end.
+
+
 Ltac order_loop t :=
- match goal with
+ lazymatch goal with
+ | H1 : ?x = true, H2 : ?x = false |- _  => congruence
  (* First, successful situations *)
  | H : @op_zeze__ t _ ?x ?x = false |- _ => rewrite Eq_eq_refl in H; congruence
  | H : @op_zlze__ t _ _ ?x ?x = false |- _ => rewrite Ord_le_refl in H; congruence
  (* Second, useless hyps *)
- | H : @op_zlze__ t _ _ ?x ?x = true |- _ => rewrite Ord_le_refl in H; order_loop t
+ | H : @op_zlze__ t _ _ ?x ?x = true |- _ => clear H; order_loop t
  (* Third, we eliminate equalities *)
- (*
- | H : ?x == ?y |- _ => order_eq x y H; order_loop
+ | H : @op_zeze__ t _ ?x ?y = true |- _ =>
+     order_eq t x y H; order_loop t
  (* Simultaneous le and ge is eq *)
- | H1 : ?x <= ?y, H2 : ?y <= ?x |- _ =>
-     generalize (le_antisym H1 H2); clear H1 H2; intro; order_loop
+ | H1 : @op_zlze__ t _ _ ?x ?y = true, H2 : @op_zlze__ t _ _  ?y ?x = true |- _ =>
+     pose proof (@Ord_antisym t _ _ _ _ x y H1 H2); clear H1 H2; order_loop t
  (* Simultaneous le and ~eq is lt *)
- | H1: ?x <= ?y, H2: ~ ?x == ?y |- _ =>
-     generalize (le_neq_lt H1 H2); clear H1 H2; intro; order_loop
- | H1: ?x <= ?y, H2: ~ ?y == ?x |- _ =>
-     generalize (le_neq_lt H1 (neq_sym H2)); clear H1 H2; intro; order_loop
- (* Transitivity of lt and le *)
- | H1 : ?x < ?y, H2 : ?y < ?z |- _ =>
-    match goal with
-      | H : x < z |- _ => fail 1
-      | _ => generalize (lt_trans H1 H2); intro; order_loop
-    end
- | H1 : ?x <= ?y, H2 : ?y < ?z |- _ =>
-    match goal with
-      | H : x < z |- _ => fail 1
-      | _ => generalize (le_lt_trans H1 H2); intro; order_loop
-    end
- | H1 : ?x < ?y, H2 : ?y <= ?z |- _ =>
-    match goal with
-      | H : x < z |- _ => fail 1
-      | _ => generalize (lt_le_trans H1 H2); intro; order_loop
-    end
- | H1 : ?x <= ?y, H2 : ?y <= ?z |- _ =>
-    match goal with
-      | H : x <= z |- _ => fail 1
-      | _ => generalize (le_trans H1 H2); intro; order_loop
-    end *)
- | _ => idtac
+ | H1 : @op_zeze__ t _ ?x ?y = false, H2 : @op_zlze__ t _ _  ?x ?y = true |- _ =>
+     apply (@NEq_le_l t _ _ _ _ x y H1) in H2; order_loop t
+ | H1 : @op_zeze__ t _ ?x ?y = false, H2 : @op_zlze__ t _ _  ?y ?x = true |- _ =>
+     apply (@NEq_le_r t _ _ _ _ x y H1) in H2; order_loop t
+ | _ => match goal with
+   (* Transitivity of lt and le *)
+   (* Here we need back-tracking, because we expect [pose_new] to fail.
+      I would love if once [pose_new] succeeds, no backtracking happens
+      even when the recursive call fails, but I do not know how to do that. *)
+   | H1 : @op_zlze__ t _ _ ?x ?y = true, H2 : @op_zlze__ t _ _ ?y ?z = true |- _ =>
+       pose_new (@Ord_trans_le t _ _ _ _ x y z H1 H2); order_loop t
+   | H1 : @op_zlze__ t _ _ ?y ?x = false, H2 : @op_zlze__ t _ _ ?z ?y = false |- _ =>
+       pose_new (@Ord_trans_lt t _ _ _ _ x y z H1 H2); order_loop t
+   | H1 : @op_zlze__ t _ _ ?x ?y = true, H2 : @op_zlze__ t _ _ ?z ?y = false |- _ =>
+       pose_new (@Ord_trans_le_lt t _ _ _ _ x y z H1 H2); order_loop t
+   | H1 : @op_zlze__ t _ _ ?y ?x = false, H2 : @op_zlze__ t _ _ ?y ?z = true |- _ =>
+       pose_new (@Ord_trans_lt_le t _ _ _ _ x y z H1 H2); order_loop t
+   (* Nothing left to do *)
+   | _ => idtac
+   end
 end.
-
 
 Ltac order t :=
  intros; order_prepare t; order_loop t.
-
 
 Module Tests.
 
@@ -162,6 +182,30 @@ Lemma test4 : forall x : Z, (x <= x) = false -> False.
 Proof. order Z. Qed.
 
 Lemma test5 : forall x : Z, x < x = false.
+Proof. order Z. Qed.
+
+Lemma test6 : forall x y : Z, x <= y = true -> y <= x = true -> x == y = true.
+Proof. order Z. Qed.
+
+Lemma test7 : forall x y z : Z, x <= y = true -> y <= z = true -> x <= z = true.
+Proof. order Z. Qed.
+
+Lemma test8 : forall x y z : Z, x <= y = true -> x == y = false -> y <= x = false.
+Proof. order Z. Qed.
+
+Lemma test9 : forall x y z : Z, x <= y = true -> y <= x = true -> y <= z = true -> x <= z = true.
+Proof. order Z. Qed.
+
+Lemma test10 : forall x y z : Z, x < y = true -> y < z = true -> x < z = true.
+Proof. order Z. Qed.
+
+Lemma test11 : forall x y z : Z, x < y = true -> x <= y = true.
+Proof. order Z. Qed.
+
+Lemma test12 : forall x y z a: Z, x < y = true -> y <= z = true -> z < a = true -> x < a = true.
+Proof. order Z. Qed.
+
+Lemma test13 : forall x y z a: Z, x < y = true -> y <= z = true -> z < a = true -> a <= x = true -> False.
 Proof. order Z. Qed.
 
 

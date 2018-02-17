@@ -106,15 +106,27 @@ Proof. order_Bounds. Qed.
 Definition balance_prop sz1 sz2 :=
   (sz1 + sz2 <= 1 \/ sz1 <= (delta * sz2) /\ sz2 <= delta * sz1)%Z.
 
-(** This is the low-level, all in one predicate that says:
-   - the set is well-formed (balanced, sizes valid, in order)
-   - is within the bounds (exclusive)
-   - describes the function
-*)
 
 Fixpoint sem (s : Set_ e) (i : e) : bool :=
   match s with | Bin _ x s1 s2 => sem s1 i || (i == x) || sem s2 i
                | Tip => false end.
+
+Lemma sem_resp_eq : forall s i j,
+  i == j = true -> sem s i = sem s j.
+Proof.
+  intros.
+  induction s.
+  * simpl.
+    rewrite IHs1, IHs2.
+    replace (j == a) with (i == a) by (apply eq_true_iff_eq; split; order e).
+    reflexivity.
+  * reflexivity.
+Qed.
+
+(** This inductive predicate describes when sets are well-formed within 
+  (exclusive) bounds.
+*)
+
 
 Inductive Bounded : Set_ e -> bound -> bound -> Prop :=
   | BoundedTip : forall lb ub,
@@ -369,16 +381,20 @@ Ltac split_bool :=
     | [ |- ?lhs = ?rhs] => split_bool_go lhs || split_bool_go rhs
   end.
 
-
 Ltac f_solver := f_solver_simple;
   repeat (try solve [exfalso; inside_bounds; order_Bounds];
           rewrite ?andb_true_r, ?andb_true_l, ?andb_false_r, ?andb_false_l,
                   ?orb_true_r, ?orb_true_l, ?orb_false_r, ?orb_false_l,
                   ?orb_assoc, ?and_assoc;
           try reflexivity;
+          try lazymatch goal with
+            |  H1 : (?i == ?j) = true , H2 : sem ?s ?i = true, H3 : sem ?s ?j = false |- _
+              => exfalso; rewrite (sem_resp_eq s i j H1) in H2; congruence
+            |  H1 : (?i == ?j) = true , H2 : sem ?s ?i = false, H3 : sem ?s ?j = true |- _
+              => exfalso; rewrite (sem_resp_eq s i j H1) in H2; congruence
+          end;
           split_bool || exfalso
           ).
-
 
 (** A variant of [lia] that unfolds a few specific things and knows that
    the size of a well-formed tree is positive. *)
@@ -823,10 +839,7 @@ Proof.
     + rewrite orb_true_iff in Hthere; destruct Hthere; solve_Bounds.
     + rewrite orb_true_iff in Hthere; destruct Hthere; solve_Bounds.
     + solve_size.
-    + solve_Desc.
-      f_solver.
-      (* f_solver needs to propage equalities into [sem] arguments, then this goes through *)
-      admit.
+    + rewrite orb_true_iff in Hthere; destruct Hthere; solve_Desc.
   - expand_pairs.
     rewrite !size_Bin.
 
@@ -841,10 +854,7 @@ Proof.
     + rewrite orb_true_iff in Hthere; destruct Hthere; solve_Bounds.
     + solve_size.
     + rewrite orb_true_iff in Hthere; destruct Hthere; solve_Desc.
-      f_solver.
-      (* f_solver needs to propage equalities into [sem] arguments, then this goes through *)
-      admit.
-Admitted.
+Qed.
 
 From Coq Require Import ssreflect.
 Require Import Tactics.

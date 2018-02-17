@@ -420,25 +420,26 @@ Ltac solve_Bounded := eassumption || lazymatch goal with
   can use this lemma to replace all occurrences of
     [Bounded s lb ub], [sem s] and [size s]
   (for some concrete, non-variable s) with their actual values. *)
+Inductive Foo P Q : Prop -> Prop :=
+  FooI : P -> Q -> Foo P Q True.
+
 Definition Desc s lb ub sz f : Prop :=
-  forall (P : Prop -> Size -> (e -> bool) -> Prop),
-  (P True sz f) ->
-  P (Bounded s lb ub) (size s) (sem s).
+  Foo (size s = sz) (sem s = f) (Bounded s lb ub).
 
 (** To actually establish [Desc s lb ub sz f], use this lemma. *)
 Require Import Coq.Logic.PropExtensionality.
 Require Import Coq.Logic.FunctionalExtensionality.
 Lemma showDesc :
   forall s lb ub sz f,
-  (Bounded s lb ub) /\ size s = sz /\ (forall i, sem s i = f i) ->
-   Desc s lb ub sz f.
+  Bounded s lb ub /\ size s = sz /\ (forall i, sem s i = f i) ->
+  Desc s lb ub sz f.
 Proof.
-  intros. intros X HX.
+  intros. unfold Desc.
   destruct H as [HB [Hsz Hf]].
-  rewrite Hsz.
-  replace (sem s) with f by (symmetry; extensionality i; apply Hf).
+  rewrite <- Hsz.
+  replace f with (sem s) by (extensionality i; apply Hf).
   replace (Bounded s lb ub) with True by (apply propositional_extensionality; tauto).
-  assumption.
+  eapply FooI; try reflexivity.
 Qed.
 
 Lemma Desc_change_f:
@@ -447,7 +448,7 @@ Lemma Desc_change_f:
   Desc s lb ub sz f' <-> Desc s lb ub sz f.
 Proof.
   intros.
-  split; intro HD; apply showDesc; apply HD; intuition.
+  split; intro HD; apply showDesc; induction HD; subst; intuition.
 Qed.
 
 
@@ -456,19 +457,6 @@ Ltac solve_Desc := apply showDesc; split; [solve_Bounded | split; [solve_size | 
 
 (** And any set that has a bounds is well-formed *)
 Definition WF (s : Set_ e) : Prop := Bounded s None None.
-
-Lemma Desc_WF:
-  forall s sz f,
-  Desc s None None sz f -> WF s.
-Proof.
-  intros ??? HD.
-  unfold WF.
-  (* Unfortunately, [apply HD] does not work unless we have [size s] and [sem s]
-     in the context. *)
-  assert (Bounded s None None /\ size s = size s /\ sem s = sem s) by (apply HD; auto).
-  intuition.
-Qed.
-
 
 (** For every set in the context, try to see if [lia] knows it is empty. *)
 Ltac find_Tip :=
@@ -484,6 +472,34 @@ Ltac find_Tip :=
 Require Import Coq.Program.Tactics.
 
 Open Scope Z_scope.
+
+(* verification of singleton *)
+
+Lemma singleton_Desc:
+  forall x lb ub,
+  isLB lb x = true ->
+  isUB ub x = true ->
+  Desc (singleton x) lb ub 1 (fun i => i == x).
+Proof.
+  intros.
+
+  unfold singleton.
+  unfold fromInteger, Num_Integer__.
+  solve_Desc.
+Qed.
+
+(* Can we abstract over this pattern? *)
+Ltac singleton_Desc :=
+  lazymatch goal with |- context [Bounded (singleton ?y) ?lb ?ub] =>
+    induction (singleton_Desc y lb ub); subst
+  end.
+
+Lemma singleton_WF:
+  forall y, WF (singleton y).
+Proof. intros. unfold WF. destruct (singleton_Desc y None None); try reflexivity. Qed.
+
+(* verification of [balanceL] and [balanceR] *)
+
 
 Lemma balanceL_Desc:
     forall x s1 s2 lb ub,
@@ -564,28 +580,8 @@ Proof.
       reflexivity.
 Qed.
 
-(* verification of singleton *)
-
-Lemma singleton_Desc:
-  forall x lb ub,
-  isLB lb x = true ->
-  isUB ub x = true ->
-  Desc (singleton x) lb ub 1 (fun i => i == x).
-Proof.
-  intros.
-
-  unfold singleton.
-  unfold fromInteger, Num_Integer__.
-  solve_Desc.
-Qed.
-
-Lemma singleton_WF:
-  forall y, WF (singleton y).
-Proof. intros. eapply Desc_WF. apply singleton_Desc; reflexivity. Qed.
-
-
 (* verification of insert *)
-                   
+
 (* The [orig] passing and the local fixpoint in insert is plain ugly, so let’s to this instead *)
 
 Fixpoint insert' (x : e) (s : Set_ e ) : Set_ e :=
@@ -626,7 +622,8 @@ Proof.
   rewrite insert_insert'.
   induction HB; intros.
   * simpl.
-    apply showDesc. apply singleton_Desc; try assumption.
+    apply showDesc.
+    induction (singleton_Desc y lb ub); try assumption.
     repeat split; try f_solver.
   * subst; cbn -[Z.add].
     destruct (compare y x) eqn:?.
@@ -662,15 +659,21 @@ Proof.
         destruct (i == y) eqn:?, (i == x)  eqn:?, (sem s1 i)  eqn:?, (sem s2 i)  eqn:?; 
           intuition congruence.
 
-      - unfold Desc; apply balanceL_Desc.
-        ** solve_Bounded.
+      - apply showDesc.
+        induction (balanceL_Desc x (insert' y s1) s2 lb ub).
+        ** repeat split.
+           ++ induction IHHB1; [idtac | solve_Bounds | solve_Bounds].
+              destruct (sem s1 y); solve_size.
+           ++ induction IHHB1; [idtac | solve_Bounds | solve_Bounds].
+              revert H1. inversion H4. intros.
+              f_solver.
+        ** induction IHHB1; [idtac | solve_Bounds | solve_Bounds].
+           apply I.
         ** solve_Bounded.
         ** assumption.
         ** assumption.        
-        ** destruct (sem s1 y); solve_size.
-        ** repeat split.
-           ++ destruct (sem s1 y); solve_size.
-           ++ f_solver.
+        ** induction IHHB1; [idtac | solve_Bounds | solve_Bounds].
+           destruct (sem s1 y); solve_size.
     + (* more or less a copy-n-paste from above *)
       edestruct IHHB2 as [IH_Desc [IH_size IHf]]; only 1,2: solve_Bounds; try assumption; try (intro; reflexivity).
       simpl in IHf.

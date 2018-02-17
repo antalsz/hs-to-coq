@@ -81,10 +81,10 @@ Ltac order_Bounds :=
   simpl isUB in *;
   simpl isLB in *;
   repeat (congruence || lazymatch goal with
-    | H : context [isUB ?ub _] |- _ => destruct ub; simpl isUB in *
-    | |-  context [isUB ?ub _]      => destruct ub; simpl isUB in *
-    | H : context [isLB ?lb _] |- _ => destruct lb; simpl isLB in *
-    | |-  context [isLB ?lb _]      => destruct lb; simpl isLB in *
+    | H : isUB ?ub _ = false |- _ => destruct ub; simpl isUB in *
+    | |-  isUB ?ub _ = _          => destruct ub; simpl isUB in *
+    | H : isLB ?lb _ = false |- _ => destruct lb; simpl isLB in *
+    | |-  isLB ?lb _ = _          => destruct lb; simpl isLB in *
    end);
    order e.
 

@@ -219,58 +219,6 @@ Proof.
     intuition try (congruence || lia).
 Qed.
 
-(* Solve equations of the form
-     forall i, f i = f0 i || f1 i
-   possibly using equations from the context.
-   Fails if it does not start with [forall i,], but may leave a partially solve goal.
-    *)
-Ltac f_solver_simple  :=
-  let i := fresh "i" in 
-  intro i;
-  try reflexivity; (* for when we have an existential variable *)
-  repeat match goal with [ H : ?f = _ |- context [?f i] ] => rewrite H in *; clear H end;
-  repeat match goal with [ H : (forall i, ?f i = _) |- context [?f i] ] => rewrite H; clear H end;
-  simpl sem; rewrite ?orb_assoc, ?orb_false_r, ?orb_false_l;
-  try reflexivity.
-
-
-(** This auxillary tactic destructs one boolean atom in the argument *)
-
-Ltac split_bool_go expr :=
-  lazymatch expr with 
-    | true       => fail
-    | false      => fail
-    | Some _     => fail
-    | None       => fail
-    | match ?x with _ => _ end => split_bool_go x || (simpl x; cbv match)
-    | negb ?x    => split_bool_go x
-    | ?x && ?y   => split_bool_go x || split_bool_go y
-    | ?x || ?y   => split_bool_go x || split_bool_go y
-    | xorb ?x ?y => split_bool_go x || split_bool_go y
-    | ?bexpr     => destruct bexpr eqn:?
-  end.
-
-(** This auxillary tactic destructs one boolean or option atom in the goal *)
-
-Ltac split_bool :=
-  match goal with 
-    | [ |- ?lhs = ?rhs] => split_bool_go lhs || split_bool_go rhs
-  end.
-  
-Ltac f_solver := f_solver_simple;
-  repeat (try solve [exfalso; order_Bounds];
-          rewrite ?andb_true_r, ?andb_true_l, ?andb_false_r, ?andb_false_l,
-                  ?orb_true_r, ?orb_true_l, ?orb_false_r, ?orb_false_l,
-                  ?orb_assoc, ?and_assoc;
-          try lazymatch goal with
-            | H : Bounded ?s _ _, H2 : sem ?s ?i = true |- _ =>
-               apply (sem_inside H) in H2; destruct H2
-          end;
-          try reflexivity;
-          split_bool || exfalso
-          ).
-
-
 Lemma Bounded_change_ub:
   forall s lb ub ub',
   Bounded s lb (Some ub) ->
@@ -368,12 +316,69 @@ Ltac expand_pairs :=
     rewrite (surjective_pairing e)
   end.
 
+
+(** Learns bounds of values found in some set in the context *)
+Ltac inside_bounds :=
+  repeat lazymatch goal with
+    | H : Bounded ?s _ _, H2 : sem ?s ?i = true |- _ =>
+       apply (sem_inside H) in H2; destruct H2
+  end.
+
 (** Solve [isLB] and [isUB] goals.  *)
 Ltac solve_Bounds := first
   [ assumption
-  | solve [order_Bounds]
+  | solve [inside_bounds; order_Bounds]
   | idtac "solve_Bounds gave up"
   ].
+
+(* Solve equations of the form
+     forall i, f i = f0 i || f1 i
+   possibly using equations from the context.
+   Fails if it does not start with [forall i,], but may leave a partially solve goal.
+    *)
+Ltac f_solver_simple  :=
+  let i := fresh "i" in 
+  intro i;
+  try reflexivity; (* for when we have an existential variable *)
+  repeat match goal with [ H : ?f = _ |- context [?f i] ] => rewrite H in *; clear H end;
+  repeat match goal with [ H : (forall i, ?f i = _) |- context [?f i] ] => rewrite H; clear H end;
+  simpl sem; rewrite ?orb_assoc, ?orb_false_r, ?orb_false_l;
+  try reflexivity.
+
+
+(** This auxillary tactic destructs one boolean atom in the argument *)
+
+Ltac split_bool_go expr :=
+  lazymatch expr with 
+    | true       => fail
+    | false      => fail
+    | Some _     => fail
+    | None       => fail
+    | match ?x with _ => _ end => split_bool_go x || (simpl x; cbv match)
+    | negb ?x    => split_bool_go x
+    | ?x && ?y   => split_bool_go x || split_bool_go y
+    | ?x || ?y   => split_bool_go x || split_bool_go y
+    | xorb ?x ?y => split_bool_go x || split_bool_go y
+    | ?bexpr     => destruct bexpr eqn:?
+  end.
+
+(** This auxillary tactic destructs one boolean or option atom in the goal *)
+
+Ltac split_bool :=
+  match goal with 
+    | [ |- ?lhs = ?rhs] => split_bool_go lhs || split_bool_go rhs
+  end.
+
+
+Ltac f_solver := f_solver_simple;
+  repeat (try solve [exfalso; inside_bounds; order_Bounds];
+          rewrite ?andb_true_r, ?andb_true_l, ?andb_false_r, ?andb_false_l,
+                  ?orb_true_r, ?orb_true_l, ?orb_false_r, ?orb_false_l,
+                  ?orb_assoc, ?and_assoc;
+          try reflexivity;
+          split_bool || exfalso
+          ).
+
 
 (** A variant of [lia] that unfolds a few specific things and knows that
    the size of a well-formed tree is positive. *)
@@ -715,9 +720,6 @@ Lemma maxViewSure_Desc:
     let r := snd (maxViewSure x s1 s2) in
     (* we know that y is in the input, and we actually know more: it is x or in s2 *)
     ((y == x) || sem s2 y) = true /\
-     (* These two are obsolete, they follow from the above *)
-    isUB ub y = true /\
-    isLB lb y = true /\
     Desc r lb (Some y) (size s1 + size s2) (fun i => (sem s1 i || (i == x) || sem s2 i) && negb (i == y)).
 Proof.
   intros ?????? HB y r.
@@ -729,26 +731,23 @@ Proof.
     cbn -[Z.add size] in *. subst y r. expand_pairs. cbn -[Z.add size] in *.
     rewrite size_Bin in *.
 
-    edestruct IHs2_2 as [Hthere [IHUB [IHLB IHD]]]; try eassumption;  subst.
+    edestruct IHs2_2 as [Hthere IHD]; try eassumption;  subst.
     applyDesc IHD; clear IHD.
 
-    split;[|split;[|split]].
+    split.
     + rewrite <- !orb_assoc. rewrite Hthere.
       rewrite !orb_true_r. reflexivity.
-    + assumption.
-    + solve_Bounds.
     + applyDesc balanceL_Desc.
       * eassumption.
       * eassumption.
       * solve_Bounds.
-      * solve_Bounds.
+      * rewrite orb_true_iff in Hthere; destruct Hthere; solve_Bounds.
       * solve_size.
-      * solve_Desc.
+      * rewrite orb_true_iff in Hthere; destruct Hthere; solve_Desc.
   - cbn -[Z.add size] in *; subst y r.
     inversion HB; subst; clear HB.
     rewrite Eq_refl.
-    split;[|split;[|split]]; try assumption; try reflexivity.
-    solve_Desc.
+    split; [reflexivity | solve_Desc].
 Qed.
 
 (* verification of minViewSure *)
@@ -761,9 +760,6 @@ Lemma minViewSure_Desc:
     let r := snd (minViewSure x s1 s2) in
     (* we know that y is in the input, and we actually know more: it is x or in s1 *)
     (sem s1 y || (y == x)) = true /\
-     (* These two are obsolete, they follow from the above *)
-    isUB ub y = true /\
-    isLB lb y = true /\
     Desc r (Some y) ub (size s1 + size s2) (fun i => (sem s1 i || (i == x) || sem s2 i) && negb (i == y)).
 Proof.
   intros ?????? HB y r.
@@ -775,26 +771,23 @@ Proof.
     cbn -[Z.add size] in *. subst y r. expand_pairs. cbn -[Z.add size] in *.
     rewrite size_Bin in *.
 
-    edestruct IHs1_1 as [Hthere [IHUB [IHLB IHD]]]; try eassumption;  subst.
+    edestruct IHs1_1 as [Hthere IHD]; try eassumption;  subst.
     applyDesc IHD; clear IHD.
 
-    split;[|split;[|split]].
+    split.
     + rewrite <- orb_assoc. rewrite Hthere.
       rewrite !orb_true_l. reflexivity.
-    + solve_Bounds.
-    + assumption.
     + applyDesc balanceR_Desc.
       * eassumption.
       * eassumption.
-      * solve_Bounds.
+      * rewrite orb_true_iff in Hthere; destruct Hthere; solve_Bounds.
       * solve_Bounds.
       * solve_size.
-      * solve_Desc.
+      * rewrite orb_true_iff in Hthere; destruct Hthere; solve_Desc.
   - cbn -[Z.add size] in *; subst y r.
     inversion HB; subst; clear HB.
     rewrite Eq_refl.
-    split;[|split;[|split]]; try assumption; try reflexivity.
-    solve_Desc.
+    split; [reflexivity | solve_Desc].
 Qed.
 
 (* verification of glue *)
@@ -817,42 +810,36 @@ Proof.
     rewrite !size_Bin.
 
     edestruct maxViewSure_Desc with (x := x0) (s1 := s0) (s2 := s3)
-      as [Hthere [Hlb [Hub HD]]];
-      only 1: solve_Bounded.
+      as [Hthere HD]; only 1: solve_Bounded.
     applyDesc HD.
 
     applyDesc balanceR_Desc.
     + eassumption.
-    + solve_Bounded.
-    + solve_Bounds.
-    + solve_Bounds.
+    + rewrite orb_true_iff in Hthere; destruct Hthere; solve_Bounded.
+    + rewrite orb_true_iff in Hthere; destruct Hthere; solve_Bounds.
+    + rewrite orb_true_iff in Hthere; destruct Hthere; solve_Bounds.
     + solve_size.
     + solve_Desc.
-      f_solver_simple. (* a sufficient smart [f_solver] should handle this *)
-      destruct (i == fst (maxViewSure x0 s0 s3)) eqn:?.
-      * simpl. rewrite andb_false_r, ?orb_true_l.
-        admit.
-      * simpl. rewrite andb_true_r, ?orb_false_r. reflexivity.
+      f_solver.
+      (* f_solver needs to propage equalities into [sem] arguments, then this goes through *)
+      admit.
   - expand_pairs.
     rewrite !size_Bin.
 
     edestruct minViewSure_Desc with (x := x1) (s1 := s4) (s2 := s5)
-      as [Hthere [Hlb [Hub HD]]];
-      only 1: solve_Bounded.
+      as [Hthere HD]; only 1: solve_Bounded.
     applyDesc HD.
 
     applyDesc balanceL_Desc.
-    + solve_Bounded.
+    + rewrite orb_true_iff in Hthere; destruct Hthere; solve_Bounded.
     + eassumption.
-    + solve_Bounds.
-    + solve_Bounds.
+    + rewrite orb_true_iff in Hthere; destruct Hthere; solve_Bounds.
+    + rewrite orb_true_iff in Hthere; destruct Hthere; solve_Bounds.
     + solve_size.
-    + solve_Desc.
-      f_solver_simple. (* a sufficient smart [f_solver] should handle this *)
-      destruct (i == fst (minViewSure x1 s4 s5)) eqn:?.
-      * simpl. rewrite andb_false_r, ?orb_true_r, ?orb_false_r.
-        admit.
-      * simpl. rewrite andb_true_r, ?orb_false_r, ?orb_assoc. reflexivity.
+    + rewrite orb_true_iff in Hthere; destruct Hthere; solve_Desc.
+      f_solver.
+      (* f_solver needs to propage equalities into [sem] arguments, then this goes through *)
+      admit.
 Admitted.
 
 From Coq Require Import ssreflect.

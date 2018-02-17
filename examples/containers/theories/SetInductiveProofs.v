@@ -856,9 +856,6 @@ Proof.
     + rewrite orb_true_iff in Hthere; destruct Hthere; solve_Desc.
 Qed.
 
-From Coq Require Import ssreflect.
-Require Import Tactics.
-
 
 Lemma delete_Desc :
   forall x s lb ub,
@@ -867,13 +864,12 @@ Lemma delete_Desc :
 Proof.
   intros ???? HB.
   induction HB; intros; subst.
-  - rewrite /delete.
-    solve_Desc.
-  - rewrite /delete -/delete.
+  - simpl. solve_Desc.
+  - cbn -[Z.add].
     destruct (compare x x0) eqn:Heq.
     + applyDesc glue_Desc; try eassumption.
       solve_Desc.
-      simpl sem. rewrite size_Bin.
+      simpl sem.
       replace (x == x0) with true by solve_Bounds.
       rewrite orb_true_r. cbn -[Z.add]. solve_size.
     + applyDesc IHHB1; clear IHHB1 IHHB2.

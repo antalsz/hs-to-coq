@@ -735,39 +735,45 @@ Proof. intros. eapply Desc_WF. applyDesc insert_Desc; try reflexivity; try assum
 Lemma maxViewSure_Desc:
   forall sz' x s1 s2 lb ub,
     Bounded (Bin sz' x s1 s2) lb ub ->
-
-    let y := fst (maxViewSure x s1 s2) in
-    let r := snd (maxViewSure x s1 s2) in
+    forall P,
+    (forall y r,
+      ((y == x) = true \/ sem s2 y = true) /\
+      Desc r lb (Some y) (size s1 + size s2)
+                         (fun i => (sem s1 i || (i == x) || sem s2 i) && negb (i == y)) ->
+      P (y, r)) ->
+    P (maxViewSure x s1 s2).
     (* we know that y is in the input, and we actually know more: it is x or in s2 *)
-    ((y == x) || sem s2 y) = true /\
-    Desc r lb (Some y) (size s1 + size s2) (fun i => (sem s1 i || (i == x) || sem s2 i) && negb (i == y)).
 Proof.
-  intros ?????? HB y r.
-  revert sz' x s1 lb ub HB y r.
-  induction s2; intros;subst.
+  intros ?????? HB.
+  revert sz' x s1 lb ub HB.
+  induction s2; intros sz' x s1 lb ub HB;subst.
   - clear IHs2_1.
+    simpl.
+    intros X HX; rewrite (surjective_pairing (maxViewSure _ _ _)). apply HX; clear X HX.
+
     inversion HB; subst; clear HB.
     inversion H4; subst.
-    cbn -[Z.add size] in *. subst y r. expand_pairs. cbn -[Z.add size] in *.
-    rewrite size_Bin in *.
 
-    edestruct IHs2_2 as [Hthere IHD]; try eassumption;  subst.
+    eapply IHs2_2; only 1: solve_Bounded; intros y r H; destruct H as [Hthere IHD]; clear IHs2_2.
+    cbn -[Z.add size] in *; rewrite size_Bin in *.
+
     applyDesc IHD; clear IHD.
 
     split.
-    + rewrite <- !orb_assoc. rewrite Hthere.
-      rewrite !orb_true_r. reflexivity.
+    + rewrite <- !orb_assoc. right. destruct Hthere as [H|H]; rewrite H;
+      rewrite ?orb_true_r, ?orb_true_r; reflexivity.
     + applyDesc balanceL_Desc.
       * eassumption.
       * eassumption.
       * solve_Bounds.
-      * rewrite orb_true_iff in Hthere; destruct Hthere; solve_Bounds.
+      * destruct Hthere; solve_Bounds.
       * solve_size.
-      * rewrite orb_true_iff in Hthere; destruct Hthere; solve_Desc.
-  - cbn -[Z.add size] in *; subst y r.
+      * destruct Hthere; solve_Desc.
+  - intros X HX; rewrite (surjective_pairing (maxViewSure _ _ _)). apply HX; clear X HX.
+    cbn -[Z.add size] in *.
     inversion HB; subst; clear HB.
     rewrite Eq_refl.
-    split; [reflexivity | solve_Desc].
+    split; [left; reflexivity | solve_Desc].
 Qed.
 
 (* verification of minViewSure *)
@@ -775,39 +781,45 @@ Qed.
 Lemma minViewSure_Desc:
   forall sz' x s1 s2 lb ub,
     Bounded (Bin sz' x s1 s2) lb ub ->
-
-    let y := fst (minViewSure x s1 s2) in
-    let r := snd (minViewSure x s1 s2) in
-    (* we know that y is in the input, and we actually know more: it is x or in s1 *)
-    (sem s1 y || (y == x)) = true /\
-    Desc r (Some y) ub (size s1 + size s2) (fun i => (sem s1 i || (i == x) || sem s2 i) && negb (i == y)).
+    forall P,
+    (forall y r,
+      ((y == x) = true \/ sem s1 y = true) /\
+      Desc r (Some y) ub (size s1 + size s2)
+                         (fun i => (sem s1 i || (i == x) || sem s2 i) && negb (i == y)) ->
+      P (y, r)) ->
+    P (minViewSure x s1 s2).
+    (* we know that y is in the input, and we actually know more: it is x or in s2 *)
 Proof.
-  intros ?????? HB y r.
-  revert sz' x s2 lb ub HB y r.
-  induction s1; intros;subst.
+  intros ?????? HB.
+  revert sz' x s2 lb ub HB.
+  induction s1; intros sz' x s2 lb ub HB;subst.
   - clear IHs1_2.
+    simpl.
+    intros X HX; rewrite (surjective_pairing (minViewSure _ _ _)). apply HX; clear X HX.
+
     inversion HB; subst; clear HB.
     inversion H3; subst.
-    cbn -[Z.add size] in *. subst y r. expand_pairs. cbn -[Z.add size] in *.
-    rewrite size_Bin in *.
 
-    edestruct IHs1_1 as [Hthere IHD]; try eassumption;  subst.
+    eapply IHs1_1; only 1: solve_Bounded; intros y r [Hthere IHD]; clear IHs1_1.
+    cbn -[Z.add size] in *; rewrite size_Bin in *.
+
     applyDesc IHD; clear IHD.
 
     split.
-    + rewrite <- orb_assoc. rewrite Hthere.
-      rewrite !orb_true_l. reflexivity.
+    + rewrite <- !orb_assoc. right. destruct Hthere as [H|H]; rewrite H;
+      rewrite ?orb_true_r, ?orb_true_r; reflexivity.
     + applyDesc balanceR_Desc.
       * eassumption.
       * eassumption.
-      * rewrite orb_true_iff in Hthere; destruct Hthere; solve_Bounds.
+      * destruct Hthere; solve_Bounds.
       * solve_Bounds.
       * solve_size.
-      * rewrite orb_true_iff in Hthere; destruct Hthere; solve_Desc.
-  - cbn -[Z.add size] in *; subst y r.
+      * destruct Hthere; solve_Desc.
+  - intros X HX; rewrite (surjective_pairing (minViewSure _ _ _)). apply HX; clear X HX.
+    cbn -[Z.add size] in *.
     inversion HB; subst; clear HB.
     rewrite Eq_refl.
-    split; [reflexivity | solve_Desc].
+    split; [left; reflexivity | solve_Desc].
 Qed.
 
 (* verification of glue *)
@@ -826,34 +838,32 @@ Proof.
   inversion HB1; inversion HB2; subst; cbn -[size Z.add]; clear HB1 HB2.
   1-3: solve [solve_Desc|solve_size].
   destruct (Z.ltb_spec (1 + size s4 + size s5) (1 + size s0 + size s3)).
-  - expand_pairs.
-    rewrite !size_Bin.
+  - rewrite !size_Bin.
 
-    edestruct maxViewSure_Desc with (x := x0) (s1 := s0) (s2 := s3)
-      as [Hthere HD]; only 1: solve_Bounded.
+    eapply maxViewSure_Desc; only 1: solve_Bounded.
+    intros y r [Hthere HD].
     applyDesc HD.
 
     applyDesc balanceR_Desc.
     + eassumption.
-    + rewrite orb_true_iff in Hthere; destruct Hthere; solve_Bounded.
-    + rewrite orb_true_iff in Hthere; destruct Hthere; solve_Bounds.
-    + rewrite orb_true_iff in Hthere; destruct Hthere; solve_Bounds.
+    + destruct Hthere; solve_Bounded.
+    + destruct Hthere; solve_Bounds.
+    + destruct Hthere; solve_Bounds.
     + solve_size.
-    + rewrite orb_true_iff in Hthere; destruct Hthere; solve_Desc.
-  - expand_pairs.
-    rewrite !size_Bin.
+    + destruct Hthere; solve_Desc.
+  - rewrite !size_Bin.
 
-    edestruct minViewSure_Desc with (x := x1) (s1 := s4) (s2 := s5)
-      as [Hthere HD]; only 1: solve_Bounded.
+    eapply minViewSure_Desc; only 1: solve_Bounded.
+    intros y r [Hthere HD].
     applyDesc HD.
 
     applyDesc balanceL_Desc.
-    + rewrite orb_true_iff in Hthere; destruct Hthere; solve_Bounded.
+    + destruct Hthere; solve_Bounded.
     + eassumption.
-    + rewrite orb_true_iff in Hthere; destruct Hthere; solve_Bounds.
-    + rewrite orb_true_iff in Hthere; destruct Hthere; solve_Bounds.
+    + destruct Hthere; solve_Bounds.
+    + destruct Hthere; solve_Bounds.
     + solve_size.
-    + rewrite orb_true_iff in Hthere; destruct Hthere; solve_Desc.
+    + destruct Hthere; solve_Desc.
 Qed.
 
 

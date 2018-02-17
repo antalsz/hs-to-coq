@@ -132,41 +132,8 @@ Inductive Bounded : Set_ e -> bound -> bound -> Prop :=
     balance_prop (size s1) (size s2) ->
     Bounded (Bin sz x s1 s2) lb ub.
 
-Definition Desc : Set_ e -> bound -> bound -> Size -> (e -> bool) -> Prop :=
-  fun s lb ub sz f => Bounded s lb ub /\ sz = size s /\  (forall i, sem s i = f i).
-
-
-Lemma Desc_change_f:
-  forall s lb ub sz f f',
-  (forall i, f' i = f i) ->
-  Desc s lb ub sz f' <-> Desc s lb ub sz f.
-Proof.
-  intros.
-  unfold Desc  in *. intuition; rewrite ?H3, ?H; reflexivity.
-Qed.
-
-(* Maybe useful? Maybe not? *)
-(*
-Ltac Desc_helper foo :=
-  match goal with |- context [Bounded ?s ?lb ?ub] =>
-    let Htmp := fresh "Htmp" in
-    let HB := fresh "HB" in
-    let Hf := fresh "Hf" in
-    eassert (Desc s lb ub _);
-    [ eapply foo
-    | destruct Htmp as [HB Hf]
-    ]
-  end.
-*)
-
-(** For the meaning of a set we do not care about the bounds *)
-Definition Sem (s : Set_ e) (f : e -> bool) := Desc s None None (size s) f.
-
-(** And any set that has a meaning is well-formed *)
-Definition WF (s : Set_ e) : Prop := exists f, Sem s f.
-
 (** There are no values outside the bounds *)
-Lemma Desc_outside_below:
+Lemma sem_outside_below:
   forall {s lb ub i},
   Bounded s lb ub ->
   isLB lb i = false ->
@@ -179,7 +146,7 @@ Proof.
   rewrite orb_false_l. rewrite orb_false_r. order_Bounds.
 Qed.
 
-Lemma Desc_outside_above:
+Lemma sem_outside_above:
   forall {s lb ub i},
   Bounded s lb ub ->
   isUB ub i = false ->
@@ -192,7 +159,7 @@ Proof.
   rewrite orb_false_l. rewrite orb_false_r. order_Bounds.
 Qed.
 
-Lemma Desc_inside:
+Lemma sem_inside:
   forall {s lb ub i},
   Bounded s lb ub ->
   sem s i = true ->
@@ -296,7 +263,7 @@ Ltac f_solver := f_solver_simple;
                   ?orb_assoc, ?and_assoc;
           try lazymatch goal with
             | H : Bounded ?s _ _, H2 : sem ?s ?i = true |- _ =>
-               apply (Desc_inside H) in H2; destruct H2
+               apply (sem_inside H) in H2; destruct H2
           end;
           try reflexivity;
           split_bool || exfalso
@@ -367,10 +334,31 @@ Proof.
     order_Bounds.
 Qed.
 
+Lemma Bounded_relax_ub_None:
+  forall s lb ub,
+  Bounded s lb ub ->
+  Bounded s lb None.
+Proof.
+  intros ??? HD.
+  induction HD; subst.
+  * apply BoundedTip; reflexivity.
+  * eapply BoundedBin; try eassumption; try reflexivity.
+Qed.
+
+Lemma Bounded_relax_lb_None:
+  forall s lb ub,
+  Bounded s lb ub ->
+  Bounded s None ub.
+Proof.
+  intros ??? HD.
+  induction HD; subst.
+  * apply BoundedTip; reflexivity.
+  * eapply BoundedBin; try eassumption; try reflexivity.
+Qed.
 
 
 (** In order to stay sane and speed things up, here is
- a tactic that solves [Desc] goals, which runs 
+ a tactic that solves [Bounded] goals, which runs 
  the right auxillary tactic on the corresponding goals. *)
 
 Ltac expand_pairs :=
@@ -388,7 +376,7 @@ Ltac solve_Bounds := first
 
 (** A variant of [lia] that unfolds a few specific things and knows that
    the size of a well-formed tree is positive. *)
-Ltac lia_Desc :=
+Ltac lia_sizes :=
   postive_sizes;
   unfold balance_prop, delta, fromInteger, Num_Integer__ in *;
   rewrite ?size_Bin in *; simpl (size Tip) in *;
@@ -398,7 +386,7 @@ Ltac lia_Desc :=
 Ltac solve_size := first
   [ assumption
   | reflexivity
-  | lia_Desc
+  | lia_sizes
   | idtac "solve_size gave up"
   ].
 
@@ -426,13 +414,66 @@ Ltac solve_Bounded := eassumption || lazymatch goal with
   | |- ?H => fail "solve_Bounded gave up on" H
   end.
 
-Ltac solve_Desc := split; [solve_Bounded | split; [solve_size | simpl sem; try solve [f_solver]]].
+
+(** A proposition of the form [Desc s lb ub sz f] tells us
+  everything we need to know about [s]. Therefore, we
+  can use this lemma to replace all occurrences of
+    [Bounded s lb ub], [sem s] and [size s]
+  (for some concrete, non-variable s) with their actual values. *)
+Definition Desc s lb ub sz f : Prop :=
+  forall (P : Prop -> Size -> (e -> bool) -> Prop),
+  (P True sz f) ->
+  P (Bounded s lb ub) (size s) (sem s).
+
+(** To actually establish [Desc s lb ub sz f], use this lemma. *)
+Require Import Coq.Logic.PropExtensionality.
+Require Import Coq.Logic.FunctionalExtensionality.
+Lemma showDesc :
+  forall s lb ub sz f,
+  (Bounded s lb ub) /\ size s = sz /\ (forall i, sem s i = f i) ->
+   Desc s lb ub sz f.
+Proof.
+  intros. intros X HX.
+  destruct H as [HB [Hsz Hf]].
+  rewrite Hsz.
+  replace (sem s) with f by (symmetry; extensionality i; apply Hf).
+  replace (Bounded s lb ub) with True by (apply propositional_extensionality; tauto).
+  assumption.
+Qed.
+
+Lemma Desc_change_f:
+  forall s lb ub sz f f',
+  (forall i, f' i = f i) ->
+  Desc s lb ub sz f' <-> Desc s lb ub sz f.
+Proof.
+  intros.
+  split; intro HD; apply showDesc; apply HD; intuition.
+Qed.
+
+
+Ltac solve_Desc := apply showDesc; split; [solve_Bounded | split; [solve_size | simpl sem; try solve [f_solver]]].
+
+
+(** And any set that has a bounds is well-formed *)
+Definition WF (s : Set_ e) : Prop := Bounded s None None.
+
+Lemma Desc_WF:
+  forall s sz f,
+  Desc s None None sz f -> WF s.
+Proof.
+  intros ??? HD.
+  unfold WF.
+  (* Unfortunately, [apply HD] does not work unless we have [size s] and [sem s]
+     in the context. *)
+  assert (Bounded s None None /\ size s = size s /\ sem s = sem s) by (apply HD; auto).
+  intuition.
+Qed.
 
 
 (** For every set in the context, try to see if [lia] knows it is empty. *)
 Ltac find_Tip :=
   match goal with [ H : Bounded ?s _ _ |- _ ] =>
-    assert_new (size s = 0)%Z lia_Desc;
+    assert_new (size s = 0)%Z lia_sizes;
     rewrite (size_0_iff_tip H) in *;
     subst s;
     inversion H;
@@ -445,25 +486,18 @@ Require Import Coq.Program.Tactics.
 Open Scope Z_scope.
 
 Lemma balanceL_Desc:
-    forall lb ub,
-    forall s1 s2,
-    forall x f sz,
+    forall x s1 s2 lb ub,
     Bounded s1 lb (Some x) ->
     Bounded s2 (Some x) ub  ->
     isLB lb x = true ->
     isUB ub x = true->
-    (forall i, f i = sem s1 i || (i == x) || sem s2 i) ->
     balance_prop (size s1) (size s2) \/
     balance_prop (size s1 - 1)%Z (size s2) /\ (1 <= size s1)%Z  \/
     balance_prop (size s1)%Z (size s2 + 1) ->
-    sz = 1 + size s1 + size s2 ->
-    Desc (balanceL x s1 s2) lb ub sz f.
+    Desc (balanceL x s1 s2) lb ub (1 + size s1 + size s2) (fun i => sem s1 i || (i == x) || sem s2 i).
 Proof.
   intros.
   
-  (* Get rid of the [f] variable (maybe worth a tactic?) *)
-  erewrite Desc_change_f by apply H3; clear f H3.
-
   unfold balanceL, balance_prop, delta, ratio in *.
   unfold fromInteger, op_zg__, op_zl__, op_zt__, op_zp__, Num_Integer__, Ord_Integer___, op_zg____, op_zl____.
   rewrite ?size_size.
@@ -473,31 +507,23 @@ Proof.
   rewrite ?size_Bin in *; simpl (size Tip) in *; simpl sem;
   simpl isLB in *;
   simpl isUB in *.
-  all: try solve [exfalso; lia_Desc]. (* Some are simply impossible *)
+  all: try solve [exfalso; lia_sizes]. (* Some are simply impossible *)
   all: repeat find_Tip.
   all: try solve [solve_Desc].
 Qed.
 
-
 Lemma balanceR_Desc:
-    forall lb ub,
-    forall s1 s2,
-    forall x f sz,
+    forall x s1 s2 lb ub,
     Bounded s1 lb (Some x) ->
     Bounded s2 (Some x) ub ->
     isLB lb x = true ->
     isUB ub x = true->
-    (forall i, f i = sem s1 i || (i == x) || sem s2 i) ->
     balance_prop (size s1) (size s2) \/
     balance_prop (size s1) (size s2 - 1)%Z /\ (1 <= size s2)%Z  \/
     balance_prop (size s1 + 1) (size s2) ->
-    sz = 1 + size s1 + size s2 ->
-    Desc (balanceR x s1 s2) lb ub sz f.
+    Desc (balanceR x s1 s2) lb ub (1 + size s1 + size s2) (fun i => sem s1 i || (i == x) || sem s2 i).
 Proof.
   intros.
-
-  (* Get rid of the [f] variable (maybe worth a tactic?) *)
-  erewrite Desc_change_f by apply H3; clear f H3.
 
   unfold balanceR, balance_prop, delta, ratio in *.
   unfold fromInteger, op_zg__, op_zl__, op_zt__, op_zp__, Num_Integer__, Ord_Integer___, op_zg____, op_zl____.
@@ -508,7 +534,7 @@ Proof.
   rewrite ?size_Bin in *; simpl (size Tip) in *; simpl sem;
   simpl isLB in *;
   simpl isUB in *.
-  all: try solve [exfalso; lia_Desc]. (* Some are simply impossible *)
+  all: try solve [exfalso; lia_sizes]. (* Some are simply impossible *)
   all: repeat find_Tip.
   all: try solve [solve_Desc].
 Qed.
@@ -528,51 +554,34 @@ Proof.
       reflexivity.
     + replace (i == x) with false by order_Bounds.
       rewrite IHHB1.
-      rewrite (Desc_outside_below HB2) by order_Bounds.
+      rewrite (sem_outside_below HB2) by order_Bounds.
       rewrite !orb_false_r.
       reflexivity.
     + replace (i == x) with false by order_Bounds.
       rewrite IHHB2.
-      rewrite (Desc_outside_above HB1) by order_Bounds.
+      rewrite (sem_outside_above HB1) by order_Bounds.
       rewrite orb_false_l.
       reflexivity.
 Qed.
 
-(* Lemma member_Sem:
- forall {s f i}, Sem s f -> member i s = f i.
-Proof. intros. eapply member_Desc; eassumption. Qed.
- *)
-
 (* verification of singleton *)
-                 
+
 Lemma singleton_Desc:
-  forall x lb ub sz f,
+  forall x lb ub,
   isLB lb x = true ->
   isUB ub x = true ->
-  (forall i, f i = (i == x)) ->
-  sz = 1 ->
-  Desc (singleton x) lb ub sz f.
+  Desc (singleton x) lb ub 1 (fun i => i == x).
 Proof.
   intros.
-
-  subst.
-  (* Get rid of the [f] variable (maybe worth a tactic?) *)
-  erewrite Desc_change_f by apply H1; clear dependent f.
 
   unfold singleton.
   unfold fromInteger, Num_Integer__.
   solve_Desc.
 Qed.
 
-Lemma singleton_Sem:
-  forall f x,
-  (forall i, f i = (i == x)) ->
-  Sem (singleton x) f.
-Proof. intros. apply singleton_Desc; try eassumption; try reflexivity. Qed.
-
 Lemma singleton_WF:
   forall y, WF (singleton y).
-Proof. intros. eexists. eapply singleton_Sem. reflexivity. Qed.
+Proof. intros. eapply Desc_WF. apply singleton_Desc; reflexivity. Qed.
 
 
 (* verification of insert *)
@@ -606,24 +615,19 @@ Proof.
 Qed.
 
 Lemma insert_Desc:
-  forall y,
-  forall s lb ub sz f,
+  forall y s lb ub,
   Bounded s lb ub ->
   isLB lb y = true ->
   isUB ub y = true ->
-  (forall i, f i = (i == y) || sem s i) ->
-  sz = (if sem s y then size s else (1 + size s)%Z) ->
-  Desc (insert y s) lb ub sz f.
+  Desc (insert y s) lb ub (if sem s y then size s else (1 + size s)%Z) (fun i => (i == y) || sem s i).
 Proof.
-  intros ?????? HB HLB HUB Hf Hsz.
-  subst.
-  (* Get rid of the [f] variable (maybe worth a tactic?) *)
-  erewrite Desc_change_f by apply Hf; clear dependent f.
+  intros ???? HB HLB HUB.
 
   rewrite insert_insert'.
   induction HB; intros.
-  * unfold insert, Datatypes.id.
-    apply singleton_Desc; try assumption; try f_solver; reflexivity.
+  * simpl.
+    apply showDesc. apply singleton_Desc; try assumption.
+    repeat split; try f_solver.
   * subst; cbn -[Z.add].
     destruct (compare y x) eqn:?.
     + rewrite compare_Eq in *.
@@ -634,18 +638,20 @@ Proof.
         solve_Desc.
       - unfold Datatypes.id.
         solve_Desc.
-    + edestruct IHHB1 as [IH_Desc [IH_size IHf]]; only 1,2: solve_Bounds; try assumption; try (intro; reflexivity).
-      simpl in IHf.
+    + clear IHHB2.
+      cbn -[Z.add].
 
-      rewrite (Desc_outside_below HB2) by order_Bounds.
+      rewrite (sem_outside_below HB2) by order_Bounds.
       replace (y == x) with false by order_Bounds.
       rewrite ?orb_false_r, ?orb_false_l.
 
       destruct (PtrEquality.ptrEq _ _) eqn:Hpe; only 2: clear Hpe.
       - apply PtrEquality.ptrEq_eq in Hpe; subst.
-        rewrite Hpe in IH_size.
+        rewrite Hpe in *.
+        
         assert (Hf' : sem s1 y = true). {
-          destruct (sem s1 y) eqn:?; auto; try lia.
+          destruct (sem s1 y) eqn:?; auto; exfalso.
+          apply IHHB1.
         }
         rewrite Hf'.
         solve_Desc.
@@ -656,19 +662,20 @@ Proof.
         destruct (i == y) eqn:?, (i == x)  eqn:?, (sem s1 i)  eqn:?, (sem s2 i)  eqn:?; 
           intuition congruence.
 
-      - eapply balanceL_Desc; try solve_Bounded.
-        ** intro i.
-           rewrite IHf.
-           rewrite !orb_assoc.
-           (* here I can use some tactics from IntSet *)
-           destruct (i == y), (i == x); reflexivity.
+      - unfold Desc; apply balanceL_Desc.
+        ** solve_Bounded.
+        ** solve_Bounded.
+        ** assumption.
+        ** assumption.        
         ** destruct (sem s1 y); solve_size.
-        ** destruct (sem s1 y); solve_size.
+        ** repeat split.
+           ++ destruct (sem s1 y); solve_size.
+           ++ f_solver.
     + (* more or less a copy-n-paste from above *)
       edestruct IHHB2 as [IH_Desc [IH_size IHf]]; only 1,2: solve_Bounds; try assumption; try (intro; reflexivity).
       simpl in IHf.
 
-      rewrite (Desc_outside_above HB1) by order_Bounds.
+      rewrite (sem_outside_above HB1) by order_Bounds.
       replace (y == x) with false by order_Bounds.
       rewrite ?orb_false_r, ?orb_false_l.
 
@@ -912,7 +919,7 @@ Proof.
           by (destruct (sem s1 x); try congruence; lia).
         rewrite Hnot_there.
         replace (x == x0) with false by solve_Bounds.
-        rewrite -> (Desc_outside_below HB2) by solve_Bounds.
+        rewrite -> (sem_outside_below HB2) by solve_Bounds.
         cbn -[Z.add].
         solve_Desc.
       * eapply balanceR_Desc; try first [eassumption|reflexivity].
@@ -920,7 +927,7 @@ Proof.
         -- destruct (sem s1 x); solve_size.
         -- cbn -[Z.add].
            replace (x == x0) with false  by solve_Bounds.
-           rewrite -> (Desc_outside_below HB2) by solve_Bounds.
+           rewrite -> (sem_outside_below HB2) by solve_Bounds.
            destruct (sem s1 x); cbn -[Z.add]; solve_size.
     + destruct IHHB1 as [IHD1 [IHsz1 IHsem1]].
       destruct IHHB2 as [IHD2 [IHsz2 IHsem2]].
@@ -932,7 +939,7 @@ Proof.
           by (destruct (sem s2 x); try congruence; lia).
         rewrite Hnot_there.
         replace (x == x0) with false by solve_Bounds.
-        rewrite -> (Desc_outside_above HB1) by solve_Bounds.
+        rewrite -> (sem_outside_above HB1) by solve_Bounds.
         cbn -[Z.add].
         solve_Desc.
       * eapply balanceL_Desc; try first [eassumption|reflexivity].
@@ -940,7 +947,7 @@ Proof.
         -- destruct (sem s2 x); solve_size.
         -- cbn -[Z.add].
            replace (x == x0) with false  by solve_Bounds.
-           rewrite -> (Desc_outside_above HB1) by solve_Bounds.
+           rewrite -> (sem_outside_above HB1) by solve_Bounds.
            destruct (sem s2 x); cbn -[Z.add]; solve_size.
 Qed.
 End WF.

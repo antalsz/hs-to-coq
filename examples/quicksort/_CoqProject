@@ -1,5 +1,5 @@
--Q ../../base/     ""
--Q .               ""
+-Q ../../base/     ''
+-Q .               ''
 -Q ../../base-thy/ Proofs
 QuickSort.v
 Proofs.v

@@ -33,7 +33,7 @@ VFILES    = $(addsuffix .v,$(MODULES))
 VOFILES   = $(patsubst %.v,%.vo,$(VFILES))
 COQFLAGS  = ""
 
-TYPECHECK=coqc -Q ../../base/ ""
+TYPECHECK=coqc -Q ../../base/ ''
 
 main:
 	# Call ourselves with -k, so that we see all test outputs,

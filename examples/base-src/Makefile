@@ -81,7 +81,7 @@ all:  $(OUT)/edits $(OUT)/README.md $(VFILES) coq
 $(OUT)/_CoqProject : Makefile
 	mkdir -p $(OUT)
 	> $@
-	echo "-Q . """ >> $@
+	echo "-Q . ''" >> $@
 	echo $(addsuffix .v,$(HANDMOD)) >> $@
 	echo $(addsuffix .v,$(MODULES)) >> $@
 	echo $(addsuffix .v,$(SPECIAL_MODULES)) >> $@

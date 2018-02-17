@@ -96,10 +96,10 @@ $(OUT):
 
 $(OUT)/_CoqProject: $(OUT) Makefile
 	> $@
-	echo "-Q . """ >> $@
-	echo "-R ../../../base """ >> $@
+	echo "-Q . ''" >> $@
+	echo "-R ../../../base ''" >> $@
 	echo "-Q ../../../base-thy  Proofs" >> $@
-	echo "-Q ../../containers/lib   """ >> $@
+	echo "-Q ../../containers/lib   ''" >> $@
 	echo $(addsuffix .v,$(HANDMOD)) >> $@
 	echo $(addsuffix .v,$(MODULES)) >> $@
 	echo $(addsuffix .v,$(CORE_MODULES)) >> $@

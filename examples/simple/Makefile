@@ -15,10 +15,10 @@ all: coq
 
 _CoqProject: Makefile
 	> $@
-	echo "-Q . """ >> $@
-	echo "-R ../../base """ >> $@
+	echo "-Q . ''" >> $@
+	echo "-R ../../base ''" >> $@
 	echo "-Q ../../base-thy  Proofs" >> $@
-	echo "-Q ../containers/lib   """ >> $@
+	echo "-Q ../containers/lib   ''" >> $@
 	echo $(COQFILES) >> $@
 
 Makefile.coq: _CoqProject

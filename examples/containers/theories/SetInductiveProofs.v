@@ -306,7 +306,7 @@ Ltac f_solver := f_solver_simple;
 Lemma Bounded_change_ub:
   forall s lb ub ub',
   Bounded s lb (Some ub) ->
-  ub' == ub = true ->
+  ub <= ub' = true ->
   Bounded s lb (Some ub').
 Proof.
   intros ???? HD Heq.
@@ -316,13 +316,13 @@ Proof.
   * intuition.
     eapply BoundedBin; try eassumption; try reflexivity.
     simpl in *.
-    eapply lt_eq_r; eassumption.
+    order_Bounds.
 Qed.
 
 Lemma Bounded_change_lb:
   forall s lb lb' ub,
   Bounded s (Some lb) ub ->
-  lb' == lb = true ->
+  lb' <= lb = true ->
   Bounded s (Some lb') ub.
 Proof.
   intros ???? HD Heq.
@@ -331,9 +331,43 @@ Proof.
   * apply BoundedTip; reflexivity.
   * intuition.
     eapply BoundedBin; try eassumption; try reflexivity.
-    simpl in *.
-    eapply lt_eq_l; eassumption.
+    order_Bounds.
 Qed.
+
+(* Bounded_change_ub and Bounded_relax_ub could be united with
+   a isNonStrictUB predicate *)
+Lemma Bounded_relax_ub:
+  forall s lb ub ub',
+  Bounded s lb (Some ub) ->
+  isUB ub' ub = true ->
+  Bounded s lb ub'.
+Proof.
+  intros ???? HD Heq.
+  remember (Some ub) as ubo.
+  induction HD; subst.
+  * apply BoundedTip; auto.
+  * intuition.
+    eapply BoundedBin; try eassumption; try reflexivity.
+    simpl in *.
+    order_Bounds.
+Qed.
+
+Lemma Bounded_relax_lb:
+  forall s lb lb' ub,
+  Bounded s (Some lb) ub ->
+  isLB lb' lb = true ->
+  Bounded s lb' ub.
+Proof.
+  intros ???? HD Heq.
+  remember (Some lb) as lbo.
+  induction HD; subst.
+  * apply BoundedTip; reflexivity.
+  * intuition.
+    eapply BoundedBin; try eassumption; try reflexivity.
+    order_Bounds.
+Qed.
+
+
 
 (** In order to stay sane and speed things up, here is
  a tactic that solves [Desc] goals, which runs 
@@ -372,14 +406,14 @@ Ltac solve_size := first
 Ltac solve_Bounded := eassumption || lazymatch goal with
   | [ |- Bounded Tip _ _ ]
     => apply BoundedTip
-  | [ H : Bounded ?s ?lb (Some ?ub), H2 : ?ub' == ?ub = true  |- Bounded ?s ?lb (Some ?ub') ]
-    => apply (Bounded_change_ub _ _ _ _ H H2)
-  | [ H : Bounded ?s ?lb (Some ?ub), H2 : isUB ?ub' ?ub = true  |- Bounded ?s ?lb ?ub' ]
-    => admit
-  | [ H : Bounded ?s (Some ?lb) ?ub, H2 : ?lb' == ?lb = true  |- Bounded ?s (Some ?lb') ?ub ]
-    => apply (Bounded_change_lb _ _ _ _ H H2)
-  | [ H : Bounded ?s (Some ?lb) ?ub, H2 : isLB ?lb' ?lb = true  |- Bounded ?s ?lb' ?ub ]
-    => admit
+  | [ H : Bounded ?s ?lb (Some ?ub) |- Bounded ?s ?lb (Some ?ub') ]
+    => apply (Bounded_change_ub _ _ _ _ H); solve_Bounds
+  | [ H : Bounded ?s (Some ?lb) ?ub  |- Bounded ?s (Some ?lb') ?ub ]
+    => apply (Bounded_change_lb _ _ _ _ H); solve_Bounds
+  | [ H : Bounded ?s ?lb (Some ?ub) |- Bounded ?s ?lb ?ub' ]
+    => apply (Bounded_relax_ub _ _ _ _ H); solve_Bounds
+  | [ H : Bounded ?s (Some ?lb) ?ub  |- Bounded ?s ?lb' ?ub ]
+    => apply (Bounded_relax_lb _ _ _ _ H); solve_Bounds
   | [ |- Bounded (Bin _ _ _ _) _ _ ]
     => apply BoundedBin;
         [ solve_Bounded
@@ -600,7 +634,6 @@ Proof.
         solve_Desc.
       - unfold Datatypes.id.
         solve_Desc.
-        solve_Bounds.
     + edestruct IHHB1 as [IH_Desc [IH_size IHf]]; only 1,2: solve_Bounds; try assumption; try (intro; reflexivity).
       simpl in IHf.
 

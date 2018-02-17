@@ -422,9 +422,17 @@ Ltac solve_Bounded := eassumption || lazymatch goal with
 
 
 (** A proposition of the form [Desc s lb ub sz f] tells us
-  everything we need to know about [s], once we apply it,
-  we can replace [s] with a fresh variable, for simpler proof goals.
+  everything we need to know about [s].
+
+  Therefore, it is phrased as an induction lemma which replaces
+  the concrete Set (e.g. [insert y s]) with a fresh variable [s'],
+  and adds all interesting bits about it to the context.
+
+  To prove a [Desc] statement, use [apply showDesc].
+
+  To use a [Desc] statement, use [applyDesc HD] or [apply foo_Desc].
   *)
+
 Definition Desc s lb ub sz f : Prop :=
   forall (P : Set_ e -> Prop),
   (forall s,
@@ -434,9 +442,6 @@ Definition Desc s lb ub sz f : Prop :=
     P s) ->
   P s.
 
-
-(** If [tac] is a lemma with a [Desc] conclusion, then
-   this is the recommended way of applying it. *)
 Ltac applyDesc lem :=
   eapply lem; [..|
     try ( (* We have to wrap this in a [try]: Sometimes [eapply] already solved this subgoal *)
@@ -451,7 +456,6 @@ Ltac applyDesc lem :=
     )
     ].
 
-(** To actually establish [Desc s lb ub sz f], use this lemma. *)
 Require Import Coq.Logic.PropExtensionality.
 Require Import Coq.Logic.FunctionalExtensionality.
 Lemma showDesc :

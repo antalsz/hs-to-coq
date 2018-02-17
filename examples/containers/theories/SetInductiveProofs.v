@@ -489,15 +489,15 @@ Proof.
   * simpl. reflexivity.
   * subst; simpl.
     destruct (compare i x) eqn:?.
-    + replace (i == x) with true by (symmetry; order_Bounds).
+    + replace (i == x) with true by order_Bounds.
       rewrite orb_true_r.
       reflexivity.
-    + replace (i == x) with false by (symmetry; order_Bounds).
+    + replace (i == x) with false by order_Bounds.
       rewrite IHHB1.
       rewrite (Desc_outside_below HB2) by order_Bounds.
       rewrite !orb_false_r.
       reflexivity.
-    + replace (i == x) with false by (symmetry; order_Bounds).
+    + replace (i == x) with false by order_Bounds.
       rewrite IHHB2.
       rewrite (Desc_outside_above HB1) by order_Bounds.
       rewrite orb_false_l.
@@ -600,11 +600,12 @@ Proof.
         solve_Desc.
       - unfold Datatypes.id.
         solve_Desc.
+        solve_Bounds.
     + edestruct IHHB1 as [IH_Desc [IH_size IHf]]; only 1,2: solve_Bounds; try assumption; try (intro; reflexivity).
       simpl in IHf.
 
       rewrite (Desc_outside_below HB2) by order_Bounds.
-      replace (y == x) with false by (symmetry; solve_Bounds).
+      replace (y == x) with false by order_Bounds.
       rewrite ?orb_false_r, ?orb_false_l.
 
       destruct (PtrEquality.ptrEq _ _) eqn:Hpe; only 2: clear Hpe.
@@ -635,7 +636,7 @@ Proof.
       simpl in IHf.
 
       rewrite (Desc_outside_above HB1) by order_Bounds.
-      replace (y == x) with false by (symmetry; solve_Bounds).
+      replace (y == x) with false by order_Bounds.
       rewrite ?orb_false_r, ?orb_false_l.
 
       destruct (PtrEquality.ptrEq _ _) eqn:Hpe; only 2: clear Hpe.
@@ -866,7 +867,7 @@ Proof.
     + eapply glue_Desc; eauto.
       * f_solver.
       * simpl sem. rewrite size_Bin.
-        replace (x == x0) with true by (symmetry; solve_Bounds).
+        replace (x == x0) with true by solve_Bounds.
         rewrite orb_true_r. cbn -[Z.add]. solve_size.
     + destruct IHHB1 as [IHD1 [IHsz1 IHsem1]].
       destruct IHHB2 as [IHD2 [IHsz2 IHsem2]].
@@ -877,7 +878,7 @@ Proof.
         assert (Hnot_there: sem s1 x = false)
           by (destruct (sem s1 x); try congruence; lia).
         rewrite Hnot_there.
-        replace (x == x0) with false by (symmetry; solve_Bounds).
+        replace (x == x0) with false by solve_Bounds.
         rewrite -> (Desc_outside_below HB2) by solve_Bounds.
         cbn -[Z.add].
         solve_Desc.
@@ -885,7 +886,7 @@ Proof.
         -- f_solver.
         -- destruct (sem s1 x); solve_size.
         -- cbn -[Z.add].
-           replace (x == x0) with false  by (symmetry; solve_Bounds).
+           replace (x == x0) with false  by solve_Bounds.
            rewrite -> (Desc_outside_below HB2) by solve_Bounds.
            destruct (sem s1 x); cbn -[Z.add]; solve_size.
     + destruct IHHB1 as [IHD1 [IHsz1 IHsem1]].
@@ -897,7 +898,7 @@ Proof.
         assert (Hnot_there: sem s2 x = false)
           by (destruct (sem s2 x); try congruence; lia).
         rewrite Hnot_there.
-        replace (x == x0) with false by (symmetry; solve_Bounds).
+        replace (x == x0) with false by solve_Bounds.
         rewrite -> (Desc_outside_above HB1) by solve_Bounds.
         cbn -[Z.add].
         solve_Desc.
@@ -905,7 +906,7 @@ Proof.
         -- f_solver.
         -- destruct (sem s2 x); solve_size.
         -- cbn -[Z.add].
-           replace (x == x0) with false  by (symmetry; solve_Bounds).
+           replace (x == x0) with false  by solve_Bounds.
            rewrite -> (Desc_outside_above HB1) by solve_Bounds.
            destruct (sem s2 x); cbn -[Z.add]; solve_size.
 Qed.

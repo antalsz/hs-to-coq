@@ -88,6 +88,16 @@ Ltac order_prepare t :=
  | |- @compare   t _ _ ?x ?y = Eq => rewrite Ord_compare_Eq; order_prepare t
  | |- @compare   t _ _ ?x ?y = Lt => rewrite Ord_compare_Lt; order_prepare t
  | |- @compare   t _ _ ?x ?y = Gt => rewrite Ord_compare_Gt; order_prepare t
+ (* reorient *)
+ | H : true  = @op_zeze__ t _   ?x ?y |- _ => symmetry in H; order_prepare t
+ | H : false = @op_zeze__ t _   ?x ?y |- _ => symmetry in H; order_prepare t
+ | |-  true  = @op_zeze__ t _   ?x ?y      => symmetry;      order_prepare t
+ | |-  false = @op_zeze__ t _   ?x ?y      => symmetry;      order_prepare t
+ | H : true  = @op_zlze__ t _ _ ?x ?y |- _ => symmetry in H; order_prepare t
+ | H : false = @op_zlze__ t _ _ ?x ?y |- _ => symmetry in H; order_prepare t
+ | |-  true  = @op_zlze__ t _ _ ?x ?y      => symmetry;      order_prepare t
+ | |-  false = @op_zlze__ t _ _ ?x ?y      => symmetry;      order_prepare t
+ (* pulll things out of the conclusion *)
  | |- _ = true  => apply not_false_is_true; intro; order_prepare t
  | |- _ = false => apply not_true_is_false; intro; order_prepare t
  | _ => exfalso

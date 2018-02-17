@@ -54,7 +54,7 @@ before_install:
  # Install COQ
  - if ! [ -e $HOME/.opam/config ]; then opam init -j 2 --compiler=system -n -y; fi
  - opam repo add coq-released http://coq.inria.fr/opam/released || true
- - opam list -i coq.8.7.1 || { opam unpin coq && opam install -v -y -j 1  coq.8.7.1 && opam pin add coq 8.7.1 ; }
+ - opam list -i coq.8.7.2 || { opam unpin coq && opam install -v -y -j 1  coq.8.7.2 && opam pin add coq 8.7.2 ; }
  - opam list -i coq-mathcomp-ssreflect || opam install -y coq-mathcomp-ssreflect
  - eval $(opam config env)
 
@@ -82,7 +82,6 @@ script:
  - make -C examples/intervals
  - make -C examples/containers clean
  - make -C examples/containers
- - touch examples/containers/theories/Makefile.conf # hack until Coq 8.7.2
  - make -C examples/containers/theories
 
  # disabled 2018-07-24 due to too big of a fall-out, and the

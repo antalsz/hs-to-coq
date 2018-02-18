@@ -476,8 +476,8 @@ Require Import Coq.Logic.PropExtensionality.
 Require Import Coq.Logic.FunctionalExtensionality.
 Lemma showDesc :
   forall s lb ub sz f,
-  (Bounded s lb ub) /\ size s = sz /\ (forall i, sem s i = f i) ->
-   Desc s lb ub sz f.
+  Bounded s lb ub /\ size s = sz /\ (forall i, sem s i = f i) ->
+  Desc s lb ub sz f.
 Proof.
   intros. intros P HP.
   enough (Bounded s lb ub  /\ size s = sz /\ sem s = f ) by intuition.
@@ -497,6 +497,30 @@ Lemma Desc_change_f:
 Proof.
   intros.
   split; intro HD; applyDesc HD; solve_Desc; intuition.
+Qed.
+
+(** A variant that does not indicate anything about [size]. *)
+
+Definition Desc' s lb ub f : Prop :=
+  forall (P : Set_ e -> Prop),
+  (forall s,
+    Bounded s lb ub ->
+    True ->             (* So that we can still use [applyDesc] here *)
+    sem s = f ->
+    P s) ->
+  P s.
+
+Lemma showDesc' :
+  forall s lb ub f,
+  Bounded s lb ub /\ (forall i, sem s i = f i) ->
+  Desc' s lb ub f.
+Proof.
+  intros. intros P HP.
+  enough (Bounded s lb ub /\ sem s = f ) by intuition.
+  destruct H as [HB Hf].
+  replace (sem s) with f by (symmetry; extensionality i; apply Hf).
+  replace (Bounded s lb ub) with True by (apply propositional_extensionality; tauto).
+  intuition.
 Qed.
 
 
@@ -530,6 +554,8 @@ Ltac find_Tip :=
 Require Import Coq.Program.Tactics.
 
 Open Scope Z_scope.
+
+(** ** Verifying the various balancing operations *)
 
 Lemma balanceL_Desc:
     forall x s1 s2 lb ub,
@@ -585,6 +611,31 @@ Proof.
   all: try solve [solve_Desc].
 Qed.
 
+Lemma insertMax_Desc:
+    forall x s1 lb ub,
+    Bounded s1 lb (Some x) ->
+    isLB lb x = true ->
+    isUB ub x = true->
+    Desc (insertMax x s1) lb ub (1 + size s1) (fun i => sem s1 i || (i == x)).
+Admitted.
+
+Lemma insertMin_Desc:
+    forall x s2 lb ub,
+    Bounded s2 (Some x) ub ->
+    isLB lb x = true ->
+    isUB ub x = true->
+    Desc (insertMin x s2) lb ub (1 + size s2) (fun i => (i == x) || sem s2 i).
+Admitted.
+
+Lemma link_Desc:
+    forall x s1 s2 lb ub,
+    Bounded s1 lb (Some x) ->
+    Bounded s2 (Some x) ub  ->
+    isLB lb x = true ->
+    isUB ub x = true->
+    Desc (link x s1 s2) lb ub (1 + size s1 + size s2) (fun i => sem s1 i || (i == x) || sem s2 i).
+Admitted.
+
 (* verification of member *)
 
 Lemma member_spec:
@@ -631,8 +682,8 @@ Lemma singleton_WF:
 Proof. intros. eapply Desc_WF. applyDesc singleton_Desc; reflexivity. Qed.
 
 
-(* verification of insert *)
-                   
+(** ** verification of [insert] *)
+
 (* The [orig] passing and the local fixpoint in insert is plain ugly, so let’s to this instead *)
 
 Fixpoint insert' (x : e) (s : Set_ e ) : Set_ e :=
@@ -726,11 +777,21 @@ Proof.
         ** destruct (sem s2 y); solve_Desc.
 Qed.
 
+(** For our purposes, [insertR] and [insert] are equivalent (the sets 
+    are equal up to [==] of elements. *)
+Lemma insertR_Desc:
+  forall y s lb ub,
+  Bounded s lb ub ->
+  isLB lb y = true ->
+  isUB ub y = true ->
+  Desc (insertR y s) lb ub (if sem s y then size s else (1 + size s)%Z) (fun i => (i == y) || sem s i).
+Admitted.
+
 Lemma insert_WF:
   forall y s, WF s -> WF (insert y s).
 Proof. intros. eapply Desc_WF. applyDesc insert_Desc; try reflexivity; try assumption. Qed.
 
-(* verification of maxViewSure *)
+(** ** Verification of [maxViewSure] *)
 
 Lemma maxViewSure_Desc:
   forall sz' x s1 s2 lb ub,
@@ -776,7 +837,7 @@ Proof.
     split; [left; reflexivity | solve_Desc].
 Qed.
 
-(* verification of minViewSure *)
+(** ** Verification of [minViewSure] *)
 
 Lemma minViewSure_Desc:
   forall sz' x s1 s2 lb ub,
@@ -822,7 +883,7 @@ Proof.
     split; [left; reflexivity | solve_Desc].
 Qed.
 
-(* verification of glue *)
+(** ** Verification of [glue] *)
 
 Lemma glue_Desc:
   forall s1 s2 lb ub x,
@@ -866,6 +927,7 @@ Proof.
     + destruct Hthere; solve_Desc.
 Qed.
 
+(** ** Verification of [delete] *)
 
 Lemma delete_Desc :
   forall x s lb ub,
@@ -911,4 +973,32 @@ Proof.
            rewrite -> (sem_outside_above HB1) by solve_Bounds.
            destruct (sem s2 x); cbn -[Z.add]; solve_Desc.
 Qed.
+
+(** ** Verification of [union] *)
+
+Lemma splitS_Desc :
+  forall x s lb ub,
+  Bounded s lb ub ->
+  forall P,
+  (forall s1 s2,
+    Bounded s1 lb (Some x) ->
+    Bounded s2 (Some x) ub ->
+    (forall i, sem s i = sem s1 i || sem s2 i) ->
+    P (s1, s2)) ->
+  P (splitS x s).
+Admitted.
+
+
+Lemma union_Desc :
+  forall s1 s2 lb ub,
+  Bounded s1 lb ub ->
+  Bounded s2 lb ub ->
+  Desc' (union s1 s2) lb ub (fun i => sem s1 i || sem s2 i).
+Admitted.
+(* We use [Desc'] here, because the result of [union] is passed to [link], which
+   does a full rebalance, and hence does not need to know anything about the size.
+   If it turns out we need [size (union s1 s2)], we can still add it.
+*)
+
+
 End WF.

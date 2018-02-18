@@ -1,7 +1,10 @@
 skip Utils.Containers.Internal.BitUtil.shiftLL
 skip Utils.Containers.Internal.BitUtil.shiftRL
-skip Utils.Containers.Internal.BitUtil.highestBitMask
 skip Utils.Containers.Internal.BitUtil.wordSize
+
+# we could translate and verify highest bit mask if we
+# were using fixed width integers
+skip Utils.Containers.Internal.BitUtil.highestBitMask
 
 # lowestBitMask is actually defined in
 # Data/IntSet/Internal.hs

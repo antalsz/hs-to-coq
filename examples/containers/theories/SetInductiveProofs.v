@@ -402,7 +402,11 @@ Ltac f_solver := f_solver_simple;
    the size of a well-formed tree is positive. *)
 Ltac lia_sizes :=
   postive_sizes;
-  unfold balance_prop, delta, fromInteger, Num_Integer__ in *;
+  unfold balance_prop, delta, ratio in *;
+  unfold fromInteger, op_zg__, op_zl__, op_zt__, op_zp__,
+                      Num_Integer__, Ord_Integer___,
+                      op_zg____, op_zl____ in *;
+  rewrite ?size_size in *;
   rewrite ?size_Bin in *; simpl (size Tip) in *;
   lia.
 
@@ -592,10 +596,44 @@ Lemma balanceL_Desc:
     Desc (balanceL x s1 s2) lb ub (1 + size s1 + size s2) (fun i => sem s1 i || (i == x) || sem s2 i).
 Proof.
   intros.
-  
-  unfold balanceL, balance_prop, delta, ratio in *.
-  unfold fromInteger, op_zg__, op_zl__, op_zt__, op_zp__, Num_Integer__, Ord_Integer___, op_zg____, op_zl____.
-  rewrite ?size_size.
+
+  unfold balanceL.
+  unfold op_zg__, op_zl__, Ord_Integer___, op_zg____, op_zl____.
+
+  repeat lazymatch goal with [ H : Bounded ?s _ _ |- context [match ?s with _ => _ end] ] => inversion H; subst; clear H end;
+  repeat lazymatch goal with [ |- context [if (?x <? ?y)%Z then _ else _] ] => destruct (Z.ltb_spec x y) end;
+  rewrite ?size_Bin in *; simpl (size Tip) in *; simpl sem;
+  simpl isLB in *;
+  simpl isUB in *.
+  all: try solve [exfalso; lia_sizes]. (* Some are simply impossible *)
+  all: repeat find_Tip.
+  all: try solve [solve_Desc].
+Qed.
+
+Lemma balanceL_Desc_for_link:
+    forall x s1 s2 lb ub,
+    Bounded s1 lb (Some x) ->
+    Bounded s2 (Some x) ub  ->
+    isLB lb x = true ->
+    isUB ub x = true->
+    (exists s sl sr,
+    size s1 = 1 + s + sl /\
+    size s2 = sr /\
+    balance_prop sl sr /\
+    delta * s < 1 + sl + sr /\
+    1 <= s /\
+    0 <= sl /\
+    0 <= sr) ->
+    Desc (balanceL x s1 s2) lb ub (1 + size s1 + size s2) (fun i => sem s1 i || (i == x) || sem s2 i).
+Proof.
+  intros.
+
+  repeat lazymatch goal with 
+    H : exists _, _ |- _ => destruct H
+  end.
+
+  unfold balanceL.
+  unfold op_zg__, op_zl__, Ord_Integer___, op_zg____, op_zl____.
 
   repeat lazymatch goal with [ H : Bounded ?s _ _ |- context [match ?s with _ => _ end] ] => inversion H; subst; clear H end;
   repeat lazymatch goal with [ |- context [if (?x <? ?y)%Z then _ else _] ] => destruct (Z.ltb_spec x y) end;
@@ -620,9 +658,8 @@ Lemma balanceR_Desc:
 Proof.
   intros.
 
-  unfold balanceR, balance_prop, delta, ratio in *.
-  unfold fromInteger, op_zg__, op_zl__, op_zt__, op_zp__, Num_Integer__, Ord_Integer___, op_zg____, op_zl____.
-  rewrite ?size_size.
+  unfold balanceR.
+  unfold op_zg__, op_zl__, Ord_Integer___, op_zg____, op_zl____.
 
   repeat lazymatch goal with [ H : Bounded ?s _ _ |- context [match ?s with _ => _ end] ] => inversion H; subst; clear H end;
   repeat lazymatch goal with [ |- context [if (?x <? ?y)%Z then _ else _] ] => destruct (Z.ltb_spec x y) end;
@@ -633,6 +670,42 @@ Proof.
   all: repeat find_Tip.
   all: try solve [solve_Desc].
 Qed.
+
+Lemma balanceR_Desc_for_link:
+    forall x s1 s2 lb ub,
+    Bounded s1 lb (Some x) ->
+    Bounded s2 (Some x) ub ->
+    isLB lb x = true ->
+    isUB ub x = true->
+    (exists s sl sr,
+    size s1 = sl /\
+    size s2 = 1 + sr + s /\
+    balance_prop sl sr /\
+    delta * s < 1 + sl + sr /\
+    1 <= s /\
+    0 <= sl /\
+    0 <= sr) ->
+    Desc (balanceR x s1 s2) lb ub (1 + size s1 + size s2) (fun i => sem s1 i || (i == x) || sem s2 i).
+Proof.
+  intros.
+
+  repeat lazymatch goal with 
+    H : exists _, _ |- _ => destruct H
+  end.
+
+  unfold balanceR.
+  unfold op_zg__, op_zl__, Ord_Integer___, op_zg____, op_zl____.
+
+  repeat lazymatch goal with [ H : Bounded ?s _ _ |- context [match ?s with _ => _ end] ] => inversion H; subst; clear H end;
+  repeat lazymatch goal with [ |- context [if (?x <? ?y)%Z then _ else _] ] => destruct (Z.ltb_spec x y) end;
+  rewrite ?size_Bin in *; simpl (size Tip) in *; simpl sem;
+  simpl isLB in *;
+  simpl isUB in *.
+  all: try solve [exfalso; lia_sizes]. (* Some are simply impossible *)
+  all: repeat find_Tip.
+  all: try solve [solve_Desc].
+Qed.
+
 
 Lemma insertMax_Desc:
     forall x s1 lb ub,
@@ -686,10 +759,7 @@ Proof.
   unfold link at 1, link_func at 1.
   rewrite Wf.WfExtensionality.fix_sub_eq_ext.
   unfold projT1, projT2.
-  repeat lazymatch goal with
-    | |- _ = match ?x with _ => _ end => destruct x
-    | _ => reflexivity
-  end.
+  destruct s1, s2; reflexivity.
 Qed.
 
 (* [program_simpl] calls [simpl], which is very confusing due to [1 + _]. So
@@ -724,32 +794,30 @@ Next Obligation.
         | solve_Bounded | solve_Bounded
         | solve_Bounds | solve_Bounds
         |..].
-      applyDesc balanceL_Desc;
+      applyDesc balanceL_Desc_for_link;
         [ solve_Bounded | solve_Bounded
         | solve_Bounds | solve_Bounds
         |
         | solve_Desc].
-      (* balance reasoning required here *)
-      replace (size s); rewrite size_Bin.
-      clear -e0 H12 H8.
-      admit.
+      (* ugh *)
+      exists (1 + size s0 + size s3), (size s1), (size s4).
+      repeat split; try reflexivity; solve_size.
     - applyDesc link_Desc;
         [ simpl; lia
         | solve_Bounded | solve_Bounded
         | solve_Bounds | solve_Bounds
         |..].
-      applyDesc balanceR_Desc;
+      applyDesc balanceR_Desc_for_link;
         [ solve_Bounded | solve_Bounded
         | solve_Bounds | solve_Bounds
         |
         | solve_Desc].
-      admit.
+      exists (1 + size s1 + size s4), (size s0), (size s3).
+      repeat split; try reflexivity; solve_size.
     - clear link_Desc.
-      unfold bin, op_zp__, Num_Integer__, fromInteger.
-      rewrite size_size, ?size_Bin. simpl sem.
+      unfold bin.
       solve_Desc.
-      rewrite ?size_Bin.
-Admitted.
+Qed.
 
 (* verification of member *)
 

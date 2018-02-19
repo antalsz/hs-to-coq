@@ -600,6 +600,17 @@ Require Import Coq.Program.Tactics.
 
 Open Scope Z_scope.
 
+(** ** Verification of [empty] *)
+
+Lemma empty_Desc:
+  forall lb ub,
+  Desc empty lb ub 0 (fun _ => false).
+Proof. intros. unfold empty. solve_Desc. Qed.
+
+Lemma empty_WF: WF empty.
+Proof. intros. unfold empty. eapply Desc_WF. apply empty_Desc. Qed.
+
+
 (* verification of singleton *)
 
 Lemma singleton_Desc:

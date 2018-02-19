@@ -611,6 +611,13 @@ Lemma empty_WF: WF empty.
 Proof. intros. unfold empty. eapply Desc_WF. apply empty_Desc. Qed.
 
 
+(** ** Verification of [null] *)
+
+Lemma null:
+  forall s, WF s -> null s = true <-> size s = 0.
+Proof. intros. unfold null. inversion H; simpl; intuition (congruence || lia_sizes). Qed.
+
+
 (* verification of singleton *)
 
 Lemma singleton_Desc:

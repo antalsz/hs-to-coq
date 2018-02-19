@@ -523,15 +523,15 @@ Proof.
   intuition.
 Qed.
 
-Ltac solve_Desc := apply showDesc; split; [solve_Bounded | split; [solve_size | simpl sem; try solve [f_solver]]].
-
 Lemma Desc_change_f:
   forall s lb ub sz f f',
   (forall i, f' i = f i) ->
   Desc s lb ub sz f' <-> Desc s lb ub sz f.
 Proof.
   intros.
-  split; intro HD; applyDesc HD; solve_Desc; intuition.
+  split; intro HD; applyDesc HD;
+  (apply showDesc; split; [solve_Bounded | split; [solve_size | simpl sem; try solve [f_solver]]]);
+  intuition.
 Qed.
 
 (** A variant that does not indicate anything about [size]. *)
@@ -557,6 +557,16 @@ Proof.
   replace (Bounded s lb ub) with True by (apply propositional_extensionality; tauto).
   intuition.
 Qed.
+
+Ltac solve_Desc :=
+ lazymatch goal with
+ | |- (Desc _ _ _ _ _)
+ => apply showDesc; split; [solve_Bounded | split; [solve_size | simpl sem; try solve [f_solver]]]
+ | |- (Desc' _ _ _ _)
+ => apply showDesc'; split; [solve_Bounded | simpl sem; try solve [f_solver]]
+ | |- ?P
+ => fail "solve_Desc: Goal not a Desc or Desc' proposition: " P
+ end.
 
 
 (** And any set that has a bounds is well-formed *)
@@ -1057,16 +1067,82 @@ Proof.
       solveThis.
 Qed.
 
+(* The [union] uses some nested pattern match that expand to a very large
+   number of patterns in Coq. So let’s take them apart here *)
+Lemma union_destruct :
+  forall (P : Set_ e -> Prop),
+  forall s1 s2,
+  (s2 = Tip -> P s1) ->
+  (s1 = Tip -> P s2) ->
+  (forall sz2 x, (s2 = Bin sz2 x Tip Tip) -> P (insertR x s1)) ->
+  (forall sz1 x, (s1 = Bin sz1 x Tip Tip) -> P (insert x s2)) ->
+  (forall sz1 x l1 r1, (s1 = Bin sz1 x l1 r1) -> 
+    P (
+      match splitS x s2 with
+      | pair l2 r2 =>
+      match union r1 r2 with
+      | r1r2 =>
+      match union l1 l2 with
+      | l1l2 => if andb  (PtrEquality.ptrEq l1l2 l1)
+                         (PtrEquality.ptrEq r1r2 r1) : bool
+                then s1 else link x l1l2 r1r2
+      end end end)) ->
+  P (union s1 s2).
+Proof.
+  intros P s1 s2 HTipR HTipL HSingletonR HSingletonL HBins.
+  destruct s1, s2; simpl union;
+  try destruct s1_1, s1_2;
+  try destruct s2_1, s2_2;
+  first [ eapply HBins; reflexivity
+        | eapply HSingletonL; reflexivity
+        | eapply HSingletonR; reflexivity
+        | eapply HTipL; reflexivity
+        | eapply HTipR; reflexivity
+        | idtac
+        ].
+Qed. 
+
 Lemma union_Desc :
   forall s1 s2 lb ub,
   Bounded s1 lb ub ->
   Bounded s2 lb ub ->
   Desc' (union s1 s2) lb ub (fun i => sem s1 i || sem s2 i).
-Admitted.
 (* We use [Desc'] here, because the result of [union] is passed to [link], which
    does a full rebalance, and hence does not need to know anything about the size.
    If it turns out we need [size (union s1 s2)], we can still add it.
 *)
-
+Proof.
+  intros ???? HB1 HB2.
+  revert s2 HB2.
+  induction HB1; intros s3 HB3.
+  * apply union_destruct; intros; subst; try congruence.
+    + solve_Desc.
+    + solve_Desc.
+    + inversion HB3; subst; clear HB3.
+      clear H3 H4.
+      (* We need to give [applyDesc] a hint about the bounds that we care about: *)
+      assert (Bounded Tip lb ub) by constructor.
+      applyDesc insertR_Desc.
+      solve_Desc.
+  * apply union_destruct; intros; subst; try congruence.
+    + solve_Desc.
+    + inversion HB3; subst; clear HB3.
+      applyDesc insertR_Desc.
+      solve_Desc.
+    + inversion H3; subst; clear H3.
+      applyDesc insert_Desc. solve_Desc.
+    + inversion H3; subst; clear H3.
+      eapply splitS_Desc; try eassumption.
+      intros.
+      applyDesc IHHB1_1.
+      applyDesc IHHB1_2.
+      destruct (PtrEquality.ptrEq s l1 && PtrEquality.ptrEq s0 r1) eqn:Hpes.
+      - rewrite andb_true_iff in Hpes.
+        destruct Hpes as [Hpe1 Hpe2].
+        apply PtrEquality.ptrEq_eq in Hpe1; apply PtrEquality.ptrEq_eq in Hpe2; subst.
+        solve_Desc.
+      - applyDesc link_Desc.
+        solve_Desc.
+Qed.
 
 End WF.

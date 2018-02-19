@@ -931,7 +931,7 @@ Proof.
 Qed.
 
 
-Lemma insertR'_Desc:
+Lemma insertR_Desc:
   forall y s lb ub,
   Bounded s lb ub ->
   isLB lb y = true ->

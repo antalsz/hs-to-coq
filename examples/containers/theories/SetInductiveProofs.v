@@ -1005,11 +1005,10 @@ Proof.
   - simpl. solve_Desc.
   - cbn -[Z.add].
     destruct (compare x x0) eqn:Heq.
-    + applyDesc glue_Desc.
+    + replace (x == x0) with true by solve_Bounds.
+      rewrite ?orb_true_r, ?orb_true_l.
+      applyDesc glue_Desc.
       solve_Desc.
-      simpl sem.
-      replace (x == x0) with true by solve_Bounds.
-      rewrite orb_true_r. cbn -[Z.add]. solve_size.
     + applyDesc IHHB1; clear IHHB1 IHHB2.
       replace (x == x0) with false by solve_Bounds.
       rewrite -> (sem_outside_below HB2) by solve_Bounds.

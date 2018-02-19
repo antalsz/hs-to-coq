@@ -113,7 +113,7 @@ Definition balance_prop sz1 sz2 :=
     unfortunately not very educational.
  *)
 Definition balance_prop_inserted sz1 sz2 :=
-  (delta * sz1 <= (delta * delta + 1) * sz2 + delta * (sz2 + 1) /\ sz2 <= delta * sz1)%Z.
+  (delta * sz1 < ((delta + 1)*(delta + 1) - delta) * (sz2 + 1) - delta * delta /\ sz2 <= delta * sz1)%Z.
 
 
 Fixpoint sem (s : Set_ e) (i : e) : bool :=
@@ -449,6 +449,24 @@ Ltac solve_Bounded := eassumption || lazymatch goal with
   | |- ?H => fail "solve_Bounded gave up on" H
   end.
 
+(** We now have special tactics for the three kinds of preconditions most
+    our lemmas below have. So we can write a tactic that correctly chooses the
+    right tactic.
+    Why not simply use [first [solve_Bounded|solve_Bounds|solve_size]]?
+    Because that would involve backtracking which hides error messages from us,
+    and is possibly too slow.
+  *)
+
+Ltac solve_Precondition := lazymatch goal with
+  | |- Bounded _ _ _          => solve_Bounded
+  | |- isLB _ _ = true        => solve_Bounds
+  | |- isUB _ _ = true        => solve_Bounds
+  | |- context [set_size]     => simpl; lia    (* in well-founded recursion *)
+  | |- _ = _                  => solve_size
+  | |- context [balance_prop] => solve_size
+  | |- ?H                     => fail "solve_Precondition does not recognize this goal: " H
+  end.
+
 
 (** A proposition of the form [Desc s lb ub sz f] tells us
   everything we need to know about [s].
@@ -471,19 +489,23 @@ Definition Desc s lb ub sz f : Prop :=
     P s) ->
   P s.
 
+Local Inductive HIDE (P : Prop) := unhide : P -> HIDE P.
+Local Lemma hide : forall {P : Prop},  HIDE P -> P. Proof. intros. inversion H. assumption. Qed.
+
 Ltac applyDesc lem :=
-  eapply lem; [..|
-    try ( (* We have to wrap this in a [try]: Sometimes [eapply] already solved this subgoal *)
-      let s := fresh "s" in 
-      let HB := fresh "HB" in
-      let Hsz := fresh "Hsz" in
-      let Hsem := fresh "Hsem" in
-      intros s HB Hsz Hsem;
-      try replace (size s) in *;
-      try replace (sem s) in *;
-      try assumption
-    )
-    ].
+  apply hide;
+  eapply lem;
+  [ solve_Precondition ..
+  | let s := fresh "s" in 
+    let HB := fresh "HB" in
+    let Hsz := fresh "Hsz" in
+    let Hsem := fresh "Hsem" in
+    intros s HB Hsz Hsem;
+    apply unhide;
+    try replace (size s) in *;
+    try replace (sem s) in *;
+    try assumption
+  ].
 
 Require Import Coq.Logic.PropExtensionality.
 Require Import Coq.Logic.FunctionalExtensionality.
@@ -586,8 +608,7 @@ Qed.
 
 Lemma singleton_WF:
   forall y, WF (singleton y).
-Proof. intros. eapply Desc_WF. applyDesc singleton_Desc; reflexivity. Qed.
-
+Proof. intros. eapply Desc_WF. eapply singleton_Desc; reflexivity. Qed.
 
 (** ** Verifying the various balancing operations *)
 
@@ -643,6 +664,7 @@ Proof.
   all: try solve [solve_Desc].
 Qed.
 
+
 Lemma insertMax_Desc:
     forall x s1 lb ub,
     Bounded s1 lb (Some x) ->
@@ -654,10 +676,11 @@ Proof.
   
   remember (Some x) as ub'. revert dependent x.
   induction H; intros; subst; cbn - [Z.add].
-  * applyDesc singleton_Desc; [solve_Bounds|solve_Bounds|..].
+  * applyDesc singleton_Desc.
+    solve_Desc.
   * clear IHBounded1.
-    applyDesc IHBounded2;[reflexivity|solve_Bounds|solve_Bounds|].
-    applyDesc balanceR_Desc; [solve_Bounded|solve_Bounded|solve_Bounds|solve_Bounds|solve_size|].
+    applyDesc IHBounded2.
+    applyDesc balanceR_Desc.
     solve_Desc.
 Qed.
 
@@ -671,11 +694,11 @@ Proof.
   intros.
   remember (Some x) as ub'. revert dependent x.
   induction H; intros; subst; cbn - [Z.add].
-  * applyDesc singleton_Desc; [solve_Bounds|solve_Bounds|].
+  * applyDesc singleton_Desc.
     solve_Desc.
   * clear IHBounded2.
-    applyDesc IHBounded1;[reflexivity|solve_Bounds|solve_Bounds|].
-    applyDesc balanceL_Desc; [solve_Bounded|solve_Bounded|solve_Bounds|solve_Bounds|solve_size|].
+    applyDesc IHBounded1.
+    applyDesc balanceL_Desc.
     solve_Desc.
 Qed.
 
@@ -717,34 +740,21 @@ Next Obligation.
   inversion H; subst; clear H;
   inversion H0; subst; clear H0.
   * simpl insertMin.
-    applyDesc singleton_Desc; [solve_Bounds|solve_Bounds|].
+    applyDesc singleton_Desc.
     solve_Desc.
-  * applyDesc insertMin_Desc; simpl projT1; simpl projT2; [solve_Bounded|solve_Bounds|solve_Bounds].
-  * applyDesc insertMax_Desc; simpl projT1; simpl projT2; [solve_Bounded|solve_Bounds|solve_Bounds|..].
+  * applyDesc insertMin_Desc.
+    solve_Desc.
+  * applyDesc insertMax_Desc.
     solve_Desc.
   * destruct (Sumbool.sumbool_of_bool _);
     only 2: destruct (Sumbool.sumbool_of_bool _);
     rewrite ?Z.ltb_lt, ?Z.ltb_ge in *.
-    - applyDesc link_Desc;
-        [ simpl; lia
-        | solve_Bounded | solve_Bounded
-        | solve_Bounds | solve_Bounds
-        |..].
-      applyDesc balanceL_Desc;
-        [ solve_Bounded | solve_Bounded
-        | solve_Bounds | solve_Bounds
-        | solve_size
-        | solve_Desc].
-    - applyDesc link_Desc;
-        [ simpl; lia
-        | solve_Bounded | solve_Bounded
-        | solve_Bounds | solve_Bounds
-        |..].
-      applyDesc balanceR_Desc;
-        [ solve_Bounded | solve_Bounded
-        | solve_Bounds | solve_Bounds
-        | solve_size
-        | solve_Desc].
+    - applyDesc link_Desc.
+      applyDesc balanceL_Desc.
+      solve_Desc.
+    - applyDesc link_Desc.
+      applyDesc balanceR_Desc.
+      solve_Desc.
     - clear link_Desc.
       unfold bin.
       solve_Desc.
@@ -830,7 +840,7 @@ Proof.
       - unfold Datatypes.id.
         solve_Desc.
     + clear IHHB2.
-      applyDesc IHHB1; only 1-2: solve_Bounds.
+      applyDesc IHHB1.
 
       rewrite (sem_outside_below HB2) by order_Bounds.
       replace (y == x) with false by order_Bounds.
@@ -842,16 +852,12 @@ Proof.
         replace (sem s1 y) with true
            by (destruct (sem s1 y) eqn:?; auto; exfalso; lia).
         solve_Desc.
-      - applyDesc balanceL_Desc.
-        ** solve_Bounded.
-        ** solve_Bounded.
-        ** assumption.
-        ** assumption.        
-        ** destruct (sem s1 y); solve_size.
-        ** destruct (sem s1 y); solve_Desc.
+      - destruct (sem s1 y);
+        applyDesc balanceL_Desc;
+        solve_Desc.
     + (* more or less a copy-n-paste from above *)
       clear IHHB1.
-      applyDesc IHHB2; only 1-2: solve_Bounds.
+      applyDesc IHHB2.
 
       rewrite (sem_outside_above HB1) by order_Bounds.
       replace (y == x) with false by order_Bounds.
@@ -862,13 +868,9 @@ Proof.
         replace (sem s2 y) with true
            by (destruct (sem s2 y) eqn:?; auto; exfalso; lia).
         solve_Desc.
-      - applyDesc balanceR_Desc.
-        ** solve_Bounded.
-        ** solve_Bounded.
-        ** assumption.
-        ** assumption.        
-        ** destruct (sem s2 y); solve_size.
-        ** destruct (sem s2 y); solve_Desc.
+      - destruct (sem s2 y);
+        applyDesc balanceR_Desc;
+        solve_Desc.
 Qed.
 
 (** For our purposes, [insertR] and [insert] are equivalent (the sets 
@@ -883,7 +885,7 @@ Admitted.
 
 Lemma insert_WF:
   forall y s, WF s -> WF (insert y s).
-Proof. intros. eapply Desc_WF. applyDesc insert_Desc; try reflexivity; try assumption. Qed.
+Proof. intros. eapply Desc_WF. eapply insert_Desc; try reflexivity; try assumption. Qed.
 
 (** ** Verification of [maxViewSure] *)
 
@@ -917,13 +919,7 @@ Proof.
     split.
     + rewrite <- !orb_assoc. right. destruct Hthere as [H|H]; rewrite H;
       rewrite ?orb_true_r, ?orb_true_r; reflexivity.
-    + applyDesc balanceL_Desc.
-      * eassumption.
-      * eassumption.
-      * solve_Bounds.
-      * destruct Hthere; solve_Bounds.
-      * solve_size.
-      * destruct Hthere; solve_Desc.
+    + destruct Hthere; applyDesc balanceL_Desc; solve_Desc.
   - intros X HX; rewrite (surjective_pairing (maxViewSure _ _ _)). apply HX; clear X HX.
     cbn -[Z.add size] in *.
     inversion HB; subst; clear HB.
@@ -963,13 +959,7 @@ Proof.
     split.
     + rewrite <- !orb_assoc. right. destruct Hthere as [H|H]; rewrite H;
       rewrite ?orb_true_r, ?orb_true_r; reflexivity.
-    + applyDesc balanceR_Desc.
-      * eassumption.
-      * eassumption.
-      * destruct Hthere; solve_Bounds.
-      * solve_Bounds.
-      * solve_size.
-      * destruct Hthere; solve_Desc.
+    + destruct Hthere; applyDesc balanceR_Desc; solve_Desc.
   - intros X HX; rewrite (surjective_pairing (minViewSure _ _ _)). apply HX; clear X HX.
     cbn -[Z.add size] in *.
     inversion HB; subst; clear HB.
@@ -990,35 +980,17 @@ Lemma glue_Desc:
 Proof.
   intros ????? HB1 HB2 ???.
 
-  inversion HB1; inversion HB2; subst; cbn -[size Z.add]; clear HB1 HB2.
+  inversion HB1; inversion HB2; subst; cbn -[Z.add]; clear HB1 HB2.
   1-3: solve [solve_Desc|solve_size].
   destruct (Z.ltb_spec (1 + size s4 + size s5) (1 + size s0 + size s3)).
-  - rewrite !size_Bin.
-
-    eapply maxViewSure_Desc; only 1: solve_Bounded.
+  - eapply maxViewSure_Desc; only 1: solve_Bounded.
     intros y r [Hthere HD].
     applyDesc HD.
-
-    applyDesc balanceR_Desc.
-    + eassumption.
-    + destruct Hthere; solve_Bounded.
-    + destruct Hthere; solve_Bounds.
-    + destruct Hthere; solve_Bounds.
-    + solve_size.
-    + destruct Hthere; solve_Desc.
-  - rewrite !size_Bin.
-
-    eapply minViewSure_Desc; only 1: solve_Bounded.
+    destruct Hthere; applyDesc balanceR_Desc; solve_Desc.
+  - eapply minViewSure_Desc; only 1: solve_Bounded.
     intros y r [Hthere HD].
     applyDesc HD.
-
-    applyDesc balanceL_Desc.
-    + destruct Hthere; solve_Bounded.
-    + eassumption.
-    + destruct Hthere; solve_Bounds.
-    + destruct Hthere; solve_Bounds.
-    + solve_size.
-    + destruct Hthere; solve_Desc.
+    destruct Hthere; applyDesc balanceL_Desc; solve_Desc.
 Qed.
 
 (** ** Verification of [delete] *)
@@ -1033,39 +1005,29 @@ Proof.
   - simpl. solve_Desc.
   - cbn -[Z.add].
     destruct (compare x x0) eqn:Heq.
-    + applyDesc glue_Desc; try eassumption.
+    + applyDesc glue_Desc.
       solve_Desc.
       simpl sem.
       replace (x == x0) with true by solve_Bounds.
       rewrite orb_true_r. cbn -[Z.add]. solve_size.
     + applyDesc IHHB1; clear IHHB1 IHHB2.
+      replace (x == x0) with false by solve_Bounds.
+      rewrite -> (sem_outside_below HB2) by solve_Bounds.
+      rewrite ?orb_false_r.
       destruct (PtrEquality.ptrEq s s1) eqn:Heq0.
       * apply PtrEquality.ptrEq_eq in Heq0; subst.
-        cbn -[Z.add].
         replace (sem s1 x) with false by (destruct (sem s1 x); try congruence; lia).
-        replace (x == x0) with false by solve_Bounds.
-        rewrite -> (sem_outside_below HB2) by solve_Bounds.
         solve_Desc.
-      * applyDesc balanceR_Desc; try eassumption; try reflexivity.
-        -- destruct (sem s1 x); solve_size.
-        -- cbn -[Z.add].
-           replace (x == x0) with false  by solve_Bounds.
-           rewrite -> (sem_outside_below HB2) by solve_Bounds.
-           destruct (sem s1 x); cbn -[Z.add]; solve_Desc.
+      * destruct (sem s1 x); applyDesc balanceR_Desc; solve_Desc.
     + applyDesc IHHB2; clear IHHB1 IHHB2.
+      replace (x == x0) with false by solve_Bounds.
+      rewrite -> (sem_outside_above HB1) by solve_Bounds.
+      rewrite ?orb_false_l.
       destruct (PtrEquality.ptrEq s s2) eqn:Heq0.
       * apply PtrEquality.ptrEq_eq in Heq0; subst.
-        cbn -[Z.add].
         replace (sem s2 x) with false by (destruct (sem s2 x); try congruence; lia).
-        replace (x == x0) with false by solve_Bounds.
-        rewrite -> (sem_outside_above HB1) by solve_Bounds.
         solve_Desc.
-      * applyDesc balanceL_Desc; try eassumption; try reflexivity.
-        -- destruct (sem s2 x); solve_size.
-        -- cbn -[Z.add].
-           replace (x == x0) with false  by solve_Bounds.
-           rewrite -> (sem_outside_above HB1) by solve_Bounds.
-           destruct (sem s2 x); cbn -[Z.add]; solve_Desc.
+      * destruct (sem s2 x); applyDesc balanceL_Desc; solve_Desc.
 Qed.
 
 (** ** Verification of [union] *)

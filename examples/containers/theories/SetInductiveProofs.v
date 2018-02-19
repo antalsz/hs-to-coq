@@ -820,12 +820,12 @@ Proof.
   intros.
   unfold insert.
   induction s; simpl.
-  * destruct (compare x a); try reflexivity.
+  * destruct (compare x a).
+    - reflexivity.
     - rewrite IHs1. reflexivity.
     - rewrite IHs2. reflexivity.
   * reflexivity.
 Qed.
-
 Lemma insert_Desc:
   forall y s lb ub,
   Bounded s lb ub ->
@@ -885,13 +885,87 @@ Qed.
 
 (** For our purposes, [insertR] and [insert] are equivalent (the sets 
     are equal up to [==] of elements. *)
-Lemma insertR_Desc:
+
+Fixpoint insertR' (x : e) (s : Set_ e ) : Set_ e :=
+  match s with 
+    | Tip => singleton x
+    | Bin sz y l r => match compare x y with
+      | Lt =>
+        let l' := insertR' x l in
+        if PtrEquality.ptrEq l' l then s else balanceL y l' r
+      | Gt =>
+        let r' := insertR' x r in 
+        if PtrEquality.ptrEq r' r then s else balanceR y l r'
+      | Eq => Bin sz y l r
+     end
+  end.
+
+Lemma insertR_insertR' : forall x s, insertR x s = insertR' x s.
+Proof.
+  intros.
+  unfold insertR.
+  induction s; simpl.
+  * destruct (compare x a).
+    - reflexivity.
+    - rewrite IHs1. reflexivity.
+    - rewrite IHs2. reflexivity.
+  * reflexivity.
+Qed.
+
+
+Lemma insertR'_Desc:
   forall y s lb ub,
   Bounded s lb ub ->
   isLB lb y = true ->
   isUB ub y = true ->
   Desc (insertR y s) lb ub (if sem s y then size s else (1 + size s)%Z) (fun i => (i == y) || sem s i).
-Admitted.
+Proof.
+  intros ???? HB HLB HUB.
+
+  rewrite insertR_insertR'.
+  induction HB; intros.
+  * simpl.
+    applyDesc singleton_Desc; try eassumption; solve_Desc.
+  * subst; cbn -[Z.add].
+    destruct (compare y x) eqn:?.
+    + rewrite compare_Eq in *.
+      rewrite Heqc.
+      rewrite ?orb_true_r, ?orb_true_l.
+      solve_Desc.
+    + clear IHHB2.
+      applyDesc IHHB1.
+
+      rewrite (sem_outside_below HB2) by order_Bounds.
+      replace (y == x) with false by order_Bounds.
+      rewrite ?orb_false_r, ?orb_false_l.
+
+      (* worth having a tactic that combines destruct and ptrEq_eq? *)
+      destruct (PtrEquality.ptrEq _ _) eqn:Hpe; only 2: clear Hpe.
+      - apply PtrEquality.ptrEq_eq in Hpe; subst.
+        replace (sem s1 y) with true
+           by (destruct (sem s1 y) eqn:?; auto; exfalso; lia).
+        solve_Desc.
+      - destruct (sem s1 y);
+        applyDesc balanceL_Desc;
+        solve_Desc.
+    + (* more or less a copy-n-paste from above *)
+      clear IHHB1.
+      applyDesc IHHB2.
+
+      rewrite (sem_outside_above HB1) by order_Bounds.
+      replace (y == x) with false by order_Bounds.
+      rewrite ?orb_false_r, ?orb_false_l.
+
+      destruct (PtrEquality.ptrEq _ _) eqn:Hpe; only 2: clear Hpe.
+      - apply PtrEquality.ptrEq_eq in Hpe; subst.
+        replace (sem s2 y) with true
+           by (destruct (sem s2 y) eqn:?; auto; exfalso; lia).
+        solve_Desc.
+      - destruct (sem s2 y);
+        applyDesc balanceR_Desc;
+        solve_Desc.
+Qed.
+
 
 Lemma insert_WF:
   forall y s, WF s -> WF (insert y s).

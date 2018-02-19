@@ -1034,15 +1034,28 @@ Qed.
 Lemma splitS_Desc :
   forall x s lb ub,
   Bounded s lb ub ->
-  forall P,
+  forall (P : Set_ e * Set_ e -> Prop),
   (forall s1 s2,
     Bounded s1 lb (Some x) ->
     Bounded s2 (Some x) ub ->
-    (forall i, sem s i = sem s1 i || sem s2 i) ->
+    (forall i, sem s i = (if i == x then sem s i else sem s1 i || sem s2 i)) ->
     P (s1, s2)) ->
-  P (splitS x s).
-Admitted.
-
+  P (splitS x s) : Prop.
+Proof.
+  intros ?? ?? HB.
+  Ltac solveThis := intros X HX; apply HX; clear X HX; [solve_Bounded|solve_Bounded|f_solver].
+  induction HB.
+  * solveThis.
+  * simpl.
+    destruct (compare x x0) eqn:?.
+    + solveThis.
+    + apply IHHB1; intros s1_2 s1_3 HB1_2 HB1_3 Hsems1; clear IHHB1 IHHB2.
+      applyDesc link_Desc.
+      solveThis.
+    + apply IHHB2; intros s2_2 s2_3 HB2_2 HB2_3 Hsems2; clear IHHB1 IHHB2.
+      applyDesc link_Desc.
+      solveThis.
+Qed.
 
 Lemma union_Desc :
   forall s1 s2 lb ub,

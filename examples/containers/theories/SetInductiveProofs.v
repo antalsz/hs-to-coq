@@ -1,6 +1,8 @@
 Require Import GHC.Base.
+Import GHC.Base.Notations.
 Require Import Proofs.GHC.Base.
 Require Import Data.Set.Internal.
+Import GHC.Num.Notations.
 Require Import OrdTactic.
 Require Import Psatz.
 Set Bullet Behavior "Strict Subproofs".
@@ -227,7 +229,7 @@ Proof.
   induction H.
   * intuition.
   * postive_sizes;
-    rewrite size_Bin in *.
+    rewrite ?size_Bin in *.
     intuition try (congruence || lia).
 Qed.
 
@@ -338,7 +340,7 @@ Ltac inside_bounds :=
 
 (** Solve [isLB] and [isUB] goals.  *)
 Ltac solve_Bounds := first
-  [ assumption
+  [ eassumption
   | solve [inside_bounds; order_Bounds]
   | idtac "solve_Bounds gave up"
   ].
@@ -555,6 +557,27 @@ Require Import Coq.Program.Tactics.
 
 Open Scope Z_scope.
 
+(* verification of singleton *)
+
+Lemma singleton_Desc:
+  forall x lb ub,
+  isLB lb x = true ->
+  isUB ub x = true ->
+  Desc (singleton x) lb ub 1 (fun i => i == x).
+Proof.
+  intros.
+
+  unfold singleton.
+  unfold fromInteger, Num_Integer__.
+  solve_Desc.
+Qed.
+
+
+Lemma singleton_WF:
+  forall y, WF (singleton y).
+Proof. intros. eapply Desc_WF. applyDesc singleton_Desc; reflexivity. Qed.
+
+
 (** ** Verifying the various balancing operations *)
 
 Lemma balanceL_Desc:
@@ -617,7 +640,17 @@ Lemma insertMax_Desc:
     isLB lb x = true ->
     isUB ub x = true->
     Desc (insertMax x s1) lb ub (1 + size s1) (fun i => sem s1 i || (i == x)).
-Admitted.
+Proof.
+  intros.
+  
+  remember (Some x) as ub'. revert dependent x.
+  induction H; intros; subst; cbn - [Z.add].
+  * applyDesc singleton_Desc; [solve_Bounds|solve_Bounds|..].
+  * clear IHBounded1.
+    applyDesc IHBounded2;[reflexivity|solve_Bounds|solve_Bounds|].
+    applyDesc balanceR_Desc; [solve_Bounded|solve_Bounded|solve_Bounds|solve_Bounds|solve_size|].
+    solve_Desc.
+Qed.
 
 Lemma insertMin_Desc:
     forall x s2 lb ub,
@@ -625,15 +658,97 @@ Lemma insertMin_Desc:
     isLB lb x = true ->
     isUB ub x = true->
     Desc (insertMin x s2) lb ub (1 + size s2) (fun i => (i == x) || sem s2 i).
-Admitted.
+Proof.
+  intros.
+  remember (Some x) as ub'. revert dependent x.
+  induction H; intros; subst; cbn - [Z.add].
+  * applyDesc singleton_Desc; [solve_Bounds|solve_Bounds|].
+    solve_Desc.
+  * clear IHBounded2.
+    applyDesc IHBounded1;[reflexivity|solve_Bounds|solve_Bounds|].
+    applyDesc balanceL_Desc; [solve_Bounded|solve_Bounded|solve_Bounds|solve_Bounds|solve_size|].
+    solve_Desc.
+Qed.
 
-Lemma link_Desc:
-    forall x s1 s2 lb ub,
+Lemma link_eq (x : e) (s1: Set_ e)  (s2: Set_ e) :
+  link x s1 s2 =
+       match s1, s2 with
+          | Tip , r => insertMin x r
+          | l , Tip => insertMax x l
+          | (Bin sizeL y ly ry as l) , (Bin sizeR z lz rz as r) =>
+            if Sumbool.sumbool_of_bool ((delta GHC.Num.* sizeL) GHC.Base.< sizeR)
+            then balanceL z (link x l lz) rz
+            else if Sumbool.sumbool_of_bool  ((delta GHC.Num.* sizeR) GHC.Base.< sizeL)
+                 then balanceR y ly (link x ry r)
+                 else bin x l r
+        end.
+Proof.
+  unfold link at 1, link_func at 1.
+  rewrite Wf.WfExtensionality.fix_sub_eq_ext.
+  unfold projT1, projT2.
+  repeat lazymatch goal with
+    | |- _ = match ?x with _ => _ end => destruct x
+    | _ => reflexivity
+  end.
+Qed.
+
+(* [program_simpl] calls [simpl], which is very confusing due to [1 + _]. So
+ask [Next Obligation] to use this only when it solves the goal completely. *)
+Local Obligation Tactic := try solve [program_simpl].
+
+Program Fixpoint link_Desc (x : e) (s1: Set_ e)  (s2: Set_ e)
+  {measure (set_size s1 + set_size s2)} :
+    forall lb ub,
     Bounded s1 lb (Some x) ->
     Bounded s2 (Some x) ub  ->
     isLB lb x = true ->
     isUB ub x = true->
-    Desc (link x s1 s2) lb ub (1 + size s1 + size s2) (fun i => sem s1 i || (i == x) || sem s2 i).
+    Desc (link x s1 s2) lb ub (1 + size s1 + size s2) (fun i => sem s1 i || (i == x) || sem s2 i)
+    := _.
+Next Obligation.
+  intros.
+  rewrite link_eq. 
+  inversion H; subst; clear H;
+  inversion H0; subst; clear H0.
+  * simpl insertMin.
+    applyDesc singleton_Desc; [solve_Bounds|solve_Bounds|].
+    solve_Desc.
+  * applyDesc insertMin_Desc; simpl projT1; simpl projT2; [solve_Bounded|solve_Bounds|solve_Bounds].
+  * applyDesc insertMax_Desc; simpl projT1; simpl projT2; [solve_Bounded|solve_Bounds|solve_Bounds|..].
+    solve_Desc.
+  * destruct (Sumbool.sumbool_of_bool _);
+    only 2: destruct (Sumbool.sumbool_of_bool _);
+    rewrite ?Z.ltb_lt, ?Z.ltb_ge in *.
+    - applyDesc link_Desc;
+        [ simpl; lia
+        | solve_Bounded | solve_Bounded
+        | solve_Bounds | solve_Bounds
+        |..].
+      applyDesc balanceL_Desc;
+        [ solve_Bounded | solve_Bounded
+        | solve_Bounds | solve_Bounds
+        |
+        | solve_Desc].
+      (* balance reasoning required here *)
+      replace (size s); rewrite size_Bin.
+      clear -e0 H12 H8.
+      admit.
+    - applyDesc link_Desc;
+        [ simpl; lia
+        | solve_Bounded | solve_Bounded
+        | solve_Bounds | solve_Bounds
+        |..].
+      applyDesc balanceR_Desc;
+        [ solve_Bounded | solve_Bounded
+        | solve_Bounds | solve_Bounds
+        |
+        | solve_Desc].
+      admit.
+    - clear link_Desc.
+      unfold bin, op_zp__, Num_Integer__, fromInteger.
+      rewrite size_size, ?size_Bin. simpl sem.
+      solve_Desc.
+      rewrite ?size_Bin.
 Admitted.
 
 (* verification of member *)
@@ -660,26 +775,6 @@ Proof.
       rewrite orb_false_l.
       reflexivity.
 Qed.
-
-(* verification of singleton *)
-
-Lemma singleton_Desc:
-  forall x lb ub,
-  isLB lb x = true ->
-  isUB ub x = true ->
-  Desc (singleton x) lb ub 1 (fun i => i == x).
-Proof.
-  intros.
-
-  unfold singleton.
-  unfold fromInteger, Num_Integer__.
-  solve_Desc.
-Qed.
-
-
-Lemma singleton_WF:
-  forall y, WF (singleton y).
-Proof. intros. eapply Desc_WF. applyDesc singleton_Desc; reflexivity. Qed.
 
 
 (** ** verification of [insert] *)

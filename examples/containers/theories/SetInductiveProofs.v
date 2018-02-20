@@ -1283,16 +1283,14 @@ Next Obligation.
   destruct (Sumbool.sumbool_of_bool _);
     only 2: destruct (Sumbool.sumbool_of_bool _);
     rewrite ?Z.ltb_lt, ?Z.ltb_ge in *.
-  - eapply balanceL_Desc;
-      try solve_Precondition.
-    + admit.
-    + solve_size.
-  - eapply balanceR_Desc;
-      try solve_Precondition.
-    + admit.
-    + solve_size.
-  - eapply glue_Desc;
-      solve_Precondition.   
-Admitted.
+  - applyDesc merge_Desc.
+    applyDesc balanceL_Desc.
+    solve_Desc.
+  - applyDesc merge_Desc.
+    applyDesc balanceR_Desc.
+    solve_Desc.
+  - applyDesc glue_Desc.
+    solve_Desc.
+Qed.
 
 End WF.

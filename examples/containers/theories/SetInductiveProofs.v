@@ -1237,4 +1237,62 @@ Proof.
         solve_Desc.
 Qed.
 
+
+(** ** Verification of [merge] *)
+
+Lemma merge_eq: forall (l r: Set_ e), merge l r = 
+  match l, r with 
+  | Tip, r => r
+  | l, Tip => l
+  | (Bin sizeL x lx rx as l), (Bin sizeR y ly ry as r) =>
+    if Sumbool.sumbool_of_bool
+         ((delta GHC.Num.* sizeL) GHC.Base.< sizeR)
+    then balanceL y (merge l ly) ry           
+    else if Sumbool.sumbool_of_bool
+              ((delta GHC.Num.* sizeR) GHC.Base.< sizeL)
+         then balanceR x lx (merge rx r)
+         else glue l r
+  end.
+Proof.
+  destruct l; [|auto].
+  destruct r; [|auto].
+  unfold merge at 1, merge_func at 1.
+  rewrite Wf.WfExtensionality.fix_sub_eq_ext.
+  unfold projT1, projT2.
+  reflexivity.
+Qed.
+
+
+Program Fixpoint merge_Desc (s1: Set_ e)  (s2: Set_ e)
+  {measure (set_size s1 + set_size s2)} :
+    forall x lb ub,
+      Bounded s1 lb (Some x) ->
+      Bounded s2 (Some x) ub  ->
+      isLB lb x = true ->
+      isUB ub x = true->
+      balance_prop (size s1) (size s2) ->
+      Desc (merge s1 s2) lb ub (size s1 + size s2)
+           (fun i => sem s1 i || sem s2 i)
+  := _.
+Next Obligation.
+  intros.
+  rewrite merge_eq. 
+  inversion H; subst; clear H;
+    inversion H0; subst; clear H0;
+      try solve [solve_Desc].
+  destruct (Sumbool.sumbool_of_bool _);
+    only 2: destruct (Sumbool.sumbool_of_bool _);
+    rewrite ?Z.ltb_lt, ?Z.ltb_ge in *.
+  - eapply balanceL_Desc;
+      try solve_Precondition.
+    + admit.
+    + solve_size.
+  - eapply balanceR_Desc;
+      try solve_Precondition.
+    + admit.
+    + solve_size.
+  - eapply glue_Desc;
+      solve_Precondition.   
+Admitted.
+
 End WF.

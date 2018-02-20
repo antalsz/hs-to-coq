@@ -1270,7 +1270,6 @@ Program Fixpoint merge_Desc (s1: Set_ e)  (s2: Set_ e)
       Bounded s2 (Some x) ub  ->
       isLB lb x = true ->
       isUB ub x = true->
-      balance_prop (size s1) (size s2) ->
       Desc (merge s1 s2) lb ub (size s1 + size s2)
            (fun i => sem s1 i || sem s2 i)
   := _.

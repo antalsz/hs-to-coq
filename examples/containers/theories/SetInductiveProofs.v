@@ -8,8 +8,28 @@ Require Import Psatz.
 Set Bullet Behavior "Strict Subproofs".
 
 
+Ltac destruct_ptrEq := lazymatch goal with
+  | |- context [if PtrEquality.ptrEq ?x ?y && PtrEquality.ptrEq ?x2 ?y2 then _ else _]
+  => let Hpe := fresh "Hpe" in
+     let Hpe1 := fresh "Hpe1" in
+     let Hpe2 := fresh "Hpe2" in
+     destruct (PtrEquality.ptrEq x y && PtrEquality.ptrEq x2 y2) eqn:Hpe;
+     [ rewrite andb_true_iff in Hpe;
+       destruct Hpe as [Hpe1 Hpe2];
+       apply PtrEquality.ptrEq_eq in Hpe1;
+       apply PtrEquality.ptrEq_eq in Hpe2;
+       subst
+     | clear Hpe]
+  | |- context [if PtrEquality.ptrEq ?x ?y then _ else _]
+  => let Hpe := fresh "Hpe" in
+     destruct (PtrEquality.ptrEq x y) eqn:Hpe;
+     [ apply PtrEquality.ptrEq_eq in Hpe; subst
+     | clear Hpe] 
+end.
+
+
 Section WF.
-Context (e : Type) {HEq : Eq_ e} {HOrd : Ord e} {HEqLaws : EqLaws e}  {HOrdLaws : OrdLaws e}.
+Context {e : Type} {HEq : Eq_ e} {HOrd : Ord e} {HEqLaws : EqLaws e}  {HOrdLaws : OrdLaws e}.
 
 (* We don’t have a OrdLawful class yet. We need to introduce that,
    add it to the context, and derive all axioms from that.
@@ -232,8 +252,7 @@ Lemma size_0_iff_tip:
   forall {s lb ub},
   Bounded s lb ub -> (size s = 0)%Z <-> s = Tip.
 Proof.
-  intros.
-  induction H.
+  induction 1.
   * intuition.
   * postive_sizes;
     rewrite ?size_Bin in *.
@@ -325,18 +344,6 @@ Proof.
   * apply BoundedTip; reflexivity.
   * eapply BoundedBin; try eassumption; try reflexivity.
 Qed.
-
-
-(** In order to stay sane and speed things up, here is
- a tactic that solves [Bounded] goals, which runs 
- the right auxillary tactic on the corresponding goals. *)
-
-Ltac expand_pairs :=
-  match goal with
-    |- context[let (_,_) := ?e in _] =>
-    rewrite (surjective_pairing e)
-  end.
-
 
 (** Learns bounds of values found in some set in the context *)
 Ltac inside_bounds :=
@@ -613,8 +620,8 @@ Proof. intros. unfold empty. eapply Desc_WF. apply empty_Desc. Qed.
 
 (** ** Verification of [null] *)
 
-Lemma null:
-  forall s, WF s -> null s = true <-> size s = 0.
+Lemma null_spec:
+  forall s, WF s -> null s = true <-> s = Tip.
 Proof. intros. unfold null. inversion H; simpl; intuition (congruence || lia_sizes). Qed.
 
 
@@ -862,9 +869,8 @@ Proof.
     + rewrite compare_Eq in *.
       rewrite Heqc.
       rewrite ?orb_true_r, ?orb_true_l.
-      destruct (PtrEquality.ptrEq _ _) eqn:Hpe; [| clear Hpe]. 
-      - apply PtrEquality.ptrEq_eq in Hpe; subst.
-        solve_Desc.
+      destruct_ptrEq.
+      - solve_Desc.
       - unfold Datatypes.id.
         solve_Desc.
     + clear IHHB2.
@@ -874,10 +880,8 @@ Proof.
       replace (y == x) with false by order_Bounds.
       rewrite ?orb_false_r, ?orb_false_l.
 
-      (* worth having a tactic that combines destruct and ptrEq_eq? *)
-      destruct (PtrEquality.ptrEq _ _) eqn:Hpe; only 2: clear Hpe.
-      - apply PtrEquality.ptrEq_eq in Hpe; subst.
-        replace (sem s1 y) with true
+      destruct_ptrEq.
+      - replace (sem s1 y) with true
            by (destruct (sem s1 y) eqn:?; auto; exfalso; lia).
         solve_Desc.
       - destruct (sem s1 y);
@@ -891,9 +895,8 @@ Proof.
       replace (y == x) with false by order_Bounds.
       rewrite ?orb_false_r, ?orb_false_l.
 
-      destruct (PtrEquality.ptrEq _ _) eqn:Hpe; only 2: clear Hpe.
-      - apply PtrEquality.ptrEq_eq in Hpe; subst.
-        replace (sem s2 y) with true
+      destruct_ptrEq.
+      - replace (sem s2 y) with true
            by (destruct (sem s2 y) eqn:?; auto; exfalso; lia).
         solve_Desc.
       - destruct (sem s2 y);
@@ -957,10 +960,8 @@ Proof.
       replace (y == x) with false by order_Bounds.
       rewrite ?orb_false_r, ?orb_false_l.
 
-      (* worth having a tactic that combines destruct and ptrEq_eq? *)
-      destruct (PtrEquality.ptrEq _ _) eqn:Hpe; only 2: clear Hpe.
-      - apply PtrEquality.ptrEq_eq in Hpe; subst.
-        replace (sem s1 y) with true
+      destruct_ptrEq.
+      - replace (sem s1 y) with true
            by (destruct (sem s1 y) eqn:?; auto; exfalso; lia).
         solve_Desc.
       - destruct (sem s1 y);
@@ -974,9 +975,8 @@ Proof.
       replace (y == x) with false by order_Bounds.
       rewrite ?orb_false_r, ?orb_false_l.
 
-      destruct (PtrEquality.ptrEq _ _) eqn:Hpe; only 2: clear Hpe.
-      - apply PtrEquality.ptrEq_eq in Hpe; subst.
-        replace (sem s2 y) with true
+      destruct_ptrEq.
+      - replace (sem s2 y) with true
            by (destruct (sem s2 y) eqn:?; auto; exfalso; lia).
         solve_Desc.
       - destruct (sem s2 y);
@@ -1115,18 +1115,16 @@ Proof.
       replace (x == x0) with false by solve_Bounds.
       rewrite -> (sem_outside_below HB2) by solve_Bounds.
       rewrite ?orb_false_r.
-      destruct (PtrEquality.ptrEq s s1) eqn:Heq0.
-      * apply PtrEquality.ptrEq_eq in Heq0; subst.
-        replace (sem s1 x) with false by (destruct (sem s1 x); try congruence; lia).
+      destruct_ptrEq.
+      * replace (sem s1 x) with false by (destruct (sem s1 x); try congruence; lia).
         solve_Desc.
       * destruct (sem s1 x); applyDesc balanceR_Desc; solve_Desc.
     + applyDesc IHHB2; clear IHHB1 IHHB2.
       replace (x == x0) with false by solve_Bounds.
       rewrite -> (sem_outside_above HB1) by solve_Bounds.
       rewrite ?orb_false_l.
-      destruct (PtrEquality.ptrEq s s2) eqn:Heq0.
-      * apply PtrEquality.ptrEq_eq in Heq0; subst.
-        replace (sem s2 x) with false by (destruct (sem s2 x); try congruence; lia).
+      destruct_ptrEq.
+      * replace (sem s2 x) with false by (destruct (sem s2 x); try congruence; lia).
         solve_Desc.
       * destruct (sem s2 x); applyDesc balanceL_Desc; solve_Desc.
 Qed.
@@ -1228,11 +1226,8 @@ Proof.
       intros.
       applyDesc IHHB1_1.
       applyDesc IHHB1_2.
-      destruct (PtrEquality.ptrEq s l1 && PtrEquality.ptrEq s0 r1) eqn:Hpes.
-      - rewrite andb_true_iff in Hpes.
-        destruct Hpes as [Hpe1 Hpe2].
-        apply PtrEquality.ptrEq_eq in Hpe1; apply PtrEquality.ptrEq_eq in Hpe2; subst.
-        solve_Desc.
+      destruct_ptrEq.
+      - solve_Desc.
       - applyDesc link_Desc.
         solve_Desc.
 Qed.
@@ -1292,4 +1287,545 @@ Next Obligation.
     solve_Desc.
 Qed.
 
+Program Fixpoint merge_Desc' (s1: Set_ e)  (s2: Set_ e)
+  {measure (set_size s1 + set_size s2)} :
+    forall x lb ub,
+      Bounded s1 lb (Some x) ->
+      Bounded s2 (Some x) ub  ->
+      isLB lb x = true ->
+      isUB ub x = true->
+      Desc' (merge s1 s2) lb ub (fun i => sem s1 i || sem s2 i)
+  := _.
+Next Obligation.
+  intros.
+  rewrite merge_eq. 
+  inversion H; subst; clear H;
+    inversion H0; subst; clear H0;
+      try solve [solve_Desc].
+  destruct (Sumbool.sumbool_of_bool _);
+    only 2: destruct (Sumbool.sumbool_of_bool _);
+    rewrite ?Z.ltb_lt, ?Z.ltb_ge in *.
+  - applyDesc merge_Desc.
+    applyDesc balanceL_Desc.
+    solve_Desc.
+  - applyDesc merge_Desc.
+    applyDesc balanceR_Desc.
+    solve_Desc.
+  - applyDesc glue_Desc.
+    solve_Desc.
+Qed.
+
+Lemma splitMember_Desc:
+  forall x s lb ub,
+  Bounded s lb ub ->
+  forall (P : Set_ e * bool * Set_ e -> Prop),
+  (forall s1 b s2,
+    Bounded s1 lb (Some x) ->
+    Bounded s2 (Some x) ub ->
+    (forall i, sem s i =
+          (if i == x then b 
+           else  (sem s1 i || sem s2 i))) ->
+    P (s1, b, s2)) ->
+  P (splitMember x s) : Prop.
+Proof.
+  intros ?? ?? HB.
+  induction HB.
+  * solveThis.
+  * simpl.
+    destruct (compare x x0) eqn:?.
+    + solveThis.
+    + apply IHHB1.
+      intros s1_2 b s1_3 HB1_2 HB1_3 Hsems1.
+      clear IHHB1 IHHB2.
+      applyDesc link_Desc.
+      solveThis.
+    + apply IHHB2.
+      intros s2_2 b s2_3 HB2_2 HB2_3 Hsems2.
+      clear IHHB1 IHHB2.
+      applyDesc link_Desc.
+      solveThis.
+Qed.
+
+Lemma intersection_Desc:
+  forall s1 s2 lb ub,
+  Bounded s1 lb ub ->
+  Bounded s2 lb ub ->
+  Desc' (intersection s1 s2) lb ub
+        (fun i => sem s1 i && sem s2 i).
+Proof.
+  intros ???? HB1 HB2.
+  revert s2 HB2.
+  induction HB1; intros s3 HB3.
+  - simpl. solve_Desc.
+  - simpl.
+    destruct s3 eqn:Hs3.
+    + rewrite<- Hs3 in *.
+      clear Hs3 e0 s4 s5 s6.
+      eapply splitMember_Desc;
+        only 1: eassumption.
+      intros s4' b s5' HB1 HB2 Hi.  
+      applyDesc IHHB1_1.
+      applyDesc IHHB1_2.
+      destruct b.
+      * destruct_ptrEq.
+        -- solve_Desc.
+        -- applyDesc link_Desc.
+           solve_Desc.
+      * applyDesc merge_Desc'.
+        solve_Desc.
+    + solve_Desc.
+Qed.
+
+(** ** Verification of [difference] *)
+Lemma split_Desc :
+  forall x s lb ub,
+  Bounded s lb ub ->
+  forall (P : Set_ e * Set_ e -> Prop),
+  (forall s1 s2,
+    Bounded s1 lb (Some x) ->
+    Bounded s2 (Some x) ub ->
+    (forall i, sem s i = (if i == x then sem s i else sem s1 i || sem s2 i)) ->
+    P (s1, s2)) ->
+  P (split x s) : Prop.
+Proof.
+  unfold split.
+  intros x s.
+  replace (Datatypes.id GHC.Base.$ splitS x s) with (splitS x s).
+  apply splitS_Desc.
+  reflexivity.
+Qed.
+
+Lemma difference_destruct :
+  forall (P : Set_ e -> Prop),
+  forall s1 s2,
+  (s1 = Tip -> P Tip) ->
+  (s2 = Tip -> P s1) ->
+  (forall sz2 x l2 r2, (s2 = Bin sz2 x l2 r2) -> 
+    P (
+      match split x s1 with
+      | pair l1 r1 =>
+      match difference r1 r2 with
+      | r1r2 =>
+      match difference l1 l2 with
+      | l1l2 => if size l1l2 + size r1r2 == size s1
+                then s1 else merge l1l2 r1r2
+      end end end)) ->
+  P (difference s1 s2).
+Proof.
+  intros P s1 s2 HTipL HTipR HBins.
+  destruct s1, s2; simpl difference;
+  try destruct s1_1, s1_2;
+  try destruct s2_1, s2_2;
+  first [ eapply HBins; reflexivity
+        | eapply HTipL; reflexivity
+        | eapply HTipR; reflexivity
+        | idtac
+        ].
+Qed.
+
+Lemma difference_Desc :
+  forall s1 s2 lb1 lb2 ub1 ub2,
+  Bounded s1 lb1 ub1 ->
+  Bounded s2 lb2 ub2 ->
+  Desc' (difference s1 s2) lb1 ub1 (fun i => sem s1 i && negb (sem s2 i)).
+Proof.
+  intros s1 s2 lb1 lb2 ub1 ub2 Hb1 Hb2.
+  revert s1 lb1 ub1 Hb1. induction Hb2; intros ??? Hb1.
+  - simpl. destruct s1; solve_Desc.
+  - apply difference_destruct; intros; subst.
+    + solve_Desc.
+    + solve_Desc.
+    + eapply split_Desc; try eassumption.
+      intros.
+      destruct (_GHC.Base.==_ (size (difference s3 l2) + size (difference s4 r2)) (size s0)) eqn:Hcomp.
+      * solve_Desc. admit.
+      * admit.
+Admitted.
 End WF.
+
+(** * Instantiationg the [FSetInterface] *)
+
+Require Import Coq.FSets.FSetInterface.
+Require OrdTheories.
+
+Module Foo (E : OrderedType) : WSfun(E).
+  Include OrdTheories.OrdTheories E.
+
+  Instance EqLaws_elt : EqLaws elt. Admitted. (* Should be moved to [OrdTheoreis] *)
+  Instance OrdLaws_elt : OrdLaws elt. Admitted. (* Should be moved to [OrdTheoreis] *)
+
+  (* Well-formedness *)
+  Definition t := {s : Set_ elt | Bounded s None None}.
+  Program Definition In (x :elt) (s : t) : Prop := sem s x = true.
+
+  Definition Equal s s' := forall a : elt, In a s <-> In a s'.
+  Definition Subset s s' := forall a : elt, In a s -> In a s'.
+  Definition Empty s := forall a : elt, ~ In a s.
+  Definition For_all (P : elt -> Prop) s := forall x, In x s -> P x.
+  Definition Exists (P : elt -> Prop) s := exists x, In x s /\ P x.
+
+  Program Definition empty : t := empty.
+  Next Obligation. constructor. Defined.
+
+  Program Definition is_empty : t -> bool := null.
+
+  Lemma empty_1 : Empty empty.
+  Proof. intros x H. inversion H. Qed.
+
+  Lemma Empty_tip : forall s, Empty s <-> proj1_sig s = Tip.
+  Proof.
+    intros. split; intro.
+    * destruct s as [[|]?].
+      + exfalso. specialize (H e).
+        contradict H.
+        unfold In. simpl. rewrite Eq_refl, orb_true_r. reflexivity.
+      + reflexivity.
+    * intros x H1. inversion H1. rewrite H in H2. inversion H2.
+  Qed.
+
+  Lemma is_empty_1 : forall s : t, Empty s -> is_empty s = true.
+  Proof.
+    intros.
+    rewrite Empty_tip in *.
+    unfold is_empty in *.
+    rewrite H. reflexivity.
+  Qed.
+
+  Lemma is_empty_2 : forall s : t, is_empty s = true -> Empty s.
+  Proof.
+    intros.
+    rewrite Empty_tip in *.
+    unfold is_empty in *.
+    destruct (proj1_sig s); [ inversion H | reflexivity].
+  Qed.
+  
+  Definition eq : t -> t -> Prop := Equal.
+  Definition eq_dec : forall s s' : t, {eq s s'} + {~ eq s s'}. Admitted.
+
+  Lemma eq_refl : forall s : t, eq s s.
+  Proof. destruct s. unfold eq. unfold Equal. intro. reflexivity. Qed.
+
+  Lemma eq_sym : forall s s' : t, eq s s' -> eq s' s.
+  Proof. destruct s; destruct s'; 
+    unfold eq, Equal in *. intros. rewrite H. intuition. Qed.
+
+  Lemma eq_trans :
+    forall s s' s'' : t, eq s s' -> eq s' s'' -> eq s s''.
+  Proof.
+    destruct s; destruct s'; destruct s''; simpl.
+    unfold eq, Equal. intros ???. rewrite H, H0. reflexivity.
+  Qed.
+
+  Program Definition mem : elt -> t -> bool := member.
+
+  Program Definition singleton : elt -> t := singleton.
+  Next Obligation. eapply singleton_Desc with (ub := None) (lb := None); intuition. Qed.
+
+  Program Definition add : elt -> t -> t := insert.
+  Next Obligation.
+    destruct x0. simpl.
+    eapply insert_Desc with (ub := None) (lb := None); intuition.
+  Qed.
+
+  Program Definition remove : elt -> t -> t := delete.
+  Next Obligation.
+    destruct x0. simpl.
+    eapply delete_Desc with (ub := None) (lb := None); intuition.
+  Qed.
+
+  Program Definition union : t -> t -> t := union.
+  Next Obligation.
+    destruct x, x0. simpl.
+    eapply union_Desc with (ub := None) (lb := None); intuition.
+  Qed.
+
+  Program Definition inter : t -> t -> t:= intersection.
+  Next Obligation.
+    destruct x, x0. simpl.
+    eapply intersection_Desc
+    with (ub := None) (lb := None);
+      intuition.
+  Qed.
+  
+  Definition diff : t -> t -> t. Admitted.
+  Definition equal : t -> t -> bool. Admitted.
+  Definition subset : t -> t -> bool. Admitted.
+  Definition fold : forall A : Type, (elt -> A -> A) -> t -> A -> A. Admitted.
+  Definition for_all : (elt -> bool) -> t -> bool. Admitted.
+  Definition exists_ : (elt -> bool) -> t -> bool. Admitted.
+  Definition filter : (elt -> bool) -> t -> t. Admitted.
+  Definition partition : (elt -> bool) -> t -> t * t. Admitted.
+  Definition cardinal : t -> nat. Admitted.
+  Definition elements : t -> list elt. Admitted.
+  Definition choose : t -> option elt. Admitted.
+
+  Lemma In_1 :
+    forall (s : t) (x y : elt), E.eq x y -> In x s -> In y s.
+  Admitted.
+
+  Lemma mem_1 : forall (s : t) (x : elt), In x s -> mem x s = true.
+  Proof.
+    intros. destruct s. unfold In, mem in *. simpl in *.
+    erewrite member_spec; eassumption.
+  Qed.
+
+  Lemma mem_2 : forall (s : t) (x : elt), mem x s = true -> In x s.
+  Proof.
+    intros. destruct s. unfold In, mem in *. simpl in *.
+    erewrite member_spec in H; eassumption.
+  Qed.
+
+  Lemma equal_1 : forall s s' : t, Equal s s' -> equal s s' = true. Admitted.
+  Lemma equal_2 : forall s s' : t, equal s s' = true -> Equal s s'. Admitted.
+  Lemma subset_1 : forall s s' : t, Subset s s' -> subset s s' = true. Admitted.
+  Lemma subset_2 : forall s s' : t, subset s s' = true -> Subset s s'. Admitted.
+
+
+  Lemma E_eq_zeze:
+    forall x y : elt, E.eq x y <-> (x == y) = true.
+  Proof.
+    intros.
+    unfold op_zeze__, Eq_t, op_zeze____.
+    destruct (E.eq_dec x y); simpl in *; intuition congruence.
+  Qed.
+
+  Lemma singleton_1 :
+    forall x y : elt, In y (singleton x) -> E.eq x y.
+  Proof.
+    intros x y.
+    unfold In, singleton, proj1_sig.
+    rewrite E_eq_zeze.
+    eapply singleton_Desc with (ub := None) (lb := None); try reflexivity.
+    intros.
+    simpl in H1.
+    unfold elt in *.
+    rewrite H1 in H2.
+    rewrite Eq_sym in H2.
+    assumption.
+  Qed.
+
+  Lemma singleton_2 :
+    forall x y : elt, E.eq x y -> In y (singleton x).
+  Proof.
+    intros x y.
+    unfold In, singleton, proj1_sig.
+    rewrite E_eq_zeze.
+    eapply singleton_Desc with (ub := None) (lb := None); try reflexivity.
+    intros.
+    unfold elt in *. rewrite H1.
+    rewrite Eq_sym.
+    assumption.
+  Qed.
+
+  Lemma add_1 :
+    forall (s : t) (x y : elt), E.eq x y -> In y (add x s).
+  Proof.
+    intros [s Hs] x y.
+    unfold In, add, proj1_sig.
+    rewrite E_eq_zeze.
+    eapply insert_Desc with (ub := None) (lb := None); try assumption; try reflexivity.
+    intros.
+    unfold elt in *. rewrite H1.
+    rewrite Eq_sym.
+    rewrite H2. reflexivity.
+  Qed.
+
+  Lemma add_2 : forall (s : t) (x y : elt), In y s -> In y (add x s).
+  Proof.
+    intros [s Hs] x y.
+    unfold In, add, proj1_sig.
+    eapply insert_Desc with (ub := None) (lb := None); try assumption; try reflexivity.
+    intros.
+    unfold elt in *. rewrite H1, H2.
+    rewrite orb_true_r.
+    reflexivity.
+  Qed.
+
+  Lemma add_3 :
+    forall (s : t) (x y : elt), ~ E.eq x y -> In y (add x s) -> In y s.
+  Proof.
+    intros [s Hs] x y.
+    unfold In, add, proj1_sig.
+    rewrite E_eq_zeze.
+    eapply insert_Desc with (ub := None) (lb := None); try assumption; try reflexivity.
+    intros.
+    unfold elt in *. rewrite H1 in H3.
+    rewrite Eq_sym in H3.
+    rewrite orb_true_iff in H3. destruct H3 as [H3|H3].
+    * congruence.
+    * assumption.
+  Qed.
+
+  Lemma remove_1 :
+    forall (s : t) (x y : elt), E.eq x y -> ~ In y (remove x s).
+  Proof.
+    intros [s Hs] x y.
+    unfold In, remove, proj1_sig.
+    rewrite E_eq_zeze.
+    eapply delete_Desc with (ub := None) (lb := None); try assumption; try reflexivity.
+    intros.
+    unfold elt in *.
+    rewrite H1.
+    rewrite Eq_sym in H2.
+    rewrite H2. simpl.
+    rewrite andb_false_r.
+    congruence.
+  Qed.
+
+  Lemma remove_2 :
+    forall (s : t) (x y : elt), ~ E.eq x y -> In y s -> In y (remove x s).
+  Proof.
+    intros [s Hs] x y.
+    unfold In, remove, proj1_sig.
+    rewrite E_eq_zeze.
+    eapply delete_Desc with (ub := None) (lb := None); try assumption; try reflexivity.
+    intros.
+    unfold elt in *.
+    rewrite H1, H3.
+    rewrite andb_true_l.
+    rewrite Eq_sym in H2.
+    rewrite negb_true_iff.
+    apply not_true_is_false.
+    assumption.
+  Qed.
+
+  Lemma remove_3 :
+    forall (s : t) (x y : elt), In y (remove x s) -> In y s.
+  Proof.
+    intros [s Hs] x y.
+    unfold In, remove, proj1_sig.
+    eapply delete_Desc with (ub := None) (lb := None); try assumption; try reflexivity.
+    intros.
+    unfold elt in *.
+    rewrite H1 in H2.
+    rewrite andb_true_iff in H2. intuition.
+  Qed.
+
+  Lemma union_1 :
+    forall (s s' : t) (x : elt), In x (union s s') -> In x s \/ In x s'.
+   Proof.
+     intros [s1 Hs1] [s2 Hs2] x.
+     unfold In, union, proj1_sig.
+    eapply union_Desc with (ub := None) (lb := None); try assumption.
+    intros.
+    rewrite H1 in H2.
+    rewrite orb_true_iff in H2.
+    assumption.
+  Qed.
+
+
+  Lemma union_2 :
+    forall (s s' : t) (x : elt), In x s -> In x (union s s').
+  Proof.
+    intros [s1 Hs1] [s2 Hs2] x.
+    unfold In, union, proj1_sig.
+    eapply union_Desc with (ub := None) (lb := None); try assumption.
+    intros.
+    rewrite H1 in *.
+    rewrite orb_true_iff.
+    intuition.
+  Qed.
+  
+  Lemma union_3 :
+    forall (s s' : t) (x : elt), In x s' -> In x (union s s').
+  Proof.
+    intros [s1 Hs1] [s2 Hs2] x.
+    unfold In, union, proj1_sig.
+    eapply union_Desc with (ub := None) (lb := None); try assumption.
+    intros.
+    rewrite H1 in *.
+    rewrite orb_true_iff.
+    intuition.
+  Qed.
+
+  Lemma inter_1 : forall (s s' : t) (x : elt),
+      In x (inter s s') -> In x s.
+  Proof.
+    intros [s1 Hs1] [s2 Hs2] x.
+    unfold In, inter, proj1_sig.
+    eapply intersection_Desc with (ub := None) (lb := None);
+      try assumption.
+    intros.
+    rewrite H1 in *.
+    rewrite andb_true_iff in H2.
+    intuition.
+  Qed.
+
+  Lemma inter_2 : forall (s s' : t) (x : elt),
+      In x (inter s s') -> In x s'.
+  Proof.
+    intros [s1 Hs1] [s2 Hs2] x.
+    unfold In, inter, proj1_sig.
+    eapply intersection_Desc with (ub := None) (lb := None);
+      try assumption.
+    intros.
+    rewrite H1 in *.
+    rewrite andb_true_iff in H2.
+    intuition.
+  Qed.
+  
+  Lemma inter_3 : forall (s s' : t) (x : elt),
+      In x s -> In x s' -> In x (inter s s').
+  Proof.
+    intros [s1 Hs1] [s2 Hs2] x.
+    unfold In, inter, proj1_sig.
+    eapply intersection_Desc with (ub := None) (lb := None);
+      try assumption.
+    intros.
+    rewrite H1, H2, H3.
+    intuition.
+  Qed.
+
+  Lemma diff_1 :
+    forall (s s' : t) (x : elt), In x (diff s s') -> In x s. Admitted.
+  Lemma diff_2 :
+    forall (s s' : t) (x : elt), In x (diff s s') -> ~ In x s'. Admitted.
+  Lemma diff_3 :
+    forall (s s' : t) (x : elt), In x s -> ~ In x s' -> In x (diff s s'). Admitted.
+  Lemma fold_1 :
+    forall (s : t) (A : Type) (i : A) (f : elt -> A -> A),
+      fold A f s i =
+      fold_left (fun (a : A) (e : elt) => f e a) (elements s) i. Admitted.
+  Lemma cardinal_1 : forall s : t, cardinal s = length (elements s). Admitted.
+  Lemma filter_1 :
+    forall (s : t) (x : elt) (f : elt -> bool),
+      compat_bool E.eq f -> In x (filter f s) -> In x s. Admitted.
+  Lemma filter_2 :
+    forall (s : t) (x : elt) (f : elt -> bool),
+      compat_bool E.eq f -> In x (filter f s) -> f x = true. Admitted.
+  Lemma filter_3 :
+    forall (s : t) (x : elt) (f : elt -> bool),
+      compat_bool E.eq f -> In x s -> f x = true -> In x (filter f s). Admitted.
+  Lemma for_all_1 :
+    forall (s : t) (f : elt -> bool),
+      compat_bool E.eq f ->
+      For_all (fun x : elt => f x = true) s -> for_all f s = true. Admitted.
+  Lemma for_all_2 :
+    forall (s : t) (f : elt -> bool),
+      compat_bool E.eq f ->
+      for_all f s = true -> For_all (fun x : elt => f x = true) s. Admitted.
+  Lemma exists_1 :
+    forall (s : t) (f : elt -> bool),
+      compat_bool E.eq f ->
+      Exists (fun x : elt => f x = true) s -> exists_ f s = true. Admitted.
+  Lemma exists_2 :
+    forall (s : t) (f : elt -> bool),
+      compat_bool E.eq f ->
+      exists_ f s = true -> Exists (fun x : elt => f x = true) s. Admitted.
+  Lemma partition_1 :
+    forall (s : t) (f : elt -> bool),
+      compat_bool E.eq f -> Equal (fst (partition f s)) (filter f s). Admitted.
+  Lemma partition_2 :
+    forall (s : t) (f : elt -> bool),
+      compat_bool E.eq f ->
+      Equal (snd (partition f s)) (filter (fun x : elt => negb (f x)) s). Admitted.
+  Lemma elements_1 :
+    forall (s : t) (x : elt), In x s -> InA E.eq x (elements s). Admitted.
+  Lemma elements_2 :
+    forall (s : t) (x : elt), InA E.eq x (elements s) -> In x s. Admitted.
+  Lemma elements_3w : forall s : t, NoDupA E.eq (elements s). Admitted.
+  Lemma choose_1 :
+    forall (s : t) (x : elt), choose s = Some x -> In x s. Admitted.
+  Lemma choose_2 : forall s : t, choose s = None -> Empty s. Admitted.
+
+End Foo.

@@ -5497,6 +5497,83 @@ Proof.
   eexists. apply difference_Sem; eassumption.
 Qed.
 
+(** *** Specifing [disjoint] *)
+
+(** The following is copied from the body of [disjoint] *)
+
+Definition disjoint_body s1 s2 := match s1, s2 with
+          | (Bin p1 m1 l1 r1 as t1) , (Bin p2 m2 l2 r2 as t2) =>
+           let disjoint2 :=
+             if nomatch p1 p2 m2
+             then true
+             else if zero p1 m2
+                  then disjoint t1 l2
+                  else disjoint t1 r2 in
+           let disjoint1 :=
+             if nomatch p2 p1 m1
+             then true
+             else if zero p2 m1
+                  then disjoint l1 t2
+                  else disjoint r1 t2 in
+           if shorter m1 m2
+           then disjoint1
+           else if shorter m2 m1
+                then disjoint2
+                else if p1 GHC.Base.== p2
+                     then andb (disjoint l1 l2) (disjoint r1 r2)
+                     else true
+          | (Bin _ _ _ _ as t1) , Tip kx2 bm2 =>
+           let fix disjointBM arg_11__
+             := match arg_11__ with
+                  | Bin p1 m1 l1 r1 =>
+                    if nomatch kx2 p1 m1
+                    then true
+                    else if zero kx2 m1
+                         then disjointBM l1
+                         else disjointBM r1
+                  | Tip kx1 bm1 =>
+                    if kx1 GHC.Base.== kx2
+                    then (bm1 Data.Bits..&.(**) bm2)
+                         GHC.Base.== GHC.Num.fromInteger 0
+                    else true
+                  | Nil => true
+                end in
+               disjointBM t1
+          | Bin _ _ _ _ , Nil => true
+          | Tip kx1 bm1 , t2 => let fix disjointBM arg_18__
+            := match arg_18__ with
+                 | Bin p2 m2 l2 r2 => if nomatch kx1 p2 m2
+                                      then true
+                                      else if zero kx1 m2
+                                           then disjointBM l2
+                                           else disjointBM r2
+                 | Tip kx2 bm2 => if kx1 GHC.Base.== kx2
+                                  then (bm1 Data.Bits..&.(**) bm2)
+                                       GHC.Base.== GHC.Num.fromInteger 0
+                                  else true
+                 | Nil => true
+               end in
+            disjointBM t2
+          | Nil , _ => true
+        end.
+
+Lemma disjoint_eq s1 s2 :
+  disjoint s1 s2 = disjoint_body s1 s2.
+Proof.
+  unfold disjoint, disjoint_func.
+  rewrite Wf.WfExtensionality.fix_sub_eq_ext.
+  unfold projT1, projT2.
+  unfold disjoint_body.
+  repeat match goal with
+    | _ => progress replace (Sumbool.sumbool_of_bool false) with (@right (false = true) (false = false) (@eq_refl bool false))
+by reflexivity
+    | _ => progress replace (Sumbool.sumbool_of_bool true) with (@left (true = true) (true = false) (@eq_refl bool true))
+by reflexivity
+    | [ |- _ = match ?x with _ => _ end ] => destruct x
+    | _ => assumption || reflexivity
+    | [ |- _ ?x = _ ?x ] => induction x
+  end.
+Qed.
 
 (** *** Specifing [foldr] *)
 

@@ -1138,23 +1138,31 @@ Lemma splitS_Desc :
   (forall s1 s2,
     Bounded s1 lb (Some x) ->
     Bounded s2 (Some x) ub ->
+    size s = size s1 + size s2 + (if sem s x then 1 else 0) ->
     (forall i, sem s i = (if i == x then sem s i else sem s1 i || sem s2 i)) ->
     P (s1, s2)) ->
   P (splitS x s) : Prop.
 Proof.
   intros ?? ?? HB.
-  Ltac solveThis := intros X HX; apply HX; clear X HX; [solve_Bounded|solve_Bounded|f_solver].
+  Ltac solveThis := intros X HX; apply HX; clear X HX; [solve_Bounded|solve_Bounded| |f_solver].
   induction HB.
-  * solveThis.
-  * simpl.
+  - solveThis. reflexivity.
+  - simpl.
     destruct (compare x x0) eqn:?.
-    + solveThis.
-    + apply IHHB1; intros s1_2 s1_3 HB1_2 HB1_3 Hsems1; clear IHHB1 IHHB2.
-      applyDesc link_Desc.
-      solveThis.
-    + apply IHHB2; intros s2_2 s2_3 HB2_2 HB2_3 Hsems2; clear IHHB1 IHHB2.
-      applyDesc link_Desc.
-      solveThis.
+  + solveThis. replace (x == x0) with true by order e.
+    rewrite orb_true_r. simpl. lia.
+  + apply IHHB1; intros s1_2 s1_3 HB1_2 HB1_3 Hsz Hsems1; clear IHHB1 IHHB2.
+    applyDesc link_Desc.
+    solveThis. destruct (sem s1 x). 
+    * simpl. lia.
+    * replace (x == x0) with false by order e. simpl.
+      rewrite (sem_outside_below HB2) by solve_Bounds. lia.
+  + apply IHHB2; intros s2_2 s2_3 HB2_2 HB2_3 Hsz Hsems2; clear IHHB1 IHHB2.
+    applyDesc link_Desc.
+    solveThis. destruct (sem s2 x). 
+    * rewrite orb_true_r. lia.
+    * replace (x == x0) with false by order e. simpl.
+      rewrite (sem_outside_above HB1) by solve_Bounds. simpl. lia.
 Qed.
 
 (* The [union] uses some nested pattern match that expand to a very large
@@ -1330,6 +1338,7 @@ Lemma splitMember_Desc:
 Proof.
   intros ?? ?? HB.
   induction HB.
+  Ltac solveThis ::= intros X HX; apply HX; clear X HX; [solve_Bounded|solve_Bounded|f_solver].
   * solveThis.
   * simpl.
     destruct (compare x x0) eqn:?.
@@ -1384,6 +1393,7 @@ Lemma split_Desc :
   (forall s1 s2,
     Bounded s1 lb (Some x) ->
     Bounded s2 (Some x) ub ->
+    (size s = size s1 + size s2 + (if sem s x then 1 else 0)) ->
     (forall i, sem s i = (if i == x then sem s i else sem s1 i || sem s2 i)) ->
     P (s1, s2)) ->
   P (split x s) : Prop.
@@ -1423,23 +1433,94 @@ Proof.
         ].
 Qed.
 
+
+Ltac f_solver_simple  ::=
+  let i := fresh "i" in 
+  intro i;
+  try reflexivity; (* for when we have an existential variable *)
+  repeat multimatch goal with [ H : (forall i, _) |- _] => specialize (H i) end;
+  repeat match goal with [ H : ?f = _ |- context [?f i] ] => rewrite H in *; clear H end;
+  simpl sem; rewrite ?orb_assoc, ?orb_false_r, ?orb_false_l;
+  try reflexivity.
+
+Ltac f_solver_post :=
+  repeat (try congruence;
+          try solve [exfalso; inside_bounds; order_Bounds];
+          rewrite ?andb_true_r, ?andb_true_l, ?andb_false_r, ?andb_false_l,
+          ?orb_true_r, ?orb_true_l, ?orb_false_r, ?orb_false_l,
+                  ?orb_assoc, ?and_assoc;
+          try reflexivity;
+          try lazymatch goal with
+            |  H1 : (?i == ?j) = true , H2 : sem ?s ?i = true, H3 : sem ?s ?j = false |- _
+              => exfalso; rewrite (sem_resp_eq s i j H1) in H2; congruence
+            |  H1 : (?i == ?j) = true , H2 : sem ?s ?i = false, H3 : sem ?s ?j = true |- _
+              => exfalso; rewrite (sem_resp_eq s i j H1) in H2; congruence
+          end;
+          split_bool || exfalso
+          ).
+
 Lemma difference_Desc :
-  forall s1 s2 lb1 lb2 ub1 ub2,
-  Bounded s1 lb1 ub1 ->
-  Bounded s2 lb2 ub2 ->
-  Desc' (difference s1 s2) lb1 ub1 (fun i => sem s1 i && negb (sem s2 i)).
+  forall s1 s2 lb ub,
+  Bounded s1 lb ub ->
+  Bounded s2 lb ub ->
+  forall (P : Set_ e -> Prop),
+  (forall s,
+    Bounded s lb ub ->
+    size s <= size s1 ->
+    (size s = size s1 -> forall i, sem s i = sem s1 i) ->
+    (forall i, sem s i = sem s1 i && negb (sem s2 i)) ->
+    P s) ->
+  P (difference s1 s2).
 Proof.
-  intros s1 s2 lb1 lb2 ub1 ub2 Hb1 Hb2.
-  revert s1 lb1 ub1 Hb1. induction Hb2; intros ??? Hb1.
-  - simpl. destruct s1; solve_Desc.
+  intros s1 s2 lb ub Hb1 Hb2.
+  revert s1 Hb1. induction Hb2; intros sl Hb1; apply hide.
+  - simpl.
+    Ltac solve_P := apply unhide; intros X HX; apply HX; clear X HX; try reflexivity; try assumption; try solve [f_solver].
+    destruct sl; solve_P.
   - apply difference_destruct; intros; subst.
-    + solve_Desc.
-    + solve_Desc.
-    + eapply split_Desc; try eassumption.
-      intros.
-      destruct (_GHC.Base.==_ (size (difference s3 l2) + size (difference s4 r2)) (size s0)) eqn:Hcomp.
-      * solve_Desc. admit.
-      * admit.
+    + solve_P.
+    + solve_P. 
+    + eapply split_Desc; try eassumption. 
+      intros sl1 sl2 HBsl1 HBsl2 Hsz Hsem. inversion H3; subst; clear H3.
+      eapply IHHb2_1. solve_Bounded. intros sil ????.
+      eapply IHHb2_2. solve_Bounded. intros sir ????.
+      destruct (_ == _) eqn:Hcomp.
+      * solve_P.
+        assert (size sl1 + size sl2 <= size sl) by (destruct (sem sl x0); lia).
+        change (size sil + size sir =? size sl = true) in Hcomp.
+        rewrite Z.eqb_eq in Hcomp.
+        lapply H4; [intro; subst|lia].
+        lapply H8; [intro; subst|lia].
+        assert (sem sl x0 = false).
+        { destruct (sem sl x0); auto. lia. }
+        f_solver.
+        -- destruct (i == x0) eqn:Heq.
+           ++ f_solver_post.
+           ++ symmetry in Hsem. rewrite orb_true_iff in Hsem.
+              destruct Hsem; simpl negb in H5;
+                rewrite andb_false_r in H5; f_solver_post.
+        -- symmetry in Hsem. rewrite orb_true_iff in Hsem.
+              destruct Hsem; simpl negb in H9;
+                rewrite andb_false_r in H9; f_solver_post.
+      * applyDesc merge_Desc.
+        apply unhide; intros X HX; apply HX; clear X HX; try reflexivity; try assumption.
+        -- destruct (sem sl x0); lia.
+        -- intro. assert (sem sl x0 = false).
+           { destruct (sem sl x0); try lia. reflexivity. }
+           rewrite H11 in Hsz.
+           lapply H4; [intro; subst|lia].
+           lapply H8; [intro; subst|lia].
+           clear H4 H8.
+           symmetry in Hsem; f_solver; destruct (i == x0) eqn:Heq;
+             try f_solver_post;
+             rewrite ?orb_false_iff, ?orb_true_iff in *;
+             destruct Hsem; simpl negb in H5; f_solver_post.
+        -- simpl sem.
+           symmetry in Hsem; f_solver; destruct (i == x0) eqn:Heq;
+             try f_solver_post;
+             simpl negb in *;
+             rewrite ?orb_false_iff, ?orb_true_iff, ?and_false_r in *;
+             destruct Hsem; simpl negb in H5; f_solver_post.
 Admitted.
 End WF.
 

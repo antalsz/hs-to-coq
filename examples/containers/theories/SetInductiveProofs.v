@@ -8,6 +8,26 @@ Require Import Psatz.
 Set Bullet Behavior "Strict Subproofs".
 
 
+Ltac destruct_ptrEq := lazymatch goal with
+  | |- context [if PtrEquality.ptrEq ?x ?y && PtrEquality.ptrEq ?x2 ?y2 then _ else _]
+  => let Hpe := fresh "Hpe" in
+     let Hpe1 := fresh "Hpe1" in
+     let Hpe2 := fresh "Hpe2" in
+     destruct (PtrEquality.ptrEq x y && PtrEquality.ptrEq x2 y2) eqn:Hpe;
+     [ rewrite andb_true_iff in Hpe;
+       destruct Hpe as [Hpe1 Hpe2];
+       apply PtrEquality.ptrEq_eq in Hpe1;
+       apply PtrEquality.ptrEq_eq in Hpe2;
+       subst
+     | clear Hpe]
+  | |- context [if PtrEquality.ptrEq ?x ?y then _ else _]
+  => let Hpe := fresh "Hpe" in
+     destruct (PtrEquality.ptrEq x y) eqn:Hpe;
+     [ apply PtrEquality.ptrEq_eq in Hpe; subst
+     | clear Hpe] 
+end.
+
+
 Section WF.
 Context {e : Type} {HEq : Eq_ e} {HOrd : Ord e} {HEqLaws : EqLaws e}  {HOrdLaws : OrdLaws e}.
 
@@ -862,9 +882,8 @@ Proof.
     + rewrite compare_Eq in *.
       rewrite Heqc.
       rewrite ?orb_true_r, ?orb_true_l.
-      destruct (PtrEquality.ptrEq _ _) eqn:Hpe; [| clear Hpe]. 
-      - apply PtrEquality.ptrEq_eq in Hpe; subst.
-        solve_Desc.
+      destruct_ptrEq.
+      - solve_Desc.
       - unfold Datatypes.id.
         solve_Desc.
     + clear IHHB2.
@@ -874,10 +893,8 @@ Proof.
       replace (y == x) with false by order_Bounds.
       rewrite ?orb_false_r, ?orb_false_l.
 
-      (* worth having a tactic that combines destruct and ptrEq_eq? *)
-      destruct (PtrEquality.ptrEq _ _) eqn:Hpe; only 2: clear Hpe.
-      - apply PtrEquality.ptrEq_eq in Hpe; subst.
-        replace (sem s1 y) with true
+      destruct_ptrEq.
+      - replace (sem s1 y) with true
            by (destruct (sem s1 y) eqn:?; auto; exfalso; lia).
         solve_Desc.
       - destruct (sem s1 y);
@@ -891,9 +908,8 @@ Proof.
       replace (y == x) with false by order_Bounds.
       rewrite ?orb_false_r, ?orb_false_l.
 
-      destruct (PtrEquality.ptrEq _ _) eqn:Hpe; only 2: clear Hpe.
-      - apply PtrEquality.ptrEq_eq in Hpe; subst.
-        replace (sem s2 y) with true
+      destruct_ptrEq.
+      - replace (sem s2 y) with true
            by (destruct (sem s2 y) eqn:?; auto; exfalso; lia).
         solve_Desc.
       - destruct (sem s2 y);
@@ -957,10 +973,8 @@ Proof.
       replace (y == x) with false by order_Bounds.
       rewrite ?orb_false_r, ?orb_false_l.
 
-      (* worth having a tactic that combines destruct and ptrEq_eq? *)
-      destruct (PtrEquality.ptrEq _ _) eqn:Hpe; only 2: clear Hpe.
-      - apply PtrEquality.ptrEq_eq in Hpe; subst.
-        replace (sem s1 y) with true
+      destruct_ptrEq.
+      - replace (sem s1 y) with true
            by (destruct (sem s1 y) eqn:?; auto; exfalso; lia).
         solve_Desc.
       - destruct (sem s1 y);
@@ -974,9 +988,8 @@ Proof.
       replace (y == x) with false by order_Bounds.
       rewrite ?orb_false_r, ?orb_false_l.
 
-      destruct (PtrEquality.ptrEq _ _) eqn:Hpe; only 2: clear Hpe.
-      - apply PtrEquality.ptrEq_eq in Hpe; subst.
-        replace (sem s2 y) with true
+      destruct_ptrEq.
+      - replace (sem s2 y) with true
            by (destruct (sem s2 y) eqn:?; auto; exfalso; lia).
         solve_Desc.
       - destruct (sem s2 y);
@@ -1115,18 +1128,16 @@ Proof.
       replace (x == x0) with false by solve_Bounds.
       rewrite -> (sem_outside_below HB2) by solve_Bounds.
       rewrite ?orb_false_r.
-      destruct (PtrEquality.ptrEq s s1) eqn:Heq0.
-      * apply PtrEquality.ptrEq_eq in Heq0; subst.
-        replace (sem s1 x) with false by (destruct (sem s1 x); try congruence; lia).
+      destruct_ptrEq.
+      * replace (sem s1 x) with false by (destruct (sem s1 x); try congruence; lia).
         solve_Desc.
       * destruct (sem s1 x); applyDesc balanceR_Desc; solve_Desc.
     + applyDesc IHHB2; clear IHHB1 IHHB2.
       replace (x == x0) with false by solve_Bounds.
       rewrite -> (sem_outside_above HB1) by solve_Bounds.
       rewrite ?orb_false_l.
-      destruct (PtrEquality.ptrEq s s2) eqn:Heq0.
-      * apply PtrEquality.ptrEq_eq in Heq0; subst.
-        replace (sem s2 x) with false by (destruct (sem s2 x); try congruence; lia).
+      destruct_ptrEq.
+      * replace (sem s2 x) with false by (destruct (sem s2 x); try congruence; lia).
         solve_Desc.
       * destruct (sem s2 x); applyDesc balanceL_Desc; solve_Desc.
 Qed.
@@ -1228,11 +1239,8 @@ Proof.
       intros.
       applyDesc IHHB1_1.
       applyDesc IHHB1_2.
-      destruct (PtrEquality.ptrEq s l1 && PtrEquality.ptrEq s0 r1) eqn:Hpes.
-      - rewrite andb_true_iff in Hpes.
-        destruct Hpes as [Hpe1 Hpe2].
-        apply PtrEquality.ptrEq_eq in Hpe1; apply PtrEquality.ptrEq_eq in Hpe2; subst.
-        solve_Desc.
+      destruct_ptrEq.
+      - solve_Desc.
       - applyDesc link_Desc.
         solve_Desc.
 Qed.
@@ -1372,15 +1380,8 @@ Proof.
       applyDesc IHHB1_1.
       applyDesc IHHB1_2.
       destruct b.
-      * destruct
-          (PtrEquality.ptrEq s s1 &&
-           PtrEquality.ptrEq s0 s2) eqn: Hptr.
-        -- rewrite andb_true_iff in Hptr.
-           destruct Hptr as [Hptr1 Hptr2].
-           apply PtrEquality.ptrEq_eq in Hptr1.
-           apply PtrEquality.ptrEq_eq in Hptr2.
-           subst.
-           solve_Desc.
+      * destruct_ptrEq.
+        -- solve_Desc.
         -- applyDesc link_Desc.
            solve_Desc.
       * applyDesc merge_Desc'.

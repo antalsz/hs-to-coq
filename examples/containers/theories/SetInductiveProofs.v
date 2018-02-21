@@ -613,8 +613,8 @@ Proof. intros. unfold empty. eapply Desc_WF. apply empty_Desc. Qed.
 
 (** ** Verification of [null] *)
 
-Lemma null:
-  forall s, WF s -> null s = true <-> size s = 0.
+Lemma null_spec:
+  forall s, WF s -> null s = true <-> s = Tip.
 Proof. intros. unfold null. inversion H; simpl; intuition (congruence || lia_sizes). Qed.
 
 
@@ -1302,9 +1302,12 @@ Require OrdTheories.
 Module Foo (E : OrderedType) : WSfun(E).
   Include OrdTheories.OrdTheories E.
 
+  Instance EqLaws_elt : EqLaws elt. Admitted. (* Should be moved to [OrdTheoreis] *)
+  Instance OrdLaws_elt : OrdLaws elt. Admitted. (* Should be moved to [OrdTheoreis] *)
+
   (* Well-formedness *)
   Definition t := {s : Set_ elt | Bounded s None None}.
-  Definition In (x :elt) (s : t) : Prop. Admitted.
+  Program Definition In (x :elt) (s : t) : Prop := sem s x = true.
 
   Definition Equal s s' := forall a : elt, In a s <-> In a s'.
   Definition Subset s s' := forall a : elt, In a s -> In a s'.
@@ -1312,36 +1315,81 @@ Module Foo (E : OrderedType) : WSfun(E).
   Definition For_all (P : elt -> Prop) s := forall x, In x s -> P x.
   Definition Exists (P : elt -> Prop) s := exists x, In x s /\ P x.
 
-  Definition empty : t. Admitted.
-  Definition is_empty : t -> bool. Admitted.
+  Program Definition empty : t := empty.
+  Next Obligation. constructor. Defined.
+
+  Program Definition is_empty : t -> bool := null.
 
   Lemma empty_1 : Empty empty.
-  Admitted.
+  Proof. intros x H. inversion H. Qed.
+
+  Lemma Empty_tip : forall s, Empty s <-> proj1_sig s = Tip.
+  Proof.
+    intros. split; intro.
+    * destruct s as [[|]?].
+      + exfalso. specialize (H e).
+        contradict H.
+        unfold In. simpl. rewrite Eq_refl, orb_true_r. reflexivity.
+      + reflexivity.
+    * intros x H1. inversion H1. rewrite H in H2. inversion H2.
+  Qed.
 
   Lemma is_empty_1 : forall s : t, Empty s -> is_empty s = true.
-  Admitted.
+  Proof.
+    intros.
+    rewrite Empty_tip in *.
+    unfold is_empty in *.
+    rewrite H. reflexivity.
+  Qed.
 
   Lemma is_empty_2 : forall s : t, is_empty s = true -> Empty s.
-  Admitted.
+  Proof.
+    intros.
+    rewrite Empty_tip in *.
+    unfold is_empty in *.
+    destruct (proj1_sig s); [ inversion H | reflexivity].
+  Qed.
   
   Definition eq : t -> t -> Prop := Equal.
   Definition eq_dec : forall s s' : t, {eq s s'} + {~ eq s s'}. Admitted.
 
   Lemma eq_refl : forall s : t, eq s s.
-  Admitted.
+  Proof. destruct s. unfold eq. unfold Equal. intro. reflexivity. Qed.
 
   Lemma eq_sym : forall s s' : t, eq s s' -> eq s' s.
-  Admitted.
+  Proof. destruct s; destruct s'; 
+    unfold eq, Equal in *. intros. rewrite H. intuition. Qed.
 
   Lemma eq_trans :
     forall s s' s'' : t, eq s s' -> eq s' s'' -> eq s s''.
-  Admitted.
+  Proof.
+    destruct s; destruct s'; destruct s''; simpl.
+    unfold eq, Equal. intros ???. rewrite H, H0. reflexivity.
+  Qed.
 
-  Definition mem : elt -> t -> bool. Admitted.
-  Definition singleton : elt -> t. Admitted.
-  Definition add : elt -> t -> t. Admitted.
-  Definition remove : elt -> t -> t. Admitted.
-  Definition union : t -> t -> t. Admitted.
+  Program Definition mem : elt -> t -> bool := member.
+
+  Program Definition singleton : elt -> t := singleton.
+  Next Obligation. eapply singleton_Desc with (ub := None) (lb := None); intuition. Qed.
+
+  Program Definition add : elt -> t -> t := insert.
+  Next Obligation.
+    destruct x0. simpl.
+    eapply insert_Desc with (ub := None) (lb := None); intuition.
+  Qed.
+
+  Program Definition remove : elt -> t -> t := delete.
+  Next Obligation.
+    destruct x0. simpl.
+    eapply delete_Desc with (ub := None) (lb := None); intuition.
+  Qed.
+
+  Program Definition union : t -> t -> t := union.
+  Next Obligation.
+    destruct x, x0. simpl.
+    eapply union_Desc with (ub := None) (lb := None); intuition.
+  Qed.
+
   Definition inter : t -> t -> t. Admitted.
   Definition diff : t -> t -> t. Admitted.
   Definition equal : t -> t -> bool. Admitted.
@@ -1360,48 +1408,180 @@ Module Foo (E : OrderedType) : WSfun(E).
   Admitted.
 
   Lemma mem_1 : forall (s : t) (x : elt), In x s -> mem x s = true.
-  Admitted.
+  Proof.
+    intros. destruct s. unfold In, mem in *. simpl in *.
+    erewrite member_spec; eassumption.
+  Qed.
 
   Lemma mem_2 : forall (s : t) (x : elt), mem x s = true -> In x s.
-  Admitted.
+  Proof.
+    intros. destruct s. unfold In, mem in *. simpl in *.
+    erewrite member_spec in H; eassumption.
+  Qed.
 
   Lemma equal_1 : forall s s' : t, Equal s s' -> equal s s' = true. Admitted.
   Lemma equal_2 : forall s s' : t, equal s s' = true -> Equal s s'. Admitted.
   Lemma subset_1 : forall s s' : t, Subset s s' -> subset s s' = true. Admitted.
   Lemma subset_2 : forall s s' : t, subset s s' = true -> Subset s s'. Admitted.
 
+
+  Lemma E_eq_zeze:
+    forall x y : elt, E.eq x y <-> (x == y) = true.
+  Proof.
+    intros.
+    unfold op_zeze__, Eq_t, op_zeze____.
+    destruct (E.eq_dec x y); simpl in *; intuition congruence.
+  Qed.
+
   Lemma singleton_1 :
     forall x y : elt, In y (singleton x) -> E.eq x y.
-  Admitted.
+  Proof.
+    intros x y.
+    unfold In, singleton, proj1_sig.
+    rewrite E_eq_zeze.
+    eapply singleton_Desc with (ub := None) (lb := None); try reflexivity.
+    intros.
+    simpl in H1.
+    unfold elt in *.
+    rewrite H1 in H2.
+    rewrite Eq_sym in H2.
+    assumption.
+  Qed.
 
   Lemma singleton_2 :
     forall x y : elt, E.eq x y -> In y (singleton x).
-  Admitted.
+  Proof.
+    intros x y.
+    unfold In, singleton, proj1_sig.
+    rewrite E_eq_zeze.
+    eapply singleton_Desc with (ub := None) (lb := None); try reflexivity.
+    intros.
+    unfold elt in *. rewrite H1.
+    rewrite Eq_sym.
+    assumption.
+  Qed.
 
   Lemma add_1 :
     forall (s : t) (x y : elt), E.eq x y -> In y (add x s).
-  Admitted.
+  Proof.
+    intros [s Hs] x y.
+    unfold In, add, proj1_sig.
+    rewrite E_eq_zeze.
+    eapply insert_Desc with (ub := None) (lb := None); try assumption; try reflexivity.
+    intros.
+    unfold elt in *. rewrite H1.
+    rewrite Eq_sym.
+    rewrite H2. reflexivity.
+  Qed.
 
   Lemma add_2 : forall (s : t) (x y : elt), In y s -> In y (add x s).
-  Admitted.
+  Proof.
+    intros [s Hs] x y.
+    unfold In, add, proj1_sig.
+    eapply insert_Desc with (ub := None) (lb := None); try assumption; try reflexivity.
+    intros.
+    unfold elt in *. rewrite H1, H2.
+    rewrite orb_true_r.
+    reflexivity.
+  Qed.
 
   Lemma add_3 :
     forall (s : t) (x y : elt), ~ E.eq x y -> In y (add x s) -> In y s.
-  Admitted.
+  Proof.
+    intros [s Hs] x y.
+    unfold In, add, proj1_sig.
+    rewrite E_eq_zeze.
+    eapply insert_Desc with (ub := None) (lb := None); try assumption; try reflexivity.
+    intros.
+    unfold elt in *. rewrite H1 in H3.
+    rewrite Eq_sym in H3.
+    rewrite orb_true_iff in H3. destruct H3 as [H3|H3].
+    * congruence.
+    * assumption.
+  Qed.
 
   Lemma remove_1 :
-    forall (s : t) (x y : elt), E.eq x y -> ~ In y (remove x s). Admitted.
+    forall (s : t) (x y : elt), E.eq x y -> ~ In y (remove x s).
+  Proof.
+    intros [s Hs] x y.
+    unfold In, remove, proj1_sig.
+    rewrite E_eq_zeze.
+    eapply delete_Desc with (ub := None) (lb := None); try assumption; try reflexivity.
+    intros.
+    unfold elt in *.
+    rewrite H1.
+    rewrite Eq_sym in H2.
+    rewrite H2. simpl.
+    rewrite andb_false_r.
+    congruence.
+  Qed.
+
   Lemma remove_2 :
-    forall (s : t) (x y : elt), ~ E.eq x y -> In y s -> In y (remove x s). Admitted.
+    forall (s : t) (x y : elt), ~ E.eq x y -> In y s -> In y (remove x s).
+  Proof.
+    intros [s Hs] x y.
+    unfold In, remove, proj1_sig.
+    rewrite E_eq_zeze.
+    eapply delete_Desc with (ub := None) (lb := None); try assumption; try reflexivity.
+    intros.
+    unfold elt in *.
+    rewrite H1, H3.
+    rewrite andb_true_l.
+    rewrite Eq_sym in H2.
+    rewrite negb_true_iff.
+    apply not_true_is_false.
+    assumption.
+  Qed.
+
   Lemma remove_3 :
-    forall (s : t) (x y : elt), In y (remove x s) -> In y s. Admitted.
+    forall (s : t) (x y : elt), In y (remove x s) -> In y s.
+  Proof.
+    intros [s Hs] x y.
+    unfold In, remove, proj1_sig.
+    eapply delete_Desc with (ub := None) (lb := None); try assumption; try reflexivity.
+    intros.
+    unfold elt in *.
+    rewrite H1 in H2.
+    rewrite andb_true_iff in H2. intuition.
+  Qed.
 
   Lemma union_1 :
-    forall (s s' : t) (x : elt), In x (union s s') -> In x s \/ In x s'. Admitted.
+    forall (s s' : t) (x : elt), In x (union s s') -> In x s \/ In x s'.
+   Proof.
+     intros [s1 Hs1] [s2 Hs2] x.
+     unfold In, union, proj1_sig.
+    eapply union_Desc with (ub := None) (lb := None); try assumption.
+    intros.
+    rewrite H1 in H2.
+    rewrite orb_true_iff in H2.
+    assumption.
+  Qed.
+
+
   Lemma union_2 :
-    forall (s s' : t) (x : elt), In x s -> In x (union s s'). Admitted.
+    forall (s s' : t) (x : elt), In x s -> In x (union s s').
+  Proof.
+    intros [s1 Hs1] [s2 Hs2] x.
+    unfold In, union, proj1_sig.
+    eapply union_Desc with (ub := None) (lb := None); try assumption.
+    intros.
+    rewrite H1 in *.
+    rewrite orb_true_iff.
+    intuition.
+  Qed.
+  
   Lemma union_3 :
-    forall (s s' : t) (x : elt), In x s' -> In x (union s s'). Admitted.
+    forall (s s' : t) (x : elt), In x s' -> In x (union s s').
+  Proof.
+    intros [s1 Hs1] [s2 Hs2] x.
+    unfold In, union, proj1_sig.
+    eapply union_Desc with (ub := None) (lb := None); try assumption.
+    intros.
+    rewrite H1 in *.
+    rewrite orb_true_iff.
+    intuition.
+  Qed.
+
   Lemma inter_1 :
     forall (s s' : t) (x : elt), In x (inter s s') -> In x s. Admitted.
   Lemma inter_2 :

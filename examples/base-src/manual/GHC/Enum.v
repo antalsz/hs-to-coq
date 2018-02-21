@@ -316,7 +316,7 @@ Instance instance__Bounded_Int__183__ : (Bounded Int) := {
   minBound := minInt ;
   maxBound := maxInt }.
 
-Inductive eftInt_aux_fuel : Int -> Int -> Prop :=
+Inductive eftInt_aux_fuel : Int -> Int -> Type :=
   | done : forall x y, (x >? y)%Z = true -> eftInt_aux_fuel x y
   | step : forall x y, eftInt_aux_fuel (x + 1)%Z y -> eftInt_aux_fuel x y.
 
@@ -326,7 +326,7 @@ Program Fixpoint eftInt_aux  (x : Int) (y: Int) (d : eftInt_aux_fuel x y) {struc
     | false => @eftInt_aux (x + 1)%Z y _
   end.
 Obligation 1.
-destruct d. rewrite H in Heq_anonymous. done. auto. Defined.
+destruct d. rewrite e in Heq_anonymous. done. auto. Defined.
 
 Require Import Omega.
 Open Scope Z_scope.
@@ -346,7 +346,7 @@ Proof.
   subst.
   rewrite Zabs_eq; try omega.
   rewrite Zabs_eq; try omega.
-Qed.
+Defined.
 Close Scope Z_scope.
 
 

@@ -34,6 +34,7 @@ MODULES = \
   Data/IntMap/Internal \
   Data/Map/Internal \
   IntSetValidity \
+  intset-properties
 
 # Generated modules
 # generated directly from GHC/libraries/containers/tests
@@ -86,18 +87,20 @@ $(VFILES_GEN): $(OUT)/%.v : $$(wildcard module-edits/$$*/preamble.v) $$(wildcard
 	$(HS_TO_COQ) $(addprefix -e , $(wildcard module-edits/$*/edits)) \
 	             $(addprefix -p , $(wildcard module-edits/$*/preamble.v)) \
 	             $(addprefix --midamble , $(wildcard module-edits/$*/midamble.v)) \
-                     -e ../base-src/edits \
-                     -e edits \
-                     -N \
-		     -i containers \
-		     -i containers/tests \
-		     -i containers/dist-install/build \
-		     -I containers/include \
-		     --ghc -package --ghc QuickCheck \
-		     --ghc -this-unit-id --ghc containers \
-                     -o $(OUT) \
-		     $(wildcard containers/$*.hs) $(wildcard containers/tests/$*.hs)
-	test -e $@
+	             -e ../base-src/edits \
+	             -e edits \
+	             -N \
+	             -i containers \
+	             -i containers/tests \
+	             -i containers/dist-install/build \
+	             -I containers/include \
+	             --ghc -package --ghc QuickCheck \
+	             --ghc -this-unit-id --ghc containers \
+	             $(addprefix `cat , $(addsuffix ` , $(wildcard module-edits/$*/flags))) \
+	             -o $(OUT) \
+	             $(wildcard containers/$*.hs) $(wildcard containers/tests/$*.hs)
+	if [[ -e $(OUT)/Main.v && ( ! -e $@ || $(OUT)/Main.v -nt $@ ) ]]; then mv $(OUT)/Main.v $@; fi
+	test -e $@ && test \! -e $(OUT)/Main.v
 
 $(VFILES_MAN): $(OUT)/%.v : manual/%.v
 	mkdir -p "$$(dirname $(OUT)/$*.v)"
@@ -108,14 +111,14 @@ $(VFILES_MAN): $(OUT)/%.v : manual/%.v
 $(VFILES_DROPIN): $(OUT)/%.v : module-edits/%/edits edits module-edits/%/preamble.v drop-in/%.hs
 	$(HS_TO_COQ) -e module-edits/$*/edits \
 	             -e edits \
-		     -o $(OUT) \
-		     -N \
-		     -p module-edits/$*/preamble.v \
-		     --ghc -icontainers \
-		     --ghc -icontainers/dist-install/build \
-		     -Icontainers/include \
-		     --ghc -this-unit-id=containers \
-		     drop-in/$*.hs
+	       -o $(OUT) \
+	       -N \
+	       -p module-edits/$*/preamble.v \
+	       --ghc -icontainers \
+	       --ghc -icontainers/dist-install/build \
+	       -Icontainers/include \
+	       --ghc -this-unit-id=containers \
+	       drop-in/$*.hs
 
 clean:
 	rm -rf $(OUT)

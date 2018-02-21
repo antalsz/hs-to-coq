@@ -1,0 +1,6 @@
+-Q . ""
+-R ../../../base ""
+-Q ../../../base-thy Proofs
+-R ../lib ""
+-R ../theories ""
+IntSetProperties.v IntSetPropertyProofs.v

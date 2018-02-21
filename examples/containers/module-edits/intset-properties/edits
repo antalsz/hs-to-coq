@@ -1,0 +1,43 @@
+skip module Test.Framework.Providers.HUnit
+skip module Test.Framework.Providers.QuickCheck2
+skip module Test.Framework.Runners.Console
+skip module Test.HUnit.Base
+skip module Test.HUnit.Lang
+skip module Test.QuickCheck.Arbitrary
+skip module Test.QuickCheck.Gen
+skip module Test.QuickCheck.Property
+skip module Text.Read
+
+rename type  Test.QuickCheck.Property.Property   = Prop
+rename value Test.QuickCheck.Property.==>        = .==>.
+rename value Test.QuickCheck.Property..&&.       = .&&.
+rename value Test.QuickCheck.Property..||.       = .||.
+rename value Test.QuickCheck.Property.===        = GHC.Base.==
+rename type  Test.QuickCheck.Property.Testable   = Propable
+rename value Test.QuickCheck.Property.classify   = skip_classify
+rename value Test.QuickCheck.Property.forAll     = forAll
+rename value Test.QuickCheck.Arbitrary.arbitrary = arbitrary
+rename value Test.QuickCheck.Gen.choose          = choose
+
+rename value GHC.Real.^ = Zpow
+rename value enumFromTo = GHC.Enum.enumFromTo
+
+skip Main.prop_Ordered         # fromAscList
+skip Main.prop_bitcount        # local fixpoint
+skip Main.prop_findMax         # findMax
+skip Main.prop_findMin         # findMin
+skip Main.prop_fromList        # head, fromAscList, fromDistinctAscList
+skip Main.prop_maxView         # maxView
+skip Main.prop_minView         # minView
+skip Main.prop_readShow        # read
+skip Main.test_LookupSomething # last, head
+skip Main.prop_LookupLT        # test_LookupSomething
+skip Main.prop_LookupLE        # test_LookupSomething
+skip Main.prop_LookupGT        # test_LookupSomething
+skip Main.prop_LookupGE        # test_LookupSomething
+skip Main.test_lookupGE        # HUnit
+skip Main.test_lookupGT        # HUnit
+skip Main.test_lookupLE        # HUnit
+skip Main.test_lookupLT        # HUnit
+skip Main.test_split           # HUnit
+skip Main.main

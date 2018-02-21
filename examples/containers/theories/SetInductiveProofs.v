@@ -1494,8 +1494,8 @@ Proof.
         showP.
         -- assumption.
         -- destruct (sem sl x0); lia.
-        -- assert (sem sl x0 = false) by (destruct (sem sl x0); try reflexivity; lia).
-           rewrite H11 in Hsz.
+        -- destruct (sem sl x0) eqn:Heq; try lia.
+           rewrite <- H10 in Hsz.
            lapply H4; [intro; subst|lia].
            lapply H8; [intro; subst|lia].
            clear H4 H8.

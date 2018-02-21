@@ -1292,4 +1292,99 @@ Next Obligation.
     solve_Desc.
 Qed.
 
+Program Fixpoint merge_Desc' (s1: Set_ e)  (s2: Set_ e)
+  {measure (set_size s1 + set_size s2)} :
+    forall x lb ub,
+      Bounded s1 lb (Some x) ->
+      Bounded s2 (Some x) ub  ->
+      isLB lb x = true ->
+      isUB ub x = true->
+      Desc' (merge s1 s2) lb ub (fun i => sem s1 i || sem s2 i)
+  := _.
+Next Obligation.
+  intros.
+  rewrite merge_eq. 
+  inversion H; subst; clear H;
+    inversion H0; subst; clear H0;
+      try solve [solve_Desc].
+  destruct (Sumbool.sumbool_of_bool _);
+    only 2: destruct (Sumbool.sumbool_of_bool _);
+    rewrite ?Z.ltb_lt, ?Z.ltb_ge in *.
+  - applyDesc merge_Desc.
+    applyDesc balanceL_Desc.
+    solve_Desc.
+  - applyDesc merge_Desc.
+    applyDesc balanceR_Desc.
+    solve_Desc.
+  - applyDesc glue_Desc.
+    solve_Desc.
+Qed.
+
+Lemma splitMember_Desc:
+  forall x s lb ub,
+  Bounded s lb ub ->
+  forall (P : Set_ e * bool * Set_ e -> Prop),
+  (forall s1 b s2,
+    Bounded s1 lb (Some x) ->
+    Bounded s2 (Some x) ub ->
+    (forall i, sem s i =
+          (if i == x then b && sem s i
+           else  (sem s1 i || sem s2 i))) ->
+    P (s1, b, s2)) ->
+  P (splitMember x s) : Prop.
+Proof.
+  intros ?? ?? HB.
+  induction HB.
+  * solveThis.
+  * simpl.
+    destruct (compare x x0) eqn:?.
+    + solveThis.
+    + apply IHHB1.
+      intros s1_2 b s1_3 HB1_2 HB1_3 Hsems1.
+      clear IHHB1 IHHB2.
+      applyDesc link_Desc.
+      solveThis.
+    + apply IHHB2.
+      intros s2_2 b s2_3 HB2_2 HB2_3 Hsems2.
+      clear IHHB1 IHHB2.
+      applyDesc link_Desc.
+      solveThis.
+Qed.
+
+Lemma intersection_Desc :
+  forall s1 s2 lb ub,
+  Bounded s1 lb ub ->
+  Bounded s2 lb ub ->
+  Desc' (intersection s1 s2) lb ub
+        (fun i => sem s1 i && sem s2 i).
+Proof.
+  intros ???? HB1 HB2.
+  revert s2 HB2.
+  induction HB1; intros s3 HB3.
+  - simpl. solve_Desc.
+  - simpl.
+    destruct s3.
+    + repeat expand_pairs.
+      destruct (PtrEquality.ptrEq
+       (intersection s1
+        (fst (fst (splitMember x (Bin s e0 s3_1 s3_2))))) s1 &&
+       PtrEquality.ptrEq
+       (intersection s2
+        (snd (splitMember x (Bin s e0 s3_1 s3_2)))) s2) eqn: Hptr.
+      * eapply splitMember_Desc.
+        -- admit.
+        -- intros.
+           simpl.
+           destruct b.
+           ++ clear H5.
+              admit.
+           ++ (*apply
+             applyDesc merge_Desc'.
+        destruct (snd (fst (splitMember x (Bin s e0 s3_1 s3_2))))
+               eqn:HsM.*) admit.
+      * admit.
+    + simpl. solve_Desc.
+Admitted.
+
+
 End WF.

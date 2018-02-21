@@ -368,8 +368,8 @@ Ltac f_solver_simple  :=
   let i := fresh "i" in 
   intro i;
   try reflexivity; (* for when we have an existential variable *)
+  repeat multimatch goal with [ H : (forall i, _) |- _] => specialize (H i) end;
   repeat match goal with [ H : ?f = _ |- context [?f i] ] => rewrite H in *; clear H end;
-  repeat match goal with [ H : (forall i, ?f i = _) |- context [?f i] ] => rewrite H; clear H end;
   simpl sem; rewrite ?orb_assoc, ?orb_false_r, ?orb_false_l;
   try reflexivity.
 
@@ -392,25 +392,48 @@ Ltac split_bool_go expr :=
 
 (** This auxillary tactic destructs one boolean or option atom in the goal *)
 
+
 Ltac split_bool :=
   match goal with 
-    | [ |- ?lhs = ?rhs] => split_bool_go lhs || split_bool_go rhs
+    | |- ?lhs = ?rhs        => split_bool_go lhs || split_bool_go rhs
+    (* A bit ad-hoc, could be improved: *)
+    | H : ?x || ?y = true  |- _ => split_bool_go x
+    | H : ?x || ?y = false |- _ => split_bool_go x
+    | H : ?x && ?y = true  |- _ => split_bool_go x
+    | H : ?x && ?y = false |- _ => split_bool_go x
   end.
 
-Ltac f_solver := f_solver_simple;
-  repeat (try solve [exfalso; inside_bounds; order_Bounds];
-          rewrite ?andb_true_r, ?andb_true_l, ?andb_false_r, ?andb_false_l,
-                  ?orb_true_r, ?orb_true_l, ?orb_false_r, ?orb_false_l,
-                  ?orb_assoc, ?and_assoc;
-          try reflexivity;
-          try lazymatch goal with
-            |  H1 : (?i == ?j) = true , H2 : sem ?s ?i = true, H3 : sem ?s ?j = false |- _
-              => exfalso; rewrite (sem_resp_eq s i j H1) in H2; congruence
-            |  H1 : (?i == ?j) = true , H2 : sem ?s ?i = false, H3 : sem ?s ?j = true |- _
-              => exfalso; rewrite (sem_resp_eq s i j H1) in H2; congruence
-          end;
-          split_bool || exfalso
-          ).
+
+Ltac f_solver_cleanup :=
+  simpl negb in *;
+  rewrite ?andb_true_r, ?andb_true_l, ?andb_false_r, ?andb_false_l,
+          ?orb_true_r, ?orb_true_l, ?orb_false_r, ?orb_false_l,
+          ?orb_assoc, ?and_assoc in *;
+  try congruence;
+  repeat lazymatch goal with
+    |  H1 : true = true |- _ => clear H1
+    |  H1 : true = _    |- _ => symmetry in H1
+    |  H1 : false = false |- _ => clear H1
+    |  H1 : false = _    |- _ => symmetry in H1
+  end;
+  try solve [exfalso; inside_bounds; order_Bounds];
+  try reflexivity;
+  try lazymatch goal with
+    |  H1 : (?i == ?j) = true , H2 : sem ?s ?i = true, H3 : sem ?s ?j = false |- _
+      => exfalso; rewrite (sem_resp_eq s i j H1) in H2; congruence
+    |  H1 : (?i == ?j) = true , H2 : sem ?s ?i = false, H3 : sem ?s ?j = true |- _
+      => exfalso; rewrite (sem_resp_eq s i j H1) in H2; congruence
+  end.
+
+Ltac f_solver_step := first
+  [ split_bool
+  | lazymatch goal with H : context [if ?x == ?y then _ else _] |- _
+      => destruct (x == y) eqn:?
+    end
+  | exfalso
+  ].
+
+Ltac f_solver := f_solver_simple; repeat (f_solver_cleanup; f_solver_step).
 
 (** A variant of [lia] that unfolds a few specific things and knows that
    the size of a well-formed tree is positive. *)
@@ -1433,32 +1456,6 @@ Proof.
         ].
 Qed.
 
-
-Ltac f_solver_simple  ::=
-  let i := fresh "i" in 
-  intro i;
-  try reflexivity; (* for when we have an existential variable *)
-  repeat multimatch goal with [ H : (forall i, _) |- _] => specialize (H i) end;
-  repeat match goal with [ H : ?f = _ |- context [?f i] ] => rewrite H in *; clear H end;
-  simpl sem; rewrite ?orb_assoc, ?orb_false_r, ?orb_false_l;
-  try reflexivity.
-
-Ltac f_solver_post :=
-  repeat (try congruence;
-          try solve [exfalso; inside_bounds; order_Bounds];
-          rewrite ?andb_true_r, ?andb_true_l, ?andb_false_r, ?andb_false_l,
-          ?orb_true_r, ?orb_true_l, ?orb_false_r, ?orb_false_l,
-                  ?orb_assoc, ?and_assoc;
-          try reflexivity;
-          try lazymatch goal with
-            |  H1 : (?i == ?j) = true , H2 : sem ?s ?i = true, H3 : sem ?s ?j = false |- _
-              => exfalso; rewrite (sem_resp_eq s i j H1) in H2; congruence
-            |  H1 : (?i == ?j) = true , H2 : sem ?s ?i = false, H3 : sem ?s ?j = true |- _
-              => exfalso; rewrite (sem_resp_eq s i j H1) in H2; congruence
-          end;
-          split_bool || exfalso
-          ).
-
 Lemma difference_Desc :
   forall s1 s2 lb ub,
   Bounded s1 lb ub ->
@@ -1474,54 +1471,38 @@ Lemma difference_Desc :
 Proof.
   intros s1 s2 lb ub Hb1 Hb2.
   revert s1 Hb1. induction Hb2; intros sl Hb1; apply hide.
+  Ltac showP := apply unhide; intros X HX; apply HX; clear X HX; only 3: intro.
   - simpl.
-    Ltac solve_P := apply unhide; intros X HX; apply HX; clear X HX; try reflexivity; try assumption; try solve [f_solver].
-    destruct sl; solve_P.
+    destruct sl; (showP; [assumption | reflexivity | reflexivity | f_solver]).
   - apply difference_destruct; intros; subst.
-    + solve_P.
-    + solve_P. 
+    + (showP; [assumption | reflexivity | reflexivity | f_solver]).
+    + (showP; [assumption | reflexivity | reflexivity | f_solver]). 
     + eapply split_Desc; try eassumption. 
       intros sl1 sl2 HBsl1 HBsl2 Hsz Hsem. inversion H3; subst; clear H3.
       eapply IHHb2_1. solve_Bounded. intros sil ????.
       eapply IHHb2_2. solve_Bounded. intros sir ????.
       destruct (_ == _) eqn:Hcomp.
-      * solve_P.
+      * showP; [assumption | reflexivity | reflexivity | ].
         assert (size sl1 + size sl2 <= size sl) by (destruct (sem sl x0); lia).
         change (size sil + size sir =? size sl = true) in Hcomp.
         rewrite Z.eqb_eq in Hcomp.
         lapply H4; [intro; subst|lia].
         lapply H8; [intro; subst|lia].
-        assert (sem sl x0 = false).
-        { destruct (sem sl x0); auto. lia. }
+        assert (sem sl x0 = false) by (destruct (sem sl x0); try reflexivity; lia).
         f_solver.
-        -- destruct (i == x0) eqn:Heq.
-           ++ f_solver_post.
-           ++ symmetry in Hsem. rewrite orb_true_iff in Hsem.
-              destruct Hsem; simpl negb in H5;
-                rewrite andb_false_r in H5; f_solver_post.
-        -- symmetry in Hsem. rewrite orb_true_iff in Hsem.
-              destruct Hsem; simpl negb in H9;
-                rewrite andb_false_r in H9; f_solver_post.
       * applyDesc merge_Desc.
-        apply unhide; intros X HX; apply HX; clear X HX; try reflexivity; try assumption.
+        showP.
+        -- assumption.
         -- destruct (sem sl x0); lia.
-        -- intro. assert (sem sl x0 = false).
-           { destruct (sem sl x0); try lia. reflexivity. }
+        -- assert (sem sl x0 = false) by (destruct (sem sl x0); try reflexivity; lia).
            rewrite H11 in Hsz.
            lapply H4; [intro; subst|lia].
            lapply H8; [intro; subst|lia].
            clear H4 H8.
-           symmetry in Hsem; f_solver; destruct (i == x0) eqn:Heq;
-             try f_solver_post;
-             rewrite ?orb_false_iff, ?orb_true_iff in *;
-             destruct Hsem; simpl negb in H5; f_solver_post.
-        -- simpl sem.
-           symmetry in Hsem; f_solver; destruct (i == x0) eqn:Heq;
-             try f_solver_post;
-             simpl negb in *;
-             rewrite ?orb_false_iff, ?orb_true_iff, ?and_false_r in *;
-             destruct Hsem; simpl negb in H5; f_solver_post.
-Admitted.
+           f_solver.
+        -- f_solver.
+Qed.
+
 End WF.
 
 (** * Instantiationg the [FSetInterface] *)

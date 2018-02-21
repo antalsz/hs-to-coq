@@ -252,8 +252,7 @@ Lemma size_0_iff_tip:
   forall {s lb ub},
   Bounded s lb ub -> (size s = 0)%Z <-> s = Tip.
 Proof.
-  intros.
-  induction H.
+  induction 1.
   * intuition.
   * postive_sizes;
     rewrite ?size_Bin in *.
@@ -345,18 +344,6 @@ Proof.
   * apply BoundedTip; reflexivity.
   * eapply BoundedBin; try eassumption; try reflexivity.
 Qed.
-
-
-(** In order to stay sane and speed things up, here is
- a tactic that solves [Bounded] goals, which runs 
- the right auxillary tactic on the corresponding goals. *)
-
-Ltac expand_pairs :=
-  match goal with
-    |- context[let (_,_) := ?e in _] =>
-    rewrite (surjective_pairing e)
-  end.
-
 
 (** Learns bounds of values found in some set in the context *)
 Ltac inside_bounds :=
@@ -1389,6 +1376,71 @@ Proof.
     + solve_Desc.
 Qed.
 
+(** ** Verification of [difference] *)
+Lemma split_Desc :
+  forall x s lb ub,
+  Bounded s lb ub ->
+  forall (P : Set_ e * Set_ e -> Prop),
+  (forall s1 s2,
+    Bounded s1 lb (Some x) ->
+    Bounded s2 (Some x) ub ->
+    (forall i, sem s i = (if i == x then sem s i else sem s1 i || sem s2 i)) ->
+    P (s1, s2)) ->
+  P (split x s) : Prop.
+Proof.
+  unfold split.
+  intros x s.
+  replace (Datatypes.id GHC.Base.$ splitS x s) with (splitS x s).
+  apply splitS_Desc.
+  reflexivity.
+Qed.
+
+Lemma difference_destruct :
+  forall (P : Set_ e -> Prop),
+  forall s1 s2,
+  (s1 = Tip -> P Tip) ->
+  (s2 = Tip -> P s1) ->
+  (forall sz2 x l2 r2, (s2 = Bin sz2 x l2 r2) -> 
+    P (
+      match split x s1 with
+      | pair l1 r1 =>
+      match difference r1 r2 with
+      | r1r2 =>
+      match difference l1 l2 with
+      | l1l2 => if size l1l2 + size r1r2 == size s1
+                then s1 else merge l1l2 r1r2
+      end end end)) ->
+  P (difference s1 s2).
+Proof.
+  intros P s1 s2 HTipL HTipR HBins.
+  destruct s1, s2; simpl difference;
+  try destruct s1_1, s1_2;
+  try destruct s2_1, s2_2;
+  first [ eapply HBins; reflexivity
+        | eapply HTipL; reflexivity
+        | eapply HTipR; reflexivity
+        | idtac
+        ].
+Qed.
+
+Lemma difference_Desc :
+  forall s1 s2 lb1 lb2 ub1 ub2,
+  Bounded s1 lb1 ub1 ->
+  Bounded s2 lb2 ub2 ->
+  Desc' (difference s1 s2) lb1 ub1 (fun i => sem s1 i && negb (sem s2 i)).
+Proof.
+  intros s1 s2 lb1 lb2 ub1 ub2 Hb1 Hb2.
+  revert s1 lb1 ub1 Hb1. induction Hb2; intros ??? Hb1.
+  - simpl. destruct s1; solve_Desc.
+  - apply difference_destruct; intros; subst.
+    + solve_Desc.
+    + solve_Desc.
+    + eapply split_Desc; try eassumption.
+      intros.
+      destruct (_GHC.Base.==_ (size (difference s3 l2) + size (difference s4 r2)) (size s0)) eqn:Hcomp.
+      * solve_Desc. admit.
+      * admit.
+Admitted.
 End WF.
 
 (** * Instantiationg the [FSetInterface] *)

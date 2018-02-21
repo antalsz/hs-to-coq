@@ -1328,7 +1328,7 @@ Lemma splitMember_Desc:
     Bounded s1 lb (Some x) ->
     Bounded s2 (Some x) ub ->
     (forall i, sem s i =
-          (if i == x then b && sem s i
+          (if i == x then b 
            else  (sem s1 i || sem s2 i))) ->
     P (s1, b, s2)) ->
   P (splitMember x s) : Prop.
@@ -1351,7 +1351,7 @@ Proof.
       solveThis.
 Qed.
 
-Lemma intersection_Desc :
+Lemma intersection_Desc:
   forall s1 s2 lb ub,
   Bounded s1 lb ub ->
   Bounded s2 lb ub ->
@@ -1363,29 +1363,30 @@ Proof.
   induction HB1; intros s3 HB3.
   - simpl. solve_Desc.
   - simpl.
-    destruct s3.
-    + repeat expand_pairs.
-      destruct (PtrEquality.ptrEq
-       (intersection s1
-        (fst (fst (splitMember x (Bin s e0 s3_1 s3_2))))) s1 &&
-       PtrEquality.ptrEq
-       (intersection s2
-        (snd (splitMember x (Bin s e0 s3_1 s3_2)))) s2) eqn: Hptr.
-      * eapply splitMember_Desc.
-        -- admit.
-        -- intros.
-           simpl.
-           destruct b.
-           ++ clear H5.
-              admit.
-           ++ (*apply
-             applyDesc merge_Desc'.
-        destruct (snd (fst (splitMember x (Bin s e0 s3_1 s3_2))))
-               eqn:HsM.*) admit.
-      * admit.
-    + simpl. solve_Desc.
-Admitted.
-
+    destruct s3 eqn:Hs3.
+    + rewrite<- Hs3 in *.
+      clear Hs3 e0 s4 s5 s6.
+      eapply splitMember_Desc;
+        only 1: eassumption.
+      intros s4' b s5' HB1 HB2 Hi.  
+      applyDesc IHHB1_1.
+      applyDesc IHHB1_2.
+      destruct b.
+      * destruct
+          (PtrEquality.ptrEq s s1 &&
+           PtrEquality.ptrEq s0 s2) eqn: Hptr.
+        -- rewrite andb_true_iff in Hptr.
+           destruct Hptr as [Hptr1 Hptr2].
+           apply PtrEquality.ptrEq_eq in Hptr1.
+           apply PtrEquality.ptrEq_eq in Hptr2.
+           subst.
+           solve_Desc.
+        -- applyDesc link_Desc.
+           solve_Desc.
+      * applyDesc merge_Desc'.
+        solve_Desc.
+    + solve_Desc.
+Qed.
 
 End WF.
 

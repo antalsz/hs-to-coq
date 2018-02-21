@@ -1486,7 +1486,14 @@ Module Foo (E : OrderedType) : WSfun(E).
     eapply union_Desc with (ub := None) (lb := None); intuition.
   Qed.
 
-  Definition inter : t -> t -> t. Admitted.
+  Program Definition inter : t -> t -> t:= intersection.
+  Next Obligation.
+    destruct x, x0. simpl.
+    eapply intersection_Desc
+    with (ub := None) (lb := None);
+      intuition.
+  Qed.
+  
   Definition diff : t -> t -> t. Admitted.
   Definition equal : t -> t -> bool. Admitted.
   Definition subset : t -> t -> bool. Admitted.
@@ -1678,12 +1685,44 @@ Module Foo (E : OrderedType) : WSfun(E).
     intuition.
   Qed.
 
-  Lemma inter_1 :
-    forall (s s' : t) (x : elt), In x (inter s s') -> In x s. Admitted.
-  Lemma inter_2 :
-    forall (s s' : t) (x : elt), In x (inter s s') -> In x s'. Admitted.
-  Lemma inter_3 :
-    forall (s s' : t) (x : elt), In x s -> In x s' -> In x (inter s s'). Admitted.
+  Lemma inter_1 : forall (s s' : t) (x : elt),
+      In x (inter s s') -> In x s.
+  Proof.
+    intros [s1 Hs1] [s2 Hs2] x.
+    unfold In, inter, proj1_sig.
+    eapply intersection_Desc with (ub := None) (lb := None);
+      try assumption.
+    intros.
+    rewrite H1 in *.
+    rewrite andb_true_iff in H2.
+    intuition.
+  Qed.
+
+  Lemma inter_2 : forall (s s' : t) (x : elt),
+      In x (inter s s') -> In x s'.
+  Proof.
+    intros [s1 Hs1] [s2 Hs2] x.
+    unfold In, inter, proj1_sig.
+    eapply intersection_Desc with (ub := None) (lb := None);
+      try assumption.
+    intros.
+    rewrite H1 in *.
+    rewrite andb_true_iff in H2.
+    intuition.
+  Qed.
+  
+  Lemma inter_3 : forall (s s' : t) (x : elt),
+      In x s -> In x s' -> In x (inter s s').
+  Proof.
+    intros [s1 Hs1] [s2 Hs2] x.
+    unfold In, inter, proj1_sig.
+    eapply intersection_Desc with (ub := None) (lb := None);
+      try assumption.
+    intros.
+    rewrite H1, H2, H3.
+    intuition.
+  Qed.
+
   Lemma diff_1 :
     forall (s s' : t) (x : elt), In x (diff s s') -> In x s. Admitted.
   Lemma diff_2 :

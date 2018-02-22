@@ -1868,10 +1868,146 @@ Proof.
     rewrite Z.eqb_refl. intuition.
 Qed.
 
+(** ** Verifying [filter] *)
+
+Require Import Coq.Classes.Morphisms. (* For [Proper] *)
+
+(**
+For filter we need two lemmas: We need to know that [filter P s] is
+well-formed even if P does not respect equality (this is
+required by the [FSetInterface]). But to prove something about its
+semantics, we need to assume that [P] respects equality.
+*)
+
+Lemma filter_Bounded:
+  forall (P : e -> bool) s lb ub,
+  Bounded s lb ub ->
+  Bounded (Internal.filter P s) lb ub.
+Proof.
+  intros.
+  induction H.
+  * simpl. solve_Bounded.
+  * simpl.
+    destruct (P x) eqn:HPx.
+    - destruct_ptrEq.
+      + solve_Bounded.
+      + applyDesc link_Desc.
+    - applyDesc merge_Desc.
+Qed.
+
+Lemma filter_Desc:
+  forall (P : e -> bool) s lb ub,
+  Bounded s lb ub ->
+  Proper ((fun i j : e => _GHC.Base.==_ i j = true) ==> eq) P ->
+  Desc' (Internal.filter P s) lb ub (fun i => P i && sem s i).
+Proof.
+  intros.
+  induction H.
+  * simpl. solve_Desc.
+  * simpl.
+    applyDesc IHBounded1.
+    applyDesc IHBounded2.
+    destruct (P x) eqn:HPx.
+    - destruct_ptrEq.
+      + solve_Desc.
+        f_solver.
+        specialize (H0 _ _ Heqb0). congruence.
+      + applyDesc link_Desc.
+        solve_Desc.
+        f_solver.
+        specialize (H0 _ _ Heqb0). congruence.
+    - applyDesc merge_Desc.
+      solve_Desc.
+      f_solver.
+      specialize (H0 _ _ Heqb2). congruence.
+Qed.
+
+(** ** Verifying [partition] *)
+
+Lemma partition_Bounded:
+  forall p s lb ub,
+  Bounded s lb ub ->
+  forall (P : (Set_ e * Set_ e) -> Prop),
+  (forall s1 s2, Bounded s1 lb ub /\ Bounded s2 lb ub -> P (s1, s2)) ->
+  P (partition p s).
+Proof.
+  intros ???? HB.
+  induction HB.
+  * intros X HX; apply HX; clear X HX; split; solve_Bounded.
+  * simpl.
+    apply IHHB1; intros sl1 sl2 [HDsl1 HDsl2]; clear IHHB1.
+    apply IHHB2; intros sr1 sr2 [HDsr1 HDsr2]; clear IHHB2.
+    destruct (p x) eqn:?.
+    - intros X HX; apply HX; clear X HX; split.
+      + destruct_ptrEq.
+        -- solve_Bounded.
+        -- applyDesc link_Desc.
+      + applyDesc merge_Desc.
+    - intros X HX; apply HX; clear X HX; split.
+      + applyDesc merge_Desc.
+      + destruct_ptrEq.
+        -- solve_Bounded.
+        -- applyDesc link_Desc.
+Qed.
+
+
+Lemma partition_spec:
+  forall p s lb ub,
+  Bounded s lb ub ->
+  Proper ((fun i j : e => i == j = true) ==> eq) p ->
+  forall (P : (Set_ e * Set_ e) -> Prop),
+  (forall s1 s2,
+    Desc' s1 lb ub (fun i => p i && sem s i) /\
+    Desc' s2 lb ub (fun i => negb (p i) && sem s i) ->
+    P (s1, s2)) ->
+  P (partition p s).
+Proof.
+  intros ???? HB HProper.
+  induction HB.
+  * intros X HX; apply HX; clear X HX; split; solve_Desc.
+  * simpl.
+    apply IHHB1; intros sl1 sl2 [HDsl1 HDsl2]; clear IHHB1.
+    applyDesc HDsl1; clear HDsl1.
+    applyDesc HDsl2; clear HDsl2.
+    apply IHHB2; intros sr1 sr2 [HDsr1 HDsr2]; clear IHHB2.
+    applyDesc HDsr1; clear HDsr1.
+    applyDesc HDsr2; clear HDsr2.
+    destruct (p x) eqn:?.
+    - intros X HX; apply HX; clear X HX; split.
+      + destruct_ptrEq.
+        -- solve_Desc.
+           f_solver.
+           specialize (HProper _ _ Heqb1). congruence.
+        -- applyDesc link_Desc.
+           solve_Desc.
+           f_solver.
+           specialize (HProper _ _ Heqb1). congruence.
+      + applyDesc merge_Desc.
+        solve_Desc.
+        f_solver.
+        specialize (HProper _ _ Heqb3). congruence.
+    - intros X HX; apply HX; clear X HX; split.
+      + applyDesc merge_Desc.
+        solve_Desc.
+        f_solver.
+        specialize (HProper _ _ Heqb3). congruence.
+      + destruct_ptrEq.
+        -- solve_Desc.
+           f_solver.
+           specialize (HProper _ _ Heqb1). congruence.
+        -- applyDesc link_Desc.
+           solve_Desc.
+           f_solver.
+           specialize (HProper _ _ Heqb1). congruence.
+Qed.
+
+
 End WF.
 
 
-(** * Instantiationg the [FSetInterface] *)
+
+
+(** * Instantiating the [FSetInterface] *)
 
 Require Import Coq.FSets.FSetInterface.
 Require OrdTheories.
@@ -1902,6 +2038,16 @@ Module Foo (E : OrderedType) : WSfun(E).
     induction xs.
     * simpl. split; intro; inversion H.
     * simpl. rewrite InA_cons, orb_true_iff, IHxs, E_eq_zeze. reflexivity.
+  Qed.
+
+  Lemma compat_bool_Eeq_op_zeze:
+    forall f, compat_bool E.eq f ->
+    Proper ((fun i j : elt => i == j = true) ==> eq) f.
+  Proof.
+    intros.
+    intros i j Heq.
+    rewrite <- E_eq_zeze in Heq.
+    apply H. assumption.
   Qed.
 
   (* Well-formedness *)
@@ -2016,8 +2162,23 @@ Module Foo (E : OrderedType) : WSfun(E).
   Definition subset : t -> t -> bool. Admitted.
   Program Definition fold : forall A : Type, (elt -> A -> A) -> t -> A -> A
     := fun a k s n => foldl (fun x e => k e x) n s.
-  Definition filter : (elt -> bool) -> t -> t. Admitted.
-  Definition partition : (elt -> bool) -> t -> t * t. Admitted.
+
+  Program Definition filter : (elt -> bool) -> t -> t := filter.
+  Next Obligation.
+    destruct x0. simpl.
+    eapply filter_Bounded with (ub := None) (lb := None); assumption.
+  Qed.
+
+  Program Definition partition : (elt -> bool) -> t -> t * t := partition.
+  Next Obligation.
+    destruct x0. simpl.
+    eapply partition_Bounded with (ub := None) (lb := None); intuition.
+  Qed.
+  Next Obligation.
+    destruct x0. simpl.
+    eapply partition_Bounded with (ub := None) (lb := None); intuition.
+  Qed.
+
   Program Definition cardinal : t -> nat := fun s => Z.to_nat (size s).
   Program Definition elements : t -> list elt := toList.
 
@@ -2314,20 +2475,85 @@ Module Foo (E : OrderedType) : WSfun(E).
 
   Lemma filter_1 :
     forall (s : t) (x : elt) (f : elt -> bool),
-      compat_bool E.eq f -> In x (filter f s) -> In x s. Admitted.
+      compat_bool E.eq f -> In x (filter f s) -> In x s.
+  Proof.
+    intros [s?] x f HProper.
+    apply compat_bool_Eeq_op_zeze in HProper.
+    unfold In, filter, proj1_sig.
+    eapply filter_Desc; try eassumption.
+    intros s' HB _ Hsem.
+    rewrite Hsem.
+    rewrite andb_true_iff.
+    intuition.
+  Qed.
+
   Lemma filter_2 :
     forall (s : t) (x : elt) (f : elt -> bool),
-      compat_bool E.eq f -> In x (filter f s) -> f x = true. Admitted.
+      compat_bool E.eq f -> In x (filter f s) -> f x = true.
+  Proof.
+    intros [s?] x f HProper.
+    apply compat_bool_Eeq_op_zeze in HProper.
+    unfold In, filter, proj1_sig.
+    eapply filter_Desc; try eassumption.
+    intros s' HB _ Hsem.
+    rewrite Hsem.
+    rewrite andb_true_iff.
+    intuition.
+  Qed.
+
   Lemma filter_3 :
     forall (s : t) (x : elt) (f : elt -> bool),
-      compat_bool E.eq f -> In x s -> f x = true -> In x (filter f s). Admitted.
+      compat_bool E.eq f -> In x s -> f x = true -> In x (filter f s).
+  Proof.
+    intros [s?] x f HProper.
+    apply compat_bool_Eeq_op_zeze in HProper.
+    unfold In, filter, proj1_sig.
+    eapply filter_Desc; try eassumption.
+    intros s' HB _ Hsem.
+    rewrite Hsem.
+    rewrite andb_true_iff.
+    intuition.
+  Qed.
+
   Lemma partition_1 :
     forall (s : t) (f : elt -> bool),
-      compat_bool E.eq f -> Equal (fst (partition f s)) (filter f s). Admitted.
+      compat_bool E.eq f -> Equal (fst (partition f s)) (filter f s).
+  Proof.
+    intros [s?] f HProper.
+    apply compat_bool_Eeq_op_zeze in HProper.
+    unfold Equal, In, filter, partition, fst, proj1_sig.
+    eapply filter_Desc; try eassumption.
+    intros s' HB _ Hsem.
+    eapply partition_spec; try eassumption.
+    intros s1 s2 [HD1 HD2].
+    eapply HD1; intros s1' HBs1' _ Hsems1'.
+    intro.
+    rewrite Hsem, Hsems1'.
+    reflexivity.
+  Qed.
+  
+  Lemma compat_bool_negb:
+    forall A R (f : A -> bool), compat_bool R f -> compat_bool R (fun x => negb (f x)).
+  Proof. intros. intros x y HR. f_equal. apply H. assumption. Qed.
+
   Lemma partition_2 :
     forall (s : t) (f : elt -> bool),
       compat_bool E.eq f ->
-      Equal (snd (partition f s)) (filter (fun x : elt => negb (f x)) s). Admitted.
+      Equal (snd (partition f s)) (filter (fun x : elt => negb (f x)) s).
+  Proof.
+    intros [s?] f HProper.
+    apply compat_bool_Eeq_op_zeze in HProper.
+    pose proof (compat_bool_negb _ _ _ HProper).
+    unfold Equal, In, filter, partition, snd, proj1_sig.
+    eapply filter_Desc; try eassumption.
+    intros s' HB _ Hsem.
+    eapply partition_spec; try eassumption.
+    intros s1 s2 [HD1 HD2].
+    eapply HD2; intros s2' HBs2' _ Hsems2'.
+    intro.
+    rewrite Hsem, Hsems2'.
+    reflexivity.
+  Qed.
 
   Lemma elements_1 :
     forall (s : t) (x : elt), In x s -> InA E.eq x (elements s).

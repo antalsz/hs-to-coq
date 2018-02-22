@@ -1495,8 +1495,8 @@ Proof.
         showP.
         -- assumption.
         -- destruct (sem sl x0); lia.
-        -- destruct (sem sl x0) eqn:Heq; try lia.
-           rewrite <- H10 in Hsz.
+        -- assert (sem sl x0 = false) by (destruct (sem sl x0); try reflexivity; lia).
+           rewrite H11 in Hsz.
            lapply H4; [intro; subst|lia].
            lapply H8; [intro; subst|lia].
            clear H4 H8.
@@ -1995,8 +1995,8 @@ Module Foo (E : OrderedType) : WSfun(E).
   Definition exists_ : (elt -> bool) -> t -> bool. Admitted.
   Definition filter : (elt -> bool) -> t -> t. Admitted.
   Definition partition : (elt -> bool) -> t -> t * t. Admitted.
-  Definition cardinal : t -> nat. Admitted.
-  Definition elements : t -> list elt. Admitted.
+  Program Definition cardinal : t -> nat := fun s => Z.to_nat (size s).
+  Program Definition elements : t -> list elt := toList.
   Definition choose : t -> option elt. Admitted.
 
   Lemma E_eq_zeze:
@@ -2246,7 +2246,16 @@ Module Foo (E : OrderedType) : WSfun(E).
     forall (s : t) (A : Type) (i : A) (f : elt -> A -> A),
       fold A f s i =
       fold_left (fun (a : A) (e : elt) => f e a) (elements s) i. Admitted.
-  Lemma cardinal_1 : forall s : t, cardinal s = length (elements s). Admitted.
+
+  Lemma cardinal_1 : forall s : t, cardinal s = length (elements s).
+  Proof.
+    intros [s?].
+    unfold cardinal, elements, proj1_sig.
+    erewrite size_spec by eassumption.
+    rewrite Nat2Z.id.
+    reflexivity.
+  Qed.
+
   Lemma filter_1 :
     forall (s : t) (x : elt) (f : elt -> bool),
       compat_bool E.eq f -> In x (filter f s) -> In x s. Admitted.

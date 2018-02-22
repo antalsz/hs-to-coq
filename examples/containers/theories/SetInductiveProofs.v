@@ -2130,14 +2130,14 @@ Module Foo (E : OrderedType) : WSfun(E).
   Lemma E_eq_zeze:  (* Should be moved to [OrdTheories] *)
     forall x y : elt, E.eq x y <-> (x == y) = true.
   Proof.
-    intros.
-    unfold op_zeze__, Eq_t, op_zeze____.
-    destruct (E.eq_dec x y); simpl in *; intuition congruence.
+    intros; split; apply elt_eq.
   Qed.
 
   Lemma E_lt_zl:  (* Should be moved to [OrdTheories] *)
     forall x y : elt, E.lt x y <-> (x < y) = true.
-  Admitted.
+  Proof.
+    intros; split; apply elt_lt.
+  Qed.
   
   Lemma InA_Eeq_elem:
     forall x xs,  
@@ -2146,7 +2146,7 @@ Module Foo (E : OrderedType) : WSfun(E).
     intros.
     induction xs.
     * simpl. split; intro; inversion H.
-    * simpl. rewrite InA_cons, orb_true_iff, IHxs, E_eq_zeze. reflexivity.
+    * simpl. rewrite InA_cons, orb_true_iff, IHxs, elt_eq. reflexivity.
   Qed.
 
   Lemma compat_bool_Eeq_op_zeze:

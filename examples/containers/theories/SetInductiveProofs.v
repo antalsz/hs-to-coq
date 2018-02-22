@@ -1882,8 +1882,20 @@ Require OrdTheories.
 Module Foo (E : OrderedType) : WSfun(E).
   Include OrdTheories.OrdTheories E.
 
-  Instance EqLaws_elt : EqLaws elt. Admitted. (* Should be moved to [OrdTheoreis] *)
-  Instance OrdLaws_elt : OrdLaws elt. Admitted. (* Should be moved to [OrdTheoreis] *)
+  Instance EqLaws_elt : EqLaws elt. Admitted. (* Should be moved to [OrdTheories] *)
+  Instance OrdLaws_elt : OrdLaws elt. Admitted. (* Should be moved to [OrdTheories] *)
+
+  Lemma E_eq_zeze:  (* Should be moved to [OrdTheories] *)
+    forall x y : elt, E.eq x y <-> (x == y) = true.
+  Proof.
+    intros.
+    unfold op_zeze__, Eq_t, op_zeze____.
+    destruct (E.eq_dec x y); simpl in *; intuition congruence.
+  Qed.
+
+  Lemma E_lt_zl:  (* Should be moved to [OrdTheories] *)
+    forall x y : elt, E.lt x y <-> (x < y) = true.
+  Admitted.
 
   (* Well-formedness *)
   Definition t := {s : Set_ elt | Bounded s None None}.
@@ -1990,7 +2002,8 @@ Module Foo (E : OrderedType) : WSfun(E).
   Definition diff : t -> t -> t. Admitted.
   Program Definition equal : t -> t -> bool := fun s1 s2 => @op_zeze__ (Set_ elt) _ s1 s2.
   Definition subset : t -> t -> bool. Admitted.
-  Definition fold : forall A : Type, (elt -> A -> A) -> t -> A -> A. Admitted.
+  Program Definition fold : forall A : Type, (elt -> A -> A) -> t -> A -> A
+    := fun a k s n => foldl (fun x e => k e x) n s.
   Definition for_all : (elt -> bool) -> t -> bool. Admitted.
   Definition exists_ : (elt -> bool) -> t -> bool. Admitted.
   Definition filter : (elt -> bool) -> t -> t. Admitted.
@@ -1998,14 +2011,6 @@ Module Foo (E : OrderedType) : WSfun(E).
   Program Definition cardinal : t -> nat := fun s => Z.to_nat (size s).
   Program Definition elements : t -> list elt := toList.
   Definition choose : t -> option elt. Admitted.
-
-  Lemma E_eq_zeze:
-    forall x y : elt, E.eq x y <-> (x == y) = true.
-  Proof.
-    intros.
-    unfold op_zeze__, Eq_t, op_zeze____.
-    destruct (E.eq_dec x y); simpl in *; intuition congruence.
-  Qed.
 
   Lemma In_1 :
     forall (s : t) (x y : elt), E.eq x y -> In x s -> In y s.
@@ -2245,8 +2250,14 @@ Module Foo (E : OrderedType) : WSfun(E).
   Lemma fold_1 :
     forall (s : t) (A : Type) (i : A) (f : elt -> A -> A),
       fold A f s i =
-      fold_left (fun (a : A) (e : elt) => f e a) (elements s) i. Admitted.
-
+      fold_left (fun (a : A) (e : elt) => f e a) (elements s) i.
+  Proof.
+    intros [s?] A n k.
+    unfold fold, elements, proj1_sig.
+    rewrite foldl_spec.
+    reflexivity.
+  Qed.
+  
   Lemma cardinal_1 : forall s : t, cardinal s = length (elements s).
   Proof.
     intros [s?].
@@ -2288,11 +2299,52 @@ Module Foo (E : OrderedType) : WSfun(E).
     forall (s : t) (f : elt -> bool),
       compat_bool E.eq f ->
       Equal (snd (partition f s)) (filter (fun x : elt => negb (f x)) s). Admitted.
+
   Lemma elements_1 :
-    forall (s : t) (x : elt), In x s -> InA E.eq x (elements s). Admitted.
+    forall (s : t) (x : elt), In x s -> InA E.eq x (elements s).
+  Proof.
+    intros [s?] x H.
+    unfold In, elements, proj1_sig in *.
+    rewrite toList_sem in H by eassumption.
+    rewrite InA_altdef.
+    rewrite Exists_exists.
+    destruct H as [y [Hin Heq]].
+    exists y.
+    rewrite E_eq_zeze.
+    intuition.
+  Qed.
+  
   Lemma elements_2 :
-    forall (s : t) (x : elt), InA E.eq x (elements s) -> In x s. Admitted.
-  Lemma elements_3w : forall s : t, NoDupA E.eq (elements s). Admitted.
+    forall (s : t) (x : elt), InA E.eq x (elements s) -> In x s.
+  Proof.
+    intros [s?] x H.
+    unfold In, elements, proj1_sig in *.
+    rewrite toList_sem by eassumption.
+    rewrite InA_altdef in H.
+    rewrite Exists_exists in H.
+    destruct H as [y [Hin Heq]].
+    exists y.
+    rewrite E_eq_zeze in Heq.
+    intuition.
+  Qed.
+
+  Lemma elements_3w : forall s : t, NoDupA E.eq (elements s).
+  Proof.
+    intros [s?].
+    unfold elements, proj1_sig.
+    apply OrdFacts.Sort_NoDup.
+    apply StronglySorted_Sorted.
+    assert (StronglySorted lt (toList s)) by (eapply to_List_sorted; eassumption).
+    induction H.
+    * apply SSorted_nil.    
+    * apply SSorted_cons; try assumption.
+      clear IHStronglySorted H.
+      induction H0.
+      - constructor.
+      - constructor; try assumption.
+        rewrite E_lt_zl. assumption.
+  Qed.
+
   Lemma choose_1 :
     forall (s : t) (x : elt), choose s = Some x -> In x s. Admitted.
   Lemma choose_2 : forall s : t, choose s = None -> Empty s. Admitted.

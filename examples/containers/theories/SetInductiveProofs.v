@@ -1670,7 +1670,7 @@ Qed.
 Lemma to_List_sorted:
   forall s lb ub,
   Bounded s lb ub ->
-  StronglySorted (fun x y => x < y = true) (toList s).
+  StronglySorted lt (toList s).
 Proof.
   intros.
   induction H.
@@ -1714,11 +1714,166 @@ Proof.
   * reflexivity.
 Qed.
 
+(** Size *)
+
+Lemma size_spec:
+  forall s lb ub,
+  Bounded s lb ub ->
+  size s = Z.of_nat (length (toList s)).
+Proof.
+  intros.
+  induction H.
+  * reflexivity.
+  * rewrite toList_Bin.
+    rewrite app_length.
+    simpl.
+    rewrite H3, IHBounded1, IHBounded2.
+    lia.
+Qed.
+
+(** Equality *)
+
+Lemma eqlist_sym:
+  forall {a} `{EqLaws a} (xs ys : list a),
+  eqlist xs ys = eqlist ys xs.
+Proof.
+  intros. revert ys.
+  induction xs; intros ys; destruct ys; simpl in *; try congruence.
+  rewrite Eq_sym. rewrite IHxs.
+  reflexivity.
+Qed.
+
+Lemma eqlist_length:
+  forall {a} `{Eq_ a} (xs ys : list a),
+  eqlist xs ys = true ->
+  length xs = length ys.
+Proof.
+  intros. revert ys H0.
+  induction xs; intros ys Heqlist; destruct ys; simpl in *; try congruence.
+  rewrite andb_true_iff in Heqlist; destruct Heqlist.
+  erewrite -> IHxs by eassumption.
+  reflexivity.
+Qed.
+
+Lemma eqlist_In:
+  forall {a} `{Eq_ a} (xs ys : list a) (x : a),
+  eqlist xs ys = true ->
+  In x xs -> exists y, In y ys /\ x == y = true.
+Proof.
+  intros. revert ys H0.
+  induction xs; intros ys H0; destruct ys; simpl in *; try congruence.
+  * contradiction H1.
+  * rewrite andb_true_iff in H0; destruct H0.
+    destruct H1.
+    + subst. exists a1; intuition. 
+    + apply IHxs in H2; clear IHxs.
+      - destruct H2 as [y [Hin Heq]].
+        exists y. intuition.
+      - assumption.
+Qed.
 
 
+Lemma sem_false_nil:
+  forall s, (forall i, sem s i = false) -> s = Tip.
+Proof.
+  intros.
+  destruct s; try reflexivity; exfalso.
+  specialize (H e0).
+  simpl in H.
+  rewrite Eq_refl in H.
+  rewrite orb_true_r in H.
+  simpl in H.
+  congruence.
+Qed.
 
+Lemma strongly_sorted_unique:
+  forall (xs ys : list e),
+  StronglySorted lt xs ->
+  StronglySorted lt ys ->
+  (forall x, In x xs -> exists y, In y ys /\ x == y = true) ->
+  (forall y, In y ys -> exists x, In x xs /\ y == x = true) ->
+  eqlist xs ys = true.
+Proof.
+  intros.
+  revert dependent ys.
+  induction H; intros ys Hys Hin_xs Hin_ys; inversion Hys; subst; clear Hys.
+  * reflexivity.
+  * destruct (Hin_ys a) as [?[[] ?]]; try (constructor; reflexivity).
+  * destruct (Hin_xs a) as [?[[] ?]]; try (constructor; reflexivity).
+  * simpl. rewrite andb_true_iff.
+    assert (_GHC.Base.==_ a a0 = true).
+    { clear IHStronglySorted.
+      destruct (Hin_ys a0) as [?[??]]; try (constructor; reflexivity); clear Hin_ys.
+      destruct (Hin_xs a) as [?[??]]; try (constructor; reflexivity); clear Hin_xs.
+      destruct H3, H5; subst; only 1-3: order e.
+      rewrite Forall_forall in H0; specialize (H0 _ H3). unfold lt in H0.
+      rewrite Forall_forall in H2; specialize (H2 _ H5). unfold lt in H2.
+      order e.
+    }
+    split; try assumption.
+    apply IHStronglySorted; clear IHStronglySorted.
+      + assumption.
+      + intros i Hin.
+        destruct (Hin_xs i) as [?[??]]; try (constructor 2; assumption); clear Hin_xs.
+        destruct H4; subst.
+        -- rewrite Forall_forall in H0; specialize (H0 _ Hin). unfold lt in H0.
+           order e.
+        -- exists x; intuition.
+      + intros i Hin.
+        destruct (Hin_ys i) as [?[??]]; try (constructor 2; assumption); clear Hin_ys.
+        destruct H4; subst.
+        -- rewrite Forall_forall in H2; specialize (H2 _ Hin). unfold lt in H2.
+           order e.
+        -- exists x; intuition.
+Qed.
+
+
+Lemma equals_spec:
+  forall s1 s2 lb ub,
+  Bounded s1 lb ub ->
+  Bounded s2 lb ub ->
+  s1 == s2 = true <-> (forall i, sem s1 i = sem s2 i).
+Proof.
+  intros.
+  unfold op_zeze__, Eq___Set_, op_zeze____.
+  unfold Internal.Eq___Set__op_zeze__.
+  unfold op_zeze__, Eq_Integer___, Eq_list, op_zeze____.
+  rewrite andb_true_iff.
+  split; intro.
+  * destruct H1.
+    intro i.
+    rewrite eq_iff_eq_true.
+    rewrite !toList_sem by eassumption.
+    split; intros [x [HIn Heq]].
+    - apply (eqlist_In _ _ _ H2) in HIn.
+      destruct HIn as [y [Hin Heqy]].
+      exists y; intuition order e.
+    - rewrite eqlist_sym in H2.
+      apply (eqlist_In _ _ _ H2) in HIn.
+      destruct HIn as [y [Hin Heqy]].
+      exists y; intuition order e.
+  * erewrite !size_spec by eassumption.
+    assert (forall i, sem s1 i = true <-> sem s2 i = true)
+      by (intro i; rewrite H1; reflexivity); clear H1.
+    assert (Heqlist : eqlist (toList s1) (toList s2) = true).
+    { apply strongly_sorted_unique.
+      * eapply to_List_sorted; eassumption.
+      * eapply to_List_sorted; eassumption.
+      * intros i Hin; specialize (H2 i).
+        rewrite !toList_sem in H2 by eassumption.
+        rewrite <- H2; clear H2.
+        eexists i; rewrite Eq_refl; intuition.
+      * intros i Hin; specialize (H2 i).
+        rewrite !toList_sem in H2 by eassumption.
+        rewrite -> H2; clear H2.
+        eexists i; rewrite Eq_refl; intuition.
+    }
+    erewrite  eqlist_length by eassumption.
+    rewrite Z.eqb_refl. intuition.
+Qed.
 
 End WF.
+
 
 (** * Instantiationg the [FSetInterface] *)
 

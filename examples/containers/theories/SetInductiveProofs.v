@@ -2127,17 +2127,13 @@ Require OrdTheories.
 Module Foo (E : OrderedType) : WSfun(E).
   Include OrdTheories.OrdTheories E.
 
-  Lemma E_eq_zeze:  (* Should be moved to [OrdTheories] *)
+  Lemma E_eq_zeze:
     forall x y : elt, E.eq x y <-> (x == y) = true.
-  Proof.
-    intros; split; apply elt_eq.
-  Qed.
+  Proof. apply elt_eq. Qed.
 
-  Lemma E_lt_zl:  (* Should be moved to [OrdTheories] *)
+  Lemma E_lt_zl:
     forall x y : elt, E.lt x y <-> (x < y) = true.
-  Proof.
-    intros; split; apply elt_lt.
-  Qed.
+  Proof. apply elt_lt. Qed.
   
   Lemma InA_Eeq_elem:
     forall x xs,  

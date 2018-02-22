@@ -1988,7 +1988,7 @@ Module Foo (E : OrderedType) : WSfun(E).
   Qed.
   
   Definition diff : t -> t -> t. Admitted.
-  Definition equal : t -> t -> bool. Admitted.
+  Program Definition equal : t -> t -> bool := fun s1 s2 => @op_zeze__ (Set_ elt) _ s1 s2.
   Definition subset : t -> t -> bool. Admitted.
   Definition fold : forall A : Type, (elt -> A -> A) -> t -> A -> A. Admitted.
   Definition for_all : (elt -> bool) -> t -> bool. Admitted.
@@ -1999,9 +1999,23 @@ Module Foo (E : OrderedType) : WSfun(E).
   Definition elements : t -> list elt. Admitted.
   Definition choose : t -> option elt. Admitted.
 
+  Lemma E_eq_zeze:
+    forall x y : elt, E.eq x y <-> (x == y) = true.
+  Proof.
+    intros.
+    unfold op_zeze__, Eq_t, op_zeze____.
+    destruct (E.eq_dec x y); simpl in *; intuition congruence.
+  Qed.
+
   Lemma In_1 :
     forall (s : t) (x y : elt), E.eq x y -> In x s -> In y s.
-  Admitted.
+  Proof.
+    intros [s?] x y Heq.
+    rewrite E_eq_zeze in Heq.
+    unfold In, proj1_sig.
+    rewrite (sem_resp_eq _ _ _ Heq).
+    intuition.
+  Qed.
 
   Lemma mem_1 : forall (s : t) (x : elt), In x s -> mem x s = true.
   Proof.
@@ -2015,19 +2029,25 @@ Module Foo (E : OrderedType) : WSfun(E).
     erewrite member_spec in H; eassumption.
   Qed.
 
-  Lemma equal_1 : forall s s' : t, Equal s s' -> equal s s' = true. Admitted.
-  Lemma equal_2 : forall s s' : t, equal s s' = true -> Equal s s'. Admitted.
+  Lemma equal_1 : forall s s' : t, Equal s s' -> equal s s' = true.
+  Proof.
+    intros [s1?] [s2?].
+    unfold Equal, equal, In, proj1_sig.
+    rewrite equals_spec by eassumption.
+    intuition.
+  Qed.
+  
+  Lemma equal_2 : forall s s' : t, equal s s' = true -> Equal s s'.
+  Proof.
+    intros [s1?] [s2?].
+    unfold Equal, equal, In, proj1_sig.
+    rewrite equals_spec by eassumption.
+    intuition.
+  Qed.
+
   Lemma subset_1 : forall s s' : t, Subset s s' -> subset s s' = true. Admitted.
   Lemma subset_2 : forall s s' : t, subset s s' = true -> Subset s s'. Admitted.
 
-
-  Lemma E_eq_zeze:
-    forall x y : elt, E.eq x y <-> (x == y) = true.
-  Proof.
-    intros.
-    unfold op_zeze__, Eq_t, op_zeze____.
-    destruct (E.eq_dec x y); simpl in *; intuition congruence.
-  Qed.
 
   Lemma singleton_1 :
     forall x y : elt, In y (singleton x) -> E.eq x y.

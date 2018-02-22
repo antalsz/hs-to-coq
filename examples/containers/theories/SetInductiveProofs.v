@@ -1409,6 +1409,7 @@ Proof.
 Qed.
 
 (** ** Verification of [difference] *)
+
 Lemma split_Desc :
   forall x s lb ub,
   Bounded s lb ub ->
@@ -1502,6 +1503,89 @@ Proof.
            f_solver.
         -- f_solver.
 Qed.
+
+(** ** Verification of [foldr] *)
+
+(** This relates [foldr] and [toList]. Hard to say which one is more primitive. *)
+
+Lemma fold_right_toList_go:
+  forall {a} k (n : a) s (xs : list e),
+  fold_right k n (foldr cons xs s) = foldr k (fold_right k n xs) s.
+Proof.
+  intros. 
+  revert xs; induction s; intros.
+  * simpl.
+    rewrite IHs1.
+    simpl.
+    rewrite IHs2.
+    reflexivity.
+  * reflexivity.
+Qed.
+
+
+Lemma foldr_spec:
+  forall {a} k (n : a) (s : Set_ e),
+  foldr k n s = fold_right k n (toList s).
+Proof.
+  intros.
+  unfold toList, toAscList. simpl.
+  erewrite fold_right_toList_go by eassumption.
+  reflexivity.
+Qed.
+
+(** ** Verification of [toList] and [toAscList] *)
+
+Import ListNotations.
+
+Lemma foldr_const_append:
+  forall xs (s : Set_ e),
+  foldr cons xs s = toList s ++ xs.
+Proof.
+  intros. revert xs. induction s; intros xs.
+  * unfold toList, toAscList.
+    simpl.
+    rewrite !IHs2, !IHs1.
+    rewrite app_nil_r.
+    rewrite <- !app_assoc.
+    reflexivity.
+  * reflexivity.
+Qed.
+
+Lemma toList_Bin:
+  forall sz x (s1 s2 : Set_ e),
+  toList (Bin sz x s1 s2) = toList s1 ++ [x] ++ toList s2.
+Proof.
+  intros.
+  unfold toList at 1, toAscList at 1.
+  simpl.
+  rewrite !foldr_const_append.
+  rewrite app_nil_r.
+  reflexivity.
+Qed.
+
+
+(** This relates [foldl] and [toList]. *)
+
+Lemma foldl_spec:
+  forall {a} k (n : a) (s : Set_ e),
+  foldl k n s = fold_left k (toList s) n.
+Proof.
+  intros ????.
+  revert n.
+  induction s; intros n.
+  * simpl.
+    rewrite toList_Bin.
+    rewrite IHs1.
+    rewrite IHs2.
+    simpl.
+    rewrite fold_left_app.
+    reflexivity.
+  * reflexivity.
+Qed.
+
+
+
+
 
 End WF.
 

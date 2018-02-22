@@ -1563,6 +1563,35 @@ Proof.
   reflexivity.
 Qed.
 
+Lemma toList_sem:
+  forall s lb ub, Bounded s lb ub ->
+  forall i, sem s i = true <-> (exists x, In x (toList s) /\ i == x = true).
+Proof.
+  intros.
+  induction H.
+  * simpl.
+    split; intro H.
+    - inversion H.
+    - destruct H as [?[[]?]].
+  * rewrite toList_Bin.
+    simpl.
+    rewrite !orb_true_iff.
+    rewrite IHBounded1, IHBounded2; clear IHBounded1 IHBounded2.
+    split; intros ?.
+    - destruct H5 as [[Hex|Heq]|Hex].
+      + destruct Hex as [j [Hin Heq]].
+        exists j. rewrite in_app_iff. intuition.
+      + exists x.  rewrite in_app_iff. intuition.
+      + destruct Hex as [j [Hin Heq]].
+        exists j. rewrite in_app_iff. intuition.
+    - destruct H5 as [j [Hin Heq]].
+      rewrite in_app_iff in Hin.
+      destruct Hin as [Hin|[Hin|Hin]].
+      + left; left. exists j. intuition.
+      + left; right. subst. assumption.
+      + right. exists j. intuition.
+Qed.
+
 
 (** This relates [foldl] and [toList]. *)
 

@@ -4504,6 +4504,21 @@ Proof.
   assumption.
 Qed.
 
+(** *** Specifying [null] *)
+
+Lemma null_Sem:
+  forall {s f}, Sem s f -> null s = true <-> (forall i, f i = false).
+Proof.
+  intros s f HSem.
+  destruct HSem.
+  * intuition.
+  * assert (null s = false) by (destruct HD; reflexivity).
+    intuition try congruence.
+    destruct (Desc_some_f HD).
+    specialize (H0 x).
+    congruence.
+Qed.
+
 
 (** *** Specifying [singleton] *)
 
@@ -7011,13 +7026,17 @@ Module Foo: WSfun(N_as_OT).
 
   Lemma is_empty_1 : forall s : t, Empty s -> is_empty s = true.
   Proof.
-    intros. unfold Empty, In, In_set, is_empty in *. destruct s. simpl.
+    intros. unfold Empty, In, In_set, is_empty in *. destruct s.
     destruct w as [s HSem].
-    induction HSem.
-    * auto.
-    * destruct (Desc_has_member  HD).
-      specialize (H (Z.to_N x)).
-      rewrite Z2N.id in H; try assumption; intuition.
+    erewrite null_Sem by eassumption.
+    intro i.
+    destruct (Z.ltb_spec i 0).
+    * eapply Sem_neg_false; eassumption.
+    * specialize (H (Z.to_N i)).
+      rewrite not_true_iff_false in H.
+      erewrite member_Sem in H by eassumption.
+      rewrite Z2N.id in H by assumption.
+      assumption.
   Qed.
 
   Lemma is_empty_2 : forall s : t, is_empty s = true -> Empty s.

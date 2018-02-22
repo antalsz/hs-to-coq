@@ -1992,12 +1992,15 @@ Module Foo (E : OrderedType) : WSfun(E).
   Program Definition inter : t -> t -> t:= intersection.
   Next Obligation.
     destruct x, x0. simpl.
-    eapply intersection_Desc
-    with (ub := None) (lb := None);
-      intuition.
+    eapply intersection_Desc with (ub := None) (lb := None);intuition.
   Qed.
-  
-  Definition diff : t -> t -> t. Admitted.
+
+  Program Definition diff : t -> t -> t := difference.
+  Next Obligation.
+    destruct x, x0. simpl.
+    eapply difference_Desc with (ub := None) (lb := None); intuition.
+  Qed.
+
   Program Definition equal : t -> t -> bool := fun s1 s2 => @op_zeze__ (Set_ elt) _ s1 s2.
   Definition subset : t -> t -> bool. Admitted.
   Program Definition fold : forall A : Type, (elt -> A -> A) -> t -> A -> A
@@ -2237,11 +2240,47 @@ Module Foo (E : OrderedType) : WSfun(E).
   Qed.
 
   Lemma diff_1 :
-    forall (s s' : t) (x : elt), In x (diff s s') -> In x s. Admitted.
+    forall (s s' : t) (x : elt), In x (diff s s') -> In x s.
+  Proof.
+    intros [s1 Hs1] [s2 Hs2] x.
+    unfold In, diff, proj1_sig.
+    eapply difference_Desc with (ub := None) (lb := None);
+      try assumption.
+    intros.
+    rewrite H2 in H3.
+    rewrite andb_true_iff in H3.
+    intuition.
+  Qed.
+
   Lemma diff_2 :
-    forall (s s' : t) (x : elt), In x (diff s s') -> ~ In x s'. Admitted.
+    forall (s s' : t) (x : elt), In x (diff s s') -> ~ In x s'.
+  Proof.
+    intros [s1 Hs1] [s2 Hs2] x.
+    unfold In, diff, proj1_sig.
+    eapply difference_Desc with (ub := None) (lb := None);
+      try assumption.
+    intros. intro.
+    rewrite H2 in H3.
+    rewrite andb_true_iff in H3.
+    rewrite negb_true_iff in H3.
+    intuition congruence.
+  Qed.
+
   Lemma diff_3 :
-    forall (s s' : t) (x : elt), In x s -> ~ In x s' -> In x (diff s s'). Admitted.
+    forall (s s' : t) (x : elt), In x s -> ~ In x s' -> In x (diff s s').
+  Proof.
+    intros [s1 Hs1] [s2 Hs2] x.
+    unfold In, diff, proj1_sig.
+    eapply difference_Desc with (ub := None) (lb := None);
+      try assumption.
+    intros.
+    rewrite H2.
+    rewrite andb_true_iff.
+    rewrite negb_true_iff.
+    intuition try congruence.
+    destruct (sem s2 x); congruence.
+  Qed.
+
   Lemma fold_1 :
     forall (s : t) (A : Type) (i : A) (f : elt -> A -> A),
       fold A f s i =

@@ -1832,7 +1832,7 @@ Lemma equals_spec:
   forall s1 s2 lb ub,
   Bounded s1 lb ub ->
   Bounded s2 lb ub ->
-  s1 == s2 = true <-> (forall i, sem s1 i = sem s2 i).
+  s1 == s2 = true <-> (forall i, sem s1 i = true <-> sem s2 i = true).
 Proof.
   intros.
   unfold op_zeze__, Eq___Set_, op_zeze____.
@@ -1842,7 +1842,6 @@ Proof.
   split; intro.
   * destruct H1.
     intro i.
-    rewrite eq_iff_eq_true.
     rewrite !toList_sem by eassumption.
     split; intros [x [HIn Heq]].
     - apply (eqlist_In _ _ _ H2) in HIn.
@@ -1932,7 +1931,16 @@ Module Foo (E : OrderedType) : WSfun(E).
   Qed.
   
   Definition eq : t -> t -> Prop := Equal.
-  Definition eq_dec : forall s s' : t, {eq s s'} + {~ eq s s'}. Admitted.
+  Definition eq_dec : forall s s' : t, {eq s s'} + {~ eq s s'}.
+  Proof.
+    intros.
+    destruct s as [s1 ?], s' as [s2 ?].
+    unfold eq, Equal, In, proj1_sig.
+    destruct (s1 == s2) eqn:?.
+    * left. rewrite <- equals_spec; eassumption.
+    * right. rewrite <- equals_spec; try eassumption.
+      intro; congruence.
+  Qed.
 
   Lemma eq_refl : forall s : t, eq s s.
   Proof. destruct s. unfold eq. unfold Equal. intro. reflexivity. Qed.

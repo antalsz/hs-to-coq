@@ -1563,33 +1563,29 @@ Proof.
   reflexivity.
 Qed.
 
+Lemma elem_app:
+  forall {a} `{Eq_ a} (i : a) xs ys,
+  List.elem i (xs ++ ys) = List.elem i xs || List.elem i ys.
+Proof.
+  intros.
+  induction xs.
+  * reflexivity.
+  * simpl. rewrite IHxs. rewrite orb_assoc. reflexivity.
+Qed.
+
 Lemma toList_sem:
   forall s lb ub, Bounded s lb ub ->
-  forall i, sem s i = true <-> (exists x, In x (toList s) /\ i == x = true).
+  forall i, sem s i = List.elem i (toList s).
 Proof.
   intros.
   induction H.
-  * simpl.
-    split; intro H.
-    - inversion H.
-    - destruct H as [?[[]?]].
+  * simpl. reflexivity.
   * rewrite toList_Bin.
     simpl.
-    rewrite !orb_true_iff.
     rewrite IHBounded1, IHBounded2; clear IHBounded1 IHBounded2.
-    split; intros ?.
-    - destruct H5 as [[Hex|Heq]|Hex].
-      + destruct Hex as [j [Hin Heq]].
-        exists j. rewrite in_app_iff. intuition.
-      + exists x.  rewrite in_app_iff. intuition.
-      + destruct Hex as [j [Hin Heq]].
-        exists j. rewrite in_app_iff. intuition.
-    - destruct H5 as [j [Hin Heq]].
-      rewrite in_app_iff in Hin.
-      destruct Hin as [Hin|[Hin|Hin]].
-      + left; left. exists j. intuition.
-      + left; right. subst. assumption.
-      + right. exists j. intuition.
+    rewrite elem_app.
+    simpl.
+    rewrite orb_assoc. reflexivity.
 Qed.
 
 Lemma toList_lb:
@@ -1665,6 +1661,22 @@ Proof.
       - assert (lt a x) by (apply Hlt; left; reflexivity).
         assert (x <= z = true) by (apply Hge; assumption).
         (unfold lt in *; order e).
+Qed.
+
+Lemma All_lt_elem:
+  forall x i xs,
+  Forall (lt x) xs ->
+  List.elem i xs = true ->
+  x < i = true.
+Proof.
+  intros.
+  induction H.
+  * simpl in H0. inversion H0.
+  * simpl in *.
+    rewrite orb_true_iff in H0.
+    destruct H0.
+    - unfold lt in *. order e.
+    - intuition.
 Qed.
 
 Lemma to_List_sorted:
@@ -1755,21 +1767,20 @@ Proof.
   reflexivity.
 Qed.
 
-Lemma eqlist_In:
-  forall {a} `{Eq_ a} (xs ys : list a) (x : a),
+Lemma eqlist_elem:
+  forall {a} `{EqLaws a} (xs ys : list a) (x : a),
   eqlist xs ys = true ->
-  In x xs -> exists y, In y ys /\ x == y = true.
+  List.elem x xs = List.elem x ys.
 Proof.
-  intros. revert ys H0.
-  induction xs; intros ys H0; destruct ys; simpl in *; try congruence.
-  * contradiction H1.
-  * rewrite andb_true_iff in H0; destruct H0.
-    destruct H1.
-    + subst. exists a1; intuition. 
-    + apply IHxs in H2; clear IHxs.
-      - destruct H2 as [y [Hin Heq]].
-        exists y. intuition.
-      - assumption.
+  intros. revert ys H1.
+  induction xs; intros ys H1; destruct ys; simpl in *; try congruence.
+  rewrite andb_true_iff in H1; destruct H1.
+  erewrite IHxs by eassumption.
+  f_equal.
+  rewrite eq_iff_eq_true.
+  split; intro.
+  - eapply Eq_trans; eassumption.
+  - rewrite Eq_sym in H1. eapply Eq_trans; eassumption.
 Qed.
 
 
@@ -1790,49 +1801,48 @@ Lemma strongly_sorted_unique:
   forall (xs ys : list e),
   StronglySorted lt xs ->
   StronglySorted lt ys ->
-  (forall x, In x xs -> exists y, In y ys /\ x == y = true) ->
-  (forall y, In y ys -> exists x, In x xs /\ y == x = true) ->
+  (forall x, List.elem x xs = List.elem x ys) ->
   eqlist xs ys = true.
 Proof.
   intros.
   revert dependent ys.
-  induction H; intros ys Hys Hin_xs Hin_ys; inversion Hys; subst; clear Hys.
+  induction H; intros ys Hys Helem; inversion Hys; subst; clear Hys.
   * reflexivity.
-  * destruct (Hin_ys a) as [?[[] ?]]; try (constructor; reflexivity).
-  * destruct (Hin_xs a) as [?[[] ?]]; try (constructor; reflexivity).
+  * specialize (Helem a). simpl in Helem. rewrite Eq_refl in Helem. inversion Helem.
+  * specialize (Helem a). simpl in Helem. rewrite Eq_refl in Helem. inversion Helem.
   * simpl. rewrite andb_true_iff.
-    assert (_GHC.Base.==_ a a0 = true).
+    assert (a == a0 = true).
     { clear IHStronglySorted.
-      destruct (Hin_ys a0) as [?[??]]; try (constructor; reflexivity); clear Hin_ys.
-      destruct (Hin_xs a) as [?[??]]; try (constructor; reflexivity); clear Hin_xs.
-      destruct H3, H5; subst; only 1-3: order e.
-      rewrite Forall_forall in H0; specialize (H0 _ H3). unfold lt in H0.
-      rewrite Forall_forall in H2; specialize (H2 _ H5). unfold lt in H2.
+      pose proof (Helem a) as Ha.
+      pose proof (Helem a0) as Ha0.
+      simpl in Ha, Ha0.
+      rewrite Eq_refl in Ha, Ha0; rewrite ?orb_true_l, ?orb_true_r in Ha, Ha0.
+      symmetry in Ha.
+      rewrite orb_true_iff in Ha, Ha0.
+      destruct Ha, Ha0; only 1-3 : order e; exfalso.
+      pose proof (All_lt_elem _ _ _ H0 H4).
+      pose proof (All_lt_elem _ _ _ H2 H3).
       order e.
     }
     split; try assumption.
     apply IHStronglySorted; clear IHStronglySorted.
       + assumption.
-      + intros i Hin.
-        destruct (Hin_xs i) as [?[??]]; try (constructor 2; assumption); clear Hin_xs.
-        destruct H4; subst.
-        -- rewrite Forall_forall in H0; specialize (H0 _ Hin). unfold lt in H0.
-           order e.
-        -- exists x; intuition.
-      + intros i Hin.
-        destruct (Hin_ys i) as [?[??]]; try (constructor 2; assumption); clear Hin_ys.
-        destruct H4; subst.
-        -- rewrite Forall_forall in H2; specialize (H2 _ Hin). unfold lt in H2.
-           order e.
-        -- exists x; intuition.
+      + intros i.
+        specialize (Helem i).
+        simpl in Helem.
+        destruct (List.elem i l) eqn:?, (List.elem i l0) eqn:?;
+          rewrite ?orb_true_l, ?orb_true_r, ?orb_false_l, ?orb_false_r  in Helem;
+          try reflexivity;
+          try solve [order e].
+        - pose proof (All_lt_elem _ _ _ H0 Heqb). order e.
+        - pose proof (All_lt_elem _ _ _ H2 Heqb0). order e.
 Qed.
-
 
 Lemma equals_spec:
   forall s1 s2 lb ub,
   Bounded s1 lb ub ->
   Bounded s2 lb ub ->
-  s1 == s2 = true <-> (forall i, sem s1 i = true <-> sem s2 i = true).
+  s1 == s2 = true <-> (forall i, sem s1 i = sem s2 i).
 Proof.
   intros.
   unfold op_zeze__, Eq___Set_, op_zeze____.
@@ -1842,30 +1852,17 @@ Proof.
   split; intro.
   * destruct H1.
     intro i.
-    rewrite !toList_sem by eassumption.
-    split; intros [x [HIn Heq]].
-    - apply (eqlist_In _ _ _ H2) in HIn.
-      destruct HIn as [y [Hin Heqy]].
-      exists y; intuition order e.
-    - rewrite eqlist_sym in H2.
-      apply (eqlist_In _ _ _ H2) in HIn.
-      destruct HIn as [y [Hin Heqy]].
-      exists y; intuition order e.
+    erewrite !toList_sem by eassumption.
+    erewrite eqlist_elem by eassumption.
+    reflexivity.
   * erewrite !size_spec by eassumption.
-    assert (forall i, sem s1 i = true <-> sem s2 i = true)
-      by (intro i; rewrite H1; reflexivity); clear H1.
     assert (Heqlist : eqlist (toList s1) (toList s2) = true).
     { apply strongly_sorted_unique.
       * eapply to_List_sorted; eassumption.
       * eapply to_List_sorted; eassumption.
-      * intros i Hin; specialize (H2 i).
-        rewrite !toList_sem in H2 by eassumption.
-        rewrite <- H2; clear H2.
-        eexists i; rewrite Eq_refl; intuition.
-      * intros i Hin; specialize (H2 i).
-        rewrite !toList_sem in H2 by eassumption.
-        rewrite -> H2; clear H2.
-        eexists i; rewrite Eq_refl; intuition.
+      * intros i; specialize (H1 i).
+        erewrite !toList_sem in H1 by eassumption.
+        assumption.
     }
     erewrite  eqlist_length by eassumption.
     rewrite Z.eqb_refl. intuition.
@@ -1896,6 +1893,16 @@ Module Foo (E : OrderedType) : WSfun(E).
   Lemma E_lt_zl:  (* Should be moved to [OrdTheories] *)
     forall x y : elt, E.lt x y <-> (x < y) = true.
   Admitted.
+  
+  Lemma InA_Eeq_elem:
+    forall x xs,  
+    InA E.eq x xs <-> List.elem x xs = true.
+  Proof.
+    intros.
+    induction xs.
+    * simpl. split; intro; inversion H.
+    * simpl. rewrite InA_cons, orb_true_iff, IHxs, E_eq_zeze. reflexivity.
+  Qed.
 
   (* Well-formedness *)
   Definition t := {s : Set_ elt | Bounded s None None}.
@@ -1947,9 +1954,13 @@ Module Foo (E : OrderedType) : WSfun(E).
     destruct s as [s1 ?], s' as [s2 ?].
     unfold eq, Equal, In, proj1_sig.
     destruct (s1 == s2) eqn:?.
-    * left. rewrite <- equals_spec; eassumption.
-    * right. rewrite <- equals_spec; try eassumption.
-      intro; congruence.
+    * left. intro i.  apply eq_iff_eq_true. eapply equals_spec; try eassumption.
+    * right.
+      assert (~ (forall a : elt, sem s1 a = sem s2 a)).
+      { rewrite <- equals_spec by eassumption.
+        rewrite not_true_iff_false. assumption.
+      }
+      contradict H. intro i. apply eq_iff_eq_true. apply H.
   Qed.
 
   Lemma eq_refl : forall s : t, eq s s.
@@ -2037,7 +2048,7 @@ Module Foo (E : OrderedType) : WSfun(E).
     intros [s1?] [s2?].
     unfold Equal, equal, In, proj1_sig.
     rewrite equals_spec by eassumption.
-    intuition.
+    intros. apply eq_iff_eq_true. apply H.
   Qed.
   
   Lemma equal_2 : forall s s' : t, equal s s' = true -> Equal s s'.
@@ -2045,7 +2056,7 @@ Module Foo (E : OrderedType) : WSfun(E).
     intros [s1?] [s2?].
     unfold Equal, equal, In, proj1_sig.
     rewrite equals_spec by eassumption.
-    intuition.
+    intros. apply eq_iff_eq_true. apply H.
   Qed.
 
   Lemma subset_1 : forall s s' : t, Subset s s' -> subset s s' = true. Admitted.
@@ -2323,27 +2334,19 @@ Module Foo (E : OrderedType) : WSfun(E).
   Proof.
     intros [s?] x H.
     unfold In, elements, proj1_sig in *.
-    rewrite toList_sem in H by eassumption.
-    rewrite InA_altdef.
-    rewrite Exists_exists.
-    destruct H as [y [Hin Heq]].
-    exists y.
-    rewrite E_eq_zeze.
-    intuition.
+    rewrite InA_Eeq_elem in *.
+    erewrite toList_sem in H by eassumption.
+    assumption.
   Qed.
-  
+
   Lemma elements_2 :
     forall (s : t) (x : elt), InA E.eq x (elements s) -> In x s.
   Proof.
     intros [s?] x H.
     unfold In, elements, proj1_sig in *.
-    rewrite toList_sem by eassumption.
-    rewrite InA_altdef in H.
-    rewrite Exists_exists in H.
-    destruct H as [y [Hin Heq]].
-    exists y.
-    rewrite E_eq_zeze in Heq.
-    intuition.
+    rewrite InA_Eeq_elem in *.
+    erewrite toList_sem in * by eassumption.
+    assumption.
   Qed.
 
   Lemma elements_3w : forall s : t, NoDupA E.eq (elements s).
@@ -2353,6 +2356,7 @@ Module Foo (E : OrderedType) : WSfun(E).
     apply OrdFacts.Sort_NoDup.
     apply StronglySorted_Sorted.
     assert (StronglySorted lt (toList s)) by (eapply to_List_sorted; eassumption).
+    (* Here we just replace E.lt with lt *)
     induction H.
     * apply SSorted_nil.    
     * apply SSorted_cons; try assumption.

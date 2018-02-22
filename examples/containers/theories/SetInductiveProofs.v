@@ -1592,6 +1592,108 @@ Proof.
       + right. exists j. intuition.
 Qed.
 
+Lemma toList_lb:
+  forall s lb ub, Bounded s lb ub ->
+  Forall (fun i => isLB lb i = true) (toList s).
+Proof.
+  intros.
+  induction H.
+  * apply Forall_nil.
+  * rewrite toList_Bin.
+    rewrite Forall_forall in *.
+    intros y Hi.
+    simpl in Hi.
+    rewrite !in_app_iff in *.
+    destruct Hi as [?|[?|?]].
+    - intuition.
+    - subst. assumption.
+    - enough(isLB (Some x) y = true) by order_Bounds. 
+      intuition.
+Qed.
+
+Lemma toList_ub:
+  forall s lb ub, Bounded s lb ub ->
+  Forall (fun i => isUB ub i = true) (toList s).
+Proof.
+  intros.
+  induction H.
+  * apply Forall_nil.
+  * rewrite toList_Bin.
+    rewrite Forall_forall in *.
+    intros y Hi.
+    simpl in Hi.
+    rewrite !in_app_iff in *.
+    destruct Hi as [?|[?|?]].
+    - enough(isUB (Some x) y = true) by order_Bounds. 
+      intuition.
+    - subst. assumption.
+    - intuition.
+Qed.
+
+
+(** *** Sortedness of [toList] *)
+
+Require Import Coq.Sorting.Sorted.
+
+Close Scope Z.
+Local Definition lt : e -> e -> Prop
+  := fun x y => (x < y) = true.
+
+Lemma sorted_append:
+  forall l1 l2 (x : e),
+  StronglySorted lt l1 ->
+  StronglySorted lt l2 ->
+  (forall y, In y l1 -> (y < x) = true) ->
+  (forall y, In y l2 -> (x <= y) = true) ->
+  StronglySorted lt (l1 ++ l2).
+Proof.
+  intros ??? Hsorted1 Hsorted2 Hlt Hge.
+  induction Hsorted1.
+  * apply Hsorted2.
+  * simpl. apply SSorted_cons.
+    + apply IHHsorted1.
+      intros y Hy.
+      apply Hlt.
+      right.
+      assumption.
+    + rewrite Forall_forall.
+      intros z Hz.
+      rewrite in_app_iff in Hz.
+      destruct Hz.
+      - rewrite Forall_forall in H.
+        apply H; auto.
+      - assert (lt a x) by (apply Hlt; left; reflexivity).
+        assert (x <= z = true) by (apply Hge; assumption).
+        (unfold lt in *; order e).
+Qed.
+
+Lemma to_List_sorted:
+  forall s lb ub,
+  Bounded s lb ub ->
+  StronglySorted (fun x y => x < y = true) (toList s).
+Proof.
+  intros.
+  induction H.
+  * apply SSorted_nil.
+  * rewrite toList_Bin.
+    apply sorted_append with (x := x); only 2: apply SSorted_cons.
+    - assumption.
+    - assumption.
+    - apply toList_lb in H0. simpl in H0.
+      apply H0.
+    - intros.
+      apply toList_ub in H. simpl in H.
+      rewrite Forall_forall in H.
+      apply H; assumption.
+    - intros.
+      simpl in H5.
+      destruct H5.
+      + subst. order e.
+      + apply toList_lb in H0. simpl in H0.
+        rewrite Forall_forall in H0.
+        assert (x < y = true) by (apply H0; assumption).
+        order e.
+Qed.
 
 (** This relates [foldl] and [toList]. *)
 

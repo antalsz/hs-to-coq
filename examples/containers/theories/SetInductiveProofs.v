@@ -2127,9 +2127,6 @@ Require OrdTheories.
 Module Foo (E : OrderedType) : WSfun(E).
   Include OrdTheories.OrdTheories E.
 
-  Instance EqLaws_elt : EqLaws elt. Admitted. (* Should be moved to [OrdTheories] *)
-  Instance OrdLaws_elt : OrdLaws elt. Admitted. (* Should be moved to [OrdTheories] *)
-
   Lemma E_eq_zeze:  (* Should be moved to [OrdTheories] *)
     forall x y : elt, E.eq x y <-> (x == y) = true.
   Proof.

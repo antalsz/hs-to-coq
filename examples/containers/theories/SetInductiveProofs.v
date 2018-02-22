@@ -1868,6 +1868,118 @@ Proof.
     rewrite Z.eqb_refl. intuition.
 Qed.
 
+(** ** Verifying [isSubsetOf] *)
+
+Lemma isSubsetOfX_spec:
+  forall s1 s2 lb ub,
+  Bounded s1 lb ub ->
+  Bounded s2 lb ub ->
+  isSubsetOfX s1 s2 = true <-> (forall i, sem s1 i = true -> sem s2 i = true).
+Proof.
+  intros ???? HB1 HB2.
+  revert dependent s2.
+  induction HB1; intros; simpl; subst.
+  * intuition.
+  * destruct s0 eqn:Hs0.
+    - rewrite <- Hs0 in *.
+      clear s3 e0 s4 s5 Hs0.
+      eapply splitMember_Desc; [solve_Bounded|].
+      intros sr1 b sr2 HBsr1 HBsr2 Hsem.
+      rewrite !andb_true_iff.
+      rewrite IHHB1_1 by eassumption.
+      rewrite IHHB1_2 by eassumption.
+      split; intro; [destruct H1 as [?[??]] | split; [|split] ].
+      -- intros i Hi.
+         rewrite Hsem.
+         rewrite !orb_true_iff in Hi.
+         destruct Hi as [[Hi|Hi]|Hi];
+         destruct (i == x);
+         try reflexivity;
+         try congruence;
+         try apply H3 in Hi;
+         try apply H4 in Hi;
+         rewrite Hi;
+         rewrite ?orb_true_l, ?orb_true_r; reflexivity.
+     -- specialize (Hsem x).
+        rewrite Eq_refl in Hsem. rewrite <- Hsem.
+        apply H1.
+        rewrite Eq_refl.
+        rewrite ?orb_true_l, ?orb_true_r; reflexivity.
+     -- intros i Hi.
+        specialize (H1 i).
+        rewrite Hi in H1.
+        rewrite ?orb_true_l, ?orb_true_r in H1.
+        rewrite Hsem in H1.
+        specialize (H1 eq_refl).
+        repeat (f_solver_step; f_solver_cleanup).
+     -- intros i Hi.
+        specialize (H1 i).
+        rewrite Hi in H1.
+        rewrite ?orb_true_l, ?orb_true_r in H1.
+        rewrite Hsem in H1.
+        specialize (H1 eq_refl).
+        repeat (f_solver_step; f_solver_cleanup).
+    - intuition.
+      specialize (H1 x).
+      rewrite Eq_refl, orb_true_r in H1.
+      simpl in H1. intuition.
+Qed.
+
+Lemma subest_size:
+  forall s1 s2 lb ub,
+  Bounded s1 lb ub ->
+  Bounded s2 lb ub ->
+  (forall i, sem s1 i = true -> sem s2 i = true) ->
+  (size s1 <= size s2)%Z.
+Proof.
+  intros ???? HB1 HB2 Hsubset.
+  revert dependent s2.
+  induction HB1; intros; simpl; subst.
+  * simpl. solve_size.
+  * assert (sem s0 x = true)
+      by (apply Hsubset; simpl; rewrite Eq_refl, orb_true_r; reflexivity).
+    assert (size s0 = let '(sl,sr) := split x s0 in 1 + size sl + size sr)%Z.
+    { eapply split_Desc; [eassumption|]. intros. rewrite H1 in H5. lia. }
+    rewrite H3.
+    eapply split_Desc; [eassumption|]. intros.
+    assert (size s1 <= size s3)%Z.
+    { apply IHHB1_1; try assumption.
+      intros i Hi.
+      specialize (Hsubset i). simpl in Hsubset.
+      rewrite Hi in Hsubset. rewrite orb_true_l in Hsubset.
+      specialize (Hsubset eq_refl).
+      rewrite H7 in Hsubset.
+      repeat (f_solver_step; f_solver_cleanup).
+    }
+    assert (size s2 <= size s4)%Z.
+    { apply IHHB1_2; try assumption.
+      intros i Hi.
+      specialize (Hsubset i). simpl in Hsubset.
+      rewrite Hi in Hsubset. rewrite orb_true_r in Hsubset.
+      specialize (Hsubset eq_refl).
+      rewrite H7 in Hsubset.
+      repeat (f_solver_step; f_solver_cleanup).
+    }
+    lia.
+Qed.
+
+Lemma isSubsetOf_spec:
+  forall s1 s2 lb ub,
+  Bounded s1 lb ub ->
+  Bounded s2 lb ub ->
+  isSubsetOf s1 s2 = true <-> (forall i, sem s1 i = true -> sem s2 i = true).
+Proof.
+  intros.
+  unfold isSubsetOf.
+  rewrite andb_true_iff.
+  erewrite isSubsetOfX_spec by eassumption.
+  intuition.
+  unfold op_zlze__, Ord_Integer___, op_zlze____.
+  rewrite Z.leb_le.
+  eapply subest_size; eassumption.
+Qed.
+
+
 (** ** Verifying [filter] *)
 
 Require Import Coq.Classes.Morphisms. (* For [Proper] *)
@@ -2159,7 +2271,8 @@ Module Foo (E : OrderedType) : WSfun(E).
   Qed.
 
   Program Definition equal : t -> t -> bool := fun s1 s2 => @op_zeze__ (Set_ elt) _ s1 s2.
-  Definition subset : t -> t -> bool. Admitted.
+  Program Definition subset : t -> t -> bool := isSubsetOf.
+
   Program Definition fold : forall A : Type, (elt -> A -> A) -> t -> A -> A
     := fun a k s n => foldl (fun x e => k e x) n s.
 
@@ -2220,9 +2333,21 @@ Module Foo (E : OrderedType) : WSfun(E).
     intros. apply eq_iff_eq_true. apply H.
   Qed.
 
-  Lemma subset_1 : forall s s' : t, Subset s s' -> subset s s' = true. Admitted.
-  Lemma subset_2 : forall s s' : t, subset s s' = true -> Subset s s'. Admitted.
-
+  Lemma subset_1 : forall s s' : t, Subset s s' -> subset s s' = true.
+  Proof.
+    intros [s1?] [s2?].
+    unfold Subset, subset, In, proj1_sig.
+    rewrite isSubsetOf_spec by eassumption.
+    intuition.
+  Qed.
+  
+  Lemma subset_2 : forall s s' : t, subset s s' = true -> Subset s s'.
+  Proof.
+    intros [s1?] [s2?].
+    unfold Subset, subset, In, proj1_sig.
+    rewrite isSubsetOf_spec by eassumption.
+    intuition.
+  Qed.
 
   Lemma singleton_1 :
     forall x y : elt, In y (singleton x) -> E.eq x y.

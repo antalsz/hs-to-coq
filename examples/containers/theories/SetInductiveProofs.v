@@ -368,8 +368,8 @@ Ltac f_solver_simple  :=
   let i := fresh "i" in 
   intro i;
   try reflexivity; (* for when we have an existential variable *)
+  repeat multimatch goal with [ H : (forall i, _) |- _] => specialize (H i) end;
   repeat match goal with [ H : ?f = _ |- context [?f i] ] => rewrite H in *; clear H end;
-  repeat match goal with [ H : (forall i, ?f i = _) |- context [?f i] ] => rewrite H; clear H end;
   simpl sem; rewrite ?orb_assoc, ?orb_false_r, ?orb_false_l;
   try reflexivity.
 
@@ -392,25 +392,48 @@ Ltac split_bool_go expr :=
 
 (** This auxillary tactic destructs one boolean or option atom in the goal *)
 
+
 Ltac split_bool :=
   match goal with 
-    | [ |- ?lhs = ?rhs] => split_bool_go lhs || split_bool_go rhs
+    | |- ?lhs = ?rhs        => split_bool_go lhs || split_bool_go rhs
+    (* A bit ad-hoc, could be improved: *)
+    | H : ?x || ?y = true  |- _ => split_bool_go x
+    | H : ?x || ?y = false |- _ => split_bool_go x
+    | H : ?x && ?y = true  |- _ => split_bool_go x
+    | H : ?x && ?y = false |- _ => split_bool_go x
   end.
 
-Ltac f_solver := f_solver_simple;
-  repeat (try solve [exfalso; inside_bounds; order_Bounds];
-          rewrite ?andb_true_r, ?andb_true_l, ?andb_false_r, ?andb_false_l,
-                  ?orb_true_r, ?orb_true_l, ?orb_false_r, ?orb_false_l,
-                  ?orb_assoc, ?and_assoc;
-          try reflexivity;
-          try lazymatch goal with
-            |  H1 : (?i == ?j) = true , H2 : sem ?s ?i = true, H3 : sem ?s ?j = false |- _
-              => exfalso; rewrite (sem_resp_eq s i j H1) in H2; congruence
-            |  H1 : (?i == ?j) = true , H2 : sem ?s ?i = false, H3 : sem ?s ?j = true |- _
-              => exfalso; rewrite (sem_resp_eq s i j H1) in H2; congruence
-          end;
-          split_bool || exfalso
-          ).
+
+Ltac f_solver_cleanup :=
+  simpl negb in *;
+  rewrite ?andb_true_r, ?andb_true_l, ?andb_false_r, ?andb_false_l,
+          ?orb_true_r, ?orb_true_l, ?orb_false_r, ?orb_false_l,
+          ?orb_assoc, ?and_assoc in *;
+  try congruence;
+  repeat lazymatch goal with
+    |  H1 : true = true |- _ => clear H1
+    |  H1 : true = _    |- _ => symmetry in H1
+    |  H1 : false = false |- _ => clear H1
+    |  H1 : false = _    |- _ => symmetry in H1
+  end;
+  try solve [exfalso; inside_bounds; order_Bounds];
+  try reflexivity;
+  try lazymatch goal with
+    |  H1 : (?i == ?j) = true , H2 : sem ?s ?i = true, H3 : sem ?s ?j = false |- _
+      => exfalso; rewrite (sem_resp_eq s i j H1) in H2; congruence
+    |  H1 : (?i == ?j) = true , H2 : sem ?s ?i = false, H3 : sem ?s ?j = true |- _
+      => exfalso; rewrite (sem_resp_eq s i j H1) in H2; congruence
+  end.
+
+Ltac f_solver_step := first
+  [ split_bool
+  | lazymatch goal with H : context [if ?x == ?y then _ else _] |- _
+      => destruct (x == y) eqn:?
+    end
+  | exfalso
+  ].
+
+Ltac f_solver := f_solver_simple; repeat (f_solver_cleanup; f_solver_step).
 
 (** A variant of [lia] that unfolds a few specific things and knows that
    the size of a well-formed tree is positive. *)
@@ -1138,23 +1161,31 @@ Lemma splitS_Desc :
   (forall s1 s2,
     Bounded s1 lb (Some x) ->
     Bounded s2 (Some x) ub ->
+    size s = size s1 + size s2 + (if sem s x then 1 else 0) ->
     (forall i, sem s i = (if i == x then sem s i else sem s1 i || sem s2 i)) ->
     P (s1, s2)) ->
   P (splitS x s) : Prop.
 Proof.
   intros ?? ?? HB.
-  Ltac solveThis := intros X HX; apply HX; clear X HX; [solve_Bounded|solve_Bounded|f_solver].
+  Ltac solveThis := intros X HX; apply HX; clear X HX; [solve_Bounded|solve_Bounded| |f_solver].
   induction HB.
-  * solveThis.
-  * simpl.
+  - solveThis. reflexivity.
+  - simpl.
     destruct (compare x x0) eqn:?.
-    + solveThis.
-    + apply IHHB1; intros s1_2 s1_3 HB1_2 HB1_3 Hsems1; clear IHHB1 IHHB2.
-      applyDesc link_Desc.
-      solveThis.
-    + apply IHHB2; intros s2_2 s2_3 HB2_2 HB2_3 Hsems2; clear IHHB1 IHHB2.
-      applyDesc link_Desc.
-      solveThis.
+  + solveThis. replace (x == x0) with true by order e.
+    rewrite orb_true_r. simpl. lia.
+  + apply IHHB1; intros s1_2 s1_3 HB1_2 HB1_3 Hsz Hsems1; clear IHHB1 IHHB2.
+    applyDesc link_Desc.
+    solveThis. destruct (sem s1 x). 
+    * simpl. lia.
+    * replace (x == x0) with false by order e. simpl.
+      rewrite (sem_outside_below HB2) by solve_Bounds. lia.
+  + apply IHHB2; intros s2_2 s2_3 HB2_2 HB2_3 Hsz Hsems2; clear IHHB1 IHHB2.
+    applyDesc link_Desc.
+    solveThis. destruct (sem s2 x). 
+    * rewrite orb_true_r. lia.
+    * replace (x == x0) with false by order e. simpl.
+      rewrite (sem_outside_above HB1) by solve_Bounds. simpl. lia.
 Qed.
 
 (* The [union] uses some nested pattern match that expand to a very large
@@ -1330,6 +1361,7 @@ Lemma splitMember_Desc:
 Proof.
   intros ?? ?? HB.
   induction HB.
+  Ltac solveThis ::= intros X HX; apply HX; clear X HX; [solve_Bounded|solve_Bounded|f_solver].
   * solveThis.
   * simpl.
     destruct (compare x x0) eqn:?.
@@ -1377,6 +1409,7 @@ Proof.
 Qed.
 
 (** ** Verification of [difference] *)
+
 Lemma split_Desc :
   forall x s lb ub,
   Bounded s lb ub ->
@@ -1384,6 +1417,7 @@ Lemma split_Desc :
   (forall s1 s2,
     Bounded s1 lb (Some x) ->
     Bounded s2 (Some x) ub ->
+    (size s = size s1 + size s2 + (if sem s x then 1 else 0)) ->
     (forall i, sem s i = (if i == x then sem s i else sem s1 i || sem s2 i)) ->
     P (s1, s2)) ->
   P (split x s) : Prop.
@@ -1424,26 +1458,668 @@ Proof.
 Qed.
 
 Lemma difference_Desc :
-  forall s1 s2 lb1 lb2 ub1 ub2,
-  Bounded s1 lb1 ub1 ->
-  Bounded s2 lb2 ub2 ->
-  Desc' (difference s1 s2) lb1 ub1 (fun i => sem s1 i && negb (sem s2 i)).
+  forall s1 s2 lb ub,
+  Bounded s1 lb ub ->
+  Bounded s2 lb ub ->
+  forall (P : Set_ e -> Prop),
+  (forall s,
+    Bounded s lb ub ->
+    size s <= size s1 ->
+    (size s = size s1 -> forall i, sem s i = sem s1 i) ->
+    (forall i, sem s i = sem s1 i && negb (sem s2 i)) ->
+    P s) ->
+  P (difference s1 s2).
 Proof.
-  intros s1 s2 lb1 lb2 ub1 ub2 Hb1 Hb2.
-  revert s1 lb1 ub1 Hb1. induction Hb2; intros ??? Hb1.
-  - simpl. destruct s1; solve_Desc.
+  intros s1 s2 lb ub Hb1 Hb2.
+  revert s1 Hb1. induction Hb2; intros sl Hb1; apply hide.
+  Ltac showP := apply unhide; intros X HX; apply HX; clear X HX; only 3: intro.
+  - simpl.
+    destruct sl; (showP; [assumption | reflexivity | reflexivity | f_solver]).
   - apply difference_destruct; intros; subst.
-    + solve_Desc.
-    + solve_Desc.
-    + eapply split_Desc; try eassumption.
-      intros.
-      destruct (_GHC.Base.==_ (size (difference s3 l2) + size (difference s4 r2)) (size s0)) eqn:Hcomp.
-      * solve_Desc. admit.
-      * admit.
-Admitted.
+    + (showP; [assumption | reflexivity | reflexivity | f_solver]).
+    + (showP; [assumption | reflexivity | reflexivity | f_solver]). 
+    + eapply split_Desc; try eassumption. 
+      intros sl1 sl2 HBsl1 HBsl2 Hsz Hsem. inversion H3; subst; clear H3.
+      eapply IHHb2_1. solve_Bounded. intros sil ????.
+      eapply IHHb2_2. solve_Bounded. intros sir ????.
+      destruct (_ == _) eqn:Hcomp.
+      * showP; [assumption | reflexivity | reflexivity | ].
+        assert (size sl1 + size sl2 <= size sl) by (destruct (sem sl x0); lia).
+        change (size sil + size sir =? size sl = true) in Hcomp.
+        rewrite Z.eqb_eq in Hcomp.
+        lapply H4; [intro; subst|lia].
+        lapply H8; [intro; subst|lia].
+        assert (sem sl x0 = false) by (destruct (sem sl x0); try reflexivity; lia).
+        f_solver.
+      * applyDesc merge_Desc.
+        showP.
+        -- assumption.
+        -- destruct (sem sl x0); lia.
+        -- assert (sem sl x0 = false) by (destruct (sem sl x0); try reflexivity; lia).
+           rewrite H11 in Hsz.
+           lapply H4; [intro; subst|lia].
+           lapply H8; [intro; subst|lia].
+           clear H4 H8.
+           f_solver.
+        -- f_solver.
+Qed.
+
+(** ** Verification of [foldr] *)
+
+(** This relates [foldr] and [toList]. Hard to say which one is more primitive. *)
+
+Lemma fold_right_toList_go:
+  forall {a} k (n : a) s (xs : list e),
+  fold_right k n (foldr cons xs s) = foldr k (fold_right k n xs) s.
+Proof.
+  intros. 
+  revert xs; induction s; intros.
+  * simpl.
+    rewrite IHs1.
+    simpl.
+    rewrite IHs2.
+    reflexivity.
+  * reflexivity.
+Qed.
+
+
+Lemma foldr_spec:
+  forall {a} k (n : a) (s : Set_ e),
+  foldr k n s = fold_right k n (toList s).
+Proof.
+  intros.
+  unfold toList, toAscList. simpl.
+  erewrite fold_right_toList_go by eassumption.
+  reflexivity.
+Qed.
+
+(** ** Verification of [toList] and [toAscList] *)
+
+Import ListNotations.
+
+Lemma foldr_const_append:
+  forall xs (s : Set_ e),
+  foldr cons xs s = toList s ++ xs.
+Proof.
+  intros. revert xs. induction s; intros xs.
+  * unfold toList, toAscList.
+    simpl.
+    rewrite !IHs2, !IHs1.
+    rewrite app_nil_r.
+    rewrite <- !app_assoc.
+    reflexivity.
+  * reflexivity.
+Qed.
+
+Lemma toList_Bin:
+  forall sz x (s1 s2 : Set_ e),
+  toList (Bin sz x s1 s2) = toList s1 ++ [x] ++ toList s2.
+Proof.
+  intros.
+  unfold toList at 1, toAscList at 1.
+  simpl.
+  rewrite !foldr_const_append.
+  rewrite app_nil_r.
+  reflexivity.
+Qed.
+
+Lemma elem_app:
+  forall {a} `{Eq_ a} (i : a) xs ys,
+  List.elem i (xs ++ ys) = List.elem i xs || List.elem i ys.
+Proof.
+  intros.
+  induction xs.
+  * reflexivity.
+  * simpl. rewrite IHxs. rewrite orb_assoc. reflexivity.
+Qed.
+
+Lemma toList_sem:
+  forall s lb ub, Bounded s lb ub ->
+  forall i, sem s i = List.elem i (toList s).
+Proof.
+  intros.
+  induction H.
+  * simpl. reflexivity.
+  * rewrite toList_Bin.
+    simpl.
+    rewrite IHBounded1, IHBounded2; clear IHBounded1 IHBounded2.
+    rewrite elem_app.
+    simpl.
+    rewrite orb_assoc. reflexivity.
+Qed.
+
+Lemma toList_lb:
+  forall s lb ub, Bounded s lb ub ->
+  Forall (fun i => isLB lb i = true) (toList s).
+Proof.
+  intros.
+  induction H.
+  * apply Forall_nil.
+  * rewrite toList_Bin.
+    rewrite Forall_forall in *.
+    intros y Hi.
+    simpl in Hi.
+    rewrite !in_app_iff in *.
+    destruct Hi as [?|[?|?]].
+    - intuition.
+    - subst. assumption.
+    - enough(isLB (Some x) y = true) by order_Bounds. 
+      intuition.
+Qed.
+
+Lemma toList_ub:
+  forall s lb ub, Bounded s lb ub ->
+  Forall (fun i => isUB ub i = true) (toList s).
+Proof.
+  intros.
+  induction H.
+  * apply Forall_nil.
+  * rewrite toList_Bin.
+    rewrite Forall_forall in *.
+    intros y Hi.
+    simpl in Hi.
+    rewrite !in_app_iff in *.
+    destruct Hi as [?|[?|?]].
+    - enough(isUB (Some x) y = true) by order_Bounds. 
+      intuition.
+    - subst. assumption.
+    - intuition.
+Qed.
+
+
+(** *** Sortedness of [toList] *)
+
+Require Import Coq.Sorting.Sorted.
+
+Close Scope Z.
+Local Definition lt : e -> e -> Prop
+  := fun x y => (x < y) = true.
+
+Lemma sorted_append:
+  forall l1 l2 (x : e),
+  StronglySorted lt l1 ->
+  StronglySorted lt l2 ->
+  (forall y, In y l1 -> (y < x) = true) ->
+  (forall y, In y l2 -> (x <= y) = true) ->
+  StronglySorted lt (l1 ++ l2).
+Proof.
+  intros ??? Hsorted1 Hsorted2 Hlt Hge.
+  induction Hsorted1.
+  * apply Hsorted2.
+  * simpl. apply SSorted_cons.
+    + apply IHHsorted1.
+      intros y Hy.
+      apply Hlt.
+      right.
+      assumption.
+    + rewrite Forall_forall.
+      intros z Hz.
+      rewrite in_app_iff in Hz.
+      destruct Hz.
+      - rewrite Forall_forall in H.
+        apply H; auto.
+      - assert (lt a x) by (apply Hlt; left; reflexivity).
+        assert (x <= z = true) by (apply Hge; assumption).
+        (unfold lt in *; order e).
+Qed.
+
+Lemma All_lt_elem:
+  forall x i xs,
+  Forall (lt x) xs ->
+  List.elem i xs = true ->
+  x < i = true.
+Proof.
+  intros.
+  induction H.
+  * simpl in H0. inversion H0.
+  * simpl in *.
+    rewrite orb_true_iff in H0.
+    destruct H0.
+    - unfold lt in *. order e.
+    - intuition.
+Qed.
+
+Lemma to_List_sorted:
+  forall s lb ub,
+  Bounded s lb ub ->
+  StronglySorted lt (toList s).
+Proof.
+  intros.
+  induction H.
+  * apply SSorted_nil.
+  * rewrite toList_Bin.
+    apply sorted_append with (x := x); only 2: apply SSorted_cons.
+    - assumption.
+    - assumption.
+    - apply toList_lb in H0. simpl in H0.
+      apply H0.
+    - intros.
+      apply toList_ub in H. simpl in H.
+      rewrite Forall_forall in H.
+      apply H; assumption.
+    - intros.
+      simpl in H5.
+      destruct H5.
+      + subst. order e.
+      + apply toList_lb in H0. simpl in H0.
+        rewrite Forall_forall in H0.
+        assert (x < y = true) by (apply H0; assumption).
+        order e.
+Qed.
+
+(** This relates [foldl] and [toList]. *)
+
+Lemma foldl_spec:
+  forall {a} k (n : a) (s : Set_ e),
+  foldl k n s = fold_left k (toList s) n.
+Proof.
+  intros ????.
+  revert n.
+  induction s; intros n.
+  * simpl.
+    rewrite toList_Bin.
+    rewrite IHs1.
+    rewrite IHs2.
+    simpl.
+    rewrite fold_left_app.
+    reflexivity.
+  * reflexivity.
+Qed.
+
+(** Size *)
+
+Lemma size_spec:
+  forall s lb ub,
+  Bounded s lb ub ->
+  size s = Z.of_nat (length (toList s)).
+Proof.
+  intros.
+  induction H.
+  * reflexivity.
+  * rewrite toList_Bin.
+    rewrite app_length.
+    simpl.
+    rewrite H3, IHBounded1, IHBounded2.
+    lia.
+Qed.
+
+(** Equality *)
+
+Lemma eqlist_sym:
+  forall {a} `{EqLaws a} (xs ys : list a),
+  eqlist xs ys = eqlist ys xs.
+Proof.
+  intros. revert ys.
+  induction xs; intros ys; destruct ys; simpl in *; try congruence.
+  rewrite Eq_sym. rewrite IHxs.
+  reflexivity.
+Qed.
+
+Lemma eqlist_length:
+  forall {a} `{Eq_ a} (xs ys : list a),
+  eqlist xs ys = true ->
+  length xs = length ys.
+Proof.
+  intros. revert ys H0.
+  induction xs; intros ys Heqlist; destruct ys; simpl in *; try congruence.
+  rewrite andb_true_iff in Heqlist; destruct Heqlist.
+  erewrite -> IHxs by eassumption.
+  reflexivity.
+Qed.
+
+Lemma eqlist_elem:
+  forall {a} `{EqLaws a} (xs ys : list a) (x : a),
+  eqlist xs ys = true ->
+  List.elem x xs = List.elem x ys.
+Proof.
+  intros. revert ys H1.
+  induction xs; intros ys H1; destruct ys; simpl in *; try congruence.
+  rewrite andb_true_iff in H1; destruct H1.
+  erewrite IHxs by eassumption.
+  f_equal.
+  rewrite eq_iff_eq_true.
+  split; intro.
+  - eapply Eq_trans; eassumption.
+  - rewrite Eq_sym in H1. eapply Eq_trans; eassumption.
+Qed.
+
+
+Lemma sem_false_nil:
+  forall s, (forall i, sem s i = false) -> s = Tip.
+Proof.
+  intros.
+  destruct s; try reflexivity; exfalso.
+  specialize (H e0).
+  simpl in H.
+  rewrite Eq_refl in H.
+  rewrite orb_true_r in H.
+  simpl in H.
+  congruence.
+Qed.
+
+Lemma strongly_sorted_unique:
+  forall (xs ys : list e),
+  StronglySorted lt xs ->
+  StronglySorted lt ys ->
+  (forall x, List.elem x xs = List.elem x ys) ->
+  eqlist xs ys = true.
+Proof.
+  intros.
+  revert dependent ys.
+  induction H; intros ys Hys Helem; inversion Hys; subst; clear Hys.
+  * reflexivity.
+  * specialize (Helem a). simpl in Helem. rewrite Eq_refl in Helem. inversion Helem.
+  * specialize (Helem a). simpl in Helem. rewrite Eq_refl in Helem. inversion Helem.
+  * simpl. rewrite andb_true_iff.
+    assert (a == a0 = true).
+    { clear IHStronglySorted.
+      pose proof (Helem a) as Ha.
+      pose proof (Helem a0) as Ha0.
+      simpl in Ha, Ha0.
+      rewrite Eq_refl in Ha, Ha0; rewrite ?orb_true_l, ?orb_true_r in Ha, Ha0.
+      symmetry in Ha.
+      rewrite orb_true_iff in Ha, Ha0.
+      destruct Ha, Ha0; only 1-3 : order e; exfalso.
+      pose proof (All_lt_elem _ _ _ H0 H4).
+      pose proof (All_lt_elem _ _ _ H2 H3).
+      order e.
+    }
+    split; try assumption.
+    apply IHStronglySorted; clear IHStronglySorted.
+      + assumption.
+      + intros i.
+        specialize (Helem i).
+        simpl in Helem.
+        destruct (List.elem i l) eqn:?, (List.elem i l0) eqn:?;
+          rewrite ?orb_true_l, ?orb_true_r, ?orb_false_l, ?orb_false_r  in Helem;
+          try reflexivity;
+          try solve [order e].
+        - pose proof (All_lt_elem _ _ _ H0 Heqb). order e.
+        - pose proof (All_lt_elem _ _ _ H2 Heqb0). order e.
+Qed.
+
+Lemma equals_spec:
+  forall s1 s2 lb ub,
+  Bounded s1 lb ub ->
+  Bounded s2 lb ub ->
+  s1 == s2 = true <-> (forall i, sem s1 i = sem s2 i).
+Proof.
+  intros.
+  unfold op_zeze__, Eq___Set_, op_zeze____.
+  unfold Internal.Eq___Set__op_zeze__.
+  unfold op_zeze__, Eq_Integer___, Eq_list, op_zeze____.
+  rewrite andb_true_iff.
+  split; intro.
+  * destruct H1.
+    intro i.
+    erewrite !toList_sem by eassumption.
+    erewrite eqlist_elem by eassumption.
+    reflexivity.
+  * erewrite !size_spec by eassumption.
+    assert (Heqlist : eqlist (toList s1) (toList s2) = true).
+    { apply strongly_sorted_unique.
+      * eapply to_List_sorted; eassumption.
+      * eapply to_List_sorted; eassumption.
+      * intros i; specialize (H1 i).
+        erewrite !toList_sem in H1 by eassumption.
+        assumption.
+    }
+    erewrite  eqlist_length by eassumption.
+    rewrite Z.eqb_refl. intuition.
+Qed.
+
+(** ** Verifying [isSubsetOf] *)
+
+Lemma isSubsetOfX_spec:
+  forall s1 s2 lb ub,
+  Bounded s1 lb ub ->
+  Bounded s2 lb ub ->
+  isSubsetOfX s1 s2 = true <-> (forall i, sem s1 i = true -> sem s2 i = true).
+Proof.
+  intros ???? HB1 HB2.
+  revert dependent s2.
+  induction HB1; intros; simpl; subst.
+  * intuition.
+  * destruct s0 eqn:Hs0.
+    - rewrite <- Hs0 in *.
+      clear s3 e0 s4 s5 Hs0.
+      eapply splitMember_Desc; [solve_Bounded|].
+      intros sr1 b sr2 HBsr1 HBsr2 Hsem.
+      rewrite !andb_true_iff.
+      rewrite IHHB1_1 by eassumption.
+      rewrite IHHB1_2 by eassumption.
+      split; intro; [destruct H1 as [?[??]] | split; [|split] ].
+      -- intros i Hi.
+         rewrite Hsem.
+         rewrite !orb_true_iff in Hi.
+         destruct Hi as [[Hi|Hi]|Hi];
+         destruct (i == x);
+         try reflexivity;
+         try congruence;
+         try apply H3 in Hi;
+         try apply H4 in Hi;
+         rewrite Hi;
+         rewrite ?orb_true_l, ?orb_true_r; reflexivity.
+     -- specialize (Hsem x).
+        rewrite Eq_refl in Hsem. rewrite <- Hsem.
+        apply H1.
+        rewrite Eq_refl.
+        rewrite ?orb_true_l, ?orb_true_r; reflexivity.
+     -- intros i Hi.
+        specialize (H1 i).
+        rewrite Hi in H1.
+        rewrite ?orb_true_l, ?orb_true_r in H1.
+        rewrite Hsem in H1.
+        specialize (H1 eq_refl).
+        repeat (f_solver_step; f_solver_cleanup).
+     -- intros i Hi.
+        specialize (H1 i).
+        rewrite Hi in H1.
+        rewrite ?orb_true_l, ?orb_true_r in H1.
+        rewrite Hsem in H1.
+        specialize (H1 eq_refl).
+        repeat (f_solver_step; f_solver_cleanup).
+    - intuition.
+      specialize (H1 x).
+      rewrite Eq_refl, orb_true_r in H1.
+      simpl in H1. intuition.
+Qed.
+
+Lemma subest_size:
+  forall s1 s2 lb ub,
+  Bounded s1 lb ub ->
+  Bounded s2 lb ub ->
+  (forall i, sem s1 i = true -> sem s2 i = true) ->
+  (size s1 <= size s2)%Z.
+Proof.
+  intros ???? HB1 HB2 Hsubset.
+  revert dependent s2.
+  induction HB1; intros; simpl; subst.
+  * simpl. solve_size.
+  * assert (sem s0 x = true)
+      by (apply Hsubset; simpl; rewrite Eq_refl, orb_true_r; reflexivity).
+    assert (size s0 = let '(sl,sr) := split x s0 in 1 + size sl + size sr)%Z.
+    { eapply split_Desc; [eassumption|]. intros. rewrite H1 in H5. lia. }
+    rewrite H3.
+    eapply split_Desc; [eassumption|]. intros.
+    assert (size s1 <= size s3)%Z.
+    { apply IHHB1_1; try assumption.
+      intros i Hi.
+      specialize (Hsubset i). simpl in Hsubset.
+      rewrite Hi in Hsubset. rewrite orb_true_l in Hsubset.
+      specialize (Hsubset eq_refl).
+      rewrite H7 in Hsubset.
+      repeat (f_solver_step; f_solver_cleanup).
+    }
+    assert (size s2 <= size s4)%Z.
+    { apply IHHB1_2; try assumption.
+      intros i Hi.
+      specialize (Hsubset i). simpl in Hsubset.
+      rewrite Hi in Hsubset. rewrite orb_true_r in Hsubset.
+      specialize (Hsubset eq_refl).
+      rewrite H7 in Hsubset.
+      repeat (f_solver_step; f_solver_cleanup).
+    }
+    lia.
+Qed.
+
+Lemma isSubsetOf_spec:
+  forall s1 s2 lb ub,
+  Bounded s1 lb ub ->
+  Bounded s2 lb ub ->
+  isSubsetOf s1 s2 = true <-> (forall i, sem s1 i = true -> sem s2 i = true).
+Proof.
+  intros.
+  unfold isSubsetOf.
+  rewrite andb_true_iff.
+  erewrite isSubsetOfX_spec by eassumption.
+  intuition.
+  unfold op_zlze__, Ord_Integer___, op_zlze____.
+  rewrite Z.leb_le.
+  eapply subest_size; eassumption.
+Qed.
+
+
+(** ** Verifying [filter] *)
+
+Require Import Coq.Classes.Morphisms. (* For [Proper] *)
+
+(**
+For filter we need two lemmas: We need to know that [filter P s] is
+well-formed even if P does not respect equality (this is
+required by the [FSetInterface]). But to prove something about its
+semantics, we need to assume that [P] respects equality.
+*)
+
+Lemma filter_Bounded:
+  forall (P : e -> bool) s lb ub,
+  Bounded s lb ub ->
+  Bounded (Internal.filter P s) lb ub.
+Proof.
+  intros.
+  induction H.
+  * simpl. solve_Bounded.
+  * simpl.
+    destruct (P x) eqn:HPx.
+    - destruct_ptrEq.
+      + solve_Bounded.
+      + applyDesc link_Desc.
+    - applyDesc merge_Desc.
+Qed.
+
+Lemma filter_Desc:
+  forall (P : e -> bool) s lb ub,
+  Bounded s lb ub ->
+  Proper ((fun i j : e => _GHC.Base.==_ i j = true) ==> eq) P ->
+  Desc' (Internal.filter P s) lb ub (fun i => P i && sem s i).
+Proof.
+  intros.
+  induction H.
+  * simpl. solve_Desc.
+  * simpl.
+    applyDesc IHBounded1.
+    applyDesc IHBounded2.
+    destruct (P x) eqn:HPx.
+    - destruct_ptrEq.
+      + solve_Desc.
+        f_solver.
+        specialize (H0 _ _ Heqb0). congruence.
+      + applyDesc link_Desc.
+        solve_Desc.
+        f_solver.
+        specialize (H0 _ _ Heqb0). congruence.
+    - applyDesc merge_Desc.
+      solve_Desc.
+      f_solver.
+      specialize (H0 _ _ Heqb2). congruence.
+Qed.
+
+(** ** Verifying [partition] *)
+
+Lemma partition_Bounded:
+  forall p s lb ub,
+  Bounded s lb ub ->
+  forall (P : (Set_ e * Set_ e) -> Prop),
+  (forall s1 s2, Bounded s1 lb ub /\ Bounded s2 lb ub -> P (s1, s2)) ->
+  P (partition p s).
+Proof.
+  intros ???? HB.
+  induction HB.
+  * intros X HX; apply HX; clear X HX; split; solve_Bounded.
+  * simpl.
+    apply IHHB1; intros sl1 sl2 [HDsl1 HDsl2]; clear IHHB1.
+    apply IHHB2; intros sr1 sr2 [HDsr1 HDsr2]; clear IHHB2.
+    destruct (p x) eqn:?.
+    - intros X HX; apply HX; clear X HX; split.
+      + destruct_ptrEq.
+        -- solve_Bounded.
+        -- applyDesc link_Desc.
+      + applyDesc merge_Desc.
+    - intros X HX; apply HX; clear X HX; split.
+      + applyDesc merge_Desc.
+      + destruct_ptrEq.
+        -- solve_Bounded.
+        -- applyDesc link_Desc.
+Qed.
+
+
+Lemma partition_spec:
+  forall p s lb ub,
+  Bounded s lb ub ->
+  Proper ((fun i j : e => i == j = true) ==> eq) p ->
+  forall (P : (Set_ e * Set_ e) -> Prop),
+  (forall s1 s2,
+    Desc' s1 lb ub (fun i => p i && sem s i) /\
+    Desc' s2 lb ub (fun i => negb (p i) && sem s i) ->
+    P (s1, s2)) ->
+  P (partition p s).
+Proof.
+  intros ???? HB HProper.
+  induction HB.
+  * intros X HX; apply HX; clear X HX; split; solve_Desc.
+  * simpl.
+    apply IHHB1; intros sl1 sl2 [HDsl1 HDsl2]; clear IHHB1.
+    applyDesc HDsl1; clear HDsl1.
+    applyDesc HDsl2; clear HDsl2.
+    apply IHHB2; intros sr1 sr2 [HDsr1 HDsr2]; clear IHHB2.
+    applyDesc HDsr1; clear HDsr1.
+    applyDesc HDsr2; clear HDsr2.
+    destruct (p x) eqn:?.
+    - intros X HX; apply HX; clear X HX; split.
+      + destruct_ptrEq.
+        -- solve_Desc.
+           f_solver.
+           specialize (HProper _ _ Heqb1). congruence.
+        -- applyDesc link_Desc.
+           solve_Desc.
+           f_solver.
+           specialize (HProper _ _ Heqb1). congruence.
+      + applyDesc merge_Desc.
+        solve_Desc.
+        f_solver.
+        specialize (HProper _ _ Heqb3). congruence.
+    - intros X HX; apply HX; clear X HX; split.
+      + applyDesc merge_Desc.
+        solve_Desc.
+        f_solver.
+        specialize (HProper _ _ Heqb3). congruence.
+      + destruct_ptrEq.
+        -- solve_Desc.
+           f_solver.
+           specialize (HProper _ _ Heqb1). congruence.
+        -- applyDesc link_Desc.
+           solve_Desc.
+           f_solver.
+           specialize (HProper _ _ Heqb1). congruence.
+Qed.
+
+
 End WF.
 
-(** * Instantiationg the [FSetInterface] *)
+
+
+
+(** * Instantiating the [FSetInterface] *)
 
 Require Import Coq.FSets.FSetInterface.
 Require OrdTheories.
@@ -1451,8 +2127,33 @@ Require OrdTheories.
 Module Foo (E : OrderedType) : WSfun(E).
   Include OrdTheories.OrdTheories E.
 
-  Instance EqLaws_elt : EqLaws elt. Admitted. (* Should be moved to [OrdTheoreis] *)
-  Instance OrdLaws_elt : OrdLaws elt. Admitted. (* Should be moved to [OrdTheoreis] *)
+  Lemma E_eq_zeze:
+    forall x y : elt, E.eq x y <-> (x == y) = true.
+  Proof. apply elt_eq. Qed.
+
+  Lemma E_lt_zl:
+    forall x y : elt, E.lt x y <-> (x < y) = true.
+  Proof. apply elt_lt. Qed.
+  
+  Lemma InA_Eeq_elem:
+    forall x xs,  
+    InA E.eq x xs <-> List.elem x xs = true.
+  Proof.
+    intros.
+    induction xs.
+    * simpl. split; intro; inversion H.
+    * simpl. rewrite InA_cons, orb_true_iff, IHxs, elt_eq. reflexivity.
+  Qed.
+
+  Lemma compat_bool_Eeq_op_zeze:
+    forall f, compat_bool E.eq f ->
+    Proper ((fun i j : elt => i == j = true) ==> eq) f.
+  Proof.
+    intros.
+    intros i j Heq.
+    rewrite <- E_eq_zeze in Heq.
+    apply H. assumption.
+  Qed.
 
   (* Well-formedness *)
   Definition t := {s : Set_ elt | Bounded s None None}.
@@ -1461,8 +2162,6 @@ Module Foo (E : OrderedType) : WSfun(E).
   Definition Equal s s' := forall a : elt, In a s <-> In a s'.
   Definition Subset s s' := forall a : elt, In a s -> In a s'.
   Definition Empty s := forall a : elt, ~ In a s.
-  Definition For_all (P : elt -> Prop) s := forall x, In x s -> P x.
-  Definition Exists (P : elt -> Prop) s := exists x, In x s /\ P x.
 
   Program Definition empty : t := empty.
   Next Obligation. constructor. Defined.
@@ -1500,7 +2199,20 @@ Module Foo (E : OrderedType) : WSfun(E).
   Qed.
   
   Definition eq : t -> t -> Prop := Equal.
-  Definition eq_dec : forall s s' : t, {eq s s'} + {~ eq s s'}. Admitted.
+  Definition eq_dec : forall s s' : t, {eq s s'} + {~ eq s s'}.
+  Proof.
+    intros.
+    destruct s as [s1 ?], s' as [s2 ?].
+    unfold eq, Equal, In, proj1_sig.
+    destruct (s1 == s2) eqn:?.
+    * left. intro i.  apply eq_iff_eq_true. eapply equals_spec; try eassumption.
+    * right.
+      assert (~ (forall a : elt, sem s1 a = sem s2 a)).
+      { rewrite <- equals_spec by eassumption.
+        rewrite not_true_iff_false. assumption.
+      }
+      contradict H. intro i. apply eq_iff_eq_true. apply H.
+  Qed.
 
   Lemma eq_refl : forall s : t, eq s s.
   Proof. destruct s. unfold eq. unfold Equal. intro. reflexivity. Qed.
@@ -1542,26 +2254,49 @@ Module Foo (E : OrderedType) : WSfun(E).
   Program Definition inter : t -> t -> t:= intersection.
   Next Obligation.
     destruct x, x0. simpl.
-    eapply intersection_Desc
-    with (ub := None) (lb := None);
-      intuition.
+    eapply intersection_Desc with (ub := None) (lb := None);intuition.
   Qed.
-  
-  Definition diff : t -> t -> t. Admitted.
-  Definition equal : t -> t -> bool. Admitted.
-  Definition subset : t -> t -> bool. Admitted.
-  Definition fold : forall A : Type, (elt -> A -> A) -> t -> A -> A. Admitted.
-  Definition for_all : (elt -> bool) -> t -> bool. Admitted.
-  Definition exists_ : (elt -> bool) -> t -> bool. Admitted.
-  Definition filter : (elt -> bool) -> t -> t. Admitted.
-  Definition partition : (elt -> bool) -> t -> t * t. Admitted.
-  Definition cardinal : t -> nat. Admitted.
-  Definition elements : t -> list elt. Admitted.
-  Definition choose : t -> option elt. Admitted.
+
+  Program Definition diff : t -> t -> t := difference.
+  Next Obligation.
+    destruct x, x0. simpl.
+    eapply difference_Desc with (ub := None) (lb := None); intuition.
+  Qed.
+
+  Program Definition equal : t -> t -> bool := fun s1 s2 => @op_zeze__ (Set_ elt) _ s1 s2.
+  Program Definition subset : t -> t -> bool := isSubsetOf.
+
+  Program Definition fold : forall A : Type, (elt -> A -> A) -> t -> A -> A
+    := fun a k s n => foldl (fun x e => k e x) n s.
+
+  Program Definition filter : (elt -> bool) -> t -> t := filter.
+  Next Obligation.
+    destruct x0. simpl.
+    eapply filter_Bounded with (ub := None) (lb := None); assumption.
+  Qed.
+
+  Program Definition partition : (elt -> bool) -> t -> t * t := partition.
+  Next Obligation.
+    destruct x0. simpl.
+    eapply partition_Bounded with (ub := None) (lb := None); intuition.
+  Qed.
+  Next Obligation.
+    destruct x0. simpl.
+    eapply partition_Bounded with (ub := None) (lb := None); intuition.
+  Qed.
+
+  Program Definition cardinal : t -> nat := fun s => Z.to_nat (size s).
+  Program Definition elements : t -> list elt := toList.
 
   Lemma In_1 :
     forall (s : t) (x y : elt), E.eq x y -> In x s -> In y s.
-  Admitted.
+  Proof.
+    intros [s?] x y Heq.
+    rewrite E_eq_zeze in Heq.
+    unfold In, proj1_sig.
+    rewrite (sem_resp_eq _ _ _ Heq).
+    intuition.
+  Qed.
 
   Lemma mem_1 : forall (s : t) (x : elt), In x s -> mem x s = true.
   Proof.
@@ -1575,18 +2310,36 @@ Module Foo (E : OrderedType) : WSfun(E).
     erewrite member_spec in H; eassumption.
   Qed.
 
-  Lemma equal_1 : forall s s' : t, Equal s s' -> equal s s' = true. Admitted.
-  Lemma equal_2 : forall s s' : t, equal s s' = true -> Equal s s'. Admitted.
-  Lemma subset_1 : forall s s' : t, Subset s s' -> subset s s' = true. Admitted.
-  Lemma subset_2 : forall s s' : t, subset s s' = true -> Subset s s'. Admitted.
-
-
-  Lemma E_eq_zeze:
-    forall x y : elt, E.eq x y <-> (x == y) = true.
+  Lemma equal_1 : forall s s' : t, Equal s s' -> equal s s' = true.
   Proof.
-    intros.
-    unfold op_zeze__, Eq_t, op_zeze____.
-    destruct (E.eq_dec x y); simpl in *; intuition congruence.
+    intros [s1?] [s2?].
+    unfold Equal, equal, In, proj1_sig.
+    rewrite equals_spec by eassumption.
+    intros. apply eq_iff_eq_true. apply H.
+  Qed.
+  
+  Lemma equal_2 : forall s s' : t, equal s s' = true -> Equal s s'.
+  Proof.
+    intros [s1?] [s2?].
+    unfold Equal, equal, In, proj1_sig.
+    rewrite equals_spec by eassumption.
+    intros. apply eq_iff_eq_true. apply H.
+  Qed.
+
+  Lemma subset_1 : forall s s' : t, Subset s s' -> subset s s' = true.
+  Proof.
+    intros [s1?] [s2?].
+    unfold Subset, subset, In, proj1_sig.
+    rewrite isSubsetOf_spec by eassumption.
+    intuition.
+  Qed.
+  
+  Lemma subset_2 : forall s s' : t, subset s s' = true -> Subset s s'.
+  Proof.
+    intros [s1?] [s2?].
+    unfold Subset, subset, In, proj1_sig.
+    rewrite isSubsetOf_spec by eassumption.
+    intuition.
   Qed.
 
   Lemma singleton_1 :
@@ -1777,55 +2530,302 @@ Module Foo (E : OrderedType) : WSfun(E).
   Qed.
 
   Lemma diff_1 :
-    forall (s s' : t) (x : elt), In x (diff s s') -> In x s. Admitted.
+    forall (s s' : t) (x : elt), In x (diff s s') -> In x s.
+  Proof.
+    intros [s1 Hs1] [s2 Hs2] x.
+    unfold In, diff, proj1_sig.
+    eapply difference_Desc with (ub := None) (lb := None);
+      try assumption.
+    intros.
+    rewrite H2 in H3.
+    rewrite andb_true_iff in H3.
+    intuition.
+  Qed.
+
   Lemma diff_2 :
-    forall (s s' : t) (x : elt), In x (diff s s') -> ~ In x s'. Admitted.
+    forall (s s' : t) (x : elt), In x (diff s s') -> ~ In x s'.
+  Proof.
+    intros [s1 Hs1] [s2 Hs2] x.
+    unfold In, diff, proj1_sig.
+    eapply difference_Desc with (ub := None) (lb := None);
+      try assumption.
+    intros. intro.
+    rewrite H2 in H3.
+    rewrite andb_true_iff in H3.
+    rewrite negb_true_iff in H3.
+    intuition congruence.
+  Qed.
+
   Lemma diff_3 :
-    forall (s s' : t) (x : elt), In x s -> ~ In x s' -> In x (diff s s'). Admitted.
+    forall (s s' : t) (x : elt), In x s -> ~ In x s' -> In x (diff s s').
+  Proof.
+    intros [s1 Hs1] [s2 Hs2] x.
+    unfold In, diff, proj1_sig.
+    eapply difference_Desc with (ub := None) (lb := None);
+      try assumption.
+    intros.
+    rewrite H2.
+    rewrite andb_true_iff.
+    rewrite negb_true_iff.
+    intuition try congruence.
+    destruct (sem s2 x); congruence.
+  Qed.
+
   Lemma fold_1 :
     forall (s : t) (A : Type) (i : A) (f : elt -> A -> A),
       fold A f s i =
-      fold_left (fun (a : A) (e : elt) => f e a) (elements s) i. Admitted.
-  Lemma cardinal_1 : forall s : t, cardinal s = length (elements s). Admitted.
+      fold_left (fun (a : A) (e : elt) => f e a) (elements s) i.
+  Proof.
+    intros [s?] A n k.
+    unfold fold, elements, proj1_sig.
+    rewrite foldl_spec.
+    reflexivity.
+  Qed.
+  
+  Lemma cardinal_1 : forall s : t, cardinal s = length (elements s).
+  Proof.
+    intros [s?].
+    unfold cardinal, elements, proj1_sig.
+    erewrite size_spec by eassumption.
+    rewrite Nat2Z.id.
+    reflexivity.
+  Qed.
+
   Lemma filter_1 :
     forall (s : t) (x : elt) (f : elt -> bool),
-      compat_bool E.eq f -> In x (filter f s) -> In x s. Admitted.
+      compat_bool E.eq f -> In x (filter f s) -> In x s.
+  Proof.
+    intros [s?] x f HProper.
+    apply compat_bool_Eeq_op_zeze in HProper.
+    unfold In, filter, proj1_sig.
+    eapply filter_Desc; try eassumption.
+    intros s' HB _ Hsem.
+    rewrite Hsem.
+    rewrite andb_true_iff.
+    intuition.
+  Qed.
+
   Lemma filter_2 :
     forall (s : t) (x : elt) (f : elt -> bool),
-      compat_bool E.eq f -> In x (filter f s) -> f x = true. Admitted.
+      compat_bool E.eq f -> In x (filter f s) -> f x = true.
+  Proof.
+    intros [s?] x f HProper.
+    apply compat_bool_Eeq_op_zeze in HProper.
+    unfold In, filter, proj1_sig.
+    eapply filter_Desc; try eassumption.
+    intros s' HB _ Hsem.
+    rewrite Hsem.
+    rewrite andb_true_iff.
+    intuition.
+  Qed.
+
   Lemma filter_3 :
     forall (s : t) (x : elt) (f : elt -> bool),
-      compat_bool E.eq f -> In x s -> f x = true -> In x (filter f s). Admitted.
-  Lemma for_all_1 :
-    forall (s : t) (f : elt -> bool),
-      compat_bool E.eq f ->
-      For_all (fun x : elt => f x = true) s -> for_all f s = true. Admitted.
-  Lemma for_all_2 :
-    forall (s : t) (f : elt -> bool),
-      compat_bool E.eq f ->
-      for_all f s = true -> For_all (fun x : elt => f x = true) s. Admitted.
-  Lemma exists_1 :
-    forall (s : t) (f : elt -> bool),
-      compat_bool E.eq f ->
-      Exists (fun x : elt => f x = true) s -> exists_ f s = true. Admitted.
-  Lemma exists_2 :
-    forall (s : t) (f : elt -> bool),
-      compat_bool E.eq f ->
-      exists_ f s = true -> Exists (fun x : elt => f x = true) s. Admitted.
+      compat_bool E.eq f -> In x s -> f x = true -> In x (filter f s).
+  Proof.
+    intros [s?] x f HProper.
+    apply compat_bool_Eeq_op_zeze in HProper.
+    unfold In, filter, proj1_sig.
+    eapply filter_Desc; try eassumption.
+    intros s' HB _ Hsem.
+    rewrite Hsem.
+    rewrite andb_true_iff.
+    intuition.
+  Qed.
+
   Lemma partition_1 :
     forall (s : t) (f : elt -> bool),
-      compat_bool E.eq f -> Equal (fst (partition f s)) (filter f s). Admitted.
+      compat_bool E.eq f -> Equal (fst (partition f s)) (filter f s).
+  Proof.
+    intros [s?] f HProper.
+    apply compat_bool_Eeq_op_zeze in HProper.
+    unfold Equal, In, filter, partition, fst, proj1_sig.
+    eapply filter_Desc; try eassumption.
+    intros s' HB _ Hsem.
+    eapply partition_spec; try eassumption.
+    intros s1 s2 [HD1 HD2].
+    eapply HD1; intros s1' HBs1' _ Hsems1'.
+    intro.
+    rewrite Hsem, Hsems1'.
+    reflexivity.
+  Qed.
+  
+  Lemma compat_bool_negb:
+    forall A R (f : A -> bool), compat_bool R f -> compat_bool R (fun x => negb (f x)).
+  Proof. intros. intros x y HR. f_equal. apply H. assumption. Qed.
+
   Lemma partition_2 :
     forall (s : t) (f : elt -> bool),
       compat_bool E.eq f ->
-      Equal (snd (partition f s)) (filter (fun x : elt => negb (f x)) s). Admitted.
+      Equal (snd (partition f s)) (filter (fun x : elt => negb (f x)) s).
+  Proof.
+    intros [s?] f HProper.
+    apply compat_bool_Eeq_op_zeze in HProper.
+    pose proof (compat_bool_negb _ _ _ HProper).
+    unfold Equal, In, filter, partition, snd, proj1_sig.
+    eapply filter_Desc; try eassumption.
+    intros s' HB _ Hsem.
+    eapply partition_spec; try eassumption.
+    intros s1 s2 [HD1 HD2].
+    eapply HD2; intros s2' HBs2' _ Hsems2'.
+    intro.
+    rewrite Hsem, Hsems2'.
+    reflexivity.
+  Qed.
+
   Lemma elements_1 :
-    forall (s : t) (x : elt), In x s -> InA E.eq x (elements s). Admitted.
+    forall (s : t) (x : elt), In x s -> InA E.eq x (elements s).
+  Proof.
+    intros [s?] x H.
+    unfold In, elements, proj1_sig in *.
+    rewrite InA_Eeq_elem in *.
+    erewrite toList_sem in H by eassumption.
+    assumption.
+  Qed.
+
   Lemma elements_2 :
-    forall (s : t) (x : elt), InA E.eq x (elements s) -> In x s. Admitted.
-  Lemma elements_3w : forall s : t, NoDupA E.eq (elements s). Admitted.
+    forall (s : t) (x : elt), InA E.eq x (elements s) -> In x s.
+  Proof.
+    intros [s?] x H.
+    unfold In, elements, proj1_sig in *.
+    rewrite InA_Eeq_elem in *.
+    erewrite toList_sem in * by eassumption.
+    assumption.
+  Qed.
+
+  Lemma elements_3w : forall s : t, NoDupA E.eq (elements s).
+  Proof.
+    intros [s?].
+    unfold elements, proj1_sig.
+    apply OrdFacts.Sort_NoDup.
+    apply StronglySorted_Sorted.
+    assert (StronglySorted lt (toList s)) by (eapply to_List_sorted; eassumption).
+    (* Here we just replace E.lt with lt *)
+    induction H.
+    * apply SSorted_nil.    
+    * apply SSorted_cons; try assumption.
+      clear IHStronglySorted H.
+      induction H0.
+      - constructor.
+      - constructor; try assumption.
+        rewrite E_lt_zl. assumption.
+  Qed.
+
+(**
+  These portions of the [FMapInterface] have no counterpart in the [IntSet] interface.
+  We implement them generically.
+  *)
+
+  Definition For_all (P : elt -> Prop) s := forall x, In x s -> P x.
+  Definition Exists (P : elt -> Prop) s := exists x, In x s /\ P x.
+
+  Definition for_all : (elt -> bool) -> t -> bool :=
+    fun P s => forallb P (elements s).
+  Definition exists_ : (elt -> bool) -> t -> bool :=
+    fun P s => existsb P (elements s).
+
+  Lemma for_all_1 :
+    forall (s : t) (f : elt -> bool),
+    compat_bool E.eq f ->
+    For_all (fun x : elt => f x = true) s -> for_all f s = true.
+  Proof.
+    intros.
+    unfold For_all, for_all in *.
+    rewrite forallb_forall.
+    intros. apply H0.
+    apply elements_2.
+    apply OrdFacts.ListIn_In.
+    assumption.
+  Qed.
+
+  Lemma for_all_2 :
+    forall (s : t) (f : elt -> bool),
+    compat_bool E.eq f ->
+    for_all f s = true -> For_all (fun x : elt => f x = true) s.
+  Proof.
+    intros.
+    unfold For_all, for_all in *.
+    rewrite forallb_forall in H0.
+    intros.
+    apply elements_1 in H1.
+    rewrite InA_alt in H1.
+    destruct H1 as [?[??]].
+    assert (f x0 = true) by (apply H0; assumption).
+    unfold compat_bool in H.
+    setoid_rewrite H1.
+    assumption.
+  Qed.
+
+  Lemma exists_1 :
+    forall (s : t) (f : elt -> bool),
+    compat_bool E.eq f ->
+    Exists (fun x : elt => f x = true) s -> exists_ f s = true.
+  Proof.
+    intros.
+    unfold Exists, exists_ in *.
+    rewrite existsb_exists.
+    destruct H0 as [x[??]].
+    apply elements_1 in H0.
+    rewrite InA_alt in H0.
+    destruct H0 as [?[??]].
+    exists x0.
+    split; auto.
+    unfold compat_bool in H.
+    setoid_rewrite <- H0.
+    assumption.
+  Qed.
+
+  Lemma exists_2 :
+    forall (s : t) (f : elt -> bool),
+    compat_bool E.eq f ->
+    exists_ f s = true -> Exists (fun x : elt => f x = true) s.
+  Proof.
+    intros.
+    unfold Exists, exists_ in *.
+    rewrite existsb_exists in H0.
+    destruct H0 as [x[??]].
+    exists x.
+    split; auto.
+    apply elements_2.
+    apply OrdFacts.ListIn_In.
+    assumption.
+  Qed.
+  
+ (** One could implement [choose] with [minView]. We currenlty do not
+  translate [minView], because of a call to [error] in a branch that is inaccessible
+  in well-formed trees. Stretch goal: translate that and use it here.
+  *)
+
+  Definition choose : t -> option elt :=
+    fun s => match elements s with
+                | nil => None
+                | x :: _ => Some x
+              end.
+
+
   Lemma choose_1 :
-    forall (s : t) (x : elt), choose s = Some x -> In x s. Admitted.
-  Lemma choose_2 : forall s : t, choose s = None -> Empty s. Admitted.
+    forall (s : t) (x : elt), choose s = Some x -> In x s.
+  Proof.
+    intros.
+    unfold choose in *.
+    destruct (elements s) eqn:?; try congruence.
+    inversion H; subst.
+    apply elements_2.
+    rewrite Heql.
+    left.
+    reflexivity.
+  Qed.
+
+  Lemma choose_2 : forall s : t, choose s = None -> Empty s.
+  Proof.
+    intros.
+    unfold choose in *.
+    destruct (elements s) eqn:?; try congruence.
+    intros x ?.
+    apply elements_1 in H0.
+    rewrite Heql in H0.
+    inversion H0.
+  Qed.
+
 
 End Foo.

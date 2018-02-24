@@ -133,8 +133,12 @@ Definition balance_prop sz1 sz2 :=
     unfortunately not very educational.
  *)
 Definition balance_prop_inserted sz1 sz2 :=
-  (delta * sz1 < ((delta + 1)*(delta + 1) - delta) * (sz2 + 1) - delta * delta /\ sz2 <= delta * sz1)%Z.
+  (delta * sz1 <= delta*delta*sz2 + delta*sz2 + delta + sz2 /\ sz2 <= delta * sz1)%Z.
 
+(* NB: this does not work: 
+Definition balance_prop_inserted sz1 sz2 :=
+  (1 <= sz1)%Z  /\ balance_prop (sz1 - 1) sz2.
+*)
 
 Fixpoint sem (s : Set_ e) (i : e) : bool :=
   match s with | Bin _ x s1 s2 => sem s1 i || (i == x) || sem s2 i
@@ -439,7 +443,7 @@ Ltac f_solver := f_solver_simple; repeat (f_solver_cleanup; f_solver_step).
    the size of a well-formed tree is positive. *)
 Ltac lia_sizes :=
   postive_sizes;
-  unfold balance_prop, balance_prop_inserted, delta, ratio in *;
+  unfold balance_prop_inserted, balance_prop, delta, ratio in *;
   unfold fromInteger, op_zg__, op_zl__, op_zt__, op_zp__,
                       Num_Integer__, Ord_Integer___,
                       op_zg____, op_zl____ in *;

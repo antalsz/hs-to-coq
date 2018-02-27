@@ -5,7 +5,8 @@
 Tactics.v
 IntToZ.v
 OrdTheories.v
-SetProofs.v
+# disable for now, since it is soo slow
+# SetProofs.v
 MapProofs.v
 IntSetProofs.v
 IntMapProofs.v

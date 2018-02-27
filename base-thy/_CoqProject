@@ -1,3 +1,3 @@
 -Q .        Proofs
--Q ../base/ ''
+-Q ../base/ ""
 ./Data/Ord.v ./Data/OldList.v ./Data/Foldable.v ./Data/Either.v ./Data/Proxy.v ./GHC/Base.v ./GHC/List.v ./Termination.v

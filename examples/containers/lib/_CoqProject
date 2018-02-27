@@ -1,6 +1,6 @@
 -Q . ''
 -R ../../../base ''
 Data/SequenceManual.v Utils/Containers/Internal/PtrEquality.v CTZ.v Popcount.v BitTerminationProofs.v
-Data/Set/Internal.v Utils/Containers/Internal/BitQueue.v Utils/Containers/Internal/BitUtil.v Data/IntSet/Internal.v Data/IntMap/Internal.v Data/Map/Internal.v IntSetValidity.v 
+Data/Set/Internal.v Utils/Containers/Internal/BitQueue.v Utils/Containers/Internal/BitUtil.v Data/IntSet/Internal.v Data/IntMap/Internal.v Data/Map/Internal.v IntSetValidity.v intset-properties.v
 
 

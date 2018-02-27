@@ -3,4 +3,5 @@
 -Q ../../../base-thy Proofs
 -R ../lib ""
 -R ../theories ""
+HSUtil.v SortedUtil.v IntSetUtil.v
 IntSetProperties.v IntSetPropertyProofs.v

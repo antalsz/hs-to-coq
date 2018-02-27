@@ -29,45 +29,110 @@ Module Lemmas.
 Section Lemmas.
   Context {t : Type} {HEq : Eq_ t} {HOrd : Ord t} {HEqLaw : EqLaws t} {HOrdLaw : OrdLaws t}.
 
-  Lemma Eq_neq_sym : forall x y : t, (x == y) = false -> (y == x) = false.
-  Admitted.
+  Lemma Eq_neq_sym (x y : t) : (x == y) = false -> (y == x) = false.
+  Proof. rewrite Eq_sym; auto. Qed.
 
-  Lemma Eq_ne_eq : forall x y : t, (x /= y) = negb (x == y).
-  Admitted.
+  Lemma Eq_ne_eq (x y : t) : (x /= y) = negb (x == y).
+  Proof. rewrite Eq_inv, negb_involutive; auto. Qed.
 
-  Lemma Eq_eq_refl : forall x : t, (x == x) = true.
-  Admitted.
+  Lemma Eq_eq_refl (x : t) : (x == x) = true.
+  Proof. rewrite Eq_refl; auto. Qed.
 
-  Lemma Ord_le_refl : forall x : t, (x <= x) = true.
-  Admitted.
+  Lemma Ord_le_refl (x : t) : (x <= x) = true.
+  Proof. destruct (Ord_total x x); auto. Qed.
 
-  Lemma Eq_trans_l : forall x y z : t, (x == y) = true -> (x == z) = (y == z).
-  Admitted.
+  Lemma Eq_trans_l (x y z : t) : (x == y) = true -> (x == z) = (y == z).
+  Proof.
+    intros Exy; specialize (Eq_trans y x z Exy).
+    destruct (y == z) eqn:Eyz.
+    - intros H; rewrite H; auto.
+    - destruct (x == z) eqn:Exz; auto.
+      exfalso.
+      rewrite Eq_sym in Exz.
+      specialize (Eq_trans _ _ _ Exz Exy); rewrite Eq_sym, Eyz.
+      auto.
+  Qed.
 
-  Lemma Eq_trans_r : forall x y z : t, (x == y) = true -> (z == x) = (z == y).
-  Admitted.
+  Lemma Eq_trans_r (x y z : t) : (x == y) = true -> (z == x) = (z == y).
+  Proof. rewrite (Eq_sym z x), (Eq_sym z y); apply Eq_trans_l. Qed.
 
-  Lemma Eq_le_l : forall x y z : t, (x == y) = true -> (x <= z) = (y <= z).
-  Admitted.
+  Lemma Eq_le_l (x y z : t) : (x == y) = true -> (x <= z) = (y <= z).
+  Proof.
+    intros Exy.
+    rewrite <-Ord_compare_Eq in Exy;
+      (destruct (x <= z) eqn:LExz; [|rename LExz into GTxz]);
+      (destruct (y <= z) eqn:LEyz; [|rename LEyz into GTyz]);
+      auto; exfalso.
+    - apply not_true_iff_false in GTyz; apply GTyz; clear GTyz.
+      apply Ord_trans_le with x; auto.
+      rewrite <-not_false_iff_true, <-Ord_compare_Lt.
+      congruence.
+    - apply not_true_iff_false in GTxz; apply GTxz; clear GTxz.
+      apply Ord_trans_le with y; auto.
+      rewrite <-not_false_iff_true, <-Ord_compare_Gt.
+      congruence.
+  Qed.
 
-  Lemma Eq_le_r : forall x y z : t, (x == y) = true -> (z <= x) = (z <= y).
-  Admitted.
+  Lemma Eq_le_r (x y z : t) : (x == y) = true -> (z <= x) = (z <= y).
+  Proof.
+    intros Exy.
+    rewrite <-Ord_compare_Eq in Exy;
+      (destruct (z <= x) eqn:LEzx; [|rename LEzx into GTzx]);
+      (destruct (z <= y) eqn:LEzy; [|rename LEzy into GTzy]);
+      auto; exfalso.
+    - apply not_true_iff_false in GTzy; apply GTzy; clear GTzy.
+      apply Ord_trans_le with x; auto.
+      rewrite <-not_false_iff_true, <-Ord_compare_Gt.
+      congruence.
+    - apply not_true_iff_false in GTzx; apply GTzx; clear GTzx.
+      apply Ord_trans_le with y; auto.
+      rewrite <-not_false_iff_true, <-Ord_compare_Lt.
+      congruence.
+  Qed.
+  
+  Lemma NEq_le_l (x y : t) : (x == y) = false -> (x <= y) = true -> (y <= x) = false.
+  Proof.
+    intros Nxy LExy.
+    apply not_true_iff_false; intros LEyx.
+    specialize (Ord_antisym _ _ LExy LEyx); rewrite Nxy; auto.
+  Qed.
 
-  Lemma NEq_le_l : forall x y : t, (x == y) = false -> (x <= y) = true -> (y <= x) = false.
-  Admitted.
+  Lemma NEq_le_r (x y : t) : (x == y) = false -> (y <= x) = true -> (x <= y) = false.
+  Proof.
+    intros Nxy LEyx.
+    apply not_true_iff_false; intros LExy.
+    specialize (Ord_antisym _ _ LExy LEyx); rewrite Nxy; auto.
+  Qed.
 
-  Lemma NEq_le_r : forall x y : t, (x == y) = false -> (y <= x) = true -> (x <= y) = false.
-  Admitted.
+  Lemma Ord_trans_lt (x y z : t) : y <= x = false -> z <= y = false -> z <= x = false.
+  Proof.
+    intros GTyx GTzy;
+      apply not_true_iff_false in GTyx;
+      apply not_true_iff_false in GTzy;
+      apply not_true_iff_false;
+      intros LEzx.
+    destruct (Ord_total y x) as [? | LEyx]; try tauto.
+    specialize (Ord_trans_le _ _ _ LEzx LEyx); auto.
+  Qed.
+  
+  Lemma Ord_trans_lt_le (x y z : t) : y <= x = false -> y <= z = true -> z <= x = false.
+  Proof.
+    intros GTyx LEyz;
+      apply not_true_iff_false in GTyx;
+      apply not_true_iff_false;
+      intros LEzx.
+    specialize (Ord_trans_le _ _ _ LEyz LEzx); auto.
+  Qed.
+      
 
-  Lemma Ord_trans_lt : forall x y z, y <= x = false -> z <= y = false -> z <= x = false.
-  Admitted.
-
-  Lemma Ord_trans_lt_le : forall x y z, y <= x = false -> y <= z = true -> z <= x = false.
-  Admitted.
-
-  Lemma Ord_trans_le_lt : forall x y z, x <= y = true -> z <= y = false -> z <= x = false.
-  Admitted.
-
+  Lemma Ord_trans_le_lt (x y z : t) : x <= y = true -> z <= y = false -> z <= x = false.
+  Proof.
+    intros LExy GTzy;
+      apply not_true_iff_false in GTzy;
+      apply not_true_iff_false;
+      intros LEzx.
+    specialize (Ord_trans_le _ _ _ LEzx LExy); auto.
+  Qed.
 End Lemmas.
 End Lemmas.
 

@@ -40,6 +40,7 @@ Class Propable (a : Type) := { toProp : a -> Prop }.
 
 Definition forAll {a prop} `{Propable prop} (g : Gen a) (p : a -> prop) : Prop :=
   forall (x : a), unGen g x -> toProp (p x).
+Arguments forAll {_ _ _} / _ _.
 
 
 Instance Propable_Prop : Propable Prop :=

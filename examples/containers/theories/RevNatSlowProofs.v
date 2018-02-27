@@ -582,30 +582,31 @@ Proof.
       assert (Hor : (i = m \/ i < m)%N) by lia; clear H; destruct Hor
     end.
 
-  Ltac rewrite_land_smart := 
-      match goal with [ |- context [N.testbit (N.land ?x ?y) ?i] ] =>
-        rewrite N.land_spec;
-        simpl (N.testbit y i); (* The right side is always constant, so simplify right away *)
-        rewrite andb_false_r || rewrite andb_true_r
-      end.
-
   unfold revNat.
-  
+
   rewrite N.mod_pow2_bits_low by assumption.
 
   Ltac solve :=
       subst;
-      repeat ltac:(simpl N.add; simpl N.sub; simpl N.ltb; first
-             [ rewrite andb_false_r
-             | rewrite andb_true_r
-             | rewrite orb_false_r 
-             | rewrite N.lor_spec
-             | rewrite_land_smart
-             | rewrite N.shiftr_spec by (intro Htmp; inversion Htmp)
-             | rewrite N_shiftl_spec_eq
-             ]);
-      reflexivity.
-  Time do 64 (next; [solve|]).
+      repeat (lazymatch goal with
+             | |- context [?x && false] => rewrite andb_false_r
+             | |- context [?x && true]  => rewrite andb_true_r
+             | |- context [false || _]  => rewrite orb_false_l
+             | |- context [?x || false] => rewrite orb_false_r
+             | |- context [N.testbit (N.lor _ _) _] => rewrite N.lor_spec
+             | |- context [N.testbit (N.land ?x ?y) ?i] =>
+                rewrite N.land_spec;
+                simpl (N.testbit y i); (* The right side is always constant, so simplify right away *)
+                rewrite andb_false_r || rewrite andb_true_r
+             | |- context [N.testbit (N.shiftr _ _) _] => rewrite N.shiftr_spec by (intro Htmp; inversion Htmp)
+             | |- context [N.testbit (N.shiftl _ ?i) ?j] => rewrite N_shiftl_spec_eq;
+                 (* This used to be possible with just [simpl N.ltb] -- what broke? *)
+                 (replace (j <? i)%N with false by reflexivity) ||
+                 (replace (j <? i)%N with true  by reflexivity)
+             | _ => idtac
+             end
+             ).
+  Time do 64 (next; [solve;reflexivity|]).
   apply N.nlt_0_r in H. contradiction.
 Qed.
 

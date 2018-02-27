@@ -150,7 +150,8 @@ Proof.
   induction s.
   * simpl.
     rewrite IHs1, IHs2.
-    replace (j == a) with (i == a) by (apply eq_true_iff_eq; split; order e).
+    replace (j == a) with (i == a)
+      by (apply eq_true_iff_eq; split; apply Eq_trans; auto; rewrite Eq_sym; auto).
     reflexivity.
   * reflexivity.
 Qed.

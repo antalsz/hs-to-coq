@@ -1,6 +1,7 @@
 Require Import NArith.NArith.
 Require Import ZArith.ZArith.
 Require Import Bool.Bool.
+Require Import Psatz.
 
 Definition WIDTH : N := 64%N.
 
@@ -578,7 +579,7 @@ Proof.
     match goal with [ H : (?i < ?n)%N |- _ ] =>
       let m := eval simpl in (n - 1)%N in
       idtac "Now solving i =" m;
-      assert (Hor : (i = m \/ i < m)%N) by (zify; omega); clear H; destruct Hor
+      assert (Hor : (i = m \/ i < m)%N) by lia; clear H; destruct Hor
     end.
 
   Ltac rewrite_land_smart := 

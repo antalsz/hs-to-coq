@@ -176,9 +176,9 @@ Ltac order_eq t x y Heq :=
   apply hide in Heq;
   repeat lazymatch goal with
   | H : @op_zeze__ t _ x ?z = ?b |- _ =>
-    rewrite (@Lemmas.Eq_trans_l t _ _ _ _ x y z (unhide Heq)) in H
+    rewrite (@Lemmas.Eq_trans_l t _ _ x y z (unhide Heq)) in H
   | H : @op_zeze__ t _ ?z x = ?b |- _ =>
-    rewrite (@Lemmas.Eq_trans_r t _ _ _ _ x y z (unhide Heq)) in H
+    rewrite (@Lemmas.Eq_trans_r t _ _ x y z (unhide Heq)) in H
   | H : @op_zlze__ t _ _ x ?z = ?b |- _ =>
     rewrite (@Lemmas.Eq_le_l t _ _ _ _ x y z (unhide Heq)) in H
   | H : @op_zlze__ t _ _ ?z x = ?b |- _ =>

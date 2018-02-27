@@ -61,8 +61,8 @@ before_install:
 install:
  # Build dependencies
  - stack --no-terminal --install-ghc test --only-dependencies
- # dependencies of the continers code that we translate
- - stack --no-terminal --install-ghc install QuickCheck
+ # dependencies of the containers code that we translate
+ - stack --no-terminal --install-ghc install QuickCheck HUnit test-framework test-framework-hunit test-framework-quickcheck2
 
 script:
  - stack --no-terminal --install-ghc install

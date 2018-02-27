@@ -373,7 +373,9 @@ Qed.
 
 Theorem thm_ord : toProp prop_ord.
 Proof.
-Abort.
+  rewrite /prop_ord /= => s1 WF1 s2 WF2.
+  apply Eq_refl.
+Qed.
 
 (* SKIPPED: prop_readShow *)
 

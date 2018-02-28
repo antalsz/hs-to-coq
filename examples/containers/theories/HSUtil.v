@@ -39,6 +39,7 @@ Global Arguments "$"          {_ _}     / _ _.
 Global Arguments id           {_}       / _.
 Global Arguments Datatypes.id {_}       / _.
 Global Arguments "∘"          {_ _}     _ _ _ /.
+Global Arguments flip         {_ _ _}   _ _ _ /.
 
 (******************************************************************************)
 (** bool **)
@@ -102,6 +103,12 @@ Qed.
 (******************************************************************************)
 (** List membership (`elem`, `In`, `\in`) **)
 
+Theorem elemN {A} `{Eq_ A} (a : A) : elem a [::] = false.
+Proof. done. Qed.
+
+Theorem elemC {A} `{Eq_ A} (a x : A) (xs : list A) : elem a (x :: xs) = (a == x) || elem a xs.
+Proof. done. Qed.
+
 Theorem elem_in {A : eqType} `{EqExact A} (xs : list A) (a : A) :
   elem a xs = (a \in xs).
 Proof. by elim: xs => [|x xs IH] //=; rewrite inE -IH eqType_EqExact. Qed.
@@ -110,11 +117,12 @@ Theorem in_elem {A : eqType} `{EqExact A} (xs : list A) (a : A) :
   a \in xs = elem a xs.
 Proof. symmetry; apply elem_in. Qed.
 
-Theorem elemN {A} `{Eq_ A} (a : A) : elem a [::] = false.
-Proof. done. Qed.
-
-Theorem elemC {A} `{Eq_ A} (a x : A) (xs : list A) : elem a (x :: xs) = (a == x) || elem a xs.
-Proof. done. Qed.
+Theorem elem_elem_by {A} `{EqLaws A} :
+  elem =2 elem_by _==_.
+Proof.
+  move=> a; elim=> [|x xs IH] //=.
+  by rewrite elemC IH Eq_sym.
+Qed.
 
 Theorem elemP {A} `{EqExact A} (x : A) (xs : list A) :
   reflect (In x xs) (elem x xs).
@@ -128,11 +136,7 @@ Proof.
     by move: CMP; rewrite Eq_refl.
 Qed.
 
-Theorem elem_app {A} `{Eq_ A} (a : A) (xs ys : list A) :
-  elem a (xs ++ ys) = elem a xs || elem a ys.
-Proof. by elim: xs => [|x xs] //=; rewrite !elemC -orbA => ->. Qed.
-
-Theorem elem_by_In {A} `{EqExact A} (xs : list A) (x : A) :
+Theorem elem_byP {A} `{EqExact A} (xs : list A) (x : A) :
   reflect (In x xs) (elem_by _==_ x xs).
 Proof.
   elim: xs => [|x' xs IH] /=; first by constructor.
@@ -142,6 +146,27 @@ Proof.
     try apply/orP;
     solve [by left; apply/Eq_eq | by right; apply/IH].
 Qed.
+
+Theorem elem_app {A} `{Eq_ A} (a : A) (xs ys : list A) :
+  elem a (xs ++ ys) = elem a xs || elem a ys.
+Proof. by elim: xs => [|x xs] //=; rewrite !elemC -orbA => ->. Qed.
+
+Theorem elem_by_resp_eq {A} `{EqLaws A} (xs : list A) (a b : A) :
+  a == b ->
+  elem_by _==_ a xs ->
+  elem_by _==_ b xs.
+Proof.
+  move=> EQab; elim: xs => [|x xs IH] //=.
+  case EQxa: (x == a) => //=; case EQxb: (x == b) => //=.
+  have: (x == b) by eapply Eq_trans with a.
+  by rewrite EQxb.
+Qed.
+
+Theorem elem_resp_eq {A} `{EqLaws A} (xs : list A) (a b : A) :
+  a == b ->
+  elem a xs ->
+  elem b xs.
+Proof. rewrite !elem_elem_by; apply elem_by_resp_eq. Qed.
 
 (* Non-Haskell theorems about In *)
 
@@ -169,6 +194,138 @@ Proof.
       by exists (x' :: pre), post.
   - move=> [pre [post ->]].
     by elim: pre => [|p pre IH] //=; [left | right].
+Qed.
+
+(******************************************************************************)
+(** Other Haskell/Coq interop **)
+
+Theorem reverse_rev {A} :
+  reverse =1 @rev A.
+Proof.
+  move=> xs; rewrite /reverse; match goal with |- context[?F _ [::]] => set hs_rev := F end.
+  rewrite -(cats0 (rev xs)); move: [::].
+  elim: xs => [|x xs IH] //= acc.
+  by rewrite IH -catA /=.
+Qed.
+
+(******************************************************************************)
+(** Element-based list function semantics **)
+
+(* reverse and rev *)
+
+Theorem rev_elem {A} `{EqLaws A} (xs : list A) (a : A) :
+  elem a (rev xs) = elem a xs.
+Proof.
+  elim: xs => [|x xs IH] //=.
+  by rewrite elem_app !elemC elemN orbF IH orbC.
+Qed.
+
+Theorem reverse_elem {A} `{EqLaws A} (xs : list A) (a : A) :
+  elem a (reverse xs) = elem a xs.
+Proof. rewrite reverse_rev; apply rev_elem. Qed.
+
+(* nub *)
+
+Theorem nub_elem {A} `{EqLaws A} (xs : list A) (a : A) :
+  elem a (nub xs) = elem a xs.
+Proof.
+  rewrite /nub /nubBy !elem_elem_by;
+    match goal with |- context[?F xs [::]] => set nubBy' := F end.
+  replace (elem_by _==_ a xs) with (elem_by _==_ a xs && ~~ elem_by _==_ a [::])
+    by rewrite /= andbT //.
+  move: [::].
+  elim: xs => [|x xs IH] //= acc.
+  case ELEM_x: (elem_by _==_ x acc) => /=; last rename ELEM_x into NELEM_x.
+  - rewrite IH.
+    case NELEM_a: (elem_by _==_ a acc) => /=; rewrite ?andbT ?andbF //.
+    case EQxa: (x == a) => //=.
+    by rewrite (elem_by_resp_eq _ _ _ EQxa ELEM_x) in NELEM_a.
+  - rewrite IH /= negb_orb orb_andr.
+    case EQxa: (x == a) => //=.
+    symmetry; apply/negP => ELEM_a.
+    by rewrite Eq_sym in EQxa; rewrite (elem_by_resp_eq _ _ _ EQxa ELEM_a) in NELEM_x.
+Qed.
+
+(* delete and deleteBy *)
+
+Theorem deleteBy_only_elem {A} `{Eq_ A} (xs : list A) (a b : A) :
+  elem b (deleteBy _==_ a xs) -> elem b xs.
+Proof.
+  elim: xs => [|x xs IH] //=.
+  rewrite elemC; case NEQbx: (b == x) => //=.
+  case NEQax: (a == x) => //=.
+  rewrite elemC NEQbx orFb; apply IH.
+Qed.
+
+Theorem delete_only_elem {A} `{Eq_ A} (xs : list A) (a b : A) :
+  elem b (delete a xs) -> elem b xs.
+Proof. apply deleteBy_only_elem. Qed.
+
+Theorem deleteBy_NoDup_elem {A} `{EqExact A} (xs : list A) :
+  NoDup xs -> forall a b, elem b (deleteBy _==_ a xs) = elem b xs && (a /= b).
+Proof.
+  elim: xs => [|x xs IH] //= ND' a b.
+  inversion ND' as [|x' xs' NIN ND]; subst x' xs'.
+  rewrite elemC; case EQbx: (b == x) => //=; last rename EQbx into NEQbx.
+  - move/Eq_eq in EQbx; subst x.
+    rewrite Neq_inv; case EQab: (a == b) => //=; last rename EQab into NEQab.
+    + by apply/elemP.
+    + by rewrite elemC Eq_refl orTb.
+  - case EQax: (a == x) => //=; last rename EQax into NEQax.
+    + have: (a /= b). {
+        rewrite Neq_inv Eq_sym; apply/negP => EQba.
+        by rewrite (Eq_trans _ _ _ EQba EQax) in NEQbx.
+      }
+      by move=> ->; rewrite andbT.
+    + by rewrite elemC NEQbx orFb; apply IH.
+Qed.
+
+Theorem delete_NoDup_elem {A} `{EqExact A} (xs : list A) :
+  NoDup xs -> forall a b, elem b (delete a xs) = elem b xs && (a /= b).
+Proof. apply deleteBy_NoDup_elem. Qed.
+
+Theorem deleteBy_NoDup_removes {A} `{EqExact A} (xs : list A) :
+  NoDup xs -> forall a, ~~ elem a (deleteBy _==_ a xs).
+Proof. by move=> ND a; rewrite deleteBy_NoDup_elem // Neq_irrefl andbF. Qed.
+
+Theorem delete_NoDup_removes {A} `{EqExact A} (xs : list A) :
+  NoDup xs -> forall a, ~~ elem a (delete a xs).
+Proof. apply deleteBy_NoDup_removes. Qed.
+
+Theorem deleteBy_preserves_NoDup {A} `{EqExact A} (xs : list A) :
+  NoDup xs -> forall a, NoDup (deleteBy _==_ a xs).
+Proof.
+  elim: xs => [|x xs IH] //= ND' a.
+  inversion ND' as [|x' xs' NIN ND]; subst x' xs'.
+  case NEQax: (a == x) => //.
+  constructor; last by apply IH.
+  apply/elemP/negP => ELEM.
+  by apply deleteBy_only_elem in ELEM; move/elemP in ELEM.
+Qed.
+
+Theorem delete_preserves_NoDup {A} `{EqExact A} (xs : list A) :
+  NoDup xs -> forall a, NoDup (delete a xs).
+Proof. apply deleteBy_preserves_NoDup. Qed.
+
+(* List difference (\\) *)
+
+Theorem diff_NoDup_elem {A} `{EqExact A} (xs ys : list A) :
+  NoDup xs -> forall a, elem a (xs \\ ys) = elem a xs && ~~ elem a ys.
+Proof.
+  unfold "\\"; elim: ys xs => [|y ys IH] //= xs ND a; first by rewrite andbT.
+  rewrite elemC negb_orb IH; last by apply delete_preserves_NoDup.
+  by rewrite andbA delete_NoDup_elem // Neq_inv Eq_sym.
+Qed.
+
+Theorem diff_only_elem {A} `{Eq_ A} (xs ys : list A) (a : A) :
+  elem a (xs \\ ys) -> elem a xs.
+Proof. by unfold "\\"; elim: ys xs => [|y ys IH] //= xs /IH; apply delete_only_elem. Qed.
+
+Theorem diff_preserves_NoDup {A} `{EqExact A} (xs ys : list A) :
+  NoDup xs -> NoDup (xs \\ ys).
+Proof.
+  unfold "\\"; elim: ys xs => [|y ys IH] //= xs ND.
+  by apply IH, delete_preserves_NoDup.
 Qed.
 
 (******************************************************************************)

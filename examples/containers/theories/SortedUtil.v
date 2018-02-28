@@ -27,7 +27,68 @@ Notation reflect := ssrbool.reflect.
 (******************************************************************************)
 (** Basic facts about StronglySorted **)
 
-Theorem StronglySorted_irrefl_no_duplicates {A} (R : A -> A -> Prop) (x : A) (xs : list A) :
+Theorem StronglySorted_R_ext' {A} (R1 R2 : A -> A -> Prop) (xs : list A) :
+  (forall a b, R1 a b <-> R2 a b) ->
+  StronglySorted R1 xs -> StronglySorted R2 xs.
+Proof.
+  move=> R12_iff; elim: xs => [|x xs IH] SS1; first by constructor.
+  inversion SS1 as [|x' xs' SS1' All1]; subst x' xs'.
+  constructor; first by apply IH.
+  eapply Forall_impl; last exact All1.
+  apply R12_iff.
+Qed.
+
+Corollary StronglySorted_R_ext {A} (R1 R2 : A -> A -> Prop) (xs : list A) :
+  (forall a b, R1 a b <-> R2 a b) ->
+  StronglySorted R1 xs <-> StronglySorted R2 xs.
+Proof. by split; apply StronglySorted_R_ext'; last symmetry. Qed.
+
+Theorem StronglySorted_snoc {A} (R : A -> A -> Prop) (x : A) (xs : list A) :
+  StronglySorted R xs -> Forall (R^~ x) xs -> StronglySorted R (xs ++ [:: x]).
+Proof.
+  elim: xs => [|x' xs IH] /= SS' AllRev'; first by constructor.
+  inversion SS'     as [|x'' xs' SS   All];    subst x'' xs'.
+  inversion AllRev' as [|x'' xs' Rx'x AllRev]; subst x'' xs'.
+  constructor.
+  - by apply IH.
+  - move: All AllRev; rewrite !Forall_forall => /= All AllRev a.
+    rewrite in_app_iff => -[IN | [? | //]]; last subst a=> //.
+    by apply All.
+Qed.    
+
+Theorem StronglySorted_rev' {A} (R : A -> A -> Prop) (xs : list A) :
+  StronglySorted R xs -> StronglySorted (fun a b => R b a) (rev xs).
+Proof.
+  elim: xs => [|x xs IH] /= SS'; first by constructor.
+  inversion SS' as [|x' xs' SS All]; subst x' xs'.
+  move: (IH SS) => IH'.
+  apply StronglySorted_snoc; first by apply IH.
+  move: All; rewrite !Forall_forall => All a; rewrite -in_rev; apply All.
+Qed.
+
+Corollary StronglySorted_rev {A} (R : A -> A -> Prop) (xs : list A) :
+  StronglySorted R xs <-> StronglySorted (fun a b => R b a) (rev xs).
+Proof.
+  split; first apply StronglySorted_rev'.
+  rewrite -{2}(rev_involutive xs)=> SS.
+  by eapply StronglySorted_rev', StronglySorted_R_ext; last exact SS.
+Qed.
+
+Theorem StronglySorted_app {A} (R : A -> A -> Prop) (xs ys : list A) :
+  StronglySorted R (xs ++ ys) -> StronglySorted R xs /\ StronglySorted R ys.
+Proof.
+  elim: xs => [|x xs IH] //= SS; first by auto using StronglySorted.
+  inversion SS as [|x' rest SS' All E1]; subst x' rest.
+  move: (IH SS') => [SS_xs SS_ys]; split=> //.
+  constructor=> //.
+  apply/Forall_forall=> a In_a; move: All => /Forall_forall/(_ a).
+  by rewrite in_app_iff; apply; left.
+Qed.
+
+(******************************************************************************)
+(** StronglySorted and NoDup (and similar) **)
+
+Theorem StronglySorted_irrefl_not_in {A} (R : A -> A -> Prop) (x : A) (xs : list A) :
   (forall a, ~ R a a) ->
   StronglySorted R (x :: xs) ->
   ~ In x xs.
@@ -39,6 +100,17 @@ Proof.
   - apply IH=> //.
     + by inversion SS_xs.
     + by inversion R_x_xs.
+Qed.
+
+Theorem StronglySorted_irrefl_NoDup {A} (R : A -> A -> Prop) (xs : list A) :
+  (forall a, ~ R a a) ->
+  StronglySorted R xs ->
+  NoDup xs.
+Proof.
+  move=> irrefl_R.
+  elim: xs => [|x xs IH] SS_xxs //=; constructor.
+  - eapply StronglySorted_irrefl_not_in; eassumption.
+  - by apply IH; inversion SS_xxs.
 Qed.
 
 Theorem StronglySorted_eq_In {A} (R : A -> A -> Prop) (xs ys : list A) :
@@ -54,8 +126,8 @@ Proof.
   all: try by (move=> /(_ x) || move=> /(_ y)); simpl; tauto.
   - by inversion 1.
   - move=> ext_eq.
-    have NIn_x_xs: ~ In x xs by eapply StronglySorted_irrefl_no_duplicates; eauto using StronglySorted.
-    have NIn_y_ys: ~ In y ys by eapply StronglySorted_irrefl_no_duplicates.
+    have NIn_x_xs: ~ In x xs by eapply StronglySorted_irrefl_not_in; eauto using StronglySorted.
+    have NIn_y_ys: ~ In y ys by eapply StronglySorted_irrefl_not_in.
     have E: x = y; last subst y. {
       inversion SS_ys; subst.
       move: (ext_eq x) => [fwd_x bwd_x].
@@ -105,13 +177,23 @@ Proof.
 Qed.  
 
 (******************************************************************************)
-(** Basic facts about StronglySorted for specific relations **)
+(** Previous StronglySorted theorems with specific relations **)
 
 Corollary StronglySorted_Zlt_eq_In (xs ys : list Int) :
   StronglySorted Z.lt xs ->
   StronglySorted Z.lt ys ->
   (xs = ys) <-> (forall a, In a xs <-> In a ys).
 Proof. apply StronglySorted_eq_In; [exact Z.lt_irrefl | exact Z.lt_trans]. Qed.
+
+Corollary StronglySorted_Ord_eq_In {A} `{OrdLaws A} (xs ys : list A) :
+  StronglySorted _<_ xs ->
+  StronglySorted _<_ ys ->
+  (xs = ys) <-> (forall a, In a xs <-> In a ys).
+Proof.
+  apply StronglySorted_eq_In.
+  - by move=> a; rewrite Ord_lt_le Lemmas.Ord_le_refl.
+  - unfold is_true; order A.
+Qed.
 
 Corollary StronglySorted_NoDup_Ord {A} `{OrdLaws A} `{!EqExact A} (xs : list A) :
   StronglySorted _<=_ xs ->
@@ -153,43 +235,78 @@ Proof.
       by apply/Eq_eq; apply Ord_antisym.
 Qed.
 
+(******************************************************************************)
 (** Basic facts about NoDup **)
 
-Theorem NoDup_length_perm {A} (xs ys : list A) :
-  NoDup xs ->
-  length xs = length ys ->
-  (forall a, In a xs <-> In a ys) ->
-  NoDup ys.
+Theorem NoDup_reorder {A} (pre : list A) (x : A) (post : list A) :
+  NoDup (pre ++ x :: post) <-> NoDup (x :: (pre ++ post)).
 Proof.
-  rewrite !hs_coq_length_list !Zlength_correct Nat2Z.inj_iff.
-  elim: xs ys => [|x xs IH] [|y ys] //=.
-  move=> NoDup_xxs Slen_eq ext_eq.
-  inversion NoDup_xxs as [|x' xs' NIn_x_xs NoDup_xs E1]; subst.
-  case: (Slen_eq) => len_eq.
-  constructor.
-  - admit.
-  - apply IH=> //.
-    move=> a; move: (ext_eq a)=> -[fwd_a bwd_a].
-    split.
-    + move=> In_a_xs; move: (In_a_xs) => /or_intror/fwd_a [? | //]; subst a.
-      move: (ext_eq x) => [fwd_x bwd_x].
-      move: (fwd_x (or_introl erefl)) => [? | In_x_ys]; first by subst y.
-      move: (In_x_ys) => /In_split [pre_ys [post_ys def_ys]].
-      move: (In_a_xs) => /In_split [pre_xs [post_xs def_xs]].
-      subst; apply in_or_app=> /=.
-      have NIn_x_pre_xs:  ~ In x pre_xs  by move=> IN; apply NIn_x_xs, in_or_app; left.
-      have NIn_x_post_xs: ~ In x post_xs by move=> IN; apply NIn_x_xs, in_or_app; do 2 right.
-Abort.
+  elim: pre => [|p pre IH] //=; split=> [ND_mid | ND_fst].
+  - inversion ND_mid as [|p' rest NIn_p ND_mid' E1]; subst p' rest.
+    move/IH in ND_mid'; inversion ND_mid' as [|x' rest NIn_x ND_mid'' E1]; subst x' rest.
+    constructor=> //.
+    + move=> [? | //]; subst p.
+      apply NIn_p; rewrite in_app_iff /=; auto.
+    + constructor=> //.
+      contradict NIn_p; move: NIn_p.
+      rewrite !in_app_iff /=; tauto.
+  - inversion ND_fst  as [|x' rest NIn_x ND_fst'  E1]; subst x' rest.
+    inversion ND_fst' as [|p' rest NIn_p ND_fst'' E1]; subst p' rest.
+    constructor=> //.
+    + contradict NIn_p; move: NIn_p.
+      rewrite !in_app_iff /= => -[? | [? | ?]]; try tauto; subst p.
+      by exfalso; apply NIn_x; left.
+    + apply IH; constructor=> //.
+      by contradict NIn_x; right.
+Qed.
 
 (******************************************************************************)
-(** Hypotheses about sort **)
+(** Axioms about sort **)
 
-Hypothesis sort_StronglySorted : forall {A} `{OrdLaws A} (xs : list A), StronglySorted _<=_ (sort xs).
-Hypothesis sort_length         : forall {A} `{OrdLaws A} (xs : list A), length (sort xs) = length xs.
-Hypothesis sort_elem           : forall {A} `{OrdLaws A} (xs : list A), forall x, elem x (sort xs) <-> elem x xs.
+Axiom sort_StronglySorted : forall {A} `{OrdLaws A} (xs : list A), StronglySorted _<=_ (sort xs).
+Axiom sort_length         : forall {A} `{OrdLaws A} (xs : list A), length (sort xs) = length xs.
+Axiom sort_elem           : forall {A} `{OrdLaws A} (xs : list A), forall x, elem x (sort xs) <-> elem x xs.
+
+(* True because `sort` is stable.  Not provable because that's not a separate
+   axiom.  This is the axiom I'm most nervous about. *)
+Axiom sortC : forall {A} `{OrdLaws A} (x : A) (xs : list A),
+  exists pre, ex2 (fun post => sort (x :: xs) = pre ++ x :: post)
+                  (fun post => sort xs = pre ++ post).
 
 (******************************************************************************)
 (** Theorems about sort and nub **)
+
+Theorem sortN {A} `{OrdLaws A} : sort [::] = [::].
+Proof.
+  case S: (sort [::]) => [|x xs] //=.
+  have: length (sort [::]) = length (x ::xs) by rewrite S.
+  by rewrite sort_length !hs_coq_length_list !Zlength_correct.
+Qed.
+
+Theorem sort1 {A} `{OrdLaws A} `{!EqExact A} (x : A) :
+  sort [:: x] = [:: x].
+Proof.
+  case: (sortC x [::]) => [pre [post -> ]].
+  by rewrite sortN; case: pre; case: post.
+Qed.
+
+Theorem sort_NoDup {A} `{OrdLaws A} `{!EqExact A} (xs : list A) :
+  NoDup xs <-> NoDup (sort xs).
+Proof.
+  remember (Datatypes.length xs) as n eqn:LEN.
+  elim: n xs LEN => [|n IH] [|x xs] //= LEN; first by rewrite sortN.
+  move: LEN => [?]; subst.
+  case: (sortC x xs) => [pre [post -> sort_xs]].
+  rewrite NoDup_reorder.
+  move: IH => /(_ xs erefl); rewrite sort_xs => IH.
+  split; inversion 1; subst; constructor; try apply IH; auto.
+  - apply/elemP/negP.
+    change @cat with @app; rewrite -sort_xs sort_elem.
+    by apply/negP/elemP.
+  - apply/elemP/negP.
+    rewrite -sort_elem sort_xs.
+    by apply/negP/elemP.
+Qed.
 
 Theorem nub_NoDup {A} `{EqExact A} (xs : list A) : NoDup (nub xs).
 Proof.
@@ -206,13 +323,13 @@ Proof.
       elim: xs => [|x' xs IH] acc IN //=.
       case EQ: (x == x') => //=.
       -- move/Eq_eq in EQ; subst x'.
-         by move: (IN) => /elem_by_In ->; apply IH.
+         by move: (IN) => /elem_byP ->; apply IH.
       -- case MEM': (elem_by _==_ x' acc) => //=; first by apply IH.
          move=> [? | IN']; first by subst x'; contradict EQ; rewrite Eq_refl.
          eapply IH; last apply IN'.
          by right.
     * eapply IH; constructor=> //.
-      by apply/elem_by_In; rewrite MEM.
+      by apply/elem_byP; rewrite MEM.
 Qed.
 
 Corollary StronglySorted_sort_nub {A} `{OrdLaws A} `{!EqExact A} (xs : list A) :
@@ -220,21 +337,5 @@ Corollary StronglySorted_sort_nub {A} `{OrdLaws A} `{!EqExact A} (xs : list A) :
 Proof.
   apply StronglySorted_NoDup_Ord; first by apply sort_StronglySorted.
   have decA: forall x y : A, {x = y} + {x <> y} by move=> x y; case: (EqExact_cases x y); tauto.
-  apply NoDup_count_occ with decA.
-  suff: count_occ decA (@sort A HEq HOrd (@nub A HEq xs)) = count_occ decA (@nub A HEq xs)
-    by move=> ->; apply NoDup_count_occ, nub_NoDup.
-Abort.
-
-Theorem Sort_eq {A : eqType} `{OrdLaws A} `{!EqExact A} (xs ys : list A) :
-  StronglySorted _<=_ xs ->
-  StronglySorted _<=_ ys ->
-  (xs == ys) = seq.all (fun a => a \in xs) ys && seq.all (fun b => b \in ys) xs.
-Proof.
-  elim: xs ys => [|x xs IH_xs] [|y ys] //=.
-  inversion_clear 1 as [|X1 X2 SS_xs FA_xs X3]; inversion_clear 1 as [|X1 X2 SS_ys FA_ys X3].
-  unfold "=="; rewrite /Eq_list /=; case CMP: (x == y).
-  - move: CMP => /Eq_eq ? /=; subst y.
-    replace (eqlist xs ys) with (xs == ys) by done; rewrite IH_xs //.
-    admit.
-  - 
-Abort.
+  rewrite -sort_NoDup; apply nub_NoDup.
+Qed.

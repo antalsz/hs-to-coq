@@ -5,6 +5,9 @@
 From mathcomp Require Import ssreflect ssrbool ssrnat ssrfun seq eqtype.
 Set Bullet Behavior "Strict Subproofs".
 
+(* Sortedness *)
+Require Import Coq.Sorting.Sorted.
+
 (* Basic Haskell libraries *)
 Require Import GHC.Base      Proofs.GHC.Base.
 Require Import Data.Foldable Proofs.Data.Foldable.
@@ -15,7 +18,7 @@ Require Import IntSetProofs.
 Module IntSetFSet := Foo.
 
 (* Util *)
-Require Import HSUtil.
+Require Import HSUtil SortedUtil.
 
 (******************************************************************************)
 (** Name dismabiguation -- copied from HSUtil **)
@@ -51,6 +54,35 @@ Proof. by move=> /WF_Bin_children []. Qed.
 Corollary WF_Bin_right (p : Prefix) (m : Mask) (l r : IntSet) :
   WF (Bin p m l r) -> WF r.
 Proof. by move=> /WF_Bin_children []. Qed.
+
+(******************************************************************************)
+(** Sortedness theorems in terms of Ord **)
+
+Theorem toList_sorted (s : IntSet) :
+  WF s ->
+  StronglySorted _<_ (toList s).
+Proof.
+  move=> WF_s; apply StronglySorted_R_ext with Z.lt; last by apply to_List_sorted.
+  move=> a b; unfold "<", Ord_Integer___ => /=.
+  symmetry; apply rwP.
+  apply/Z.ltb_spec0.
+Qed.
+
+Theorem toAscList_sorted (s : IntSet) :
+  WF s ->
+  StronglySorted _<_ (toAscList s).
+Proof.
+  apply toList_sorted.
+Qed.
+
+Theorem toDescList_sorted (s : IntSet) :
+  WF s ->
+  StronglySorted _>_ (toDescList s).
+Proof.
+  move=> WF_s; rewrite toDescList_spec //.
+  rewrite -StronglySorted_rev.
+  by apply toList_sorted.
+Qed.
 
 (******************************************************************************)
 (** Basic properties of Sem **)
@@ -211,6 +243,19 @@ Theorem toList_member (s : IntSet) :
 Proof.
   move=> /Sem_member/toList_In SEM k.
   by case CONT: (member k s) (SEM k) => SEM_k; apply/elemP/SEM_k.
+Qed.
+
+Theorem toAscList_member (s : IntSet) :
+  WF s ->
+  forall k, elem k (toAscList s) = member k s.
+Proof. apply toList_member. Qed.
+
+Theorem toDescList_member (s : IntSet) :
+  WF s ->
+  forall k, elem k (toDescList s) = member k s.
+Proof. 
+  move=> WF_s; rewrite toDescList_spec // => k.
+  by rewrite rev_elem toList_member.
 Qed.
 
 Theorem map_member (s : IntSet) (f : Int -> Int) :

@@ -5,6 +5,9 @@
 From mathcomp Require Import ssreflect ssrbool ssrnat ssrfun seq eqtype.
 Set Bullet Behavior "Strict Subproofs".
 
+(* Sortedness *)
+Require Import Coq.Sorting.Sorted.
+
 (* Basic Haskell libraries *)
 Require Import GHC.Base      Proofs.GHC.Base.
 Require Import GHC.List      Proofs.GHC.List.
@@ -181,7 +184,18 @@ Proof.
   move: (difference_WF _ _ WF_xs WF_ys) => WF_diff.
   
   split=> /=; first by apply valid_correct.
-Abort.
+  apply/Eq_eq/StronglySorted_Ord_eq_In.
+  - by apply toList_sorted.
+  - apply StronglySorted_NoDup_Ord; first apply sort_StronglySorted.
+    rewrite -sort_NoDup.
+    apply diff_preserves_NoDup, nub_NoDup.
+  - move=> a.
+    rewrite !(rwP (elemP _ _)).
+    rewrite sort_elem.
+    rewrite diff_NoDup_elem; last apply nub_NoDup.
+    rewrite !nub_elem.
+    rewrite toAscList_member // difference_member // !fromList_member //.
+Qed.
 
 Theorem thm_Int : toProp prop_Int.
 Proof.

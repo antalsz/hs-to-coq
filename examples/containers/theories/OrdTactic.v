@@ -8,8 +8,8 @@ the module system.
 **)
 
 Require Import GHC.Base.
-Import GHC.Base.Notations.
 Require Import Proofs.GHC.Base.
+Set Bullet Behavior "Strict Subproofs".
 
 Class OrdLaws (t : Type) {HEq : Eq_ t} {HOrd : Ord t} {HEqLaw : EqLaws t} :=
   { (* The axioms *)
@@ -24,6 +24,115 @@ Class OrdLaws (t : Type) {HEq : Eq_ t} {HOrd : Ord t} {HEqLaw : EqLaws t} :=
     Ord_ge_le : forall a b, a >= b = (b <= a);
     Ord_gt_le : forall a b, a >  b = negb (a <= b);
   }.
+
+(** Lawfulness of [ord_default] *)
+
+Section GoodCompare.
+Context {t : Type} {HEq : Eq_ t} {HEqLaw : EqLaws t}.
+Variable (compare : t -> t -> comparison).
+
+Definition flip_comparison (c : comparison) := match c with
+  | Lt => Gt
+  | Eq => Eq
+  | Gt => Lt
+  end.
+
+Record GoodCompare :=
+  { Good_compare_Eq : forall a b, compare a b = Eq <-> a == b = true;
+    Good_compare_sym : forall a b, compare a b = flip_comparison (compare b a);
+    Good_compare_trans_1 : forall a b c, compare a b = Lt -> compare b c = Lt -> compare a c = Lt;
+    Good_compare_trans_2 : forall a b c, compare a b = Lt -> compare b c = Eq -> compare a c = Lt;
+    Good_compare_trans_3 : forall a b c, compare a b = Eq -> compare b c = Lt -> compare a c = Lt;
+  }.
+
+Lemma Good_compare_sym_Eq (HGood : GoodCompare) : forall a b, compare a b = Eq <-> compare b a = Eq.
+Proof. intros. rewrite (Good_compare_sym HGood). destruct (compare b a); simpl; intuition congruence. Qed.
+
+Lemma  OrdLaws_ord_default (HGood : GoodCompare) : OrdLaws t (HOrd := ord_default compare).
+Proof.
+  split.
+  * intros.
+    unfold op_zlze__, ord_default, op_zlze____ in *.
+    rewrite <- (Good_compare_Eq HGood).
+    rewrite (Good_compare_sym HGood) in H.
+    destruct (compare a b); simpl in *; congruence.
+  * intros.
+    unfold op_zlze__, ord_default, op_zlze____ in *.
+    destruct (compare b a) eqn:H1, (compare c b) eqn:H2, (compare c a) eqn:H3; simpl in *;
+        try congruence; exfalso.
+    - rewrite (Good_compare_Eq HGood) in H1, H2.
+      enough (compare c a = Eq) by congruence.
+      rewrite (Good_compare_Eq HGood).
+      eapply Eq_trans; eassumption.
+    - enough (compare c b = Lt) by congruence.
+      rewrite (Good_compare_sym_Eq HGood) in H1.
+      eapply (Good_compare_trans_2 HGood); try eassumption.
+    - enough (compare b a = Lt) by congruence.
+      rewrite (Good_compare_sym_Eq HGood) in H2.
+      eapply (Good_compare_trans_3 HGood); try eassumption.
+    - assert (compare b c = Lt) by (rewrite (Good_compare_sym HGood); destruct (compare c b); simpl in *; congruence).
+      enough (compare b a = Lt) by congruence.
+      eapply (Good_compare_trans_1 HGood); try eassumption.
+  * intros.
+    unfold op_zlze__, ord_default, op_zlze____ in *.
+    rewrite (Good_compare_sym HGood).
+    destruct (compare a b); simpl; intuition.
+  * intros.
+    unfold op_zlze__, Base.compare, ord_default, op_zlze____, compare__ in *.
+    destruct (compare a b); simpl; intuition congruence.
+  * intros.
+    unfold op_zlze__, Base.compare, ord_default, op_zlze____, compare__ in *.
+    rewrite (Good_compare_Eq HGood).
+    reflexivity.
+  * intros.
+    unfold op_zlze__, Base.compare, ord_default, op_zlze____, compare__ in *.
+    rewrite (Good_compare_sym HGood).
+    destruct (compare b a); simpl; intuition congruence.
+  * intros.
+    unfold op_zlze__, op_zl__, Base.compare, ord_default, op_zlze____, op_zl____, compare__ in *.
+    destruct (compare a b); simpl; intuition congruence.
+  * intros.
+    unfold op_zgze__, op_zlze__, Base.compare, ord_default, op_zgze____, op_zlze____, compare__ in *.
+    destruct (compare a b); simpl; intuition congruence.
+  * intros.
+    unfold op_zg__, op_zlze__, Base.compare, ord_default, op_zg____, op_zlze____, compare__ in *.
+    rewrite (Good_compare_sym HGood).
+    destruct (compare a b); simpl; intuition congruence.
+Qed.
+End GoodCompare.
+
+(** good comparison functions transfer *)
+
+Section GoodCompareImage.
+Context (t1 : Type) {HEq1 : Eq_ t1} {HEqLaw1 : EqLaws t1}.
+Context (t2 : Type) {HEq2 : Eq_ t2}  (* {HEqLaw2 : EqLaws t2} *).
+Context (f : t2 -> t1).
+Context (Eq_t2 : forall x y, (x == y) = (f x == f y)).
+Context {compare : t1 -> t1 -> comparison}.
+Context (HGood : GoodCompare compare).
+
+Lemma GoodCompare_image : GoodCompare (fun x y => compare (f x) (f y)).
+Proof.
+  split.
+  * intros. rewrite Eq_t2. rewrite (Good_compare_Eq _ HGood). reflexivity.
+  * intros. rewrite (Good_compare_sym _ HGood). reflexivity.
+  * intros. eapply (Good_compare_trans_1 _ HGood); eassumption.
+  * intros. eapply (Good_compare_trans_2 _ HGood); eassumption.
+  * intros. eapply (Good_compare_trans_3 _ HGood); eassumption.
+Qed.
+
+End GoodCompareImage.
+
+(** Lawfulness of the list instance *)
+Section ListOrd.
+Context  a {HEq : Eq_ a} {HOrd : Ord a} {HEqLaw : EqLaws a} {HOrdLaw : OrdLaws a}.
+
+Lemma GoodCompare_compare_list : GoodCompare compare_list.
+Admitted.
+
+Instance OrdLaws_list  : OrdLaws (list a)
+  := OrdLaws_ord_default _ GoodCompare_compare_list.
+End ListOrd.
 
 Module Lemmas.
 Section Lemmas.

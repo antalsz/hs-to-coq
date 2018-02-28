@@ -7790,33 +7790,21 @@ End Foo.
 
 Require Import Proofs.GHC.Base.
 
-(* It is a bit stupid to have to prove these when they follow from [EqExact] *)
-Instance EqLaws_IntSet : EqLaws IntSet.
-Proof.
-  split.
-  * change (forall x, equal x x = true).
-    intros. rewrite equal_spec. reflexivity.
-  * change (forall x y, equal x y = equal y x).
-    intros.
-    apply eq_iff_eq_true.
-    rewrite !equal_spec.
-    intuition congruence.
-  * change (forall y x z, equal x y = true -> equal y z = true -> equal x z = true).
-    intros. rewrite !equal_spec in *. congruence.
-  * intros.
-    unfoldMethods.
-    unfold Internal.Eq___IntSet_op_zsze__.
-    rewrite !nequal_spec.
-    rewrite negb_involutive.
-    reflexivity.
-Qed.
-
 Instance EqExact_IntSet : EqExact IntSet.
 Proof.
   split.
-  intros x y.
-  change (reflect (x = y) (equal x y)).
-  apply iff_reflect.
-  rewrite equal_spec.
-  reflexivity.
+  * intros x y.
+    change (reflect (x = y) (equal x y)).
+    apply iff_reflect.
+    rewrite equal_spec.
+    reflexivity.
+  * unfold op_zeze__, op_zsze__, Eq___IntSet, op_zsze____, op_zeze____.
+    unfold Internal.Eq___IntSet_op_zeze__, Internal.Eq___IntSet_op_zsze__.
+    intros. rewrite !nequal_spec, negb_involutive. reflexivity.
+Qed.
+
+Instance EqLaws_IntSet : EqLaws IntSet.
+Proof.
+  apply EqExact_is_lawful.
+  apply EqExact_IntSet.
 Qed.

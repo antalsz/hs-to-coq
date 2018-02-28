@@ -168,62 +168,73 @@ Proof. by move=> ? ?; rewrite !Neq_inv Eq_sym. Qed.
 Theorem Neq_atrans {t} `{EqLaws t} y x z : x /= z -> (x /= y) || (y /= z).
 Proof. rewrite !Neq_inv -negb_andb; apply contra => /andP[]; apply Eq_trans. Qed.
 
-Class EqExact (t : Type) `{EqLaws t} :=
-  { Eq_eq : forall x y, reflect (x = y) (x == y) }.
+Class EqExact (t : Type) `{Eq_ t} :=
+  { Eq_eq : forall x y, reflect (x = y) (x == y)
+  ; Eq_exact_inv   : forall x y, x == y = ~~ (x /= y)
+   }.
 
-Instance EqLaws_Int : EqLaws Int.
+Lemma EqExact_is_lawful (t : Type) {HEq : Eq_ t} {H: EqExact t} : EqLaws t.
 Proof.
   split.
-  - exact Z.eqb_refl.
-  - exact Z.eqb_sym.
-  - by move=> ? ? ? /Z.eqb_eq -> /Z.eqb_eq; apply Z.eqb_eq.
-  - by move=> * /=; rewrite negbK.
+  - intros x. destruct (Eq_eq x x); congruence.
+  - intros x y. destruct (Eq_eq x y), (Eq_eq y x); congruence.
+  - intros x z y ??. destruct (Eq_eq x y), (Eq_eq y z), (Eq_eq x z); congruence.
+  - apply Eq_exact_inv.
 Qed.
 
 Instance EqExact_Int : EqExact Int.
 Proof.
-  constructor. intros. 
-  unfold op_zeze__, Eq_Integer___, op_zeze____.
-  case H: (_ =? _)%Z; constructor.
-  - by apply Z.eqb_eq.
-  - by rewrite -Z.eqb_eq H.
+  split.
+  * intros. 
+    unfold op_zeze__, Eq_Integer___, op_zeze____.
+    case H: (_ =? _)%Z; constructor.
+    - by apply Z.eqb_eq.
+    - by rewrite -Z.eqb_eq H.
+  * unfold op_zeze__, op_zsze__, Eq_Integer___, op_zeze____, op_zsze____.
+    intros. by rewrite negb_involutive.
+Qed.
+
+Instance EqLaws_Int : EqLaws Int.
+Proof.
+  apply EqExact_is_lawful.
+  apply EqExact_Int.
 Qed.
 
 Instance EqLaws_Integer  : EqLaws  Integer := EqLaws_Int.
 Instance EqExact_Integer : EqExact Integer := EqExact_Int.
 
-Instance EqLaws_Word : EqLaws Word.
-Proof.
-  split.
-  - exact N.eqb_refl.
-  - exact N.eqb_sym.
-  - by move=> ? ? ? /N.eqb_eq -> /N.eqb_eq; apply N.eqb_eq.
-  - by move=> * /=; rewrite negbK.
-Qed.
-
 Instance EqExact_Word : EqExact Word.
 Proof.
-  constructor. intros. 
-  unfold op_zeze__, Eq_Word___, op_zeze____, Eq_Char___.
-  case H: (_ =? _)%N; constructor.
-  - by apply N.eqb_eq.
-  - by rewrite -N.eqb_eq H.
+  split.
+  * intros. 
+    unfold op_zeze__, Eq_Char___, op_zeze____.
+    case H: (_ =? _)%N; constructor.
+    - by apply N.eqb_eq.
+    - by rewrite -N.eqb_eq H.
+  * unfold op_zeze__, op_zsze__, Eq_Char___, op_zeze____, op_zsze____.
+    intros. by rewrite negb_involutive.
+Qed.
+
+
+Instance EqLaws_Word : EqLaws Word.
+Proof.
+  apply EqExact_is_lawful.
+  apply EqExact_Word.
 Qed.
 
 Instance EqLaws_Char  : EqLaws  Char := EqLaws_Word.
 Instance EqExact_Char : EqExact Char := EqExact_Word.
 
-Instance EqLaws_bool : EqLaws bool.
-Proof.
-  split.
-  - exact eqb_reflx.
-  - by repeat case.
-  - by repeat case.
-  - by move=> * /=; rewrite negbK.
-Qed.
-
 Instance EqExact_bool : EqExact bool.
 Proof. by split; repeat case; constructor. Qed.
+
+
+Instance EqLaws_bool : EqLaws bool.
+Proof.
+  apply EqExact_is_lawful.
+  apply EqExact_bool.
+Qed.
+
 
 Instance EqLaws_unit : EqLaws unit.
 Proof. by split. Qed.
@@ -254,14 +265,17 @@ Qed.
 
 Instance EqExact_list {a} `{EqExact a} : EqExact (list a).
 Proof.
-  split; unfold op_zeze__, op_zsze__, Eq_list, op_zeze____, op_zsze____;
-  elim=> [|x xs /= IH]; first by case; constructor.
-  case=> [|y ys] //=; first by constructor.
-  case: (IH ys) => [-> | NEQ].
-  - case E: (x == y); constructor; move/Eq_eq in E.
-    + by rewrite E.
-    + by contradict E; case: E.
-  - by rewrite andbF; constructor; contradict NEQ; case: NEQ.
+  split.
+  * unfold op_zeze__, op_zsze__, Eq_list, op_zeze____, op_zsze____;
+    elim=> [|x xs /= IH]; first by case; constructor.
+    case=> [|y ys] //=; first by constructor.
+    case: (IH ys) => [-> | NEQ].
+    - case E: (x == y); constructor; move/Eq_eq in E.
+      + by rewrite E.
+      + by contradict E; case: E.
+    - by rewrite andbF; constructor; contradict NEQ; case: NEQ.
+  * unfold op_zeze__, op_zsze__, Eq_Char___, op_zeze____, op_zsze____.
+    intros. by rewrite negb_involutive.
 Qed.
 
 Instance EqLaws_option {a} `{EqLaws a} : EqLaws (option a).
@@ -275,11 +289,14 @@ Qed.
 
 Instance EqExact_option {a} `{EqExact a} : EqExact (option a).
 Proof.
-  split; unfold op_zeze__, op_zsze__, Eq___option, op_zeze____, op_zsze____
+  split.
+  * unfold op_zeze__, op_zsze__, Eq___option, op_zeze____, op_zsze____
      => - [x|] [y|] //=; try by constructor.
-  case E: (x == y); constructor; move/Eq_eq in E.
-  + by rewrite E.
-  + by contradict E; case: E.
+    case E: (x == y); constructor; move/Eq_eq in E.
+    + by rewrite E.
+    + by contradict E; case: E.
+  * unfold op_zeze__, op_zsze__, Eq___option, op_zeze____, op_zsze____.
+    intros. by rewrite negb_involutive.
 Qed.
 
 (* -------------------------------------------------------------------- *)

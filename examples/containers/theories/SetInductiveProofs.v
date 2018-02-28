@@ -2832,3 +2832,26 @@ Module Foo (E : OrderedType) : WSfun(E).
 
 
 End Foo.
+
+Require Import Proofs.GHC.Base.
+
+Section TypeClassLaws.
+Context {e : Type} {HEq : Eq_ e} {HOrd : Ord e} {HEqLaws : EqLaws e}  {HOrdLaws : OrdLaws e}.
+
+Instance EqLaws_Set : EqLaws (Set_ e).
+(* EqLaws uses ssreflect-stuff. Can someone have a stab at this?
+   Equality on sets is just equality on sizes and equality on lists, so it should
+   follow quickly using
+   unfold op_zeze__, Eq___Set_, op_zeze____.
+   unfold Internal.Eq___Set__op_zeze__.
+   unfold op_zeze__, Eq___Set_, Eq_Integer___, Eq_list, op_zeze____.
+   and then using the EqLaws instances for Integer and lists.
+*)
+Admitted.
+
+(* We cannot do
+  Instance OrdLaws_Set : OrdLaws (Set_ e).
+because the Ord instance is only lawful for well-formed sets
+*)
+
+End TypeClassLaws.

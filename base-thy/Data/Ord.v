@@ -25,18 +25,25 @@ Qed.
 
 Instance EqExact_Down {a} `{EqExact a} : EqExact (Down a).
 Proof.
-  split;
-  unfold op_zeze__, op_zsze__;
-  unfold Ord.Eq___Down;
-  unfold op_zeze____, op_zsze____;
-  unfold Ord.Eq___Down_op_zsze__;
-  unfold Ord.Eq___Down_op_zeze__;
-  unfold coerce, Coercible_Unpeel, unpeel, repeel, Unpeel_refl;
-  unfold "_==_";
-  unfold "_/=_".
-  unfold instance_Down_Eq
-     => - [x] [y] /=.
-  case E: (x == y); constructor; move/Eq_eq in E.
-  + by rewrite E.
-  + by contradict E; case: E.
+  split.
+  * unfold op_zeze__, op_zsze__;
+    unfold Ord.Eq___Down;
+    unfold op_zeze____, op_zsze____;
+    unfold Ord.Eq___Down_op_zsze__;
+    unfold Ord.Eq___Down_op_zeze__;
+    unfold coerce, Coercible_Unpeel, unpeel, repeel, Unpeel_refl;
+    unfold "_==_";
+    unfold "_/=_".
+    unfold instance_Down_Eq
+       => - [x] [y] /=.
+    case E: (x == y); constructor; move/Eq_eq in E.
+    + by rewrite E.
+    + by contradict E; case: E.
+  * unfold op_zeze__, op_zsze__, Ord.Eq___Down, op_zeze____, op_zsze____.
+    unfold Ord.Eq___Down_op_zeze__, Ord.Eq___Down_op_zsze__.
+    unfold coerce, Coercible_Unpeel, unpeel, repeel, Unpeel_refl.
+    intros.
+    destruct x, y.
+    unfold op_zeze__, op_zsze__, instance_Down_Eq, op_zeze____, op_zsze____.
+    apply Eq_exact_inv.
 Qed.

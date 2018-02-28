@@ -149,37 +149,48 @@ Qed.
 
 (* -------------------------------------------------------------------- *)
 
-Class EqLaws (t : Type) `{Eq_ t} :=
-  { Eq_refl  : reflexive  _==_;
-    Eq_sym   : symmetric  _==_;
-    Eq_trans : transitive _==_;
-    Eq_inv   : forall x y, x == y = ~~ (x /= y)
+Class HasOk (t : Type) := { IsOk : t -> Prop }.
+
+Definition ForAllOk {t} `{HasOk t} P := forall x, IsOk x -> P x.
+
+Notation "'for_ok' x .. y , P" := (ForAllOk (fun x => .. (ForAllOk (fun y => P)) .. ))
+  (at level 200, x binder, y binder).
+
+
+(* -------------------------------------------------------------------- *)
+
+Class EqLaws (t : Type) `{HasOk t} `{Eq_ t} :=
+  { Eq_refl  : for_ok x, x == x;
+    Eq_sym   : for_ok x y, (x == y) = (y == x);
+    Eq_trans : for_ok x y z, x == y -> y == z -> x == z;
+    Eq_inv   : for_ok x y, x == y = ~~ (x /= y)
   }.
 
-Theorem Neq_inv {t} `{EqLaws t} x y : x /= y = ~~ (x == y).
-Proof. by rewrite Eq_inv negbK. Qed.
+Theorem Neq_inv {t} `{EqLaws t} : for_ok x y, x /= y = ~~ (x == y).
+Proof. intros x? y?. by rewrite Eq_inv ?negbK. Qed.
 
-Theorem Neq_irrefl {t} `{EqLaws t} : irreflexive _/=_.
-Proof. by move=> ?; rewrite Neq_inv Eq_refl. Qed.
+Theorem Neq_irrefl {t} `{EqLaws t} : for_ok x,  x /= x = false.
+Proof. intros x?. by rewrite Neq_inv ?Eq_refl. Qed.
 
-Theorem Neq_sym {t} `{EqLaws t} : symmetric _/=_.
-Proof. by move=> ? ?; rewrite !Neq_inv Eq_sym. Qed.
+Theorem Neq_sym {t} `{EqLaws t} : for_ok x y, (x /= y) = (y /= x).
+Proof. intros x? y?. by rewrite !Neq_inv 1?Eq_sym. Qed.
 
-Theorem Neq_atrans {t} `{EqLaws t} y x z : x /= z -> (x /= y) || (y /= z).
-Proof. rewrite !Neq_inv -negb_andb; apply contra => /andP[]; apply Eq_trans. Qed.
+Theorem Neq_atrans {t} `{EqLaws t} : for_ok y x z, x /= z -> (x /= y) || (y /= z).
+Proof. intros x? y? z?. rewrite !Neq_inv -1?negb_andb; try trivial; apply contra => /andP[]; apply Eq_trans; trivial. Qed.
 
+(* We don’t expect to need the HasOk constraint here. *)
 Class EqExact (t : Type) `{Eq_ t} :=
   { Eq_eq : forall x y, reflect (x = y) (x == y)
   ; Eq_exact_inv   : forall x y, x == y = ~~ (x /= y)
    }.
 
-Lemma EqExact_is_lawful (t : Type) {HEq : Eq_ t} {H: EqExact t} : EqLaws t.
+Lemma EqExact_is_lawful (t : Type) {HEq : Eq_ t} {H: EqExact t} {HOk : HasOk t}: EqLaws t.
 Proof.
   split.
-  - intros x. destruct (Eq_eq x x); congruence.
-  - intros x y. destruct (Eq_eq x y), (Eq_eq y x); congruence.
-  - intros x z y ??. destruct (Eq_eq x y), (Eq_eq y z), (Eq_eq x z); congruence.
-  - apply Eq_exact_inv.
+  - intros x? . destruct (Eq_eq x x); congruence.
+  - intros x? y?. destruct (Eq_eq x y), (Eq_eq y x); congruence.
+  - intros x? y? z? ??. destruct (Eq_eq x y), (Eq_eq y z), (Eq_eq x z); try congruence.
+  - intros x? y?. apply Eq_exact_inv.
 Qed.
 
 Instance EqExact_Int : EqExact Int.
@@ -193,6 +204,8 @@ Proof.
   * unfold op_zeze__, op_zsze__, Eq_Integer___, op_zeze____, op_zsze____.
     intros. by rewrite negb_involutive.
 Qed.
+
+Instance HasOk_Int : HasOk Int := { IsOk _ := True }.
 
 Instance EqLaws_Int : EqLaws Int.
 Proof.
@@ -215,6 +228,7 @@ Proof.
     intros. by rewrite negb_involutive.
 Qed.
 
+Instance HasOk_Word : HasOk Word := { IsOk _ := True }.
 
 Instance EqLaws_Word : EqLaws Word.
 Proof.
@@ -228,6 +242,7 @@ Instance EqExact_Char : EqExact Char := EqExact_Word.
 Instance EqExact_bool : EqExact bool.
 Proof. by split; repeat case; constructor. Qed.
 
+Instance HasOk_bool : HasOk bool := { IsOk _ := True }.
 
 Instance EqLaws_bool : EqLaws bool.
 Proof.
@@ -235,6 +250,7 @@ Proof.
   apply EqExact_bool.
 Qed.
 
+Instance HasOk_unit : HasOk unit := { IsOk _ := True }.
 
 Instance EqLaws_unit : EqLaws unit.
 Proof. by split. Qed.
@@ -242,16 +258,22 @@ Proof. by split. Qed.
 Instance EqExact_unit : EqExact unit.
 Proof. by split; repeat case; constructor. Qed.
 
+Instance HasOk_comparison : HasOk comparison := { IsOk _ := True }.
+
 Instance EqLaws_comparison : EqLaws comparison.
 Proof. by split; repeat case. Qed.
 
 Instance EqExact_comparison : EqExact comparison.
 Proof. by split; repeat case; constructor. Qed.
 
+Instance HasOk_list {a} `{HasOk a} : HasOk (list a) := { IsOk := Forall IsOk }.
+
 Instance EqLaws_list {a} `{EqLaws a} : EqLaws (list a).
 Proof.
   split;
   unfold op_zeze__, op_zsze__, Eq_list, op_zeze____, op_zsze____.
+Admitted.
+(*
   - by elim=> [|x xs IH] //=; rewrite Eq_refl.
   - elim=> [|x xs /= IH] //=; first by case.
     by case=> [|y ys] //=; rewrite Eq_sym IH.
@@ -262,6 +284,7 @@ Proof.
     by apply IH.
   - by move=> * /=; rewrite negbK.
 Qed.
+*)
 
 Instance EqExact_list {a} `{EqExact a} : EqExact (list a).
 Proof.
@@ -278,14 +301,20 @@ Proof.
     intros. by rewrite negb_involutive.
 Qed.
 
+Instance HasOk_option {a} `{HasOk a} : HasOk (option a) :=
+  { IsOk x := match x with | Some y => IsOk y | None => True end }.
+
 Instance EqLaws_option {a} `{EqLaws a} : EqLaws (option a).
 Proof.
   split; rewrite /op_zeze__ /op_zsze__ /Eq___option /op_zeze____ /op_zsze____.
   - case=> [?|] //=; apply Eq_refl.
+(*
+Admitted
   - repeat case=> [?|] //=; apply Eq_sym.
   - repeat case=> [?|] //=; apply Eq_trans.
   - repeat case=> [?|] //=. rewrite negb_involutive. reflexivity.
 Qed.
+*)
 
 Instance EqExact_option {a} `{EqExact a} : EqExact (option a).
 Proof.

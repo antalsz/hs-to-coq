@@ -2833,12 +2833,43 @@ Module Foo (E : OrderedType) : WSfun(E).
 
 End Foo.
 
+(** Type classes. Because a [Set_ e] is only useful if it well-formed, we instantiate
+the law classes with a subset type. *)
+
 Require Import Proofs.GHC.Base.
 
 Section TypeClassLaws.
 Context {e : Type} {HEq : Eq_ e} {HOrd : Ord e} {HEqLaws : EqLaws e}  {HOrdLaws : OrdLaws e}.
 
-Instance EqLaws_Set : EqLaws (Set_ e).
+Definition WFSet := {s: Set_ e | Bounded s None None }.
+
+Program Instance Eq_Set_WF : Eq_ WFSet := fun _ k => k
+  {| op_zeze____ := @op_zeze__ (Set_ e) _
+   ; op_zsze____ := @op_zsze__ (Set_ e) _
+  |}.
+
+Program Instance Ord_Set_WF : Ord WFSet := fun _ k => k
+  {| op_zlze____ := @op_zlze__ (Set_ e) _ _
+   ; op_zgze____ := @op_zgze__ (Set_ e) _ _
+   ; op_zl____ := @op_zl__ (Set_ e) _ _
+   ; op_zg____ := @op_zg__ (Set_ e) _ _
+   ; compare__ := @compare (Set_ e) _ _
+   ; min__ := @min (Set_ e) _ _
+   ; max__ := @max (Set_ e) _ _
+  |}.
+Next Obligation.
+  destruct x as [s1 HB1], x0 as [s2 HB2]. simpl.
+  unfold max, Ord__Set_, max__, Internal.Ord__Set__max.
+  destruct (Internal.Ord__Set__op_zlze__ _ _); assumption.
+Qed.
+Next Obligation.
+  destruct x as [s1 HB1], x0 as [s2 HB2]. simpl.
+  unfold min, Ord__Set_, min__, Internal.Ord__Set__min.
+  destruct (Internal.Ord__Set__op_zlze__ _ _); assumption.
+Qed.
+
+
+Instance EqLaws_Set : EqLaws WFSet.
 (* EqLaws uses ssreflect-stuff. Can someone have a stab at this?
    Equality on sets is just equality on sizes and equality on lists, so it should
    follow quickly using
@@ -2849,9 +2880,8 @@ Instance EqLaws_Set : EqLaws (Set_ e).
 *)
 Admitted.
 
-(* We cannot do
-  Instance OrdLaws_Set : OrdLaws (Set_ e).
-because the Ord instance is only lawful for well-formed sets
-*)
+Instance OrdLaws_Set : OrdLaws WFSet.
+Admitted.
+
 
 End TypeClassLaws.

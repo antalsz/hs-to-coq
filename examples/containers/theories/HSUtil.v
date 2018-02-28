@@ -65,11 +65,9 @@ Proof. by rewrite eqType_EqExact. Qed.
 Theorem EqExact_cases {A} `{EqExact A} (x y : A) :
   {x == y /\ x = y} + {x /= y /\ x <> y}.
 Proof.
-  replace (x /= y) with (~~ (x == y)).
-  * destruct (Eq_eq x y).
-    - apply left. intuition.
-    - apply right. intuition.
-  * rewrite Eq_exact_inv negb_involutive. reflexivity.
+  rewrite Neq_inv; case CMP: (x == y).
+  - by left; split=> //; apply/Eq_eq.
+  - by right; split=> //; move=> /Eq_eq; rewrite CMP.
 Qed.
 
 Corollary EqExact_dec {A} `{EqExact A} (x y : A) :
@@ -123,11 +121,11 @@ Theorem elemP {A} `{EqExact A} (x : A) (xs : list A) :
 Proof.
   elim: xs => [|y ys IH] //=; first by constructor.
   rewrite elemC; case CMP: (x == y) => /=.
-  - by constructor; left; symmetry; apply/Eq_eq.
+  - by constructor; left; apply/Eq_eq; rewrite Eq_sym.
   - apply/equivP; first exact IH.
     split; first by right.
     case=> // ?; subst.
-    destruct (Eq_eq x x); try congruence.
+    by move: CMP; rewrite Eq_refl.
 Qed.
 
 Theorem elem_app {A} `{Eq_ A} (a : A) (xs ys : list A) :

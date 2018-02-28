@@ -7790,21 +7790,21 @@ End Foo.
 
 Require Import Proofs.GHC.Base.
 
-Instance EqExact_IntSet : EqExact IntSet.
+Theorem Eq_eq_IntSet (x y : IntSet) : reflect (x = y) (x == y).
 Proof.
-  split.
-  * intros x y.
-    change (reflect (x = y) (equal x y)).
-    apply iff_reflect.
-    rewrite equal_spec.
-    reflexivity.
-  * unfold op_zeze__, op_zsze__, Eq___IntSet, op_zsze____, op_zeze____.
-    unfold Internal.Eq___IntSet_op_zeze__, Internal.Eq___IntSet_op_zsze__.
-    intros. rewrite !nequal_spec, negb_involutive. reflexivity.
+  change (reflect (x = y) (equal x y)).
+  apply iff_reflect.
+  rewrite equal_spec.
+  reflexivity.
 Qed.
 
 Instance EqLaws_IntSet : EqLaws IntSet.
 Proof.
-  apply EqExact_is_lawful.
-  apply EqExact_IntSet.
+  EqLaws_from_reflect Eq_eq_IntSet.
+  intros x y; unfoldMethods; unfold Internal.Eq___IntSet_op_zsze__.
+  rewrite nequal_spec, negb_involutive.
+  reflexivity.
 Qed.
+
+Instance EqExact_IntSet : EqExact IntSet.
+Proof.  constructor; apply Eq_eq_IntSet. Qed.

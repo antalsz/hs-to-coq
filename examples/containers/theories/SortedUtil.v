@@ -191,7 +191,7 @@ Hypothesis sort_elem           : forall {A} `{OrdLaws A} (xs : list A), forall x
 (******************************************************************************)
 (** Theorems about sort and nub **)
 
-Theorem nub_NoDup {A} `{Eq_ A} {HExact : EqExact A} {HLaws : EqLaws A}  (xs : list A) : NoDup (nub xs).
+Theorem nub_NoDup {A} `{EqExact A} (xs : list A) : NoDup (nub xs).
 Proof.
   rewrite /nub /nubBy.
   have: NoDup ([::] : list A) by constructor.

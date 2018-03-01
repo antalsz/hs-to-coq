@@ -385,7 +385,7 @@ Proof.
       order a.
 Qed.
 
-Instance OrdLaws_list  : OrdLaws (list a)
+Global Instance OrdLaws_list  : OrdLaws (list a)
   := OrdLaws_ord_default _ GoodCompare_compare_list.
 End ListOrd.
 

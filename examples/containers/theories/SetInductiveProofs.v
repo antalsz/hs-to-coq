@@ -2861,7 +2861,7 @@ Local Ltac unfold_WFSet_Ord :=
          Data.Set.Internal.Ord__Set__op_zgze__, Data.Set.Internal.Ord__Set__op_zg__,
          Data.Set.Internal.Ord__Set__compare => /=.
 
-Instance EqLaws_Set : EqLaws WFSet.
+Global Instance EqLaws_Set : EqLaws WFSet.
 Proof.
   constructor.
   - by move=> x; unfold_WFSet_Eq; rewrite !Eq_refl.
@@ -2871,7 +2871,49 @@ Proof.
   - by move=> x y; unfold_WFSet_Eq; rewrite negbK.
 Qed.
 
-Instance OrdLaws_Set : OrdLaws WFSet.
-Admitted.
+Lemma compare_neq_gt_iff_le {t} `{OrdLaws t} (l1 l2 : t) :
+  (compare l1 l2 /= Gt = true) <-> l1 <= l2.
+Proof.
+  rewrite Neq_inv negb_true_iff.
+  case LE: (_ <= _) => //=.
+  - split=> [// | _].
+    by apply/Eq_eq; rewrite Ord_compare_Gt LE.
+  - by move: LE; rewrite -Ord_compare_Gt => ->.
+Qed.
+
+Lemma WFSet_eq_size_length (a : WFSet) :
+  Data.Set.Internal.size (proj1_sig a) = Z.of_nat (Datatypes.length (toAscList (proj1_sig a))).
+Proof.
+  move: a => [a WFa]; unfold "==", Eq_Set_WF => /=.
+  rewrite size_size; erewrite size_spec => //; exact WFa.
+Qed.
+
+Local Ltac hideToAscList a :=
+  let la := fresh "l" a in
+  let EQ := fresh "EQ"  in
+  remember (toAscList (proj1_sig a)) as la eqn:EQ; try clear a EQ.
+
+Global Instance OrdLaws_Set : OrdLaws WFSet.
+Proof.
+  constructor; unfold_WFSet_Eq; unfold_WFSet_Ord.
+  - move=> a b; rewrite !compare_neq_gt_iff_le => LEab LEba.
+    generalize (Ord_antisym _ _ LEab LEba) => EQab.
+    apply/andP; split=> //.
+    rewrite !WFSet_eq_size_length; apply/Eq_eq.
+    rewrite Nat2Z.inj_iff; apply eqlist_length, EQab.
+  - move=> a b c; rewrite !compare_neq_gt_iff_le; unfold is_true; order (list e).
+  - move=> a b; rewrite !compare_neq_gt_iff_le; apply Ord_total.
+  - move=> a b; rewrite Ord_compare_Lt Neq_inv negb_false_iff.
+    split=> [? | /Eq_eq]; first apply/Eq_eq; rewrite Ord_compare_Gt; order (list e).
+  - move=> a b; rewrite Ord_compare_Eq.
+    split=> [EQ | /andP [LIST EQ]]; rewrite EQ => //=.
+    rewrite andbT !WFSet_eq_size_length; apply/Eq_eq.
+    rewrite Nat2Z.inj_iff; apply eqlist_length, EQ.
+  - move=> a b; rewrite Ord_compare_Gt Neq_inv negb_false_iff.
+    split=> [? | /Eq_eq]; first apply/Eq_eq; rewrite Ord_compare_Gt; order (list e).
+  - by move=> a b; rewrite Neq_inv negbK compare_flip; case: (compare _ _).
+  - by move=> a b; rewrite !Neq_inv compare_flip; case: (compare _ _).
+  - by move=> a b; rewrite Neq_inv negbK compare_flip; case: (compare _ _).
+Qed.
 
 End TypeClassLaws.

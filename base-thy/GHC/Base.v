@@ -153,7 +153,7 @@ Class EqLaws (t : Type) `{Eq_ t} :=
   { Eq_refl  : reflexive  _==_;
     Eq_sym   : symmetric  _==_;
     Eq_trans : transitive _==_;
-    Eq_inv   : forall x y, x == y = ~~ (x /= y)
+    Eq_inv   : forall x y : t, x == y = ~~ (x /= y)
   }.
 
 Theorem Neq_inv {t} `{EqLaws t} x y : x /= y = ~~ (x == y).
@@ -169,7 +169,10 @@ Theorem Neq_atrans {t} `{EqLaws t} y x z : x /= z -> (x /= y) || (y /= z).
 Proof. rewrite !Neq_inv -negb_andb; apply contra => /andP[]; apply Eq_trans. Qed.
 
 Class EqExact (t : Type) `{EqLaws t} :=
-  { Eq_eq : forall x y, reflect (x = y) (x == y) }.
+  { Eq_eq : forall x y : t, reflect (x = y) (x == y) }.
+
+Theorem Neq_neq {t} `{EqExact t} (x y : t) : reflect (x <> y) (x /= y).
+Proof. by rewrite Neq_inv; case CMP: (x == y) => /=; move/Eq_eq in CMP; constructor. Qed.
 
 Lemma Build_EqLaws_reflect (t : Type) `{Eq_ t} :
   (forall x y : t, reflect (x = y) (x == y)) ->

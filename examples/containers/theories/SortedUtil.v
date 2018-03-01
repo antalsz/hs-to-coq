@@ -339,3 +339,10 @@ Proof.
   have decA: forall x y : A, {x = y} + {x <> y} by move=> x y; case: (EqExact_cases x y); tauto.
   rewrite -sort_NoDup; apply nub_NoDup.
 Qed.
+
+Corollary StronglySorted_sort_nub_Zlt (xs : list Int) :
+  StronglySorted Z.lt (sort (nub xs)).
+Proof.
+  eapply StronglySorted_R_ext; last by apply StronglySorted_sort_nub.
+  by unfold "<", Ord_Integer___ => /= a b; rewrite -Z.ltb_lt.
+Qed.

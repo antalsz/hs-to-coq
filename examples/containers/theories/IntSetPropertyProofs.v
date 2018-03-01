@@ -207,9 +207,13 @@ Proof.
 
   split=> /=; first by apply valid_correct.
   apply/Eq_eq; fold toList.
-  apply StronglySorted_Zlt_eq_In; [by apply to_List_sorted | | ].
-  
-Abort.
+  apply StronglySorted_Zlt_eq_In;
+    [by apply to_List_sorted | apply StronglySorted_sort_nub_Zlt | ].
+  move=> a.
+  by rewrite !(rwP (elemP _ _))
+             toList_member // intersection_member // !fromList_member //
+             sort_elem nub_elem intersect_elem.
+Qed.
 
 Theorem thm_disjoint : toProp prop_disjoint.
 Proof.

@@ -209,6 +209,20 @@ Proof.
 Qed.
 
 (******************************************************************************)
+(* Foldable vs. list functions *)
+
+Theorem Foldable_list_any {A} :
+  Data.Foldable.any =2 @GHC.List.any A.
+Proof.
+  rewrite /Data.Foldable.any /hash_compose /compose /foldMap /Foldable__list /=
+          /Data.Foldable.Foldable__list_foldMap /Data.Foldable.Foldable__list_foldr /=.
+  move=> p; elim=> [|x xs IH] //=.
+  rewrite -IH.
+  rewrite {1}/mappend /Data.Monoid.Monoid__Any /=.
+  case: (GHC.Base.foldr _ _ _) => //=.
+Qed.
+
+(******************************************************************************)
 (** Element-based list function semantics **)
 
 (* reverse and rev *)
@@ -306,6 +320,69 @@ Qed.
 Theorem delete_preserves_NoDup {A} `{EqExact A} (xs : list A) :
   NoDup xs -> forall a, NoDup (delete a xs).
 Proof. apply deleteBy_preserves_NoDup. Qed.
+
+(* Filter *)
+
+Theorem filter_In {A} (p : A -> bool) (xs : list A) :
+  forall a, In a (filter p xs) <-> In a xs /\ p a.
+Proof.
+  move=> a; elim: xs => [|x xs IH] //=; first tauto.
+  case Hpx: (p x) => //=; rewrite IH; intuition congruence.
+Qed.
+
+Theorem filter_elem {A} `{EqExact A} (p : A -> bool) (xs : list A) :
+  forall a, elem a (filter p xs) = elem a xs && p a.
+Proof.
+  move=> a; apply/bool_eq_iff.
+  rewrite -(rwP andP) -!(rwP (elemP _ _)); apply filter_In.
+Qed.
+
+Theorem filter_preserves_NoDup {A} `{EqExact A} (p : A -> bool) (xs : list A) :
+  NoDup xs -> NoDup (filter p xs).
+Proof.
+  elim: xs => [|x xs IH] //= ND'.
+  inversion ND' as [|x' xs' NIN ND]; subst x' xs'.
+  case: (p x); first constructor; try by apply IH.
+  rewrite filter_In; contradict NIN; tauto.
+Qed.
+
+(* List intersection (intersect) *)
+
+Theorem intersectBy_flat_map {A} (eq : A -> A -> bool) (xs ys : list A) :
+  intersectBy eq xs ys = flat_map (fun x => if GHC.List.any (eq x) ys then [:: x] else [::]) xs.
+Proof.
+  move: xs ys => [|x xs] [|y ys] //=.
+  elim: xs => [|x' xs IH] //=.
+Qed.
+
+Theorem intersectBy_filter {A} (eq : A -> A -> bool) (xs ys : list A) :
+  intersectBy eq xs ys = filter (fun x => any (eq x) ys) xs.
+Proof.
+  rewrite intersectBy_flat_map.
+  elim: xs => [|x xs IH] => //=.
+  rewrite -Foldable_list_any IH.
+  by case: (any _ _).
+Qed.
+
+Theorem intersectBy_elem {A} `{EqExact A} (xs ys : list A) (a : A) :
+  elem a (intersectBy _==_ xs ys) = elem a xs && elem a ys.
+Proof.
+  rewrite intersectBy_filter filter_elem Foldable_list_any; f_equal.
+  elim: ys => [|y ys IH] //=.
+  by rewrite IH elemC.
+Qed.
+
+Theorem intersect_elem {A} `{EqExact A} (xs ys : list A) (a : A) :
+  elem a (intersect xs ys) = elem a xs && elem a ys.
+Proof. apply intersectBy_elem. Qed.
+
+Theorem intersectBy_preserves_NoDup {A} `{EqExact A} (xs ys : list A) :
+  NoDup xs -> NoDup (intersectBy _==_ xs ys).
+Proof. rewrite intersectBy_filter; apply filter_preserves_NoDup. Qed.
+
+Theorem intersect_preserves_NoDup {A} `{EqExact A} (xs ys : list A) :
+  NoDup xs -> NoDup (intersect xs ys).
+Proof. rewrite /intersect intersectBy_filter; apply filter_preserves_NoDup. Qed.
 
 (* List difference (\\) *)
 

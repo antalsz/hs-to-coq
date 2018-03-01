@@ -31,7 +31,7 @@ This is the annotated export list of IntSet. The first column says:
     , lookupGE
  F  , isSubsetOf
  V  , isProperSubsetOf
-    , disjoint
+ V  , disjoint
 
     -- * Construction
  F  , empty

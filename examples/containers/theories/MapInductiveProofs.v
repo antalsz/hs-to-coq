@@ -858,9 +858,12 @@ Lemma link_eq (x : e) (v : a) (s1: Map e a)  (s2: Map e a) :
                  else bin x v l r
         end.
 Proof.
-  unfold link at 1, link_func at 1.
-  rewrite Wf.WfExtensionality.fix_sub_eq_ext.
-  unfold projT1, projT2.
+  unfold link at 1, link_func at 1;
+  lazymatch goal with 
+    |- Wf.Fix_sub ?A ?R ?Rwf ?P ?F_sub ?x = ?rhs => 
+    etransitivity; only 1: apply (@Wf.WfExtensionality.fix_sub_eq_ext A R Rwf P F_sub x)
+  end;
+  unfold projT1, projT2;
   destruct s1, s2; reflexivity.
 Qed.
 
@@ -1420,9 +1423,12 @@ Proof.
   intros l r.
   destruct l; [|auto].
   destruct r; [|auto].
-  unfold link2 at 1, link2_func at 1.
-  rewrite Wf.WfExtensionality.fix_sub_eq_ext;
-  unfold projT1, projT2.
+  unfold link2 at 1, link2_func at 1;
+  lazymatch goal with 
+    |- Wf.Fix_sub ?A ?R ?Rwf ?P ?F_sub ?x = ?rhs => 
+    etransitivity; only 1: apply (@Wf.WfExtensionality.fix_sub_eq_ext A R Rwf P F_sub x)
+  end;
+  unfold projT1, projT2;
   reflexivity.
 Qed.
 

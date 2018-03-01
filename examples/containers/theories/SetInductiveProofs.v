@@ -774,7 +774,11 @@ Lemma link_eq (x : e) (s1: Set_ e)  (s2: Set_ e) :
         end.
 Proof.
   unfold link at 1, link_func at 1.
-  rewrite Wf.WfExtensionality.fix_sub_eq_ext.
+  etransitivity.
+  lazymatch goal with 
+    |- Wf.Fix_sub ?A ?R ?Rwf ?P ?F_sub ?x = ?rhs => 
+    apply (@Wf.WfExtensionality.fix_sub_eq_ext A R Rwf P F_sub x)
+  end;
   unfold projT1, projT2.
   destruct s1, s2; reflexivity.
 Qed.
@@ -1283,8 +1287,12 @@ Proof.
   destruct l; [|auto].
   destruct r; [|auto].
   unfold merge at 1, merge_func at 1.
-  rewrite Wf.WfExtensionality.fix_sub_eq_ext.
-  unfold projT1, projT2.
+  etransitivity.
+  lazymatch goal with 
+    |- Wf.Fix_sub ?A ?R ?Rwf ?P ?F_sub ?x = ?rhs => 
+    apply (@Wf.WfExtensionality.fix_sub_eq_ext A R Rwf P F_sub x)
+  end.
+  unfold projT1, projT2;
   reflexivity.
 Qed.
 

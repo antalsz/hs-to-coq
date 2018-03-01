@@ -4883,7 +4883,7 @@ Proof.
   intro i. reflexivity.
 Qed.
 
-(** *** Specifing [union] *)
+(** *** Specifying [union] *)
 
 (** The following is copied from the body of [union] *)
 
@@ -5032,7 +5032,7 @@ Proof.
   eexists. apply union_Sem; eassumption.
 Qed.
 
-(** *** Specifing [intersection] *)
+(** *** Specifying [intersection] *)
 
 (** The following is copied from the body of [intersection] *)
 
@@ -5298,7 +5298,7 @@ Proof.
   eexists. apply intersection_Sem; eassumption.
 Qed.
 
-(** *** Specifing [difference] *)
+(** *** Specifying [difference] *)
 
 (** The following is copied from the body of [difference] *)
 
@@ -5512,7 +5512,7 @@ Proof.
   eexists. apply difference_Sem; eassumption.
 Qed.
 
-(** *** Specifing [disjoint] *)
+(** *** Specifying [disjoint] *)
 
 (** The following is copied from the body of [disjoint] *)
 
@@ -5608,7 +5608,7 @@ Proof.
     + eapply disjoint_Desc; eassumption.
 Qed.
 
-(** *** Specifing [foldr] *)
+(** *** Specifying [foldr] *)
 
 (* We can extract the argument to [wfFix2] from the definition of [foldrBits]. *)
 Definition foldrBits_go {a} (p : Int) (f : Int -> a -> a) (x : a) (bm : Nat)
@@ -5689,7 +5689,7 @@ Definition foldr_go {a} k :=
      end).
 
 
-(** *** Specifing [toList] *)
+(** *** Specifying [toList] *)
 
 Lemma In_cons_iff:
   forall {a} (y x : a) xs, In y (x :: xs) <-> x = y \/ In y xs.
@@ -6309,7 +6309,7 @@ Proof.
   reflexivity.
 Qed.
 
-(** *** Specifing [toDescList] *)
+(** *** Specifying [toDescList] *)
 
 (** The easiest complete specification simply relates this to [toList] *)
 

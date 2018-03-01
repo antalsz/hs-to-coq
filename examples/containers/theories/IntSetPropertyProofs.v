@@ -258,16 +258,25 @@ Abort.
 Theorem thm_List : toProp prop_List.
 Proof.
   rewrite /prop_List /=; rewrite -/toList => xs POS_xs.
-Abort.
+Proof.
+  have WF_xs: WF (fromList xs) by apply fromList_WF.
+  apply/Eq_eq/StronglySorted_Ord_eq_In.
+  - apply StronglySorted_sort_nub.
+  - apply toList_sorted, fromList_WF=> //.
+  - move=> a.
+    by rewrite !(rwP (elemP _ _))
+               toList_member // fromList_member //
+               sort_elem nub_elem.
+Qed.
 
 Theorem thm_DescList : toProp prop_DescList.
 Proof.
   rewrite /prop_DescList /= => xs POS_xs.
   replace (toDescList (fromList xs)) with (reverse (toAscList (fromList xs)))
     by by rewrite !hs_coq_reverse_rev toDescList_spec //; apply fromList_WF.
-  apply/Eq_eq; f_equal.
-  (* thm_List *)
-Abort.
+  apply/Eq_eq; f_equal; apply/Eq_eq.
+  by apply thm_List.
+Qed.
 
 Theorem thm_AscDescList : toProp prop_AscDescList.
 Proof.

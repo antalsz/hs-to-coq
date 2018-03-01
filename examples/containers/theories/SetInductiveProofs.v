@@ -2869,19 +2869,32 @@ Next Obligation.
 Qed.
 
 
+From mathcomp Require Import ssreflect ssrbool.
+Set Bullet Behavior "Strict Subproofs".
+
+Local Ltac unfold_WFSet_Eq :=
+  unfold "_==_", "_/=_", Eq_Set_WF => /=;
+  unfold "_==_", "_/=_", Eq___Set_ => /=;
+  unfold Data.Set.Internal.Eq___Set__op_zsze__, Data.Set.Internal.Eq___Set__op_zeze__ => /=.
+
+Local Ltac unfold_WFSet_Ord :=
+  unfold "_<=_", "_<_", "_>=_", "_>_", compare, Ord_Set_WF => /=;
+  unfold "_<=_", "_<_", "_>=_", "_>_", compare, Ord__Set_ => /=;
+  unfold Data.Set.Internal.Ord__Set__op_zlze__, Data.Set.Internal.Ord__Set__op_zl__,
+         Data.Set.Internal.Ord__Set__op_zgze__, Data.Set.Internal.Ord__Set__op_zg__,
+         Data.Set.Internal.Ord__Set__compare => /=.
+
 Instance EqLaws_Set : EqLaws WFSet.
-(* EqLaws uses ssreflect-stuff. Can someone have a stab at this?
-   Equality on sets is just equality on sizes and equality on lists, so it should
-   follow quickly using
-   unfold op_zeze__, Eq___Set_, op_zeze____.
-   unfold Internal.Eq___Set__op_zeze__.
-   unfold op_zeze__, Eq___Set_, Eq_Integer___, Eq_list, op_zeze____.
-   and then using the EqLaws instances for Integer and lists.
-*)
-Admitted.
+Proof.
+  constructor.
+  - by move=> x; unfold_WFSet_Eq; rewrite !Eq_refl.
+  - by move=> x y; unfold_WFSet_Eq; f_equal; rewrite Eq_sym.
+  - move=> x y z; unfold_WFSet_Eq=> /andP [size_xy list_xy] /andP [size_yz list_yz].
+    by apply/andP; split; eapply Eq_trans; eassumption.
+  - by move=> x y; unfold_WFSet_Eq; rewrite negbK.
+Qed.
 
 Instance OrdLaws_Set : OrdLaws WFSet.
 Admitted.
-
 
 End TypeClassLaws.

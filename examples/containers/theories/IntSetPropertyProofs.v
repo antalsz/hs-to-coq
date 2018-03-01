@@ -220,34 +220,16 @@ Proof.
   rewrite /prop_disjoint /= => s1 WF1 s2 WF2.
   
   move: (intersection_WF _ _ WF1 WF2) => WF12.
-
-  apply/Eq_eq.
   
-  elim: s1 s2 WF1 WF2 WF12 => [p1 m1 l1 IHl1 r1 IHr1 | p1 b1 |] s2 //.
-  - elim: s2 p1 m1 l1 IHl1 r1 IHr1 => [p2 m2 l2 IHl2 r2 IHr2 | p2 b2 |] //= p1 m1 l1 IHl1 r1 IHr1 WF1 WF2 WF12.
-    all: move: (WF1) => /WF_Bin_children [WFl1 WFr1].
-    + move: (WF2) => /WF_Bin_children [WFl2 WFr2].
-      rewrite disjoint_eq intersection_eq /=.
-      repeat match goal with |- context[if ?b then _ else _] => case b => //= end.
-      all: try by rewrite ?IHl1 ?IHr1 ?IHl2 ?IHr2 //=; apply intersection_WF.
-      rewrite IHl1 //=; last by apply intersection_WF.
-      rewrite IHr1 //=; last by apply intersection_WF.
-      rewrite /bin.
-      by case: (intersection l1 l2); case: (intersection r1 r2).
-    + rewrite disjoint_eq intersection_eq /=.
-      repeat match goal with |- context[if ?b then _ else _] => case b => //= end.
-      * admit.
-      * admit.
-  - elim: s2 p1 b1 => [p2 m2 l2 IHl2 r2 IHr2 | p2 b2 |] //= p1 b1 WF1 WF2 WF12.
-    + rewrite disjoint_eq intersection_eq /=.
-      repeat match goal with |- context[if ?b then _ else _] => case b => //= end.
-      * admit.
-      * admit.
-    + rewrite disjoint_eq intersection_eq /=.
-      rewrite /tip.
-      case: (p1 == p2) => //=.
-      case: (N.land b1 b2 == 0%N) => //=.
-Abort.
+  apply/Eq_eq/bool_eq_iff.
+  rewrite disjoint_member // null_member //.
+  split=> [is_disjoint | is_not_intersection] k.
+  - rewrite intersection_member //; apply negbTE.
+    rewrite negb_andb; apply is_disjoint.
+  - move: (is_not_intersection k).
+    rewrite intersection_member // => /negbT.
+    by rewrite negb_andb.
+Qed.
 
 (********************************************************************
   Lists

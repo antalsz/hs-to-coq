@@ -210,33 +210,33 @@ Qed.
 
 Theorem isSubsetOf_member (s1 s2 : IntSet) :
   WF s1 -> WF s2 ->
-  isSubsetOf s1 s2 <-> (forall k, member k s1 ==> member k s2).
+  isSubsetOf s1 s2 <-> (forall k, member k s1 -> member k s2).
 Proof.
   move=> [f1 Sem1] [f2 Sem2]; move: (isSubsetOf_Sem _ _ _ _ Sem1 Sem2) => subset_iff.
   split.
   - move=> /subset_iff is_subset k.
     erewrite !member_Sem; try eassumption.
-    apply/implyP/is_subset.
+    apply is_subset.
   - move=> is_subset; apply subset_iff=> k.
     erewrite <-!member_Sem; try eassumption.
-    move: (is_subset k) => /implyP; apply.
+    apply (is_subset k).
 Qed.
 
 Theorem isProperSubsetOf_member (s1 s2 : IntSet) :
   WF s1 -> WF s2 ->
-  isProperSubsetOf s1 s2 <-> (forall k, member k s1 ==> member k s2) /\ (s1 /= s2).
+  isProperSubsetOf s1 s2 <-> (forall k, member k s1 -> member k s2) /\ (s1 /= s2).
 Proof.
   move=> [f1 Sem1] [f2 Sem2]; move: (isProperSubsetOf_Sem _ _ _ _ Sem1 Sem2) => proper_subset_iff.
   split.
   - move=> /proper_subset_iff [is_subset is_proper]; split.
     + move=> k; erewrite !member_Sem; try eassumption.
-      apply/implyP/is_subset.
+      apply is_subset.
     + rewrite Neq_inv; apply/Eq_eq=> ?; subst s2.
       case: is_proper => [] i; apply.
       erewrite Sem_extensional; eauto.
   - move=> [is_subset is_proper]; apply proper_subset_iff; split.
     + move=> k; erewrite <-!member_Sem; try eassumption.
-      move: (is_subset k) => /implyP; apply.
+      apply (is_subset k).
     + have distinct: s1 <> s2 by move=> ?; subst; move: is_proper; rewrite Neq_inv Eq_refl.
       eapply Sem_differ_witness; eassumption.
 Qed.

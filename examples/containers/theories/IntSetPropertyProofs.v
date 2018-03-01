@@ -346,8 +346,8 @@ Proof.
   move: (union_WF _ _ WF1 WF2) => WF12.
   apply/Eq_eq/bool_eq_iff.
   
-  rewrite isProperSubsetOf_member //; intuition.
-  apply/implyP=> k_in_s1.
+  rewrite isProperSubsetOf_member //; split; first by intuition.
+  move=> s1_diff; split=> // k k_in_s1.
   by rewrite union_member // k_in_s1 orTb.
 Qed.
 
@@ -361,8 +361,7 @@ Proof.
   rewrite /prop_isSubsetOf2 /= => s1 WF1 s2 WF2.
   move: (union_WF _ _ WF1 WF2) => WF12.
   rewrite isSubsetOf_member // => k.
-  rewrite union_member //.
-  by apply/implyP => ->.
+  by rewrite union_member // => ->; rewrite orTb.
 Qed.
 
 Theorem thm_size : toProp prop_size.

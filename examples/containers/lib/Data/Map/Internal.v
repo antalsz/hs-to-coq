@@ -711,11 +711,6 @@ Definition member {k} {a} `{GHC.Base.Ord k} : k -> Map k a -> bool :=
 Definition notMember {k} {a} `{GHC.Base.Ord k} : k -> Map k a -> bool :=
   fun k m => negb GHC.Base.$ member k m.
 
-Axiom merge : forall {A : Type}, A.
-
-(* Translating `merge' failed: Could not apply edit: cannot "termination" a
-   definition that is not a recursive function *)
-
 Definition null {k} {a} : Map k a -> bool :=
   fun arg_0__ => match arg_0__ with | Tip => true | Bin _ _ _ _ _ => false end.
 
@@ -1888,20 +1883,19 @@ Definition delete {k} {a} `{GHC.Base.Ord k} : k -> Map k a -> Map k a :=
              end in
   go.
 
-Definition link2 {k} {a} : Map k a -> Map k a -> Map k a :=
-  unsafeFix (fun link2 arg_0__ arg_1__ =>
-              match arg_0__ , arg_1__ with
-                | Tip , r => r
-                | l , Tip => l
-                | (Bin sizeL kx x lx rx as l) , (Bin sizeR ky y ly ry as r) => if (delta
-                                                                                  GHC.Num.* sizeL) GHC.Base.<
-                                                                                  sizeR : bool
-                                                                               then balanceL ky y (link2 l ly) ry
-                                                                               else if (delta GHC.Num.* sizeR)
-                                                                                       GHC.Base.< sizeL : bool
-                                                                                    then balanceR kx x lx (link2 rx r)
-                                                                                    else glue l r
-              end).
+Program Fixpoint link2 {k} {a} (arg_0__ : Map k a) (arg_1__ : Map k a)
+                       {measure (Nat.add (map_size arg_0__) (map_size arg_1__))} : Map k a
+                   := match arg_0__ , arg_1__ with
+                        | Tip , r => r
+                        | l , Tip => l
+                        | (Bin sizeL kx x lx rx as l) , (Bin sizeR ky y ly ry as r) =>
+                          if Bool.Sumbool.sumbool_of_bool ((delta GHC.Num.* sizeL) GHC.Base.< sizeR)
+                          then balanceL ky y (link2 l ly) ry
+                          else if Bool.Sumbool.sumbool_of_bool ((delta GHC.Num.* sizeR) GHC.Base.< sizeL)
+                               then balanceR kx x lx (link2 rx r)
+                               else glue l r
+                      end.
+Solve Obligations with (termination_by_omega).
 
 Definition filterWithKey {k} {a} : (k -> a -> bool) -> Map k a -> Map k a :=
   fix filterWithKey arg_0__ arg_1__

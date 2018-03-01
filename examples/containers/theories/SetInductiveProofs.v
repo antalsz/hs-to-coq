@@ -31,9 +31,6 @@ end.
 Section WF.
 Context {e : Type} {HEq : Eq_ e} {HOrd : Ord e} {HEqLaws : EqLaws e}  {HOrdLaws : OrdLaws e}.
 
-(* We don’t have a OrdLawful class yet. We need to introduce that,
-   add it to the context, and derive all axioms from that.
- *)
 Lemma compare_Eq : forall (x y : e),
   compare x y = Eq <-> x == y = true.
 Proof. intuition; order e. Qed.
@@ -777,7 +774,11 @@ Lemma link_eq (x : e) (s1: Set_ e)  (s2: Set_ e) :
         end.
 Proof.
   unfold link at 1, link_func at 1.
-  rewrite Wf.WfExtensionality.fix_sub_eq_ext.
+  etransitivity.
+  lazymatch goal with 
+    |- Wf.Fix_sub ?A ?R ?Rwf ?P ?F_sub ?x = ?rhs => 
+    apply (@Wf.WfExtensionality.fix_sub_eq_ext A R Rwf P F_sub x)
+  end;
   unfold projT1, projT2.
   destruct s1, s2; reflexivity.
 Qed.
@@ -1286,8 +1287,12 @@ Proof.
   destruct l; [|auto].
   destruct r; [|auto].
   unfold merge at 1, merge_func at 1.
-  rewrite Wf.WfExtensionality.fix_sub_eq_ext.
-  unfold projT1, projT2.
+  etransitivity.
+  lazymatch goal with 
+    |- Wf.Fix_sub ?A ?R ?Rwf ?P ?F_sub ?x = ?rhs => 
+    apply (@Wf.WfExtensionality.fix_sub_eq_ext A R Rwf P F_sub x)
+  end.
+  unfold projT1, projT2;
   reflexivity.
 Qed.
 
@@ -1301,34 +1306,6 @@ Program Fixpoint merge_Desc (s1: Set_ e)  (s2: Set_ e)
       isUB ub x = true->
       Desc (merge s1 s2) lb ub (size s1 + size s2)
            (fun i => sem s1 i || sem s2 i)
-  := _.
-Next Obligation.
-  intros.
-  rewrite merge_eq. 
-  inversion H; subst; clear H;
-    inversion H0; subst; clear H0;
-      try solve [solve_Desc].
-  destruct (Sumbool.sumbool_of_bool _);
-    only 2: destruct (Sumbool.sumbool_of_bool _);
-    rewrite ?Z.ltb_lt, ?Z.ltb_ge in *.
-  - applyDesc merge_Desc.
-    applyDesc balanceL_Desc.
-    solve_Desc.
-  - applyDesc merge_Desc.
-    applyDesc balanceR_Desc.
-    solve_Desc.
-  - applyDesc glue_Desc.
-    solve_Desc.
-Qed.
-
-Program Fixpoint merge_Desc' (s1: Set_ e)  (s2: Set_ e)
-  {measure (set_size s1 + set_size s2)} :
-    forall x lb ub,
-      Bounded s1 lb (Some x) ->
-      Bounded s2 (Some x) ub  ->
-      isLB lb x = true ->
-      isUB ub x = true->
-      Desc' (merge s1 s2) lb ub (fun i => sem s1 i || sem s2 i)
   := _.
 Next Obligation.
   intros.
@@ -1406,7 +1383,7 @@ Proof.
         -- solve_Desc.
         -- applyDesc link_Desc.
            solve_Desc.
-      * applyDesc merge_Desc'.
+      * applyDesc merge_Desc.
         solve_Desc.
     + solve_Desc.
 Qed.

@@ -858,6 +858,7 @@ Lemma link_eq (x : e) (v : a) (s1: Map e a)  (s2: Map e a) :
                  else bin x v l r
         end.
 Proof.
+  idtac "Proving link_eq...".
   unfold link at 1, link_func at 1;
   lazymatch goal with 
     |- Wf.Fix_sub ?A ?R ?Rwf ?P ?F_sub ?x = ?rhs => 
@@ -865,7 +866,7 @@ Proof.
   end;
   unfold projT1, projT2;
   destruct s1, s2; reflexivity.
-Qed.
+Time Qed.
 
 (* [program_simpl] calls [simpl], which is very confusing due to [1 + _]. So
 ask [Next Obligation] to use this only when it solves the goal completely. *)
@@ -1420,6 +1421,7 @@ Lemma link2_eq: forall (l r: Map e a), link2 l r =
          else glue l r
   end.
 Proof.
+  idtac "Proving link2_Eq...".
   intros l r.
   destruct l; [|auto].
   destruct r; [|auto].
@@ -1430,7 +1432,7 @@ Proof.
   end;
   unfold projT1, projT2;
   reflexivity.
-Qed.
+Time Qed.
 
 
 Program Fixpoint link2_Desc (s1: Map e a)  (s2: Map e a)

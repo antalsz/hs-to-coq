@@ -5590,21 +5590,201 @@ by reflexivity
   end.
 Qed.
 
-Axiom disjoint_Desc : forall
-  s1 r1 f1 s2 r2 f2,
+Program Fixpoint disjoint_Desc
+  s1 r1 f1 s2 r2 f2
+  { measure (size_nat s1 + size_nat s2) } :
   Desc s1 r1 f1 ->
   Desc s2 r2 f2 ->
-  disjoint s1 s2 = true <-> (forall i, f1 i = false \/ f2 i = false).
+  disjoint s1 s2 = true <-> (forall i, f1 i && f2 i = false) := _.
+Next Obligation.
+
+  Ltac solve_eq_disjoint_specialize :=
+   intro i;
+   repeat match goal with H : (forall i, _) |- _ => specialize (H i) end;
+   repeat split_bool;
+   repeat point_to_inRange; repeat saturate_inRange; try inRange_disjoint;
+   simpl in *; rewrite ?orb_true_r, ?andb_true_l in *; try congruence.
+
+  rename H into HD1, H0 into HD0.
+  rewrite disjoint_eq.
+  unfold disjoint_body.
+  unfoldMethods.
+  inversion HD1.
+  * (* s1 is a Tip *)
+    subst.
+    clear disjoint_Desc.
+    induction HD0; intros; subst.
+    + apply same_size_compare; try Nomega; intros.
+      -- simpl. subst r1.
+         rewrite N.eqb_eq.
+         rewrite <- N.bits_inj_iff.
+         unfold N.eqf.
+         setoid_rewrite N.land_spec.
+         setoid_rewrite N.bits_0.
+         setoid_rewrite H6. setoid_rewrite H2.
+         split; intro.
+         ** intro i.
+            unfold bitmapInRange.
+            destruct (inRange i r).
+            ++ apply H4.
+            ++ reflexivity.
+         ** intro n.
+            destruct (N.ltb_spec n (2 ^ rBits r))%N.
+            ++ specialize (H4 (intoRange r n)).
+               rewrite !bitmapInRange_intoRange in H4 by assumption.
+               assumption.
+            ++ replace (rBits r) in H8. change (WIDTH <= n)%N in H8.
+               rewrite isBitMask0_outside by isBitMask.
+               reflexivity.
+      -- split; intro; try reflexivity.
+         solve_f_eq_disjoint.
+    + assert (N.log2 WIDTH <= rBits r0)%N by (eapply Desc_larger_WIDTH; eauto).
+      assert (rBits r0 <= rBits (halfRange r false))%N by (apply subRange_smaller; auto).
+      assert (rBits (halfRange r false) < rBits r)%N by (apply halfRange_smaller; auto).
+      assert (rBits r1 < rBits r)%N by Nomega.
+
+      apply nomatch_zero_smaller; try assumption; intros.
+      - clear IHHD0_1 IHHD0_2.
+        split; intro; try reflexivity.
+        solve_f_eq_disjoint.
+      - rewrite IHHD0_1; clear IHHD0_1 IHHD0_2.
+        setoid_rewrite H8. setoid_rewrite H2.
+        split; intro; solve_eq_disjoint_specialize.
+      - rewrite IHHD0_2; clear IHHD0_1 IHHD0_2.
+        setoid_rewrite H8. setoid_rewrite H2.
+        split; intro; solve_eq_disjoint_specialize.
+
+  * (* s1 is a Bin *)
+    inversion HD0.
+    + (* s2 is a Tip *)
+
+      (* Need to undo the split of s1 *)
+      change ((fix disjointBM (arg_11__ : IntSet) : bool :=
+      match arg_11__ with
+      | Bin p1 m1 l1 r5 =>
+          if nomatch p0 p1 m1 then true else if zero p0 m1 then disjointBM l1 else disjointBM r5
+      | Tip kx1 bm1 => if kx1 =? p0 then (N.land bm1 bm =? Z.to_N 0)%N else true
+      | Nil => true
+      end) (Bin p msk s0 s3) = true <->  (forall i : Z, f1 i && f2 i = false)).
+      rewrite H7.
+      clear dependent s0. clear dependent s3. clear dependent r0. clear dependent r3. clear dependent f0. clear dependent f3.
+      clear dependent p. clear dependent msk.
+      clear H1.
+      subst.
+
+      (* Now we are essentially in the same situation as above. *)
+      (* Unfortunately, the two implementations of [intersectionBM] are slightly 
+         different in irrelevant details that make ist just hard enough to abstract
+         over them in a lemma of its own. So let’s just copy’n’paste. *)
+
+      clear disjoint_Desc.
+      induction HD1; intros; subst.
+      ++ apply same_size_compare; try Nomega; intros.
+        -- simpl. subst r2.
+           rewrite N.eqb_eq.
+           rewrite <- N.bits_inj_iff.
+           unfold N.eqf.
+           setoid_rewrite N.land_spec.
+           setoid_rewrite N.bits_0.
+           setoid_rewrite H13. setoid_rewrite H2.
+           split; intro.
+           ** intro i.
+              unfold bitmapInRange.
+              destruct (inRange i r).
+              +++ apply H0.
+              +++ reflexivity.
+           ** intro n.
+              destruct (N.ltb_spec n (2 ^ rBits r))%N.
+              +++ specialize (H0 (intoRange r n)).
+                  rewrite !bitmapInRange_intoRange in H0 by assumption.
+                  assumption.
+              +++ replace (rBits r) in H4. change (WIDTH <= n)%N in H4.
+                  rewrite isBitMask0_outside by isBitMask.
+                  reflexivity.
+        -- split; intro; try reflexivity.
+           solve_f_eq_disjoint.
+      ++ assert (N.log2 WIDTH <= rBits r1)%N by (eapply Desc_larger_WIDTH; eauto).
+         assert (rBits r1 <= rBits (halfRange r false))%N by (apply subRange_smaller; auto).
+         assert (rBits (halfRange r false) < rBits r)%N by (apply halfRange_smaller; auto).
+         assert (rBits r2 < rBits r)%N by Nomega.
+
+        apply nomatch_zero_smaller; try assumption; intros.
+        - clear IHHD1_1 IHHD1_2.
+          split; intro; try reflexivity.
+          solve_f_eq_disjoint.
+        - rewrite IHHD1_1; clear IHHD1_1 IHHD1_2.
+          setoid_rewrite H13. setoid_rewrite H4.
+          split; intro; solve_eq_disjoint_specialize.
+        - rewrite IHHD1_2; clear IHHD1_1 IHHD1_2.
+          setoid_rewrite H13. setoid_rewrite H4.
+          split; intro; solve_eq_disjoint_specialize.
+
+    + subst.
+      set (sl := Bin (rPrefix r1) (rMask r1) s0 s3) in *.
+      set (sr := Bin (rPrefix r2) (rMask r2) s4 s5) in *.
+      rewrite !shorter_spec by assumption.
+      destruct (N.ltb_spec (rBits r2) (rBits r1)).
+      ++ (* s2 is smaller than s1 *)
+        apply nomatch_zero_smaller; try assumption; intros.
+        - (* s2 is disjoint of s1 *)
+          split; intro; try reflexivity.
+          solve_f_eq_disjoint.
+
+        - (* s2 is part of the left half of s1 *)
+          rewrite disjoint_Desc; try eassumption.
+          ** setoid_rewrite H6.
+             split; intro; solve_eq_disjoint_specialize.
+          ** subst sl sr. simpl. omega.
+        - (* s2 is part of the right half of s1 *)
+          rewrite disjoint_Desc; try eassumption.
+          ** setoid_rewrite H6.
+             split; intro; solve_eq_disjoint_specialize.
+          ** subst sl sr. simpl. omega.
+
+      ++ (* s2 is not smaller than s1 *)
+        destruct (N.ltb_spec (rBits r1) (rBits r2)).
+        -- (* s2 is smaller than s1 *)
+          apply nomatch_zero_smaller; try assumption; intros.
+          - (* s1 is disjoint of s2 *)
+            split; intro; try reflexivity.
+            solve_f_eq_disjoint.
+          - (* s1 is part of the left half of s2 *)
+            rewrite disjoint_Desc; try eassumption.
+            ** setoid_rewrite H17.
+               split; intro; solve_eq_disjoint_specialize.
+            ** subst sl sr. simpl. omega.
+          - (* s1 is part of the right half of s2 *)
+            rewrite disjoint_Desc; try eassumption.
+            ** setoid_rewrite H17.
+               split; intro; solve_eq_disjoint_specialize.
+            ** subst sl sr. simpl. omega.
+
+        -- (* s1 and s2 are the same size *)
+          apply same_size_compare; try Nomega; intros.
+          - subst.
+            rewrite andb_true_iff.
+            rewrite !disjoint_Desc; try eassumption.
+            ** setoid_rewrite H17. setoid_rewrite H6.
+               intuition solve_eq_disjoint_specialize.
+            ** subst sl sr. simpl. omega.
+            ** subst sl sr. simpl. omega.
+          - split; intro; try reflexivity.
+            solve_f_eq_disjoint.
+Qed.
 
 Lemma disjoint_Sem s1 f1 s2 f2 :
   Sem s1 f1 -> Sem s2 f2 ->
-  disjoint s1 s2 = true <-> (forall i, f1 i = false \/ f2 i = false).
+  disjoint s1 s2 = true <-> (forall i, f1 i && f2 i = false).
 Proof.
   intros HSem1 HSem2.
   destruct HSem1 as [f1 def_f1 | s1 r1 f1 HDesc1].
-  * rewrite disjoint_eq; simpl; intuition.
+  * rewrite disjoint_eq; simpl.
+    split; intro; try reflexivity.
+    setoid_rewrite andb_false_iff; intuition.
   * destruct HSem2 as [f2 def_f2 | s2 r2 f2 HDesc2].
-    + replace (disjoint s1 Nil) with true by (destruct s1; reflexivity); intuition.
+    + replace (disjoint s1 Nil) with true by (destruct s1; reflexivity).
+      split; intro; try reflexivity.
+      setoid_rewrite andb_false_iff; intuition.
     + eapply disjoint_Desc; eassumption.
 Qed.
 

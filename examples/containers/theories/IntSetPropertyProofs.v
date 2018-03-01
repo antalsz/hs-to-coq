@@ -225,7 +225,7 @@ Proof.
   rewrite disjoint_member // null_member //.
   split=> [is_disjoint | is_not_intersection] k.
   - rewrite intersection_member //; apply negbTE.
-    rewrite negb_andb; apply is_disjoint.
+    apply is_disjoint.
   - move: (is_not_intersection k).
     rewrite intersection_member // => /negbT.
     by rewrite negb_andb.

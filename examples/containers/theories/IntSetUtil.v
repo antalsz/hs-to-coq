@@ -195,17 +195,16 @@ Qed.
 
 Theorem disjoint_member (s1 s2 : IntSet) :
   WF s1 -> WF s2 ->
-  disjoint s1 s2 <-> (forall k, ~~ member k s1 || ~~ member k s2).
+  disjoint s1 s2 <-> (forall k, ~~ (member k s1 && member k s2)).
 Proof.
   move=> [f1 Sem1] [f2 Sem2]; move: (disjoint_Sem _ _ _ _ Sem1 Sem2) => disjoint_iff.
   split.
   - move=> /disjoint_iff is_disjoint k.
     erewrite !member_Sem; try eassumption.
-    apply/orP.
     case: (is_disjoint k) => -> /=; intuition.
   - move=> is_disjoint; apply disjoint_iff => k.
     erewrite <-!member_Sem; try eassumption.
-    move: (is_disjoint k) => /orP [] /negbTE ->; tauto.
+    move: (is_disjoint k) =>  [] /negbTE ->; tauto.
 Qed.
 
 Theorem isSubsetOf_member (s1 s2 : IntSet) :

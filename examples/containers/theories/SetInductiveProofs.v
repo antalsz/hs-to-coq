@@ -31,9 +31,6 @@ end.
 Section WF.
 Context {e : Type} {HEq : Eq_ e} {HOrd : Ord e} {HEqLaws : EqLaws e}  {HOrdLaws : OrdLaws e}.
 
-(* We don’t have a OrdLawful class yet. We need to introduce that,
-   add it to the context, and derive all axioms from that.
- *)
 Lemma compare_Eq : forall (x y : e),
   compare x y = Eq <-> x == y = true.
 Proof. intuition; order e. Qed.
@@ -1321,34 +1318,6 @@ Next Obligation.
     solve_Desc.
 Qed.
 
-Program Fixpoint merge_Desc' (s1: Set_ e)  (s2: Set_ e)
-  {measure (set_size s1 + set_size s2)} :
-    forall x lb ub,
-      Bounded s1 lb (Some x) ->
-      Bounded s2 (Some x) ub  ->
-      isLB lb x = true ->
-      isUB ub x = true->
-      Desc' (merge s1 s2) lb ub (fun i => sem s1 i || sem s2 i)
-  := _.
-Next Obligation.
-  intros.
-  rewrite merge_eq. 
-  inversion H; subst; clear H;
-    inversion H0; subst; clear H0;
-      try solve [solve_Desc].
-  destruct (Sumbool.sumbool_of_bool _);
-    only 2: destruct (Sumbool.sumbool_of_bool _);
-    rewrite ?Z.ltb_lt, ?Z.ltb_ge in *.
-  - applyDesc merge_Desc.
-    applyDesc balanceL_Desc.
-    solve_Desc.
-  - applyDesc merge_Desc.
-    applyDesc balanceR_Desc.
-    solve_Desc.
-  - applyDesc glue_Desc.
-    solve_Desc.
-Qed.
-
 Lemma splitMember_Desc:
   forall x s lb ub,
   Bounded s lb ub ->
@@ -1406,7 +1375,7 @@ Proof.
         -- solve_Desc.
         -- applyDesc link_Desc.
            solve_Desc.
-      * applyDesc merge_Desc'.
+      * applyDesc merge_Desc.
         solve_Desc.
     + solve_Desc.
 Qed.

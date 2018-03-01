@@ -5590,6 +5590,24 @@ by reflexivity
   end.
 Qed.
 
+Axiom disjoint_Desc : forall
+  s1 r1 f1 s2 r2 f2,
+  Desc s1 r1 f1 ->
+  Desc s2 r2 f2 ->
+  disjoint s1 s2 = true <-> (forall i, f1 i = false \/ f2 i = false).
+
+Lemma disjoint_Sem s1 f1 s2 f2 :
+  Sem s1 f1 -> Sem s2 f2 ->
+  disjoint s1 s2 = true <-> (forall i, f1 i = false \/ f2 i = false).
+Proof.
+  intros HSem1 HSem2.
+  destruct HSem1 as [f1 def_f1 | s1 r1 f1 HDesc1].
+  * rewrite disjoint_eq; simpl; intuition.
+  * destruct HSem2 as [f2 def_f2 | s2 r2 f2 HDesc2].
+    + replace (disjoint s1 Nil) with true by (destruct s1; reflexivity); intuition.
+    + eapply disjoint_Desc; eassumption.
+Qed.
+
 (** *** Specifing [foldr] *)
 
 (* We can extract the argument to [wfFix2] from the definition of [foldrBits]. *)

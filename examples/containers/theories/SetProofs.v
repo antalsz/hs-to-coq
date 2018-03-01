@@ -2100,7 +2100,7 @@ End WF.
 Require Import Coq.FSets.FSetInterface.
 Require OrdTheories.
 
-Module Foo (E : OrderedType) : WSfun(E).
+Module SetWSfun (E : OrderedType) <: WSfun(E).
   Include OrdTheories.OrdTheories E.
 
   Lemma E_eq_zeze:
@@ -2804,7 +2804,7 @@ Module Foo (E : OrderedType) : WSfun(E).
   Qed.
 
 
-End Foo.
+End SetWSfun.
 
 (** Type classes. Because a [Set_ e] is only useful if it well-formed, we instantiate
 the law classes with a subset type. *)

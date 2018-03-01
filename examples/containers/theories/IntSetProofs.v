@@ -7182,7 +7182,7 @@ Qed.
 Require Import Coq.FSets.FSetInterface.
 Require Import Coq.Structures.OrderedTypeEx.
 
-Module Foo <: WSfun(N_as_OT).
+Module IntSetWSfun <: WSfun(N_as_OT).
   Module OrdFacts := OrderedTypeFacts(N_as_OT).
 
   (* We are saying [N] instead of [Z] to force the invariant that
@@ -7980,7 +7980,7 @@ Module Foo <: WSfun(N_as_OT).
     inversion H0.
   Qed.
 
-End Foo.
+End IntSetWSfun.
 
 (** ** Type class laws *)
 

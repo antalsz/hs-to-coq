@@ -859,13 +859,13 @@ Lemma link_eq (x : e) (v : a) (s1: Map e a)  (s2: Map e a) :
         end.
 Proof.
   idtac "Proving link_eq...".
-  unfold link at 1, link_func at 1;
+  destruct s1; [|reflexivity].
+  destruct s2; [|reflexivity].
+  unfold link at 1, link_func at 1.
   lazymatch goal with 
     |- Wf.Fix_sub ?A ?R ?Rwf ?P ?F_sub ?x = ?rhs => 
-    etransitivity; only 1: apply (@Wf.WfExtensionality.fix_sub_eq_ext A R Rwf P F_sub x)
-  end;
-  unfold projT1, projT2;
-  destruct s1, s2; reflexivity.
+    apply (@Wf.WfExtensionality.fix_sub_eq_ext A R Rwf P F_sub x)
+  end.
 Time Qed.
 
 (* [program_simpl] calls [simpl], which is very confusing due to [1 + _]. So
@@ -1428,10 +1428,8 @@ Proof.
   unfold link2 at 1, link2_func at 1;
   lazymatch goal with 
     |- Wf.Fix_sub ?A ?R ?Rwf ?P ?F_sub ?x = ?rhs => 
-    etransitivity; only 1: apply (@Wf.WfExtensionality.fix_sub_eq_ext A R Rwf P F_sub x)
-  end;
-  unfold projT1, projT2;
-  reflexivity.
+    apply (@Wf.WfExtensionality.fix_sub_eq_ext A R Rwf P F_sub x)
+  end.
 Time Qed.
 
 

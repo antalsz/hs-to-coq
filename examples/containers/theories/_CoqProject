@@ -6,15 +6,14 @@
 Tactics.v
 IntToZ.v
 OrdTheories.v
-# disable for now, since it is soo slow
-# SetProofs.v
+SetProofs.v
 MapProofs.v
 IntSetProofs.v
 IntMapProofs.v
 RevNatSlowProofs.v
-SetInductiveProofs.v
-MapInductiveProofs.v
 OrdTactic.v
 ../hs-spec/IntSetProperties.v
-HSUtil.v SortedUtil.v IntSetUtil.v
+HSUtil.v
+SortedUtil.v
+IntSetUtil.v
 IntSetPropertyProofs.v

@@ -17,6 +17,7 @@ Require Import Data.Bits.
 
 (* IntSet *)
 Require Import Data.IntSet.Internal.
+Require Import Popcount.
 Require Import IntSetProperties.
 Require Import IntSetProofs.
 
@@ -276,39 +277,19 @@ Qed.
 (* "Check the invariant that the mask is a power of 2." *)
 Theorem thm_MaskPow2 : toProp prop_MaskPow2.
 Proof.
-  simpl; elim=> [p m l IHl r IHr | p m | ] WF_s //=.
-  apply/and3P; split.
-  - rewrite /powersOf2 enumFromTo_Int_iterates.
-    cbv -[Z.pow member fromList].
-
-    inversion WF_s; inversion H; inversion HD; subst.
-    rewrite /rMask.
-    destruct r0 as [r0_1 r0_2].
-    
-    (*
-    rewrite /powersOf2 enumFromTo_Int_iterates.
-    cbv -[Zpow member fromList].
-
-    
-    move: (WF_s) => /WF_Bin_children [/IHl Pl /IHr Pr].
-    move: Pl Pr; rewrite /prop_MaskPow2.
-
-rewrite /powersOf2 enumFromTo_Int_iterates.
-    cbv -[Zpow member fromList].
-    
-    simpl
-
- /=.
-    replace (GHC.Enum.eftInt 0%Z 63%Z) with (eftInt 0%Z 63%Z) by admit.
-    
-
-    cbv -[member fromList flat_map Zpow].
-
-    rewrite /Enum.eftInt_fuel.
-    
-  - apply IHl; move: WF_s; apply WF_Bin_left.
-  - apply IHr; move: WF_s; apply WF_Bin_right.
-  *)
+  simpl; elim=> [p m l IHl r IHr | p m | ] WFs //=.
+  move: (WFs) => /WF_Bin_children [WFl WFr].
+  apply/and3P; split; [| apply IHl, WFl | apply IHr, WFr].
+  rewrite /powersOf2 flat_map_cons_f; change @GHC.Base.map with @Coq.Lists.List.map.
+  rewrite fromList_member.
+  - apply/elemP; rewrite in_map_iff.
+    move: (valid_maskPowerOfTwo _ WFs) => /= /and3P [/Eq_eq Bits _ _].
+    move: Bits; rewrite /Utils.Containers.Internal.BitUtil.bitcount /popCount /=.
+    change 1%Z with (Z.of_N 1%N); rewrite N2Z.inj_iff => /N_popcount_1_pow2 [i def_i].
+    exists (Z.of_N i); split.
+    + change 2%Z with (Z.of_N 2%N); rewrite -N2Z.inj_pow def_i Z2N.id //.
+      admit. (* Possibly provable? *)
+    + admit. (* Unprovable *)
 Abort.
 
 (* "Check that the prefix satisfies its invariant." *)

@@ -6,6 +6,7 @@ The standard library lacks a popcount operation.
 
 Require Import Coq.PArith.PArith.
 Require Import Coq.NArith.NArith.
+Require Import Coq.ZArith.ZArith.
 Require Import Omega.
 
 (** First for [positive], where the function is nicely total. *)
@@ -24,6 +25,13 @@ Proof.
   * reflexivity.
   * rewrite Pos.pow_succ_r.
     apply H.
+Qed.
+
+Lemma Pos_popcount_1_Is_power (p : positive) :
+  Pos_popcount p = 1%positive -> Is_power p.
+Proof.
+  induction p as [p IH | p IH |]; simpl; auto.
+  specialize (Pos.succ_not_1 (Pos_popcount p)); contradiction.
 Qed.
 
 (** And now for [N] *)
@@ -71,6 +79,19 @@ Proof.
     rewrite <- N.double_spec.
     rewrite N_popcount_double.
     assumption.
+Qed.
+
+Lemma N_popcount_1_pow2 (n : N) :
+  N_popcount n = 1%N -> exists i : N, (2^i = n)%N.
+Proof.
+  destruct n as [|p]; simpl; [discriminate | intros def_Npcp].
+  assert (Pos_popcount p = 1%positive) as def_pcp by (inversion def_Npcp; reflexivity).
+  apply Pos_popcount_1_Is_power, Is_power_correct in def_pcp.
+  destruct def_pcp as [y def_p]; rewrite def_p.
+  specialize (shift_nat_correct y 1); rewrite Z.mul_1_r, Zpower_nat_Z; intros def_power.
+  exists (N.of_nat y). 
+  rewrite <-N2Z.inj_iff, N2Z.inj_pow; simpl.
+  rewrite def_power, nat_N_Z; reflexivity.
 Qed.
 
 Lemma N_double_succ:

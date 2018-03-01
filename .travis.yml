@@ -69,22 +69,22 @@ script:
  # Run test suite
  - make -C examples/tests
  # Build Coq’ified base (generated sources are in the repo)
- - make -j2 -C base
+ - make -C base
  # Build base theory
- - make -j2 -C base-thy
+ - make -C base-thy
  # Run examples that use base:
- - make -j2 -C examples/base-tests
- - make -j2 -C examples/successors
- - make -j2 -C examples/compiler
- - make -j2 -C examples/rle
- - make -j2 -C examples/bag
- - make -j2 -C examples/quicksort
- - make -j2 -C examples/intervals
- - make -j2 -C examples/containers clean
- - make -j2 -C examples/containers
- - make -j2 -C examples/containers/theories
+ - make -C examples/base-tests
+ - make -C examples/successors
+ - make -C examples/compiler
+ - make -C examples/rle
+ - make -C examples/bag
+ - make -C examples/quicksort
+ - make -C examples/intervals
+ - make -C examples/containers clean
+ - make -C examples/containers
+ - make -C examples/containers/theories
 
- # disabled 2018-02-24 due to too big of a fall-out, and the
+ # disabled 2018-07-24 due to too big of a fall-out, and the
  # focus is somewhere on containers right now
  #- make -C examples/ghc/lib
 

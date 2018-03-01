@@ -45,6 +45,26 @@ Proof. intros. reflexivity. Qed.
 Lemma oro_Some_iff: forall x y v, x ||| y = Some v <-> (x = Some v \/ (x = None /\ y = Some v)).
 Proof. intros. destruct x, y; simpl; intuition congruence. Qed.
 
+Lemma ando_None_l : forall x, None &&& x = None.
+Proof. intros. destruct x; reflexivity. Qed.
+
+Lemma ando_None_r : forall x, x &&& None = None.
+Proof. intros. destruct x; reflexivity. Qed.
+
+Lemma ando_Some_Some : forall x y, Some x &&& Some y = Some x.
+Proof. intros. reflexivity. Qed.
+
+Definition SomeIf (b : bool) (x : a) : option a :=
+  if b then Some x else None.
+
+Lemma SomeIf_eq_Some : forall b x y,
+  SomeIf b x = Some y <-> b = true /\ x = y.
+Proof. intros. destruct b; simpl in *; intuition try congruence. Qed.
+
+Lemma SomeIf_eq_None : forall b x,
+  SomeIf b x = None <-> b = false.
+Proof. intros. destruct b; simpl in *; intuition try congruence. Qed.
+
 Definition isSome (x : option a) : bool := if x then true else false.
 
 Lemma isSome_oro : forall x y, isSome (x ||| y) = isSome x || isSome y.
@@ -53,9 +73,54 @@ Proof. intros. destruct x, y; reflexivity. Qed.
 Lemma isSome_ando : forall x y, isSome (x &&& y) = isSome x && isSome y.
 Proof. intros. destruct x, y; reflexivity. Qed.
 
+Lemma isSome_SomeIf : forall b x, isSome (SomeIf b x) = b.
+Proof. intros. destruct b; reflexivity. Qed.
+
+
 End oro.
 Infix "|||" := oro.
 Infix "&&&" := ando.
+
+Ltac simpl_options := repeat lazymatch goal with
+  | |- context [true    ||  ?x]              => rewrite (orb_true_l x)
+  | H: context [true    ||  ?x]         |- _ => rewrite (orb_true_l x) in H
+  | |- context [?x      ||  true]            => rewrite (orb_true_r x)
+  | H: context [?x      ||  true]       |- _ => rewrite (orb_true_r x) in H
+  | |- context [false   ||  ?x]              => rewrite (orb_false_l x)
+  | H: context [false   ||  ?x]         |- _ => rewrite (orb_false_l x) in H
+  | |- context [?x      ||  false]           => rewrite (orb_false_r x)
+  | H: context [?x      ||  false]      |- _ => rewrite (orb_false_r x) in H
+  | |- context [None    ||| ?x]              => rewrite (oro_None_l x)
+  | H: context [None    ||| ?x]         |- _ => rewrite (oro_None_l x) in H
+  | |- context [?x      ||| None]            => rewrite (oro_None_r x)
+  | H: context [?x      ||| None]       |- _ => rewrite (oro_None_r x) in H
+  | |- context [Some ?x ||| ?y]              => rewrite (oro_Some_l x y)
+  | H: context [Some ?x ||| ?y]         |- _ => rewrite (oro_Some_l x y) in H
+  | |- context [None    &&& ?x]              => rewrite (ando_None_l x)
+  | H: context [None    &&& ?x]         |- _ => rewrite (ando_None_l x) in H
+  | |- context [?x      &&& None]            => rewrite (ando_None_r x)
+  | H: context [?x      &&& None]       |- _ => rewrite (ando_None_r x) in H
+  | |- context [Some ?x &&& Some ?y]         => rewrite (ando_Some_Some x y)
+  | H: context [Some ?x &&& Some ?y]    |- _ => rewrite (ando_Some_Some x y) in H
+  | |- context [isSome (?x &&& ?y)]          => rewrite (isSome_ando x y)
+  | H: context [isSome (?x &&& ?y)]     |- _ => rewrite (isSome_ando x y) in H
+  | |- context [isSome (?x ||| ?y)]          => rewrite (isSome_oro x y)
+  | H: context [isSome (?x ||| ?y)]     |- _ => rewrite (isSome_oro x y) in H
+  | |- context [isSome (Some ?x)]            => simpl (isSome (Some x))
+  | H: context [isSome (Some ?x)]       |- _ => simpl (isSome (Some x)) in H
+  | |- context [isSome None]                 => simpl (isSome None)
+  | H: context [isSome None]            |- _ => simpl (isSome None) in H
+  | |- context [isSome (SomeIf ?b ?x)]       => rewrite (isSome_SomeIf b x)
+  | H: context [isSome (SomeIf ?b ?x)]  |- _ => rewrite (isSome_SomeIf b x) in H
+  | |- context [SomeIf false ?x]             => simpl (SomeIf false x)
+  | H: context [SomeIf false ?x]        |- _ => simpl (SomeIf false x) in H
+  | |- context [SomeIf true ?x]              => simpl (SomeIf true  x)
+  | H: context [SomeIf true ?x]         |- _ => simpl (SomeIf true  x) in H
+  | |- context [SomeIf ?b ?x = Some ?y]      => rewrite (SomeIf_eq_Some b x y)
+  | H: context [SomeIf ?b ?x = Some ?y] |- _ => rewrite (SomeIf_eq_Some b x y) in H; destruct H; subst
+  | |- context [SomeIf ?b ?x = None]         => rewrite (SomeIf_eq_None b x)
+  | H: context [SomeIf ?b ?x = None]    |- _ => rewrite (SomeIf_eq_None b x) in H; subst
+end; lazy match in *.
 
 
 Ltac destruct_ptrEq := lazymatch goal with
@@ -190,7 +255,7 @@ Definition balance_prop_inserted sz1 sz2 := balance_prop sz1 sz2.
 *)
 
 Fixpoint sem (s : Map e a) (i : e) : option a :=
-  match s with | Bin _ x v s1 s2 => sem s1 i ||| (if i == x then Some v else None) ||| sem s2 i
+  match s with | Bin _ x v s1 s2 => sem s1 i ||| SomeIf (i == x) v ||| sem s2 i
                | Tip => None end.
 
 Lemma sem_resp_eq : forall s i j,
@@ -237,8 +302,7 @@ Proof.
   induction HD; intros; subst; simpl in *; intuition.
   rewrite H2.
   rewrite IHHD2 by order_Bounds.
-  rewrite oro_None_l, oro_None_r.
-  destruct (i == x) eqn:?; auto.
+  simpl_options.
   order_Bounds.
 Qed.
 
@@ -252,8 +316,7 @@ Proof.
   induction HD; intros; subst; simpl in *; intuition.
   rewrite H2.
   rewrite IHHD1 by order_Bounds.
-  rewrite oro_None_l, oro_None_r.
-  destruct (i == x) eqn:?; auto.
+  simpl_options.
   order_Bounds.
 Qed.
 
@@ -265,9 +328,8 @@ Lemma sem_inside:
 Proof.
   intros ????? HD ?.
   induction HD; intros; subst; simpl in *; rewrite ?oro_Some_iff in H; intuition; try congruence;
+  simpl_options;
   order_Bounds.
-  destruct (i == x) eqn:?; order_Bounds.
-  destruct (i == x) eqn:?; order_Bounds.
 Qed.
 
 Lemma sem_inside_isSome:
@@ -340,7 +402,6 @@ Proof.
   * apply BoundedTip; auto.
   * intuition.
     eapply BoundedBin; try eassumption; try reflexivity.
-    simpl in *.
     order_Bounds.
 Qed.
 
@@ -373,7 +434,6 @@ Proof.
   * apply BoundedTip; auto.
   * intuition.
     eapply BoundedBin; try eassumption; try reflexivity.
-    simpl in *.
     order_Bounds.
 Qed.
 
@@ -441,7 +501,7 @@ Ltac f_solver_simple  :=
   try reflexivity; (* for when we have an existential variable *)
   repeat multimatch goal with [ H : (forall i, _) |- _] => specialize (H i) end;
   repeat match goal with [ H : ?f = _ |- context [?f i] ] => rewrite H in *; clear H end;
-  simpl sem; rewrite ?orb_assoc, ?orb_false_r, ?orb_false_l;
+  simpl sem; simpl_options;
   try reflexivity.
 
 
@@ -454,14 +514,15 @@ Ltac split_bool_go expr :=
     | Some _     => fail
     | None       => fail
     | match ?x with _ => _ end => split_bool_go x || (simpl x; cbv match)
-    | negb ?x    => split_bool_go x
-    | ?x && ?y   => split_bool_go x || split_bool_go y
-    | ?x || ?y   => split_bool_go x || split_bool_go y
-    | xorb ?x ?y => split_bool_go x || split_bool_go y
-    | ?x ||| ?y  => split_bool_go x || split_bool_go y
-    | ?x &&& ?y  => split_bool_go x || split_bool_go y
-    | diffo ?x ?y => split_bool_go y || split_bool_go x
-    | ?bexpr     => destruct bexpr eqn:?
+    | negb ?x      => split_bool_go x
+    | ?x && ?y     => split_bool_go x || split_bool_go y
+    | ?x || ?y     => split_bool_go x || split_bool_go y
+    | xorb ?x ?y   => split_bool_go x || split_bool_go y
+    | ?x ||| ?y    => split_bool_go x || split_bool_go y
+    | ?x &&& ?y    => split_bool_go x || split_bool_go y
+    | diffo ?x ?y  => split_bool_go y || split_bool_go x
+    | SomeIf ?b ?x => split_bool_go b
+    | ?bexpr       => destruct bexpr eqn:?
   end.
 
 (** This auxillary tactic destructs one boolean or option atom in the goal *)
@@ -486,10 +547,7 @@ Ltac split_bool :=
 
 Ltac f_solver_cleanup :=
   simpl negb in *;
-  rewrite ?andb_true_r, ?andb_true_l, ?andb_false_r, ?andb_false_l,
-          ?orb_true_r, ?orb_true_l, ?orb_false_r, ?orb_false_l,
-          ?oro_None_r, ?oro_None_l, ?oro_Some_l,
-          ?orb_assoc, ?and_assoc in *;
+  simpl_options;
   try congruence;
   repeat lazymatch goal with
     |  H1 : true   = true   |- _ => clear H1
@@ -501,13 +559,28 @@ Ltac f_solver_cleanup :=
     |  H1 : None   = None   |- _ => clear H1
     |  H1 : None   = _      |- _ => symmetry in H1
   end;
+  (* Find equalities *)
+  repeat lazymatch goal with
+    |  H1 : (?i == ?j) = true , H2 : sem ?s ?i = Some ?a, H3 : sem ?s ?j = Some ?b |- _
+      => rewrite (sem_resp_eq s i j H1) in H2; rewrite H2 in H3; inversion H3; subst; clear H3
+  end;
+  (* Try to solve it *)
   try solve [exfalso; inside_bounds; order_Bounds];
   try reflexivity;
+  (* Find conradiction *)   
   try lazymatch goal with
     |  H1 : (?i == ?j) = true , H2 : sem ?s ?i = Some _, H3 : sem ?s ?j = None |- _
       => exfalso; rewrite (sem_resp_eq s i j H1) in H2; congruence
+    |  H1 : (?i == ?j) = true , H2 : isSome (sem ?s ?i) = true, H3 : sem ?s ?j = None |- _
+      => exfalso; rewrite <- (sem_resp_eq s i j H1) in H3; rewrite H3 in H2; simpl in H2; congruence
+    |  H1 : (?i == ?j) = true , H2 : isSome (sem ?s ?i) = false, H3 : sem ?s ?j = Some _ |- _
+      => exfalso; rewrite <- (sem_resp_eq s i j H1) in H3; rewrite H3 in H2; simpl in H2; congruence
     |  H1 : (?i == ?j) = true , H2 : sem ?s ?i = None, H3 : sem ?s ?j = Some _ |- _
       => exfalso; rewrite (sem_resp_eq s i j H1) in H2; congruence
+    |  H1 : (?i == ?j) = true , H2 : sem ?s ?i = None, H3 : isSome (sem ?s ?j) = true |- _
+      => exfalso; rewrite  (sem_resp_eq s i j H1) in H2; rewrite H2 in H3; simpl in H3; congruence
+    |  H1 : (?i == ?j) = true , H2 : sem ?s ?i = Some _, H3 : isSome (sem ?s ?j) = false |- _
+      => exfalso; rewrite  (sem_resp_eq s i j H1) in H2; rewrite H2 in H3; simpl in H3; congruence
   end.
 
 Ltac f_solver_step := first
@@ -515,10 +588,10 @@ Ltac f_solver_step := first
   | lazymatch goal with H : context [if ?x == ?y then _ else _] |- _
       => destruct (x == y) eqn:?
     end
-  | exfalso
+(*   | exfalso *)
   ].
 
-Ltac f_solver := f_solver_simple; repeat (f_solver_cleanup; f_solver_step).
+Ltac f_solver := f_solver_simple; f_solver_cleanup; repeat (f_solver_step; f_solver_cleanup).
 
 (** A variant of [lia] that unfolds a few specific things and knows that
    the size of a well-formed tree is positive. *)
@@ -739,7 +812,7 @@ Lemma singleton_Desc:
   forall x v lb ub,
   isLB lb x = true ->
   isUB ub x = true ->
-  Desc (singleton x v) lb ub 1 (fun i => (if i == x then Some v else None)).
+  Desc (singleton x v) lb ub 1 (fun i => SomeIf (i == x) v).
 Proof.
   intros.
 
@@ -764,7 +837,7 @@ Lemma balanceL_Desc:
     balance_prop (size s1) (size s2) \/
     balance_prop_inserted (size s1 - 1) (size s2) /\ (1 <= size s1)%Z \/
     balance_prop (size s1) (size s2 + 1) ->
-    Desc (balanceL x v s1 s2) lb ub (1 + size s1 + size s2) (fun i => sem s1 i ||| (if i == x then Some v else None) ||| sem s2 i).
+    Desc (balanceL x v s1 s2) lb ub (1 + size s1 + size s2) (fun i => sem s1 i ||| SomeIf (i == x) v ||| sem s2 i).
 Proof.
   intros.
 
@@ -790,7 +863,7 @@ Lemma balanceR_Desc:
     balance_prop (size s1) (size s2) \/
     balance_prop_inserted (size s2 - 1) (size s1) /\ (1 <= size s2)%Z  \/
     balance_prop (size s1 + 1) (size s2) ->
-    Desc (balanceR x v s1 s2) lb ub (1 + size s1 + size s2) (fun i => sem s1 i ||| (if i == x then Some v else None) ||| sem s2 i).
+    Desc (balanceR x v s1 s2) lb ub (1 + size s1 + size s2) (fun i => sem s1 i ||| SomeIf (i == x) v ||| sem s2 i).
 Proof.
   intros.
 
@@ -813,12 +886,12 @@ Lemma insertMax_Desc:
     Bounded s1 lb (Some x) ->
     isLB lb x = true ->
     isUB ub x = true->
-    Desc (insertMax x v s1) lb ub (1 + size s1) (fun i => sem s1 i ||| (if i == x then Some v else None)).
+    Desc (insertMax x v s1) lb ub (1 + size s1) (fun i => sem s1 i ||| SomeIf (i == x) v).
 Proof.
   intros.
   
   remember (Some x) as ub'. revert dependent x.
-  induction H; intros; subst; cbn - [Z.add].
+  induction H; intros; subst; cbn - [Z.add SomeIf].
   * applyDesc singleton_Desc.
     solve_Desc.
   * clear IHBounded1.
@@ -832,7 +905,7 @@ Lemma insertMin_Desc:
     Bounded s2 (Some x) ub ->
     isLB lb x = true ->
     isUB ub x = true->
-    Desc (insertMin x v s2) lb ub (1 + size s2) (fun i => (if i == x then Some v else None) ||| sem s2 i).
+    Desc (insertMin x v s2) lb ub (1 + size s2) (fun i => SomeIf (i == x) v ||| sem s2 i).
 Proof.
   intros.
   remember (Some x) as ub'. revert dependent x.
@@ -858,7 +931,6 @@ Lemma link_eq (x : e) (v : a) (s1: Map e a)  (s2: Map e a) :
                  else bin x v l r
         end.
 Proof.
-  idtac "Proving link_eq...".
   destruct s1; [|reflexivity].
   destruct s2; [|reflexivity].
   unfold link at 1, link_func at 1.
@@ -866,7 +938,7 @@ Proof.
     |- Wf.Fix_sub ?A ?R ?Rwf ?P ?F_sub ?x = ?rhs => 
     apply (@Wf.WfExtensionality.fix_sub_eq_ext A R Rwf P F_sub x)
   end.
-Time Qed.
+Qed.
 
 (* [program_simpl] calls [simpl], which is very confusing due to [1 + _]. So
 ask [Next Obligation] to use this only when it solves the goal completely. *)
@@ -880,7 +952,7 @@ Program Fixpoint link_Desc (x : e) (v : a) (s1: Map e a) (s2: Map e a)
     isLB lb x = true ->
     isUB ub x = true->
     Desc (link x v s1 s2) lb ub (1 + size s1 + size s2)
-        (fun i => sem s1 i ||| (if i == x then Some v else None) ||| sem s2 i)
+        (fun i => sem s1 i ||| SomeIf (i == x) v ||| sem s2 i)
     := _.
 Next Obligation.
   intros.
@@ -924,12 +996,12 @@ Proof.
     + replace (i == x) with false by order_Bounds.
       rewrite IHHB1.
       rewrite (sem_outside_below HB2) by order_Bounds.
-      rewrite !oro_None_r.
+      simpl_options.
       reflexivity.
     + replace (i == x) with false by order_Bounds.
       rewrite IHHB2.
       rewrite (sem_outside_above HB1) by order_Bounds.
-      rewrite !oro_None_l.
+      simpl_options.
       reflexivity.
 Qed.
 
@@ -952,9 +1024,6 @@ Fixpoint insert' (x : e) (v : a) (s : Map e a) : Map e a :=
         if PtrEquality.ptrEq v vy && PtrEquality.ptrEq x y then s else Bin sz x v l r
      end
   end.
-
-(* MOve up *)
-Lemma isSome_Some: forall {a} (x : a), isSome (Some x) = true. Proof. reflexivity. Qed.
 
 Lemma insert_insert' : forall x v s, insert x v s = insert' x v s.
 Proof.
@@ -996,13 +1065,14 @@ Proof.
 
       rewrite (sem_outside_below HB2) by order_Bounds.
       replace (y == x) with false by order_Bounds.
-      rewrite ?oro_None_r, ?oro_None_l.
+      simpl_options.
 
       destruct_ptrEq.
       - destruct (sem s1 y) eqn:?; simpl isSome in *; try lia.
         solve_Desc.
       - destruct (sem s1 y); simpl isSome in *;
         applyDesc balanceL_Desc;
+        cbv match in *;
         solve_Desc.
     + (* more or less a copy-n-paste from above *)
       clear IHHB1.
@@ -1010,12 +1080,12 @@ Proof.
 
       rewrite (sem_outside_above HB1) by order_Bounds.
       replace (y == x) with false by order_Bounds.
-      rewrite ?oro_None_r, ?oro_None_l.
-      
+      simpl_options.
+
       destruct_ptrEq.
-      - destruct (sem s2 y) eqn:?; simpl isSome in *; try lia.
+      - destruct (sem s2 y) eqn:?; simpl_options; try lia.
         solve_Desc.
-      - destruct (sem s2 y); simpl isSome in *;
+      - destruct (sem s2 y); simpl_options;
         applyDesc balanceR_Desc;
         solve_Desc.
 Qed.
@@ -1075,12 +1145,12 @@ Proof.
 
       rewrite (sem_outside_below HB2) by order_Bounds.
       replace (y == x) with false by order_Bounds.
-      rewrite ?oro_None_r, ?oro_None_l.
+      simpl_options.
 
       destruct_ptrEq.
-      - destruct (sem s1 y) eqn:?; simpl isSome in *; try lia.
+      - destruct (sem s1 y) eqn:?; simpl_options; try lia.
         solve_Desc.
-      - destruct (sem s1 y); simpl isSome in *;
+      - destruct (sem s1 y); simpl_options;
         applyDesc balanceL_Desc;
         solve_Desc.
     + (* more or less a copy-n-paste from above *)
@@ -1089,12 +1159,12 @@ Proof.
 
       rewrite (sem_outside_above HB1) by order_Bounds.
       replace (y == x) with false by order_Bounds.
-      rewrite ?oro_None_r, ?oro_None_l.
+      simpl_options.
       
       destruct_ptrEq.
-      - destruct (sem s2 y) eqn:?; simpl isSome in *; try lia.
+      - destruct (sem s2 y) eqn:?; simpl_options; try lia.
         solve_Desc.
-      - destruct (sem s2 y); simpl isSome in *;
+      - destruct (sem s2 y); simpl_options;
         applyDesc balanceR_Desc;
         solve_Desc.
 Qed.
@@ -1237,24 +1307,10 @@ Proof.
     destruct Hthere as [[??]|Hthere].
     * subst; applyDesc balanceR_Desc; solve_Desc.
     * subst; applyDesc balanceR_Desc; solve_Desc.
-      f_solver_simple.
-      f_solver_cleanup.
-      f_solver_step.
-      f_solver_cleanup.
-      rewrite !(sem_resp_eq _ _ _ Heqb) in *.
-      rewrite !Hthere.
-      repeat (f_solver_cleanup; f_solver_step).
-      repeat (f_solver_cleanup; f_solver_step).
   - eapply minViewSure_Desc; only 1: solve_Bounded.
     intros y vy r [Hthere HD].
     applyDesc HD.
     destruct Hthere as [[??]|Hthere]; subst; applyDesc balanceL_Desc; solve_Desc.
-    f_solver_simple.
-    destruct (i == y) eqn:Hiy.
-    rewrite !(sem_resp_eq _ _ _ Hiy) in *.
-    rewrite !Hthere.
-    repeat (f_solver_cleanup; f_solver_step).
-    repeat (f_solver_cleanup; f_solver_step).
 Qed.
 
 (** ** Verification of [delete] *)
@@ -1270,13 +1326,13 @@ Proof.
   - cbn -[Z.add].
     destruct (compare x x0) eqn:Heq.
     + replace (x == x0) with true by solve_Bounds.
-      rewrite !isSome_oro, ?orb_true_r, ?orb_true_l.
+      simpl_options.
       applyDesc glue_Desc.
       solve_Desc.
     + applyDesc IHHB1; clear IHHB1 IHHB2.
       replace (x == x0) with false by solve_Bounds.
       rewrite -> (sem_outside_below HB2) by solve_Bounds.
-      rewrite ?oro_None_r.
+      simpl_options.
       destruct_ptrEq.
       * replace (isSome (sem s1 x)) with false in *
           by (destruct (sem s1 x); simpl in *;  try congruence; lia).
@@ -1285,7 +1341,7 @@ Proof.
     + applyDesc IHHB2; clear IHHB1 IHHB2.
       replace (x == x0) with false by solve_Bounds.
       rewrite -> (sem_outside_above HB1) by solve_Bounds.
-      rewrite ?oro_None_l.
+      simpl_options.
       destruct_ptrEq.
       * replace (isSome (sem s2 x)) with false by (destruct (sem s2 x); simpl in *; try congruence; lia).
         solve_Desc.
@@ -1313,7 +1369,7 @@ Proof.
   - simpl.
     destruct (compare x x0) eqn:?.
   + solveThis. replace (x == x0) with true by order e.
-    rewrite !isSome_oro, isSome_Some, orb_true_r. simpl. lia.
+    simpl_options. lia.
   + apply IHHB1; intros s1_2 s1_3 HB1_2 HB1_3 Hsz Hsems1; clear IHHB1 IHHB2.
     applyDesc link_Desc.
     solveThis. destruct (sem s1 x); cbn -[Z.add] in *.
@@ -1323,7 +1379,7 @@ Proof.
   + apply IHHB2; intros s2_2 s2_3 HB2_2 HB2_3 Hsz Hsems2; clear IHHB1 IHHB2.
     applyDesc link_Desc.
     solveThis. destruct (sem s2 x); cbn -[Z.add] in *.
-    * rewrite !isSome_oro, isSome_Some, orb_true_r. simpl. lia.
+    * simpl_options. lia.
     * replace (x == x0) with false by order e. simpl.
       rewrite (sem_outside_above HB1) by solve_Bounds. simpl. lia.
 Qed.
@@ -1421,7 +1477,6 @@ Lemma link2_eq: forall (l r: Map e a), link2 l r =
          else glue l r
   end.
 Proof.
-  idtac "Proving link2_Eq...".
   intros l r.
   destruct l; [|auto].
   destruct r; [|auto].
@@ -1430,7 +1485,7 @@ Proof.
     |- Wf.Fix_sub ?A ?R ?Rwf ?P ?F_sub ?x = ?rhs => 
     apply (@Wf.WfExtensionality.fix_sub_eq_ext A R Rwf P F_sub x)
   end.
-Time Qed.
+Qed.
 
 
 Program Fixpoint link2_Desc (s1: Map e a)  (s2: Map e a)
@@ -1522,7 +1577,7 @@ Proof.
     destruct (compare x x0) eqn:?.
     + solveThis.
       replace (x == x0) with true by order_Bounds.
-      rewrite ?isSome_oro, isSome_Some, orb_true_r.
+      simpl_options.
       reflexivity.
     + apply IHHB1.
       intros s1_2 b s1_3 HB1_2 HB1_3 Hb Hsems1.
@@ -1531,7 +1586,7 @@ Proof.
       solveThis.
       replace (x == x0) with false by order_Bounds.
       rewrite (sem_outside_below HB2) by order_Bounds.
-      rewrite ?oro_None_r. assumption.
+      simpl_options. assumption.
     + apply IHHB2.
       intros s2_2 b s2_3 HB2_2 HB2_3 Hb Hsems2.
       clear IHHB1 IHHB2.
@@ -1539,7 +1594,7 @@ Proof.
       solveThis.
       replace (x == x0) with false by order_Bounds.
       rewrite (sem_outside_above HB1) by order_Bounds.
-      rewrite ?oro_None_r, ?oro_None_l. assumption.
+      simpl_options. assumption.
 Qed.
 
 Lemma intersection_Desc:
@@ -1565,31 +1620,10 @@ Proof.
       destruct b.
       * destruct_ptrEq.
         -- solve_Desc.
-           f_solver. (* TODO: f_solver should handle that *)
-           ++ rewrite oro_None_r in Hi; congruence.
-           ++ rewrite !(sem_resp_eq _ _ _ Heqb) in Heqo3.
-              rewrite Heqo3 in Hb.
-              simpl in Hb.
-              congruence.
-           ++ rewrite oro_None_l in Hi; congruence.
         -- applyDesc link_Desc.
            solve_Desc.
-           f_solver. (* TODO: f_solver should handle that *)
-           ++ rewrite oro_None_r in Hi; congruence.
-           ++ rewrite oro_None_r in Hi; congruence.
-           ++ rewrite !(sem_resp_eq _ _ _ Heqb) in Heqo3.
-              rewrite Heqo3 in Hb.
-              simpl in Hb.
-              congruence.
       * applyDesc link2_Desc.
         solve_Desc.
-        f_solver.
-        ++ rewrite oro_None_r in Hi; congruence.
-        ++ rewrite oro_None_r in Hi; congruence.
-        ++ rewrite !(sem_resp_eq _ _ _ Heqb) in Heqo3.
-           rewrite Heqo3 in Hb.
-           simpl in Hb.
-           congruence.
     + solve_Desc.
 Qed.
 
@@ -1663,21 +1697,6 @@ Proof.
         lapply H8; [intro; subst; clear H8|lia].
         assert (sem sl x0 = None) by (destruct (sem sl x0); simpl in *; try reflexivity; lia).
         f_solver. (* TODO: More stuff that [f_solver] should do *)
-        ** destruct (sem sl1 i); only 2: destruct (sem sl2 i).
-           ++ inversion Hsem. subst. clear Hsem. simpl in *.
-               f_solver_cleanup.
-           ++ inversion Hsem. subst. clear Hsem. simpl in *.
-               f_solver_cleanup.
-           ++ congruence.
-        ** destruct (sem sl1 i); only 2: destruct (sem sl2 i).
-           ++ inversion Hsem. subst. clear Hsem. simpl in *.
-               f_solver_cleanup.
-           ++ inversion Hsem. subst. clear Hsem. simpl in *.
-               f_solver_cleanup.
-           ++ inversion Hsem.
-        ** simpl diffo in *.
-           rewrite oro_None_l in Hsem.
-           f_solver_cleanup.
       * applyDesc link2_Desc.
         showP.
         -- assumption.
@@ -1688,20 +1707,8 @@ Proof.
            lapply H4; [intro; subst|lia].
            lapply H8; [intro; subst|lia].
            clear H4 H8.
-           f_solver_simple. (* Buh, more TODO where [f_solver] should cut it *)
-           rewrite Hsem; clear Hsem.
-           rewrite H12; clear H5 H12.
-           rewrite H13; clear H9 H13.
-           destruct (i == x0) eqn:Hi.
-           ** repeat (f_solver_cleanup; f_solver_step).
-           ** reflexivity.
-        -- f_solver_simple.
-           destruct (i == x0) eqn:Hi.
-           ** repeat (f_solver_cleanup; f_solver_step).
-           ** rewrite ?oro_None_r.
-              rewrite H5; clear H5 H4.
-              rewrite H9; clear H8 H8.
-              repeat (simpl diffo in *; f_solver_cleanup; f_solver_step).
+           f_solver.
+        -- f_solver.
 Qed.
 
 End WF.

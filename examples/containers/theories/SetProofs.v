@@ -28,6 +28,25 @@ Ltac destruct_ptrEq := lazymatch goal with
      | clear Hpe] 
 end.
 
+
+(** ** General utility tactics *)
+
+(* Pose the proof [prf], unless it already exists. *)
+Ltac pose_new prf :=
+  let prop := type of prf in
+  match goal with 
+    | [ H : prop |- _] => fail 1
+    | _ => pose proof prf
+  end.
+
+(* Pose the [prop], using [prf], unless it already exists. *)
+Ltac assert_new prop prf :=
+  match goal with 
+    | [ H : prop |- _] => fail 1
+    | _ => assert prop by prf
+  end.
+
+
 Section WF.
 Context {e : Type} {HEq : Eq_ e} {HOrd : Ord e} {HEqLaws : EqLaws e}  {HOrdLaws : OrdLaws e}.
 

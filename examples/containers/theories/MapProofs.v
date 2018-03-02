@@ -7,6 +7,46 @@ Require Import OrdTactic.
 Require Import Psatz.
 Set Bullet Behavior "Strict Subproofs".
 
+(** ** Tactics for pointer equality *)
+
+Ltac destruct_ptrEq := lazymatch goal with
+  | |- context [if PtrEquality.ptrEq ?x ?y && PtrEquality.ptrEq ?x2 ?y2 then _ else _]
+  => let Hpe := fresh "Hpe" in
+     let Hpe1 := fresh "Hpe1" in
+     let Hpe2 := fresh "Hpe2" in
+     destruct (PtrEquality.ptrEq x y && PtrEquality.ptrEq x2 y2) eqn:Hpe;
+     [ rewrite andb_true_iff in Hpe;
+       destruct Hpe as [Hpe1 Hpe2];
+       apply PtrEquality.ptrEq_eq in Hpe1;
+       apply PtrEquality.ptrEq_eq in Hpe2;
+       subst
+     | clear Hpe]
+  | |- context [if PtrEquality.ptrEq ?x ?y then _ else _]
+  => let Hpe := fresh "Hpe" in
+     destruct (PtrEquality.ptrEq x y) eqn:Hpe;
+     [ apply PtrEquality.ptrEq_eq in Hpe; subst
+     | clear Hpe] 
+end.
+
+(** ** General utility tactics *)
+
+(* Pose the proof [prf], unless it already exists. *)
+Ltac pose_new prf :=
+  let prop := type of prf in
+  match goal with 
+    | [ H : prop |- _] => fail 1
+    | _ => pose proof prf
+  end.
+
+(* Pose the [prop], using [prf], unless it already exists. *)
+Ltac assert_new prop prf :=
+  match goal with 
+    | [ H : prop |- _] => fail 1
+    | _ => assert prop by prf
+  end.
+
+
+(** * Tactics for option-valued functions *)
 
 Section oro.
 Context {a : Type}.
@@ -122,29 +162,10 @@ Ltac simpl_options := repeat lazymatch goal with
   | H: context [SomeIf ?b ?x = None]    |- _ => rewrite (SomeIf_eq_None b x) in H; subst
 end; lazy match in *.
 
-
-Ltac destruct_ptrEq := lazymatch goal with
-  | |- context [if PtrEquality.ptrEq ?x ?y && PtrEquality.ptrEq ?x2 ?y2 then _ else _]
-  => let Hpe := fresh "Hpe" in
-     let Hpe1 := fresh "Hpe1" in
-     let Hpe2 := fresh "Hpe2" in
-     destruct (PtrEquality.ptrEq x y && PtrEquality.ptrEq x2 y2) eqn:Hpe;
-     [ rewrite andb_true_iff in Hpe;
-       destruct Hpe as [Hpe1 Hpe2];
-       apply PtrEquality.ptrEq_eq in Hpe1;
-       apply PtrEquality.ptrEq_eq in Hpe2;
-       subst
-     | clear Hpe]
-  | |- context [if PtrEquality.ptrEq ?x ?y then _ else _]
-  => let Hpe := fresh "Hpe" in
-     destruct (PtrEquality.ptrEq x y) eqn:Hpe;
-     [ apply PtrEquality.ptrEq_eq in Hpe; subst
-     | clear Hpe] 
-end.
-
-
 Section WF.
 Context {e : Type} {a : Type} {HEq : Eq_ e} {HOrd : Ord e} {HEqLaws : EqLaws e}  {HOrdLaws : OrdLaws e}.
+
+(** ** Utilities for working with [Ord] *)
 
 (* We don’t have a OrdLawful class yet. We need to introduce that,
    add it to the context, and derive all axioms from that.
@@ -195,6 +216,8 @@ Definition size (s : Map e a) : Z :=
 
 Lemma size_size: Internal.size = size.
 Proof. reflexivity. Qed.
+
+(** * Well-formedness *)
 
 (* Bounds may be absent (infinity) *)
 Definition bound := (option e)%type.
@@ -290,6 +313,8 @@ Inductive Bounded : Map e a -> bound -> bound -> Prop :=
     sz = (1 + size s1 + size s2)%Z ->
     balance_prop (size s1) (size s2) ->
     Bounded (Bin sz x v s1 s2) lb ub.
+
+(** ** Lemmas related to well-formedness *)
 
 (** There are no values outside the bounds *)
 Lemma sem_outside_below:
@@ -474,6 +499,10 @@ Proof.
   * eapply BoundedBin; try eassumption; try reflexivity.
 Qed.
 
+
+(** ** Tactics for Boundedness etc. *)
+
+
 (** Learns bounds of values found in some set in the context *)
 Ltac inside_bounds :=
   repeat lazymatch goal with
@@ -655,6 +684,9 @@ Ltac solve_Precondition := lazymatch goal with
   | |- ?H                     => fail "solve_Precondition does not recognize this goal: " H
   end.
 
+(** ** A setup for complete specification *)
+
+
 
 (** A proposition of the form [Desc s lb ub sz f] tells us
   everything we need to know about [s].
@@ -756,6 +788,8 @@ Ltac solve_Desc :=
  => fail "solve_Desc: Goal not a Desc or Desc' proposition: " P
  end.
 
+(** ** The actual [WF] predicate *)
+
 
 (** And any set that has a bounds is well-formed *)
 Definition WF (s : Map e a) : Prop := Bounded s None None.
@@ -806,7 +840,7 @@ Lemma null_spec:
 Proof. intros. unfold null. inversion H; simpl; intuition (congruence || lia_sizes). Qed.
 
 
-(* verification of singleton *)
+(** ** Verification of [singleton] *)
 
 Lemma singleton_Desc:
   forall x v lb ub,
@@ -827,6 +861,8 @@ Lemma singleton_WF:
 Proof. intros. eapply Desc_WF. eapply singleton_Desc; reflexivity. Qed.
 
 (** ** Verifying the various balancing operations *)
+
+(** *** Verification of [balanceL] *)
 
 Lemma balanceL_Desc:
     forall x v s1 s2 lb ub,
@@ -854,6 +890,8 @@ Proof.
   all: try solve [solve_Desc].
 Qed.
 
+(** *** Verification of [balanceR] *)
+
 Lemma balanceR_Desc:
     forall x v s1 s2 lb ub,
     Bounded s1 lb (Some x) ->
@@ -880,6 +918,8 @@ Proof.
   all: try solve [solve_Desc].
 Qed.
 
+(** *** Verification of [insertMax] *)
+
 
 Lemma insertMax_Desc:
     forall x v s1 lb ub,
@@ -900,6 +940,8 @@ Proof.
     solve_Desc.
 Qed.
 
+(** *** Verification of [insertMin] *)
+
 Lemma insertMin_Desc:
     forall x v s2 lb ub,
     Bounded s2 (Some x) ub ->
@@ -917,6 +959,8 @@ Proof.
     applyDesc balanceL_Desc.
     solve_Desc.
 Qed.
+
+(** *** Verification of [link] *)
 
 Lemma link_eq (x : e) (v : a) (s1: Map e a)  (s2: Map e a) :
   link x v s1 s2 =
@@ -980,7 +1024,7 @@ Next Obligation.
       solve_Desc.
 Qed.
 
-(* verification of lookup *)
+(** ** Verification of [lookup] *)
 
 Lemma lookup_spec:
  forall {s lb ub i}, Bounded s lb ub -> lookup i s = sem s i.
@@ -1006,7 +1050,7 @@ Proof.
 Qed.
 
 
-(** ** verification of [insert] *)
+(** ** Verification of [insert] *)
 
 (* The [orig] passing and the local fixpoint in insert is plain ugly, so let’s to this instead *)
 
@@ -1090,8 +1134,7 @@ Proof.
         solve_Desc.
 Qed.
 
-(** For our purposes, [insertR] and [insert] are equivalent (the sets 
-    are equal up to [==] of elements. *)
+(** ** Verification of [insertR] *)
 
 Fixpoint insertR' (x : e) (v : a) (s : Map e a) : Map e a :=
   match s with 
@@ -1348,7 +1391,7 @@ Proof.
       * destruct (sem s2 x); cbn -[Z.add] in *; applyDesc balanceL_Desc; solve_Desc.
 Qed.
 
-(** ** Verification of [union] *)
+(** ** Verification of [split] *)
 
 Lemma split_Desc :
   forall x s lb ub,
@@ -1383,6 +1426,8 @@ Proof.
     * replace (x == x0) with false by order e. simpl.
       rewrite (sem_outside_above HB1) by solve_Bounds. simpl. lia.
 Qed.
+
+(** ** Verification of [union] *)
 
 (* The [union] uses some nested pattern match that expand to a very large
    number of patterns in Coq. So let’s take them apart here *)
@@ -1518,7 +1563,7 @@ Next Obligation.
 Qed.
 
 
-(** ** Verification of [intersection] *)
+(** ** Verification of [splitMember] *)
 
 (* Rewrite to avoid local [go] and StrictTriple *)
 Fixpoint splitMember' (k : e) (s : Map e a) : (Map e a * bool * Map e a)%type :=
@@ -1596,6 +1641,8 @@ Proof.
       rewrite (sem_outside_above HB1) by order_Bounds.
       simpl_options. assumption.
 Qed.
+
+(** ** Verification of [intersection] *)
 
 Lemma intersection_Desc:
   forall s1 s2 lb ub,

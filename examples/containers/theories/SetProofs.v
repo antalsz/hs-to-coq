@@ -7,6 +7,7 @@ Require Import OrdTactic.
 Require Import Psatz.
 Set Bullet Behavior "Strict Subproofs".
 
+(** ** Tactics for pointer equality *)
 
 Ltac destruct_ptrEq := lazymatch goal with
   | |- context [if PtrEquality.ptrEq ?x ?y && PtrEquality.ptrEq ?x2 ?y2 then _ else _]
@@ -27,9 +28,10 @@ Ltac destruct_ptrEq := lazymatch goal with
      | clear Hpe] 
 end.
 
-
 Section WF.
 Context {e : Type} {HEq : Eq_ e} {HOrd : Ord e} {HEqLaws : EqLaws e}  {HOrdLaws : OrdLaws e}.
+
+(** ** Utilities for working with [Ord] *)
 
 Lemma compare_Eq : forall (x y : e),
   compare x y = Eq <-> x == y = true.
@@ -69,14 +71,7 @@ Lemma lt_trans : forall (x y z : e),
   x < y = true -> y < z = true -> x < z = true.
 Proof. intuition; order e. Qed.
 
-
-(** This is just like size, but with a type signature that does not confuse [lia] *)
-Definition size (s : Set_ e) : Z :=
-  match s with | Bin sz _ _ _ => sz
-               | Tip => 0 end.
-
-Lemma size_size: Internal.size = size.
-Proof. reflexivity. Qed.
+(** * Well-formedness *)
 
 (* Bounds may be absent (infinity) *)
 Definition bound := (option e)%type.
@@ -121,6 +116,14 @@ Lemma isUB_lt:
   isUB ub y = true.
 Proof. order_Bounds. Qed.
 
+(** This is just like size, but with a type signature that does not confuse [lia] *)
+Definition size (s : Set_ e) : Z :=
+  match s with | Bin sz _ _ _ => sz
+               | Tip => 0 end.
+
+Lemma size_size: Internal.size = size.
+Proof. reflexivity. Qed.
+
 (** The balancing property of a binary node *)
 Definition balance_prop sz1 sz2 :=
   (sz1 + sz2 <= 1 \/ sz1 <= delta * sz2 /\ sz2 <= delta * sz1)%Z.
@@ -156,7 +159,6 @@ Qed.
   (exclusive) bounds.
 *)
 
-
 Inductive Bounded : Set_ e -> bound -> bound -> Prop :=
   | BoundedTip : forall lb ub,
     Bounded Tip lb ub
@@ -172,6 +174,8 @@ Inductive Bounded : Set_ e -> bound -> bound -> Prop :=
     sz = (1 + size s1 + size s2)%Z ->
     balance_prop (size s1) (size s2) ->
     Bounded (Bin sz x s1 s2) lb ub.
+
+(** ** Lemmas related to well-formedness *)
 
 (** There are no values outside the bounds *)
 Lemma sem_outside_below:
@@ -218,21 +222,6 @@ Qed.
 Lemma size_Bin: forall sz x (s1 s2 : Set_ e),
   size (Bin sz x s1 s2) = sz.
 Proof. intros. reflexivity. Qed.
-
-(* Pose the proof [prf], unless it already exists. *)
-Ltac pose_new prf :=
-  let prop := type of prf in
-  match goal with 
-    | [ H : prop |- _] => fail 1
-    | _ => pose proof prf
-  end.
-
-(* Pose the [prop], using [prf], unless it already exists. *)
-Ltac assert_new prop prf :=
-  match goal with 
-    | [ H : prop |- _] => fail 1
-    | _ => assert prop by prf
-  end.
 
 Lemma size_nonneg:
   forall {s lb ub},
@@ -345,6 +334,8 @@ Proof.
   * eapply BoundedBin; try eassumption; try reflexivity.
 Qed.
 
+(** ** Tactics for Boundedness etc. *)
+
 (** Learns bounds of values found in some set in the context *)
 Ltac inside_bounds :=
   repeat lazymatch goal with
@@ -391,7 +382,6 @@ Ltac split_bool_go expr :=
   end.
 
 (** This auxillary tactic destructs one boolean or option atom in the goal *)
-
 
 Ltac split_bool :=
   match goal with 
@@ -497,6 +487,19 @@ Ltac solve_Precondition := lazymatch goal with
   | |- ?H                     => fail "solve_Precondition does not recognize this goal: " H
   end.
 
+(** For every set in the context, try to see if [lia] knows it is empty. *)
+Ltac find_Tip :=
+  match goal with [ H : Bounded ?s _ _ |- _ ] =>
+    assert_new (size s = 0)%Z lia_sizes;
+    rewrite (size_0_iff_tip H) in *;
+    subst s;
+    inversion H;
+    clear H;
+    subst
+  end.
+
+
+(** ** A setup for complete specification *)
 
 (** A proposition of the form [Desc s lb ub sz f] tells us
   everything we need to know about [s].
@@ -598,6 +601,7 @@ Ltac solve_Desc :=
  => fail "solve_Desc: Goal not a Desc or Desc' proposition: " P
  end.
 
+(** ** The actual [WF] predicate *)
 
 (** And any set that has a bounds is well-formed *)
 Definition WF (s : Set_ e) : Prop := Bounded s None None.
@@ -614,17 +618,6 @@ Proof.
   intuition.
 Qed.
 
-
-(** For every set in the context, try to see if [lia] knows it is empty. *)
-Ltac find_Tip :=
-  match goal with [ H : Bounded ?s _ _ |- _ ] =>
-    assert_new (size s = 0)%Z lia_sizes;
-    rewrite (size_0_iff_tip H) in *;
-    subst s;
-    inversion H;
-    clear H;
-    subst
-  end.
 
 Require Import Coq.Program.Tactics.
 
@@ -648,7 +641,7 @@ Lemma null_spec:
 Proof. intros. unfold null. inversion H; simpl; intuition (congruence || lia_sizes). Qed.
 
 
-(* verification of singleton *)
+(** ** Verification of [singleton] *)
 
 Lemma singleton_Desc:
   forall x lb ub,
@@ -669,6 +662,8 @@ Lemma singleton_WF:
 Proof. intros. eapply Desc_WF. eapply singleton_Desc; reflexivity. Qed.
 
 (** ** Verifying the various balancing operations *)
+
+(** *** Verification of [balanceL] *)
 
 Lemma balanceL_Desc:
     forall x s1 s2 lb ub,
@@ -696,6 +691,8 @@ Proof.
   all: try solve [solve_Desc].
 Qed.
 
+(** *** Verification of [balanceR] *)
+
 Lemma balanceR_Desc:
     forall x s1 s2 lb ub,
     Bounded s1 lb (Some x) ->
@@ -722,6 +719,7 @@ Proof.
   all: try solve [solve_Desc].
 Qed.
 
+(** *** Verification of [link] *)
 
 Lemma insertMax_Desc:
     forall x s1 lb ub,
@@ -821,7 +819,7 @@ Next Obligation.
       solve_Desc.
 Qed.
 
-(* verification of member *)
+(** ** Verification of [member] *)
 
 Lemma member_spec:
  forall {s lb ub i}, Bounded s lb ub -> member i s = sem s i.
@@ -847,7 +845,7 @@ Proof.
 Qed.
 
 
-(** ** verification of [insert] *)
+(** ** Verification of [insert] *)
 
 (* The [orig] passing and the local fixpoint in insert is plain ugly, so let’s to this instead *)
 
@@ -877,6 +875,7 @@ Proof.
     - rewrite IHs2. reflexivity.
   * reflexivity.
 Qed.
+
 Lemma insert_Desc:
   forall y s lb ub,
   Bounded s lb ub ->
@@ -929,6 +928,8 @@ Proof.
         applyDesc balanceR_Desc;
         solve_Desc.
 Qed.
+
+(** ** Verification of [insertR] *)
 
 (** For our purposes, [insertR] and [insert] are equivalent (the sets 
     are equal up to [==] of elements. *)
@@ -1155,7 +1156,7 @@ Proof.
       * destruct (sem s2 x); applyDesc balanceL_Desc; solve_Desc.
 Qed.
 
-(** ** Verification of [union] *)
+(** ** Verification of [splitS] *)
 
 Lemma splitS_Desc :
   forall x s lb ub,
@@ -1190,6 +1191,8 @@ Proof.
     * replace (x == x0) with false by order e. simpl.
       rewrite (sem_outside_above HB1) by solve_Bounds. simpl. lia.
 Qed.
+
+(** ** Verification of [union] *)
 
 (* The [union] uses some nested pattern match that expand to a very large
    number of patterns in Coq. So let’s take them apart here *)
@@ -1322,6 +1325,9 @@ Next Obligation.
     solve_Desc.
 Qed.
 
+(** ** Verification of [splitMember] *)
+
+
 Lemma splitMember_Desc:
   forall x s lb ub,
   Bounded s lb ub ->
@@ -1353,6 +1359,8 @@ Proof.
       applyDesc link_Desc.
       solveThis.
 Qed.
+
+(** ** Verification of [intersection] *)
 
 Lemma intersection_Desc:
   forall s1 s2 lb ub,
@@ -1386,25 +1394,6 @@ Qed.
 
 (** ** Verification of [difference] *)
 
-Lemma split_Desc :
-  forall x s lb ub,
-  Bounded s lb ub ->
-  forall (P : Set_ e * Set_ e -> Prop),
-  (forall s1 s2,
-    Bounded s1 lb (Some x) ->
-    Bounded s2 (Some x) ub ->
-    (size s = size s1 + size s2 + (if sem s x then 1 else 0)) ->
-    (forall i, sem s i = (if i == x then sem s i else sem s1 i || sem s2 i)) ->
-    P (s1, s2)) ->
-  P (split x s) : Prop.
-Proof.
-  unfold split.
-  intros x s.
-  replace (Datatypes.id GHC.Base.$ splitS x s) with (splitS x s).
-  apply splitS_Desc.
-  reflexivity.
-Qed.
-
 Lemma difference_destruct :
   forall (P : Set_ e -> Prop),
   forall s1 s2,
@@ -1412,7 +1401,7 @@ Lemma difference_destruct :
   (s2 = Tip -> P s1) ->
   (forall sz2 x l2 r2, (s2 = Bin sz2 x l2 r2) -> 
     P (
-      match split x s1 with
+      match splitS x s1 with
       | pair l1 r1 =>
       match difference r1 r2 with
       | r1r2 =>
@@ -1454,7 +1443,7 @@ Proof.
   - apply difference_destruct; intros; subst.
     + (showP; [assumption | reflexivity | reflexivity | f_solver]).
     + (showP; [assumption | reflexivity | reflexivity | f_solver]). 
-    + eapply split_Desc; try eassumption. 
+    + eapply splitS_Desc; try eassumption. 
       intros sl1 sl2 HBsl1 HBsl2 Hsz Hsem. inversion H3; subst; clear H3.
       eapply IHHb2_1. solve_Bounded. intros sil ????.
       eapply IHHb2_2. solve_Bounded. intros sir ????.
@@ -1508,6 +1497,13 @@ Proof.
   erewrite fold_right_toList_go by eassumption.
   reflexivity.
 Qed.
+
+(** ** Verification of [foldr'] *)
+
+Lemma foldr'_spec:
+  forall {a} k (n : a) (s : Set_ e),
+  foldr' k n s = foldr k n s.
+Proof. reflexivity. Qed.
 
 (** ** Verification of [toList] and [toAscList] *)
 
@@ -1683,6 +1679,8 @@ Proof.
         order e.
 Qed.
 
+(** ** Verification of [foldl] *)
+
 (** This relates [foldl] and [toList]. *)
 
 Lemma foldl_spec:
@@ -1702,7 +1700,14 @@ Proof.
   * reflexivity.
 Qed.
 
-(** Size *)
+(** ** Verification of [foldl'] *)
+
+Lemma foldl'_spec:
+  forall {a} k (n : a) (s : Set_ e),
+  foldl' k n s = foldl k n s.
+Proof. reflexivity. Qed.
+
+(** ** Verification of [size] *)
 
 Lemma size_spec:
   forall s lb ub,
@@ -1719,7 +1724,7 @@ Proof.
     lia.
 Qed.
 
-(** Equality *)
+(** ** Verification of [Eq] *)
 
 Lemma eqlist_sym:
   forall {a} `{EqLaws a} (xs ys : list a),
@@ -1844,7 +1849,7 @@ Proof.
     rewrite Z.eqb_refl. intuition.
 Qed.
 
-(** ** Verifying [isSubsetOf] *)
+(** ** Verification of [isSubsetOf] *)
 
 Lemma isSubsetOfX_spec:
   forall s1 s2 lb ub,
@@ -1901,7 +1906,7 @@ Proof.
       simpl in H1. intuition.
 Qed.
 
-Lemma subest_size:
+Lemma subset_size:
   forall s1 s2 lb ub,
   Bounded s1 lb ub ->
   Bounded s2 lb ub ->
@@ -1915,9 +1920,9 @@ Proof.
   * assert (sem s0 x = true)
       by (apply Hsubset; simpl; rewrite Eq_refl, orb_true_r; reflexivity).
     assert (size s0 = let '(sl,sr) := split x s0 in 1 + size sl + size sr)%Z.
-    { eapply split_Desc; [eassumption|]. intros. rewrite H1 in H5. lia. }
+    { eapply splitS_Desc; [eassumption|]. intros. rewrite H1 in H5. lia. }
     rewrite H3.
-    eapply split_Desc; [eassumption|]. intros.
+    eapply splitS_Desc; [eassumption|]. intros.
     assert (size s1 <= size s3)%Z.
     { apply IHHB1_1; try assumption.
       intros i Hi.
@@ -1952,11 +1957,11 @@ Proof.
   intuition.
   unfold op_zlze__, Ord_Integer___, op_zlze____.
   rewrite Z.leb_le.
-  eapply subest_size; eassumption.
+  eapply subset_size; eassumption.
 Qed.
 
 
-(** ** Verifying [filter] *)
+(** ** Verification of [filter] *)
 
 Require Import Coq.Classes.Morphisms. (* For [Proper] *)
 
@@ -2010,7 +2015,7 @@ Proof.
       specialize (H0 _ _ Heqb2). congruence.
 Qed.
 
-(** ** Verifying [partition] *)
+(** ** Verification of [partition] *)
 
 Lemma partition_Bounded:
   forall p s lb ub,
@@ -2089,7 +2094,7 @@ Proof.
            specialize (HProper _ _ Heqb1). congruence.
 Qed.
 
-(** ** Verifying the [valid] function *)
+(** ** Verification of [valid] *)
 
 (* This is nicer than the [bounded] in [ordered],
    because it is compatible with [isLB] and [isUB] *)
@@ -2226,7 +2231,7 @@ Proof.
 Qed.
 
 Lemma Bounded_iff_valid : forall s,
-    Bounded s None None <-> valid s = true.
+    WF s <-> valid s = true.
 Proof.
   intros s. unfold valid.
   rewrite ordered_bounded'.
@@ -2949,7 +2954,9 @@ Module SetWSfun (E : OrderedType) <: WSfun(E).
 
 End SetWSfun.
 
-(** Type classes. Because a [Set_ e] is only useful if it well-formed, we instantiate
+(** * Type classes *)
+
+(** Because a [Set_ e] is only useful if it well-formed, we instantiate
 the law classes with a subset type. *)
 
 Require Import Proofs.GHC.Base.
@@ -2957,12 +2964,34 @@ Require Import Proofs.GHC.Base.
 Section TypeClassLaws.
 Context {e : Type} {HEq : Eq_ e} {HOrd : Ord e} {HEqLaws : EqLaws e}  {HOrdLaws : OrdLaws e}.
 
-Definition WFSet := {s: Set_ e | Bounded s None None }.
+(** ** Verification of [Eq] *)
+
+Definition WFSet := {s: Set_ e | WF s }.
 
 Program Instance Eq_Set_WF : Eq_ WFSet := fun _ k => k
   {| op_zeze____ := @op_zeze__ (Set_ e) _
    ; op_zsze____ := @op_zsze__ (Set_ e) _
   |}.
+
+From mathcomp Require Import ssreflect ssrbool.
+Set Bullet Behavior "Strict Subproofs".
+
+Local Ltac unfold_WFSet_Eq :=
+  unfold "_==_", "_/=_", Eq_Set_WF => /=;
+  unfold "_==_", "_/=_", Eq___Set_ => /=;
+  unfold Data.Set.Internal.Eq___Set__op_zsze__, Data.Set.Internal.Eq___Set__op_zeze__ => /=.
+Global Instance EqLaws_Set : EqLaws WFSet.
+Proof.
+  constructor.
+  - by move=> x; unfold_WFSet_Eq; rewrite !Eq_refl.
+  - by move=> x y; unfold_WFSet_Eq; f_equal; rewrite Eq_sym.
+  - move=> x y z; unfold_WFSet_Eq=> /andP [size_xy list_xy] /andP [size_yz list_yz].
+    by apply/andP; split; eapply Eq_trans; eassumption.
+  - by move=> x y; unfold_WFSet_Eq; rewrite negbK.
+Qed.
+
+
+(** ** Verification of [Ord] *)
 
 Program Instance Ord_Set_WF : Ord WFSet := fun _ k => k
   {| op_zlze____ := @op_zlze__ (Set_ e) _ _
@@ -2984,32 +3013,6 @@ Next Obligation.
   destruct (Internal.Ord__Set__op_zlze__ _ _); assumption.
 Qed.
 
-
-From mathcomp Require Import ssreflect ssrbool.
-Set Bullet Behavior "Strict Subproofs".
-
-Local Ltac unfold_WFSet_Eq :=
-  unfold "_==_", "_/=_", Eq_Set_WF => /=;
-  unfold "_==_", "_/=_", Eq___Set_ => /=;
-  unfold Data.Set.Internal.Eq___Set__op_zsze__, Data.Set.Internal.Eq___Set__op_zeze__ => /=.
-
-Local Ltac unfold_WFSet_Ord :=
-  unfold "_<=_", "_<_", "_>=_", "_>_", compare, Ord_Set_WF => /=;
-  unfold "_<=_", "_<_", "_>=_", "_>_", compare, Ord__Set_ => /=;
-  unfold Data.Set.Internal.Ord__Set__op_zlze__, Data.Set.Internal.Ord__Set__op_zl__,
-         Data.Set.Internal.Ord__Set__op_zgze__, Data.Set.Internal.Ord__Set__op_zg__,
-         Data.Set.Internal.Ord__Set__compare => /=.
-
-Global Instance EqLaws_Set : EqLaws WFSet.
-Proof.
-  constructor.
-  - by move=> x; unfold_WFSet_Eq; rewrite !Eq_refl.
-  - by move=> x y; unfold_WFSet_Eq; f_equal; rewrite Eq_sym.
-  - move=> x y z; unfold_WFSet_Eq=> /andP [size_xy list_xy] /andP [size_yz list_yz].
-    by apply/andP; split; eapply Eq_trans; eassumption.
-  - by move=> x y; unfold_WFSet_Eq; rewrite negbK.
-Qed.
-
 Lemma compare_neq_gt_iff_le {t} `{OrdLaws t} (l1 l2 : t) :
   (compare l1 l2 /= Gt = true) <-> l1 <= l2.
 Proof.
@@ -3026,6 +3029,18 @@ Proof.
   move: a => [a WFa]; unfold "==", Eq_Set_WF => /=.
   rewrite size_size; erewrite size_spec => //; exact WFa.
 Qed.
+
+
+
+Local Ltac unfold_WFSet_Ord :=
+  unfold "_<=_", "_<_", "_>=_", "_>_", compare, Ord_Set_WF => /=;
+  unfold "_<=_", "_<_", "_>=_", "_>_", compare, Ord__Set_ => /=;
+  unfold Data.Set.Internal.Ord__Set__op_zlze__, Data.Set.Internal.Ord__Set__op_zl__,
+         Data.Set.Internal.Ord__Set__op_zgze__, Data.Set.Internal.Ord__Set__op_zg__,
+         Data.Set.Internal.Ord__Set__compare => /=.
+
+
+
 
 Local Ltac hideToAscList a :=
   let la := fresh "l" a in

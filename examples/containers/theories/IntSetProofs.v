@@ -200,6 +200,9 @@ Definition oro {a} : option a -> option a -> option a :=
     | None => y
     end.
 
+(** *** The [nonneg] tactic *)
+
+
 (**
 We very often have to resolve non-negativity constraints, so we build
 a tactic library for that.
@@ -265,6 +268,8 @@ Proof.
   * apply pos_pos.
   * inversion H0.
 Qed.
+
+(** *** Lemmas about [N] and [Z], especially related to bits *)
 
 Lemma N_lt_pow2_testbits:
   forall n p, (n < 2^p)%N <-> (forall j, (p <= j)%N -> N.testbit n j = false).
@@ -2347,7 +2352,7 @@ Proof.
 Qed.
 Hint Resolve rMask_nonneg : nonneg.
 
-(** *** Lemmas about [nomatch], [zero] and their combinations *)
+(** *** Verification of [nomatch] *)
 
 Lemma nomatch_spec:
   forall i r,
@@ -2368,6 +2373,8 @@ Proof.
   rewrite -> Z_shiftl_injb by nonneg.
   reflexivity.
 Qed.
+
+(** *** Verification of [zero] *)
 
 Lemma zero_spec:
   forall i r,
@@ -2447,7 +2454,7 @@ Proof.
 Qed.
 
 
-(** *** Lemmas about [branchMask] *)
+(** *** Verification of [branchMask] *)
 
 Lemma branchMask_spec:
   forall r1 r2,
@@ -2463,7 +2470,7 @@ Proof.
   reflexivity.
 Qed.
 
-(** *** Lemmas about [mask] *)
+(** *** Verification of [mask] *)
 
 Lemma mask_spec:
   forall r1 r2,
@@ -2485,7 +2492,7 @@ Proof.
   assumption.
 Qed.
 
-(** *** Lemmas about [shorter] *)
+(** *** Verification of [shorter] *)
 
 Lemma shorter_spec:
   forall r1 r2,
@@ -2914,7 +2921,7 @@ Qed.
 Hint Resolve isBitMask_ctz_lt_WIDTH : isBitMask.
 
 
-(** *** Lemmas about [revNat] *)
+(** *** Verification of [revNat] *)
 
 Require RevNatSlowProofs.
 
@@ -3068,7 +3075,7 @@ Proof.
     Nomega.
 Qed.
 
-(** *** Lemmas about [highestBitMask] and [lowestBitMask] *)
+(** *** Verification of [highestBitMask] and [lowestBitMask] *)
 
 (** And the operations they are based on, [N.log2] and [N_ctz]. *)
 
@@ -3481,6 +3488,10 @@ Inductive Sem : IntSet -> (Z -> bool) -> Prop :=
  *)
 
 Definition WF (s : IntSet) : Prop := exists f, Sem s f.
+
+
+(** ** Lemmas related to well-formedness *)
+
 
 (** All of these respect extensionality of [f] *)
 
@@ -4115,7 +4126,7 @@ Proof.
   * eapply Desc_unique; eassumption.
 Qed.
 
-(** *** Specifying [equal] *)
+(** *** Verification of [equal] *)
 
 Lemma equal_spec:
   forall s1 s2, equal s1 s2 = true <-> s1 = s2.
@@ -4135,7 +4146,7 @@ Proof.
     intuition congruence.
 Qed.
 
-(** *** Specifying [nequal] *)
+(** *** Verification of [nequal] *)
 
 Lemma nequal_spec:
   forall s1 s2, nequal s1 s2 = negb (equal s1 s2).
@@ -4152,7 +4163,7 @@ Proof.
     intuition congruence.
 Qed.
 
-(** *** Specifying [isSubsetOf] *)
+(** *** Verification of [isSubsetOf] *)
 
 Lemma isSubsetOf_disjoint:
   forall s1 r1 f1 s2 r2 f2,
@@ -4427,7 +4438,7 @@ Proof.
 Qed.
 
 
-(** *** Specifying [member] *)
+(** *** Verification of [member] *)
 
 Lemma member_Desc:
  forall {s r f i}, Desc s r f -> member i s = f i.
@@ -4492,7 +4503,7 @@ Proof.
   apply Zlt_not_le. assumption.
 Qed.
 
-(** *** Specifying [notMember] *)
+(** *** Verification of [notMember] *)
 
 Lemma notMember_Sem:
   forall {s f i}, Sem s f -> notMember i s = negb (f i).
@@ -4504,7 +4515,7 @@ Proof.
   assumption.
 Qed.
 
-(** *** Specifying [null] *)
+(** *** Verification of [null] *)
 
 Lemma null_Sem:
   forall {s f}, Sem s f -> null s = true <-> (forall i, f i = false).
@@ -4520,7 +4531,7 @@ Proof.
 Qed.
 
 
-(** *** Specifying [singleton] *)
+(** *** Verification of [singleton] *)
 
 Lemma singleton_Desc:
   forall e,
@@ -4546,7 +4557,7 @@ Lemma singleton_WF:
   forall e, 0 <= e -> WF (singleton e).
 Proof. intros. eexists. apply singleton_Sem; auto. Qed.
 
-(** *** Specifying [insert] *)
+(** *** Verification of [insert] *)
 
 Lemma link_Desc:
     forall p1' s1 r1 f1 p2' s2 r2 f2 r f,
@@ -4713,7 +4724,7 @@ Proof.
   intro i; reflexivity.
 Qed.
 
-(** *** Specifying the smart constructors [tip] and [bin] *)
+(** *** Verification of the smart constructors [tip] and [bin] *)
 
 Lemma tip_Desc0:
   forall p bm r f,
@@ -4773,7 +4784,7 @@ Proof.
     + solve_f_eq.
 Qed.
 
-(** *** Specifying [remove] *)
+(** *** Verification of [delete] *)
 
 Lemma deleteBM_Desc:
   forall p' bm s2 r1 r2 f1 f2 f,
@@ -4883,7 +4894,7 @@ Proof.
   intro i. reflexivity.
 Qed.
 
-(** *** Specifying [union] *)
+(** *** Verification of [union] *)
 
 (** The following is copied from the body of [union] *)
 
@@ -5032,7 +5043,7 @@ Proof.
   eexists. apply union_Sem; eassumption.
 Qed.
 
-(** *** Specifying [intersection] *)
+(** *** Verification of [intersection] *)
 
 (** The following is copied from the body of [intersection] *)
 
@@ -5298,7 +5309,7 @@ Proof.
   eexists. apply intersection_Sem; eassumption.
 Qed.
 
-(** *** Specifying [difference] *)
+(** *** Verification of [difference] *)
 
 (** The following is copied from the body of [difference] *)
 
@@ -5512,7 +5523,7 @@ Proof.
   eexists. apply difference_Sem; eassumption.
 Qed.
 
-(** *** Specifying [disjoint] *)
+(** *** Verification of [disjoint] *)
 
 (** The following is copied from the body of [disjoint] *)
 
@@ -5788,7 +5799,7 @@ Proof.
     + eapply disjoint_Desc; eassumption.
 Qed.
 
-(** *** Specifying [foldr] *)
+(** *** Verification of [foldr] *)
 
 (* We can extract the argument to [wfFix2] from the definition of [foldrBits]. *)
 Definition foldrBits_go {a} (p : Int) (f : Int -> a -> a) (x : a) (bm : Nat)
@@ -5869,7 +5880,7 @@ Definition foldr_go {a} k :=
      end).
 
 
-(** *** Specifying [toList] *)
+(** *** Verification of [toList] *)
 
 Lemma In_cons_iff:
   forall {a} (y x : a) xs, In y (x :: xs) <-> x = y \/ In y xs.
@@ -6145,7 +6156,7 @@ Proof.
   * eapply to_List_Desc_sorted; eassumption.
 Qed.
 
-(** *** Specifying [foldl] *)
+(** *** Verification of [foldl] *)
 
 Definition foldl_go {a} k :=
   fix go (arg_0__ : a) (arg_1__ : IntSet) {struct arg_1__} : a :=
@@ -6392,7 +6403,7 @@ Proof.
   reflexivity.
 Qed.
 
-(** *** Specifying [size] *)
+(** *** Verification of [size] *)
 
 Definition sizeGo : Int -> IntSet -> Int.
 Proof.
@@ -6489,7 +6500,7 @@ Proof.
   reflexivity.
 Qed.
 
-(** *** Specifying [toDescList] *)
+(** *** Verification of [toDescList] *)
 
 (** The easiest complete specification simply relates this to [toList] *)
 
@@ -6507,7 +6518,7 @@ Proof.
   * simpl. rewrite IHxs. reflexivity.
 Qed.
 
-(** *** Specifying [fromList] *)
+(** *** Verification of [fromList] *)
 
 Require Import Proofs.Data.Foldable.
 
@@ -6569,7 +6580,7 @@ Proof.
   eassumption.
 Qed.
 
-(** *** Specifying [filter] *)
+(** *** Verification of [filter] *)
 
 Definition filterBits p o bm :=
   (foldlBits 0
@@ -6718,7 +6729,7 @@ Proof.
   intro. reflexivity.
 Qed.
 
-(** *** Specifying [partition] *)
+(** *** Verification of [partition] *)
 
 (** Conveniently, [partition] uses [filterBits] *)
 
@@ -6837,7 +6848,7 @@ Proof.
 Qed.
 
 
-(** *** Specifying [isProperSubsetOf] *)
+(** *** Verification of [isProperSubsetOf] *)
 
 (** [subsetCmp] is a strange beast, as it returns an [ordering], but does not totally
 order the sets. We first relate it to [equal] and [isSubsetOf], and then stich the specification
@@ -6980,7 +6991,7 @@ Proof.
 Qed.
 
 
-(** *** Correctness of [valid] *)
+(** *** Verification of [valid] *)
 
 (** The [valid] function is used in the test suite to detect whether
    functions return valid trees. It should be equivalent to our [WF].
@@ -7982,9 +7993,9 @@ Module IntSetWSfun <: WSfun(N_as_OT).
 
 End IntSetWSfun.
 
-(** ** Type class laws *)
+(** ** Type classes *)
 
-(** *** [Eq] *)
+(** *** Verification of [Eq] *)
 
 Require Import Proofs.GHC.Base.
 

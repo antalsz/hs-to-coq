@@ -404,39 +404,3 @@ Proof.
   unfold "\\"; elim: ys xs => [|y ys IH] //= xs ND.
   by apply IH, delete_preserves_NoDup.
 Qed.
-
-(******************************************************************************)
-(** Enum **)
-
-(* Missing function *)
-Fixpoint iterates (n : nat) {a} (f : a -> a) (z : a) : list a :=
-  match n with
-  | O    => nil
-  | S n' => z :: iterates n' f (f z)
-  end.
-
-Lemma eftInt_aux_fuel_case (x y : Int) (p : GHC.Enum.eftInt_aux_fuel x y) :
-  (exists (gt : (x >? y)%Z = true),                  p = @GHC.Enum.done x y gt) \/
-  (exists (p' : GHC.Enum.eftInt_aux_fuel (x+1)%Z y), p = @GHC.Enum.step x y p').
-Proof.
-  case: p => [x' y' gt | x' y' p'].
-  - by left; exists gt.
-  - by right; exists p'.
-Qed.
-
-Theorem eftInt_aux_iterates (from to : Int) p :
-  @GHC.Enum.eftInt_aux from to p = iterates (Z.to_nat (to - from + #1)) (fun x => x + #1) from.
-Proof.
-  move: to p.
-  elim: from => [| from IHfrom | from IHfrom].
-  - elim=> [| to IHto | to IHto].
-    + move=> p; move: (eftInt_aux_fuel_case _ _ p) => [[gt def_p] | [p' def_p]]; subst p.
-      * by contradict gt.
-      * admit.
-    + simpl.
-Admitted.
-
-Require Import GHC.Num.
-Theorem enumFromTo_Int_iterates (from to : Int) :
-  enumFromTo from to = iterates (Z.to_nat (to - from + #1)) (fun x => x + #1) from.
-Proof. apply eftInt_aux_iterates. Qed.

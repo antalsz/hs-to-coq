@@ -316,41 +316,27 @@ Instance instance__Bounded_Int__183__ : (Bounded Int) := {
   minBound := minInt ;
   maxBound := maxInt }.
 
-Inductive eftInt_aux_fuel : Int -> Int -> Type :=
-  | done : forall x y, (x >? y)%Z = true -> eftInt_aux_fuel x y
-  | step : forall x y, eftInt_aux_fuel (x + 1)%Z y -> eftInt_aux_fuel x y.
+Lemma eftInt_aux_pf (y x : Int) :
+  (x <= y)%Z ->
+  x <> y ->
+  (x+1 <= y)%Z.
+Proof. unfold Int in *; omega. Qed.
 
-Program Fixpoint eftInt_aux  (x : Int) (y: Int) (d : eftInt_aux_fuel x y) {struct d} : list Int :=
-  match (x >? y)%Z with
-    | true => nil
-    | false => @eftInt_aux (x + 1)%Z y _
+(* Manually copying `GHC.Enum.eftInt`'s local function `go` *)
+Program Fixpoint eftInt_aux (y x : Int) (pf : (x <= y)%Z) {measure (Z.to_nat (y - x))} : list Int :=
+  x :: match Z.eq_dec x y with
+       | left  _   => nil
+       | right neq => eftInt_aux (eftInt_aux_pf pf neq)
+       end%Z.
+Next Obligation. apply Z2Nat.inj_lt; omega. Defined.
+Arguments eftInt_aux _ _ _ : clear implicits.
+
+(* Manually copying `GHC.Enum.eftInt` *)
+Definition eftInt (x0 y : Int) :=
+  match Z_gt_dec x0 y with
+  | left  _   => nil
+  | right Ngt => eftInt_aux y x0 (Znot_gt_le x0 y Ngt)
   end.
-Obligation 1.
-destruct d. rewrite e in Heq_anonymous. done. auto. Defined.
-
-Require Import Omega.
-Open Scope Z_scope.
-
-Lemma eftInt_fuel : forall (x:Int) (y:Int), eftInt_aux_fuel x y.
-Proof.
-  intros x y.
-  remember ((y + 1 - x)%Z) as n.
-  generalize n x y Heqn. clear x y n Heqn.
-  intro n. eapply Z_lt_abs_rec with (n := n). clear n.
-  intros.
-  case ((x >? y)%Z) eqn:GT. eapply done. auto.
-  eapply step.
-  eapply (H ((y + 1) - (x + 1)%Z)); auto.
-  rewrite Z.gtb_ltb in GT.
-  eapply Z.ltb_ge in GT.
-  subst.
-  rewrite Zabs_eq; try omega.
-  rewrite Zabs_eq; try omega.
-Defined.
-Close Scope Z_scope.
-
-
-Definition eftInt := fun x y => eftInt_aux (eftInt_fuel x y).
 
 Instance instance__Enum_Int__184__ : (Enum Int) := {
   succ := (fun arg_185__ =>

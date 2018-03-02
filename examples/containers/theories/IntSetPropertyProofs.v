@@ -11,6 +11,7 @@ Require Import Coq.Sorting.Sorted.
 (* Basic Haskell libraries *)
 Require Import GHC.Base      Proofs.GHC.Base.
 Require Import GHC.List      Proofs.GHC.List.
+Require Import GHC.Enum      Proofs.GHC.Enum.
 Require Import Data.Foldable Proofs.Data.Foldable.
 Require Import Data.OldList  Proofs.Data.OldList.
 Require Import Data.Bits.
@@ -277,19 +278,28 @@ Qed.
 (* "Check the invariant that the mask is a power of 2." *)
 Theorem thm_MaskPow2 : toProp prop_MaskPow2.
 Proof.
-  simpl; elim=> [p m l IHl r IHr | p m | ] WFs //=.
+  (* We do `...; [|done|done]` and the next rewrite both together instead of
+     `//=` to avoid ever trying to simplify `powersOf2`, which would both
+     generate [0..63] *and do the exponentiation*. *)
+  simpl; elim=> [p m l IHl r IHr | p m | ] WFs; [|done|done].
+  rewrite /prop_MaskPow2 -/prop_MaskPow2.
   move: (WFs) => /WF_Bin_children [WFl WFr].
   apply/and3P; split; [| apply IHl, WFl | apply IHr, WFr].
   rewrite /powersOf2 flat_map_cons_f; change @GHC.Base.map with @Coq.Lists.List.map.
   rewrite fromList_member.
-  - apply/elemP; rewrite in_map_iff.
+  - rewrite (lock enumFromTo).
+    apply/elemP; rewrite in_map_iff.
     move: (valid_maskPowerOfTwo _ WFs) => /= /and3P [/Eq_eq Bits _ _].
     move: Bits; rewrite /Utils.Containers.Internal.BitUtil.bitcount /popCount /=.
     change 1%Z with (Z.of_N 1%N); rewrite N2Z.inj_iff => /N_popcount_1_pow2 [i def_i].
     exists (Z.of_N i); split.
     + change 2%Z with (Z.of_N 2%N); rewrite -N2Z.inj_pow def_i Z2N.id //.
-      admit. (* Possibly provable? *)
-    + admit. (* Unprovable *)
+      case: m def_i {WFs} => [|m|m] //= def_i.
+      by move: (N_pow_pos_nonneg 2%N i N.lt_0_2); rewrite def_i.
+    + rewrite -(lock eftInt) eftInt_In.
+      admit. (* Unprovable *)
+  - apply Forall_forall => m' /in_map_iff [i [<-{m'} _]].
+    by apply Z.pow_nonneg.
 Abort.
 
 (* "Check that the prefix satisfies its invariant." *)

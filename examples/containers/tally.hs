@@ -278,7 +278,9 @@ printModSummaryPlots summary = (xcoords, plots)
       | g <- groups
       ] ++
       [ "\\legend{ " <> commas [showWhat g | g <- groups ] <> "}" ]
-    barLabel c m = BS.pack $ printf "%s %s" (BS.unpack m) (show c)
+    barLabel Haskell m = m <> ".hs"
+    barLabel Gallina m = m <> ".v"
+    barLabel Proofs m  = m <> "Proofs.v"
     cols = [minBound..maxBound]
     mods = S.toList $ S.fromList [ m | (m,g,c) <- M.keys summary]
     bars = (,) <$> ["Set", "Map", "IntSet"] <*> cols

@@ -449,4 +449,8 @@ Proof. order Z. Qed.
 Goal forall x y : Z, compare x y = Eq <-> x == y = true.
 Proof. intuition; order Z. Qed.
 
+Goal forall x y z : Z, x < y = true -> y > x = true.
+Proof. order Z. Qed.
+
+
 End Tests.

@@ -2089,27 +2089,37 @@ Proof.
            specialize (HProper _ _ Heqb1). congruence.
 Qed.
 
-Fixpoint bounded lo hi t :=
+(** ** Verifying the [valid] function *)
+
+(* This is nicer than the [bounded] in [ordered],
+   because it is compatible with [isLB] and [isUB] *)
+Fixpoint bounded' lo hi t :=
   match t with
   | Bin _ x l r =>
     lo x && (hi x &&
-         (bounded lo (fun arg_0__ => _GHC.Base.<_ arg_0__ x) l &&
-          bounded (fun arg_1__ => _GHC.Base.>_ arg_1__ x) hi r))
+         (bounded' lo (isUB (Some x)) l &&
+          bounded' (isLB (Some x)) hi r))
     | Tip => true
   end.
 
-Definition bounded' s lb ub :=
-  let f := match lb with
-           | Some lb' => (fun x => x > lb')
-           | None => const true
-           end in
-  let g := match ub with
-           | Some ub' => (fun x => x < ub')
-           | None => const true
-           end in
-  bounded f g s.
+Lemma ordered_bounded': forall t, ordered t = bounded' (isLB None) (isUB None) t.
+Proof.
+  intro t.
+  unfold ordered.
+  lazymatch goal with |- ?b _ _ _ = _ => set (bounded := b) end.
+  enough (forall lo lo' hi hi',
+    (forall x, lo x = lo' x) -> (forall x, hi x = hi' x) ->
+    bounded lo hi t = bounded' lo' hi' t) 
+    by (apply H; intro; reflexivity).
+  induction t; intros; simpl.
+  * erewrite !H, !H0, IHt1, IHt2; auto.
+    intro; simpl; rewrite Ord_lt_le, Ord_gt_le; reflexivity.
+  * reflexivity.
+Qed.
 
 Require Import Tactics.
+
+(* This is a copy of the local fixpoint from Haskell’s [validsize] function. *)
 
 Definition realsize :=
   fix realsize (t' : Set_ e) : option Size :=
@@ -2130,12 +2140,14 @@ Definition realsize :=
     end.
 
 Lemma validsize_realsize : forall s,
-    validsize s = true -> Some (size s) = realsize s.
+    validsize s = true <-> realsize s = Some (size s).
 Proof.
-  induction s.
-  - intros. revert H. unfold validsize.
-    unfold realsize. repeat destruct_match.
-  - reflexivity.
+  intros.
+  change (realsize s == Some (size s) = true  <-> realsize s = Some (size s)).
+  unfold op_zeze__, Eq___option, op_zeze____, Base.Eq___option_op_zeze__.
+  unfold op_zeze__, Eq_Integer___, op_zeze____.
+  destruct (realsize s); try rewrite  Z.eqb_eq; simpl;
+  intuition (subst; congruence || reflexivity).
 Qed.
 
 Lemma validsize_children : forall l (a : e) s1 s2,
@@ -2157,25 +2169,22 @@ Qed.
 
 Lemma Bounded_valid' : forall s lb ub,
     Bounded s lb ub <->
-    (balanced s = true /\ bounded' s lb ub = true /\ validsize s = true).
+    (balanced s = true /\ bounded' (isLB lb) (isUB ub) s = true /\ validsize s = true).
 Proof.
   intros s lb ub. split.
   - induction 1; (split; [|split]); try reflexivity;
       destruct IHBounded1 as [IHb1 [IHbd1 IHv1]];
       destruct IHBounded2 as [IHb2 [IHbd2 IHv2]].
-    + unfold balanced. repeat rewrite andb_true_iff.
+    + cbn -[Z.add Z.mul]. rewrite size_size.
+      repeat rewrite andb_true_iff.
       split; [| split]; try assumption.
       unfold balance_prop in H4.
       rewrite orb_true_iff.
       rewrite andb_true_iff. cbn -[Z.mul]. 
-      rewrite size_size. repeat rewrite Z.leb_le.
+      repeat rewrite Z.leb_le.
       assumption.
-    + unfold bounded'. simpl.
-      repeat rewrite andb_true_iff.
-      split; [|split; [|split]]; try assumption.
-      * destruct lb; inversion H1; try reflexivity.
-        rewrite H6. order e.
-      * destruct ub; inversion H2; try reflexivity.
+    + simpl.
+      rewrite H1, H2, IHbd1, IHbd2. reflexivity.
     + unfold validsize. 
       repeat destruct_match; rewrite size_size;
         unfold validsize in IHv1, IHv2;
@@ -2189,7 +2198,7 @@ Proof.
       * rewrite Heq0 in IHv2. cbn in IHv2. congruence.
       * cbn in IHv1; congruence.
   - revert lb ub. induction s.
-    + unfold bounded'. intros.
+    + intros.
       destruct H as [? [? ?]].
       simpl in H0. repeat rewrite andb_true_iff in H0.
       destruct H0 as [? [? [? ?]]].
@@ -2197,9 +2206,6 @@ Proof.
       destruct H as [? [? ?]].
       constructor;
         try solve [apply validsize_children in H1; destruct H1; auto].
-      * destruct lb; try assumption.
-        simpl. order e.
-      * destruct ub; assumption.
       * pose proof validsize_children _ _ _ _ H1.
         destruct H7. apply validsize_realsize in H1.
         apply validsize_realsize in H7.
@@ -2223,10 +2229,12 @@ Lemma Bounded_iff_valid : forall s,
     Bounded s None None <-> valid s = true.
 Proof.
   intros s. unfold valid.
+  rewrite ordered_bounded'.
   repeat rewrite andb_true_iff. split.
   - intros. apply Bounded_valid' in H. intuition.
   - intros. apply Bounded_valid'. intuition.
 Qed.
+
 End WF.
 
 

@@ -2089,10 +2089,145 @@ Proof.
            specialize (HProper _ _ Heqb1). congruence.
 Qed.
 
+Fixpoint bounded lo hi t :=
+  match t with
+  | Bin _ x l r =>
+    lo x && (hi x &&
+         (bounded lo (fun arg_0__ => _GHC.Base.<_ arg_0__ x) l &&
+          bounded (fun arg_1__ => _GHC.Base.>_ arg_1__ x) hi r))
+    | Tip => true
+  end.
 
+Definition bounded' s lb ub :=
+  let f := match lb with
+           | Some lb' => (fun x => x > lb')
+           | None => const true
+           end in
+  let g := match ub with
+           | Some ub' => (fun x => x < ub')
+           | None => const true
+           end in
+  bounded f g s.
+
+Require Import Tactics.
+
+Definition realsize :=
+  fix realsize (t' : Set_ e) : option Size :=
+    match t' with
+    | Bin sz _ l r =>
+      match realsize l with
+      | Some n =>
+        match realsize r with
+        | Some m =>
+          if _GHC.Base.==_ (_GHC.Num.+_ (_GHC.Num.+_ n m) #1) sz
+          then Some sz
+          else None
+        | None => None
+        end
+      | None => None
+      end
+    | Tip => Some #0
+    end.
+
+Lemma validsize_realsize : forall s,
+    validsize s = true -> Some (size s) = realsize s.
+Proof.
+  induction s.
+  - intros. revert H. unfold validsize.
+    unfold realsize. repeat destruct_match.
+  - reflexivity.
+Qed.
+
+Lemma validsize_children : forall l (a : e) s1 s2,
+    validsize (Bin l a s1 s2) = true ->
+    validsize s1 = true /\ validsize s2 = true.
+Proof.
+  split.
+  - destruct s1; unfold validsize in *.
+    + intros. repeat destruct_match.
+      rewrite size_size in *. cbn. 
+      rewrite Z.eqb_eq. inversion Heq; reflexivity.
+    + reflexivity.
+  - destruct s2; unfold validsize in *.
+    + intros. repeat destruct_match.
+      rewrite size_size in *. cbn. 
+      rewrite Z.eqb_eq. inversion Heq0; reflexivity.
+    + reflexivity.
+Qed.
+
+Lemma Bounded_valid' : forall s lb ub,
+    Bounded s lb ub <->
+    (balanced s = true /\ bounded' s lb ub = true /\ validsize s = true).
+Proof.
+  intros s lb ub. split.
+  - induction 1; (split; [|split]); try reflexivity;
+      destruct IHBounded1 as [IHb1 [IHbd1 IHv1]];
+      destruct IHBounded2 as [IHb2 [IHbd2 IHv2]].
+    + unfold balanced. repeat rewrite andb_true_iff.
+      split; [| split]; try assumption.
+      unfold balance_prop in H4.
+      rewrite orb_true_iff.
+      rewrite andb_true_iff. cbn -[Z.mul]. 
+      rewrite size_size. repeat rewrite Z.leb_le.
+      assumption.
+    + unfold bounded'. simpl.
+      repeat rewrite andb_true_iff.
+      split; [|split; [|split]]; try assumption.
+      * destruct lb; inversion H1; try reflexivity.
+        rewrite H6. order e.
+      * destruct ub; inversion H2; try reflexivity.
+    + unfold validsize. 
+      repeat destruct_match; rewrite size_size;
+        unfold validsize in IHv1, IHv2;
+        rewrite Heq in IHv1.
+      * cbn. rewrite Z.eqb_eq; reflexivity.
+      * rewrite Heq0 in IHv2.
+        rewrite size_size in IHv1, IHv2. cbn in IHv1, IHv2.
+        rewrite Z.eqb_neq in Heq1. exfalso.
+        apply Heq1. cbn. rewrite H3.
+        rewrite Z.eqb_eq in IHv1, IHv2; subst. lia.
+      * rewrite Heq0 in IHv2. cbn in IHv2. congruence.
+      * cbn in IHv1; congruence.
+  - revert lb ub. induction s.
+    + unfold bounded'. intros.
+      destruct H as [? [? ?]].
+      simpl in H0. repeat rewrite andb_true_iff in H0.
+      destruct H0 as [? [? [? ?]]].
+      cbn -[Z.mul] in H. repeat rewrite andb_true_iff in H.
+      destruct H as [? [? ?]].
+      constructor;
+        try solve [apply validsize_children in H1; destruct H1; auto].
+      * destruct lb; try assumption.
+        simpl. order e.
+      * destruct ub; assumption.
+      * pose proof validsize_children _ _ _ _ H1.
+        destruct H7. apply validsize_realsize in H1.
+        apply validsize_realsize in H7.
+        apply validsize_realsize in H8.
+        simpl in H1. revert H1.
+        destruct (realsize s2) eqn:Hrs1;
+          destruct (realsize s3) eqn:Hrs2; try congruence.
+        match goal with
+         |- context[if ?a then _ else _] =>
+         destruct a eqn:Heq
+        end; try congruence.
+        intro. cbn in Heq. apply Z.eqb_eq in Heq.
+        inversion H7; inversion H8; subst. lia.
+      * unfold balance_prop. rewrite size_size in H.
+        rewrite orb_true_iff, andb_true_iff in H.
+        repeat rewrite Z.leb_le in H. assumption.
+    + simpl. intros. constructor.
+Qed.
+
+Lemma Bounded_iff_valid : forall s,
+    Bounded s None None <-> valid s = true.
+Proof.
+  intros s. unfold valid.
+  repeat rewrite andb_true_iff. split.
+  - intros. apply Bounded_valid' in H. intuition.
+  - intros. apply Bounded_valid'. intuition.
+Qed.
 End WF.
-
-
 
 
 (** * Instantiating the [FSetInterface] *)

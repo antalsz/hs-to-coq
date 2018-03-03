@@ -1,0 +1,8 @@
+skip module Test.QuickCheck
+skip module Test.QuickCheck.Property
+skip module Utils.Containers.Internal.BitUtil
+
+rename type Test.QuickCheck.Property.Property = bool
+rename value Test.QuickCheck.Property..&&. = andb
+
+rewrite forall s x, Test.QuickCheck.Property.counterexample s x = x

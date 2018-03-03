@@ -85,6 +85,7 @@ Local Definition Eq___ForeignHint_op_zsze__
 Program Instance Eq___ForeignHint : GHC.Base.Eq_ ForeignHint := fun _ k =>
     k {|GHC.Base.op_zeze____ := Eq___ForeignHint_op_zeze__ ;
       GHC.Base.op_zsze____ := Eq___ForeignHint_op_zsze__ |}.
+Admit Obligations.
 
 Local Definition Eq___CmmCat_op_zeze__ : CmmCat -> CmmCat -> bool :=
   fun x y => true.
@@ -95,6 +96,7 @@ Local Definition Eq___CmmCat_op_zsze__ : CmmCat -> CmmCat -> bool :=
 Program Instance Eq___CmmCat : GHC.Base.Eq_ CmmCat := fun _ k =>
     k {|GHC.Base.op_zeze____ := Eq___CmmCat_op_zeze__ ;
       GHC.Base.op_zsze____ := Eq___CmmCat_op_zsze__ |}.
+Admit Obligations.
 
 (* Translating `instance GHC.Show.Show CmmType.Width' failed: OOPS! Cannot find
    information for class Qualified "GHC.Show" "Show" unsupported *)
@@ -121,6 +123,7 @@ Local Definition Eq___Width_op_zsze__ : Width -> Width -> bool :=
 Program Instance Eq___Width : GHC.Base.Eq_ Width := fun _ k =>
     k {|GHC.Base.op_zeze____ := Eq___Width_op_zeze__ ;
       GHC.Base.op_zsze____ := Eq___Width_op_zsze__ |}.
+Admit Obligations.
 
 Definition cmmBits : Width -> CmmType :=
   Mk_CmmType BitsCat.
@@ -278,57 +281,61 @@ Definition vecLength : CmmType -> Length :=
 
 Definition widthFromBytes : GHC.Num.Int -> Width :=
   fun arg_0__ =>
-    let j_10__ :=
-      match arg_0__ with
-        | n => Panic.panicStr (GHC.Base.hs_string__
-                              "no width for given number of bytes") (Panic.noString n)
-      end in
-    let j_12__ :=
-      match arg_0__ with
-        | num_8__ => if num_8__ GHC.Base.== GHC.Num.fromInteger 10 : bool
-                     then W80
-                     else j_10__
-      end in
-    let j_14__ :=
-      match arg_0__ with
-        | num_7__ => if num_7__ GHC.Base.== GHC.Num.fromInteger 64 : bool
-                     then W512
-                     else j_12__
-      end in
-    let j_16__ :=
-      match arg_0__ with
-        | num_6__ => if num_6__ GHC.Base.== GHC.Num.fromInteger 32 : bool
-                     then W256
-                     else j_14__
-      end in
-    let j_18__ :=
-      match arg_0__ with
-        | num_5__ => if num_5__ GHC.Base.== GHC.Num.fromInteger 16 : bool
-                     then W128
-                     else j_16__
-      end in
-    let j_20__ :=
-      match arg_0__ with
-        | num_4__ => if num_4__ GHC.Base.== GHC.Num.fromInteger 8 : bool
-                     then W64
-                     else j_18__
-      end in
-    let j_22__ :=
-      match arg_0__ with
-        | num_3__ => if num_3__ GHC.Base.== GHC.Num.fromInteger 4 : bool
-                     then W32
-                     else j_20__
-      end in
-    let j_24__ :=
-      match arg_0__ with
-        | num_2__ => if num_2__ GHC.Base.== GHC.Num.fromInteger 2 : bool
-                     then W16
-                     else j_22__
-      end in
     match arg_0__ with
       | num_1__ => if num_1__ GHC.Base.== GHC.Num.fromInteger 1 : bool
                    then W8
-                   else j_24__
+                   else match arg_0__ with
+                          | num_2__ => if num_2__ GHC.Base.== GHC.Num.fromInteger 2 : bool
+                                       then W16
+                                       else match arg_0__ with
+                                              | num_3__ => if num_3__ GHC.Base.== GHC.Num.fromInteger 4 : bool
+                                                           then W32
+                                                           else match arg_0__ with
+                                                                  | num_4__ => if num_4__ GHC.Base.==
+                                                                                  GHC.Num.fromInteger 8 : bool
+                                                                               then W64
+                                                                               else match arg_0__ with
+                                                                                      | num_5__ => if num_5__
+                                                                                                      GHC.Base.==
+                                                                                                      GHC.Num.fromInteger
+                                                                                                      16 : bool
+                                                                                                   then W128
+                                                                                                   else match arg_0__ with
+                                                                                                          | num_6__ =>
+                                                                                                            if num_6__
+                                                                                                               GHC.Base.==
+                                                                                                               GHC.Num.fromInteger
+                                                                                                               32 : bool
+                                                                                                            then W256
+                                                                                                            else match arg_0__ with
+                                                                                                                   | num_7__ =>
+                                                                                                                     if num_7__
+                                                                                                                        GHC.Base.==
+                                                                                                                        GHC.Num.fromInteger
+                                                                                                                        64 : bool
+                                                                                                                     then W512
+                                                                                                                     else match arg_0__ with
+                                                                                                                            | num_8__ =>
+                                                                                                                              if num_8__
+                                                                                                                                 GHC.Base.==
+                                                                                                                                 GHC.Num.fromInteger
+                                                                                                                                 10 : bool
+                                                                                                                              then W80
+                                                                                                                              else match arg_0__ with
+                                                                                                                                     | n =>
+                                                                                                                                       Panic.panicStr
+                                                                                                                                       (GHC.Base.hs_string__
+                                                                                                                                       "no width for given number of bytes")
+                                                                                                                                       (Panic.noString
+                                                                                                                                       n)
+                                                                                                                                   end
+                                                                                                                          end
+                                                                                                                 end
+                                                                                                        end
+                                                                                    end
+                                                                end
+                                            end
+                        end
     end.
 
 Definition widthInBits : Width -> GHC.Num.Int :=

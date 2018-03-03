@@ -1,6 +1,7 @@
 Require Import NArith.NArith.
 Require Import ZArith.ZArith.
 Require Import Bool.Bool.
+Require Import Psatz.
 
 Definition WIDTH : N := 64%N.
 
@@ -491,71 +492,37 @@ Local Definition revNat n := (N.lor
                (Z.to_N 281470681808895)) (Z.to_N 16))) (Z.to_N 32))
  mod 2 ^ 64)%N.
 
-(* This proof of revNat_or could be used
-   in a more efficient proof of revNat_spec, where
-   we break the input down in a [N.lorg] of powers of two,
-   and then use computation on these powers of two.
- *)
 
-(*
-Definition hidden_lor := N.lor.
+Inductive Term :=
+  | Input : Term
+  | Const : N -> Term
+  | LAnd : Term -> Term -> Term
+  | LOr : Term -> Term -> Term
+  | ShiftL : Term -> N -> Term
+  | ShiftR : Term -> N -> Term
+  | ModPow2 : Term -> N -> Term.
 
-Lemma land_hidden_lor:
-  forall a b x,
-  N.land (hidden_lor a b) x = hidden_lor (N.land a x) (N.land b x).
-Proof.
-  intros.
-  unfold hidden_lor.
-  apply N.bits_inj_iff; intro i.
-  repeat first [rewrite N.land_spec | rewrite N.lor_spec].
-  destruct (N.testbit a i), (N.testbit b i), (N.testbit x i); reflexivity.
-Qed.
+Fixpoint evalTerm (n : N) (t : Term) : N :=
+  match t with
+  | Input => n
+  | Const n => n
+  | LAnd t1 t2 => N.land (evalTerm n t1) (evalTerm n t2)
+  | LOr  t1 t2 => N.lor  (evalTerm n t1) (evalTerm n t2)  
+  | ShiftL t1 s => N.shiftl (evalTerm n t1) s
+  | ShiftR t1 s => N.shiftr (evalTerm n t1) s
+  | ModPow2 t1 s => (evalTerm n t1 mod 2^s)%N
+ end.
 
-Lemma lor_hidden_lor:
-  forall a b c d,
-  N.lor (hidden_lor a b) (hidden_lor c d) = hidden_lor (N.lor a c) (N.lor b d).
-Proof.
-  intros.
-  unfold hidden_lor.
-  apply N.bits_inj_iff; intro i.
-  repeat first [rewrite N.lor_spec | rewrite N.lxor_spec].
-  destruct (N.testbit a i), (N.testbit b i), (N.testbit c i), (N.testbit d i); reflexivity.
-Qed.
-
-Lemma shiftr_hidden_lor:
-  forall a b n,
-  N.shiftr (hidden_lor a b) n = hidden_lor (N.shiftr a n) (N.shiftr b n).
-Proof.
-  exact N.shiftr_lor.
-Qed.
-
-Lemma shiftl_hidden_lor:
-  forall a b n,
-  N.shiftl (hidden_lor a b) n = hidden_lor (N.shiftl a n) (N.shiftl b n).
-Proof.
-  exact N.shiftl_lor.
-Qed.
-
-
-Lemma revNat_or:
-  forall a b,
-  revNat (N.lor a b) = N.lor (revNat a) (revNat b).
-Proof.
-  intros.
-  fold hidden_lor.
-  unfold revNat.
-  repeat match goal with
-  | [ |- _ = hidden_lor (N.lor _ _) (N.lor _ _) ] =>
-      rewrite <- lor_hidden_lor; f_equal
-  | [ |- _ = hidden_lor (N.land _ _) (N.land _ _) ] =>
-      rewrite <- land_hidden_lor; f_equal
-  | [ |- _ = hidden_lor (N.shiftr _ _) (N.shiftr _ _) ] =>
-      rewrite <- shiftr_hidden_lor; f_equal
-  | [ |- _ = hidden_lor (N.shiftl _ _) (N.shiftl _ _) ] =>
-      rewrite <- shiftl_hidden_lor; f_equal
-  end.
-Qed.
-*)
+Fixpoint checkbit (n : N) (i : N) (t : Term) : bool :=
+  match t with
+  | Input => N.testbit n i
+  | Const c => N.testbit c i
+  | LAnd t1 t2 => if checkbit n i t2 then checkbit n i t1 else false
+  | LOr  t1 t2 => orb  (checkbit n i t1) (checkbit n i t2)
+  | ShiftL t1 s => if (i <? s)%N then false else checkbit n (i - s) t1
+  | ShiftR t1 s => checkbit n (i + s) t1
+  | ModPow2 t1 s => if (i <? s)%N then checkbit n i t1 else false
+ end.
 
 Lemma N_shiftl_spec_eq:
   forall n i j,
@@ -568,6 +535,25 @@ Proof.
   * apply N.shiftl_spec_high'; assumption.
 Qed.
 
+Lemma checkbit_correct: forall n i t,
+  checkbit n i t = N.testbit (evalTerm n t) i.
+Proof.
+  intros. revert i. induction t; intros i; simpl.
+  * reflexivity.
+  * reflexivity.
+  * rewrite N.land_spec, IHt1, IHt2.
+    destruct (N.testbit (evalTerm n t2) i); rewrite ?andb_true_r, ?andb_false_r; reflexivity.
+  * rewrite N.lor_spec, IHt1, IHt2. reflexivity.
+  * rewrite N_shiftl_spec_eq, IHt. reflexivity.
+  * rewrite N.shiftr_spec, IHt. reflexivity. apply N.le_0_l.
+  * destruct (N.ltb_spec i n0). 
+    - rewrite N.mod_pow2_bits_low by assumption.
+      rewrite IHt. reflexivity.
+    - rewrite N.mod_pow2_bits_high by assumption.
+      reflexivity.
+Qed.
+
+
 Lemma revNat_spec:
   forall n i, (i < WIDTH)%N ->
   N.testbit (revNat n) i = N.testbit n (WIDTH - 1 - i)%N.
@@ -578,33 +564,30 @@ Proof.
     match goal with [ H : (?i < ?n)%N |- _ ] =>
       let m := eval simpl in (n - 1)%N in
       idtac "Now solving i =" m;
-      assert (Hor : (i = m \/ i < m)%N) by (zify; omega); clear H; destruct Hor
+      assert (Hor : (i = m \/ i < m)%N) by lia; clear H; destruct Hor
     end.
-
-  Ltac rewrite_land_smart := 
-      match goal with [ |- context [N.testbit (N.land ?x ?y) ?i] ] =>
-        rewrite N.land_spec;
-        simpl (N.testbit y i); (* The right side is always constant, so simplify right away *)
-        rewrite andb_false_r || rewrite andb_true_r
-      end.
 
   unfold revNat.
   
-  rewrite N.mod_pow2_bits_low by assumption.
+  Ltac toTerm n x :=
+    let rec go x :=
+       match x with
+        | (?y mod 2^?k)%N => let t1 := go y in constr:(ModPow2 t1 k)
+        | N.land ?e1 ?e2 =>  let t1 := go e1 in let t2 := go e2 in constr:(LAnd t1 t2)
+        | N.lor  ?e1 ?e2 =>  let t1 := go e1 in let t2 := go e2 in constr:(LOr t1 t2)
+        | N.shiftr ?e1 ?s => let t1 := go e1 in let c := eval simpl in s in constr:(ShiftR t1 c)
+        | N.shiftl ?e1 ?s => let t1 := go e1 in let c := eval simpl in s in constr:(ShiftL t1 c)
+        | n => constr:(Input)
+        | _ => let c := eval simpl in x in constr:(Const c)
+       end
+     in go x.
 
-  Ltac solve :=
-      subst;
-      repeat ltac:(simpl N.add; simpl N.sub; simpl N.ltb; first
-             [ rewrite andb_false_r
-             | rewrite andb_true_r
-             | rewrite orb_false_r 
-             | rewrite N.lor_spec
-             | rewrite_land_smart
-             | rewrite N.shiftr_spec by (intro Htmp; inversion Htmp)
-             | rewrite N_shiftl_spec_eq
-             ]);
-      reflexivity.
-  Time do 64 (next; [solve|]).
+  lazymatch goal with |- N.testbit ?exp i = ?rhs =>
+    let tm := toTerm n exp in
+    change (N.testbit (evalTerm n tm) i = rhs)
+   end.
+  rewrite <- checkbit_correct.
+  do 64 (next; [subst; simpl checkbit; rewrite ?orb_false_r; reflexivity|]).
   apply N.nlt_0_r in H. contradiction.
 Qed.
 

@@ -11,11 +11,12 @@ skip Data.Map.Internal.alterF
 rename value Data.Map.Internal.bool = Data.Map.Internal.boolITE
 rewrite forall x, GHC.Magic.lazy x = x
 
-nonterminating Data.Map.Internal.link2
-
 # Type inference fail
 skip Data.Map.Internal.differenceWithKey
 skip Data.Map.Internal.differenceWith
+
+# Needs runIdentity
+skip Data.Map.Internal.merge
 
 skip Data.Map.Internal.Monoid__Map
 skip Data.Map.Internal.Functor__Map
@@ -43,8 +44,10 @@ skip Data.Map.Internal.showsTreeHang
 skip Data.Map.Internal.fromListConstr
 skip Data.Map.Internal.mapDataType
 
-termination Data.Map.Internal.link {measure (Nat.add (map_size arg_2__) (map_size arg_3__))} termination_by_omega
-termination Data.Map.Internal.merge {measure (Nat.add (map_size arg_0__) (map_size arg_1__))} termination_by_omega
+termination Data.Map.Internal.link {measure (Nat.add (map_size arg_2__) (map_size arg_3__))}
+obligations Data.Map.Internal.link termination_by_omega
+termination Data.Map.Internal.link2 {measure (Nat.add (map_size arg_0__) (map_size arg_1__))}
+obligations Data.Map.Internal.link2 termination_by_omega
 
 nonterminating Data.Map.Internal.fromDistinctAscList
 nonterminating Data.Map.Internal.fromDistinctDescList

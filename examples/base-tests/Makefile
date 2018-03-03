@@ -15,11 +15,12 @@ PASS = \
   Endo \
   Type \
   OpMeth \
+  NestTup \
+  Pair \
+  SplitAt
 
 # tests that *should* pass but currently fail
 TODO_PASS  = \
-  NestTup \
-  Pair \
   Arrow \
   EqList \
   TypeClient \
@@ -32,7 +33,7 @@ VFILES    = $(addsuffix .v,$(MODULES))
 VOFILES   = $(patsubst %.v,%.vo,$(VFILES))
 COQFLAGS  = ""
 
-TYPECHECK=coqc -Q ../../base/ ''
+TYPECHECK=coqc -Q ../../base/ ""
 
 main:
 	# Call ourselves with -k, so that we see all test outputs,

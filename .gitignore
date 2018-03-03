@@ -13,6 +13,9 @@ cabal.project.local
 *.glob
 .*.aux
 *.v.d
+Makefile.coq.conf
+Makefile.bak
+.lia.cache
 
 # Haskell
 *.o

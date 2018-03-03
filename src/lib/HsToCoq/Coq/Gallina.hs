@@ -35,7 +35,7 @@ module HsToCoq.Coq.Gallina (
   CofixBodies(..),
   FixBody(..),
   CofixBody(..),
-  Annotation(..),
+  Order(..),
   MatchItem(..),
   DepRetType(..),
   ReturnType(..),
@@ -60,8 +60,6 @@ module HsToCoq.Coq.Gallina (
   Inductive(..),
   IndBody(..),
   Fixpoint(..),
-  ProgramFixpoint(..),
-  Order(..),
   Assertion(..),
   AssertionKeyword(..),
   Tactics,
@@ -216,7 +214,7 @@ data CofixBodies = CofixOne CofixBody                                           
                  deriving (Eq, Ord, Show, Read, Typeable, Data)
 
 -- |@/fix_body/ ::=@
-data FixBody = FixBody Qualid Binders (Maybe Annotation) (Maybe Term) Term                     -- ^@/ident/ /binders/ [/annotation/] [: /term/] := /term/@
+data FixBody = FixBody Qualid Binders (Maybe Order) (Maybe Term) Term                     -- ^@/ident/ /binders/ [/order/] [: /term/] := /term/@
              deriving (Eq, Ord, Show, Read, Typeable, Data)
 
 -- |@/cofix_body/ ::=@
@@ -224,8 +222,10 @@ data CofixBody = CofixBody Qualid Binders (Maybe Term) Term                     
                deriving (Eq, Ord, Show, Read, Typeable, Data)
 
 -- |@/annotation/ ::=@
-newtype Annotation = Annotation Qualid                                                         -- ^@{ struct /ident/ }@
-                   deriving (Eq, Ord, Show, Read, Typeable, Data)
+data Order = StructOrder Qualid                                                                -- ^@{ struct /ident/ }@
+           | MeasureOrder Term (Maybe Term)                                                    -- ^@measure /term/ (/term/)?/
+           | WFOrder Term Qualid                                                               -- ^@wf /term/ /ident//
+              deriving (Eq, Ord, Show, Read, Typeable, Data)
 
 -- |@/match_item/ ::=@
 data MatchItem = MatchItem Term (Maybe Name) (Maybe (Qualid, [Pattern]))                       -- ^@/term/ [as /name/] [in /qualid/ [/pattern/ … /pattern/]]@
@@ -280,14 +280,13 @@ data Sentence = AssumptionSentence       Assumption                             
               | DefinitionSentence       Definition                                            -- ^@/definition/@
               | InductiveSentence        Inductive                                             -- ^@/inductive/@
               | FixpointSentence         Fixpoint                                              -- ^@/fixpoint/@
-              | ProgramFixpointSentence  ProgramFixpoint (Maybe Text)                          -- ^@/program fixpoint/ Solve Obligations with (/tac/). Admit Obligations.@
+              | ProgramSentence          Sentence (Maybe Text)                                 -- ^@Program /sentence/ Solve Obligations with (/tac/). Admit Obligations.@
               | AssertionSentence        Assertion Proof                                       -- ^@/assertion/ /proof/@
               | ModuleSentence           ModuleSentence                                        -- ^@/module_sentence/@ – extra (inferred from §2.5)
               | ClassSentence            ClassDefinition                                       -- ^@/class_definition/@ – extra
               | ExistingClassSentence    Qualid                                                -- ^@/Existing Class /ident//@ – extra
-              | RecordSentence           RecordDefinition                                       -- ^@/class_definition/@ – extra
+              | RecordSentence           RecordDefinition                                      -- ^@/class_definition/@ – extra
               | InstanceSentence         InstanceDefinition                                    -- ^@/instance_definition/@ – extra
-              | ProgramInstanceSentence  InstanceDefinition                                    -- ^@Program /instance_definition/@ – extra
               | NotationSentence         Notation                                              -- ^@/notation/@ – extra
               | ArgumentsSentence        Arguments                                             -- ^@/arguments/@ – extra
               | CommentSentence          Comment                                               -- ^@/comment/@ – extra
@@ -337,15 +336,6 @@ data IndBody = IndBody Qualid [Binder] Term [(Qualid, [Binder], Maybe Term)]    
 -- |@/fixpoint/ ::=@
 data Fixpoint = Fixpoint   (NonEmpty FixBody)   [NotationBinding]                              -- ^@Fixpoint /fix_body/ with … with /fix_body/ [where /notation_binding/ and … and /notation_binding/] .@
               | CoFixpoint (NonEmpty CofixBody) [NotationBinding]                              -- ^@CoFixpoint /fix_body/ with … with /fix_body/ [where /notation_binding/ and … and /notation_binding/] .@
-              deriving (Eq, Ord, Show, Read, Typeable, Data)
-
--- |@/program fixpoint/ ::=@
-data ProgramFixpoint = ProgramFixpoint Qualid [Binder] Order Term Term                         -- ^@Program Fixpoint /ident/ /params/ {/order/} : /type/ := /term/.@
-              deriving (Eq, Ord, Show, Read, Typeable, Data)
-
--- |@/order/ ::=@
-data Order = MeasureOrder Term (Maybe Term)                                                    -- ^@measure /term/ (/term/)?/
-           | WFOrder Term Qualid                                                               -- ^@wf /term/ /ident//
               deriving (Eq, Ord, Show, Read, Typeable, Data)
 
 -- |@/assertion/ ::=@

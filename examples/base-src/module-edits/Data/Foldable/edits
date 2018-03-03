@@ -35,7 +35,12 @@ redefine Definition Data.Foldable.hash_compose {a} {b} {c} := @Coq.Program.Basic
 skip Data.Foldable.Foldable__U1
 skip Data.Foldable.Foldable__Array
 skip Data.Foldable.Foldable__V1
-skip Data.Foldable.Foldable__URec
+skip Data.Foldable.Foldable__URec__Ptr__unit
+skip Data.Foldable.Foldable__URec__Char
+skip Data.Foldable.Foldable__URec__Double
+skip Data.Foldable.Foldable__URec__Float
+skip Data.Foldable.Foldable__URec__Int
+skip Data.Foldable.Foldable__URec__Word
 skip Data.Foldable.Foldable__M1
 skip Data.Foldable.Foldable__K1
 skip Data.Foldable.Foldable__Rec1

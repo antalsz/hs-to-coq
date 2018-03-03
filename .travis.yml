@@ -40,6 +40,7 @@ addons:
     packages:
       - opam
       - libgmp-dev
+      - xutils-dev
 
 before_install:
  # Download and unpack the stack executable
@@ -53,13 +54,15 @@ before_install:
  # Install COQ
  - if ! [ -e $HOME/.opam/config ]; then opam init -j 2 --compiler=system -n -y; fi
  - opam repo add coq-released http://coq.inria.fr/opam/released || true
- - opam list -i coq || { opam install -y  coq.8.6 && opam pin add coq 8.6 ; }
+ - opam list -i coq.8.7.2 || { opam update && opam unpin coq && opam install -v -y -j 1  coq.8.7.2 ocamlfind.1.7.3-1 ; }
  - opam list -i coq-mathcomp-ssreflect || opam install -y coq-mathcomp-ssreflect
  - eval $(opam config env)
 
 install:
  # Build dependencies
  - stack --no-terminal --install-ghc test --only-dependencies
+ # dependencies of the containers code that we translate
+ - stack --no-terminal --install-ghc install QuickCheck HUnit test-framework test-framework-hunit test-framework-quickcheck2
 
 script:
  - stack --no-terminal --install-ghc install
@@ -77,7 +80,8 @@ script:
  - make -C examples/bag
  - make -C examples/quicksort
  - make -C examples/intervals
- - make -C examples/containers/lib
+ - make -C examples/containers clean
+ - make -C examples/containers
  - make -C examples/containers/theories
 
  # disabled 2018-07-24 due to too big of a fall-out, and the

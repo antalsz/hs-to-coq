@@ -45,23 +45,27 @@ convertModuleValDecls mdecls = do
            $  withConvertedBinding
                 (\cdef@ConvertedDefinition{convDefName = name} -> ((name,) <$>) $ do
                    r <- use (edits.redefinitions.at name)
+                   obl <- use (edits.obligations.at name)
                    t <- use (edits.termination.at name)
+                   lt <- use (edits.local_termination.at name)
+                   let useProgram = isJust t || isJust lt
                    if | Just def <- r               -- redefined
                       -> [definitionSentence def] <$ case def of
                           CoqInductiveDef        _ -> editFailure "cannot redefine a value definition into an Inductive"
                           CoqDefinitionDef       _ -> pure ()
                           CoqFixpointDef         _ -> pure ()
-                          CoqProgramFixpointDef  _ -> pure ()
                           CoqInstanceDef         _ -> editFailure "cannot redefine a value definition into an Instance"
-                      | Just (order, tactic) <- t  -- turn into Program Fixpoint
-                      ->  pure <$> toProgramFixpointSentence cdef order tactic
+                      | Just order <- t  -- turn into Program Fixpoint
+                      ->  pure <$> toProgramFixpointSentence cdef order obl
                       | otherwise                   -- no edit
                       -> let def = DefinitionDef Global (convDefName cdef)
                                                         (convDefArgs cdef)
                                                         (convDefType cdef)
                                                         (convDefBody cdef)
                          in pure $
-                            [ DefinitionSentence def ] ++
+                            [ if useProgram
+                              then ProgramSentence (DefinitionSentence def) obl
+                              else DefinitionSentence def ] ++
                             [ NotationSentence n | n <- buildInfixNotations sigs (convDefName cdef) ]
                 )(\_ _ -> convUnsupported "top-level pattern bindings")
 

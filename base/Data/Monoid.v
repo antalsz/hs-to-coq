@@ -403,6 +403,7 @@ Program Instance Monoid__Dual {a} `{GHC.Base.Monoid a} : GHC.Base.Monoid (Dual
     k {|GHC.Base.mappend__ := Monoid__Dual_mappend ;
       GHC.Base.mconcat__ := Monoid__Dual_mconcat ;
       GHC.Base.mempty__ := Monoid__Dual_mempty |}.
+Admit Obligations.
 
 Local Definition Functor__Dual_fmap : forall {a} {b},
                                         (a -> b) -> Dual a -> Dual b :=
@@ -415,6 +416,7 @@ Local Definition Functor__Dual_op_zlzd__ : forall {a} {b},
 Program Instance Functor__Dual : GHC.Base.Functor Dual := fun _ k =>
     k {|GHC.Base.op_zlzd____ := fun {a} {b} => Functor__Dual_op_zlzd__ ;
       GHC.Base.fmap__ := fun {a} {b} => Functor__Dual_fmap |}.
+Admit Obligations.
 
 Local Definition Applicative__Dual_op_zlztzg__ : forall {a} {b},
                                                    Dual (a -> b) -> Dual a -> Dual b :=
@@ -433,6 +435,7 @@ Program Instance Applicative__Dual : GHC.Base.Applicative Dual := fun _ k =>
     k {|GHC.Base.op_ztzg____ := fun {a} {b} => Applicative__Dual_op_ztzg__ ;
       GHC.Base.op_zlztzg____ := fun {a} {b} => Applicative__Dual_op_zlztzg__ ;
       GHC.Base.pure__ := fun {a} => Applicative__Dual_pure |}.
+Admit Obligations.
 
 Local Definition Monad__Dual_op_zgzg__ : forall {a} {b},
                                            Dual a -> Dual b -> Dual b :=
@@ -449,6 +452,7 @@ Program Instance Monad__Dual : GHC.Base.Monad Dual := fun _ k =>
     k {|GHC.Base.op_zgzg____ := fun {a} {b} => Monad__Dual_op_zgzg__ ;
       GHC.Base.op_zgzgze____ := fun {a} {b} => Monad__Dual_op_zgzgze__ ;
       GHC.Base.return___ := fun {a} => Monad__Dual_return_ |}.
+Admit Obligations.
 
 Local Definition Monoid__Endo_mappend {inst_a} : (Endo inst_a) -> (Endo
                                                  inst_a) -> (Endo inst_a) :=
@@ -468,6 +472,7 @@ Program Instance Monoid__Endo {a} : GHC.Base.Monoid (Endo a) := fun _ k =>
     k {|GHC.Base.mappend__ := Monoid__Endo_mappend ;
       GHC.Base.mconcat__ := Monoid__Endo_mconcat ;
       GHC.Base.mempty__ := Monoid__Endo_mempty |}.
+Admit Obligations.
 
 Local Definition Monoid__All_mappend : All -> All -> All :=
   fun arg_0__ arg_1__ =>
@@ -485,6 +490,7 @@ Program Instance Monoid__All : GHC.Base.Monoid All := fun _ k =>
     k {|GHC.Base.mappend__ := Monoid__All_mappend ;
       GHC.Base.mconcat__ := Monoid__All_mconcat ;
       GHC.Base.mempty__ := Monoid__All_mempty |}.
+Admit Obligations.
 
 Local Definition Monoid__Any_mappend : Any -> Any -> Any :=
   fun arg_0__ arg_1__ =>
@@ -502,6 +508,7 @@ Program Instance Monoid__Any : GHC.Base.Monoid Any := fun _ k =>
     k {|GHC.Base.mappend__ := Monoid__Any_mappend ;
       GHC.Base.mconcat__ := Monoid__Any_mconcat ;
       GHC.Base.mempty__ := Monoid__Any_mempty |}.
+Admit Obligations.
 
 (* Skipping instance Monoid__Sum *)
 
@@ -515,6 +522,7 @@ Local Definition Functor__Sum_op_zlzd__ : forall {a} {b}, a -> Sum b -> Sum a :=
 Program Instance Functor__Sum : GHC.Base.Functor Sum := fun _ k =>
     k {|GHC.Base.op_zlzd____ := fun {a} {b} => Functor__Sum_op_zlzd__ ;
       GHC.Base.fmap__ := fun {a} {b} => Functor__Sum_fmap |}.
+Admit Obligations.
 
 Local Definition Applicative__Sum_op_zlztzg__ : forall {a} {b},
                                                   Sum (a -> b) -> Sum a -> Sum b :=
@@ -533,6 +541,7 @@ Program Instance Applicative__Sum : GHC.Base.Applicative Sum := fun _ k =>
     k {|GHC.Base.op_ztzg____ := fun {a} {b} => Applicative__Sum_op_ztzg__ ;
       GHC.Base.op_zlztzg____ := fun {a} {b} => Applicative__Sum_op_zlztzg__ ;
       GHC.Base.pure__ := fun {a} => Applicative__Sum_pure |}.
+Admit Obligations.
 
 Local Definition Monad__Sum_op_zgzg__ : forall {a} {b},
                                           Sum a -> Sum b -> Sum b :=
@@ -549,6 +558,7 @@ Program Instance Monad__Sum : GHC.Base.Monad Sum := fun _ k =>
     k {|GHC.Base.op_zgzg____ := fun {a} {b} => Monad__Sum_op_zgzg__ ;
       GHC.Base.op_zgzgze____ := fun {a} {b} => Monad__Sum_op_zgzgze__ ;
       GHC.Base.return___ := fun {a} => Monad__Sum_return_ |}.
+Admit Obligations.
 
 (* Skipping instance Monoid__Product *)
 
@@ -563,6 +573,7 @@ Local Definition Functor__Product_op_zlzd__ : forall {a} {b},
 Program Instance Functor__Product : GHC.Base.Functor Product := fun _ k =>
     k {|GHC.Base.op_zlzd____ := fun {a} {b} => Functor__Product_op_zlzd__ ;
       GHC.Base.fmap__ := fun {a} {b} => Functor__Product_fmap |}.
+Admit Obligations.
 
 Local Definition Applicative__Product_op_zlztzg__ : forall {a} {b},
                                                       Product (a -> b) -> Product a -> Product b :=
@@ -583,6 +594,7 @@ Program Instance Applicative__Product : GHC.Base.Applicative Product := fun _
     k {|GHC.Base.op_ztzg____ := fun {a} {b} => Applicative__Product_op_ztzg__ ;
       GHC.Base.op_zlztzg____ := fun {a} {b} => Applicative__Product_op_zlztzg__ ;
       GHC.Base.pure__ := fun {a} => Applicative__Product_pure |}.
+Admit Obligations.
 
 Local Definition Monad__Product_op_zgzg__ : forall {a} {b},
                                               Product a -> Product b -> Product b :=
@@ -599,6 +611,7 @@ Program Instance Monad__Product : GHC.Base.Monad Product := fun _ k =>
     k {|GHC.Base.op_zgzg____ := fun {a} {b} => Monad__Product_op_zgzg__ ;
       GHC.Base.op_zgzgze____ := fun {a} {b} => Monad__Product_op_zgzgze__ ;
       GHC.Base.return___ := fun {a} => Monad__Product_return_ |}.
+Admit Obligations.
 
 Local Definition Monoid__First_mappend {inst_a} : (First inst_a) -> (First
                                                   inst_a) -> (First inst_a) :=
@@ -619,6 +632,7 @@ Program Instance Monoid__First {a} : GHC.Base.Monoid (First a) := fun _ k =>
     k {|GHC.Base.mappend__ := Monoid__First_mappend ;
       GHC.Base.mconcat__ := Monoid__First_mconcat ;
       GHC.Base.mempty__ := Monoid__First_mempty |}.
+Admit Obligations.
 
 Local Definition Monoid__Last_mappend {inst_a} : (Last inst_a) -> (Last
                                                  inst_a) -> (Last inst_a) :=
@@ -639,6 +653,7 @@ Program Instance Monoid__Last {a} : GHC.Base.Monoid (Last a) := fun _ k =>
     k {|GHC.Base.mappend__ := Monoid__Last_mappend ;
       GHC.Base.mconcat__ := Monoid__Last_mconcat ;
       GHC.Base.mempty__ := Monoid__Last_mempty |}.
+Admit Obligations.
 
 Local Definition Monoid__Alt_mappend {inst_f} {inst_a} `{_
                                        : GHC.Base.Alternative inst_f} : Alt inst_f inst_a -> Alt inst_f inst_a -> Alt
@@ -658,6 +673,7 @@ Program Instance Monoid__Alt {f} {a} `{GHC.Base.Alternative f} : GHC.Base.Monoid
     k {|GHC.Base.mappend__ := Monoid__Alt_mappend ;
       GHC.Base.mconcat__ := Monoid__Alt_mconcat ;
       GHC.Base.mempty__ := Monoid__Alt_mempty |}.
+Admit Obligations.
 
 Local Definition Functor__Alt_fmap {inst_f} `{GHC.Base.Functor inst_f}
     : forall {a} {b}, (a -> b) -> Alt inst_f a -> Alt inst_f b :=
@@ -671,6 +687,7 @@ Program Instance Functor__Alt {f} `{GHC.Base.Functor f} : GHC.Base.Functor (Alt
                                                                            f) := fun _ k =>
     k {|GHC.Base.op_zlzd____ := fun {a} {b} => Functor__Alt_op_zlzd__ ;
       GHC.Base.fmap__ := fun {a} {b} => Functor__Alt_fmap |}.
+Admit Obligations.
 
 (* Translating `instance forall {f}, forall `{GHC.Base.Alternative f},
    GHC.Base.Alternative (Data.Monoid.Alt f)' failed: OOPS! Cannot find information
@@ -694,6 +711,7 @@ Program Instance Applicative__Alt {f} `{GHC.Base.Applicative f}
     k {|GHC.Base.op_ztzg____ := fun {a} {b} => Applicative__Alt_op_ztzg__ ;
       GHC.Base.op_zlztzg____ := fun {a} {b} => Applicative__Alt_op_zlztzg__ ;
       GHC.Base.pure__ := fun {a} => Applicative__Alt_pure |}.
+Admit Obligations.
 
 (* Translating `instance forall {f}, forall `{GHC.Base.MonadPlus f},
    GHC.Base.MonadPlus (Data.Monoid.Alt f)' failed: OOPS! Cannot find information
@@ -716,6 +734,7 @@ Program Instance Monad__Alt {f} `{GHC.Base.Monad f} : GHC.Base.Monad (Alt f) :=
     k {|GHC.Base.op_zgzg____ := fun {a} {b} => Monad__Alt_op_zgzg__ ;
       GHC.Base.op_zgzgze____ := fun {a} {b} => Monad__Alt_op_zgzgze__ ;
       GHC.Base.return___ := fun {a} => Monad__Alt_return_ |}.
+Admit Obligations.
 
 (* Translating `instance forall {k} {f} {a}, forall `{GHC.Enum.Enum (f a)},
    GHC.Enum.Enum (Data.Monoid.Alt f a)' failed: OOPS! Cannot find information for
@@ -774,16 +793,19 @@ Local Definition Functor__Last_op_zlzd__ : forall {a} {b},
 Program Instance Functor__Last : GHC.Base.Functor Last := fun _ k =>
     k {|GHC.Base.op_zlzd____ := fun {a} {b} => Functor__Last_op_zlzd__ ;
       GHC.Base.fmap__ := fun {a} {b} => Functor__Last_fmap |}.
+Admit Obligations.
 
 Program Instance Applicative__Last : GHC.Base.Applicative Last := fun _ k =>
     k {|GHC.Base.op_ztzg____ := fun {a} {b} => Applicative__Last_op_ztzg__ ;
       GHC.Base.op_zlztzg____ := fun {a} {b} => Applicative__Last_op_zlztzg__ ;
       GHC.Base.pure__ := fun {a} => Applicative__Last_pure |}.
+Admit Obligations.
 
 Program Instance Monad__Last : GHC.Base.Monad Last := fun _ k =>
     k {|GHC.Base.op_zgzg____ := fun {a} {b} => Monad__Last_op_zgzg__ ;
       GHC.Base.op_zgzgze____ := fun {a} {b} => Monad__Last_op_zgzgze__ ;
       GHC.Base.return___ := fun {a} => Monad__Last_return_ |}.
+Admit Obligations.
 
 (* Translating `instance GHC.Generics.Generic1 Data.Monoid.Last' failed: OOPS!
    Cannot find information for class Qualified "GHC.Generics" "Generic1"
@@ -837,6 +859,7 @@ Program Instance Eq___Last {a} `{GHC.Base.Eq_ a} : GHC.Base.Eq_ (Last a) :=
   fun _ k =>
     k {|GHC.Base.op_zeze____ := Eq___Last_op_zeze__ ;
       GHC.Base.op_zsze____ := Eq___Last_op_zsze__ |}.
+Admit Obligations.
 
 Program Instance Ord__Last {a} `{GHC.Base.Ord a} : GHC.Base.Ord (Last a) :=
   fun _ k =>
@@ -847,6 +870,7 @@ Program Instance Ord__Last {a} `{GHC.Base.Ord a} : GHC.Base.Ord (Last a) :=
       GHC.Base.compare__ := Ord__Last_compare ;
       GHC.Base.max__ := Ord__Last_max ;
       GHC.Base.min__ := Ord__Last_min |}.
+Admit Obligations.
 
 Local Definition Monad__First_op_zgzg__ : forall {a} {b},
                                             First a -> First b -> First b :=
@@ -881,16 +905,19 @@ Local Definition Functor__First_op_zlzd__ : forall {a} {b},
 Program Instance Functor__First : GHC.Base.Functor First := fun _ k =>
     k {|GHC.Base.op_zlzd____ := fun {a} {b} => Functor__First_op_zlzd__ ;
       GHC.Base.fmap__ := fun {a} {b} => Functor__First_fmap |}.
+Admit Obligations.
 
 Program Instance Applicative__First : GHC.Base.Applicative First := fun _ k =>
     k {|GHC.Base.op_ztzg____ := fun {a} {b} => Applicative__First_op_ztzg__ ;
       GHC.Base.op_zlztzg____ := fun {a} {b} => Applicative__First_op_zlztzg__ ;
       GHC.Base.pure__ := fun {a} => Applicative__First_pure |}.
+Admit Obligations.
 
 Program Instance Monad__First : GHC.Base.Monad First := fun _ k =>
     k {|GHC.Base.op_zgzg____ := fun {a} {b} => Monad__First_op_zgzg__ ;
       GHC.Base.op_zgzgze____ := fun {a} {b} => Monad__First_op_zgzgze__ ;
       GHC.Base.return___ := fun {a} => Monad__First_return_ |}.
+Admit Obligations.
 
 (* Translating `instance GHC.Generics.Generic1 Data.Monoid.First' failed: OOPS!
    Cannot find information for class Qualified "GHC.Generics" "Generic1"
@@ -944,6 +971,7 @@ Program Instance Eq___First {a} `{GHC.Base.Eq_ a} : GHC.Base.Eq_ (First a) :=
   fun _ k =>
     k {|GHC.Base.op_zeze____ := Eq___First_op_zeze__ ;
       GHC.Base.op_zsze____ := Eq___First_op_zsze__ |}.
+Admit Obligations.
 
 Program Instance Ord__First {a} `{GHC.Base.Ord a} : GHC.Base.Ord (First a) :=
   fun _ k =>
@@ -954,6 +982,7 @@ Program Instance Ord__First {a} `{GHC.Base.Ord a} : GHC.Base.Ord (First a) :=
       GHC.Base.compare__ := Ord__First_compare ;
       GHC.Base.max__ := Ord__First_max ;
       GHC.Base.min__ := Ord__First_min |}.
+Admit Obligations.
 
 (* Translating `instance forall {a}, forall `{GHC.Num.Num a}, GHC.Num.Num
    (Data.Monoid.Product a)' failed: OOPS! Cannot find information for class
@@ -1015,6 +1044,7 @@ Program Instance Eq___Product {a} `{GHC.Base.Eq_ a} : GHC.Base.Eq_ (Product
                                                                    a) := fun _ k =>
     k {|GHC.Base.op_zeze____ := Eq___Product_op_zeze__ ;
       GHC.Base.op_zsze____ := Eq___Product_op_zsze__ |}.
+Admit Obligations.
 
 Program Instance Ord__Product {a} `{GHC.Base.Ord a} : GHC.Base.Ord (Product
                                                                    a) := fun _ k =>
@@ -1025,6 +1055,7 @@ Program Instance Ord__Product {a} `{GHC.Base.Ord a} : GHC.Base.Ord (Product
       GHC.Base.compare__ := Ord__Product_compare ;
       GHC.Base.max__ := Ord__Product_max ;
       GHC.Base.min__ := Ord__Product_min |}.
+Admit Obligations.
 
 (* Translating `instance forall {a}, forall `{GHC.Num.Num a}, GHC.Num.Num
    (Data.Monoid.Sum a)' failed: OOPS! Cannot find information for class Qualified
@@ -1086,6 +1117,7 @@ Program Instance Eq___Sum {a} `{GHC.Base.Eq_ a} : GHC.Base.Eq_ (Sum a) := fun _
                                                                               k =>
     k {|GHC.Base.op_zeze____ := Eq___Sum_op_zeze__ ;
       GHC.Base.op_zsze____ := Eq___Sum_op_zsze__ |}.
+Admit Obligations.
 
 Program Instance Ord__Sum {a} `{GHC.Base.Ord a} : GHC.Base.Ord (Sum a) := fun _
                                                                               k =>
@@ -1096,6 +1128,7 @@ Program Instance Ord__Sum {a} `{GHC.Base.Ord a} : GHC.Base.Ord (Sum a) := fun _
       GHC.Base.compare__ := Ord__Sum_compare ;
       GHC.Base.max__ := Ord__Sum_max ;
       GHC.Base.min__ := Ord__Sum_min |}.
+Admit Obligations.
 
 (* Translating `instance GHC.Generics.Generic Data.Monoid.Any' failed: OOPS!
    Cannot find information for class Qualified "GHC.Generics" "Generic"
@@ -1138,6 +1171,7 @@ Local Definition Eq___Any_op_zsze__ : Any -> Any -> bool :=
 Program Instance Eq___Any : GHC.Base.Eq_ Any := fun _ k =>
     k {|GHC.Base.op_zeze____ := Eq___Any_op_zeze__ ;
       GHC.Base.op_zsze____ := Eq___Any_op_zsze__ |}.
+Admit Obligations.
 
 Program Instance Ord__Any : GHC.Base.Ord Any := fun _ k =>
     k {|GHC.Base.op_zl____ := Ord__Any_op_zl__ ;
@@ -1147,6 +1181,7 @@ Program Instance Ord__Any : GHC.Base.Ord Any := fun _ k =>
       GHC.Base.compare__ := Ord__Any_compare ;
       GHC.Base.max__ := Ord__Any_max ;
       GHC.Base.min__ := Ord__Any_min |}.
+Admit Obligations.
 
 (* Translating `instance GHC.Generics.Generic Data.Monoid.All' failed: OOPS!
    Cannot find information for class Qualified "GHC.Generics" "Generic"
@@ -1189,6 +1224,7 @@ Local Definition Eq___All_op_zsze__ : All -> All -> bool :=
 Program Instance Eq___All : GHC.Base.Eq_ All := fun _ k =>
     k {|GHC.Base.op_zeze____ := Eq___All_op_zeze__ ;
       GHC.Base.op_zsze____ := Eq___All_op_zsze__ |}.
+Admit Obligations.
 
 Program Instance Ord__All : GHC.Base.Ord All := fun _ k =>
     k {|GHC.Base.op_zl____ := Ord__All_op_zl__ ;
@@ -1198,6 +1234,7 @@ Program Instance Ord__All : GHC.Base.Ord All := fun _ k =>
       GHC.Base.compare__ := Ord__All_compare ;
       GHC.Base.max__ := Ord__All_max ;
       GHC.Base.min__ := Ord__All_min |}.
+Admit Obligations.
 
 (* Translating `instance forall {a}, GHC.Generics.Generic (Data.Monoid.Endo a)'
    failed: OOPS! Cannot find information for class Qualified "GHC.Generics"
@@ -1259,6 +1296,7 @@ Program Instance Eq___Dual {a} `{GHC.Base.Eq_ a} : GHC.Base.Eq_ (Dual a) :=
   fun _ k =>
     k {|GHC.Base.op_zeze____ := Eq___Dual_op_zeze__ ;
       GHC.Base.op_zsze____ := Eq___Dual_op_zsze__ |}.
+Admit Obligations.
 
 Program Instance Ord__Dual {a} `{GHC.Base.Ord a} : GHC.Base.Ord (Dual a) :=
   fun _ k =>
@@ -1269,6 +1307,7 @@ Program Instance Ord__Dual {a} `{GHC.Base.Ord a} : GHC.Base.Ord (Dual a) :=
       GHC.Base.compare__ := Ord__Dual_compare ;
       GHC.Base.max__ := Ord__Dual_max ;
       GHC.Base.min__ := Ord__Dual_min |}.
+Admit Obligations.
 
 (* Unbound variables:
      Build_Unpeel None Type Unpeel andb bool comparison false list option orb true

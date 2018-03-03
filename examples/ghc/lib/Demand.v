@@ -306,6 +306,7 @@ Local Definition Eq___CPRResult_op_zsze__ : CPRResult -> CPRResult -> bool :=
 Program Instance Eq___CPRResult : GHC.Base.Eq_ CPRResult := fun _ k =>
     k {|GHC.Base.op_zeze____ := Eq___CPRResult_op_zeze__ ;
       GHC.Base.op_zsze____ := Eq___CPRResult_op_zsze__ |}.
+Admit Obligations.
 
 (* Translating `instance forall {r}, forall `{GHC.Show.Show r}, GHC.Show.Show
    (Demand.Termination r)' failed: OOPS! Cannot find information for class
@@ -329,6 +330,7 @@ Program Instance Eq___Termination {r} `{GHC.Base.Eq_ r} : GHC.Base.Eq_
                                                           (Termination r) := fun _ k =>
     k {|GHC.Base.op_zeze____ := Eq___Termination_op_zeze__ ;
       GHC.Base.op_zsze____ := Eq___Termination_op_zsze__ |}.
+Admit Obligations.
 
 (* Translating `instance GHC.Show.Show Demand.UseDmd' failed: OOPS! Cannot find
    information for class Qualified "GHC.Show" "Show" unsupported *)
@@ -354,6 +356,7 @@ Local Definition Eq___Count_op_zsze__ : Count -> Count -> bool :=
 Program Instance Eq___Count : GHC.Base.Eq_ Count := fun _ k =>
     k {|GHC.Base.op_zeze____ := Eq___Count_op_zeze__ ;
       GHC.Base.op_zsze____ := Eq___Count_op_zsze__ |}.
+Admit Obligations.
 
 Local Definition Eq___Use_op_zeze__ {inst_u} `{GHC.Base.Eq_ inst_u} : Use
                                                                       inst_u -> Use inst_u -> bool :=
@@ -373,6 +376,7 @@ Program Instance Eq___Use {u} `{GHC.Base.Eq_ u} : GHC.Base.Eq_ (Use u) := fun _
                                                                               k =>
     k {|GHC.Base.op_zeze____ := Eq___Use_op_zeze__ ;
       GHC.Base.op_zsze____ := Eq___Use_op_zsze__ |}.
+Admit Obligations.
 
 Local Definition Eq___UseDmd_op_zeze__ : UseDmd -> UseDmd -> bool :=
   fix UseDmd_eq x y
@@ -391,6 +395,7 @@ Local Definition Eq___UseDmd_op_zsze__ : UseDmd -> UseDmd -> bool :=
 Program Instance Eq___UseDmd : GHC.Base.Eq_ UseDmd := fun _ k =>
     k {|GHC.Base.op_zeze____ := Eq___UseDmd_op_zeze__ ;
       GHC.Base.op_zsze____ := Eq___UseDmd_op_zsze__ |}.
+Admit Obligations.
 
 (* Translating `instance GHC.Show.Show Demand.StrDmd' failed: OOPS! Cannot find
    information for class Qualified "GHC.Show" "Show" unsupported *)
@@ -416,6 +421,7 @@ Local Definition Eq___ExnStr_op_zsze__ : ExnStr -> ExnStr -> bool :=
 Program Instance Eq___ExnStr : GHC.Base.Eq_ ExnStr := fun _ k =>
     k {|GHC.Base.op_zeze____ := Eq___ExnStr_op_zeze__ ;
       GHC.Base.op_zsze____ := Eq___ExnStr_op_zsze__ |}.
+Admit Obligations.
 
 Local Definition Eq___Str_op_zeze__ {inst_s} `{GHC.Base.Eq_ inst_s} : Str
                                                                       inst_s -> Str inst_s -> bool :=
@@ -435,6 +441,7 @@ Program Instance Eq___Str {s} `{GHC.Base.Eq_ s} : GHC.Base.Eq_ (Str s) := fun _
                                                                               k =>
     k {|GHC.Base.op_zeze____ := Eq___Str_op_zeze__ ;
       GHC.Base.op_zsze____ := Eq___Str_op_zsze__ |}.
+Admit Obligations.
 
 Local Definition Eq___StrDmd_op_zeze__ : StrDmd -> StrDmd -> bool :=
   fix StrDmd_eq x y
@@ -453,6 +460,7 @@ Local Definition Eq___StrDmd_op_zsze__ : StrDmd -> StrDmd -> bool :=
 Program Instance Eq___StrDmd : GHC.Base.Eq_ StrDmd := fun _ k =>
     k {|GHC.Base.op_zeze____ := Eq___StrDmd_op_zeze__ ;
       GHC.Base.op_zsze____ := Eq___StrDmd_op_zsze__ |}.
+Admit Obligations.
 
 (* Translating `instance forall {s} {u}, forall `{GHC.Show.Show u}
    `{GHC.Show.Show s}, GHC.Show.Show (Demand.JointDmd s u)' failed: OOPS! Cannot
@@ -475,6 +483,7 @@ Program Instance Eq___JointDmd {s} {u} `{GHC.Base.Eq_ u} `{GHC.Base.Eq_ s}
   : GHC.Base.Eq_ (JointDmd s u) := fun _ k =>
     k {|GHC.Base.op_zeze____ := Eq___JointDmd_op_zeze__ ;
       GHC.Base.op_zsze____ := Eq___JointDmd_op_zsze__ |}.
+Admit Obligations.
 
 Local Definition Eq___DmdType_op_zeze__ : DmdType -> DmdType -> bool :=
   fun arg_0__ arg_1__ =>
@@ -493,6 +502,7 @@ Local Definition Eq___DmdType_op_zsze__ : DmdType -> DmdType -> bool :=
 Program Instance Eq___DmdType : GHC.Base.Eq_ DmdType := fun _ k =>
     k {|GHC.Base.op_zeze____ := Eq___DmdType_op_zeze__ ;
       GHC.Base.op_zsze____ := Eq___DmdType_op_zsze__ |}.
+Admit Obligations.
 
 Local Definition Eq___StrictSig_op_zeze__ : StrictSig -> StrictSig -> bool :=
   GHC.Prim.coerce _GHC.Base.==_.
@@ -503,6 +513,7 @@ Local Definition Eq___StrictSig_op_zsze__ : StrictSig -> StrictSig -> bool :=
 Program Instance Eq___StrictSig : GHC.Base.Eq_ StrictSig := fun _ k =>
     k {|GHC.Base.op_zeze____ := Eq___StrictSig_op_zeze__ ;
       GHC.Base.op_zsze____ := Eq___StrictSig_op_zsze__ |}.
+Admit Obligations.
 
 Definition absDmd : Demand :=
   JD missingValue missingValue.

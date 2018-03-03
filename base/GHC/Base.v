@@ -255,10 +255,10 @@ Existing Class Eq_.
 Definition op_zeze__ {a} {g : Eq_ a} := g _ (op_zeze____ _).
 Definition op_zsze__ {a} {g : Eq_ a} := g _ (op_zsze____ _).
 
-Infix "/=" := (op_zsze__) (no associativity, at level 70).
 Notation "'_/=_'" := (op_zsze__).
-Infix "==" := (op_zeze__) (no associativity, at level 70).
+Infix "/=" := (op_zsze__) (no associativity, at level 70).
 Notation "'_==_'" := (op_zeze__).
+Infix "==" := (op_zeze__) (no associativity, at level 70).
 
 Definition eq_default {a} (eq : a -> a -> bool) : Eq_ a :=
   fun _ k => k {|op_zeze____ := eq; op_zsze____ := fun x y => negb (eq x y) |}.
@@ -298,21 +298,17 @@ Definition max `{g : Ord a} : a -> a -> a :=
 Definition min `{g : Ord a} : a -> a -> a :=
   g _ (min__ a).
 
+Notation "'_<_'" := (op_zl__).
 Infix "<" := (op_zl__) (no associativity, at level 70).
 
-Notation "'_<_'" := (op_zl__).
-
+Notation "'_<=_'" := (op_zlze__).
 Infix "<=" := (op_zlze__) (no associativity, at level 70).
 
-Notation "'_<=_'" := (op_zlze__).
-
+Notation "'_>_'" := (op_zg__).
 Infix ">" := (op_zg__) (no associativity, at level 70).
 
-Notation "'_>_'" := (op_zg__).
-
-Infix ">=" := (op_zgze__) (no associativity, at level 70).
-
 Notation "'_>=_'" := (op_zgze__).
+Infix ">=" := (op_zgze__) (no associativity, at level 70).
 
 (*********** Eq/Ord for primitive types **************************)
 
@@ -442,7 +438,7 @@ end.
 Definition ord_default {a} (comp : a -> a -> comparison) `{Eq_ a} : Ord a :=
   fun _ k => k (Ord__Dict_Build _
   (fun x y => (comp x y) == Lt)
-  ( fun x y => negb ((comp x y) == Lt))
+  ( fun x y => negb ((comp y x) == Lt))
   (fun x y => (comp y x) == Lt)
   (fun x y => negb ((comp x y) == Lt))
   comp
@@ -590,6 +586,7 @@ Program Instance Monoid__list {a} : Monoid (list a) := fun _ k =>
     k {|mappend__ := Monoid__list_mappend ;
       mconcat__ := Monoid__list_mconcat ;
       mempty__ := Monoid__list_mempty |}.
+Admit Obligations.
 
 Local Definition Monoid__arrow_mappend {inst_b} {inst_a} `{Monoid inst_b}
     : (inst_a -> inst_b) -> (inst_a -> inst_b) -> (inst_a -> inst_b) :=
@@ -612,14 +609,85 @@ Program Instance Monoid__unit : Monoid unit := fun _ k =>
     k {|mappend__ := Monoid__unit_mappend ;
       mconcat__ := Monoid__unit_mconcat ;
       mempty__ := Monoid__unit_mempty |}.
+Admit Obligations.
 
 (* Skipping instance Monoid__op_zt__ *)
 
-(* Skipping instance Monoid__op_zt__ *)
+Local Definition Monoid__op_zt____op_zt___mappend {inst_a} {inst_b} {inst_c}
+                                                  `{Monoid inst_a} `{Monoid inst_b} `{Monoid inst_c} : (inst_a * inst_b
+                                                                                                       *
+                                                                                                       inst_c)%type -> (inst_a
+                                                                                                       * inst_b *
+                                                                                                       inst_c)%type -> (inst_a
+                                                                                                       * inst_b *
+                                                                                                       inst_c)%type :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
+      | pair (pair a1 b1) c1 , pair (pair a2 b2) c2 => pair (pair (mappend a1 a2)
+                                                                  (mappend b1 b2)) (mappend c1 c2)
+    end.
 
-(* Skipping instance Monoid__op_zt__ *)
+Local Definition Monoid__op_zt____op_zt___mempty {inst_a} {inst_b} {inst_c}
+                                                 `{Monoid inst_a} `{Monoid inst_b} `{Monoid inst_c} : (inst_a * inst_b *
+                                                                                                      inst_c)%type :=
+  pair (pair mempty mempty) mempty.
 
-(* Skipping instance Monoid__op_zt__ *)
+Local Definition Monoid__op_zt____op_zt____op_zt____23_mappend {inst_a} {inst_b}
+                                                               {inst_c} {inst_d} `{Monoid inst_a} `{Monoid inst_b}
+                                                               `{Monoid inst_c} `{Monoid inst_d} : (inst_a * inst_b *
+                                                                                                   inst_c *
+                                                                                                   inst_d)%type -> (inst_a
+                                                                                                   * inst_b * inst_c *
+                                                                                                   inst_d)%type -> (inst_a
+                                                                                                   * inst_b * inst_c *
+                                                                                                   inst_d)%type :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
+      | pair (pair (pair a1 b1) c1) d1 , pair (pair (pair a2 b2) c2) d2 => pair (pair
+                                                                                (pair (mappend a1 a2) (mappend b1 b2))
+                                                                                (mappend c1 c2)) (mappend d1 d2)
+    end.
+
+Local Definition Monoid__op_zt____op_zt____op_zt____23_mempty {inst_a} {inst_b}
+                                                              {inst_c} {inst_d} `{Monoid inst_a} `{Monoid inst_b}
+                                                              `{Monoid inst_c} `{Monoid inst_d} : (inst_a * inst_b *
+                                                                                                  inst_c *
+                                                                                                  inst_d)%type :=
+  pair (pair (pair mempty mempty) mempty) mempty.
+
+Local Definition Monoid__op_zt____op_zt____op_zt____op_zt____87_mappend {inst_a}
+                                                                        {inst_b} {inst_c} {inst_d} {inst_e} `{Monoid
+                                                                        inst_a} `{Monoid inst_b} `{Monoid inst_c}
+                                                                        `{Monoid inst_d} `{Monoid inst_e} : (inst_a *
+                                                                                                            inst_b *
+                                                                                                            inst_c *
+                                                                                                            inst_d *
+                                                                                                            inst_e)%type -> (inst_a
+                                                                                                            * inst_b *
+                                                                                                            inst_c *
+                                                                                                            inst_d *
+                                                                                                            inst_e)%type -> (inst_a
+                                                                                                            * inst_b *
+                                                                                                            inst_c *
+                                                                                                            inst_d *
+                                                                                                            inst_e)%type :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
+      | pair (pair (pair (pair a1 b1) c1) d1) e1 , pair (pair (pair (pair a2 b2) c2)
+                                                              d2) e2 => pair (pair (pair (pair (mappend a1 a2) (mappend
+                                                                                               b1 b2)) (mappend c1 c2))
+                                                                                   (mappend d1 d2)) (mappend e1 e2)
+    end.
+
+Local Definition Monoid__op_zt____op_zt____op_zt____op_zt____87_mempty {inst_a}
+                                                                       {inst_b} {inst_c} {inst_d} {inst_e} `{Monoid
+                                                                       inst_a} `{Monoid inst_b} `{Monoid inst_c}
+                                                                       `{Monoid inst_d} `{Monoid inst_e} : (inst_a *
+                                                                                                           inst_b *
+                                                                                                           inst_c *
+                                                                                                           inst_d *
+                                                                                                           inst_e)%type :=
+  pair (pair (pair (pair mempty mempty) mempty) mempty) mempty.
 
 Local Definition Monoid__comparison_mappend
     : comparison -> comparison -> comparison :=
@@ -852,6 +920,7 @@ Local Definition Eq___option_op_zsze__ {inst_a} `{Eq_ inst_a} : option
 Program Instance Eq___option {a} `{Eq_ a} : Eq_ (option a) := fun _ k =>
     k {|op_zeze____ := Eq___option_op_zeze__ ;
       op_zsze____ := Eq___option_op_zsze__ |}.
+Admit Obligations.
 
 Program Instance Ord__option {a} `{Ord a} : Ord (option a) := fun _ k =>
     k {|op_zl____ := Ord__option_op_zl__ ;
@@ -861,6 +930,7 @@ Program Instance Ord__option {a} `{Ord a} : Ord (option a) := fun _ k =>
       compare__ := Ord__option_compare ;
       max__ := Ord__option_max ;
       min__ := Ord__option_min |}.
+Admit Obligations.
 
 Definition ap {m} {a} {b} `{(Monad m)} : m (a -> b) -> m a -> m b :=
   fun m1 m2 => m1 >>= (fun x1 => m2 >>= (fun x2 => return_ (x1 x2))).
@@ -918,6 +988,7 @@ Program Instance Monoid__option {a} `{Monoid a} : Monoid (option a) := fun _
     k {|mappend__ := Monoid__option_mappend ;
       mconcat__ := Monoid__option_mconcat ;
       mempty__ := Monoid__option_mempty |}.
+Admit Obligations.
 
 Local Definition Monoid__comparison_mconcat : list comparison -> comparison :=
   foldr Monoid__comparison_mappend Monoid__comparison_mempty.
@@ -926,6 +997,69 @@ Program Instance Monoid__comparison : Monoid comparison := fun _ k =>
     k {|mappend__ := Monoid__comparison_mappend ;
       mconcat__ := Monoid__comparison_mconcat ;
       mempty__ := Monoid__comparison_mempty |}.
+Admit Obligations.
+
+Local Definition Monoid__op_zt____op_zt____op_zt____op_zt____87_mconcat {inst_a}
+                                                                        {inst_b} {inst_c} {inst_d} {inst_e} `{Monoid
+                                                                        inst_a} `{Monoid inst_b} `{Monoid inst_c}
+                                                                        `{Monoid inst_d} `{Monoid inst_e} : list (inst_a
+                                                                                                                 *
+                                                                                                                 inst_b
+                                                                                                                 *
+                                                                                                                 inst_c
+                                                                                                                 *
+                                                                                                                 inst_d
+                                                                                                                 *
+                                                                                                                 inst_e)%type -> (inst_a
+                                                                                                            * inst_b *
+                                                                                                            inst_c *
+                                                                                                            inst_d *
+                                                                                                            inst_e)%type :=
+  foldr Monoid__op_zt____op_zt____op_zt____op_zt____87_mappend
+  Monoid__op_zt____op_zt____op_zt____op_zt____87_mempty.
+
+Program Instance Monoid__op_zt____op_zt____op_zt____op_zt____87 {a} {b} {c} {d}
+                                                                {e} `{Monoid a} `{Monoid b} `{Monoid c} `{Monoid d}
+                                                                `{Monoid e} : Monoid (a * b * c * d * e)%type := fun _
+                                                                                                                     k =>
+    k {|mappend__ := Monoid__op_zt____op_zt____op_zt____op_zt____87_mappend ;
+      mconcat__ := Monoid__op_zt____op_zt____op_zt____op_zt____87_mconcat ;
+      mempty__ := Monoid__op_zt____op_zt____op_zt____op_zt____87_mempty |}.
+Admit Obligations.
+
+Local Definition Monoid__op_zt____op_zt____op_zt____23_mconcat {inst_a} {inst_b}
+                                                               {inst_c} {inst_d} `{Monoid inst_a} `{Monoid inst_b}
+                                                               `{Monoid inst_c} `{Monoid inst_d} : list (inst_a * inst_b
+                                                                                                        * inst_c *
+                                                                                                        inst_d)%type -> (inst_a
+                                                                                                   * inst_b * inst_c *
+                                                                                                   inst_d)%type :=
+  foldr Monoid__op_zt____op_zt____op_zt____23_mappend
+  Monoid__op_zt____op_zt____op_zt____23_mempty.
+
+Program Instance Monoid__op_zt____op_zt____op_zt____23 {a} {b} {c} {d} `{Monoid
+                                                       a} `{Monoid b} `{Monoid c} `{Monoid d} : Monoid (a * b * c *
+                                                                                                       d)%type := fun _
+                                                                                                                      k =>
+    k {|mappend__ := Monoid__op_zt____op_zt____op_zt____23_mappend ;
+      mconcat__ := Monoid__op_zt____op_zt____op_zt____23_mconcat ;
+      mempty__ := Monoid__op_zt____op_zt____op_zt____23_mempty |}.
+Admit Obligations.
+
+Local Definition Monoid__op_zt____op_zt___mconcat {inst_a} {inst_b} {inst_c}
+                                                  `{Monoid inst_a} `{Monoid inst_b} `{Monoid inst_c} : list (inst_a *
+                                                                                                            inst_b *
+                                                                                                            inst_c)%type -> (inst_a
+                                                                                                       * inst_b *
+                                                                                                       inst_c)%type :=
+  foldr Monoid__op_zt____op_zt___mappend Monoid__op_zt____op_zt___mempty.
+
+Program Instance Monoid__op_zt____op_zt__ {a} {b} {c} `{Monoid a} `{Monoid b}
+                                          `{Monoid c} : Monoid (a * b * c)%type := fun _ k =>
+    k {|mappend__ := Monoid__op_zt____op_zt___mappend ;
+      mconcat__ := Monoid__op_zt____op_zt___mconcat ;
+      mempty__ := Monoid__op_zt____op_zt___mempty |}.
+Admit Obligations.
 
 Local Definition Monoid__arrow_mconcat {inst_b} {inst_a} `{Monoid inst_b} : list
                                                                             (inst_a -> inst_b) -> (inst_a -> inst_b) :=
@@ -936,6 +1070,7 @@ Program Instance Monoid__arrow {b} {a} `{Monoid b} : Monoid (a -> b) := fun _
     k {|mappend__ := Monoid__arrow_mappend ;
       mconcat__ := Monoid__arrow_mconcat ;
       mempty__ := Monoid__arrow_mempty |}.
+Admit Obligations.
 
 Definition id {a} : a -> a :=
   fun x => x.
@@ -1010,11 +1145,13 @@ Local Definition Functor__list_op_zlzd__ : forall {a} {b},
 Program Instance Functor__list : Functor list := fun _ k =>
     k {|fmap__ := fun {a} {b} => Functor__list_fmap ;
       op_zlzd____ := fun {a} {b} => Functor__list_op_zlzd__ |}.
+Admit Obligations.
 
 Program Instance Applicative__list : Applicative list := fun _ k =>
     k {|op_zlztzg____ := fun {a} {b} => Applicative__list_op_zlztzg__ ;
       op_ztzg____ := fun {a} {b} => Applicative__list_op_ztzg__ ;
       pure__ := fun {a} => Applicative__list_pure |}.
+Admit Obligations.
 
 Local Definition Monad__list_return_ : forall {a}, a -> list a :=
   fun {a} => pure.
@@ -1027,6 +1164,7 @@ Program Instance Monad__list : Monad list := fun _ k =>
     k {|op_zgzg____ := fun {a} {b} => Monad__list_op_zgzg__ ;
       op_zgzgze____ := fun {a} {b} => Monad__list_op_zgzgze__ ;
       return___ := fun {a} => Monad__list_return_ |}.
+Admit Obligations.
 
 Local Definition Functor__option_op_zlzd__ : forall {a} {b},
                                                a -> option b -> option a :=
@@ -1035,6 +1173,7 @@ Local Definition Functor__option_op_zlzd__ : forall {a} {b},
 Program Instance Functor__option : Functor option := fun _ k =>
     k {|fmap__ := fun {a} {b} => Functor__option_fmap ;
       op_zlzd____ := fun {a} {b} => Functor__option_op_zlzd__ |}.
+Admit Obligations.
 
 Local Definition Applicative__option_op_zlztzg__ : forall {a} {b},
                                                      option (a -> b) -> option a -> option b :=
@@ -1049,6 +1188,7 @@ Program Instance Applicative__option : Applicative option := fun _ k =>
     k {|op_zlztzg____ := fun {a} {b} => Applicative__option_op_zlztzg__ ;
       op_ztzg____ := fun {a} {b} => Applicative__option_op_ztzg__ ;
       pure__ := fun {a} => Applicative__option_pure |}.
+Admit Obligations.
 
 Local Definition Monad__option_op_zgzg__ : forall {a} {b},
                                              option a -> option b -> option b :=
@@ -1061,6 +1201,7 @@ Program Instance Monad__option : Monad option := fun _ k =>
     k {|op_zgzg____ := fun {a} {b} => Monad__option_op_zgzg__ ;
       op_zgzgze____ := fun {a} {b} => Monad__option_op_zgzgze__ ;
       return___ := fun {a} => Monad__option_return_ |}.
+Admit Obligations.
 
 Local Definition Functor__pair_type_op_zlzd__ {inst_a} : forall {a} {b},
                                                            a -> (GHC.Tuple.pair_type inst_a) b -> (GHC.Tuple.pair_type
@@ -1071,6 +1212,7 @@ Program Instance Functor__pair_type {a} : Functor (GHC.Tuple.pair_type a) :=
   fun _ k =>
     k {|fmap__ := fun {a} {b} => Functor__pair_type_fmap ;
       op_zlzd____ := fun {a} {b} => Functor__pair_type_op_zlzd__ |}.
+Admit Obligations.
 
 Local Definition Applicative__pair_type_op_ztzg__ {inst_a} `{Monoid inst_a}
     : forall {a} {b},
@@ -1083,6 +1225,7 @@ Program Instance Applicative__pair_type {a} `{Monoid a} : Applicative
     k {|op_zlztzg____ := fun {a} {b} => Applicative__pair_type_op_zlztzg__ ;
       op_ztzg____ := fun {a} {b} => Applicative__pair_type_op_ztzg__ ;
       pure__ := fun {a} => Applicative__pair_type_pure |}.
+Admit Obligations.
 
 Local Definition Monad__pair_type_return_ {inst_a} `{Monoid inst_a}
     : forall {a}, a -> (GHC.Tuple.pair_type inst_a) a :=
@@ -1111,6 +1254,7 @@ Program Instance Monad__pair_type {a} `{Monoid a} : Monad (GHC.Tuple.pair_type
     k {|op_zgzg____ := fun {a} {b} => Monad__pair_type_op_zgzg__ ;
       op_zgzgze____ := fun {a} {b} => Monad__pair_type_op_zgzgze__ ;
       return___ := fun {a} => Monad__pair_type_return_ |}.
+Admit Obligations.
 
 Local Definition Functor__arrow_fmap {inst_r} : forall {a} {b},
                                                   (a -> b) -> (GHC.Prim.arrow inst_r) a -> (GHC.Prim.arrow inst_r) b :=
@@ -1123,6 +1267,7 @@ Local Definition Functor__arrow_op_zlzd__ {inst_r} : forall {a} {b},
 Program Instance Functor__arrow {r} : Functor (GHC.Prim.arrow r) := fun _ k =>
     k {|fmap__ := fun {a} {b} => Functor__arrow_fmap ;
       op_zlzd____ := fun {a} {b} => Functor__arrow_op_zlzd__ |}.
+Admit Obligations.
 
 Local Definition Applicative__arrow_op_ztzg__ {inst_a} : forall {a} {b},
                                                            (GHC.Prim.arrow inst_a) a -> (GHC.Prim.arrow inst_a)
@@ -1134,6 +1279,7 @@ Program Instance Applicative__arrow {a} : Applicative (GHC.Prim.arrow a) :=
     k {|op_zlztzg____ := fun {a} {b} => Applicative__arrow_op_zlztzg__ ;
       op_ztzg____ := fun {a} {b} => Applicative__arrow_op_ztzg__ ;
       pure__ := fun {a} => Applicative__arrow_pure |}.
+Admit Obligations.
 
 Local Definition Monad__arrow_return_ {inst_r} : forall {a},
                                                    a -> (GHC.Prim.arrow inst_r) a :=
@@ -1143,6 +1289,7 @@ Program Instance Monad__arrow {r} : Monad (GHC.Prim.arrow r) := fun _ k =>
     k {|op_zgzg____ := fun {a} {b} => Monad__arrow_op_zgzg__ ;
       op_zgzgze____ := fun {a} {b} => Monad__arrow_op_zgzgze__ ;
       return___ := fun {a} => Monad__arrow_return_ |}.
+Admit Obligations.
 
 Definition op_zd__ {a} {b} : (a -> b) -> a -> b :=
   fun f x => f x.
@@ -1207,7 +1354,7 @@ End Notations.
 
 (* Unbound variables:
      Eq Eq_ Gt Lt None Ord Some String Type andb bool compare comparison cons false
-     list negb nil op_zeze__ op_zg__ op_zgze__ op_zl__ op_zlze__ option pair true tt
-     unit Coq.Init.Datatypes.app Coq.Lists.List.flat_map Coq.Lists.List.map
+     list negb nil op_zeze__ op_zg__ op_zgze__ op_zl__ op_zlze__ op_zt__ option pair
+     true tt unit Coq.Init.Datatypes.app Coq.Lists.List.flat_map Coq.Lists.List.map
      GHC.Prim.arrow GHC.Tuple.pair_type
 *)

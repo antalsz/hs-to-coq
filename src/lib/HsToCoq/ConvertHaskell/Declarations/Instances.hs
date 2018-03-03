@@ -57,38 +57,64 @@ import HsToCoq.ConvertHaskell.Declarations.Class
 
 --------------------------------------------------------------------------------
 
--- Take the instance head and make it into a valid identifier by replacing
--- non-alphanumerics with underscores.  Then, prepend "instance_".
+-- Take the instance head and make it into a valid identifier.
 convertInstanceName :: ConversionMonad m => LHsType GHC.Name -> m Qualid
 convertInstanceName n = do
     coqType <- convertLType n
     qual <- maybe Bare (Qualified . moduleNameText) <$> use currentModule
-    qual <$> skip coqType
+    case skip coqType of
+        Left err -> convUnsupported $ "Cannot derive instance name from " ++ show coqType ++ ": " ++ err
+        Right name -> return $ qual name
   where
     -- Skip type vaiables and constraints
     skip (Forall _ t)  = skip t
     skip (Arrow _ t)   = skip t
     skip (InScope t _) = skip t
-    skip t             = split t
+    skip t             = bfToName <$> bfTerm t
 
-    -- Split class and args
-    split (App (Qualid cls) args) | Just argsText <- mapM describeArg args
-        = return $ T.intercalate "__" (qualidBase cls : NE.toList argsText)
-    split t = convUnsupported $ "Cannot derive instance name from " ++ show t
+    bfToName :: [Qualid] -> T.Text
+    bfToName qids | isVanilla = name
+                  | otherwise = name <> "__" <> T.pack (show shapeNum)
+      where
+        tyCons = [ bn | Just bn <- unTyCon <$> qids]
+        name = T.intercalate "__" tyCons
+        shapeNum = bitsToInt $ map isTyCon qids
 
-    describeArg :: Arg -> Maybe T.Text
-    describeArg (PosArg t) = describeTerm t
-    describeArg _          = Nothing
+        -- A vanilla header is when all tyCons appear before all
+        -- type variables. In this case, do not add the shapeNum
+        isVanilla = not $ any isTyCon $ dropWhile isTyCon $ qids
 
-    describeTerm :: Term -> Maybe T.Text
-    describeTerm (Parens t)      = describeTerm t
-    describeTerm (InScope t _)   = describeTerm t
-    describeTerm (App t _)       = describeTerm t
-    describeTerm (Infix _ qid _) = Just $ qualidBase qid
-    describeTerm (Qualid qid)    = Just $ qualidBase qid
-    describeTerm (Arrow _ _ )    = Just "arrow"
-    describeTerm _               = Nothing
+        isTyCon = isJust . unTyCon
 
+        unTyCon :: Qualid -> Maybe T.Text
+        unTyCon (Qualified _ base)  = Just base
+        unTyCon (Bare "bool")       = Just "bool"
+        unTyCon (Bare "comparison") = Just "comparison"
+        unTyCon (Bare "list")       = Just "list"
+        unTyCon (Bare "option")     = Just "option"
+        unTyCon (Bare "op_zt__")    = Just "op_zt__"
+        unTyCon (Bare "unit")       = Just "unit"
+        unTyCon _                   = Nothing
+
+        bitsToInt :: [Bool] -> Integer
+        bitsToInt []         = 0
+        bitsToInt (True:xs)  = 2*bitsToInt xs + 1
+        bitsToInt (False:xs) = 2*bitsToInt xs
+
+    -- Breadth-first traversal listing all variables and type constructors
+    bfTerm :: Monad m => Term -> m [Qualid]
+    bfTerm = fmap concat . go
+      where
+        go :: Monad m => Term -> m [[Qualid]]
+        go t = do
+            (f, args) <- collectArgs t
+            subtrees <- mapM go args
+            return $ [f] : foldr merge [] subtrees
+
+    merge :: [[a]] -> [[a]] -> [[a]]
+    merge xs     []     = xs
+    merge []     ys     = ys
+    merge (x:xs) (y:ys) = (x ++ y) : merge xs ys
 
 -- Looks up what GHC knows about this class (given by an instance head)
 findHsClass :: ConversionMonad m => LHsSigType GHC.Name -> m Class
@@ -413,7 +439,7 @@ topoSortInstance (InstanceDefinition instanceName params ty members mp) = go sor
             let instTerm = Fun (Inferred Explicit UnderscoreName NE.:| [Inferred Explicit (Ident "k")])
                                (App1 (Var "k") body)
 
-            pure [ProgramInstanceSentence (InstanceTerm instanceName params ty instTerm mp)]
+            pure [ProgramSentence (InstanceSentence (InstanceTerm instanceName params ty instTerm mp)) Nothing]
 
 --------------------------------------------------------------------------------
 

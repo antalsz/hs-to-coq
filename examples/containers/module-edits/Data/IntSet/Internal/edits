@@ -1,6 +1,10 @@
 # not a TODO
 skip module Data.Data
 
+# Moved to another module
+rename value Data.IntSet.Internal.lowestBitMask = Utils.Containers.Internal.BitUtil.lowestBitMask
+skip Utils.Containers.Internal.BitUtil.lowestBitMask
+
 # These are TODOs:
 
 # mutual recursion
@@ -8,16 +12,14 @@ skip Data.IntSet.Internal.fromDistinctAscList
 skip Data.IntSet.Internal.fromAscList
 
 # local termination via the bit mask
-nonterminating Data.IntSet.Internal.foldlBits
-nonterminating Data.IntSet.Internal.foldl'Bits
-nonterminating Data.IntSet.Internal.foldrBits
-nonterminating Data.IntSet.Internal.foldr'Bits
-
-# Need to be implemented
-rename value Utils.Containers.Internal.BitUtil.shiftLL = Data.IntSet.Internal.shiftLL
-rename value Utils.Containers.Internal.BitUtil.shiftRL = Data.IntSet.Internal.shiftRL
-rename value Utils.Containers.Internal.BitUtil.highestBitMask = Data.IntSet.Internal.highestBitMask
-rename value Utils.Containers.Internal.BitUtil.bitcount = Data.IntSet.Internal.bitCount_N
+termination go in Data.IntSet.Internal.foldlBits {measure (Coq.NArith.BinNat.N.to_nat arg_0__)}
+obligations Data.IntSet.Internal.foldlBits BitTerminationProofs.termination_foldl
+termination go in Data.IntSet.Internal.foldl'Bits {measure (Coq.NArith.BinNat.N.to_nat arg_0__)}
+obligations Data.IntSet.Internal.foldl'Bits BitTerminationProofs.termination_foldl
+termination go in Data.IntSet.Internal.foldrBits {measure (Coq.NArith.BinNat.N.to_nat arg_0__)}
+obligations Data.IntSet.Internal.foldrBits BitTerminationProofs.termination_foldl
+termination go in Data.IntSet.Internal.foldr'Bits {measure (Coq.NArith.BinNat.N.to_nat arg_0__)}
+obligations Data.IntSet.Internal.foldr'Bits BitTerminationProofs.termination_foldl
 
 # partial
 skip Data.IntSet.Internal.findMax
@@ -53,9 +55,6 @@ redefine Definition Data.IntSet.Internal.branchMask : Prefix -> (Prefix -> Mask)
 redefine Definition Data.IntSet.Internal.indexOfTheOnlyBit :=
  fun x => Coq.ZArith.BinInt.Z.of_N (Coq.NArith.BinNat.N.log2 x).
 
-redefine Definition Data.IntSet.Internal.lowestBitMask : Nat -> Nat :=
-  fun n => Data.IntSet.Internal.revNatSafe (Data.IntSet.Internal.highestBitMask (Data.IntSet.Internal.revNatSafe n)).
-
 # the revNat function is only correct if its result is cropped to 64 bits.
 add Data.IntSet.Internal Definition Data.IntSet.Internal.revNatSafe n := Coq.NArith.BinNat.N.modulo (Data.IntSet.Internal.revNat n) (Coq.NArith.BinNat.N.pow 2 64).
 # Use rewrite, not rename, to not change the name of the actual definition
@@ -68,10 +67,14 @@ rewrite forall, Data.IntSet.Internal.revNat = Data.IntSet.Internal.revNatSafe
 skip Data.IntSet.Internal.suffixBitMask
 
 # These are typical that they recurse left or right
-termination Data.IntSet.Internal.union        {measure ((size_nat arg_0__) + (size_nat arg_1__))} termination_by_omega
-termination Data.IntSet.Internal.difference   {measure ((size_nat arg_0__) + (size_nat arg_1__))} termination_by_omega
-termination Data.IntSet.Internal.intersection {measure ((size_nat arg_0__) + (size_nat arg_1__))} termination_by_omega
-termination Data.IntSet.Internal.disjoint     {measure ((size_nat arg_0__) + (size_nat arg_1__))} termination_by_omega
+termination Data.IntSet.Internal.union        {measure ((size_nat arg_0__) + (size_nat arg_1__))}
+obligations Data.IntSet.Internal.union        termination_by_omega
+termination Data.IntSet.Internal.difference   {measure ((size_nat arg_0__) + (size_nat arg_1__))}
+obligations Data.IntSet.Internal.difference   termination_by_omega
+termination Data.IntSet.Internal.intersection {measure ((size_nat arg_0__) + (size_nat arg_1__))}
+obligations Data.IntSet.Internal.intersection termination_by_omega
+termination Data.IntSet.Internal.disjoint     {measure ((size_nat arg_0__) + (size_nat arg_1__))}
+obligations Data.IntSet.Internal.disjoint     termination_by_omega
 
 # Show stuff
 skip Data.IntSet.Internal.showsBars
@@ -91,9 +94,9 @@ skip Data.IntSet.Internal.fromListConstr
 skip Data.IntSet.Internal.intSetDataType
 skip Data.IntSet.Internal.Monoid__IntSet
 
-
 # We need Integral N to use GHC.Real.fromIntegral to go from N to Z
 rename value Data.IntSet.Internal.intFromNat = Coq.ZArith.BinInt.Z.of_N
+
 skip Coq.ZArith.BinInt.Z.of_N
 
 skip module Coq.ZArith.BinInt.Z

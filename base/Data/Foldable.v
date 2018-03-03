@@ -116,25 +116,24 @@ Definition default_elem {t : Type -> Type} {a} `{GHC.Base.Eq_ a} (foldMap : (a -
   a -> t a -> bool :=
    fun x xs => getAny (foldMap (fun y => Mk_Any (GHC.Base.op_zeze__ x y)) xs).
 
-
 Definition default_foldable {f:Type -> Type}
-  (foldMap : forall {m} {a}, forall `{GHC.Base.Monoid m}, (a -> m) -> f a -> m)
-  (foldr : forall {a} {b}, (a -> b -> b) -> b -> f a -> b):=
-  let foldl : forall {b} {a}, (b -> a -> b) -> b -> f a -> b :=
-      (fun {b} {a} =>
+  (foldMap : forall m a, forall (M : GHC.Base.Monoid m), (a -> m) -> f a -> m)
+  (foldr : forall a b, (a -> b -> b) -> b -> f a -> b):=
+  let foldl : forall b a, (b -> a -> b) -> b -> f a -> b :=
+      (fun b a =>
          fun f  z t => Data.Monoid.appEndo
                     (Data.Monoid.getDual
-                       (foldMap (Coq.Program.Basics.compose
+                       (foldMap _ _ _ (Coq.Program.Basics.compose
                                    Data.Monoid.Mk_Dual
                                    (Coq.Program.Basics.compose
                                       Data.Monoid.Mk_Endo
                                       (GHC.Base.flip f))) t)) z)
   in
-  let foldl' : forall {b} {a}, (b -> a -> b) -> b -> f a -> b :=
+  let foldl' : forall b a, (b -> a -> b) -> b -> f a -> b :=
       (fun {b} {a} =>
          fun f  z0  xs =>
            let f' :=  fun  x  k  z => GHC.Base.op_zdzn__ k (f z x)
-           in foldr f' GHC.Base.id xs z0)
+           in foldr _ _ f' GHC.Base.id xs z0)
   in
   Foldable__Dict_Build
     f
@@ -142,54 +141,54 @@ Definition default_foldable {f:Type -> Type}
        Coq.Program.Basics.compose
          (fun p => Coq.Program.Basics.compose
                   Data.Monoid.getAny
-                  (foldMap (fun x => Data.Monoid.Mk_Any (p x))))
+                  (foldMap _ _ _ (fun x => Data.Monoid.Mk_Any (p x))))
          GHC.Base.op_zeze__ )
     (* fold *)
-    (fun {m} `{GHC.Base.Monoid m} => foldMap GHC.Base.id)
+    (fun m (M : GHC.Base.Monoid m) => foldMap _ _ _ GHC.Base.id)
     (* foldMap *)
-    (fun {m}{a} `{GHC.Base.Monoid m} => foldMap)
+    (@foldMap)
     (* foldl *)
-    foldl
+    (@foldl)
     (* foldl' *)
-    foldl'
+    (@foldl')
     (* foldr  *)
-    (fun {a}{b} => foldr)
+    (@foldr)
     (* foldr' *)
-    (fun {a} {b} f z0 xs =>
+    (fun a b f z0 xs =>
        let f' := fun k  x  z => GHC.Base.op_zdzn__ k (f x z)
        in
-       foldl _ _ f' GHC.Base.id xs z0)
+       @foldl _ _ f' GHC.Base.id xs z0)
     (* length *)
-    (fun {a} => foldl' _ _ (fun c  _ => GHC.Num.op_zp__ c (GHC.Num.fromInteger 1))
+    (fun a => @foldl' _ a (fun c  _ => GHC.Num.op_zp__ c (GHC.Num.fromInteger 1))
                     (GHC.Num.fromInteger 0))
     (* null *)
-    (fun {a} => foldr (fun arg_61__ arg_62__ => false) true)
+    (fun a => @foldr _ _ (fun arg_61__ arg_62__ => false) true)
     (* product *)
-    (fun {a} `{GHC.Num.Num a} =>
+    (fun a `{GHC.Num.Num a} =>
        Coq.Program.Basics.compose Data.Monoid.getProduct
-                                  (foldMap Data.Monoid.Mk_Product))
+                                  (foldMap _ _ _ Data.Monoid.Mk_Product))
     (* sum *)
-    (fun  {a} `{GHC.Num.Num a} =>
+    (fun a `{GHC.Num.Num a} =>
        Coq.Program.Basics.compose Data.Monoid.getSum
-                                  (foldMap Data.Monoid.Mk_Sum))
+                                  (foldMap _ _ _ Data.Monoid.Mk_Sum))
     (* toList *)
-    (fun {a} => fun t => GHC.Base.build (fun c n => foldr c n t)).
+    (fun a => fun t => GHC.Base.build (fun c n => @foldr _ _ c n t)).
 
 Definition default_foldable_foldMap {f : Type -> Type}
   (foldMap : forall {m} {a}, forall `{GHC.Base.Monoid m}, (a -> m) -> f a -> m)
  :=
   let foldr : forall {a} {b}, (a -> b -> b) -> b -> f a -> b :=
-  fun {a} {b} f z t =>
+  fun a b f z t =>
     Data.Monoid.appEndo
       (foldMap
          (Coq.Program.Basics.compose Data.Monoid.Mk_Endo f) t) z
   in
-  default_foldable (fun {m}{a}`{GHC.Base.Monoid m} => foldMap) foldr.
+  default_foldable (fun {m}{a} `{GHC.Base.Monoid m} => foldMap) foldr.
 
 Definition default_foldable_foldr (f : Type -> Type)
   (foldr : forall {a} {b}, (a -> b -> b) -> b -> f a -> b) :=
   let foldMap :  forall {m} {a} `{GHC.Base.Monoid m}, (a -> m) -> f a -> m :=
-  fun {m} {a} `{GHC.Base.Monoid m} =>
+  fun m a (H : GHC.Base.Monoid m) =>
     fun f => foldr
             (Coq.Program.Basics.compose GHC.Base.mappend
                                         f) GHC.Base.mempty
@@ -319,6 +318,7 @@ Program Instance Foldable__list : Foldable list := fun _ k =>
       product__ := fun {a} `{GHC.Num.Num a} => Foldable__list_product ;
       sum__ := fun {a} `{GHC.Num.Num a} => Foldable__list_sum ;
       toList__ := fun {a} => Foldable__list_toList |}.
+Admit Obligations.
 
 Local Definition Foldable__Either_foldMap {inst_a} : forall {m} {a},
                                                        forall `{GHC.Base.Monoid m},
@@ -522,6 +522,7 @@ Program Instance Foldable__Proxy : Foldable Data.Proxy.Proxy := fun _ k =>
       product__ := fun {a} `{GHC.Num.Num a} => Foldable__Proxy_product ;
       sum__ := fun {a} `{GHC.Num.Num a} => Foldable__Proxy_sum ;
       toList__ := fun {a} => Foldable__Proxy_toList |}.
+Admit Obligations.
 
 Local Definition Foldable__Dual_foldMap : forall {m} {a},
                                             forall `{GHC.Base.Monoid m}, (a -> m) -> Data.Monoid.Dual a -> m :=
@@ -696,6 +697,7 @@ Program Instance Monoid__Max {a} `{GHC.Base.Ord a} : GHC.Base.Monoid (Max a) :=
     k {|GHC.Base.mappend__ := Monoid__Max_mappend ;
       GHC.Base.mconcat__ := Monoid__Max_mconcat ;
       GHC.Base.mempty__ := Monoid__Max_mempty |}.
+Admit Obligations.
 
 Local Definition Monoid__Min_mappend {inst_a} `{GHC.Base.Ord inst_a} : (Min
                                                                        inst_a) -> (Min inst_a) -> (Min inst_a) :=
@@ -721,6 +723,7 @@ Program Instance Monoid__Min {a} `{GHC.Base.Ord a} : GHC.Base.Monoid (Min a) :=
     k {|GHC.Base.mappend__ := Monoid__Min_mappend ;
       GHC.Base.mconcat__ := Monoid__Min_mconcat ;
       GHC.Base.mempty__ := Monoid__Min_mempty |}.
+Admit Obligations.
 
 (* Skipping instance Foldable__U1 *)
 
@@ -740,17 +743,17 @@ Program Instance Monoid__Min {a} `{GHC.Base.Ord a} : GHC.Base.Monoid (Min a) :=
 
 (* Skipping instance Foldable__op_ZCziZC__ *)
 
-(* Skipping instance Foldable__URec *)
+(* Skipping instance Foldable__URec__Ptr__unit *)
 
-(* Skipping instance Foldable__URec *)
+(* Skipping instance Foldable__URec__Char *)
 
-(* Skipping instance Foldable__URec *)
+(* Skipping instance Foldable__URec__Double *)
 
-(* Skipping instance Foldable__URec *)
+(* Skipping instance Foldable__URec__Float *)
 
-(* Skipping instance Foldable__URec *)
+(* Skipping instance Foldable__URec__Int *)
 
-(* Skipping instance Foldable__URec *)
+(* Skipping instance Foldable__URec__Word *)
 
 Definition asum {t} {f} {a} `{Foldable t} `{GHC.Base.Alternative f} : t (f
                                                                         a) -> f a :=
@@ -815,6 +818,7 @@ Program Instance Foldable__Product : Foldable Data.Monoid.Product := fun _ k =>
       product__ := fun {a} `{GHC.Num.Num a} => Foldable__Product_product ;
       sum__ := fun {a} `{GHC.Num.Num a} => Foldable__Product_sum ;
       toList__ := fun {a} => Foldable__Product_toList |}.
+Admit Obligations.
 
 Local Definition Foldable__Sum_elem : forall {a},
                                         forall `{GHC.Base.Eq_ a}, a -> Data.Monoid.Sum a -> bool :=
@@ -834,6 +838,7 @@ Program Instance Foldable__Sum : Foldable Data.Monoid.Sum := fun _ k =>
       product__ := fun {a} `{GHC.Num.Num a} => Foldable__Sum_product ;
       sum__ := fun {a} `{GHC.Num.Num a} => Foldable__Sum_sum ;
       toList__ := fun {a} => Foldable__Sum_toList |}.
+Admit Obligations.
 
 Local Definition Foldable__Dual_elem : forall {a},
                                          forall `{GHC.Base.Eq_ a}, a -> Data.Monoid.Dual a -> bool :=
@@ -853,6 +858,7 @@ Program Instance Foldable__Dual : Foldable Data.Monoid.Dual := fun _ k =>
       product__ := fun {a} `{GHC.Num.Num a} => Foldable__Dual_product ;
       sum__ := fun {a} `{GHC.Num.Num a} => Foldable__Dual_sum ;
       toList__ := fun {a} => Foldable__Dual_toList |}.
+Admit Obligations.
 
 Local Definition Foldable__pair_type_product {inst_a} : forall {a},
                                                           forall `{GHC.Num.Num a},
@@ -879,6 +885,7 @@ Program Instance Foldable__pair_type {a} : Foldable (GHC.Tuple.pair_type a) :=
       product__ := fun {a} `{GHC.Num.Num a} => Foldable__pair_type_product ;
       sum__ := fun {a} `{GHC.Num.Num a} => Foldable__pair_type_sum ;
       toList__ := fun {a} => Foldable__pair_type_toList |}.
+Admit Obligations.
 
 Local Definition Foldable__Either_product {inst_a} : forall {a},
                                                        forall `{GHC.Num.Num a}, (Data.Either.Either inst_a) a -> a :=
@@ -904,6 +911,7 @@ Program Instance Foldable__Either {a} : Foldable (Data.Either.Either a) := fun _
       product__ := fun {a} `{GHC.Num.Num a} => Foldable__Either_product ;
       sum__ := fun {a} `{GHC.Num.Num a} => Foldable__Either_sum ;
       toList__ := fun {a} => Foldable__Either_toList |}.
+Admit Obligations.
 
 Local Definition Foldable__option_product : forall {a},
                                               forall `{GHC.Num.Num a}, option a -> a :=
@@ -928,6 +936,7 @@ Program Instance Foldable__option : Foldable option := fun _ k =>
       product__ := fun {a} `{GHC.Num.Num a} => Foldable__option_product ;
       sum__ := fun {a} `{GHC.Num.Num a} => Foldable__option_sum ;
       toList__ := fun {a} => Foldable__option_toList |}.
+Admit Obligations.
 
 Definition mapM_ {t} {m} {a} {b} `{Foldable t} `{GHC.Base.Monad m} : (a -> m
                                                                      b) -> t a -> m unit :=

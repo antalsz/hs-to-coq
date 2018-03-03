@@ -8,7 +8,7 @@ Antal Spector-Zabusky, Joachim Breitner, Christine Rizkallah, and Stephanie Weir
 
 # Requirements
 
-`hs-to-coq` uses GHC-8.0, Coq 8.6 and ssreflect.
+`hs-to-coq` uses GHC-8.0, Coq 8.7.1 and ssreflect.
 
 # Compilation
 
@@ -27,13 +27,13 @@ This repository comes with a version of (parts of the) Haskell base library
 converted to Coq, which you will likely need if you want to verify Haskell
 code.
 
-You must have Coq 8.6 and ssreflect to build the base library. To install
+You must have Coq 8.7.1 and ssreflect to build the base library. To install
 these tools:
 
   1. `opam repo add coq-released https://coq.inria.fr/opam/released` (for
      SSReflect and MathComp)
   2. `opam update`
-  3. `opam install coq.8.6 coq-mathcomp-ssreflect.1.6.1`
+  3. `opam install coq.8.7.1 coq-mathcomp-ssreflect.1.6.4`
 
 Once installed, you can build the base library with
 
@@ -56,6 +56,59 @@ sure you pass `-e base/edits`.
 
 Have a look at the example directories, e.g. `examples/successors`, for a
 convenient `Makefile` based setup.
+
+## Edits
+
+`edits` file contains directives to `hs-to-coq` for ignoring or
+transforming some Haskell constructs into proper Coq.
+
+The following directives are available:
+
+```
+skip module <qualified module name>
+```
+
+Ignores the given module
+
+```
+skip method <typeclass> <method name>
+```
+
+Ignores given method in given typeclass, e.g. don't try to generate
+Coq code from it.
+
+```
+rename type <qualified type name> = <qualified type name>
+```
+
+Renames given type. Coq does not support declaring operator-like data
+types.
+
+```
+remame value <qualified constructor> = <qualified name>
+```
+
+Renames given constructor.
+
+### Common Uses
+
+It is common in Haskell to have the following code:
+
+```
+module Foo where
+...
+newtype SomeType = SomeType { someFiled :: Integer }
+```
+
+Coq has a single namespace for types and values hence the type name
+will conflict with constructor name. One can pass `-e edit` file
+containing custom directives to ensure correctness of generated code
+with the following directive:
+
+```
+remame value Foo.SomeType = Foo.MkSomeType
+```
+
 
 # Other directories
 

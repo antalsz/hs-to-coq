@@ -2,7 +2,7 @@ module HsToCoq.Util.List (
   -- * Lists
   uncons, assertUncons, unsnoc, assertUnsnoc,
   -- * Nonempty lists
-  unconsNEL, unsnocNEL, (|:)
+  unconsNEL, unsnocNEL, (|:), (|>)
 ) where
 
 import Data.Bifunctor
@@ -23,6 +23,10 @@ assertUncons = fromMaybe (error "assertUncons: empty list") . uncons
 []     |: y = y :| []
 (x:xs) |: y = x <| (xs |: y)
 infixl 5 |:
+
+(|>) :: NonEmpty a -> a -> NonEmpty a
+(x :| xs) |> y = x :| (xs ++ [y])
+infixr 5 |>
 
 unsnocNEL :: NonEmpty a -> ([a],a)
 unsnocNEL (x :| xs) = go x xs where

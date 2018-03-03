@@ -30,6 +30,7 @@ import Data.Foldable
 
 import HsToCoq.Coq.Subst
 import HsToCoq.Coq.Gallina
+import HsToCoq.Coq.Gallina.Util
 
 data Rewrite = Rewrite
     { patternVars :: [Ident]
@@ -56,7 +57,7 @@ rewrite1 (Rewrite patVars lhs rhs) term
 -- | Normalizes the outermost constructor
 -- (Maybe we should drop InFix completely)
 norm :: Term -> Term
-norm (Infix a1 f a2) = App (Qualid f) [PosArg a1, PosArg a2]
+norm t | Just (f, args) <- collectArgs t = appList (Qualid f) (map PosArg args)
 norm t = t
 
 match :: [Ident] -> Term -> Term -> Maybe (M.Map Qualid Term)

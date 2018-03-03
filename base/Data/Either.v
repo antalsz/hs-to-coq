@@ -44,6 +44,7 @@ Local Definition Functor__Either_op_zlzd__ {inst_a} : forall {a} {b},
 Program Instance Functor__Either {a} : GHC.Base.Functor (Either a) := fun _ k =>
     k {|GHC.Base.op_zlzd____ := fun {a} {b} => Functor__Either_op_zlzd__ ;
       GHC.Base.fmap__ := fun {a} {b} => Functor__Either_fmap |}.
+Admit Obligations.
 
 Local Definition Applicative__Either_op_zlztzg__ {inst_e} : forall {a} {b},
                                                               (Either inst_e) (a -> b) -> (Either inst_e) a -> (Either
@@ -72,6 +73,7 @@ Program Instance Applicative__Either {e} : GHC.Base.Applicative (Either e) :=
     k {|GHC.Base.op_ztzg____ := fun {a} {b} => Applicative__Either_op_ztzg__ ;
       GHC.Base.op_zlztzg____ := fun {a} {b} => Applicative__Either_op_zlztzg__ ;
       GHC.Base.pure__ := fun {a} => Applicative__Either_pure |}.
+Admit Obligations.
 
 Local Definition Monad__Either_op_zgzg__ {inst_e} : forall {a} {b},
                                                       (Either inst_e) a -> (Either inst_e) b -> (Either inst_e) b :=
@@ -95,6 +97,7 @@ Program Instance Monad__Either {e} : GHC.Base.Monad (Either e) := fun _ k =>
     k {|GHC.Base.op_zgzg____ := fun {a} {b} => Monad__Either_op_zgzg__ ;
       GHC.Base.op_zgzgze____ := fun {a} {b} => Monad__Either_op_zgzgze__ ;
       GHC.Base.return___ := fun {a} => Monad__Either_return_ |}.
+Admit Obligations.
 
 (* Translating `instance forall {a} {b}, forall `{GHC.Show.Show b}
    `{GHC.Show.Show a}, GHC.Show.Show (Data.Either.Either a b)' failed: OOPS! Cannot
@@ -208,6 +211,7 @@ Program Instance Eq___Either {a} {b} `{GHC.Base.Eq_ b} `{GHC.Base.Eq_ a}
   : GHC.Base.Eq_ (Either a b) := fun _ k =>
     k {|GHC.Base.op_zeze____ := Eq___Either_op_zeze__ ;
       GHC.Base.op_zsze____ := Eq___Either_op_zsze__ |}.
+Admit Obligations.
 
 Program Instance Ord__Either {a} {b} `{GHC.Base.Ord b} `{GHC.Base.Ord a}
   : GHC.Base.Ord (Either a b) := fun _ k =>
@@ -218,6 +222,7 @@ Program Instance Ord__Either {a} {b} `{GHC.Base.Ord b} `{GHC.Base.Ord a}
       GHC.Base.compare__ := Ord__Either_compare ;
       GHC.Base.max__ := Ord__Either_max ;
       GHC.Base.min__ := Ord__Either_min |}.
+Admit Obligations.
 
 Definition either {a} {c} {b} : (a -> c) -> (b -> c) -> Either a b -> c :=
   fun arg_0__ arg_1__ arg_2__ =>

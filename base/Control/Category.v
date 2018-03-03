@@ -52,6 +52,7 @@ Local Definition Category__arrow_op_z2218U__ : forall {b} {c} {a},
 Program Instance Category__arrow : Category GHC.Prim.arrow := fun _ k =>
     k {|id__ := fun {a} => Category__arrow_id ;
       op_z2218U____ := fun {b} {c} {a} => Category__arrow_op_z2218U__ |}.
+Admit Obligations.
 
 (* Skipping instance Category__op_ZCz7eUZC__ *)
 

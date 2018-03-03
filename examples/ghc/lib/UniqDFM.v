@@ -53,6 +53,7 @@ Program Instance Eq___TaggedVal {val} `{GHC.Base.Eq_ val} : GHC.Base.Eq_
                                                             (TaggedVal val) := fun _ k =>
     k {|GHC.Base.op_zeze____ := Eq___TaggedVal_op_zeze__ ;
       GHC.Base.op_zsze____ := Eq___TaggedVal_op_zsze__ |}.
+Admit Obligations.
 
 Local Definition Functor__TaggedVal_fmap : forall {a} {b},
                                              (a -> b) -> TaggedVal a -> TaggedVal b :=
@@ -69,6 +70,7 @@ Local Definition Functor__TaggedVal_op_zlzd__ : forall {a} {b},
 Program Instance Functor__TaggedVal : GHC.Base.Functor TaggedVal := fun _ k =>
     k {|GHC.Base.op_zlzd____ := fun {a} {b} => Functor__TaggedVal_op_zlzd__ ;
       GHC.Base.fmap__ := fun {a} {b} => Functor__TaggedVal_fmap |}.
+Admit Obligations.
 
 (* Translating `instance forall {a}, forall `{Outputable.Outputable a},
    Outputable.Outputable (UniqDFM.UniqDFM a)' failed: OOPS! Cannot find information
@@ -380,6 +382,7 @@ Program Instance Monoid__UniqDFM {a} : GHC.Base.Monoid (UniqDFM a) := fun _ k =>
     k {|GHC.Base.mappend__ := Monoid__UniqDFM_mappend ;
       GHC.Base.mconcat__ := Monoid__UniqDFM_mconcat ;
       GHC.Base.mempty__ := Monoid__UniqDFM_mempty |}.
+Admit Obligations.
 
 Definition eltsUDFM {elt} : UniqDFM elt -> list elt :=
   fun arg_0__ =>

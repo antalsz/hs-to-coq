@@ -55,6 +55,7 @@ Local Definition Functor__Pair_op_zlzd__ : forall {a} {b},
 Program Instance Functor__Pair : GHC.Base.Functor Pair := fun _ k =>
     k {|GHC.Base.op_zlzd____ := fun {a} {b} => Functor__Pair_op_zlzd__ ;
       GHC.Base.fmap__ := fun {a} {b} => Functor__Pair_fmap |}.
+Admit Obligations.
 
 Local Definition Applicative__Pair_op_zlztzg__ : forall {a} {b},
                                                    Pair (a -> b) -> Pair a -> Pair b :=
@@ -77,6 +78,7 @@ Program Instance Applicative__Pair : GHC.Base.Applicative Pair := fun _ k =>
     k {|GHC.Base.op_ztzg____ := fun {a} {b} => Applicative__Pair_op_ztzg__ ;
       GHC.Base.op_zlztzg____ := fun {a} {b} => Applicative__Pair_op_zlztzg__ ;
       GHC.Base.pure__ := fun {a} => Applicative__Pair_pure |}.
+Admit Obligations.
 
 Local Definition Foldable__Pair_foldMap : forall {m} {a},
                                             forall `{GHC.Base.Monoid m}, (a -> m) -> Pair a -> m :=
@@ -192,6 +194,7 @@ Program Instance Foldable__Pair : Data.Foldable.Foldable Pair := fun _ k =>
       Data.Foldable.product__ := fun {a} `{GHC.Num.Num a} => Foldable__Pair_product ;
       Data.Foldable.sum__ := fun {a} `{GHC.Num.Num a} => Foldable__Pair_sum ;
       Data.Foldable.toList__ := fun {a} => Foldable__Pair_toList |}.
+Admit Obligations.
 
 Local Definition Traversable__Pair_traverse : forall {f} {a} {b},
                                                 forall `{GHC.Base.Applicative f}, (a -> f b) -> Pair a -> f (Pair b) :=
@@ -223,6 +226,7 @@ Program Instance Traversable__Pair : Data.Traversable.Traversable Pair := fun _
         Traversable__Pair_sequenceA ;
       Data.Traversable.traverse__ := fun {f} {a} {b} `{GHC.Base.Applicative f} =>
         Traversable__Pair_traverse |}.
+Admit Obligations.
 
 Local Definition Monoid__Pair_mappend {inst_a} `{GHC.Base.Monoid inst_a} : (Pair
                                                                            inst_a) -> (Pair inst_a) -> (Pair inst_a) :=
@@ -245,6 +249,7 @@ Program Instance Monoid__Pair {a} `{GHC.Base.Monoid a} : GHC.Base.Monoid (Pair
     k {|GHC.Base.mappend__ := Monoid__Pair_mappend ;
       GHC.Base.mconcat__ := Monoid__Pair_mconcat ;
       GHC.Base.mempty__ := Monoid__Pair_mempty |}.
+Admit Obligations.
 
 (* Translating `instance forall {a}, forall `{Outputable.Outputable a},
    Outputable.Outputable (Pair.Pair a)' failed: OOPS! Cannot find information for

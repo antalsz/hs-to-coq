@@ -71,6 +71,7 @@ Local Definition Functor__UniqSM_op_zlzd__ : forall {a} {b},
 Program Instance Functor__UniqSM : GHC.Base.Functor UniqSM := fun _ k =>
     k {|GHC.Base.op_zlzd____ := fun {a} {b} => Functor__UniqSM_op_zlzd__ ;
       GHC.Base.fmap__ := fun {a} {b} => Functor__UniqSM_fmap |}.
+Admit Obligations.
 
 Local Definition Applicative__UniqSM_op_zlztzg__ : forall {a} {b},
                                                      UniqSM (a -> b) -> UniqSM a -> UniqSM b :=
@@ -213,6 +214,7 @@ Program Instance Applicative__UniqSM : GHC.Base.Applicative UniqSM := fun _ k =>
     k {|GHC.Base.op_ztzg____ := fun {a} {b} => Applicative__UniqSM_op_ztzg__ ;
       GHC.Base.op_zlztzg____ := fun {a} {b} => Applicative__UniqSM_op_zlztzg__ ;
       GHC.Base.pure__ := fun {a} => Applicative__UniqSM_pure |}.
+Admit Obligations.
 
 Local Definition Monad__UniqSM_return_ : forall {a}, a -> UniqSM a :=
   fun {a} => GHC.Base.pure.
@@ -225,6 +227,7 @@ Program Instance Monad__UniqSM : GHC.Base.Monad UniqSM := fun _ k =>
     k {|GHC.Base.op_zgzg____ := fun {a} {b} => Monad__UniqSM_op_zgzg__ ;
       GHC.Base.op_zgzgze____ := fun {a} {b} => Monad__UniqSM_op_zgzgze__ ;
       GHC.Base.return___ := fun {a} => Monad__UniqSM_return_ |}.
+Admit Obligations.
 
 Definition uniqFromSupply : UniqSupply -> Unique.Unique :=
   fun arg_0__ =>
@@ -253,6 +256,7 @@ Program Instance MonadUnique__UniqSM : MonadUnique UniqSM := fun _ k =>
     k {|getUniqueM__ := MonadUnique__UniqSM_getUniqueM ;
       getUniqueSupplyM__ := MonadUnique__UniqSM_getUniqueSupplyM ;
       getUniquesM__ := MonadUnique__UniqSM_getUniquesM |}.
+Admit Obligations.
 
 (* Unbound variables:
      cons list nil op_zt__ pair GHC.Base.Applicative GHC.Base.Functor GHC.Base.Monad

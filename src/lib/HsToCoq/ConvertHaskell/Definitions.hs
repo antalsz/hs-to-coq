@@ -8,12 +8,10 @@ module HsToCoq.ConvertHaskell.Definitions (
 
 import HsToCoq.Coq.Gallina
 
-import Data.List.NonEmpty (toList )
+import Data.List.NonEmpty (NonEmpty(..), (<|), toList)
 
-import Data.Text (Text)
 import Data.Bifunctor
 import HsToCoq.ConvertHaskell.Monad
-
 
 --------------------------------------------------------------------------------
 
@@ -36,7 +34,7 @@ withConvertedBinding _withDef  withPat (ConvertedPatternBinding    pat def) = wi
 
 toProgramFixpointSentence ::
     ConversionMonad m =>
-    ConvertedDefinition -> Order -> Maybe Text -> m Sentence
+    ConvertedDefinition -> Order -> Maybe Tactics -> m Sentence
 toProgramFixpointSentence (ConvertedDefinition{..}) order tac
     | Nothing <- convDefType
     = editFailure "cannot \"termination\" a definition without a type signature"
@@ -46,21 +44,27 @@ toProgramFixpointSentence (ConvertedDefinition{..}) order tac
          -> editFailure "internal name and external name disagree?"
          | otherwise
          -> do
-            (binders', ty') <- moveTyToArgs (toList binders) ty
-            pure $ ProgramFixpointSentence (ProgramFixpoint name (convDefArgs ++ binders') order ty' body) tac
+            (binders', ty') <- moveTyToArgs binders ty
+            pure $ ProgramSentence
+                (FixpointSentence (Fixpoint [FixBody name (foldr (<|) binders' convDefArgs) (Just order) (Just ty') body] []))
+                tac
     | otherwise
     = editFailure "cannot \"termination\" a definition that is not a recursive function"
   where
-    moveTyToArgs :: ConversionMonad m => [Binder] -> Term -> m ([Binder], Term)
+    moveTyToArgs :: ConversionMonad m => NonEmpty Binder -> Term -> m (NonEmpty Binder, Term)
         -- Base case
-    moveTyToArgs [] ty = pure ([], ty)
+    moveTyToArgs' [] ty = pure ([], ty)
+
+        -- Helper to get avoid [a] vs. NonEmpty confusion
+    moveTyToArgs' (x:xs) ty = first toList <$> moveTyToArgs (x :| xs) ty
+
         -- Good case
-    moveTyToArgs (Inferred exp n : binders) (Arrow at ty)
-        = first (Typed Ungeneralizable exp [n] at :) <$> moveTyToArgs binders ty
+    moveTyToArgs (Inferred exp n :| binders) (Arrow at ty)
+        = first (Typed Ungeneralizable exp [n] at :|) <$> moveTyToArgs' binders ty
         -- Error cases
-    moveTyToArgs (binder : _) (Arrow _ _)
+    moveTyToArgs (binder :| _) (Arrow _ _)
         = editFailure $ "cannot handle binder to fix of form " ++ show binder
-    moveTyToArgs (_ : _) ty
+    moveTyToArgs (_ :| _) ty
         = editFailure $ "cannot peel off argument type off " ++ show ty
 
 

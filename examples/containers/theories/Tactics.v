@@ -1,5 +1,11 @@
 From mathcomp Require Import ssrbool ssreflect.
 
+Ltac expand_pairs :=
+  match goal with
+    |- context[let (_,_) := ?e in _] =>
+    rewrite (surjective_pairing e)
+  end.
+
 Ltac destruct_match :=
   match goal with
   | [ H :context[match ?a with _ => _ end] |- _] =>

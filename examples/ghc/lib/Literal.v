@@ -159,17 +159,15 @@ Definition int2FloatLit : Literal -> Literal :=
 
 Definition int2WordLit : DynFlags.DynFlags -> Literal -> Literal :=
   fun arg_0__ arg_1__ =>
-    let j_3__ :=
-      match arg_0__ , arg_1__ with
-        | _ , l => Panic.panicStr (GHC.Base.hs_string__ "int2WordLit") (Panic.noString
-                                                                       l)
-      end in
     match arg_0__ , arg_1__ with
       | dflags , MachInt i => if i GHC.Base.< GHC.Num.fromInteger 0 : bool
                               then MachWord ((GHC.Num.fromInteger 1 GHC.Num.+ DynFlags.tARGET_MAX_WORD dflags)
                                             GHC.Num.+ i)
                               else MachWord i
-      | _ , _ => j_3__
+      | _ , _ => match arg_0__ , arg_1__ with
+                   | _ , l => Panic.panicStr (GHC.Base.hs_string__ "int2WordLit") (Panic.noString
+                                                                                  l)
+                 end
     end.
 
 Definition isZeroLit : Literal -> bool :=
@@ -301,6 +299,7 @@ Local Definition Eq___Literal_op_zsze__ : Literal -> Literal -> bool :=
 Program Instance Eq___Literal : GHC.Base.Eq_ Literal := fun _ k =>
     k {|GHC.Base.op_zeze____ := Eq___Literal_op_zeze__ ;
       GHC.Base.op_zsze____ := Eq___Literal_op_zsze__ |}.
+Admit Obligations.
 
 Program Instance Ord__Literal : GHC.Base.Ord Literal := fun _ k =>
     k {|GHC.Base.op_zl____ := Ord__Literal_op_zl__ ;
@@ -310,6 +309,7 @@ Program Instance Ord__Literal : GHC.Base.Ord Literal := fun _ k =>
       GHC.Base.compare__ := Ord__Literal_compare ;
       GHC.Base.max__ := Ord__Literal_max ;
       GHC.Base.min__ := Ord__Literal_min |}.
+Admit Obligations.
 
 Definition litValue : Literal -> GHC.Num.Integer :=
   fun arg_0__ =>
@@ -367,17 +367,15 @@ Definition nullAddrLit : Literal :=
 
 Definition word2IntLit : DynFlags.DynFlags -> Literal -> Literal :=
   fun arg_0__ arg_1__ =>
-    let j_3__ :=
-      match arg_0__ , arg_1__ with
-        | _ , l => Panic.panicStr (GHC.Base.hs_string__ "word2IntLit") (Panic.noString
-                                                                       l)
-      end in
     match arg_0__ , arg_1__ with
       | dflags , MachWord w => if w GHC.Base.> DynFlags.tARGET_MAX_INT dflags : bool
                                then MachInt ((w GHC.Num.- DynFlags.tARGET_MAX_WORD dflags) GHC.Num.-
                                             GHC.Num.fromInteger 1)
                                else MachInt w
-      | _ , _ => j_3__
+      | _ , _ => match arg_0__ , arg_1__ with
+                   | _ , l => Panic.panicStr (GHC.Base.hs_string__ "word2IntLit") (Panic.noString
+                                                                                  l)
+                 end
     end.
 
 (* Unbound variables:

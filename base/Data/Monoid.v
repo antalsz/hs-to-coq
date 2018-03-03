@@ -197,49 +197,40 @@ Arguments Mk_Dual {_} _.
 Arguments Mk_Alt {_} {_} _.
 
 Definition getSum {a} (arg_0__ : Sum a) :=
-  match arg_0__ with
-    | Mk_Sum getSum => getSum
-  end.
+  let 'Mk_Sum getSum := arg_0__ in
+  getSum.
 
 Definition getProduct {a} (arg_1__ : Product a) :=
-  match arg_1__ with
-    | Mk_Product getProduct => getProduct
-  end.
+  let 'Mk_Product getProduct := arg_1__ in
+  getProduct.
 
 Definition getLast {a} (arg_2__ : Last a) :=
-  match arg_2__ with
-    | Mk_Last getLast => getLast
-  end.
+  let 'Mk_Last getLast := arg_2__ in
+  getLast.
 
 Definition getFirst {a} (arg_3__ : First a) :=
-  match arg_3__ with
-    | Mk_First getFirst => getFirst
-  end.
+  let 'Mk_First getFirst := arg_3__ in
+  getFirst.
 
 Definition appEndo {a} (arg_4__ : Endo a) :=
-  match arg_4__ with
-    | Mk_Endo appEndo => appEndo
-  end.
+  let 'Mk_Endo appEndo := arg_4__ in
+  appEndo.
 
 Definition getDual {a} (arg_5__ : Dual a) :=
-  match arg_5__ with
-    | Mk_Dual getDual => getDual
-  end.
+  let 'Mk_Dual getDual := arg_5__ in
+  getDual.
 
 Definition getAny (arg_6__ : Any) :=
-  match arg_6__ with
-    | Mk_Any getAny => getAny
-  end.
+  let 'Mk_Any getAny := arg_6__ in
+  getAny.
 
 Definition getAlt {f : Type -> Type} {a} (arg_7__ : Alt f a) :=
-  match arg_7__ with
-    | Mk_Alt getAlt => getAlt
-  end.
+  let 'Mk_Alt getAlt := arg_7__ in
+  getAlt.
 
 Definition getAll (arg_8__ : All) :=
-  match arg_8__ with
-    | Mk_All getAll => getAll
-  end.
+  let 'Mk_All getAll := arg_8__ in
+  getAll.
 (* Midamble *)
 
 Definition op_zlzg__ {m} `{GHC.Base.Monoid m} : m -> m -> m :=
@@ -387,7 +378,7 @@ Local Definition Monoid__Dual_mappend {inst_a} `{GHC.Base.Monoid inst_a} : (Dual
                                                                            inst_a) -> (Dual inst_a) -> (Dual inst_a) :=
   fun arg_0__ arg_1__ =>
     match arg_0__ , arg_1__ with
-      | Mk_Dual x , Mk_Dual y => Mk_Dual (GHC.Base.mappend y x)
+    | Mk_Dual x , Mk_Dual y => Mk_Dual (GHC.Base.mappend y x)
     end.
 
 Local Definition Monoid__Dual_mempty {inst_a} `{GHC.Base.Monoid inst_a} : (Dual
@@ -458,7 +449,7 @@ Local Definition Monoid__Endo_mappend {inst_a} : (Endo inst_a) -> (Endo
                                                  inst_a) -> (Endo inst_a) :=
   fun arg_0__ arg_1__ =>
     match arg_0__ , arg_1__ with
-      | Mk_Endo f , Mk_Endo g => Mk_Endo (f GHC.Base.∘ g)
+    | Mk_Endo f , Mk_Endo g => Mk_Endo (f GHC.Base.∘ g)
     end.
 
 Local Definition Monoid__Endo_mempty {inst_a} : (Endo inst_a) :=
@@ -477,7 +468,7 @@ Admit Obligations.
 Local Definition Monoid__All_mappend : All -> All -> All :=
   fun arg_0__ arg_1__ =>
     match arg_0__ , arg_1__ with
-      | Mk_All x , Mk_All y => Mk_All (andb x y)
+    | Mk_All x , Mk_All y => Mk_All (andb x y)
     end.
 
 Local Definition Monoid__All_mempty : All :=
@@ -495,7 +486,7 @@ Admit Obligations.
 Local Definition Monoid__Any_mappend : Any -> Any -> Any :=
   fun arg_0__ arg_1__ =>
     match arg_0__ , arg_1__ with
-      | Mk_Any x , Mk_Any y => Mk_Any (orb x y)
+    | Mk_Any x , Mk_Any y => Mk_Any (orb x y)
     end.
 
 Local Definition Monoid__Any_mempty : Any :=
@@ -617,8 +608,8 @@ Local Definition Monoid__First_mappend {inst_a} : (First inst_a) -> (First
                                                   inst_a) -> (First inst_a) :=
   fun arg_0__ arg_1__ =>
     match arg_0__ , arg_1__ with
-      | Mk_First None , r => r
-      | l , _ => l
+    | Mk_First None , r => r
+    | l , _ => l
     end.
 
 Local Definition Monoid__First_mempty {inst_a} : (First inst_a) :=
@@ -638,8 +629,8 @@ Local Definition Monoid__Last_mappend {inst_a} : (Last inst_a) -> (Last
                                                  inst_a) -> (Last inst_a) :=
   fun arg_0__ arg_1__ =>
     match arg_0__ , arg_1__ with
-      | l , Mk_Last None => l
-      | _ , r => r
+    | l , Mk_Last None => l
+    | _ , r => r
     end.
 
 Local Definition Monoid__Last_mempty {inst_a} : (Last inst_a) :=

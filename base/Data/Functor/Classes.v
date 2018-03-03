@@ -81,10 +81,10 @@ Local Definition Eq1__option_liftEq : forall {a} {b},
   fun {a} {b} =>
     fun arg_0__ arg_1__ arg_2__ =>
       match arg_0__ , arg_1__ , arg_2__ with
-        | _ , None , None => true
-        | _ , None , Some _ => false
-        | _ , Some _ , None => false
-        | eq , Some x , Some y => eq x y
+      | _ , None , None => true
+      | _ , None , Some _ => false
+      | _ , Some _ , None => false
+      | eq , Some x , Some y => eq x y
       end.
 
 Program Instance Eq1__option : Eq1 option := fun _ k =>
@@ -96,10 +96,10 @@ Local Definition Ord1__option_liftCompare : forall {a} {b},
   fun {a} {b} =>
     fun arg_0__ arg_1__ arg_2__ =>
       match arg_0__ , arg_1__ , arg_2__ with
-        | _ , None , None => Eq
-        | _ , None , Some _ => Lt
-        | _ , Some _ , None => Gt
-        | comp , Some x , Some y => comp x y
+      | _ , None , None => Eq
+      | _ , None , Some _ => Lt
+      | _ , Some _ , None => Gt
+      | comp , Some x , Some y => comp x y
       end.
 
 Program Instance Ord1__option : Ord1 option := fun _ k =>
@@ -119,10 +119,10 @@ Local Definition Eq1__list_liftEq : forall {a} {b},
   fun {a} {b} =>
     fix liftEq arg_69__ arg_70__ arg_71__
           := match arg_69__ , arg_70__ , arg_71__ with
-               | _ , nil , nil => true
-               | _ , nil , cons _ _ => false
-               | _ , cons _ _ , nil => false
-               | eq , cons x xs , cons y ys => andb (eq x y) (liftEq eq xs ys)
+             | _ , nil , nil => true
+             | _ , nil , cons _ _ => false
+             | _ , cons _ _ , nil => false
+             | eq , cons x xs , cons y ys => andb (eq x y) (liftEq eq xs ys)
              end.
 
 Program Instance Eq1__list : Eq1 list := fun _ k =>
@@ -134,11 +134,11 @@ Local Definition Ord1__list_liftCompare : forall {a} {b},
   fun {a} {b} =>
     fix liftCompare arg_69__ arg_70__ arg_71__
           := match arg_69__ , arg_70__ , arg_71__ with
-               | _ , nil , nil => Eq
-               | _ , nil , cons _ _ => Lt
-               | _ , cons _ _ , nil => Gt
-               | comp , cons x xs , cons y ys => GHC.Base.mappend (comp x y) (liftCompare comp
-                                                                                          xs ys)
+             | _ , nil , nil => Eq
+             | _ , nil , cons _ _ => Lt
+             | _ , cons _ _ , nil => Gt
+             | comp , cons x xs , cons y ys =>
+                 GHC.Base.mappend (comp x y) (liftCompare comp xs ys)
              end.
 
 Program Instance Ord1__list : Ord1 list := fun _ k =>
@@ -159,7 +159,7 @@ Local Definition Eq2__pair_type_liftEq2 : forall {a} {b} {c} {d},
   fun {a} {b} {c} {d} =>
     fun arg_0__ arg_1__ arg_2__ arg_3__ =>
       match arg_0__ , arg_1__ , arg_2__ , arg_3__ with
-        | e1 , e2 , pair x1 y1 , pair x2 y2 => andb (e1 x1 x2) (e2 y1 y2)
+      | e1 , e2 , pair x1 y1 , pair x2 y2 => andb (e1 x1 x2) (e2 y1 y2)
       end.
 
 Program Instance Eq2__pair_type : Eq2 GHC.Tuple.pair_type := fun _ k =>
@@ -172,8 +172,8 @@ Local Definition Ord2__pair_type_liftCompare2 : forall {a} {b} {c} {d},
   fun {a} {b} {c} {d} =>
     fun arg_0__ arg_1__ arg_2__ arg_3__ =>
       match arg_0__ , arg_1__ , arg_2__ , arg_3__ with
-        | comp1 , comp2 , pair x1 y1 , pair x2 y2 => GHC.Base.mappend (comp1 x1 x2)
-                                                                      (comp2 y1 y2)
+      | comp1 , comp2 , pair x1 y1 , pair x2 y2 =>
+          GHC.Base.mappend (comp1 x1 x2) (comp2 y1 y2)
       end.
 
 Program Instance Ord2__pair_type : Ord2 GHC.Tuple.pair_type := fun _ k =>
@@ -224,10 +224,10 @@ Local Definition Eq2__Either_liftEq2 : forall {a} {b} {c} {d},
   fun {a} {b} {c} {d} =>
     fun arg_0__ arg_1__ arg_2__ arg_3__ =>
       match arg_0__ , arg_1__ , arg_2__ , arg_3__ with
-        | e1 , _ , Data.Either.Left x , Data.Either.Left y => e1 x y
-        | _ , _ , Data.Either.Left _ , Data.Either.Right _ => false
-        | _ , _ , Data.Either.Right _ , Data.Either.Left _ => false
-        | _ , e2 , Data.Either.Right x , Data.Either.Right y => e2 x y
+      | e1 , _ , Data.Either.Left x , Data.Either.Left y => e1 x y
+      | _ , _ , Data.Either.Left _ , Data.Either.Right _ => false
+      | _ , _ , Data.Either.Right _ , Data.Either.Left _ => false
+      | _ , e2 , Data.Either.Right x , Data.Either.Right y => e2 x y
       end.
 
 Program Instance Eq2__Either : Eq2 Data.Either.Either := fun _ k =>
@@ -240,10 +240,10 @@ Local Definition Ord2__Either_liftCompare2 : forall {a} {b} {c} {d},
   fun {a} {b} {c} {d} =>
     fun arg_0__ arg_1__ arg_2__ arg_3__ =>
       match arg_0__ , arg_1__ , arg_2__ , arg_3__ with
-        | comp1 , _ , Data.Either.Left x , Data.Either.Left y => comp1 x y
-        | _ , _ , Data.Either.Left _ , Data.Either.Right _ => Lt
-        | _ , _ , Data.Either.Right _ , Data.Either.Left _ => Gt
-        | _ , comp2 , Data.Either.Right x , Data.Either.Right y => comp2 x y
+      | comp1 , _ , Data.Either.Left x , Data.Either.Left y => comp1 x y
+      | _ , _ , Data.Either.Left _ , Data.Either.Right _ => Lt
+      | _ , _ , Data.Either.Right _ , Data.Either.Left _ => Gt
+      | _ , comp2 , Data.Either.Right x , Data.Either.Right y => comp2 x y
       end.
 
 Program Instance Ord2__Either : Ord2 Data.Either.Either := fun _ k =>
@@ -294,8 +294,9 @@ Local Definition Eq1__Identity_liftEq : forall {a} {b},
   fun {a} {b} =>
     fun arg_0__ arg_1__ arg_2__ =>
       match arg_0__ , arg_1__ , arg_2__ with
-        | eq , Data.Functor.Identity.Mk_Identity x , Data.Functor.Identity.Mk_Identity
-          y => eq x y
+      | eq , Data.Functor.Identity.Mk_Identity x , Data.Functor.Identity.Mk_Identity
+        y =>
+          eq x y
       end.
 
 Program Instance Eq1__Identity : Eq1 Data.Functor.Identity.Identity := fun _
@@ -309,8 +310,9 @@ Local Definition Ord1__Identity_liftCompare : forall {a} {b},
   fun {a} {b} =>
     fun arg_0__ arg_1__ arg_2__ =>
       match arg_0__ , arg_1__ , arg_2__ with
-        | comp , Data.Functor.Identity.Mk_Identity x , Data.Functor.Identity.Mk_Identity
-          y => comp x y
+      | comp , Data.Functor.Identity.Mk_Identity x , Data.Functor.Identity.Mk_Identity
+        y =>
+          comp x y
       end.
 
 Program Instance Ord1__Identity : Ord1 Data.Functor.Identity.Identity := fun _
@@ -332,8 +334,8 @@ Local Definition Eq2__Const_liftEq2 : forall {a} {b} {c} {d},
   fun {a} {b} {c} {d} =>
     fun arg_0__ arg_1__ arg_2__ arg_3__ =>
       match arg_0__ , arg_1__ , arg_2__ , arg_3__ with
-        | eq , _ , Data.Functor.Const.Mk_Const x , Data.Functor.Const.Mk_Const y => eq x
-                                                                                    y
+      | eq , _ , Data.Functor.Const.Mk_Const x , Data.Functor.Const.Mk_Const y =>
+          eq x y
       end.
 
 Program Instance Eq2__Const : Eq2 Data.Functor.Const.Const := fun _ k =>
@@ -346,7 +348,7 @@ Local Definition Ord2__Const_liftCompare2 : forall {a} {b} {c} {d},
   fun {a} {b} {c} {d} =>
     fun arg_0__ arg_1__ arg_2__ arg_3__ =>
       match arg_0__ , arg_1__ , arg_2__ , arg_3__ with
-        | comp , _ , Data.Functor.Const.Mk_Const x , Data.Functor.Const.Mk_Const y =>
+      | comp , _ , Data.Functor.Const.Mk_Const x , Data.Functor.Const.Mk_Const y =>
           comp x y
       end.
 

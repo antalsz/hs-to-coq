@@ -45,7 +45,7 @@ Local Definition Ord__Down_compare {inst_a} `{GHC.Base.Ord inst_a} : (Down
                                                                      inst_a) -> (Down inst_a) -> comparison :=
   fun arg_0__ arg_1__ =>
     match arg_0__ , arg_1__ with
-      | Mk_Down x , Mk_Down y => GHC.Base.compare y x
+    | Mk_Down x , Mk_Down y => GHC.Base.compare y x
     end.
 
 Local Definition Ord__Down_op_zg__ {inst_a} `{GHC.Base.Ord inst_a} : (Down

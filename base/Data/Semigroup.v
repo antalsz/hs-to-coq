@@ -87,34 +87,28 @@ Arguments Mk_First {_} _.
 Arguments Mk_Arg {_} {_} _ _.
 
 Definition unwrapMonoid {m} (arg_0__ : WrappedMonoid m) :=
-  match arg_0__ with
-    | WrapMonoid unwrapMonoid => unwrapMonoid
-  end.
+  let 'WrapMonoid unwrapMonoid := arg_0__ in
+  unwrapMonoid.
 
 Definition getOption {a} (arg_1__ : Option a) :=
-  match arg_1__ with
-    | Mk_Option getOption => getOption
-  end.
+  let 'Mk_Option getOption := arg_1__ in
+  getOption.
 
 Definition getMin {a} (arg_2__ : Min a) :=
-  match arg_2__ with
-    | Mk_Min getMin => getMin
-  end.
+  let 'Mk_Min getMin := arg_2__ in
+  getMin.
 
 Definition getMax {a} (arg_3__ : Max a) :=
-  match arg_3__ with
-    | Mk_Max getMax => getMax
-  end.
+  let 'Mk_Max getMax := arg_3__ in
+  getMax.
 
 Definition getLast {a} (arg_4__ : Last a) :=
-  match arg_4__ with
-    | Mk_Last getLast => getLast
-  end.
+  let 'Mk_Last getLast := arg_4__ in
+  getLast.
 
 Definition getFirst {a} (arg_5__ : First a) :=
-  match arg_5__ with
-    | Mk_First getFirst => getFirst
-  end.
+  let 'Mk_First getFirst := arg_5__ in
+  getFirst.
 (* Midamble *)
 
 Require Import GHC.Prim.
@@ -197,14 +191,13 @@ Local Definition Semigroup__arrow_op_zlzg__ {inst_b} {inst_a} `{Semigroup
 Local Definition Semigroup__arrow_sconcat {inst_b} {inst_a} `{Semigroup inst_b}
     : Data.List.NonEmpty.NonEmpty (inst_a -> inst_b) -> (inst_a -> inst_b) :=
   fun arg_0__ =>
-    match arg_0__ with
-      | Data.List.NonEmpty.NEcons a as_ => let fix go arg_1__ arg_2__
-                                                     := match arg_1__ , arg_2__ with
-                                                          | b , cons c cs => Semigroup__arrow_op_zlzg__ b (go c cs)
-                                                          | b , nil => b
-                                                        end in
-                                           go a as_
-    end.
+    let 'Data.List.NonEmpty.NEcons a as_ := arg_0__ in
+    let fix go arg_1__ arg_2__
+              := match arg_1__ , arg_2__ with
+                 | b , cons c cs => Semigroup__arrow_op_zlzg__ b (go c cs)
+                 | b , nil => b
+                 end in
+    go a as_.
 
 Program Instance Semigroup__arrow {b} {a} `{Semigroup b} : Semigroup (a -> b) :=
   fun _ k =>
@@ -219,14 +212,13 @@ Local Definition Semigroup__list_op_zlzg__ {inst_a} : list inst_a -> list
 Local Definition Semigroup__list_sconcat {inst_a} : Data.List.NonEmpty.NonEmpty
                                                     (list inst_a) -> list inst_a :=
   fun arg_0__ =>
-    match arg_0__ with
-      | Data.List.NonEmpty.NEcons a as_ => let fix go arg_1__ arg_2__
-                                                     := match arg_1__ , arg_2__ with
-                                                          | b , cons c cs => Semigroup__list_op_zlzg__ b (go c cs)
-                                                          | b , nil => b
-                                                        end in
-                                           go a as_
-    end.
+    let 'Data.List.NonEmpty.NEcons a as_ := arg_0__ in
+    let fix go arg_1__ arg_2__
+              := match arg_1__ , arg_2__ with
+                 | b , cons c cs => Semigroup__list_op_zlzg__ b (go c cs)
+                 | b , nil => b
+                 end in
+    go a as_.
 
 Program Instance Semigroup__list {a} : Semigroup (list a) := fun _ k =>
     k {|op_zlzg____ := Semigroup__list_op_zlzg__ ;
@@ -237,22 +229,21 @@ Local Definition Semigroup__option_op_zlzg__ {inst_a} `{Semigroup inst_a}
     : (option inst_a) -> (option inst_a) -> (option inst_a) :=
   fun arg_0__ arg_1__ =>
     match arg_0__ , arg_1__ with
-      | None , b => b
-      | a , None => a
-      | Some a , Some b => Some (a <> b)
+    | None , b => b
+    | a , None => a
+    | Some a , Some b => Some (a <> b)
     end.
 
 Local Definition Semigroup__option_sconcat {inst_a} `{Semigroup inst_a}
     : Data.List.NonEmpty.NonEmpty (option inst_a) -> (option inst_a) :=
   fun arg_0__ =>
-    match arg_0__ with
-      | Data.List.NonEmpty.NEcons a as_ => let fix go arg_1__ arg_2__
-                                                     := match arg_1__ , arg_2__ with
-                                                          | b , cons c cs => Semigroup__option_op_zlzg__ b (go c cs)
-                                                          | b , nil => b
-                                                        end in
-                                           go a as_
-    end.
+    let 'Data.List.NonEmpty.NEcons a as_ := arg_0__ in
+    let fix go arg_1__ arg_2__
+              := match arg_1__ , arg_2__ with
+                 | b , cons c cs => Semigroup__option_op_zlzg__ b (go c cs)
+                 | b , nil => b
+                 end in
+    go a as_.
 
 Program Instance Semigroup__option {a} `{Semigroup a} : Semigroup (option a) :=
   fun _ k =>
@@ -265,22 +256,21 @@ Local Definition Semigroup__Either_op_zlzg__ {inst_a} {inst_b}
       inst_b) -> (Data.Either.Either inst_a inst_b) :=
   fun arg_0__ arg_1__ =>
     match arg_0__ , arg_1__ with
-      | Data.Either.Left _ , b => b
-      | a , _ => a
+    | Data.Either.Left _ , b => b
+    | a , _ => a
     end.
 
 Local Definition Semigroup__Either_sconcat {inst_a} {inst_b}
     : Data.List.NonEmpty.NonEmpty (Data.Either.Either inst_a
                                   inst_b) -> (Data.Either.Either inst_a inst_b) :=
   fun arg_0__ =>
-    match arg_0__ with
-      | Data.List.NonEmpty.NEcons a as_ => let fix go arg_1__ arg_2__
-                                                     := match arg_1__ , arg_2__ with
-                                                          | b , cons c cs => Semigroup__Either_op_zlzg__ b (go c cs)
-                                                          | b , nil => b
-                                                        end in
-                                           go a as_
-    end.
+    let 'Data.List.NonEmpty.NEcons a as_ := arg_0__ in
+    let fix go arg_1__ arg_2__
+              := match arg_1__ , arg_2__ with
+                 | b , cons c cs => Semigroup__Either_op_zlzg__ b (go c cs)
+                 | b , nil => b
+                 end in
+    go a as_.
 
 Program Instance Semigroup__Either {a} {b} : Semigroup (Data.Either.Either a
                                                        b) := fun _ k =>
@@ -296,8 +286,8 @@ Local Definition Semigroup__op_zt____op_zt___op_zlzg__ {inst_a} {inst_b}
                                                                  inst_c)%type -> (inst_a * inst_b * inst_c)%type :=
   fun arg_0__ arg_1__ =>
     match arg_0__ , arg_1__ with
-      | pair (pair a b) c , pair (pair a' b') c' => pair (pair (a <> a') (b <> b')) (c
-                                                         <> c')
+    | pair (pair a b) c , pair (pair a' b') c' =>
+        pair (pair (a <> a') (b <> b')) (c <> c')
     end.
 
 Local Definition Semigroup__op_zt____op_zt___sconcat {inst_a} {inst_b} {inst_c}
@@ -305,15 +295,13 @@ Local Definition Semigroup__op_zt____op_zt___sconcat {inst_a} {inst_b} {inst_c}
     : Data.List.NonEmpty.NonEmpty (inst_a * inst_b * inst_c)%type -> (inst_a *
       inst_b * inst_c)%type :=
   fun arg_0__ =>
-    match arg_0__ with
-      | Data.List.NonEmpty.NEcons a as_ => let fix go arg_1__ arg_2__
-                                                     := match arg_1__ , arg_2__ with
-                                                          | b , cons c cs => Semigroup__op_zt____op_zt___op_zlzg__ b (go
-                                                                                                                   c cs)
-                                                          | b , nil => b
-                                                        end in
-                                           go a as_
-    end.
+    let 'Data.List.NonEmpty.NEcons a as_ := arg_0__ in
+    let fix go arg_1__ arg_2__
+              := match arg_1__ , arg_2__ with
+                 | b , cons c cs => Semigroup__op_zt____op_zt___op_zlzg__ b (go c cs)
+                 | b , nil => b
+                 end in
+    go a as_.
 
 Program Instance Semigroup__op_zt____op_zt__ {a} {b} {c} `{Semigroup a}
                                              `{Semigroup b} `{Semigroup c} : Semigroup (a * b * c)%type := fun _ k =>
@@ -330,9 +318,8 @@ Local Definition Semigroup__op_zt____op_zt____op_zt____23_op_zlzg__ {inst_a}
                                                                               inst_c * inst_d)%type :=
   fun arg_0__ arg_1__ =>
     match arg_0__ , arg_1__ with
-      | pair (pair (pair a b) c) d , pair (pair (pair a' b') c') d' => pair (pair
-                                                                            (pair (a <> a') (b <> b')) (c <> c')) (d <>
-                                                                            d')
+    | pair (pair (pair a b) c) d , pair (pair (pair a' b') c') d' =>
+        pair (pair (pair (a <> a') (b <> b')) (c <> c')) (d <> d')
     end.
 
 Local Definition Semigroup__op_zt____op_zt____op_zt____23_sconcat {inst_a}
@@ -343,16 +330,14 @@ Local Definition Semigroup__op_zt____op_zt____op_zt____23_sconcat {inst_a}
                                                                                                         inst_d)%type -> (inst_a
                                                                             * inst_b * inst_c * inst_d)%type :=
   fun arg_0__ =>
-    match arg_0__ with
-      | Data.List.NonEmpty.NEcons a as_ => let fix go arg_1__ arg_2__
-                                                     := match arg_1__ , arg_2__ with
-                                                          | b , cons c cs =>
-                                                            Semigroup__op_zt____op_zt____op_zt____23_op_zlzg__ b (go c
-                                                                                                               cs)
-                                                          | b , nil => b
-                                                        end in
-                                           go a as_
-    end.
+    let 'Data.List.NonEmpty.NEcons a as_ := arg_0__ in
+    let fix go arg_1__ arg_2__
+              := match arg_1__ , arg_2__ with
+                 | b , cons c cs =>
+                     Semigroup__op_zt____op_zt____op_zt____23_op_zlzg__ b (go c cs)
+                 | b , nil => b
+                 end in
+    go a as_.
 
 Program Instance Semigroup__op_zt____op_zt____op_zt____23 {a} {b} {c} {d}
                                                           `{Semigroup a} `{Semigroup b} `{Semigroup c} `{Semigroup d}
@@ -376,9 +361,9 @@ Local Definition Semigroup__op_zt____op_zt____op_zt____op_zt____87_op_zlzg__ {in
                                                                                                    inst_e)%type :=
   fun arg_0__ arg_1__ =>
     match arg_0__ , arg_1__ with
-      | pair (pair (pair (pair a b) c) d) e , pair (pair (pair (pair a' b') c') d')
-                                                   e' => pair (pair (pair (pair (a <> a') (b <> b')) (c <> c')) (d <>
-                                                                    d')) (e <> e')
+    | pair (pair (pair (pair a b) c) d) e , pair (pair (pair (pair a' b') c') d')
+                                                 e' =>
+        pair (pair (pair (pair (a <> a') (b <> b')) (c <> c')) (d <> d')) (e <> e')
     end.
 
 Local Definition Semigroup__op_zt____op_zt____op_zt____op_zt____87_sconcat {inst_a}
@@ -389,16 +374,14 @@ Local Definition Semigroup__op_zt____op_zt____op_zt____op_zt____87_sconcat {inst
     : Data.List.NonEmpty.NonEmpty (inst_a * inst_b * inst_c * inst_d *
                                   inst_e)%type -> (inst_a * inst_b * inst_c * inst_d * inst_e)%type :=
   fun arg_0__ =>
-    match arg_0__ with
-      | Data.List.NonEmpty.NEcons a as_ => let fix go arg_1__ arg_2__
-                                                     := match arg_1__ , arg_2__ with
-                                                          | b , cons c cs =>
-                                                            Semigroup__op_zt____op_zt____op_zt____op_zt____87_op_zlzg__
-                                                            b (go c cs)
-                                                          | b , nil => b
-                                                        end in
-                                           go a as_
-    end.
+    let 'Data.List.NonEmpty.NEcons a as_ := arg_0__ in
+    let fix go arg_1__ arg_2__
+              := match arg_1__ , arg_2__ with
+                 | b , cons c cs =>
+                     Semigroup__op_zt____op_zt____op_zt____op_zt____87_op_zlzg__ b (go c cs)
+                 | b , nil => b
+                 end in
+    go a as_.
 
 Program Instance Semigroup__op_zt____op_zt____op_zt____op_zt____87 {a} {b} {c}
                                                                    {d} {e} `{Semigroup a} `{Semigroup b} `{Semigroup c}
@@ -414,22 +397,21 @@ Local Definition Semigroup__comparison_op_zlzg__
     : comparison -> comparison -> comparison :=
   fun arg_0__ arg_1__ =>
     match arg_0__ , arg_1__ with
-      | Lt , _ => Lt
-      | Eq , y => y
-      | Gt , _ => Gt
+    | Lt , _ => Lt
+    | Eq , y => y
+    | Gt , _ => Gt
     end.
 
 Local Definition Semigroup__comparison_sconcat : Data.List.NonEmpty.NonEmpty
                                                  comparison -> comparison :=
   fun arg_0__ =>
-    match arg_0__ with
-      | Data.List.NonEmpty.NEcons a as_ => let fix go arg_1__ arg_2__
-                                                     := match arg_1__ , arg_2__ with
-                                                          | b , cons c cs => Semigroup__comparison_op_zlzg__ b (go c cs)
-                                                          | b , nil => b
-                                                        end in
-                                           go a as_
-    end.
+    let 'Data.List.NonEmpty.NEcons a as_ := arg_0__ in
+    let fix go arg_1__ arg_2__
+              := match arg_1__ , arg_2__ with
+                 | b , cons c cs => Semigroup__comparison_op_zlzg__ b (go c cs)
+                 | b , nil => b
+                 end in
+    go a as_.
 
 Program Instance Semigroup__comparison : Semigroup comparison := fun _ k =>
     k {|op_zlzg____ := Semigroup__comparison_op_zlzg__ ;
@@ -441,21 +423,20 @@ Local Definition Semigroup__Dual_op_zlzg__ {inst_a} `{Semigroup inst_a}
       inst_a) :=
   fun arg_0__ arg_1__ =>
     match arg_0__ , arg_1__ with
-      | Data.Monoid.Mk_Dual a , Data.Monoid.Mk_Dual b => Data.Monoid.Mk_Dual (b <> a)
+    | Data.Monoid.Mk_Dual a , Data.Monoid.Mk_Dual b => Data.Monoid.Mk_Dual (b <> a)
     end.
 
 Local Definition Semigroup__Dual_sconcat {inst_a} `{Semigroup inst_a}
     : Data.List.NonEmpty.NonEmpty (Data.Monoid.Dual inst_a) -> (Data.Monoid.Dual
       inst_a) :=
   fun arg_0__ =>
-    match arg_0__ with
-      | Data.List.NonEmpty.NEcons a as_ => let fix go arg_1__ arg_2__
-                                                     := match arg_1__ , arg_2__ with
-                                                          | b , cons c cs => Semigroup__Dual_op_zlzg__ b (go c cs)
-                                                          | b , nil => b
-                                                        end in
-                                           go a as_
-    end.
+    let 'Data.List.NonEmpty.NEcons a as_ := arg_0__ in
+    let fix go arg_1__ arg_2__
+              := match arg_1__ , arg_2__ with
+                 | b , cons c cs => Semigroup__Dual_op_zlzg__ b (go c cs)
+                 | b , nil => b
+                 end in
+    go a as_.
 
 Program Instance Semigroup__Dual {a} `{Semigroup a} : Semigroup
                                                       (Data.Monoid.Dual a) := fun _ k =>
@@ -470,14 +451,13 @@ Local Definition Semigroup__Endo_op_zlzg__ {a} : Data.Monoid.Endo
 Local Definition Semigroup__Endo_sconcat {inst_a} : Data.List.NonEmpty.NonEmpty
                                                     (Data.Monoid.Endo inst_a) -> (Data.Monoid.Endo inst_a) :=
   fun arg_0__ =>
-    match arg_0__ with
-      | Data.List.NonEmpty.NEcons a as_ => let fix go arg_1__ arg_2__
-                                                     := match arg_1__ , arg_2__ with
-                                                          | b , cons c cs => Semigroup__Endo_op_zlzg__ b (go c cs)
-                                                          | b , nil => b
-                                                        end in
-                                           go a as_
-    end.
+    let 'Data.List.NonEmpty.NEcons a as_ := arg_0__ in
+    let fix go arg_1__ arg_2__
+              := match arg_1__ , arg_2__ with
+                 | b , cons c cs => Semigroup__Endo_op_zlzg__ b (go c cs)
+                 | b , nil => b
+                 end in
+    go a as_.
 
 Program Instance Semigroup__Endo {a} : Semigroup (Data.Monoid.Endo a) := fun _
                                                                              k =>
@@ -492,14 +472,13 @@ Local Definition Semigroup__All_op_zlzg__
 Local Definition Semigroup__All_sconcat : Data.List.NonEmpty.NonEmpty
                                           Data.Monoid.All -> Data.Monoid.All :=
   fun arg_0__ =>
-    match arg_0__ with
-      | Data.List.NonEmpty.NEcons a as_ => let fix go arg_1__ arg_2__
-                                                     := match arg_1__ , arg_2__ with
-                                                          | b , cons c cs => Semigroup__All_op_zlzg__ b (go c cs)
-                                                          | b , nil => b
-                                                        end in
-                                           go a as_
-    end.
+    let 'Data.List.NonEmpty.NEcons a as_ := arg_0__ in
+    let fix go arg_1__ arg_2__
+              := match arg_1__ , arg_2__ with
+                 | b , cons c cs => Semigroup__All_op_zlzg__ b (go c cs)
+                 | b , nil => b
+                 end in
+    go a as_.
 
 Program Instance Semigroup__All : Semigroup Data.Monoid.All := fun _ k =>
     k {|op_zlzg____ := Semigroup__All_op_zlzg__ ;
@@ -513,14 +492,13 @@ Local Definition Semigroup__Any_op_zlzg__
 Local Definition Semigroup__Any_sconcat : Data.List.NonEmpty.NonEmpty
                                           Data.Monoid.Any -> Data.Monoid.Any :=
   fun arg_0__ =>
-    match arg_0__ with
-      | Data.List.NonEmpty.NEcons a as_ => let fix go arg_1__ arg_2__
-                                                     := match arg_1__ , arg_2__ with
-                                                          | b , cons c cs => Semigroup__Any_op_zlzg__ b (go c cs)
-                                                          | b , nil => b
-                                                        end in
-                                           go a as_
-    end.
+    let 'Data.List.NonEmpty.NEcons a as_ := arg_0__ in
+    let fix go arg_1__ arg_2__
+              := match arg_1__ , arg_2__ with
+                 | b , cons c cs => Semigroup__Any_op_zlzg__ b (go c cs)
+                 | b , nil => b
+                 end in
+    go a as_.
 
 Program Instance Semigroup__Any : Semigroup Data.Monoid.Any := fun _ k =>
     k {|op_zlzg____ := Semigroup__Any_op_zlzg__ ;
@@ -535,14 +513,13 @@ Local Definition Semigroup__Sum_sconcat {inst_a} `{GHC.Num.Num inst_a}
     : Data.List.NonEmpty.NonEmpty (Data.Monoid.Sum inst_a) -> (Data.Monoid.Sum
       inst_a) :=
   fun arg_0__ =>
-    match arg_0__ with
-      | Data.List.NonEmpty.NEcons a as_ => let fix go arg_1__ arg_2__
-                                                     := match arg_1__ , arg_2__ with
-                                                          | b , cons c cs => Semigroup__Sum_op_zlzg__ b (go c cs)
-                                                          | b , nil => b
-                                                        end in
-                                           go a as_
-    end.
+    let 'Data.List.NonEmpty.NEcons a as_ := arg_0__ in
+    let fix go arg_1__ arg_2__
+              := match arg_1__ , arg_2__ with
+                 | b , cons c cs => Semigroup__Sum_op_zlzg__ b (go c cs)
+                 | b , nil => b
+                 end in
+    go a as_.
 
 Program Instance Semigroup__Sum {a} `{GHC.Num.Num a} : Semigroup
                                                        (Data.Monoid.Sum a) := fun _ k =>
@@ -559,14 +536,13 @@ Local Definition Semigroup__Product_sconcat {inst_a} `{GHC.Num.Num inst_a}
     : Data.List.NonEmpty.NonEmpty (Data.Monoid.Product
                                   inst_a) -> (Data.Monoid.Product inst_a) :=
   fun arg_0__ =>
-    match arg_0__ with
-      | Data.List.NonEmpty.NEcons a as_ => let fix go arg_1__ arg_2__
-                                                     := match arg_1__ , arg_2__ with
-                                                          | b , cons c cs => Semigroup__Product_op_zlzg__ b (go c cs)
-                                                          | b , nil => b
-                                                        end in
-                                           go a as_
-    end.
+    let 'Data.List.NonEmpty.NEcons a as_ := arg_0__ in
+    let fix go arg_1__ arg_2__
+              := match arg_1__ , arg_2__ with
+                 | b , cons c cs => Semigroup__Product_op_zlzg__ b (go c cs)
+                 | b , nil => b
+                 end in
+    go a as_.
 
 Program Instance Semigroup__Product {a} `{GHC.Num.Num a} : Semigroup
                                                            (Data.Monoid.Product a) := fun _ k =>
@@ -585,14 +561,13 @@ Local Definition Semigroup__Const_sconcat {inst_a} {inst_b} `{Semigroup inst_a}
     : Data.List.NonEmpty.NonEmpty (Data.Functor.Const.Const inst_a
                                   inst_b) -> (Data.Functor.Const.Const inst_a inst_b) :=
   fun arg_0__ =>
-    match arg_0__ with
-      | Data.List.NonEmpty.NEcons a as_ => let fix go arg_1__ arg_2__
-                                                     := match arg_1__ , arg_2__ with
-                                                          | b , cons c cs => Semigroup__Const_op_zlzg__ b (go c cs)
-                                                          | b , nil => b
-                                                        end in
-                                           go a as_
-    end.
+    let 'Data.List.NonEmpty.NEcons a as_ := arg_0__ in
+    let fix go arg_1__ arg_2__
+              := match arg_1__ , arg_2__ with
+                 | b , cons c cs => Semigroup__Const_op_zlzg__ b (go c cs)
+                 | b , nil => b
+                 end in
+    go a as_.
 
 Program Instance Semigroup__Const {a} {b} `{Semigroup a} : Semigroup
                                                            (Data.Functor.Const.Const a b) := fun _ k =>
@@ -613,14 +588,13 @@ Local Definition Semigroup__Void_op_zlzg__
 Local Definition Semigroup__Void_sconcat : Data.List.NonEmpty.NonEmpty
                                            Data.Void.Void -> Data.Void.Void :=
   fun arg_0__ =>
-    match arg_0__ with
-      | Data.List.NonEmpty.NEcons a as_ => let fix go arg_1__ arg_2__
-                                                     := match arg_1__ , arg_2__ with
-                                                          | b , cons c cs => Semigroup__Void_op_zlzg__ b (go c cs)
-                                                          | b , nil => b
-                                                        end in
-                                           go a as_
-    end.
+    let 'Data.List.NonEmpty.NEcons a as_ := arg_0__ in
+    let fix go arg_1__ arg_2__
+              := match arg_1__ , arg_2__ with
+                 | b , cons c cs => Semigroup__Void_op_zlzg__ b (go c cs)
+                 | b , nil => b
+                 end in
+    go a as_.
 
 Program Instance Semigroup__Void : Semigroup Data.Void.Void := fun _ k =>
     k {|op_zlzg____ := Semigroup__Void_op_zlzg__ ;
@@ -632,7 +606,7 @@ Local Definition Semigroup__NonEmpty_op_zlzg__ {inst_a}
       inst_a) -> (Data.List.NonEmpty.NonEmpty inst_a) :=
   fun arg_0__ arg_1__ =>
     match arg_0__ , arg_1__ with
-      | Data.List.NonEmpty.NEcons a as_ , Data.List.NonEmpty.NEcons b bs =>
+    | Data.List.NonEmpty.NEcons a as_ , Data.List.NonEmpty.NEcons b bs =>
         Data.List.NonEmpty.NEcons a (Coq.Init.Datatypes.app as_ (cons b bs))
     end.
 
@@ -640,14 +614,13 @@ Local Definition Semigroup__NonEmpty_sconcat {inst_a}
     : Data.List.NonEmpty.NonEmpty (Data.List.NonEmpty.NonEmpty
                                   inst_a) -> (Data.List.NonEmpty.NonEmpty inst_a) :=
   fun arg_0__ =>
-    match arg_0__ with
-      | Data.List.NonEmpty.NEcons a as_ => let fix go arg_1__ arg_2__
-                                                     := match arg_1__ , arg_2__ with
-                                                          | b , cons c cs => Semigroup__NonEmpty_op_zlzg__ b (go c cs)
-                                                          | b , nil => b
-                                                        end in
-                                           go a as_
-    end.
+    let 'Data.List.NonEmpty.NEcons a as_ := arg_0__ in
+    let fix go arg_1__ arg_2__
+              := match arg_1__ , arg_2__ with
+                 | b , cons c cs => Semigroup__NonEmpty_op_zlzg__ b (go c cs)
+                 | b , nil => b
+                 end in
+    go a as_.
 
 Program Instance Semigroup__NonEmpty {a} : Semigroup
                                            (Data.List.NonEmpty.NonEmpty a) := fun _ k =>
@@ -670,14 +643,13 @@ Local Definition Semigroup__Min_op_zlzg__ {inst_a} `{_ : GHC.Base.Ord inst_a}
 Local Definition Semigroup__Min_sconcat {inst_a} `{GHC.Base.Ord inst_a}
     : Data.List.NonEmpty.NonEmpty (Min inst_a) -> (Min inst_a) :=
   fun arg_0__ =>
-    match arg_0__ with
-      | Data.List.NonEmpty.NEcons a as_ => let fix go arg_1__ arg_2__
-                                                     := match arg_1__ , arg_2__ with
-                                                          | b , cons c cs => Semigroup__Min_op_zlzg__ b (go c cs)
-                                                          | b , nil => b
-                                                        end in
-                                           go a as_
-    end.
+    let 'Data.List.NonEmpty.NEcons a as_ := arg_0__ in
+    let fix go arg_1__ arg_2__
+              := match arg_1__ , arg_2__ with
+                 | b , cons c cs => Semigroup__Min_op_zlzg__ b (go c cs)
+                 | b , nil => b
+                 end in
+    go a as_.
 
 Program Instance Semigroup__Min {a} `{GHC.Base.Ord a} : Semigroup (Min a) :=
   fun _ k =>
@@ -692,7 +664,7 @@ Local Definition Functor__Min_fmap : forall {a} {b},
   fun {a} {b} =>
     fun arg_0__ arg_1__ =>
       match arg_0__ , arg_1__ with
-        | f , Mk_Min x => Mk_Min (f x)
+      | f , Mk_Min x => Mk_Min (f x)
       end.
 
 Local Definition Functor__Min_op_zlzd__ : forall {a} {b}, a -> Min b -> Min a :=
@@ -713,11 +685,12 @@ Local Definition Foldable__Min_foldl : forall {b} {a},
   fun {b} {a} =>
     fun arg_19__ arg_20__ arg_21__ =>
       match arg_19__ , arg_20__ , arg_21__ with
-        | f , z , t => Data.Monoid.appEndo (Data.Monoid.getDual (Foldable__Min_foldMap
-                                                                (Coq.Program.Basics.compose Data.Monoid.Mk_Dual
-                                                                                            (Coq.Program.Basics.compose
-                                                                                            Data.Monoid.Mk_Endo
-                                                                                            (GHC.Base.flip f))) t)) z
+      | f , z , t =>
+          Data.Monoid.appEndo (Data.Monoid.getDual (Foldable__Min_foldMap
+                                                   (Coq.Program.Basics.compose Data.Monoid.Mk_Dual
+                                                                               (Coq.Program.Basics.compose
+                                                                               Data.Monoid.Mk_Endo (GHC.Base.flip f)))
+                                                   t)) z
       end.
 
 Local Definition Foldable__Min_foldr' : forall {a} {b},
@@ -725,12 +698,13 @@ Local Definition Foldable__Min_foldr' : forall {a} {b},
   fun {a} {b} =>
     fun arg_9__ arg_10__ arg_11__ =>
       match arg_9__ , arg_10__ , arg_11__ with
-        | f , z0 , xs => let f' :=
-                           fun arg_12__ arg_13__ arg_14__ =>
-                             match arg_12__ , arg_13__ , arg_14__ with
-                               | k , x , z => _GHC.Base.$!_ k (f x z)
-                             end in
-                         Foldable__Min_foldl f' GHC.Base.id xs z0
+      | f , z0 , xs =>
+          let f' :=
+            fun arg_12__ arg_13__ arg_14__ =>
+              match arg_12__ , arg_13__ , arg_14__ with
+              | k , x , z => _GHC.Base.$!_ k (f x z)
+              end in
+          Foldable__Min_foldl f' GHC.Base.id xs z0
       end.
 
 Local Definition Foldable__Min_foldr : forall {a} {b},
@@ -738,8 +712,9 @@ Local Definition Foldable__Min_foldr : forall {a} {b},
   fun {a} {b} =>
     fun arg_4__ arg_5__ arg_6__ =>
       match arg_4__ , arg_5__ , arg_6__ with
-        | f , z , t => Data.Monoid.appEndo (Foldable__Min_foldMap
-                                           (Data.Foldable.hash_compose Data.Monoid.Mk_Endo f) t) z
+      | f , z , t =>
+          Data.Monoid.appEndo (Foldable__Min_foldMap (Data.Foldable.hash_compose
+                                                     Data.Monoid.Mk_Endo f) t) z
       end.
 
 Local Definition Foldable__Min_foldl' : forall {b} {a},
@@ -747,19 +722,20 @@ Local Definition Foldable__Min_foldl' : forall {b} {a},
   fun {b} {a} =>
     fun arg_24__ arg_25__ arg_26__ =>
       match arg_24__ , arg_25__ , arg_26__ with
-        | f , z0 , xs => let f' :=
-                           fun arg_27__ arg_28__ arg_29__ =>
-                             match arg_27__ , arg_28__ , arg_29__ with
-                               | x , k , z => _GHC.Base.$!_ k (f z x)
-                             end in
-                         Foldable__Min_foldr f' GHC.Base.id xs z0
+      | f , z0 , xs =>
+          let f' :=
+            fun arg_27__ arg_28__ arg_29__ =>
+              match arg_27__ , arg_28__ , arg_29__ with
+              | x , k , z => _GHC.Base.$!_ k (f z x)
+              end in
+          Foldable__Min_foldr f' GHC.Base.id xs z0
       end.
 
 Local Definition Foldable__Min_length : forall {a}, Min a -> GHC.Num.Int :=
   fun {a} =>
     Foldable__Min_foldl' (fun arg_64__ arg_65__ =>
                            match arg_64__ , arg_65__ with
-                             | c , _ => _GHC.Num.+_ c (GHC.Num.fromInteger 1)
+                           | c , _ => _GHC.Num.+_ c (GHC.Num.fromInteger 1)
                            end) (GHC.Num.fromInteger 0).
 
 Local Definition Foldable__Min_null : forall {a}, Min a -> bool :=
@@ -768,12 +744,11 @@ Local Definition Foldable__Min_null : forall {a}, Min a -> bool :=
 Local Definition Foldable__Min_toList : forall {a}, Min a -> list a :=
   fun {a} =>
     fun arg_54__ =>
-      match arg_54__ with
-        | t => GHC.Base.build (fun arg_55__ arg_56__ =>
-                                match arg_55__ , arg_56__ with
-                                  | c , n => Foldable__Min_foldr c n t
-                                end)
-      end.
+      let 't := arg_54__ in
+      GHC.Base.build (fun arg_55__ arg_56__ =>
+                       match arg_55__ , arg_56__ with
+                       | c , n => Foldable__Min_foldr c n t
+                       end).
 
 Local Definition Foldable__Min_product : forall {a},
                                            forall `{GHC.Num.Num a}, Min a -> a :=
@@ -795,10 +770,10 @@ Local Definition Foldable__Min_elem : forall {a},
                                         forall `{GHC.Base.Eq_ a}, a -> Min a -> bool :=
   fun {a} `{GHC.Base.Eq_ a} =>
     Coq.Program.Basics.compose (fun arg_69__ =>
-                                 match arg_69__ with
-                                   | p => Coq.Program.Basics.compose Data.Monoid.getAny (Foldable__Min_foldMap
-                                                                     (Coq.Program.Basics.compose Data.Monoid.Mk_Any p))
-                                 end) _GHC.Base.==_.
+                                 let 'p := arg_69__ in
+                                 Coq.Program.Basics.compose Data.Monoid.getAny (Foldable__Min_foldMap
+                                                            (Coq.Program.Basics.compose Data.Monoid.Mk_Any p)))
+                               _GHC.Base.==_.
 
 Program Instance Foldable__Min : Data.Foldable.Foldable Min := fun _ k =>
     k {|Data.Foldable.elem__ := fun {a} `{GHC.Base.Eq_ a} => Foldable__Min_elem ;
@@ -821,7 +796,7 @@ Local Definition Traversable__Min_traverse : forall {f} {a} {b},
   fun {f} {a} {b} `{GHC.Base.Applicative f} =>
     fun arg_0__ arg_1__ =>
       match arg_0__ , arg_1__ with
-        | f , Mk_Min a => Mk_Min Data.Functor.<$> f a
+      | f , Mk_Min a => Mk_Min Data.Functor.<$> f a
       end.
 
 Local Definition Traversable__Min_sequenceA : forall {f} {a},
@@ -853,7 +828,7 @@ Local Definition Applicative__Min_op_zlztzg__ : forall {a} {b},
   fun {a} {b} =>
     fun arg_0__ arg_1__ =>
       match arg_0__ , arg_1__ with
-        | Mk_Min f , Mk_Min x => Mk_Min (f x)
+      | Mk_Min f , Mk_Min x => Mk_Min (f x)
       end.
 
 Local Definition Applicative__Min_op_ztzg__ : forall {a} {b},
@@ -911,14 +886,13 @@ Local Definition Semigroup__Max_op_zlzg__ {inst_a} `{_ : GHC.Base.Ord inst_a}
 Local Definition Semigroup__Max_sconcat {inst_a} `{GHC.Base.Ord inst_a}
     : Data.List.NonEmpty.NonEmpty (Max inst_a) -> (Max inst_a) :=
   fun arg_0__ =>
-    match arg_0__ with
-      | Data.List.NonEmpty.NEcons a as_ => let fix go arg_1__ arg_2__
-                                                     := match arg_1__ , arg_2__ with
-                                                          | b , cons c cs => Semigroup__Max_op_zlzg__ b (go c cs)
-                                                          | b , nil => b
-                                                        end in
-                                           go a as_
-    end.
+    let 'Data.List.NonEmpty.NEcons a as_ := arg_0__ in
+    let fix go arg_1__ arg_2__
+              := match arg_1__ , arg_2__ with
+                 | b , cons c cs => Semigroup__Max_op_zlzg__ b (go c cs)
+                 | b , nil => b
+                 end in
+    go a as_.
 
 Program Instance Semigroup__Max {a} `{GHC.Base.Ord a} : Semigroup (Max a) :=
   fun _ k =>
@@ -933,7 +907,7 @@ Local Definition Functor__Max_fmap : forall {a} {b},
   fun {a} {b} =>
     fun arg_0__ arg_1__ =>
       match arg_0__ , arg_1__ with
-        | f , Mk_Max x => Mk_Max (f x)
+      | f , Mk_Max x => Mk_Max (f x)
       end.
 
 Local Definition Functor__Max_op_zlzd__ : forall {a} {b}, a -> Max b -> Max a :=
@@ -954,11 +928,12 @@ Local Definition Foldable__Max_foldl : forall {b} {a},
   fun {b} {a} =>
     fun arg_19__ arg_20__ arg_21__ =>
       match arg_19__ , arg_20__ , arg_21__ with
-        | f , z , t => Data.Monoid.appEndo (Data.Monoid.getDual (Foldable__Max_foldMap
-                                                                (Coq.Program.Basics.compose Data.Monoid.Mk_Dual
-                                                                                            (Coq.Program.Basics.compose
-                                                                                            Data.Monoid.Mk_Endo
-                                                                                            (GHC.Base.flip f))) t)) z
+      | f , z , t =>
+          Data.Monoid.appEndo (Data.Monoid.getDual (Foldable__Max_foldMap
+                                                   (Coq.Program.Basics.compose Data.Monoid.Mk_Dual
+                                                                               (Coq.Program.Basics.compose
+                                                                               Data.Monoid.Mk_Endo (GHC.Base.flip f)))
+                                                   t)) z
       end.
 
 Local Definition Foldable__Max_foldr' : forall {a} {b},
@@ -966,12 +941,13 @@ Local Definition Foldable__Max_foldr' : forall {a} {b},
   fun {a} {b} =>
     fun arg_9__ arg_10__ arg_11__ =>
       match arg_9__ , arg_10__ , arg_11__ with
-        | f , z0 , xs => let f' :=
-                           fun arg_12__ arg_13__ arg_14__ =>
-                             match arg_12__ , arg_13__ , arg_14__ with
-                               | k , x , z => _GHC.Base.$!_ k (f x z)
-                             end in
-                         Foldable__Max_foldl f' GHC.Base.id xs z0
+      | f , z0 , xs =>
+          let f' :=
+            fun arg_12__ arg_13__ arg_14__ =>
+              match arg_12__ , arg_13__ , arg_14__ with
+              | k , x , z => _GHC.Base.$!_ k (f x z)
+              end in
+          Foldable__Max_foldl f' GHC.Base.id xs z0
       end.
 
 Local Definition Foldable__Max_foldr : forall {a} {b},
@@ -979,8 +955,9 @@ Local Definition Foldable__Max_foldr : forall {a} {b},
   fun {a} {b} =>
     fun arg_4__ arg_5__ arg_6__ =>
       match arg_4__ , arg_5__ , arg_6__ with
-        | f , z , t => Data.Monoid.appEndo (Foldable__Max_foldMap
-                                           (Data.Foldable.hash_compose Data.Monoid.Mk_Endo f) t) z
+      | f , z , t =>
+          Data.Monoid.appEndo (Foldable__Max_foldMap (Data.Foldable.hash_compose
+                                                     Data.Monoid.Mk_Endo f) t) z
       end.
 
 Local Definition Foldable__Max_foldl' : forall {b} {a},
@@ -988,19 +965,20 @@ Local Definition Foldable__Max_foldl' : forall {b} {a},
   fun {b} {a} =>
     fun arg_24__ arg_25__ arg_26__ =>
       match arg_24__ , arg_25__ , arg_26__ with
-        | f , z0 , xs => let f' :=
-                           fun arg_27__ arg_28__ arg_29__ =>
-                             match arg_27__ , arg_28__ , arg_29__ with
-                               | x , k , z => _GHC.Base.$!_ k (f z x)
-                             end in
-                         Foldable__Max_foldr f' GHC.Base.id xs z0
+      | f , z0 , xs =>
+          let f' :=
+            fun arg_27__ arg_28__ arg_29__ =>
+              match arg_27__ , arg_28__ , arg_29__ with
+              | x , k , z => _GHC.Base.$!_ k (f z x)
+              end in
+          Foldable__Max_foldr f' GHC.Base.id xs z0
       end.
 
 Local Definition Foldable__Max_length : forall {a}, Max a -> GHC.Num.Int :=
   fun {a} =>
     Foldable__Max_foldl' (fun arg_64__ arg_65__ =>
                            match arg_64__ , arg_65__ with
-                             | c , _ => _GHC.Num.+_ c (GHC.Num.fromInteger 1)
+                           | c , _ => _GHC.Num.+_ c (GHC.Num.fromInteger 1)
                            end) (GHC.Num.fromInteger 0).
 
 Local Definition Foldable__Max_null : forall {a}, Max a -> bool :=
@@ -1009,12 +987,11 @@ Local Definition Foldable__Max_null : forall {a}, Max a -> bool :=
 Local Definition Foldable__Max_toList : forall {a}, Max a -> list a :=
   fun {a} =>
     fun arg_54__ =>
-      match arg_54__ with
-        | t => GHC.Base.build (fun arg_55__ arg_56__ =>
-                                match arg_55__ , arg_56__ with
-                                  | c , n => Foldable__Max_foldr c n t
-                                end)
-      end.
+      let 't := arg_54__ in
+      GHC.Base.build (fun arg_55__ arg_56__ =>
+                       match arg_55__ , arg_56__ with
+                       | c , n => Foldable__Max_foldr c n t
+                       end).
 
 Local Definition Foldable__Max_product : forall {a},
                                            forall `{GHC.Num.Num a}, Max a -> a :=
@@ -1036,10 +1013,10 @@ Local Definition Foldable__Max_elem : forall {a},
                                         forall `{GHC.Base.Eq_ a}, a -> Max a -> bool :=
   fun {a} `{GHC.Base.Eq_ a} =>
     Coq.Program.Basics.compose (fun arg_69__ =>
-                                 match arg_69__ with
-                                   | p => Coq.Program.Basics.compose Data.Monoid.getAny (Foldable__Max_foldMap
-                                                                     (Coq.Program.Basics.compose Data.Monoid.Mk_Any p))
-                                 end) _GHC.Base.==_.
+                                 let 'p := arg_69__ in
+                                 Coq.Program.Basics.compose Data.Monoid.getAny (Foldable__Max_foldMap
+                                                            (Coq.Program.Basics.compose Data.Monoid.Mk_Any p)))
+                               _GHC.Base.==_.
 
 Program Instance Foldable__Max : Data.Foldable.Foldable Max := fun _ k =>
     k {|Data.Foldable.elem__ := fun {a} `{GHC.Base.Eq_ a} => Foldable__Max_elem ;
@@ -1062,7 +1039,7 @@ Local Definition Traversable__Max_traverse : forall {f} {a} {b},
   fun {f} {a} {b} `{GHC.Base.Applicative f} =>
     fun arg_0__ arg_1__ =>
       match arg_0__ , arg_1__ with
-        | f , Mk_Max a => Mk_Max Data.Functor.<$> f a
+      | f , Mk_Max a => Mk_Max Data.Functor.<$> f a
       end.
 
 Local Definition Traversable__Max_sequenceA : forall {f} {a},
@@ -1094,7 +1071,7 @@ Local Definition Applicative__Max_op_zlztzg__ : forall {a} {b},
   fun {a} {b} =>
     fun arg_0__ arg_1__ =>
       match arg_0__ , arg_1__ with
-        | Mk_Max f , Mk_Max x => Mk_Max (f x)
+      | Mk_Max f , Mk_Max x => Mk_Max (f x)
       end.
 
 Local Definition Applicative__Max_op_ztzg__ : forall {a} {b},
@@ -1142,7 +1119,7 @@ Local Definition Functor__Arg_fmap {inst_a} : forall {a} {b},
   fun {a} {b} =>
     fun arg_0__ arg_1__ =>
       match arg_0__ , arg_1__ with
-        | f , Mk_Arg x a => Mk_Arg x (f a)
+      | f , Mk_Arg x a => Mk_Arg x (f a)
       end.
 
 Local Definition Functor__Arg_op_zlzd__ {inst_a} : forall {a} {b},
@@ -1164,11 +1141,12 @@ Local Definition Foldable__Arg_foldl {inst_a} : forall {b} {a},
   fun {b} {a} =>
     fun arg_19__ arg_20__ arg_21__ =>
       match arg_19__ , arg_20__ , arg_21__ with
-        | f , z , t => Data.Monoid.appEndo (Data.Monoid.getDual (Foldable__Arg_foldMap
-                                                                (Coq.Program.Basics.compose Data.Monoid.Mk_Dual
-                                                                                            (Coq.Program.Basics.compose
-                                                                                            Data.Monoid.Mk_Endo
-                                                                                            (GHC.Base.flip f))) t)) z
+      | f , z , t =>
+          Data.Monoid.appEndo (Data.Monoid.getDual (Foldable__Arg_foldMap
+                                                   (Coq.Program.Basics.compose Data.Monoid.Mk_Dual
+                                                                               (Coq.Program.Basics.compose
+                                                                               Data.Monoid.Mk_Endo (GHC.Base.flip f)))
+                                                   t)) z
       end.
 
 Local Definition Foldable__Arg_foldr' {inst_a} : forall {a} {b},
@@ -1176,12 +1154,13 @@ Local Definition Foldable__Arg_foldr' {inst_a} : forall {a} {b},
   fun {a} {b} =>
     fun arg_9__ arg_10__ arg_11__ =>
       match arg_9__ , arg_10__ , arg_11__ with
-        | f , z0 , xs => let f' :=
-                           fun arg_12__ arg_13__ arg_14__ =>
-                             match arg_12__ , arg_13__ , arg_14__ with
-                               | k , x , z => _GHC.Base.$!_ k (f x z)
-                             end in
-                         Foldable__Arg_foldl f' GHC.Base.id xs z0
+      | f , z0 , xs =>
+          let f' :=
+            fun arg_12__ arg_13__ arg_14__ =>
+              match arg_12__ , arg_13__ , arg_14__ with
+              | k , x , z => _GHC.Base.$!_ k (f x z)
+              end in
+          Foldable__Arg_foldl f' GHC.Base.id xs z0
       end.
 
 Local Definition Foldable__Arg_foldr {inst_a} : forall {a} {b},
@@ -1189,8 +1168,9 @@ Local Definition Foldable__Arg_foldr {inst_a} : forall {a} {b},
   fun {a} {b} =>
     fun arg_4__ arg_5__ arg_6__ =>
       match arg_4__ , arg_5__ , arg_6__ with
-        | f , z , t => Data.Monoid.appEndo (Foldable__Arg_foldMap
-                                           (Data.Foldable.hash_compose Data.Monoid.Mk_Endo f) t) z
+      | f , z , t =>
+          Data.Monoid.appEndo (Foldable__Arg_foldMap (Data.Foldable.hash_compose
+                                                     Data.Monoid.Mk_Endo f) t) z
       end.
 
 Local Definition Foldable__Arg_foldl' {inst_a} : forall {b} {a},
@@ -1198,12 +1178,13 @@ Local Definition Foldable__Arg_foldl' {inst_a} : forall {b} {a},
   fun {b} {a} =>
     fun arg_24__ arg_25__ arg_26__ =>
       match arg_24__ , arg_25__ , arg_26__ with
-        | f , z0 , xs => let f' :=
-                           fun arg_27__ arg_28__ arg_29__ =>
-                             match arg_27__ , arg_28__ , arg_29__ with
-                               | x , k , z => _GHC.Base.$!_ k (f z x)
-                             end in
-                         Foldable__Arg_foldr f' GHC.Base.id xs z0
+      | f , z0 , xs =>
+          let f' :=
+            fun arg_27__ arg_28__ arg_29__ =>
+              match arg_27__ , arg_28__ , arg_29__ with
+              | x , k , z => _GHC.Base.$!_ k (f z x)
+              end in
+          Foldable__Arg_foldr f' GHC.Base.id xs z0
       end.
 
 Local Definition Foldable__Arg_length {inst_a} : forall {a},
@@ -1211,7 +1192,7 @@ Local Definition Foldable__Arg_length {inst_a} : forall {a},
   fun {a} =>
     Foldable__Arg_foldl' (fun arg_64__ arg_65__ =>
                            match arg_64__ , arg_65__ with
-                             | c , _ => _GHC.Num.+_ c (GHC.Num.fromInteger 1)
+                           | c , _ => _GHC.Num.+_ c (GHC.Num.fromInteger 1)
                            end) (GHC.Num.fromInteger 0).
 
 Local Definition Foldable__Arg_null {inst_a} : forall {a},
@@ -1222,12 +1203,11 @@ Local Definition Foldable__Arg_toList {inst_a} : forall {a},
                                                    (Arg inst_a) a -> list a :=
   fun {a} =>
     fun arg_54__ =>
-      match arg_54__ with
-        | t => GHC.Base.build (fun arg_55__ arg_56__ =>
-                                match arg_55__ , arg_56__ with
-                                  | c , n => Foldable__Arg_foldr c n t
-                                end)
-      end.
+      let 't := arg_54__ in
+      GHC.Base.build (fun arg_55__ arg_56__ =>
+                       match arg_55__ , arg_56__ with
+                       | c , n => Foldable__Arg_foldr c n t
+                       end).
 
 Local Definition Foldable__Arg_product {inst_a} : forall {a},
                                                     forall `{GHC.Num.Num a}, (Arg inst_a) a -> a :=
@@ -1249,10 +1229,10 @@ Local Definition Foldable__Arg_elem {inst_a} : forall {a},
                                                  forall `{GHC.Base.Eq_ a}, a -> (Arg inst_a) a -> bool :=
   fun {a} `{GHC.Base.Eq_ a} =>
     Coq.Program.Basics.compose (fun arg_69__ =>
-                                 match arg_69__ with
-                                   | p => Coq.Program.Basics.compose Data.Monoid.getAny (Foldable__Arg_foldMap
-                                                                     (Coq.Program.Basics.compose Data.Monoid.Mk_Any p))
-                                 end) _GHC.Base.==_.
+                                 let 'p := arg_69__ in
+                                 Coq.Program.Basics.compose Data.Monoid.getAny (Foldable__Arg_foldMap
+                                                            (Coq.Program.Basics.compose Data.Monoid.Mk_Any p)))
+                               _GHC.Base.==_.
 
 Program Instance Foldable__Arg {a} : Data.Foldable.Foldable (Arg a) := fun _
                                                                            k =>
@@ -1277,7 +1257,7 @@ Local Definition Traversable__Arg_traverse {inst_a} : forall {f} {a} {b},
   fun {f} {a} {b} `{GHC.Base.Applicative f} =>
     fun arg_0__ arg_1__ =>
       match arg_0__ , arg_1__ with
-        | f , Mk_Arg x a => Mk_Arg x Data.Functor.<$> f a
+      | f , Mk_Arg x a => Mk_Arg x Data.Functor.<$> f a
       end.
 
 Local Definition Traversable__Arg_sequenceA {inst_a} : forall {f} {a},
@@ -1311,7 +1291,7 @@ Local Definition Eq___Arg_op_zeze__ {inst_a} {inst_b} `{GHC.Base.Eq_ inst_a}
     : (Arg inst_a inst_b) -> (Arg inst_a inst_b) -> bool :=
   fun arg_0__ arg_1__ =>
     match arg_0__ , arg_1__ with
-      | Mk_Arg a _ , Mk_Arg b _ => a GHC.Base.== b
+    | Mk_Arg a _ , Mk_Arg b _ => a GHC.Base.== b
     end.
 
 Local Definition Eq___Arg_op_zsze__ {inst_a} {inst_b} `{GHC.Base.Eq_ inst_a}
@@ -1346,7 +1326,7 @@ Local Definition Functor__First_fmap : forall {a} {b},
   fun {a} {b} =>
     fun arg_0__ arg_1__ =>
       match arg_0__ , arg_1__ with
-        | f , Mk_First x => Mk_First (f x)
+      | f , Mk_First x => Mk_First (f x)
       end.
 
 Local Definition Functor__First_op_zlzd__ : forall {a} {b},
@@ -1368,11 +1348,12 @@ Local Definition Foldable__First_foldl : forall {b} {a},
   fun {b} {a} =>
     fun arg_19__ arg_20__ arg_21__ =>
       match arg_19__ , arg_20__ , arg_21__ with
-        | f , z , t => Data.Monoid.appEndo (Data.Monoid.getDual (Foldable__First_foldMap
-                                                                (Coq.Program.Basics.compose Data.Monoid.Mk_Dual
-                                                                                            (Coq.Program.Basics.compose
-                                                                                            Data.Monoid.Mk_Endo
-                                                                                            (GHC.Base.flip f))) t)) z
+      | f , z , t =>
+          Data.Monoid.appEndo (Data.Monoid.getDual (Foldable__First_foldMap
+                                                   (Coq.Program.Basics.compose Data.Monoid.Mk_Dual
+                                                                               (Coq.Program.Basics.compose
+                                                                               Data.Monoid.Mk_Endo (GHC.Base.flip f)))
+                                                   t)) z
       end.
 
 Local Definition Foldable__First_foldr' : forall {a} {b},
@@ -1380,12 +1361,13 @@ Local Definition Foldable__First_foldr' : forall {a} {b},
   fun {a} {b} =>
     fun arg_9__ arg_10__ arg_11__ =>
       match arg_9__ , arg_10__ , arg_11__ with
-        | f , z0 , xs => let f' :=
-                           fun arg_12__ arg_13__ arg_14__ =>
-                             match arg_12__ , arg_13__ , arg_14__ with
-                               | k , x , z => _GHC.Base.$!_ k (f x z)
-                             end in
-                         Foldable__First_foldl f' GHC.Base.id xs z0
+      | f , z0 , xs =>
+          let f' :=
+            fun arg_12__ arg_13__ arg_14__ =>
+              match arg_12__ , arg_13__ , arg_14__ with
+              | k , x , z => _GHC.Base.$!_ k (f x z)
+              end in
+          Foldable__First_foldl f' GHC.Base.id xs z0
       end.
 
 Local Definition Foldable__First_foldr : forall {a} {b},
@@ -1393,8 +1375,9 @@ Local Definition Foldable__First_foldr : forall {a} {b},
   fun {a} {b} =>
     fun arg_4__ arg_5__ arg_6__ =>
       match arg_4__ , arg_5__ , arg_6__ with
-        | f , z , t => Data.Monoid.appEndo (Foldable__First_foldMap
-                                           (Data.Foldable.hash_compose Data.Monoid.Mk_Endo f) t) z
+      | f , z , t =>
+          Data.Monoid.appEndo (Foldable__First_foldMap (Data.Foldable.hash_compose
+                                                       Data.Monoid.Mk_Endo f) t) z
       end.
 
 Local Definition Foldable__First_foldl' : forall {b} {a},
@@ -1402,19 +1385,20 @@ Local Definition Foldable__First_foldl' : forall {b} {a},
   fun {b} {a} =>
     fun arg_24__ arg_25__ arg_26__ =>
       match arg_24__ , arg_25__ , arg_26__ with
-        | f , z0 , xs => let f' :=
-                           fun arg_27__ arg_28__ arg_29__ =>
-                             match arg_27__ , arg_28__ , arg_29__ with
-                               | x , k , z => _GHC.Base.$!_ k (f z x)
-                             end in
-                         Foldable__First_foldr f' GHC.Base.id xs z0
+      | f , z0 , xs =>
+          let f' :=
+            fun arg_27__ arg_28__ arg_29__ =>
+              match arg_27__ , arg_28__ , arg_29__ with
+              | x , k , z => _GHC.Base.$!_ k (f z x)
+              end in
+          Foldable__First_foldr f' GHC.Base.id xs z0
       end.
 
 Local Definition Foldable__First_length : forall {a}, First a -> GHC.Num.Int :=
   fun {a} =>
     Foldable__First_foldl' (fun arg_64__ arg_65__ =>
                              match arg_64__ , arg_65__ with
-                               | c , _ => _GHC.Num.+_ c (GHC.Num.fromInteger 1)
+                             | c , _ => _GHC.Num.+_ c (GHC.Num.fromInteger 1)
                              end) (GHC.Num.fromInteger 0).
 
 Local Definition Foldable__First_null : forall {a}, First a -> bool :=
@@ -1423,12 +1407,11 @@ Local Definition Foldable__First_null : forall {a}, First a -> bool :=
 Local Definition Foldable__First_toList : forall {a}, First a -> list a :=
   fun {a} =>
     fun arg_54__ =>
-      match arg_54__ with
-        | t => GHC.Base.build (fun arg_55__ arg_56__ =>
-                                match arg_55__ , arg_56__ with
-                                  | c , n => Foldable__First_foldr c n t
-                                end)
-      end.
+      let 't := arg_54__ in
+      GHC.Base.build (fun arg_55__ arg_56__ =>
+                       match arg_55__ , arg_56__ with
+                       | c , n => Foldable__First_foldr c n t
+                       end).
 
 Local Definition Foldable__First_product : forall {a},
                                              forall `{GHC.Num.Num a}, First a -> a :=
@@ -1450,10 +1433,10 @@ Local Definition Foldable__First_elem : forall {a},
                                           forall `{GHC.Base.Eq_ a}, a -> First a -> bool :=
   fun {a} `{GHC.Base.Eq_ a} =>
     Coq.Program.Basics.compose (fun arg_69__ =>
-                                 match arg_69__ with
-                                   | p => Coq.Program.Basics.compose Data.Monoid.getAny (Foldable__First_foldMap
-                                                                     (Coq.Program.Basics.compose Data.Monoid.Mk_Any p))
-                                 end) _GHC.Base.==_.
+                                 let 'p := arg_69__ in
+                                 Coq.Program.Basics.compose Data.Monoid.getAny (Foldable__First_foldMap
+                                                            (Coq.Program.Basics.compose Data.Monoid.Mk_Any p)))
+                               _GHC.Base.==_.
 
 Program Instance Foldable__First : Data.Foldable.Foldable First := fun _ k =>
     k {|Data.Foldable.elem__ := fun {a} `{GHC.Base.Eq_ a} => Foldable__First_elem ;
@@ -1477,7 +1460,7 @@ Local Definition Traversable__First_traverse : forall {f} {a} {b},
   fun {f} {a} {b} `{GHC.Base.Applicative f} =>
     fun arg_0__ arg_1__ =>
       match arg_0__ , arg_1__ with
-        | f , Mk_First a => Mk_First Data.Functor.<$> f a
+      | f , Mk_First a => Mk_First Data.Functor.<$> f a
       end.
 
 Local Definition Traversable__First_sequenceA : forall {f} {a},
@@ -1510,7 +1493,7 @@ Local Definition Applicative__First_op_zlztzg__ : forall {a} {b},
   fun {a} {b} =>
     fun arg_0__ arg_1__ =>
       match arg_0__ , arg_1__ with
-        | Mk_First f , Mk_First x => Mk_First (f x)
+      | Mk_First f , Mk_First x => Mk_First (f x)
       end.
 
 Local Definition Applicative__First_op_ztzg__ : forall {a} {b},
@@ -1564,7 +1547,7 @@ Local Definition Functor__Last_fmap : forall {a} {b},
   fun {a} {b} =>
     fun arg_0__ arg_1__ =>
       match arg_0__ , arg_1__ with
-        | f , Mk_Last x => Mk_Last (f x)
+      | f , Mk_Last x => Mk_Last (f x)
       end.
 
 Local Definition Functor__Last_op_zlzd__ : forall {a} {b},
@@ -1587,11 +1570,12 @@ Local Definition Foldable__Last_foldl : forall {b} {a},
   fun {b} {a} =>
     fun arg_19__ arg_20__ arg_21__ =>
       match arg_19__ , arg_20__ , arg_21__ with
-        | f , z , t => Data.Monoid.appEndo (Data.Monoid.getDual (Foldable__Last_foldMap
-                                                                (Coq.Program.Basics.compose Data.Monoid.Mk_Dual
-                                                                                            (Coq.Program.Basics.compose
-                                                                                            Data.Monoid.Mk_Endo
-                                                                                            (GHC.Base.flip f))) t)) z
+      | f , z , t =>
+          Data.Monoid.appEndo (Data.Monoid.getDual (Foldable__Last_foldMap
+                                                   (Coq.Program.Basics.compose Data.Monoid.Mk_Dual
+                                                                               (Coq.Program.Basics.compose
+                                                                               Data.Monoid.Mk_Endo (GHC.Base.flip f)))
+                                                   t)) z
       end.
 
 Local Definition Foldable__Last_foldr' : forall {a} {b},
@@ -1599,12 +1583,13 @@ Local Definition Foldable__Last_foldr' : forall {a} {b},
   fun {a} {b} =>
     fun arg_9__ arg_10__ arg_11__ =>
       match arg_9__ , arg_10__ , arg_11__ with
-        | f , z0 , xs => let f' :=
-                           fun arg_12__ arg_13__ arg_14__ =>
-                             match arg_12__ , arg_13__ , arg_14__ with
-                               | k , x , z => _GHC.Base.$!_ k (f x z)
-                             end in
-                         Foldable__Last_foldl f' GHC.Base.id xs z0
+      | f , z0 , xs =>
+          let f' :=
+            fun arg_12__ arg_13__ arg_14__ =>
+              match arg_12__ , arg_13__ , arg_14__ with
+              | k , x , z => _GHC.Base.$!_ k (f x z)
+              end in
+          Foldable__Last_foldl f' GHC.Base.id xs z0
       end.
 
 Local Definition Foldable__Last_foldr : forall {a} {b},
@@ -1612,8 +1597,9 @@ Local Definition Foldable__Last_foldr : forall {a} {b},
   fun {a} {b} =>
     fun arg_4__ arg_5__ arg_6__ =>
       match arg_4__ , arg_5__ , arg_6__ with
-        | f , z , t => Data.Monoid.appEndo (Foldable__Last_foldMap
-                                           (Data.Foldable.hash_compose Data.Monoid.Mk_Endo f) t) z
+      | f , z , t =>
+          Data.Monoid.appEndo (Foldable__Last_foldMap (Data.Foldable.hash_compose
+                                                      Data.Monoid.Mk_Endo f) t) z
       end.
 
 Local Definition Foldable__Last_foldl' : forall {b} {a},
@@ -1621,19 +1607,20 @@ Local Definition Foldable__Last_foldl' : forall {b} {a},
   fun {b} {a} =>
     fun arg_24__ arg_25__ arg_26__ =>
       match arg_24__ , arg_25__ , arg_26__ with
-        | f , z0 , xs => let f' :=
-                           fun arg_27__ arg_28__ arg_29__ =>
-                             match arg_27__ , arg_28__ , arg_29__ with
-                               | x , k , z => _GHC.Base.$!_ k (f z x)
-                             end in
-                         Foldable__Last_foldr f' GHC.Base.id xs z0
+      | f , z0 , xs =>
+          let f' :=
+            fun arg_27__ arg_28__ arg_29__ =>
+              match arg_27__ , arg_28__ , arg_29__ with
+              | x , k , z => _GHC.Base.$!_ k (f z x)
+              end in
+          Foldable__Last_foldr f' GHC.Base.id xs z0
       end.
 
 Local Definition Foldable__Last_length : forall {a}, Last a -> GHC.Num.Int :=
   fun {a} =>
     Foldable__Last_foldl' (fun arg_64__ arg_65__ =>
                             match arg_64__ , arg_65__ with
-                              | c , _ => _GHC.Num.+_ c (GHC.Num.fromInteger 1)
+                            | c , _ => _GHC.Num.+_ c (GHC.Num.fromInteger 1)
                             end) (GHC.Num.fromInteger 0).
 
 Local Definition Foldable__Last_null : forall {a}, Last a -> bool :=
@@ -1642,12 +1629,11 @@ Local Definition Foldable__Last_null : forall {a}, Last a -> bool :=
 Local Definition Foldable__Last_toList : forall {a}, Last a -> list a :=
   fun {a} =>
     fun arg_54__ =>
-      match arg_54__ with
-        | t => GHC.Base.build (fun arg_55__ arg_56__ =>
-                                match arg_55__ , arg_56__ with
-                                  | c , n => Foldable__Last_foldr c n t
-                                end)
-      end.
+      let 't := arg_54__ in
+      GHC.Base.build (fun arg_55__ arg_56__ =>
+                       match arg_55__ , arg_56__ with
+                       | c , n => Foldable__Last_foldr c n t
+                       end).
 
 Local Definition Foldable__Last_product : forall {a},
                                             forall `{GHC.Num.Num a}, Last a -> a :=
@@ -1669,10 +1655,10 @@ Local Definition Foldable__Last_elem : forall {a},
                                          forall `{GHC.Base.Eq_ a}, a -> Last a -> bool :=
   fun {a} `{GHC.Base.Eq_ a} =>
     Coq.Program.Basics.compose (fun arg_69__ =>
-                                 match arg_69__ with
-                                   | p => Coq.Program.Basics.compose Data.Monoid.getAny (Foldable__Last_foldMap
-                                                                     (Coq.Program.Basics.compose Data.Monoid.Mk_Any p))
-                                 end) _GHC.Base.==_.
+                                 let 'p := arg_69__ in
+                                 Coq.Program.Basics.compose Data.Monoid.getAny (Foldable__Last_foldMap
+                                                            (Coq.Program.Basics.compose Data.Monoid.Mk_Any p)))
+                               _GHC.Base.==_.
 
 Program Instance Foldable__Last : Data.Foldable.Foldable Last := fun _ k =>
     k {|Data.Foldable.elem__ := fun {a} `{GHC.Base.Eq_ a} => Foldable__Last_elem ;
@@ -1695,7 +1681,7 @@ Local Definition Traversable__Last_traverse : forall {f} {a} {b},
   fun {f} {a} {b} `{GHC.Base.Applicative f} =>
     fun arg_0__ arg_1__ =>
       match arg_0__ , arg_1__ with
-        | f , Mk_Last a => Mk_Last Data.Functor.<$> f a
+      | f , Mk_Last a => Mk_Last Data.Functor.<$> f a
       end.
 
 Local Definition Traversable__Last_sequenceA : forall {f} {a},
@@ -1727,7 +1713,7 @@ Local Definition Applicative__Last_op_zlztzg__ : forall {a} {b},
   fun {a} {b} =>
     fun arg_0__ arg_1__ =>
       match arg_0__ , arg_1__ with
-        | Mk_Last f , Mk_Last x => Mk_Last (f x)
+      | Mk_Last f , Mk_Last x => Mk_Last (f x)
       end.
 
 Local Definition Applicative__Last_op_ztzg__ : forall {a} {b},
@@ -1776,15 +1762,13 @@ Local Definition Semigroup__WrappedMonoid_sconcat {inst_m} `{GHC.Base.Monoid
                                                                                         inst_m) -> (WrappedMonoid
                                                             inst_m) :=
   fun arg_0__ =>
-    match arg_0__ with
-      | Data.List.NonEmpty.NEcons a as_ => let fix go arg_1__ arg_2__
-                                                     := match arg_1__ , arg_2__ with
-                                                          | b , cons c cs => Semigroup__WrappedMonoid_op_zlzg__ b (go c
-                                                                                                                cs)
-                                                          | b , nil => b
-                                                        end in
-                                           go a as_
-    end.
+    let 'Data.List.NonEmpty.NEcons a as_ := arg_0__ in
+    let fix go arg_1__ arg_2__
+              := match arg_1__ , arg_2__ with
+                 | b , cons c cs => Semigroup__WrappedMonoid_op_zlzg__ b (go c cs)
+                 | b , nil => b
+                 end in
+    go a as_.
 
 Program Instance Semigroup__WrappedMonoid {m} `{GHC.Base.Monoid m} : Semigroup
                                                                      (WrappedMonoid m) := fun _ k =>
@@ -1825,7 +1809,7 @@ Local Definition Functor__Option_fmap : forall {a} {b},
   fun {a} {b} =>
     fun arg_0__ arg_1__ =>
       match arg_0__ , arg_1__ with
-        | f , Mk_Option a => Mk_Option (GHC.Base.fmap f a)
+      | f , Mk_Option a => Mk_Option (GHC.Base.fmap f a)
       end.
 
 Local Definition Functor__Option_op_zlzd__ : forall {a} {b},
@@ -1842,7 +1826,7 @@ Local Definition Applicative__Option_op_zlztzg__ : forall {a} {b},
   fun {a} {b} =>
     fun arg_0__ arg_1__ =>
       match arg_0__ , arg_1__ with
-        | Mk_Option a , Mk_Option b => Mk_Option (a GHC.Base.<*> b)
+      | Mk_Option a , Mk_Option b => Mk_Option (a GHC.Base.<*> b)
       end.
 
 Local Definition Applicative__Option_op_ztzg__ : forall {a} {b},
@@ -1850,8 +1834,8 @@ Local Definition Applicative__Option_op_ztzg__ : forall {a} {b},
   fun {a} {b} =>
     fun arg_0__ arg_1__ =>
       match arg_0__ , arg_1__ with
-        | Mk_Option None , _ => Mk_Option None
-        | _ , b => b
+      | Mk_Option None , _ => Mk_Option None
+      | _ , b => b
       end.
 
 Local Definition Applicative__Option_pure : forall {a}, a -> Option a :=
@@ -1872,8 +1856,8 @@ Local Definition Monad__Option_op_zgzgze__ : forall {a} {b},
   fun {a} {b} =>
     fun arg_0__ arg_1__ =>
       match arg_0__ , arg_1__ with
-        | Mk_Option (Some a) , k => k a
-        | _ , _ => Mk_Option None
+      | Mk_Option (Some a) , k => k a
+      | _ , _ => Mk_Option None
       end.
 
 Local Definition Monad__Option_return_ : forall {a}, a -> Option a :=
@@ -1902,8 +1886,8 @@ Local Definition Foldable__Option_foldMap : forall {m} {a},
   fun {m} {a} `{GHC.Base.Monoid m} =>
     fun arg_0__ arg_1__ =>
       match arg_0__ , arg_1__ with
-        | f , Mk_Option (Some m) => f m
-        | _ , Mk_Option None => GHC.Base.mempty
+      | f , Mk_Option (Some m) => f m
+      | _ , Mk_Option None => GHC.Base.mempty
       end.
 
 Local Definition Foldable__Option_foldl : forall {b} {a},
@@ -1911,12 +1895,12 @@ Local Definition Foldable__Option_foldl : forall {b} {a},
   fun {b} {a} =>
     fun arg_19__ arg_20__ arg_21__ =>
       match arg_19__ , arg_20__ , arg_21__ with
-        | f , z , t => Data.Monoid.appEndo (Data.Monoid.getDual
-                                           (Foldable__Option_foldMap (Coq.Program.Basics.compose Data.Monoid.Mk_Dual
-                                                                                                 (Coq.Program.Basics.compose
-                                                                                                 Data.Monoid.Mk_Endo
-                                                                                                 (GHC.Base.flip f))) t))
-                       z
+      | f , z , t =>
+          Data.Monoid.appEndo (Data.Monoid.getDual (Foldable__Option_foldMap
+                                                   (Coq.Program.Basics.compose Data.Monoid.Mk_Dual
+                                                                               (Coq.Program.Basics.compose
+                                                                               Data.Monoid.Mk_Endo (GHC.Base.flip f)))
+                                                   t)) z
       end.
 
 Local Definition Foldable__Option_foldr' : forall {a} {b},
@@ -1924,12 +1908,13 @@ Local Definition Foldable__Option_foldr' : forall {a} {b},
   fun {a} {b} =>
     fun arg_9__ arg_10__ arg_11__ =>
       match arg_9__ , arg_10__ , arg_11__ with
-        | f , z0 , xs => let f' :=
-                           fun arg_12__ arg_13__ arg_14__ =>
-                             match arg_12__ , arg_13__ , arg_14__ with
-                               | k , x , z => _GHC.Base.$!_ k (f x z)
-                             end in
-                         Foldable__Option_foldl f' GHC.Base.id xs z0
+      | f , z0 , xs =>
+          let f' :=
+            fun arg_12__ arg_13__ arg_14__ =>
+              match arg_12__ , arg_13__ , arg_14__ with
+              | k , x , z => _GHC.Base.$!_ k (f x z)
+              end in
+          Foldable__Option_foldl f' GHC.Base.id xs z0
       end.
 
 Local Definition Foldable__Option_foldr : forall {a} {b},
@@ -1937,8 +1922,9 @@ Local Definition Foldable__Option_foldr : forall {a} {b},
   fun {a} {b} =>
     fun arg_4__ arg_5__ arg_6__ =>
       match arg_4__ , arg_5__ , arg_6__ with
-        | f , z , t => Data.Monoid.appEndo (Foldable__Option_foldMap
-                                           (Data.Foldable.hash_compose Data.Monoid.Mk_Endo f) t) z
+      | f , z , t =>
+          Data.Monoid.appEndo (Foldable__Option_foldMap (Data.Foldable.hash_compose
+                                                        Data.Monoid.Mk_Endo f) t) z
       end.
 
 Local Definition Foldable__Option_foldl' : forall {b} {a},
@@ -1946,12 +1932,13 @@ Local Definition Foldable__Option_foldl' : forall {b} {a},
   fun {b} {a} =>
     fun arg_24__ arg_25__ arg_26__ =>
       match arg_24__ , arg_25__ , arg_26__ with
-        | f , z0 , xs => let f' :=
-                           fun arg_27__ arg_28__ arg_29__ =>
-                             match arg_27__ , arg_28__ , arg_29__ with
-                               | x , k , z => _GHC.Base.$!_ k (f z x)
-                             end in
-                         Foldable__Option_foldr f' GHC.Base.id xs z0
+      | f , z0 , xs =>
+          let f' :=
+            fun arg_27__ arg_28__ arg_29__ =>
+              match arg_27__ , arg_28__ , arg_29__ with
+              | x , k , z => _GHC.Base.$!_ k (f z x)
+              end in
+          Foldable__Option_foldr f' GHC.Base.id xs z0
       end.
 
 Local Definition Foldable__Option_length : forall {a},
@@ -1959,7 +1946,7 @@ Local Definition Foldable__Option_length : forall {a},
   fun {a} =>
     Foldable__Option_foldl' (fun arg_64__ arg_65__ =>
                               match arg_64__ , arg_65__ with
-                                | c , _ => _GHC.Num.+_ c (GHC.Num.fromInteger 1)
+                              | c , _ => _GHC.Num.+_ c (GHC.Num.fromInteger 1)
                               end) (GHC.Num.fromInteger 0).
 
 Local Definition Foldable__Option_null : forall {a}, Option a -> bool :=
@@ -1968,12 +1955,11 @@ Local Definition Foldable__Option_null : forall {a}, Option a -> bool :=
 Local Definition Foldable__Option_toList : forall {a}, Option a -> list a :=
   fun {a} =>
     fun arg_54__ =>
-      match arg_54__ with
-        | t => GHC.Base.build (fun arg_55__ arg_56__ =>
-                                match arg_55__ , arg_56__ with
-                                  | c , n => Foldable__Option_foldr c n t
-                                end)
-      end.
+      let 't := arg_54__ in
+      GHC.Base.build (fun arg_55__ arg_56__ =>
+                       match arg_55__ , arg_56__ with
+                       | c , n => Foldable__Option_foldr c n t
+                       end).
 
 Local Definition Foldable__Option_product : forall {a},
                                               forall `{GHC.Num.Num a}, Option a -> a :=
@@ -1995,10 +1981,10 @@ Local Definition Foldable__Option_elem : forall {a},
                                            forall `{GHC.Base.Eq_ a}, a -> Option a -> bool :=
   fun {a} `{GHC.Base.Eq_ a} =>
     Coq.Program.Basics.compose (fun arg_69__ =>
-                                 match arg_69__ with
-                                   | p => Coq.Program.Basics.compose Data.Monoid.getAny (Foldable__Option_foldMap
-                                                                     (Coq.Program.Basics.compose Data.Monoid.Mk_Any p))
-                                 end) _GHC.Base.==_.
+                                 let 'p := arg_69__ in
+                                 Coq.Program.Basics.compose Data.Monoid.getAny (Foldable__Option_foldMap
+                                                            (Coq.Program.Basics.compose Data.Monoid.Mk_Any p)))
+                               _GHC.Base.==_.
 
 Program Instance Foldable__Option : Data.Foldable.Foldable Option := fun _ k =>
     k {|Data.Foldable.elem__ := fun {a} `{GHC.Base.Eq_ a} => Foldable__Option_elem ;
@@ -2023,8 +2009,8 @@ Local Definition Traversable__Option_traverse : forall {f} {a} {b},
   fun {f} {a} {b} `{GHC.Base.Applicative f} =>
     fun arg_0__ arg_1__ =>
       match arg_0__ , arg_1__ with
-        | f , Mk_Option (Some a) => (Mk_Option GHC.Base.∘ Some) Data.Functor.<$> f a
-        | _ , Mk_Option None => GHC.Base.pure (Mk_Option None)
+      | f , Mk_Option (Some a) => (Mk_Option GHC.Base.∘ Some) Data.Functor.<$> f a
+      | _ , Mk_Option None => GHC.Base.pure (Mk_Option None)
       end.
 
 Local Definition Traversable__Option_sequenceA : forall {f} {a},
@@ -2059,14 +2045,13 @@ Local Definition Semigroup__Option_op_zlzg__ {inst_a} `{_ : Semigroup inst_a}
 Local Definition Semigroup__Option_sconcat {inst_a} `{Semigroup inst_a}
     : Data.List.NonEmpty.NonEmpty (Option inst_a) -> (Option inst_a) :=
   fun arg_0__ =>
-    match arg_0__ with
-      | Data.List.NonEmpty.NEcons a as_ => let fix go arg_1__ arg_2__
-                                                     := match arg_1__ , arg_2__ with
-                                                          | b , cons c cs => Semigroup__Option_op_zlzg__ b (go c cs)
-                                                          | b , nil => b
-                                                        end in
-                                           go a as_
-    end.
+    let 'Data.List.NonEmpty.NEcons a as_ := arg_0__ in
+    let fix go arg_1__ arg_2__
+              := match arg_1__ , arg_2__ with
+                 | b , cons c cs => Semigroup__Option_op_zlzg__ b (go c cs)
+                 | b , nil => b
+                 end in
+    go a as_.
 
 Program Instance Semigroup__Option {a} `{Semigroup a} : Semigroup (Option a) :=
   fun _ k =>
@@ -2572,7 +2557,7 @@ Definition diff {m} `{Semigroup m} : m -> Data.Monoid.Endo m :=
 Definition option {b} {a} : b -> (a -> b) -> Option a -> b :=
   fun arg_0__ arg_1__ arg_2__ =>
     match arg_0__ , arg_1__ , arg_2__ with
-      | n , j , Mk_Option m => Data.Maybe.maybe n j m
+    | n , j , Mk_Option m => Data.Maybe.maybe n j m
     end.
 
 Module Notations.

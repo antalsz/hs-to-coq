@@ -30,49 +30,47 @@ Definition commonPrefix : Data.IntSet.Internal.IntSet -> bool :=
       fun p a =>
         GHC.Num.fromInteger 0 GHC.Base.== (Data.Bits.xor p (p Data.Bits..&.(**) a)) in
     match t with
-      | Data.IntSet.Internal.Nil => true
-      | Data.IntSet.Internal.Tip _ _ => true
-      | (Data.IntSet.Internal.Bin p _ _ _ as b) => Data.Foldable.all (sharedPrefix p)
-                                                   (Data.IntSet.Internal.elems b)
+    | Data.IntSet.Internal.Nil => true
+    | Data.IntSet.Internal.Tip _ _ => true
+    | (Data.IntSet.Internal.Bin p _ _ _ as b) =>
+        Data.Foldable.all (sharedPrefix p) (Data.IntSet.Internal.elems b)
     end.
 
 Definition maskPowerOfTwo : Data.IntSet.Internal.IntSet -> bool :=
   fix maskPowerOfTwo t
         := match t with
-             | Data.IntSet.Internal.Nil => true
-             | Data.IntSet.Internal.Tip _ _ => true
-             | Data.IntSet.Internal.Bin _ m l r => andb
-                                                   (Utils.Containers.Internal.BitUtil.bitcount (GHC.Num.fromInteger 0)
-                                                   (GHC.Real.fromIntegral m) GHC.Base.== GHC.Num.fromInteger 1) (andb
-                                                   (maskPowerOfTwo l) (maskPowerOfTwo r))
+           | Data.IntSet.Internal.Nil => true
+           | Data.IntSet.Internal.Tip _ _ => true
+           | Data.IntSet.Internal.Bin _ m l r =>
+               andb (Utils.Containers.Internal.BitUtil.bitcount (GHC.Num.fromInteger 0)
+                    (GHC.Real.fromIntegral m) GHC.Base.== GHC.Num.fromInteger 1) (andb
+                    (maskPowerOfTwo l) (maskPowerOfTwo r))
            end.
 
 Definition maskRespected : Data.IntSet.Internal.IntSet -> bool :=
   fun t =>
     match t with
-      | Data.IntSet.Internal.Nil => true
-      | Data.IntSet.Internal.Tip _ _ => true
-      | Data.IntSet.Internal.Bin _ binMask l r => andb (Data.Foldable.all (fun x =>
-                                                                            Data.IntSet.Internal.zero x binMask)
-                                                       (Data.IntSet.Internal.elems l)) (Data.Foldable.all (fun x =>
-                                                                                                            negb
-                                                                                                            (Data.IntSet.Internal.zero
-                                                                                                            x binMask))
-                                                       (Data.IntSet.Internal.elems r))
+    | Data.IntSet.Internal.Nil => true
+    | Data.IntSet.Internal.Tip _ _ => true
+    | Data.IntSet.Internal.Bin _ binMask l r =>
+        andb (Data.Foldable.all (fun x => Data.IntSet.Internal.zero x binMask)
+             (Data.IntSet.Internal.elems l)) (Data.Foldable.all (fun x =>
+                                                                  negb (Data.IntSet.Internal.zero x binMask))
+             (Data.IntSet.Internal.elems r))
     end.
 
 Definition nilNeverChildOfBin : Data.IntSet.Internal.IntSet -> bool :=
   fun t =>
     let fix noNilInSet t'
               := match t' with
-                   | Data.IntSet.Internal.Nil => false
-                   | Data.IntSet.Internal.Tip _ _ => true
-                   | Data.IntSet.Internal.Bin _ _ l' r' => andb (noNilInSet l') (noNilInSet r')
+                 | Data.IntSet.Internal.Nil => false
+                 | Data.IntSet.Internal.Tip _ _ => true
+                 | Data.IntSet.Internal.Bin _ _ l' r' => andb (noNilInSet l') (noNilInSet r')
                  end in
     match t with
-      | Data.IntSet.Internal.Nil => true
-      | Data.IntSet.Internal.Tip _ _ => true
-      | Data.IntSet.Internal.Bin _ _ l r => andb (noNilInSet l) (noNilInSet r)
+    | Data.IntSet.Internal.Nil => true
+    | Data.IntSet.Internal.Tip _ _ => true
+    | Data.IntSet.Internal.Bin _ _ l r => andb (noNilInSet l) (noNilInSet r)
     end.
 
 Definition validTipPrefix : Data.IntSet.Internal.Prefix -> bool :=
@@ -82,9 +80,9 @@ Definition validTipPrefix : Data.IntSet.Internal.Prefix -> bool :=
 Definition tipsValid : Data.IntSet.Internal.IntSet -> bool :=
   fix tipsValid t
         := match t with
-             | Data.IntSet.Internal.Nil => true
-             | (Data.IntSet.Internal.Tip p b as tip) => validTipPrefix p
-             | Data.IntSet.Internal.Bin _ _ l r => andb (tipsValid l) (tipsValid r)
+           | Data.IntSet.Internal.Nil => true
+           | (Data.IntSet.Internal.Tip p b as tip) => validTipPrefix p
+           | Data.IntSet.Internal.Bin _ _ l r => andb (tipsValid l) (tipsValid r)
            end.
 
 Definition valid : Data.IntSet.Internal.IntSet -> bool :=

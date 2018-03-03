@@ -166,9 +166,8 @@ Arguments Mk_Kleisli {_} {_} {_} _.
 Arguments Mk_ArrowMonad {_} {_} _.
 
 Definition runKleisli {m : Type -> Type} {a} {b} (arg_0__ : Kleisli m a b) :=
-  match arg_0__ with
-    | Mk_Kleisli runKleisli => runKleisli
-  end.
+  let 'Mk_Kleisli runKleisli := arg_0__ in
+  runKleisli.
 (* Converted value declarations: *)
 
 Local Definition Arrow__arrow_arr : forall {b} {c},
@@ -181,7 +180,7 @@ Local Definition Arrow__arrow_op_ztztzt__ : forall {b} {c} {b'} {c'},
   fun {b} {c} {b'} {c'} =>
     fun arg_0__ arg_1__ arg_2__ =>
       match arg_0__ , arg_1__ , arg_2__ with
-        | f , g , pair x y => pair (f x) (g y)
+      | f , g , pair x y => pair (f x) (g y)
       end.
 
 Local Definition Arrow__arrow_second : forall {b} {c} {d},
@@ -224,7 +223,7 @@ Admit Obligations.
 
 Local Definition ArrowApply__arrow_app : forall {b} {c},
                                            GHC.Prim.arrow (GHC.Prim.arrow b c * b)%type c :=
-  fun {b} {c} => fun arg_0__ => match arg_0__ with | pair f x => f x end.
+  fun {b} {c} => fun arg_0__ => let 'pair f x := arg_0__ in f x.
 
 Program Instance ArrowApply__arrow : ArrowApply GHC.Prim.arrow := fun _ k =>
     k {|app__ := fun {b} {c} => ArrowApply__arrow_app |}.
@@ -239,7 +238,7 @@ Local Definition Functor__ArrowMonad_fmap {inst_a} `{Arrow inst_a} : forall {a}
   fun {a} {b} =>
     fun arg_0__ arg_1__ =>
       match arg_0__ , arg_1__ with
-        | f , Mk_ArrowMonad m => Mk_ArrowMonad GHC.Base.$ (m Control.Category.>>> arr f)
+      | f , Mk_ArrowMonad m => Mk_ArrowMonad GHC.Base.$ (m Control.Category.>>> arr f)
       end.
 
 Local Definition Functor__ArrowMonad_op_zlzd__ {inst_a} `{Arrow inst_a}

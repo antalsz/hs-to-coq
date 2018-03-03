@@ -102,14 +102,12 @@ Arguments Mk_Min {_} _.
 Arguments Mk_Max {_} _.
 
 Definition getMin {a} (arg_0__ : Min a) :=
-  match arg_0__ with
-    | Mk_Min getMin => getMin
-  end.
+  let 'Mk_Min getMin := arg_0__ in
+  getMin.
 
 Definition getMax {a} (arg_1__ : Max a) :=
-  match arg_1__ with
-    | Mk_Max getMax => getMax
-  end.
+  let 'Mk_Max getMax := arg_1__ in
+  getMax.
 (* Midamble *)
 
 Definition default_elem {t : Type -> Type} {a} `{GHC.Base.Eq_ a} (foldMap : (a -> Any) -> t a -> Any) :
@@ -202,8 +200,8 @@ Local Definition Foldable__option_foldl : forall {b} {a},
   fun {b} {a} =>
     fun arg_0__ arg_1__ arg_2__ =>
       match arg_0__ , arg_1__ , arg_2__ with
-        | _ , z , None => z
-        | f , z , Some x => f z x
+      | _ , z , None => z
+      | f , z , Some x => f z x
       end.
 
 Local Definition Foldable__option_foldr' : forall {a} {b},
@@ -218,8 +216,8 @@ Local Definition Foldable__option_foldr : forall {a} {b},
   fun {a} {b} =>
     fun arg_0__ arg_1__ arg_2__ =>
       match arg_0__ , arg_1__ , arg_2__ with
-        | _ , z , None => z
-        | f , z , Some x => f x z
+      | _ , z , None => z
+      | f , z , Some x => f x z
       end.
 
 Local Definition Foldable__option_null : forall {a}, option a -> bool :=
@@ -240,7 +238,7 @@ Local Definition Foldable__option_length : forall {a},
   fun {a} =>
     Foldable__option_foldl' (fun arg_0__ arg_1__ =>
                               match arg_0__ , arg_1__ with
-                                | c , _ => c GHC.Num.+ GHC.Num.fromInteger 1
+                              | c , _ => c GHC.Num.+ GHC.Num.fromInteger 1
                               end) (GHC.Num.fromInteger 0).
 
 Local Definition Foldable__option_foldMap : forall {m} {a},
@@ -326,8 +324,8 @@ Local Definition Foldable__Either_foldMap {inst_a} : forall {m} {a},
   fun {m} {a} `{GHC.Base.Monoid m} =>
     fun arg_0__ arg_1__ =>
       match arg_0__ , arg_1__ with
-        | _ , Data.Either.Left _ => GHC.Base.mempty
-        | f , Data.Either.Right y => f y
+      | _ , Data.Either.Left _ => GHC.Base.mempty
+      | f , Data.Either.Right y => f y
       end.
 
 Local Definition Foldable__Either_foldl {inst_a} : forall {b} {a},
@@ -357,8 +355,8 @@ Local Definition Foldable__Either_foldr {inst_a} : forall {a} {b},
   fun {a} {b} =>
     fun arg_0__ arg_1__ arg_2__ =>
       match arg_0__ , arg_1__ , arg_2__ with
-        | _ , z , Data.Either.Left _ => z
-        | f , z , Data.Either.Right y => f y z
+      | _ , z , Data.Either.Left _ => z
+      | f , z , Data.Either.Right y => f y z
       end.
 
 Local Definition Foldable__Either_toList {inst_a} : forall {a},
@@ -377,8 +375,8 @@ Local Definition Foldable__Either_length {inst_a} : forall {a},
   fun {a} =>
     fun arg_0__ =>
       match arg_0__ with
-        | Data.Either.Left _ => GHC.Num.fromInteger 0
-        | Data.Either.Right _ => GHC.Num.fromInteger 1
+      | Data.Either.Left _ => GHC.Num.fromInteger 0
+      | Data.Either.Right _ => GHC.Num.fromInteger 1
       end.
 
 Local Definition Foldable__Either_null {inst_a} : forall {a},
@@ -419,7 +417,7 @@ Local Definition Foldable__pair_type_foldr {inst_a} : forall {a} {b},
   fun {a} {b} =>
     fun arg_0__ arg_1__ arg_2__ =>
       match arg_0__ , arg_1__ , arg_2__ with
-        | f , z , pair _ y => f y z
+      | f , z , pair _ y => f y z
       end.
 
 Local Definition Foldable__pair_type_null {inst_a} : forall {a},
@@ -442,7 +440,7 @@ Local Definition Foldable__pair_type_length {inst_a} : forall {a},
   fun {a} =>
     Foldable__pair_type_foldl' (fun arg_0__ arg_1__ =>
                                  match arg_0__ , arg_1__ with
-                                   | c , _ => c GHC.Num.+ GHC.Num.fromInteger 1
+                                 | c , _ => c GHC.Num.+ GHC.Num.fromInteger 1
                                  end) (GHC.Num.fromInteger 0).
 
 (* Skipping instance Foldable__Array *)
@@ -464,7 +462,7 @@ Local Definition Foldable__Proxy_foldl : forall {b} {a},
   fun {b} {a} =>
     fun arg_0__ arg_1__ arg_2__ =>
       match arg_0__ , arg_1__ , arg_2__ with
-        | _ , z , _ => z
+      | _ , z , _ => z
       end.
 
 Local Definition Foldable__Proxy_foldr' : forall {a} {b},
@@ -479,7 +477,7 @@ Local Definition Foldable__Proxy_foldr : forall {a} {b},
   fun {a} {b} =>
     fun arg_0__ arg_1__ arg_2__ =>
       match arg_0__ , arg_1__ , arg_2__ with
-        | _ , z , _ => z
+      | _ , z , _ => z
       end.
 
 Local Definition Foldable__Proxy_toList : forall {a},
@@ -545,7 +543,7 @@ Local Definition Foldable__Dual_foldr : forall {a} {b},
   fun {a} {b} =>
     fun arg_0__ arg_1__ arg_2__ =>
       match arg_0__ , arg_1__ , arg_2__ with
-        | f , z , Data.Monoid.Mk_Dual x => f x z
+      | f , z , Data.Monoid.Mk_Dual x => f x z
       end.
 
 Local Definition Foldable__Dual_foldr' : forall {a} {b},
@@ -569,8 +567,7 @@ Local Definition Foldable__Dual_sum : forall {a},
 
 Local Definition Foldable__Dual_toList : forall {a},
                                            Data.Monoid.Dual a -> list a :=
-  fun {a} =>
-    fun arg_0__ => match arg_0__ with | Data.Monoid.Mk_Dual x => cons x nil end.
+  fun {a} => fun arg_0__ => let 'Data.Monoid.Mk_Dual x := arg_0__ in cons x nil.
 
 Local Definition Foldable__Sum_foldMap : forall {m} {a},
                                            forall `{GHC.Base.Monoid m}, (a -> m) -> Data.Monoid.Sum a -> m :=
@@ -593,7 +590,7 @@ Local Definition Foldable__Sum_foldr : forall {a} {b},
   fun {a} {b} =>
     fun arg_0__ arg_1__ arg_2__ =>
       match arg_0__ , arg_1__ , arg_2__ with
-        | f , z , Data.Monoid.Mk_Sum x => f x z
+      | f , z , Data.Monoid.Mk_Sum x => f x z
       end.
 
 Local Definition Foldable__Sum_foldr' : forall {a} {b},
@@ -617,8 +614,7 @@ Local Definition Foldable__Sum_sum : forall {a},
 
 Local Definition Foldable__Sum_toList : forall {a},
                                           Data.Monoid.Sum a -> list a :=
-  fun {a} =>
-    fun arg_0__ => match arg_0__ with | Data.Monoid.Mk_Sum x => cons x nil end.
+  fun {a} => fun arg_0__ => let 'Data.Monoid.Mk_Sum x := arg_0__ in cons x nil.
 
 Local Definition Foldable__Product_foldMap : forall {m} {a},
                                                forall `{GHC.Base.Monoid m}, (a -> m) -> Data.Monoid.Product a -> m :=
@@ -641,7 +637,7 @@ Local Definition Foldable__Product_foldr : forall {a} {b},
   fun {a} {b} =>
     fun arg_0__ arg_1__ arg_2__ =>
       match arg_0__ , arg_1__ , arg_2__ with
-        | f , z , Data.Monoid.Mk_Product x => f x z
+      | f , z , Data.Monoid.Mk_Product x => f x z
       end.
 
 Local Definition Foldable__Product_foldr' : forall {a} {b},
@@ -667,7 +663,7 @@ Local Definition Foldable__Product_sum : forall {a},
 Local Definition Foldable__Product_toList : forall {a},
                                               Data.Monoid.Product a -> list a :=
   fun {a} =>
-    fun arg_0__ => match arg_0__ with | Data.Monoid.Mk_Product x => cons x nil end.
+    fun arg_0__ => let 'Data.Monoid.Mk_Product x := arg_0__ in cons x nil.
 
 (* Skipping instance Foldable__First *)
 
@@ -677,11 +673,12 @@ Local Definition Monoid__Max_mappend {inst_a} `{GHC.Base.Ord inst_a} : (Max
                                                                        inst_a) -> (Max inst_a) -> (Max inst_a) :=
   fun arg_0__ arg_1__ =>
     match arg_0__ , arg_1__ with
-      | m , Mk_Max None => m
-      | Mk_Max None , n => n
-      | Mk_Max (Some x as m) , Mk_Max (Some y as n) => if x GHC.Base.>= y : bool
-                                                       then Mk_Max m
-                                                       else Mk_Max n
+    | m , Mk_Max None => m
+    | Mk_Max None , n => n
+    | Mk_Max (Some x as m) , Mk_Max (Some y as n) =>
+        if x GHC.Base.>= y : bool
+        then Mk_Max m
+        else Mk_Max n
     end.
 
 Local Definition Monoid__Max_mempty {inst_a} `{GHC.Base.Ord inst_a} : (Max
@@ -703,11 +700,12 @@ Local Definition Monoid__Min_mappend {inst_a} `{GHC.Base.Ord inst_a} : (Min
                                                                        inst_a) -> (Min inst_a) -> (Min inst_a) :=
   fun arg_0__ arg_1__ =>
     match arg_0__ , arg_1__ with
-      | m , Mk_Min None => m
-      | Mk_Min None , n => n
-      | Mk_Min (Some x as m) , Mk_Min (Some y as n) => if x GHC.Base.<= y : bool
-                                                       then Mk_Min m
-                                                       else Mk_Min n
+    | m , Mk_Min None => m
+    | Mk_Min None , n => n
+    | Mk_Min (Some x as m) , Mk_Min (Some y as n) =>
+        if x GHC.Base.<= y : bool
+        then Mk_Min m
+        else Mk_Min n
     end.
 
 Local Definition Monoid__Min_mempty {inst_a} `{GHC.Base.Ord inst_a} : (Min

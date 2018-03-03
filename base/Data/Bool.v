@@ -21,8 +21,8 @@ Require Coq.Program.Wf.
 Definition bool {a} : a -> a -> bool -> a :=
   fun arg_0__ arg_1__ arg_2__ =>
     match arg_0__ , arg_1__ , arg_2__ with
-      | f , _ , false => f
-      | _ , t , true => t
+    | f , _ , false => f
+    | _ , t , true => t
     end.
 
 (* Unbound variables:

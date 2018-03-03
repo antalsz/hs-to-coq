@@ -48,7 +48,7 @@ Local Definition Bifunctor__pair_type_bimap : forall {a} {b} {c} {d},
   fun {a} {b} {c} {d} =>
     fun arg_0__ arg_1__ arg_2__ =>
       match arg_0__ , arg_1__ , arg_2__ with
-        | f , g , pair a b => pair (f a) (g b)
+      | f , g , pair a b => pair (f a) (g b)
       end.
 
 Local Definition Bifunctor__pair_type_first : forall {a} {b} {c},
@@ -75,7 +75,7 @@ Local Definition Bifunctor__triple_type_bimap {inst_x1} : forall {a}
   fun {a} {b} {c} {d} =>
     fun arg_0__ arg_1__ arg_2__ =>
       match arg_0__ , arg_1__ , arg_2__ with
-        | f , g , pair (pair x1 a) b => pair (pair x1 (f a)) (g b)
+      | f , g , pair (pair x1 a) b => pair (pair x1 (f a)) (g b)
       end.
 
 Local Definition Bifunctor__triple_type_first {inst_x1} : forall {a} {b} {c},
@@ -105,7 +105,7 @@ Local Definition Bifunctor__quad_type_bimap {inst_x1} {inst_x2} : forall {a}
   fun {a} {b} {c} {d} =>
     fun arg_0__ arg_1__ arg_2__ =>
       match arg_0__ , arg_1__ , arg_2__ with
-        | f , g , pair (pair (pair x1 x2) a) b => pair (pair (pair x1 x2) (f a)) (g b)
+      | f , g , pair (pair (pair x1 x2) a) b => pair (pair (pair x1 x2) (f a)) (g b)
       end.
 
 Local Definition Bifunctor__quad_type_first {inst_x1} {inst_x2} : forall {a}
@@ -136,8 +136,8 @@ Local Definition Bifunctor__quint_type_bimap {inst_x1} {inst_x2} {inst_x3}
   fun {a} {b} {c} {d} =>
     fun arg_0__ arg_1__ arg_2__ =>
       match arg_0__ , arg_1__ , arg_2__ with
-        | f , g , pair (pair (pair (pair x1 x2) x3) a) b => pair (pair (pair (pair x1
-                                                                                   x2) x3) (f a)) (g b)
+      | f , g , pair (pair (pair (pair x1 x2) x3) a) b =>
+          pair (pair (pair (pair x1 x2) x3) (f a)) (g b)
       end.
 
 Local Definition Bifunctor__quint_type_first {inst_x1} {inst_x2} {inst_x3}
@@ -167,8 +167,8 @@ Local Definition Bifunctor__sext_type_bimap {inst_x1} {inst_x2} {inst_x3}
   fun {a} {b} {c} {d} =>
     fun arg_0__ arg_1__ arg_2__ =>
       match arg_0__ , arg_1__ , arg_2__ with
-        | f , g , pair (pair (pair (pair (pair x1 x2) x3) x4) a) b => pair (pair (pair
-                                                                                 (pair (pair x1 x2) x3) x4) (f a)) (g b)
+      | f , g , pair (pair (pair (pair (pair x1 x2) x3) x4) a) b =>
+          pair (pair (pair (pair (pair x1 x2) x3) x4) (f a)) (g b)
       end.
 
 Local Definition Bifunctor__sext_type_first {inst_x1} {inst_x2} {inst_x3}
@@ -201,9 +201,8 @@ Local Definition Bifunctor__sept_type_bimap {inst_x1} {inst_x2} {inst_x3}
   fun {a} {b} {c} {d} =>
     fun arg_0__ arg_1__ arg_2__ =>
       match arg_0__ , arg_1__ , arg_2__ with
-        | f , g , pair (pair (pair (pair (pair (pair x1 x2) x3) x4) x5) a) b => pair
-                                                                                (pair (pair (pair (pair (pair x1 x2) x3)
-                                                                                                  x4) x5) (f a)) (g b)
+      | f , g , pair (pair (pair (pair (pair (pair x1 x2) x3) x4) x5) a) b =>
+          pair (pair (pair (pair (pair (pair x1 x2) x3) x4) x5) (f a)) (g b)
       end.
 
 Local Definition Bifunctor__sept_type_first {inst_x1} {inst_x2} {inst_x3}
@@ -233,8 +232,8 @@ Local Definition Bifunctor__Either_bimap : forall {a} {b} {c} {d},
   fun {a} {b} {c} {d} =>
     fun arg_0__ arg_1__ arg_2__ =>
       match arg_0__ , arg_1__ , arg_2__ with
-        | f , _ , Data.Either.Left a => Data.Either.Left (f a)
-        | _ , g , Data.Either.Right b => Data.Either.Right (g b)
+      | f , _ , Data.Either.Left a => Data.Either.Left (f a)
+      | _ , g , Data.Either.Right b => Data.Either.Right (g b)
       end.
 
 Local Definition Bifunctor__Either_first : forall {a} {b} {c},
@@ -257,7 +256,7 @@ Local Definition Bifunctor__Const_bimap : forall {a} {b} {c} {d},
   fun {a} {b} {c} {d} =>
     fun arg_0__ arg_1__ arg_2__ =>
       match arg_0__ , arg_1__ , arg_2__ with
-        | f , _ , Data.Functor.Const.Mk_Const a => Data.Functor.Const.Mk_Const (f a)
+      | f , _ , Data.Functor.Const.Mk_Const a => Data.Functor.Const.Mk_Const (f a)
       end.
 
 Local Definition Bifunctor__Const_first : forall {a} {b} {c},

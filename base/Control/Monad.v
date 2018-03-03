@@ -48,8 +48,8 @@ Definition foldM_ {t} {m} {b} {a} `{Data.Foldable.Foldable t} `{GHC.Base.Monad
 Definition guard {f} `{(GHC.Base.Alternative f)} : bool -> f unit :=
   fun arg_0__ =>
     match arg_0__ with
-      | true => GHC.Base.pure tt
-      | false => GHC.Base.empty
+    | true => GHC.Base.pure tt
+    | false => GHC.Base.empty
     end.
 
 Definition mapAndUnzipM {m} {a} {b} {c} `{(GHC.Base.Applicative m)} : (a -> m (b

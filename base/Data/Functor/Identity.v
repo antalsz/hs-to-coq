@@ -27,9 +27,8 @@ Inductive Identity a : Type := Mk_Identity : a -> Identity a.
 Arguments Mk_Identity {_} _.
 
 Definition runIdentity {a} (arg_0__ : Identity a) :=
-  match arg_0__ with
-    | Mk_Identity runIdentity => runIdentity
-  end.
+  let 'Mk_Identity runIdentity := arg_0__ in
+  runIdentity.
 (* Midamble *)
 
 Instance Unpeel_Identity a : Prim.Unpeel (Identity a) a :=
@@ -66,7 +65,7 @@ Local Definition Foldable__Identity_foldr : forall {a} {b},
   fun {a} {b} =>
     fun arg_0__ arg_1__ arg_2__ =>
       match arg_0__ , arg_1__ , arg_2__ with
-        | f , z , Mk_Identity x => f x z
+      | f , z , Mk_Identity x => f x z
       end.
 
 Local Definition Foldable__Identity_foldr' : forall {a} {b},
@@ -89,7 +88,7 @@ Local Definition Foldable__Identity_sum : forall {a},
   fun {a} `{GHC.Num.Num a} => runIdentity.
 
 Local Definition Foldable__Identity_toList : forall {a}, Identity a -> list a :=
-  fun {a} => fun arg_0__ => match arg_0__ with | Mk_Identity x => cons x nil end.
+  fun {a} => fun arg_0__ => let 'Mk_Identity x := arg_0__ in cons x nil.
 
 Local Definition Functor__Identity_fmap : forall {a} {b},
                                             (a -> b) -> Identity a -> Identity b :=
@@ -156,7 +155,7 @@ Local Definition Traversable__Identity_traverse : forall {f} {a} {b},
   fun {f} {a} {b} `{GHC.Base.Applicative f} =>
     fun arg_0__ arg_1__ =>
       match arg_0__ , arg_1__ with
-        | f , Mk_Identity a1 => GHC.Base.fmap (fun b1 => Mk_Identity b1) (f a1)
+      | f , Mk_Identity a1 => GHC.Base.fmap (fun b1 => Mk_Identity b1) (f a1)
       end.
 
 Local Definition Traversable__Identity_sequenceA : forall {f} {a},

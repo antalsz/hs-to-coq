@@ -36,15 +36,13 @@ Arguments WrapMonad {_} {_} _.
 Arguments WrapArrow {_} {_} {_} _.
 
 Definition unwrapMonad {m : Type -> Type} {a} (arg_0__ : WrappedMonad m a) :=
-  match arg_0__ with
-    | WrapMonad unwrapMonad => unwrapMonad
-  end.
+  let 'WrapMonad unwrapMonad := arg_0__ in
+  unwrapMonad.
 
 Definition unwrapArrow {a : Type -> Type -> Type} {b} {c} (arg_1__
                          : WrappedArrow a b c) :=
-  match arg_1__ with
-    | WrapArrow unwrapArrow => unwrapArrow
-  end.
+  let 'WrapArrow unwrapArrow := arg_1__ in
+  unwrapArrow.
 (* Converted value declarations: *)
 
 Instance Unpeel_WrappedMonad {m} {a} : GHC.Prim.Unpeel (WrappedMonad m a) (m
@@ -59,7 +57,7 @@ Local Definition Functor__WrappedMonad_fmap {inst_m} `{GHC.Base.Monad inst_m}
   fun {a} {b} =>
     fun arg_0__ arg_1__ =>
       match arg_0__ , arg_1__ with
-        | f , WrapMonad v => WrapMonad (GHC.Base.liftM f v)
+      | f , WrapMonad v => WrapMonad (GHC.Base.liftM f v)
       end.
 
 Local Definition Functor__WrappedMonad_op_zlzd__ {inst_m} `{GHC.Base.Monad
@@ -80,7 +78,7 @@ Local Definition Applicative__WrappedMonad_op_zlztzg__ {inst_m} `{GHC.Base.Monad
   fun {a} {b} =>
     fun arg_0__ arg_1__ =>
       match arg_0__ , arg_1__ with
-        | WrapMonad f , WrapMonad v => WrapMonad (GHC.Base.ap f v)
+      | WrapMonad f , WrapMonad v => WrapMonad (GHC.Base.ap f v)
       end.
 
 Local Definition Applicative__WrappedMonad_op_ztzg__ {inst_m} `{GHC.Base.Monad
@@ -114,7 +112,7 @@ Local Definition Functor__WrappedArrow_fmap {inst_a} {inst_b}
   fun {a} {b} =>
     fun arg_0__ arg_1__ =>
       match arg_0__ , arg_1__ with
-        | f , WrapArrow a => WrapArrow (a Control.Category.>>> Control.Arrow.arr f)
+      | f , WrapArrow a => WrapArrow (a Control.Category.>>> Control.Arrow.arr f)
       end.
 
 Local Definition Functor__WrappedArrow_op_zlzd__ {inst_a} {inst_b}
@@ -140,9 +138,9 @@ Local Definition Applicative__WrappedArrow_op_zlztzg__ {inst_a} {inst_b}
   fun {a} {b} =>
     fun arg_0__ arg_1__ =>
       match arg_0__ , arg_1__ with
-        | WrapArrow f , WrapArrow v => WrapArrow ((f Control.Arrow.&&& v)
-                                                 Control.Category.>>> Control.Arrow.arr (Data.Tuple.uncurry
-                                                                                        GHC.Base.id))
+      | WrapArrow f , WrapArrow v =>
+          WrapArrow ((f Control.Arrow.&&& v) Control.Category.>>> Control.Arrow.arr
+                    (Data.Tuple.uncurry GHC.Base.id))
       end.
 
 Local Definition Applicative__WrappedArrow_op_ztzg__ {inst_a} {inst_b}

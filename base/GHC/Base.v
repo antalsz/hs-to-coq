@@ -623,8 +623,8 @@ Local Definition Monoid__op_zt____op_zt___mappend {inst_a} {inst_b} {inst_c}
                                                                                                        inst_c)%type :=
   fun arg_0__ arg_1__ =>
     match arg_0__ , arg_1__ with
-      | pair (pair a1 b1) c1 , pair (pair a2 b2) c2 => pair (pair (mappend a1 a2)
-                                                                  (mappend b1 b2)) (mappend c1 c2)
+    | pair (pair a1 b1) c1 , pair (pair a2 b2) c2 =>
+        pair (pair (mappend a1 a2) (mappend b1 b2)) (mappend c1 c2)
     end.
 
 Local Definition Monoid__op_zt____op_zt___mempty {inst_a} {inst_b} {inst_c}
@@ -643,9 +643,9 @@ Local Definition Monoid__op_zt____op_zt____op_zt____23_mappend {inst_a} {inst_b}
                                                                                                    inst_d)%type :=
   fun arg_0__ arg_1__ =>
     match arg_0__ , arg_1__ with
-      | pair (pair (pair a1 b1) c1) d1 , pair (pair (pair a2 b2) c2) d2 => pair (pair
-                                                                                (pair (mappend a1 a2) (mappend b1 b2))
-                                                                                (mappend c1 c2)) (mappend d1 d2)
+    | pair (pair (pair a1 b1) c1) d1 , pair (pair (pair a2 b2) c2) d2 =>
+        pair (pair (pair (mappend a1 a2) (mappend b1 b2)) (mappend c1 c2)) (mappend d1
+                                                                                    d2)
     end.
 
 Local Definition Monoid__op_zt____op_zt____op_zt____23_mempty {inst_a} {inst_b}
@@ -673,10 +673,10 @@ Local Definition Monoid__op_zt____op_zt____op_zt____op_zt____87_mappend {inst_a}
                                                                                                             inst_e)%type :=
   fun arg_0__ arg_1__ =>
     match arg_0__ , arg_1__ with
-      | pair (pair (pair (pair a1 b1) c1) d1) e1 , pair (pair (pair (pair a2 b2) c2)
-                                                              d2) e2 => pair (pair (pair (pair (mappend a1 a2) (mappend
-                                                                                               b1 b2)) (mappend c1 c2))
-                                                                                   (mappend d1 d2)) (mappend e1 e2)
+    | pair (pair (pair (pair a1 b1) c1) d1) e1 , pair (pair (pair (pair a2 b2) c2)
+                                                            d2) e2 =>
+        pair (pair (pair (pair (mappend a1 a2) (mappend b1 b2)) (mappend c1 c2))
+                   (mappend d1 d2)) (mappend e1 e2)
     end.
 
 Local Definition Monoid__op_zt____op_zt____op_zt____op_zt____87_mempty {inst_a}
@@ -693,9 +693,9 @@ Local Definition Monoid__comparison_mappend
     : comparison -> comparison -> comparison :=
   fun arg_0__ arg_1__ =>
     match arg_0__ , arg_1__ with
-      | Lt , _ => Lt
-      | Eq , y => y
-      | Gt , _ => Gt
+    | Lt , _ => Lt
+    | Eq , y => y
+    | Gt , _ => Gt
     end.
 
 Local Definition Monoid__comparison_mempty : comparison :=
@@ -705,9 +705,9 @@ Local Definition Monoid__option_mappend {inst_a} `{Monoid inst_a} : (option
                                                                     inst_a) -> (option inst_a) -> (option inst_a) :=
   fun arg_0__ arg_1__ =>
     match arg_0__ , arg_1__ with
-      | None , m => m
-      | m , None => m
-      | Some m1 , Some m2 => Some (mappend m1 m2)
+    | None , m => m
+    | m , None => m
+    | Some m1 , Some m2 => Some (mappend m1 m2)
     end.
 
 Local Definition Monoid__option_mempty {inst_a} `{Monoid inst_a} : (option
@@ -721,7 +721,7 @@ Local Definition Applicative__pair_type_op_zlztzg__ {inst_a} `{Monoid inst_a}
   fun {a} {b} =>
     fun arg_0__ arg_1__ =>
       match arg_0__ , arg_1__ with
-        | pair u f , pair v x => pair (mappend u v) (f x)
+      | pair u f , pair v x => pair (mappend u v) (f x)
       end.
 
 Local Definition Applicative__pair_type_pure {inst_a} `{Monoid inst_a}
@@ -751,7 +751,7 @@ Local Definition Functor__pair_type_fmap {inst_a} : forall {a} {b},
   fun {a} {b} =>
     fun arg_0__ arg_1__ =>
       match arg_0__ , arg_1__ with
-        | f , pair x y => pair x (f y)
+      | f , pair x y => pair x (f y)
       end.
 
 Local Definition Functor__option_fmap : forall {a} {b},
@@ -759,8 +759,8 @@ Local Definition Functor__option_fmap : forall {a} {b},
   fun {a} {b} =>
     fun arg_0__ arg_1__ =>
       match arg_0__ , arg_1__ with
-        | _ , None => None
-        | f , Some a => Some (f a)
+      | _ , None => None
+      | f , Some a => Some (f a)
       end.
 
 Local Definition Applicative__option_op_ztzg__ : forall {a} {b},
@@ -768,8 +768,8 @@ Local Definition Applicative__option_op_ztzg__ : forall {a} {b},
   fun {a} {b} =>
     fun arg_0__ arg_1__ =>
       match arg_0__ , arg_1__ with
-        | Some _m1 , m2 => m2
-        | None , _m2 => None
+      | Some _m1 , m2 => m2
+      | None , _m2 => None
       end.
 
 Local Definition Applicative__option_pure : forall {a}, a -> option a :=
@@ -780,8 +780,8 @@ Local Definition Monad__option_op_zgzgze__ : forall {a} {b},
   fun {a} {b} =>
     fun arg_0__ arg_1__ =>
       match arg_0__ , arg_1__ with
-        | Some x , k => k x
-        | None , _ => None
+      | Some x , k => k x
+      | None , _ => None
       end.
 
 (* Skipping instance Alternative__option *)
@@ -830,70 +830,40 @@ Local Definition Ord__option_compare {inst_a} `{Ord inst_a} : option
                                                               inst_a -> option inst_a -> comparison :=
   fun a b =>
     match a with
-      | None => match b with
-                  | None => Eq
-                  | _ => Lt
-                end
-      | Some a1 => match b with
-                     | Some b1 => (compare a1 b1)
-                     | _ => Gt
-                   end
+    | None => match b with | None => Eq | _ => Lt end
+    | Some a1 => match b with | Some b1 => (compare a1 b1) | _ => Gt end
     end.
 
 Local Definition Ord__option_op_zg__ {inst_a} `{Ord inst_a} : option
                                                               inst_a -> option inst_a -> bool :=
   fun a b =>
     match a with
-      | None => match b with
-                  | None => false
-                  | _ => false
-                end
-      | Some a1 => match b with
-                     | Some b1 => (a1 > b1)
-                     | _ => true
-                   end
+    | None => match b with | None => false | _ => false end
+    | Some a1 => match b with | Some b1 => (a1 > b1) | _ => true end
     end.
 
 Local Definition Ord__option_op_zgze__ {inst_a} `{Ord inst_a} : option
                                                                 inst_a -> option inst_a -> bool :=
   fun a b =>
     match a with
-      | None => match b with
-                  | None => true
-                  | _ => false
-                end
-      | Some a1 => match b with
-                     | Some b1 => (a1 >= b1)
-                     | _ => true
-                   end
+    | None => match b with | None => true | _ => false end
+    | Some a1 => match b with | Some b1 => (a1 >= b1) | _ => true end
     end.
 
 Local Definition Ord__option_op_zl__ {inst_a} `{Ord inst_a} : option
                                                               inst_a -> option inst_a -> bool :=
   fun a b =>
     match a with
-      | None => match b with
-                  | None => false
-                  | _ => true
-                end
-      | Some a1 => match b with
-                     | Some b1 => (a1 < b1)
-                     | _ => false
-                   end
+    | None => match b with | None => false | _ => true end
+    | Some a1 => match b with | Some b1 => (a1 < b1) | _ => false end
     end.
 
 Local Definition Ord__option_op_zlze__ {inst_a} `{Ord inst_a} : option
                                                                 inst_a -> option inst_a -> bool :=
   fun a b =>
     match a with
-      | None => match b with
-                  | None => true
-                  | _ => true
-                end
-      | Some a1 => match b with
-                     | Some b1 => (a1 <= b1)
-                     | _ => false
-                   end
+    | None => match b with | None => true | _ => true end
+    | Some a1 => match b with | Some b1 => (a1 <= b1) | _ => false end
     end.
 
 Local Definition Ord__option_min {inst_a} `{Ord inst_a} : option
@@ -908,9 +878,9 @@ Local Definition Eq___option_op_zeze__ {inst_a} `{Eq_ inst_a} : option
                                                                 inst_a -> option inst_a -> bool :=
   fun arg_0__ arg_1__ =>
     match arg_0__ , arg_1__ with
-      | None , None => true
-      | Some a1 , Some b1 => ((a1 == b1))
-      | _ , _ => false
+    | None , None => true
+    | Some a1 , Some b1 => ((a1 == b1))
+    | _ , _ => false
     end.
 
 Local Definition Eq___option_op_zsze__ {inst_a} `{Eq_ inst_a} : option
@@ -957,9 +927,9 @@ Local Definition Applicative__arrow_pure {inst_a} : forall {a},
 Definition eqString : String -> String -> bool :=
   fix eqString arg_0__ arg_1__
         := match arg_0__ , arg_1__ with
-             | nil , nil => true
-             | cons c1 cs1 , cons c2 cs2 => andb (c1 == c2) (eqString cs1 cs2)
-             | _ , _ => false
+           | nil , nil => true
+           | cons c1 cs1 , cons c2 cs2 => andb (c1 == c2) (eqString cs1 cs2)
+           | _ , _ => false
            end.
 
 Definition flip {a} {b} {c} : (a -> b -> c) -> b -> a -> c :=
@@ -969,8 +939,8 @@ Definition foldr {a} {b} : (a -> b -> b) -> b -> list a -> b :=
   fun k z =>
     let fix go arg_0__
               := match arg_0__ with
-                   | nil => z
-                   | cons y ys => k y (go ys)
+                 | nil => z
+                 | cons y ys => k y (go ys)
                  end in
     go.
 
@@ -1180,8 +1150,8 @@ Local Definition Applicative__option_op_zlztzg__ : forall {a} {b},
   fun {a} {b} =>
     fun arg_0__ arg_1__ =>
       match arg_0__ , arg_1__ with
-        | Some f , m => fmap f m
-        | None , _m => None
+      | Some f , m => fmap f m
+      | None , _m => None
       end.
 
 Program Instance Applicative__option : Applicative option := fun _ k =>
@@ -1238,9 +1208,7 @@ Local Definition Monad__pair_type_op_zgzgze__ {inst_a} `{Monoid inst_a}
   fun {a} {b} =>
     fun arg_0__ arg_1__ =>
       match arg_0__ , arg_1__ with
-        | pair u a , k => match k a with
-                            | pair v b => pair (mappend u v) b
-                          end
+      | pair u a , k => let 'pair v b := k a in pair (mappend u v) b
       end.
 
 Local Definition Monad__pair_type_op_zgzg__ {inst_a} `{Monoid inst_a}
@@ -1307,7 +1275,7 @@ Notation "'_<**>_'" := (op_zlztztzg__).
 Infix "<**>" := (_<**>_) (at level 99).
 
 Definition op_zdzn__ {a} {b} : (a -> b) -> a -> b :=
-  fun f x => match x with | vx => f vx end.
+  fun f x => let 'vx := x in f vx.
 
 Notation "'_$!_'" := (op_zdzn__).
 

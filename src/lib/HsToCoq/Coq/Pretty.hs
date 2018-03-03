@@ -321,6 +321,12 @@ instance Gallina Term where
   renderGallina' p (InScope tm scope) = maybeParen (p > scopePrec) $
     renderGallina' scopePrec tm <> "%" <> renderIdent scope
 
+  -- Special case the [let 'pat := scrut in body] syntax
+  renderGallina' p (Match [scrut] Nothing [Equation [pat] body])
+    = maybeParen (p > matchPrec) $
+         "let" <+> nest 2 ("'" <> renderGallina pat <+> ":=" </> renderGallina scrut <+> "in")
+          <!>  align (renderGallina body)
+
   renderGallina' p (Match discriminees orty eqns) = maybeParen (p > matchPrec) $
        "match" <+> group (align . nest (-2)
                            $ (sepWith (<!>) (<+>) "," $ renderGallina <$> discriminees)
@@ -328,7 +334,7 @@ instance Gallina Term where
                <+> "with"
     <> (case eqns of
           [] -> space
-          _  -> nest 2 (line <> "| " <> sepWith (<!>) (<+>) "|" (renderGallina <$> eqns))
+          _  -> (line <> "| " <> sepWith (<!>) (<+>) "|" (renderGallina <$> eqns))
              <> line)
     <> "end"
 
@@ -463,8 +469,9 @@ instance Gallina ReturnType where
   renderGallina' _ (ReturnType ty) = "return" <+> align (renderGallina ty)
 
 instance Gallina Equation where
-  renderGallina' _ (Equation mps body) =
-    spacedSepPre "|" (align . renderGallina <$> mps) <+> nest 2 ("=>" </> align (renderGallina body))
+  renderGallina' _ (Equation mps body) = nest 4 $ group $
+    spacedSepPre "|" (align . renderGallina <$> mps) <+> "=>" <!>
+    align (renderGallina body)
 
 instance Gallina MultPattern where
   renderGallina' _ (MultPattern pats) = spacedSepPost "," $ renderGallina <$> pats

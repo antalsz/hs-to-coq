@@ -404,3 +404,47 @@ Proof.
   unfold "\\"; elim: ys xs => [|y ys IH] //= xs ND.
   by apply IH, delete_preserves_NoDup.
 Qed.
+
+(******************************************************************************)
+(** Bit manipulation **)
+
+Theorem Z_eq_testbits_pos (m n : Z) :
+  m = n <-> (forall ix, (0 <= ix)%Z -> Z.testbit m ix = Z.testbit n ix).
+Proof.
+  split => [? | bits]; first by subst.
+  apply Z.bits_inj_iff => ix.
+  case: (Z_le_dec 0 ix) => [POS | NEG]; first by apply bits.
+  rewrite !Z.testbit_neg_r //; omega.
+Qed.
+
+Theorem Z_negb_testbit_iff (m n : Z) :
+  ~~ Z.testbit m n <-> (Z.land m (Z.shiftl 1 n) = 0)%Z.
+Proof.
+  rewrite Z_eq_testbits_pos; split => [nbit ix POS_ix | bits].
+  - rewrite Z.bits_0 Z.land_spec Z.shiftl_spec // IntSetProofs.testbit_1.
+    case SUB: (ix - n =? 0)%Z.
+    + by move: SUB => /Z.eqb_spec/Z.sub_move_0_r ->; rewrite (negbTE nbit) andFb.
+    + by rewrite andbF.
+  - case: (Z_le_dec 0 n) => [POS | NEG].
+    + move: bits => /(_ n POS).
+      by rewrite Z.bits_0 Z.land_spec Z.shiftl_spec // IntSetProofs.testbit_1 Z.sub_diag /= andbT => ->.
+    + rewrite Z.testbit_neg_r //; omega.
+Qed.
+
+Theorem Z_negb_testbit_eq (m n : Z) :
+  ~~ Z.testbit m n = (Z.land m (Z.shiftl 1 n) =? 0)%Z.
+Proof.
+  apply/bool_eq_iff; rewrite Z_negb_testbit_iff; apply (rwP (Z.eqb_spec _ _)).
+Qed.
+
+Theorem Z_testbit_iff (m n : Z) :
+  Z.testbit m n <-> (Z.land m (Z.shiftl 1 n) <> 0)%Z.
+Proof.
+  by rewrite -Z_negb_testbit_iff; split => [-> | /negP]; last rewrite negbK.
+Qed.
+
+Theorem Z_testbit_eq (m n : Z) :
+  Z.testbit m n = ~~ (Z.land m (Z.shiftl 1 n) =? 0)%Z.
+Proof.
+  by apply/bool_eq_iff; rewrite Z_testbit_iff (rwP (Z.eqb_spec _ _)) (rwP negP).
+Qed.

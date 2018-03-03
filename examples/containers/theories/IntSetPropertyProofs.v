@@ -18,7 +18,6 @@ Require Import Data.Bits.
 
 (* IntSet *)
 Require Import Data.IntSet.Internal.
-Require Import Popcount.
 Require Import IntSetProperties.
 Require Import IntSetProofs.
 
@@ -289,15 +288,10 @@ Proof.
   rewrite fromList_member.
   - rewrite (lock enumFromTo).
     apply/elemP; rewrite in_map_iff.
-    move: (valid_maskPowerOfTwo _ WFs) => /= /and3P [/Eq_eq Bits _ _].
-    move: Bits; rewrite /Utils.Containers.Internal.BitUtil.bitcount /popCount /=.
-    change 1%Z with (Z.of_N 1%N); rewrite N2Z.inj_iff => /N_popcount_1_pow2 [i def_i].
-    exists (Z.of_N i); split.
-    + change 2%Z with (Z.of_N 2%N); rewrite -N2Z.inj_pow def_i Z2N.id //.
-      case: m def_i {WFs} => [|m|m] //= def_i.
-      by move: (N_pow_pos_nonneg 2%N i N.lt_0_2); rewrite def_i.
-    + rewrite -(lock eftInt) eftInt_In.
-      admit. (* Unprovable *)
+    move: (valid_maskPowerOfTwo _ WFs) => /= /and3P [/Eq_eq/bitcount_0_1_power_Z_N [i ->] _ _].
+    exists (Z.of_N i); split => //.
+    rewrite -(lock eftInt) eftInt_In.
+    admit. (* Unprovable *)
   - apply Forall_forall => m' /in_map_iff [i [<-{m'} _]].
     by apply Z.pow_nonneg.
 Abort.
@@ -305,19 +299,47 @@ Abort.
 (* "Check that the prefix satisfies its invariant." *)
 Theorem thm_Prefix : toProp prop_Prefix.
 Proof.
+(*
+  elim => [p m | p bm | ] //.
+  rewrite /prop_Prefix -/prop_Prefix /toList (lock toAscList) /= => l IHl r IHr WFs;
+    move: (WFs) => /WF_Bin_children [WFl WFr].
+  apply/and3P; split; try by (apply IHl || apply IHr).
+  move: (valid_correct _ WFs) => /and5P [_ _ COMMON _ _].
+  move: COMMON; rewrite /IntSetValidity.commonPrefix /elems {1}(lock toAscList).
+  rewrite !Foldable_all_ssreflect => /allP /= COMMON.
+  apply/allP => /= x /COMMON /Eq_eq arith.
+  rewrite /match_ /mask; apply/Eq_eq.
+  have: (exists i, m = 2^i /\ 0 <= i)%Z by admit.
+  move=> [i [? POS_i]]; subst m.
+  rewrite mask_to_upper_bits // -Z.ldiff_land.
+  move: arith => /esym /Z.lxor_eq ->.
+*)
 Abort.
 
 (* "Check that the left elements don't have the mask bit set, and the right ones
    do." *)
 Theorem thm_LeftRight : toProp prop_LeftRight.
 Proof.
-  rewrite /prop_LeftRight /= => -[p m l r | // | // ] WF_x; move: (WF_x) => /WF_Bin_children [WF_l WF_r].
-  rewrite !Foldable_and_all !Foldable_all_ssreflect !flat_map_cons_f;
-    apply/andP; split; apply/allP => /= b /mapP [] x; rewrite in_elem toList_member // => x_in {b}->.
-  - case: (WF_x) => [f /Sem_Desc0 [rng DESC0]].
-    inversion_clear DESC0 as [|s rng' f' rng_ f'_ DESC rng'_rng f_f'].
-    inversion DESC; subst.
-Abort.
+  rewrite /prop_LeftRight /= => -[p m l r | // | // ] WFs; move: (WFs) => /WF_Bin_children [WFl WFr].
+  move: (WFs) => /valid_maskRespected /= /andP [mask_l mask_r]; move: mask_l mask_r.
+  rewrite !Foldable_and_all !Foldable_all_ssreflect !flat_map_cons_f /zero /elems /toList.
+  move=> /allP /= mask_l /allP /= mask_r.
+  apply/andP; split; apply/allP => /= b /mapP [] /= x x_in {b}->; apply/Eq_eq.
+  - by move: (mask_l _ x_in) => /Z.eqb_spec ->.
+  - move: (mask_r _ x_in) => /Z.eqb_spec.
+    have: (exists i, m = 2^i)%Z
+      by move: (WFs) => /valid_maskPowerOfTwo /= /and3P [/Eq_eq/bitcount_0_1_power_Z_N [i ->] _ _];
+         exists (Z.of_N i).
+    move=> [i ?]; subst m.
+    rewrite -Z.shiftl_1_l => NEQ_bits.
+    apply Z_eq_testbits_pos => ix POS_ix.
+    rewrite Z.land_spec Z.shiftl_spec // testbit_1.
+    case: (Z.eq_dec ix i) => [? | NEQ]; first subst.
+    + rewrite Z.sub_diag /= andbT Z_testbit_eq; apply/negP.
+      by contradict NEQ_bits; apply/Z.eqb_spec.
+    + suff: ~~ (ix - i =? 0)%Z by move=> /negbTE ->; rewrite andbF.
+      apply/negP => /Z.eqb_spec ?; omega.
+Qed.
 
 (********************************************************************
   IntSet operations are like Set operations

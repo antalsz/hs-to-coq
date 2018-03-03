@@ -11,9 +11,12 @@ Require Import Coq.Sorting.Sorted.
 (* Basic Haskell libraries *)
 Require Import GHC.Base      Proofs.GHC.Base.
 Require Import Data.Foldable Proofs.Data.Foldable.
+Require Import Data.Bits.
 
 (* IntSet *)
 Require Import Data.IntSet.Internal.
+Require Import Utils.Containers.Internal.BitUtil.
+Require Import Popcount.
 Require Import IntSetProofs.
 
 (* Util *)
@@ -25,6 +28,37 @@ Require Import HSUtil SortedUtil.
 Notation list    := Coq.Init.Datatypes.list.
 Notation seq     := Coq.Lists.List.seq.
 Notation reflect := ssrbool.reflect.
+
+(******************************************************************************)
+(** Bit manipulation **)
+
+Theorem bitcount_0_1_power (n : Word) :
+  bitcount #0 n = #1 <-> exists i, n = (2^i)%N.
+Proof.
+  rewrite /bitcount /popCount /=; change 1%Z with (Z.of_N 1%N); rewrite N2Z.inj_iff.
+  split=> [/N_popcount_1_pow2 [i def_n] | [i ->{n}]].
+  - by exists i.
+  - apply N_popcount_pow2.
+Qed.
+
+Theorem bitcount_0_1_power_Z_N (n : Int) :
+  bitcount #0 (Z.to_N n) = #1 <-> exists i, n = (2 ^ Z.of_N i)%Z.
+Proof.
+  change 2%Z with (Z.of_N 2%N); rewrite bitcount_0_1_power; split=> -[i def_n]; exists i.
+  - rewrite -N2Z.inj_pow -def_n Z2N.id //.
+    case: n def_n => [|n|n] //=.
+    have: (0 < 2^i)%N by apply N_pow_pos_nonneg.
+    by case: (2^i)%N.
+  - by rewrite def_n -N2Z.inj_pow N2Z.id.
+Qed.
+
+Theorem bitcount_0_1_power_Z_Z (n : Int) :
+  bitcount #0 (Z.to_N n) = #1 <-> ex2 (fun i => n = 2 ^ i)%Z (fun i => 0 <= i)%Z.
+Proof.
+  rewrite bitcount_0_1_power_Z_N; split=> [[i def_n] | [i def_n POS_i]].
+  - exists (Z.of_N i) => //; apply N2Z.is_nonneg.
+  - exists (Z.to_N i); rewrite def_n Z2N.id //.
+Qed.
 
 (******************************************************************************)
 (** Well-formedness (WF) theorems **)

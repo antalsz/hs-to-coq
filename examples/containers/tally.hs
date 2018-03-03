@@ -19,24 +19,31 @@ type S = BS.ByteString
 type Module = S
 
 data What
-    = Headers
-    | Types
-    | UntranslatedFunctions
+    = Functions
     | UnverifiedFunctions
-    | Functions
+    | UntranslatedFunctions
     | Function Function
-    | UntranslatedTypeClasses
-    | UnverifiedTypeClasses
+
     | TypeClasses
+    | UnverifiedTypeClasses
+    | UntranslatedTypeClasses
     | TypeClass TypeClass
+
+    | Headers
+    | Types
+    | Tactics
+
     | WellFormedness
     | WellFormednessLemmas
-    | CoqInterface
-    | Tactics
-    | Sorted
-    | Arith
-    | Dyadic
+
     | Uniqueness
+
+    | CoqInterface
+    | Tests
+
+    | Arith
+    | Lists
+    | Dyadic
     | Order
   deriving (Show, Eq, Ord)
 type Group = What -- a buit ugly
@@ -47,6 +54,8 @@ groupOf w = w
 
 -- Common up some highly related functions under a common name
 normWhat :: Module -> Column -> What -> What
+normWhat _ _ WellFormednessLemmas = WellFormedness -- disable this distinction
+
 normWhat "Utils" _ (Function _) = Functions
 
 normWhat _ _ (Function "op_zrzr__") = Function "difference"
@@ -87,6 +96,11 @@ normWhat _ _ w = w
 showWhat :: What -> BS.ByteString
 showWhat (Function f)   = f
 showWhat (TypeClass f)  = "instance " <> f
+showWhat UnverifiedFunctions    = "(unverified)"
+showWhat UnverifiedTypeClasses  = "(unverified)"
+showWhat UntranslatedFunctions    = "(untranslated)"
+showWhat UntranslatedTypeClasses  = "(untranslated)"
+showWhat WellFormednessLemmas  = "(lemmas)"
 showWhat w              = BS.pack (show w)
 
 type Function = S
@@ -96,21 +110,36 @@ data Column = Haskell | Gallina | Proofs deriving (Show, Eq, Ord, Enum, Bounded)
 
 files :: [(FilePath, Pats, Module, Column)]
 files =
-    [ ("theories/SetProofs.v",                                proofs,    "Set",    Proofs)
-    , ("theories/MapProofs.v",                                proofs,    "Map",    Proofs)
-    , ("theories/IntSetProofs.v",                             proofs,    "IntSet", Proofs)
-    , ("lib/Data/Set/Internal.v",                             gallina,   "Set",    Gallina)
-    , ("lib/Data/Map/Internal.v",                             gallina,   "Map",    Gallina)
-    , ("lib/Data/IntSet/Internal.v",                          gallina,   "IntSet", Gallina)
-    , ("lib/Utils/Containers/Internal/BitUtil.v",             gallina,   "IntSet", Gallina)
-    , ("lib/IntSetValidity.v",                                all_valid, "IntSet", Gallina)
-    , ("containers/Data/Set/Internal.hs",                     hs,        "Set",    Haskell)
-    , ("containers/Data/Map/Internal.hs",                     hs,        "Map",    Haskell)
-    , ("containers/Data/IntSet/Internal.hs",                  hs,        "IntSet", Haskell)
-    , ("containers/tests/IntMapValidity.hs",                  all_valid, "IntSet", Haskell)
-    , ("containers/Utils/Containers/Internal/BitUtil.hs",     hs,        "IntSet", Haskell)
-    , ("containers/Utils/Containers/Internal/PtrEquality.hs", hs,        "Utils",  Haskell)
+    [ ("theories/SetProofs.v",                                proofs,      "Set",    Proofs)
+    , ("theories/MapProofs.v",                                proofs,      "Map",    Proofs)
+    , ("theories/RevNatSlowProofs.v",                         proofs,      "IntSet", Proofs)
+    , ("theories/IntSetProofs.v",                             proofs,      "IntSet", Proofs)
+    , ("theories/IntSetUtil.v",                               all Tests,   "IntSet", Proofs)
+    , ("theories/IntSetPropertyProofs.v",                     all Tests,   "IntSet", Proofs)
+    , ("theories/OrdTactic.v",                                all Order,   "Utils",  Proofs)
+    , ("theories/OrdTheories.v",                              all CoqInterface,   "Utils",  Proofs)
+    , ("theories/Tactics.v",                                  all Tactics, "Utils",  Proofs)
+    , ("theories/HSUtil.v",                                   all Lists,   "Utils",  Proofs)
+    , ("theories/SortedUtil.v",                               all Lists,   "Utils",  Proofs)
+    , ("lib/Data/Set/Internal.v",                             gallina,     "Set",    Gallina)
+    , ("lib/Data/Map/Internal.v",                             gallina,     "Map",    Gallina)
+    , ("lib/Data/IntSet/Internal.v",                          gallina,     "IntSet", Gallina)
+    , ("lib/Utils/Containers/Internal/BitUtil.v",             gallina,     "IntSet", Gallina)
+    , ("lib/IntSetValidity.v",                                all_valid,   "IntSet", Gallina)
+    , ("hs-spec/IntSetProperties.v",                          all Tests,   "IntSet", Gallina)
+    , ("lib/BitTerminationProofs.v",                          all Arith,   "IntSet", Gallina)
+    , ("containers/Data/Set/Internal.hs",                     hs,          "Set",    Haskell)
+    , ("containers/Data/Map/Internal.hs",                     hs,          "Map",    Haskell)
+    , ("containers/Data/IntSet/Internal.hs",                  hs,          "IntSet", Haskell)
+    , ("containers/tests/IntSetValidity.hs",                  all_valid,   "IntSet", Haskell)
+    , ("containers/tests/intset-properties.hs",               all Tests,   "IntSet", Haskell)
+    , ("containers/Utils/Containers/Internal/BitUtil.hs",     hs,          "IntSet", Haskell)
+    , ("containers/Utils/Containers/Internal/PtrEquality.hs", hs,          "Utils",  Haskell)
     ]
+  where
+    all :: What -> Pats
+    all w = [(mkM ".*", k w)]
+
 
 
 type ToFun = MatchResult S -> What
@@ -139,9 +168,8 @@ hs = first mk <$>
 all_valid :: Pats
 all_valid = first mk <$>
     [ ("^valid ::",                        k (Function "valid"))
-    , ("^Definition",                        k (Function "valid"))
+    , ("^Definition",                      k (Function "valid"))
     ]
-
 gallina :: Pats
 gallina = first mk <$>
     [ ("^Definition Size",                 k Types)
@@ -165,7 +193,7 @@ proofs = first mk <$>
     [ (sect "Tactics",                               k Tactics)
     , (sect "General utility tactics",               k Tactics)
     , (sect "An omega that "         ,               k Tactics)
-    , (sect "Utilities about sorted ",               k Sorted)
+    , (sect "Utilities about sorted ",               k Lists)
     , (sect "The \\[nonneg\\] tactic",               k Tactics)
     , (sect "Lemmas about \\[N\\] and",              k Arith)
     , (sect "Dyadic intervals",                      k Dyadic)
@@ -236,8 +264,16 @@ main = do
         $ printTransCoordinateList summary
         , def "provingcoordinates"
         $ printProvingCoordinateList summary
-        , def2 "modsummaryxcoords" "modsummaryplots"
+        , def2 "modsummarysymboliccoords" "modsummaryplots"
         $ printModSummaryPlots gsummary
+        , def2 "modsummarysymboliccoordsSet" "modsummaryplotsSet"
+        $ printModSummaryPlots' "Set" gsummary
+        , def2 "modsummarysymboliccoordsMap" "modsummaryplotsMap"
+        $ printModSummaryPlots' "Map" gsummary
+        , def2 "modsummarysymboliccoordsIntSet" "modsummaryplotsIntSet"
+        $ printModSummaryPlots' "IntSet" gsummary
+        , def2 "modsummarysymboliccoordsUtils" "modsummaryplotsUtils"
+        $ printModSummaryPlots' "Utils" gsummary
         ]
 
 printTransCoordinateList :: Summary -> S
@@ -265,12 +301,12 @@ printProvingCoordinateList summary = BS.unwords
     isInteresting _ = False
 
 printModSummaryPlots :: GroupSummary -> (S, S)
-printModSummaryPlots summary = (xcoords, plots)
+printModSummaryPlots summary = (symboliccoords, plots)
   where
-    xcoords = "symbolic x coords={" <> commas [ barLabel c m | (m,c) <- bars] <> "}"
+    symboliccoords = "symbolic y coords={" <> commas [ barLabel c m | (m,c) <- bars] <> "}"
     plots = BS.unlines $
       [ "\\addplot coordinates {" <> BS.unwords
-        [ coordinate (barLabel c m) (showBS n)
+        [ coordinate (showBS n) (barLabel c m)
         | (m,c) <- bars
         , let n = lookupInt (m,g,c) summary
         ] <>
@@ -283,7 +319,24 @@ printModSummaryPlots summary = (xcoords, plots)
     barLabel Proofs m  = m <> "Proofs.v"
     cols = [minBound..maxBound]
     mods = S.toList $ S.fromList [ m | (m,g,c) <- M.keys summary]
-    bars = (,) <$> ["Set", "Map", "IntSet"] <*> cols
+    bars = reverse $ (,) <$> ["Set", "Map", "IntSet"] <*> cols
+    groups = S.toList $ S.fromList [ g | (m,g,c) <- M.keys summary]
+
+printModSummaryPlots' :: Module -> GroupSummary -> (S, S)
+printModSummaryPlots' mod summary = (symboliccoords, plots)
+  where
+    symboliccoords = "symbolic y coords={" <> commas [ showBS c | c <- cols] <> "}"
+    plots = BS.unlines $
+      [ "\\addplot coordinates {" <> BS.unwords
+        [ coordinate (showBS n) (showBS c)
+        | c <- cols
+        , let n = lookupInt (mod,g,c) summary
+        ] <>
+        "};"
+      | g <- groups
+      ] ++
+      [ "\\legend{ " <> commas [showWhat g | g <- groups ] <> "}" ]
+    cols = reverse $ [minBound..maxBound]
     groups = S.toList $ S.fromList [ g | (m,g,c) <- M.keys summary]
 
 pruneUnverified :: Summary -> Summary
@@ -358,7 +411,8 @@ classify pats mod col = go
   where
     go :: S -> S -> What -> Table
     go begin rest current
-        | Just (mr, toFun) <- matchFirst pats rest
+        | not (BS.null rest)
+        , Just (mr, toFun) <- matchFirst pats rest
         , let this = begin <> mrBefore mr
         , let next = normWhat mod col $ toFun mr
         = if current == next

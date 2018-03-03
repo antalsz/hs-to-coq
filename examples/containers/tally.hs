@@ -6,6 +6,7 @@ import Data.Char
 import Data.Foldable
 import Data.Monoid
 import Data.Maybe
+import Data.List
 import Data.Ord
 import Data.Traversable
 import qualified Data.ByteString.Char8 as BS
@@ -19,14 +20,14 @@ type S = BS.ByteString
 type Module = S
 
 data What
-    = Functions
-    | UnverifiedFunctions
-    | UntranslatedFunctions
+    = VerifiedFunctions Int
+    | UnverifiedFunctions Int
+    | UntranslatedFunctions Int
     | Function Function
 
-    | TypeClasses
-    | UnverifiedTypeClasses
-    | UntranslatedTypeClasses
+    | VerifiedTypeClasses Int
+    | UnverifiedTypeClasses Int
+    | UntranslatedTypeClasses Int
     | TypeClass TypeClass
 
     | Headers
@@ -48,15 +49,12 @@ data What
   deriving (Show, Eq, Ord)
 type Group = What -- a buit ugly
 
-groupOf (Function _) = Functions
-groupOf (TypeClass _) = TypeClasses
-groupOf w = w
-
 -- Common up some highly related functions under a common name
 normWhat :: Module -> Column -> What -> What
 normWhat _ _ WellFormednessLemmas = WellFormedness -- disable this distinction
+normWhat _ _ Types = Headers -- disable this distinction
 
-normWhat "Utils" _ (Function _) = Functions
+-- normWhat "Utils" _ (Function _) = Functions
 
 normWhat _ _ (Function "op_zrzr__") = Function "difference"
 normWhat _ _ (Function "op_zn__") = Function "find"
@@ -78,16 +76,16 @@ normWhat _ _ (Function "bit_N")  = Arith
 normWhat _ _ (Function "shiftLL")  = Arith
 
 -- record accessors
-normWhat _ _ (Function "matchedKey")  = Types
-normWhat _ _ (Function "getMergeSet")  = Types
-normWhat _ _ (Function "missingKey")  = Types
-normWhat _ _ (Function "missingSubtree")  = Types
+normWhat m c (Function "matchedKey")      = normWhat m c Types
+normWhat m c (Function "getMergeSet")     = normWhat m c Types
+normWhat m c (Function "missingKey")      = normWhat m c Types
+normWhat m c (Function "missingSubtree")  = normWhat m c Types
 
-normWhat _ _ (Function "delta")   = Types
-normWhat _ _ (Function "ratio")   = Types
-normWhat _ _ (Function "set_size") = Types
-normWhat _ _ (Function "map_size") = Types
-normWhat _ _ (Function "size_nat") = Types
+normWhat m c (Function "delta")           = normWhat m c Types
+normWhat m c (Function "ratio")           = normWhat m c Types
+normWhat m c (Function "set_size")        = normWhat m c Types
+normWhat m c (Function "map_size")        = normWhat m c Types
+normWhat m c (Function "size_nat")        = normWhat m c Types
 normWhat _ _ (Function f)
     | f `elem` BS.words "showTreeWith showWide showsBars showsTree showsTreeHang withBar withEmpty "
     = Function "showTree"
@@ -96,12 +94,31 @@ normWhat _ _ w = w
 showWhat :: What -> BS.ByteString
 showWhat (Function f)   = f
 showWhat (TypeClass f)  = "instance " <> f
-showWhat UnverifiedFunctions    = "(unverified)"
-showWhat UnverifiedTypeClasses  = "(unverified)"
-showWhat UntranslatedFunctions    = "(untranslated)"
-showWhat UntranslatedTypeClasses  = "(untranslated)"
+showWhat (VerifiedFunctions n)       = "Functions, verified (" <> showBS n <> ")"
+showWhat (UnverifiedFunctions n)     = "Functions, unverified (" <> showBS n <> ")"
+showWhat (UntranslatedFunctions n)   = "Functions, untranslated (" <> showBS n <> ")"
+showWhat (VerifiedTypeClasses n)     = "Type classes, verified (" <> showBS n <> ")"
+showWhat (UnverifiedTypeClasses n)   = "Type classes, unverified (" <> showBS n <> ")"
+showWhat (UntranslatedTypeClasses n) = "Type classes, untranslated (" <> showBS n <> ")"
+showWhat WellFormedness        = "Well-formedness"
 showWhat WellFormednessLemmas  = "(lemmas)"
+showWhat Headers  = "Headers and types"
+showWhat Arith  = "Arithmetic"
+showWhat CoqInterface  = "\\texttt{FSetInterface}"
 showWhat w              = BS.pack (show w)
+
+showWhatShort :: What -> BS.ByteString
+showWhatShort (Function f)   = f
+showWhatShort (TypeClass f)  = "instance " <> f
+showWhatShort (VerifiedFunctions n)       = "Funcs, verf."
+showWhatShort (UnverifiedFunctions n)     = "\\ldots, unverif."
+showWhatShort (UntranslatedFunctions n)   = "\\ldots, untrans."
+showWhatShort (VerifiedTypeClasses n)     = "Classes, verif."
+showWhatShort (UnverifiedTypeClasses n)   = "\\ldots, unverif."
+showWhatShort (UntranslatedTypeClasses n) = "\\ldots, untrans."
+showWhatShort WellFormedness        = "WF"
+showWhatShort WellFormednessLemmas  = "(lemmas)"
+showWhatShort w              = BS.pack (show w)
 
 type Function = S
 type TypeClass = S
@@ -160,7 +177,9 @@ hs = first mk <$>
     , ("^(insertMin)",                     f1)
     , ("^(insertMax)",                     f1)
     , ("^infixl . \\\\\\\\",               k (Function "difference"))
---    , ("^\\(\\\\\\\\\\)",                  k (Function "difference"))
+    , ("^\\(\\\\\\\\\\)",                  k (Function "difference"))
+    , ("^\\(!\\)",                         k (Function "find"))
+    , ("^\\(!\\?\\)",                      k (Function "lookup"))
     , ("^([a-zA-Z0-9'_]*?)(?:,.*)? +::",           f1)
     , ("^(mergeA)$",                       f1)
     ]
@@ -226,18 +245,36 @@ summarizeGroups summary =
     M.fromListWith (+) [ ((mod, groupOf mod what, col), n)
                        | ((mod, what, col), n) <- M.toList summary ]
   where
-    groupOf m w@(Function _)  | (m,w,Proofs)  `M.member` summary = Functions
-                              | (m,w,Gallina) `M.member` summary = UnverifiedFunctions
-                              | otherwise                        = UntranslatedFunctions
-    groupOf m w@(TypeClass _) | (m,w,Proofs)  `M.member` summary = TypeClasses
-                              | (m,w,Gallina) `M.member` summary = UnverifiedTypeClasses
-                              | otherwise                        = UntranslatedTypeClasses
+    isVerified     m w = (m,w,Proofs) `M.member` summary
+    isUnverified   m w = not (isVerified m w) && (m,w,Gallina) `M.member` summary
+    isUntranslated m w = not (isVerified m w) && not (isUnverified m w)
+
+    verifiedFunctions = S.fromList
+        [ w | ((m, w@Function{}, _), _) <- M.toList summary, isVerified m w ]
+    unverifiedFunctions = S.fromList
+        [ w | ((m, w@Function{}, _), _) <- M.toList summary, isUnverified m w ]
+    untranslatedFunctions = S.fromList
+        [ w | ((m, w@Function{}, _), _) <- M.toList summary, isUntranslated m w ]
+    verifiedTypeClasses = S.fromList
+        [ w | ((m, w@TypeClass{}, _), _) <- M.toList summary, isVerified m w ]
+    unverifiedTypeClasses = S.fromList
+        [ w | ((m, w@TypeClass{}, _), _) <- M.toList summary, isUnverified m w ]
+    untranslatedTypeClasses = S.fromList
+        [ w | ((m, w@TypeClass{}, _), _) <- M.toList summary, isUntranslated m w ]
+
+    groupOf m w@Function{}  | isVerified     m w = VerifiedFunctions (S.size verifiedFunctions)
+                            | isUnverified   m w = UnverifiedFunctions (S.size unverifiedFunctions)
+                            | isUntranslated m w = UntranslatedFunctions (S.size untranslatedFunctions)
+    groupOf m w@TypeClass{} | isVerified     m w = VerifiedTypeClasses (S.size verifiedTypeClasses)
+                            | isUnverified   m w = UnverifiedTypeClasses (S.size unverifiedTypeClasses)
+                            | isUntranslated m w = UntranslatedTypeClasses (S.size untranslatedTypeClasses)
     groupOf m w = w
 
 summarize :: Table -> Summary
 summarize table = M.fromListWith (+)
     [ ((mod, what, col), n)
     | (mod, what, col, _, n) <- table
+    , n > 0
     ]
 
 main :: IO ()
@@ -256,10 +293,8 @@ main = do
 
     BS.writeFile "tally.csv" $ printSummary summary
     BS.writeFile "tally.tex" $ mconcat
-        [ def "fulltallytable"
-        $ printLaTeXSummary summary
-        , def "verifiedtallytable"
-        $ printLaTeXSummary (pruneUnverified summary)
+        [ def "summarytallytable"
+        $ printLaTeXSummary gsummary
         , def "translationcoordinates"
         $ printTransCoordinateList summary
         , def "provingcoordinates"
@@ -313,7 +348,7 @@ printModSummaryPlots summary = (symboliccoords, plots)
         "};"
       | g <- groups
       ] ++
-      [ "\\legend{ " <> commas [showWhat g | g <- groups ] <> "}" ]
+      [ "\\legend{ " <> commas ["{" <> showWhatShort g <> "}"| g <- groups ] <> "}" ]
     barLabel Haskell m = m <> ".hs"
     barLabel Gallina m = m <> ".v"
     barLabel Proofs m  = m <> "Proofs.v"
@@ -335,7 +370,7 @@ printModSummaryPlots' mod summary = (symboliccoords, plots)
         "};"
       | g <- groups
       ] ++
-      [ "\\legend{ " <> commas [showWhat g | g <- groups ] <> "}" ]
+      [ "\\legend{ " <> commas ["{" <> showWhatShort g <> "}"| g <- groups ] <> "}" ]
     cols = reverse $ [minBound..maxBound]
     groups = S.toList $ S.fromList [ g | (m,g,c) <- M.keys summary]
 
@@ -378,33 +413,53 @@ lookupInt x = fromMaybe 0 . M.lookup x
 lookupIntS :: Ord a => a -> M.Map a Int -> S
 lookupIntS x = maybe "" (BS.pack . show) . M.lookup x
 
-printLaTeXSummary :: M.Map (S,What,Column) Int -> S
+printLaTeXSummary :: GroupSummary -> S
 printLaTeXSummary summary
     = BS.unlines $
-    [ "\\begin{longtable}{lrrr}"
-    , row ("" : map showBS cols)
+    [ "\\begin{tabular}{l|rrr|rrr|rrr}"
+    , row' ("" : map center (map showBS cols))
+    , row  ("" : concatMap (const subColumns) cols)
     ] ++ concat
-    [ [ "\\midrule"
-      , row $ "\\textbf{" <> showWhat g <> "}" :
-              [ lookupIntS (g,c) gsummary | c <- cols ]
+    [ [ "\\noalign{\\hrule height 0.4pt}" ] ++
+      [ row' $ firstLine :
+              [ lookupIntS (w,c) gsummary | c <- cols ]
+      | showTotal
       ] ++
-      [ row $ "\\quad " <> m <> "." <> showWhat w :
-              [ lookupIntS (m,w,c) summary | c <- cols ]
-      | (m,w) <- groupRows ]
-    | (g, groupRows) <- M.toList groupedRows ] ++
-    [ "\\end{longtable}" ]
+      [ row $ secondLine :
+              [ lookupIntS (m,w,c) summary | c <- cols, m <- subColumns]
+      ]
+    | (w, groupRows) <- M.toList groupedRows
+    , let showTotal = length groupRows > 1
+    , let (firstLine, secondLine)
+            | showTotal = second ("\\quad " <>) $ splitComma (showWhat w)
+            | otherwise = (undefined, showWhat w)
+    ] ++
+    [ "\\end{tabular}" ]
   where
+    splitComma x | BS.null b = (a,b)
+                 | otherwise = (a <> ",", BS.tail b)
+      where
+        (a,b) = BS.break (','==) x
+    center x = "\\multicolumn{1}{c}{" <> x <> "}"
     row xs = BS.intercalate " & " xs <> "\\\\"
+    row' (x:xs) = BS.intercalate " & " ys <> "\\\\"
+      where ys = x : concatMap (\y -> if BS.null y then ["","",""] else ["",y,""]) xs
     cols = [minBound..maxBound]
     rows = S.toList $ S.fromList [ (x,y) | (x,y,_)   <- M.keys summary]
     gsummary = M.fromListWith (+)
-        [ ((groupOf what, col), n)
+        [ ((what, col), n)
         | ((mod, what, col), n) <- M.toList summary
         ]
-    groupedRows = M.fromListWith (++) [(groupOf w, [(m,w)]) | (m,w) <- rows]
+    groupedRows = M.fromListWith (++) [(w, [m]) | (m,w) <- rows]
+    subColumns = ["Set", "Map", "IntSet"]
+
 
 showBS :: Show a => a -> S
 showBS = BS.pack . show
+
+showMod :: Module -> S
+showMod m = "{\\codefont " <> m <> "}"
+
 
 classify :: Pats -> Module -> Column -> S -> S -> What -> Table
 classify pats mod col = go

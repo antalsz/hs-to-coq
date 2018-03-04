@@ -27,6 +27,7 @@ Require Panic.
 Require SrcLoc.
 Require Unique.
 Import GHC.Base.Notations.
+Import GHC.Num.Notations.
 
 (* Converted type declarations: *)
 
@@ -204,36 +205,36 @@ Local Definition Ord__CoAxiom_op_zg__ {inst_br} : (Core.CoAxiom
                                                   inst_br) -> (Core.CoAxiom inst_br) -> bool :=
   fun a b =>
     match (Ord__CoAxiom_compare a b) with
-      | Lt => false
-      | Eq => false
-      | Gt => true
+    | Lt => false
+    | Eq => false
+    | Gt => true
     end.
 
 Local Definition Ord__CoAxiom_op_zgze__ {inst_br} : (Core.CoAxiom
                                                     inst_br) -> (Core.CoAxiom inst_br) -> bool :=
   fun a b =>
     match (Ord__CoAxiom_compare a b) with
-      | Lt => false
-      | Eq => true
-      | Gt => true
+    | Lt => false
+    | Eq => true
+    | Gt => true
     end.
 
 Local Definition Ord__CoAxiom_op_zl__ {inst_br} : (Core.CoAxiom
                                                   inst_br) -> (Core.CoAxiom inst_br) -> bool :=
   fun a b =>
     match (Ord__CoAxiom_compare a b) with
-      | Lt => true
-      | Eq => false
-      | Gt => false
+    | Lt => true
+    | Eq => false
+    | Gt => false
     end.
 
 Local Definition Ord__CoAxiom_op_zlze__ {inst_br} : (Core.CoAxiom
                                                     inst_br) -> (Core.CoAxiom inst_br) -> bool :=
   fun a b =>
     match (Ord__CoAxiom_compare a b) with
-      | Lt => true
-      | Eq => true
-      | Gt => false
+    | Lt => true
+    | Eq => true
+    | Gt => false
     end.
 
 Local Definition Ord__CoAxiom_max {inst_br} : (Core.CoAxiom
@@ -249,8 +250,8 @@ Definition Eq___CoAxiom_op_zeze__ {inst_br} : Core.CoAxiom
   fun a b =>
     let scrut_0__ := Ord__CoAxiom_compare a b in
     match scrut_0__ with
-      | Eq => true
-      | _ => false
+    | Eq => true
+    | _ => false
     end.
 
 Definition Eq___CoAxiom_op_zsze__ {inst_br} : Core.CoAxiom
@@ -258,8 +259,8 @@ Definition Eq___CoAxiom_op_zsze__ {inst_br} : Core.CoAxiom
   fun a b =>
     let scrut_0__ := Ord__CoAxiom_compare a b in
     match scrut_0__ with
-      | Eq => false
-      | _ => true
+    | Eq => false
+    | _ => true
     end.
 
 Program Instance Eq___CoAxiom {br} : GHC.Base.Eq_ (Core.CoAxiom br) := fun _
@@ -376,10 +377,10 @@ Admit Obligations.
 Local Definition Eq___Role_op_zeze__ : Core.Role -> Core.Role -> bool :=
   fun arg_0__ arg_1__ =>
     match arg_0__ , arg_1__ with
-      | Core.Nominal , Core.Nominal => true
-      | Core.Representational , Core.Representational => true
-      | Core.Phantom , Core.Phantom => true
-      | _ , _ => false
+    | Core.Nominal , Core.Nominal => true
+    | Core.Representational , Core.Representational => true
+    | Core.Phantom , Core.Phantom => true
+    | _ , _ => false
     end.
 
 Local Definition Eq___Role_op_zsze__ : Core.Role -> Core.Role -> bool :=
@@ -426,7 +427,7 @@ Axiom coAxiomNthBranch : forall {A : Type}, A.
 
 Definition coAxiomNumPats {br} : Core.CoAxiom br -> GHC.Num.Int :=
   Data.Foldable.length GHC.Base.∘ (coAxBranchLHS GHC.Base.∘ (GHC.Base.flip
-  coAxiomNthBranch (GHC.Num.fromInteger 0))).
+  coAxiomNthBranch #0)).
 
 (* Translating `coAxiomNthBranch' failed: using a record pattern for the unknown
    constructor `CoAxiom' unsupported *)
@@ -450,10 +451,10 @@ Definition coAxiomTyCon {br} : Core.CoAxiom br -> Core.TyCon :=
 Definition fsFromRole : Core.Role -> FastString.FastString :=
   fun arg_0__ =>
     match arg_0__ with
-      | Core.Nominal => FastString.fsLit (GHC.Base.hs_string__ "nominal")
-      | Core.Representational => FastString.fsLit (GHC.Base.hs_string__
-                                                  "representational")
-      | Core.Phantom => FastString.fsLit (GHC.Base.hs_string__ "phantom")
+    | Core.Nominal => FastString.fsLit (GHC.Base.hs_string__ "nominal")
+    | Core.Representational =>
+        FastString.fsLit (GHC.Base.hs_string__ "representational")
+    | Core.Phantom => FastString.fsLit (GHC.Base.hs_string__ "phantom")
     end.
 
 Definition isImplicitCoAxiom {br} : Core.CoAxiom br -> bool :=
@@ -474,6 +475,7 @@ Axiom trivialBuiltInFamily : forall {A : Type}, A.
      Core.CoAxiomRule Core.Nominal Core.Phantom Core.Representational Core.Role
      Core.TyCon Core.Type_ Data.Foldable.length FastString.FastString
      FastString.fsLit GHC.Base.Eq_ GHC.Base.Ord GHC.Base.compare GHC.Base.flip
-     GHC.Base.op_z2218U__ GHC.Base.op_zeze__ GHC.Base.op_zsze__ GHC.Num.Int Name.Name
-     Pair.Pair Panic.panic SrcLoc.SrcSpan Unique.getUnique
+     GHC.Base.op_z2218U__ GHC.Base.op_zeze__ GHC.Base.op_zsze__ GHC.Num.Int
+     GHC.Num.fromInteger Name.Name Pair.Pair Panic.panic SrcLoc.SrcSpan
+     Unique.getUnique
 *)

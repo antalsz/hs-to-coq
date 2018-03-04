@@ -168,17 +168,17 @@ Definition lenAcc {a} : list a -> GHC.Num.Int -> GHC.Num.Int :=
   fix lenAcc arg_0__ arg_1__
         := match arg_0__ , arg_1__ with
            | nil , n => n
-           | cons _ ys , n => lenAcc ys (n GHC.Num.+ GHC.Num.fromInteger 1)
+           | cons _ ys , n => lenAcc ys (n GHC.Num.+ #1)
            end.
 
 Definition length {a} : list a -> GHC.Num.Int :=
-  fun xs => lenAcc xs (GHC.Num.fromInteger 0).
+  fun xs => lenAcc xs #0.
 
 Definition lengthFB {x}
     : x -> (GHC.Num.Int -> GHC.Num.Int) -> GHC.Num.Int -> GHC.Num.Int :=
   fun arg_0__ arg_1__ =>
     match arg_0__ , arg_1__ with
-    | _ , r => fun a => r (a GHC.Num.+ GHC.Num.fromInteger 1)
+    | _ , r => fun a => r (a GHC.Num.+ #1)
     end.
 
 Definition lookup {a} {b} `{(GHC.Base.Eq_ a)} : a -> list (a * b)%type -> option
@@ -213,7 +213,7 @@ Definition prel_list_str : GHC.Base.String :=
   GHC.Base.hs_string__ "Prelude.".
 
 Definition product {a} `{(GHC.Num.Num a)} : list a -> a :=
-  GHC.Base.foldl _GHC.Num.*_ (GHC.Num.fromInteger 1).
+  GHC.Base.foldl _GHC.Num.*_ #1.
 
 Definition reverse {a} : list a -> list a :=
   fun l =>
@@ -283,16 +283,16 @@ Definition strictUncurryScanr {a} {b} {c} : (a -> b -> c) -> (a *
   fun f pair_ => let 'pair x y := pair_ in f x y.
 
 Definition sum {a} `{(GHC.Num.Num a)} : list a -> a :=
-  GHC.Base.foldl _GHC.Num.+_ (GHC.Num.fromInteger 0).
+  GHC.Base.foldl _GHC.Num.+_ #0.
 
 Definition takeFB {a} {b}
     : (a -> b -> b) -> b -> a -> (GHC.Num.Int -> b) -> GHC.Num.Int -> b :=
   fun c n x xs =>
     fun m =>
       let 'num_0__ := m in
-      if num_0__ GHC.Base.== GHC.Num.fromInteger 1 : bool
+      if num_0__ GHC.Base.== #1 : bool
       then c x n
-      else c x (xs (m GHC.Num.- GHC.Num.fromInteger 1)).
+      else c x (xs (m GHC.Num.- #1)).
 
 Definition takeWhile {a} : (a -> bool) -> list a -> list a :=
   fix takeWhile arg_0__ arg_1__
@@ -372,6 +372,6 @@ Definition zipWithFB {a} {b} {c} {d} {e}
      None Some andb bool cons false list nil op_zt__ option orb pair true
      Coq.Init.Datatypes.app GHC.Base.Eq_ GHC.Base.String GHC.Base.const
      GHC.Base.foldl GHC.Base.foldr GHC.Base.id GHC.Base.oneShot GHC.Base.op_zeze__
-     GHC.Base.op_zsze__ GHC.Num.Int GHC.Num.Num GHC.Num.op_zm__ GHC.Num.op_zp__
-     GHC.Num.op_zt__
+     GHC.Base.op_zsze__ GHC.Num.Int GHC.Num.Num GHC.Num.fromInteger GHC.Num.op_zm__
+     GHC.Num.op_zp__ GHC.Num.op_zt__
 *)

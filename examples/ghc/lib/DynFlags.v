@@ -423,14 +423,12 @@ Arguments On {_} _.
 Arguments Off {_} _.
 
 Definition modRenamingWithImplicit (arg_0__ : ModRenaming) :=
-  match arg_0__ with
-    | Mk_ModRenaming modRenamingWithImplicit _ => modRenamingWithImplicit
-  end.
+  let 'Mk_ModRenaming modRenamingWithImplicit _ := arg_0__ in
+  modRenamingWithImplicit.
 
 Definition modRenamings (arg_1__ : ModRenaming) :=
-  match arg_1__ with
-    | Mk_ModRenaming _ modRenamings => modRenamings
-  end.
+  let 'Mk_ModRenaming _ modRenamings := arg_1__ in
+  modRenamings.
 (* Midamble *)
 
 Instance Unpeel_IgnorePackageFlag : Prim.Unpeel IgnorePackageFlag GHC.Base.String :=

@@ -84,8 +84,8 @@ Definition unionUniqDSets {a} : UniqDSet a -> UniqDSet a -> UniqDSet a :=
 
 Definition unionManyUniqDSets {a} (xs : list (UniqDSet a)) : UniqDSet a :=
   match xs with
-    | nil => emptyUniqDSet
-    | cons set sets => Data.Foldable.foldr unionUniqDSets set sets
+  | nil => emptyUniqDSet
+  | cons set sets => Data.Foldable.foldr unionUniqDSets set sets
   end.
 
 Definition uniqDSetMinusUniqSet {a} : UniqDSet a -> UniqSet.UniqSet

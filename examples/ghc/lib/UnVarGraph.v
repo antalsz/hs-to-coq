@@ -72,22 +72,18 @@ Definition emptyUnVarSet : UnVarSet :=
   Mk_UnVarSet Data.IntSet.Internal.empty.
 
 Definition isEmptyUnVarSet : UnVarSet -> bool :=
-  fun arg_0__ =>
-    match arg_0__ with
-      | Mk_UnVarSet s => Data.IntSet.Internal.null s
-    end.
+  fun arg_0__ => let 'Mk_UnVarSet s := arg_0__ in Data.IntSet.Internal.null s.
 
 Definition prune : UnVarGraph -> UnVarGraph :=
   fun arg_0__ =>
-    match arg_0__ with
-      | Mk_UnVarGraph g => let go :=
-                             fun arg_1__ =>
-                               match arg_1__ with
-                                 | CG s => negb (isEmptyUnVarSet s)
-                                 | CBPG s1 s2 => andb (negb (isEmptyUnVarSet s1)) (negb (isEmptyUnVarSet s2))
-                               end in
-                           Mk_UnVarGraph GHC.Base.$ Bag.filterBag go g
-    end.
+    let 'Mk_UnVarGraph g := arg_0__ in
+    let go :=
+      fun arg_1__ =>
+        match arg_1__ with
+        | CG s => negb (isEmptyUnVarSet s)
+        | CBPG s1 s2 => andb (negb (isEmptyUnVarSet s1)) (negb (isEmptyUnVarSet s2))
+        end in
+    Mk_UnVarGraph GHC.Base.$ Bag.filterBag go g.
 
 Definition completeGraph : UnVarSet -> UnVarGraph :=
   fun s =>
@@ -108,32 +104,33 @@ Definition mkUnVarSet : list Core.Var -> UnVarSet :=
 Definition elemUnVarSet : Core.Var -> UnVarSet -> bool :=
   fun arg_0__ arg_1__ =>
     match arg_0__ , arg_1__ with
-      | v , Mk_UnVarSet s => Data.IntSet.Internal.member (k v) s
+    | v , Mk_UnVarSet s => Data.IntSet.Internal.member (k v) s
     end.
 
 Definition delUnVarSet : UnVarSet -> Core.Var -> UnVarSet :=
   fun arg_0__ arg_1__ =>
     match arg_0__ , arg_1__ with
-      | Mk_UnVarSet s , v => Mk_UnVarSet GHC.Base.$ Data.IntSet.Internal.delete (k v)
-                                                                                s
+    | Mk_UnVarSet s , v =>
+        Mk_UnVarSet GHC.Base.$ Data.IntSet.Internal.delete (k v) s
     end.
 
 Definition delNode : UnVarGraph -> Core.Var -> UnVarGraph :=
   fun arg_0__ arg_1__ =>
     match arg_0__ , arg_1__ with
-      | Mk_UnVarGraph g , v => let go :=
-                                 fun arg_2__ =>
-                                   match arg_2__ with
-                                     | CG s => CG (delUnVarSet s v)
-                                     | CBPG s1 s2 => CBPG (delUnVarSet s1 v) (delUnVarSet s2 v)
-                                   end in
-                               prune GHC.Base.$ (Mk_UnVarGraph GHC.Base.$ Bag.mapBag go g)
+    | Mk_UnVarGraph g , v =>
+        let go :=
+          fun arg_2__ =>
+            match arg_2__ with
+            | CG s => CG (delUnVarSet s v)
+            | CBPG s1 s2 => CBPG (delUnVarSet s1 v) (delUnVarSet s2 v)
+            end in
+        prune GHC.Base.$ (Mk_UnVarGraph GHC.Base.$ Bag.mapBag go g)
     end.
 
 Definition unionUnVarGraph : UnVarGraph -> UnVarGraph -> UnVarGraph :=
   fun arg_0__ arg_1__ =>
     match arg_0__ , arg_1__ with
-      | Mk_UnVarGraph g1 , Mk_UnVarGraph g2 => Mk_UnVarGraph (Bag.unionBags g1 g2)
+    | Mk_UnVarGraph g1 , Mk_UnVarGraph g2 => Mk_UnVarGraph (Bag.unionBags g1 g2)
     end.
 
 Definition unionUnVarGraphs : list UnVarGraph -> UnVarGraph :=
@@ -142,8 +139,8 @@ Definition unionUnVarGraphs : list UnVarGraph -> UnVarGraph :=
 Definition unionUnVarSet : UnVarSet -> UnVarSet -> UnVarSet :=
   fun arg_0__ arg_1__ =>
     match arg_0__ , arg_1__ with
-      | Mk_UnVarSet set1 , Mk_UnVarSet set2 => Mk_UnVarSet (Data.IntSet.Internal.union
-                                                           set1 set2)
+    | Mk_UnVarSet set1 , Mk_UnVarSet set2 =>
+        Mk_UnVarSet (Data.IntSet.Internal.union set1 set2)
     end.
 
 Definition unionUnVarSets : list UnVarSet -> UnVarSet :=
@@ -152,20 +149,20 @@ Definition unionUnVarSets : list UnVarSet -> UnVarSet :=
 Definition neighbors : UnVarGraph -> Core.Var -> UnVarSet :=
   fun arg_0__ arg_1__ =>
     match arg_0__ , arg_1__ with
-      | Mk_UnVarGraph g , v => let go :=
-                                 fun arg_2__ =>
-                                   match arg_2__ with
-                                     | CG s => (if elemUnVarSet v s : bool
-                                               then cons s nil
-                                               else nil)
-                                     | CBPG s1 s2 => Coq.Init.Datatypes.app (if elemUnVarSet v s1 : bool
-                                                                            then cons s2 nil
-                                                                            else nil) (if elemUnVarSet v s2 : bool
-                                                                            then cons s1 nil
-                                                                            else nil)
-                                   end in
-                               unionUnVarSets GHC.Base.$ (Data.Foldable.concatMap go GHC.Base.$ Bag.bagToList
-                               g)
+    | Mk_UnVarGraph g , v =>
+        let go :=
+          fun arg_2__ =>
+            match arg_2__ with
+            | CG s => (if elemUnVarSet v s : bool then cons s nil else nil)
+            | CBPG s1 s2 =>
+                Coq.Init.Datatypes.app (if elemUnVarSet v s1 : bool
+                                       then cons s2 nil
+                                       else nil) (if elemUnVarSet v s2 : bool
+                                       then cons s1 nil
+                                       else nil)
+            end in
+        unionUnVarSets GHC.Base.$ (Data.Foldable.concatMap go GHC.Base.$ Bag.bagToList
+        g)
     end.
 
 Definition varEnvDom {a} : VarEnv.VarEnv a -> UnVarSet :=

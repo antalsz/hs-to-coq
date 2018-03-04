@@ -270,8 +270,8 @@ Local Definition Foldable__NonEmpty_length : forall {a},
   fun {a} =>
     Foldable__NonEmpty_foldl' (fun arg_64__ arg_65__ =>
                                 match arg_64__ , arg_65__ with
-                                | c , _ => _GHC.Num.+_ c (GHC.Num.fromInteger 1)
-                                end) (GHC.Num.fromInteger 0).
+                                | c , _ => _GHC.Num.+_ c #1
+                                end) #0.
 
 Program Instance Foldable__NonEmpty : Data.Foldable.Foldable NonEmpty := fun _
                                                                              k =>
@@ -368,7 +368,7 @@ Definition isPrefixOf {a} `{GHC.Base.Eq_ a} : list a -> NonEmpty a -> bool :=
 Definition length {a} : NonEmpty a -> GHC.Num.Int :=
   fun arg_0__ =>
     let 'NEcons _ xs := arg_0__ in
-    GHC.Num.fromInteger 1 GHC.Num.+ Data.Foldable.length xs.
+    #1 GHC.Num.+ Data.Foldable.length xs.
 
 Definition map {a} {b} : (a -> b) -> NonEmpty a -> NonEmpty b :=
   fun arg_0__ arg_1__ =>
@@ -520,5 +520,5 @@ End Notations.
      GHC.Base.op_zlzd__ GHC.Base.op_zlztzg__ GHC.Base.op_ztzg__ GHC.Base.pure
      GHC.List.drop GHC.List.dropWhile GHC.List.filter GHC.List.span GHC.List.splitAt
      GHC.List.take GHC.List.takeWhile GHC.List.zip GHC.List.zipWith GHC.Num.Int
-     GHC.Num.Num GHC.Num.op_zp__
+     GHC.Num.Num GHC.Num.fromInteger GHC.Num.op_zp__
 *)

@@ -19,6 +19,7 @@ Require GHC.Base.
 Require GHC.Num.
 Require GHC.Prim.
 Import GHC.Base.Notations.
+Import GHC.Num.Notations.
 
 (* Converted type declarations: *)
 
@@ -74,7 +75,7 @@ Local Definition Foldable__Identity_foldr' : forall {a} {b},
 
 Local Definition Foldable__Identity_length : forall {a},
                                                Identity a -> GHC.Num.Int :=
-  fun {a} => fun arg_0__ => GHC.Num.fromInteger 1.
+  fun {a} => fun arg_0__ => #1.
 
 Local Definition Foldable__Identity_null : forall {a}, Identity a -> bool :=
   fun {a} => fun arg_0__ => false.
@@ -367,5 +368,5 @@ Admit Obligations.
      GHC.Base.max GHC.Base.mconcat GHC.Base.mempty GHC.Base.min GHC.Base.op_z2218U__
      GHC.Base.op_zeze__ GHC.Base.op_zg__ GHC.Base.op_zgze__ GHC.Base.op_zl__
      GHC.Base.op_zlze__ GHC.Base.op_zsze__ GHC.Base.op_ztzg__ GHC.Base.pure
-     GHC.Num.Int GHC.Num.Num GHC.Prim.coerce
+     GHC.Num.Int GHC.Num.Num GHC.Num.fromInteger GHC.Prim.coerce
 *)

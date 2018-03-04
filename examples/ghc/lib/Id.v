@@ -152,8 +152,8 @@ Definition idOneShotInfo : Var.Id -> BasicTypes.OneShotInfo :=
 Definition isOneShotLambda : Var.Id -> bool :=
   fun id =>
     match idOneShotInfo id with
-      | BasicTypes.OneShotLam => true
-      | _ => false
+    | BasicTypes.OneShotLam => true
+    | _ => false
     end.
 
 Definition isOneShotBndr : Core.Var -> bool :=
@@ -162,9 +162,9 @@ Definition isOneShotBndr : Core.Var -> bool :=
 Definition isProbablyOneShotLambda : Var.Id -> bool :=
   fun id =>
     match idOneShotInfo id with
-      | BasicTypes.OneShotLam => true
-      | BasicTypes.ProbOneShot => true
-      | BasicTypes.NoOneShotInfo => false
+    | BasicTypes.OneShotLam => true
+    | BasicTypes.ProbOneShot => true
+    | BasicTypes.NoOneShotInfo => false
     end.
 
 Definition idSpecialisation : Var.Id -> IdInfo.RuleInfo :=
@@ -190,7 +190,7 @@ Definition localiseId : Var.Id -> Var.Id :=
     let name := idName id in
     if (if andb Util.debugIsOn (negb (Var.isId id)) : bool
        then (Panic.assertPanic (GHC.Base.hs_string__ "ghc/compiler/basicTypes/Id.hs")
-            (GHC.Num.fromInteger 193))
+            #193)
        else andb (Var.isLocalId id) (Name.isInternalName name)) : bool
     then id
     else Var.mkLocalVar (Var.idDetails id) (Name.localiseName name) (idType id)
@@ -242,8 +242,8 @@ Definition lazySetIdInfo : Var.Id -> IdInfo.IdInfo -> Var.Id :=
 Definition maybeModifyIdInfo : option IdInfo.IdInfo -> Var.Id -> Var.Id :=
   fun arg_0__ arg_1__ =>
     match arg_0__ , arg_1__ with
-      | Some new_info , id => lazySetIdInfo id new_info
-      | None , id => id
+    | Some new_info , id => lazySetIdInfo id new_info
+    | None , id => id
     end.
 
 Definition zapInfo : (IdInfo.IdInfo -> option
@@ -311,10 +311,10 @@ Definition updOneShotInfo : Var.Id -> BasicTypes.OneShotInfo -> Var.Id :=
   fun id one_shot =>
     let do_upd :=
       match pair (idOneShotInfo id) one_shot with
-        | pair BasicTypes.NoOneShotInfo _ => true
-        | pair BasicTypes.OneShotLam _ => false
-        | pair _ BasicTypes.NoOneShotInfo => false
-        | _ => true
+      | pair BasicTypes.NoOneShotInfo _ => true
+      | pair BasicTypes.OneShotLam _ => false
+      | pair _ BasicTypes.NoOneShotInfo => false
+      | _ => true
       end in
     if do_upd : bool
     then setIdOneShotInfo id one_shot
@@ -405,14 +405,14 @@ Definition mkTemplateLocal : GHC.Num.Int -> Core.Type_ -> Var.Id :=
     (Unique.mkBuiltinUnique i) ty.
 
 Definition mkTemplateLocals : list Core.Type_ -> list Var.Id :=
-  mkTemplateLocalsNum (GHC.Num.fromInteger 1).
+  mkTemplateLocalsNum #1.
 
 Definition mkUserLocal
     : OccName.OccName -> Unique.Unique -> Core.Type_ -> SrcLoc.SrcSpan -> Var.Id :=
   fun occ uniq ty loc =>
     if andb Util.debugIsOn (negb (negb (TyCoRep.isCoercionType ty))) : bool
     then (Panic.assertPanic (GHC.Base.hs_string__ "ghc/compiler/basicTypes/Id.hs")
-         (GHC.Num.fromInteger 315))
+         #315)
     else mkLocalId (Name.mkInternalName uniq occ loc) ty.
 
 Definition mkUserLocalOrCoVar
@@ -461,12 +461,12 @@ Definition stateHackOneShot : BasicTypes.OneShotInfo :=
      CoreSyn.NoUnfolding CoreSyn.Unfolding DataCon.DataCon Demand.Demand
      Demand.StrictSig Demand.increaseStrictSigArity Demand.isBottomingSig
      Demand.nopSig FastString.FastString FastString.fsLit GHC.Base.op_zgzgze__
-     GHC.Base.return_ GHC.Num.Int GHC.Num.op_zp__ GHC.Prim.seq IdInfo.CafInfo
-     IdInfo.IdDetails IdInfo.IdInfo IdInfo.RuleInfo IdInfo.isEmptyRuleInfo
-     IdInfo.setArityInfo IdInfo.setCafInfo IdInfo.setCallArityInfo
-     IdInfo.setInlinePragInfo IdInfo.setOccInfo IdInfo.setOneShotInfo
-     IdInfo.setRuleInfo IdInfo.vanillaIdInfo IdInfo.zapDemandInfo
-     IdInfo.zapFragileInfo IdInfo.zapLamInfo IdInfo.zapUsageInfo
+     GHC.Base.return_ GHC.Num.Int GHC.Num.fromInteger GHC.Num.op_zp__ GHC.Prim.seq
+     IdInfo.CafInfo IdInfo.IdDetails IdInfo.IdInfo IdInfo.RuleInfo
+     IdInfo.isEmptyRuleInfo IdInfo.setArityInfo IdInfo.setCafInfo
+     IdInfo.setCallArityInfo IdInfo.setInlinePragInfo IdInfo.setOccInfo
+     IdInfo.setOneShotInfo IdInfo.setRuleInfo IdInfo.vanillaIdInfo
+     IdInfo.zapDemandInfo IdInfo.zapFragileInfo IdInfo.zapLamInfo IdInfo.zapUsageInfo
      IdInfo2.ruleInfoRules IdInfo2.setDemandInfo IdInfo2.setStrictnessInfo
      IdInfo2.setUnfoldingInfo IdInfo2.setUnfoldingInfoLazily Maybes.orElse
      Module.Module Name.Name Name.getName Name.isInternalName Name.localiseName

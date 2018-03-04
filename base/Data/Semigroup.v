@@ -735,8 +735,8 @@ Local Definition Foldable__Min_length : forall {a}, Min a -> GHC.Num.Int :=
   fun {a} =>
     Foldable__Min_foldl' (fun arg_64__ arg_65__ =>
                            match arg_64__ , arg_65__ with
-                           | c , _ => _GHC.Num.+_ c (GHC.Num.fromInteger 1)
-                           end) (GHC.Num.fromInteger 0).
+                           | c , _ => _GHC.Num.+_ c #1
+                           end) #0.
 
 Local Definition Foldable__Min_null : forall {a}, Min a -> bool :=
   fun {a} => Foldable__Min_foldr (fun arg_61__ arg_62__ => false) true.
@@ -978,8 +978,8 @@ Local Definition Foldable__Max_length : forall {a}, Max a -> GHC.Num.Int :=
   fun {a} =>
     Foldable__Max_foldl' (fun arg_64__ arg_65__ =>
                            match arg_64__ , arg_65__ with
-                           | c , _ => _GHC.Num.+_ c (GHC.Num.fromInteger 1)
-                           end) (GHC.Num.fromInteger 0).
+                           | c , _ => _GHC.Num.+_ c #1
+                           end) #0.
 
 Local Definition Foldable__Max_null : forall {a}, Max a -> bool :=
   fun {a} => Foldable__Max_foldr (fun arg_61__ arg_62__ => false) true.
@@ -1192,8 +1192,8 @@ Local Definition Foldable__Arg_length {inst_a} : forall {a},
   fun {a} =>
     Foldable__Arg_foldl' (fun arg_64__ arg_65__ =>
                            match arg_64__ , arg_65__ with
-                           | c , _ => _GHC.Num.+_ c (GHC.Num.fromInteger 1)
-                           end) (GHC.Num.fromInteger 0).
+                           | c , _ => _GHC.Num.+_ c #1
+                           end) #0.
 
 Local Definition Foldable__Arg_null {inst_a} : forall {a},
                                                  (Arg inst_a) a -> bool :=
@@ -1398,8 +1398,8 @@ Local Definition Foldable__First_length : forall {a}, First a -> GHC.Num.Int :=
   fun {a} =>
     Foldable__First_foldl' (fun arg_64__ arg_65__ =>
                              match arg_64__ , arg_65__ with
-                             | c , _ => _GHC.Num.+_ c (GHC.Num.fromInteger 1)
-                             end) (GHC.Num.fromInteger 0).
+                             | c , _ => _GHC.Num.+_ c #1
+                             end) #0.
 
 Local Definition Foldable__First_null : forall {a}, First a -> bool :=
   fun {a} => Foldable__First_foldr (fun arg_61__ arg_62__ => false) true.
@@ -1620,8 +1620,8 @@ Local Definition Foldable__Last_length : forall {a}, Last a -> GHC.Num.Int :=
   fun {a} =>
     Foldable__Last_foldl' (fun arg_64__ arg_65__ =>
                             match arg_64__ , arg_65__ with
-                            | c , _ => _GHC.Num.+_ c (GHC.Num.fromInteger 1)
-                            end) (GHC.Num.fromInteger 0).
+                            | c , _ => _GHC.Num.+_ c #1
+                            end) #0.
 
 Local Definition Foldable__Last_null : forall {a}, Last a -> bool :=
   fun {a} => Foldable__Last_foldr (fun arg_61__ arg_62__ => false) true.
@@ -1946,8 +1946,8 @@ Local Definition Foldable__Option_length : forall {a},
   fun {a} =>
     Foldable__Option_foldl' (fun arg_64__ arg_65__ =>
                               match arg_64__ , arg_65__ with
-                              | c , _ => _GHC.Num.+_ c (GHC.Num.fromInteger 1)
-                              end) (GHC.Num.fromInteger 0).
+                              | c , _ => _GHC.Num.+_ c #1
+                              end) #0.
 
 Local Definition Foldable__Option_null : forall {a}, Option a -> bool :=
   fun {a} => Foldable__Option_foldr (fun arg_61__ arg_62__ => false) true.
@@ -2583,5 +2583,5 @@ End Notations.
      GHC.Base.op_z2218U__ GHC.Base.op_zdzn__ GHC.Base.op_zeze__ GHC.Base.op_zg__
      GHC.Base.op_zgze__ GHC.Base.op_zl__ GHC.Base.op_zlze__ GHC.Base.op_zlztzg__
      GHC.Base.op_zsze__ GHC.Base.op_ztzg__ GHC.Base.pure GHC.Num.Int GHC.Num.Num
-     GHC.Num.op_zm__ GHC.Num.op_zp__ GHC.Prim.coerce
+     GHC.Num.fromInteger GHC.Num.op_zm__ GHC.Num.op_zp__ GHC.Prim.coerce
 *)

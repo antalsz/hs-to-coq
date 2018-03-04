@@ -255,7 +255,7 @@ Definition boolITE {a} : a -> a -> bool -> a :=
     end.
 
 Definition delta : GHC.Num.Int :=
-  GHC.Num.fromInteger 3.
+  #3.
 
 Definition dropMissing {f} {k} {x} {y} `{GHC.Base.Applicative f} : WhenMissing f
                                                                    k x y :=
@@ -314,7 +314,7 @@ Definition foldMapWithKey {m} {k} {a} `{GHC.Base.Monoid m}
               := match arg_0__ with
                  | Tip => GHC.Base.mempty
                  | Bin num_1__ k v _ _ =>
-                     if num_1__ GHC.Base.== GHC.Num.fromInteger 1 : bool
+                     if num_1__ GHC.Base.== #1 : bool
                      then f k v
                      else match arg_0__ with
                           | Bin _ k v l r => GHC.Base.mappend (go l) (GHC.Base.mappend (f k v) (go r))
@@ -725,7 +725,7 @@ Definition preserveMissing {f} {k} {x} `{GHC.Base.Applicative f} : WhenMissing f
   Mk_WhenMissing missingValue missingValue.
 
 Definition ratio : GHC.Num.Int :=
-  GHC.Num.fromInteger 2.
+  #2.
 
 Definition replaceAlong {a} {k}
     : Utils.Containers.Internal.BitQueue.BitQueue -> a -> Map k a -> Map k a :=
@@ -757,7 +757,7 @@ Definition runWhenMissing {f} {k} {x} {y} : WhenMissing f k x y -> k -> x -> f
   missingKey.
 
 Definition singleton {k} {a} : k -> a -> Map k a :=
-  fun k x => Bin (GHC.Num.fromInteger 1) k x Tip Tip.
+  fun k x => Bin #1 k x Tip Tip.
 
 Definition splitRoot {k} {b} : Map k b -> list (Map k b) :=
   fun orig =>
@@ -767,11 +767,7 @@ Definition splitRoot {k} {b} : Map k b -> list (Map k b) :=
     end.
 
 Definition size {k} {a} : Map k a -> GHC.Num.Int :=
-  fun arg_0__ =>
-    match arg_0__ with
-    | Tip => GHC.Num.fromInteger 0
-    | Bin sz _ _ _ _ => sz
-    end.
+  fun arg_0__ => match arg_0__ with | Tip => #0 | Bin sz _ _ _ _ => sz end.
 
 Definition lookupIndex {k} {a} `{GHC.Base.Ord k} : k -> Map k a -> option
                                                    GHC.Num.Int :=
@@ -783,11 +779,11 @@ Definition lookupIndex {k} {a} `{GHC.Base.Ord k} : k -> Map k a -> option
              | idx , k , Bin _ kx _ l r =>
                  match GHC.Base.compare k kx with
                  | Lt => go idx k l
-                 | Gt => go ((idx GHC.Num.+ size l) GHC.Num.+ GHC.Num.fromInteger 1) k r
+                 | Gt => go ((idx GHC.Num.+ size l) GHC.Num.+ #1) k r
                  | Eq => Some GHC.Base.$! (idx GHC.Num.+ size l)
                  end
              end in
-  go (GHC.Num.fromInteger 0).
+  go #0.
 
 Definition findIndex {k} {a} `{GHC.Base.Ord k} : k -> Map k a -> GHC.Num.Int :=
   let go {k} {a} `{GHC.Base.Ord k} : GHC.Num.Int -> k -> Map k a -> GHC.Num.Int :=
@@ -798,11 +794,11 @@ Definition findIndex {k} {a} `{GHC.Base.Ord k} : k -> Map k a -> GHC.Num.Int :=
              | idx , k , Bin _ kx _ l r =>
                  match GHC.Base.compare k kx with
                  | Lt => go idx k l
-                 | Gt => go ((idx GHC.Num.+ size l) GHC.Num.+ GHC.Num.fromInteger 1) k r
+                 | Gt => go ((idx GHC.Num.+ size l) GHC.Num.+ #1) k r
                  | Eq => idx GHC.Num.+ size l
                  end
              end in
-  go (GHC.Num.fromInteger 0).
+  go #0.
 
 Definition elemAt {k} {a} : GHC.Num.Int -> Map k a -> (k * a)%type :=
   fix elemAt arg_0__ arg_1__
@@ -813,66 +809,54 @@ Definition elemAt {k} {a} : GHC.Num.Int -> Map k a -> (k * a)%type :=
                let sizeL := size l in
                match GHC.Base.compare i sizeL with
                | Lt => elemAt i l
-               | Gt => elemAt ((i GHC.Num.- sizeL) GHC.Num.- GHC.Num.fromInteger 1) r
+               | Gt => elemAt ((i GHC.Num.- sizeL) GHC.Num.- #1) r
                | Eq => pair kx x
                end
            end.
 
 Definition bin {k} {a} : k -> a -> Map k a -> Map k a -> Map k a :=
-  fun k x l r =>
-    Bin ((size l GHC.Num.+ size r) GHC.Num.+ GHC.Num.fromInteger 1) k x l r.
+  fun k x l r => Bin ((size l GHC.Num.+ size r) GHC.Num.+ #1) k x l r.
 
 Definition balanceR {k} {a} : k -> a -> Map k a -> Map k a -> Map k a :=
   fun k x l r =>
     match l with
     | Tip =>
         match r with
-        | Tip => Bin (GHC.Num.fromInteger 1) k x Tip Tip
-        | Bin _ _ _ Tip Tip => Bin (GHC.Num.fromInteger 2) k x Tip r
-        | Bin _ rk rx Tip (Bin _ _ _ _ _ as rr) =>
-            Bin (GHC.Num.fromInteger 3) rk rx (Bin (GHC.Num.fromInteger 1) k x Tip Tip) rr
+        | Tip => Bin #1 k x Tip Tip
+        | Bin _ _ _ Tip Tip => Bin #2 k x Tip r
+        | Bin _ rk rx Tip (Bin _ _ _ _ _ as rr) => Bin #3 rk rx (Bin #1 k x Tip Tip) rr
         | Bin _ rk rx (Bin _ rlk rlx _ _) Tip =>
-            Bin (GHC.Num.fromInteger 3) rlk rlx (Bin (GHC.Num.fromInteger 1) k x Tip Tip)
-            (Bin (GHC.Num.fromInteger 1) rk rx Tip Tip)
+            Bin #3 rlk rlx (Bin #1 k x Tip Tip) (Bin #1 rk rx Tip Tip)
         | Bin rs rk rx (Bin rls rlk rlx rll rlr as rl) (Bin rrs _ _ _ _ as rr) =>
             if rls GHC.Base.< (ratio GHC.Num.* rrs) : bool
-            then Bin (GHC.Num.fromInteger 1 GHC.Num.+ rs) rk rx (Bin (GHC.Num.fromInteger 1
-                                                                     GHC.Num.+ rls) k x Tip rl) rr
-            else Bin (GHC.Num.fromInteger 1 GHC.Num.+ rs) rlk rlx (Bin (GHC.Num.fromInteger
-                                                                       1 GHC.Num.+ size rll) k x Tip rll) (Bin
-                                                                                                          ((GHC.Num.fromInteger
-                                                                                                          1 GHC.Num.+
-                                                                                                          rrs) GHC.Num.+
-                                                                                                          size rlr) rk
-                                                                                                          rx rlr rr)
+            then Bin (#1 GHC.Num.+ rs) rk rx (Bin (#1 GHC.Num.+ rls) k x Tip rl) rr
+            else Bin (#1 GHC.Num.+ rs) rlk rlx (Bin (#1 GHC.Num.+ size rll) k x Tip rll)
+                 (Bin ((#1 GHC.Num.+ rrs) GHC.Num.+ size rlr) rk rx rlr rr)
         end
     | Bin ls _ _ _ _ =>
         match r with
-        | Tip => Bin (GHC.Num.fromInteger 1 GHC.Num.+ ls) k x l Tip
+        | Tip => Bin (#1 GHC.Num.+ ls) k x l Tip
         | Bin rs rk rx rl rr =>
             if rs GHC.Base.> (delta GHC.Num.* ls) : bool
             then let scrut_10__ := pair rl rr in
                  match scrut_10__ with
                  | pair (Bin rls rlk rlx rll rlr) (Bin rrs _ _ _ _) =>
                      if rls GHC.Base.< (ratio GHC.Num.* rrs) : bool
-                     then Bin ((GHC.Num.fromInteger 1 GHC.Num.+ ls) GHC.Num.+ rs) rk rx (Bin
-                                                                                        ((GHC.Num.fromInteger 1
-                                                                                        GHC.Num.+ ls) GHC.Num.+ rls) k x
-                                                                                        l rl) rr
-                     else Bin ((GHC.Num.fromInteger 1 GHC.Num.+ ls) GHC.Num.+ rs) rlk rlx (Bin
-                                                                                          ((GHC.Num.fromInteger 1
-                                                                                          GHC.Num.+ ls) GHC.Num.+ size
-                                                                                          rll) k x l rll) (Bin
-                                                                                                          ((GHC.Num.fromInteger
-                                                                                                          1 GHC.Num.+
-                                                                                                          rrs) GHC.Num.+
-                                                                                                          size rlr) rk
-                                                                                                          rx rlr rr)
+                     then Bin ((#1 GHC.Num.+ ls) GHC.Num.+ rs) rk rx (Bin ((#1 GHC.Num.+ ls)
+                                                                          GHC.Num.+ rls) k x l rl) rr
+                     else Bin ((#1 GHC.Num.+ ls) GHC.Num.+ rs) rlk rlx (Bin ((#1 GHC.Num.+ ls)
+                                                                            GHC.Num.+ size rll) k x l rll) (Bin ((#1
+                                                                                                                GHC.Num.+
+                                                                                                                rrs)
+                                                                                                                GHC.Num.+
+                                                                                                                size
+                                                                                                                rlr) rk
+                                                                                                           rx rlr rr)
                  | _ =>
                      let 'pair _ _ := scrut_10__ in
                      GHC.Err.error (GHC.Base.hs_string__ "Failure in Data.Map.balanceR")
                  end
-            else Bin ((GHC.Num.fromInteger 1 GHC.Num.+ ls) GHC.Num.+ rs) k x l r
+            else Bin ((#1 GHC.Num.+ ls) GHC.Num.+ rs) k x l r
         end
     end.
 
@@ -952,50 +936,41 @@ Definition balanceL {k} {a} : k -> a -> Map k a -> Map k a -> Map k a :=
     match r with
     | Tip =>
         match l with
-        | Tip => Bin (GHC.Num.fromInteger 1) k x Tip Tip
-        | Bin _ _ _ Tip Tip => Bin (GHC.Num.fromInteger 2) k x l Tip
+        | Tip => Bin #1 k x Tip Tip
+        | Bin _ _ _ Tip Tip => Bin #2 k x l Tip
         | Bin _ lk lx Tip (Bin _ lrk lrx _ _) =>
-            Bin (GHC.Num.fromInteger 3) lrk lrx (Bin (GHC.Num.fromInteger 1) lk lx Tip Tip)
-            (Bin (GHC.Num.fromInteger 1) k x Tip Tip)
-        | Bin _ lk lx (Bin _ _ _ _ _ as ll) Tip =>
-            Bin (GHC.Num.fromInteger 3) lk lx ll (Bin (GHC.Num.fromInteger 1) k x Tip Tip)
+            Bin #3 lrk lrx (Bin #1 lk lx Tip Tip) (Bin #1 k x Tip Tip)
+        | Bin _ lk lx (Bin _ _ _ _ _ as ll) Tip => Bin #3 lk lx ll (Bin #1 k x Tip Tip)
         | Bin ls lk lx (Bin lls _ _ _ _ as ll) (Bin lrs lrk lrx lrl lrr as lr) =>
             if lrs GHC.Base.< (ratio GHC.Num.* lls) : bool
-            then Bin (GHC.Num.fromInteger 1 GHC.Num.+ ls) lk lx ll (Bin (GHC.Num.fromInteger
-                                                                        1 GHC.Num.+ lrs) k x lr Tip)
-            else Bin (GHC.Num.fromInteger 1 GHC.Num.+ ls) lrk lrx (Bin ((GHC.Num.fromInteger
-                                                                       1 GHC.Num.+ lls) GHC.Num.+ size lrl) lk lx ll
-                                                                  lrl) (Bin (GHC.Num.fromInteger 1 GHC.Num.+ size lrr) k
-                                                                       x lrr Tip)
+            then Bin (#1 GHC.Num.+ ls) lk lx ll (Bin (#1 GHC.Num.+ lrs) k x lr Tip)
+            else Bin (#1 GHC.Num.+ ls) lrk lrx (Bin ((#1 GHC.Num.+ lls) GHC.Num.+ size lrl)
+                                               lk lx ll lrl) (Bin (#1 GHC.Num.+ size lrr) k x lrr Tip)
         end
     | Bin rs _ _ _ _ =>
         match l with
-        | Tip => Bin (GHC.Num.fromInteger 1 GHC.Num.+ rs) k x Tip r
+        | Tip => Bin (#1 GHC.Num.+ rs) k x Tip r
         | Bin ls lk lx ll lr =>
             if ls GHC.Base.> (delta GHC.Num.* rs) : bool
             then let scrut_10__ := pair ll lr in
                  match scrut_10__ with
                  | pair (Bin lls _ _ _ _) (Bin lrs lrk lrx lrl lrr) =>
                      if lrs GHC.Base.< (ratio GHC.Num.* lls) : bool
-                     then Bin ((GHC.Num.fromInteger 1 GHC.Num.+ ls) GHC.Num.+ rs) lk lx ll (Bin
-                                                                                           ((GHC.Num.fromInteger 1
-                                                                                           GHC.Num.+ rs) GHC.Num.+ lrs)
-                                                                                           k x lr r)
-                     else Bin ((GHC.Num.fromInteger 1 GHC.Num.+ ls) GHC.Num.+ rs) lrk lrx (Bin
-                                                                                          ((GHC.Num.fromInteger 1
-                                                                                          GHC.Num.+ lls) GHC.Num.+ size
-                                                                                          lrl) lk lx ll lrl) (Bin
-                                                                                                             ((GHC.Num.fromInteger
-                                                                                                             1 GHC.Num.+
-                                                                                                             rs)
-                                                                                                             GHC.Num.+
-                                                                                                             size lrr) k
-                                                                                                             x lrr r)
+                     then Bin ((#1 GHC.Num.+ ls) GHC.Num.+ rs) lk lx ll (Bin ((#1 GHC.Num.+ rs)
+                                                                             GHC.Num.+ lrs) k x lr r)
+                     else Bin ((#1 GHC.Num.+ ls) GHC.Num.+ rs) lrk lrx (Bin ((#1 GHC.Num.+ lls)
+                                                                            GHC.Num.+ size lrl) lk lx ll lrl) (Bin ((#1
+                                                                                                                   GHC.Num.+
+                                                                                                                   rs)
+                                                                                                                   GHC.Num.+
+                                                                                                                   size
+                                                                                                                   lrr)
+                                                                                                              k x lrr r)
                  | _ =>
                      let 'pair _ _ := scrut_10__ in
                      GHC.Err.error (GHC.Base.hs_string__ "Failure in Data.Map.balanceL")
                  end
-            else Bin ((GHC.Num.fromInteger 1 GHC.Num.+ ls) GHC.Num.+ rs) k x l r
+            else Bin ((#1 GHC.Num.+ ls) GHC.Num.+ rs) k x l r
         end
     end.
 
@@ -1224,13 +1199,13 @@ Definition fromDistinctAscList {k} {a} : list (k * a)%type -> Map k a :=
                       match arg_1__ , arg_2__ with
                       | _ , nil => (pair Tip nil)
                       | s , (cons x' xs' as xs) =>
-                          if s GHC.Base.== GHC.Num.fromInteger 1 : bool
+                          if s GHC.Base.== #1 : bool
                           then let 'pair kx x := x' in
-                               (pair (Bin (GHC.Num.fromInteger 1) kx x Tip Tip) xs')
-                          else match create (Data.Bits.shiftR s (GHC.Num.fromInteger 1)) xs with
+                               (pair (Bin #1 kx x Tip Tip) xs')
+                          else match create (Data.Bits.shiftR s #1) xs with
                                | (pair _ nil as res) => res
                                | pair l (cons (pair ky y) ys) =>
-                                   let 'pair r zs := create (Data.Bits.shiftR s (GHC.Num.fromInteger 1)) ys in
+                                   let 'pair r zs := create (Data.Bits.shiftR s #1) ys in
                                    (pair (link ky y l r) zs)
                                end
                       end) in
@@ -1241,10 +1216,9 @@ Definition fromDistinctAscList {k} {a} : list (k * a)%type -> Map k a :=
                       | s , l , cons (pair kx x) xs =>
                           let 'pair r ys := create s xs in
                           let 't' := link kx x l r in
-                          go (Data.Bits.shiftL s (GHC.Num.fromInteger 1)) t' ys
+                          go (Data.Bits.shiftL s #1) t' ys
                       end) in
-        go (GHC.Num.fromInteger 1 : GHC.Num.Int) (Bin (GHC.Num.fromInteger 1) kx0 x0 Tip
-                                                 Tip) xs0
+        go (#1 : GHC.Num.Int) (Bin #1 kx0 x0 Tip Tip) xs0
     end.
 
 Definition fromAscList {k} {a} `{GHC.Base.Eq_ k} : list (k * a)%type -> Map k
@@ -1308,13 +1282,13 @@ Definition fromDistinctDescList {k} {a} : list (k * a)%type -> Map k a :=
                       match arg_1__ , arg_2__ with
                       | _ , nil => (pair Tip nil)
                       | s , (cons x' xs' as xs) =>
-                          if s GHC.Base.== GHC.Num.fromInteger 1 : bool
+                          if s GHC.Base.== #1 : bool
                           then let 'pair kx x := x' in
-                               (pair (Bin (GHC.Num.fromInteger 1) kx x Tip Tip) xs')
-                          else match create (Data.Bits.shiftR s (GHC.Num.fromInteger 1)) xs with
+                               (pair (Bin #1 kx x Tip Tip) xs')
+                          else match create (Data.Bits.shiftR s #1) xs with
                                | (pair _ nil as res) => res
                                | pair r (cons (pair ky y) ys) =>
-                                   let 'pair l zs := create (Data.Bits.shiftR s (GHC.Num.fromInteger 1)) ys in
+                                   let 'pair l zs := create (Data.Bits.shiftR s #1) ys in
                                    (pair (link ky y l r) zs)
                                end
                       end) in
@@ -1325,10 +1299,9 @@ Definition fromDistinctDescList {k} {a} : list (k * a)%type -> Map k a :=
                       | s , r , cons (pair kx x) xs =>
                           let 'pair l ys := create s xs in
                           let 't' := link kx x l r in
-                          go (Data.Bits.shiftL s (GHC.Num.fromInteger 1)) t' ys
+                          go (Data.Bits.shiftL s #1) t' ys
                       end) in
-        go (GHC.Num.fromInteger 1 : GHC.Num.Int) (Bin (GHC.Num.fromInteger 1) kx0 x0 Tip
-                                                 Tip) xs0
+        go (#1 : GHC.Num.Int) (Bin #1 kx0 x0 Tip Tip) xs0
     end.
 
 Definition fromDescList {k} {a} `{GHC.Base.Eq_ k} : list (k * a)%type -> Map k
@@ -1386,7 +1359,7 @@ Definition fromList {k} {a} `{GHC.Base.Ord k} : list (k * a)%type -> Map k a :=
   fun arg_0__ =>
     match arg_0__ with
     | nil => Tip
-    | cons (pair kx x) nil => Bin (GHC.Num.fromInteger 1) kx x Tip Tip
+    | cons (pair kx x) nil => Bin #1 kx x Tip Tip
     | cons (pair kx0 x0) xs0 =>
         let fromList' :=
           fun t0 xs =>
@@ -1407,20 +1380,19 @@ Definition fromList {k} {a} `{GHC.Base.Ord k} : list (k * a)%type -> Map k a :=
                       match arg_11__ , arg_12__ with
                       | _ , nil => pair (pair Tip nil) nil
                       | s , (cons xp xss as xs) =>
-                          if s GHC.Base.== GHC.Num.fromInteger 1 : bool
+                          if s GHC.Base.== #1 : bool
                           then let 'pair kx x := xp in
                                if not_ordered kx xss : bool
-                               then pair (pair (Bin (GHC.Num.fromInteger 1) kx x Tip Tip) nil) xss
-                               else pair (pair (Bin (GHC.Num.fromInteger 1) kx x Tip Tip) xss) nil
-                          else match create (Data.Bits.shiftR s (GHC.Num.fromInteger 1)) xs with
+                               then pair (pair (Bin #1 kx x Tip Tip) nil) xss
+                               else pair (pair (Bin #1 kx x Tip Tip) xss) nil
+                          else match create (Data.Bits.shiftR s #1) xs with
                                | (pair (pair _ nil) _ as res) => res
                                | pair (pair l (cons (pair ky y) nil)) zs =>
                                    pair (pair (insertMax ky y l) nil) zs
                                | pair (pair l (cons (pair ky y) yss as ys)) _ =>
                                    if not_ordered ky yss : bool
                                    then pair (pair l nil) ys
-                                   else let 'pair (pair r zs) ws := create (Data.Bits.shiftR s (GHC.Num.fromInteger
-                                                                                             1)) yss in
+                                   else let 'pair (pair r zs) ws := create (Data.Bits.shiftR s #1) yss in
                                         pair (pair (link ky y l r) zs) ws
                                end
                       end) in
@@ -1433,15 +1405,13 @@ Definition fromList {k} {a} `{GHC.Base.Ord k} : list (k * a)%type -> Map k a :=
                           if not_ordered kx xss : bool
                           then fromList' l xs
                           else match create s xss with
-                               | pair (pair r ys) nil =>
-                                   go (Data.Bits.shiftL s (GHC.Num.fromInteger 1)) (link kx x l r) ys
+                               | pair (pair r ys) nil => go (Data.Bits.shiftL s #1) (link kx x l r) ys
                                | pair (pair r _) ys => fromList' (link kx x l r) ys
                                end
                       end) in
         if not_ordered kx0 xs0 : bool
-        then fromList' (Bin (GHC.Num.fromInteger 1) kx0 x0 Tip Tip) xs0
-        else go (GHC.Num.fromInteger 1 : GHC.Num.Int) (Bin (GHC.Num.fromInteger 1) kx0
-                                                      x0 Tip Tip) xs0
+        then fromList' (Bin #1 kx0 x0 Tip Tip) xs0
+        else go (#1 : GHC.Num.Int) (Bin #1 kx0 x0 Tip Tip) xs0
     end.
 
 Definition mapKeys {k2} {k1} {a} `{GHC.Base.Ord k2} : (k1 -> k2) -> Map k1
@@ -1940,8 +1910,7 @@ Definition traverseMaybeWithKey {f} {k} {a} {b} `{GHC.Base.Applicative f}
             := match arg_0__ , arg_1__ with
                | _ , Tip => GHC.Base.pure Tip
                | f , Bin _ kx x Tip Tip =>
-                   Data.Maybe.maybe Tip (fun x' => Bin (GHC.Num.fromInteger 1) kx x' Tip Tip)
-                   Data.Functor.<$> f kx x
+                   Data.Maybe.maybe Tip (fun x' => Bin #1 kx x' Tip Tip) Data.Functor.<$> f kx x
                | f , Bin _ kx x l r =>
                    let combine :=
                      fun l' mx r' =>
@@ -2108,7 +2077,7 @@ Definition drop {k} {a} : GHC.Num.Int -> Map k a -> Map k a :=
                  let fix go arg_2__ arg_3__
                            := match arg_2__ , arg_3__ with
                               | i , m =>
-                                  if i GHC.Base.<= GHC.Num.fromInteger 0 : bool
+                                  if i GHC.Base.<= #0 : bool
                                   then m
                                   else match arg_2__ , arg_3__ with
                                        | _ , Tip => Tip
@@ -2116,7 +2085,7 @@ Definition drop {k} {a} : GHC.Num.Int -> Map k a -> Map k a :=
                                            let sizeL := size l in
                                            match GHC.Base.compare i sizeL with
                                            | Lt => link kx x (go i l) r
-                                           | Gt => go ((i GHC.Num.- sizeL) GHC.Num.- GHC.Num.fromInteger 1) r
+                                           | Gt => go ((i GHC.Num.- sizeL) GHC.Num.- #1) r
                                            | Eq => insertMin kx x r
                                            end
                                        end
@@ -2131,7 +2100,7 @@ Definition splitAt {k} {a} : GHC.Num.Int -> Map k a -> (Map k a * Map k
     let fix go arg_0__ arg_1__
               := match arg_0__ , arg_1__ with
                  | i , m =>
-                     if i GHC.Base.<= GHC.Num.fromInteger 0 : bool
+                     if i GHC.Base.<= #0 : bool
                      then pair Tip m
                      else match arg_0__ , arg_1__ with
                           | _ , Tip => pair Tip Tip
@@ -2140,7 +2109,7 @@ Definition splitAt {k} {a} : GHC.Num.Int -> Map k a -> (Map k a * Map k
                               match GHC.Base.compare i sizeL with
                               | Lt => let 'pair ll lr := go i l in pair ll (link kx x lr r)
                               | Gt =>
-                                  let 'pair rl rr := go ((i GHC.Num.- sizeL) GHC.Num.- GHC.Num.fromInteger 1) r in
+                                  let 'pair rl rr := go ((i GHC.Num.- sizeL) GHC.Num.- #1) r in
                                   pair (link kx x l rl) rr
                               | Eq => pair l (insertMin kx x r)
                               end
@@ -2177,7 +2146,7 @@ Definition take {k} {a} : GHC.Num.Int -> Map k a -> Map k a :=
                  let fix go arg_2__ arg_3__
                            := match arg_2__ , arg_3__ with
                               | i , _ =>
-                                  if i GHC.Base.<= GHC.Num.fromInteger 0 : bool
+                                  if i GHC.Base.<= #0 : bool
                                   then Tip
                                   else match arg_2__ , arg_3__ with
                                        | _ , Tip => Tip
@@ -2185,8 +2154,7 @@ Definition take {k} {a} : GHC.Num.Int -> Map k a -> Map k a :=
                                            let sizeL := size l in
                                            match GHC.Base.compare i sizeL with
                                            | Lt => go i l
-                                           | Gt =>
-                                               link kx x l (go ((i GHC.Num.- sizeL) GHC.Num.- GHC.Num.fromInteger 1) r)
+                                           | Gt => link kx x l (go ((i GHC.Num.- sizeL) GHC.Num.- #1) r)
                                            | Eq => l
                                            end
                                        end
@@ -2203,9 +2171,7 @@ Definition deleteAt {k} {a} : GHC.Num.Int -> Map k a -> Map k a :=
                let sizeL := size l in
                match GHC.Base.compare i sizeL with
                | Lt => balanceR kx x (deleteAt i l) r
-               | Gt =>
-                   balanceL kx x l (deleteAt ((i GHC.Num.- sizeL) GHC.Num.- GHC.Num.fromInteger 1)
-                                   r)
+               | Gt => balanceL kx x l (deleteAt ((i GHC.Num.- sizeL) GHC.Num.- #1) r)
                | Eq => glue l r
                end
            end.
@@ -2242,9 +2208,7 @@ Definition updateAt {k} {a} : (k -> a -> option a) -> GHC.Num.Int -> Map k
                let sizeL := size l in
                match GHC.Base.compare i sizeL with
                | Lt => balanceR kx x (updateAt f i l) r
-               | Gt =>
-                   balanceL kx x l (updateAt f ((i GHC.Num.- sizeL) GHC.Num.- GHC.Num.fromInteger
-                                               1) r)
+               | Gt => balanceL kx x l (updateAt f ((i GHC.Num.- sizeL) GHC.Num.- #1) r)
                | Eq => match f kx x with | Some x' => Bin sx kx x' l r | None => glue l r end
                end
            end.
@@ -2254,43 +2218,30 @@ Definition balance {k} {a} : k -> a -> Map k a -> Map k a -> Map k a :=
     match l with
     | Tip =>
         match r with
-        | Tip => Bin (GHC.Num.fromInteger 1) k x Tip Tip
-        | Bin _ _ _ Tip Tip => Bin (GHC.Num.fromInteger 2) k x Tip r
-        | Bin _ rk rx Tip (Bin _ _ _ _ _ as rr) =>
-            Bin (GHC.Num.fromInteger 3) rk rx (Bin (GHC.Num.fromInteger 1) k x Tip Tip) rr
+        | Tip => Bin #1 k x Tip Tip
+        | Bin _ _ _ Tip Tip => Bin #2 k x Tip r
+        | Bin _ rk rx Tip (Bin _ _ _ _ _ as rr) => Bin #3 rk rx (Bin #1 k x Tip Tip) rr
         | Bin _ rk rx (Bin _ rlk rlx _ _) Tip =>
-            Bin (GHC.Num.fromInteger 3) rlk rlx (Bin (GHC.Num.fromInteger 1) k x Tip Tip)
-            (Bin (GHC.Num.fromInteger 1) rk rx Tip Tip)
+            Bin #3 rlk rlx (Bin #1 k x Tip Tip) (Bin #1 rk rx Tip Tip)
         | Bin rs rk rx (Bin rls rlk rlx rll rlr as rl) (Bin rrs _ _ _ _ as rr) =>
             if rls GHC.Base.< (ratio GHC.Num.* rrs) : bool
-            then Bin (GHC.Num.fromInteger 1 GHC.Num.+ rs) rk rx (Bin (GHC.Num.fromInteger 1
-                                                                     GHC.Num.+ rls) k x Tip rl) rr
-            else Bin (GHC.Num.fromInteger 1 GHC.Num.+ rs) rlk rlx (Bin (GHC.Num.fromInteger
-                                                                       1 GHC.Num.+ size rll) k x Tip rll) (Bin
-                                                                                                          ((GHC.Num.fromInteger
-                                                                                                          1 GHC.Num.+
-                                                                                                          rrs) GHC.Num.+
-                                                                                                          size rlr) rk
-                                                                                                          rx rlr rr)
+            then Bin (#1 GHC.Num.+ rs) rk rx (Bin (#1 GHC.Num.+ rls) k x Tip rl) rr
+            else Bin (#1 GHC.Num.+ rs) rlk rlx (Bin (#1 GHC.Num.+ size rll) k x Tip rll)
+                 (Bin ((#1 GHC.Num.+ rrs) GHC.Num.+ size rlr) rk rx rlr rr)
         end
     | Bin ls lk lx ll lr =>
         match r with
         | Tip =>
             match pair ll lr with
-            | pair Tip Tip => Bin (GHC.Num.fromInteger 2) k x l Tip
+            | pair Tip Tip => Bin #2 k x l Tip
             | pair Tip (Bin _ lrk lrx _ _) =>
-                Bin (GHC.Num.fromInteger 3) lrk lrx (Bin (GHC.Num.fromInteger 1) lk lx Tip Tip)
-                (Bin (GHC.Num.fromInteger 1) k x Tip Tip)
-            | pair (Bin _ _ _ _ _) Tip =>
-                Bin (GHC.Num.fromInteger 3) lk lx ll (Bin (GHC.Num.fromInteger 1) k x Tip Tip)
+                Bin #3 lrk lrx (Bin #1 lk lx Tip Tip) (Bin #1 k x Tip Tip)
+            | pair (Bin _ _ _ _ _) Tip => Bin #3 lk lx ll (Bin #1 k x Tip Tip)
             | pair (Bin lls _ _ _ _) (Bin lrs lrk lrx lrl lrr) =>
                 if lrs GHC.Base.< (ratio GHC.Num.* lls) : bool
-                then Bin (GHC.Num.fromInteger 1 GHC.Num.+ ls) lk lx ll (Bin (GHC.Num.fromInteger
-                                                                            1 GHC.Num.+ lrs) k x lr Tip)
-                else Bin (GHC.Num.fromInteger 1 GHC.Num.+ ls) lrk lrx (Bin ((GHC.Num.fromInteger
-                                                                           1 GHC.Num.+ lls) GHC.Num.+ size lrl) lk lx ll
-                                                                      lrl) (Bin (GHC.Num.fromInteger 1 GHC.Num.+ size
-                                                                                lrr) k x lrr Tip)
+                then Bin (#1 GHC.Num.+ ls) lk lx ll (Bin (#1 GHC.Num.+ lrs) k x lr Tip)
+                else Bin (#1 GHC.Num.+ ls) lrk lrx (Bin ((#1 GHC.Num.+ lls) GHC.Num.+ size lrl)
+                                                   lk lx ll lrl) (Bin (#1 GHC.Num.+ size lrr) k x lrr Tip)
             end
         | Bin rs rk rx rl rr =>
             if rs GHC.Base.> (delta GHC.Num.* ls) : bool
@@ -2298,19 +2249,16 @@ Definition balance {k} {a} : k -> a -> Map k a -> Map k a -> Map k a :=
                  match scrut_24__ with
                  | pair (Bin rls rlk rlx rll rlr) (Bin rrs _ _ _ _) =>
                      if rls GHC.Base.< (ratio GHC.Num.* rrs) : bool
-                     then Bin ((GHC.Num.fromInteger 1 GHC.Num.+ ls) GHC.Num.+ rs) rk rx (Bin
-                                                                                        ((GHC.Num.fromInteger 1
-                                                                                        GHC.Num.+ ls) GHC.Num.+ rls) k x
-                                                                                        l rl) rr
-                     else Bin ((GHC.Num.fromInteger 1 GHC.Num.+ ls) GHC.Num.+ rs) rlk rlx (Bin
-                                                                                          ((GHC.Num.fromInteger 1
-                                                                                          GHC.Num.+ ls) GHC.Num.+ size
-                                                                                          rll) k x l rll) (Bin
-                                                                                                          ((GHC.Num.fromInteger
-                                                                                                          1 GHC.Num.+
-                                                                                                          rrs) GHC.Num.+
-                                                                                                          size rlr) rk
-                                                                                                          rx rlr rr)
+                     then Bin ((#1 GHC.Num.+ ls) GHC.Num.+ rs) rk rx (Bin ((#1 GHC.Num.+ ls)
+                                                                          GHC.Num.+ rls) k x l rl) rr
+                     else Bin ((#1 GHC.Num.+ ls) GHC.Num.+ rs) rlk rlx (Bin ((#1 GHC.Num.+ ls)
+                                                                            GHC.Num.+ size rll) k x l rll) (Bin ((#1
+                                                                                                                GHC.Num.+
+                                                                                                                rrs)
+                                                                                                                GHC.Num.+
+                                                                                                                size
+                                                                                                                rlr) rk
+                                                                                                           rx rlr rr)
                  | _ =>
                      let 'pair _ _ := scrut_24__ in
                      GHC.Err.error (GHC.Base.hs_string__ "Failure in Data.Map.balance")
@@ -2320,20 +2268,24 @@ Definition balance {k} {a} : k -> a -> Map k a -> Map k a -> Map k a :=
                       match scrut_17__ with
                       | pair (Bin lls _ _ _ _) (Bin lrs lrk lrx lrl lrr) =>
                           if lrs GHC.Base.< (ratio GHC.Num.* lls) : bool
-                          then Bin ((GHC.Num.fromInteger 1 GHC.Num.+ ls) GHC.Num.+ rs) lk lx ll (Bin
-                                                                                                ((GHC.Num.fromInteger 1
-                                                                                                GHC.Num.+ rs) GHC.Num.+
-                                                                                                lrs) k x lr r)
-                          else Bin ((GHC.Num.fromInteger 1 GHC.Num.+ ls) GHC.Num.+ rs) lrk lrx (Bin
-                                                                                               ((GHC.Num.fromInteger 1
-                                                                                               GHC.Num.+ lls) GHC.Num.+
-                                                                                               size lrl) lk lx ll lrl)
-                               (Bin ((GHC.Num.fromInteger 1 GHC.Num.+ rs) GHC.Num.+ size lrr) k x lrr r)
+                          then Bin ((#1 GHC.Num.+ ls) GHC.Num.+ rs) lk lx ll (Bin ((#1 GHC.Num.+ rs)
+                                                                                  GHC.Num.+ lrs) k x lr r)
+                          else Bin ((#1 GHC.Num.+ ls) GHC.Num.+ rs) lrk lrx (Bin ((#1 GHC.Num.+ lls)
+                                                                                 GHC.Num.+ size lrl) lk lx ll lrl) (Bin
+                                                                                                                   ((#1
+                                                                                                                   GHC.Num.+
+                                                                                                                   rs)
+                                                                                                                   GHC.Num.+
+                                                                                                                   size
+                                                                                                                   lrr)
+                                                                                                                   k x
+                                                                                                                   lrr
+                                                                                                                   r)
                       | _ =>
                           let 'pair _ _ := scrut_17__ in
                           GHC.Err.error (GHC.Base.hs_string__ "Failure in Data.Map.balance")
                       end
-                 else Bin ((GHC.Num.fromInteger 1 GHC.Num.+ ls) GHC.Num.+ rs) k x l r
+                 else Bin ((#1 GHC.Num.+ ls) GHC.Num.+ rs) k x l r
         end
     end.
 
@@ -2372,8 +2324,8 @@ Definition traverseWithKey {t} {k} {a} {b} `{GHC.Base.Applicative t}
               := match arg_0__ with
                  | Tip => GHC.Base.pure Tip
                  | Bin num_1__ k v _ _ =>
-                     if num_1__ GHC.Base.== GHC.Num.fromInteger 1 : bool
-                     then (fun v' => Bin (GHC.Num.fromInteger 1) k v' Tip Tip) Data.Functor.<$> f k v
+                     if num_1__ GHC.Base.== #1 : bool
+                     then (fun v' => Bin #1 k v' Tip Tip) Data.Functor.<$> f k v
                      else match arg_0__ with
                           | Bin s k v l r =>
                               GHC.Base.liftA3 (GHC.Base.flip (Bin s k)) (go l) (f k v) (go r)
@@ -2428,8 +2380,9 @@ End Notations.
      GHC.Base.liftA3 GHC.Base.mappend GHC.Base.mempty GHC.Base.op_z2218U__
      GHC.Base.op_zd__ GHC.Base.op_zdzn__ GHC.Base.op_zeze__ GHC.Base.op_zg__
      GHC.Base.op_zgze__ GHC.Base.op_zl__ GHC.Base.op_zlze__ GHC.Base.pure
-     GHC.Err.error GHC.Num.Int GHC.Num.op_zm__ GHC.Num.op_zp__ GHC.Num.op_zt__
-     GHC.Prim.coerce GHC.Prim.seq Nat.add Utils.Containers.Internal.BitQueue.BitQueue
+     GHC.Err.error GHC.Num.Int GHC.Num.fromInteger GHC.Num.op_zm__ GHC.Num.op_zp__
+     GHC.Num.op_zt__ GHC.Prim.coerce GHC.Prim.seq Nat.add
+     Utils.Containers.Internal.BitQueue.BitQueue
      Utils.Containers.Internal.BitQueue.BitQueueB
      Utils.Containers.Internal.BitQueue.buildQ
      Utils.Containers.Internal.BitQueue.emptyQB

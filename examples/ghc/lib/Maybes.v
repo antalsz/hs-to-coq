@@ -43,8 +43,8 @@ Local Definition Functor__MaybeErr_fmap {inst_err} : forall {a} {b},
   fun {a} {b} =>
     fun f x =>
       match x with
-        | Succeeded x => Succeeded (f x)
-        | Failed e => Failed e
+      | Succeeded x => Succeeded (f x)
+      | Failed e => Failed e
       end.
 
 Local Definition Functor__MaybeErr_op_zlzd__ {inst_err} : forall {a} {b},
@@ -63,11 +63,12 @@ Local Definition Applicative__MaybeErr_op_zlztzg__ {inst_err} : forall {a} {b},
   fun {a} {b} =>
     fun mf mx =>
       match mf with
-        | Succeeded f => match mx with
-                           | Succeeded x => Succeeded (f x)
-                           | Failed e => Failed e
-                         end
-        | Failed e => Failed e
+      | Succeeded f =>
+          match mx with
+          | Succeeded x => Succeeded (f x)
+          | Failed e => Failed e
+          end
+      | Failed e => Failed e
       end.
 
 Local Definition Applicative__MaybeErr_op_ztzg__ {inst_err} : forall {a} {b},
@@ -100,8 +101,8 @@ Local Definition Monad__MaybeErr_op_zgzgze__ {inst_err} : forall {a} {b},
   fun {a} {b} =>
     fun arg_0__ arg_1__ =>
       match arg_0__ , arg_1__ with
-        | Succeeded v , k => k v
-        | Failed e , _ => Failed e
+      | Succeeded v , k => k v
+      | Failed e , _ => Failed e
       end.
 
 Local Definition Monad__MaybeErr_return_ {inst_err} : forall {a},
@@ -128,8 +129,8 @@ Definition whenIsJust {m} {a} `{GHC.Base.Monad m} : option a -> (a -> m
                                                     unit) -> m unit :=
   fun arg_0__ arg_1__ =>
     match arg_0__ , arg_1__ with
-      | Some x , f => f x
-      | None , _ => GHC.Base.return_ tt
+    | Some x , f => f x
+    | None , _ => GHC.Base.return_ tt
     end.
 
 (* Unbound variables:

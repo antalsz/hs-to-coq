@@ -350,17 +350,8 @@ instance Gallina Term where
   renderGallina' _ (Num num) =
     renderNum num
 
-  renderGallina' p (PolyNum num) =
-    -- The notation for # is currently not always in scope,
-    -- as it requires Require Import, but we only do Require.
-    -- As a make-shift, do not use the notation. This should be
-    -- revisited later.
-    -- (E.g. every module could have an internal module Notations
-    -- that every requiring module the imports)
-    -- char '#' <> renderNum num
-    renderGallina' p (App (Qualid fromIntegerQI) [PosArg (Num num)])
-    where
-      fromIntegerQI = Qualified "GHC.Num" "fromInteger"
+  renderGallina' _ (PolyNum num) =
+    char '#' <> renderNum num
 
   renderGallina' _ (String str) =
     renderString str

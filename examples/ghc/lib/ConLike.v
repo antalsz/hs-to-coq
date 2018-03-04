@@ -99,15 +99,15 @@ Admit Obligations.
 Definition conLikeArity : ConLike -> BasicTypes.Arity :=
   fun arg_0__ =>
     match arg_0__ with
-      | RealDataCon data_con => DataCon.dataConSourceArity data_con
-      | PatSynCon pat_syn => PatSyn.patSynArity pat_syn
+    | RealDataCon data_con => DataCon.dataConSourceArity data_con
+    | PatSynCon pat_syn => PatSyn.patSynArity pat_syn
     end.
 
 Definition conLikeFieldLabels : ConLike -> list FieldLabel.FieldLabel :=
   fun arg_0__ =>
     match arg_0__ with
-      | RealDataCon data_con => DataCon.dataConFieldLabels data_con
-      | PatSynCon pat_syn => PatSyn.patSynFieldLabels pat_syn
+    | RealDataCon data_con => DataCon.dataConFieldLabels data_con
+    | PatSynCon pat_syn => PatSyn.patSynFieldLabels pat_syn
     end.
 
 Definition conLikesWithFields : list ConLike -> list
@@ -123,8 +123,8 @@ Definition conLikesWithFields : list ConLike -> list
 Definition conLikeName : ConLike -> Name.Name :=
   fun arg_0__ =>
     match arg_0__ with
-      | RealDataCon data_con => DataCon.dataConName data_con
-      | PatSynCon pat_syn => PatSyn.patSynName pat_syn
+    | RealDataCon data_con => DataCon.dataConName data_con
+    | PatSynCon pat_syn => PatSyn.patSynName pat_syn
     end.
 
 (* Unbound variables:

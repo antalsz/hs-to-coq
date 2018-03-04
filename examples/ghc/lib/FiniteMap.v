@@ -38,7 +38,7 @@ Definition insertList {key} {elt} `{GHC.Base.Ord key} : list (key *
   fun xs m =>
     Data.Foldable.foldl (fun arg_0__ arg_1__ =>
                           match arg_0__ , arg_1__ with
-                            | m , pair k v => Data.Map.Internal.insert k v m
+                          | m , pair k v => Data.Map.Internal.insert k v m
                           end) m xs.
 
 Definition insertListWith {key} {elt} `{GHC.Base.Ord key}
@@ -47,7 +47,7 @@ Definition insertListWith {key} {elt} `{GHC.Base.Ord key}
   fun f xs m0 =>
     Data.Foldable.foldl (fun arg_0__ arg_1__ =>
                           match arg_0__ , arg_1__ with
-                            | m , pair k v => Data.Map.Internal.insertWith f k v m
+                          | m , pair k v => Data.Map.Internal.insertWith f k v m
                           end) m0 xs.
 
 (* Unbound variables:

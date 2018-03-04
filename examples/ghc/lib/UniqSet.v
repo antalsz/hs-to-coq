@@ -90,8 +90,8 @@ Definition unionUniqSets {a} : UniqSet a -> UniqSet a -> UniqSet a :=
 
 Definition unionManyUniqSets {a} (xs : list (UniqSet a)) : UniqSet a :=
   match xs with
-    | nil => emptyUniqSet
-    | cons set sets => Data.Foldable.foldr unionUniqSets set sets
+  | nil => emptyUniqSet
+  | cons set sets => Data.Foldable.foldr unionUniqSets set sets
   end.
 
 Definition uniqSetToList {a} : UniqSet a -> list a :=

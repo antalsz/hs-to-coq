@@ -118,18 +118,18 @@ Definition forValid {a} `{Propable a}
     : (Data.IntSet.Internal.IntSet -> a) -> Prop :=
   fun f =>
     forAll arbitrary GHC.Base.$ (fun t =>
-      skip_classify (Data.IntSet.Internal.size t GHC.Base.== GHC.Num.fromInteger 0)
-      (GHC.Base.hs_string__ "empty") GHC.Base.$ (skip_classify (andb
-                                                               (Data.IntSet.Internal.size t GHC.Base.>
-                                                               GHC.Num.fromInteger 0) (Data.IntSet.Internal.size t
-                                                               GHC.Base.<= GHC.Num.fromInteger 10))
+      skip_classify (Data.IntSet.Internal.size t GHC.Base.== #0) (GHC.Base.hs_string__
+                                                                 "empty") GHC.Base.$ (skip_classify (andb
+                                                                                                    (Data.IntSet.Internal.size
+                                                                                                    t GHC.Base.> #0)
+                                                                                                    (Data.IntSet.Internal.size
+                                                                                                    t GHC.Base.<= #10))
       (GHC.Base.hs_string__ "small") GHC.Base.$ (skip_classify (andb
-                                                               (Data.IntSet.Internal.size t GHC.Base.>
-                                                               GHC.Num.fromInteger 10) (Data.IntSet.Internal.size t
-                                                               GHC.Base.<= GHC.Num.fromInteger 64))
+                                                               (Data.IntSet.Internal.size t GHC.Base.> #10)
+                                                               (Data.IntSet.Internal.size t GHC.Base.<= #64))
       (GHC.Base.hs_string__ "medium") GHC.Base.$ (skip_classify
-      (Data.IntSet.Internal.size t GHC.Base.> GHC.Num.fromInteger 64)
-      (GHC.Base.hs_string__ "large") GHC.Base.$ f t)))).
+      (Data.IntSet.Internal.size t GHC.Base.> #64) (GHC.Base.hs_string__ "large")
+      GHC.Base.$ f t)))).
 
 Definition forValidUnitTree {a} `{Propable a}
     : (Data.IntSet.Internal.IntSet -> a) -> Prop :=
@@ -140,8 +140,7 @@ Definition prop_Valid : Prop :=
 
 Definition powersOf2 : Data.IntSet.Internal.IntSet :=
   Data.IntSet.Internal.fromList (Coq.Lists.List.flat_map (fun i =>
-                                                           cons (Zpow (GHC.Num.fromInteger 2) i) nil) (enumFromTo
-                                                         (GHC.Num.fromInteger 0) (GHC.Num.fromInteger 63))).
+                                                           cons (Zpow #2 i) nil) (enumFromTo #0 #63)).
 
 Definition prop_MaskPow2 : Data.IntSet.Internal.IntSet -> bool :=
   fix prop_MaskPow2 arg_0__
@@ -197,17 +196,11 @@ Definition prop_LeftRight : Data.IntSet.Internal.IntSet -> bool :=
     match arg_0__ with
     | Data.IntSet.Internal.Bin _ msk left_ right_ =>
         andb (Data.Foldable.and (Coq.Lists.List.flat_map (fun x =>
-                                                           cons ((x Data.Bits..&.(**) msk) GHC.Base.==
-                                                                GHC.Num.fromInteger 0) nil) (Data.IntSet.Internal.toList
-                                                         left_))) (Data.Foldable.and (Coq.Lists.List.flat_map (fun x =>
-                                                                                                                cons ((x
-                                                                                                                     Data.Bits..&.(**)
-                                                                                                                     msk)
-                                                                                                                     GHC.Base.==
-                                                                                                                     msk)
-                                                                                                                     nil)
-                                                                                                              (Data.IntSet.Internal.toList
-                                                                                                              right_)))
+                                                           cons ((x Data.Bits..&.(**) msk) GHC.Base.== #0) nil)
+                                                         (Data.IntSet.Internal.toList left_))) (Data.Foldable.and
+             (Coq.Lists.List.flat_map (fun x =>
+                                        cons ((x Data.Bits..&.(**) msk) GHC.Base.== msk) nil)
+                                      (Data.IntSet.Internal.toList right_)))
     | _ => true
     end.
 
@@ -227,7 +220,7 @@ Definition prop_MemberFromList : list GHC.Num.Int -> bool :=
   fun xs =>
     let abs_xs :=
       Coq.Lists.List.flat_map (fun x =>
-                                if x GHC.Base./= GHC.Num.fromInteger 0 : bool
+                                if x GHC.Base./= #0 : bool
                                 then cons (GHC.Num.abs x) nil
                                 else nil) xs in
     let t := Data.IntSet.Internal.fromList abs_xs in
@@ -344,8 +337,8 @@ Definition prop_size : Data.IntSet.Internal.IntSet -> Prop :=
     let sz := Data.IntSet.Internal.size s in
     (sz GHC.Base.== Data.IntSet.Internal.foldl' (fun arg_1__ arg_2__ =>
                                                   match arg_1__ , arg_2__ with
-                                                  | i , _ => i GHC.Num.+ GHC.Num.fromInteger 1
-                                                  end) (GHC.Num.fromInteger 0 : GHC.Num.Int) s) .&&.(**) (sz GHC.Base.==
+                                                  | i , _ => i GHC.Num.+ #1
+                                                  end) (#0 : GHC.Num.Int) s) .&&.(**) (sz GHC.Base.==
     Data.Foldable.length (Data.IntSet.Internal.toList s)).
 
 Definition prop_split : Data.IntSet.Internal.IntSet -> GHC.Num.Int -> Prop :=
@@ -433,6 +426,6 @@ Definition prop_isProperSubsetOf
      Data.Set.Internal.isSubsetOf GHC.Base.compare GHC.Base.flip GHC.Base.id
      GHC.Base.op_z2218U__ GHC.Base.op_zd__ GHC.Base.op_zeze__ GHC.Base.op_zg__
      GHC.Base.op_zl__ GHC.Base.op_zlze__ GHC.Base.op_zsze__ GHC.List.reverse
-     GHC.Num.Int GHC.Num.abs GHC.Num.negate GHC.Num.op_zp__ GHC.Real.even
-     GHC.Real.odd IntSetValidity.valid
+     GHC.Num.Int GHC.Num.abs GHC.Num.fromInteger GHC.Num.negate GHC.Num.op_zp__
+     GHC.Real.even GHC.Real.odd IntSetValidity.valid
 *)

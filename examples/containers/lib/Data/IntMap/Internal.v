@@ -374,20 +374,18 @@ Definition binCheckRight {a} : Prefix -> Mask -> IntMap a -> IntMap a -> IntMap
 
 Definition bitmapOf : GHC.Num.Int -> IntSetBitMap :=
   fun x =>
-    Utils.Containers.Internal.BitUtil.shiftLL (GHC.Num.fromInteger 1) (x
-                                                                      Data.Bits..&.(**)
-                                                                      Data.IntSet.Internal.suffixBitMask).
+    Utils.Containers.Internal.BitUtil.shiftLL #1 (x Data.Bits..&.(**)
+                                                 Data.IntSet.Internal.suffixBitMask).
 
 Definition restrictBM {a} : IntSetBitMap -> IntMap a -> IntMap a :=
   unsafeFix (fun restrictBM arg_0__ arg_1__ =>
               match arg_0__ , arg_1__ with
               | num_2__ , _ =>
-                  if num_2__ GHC.Base.== GHC.Num.fromInteger 0 : bool
+                  if num_2__ GHC.Base.== #0 : bool
                   then Nil
                   else match arg_0__ , arg_1__ with
                        | bm , Bin p m l r =>
-                           let leftBits :=
-                             bitmapOf (p Data.Bits..|.(**) m) GHC.Num.- GHC.Num.fromInteger 1 in
+                           let leftBits := bitmapOf (p Data.Bits..|.(**) m) GHC.Num.- #1 in
                            let bmL := bm Data.Bits..&.(**) leftBits in
                            let bmR := Data.Bits.xor bm bmL in bin p m (restrictBM bmL l) (restrictBM bmR r)
                        | bm , (Tip k _ as t) =>
@@ -404,12 +402,11 @@ Definition withoutBM {a} : IntSetBitMap -> IntMap a -> IntMap a :=
   unsafeFix (fun withoutBM arg_0__ arg_1__ =>
               match arg_0__ , arg_1__ with
               | num_2__ , t =>
-                  if num_2__ GHC.Base.== GHC.Num.fromInteger 0 : bool
+                  if num_2__ GHC.Base.== #0 : bool
                   then t
                   else match arg_0__ , arg_1__ with
                        | bm , Bin p m l r =>
-                           let leftBits :=
-                             bitmapOf (p Data.Bits..|.(**) m) GHC.Num.- GHC.Num.fromInteger 1 in
+                           let leftBits := bitmapOf (p Data.Bits..|.(**) m) GHC.Num.- #1 in
                            let bmL := bm Data.Bits..&.(**) leftBits in
                            let bmR := Data.Bits.xor bm bmL in bin p m (withoutBM bmL l) (withoutBM bmR r)
                        | bm , (Tip k _ as t) =>
@@ -480,10 +477,7 @@ Definition foldl {a} {b} : (a -> b -> a) -> a -> IntMap b -> a :=
                  end in
     fun t =>
       match t with
-      | Bin _ m l r =>
-          if m GHC.Base.< GHC.Num.fromInteger 0 : bool
-          then go (go z r) l
-          else go (go z l) r
+      | Bin _ m l r => if m GHC.Base.< #0 : bool then go (go z r) l else go (go z l) r
       | _ => go z t
       end.
 
@@ -501,20 +495,17 @@ Definition foldl' {a} {b} : (a -> b -> a) -> a -> IntMap b -> a :=
                  end in
     fun t =>
       match t with
-      | Bin _ m l r =>
-          if m GHC.Base.< GHC.Num.fromInteger 0 : bool
-          then go (go z r) l
-          else go (go z l) r
+      | Bin _ m l r => if m GHC.Base.< #0 : bool then go (go z r) l else go (go z l) r
       | _ => go z t
       end.
 
 Local Definition Foldable__IntMap_sum : forall {a},
                                           forall `{GHC.Num.Num a}, IntMap a -> a :=
-  fun {a} `{GHC.Num.Num a} => foldl' _GHC.Num.+_ (GHC.Num.fromInteger 0).
+  fun {a} `{GHC.Num.Num a} => foldl' _GHC.Num.+_ #0.
 
 Local Definition Foldable__IntMap_product : forall {a},
                                               forall `{GHC.Num.Num a}, IntMap a -> a :=
-  fun {a} `{GHC.Num.Num a} => foldl' _GHC.Num.*_ (GHC.Num.fromInteger 1).
+  fun {a} `{GHC.Num.Num a} => foldl' _GHC.Num.*_ #1.
 
 Local Definition Foldable__IntMap_foldl' : forall {b} {a},
                                              (b -> a -> b) -> b -> IntMap a -> b :=
@@ -531,10 +522,7 @@ Definition foldlWithKey {a} {b}
                  end in
     fun t =>
       match t with
-      | Bin _ m l r =>
-          if m GHC.Base.< GHC.Num.fromInteger 0 : bool
-          then go (go z r) l
-          else go (go z l) r
+      | Bin _ m l r => if m GHC.Base.< #0 : bool then go (go z r) l else go (go z l) r
       | _ => go z t
       end.
 
@@ -557,10 +545,7 @@ Definition foldlWithKey' {a} {b}
                  end in
     fun t =>
       match t with
-      | Bin _ m l r =>
-          if m GHC.Base.< GHC.Num.fromInteger 0 : bool
-          then go (go z r) l
-          else go (go z l) r
+      | Bin _ m l r => if m GHC.Base.< #0 : bool then go (go z r) l else go (go z l) r
       | _ => go z t
       end.
 
@@ -574,10 +559,7 @@ Definition foldr {a} {b} : (a -> b -> b) -> b -> IntMap a -> b :=
                  end in
     fun t =>
       match t with
-      | Bin _ m l r =>
-          if m GHC.Base.< GHC.Num.fromInteger 0 : bool
-          then go (go z l) r
-          else go (go z r) l
+      | Bin _ m l r => if m GHC.Base.< #0 : bool then go (go z l) r else go (go z r) l
       | _ => go z t
       end.
 
@@ -601,10 +583,7 @@ Definition foldr' {a} {b} : (a -> b -> b) -> b -> IntMap a -> b :=
                  end in
     fun t =>
       match t with
-      | Bin _ m l r =>
-          if m GHC.Base.< GHC.Num.fromInteger 0 : bool
-          then go (go z l) r
-          else go (go z r) l
+      | Bin _ m l r => if m GHC.Base.< #0 : bool then go (go z l) r else go (go z r) l
       | _ => go z t
       end.
 
@@ -623,10 +602,7 @@ Definition foldrWithKey {a} {b}
                  end in
     fun t =>
       match t with
-      | Bin _ m l r =>
-          if m GHC.Base.< GHC.Num.fromInteger 0 : bool
-          then go (go z l) r
-          else go (go z r) l
+      | Bin _ m l r => if m GHC.Base.< #0 : bool then go (go z l) r else go (go z r) l
       | _ => go z t
       end.
 
@@ -689,10 +665,7 @@ Definition foldrWithKey' {a} {b}
                  end in
     fun t =>
       match t with
-      | Bin _ m l r =>
-          if m GHC.Base.< GHC.Num.fromInteger 0 : bool
-          then go (go z l) r
-          else go (go z r) l
+      | Bin _ m l r => if m GHC.Base.< #0 : bool then go (go z l) r else go (go z r) l
       | _ => go z t
       end.
 
@@ -709,12 +682,10 @@ Definition keysSet {a} : IntMap a -> Data.IntSet.Internal.IntSet :=
                             | _ , Nil => GHC.Err.error (GHC.Base.hs_string__ "Data.IntSet.keysSet: Nil")
                             end in
                if (m Data.Bits..&.(**) Data.IntSet.Internal.suffixBitMask) GHC.Base.==
-                  GHC.Num.fromInteger 0 : bool
+                  #0 : bool
                then Data.IntSet.Internal.Bin p m (keysSet l) (keysSet r)
                else Data.IntSet.Internal.Tip (p Data.Bits..&.(**)
-                                             Data.IntSet.Internal.prefixBitMask) (computeBm (computeBm
-                                                                                            (GHC.Num.fromInteger 0) l)
-                                                                                 r)
+                                             Data.IntSet.Internal.prefixBitMask) (computeBm (computeBm #0 l) r)
            end.
 
 Definition lmapWhenMissing {b} {a} {f} {x} : (b -> a) -> WhenMissing f a
@@ -734,7 +705,7 @@ Definition lookupMax {a} : IntMap a -> option (Data.IntSet.Internal.Key *
                      | Bin _ _ _ r' => go r'
                      | Nil => None
                      end in
-        if m GHC.Base.< GHC.Num.fromInteger 0 : bool
+        if m GHC.Base.< #0 : bool
         then go l
         else go r
     end.
@@ -752,7 +723,7 @@ Definition lookupMin {a} : IntMap a -> option (Data.IntSet.Internal.Key *
                      | Bin _ _ l' _ => go l'
                      | Nil => None
                      end in
-        if m GHC.Base.< GHC.Num.fromInteger 0 : bool
+        if m GHC.Base.< #0 : bool
         then go r
         else go l
     end.
@@ -865,8 +836,8 @@ Definition mapWithKey {a} {b} : (Data.IntSet.Internal.Key -> a -> b) -> IntMap
 Definition maskW : Nat -> Nat -> Prefix :=
   fun i m =>
     Coq.ZArith.BinInt.Z.of_N (i Data.Bits..&.(**) (Data.Bits.xor
-                             (Coq.NArith.BinNat.N.lxor (_GHC.Num.-_ m (GHC.Num.fromInteger 1))
-                                                       (Coq.NArith.BinNat.N.ones (64 % N))) m)).
+                             (Coq.NArith.BinNat.N.lxor (_GHC.Num.-_ m #1) (Coq.NArith.BinNat.N.ones (64 %
+                                                                                                    N))) m)).
 
 Definition match_ : Data.IntSet.Internal.Key -> Prefix -> Mask -> bool :=
   fun i p m => (Data.IntSet.Internal.mask i m) GHC.Base.== p.
@@ -887,29 +858,25 @@ Definition fromSet {a}
                   let buildTree :=
                     unsafeFix (fun buildTree g prefix bmask bits =>
                                 let 'num_3__ := bits in
-                                if num_3__ GHC.Base.== GHC.Num.fromInteger 0 : bool
+                                if num_3__ GHC.Base.== #0 : bool
                                 then Tip prefix (g prefix)
                                 else let 'bits2 := Coq.ZArith.BinInt.Z.of_N
-                                                     (Utils.Containers.Internal.BitUtil.shiftRL (natFromInt bits)
-                                                                                                (GHC.Num.fromInteger
-                                                                                                1)) in
-                                     if (bmask Data.Bits..&.(**) ((Utils.Containers.Internal.BitUtil.shiftLL
-                                        (GHC.Num.fromInteger 1) bits2) GHC.Num.- GHC.Num.fromInteger 1)) GHC.Base.==
-                                        GHC.Num.fromInteger 0 : bool
+                                                     (Utils.Containers.Internal.BitUtil.shiftRL (natFromInt bits) #1) in
+                                     if (bmask Data.Bits..&.(**) ((Utils.Containers.Internal.BitUtil.shiftLL #1
+                                                                                                             bits2)
+                                        GHC.Num.- #1)) GHC.Base.== #0 : bool
                                      then buildTree g (prefix GHC.Num.+ bits2)
                                           (Utils.Containers.Internal.BitUtil.shiftRL bmask bits2) bits2
                                      else if ((Utils.Containers.Internal.BitUtil.shiftRL bmask bits2)
-                                             Data.Bits..&.(**) ((Utils.Containers.Internal.BitUtil.shiftLL
-                                             (GHC.Num.fromInteger 1) bits2) GHC.Num.- GHC.Num.fromInteger 1))
-                                             GHC.Base.== GHC.Num.fromInteger 0 : bool
+                                             Data.Bits..&.(**) ((Utils.Containers.Internal.BitUtil.shiftLL #1 bits2)
+                                             GHC.Num.- #1)) GHC.Base.== #0 : bool
                                           then buildTree g prefix bmask bits2
                                           else Bin prefix bits2 (buildTree g prefix bmask bits2) (buildTree g (prefix
                                                                                                               GHC.Num.+
                                                                                                               bits2)
                                                                                                  (Utils.Containers.Internal.BitUtil.shiftRL
                                                                                                  bmask bits2) bits2)) in
-                  buildTree f kx bm (Data.IntSet.Internal.suffixBitMask GHC.Num.+
-                                    GHC.Num.fromInteger 1)
+                  buildTree f kx bm (Data.IntSet.Internal.suffixBitMask GHC.Num.+ #1)
               end).
 
 Definition branchMask : Prefix -> Prefix -> Mask :=
@@ -986,7 +953,7 @@ Definition lookupPrefix {a} : IntSetPrefix -> IntMap a -> IntMap a :=
         := match arg_0__ , arg_1__ with
            | kp , (Bin p m l r as t) =>
                if (m Data.Bits..&.(**) Data.IntSet.Internal.suffixBitMask) GHC.Base./=
-                  GHC.Num.fromInteger 0 : bool
+                  #0 : bool
                then if (p Data.Bits..&.(**) Data.IntSet.Internal.prefixBitMask) GHC.Base.==
                        kp : bool
                     then t
@@ -1421,8 +1388,8 @@ Definition split {a} : Data.IntSet.Internal.Key -> IntMap a -> (IntMap a *
     let j_20__ := let 'pair lt gt := go k t in pair lt gt in
     match t with
     | Bin _ m l r =>
-        if m GHC.Base.< GHC.Num.fromInteger 0 : bool
-        then if k GHC.Base.>= GHC.Num.fromInteger 0 : bool
+        if m GHC.Base.< #0 : bool
+        then if k GHC.Base.>= #0 : bool
              then let 'pair lt gt := go k l in
                   let 'lt' := union r lt in
                   pair lt' gt
@@ -1457,8 +1424,8 @@ Definition splitLookup {a} : Data.IntSet.Internal.Key -> IntMap a -> (IntMap a *
     let 'Mk_SplitLookup lt fnd gt := (let j_12__ := go k t in
                                        match t with
                                        | Bin _ m l r =>
-                                           if m GHC.Base.< GHC.Num.fromInteger 0 : bool
-                                           then if k GHC.Base.>= GHC.Num.fromInteger 0 : bool
+                                           if m GHC.Base.< #0 : bool
+                                           then if k GHC.Base.>= #0 : bool
                                                 then mapLT (union r) (go k l)
                                                 else mapGT (fun arg_13__ => union arg_13__ l) (go k r)
                                            else j_12__
@@ -1518,7 +1485,7 @@ Definition updatePrefix {a} : IntSetPrefix -> IntMap a -> (IntMap a -> IntMap
         := match arg_0__ , arg_1__ , arg_2__ with
            | kp , (Bin p m l r as t) , f =>
                if (m Data.Bits..&.(**) Data.IntSet.Internal.suffixBitMask) GHC.Base./=
-                  GHC.Num.fromInteger 0 : bool
+                  #0 : bool
                then if (p Data.Bits..&.(**) Data.IntSet.Internal.prefixBitMask) GHC.Base.==
                        kp : bool
                     then f t
@@ -1590,14 +1557,12 @@ Definition restrictKeys {a} : IntMap a -> Data.IntSet.Internal.IntSet -> IntMap
                             else Nil
               | (Bin p1 m1 _ _ as t1) , Data.IntSet.Internal.Tip p2 bm2 =>
                   let maxbit :=
-                    bitmapOf (p1 Data.Bits..|.(**) (m1 Data.Bits..|.(**) (m1 GHC.Num.-
-                             GHC.Num.fromInteger 1))) in
-                  let le_maxbit :=
-                    maxbit Data.Bits..|.(**) (maxbit GHC.Num.- GHC.Num.fromInteger 1) in
+                    bitmapOf (p1 Data.Bits..|.(**) (m1 Data.Bits..|.(**) (m1 GHC.Num.- #1))) in
+                  let le_maxbit := maxbit Data.Bits..|.(**) (maxbit GHC.Num.- #1) in
                   let minbit := bitmapOf p1 in
                   let ge_minbit :=
-                    Coq.NArith.BinNat.N.lxor (_GHC.Num.-_ minbit (GHC.Num.fromInteger 1))
-                                             (Coq.NArith.BinNat.N.ones (64 % N)) in
+                    Coq.NArith.BinNat.N.lxor (_GHC.Num.-_ minbit #1) (Coq.NArith.BinNat.N.ones (64 %
+                                                                                               N)) in
                   restrictBM ((bm2 Data.Bits..&.(**) ge_minbit) Data.Bits..&.(**) le_maxbit)
                   (lookupPrefix p2 t1)
               | Bin _ _ _ _ , Data.IntSet.Internal.Nil => Nil
@@ -1634,14 +1599,12 @@ Definition withoutKeys {a} : IntMap a -> Data.IntSet.Internal.IntSet -> IntMap
                             else t1
               | (Bin p1 m1 _ _ as t1) , Data.IntSet.Internal.Tip p2 bm2 =>
                   let maxbit :=
-                    bitmapOf (p1 Data.Bits..|.(**) (m1 Data.Bits..|.(**) (m1 GHC.Num.-
-                             GHC.Num.fromInteger 1))) in
+                    bitmapOf (p1 Data.Bits..|.(**) (m1 Data.Bits..|.(**) (m1 GHC.Num.- #1))) in
                   let gt_maxbit :=
-                    Data.Bits.xor maxbit (Coq.NArith.BinNat.N.lxor (_GHC.Num.-_ maxbit
-                                                                                (GHC.Num.fromInteger 1))
+                    Data.Bits.xor maxbit (Coq.NArith.BinNat.N.lxor (_GHC.Num.-_ maxbit #1)
                                                                    (Coq.NArith.BinNat.N.ones (64 % N))) in
                   let minbit := bitmapOf p1 in
-                  let lt_minbit := minbit GHC.Num.- GHC.Num.fromInteger 1 in
+                  let lt_minbit := minbit GHC.Num.- #1 in
                   updatePrefix p2 t1 GHC.Base.$ withoutBM ((bm2 Data.Bits..|.(**) lt_minbit)
                                                           Data.Bits..|.(**) gt_maxbit)
               | (Bin _ _ _ _ as t1) , Data.IntSet.Internal.Nil => t1
@@ -1737,10 +1700,10 @@ Definition size {a} : IntMap a -> GHC.Num.Int :=
   let fix go arg_0__ arg_1__
             := match arg_0__ , arg_1__ with
                | acc , Bin _ _ l r => go (go acc l) r
-               | acc , Tip _ _ => GHC.Num.fromInteger 1 GHC.Num.+ acc
+               | acc , Tip _ _ => #1 GHC.Num.+ acc
                | acc , Nil => acc
                end in
-  go (GHC.Num.fromInteger 0).
+  go #0.
 
 Local Definition Foldable__IntMap_length : forall {a},
                                              IntMap a -> GHC.Num.Int :=
@@ -1769,7 +1732,7 @@ Definition splitRoot {a} : IntMap a -> list (IntMap a) :=
     | Nil => nil
     | (Tip _ _ as x) => cons x nil
     | Bin _ m l r =>
-        if m GHC.Base.< GHC.Num.fromInteger 0 : bool
+        if m GHC.Base.< #0 : bool
         then cons r (cons l nil)
         else cons l (cons r nil)
     end.
@@ -1855,8 +1818,8 @@ Definition lookupLT {a} : Data.IntSet.Internal.Key -> IntMap a -> option
     let j_10__ := go Nil t in
     match t with
     | Bin _ m l r =>
-        if m GHC.Base.< GHC.Num.fromInteger 0 : bool
-        then if k GHC.Base.>= GHC.Num.fromInteger 0 : bool
+        if m GHC.Base.< #0 : bool
+        then if k GHC.Base.>= #0 : bool
              then go r l
              else go Nil r
         else j_10__
@@ -1885,8 +1848,8 @@ Definition lookupLE {a} : Data.IntSet.Internal.Key -> IntMap a -> option
     let j_10__ := go Nil t in
     match t with
     | Bin _ m l r =>
-        if m GHC.Base.< GHC.Num.fromInteger 0 : bool
-        then if k GHC.Base.>= GHC.Num.fromInteger 0 : bool
+        if m GHC.Base.< #0 : bool
+        then if k GHC.Base.>= #0 : bool
              then go r l
              else go Nil r
         else j_10__
@@ -1924,8 +1887,8 @@ Definition lookupGT {a} : Data.IntSet.Internal.Key -> IntMap a -> option
     let j_10__ := go Nil t in
     match t with
     | Bin _ m l r =>
-        if m GHC.Base.< GHC.Num.fromInteger 0 : bool
-        then if k GHC.Base.>= GHC.Num.fromInteger 0 : bool
+        if m GHC.Base.< #0 : bool
+        then if k GHC.Base.>= #0 : bool
              then go Nil l
              else go l r
         else j_10__
@@ -1954,8 +1917,8 @@ Definition lookupGE {a} : Data.IntSet.Internal.Key -> IntMap a -> option
     let j_10__ := go Nil t in
     match t with
     | Bin _ m l r =>
-        if m GHC.Base.< GHC.Num.fromInteger 0 : bool
-        then if k GHC.Base.>= GHC.Num.fromInteger 0 : bool
+        if m GHC.Base.< #0 : bool
+        then if k GHC.Base.>= #0 : bool
              then go Nil l
              else go l r
         else j_10__
@@ -2011,9 +1974,9 @@ End Notations.
      GHC.Base.fmap GHC.Base.id GHC.Base.liftA2 GHC.Base.mappend GHC.Base.mempty
      GHC.Base.op_z2218U__ GHC.Base.op_zd__ GHC.Base.op_zeze__ GHC.Base.op_zg__
      GHC.Base.op_zgze__ GHC.Base.op_zl__ GHC.Base.op_zlze__ GHC.Base.op_zsze__
-     GHC.Base.pure GHC.Err.error GHC.Num.Int GHC.Num.Num GHC.Num.Word GHC.Num.op_zm__
-     GHC.Num.op_zp__ GHC.Num.op_zt__ GHC.Real.fromIntegral
-     Utils.Containers.Internal.BitUtil.highestBitMask
+     GHC.Base.pure GHC.Err.error GHC.Num.Int GHC.Num.Num GHC.Num.Word
+     GHC.Num.fromInteger GHC.Num.op_zm__ GHC.Num.op_zp__ GHC.Num.op_zt__
+     GHC.Real.fromIntegral Utils.Containers.Internal.BitUtil.highestBitMask
      Utils.Containers.Internal.BitUtil.shiftLL
      Utils.Containers.Internal.BitUtil.shiftRL
 *)

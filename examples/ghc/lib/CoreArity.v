@@ -37,14 +37,12 @@ Inductive ArityType : Type := ATop : list BasicTypes.OneShotInfo -> ArityType
 Inductive ArityEnv : Type := AE : CheapFun -> bool -> ArityEnv.
 
 Definition ae_cheap_fn (arg_0__ : ArityEnv) :=
-  match arg_0__ with
-    | AE ae_cheap_fn _ => ae_cheap_fn
-  end.
+  let 'AE ae_cheap_fn _ := arg_0__ in
+  ae_cheap_fn.
 
 Definition ae_ped_bot (arg_1__ : ArityEnv) :=
-  match arg_1__ with
-    | AE _ ae_ped_bot => ae_ped_bot
-  end.
+  let 'AE _ ae_ped_bot := arg_1__ in
+  ae_ped_bot.
 (* Converted value declarations: *)
 
 Axiom manifestArity : CoreSyn.CoreExpr -> BasicTypes.Arity.

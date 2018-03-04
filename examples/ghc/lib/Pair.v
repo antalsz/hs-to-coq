@@ -30,14 +30,12 @@ Inductive Pair a : Type := Mk_Pair : a -> a -> Pair a.
 Arguments Mk_Pair {_} _ _.
 
 Definition pFst {a} (arg_0__ : Pair a) :=
-  match arg_0__ with
-    | Mk_Pair pFst _ => pFst
-  end.
+  let 'Mk_Pair pFst _ := arg_0__ in
+  pFst.
 
 Definition pSnd {a} (arg_1__ : Pair a) :=
-  match arg_1__ with
-    | Mk_Pair _ pSnd => pSnd
-  end.
+  let 'Mk_Pair _ pSnd := arg_1__ in
+  pSnd.
 (* Converted value declarations: *)
 
 Local Definition Functor__Pair_fmap : forall {a} {b},
@@ -45,7 +43,7 @@ Local Definition Functor__Pair_fmap : forall {a} {b},
   fun {a} {b} =>
     fun arg_0__ arg_1__ =>
       match arg_0__ , arg_1__ with
-        | f , Mk_Pair x y => Mk_Pair (f x) (f y)
+      | f , Mk_Pair x y => Mk_Pair (f x) (f y)
       end.
 
 Local Definition Functor__Pair_op_zlzd__ : forall {a} {b},
@@ -62,7 +60,7 @@ Local Definition Applicative__Pair_op_zlztzg__ : forall {a} {b},
   fun {a} {b} =>
     fun arg_0__ arg_1__ =>
       match arg_0__ , arg_1__ with
-        | Mk_Pair f g , Mk_Pair x y => Mk_Pair (f x) (g y)
+      | Mk_Pair f g , Mk_Pair x y => Mk_Pair (f x) (g y)
       end.
 
 Local Definition Applicative__Pair_op_ztzg__ : forall {a} {b},
@@ -85,7 +83,7 @@ Local Definition Foldable__Pair_foldMap : forall {m} {a},
   fun {m} {a} `{GHC.Base.Monoid m} =>
     fun arg_0__ arg_1__ =>
       match arg_0__ , arg_1__ with
-        | f , Mk_Pair x y => GHC.Base.mappend (f x) (f y)
+      | f , Mk_Pair x y => GHC.Base.mappend (f x) (f y)
       end.
 
 Local Definition Foldable__Pair_foldl : forall {b} {a},
@@ -93,11 +91,12 @@ Local Definition Foldable__Pair_foldl : forall {b} {a},
   fun {b} {a} =>
     fun arg_19__ arg_20__ arg_21__ =>
       match arg_19__ , arg_20__ , arg_21__ with
-        | f , z , t => Data.Monoid.appEndo (Data.Monoid.getDual (Foldable__Pair_foldMap
-                                                                (Coq.Program.Basics.compose Data.Monoid.Mk_Dual
-                                                                                            (Coq.Program.Basics.compose
-                                                                                            Data.Monoid.Mk_Endo
-                                                                                            (GHC.Base.flip f))) t)) z
+      | f , z , t =>
+          Data.Monoid.appEndo (Data.Monoid.getDual (Foldable__Pair_foldMap
+                                                   (Coq.Program.Basics.compose Data.Monoid.Mk_Dual
+                                                                               (Coq.Program.Basics.compose
+                                                                               Data.Monoid.Mk_Endo (GHC.Base.flip f)))
+                                                   t)) z
       end.
 
 Local Definition Foldable__Pair_foldr' : forall {a} {b},
@@ -105,12 +104,13 @@ Local Definition Foldable__Pair_foldr' : forall {a} {b},
   fun {a} {b} =>
     fun arg_9__ arg_10__ arg_11__ =>
       match arg_9__ , arg_10__ , arg_11__ with
-        | f , z0 , xs => let f' :=
-                           fun arg_12__ arg_13__ arg_14__ =>
-                             match arg_12__ , arg_13__ , arg_14__ with
-                               | k , x , z => _GHC.Base.$!_ k (f x z)
-                             end in
-                         Foldable__Pair_foldl f' GHC.Base.id xs z0
+      | f , z0 , xs =>
+          let f' :=
+            fun arg_12__ arg_13__ arg_14__ =>
+              match arg_12__ , arg_13__ , arg_14__ with
+              | k , x , z => _GHC.Base.$!_ k (f x z)
+              end in
+          Foldable__Pair_foldl f' GHC.Base.id xs z0
       end.
 
 Local Definition Foldable__Pair_foldr : forall {a} {b},
@@ -118,8 +118,9 @@ Local Definition Foldable__Pair_foldr : forall {a} {b},
   fun {a} {b} =>
     fun arg_4__ arg_5__ arg_6__ =>
       match arg_4__ , arg_5__ , arg_6__ with
-        | f , z , t => Data.Monoid.appEndo (Foldable__Pair_foldMap
-                                           (Data.Foldable.hash_compose Data.Monoid.Mk_Endo f) t) z
+      | f , z , t =>
+          Data.Monoid.appEndo (Foldable__Pair_foldMap (Data.Foldable.hash_compose
+                                                      Data.Monoid.Mk_Endo f) t) z
       end.
 
 Local Definition Foldable__Pair_foldl' : forall {b} {a},
@@ -127,20 +128,21 @@ Local Definition Foldable__Pair_foldl' : forall {b} {a},
   fun {b} {a} =>
     fun arg_24__ arg_25__ arg_26__ =>
       match arg_24__ , arg_25__ , arg_26__ with
-        | f , z0 , xs => let f' :=
-                           fun arg_27__ arg_28__ arg_29__ =>
-                             match arg_27__ , arg_28__ , arg_29__ with
-                               | x , k , z => _GHC.Base.$!_ k (f z x)
-                             end in
-                         Foldable__Pair_foldr f' GHC.Base.id xs z0
+      | f , z0 , xs =>
+          let f' :=
+            fun arg_27__ arg_28__ arg_29__ =>
+              match arg_27__ , arg_28__ , arg_29__ with
+              | x , k , z => _GHC.Base.$!_ k (f z x)
+              end in
+          Foldable__Pair_foldr f' GHC.Base.id xs z0
       end.
 
 Local Definition Foldable__Pair_length : forall {a}, Pair a -> GHC.Num.Int :=
   fun {a} =>
     Foldable__Pair_foldl' (fun arg_64__ arg_65__ =>
                             match arg_64__ , arg_65__ with
-                              | c , _ => _GHC.Num.+_ c (GHC.Num.fromInteger 1)
-                            end) (GHC.Num.fromInteger 0).
+                            | c , _ => _GHC.Num.+_ c #1
+                            end) #0.
 
 Local Definition Foldable__Pair_null : forall {a}, Pair a -> bool :=
   fun {a} => Foldable__Pair_foldr (fun arg_61__ arg_62__ => false) true.
@@ -148,12 +150,11 @@ Local Definition Foldable__Pair_null : forall {a}, Pair a -> bool :=
 Local Definition Foldable__Pair_toList : forall {a}, Pair a -> list a :=
   fun {a} =>
     fun arg_54__ =>
-      match arg_54__ with
-        | t => GHC.Base.build (fun arg_55__ arg_56__ =>
-                                match arg_55__ , arg_56__ with
-                                  | c , n => Foldable__Pair_foldr c n t
-                                end)
-      end.
+      let 't := arg_54__ in
+      GHC.Base.build (fun arg_55__ arg_56__ =>
+                       match arg_55__ , arg_56__ with
+                       | c , n => Foldable__Pair_foldr c n t
+                       end).
 
 Local Definition Foldable__Pair_product : forall {a},
                                             forall `{GHC.Num.Num a}, Pair a -> a :=
@@ -175,10 +176,10 @@ Local Definition Foldable__Pair_elem : forall {a},
                                          forall `{GHC.Base.Eq_ a}, a -> Pair a -> bool :=
   fun {a} `{GHC.Base.Eq_ a} =>
     Coq.Program.Basics.compose (fun arg_69__ =>
-                                 match arg_69__ with
-                                   | p => Coq.Program.Basics.compose Data.Monoid.getAny (Foldable__Pair_foldMap
-                                                                     (Coq.Program.Basics.compose Data.Monoid.Mk_Any p))
-                                 end) _GHC.Base.==_.
+                                 let 'p := arg_69__ in
+                                 Coq.Program.Basics.compose Data.Monoid.getAny (Foldable__Pair_foldMap
+                                                            (Coq.Program.Basics.compose Data.Monoid.Mk_Any p)))
+                               _GHC.Base.==_.
 
 Program Instance Foldable__Pair : Data.Foldable.Foldable Pair := fun _ k =>
     k {|Data.Foldable.elem__ := fun {a} `{GHC.Base.Eq_ a} => Foldable__Pair_elem ;
@@ -201,7 +202,7 @@ Local Definition Traversable__Pair_traverse : forall {f} {a} {b},
   fun {f} {a} {b} `{GHC.Base.Applicative f} =>
     fun arg_0__ arg_1__ =>
       match arg_0__ , arg_1__ with
-        | f , Mk_Pair x y => (Mk_Pair Data.Functor.<$> f x) GHC.Base.<*> f y
+      | f , Mk_Pair x y => (Mk_Pair Data.Functor.<$> f x) GHC.Base.<*> f y
       end.
 
 Local Definition Traversable__Pair_sequenceA : forall {f} {a},
@@ -232,8 +233,8 @@ Local Definition Monoid__Pair_mappend {inst_a} `{GHC.Base.Monoid inst_a} : (Pair
                                                                            inst_a) -> (Pair inst_a) -> (Pair inst_a) :=
   fun arg_0__ arg_1__ =>
     match arg_0__ , arg_1__ with
-      | Mk_Pair a1 b1 , Mk_Pair a2 b2 => Mk_Pair (GHC.Base.mappend a1 a2)
-                                         (GHC.Base.mappend b1 b2)
+    | Mk_Pair a1 b1 , Mk_Pair a2 b2 =>
+        Mk_Pair (GHC.Base.mappend a1 a2) (GHC.Base.mappend b1 b2)
     end.
 
 Local Definition Monoid__Pair_mempty {inst_a} `{GHC.Base.Monoid inst_a} : (Pair
@@ -258,23 +259,23 @@ Admit Obligations.
 Definition pLiftFst {a} : (a -> a) -> Pair a -> Pair a :=
   fun arg_0__ arg_1__ =>
     match arg_0__ , arg_1__ with
-      | f , Mk_Pair a b => Mk_Pair (f a) b
+    | f , Mk_Pair a b => Mk_Pair (f a) b
     end.
 
 Definition pLiftSnd {a} : (a -> a) -> Pair a -> Pair a :=
   fun arg_0__ arg_1__ =>
     match arg_0__ , arg_1__ with
-      | f , Mk_Pair a b => Mk_Pair a (f b)
+    | f , Mk_Pair a b => Mk_Pair a (f b)
     end.
 
 Definition swap {a} : Pair a -> Pair a :=
-  fun arg_0__ => match arg_0__ with | Mk_Pair x y => Mk_Pair y x end.
+  fun arg_0__ => let 'Mk_Pair x y := arg_0__ in Mk_Pair y x.
 
 Definition toPair {a} : (a * a)%type -> Pair a :=
-  fun arg_0__ => match arg_0__ with | pair x y => Mk_Pair x y end.
+  fun arg_0__ => let 'pair x y := arg_0__ in Mk_Pair x y.
 
 Definition unPair {a} : Pair a -> (a * a)%type :=
-  fun arg_0__ => match arg_0__ with | Mk_Pair x y => pair x y end.
+  fun arg_0__ => let 'Mk_Pair x y := arg_0__ in pair x y.
 
 (* Unbound variables:
      bool false list op_zt__ pair true Coq.Program.Basics.compose
@@ -286,5 +287,5 @@ Definition unPair {a} : Pair a -> (a * a)%type :=
      GHC.Base.Monad GHC.Base.Monoid GHC.Base.build GHC.Base.const GHC.Base.flip
      GHC.Base.fmap GHC.Base.foldr GHC.Base.id GHC.Base.mappend GHC.Base.mempty
      GHC.Base.op_zdzn__ GHC.Base.op_zeze__ GHC.Base.op_zlztzg__ GHC.Num.Int
-     GHC.Num.Num GHC.Num.op_zp__
+     GHC.Num.Num GHC.Num.fromInteger GHC.Num.op_zp__
 *)

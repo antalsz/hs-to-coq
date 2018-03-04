@@ -191,12 +191,12 @@ Local Definition Foldable__BooleanFormula_foldl : forall {b} {a},
   fun {b} {a} =>
     fun arg_19__ arg_20__ arg_21__ =>
       match arg_19__ , arg_20__ , arg_21__ with
-        | f , z , t => Data.Monoid.appEndo (Data.Monoid.getDual
-                                           (Foldable__BooleanFormula_foldMap (Coq.Program.Basics.compose
-                                                                             Data.Monoid.Mk_Dual
-                                                                             (Coq.Program.Basics.compose
-                                                                             Data.Monoid.Mk_Endo (GHC.Base.flip f))) t))
-                       z
+      | f , z , t =>
+          Data.Monoid.appEndo (Data.Monoid.getDual (Foldable__BooleanFormula_foldMap
+                                                   (Coq.Program.Basics.compose Data.Monoid.Mk_Dual
+                                                                               (Coq.Program.Basics.compose
+                                                                               Data.Monoid.Mk_Endo (GHC.Base.flip f)))
+                                                   t)) z
       end.
 
 Local Definition Foldable__BooleanFormula_foldr' : forall {a} {b},
@@ -204,12 +204,13 @@ Local Definition Foldable__BooleanFormula_foldr' : forall {a} {b},
   fun {a} {b} =>
     fun arg_9__ arg_10__ arg_11__ =>
       match arg_9__ , arg_10__ , arg_11__ with
-        | f , z0 , xs => let f' :=
-                           fun arg_12__ arg_13__ arg_14__ =>
-                             match arg_12__ , arg_13__ , arg_14__ with
-                               | k , x , z => _GHC.Base.$!_ k (f x z)
-                             end in
-                         Foldable__BooleanFormula_foldl f' GHC.Base.id xs z0
+      | f , z0 , xs =>
+          let f' :=
+            fun arg_12__ arg_13__ arg_14__ =>
+              match arg_12__ , arg_13__ , arg_14__ with
+              | k , x , z => _GHC.Base.$!_ k (f x z)
+              end in
+          Foldable__BooleanFormula_foldl f' GHC.Base.id xs z0
       end.
 
 Local Definition Foldable__BooleanFormula_product : forall {a},
@@ -232,11 +233,10 @@ Local Definition Foldable__BooleanFormula_elem : forall {a},
                                                    forall `{GHC.Base.Eq_ a}, a -> BooleanFormula a -> bool :=
   fun {a} `{GHC.Base.Eq_ a} =>
     Coq.Program.Basics.compose (fun arg_69__ =>
-                                 match arg_69__ with
-                                   | p => Coq.Program.Basics.compose Data.Monoid.getAny
-                                                                     (Foldable__BooleanFormula_foldMap
-                                                                     (Coq.Program.Basics.compose Data.Monoid.Mk_Any p))
-                                 end) _GHC.Base.==_.
+                                 let 'p := arg_69__ in
+                                 Coq.Program.Basics.compose Data.Monoid.getAny (Foldable__BooleanFormula_foldMap
+                                                            (Coq.Program.Basics.compose Data.Monoid.Mk_Any p)))
+                               _GHC.Base.==_.
 
 Local Definition Foldable__BooleanFormula_foldr {a} {b}
     : (a -> b -> b) -> b -> BooleanFormula a -> b :=
@@ -250,24 +250,24 @@ Local Definition Foldable__BooleanFormula_toList : forall {a},
                                                      BooleanFormula a -> list a :=
   fun {a} =>
     fun arg_54__ =>
-      match arg_54__ with
-        | t => GHC.Base.build (fun arg_55__ arg_56__ =>
-                                match arg_55__ , arg_56__ with
-                                  | c , n => Foldable__BooleanFormula_foldr c n t
-                                end)
-      end.
+      let 't := arg_54__ in
+      GHC.Base.build (fun arg_55__ arg_56__ =>
+                       match arg_55__ , arg_56__ with
+                       | c , n => Foldable__BooleanFormula_foldr c n t
+                       end).
 
 Local Definition Foldable__BooleanFormula_foldl' : forall {b} {a},
                                                      (b -> a -> b) -> b -> BooleanFormula a -> b :=
   fun {b} {a} =>
     fun arg_24__ arg_25__ arg_26__ =>
       match arg_24__ , arg_25__ , arg_26__ with
-        | f , z0 , xs => let f' :=
-                           fun arg_27__ arg_28__ arg_29__ =>
-                             match arg_27__ , arg_28__ , arg_29__ with
-                               | x , k , z => _GHC.Base.$!_ k (f z x)
-                             end in
-                         Foldable__BooleanFormula_foldr f' GHC.Base.id xs z0
+      | f , z0 , xs =>
+          let f' :=
+            fun arg_27__ arg_28__ arg_29__ =>
+              match arg_27__ , arg_28__ , arg_29__ with
+              | x , k , z => _GHC.Base.$!_ k (f z x)
+              end in
+          Foldable__BooleanFormula_foldr f' GHC.Base.id xs z0
       end.
 
 Local Definition Foldable__BooleanFormula_length : forall {a},
@@ -275,8 +275,8 @@ Local Definition Foldable__BooleanFormula_length : forall {a},
   fun {a} =>
     Foldable__BooleanFormula_foldl' (fun arg_64__ arg_65__ =>
                                       match arg_64__ , arg_65__ with
-                                        | c , _ => _GHC.Num.+_ c (GHC.Num.fromInteger 1)
-                                      end) (GHC.Num.fromInteger 0).
+                                      | c , _ => _GHC.Num.+_ c #1
+                                      end) #0.
 
 Program Instance Foldable__BooleanFormula : Data.Foldable.Foldable
                                             BooleanFormula := fun _ k =>
@@ -333,11 +333,11 @@ Local Definition Eq___BooleanFormula_op_zeze__ {inst_a} `{GHC.Base.Eq_ inst_a}
     : BooleanFormula inst_a -> BooleanFormula inst_a -> bool :=
   fun arg_0__ arg_1__ =>
     match arg_0__ , arg_1__ with
-      | Var a1 , Var b1 => ((a1 GHC.Base.== b1))
-      | And a1 , And b1 => ((a1 GHC.Base.== b1))
-      | Or a1 , Or b1 => ((a1 GHC.Base.== b1))
-      | Parens a1 , Parens b1 => ((a1 GHC.Base.== b1))
-      | _ , _ => false
+    | Var a1 , Var b1 => ((a1 GHC.Base.== b1))
+    | And a1 , And b1 => ((a1 GHC.Base.== b1))
+    | Or a1 , Or b1 => ((a1 GHC.Base.== b1))
+    | Parens a1 , Parens b1 => ((a1 GHC.Base.== b1))
+    | _ , _ => false
     end.
 
 Local Definition Eq___BooleanFormula_op_zsze__ {inst_a} `{GHC.Base.Eq_ inst_a}
@@ -353,29 +353,29 @@ Admit Obligations.
 Definition eval {a} : (a -> bool) -> BooleanFormula a -> bool :=
   fix eval arg_0__ arg_1__
         := match arg_0__ , arg_1__ with
-             | f , Var x => f x
-             | f , And xs => Data.Foldable.all (eval f GHC.Base.∘ SrcLoc.unLoc) xs
-             | f , Or xs => Data.Foldable.any (eval f GHC.Base.∘ SrcLoc.unLoc) xs
-             | f , Parens x => eval f (SrcLoc.unLoc x)
+           | f , Var x => f x
+           | f , And xs => Data.Foldable.all (eval f GHC.Base.∘ SrcLoc.unLoc) xs
+           | f , Or xs => Data.Foldable.any (eval f GHC.Base.∘ SrcLoc.unLoc) xs
+           | f , Parens x => eval f (SrcLoc.unLoc x)
            end.
 
 Definition impliesAtom {a} `{GHC.Base.Eq_ a} : BooleanFormula a -> a -> bool :=
   fix impliesAtom arg_0__ arg_1__
         := match arg_0__ , arg_1__ with
-             | Var x , y => x GHC.Base.== y
-             | And xs , y => Data.Foldable.any (fun x => impliesAtom (SrcLoc.unLoc x) y) xs
-             | Or xs , y => Data.Foldable.all (fun x => impliesAtom (SrcLoc.unLoc x) y) xs
-             | Parens x , y => impliesAtom (SrcLoc.unLoc x) y
+           | Var x , y => x GHC.Base.== y
+           | And xs , y => Data.Foldable.any (fun x => impliesAtom (SrcLoc.unLoc x) y) xs
+           | Or xs , y => Data.Foldable.all (fun x => impliesAtom (SrcLoc.unLoc x) y) xs
+           | Parens x , y => impliesAtom (SrcLoc.unLoc x) y
            end.
 
 Definition implies {a} `{GHC.Base.Eq_ a} : BooleanFormula a -> BooleanFormula
                                            a -> bool :=
   fix implies arg_0__ arg_1__
         := match arg_0__ , arg_1__ with
-             | x , Var y => impliesAtom x y
-             | x , And ys => Data.Foldable.all (implies x GHC.Base.∘ SrcLoc.unLoc) ys
-             | x , Or ys => Data.Foldable.any (implies x GHC.Base.∘ SrcLoc.unLoc) ys
-             | x , Parens y => implies x (SrcLoc.unLoc y)
+           | x , Var y => impliesAtom x y
+           | x , And ys => Data.Foldable.all (implies x GHC.Base.∘ SrcLoc.unLoc) ys
+           | x , Or ys => Data.Foldable.any (implies x GHC.Base.∘ SrcLoc.unLoc) ys
+           | x , Parens y => implies x (SrcLoc.unLoc y)
            end.
 
 Definition isFalse {a} : BooleanFormula a -> bool :=
@@ -392,15 +392,15 @@ Definition mkAnd {a} `{GHC.Base.Eq_ a} : list (LBooleanFormula
   let mkAnd' :=
     fun arg_0__ =>
       match arg_0__ with
-        | cons x nil => SrcLoc.unLoc x
-        | xs => And xs
+      | cons x nil => SrcLoc.unLoc x
+      | xs => And xs
       end in
   let fromAnd {a} : LBooleanFormula a -> option (list (LBooleanFormula a)) :=
     fun arg_4__ =>
       match arg_4__ with
-        | SrcLoc.L _ (And xs) => Some xs
-        | SrcLoc.L _ (Or nil) => None
-        | x => Some (cons x nil)
+      | SrcLoc.L _ (And xs) => Some xs
+      | SrcLoc.L _ (Or nil) => None
+      | x => Some (cons x nil)
       end in
   Data.Maybe.maybe mkFalse (mkAnd' GHC.Base.∘ Data.OldList.nub) GHC.Base.∘
   MonadUtils.concatMapM fromAnd.
@@ -413,15 +413,15 @@ Definition mkOr {a} `{GHC.Base.Eq_ a} : list (LBooleanFormula
   let mkOr' :=
     fun arg_0__ =>
       match arg_0__ with
-        | cons x nil => SrcLoc.unLoc x
-        | xs => Or xs
+      | cons x nil => SrcLoc.unLoc x
+      | xs => Or xs
       end in
   let fromOr :=
     fun arg_4__ =>
       match arg_4__ with
-        | SrcLoc.L _ (Or xs) => Some xs
-        | SrcLoc.L _ (And nil) => None
-        | x => Some (cons x nil)
+      | SrcLoc.L _ (Or xs) => Some xs
+      | SrcLoc.L _ (And nil) => None
+      | x => Some (cons x nil)
       end in
   Data.Maybe.maybe mkTrue (mkOr' GHC.Base.∘ Data.OldList.nub) GHC.Base.∘
   MonadUtils.concatMapM fromOr.
@@ -433,19 +433,16 @@ Definition simplify {a} `{GHC.Base.Eq_ a} : (a -> option bool) -> BooleanFormula
                                             a -> BooleanFormula a :=
   fix simplify arg_0__ arg_1__
         := match arg_0__ , arg_1__ with
-             | f , Var a => match f a with
-                              | None => Var a
-                              | Some b => mkBool b
-                            end
-             | f , And xs => mkAnd (GHC.Base.map (fun arg_7__ =>
-                                                   match arg_7__ with
-                                                     | SrcLoc.L l x => SrcLoc.L l (simplify f x)
-                                                   end) xs)
-             | f , Or xs => mkOr (GHC.Base.map (fun arg_11__ =>
-                                                 match arg_11__ with
-                                                   | SrcLoc.L l x => SrcLoc.L l (simplify f x)
-                                                 end) xs)
-             | f , Parens x => simplify f (SrcLoc.unLoc x)
+           | f , Var a => match f a with | None => Var a | Some b => mkBool b end
+           | f , And xs =>
+               mkAnd (GHC.Base.map (fun arg_7__ =>
+                                     let 'SrcLoc.L l x := arg_7__ in
+                                     SrcLoc.L l (simplify f x)) xs)
+           | f , Or xs =>
+               mkOr (GHC.Base.map (fun arg_11__ =>
+                                    let 'SrcLoc.L l x := arg_11__ in
+                                    SrcLoc.L l (simplify f x)) xs)
+           | f , Parens x => simplify f (SrcLoc.unLoc x)
            end.
 
 Definition isUnsatisfied {a} `{GHC.Base.Eq_ a} : (a -> bool) -> BooleanFormula
@@ -468,6 +465,6 @@ Definition mkVar {a} : a -> BooleanFormula a :=
      Data.Traversable.Traversable GHC.Base.Applicative GHC.Base.Eq_ GHC.Base.Functor
      GHC.Base.Monad GHC.Base.Monoid GHC.Base.Synonym GHC.Base.build GHC.Base.const
      GHC.Base.flip GHC.Base.id GHC.Base.map GHC.Base.op_z2218U__ GHC.Base.op_zdzn__
-     GHC.Base.op_zeze__ GHC.Num.Int GHC.Num.Num GHC.Num.op_zp__ MonadUtils.concatMapM
-     SrcLoc.L SrcLoc.Located SrcLoc.unLoc
+     GHC.Base.op_zeze__ GHC.Num.Int GHC.Num.Num GHC.Num.fromInteger GHC.Num.op_zp__
+     MonadUtils.concatMapM SrcLoc.L SrcLoc.Located SrcLoc.unLoc
 *)

@@ -108,7 +108,7 @@ Definition bin : Prefix -> Mask -> IntSet -> IntSet -> IntSet :=
     end.
 
 Definition bitmapOfSuffix : GHC.Num.Int -> BitMap :=
-  fun s => Utils.Containers.Internal.BitUtil.shiftLL (GHC.Num.fromInteger 1) s.
+  fun s => Utils.Containers.Internal.BitUtil.shiftLL #1 s.
 
 Definition branchMask : Prefix -> Prefix -> Mask :=
   fun p1 p2 =>
@@ -165,7 +165,7 @@ Program Definition foldlBits {a}
                               Coq.NArith.BinNat.N.to_nat arg_0__) _ (fun arg_0__ arg_1__ go =>
                               match arg_0__ , arg_1__ with
                               | num_2__ , acc =>
-                                  if Bool.Sumbool.sumbool_of_bool (num_2__ GHC.Base.== GHC.Num.fromInteger 0)
+                                  if Bool.Sumbool.sumbool_of_bool (num_2__ GHC.Base.== #0)
                                   then acc
                                   else match arg_0__ , arg_1__ with
                                        | bm , acc =>
@@ -187,10 +187,7 @@ Definition foldl {a} : (a -> Key -> a) -> a -> IntSet -> a :=
                  end in
     fun t =>
       match t with
-      | Bin _ m l r =>
-          if m GHC.Base.< GHC.Num.fromInteger 0 : bool
-          then go (go z r) l
-          else go (go z l) r
+      | Bin _ m l r => if m GHC.Base.< #0 : bool then go (go z r) l else go (go z l) r
       | _ => go z t
       end.
 
@@ -208,7 +205,7 @@ Program Definition foldl'Bits {a}
                               Coq.NArith.BinNat.N.to_nat arg_0__) _ (fun arg_0__ arg_1__ go =>
                               match arg_0__ , arg_1__ with
                               | num_2__ , acc =>
-                                  if Bool.Sumbool.sumbool_of_bool (num_2__ GHC.Base.== GHC.Num.fromInteger 0)
+                                  if Bool.Sumbool.sumbool_of_bool (num_2__ GHC.Base.== #0)
                                   then acc
                                   else match arg_0__ , arg_1__ with
                                        | bm , acc =>
@@ -230,10 +227,7 @@ Definition foldl' {a} : (a -> Key -> a) -> a -> IntSet -> a :=
                  end in
     fun t =>
       match t with
-      | Bin _ m l r =>
-          if m GHC.Base.< GHC.Num.fromInteger 0 : bool
-          then go (go z r) l
-          else go (go z l) r
+      | Bin _ m l r => if m GHC.Base.< #0 : bool then go (go z r) l else go (go z l) r
       | _ => go z t
       end.
 
@@ -251,7 +245,7 @@ Definition nomatch : GHC.Num.Int -> Prefix -> Mask -> bool :=
 Definition maskW : Nat -> Nat -> Prefix :=
   fun i m =>
     Coq.ZArith.BinInt.Z.of_N (i Data.Bits..&.(**) (Data.Bits.xor
-                             (Data.Bits.complement (m GHC.Num.- GHC.Num.fromInteger 1)) m)).
+                             (Data.Bits.complement (m GHC.Num.- #1)) m)).
 
 Definition natFromInt : GHC.Num.Int -> Nat :=
   fun i => GHC.Real.fromIntegral i.
@@ -292,39 +286,26 @@ Definition prefixOf : GHC.Num.Int -> Prefix :=
 
 Definition revNat : Nat -> Nat :=
   fun x1 =>
-    let 'x2 := ((Utils.Containers.Internal.BitUtil.shiftRL x1 (GHC.Num.fromInteger
-                                                           1)) Data.Bits..&.(**) GHC.Num.fromInteger
-                 6148914691236517205) Data.Bits..|.(**)
+    let 'x2 := ((Utils.Containers.Internal.BitUtil.shiftRL x1 #1) Data.Bits..&.(**)
+                 #6148914691236517205) Data.Bits..|.(**)
                  (Utils.Containers.Internal.BitUtil.shiftLL (x1 Data.Bits..&.(**)
-                                                            GHC.Num.fromInteger 6148914691236517205)
-                                                            (GHC.Num.fromInteger 1)) in
-    let 'x3 := ((Utils.Containers.Internal.BitUtil.shiftRL x2 (GHC.Num.fromInteger
-                                                           2)) Data.Bits..&.(**) GHC.Num.fromInteger
-                 3689348814741910323) Data.Bits..|.(**)
+                                                            #6148914691236517205) #1) in
+    let 'x3 := ((Utils.Containers.Internal.BitUtil.shiftRL x2 #2) Data.Bits..&.(**)
+                 #3689348814741910323) Data.Bits..|.(**)
                  (Utils.Containers.Internal.BitUtil.shiftLL (x2 Data.Bits..&.(**)
-                                                            GHC.Num.fromInteger 3689348814741910323)
-                                                            (GHC.Num.fromInteger 2)) in
-    let 'x4 := ((Utils.Containers.Internal.BitUtil.shiftRL x3 (GHC.Num.fromInteger
-                                                           4)) Data.Bits..&.(**) GHC.Num.fromInteger
-                 1085102592571150095) Data.Bits..|.(**)
+                                                            #3689348814741910323) #2) in
+    let 'x4 := ((Utils.Containers.Internal.BitUtil.shiftRL x3 #4) Data.Bits..&.(**)
+                 #1085102592571150095) Data.Bits..|.(**)
                  (Utils.Containers.Internal.BitUtil.shiftLL (x3 Data.Bits..&.(**)
-                                                            GHC.Num.fromInteger 1085102592571150095)
-                                                            (GHC.Num.fromInteger 4)) in
-    let 'x5 := ((Utils.Containers.Internal.BitUtil.shiftRL x4 (GHC.Num.fromInteger
-                                                           8)) Data.Bits..&.(**) GHC.Num.fromInteger 71777214294589695)
-                 Data.Bits..|.(**) (Utils.Containers.Internal.BitUtil.shiftLL (x4
-                                                                              Data.Bits..&.(**) GHC.Num.fromInteger
-                                                                              71777214294589695) (GHC.Num.fromInteger
-                                                                              8)) in
-    let 'x6 := ((Utils.Containers.Internal.BitUtil.shiftRL x5 (GHC.Num.fromInteger
-                                                           16)) Data.Bits..&.(**) GHC.Num.fromInteger 281470681808895)
-                 Data.Bits..|.(**) (Utils.Containers.Internal.BitUtil.shiftLL (x5
-                                                                              Data.Bits..&.(**) GHC.Num.fromInteger
-                                                                              281470681808895) (GHC.Num.fromInteger
-                                                                              16)) in
-    (Utils.Containers.Internal.BitUtil.shiftRL x6 (GHC.Num.fromInteger 32))
-    Data.Bits..|.(**) (Utils.Containers.Internal.BitUtil.shiftLL x6
-                                                                 (GHC.Num.fromInteger 32)).
+                                                            #1085102592571150095) #4) in
+    let 'x5 := ((Utils.Containers.Internal.BitUtil.shiftRL x4 #8) Data.Bits..&.(**)
+                 #71777214294589695) Data.Bits..|.(**) (Utils.Containers.Internal.BitUtil.shiftLL
+                 (x4 Data.Bits..&.(**) #71777214294589695) #8) in
+    let 'x6 := ((Utils.Containers.Internal.BitUtil.shiftRL x5 #16) Data.Bits..&.(**)
+                 #281470681808895) Data.Bits..|.(**) (Utils.Containers.Internal.BitUtil.shiftLL
+                 (x5 Data.Bits..&.(**) #281470681808895) #16) in
+    (Utils.Containers.Internal.BitUtil.shiftRL x6 #32) Data.Bits..|.(**)
+    (Utils.Containers.Internal.BitUtil.shiftLL x6 #32).
 
 Definition revNatSafe n :=
   Coq.NArith.BinNat.N.modulo (revNat n) (Coq.NArith.BinNat.N.pow 2 64).
@@ -337,15 +318,14 @@ Program Definition foldrBits {a}
                               Coq.NArith.BinNat.N.to_nat arg_0__) _ (fun arg_0__ arg_1__ go =>
                               match arg_0__ , arg_1__ with
                               | num_2__ , acc =>
-                                  if Bool.Sumbool.sumbool_of_bool (num_2__ GHC.Base.== GHC.Num.fromInteger 0)
+                                  if Bool.Sumbool.sumbool_of_bool (num_2__ GHC.Base.== #0)
                                   then acc
                                   else match arg_0__ , arg_1__ with
                                        | bm , acc =>
                                            let 'bitmask := Utils.Containers.Internal.BitUtil.lowestBitMask bm in
                                            let 'bi := indexOfTheOnlyBit bitmask in
-                                           go (Data.Bits.xor bm bitmask) ((f GHC.Base.$! ((prefix GHC.Num.+
-                                                                         (GHC.Num.fromInteger 64 GHC.Num.-
-                                                                         GHC.Num.fromInteger 1)) GHC.Num.- bi)) acc)
+                                           go (Data.Bits.xor bm bitmask) ((f GHC.Base.$! ((prefix GHC.Num.+ (#64
+                                                                         GHC.Num.- #1)) GHC.Num.- bi)) acc)
                                        end
                               end) in
             go (revNatSafe bitmap) z.
@@ -361,10 +341,7 @@ Definition foldr {b} : (Key -> b -> b) -> b -> IntSet -> b :=
                  end in
     fun t =>
       match t with
-      | Bin _ m l r =>
-          if m GHC.Base.< GHC.Num.fromInteger 0 : bool
-          then go (go z l) r
-          else go (go z r) l
+      | Bin _ m l r => if m GHC.Base.< #0 : bool then go (go z l) r else go (go z r) l
       | _ => go z t
       end.
 
@@ -422,15 +399,14 @@ Program Definition foldr'Bits {a}
                               Coq.NArith.BinNat.N.to_nat arg_0__) _ (fun arg_0__ arg_1__ go =>
                               match arg_0__ , arg_1__ with
                               | num_2__ , acc =>
-                                  if Bool.Sumbool.sumbool_of_bool (num_2__ GHC.Base.== GHC.Num.fromInteger 0)
+                                  if Bool.Sumbool.sumbool_of_bool (num_2__ GHC.Base.== #0)
                                   then acc
                                   else match arg_0__ , arg_1__ with
                                        | bm , acc =>
                                            let 'bitmask := Utils.Containers.Internal.BitUtil.lowestBitMask bm in
                                            let 'bi := indexOfTheOnlyBit bitmask in
-                                           go (Data.Bits.xor bm bitmask) ((f GHC.Base.$! ((prefix GHC.Num.+
-                                                                         (GHC.Num.fromInteger 64 GHC.Num.-
-                                                                         GHC.Num.fromInteger 1)) GHC.Num.- bi)) acc)
+                                           go (Data.Bits.xor bm bitmask) ((f GHC.Base.$! ((prefix GHC.Num.+ (#64
+                                                                         GHC.Num.- #1)) GHC.Num.- bi)) acc)
                                        end
                               end) in
             go (revNatSafe bitmap) z.
@@ -446,10 +422,7 @@ Definition foldr' {b} : (Key -> b -> b) -> b -> IntSet -> b :=
                  end in
     fun t =>
       match t with
-      | Bin _ m l r =>
-          if m GHC.Base.< GHC.Num.fromInteger 0 : bool
-          then go (go z l) r
-          else go (go z r) l
+      | Bin _ m l r => if m GHC.Base.< #0 : bool then go (go z l) r else go (go z r) l
       | _ => go z t
       end.
 
@@ -458,11 +431,10 @@ Definition size : IntSet -> GHC.Num.Int :=
             := match arg_0__ , arg_1__ with
                | acc , Bin _ _ l r => go (go acc l) r
                | acc , Tip _ bm =>
-                   acc GHC.Num.+ Utils.Containers.Internal.BitUtil.bitcount (GHC.Num.fromInteger 0)
-                   bm
+                   acc GHC.Num.+ Utils.Containers.Internal.BitUtil.bitcount #0 bm
                | acc , Nil => acc
                end in
-  go (GHC.Num.fromInteger 0).
+  go #0.
 
 Definition splitRoot : IntSet -> list IntSet :=
   fun arg_0__ =>
@@ -470,7 +442,7 @@ Definition splitRoot : IntSet -> list IntSet :=
     | Nil => nil
     | (Tip _ _ as x) => cons x nil
     | Bin _ m l r =>
-        if m GHC.Base.< GHC.Num.fromInteger 0 : bool
+        if m GHC.Base.< #0 : bool
         then cons r (cons l nil)
         else cons l (cons r nil)
     end.
@@ -488,7 +460,7 @@ Definition tip : Prefix -> BitMap -> IntSet :=
   fun arg_0__ arg_1__ =>
     match arg_0__ , arg_1__ with
     | _ , num_2__ =>
-        if num_2__ GHC.Base.== GHC.Num.fromInteger 0 : bool
+        if num_2__ GHC.Base.== #0 : bool
         then Nil
         else match arg_0__ , arg_1__ with
              | kx , bm => Tip kx bm
@@ -504,9 +476,7 @@ Definition filter : (Key -> bool) -> IntSet -> IntSet :=
                else bm in
            match t with
            | Bin p m l r => bin p m (filter predicate l) (filter predicate r)
-           | Tip kx bm =>
-               tip kx (foldl'Bits (GHC.Num.fromInteger 0) (bitPred kx) (GHC.Num.fromInteger 0)
-                      bm)
+           | Tip kx bm => tip kx (foldl'Bits #0 (bitPred kx) #0 bm)
            | Nil => Nil
            end.
 
@@ -524,8 +494,7 @@ Definition partition : (Key -> bool) -> IntSet -> (IntSet * IntSet)%type :=
                      let 'pair l1 l2 := go predicate l in
                      pair (bin p m l1 r1) (bin p m l2 r2)
                  | Tip kx bm =>
-                     let bm1 :=
-                       foldl'Bits (GHC.Num.fromInteger 0) (bitPred kx) (GHC.Num.fromInteger 0) bm in
+                     let bm1 := foldl'Bits #0 (bitPred kx) #0 bm in
                      pair (tip kx bm1) (tip kx (Data.Bits.xor bm bm1))
                  | Nil => (pair Nil Nil)
                  end in
@@ -569,8 +538,7 @@ Definition subsetCmp : IntSet -> IntSet -> comparison :=
                    then Gt
                    else if bm1 GHC.Base.== bm2 : bool
                         then Eq
-                        else if Data.Bits.xor bm1 (bm1 Data.Bits..&.(**) bm2) GHC.Base.==
-                                GHC.Num.fromInteger 0 : bool
+                        else if Data.Bits.xor bm1 (bm1 Data.Bits..&.(**) bm2) GHC.Base.== #0 : bool
                              then Lt
                              else Gt
                | (Tip kx _ as t1) , Bin p m l r =>
@@ -610,7 +578,7 @@ Definition isSubsetOf : IntSet -> IntSet -> bool :=
                | Bin _ _ _ _ , _ => false
                | Tip kx1 bm1 , Tip kx2 bm2 =>
                    andb (kx1 GHC.Base.== kx2) (Data.Bits.xor bm1 (bm1 Data.Bits..&.(**) bm2)
-                        GHC.Base.== GHC.Num.fromInteger 0)
+                        GHC.Base.== #0)
                | (Tip kx _ as t1) , Bin p m l r =>
                    if nomatch kx p m : bool
                    then false
@@ -656,7 +624,7 @@ Program Fixpoint disjoint (arg_0__ : IntSet) (arg_1__ : IntSet)
                                                 else disjointBM r1
                                        | Tip kx1 bm1 =>
                                            if Bool.Sumbool.sumbool_of_bool (kx1 GHC.Base.== kx2)
-                                           then (bm1 Data.Bits..&.(**) bm2) GHC.Base.== GHC.Num.fromInteger 0
+                                           then (bm1 Data.Bits..&.(**) bm2) GHC.Base.== #0
                                            else true
                                        | Nil => true
                                        end in
@@ -673,7 +641,7 @@ Program Fixpoint disjoint (arg_0__ : IntSet) (arg_1__ : IntSet)
                                                 else disjointBM r2
                                        | Tip kx2 bm2 =>
                                            if Bool.Sumbool.sumbool_of_bool (kx1 GHC.Base.== kx2)
-                                           then (bm1 Data.Bits..&.(**) bm2) GHC.Base.== GHC.Num.fromInteger 0
+                                           then (bm1 Data.Bits..&.(**) bm2) GHC.Base.== #0
                                            else true
                                        | Nil => true
                                        end in
@@ -761,8 +729,7 @@ Definition lookupGE : Key -> IntSet -> option Key :=
                      let maskGE := (GHC.Num.negate (bitmapOf x)) Data.Bits..&.(**) bm in
                      if prefixOf x GHC.Base.< kx : bool
                      then Some GHC.Base.$ (kx GHC.Num.+ lowestBitSet bm)
-                     else if andb (prefixOf x GHC.Base.== kx) (maskGE GHC.Base./= GHC.Num.fromInteger
-                                  0) : bool
+                     else if andb (prefixOf x GHC.Base.== kx) (maskGE GHC.Base./= #0) : bool
                           then Some GHC.Base.$ (kx GHC.Num.+ lowestBitSet maskGE)
                           else unsafeFindMin def
                  | def , Nil => unsafeFindMin def
@@ -770,8 +737,8 @@ Definition lookupGE : Key -> IntSet -> option Key :=
     let j_12__ := go Nil t in
     match t with
     | Bin _ m l r =>
-        if m GHC.Base.< GHC.Num.fromInteger 0 : bool
-        then if x GHC.Base.>= GHC.Num.fromInteger 0 : bool
+        if m GHC.Base.< #0 : bool
+        then if x GHC.Base.>= #0 : bool
              then go Nil l
              else go l r
         else j_12__
@@ -792,13 +759,11 @@ Definition lookupGT : Key -> IntSet -> option Key :=
                           else go def r
                  | def , Tip kx bm =>
                      let maskGT :=
-                       (GHC.Num.negate (Utils.Containers.Internal.BitUtil.shiftLL (bitmapOf x)
-                                                                                  (GHC.Num.fromInteger 1)))
+                       (GHC.Num.negate (Utils.Containers.Internal.BitUtil.shiftLL (bitmapOf x) #1))
                        Data.Bits..&.(**) bm in
                      if prefixOf x GHC.Base.< kx : bool
                      then Some GHC.Base.$ (kx GHC.Num.+ lowestBitSet bm)
-                     else if andb (prefixOf x GHC.Base.== kx) (maskGT GHC.Base./= GHC.Num.fromInteger
-                                  0) : bool
+                     else if andb (prefixOf x GHC.Base.== kx) (maskGT GHC.Base./= #0) : bool
                           then Some GHC.Base.$ (kx GHC.Num.+ lowestBitSet maskGT)
                           else unsafeFindMin def
                  | def , Nil => unsafeFindMin def
@@ -806,8 +771,8 @@ Definition lookupGT : Key -> IntSet -> option Key :=
     let j_12__ := go Nil t in
     match t with
     | Bin _ m l r =>
-        if m GHC.Base.< GHC.Num.fromInteger 0 : bool
-        then if x GHC.Base.>= GHC.Num.fromInteger 0 : bool
+        if m GHC.Base.< #0 : bool
+        then if x GHC.Base.>= #0 : bool
              then go Nil l
              else go l r
         else j_12__
@@ -828,13 +793,11 @@ Definition lookupLE : Key -> IntSet -> option Key :=
                           else go l r
                  | def , Tip kx bm =>
                      let maskLE :=
-                       ((Utils.Containers.Internal.BitUtil.shiftLL (bitmapOf x) (GHC.Num.fromInteger
-                                                                   1)) GHC.Num.- GHC.Num.fromInteger 1)
+                       ((Utils.Containers.Internal.BitUtil.shiftLL (bitmapOf x) #1) GHC.Num.- #1)
                        Data.Bits..&.(**) bm in
                      if prefixOf x GHC.Base.> kx : bool
                      then Some GHC.Base.$ (kx GHC.Num.+ highestBitSet bm)
-                     else if andb (prefixOf x GHC.Base.== kx) (maskLE GHC.Base./= GHC.Num.fromInteger
-                                  0) : bool
+                     else if andb (prefixOf x GHC.Base.== kx) (maskLE GHC.Base./= #0) : bool
                           then Some GHC.Base.$ (kx GHC.Num.+ highestBitSet maskLE)
                           else unsafeFindMax def
                  | def , Nil => unsafeFindMax def
@@ -842,8 +805,8 @@ Definition lookupLE : Key -> IntSet -> option Key :=
     let j_12__ := go Nil t in
     match t with
     | Bin _ m l r =>
-        if m GHC.Base.< GHC.Num.fromInteger 0 : bool
-        then if x GHC.Base.>= GHC.Num.fromInteger 0 : bool
+        if m GHC.Base.< #0 : bool
+        then if x GHC.Base.>= #0 : bool
              then go r l
              else go Nil r
         else j_12__
@@ -863,12 +826,10 @@ Definition lookupLT : Key -> IntSet -> option Key :=
                           then go def l
                           else go l r
                  | def , Tip kx bm =>
-                     let maskLT :=
-                       (bitmapOf x GHC.Num.- GHC.Num.fromInteger 1) Data.Bits..&.(**) bm in
+                     let maskLT := (bitmapOf x GHC.Num.- #1) Data.Bits..&.(**) bm in
                      if prefixOf x GHC.Base.> kx : bool
                      then Some GHC.Base.$ (kx GHC.Num.+ highestBitSet bm)
-                     else if andb (prefixOf x GHC.Base.== kx) (maskLT GHC.Base./= GHC.Num.fromInteger
-                                  0) : bool
+                     else if andb (prefixOf x GHC.Base.== kx) (maskLT GHC.Base./= #0) : bool
                           then Some GHC.Base.$ (kx GHC.Num.+ highestBitSet maskLT)
                           else unsafeFindMax def
                  | def , Nil => unsafeFindMax def
@@ -876,8 +837,8 @@ Definition lookupLT : Key -> IntSet -> option Key :=
     let j_12__ := go Nil t in
     match t with
     | Bin _ m l r =>
-        if m GHC.Base.< GHC.Num.fromInteger 0 : bool
-        then if x GHC.Base.>= GHC.Num.fromInteger 0 : bool
+        if m GHC.Base.< #0 : bool
+        then if x GHC.Base.>= #0 : bool
              then go r l
              else go Nil r
         else j_12__
@@ -896,7 +857,7 @@ Definition member : Key -> IntSet -> bool :=
                           else go r
                  | Tip y bm =>
                      andb (prefixOf x GHC.Base.== y) ((bitmapOf x Data.Bits..&.(**) bm) GHC.Base./=
-                          GHC.Num.fromInteger 0)
+                          #0)
                  | Nil => false
                  end in
     go.
@@ -919,7 +880,7 @@ Definition split : Key -> IntSet -> (IntSet * IntSet)%type :=
                           then (pair Nil t')
                           else (pair t' Nil)
                  | x' , (Tip kx' bm as t') =>
-                     let lowerBitmap := bitmapOf x' GHC.Num.- GHC.Num.fromInteger 1 in
+                     let lowerBitmap := bitmapOf x' GHC.Num.- #1 in
                      let higherBitmap := Data.Bits.complement (lowerBitmap GHC.Num.+ bitmapOf x') in
                      if kx' GHC.Base.> x' : bool
                      then (pair Nil t')
@@ -933,8 +894,8 @@ Definition split : Key -> IntSet -> (IntSet * IntSet)%type :=
     let j_21__ := let 'pair lt gt := go x t in pair lt gt in
     match t with
     | Bin _ m l r =>
-        if m GHC.Base.< GHC.Num.fromInteger 0 : bool
-        then if x GHC.Base.>= GHC.Num.fromInteger 0 : bool
+        if m GHC.Base.< #0 : bool
+        then if x GHC.Base.>= #0 : bool
              then let 'pair lt gt := go x l in
                   let 'lt' := union lt r in
                   pair lt' gt
@@ -961,15 +922,14 @@ Definition splitMember : Key -> IntSet -> (IntSet * bool * IntSet)%type :=
                           else pair (pair t' false) Nil
                  | x' , (Tip kx' bm as t') =>
                      let bitmapOfx' := bitmapOf x' in
-                     let lowerBitmap := bitmapOfx' GHC.Num.- GHC.Num.fromInteger 1 in
+                     let lowerBitmap := bitmapOfx' GHC.Num.- #1 in
                      let higherBitmap := Data.Bits.complement (lowerBitmap GHC.Num.+ bitmapOfx') in
                      if kx' GHC.Base.> x' : bool
                      then pair (pair Nil false) t'
                      else if kx' GHC.Base.< prefixOf x' : bool
                           then pair (pair t' false) Nil
                           else let 'gt := tip kx' (bm Data.Bits..&.(**) higherBitmap) in
-                               let 'found := (bm Data.Bits..&.(**) bitmapOfx') GHC.Base./= GHC.Num.fromInteger
-                                               0 in
+                               let 'found := (bm Data.Bits..&.(**) bitmapOfx') GHC.Base./= #0 in
                                let 'lt := tip kx' (bm Data.Bits..&.(**) lowerBitmap) in
                                pair (pair lt found) gt
                  | _ , Nil => pair (pair Nil false) Nil
@@ -977,8 +937,8 @@ Definition splitMember : Key -> IntSet -> (IntSet * bool * IntSet)%type :=
     let j_22__ := go x t in
     match t with
     | Bin _ m l r =>
-        if m GHC.Base.< GHC.Num.fromInteger 0 : bool
-        then if x GHC.Base.>= GHC.Num.fromInteger 0 : bool
+        if m GHC.Base.< #0 : bool
+        then if x GHC.Base.>= #0 : bool
              then let 'pair (pair lt fnd) gt := go x l in
                   let 'lt' := union lt r in
                   pair (pair lt' fnd) gt
@@ -1137,8 +1097,9 @@ End Notations.
      GHC.Base.Ord GHC.Base.String GHC.Base.compare GHC.Base.flip GHC.Base.map
      GHC.Base.op_z2218U__ GHC.Base.op_zd__ GHC.Base.op_zdzn__ GHC.Base.op_zeze__
      GHC.Base.op_zg__ GHC.Base.op_zgze__ GHC.Base.op_zl__ GHC.Base.op_zsze__
-     GHC.Num.Int GHC.Num.Word GHC.Num.negate GHC.Num.op_zm__ GHC.Num.op_zp__
-     GHC.Real.fromIntegral GHC.Wf.wfFix2 Utils.Containers.Internal.BitUtil.bitcount
+     GHC.Num.Int GHC.Num.Word GHC.Num.fromInteger GHC.Num.negate GHC.Num.op_zm__
+     GHC.Num.op_zp__ GHC.Real.fromIntegral GHC.Wf.wfFix2
+     Utils.Containers.Internal.BitUtil.bitcount
      Utils.Containers.Internal.BitUtil.highestBitMask
      Utils.Containers.Internal.BitUtil.lowestBitMask
      Utils.Containers.Internal.BitUtil.shiftLL

@@ -197,7 +197,7 @@ Definition union {a} `{(GHC.Base.Eq_ a)} : list a -> list a -> list a :=
   unionBy _GHC.Base.==_.
 
 Definition emptySB {a} : SnocBuilder a :=
-  Mk_SnocBuilder (GHC.Num.fromInteger 0) nil nil.
+  Mk_SnocBuilder #0 nil nil.
 
 Definition find {a} : (a -> bool) -> list a -> option a :=
   fun p => Data.Maybe.listToMaybe GHC.Base.∘ GHC.List.filter p.
@@ -207,19 +207,19 @@ Definition genericDrop {i} {a} `{(GHC.Real.Integral i)} : i -> list a -> list
   fix genericDrop arg_0__ arg_1__
         := match arg_0__ , arg_1__ with
            | n , xs =>
-               if n GHC.Base.<= GHC.Num.fromInteger 0 : bool
+               if n GHC.Base.<= #0 : bool
                then xs
                else match arg_0__ , arg_1__ with
                     | _ , nil => nil
-                    | n , cons _ xs => genericDrop (n GHC.Num.- GHC.Num.fromInteger 1) xs
+                    | n , cons _ xs => genericDrop (n GHC.Num.- #1) xs
                     end
            end.
 
 Definition genericLength {i} {a} `{(GHC.Num.Num i)} : list a -> i :=
   fix genericLength arg_0__
         := match arg_0__ with
-           | nil => GHC.Num.fromInteger 0
-           | cons _ l => GHC.Num.fromInteger 1 GHC.Num.+ genericLength l
+           | nil => #0
+           | cons _ l => #1 GHC.Num.+ genericLength l
            end.
 
 Definition genericSplitAt {i} {a} `{(GHC.Real.Integral i)} : i -> list
@@ -227,12 +227,12 @@ Definition genericSplitAt {i} {a} `{(GHC.Real.Integral i)} : i -> list
   fix genericSplitAt arg_0__ arg_1__
         := match arg_0__ , arg_1__ with
            | n , xs =>
-               if n GHC.Base.<= GHC.Num.fromInteger 0 : bool
+               if n GHC.Base.<= #0 : bool
                then pair nil xs
                else match arg_0__ , arg_1__ with
                     | _ , nil => pair nil nil
                     | n , cons x xs =>
-                        let 'pair xs' xs'' := genericSplitAt (n GHC.Num.- GHC.Num.fromInteger 1) xs in
+                        let 'pair xs' xs'' := genericSplitAt (n GHC.Num.- #1) xs in
                         pair (cons x xs') xs''
                     end
            end.
@@ -242,11 +242,11 @@ Definition genericTake {i} {a} `{(GHC.Real.Integral i)} : i -> list a -> list
   fix genericTake arg_0__ arg_1__
         := match arg_0__ , arg_1__ with
            | n , _ =>
-               if n GHC.Base.<= GHC.Num.fromInteger 0 : bool
+               if n GHC.Base.<= #0 : bool
                then nil
                else match arg_0__ , arg_1__ with
                     | _ , nil => nil
-                    | n , cons x xs => cons x (genericTake (n GHC.Num.- GHC.Num.fromInteger 1) xs)
+                    | n , cons x xs => cons x (genericTake (n GHC.Num.- #1) xs)
                     end
            end.
 
@@ -355,10 +355,9 @@ Definition strictGenericLength {i} {b} `{(GHC.Num.Num i)} : list b -> i :=
     let fix gl arg_0__ arg_1__
               := match arg_0__ , arg_1__ with
                  | nil , a => a
-                 | cons _ xs , a =>
-                     let a' := a GHC.Num.+ GHC.Num.fromInteger 1 in GHC.Prim.seq a' (gl xs a')
+                 | cons _ xs , a => let a' := a GHC.Num.+ #1 in GHC.Prim.seq a' (gl xs a')
                  end in
-    gl l (GHC.Num.fromInteger 0).
+    gl l #0.
 
 Definition stripPrefix {a} `{GHC.Base.Eq_ a} : list a -> list a -> option (list
                                                                           a) :=
@@ -528,6 +527,7 @@ End Notations.
      GHC.Base.map GHC.Base.oneShot GHC.Base.op_z2218U__ GHC.Base.op_zd__
      GHC.Base.op_zeze__ GHC.Base.op_zgzgze__ GHC.Base.op_zlze__ GHC.Base.return_
      GHC.List.any GHC.List.filter GHC.List.null GHC.List.reverse GHC.Num.Num
-     GHC.Num.Word GHC.Num.op_zm__ GHC.Num.op_zp__ GHC.Prim.seq GHC.Real.Integral
-     GHC.Tuple.pair4 GHC.Tuple.pair5 GHC.Tuple.pair6 GHC.Tuple.pair7
+     GHC.Num.Word GHC.Num.fromInteger GHC.Num.op_zm__ GHC.Num.op_zp__ GHC.Prim.seq
+     GHC.Real.Integral GHC.Tuple.pair4 GHC.Tuple.pair5 GHC.Tuple.pair6
+     GHC.Tuple.pair7
 *)

@@ -238,8 +238,8 @@ Local Definition Foldable__option_length : forall {a},
   fun {a} =>
     Foldable__option_foldl' (fun arg_0__ arg_1__ =>
                               match arg_0__ , arg_1__ with
-                              | c , _ => c GHC.Num.+ GHC.Num.fromInteger 1
-                              end) (GHC.Num.fromInteger 0).
+                              | c , _ => c GHC.Num.+ #1
+                              end) #0.
 
 Local Definition Foldable__option_foldMap : forall {m} {a},
                                               forall `{GHC.Base.Monoid m}, (a -> m) -> option a -> m :=
@@ -375,8 +375,8 @@ Local Definition Foldable__Either_length {inst_a} : forall {a},
   fun {a} =>
     fun arg_0__ =>
       match arg_0__ with
-      | Data.Either.Left _ => GHC.Num.fromInteger 0
-      | Data.Either.Right _ => GHC.Num.fromInteger 1
+      | Data.Either.Left _ => #0
+      | Data.Either.Right _ => #1
       end.
 
 Local Definition Foldable__Either_null {inst_a} : forall {a},
@@ -440,8 +440,8 @@ Local Definition Foldable__pair_type_length {inst_a} : forall {a},
   fun {a} =>
     Foldable__pair_type_foldl' (fun arg_0__ arg_1__ =>
                                  match arg_0__ , arg_1__ with
-                                 | c , _ => c GHC.Num.+ GHC.Num.fromInteger 1
-                                 end) (GHC.Num.fromInteger 0).
+                                 | c , _ => c GHC.Num.+ #1
+                                 end) #0.
 
 (* Skipping instance Foldable__Array *)
 
@@ -493,7 +493,7 @@ Local Definition Foldable__Proxy_foldl' : forall {b} {a},
 
 Local Definition Foldable__Proxy_length : forall {a},
                                             Data.Proxy.Proxy a -> GHC.Num.Int :=
-  fun {a} => fun arg_0__ => GHC.Num.fromInteger 0.
+  fun {a} => fun arg_0__ => #0.
 
 Local Definition Foldable__Proxy_null : forall {a},
                                           Data.Proxy.Proxy a -> bool :=
@@ -501,11 +501,11 @@ Local Definition Foldable__Proxy_null : forall {a},
 
 Local Definition Foldable__Proxy_product : forall {a},
                                              forall `{GHC.Num.Num a}, Data.Proxy.Proxy a -> a :=
-  fun {a} `{GHC.Num.Num a} => fun arg_0__ => GHC.Num.fromInteger 1.
+  fun {a} `{GHC.Num.Num a} => fun arg_0__ => #1.
 
 Local Definition Foldable__Proxy_sum : forall {a},
                                          forall `{GHC.Num.Num a}, Data.Proxy.Proxy a -> a :=
-  fun {a} `{GHC.Num.Num a} => fun arg_0__ => GHC.Num.fromInteger 0.
+  fun {a} `{GHC.Num.Num a} => fun arg_0__ => #0.
 
 Program Instance Foldable__Proxy : Foldable Data.Proxy.Proxy := fun _ k =>
     k {|elem__ := fun {a} `{GHC.Base.Eq_ a} => Foldable__Proxy_elem ;
@@ -552,7 +552,7 @@ Local Definition Foldable__Dual_foldr' : forall {a} {b},
 
 Local Definition Foldable__Dual_length : forall {a},
                                            Data.Monoid.Dual a -> GHC.Num.Int :=
-  fun {a} => fun arg_0__ => GHC.Num.fromInteger 1.
+  fun {a} => fun arg_0__ => #1.
 
 Local Definition Foldable__Dual_null : forall {a}, Data.Monoid.Dual a -> bool :=
   fun {a} => fun arg_0__ => false.
@@ -599,7 +599,7 @@ Local Definition Foldable__Sum_foldr' : forall {a} {b},
 
 Local Definition Foldable__Sum_length : forall {a},
                                           Data.Monoid.Sum a -> GHC.Num.Int :=
-  fun {a} => fun arg_0__ => GHC.Num.fromInteger 1.
+  fun {a} => fun arg_0__ => #1.
 
 Local Definition Foldable__Sum_null : forall {a}, Data.Monoid.Sum a -> bool :=
   fun {a} => fun arg_0__ => false.
@@ -646,7 +646,7 @@ Local Definition Foldable__Product_foldr' : forall {a} {b},
 
 Local Definition Foldable__Product_length : forall {a},
                                               Data.Monoid.Product a -> GHC.Num.Int :=
-  fun {a} => fun arg_0__ => GHC.Num.fromInteger 1.
+  fun {a} => fun arg_0__ => #1.
 
 Local Definition Foldable__Product_null : forall {a},
                                             Data.Monoid.Product a -> bool :=
@@ -977,6 +977,6 @@ Definition for__ {t} {f} {a} {b} `{Foldable t} `{GHC.Base.Applicative f} : t
      GHC.Base.op_zdzn__ GHC.Base.op_zeze__ GHC.Base.op_zgze__ GHC.Base.op_zgzg__
      GHC.Base.op_zgzgze__ GHC.Base.op_zlzbzg__ GHC.Base.op_zlze__ GHC.Base.op_ztzg__
      GHC.Base.pure GHC.Base.return_ GHC.List.elem GHC.List.length GHC.List.null
-     GHC.List.product GHC.List.sum GHC.Num.Int GHC.Num.Num GHC.Num.op_zp__
-     GHC.Prim.coerce GHC.Tuple.pair_type
+     GHC.List.product GHC.List.sum GHC.Num.Int GHC.Num.Num GHC.Num.fromInteger
+     GHC.Num.op_zp__ GHC.Prim.coerce GHC.Tuple.pair_type
 *)

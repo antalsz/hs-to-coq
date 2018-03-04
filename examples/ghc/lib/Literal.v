@@ -71,33 +71,31 @@ Definition absentLiteralOf : Core.TyCon -> option Literal :=
 Definition char2IntLit : Literal -> Literal :=
   fun arg_0__ =>
     match arg_0__ with
-      | MachChar c => MachInt (GHC.Real.toInteger (GHC.Char.ord c))
-      | l => Panic.panicStr (GHC.Base.hs_string__ "char2IntLit") (Panic.noString l)
+    | MachChar c => MachInt (GHC.Real.toInteger (GHC.Char.ord c))
+    | l => Panic.panicStr (GHC.Base.hs_string__ "char2IntLit") (Panic.noString l)
     end.
 
 Definition double2FloatLit : Literal -> Literal :=
   fun arg_0__ =>
     match arg_0__ with
-      | MachDouble d => MachFloat d
-      | l => Panic.panicStr (GHC.Base.hs_string__ "double2FloatLit") (Panic.noString
-                                                                     l)
+    | MachDouble d => MachFloat d
+    | l =>
+        Panic.panicStr (GHC.Base.hs_string__ "double2FloatLit") (Panic.noString l)
     end.
 
 Definition float2DoubleLit : Literal -> Literal :=
   fun arg_0__ =>
     match arg_0__ with
-      | MachFloat f => MachDouble f
-      | l => Panic.panicStr (GHC.Base.hs_string__ "float2DoubleLit") (Panic.noString
-                                                                     l)
+    | MachFloat f => MachDouble f
+    | l =>
+        Panic.panicStr (GHC.Base.hs_string__ "float2DoubleLit") (Panic.noString l)
     end.
 
 Definition hashFS : FastString.FastString -> GHC.Num.Int :=
   fun s => FastString.uniqueOfFS s.
 
 Definition hashInteger : GHC.Num.Integer -> GHC.Num.Int :=
-  fun i =>
-    GHC.Num.fromInteger 1 GHC.Num.+ GHC.Num.abs (GHC.Num.fromInteger (GHC.Real.rem i
-                                                                                   (GHC.Num.fromInteger 10000))).
+  fun i => #1 GHC.Num.+ GHC.Num.abs (GHC.Num.fromInteger (GHC.Real.rem i #10000)).
 
 Definition hashRational : GHC.Real.Rational -> GHC.Num.Int :=
   fun r => hashInteger (GHC.Real.numerator r).
@@ -105,17 +103,17 @@ Definition hashRational : GHC.Real.Rational -> GHC.Num.Int :=
 Definition hashLiteral : Literal -> GHC.Num.Int :=
   fun arg_0__ =>
     match arg_0__ with
-      | MachChar c => GHC.Char.ord c GHC.Num.+ GHC.Num.fromInteger 1000
-      | MachStr s => FastString.hashByteString s
-      | MachNullAddr => GHC.Num.fromInteger 0
-      | MachInt i => hashInteger i
-      | MachInt64 i => hashInteger i
-      | MachWord i => hashInteger i
-      | MachWord64 i => hashInteger i
-      | MachFloat r => hashRational r
-      | MachDouble r => hashRational r
-      | MachLabel s _ _ => hashFS s
-      | LitInteger i _ => hashInteger i
+    | MachChar c => GHC.Char.ord c GHC.Num.+ #1000
+    | MachStr s => FastString.hashByteString s
+    | MachNullAddr => #0
+    | MachInt i => hashInteger i
+    | MachInt64 i => hashInteger i
+    | MachWord i => hashInteger i
+    | MachWord64 i => hashInteger i
+    | MachFloat r => hashRational r
+    | MachDouble r => hashRational r
+    | MachLabel s _ _ => hashFS s
+    | LitInteger i _ => hashInteger i
     end.
 
 Definition inIntRange : DynFlags.DynFlags -> GHC.Num.Integer -> bool :=
@@ -126,81 +124,69 @@ Definition inIntRange : DynFlags.DynFlags -> GHC.Num.Integer -> bool :=
 Definition litIsDupable : DynFlags.DynFlags -> Literal -> bool :=
   fun arg_0__ arg_1__ =>
     match arg_0__ , arg_1__ with
-      | _ , MachStr _ => false
-      | dflags , LitInteger i _ => inIntRange dflags i
-      | _ , _ => true
+    | _ , MachStr _ => false
+    | dflags , LitInteger i _ => inIntRange dflags i
+    | _ , _ => true
     end.
 
 Definition inWordRange : DynFlags.DynFlags -> GHC.Num.Integer -> bool :=
   fun dflags x =>
-    andb (x GHC.Base.>= GHC.Num.fromInteger 0) (x GHC.Base.<=
-         DynFlags.tARGET_MAX_WORD dflags).
+    andb (x GHC.Base.>= #0) (x GHC.Base.<= DynFlags.tARGET_MAX_WORD dflags).
 
 Definition int2CharLit : Literal -> Literal :=
   fun arg_0__ =>
     match arg_0__ with
-      | MachInt i => MachChar (GHC.Char.chr (GHC.Num.fromInteger i))
-      | l => Panic.panicStr (GHC.Base.hs_string__ "int2CharLit") (Panic.noString l)
+    | MachInt i => MachChar (GHC.Char.chr (GHC.Num.fromInteger i))
+    | l => Panic.panicStr (GHC.Base.hs_string__ "int2CharLit") (Panic.noString l)
     end.
 
 Definition int2DoubleLit : Literal -> Literal :=
   fun arg_0__ =>
     match arg_0__ with
-      | MachInt i => MachDouble (GHC.Num.fromInteger i)
-      | l => Panic.panicStr (GHC.Base.hs_string__ "int2DoubleLit") (Panic.noString l)
+    | MachInt i => MachDouble (GHC.Num.fromInteger i)
+    | l => Panic.panicStr (GHC.Base.hs_string__ "int2DoubleLit") (Panic.noString l)
     end.
 
 Definition int2FloatLit : Literal -> Literal :=
   fun arg_0__ =>
     match arg_0__ with
-      | MachInt i => MachFloat (GHC.Num.fromInteger i)
-      | l => Panic.panicStr (GHC.Base.hs_string__ "int2FloatLit") (Panic.noString l)
+    | MachInt i => MachFloat (GHC.Num.fromInteger i)
+    | l => Panic.panicStr (GHC.Base.hs_string__ "int2FloatLit") (Panic.noString l)
     end.
 
 Definition int2WordLit : DynFlags.DynFlags -> Literal -> Literal :=
   fun arg_0__ arg_1__ =>
     match arg_0__ , arg_1__ with
-      | dflags , MachInt i => if i GHC.Base.< GHC.Num.fromInteger 0 : bool
-                              then MachWord ((GHC.Num.fromInteger 1 GHC.Num.+ DynFlags.tARGET_MAX_WORD dflags)
-                                            GHC.Num.+ i)
-                              else MachWord i
-      | _ , _ => match arg_0__ , arg_1__ with
-                   | _ , l => Panic.panicStr (GHC.Base.hs_string__ "int2WordLit") (Panic.noString
-                                                                                  l)
-                 end
+    | dflags , MachInt i =>
+        if i GHC.Base.< #0 : bool
+        then MachWord ((#1 GHC.Num.+ DynFlags.tARGET_MAX_WORD dflags) GHC.Num.+ i)
+        else MachWord i
+    | _ , _ =>
+        match arg_0__ , arg_1__ with
+        | _ , l =>
+            Panic.panicStr (GHC.Base.hs_string__ "int2WordLit") (Panic.noString l)
+        end
     end.
 
 Definition isZeroLit : Literal -> bool :=
   fun arg_0__ =>
     match arg_0__ with
-      | MachInt num_1__ => if num_1__ GHC.Base.== GHC.Num.fromInteger 0 : bool
-                           then true
-                           else false
-      | MachInt64 num_2__ => if num_2__ GHC.Base.== GHC.Num.fromInteger 0 : bool
-                             then true
-                             else false
-      | MachWord num_3__ => if num_3__ GHC.Base.== GHC.Num.fromInteger 0 : bool
-                            then true
-                            else false
-      | MachWord64 num_4__ => if num_4__ GHC.Base.== GHC.Num.fromInteger 0 : bool
-                              then true
-                              else false
-      | MachFloat num_5__ => if num_5__ GHC.Base.== GHC.Num.fromInteger 0 : bool
-                             then true
-                             else false
-      | MachDouble num_6__ => if num_6__ GHC.Base.== GHC.Num.fromInteger 0 : bool
-                              then true
-                              else false
-      | _ => false
+    | MachInt num_1__ => if num_1__ GHC.Base.== #0 : bool then true else false
+    | MachInt64 num_2__ => if num_2__ GHC.Base.== #0 : bool then true else false
+    | MachWord num_3__ => if num_3__ GHC.Base.== #0 : bool then true else false
+    | MachWord64 num_4__ => if num_4__ GHC.Base.== #0 : bool then true else false
+    | MachFloat num_5__ => if num_5__ GHC.Base.== #0 : bool then true else false
+    | MachDouble num_6__ => if num_6__ GHC.Base.== #0 : bool then true else false
+    | _ => false
     end.
 
 Definition litFitsInChar : Literal -> bool :=
   fun arg_0__ =>
     match arg_0__ with
-      | MachInt i => andb (i GHC.Base.>= GHC.Real.toInteger (GHC.Char.ord
-                                                            GHC.Enum.minBound)) (i GHC.Base.<= GHC.Real.toInteger
-                          (GHC.Char.ord GHC.Enum.maxBound))
-      | _ => false
+    | MachInt i =>
+        andb (i GHC.Base.>= GHC.Real.toInteger (GHC.Char.ord GHC.Enum.minBound)) (i
+             GHC.Base.<= GHC.Real.toInteger (GHC.Char.ord GHC.Enum.maxBound))
+    | _ => false
     end.
 
 Definition litIsLifted : Literal -> bool :=
@@ -209,44 +195,42 @@ Definition litIsLifted : Literal -> bool :=
 Definition litIsTrivial : Literal -> bool :=
   fun arg_0__ =>
     match arg_0__ with
-      | MachStr _ => false
-      | LitInteger _ _ => false
-      | _ => true
+    | MachStr _ => false
+    | LitInteger _ _ => false
+    | _ => true
     end.
 
 Definition litTag : Literal -> GHC.Num.Int :=
   fun arg_0__ =>
     match arg_0__ with
-      | MachChar _ => GHC.Num.fromInteger 1
-      | MachStr _ => GHC.Num.fromInteger 2
-      | MachNullAddr => GHC.Num.fromInteger 3
-      | MachInt _ => GHC.Num.fromInteger 4
-      | MachWord _ => GHC.Num.fromInteger 5
-      | MachInt64 _ => GHC.Num.fromInteger 6
-      | MachWord64 _ => GHC.Num.fromInteger 7
-      | MachFloat _ => GHC.Num.fromInteger 8
-      | MachDouble _ => GHC.Num.fromInteger 9
-      | MachLabel _ _ _ => GHC.Num.fromInteger 10
-      | LitInteger _ _ => GHC.Num.fromInteger 11
+    | MachChar _ => #1
+    | MachStr _ => #2
+    | MachNullAddr => #3
+    | MachInt _ => #4
+    | MachWord _ => #5
+    | MachInt64 _ => #6
+    | MachWord64 _ => #7
+    | MachFloat _ => #8
+    | MachDouble _ => #9
+    | MachLabel _ _ _ => #10
+    | LitInteger _ _ => #11
     end.
 
 Definition cmpLit : Literal -> Literal -> comparison :=
   fun arg_0__ arg_1__ =>
     match arg_0__ , arg_1__ with
-      | MachChar a , MachChar b => GHC.Base.compare a b
-      | MachStr a , MachStr b => GHC.Base.compare a b
-      | MachNullAddr , MachNullAddr => Eq
-      | MachInt a , MachInt b => GHC.Base.compare a b
-      | MachWord a , MachWord b => GHC.Base.compare a b
-      | MachInt64 a , MachInt64 b => GHC.Base.compare a b
-      | MachWord64 a , MachWord64 b => GHC.Base.compare a b
-      | MachFloat a , MachFloat b => GHC.Base.compare a b
-      | MachDouble a , MachDouble b => GHC.Base.compare a b
-      | MachLabel a _ _ , MachLabel b _ _ => GHC.Base.compare a b
-      | LitInteger a _ , LitInteger b _ => GHC.Base.compare a b
-      | lit1 , lit2 => if litTag lit1 GHC.Base.< litTag lit2 : bool
-                       then Lt
-                       else Gt
+    | MachChar a , MachChar b => GHC.Base.compare a b
+    | MachStr a , MachStr b => GHC.Base.compare a b
+    | MachNullAddr , MachNullAddr => Eq
+    | MachInt a , MachInt b => GHC.Base.compare a b
+    | MachWord a , MachWord b => GHC.Base.compare a b
+    | MachInt64 a , MachInt64 b => GHC.Base.compare a b
+    | MachWord64 a , MachWord64 b => GHC.Base.compare a b
+    | MachFloat a , MachFloat b => GHC.Base.compare a b
+    | MachDouble a , MachDouble b => GHC.Base.compare a b
+    | MachLabel a _ _ , MachLabel b _ _ => GHC.Base.compare a b
+    | LitInteger a _ , LitInteger b _ => GHC.Base.compare a b
+    | lit1 , lit2 => if litTag lit1 GHC.Base.< litTag lit2 : bool then Lt else Gt
     end.
 
 Local Definition Ord__Literal_compare : Literal -> Literal -> comparison :=
@@ -255,33 +239,33 @@ Local Definition Ord__Literal_compare : Literal -> Literal -> comparison :=
 Local Definition Ord__Literal_op_zg__ : Literal -> Literal -> bool :=
   fun a b =>
     match (Ord__Literal_compare a b) with
-      | Lt => false
-      | Eq => false
-      | Gt => true
+    | Lt => false
+    | Eq => false
+    | Gt => true
     end.
 
 Local Definition Ord__Literal_op_zgze__ : Literal -> Literal -> bool :=
   fun a b =>
     match (Ord__Literal_compare a b) with
-      | Lt => false
-      | Eq => true
-      | Gt => true
+    | Lt => false
+    | Eq => true
+    | Gt => true
     end.
 
 Local Definition Ord__Literal_op_zl__ : Literal -> Literal -> bool :=
   fun a b =>
     match (Ord__Literal_compare a b) with
-      | Lt => true
-      | Eq => false
-      | Gt => false
+    | Lt => true
+    | Eq => false
+    | Gt => false
     end.
 
 Local Definition Ord__Literal_op_zlze__ : Literal -> Literal -> bool :=
   fun a b =>
     match (Ord__Literal_compare a b) with
-      | Lt => true
-      | Eq => true
-      | Gt => false
+    | Lt => true
+    | Eq => true
+    | Gt => false
     end.
 
 Local Definition Ord__Literal_max : Literal -> Literal -> Literal :=
@@ -314,29 +298,29 @@ Admit Obligations.
 Definition litValue : Literal -> GHC.Num.Integer :=
   fun arg_0__ =>
     match arg_0__ with
-      | MachChar c => GHC.Real.toInteger GHC.Base.$ GHC.Char.ord c
-      | MachInt i => i
-      | MachInt64 i => i
-      | MachWord i => i
-      | MachWord64 i => i
-      | LitInteger i _ => i
-      | l => Panic.panicStr (GHC.Base.hs_string__ "litValue") (Panic.noString l)
+    | MachChar c => GHC.Real.toInteger GHC.Base.$ GHC.Char.ord c
+    | MachInt i => i
+    | MachInt64 i => i
+    | MachWord i => i
+    | MachWord64 i => i
+    | LitInteger i _ => i
+    | l => Panic.panicStr (GHC.Base.hs_string__ "litValue") (Panic.noString l)
     end.
 
 Definition literalType : Literal -> Core.Type_ :=
   fun arg_0__ =>
     match arg_0__ with
-      | MachNullAddr => Core.addrPrimTy
-      | MachChar _ => Core.charPrimTy
-      | MachStr _ => Core.addrPrimTy
-      | MachInt _ => Core.intPrimTy
-      | MachWord _ => Core.wordPrimTy
-      | MachInt64 _ => Core.int64PrimTy
-      | MachWord64 _ => Core.word64PrimTy
-      | MachFloat _ => Core.floatPrimTy
-      | MachDouble _ => Core.doublePrimTy
-      | MachLabel _ _ _ => Core.addrPrimTy
-      | LitInteger _ t => t
+    | MachNullAddr => Core.addrPrimTy
+    | MachChar _ => Core.charPrimTy
+    | MachStr _ => Core.addrPrimTy
+    | MachInt _ => Core.intPrimTy
+    | MachWord _ => Core.wordPrimTy
+    | MachInt64 _ => Core.int64PrimTy
+    | MachWord64 _ => Core.word64PrimTy
+    | MachFloat _ => Core.floatPrimTy
+    | MachDouble _ => Core.doublePrimTy
+    | MachLabel _ _ _ => Core.addrPrimTy
+    | LitInteger _ t => t
     end.
 
 Definition mkLitInteger : GHC.Num.Integer -> Core.Type_ -> Literal :=
@@ -368,14 +352,15 @@ Definition nullAddrLit : Literal :=
 Definition word2IntLit : DynFlags.DynFlags -> Literal -> Literal :=
   fun arg_0__ arg_1__ =>
     match arg_0__ , arg_1__ with
-      | dflags , MachWord w => if w GHC.Base.> DynFlags.tARGET_MAX_INT dflags : bool
-                               then MachInt ((w GHC.Num.- DynFlags.tARGET_MAX_WORD dflags) GHC.Num.-
-                                            GHC.Num.fromInteger 1)
-                               else MachInt w
-      | _ , _ => match arg_0__ , arg_1__ with
-                   | _ , l => Panic.panicStr (GHC.Base.hs_string__ "word2IntLit") (Panic.noString
-                                                                                  l)
-                 end
+    | dflags , MachWord w =>
+        if w GHC.Base.> DynFlags.tARGET_MAX_INT dflags : bool
+        then MachInt ((w GHC.Num.- DynFlags.tARGET_MAX_WORD dflags) GHC.Num.- #1)
+        else MachInt w
+    | _ , _ =>
+        match arg_0__ , arg_1__ with
+        | _ , l =>
+            Panic.panicStr (GHC.Base.hs_string__ "word2IntLit") (Panic.noString l)
+        end
     end.
 
 (* Unbound variables:

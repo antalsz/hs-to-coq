@@ -28,12 +28,12 @@ Definition DNameEnv :=
   UniqDFM.UniqDFM%type.
 (* Converted value declarations: *)
 
-Definition alterDNameEnv {a} : (option a -> option a) -> DNameEnv
-                               a -> Name.Name -> DNameEnv a :=
+Definition alterDNameEnv {a}
+   : (option a -> option a) -> DNameEnv a -> Name.Name -> DNameEnv a :=
   UniqDFM.alterUDFM.
 
-Definition alterNameEnv {a} : (option a -> option a) -> NameEnv
-                              a -> Name.Name -> NameEnv a :=
+Definition alterNameEnv {a}
+   : (option a -> option a) -> NameEnv a -> Name.Name -> NameEnv a :=
   UniqFM.alterUFM.
 
 Definition anyNameEnv {elt} : (elt -> bool) -> NameEnv elt -> bool :=
@@ -60,20 +60,20 @@ Definition emptyNameEnv {a} : NameEnv a :=
 Definition extendNameEnv {a} : NameEnv a -> Name.Name -> a -> NameEnv a :=
   fun x y z => UniqFM.addToUFM x y z.
 
-Definition extendNameEnvList {a} : NameEnv a -> list (Name.Name *
-                                                     a)%type -> NameEnv a :=
+Definition extendNameEnvList {a}
+   : NameEnv a -> list (Name.Name * a)%type -> NameEnv a :=
   fun x l => UniqFM.addListToUFM x l.
 
-Definition extendNameEnvList_C {a} : (a -> a -> a) -> NameEnv a -> list
-                                     (Name.Name * a)%type -> NameEnv a :=
+Definition extendNameEnvList_C {a}
+   : (a -> a -> a) -> NameEnv a -> list (Name.Name * a)%type -> NameEnv a :=
   fun x y z => UniqFM.addListToUFM_C x y z.
 
-Definition extendNameEnv_Acc {a} {b} : (a -> b -> b) -> (a -> b) -> NameEnv
-                                       b -> Name.Name -> a -> NameEnv b :=
+Definition extendNameEnv_Acc {a} {b}
+   : (a -> b -> b) -> (a -> b) -> NameEnv b -> Name.Name -> a -> NameEnv b :=
   fun x y z a b => UniqFM.addToUFM_Acc x y z a b.
 
-Definition extendNameEnv_C {a} : (a -> a -> a) -> NameEnv
-                                 a -> Name.Name -> a -> NameEnv a :=
+Definition extendNameEnv_C {a}
+   : (a -> a -> a) -> NameEnv a -> Name.Name -> a -> NameEnv a :=
   fun f x y z => UniqFM.addToUFM_C f x y z.
 
 Definition filterNameEnv {elt} : (elt -> bool) -> NameEnv elt -> NameEnv elt :=
@@ -94,8 +94,8 @@ Definition lookupNameEnv {a} : NameEnv a -> Name.Name -> option a :=
 Definition mapDNameEnv {a} {b} : (a -> b) -> DNameEnv a -> DNameEnv b :=
   UniqDFM.mapUDFM.
 
-Definition mapNameEnv {elt1} {elt2} : (elt1 -> elt2) -> NameEnv elt1 -> NameEnv
-                                      elt2 :=
+Definition mapNameEnv {elt1} {elt2}
+   : (elt1 -> elt2) -> NameEnv elt1 -> NameEnv elt2 :=
   fun f x => UniqFM.mapUFM f x.
 
 Definition mkNameEnv {a} : list (Name.Name * a)%type -> NameEnv a :=
@@ -110,8 +110,8 @@ Definition nameEnvUniqueElts {a} : NameEnv a -> list (Unique.Unique * a)%type :=
 Definition plusNameEnv {a} : NameEnv a -> NameEnv a -> NameEnv a :=
   fun x y => UniqFM.plusUFM x y.
 
-Definition plusNameEnv_C {a} : (a -> a -> a) -> NameEnv a -> NameEnv
-                               a -> NameEnv a :=
+Definition plusNameEnv_C {a}
+   : (a -> a -> a) -> NameEnv a -> NameEnv a -> NameEnv a :=
   fun f x y => UniqFM.plusUFM_C f x y.
 
 Definition unitNameEnv {a} : Name.Name -> a -> NameEnv a :=

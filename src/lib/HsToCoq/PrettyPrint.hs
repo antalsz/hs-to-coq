@@ -11,6 +11,7 @@ module HsToCoq.PrettyPrint (
   hsep, vsep, fillSep, sep,
   hcat, vcat, fillCat, cat,
   punctuate,
+  fill1Sep, commaList,
   -- * Utility functions
   -- ** Nicely smushing lists together
   sepWith, spacedSepPre, spacedSepPost,
@@ -156,3 +157,15 @@ softlineIf = docIf softline
 renderOneLineT :: Doc -> Text
 renderOneLineT = TL.toStrict . displayT . renderOneLine
 {-# INLINABLE renderOneLineT #-}
+
+-- Puts everything on a line as long as it fits, and the
+-- rest on individual lines
+fill1Sep :: Foldable f => f Doc -> Doc
+fill1Sep xs = go (reverse (toList xs))
+  where
+    go [] = empty
+    go (x:xs) = group (go xs <!> x)
+
+commaList :: Foldable f => f Doc -> Doc
+commaList xs = group (align . nest (-2) $ (sepWith (<$$>) (<+>) T.comma xs))
+

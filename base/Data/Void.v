@@ -29,9 +29,10 @@ Local Definition Eq___Void_op_zeze__ : Void -> Void -> bool :=
 Local Definition Eq___Void_op_zsze__ : Void -> Void -> bool :=
   fun x y => negb (Eq___Void_op_zeze__ x y).
 
-Program Instance Eq___Void : GHC.Base.Eq_ Void := fun _ k =>
-    k {|GHC.Base.op_zeze____ := Eq___Void_op_zeze__ ;
-      GHC.Base.op_zsze____ := Eq___Void_op_zsze__ |}.
+Program Instance Eq___Void : GHC.Base.Eq_ Void :=
+  fun _ k =>
+    k {| GHC.Base.op_zeze____ := Eq___Void_op_zeze__ ;
+         GHC.Base.op_zsze____ := Eq___Void_op_zsze__ |}.
 Admit Obligations.
 
 Local Definition Ord__Void_compare : Void -> Void -> comparison :=
@@ -55,14 +56,15 @@ Local Definition Ord__Void_max : Void -> Void -> Void :=
 Local Definition Ord__Void_min : Void -> Void -> Void :=
   fun x y => if Ord__Void_op_zlze__ x y : bool then x else y.
 
-Program Instance Ord__Void : GHC.Base.Ord Void := fun _ k =>
-    k {|GHC.Base.op_zl____ := Ord__Void_op_zl__ ;
-      GHC.Base.op_zlze____ := Ord__Void_op_zlze__ ;
-      GHC.Base.op_zg____ := Ord__Void_op_zg__ ;
-      GHC.Base.op_zgze____ := Ord__Void_op_zgze__ ;
-      GHC.Base.compare__ := Ord__Void_compare ;
-      GHC.Base.max__ := Ord__Void_max ;
-      GHC.Base.min__ := Ord__Void_min |}.
+Program Instance Ord__Void : GHC.Base.Ord Void :=
+  fun _ k =>
+    k {| GHC.Base.op_zl____ := Ord__Void_op_zl__ ;
+         GHC.Base.op_zlze____ := Ord__Void_op_zlze__ ;
+         GHC.Base.op_zg____ := Ord__Void_op_zg__ ;
+         GHC.Base.op_zgze____ := Ord__Void_op_zgze__ ;
+         GHC.Base.compare__ := Ord__Void_compare ;
+         GHC.Base.max__ := Ord__Void_max ;
+         GHC.Base.min__ := Ord__Void_min |}.
 Admit Obligations.
 
 (* Translating `instance GHC.Read.Read Data.Void.Void' failed: OOPS! Cannot find

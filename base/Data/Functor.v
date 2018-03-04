@@ -28,8 +28,8 @@ Notation "'_$>_'" := (op_zdzg__).
 
 Infix "$>" := (_$>_) (at level 99).
 
-Definition op_zlzdzg__ {f} {a} {b} `{GHC.Base.Functor f} : (a -> b) -> f a -> f
-                                                           b :=
+Definition op_zlzdzg__ {f} {a} {b} `{GHC.Base.Functor f}
+   : (a -> b) -> f a -> f b :=
   GHC.Base.fmap.
 
 Notation "'_<$>_'" := (op_zlzdzg__).

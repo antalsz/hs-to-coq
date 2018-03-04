@@ -28,21 +28,22 @@ Import GHC.Base.Notations.
 (* No type declarations to convert. *)
 (* Converted value declarations: *)
 
-Definition filterM {m} {a} `{(GHC.Base.Applicative m)} : (a -> m bool) -> list
-                                                         a -> m (list a) :=
+Definition filterM {m} {a} `{(GHC.Base.Applicative m)}
+   : (a -> m bool) -> list a -> m (list a) :=
   fun p =>
     GHC.Base.foldr (fun x =>
-                     GHC.Base.liftA2 (fun flg =>
-                                       if flg : bool
-                                       then (fun arg_0__ => cons x arg_0__)
-                                       else GHC.Base.id) (p x)) (GHC.Base.pure nil).
+                      GHC.Base.liftA2 (fun flg =>
+                                         if flg : bool
+                                         then (fun arg_0__ => cons x arg_0__)
+                                         else GHC.Base.id) (p x)) (GHC.Base.pure nil).
 
 Definition foldM {t} {m} {b} {a} `{Data.Foldable.Foldable t} `{GHC.Base.Monad m}
-    : (b -> a -> m b) -> b -> t a -> m b :=
+   : (b -> a -> m b) -> b -> t a -> m b :=
   Data.Foldable.foldlM.
 
 Definition foldM_ {t} {m} {b} {a} `{Data.Foldable.Foldable t} `{GHC.Base.Monad
-                  m} : (b -> a -> m b) -> b -> t a -> m unit :=
+  m}
+   : (b -> a -> m b) -> b -> t a -> m unit :=
   fun f a xs => Data.Foldable.foldlM f a xs GHC.Base.>> GHC.Base.return_ tt.
 
 Definition guard {f} `{(GHC.Base.Alternative f)} : bool -> f unit :=
@@ -52,37 +53,34 @@ Definition guard {f} `{(GHC.Base.Alternative f)} : bool -> f unit :=
     | false => GHC.Base.empty
     end.
 
-Definition mapAndUnzipM {m} {a} {b} {c} `{(GHC.Base.Applicative m)} : (a -> m (b
-                                                                              * c)%type) -> list a -> m (list b * list
-                                                                                                        c)%type :=
+Definition mapAndUnzipM {m} {a} {b} {c} `{(GHC.Base.Applicative m)}
+   : (a -> m (b * c)%type) -> list a -> m (list b * list c)%type :=
   fun f xs => GHC.List.unzip Data.Functor.<$> Data.Traversable.traverse f xs.
 
-Definition mfilter {m} {a} `{(GHC.Base.MonadPlus m)} : (a -> bool) -> m a -> m
-                                                       a :=
+Definition mfilter {m} {a} `{(GHC.Base.MonadPlus m)}
+   : (a -> bool) -> m a -> m a :=
   fun p ma =>
-    ma GHC.Base.>>= (fun a =>
-      if p a : bool
-      then GHC.Base.return_ a
-      else GHC.Base.mzero).
+    ma GHC.Base.>>=
+    (fun a => if p a : bool then GHC.Base.return_ a else GHC.Base.mzero).
 
-Definition op_zgzezg__ {m} {a} {b} {c} `{GHC.Base.Monad m} : (a -> m
-                                                             b) -> (b -> m c) -> (a -> m c) :=
+Definition op_zgzezg__ {m} {a} {b} {c} `{GHC.Base.Monad m}
+   : (a -> m b) -> (b -> m c) -> (a -> m c) :=
   fun f g => fun x => f x GHC.Base.>>= g.
 
 Notation "'_>=>_'" := (op_zgzezg__).
 
 Infix ">=>" := (_>=>_) (at level 99).
 
-Definition op_zlzezl__ {m} {b} {c} {a} `{GHC.Base.Monad m} : (b -> m
-                                                             c) -> (a -> m b) -> (a -> m c) :=
+Definition op_zlzezl__ {m} {b} {c} {a} `{GHC.Base.Monad m}
+   : (b -> m c) -> (a -> m b) -> (a -> m c) :=
   GHC.Base.flip _>=>_.
 
 Notation "'_<=<_'" := (op_zlzezl__).
 
 Infix "<=<" := (_<=<_) (at level 99).
 
-Definition op_zlzdznzg__ {m} {a} {b} `{GHC.Base.Monad m} : (a -> b) -> m a -> m
-                                                           b :=
+Definition op_zlzdznzg__ {m} {a} {b} `{GHC.Base.Monad m}
+   : (a -> b) -> m a -> m b :=
   fun f m =>
     m GHC.Base.>>= (fun x => let z := f x in GHC.Prim.seq z (GHC.Base.return_ z)).
 
@@ -93,13 +91,13 @@ Infix "<$!>" := (_<$!>_) (at level 99).
 Definition unless {f} `{(GHC.Base.Applicative f)} : bool -> f unit -> f unit :=
   fun p s => if p : bool then GHC.Base.pure tt else s.
 
-Definition zipWithM {m} {a} {b} {c} `{_ : GHC.Base.Applicative m} : (a -> b -> m
-                                                                    c) -> list a -> list b -> m (list c) :=
+Definition zipWithM {m} {a} {b} {c} `{_ : GHC.Base.Applicative m}
+   : (a -> b -> m c) -> list a -> list b -> m (list c) :=
   fun f xs ys =>
     (@Data.Traversable.sequenceA _ _ _ _ m _ _ _ (GHC.List.zipWith f xs ys)).
 
-Definition zipWithM_ {m} {a} {b} {c} `{(GHC.Base.Applicative m)} : (a -> b -> m
-                                                                   c) -> list a -> list b -> m unit :=
+Definition zipWithM_ {m} {a} {b} {c} `{(GHC.Base.Applicative m)}
+   : (a -> b -> m c) -> list a -> list b -> m unit :=
   fun f xs ys => Data.Foldable.sequenceA_ (GHC.List.zipWith f xs ys).
 
 Module Notations.

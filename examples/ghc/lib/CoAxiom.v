@@ -197,12 +197,12 @@ Definition toUnbranchedAxiom {br} : Core.CoAxiom br -> Core.CoAxiom
 
 (* Converted value declarations: *)
 
-Local Definition Ord__CoAxiom_compare {inst_br} : (Core.CoAxiom
-                                                  inst_br) -> (Core.CoAxiom inst_br) -> comparison :=
+Local Definition Ord__CoAxiom_compare {inst_br}
+   : (Core.CoAxiom inst_br) -> (Core.CoAxiom inst_br) -> comparison :=
   fun a b => GHC.Base.compare (Unique.getUnique a) (Unique.getUnique b).
 
-Local Definition Ord__CoAxiom_op_zg__ {inst_br} : (Core.CoAxiom
-                                                  inst_br) -> (Core.CoAxiom inst_br) -> bool :=
+Local Definition Ord__CoAxiom_op_zg__ {inst_br}
+   : (Core.CoAxiom inst_br) -> (Core.CoAxiom inst_br) -> bool :=
   fun a b =>
     match (Ord__CoAxiom_compare a b) with
     | Lt => false
@@ -210,8 +210,8 @@ Local Definition Ord__CoAxiom_op_zg__ {inst_br} : (Core.CoAxiom
     | Gt => true
     end.
 
-Local Definition Ord__CoAxiom_op_zgze__ {inst_br} : (Core.CoAxiom
-                                                    inst_br) -> (Core.CoAxiom inst_br) -> bool :=
+Local Definition Ord__CoAxiom_op_zgze__ {inst_br}
+   : (Core.CoAxiom inst_br) -> (Core.CoAxiom inst_br) -> bool :=
   fun a b =>
     match (Ord__CoAxiom_compare a b) with
     | Lt => false
@@ -219,8 +219,8 @@ Local Definition Ord__CoAxiom_op_zgze__ {inst_br} : (Core.CoAxiom
     | Gt => true
     end.
 
-Local Definition Ord__CoAxiom_op_zl__ {inst_br} : (Core.CoAxiom
-                                                  inst_br) -> (Core.CoAxiom inst_br) -> bool :=
+Local Definition Ord__CoAxiom_op_zl__ {inst_br}
+   : (Core.CoAxiom inst_br) -> (Core.CoAxiom inst_br) -> bool :=
   fun a b =>
     match (Ord__CoAxiom_compare a b) with
     | Lt => true
@@ -228,8 +228,8 @@ Local Definition Ord__CoAxiom_op_zl__ {inst_br} : (Core.CoAxiom
     | Gt => false
     end.
 
-Local Definition Ord__CoAxiom_op_zlze__ {inst_br} : (Core.CoAxiom
-                                                    inst_br) -> (Core.CoAxiom inst_br) -> bool :=
+Local Definition Ord__CoAxiom_op_zlze__ {inst_br}
+   : (Core.CoAxiom inst_br) -> (Core.CoAxiom inst_br) -> bool :=
   fun a b =>
     match (Ord__CoAxiom_compare a b) with
     | Lt => true
@@ -237,16 +237,16 @@ Local Definition Ord__CoAxiom_op_zlze__ {inst_br} : (Core.CoAxiom
     | Gt => false
     end.
 
-Local Definition Ord__CoAxiom_max {inst_br} : (Core.CoAxiom
-                                              inst_br) -> (Core.CoAxiom inst_br) -> (Core.CoAxiom inst_br) :=
+Local Definition Ord__CoAxiom_max {inst_br}
+   : (Core.CoAxiom inst_br) -> (Core.CoAxiom inst_br) -> (Core.CoAxiom inst_br) :=
   fun x y => if Ord__CoAxiom_op_zlze__ x y : bool then y else x.
 
-Local Definition Ord__CoAxiom_min {inst_br} : (Core.CoAxiom
-                                              inst_br) -> (Core.CoAxiom inst_br) -> (Core.CoAxiom inst_br) :=
+Local Definition Ord__CoAxiom_min {inst_br}
+   : (Core.CoAxiom inst_br) -> (Core.CoAxiom inst_br) -> (Core.CoAxiom inst_br) :=
   fun x y => if Ord__CoAxiom_op_zlze__ x y : bool then x else y.
 
-Definition Eq___CoAxiom_op_zeze__ {inst_br} : Core.CoAxiom
-                                              inst_br -> Core.CoAxiom inst_br -> bool :=
+Definition Eq___CoAxiom_op_zeze__ {inst_br}
+   : Core.CoAxiom inst_br -> Core.CoAxiom inst_br -> bool :=
   fun a b =>
     let scrut_0__ := Ord__CoAxiom_compare a b in
     match scrut_0__ with
@@ -254,8 +254,8 @@ Definition Eq___CoAxiom_op_zeze__ {inst_br} : Core.CoAxiom
     | _ => false
     end.
 
-Definition Eq___CoAxiom_op_zsze__ {inst_br} : Core.CoAxiom
-                                              inst_br -> Core.CoAxiom inst_br -> bool :=
+Definition Eq___CoAxiom_op_zsze__ {inst_br}
+   : Core.CoAxiom inst_br -> Core.CoAxiom inst_br -> bool :=
   fun a b =>
     let scrut_0__ := Ord__CoAxiom_compare a b in
     match scrut_0__ with
@@ -263,21 +263,21 @@ Definition Eq___CoAxiom_op_zsze__ {inst_br} : Core.CoAxiom
     | _ => true
     end.
 
-Program Instance Eq___CoAxiom {br} : GHC.Base.Eq_ (Core.CoAxiom br) := fun _
-                                                                           k =>
-    k {|GHC.Base.op_zeze____ := Eq___CoAxiom_op_zeze__ ;
-      GHC.Base.op_zsze____ := Eq___CoAxiom_op_zsze__ |}.
+Program Instance Eq___CoAxiom {br} : GHC.Base.Eq_ (Core.CoAxiom br) :=
+  fun _ k =>
+    k {| GHC.Base.op_zeze____ := Eq___CoAxiom_op_zeze__ ;
+         GHC.Base.op_zsze____ := Eq___CoAxiom_op_zsze__ |}.
 Admit Obligations.
 
-Program Instance Ord__CoAxiom {br} : GHC.Base.Ord (Core.CoAxiom br) := fun _
-                                                                           k =>
-    k {|GHC.Base.op_zl____ := Ord__CoAxiom_op_zl__ ;
-      GHC.Base.op_zlze____ := Ord__CoAxiom_op_zlze__ ;
-      GHC.Base.op_zg____ := Ord__CoAxiom_op_zg__ ;
-      GHC.Base.op_zgze____ := Ord__CoAxiom_op_zgze__ ;
-      GHC.Base.compare__ := Ord__CoAxiom_compare ;
-      GHC.Base.max__ := Ord__CoAxiom_max ;
-      GHC.Base.min__ := Ord__CoAxiom_min |}.
+Program Instance Ord__CoAxiom {br} : GHC.Base.Ord (Core.CoAxiom br) :=
+  fun _ k =>
+    k {| GHC.Base.op_zl____ := Ord__CoAxiom_op_zl__ ;
+         GHC.Base.op_zlze____ := Ord__CoAxiom_op_zlze__ ;
+         GHC.Base.op_zg____ := Ord__CoAxiom_op_zg__ ;
+         GHC.Base.op_zgze____ := Ord__CoAxiom_op_zgze__ ;
+         GHC.Base.compare__ := Ord__CoAxiom_compare ;
+         GHC.Base.max__ := Ord__CoAxiom_max ;
+         GHC.Base.min__ := Ord__CoAxiom_min |}.
 Admit Obligations.
 
 (* Translating `instance forall {br}, Unique.Uniquable (Core.CoAxiom br)'
@@ -312,54 +312,56 @@ Admit Obligations.
    find information for class Qualified "Unique" "Uniquable" unsupported *)
 
 Local Definition Eq___CoAxiomRule_op_zeze__
-    : Core.CoAxiomRule -> Core.CoAxiomRule -> bool :=
+   : Core.CoAxiomRule -> Core.CoAxiomRule -> bool :=
   fun x y => coaxrName x GHC.Base.== coaxrName y.
 
 Local Definition Eq___CoAxiomRule_op_zsze__
-    : Core.CoAxiomRule -> Core.CoAxiomRule -> bool :=
+   : Core.CoAxiomRule -> Core.CoAxiomRule -> bool :=
   fun x y => negb (Eq___CoAxiomRule_op_zeze__ x y).
 
-Program Instance Eq___CoAxiomRule : GHC.Base.Eq_ Core.CoAxiomRule := fun _ k =>
-    k {|GHC.Base.op_zeze____ := Eq___CoAxiomRule_op_zeze__ ;
-      GHC.Base.op_zsze____ := Eq___CoAxiomRule_op_zsze__ |}.
+Program Instance Eq___CoAxiomRule : GHC.Base.Eq_ Core.CoAxiomRule :=
+  fun _ k =>
+    k {| GHC.Base.op_zeze____ := Eq___CoAxiomRule_op_zeze__ ;
+         GHC.Base.op_zsze____ := Eq___CoAxiomRule_op_zsze__ |}.
 Admit Obligations.
 
 Local Definition Ord__CoAxiomRule_compare
-    : Core.CoAxiomRule -> Core.CoAxiomRule -> comparison :=
+   : Core.CoAxiomRule -> Core.CoAxiomRule -> comparison :=
   fun x y => GHC.Base.compare (coaxrName x) (coaxrName y).
 
 Local Definition Ord__CoAxiomRule_op_zg__
-    : Core.CoAxiomRule -> Core.CoAxiomRule -> bool :=
+   : Core.CoAxiomRule -> Core.CoAxiomRule -> bool :=
   fun x y => _GHC.Base.==_ (Ord__CoAxiomRule_compare x y) Gt.
 
 Local Definition Ord__CoAxiomRule_op_zgze__
-    : Core.CoAxiomRule -> Core.CoAxiomRule -> bool :=
+   : Core.CoAxiomRule -> Core.CoAxiomRule -> bool :=
   fun x y => _GHC.Base./=_ (Ord__CoAxiomRule_compare x y) Lt.
 
 Local Definition Ord__CoAxiomRule_op_zl__
-    : Core.CoAxiomRule -> Core.CoAxiomRule -> bool :=
+   : Core.CoAxiomRule -> Core.CoAxiomRule -> bool :=
   fun x y => _GHC.Base.==_ (Ord__CoAxiomRule_compare x y) Lt.
 
 Local Definition Ord__CoAxiomRule_op_zlze__
-    : Core.CoAxiomRule -> Core.CoAxiomRule -> bool :=
+   : Core.CoAxiomRule -> Core.CoAxiomRule -> bool :=
   fun x y => _GHC.Base./=_ (Ord__CoAxiomRule_compare x y) Gt.
 
 Local Definition Ord__CoAxiomRule_max
-    : Core.CoAxiomRule -> Core.CoAxiomRule -> Core.CoAxiomRule :=
+   : Core.CoAxiomRule -> Core.CoAxiomRule -> Core.CoAxiomRule :=
   fun x y => if Ord__CoAxiomRule_op_zlze__ x y : bool then y else x.
 
 Local Definition Ord__CoAxiomRule_min
-    : Core.CoAxiomRule -> Core.CoAxiomRule -> Core.CoAxiomRule :=
+   : Core.CoAxiomRule -> Core.CoAxiomRule -> Core.CoAxiomRule :=
   fun x y => if Ord__CoAxiomRule_op_zlze__ x y : bool then x else y.
 
-Program Instance Ord__CoAxiomRule : GHC.Base.Ord Core.CoAxiomRule := fun _ k =>
-    k {|GHC.Base.op_zl____ := Ord__CoAxiomRule_op_zl__ ;
-      GHC.Base.op_zlze____ := Ord__CoAxiomRule_op_zlze__ ;
-      GHC.Base.op_zg____ := Ord__CoAxiomRule_op_zg__ ;
-      GHC.Base.op_zgze____ := Ord__CoAxiomRule_op_zgze__ ;
-      GHC.Base.compare__ := Ord__CoAxiomRule_compare ;
-      GHC.Base.max__ := Ord__CoAxiomRule_max ;
-      GHC.Base.min__ := Ord__CoAxiomRule_min |}.
+Program Instance Ord__CoAxiomRule : GHC.Base.Ord Core.CoAxiomRule :=
+  fun _ k =>
+    k {| GHC.Base.op_zl____ := Ord__CoAxiomRule_op_zl__ ;
+         GHC.Base.op_zlze____ := Ord__CoAxiomRule_op_zlze__ ;
+         GHC.Base.op_zg____ := Ord__CoAxiomRule_op_zg__ ;
+         GHC.Base.op_zgze____ := Ord__CoAxiomRule_op_zgze__ ;
+         GHC.Base.compare__ := Ord__CoAxiomRule_compare ;
+         GHC.Base.max__ := Ord__CoAxiomRule_max ;
+         GHC.Base.min__ := Ord__CoAxiomRule_min |}.
 Admit Obligations.
 
 (* Translating `instance Outputable.Outputable Core.CoAxiomRule' failed: OOPS!
@@ -376,19 +378,20 @@ Admit Obligations.
 
 Local Definition Eq___Role_op_zeze__ : Core.Role -> Core.Role -> bool :=
   fun arg_0__ arg_1__ =>
-    match arg_0__ , arg_1__ with
-    | Core.Nominal , Core.Nominal => true
-    | Core.Representational , Core.Representational => true
-    | Core.Phantom , Core.Phantom => true
-    | _ , _ => false
+    match arg_0__, arg_1__ with
+    | Core.Nominal, Core.Nominal => true
+    | Core.Representational, Core.Representational => true
+    | Core.Phantom, Core.Phantom => true
+    | _, _ => false
     end.
 
 Local Definition Eq___Role_op_zsze__ : Core.Role -> Core.Role -> bool :=
   fun a b => negb (Eq___Role_op_zeze__ a b).
 
-Program Instance Eq___Role : GHC.Base.Eq_ Core.Role := fun _ k =>
-    k {|GHC.Base.op_zeze____ := Eq___Role_op_zeze__ ;
-      GHC.Base.op_zsze____ := Eq___Role_op_zsze__ |}.
+Program Instance Eq___Role : GHC.Base.Eq_ Core.Role :=
+  fun _ k =>
+    k {| GHC.Base.op_zeze____ := Eq___Role_op_zeze__ ;
+         GHC.Base.op_zsze____ := Eq___Role_op_zsze__ |}.
 Admit Obligations.
 
 Definition coAxBranchCoVars : Core.CoAxBranch -> list CoVar :=
@@ -426,8 +429,8 @@ Definition coAxiomName {br} : Core.CoAxiom br -> Name.Name :=
 Axiom coAxiomNthBranch : forall {A : Type}, A.
 
 Definition coAxiomNumPats {br} : Core.CoAxiom br -> GHC.Num.Int :=
-  Data.Foldable.length GHC.Base.∘ (coAxBranchLHS GHC.Base.∘ (GHC.Base.flip
-  coAxiomNthBranch #0)).
+  Data.Foldable.length GHC.Base.∘
+  (coAxBranchLHS GHC.Base.∘ (GHC.Base.flip coAxiomNthBranch #0)).
 
 (* Translating `coAxiomNthBranch' failed: using a record pattern for the unknown
    constructor `CoAxiom' unsupported *)

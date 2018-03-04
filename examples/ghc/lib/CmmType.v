@@ -23,26 +23,29 @@ Import GHC.Num.Notations.
 
 (* Converted type declarations: *)
 
-Inductive Width : Type := W8 : Width
-                       |  W16 : Width
-                       |  W32 : Width
-                       |  W64 : Width
-                       |  W80 : Width
-                       |  W128 : Width
-                       |  W256 : Width
-                       |  W512 : Width.
+Inductive Width : Type
+  := W8 : Width
+  |  W16 : Width
+  |  W32 : Width
+  |  W64 : Width
+  |  W80 : Width
+  |  W128 : Width
+  |  W256 : Width
+  |  W512 : Width.
 
 Definition Length :=
   GHC.Num.Int%type.
 
-Inductive ForeignHint : Type := NoHint : ForeignHint
-                             |  AddrHint : ForeignHint
-                             |  SignedHint : ForeignHint.
+Inductive ForeignHint : Type
+  := NoHint : ForeignHint
+  |  AddrHint : ForeignHint
+  |  SignedHint : ForeignHint.
 
-Inductive CmmCat : Type := GcPtrCat : CmmCat
-                        |  BitsCat : CmmCat
-                        |  FloatCat : CmmCat
-                        |  VecCat : Length -> CmmCat -> CmmCat.
+Inductive CmmCat : Type
+  := GcPtrCat : CmmCat
+  |  BitsCat : CmmCat
+  |  FloatCat : CmmCat
+  |  VecCat : Length -> CmmCat -> CmmCat.
 
 Inductive CmmType : Type := Mk_CmmType : CmmCat -> Width -> CmmType.
 (* Midamble *)
@@ -69,22 +72,23 @@ Instance Default_CmmType : GHC.Err.Default CmmType :=
    unsupported *)
 
 Local Definition Eq___ForeignHint_op_zeze__
-    : ForeignHint -> ForeignHint -> bool :=
+   : ForeignHint -> ForeignHint -> bool :=
   fun arg_0__ arg_1__ =>
-    match arg_0__ , arg_1__ with
-    | NoHint , NoHint => true
-    | AddrHint , AddrHint => true
-    | SignedHint , SignedHint => true
-    | _ , _ => false
+    match arg_0__, arg_1__ with
+    | NoHint, NoHint => true
+    | AddrHint, AddrHint => true
+    | SignedHint, SignedHint => true
+    | _, _ => false
     end.
 
 Local Definition Eq___ForeignHint_op_zsze__
-    : ForeignHint -> ForeignHint -> bool :=
+   : ForeignHint -> ForeignHint -> bool :=
   fun a b => negb (Eq___ForeignHint_op_zeze__ a b).
 
-Program Instance Eq___ForeignHint : GHC.Base.Eq_ ForeignHint := fun _ k =>
-    k {|GHC.Base.op_zeze____ := Eq___ForeignHint_op_zeze__ ;
-      GHC.Base.op_zsze____ := Eq___ForeignHint_op_zsze__ |}.
+Program Instance Eq___ForeignHint : GHC.Base.Eq_ ForeignHint :=
+  fun _ k =>
+    k {| GHC.Base.op_zeze____ := Eq___ForeignHint_op_zeze__ ;
+         GHC.Base.op_zsze____ := Eq___ForeignHint_op_zsze__ |}.
 Admit Obligations.
 
 Local Definition Eq___CmmCat_op_zeze__ : CmmCat -> CmmCat -> bool :=
@@ -93,9 +97,10 @@ Local Definition Eq___CmmCat_op_zeze__ : CmmCat -> CmmCat -> bool :=
 Local Definition Eq___CmmCat_op_zsze__ : CmmCat -> CmmCat -> bool :=
   fun a b => negb (Eq___CmmCat_op_zeze__ a b).
 
-Program Instance Eq___CmmCat : GHC.Base.Eq_ CmmCat := fun _ k =>
-    k {|GHC.Base.op_zeze____ := Eq___CmmCat_op_zeze__ ;
-      GHC.Base.op_zsze____ := Eq___CmmCat_op_zsze__ |}.
+Program Instance Eq___CmmCat : GHC.Base.Eq_ CmmCat :=
+  fun _ k =>
+    k {| GHC.Base.op_zeze____ := Eq___CmmCat_op_zeze__ ;
+         GHC.Base.op_zsze____ := Eq___CmmCat_op_zsze__ |}.
 Admit Obligations.
 
 (* Translating `instance GHC.Show.Show CmmType.Width' failed: OOPS! Cannot find
@@ -105,24 +110,25 @@ Admit Obligations.
 
 Local Definition Eq___Width_op_zeze__ : Width -> Width -> bool :=
   fun arg_0__ arg_1__ =>
-    match arg_0__ , arg_1__ with
-    | W8 , W8 => true
-    | W16 , W16 => true
-    | W32 , W32 => true
-    | W64 , W64 => true
-    | W80 , W80 => true
-    | W128 , W128 => true
-    | W256 , W256 => true
-    | W512 , W512 => true
-    | _ , _ => false
+    match arg_0__, arg_1__ with
+    | W8, W8 => true
+    | W16, W16 => true
+    | W32, W32 => true
+    | W64, W64 => true
+    | W80, W80 => true
+    | W128, W128 => true
+    | W256, W256 => true
+    | W512, W512 => true
+    | _, _ => false
     end.
 
 Local Definition Eq___Width_op_zsze__ : Width -> Width -> bool :=
   fun a b => negb (Eq___Width_op_zeze__ a b).
 
-Program Instance Eq___Width : GHC.Base.Eq_ Width := fun _ k =>
-    k {|GHC.Base.op_zeze____ := Eq___Width_op_zeze__ ;
-      GHC.Base.op_zsze____ := Eq___Width_op_zsze__ |}.
+Program Instance Eq___Width : GHC.Base.Eq_ Width :=
+  fun _ k =>
+    k {| GHC.Base.op_zeze____ := Eq___Width_op_zeze__ ;
+         GHC.Base.op_zsze____ := Eq___Width_op_zsze__ |}.
 Admit Obligations.
 
 Definition cmmBits : Width -> CmmType :=
@@ -151,26 +157,25 @@ Definition b128 : CmmType :=
 
 Definition cmmEqType : CmmType -> CmmType -> bool :=
   fun arg_0__ arg_1__ =>
-    match arg_0__ , arg_1__ with
-    | Mk_CmmType c1 w1 , Mk_CmmType c2 w2 =>
+    match arg_0__, arg_1__ with
+    | Mk_CmmType c1 w1, Mk_CmmType c2 w2 =>
         andb (c1 GHC.Base.== c2) (w1 GHC.Base.== w2)
     end.
 
 Definition cmmEqType_ignoring_ptrhood : CmmType -> CmmType -> bool :=
   fun arg_0__ arg_1__ =>
-    match arg_0__ , arg_1__ with
-    | Mk_CmmType c1 w1 , Mk_CmmType c2 w2 =>
+    match arg_0__, arg_1__ with
+    | Mk_CmmType c1 w1, Mk_CmmType c2 w2 =>
         let weak_eq : CmmCat -> CmmCat -> bool :=
           fix weak_eq arg_2__ arg_3__
-                := match arg_2__ , arg_3__ with
-                   | FloatCat , FloatCat => true
-                   | FloatCat , _other => false
-                   | _other , FloatCat => false
-                   | VecCat l1 cat1 , VecCat l2 cat2 =>
-                       andb (l1 GHC.Base.== l2) (weak_eq cat1 cat2)
-                   | VecCat _ _ , _other => false
-                   | _other , VecCat _ _ => false
-                   | _word1 , _word2 => true
+                := match arg_2__, arg_3__ with
+                   | FloatCat, FloatCat => true
+                   | FloatCat, _other => false
+                   | _other, FloatCat => false
+                   | VecCat l1 cat1, VecCat l2 cat2 => andb (l1 GHC.Base.== l2) (weak_eq cat1 cat2)
+                   | VecCat _ _, _other => false
+                   | _other, VecCat _ _ => false
+                   | _word1, _word2 => true
                    end in
         andb (weak_eq c1 c2) (w1 GHC.Base.== w2)
     end.
@@ -191,7 +196,7 @@ Definition halfWordMask : DynFlags.DynFlags -> GHC.Num.Integer :=
     else if DynFlags.wORD_SIZE dflags GHC.Base.== #8 : bool
          then #4294967295
          else Panic.panic (GHC.Base.hs_string__
-                          "MachOp.halfWordMask: Unknown word size").
+                           "MachOp.halfWordMask: Unknown word size").
 
 Definition halfWordWidth : DynFlags.DynFlags -> Width :=
   fun dflags =>
@@ -345,8 +350,8 @@ Definition vecElemType : CmmType -> CmmType :=
 
 Definition vec : Length -> CmmType -> CmmType :=
   fun arg_0__ arg_1__ =>
-    match arg_0__ , arg_1__ with
-    | l , Mk_CmmType cat w =>
+    match arg_0__, arg_1__ with
+    | l, Mk_CmmType cat w =>
         let vecw : Width := widthFromBytes (l GHC.Num.* widthInBytes w) in
         Mk_CmmType (VecCat l cat) vecw
     end.
@@ -383,8 +388,8 @@ Definition vec8b16 : CmmType :=
 
 Definition cmmVec : GHC.Num.Int -> CmmType -> CmmType :=
   fun arg_0__ arg_1__ =>
-    match arg_0__ , arg_1__ with
-    | n , Mk_CmmType cat w =>
+    match arg_0__, arg_1__ with
+    | n, Mk_CmmType cat w =>
         Mk_CmmType (VecCat n cat) (widthFromBytes (n GHC.Num.* widthInBytes w))
     end.
 

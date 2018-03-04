@@ -29,8 +29,10 @@ Definition InterestingVarFun :=
   (Core.Var -> bool)%type.
 
 Definition FV :=
-  (InterestingVarFun -> VarSet.VarSet -> (list Core.Var *
-  VarSet.VarSet)%type -> (list Core.Var * VarSet.VarSet)%type)%type.
+  (InterestingVarFun ->
+   VarSet.VarSet ->
+   (list Core.Var * VarSet.VarSet)%type ->
+   (list Core.Var * VarSet.VarSet)%type)%type.
 (* Converted value declarations: *)
 
 Definition delFV : Core.Var -> FV -> FV :=
@@ -43,8 +45,8 @@ Definition delFVs : VarSet.VarSet -> FV -> FV :=
 
 Definition emptyFV : FV :=
   fun arg_0__ arg_1__ arg_2__ =>
-    match arg_0__ , arg_1__ , arg_2__ with
-    | _ , _ , acc => acc
+    match arg_0__, arg_1__, arg_2__ with
+    | _, _, acc => acc
     end.
 
 Definition filterFV : InterestingVarFun -> FV -> FV :=
@@ -66,11 +68,11 @@ Definition fvDVarSet : FV -> VarSet.DVarSet :=
 
 Definition mapUnionFV {a} : (a -> FV) -> list a -> FV :=
   fix mapUnionFV arg_0__ arg_1__ arg_2__ arg_3__ arg_4__
-        := match arg_0__ , arg_1__ , arg_2__ , arg_3__ , arg_4__ with
-           | _f , nil , _fv_cand , _in_scope , acc => acc
-           | f , cons a as_ , fv_cand , in_scope , acc =>
-               mapUnionFV f as_ fv_cand in_scope GHC.Base.$! (f a fv_cand in_scope GHC.Base.$!
-               acc)
+        := match arg_0__, arg_1__, arg_2__, arg_3__, arg_4__ with
+           | _f, nil, _fv_cand, _in_scope, acc => acc
+           | f, cons a as_, fv_cand, in_scope, acc =>
+               mapUnionFV f as_ fv_cand in_scope GHC.Base.$!
+               (f a fv_cand in_scope GHC.Base.$! acc)
            end.
 
 Definition unionsFV : list FV -> FV :=
@@ -82,8 +84,8 @@ Definition unionFV : FV -> FV -> FV :=
 
 Definition unitFV : Var.Id -> FV :=
   fun arg_0__ arg_1__ arg_2__ arg_3__ =>
-    match arg_0__ , arg_1__ , arg_2__ , arg_3__ with
-    | var , fv_cand , in_scope , (pair have haveSet as acc) =>
+    match arg_0__, arg_1__, arg_2__, arg_3__ with
+    | var, fv_cand, in_scope, (pair have haveSet as acc) =>
         if VarSet.elemVarSet var in_scope : bool
         then acc
         else if VarSet.elemVarSet var haveSet : bool

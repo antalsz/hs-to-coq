@@ -43,7 +43,8 @@ Definition maskPowerOfTwo : Data.IntSet.Internal.IntSet -> bool :=
            | Data.IntSet.Internal.Tip _ _ => true
            | Data.IntSet.Internal.Bin _ m l r =>
                andb (Utils.Containers.Internal.BitUtil.bitcount #0 (GHC.Real.fromIntegral m)
-                    GHC.Base.== #1) (andb (maskPowerOfTwo l) (maskPowerOfTwo r))
+                     GHC.Base.==
+                     #1) (andb (maskPowerOfTwo l) (maskPowerOfTwo r))
            end.
 
 Definition maskRespected : Data.IntSet.Internal.IntSet -> bool :=
@@ -53,9 +54,9 @@ Definition maskRespected : Data.IntSet.Internal.IntSet -> bool :=
     | Data.IntSet.Internal.Tip _ _ => true
     | Data.IntSet.Internal.Bin _ binMask l r =>
         andb (Data.Foldable.all (fun x => Data.IntSet.Internal.zero x binMask)
-             (Data.IntSet.Internal.elems l)) (Data.Foldable.all (fun x =>
-                                                                  negb (Data.IntSet.Internal.zero x binMask))
-             (Data.IntSet.Internal.elems r))
+              (Data.IntSet.Internal.elems l)) (Data.Foldable.all (fun x =>
+                                                                    negb (Data.IntSet.Internal.zero x binMask))
+              (Data.IntSet.Internal.elems r))
     end.
 
 Definition nilNeverChildOfBin : Data.IntSet.Internal.IntSet -> bool :=

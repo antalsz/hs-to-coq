@@ -34,8 +34,9 @@ Definition TKVar :=
 Definition KindVar :=
   Core.Var%type.
 
-Inductive IdScope : Type := GlobalId : IdScope
-                         |  LocalId : Core.ExportFlag -> IdScope.
+Inductive IdScope : Type
+  := GlobalId : IdScope
+  |  LocalId : Core.ExportFlag -> IdScope.
 
 Definition Id :=
   Core.Var%type.
@@ -119,9 +120,10 @@ Local Definition Eq___Var_op_zeze__ : Core.Var -> Core.Var -> bool :=
 Local Definition Eq___Var_op_zsze__ : Core.Var -> Core.Var -> bool :=
   fun x y => negb (Eq___Var_op_zeze__ x y).
 
-Program Instance Eq___Var : GHC.Base.Eq_ Core.Var := fun _ k =>
-    k {|GHC.Base.op_zeze____ := Eq___Var_op_zeze__ ;
-      GHC.Base.op_zsze____ := Eq___Var_op_zsze__ |}.
+Program Instance Eq___Var : GHC.Base.Eq_ Core.Var :=
+  fun _ k =>
+    k {| GHC.Base.op_zeze____ := Eq___Var_op_zeze__ ;
+         GHC.Base.op_zsze____ := Eq___Var_op_zsze__ |}.
 Admit Obligations.
 
 Local Definition Ord__Var_op_zg__ : Core.Var -> Core.Var -> bool :=
@@ -230,16 +232,16 @@ Axiom mkTyVar : forall {A : Type}, A.
 Axiom mk_id : forall {A : Type}, A.
 
 Definition mkLocalVar
-    : IdInfo.IdDetails -> Name.Name -> Core.Type_ -> IdInfo.IdInfo -> Id :=
+   : IdInfo.IdDetails -> Name.Name -> Core.Type_ -> IdInfo.IdInfo -> Id :=
   fun details name ty info =>
     mk_id name ty (LocalId Core.NotExported) details info.
 
 Definition mkGlobalVar
-    : IdInfo.IdDetails -> Name.Name -> Core.Type_ -> IdInfo.IdInfo -> Id :=
+   : IdInfo.IdDetails -> Name.Name -> Core.Type_ -> IdInfo.IdInfo -> Id :=
   fun details name ty info => mk_id name ty GlobalId details info.
 
 Definition mkExportedLocalVar
-    : IdInfo.IdDetails -> Name.Name -> Core.Type_ -> IdInfo.IdInfo -> Id :=
+   : IdInfo.IdDetails -> Name.Name -> Core.Type_ -> IdInfo.IdInfo -> Id :=
   fun details name ty info => mk_id name ty (LocalId Core.Exported) details info.
 
 Definition mkCoVar : Name.Name -> Core.Type_ -> CoVar :=
@@ -334,14 +336,15 @@ Definition nonDetCmpVar : Core.Var -> Core.Var -> comparison :=
 Local Definition Ord__Var_compare : Core.Var -> Core.Var -> comparison :=
   fun a b => nonDetCmpVar a b.
 
-Program Instance Ord__Var : GHC.Base.Ord Core.Var := fun _ k =>
-    k {|GHC.Base.op_zl____ := Ord__Var_op_zl__ ;
-      GHC.Base.op_zlze____ := Ord__Var_op_zlze__ ;
-      GHC.Base.op_zg____ := Ord__Var_op_zg__ ;
-      GHC.Base.op_zgze____ := Ord__Var_op_zgze__ ;
-      GHC.Base.compare__ := Ord__Var_compare ;
-      GHC.Base.max__ := Ord__Var_max ;
-      GHC.Base.min__ := Ord__Var_min |}.
+Program Instance Ord__Var : GHC.Base.Ord Core.Var :=
+  fun _ k =>
+    k {| GHC.Base.op_zl____ := Ord__Var_op_zl__ ;
+         GHC.Base.op_zlze____ := Ord__Var_op_zlze__ ;
+         GHC.Base.op_zg____ := Ord__Var_op_zg__ ;
+         GHC.Base.op_zgze____ := Ord__Var_op_zgze__ ;
+         GHC.Base.compare__ := Ord__Var_compare ;
+         GHC.Base.max__ := Ord__Var_max ;
+         GHC.Base.min__ := Ord__Var_min |}.
 Admit Obligations.
 
 (* Unbound variables:

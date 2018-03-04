@@ -41,8 +41,8 @@ Definition getUnique `{g : Uniquable a} : a -> Unique :=
 Local Definition Uniquable__Unique_getUnique : Unique -> Unique :=
   fun u => u.
 
-Program Instance Uniquable__Unique : Uniquable Unique := fun _ k =>
-    k {|getUnique__ := Uniquable__Unique_getUnique |}.
+Program Instance Uniquable__Unique : Uniquable Unique :=
+  fun _ k => k {| getUnique__ := Uniquable__Unique_getUnique |}.
 Admit Obligations.
 
 (* Translating `instance Outputable.Outputable Unique.Unique' failed: OOPS!
@@ -54,8 +54,8 @@ Admit Obligations.
 
 Definition eqUnique : Unique -> Unique -> bool :=
   fun arg_0__ arg_1__ =>
-    match arg_0__ , arg_1__ with
-    | MkUnique u1 , MkUnique u2 => u1 GHC.Base.== u2
+    match arg_0__, arg_1__ with
+    | MkUnique u1, MkUnique u2 => u1 GHC.Base.== u2
     end.
 
 Local Definition Eq___Unique_op_zsze__ : Unique -> Unique -> bool :=
@@ -64,9 +64,10 @@ Local Definition Eq___Unique_op_zsze__ : Unique -> Unique -> bool :=
 Local Definition Eq___Unique_op_zeze__ : Unique -> Unique -> bool :=
   fun a b => eqUnique a b.
 
-Program Instance Eq___Unique : GHC.Base.Eq_ Unique := fun _ k =>
-    k {|GHC.Base.op_zeze____ := Eq___Unique_op_zeze__ ;
-      GHC.Base.op_zsze____ := Eq___Unique_op_zsze__ |}.
+Program Instance Eq___Unique : GHC.Base.Eq_ Unique :=
+  fun _ k =>
+    k {| GHC.Base.op_zeze____ := Eq___Unique_op_zeze__ ;
+         GHC.Base.op_zsze____ := Eq___Unique_op_zsze__ |}.
 Admit Obligations.
 
 Definition getKey : Unique -> GHC.Num.Int :=
@@ -86,8 +87,8 @@ Definition dataConWorkerUnique : Unique -> Unique :=
 
 Definition leUnique : Unique -> Unique -> bool :=
   fun arg_0__ arg_1__ =>
-    match arg_0__ , arg_1__ with
-    | MkUnique u1 , MkUnique u2 => u1 GHC.Base.<= u2
+    match arg_0__, arg_1__ with
+    | MkUnique u1, MkUnique u2 => u1 GHC.Base.<= u2
     end.
 
 Local Definition Ord__Unique_op_zlze__ : Unique -> Unique -> bool :=
@@ -104,8 +105,8 @@ Local Definition Ord__Unique_op_zg__ : Unique -> Unique -> bool :=
 
 Definition ltUnique : Unique -> Unique -> bool :=
   fun arg_0__ arg_1__ =>
-    match arg_0__ , arg_1__ with
-    | MkUnique u1 , MkUnique u2 => u1 GHC.Base.< u2
+    match arg_0__, arg_1__ with
+    | MkUnique u1, MkUnique u2 => u1 GHC.Base.< u2
     end.
 
 Local Definition Ord__Unique_op_zl__ : Unique -> Unique -> bool :=
@@ -120,22 +121,22 @@ Definition mkUniqueGrimily : GHC.Num.Int -> Unique :=
 Local Definition Uniquable__Int_getUnique : GHC.Num.Int -> Unique :=
   fun i => mkUniqueGrimily i.
 
-Program Instance Uniquable__Int : Uniquable GHC.Num.Int := fun _ k =>
-    k {|getUnique__ := Uniquable__Int_getUnique |}.
+Program Instance Uniquable__Int : Uniquable GHC.Num.Int :=
+  fun _ k => k {| getUnique__ := Uniquable__Int_getUnique |}.
 Admit Obligations.
 
 Local Definition Uniquable__FastString_getUnique
-    : FastString.FastString -> Unique :=
+   : FastString.FastString -> Unique :=
   fun fs => mkUniqueGrimily (FastString.uniqueOfFS fs).
 
 Program Instance Uniquable__FastString : Uniquable FastString.FastString :=
-  fun _ k => k {|getUnique__ := Uniquable__FastString_getUnique |}.
+  fun _ k => k {| getUnique__ := Uniquable__FastString_getUnique |}.
 Admit Obligations.
 
 Definition nonDetCmpUnique : Unique -> Unique -> comparison :=
   fun arg_0__ arg_1__ =>
-    match arg_0__ , arg_1__ with
-    | MkUnique u1 , MkUnique u2 =>
+    match arg_0__, arg_1__ with
+    | MkUnique u1, MkUnique u2 =>
         if u1 GHC.Base.== u2 : bool
         then Eq
         else if u1 GHC.Base.< u2 : bool
@@ -146,20 +147,21 @@ Definition nonDetCmpUnique : Unique -> Unique -> comparison :=
 Local Definition Ord__Unique_compare : Unique -> Unique -> comparison :=
   fun a b => nonDetCmpUnique a b.
 
-Program Instance Ord__Unique : GHC.Base.Ord Unique := fun _ k =>
-    k {|GHC.Base.op_zl____ := Ord__Unique_op_zl__ ;
-      GHC.Base.op_zlze____ := Ord__Unique_op_zlze__ ;
-      GHC.Base.op_zg____ := Ord__Unique_op_zg__ ;
-      GHC.Base.op_zgze____ := Ord__Unique_op_zgze__ ;
-      GHC.Base.compare__ := Ord__Unique_compare ;
-      GHC.Base.max__ := Ord__Unique_max ;
-      GHC.Base.min__ := Ord__Unique_min |}.
+Program Instance Ord__Unique : GHC.Base.Ord Unique :=
+  fun _ k =>
+    k {| GHC.Base.op_zl____ := Ord__Unique_op_zl__ ;
+         GHC.Base.op_zlze____ := Ord__Unique_op_zlze__ ;
+         GHC.Base.op_zg____ := Ord__Unique_op_zg__ ;
+         GHC.Base.op_zgze____ := Ord__Unique_op_zgze__ ;
+         GHC.Base.compare__ := Ord__Unique_compare ;
+         GHC.Base.max__ := Ord__Unique_max ;
+         GHC.Base.min__ := Ord__Unique_min |}.
 Admit Obligations.
 
 Definition stepUnique : Unique -> GHC.Num.Int -> Unique :=
   fun arg_0__ arg_1__ =>
-    match arg_0__ , arg_1__ with
-    | MkUnique i , n => MkUnique (i GHC.Num.+ n)
+    match arg_0__, arg_1__ with
+    | MkUnique i, n => MkUnique (i GHC.Num.+ n)
     end.
 
 Definition dataConRepNameUnique : Unique -> Unique :=
@@ -190,19 +192,19 @@ Definition mkTvOccUnique : FastString.FastString -> Unique :=
   fun fs => mkUnique (GHC.Char.hs_char__ "v") (FastString.uniqueOfFS fs).
 
 Definition mkTupleTyConUnique
-    : BasicTypes.Boxity -> BasicTypes.Arity -> Unique :=
+   : BasicTypes.Boxity -> BasicTypes.Arity -> Unique :=
   fun arg_0__ arg_1__ =>
-    match arg_0__ , arg_1__ with
-    | BasicTypes.Boxed , a => mkUnique (GHC.Char.hs_char__ "4") (#2 GHC.Num.* a)
-    | BasicTypes.Unboxed , a => mkUnique (GHC.Char.hs_char__ "5") (#2 GHC.Num.* a)
+    match arg_0__, arg_1__ with
+    | BasicTypes.Boxed, a => mkUnique (GHC.Char.hs_char__ "4") (#2 GHC.Num.* a)
+    | BasicTypes.Unboxed, a => mkUnique (GHC.Char.hs_char__ "5") (#2 GHC.Num.* a)
     end.
 
 Definition mkTupleDataConUnique
-    : BasicTypes.Boxity -> BasicTypes.Arity -> Unique :=
+   : BasicTypes.Boxity -> BasicTypes.Arity -> Unique :=
   fun arg_0__ arg_1__ =>
-    match arg_0__ , arg_1__ with
-    | BasicTypes.Boxed , a => mkUnique (GHC.Char.hs_char__ "7") (#3 GHC.Num.* a)
-    | BasicTypes.Unboxed , a => mkUnique (GHC.Char.hs_char__ "8") (#3 GHC.Num.* a)
+    match arg_0__, arg_1__ with
+    | BasicTypes.Boxed, a => mkUnique (GHC.Char.hs_char__ "7") (#3 GHC.Num.* a)
+    | BasicTypes.Unboxed, a => mkUnique (GHC.Char.hs_char__ "8") (#3 GHC.Num.* a)
     end.
 
 Definition mkTcOccUnique : FastString.FastString -> Unique :=
@@ -270,8 +272,8 @@ Definition initTyVarUnique : Unique :=
 
 Definition deriveUnique : Unique -> GHC.Num.Int -> Unique :=
   fun arg_0__ arg_1__ =>
-    match arg_0__ , arg_1__ with
-    | MkUnique i , delta => mkUnique (GHC.Char.hs_char__ "X") (i GHC.Num.+ delta)
+    match arg_0__, arg_1__ with
+    | MkUnique i, delta => mkUnique (GHC.Char.hs_char__ "X") (i GHC.Num.+ delta)
     end.
 
 (* Unbound variables:

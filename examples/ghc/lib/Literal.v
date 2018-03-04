@@ -32,18 +32,20 @@ Import GHC.Num.Notations.
 
 (* Converted type declarations: *)
 
-Inductive Literal : Type := MachChar : GHC.Char.Char -> Literal
-                         |  MachStr : GHC.Base.String -> Literal
-                         |  MachNullAddr : Literal
-                         |  MachInt : GHC.Num.Integer -> Literal
-                         |  MachInt64 : GHC.Num.Integer -> Literal
-                         |  MachWord : GHC.Num.Integer -> Literal
-                         |  MachWord64 : GHC.Num.Integer -> Literal
-                         |  MachFloat : GHC.Real.Rational -> Literal
-                         |  MachDouble : GHC.Real.Rational -> Literal
-                         |  MachLabel : FastString.FastString -> (option
-                                        GHC.Num.Int) -> BasicTypes.FunctionOrData -> Literal
-                         |  LitInteger : GHC.Num.Integer -> Core.Type_ -> Literal.
+Inductive Literal : Type
+  := MachChar : GHC.Char.Char -> Literal
+  |  MachStr : GHC.Base.String -> Literal
+  |  MachNullAddr : Literal
+  |  MachInt : GHC.Num.Integer -> Literal
+  |  MachInt64 : GHC.Num.Integer -> Literal
+  |  MachWord : GHC.Num.Integer -> Literal
+  |  MachWord64 : GHC.Num.Integer -> Literal
+  |  MachFloat : GHC.Real.Rational -> Literal
+  |  MachDouble : GHC.Real.Rational -> Literal
+  |  MachLabel
+   : FastString.FastString ->
+     (option GHC.Num.Int) -> BasicTypes.FunctionOrData -> Literal
+  |  LitInteger : GHC.Num.Integer -> Core.Type_ -> Literal.
 (* Midamble *)
 
 Instance Default_Literal : GHC.Err.Default Literal :=
@@ -119,14 +121,14 @@ Definition hashLiteral : Literal -> GHC.Num.Int :=
 Definition inIntRange : DynFlags.DynFlags -> GHC.Num.Integer -> bool :=
   fun dflags x =>
     andb (x GHC.Base.>= DynFlags.tARGET_MIN_INT dflags) (x GHC.Base.<=
-         DynFlags.tARGET_MAX_INT dflags).
+          DynFlags.tARGET_MAX_INT dflags).
 
 Definition litIsDupable : DynFlags.DynFlags -> Literal -> bool :=
   fun arg_0__ arg_1__ =>
-    match arg_0__ , arg_1__ with
-    | _ , MachStr _ => false
-    | dflags , LitInteger i _ => inIntRange dflags i
-    | _ , _ => true
+    match arg_0__, arg_1__ with
+    | _, MachStr _ => false
+    | dflags, LitInteger i _ => inIntRange dflags i
+    | _, _ => true
     end.
 
 Definition inWordRange : DynFlags.DynFlags -> GHC.Num.Integer -> bool :=
@@ -156,15 +158,14 @@ Definition int2FloatLit : Literal -> Literal :=
 
 Definition int2WordLit : DynFlags.DynFlags -> Literal -> Literal :=
   fun arg_0__ arg_1__ =>
-    match arg_0__ , arg_1__ with
-    | dflags , MachInt i =>
+    match arg_0__, arg_1__ with
+    | dflags, MachInt i =>
         if i GHC.Base.< #0 : bool
         then MachWord ((#1 GHC.Num.+ DynFlags.tARGET_MAX_WORD dflags) GHC.Num.+ i)
         else MachWord i
-    | _ , _ =>
-        match arg_0__ , arg_1__ with
-        | _ , l =>
-            Panic.panicStr (GHC.Base.hs_string__ "int2WordLit") (Panic.noString l)
+    | _, _ =>
+        match arg_0__, arg_1__ with
+        | _, l => Panic.panicStr (GHC.Base.hs_string__ "int2WordLit") (Panic.noString l)
         end
     end.
 
@@ -185,7 +186,8 @@ Definition litFitsInChar : Literal -> bool :=
     match arg_0__ with
     | MachInt i =>
         andb (i GHC.Base.>= GHC.Real.toInteger (GHC.Char.ord GHC.Enum.minBound)) (i
-             GHC.Base.<= GHC.Real.toInteger (GHC.Char.ord GHC.Enum.maxBound))
+              GHC.Base.<=
+              GHC.Real.toInteger (GHC.Char.ord GHC.Enum.maxBound))
     | _ => false
     end.
 
@@ -218,19 +220,19 @@ Definition litTag : Literal -> GHC.Num.Int :=
 
 Definition cmpLit : Literal -> Literal -> comparison :=
   fun arg_0__ arg_1__ =>
-    match arg_0__ , arg_1__ with
-    | MachChar a , MachChar b => GHC.Base.compare a b
-    | MachStr a , MachStr b => GHC.Base.compare a b
-    | MachNullAddr , MachNullAddr => Eq
-    | MachInt a , MachInt b => GHC.Base.compare a b
-    | MachWord a , MachWord b => GHC.Base.compare a b
-    | MachInt64 a , MachInt64 b => GHC.Base.compare a b
-    | MachWord64 a , MachWord64 b => GHC.Base.compare a b
-    | MachFloat a , MachFloat b => GHC.Base.compare a b
-    | MachDouble a , MachDouble b => GHC.Base.compare a b
-    | MachLabel a _ _ , MachLabel b _ _ => GHC.Base.compare a b
-    | LitInteger a _ , LitInteger b _ => GHC.Base.compare a b
-    | lit1 , lit2 => if litTag lit1 GHC.Base.< litTag lit2 : bool then Lt else Gt
+    match arg_0__, arg_1__ with
+    | MachChar a, MachChar b => GHC.Base.compare a b
+    | MachStr a, MachStr b => GHC.Base.compare a b
+    | MachNullAddr, MachNullAddr => Eq
+    | MachInt a, MachInt b => GHC.Base.compare a b
+    | MachWord a, MachWord b => GHC.Base.compare a b
+    | MachInt64 a, MachInt64 b => GHC.Base.compare a b
+    | MachWord64 a, MachWord64 b => GHC.Base.compare a b
+    | MachFloat a, MachFloat b => GHC.Base.compare a b
+    | MachDouble a, MachDouble b => GHC.Base.compare a b
+    | MachLabel a _ _, MachLabel b _ _ => GHC.Base.compare a b
+    | LitInteger a _, LitInteger b _ => GHC.Base.compare a b
+    | lit1, lit2 => if litTag lit1 GHC.Base.< litTag lit2 : bool then Lt else Gt
     end.
 
 Local Definition Ord__Literal_compare : Literal -> Literal -> comparison :=
@@ -280,19 +282,21 @@ Local Definition Eq___Literal_op_zeze__ : Literal -> Literal -> bool :=
 Local Definition Eq___Literal_op_zsze__ : Literal -> Literal -> bool :=
   fun a b => match cmpLit a b with | Eq => false | _ => true end.
 
-Program Instance Eq___Literal : GHC.Base.Eq_ Literal := fun _ k =>
-    k {|GHC.Base.op_zeze____ := Eq___Literal_op_zeze__ ;
-      GHC.Base.op_zsze____ := Eq___Literal_op_zsze__ |}.
+Program Instance Eq___Literal : GHC.Base.Eq_ Literal :=
+  fun _ k =>
+    k {| GHC.Base.op_zeze____ := Eq___Literal_op_zeze__ ;
+         GHC.Base.op_zsze____ := Eq___Literal_op_zsze__ |}.
 Admit Obligations.
 
-Program Instance Ord__Literal : GHC.Base.Ord Literal := fun _ k =>
-    k {|GHC.Base.op_zl____ := Ord__Literal_op_zl__ ;
-      GHC.Base.op_zlze____ := Ord__Literal_op_zlze__ ;
-      GHC.Base.op_zg____ := Ord__Literal_op_zg__ ;
-      GHC.Base.op_zgze____ := Ord__Literal_op_zgze__ ;
-      GHC.Base.compare__ := Ord__Literal_compare ;
-      GHC.Base.max__ := Ord__Literal_max ;
-      GHC.Base.min__ := Ord__Literal_min |}.
+Program Instance Ord__Literal : GHC.Base.Ord Literal :=
+  fun _ k =>
+    k {| GHC.Base.op_zl____ := Ord__Literal_op_zl__ ;
+         GHC.Base.op_zlze____ := Ord__Literal_op_zlze__ ;
+         GHC.Base.op_zg____ := Ord__Literal_op_zg__ ;
+         GHC.Base.op_zgze____ := Ord__Literal_op_zgze__ ;
+         GHC.Base.compare__ := Ord__Literal_compare ;
+         GHC.Base.max__ := Ord__Literal_max ;
+         GHC.Base.min__ := Ord__Literal_min |}.
 Admit Obligations.
 
 Definition litValue : Literal -> GHC.Num.Integer :=
@@ -340,8 +344,8 @@ Definition mkMachInt64 : GHC.Num.Integer -> Literal :=
 
 Definition mkMachString : GHC.Base.String -> Literal :=
   fun s =>
-    MachStr (FastString.fastStringToByteString GHC.Base.$ FastString.mkFastString
-            s).
+    MachStr (FastString.fastStringToByteString GHC.Base.$
+             FastString.mkFastString s).
 
 Definition mkMachWord64 : GHC.Num.Integer -> Literal :=
   fun x => MachWord64 x.
@@ -351,15 +355,14 @@ Definition nullAddrLit : Literal :=
 
 Definition word2IntLit : DynFlags.DynFlags -> Literal -> Literal :=
   fun arg_0__ arg_1__ =>
-    match arg_0__ , arg_1__ with
-    | dflags , MachWord w =>
+    match arg_0__, arg_1__ with
+    | dflags, MachWord w =>
         if w GHC.Base.> DynFlags.tARGET_MAX_INT dflags : bool
         then MachInt ((w GHC.Num.- DynFlags.tARGET_MAX_WORD dflags) GHC.Num.- #1)
         else MachInt w
-    | _ , _ =>
-        match arg_0__ , arg_1__ with
-        | _ , l =>
-            Panic.panicStr (GHC.Base.hs_string__ "word2IntLit") (Panic.noString l)
+    | _, _ =>
+        match arg_0__, arg_1__ with
+        | _, l => Panic.panicStr (GHC.Base.hs_string__ "word2IntLit") (Panic.noString l)
         end
     end.
 

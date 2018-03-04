@@ -129,6 +129,7 @@ Program Instance Functor__NonEmpty : GHC.Base.Functor NonEmpty :=
   fun _ k =>
     k {| GHC.Base.op_zlzd____ := fun {a} {b} => Functor__NonEmpty_op_zlzd__ ;
          GHC.Base.fmap__ := fun {a} {b} => Functor__NonEmpty_fmap |}.
+Admit Obligations.
 
 Local Definition Applicative__NonEmpty_pure : forall {a}, a -> NonEmpty a :=
   fun {a} => fun a => NEcons a nil.
@@ -287,6 +288,7 @@ Program Instance Foldable__NonEmpty : Data.Foldable.Foldable NonEmpty :=
            Foldable__NonEmpty_product ;
          Data.Foldable.sum__ := fun {a} `{GHC.Num.Num a} => Foldable__NonEmpty_sum ;
          Data.Foldable.toList__ := fun {a} => Foldable__NonEmpty_toList |}.
+Admit Obligations.
 
 Program Instance Traversable__NonEmpty
    : Data.Traversable.Traversable NonEmpty :=
@@ -299,6 +301,7 @@ Program Instance Traversable__NonEmpty
            Traversable__NonEmpty_sequenceA ;
          Data.Traversable.traverse__ := fun {f} {a} {b} `{GHC.Base.Applicative f} =>
            Traversable__NonEmpty_traverse |}.
+Admit Obligations.
 
 (* Translating `instance GHC.Generics.Generic1 Data.List.NonEmpty.NonEmpty'
    failed: OOPS! Cannot find information for class Qualified "GHC.Generics"
@@ -339,6 +342,7 @@ Program Instance Eq___NonEmpty {a} `{GHC.Base.Eq_ a}
   fun _ k =>
     k {| GHC.Base.op_zeze____ := Eq___NonEmpty_op_zeze__ ;
          GHC.Base.op_zsze____ := Eq___NonEmpty_op_zsze__ |}.
+Admit Obligations.
 
 Definition drop {a} : GHC.Num.Int -> NonEmpty a -> list a :=
   fun n => GHC.List.drop n GHC.Base.∘ toList.
@@ -478,6 +482,7 @@ Program Instance Applicative__NonEmpty : GHC.Base.Applicative NonEmpty :=
     k {| GHC.Base.op_ztzg____ := fun {a} {b} => Applicative__NonEmpty_op_ztzg__ ;
          GHC.Base.op_zlztzg____ := fun {a} {b} => Applicative__NonEmpty_op_zlztzg__ ;
          GHC.Base.pure__ := fun {a} => Applicative__NonEmpty_pure |}.
+Admit Obligations.
 
 Local Definition Monad__NonEmpty_op_zgzg__
    : forall {a} {b}, NonEmpty a -> NonEmpty b -> NonEmpty b :=
@@ -491,6 +496,7 @@ Program Instance Monad__NonEmpty : GHC.Base.Monad NonEmpty :=
     k {| GHC.Base.op_zgzg____ := fun {a} {b} => Monad__NonEmpty_op_zgzg__ ;
          GHC.Base.op_zgzgze____ := fun {a} {b} => Monad__NonEmpty_op_zgzgze__ ;
          GHC.Base.return___ := fun {a} => Monad__NonEmpty_return_ |}.
+Admit Obligations.
 
 Module Notations.
 Notation "'_Data.List.NonEmpty.<|_'" := (op_zlzb__).

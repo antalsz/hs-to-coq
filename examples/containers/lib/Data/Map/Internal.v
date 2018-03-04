@@ -12,13 +12,7 @@ Require Coq.Program.Wf.
 
 (* Preamble *)
 
-Require GHC.Base.
 
-Module GHC.
-  Module Err.
-    Axiom error : forall {a}, GHC.Base.String -> a.
-  End Err.
-End GHC.
 
 (* Converted imports: *)
 
@@ -138,6 +132,13 @@ Fixpoint map_size {a} {b} (s : Map a b) : nat :=
   | Tip => 0
   | Bin _ _ _ s1 s2 => 1 + map_size s1 + map_size s2
   end.
+
+Require Import GHC.Err.
+
+Instance Map_Default {k}{v} : Default (Map k v) :=
+  Build_Default _ Tip.
+Instance AlteredDefault {k}{v} : Default (Altered k v) :=
+  Build_Default _ AltSame.
 
 (* Converted value declarations: *)
 
@@ -308,28 +309,6 @@ Definition filterAMissing {f} {k} {x} `{GHC.Base.Applicative f}
 Definition filterMissing {f} {k} {x} `{GHC.Base.Applicative f}
    : (k -> x -> bool) -> WhenMissing f k x x :=
   fun f => Mk_WhenMissing missingValue missingValue.
-
-Definition find {k} {a} `{GHC.Base.Ord k} : k -> Map k a -> a :=
-  let fix go arg_0__ arg_1__
-            := match arg_0__, arg_1__ with
-               | _, Tip =>
-                   GHC.Err.error (GHC.Base.hs_string__
-                                  "Map.!: given key is not an element in the map")
-               | k, Bin _ kx x l r =>
-                   match GHC.Base.compare k kx with
-                   | Lt => go k l
-                   | Gt => go k r
-                   | Eq => x
-                   end
-               end in
-  go.
-
-Definition op_zn__ {k} {a} `{GHC.Base.Ord k} : Map k a -> k -> a :=
-  fun m k => find k m.
-
-Notation "'_!_'" := (op_zn__).
-
-Infix "!" := (_!_) (at level 99).
 
 Definition findWithDefault {k} {a} `{GHC.Base.Ord k} : a -> k -> Map k a -> a :=
   let fix go arg_0__ arg_1__ arg_2__
@@ -665,15 +644,6 @@ Definition lookupMax {k} {a} : Map k a -> option (k * a)%type :=
     | Bin _ k x _ r => Some GHC.Base.$! lookupMaxSure k x r
     end.
 
-Definition findMax {k} {a} : Map k a -> (k * a)%type :=
-  fun t =>
-    match lookupMax t with
-    | Some r => r
-    | _ =>
-        GHC.Err.error (GHC.Base.hs_string__
-                       "Map.findMax: empty map has no maximal element")
-    end.
-
 Definition lookupMinSure {k} {a} : k -> a -> Map k a -> (k * a)%type :=
   fix lookupMinSure arg_0__ arg_1__ arg_2__
         := match arg_0__, arg_1__, arg_2__ with
@@ -686,15 +656,6 @@ Definition lookupMin {k} {a} : Map k a -> option (k * a)%type :=
     match arg_0__ with
     | Tip => None
     | Bin _ k x l _ => Some GHC.Base.$! lookupMinSure k x l
-    end.
-
-Definition findMin {k} {a} : Map k a -> (k * a)%type :=
-  fun t =>
-    match lookupMin t with
-    | Some r => r
-    | _ =>
-        GHC.Err.error (GHC.Base.hs_string__
-                       "Map.findMin: empty map has no minimal element")
     end.
 
 Definition lookupTrace {k} {a} `{GHC.Base.Ord k}
@@ -904,20 +865,6 @@ Definition findIndex {k} {a} `{GHC.Base.Ord k} : k -> Map k a -> GHC.Num.Int :=
              end in
   go #0.
 
-Definition elemAt {k} {a} : GHC.Num.Int -> Map k a -> (k * a)%type :=
-  fix elemAt arg_0__ arg_1__
-        := match arg_0__, arg_1__ with
-           | _, Tip =>
-               GHC.Err.error (GHC.Base.hs_string__ "Map.elemAt: index out of range")
-           | i, Bin _ kx x l r =>
-               let sizeL := size l in
-               match GHC.Base.compare i sizeL with
-               | Lt => elemAt i l
-               | Gt => elemAt ((i GHC.Num.- sizeL) GHC.Num.- #1) r
-               | Eq => pair kx x
-               end
-           end.
-
 Definition bin {k} {a} : k -> a -> Map k a -> Map k a -> Map k a :=
   fun k x l r => Bin ((size l GHC.Num.+ size r) GHC.Num.+ #1) k x l r.
 
@@ -997,15 +944,6 @@ Definition minViewWithKey {k} {a}
         Some GHC.Base.$
         (let 'Mk_MinView km xm t := minViewSure k x l r in
          pair (pair km xm) t)
-    end.
-
-Definition deleteFindMin {k} {a} : Map k a -> ((k * a)%type * Map k a)%type :=
-  fun t =>
-    match minViewWithKey t with
-    | None =>
-        pair (GHC.Err.error (GHC.Base.hs_string__
-                             "Map.deleteFindMin: can not return the minimal element of an empty map")) Tip
-    | Some res => res
     end.
 
 Definition minView {k} {a} : Map k a -> option (a * Map k a)%type :=
@@ -1658,6 +1596,7 @@ Local Definition Semigroup__Map_op_zlzg__ {inst_k} {inst_v} `{(GHC.Base.Ord
 Program Instance Semigroup__Map {k} {v} `{(GHC.Base.Ord k)}
    : Data.Semigroup.Semigroup (Map k v) :=
   fun _ k => k {| Data.Semigroup.op_zlzg____ := Semigroup__Map_op_zlzg__ |}.
+Admit Obligations.
 
 Local Definition Monoid__Map_mappend {inst_k} {inst_v} `{(GHC.Base.Ord inst_k)}
    : (Map inst_k inst_v) -> (Map inst_k inst_v) -> (Map inst_k inst_v) :=
@@ -1669,6 +1608,7 @@ Program Instance Monoid__Map {k} {v} `{(GHC.Base.Ord k)}
     k {| GHC.Base.mappend__ := Monoid__Map_mappend ;
          GHC.Base.mconcat__ := Monoid__Map_mconcat ;
          GHC.Base.mempty__ := Monoid__Map_mempty |}.
+Admit Obligations.
 
 Definition unionWith {k} {a} `{GHC.Base.Ord k}
    : (a -> a -> a) -> Map k a -> Map k a -> Map k a :=
@@ -1729,15 +1669,6 @@ Definition maxViewWithKey {k} {a}
         Some GHC.Base.$
         (let 'Mk_MaxView km xm t := maxViewSure k x l r in
          pair (pair km xm) t)
-    end.
-
-Definition deleteFindMax {k} {a} : Map k a -> ((k * a)%type * Map k a)%type :=
-  fun t =>
-    match maxViewWithKey t with
-    | None =>
-        pair (GHC.Err.error (GHC.Base.hs_string__
-                             "Map.deleteFindMax: can not return the maximal element of an empty map")) Tip
-    | Some res => res
     end.
 
 Definition maxView {k} {a} : Map k a -> option (a * Map k a)%type :=
@@ -2459,6 +2390,7 @@ Program Instance Foldable__Map {k} : Data.Foldable.Foldable (Map k) :=
          Data.Foldable.product__ := fun {a} `{GHC.Num.Num a} => Foldable__Map_product ;
          Data.Foldable.sum__ := fun {a} `{GHC.Num.Num a} => Foldable__Map_sum ;
          Data.Foldable.toList__ := fun {a} => Foldable__Map_toList |}.
+Admit Obligations.
 
 Local Definition Eq___Map_op_zeze__ {inst_k} {inst_a} `{GHC.Base.Eq_ inst_k}
   `{GHC.Base.Eq_ inst_a}
@@ -2476,6 +2408,7 @@ Program Instance Eq___Map {k} {a} `{GHC.Base.Eq_ k} `{GHC.Base.Eq_ a}
   fun _ k =>
     k {| GHC.Base.op_zeze____ := Eq___Map_op_zeze__ ;
          GHC.Base.op_zsze____ := Eq___Map_op_zsze__ |}.
+Admit Obligations.
 
 Program Instance Ord__Map {k} {v} `{GHC.Base.Ord k} `{GHC.Base.Ord v}
    : GHC.Base.Ord (Map k v) :=
@@ -2487,6 +2420,7 @@ Program Instance Ord__Map {k} {v} `{GHC.Base.Ord k} `{GHC.Base.Ord v}
          GHC.Base.compare__ := Ord__Map_compare ;
          GHC.Base.max__ := Ord__Map_max ;
          GHC.Base.min__ := Ord__Map_min |}.
+Admit Obligations.
 
 Definition traverseMaybeMissing {f} {k} {x} {y} `{GHC.Base.Applicative f}
    : (k -> x -> f (option y)) -> WhenMissing f k x y :=
@@ -2539,8 +2473,6 @@ Definition zipWithMaybeMatched {f} {k} {x} {y} {z} `{GHC.Base.Applicative f}
     Mk_WhenMatched GHC.Base.$ (fun k x y => GHC.Base.pure GHC.Base.$ f k x y).
 
 Module Notations.
-Notation "'_Data.Map.Internal.!_'" := (op_zn__).
-Infix "Data.Map.Internal.!" := (_!_) (at level 99).
 Notation "'_Data.Map.Internal.!?_'" := (op_znz3fU__).
 Infix "Data.Map.Internal.!?" := (_!?_) (at level 99).
 Notation "'_Data.Map.Internal.\\_'" := (op_zrzr__).

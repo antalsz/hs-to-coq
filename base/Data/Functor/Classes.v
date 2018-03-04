@@ -91,6 +91,7 @@ Local Definition Eq1__option_liftEq
 
 Program Instance Eq1__option : Eq1 option :=
   fun _ k => k {| liftEq__ := fun {a} {b} => Eq1__option_liftEq |}.
+Admit Obligations.
 
 Local Definition Ord1__option_liftCompare
    : forall {a} {b},
@@ -106,6 +107,7 @@ Local Definition Ord1__option_liftCompare
 
 Program Instance Ord1__option : Ord1 option :=
   fun _ k => k {| liftCompare__ := fun {a} {b} => Ord1__option_liftCompare |}.
+Admit Obligations.
 
 (* Translating `instance Data.Functor.Classes.Read1 option' failed: OOPS! Cannot
    find information for class Qualified "Data.Functor.Classes" "Read1"
@@ -128,6 +130,7 @@ Local Definition Eq1__list_liftEq
 
 Program Instance Eq1__list : Eq1 list :=
   fun _ k => k {| liftEq__ := fun {a} {b} => Eq1__list_liftEq |}.
+Admit Obligations.
 
 Local Definition Ord1__list_liftCompare
    : forall {a} {b}, (a -> b -> comparison) -> list a -> list b -> comparison :=
@@ -143,6 +146,7 @@ Local Definition Ord1__list_liftCompare
 
 Program Instance Ord1__list : Ord1 list :=
   fun _ k => k {| liftCompare__ := fun {a} {b} => Ord1__list_liftCompare |}.
+Admit Obligations.
 
 (* Translating `instance Data.Functor.Classes.Read1 list' failed: OOPS! Cannot
    find information for class Qualified "Data.Functor.Classes" "Read1"
@@ -165,6 +169,7 @@ Local Definition Eq2__pair_type_liftEq2
 
 Program Instance Eq2__pair_type : Eq2 GHC.Tuple.pair_type :=
   fun _ k => k {| liftEq2__ := fun {a} {b} {c} {d} => Eq2__pair_type_liftEq2 |}.
+Admit Obligations.
 
 Local Definition Ord2__pair_type_liftCompare2
    : forall {a} {b} {c} {d},
@@ -181,6 +186,7 @@ Local Definition Ord2__pair_type_liftCompare2
 Program Instance Ord2__pair_type : Ord2 GHC.Tuple.pair_type :=
   fun _ k =>
     k {| liftCompare2__ := fun {a} {b} {c} {d} => Ord2__pair_type_liftCompare2 |}.
+Admit Obligations.
 
 (* Translating `instance Data.Functor.Classes.Read2 GHC.Tuple.pair_type' failed:
    OOPS! Cannot find information for class Qualified "Data.Functor.Classes" "Read2"
@@ -199,6 +205,7 @@ Local Definition Eq1__pair_type_liftEq {inst_a} `{(GHC.Base.Eq_ inst_a)}
 Program Instance Eq1__pair_type {a} `{(GHC.Base.Eq_ a)}
    : Eq1 (GHC.Tuple.pair_type a) :=
   fun _ k => k {| liftEq__ := fun {a} {b} => Eq1__pair_type_liftEq |}.
+Admit Obligations.
 
 Local Definition Ord1__pair_type_liftCompare {inst_a} `{(GHC.Base.Ord inst_a)}
    : forall {a} {b},
@@ -210,6 +217,7 @@ Local Definition Ord1__pair_type_liftCompare {inst_a} `{(GHC.Base.Ord inst_a)}
 Program Instance Ord1__pair_type {a} `{(GHC.Base.Ord a)}
    : Ord1 (GHC.Tuple.pair_type a) :=
   fun _ k => k {| liftCompare__ := fun {a} {b} => Ord1__pair_type_liftCompare |}.
+Admit Obligations.
 
 (* Translating `instance forall {a}, forall `{(GHC.Read.Read a)},
    Data.Functor.Classes.Read1 (GHC.Tuple.pair_type a)' failed: OOPS! Cannot find
@@ -234,6 +242,7 @@ Local Definition Eq2__Either_liftEq2
 
 Program Instance Eq2__Either : Eq2 Data.Either.Either :=
   fun _ k => k {| liftEq2__ := fun {a} {b} {c} {d} => Eq2__Either_liftEq2 |}.
+Admit Obligations.
 
 Local Definition Ord2__Either_liftCompare2
    : forall {a} {b} {c} {d},
@@ -252,6 +261,7 @@ Local Definition Ord2__Either_liftCompare2
 Program Instance Ord2__Either : Ord2 Data.Either.Either :=
   fun _ k =>
     k {| liftCompare2__ := fun {a} {b} {c} {d} => Ord2__Either_liftCompare2 |}.
+Admit Obligations.
 
 (* Translating `instance Data.Functor.Classes.Read2 Data.Either.Either' failed:
    OOPS! Cannot find information for class Qualified "Data.Functor.Classes" "Read2"
@@ -270,6 +280,7 @@ Local Definition Eq1__Either_liftEq {inst_a} `{(GHC.Base.Eq_ inst_a)}
 Program Instance Eq1__Either {a} `{(GHC.Base.Eq_ a)}
    : Eq1 (Data.Either.Either a) :=
   fun _ k => k {| liftEq__ := fun {a} {b} => Eq1__Either_liftEq |}.
+Admit Obligations.
 
 Local Definition Ord1__Either_liftCompare {inst_a} `{(GHC.Base.Ord inst_a)}
    : forall {a} {b},
@@ -280,6 +291,7 @@ Local Definition Ord1__Either_liftCompare {inst_a} `{(GHC.Base.Ord inst_a)}
 Program Instance Ord1__Either {a} `{(GHC.Base.Ord a)}
    : Ord1 (Data.Either.Either a) :=
   fun _ k => k {| liftCompare__ := fun {a} {b} => Ord1__Either_liftCompare |}.
+Admit Obligations.
 
 (* Translating `instance forall {a}, forall `{(GHC.Read.Read a)},
    Data.Functor.Classes.Read1 (Data.Either.Either a)' failed: OOPS! Cannot find
@@ -304,6 +316,7 @@ Local Definition Eq1__Identity_liftEq
 
 Program Instance Eq1__Identity : Eq1 Data.Functor.Identity.Identity :=
   fun _ k => k {| liftEq__ := fun {a} {b} => Eq1__Identity_liftEq |}.
+Admit Obligations.
 
 Local Definition Ord1__Identity_liftCompare
    : forall {a} {b},
@@ -321,6 +334,7 @@ Local Definition Ord1__Identity_liftCompare
 
 Program Instance Ord1__Identity : Ord1 Data.Functor.Identity.Identity :=
   fun _ k => k {| liftCompare__ := fun {a} {b} => Ord1__Identity_liftCompare |}.
+Admit Obligations.
 
 (* Translating `instance Data.Functor.Classes.Read1
    Data.Functor.Identity.Identity' failed: OOPS! Cannot find information for class
@@ -343,6 +357,7 @@ Local Definition Eq2__Const_liftEq2
 
 Program Instance Eq2__Const : Eq2 Data.Functor.Const.Const :=
   fun _ k => k {| liftEq2__ := fun {a} {b} {c} {d} => Eq2__Const_liftEq2 |}.
+Admit Obligations.
 
 Local Definition Ord2__Const_liftCompare2
    : forall {a} {b} {c} {d},
@@ -359,6 +374,7 @@ Local Definition Ord2__Const_liftCompare2
 Program Instance Ord2__Const : Ord2 Data.Functor.Const.Const :=
   fun _ k =>
     k {| liftCompare2__ := fun {a} {b} {c} {d} => Ord2__Const_liftCompare2 |}.
+Admit Obligations.
 
 (* Translating `instance Data.Functor.Classes.Read2 Data.Functor.Const.Const'
    failed: OOPS! Cannot find information for class Qualified "Data.Functor.Classes"
@@ -378,6 +394,7 @@ Local Definition Eq1__Const_liftEq {inst_a} `{(GHC.Base.Eq_ inst_a)}
 Program Instance Eq1__Const {a} `{(GHC.Base.Eq_ a)}
    : Eq1 (Data.Functor.Const.Const a) :=
   fun _ k => k {| liftEq__ := fun {a} {b} => Eq1__Const_liftEq |}.
+Admit Obligations.
 
 Local Definition Ord1__Const_liftCompare {inst_a} `{(GHC.Base.Ord inst_a)}
    : forall {a} {b},
@@ -389,6 +406,7 @@ Local Definition Ord1__Const_liftCompare {inst_a} `{(GHC.Base.Ord inst_a)}
 Program Instance Ord1__Const {a} `{(GHC.Base.Ord a)}
    : Ord1 (Data.Functor.Const.Const a) :=
   fun _ k => k {| liftCompare__ := fun {a} {b} => Ord1__Const_liftCompare |}.
+Admit Obligations.
 
 (* Translating `instance forall {a}, forall `{(GHC.Read.Read a)},
    Data.Functor.Classes.Read1 (Data.Functor.Const.Const a)' failed: OOPS! Cannot
@@ -407,6 +425,7 @@ Local Definition Eq1__Proxy_liftEq
 
 Program Instance Eq1__Proxy : Eq1 Data.Proxy.Proxy :=
   fun _ k => k {| liftEq__ := fun {a} {b} => Eq1__Proxy_liftEq |}.
+Admit Obligations.
 
 Local Definition Ord1__Proxy_liftCompare
    : forall {a} {b},
@@ -416,6 +435,7 @@ Local Definition Ord1__Proxy_liftCompare
 
 Program Instance Ord1__Proxy : Ord1 Data.Proxy.Proxy :=
   fun _ k => k {| liftCompare__ := fun {a} {b} => Ord1__Proxy_liftCompare |}.
+Admit Obligations.
 
 (* Translating `instance Data.Functor.Classes.Show1 Data.Proxy.Proxy' failed:
    OOPS! Cannot find information for class Qualified "Data.Functor.Classes" "Show1"

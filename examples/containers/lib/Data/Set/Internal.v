@@ -12,13 +12,6 @@ Require Coq.Program.Wf.
 
 (* Preamble *)
 
-Require GHC.Base.
-
-Module GHC.
-  Module Err.
-    Axiom error : forall {a}, GHC.Base.String -> a.
-  End Err.
-End GHC.
 
 (* Converted imports: *)
 
@@ -74,6 +67,13 @@ Fixpoint set_size {a} (s : Set_ a) : nat :=
   | Tip => 0
   | Bin _ _ s1 s2 => 1 + set_size s1 + set_size s2
   end.
+
+Require Import GHC.Err.
+
+Instance Set_Default {a} : Default (Set_ a) :=
+  Build_Default _ Tip.
+Instance MergeSetDefault {a} : Default (MergeSet a) :=
+  Build_Default _ (Mk_MergeSet default).
 
 (* Converted value declarations: *)
 
@@ -950,6 +950,7 @@ Local Definition Semigroup__Set__op_zlzg__ {inst_a} `{GHC.Base.Ord inst_a}
 Program Instance Semigroup__Set_ {a} `{GHC.Base.Ord a}
    : Data.Semigroup.Semigroup (Set_ a) :=
   fun _ k => k {| Data.Semigroup.op_zlzg____ := Semigroup__Set__op_zlzg__ |}.
+Admit Obligations.
 
 Local Definition Monoid__Set__mappend {inst_a} `{GHC.Base.Ord inst_a}
    : (Set_ inst_a) -> (Set_ inst_a) -> (Set_ inst_a) :=
@@ -961,6 +962,7 @@ Program Instance Monoid__Set_ {a} `{GHC.Base.Ord a}
     k {| GHC.Base.mappend__ := Monoid__Set__mappend ;
          GHC.Base.mconcat__ := Monoid__Set__mconcat ;
          GHC.Base.mempty__ := Monoid__Set__mempty |}.
+Admit Obligations.
 
 Definition maxViewSure {a} : a -> Set_ a -> Set_ a -> prod a (Set_ a) :=
   let fix go arg_0__ arg_1__ arg_2__
@@ -1102,6 +1104,7 @@ Local Definition Semigroup__MergeSet_op_zlzg__ {inst_a}
 Program Instance Semigroup__MergeSet {a}
    : Data.Semigroup.Semigroup (MergeSet a) :=
   fun _ k => k {| Data.Semigroup.op_zlzg____ := Semigroup__MergeSet_op_zlzg__ |}.
+Admit Obligations.
 
 Local Definition Monoid__MergeSet_mappend {inst_a}
    : (MergeSet inst_a) -> (MergeSet inst_a) -> (MergeSet inst_a) :=
@@ -1116,6 +1119,7 @@ Program Instance Monoid__MergeSet {a} : GHC.Base.Monoid (MergeSet a) :=
     k {| GHC.Base.mappend__ := Monoid__MergeSet_mappend ;
          GHC.Base.mconcat__ := Monoid__MergeSet_mconcat ;
          GHC.Base.mempty__ := Monoid__MergeSet_mempty |}.
+Admit Obligations.
 
 Definition drop {a} : GHC.Num.Int -> Set_ a -> Set_ a :=
   fun arg_0__ arg_1__ =>
@@ -1237,6 +1241,7 @@ Program Instance Eq___Set_ {a} `{GHC.Base.Eq_ a} : GHC.Base.Eq_ (Set_ a) :=
   fun _ k =>
     k {| GHC.Base.op_zeze____ := Eq___Set__op_zeze__ ;
          GHC.Base.op_zsze____ := Eq___Set__op_zsze__ |}.
+Admit Obligations.
 
 Program Instance Ord__Set_ {a} `{GHC.Base.Ord a} : GHC.Base.Ord (Set_ a) :=
   fun _ k =>
@@ -1247,6 +1252,7 @@ Program Instance Ord__Set_ {a} `{GHC.Base.Ord a} : GHC.Base.Ord (Set_ a) :=
          GHC.Base.compare__ := Ord__Set__compare ;
          GHC.Base.max__ := Ord__Set__max ;
          GHC.Base.min__ := Ord__Set__min |}.
+Admit Obligations.
 
 Local Definition Foldable__Set__length : forall {a}, Set_ a -> GHC.Num.Int :=
   fun {a} => size.
@@ -1266,6 +1272,7 @@ Program Instance Foldable__Set_ : Data.Foldable.Foldable Set_ :=
          Data.Foldable.product__ := fun {a} `{GHC.Num.Num a} => Foldable__Set__product ;
          Data.Foldable.sum__ := fun {a} `{GHC.Num.Num a} => Foldable__Set__sum ;
          Data.Foldable.toList__ := fun {a} => Foldable__Set__toList |}.
+Admit Obligations.
 
 Module Notations.
 Notation "'_Data.Set.Internal.\\_'" := (op_zrzr__).

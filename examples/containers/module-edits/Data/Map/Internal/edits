@@ -60,3 +60,13 @@ rename value Data.Map.Internal.StrictTriple = Data.Map.Internal.Mk_StrictTriple
 rename value Data.Map.Internal.MaxView = Data.Map.Internal.Mk_MaxView
 rename value Data.Map.Internal.MinView = Data.Map.Internal.Mk_MinView
 rename value Data.Map.Internal.WhenMissing = Data.Map.Internal.Mk_WhenMissing
+
+# partial
+skip Data.Map.Internal.find
+skip Data.Map.Internal.op_zn__
+skip Data.Map.Internal.findMax
+skip Data.Map.Internal.findMin
+skip Data.Map.Internal.elemAt
+skip Data.Map.Internal.deleteFindMin
+skip Data.Map.Internal.deleteFindMax
+

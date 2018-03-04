@@ -175,6 +175,7 @@ Local Definition Semigroup__unit_op_zlzg__ : unit -> unit -> unit :=
 
 Program Instance Semigroup__unit : Semigroup unit :=
   fun _ k => k {| op_zlzg____ := Semigroup__unit_op_zlzg__ |}.
+Admit Obligations.
 
 Local Definition Semigroup__arrow_op_zlzg__ {inst_b} {inst_a} `{Semigroup
   inst_b}
@@ -183,6 +184,7 @@ Local Definition Semigroup__arrow_op_zlzg__ {inst_b} {inst_a} `{Semigroup
 
 Program Instance Semigroup__arrow {b} {a} `{Semigroup b} : Semigroup (a -> b) :=
   fun _ k => k {| op_zlzg____ := Semigroup__arrow_op_zlzg__ |}.
+Admit Obligations.
 
 Local Definition Semigroup__list_op_zlzg__ {inst_a}
    : list inst_a -> list inst_a -> list inst_a :=
@@ -190,6 +192,7 @@ Local Definition Semigroup__list_op_zlzg__ {inst_a}
 
 Program Instance Semigroup__list {a} : Semigroup (list a) :=
   fun _ k => k {| op_zlzg____ := Semigroup__list_op_zlzg__ |}.
+Admit Obligations.
 
 Local Definition Semigroup__option_op_zlzg__ {inst_a} `{Semigroup inst_a}
    : (option inst_a) -> (option inst_a) -> (option inst_a) :=
@@ -202,6 +205,7 @@ Local Definition Semigroup__option_op_zlzg__ {inst_a} `{Semigroup inst_a}
 
 Program Instance Semigroup__option {a} `{Semigroup a} : Semigroup (option a) :=
   fun _ k => k {| op_zlzg____ := Semigroup__option_op_zlzg__ |}.
+Admit Obligations.
 
 Local Definition Semigroup__Either_op_zlzg__ {inst_a} {inst_b}
    : (Data.Either.Either inst_a inst_b) ->
@@ -215,6 +219,7 @@ Local Definition Semigroup__Either_op_zlzg__ {inst_a} {inst_b}
 Program Instance Semigroup__Either {a} {b}
    : Semigroup (Data.Either.Either a b) :=
   fun _ k => k {| op_zlzg____ := Semigroup__Either_op_zlzg__ |}.
+Admit Obligations.
 
 (* Skipping instance Semigroup__op_zt__ *)
 
@@ -232,6 +237,7 @@ Program Instance Semigroup__op_zt____op_zt__ {a} {b} {c} `{Semigroup a}
   `{Semigroup b} `{Semigroup c}
    : Semigroup (a * b * c)%type :=
   fun _ k => k {| op_zlzg____ := Semigroup__op_zt____op_zt___op_zlzg__ |}.
+Admit Obligations.
 
 Local Definition Semigroup__op_zt____op_zt____op_zt____23_op_zlzg__ {inst_a}
   {inst_b} {inst_c} {inst_d} `{Semigroup inst_a} `{Semigroup inst_b} `{Semigroup
@@ -250,6 +256,7 @@ Program Instance Semigroup__op_zt____op_zt____op_zt____23 {a} {b} {c} {d}
    : Semigroup (a * b * c * d)%type :=
   fun _ k =>
     k {| op_zlzg____ := Semigroup__op_zt____op_zt____op_zt____23_op_zlzg__ |}.
+Admit Obligations.
 
 Local Definition Semigroup__op_zt____op_zt____op_zt____op_zt____87_op_zlzg__ {inst_a}
   {inst_b} {inst_c} {inst_d} {inst_e} `{Semigroup inst_a} `{Semigroup inst_b}
@@ -271,6 +278,7 @@ Program Instance Semigroup__op_zt____op_zt____op_zt____op_zt____87 {a} {b} {c}
   fun _ k =>
     k
     {| op_zlzg____ := Semigroup__op_zt____op_zt____op_zt____op_zt____87_op_zlzg__ |}.
+Admit Obligations.
 
 Local Definition Semigroup__comparison_op_zlzg__
    : comparison -> comparison -> comparison :=
@@ -283,6 +291,7 @@ Local Definition Semigroup__comparison_op_zlzg__
 
 Program Instance Semigroup__comparison : Semigroup comparison :=
   fun _ k => k {| op_zlzg____ := Semigroup__comparison_op_zlzg__ |}.
+Admit Obligations.
 
 Local Definition Semigroup__Dual_op_zlzg__ {inst_a} `{Semigroup inst_a}
    : (Data.Monoid.Dual inst_a) ->
@@ -295,6 +304,7 @@ Local Definition Semigroup__Dual_op_zlzg__ {inst_a} `{Semigroup inst_a}
 Program Instance Semigroup__Dual {a} `{Semigroup a}
    : Semigroup (Data.Monoid.Dual a) :=
   fun _ k => k {| op_zlzg____ := Semigroup__Dual_op_zlzg__ |}.
+Admit Obligations.
 
 Local Definition Semigroup__Endo_op_zlzg__ {a}
    : Data.Monoid.Endo a -> Data.Monoid.Endo a -> Data.Monoid.Endo a :=
@@ -302,6 +312,7 @@ Local Definition Semigroup__Endo_op_zlzg__ {a}
 
 Program Instance Semigroup__Endo {a} : Semigroup (Data.Monoid.Endo a) :=
   fun _ k => k {| op_zlzg____ := Semigroup__Endo_op_zlzg__ |}.
+Admit Obligations.
 
 Local Definition Semigroup__All_op_zlzg__
    : Data.Monoid.All -> Data.Monoid.All -> Data.Monoid.All :=
@@ -309,6 +320,7 @@ Local Definition Semigroup__All_op_zlzg__
 
 Program Instance Semigroup__All : Semigroup Data.Monoid.All :=
   fun _ k => k {| op_zlzg____ := Semigroup__All_op_zlzg__ |}.
+Admit Obligations.
 
 Local Definition Semigroup__Any_op_zlzg__
    : Data.Monoid.Any -> Data.Monoid.Any -> Data.Monoid.Any :=
@@ -316,6 +328,7 @@ Local Definition Semigroup__Any_op_zlzg__
 
 Program Instance Semigroup__Any : Semigroup Data.Monoid.Any :=
   fun _ k => k {| op_zlzg____ := Semigroup__Any_op_zlzg__ |}.
+Admit Obligations.
 
 Local Definition Semigroup__Sum_op_zlzg__ {inst_a} `{_ : GHC.Num.Num inst_a}
    : Data.Monoid.Sum inst_a -> Data.Monoid.Sum inst_a -> Data.Monoid.Sum inst_a :=
@@ -324,6 +337,7 @@ Local Definition Semigroup__Sum_op_zlzg__ {inst_a} `{_ : GHC.Num.Num inst_a}
 Program Instance Semigroup__Sum {a} `{GHC.Num.Num a}
    : Semigroup (Data.Monoid.Sum a) :=
   fun _ k => k {| op_zlzg____ := Semigroup__Sum_op_zlzg__ |}.
+Admit Obligations.
 
 Local Definition Semigroup__Product_op_zlzg__ {inst_a} `{_ : GHC.Num.Num inst_a}
    : Data.Monoid.Product inst_a ->
@@ -333,6 +347,7 @@ Local Definition Semigroup__Product_op_zlzg__ {inst_a} `{_ : GHC.Num.Num inst_a}
 Program Instance Semigroup__Product {a} `{GHC.Num.Num a}
    : Semigroup (Data.Monoid.Product a) :=
   fun _ k => k {| op_zlzg____ := Semigroup__Product_op_zlzg__ |}.
+Admit Obligations.
 
 Local Definition Semigroup__Const_op_zlzg__ {inst_a} {inst_b} `{_
    : Semigroup inst_a}
@@ -344,6 +359,7 @@ Local Definition Semigroup__Const_op_zlzg__ {inst_a} {inst_b} `{_
 Program Instance Semigroup__Const {a} {b} `{Semigroup a}
    : Semigroup (Data.Functor.Const.Const a b) :=
   fun _ k => k {| op_zlzg____ := Semigroup__Const_op_zlzg__ |}.
+Admit Obligations.
 
 (* Skipping instance Semigroup__First *)
 
@@ -357,6 +373,7 @@ Local Definition Semigroup__Void_op_zlzg__
 
 Program Instance Semigroup__Void : Semigroup Data.Void.Void :=
   fun _ k => k {| op_zlzg____ := Semigroup__Void_op_zlzg__ |}.
+Admit Obligations.
 
 Local Definition Semigroup__NonEmpty_op_zlzg__ {inst_a}
    : (Data.List.NonEmpty.NonEmpty inst_a) ->
@@ -370,6 +387,7 @@ Local Definition Semigroup__NonEmpty_op_zlzg__ {inst_a}
 Program Instance Semigroup__NonEmpty {a}
    : Semigroup (Data.List.NonEmpty.NonEmpty a) :=
   fun _ k => k {| op_zlzg____ := Semigroup__NonEmpty_op_zlzg__ |}.
+Admit Obligations.
 
 (* Translating `instance forall {a}, forall `{GHC.Enum.Bounded a},
    GHC.Enum.Bounded (Data.Semigroup.Min a)' failed: OOPS! Cannot find information
@@ -385,6 +403,7 @@ Local Definition Semigroup__Min_op_zlzg__ {inst_a} `{_ : GHC.Base.Ord inst_a}
 
 Program Instance Semigroup__Min {a} `{GHC.Base.Ord a} : Semigroup (Min a) :=
   fun _ k => k {| op_zlzg____ := Semigroup__Min_op_zlzg__ |}.
+Admit Obligations.
 
 (* Skipping instance Monoid__Min *)
 
@@ -403,6 +422,7 @@ Program Instance Functor__Min : GHC.Base.Functor Min :=
   fun _ k =>
     k {| GHC.Base.op_zlzd____ := fun {a} {b} => Functor__Min_op_zlzd__ ;
          GHC.Base.fmap__ := fun {a} {b} => Functor__Min_fmap |}.
+Admit Obligations.
 
 Local Definition Foldable__Min_foldMap
    : forall {m} {a}, forall `{GHC.Base.Monoid m}, (a -> m) -> Min a -> m :=
@@ -519,6 +539,7 @@ Program Instance Foldable__Min : Data.Foldable.Foldable Min :=
          Data.Foldable.product__ := fun {a} `{GHC.Num.Num a} => Foldable__Min_product ;
          Data.Foldable.sum__ := fun {a} `{GHC.Num.Num a} => Foldable__Min_sum ;
          Data.Foldable.toList__ := fun {a} => Foldable__Min_toList |}.
+Admit Obligations.
 
 Local Definition Traversable__Min_traverse
    : forall {f} {a} {b},
@@ -552,6 +573,7 @@ Program Instance Traversable__Min : Data.Traversable.Traversable Min :=
            Traversable__Min_sequenceA ;
          Data.Traversable.traverse__ := fun {f} {a} {b} `{GHC.Base.Applicative f} =>
            Traversable__Min_traverse |}.
+Admit Obligations.
 
 Local Definition Applicative__Min_op_zlztzg__
    : forall {a} {b}, Min (a -> b) -> Min a -> Min b :=
@@ -574,6 +596,7 @@ Program Instance Applicative__Min : GHC.Base.Applicative Min :=
     k {| GHC.Base.op_ztzg____ := fun {a} {b} => Applicative__Min_op_ztzg__ ;
          GHC.Base.op_zlztzg____ := fun {a} {b} => Applicative__Min_op_zlztzg__ ;
          GHC.Base.pure__ := fun {a} => Applicative__Min_pure |}.
+Admit Obligations.
 
 Local Definition Monad__Min_op_zgzg__
    : forall {a} {b}, Min a -> Min b -> Min b :=
@@ -592,6 +615,7 @@ Program Instance Monad__Min : GHC.Base.Monad Min :=
     k {| GHC.Base.op_zgzg____ := fun {a} {b} => Monad__Min_op_zgzg__ ;
          GHC.Base.op_zgzgze____ := fun {a} {b} => Monad__Min_op_zgzgze__ ;
          GHC.Base.return___ := fun {a} => Monad__Min_return_ |}.
+Admit Obligations.
 
 (* Translating `instance Control.Monad.Fix.MonadFix Data.Semigroup.Min' failed:
    OOPS! Cannot find information for class Qualified "Control.Monad.Fix" "MonadFix"
@@ -615,6 +639,7 @@ Local Definition Semigroup__Max_op_zlzg__ {inst_a} `{_ : GHC.Base.Ord inst_a}
 
 Program Instance Semigroup__Max {a} `{GHC.Base.Ord a} : Semigroup (Max a) :=
   fun _ k => k {| op_zlzg____ := Semigroup__Max_op_zlzg__ |}.
+Admit Obligations.
 
 (* Skipping instance Monoid__Max *)
 
@@ -633,6 +658,7 @@ Program Instance Functor__Max : GHC.Base.Functor Max :=
   fun _ k =>
     k {| GHC.Base.op_zlzd____ := fun {a} {b} => Functor__Max_op_zlzd__ ;
          GHC.Base.fmap__ := fun {a} {b} => Functor__Max_fmap |}.
+Admit Obligations.
 
 Local Definition Foldable__Max_foldMap
    : forall {m} {a}, forall `{GHC.Base.Monoid m}, (a -> m) -> Max a -> m :=
@@ -749,6 +775,7 @@ Program Instance Foldable__Max : Data.Foldable.Foldable Max :=
          Data.Foldable.product__ := fun {a} `{GHC.Num.Num a} => Foldable__Max_product ;
          Data.Foldable.sum__ := fun {a} `{GHC.Num.Num a} => Foldable__Max_sum ;
          Data.Foldable.toList__ := fun {a} => Foldable__Max_toList |}.
+Admit Obligations.
 
 Local Definition Traversable__Max_traverse
    : forall {f} {a} {b},
@@ -782,6 +809,7 @@ Program Instance Traversable__Max : Data.Traversable.Traversable Max :=
            Traversable__Max_sequenceA ;
          Data.Traversable.traverse__ := fun {f} {a} {b} `{GHC.Base.Applicative f} =>
            Traversable__Max_traverse |}.
+Admit Obligations.
 
 Local Definition Applicative__Max_op_zlztzg__
    : forall {a} {b}, Max (a -> b) -> Max a -> Max b :=
@@ -804,6 +832,7 @@ Program Instance Applicative__Max : GHC.Base.Applicative Max :=
     k {| GHC.Base.op_ztzg____ := fun {a} {b} => Applicative__Max_op_ztzg__ ;
          GHC.Base.op_zlztzg____ := fun {a} {b} => Applicative__Max_op_zlztzg__ ;
          GHC.Base.pure__ := fun {a} => Applicative__Max_pure |}.
+Admit Obligations.
 
 Local Definition Monad__Max_op_zgzg__
    : forall {a} {b}, Max a -> Max b -> Max b :=
@@ -822,6 +851,7 @@ Program Instance Monad__Max : GHC.Base.Monad Max :=
     k {| GHC.Base.op_zgzg____ := fun {a} {b} => Monad__Max_op_zgzg__ ;
          GHC.Base.op_zgzgze____ := fun {a} {b} => Monad__Max_op_zgzgze__ ;
          GHC.Base.return___ := fun {a} => Monad__Max_return_ |}.
+Admit Obligations.
 
 (* Translating `instance Control.Monad.Fix.MonadFix Data.Semigroup.Max' failed:
    OOPS! Cannot find information for class Qualified "Control.Monad.Fix" "MonadFix"
@@ -847,6 +877,7 @@ Program Instance Functor__Arg {a} : GHC.Base.Functor (Arg a) :=
   fun _ k =>
     k {| GHC.Base.op_zlzd____ := fun {a} {b} => Functor__Arg_op_zlzd__ ;
          GHC.Base.fmap__ := fun {a} {b} => Functor__Arg_fmap |}.
+Admit Obligations.
 
 Local Definition Foldable__Arg_foldMap {inst_a}
    : forall {m} {a},
@@ -967,6 +998,7 @@ Program Instance Foldable__Arg {a} : Data.Foldable.Foldable (Arg a) :=
          Data.Foldable.product__ := fun {a} `{GHC.Num.Num a} => Foldable__Arg_product ;
          Data.Foldable.sum__ := fun {a} `{GHC.Num.Num a} => Foldable__Arg_sum ;
          Data.Foldable.toList__ := fun {a} => Foldable__Arg_toList |}.
+Admit Obligations.
 
 Local Definition Traversable__Arg_traverse {inst_a}
    : forall {f} {a} {b},
@@ -1004,6 +1036,7 @@ Program Instance Traversable__Arg {a} : Data.Traversable.Traversable (Arg a) :=
            Traversable__Arg_sequenceA ;
          Data.Traversable.traverse__ := fun {f} {a} {b} `{GHC.Base.Applicative f} =>
            Traversable__Arg_traverse |}.
+Admit Obligations.
 
 Local Definition Eq___Arg_op_zeze__ {inst_a} {inst_b} `{GHC.Base.Eq_ inst_a}
    : (Arg inst_a inst_b) -> (Arg inst_a inst_b) -> bool :=
@@ -1020,6 +1053,7 @@ Program Instance Eq___Arg {a} {b} `{GHC.Base.Eq_ a} : GHC.Base.Eq_ (Arg a b) :=
   fun _ k =>
     k {| GHC.Base.op_zeze____ := Eq___Arg_op_zeze__ ;
          GHC.Base.op_zsze____ := Eq___Arg_op_zsze__ |}.
+Admit Obligations.
 
 (* Skipping instance Ord__Arg *)
 
@@ -1054,6 +1088,7 @@ Program Instance Functor__First : GHC.Base.Functor First :=
   fun _ k =>
     k {| GHC.Base.op_zlzd____ := fun {a} {b} => Functor__First_op_zlzd__ ;
          GHC.Base.fmap__ := fun {a} {b} => Functor__First_fmap |}.
+Admit Obligations.
 
 Local Definition Foldable__First_foldMap
    : forall {m} {a}, forall `{GHC.Base.Monoid m}, (a -> m) -> First a -> m :=
@@ -1170,6 +1205,7 @@ Program Instance Foldable__First : Data.Foldable.Foldable First :=
          Data.Foldable.product__ := fun {a} `{GHC.Num.Num a} => Foldable__First_product ;
          Data.Foldable.sum__ := fun {a} `{GHC.Num.Num a} => Foldable__First_sum ;
          Data.Foldable.toList__ := fun {a} => Foldable__First_toList |}.
+Admit Obligations.
 
 Local Definition Traversable__First_traverse
    : forall {f} {a} {b},
@@ -1205,6 +1241,7 @@ Program Instance Traversable__First : Data.Traversable.Traversable First :=
            Traversable__First_sequenceA ;
          Data.Traversable.traverse__ := fun {f} {a} {b} `{GHC.Base.Applicative f} =>
            Traversable__First_traverse |}.
+Admit Obligations.
 
 Local Definition Applicative__First_op_zlztzg__
    : forall {a} {b}, First (a -> b) -> First a -> First b :=
@@ -1227,6 +1264,7 @@ Program Instance Applicative__First : GHC.Base.Applicative First :=
     k {| GHC.Base.op_ztzg____ := fun {a} {b} => Applicative__First_op_ztzg__ ;
          GHC.Base.op_zlztzg____ := fun {a} {b} => Applicative__First_op_zlztzg__ ;
          GHC.Base.pure__ := fun {a} => Applicative__First_pure |}.
+Admit Obligations.
 
 Local Definition Monad__First_op_zgzg__
    : forall {a} {b}, First a -> First b -> First b :=
@@ -1245,6 +1283,7 @@ Program Instance Monad__First : GHC.Base.Monad First :=
     k {| GHC.Base.op_zgzg____ := fun {a} {b} => Monad__First_op_zgzg__ ;
          GHC.Base.op_zgzgze____ := fun {a} {b} => Monad__First_op_zgzgze__ ;
          GHC.Base.return___ := fun {a} => Monad__First_return_ |}.
+Admit Obligations.
 
 (* Translating `instance Control.Monad.Fix.MonadFix Data.Semigroup.First'
    failed: OOPS! Cannot find information for class Qualified "Control.Monad.Fix"
@@ -1277,6 +1316,7 @@ Program Instance Functor__Last : GHC.Base.Functor Last :=
   fun _ k =>
     k {| GHC.Base.op_zlzd____ := fun {a} {b} => Functor__Last_op_zlzd__ ;
          GHC.Base.fmap__ := fun {a} {b} => Functor__Last_fmap |}.
+Admit Obligations.
 
 Local Definition Foldable__Last_foldMap
    : forall {m} {a}, forall `{GHC.Base.Monoid m}, (a -> m) -> Last a -> m :=
@@ -1393,6 +1433,7 @@ Program Instance Foldable__Last : Data.Foldable.Foldable Last :=
          Data.Foldable.product__ := fun {a} `{GHC.Num.Num a} => Foldable__Last_product ;
          Data.Foldable.sum__ := fun {a} `{GHC.Num.Num a} => Foldable__Last_sum ;
          Data.Foldable.toList__ := fun {a} => Foldable__Last_toList |}.
+Admit Obligations.
 
 Local Definition Traversable__Last_traverse
    : forall {f} {a} {b},
@@ -1426,6 +1467,7 @@ Program Instance Traversable__Last : Data.Traversable.Traversable Last :=
            Traversable__Last_sequenceA ;
          Data.Traversable.traverse__ := fun {f} {a} {b} `{GHC.Base.Applicative f} =>
            Traversable__Last_traverse |}.
+Admit Obligations.
 
 Local Definition Applicative__Last_op_zlztzg__
    : forall {a} {b}, Last (a -> b) -> Last a -> Last b :=
@@ -1448,6 +1490,7 @@ Program Instance Applicative__Last : GHC.Base.Applicative Last :=
     k {| GHC.Base.op_ztzg____ := fun {a} {b} => Applicative__Last_op_ztzg__ ;
          GHC.Base.op_zlztzg____ := fun {a} {b} => Applicative__Last_op_zlztzg__ ;
          GHC.Base.pure__ := fun {a} => Applicative__Last_pure |}.
+Admit Obligations.
 
 Local Definition Monad__Last_op_zgzg__
    : forall {a} {b}, Last a -> Last b -> Last b :=
@@ -1466,6 +1509,7 @@ Program Instance Monad__Last : GHC.Base.Monad Last :=
     k {| GHC.Base.op_zgzg____ := fun {a} {b} => Monad__Last_op_zgzg__ ;
          GHC.Base.op_zgzgze____ := fun {a} {b} => Monad__Last_op_zgzgze__ ;
          GHC.Base.return___ := fun {a} => Monad__Last_return_ |}.
+Admit Obligations.
 
 (* Translating `instance Control.Monad.Fix.MonadFix Data.Semigroup.Last' failed:
    OOPS! Cannot find information for class Qualified "Control.Monad.Fix" "MonadFix"
@@ -1479,6 +1523,7 @@ Local Definition Semigroup__WrappedMonoid_op_zlzg__ {inst_m} `{_
 Program Instance Semigroup__WrappedMonoid {m} `{GHC.Base.Monoid m}
    : Semigroup (WrappedMonoid m) :=
   fun _ k => k {| op_zlzg____ := Semigroup__WrappedMonoid_op_zlzg__ |}.
+Admit Obligations.
 
 Local Definition Monoid__WrappedMonoid_mappend {inst_m} `{GHC.Base.Monoid
   inst_m}
@@ -1500,6 +1545,7 @@ Program Instance Monoid__WrappedMonoid {m} `{GHC.Base.Monoid m}
     k {| GHC.Base.mappend__ := Monoid__WrappedMonoid_mappend ;
          GHC.Base.mconcat__ := Monoid__WrappedMonoid_mconcat ;
          GHC.Base.mempty__ := Monoid__WrappedMonoid_mempty |}.
+Admit Obligations.
 
 (* Translating `instance forall {a}, forall `{GHC.Enum.Bounded a},
    GHC.Enum.Bounded (Data.Semigroup.WrappedMonoid a)' failed: OOPS! Cannot find
@@ -1525,6 +1571,7 @@ Program Instance Functor__Option : GHC.Base.Functor Option :=
   fun _ k =>
     k {| GHC.Base.op_zlzd____ := fun {a} {b} => Functor__Option_op_zlzd__ ;
          GHC.Base.fmap__ := fun {a} {b} => Functor__Option_fmap |}.
+Admit Obligations.
 
 Local Definition Applicative__Option_op_zlztzg__
    : forall {a} {b}, Option (a -> b) -> Option a -> Option b :=
@@ -1551,6 +1598,7 @@ Program Instance Applicative__Option : GHC.Base.Applicative Option :=
     k {| GHC.Base.op_ztzg____ := fun {a} {b} => Applicative__Option_op_ztzg__ ;
          GHC.Base.op_zlztzg____ := fun {a} {b} => Applicative__Option_op_zlztzg__ ;
          GHC.Base.pure__ := fun {a} => Applicative__Option_pure |}.
+Admit Obligations.
 
 Local Definition Monad__Option_op_zgzg__
    : forall {a} {b}, Option a -> Option b -> Option b :=
@@ -1573,6 +1621,7 @@ Program Instance Monad__Option : GHC.Base.Monad Option :=
     k {| GHC.Base.op_zgzg____ := fun {a} {b} => Monad__Option_op_zgzg__ ;
          GHC.Base.op_zgzgze____ := fun {a} {b} => Monad__Option_op_zgzgze__ ;
          GHC.Base.return___ := fun {a} => Monad__Option_return_ |}.
+Admit Obligations.
 
 (* Translating `instance GHC.Base.Alternative Data.Semigroup.Option' failed:
    OOPS! Cannot find information for class Qualified "GHC.Base" "Alternative"
@@ -1708,6 +1757,7 @@ Program Instance Foldable__Option : Data.Foldable.Foldable Option :=
            Foldable__Option_product ;
          Data.Foldable.sum__ := fun {a} `{GHC.Num.Num a} => Foldable__Option_sum ;
          Data.Foldable.toList__ := fun {a} => Foldable__Option_toList |}.
+Admit Obligations.
 
 Local Definition Traversable__Option_traverse
    : forall {f} {a} {b},
@@ -1744,6 +1794,7 @@ Program Instance Traversable__Option : Data.Traversable.Traversable Option :=
            Traversable__Option_sequenceA ;
          Data.Traversable.traverse__ := fun {f} {a} {b} `{GHC.Base.Applicative f} =>
            Traversable__Option_traverse |}.
+Admit Obligations.
 
 Local Definition Semigroup__Option_op_zlzg__ {inst_a} `{_ : Semigroup inst_a}
    : Option inst_a -> Option inst_a -> Option inst_a :=
@@ -1751,6 +1802,7 @@ Local Definition Semigroup__Option_op_zlzg__ {inst_a} `{_ : Semigroup inst_a}
 
 Program Instance Semigroup__Option {a} `{Semigroup a} : Semigroup (Option a) :=
   fun _ k => k {| op_zlzg____ := Semigroup__Option_op_zlzg__ |}.
+Admit Obligations.
 
 Local Definition Monoid__Option_mappend {inst_a} `{Semigroup inst_a}
    : (Option inst_a) -> (Option inst_a) -> (Option inst_a) :=
@@ -1770,6 +1822,7 @@ Program Instance Monoid__Option {a} `{Semigroup a}
     k {| GHC.Base.mappend__ := Monoid__Option_mappend ;
          GHC.Base.mconcat__ := Monoid__Option_mconcat ;
          GHC.Base.mempty__ := Monoid__Option_mempty |}.
+Admit Obligations.
 
 Local Definition Semigroup__Proxy_op_zlzg__ {inst_s}
    : (Data.Proxy.Proxy inst_s) ->
@@ -1778,6 +1831,7 @@ Local Definition Semigroup__Proxy_op_zlzg__ {inst_s}
 
 Program Instance Semigroup__Proxy {s} : Semigroup (Data.Proxy.Proxy s) :=
   fun _ k => k {| op_zlzg____ := Semigroup__Proxy_op_zlzg__ |}.
+Admit Obligations.
 
 (* Translating `instance GHC.Generics.Generic1 Data.Semigroup.Option' failed:
    OOPS! Cannot find information for class Qualified "GHC.Generics" "Generic1"
@@ -1839,6 +1893,7 @@ Program Instance Eq___Option {a} `{GHC.Base.Eq_ a} : GHC.Base.Eq_ (Option a) :=
   fun _ k =>
     k {| GHC.Base.op_zeze____ := Eq___Option_op_zeze__ ;
          GHC.Base.op_zsze____ := Eq___Option_op_zsze__ |}.
+Admit Obligations.
 
 Program Instance Ord__Option {a} `{GHC.Base.Ord a} : GHC.Base.Ord (Option a) :=
   fun _ k =>
@@ -1849,6 +1904,7 @@ Program Instance Ord__Option {a} `{GHC.Base.Ord a} : GHC.Base.Ord (Option a) :=
          GHC.Base.compare__ := Ord__Option_compare ;
          GHC.Base.max__ := Ord__Option_max ;
          GHC.Base.min__ := Ord__Option_min |}.
+Admit Obligations.
 
 (* Translating `instance GHC.Generics.Generic1 Data.Semigroup.WrappedMonoid'
    failed: OOPS! Cannot find information for class Qualified "GHC.Generics"
@@ -1911,6 +1967,7 @@ Program Instance Eq___WrappedMonoid {m} `{GHC.Base.Eq_ m}
   fun _ k =>
     k {| GHC.Base.op_zeze____ := Eq___WrappedMonoid_op_zeze__ ;
          GHC.Base.op_zsze____ := Eq___WrappedMonoid_op_zsze__ |}.
+Admit Obligations.
 
 Program Instance Ord__WrappedMonoid {m} `{GHC.Base.Ord m}
    : GHC.Base.Ord (WrappedMonoid m) :=
@@ -1922,6 +1979,7 @@ Program Instance Ord__WrappedMonoid {m} `{GHC.Base.Ord m}
          GHC.Base.compare__ := Ord__WrappedMonoid_compare ;
          GHC.Base.max__ := Ord__WrappedMonoid_max ;
          GHC.Base.min__ := Ord__WrappedMonoid_min |}.
+Admit Obligations.
 
 (* Translating `instance GHC.Generics.Generic1 Data.Semigroup.Last' failed:
    OOPS! Cannot find information for class Qualified "GHC.Generics" "Generic1"
@@ -1983,6 +2041,7 @@ Program Instance Eq___Last {a} `{GHC.Base.Eq_ a} : GHC.Base.Eq_ (Last a) :=
   fun _ k =>
     k {| GHC.Base.op_zeze____ := Eq___Last_op_zeze__ ;
          GHC.Base.op_zsze____ := Eq___Last_op_zsze__ |}.
+Admit Obligations.
 
 Program Instance Ord__Last {a} `{GHC.Base.Ord a} : GHC.Base.Ord (Last a) :=
   fun _ k =>
@@ -1993,6 +2052,7 @@ Program Instance Ord__Last {a} `{GHC.Base.Ord a} : GHC.Base.Ord (Last a) :=
          GHC.Base.compare__ := Ord__Last_compare ;
          GHC.Base.max__ := Ord__Last_max ;
          GHC.Base.min__ := Ord__Last_min |}.
+Admit Obligations.
 
 (* Translating `instance GHC.Generics.Generic1 Data.Semigroup.First' failed:
    OOPS! Cannot find information for class Qualified "GHC.Generics" "Generic1"
@@ -2054,6 +2114,7 @@ Program Instance Eq___First {a} `{GHC.Base.Eq_ a} : GHC.Base.Eq_ (First a) :=
   fun _ k =>
     k {| GHC.Base.op_zeze____ := Eq___First_op_zeze__ ;
          GHC.Base.op_zsze____ := Eq___First_op_zsze__ |}.
+Admit Obligations.
 
 Program Instance Ord__First {a} `{GHC.Base.Ord a} : GHC.Base.Ord (First a) :=
   fun _ k =>
@@ -2064,6 +2125,7 @@ Program Instance Ord__First {a} `{GHC.Base.Ord a} : GHC.Base.Ord (First a) :=
          GHC.Base.compare__ := Ord__First_compare ;
          GHC.Base.max__ := Ord__First_max ;
          GHC.Base.min__ := Ord__First_min |}.
+Admit Obligations.
 
 (* Translating `instance forall {a}, GHC.Generics.Generic1 (Data.Semigroup.Arg
    a)' failed: OOPS! Cannot find information for class Qualified "GHC.Generics"
@@ -2145,6 +2207,7 @@ Program Instance Eq___Max {a} `{GHC.Base.Eq_ a} : GHC.Base.Eq_ (Max a) :=
   fun _ k =>
     k {| GHC.Base.op_zeze____ := Eq___Max_op_zeze__ ;
          GHC.Base.op_zsze____ := Eq___Max_op_zsze__ |}.
+Admit Obligations.
 
 Program Instance Ord__Max {a} `{GHC.Base.Ord a} : GHC.Base.Ord (Max a) :=
   fun _ k =>
@@ -2155,6 +2218,7 @@ Program Instance Ord__Max {a} `{GHC.Base.Ord a} : GHC.Base.Ord (Max a) :=
          GHC.Base.compare__ := Ord__Max_compare ;
          GHC.Base.max__ := Ord__Max_max ;
          GHC.Base.min__ := Ord__Max_min |}.
+Admit Obligations.
 
 (* Translating `instance GHC.Generics.Generic1 Data.Semigroup.Min' failed: OOPS!
    Cannot find information for class Qualified "GHC.Generics" "Generic1"
@@ -2216,6 +2280,7 @@ Program Instance Eq___Min {a} `{GHC.Base.Eq_ a} : GHC.Base.Eq_ (Min a) :=
   fun _ k =>
     k {| GHC.Base.op_zeze____ := Eq___Min_op_zeze__ ;
          GHC.Base.op_zsze____ := Eq___Min_op_zsze__ |}.
+Admit Obligations.
 
 Program Instance Ord__Min {a} `{GHC.Base.Ord a} : GHC.Base.Ord (Min a) :=
   fun _ k =>
@@ -2226,6 +2291,7 @@ Program Instance Ord__Min {a} `{GHC.Base.Ord a} : GHC.Base.Ord (Min a) :=
          GHC.Base.compare__ := Ord__Min_compare ;
          GHC.Base.max__ := Ord__Min_max ;
          GHC.Base.min__ := Ord__Min_min |}.
+Admit Obligations.
 
 Definition diff {m} `{Semigroup m} : m -> Data.Monoid.Endo m :=
   Data.Monoid.Mk_Endo GHC.Base.∘ _<>_.

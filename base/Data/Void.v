@@ -33,6 +33,7 @@ Program Instance Eq___Void : GHC.Base.Eq_ Void :=
   fun _ k =>
     k {| GHC.Base.op_zeze____ := Eq___Void_op_zeze__ ;
          GHC.Base.op_zsze____ := Eq___Void_op_zsze__ |}.
+Admit Obligations.
 
 Local Definition Ord__Void_compare : Void -> Void -> comparison :=
   fun arg_0__ arg_1__ => Eq.
@@ -64,6 +65,7 @@ Program Instance Ord__Void : GHC.Base.Ord Void :=
          GHC.Base.compare__ := Ord__Void_compare ;
          GHC.Base.max__ := Ord__Void_max ;
          GHC.Base.min__ := Ord__Void_min |}.
+Admit Obligations.
 
 (* Translating `instance GHC.Read.Read Data.Void.Void' failed: OOPS! Cannot find
    information for class Qualified "GHC.Read" "Read" unsupported *)

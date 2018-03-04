@@ -5,6 +5,7 @@ Require Import Data.Set.Internal.
 Import GHC.Num.Notations.
 Require Import OrdTactic.
 Require Import Psatz.
+Require Import Tactics.
 Set Bullet Behavior "Strict Subproofs".
 
 (** ** Tactics for pointer equality *)
@@ -27,25 +28,6 @@ Ltac destruct_ptrEq := lazymatch goal with
      [ apply PtrEquality.ptrEq_eq in Hpe; subst
      | clear Hpe] 
 end.
-
-
-(** ** General utility tactics *)
-
-(* Pose the proof [prf], unless it already exists. *)
-Ltac pose_new prf :=
-  let prop := type of prf in
-  match goal with 
-    | [ H : prop |- _] => fail 1
-    | _ => pose proof prf
-  end.
-
-(* Pose the [prop], using [prf], unless it already exists. *)
-Ltac assert_new prop prf :=
-  match goal with 
-    | [ H : prop |- _] => fail 1
-    | _ => assert prop by prf
-  end.
-
 
 Section WF.
 Context {e : Type} {HEq : Eq_ e} {HOrd : Ord e} {HEqLaws : EqLaws e}  {HOrdLaws : OrdLaws e}.

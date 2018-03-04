@@ -43,7 +43,6 @@ Local Definition Uniquable__Unique_getUnique : Unique -> Unique :=
 
 Program Instance Uniquable__Unique : Uniquable Unique :=
   fun _ k => k {| getUnique__ := Uniquable__Unique_getUnique |}.
-Admit Obligations.
 
 (* Translating `instance Outputable.Outputable Unique.Unique' failed: OOPS!
    Cannot find information for class Qualified "Outputable" "Outputable"
@@ -68,7 +67,6 @@ Program Instance Eq___Unique : GHC.Base.Eq_ Unique :=
   fun _ k =>
     k {| GHC.Base.op_zeze____ := Eq___Unique_op_zeze__ ;
          GHC.Base.op_zsze____ := Eq___Unique_op_zsze__ |}.
-Admit Obligations.
 
 Definition getKey : Unique -> GHC.Num.Int :=
   fun arg_0__ => let 'MkUnique x := arg_0__ in x.
@@ -123,7 +121,6 @@ Local Definition Uniquable__Int_getUnique : GHC.Num.Int -> Unique :=
 
 Program Instance Uniquable__Int : Uniquable GHC.Num.Int :=
   fun _ k => k {| getUnique__ := Uniquable__Int_getUnique |}.
-Admit Obligations.
 
 Local Definition Uniquable__FastString_getUnique
    : FastString.FastString -> Unique :=
@@ -131,7 +128,6 @@ Local Definition Uniquable__FastString_getUnique
 
 Program Instance Uniquable__FastString : Uniquable FastString.FastString :=
   fun _ k => k {| getUnique__ := Uniquable__FastString_getUnique |}.
-Admit Obligations.
 
 Definition nonDetCmpUnique : Unique -> Unique -> comparison :=
   fun arg_0__ arg_1__ =>
@@ -156,7 +152,6 @@ Program Instance Ord__Unique : GHC.Base.Ord Unique :=
          GHC.Base.compare__ := Ord__Unique_compare ;
          GHC.Base.max__ := Ord__Unique_max ;
          GHC.Base.min__ := Ord__Unique_min |}.
-Admit Obligations.
 
 Definition stepUnique : Unique -> GHC.Num.Int -> Unique :=
   fun arg_0__ arg_1__ =>

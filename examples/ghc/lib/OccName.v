@@ -140,7 +140,6 @@ Local Definition HasOccName__OccName_occName : OccName -> OccName :=
 
 Program Instance HasOccName__OccName : HasOccName OccName :=
   fun _ k => k {| occName__ := HasOccName__OccName_occName |}.
-Admit Obligations.
 
 (* Translating `instance Control.DeepSeq.NFData OccName.OccName' failed: OOPS!
    Cannot find information for class Qualified "Control.DeepSeq" "NFData"
@@ -210,7 +209,6 @@ Program Instance Eq___NameSpace : GHC.Base.Eq_ NameSpace :=
   fun _ k =>
     k {| GHC.Base.op_zeze____ := Eq___NameSpace_op_zeze__ ;
          GHC.Base.op_zsze____ := Eq___NameSpace_op_zsze__ |}.
-Admit Obligations.
 
 Program Instance Ord__NameSpace : GHC.Base.Ord NameSpace :=
   fun _ k =>
@@ -221,7 +219,6 @@ Program Instance Ord__NameSpace : GHC.Base.Ord NameSpace :=
          GHC.Base.compare__ := Ord__NameSpace_compare ;
          GHC.Base.max__ := Ord__NameSpace_max ;
          GHC.Base.min__ := Ord__NameSpace_min |}.
-Admit Obligations.
 
 Local Definition Eq___OccName_op_zeze__ : OccName -> OccName -> bool :=
   fun arg_0__ arg_1__ =>
@@ -237,7 +234,6 @@ Program Instance Eq___OccName : GHC.Base.Eq_ OccName :=
   fun _ k =>
     k {| GHC.Base.op_zeze____ := Eq___OccName_op_zeze__ ;
          GHC.Base.op_zsze____ := Eq___OccName_op_zsze__ |}.
-Admit Obligations.
 
 Local Definition Ord__OccName_compare : OccName -> OccName -> comparison :=
   fun arg_0__ arg_1__ =>
@@ -273,7 +269,6 @@ Program Instance Ord__OccName : GHC.Base.Ord OccName :=
          GHC.Base.compare__ := Ord__OccName_compare ;
          GHC.Base.max__ := Ord__OccName_max ;
          GHC.Base.min__ := Ord__OccName_min |}.
-Admit Obligations.
 
 Definition alterOccEnv {elt}
    : (option elt -> option elt) -> OccEnv elt -> OccName -> OccEnv elt :=

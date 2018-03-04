@@ -132,7 +132,6 @@ Program Instance Functor__OrdList : GHC.Base.Functor OrdList :=
   fun _ k =>
     k {| GHC.Base.op_zlzd____ := fun {a} {b} => Functor__OrdList_op_zlzd__ ;
          GHC.Base.fmap__ := fun {a} {b} => Functor__OrdList_fmap |}.
-Admit Obligations.
 
 Definition nilOL {a} : OrdList a :=
   None.
@@ -145,7 +144,6 @@ Program Instance Monoid__OrdList {a} : GHC.Base.Monoid (OrdList a) :=
     k {| GHC.Base.mappend__ := Monoid__OrdList_mappend ;
          GHC.Base.mconcat__ := Monoid__OrdList_mconcat ;
          GHC.Base.mempty__ := Monoid__OrdList_mempty |}.
-Admit Obligations.
 
 Definition snocOL {a} : OrdList a -> a -> OrdList a :=
   fun as_ b => Snoc as_ b.

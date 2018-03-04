@@ -48,7 +48,6 @@ Program Instance Eq___ConLike : GHC.Base.Eq_ ConLike :=
   fun _ k =>
     k {| GHC.Base.op_zeze____ := Eq___ConLike_op_zeze__ ;
          GHC.Base.op_zsze____ := Eq___ConLike_op_zsze__ |}.
-Admit Obligations.
 
 Local Definition Ord__ConLike_compare : ConLike -> ConLike -> comparison :=
   Data.Function.on GHC.Base.compare Unique.getUnique.
@@ -80,7 +79,6 @@ Program Instance Ord__ConLike : GHC.Base.Ord ConLike :=
          GHC.Base.compare__ := Ord__ConLike_compare ;
          GHC.Base.max__ := Ord__ConLike_max ;
          GHC.Base.min__ := Ord__ConLike_min |}.
-Admit Obligations.
 
 (* Translating `instance Unique.Uniquable ConLike.ConLike' failed: OOPS! Cannot
    find information for class Qualified "Unique" "Uniquable" unsupported *)

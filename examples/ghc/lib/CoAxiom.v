@@ -267,7 +267,6 @@ Program Instance Eq___CoAxiom {br} : GHC.Base.Eq_ (Core.CoAxiom br) :=
   fun _ k =>
     k {| GHC.Base.op_zeze____ := Eq___CoAxiom_op_zeze__ ;
          GHC.Base.op_zsze____ := Eq___CoAxiom_op_zsze__ |}.
-Admit Obligations.
 
 Program Instance Ord__CoAxiom {br} : GHC.Base.Ord (Core.CoAxiom br) :=
   fun _ k =>
@@ -278,7 +277,6 @@ Program Instance Ord__CoAxiom {br} : GHC.Base.Ord (Core.CoAxiom br) :=
          GHC.Base.compare__ := Ord__CoAxiom_compare ;
          GHC.Base.max__ := Ord__CoAxiom_max ;
          GHC.Base.min__ := Ord__CoAxiom_min |}.
-Admit Obligations.
 
 (* Translating `instance forall {br}, Unique.Uniquable (Core.CoAxiom br)'
    failed: OOPS! Cannot find information for class Qualified "Unique" "Uniquable"
@@ -323,7 +321,6 @@ Program Instance Eq___CoAxiomRule : GHC.Base.Eq_ Core.CoAxiomRule :=
   fun _ k =>
     k {| GHC.Base.op_zeze____ := Eq___CoAxiomRule_op_zeze__ ;
          GHC.Base.op_zsze____ := Eq___CoAxiomRule_op_zsze__ |}.
-Admit Obligations.
 
 Local Definition Ord__CoAxiomRule_compare
    : Core.CoAxiomRule -> Core.CoAxiomRule -> comparison :=
@@ -362,7 +359,6 @@ Program Instance Ord__CoAxiomRule : GHC.Base.Ord Core.CoAxiomRule :=
          GHC.Base.compare__ := Ord__CoAxiomRule_compare ;
          GHC.Base.max__ := Ord__CoAxiomRule_max ;
          GHC.Base.min__ := Ord__CoAxiomRule_min |}.
-Admit Obligations.
 
 (* Translating `instance Outputable.Outputable Core.CoAxiomRule' failed: OOPS!
    Cannot find information for class Qualified "Outputable" "Outputable"
@@ -392,7 +388,6 @@ Program Instance Eq___Role : GHC.Base.Eq_ Core.Role :=
   fun _ k =>
     k {| GHC.Base.op_zeze____ := Eq___Role_op_zeze__ ;
          GHC.Base.op_zsze____ := Eq___Role_op_zsze__ |}.
-Admit Obligations.
 
 Definition coAxBranchCoVars : Core.CoAxBranch -> list CoVar :=
   cab_cvs.

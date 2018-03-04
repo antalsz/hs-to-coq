@@ -302,7 +302,6 @@ Program Instance Foldable__BooleanFormula
          Data.Foldable.sum__ := fun {a} `{GHC.Num.Num a} =>
            Foldable__BooleanFormula_sum ;
          Data.Foldable.toList__ := fun {a} => Foldable__BooleanFormula_toList |}.
-Admit Obligations.
 
 Local Definition Functor__BooleanFormula_fmap {a} {b}
    : (a -> b) -> BooleanFormula a -> BooleanFormula b :=
@@ -316,7 +315,6 @@ Program Instance Functor__BooleanFormula : GHC.Base.Functor BooleanFormula :=
   fun _ k =>
     k {| GHC.Base.op_zlzd____ := fun {a} {b} => Functor__BooleanFormula_op_zlzd__ ;
          GHC.Base.fmap__ := fun {a} {b} => Functor__BooleanFormula_fmap |}.
-Admit Obligations.
 
 Program Instance Traversable__BooleanFormula
    : Data.Traversable.Traversable BooleanFormula :=
@@ -329,7 +327,6 @@ Program Instance Traversable__BooleanFormula
            Traversable__BooleanFormula_sequenceA ;
          Data.Traversable.traverse__ := fun {f} {a} {b} `{GHC.Base.Applicative f} =>
            Traversable__BooleanFormula_traverse |}.
-Admit Obligations.
 
 (* Translating `instance forall {a}, forall `{Data.Data.Data a}, Data.Data.Data
    (BooleanFormula.BooleanFormula a)' failed: OOPS! Cannot find information for
@@ -355,7 +352,6 @@ Program Instance Eq___BooleanFormula {a} `{GHC.Base.Eq_ a}
   fun _ k =>
     k {| GHC.Base.op_zeze____ := Eq___BooleanFormula_op_zeze__ ;
          GHC.Base.op_zsze____ := Eq___BooleanFormula_op_zsze__ |}.
-Admit Obligations.
 
 Definition eval {a} : (a -> bool) -> BooleanFormula a -> bool :=
   fix eval arg_0__ arg_1__

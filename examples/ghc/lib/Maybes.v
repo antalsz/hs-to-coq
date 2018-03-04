@@ -56,7 +56,6 @@ Program Instance Functor__MaybeErr {err} : GHC.Base.Functor (MaybeErr err) :=
   fun _ k =>
     k {| GHC.Base.op_zlzd____ := fun {a} {b} => Functor__MaybeErr_op_zlzd__ ;
          GHC.Base.fmap__ := fun {a} {b} => Functor__MaybeErr_fmap |}.
-Admit Obligations.
 
 Local Definition Applicative__MaybeErr_op_zlztzg__ {inst_err}
    : forall {a} {b},
@@ -90,7 +89,6 @@ Program Instance Applicative__MaybeErr {err}
     k {| GHC.Base.op_ztzg____ := fun {a} {b} => Applicative__MaybeErr_op_ztzg__ ;
          GHC.Base.op_zlztzg____ := fun {a} {b} => Applicative__MaybeErr_op_zlztzg__ ;
          GHC.Base.pure__ := fun {a} => Applicative__MaybeErr_pure |}.
-Admit Obligations.
 
 Local Definition Monad__MaybeErr_op_zgzg__ {inst_err}
    : forall {a} {b},
@@ -117,7 +115,6 @@ Program Instance Monad__MaybeErr {err} : GHC.Base.Monad (MaybeErr err) :=
     k {| GHC.Base.op_zgzg____ := fun {a} {b} => Monad__MaybeErr_op_zgzg__ ;
          GHC.Base.op_zgzgze____ := fun {a} {b} => Monad__MaybeErr_op_zgzgze__ ;
          GHC.Base.return___ := fun {a} => Monad__MaybeErr_return_ |}.
-Admit Obligations.
 
 Definition failME {err} {val} : err -> MaybeErr err val :=
   fun e => Failed e.

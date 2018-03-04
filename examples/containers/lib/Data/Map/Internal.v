@@ -1658,7 +1658,6 @@ Local Definition Semigroup__Map_op_zlzg__ {inst_k} {inst_v} `{(GHC.Base.Ord
 Program Instance Semigroup__Map {k} {v} `{(GHC.Base.Ord k)}
    : Data.Semigroup.Semigroup (Map k v) :=
   fun _ k => k {| Data.Semigroup.op_zlzg____ := Semigroup__Map_op_zlzg__ |}.
-Admit Obligations.
 
 Local Definition Monoid__Map_mappend {inst_k} {inst_v} `{(GHC.Base.Ord inst_k)}
    : (Map inst_k inst_v) -> (Map inst_k inst_v) -> (Map inst_k inst_v) :=
@@ -1670,7 +1669,6 @@ Program Instance Monoid__Map {k} {v} `{(GHC.Base.Ord k)}
     k {| GHC.Base.mappend__ := Monoid__Map_mappend ;
          GHC.Base.mconcat__ := Monoid__Map_mconcat ;
          GHC.Base.mempty__ := Monoid__Map_mempty |}.
-Admit Obligations.
 
 Definition unionWith {k} {a} `{GHC.Base.Ord k}
    : (a -> a -> a) -> Map k a -> Map k a -> Map k a :=
@@ -2461,7 +2459,6 @@ Program Instance Foldable__Map {k} : Data.Foldable.Foldable (Map k) :=
          Data.Foldable.product__ := fun {a} `{GHC.Num.Num a} => Foldable__Map_product ;
          Data.Foldable.sum__ := fun {a} `{GHC.Num.Num a} => Foldable__Map_sum ;
          Data.Foldable.toList__ := fun {a} => Foldable__Map_toList |}.
-Admit Obligations.
 
 Local Definition Eq___Map_op_zeze__ {inst_k} {inst_a} `{GHC.Base.Eq_ inst_k}
   `{GHC.Base.Eq_ inst_a}
@@ -2479,7 +2476,6 @@ Program Instance Eq___Map {k} {a} `{GHC.Base.Eq_ k} `{GHC.Base.Eq_ a}
   fun _ k =>
     k {| GHC.Base.op_zeze____ := Eq___Map_op_zeze__ ;
          GHC.Base.op_zsze____ := Eq___Map_op_zsze__ |}.
-Admit Obligations.
 
 Program Instance Ord__Map {k} {v} `{GHC.Base.Ord k} `{GHC.Base.Ord v}
    : GHC.Base.Ord (Map k v) :=
@@ -2491,7 +2487,6 @@ Program Instance Ord__Map {k} {v} `{GHC.Base.Ord k} `{GHC.Base.Ord v}
          GHC.Base.compare__ := Ord__Map_compare ;
          GHC.Base.max__ := Ord__Map_max ;
          GHC.Base.min__ := Ord__Map_min |}.
-Admit Obligations.
 
 Definition traverseMaybeMissing {f} {k} {x} {y} `{GHC.Base.Applicative f}
    : (k -> x -> f (option y)) -> WhenMissing f k x y :=

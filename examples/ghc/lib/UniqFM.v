@@ -65,7 +65,6 @@ Program Instance Eq___UniqFM {ele} `{GHC.Base.Eq_ ele}
   fun _ k =>
     k {| GHC.Base.op_zeze____ := Eq___UniqFM_op_zeze__ ;
          GHC.Base.op_zsze____ := Eq___UniqFM_op_zsze__ |}.
-Admit Obligations.
 
 (* Translating `instance forall {ele}, forall `{Data.Data.Data ele},
    Data.Data.Data (UniqFM.UniqFM ele)' failed: OOPS! Cannot find information for
@@ -364,7 +363,6 @@ Program Instance Monoid__UniqFM {a} : GHC.Base.Monoid (UniqFM a) :=
     k {| GHC.Base.mappend__ := Monoid__UniqFM_mappend ;
          GHC.Base.mconcat__ := Monoid__UniqFM_mconcat ;
          GHC.Base.mempty__ := Monoid__UniqFM_mempty |}.
-Admit Obligations.
 
 Definition plusUFM_C {elt}
    : (elt -> elt -> elt) -> UniqFM elt -> UniqFM elt -> UniqFM elt :=

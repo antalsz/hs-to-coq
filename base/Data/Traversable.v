@@ -115,7 +115,6 @@ Program Instance Traversable__option : Traversable option :=
            Traversable__option_sequenceA ;
          traverse__ := fun {f} {a} {b} `{GHC.Base.Applicative f} =>
            Traversable__option_traverse |}.
-Admit Obligations.
 
 Local Definition Traversable__list_traverse
    : forall {f} {a} {b},
@@ -146,7 +145,6 @@ Program Instance Traversable__list : Traversable list :=
            Traversable__list_sequenceA ;
          traverse__ := fun {f} {a} {b} `{GHC.Base.Applicative f} =>
            Traversable__list_traverse |}.
-Admit Obligations.
 
 Local Definition Traversable__Either_traverse {inst_a}
    : forall {f} {a} {b},
@@ -188,7 +186,6 @@ Program Instance Traversable__Either {a} : Traversable (Data.Either.Either a) :=
            Traversable__Either_sequenceA ;
          traverse__ := fun {f} {a} {b} `{GHC.Base.Applicative f} =>
            Traversable__Either_traverse |}.
-Admit Obligations.
 
 Local Definition Traversable__pair_type_traverse {inst_a}
    : forall {f} {a} {b},
@@ -232,7 +229,6 @@ Program Instance Traversable__pair_type {a}
            Traversable__pair_type_sequenceA ;
          traverse__ := fun {f} {a} {b} `{GHC.Base.Applicative f} =>
            Traversable__pair_type_traverse |}.
-Admit Obligations.
 
 (* Skipping instance Traversable__Array *)
 
@@ -271,7 +267,6 @@ Program Instance Traversable__Proxy : Traversable Data.Proxy.Proxy :=
            Traversable__Proxy_sequenceA ;
          traverse__ := fun {f} {a} {b} `{GHC.Base.Applicative f} =>
            Traversable__Proxy_traverse |}.
-Admit Obligations.
 
 Local Definition Traversable__Const_traverse {inst_m}
    : forall {f} {a} {b},
@@ -318,7 +313,6 @@ Program Instance Traversable__Const {m}
            Traversable__Const_sequenceA ;
          traverse__ := fun {f} {a} {b} `{GHC.Base.Applicative f} =>
            Traversable__Const_traverse |}.
-Admit Obligations.
 
 Local Definition Traversable__Dual_traverse
    : forall {f} {a} {b},
@@ -355,7 +349,6 @@ Program Instance Traversable__Dual : Traversable Data.Monoid.Dual :=
            Traversable__Dual_sequenceA ;
          traverse__ := fun {f} {a} {b} `{GHC.Base.Applicative f} =>
            Traversable__Dual_traverse |}.
-Admit Obligations.
 
 Local Definition Traversable__Sum_traverse
    : forall {f} {a} {b},
@@ -392,7 +385,6 @@ Program Instance Traversable__Sum : Traversable Data.Monoid.Sum :=
            Traversable__Sum_sequenceA ;
          traverse__ := fun {f} {a} {b} `{GHC.Base.Applicative f} =>
            Traversable__Sum_traverse |}.
-Admit Obligations.
 
 Local Definition Traversable__Product_traverse
    : forall {f} {a} {b},
@@ -432,7 +424,6 @@ Program Instance Traversable__Product : Traversable Data.Monoid.Product :=
            Traversable__Product_sequenceA ;
          traverse__ := fun {f} {a} {b} `{GHC.Base.Applicative f} =>
            Traversable__Product_traverse |}.
-Admit Obligations.
 
 (* Skipping instance Traversable__First *)
 
@@ -459,7 +450,6 @@ Program Instance Functor__StateL {s} : GHC.Base.Functor (StateL s) :=
   fun _ k =>
     k {| GHC.Base.op_zlzd____ := fun {a} {b} => Functor__StateL_op_zlzd__ ;
          GHC.Base.fmap__ := fun {a} {b} => Functor__StateL_fmap |}.
-Admit Obligations.
 
 Local Definition Applicative__StateL_op_zlztzg__ {inst_s}
    : forall {a} {b},
@@ -489,7 +479,6 @@ Program Instance Applicative__StateL {s} : GHC.Base.Applicative (StateL s) :=
     k {| GHC.Base.op_ztzg____ := fun {a} {b} => Applicative__StateL_op_ztzg__ ;
          GHC.Base.op_zlztzg____ := fun {a} {b} => Applicative__StateL_op_zlztzg__ ;
          GHC.Base.pure__ := fun {a} => Applicative__StateL_pure |}.
-Admit Obligations.
 
 Local Definition Functor__StateR_fmap {inst_s}
    : forall {a} {b}, (a -> b) -> (StateR inst_s) a -> (StateR inst_s) b :=
@@ -508,7 +497,6 @@ Program Instance Functor__StateR {s} : GHC.Base.Functor (StateR s) :=
   fun _ k =>
     k {| GHC.Base.op_zlzd____ := fun {a} {b} => Functor__StateR_op_zlzd__ ;
          GHC.Base.fmap__ := fun {a} {b} => Functor__StateR_fmap |}.
-Admit Obligations.
 
 Local Definition Applicative__StateR_op_zlztzg__ {inst_s}
    : forall {a} {b},
@@ -538,7 +526,6 @@ Program Instance Applicative__StateR {s} : GHC.Base.Applicative (StateR s) :=
     k {| GHC.Base.op_ztzg____ := fun {a} {b} => Applicative__StateR_op_ztzg__ ;
          GHC.Base.op_zlztzg____ := fun {a} {b} => Applicative__StateR_op_zlztzg__ ;
          GHC.Base.pure__ := fun {a} => Applicative__StateR_pure |}.
-Admit Obligations.
 
 Local Definition Functor__Id_fmap : forall {a} {b}, (a -> b) -> Id a -> Id b :=
   fun {a} {b} =>
@@ -554,7 +541,6 @@ Program Instance Functor__Id : GHC.Base.Functor Id :=
   fun _ k =>
     k {| GHC.Base.op_zlzd____ := fun {a} {b} => Functor__Id_op_zlzd__ ;
          GHC.Base.fmap__ := fun {a} {b} => Functor__Id_fmap |}.
-Admit Obligations.
 
 Local Definition Applicative__Id_op_zlztzg__
    : forall {a} {b}, Id (a -> b) -> Id a -> Id b :=
@@ -578,7 +564,6 @@ Program Instance Applicative__Id : GHC.Base.Applicative Id :=
     k {| GHC.Base.op_ztzg____ := fun {a} {b} => Applicative__Id_op_ztzg__ ;
          GHC.Base.op_zlztzg____ := fun {a} {b} => Applicative__Id_op_zlztzg__ ;
          GHC.Base.pure__ := fun {a} => Applicative__Id_pure |}.
-Admit Obligations.
 
 (* Skipping instance Traversable__V1 *)
 

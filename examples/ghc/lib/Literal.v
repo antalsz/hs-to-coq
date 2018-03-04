@@ -286,7 +286,6 @@ Program Instance Eq___Literal : GHC.Base.Eq_ Literal :=
   fun _ k =>
     k {| GHC.Base.op_zeze____ := Eq___Literal_op_zeze__ ;
          GHC.Base.op_zsze____ := Eq___Literal_op_zsze__ |}.
-Admit Obligations.
 
 Program Instance Ord__Literal : GHC.Base.Ord Literal :=
   fun _ k =>
@@ -297,7 +296,6 @@ Program Instance Ord__Literal : GHC.Base.Ord Literal :=
          GHC.Base.compare__ := Ord__Literal_compare ;
          GHC.Base.max__ := Ord__Literal_max ;
          GHC.Base.min__ := Ord__Literal_min |}.
-Admit Obligations.
 
 Definition litValue : Literal -> GHC.Num.Integer :=
   fun arg_0__ =>

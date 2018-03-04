@@ -65,7 +65,6 @@ Program Instance Eq___UnVarSet : GHC.Base.Eq_ UnVarSet :=
   fun _ k =>
     k {| GHC.Base.op_zeze____ := Eq___UnVarSet_op_zeze__ ;
          GHC.Base.op_zsze____ := Eq___UnVarSet_op_zsze__ |}.
-Admit Obligations.
 
 Definition emptyUnVarGraph : UnVarGraph :=
   Mk_UnVarGraph Bag.emptyBag.

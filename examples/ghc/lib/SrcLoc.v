@@ -262,7 +262,6 @@ Program Instance Functor__GenLocated {l} : GHC.Base.Functor (GenLocated l) :=
   fun _ k =>
     k {| GHC.Base.op_zlzd____ := fun {a} {b} => Functor__GenLocated_op_zlzd__ ;
          GHC.Base.fmap__ := fun {a} {b} => Functor__GenLocated_fmap |}.
-Admit Obligations.
 
 Program Instance Foldable__GenLocated {l}
    : Data.Foldable.Foldable (GenLocated l) :=
@@ -283,7 +282,6 @@ Program Instance Foldable__GenLocated {l}
            Foldable__GenLocated_product ;
          Data.Foldable.sum__ := fun {a} `{GHC.Num.Num a} => Foldable__GenLocated_sum ;
          Data.Foldable.toList__ := fun {a} => Foldable__GenLocated_toList |}.
-Admit Obligations.
 
 Program Instance Traversable__GenLocated {l}
    : Data.Traversable.Traversable (GenLocated l) :=
@@ -296,7 +294,6 @@ Program Instance Traversable__GenLocated {l}
            Traversable__GenLocated_sequenceA ;
          Data.Traversable.traverse__ := fun {f} {a} {b} `{GHC.Base.Applicative f} =>
            Traversable__GenLocated_traverse |}.
-Admit Obligations.
 
 (* Translating `instance forall {l} {e}, forall `{Data.Data.Data e}
    `{Data.Data.Data l}, Data.Data.Data (SrcLoc.GenLocated l e)' failed: OOPS!
@@ -322,7 +319,6 @@ Program Instance Eq___GenLocated {l} {e} `{GHC.Base.Eq_ e} `{GHC.Base.Eq_ l}
   fun _ k =>
     k {| GHC.Base.op_zeze____ := Eq___GenLocated_op_zeze__ ;
          GHC.Base.op_zsze____ := Eq___GenLocated_op_zsze__ |}.
-Admit Obligations.
 
 (* Translating `instance GHC.Show.Show SrcLoc.SrcSpan' failed: OOPS! Cannot find
    information for class Qualified "GHC.Show" "Show" unsupported *)
@@ -348,7 +344,6 @@ Program Instance Eq___RealSrcSpan : GHC.Base.Eq_ RealSrcSpan :=
   fun _ k =>
     k {| GHC.Base.op_zeze____ := Eq___RealSrcSpan_op_zeze__ ;
          GHC.Base.op_zsze____ := Eq___RealSrcSpan_op_zsze__ |}.
-Admit Obligations.
 
 Local Definition Eq___SrcSpan_op_zeze__ : SrcSpan -> SrcSpan -> bool :=
   fun arg_0__ arg_1__ =>
@@ -368,7 +363,6 @@ Program Instance Eq___SrcSpan : GHC.Base.Eq_ SrcSpan :=
   fun _ k =>
     k {| GHC.Base.op_zeze____ := Eq___SrcSpan_op_zeze__ ;
          GHC.Base.op_zsze____ := Eq___SrcSpan_op_zsze__ |}.
-Admit Obligations.
 
 (* Translating `instance GHC.Show.Show SrcLoc.SrcLoc' failed: OOPS! Cannot find
    information for class Qualified "GHC.Show" "Show" unsupported *)
@@ -411,7 +405,6 @@ Program Instance Eq___RealSrcLoc : GHC.Base.Eq_ RealSrcLoc :=
   fun _ k =>
     k {| GHC.Base.op_zeze____ := Eq___RealSrcLoc_op_zeze__ ;
          GHC.Base.op_zsze____ := Eq___RealSrcLoc_op_zsze__ |}.
-Admit Obligations.
 
 Local Definition Ord__RealSrcLoc_min : RealSrcLoc -> RealSrcLoc -> RealSrcLoc :=
   fun x y => if Ord__RealSrcLoc_op_zlze__ x y : bool then x else y.
@@ -428,7 +421,6 @@ Program Instance Ord__RealSrcLoc : GHC.Base.Ord RealSrcLoc :=
          GHC.Base.compare__ := Ord__RealSrcLoc_compare ;
          GHC.Base.max__ := Ord__RealSrcLoc_max ;
          GHC.Base.min__ := Ord__RealSrcLoc_min |}.
-Admit Obligations.
 
 Definition cmpSrcLoc : SrcLoc -> SrcLoc -> comparison :=
   fun arg_0__ arg_1__ =>
@@ -474,7 +466,6 @@ Program Instance Eq___SrcLoc : GHC.Base.Eq_ SrcLoc :=
   fun _ k =>
     k {| GHC.Base.op_zeze____ := Eq___SrcLoc_op_zeze__ ;
          GHC.Base.op_zsze____ := Eq___SrcLoc_op_zsze__ |}.
-Admit Obligations.
 
 Program Instance Ord__SrcLoc : GHC.Base.Ord SrcLoc :=
   fun _ k =>
@@ -485,7 +476,6 @@ Program Instance Ord__SrcLoc : GHC.Base.Ord SrcLoc :=
          GHC.Base.compare__ := Ord__SrcLoc_compare ;
          GHC.Base.max__ := Ord__SrcLoc_max ;
          GHC.Base.min__ := Ord__SrcLoc_min |}.
-Admit Obligations.
 
 Definition generatedSrcLoc : SrcLoc :=
   UnhelpfulLoc (FastString.fsLit (GHC.Base.hs_string__
@@ -681,7 +671,6 @@ Program Instance Ord__RealSrcSpan : GHC.Base.Ord RealSrcSpan :=
          GHC.Base.compare__ := Ord__RealSrcSpan_compare ;
          GHC.Base.max__ := Ord__RealSrcSpan_max ;
          GHC.Base.min__ := Ord__RealSrcSpan_min |}.
-Admit Obligations.
 
 Local Definition Ord__SrcSpan_op_zlze__ : SrcSpan -> SrcSpan -> bool :=
   fun a b =>
@@ -773,7 +762,6 @@ Program Instance Ord__SrcSpan : GHC.Base.Ord SrcSpan :=
          GHC.Base.compare__ := Ord__SrcSpan_compare ;
          GHC.Base.max__ := Ord__SrcSpan_max ;
          GHC.Base.min__ := Ord__SrcSpan_min |}.
-Admit Obligations.
 
 Definition rightmost : SrcSpan -> SrcSpan -> comparison :=
   GHC.Base.flip GHC.Base.compare.

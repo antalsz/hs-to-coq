@@ -502,13 +502,19 @@ instance Gallina OrPattern where
 instance Gallina Comment where
   renderGallina' _ (Comment com) = "(* " <> align (fillSep . map (text . T.replace "*)" "* )") $ T.words com) <> " *)"
 
+renderObligation :: Maybe Tactics -> Doc
+renderObligation (Just "admit") = "Admit Obligations."
+    -- Strangly, `Solve Obligations with (admit).` does not actually discharge
+    -- the obligations; some Program mode weirdness. So lets use `Admit Obligations.`
+renderObligation (Just t)       = "Solve Obligations with ("<> text t <>")."
+renderObligation Nothing        = empty
+
 instance Gallina Sentence where
   renderGallina' p (AssumptionSentence      ass)    = renderGallina' p ass
   renderGallina' p (DefinitionSentence      def)    = renderGallina' p def
   renderGallina' p (InductiveSentence       ind)    = renderGallina' p ind
   renderGallina' p (FixpointSentence        fix)    = renderGallina' p fix
-  renderGallina' p (ProgramSentence         sen pf) = "Program" <+> renderGallina' p sen <!>
-                                                      maybe "Admit Obligations." (\t -> "Solve Obligations with ("<> text t <>").") pf
+  renderGallina' p (ProgramSentence         sen pf) = "Program" <+> renderGallina' p sen <!> renderObligation pf
   renderGallina' p (AssertionSentence       ass pf) = renderGallina' p ass <!> renderGallina' p pf
   renderGallina' p (ModuleSentence          mod)    = renderGallina' p mod
   renderGallina' p (ClassSentence           cls)    = renderGallina' p cls

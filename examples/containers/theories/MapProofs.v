@@ -903,7 +903,6 @@ Qed.
 
 (** *** Verification of [insertMax] *)
 
-
 Lemma insertMax_Desc:
     forall x v s1 lb ub,
     Bounded s1 lb (Some x) ->

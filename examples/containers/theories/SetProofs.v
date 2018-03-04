@@ -720,7 +720,7 @@ Proof.
   all: try solve [solve_Desc].
 Qed.
 
-(** *** Verification of [link] *)
+(** *** Verification of [insertMax] *)
 
 Lemma insertMax_Desc:
     forall x s1 lb ub,
@@ -741,6 +741,8 @@ Proof.
     solve_Desc.
 Qed.
 
+(** *** Verification of [insertMin] *)
+
 Lemma insertMin_Desc:
     forall x s2 lb ub,
     Bounded s2 (Some x) ub ->
@@ -758,6 +760,8 @@ Proof.
     applyDesc balanceL_Desc.
     solve_Desc.
 Qed.
+
+(** *** Verification of [link] *)
 
 Lemma link_eq (x : e) (s1: Set_ e)  (s2: Set_ e) :
   link x s1 s2 =

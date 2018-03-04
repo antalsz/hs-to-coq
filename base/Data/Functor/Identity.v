@@ -185,13 +185,13 @@ Local Definition Traversable__Identity_mapM
    unsupported *)
 
 Local Definition Semigroup__Identity_op_zlzg__ {inst_a}
-                                               `{Data.Semigroup.Semigroup inst_a} : Identity inst_a -> Identity
-                                                                                    inst_a -> Identity inst_a :=
+  `{Data.Semigroup.Semigroup inst_a}
+   : Identity inst_a -> Identity inst_a -> Identity inst_a :=
   GHC.Prim.coerce _Data.Semigroup.<>_.
 
 Program Instance Semigroup__Identity {a} `{Data.Semigroup.Semigroup a}
-  : Data.Semigroup.Semigroup (Identity a) := fun _ k =>
-    k {|Data.Semigroup.op_zlzg____ := Semigroup__Identity_op_zlzg__ |}.
+   : Data.Semigroup.Semigroup (Identity a) :=
+  fun _ k => k {| Data.Semigroup.op_zlzg____ := Semigroup__Identity_op_zlzg__ |}.
 Admit Obligations.
 
 (* Translating `instance forall {a}, forall `{GHC.Float.RealFloat a},
@@ -376,7 +376,6 @@ Admit Obligations.
 
 (* Unbound variables:
      bool comparison cons false list nil Coq.Program.Basics.compose
-<<<<<<< HEAD
      Data.Foldable.Foldable Data.Semigroup.Semigroup Data.Semigroup.op_zlzg__
      Data.Traversable.Traversable GHC.Base.Applicative GHC.Base.Eq_ GHC.Base.Functor
      GHC.Base.Monad GHC.Base.Monoid GHC.Base.Ord GHC.Base.compare GHC.Base.const
@@ -384,14 +383,5 @@ Admit Obligations.
      GHC.Base.mempty GHC.Base.min GHC.Base.op_z2218U__ GHC.Base.op_zeze__
      GHC.Base.op_zg__ GHC.Base.op_zgze__ GHC.Base.op_zl__ GHC.Base.op_zlze__
      GHC.Base.op_zsze__ GHC.Base.op_ztzg__ GHC.Base.pure GHC.Num.Int GHC.Num.Num
-     GHC.Prim.coerce
-=======
-     Data.Foldable.Foldable Data.Traversable.Traversable GHC.Base.Applicative
-     GHC.Base.Eq_ GHC.Base.Functor GHC.Base.Monad GHC.Base.Monoid GHC.Base.Ord
-     GHC.Base.compare GHC.Base.const GHC.Base.fmap GHC.Base.id GHC.Base.mappend
-     GHC.Base.max GHC.Base.mconcat GHC.Base.mempty GHC.Base.min GHC.Base.op_z2218U__
-     GHC.Base.op_zeze__ GHC.Base.op_zg__ GHC.Base.op_zgze__ GHC.Base.op_zl__
-     GHC.Base.op_zlze__ GHC.Base.op_zsze__ GHC.Base.op_ztzg__ GHC.Base.pure
-     GHC.Num.Int GHC.Num.Num GHC.Num.fromInteger GHC.Prim.coerce
->>>>>>> dc245e2a07d60343ed30485d24ec72ba03af89dd
+     GHC.Num.fromInteger GHC.Prim.coerce
 *)

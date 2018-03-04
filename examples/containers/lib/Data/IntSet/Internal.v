@@ -19,12 +19,14 @@ Require BitTerminationProofs.
 Require Coq.Init.Peano.
 Require Data.Bits.
 Require Data.Foldable.
+Require Data.Semigroup.
 Require GHC.Base.
 Require GHC.Num.
 Require GHC.Real.
 Require GHC.Wf.
 Require Utils.Containers.Internal.BitUtil.
 Import Data.Bits.Notations.
+Import Data.Semigroup.Notations.
 Import GHC.Base.Notations.
 Import GHC.Num.Notations.
 
@@ -73,12 +75,6 @@ Definition suffixBitMask : GHC.Num.Int := (Coq.ZArith.BinInt.Z.ones 6%Z).
 
 (* Converted value declarations: *)
 
-(* Skipping instance Monoid__IntSet *)
-
-(* Translating `instance Data.Semigroup.Semigroup Data.IntSet.Internal.IntSet'
-   failed: OOPS! Cannot find information for class Qualified "Data.Semigroup"
-   "Semigroup" unsupported *)
-
 (* Translating `instance Data.Data.Data Data.IntSet.Internal.IntSet' failed:
    OOPS! Cannot find information for class Qualified "Data.Data" "Data"
    unsupported *)
@@ -117,6 +113,9 @@ Definition branchMask : Prefix -> Prefix -> Mask :=
 
 Definition empty : IntSet :=
   Nil.
+
+Local Definition Monoid__IntSet_mempty : IntSet :=
+  empty.
 
 Definition equal : IntSet -> IntSet -> bool :=
   fix equal arg_0__ arg_1__
@@ -801,6 +800,26 @@ Solve Obligations with (termination_by_omega).
 Definition unions : list IntSet -> IntSet :=
   fun xs => Data.Foldable.foldl union empty xs.
 
+Local Definition Monoid__IntSet_mconcat : list IntSet -> IntSet :=
+  unions.
+
+Local Definition Semigroup__IntSet_op_zlzg__ : IntSet -> IntSet -> IntSet :=
+  union.
+
+Program Instance Semigroup__IntSet : Data.Semigroup.Semigroup IntSet := fun _
+                                                                            k =>
+    k {|Data.Semigroup.op_zlzg____ := Semigroup__IntSet_op_zlzg__ |}.
+Admit Obligations.
+
+Local Definition Monoid__IntSet_mappend : IntSet -> IntSet -> IntSet :=
+  _Data.Semigroup.<>_.
+
+Program Instance Monoid__IntSet : GHC.Base.Monoid IntSet := fun _ k =>
+    k {|GHC.Base.mappend__ := Monoid__IntSet_mappend ;
+      GHC.Base.mconcat__ := Monoid__IntSet_mconcat ;
+      GHC.Base.mempty__ := Monoid__IntSet_mempty |}.
+Admit Obligations.
+
 Definition lookupGE : Key -> IntSet -> option Key :=
   fun x t =>
     let fix go arg_0__ arg_1__
@@ -1214,12 +1233,13 @@ End Notations.
      Coq.ZArith.BinInt.Z.land Coq.ZArith.BinInt.Z.lnot Coq.ZArith.BinInt.Z.log2
      Coq.ZArith.BinInt.Z.lxor Coq.ZArith.BinInt.Z.of_N Coq.ZArith.BinInt.Z.pow
      Coq.ZArith.BinInt.Z.pred Data.Bits.complement Data.Bits.op_zizazi__
-     Data.Bits.op_zizbzi__ Data.Bits.xor Data.Foldable.foldl GHC.Base.Eq_
-     GHC.Base.Ord GHC.Base.String GHC.Base.compare GHC.Base.flip GHC.Base.map
-     GHC.Base.op_z2218U__ GHC.Base.op_zd__ GHC.Base.op_zdzn__ GHC.Base.op_zeze__
-     GHC.Base.op_zg__ GHC.Base.op_zgze__ GHC.Base.op_zl__ GHC.Base.op_zsze__
-     GHC.Num.Int GHC.Num.Word GHC.Num.negate GHC.Num.op_zm__ GHC.Num.op_zp__
-     GHC.Real.fromIntegral GHC.Wf.wfFix2 Utils.Containers.Internal.BitUtil.bitcount
+     Data.Bits.op_zizbzi__ Data.Bits.xor Data.Foldable.foldl Data.Semigroup.Semigroup
+     Data.Semigroup.op_zlzg__ GHC.Base.Eq_ GHC.Base.Monoid GHC.Base.Ord
+     GHC.Base.String GHC.Base.compare GHC.Base.flip GHC.Base.map GHC.Base.op_z2218U__
+     GHC.Base.op_zd__ GHC.Base.op_zdzn__ GHC.Base.op_zeze__ GHC.Base.op_zg__
+     GHC.Base.op_zgze__ GHC.Base.op_zl__ GHC.Base.op_zsze__ GHC.Num.Int GHC.Num.Word
+     GHC.Num.negate GHC.Num.op_zm__ GHC.Num.op_zp__ GHC.Real.fromIntegral
+     GHC.Wf.wfFix2 Utils.Containers.Internal.BitUtil.bitcount
      Utils.Containers.Internal.BitUtil.highestBitMask
      Utils.Containers.Internal.BitUtil.lowestBitMask
      Utils.Containers.Internal.BitUtil.shiftLL

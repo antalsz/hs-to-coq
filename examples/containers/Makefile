@@ -22,11 +22,13 @@ HS_SPEC=hs-spec
 
 # Handwritten modules (usually by modification of generated version)
 HANDMOD = \
-  Data/SequenceManual \
   Utils/Containers/Internal/PtrEquality \
   CTZ \
   Popcount \
   BitTerminationProofs \
+#  BenchSet
+
+#  Data/SequenceManual \
 
 # Generated modules
 # generated directly from GHC/libraries/containers

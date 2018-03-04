@@ -25,10 +25,12 @@ End GHC.
 Require Data.Bits.
 Require Data.Either.
 Require Data.Foldable.
+Require Data.Semigroup.
 Require GHC.Base.
 Require GHC.Num.
 Require Nat.
 Require Utils.Containers.Internal.PtrEquality.
+Import Data.Semigroup.Notations.
 Import GHC.Base.Notations.
 Import GHC.Num.Notations.
 
@@ -74,12 +76,6 @@ Fixpoint set_size {a} (s : Set_ a) : nat :=
   end.
 
 (* Converted value declarations: *)
-
-(* Skipping instance Monoid__Set_ *)
-
-(* Translating `instance forall {a}, forall `{GHC.Base.Ord a},
-   Data.Semigroup.Semigroup (Data.Set.Internal.Set_ a)' failed: OOPS! Cannot find
-   information for class Qualified "Data.Semigroup" "Semigroup" unsupported *)
 
 Local Definition Foldable__Set__elem : forall {a},
                                          forall `{GHC.Base.Eq_ a}, a -> Set_ a -> bool :=
@@ -155,12 +151,6 @@ Local Definition Foldable__Set__foldMap : forall {m} {a},
    Control.DeepSeq.NFData (Data.Set.Internal.Set_ a)' failed: OOPS! Cannot find
    information for class Qualified "Control.DeepSeq" "NFData" unsupported *)
 
-(* Translating `instance forall {a}, Data.Semigroup.Semigroup
-   (Data.Set.Internal.MergeSet a)' failed: OOPS! Cannot find information for class
-   Qualified "Data.Semigroup" "Semigroup" unsupported *)
-
-(* Skipping instance Monoid__MergeSet *)
-
 Definition combineEq {a} `{GHC.Base.Eq_ a} : list a -> list a :=
   fun arg_0__ =>
     match arg_0__ with
@@ -180,6 +170,13 @@ Definition delta : GHC.Num.Int :=
 
 Definition empty {a} : Set_ a :=
   Tip.
+
+Local Definition Monoid__MergeSet_mempty {inst_a} : (MergeSet inst_a) :=
+  Mk_MergeSet empty.
+
+Local Definition Monoid__Set__mempty {inst_a} `{GHC.Base.Ord inst_a} : (Set_
+                                                                       inst_a) :=
+  empty.
 
 Definition foldl {a} {b} : (a -> b -> a) -> a -> Set_ b -> a :=
   fun f z =>
@@ -1071,6 +1068,30 @@ Definition union {a} `{GHC.Base.Ord a} : Set_ a -> Set_ a -> Set_ a :=
 Definition unions {a} `{GHC.Base.Ord a} : list (Set_ a) -> Set_ a :=
   Data.Foldable.foldl union empty.
 
+Local Definition Monoid__Set__mconcat {inst_a} `{GHC.Base.Ord inst_a} : list
+                                                                        (Set_ inst_a) -> (Set_ inst_a) :=
+  unions.
+
+Local Definition Semigroup__Set__op_zlzg__ {inst_a} `{GHC.Base.Ord inst_a}
+    : (Set_ inst_a) -> (Set_ inst_a) -> (Set_ inst_a) :=
+  union.
+
+Program Instance Semigroup__Set_ {a} `{GHC.Base.Ord a}
+  : Data.Semigroup.Semigroup (Set_ a) := fun _ k =>
+    k {|Data.Semigroup.op_zlzg____ := Semigroup__Set__op_zlzg__ |}.
+Admit Obligations.
+
+Local Definition Monoid__Set__mappend {inst_a} `{GHC.Base.Ord inst_a} : (Set_
+                                                                        inst_a) -> (Set_ inst_a) -> (Set_ inst_a) :=
+  _Data.Semigroup.<>_.
+
+Program Instance Monoid__Set_ {a} `{GHC.Base.Ord a} : GHC.Base.Monoid (Set_
+                                                                      a) := fun _ k =>
+    k {|GHC.Base.mappend__ := Monoid__Set__mappend ;
+      GHC.Base.mconcat__ := Monoid__Set__mconcat ;
+      GHC.Base.mempty__ := Monoid__Set__mempty |}.
+Admit Obligations.
+
 Definition maxViewSure {a} : a -> Set_ a -> Set_ a -> prod a (Set_ a) :=
   let fix go arg_0__ arg_1__ arg_2__
             := match arg_0__ , arg_1__ , arg_2__ with
@@ -1218,6 +1239,33 @@ Definition partition {a} : (a -> bool) -> Set_ a -> (Set_ a * Set_ a)%type :=
                                                end
                  end in
     id GHC.Base.$ go p0 t0.
+
+Local Definition Semigroup__MergeSet_op_zlzg__ {inst_a} : (MergeSet
+                                                          inst_a) -> (MergeSet inst_a) -> (MergeSet inst_a) :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__ , arg_1__ with
+      | Mk_MergeSet xs , Mk_MergeSet ys => Mk_MergeSet (merge xs ys)
+    end.
+
+Program Instance Semigroup__MergeSet {a} : Data.Semigroup.Semigroup (MergeSet
+                                                                    a) := fun _ k =>
+    k {|Data.Semigroup.op_zlzg____ := Semigroup__MergeSet_op_zlzg__ |}.
+Admit Obligations.
+
+Local Definition Monoid__MergeSet_mappend {inst_a} : (MergeSet
+                                                     inst_a) -> (MergeSet inst_a) -> (MergeSet inst_a) :=
+  _Data.Semigroup.<>_.
+
+Local Definition Monoid__MergeSet_mconcat {inst_a} : list (MergeSet
+                                                          inst_a) -> (MergeSet inst_a) :=
+  GHC.Base.foldr Monoid__MergeSet_mappend Monoid__MergeSet_mempty.
+
+Program Instance Monoid__MergeSet {a} : GHC.Base.Monoid (MergeSet a) := fun _
+                                                                            k =>
+    k {|GHC.Base.mappend__ := Monoid__MergeSet_mappend ;
+      GHC.Base.mconcat__ := Monoid__MergeSet_mconcat ;
+      GHC.Base.mempty__ := Monoid__MergeSet_mempty |}.
+Admit Obligations.
 
 Definition drop {a} : GHC.Num.Int -> Set_ a -> Set_ a :=
   fun arg_0__ arg_1__ =>
@@ -1392,8 +1440,9 @@ End Notations.
      Bool.Sumbool.sumbool_of_bool Eq Gt Lt None Some andb bool comparison cons false
      id list negb nil op_zt__ option orb pair prod set_size true Data.Bits.shiftL
      Data.Bits.shiftR Data.Either.Either Data.Either.Left Data.Either.Right
-     Data.Foldable.Foldable Data.Foldable.foldl GHC.Base.Eq_ GHC.Base.Monoid
-     GHC.Base.Ord GHC.Base.String GHC.Base.compare GHC.Base.const GHC.Base.flip
+     Data.Foldable.Foldable Data.Foldable.foldl Data.Semigroup.Semigroup
+     Data.Semigroup.op_zlzg__ GHC.Base.Eq_ GHC.Base.Monoid GHC.Base.Ord
+     GHC.Base.String GHC.Base.compare GHC.Base.const GHC.Base.flip GHC.Base.foldr
      GHC.Base.map GHC.Base.mappend GHC.Base.mempty GHC.Base.op_z2218U__
      GHC.Base.op_zd__ GHC.Base.op_zdzn__ GHC.Base.op_zeze__ GHC.Base.op_zg__
      GHC.Base.op_zgze__ GHC.Base.op_zl__ GHC.Base.op_zlze__ GHC.Base.op_zsze__

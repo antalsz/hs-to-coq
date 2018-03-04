@@ -1,5 +1,7 @@
 ## all instances in this file for stimes are partial
 skip method Data.Semigroup.Semigroup stimes
+## Default method refers to other methods. Just define in midamble.
+skip method Data.Semigroup.Semigroup sconcat
 
 # needs stimes
 skip Data.Semigroup.mtimesDefault 
@@ -15,6 +17,7 @@ skip Data.Semigroup.cycle1
 
 skip Data.Semigroup.stimesIdempotent
 skip Data.Semigroup.stimesIdempotentMonoid 
+
 
 
 ## Cannot make instances for two different types with the same name

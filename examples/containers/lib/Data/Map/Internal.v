@@ -28,6 +28,7 @@ Require Data.Foldable.
 Require Data.Functor.
 Require Data.Functor.Identity.
 Require Data.Maybe.
+Require Data.Semigroup.
 Require Data.Set.Internal.
 Require GHC.Base.
 Require GHC.Num.
@@ -35,6 +36,7 @@ Require Nat.
 Require Utils.Containers.Internal.BitQueue.
 Require Utils.Containers.Internal.PtrEquality.
 Import Data.Functor.Notations.
+Import Data.Semigroup.Notations.
 Import GHC.Base.Notations.
 Import GHC.Num.Notations.
 
@@ -143,12 +145,6 @@ Fixpoint map_size {a} {b} (s : Map a b) : nat :=
 
 (* Converted value declarations: *)
 
-(* Skipping instance Monoid__Map *)
-
-(* Translating `instance forall {k} {v}, forall `{(GHC.Base.Ord k)},
-   Data.Semigroup.Semigroup (Data.Map.Internal.Map k v)' failed: OOPS! Cannot find
-   information for class Qualified "Data.Semigroup" "Semigroup" unsupported *)
-
 (* Translating `instance forall {k} {a}, forall `{Data.Data.Data k}
    `{Data.Data.Data a} `{GHC.Base.Ord k}, Data.Data.Data (Data.Map.Internal.Map k
    a)' failed: OOPS! Cannot find information for class Qualified "Data.Data" "Data"
@@ -173,10 +169,6 @@ Fixpoint map_size {a} {b} (s : Map a b) : nat :=
 (* Translating `instance forall {k} {v}, forall `{(GHC.Base.Ord k)},
    GHC.Exts.IsList (Data.Map.Internal.Map k v)' failed: OOPS! Cannot find
    information for class Qualified "GHC.Exts" "IsList" unsupported *)
-
-(* Skipping instance Eq___Map *)
-
-(* Skipping instance Ord__Map *)
 
 (* Translating `instance Data.Functor.Classes.Eq2 Data.Map.Internal.Map' failed:
    OOPS! Cannot find information for class Qualified "Data.Functor.Classes" "Eq2"
@@ -211,7 +203,49 @@ Fixpoint map_size {a} {b} (s : Map a b) : nat :=
 
 (* Skipping instance Traversable__Map *)
 
-(* Skipping instance Foldable__Map *)
+Local Definition Foldable__Map_elem {inst_k} : forall {a},
+                                                 forall `{GHC.Base.Eq_ a}, a -> (Map inst_k) a -> bool :=
+  fun {a} `{GHC.Base.Eq_ a} =>
+    let fix go arg_0__ arg_1__
+              := match arg_0__ , arg_1__ with
+                   | _ , Tip => false
+                   | x , Bin _ _ v l r => orb (x GHC.Base.== v) (orb (go x l) (go x r))
+                 end in
+    go.
+
+Local Definition Foldable__Map_fold {inst_k} : forall {m},
+                                                 forall `{GHC.Base.Monoid m}, (Map inst_k) m -> m :=
+  fun {m} `{GHC.Base.Monoid m} =>
+    let fix go arg_0__
+              := match arg_0__ with
+                   | Tip => GHC.Base.mempty
+                   | Bin num_1__ _ v _ _ => if num_1__ GHC.Base.== GHC.Num.fromInteger 1 : bool
+                                            then v
+                                            else match arg_0__ with
+                                                   | Bin _ _ v l r => GHC.Base.mappend (go l) (GHC.Base.mappend v (go
+                                                                                                                r))
+                                                   | _ => patternFailure
+                                                 end
+                 end in
+    go.
+
+Local Definition Foldable__Map_foldMap {inst_k} : forall {m} {a},
+                                                    forall `{GHC.Base.Monoid m}, (a -> m) -> (Map inst_k) a -> m :=
+  fun {m} {a} `{GHC.Base.Monoid m} =>
+    fun f t =>
+      let fix go arg_0__
+                := match arg_0__ with
+                     | Tip => GHC.Base.mempty
+                     | Bin num_1__ _ v _ _ => if num_1__ GHC.Base.== GHC.Num.fromInteger 1 : bool
+                                              then f v
+                                              else match arg_0__ with
+                                                     | Bin _ _ v l r => GHC.Base.mappend (go l) (GHC.Base.mappend (f v)
+                                                                                                                  (go
+                                                                                                                  r))
+                                                     | _ => patternFailure
+                                                   end
+                   end in
+      go t.
 
 (* Translating `instance forall {k} {a}, forall `{Control.DeepSeq.NFData k}
    `{Control.DeepSeq.NFData a}, Control.DeepSeq.NFData (Data.Map.Internal.Map k a)'
@@ -265,6 +299,10 @@ Definition dropMissing {f} {k} {x} {y} `{GHC.Base.Applicative f} : WhenMissing f
 
 Definition empty {k} {a} : Map k a :=
   Tip.
+
+Local Definition Monoid__Map_mempty {inst_k} {inst_v} `{(GHC.Base.Ord inst_k)}
+    : (Map inst_k inst_v) :=
+  empty.
 
 Definition filterAMissing {f} {k} {x} `{GHC.Base.Applicative f} : (k -> x -> f
                                                                   bool) -> WhenMissing f k x x :=
@@ -331,6 +369,10 @@ Definition foldl {a} {b} {k} : (a -> b -> a) -> a -> Map k b -> a :=
                  end in
     go z.
 
+Local Definition Foldable__Map_foldl {inst_k} : forall {b} {a},
+                                                  (b -> a -> b) -> b -> (Map inst_k) a -> b :=
+  fun {b} {a} => foldl.
+
 Definition foldl' {a} {b} {k} : (a -> b -> a) -> a -> Map k b -> a :=
   fun f z =>
     let fix go arg_0__ arg_1__
@@ -339,6 +381,18 @@ Definition foldl' {a} {b} {k} : (a -> b -> a) -> a -> Map k b -> a :=
                    | z' , Bin _ _ x l r => go (f (go z' l) x) r
                  end in
     go z.
+
+Local Definition Foldable__Map_sum {inst_k} : forall {a},
+                                                forall `{GHC.Num.Num a}, (Map inst_k) a -> a :=
+  fun {a} `{GHC.Num.Num a} => foldl' _GHC.Num.+_ (GHC.Num.fromInteger 0).
+
+Local Definition Foldable__Map_product {inst_k} : forall {a},
+                                                    forall `{GHC.Num.Num a}, (Map inst_k) a -> a :=
+  fun {a} `{GHC.Num.Num a} => foldl' _GHC.Num.*_ (GHC.Num.fromInteger 1).
+
+Local Definition Foldable__Map_foldl' {inst_k} : forall {b} {a},
+                                                   (b -> a -> b) -> b -> (Map inst_k) a -> b :=
+  fun {b} {a} => foldl'.
 
 Definition foldlWithKey {a} {k} {b} : (a -> k -> b -> a) -> a -> Map k b -> a :=
   fun f z =>
@@ -377,6 +431,14 @@ Definition foldr {a} {b} {k} : (a -> b -> b) -> b -> Map k a -> b :=
 Definition elems {k} {a} : Map k a -> list a :=
   foldr cons nil.
 
+Local Definition Foldable__Map_toList {inst_k} : forall {a},
+                                                   (Map inst_k) a -> list a :=
+  fun {a} => elems.
+
+Local Definition Foldable__Map_foldr {inst_k} : forall {a} {b},
+                                                  (a -> b -> b) -> b -> (Map inst_k) a -> b :=
+  fun {a} {b} => foldr.
+
 Definition foldr' {a} {b} {k} : (a -> b -> b) -> b -> Map k a -> b :=
   fun f z =>
     let fix go arg_0__ arg_1__
@@ -385,6 +447,10 @@ Definition foldr' {a} {b} {k} : (a -> b -> b) -> b -> Map k a -> b :=
                    | z' , Bin _ _ x l r => go (f x (go z' r)) l
                  end in
     go z.
+
+Local Definition Foldable__Map_foldr' {inst_k} : forall {a} {b},
+                                                   (a -> b -> b) -> b -> (Map inst_k) a -> b :=
+  fun {a} {b} => foldr'.
 
 Definition foldrWithKey {k} {a} {b} : (k -> a -> b -> b) -> b -> Map k a -> b :=
   fun f z =>
@@ -409,6 +475,37 @@ Definition toList {k} {a} : Map k a -> list (k * a)%type :=
 
 Definition assocs {k} {a} : Map k a -> list (k * a)%type :=
   fun m => toAscList m.
+
+Local Definition Ord__Map_compare {inst_k} {inst_v} `{GHC.Base.Ord inst_k}
+                                  `{GHC.Base.Ord inst_v} : (Map inst_k inst_v) -> (Map inst_k
+                                                           inst_v) -> comparison :=
+  fun m1 m2 => GHC.Base.compare (toAscList m1) (toAscList m2).
+
+Local Definition Ord__Map_op_zg__ {inst_k} {inst_v} `{GHC.Base.Ord inst_k}
+                                  `{GHC.Base.Ord inst_v} : (Map inst_k inst_v) -> (Map inst_k inst_v) -> bool :=
+  fun x y => _GHC.Base.==_ (Ord__Map_compare x y) Gt.
+
+Local Definition Ord__Map_op_zgze__ {inst_k} {inst_v} `{GHC.Base.Ord inst_k}
+                                    `{GHC.Base.Ord inst_v} : (Map inst_k inst_v) -> (Map inst_k inst_v) -> bool :=
+  fun x y => _GHC.Base./=_ (Ord__Map_compare x y) Lt.
+
+Local Definition Ord__Map_op_zl__ {inst_k} {inst_v} `{GHC.Base.Ord inst_k}
+                                  `{GHC.Base.Ord inst_v} : (Map inst_k inst_v) -> (Map inst_k inst_v) -> bool :=
+  fun x y => _GHC.Base.==_ (Ord__Map_compare x y) Lt.
+
+Local Definition Ord__Map_op_zlze__ {inst_k} {inst_v} `{GHC.Base.Ord inst_k}
+                                    `{GHC.Base.Ord inst_v} : (Map inst_k inst_v) -> (Map inst_k inst_v) -> bool :=
+  fun x y => _GHC.Base./=_ (Ord__Map_compare x y) Gt.
+
+Local Definition Ord__Map_max {inst_k} {inst_v} `{GHC.Base.Ord inst_k}
+                              `{GHC.Base.Ord inst_v} : (Map inst_k inst_v) -> (Map inst_k inst_v) -> (Map
+                                                       inst_k inst_v) :=
+  fun x y => if Ord__Map_op_zlze__ x y : bool then y else x.
+
+Local Definition Ord__Map_min {inst_k} {inst_v} `{GHC.Base.Ord inst_k}
+                              `{GHC.Base.Ord inst_v} : (Map inst_k inst_v) -> (Map inst_k inst_v) -> (Map
+                                                       inst_k inst_v) :=
+  fun x y => if Ord__Map_op_zlze__ x y : bool then x else y.
 
 Definition foldrFB {k} {a} {b} : (k -> a -> b -> b) -> b -> Map k a -> b :=
   foldrWithKey.
@@ -713,6 +810,10 @@ Definition notMember {k} {a} `{GHC.Base.Ord k} : k -> Map k a -> bool :=
 
 Definition null {k} {a} : Map k a -> bool :=
   fun arg_0__ => match arg_0__ with | Tip => true | Bin _ _ _ _ _ => false end.
+
+Local Definition Foldable__Map_null {inst_k} : forall {a},
+                                                 (Map inst_k) a -> bool :=
+  fun {a} => null.
 
 Definition preserveMissing {f} {k} {x} `{GHC.Base.Applicative f} : WhenMissing f
                                                                    k x x :=
@@ -1758,6 +1859,31 @@ Definition union {k} {a} `{GHC.Base.Ord k} : Map k a -> Map k a -> Map k a :=
 Definition unions {k} {a} `{GHC.Base.Ord k} : list (Map k a) -> Map k a :=
   fun ts => Data.Foldable.foldl union empty ts.
 
+Local Definition Monoid__Map_mconcat {inst_k} {inst_v} `{(GHC.Base.Ord inst_k)}
+    : list (Map inst_k inst_v) -> (Map inst_k inst_v) :=
+  unions.
+
+Local Definition Semigroup__Map_op_zlzg__ {inst_k} {inst_v} `{(GHC.Base.Ord
+                                          inst_k)} : (Map inst_k inst_v) -> (Map inst_k inst_v) -> (Map inst_k
+                                                     inst_v) :=
+  union.
+
+Program Instance Semigroup__Map {k} {v} `{(GHC.Base.Ord k)}
+  : Data.Semigroup.Semigroup (Map k v) := fun _ k =>
+    k {|Data.Semigroup.op_zlzg____ := Semigroup__Map_op_zlzg__ |}.
+Admit Obligations.
+
+Local Definition Monoid__Map_mappend {inst_k} {inst_v} `{(GHC.Base.Ord inst_k)}
+    : (Map inst_k inst_v) -> (Map inst_k inst_v) -> (Map inst_k inst_v) :=
+  _Data.Semigroup.<>_.
+
+Program Instance Monoid__Map {k} {v} `{(GHC.Base.Ord k)} : GHC.Base.Monoid (Map
+                                                                           k v) := fun _ k =>
+    k {|GHC.Base.mappend__ := Monoid__Map_mappend ;
+      GHC.Base.mconcat__ := Monoid__Map_mconcat ;
+      GHC.Base.mempty__ := Monoid__Map_mempty |}.
+Admit Obligations.
+
 Definition unionWith {k} {a} `{GHC.Base.Ord k} : (a -> a -> a) -> Map k a -> Map
                                                  k a -> Map k a :=
   fix unionWith arg_0__ arg_1__ arg_2__
@@ -2733,6 +2859,53 @@ Definition alter {k} {a} `{GHC.Base.Ord k} : (option a -> option a) -> k -> Map
              end in
   go.
 
+Local Definition Foldable__Map_length {inst_k} : forall {a},
+                                                   (Map inst_k) a -> GHC.Num.Int :=
+  fun {a} => size.
+
+Program Instance Foldable__Map {k} : Data.Foldable.Foldable (Map k) := fun _
+                                                                           k =>
+    k {|Data.Foldable.elem__ := fun {a} `{GHC.Base.Eq_ a} => Foldable__Map_elem ;
+      Data.Foldable.fold__ := fun {m} `{GHC.Base.Monoid m} => Foldable__Map_fold ;
+      Data.Foldable.foldMap__ := fun {m} {a} `{GHC.Base.Monoid m} =>
+        Foldable__Map_foldMap ;
+      Data.Foldable.foldl__ := fun {b} {a} => Foldable__Map_foldl ;
+      Data.Foldable.foldl'__ := fun {b} {a} => Foldable__Map_foldl' ;
+      Data.Foldable.foldr__ := fun {a} {b} => Foldable__Map_foldr ;
+      Data.Foldable.foldr'__ := fun {a} {b} => Foldable__Map_foldr' ;
+      Data.Foldable.length__ := fun {a} => Foldable__Map_length ;
+      Data.Foldable.null__ := fun {a} => Foldable__Map_null ;
+      Data.Foldable.product__ := fun {a} `{GHC.Num.Num a} => Foldable__Map_product ;
+      Data.Foldable.sum__ := fun {a} `{GHC.Num.Num a} => Foldable__Map_sum ;
+      Data.Foldable.toList__ := fun {a} => Foldable__Map_toList |}.
+Admit Obligations.
+
+Local Definition Eq___Map_op_zeze__ {inst_k} {inst_a} `{GHC.Base.Eq_ inst_k}
+                                    `{GHC.Base.Eq_ inst_a} : (Map inst_k inst_a) -> (Map inst_k inst_a) -> bool :=
+  fun t1 t2 =>
+    andb (size t1 GHC.Base.== size t2) (toAscList t1 GHC.Base.== toAscList t2).
+
+Local Definition Eq___Map_op_zsze__ {inst_k} {inst_a} `{GHC.Base.Eq_ inst_k}
+                                    `{GHC.Base.Eq_ inst_a} : (Map inst_k inst_a) -> (Map inst_k inst_a) -> bool :=
+  fun x y => negb (Eq___Map_op_zeze__ x y).
+
+Program Instance Eq___Map {k} {a} `{GHC.Base.Eq_ k} `{GHC.Base.Eq_ a}
+  : GHC.Base.Eq_ (Map k a) := fun _ k =>
+    k {|GHC.Base.op_zeze____ := Eq___Map_op_zeze__ ;
+      GHC.Base.op_zsze____ := Eq___Map_op_zsze__ |}.
+Admit Obligations.
+
+Program Instance Ord__Map {k} {v} `{GHC.Base.Ord k} `{GHC.Base.Ord v}
+  : GHC.Base.Ord (Map k v) := fun _ k =>
+    k {|GHC.Base.op_zl____ := Ord__Map_op_zl__ ;
+      GHC.Base.op_zlze____ := Ord__Map_op_zlze__ ;
+      GHC.Base.op_zg____ := Ord__Map_op_zg__ ;
+      GHC.Base.op_zgze____ := Ord__Map_op_zgze__ ;
+      GHC.Base.compare__ := Ord__Map_compare ;
+      GHC.Base.max__ := Ord__Map_max ;
+      GHC.Base.min__ := Ord__Map_min |}.
+Admit Obligations.
+
 Definition traverseMaybeMissing {f} {k} {x} {y} `{GHC.Base.Applicative f}
     : (k -> x -> f (option y)) -> WhenMissing f k x y :=
   fun f => Mk_WhenMissing missingValue missingValue.
@@ -2793,19 +2966,21 @@ Infix "Data.Map.Internal.\\" := (_\\_) (at level 99).
 End Notations.
 
 (* Unbound variables:
-     Bool.Sumbool.sumbool_of_bool Eq Gt Lt None Some andb bool cons false id list
-     map_size negb nil op_zt__ option pair prod true Data.Bits.shiftL
+     Bool.Sumbool.sumbool_of_bool Eq Gt Lt None Some andb bool comparison cons false
+     id list map_size negb nil op_zt__ option orb pair prod true Data.Bits.shiftL
      Data.Bits.shiftR Data.Either.Either Data.Either.Left Data.Either.Right
-     Data.Foldable.foldl Data.Functor.op_zlzdzg__ Data.Functor.Identity.Identity
-     Data.Functor.Identity.Mk_Identity Data.Maybe.maybe Data.Set.Internal.Bin
-     Data.Set.Internal.Set_ Data.Set.Internal.Tip Data.Set.Internal.splitMember
-     GHC.Base.Applicative GHC.Base.Eq_ GHC.Base.Functor GHC.Base.Monad
-     GHC.Base.Monoid GHC.Base.Ord GHC.Base.compare GHC.Base.flip GHC.Base.fmap
-     GHC.Base.liftA3 GHC.Base.mappend GHC.Base.mempty GHC.Base.op_z2218U__
-     GHC.Base.op_zd__ GHC.Base.op_zdzn__ GHC.Base.op_zeze__ GHC.Base.op_zg__
-     GHC.Base.op_zgze__ GHC.Base.op_zl__ GHC.Base.op_zlze__ GHC.Base.pure
-     GHC.Err.error GHC.Num.Int GHC.Num.op_zm__ GHC.Num.op_zp__ GHC.Num.op_zt__
-     GHC.Prim.coerce GHC.Prim.seq Nat.add Utils.Containers.Internal.BitQueue.BitQueue
+     Data.Foldable.Foldable Data.Foldable.foldl Data.Functor.op_zlzdzg__
+     Data.Functor.Identity.Identity Data.Functor.Identity.Mk_Identity
+     Data.Maybe.maybe Data.Semigroup.Semigroup Data.Semigroup.op_zlzg__
+     Data.Set.Internal.Bin Data.Set.Internal.Set_ Data.Set.Internal.Tip
+     Data.Set.Internal.splitMember GHC.Base.Applicative GHC.Base.Eq_ GHC.Base.Functor
+     GHC.Base.Monad GHC.Base.Monoid GHC.Base.Ord GHC.Base.compare GHC.Base.flip
+     GHC.Base.fmap GHC.Base.liftA3 GHC.Base.mappend GHC.Base.mempty
+     GHC.Base.op_z2218U__ GHC.Base.op_zd__ GHC.Base.op_zdzn__ GHC.Base.op_zeze__
+     GHC.Base.op_zg__ GHC.Base.op_zgze__ GHC.Base.op_zl__ GHC.Base.op_zlze__
+     GHC.Base.op_zsze__ GHC.Base.pure GHC.Err.error GHC.Num.Int GHC.Num.Num
+     GHC.Num.op_zm__ GHC.Num.op_zp__ GHC.Num.op_zt__ GHC.Prim.coerce GHC.Prim.seq
+     Nat.add Utils.Containers.Internal.BitQueue.BitQueue
      Utils.Containers.Internal.BitQueue.BitQueueB
      Utils.Containers.Internal.BitQueue.buildQ
      Utils.Containers.Internal.BitQueue.emptyQB

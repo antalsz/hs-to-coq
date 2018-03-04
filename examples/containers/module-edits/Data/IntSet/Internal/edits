@@ -92,7 +92,8 @@ skip Data.IntSet.Internal.showTree
 # Data stuff
 skip Data.IntSet.Internal.fromListConstr
 skip Data.IntSet.Internal.intSetDataType
-skip Data.IntSet.Internal.Monoid__IntSet
+
+order Data.IntSet.Internal.Semigroup__IntSet Data.IntSet.Internal.Monoid__IntSet_mappend
 
 # We need Integral N to use GHC.Real.fromIntegral to go from N to Z
 rename value Data.IntSet.Internal.intFromNat = Coq.ZArith.BinInt.Z.of_N

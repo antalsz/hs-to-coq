@@ -1,5 +1,4 @@
 skip module Data.Data
-skip module Data.Semigroup
 skip module GHC.Prim
 
 # Proxy#
@@ -18,17 +17,19 @@ skip Data.Map.Internal.differenceWith
 # Needs runIdentity
 skip Data.Map.Internal.merge
 
-skip Data.Map.Internal.Monoid__Map
+# TODO
 skip Data.Map.Internal.Functor__Map
+skip Data.Map.Internal.Traversable__Map
+
+order Data.Map.Internal.Eq___Map Data.Map.Internal.Ord__Map
+order Data.Map.Internal.Semigroup__Map Data.Map.Internal.Monoid__Map_mappend 
+
+
 skip Data.Map.Internal.Functor__WhenMatched
 skip Data.Map.Internal.Functor__WhenMissing
-skip Data.Map.Internal.Foldable__Map
-skip Data.Map.Internal.Eq___Map
-skip Data.Map.Internal.Ord__Map
 skip Data.Map.Internal.Monad__WhenMissing
 skip Data.Map.Internal.Applicative__WhenMissing
 skip Data.Map.Internal.Category__WhenMissing
-skip Data.Map.Internal.Traversable__Map
 skip Data.Map.Internal.Monad__WhenMatched
 skip Data.Map.Internal.Applicative__WhenMatched
 skip Data.Map.Internal.Category__WhenMatched
@@ -52,8 +53,6 @@ obligations Data.Map.Internal.link2 termination_by_omega
 nonterminating Data.Map.Internal.fromDistinctAscList
 nonterminating Data.Map.Internal.fromDistinctDescList
 nonterminating Data.Map.Internal.fromList
-
-order Data.Map.Internal.Eq___Map Data.Map.Internal.Ord__Map
 
 rename value Data.Map.Internal.WhenMatched = Data.Map.Internal.Mk_WhenMatched
 rename value Data.Map.Internal.TraceResult = Data.Map.Internal.Mk_TraceResult

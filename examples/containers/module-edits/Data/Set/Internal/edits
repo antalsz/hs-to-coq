@@ -1,19 +1,22 @@
 # punned
 rename value Data.Set.Internal.MergeSet = Data.Set.Internal.Mk_MergeSet
 
+## Don't translate material related to generic programming or 
+## to serialization
 skip module Data.Data
-
-## can't handle semigroup??
-skip module Data.Semigroup
-skip Data.Set.Internal.Monoid__Set_
-skip Data.Set.Internal.Monoid__MergeSet
-
 skip Data.Set.Internal.showTree
 skip Data.Set.Internal.showTreeWith
 skip Data.Set.Internal.showsTree
 skip Data.Set.Internal.showsTreeHang
 skip Data.Set.Internal.showWide
 skip Data.Set.Internal.showsBars
+
+## can't handle semigroup??
+# skip module Data.Semigroup
+# skip Data.Set.Internal.Monoid__Set_
+# skip Data.Set.Internal.Monoid__MergeSet
+
+skip method Data.Semigroup.Semigroup stimes
 
 skip Data.Set.Internal.fromListConstr
 skip Data.Set.Internal.setDataType
@@ -30,6 +33,8 @@ nonterminating Data.Set.Internal.fromList
 nonterminating Data.Set.Internal.fromDistinctDescList
 
 order Data.Set.Internal.Eq___Set_ Data.Set.Internal.Ord__Set_
+order Data.Set.Internal.Semigroup__Set_ Data.Set.Internal.Monoid__Set__mappend
+order Data.Set.Internal.Semigroup__MergeSet Data.Set.Internal.Monoid__MergeSet_mappend 
 
 rename value GHC.Magic.lazy = id
 

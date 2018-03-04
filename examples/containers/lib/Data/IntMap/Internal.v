@@ -23,6 +23,7 @@ Require Data.Functor.
 Require Data.Functor.Identity.
 Require Data.IntSet.Internal.
 Require Data.Maybe.
+Require Data.Semigroup.
 Require Data.Traversable.
 Require GHC.Base.
 Require GHC.Num.
@@ -30,6 +31,7 @@ Require GHC.Real.
 Require Utils.Containers.Internal.BitUtil.
 Import Data.Bits.Notations.
 Import Data.Functor.Notations.
+Import Data.Semigroup.Notations.
 Import GHC.Base.Notations.
 Import GHC.Num.Notations.
 
@@ -149,12 +151,6 @@ Ltac termination_by_omega :=
 Require Import Coq.Numbers.BinNums.
 
 (* Converted value declarations: *)
-
-(* Skipping instance Monoid__IntMap *)
-
-(* Translating `instance forall {a}, Data.Semigroup.Semigroup
-   (Data.IntMap.Internal.IntMap a)' failed: OOPS! Cannot find information for class
-   Qualified "Data.Semigroup" "Semigroup" unsupported *)
 
 Local Definition Foldable__IntMap_elem : forall {a},
                                            forall `{GHC.Base.Eq_ a}, a -> IntMap a -> bool :=
@@ -448,6 +444,9 @@ Definition dropMissing {f} {x} {y} `{GHC.Base.Applicative f} : WhenMissing f x
 
 Definition empty {a} : IntMap a :=
   Nil.
+
+Local Definition Monoid__IntMap_mempty {inst_a} : (IntMap inst_a) :=
+  empty.
 
 Definition equal {a} `{GHC.Base.Eq_ a} : IntMap a -> IntMap a -> bool :=
   fix equal arg_0__ arg_1__
@@ -1392,6 +1391,28 @@ Definition union {a} : IntMap a -> IntMap a -> IntMap a :=
 Definition unions {a} : list (IntMap a) -> IntMap a :=
   fun xs => Data.Foldable.foldl union empty xs.
 
+Local Definition Monoid__IntMap_mconcat {inst_a} : list (IntMap
+                                                        inst_a) -> (IntMap inst_a) :=
+  unions.
+
+Local Definition Semigroup__IntMap_op_zlzg__ {inst_a} : (IntMap
+                                                        inst_a) -> (IntMap inst_a) -> (IntMap inst_a) :=
+  union.
+
+Program Instance Semigroup__IntMap {a} : Data.Semigroup.Semigroup (IntMap a) :=
+  fun _ k => k {|Data.Semigroup.op_zlzg____ := Semigroup__IntMap_op_zlzg__ |}.
+Admit Obligations.
+
+Local Definition Monoid__IntMap_mappend {inst_a} : (IntMap inst_a) -> (IntMap
+                                                   inst_a) -> (IntMap inst_a) :=
+  _Data.Semigroup.<>_.
+
+Program Instance Monoid__IntMap {a} : GHC.Base.Monoid (IntMap a) := fun _ k =>
+    k {|GHC.Base.mappend__ := Monoid__IntMap_mappend ;
+      GHC.Base.mconcat__ := Monoid__IntMap_mconcat ;
+      GHC.Base.mempty__ := Monoid__IntMap_mempty |}.
+Admit Obligations.
+
 Definition unionWithKey {a}
     : (Data.IntSet.Internal.Key -> a -> a -> a) -> IntMap a -> IntMap a -> IntMap
       a :=
@@ -2080,13 +2101,14 @@ End Notations.
      Data.IntSet.Internal.Tip Data.IntSet.Internal.bitmapOf Data.IntSet.Internal.mask
      Data.IntSet.Internal.member Data.IntSet.Internal.prefixBitMask
      Data.IntSet.Internal.singleton Data.IntSet.Internal.suffixBitMask
-     Data.IntSet.Internal.zero Data.Maybe.maybe Data.Traversable.Traversable
-     GHC.Base.Applicative GHC.Base.Eq_ GHC.Base.Functor GHC.Base.Monad
-     GHC.Base.Monoid GHC.Base.Ord GHC.Base.String GHC.Base.compare GHC.Base.const
-     GHC.Base.fmap GHC.Base.id GHC.Base.liftA2 GHC.Base.mappend GHC.Base.mempty
-     GHC.Base.op_z2218U__ GHC.Base.op_zd__ GHC.Base.op_zeze__ GHC.Base.op_zg__
-     GHC.Base.op_zgze__ GHC.Base.op_zl__ GHC.Base.op_zlze__ GHC.Base.op_zsze__
-     GHC.Base.pure GHC.Err.error GHC.Num.Int GHC.Num.Num GHC.Num.Word GHC.Num.op_zm__
+     Data.IntSet.Internal.zero Data.Maybe.maybe Data.Semigroup.Semigroup
+     Data.Semigroup.op_zlzg__ Data.Traversable.Traversable GHC.Base.Applicative
+     GHC.Base.Eq_ GHC.Base.Functor GHC.Base.Monad GHC.Base.Monoid GHC.Base.Ord
+     GHC.Base.String GHC.Base.compare GHC.Base.const GHC.Base.fmap GHC.Base.id
+     GHC.Base.liftA2 GHC.Base.mappend GHC.Base.mempty GHC.Base.op_z2218U__
+     GHC.Base.op_zd__ GHC.Base.op_zeze__ GHC.Base.op_zg__ GHC.Base.op_zgze__
+     GHC.Base.op_zl__ GHC.Base.op_zlze__ GHC.Base.op_zsze__ GHC.Base.pure
+     GHC.Err.error GHC.Num.Int GHC.Num.Num GHC.Num.Word GHC.Num.op_zm__
      GHC.Num.op_zp__ GHC.Num.op_zt__ GHC.Real.fromIntegral
      Utils.Containers.Internal.BitUtil.highestBitMask
      Utils.Containers.Internal.BitUtil.shiftLL

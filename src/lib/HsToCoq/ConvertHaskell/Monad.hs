@@ -136,9 +136,9 @@ builtInClasses =
         , "GHC.Base.mconcat" =: ("list" `App1` "a") `Arrow` "a"
         , "GHC.Base.mempty"  =: "a"
         ]
-    , ClassDefinition "Data.Semigroup" ["a"] Nothing
-        [ "Data.Semigroup.op_zlzg____" =: "a" `Arrow` "a" `Arrow` "a" 
-        , "Data.Semigroup.sconcat__"   =: ("Data.List.NonEmpty.NonEmpty" `App1` "a") `Arrow` "a"
+    , ClassDefinition "Data.Semigroup.Semigroup" ["a"] Nothing
+        [ "Data.Semigroup.op_zlzg__" =: "a" `Arrow` "a" `Arrow` "a" 
+--        , "Data.Semigroup.sconcat__"   =: ("Data.List.NonEmpty.NonEmpty" `App1` "a") `Arrow` "a"
         ]
     , ClassDefinition "GHC.Base.Functor" ["f"] Nothing
         [ "GHC.Base.op_zlzd__" =: (Forall [ Inferred Implicit (Ident "a")

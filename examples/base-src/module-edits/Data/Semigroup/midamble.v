@@ -6,6 +6,10 @@ Instance Unpeel_Max  a : Unpeel (Max a) a := Build_Unpeel _ _ getMax Mk_Max.
 Instance Unpeel_Min  a : Unpeel (Min a) a := Build_Unpeel _ _ getMin Mk_Min.
 Instance Unpeel_Option  a : Unpeel (Option a) (option a) := Build_Unpeel _ _ getOption Mk_Option.
 
+Definition sconcat {a} `{Semigroup a} 
+           : Data.List.NonEmpty.NonEmpty a -> a :=
+  NonEmpty.NonEmpty_foldr1 (@op_zlzg__ a _).
+
 (* ------------------------- *)
 
 (* These two instances are here because we don't mangle the instance names
@@ -32,8 +36,7 @@ Local Definition Semigroup__SFirst_sconcat {inst_a} : Data.List.NonEmpty.NonEmpt
 
 
 Program Instance Semigroup__SFirst {a} : Semigroup (First a) := fun _ k =>
-    k {|op_zlzg____ := Semigroup__SFirst_op_zlzg__ ;
-      sconcat__ := Semigroup__SFirst_sconcat |}.
+    k {|op_zlzg____ := Semigroup__SFirst_op_zlzg__ |}.
 
 Local Definition Semigroup__SLast_op_zlzg__ {inst_a} : (Last inst_a) -> (Last
                                                       inst_a) -> (Last inst_a) :=
@@ -53,7 +56,6 @@ Local Definition Semigroup__SLast_sconcat {inst_a} : Data.List.NonEmpty.NonEmpty
 
 
 Program Instance Semigroup__SLast {a} : Semigroup (Last a) := fun _ k =>
-    k {|op_zlzg____ := Semigroup__SLast_op_zlzg__ ;
-      sconcat__ := Semigroup__SLast_sconcat |}.
+    k {|op_zlzg____ := Semigroup__SLast_op_zlzg__ |}.
 
 (* ------------------------- *)

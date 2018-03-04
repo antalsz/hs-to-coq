@@ -279,8 +279,6 @@ Axiom sortC : forall {A} `{OrdLaws A} (x : A) (xs : list A),
 Theorem sortN {A} `{OrdLaws A} : sort [::] = [::].
 Proof.
   case S: (sort [::]) => [|x xs] //=.
-  have: length (sort [::]) = length (x ::xs) by rewrite S.
-  by rewrite sort_length !hs_coq_length_list !Zlength_correct.
 Qed.
 
 Theorem sort1 {A} `{OrdLaws A} `{!EqExact A} (x : A) :
@@ -294,7 +292,7 @@ Theorem sort_NoDup {A} `{OrdLaws A} `{!EqExact A} (xs : list A) :
   NoDup xs <-> NoDup (sort xs).
 Proof.
   remember (Datatypes.length xs) as n eqn:LEN.
-  elim: n xs LEN => [|n IH] [|x xs] //= LEN; first by rewrite sortN.
+  elim: n xs LEN => [|n IH] [|x xs] //= LEN.
   move: LEN => [?]; subst.
   case: (sortC x xs) => [pre [post -> sort_xs]].
   rewrite NoDup_reorder.

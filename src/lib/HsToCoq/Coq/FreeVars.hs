@@ -332,7 +332,7 @@ instance FreeVars Term where
     pure () -- There are none.
 
   freeVars (PolyNum _num) =
-    pure () -- There are none.
+    freeVars (Qualified "GHC.Num" "fromInteger")
 
   freeVars (String _str) =
     pure () -- There are none.

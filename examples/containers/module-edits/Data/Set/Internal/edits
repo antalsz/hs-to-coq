@@ -10,6 +10,8 @@ skip Data.Set.Internal.showsTree
 skip Data.Set.Internal.showsTreeHang
 skip Data.Set.Internal.showWide
 skip Data.Set.Internal.showsBars
+skip Data.Set.Internal.withBar
+skip Data.Set.Internal.withEmpty
 
 ## can't handle semigroup??
 # skip module Data.Semigroup

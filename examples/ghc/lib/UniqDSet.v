@@ -24,24 +24,24 @@ Definition UniqDSet :=
   UniqDFM.UniqDFM%type.
 (* Converted value declarations: *)
 
-Definition addOneToUniqDSet {a} `{Unique.Uniquable a} : UniqDSet
-                                                        a -> a -> UniqDSet a :=
+Definition addOneToUniqDSet {a} `{Unique.Uniquable a}
+   : UniqDSet a -> a -> UniqDSet a :=
   fun set x => UniqDFM.addToUDFM set x x.
 
-Definition addListToUniqDSet {a} `{Unique.Uniquable a} : UniqDSet a -> list
-                                                         a -> UniqDSet a :=
+Definition addListToUniqDSet {a} `{Unique.Uniquable a}
+   : UniqDSet a -> list a -> UniqDSet a :=
   Data.Foldable.foldl addOneToUniqDSet.
 
-Definition delListFromUniqDSet {a} `{Unique.Uniquable a} : UniqDSet a -> list
-                                                           a -> UniqDSet a :=
+Definition delListFromUniqDSet {a} `{Unique.Uniquable a}
+   : UniqDSet a -> list a -> UniqDSet a :=
   UniqDFM.delListFromUDFM.
 
-Definition delOneFromUniqDSet {a} `{Unique.Uniquable a} : UniqDSet
-                                                          a -> a -> UniqDSet a :=
+Definition delOneFromUniqDSet {a} `{Unique.Uniquable a}
+   : UniqDSet a -> a -> UniqDSet a :=
   UniqDFM.delFromUDFM.
 
-Definition elementOfUniqDSet {a} `{Unique.Uniquable a} : a -> UniqDSet
-                                                         a -> bool :=
+Definition elementOfUniqDSet {a} `{Unique.Uniquable a}
+   : a -> UniqDSet a -> bool :=
   UniqDFM.elemUDFM.
 
 Definition emptyUniqDSet {a} : UniqDSet a :=
@@ -65,15 +65,15 @@ Definition intersectsUniqDSets {a} : UniqDSet a -> UniqDSet a -> bool :=
 Definition isEmptyUniqDSet {a} : UniqDSet a -> bool :=
   UniqDFM.isNullUDFM.
 
-Definition lookupUniqDSet {a} `{Unique.Uniquable a} : UniqDSet a -> a -> option
-                                                      a :=
+Definition lookupUniqDSet {a} `{Unique.Uniquable a}
+   : UniqDSet a -> a -> option a :=
   UniqDFM.lookupUDFM.
 
 Definition minusUniqDSet {a} : UniqDSet a -> UniqDSet a -> UniqDSet a :=
   UniqDFM.minusUDFM.
 
-Definition partitionUniqDSet {a} : (a -> bool) -> UniqDSet a -> (UniqDSet a *
-                                   UniqDSet a)%type :=
+Definition partitionUniqDSet {a}
+   : (a -> bool) -> UniqDSet a -> (UniqDSet a * UniqDSet a)%type :=
   UniqDFM.partitionUDFM.
 
 Definition sizeUniqDSet {a} : UniqDSet a -> GHC.Num.Int :=
@@ -84,12 +84,12 @@ Definition unionUniqDSets {a} : UniqDSet a -> UniqDSet a -> UniqDSet a :=
 
 Definition unionManyUniqDSets {a} (xs : list (UniqDSet a)) : UniqDSet a :=
   match xs with
-    | nil => emptyUniqDSet
-    | cons set sets => Data.Foldable.foldr unionUniqDSets set sets
+  | nil => emptyUniqDSet
+  | cons set sets => Data.Foldable.foldr unionUniqDSets set sets
   end.
 
-Definition uniqDSetMinusUniqSet {a} : UniqDSet a -> UniqSet.UniqSet
-                                      a -> UniqDSet a :=
+Definition uniqDSetMinusUniqSet {a}
+   : UniqDSet a -> UniqSet.UniqSet a -> UniqDSet a :=
   UniqDFM.udfmMinusUFM.
 
 Definition uniqDSetToList {a} : UniqDSet a -> list a :=

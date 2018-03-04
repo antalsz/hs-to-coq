@@ -137,6 +137,10 @@ $(VFILES_HS_SPEC_GEN): $(HS_SPEC)/%.v : $$(wildcard module-edits/$$*/preamble.v)
 	             -i containers/dist-install/build \
 	             -I containers/include \
 	             --ghc -package --ghc QuickCheck \
+	             --ghc -package --ghc HUnit \
+	             --ghc -package --ghc test-framework \
+	             --ghc -package --ghc test-framework-hunit \
+	             --ghc -package --ghc test-framework-quickcheck2 \
 	             --ghc -this-unit-id --ghc containers \
 	             $(addprefix `cat , $(addsuffix ` , $(wildcard module-edits/$*/flags))) \
 	             -o $(HS_SPEC) \

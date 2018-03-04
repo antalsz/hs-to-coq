@@ -115,24 +115,24 @@ Import GHC.Num.Notations.
    Qualified "Test.QuickCheck.Arbitrary" "Arbitrary" unsupported *)
 
 Definition forValid {a} `{Propable a}
-    : (Data.IntSet.Internal.IntSet -> a) -> Prop :=
+   : (Data.IntSet.Internal.IntSet -> a) -> Prop :=
   fun f =>
-    forAll arbitrary GHC.Base.$ (fun t =>
-      skip_classify (Data.IntSet.Internal.size t GHC.Base.== GHC.Num.fromInteger 0)
-      (GHC.Base.hs_string__ "empty") GHC.Base.$ (skip_classify (andb
-                                                               (Data.IntSet.Internal.size t GHC.Base.>
-                                                               GHC.Num.fromInteger 0) (Data.IntSet.Internal.size t
-                                                               GHC.Base.<= GHC.Num.fromInteger 10))
-      (GHC.Base.hs_string__ "small") GHC.Base.$ (skip_classify (andb
-                                                               (Data.IntSet.Internal.size t GHC.Base.>
-                                                               GHC.Num.fromInteger 10) (Data.IntSet.Internal.size t
-                                                               GHC.Base.<= GHC.Num.fromInteger 64))
-      (GHC.Base.hs_string__ "medium") GHC.Base.$ (skip_classify
-      (Data.IntSet.Internal.size t GHC.Base.> GHC.Num.fromInteger 64)
-      (GHC.Base.hs_string__ "large") GHC.Base.$ f t)))).
+    forAll arbitrary GHC.Base.$
+    (fun t =>
+       skip_classify (Data.IntSet.Internal.size t GHC.Base.== #0) (GHC.Base.hs_string__
+                                                                   "empty") GHC.Base.$
+       (skip_classify (andb (Data.IntSet.Internal.size t GHC.Base.> #0)
+                            (Data.IntSet.Internal.size t GHC.Base.<= #10)) (GHC.Base.hs_string__ "small")
+        GHC.Base.$
+        (skip_classify (andb (Data.IntSet.Internal.size t GHC.Base.> #10)
+                             (Data.IntSet.Internal.size t GHC.Base.<= #64)) (GHC.Base.hs_string__ "medium")
+         GHC.Base.$
+         (skip_classify (Data.IntSet.Internal.size t GHC.Base.> #64)
+          (GHC.Base.hs_string__ "large") GHC.Base.$
+          f t)))).
 
 Definition forValidUnitTree {a} `{Propable a}
-    : (Data.IntSet.Internal.IntSet -> a) -> Prop :=
+   : (Data.IntSet.Internal.IntSet -> a) -> Prop :=
   fun f => forValid f.
 
 Definition prop_Valid : Prop :=
@@ -140,48 +140,46 @@ Definition prop_Valid : Prop :=
 
 Definition powersOf2 : Data.IntSet.Internal.IntSet :=
   Data.IntSet.Internal.fromList (Coq.Lists.List.flat_map (fun i =>
-                                                           cons (Zpow (GHC.Num.fromInteger 2) i) nil) (enumFromTo
-                                                         (GHC.Num.fromInteger 0) (GHC.Num.fromInteger 63))).
+                                                            cons (Zpow #2 i) nil) (enumFromTo #0 #63)).
 
 Definition prop_MaskPow2 : Data.IntSet.Internal.IntSet -> bool :=
   fix prop_MaskPow2 arg_0__
         := match arg_0__ with
-             | Data.IntSet.Internal.Bin _ msk left_ right_ => andb
-                                                              (Data.IntSet.Internal.member msk powersOf2) (andb
-                                                              (prop_MaskPow2 left_) (prop_MaskPow2 right_))
-             | _ => true
+           | Data.IntSet.Internal.Bin _ msk left_ right_ =>
+               andb (Data.IntSet.Internal.member msk powersOf2) (andb (prop_MaskPow2 left_)
+                                                                      (prop_MaskPow2 right_))
+           | _ => true
            end.
 
 Definition prop_AscDescList : list GHC.Num.Int -> bool :=
   fun xs =>
     let s := Data.IntSet.Internal.fromList xs in
-    Data.IntSet.Internal.toAscList s GHC.Base.== GHC.List.reverse
-    (Data.IntSet.Internal.toDescList s).
+    Data.IntSet.Internal.toAscList s GHC.Base.==
+    GHC.List.reverse (Data.IntSet.Internal.toDescList s).
 
 Definition prop_DescList : list GHC.Num.Int -> bool :=
   fun xs =>
     (GHC.List.reverse (Data.OldList.sort (Data.OldList.nub xs)) GHC.Base.==
-    Data.IntSet.Internal.toDescList (Data.IntSet.Internal.fromList xs)).
+     Data.IntSet.Internal.toDescList (Data.IntSet.Internal.fromList xs)).
 
 Definition prop_Diff : list GHC.Num.Int -> list GHC.Num.Int -> Prop :=
   fun xs ys =>
-    match Data.IntSet.Internal.difference (Data.IntSet.Internal.fromList xs)
-            (Data.IntSet.Internal.fromList ys) with
-      | t => IntSetValidity.valid t .&&.(**) (Data.IntSet.Internal.toAscList t
-             GHC.Base.== Data.OldList.sort (_Data.OldList.\\_ (Data.OldList.nub xs)
-                                           (Data.OldList.nub ys)))
-    end.
+    let 't := Data.IntSet.Internal.difference (Data.IntSet.Internal.fromList xs)
+                (Data.IntSet.Internal.fromList ys) in
+    IntSetValidity.valid t .&&.(**)
+    (Data.IntSet.Internal.toAscList t GHC.Base.==
+     Data.OldList.sort (_Data.OldList.\\_ (Data.OldList.nub xs) (Data.OldList.nub
+                                                                 ys))).
 
 Definition prop_EmptyValid : Prop :=
   IntSetValidity.valid Data.IntSet.Internal.empty.
 
 Definition prop_InsertDelete
-    : GHC.Num.Int -> Data.IntSet.Internal.IntSet -> Prop :=
+   : GHC.Num.Int -> Data.IntSet.Internal.IntSet -> Prop :=
   fun k t =>
     negb (Data.IntSet.Internal.member k t) .==>.(**)
-    (match Data.IntSet.Internal.delete k (Data.IntSet.Internal.insert k t) with
-      | t' => IntSetValidity.valid t' .&&.(**) (t' GHC.Base.== t)
-    end).
+    (let 't' := Data.IntSet.Internal.delete k (Data.IntSet.Internal.insert k t) in
+     IntSetValidity.valid t' .&&.(**) (t' GHC.Base.== t)).
 
 Definition prop_InsertIntoEmptyValid : GHC.Num.Int -> Prop :=
   fun x =>
@@ -189,114 +187,107 @@ Definition prop_InsertIntoEmptyValid : GHC.Num.Int -> Prop :=
 
 Definition prop_Int : list GHC.Num.Int -> list GHC.Num.Int -> Prop :=
   fun xs ys =>
-    match Data.IntSet.Internal.intersection (Data.IntSet.Internal.fromList xs)
-            (Data.IntSet.Internal.fromList ys) with
-      | t => IntSetValidity.valid t .&&.(**) (Data.IntSet.Internal.toAscList t
-             GHC.Base.== Data.OldList.sort (Data.OldList.nub ((Data.OldList.intersect) (xs)
-                                                             (ys))))
-    end.
+    let 't := Data.IntSet.Internal.intersection (Data.IntSet.Internal.fromList xs)
+                (Data.IntSet.Internal.fromList ys) in
+    IntSetValidity.valid t .&&.(**)
+    (Data.IntSet.Internal.toAscList t GHC.Base.==
+     Data.OldList.sort (Data.OldList.nub ((Data.OldList.intersect) (xs) (ys)))).
 
 Definition prop_LeftRight : Data.IntSet.Internal.IntSet -> bool :=
   fun arg_0__ =>
     match arg_0__ with
-      | Data.IntSet.Internal.Bin _ msk left_ right_ => andb (Data.Foldable.and
-                                                            (Coq.Lists.List.flat_map (fun x =>
-                                                                                       cons ((x Data.Bits..&.(**) msk)
-                                                                                            GHC.Base.==
-                                                                                            GHC.Num.fromInteger 0) nil)
-                                                                                     (Data.IntSet.Internal.toList
-                                                                                     left_))) (Data.Foldable.and
-                                                            (Coq.Lists.List.flat_map (fun x =>
-                                                                                       cons ((x Data.Bits..&.(**) msk)
-                                                                                            GHC.Base.== msk) nil)
-                                                                                     (Data.IntSet.Internal.toList
-                                                                                     right_)))
-      | _ => true
+    | Data.IntSet.Internal.Bin _ msk left_ right_ =>
+        andb (Data.Foldable.and (Coq.Lists.List.flat_map (fun x =>
+                                                            cons ((x Data.Bits..&.(**) msk) GHC.Base.== #0) nil)
+                                                         (Data.IntSet.Internal.toList left_))) (Data.Foldable.and
+              (Coq.Lists.List.flat_map (fun x =>
+                                          cons ((x Data.Bits..&.(**) msk) GHC.Base.== msk) nil)
+                                       (Data.IntSet.Internal.toList right_)))
+    | _ => true
     end.
 
 Definition prop_List : list GHC.Num.Int -> bool :=
   fun xs =>
     (Data.OldList.sort (Data.OldList.nub xs) GHC.Base.==
-    Data.IntSet.Internal.toAscList (Data.IntSet.Internal.fromList xs)).
+     Data.IntSet.Internal.toAscList (Data.IntSet.Internal.fromList xs)).
 
 Definition prop_Member : list GHC.Num.Int -> GHC.Num.Int -> bool :=
   fun xs n =>
     let m := Data.IntSet.Internal.fromList xs in
     Data.Foldable.all (fun k =>
-                        Data.IntSet.Internal.member k m GHC.Base.== (Data.Foldable.elem k xs)) (cons n
-                                                                                                     xs).
+                         Data.IntSet.Internal.member k m GHC.Base.== (Data.Foldable.elem k xs)) (cons n
+                                                                                                      xs).
 
 Definition prop_MemberFromList : list GHC.Num.Int -> bool :=
   fun xs =>
     let abs_xs :=
       Coq.Lists.List.flat_map (fun x =>
-                                if x GHC.Base./= GHC.Num.fromInteger 0 : bool
-                                then cons (GHC.Num.abs x) nil
-                                else nil) xs in
+                                 if x GHC.Base./= #0 : bool
+                                 then cons (GHC.Num.abs x) nil
+                                 else nil) xs in
     let t := Data.IntSet.Internal.fromList abs_xs in
     andb (Data.Foldable.all (fun arg_2__ => Data.IntSet.Internal.member arg_2__ t)
-         abs_xs) (Data.Foldable.all ((fun arg_3__ =>
-                                      Data.IntSet.Internal.notMember arg_3__ t) GHC.Base.∘ GHC.Num.negate) abs_xs).
+          abs_xs) (Data.Foldable.all ((fun arg_3__ =>
+                                         Data.IntSet.Internal.notMember arg_3__ t) GHC.Base.∘
+                                      GHC.Num.negate) abs_xs).
 
 Definition prop_NotMember : list GHC.Num.Int -> GHC.Num.Int -> bool :=
   fun xs n =>
     let m := Data.IntSet.Internal.fromList xs in
     Data.Foldable.all (fun k =>
-                        Data.IntSet.Internal.notMember k m GHC.Base.== (Data.Foldable.notElem k xs))
+                         Data.IntSet.Internal.notMember k m GHC.Base.== (Data.Foldable.notElem k xs))
     (cons n xs).
 
 Definition prop_Prefix : Data.IntSet.Internal.IntSet -> bool :=
   fix prop_Prefix arg_0__
         := match arg_0__ with
-             | (Data.IntSet.Internal.Bin prefix msk left_ right_ as s) => andb
-                                                                          (Data.Foldable.all (fun elem =>
-                                                                                               Data.IntSet.Internal.match_
-                                                                                               elem prefix msk)
-                                                                          (Data.IntSet.Internal.toList s)) (andb
-                                                                          (prop_Prefix left_) (prop_Prefix right_))
-             | _ => true
+           | (Data.IntSet.Internal.Bin prefix msk left_ right_ as s) =>
+               andb (Data.Foldable.all (fun elem =>
+                                          Data.IntSet.Internal.match_ elem prefix msk) (Data.IntSet.Internal.toList s))
+                    (andb (prop_Prefix left_) (prop_Prefix right_))
+           | _ => true
            end.
 
 Definition prop_Single : GHC.Num.Int -> bool :=
   fun x =>
     (Data.IntSet.Internal.insert x Data.IntSet.Internal.empty GHC.Base.==
-    Data.IntSet.Internal.singleton x).
+     Data.IntSet.Internal.singleton x).
 
 Definition prop_SingletonValid : GHC.Num.Int -> Prop :=
   fun x => IntSetValidity.valid (Data.IntSet.Internal.singleton x).
 
 Definition prop_UnionAssoc
-    : Data.IntSet.Internal.IntSet -> Data.IntSet.Internal.IntSet -> Data.IntSet.Internal.IntSet -> bool :=
+   : Data.IntSet.Internal.IntSet ->
+     Data.IntSet.Internal.IntSet -> Data.IntSet.Internal.IntSet -> bool :=
   fun t1 t2 t3 =>
     Data.IntSet.Internal.union t1 (Data.IntSet.Internal.union t2 t3) GHC.Base.==
     Data.IntSet.Internal.union (Data.IntSet.Internal.union t1 t2) t3.
 
 Definition prop_UnionComm
-    : Data.IntSet.Internal.IntSet -> Data.IntSet.Internal.IntSet -> bool :=
+   : Data.IntSet.Internal.IntSet -> Data.IntSet.Internal.IntSet -> bool :=
   fun t1 t2 =>
     (Data.IntSet.Internal.union t1 t2 GHC.Base.== Data.IntSet.Internal.union t2 t1).
 
 Definition prop_UnionInsert
-    : GHC.Num.Int -> Data.IntSet.Internal.IntSet -> Prop :=
+   : GHC.Num.Int -> Data.IntSet.Internal.IntSet -> Prop :=
   fun x t =>
-    match Data.IntSet.Internal.union t (Data.IntSet.Internal.singleton x) with
-      | t' => IntSetValidity.valid t' .&&.(**) (t' GHC.Base.==
-              Data.IntSet.Internal.insert x t)
-    end.
+    let 't' := Data.IntSet.Internal.union t (Data.IntSet.Internal.singleton x) in
+    IntSetValidity.valid t' .&&.(**)
+    (t' GHC.Base.== Data.IntSet.Internal.insert x t).
 
 Definition prop_disjoint
-    : Data.IntSet.Internal.IntSet -> Data.IntSet.Internal.IntSet -> bool :=
+   : Data.IntSet.Internal.IntSet -> Data.IntSet.Internal.IntSet -> bool :=
   fun a b =>
-    Data.IntSet.Internal.disjoint a b GHC.Base.== Data.IntSet.Internal.null
-    (Data.IntSet.Internal.intersection a b).
+    Data.IntSet.Internal.disjoint a b GHC.Base.==
+    Data.IntSet.Internal.null (Data.IntSet.Internal.intersection a b).
 
 Definition prop_filter : Data.IntSet.Internal.IntSet -> GHC.Num.Int -> Prop :=
   fun s i =>
     let evens := Data.IntSet.Internal.filter GHC.Real.even s in
     let odds := Data.IntSet.Internal.filter GHC.Real.odd s in
     let parts := Data.IntSet.Internal.partition GHC.Real.odd s in
-    IntSetValidity.valid odds .&&.(**) (IntSetValidity.valid evens .&&.(**) (parts
-    GHC.Base.== pair odds evens)).
+    IntSetValidity.valid odds .&&.(**)
+    (IntSetValidity.valid evens .&&.(**) (parts GHC.Base.== pair odds evens)).
 
 Definition prop_foldL : Data.IntSet.Internal.IntSet -> bool :=
   fun s =>
@@ -314,104 +305,106 @@ Definition prop_foldR : Data.IntSet.Internal.IntSet -> bool :=
 
 Definition prop_foldR' : Data.IntSet.Internal.IntSet -> bool :=
   fun s =>
-    Data.IntSet.Internal.foldr' cons nil s GHC.Base.== Data.IntSet.Internal.toList
-    s.
+    Data.IntSet.Internal.foldr' cons nil s GHC.Base.==
+    Data.IntSet.Internal.toList s.
 
 Definition prop_isProperSubsetOf2
-    : Data.IntSet.Internal.IntSet -> Data.IntSet.Internal.IntSet -> bool :=
+   : Data.IntSet.Internal.IntSet -> Data.IntSet.Internal.IntSet -> bool :=
   fun a b =>
     let c := Data.IntSet.Internal.union a b in
     Data.IntSet.Internal.isProperSubsetOf a c GHC.Base.== (a GHC.Base./= c).
 
 Definition prop_isSubsetOf2
-    : Data.IntSet.Internal.IntSet -> Data.IntSet.Internal.IntSet -> bool :=
+   : Data.IntSet.Internal.IntSet -> Data.IntSet.Internal.IntSet -> bool :=
   fun a b => Data.IntSet.Internal.isSubsetOf a (Data.IntSet.Internal.union a b).
 
 Definition prop_map : Data.IntSet.Internal.IntSet -> bool :=
   fun s => Data.IntSet.Internal.map GHC.Base.id s GHC.Base.== s.
 
 Definition prop_ord
-    : Data.IntSet.Internal.IntSet -> Data.IntSet.Internal.IntSet -> bool :=
+   : Data.IntSet.Internal.IntSet -> Data.IntSet.Internal.IntSet -> bool :=
   fun s1 s2 =>
-    GHC.Base.compare s1 s2 GHC.Base.== GHC.Base.compare (Data.IntSet.Internal.toList
-                                                        s1) (Data.IntSet.Internal.toList s2).
+    GHC.Base.compare s1 s2 GHC.Base.==
+    GHC.Base.compare (Data.IntSet.Internal.toList s1) (Data.IntSet.Internal.toList
+                      s2).
 
 Definition prop_partition
-    : Data.IntSet.Internal.IntSet -> GHC.Num.Int -> Prop :=
+   : Data.IntSet.Internal.IntSet -> GHC.Num.Int -> Prop :=
   fun s i =>
-    match Data.IntSet.Internal.partition GHC.Real.odd s with
-      | pair s1 s2 => IntSetValidity.valid s1 .&&.(**) (IntSetValidity.valid s2
-                      .&&.(**) (Data.Foldable.all GHC.Real.odd (Data.IntSet.Internal.toList s1)
-                      .&&.(**) (Data.Foldable.all GHC.Real.even (Data.IntSet.Internal.toList s2)
-                      .&&.(**) (s GHC.Base.== Data.IntSet.Internal.union s1 s2))))
-    end.
+    let 'pair s1 s2 := Data.IntSet.Internal.partition GHC.Real.odd s in
+    IntSetValidity.valid s1 .&&.(**)
+    (IntSetValidity.valid s2 .&&.(**)
+     (Data.Foldable.all GHC.Real.odd (Data.IntSet.Internal.toList s1) .&&.(**)
+      (Data.Foldable.all GHC.Real.even (Data.IntSet.Internal.toList s2) .&&.(**)
+       (s GHC.Base.== Data.IntSet.Internal.union s1 s2)))).
 
 Definition prop_size : Data.IntSet.Internal.IntSet -> Prop :=
   fun s =>
     let sz := Data.IntSet.Internal.size s in
-    (sz GHC.Base.== Data.IntSet.Internal.foldl' (fun arg_1__ arg_2__ =>
-                                                  match arg_1__ , arg_2__ with
-                                                    | i , _ => i GHC.Num.+ GHC.Num.fromInteger 1
-                                                  end) (GHC.Num.fromInteger 0 : GHC.Num.Int) s) .&&.(**) (sz GHC.Base.==
-    Data.Foldable.length (Data.IntSet.Internal.toList s)).
+    (sz GHC.Base.==
+     Data.IntSet.Internal.foldl' (fun arg_1__ arg_2__ =>
+                                    match arg_1__, arg_2__ with
+                                    | i, _ => i GHC.Num.+ #1
+                                    end) (#0 : GHC.Num.Int) s) .&&.(**)
+    (sz GHC.Base.== Data.Foldable.length (Data.IntSet.Internal.toList s)).
 
 Definition prop_split : Data.IntSet.Internal.IntSet -> GHC.Num.Int -> Prop :=
   fun s i =>
-    match Data.IntSet.Internal.split i s with
-      | pair s1 s2 => IntSetValidity.valid s1 .&&.(**) (IntSetValidity.valid s2
-                      .&&.(**) (Data.Foldable.all (fun arg_1__ => arg_1__ GHC.Base.< i)
-                      (Data.IntSet.Internal.toList s1) .&&.(**) (Data.Foldable.all (fun arg_2__ =>
-                                                                                     arg_2__ GHC.Base.> i)
-                      (Data.IntSet.Internal.toList s2) .&&.(**) (Data.IntSet.Internal.delete i s
-                      GHC.Base.== Data.IntSet.Internal.union s1 s2))))
-    end.
+    let 'pair s1 s2 := Data.IntSet.Internal.split i s in
+    IntSetValidity.valid s1 .&&.(**)
+    (IntSetValidity.valid s2 .&&.(**)
+     (Data.Foldable.all (fun arg_1__ => arg_1__ GHC.Base.< i)
+      (Data.IntSet.Internal.toList s1) .&&.(**)
+      (Data.Foldable.all (fun arg_2__ => arg_2__ GHC.Base.> i)
+       (Data.IntSet.Internal.toList s2) .&&.(**)
+       (Data.IntSet.Internal.delete i s GHC.Base.==
+        Data.IntSet.Internal.union s1 s2)))).
 
 Definition prop_splitMember
-    : Data.IntSet.Internal.IntSet -> GHC.Num.Int -> Prop :=
+   : Data.IntSet.Internal.IntSet -> GHC.Num.Int -> Prop :=
   fun s i =>
-    match Data.IntSet.Internal.splitMember i s with
-      | pair (pair s1 t) s2 => IntSetValidity.valid s1 .&&.(**) (IntSetValidity.valid
-                               s2 .&&.(**) (Data.Foldable.all (fun arg_1__ => arg_1__ GHC.Base.< i)
-                               (Data.IntSet.Internal.toList s1) .&&.(**) (Data.Foldable.all (fun arg_2__ =>
-                                                                                              arg_2__ GHC.Base.> i)
-                               (Data.IntSet.Internal.toList s2) .&&.(**) ((t GHC.Base.==
-                               Data.IntSet.Internal.member i s) .&&.(**) (Data.IntSet.Internal.delete i s
-                               GHC.Base.== Data.IntSet.Internal.union s1 s2)))))
-    end.
+    let 'pair (pair s1 t) s2 := Data.IntSet.Internal.splitMember i s in
+    IntSetValidity.valid s1 .&&.(**)
+    (IntSetValidity.valid s2 .&&.(**)
+     (Data.Foldable.all (fun arg_1__ => arg_1__ GHC.Base.< i)
+      (Data.IntSet.Internal.toList s1) .&&.(**)
+      (Data.Foldable.all (fun arg_2__ => arg_2__ GHC.Base.> i)
+       (Data.IntSet.Internal.toList s2) .&&.(**)
+       ((t GHC.Base.== Data.IntSet.Internal.member i s) .&&.(**)
+        (Data.IntSet.Internal.delete i s GHC.Base.==
+         Data.IntSet.Internal.union s1 s2))))).
 
 Definition prop_splitRoot : Data.IntSet.Internal.IntSet -> bool :=
   fun s =>
     let loop :=
       fun arg_0__ =>
         match arg_0__ with
-          | nil => true
-          | cons s1 rst => Data.Foldable.null (Coq.Lists.List.flat_map (fun x =>
-                                                                         Coq.Lists.List.flat_map (fun y =>
-                                                                                                   if x GHC.Base.>
-                                                                                                      y : bool
-                                                                                                   then cons (pair x y)
-                                                                                                             nil
-                                                                                                   else nil)
-                                                                                                 (Data.IntSet.Internal.toList
-                                                                                                 (Data.IntSet.Internal.unions
-                                                                                                 rst)))
-                                                                       (Data.IntSet.Internal.toList s1))
+        | nil => true
+        | cons s1 rst =>
+            Data.Foldable.null (Coq.Lists.List.flat_map (fun x =>
+                                                           Coq.Lists.List.flat_map (fun y =>
+                                                                                      if x GHC.Base.> y : bool
+                                                                                      then cons (pair x y) nil
+                                                                                      else nil)
+                                                                                   (Data.IntSet.Internal.toList
+                                                                                    (Data.IntSet.Internal.unions rst)))
+                                                        (Data.IntSet.Internal.toList s1))
         end in
     let ls := Data.IntSet.Internal.splitRoot s in
     andb (loop ls) (s GHC.Base.== Data.IntSet.Internal.unions ls).
 
-Definition toSet : Data.IntSet.Internal.IntSet -> Data.Set.Internal.Set_
-                   GHC.Num.Int :=
+Definition toSet
+   : Data.IntSet.Internal.IntSet -> Data.Set.Internal.Set_ GHC.Num.Int :=
   Data.Set.Internal.fromList GHC.Base.∘ Data.IntSet.Internal.toList.
 
 Definition prop_isSubsetOf
-    : Data.IntSet.Internal.IntSet -> Data.IntSet.Internal.IntSet -> bool :=
+   : Data.IntSet.Internal.IntSet -> Data.IntSet.Internal.IntSet -> bool :=
   fun a b =>
-    Data.IntSet.Internal.isSubsetOf a b GHC.Base.== Data.Set.Internal.isSubsetOf
-    (toSet a) (toSet b).
+    Data.IntSet.Internal.isSubsetOf a b GHC.Base.==
+    Data.Set.Internal.isSubsetOf (toSet a) (toSet b).
 
 Definition prop_isProperSubsetOf
-    : Data.IntSet.Internal.IntSet -> Data.IntSet.Internal.IntSet -> bool :=
+   : Data.IntSet.Internal.IntSet -> Data.IntSet.Internal.IntSet -> bool :=
   fun a b =>
     Data.IntSet.Internal.isProperSubsetOf a b GHC.Base.==
     Data.Set.Internal.isProperSubsetOf (toSet a) (toSet b).
@@ -443,6 +436,6 @@ Definition prop_isProperSubsetOf
      Data.Set.Internal.isSubsetOf GHC.Base.compare GHC.Base.flip GHC.Base.id
      GHC.Base.op_z2218U__ GHC.Base.op_zd__ GHC.Base.op_zeze__ GHC.Base.op_zg__
      GHC.Base.op_zl__ GHC.Base.op_zlze__ GHC.Base.op_zsze__ GHC.List.reverse
-     GHC.Num.Int GHC.Num.abs GHC.Num.negate GHC.Num.op_zp__ GHC.Real.even
-     GHC.Real.odd IntSetValidity.valid
+     GHC.Num.Int GHC.Num.abs GHC.Num.fromInteger GHC.Num.negate GHC.Num.op_zp__
+     GHC.Real.even GHC.Real.odd IntSetValidity.valid
 *)

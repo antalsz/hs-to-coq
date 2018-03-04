@@ -124,7 +124,7 @@ Definition extendVarSetList : VarSet -> list Core.Var -> VarSet :=
   UniqSet.addListToUniqSet.
 
 Definition extendVarSet_C
-    : (Core.Var -> Core.Var -> Core.Var) -> VarSet -> Core.Var -> VarSet :=
+   : (Core.Var -> Core.Var -> Core.Var) -> VarSet -> Core.Var -> VarSet :=
   UniqSet.addOneToUniqSet_C.
 
 Definition filterDVarSet : (Core.Var -> bool) -> DVarSet -> DVarSet :=
@@ -178,8 +178,8 @@ Definition mkDVarSet : list Core.Var -> DVarSet :=
 Definition mkVarSet : list Core.Var -> VarSet :=
   UniqSet.mkUniqSet.
 
-Definition partitionDVarSet : (Core.Var -> bool) -> DVarSet -> (DVarSet *
-                              DVarSet)%type :=
+Definition partitionDVarSet
+   : (Core.Var -> bool) -> DVarSet -> (DVarSet * DVarSet)%type :=
   UniqDSet.partitionUniqDSet.
 
 Definition sizeDVarSet : DVarSet -> GHC.Num.Int :=

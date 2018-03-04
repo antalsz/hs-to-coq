@@ -23,6 +23,7 @@ Require Data.Foldable.
 Require Data.Tuple.
 Require FV.
 Require GHC.Base.
+Require GHC.Num.
 Require Id.
 Require IdInfo2.
 Require Maybes.
@@ -35,11 +36,12 @@ Require Util.
 Require Var.
 Require VarSet.
 Import GHC.Base.Notations.
+Import GHC.Num.Notations.
 
 (* Converted type declarations: *)
 
-Inductive FVAnn : Type := Mk_FVAnn
-                         : VarSet.DVarSet -> VarSet.DVarSet -> Core.Type_ -> FVAnn.
+Inductive FVAnn : Type
+  := Mk_FVAnn : VarSet.DVarSet -> VarSet.DVarSet -> Core.Type_ -> FVAnn.
 
 Definition CoreExprWithFVs' :=
   (CoreSyn.AnnExpr' Var.Id FVAnn)%type.
@@ -54,19 +56,16 @@ Definition CoreAltWithFVs :=
   (AnnAlt Var.Id FVAnn)%type.
 
 Definition fva_fvs (arg_0__ : FVAnn) :=
-  match arg_0__ with
-    | Mk_FVAnn fva_fvs _ _ => fva_fvs
-  end.
+  let 'Mk_FVAnn fva_fvs _ _ := arg_0__ in
+  fva_fvs.
 
 Definition fva_ty (arg_1__ : FVAnn) :=
-  match arg_1__ with
-    | Mk_FVAnn _ _ fva_ty => fva_ty
-  end.
+  let 'Mk_FVAnn _ _ fva_ty := arg_1__ in
+  fva_ty.
 
 Definition fva_ty_fvs (arg_2__ : FVAnn) :=
-  match arg_2__ with
-    | Mk_FVAnn _ fva_ty_fvs _ => fva_ty_fvs
-  end.
+  let 'Mk_FVAnn _ fva_ty_fvs _ := arg_2__ in
+  fva_ty_fvs.
 (* Midamble *)
 
 Require Import Var.
@@ -178,7 +177,7 @@ Definition exprsFreeVarsList : list CoreSyn.CoreExpr -> list Core.Var :=
   FV.fvVarList GHC.Base.∘ exprsFVs.
 
 Definition exprSomeFreeVars
-    : FV.InterestingVarFun -> CoreSyn.CoreExpr -> VarSet.VarSet :=
+   : FV.InterestingVarFun -> CoreSyn.CoreExpr -> VarSet.VarSet :=
   fun fv_cand e =>
     FV.fvVarSet GHC.Base.$ (FV.filterFV fv_cand GHC.Base.$ expr_fvs e).
 
@@ -186,7 +185,7 @@ Definition exprFreeIds : CoreSyn.CoreExpr -> VarSet.IdSet :=
   exprSomeFreeVars Var.isLocalId.
 
 Definition exprSomeFreeVarsDSet
-    : FV.InterestingVarFun -> CoreSyn.CoreExpr -> VarSet.DVarSet :=
+   : FV.InterestingVarFun -> CoreSyn.CoreExpr -> VarSet.DVarSet :=
   fun fv_cand e =>
     FV.fvDVarSet GHC.Base.$ (FV.filterFV fv_cand GHC.Base.$ expr_fvs e).
 
@@ -194,7 +193,7 @@ Definition exprFreeIdsDSet : CoreSyn.CoreExpr -> VarSet.DIdSet :=
   exprSomeFreeVarsDSet Var.isLocalId.
 
 Definition exprSomeFreeVarsList
-    : FV.InterestingVarFun -> CoreSyn.CoreExpr -> list Core.Var :=
+   : FV.InterestingVarFun -> CoreSyn.CoreExpr -> list Core.Var :=
   fun fv_cand e =>
     FV.fvVarList GHC.Base.$ (FV.filterFV fv_cand GHC.Base.$ expr_fvs e).
 
@@ -202,33 +201,33 @@ Definition exprFreeIdsList : CoreSyn.CoreExpr -> list Var.Id :=
   exprSomeFreeVarsList Var.isLocalId.
 
 Definition exprTypeFV : CoreExprWithFVs -> Core.Type_ :=
-  fun arg_0__ => match arg_0__ with | pair (Mk_FVAnn _ _ ty) _ => ty end.
+  fun arg_0__ => let 'pair (Mk_FVAnn _ _ ty) _ := arg_0__ in ty.
 
 Definition exprsOrphNames : list CoreSyn.CoreExpr -> NameSet.NameSet :=
   fun es =>
     Data.Foldable.foldr (NameSet.unionNameSet GHC.Base.∘ exprOrphNames)
     NameSet.emptyNameSet es.
 
-Definition exprsSomeFreeVars : FV.InterestingVarFun -> list
-                               CoreSyn.CoreExpr -> VarSet.VarSet :=
+Definition exprsSomeFreeVars
+   : FV.InterestingVarFun -> list CoreSyn.CoreExpr -> VarSet.VarSet :=
   fun fv_cand es =>
-    FV.fvVarSet GHC.Base.$ (FV.filterFV fv_cand GHC.Base.$ FV.mapUnionFV expr_fvs
-    es).
+    FV.fvVarSet GHC.Base.$
+    (FV.filterFV fv_cand GHC.Base.$ FV.mapUnionFV expr_fvs es).
 
-Definition exprsSomeFreeVarsDSet : FV.InterestingVarFun -> list
-                                   CoreSyn.CoreExpr -> VarSet.DVarSet :=
+Definition exprsSomeFreeVarsDSet
+   : FV.InterestingVarFun -> list CoreSyn.CoreExpr -> VarSet.DVarSet :=
   fun fv_cand e =>
-    FV.fvDVarSet GHC.Base.$ (FV.filterFV fv_cand GHC.Base.$ FV.mapUnionFV expr_fvs
-    e).
+    FV.fvDVarSet GHC.Base.$
+    (FV.filterFV fv_cand GHC.Base.$ FV.mapUnionFV expr_fvs e).
 
 Definition exprsFreeIdsDSet : list CoreSyn.CoreExpr -> VarSet.DIdSet :=
   exprsSomeFreeVarsDSet Var.isLocalId.
 
-Definition exprsSomeFreeVarsList : FV.InterestingVarFun -> list
-                                   CoreSyn.CoreExpr -> list Core.Var :=
+Definition exprsSomeFreeVarsList
+   : FV.InterestingVarFun -> list CoreSyn.CoreExpr -> list Core.Var :=
   fun fv_cand es =>
-    FV.fvVarList GHC.Base.$ (FV.filterFV fv_cand GHC.Base.$ FV.mapUnionFV expr_fvs
-    es).
+    FV.fvVarList GHC.Base.$
+    (FV.filterFV fv_cand GHC.Base.$ FV.mapUnionFV expr_fvs es).
 
 Definition exprsFreeIdsList : list CoreSyn.CoreExpr -> list Var.Id :=
   exprsSomeFreeVarsList Var.isLocalId.
@@ -237,13 +236,13 @@ Definition exprs_fvs : list CoreSyn.CoreExpr -> FV.FV :=
   fun exprs => FV.mapUnionFV expr_fvs exprs.
 
 Definition freeVarsOf : CoreExprWithFVs -> VarSet.DIdSet :=
-  fun arg_0__ => match arg_0__ with | pair (Mk_FVAnn fvs _ _) _ => fvs end.
+  fun arg_0__ => let 'pair (Mk_FVAnn fvs _ _) _ := arg_0__ in fvs.
 
 Definition freeVarsOfAnn : FVAnn -> VarSet.DIdSet :=
   fva_fvs.
 
 Definition freeVarsOfType : CoreExprWithFVs -> VarSet.DTyCoVarSet :=
-  fun arg_0__ => match arg_0__ with | pair (Mk_FVAnn _ ty_fvs _) _ => ty_fvs end.
+  fun arg_0__ => let 'pair (Mk_FVAnn _ ty_fvs _) _ := arg_0__ in ty_fvs.
 
 Definition freeVarsOfTypeAnn : FVAnn -> VarSet.DTyCoVarSet :=
   fva_ty_fvs.
@@ -252,9 +251,9 @@ Definition idRuleFVs : Var.Id -> FV.FV :=
   fun id =>
     if andb Util.debugIsOn (negb (Var.isId id)) : bool
     then (Panic.assertPanic (GHC.Base.hs_string__ "ghc/compiler/coreSyn/CoreFVs.hs")
-         (GHC.Num.fromInteger 664))
-    else FV.mkFVs (VarSet.dVarSetElems GHC.Base.$ IdInfo2.ruleInfoFreeVars
-                  (Id.idSpecialisation id)).
+          #664)
+    else FV.mkFVs (VarSet.dVarSetElems GHC.Base.$
+                   IdInfo2.ruleInfoFreeVars (Id.idSpecialisation id)).
 
 Definition idRuleVars : Var.Id -> VarSet.VarSet :=
   fun id => FV.fvVarSet GHC.Base.$ idRuleFVs id.
@@ -271,12 +270,12 @@ Definition vectsFreeVars : list CoreSyn.CoreVect -> VarSet.VarSet :=
   let vectFreeVars :=
     fun arg_0__ =>
       match arg_0__ with
-        | CoreSyn.Vect _ rhs => FV.fvVarSet GHC.Base.$ (FV.filterFV Var.isLocalId
-                                GHC.Base.$ expr_fvs rhs)
-        | CoreSyn.NoVect _ => noFVs
-        | CoreSyn.VectType _ _ _ => noFVs
-        | CoreSyn.VectClass _ => noFVs
-        | CoreSyn.VectInst _ => noFVs
+      | CoreSyn.Vect _ rhs =>
+          FV.fvVarSet GHC.Base.$ (FV.filterFV Var.isLocalId GHC.Base.$ expr_fvs rhs)
+      | CoreSyn.NoVect _ => noFVs
+      | CoreSyn.VectType _ _ _ => noFVs
+      | CoreSyn.VectClass _ => noFVs
+      | CoreSyn.VectInst _ => noFVs
       end in
   VarSet.mapUnionVarSet vectFreeVars.
 
@@ -284,7 +283,8 @@ Axiom orphNamesOfCoAxBranch : forall {A : Type}, A.
 
 Definition orphNamesOfCoAxBranches {br} : Core.Branches br -> NameSet.NameSet :=
   Data.Foldable.foldr (NameSet.unionNameSet GHC.Base.∘ orphNamesOfCoAxBranch)
-  NameSet.emptyNameSet GHC.Base.∘ CoAxiom.fromBranches.
+  NameSet.emptyNameSet GHC.Base.∘
+  CoAxiom.fromBranches.
 
 (* Translating `orphNamesOfCoAxBranch' failed: using a record pattern for the
    unknown constructor `CoAxBranch' unsupported *)
@@ -297,15 +297,15 @@ Axiom orphNamesOfCoCon : forall {A : Type}, A.
 Definition orphNamesOfProv : Core.UnivCoProvenance -> NameSet.NameSet :=
   fun arg_0__ =>
     match arg_0__ with
-      | Core.UnsafeCoerceProv => NameSet.emptyNameSet
-      | Core.PhantomProv co => orphNamesOfCo co
-      | Core.ProofIrrelProv co => orphNamesOfCo co
-      | Core.PluginProv _ => NameSet.emptyNameSet
-      | Core.HoleProv _ => NameSet.emptyNameSet
+    | Core.UnsafeCoerceProv => NameSet.emptyNameSet
+    | Core.PhantomProv co => orphNamesOfCo co
+    | Core.ProofIrrelProv co => orphNamesOfCo co
+    | Core.PluginProv _ => NameSet.emptyNameSet
+    | Core.HoleProv _ => NameSet.emptyNameSet
     end.
 
-Definition orphNamesOfThings {a} : (a -> NameSet.NameSet) -> list
-                                   a -> NameSet.NameSet :=
+Definition orphNamesOfThings {a}
+   : (a -> NameSet.NameSet) -> list a -> NameSet.NameSet :=
   fun f =>
     Data.Foldable.foldr (NameSet.unionNameSet GHC.Base.∘ f) NameSet.emptyNameSet.
 
@@ -316,9 +316,9 @@ Definition orphNamesOfTyCon : Core.TyCon -> NameSet.NameSet :=
   fun tycon =>
     NameSet.unionNameSet (NameSet.unitNameSet (Name.getName tycon))
                          (match TyCon.tyConClass_maybe tycon with
-                           | None => NameSet.emptyNameSet
-                           | Some cls => NameSet.unitNameSet (Name.getName cls)
-                         end).
+                          | None => NameSet.emptyNameSet
+                          | Some cls => NameSet.unitNameSet (Name.getName cls)
+                          end).
 
 Axiom orphNamesOfType : forall {A : Type}, A.
 
@@ -328,9 +328,9 @@ Definition orphNamesOfTypes : list Core.Type_ -> NameSet.NameSet :=
 Definition orphNamesOfAxiom {br} : Core.CoAxiom br -> NameSet.NameSet :=
   fun axiom =>
     NameSet.extendNameSet (orphNamesOfTypes (Data.Foldable.concatMap
-                                            CoAxiom.coAxBranchLHS GHC.Base.$ (CoAxiom.fromBranches GHC.Base.$
-                                            CoAxiom.coAxiomBranches axiom))) (Name.getName (CoAxiom.coAxiomTyCon
-                                                                                           axiom)).
+                                             CoAxiom.coAxBranchLHS GHC.Base.$
+                                             (CoAxiom.fromBranches GHC.Base.$ CoAxiom.coAxiomBranches axiom)))
+                          (Name.getName (CoAxiom.coAxiomTyCon axiom)).
 
 (* Translating `orphNamesOfType' failed: using a record pattern for the unknown
    constructor `LitTy' unsupported *)
@@ -383,7 +383,7 @@ Definition idRuleAndUnfoldingFVs : Var.Id -> FV.FV :=
   fun id =>
     if andb Util.debugIsOn (negb (Var.isId id)) : bool
     then (Panic.assertPanic (GHC.Base.hs_string__ "ghc/compiler/coreSyn/CoreFVs.hs")
-         (GHC.Num.fromInteger 656))
+          #656)
     else FV.unionFV (idRuleFVs id) (idUnfoldingFVs id).
 
 Definition idRuleAndUnfoldingVars : Var.Id -> VarSet.VarSet :=
@@ -397,9 +397,8 @@ Definition bndrRuleAndUnfoldingFVs : Core.Var -> FV.FV :=
 
 Definition rhs_fvs : (Var.Id * CoreSyn.CoreExpr)%type -> FV.FV :=
   fun arg_0__ =>
-    match arg_0__ with
-      | pair bndr rhs => FV.unionFV (expr_fvs rhs) (bndrRuleAndUnfoldingFVs bndr)
-    end.
+    let 'pair bndr rhs := arg_0__ in
+    FV.unionFV (expr_fvs rhs) (bndrRuleAndUnfoldingFVs bndr).
 
 (* Translating `stableUnfoldingFVs' failed: using a record pattern for the
    unknown constructor `CoreUnfolding' unsupported *)
@@ -420,14 +419,14 @@ Definition idFVs : Var.Id -> FV.FV :=
   fun id =>
     if andb Util.debugIsOn (negb (Var.isId id)) : bool
     then (Panic.assertPanic (GHC.Base.hs_string__ "ghc/compiler/coreSyn/CoreFVs.hs")
-         (GHC.Num.fromInteger 641))
+          #641)
     else FV.unionFV (varTypeTyCoFVs id) (idRuleAndUnfoldingFVs id).
 
 Definition idFreeVars : Var.Id -> VarSet.VarSet :=
   fun id =>
     if andb Util.debugIsOn (negb (Var.isId id)) : bool
     then (Panic.assertPanic (GHC.Base.hs_string__ "ghc/compiler/coreSyn/CoreFVs.hs")
-         (GHC.Num.fromInteger 634))
+          #634)
     else FV.fvVarSet GHC.Base.$ idFVs id.
 
 Definition dIdFreeVars : Var.Id -> VarSet.DVarSet :=
@@ -452,11 +451,13 @@ Definition addBndrs : list CoreSyn.CoreBndr -> FV.FV -> FV.FV :=
 Definition bindFreeVars : CoreSyn.CoreBind -> VarSet.VarSet :=
   fun arg_0__ =>
     match arg_0__ with
-      | CoreSyn.NonRec b r => FV.fvVarSet GHC.Base.$ (FV.filterFV Var.isLocalVar
-                              GHC.Base.$ rhs_fvs (pair b r))
-      | CoreSyn.Rec prs => FV.fvVarSet GHC.Base.$ (FV.filterFV Var.isLocalVar
-                           GHC.Base.$ addBndrs (GHC.Base.map Data.Tuple.fst prs) (FV.mapUnionFV rhs_fvs
-                                                                                 prs))
+    | CoreSyn.NonRec b r =>
+        FV.fvVarSet GHC.Base.$
+        (FV.filterFV Var.isLocalVar GHC.Base.$ rhs_fvs (pair b r))
+    | CoreSyn.Rec prs =>
+        FV.fvVarSet GHC.Base.$
+        (FV.filterFV Var.isLocalVar GHC.Base.$
+         addBndrs (GHC.Base.map Data.Tuple.fst prs) (FV.mapUnionFV rhs_fvs prs))
     end.
 
 (* Unbound variables:
@@ -471,10 +472,10 @@ Definition bindFreeVars : CoreSyn.CoreBind -> VarSet.VarSet :=
      CoreSyn.VectType Data.Foldable.concatMap Data.Foldable.foldr Data.Tuple.fst
      FV.FV FV.InterestingVarFun FV.delFV FV.emptyFV FV.filterFV FV.fvDVarSet
      FV.fvVarList FV.fvVarSet FV.mapUnionFV FV.mkFVs FV.unionFV GHC.Base.fmap
-     GHC.Base.map GHC.Base.op_z2218U__ GHC.Base.op_zd__ Id.idSpecialisation
-     Id.realIdUnfolding IdInfo2.ruleInfoFreeVars Maybes.orElse Name.getName
-     NameSet.NameSet NameSet.emptyNameSet NameSet.extendNameSet NameSet.unionNameSet
-     NameSet.unitNameSet Panic.assertPanic TyCoRep.tyCoFVsOfType
+     GHC.Base.map GHC.Base.op_z2218U__ GHC.Base.op_zd__ GHC.Num.fromInteger
+     Id.idSpecialisation Id.realIdUnfolding IdInfo2.ruleInfoFreeVars Maybes.orElse
+     Name.getName NameSet.NameSet NameSet.emptyNameSet NameSet.extendNameSet
+     NameSet.unionNameSet NameSet.unitNameSet Panic.assertPanic TyCoRep.tyCoFVsOfType
      TyCon.tyConClass_maybe Util.debugIsOn Var.Id Var.isId Var.isLocalId
      Var.isLocalVar Var.isTyVar VarSet.DIdSet VarSet.DTyCoVarSet VarSet.DVarSet
      VarSet.IdSet VarSet.TyCoVarSet VarSet.VarSet VarSet.dVarSetElems

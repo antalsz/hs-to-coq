@@ -20,12 +20,13 @@ Import GHC.Base.Notations.
 
 Definition isSubsequenceOf {a} `{(GHC.Base.Eq_ a)} : list a -> list a -> bool :=
   fix isSubsequenceOf arg_0__ arg_1__
-        := match arg_0__ , arg_1__ with
-             | nil , _ => true
-             | _ , nil => false
-             | (cons x a' as a) , cons y b => if x GHC.Base.== y : bool
-                                              then isSubsequenceOf a' b
-                                              else isSubsequenceOf a b
+        := match arg_0__, arg_1__ with
+           | nil, _ => true
+           | _, nil => false
+           | (cons x a' as a), cons y b =>
+               if x GHC.Base.== y : bool
+               then isSubsequenceOf a' b
+               else isSubsequenceOf a b
            end.
 
 (* Unbound variables:

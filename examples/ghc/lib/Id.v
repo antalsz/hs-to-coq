@@ -114,7 +114,7 @@ Definition idCallArity : Var.Id -> BasicTypes.Arity :=
 Definition idDataCon : Var.Id -> DataCon.DataCon :=
   fun id =>
     Maybes.orElse (isDataConId_maybe id) (Panic.panicStr (GHC.Base.hs_string__
-                                                         "idDataCon") (Panic.noString id)).
+                                                          "idDataCon") (Panic.noString id)).
 
 Definition idDemandInfo : Var.Id -> Demand.Demand :=
   fun id => demandInfo (Var.idInfo id).
@@ -152,8 +152,8 @@ Definition idOneShotInfo : Var.Id -> BasicTypes.OneShotInfo :=
 Definition isOneShotLambda : Var.Id -> bool :=
   fun id =>
     match idOneShotInfo id with
-      | BasicTypes.OneShotLam => true
-      | _ => false
+    | BasicTypes.OneShotLam => true
+    | _ => false
     end.
 
 Definition isOneShotBndr : Core.Var -> bool :=
@@ -162,9 +162,9 @@ Definition isOneShotBndr : Core.Var -> bool :=
 Definition isProbablyOneShotLambda : Var.Id -> bool :=
   fun id =>
     match idOneShotInfo id with
-      | BasicTypes.OneShotLam => true
-      | BasicTypes.ProbOneShot => true
-      | BasicTypes.NoOneShotInfo => false
+    | BasicTypes.OneShotLam => true
+    | BasicTypes.ProbOneShot => true
+    | BasicTypes.NoOneShotInfo => false
     end.
 
 Definition idSpecialisation : Var.Id -> IdInfo.RuleInfo :=
@@ -189,9 +189,9 @@ Definition localiseId : Var.Id -> Var.Id :=
   fun id =>
     let name := idName id in
     if (if andb Util.debugIsOn (negb (Var.isId id)) : bool
-       then (Panic.assertPanic (GHC.Base.hs_string__ "ghc/compiler/basicTypes/Id.hs")
-            (GHC.Num.fromInteger 193))
-       else andb (Var.isLocalId id) (Name.isInternalName name)) : bool
+        then (Panic.assertPanic (GHC.Base.hs_string__ "ghc/compiler/basicTypes/Id.hs")
+              #193)
+        else andb (Var.isLocalId id) (Name.isInternalName name)) : bool
     then id
     else Var.mkLocalVar (Var.idDetails id) (Name.localiseName name) (idType id)
          (Var.idInfo id).
@@ -241,13 +241,13 @@ Definition lazySetIdInfo : Var.Id -> IdInfo.IdInfo -> Var.Id :=
 
 Definition maybeModifyIdInfo : option IdInfo.IdInfo -> Var.Id -> Var.Id :=
   fun arg_0__ arg_1__ =>
-    match arg_0__ , arg_1__ with
-      | Some new_info , id => lazySetIdInfo id new_info
-      | None , id => id
+    match arg_0__, arg_1__ with
+    | Some new_info, id => lazySetIdInfo id new_info
+    | None, id => id
     end.
 
-Definition zapInfo : (IdInfo.IdInfo -> option
-                     IdInfo.IdInfo) -> Var.Id -> Var.Id :=
+Definition zapInfo
+   : (IdInfo.IdInfo -> option IdInfo.IdInfo) -> Var.Id -> Var.Id :=
   fun zapper id => maybeModifyIdInfo (zapper (Var.idInfo id)) id.
 
 Definition zapFragileIdInfo : Var.Id -> Var.Id :=
@@ -266,19 +266,19 @@ Definition setIdInfo : Var.Id -> IdInfo.IdInfo -> Var.Id :=
   fun id info => GHC.Prim.seq info (lazySetIdInfo id info).
 
 Definition modifyIdInfo
-    : (IdInfo.IdInfo -> IdInfo.IdInfo) -> Var.Id -> Var.Id :=
+   : (IdInfo.IdInfo -> IdInfo.IdInfo) -> Var.Id -> Var.Id :=
   fun fn id => setIdInfo id (fn (Var.idInfo id)).
 
 Definition modifyInlinePragma
-    : Var.Id -> (BasicTypes.InlinePragma -> BasicTypes.InlinePragma) -> Var.Id :=
+   : Var.Id -> (BasicTypes.InlinePragma -> BasicTypes.InlinePragma) -> Var.Id :=
   fun id fn =>
     modifyIdInfo (fun info =>
-                   IdInfo.setInlinePragInfo info (fn (inlinePragInfo info))) id.
+                    IdInfo.setInlinePragInfo info (fn (inlinePragInfo info))) id.
 
 Definition setInlineActivation : Var.Id -> BasicTypes.Activation -> Var.Id :=
   fun id act =>
     modifyInlinePragma id (fun prag =>
-                            BasicTypes.setInlinePragmaActivation prag act).
+                             BasicTypes.setInlinePragmaActivation prag act).
 
 Definition setIdArity : Var.Id -> BasicTypes.Arity -> Var.Id :=
   fun id arity =>
@@ -311,10 +311,10 @@ Definition updOneShotInfo : Var.Id -> BasicTypes.OneShotInfo -> Var.Id :=
   fun id one_shot =>
     let do_upd :=
       match pair (idOneShotInfo id) one_shot with
-        | pair BasicTypes.NoOneShotInfo _ => true
-        | pair BasicTypes.OneShotLam _ => false
-        | pair _ BasicTypes.NoOneShotInfo => false
-        | _ => true
+      | pair BasicTypes.NoOneShotInfo _ => true
+      | pair BasicTypes.OneShotLam _ => false
+      | pair _ BasicTypes.NoOneShotInfo => false
+      | _ => true
       end in
     if do_upd : bool
     then setIdOneShotInfo id one_shot
@@ -344,7 +344,7 @@ Definition setInlinePragma : Var.Id -> BasicTypes.InlinePragma -> Var.Id :=
 Definition setOneShotLambda : Var.Id -> Var.Id :=
   fun id =>
     modifyIdInfo (fun arg_0__ =>
-                   IdInfo.setOneShotInfo arg_0__ BasicTypes.OneShotLam) id.
+                    IdInfo.setOneShotInfo arg_0__ BasicTypes.OneShotLam) id.
 
 Definition transferPolyIdInfo : Var.Id -> list Core.Var -> Var.Id -> Var.Id :=
   fun old_id abstract_wrt new_id =>
@@ -360,7 +360,7 @@ Definition transferPolyIdInfo : Var.Id -> list Core.Var -> Var.Id -> Var.Id :=
     let transfer :=
       fun new_info =>
         IdInfo2.setStrictnessInfo (IdInfo.setOccInfo (IdInfo.setInlinePragInfo
-                                                     (IdInfo.setArityInfo new_info new_arity) old_inline_prag)
+                                                      (IdInfo.setArityInfo new_info new_arity) old_inline_prag)
                                                      old_occ_info) new_strictness in
     modifyIdInfo transfer new_id.
 
@@ -372,32 +372,32 @@ Definition zapIdStrictness : Var.Id -> Var.Id :=
 Definition clearOneShotLambda : Var.Id -> Var.Id :=
   fun id =>
     modifyIdInfo (fun arg_0__ =>
-                   IdInfo.setOneShotInfo arg_0__ BasicTypes.NoOneShotInfo) id.
+                    IdInfo.setOneShotInfo arg_0__ BasicTypes.NoOneShotInfo) id.
 
 Definition mkExportedLocalId
-    : IdInfo.IdDetails -> Name.Name -> Core.Type_ -> Var.Id :=
+   : IdInfo.IdDetails -> Name.Name -> Core.Type_ -> Var.Id :=
   fun details name ty =>
     Var.mkExportedLocalVar details name ty IdInfo.vanillaIdInfo.
 
 Definition mkGlobalId
-    : IdInfo.IdDetails -> Name.Name -> Core.Type_ -> IdInfo.IdInfo -> Var.Id :=
+   : IdInfo.IdDetails -> Name.Name -> Core.Type_ -> IdInfo.IdInfo -> Var.Id :=
   Var.mkGlobalVar.
 
 Definition mkSysLocalM {m} `{UniqSupply.MonadUnique m}
-    : FastString.FastString -> Core.Type_ -> m Var.Id :=
+   : FastString.FastString -> Core.Type_ -> m Var.Id :=
   fun fs ty =>
-    UniqSupply.getUniqueM GHC.Base.>>= (fun uniq =>
-      GHC.Base.return_ (mkSysLocal fs uniq ty)).
+    UniqSupply.getUniqueM GHC.Base.>>=
+    (fun uniq => GHC.Base.return_ (mkSysLocal fs uniq ty)).
 
 Definition mkSysLocalOrCoVar
-    : FastString.FastString -> Unique.Unique -> Core.Type_ -> Var.Id :=
+   : FastString.FastString -> Unique.Unique -> Core.Type_ -> Var.Id :=
   fun fs uniq ty => mkLocalIdOrCoVar (Name.mkSystemVarName uniq fs) ty.
 
 Definition mkSysLocalOrCoVarM {m} `{UniqSupply.MonadUnique m}
-    : FastString.FastString -> Core.Type_ -> m Var.Id :=
+   : FastString.FastString -> Core.Type_ -> m Var.Id :=
   fun fs ty =>
-    UniqSupply.getUniqueM GHC.Base.>>= (fun uniq =>
-      GHC.Base.return_ (mkSysLocalOrCoVar fs uniq ty)).
+    UniqSupply.getUniqueM GHC.Base.>>=
+    (fun uniq => GHC.Base.return_ (mkSysLocalOrCoVar fs uniq ty)).
 
 Definition mkTemplateLocal : GHC.Num.Int -> Core.Type_ -> Var.Id :=
   fun i ty =>
@@ -405,24 +405,24 @@ Definition mkTemplateLocal : GHC.Num.Int -> Core.Type_ -> Var.Id :=
     (Unique.mkBuiltinUnique i) ty.
 
 Definition mkTemplateLocals : list Core.Type_ -> list Var.Id :=
-  mkTemplateLocalsNum (GHC.Num.fromInteger 1).
+  mkTemplateLocalsNum #1.
 
 Definition mkUserLocal
-    : OccName.OccName -> Unique.Unique -> Core.Type_ -> SrcLoc.SrcSpan -> Var.Id :=
+   : OccName.OccName -> Unique.Unique -> Core.Type_ -> SrcLoc.SrcSpan -> Var.Id :=
   fun occ uniq ty loc =>
     if andb Util.debugIsOn (negb (negb (TyCoRep.isCoercionType ty))) : bool
     then (Panic.assertPanic (GHC.Base.hs_string__ "ghc/compiler/basicTypes/Id.hs")
-         (GHC.Num.fromInteger 315))
+          #315)
     else mkLocalId (Name.mkInternalName uniq occ loc) ty.
 
 Definition mkUserLocalOrCoVar
-    : OccName.OccName -> Unique.Unique -> Core.Type_ -> SrcLoc.SrcSpan -> Var.Id :=
+   : OccName.OccName -> Unique.Unique -> Core.Type_ -> SrcLoc.SrcSpan -> Var.Id :=
   fun occ uniq ty loc => mkLocalIdOrCoVar (Name.mkInternalName uniq occ loc) ty.
 
 Definition mkWorkerId : Unique.Unique -> Var.Id -> Core.Type_ -> Var.Id :=
   fun uniq unwrkr ty =>
     mkLocalIdOrCoVar (Name.mkDerivedInternalName OccName.mkWorkerOcc uniq
-                     (Name.getName unwrkr)) ty.
+                      (Name.getName unwrkr)) ty.
 
 Definition realIdUnfolding : Var.Id -> CoreSyn.Unfolding :=
   fun id => unfoldingInfo (Var.idInfo id).
@@ -461,12 +461,12 @@ Definition stateHackOneShot : BasicTypes.OneShotInfo :=
      CoreSyn.NoUnfolding CoreSyn.Unfolding DataCon.DataCon Demand.Demand
      Demand.StrictSig Demand.increaseStrictSigArity Demand.isBottomingSig
      Demand.nopSig FastString.FastString FastString.fsLit GHC.Base.op_zgzgze__
-     GHC.Base.return_ GHC.Num.Int GHC.Num.op_zp__ GHC.Prim.seq IdInfo.CafInfo
-     IdInfo.IdDetails IdInfo.IdInfo IdInfo.RuleInfo IdInfo.isEmptyRuleInfo
-     IdInfo.setArityInfo IdInfo.setCafInfo IdInfo.setCallArityInfo
-     IdInfo.setInlinePragInfo IdInfo.setOccInfo IdInfo.setOneShotInfo
-     IdInfo.setRuleInfo IdInfo.vanillaIdInfo IdInfo.zapDemandInfo
-     IdInfo.zapFragileInfo IdInfo.zapLamInfo IdInfo.zapUsageInfo
+     GHC.Base.return_ GHC.Num.Int GHC.Num.fromInteger GHC.Num.op_zp__ GHC.Prim.seq
+     IdInfo.CafInfo IdInfo.IdDetails IdInfo.IdInfo IdInfo.RuleInfo
+     IdInfo.isEmptyRuleInfo IdInfo.setArityInfo IdInfo.setCafInfo
+     IdInfo.setCallArityInfo IdInfo.setInlinePragInfo IdInfo.setOccInfo
+     IdInfo.setOneShotInfo IdInfo.setRuleInfo IdInfo.vanillaIdInfo
+     IdInfo.zapDemandInfo IdInfo.zapFragileInfo IdInfo.zapLamInfo IdInfo.zapUsageInfo
      IdInfo2.ruleInfoRules IdInfo2.setDemandInfo IdInfo2.setStrictnessInfo
      IdInfo2.setUnfoldingInfo IdInfo2.setUnfoldingInfoLazily Maybes.orElse
      Module.Module Name.Name Name.getName Name.isInternalName Name.localiseName

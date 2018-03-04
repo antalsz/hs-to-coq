@@ -206,11 +206,13 @@ convert_module_with_requires_via convGroup convModName (group, _imports, _export
     let modules = filter (/= convModName)
                      . map (mkModuleName . T.unpack)
                      . mapMaybe qualidModule $ freeVars
+    let needsNotation qualid
+            = qualidIsOp qualid || qualid == "GHC.Num.fromInteger"
     let notationModules
                      = filter (/= convModName)
                      . map (mkModuleName . T.unpack)
                      . mapMaybe qualidModule
-                     . filter qualidIsOp $ freeVars
+                     . filter needsNotation $ freeVars
 
     modules         <- skipModules $ S.toList $ S.fromList modules
     notationModules <- skipModules $ S.toList $ S.fromList notationModules

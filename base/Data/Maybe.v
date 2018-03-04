@@ -24,8 +24,8 @@ Definition catMaybes {a} : list (option a) -> list a :=
   fun ls =>
     let cont_0__ arg_1__ :=
       match arg_1__ with
-        | Some x => cons x nil
-        | _ => nil
+      | Some x => cons x nil
+      | _ => nil
       end in
     Coq.Lists.List.flat_map cont_0__ ls.
 
@@ -43,28 +43,25 @@ Definition listToMaybe {a} : list a -> option a :=
 
 Definition mapMaybe {a} {b} : (a -> option b) -> list a -> list b :=
   fix mapMaybe arg_0__ arg_1__
-        := match arg_0__ , arg_1__ with
-             | _ , nil => nil
-             | f , cons x xs => let rs := mapMaybe f xs in
-                                match f x with
-                                  | None => rs
-                                  | Some r => cons r rs
-                                end
+        := match arg_0__, arg_1__ with
+           | _, nil => nil
+           | f, cons x xs =>
+               let rs := mapMaybe f xs in match f x with | None => rs | Some r => cons r rs end
            end.
 
-Definition mapMaybeFB {b} {r} {a} : (b -> r -> r) -> (a -> option
-                                    b) -> a -> r -> r :=
+Definition mapMaybeFB {b} {r} {a}
+   : (b -> r -> r) -> (a -> option b) -> a -> r -> r :=
   fun cons_ f x next =>
     match f x with
-      | None => next
-      | Some r => cons_ r next
+    | None => next
+    | Some r => cons_ r next
     end.
 
 Definition maybe {b} {a} : b -> (a -> b) -> option a -> b :=
   fun arg_0__ arg_1__ arg_2__ =>
-    match arg_0__ , arg_1__ , arg_2__ with
-      | n , _ , None => n
-      | _ , f , Some x => f x
+    match arg_0__, arg_1__, arg_2__ with
+    | n, _, None => n
+    | _, f, Some x => f x
     end.
 
 Definition maybeToList {a} : option a -> list a :=

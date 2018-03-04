@@ -101,9 +101,8 @@ Definition minusNameSet : NameSet -> NameSet -> NameSet :=
 Definition mkDUs : list (Defs * Uses)%type -> DefUses :=
   fun pairs =>
     let cont_0__ arg_1__ :=
-      match arg_1__ with
-        | pair defs uses => cons (pair (Some defs) uses) nil
-      end in
+      let 'pair defs uses := arg_1__ in
+      cons (pair (Some defs) uses) nil in
     Coq.Lists.List.flat_map cont_0__ pairs.
 
 Definition mkNameSet : list Name.Name -> NameSet :=
@@ -132,13 +131,14 @@ Definition findUses : DefUses -> Uses -> Uses :=
   fun dus uses =>
     let get :=
       fun arg_0__ arg_1__ =>
-        match arg_0__ , arg_1__ with
-          | pair None rhs_uses , uses => unionNameSet rhs_uses uses
-          | pair (Some defs) rhs_uses , uses => if orb (intersectsNameSet defs uses)
-                                                       (Data.Foldable.any (OccName.startsWithUnderscore GHC.Base.∘
-                                                                          Name.nameOccName) (nameSetElems defs)) : bool
-                                                then unionNameSet rhs_uses uses
-                                                else uses
+        match arg_0__, arg_1__ with
+        | pair None rhs_uses, uses => unionNameSet rhs_uses uses
+        | pair (Some defs) rhs_uses, uses =>
+            if orb (intersectsNameSet defs uses) (Data.Foldable.any
+                    (OccName.startsWithUnderscore GHC.Base.∘ Name.nameOccName) (nameSetElems
+                                                                                defs)) : bool
+            then unionNameSet rhs_uses uses
+            else uses
         end in
     Data.Foldable.foldr get uses dus.
 
@@ -146,10 +146,10 @@ Definition duUses : DefUses -> Uses :=
   fun dus =>
     let get :=
       fun arg_0__ arg_1__ =>
-        match arg_0__ , arg_1__ with
-          | pair None rhs_uses , uses => unionNameSet rhs_uses uses
-          | pair (Some defs) rhs_uses , uses => minusNameSet (unionNameSet rhs_uses uses)
-                                                             defs
+        match arg_0__, arg_1__ with
+        | pair None rhs_uses, uses => unionNameSet rhs_uses uses
+        | pair (Some defs) rhs_uses, uses =>
+            minusNameSet (unionNameSet rhs_uses uses) defs
         end in
     Data.Foldable.foldr get emptyNameSet dus.
 
@@ -157,9 +157,9 @@ Definition duDefs : DefUses -> Defs :=
   fun dus =>
     let get :=
       fun arg_0__ arg_1__ =>
-        match arg_0__ , arg_1__ with
-          | pair None _u1 , d2 => d2
-          | pair (Some d1) _u1 , d2 => unionNameSet d1 d2
+        match arg_0__, arg_1__ with
+        | pair None _u1, d2 => d2
+        | pair (Some d1) _u1, d2 => unionNameSet d1 d2
         end in
     Data.Foldable.foldr get emptyNameSet dus.
 
@@ -167,8 +167,8 @@ Definition allUses : DefUses -> Uses :=
   fun dus =>
     let get :=
       fun arg_0__ arg_1__ =>
-        match arg_0__ , arg_1__ with
-          | pair _d1 u1 , u2 => unionNameSet u1 u2
+        match arg_0__, arg_1__ with
+        | pair _d1 u1, u2 => unionNameSet u1 u2
         end in
     Data.Foldable.foldr get emptyNameSet dus.
 

@@ -28,19 +28,19 @@ Definition fail `{g : MonadFail m} : forall {a}, GHC.Base.String -> m a :=
   g _ (fail__ m).
 (* Converted value declarations: *)
 
-Local Definition MonadFail__option_fail : forall {a},
-                                            GHC.Base.String -> option a :=
+Local Definition MonadFail__option_fail
+   : forall {a}, GHC.Base.String -> option a :=
   fun {a} => fun arg_0__ => None.
 
-Program Instance MonadFail__option : MonadFail option := fun _ k =>
-    k {|fail__ := fun {a} => MonadFail__option_fail |}.
+Program Instance MonadFail__option : MonadFail option :=
+  fun _ k => k {| fail__ := fun {a} => MonadFail__option_fail |}.
 Admit Obligations.
 
 Local Definition MonadFail__list_fail : forall {a}, GHC.Base.String -> list a :=
   fun {a} => fun arg_0__ => nil.
 
-Program Instance MonadFail__list : MonadFail list := fun _ k =>
-    k {|fail__ := fun {a} => MonadFail__list_fail |}.
+Program Instance MonadFail__list : MonadFail list :=
+  fun _ k => k {| fail__ := fun {a} => MonadFail__list_fail |}.
 Admit Obligations.
 
 (* Skipping instance MonadFail__IO *)

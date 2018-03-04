@@ -33,8 +33,8 @@ Existing Class Category.
 Definition id `{g : Category cat} : forall {a}, cat a a :=
   g _ (id__ cat).
 
-Definition op_z2218U__ `{g : Category cat} : forall {b} {c} {a},
-                                               cat b c -> cat a b -> cat a c :=
+Definition op_z2218U__ `{g : Category cat}
+   : forall {b} {c} {a}, cat b c -> cat a b -> cat a c :=
   g _ (op_z2218U____ cat).
 
 Notation "'_∘_'" := (op_z2218U__).
@@ -45,29 +45,31 @@ Infix "∘" := (_∘_) (left associativity, at level 40).
 Local Definition Category__arrow_id : forall {a}, GHC.Prim.arrow a a :=
   fun {a} => GHC.Base.id.
 
-Local Definition Category__arrow_op_z2218U__ : forall {b} {c} {a},
-                                                 GHC.Prim.arrow b c -> GHC.Prim.arrow a b -> GHC.Prim.arrow a c :=
+Local Definition Category__arrow_op_z2218U__
+   : forall {b} {c} {a},
+     GHC.Prim.arrow b c -> GHC.Prim.arrow a b -> GHC.Prim.arrow a c :=
   fun {b} {c} {a} => _GHC.Base.∘_.
 
-Program Instance Category__arrow : Category GHC.Prim.arrow := fun _ k =>
-    k {|id__ := fun {a} => Category__arrow_id ;
-      op_z2218U____ := fun {b} {c} {a} => Category__arrow_op_z2218U__ |}.
+Program Instance Category__arrow : Category GHC.Prim.arrow :=
+  fun _ k =>
+    k {| id__ := fun {a} => Category__arrow_id ;
+         op_z2218U____ := fun {b} {c} {a} => Category__arrow_op_z2218U__ |}.
 Admit Obligations.
 
 (* Skipping instance Category__op_ZCz7eUZC__ *)
 
 (* Skipping instance Category__Coercion *)
 
-Definition op_zgzgzg__ {cat} {a} {b} {c} `{Category cat} : cat a b -> cat b
-                                                           c -> cat a c :=
+Definition op_zgzgzg__ {cat} {a} {b} {c} `{Category cat}
+   : cat a b -> cat b c -> cat a c :=
   fun f g => g ∘ f.
 
 Notation "'_>>>_'" := (op_zgzgzg__).
 
 Infix ">>>" := (_>>>_) (at level 99).
 
-Definition op_zlzlzl__ {cat} {b} {c} {a} `{Category cat} : cat b c -> cat a
-                                                           b -> cat a c :=
+Definition op_zlzlzl__ {cat} {b} {c} {a} `{Category cat}
+   : cat b c -> cat a b -> cat a c :=
   _∘_.
 
 Notation "'_<<<_'" := (op_zlzlzl__).

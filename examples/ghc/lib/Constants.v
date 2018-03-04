@@ -13,28 +13,29 @@ Require Coq.Program.Wf.
 (* Converted imports: *)
 
 Require GHC.Num.
+Import GHC.Num.Notations.
 
 (* No type declarations to convert. *)
 (* Converted value declarations: *)
 
 Definition mAX_CTUPLE_SIZE : GHC.Num.Int :=
-  GHC.Num.fromInteger 62.
+  #62.
 
 Definition mAX_REDUCTION_DEPTH : GHC.Num.Int :=
-  GHC.Num.fromInteger 200.
+  #200.
 
 Definition mAX_SOLVER_ITERATIONS : GHC.Num.Int :=
-  GHC.Num.fromInteger 4.
+  #4.
 
 Definition mAX_TUPLE_SIZE : GHC.Num.Int :=
-  GHC.Num.fromInteger 62.
+  #62.
 
 Definition tARGET_MAX_CHAR : GHC.Num.Int :=
-  GHC.Num.fromInteger 1114111.
+  #1114111.
 
 Definition wORD64_SIZE : GHC.Num.Int :=
-  GHC.Num.fromInteger 8.
+  #8.
 
 (* Unbound variables:
-     GHC.Num.Int
+     GHC.Num.Int GHC.Num.fromInteger
 *)

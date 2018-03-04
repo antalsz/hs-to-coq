@@ -23,35 +23,35 @@ Definition UniqSet :=
   UniqFM.UniqFM%type.
 (* Converted value declarations: *)
 
-Definition addOneToUniqSet {a} `{Unique.Uniquable a} : UniqSet a -> a -> UniqSet
-                                                       a :=
+Definition addOneToUniqSet {a} `{Unique.Uniquable a}
+   : UniqSet a -> a -> UniqSet a :=
   fun set x => UniqFM.addToUFM set x x.
 
-Definition addListToUniqSet {a} `{Unique.Uniquable a} : UniqSet a -> list
-                                                        a -> UniqSet a :=
+Definition addListToUniqSet {a} `{Unique.Uniquable a}
+   : UniqSet a -> list a -> UniqSet a :=
   Data.Foldable.foldl addOneToUniqSet.
 
 Definition addOneToUniqSet_C {a} `{Unique.Uniquable a}
-    : (a -> a -> a) -> UniqSet a -> a -> UniqSet a :=
+   : (a -> a -> a) -> UniqSet a -> a -> UniqSet a :=
   fun f set x => UniqFM.addToUFM_C f set x x.
 
-Definition delListFromUniqSet {a} `{Unique.Uniquable a} : UniqSet a -> list
-                                                          a -> UniqSet a :=
+Definition delListFromUniqSet {a} `{Unique.Uniquable a}
+   : UniqSet a -> list a -> UniqSet a :=
   UniqFM.delListFromUFM.
 
-Definition delOneFromUniqSet {a} `{Unique.Uniquable a} : UniqSet
-                                                         a -> a -> UniqSet a :=
+Definition delOneFromUniqSet {a} `{Unique.Uniquable a}
+   : UniqSet a -> a -> UniqSet a :=
   UniqFM.delFromUFM.
 
-Definition delOneFromUniqSet_Directly {a} : UniqSet
-                                            a -> Unique.Unique -> UniqSet a :=
+Definition delOneFromUniqSet_Directly {a}
+   : UniqSet a -> Unique.Unique -> UniqSet a :=
   UniqFM.delFromUFM_Directly.
 
 Definition elemUniqSet_Directly {a} : Unique.Unique -> UniqSet a -> bool :=
   UniqFM.elemUFM_Directly.
 
-Definition elementOfUniqSet {a} `{Unique.Uniquable a} : a -> UniqSet
-                                                        a -> bool :=
+Definition elementOfUniqSet {a} `{Unique.Uniquable a}
+   : a -> UniqSet a -> bool :=
   UniqFM.elemUFM.
 
 Definition emptyUniqSet {a} : UniqSet a :=
@@ -72,8 +72,8 @@ Definition intersectUniqSets {a} : UniqSet a -> UniqSet a -> UniqSet a :=
 Definition isEmptyUniqSet {a} : UniqSet a -> bool :=
   UniqFM.isNullUFM.
 
-Definition lookupUniqSet {a} {b} `{Unique.Uniquable a} : UniqSet
-                                                         b -> a -> option b :=
+Definition lookupUniqSet {a} {b} `{Unique.Uniquable a}
+   : UniqSet b -> a -> option b :=
   UniqFM.lookupUFM.
 
 Definition mapUniqSet {a} {b} : (a -> b) -> UniqSet a -> UniqSet b :=
@@ -90,8 +90,8 @@ Definition unionUniqSets {a} : UniqSet a -> UniqSet a -> UniqSet a :=
 
 Definition unionManyUniqSets {a} (xs : list (UniqSet a)) : UniqSet a :=
   match xs with
-    | nil => emptyUniqSet
-    | cons set sets => Data.Foldable.foldr unionUniqSets set sets
+  | nil => emptyUniqSet
+  | cons set sets => Data.Foldable.foldr unionUniqSets set sets
   end.
 
 Definition uniqSetToList {a} : UniqSet a -> list a :=

@@ -15,3 +15,20 @@ Ltac destruct_match :=
     let Heq := fresh "Heq" in
     destruct a eqn:Heq=>//
   end.
+
+
+(* Pose the proof [prf], unless it already exists. *)
+Ltac pose_new prf :=
+  let prop := type of prf in
+  match goal with 
+    | [ H : prop |- _] => fail 1
+    | _ => pose proof prf
+  end.
+
+(* Pose the [prop], using [prf], unless it already exists. *)
+Ltac assert_new prop prf :=
+  match goal with 
+    | [ H : prop |- _] => fail 1
+    | _ => assert prop by prf
+  end.
+

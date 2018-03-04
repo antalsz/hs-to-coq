@@ -78,4 +78,6 @@ Notation "'_GHC.Num.-_'" := op_zm__.
 
 Infix    "GHC.Num.*"     := op_zt__ (at level 40, left associativity).
 Notation "'_GHC.Num.*_'" := op_zt__.
+
+Notation "'#' n" := (fromInteger n) (at level 1, format "'#' n").
 End Notations.

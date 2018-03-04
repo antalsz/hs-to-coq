@@ -1425,12 +1425,6 @@ Program Instance Foldable__Set_ : Data.Foldable.Foldable Set_ := fun _ k =>
       Data.Foldable.toList__ := fun {a} => Foldable__Set__toList |}.
 Admit Obligations.
 
-Definition withBar : list GHC.Base.String -> list GHC.Base.String :=
-  fun bars => cons (GHC.Base.hs_string__ "|  ") bars.
-
-Definition withEmpty : list GHC.Base.String -> list GHC.Base.String :=
-  fun bars => cons (GHC.Base.hs_string__ "   ") bars.
-
 Module Notations.
 Notation "'_Data.Set.Internal.\\_'" := (op_zrzr__).
 Infix "Data.Set.Internal.\\" := (_\\_) (at level 99).

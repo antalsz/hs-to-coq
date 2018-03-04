@@ -26,8 +26,9 @@ Import GHC.Base.Notations.
 
 (* Converted type declarations: *)
 
-Inductive ConLike : Type := RealDataCon : DataCon.DataCon -> ConLike
-                         |  PatSynCon : PatSyn.PatSyn -> ConLike.
+Inductive ConLike : Type
+  := RealDataCon : DataCon.DataCon -> ConLike
+  |  PatSynCon : PatSyn.PatSyn -> ConLike.
 (* Midamble *)
 
 (* nonqualified record selectors*)
@@ -43,9 +44,10 @@ Local Definition Eq___ConLike_op_zeze__ : ConLike -> ConLike -> bool :=
 Local Definition Eq___ConLike_op_zsze__ : ConLike -> ConLike -> bool :=
   Data.Function.on _GHC.Base./=_ Unique.getUnique.
 
-Program Instance Eq___ConLike : GHC.Base.Eq_ ConLike := fun _ k =>
-    k {|GHC.Base.op_zeze____ := Eq___ConLike_op_zeze__ ;
-      GHC.Base.op_zsze____ := Eq___ConLike_op_zsze__ |}.
+Program Instance Eq___ConLike : GHC.Base.Eq_ ConLike :=
+  fun _ k =>
+    k {| GHC.Base.op_zeze____ := Eq___ConLike_op_zeze__ ;
+         GHC.Base.op_zsze____ := Eq___ConLike_op_zsze__ |}.
 Admit Obligations.
 
 Local Definition Ord__ConLike_compare : ConLike -> ConLike -> comparison :=
@@ -69,14 +71,15 @@ Local Definition Ord__ConLike_min : ConLike -> ConLike -> ConLike :=
 Local Definition Ord__ConLike_max : ConLike -> ConLike -> ConLike :=
   fun x y => if Ord__ConLike_op_zlze__ x y : bool then y else x.
 
-Program Instance Ord__ConLike : GHC.Base.Ord ConLike := fun _ k =>
-    k {|GHC.Base.op_zl____ := Ord__ConLike_op_zl__ ;
-      GHC.Base.op_zlze____ := Ord__ConLike_op_zlze__ ;
-      GHC.Base.op_zg____ := Ord__ConLike_op_zg__ ;
-      GHC.Base.op_zgze____ := Ord__ConLike_op_zgze__ ;
-      GHC.Base.compare__ := Ord__ConLike_compare ;
-      GHC.Base.max__ := Ord__ConLike_max ;
-      GHC.Base.min__ := Ord__ConLike_min |}.
+Program Instance Ord__ConLike : GHC.Base.Ord ConLike :=
+  fun _ k =>
+    k {| GHC.Base.op_zl____ := Ord__ConLike_op_zl__ ;
+         GHC.Base.op_zlze____ := Ord__ConLike_op_zlze__ ;
+         GHC.Base.op_zg____ := Ord__ConLike_op_zg__ ;
+         GHC.Base.op_zgze____ := Ord__ConLike_op_zgze__ ;
+         GHC.Base.compare__ := Ord__ConLike_compare ;
+         GHC.Base.max__ := Ord__ConLike_max ;
+         GHC.Base.min__ := Ord__ConLike_min |}.
 Admit Obligations.
 
 (* Translating `instance Unique.Uniquable ConLike.ConLike' failed: OOPS! Cannot
@@ -99,32 +102,32 @@ Admit Obligations.
 Definition conLikeArity : ConLike -> BasicTypes.Arity :=
   fun arg_0__ =>
     match arg_0__ with
-      | RealDataCon data_con => DataCon.dataConSourceArity data_con
-      | PatSynCon pat_syn => PatSyn.patSynArity pat_syn
+    | RealDataCon data_con => DataCon.dataConSourceArity data_con
+    | PatSynCon pat_syn => PatSyn.patSynArity pat_syn
     end.
 
 Definition conLikeFieldLabels : ConLike -> list FieldLabel.FieldLabel :=
   fun arg_0__ =>
     match arg_0__ with
-      | RealDataCon data_con => DataCon.dataConFieldLabels data_con
-      | PatSynCon pat_syn => PatSyn.patSynFieldLabels pat_syn
+    | RealDataCon data_con => DataCon.dataConFieldLabels data_con
+    | PatSynCon pat_syn => PatSyn.patSynFieldLabels pat_syn
     end.
 
-Definition conLikesWithFields : list ConLike -> list
-                                FieldLabel.FieldLabelString -> list ConLike :=
+Definition conLikesWithFields
+   : list ConLike -> list FieldLabel.FieldLabelString -> list ConLike :=
   fun con_likes lbls =>
     let has_fld :=
       fun dc lbl =>
         Data.Foldable.any (fun fl => flLabel fl GHC.Base.== lbl) (conLikeFieldLabels
-                                                                 dc) in
+                                                                  dc) in
     let has_flds := fun dc => Data.Foldable.all (has_fld dc) lbls in
     GHC.List.filter has_flds con_likes.
 
 Definition conLikeName : ConLike -> Name.Name :=
   fun arg_0__ =>
     match arg_0__ with
-      | RealDataCon data_con => DataCon.dataConName data_con
-      | PatSynCon pat_syn => PatSyn.patSynName pat_syn
+    | RealDataCon data_con => DataCon.dataConName data_con
+    | PatSynCon pat_syn => PatSyn.patSynName pat_syn
     end.
 
 (* Unbound variables:

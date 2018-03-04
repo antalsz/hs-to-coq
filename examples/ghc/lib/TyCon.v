@@ -66,118 +66,143 @@ Import GHC.Num.Notations.
 
 (* Converted type declarations: *)
 
-Inductive RecTcChecker : Type := RC : GHC.Num.Int -> (NameEnv.NameEnv
-                                      GHC.Num.Int) -> RecTcChecker.
+Inductive RecTcChecker : Type
+  := RC : GHC.Num.Int -> (NameEnv.NameEnv GHC.Num.Int) -> RecTcChecker.
 
-Inductive PrimElemRep : Type := Int8ElemRep : PrimElemRep
-                             |  Int16ElemRep : PrimElemRep
-                             |  Int32ElemRep : PrimElemRep
-                             |  Int64ElemRep : PrimElemRep
-                             |  Word8ElemRep : PrimElemRep
-                             |  Word16ElemRep : PrimElemRep
-                             |  Word32ElemRep : PrimElemRep
-                             |  Word64ElemRep : PrimElemRep
-                             |  FloatElemRep : PrimElemRep
-                             |  DoubleElemRep : PrimElemRep.
+Inductive PrimElemRep : Type
+  := Int8ElemRep : PrimElemRep
+  |  Int16ElemRep : PrimElemRep
+  |  Int32ElemRep : PrimElemRep
+  |  Int64ElemRep : PrimElemRep
+  |  Word8ElemRep : PrimElemRep
+  |  Word16ElemRep : PrimElemRep
+  |  Word32ElemRep : PrimElemRep
+  |  Word64ElemRep : PrimElemRep
+  |  FloatElemRep : PrimElemRep
+  |  DoubleElemRep : PrimElemRep.
 
-Inductive PrimRep : Type := VoidRep : PrimRep
-                         |  PtrRep : PrimRep
-                         |  IntRep : PrimRep
-                         |  WordRep : PrimRep
-                         |  Int64Rep : PrimRep
-                         |  Word64Rep : PrimRep
-                         |  AddrRep : PrimRep
-                         |  FloatRep : PrimRep
-                         |  DoubleRep : PrimRep
-                         |  VecRep : GHC.Num.Int -> PrimElemRep -> PrimRep.
+Inductive PrimRep : Type
+  := VoidRep : PrimRep
+  |  PtrRep : PrimRep
+  |  IntRep : PrimRep
+  |  WordRep : PrimRep
+  |  Int64Rep : PrimRep
+  |  Word64Rep : PrimRep
+  |  AddrRep : PrimRep
+  |  FloatRep : PrimRep
+  |  DoubleRep : PrimRep
+  |  VecRep : GHC.Num.Int -> PrimElemRep -> PrimRep.
 
-Inductive FamTyConFlav : Type := DataFamilyTyCon
-                                : Core.TyConRepName -> FamTyConFlav
-                              |  OpenSynFamilyTyCon : FamTyConFlav
-                              |  ClosedSynFamilyTyCon : (option (Core.CoAxiom Core.Branched)) -> FamTyConFlav
-                              |  AbstractClosedSynFamilyTyCon : FamTyConFlav
-                              |  BuiltInSynFamTyCon : Core.BuiltInSynFamily -> FamTyConFlav.
+Inductive FamTyConFlav : Type
+  := DataFamilyTyCon : Core.TyConRepName -> FamTyConFlav
+  |  OpenSynFamilyTyCon : FamTyConFlav
+  |  ClosedSynFamilyTyCon : (option (Core.CoAxiom Core.Branched)) -> FamTyConFlav
+  |  AbstractClosedSynFamilyTyCon : FamTyConFlav
+  |  BuiltInSynFamTyCon : Core.BuiltInSynFamily -> FamTyConFlav.
 
-Inductive AlgTyConRhs : Type := AbstractTyCon : bool -> AlgTyConRhs
-                             |  DataTyCon : list DataCon.DataCon -> bool -> AlgTyConRhs
-                             |  TupleTyCon : DataCon.DataCon -> BasicTypes.TupleSort -> AlgTyConRhs
-                             |  NewTyCon : DataCon.DataCon -> Core.Type_ -> (list TyVar *
-                                           Core.Type_)%type -> Core.CoAxiom Core.Unbranched -> AlgTyConRhs.
+Inductive AlgTyConRhs : Type
+  := AbstractTyCon : bool -> AlgTyConRhs
+  |  DataTyCon : list DataCon.DataCon -> bool -> AlgTyConRhs
+  |  TupleTyCon : DataCon.DataCon -> BasicTypes.TupleSort -> AlgTyConRhs
+  |  NewTyCon
+   : DataCon.DataCon ->
+     Core.Type_ ->
+     (list TyVar * Core.Type_)%type -> Core.CoAxiom Core.Unbranched -> AlgTyConRhs.
 
 Definition data_con (arg_0__ : AlgTyConRhs) :=
   match arg_0__ with
-    | AbstractTyCon _ => GHC.Err.error (GHC.Base.hs_string__
-                                       "Partial record selector: field `data_con' has no match in constructor `AbstractTyCon' of type `AlgTyConRhs'")
-    | DataTyCon _ _ => GHC.Err.error (GHC.Base.hs_string__
-                                     "Partial record selector: field `data_con' has no match in constructor `DataTyCon' of type `AlgTyConRhs'")
-    | TupleTyCon data_con _ => data_con
-    | NewTyCon data_con _ _ _ => data_con
+  | AbstractTyCon _ =>
+      GHC.Err.error (GHC.Base.hs_string__
+                     "Partial record selector: field `data_con' has no match in constructor `AbstractTyCon' of type `AlgTyConRhs'")
+  | DataTyCon _ _ =>
+      GHC.Err.error (GHC.Base.hs_string__
+                     "Partial record selector: field `data_con' has no match in constructor `DataTyCon' of type `AlgTyConRhs'")
+  | TupleTyCon data_con _ => data_con
+  | NewTyCon data_con _ _ _ => data_con
   end.
 
 Definition data_cons (arg_1__ : AlgTyConRhs) :=
   match arg_1__ with
-    | AbstractTyCon _ => GHC.Err.error (GHC.Base.hs_string__
-                                       "Partial record selector: field `data_cons' has no match in constructor `AbstractTyCon' of type `AlgTyConRhs'")
-    | DataTyCon data_cons _ => data_cons
-    | TupleTyCon _ _ => GHC.Err.error (GHC.Base.hs_string__
-                                      "Partial record selector: field `data_cons' has no match in constructor `TupleTyCon' of type `AlgTyConRhs'")
-    | NewTyCon _ _ _ _ => GHC.Err.error (GHC.Base.hs_string__
-                                        "Partial record selector: field `data_cons' has no match in constructor `NewTyCon' of type `AlgTyConRhs'")
+  | AbstractTyCon _ =>
+      GHC.Err.error (GHC.Base.hs_string__
+                     "Partial record selector: field `data_cons' has no match in constructor `AbstractTyCon' of type `AlgTyConRhs'")
+  | DataTyCon data_cons _ => data_cons
+  | TupleTyCon _ _ =>
+      GHC.Err.error (GHC.Base.hs_string__
+                     "Partial record selector: field `data_cons' has no match in constructor `TupleTyCon' of type `AlgTyConRhs'")
+  | NewTyCon _ _ _ _ =>
+      GHC.Err.error (GHC.Base.hs_string__
+                     "Partial record selector: field `data_cons' has no match in constructor `NewTyCon' of type `AlgTyConRhs'")
   end.
 
 Definition is_enum (arg_2__ : AlgTyConRhs) :=
   match arg_2__ with
-    | AbstractTyCon _ => GHC.Err.error (GHC.Base.hs_string__
-                                       "Partial record selector: field `is_enum' has no match in constructor `AbstractTyCon' of type `AlgTyConRhs'")
-    | DataTyCon _ is_enum => is_enum
-    | TupleTyCon _ _ => GHC.Err.error (GHC.Base.hs_string__
-                                      "Partial record selector: field `is_enum' has no match in constructor `TupleTyCon' of type `AlgTyConRhs'")
-    | NewTyCon _ _ _ _ => GHC.Err.error (GHC.Base.hs_string__
-                                        "Partial record selector: field `is_enum' has no match in constructor `NewTyCon' of type `AlgTyConRhs'")
+  | AbstractTyCon _ =>
+      GHC.Err.error (GHC.Base.hs_string__
+                     "Partial record selector: field `is_enum' has no match in constructor `AbstractTyCon' of type `AlgTyConRhs'")
+  | DataTyCon _ is_enum => is_enum
+  | TupleTyCon _ _ =>
+      GHC.Err.error (GHC.Base.hs_string__
+                     "Partial record selector: field `is_enum' has no match in constructor `TupleTyCon' of type `AlgTyConRhs'")
+  | NewTyCon _ _ _ _ =>
+      GHC.Err.error (GHC.Base.hs_string__
+                     "Partial record selector: field `is_enum' has no match in constructor `NewTyCon' of type `AlgTyConRhs'")
   end.
 
 Definition nt_co (arg_3__ : AlgTyConRhs) :=
   match arg_3__ with
-    | AbstractTyCon _ => GHC.Err.error (GHC.Base.hs_string__
-                                       "Partial record selector: field `nt_co' has no match in constructor `AbstractTyCon' of type `AlgTyConRhs'")
-    | DataTyCon _ _ => GHC.Err.error (GHC.Base.hs_string__
-                                     "Partial record selector: field `nt_co' has no match in constructor `DataTyCon' of type `AlgTyConRhs'")
-    | TupleTyCon _ _ => GHC.Err.error (GHC.Base.hs_string__
-                                      "Partial record selector: field `nt_co' has no match in constructor `TupleTyCon' of type `AlgTyConRhs'")
-    | NewTyCon _ _ _ nt_co => nt_co
+  | AbstractTyCon _ =>
+      GHC.Err.error (GHC.Base.hs_string__
+                     "Partial record selector: field `nt_co' has no match in constructor `AbstractTyCon' of type `AlgTyConRhs'")
+  | DataTyCon _ _ =>
+      GHC.Err.error (GHC.Base.hs_string__
+                     "Partial record selector: field `nt_co' has no match in constructor `DataTyCon' of type `AlgTyConRhs'")
+  | TupleTyCon _ _ =>
+      GHC.Err.error (GHC.Base.hs_string__
+                     "Partial record selector: field `nt_co' has no match in constructor `TupleTyCon' of type `AlgTyConRhs'")
+  | NewTyCon _ _ _ nt_co => nt_co
   end.
 
 Definition nt_etad_rhs (arg_4__ : AlgTyConRhs) :=
   match arg_4__ with
-    | AbstractTyCon _ => GHC.Err.error (GHC.Base.hs_string__
-                                       "Partial record selector: field `nt_etad_rhs' has no match in constructor `AbstractTyCon' of type `AlgTyConRhs'")
-    | DataTyCon _ _ => GHC.Err.error (GHC.Base.hs_string__
-                                     "Partial record selector: field `nt_etad_rhs' has no match in constructor `DataTyCon' of type `AlgTyConRhs'")
-    | TupleTyCon _ _ => GHC.Err.error (GHC.Base.hs_string__
-                                      "Partial record selector: field `nt_etad_rhs' has no match in constructor `TupleTyCon' of type `AlgTyConRhs'")
-    | NewTyCon _ _ nt_etad_rhs _ => nt_etad_rhs
+  | AbstractTyCon _ =>
+      GHC.Err.error (GHC.Base.hs_string__
+                     "Partial record selector: field `nt_etad_rhs' has no match in constructor `AbstractTyCon' of type `AlgTyConRhs'")
+  | DataTyCon _ _ =>
+      GHC.Err.error (GHC.Base.hs_string__
+                     "Partial record selector: field `nt_etad_rhs' has no match in constructor `DataTyCon' of type `AlgTyConRhs'")
+  | TupleTyCon _ _ =>
+      GHC.Err.error (GHC.Base.hs_string__
+                     "Partial record selector: field `nt_etad_rhs' has no match in constructor `TupleTyCon' of type `AlgTyConRhs'")
+  | NewTyCon _ _ nt_etad_rhs _ => nt_etad_rhs
   end.
 
 Definition nt_rhs (arg_5__ : AlgTyConRhs) :=
   match arg_5__ with
-    | AbstractTyCon _ => GHC.Err.error (GHC.Base.hs_string__
-                                       "Partial record selector: field `nt_rhs' has no match in constructor `AbstractTyCon' of type `AlgTyConRhs'")
-    | DataTyCon _ _ => GHC.Err.error (GHC.Base.hs_string__
-                                     "Partial record selector: field `nt_rhs' has no match in constructor `DataTyCon' of type `AlgTyConRhs'")
-    | TupleTyCon _ _ => GHC.Err.error (GHC.Base.hs_string__
-                                      "Partial record selector: field `nt_rhs' has no match in constructor `TupleTyCon' of type `AlgTyConRhs'")
-    | NewTyCon _ nt_rhs _ _ => nt_rhs
+  | AbstractTyCon _ =>
+      GHC.Err.error (GHC.Base.hs_string__
+                     "Partial record selector: field `nt_rhs' has no match in constructor `AbstractTyCon' of type `AlgTyConRhs'")
+  | DataTyCon _ _ =>
+      GHC.Err.error (GHC.Base.hs_string__
+                     "Partial record selector: field `nt_rhs' has no match in constructor `DataTyCon' of type `AlgTyConRhs'")
+  | TupleTyCon _ _ =>
+      GHC.Err.error (GHC.Base.hs_string__
+                     "Partial record selector: field `nt_rhs' has no match in constructor `TupleTyCon' of type `AlgTyConRhs'")
+  | NewTyCon _ nt_rhs _ _ => nt_rhs
   end.
 
 Definition tup_sort (arg_6__ : AlgTyConRhs) :=
   match arg_6__ with
-    | AbstractTyCon _ => GHC.Err.error (GHC.Base.hs_string__
-                                       "Partial record selector: field `tup_sort' has no match in constructor `AbstractTyCon' of type `AlgTyConRhs'")
-    | DataTyCon _ _ => GHC.Err.error (GHC.Base.hs_string__
-                                     "Partial record selector: field `tup_sort' has no match in constructor `DataTyCon' of type `AlgTyConRhs'")
-    | TupleTyCon _ tup_sort => tup_sort
-    | NewTyCon _ _ _ _ => GHC.Err.error (GHC.Base.hs_string__
-                                        "Partial record selector: field `tup_sort' has no match in constructor `NewTyCon' of type `AlgTyConRhs'")
+  | AbstractTyCon _ =>
+      GHC.Err.error (GHC.Base.hs_string__
+                     "Partial record selector: field `tup_sort' has no match in constructor `AbstractTyCon' of type `AlgTyConRhs'")
+  | DataTyCon _ _ =>
+      GHC.Err.error (GHC.Base.hs_string__
+                     "Partial record selector: field `tup_sort' has no match in constructor `DataTyCon' of type `AlgTyConRhs'")
+  | TupleTyCon _ tup_sort => tup_sort
+  | NewTyCon _ _ _ _ =>
+      GHC.Err.error (GHC.Base.hs_string__
+                     "Partial record selector: field `tup_sort' has no match in constructor `NewTyCon' of type `AlgTyConRhs'")
   end.
 (* Converted value declarations: *)
 
@@ -198,33 +223,33 @@ Local Definition Ord__TyCon_compare : Core.TyCon -> Core.TyCon -> comparison :=
 Local Definition Ord__TyCon_op_zg__ : Core.TyCon -> Core.TyCon -> bool :=
   fun a b =>
     match (Ord__TyCon_compare a b) with
-      | Lt => false
-      | Eq => false
-      | Gt => true
+    | Lt => false
+    | Eq => false
+    | Gt => true
     end.
 
 Local Definition Ord__TyCon_op_zgze__ : Core.TyCon -> Core.TyCon -> bool :=
   fun a b =>
     match (Ord__TyCon_compare a b) with
-      | Lt => false
-      | Eq => true
-      | Gt => true
+    | Lt => false
+    | Eq => true
+    | Gt => true
     end.
 
 Local Definition Ord__TyCon_op_zl__ : Core.TyCon -> Core.TyCon -> bool :=
   fun a b =>
     match (Ord__TyCon_compare a b) with
-      | Lt => true
-      | Eq => false
-      | Gt => false
+    | Lt => true
+    | Eq => false
+    | Gt => false
     end.
 
 Local Definition Ord__TyCon_op_zlze__ : Core.TyCon -> Core.TyCon -> bool :=
   fun a b =>
     match (Ord__TyCon_compare a b) with
-      | Lt => true
-      | Eq => true
-      | Gt => false
+    | Lt => true
+    | Eq => true
+    | Gt => false
     end.
 
 Local Definition Ord__TyCon_max : Core.TyCon -> Core.TyCon -> Core.TyCon :=
@@ -240,23 +265,25 @@ Local Definition Eq___TyCon_op_zsze__ : Core.TyCon -> Core.TyCon -> bool :=
   fun a b =>
     let scrut_0__ := Ord__TyCon_compare a b in
     match scrut_0__ with
-      | Eq => false
-      | _ => true
+    | Eq => false
+    | _ => true
     end.
 
-Program Instance Eq___TyCon : GHC.Base.Eq_ Core.TyCon := fun _ k =>
-    k {|GHC.Base.op_zeze____ := Eq___TyCon_op_zeze__ ;
-      GHC.Base.op_zsze____ := Eq___TyCon_op_zsze__ |}.
+Program Instance Eq___TyCon : GHC.Base.Eq_ Core.TyCon :=
+  fun _ k =>
+    k {| GHC.Base.op_zeze____ := Eq___TyCon_op_zeze__ ;
+         GHC.Base.op_zsze____ := Eq___TyCon_op_zsze__ |}.
 Admit Obligations.
 
-Program Instance Ord__TyCon : GHC.Base.Ord Core.TyCon := fun _ k =>
-    k {|GHC.Base.op_zl____ := Ord__TyCon_op_zl__ ;
-      GHC.Base.op_zlze____ := Ord__TyCon_op_zlze__ ;
-      GHC.Base.op_zg____ := Ord__TyCon_op_zg__ ;
-      GHC.Base.op_zgze____ := Ord__TyCon_op_zgze__ ;
-      GHC.Base.compare__ := Ord__TyCon_compare ;
-      GHC.Base.max__ := Ord__TyCon_max ;
-      GHC.Base.min__ := Ord__TyCon_min |}.
+Program Instance Ord__TyCon : GHC.Base.Ord Core.TyCon :=
+  fun _ k =>
+    k {| GHC.Base.op_zl____ := Ord__TyCon_op_zl__ ;
+         GHC.Base.op_zlze____ := Ord__TyCon_op_zlze__ ;
+         GHC.Base.op_zg____ := Ord__TyCon_op_zg__ ;
+         GHC.Base.op_zgze____ := Ord__TyCon_op_zgze__ ;
+         GHC.Base.compare__ := Ord__TyCon_compare ;
+         GHC.Base.max__ := Ord__TyCon_max ;
+         GHC.Base.min__ := Ord__TyCon_min |}.
 Admit Obligations.
 
 (* Translating `instance Unique.Uniquable Core.TyCon' failed: OOPS! Cannot find
@@ -281,72 +308,75 @@ Admit Obligations.
    find information for class Qualified "GHC.Show" "Show" unsupported *)
 
 Local Definition Eq___PrimElemRep_op_zeze__
-    : PrimElemRep -> PrimElemRep -> bool :=
+   : PrimElemRep -> PrimElemRep -> bool :=
   fun arg_0__ arg_1__ =>
-    match arg_0__ , arg_1__ with
-      | Int8ElemRep , Int8ElemRep => true
-      | Int16ElemRep , Int16ElemRep => true
-      | Int32ElemRep , Int32ElemRep => true
-      | Int64ElemRep , Int64ElemRep => true
-      | Word8ElemRep , Word8ElemRep => true
-      | Word16ElemRep , Word16ElemRep => true
-      | Word32ElemRep , Word32ElemRep => true
-      | Word64ElemRep , Word64ElemRep => true
-      | FloatElemRep , FloatElemRep => true
-      | DoubleElemRep , DoubleElemRep => true
-      | _ , _ => false
+    match arg_0__, arg_1__ with
+    | Int8ElemRep, Int8ElemRep => true
+    | Int16ElemRep, Int16ElemRep => true
+    | Int32ElemRep, Int32ElemRep => true
+    | Int64ElemRep, Int64ElemRep => true
+    | Word8ElemRep, Word8ElemRep => true
+    | Word16ElemRep, Word16ElemRep => true
+    | Word32ElemRep, Word32ElemRep => true
+    | Word64ElemRep, Word64ElemRep => true
+    | FloatElemRep, FloatElemRep => true
+    | DoubleElemRep, DoubleElemRep => true
+    | _, _ => false
     end.
 
 Local Definition Eq___PrimElemRep_op_zsze__
-    : PrimElemRep -> PrimElemRep -> bool :=
+   : PrimElemRep -> PrimElemRep -> bool :=
   fun a b => negb (Eq___PrimElemRep_op_zeze__ a b).
 
-Program Instance Eq___PrimElemRep : GHC.Base.Eq_ PrimElemRep := fun _ k =>
-    k {|GHC.Base.op_zeze____ := Eq___PrimElemRep_op_zeze__ ;
-      GHC.Base.op_zsze____ := Eq___PrimElemRep_op_zsze__ |}.
+Program Instance Eq___PrimElemRep : GHC.Base.Eq_ PrimElemRep :=
+  fun _ k =>
+    k {| GHC.Base.op_zeze____ := Eq___PrimElemRep_op_zeze__ ;
+         GHC.Base.op_zsze____ := Eq___PrimElemRep_op_zsze__ |}.
 Admit Obligations.
 
 Local Definition Eq___PrimRep_op_zeze__ : PrimRep -> PrimRep -> bool :=
   fun arg_0__ arg_1__ =>
-    match arg_0__ , arg_1__ with
-      | VoidRep , VoidRep => true
-      | PtrRep , PtrRep => true
-      | IntRep , IntRep => true
-      | WordRep , WordRep => true
-      | Int64Rep , Int64Rep => true
-      | Word64Rep , Word64Rep => true
-      | AddrRep , AddrRep => true
-      | FloatRep , FloatRep => true
-      | DoubleRep , DoubleRep => true
-      | VecRep a1 a2 , VecRep b1 b2 => (andb ((a1 GHC.Base.== b1)) ((a2 GHC.Base.==
-                                             b2)))
-      | _ , _ => false
+    match arg_0__, arg_1__ with
+    | VoidRep, VoidRep => true
+    | PtrRep, PtrRep => true
+    | IntRep, IntRep => true
+    | WordRep, WordRep => true
+    | Int64Rep, Int64Rep => true
+    | Word64Rep, Word64Rep => true
+    | AddrRep, AddrRep => true
+    | FloatRep, FloatRep => true
+    | DoubleRep, DoubleRep => true
+    | VecRep a1 a2, VecRep b1 b2 =>
+        (andb ((a1 GHC.Base.== b1)) ((a2 GHC.Base.== b2)))
+    | _, _ => false
     end.
 
 Local Definition Eq___PrimRep_op_zsze__ : PrimRep -> PrimRep -> bool :=
   fun a b => negb (Eq___PrimRep_op_zeze__ a b).
 
-Program Instance Eq___PrimRep : GHC.Base.Eq_ PrimRep := fun _ k =>
-    k {|GHC.Base.op_zeze____ := Eq___PrimRep_op_zeze__ ;
-      GHC.Base.op_zsze____ := Eq___PrimRep_op_zsze__ |}.
+Program Instance Eq___PrimRep : GHC.Base.Eq_ PrimRep :=
+  fun _ k =>
+    k {| GHC.Base.op_zeze____ := Eq___PrimRep_op_zeze__ ;
+         GHC.Base.op_zsze____ := Eq___PrimRep_op_zsze__ |}.
 Admit Obligations.
 
 Local Definition Eq___Injectivity_op_zeze__
-    : Core.Injectivity -> Core.Injectivity -> bool :=
+   : Core.Injectivity -> Core.Injectivity -> bool :=
   fun arg_0__ arg_1__ =>
-    match arg_0__ , arg_1__ with
-      | NotInjective , NotInjective => true
-      | Injective a1 , Injective b1 => ((a1 GHC.Base.== b1))
-      | _ , _ => false
+    match arg_0__, arg_1__ with
+    | NotInjective, NotInjective => true
+    | Injective a1, Injective b1 => ((a1 GHC.Base.== b1))
+    | _, _ => false
     end.
 
 Local Definition Eq___Injectivity_op_zsze__
-    : Core.Injectivity -> Core.Injectivity -> bool :=
+   : Core.Injectivity -> Core.Injectivity -> bool :=
   fun a b => negb (Eq___Injectivity_op_zeze__ a b).
 
-Program Instance Eq___Injectivity : GHC.Base.Eq_ Core.Injectivity := fun _ k =>
-    k {|GHC.Base.op_zeze____ := Eq___Injectivity_op_zeze__ ;
-      GHC.Base.op_zsze____ := Eq___Injectivity_op_zsze__ |}.
+Program Instance Eq___Injectivity : GHC.Base.Eq_ Core.Injectivity :=
+  fun _ k =>
+    k {| GHC.Base.op_zeze____ := Eq___Injectivity_op_zeze__ ;
+         GHC.Base.op_zsze____ := Eq___Injectivity_op_zsze__ |}.
 Admit Obligations.
 
 Axiom algTyConRhs : forall {A : Type}, A.
@@ -370,7 +400,7 @@ Axiom familyTyConInjectivityInfo : forall {A : Type}, A.
    the unknown constructor `FamilyTyCon' unsupported *)
 
 Definition initRecTc : RecTcChecker :=
-  RC (GHC.Num.fromInteger 100) NameEnv.emptyNameEnv.
+  RC #100 NameEnv.emptyNameEnv.
 
 Axiom isAbstractTyCon : forall {A : Type}, A.
 
@@ -460,10 +490,10 @@ Definition isGcPtrRep : PrimRep -> bool :=
 Definition isGenInjAlgRhs : AlgTyConRhs -> bool :=
   fun arg_0__ =>
     match arg_0__ with
-      | TupleTyCon _ _ => true
-      | DataTyCon _ _ => true
-      | AbstractTyCon distinct => distinct
-      | NewTyCon _ _ _ _ => false
+    | TupleTyCon _ _ => true
+    | DataTyCon _ _ => true
+    | AbstractTyCon distinct => distinct
+    | NewTyCon _ _ _ _ => false
     end.
 
 Axiom isGenerativeTyCon : forall {A : Type}, A.
@@ -525,18 +555,18 @@ Axiom isRecursiveTyCon : forall {A : Type}, A.
 
 Definition checkRecTc : RecTcChecker -> Core.TyCon -> option RecTcChecker :=
   fun arg_0__ arg_1__ =>
-    match arg_0__ , arg_1__ with
-      | (RC bound rec_nts as rc) , tc => let tc_name := tyConName tc in
-                                         if negb (isRecursiveTyCon tc) : bool
-                                         then Some rc
-                                         else match NameEnv.lookupNameEnv rec_nts tc_name with
-                                                | Some n => if n GHC.Base.>= bound : bool
-                                                            then None
-                                                            else Some (RC bound (NameEnv.extendNameEnv rec_nts tc_name
-                                                                                (n GHC.Num.+ GHC.Num.fromInteger 1)))
-                                                | None => Some (RC bound (NameEnv.extendNameEnv rec_nts tc_name
-                                                                         (GHC.Num.fromInteger 1)))
-                                              end
+    match arg_0__, arg_1__ with
+    | (RC bound rec_nts as rc), tc =>
+        let tc_name := tyConName tc in
+        if negb (isRecursiveTyCon tc) : bool
+        then Some rc
+        else match NameEnv.lookupNameEnv rec_nts tc_name with
+             | Some n =>
+                 if n GHC.Base.>= bound : bool
+                 then None
+                 else Some (RC bound (NameEnv.extendNameEnv rec_nts tc_name (n GHC.Num.+ #1)))
+             | None => Some (RC bound (NameEnv.extendNameEnv rec_nts tc_name #1))
+             end
     end.
 
 (* Translating `isRecursiveTyCon' failed: using a record pattern for the unknown
@@ -607,8 +637,9 @@ Axiom mkFunTyCon : forall {A : Type}, A.
 
 Axiom mkPrimTyCon' : forall {A : Type}, A.
 
-Definition mkKindTyCon : Name.Name -> list Core.TyBinder -> Kind -> list
-                         Core.Role -> Name.Name -> Core.TyCon :=
+Definition mkKindTyCon
+   : Name.Name ->
+     list Core.TyBinder -> Kind -> list Core.Role -> Name.Name -> Core.TyCon :=
   fun name binders res_kind roles rep_nm =>
     let tc := mkPrimTyCon' name binders res_kind roles false (Some rep_nm) in tc.
 
@@ -640,8 +671,8 @@ Axiom newTyConCo_maybe : forall {A : Type}, A.
 Definition newTyConCo : Core.TyCon -> Core.CoAxiom Core.Unbranched :=
   fun tc =>
     match newTyConCo_maybe tc with
-      | Some co => co
-      | None => Panic.panicStr (GHC.Base.hs_string__ "newTyConCo") (Panic.noString tc)
+    | Some co => co
+    | None => Panic.panicStr (GHC.Base.hs_string__ "newTyConCo") (Panic.noString tc)
     end.
 
 (* Translating `newTyConCo_maybe' failed: using a record pattern for the unknown
@@ -680,44 +711,44 @@ Axiom pprPromotionQuote : forall {A : Type}, A.
 Definition primElemRepSizeB : PrimElemRep -> GHC.Num.Int :=
   fun arg_0__ =>
     match arg_0__ with
-      | Int8ElemRep => GHC.Num.fromInteger 1
-      | Int16ElemRep => GHC.Num.fromInteger 2
-      | Int32ElemRep => GHC.Num.fromInteger 4
-      | Int64ElemRep => GHC.Num.fromInteger 8
-      | Word8ElemRep => GHC.Num.fromInteger 1
-      | Word16ElemRep => GHC.Num.fromInteger 2
-      | Word32ElemRep => GHC.Num.fromInteger 4
-      | Word64ElemRep => GHC.Num.fromInteger 8
-      | FloatElemRep => GHC.Num.fromInteger 4
-      | DoubleElemRep => GHC.Num.fromInteger 8
+    | Int8ElemRep => #1
+    | Int16ElemRep => #2
+    | Int32ElemRep => #4
+    | Int64ElemRep => #8
+    | Word8ElemRep => #1
+    | Word16ElemRep => #2
+    | Word32ElemRep => #4
+    | Word64ElemRep => #8
+    | FloatElemRep => #4
+    | DoubleElemRep => #8
     end.
 
 Definition primRepSizeW : DynFlags.DynFlags -> PrimRep -> GHC.Num.Int :=
   fun arg_0__ arg_1__ =>
-    match arg_0__ , arg_1__ with
-      | _ , IntRep => GHC.Num.fromInteger 1
-      | _ , WordRep => GHC.Num.fromInteger 1
-      | dflags , Int64Rep => GHC.Real.quot Constants.wORD64_SIZE (DynFlags.wORD_SIZE
-                                           dflags)
-      | dflags , Word64Rep => GHC.Real.quot Constants.wORD64_SIZE (DynFlags.wORD_SIZE
-                                            dflags)
-      | _ , FloatRep => GHC.Num.fromInteger 1
-      | dflags , DoubleRep => GHC.Real.quot (DynFlags.dOUBLE_SIZE dflags)
-                                            (DynFlags.wORD_SIZE dflags)
-      | _ , AddrRep => GHC.Num.fromInteger 1
-      | _ , PtrRep => GHC.Num.fromInteger 1
-      | _ , VoidRep => GHC.Num.fromInteger 0
-      | dflags , VecRep len rep => GHC.Real.quot (len GHC.Num.* primElemRepSizeB rep)
-                                                 (DynFlags.wORD_SIZE dflags)
+    match arg_0__, arg_1__ with
+    | _, IntRep => #1
+    | _, WordRep => #1
+    | dflags, Int64Rep =>
+        GHC.Real.quot Constants.wORD64_SIZE (DynFlags.wORD_SIZE dflags)
+    | dflags, Word64Rep =>
+        GHC.Real.quot Constants.wORD64_SIZE (DynFlags.wORD_SIZE dflags)
+    | _, FloatRep => #1
+    | dflags, DoubleRep =>
+        GHC.Real.quot (DynFlags.dOUBLE_SIZE dflags) (DynFlags.wORD_SIZE dflags)
+    | _, AddrRep => #1
+    | _, PtrRep => #1
+    | _, VoidRep => #0
+    | dflags, VecRep len rep =>
+        GHC.Real.quot (len GHC.Num.* primElemRepSizeB rep) (DynFlags.wORD_SIZE dflags)
     end.
 
 Definition primRepIsFloat : PrimRep -> option bool :=
   fun arg_0__ =>
     match arg_0__ with
-      | FloatRep => Some true
-      | DoubleRep => Some true
-      | VecRep _ _ => None
-      | _ => Some false
+    | FloatRep => Some true
+    | DoubleRep => Some true
+    | VecRep _ _ => None
+    | _ => Some false
     end.
 
 Axiom synTyConDefn_maybe : forall {A : Type}, A.
@@ -750,20 +781,19 @@ Definition kindTyConKeys : UniqSet.UniqSet Unique.Unique :=
     fun tc =>
       cons (Unique.getUnique tc) (GHC.Base.map Unique.getUnique (tyConDataCons tc)) in
   UniqSet.unionManyUniqSets (cons (UniqSet.mkUniqSet (cons
-                                                     PrelNames.liftedTypeKindTyConKey (cons PrelNames.starKindTyConKey
-                                                                                            (cons
-                                                                                            PrelNames.unicodeStarKindTyConKey
-                                                                                            (cons
-                                                                                            PrelNames.constraintKindTyConKey
-                                                                                            (cons PrelNames.tYPETyConKey
-                                                                                                  nil))))))
-                                  (GHC.Base.map (UniqSet.mkUniqSet GHC.Base.∘ tycon_with_datacons) (cons
-                                                                                                   TysWiredIn.runtimeRepTyCon
-                                                                                                   (cons
-                                                                                                   TysWiredIn.vecCountTyCon
-                                                                                                   (cons
-                                                                                                   TysWiredIn.vecElemTyCon
-                                                                                                   nil))))).
+                                                      PrelNames.liftedTypeKindTyConKey (cons PrelNames.starKindTyConKey
+                                                                                             (cons
+                                                                                              PrelNames.unicodeStarKindTyConKey
+                                                                                              (cons
+                                                                                               PrelNames.constraintKindTyConKey
+                                                                                               (cons
+                                                                                                PrelNames.tYPETyConKey
+                                                                                                nil)))))) (GHC.Base.map
+                                   (UniqSet.mkUniqSet GHC.Base.∘ tycon_with_datacons) (cons
+                                                                                       TysWiredIn.runtimeRepTyCon (cons
+                                                                                        TysWiredIn.vecCountTyCon (cons
+                                                                                         TysWiredIn.vecElemTyCon
+                                                                                         nil))))).
 
 Definition isKindTyCon : Core.TyCon -> bool :=
   fun tc => UniqSet.elementOfUniqSet (Unique.getUnique tc) kindTyConKeys.
@@ -801,8 +831,8 @@ Axiom tyConFlavour : forall {A : Type}, A.
 (* Translating `tyConFlavour' failed: using a record pattern for the unknown
    constructor `AlgTyCon' unsupported *)
 
-Definition tyConRepModOcc : Module.Module -> OccName.OccName -> (Module.Module *
-                            OccName.OccName)%type :=
+Definition tyConRepModOcc
+   : Module.Module -> OccName.OccName -> (Module.Module * OccName.OccName)%type :=
   fun tc_module tc_occ =>
     let rep_module :=
       if tc_module GHC.Base.== PrelNames.gHC_PRIM : bool
@@ -819,19 +849,17 @@ Definition mkPrelTyConRepName : Name.Name -> Core.TyConRepName :=
       if OccName.isTcOcc name_occ : bool
       then Unique.tyConRepNameUnique name_uniq
       else Unique.dataConRepNameUnique name_uniq in
-    match tyConRepModOcc name_mod name_occ with
-      | pair rep_mod rep_occ => Name.mkExternalName rep_uniq rep_mod rep_occ
-                                (Name.nameSrcSpan tc_name)
-    end.
+    let 'pair rep_mod rep_occ := tyConRepModOcc name_mod name_occ in
+    Name.mkExternalName rep_uniq rep_mod rep_occ (Name.nameSrcSpan tc_name).
 
-Definition mkPrimTyCon : Name.Name -> list Core.TyBinder -> Kind -> list
-                         Core.Role -> Core.TyCon :=
+Definition mkPrimTyCon
+   : Name.Name -> list Core.TyBinder -> Kind -> list Core.Role -> Core.TyCon :=
   fun name binders res_kind roles =>
     mkPrimTyCon' name binders res_kind roles true (Some GHC.Base.$
-                                                  mkPrelTyConRepName name).
+                                                   mkPrelTyConRepName name).
 
-Definition mkLiftedPrimTyCon : Name.Name -> list Core.TyBinder -> Kind -> list
-                               Core.Role -> Core.TyCon :=
+Definition mkLiftedPrimTyCon
+   : Name.Name -> list Core.TyBinder -> Kind -> list Core.Role -> Core.TyCon :=
   fun name binders res_kind roles =>
     let rep_nm := mkPrelTyConRepName name in
     mkPrimTyCon' name binders res_kind roles false (Some rep_nm).
@@ -861,9 +889,9 @@ Axiom tyConSingleDataCon_maybe : forall {A : Type}, A.
 Definition tyConSingleDataCon : Core.TyCon -> DataCon.DataCon :=
   fun tc =>
     match tyConSingleDataCon_maybe tc with
-      | Some c => c
-      | None => Panic.panicStr (GHC.Base.hs_string__ "tyConDataCon") (Panic.noString
-                                                                     tc)
+    | Some c => c
+    | None =>
+        Panic.panicStr (GHC.Base.hs_string__ "tyConDataCon") (Panic.noString tc)
     end.
 
 (* Translating `tyConSingleDataCon_maybe' failed: using a record pattern for the
@@ -892,10 +920,10 @@ Axiom unwrapNewTyCon_maybe : forall {A : Type}, A.
 Definition visibleDataCons : AlgTyConRhs -> list DataCon.DataCon :=
   fun arg_0__ =>
     match arg_0__ with
-      | AbstractTyCon _ => nil
-      | DataTyCon cs _ => cs
-      | NewTyCon c _ _ _ => cons c nil
-      | TupleTyCon c _ => cons c nil
+    | AbstractTyCon _ => nil
+    | DataTyCon cs _ => cs
+    | NewTyCon c _ _ _ => cons c nil
+    | TupleTyCon c _ => cons c nil
     end.
 
 (* Unbound variables:
@@ -908,16 +936,16 @@ Definition visibleDataCons : AlgTyConRhs -> list DataCon.DataCon :=
      FastStringEnv.fsEnvElts FieldLabel.FieldLabel FieldLabel.FieldLabelEnv
      GHC.Base.Eq_ GHC.Base.Ord GHC.Base.compare GHC.Base.map GHC.Base.op_z2218U__
      GHC.Base.op_zd__ GHC.Base.op_zeze__ GHC.Base.op_zgze__ GHC.Err.error GHC.Num.Int
-     GHC.Num.op_zp__ GHC.Num.op_zt__ GHC.Real.quot Maybes.orElse Module.Module
-     Name.Name Name.mkExternalName Name.nameModule Name.nameOccName Name.nameSrcSpan
-     Name.nameUnique NameEnv.NameEnv NameEnv.emptyNameEnv NameEnv.extendNameEnv
-     NameEnv.lookupNameEnv OccName.OccName OccName.isTcOcc OccName.mkTyConRepOcc
-     Panic.noString Panic.panicStr PrelNames.constraintKindTyConKey
-     PrelNames.gHC_PRIM PrelNames.gHC_TYPES PrelNames.liftedTypeKindTyConKey
-     PrelNames.starKindTyConKey PrelNames.tYPETyConKey
-     PrelNames.unicodeStarKindTyConKey TysWiredIn.runtimeRepTyCon
-     TysWiredIn.vecCountTyCon TysWiredIn.vecElemTyCon UniqSet.UniqSet
-     UniqSet.elementOfUniqSet UniqSet.mkUniqSet UniqSet.unionManyUniqSets
-     Unique.Unique Unique.dataConRepNameUnique Unique.getUnique
-     Unique.tyConRepNameUnique
+     GHC.Num.fromInteger GHC.Num.op_zp__ GHC.Num.op_zt__ GHC.Real.quot Maybes.orElse
+     Module.Module Name.Name Name.mkExternalName Name.nameModule Name.nameOccName
+     Name.nameSrcSpan Name.nameUnique NameEnv.NameEnv NameEnv.emptyNameEnv
+     NameEnv.extendNameEnv NameEnv.lookupNameEnv OccName.OccName OccName.isTcOcc
+     OccName.mkTyConRepOcc Panic.noString Panic.panicStr
+     PrelNames.constraintKindTyConKey PrelNames.gHC_PRIM PrelNames.gHC_TYPES
+     PrelNames.liftedTypeKindTyConKey PrelNames.starKindTyConKey
+     PrelNames.tYPETyConKey PrelNames.unicodeStarKindTyConKey
+     TysWiredIn.runtimeRepTyCon TysWiredIn.vecCountTyCon TysWiredIn.vecElemTyCon
+     UniqSet.UniqSet UniqSet.elementOfUniqSet UniqSet.mkUniqSet
+     UniqSet.unionManyUniqSets Unique.Unique Unique.dataConRepNameUnique
+     Unique.getUnique Unique.tyConRepNameUnique
 *)

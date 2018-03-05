@@ -5859,15 +5859,26 @@ Proof.
         apply bitmapInRange_inside in Heqb.
         apply inRange_bounded in Heqb.
         rewrite Z.ltb_ge in Heqb0.
-        assert (rPrefix r + 2 ^ Z.of_N (rBits r) <= x) by admit.
-        omega.
+        rewrite <- H0 in *.
+        rewrite H1 in *; clear f bm r H3 H2 H1 H0 HX X.
+        simpl in Heqb.
+        elimtype False.
+        admit.
       + solve_f_eq.
         apply bitmapInRange_inside in Heqb.
         apply inRange_bounded in Heqb.
         rewrite Z.ltb_lt in Heqb0.
         assert (rPrefix r + 2 ^ Z.of_N (rBits r) <= x) by admit.
         omega.
-    - replace (bitmapOf x - 1)%N with (N.ones (Z.to_N (suffixOf x)-1))%N by admit.
+    - assert ((bitmapOf x - 1)%N = (N.ones (Z.to_N (suffixOf x))%N)) as H6.
+        rewrite N.ones_equiv.
+        rewrite N.pred_sub.
+        unfold bitmapOf.
+        remember (suffixOf x) as o.
+        unfold bitmapOfSuffix, shiftLL.
+        rewrite N.shiftl_1_l.
+        reflexivity.
+      rewrite H6.
       replace (complement _%N) with
         (N.ldiff (N.ones WIDTH) (N.ones (Z.to_N (suffixOf x)))%N) by admit.
         (* These two probably cannot be proven, and will have to be done using
@@ -5879,8 +5890,13 @@ Proof.
         apply isBitMask0_land; try isBitMask.
         apply isBitMask0_ones.
         pose proof (suffixOf_lt_WIDTH x).
-        Fail Nomega. (* This should work, more or less *)
-        admit.
+        apply N2Z.inj_le.
+        rewrite Z2N.id; [omega|].
+        clear -H H4.
+        unfold suffixOf.
+        simpl.
+        apply land_nonneg_proj_r2l.
+        omega.
       + eapply Desc0_Sem.
         eapply tip_Desc0; try eassumption; try reflexivity.
         apply isBitMask0_land; try isBitMask.

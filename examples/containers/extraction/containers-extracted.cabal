@@ -1,0 +1,102 @@
+name:                containers-extracted
+version:             0
+-- synopsis:
+-- description:
+license:             MIT
+license-file:        LICENSE
+author:              Stephanie Weirich, Joachim Breitner
+maintainer:          mail@joachim-breitner.de
+-- copyright:
+category:            Data
+build-type:          Simple
+cabal-version:       >=1.10
+
+library
+  exposed-modules:     ExtractedSet
+
+-- the following are extracted and in src/, this list
+-- needs to be manually maintained
+  exposed-modules:     Bits
+  exposed-modules:     Prim
+  exposed-modules:     Ring_theory
+  exposed-modules:     List
+  exposed-modules:     NonEmpty
+  exposed-modules:     Const
+  exposed-modules:     QArith_base
+  exposed-modules:     Vector
+  exposed-modules:     BinInt
+  exposed-modules:     Real
+  exposed-modules:     Ndigits
+  exposed-modules:     Bvector
+  exposed-modules:     VectorDef
+  exposed-modules:     Wf
+  exposed-modules:     ZArith_dec
+  exposed-modules:     Err
+  exposed-modules:     Logic
+  exposed-modules:     Zeven
+  exposed-modules:     Datatypes
+  exposed-modules:     Foldable
+  exposed-modules:     BinPos
+  exposed-modules:     Fin
+  exposed-modules:     BinNums
+  exposed-modules:     Specif
+  exposed-modules:     Ascii
+  exposed-modules:     Wf_Z
+  exposed-modules:     Num
+  exposed-modules:     Enum
+  exposed-modules:     BinNat
+  exposed-modules:     Wf0
+  exposed-modules:     Nat
+  exposed-modules:     Zbool
+  exposed-modules:     List0
+  exposed-modules:     Either
+  exposed-modules:     Tuple
+  exposed-modules:     Ord
+  exposed-modules:     PeanoNat
+  exposed-modules:     Monoid
+  exposed-modules:     Basics
+  exposed-modules:     String
+  exposed-modules:     Sumbool
+  exposed-modules:     Plus
+  exposed-modules:     Internal
+  exposed-modules:     Maybe
+  exposed-modules:     Tuple0
+  exposed-modules:     Bool
+  exposed-modules:     Base
+  exposed-modules:     Semigroup
+  exposed-modules:     OldList
+  exposed-modules:     Char
+  exposed-modules:     PtrEquality
+  exposed-modules:     Traversable
+  exposed-modules:     Functor
+
+  build-depends:       base >=4.9 && <4.10
+  hs-source-dirs:      .
+  hs-source-dirs:      src
+  default-language:    Haskell2010
+
+benchmark bench
+  type: exitcode-stdio-1.0
+  main-is:             Bench.hs
+  hs-source-dirs:      .
+  build-depends:       base >=4.9 && <4.10
+  build-depends:       containers-extracted
+  build-depends:       deepseq
+  build-depends:       criterion
+  build-depends:       containers ==0.5.11.0
+  default-language:    Haskell2010
+
+test-suite tests-set
+  type: exitcode-stdio-1.0
+  main-is:             SetProperties.hs
+  hs-source-dirs:      .
+  build-depends:       base >=4.9 && <4.10
+  build-depends:       containers-extracted
+  build-depends:       transformers
+  build-depends:       HUnit
+  build-depends:       QuickCheck
+  build-depends:       test-framework-quickcheck2
+  build-depends:       test-framework-hunit
+  build-depends:       test-framework
+  build-depends:       containers ==0.5.11.0
+  default-language:    Haskell2010

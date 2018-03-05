@@ -18,6 +18,8 @@ Require Import mathcomp.ssreflect.ssreflect.
 Extraction Blacklist Prelude.
 Extraction Language Haskell.
 
+Set Warnings "-extraction-reserved-identifier".
+
 (*
  Warning: The following axioms must be realized in the extracted
  code: patternFailure PtrEquality.ptrEq PtrEquality.hetPtrEq

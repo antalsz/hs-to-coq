@@ -170,7 +170,7 @@ Definition default_foldable {f:Type -> Type}
        Coq.Program.Basics.compose Data.Monoid.getSum
                                   (foldMap _ _ _ Data.Monoid.Mk_Sum))
     (* toList *)
-    (fun a => fun t => GHC.Base.build (fun c n => @foldr _ _ c n t)).
+    (fun a => fun t => GHC.Base.build (fun _ c n => @foldr _ _ c n t)).
 
 Definition default_foldable_foldMap {f : Type -> Type}
   (foldMap : forall {m} {a}, forall `{GHC.Base.Monoid m}, (a -> m) -> f a -> m)
@@ -224,7 +224,8 @@ Local Definition Foldable__option_null : forall {a}, option a -> bool :=
   fun {a} => Foldable__option_foldr (fun arg_0__ arg_1__ => false) true.
 
 Local Definition Foldable__option_toList : forall {a}, option a -> list a :=
-  fun {a} => fun t => GHC.Base.build (fun c n => Foldable__option_foldr c n t).
+  fun {a} =>
+    fun t => GHC.Base.build' (fun _ => (fun c n => Foldable__option_foldr c n t)).
 
 Local Definition Foldable__option_foldl'
    : forall {b} {a}, (b -> a -> b) -> b -> option a -> b :=
@@ -362,7 +363,8 @@ Local Definition Foldable__Either_foldr {inst_a}
 
 Local Definition Foldable__Either_toList {inst_a}
    : forall {a}, (Data.Either.Either inst_a) a -> list a :=
-  fun {a} => fun t => GHC.Base.build (fun c n => Foldable__Either_foldr c n t).
+  fun {a} =>
+    fun t => GHC.Base.build' (fun _ => (fun c n => Foldable__Either_foldr c n t)).
 
 Local Definition Foldable__Either_foldl' {inst_a}
    : forall {b} {a}, (b -> a -> b) -> b -> (Data.Either.Either inst_a) a -> b :=
@@ -427,7 +429,9 @@ Local Definition Foldable__pair_type_null {inst_a}
 
 Local Definition Foldable__pair_type_toList {inst_a}
    : forall {a}, (GHC.Tuple.pair_type inst_a) a -> list a :=
-  fun {a} => fun t => GHC.Base.build (fun c n => Foldable__pair_type_foldr c n t).
+  fun {a} =>
+    fun t =>
+      GHC.Base.build' (fun _ => (fun c n => Foldable__pair_type_foldr c n t)).
 
 Local Definition Foldable__pair_type_foldl' {inst_a}
    : forall {b} {a}, (b -> a -> b) -> b -> (GHC.Tuple.pair_type inst_a) a -> b :=
@@ -484,7 +488,8 @@ Local Definition Foldable__Proxy_foldr
 
 Local Definition Foldable__Proxy_toList
    : forall {a}, Data.Proxy.Proxy a -> list a :=
-  fun {a} => fun t => GHC.Base.build (fun c n => Foldable__Proxy_foldr c n t).
+  fun {a} =>
+    fun t => GHC.Base.build' (fun _ => (fun c n => Foldable__Proxy_foldr c n t)).
 
 Local Definition Foldable__Proxy_foldl'
    : forall {b} {a}, (b -> a -> b) -> b -> Data.Proxy.Proxy a -> b :=
@@ -765,11 +770,13 @@ Definition msum {t} {m} {a} `{Foldable t} `{GHC.Base.MonadPlus m}
   asum.
 
 Definition concat {t} {a} `{Foldable t} : t (list a) -> list a :=
-  fun xs => GHC.Base.build (fun c n => foldr (fun x y => foldr c y x) n xs).
+  fun xs =>
+    GHC.Base.build' (fun _ => (fun c n => foldr (fun x y => foldr c y x) n xs)).
 
 Definition concatMap {t} {a} {b} `{Foldable t}
    : (a -> list b) -> t a -> list b :=
-  fun f xs => GHC.Base.build (fun c n => foldr (fun x b => foldr c b (f x)) n xs).
+  fun f xs =>
+    GHC.Base.build' (fun _ => (fun c n => foldr (fun x b => foldr c b (f x)) n xs)).
 
 Definition find {t} {a} `{Foldable t} : (a -> bool) -> t a -> option a :=
   fun p =>
@@ -971,7 +978,7 @@ Definition for__ {t} {f} {a} {b} `{Foldable t} `{GHC.Base.Applicative f}
      Data.Monoid.Mk_Dual Data.Monoid.Mk_Endo Data.Monoid.Mk_First
      Data.Monoid.Mk_Product Data.Monoid.Mk_Sum Data.Monoid.Product Data.Monoid.Sum
      Data.Proxy.Proxy GHC.Base.Alternative GHC.Base.Applicative GHC.Base.Eq_
-     GHC.Base.Monad GHC.Base.MonadPlus GHC.Base.Monoid GHC.Base.Ord GHC.Base.build
+     GHC.Base.Monad GHC.Base.MonadPlus GHC.Base.Monoid GHC.Base.Ord GHC.Base.build'
      GHC.Base.empty GHC.Base.flip GHC.Base.foldl GHC.Base.foldl' GHC.Base.foldr
      GHC.Base.id GHC.Base.mappend GHC.Base.mempty GHC.Base.op_z2218U__
      GHC.Base.op_zdzn__ GHC.Base.op_zeze__ GHC.Base.op_zgze__ GHC.Base.op_zgzg__

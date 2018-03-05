@@ -384,8 +384,11 @@ Definition foldl' {a}{b} k z0 xs :=
   fold_right (fun(v:a) (fn:b->b) => (fun(z:b) => fn (k z v))) (id : b -> b) xs z0.
 
 (* Less general type for build *)
-Definition build {a} : ((a -> list a -> list a) -> list a -> list a) -> list a :=
-  fun g => g (fun x y => x :: y) nil.
+Definition build {a} : (forall {b}, (a -> b -> b) -> b -> b) -> list a :=
+  fun g => g _ (fun x y => x :: y) nil.
+
+(* A copy of it, to facilitate the rewrite rule in the edits file *)
+Definition build' : forall {a}, (forall {b}, (a -> b -> b) -> b -> b) -> list a := @build.
 
 (********************************************************************)
 

@@ -363,7 +363,7 @@ builtInDefaultMethods = fmap M.fromList $ M.fromList $
        ("Data.Foldable.null"~>App (App "Data.Foldable.foldr" (PosArg (Parens (Fun ("arg_61__" :| ["arg_62__"]) "false")) :| [])) (PosArg "true" :| [])),
        ("Data.Foldable.product"~>App "Data.Foldable.hash_compose" (PosArg "Data.Monoid.getProduct" :| [PosArg (App "Data.Foldable.foldMap" (PosArg "Data.Monoid.Mk_Product" :| []))])),
        ("Data.Foldable.sum"~>App "Data.Foldable.hash_compose" (PosArg "Data.Monoid.getSum" :| [PosArg (App "Data.Foldable.foldMap" (PosArg "Data.Monoid.Mk_Sum" :| []))])),
-       ("Data.Foldable.toList"~>Fun ("arg_54__" :| []) (Coq.Match (MatchItem "arg_54__" Nothing Nothing :| []) Nothing [Equation (MultPattern (QualidPat (Bare "t") :| []) :| []) (App "GHC.Base.build" (PosArg (Parens (Fun ("arg_55__" :| ["arg_56__"]) (Coq.Match (MatchItem "arg_55__" Nothing Nothing :| [MatchItem "arg_56__" Nothing Nothing]) Nothing [Equation (MultPattern (QualidPat (Bare "c") :| [QualidPat (Bare "n")]) :| []) (App (App (App "Data.Foldable.foldr" (PosArg "c" :| [])) (PosArg "n" :| [])) (PosArg "t" :| []))]))) :| []))]))]
+       ("Data.Foldable.toList"~>Fun ("arg_54__" :| []) (Coq.Match (MatchItem "arg_54__" Nothing Nothing :| []) Nothing [Equation (MultPattern (QualidPat (Bare "t") :| []) :| []) (App "GHC.Base.build" (PosArg (Parens (Fun ("_" :| "arg_55__" : ["arg_56__"]) (Coq.Match (MatchItem "arg_55__" Nothing Nothing :| [MatchItem "arg_56__" Nothing Nothing]) Nothing [Equation (MultPattern (QualidPat (Bare "c") :| [QualidPat (Bare "n")]) :| []) (App (App (App "Data.Foldable.foldr" (PosArg "c" :| [])) (PosArg "n" :| [])) (PosArg "t" :| []))]))) :| []))]))]
 
 
 

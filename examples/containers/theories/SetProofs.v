@@ -6,6 +6,7 @@ Import GHC.Num.Notations.
 Require Import OrdTactic.
 Require Import Psatz.
 Require Import Tactics.
+Require Import Coq.Classes.Morphisms. (* For [Proper] *)
 Set Bullet Behavior "Strict Subproofs".
 
 (** ** Tactics for pointer equality *)
@@ -362,7 +363,7 @@ Ltac f_solver_simple  :=
   try reflexivity; (* for when we have an existential variable *)
   repeat multimatch goal with [ H : (forall i, _) |- _] => specialize (H i) end;
   repeat match goal with [ H : ?f = _ |- context [?f i] ] => rewrite H in *; clear H end;
-  simpl sem; rewrite ?orb_assoc, ?orb_false_r, ?orb_false_l;
+  simpl sem in *; rewrite ?orb_assoc, ?orb_false_r, ?orb_false_l;
   try reflexivity.
 
 
@@ -414,6 +415,12 @@ Ltac f_solver_cleanup :=
       => exfalso; rewrite (sem_resp_eq s i j H1) in H2; congruence
     |  H1 : (?i == ?j) = true , H2 : sem ?s ?i = false, H3 : sem ?s ?j = true |- _
       => exfalso; rewrite (sem_resp_eq s i j H1) in H2; congruence
+    |  HProper : Proper ((fun i j : e => i == j = true) ==> eq) ?P,
+       H1 : (?i == ?j) = true , H2 : ?P ?i = true, H3 : ?P ?j = false |- _
+      => exfalso; rewrite (HProper _ _ H1) in H2; congruence
+    |  HProper : Proper ((fun i j : e => i == j = true) ==> eq) ?P,
+       H1 : (?i == ?j) = true , H2 : ?P ?i = false, H3 : ?P ?j = true |- _
+      => exfalso; rewrite (HProper _ _ H1) in H2; congruence
   end.
 
 Ltac f_solver_step := first
@@ -519,7 +526,7 @@ Definition Desc s lb ub sz f : Prop :=
   (forall s,
     Bounded s lb ub ->
     size s = sz ->
-    sem s = f ->
+    (forall i, sem s i = f i) ->
     P s) ->
   P s.
 
@@ -541,7 +548,6 @@ Ltac applyDesc lem :=
     try assumption
   ].
 
-Require Import Coq.Logic.FunctionalExtensionality.
 Lemma showDesc :
   forall s lb ub sz f,
   Bounded s lb ub /\ size s = sz /\ (forall i, sem s i = f i) ->
@@ -549,7 +555,6 @@ Lemma showDesc :
 Proof.
   intros. intros P HP.
   apply HP; try intuition.
-  extensionality i. apply H2.
 Qed.
 
 Lemma Desc_change_f:
@@ -570,7 +575,7 @@ Definition Desc' s lb ub f : Prop :=
   (forall s,
     Bounded s lb ub ->
     True ->             (* So that we can still use [applyDesc] here *)
-    sem s = f ->
+    (forall i, sem s i = f i) ->
     P s) ->
   P s.
 
@@ -580,11 +585,7 @@ Lemma showDesc' :
   Desc' s lb ub f.
 Proof.
   intros. intros P HP.
-  enough (Bounded s lb ub /\ sem s = f ) by intuition.
-  destruct H as [HB Hf].
-  replace (sem s) with f by (symmetry; extensionality i; apply Hf).
-  replace (Bounded s lb ub) with True by (apply propositional_extensionality; tauto).
-  intuition.
+  apply HP; intuition.
 Qed.
 
 Ltac solve_Desc :=
@@ -1445,8 +1446,8 @@ Proof.
     + (showP; [assumption | reflexivity | reflexivity | f_solver]). 
     + eapply splitS_Desc; try eassumption. 
       intros sl1 sl2 HBsl1 HBsl2 Hsz Hsem. inversion H3; subst; clear H3.
-      eapply IHHb2_1. solve_Bounded. intros sil ????.
-      eapply IHHb2_2. solve_Bounded. intros sir ????.
+      eapply IHHb2_1. solve_Bounded. intros sil ????. clear IHHb2_1.
+      eapply IHHb2_2. solve_Bounded. intros sir ????. clear IHHb2_2.
       destruct (_ == _) eqn:Hcomp.
       * showP; [assumption | reflexivity | reflexivity | ].
         assert (size sl1 + size sl2 <= size sl) by (destruct (sem sl x0); lia).
@@ -1462,11 +1463,13 @@ Proof.
         -- destruct (sem sl x0); lia.
         -- assert (sem sl x0 = false) by (destruct (sem sl x0); try reflexivity; lia).
            rewrite H11 in Hsz.
-           lapply H4; [intro; subst|lia].
-           lapply H8; [intro; subst|lia].
-           clear H4 H8.
+           lapply H4; [intro; subst; clear H4|lia].
+           lapply H8; [intro; subst; clear H8|lia].
            f_solver.
         -- f_solver.
+           (* Small [f_solver] incompleteness. *)
+           rewrite Hsem0 in H9.
+           repeat (f_solver_cleanup; f_solver_step).
 Qed.
 
 (** ** Verification of [foldr] *)
@@ -1963,8 +1966,6 @@ Qed.
 
 (** ** Verification of [filter] *)
 
-Require Import Coq.Classes.Morphisms. (* For [Proper] *)
-
 (**
 For filter we need two lemmas: We need to know that [filter P s] is
 well-formed even if P does not respect equality (this is
@@ -2003,16 +2004,10 @@ Proof.
     destruct (P x) eqn:HPx.
     - destruct_ptrEq.
       + solve_Desc.
-        f_solver.
-        specialize (H0 _ _ Heqb0). congruence.
       + applyDesc link_Desc.
         solve_Desc.
-        f_solver.
-        specialize (H0 _ _ Heqb0). congruence.
     - applyDesc merge_Desc.
       solve_Desc.
-      f_solver.
-      specialize (H0 _ _ Heqb2). congruence.
 Qed.
 
 (** ** Verification of [partition] *)
@@ -2069,29 +2064,17 @@ Proof.
     - intros X HX; apply HX; clear X HX; split.
       + destruct_ptrEq.
         -- solve_Desc.
-           f_solver.
-           specialize (HProper _ _ Heqb1). congruence.
         -- applyDesc link_Desc.
            solve_Desc.
-           f_solver.
-           specialize (HProper _ _ Heqb1). congruence.
       + applyDesc merge_Desc.
         solve_Desc.
-        f_solver.
-        specialize (HProper _ _ Heqb3). congruence.
     - intros X HX; apply HX; clear X HX; split.
       + applyDesc merge_Desc.
         solve_Desc.
-        f_solver.
-        specialize (HProper _ _ Heqb3). congruence.
       + destruct_ptrEq.
         -- solve_Desc.
-           f_solver.
-           specialize (HProper _ _ Heqb1). congruence.
         -- applyDesc link_Desc.
            solve_Desc.
-           f_solver.
-           specialize (HProper _ _ Heqb1). congruence.
 Qed.
 
 (** ** Verification of [valid] *)

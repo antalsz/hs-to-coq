@@ -43,10 +43,7 @@ Definition oro : option a -> option a -> option a :=
 Infix "|||" := oro.
 
 Definition ando : option a -> option a -> option a :=
-  fun x y => match x with
-    | Some v => match y with None => None | _ => Some v end
-    | None => None
-    end.
+  fun x y =>  match y with None => None | _ => x end.
 
 Infix "&&&" := ando.
 
@@ -74,7 +71,7 @@ Proof. intros. destruct x; reflexivity. Qed.
 Lemma ando_None_r : forall x, x &&& None = None.
 Proof. intros. destruct x; reflexivity. Qed.
 
-Lemma ando_Some_Some : forall x y, Some x &&& Some y = Some x.
+Lemma ando_Some_r : forall x y, x &&& Some y = x.
 Proof. intros. reflexivity. Qed.
 
 Definition SomeIf (b : bool) (x : a) : option a :=
@@ -123,8 +120,8 @@ Ltac simpl_options := repeat lazymatch goal with
   | H: context [None    &&& ?x]         |- _ => rewrite (ando_None_l x) in H
   | |- context [?x      &&& None]            => rewrite (ando_None_r x)
   | H: context [?x      &&& None]       |- _ => rewrite (ando_None_r x) in H
-  | |- context [Some ?x &&& Some ?y]         => rewrite (ando_Some_Some x y)
-  | H: context [Some ?x &&& Some ?y]    |- _ => rewrite (ando_Some_Some x y) in H
+  | |- context [?x      &&& Some ?y]         => rewrite (ando_Some_r x y)
+  | H: context [?x      &&& Some ?y]    |- _ => rewrite (ando_Some_r x y) in H
   | |- context [isSome (?x &&& ?y)]          => rewrite (isSome_ando x y)
   | H: context [isSome (?x &&& ?y)]     |- _ => rewrite (isSome_ando x y) in H
   | |- context [isSome (?x ||| ?y)]          => rewrite (isSome_oro x y)
@@ -513,7 +510,7 @@ Ltac f_solver_simple  :=
   try reflexivity; (* for when we have an existential variable *)
   repeat multimatch goal with [ H : (forall i, _) |- _] => specialize (H i) end;
   repeat match goal with [ H : ?f = _ |- context [?f i] ] => rewrite H in *; clear H end;
-  simpl sem; simpl_options;
+  simpl sem in *; simpl_options;
   try reflexivity.
 
 
@@ -546,8 +543,8 @@ Ltac split_bool :=
     (* A bit ad-hoc, could be improved: *)
     | H : ?x ||| ?y = Some _   |- _ => split_bool_go x
     | H : ?x ||| ?y = None     |- _ => split_bool_go x
-    | H : ?x &&& ?y = Some _   |- _ => split_bool_go x
-    | H : ?x &&& ?y = None     |- _ => split_bool_go x
+    | H : context [?x &&& ?y]  |- _ => split_bool_go y
+    | H : context [?x &&& ?y]  |- _ => split_bool_go y
     | H : diffo ?x ?y = Some _ |- _ => split_bool_go y
     | H : diffo ?x ?y = None   |- _ => split_bool_go y
     | H : ?x || ?y = true      |- _ => split_bool_go x
@@ -688,7 +685,7 @@ Definition Desc s lb ub sz f : Prop :=
   (forall s,
     Bounded s lb ub ->
     size s = sz ->
-    sem s = f ->
+    (forall i, sem s i = f i) ->
     P s) ->
   P s.
 
@@ -710,15 +707,12 @@ Ltac applyDesc lem :=
     try assumption
   ].
 
-Require Import Coq.Logic.FunctionalExtensionality.
 Lemma showDesc :
   forall s lb ub sz f,
   Bounded s lb ub /\ size s = sz /\ (forall i, sem s i = f i) ->
   Desc s lb ub sz f.
 Proof.
-  intros. intros P HP.
-  apply HP; try intuition.
-  extensionality i. apply H2.
+  intros. intros P HP. apply HP; intuition.
 Qed.
 
 Lemma Desc_change_f:
@@ -739,7 +733,7 @@ Definition Desc' s lb ub f : Prop :=
   (forall s,
     Bounded s lb ub ->
     True ->             (* So that we can still use [applyDesc] here *)
-    sem s = f ->
+    (forall i, sem s i = f i) ->
     P s) ->
   P s.
 
@@ -748,12 +742,7 @@ Lemma showDesc' :
   Bounded s lb ub /\ (forall i, sem s i = f i) ->
   Desc' s lb ub f.
 Proof.
-  intros. intros P HP.
-  enough (Bounded s lb ub /\ sem s = f ) by intuition.
-  destruct H as [HB Hf].
-  replace (sem s) with f by (symmetry; extensionality i; apply Hf).
-  replace (Bounded s lb ub) with True by (apply propositional_extensionality; tauto).
-  intuition.
+  intros. intros P HP. apply HP; intuition.
 Qed.
 
 Ltac solve_Desc :=

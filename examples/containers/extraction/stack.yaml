@@ -1,0 +1,7 @@
+resolver: lts-8.3
+packages:
+- '.'
+flags: {}
+extra-deps:
+- containers-0.5.11.0
+extra-package-dbs: []

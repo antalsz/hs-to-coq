@@ -5799,6 +5799,178 @@ Proof.
     + eapply disjoint_Desc; eassumption.
 Qed.
 
+
+(** ** Verification of [split] *)
+
+Definition splitGo : Key -> IntSet -> IntSet * IntSet.
+Proof.
+  let rhs := eval unfold split in split in
+  match rhs with fun x s => match _ with Nil => match ?go _ _ with _ => _ end | _ => _ end => exact go end.
+Defined.
+
+Lemma isBitMask0_ones:
+  forall n, (n <= WIDTH)%N ->
+  isBitMask0 (N.ones n).
+Admitted.
+
+Lemma splitGo_Sem :
+  forall x s r f,
+  Desc s r f ->
+  forall (P : IntSet * IntSet -> Prop),
+  (forall s1 f1 s2 f2,
+    Sem s1 f1 -> Sem s2 f2 ->
+    (forall i, f1 i = f i && (i <? x)%Z) ->
+    (forall i, f2 i = f i && (x <? i)%Z) ->
+    P (s1, s2)) ->
+  P (splitGo x s) : Prop.
+Proof.
+  intros ???? HD.
+  induction HD; intros X HX.
+  * cbn -[bitmapOf prefixOf complement].
+    destruct (Z.ltb_spec x p); only 2: destruct (Z.ltb_spec p (prefixOf x)).
+    - eapply HX.
+      + constructor; intro; reflexivity.
+      + eapply DescSem. constructor; try eassumption.
+      + solve_f_eq.
+        apply bitmapInRange_inside in Heqb.
+        apply inRange_bounded in Heqb.
+        rewrite Z.ltb_lt in Heqb0.
+        omega.
+      + solve_f_eq.
+        apply bitmapInRange_inside in Heqb.
+        apply inRange_bounded in Heqb.
+        rewrite Z.ltb_ge in Heqb0.
+        omega.
+    - eapply HX.
+      + eapply DescSem. constructor; try eassumption.
+      + constructor; intro; reflexivity.
+      + solve_f_eq.
+        apply bitmapInRange_inside in Heqb.
+        apply inRange_bounded in Heqb.
+        rewrite Z.ltb_ge in Heqb0.
+        assert (rPrefix r + 2 ^ Z.of_N (rBits r) <= x) by admit.
+        omega.
+      + solve_f_eq.
+        apply bitmapInRange_inside in Heqb.
+        apply inRange_bounded in Heqb.
+        rewrite Z.ltb_lt in Heqb0.
+        assert (rPrefix r + 2 ^ Z.of_N (rBits r) <= x) by admit.
+        omega.
+    - replace (bitmapOf x - 1)%N with (N.ones (Z.to_N (suffixOf x)-1))%N by admit.
+      replace (complement _%N) with
+        (N.ldiff (N.ones WIDTH) (N.ones (Z.to_N (suffixOf x)))%N) by admit.
+        (* These two probably cannot be proven, and will have to be done using
+           and edit in the source file. But an admit is just as good, while we 
+           work on it. *)
+      eapply HX.
+      + eapply Desc0_Sem.
+        eapply tip_Desc0; try eassumption; try reflexivity.
+        apply isBitMask0_land; try isBitMask.
+        apply isBitMask0_ones.
+        pose proof (suffixOf_lt_WIDTH x).
+        Fail Nomega. (* This should work, more or less *)
+        admit.
+      + eapply Desc0_Sem.
+        eapply tip_Desc0; try eassumption; try reflexivity.
+        apply isBitMask0_land; try isBitMask.
+        apply isBitMask0_ldiff.
+        apply isBitMask0_ones.
+        Nomega.
+      + intro i.
+        rewrite H2.
+        rewrite bitmapInRange_land.
+        destruct (bitmapInRange r bm i) eqn:?; try reflexivity; simpl.
+        apply bitmapInRange_inside in Heqb.
+        apply inRange_bounded in Heqb. 
+        (* We could use a general lemma about (bitmapInRange r (N.ones n))
+           similar to bitmapInRange_inside and inRange_bounded *)
+        admit.
+      + intro i.
+        rewrite H2.
+        rewrite bitmapInRange_land.
+        destruct (bitmapInRange r bm i) eqn:?; try reflexivity; rewrite !andb_true_l.
+        apply bitmapInRange_inside in Heqb.
+        apply inRange_bounded in Heqb. 
+        (* As above, but also about bitmapInRange and ldiff. *)
+        admit.
+  * simpl. unfoldMethods.
+  
+    (* Move this to the right place *)
+    Lemma match_nomatch: forall x p ms, match_ x p ms = negb (nomatch x p ms). Admitted.
+    subst.
+    rewrite match_nomatch.
+    rewrite if_negb.
+    apply nomatch_zero; try assumption; intros.
+    + (* x is outside the tree *)
+      clear IHHD1 IHHD2.
+      destruct (Z.ltb_spec x (rPrefix r)).
+      - eapply HX.
+        ** constructor; intro; reflexivity.
+        ** eapply DescSem. econstructor; try eassumption; reflexivity.
+        ** intros i. simpl. rewrite H4.
+           rewrite (Desc_outside HD1) by admit. (* one of the range tactics should handle that *)
+           rewrite (Desc_outside HD2) by admit. (* one of the range tactics should handle that *)
+           reflexivity.
+        ** intros i. 
+           destruct (f i) eqn:?; try reflexivity; simpl; symmetry.
+           rewrite Z.ltb_lt.
+           assert (inRange i r = true).
+           { (* Use H4, then Desc_inside, then the tactics on ranges *)
+             admit.
+           }
+           apply inRange_bounded in H5.
+           omega.
+      - (* this is analogous to the other bullet, and also the first two case further 
+           up, where x was outside and above the tree *)
+        admit.
+    + eapply IHHD1. clear IHHD1 IHHD2.
+      intros sl fl sr fr Hsl Hsr Hfl Hfr.
+      eapply HX; clear HX.
+      - eassumption.
+      - apply union_Sem; [ eassumption | eapply DescSem; eassumption].
+      - solve_f_eq. exfalso.
+        rewrite Z.ltb_lt in Heqb0.
+        (* Find the contradiction, knowing that x in the left half of r*)
+        admit.
+      - solve_f_eq; exfalso;
+        rewrite Z.ltb_ge in Heqb0.
+        (* Find the contradiction, knowing that x in the left half of r*)
+        admit.
+        admit. (* dito (this duplication can be avoided by not using solve_f_eq *)
+    + (* analogous to the previous bullet, just using IHHD2 instead of IHHD1. *)
+Admitted.
+
+Lemma split_Sem :
+  forall x s f,
+  Sem s f ->
+  forall (P : IntSet * IntSet -> Prop),
+  (forall s1 f1 s2 f2,
+    Sem s1 f1 -> Sem s2 f2 ->
+    (forall i, f1 i = f i && (i <? x)%Z) ->
+    (forall i, f2 i = f i && (x <? i)%Z) ->
+    P (s1, s2)) ->
+  P (split x s) : Prop.
+Proof.
+  intros ??? HSem X HX.
+  unfold split.
+  fold splitGo.
+  destruct HSem.
+  * simpl. eapply HX; try constructor; try reflexivity; solve_f_eq.
+  * destruct HD eqn:?; unfoldMethods.
+    + eapply splitGo_Sem;
+      only 1: eassumption;
+      intros sl fl sr fr Hsl Hsr Hfl Hfr.
+      eapply HX; eassumption.
+    + destruct (Z.ltb_spec msk 0).
+      - (* This branch is invalid since we only allow positive members. Otherwise, we
+           would have to do something here. *)
+        exfalso. pose proof (rMask_nonneg r).  omega.
+      - eapply splitGo_Sem;
+        only 1: eassumption;
+        intros sl fl sr fr Hsl Hsr Hfl Hfr.
+        eapply HX; eassumption.
+Qed.
+
 (** *** Verification of [foldr] *)
 
 (* We can extract the argument to [wfFix2] from the definition of [foldrBits]. *)
@@ -6990,7 +7162,6 @@ Proof.
     intuition try congruence.
 Qed.
 
-
 (** *** Verification of [valid] *)
 
 (** The [valid] function is used in the test suite to detect whether
@@ -7186,6 +7357,7 @@ Proof.
   rewrite valid_tipsValid by assumption.
   reflexivity.
 Qed.
+
 
 
 (** ** Instantiating the [FSetInterface] *)

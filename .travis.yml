@@ -84,6 +84,11 @@ script:
  - make -C examples/containers
  - make -C examples/containers/theories
 
+# Test extraction
+ - make -C examples/containers/extraction/src
+ - ( cd examples/containers/extraction ; stack --no-terminal --install-ghc test)
+ - ( cd examples/containers/extraction ; stack --no-terminal --install-ghc bench)
+
  # disabled 2018-07-24 due to too big of a fall-out, and the
  # focus is somewhere on containers right now
  #- make -C examples/ghc/lib

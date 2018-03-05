@@ -18,7 +18,6 @@ Require Import Data.Bits.
 
 (* IntSet *)
 Require Import Data.IntSet.Internal.
-Require Import Popcount.
 Require Import IntSetProperties.
 Require Import IntSetProofs.
 
@@ -289,15 +288,10 @@ Proof.
   rewrite fromList_member.
   - rewrite (lock enumFromTo).
     apply/elemP; rewrite in_map_iff.
-    move: (valid_maskPowerOfTwo _ WFs) => /= /and3P [/Eq_eq Bits _ _].
-    move: Bits; rewrite /Utils.Containers.Internal.BitUtil.bitcount /popCount /=.
-    change 1%Z with (Z.of_N 1%N); rewrite N2Z.inj_iff => /N_popcount_1_pow2 [i def_i].
-    exists (Z.of_N i); split.
-    + change 2%Z with (Z.of_N 2%N); rewrite -N2Z.inj_pow def_i Z2N.id //.
-      case: m def_i {WFs} => [|m|m] //= def_i.
-      by move: (N_pow_pos_nonneg 2%N i N.lt_0_2); rewrite def_i.
-    + rewrite -(lock eftInt) eftInt_In.
-      admit. (* Unprovable *)
+    move: (valid_maskPowerOfTwo _ WFs) => /= /and3P [/Eq_eq/bitcount_0_1_power_Z_N [i ->] _ _].
+    exists (Z.of_N i); split => //.
+    rewrite -(lock eftInt) eftInt_In.
+    admit. (* Unprovable *)
   - apply Forall_forall => m' /in_map_iff [i [<-{m'} _]].
     by apply Z.pow_nonneg.
 Abort.
@@ -305,19 +299,47 @@ Abort.
 (* "Check that the prefix satisfies its invariant." *)
 Theorem thm_Prefix : toProp prop_Prefix.
 Proof.
-Abort.
+  elim => [p m | p bm | ] //.
+  rewrite /prop_Prefix -/prop_Prefix /toList (lock toAscList) /= => l IHl r IHr WFs;
+    move: (WFs) => /WF_Bin_children [WFl WFr].
+  move: (WFs) => [fs SEMs];
+    inversion SEMs as [|s' [ps ms] fs' DESCs]; subst s' fs';
+    inversion DESCs as [|l' rng_l fl r' rng_r fr p' m' rng_s' fs'
+                         DESCl DESCr POSrng subrange_l subrange_r def_p def_m def_fs];
+    subst p' m' l' r' rng_s' fs' p m.
+  apply/and3P; split; try by (apply IHl || apply IHr).
+  
+  rewrite !Foldable_all_ssreflect; apply/allP => /= x.
+  rewrite -(lock toAscList) in_elem toAscList_member // (member_Sem SEMs) => MEM_x.
+  
+  rewrite /match_ /mask; apply/Eq_eq.
+  case: (WF_Bin_mask_power_Z_Z WFs) => [i def_mask_s POS_i].
+  rewrite mask_to_upper_bits //; last by apply Z.lt_le_pred; move: POSrng => /N2Z.inj_lt.
+  rewrite Z.succ_pred -Z.ldiff_land Z.ldiff_ones_r; last apply N2Z.is_nonneg.
+  by move: (Desc_inside DESCs MEM_x); rewrite /inRange => /Z.eqb_spec ->.
+Qed.
 
 (* "Check that the left elements don't have the mask bit set, and the right ones
    do." *)
 Theorem thm_LeftRight : toProp prop_LeftRight.
 Proof.
-  rewrite /prop_LeftRight /= => -[p m l r | // | // ] WF_x; move: (WF_x) => /WF_Bin_children [WF_l WF_r].
-  rewrite !Foldable_and_all !Foldable_all_ssreflect !flat_map_cons_f;
-    apply/andP; split; apply/allP => /= b /mapP [] x; rewrite in_elem toList_member // => x_in {b}->.
-  - case: (WF_x) => [f /Sem_Desc0 [rng DESC0]].
-    inversion_clear DESC0 as [|s rng' f' rng_ f'_ DESC rng'_rng f_f'].
-    inversion DESC; subst.
-Abort.
+  rewrite /prop_LeftRight /= => -[p m l r | // | // ] WFs; move: (WFs) => /WF_Bin_children [WFl WFr].
+  move: (WFs) => /valid_maskRespected /= /andP [mask_l mask_r]; move: mask_l mask_r.
+  rewrite !Foldable_and_all !Foldable_all_ssreflect !flat_map_cons_f /zero /elems /toList.
+  move=> /allP /= mask_l /allP /= mask_r.
+  apply/andP; split; apply/allP => /= b /mapP [] /= x x_in {b}->; apply/Eq_eq.
+  - by move: (mask_l _ x_in) => /Z.eqb_spec ->.
+  - move: (mask_r _ x_in) => /Z.eqb_spec.
+    case: (WF_Bin_mask_power_Z_Z WFs) => [i ? POS_i]; subst m.
+    rewrite -Z.shiftl_1_l => NEQ_bits.
+    apply Z_eq_testbits_pos => ix POS_ix.
+    rewrite Z.land_spec Z.shiftl_spec // testbit_1.
+    case: (Z.eq_dec ix i) => [? | NEQ]; first subst.
+    + rewrite Z.sub_diag /= andbT Z_testbit_eq; apply/negP.
+      by contradict NEQ_bits; apply/Z.eqb_spec.
+    + suff: ~~ (ix - i =? 0)%Z by move=> /negbTE ->; rewrite andbF.
+      apply/negP => /Z.eqb_spec ?; omega.
+Qed.
 
 (********************************************************************
   IntSet operations are like Set operations
@@ -415,6 +437,7 @@ Qed.
 
 Theorem thm_split : toProp prop_split.
 Proof.
+  rewrite /prop_split /= => s WFs i POS_i.
 Abort.
 
 Theorem thm_splitMember : toProp prop_splitMember.

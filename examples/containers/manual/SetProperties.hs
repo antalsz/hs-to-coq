@@ -1,5 +1,6 @@
 {-# LANGUAGE CPP #-}
 {-# LANGUAGE TypeSynonymInstances #-}
+
 module Main where
 
 import ExtractedSet
@@ -33,10 +34,10 @@ main = defaultMain [ testCase "lookupLT" test_lookupLT
                    , testCase "lookupGT" test_lookupGT
                    , testCase "lookupLE" test_lookupLE
                    , testCase "lookupGE" test_lookupGE
-{-                   , testCase "lookupIndex" test_lookupIndex
-                   , testCase "findIndex" test_findIndex
+                   , testCase "lookupIndex" test_lookupIndex
+                {-   , testCase "findIndex" test_findIndex
                    , testCase "elemAt" test_elemAt
-                   , testCase "deleteAt" test_deleteAt
+                   , testCase "deleteAt" test_deleteAt -}
                    , testProperty "prop_Valid" prop_Valid
                    , testProperty "prop_Single" prop_Single
                    , testProperty "prop_Member" prop_Member
@@ -48,7 +49,7 @@ main = defaultMain [ testCase "lookupLT" test_lookupLT
                    , testProperty "prop_InsertValid" prop_InsertValid
                    , testProperty "prop_InsertDelete" prop_InsertDelete
                    , testProperty "prop_InsertBiased" prop_InsertBiased
-                   , testProperty "prop_DeleteValid" prop_DeleteValid
+                   , testProperty "prop_DeleteValid" prop_DeleteValid 
                    , testProperty "prop_Link" prop_Link
                    , testProperty "prop_Merge" prop_Merge
                    , testProperty "prop_UnionValid" prop_UnionValid
@@ -61,7 +62,7 @@ main = defaultMain [ testCase "lookupLT" test_lookupLT
                    , testProperty "prop_IntValid" prop_IntValid
                    , testProperty "prop_Int" prop_Int
                    , testProperty "prop_IntBiased" prop_IntBiased
-                   , testProperty "prop_Ordered" prop_Ordered
+{-                   , testProperty "prop_Ordered" prop_Ordered
                    , testProperty "prop_DescendingOrdered" prop_DescendingOrdered
                    , testProperty "prop_List" prop_List
                    , testProperty "prop_DescList" prop_DescList
@@ -72,7 +73,7 @@ main = defaultMain [ testCase "lookupLT" test_lookupLT
                    , testProperty "prop_isProperSubsetOf2" prop_isProperSubsetOf2
                    , testProperty "prop_isSubsetOf" prop_isSubsetOf
                    , testProperty "prop_isSubsetOf2" prop_isSubsetOf2
-                   , testProperty "prop_disjoint" prop_disjoint
+                   , testProperty "prop_disjoint" prop_disjoint 
                    , testProperty "prop_size" prop_size
                    , testProperty "prop_lookupMax" prop_lookupMax
                    , testProperty "prop_lookupMin" prop_lookupMin
@@ -147,7 +148,6 @@ test_lookupGE = do
 {--------------------------------------------------------------------
   Indexed
 --------------------------------------------------------------------}
-{-
 
 test_lookupIndex :: Assertion
 test_lookupIndex = do
@@ -156,6 +156,7 @@ test_lookupIndex = do
     fromJust (lookupIndex 5 (fromList [5,3])) @?= 1
     isJust   (lookupIndex 6 (fromList [5,3])) @?= False
 
+{-
 test_findIndex :: Assertion
 test_findIndex = do
     findIndex 3 (fromList [5,3]) @?= 0
@@ -170,7 +171,7 @@ test_deleteAt :: Assertion
 test_deleteAt = do
     deleteAt 0 (fromList [5,3]) @?= singleton 5
     deleteAt 1 (fromList [5,3]) @?= singleton 3
-
+-}
 {--------------------------------------------------------------------
   Arbitrary, reasonably balanced trees
 --------------------------------------------------------------------}
@@ -244,15 +245,15 @@ mkArb step n
      p <- step
      q <- step
      if dir
-       then return (Bin 2 q (singleton p) Tip)
-       else return (Bin 2 p Tip (singleton q))
+       then return (bin 2 q (singleton p) Tip)
+       else return (bin 2 p Tip (singleton q))
   | otherwise = do
       -- This assumes a balance factor of delta = 3
       let upper = (3*(n - 1)) `quot` 4
       let lower = (n + 2) `quot` 4
       ln <- liftGen $ choose (lower, upper)
       let rn = n - ln - 1
-      liftM3 (\lt x rt -> Bin n x lt rt) (mkArb step ln) step (mkArb step rn)
+      liftM3 (\lt x rt -> bin n x lt rt) (mkArb step ln) step (mkArb step rn)
 
 -- | Given a strictly increasing list of elements, produce an arbitrarily
 -- shaped set with exactly those elements.
@@ -313,6 +314,7 @@ forValidUnitTree f = forValid f
 prop_Valid :: Property
 prop_Valid = forValidUnitTree $ \t -> valid t
 
+
 {--------------------------------------------------------------------
   Single, Member, Insert, Delete
 --------------------------------------------------------------------}
@@ -370,6 +372,7 @@ prop_InsertBiased k t = (k, True) `member` kt
 
 prop_DeleteValid :: Int -> Property
 prop_DeleteValid k = forValidUnitTree $ \t -> valid (delete k (insert k t))
+
 
 {--------------------------------------------------------------------
   Balance
@@ -436,6 +439,7 @@ prop_Int xs ys = toAscList (intersection (fromList xs) (fromList ys))
 prop_disjoint :: Set Int -> Set Int -> Bool
 prop_disjoint a b = a `disjoint` b == null (a `intersection` b)
 
+{-
 {--------------------------------------------------------------------
   Lists
 --------------------------------------------------------------------}
@@ -643,3 +647,4 @@ isLeft (Left _) = True
 isLeft _ = False
 
 -}
+

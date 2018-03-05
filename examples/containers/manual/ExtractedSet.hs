@@ -103,26 +103,18 @@ instance Data.Foldable.Foldable S2.Set_ where
   foldr'  = S2.foldr'
   foldl   = S2.foldl
   foldl'  = S2.foldl'
-  foldr1  = error "partial"
-  foldl1  = error "partial"
+  foldr1  = error "foldr1: partial"
+  foldl1  = error "foldl1: partial"
   toList  = S2.toList
   null    = S2.null
   length  = error "fix int problem" -- S2.length
   elem    = S2.coq_Foldable__Set__elem eq_a
-  maximum = error "partial"
-  minimum = error "partial"
-  sum     = error "TODO"
-  product = error "TODO"
+  maximum = error "maximum: partial"
+  minimum = error "minimum: partial"
+  sum     = error "TODO, figure out Num shim"
+  product = error "TODO, figure out Num shim"
+
   
-toAscList :: Set a -> [a]
-toAscList = S2.toAscList
-
-fromAscList :: Eq a => [a] -> Set a
-fromAscList = S2.fromAscList eq_a
-
-fromList :: Prelude.Ord a => [a] -> Set a
-fromList = S2.fromList eq_a ord_a
-
 ----------------------------------------------------------------
 -- for unit tests
 ----------------------------------------------------------------
@@ -219,3 +211,95 @@ disjoint = S2.disjoint eq_a ord_a
 
 null :: Set a -> Bool
 null = S2.null
+
+{--------------------------------------------------------------------
+  Lists
+--------------------------------------------------------------------}
+
+
+fromAscList :: Eq a => [a] -> Set a
+fromAscList = S2.fromAscList eq_a
+
+fromDescList :: Eq a => [a] -> Set a
+fromDescList = S2.fromDescList eq_a
+
+fromList :: Prelude.Ord a => [a] -> Set a
+fromList = S2.fromList eq_a ord_a
+
+fromDistinctDescList :: [a] -> Set a
+fromDistinctDescList = S2.fromDistinctDescList
+
+fromDistinctAscList ::  [a] -> Set a
+fromDistinctAscList = S2.fromDistinctAscList 
+
+
+toDescList :: Set a -> [a]
+toDescList = S2.toDescList
+
+toAscList :: Set a -> [a]
+toAscList = S2.toAscList
+
+toList :: Set a -> [a]
+toList = S2.toList
+
+
+{--------------------------------------------------------------------
+  Set operations are like IntSet operations
+--------------------------------------------------------------------}
+
+map :: (Ord b) => (a -> b) -> Set a -> Set b
+map = S2.map eq_a ord_a
+
+filter = S2.filter
+
+take :: Int -> (Set a) -> Set a
+take x = S2.take (toBinZ x)
+
+drop :: Int -> Set a -> Set a
+drop x = S2.drop (toBinZ x)
+
+splitAt :: Int -> (Set a1) -> (Set a1,Set a1)
+splitAt x = S2.splitAt (toBinZ x)
+
+isProperSubsetOf :: Ord a => Set a -> Set a -> Bool
+isProperSubsetOf = S2.isProperSubsetOf eq_a ord_a
+
+isSubsetOf :: Ord a => Set a -> Set a -> Bool
+isSubsetOf = S2.isSubsetOf eq_a ord_a
+
+findMax :: Ord a => Set a -> a
+findMax = error "partial"
+
+findMin :: Ord a => Set a -> a
+findMin = error "partial"
+
+partition :: (a1 -> Prelude.Bool) -> (Set a1) -> (Set a1, Set a1)
+partition = S2.partition
+
+{-
+lookupMin :: Set Int -> f1 b4
+lookupMax :: Set Int -> f0 b2
+minView :: Set Int -> f1 (b4, b5)
+maxView :: Set Int -> f0 (b2, b3)
+splitMember :: Int -> Set Int -> (Set Int, Bool, Set Int)
+unions :: t2 -> Set Int
+splitRoot :: Set Int -> t
+partition :: (Integer -> Bool) -> Set Int -> (Set Int, Set Int)
+-}
+
+cartesianProduct = error "cartesianProduct: untranslated"
+powerSet = error "powerSet: untranslated"
+
+disjointUnion :: (Set a1) -> (Set a2) -> Set (Either a1 a2)
+disjointUnion = S2.disjointUnion
+
+dropWhileAntitone ::  (a1 -> Prelude.Bool) -> (Set a1) -> Set a1
+dropWhileAntitone = S2.dropWhileAntitone
+
+takeWhileAntitone :: (a1 -> Prelude.Bool) -> (Set a1) -> Set a1
+takeWhileAntitone = S2.takeWhileAntitone
+
+spanAntitone :: (a1 -> Prelude.Bool) -> (Set a1) -> (Set a1, Set a1)
+spanAntitone = S2.spanAntitone
+
+

@@ -28,6 +28,7 @@ Extract Inductive comparison => "Prelude.Ordering" ["Prelude.EQ" "Prelude.LT" "P
 Extract Inductive list => "[]" ["[]" "(:)"].
 Extract Inductive option => "Prelude.Maybe" [ "Prelude.Just" "Prelude.Nothing"].
 Extract Inductive prod => "(,)" ["(,)"].
+Extract Inductive Either.Either => "Prelude.Either" [ "Prelude.Left" "Prelude.Right" ].
 
 Extract Constant patternFailure => "GHC.Base.undefined".
 Extract Constant PtrEquality.ptrEq => "\ x y -> Prelude.False".

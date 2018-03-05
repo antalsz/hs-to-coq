@@ -62,7 +62,7 @@ main = defaultMain [ testCase "lookupLT" test_lookupLT
                    , testProperty "prop_IntValid" prop_IntValid
                    , testProperty "prop_Int" prop_Int
                    , testProperty "prop_IntBiased" prop_IntBiased
-{-                   , testProperty "prop_Ordered" prop_Ordered
+                   , testProperty "prop_Ordered" prop_Ordered
                    , testProperty "prop_DescendingOrdered" prop_DescendingOrdered
                    , testProperty "prop_List" prop_List
                    , testProperty "prop_DescList" prop_DescList
@@ -75,10 +75,10 @@ main = defaultMain [ testCase "lookupLT" test_lookupLT
                    , testProperty "prop_isSubsetOf2" prop_isSubsetOf2
                    , testProperty "prop_disjoint" prop_disjoint 
                    , testProperty "prop_size" prop_size
-                   , testProperty "prop_lookupMax" prop_lookupMax
+{-                   , testProperty "prop_lookupMax" prop_lookupMax
                    , testProperty "prop_lookupMin" prop_lookupMin
-                   , testProperty "prop_findMax" prop_findMax
-                   , testProperty "prop_findMin" prop_findMin
+--                   , testProperty "prop_findMax" prop_findMax
+--                   , testProperty "prop_findMin" prop_findMin
                    , testProperty "prop_ord" prop_ord
                    , testProperty "prop_readShow" prop_readShow
                    , testProperty "prop_foldR" prop_foldR
@@ -94,16 +94,16 @@ main = defaultMain [ testCase "lookupLT" test_lookupLT
                    , testProperty "prop_splitMember" prop_splitMember
                    , testProperty "prop_splitRoot" prop_splitRoot
                    , testProperty "prop_partition" prop_partition
-                   , testProperty "prop_filter" prop_filter
+                   , testProperty "prop_filter" prop_filter -}
                    , testProperty "takeWhileAntitone"    prop_takeWhileAntitone
                    , testProperty "dropWhileAntitone"    prop_dropWhileAntitone
                    , testProperty "spanAntitone"         prop_spanAntitone
                    , testProperty "take"                 prop_take
                    , testProperty "drop"                 prop_drop
                    , testProperty "splitAt"              prop_splitAt
-                   , testProperty "powerSet"             prop_powerSet
-                   , testProperty "cartesianProduct"     prop_cartesianProduct
-                   , testProperty "disjointUnion"        prop_disjointUnion -}
+--                   , testProperty "powerSet"             prop_powerSet
+--                   , testProperty "cartesianProduct"     prop_cartesianProduct
+                   , testProperty "disjointUnion"        prop_disjointUnion
                    ]
 
 -- A type with a peculiar Eq instance designed to make sure keys
@@ -439,7 +439,7 @@ prop_Int xs ys = toAscList (intersection (fromList xs) (fromList ys))
 prop_disjoint :: Set Int -> Set Int -> Bool
 prop_disjoint a b = a `disjoint` b == null (a `intersection` b)
 
-{-
+
 {--------------------------------------------------------------------
   Lists
 --------------------------------------------------------------------}
@@ -507,6 +507,7 @@ prop_isSubsetOf2 (TwoSets a b) = isSubsetOf a (union a b)
 prop_size :: Set Int -> Bool
 prop_size s = size s == List.length (toList s)
 
+{-
 prop_findMax :: Set Int -> Property
 prop_findMax s = not (null s) ==> findMax s == maximum (toList s)
 
@@ -536,7 +537,7 @@ prop_foldL s = foldl (flip (:)) [] s == List.foldl (flip (:)) [] (toList s)
 
 prop_foldL' :: Set Int -> Bool
 prop_foldL' s = foldl' (flip (:)) [] s == List.foldl' (flip (:)) [] (toList s)
-
+-}
 prop_map :: Set Int -> Bool
 prop_map s = map id s == s
 
@@ -545,7 +546,7 @@ prop_map2 f g s = map (apply f) (map (apply g) s) === map (apply f . apply g) s
 
 prop_mapMonotonic :: Set Int -> Property
 prop_mapMonotonic s = mapMonotonic id s === s
-
+{-
 prop_maxView :: Set Int -> Bool
 prop_maxView s = case maxView s of
     Nothing -> null s
@@ -577,7 +578,7 @@ prop_splitRoot s = loop ls && (s == unions ls)
 prop_partition :: Set Int -> Int -> Bool
 prop_partition s i = case partition odd s of
     (s1,s2) -> all odd (toList s1) && all even (toList s2) && s == s1 `union` s2
-
+-}
 prop_filter :: Set Int -> Int -> Bool
 prop_filter s i = partition odd s == (filter odd s, filter even s)
 
@@ -621,6 +622,7 @@ prop_spanAntitone xs' = valid tw .&&. valid dw
     xs = fromList xs'
     (tw, dw) = spanAntitone isLeft xs
 
+{-
 prop_powerSet :: Set Int -> Property
 prop_powerSet xs = valid ps .&&. ps === ps'
   where
@@ -636,6 +638,7 @@ prop_cartesianProduct :: Set Int -> Set Int -> Property
 prop_cartesianProduct xs ys =
   valid cp .&&. toList cp === liftA2 (,) (toList xs) (toList ys)
   where cp = cartesianProduct xs ys
+-}
 
 prop_disjointUnion :: Set Int -> Set Int -> Property
 prop_disjointUnion xs ys =
@@ -646,5 +649,5 @@ isLeft :: Either a b -> Bool
 isLeft (Left _) = True
 isLeft _ = False
 
--}
+
 

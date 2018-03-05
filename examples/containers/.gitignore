@@ -1,2 +1,5 @@
 *.hi
 *.o
+lib/**/*.hs
+lib/**/*.hi
+lib/**/*.o

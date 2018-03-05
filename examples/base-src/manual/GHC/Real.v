@@ -17,25 +17,26 @@ Unset Printing Implicit Defensive.
 
 Require Import ZArith.
 Require Import QArith.
-Module Q := Coq.QArith.QArith_base.
-Definition Rational := Q.Q.
+Require Import QArith.QArith_base.
+
+Definition Rational := QArith_base.Q.
 
 Definition Qabs (q : Rational) : Rational :=
-  match ((Q.Qnum q) ?= 0)%Z with
-    | Lt => Q.Qinv q
+  match ((QArith_base.Qnum q) ?= 0)%Z with
+    | Lt => QArith_base.Qinv q
     | _ => q
   end.
 
 Definition Qsignum (q : Rational) : Rational :=
-  Q.Qmake (Z.sgn (Q.Qnum q)) (Q.Qden q).
+  QArith_base.Qmake (Z.sgn (QArith_base.Qnum q)) (QArith_base.Qden q).
 
 Instance Num_Q__ : Num Rational := {
-  op_zp__   := Q.Qplus;
-  op_zm__   := Q.Qminus;
-  op_zt__   := Q.Qmult;
+  op_zp__   := QArith_base.Qplus;
+  op_zm__   := QArith_base.Qminus;
+  op_zt__   := QArith_base.Qmult;
   abs         := Qabs;
-  fromInteger := fun x => Q.Qmake x 1;
-  negate      := Q.Qinv;
+  fromInteger := fun x => QArith_base.Qmake x 1;
+  negate      := QArith_base.Qinv;
   signum      := Qsignum; }.
 
 
@@ -48,8 +49,8 @@ Instance Num_Q__ : Num Rational := {
    ord_default Qcompare.
 
 
-Definition numerator := Q.Qnum.
-Definition denominator := Q.Qden.
+Definition numerator := QArith_base.Qnum.
+Definition denominator := QArith_base.Qden.
 
 
 Class Real a `{(Num a)} `{(Ord a)} := {
@@ -91,7 +92,7 @@ Definition fromIntegral {a} {b} `{(Integral a)} `{(Num b)} : (a -> b) :=
   (fromInteger ∘ toInteger).
 
 Instance instance__Real_Int__72__ : (Real Int) := {
-  toRational := (fun x => Q.Qmake x 1)
+  toRational := (fun x => QArith_base.Qmake x 1)
 }.
 
 

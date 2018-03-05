@@ -26,7 +26,7 @@ HANDMOD = \
   CTZ \
   Popcount \
   BitTerminationProofs \
-#  BenchSet
+  Extract
 
 #  Data/SequenceManual \
 

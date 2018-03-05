@@ -108,6 +108,7 @@ VFILES:=Utils/Containers/Internal/PtrEquality.v\
   CTZ.v\
   Popcount.v\
   BitTerminationProofs.v\
+  Extract.v\
   Data/Set/Internal.v\
   Utils/Containers/Internal/BitQueue.v\
   Utils/Containers/Internal/BitUtil.v\

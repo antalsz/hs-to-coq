@@ -53,11 +53,19 @@ Proof.
 Qed.
 
 Theorem bitcount_0_1_power_Z_Z (n : Int) :
-  bitcount #0 (Z.to_N n) = #1 <-> ex2 (fun i => n = 2 ^ i)%Z (fun i => 0 <= i)%Z.
+  bitcount #0 (Z.to_N n) = #1 <-> ex2 (fun i => n = 2^i)%Z (fun i => 0 <= i)%Z.
 Proof.
   rewrite bitcount_0_1_power_Z_N; split=> [[i def_n] | [i def_n POS_i]].
   - exists (Z.of_N i) => //; apply N2Z.is_nonneg.
   - exists (Z.to_N i); rewrite def_n Z2N.id //.
+Qed.
+
+Theorem WF_Bin_mask_power_Z_Z {p : Prefix} {m : Mask} {l r : IntSet} :
+  WF (Bin p m l r) ->
+  ex2 (fun i => m = 2^i)%Z (fun i => 0 <= i)%Z.
+Proof.
+  move=> /valid_maskPowerOfTwo /= /and3P [/Eq_eq BITS _ _].
+  by apply bitcount_0_1_power_Z_Z.
 Qed.
 
 (******************************************************************************)

@@ -541,7 +541,6 @@ Ltac applyDesc lem :=
     try assumption
   ].
 
-Require Import Coq.Logic.PropExtensionality.
 Require Import Coq.Logic.FunctionalExtensionality.
 Lemma showDesc :
   forall s lb ub sz f,
@@ -549,12 +548,8 @@ Lemma showDesc :
   Desc s lb ub sz f.
 Proof.
   intros. intros P HP.
-  enough (Bounded s lb ub  /\ size s = sz /\ sem s = f ) by intuition.
-  destruct H as [HB [Hsz Hf]].
-  rewrite Hsz.
-  replace (sem s) with f by (symmetry; extensionality i; apply Hf).
-  replace (Bounded s lb ub) with True by (apply propositional_extensionality; tauto).
-  intuition.
+  apply HP; try intuition.
+  extensionality i. apply H2.
 Qed.
 
 Lemma Desc_change_f:

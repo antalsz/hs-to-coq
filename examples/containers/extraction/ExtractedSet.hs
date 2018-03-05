@@ -1,4 +1,4 @@
--- This module is a wrapper for the extracted version of Data.Set.Internal
+-- This module is a wrapper (shim) for the extracted version of Data.Set.Internal
 
 {-# LANGUAGE PatternSynonyms, ViewPatterns #-}
 
@@ -247,6 +247,12 @@ toList = S2.toList
   Set operations are like IntSet operations
 --------------------------------------------------------------------}
 
+foldl = S2.foldl
+foldr = S2.foldr
+foldl' = S2.foldl'
+foldr' = S2.foldr'
+
+
 map :: (Ord b) => (a -> b) -> Set a -> Set b
 map = S2.map eq_a ord_a
 
@@ -273,21 +279,35 @@ findMax = error "partial"
 findMin :: Ord a => Set a -> a
 findMin = error "partial"
 
-partition :: (a1 -> Prelude.Bool) -> (Set a1) -> (Set a1, Set a1)
+lookupMin :: Set a -> Maybe a
+lookupMin = S2.lookupMin
+
+lookupMax :: Set a -> Maybe a
+lookupMax = S2.lookupMax
+
+minView :: Set a -> Maybe (a,Set a)
+minView = S2.minView
+
+maxView :: Set a -> Maybe (a,Set a)
+maxView = S2.maxView
+
+splitMember :: Ord a => a -> Set a -> (Set a, Bool, Set a)
+splitMember m s = (x,y,z) where
+  ((x,y),z) = S2.splitMember eq_a ord_a m s
+
+unions :: Ord a => [Set a] -> Set a
+unions = S2.unions eq_a ord_a
+
+splitRoot :: Set a -> [Set a]
+splitRoot = S2.splitRoot
+
+partition :: (a -> Bool) -> Set a -> (Set a, Set a)
 partition = S2.partition
 
-{-
-lookupMin :: Set Int -> f1 b4
-lookupMax :: Set Int -> f0 b2
-minView :: Set Int -> f1 (b4, b5)
-maxView :: Set Int -> f0 (b2, b3)
-splitMember :: Int -> Set Int -> (Set Int, Bool, Set Int)
-unions :: t2 -> Set Int
-splitRoot :: Set Int -> t
-partition :: (Integer -> Bool) -> Set Int -> (Set Int, Set Int)
--}
-
+cartesianProduct :: Ord a => Set a -> Set a -> Set (a,a)
 cartesianProduct = error "cartesianProduct: untranslated"
+
+powerSet :: Set a -> Set (Set a)
 powerSet = error "powerSet: untranslated"
 
 disjointUnion :: (Set a1) -> (Set a2) -> Set (Either a1 a2)

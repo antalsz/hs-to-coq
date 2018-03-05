@@ -15,6 +15,7 @@ Require Coq.Program.Wf.
 Require Data.Foldable.
 Require Data.IntMap.Internal.
 Require Data.IntSet.Internal.
+Require Data.Semigroup.
 Require GHC.Base.
 Require GHC.Num.
 Require GHC.Prim.
@@ -39,10 +40,6 @@ Instance Default_UniqFM {a} : Err.Default (UniqFM a) :=
 Instance Unpeel_UniqFM ele
    : GHC.Prim.Unpeel (UniqFM ele) (Data.IntMap.Internal.IntMap ele) :=
   GHC.Prim.Build_Unpeel _ _ (fun x => let 'UFM y := x in y) UFM.
-
-(* Translating `instance forall {a}, Data.Semigroup.Semigroup (UniqFM.UniqFM a)'
-   failed: OOPS! Cannot find information for class Qualified "Data.Semigroup"
-   "Semigroup" unsupported *)
 
 (* Translating `instance forall {a}, forall `{Outputable.Outputable a},
    Outputable.Outputable (UniqFM.UniqFM a)' failed: OOPS! Cannot find information
@@ -364,6 +361,13 @@ Program Instance Monoid__UniqFM {a} : GHC.Base.Monoid (UniqFM a) :=
          GHC.Base.mconcat__ := Monoid__UniqFM_mconcat ;
          GHC.Base.mempty__ := Monoid__UniqFM_mempty |}.
 
+Local Definition Semigroup__UniqFM_op_zlzg__ {inst_a}
+   : (UniqFM inst_a) -> (UniqFM inst_a) -> (UniqFM inst_a) :=
+  plusUFM.
+
+Program Instance Semigroup__UniqFM {a} : Data.Semigroup.Semigroup (UniqFM a) :=
+  fun _ k => k {| Data.Semigroup.op_zlzg____ := Semigroup__UniqFM_op_zlzg__ |}.
+
 Definition plusUFM_C {elt}
    : (elt -> elt -> elt) -> UniqFM elt -> UniqFM elt -> UniqFM elt :=
   fun arg_0__ arg_1__ arg_2__ =>
@@ -439,9 +443,10 @@ Definition unitUFM {key} {elt} `{Unique.Uniquable key}
      Data.IntMap.Internal.partition Data.IntMap.Internal.singleton
      Data.IntMap.Internal.size Data.IntMap.Internal.splitLookup
      Data.IntMap.Internal.toList Data.IntMap.Internal.union
-     Data.IntMap.Internal.unionWith Data.IntSet.Internal.IntSet GHC.Base.Eq_
-     GHC.Base.Monoid GHC.Base.flip GHC.Base.foldr GHC.Base.map GHC.Base.op_z2218U__
-     GHC.Base.op_zd__ GHC.Base.op_zeze__ GHC.Base.op_zsze__ GHC.Num.Int
-     GHC.Prim.Build_Unpeel GHC.Prim.Unpeel GHC.Prim.coerce Unique.Uniquable
-     Unique.Unique Unique.getKey Unique.getUnique
+     Data.IntMap.Internal.unionWith Data.IntSet.Internal.IntSet
+     Data.Semigroup.Semigroup GHC.Base.Eq_ GHC.Base.Monoid GHC.Base.flip
+     GHC.Base.foldr GHC.Base.map GHC.Base.op_z2218U__ GHC.Base.op_zd__
+     GHC.Base.op_zeze__ GHC.Base.op_zsze__ GHC.Num.Int GHC.Prim.Build_Unpeel
+     GHC.Prim.Unpeel GHC.Prim.coerce Unique.Uniquable Unique.Unique Unique.getKey
+     Unique.getUnique
 *)

@@ -66,7 +66,6 @@ Program Instance Bifunctor__pair_type : Bifunctor GHC.Tuple.pair_type :=
     k {| bimap__ := fun {a} {b} {c} {d} => Bifunctor__pair_type_bimap ;
          first__ := fun {a} {b} {c} => Bifunctor__pair_type_first ;
          second__ := fun {b} {c} {a} => Bifunctor__pair_type_second |}.
-Admit Obligations.
 
 Local Definition Bifunctor__triple_type_bimap {inst_x1}
    : forall {a} {b} {c} {d},
@@ -97,7 +96,6 @@ Program Instance Bifunctor__triple_type {x1}
     k {| bimap__ := fun {a} {b} {c} {d} => Bifunctor__triple_type_bimap ;
          first__ := fun {a} {b} {c} => Bifunctor__triple_type_first ;
          second__ := fun {b} {c} {a} => Bifunctor__triple_type_second |}.
-Admit Obligations.
 
 Local Definition Bifunctor__quad_type_bimap {inst_x1} {inst_x2}
    : forall {a} {b} {c} {d},
@@ -131,7 +129,6 @@ Program Instance Bifunctor__quad_type {x1} {x2}
     k {| bimap__ := fun {a} {b} {c} {d} => Bifunctor__quad_type_bimap ;
          first__ := fun {a} {b} {c} => Bifunctor__quad_type_first ;
          second__ := fun {b} {c} {a} => Bifunctor__quad_type_second |}.
-Admit Obligations.
 
 Local Definition Bifunctor__quint_type_bimap {inst_x1} {inst_x2} {inst_x3}
    : forall {a} {b} {c} {d},
@@ -166,7 +163,6 @@ Program Instance Bifunctor__quint_type {x1} {x2} {x3}
     k {| bimap__ := fun {a} {b} {c} {d} => Bifunctor__quint_type_bimap ;
          first__ := fun {a} {b} {c} => Bifunctor__quint_type_first ;
          second__ := fun {b} {c} {a} => Bifunctor__quint_type_second |}.
-Admit Obligations.
 
 Local Definition Bifunctor__sext_type_bimap {inst_x1} {inst_x2} {inst_x3}
   {inst_x4}
@@ -204,7 +200,6 @@ Program Instance Bifunctor__sext_type {x1} {x2} {x3} {x4}
     k {| bimap__ := fun {a} {b} {c} {d} => Bifunctor__sext_type_bimap ;
          first__ := fun {a} {b} {c} => Bifunctor__sext_type_first ;
          second__ := fun {b} {c} {a} => Bifunctor__sext_type_second |}.
-Admit Obligations.
 
 Local Definition Bifunctor__sept_type_bimap {inst_x1} {inst_x2} {inst_x3}
   {inst_x4} {inst_x5}
@@ -242,7 +237,6 @@ Program Instance Bifunctor__sept_type {x1} {x2} {x3} {x4} {x5}
     k {| bimap__ := fun {a} {b} {c} {d} => Bifunctor__sept_type_bimap ;
          first__ := fun {a} {b} {c} => Bifunctor__sept_type_first ;
          second__ := fun {b} {c} {a} => Bifunctor__sept_type_second |}.
-Admit Obligations.
 
 Local Definition Bifunctor__Either_bimap
    : forall {a} {b} {c} {d},
@@ -269,7 +263,6 @@ Program Instance Bifunctor__Either : Bifunctor Data.Either.Either :=
     k {| bimap__ := fun {a} {b} {c} {d} => Bifunctor__Either_bimap ;
          first__ := fun {a} {b} {c} => Bifunctor__Either_first ;
          second__ := fun {b} {c} {a} => Bifunctor__Either_second |}.
-Admit Obligations.
 
 Local Definition Bifunctor__Const_bimap
    : forall {a} {b} {c} {d},
@@ -296,7 +289,6 @@ Program Instance Bifunctor__Const : Bifunctor Data.Functor.Const.Const :=
     k {| bimap__ := fun {a} {b} {c} {d} => Bifunctor__Const_bimap ;
          first__ := fun {a} {b} {c} => Bifunctor__Const_first ;
          second__ := fun {b} {c} {a} => Bifunctor__Const_second |}.
-Admit Obligations.
 
 (* Skipping instance Bifunctor__K1 *)
 

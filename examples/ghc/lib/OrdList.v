@@ -14,6 +14,7 @@ Require Coq.Program.Wf.
 
 Require Coq.Init.Datatypes.
 Require Data.Foldable.
+Require Data.Semigroup.
 Require GHC.Base.
 
 (* Converted type declarations: *)
@@ -43,10 +44,6 @@ Arguments Two {_} _ _.
    Outputable.Outputable (OrdList.OrdList a)' failed: OOPS! Cannot find information
    for class Qualified "Outputable" "Outputable" unsupported *)
 
-(* Translating `instance forall {a}, Data.Semigroup.Semigroup (OrdList.OrdList
-   a)' failed: OOPS! Cannot find information for class Qualified "Data.Semigroup"
-   "Semigroup" unsupported *)
-
 Definition appOL {a} : OrdList a -> OrdList a -> OrdList a :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
@@ -67,6 +64,14 @@ Local Definition Monoid__OrdList_mconcat {inst_a}
 Local Definition Monoid__OrdList_mappend {inst_a}
    : (OrdList inst_a) -> (OrdList inst_a) -> (OrdList inst_a) :=
   appOL.
+
+Local Definition Semigroup__OrdList_op_zlzg__ {inst_a}
+   : (OrdList inst_a) -> (OrdList inst_a) -> (OrdList inst_a) :=
+  appOL.
+
+Program Instance Semigroup__OrdList {a}
+   : Data.Semigroup.Semigroup (OrdList a) :=
+  fun _ k => k {| Data.Semigroup.op_zlzg____ := Semigroup__OrdList_op_zlzg__ |}.
 
 Definition consOL {a} : a -> OrdList a -> OrdList a :=
   fun a bs => Cons a bs.
@@ -156,5 +161,6 @@ Definition unitOL {a} : a -> OrdList a :=
 
 (* Unbound variables:
      bool cons false list nil true Coq.Init.Datatypes.app Data.Foldable.foldl
-     Data.Foldable.foldr GHC.Base.Functor GHC.Base.Monoid GHC.Base.const GHC.Base.map
+     Data.Foldable.foldr Data.Semigroup.Semigroup GHC.Base.Functor GHC.Base.Monoid
+     GHC.Base.const GHC.Base.map
 *)

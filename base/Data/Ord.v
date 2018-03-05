@@ -81,7 +81,6 @@ Program Instance Ord__Down {a} `{GHC.Base.Ord a} : GHC.Base.Ord (Down a) :=
          GHC.Base.compare__ := Ord__Down_compare ;
          GHC.Base.max__ := Ord__Down_max ;
          GHC.Base.min__ := Ord__Down_min |}.
-Admit Obligations.
 
 (* Translating `instance forall {a}, forall `{GHC.Read.Read a}, GHC.Read.Read
    (Data.Ord.Down a)' failed: OOPS! Cannot find information for class Qualified
@@ -103,7 +102,6 @@ Program Instance Eq___Down {a} `{GHC.Base.Eq_ a} : GHC.Base.Eq_ (Down a) :=
   fun _ k =>
     k {| GHC.Base.op_zeze____ := Eq___Down_op_zeze__ ;
          GHC.Base.op_zsze____ := Eq___Down_op_zsze__ |}.
-Admit Obligations.
 
 Definition comparing {a} {b} `{(GHC.Base.Ord a)}
    : (b -> a) -> b -> b -> comparison :=

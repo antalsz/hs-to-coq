@@ -214,7 +214,6 @@ Program Instance Arrow__arrow : Arrow GHC.Prim.arrow :=
          op_zazaza____ := fun {b} {c} {c'} => Arrow__arrow_op_zazaza__ ;
          op_ztztzt____ := fun {b} {c} {b'} {c'} => Arrow__arrow_op_ztztzt__ ;
          second__ := fun {b} {c} {d} => Arrow__arrow_second |}.
-Admit Obligations.
 
 (* Skipping instance Category__Kleisli *)
 
@@ -234,7 +233,6 @@ Local Definition ArrowApply__arrow_app
 
 Program Instance ArrowApply__arrow : ArrowApply GHC.Prim.arrow :=
   fun _ k => k {| app__ := fun {b} {c} => ArrowApply__arrow_app |}.
-Admit Obligations.
 
 (* Skipping instance ArrowApply__Kleisli *)
 
@@ -255,7 +253,6 @@ Program Instance Functor__ArrowMonad {a} `{Arrow a}
   fun _ k =>
     k {| GHC.Base.op_zlzd____ := fun {a} {b} => Functor__ArrowMonad_op_zlzd__ ;
          GHC.Base.fmap__ := fun {a} {b} => Functor__ArrowMonad_fmap |}.
-Admit Obligations.
 
 (* Skipping instance Applicative__ArrowMonad *)
 

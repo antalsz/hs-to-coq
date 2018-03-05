@@ -272,7 +272,6 @@ Program Instance Eq___IntSet : GHC.Base.Eq_ IntSet :=
   fun _ k =>
     k {| GHC.Base.op_zeze____ := Eq___IntSet_op_zeze__ ;
          GHC.Base.op_zsze____ := Eq___IntSet_op_zsze__ |}.
-Admit Obligations.
 
 Definition node : GHC.Base.String :=
   GHC.Base.hs_string__ "+--".
@@ -393,7 +392,6 @@ Program Instance Ord__IntSet : GHC.Base.Ord IntSet :=
          GHC.Base.compare__ := Ord__IntSet_compare ;
          GHC.Base.max__ := Ord__IntSet_max ;
          GHC.Base.min__ := Ord__IntSet_min |}.
-Admit Obligations.
 
 Definition fold {b} : (Key -> b -> b) -> b -> IntSet -> b :=
   foldr.
@@ -732,7 +730,6 @@ Local Definition Semigroup__IntSet_op_zlzg__ : IntSet -> IntSet -> IntSet :=
 
 Program Instance Semigroup__IntSet : Data.Semigroup.Semigroup IntSet :=
   fun _ k => k {| Data.Semigroup.op_zlzg____ := Semigroup__IntSet_op_zlzg__ |}.
-Admit Obligations.
 
 Local Definition Monoid__IntSet_mappend : IntSet -> IntSet -> IntSet :=
   _Data.Semigroup.<>_.
@@ -742,7 +739,6 @@ Program Instance Monoid__IntSet : GHC.Base.Monoid IntSet :=
     k {| GHC.Base.mappend__ := Monoid__IntSet_mappend ;
          GHC.Base.mconcat__ := Monoid__IntSet_mconcat ;
          GHC.Base.mempty__ := Monoid__IntSet_mempty |}.
-Admit Obligations.
 
 Definition lookupGE : Key -> IntSet -> option Key :=
   fun x t =>

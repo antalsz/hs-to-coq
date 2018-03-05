@@ -219,7 +219,7 @@ Local Definition Foldable__GenLocated_toList {inst_l}
   fun {a} =>
     fun arg_54__ =>
       let 't := arg_54__ in
-      GHC.Base.build (fun arg_55__ arg_56__ =>
+      GHC.Base.build (fun _ arg_55__ arg_56__ =>
                         match arg_55__, arg_56__ with
                         | c, n => Foldable__GenLocated_foldr c n t
                         end).

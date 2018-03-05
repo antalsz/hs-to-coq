@@ -58,7 +58,7 @@ Definition default_foldable {f:Type -> Type}
        Coq.Program.Basics.compose Data.Monoid.getSum
                                   (foldMap _ _ _ Data.Monoid.Mk_Sum))
     (* toList *)
-    (fun a => fun t => GHC.Base.build (fun c n => @foldr _ _ c n t)).
+    (fun a => fun t => GHC.Base.build (fun _ c n => @foldr _ _ c n t)).
 
 Definition default_foldable_foldMap {f : Type -> Type}
   (foldMap : forall {m} {a}, forall `{GHC.Base.Monoid m}, (a -> m) -> f a -> m)

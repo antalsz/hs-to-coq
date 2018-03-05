@@ -474,7 +474,7 @@ Local Definition Foldable__Min_toList : forall {a}, Min a -> list a :=
   fun {a} =>
     fun arg_54__ =>
       let 't := arg_54__ in
-      GHC.Base.build (fun arg_55__ arg_56__ =>
+      GHC.Base.build (fun _ arg_55__ arg_56__ =>
                         match arg_55__, arg_56__ with
                         | c, n => Foldable__Min_foldr c n t
                         end).
@@ -704,7 +704,7 @@ Local Definition Foldable__Max_toList : forall {a}, Max a -> list a :=
   fun {a} =>
     fun arg_54__ =>
       let 't := arg_54__ in
-      GHC.Base.build (fun arg_55__ arg_56__ =>
+      GHC.Base.build (fun _ arg_55__ arg_56__ =>
                         match arg_55__, arg_56__ with
                         | c, n => Foldable__Max_foldr c n t
                         end).
@@ -922,7 +922,7 @@ Local Definition Foldable__Arg_toList {inst_a}
   fun {a} =>
     fun arg_54__ =>
       let 't := arg_54__ in
-      GHC.Base.build (fun arg_55__ arg_56__ =>
+      GHC.Base.build (fun _ arg_55__ arg_56__ =>
                         match arg_55__, arg_56__ with
                         | c, n => Foldable__Arg_foldr c n t
                         end).
@@ -1125,7 +1125,7 @@ Local Definition Foldable__First_toList : forall {a}, First a -> list a :=
   fun {a} =>
     fun arg_54__ =>
       let 't := arg_54__ in
-      GHC.Base.build (fun arg_55__ arg_56__ =>
+      GHC.Base.build (fun _ arg_55__ arg_56__ =>
                         match arg_55__, arg_56__ with
                         | c, n => Foldable__First_foldr c n t
                         end).
@@ -1348,7 +1348,7 @@ Local Definition Foldable__Last_toList : forall {a}, Last a -> list a :=
   fun {a} =>
     fun arg_54__ =>
       let 't := arg_54__ in
-      GHC.Base.build (fun arg_55__ arg_56__ =>
+      GHC.Base.build (fun _ arg_55__ arg_56__ =>
                         match arg_55__, arg_56__ with
                         | c, n => Foldable__Last_foldr c n t
                         end).
@@ -1661,7 +1661,7 @@ Local Definition Foldable__Option_toList : forall {a}, Option a -> list a :=
   fun {a} =>
     fun arg_54__ =>
       let 't := arg_54__ in
-      GHC.Base.build (fun arg_55__ arg_56__ =>
+      GHC.Base.build (fun _ arg_55__ arg_56__ =>
                         match arg_55__, arg_56__ with
                         | c, n => Foldable__Option_foldr c n t
                         end).

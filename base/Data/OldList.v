@@ -399,10 +399,11 @@ Definition tailUnwords : GHC.Base.String -> GHC.Base.String :=
 
 Definition tails {a} : list a -> list (list a) :=
   fun lst =>
-    GHC.Base.build (fun c n =>
-                      let fix tailsGo xs
-                                := c xs (match xs with | nil => n | cons _ xs' => tailsGo xs' end) in
-                      tailsGo lst).
+    GHC.Base.build' (fun _ =>
+                       (fun c n =>
+                          let fix tailsGo xs
+                                    := c xs (match xs with | nil => n | cons _ xs' => tailsGo xs' end) in
+                          tailsGo lst)).
 
 Definition toListSB {a} : SnocBuilder a -> list a :=
   fun arg_0__ =>
@@ -550,7 +551,7 @@ End Notations.
      Gt None Some andb bool comparison cons false list nil op_zt__ option orb pair
      sortBy true Coq.Init.Datatypes.app Coq.Lists.List.flat_map
      Data.Maybe.listToMaybe Data.Maybe.maybe Data.Ord.comparing Data.Tuple.fst
-     Data.Tuple.snd GHC.Base.Eq_ GHC.Base.Ord GHC.Base.String GHC.Base.build
+     Data.Tuple.snd GHC.Base.Eq_ GHC.Base.Ord GHC.Base.String GHC.Base.build'
      GHC.Base.compare GHC.Base.flip GHC.Base.foldl GHC.Base.foldr GHC.Base.id
      GHC.Base.map GHC.Base.oneShot GHC.Base.op_z2218U__ GHC.Base.op_zd__
      GHC.Base.op_zeze__ GHC.Base.op_zgzgze__ GHC.Base.op_zlze__ GHC.Base.return_

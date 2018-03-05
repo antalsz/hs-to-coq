@@ -1,9 +1,15 @@
 # punned
 rename value Data.Set.Internal.MergeSet = Data.Set.Internal.Mk_MergeSet
 
+# Could be in base
+rename value GHC.Magic.lazy = id
+
 ## Don't translate material related to generic programming or 
 ## to serialization
 skip module Data.Data
+skip Data.Set.Internal.fromListConstr
+skip Data.Set.Internal.setDataType
+
 skip Data.Set.Internal.showTree
 skip Data.Set.Internal.showTreeWith
 skip Data.Set.Internal.showsTree
@@ -13,38 +19,8 @@ skip Data.Set.Internal.showsBars
 skip Data.Set.Internal.withBar
 skip Data.Set.Internal.withEmpty
 
-## can't handle semigroup??
-# skip module Data.Semigroup
-# skip Data.Set.Internal.Monoid__Set_
-# skip Data.Set.Internal.Monoid__MergeSet
-
+# This should be in an interface file, if we had some
 skip method Data.Semigroup.Semigroup stimes
-
-skip Data.Set.Internal.fromListConstr
-skip Data.Set.Internal.setDataType
-
-termination Data.Set.Internal.link {measure (Nat.add (set_size arg_1__) (set_size arg_2__))}
-obligations Data.Set.Internal.link termination_by_omega
-termination Data.Set.Internal.merge {measure (Nat.add (set_size arg_0__) (set_size arg_1__))}
-obligations Data.Set.Internal.merge termination_by_omega
-
-## local functions
-nonterminating Data.Set.Internal.fromDistinctAscList
-nonterminating Data.Set.Internal.fromAscList
-nonterminating Data.Set.Internal.fromList
-nonterminating Data.Set.Internal.fromDistinctDescList
-
-order Data.Set.Internal.Eq___Set_ Data.Set.Internal.Ord__Set_
-order Data.Set.Internal.Semigroup__Set_ Data.Set.Internal.Monoid__Set__mappend
-order Data.Set.Internal.Semigroup__MergeSet Data.Set.Internal.Monoid__MergeSet_mappend 
-
-rename value GHC.Magic.lazy = id
-
-## needs monoid instance
-skip Data.Set.Internal.cartesianProduct
-## bug???
-rename value GHC.Tuple.pair_type = pair
-order Data.Set.Internal.Foldable__Set_ Data.Set.Internal.cartesianProduct
 
 ## partial, bleh
 skip Data.Set.Internal.findMax
@@ -56,3 +32,21 @@ skip Data.Set.Internal.deleteFindMax
 ### also partial, and no Maybe alternative
 skip Data.Set.Internal.elemAt
 skip Data.Set.Internal.deleteAt
+
+# Termination
+termination Data.Set.Internal.link {measure (Nat.add (set_size arg_1__) (set_size arg_2__))}
+obligations Data.Set.Internal.link termination_by_omega
+termination Data.Set.Internal.merge {measure (Nat.add (set_size arg_0__) (set_size arg_1__))}
+obligations Data.Set.Internal.merge termination_by_omega
+
+## local functions. Proving this termination with program fixpoint looks very tricky.
+nonterminating Data.Set.Internal.fromDistinctAscList
+nonterminating Data.Set.Internal.fromAscList
+nonterminating Data.Set.Internal.fromList
+nonterminating Data.Set.Internal.fromDistinctDescList
+
+# Boring
+order Data.Set.Internal.Foldable__Set_ Data.Set.Internal.cartesianProduct
+order Data.Set.Internal.Eq___Set_ Data.Set.Internal.Ord__Set_
+order Data.Set.Internal.Semigroup__Set_ Data.Set.Internal.Monoid__Set__mappend
+order Data.Set.Internal.Semigroup__MergeSet Data.Set.Internal.Monoid__MergeSet_mappend 

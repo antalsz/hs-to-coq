@@ -3054,3 +3054,14 @@ Proof.
 Qed.
 
 End TypeClassLaws.
+
+(** * Rewrite rules *)
+
+(* 
+@
+{-# RULES "Set.toAscList" [~1] forall s . toAscList s = build (\c n -> foldrFB c n s) #-}
+@
+*)
+
+Lemma rule_toAscList: forall e (s : Set_ e), toAscList s = build (fun _ c n => foldrFB c n s).
+Proof. intros.  reflexivity. Qed.

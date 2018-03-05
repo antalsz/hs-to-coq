@@ -5811,7 +5811,18 @@ Defined.
 Lemma isBitMask0_ones:
   forall n, (n <= WIDTH)%N ->
   isBitMask0 (N.ones n).
-Admitted.
+Proof.
+  intros.
+  induction n using N.peano_ind; simpl.
+    constructor.
+  rewrite N.ones_equiv.
+  unfold isBitMask0.
+  apply N.pow_le_mono_r with (a:=2%N) in H; [|Nomega].
+  assert (0 < 2 ^ N.succ n)%N.
+    apply N_pow_pos_nonneg.
+    constructor.
+  Nomega.
+Qed.
 
 Lemma splitGo_Sem :
   forall x s r f,

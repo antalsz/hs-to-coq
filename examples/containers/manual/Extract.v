@@ -26,6 +26,7 @@ Extraction Language Haskell.
 Extract Inductive bool => "Prelude.Bool" ["Prelude.True" "Prelude.False" ].
 Extract Inductive comparison => "Prelude.Ordering" ["Prelude.EQ" "Prelude.LT" "Prelude.GT"].
 Extract Inductive list => "[]" ["[]" "(:)"].
+Extract Inductive option => "Prelude.Maybe" [ "Prelude.Just" "Prelude.Nothing"].
 
 Extract Constant patternFailure => "GHC.Base.undefined".
 Extract Constant PtrEquality.ptrEq => "\ x y -> Prelude.False".

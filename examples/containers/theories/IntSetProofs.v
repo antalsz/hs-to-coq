@@ -5879,11 +5879,15 @@ Proof.
         rewrite N.shiftl_1_l.
         reflexivity.
       rewrite H6.
-      replace (complement _%N) with
-        (N.ldiff (N.ones WIDTH) (N.ones (Z.to_N (suffixOf x)))%N) by admit.
+      assert ((@complement BitMap _ _
+                (N.add (N.ones (Z.to_N (suffixOf x))) (bitmapOf x))) =
+              N.ldiff (N.ones WIDTH) (N.ones (Z.to_N (suffixOf x)))%N) as H7.
+        rewrite <- N.land_lnot_diag.
+        admit.
         (* These two probably cannot be proven, and will have to be done using
            and edit in the source file. But an admit is just as good, while we 
            work on it. *)
+      rewrite H7.
       eapply HX.
       + eapply Desc0_Sem.
         eapply tip_Desc0; try eassumption; try reflexivity.

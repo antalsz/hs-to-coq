@@ -145,7 +145,7 @@ lookupGE = S2.lookupGE eq_a ord_a
 --------------------------------------------------
 
 lookupIndex :: Prelude.Ord a => a -> Set a -> Maybe Int
-lookupIndex = error "fix int" -- S2.lookupIndex eq_a ord_a
+lookupIndex x s = fromBinZ <$> S2.lookupIndex eq_a ord_a x s
 
 findIndex   = error "findIndex: partial function"
 elemAt      = error "elemAt: partial function"

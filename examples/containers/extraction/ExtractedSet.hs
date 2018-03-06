@@ -314,7 +314,7 @@ cartesianProduct :: Set a -> Set a -> Set (a,a)
 cartesianProduct = S2.cartesianProduct
 
 powerSet :: Set a -> Set (Set a)
-powerSet = error "powerSet: untranslated"
+powerSet = S2.powerSet
 
 disjointUnion :: (Set a1) -> (Set a2) -> Set (Either a1 a2)
 disjointUnion = S2.disjointUnion

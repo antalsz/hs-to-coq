@@ -102,7 +102,7 @@ main = defaultMain [ testCase "lookupLT" test_lookupLT
                    , testProperty "drop"                 prop_drop
                    , testProperty "splitAt"              prop_splitAt
 --                   , testProperty "powerSet"             prop_powerSet
---                   , testProperty "cartesianProduct"     prop_cartesianProduct
+                   , testProperty "cartesianProduct"     prop_cartesianProduct
                    , testProperty "disjointUnion"        prop_disjointUnion
                    ]
 

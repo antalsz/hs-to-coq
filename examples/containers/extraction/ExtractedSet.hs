@@ -310,8 +310,8 @@ splitRoot = S2.splitRoot
 partition :: (a -> Bool) -> Set a -> (Set a, Set a)
 partition = S2.partition
 
-cartesianProduct :: Ord a => Set a -> Set a -> Set (a,a)
-cartesianProduct = error "cartesianProduct: untranslated"
+cartesianProduct :: Set a -> Set a -> Set (a,a)
+cartesianProduct = S2.cartesianProduct
 
 powerSet :: Set a -> Set (Set a)
 powerSet = error "powerSet: untranslated"

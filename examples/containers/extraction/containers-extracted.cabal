@@ -100,4 +100,5 @@ test-suite tests-set
   build-depends:       test-framework-hunit
   build-depends:       test-framework
   build-depends:       containers ==0.5.11.0
+  build-depends:       deepseq
   default-language:    Haskell2010

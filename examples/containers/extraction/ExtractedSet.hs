@@ -16,6 +16,12 @@ import qualified Data.Semigroup
 import qualified Data.Monoid
 import qualified Data.Foldable
 
+import Control.DeepSeq(NFData,rnf)
+
+instance NFData a => NFData (S2.Set_ a) where
+    rnf S2.Tip           = ()
+    rnf (S2.Bin _ y l r) = rnf y `seq` rnf l `seq` rnf r
+
 ----------------------------------------------------
 
 instance Show BinNums.Coq_positive where
@@ -94,7 +100,6 @@ instance (Prelude.Ord a) => Data.Monoid.Monoid (S2.Set_ a) where
 instance (Show a) => Show (S2.Set_ a) where
   showsPrec p xs = showParen (p > 10) $
     showString "fromList " . shows (Data.Foldable.toList xs)
-
 
 instance Data.Foldable.Foldable S2.Set_ where
   fold    = S2.coq_Foldable__Set__fold    monoid_a
@@ -251,6 +256,7 @@ foldl = S2.foldl
 foldr = S2.foldr
 foldl' = S2.foldl'
 foldr' = S2.foldr'
+fold   = S2.fold
 
 
 map :: (Ord b) => (a -> b) -> Set a -> Set b

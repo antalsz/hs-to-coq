@@ -5811,7 +5811,18 @@ Defined.
 Lemma isBitMask0_ones:
   forall n, (n <= WIDTH)%N ->
   isBitMask0 (N.ones n).
-Admitted.
+Proof.
+  intros.
+  induction n using N.peano_ind; simpl.
+    constructor.
+  rewrite N.ones_equiv.
+  unfold isBitMask0.
+  apply N.pow_le_mono_r with (a:=2%N) in H; [|Nomega].
+  assert (0 < 2 ^ N.succ n)%N.
+    apply N_pow_pos_nonneg.
+    constructor.
+  Nomega.
+Qed.
 
 Lemma splitGo_Sem :
   forall x s r f,
@@ -5848,28 +5859,48 @@ Proof.
         apply bitmapInRange_inside in Heqb.
         apply inRange_bounded in Heqb.
         rewrite Z.ltb_ge in Heqb0.
-        assert (rPrefix r + 2 ^ Z.of_N (rBits r) <= x) by admit.
-        omega.
+        rewrite <- H0 in *.
+        rewrite H1 in *; clear f bm r H3 H2 H1 H0 HX X.
+        simpl in Heqb.
+        elimtype False.
+        admit.
       + solve_f_eq.
         apply bitmapInRange_inside in Heqb.
         apply inRange_bounded in Heqb.
         rewrite Z.ltb_lt in Heqb0.
         assert (rPrefix r + 2 ^ Z.of_N (rBits r) <= x) by admit.
         omega.
-    - replace (bitmapOf x - 1)%N with (N.ones (Z.to_N (suffixOf x)-1))%N by admit.
-      replace (complement _%N) with
-        (N.ldiff (N.ones WIDTH) (N.ones (Z.to_N (suffixOf x)))%N) by admit.
+    - assert ((bitmapOf x - 1)%N = (N.ones (Z.to_N (suffixOf x))%N)) as H6.
+        rewrite N.ones_equiv.
+        rewrite N.pred_sub.
+        unfold bitmapOf.
+        remember (suffixOf x) as o.
+        unfold bitmapOfSuffix, shiftLL.
+        rewrite N.shiftl_1_l.
+        reflexivity.
+      rewrite H6.
+      assert ((@complement BitMap _ _
+                (N.add (N.ones (Z.to_N (suffixOf x))) (bitmapOf x))) =
+              N.ldiff (N.ones WIDTH) (N.ones (Z.to_N (suffixOf x)))%N) as H7.
+        rewrite <- N.land_lnot_diag.
+        admit.
         (* These two probably cannot be proven, and will have to be done using
            and edit in the source file. But an admit is just as good, while we 
            work on it. *)
+      rewrite H7.
       eapply HX.
       + eapply Desc0_Sem.
         eapply tip_Desc0; try eassumption; try reflexivity.
         apply isBitMask0_land; try isBitMask.
         apply isBitMask0_ones.
         pose proof (suffixOf_lt_WIDTH x).
-        Fail Nomega. (* This should work, more or less *)
-        admit.
+        apply N2Z.inj_le.
+        rewrite Z2N.id; [omega|].
+        clear -H H4.
+        unfold suffixOf.
+        simpl.
+        apply land_nonneg_proj_r2l.
+        omega.
       + eapply Desc0_Sem.
         eapply tip_Desc0; try eassumption; try reflexivity.
         apply isBitMask0_land; try isBitMask.

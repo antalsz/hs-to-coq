@@ -18,8 +18,8 @@ Require Import Data.OldList  Proofs.Data.OldList.
 (* Ord *)
 Require Import OrdTactic.
 
-(* IntSet for non-IntSet theorems *)
-Require IntSetProofs.
+Require BitUtils.
+
 
 (******************************************************************************)
 (** Name dismabiguation -- MUST BE COPIED LOCALLY **)
@@ -224,8 +224,24 @@ Qed.
 Theorem Foldable_and_all {F} `{Foldable F} : and (t := F) =1 all id.
 Proof. done. Qed.
 
+Lemma Foldable_all_forallb:
+  forall {a} p (l : list a), Foldable.all p l = forallb p l.
+Proof.
+  intros.
+  induction l.
+  * reflexivity.
+  * simpl. rewrite <- IHl.
+    compute.
+    match goal with [ |- _ = match ?x with _ => _ end ] => destruct x end.
+    match goal with [ |- _ = match ?x with _ => _ end ] => destruct x end.
+    reflexivity.
+    match goal with [ |- match ?x with _ => _ end = _ ] => destruct x eqn:? end.
+    match goal with [ H : match ?x with _ => _ end = _ |- _] => destruct x eqn:? end.
+    congruence.
+Qed.
+
 Theorem Foldable_all_ssreflect {A} (p : A -> bool) (xs : list A) : all p xs = seq.all p xs.
-Proof. by rewrite IntSetProofs.Foldable_all_forallb. Qed.
+Proof. by rewrite Foldable_all_forallb. Qed.
 
 Theorem Foldable_list_any {A} :
   Data.Foldable.any =2 @GHC.List.any A.

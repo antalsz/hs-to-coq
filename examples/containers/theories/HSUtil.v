@@ -1,4 +1,7 @@
 (******************************************************************************)
+
+Set Warnings "-notation-overridden".
+
 (** Imports **)
 
 (* SSReflect *)
@@ -28,8 +31,6 @@ Notation reflect := ssrbool.reflect.
 
 (******************************************************************************)
 (** Notation disambiguation **)
-
-Set Warnings "-notation-overridden".
 
 Infix "=="  := op_zeze__ : bool_scope.
 Infix "===" := eq_op (at level 70, no associativity) : bool_scope.

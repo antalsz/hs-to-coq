@@ -12,6 +12,10 @@ Require Coq.Program.Wf.
 
 (* Preamble *)
 
+(* runIdentity is a record selector and we are still not qualifying those.
+   So import everything from the file so that it will be in scope. *)
+
+Require Import Data.Functor.Identity.
 
 
 (* Converted imports: *)
@@ -24,6 +28,7 @@ Require Data.Functor.Identity.
 Require Data.Maybe.
 Require Data.Semigroup.
 Require Data.Set.Internal.
+Require Data.Traversable.
 Require GHC.Base.
 Require GHC.Num.
 Require GHC.Prim.
@@ -141,6 +146,18 @@ Instance Map_Default {k}{v} : Default (Map k v) :=
 Instance AlteredDefault {k}{v} : Default (Altered k v) :=
   Build_Default _ AltSame.
 
+(* This doesn't translate automatically for two reasons:
+   it should be a fixpoint.
+   it reuses the variable a as both a term and type variable. *)
+Fixpoint functor__Map_op_zlzd__ {inst_k} {a} {b} (f: a) (m:(Map inst_k) b):
+  (Map inst_k) a :=
+      match f, m with
+      | _, Tip => Tip
+      | f, Bin sx kx _ l r => Bin sx kx f
+                                 (functor__Map_op_zlzd__ f l) 
+                                 (functor__Map_op_zlzd__ f r)
+      end.
+
 (* Converted value declarations: *)
 
 (* Translating `instance forall {k} {a}, forall `{Data.Data.Data k}
@@ -148,15 +165,11 @@ Instance AlteredDefault {k}{v} : Default (Altered k v) :=
    a)' failed: OOPS! Cannot find information for class Qualified "Data.Data" "Data"
    unsupported *)
 
-(* Skipping instance Functor__WhenMissing *)
-
 (* Skipping instance Category__WhenMissing *)
 
 (* Skipping instance Applicative__WhenMissing *)
 
 (* Skipping instance Monad__WhenMissing *)
-
-(* Skipping instance Functor__WhenMatched *)
 
 (* Skipping instance Category__WhenMatched *)
 
@@ -197,9 +210,8 @@ Instance AlteredDefault {k}{v} : Default (Altered k v) :=
    find information for class Qualified "Data.Functor.Classes" "Read1"
    unsupported *)
 
-(* Skipping instance Functor__Map *)
-
-(* Skipping instance Traversable__Map *)
+Local Definition Functor__Map_op_zlzd__ {k : Type} {a : Type} {b : Type} :=
+  (@functor__Map_op_zlzd__ k a b).
 
 Local Definition Foldable__Map_elem {inst_k}
    : forall {a}, forall `{GHC.Base.Eq_ a}, a -> (Map inst_k) a -> bool :=
@@ -685,6 +697,15 @@ Definition map {a} {b} {k} : (a -> b) -> Map k a -> Map k b :=
                  end in
     go.
 
+Local Definition Functor__Map_fmap {inst_k}
+   : forall {a} {b}, (a -> b) -> (Map inst_k) a -> (Map inst_k) b :=
+  fun {a} {b} => fun f m => map f m.
+
+Program Instance Functor__Map {k} : GHC.Base.Functor (Map k) :=
+  fun _ k =>
+    k {| GHC.Base.op_zlzd____ := fun {a} {b} => Functor__Map_op_zlzd__ ;
+         GHC.Base.fmap__ := fun {a} {b} => Functor__Map_fmap |}.
+
 Definition mapAccumL {a} {k} {b} {c}
    : (a -> k -> b -> (a * c)%type) -> a -> Map k b -> (a * Map k c)%type :=
   fix mapAccumL arg_0__ arg_1__ arg_2__
@@ -751,10 +772,53 @@ Definition mapWhenMatched {f} {a} {b} {k} {x} {y} `{GHC.Base.Functor f}
         (fun k x y => GHC.Base.fmap (GHC.Base.fmap f) (g k x y))
     end.
 
+Local Definition Functor__WhenMatched_fmap {inst_f} {inst_k} {inst_x} {inst_y}
+  `{GHC.Base.Functor inst_f}
+   : forall {a} {b},
+     (a -> b) ->
+     (WhenMatched inst_f inst_k inst_x inst_y) a ->
+     (WhenMatched inst_f inst_k inst_x inst_y) b :=
+  fun {a} {b} => mapWhenMatched.
+
+Local Definition Functor__WhenMatched_op_zlzd__ {inst_f} {inst_k} {inst_x}
+  {inst_y} `{GHC.Base.Functor inst_f}
+   : forall {a} {b},
+     a ->
+     (WhenMatched inst_f inst_k inst_x inst_y) b ->
+     (WhenMatched inst_f inst_k inst_x inst_y) a :=
+  fun {a} {b} => fun x => Functor__WhenMatched_fmap (GHC.Base.const x).
+
+Program Instance Functor__WhenMatched {f} {k} {x} {y} `{GHC.Base.Functor f}
+   : GHC.Base.Functor (WhenMatched f k x y) :=
+  fun _ k =>
+    k {| GHC.Base.op_zlzd____ := fun {a} {b} => Functor__WhenMatched_op_zlzd__ ;
+         GHC.Base.fmap__ := fun {a} {b} => Functor__WhenMatched_fmap |}.
+
 Definition mapWhenMissing {f} {a} {b} {k} {x} `{GHC.Base.Applicative f}
   `{GHC.Base.Monad f}
    : (a -> b) -> WhenMissing f k x a -> WhenMissing f k x b :=
   fun f t => Mk_WhenMissing missingValue missingValue.
+
+Local Definition Functor__WhenMissing_fmap {inst_f} {inst_k} {inst_x}
+  `{GHC.Base.Applicative inst_f} `{GHC.Base.Monad inst_f}
+   : forall {a} {b},
+     (a -> b) ->
+     (WhenMissing inst_f inst_k inst_x) a -> (WhenMissing inst_f inst_k inst_x) b :=
+  fun {a} {b} => mapWhenMissing.
+
+Local Definition Functor__WhenMissing_op_zlzd__ {inst_f} {inst_k} {inst_x}
+  `{GHC.Base.Applicative inst_f} `{GHC.Base.Monad inst_f}
+   : forall {a} {b},
+     a ->
+     (WhenMissing inst_f inst_k inst_x) b -> (WhenMissing inst_f inst_k inst_x) a :=
+  fun {a} {b} => fun x => Functor__WhenMissing_fmap (GHC.Base.const x).
+
+Program Instance Functor__WhenMissing {f} {k} {x} `{GHC.Base.Applicative f}
+  `{GHC.Base.Monad f}
+   : GHC.Base.Functor (WhenMissing f k x) :=
+  fun _ k =>
+    k {| GHC.Base.op_zlzd____ := fun {a} {b} => Functor__WhenMissing_op_zlzd__ ;
+         GHC.Base.fmap__ := fun {a} {b} => Functor__WhenMissing_fmap |}.
 
 Definition mapWithKey {k} {a} {b} : (k -> a -> b) -> Map k a -> Map k b :=
   fix mapWithKey arg_0__ arg_1__
@@ -1888,6 +1952,12 @@ Definition mergeA {f} {k} {a} {c} {b} `{GHC.Base.Applicative f} `{GHC.Base.Ord
         go
     end.
 
+Definition merge {k} {a} {c} {b} `{GHC.Base.Ord k}
+   : SimpleWhenMissing k a c ->
+     SimpleWhenMissing k b c ->
+     SimpleWhenMatched k a b c -> Map k a -> Map k b -> Map k c :=
+  fun g1 g2 f m1 m2 => runIdentity GHC.Base.$ mergeA g1 g2 f m1 m2.
+
 Definition mergeWithKey {k} {a} {b} {c} `{GHC.Base.Ord k}
    : (k -> a -> b -> option c) ->
      (Map k a -> Map k c) -> (Map k b -> Map k c) -> Map k a -> Map k b -> Map k c :=
@@ -2443,6 +2513,40 @@ Definition traverseWithKey {t} {k} {a} {b} `{GHC.Base.Applicative t}
                  end in
     go.
 
+Local Definition Traversable__Map_traverse {inst_k}
+   : forall {f} {a} {b},
+     forall `{GHC.Base.Applicative f},
+     (a -> f b) -> (Map inst_k) a -> f ((Map inst_k) b) :=
+  fun {f} {a} {b} `{GHC.Base.Applicative f} =>
+    fun f => traverseWithKey (fun arg_0__ => f).
+
+Local Definition Traversable__Map_sequenceA {inst_k}
+   : forall {f} {a},
+     forall `{GHC.Base.Applicative f}, (Map inst_k) (f a) -> f ((Map inst_k) a) :=
+  fun {f} {a} `{GHC.Base.Applicative f} => Traversable__Map_traverse GHC.Base.id.
+
+Local Definition Traversable__Map_sequence {inst_k}
+   : forall {m} {a},
+     forall `{GHC.Base.Monad m}, (Map inst_k) (m a) -> m ((Map inst_k) a) :=
+  fun {m} {a} `{GHC.Base.Monad m} => Traversable__Map_sequenceA.
+
+Local Definition Traversable__Map_mapM {inst_k}
+   : forall {m} {a} {b},
+     forall `{GHC.Base.Monad m},
+     (a -> m b) -> (Map inst_k) a -> m ((Map inst_k) b) :=
+  fun {m} {a} {b} `{GHC.Base.Monad m} => Traversable__Map_traverse.
+
+Program Instance Traversable__Map {k} : Data.Traversable.Traversable (Map k) :=
+  fun _ k =>
+    k {| Data.Traversable.mapM__ := fun {m} {a} {b} `{GHC.Base.Monad m} =>
+           Traversable__Map_mapM ;
+         Data.Traversable.sequence__ := fun {m} {a} `{GHC.Base.Monad m} =>
+           Traversable__Map_sequence ;
+         Data.Traversable.sequenceA__ := fun {f} {a} `{GHC.Base.Applicative f} =>
+           Traversable__Map_sequenceA ;
+         Data.Traversable.traverse__ := fun {f} {a} {b} `{GHC.Base.Applicative f} =>
+           Traversable__Map_traverse |}.
+
 Definition zipWithAMatched {f} {k} {x} {y} {z} `{GHC.Base.Applicative f}
    : (k -> x -> y -> f z) -> WhenMatched f k x y z :=
   fun f => Mk_WhenMatched GHC.Base.$ (fun k x y => Some Data.Functor.<$> f k x y).
@@ -2476,16 +2580,17 @@ Infix "Data.Map.Internal.\\" := (_\\_) (at level 99).
 End Notations.
 
 (* Unbound variables:
-     Bool.Sumbool.sumbool_of_bool Eq Gt Lt None Some andb bool comparison cons false
-     id list map_size negb nil op_zt__ option orb pair prod true Data.Bits.shiftL
-     Data.Bits.shiftR Data.Either.Either Data.Either.Left Data.Either.Right
-     Data.Foldable.Foldable Data.Foldable.foldl Data.Functor.op_zlzdzg__
-     Data.Functor.Identity.Identity Data.Functor.Identity.Mk_Identity
-     Data.Maybe.maybe Data.Semigroup.Semigroup Data.Semigroup.op_zlzg__
-     Data.Set.Internal.Bin Data.Set.Internal.Set_ Data.Set.Internal.Tip
-     Data.Set.Internal.splitMember GHC.Base.Applicative GHC.Base.Eq_ GHC.Base.Functor
-     GHC.Base.Monad GHC.Base.Monoid GHC.Base.Ord GHC.Base.compare GHC.Base.flip
-     GHC.Base.fmap GHC.Base.liftA3 GHC.Base.mappend GHC.Base.mempty
+     Bool.Sumbool.sumbool_of_bool Eq Gt Lt None Some Type andb bool comparison cons
+     false functor__Map_op_zlzd__ id list map_size negb nil op_zt__ option orb pair
+     prod runIdentity true Data.Bits.shiftL Data.Bits.shiftR Data.Either.Either
+     Data.Either.Left Data.Either.Right Data.Foldable.Foldable Data.Foldable.foldl
+     Data.Functor.op_zlzdzg__ Data.Functor.Identity.Identity
+     Data.Functor.Identity.Mk_Identity Data.Maybe.maybe Data.Semigroup.Semigroup
+     Data.Semigroup.op_zlzg__ Data.Set.Internal.Bin Data.Set.Internal.Set_
+     Data.Set.Internal.Tip Data.Set.Internal.splitMember Data.Traversable.Traversable
+     GHC.Base.Applicative GHC.Base.Eq_ GHC.Base.Functor GHC.Base.Monad
+     GHC.Base.Monoid GHC.Base.Ord GHC.Base.compare GHC.Base.const GHC.Base.flip
+     GHC.Base.fmap GHC.Base.id GHC.Base.liftA3 GHC.Base.mappend GHC.Base.mempty
      GHC.Base.op_z2218U__ GHC.Base.op_zd__ GHC.Base.op_zdzn__ GHC.Base.op_zeze__
      GHC.Base.op_zg__ GHC.Base.op_zgze__ GHC.Base.op_zl__ GHC.Base.op_zlze__
      GHC.Base.op_zsze__ GHC.Base.pure GHC.Err.error GHC.Num.Int GHC.Num.Num

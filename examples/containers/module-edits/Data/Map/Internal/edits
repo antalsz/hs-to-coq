@@ -1,4 +1,3 @@
-
 # Proxy#
 skip Data.Map.Internal.bogus
 skip Data.Map.Internal.deleteAlong
@@ -12,25 +11,24 @@ rename value Data.Map.Internal.bool = Data.Map.Internal.boolITE
 skip Data.Map.Internal.differenceWithKey
 skip Data.Map.Internal.differenceWith
 
-# Needs runIdentity
-skip Data.Map.Internal.merge
-
-# TODO
-skip Data.Map.Internal.Functor__Map
-skip Data.Map.Internal.Traversable__Map
+redefine Local Definition Data.Map.Internal.Functor__Map_op_zlzd__ 
+			{k:Type}{a:Type}{b:Type}:= @functor__Map_op_zlzd__ k a b.
 
 order Data.Map.Internal.Eq___Map Data.Map.Internal.Ord__Map
 order Data.Map.Internal.Semigroup__Map Data.Map.Internal.Monoid__Map_mappend 
 
+order Data.Map.Internal.Functor__WhenMissing  Data.Map.Internal.Applicative__WhenMissing Data.Map.Internal.Monad__WhenMissing_op_zgzg__ Data.Map.Internal.Monad__WhenMissing_return_
+order Data.Map.Internal.Functor__WhenMatched  Data.Map.Internal.Applicative__WhenMatched Data.Map.Internal.Monad__WhenMatched_op_zgzg__ Data.Map.Internal.Monad__WhenMatched_return_
 
-skip Data.Map.Internal.Functor__WhenMatched
-skip Data.Map.Internal.Functor__WhenMissing
-skip Data.Map.Internal.Monad__WhenMissing
-skip Data.Map.Internal.Applicative__WhenMissing
-skip Data.Map.Internal.Category__WhenMissing
-skip Data.Map.Internal.Monad__WhenMatched
-skip Data.Map.Internal.Applicative__WhenMatched
-skip Data.Map.Internal.Category__WhenMatched
+
+# skip Data.Map.Internal.Functor__WhenMissing
+ skip Data.Map.Internal.Applicative__WhenMissing
+ skip Data.Map.Internal.Monad__WhenMissing
+ skip Data.Map.Internal.Category__WhenMissing
+# skip Data.Map.Internal.Functor__WhenMatched
+ skip Data.Map.Internal.Applicative__WhenMatched
+ skip Data.Map.Internal.Monad__WhenMatched
+ skip Data.Map.Internal.Category__WhenMatched
 
 
 skip Data.Map.Internal.showTree

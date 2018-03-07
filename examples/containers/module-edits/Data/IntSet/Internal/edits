@@ -26,12 +26,19 @@ skip Data.IntSet.Internal.findMin
 skip Data.IntSet.Internal.deleteFindMax
 skip Data.IntSet.Internal.deleteFindMin
 
-# not actuall partial (since 0.5) but we 
-# cannot prove it???
-skip Data.IntSet.Internal.maxView
-skip Data.IntSet.Internal.minView
-skip Data.IntSet.Internal.deleteMax
-skip Data.IntSet.Internal.deleteMin
+# not actuall partial (since 0.5) but we cannot prove it???
+skip Data.IntSet.Internal.bin  ## move to midamble
+skip Data.IntSet.Internal.tip  ## move to midamble
+skip Data.IntSet.Internal.lowestBitSet  ## move to midamble
+skip Data.IntSet.Internal.highestBitSet  ## move to midamble
+skip Data.IntSet.Internal.indexOfTheOnlyBit  ## move to midamble
+skip Data.IntSet.Internal.bitmapOfSuffix  ## move to midamble
+
+redefine Definition Data.IntSet.Internal.maxView := maxView_Manual.
+order Data.IntSet.Internal.maxView Data.IntSet.Internal.deleteMax
+redefine Definition Data.IntSet.Internal.minView := minView_Manual.
+order Data.IntSet.Internal.minView Data.IntSet.Internal.deleteMin
+
 
 
 # The idiom `x .&. complement y` does not work at type `nat`, as the complement of

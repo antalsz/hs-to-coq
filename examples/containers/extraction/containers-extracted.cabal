@@ -71,7 +71,7 @@ library
   exposed-modules:     Functor
 
   build-depends:       base >=4.9 && <4.10
-  build-depends:       deepseq >= 1.4 && <1.5
+  build-depends:       deepseq
   hs-source-dirs:      .
   hs-source-dirs:      src
   default-language:    Haskell2010
@@ -84,7 +84,7 @@ benchmark bench
   build-depends:       containers-extracted
   build-depends:       deepseq
   build-depends:       criterion
-  build-depends:       containers ==0.5.11.0
+  build-depends:       containers
   default-language:    Haskell2010
 
 test-suite tests-set
@@ -99,6 +99,6 @@ test-suite tests-set
   build-depends:       test-framework-quickcheck2
   build-depends:       test-framework-hunit
   build-depends:       test-framework
-  build-depends:       containers ==0.5.11.0
+  build-depends:       containers
   build-depends:       deepseq
   default-language:    Haskell2010

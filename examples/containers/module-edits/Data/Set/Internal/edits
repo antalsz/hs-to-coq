@@ -18,6 +18,7 @@ skip Data.Set.Internal.withEmpty
 
 
 ## partial, bleh
+## but equivalent functionality in lookupMax,lookupMin,lookupIndex,maxView,minView
 skip Data.Set.Internal.findMax
 skip Data.Set.Internal.findMin
 skip Data.Set.Internal.findIndex

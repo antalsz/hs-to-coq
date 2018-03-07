@@ -19,14 +19,20 @@ termination go in Data.IntSet.Internal.foldr'Bits {measure (Coq.NArith.BinNat.N.
 obligations Data.IntSet.Internal.foldr'Bits BitTerminationProofs.termination_foldl
 
 # partial
+# no lookupMax,lookupMin replacement
+# have minView & maxView, but we are not translating them
 skip Data.IntSet.Internal.findMax
 skip Data.IntSet.Internal.findMin
-skip Data.IntSet.Internal.maxView
-skip Data.IntSet.Internal.deleteMax
 skip Data.IntSet.Internal.deleteFindMax
-skip Data.IntSet.Internal.minView
-skip Data.IntSet.Internal.deleteMin
 skip Data.IntSet.Internal.deleteFindMin
+
+# not actuall partial (since 0.5) but we 
+# cannot prove it???
+skip Data.IntSet.Internal.maxView
+skip Data.IntSet.Internal.minView
+skip Data.IntSet.Internal.deleteMax
+skip Data.IntSet.Internal.deleteMin
+
 
 # The idiom `x .&. complement y` does not work at type `nat`, as the complement of
 # a natural number is negative. But the expression [x `xor` (x .&. y)] is equivalent:

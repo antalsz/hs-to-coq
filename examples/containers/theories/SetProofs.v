@@ -1859,6 +1859,17 @@ Proof.
   * reflexivity.
 Qed.
 
+Lemma elem_app:
+  forall {a} `{Eq_ a} (i : a) xs ys,
+  List.elem i (xs ++ ys) = List.elem i xs || List.elem i ys.
+Proof.
+  intros.
+  induction xs.
+  * reflexivity.
+  * simpl. rewrite IHxs. rewrite orb_assoc. reflexivity.
+Qed.
+
+
 Lemma toList_Bin:
   forall sz x (s1 s2 : Set_ e),
   toList (Bin sz x s1 s2) = toList s1 ++ [x] ++ toList s2.
@@ -1869,16 +1880,6 @@ Proof.
   rewrite !foldr_const_append.
   rewrite app_nil_r.
   reflexivity.
-Qed.
-
-Lemma elem_app:
-  forall {a} `{Eq_ a} (i : a) xs ys,
-  List.elem i (xs ++ ys) = List.elem i xs || List.elem i ys.
-Proof.
-  intros.
-  induction xs.
-  * reflexivity.
-  * simpl. rewrite IHxs. rewrite orb_assoc. reflexivity.
 Qed.
 
 Lemma toList_sem:
@@ -1932,6 +1933,141 @@ Proof.
       intuition.
     - subst. assumption.
     - intuition.
+Qed.
+
+Lemma toList_Tip: toList (@Tip e) = [].
+Proof. reflexivity. Qed.
+
+
+Lemma toList_bin:
+  forall x (s1 s2 : Set_ e),
+  toList (bin x s1 s2) = toList s1 ++ [x] ++ toList s2.
+Proof. intros. apply toList_Bin. Qed.
+
+Lemma toList_balanceR :
+  forall x s1 s2 lb ub,
+  Bounded s1 lb (Some x) ->
+  Bounded s2 (Some x) ub ->
+  balance_prop (size s1) (size s2) \/
+  balance_prop_inserted (size s2 - 1) (size s1) /\ (1 <= size s2)%Z  \/
+  balance_prop (size s1 + 1) (size s2) ->
+  toList (balanceR x s1 s2) = toList s1 ++ [x] ++ toList s2.
+Proof.
+  intros.
+  unfold balanceR.
+  unfold op_zg__, op_zl__, Ord_Integer___, op_zg____, op_zl____.
+
+  repeat lazymatch goal with [ H : Bounded ?s _ _ |- context [match ?s with _ => _ end] ] => inversion H; subst; clear H end;
+  repeat lazymatch goal with [ |- context [if (?x <? ?y)%Z then _ else _] ] => destruct (Z.ltb_spec x y) end;
+  rewrite ?size_Bin in *; simpl (size Tip) in *; simpl sem;
+  simpl isLB in *;
+  simpl isUB in *.
+  all: try solve [exfalso; lia_sizes]. (* Some are simply impossible *)
+  all: repeat find_Tip.
+  all: rewrite ?toList_Bin, <- ?app_assoc; try reflexivity.
+Qed.
+
+Lemma toList_balanceL:
+  forall x s1 s2 lb ub,
+  Bounded s1 lb (Some x) ->
+  Bounded s2 (Some x) ub  ->
+  balance_prop (size s1) (size s2) \/
+  balance_prop_inserted (size s1 - 1) (size s2) /\ (1 <= size s1)%Z \/
+  balance_prop (size s1) (size s2 + 1) ->
+  toList (balanceL x s1 s2) = toList s1 ++ [x] ++ toList s2.
+Proof.
+  intros.
+  unfold balanceL.
+  unfold op_zg__, op_zl__, Ord_Integer___, op_zg____, op_zl____.
+
+  repeat lazymatch goal with [ H : Bounded ?s _ _ |- context [match ?s with _ => _ end] ] => inversion H; subst; clear H end;
+  repeat lazymatch goal with [ |- context [if (?x <? ?y)%Z then _ else _] ] => destruct (Z.ltb_spec x y) end;
+  rewrite ?size_Bin in *; simpl (size Tip) in *; simpl sem;
+  simpl isLB in *;
+  simpl isUB in *.
+  all: try solve [exfalso; lia_sizes]. (* Some are simply impossible *)
+  all: repeat find_Tip.
+  all: rewrite ?toList_Bin, <- ?app_assoc; try reflexivity.
+Qed.
+
+Lemma toList_insertMax:
+   forall x s lb,
+   Bounded s lb (Some x) ->
+   toList (insertMax x s) = toList s ++ [x].
+Proof.
+  intros.
+  remember (Some x) as ub'. revert dependent x.
+  induction H; intros.
+  * reflexivity.
+  * clear IHBounded1.
+    simpl. subst.
+    specialize (IHBounded2 x0 eq_refl).
+    revert IHBounded2.
+    assert (isUB None x0 = true) by reflexivity.
+    applyDesc insertMax_Desc.
+    intro IH.
+    erewrite toList_balanceR; [ | eassumption| eassumption | solve_size ].
+    rewrite IH.
+    rewrite toList_Bin, <- ?app_assoc.
+    reflexivity.
+Qed.
+
+Lemma toList_insertMin:
+   forall x s ub,
+   Bounded s (Some x) ub ->
+   toList (insertMin x s) = [x] ++ toList s.
+Proof.
+  intros.
+  remember (Some x) as ub'. revert dependent x.
+  induction H; intros.
+  * reflexivity.
+  * clear IHBounded2.
+    simpl. subst.
+    specialize (IHBounded1 x0 eq_refl).
+    revert IHBounded1.
+    assert (isLB None x0 = true) by reflexivity.
+    applyDesc insertMin_Desc.
+    intro IH.
+    erewrite toList_balanceL; [ | eassumption| eassumption | solve_size ].
+    rewrite IH.
+    rewrite toList_Bin, <- ?app_assoc.
+    reflexivity.
+Qed.
+
+Program Fixpoint toList_link (x : e) (s1: Set_ e)  (s2: Set_ e)
+  {measure (set_size s1 + set_size s2)} :
+    forall lb ub,
+    Bounded s1 lb (Some x) ->
+    Bounded s2 (Some x) ub  ->
+    isLB lb x = true ->
+    isUB ub x = true->
+    toList (link x s1 s2) = toList s1 ++ [x] ++ toList s2 := _.
+Next Obligation.
+  intros.
+  rewrite link_eq. 
+  inversion H; subst; clear H;
+  inversion H0; subst; clear H0.
+  * reflexivity.
+  * erewrite toList_insertMin by solve_Bounded.
+    rewrite toList_Bin.
+    reflexivity.
+  * erewrite toList_insertMax by solve_Bounded.
+    rewrite toList_Bin.
+    reflexivity.
+  * destruct (Sumbool.sumbool_of_bool _);
+    only 2: destruct (Sumbool.sumbool_of_bool _);
+    rewrite ?Z.ltb_lt, ?Z.ltb_ge in *.
+    - erewrite toList_balanceL; try solve_Precondition.
+      erewrite toList_link; solve_Precondition.
+      rewrite ?toList_Bin, <- ?app_assoc. reflexivity.
+      applyDesc link_Desc; eassumption.
+      applyDesc link_Desc; solve_size.
+    - erewrite toList_balanceR; try solve_Precondition.
+      erewrite toList_link; solve_Precondition.
+      rewrite ?toList_Bin, <- ?app_assoc. reflexivity.
+      applyDesc link_Desc; eassumption.
+      applyDesc link_Desc; solve_size.
+    - rewrite ?toList_bin, ?toList_Bin, <- ?app_assoc. reflexivity.
 Qed.
 
 
@@ -2409,6 +2545,241 @@ Proof.
         -- applyDesc link_Desc.
            solve_Desc.
 Qed.
+
+(** ** Verification of [take] *)
+
+Definition takeGo : Int -> Set_ e -> Set_ e.
+Proof.
+  let rhs := eval unfold take in (@take e) in
+  match rhs with fun n s => if _ then _ else ?go _ _  => exact go end.
+Defined.
+
+Lemma take_neg: forall a n (l : list a), (n <= 0)%Z -> List.take n l = [].
+Proof.
+  intros. destruct l; simpl; destruct (Z.leb_spec n 0); try lia; try reflexivity.
+Qed.
+
+Lemma take_all:
+  forall a n (xs : list a), (Z.of_nat (length xs) <= n)%Z -> List.take n xs = xs.
+Proof.
+  intros. revert n H.
+  induction xs; intros n Hall.
+  * simpl. destruct (Z.leb_spec n 0); reflexivity.
+  * simpl.
+    simpl length in Hall. rewrite Nat2Z.inj_succ, <- Z.add_1_l in Hall.
+    rewrite IHxs by lia.
+    destruct (Z.leb_spec n 0); [lia|reflexivity].
+Qed.
+  
+Lemma take_app_cons:
+  forall a n (l1 : list a) (x : a) (l2 : list a),
+  List.take n (l1 ++ x :: l2) = match (n ?= Z.of_nat (length l1))%Z with
+    | Lt => List.take n l1
+    | Eq => l1
+    | Gt => l1 ++ [x] ++ List.take (n - Z.of_nat (length l1) - 1)%Z l2
+  end.
+Proof.
+  intros. revert n.
+  induction l1; intros n.
+  * simpl.
+    rewrite Z.sub_0_r.
+    destruct (Z.leb_spec n 0), (Z.compare_spec n 0)%Z; try reflexivity; lia.
+  * cbn -[Z.add Z.of_nat].
+    rewrite IHl1. clear IHl1.
+    rewrite Nat2Z.inj_succ, <- Z.add_1_l.
+    replace (n - (1 + Z.of_nat (length l1)) - 1)%Z with (n - 2 - Z.of_nat (length l1))%Z by lia.
+    replace (n - 1 - (Z.of_nat (length l1)) - 1)%Z with (n - 2 - Z.of_nat (length l1))%Z by lia.
+    destruct (Z.leb_spec n 0),
+             (Z.compare_spec (n - 1) (Z.of_nat (length l1)))%Z,
+             (Z.compare_spec n (1 + Z.of_nat (length l1)))%Z; try reflexivity; lia.
+Qed.
+
+
+Lemma takeGo_spec :
+  forall n s lb ub,
+  Bounded s lb ub ->
+  forall (P : Set_ e -> Prop),
+  (forall s',
+    Bounded s' lb ub /\
+    toList s' = List.take n (toList s) ->
+    P s') ->
+  P (takeGo n s).
+Proof.
+  intros ???? HD. revert n.
+  induction HD; intros n.
+  * intros X HX; apply HX. split.
+    + simpl. destruct_match; solve_Bounded.
+    + simpl. do 2 destruct_match; reflexivity.
+  * simpl.
+    intros X HX; apply HX.
+    rewrite toList_Bin.
+    unfold op_zlze__ , Ord_Integer___, op_zlze____.
+    unfold compare , Ord_Integer___, compare__.
+    rewrite size_size.
+    apply IHHD1. intros s1' [HBs1' Hs1']. clear IHHD1.
+    apply IHHD2. intros s2' [HBs2' Hs2']. clear IHHD2.
+    destruct (Z.leb_spec n 0).
+    + rewrite take_neg by assumption. split.
+      - solve_Bounded.
+      - reflexivity.
+    + simpl app.
+      rewrite take_app_cons.
+      erewrite <- size_spec by eassumption.
+      destruct (Z.compare_spec n (size s1)).
+      - split.
+        ** eapply Bounded_relax_ub; eassumption.
+        ** reflexivity.
+      - split.
+        ** eapply Bounded_relax_ub; eassumption.
+        ** assumption.
+      - split.
+        ** applyDesc link_Desc.
+        ** erewrite toList_link by solve_Precondition.
+           rewrite Hs2'.
+           reflexivity.
+Qed.
+
+Lemma toList_take:
+  forall n s lb ub,
+  Bounded s lb ub ->
+  forall (P : Set_ e -> Prop),
+  (forall s',
+    Bounded s' lb ub /\
+    toList s' = List.take n (toList s) ->
+    P s') ->
+  P (take n s).
+Proof.
+  intros. apply H0.
+  unfold take. fold takeGo.
+  unfold op_zgze__ , Ord_Integer___, op_zgze____.
+  rewrite size_size.
+  destruct (Z.leb_spec (size s) n).
+  * split; [assumption|].
+    rewrite take_all. reflexivity.
+    erewrite <- size_spec by eassumption.
+    assumption.
+  * eapply takeGo_spec; [solve_Precondition..|].
+    intros. assumption.
+Qed.
+
+(** ** Verification of [drop] *)
+
+Definition dropGo : Int -> Set_ e -> Set_ e.
+Proof.
+  let rhs := eval unfold drop in (@drop e) in
+  match rhs with fun n s => if _ then _ else ?go _ _  => exact go end.
+Defined.
+
+Lemma drop_neg: forall a n (l : list a), (n <= 0)%Z -> List.drop n l = l.
+Proof.
+  intros. destruct l; simpl; destruct (Z.leb_spec n 0); try lia; try reflexivity.
+Qed.
+
+Lemma drop_all:
+  forall a n (xs : list a), (Z.of_nat (length xs) <= n)%Z -> List.drop n xs = [].
+Proof.
+  intros. revert n H.
+  induction xs; intros n Hall.
+  * simpl. destruct (Z.leb_spec n 0); reflexivity.
+  * simpl.
+    simpl length in Hall. rewrite Nat2Z.inj_succ, <- Z.add_1_l in Hall.
+    rewrite IHxs by lia.
+    destruct (Z.leb_spec n 0); [lia|reflexivity].
+Qed.
+  
+Lemma drop_app_cons:
+  forall a n (l1 : list a) (x : a) (l2 : list a),
+  List.drop n (l1 ++ x :: l2) = match (n ?= Z.of_nat (length l1))%Z with
+    | Lt => List.drop n l1 ++ [x] ++ l2
+    | Eq => [x] ++ l2
+    | Gt => List.drop (n - Z.of_nat (length l1) - 1)%Z l2
+  end.
+Proof.
+  intros. revert n.
+  induction l1; intros n.
+  * simpl.
+    rewrite Z.sub_0_r.
+    destruct (Z.leb_spec n 0), (Z.compare_spec n 0)%Z; try reflexivity; lia.
+  * cbn -[Z.add Z.of_nat].
+    rewrite IHl1. clear IHl1.
+    rewrite Nat2Z.inj_succ, <- Z.add_1_l.
+    replace (n - (1 + Z.of_nat (length l1)) - 1)%Z with (n - 2 - Z.of_nat (length l1))%Z by lia.
+    replace (n - 1 - (Z.of_nat (length l1)) - 1)%Z with (n - 2 - Z.of_nat (length l1))%Z by lia.
+    destruct (Z.leb_spec n 0),
+             (Z.compare_spec (n - 1) (Z.of_nat (length l1)))%Z,
+             (Z.compare_spec n (1 + Z.of_nat (length l1)))%Z; try reflexivity; lia.
+Qed.
+
+
+Lemma dropGo_spec :
+  forall n s lb ub,
+  Bounded s lb ub ->
+  forall (P : Set_ e -> Prop),
+  (forall s',
+    Bounded s' lb ub /\
+    toList s' = List.drop n (toList s) ->
+    P s') ->
+  P (dropGo n s).
+Proof.
+  intros ???? HD. revert n.
+  induction HD; intros n.
+  * intros X HX; apply HX. split.
+    + simpl. destruct_match; solve_Bounded.
+    + simpl. do 2 destruct_match; reflexivity.
+  * simpl.
+    intros X HX; apply HX.
+    rewrite toList_Bin.
+    unfold op_zlze__ , Ord_Integer___, op_zlze____.
+    unfold compare , Ord_Integer___, compare__.
+    rewrite size_size.
+    apply IHHD1. intros s1' [HBs1' Hs1']. clear IHHD1.
+    apply IHHD2. intros s2' [HBs2' Hs2']. clear IHHD2.
+    destruct (Z.leb_spec n 0).
+    + rewrite drop_neg by assumption. split.
+      - solve_Bounded.
+      - rewrite toList_Bin.
+        reflexivity.
+    + simpl app.
+      rewrite drop_app_cons.
+      erewrite <- size_spec by eassumption.
+      destruct (Z.compare_spec n (size s1)).
+      - split.
+        ** applyDesc insertMin_Desc.
+        ** erewrite toList_insertMin  by solve_Precondition.
+           reflexivity.
+      - split.
+        ** applyDesc link_Desc.
+        ** erewrite toList_link by solve_Precondition.
+           rewrite Hs1'.
+           reflexivity.
+      - split.
+        ** eapply Bounded_relax_lb; eassumption.
+        ** assumption.
+Qed.
+
+Lemma toList_drop:
+  forall n s lb ub,
+  Bounded s lb ub ->
+  forall (P : Set_ e -> Prop),
+  (forall s',
+    Bounded s' lb ub /\
+    toList s' = List.drop n (toList s) ->
+    P s') ->
+  P (drop n s).
+Proof.
+  intros. apply H0.
+  unfold drop. fold dropGo.
+  unfold op_zgze__ , Ord_Integer___, op_zgze____.
+  rewrite size_size.
+  destruct (Z.leb_spec (size s) n).
+  * split; [solve_Precondition|].
+    rewrite drop_all. reflexivity.
+    erewrite <- size_spec by eassumption.
+    assumption.
+  * eapply dropGo_spec; [solve_Precondition..|].
+    intros. assumption.
+Qed.
+
 
 (** ** Verification of [valid] *)
 

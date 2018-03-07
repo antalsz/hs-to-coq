@@ -2477,12 +2477,12 @@ Lemma validsize_children : forall l (a : e) s1 s2,
 Proof.
   split.
   - destruct s1; unfold validsize in *.
-    + intros. repeat destruct_match.
+    + intros. repeat destruct_match; try ssreflect.done.
       rewrite size_size in *. cbn. 
       rewrite Z.eqb_eq. inversion Heq; reflexivity.
     + reflexivity.
   - destruct s2; unfold validsize in *.
-    + intros. repeat destruct_match.
+    + intros. repeat destruct_match; try ssreflect.done.
       rewrite size_size in *. cbn. 
       rewrite Z.eqb_eq. inversion Heq0; reflexivity.
     + reflexivity.
@@ -2507,7 +2507,7 @@ Proof.
     + simpl.
       rewrite H1, H2, IHbd1, IHbd2. reflexivity.
     + unfold validsize. 
-      repeat destruct_match; rewrite size_size;
+      repeat destruct_match; try ssreflect.done; rewrite size_size;
         unfold validsize in IHv1, IHv2;
         rewrite Heq in IHv1.
       * cbn. rewrite Z.eqb_eq; reflexivity.

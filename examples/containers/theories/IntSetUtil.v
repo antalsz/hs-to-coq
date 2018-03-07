@@ -1,4 +1,7 @@
 (******************************************************************************)
+
+Set Warnings "-notation-overridden".
+
 (** Imports **)
 
 (* SSReflect *)
@@ -17,6 +20,8 @@ Require Import Data.Bits.
 Require Import Data.IntSet.Internal.
 Require Import Utils.Containers.Internal.BitUtil.
 Require Import Popcount.
+Require Import BitUtils.
+Require Import DyadicIntervals.
 Require Import IntSetProofs.
 
 (* Util *)

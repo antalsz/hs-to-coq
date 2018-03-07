@@ -5,6 +5,10 @@ Require Import Coq.Bool.Bool.
 Local Open Scope Z_scope.
 
 
+Require Import BitUtils.
+Require Import DyadicIntervals.
+Require Import Tactics.
+
 (** * The IntMap formalization *)
 
 Require Import IntSetProofs.

@@ -1,4 +1,7 @@
 (******************************************************************************)
+
+Set Warnings "-notation-overridden".
+
 (** Imports **)
 
 (* SSReflect *)
@@ -19,6 +22,8 @@ Require Import Data.Bits.
 (* IntSet *)
 Require Import Data.IntSet.Internal.
 Require Import IntSetProperties.
+Require Import BitUtils.
+Require Import DyadicIntervals.
 Require Import IntSetProofs.
 
 (* Working with Haskell *)

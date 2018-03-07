@@ -29,6 +29,8 @@ Notation reflect := ssrbool.reflect.
 (******************************************************************************)
 (** Notation disambiguation **)
 
+Set Warnings "-notation-overridden".
+
 Infix "=="  := op_zeze__ : bool_scope.
 Infix "===" := eq_op (at level 70, no associativity) : bool_scope.
 
@@ -484,13 +486,13 @@ Theorem Z_negb_testbit_iff (m n : Z) :
   ~~ Z.testbit m n <-> (Z.land m (Z.shiftl 1 n) = 0)%Z.
 Proof.
   rewrite Z_eq_testbits_pos; split => [nbit ix POS_ix | bits].
-  - rewrite Z.bits_0 Z.land_spec Z.shiftl_spec // IntSetProofs.testbit_1.
+  - rewrite Z.bits_0 Z.land_spec Z.shiftl_spec // BitUtils.testbit_1.
     case SUB: (ix - n =? 0)%Z.
     + by move: SUB => /Z.eqb_spec/Z.sub_move_0_r ->; rewrite (negbTE nbit) andFb.
     + by rewrite andbF.
   - case: (Z_le_dec 0 n) => [POS | NEG].
     + move: bits => /(_ n POS).
-      by rewrite Z.bits_0 Z.land_spec Z.shiftl_spec // IntSetProofs.testbit_1 Z.sub_diag /= andbT => ->.
+      by rewrite Z.bits_0 Z.land_spec Z.shiftl_spec // BitUtils.testbit_1 Z.sub_diag /= andbT => ->.
     + rewrite Z.testbit_neg_r //; omega.
 Qed.
 

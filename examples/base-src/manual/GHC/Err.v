@@ -17,7 +17,9 @@ Instance default_arr {a}{b} `{Default b} : Default (a -> b) := { default := fun 
 Instance default_option {a} : Default (option a) := { default := None }.
 Instance default_list {a} : Default (list a) := { default := nil } .
 
-Definition error {a} `{Default a} : String -> a :=
-  fun s => default.
+(* The use of [Qed] is crucial, this way we cannot look through [error] in our proofs. *)
+Definition error {a} `{Default a} : String -> a.
+Proof. exact (fun _ => default). Qed.
+
 Definition errorWithoutStackTrace {a} `{Default a} :
   String -> a := error.

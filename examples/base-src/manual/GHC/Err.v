@@ -19,5 +19,6 @@ Instance default_list {a} : Default (list a) := { default := nil } .
 
 Definition error {a} `{Default a} : String -> a :=
   fun s => default.
+Opaque error.
 Definition errorWithoutStackTrace {a} `{Default a} :
   String -> a := error.

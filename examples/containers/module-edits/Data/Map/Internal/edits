@@ -1,5 +1,3 @@
-skip module Data.Data
-skip module GHC.Prim
 
 # Proxy#
 skip Data.Map.Internal.bogus
@@ -8,7 +6,7 @@ skip Data.Map.Internal.atKeyImpl
 skip Data.Map.Internal.alterF
 
 rename value Data.Map.Internal.bool = Data.Map.Internal.boolITE
-rewrite forall x, GHC.Magic.lazy x = x
+
 
 # Type inference fail
 skip Data.Map.Internal.differenceWithKey

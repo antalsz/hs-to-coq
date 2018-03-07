@@ -1,9 +1,6 @@
 # punned
 rename value Data.Set.Internal.MergeSet = Data.Set.Internal.Mk_MergeSet
 
-# Could be in base
-rename value GHC.Magic.lazy = id
-
 ## Don't translate material related to generic programming or 
 ## to serialization
 skip module Data.Data
@@ -19,8 +16,6 @@ skip Data.Set.Internal.showsBars
 skip Data.Set.Internal.withBar
 skip Data.Set.Internal.withEmpty
 
-# This should be in an interface file, if we had some
-skip method Data.Semigroup.Semigroup stimes
 
 ## partial, bleh
 skip Data.Set.Internal.findMax

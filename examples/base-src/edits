@@ -9,6 +9,8 @@ skip module GHC.IO
 skip module GHC.Integer
 skip module GHC.Unicode
 
+skip module Data.Data
+
 # manual versions
 # skip module GHC.Num
 # skip module GHC.Char
@@ -55,7 +57,8 @@ rename value GHC.List.concatMap  = Coq.Lists.List.flat_map
 rename value GHC.List.foldl      = GHC.Base.foldl
 rename value GHC.List.foldl'     = GHC.Base.foldl'
 
-rename value GHC.Magic.oneShot = GHC.Base.oneShot
+rename value GHC.Magic.oneShot   = GHC.Base.oneShot
+rewrite forall x, GHC.Magic.lazy x = x
 
 rename type GHC.Types.Ordering = comparison
 rename value GHC.Types.EQ = Eq

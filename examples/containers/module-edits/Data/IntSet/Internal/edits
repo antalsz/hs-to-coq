@@ -1,6 +1,3 @@
-# not a TODO
-skip module Data.Data
-
 # Moved to another module
 rename value Data.IntSet.Internal.lowestBitMask = Utils.Containers.Internal.BitUtil.lowestBitMask
 skip Utils.Containers.Internal.BitUtil.lowestBitMask

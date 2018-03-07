@@ -26,6 +26,7 @@ Require Data.Semigroup.
 Require Data.Set.Internal.
 Require GHC.Base.
 Require GHC.Num.
+Require GHC.Prim.
 Require Nat.
 Require Utils.Containers.Internal.BitQueue.
 Require Utils.Containers.Internal.PtrEquality.

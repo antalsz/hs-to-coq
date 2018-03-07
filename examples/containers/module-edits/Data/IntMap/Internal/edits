@@ -1,6 +1,3 @@
-# not a TODO
-skip module Data.Data
-
 rename value Data.IntMap.Internal.WhenMatched = Data.IntMap.Internal.Mk_WhenMatched
 rename value Data.IntMap.Internal.WhenMissing = Data.IntMap.Internal.Mk_WhenMissing
 rename value Data.IntMap.Internal.SplitLookup = Data.IntMap.Internal.Mk_SplitLookup

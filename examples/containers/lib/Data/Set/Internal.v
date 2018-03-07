@@ -642,7 +642,7 @@ Definition insert {a} `{GHC.Base.Ord a} : a -> Set_ a -> Set_ a :=
     let go {a} `{GHC.Base.Ord a} : a -> a -> Set_ a -> Set_ a :=
       fix go arg_0__ arg_1__ arg_2__
             := match arg_0__, arg_1__, arg_2__ with
-               | orig, _, Tip => singleton (id orig)
+               | orig, _, Tip => singleton (orig)
                | orig, x, (Bin sz y l r as t) =>
                    match GHC.Base.compare x y with
                    | Lt =>
@@ -658,7 +658,7 @@ Definition insert {a} `{GHC.Base.Ord a} : a -> Set_ a -> Set_ a :=
                    | Eq =>
                        if (Utils.Containers.Internal.PtrEquality.ptrEq orig y) : bool
                        then t
-                       else Bin sz (id orig) l r
+                       else Bin sz (orig) l r
                    end
                end in
     go x0 x0.
@@ -675,7 +675,7 @@ Definition insertR {a} `{GHC.Base.Ord a} : a -> Set_ a -> Set_ a :=
     let go {a} `{GHC.Base.Ord a} : a -> a -> Set_ a -> Set_ a :=
       fix go arg_0__ arg_1__ arg_2__
             := match arg_0__, arg_1__, arg_2__ with
-               | orig, _, Tip => singleton (id orig)
+               | orig, _, Tip => singleton (orig)
                | orig, x, (Bin _ y l r as t) =>
                    match GHC.Base.compare x y with
                    | Lt =>

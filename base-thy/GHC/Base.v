@@ -8,6 +8,7 @@
  *)
 
 Require Import GHC.Base.
+Require Import Data.Semigroup.
 
 Require Import Coq.Logic.FunctionalExtensionality.
 
@@ -168,6 +169,9 @@ Proof. by move=> ? ?; rewrite !Neq_inv Eq_sym. Qed.
 Theorem Neq_atrans {t} `{EqLaws t} y x z : x /= z -> (x /= y) || (y /= z).
 Proof. rewrite !Neq_inv -negb_andb; apply contra => /andP[]; apply Eq_trans. Qed.
 
+Lemma Eq_reflI {t} `{EqLaws t} : forall x y, x = y -> x == y = true.
+Proof. intros. subst. apply Eq_refl. Qed.
+
 Class EqExact (t : Type) `{EqLaws t} :=
   { Eq_eq : forall x y : t, reflect (x = y) (x == y) }.
 
@@ -298,11 +302,15 @@ Qed.
 
 (* -------------------------------------------------------------------- *)
 
-Class MonoidLaws (t : Type) `{ Monoid t } :=
-  { monoid_left_id  : forall x, mappend mempty x = x;
-    monoid_right_id : forall x, mappend x mempty = x;
-    monoid_assoc    : forall x y z, mappend x (mappend y z) = mappend (mappend x y) z;
-    monoid_mconcat  : forall x, mconcat x = foldr mappend mempty x
+Class SemigroupLaws (t : Type) `{ Semigroup t } `{ EqLaws t } :=
+  { semigroup_assoc    : forall (x y z : t), (x <> (y <> z) == ((x <> y) <> z)) = true;
+  }.
+
+Class MonoidLaws (t : Type) `{ Monoid t } `{SemigroupLaws t} `{ EqLaws t } :=
+  { monoid_left_id  : forall x, (mappend mempty x == x) = true;
+    monoid_right_id : forall x, (mappend x mempty == x) = true;
+    monoid_semigroup : forall x y, (mappend x y == (x <> y)) = true;
+    monoid_mconcat  : forall x, (mconcat x == foldr mappend mempty x) = true
   }.
 
 Class FunctorLaws (t : Type -> Type) `{Functor t} :=
@@ -341,12 +349,23 @@ Class MonadPlusLaws (t : Type -> Type) `{!Functor t, !Applicative t, !Monad t, !
           mplus f (mplus g h) = mplus (mplus f g) h;
   }.
 
-(* ------------------------- Monoid --------------------------- *)
+(* --------------------- Semigroup and Monoid ----------------------- *)
+
+Instance instance_SemigroupLaws_unit : SemigroupLaws unit.
+Proof.
+  split;
+    unfold op_zlzg__, Semigroup__unit, op_zlzg____,
+         Semigroup.Semigroup__unit_op_zlzg__.
+  - intros. auto.
+Qed.
+
 
 Instance instance_MonoidLaws_unit : MonoidLaws unit.
 Proof.
   split;
-    unfold mappend, mempty, mconcat, Monoid__unit,
+    unfold op_zlzg__, Semigroup__unit, op_zlzg____,
+         Semigroup.Semigroup__unit_op_zlzg__;
+    unfold mappend, mempty, mconcat, Monoid__unit, mappend__, empty__, mconcat__,
          Base.Monoid__unit_mappend,
          Base.Monoid__unit_mempty,
          Base.Monoid__unit_mconcat.
@@ -356,46 +375,71 @@ Proof.
   - intros x. induction x; simpl. auto. auto.
 Qed.
 
+Instance instance_SemigroupLaws_comparison : SemigroupLaws comparison.
+Proof.
+  split;
+    unfold op_zlzg__, Semigroup__comparison, op_zlzg____,
+      Semigroup.Semigroup__comparison_op_zlzg__.
+  - intros. destruct x; destruct y; apply Eq_refl.
+Qed.
+
 Instance instance_MonoidLaws_comparison : MonoidLaws comparison.
 Proof.
   split;
+    unfold op_zlzg__, Semigroup__comparison, op_zlzg____,
+      Semigroup.Semigroup__comparison_op_zlzg__;
     repeat unfold mappend, mempty, mconcat, instance_Monoid_comparison,
-    Base.Monoid__comparison_mappend,
-    Base.Monoid__comparison_mempty,
-    Base.Monoid__comparison_mconcat.
-  - intro x. auto.
-  - intro x. destruct x; auto.
-  - intros. destruct x; destruct y; auto.
-  - intros x. induction x; simpl; auto.
+      Base.Monoid__comparison_mappend,
+      Base.Monoid__comparison_mempty,
+      Base.Monoid__comparison_mconcat.
+  - intro x. apply Eq_refl.
+  - intro x. destruct x; apply Eq_refl.
+  - intros. apply Eq_refl.
+  - intros x. induction x; apply Eq_refl.
+Qed.
+
+Instance instance_SemigroupLaws_option {a} `{ SemigroupLaws a } : SemigroupLaws (option a).
+Proof.
+  split;
+    unfold op_zlzg__, Semigroup__option, op_zlzg____,
+      Semigroup.Semigroup__option_op_zlzg__.
+  - intros x y z.
+    destruct x; destruct y; destruct z; try apply Eq_refl.
+    unfold op_zeze__, Eq___option, op_zeze____, Base.Eq___option_op_zeze__.
+    apply semigroup_assoc.
 Qed.
 
 Instance instance_MonoidLaws_option {a} `{ MonoidLaws a } : MonoidLaws (option a).
 Proof.
-  split;
-    repeat unfold mappend, mempty, mconcat,
-    Base.Monoid__option,
-    Base.Monoid__option_mappend,
-    Base.Monoid__option_mconcat,
-    Base.Monoid__option_mempty.
-  - destruct x; auto.
-  - destruct x; auto.
-  - intros x y z.
-    simpl; repeat fold mappend.
-    destruct x; destruct y; destruct z; auto.
-    f_equal.
-    apply monoid_assoc.
+  split.
+  - destruct x; apply Eq_refl.
+  - destruct x; apply Eq_refl.
+  - intros x y.
+    destruct x; destruct y; try reflexivity; try apply Eq_refl.
+    unfold op_zeze__, Eq___option, op_zeze____, Base.Eq___option_op_zeze__.
+    apply monoid_semigroup.
   - induction x; simpl. auto.
-    destruct a0. auto.
-    auto.
+    destruct a0; apply Eq_refl.
 Qed.
 
-Instance instance_MonoidLaws_list {a} : MonoidLaws (list a).
+Instance instance_SemigroupLaws_list {a} `{ EqLaws a } : SemigroupLaws (list a).
+Proof.
+  split; 
+    unfold op_zlzg__, Semigroup__list, op_zlzg____,
+      Semigroup.Semigroup__list_op_zlzg__.
+  - intros. apply Eq_reflI. apply app_assoc.
+Qed.
+
+
+Instance instance_MonoidLaws_list {a} `{ EqLaws a } : MonoidLaws (list a).
 Proof.
   split.
-  - apply app_nil_l.
-  - apply app_nil_r.
-  - apply app_assoc.
-  - induction x.
+  - intros. apply Eq_reflI. apply app_nil_l.
+  - intros. apply Eq_reflI. apply app_nil_r.
+  - intros. apply Eq_refl.
+  - intros.
+    apply Eq_reflI.
+    induction x.
     * simpl. auto.
     * simpl.
       unfold mconcat, Monoid__list in *; simpl in *.

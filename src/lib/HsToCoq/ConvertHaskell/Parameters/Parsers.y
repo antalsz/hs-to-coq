@@ -99,7 +99,6 @@ import HsToCoq.ConvertHaskell.Parameters.Parsers.Lexing
   '`'             { TokOp      "`"              }
   '.'             { TokOp      "."              }
   '|'             { TokOp      "|"              }
-  '"'             { TokOp      "\""             }
   '\''            { TokOp      "'"              }
   ','             { TokOp      ","              }
   ';'             { TokOp      ";"              }
@@ -112,6 +111,7 @@ import HsToCoq.ConvertHaskell.Parameters.Parsers.Lexing
   Word            { TokWord    $$               }
   Op              { TokOp      $$               }
   Num             { TokNat     $$               }
+  StringLit       { TokString  $$               }
 
 %nonassoc GenFixBodyOne
 %nonassoc with
@@ -308,6 +308,7 @@ Atom :: { Term }
   | Qualid          { Qualid $1 }
   | Num             { Num $1 }
   | '_'             { Underscore }
+  | StringLit       { String $1 }
 
 TypeAnnotation :: { Term }
   : ':' Term    { $2 }
@@ -384,10 +385,7 @@ Binder :: { Binder }
   | '`' '{' GeneralizableBinderGuts '}'    { $3 Implicit }
 
 MutualDefinitions(p)
-  : SepBy1(p, with) SepByIf(where, NotationBinding, and)    { ($1, $2) }
-
-NotationBinding :: { NotationBinding }
-  : '"' '\'' Word '\'' '"' ':=' Term    { NotationIdentBinding $3 $7 }
+  : SepBy1(p, with)    { ($1, []) }
 
 MatchItem :: { MatchItem }
   : Term                 { MatchItem $1 Nothing Nothing }

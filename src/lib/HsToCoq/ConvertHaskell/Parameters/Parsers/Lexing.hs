@@ -65,6 +65,7 @@ data Token = TokWord    Ident
            | TokOp      Ident
            | TokOpen    Char
            | TokClose   Char
+           | TokString  Text
            | TokNewline
            | TokEOF
            deriving (Eq, Ord, Show, Read)
@@ -75,6 +76,7 @@ tokenDescription (TokNat     n) = "number `"            ++ show     n ++ "'"
 tokenDescription (TokOp      o) = "operator `"          ++ T.unpack o ++ "'"
 tokenDescription (TokOpen    o) = "opening delimeter `" ++ pure     o ++ "'"
 tokenDescription (TokClose   c) = "closing delimeter `" ++ pure     c ++ "'"
+tokenDescription (TokString  s) = "string literal `"    ++ T.unpack s ++ "'"
 tokenDescription TokNewline     = "newline"
 tokenDescription TokEOF         = "end of file"
 
@@ -134,6 +136,14 @@ newline = parseToken (const ()) isVSpace none
 nat :: MonadParse m => m Num
 nat = parseToken (read . T.unpack) isDigit isDigit
 
+-- No escape sequences for now
+stringLit :: MonadParse m => m Text
+stringLit = do
+    _ <- parseChar (is '"')
+    s <- parseToken id (not . is '"') (not . is '"')
+    _ <- parseChar (is '"')
+    return s
+
 -- arguments from parseToken (from Control.Monad.Trans.Parse)
 -- parseToken :: MonadParse m => (Text -> a)  -> (Char -> Bool) -> (Char -> Bool) -> m a
 -- parseToken build isFirst isRest = ...
@@ -143,6 +153,7 @@ token' = asum $
   [ Nothing          <$  comment
   , Nothing          <$  space
   , newlineToken     <*  newline
+  , Just . TokString <$> stringLit
   , Just . TokNat    <$> nat
   , Just . TokOpen   <$> parseChar isOpen
   , Just . TokClose  <$> parseChar isClose

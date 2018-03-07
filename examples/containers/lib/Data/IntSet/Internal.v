@@ -13,13 +13,16 @@ Require Coq.Program.Wf.
 (* Preamble *)
 
 Require BitTerminationProofs.
+Require GHC.Err.
 
 (* Converted imports: *)
 
 Require Coq.Init.Peano.
 Require Data.Bits.
 Require Data.Foldable.
+Require Data.Maybe.
 Require Data.Semigroup.
+Require Data.Tuple.
 Require GHC.Base.
 Require GHC.Num.
 Require GHC.Real.
@@ -486,6 +489,56 @@ Definition filter : (Key -> bool) -> IntSet -> IntSet :=
            | Tip kx bm => tip kx (foldl'Bits #0 (bitPred kx) #0 bm)
            | Nil => Nil
            end.
+
+Definition maxView : IntSet -> option (Key * IntSet)%type :=
+  fun t =>
+    let fix go arg_0__
+              := match arg_0__ with
+                 | Bin p m l r => let 'pair result r' := go r in pair result (bin p m l r')
+                 | Tip kx bm =>
+                     let 'bi := highestBitSet bm in
+                     pair (kx GHC.Num.+ bi) (tip kx (Data.Bits.xor bm (bm Data.Bits..&.(**)
+                                                                    bitmapOfSuffix bi)))
+                 | Nil => pair (0 % Z) Nil
+                 end in
+    let j_12__ := Some (go t) in
+    match t with
+    | Nil => None
+    | Bin p m l r =>
+        if m GHC.Base.< #0 : bool
+        then let 'pair result l' := go l in
+             Some (pair result (bin p m l' r))
+        else j_12__
+    | _ => j_12__
+    end.
+
+Definition deleteMax : IntSet -> IntSet :=
+  Data.Maybe.maybe Nil Data.Tuple.snd GHC.Base.∘ maxView.
+
+Definition minView : IntSet -> option (Key * IntSet)%type :=
+  fun t =>
+    let fix go arg_0__
+              := match arg_0__ with
+                 | Bin p m l r => let 'pair result l' := go l in pair result (bin p m l' r)
+                 | Tip kx bm =>
+                     let 'bi := lowestBitSet bm in
+                     pair (kx GHC.Num.+ bi) (tip kx (Data.Bits.xor bm (bm Data.Bits..&.(**)
+                                                                    bitmapOfSuffix bi)))
+                 | Nil => pair (0 % Z) Nil
+                 end in
+    let j_12__ := Some (go t) in
+    match t with
+    | Nil => None
+    | Bin p m l r =>
+        if m GHC.Base.< #0 : bool
+        then let 'pair result r' := go r in
+             Some (pair result (bin p m l r'))
+        else j_12__
+    | _ => j_12__
+    end.
+
+Definition deleteMin : IntSet -> IntSet :=
+  Data.Maybe.maybe Nil Data.Tuple.snd GHC.Base.∘ minView.
 
 Definition partition : (Key -> bool) -> IntSet -> (IntSet * IntSet)%type :=
   fun predicate0 t0 =>
@@ -1115,16 +1168,17 @@ Infix "Data.IntSet.Internal.\\" := (_\\_) (at level 99).
 End Notations.
 
 (* Unbound variables:
-     Bool.Sumbool.sumbool_of_bool Eq Gt Lt None Some andb bool comparison cons false
-     id list negb nil op_zp__ op_zt__ option orb pair size_nat suffixBitMask true
-     Coq.Init.Peano.lt Coq.NArith.BinNat.N.log2 Coq.NArith.BinNat.N.modulo
-     Coq.NArith.BinNat.N.pow Coq.NArith.BinNat.N.to_nat Coq.ZArith.BinInt.Z.eqb
-     Coq.ZArith.BinInt.Z.land Coq.ZArith.BinInt.Z.lnot Coq.ZArith.BinInt.Z.log2
-     Coq.ZArith.BinInt.Z.lxor Coq.ZArith.BinInt.Z.of_N Coq.ZArith.BinInt.Z.pow
-     Coq.ZArith.BinInt.Z.pred Data.Bits.complement Data.Bits.op_zizazi__
-     Data.Bits.op_zizbzi__ Data.Bits.xor Data.Foldable.foldl Data.Semigroup.Semigroup
-     Data.Semigroup.op_zlzg__ GHC.Base.Eq_ GHC.Base.Monoid GHC.Base.Ord
-     GHC.Base.String GHC.Base.compare GHC.Base.flip GHC.Base.map GHC.Base.op_z2218U__
+     Bool.Sumbool.sumbool_of_bool Eq Gt Lt None Some Z andb bool comparison cons
+     false id list negb nil op_zp__ op_zt__ op_zv__ option orb pair size_nat
+     suffixBitMask true Coq.Init.Peano.lt Coq.NArith.BinNat.N.log2
+     Coq.NArith.BinNat.N.modulo Coq.NArith.BinNat.N.pow Coq.NArith.BinNat.N.to_nat
+     Coq.ZArith.BinInt.Z.eqb Coq.ZArith.BinInt.Z.land Coq.ZArith.BinInt.Z.lnot
+     Coq.ZArith.BinInt.Z.log2 Coq.ZArith.BinInt.Z.lxor Coq.ZArith.BinInt.Z.of_N
+     Coq.ZArith.BinInt.Z.pow Coq.ZArith.BinInt.Z.pred Data.Bits.complement
+     Data.Bits.op_zizazi__ Data.Bits.op_zizbzi__ Data.Bits.xor Data.Foldable.foldl
+     Data.Maybe.maybe Data.Semigroup.Semigroup Data.Semigroup.op_zlzg__
+     Data.Tuple.snd GHC.Base.Eq_ GHC.Base.Monoid GHC.Base.Ord GHC.Base.String
+     GHC.Base.compare GHC.Base.flip GHC.Base.map GHC.Base.op_z2218U__
      GHC.Base.op_zd__ GHC.Base.op_zdzn__ GHC.Base.op_zeze__ GHC.Base.op_zg__
      GHC.Base.op_zgze__ GHC.Base.op_zl__ GHC.Base.op_zsze__ GHC.Num.Int GHC.Num.Word
      GHC.Num.fromInteger GHC.Num.negate GHC.Num.op_zm__ GHC.Num.op_zp__

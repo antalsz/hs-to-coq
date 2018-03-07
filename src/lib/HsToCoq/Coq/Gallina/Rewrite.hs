@@ -57,6 +57,7 @@ rewrite1 (Rewrite patVars lhs rhs) term
 -- | Normalizes the outermost constructor
 -- (Maybe we should drop InFix completely)
 norm :: Term -> Term
+norm (HsString s) = String s
 norm t | Just (f, args) <- collectArgs t = appList (Qualid f) (map PosArg args)
 norm t = t
 
@@ -69,6 +70,7 @@ match patVars lhs term = execWriterT (go lhs term)
     go lhs term = go' (norm lhs) (norm term)
 
     go' :: Term -> Term -> WriterT (M.Map Qualid Term) Maybe ()
+    go' (String s1) (String s2) = guard (s1 == s2)
     go' (Qualid qid@(Bare v)) t | isPatVar v = do
         tell (M.singleton qid t)
         return ()

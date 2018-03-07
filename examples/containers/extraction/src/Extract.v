@@ -16,7 +16,6 @@ Require Import Data.Set.Internal.
 Require Import mathcomp.ssreflect.ssreflect.
 
 Extraction Blacklist Prelude.
-Extraction Blacklist Internal.
 Extraction Language Haskell.
 
 
@@ -37,6 +36,8 @@ Extract Constant unsafeFix => "(\f -> let r = f r in r)".
 
 Require Import Data.Set.Internal.
 Recursive Extraction Library Internal.
+
+Extraction Blacklist Internal.
 
 Require Import Data.IntSet.Internal.
 Recursive Extraction Library Internal.

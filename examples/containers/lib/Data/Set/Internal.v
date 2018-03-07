@@ -18,6 +18,7 @@ Require Coq.Program.Wf.
 Require Data.Bits.
 Require Data.Either.
 Require Data.Foldable.
+Require Data.Functor.Classes.
 Require Data.Semigroup.
 Require GHC.Base.
 Require GHC.Num.
@@ -133,14 +134,6 @@ Local Definition Foldable__Set__foldMap
    (Data.Set.Internal.Set_ a)' failed: OOPS! Cannot find information for class
    Qualified "GHC.Show" "Show" unsupported *)
 
-(* Translating `instance Data.Functor.Classes.Eq1 Data.Set.Internal.Set_'
-   failed: OOPS! Cannot find information for class Qualified "Data.Functor.Classes"
-   "Eq1" unsupported *)
-
-(* Translating `instance Data.Functor.Classes.Ord1 Data.Set.Internal.Set_'
-   failed: OOPS! Cannot find information for class Qualified "Data.Functor.Classes"
-   "Ord1" unsupported *)
-
 (* Translating `instance Data.Functor.Classes.Show1 Data.Set.Internal.Set_'
    failed: OOPS! Cannot find information for class Qualified "Data.Functor.Classes"
    "Show1" unsupported *)
@@ -239,6 +232,11 @@ Definition toAscList {a} : Set_ a -> list a :=
 
 Definition toList {a} : Set_ a -> list a :=
   toAscList.
+
+Local Definition Ord1__Set__liftCompare
+   : forall {a} {b}, (a -> b -> comparison) -> Set_ a -> Set_ b -> comparison :=
+  fun {a} {b} =>
+    fun cmp m n => Data.Functor.Classes.liftCompare cmp (toList m) (toList n).
 
 Local Definition Foldable__Set__toList : forall {a}, Set_ a -> list a :=
   fun {a} => toList.
@@ -1225,6 +1223,22 @@ Notation "'_\\_'" := (op_zrzr__).
 
 Infix "\\" := (_\\_) (at level 99).
 
+Local Definition Eq1__Set__liftEq
+   : forall {a} {b}, (a -> b -> bool) -> Set_ a -> Set_ b -> bool :=
+  fun {a} {b} =>
+    fun eq m n =>
+      andb (size m GHC.Base.== size n) (Data.Functor.Classes.liftEq eq (toList m)
+            (toList n)).
+
+Program Instance Eq1__Set_ : Data.Functor.Classes.Eq1 Set_ :=
+  fun _ k =>
+    k {| Data.Functor.Classes.liftEq__ := fun {a} {b} => Eq1__Set__liftEq |}.
+
+Program Instance Ord1__Set_ : Data.Functor.Classes.Ord1 Set_ :=
+  fun _ k =>
+    k {| Data.Functor.Classes.liftCompare__ := fun {a} {b} =>
+           Ord1__Set__liftCompare |}.
+
 Local Definition Eq___Set__op_zeze__ {inst_a} `{GHC.Base.Eq_ inst_a}
    : (Set_ inst_a) -> (Set_ inst_a) -> bool :=
   fun t1 t2 =>
@@ -1284,6 +1298,8 @@ End Notations.
      id list negb nil op_zt__ option orb pair prod set_size true Data.Bits.shiftL
      Data.Bits.shiftR Data.Either.Either Data.Either.Left Data.Either.Right
      Data.Foldable.Foldable Data.Foldable.foldMap Data.Foldable.foldl
+     Data.Functor.Classes.Eq1 Data.Functor.Classes.Ord1
+     Data.Functor.Classes.liftCompare Data.Functor.Classes.liftEq
      Data.Semigroup.Semigroup Data.Semigroup.op_zlzg__ GHC.Base.Eq_ GHC.Base.Monoid
      GHC.Base.Ord GHC.Base.String GHC.Base.compare GHC.Base.const GHC.Base.flip
      GHC.Base.foldr GHC.Base.map GHC.Base.mappend GHC.Base.mempty

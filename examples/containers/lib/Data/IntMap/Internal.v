@@ -213,13 +213,9 @@ Local Definition Foldable__IntMap_foldMap
    (Data.IntMap.Internal.IntMap a)' failed: OOPS! Cannot find information for class
    Qualified "GHC.Exts" "IsList" unsupported *)
 
-(* Translating `instance Data.Functor.Classes.Eq1 Data.IntMap.Internal.IntMap'
-   failed: OOPS! Cannot find information for class Qualified "Data.Functor.Classes"
-   "Eq1" unsupported *)
+(* Skipping instance Eq1__IntMap *)
 
-(* Translating `instance Data.Functor.Classes.Ord1 Data.IntMap.Internal.IntMap'
-   failed: OOPS! Cannot find information for class Qualified "Data.Functor.Classes"
-   "Ord1" unsupported *)
+(* Skipping instance Ord1__IntMap *)
 
 Definition Functor__IntMap_op_zlzd__ {a} {b} :=
   (@IntMap_op_zlzd__ a b).

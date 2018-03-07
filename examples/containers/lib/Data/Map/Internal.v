@@ -185,17 +185,13 @@ Fixpoint functor__Map_op_zlzd__ {inst_k} {a} {b} (f: a) (m:(Map inst_k) b):
    OOPS! Cannot find information for class Qualified "Data.Functor.Classes" "Eq2"
    unsupported *)
 
-(* Translating `instance forall {k}, forall `{GHC.Base.Eq_ k},
-   Data.Functor.Classes.Eq1 (Data.Map.Internal.Map k)' failed: OOPS! Cannot find
-   information for class Qualified "Data.Functor.Classes" "Eq1" unsupported *)
+(* Skipping instance Eq1__Map *)
 
 (* Translating `instance Data.Functor.Classes.Ord2 Data.Map.Internal.Map'
    failed: OOPS! Cannot find information for class Qualified "Data.Functor.Classes"
    "Ord2" unsupported *)
 
-(* Translating `instance forall {k}, forall `{GHC.Base.Ord k},
-   Data.Functor.Classes.Ord1 (Data.Map.Internal.Map k)' failed: OOPS! Cannot find
-   information for class Qualified "Data.Functor.Classes" "Ord1" unsupported *)
+(* Skipping instance Ord1__Map *)
 
 (* Translating `instance Data.Functor.Classes.Show2 Data.Map.Internal.Map'
    failed: OOPS! Cannot find information for class Qualified "Data.Functor.Classes"

@@ -14,6 +14,9 @@ redefine Definition Data.IntMap.Internal.Functor__IntMap_op_zlzd__ {a}{b}:= @Dat
 
 #### These are TODOs:
 
+skip Data.IntMap.Internal.Eq1__IntMap 
+skip Data.IntMap.Internal.Ord1__IntMap
+
 skip Data.IntMap.Internal.Functor__WhenMissing
 skip Data.IntMap.Internal.Applicative__WhenMissing
 skip Data.IntMap.Internal.Monad__WhenMissing

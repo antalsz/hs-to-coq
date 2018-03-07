@@ -289,6 +289,21 @@ builtInClasses =
        ,("Data.Bifunctor.first",Forall (Inferred Implicit (Ident "a") :| [Inferred Implicit (Ident "b"),Inferred Implicit (Ident "c")]) (Arrow (Parens (Arrow "a" "b")) (Arrow (App (App "p" (PosArg "a" :| [])) (PosArg "c" :| [])) (App (App "p" (PosArg "b" :| [])) (PosArg "c" :| [])))))
        ,("Data.Bifunctor.second",Forall (Inferred Implicit (Ident "b") :| [Inferred Implicit (Ident "c"),Inferred Implicit (Ident "a")]) (Arrow (Parens (Arrow "b" "c")) (Arrow (App (App "p" (PosArg "a" :| [])) (PosArg "b" :| [])) (App (App "p" (PosArg "a" :| [])) (PosArg "c" :| [])))))]
 
+    , ClassDefinition "Data.Functor.Classes.Eq1" ["f"] Nothing
+        [ "Data.Functor.Classes.liftEq" =:
+          (Forall [ Inferred Implicit (Ident "a")
+                  , Inferred Implicit (Ident "b")] $
+            ("a" `Arrow` "b" `Arrow` "bool") `Arrow`
+            App1 "f" "a" `Arrow`  App1 "f" "b" `Arrow` "bool")
+        ]
+    , ClassDefinition "Data.Functor.Classes.Ord1" ["f"] Nothing
+        [ "Data.Functor.Classes.liftCompare" =:
+          (Forall [ Inferred Implicit (Ident "a")
+                  , Inferred Implicit (Ident "b")] $
+            ("a" `Arrow` "b" `Arrow` "comparison") `Arrow`
+            App1 "f" "a" `Arrow`  App1 "f" "b" `Arrow` "comparison")
+        ]
+     
     ]
   where
    (=:) = (,)

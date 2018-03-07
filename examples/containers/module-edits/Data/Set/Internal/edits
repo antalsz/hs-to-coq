@@ -45,4 +45,5 @@ nonterminating Data.Set.Internal.fromDistinctDescList
 order Data.Set.Internal.Foldable__Set_ Data.Set.Internal.cartesianProduct
 order Data.Set.Internal.Eq___Set_ Data.Set.Internal.Ord__Set_
 order Data.Set.Internal.Semigroup__Set_ Data.Set.Internal.Monoid__Set__mappend
-order Data.Set.Internal.Semigroup__MergeSet Data.Set.Internal.Monoid__MergeSet_mappend 
+order Data.Set.Internal.Semigroup__MergeSet Data.Set.Internal.Monoid__MergeSet_mappend Data.Set.Interal.combineEq
+order Data.Set.Internal.Eq1__Set_ Data.Set.Internal.Ord1__Set_

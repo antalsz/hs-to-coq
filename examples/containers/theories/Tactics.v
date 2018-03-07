@@ -1,4 +1,7 @@
-From mathcomp Require Import ssrbool ssreflect.
+(** * General tactics *)
+
+(** These tactics are general proof management tactics, and not specific to any particular theory.
+*)
 
 Ltac expand_pairs :=
   match goal with
@@ -10,10 +13,10 @@ Ltac destruct_match :=
   match goal with
   | [ H :context[match ?a with _ => _ end] |- _] =>
     let Heq := fresh "Heq" in
-    destruct a eqn:Heq=>//
+    destruct a eqn:Heq
   | [ |- context[match ?a with _ => _ end]] =>
     let Heq := fresh "Heq" in
-    destruct a eqn:Heq=>//
+    destruct a eqn:Heq
   end.
 
 
@@ -31,4 +34,11 @@ Ltac assert_new prop prf :=
     | [ H : prop |- _] => fail 1
     | _ => assert prop by prf
   end.
+
+
+(* A backtracking variant of [eassumption] *)
+
+(** Source: http://stackissue.com/coq/coq/backtracking-eassumption-287.html *)
+
+Ltac beassumption := multimatch goal with H :_ |- _ => exact H end.
 

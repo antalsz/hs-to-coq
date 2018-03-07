@@ -1,4 +1,7 @@
 (******************************************************************************)
+
+Set Warnings "-notation-overridden".
+
 (** Imports **)
 
 (* SSReflect *)
@@ -17,6 +20,8 @@ Require Import Data.Bits.
 Require Import Data.IntSet.Internal.
 Require Import Utils.Containers.Internal.BitUtil.
 Require Import Popcount.
+Require Import BitUtils.
+Require Import DyadicIntervals.
 Require Import IntSetProofs.
 
 (* Util *)
@@ -162,6 +167,54 @@ Proof.
 Qed.
 
 (******************************************************************************)
+(** Low-level IntSet membership theorems **)
+
+(* Low-level *)
+Theorem Nil_member :
+  forall k, member k Nil = false.
+Proof. done. Qed.
+
+(* Low-level *)
+Theorem Nil_member' :
+  forall k, ~~ member k Nil.
+Proof. done. Qed.
+
+(* Low-level *)
+Theorem Tip_member (p : Prefix) (bm : BitMap) :
+  WF (Tip p bm) ->
+  forall k, member k (Tip p bm) = bitmapInRange (Z.shiftr p (Z.log2 (Z.of_N WIDTH)), N.log2 WIDTH) bm k.
+Proof.
+  move=> [fs SEMs] k;
+    inversion SEMs  as [| s' rng fs' DESCs]; subst s' fs';
+    inversion DESCs as [p' bm' rng' fs' NN_p def_p def_bits_r def_fs isbm_bm |]; subst p' bm' rng' fs' p.
+  erewrite member_Desc, def_fs; last eassumption.
+  f_equal.
+  replace rng with (fst rng, rBits rng) by rewrite -surjective_pairing //.
+  f_equal => //; rewrite /rPrefix.
+  rewrite Z.shiftr_shiftl_l; last apply N2Z.is_nonneg.
+  by rewrite def_bits_r /=.
+Qed.
+
+Theorem Bin_left_lt_right {p msk : Z} {l r : IntSet} :
+  WF (Bin p msk l r) ->
+  forall kl, member kl l -> forall kr, member kr r -> kl < kr.
+Proof.
+  move=> WFs; move: (WFs) => [fs SEMs];
+    inversion SEMs as [|s' rng_s fs' DESCs];
+    subst s' fs';
+    inversion DESCs as [|l' rng_l fl r' rng_r fr p' msk' rng_s' fs'
+                         DESCl DESCr POSrng subrange_l subrange_r def_p def_m def_fs];
+    subst p' msk' l' r' rng_s' fs' p msk.
+  
+  move=> kl MEM_kl kr MEM_kr.
+  move: MEM_kl MEM_kr; erewrite !member_Desc; try eassumption.
+  move=> /(Desc_inside DESCl)/(inRange_isSubrange_true _ _ _ subrange_l)/inRange_bounded IN_kl
+         /(Desc_inside DESCr)/(inRange_isSubrange_true _ _ _ subrange_r)/inRange_bounded IN_kr.
+  move: IN_kl IN_kr; rewrite rPrefix_halfRange_otherhalf // => IN_kl IN_kr.
+  apply/Z.ltb_spec0; omega.
+Qed.
+
+(******************************************************************************)
 (** Working with IntSets by membership **)
 
 Theorem eqIntSetMemberP {s1 s2 : IntSet} :
@@ -180,6 +233,20 @@ Proof.
     move: (KEYS (Z.to_N n)); cbv -[member Z.of_N Z.to_N eqb iff].
     rewrite Z2N.id //.
     by case: (member _ s1); case: (member _ s2); intuition.
+Qed.
+
+(* Low-level *)
+Theorem Bin_member (p : Prefix) (msk : Mask) (l r : IntSet) :
+  WF (Bin p msk l r) ->
+  forall k, member k (Bin p msk l r) = member k l || member k r.
+Proof.
+  move=> [fs SEMs] k;
+    inversion SEMs  as [| s' rng fs' DESCs];
+    subst s' fs';
+    inversion DESCs as [| l' rng_l fl r' rng_r fr p' msk' rng' fs'
+                          DESCl DESCr POS_bits SUBRl SUBRr def_p def_msk def_fs];
+    subst l' r' p' msk' rng' fs' p msk.
+  erewrite !member_Desc, def_fs; eauto.
 Qed.
 
 (* Prove the spec for `forall k, member k (F ... s ...) = ...` in terms of
@@ -215,6 +282,27 @@ Theorem difference_member (s1 s2 : IntSet) :
   WF s1 -> WF s2 ->
   forall k, member k (difference s1 s2) = member k s1 && ~~ member k s2.
 Proof. member_by_Sem difference_Sem. Qed.
+
+Theorem unions_member (ss : list IntSet) :
+  Forall WF ss ->
+  forall k, member k (unions ss) = any (member k) ss.
+Proof.
+  move=> WF_ss k.
+  rewrite /unions hs_coq_foldl_list Foldable_any_ssreflect.
+  rewrite -(orFb (has _ _)); change false with (member k empty); have: (WF empty) by [].
+  elim: ss empty WF_ss => [|s ss IH] z WF_sss WF_z //=;
+    [by rewrite orbF | inversion WF_sss as [|s' ss' WF_s WF_ss]; subst s' ss'].
+  rewrite IH //; last by apply union_WF.
+  by rewrite union_member // orbA.
+Qed.
+
+Theorem empty_member :
+  forall k, member k empty = false.
+Proof. done. Qed.
+
+Theorem empty_member' :
+  forall k, ~~ member k empty.
+Proof. done. Qed.
 
 Theorem singleton_member (x : Int) :
   (0 <= x)%Z ->

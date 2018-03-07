@@ -1,4 +1,7 @@
 (******************************************************************************)
+
+Set Warnings "-notation-overridden".
+
 (** Imports **)
 
 (* SSReflect *)
@@ -19,6 +22,8 @@ Require Import Data.Bits.
 (* IntSet *)
 Require Import Data.IntSet.Internal.
 Require Import IntSetProperties.
+Require Import BitUtils.
+Require Import DyadicIntervals.
 Require Import IntSetProofs.
 
 (* Working with Haskell *)
@@ -437,7 +442,6 @@ Qed.
 
 Theorem thm_split : toProp prop_split.
 Proof.
-  rewrite /prop_split /= => s WFs i POS_i.
 Abort.
 
 Theorem thm_splitMember : toProp prop_splitMember.
@@ -446,7 +450,33 @@ Abort.
 
 Theorem thm_splitRoot : toProp prop_splitRoot.
 Proof.
-Abort.
+  rewrite /prop_splitRoot /= => -[p m l r | p m | ] WFs //=.
+  - move: (WFs) => /WF_Bin_children [WFl WFr].
+    have WFlr: WF (union l r) by apply union_WF.
+    have WFrl: WF (union r l) by apply union_WF.
+    
+    have: (m > 0%Z). {
+      move: (WFs) => [fs SEMs];
+        inversion SEMs as [|s' [ps ms] fs' DESCs];
+        subst s' fs';
+        inversion DESCs as [|l' rng_l fl r' rng_r fr p' m' rng_s' fs'
+                             DESCl DESCr POSrng subrange_l subrange_r def_p def_m def_fs];
+        subst p' m' l' r' rng_s' fs' p m.
+      unfold ">", Ord_Integer___ => /=.
+      apply/Z.ltb_spec0; apply Z.pow_pos_nonneg => //.
+      zify; simpl in *; omega.
+    }
+    move=> /(Ord_gt_not_lt _ _)/negbTE ->.
+    
+    rewrite /unions !hs_coq_foldl_list /= !(union_eq empty) /=.
+    apply/andP; split.
+    + apply null_list_none => -[x y] /in_flat_map [kl [/elemP IN_kl /in_flat_map [kr [/elemP IN_kr IN_xy]]]].
+      move: IN_kl IN_kr; rewrite !toList_member // => IN_kl IN_kr.
+      move: (Bin_left_lt_right WFs _ IN_kl _ IN_kr) IN_xy.
+      by move=> /(Ord_lt_not_gt _ _)/negbTE ->.
+    + by apply/eqIntSetMemberP => // k POS_k; rewrite Bin_member // union_member //.
+  - apply/andP; split; by [elim: (foldrBits _ _ _ _) | apply/Eq_eq].
+Qed.
 
 Theorem thm_partition : toProp prop_partition.
 Proof.

@@ -16,3 +16,5 @@ HSUtil.v
 SortedUtil.v
 IntSetUtil.v
 IntSetPropertyProofs.v
+BitUtils.v
+DyadicIntervals.v

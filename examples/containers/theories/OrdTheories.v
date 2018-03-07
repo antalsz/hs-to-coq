@@ -44,14 +44,14 @@ Module OrdTheories(E: OrderedType).
   Proof.
     rewrite /_GHC.Base.<_ /Ord_t /ord_default /=.
     rewrite /_GHC.Base.==_ /Eq_comparison___ /= /eq_comparison /compare.
-    do 2 destruct_match; constructor; auto.
+    do 2 destruct_match=>//; constructor; auto.
   Qed.
 
   Lemma elt_leP { e1 e2 } : reflect (OrdFacts.TO.le e1 e2) (e1 GHC.Base.<= e2).
   Proof.
     rewrite /_GHC.Base.<=_ /Ord_t /ord_default /=.
     rewrite /_GHC.Base.==_ /Eq_comparison___ /= /eq_comparison /compare.
-    do 2 destruct_match; constructor; auto;
+    do 2 destruct_match=>//; constructor; auto;
       rewrite /OrdFacts.TO.le /OrdFacts.TO.eq /OrdFacts.TO.lt;
       intuition; OrdFacts.order.
   Qed.
@@ -60,14 +60,14 @@ Module OrdTheories(E: OrderedType).
   Proof.
     rewrite /_GHC.Base.>_ /Ord_t /ord_default /=.
     rewrite /_GHC.Base.==_ /Eq_comparison___ /= /eq_comparison /compare.
-    do 2 destruct_match; constructor; auto.
+    do 2 destruct_match=>//; constructor; auto.
   Qed.
 
   Lemma elt_geP { e1 e2 } : reflect (OrdFacts.TO.le e2 e1) (e1 GHC.Base.>= e2).
   Proof.
     rewrite /_GHC.Base.>=_ /Ord_t /ord_default /=.
     rewrite /_GHC.Base.==_ /Eq_comparison___ /= /eq_comparison /compare.
-    do 2 destruct_match; constructor; auto;
+    do 2 destruct_match=>//; constructor; auto;
       rewrite /OrdFacts.TO.le /OrdFacts.TO.eq /OrdFacts.TO.lt;
       intuition; OrdFacts.order.
   Qed.

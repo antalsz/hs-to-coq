@@ -2227,14 +2227,14 @@ Program Instance Ord__Min {a} `{GHC.Base.Ord a} : GHC.Base.Ord (Min a) :=
          GHC.Base.max__ := Ord__Min_max ;
          GHC.Base.min__ := Ord__Min_min |}.
 
-Definition diff {m} `{Semigroup m} : m -> Data.Monoid.Endo m :=
-  Data.Monoid.Mk_Endo GHC.Base.∘ _<>_.
-
-Definition option {b} {a} : b -> (a -> b) -> Option a -> b :=
+Definition destruct_option {b} {a} : b -> (a -> b) -> Option a -> b :=
   fun arg_0__ arg_1__ arg_2__ =>
     match arg_0__, arg_1__, arg_2__ with
     | n, j, Mk_Option m => Data.Maybe.maybe n j m
     end.
+
+Definition diff {m} `{Semigroup m} : m -> Data.Monoid.Endo m :=
+  Data.Monoid.Mk_Endo GHC.Base.∘ _<>_.
 
 Module Notations.
 Notation "'_Data.Semigroup.<>_'" := (op_zlzg__).

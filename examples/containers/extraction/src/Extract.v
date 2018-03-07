@@ -16,15 +16,12 @@ Require Import Data.Set.Internal.
 Require Import mathcomp.ssreflect.ssreflect.
 
 Extraction Blacklist Prelude.
+Extraction Blacklist Internal.
 Extraction Language Haskell.
+
 
 Set Warnings "-extraction-reserved-identifier".
 
-(*
- Warning: The following axioms must be realized in the extracted
- code: patternFailure PtrEquality.ptrEq PtrEquality.hetPtrEq
-       Base.errorWithoutStackTrace unsafeFix.
-*)
 Extract Inductive bool => "Prelude.Bool" ["Prelude.True" "Prelude.False" ].
 Extract Inductive comparison => "Prelude.Ordering" ["Prelude.EQ" "Prelude.LT" "Prelude.GT"].
 Extract Inductive list => "[]" ["[]" "(:)"].
@@ -38,4 +35,8 @@ Extract Constant PtrEquality.hetPtrEq => "\ x y -> Prelude.False".
 Extract Constant Base.errorWithoutStackTrace => "errorWithoutStackTrace".
 Extract Constant unsafeFix => "(\f -> let r = f r in r)".
 
+Require Import Data.Set.Internal.
+Recursive Extraction Library Internal.
+
+Require Import Data.IntSet.Internal.
 Recursive Extraction Library Internal.

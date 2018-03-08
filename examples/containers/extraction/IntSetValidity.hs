@@ -1,6 +1,7 @@
 {-# LANGUAGE CPP #-}
 module IntSetValidity (valid) where
 
+import ExtractedNumbers
 import ExtractedIntSet
 
 import Data.Bits (xor, (.&.))

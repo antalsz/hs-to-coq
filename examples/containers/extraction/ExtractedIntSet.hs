@@ -24,6 +24,8 @@ import qualified Data.Bits
 import qualified Control.Arrow as A
 import Control.DeepSeq(NFData,rnf)
 
+import ExtractedNumbers
+
 type IntSet = S2.IntSet
 pattern Nil = S2.Nil
 pattern Tip x y = S2.Tip x y
@@ -34,91 +36,12 @@ type BitMap = S2.BitMap
 type Prefix = S2.Prefix
 type Key    = S2.Key
 
-instance Integral S2.Mask where
-  quot = undefined
-  rem  = undefined
-  div  = undefined
-  mod  = undefined
-  quotRem = undefined
-  divMod   = undefined
-  toInteger = undefined
-
-instance Eq S2.Prefix where
-  (==) = undefined
-
-instance Num S2.Prefix where
-  (+) = undefined
-  (-) = undefined
-  (*) = undefined
-  negate = undefined
-  abs = undefined
-  signum = undefined
-  fromInteger = undefined
-
-instance Data.Bits.Bits S2.Prefix where
-  (.&.) = undefined
-  (.|.) = undefined
-  xor   = undefined
-  complement = undefined
-  shift = undefined
-  rotate = undefined
-  bitSize = undefined
-  bitSizeMaybe = undefined
-  isSigned = undefined
-  testBit = undefined
-  bit = undefined
-  popCount = undefined
-
-
-
 ----------------------------------------------------
 
 instance NFData (S2.IntSet) where
     rnf (S2.Tip p b)     = p `seq` b `seq` ()
     rnf (S2.Bin p y l r) = p `seq` y `seq` rnf l `seq` rnf r
     rnf S2.Nil           = ()
-
-instance Real S2.Mask where
-  toRational = undefined
-
-instance Enum S2.Mask where
-  toEnum = undefined
-  fromEnum = undefined
-  
-instance Ord S2.Mask where
-  compare = undefined
-
-----------------------------------------------------
-
-instance Show BinNums.Coq_positive where
-  show bn = reverse (go bn) where
-    go BinNums.Coq_xH = "1"
-    go (BinNums.Coq_xI bn) = '1' : go bn
-    go (BinNums.Coq_xO bn) = 'O' : go bn
-  
-
-toPositive :: Int -> BinNums.Coq_positive
-toPositive x | x <= 0 = error "must call with positive int"
-toPositive 1 = BinNums.Coq_xH
-toPositive x = let b1 = x `mod` 2
-                   b2 = x `div` 2 in
-               if b1 == 1 then BinNums.Coq_xI (toPositive b2) else
-                               BinNums.Coq_xO (toPositive b2)
-
-fromPositive :: BinNums.Coq_positive -> Int
-fromPositive BinNums.Coq_xH = 1
-fromPositive (BinNums.Coq_xI bn) = fromPositive bn * 2 + 1
-fromPositive (BinNums.Coq_xO bn) = fromPositive bn * 2
- 
-toBinZ :: Int -> BinNums.Z
-toBinZ 0 = BinNums.Z0
-toBinZ x | x < 0 = BinNums.Zneg (toPositive (abs x))
-toBinZ x | x > 0 = BinNums.Zpos (toPositive x)
-
-fromBinZ :: BinNums.Z -> Int
-fromBinZ BinNums.Z0 = 0
-fromBinZ (BinNums.Zneg bn) = - (fromPositive bn)
-fromBinZ (BinNums.Zpos bn) = fromPositive bn
 
 ----------------------------------------------------
 
@@ -262,10 +185,10 @@ null = S2.null
 --------------------------------------------------------------------}
 
 fromAscList :: [Int] -> IntSet
-fromAscList xs = error "untranslated"
+fromAscList xs = error "fromAscList: untranslated"
 
 fromDistinctAscList :: [Int] -> IntSet
-fromDistinctAscList xs = error "untranslated"
+fromDistinctAscList xs = error "fromDistinctAscList: untranslated"
 
 
 fromList :: [Int] -> IntSet

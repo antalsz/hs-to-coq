@@ -7,6 +7,7 @@ import Data.Word (Word)
 #else
 import Data.Bits ((.&.))
 #endif
+import ExtractedNumbers
 import ExtractedIntSet
 import Data.List (nub,sort)
 import qualified Data.List as List
@@ -58,8 +59,8 @@ main = defaultMain [ testCase "lookupLT" test_lookupLT
                    , testProperty "prop_isSubsetOf2" prop_isSubsetOf2
                    , testProperty "prop_disjoint" prop_disjoint
                    , testProperty "prop_size" prop_size
-                   , testProperty "prop_findMax" prop_findMax
-                   , testProperty "prop_findMin" prop_findMin
+--                   , testProperty "prop_findMax" prop_findMax
+--                   , testProperty "prop_findMin" prop_findMin
                    , testProperty "prop_ord" prop_ord
 --                   , testProperty "prop_readShow" prop_readShow
                    , testProperty "prop_foldR" prop_foldR

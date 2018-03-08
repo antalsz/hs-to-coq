@@ -16,6 +16,8 @@ import qualified Data.Semigroup
 import qualified Data.Monoid
 import qualified Data.Foldable
 
+import ExtractedNumbers
+
 import Control.DeepSeq(NFData,rnf)
 
 instance NFData a => NFData (S2.Set_ a) where
@@ -23,39 +25,6 @@ instance NFData a => NFData (S2.Set_ a) where
     rnf (S2.Bin _ y l r) = rnf y `seq` rnf l `seq` rnf r
 
 ----------------------------------------------------
-
-instance Show BinNums.Coq_positive where
-  show bn = reverse (go bn) where
-    go BinNums.Coq_xH = "1"
-    go (BinNums.Coq_xI bn) = '1' : go bn
-    go (BinNums.Coq_xO bn) = 'O' : go bn
-  
-
-toPositive :: Int -> BinNums.Coq_positive
-toPositive x | x <= 0 = error "must call with positive int"
-toPositive 1 = BinNums.Coq_xH
-toPositive x = let b1 = x `mod` 2
-                   b2 = x `div` 2 in
-               if b1 == 1 then BinNums.Coq_xI (toPositive b2) else
-                               BinNums.Coq_xO (toPositive b2)
-
-fromPositive :: BinNums.Coq_positive -> Int
-fromPositive BinNums.Coq_xH = 1
-fromPositive (BinNums.Coq_xI bn) = fromPositive bn * 2 + 1
-fromPositive (BinNums.Coq_xO bn) = fromPositive bn * 2
- 
-toBinZ :: Int -> BinNums.Z
-toBinZ 0 = BinNums.Z0
-toBinZ x | x < 0 = BinNums.Zneg (toPositive (abs x))
-toBinZ x | x > 0 = BinNums.Zpos (toPositive x)
-
-fromBinZ :: BinNums.Z -> Int
-fromBinZ BinNums.Z0 = 0
-fromBinZ (BinNums.Zneg bn) = - (fromPositive bn)
-fromBinZ (BinNums.Zpos bn) = fromPositive bn
-
-----------------------------------------------------
-
 
 eq_a :: Eq a => Base.Eq_ a
 eq_a _ f = f (Base.Eq___Dict_Build (==) (/=))

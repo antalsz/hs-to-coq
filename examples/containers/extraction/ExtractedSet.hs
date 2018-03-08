@@ -111,7 +111,7 @@ lookupGE = S2.lookupGE eq_a ord_a
 --------------------------------------------------
 
 lookupIndex :: Prelude.Ord a => a -> Set a -> Maybe Int
-lookupIndex x s = fromBinZ <$> S2.lookupIndex eq_a ord_a x s
+lookupIndex x s = fromIntegral . fromBinZ <$> S2.lookupIndex eq_a ord_a x s
 
 findIndex   = error "findIndex: partial function"
 elemAt      = error "elemAt: partial function"
@@ -130,7 +130,7 @@ bin s = S2.Bin (toBinZ s)
 
 -- need to translate BinNums.Z -> Int
 size :: Set a -> Int
-size x = fromBinZ (S2.size x)
+size x = fromIntegral $ fromBinZ (S2.size x)
 
 --------------------------------------------------
 -- Single, Member, Insert, Delete
@@ -233,14 +233,14 @@ map = S2.map eq_a ord_a
 
 filter = S2.filter
 
-take :: Int -> (Set a) -> Set a
-take x = S2.take (toBinZ x)
+take :: Int -> Set a -> Set a
+take x = S2.take (toBinZ (fromIntegral x))
 
 drop :: Int -> Set a -> Set a
-drop x = S2.drop (toBinZ x)
+drop x = S2.drop (toBinZ (fromIntegral x))
 
-splitAt :: Int -> (Set a1) -> (Set a1,Set a1)
-splitAt x = S2.splitAt (toBinZ x)
+splitAt :: Int -> Set a1 -> (Set a1,Set a1)
+splitAt x = S2.splitAt (toBinZ (fromIntegral x))
 
 isProperSubsetOf :: Ord a => Set a -> Set a -> Bool
 isProperSubsetOf = S2.isProperSubsetOf eq_a ord_a

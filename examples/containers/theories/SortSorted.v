@@ -284,11 +284,6 @@ Proof.
     repeat (assumption || constructor).
 Qed.
 
-Lemma HdRel_Permutation:
-  forall x xs ys,
-  Permutation xs ys -> HdRel le x ys -> HdRel le x xs.
-Admitted.
-
 Lemma merge_sorted:
   forall xs ys,
   Sorted le xs ->
@@ -319,12 +314,11 @@ Proof.
         constructor.
         assumption.
         assumption.
-        eapply HdRel_Permutation.
-        etransitivity.
-        apply merge_permutation.
-        symmetry.
-        apply Permutation_middle.
-        constructor. assumption.
+        destruct l as [| x l]; simpl.
+        ++ constructor; assumption.
+        ++ destruct (eq_comparison _ _); constructor.
+           ** assumption.
+           ** inversion H0; assumption.
 Qed.
 
 Program Fixpoint mergePairs_sorted

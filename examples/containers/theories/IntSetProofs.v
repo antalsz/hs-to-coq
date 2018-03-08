@@ -4072,6 +4072,7 @@ Lemma splitMemberGo_Sem :
   forall (P : IntSet * bool * IntSet -> Prop),
   (forall s1 f1 s2 f2 b,
     Sem s1 f1 -> Sem s2 f2 ->
+    f x = b ->
     (forall i, f1 i = f i && (i <? x)%Z) ->
     (forall i, f2 i = f i && (x <? i)%Z) ->
     P (s1, b, s2)) ->
@@ -4086,6 +4087,14 @@ Proof.
       eapply HX.
       + constructor; intro; reflexivity.
       + eapply DescSem. constructor; try eassumption.
+      + rewrite H2.
+        apply bitmapInRange_outside.
+        unfold inRange.
+        destruct r.
+        simpl in *.
+        subst.
+        apply Z.eqb_neq.
+        admit.
       + solve_f_eq.
         apply bitmapInRange_inside in Heqb.
         apply inRange_bounded in Heqb.
@@ -4100,6 +4109,14 @@ Proof.
       eapply HX.
       + eapply DescSem. constructor; try eassumption.
       + constructor; intro; reflexivity.
+      + rewrite H2.
+        apply bitmapInRange_outside.
+        unfold inRange.
+        destruct r.
+        simpl in *.
+        subst.
+        apply Z.eqb_neq.
+        admit.
       + solve_f_eq.
         apply bitmapInRange_inside in Heqb.
         rewrite <- prefixOf_eqb_spec in Heqb by assumption.
@@ -4145,6 +4162,7 @@ Proof.
         apply isBitMask0_ldiff.
         apply isBitMask0_ones.
         Nomega.
+      + admit.
       + intro i.
         rewrite H2.
         rewrite bitmapInRange_land.
@@ -4188,6 +4206,7 @@ Proof.
         eapply HX.
         ** constructor; intro; reflexivity.
         ** eapply DescSem. econstructor; try eassumption; reflexivity.
+        ** admit.
         ** intros i. simpl. rewrite H4.
            destruct (Z.ltb_spec i x).
            ++ destruct (inRange i r) eqn:Hir; only 1: (apply inRange_bounded in Hir; omega).
@@ -4207,6 +4226,7 @@ Proof.
         eapply HX.
         ** eapply DescSem. econstructor; try eassumption; reflexivity.
         ** constructor; intro; reflexivity.
+        ** admit.
         ** intros i. simpl. rewrite H4.
            destruct (Z.ltb_spec i x).
            ++ rewrite andb_true_r. reflexivity.
@@ -4222,10 +4242,11 @@ Proof.
               reflexivity.
            ++ rewrite andb_false_r. reflexivity.
     + eapply IHHD1. clear IHHD1 IHHD2.
-      intros sl fl sr fr b Hsl Hsr Hfl Hfr.
+      intros sl fl sr fr b Hsl Hsr Hb Hfl Hfr.
       eapply HX; clear HX.
       - eassumption.
       - apply union_Sem; [ eassumption | eapply DescSem; eassumption].
+      - admit.
       - intro i.
         rewrite H4, Hfl; clear H4 Hfl Hfr.
         destruct (f2 i) eqn:?, (Z.ltb_spec i x);
@@ -4251,10 +4272,11 @@ Proof.
         rewrite !rBits_halfRange in *.
         omega.
     + eapply IHHD2. clear IHHD1 IHHD2.
-      intros sl fl sr fr b Hsl Hsr Hfl Hfr.
+      intros sl fl sr fr b Hsl Hsr Hb Hfl Hfr.
       eapply HX; clear HX.
       - apply union_Sem; [ eassumption | eapply DescSem; eassumption].
       - eassumption.
+      - admit.
       - intro i.
         rewrite H4, Hfl; clear H4 Hfl Hfr.
         destruct (f1 i) eqn:?, (Z.ltb_spec i x);
@@ -4286,6 +4308,7 @@ Lemma splitMember_Sem :
   forall (P : IntSet * bool * IntSet -> Prop),
   (forall s1 f1 s2 f2 b,
     Sem s1 f1 -> Sem s2 f2 ->
+    f x = b ->
     (forall i, f1 i = f i && (i <? x)%Z) ->
     (forall i, f2 i = f i && (x <? i)%Z) ->
     P (s1, b, s2)) ->
@@ -4295,7 +4318,8 @@ Proof.
   unfold splitMember.
   fold splitMemberGo.
   destruct HSem.
-  * simpl. eapply HX; try constructor; try reflexivity; solve_f_eq.
+  * simpl. eapply HX; try constructor; try reflexivity; try solve_f_eq.
+    apply H.
   * destruct HD eqn:?; unfoldMethods.
     + eapply splitMemberGo_Sem;
       only 1: eassumption;

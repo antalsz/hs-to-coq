@@ -106,6 +106,17 @@ Proof.
   omega. (* WTF, why do I have to commut mult for omega to work? *)
 Qed.
 
+Lemma inRange_false_bounded_iff:
+  forall i r , inRange i r = false <-> (i < rPrefix r \/ rPrefix r + 2^(Z.of_N (rBits r)) <= i).
+Proof.
+  intros.
+  split; intro.
+  * apply inRange_false_bounded; assumption.
+  * destruct (inRange i r) eqn:?; try reflexivity; exfalso.
+    apply inRange_bounded in Heqb.
+    omega.
+Qed.
+
 (** *** Operation: [isSubrange] *)
 
 Definition isSubrange : range -> range -> bool :=

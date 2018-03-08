@@ -3897,9 +3897,22 @@ Proof.
         rewrite bitmapInRange_land.
         destruct (bitmapInRange r bm i) eqn:?; try reflexivity; simpl.
         apply bitmapInRange_inside in Heqb.
-        apply inRange_bounded in Heqb. 
-        (* We could use a general lemma about (bitmapInRange r (N.ones n))
-           similar to bitmapInRange_inside and inRange_bounded *)
+        subst.
+        assert (prefixOf x <= x) by Nomega.
+        assert (0 <= x) by Nomega.
+        unfold bitmapInRange.
+        rewrite Heqb.
+        destruct (i <? x) eqn:?. {
+          apply N.ones_spec_low.
+          apply Z.ltb_lt in Heqb0.
+          unfold suffixOf, suffixBitMask.
+          rewrite H1; simpl.
+          admit.
+        }
+        apply N.ones_spec_high.
+        apply Z.ltb_ge in Heqb0.
+        unfold suffixOf, suffixBitMask.
+        rewrite H1; simpl.
         admit.
       + intro i.
         rewrite H2.
@@ -4040,6 +4053,259 @@ Proof.
            would have to do something here. *)
         exfalso. pose proof (rMask_nonneg r).  omega.
       - eapply splitGo_Sem;
+        only 1: eassumption;
+        intros sl fl sr fr Hsl Hsr Hfl Hfr.
+        eapply HX; eassumption.
+Qed.
+
+(** ** Verification of [splitMember] *)
+
+Definition splitMemberGo : Key -> IntSet -> IntSet * bool * IntSet.
+Proof.
+  let rhs := eval unfold splitMember in splitMember in
+  match rhs with fun x t => match _ with | Nil => ?go x t | _ => _ end => exact go end.
+Defined.
+
+Lemma splitMemberGo_Sem :
+  forall x s r f,
+  Desc s r f ->
+  forall (P : IntSet * bool * IntSet -> Prop),
+  (forall s1 f1 s2 f2 b,
+    Sem s1 f1 -> Sem s2 f2 ->
+    (forall i, f1 i = f i && (i <? x)%Z) ->
+    (forall i, f2 i = f i && (x <? i)%Z) ->
+    P (s1, b, s2)) ->
+  P (splitMemberGo x s) : Prop.
+Proof.
+  intros ???? HD.
+  induction HD; intros X HX.
+  * cbn -[bitmapOf prefixOf N.ones].
+    fold WIDTH.
+    destruct (Z.ltb_spec x p); only 2: destruct (Z.ltb_spec p (prefixOf x)).
+    - (* s is Tip, x is below *)
+      eapply HX.
+      + constructor; intro; reflexivity.
+      + eapply DescSem. constructor; try eassumption.
+      + solve_f_eq.
+        apply bitmapInRange_inside in Heqb.
+        apply inRange_bounded in Heqb.
+        rewrite Z.ltb_lt in Heqb0.
+        omega.
+      + solve_f_eq.
+        apply bitmapInRange_inside in Heqb.
+        apply inRange_bounded in Heqb.
+        rewrite Z.ltb_ge in Heqb0.
+        omega.
+    - (* s is Tip, x is above *)
+      eapply HX.
+      + eapply DescSem. constructor; try eassumption.
+      + constructor; intro; reflexivity.
+      + solve_f_eq.
+        apply bitmapInRange_inside in Heqb.
+        rewrite <- prefixOf_eqb_spec in Heqb by assumption.
+        rewrite Z.eqb_eq in Heqb.
+        rewrite Z.ltb_ge in Heqb0. subst.
+        apply prefixOf_mono in Heqb0. 
+        omega.
+      + solve_f_eq.
+        apply bitmapInRange_inside in Heqb.
+        rewrite <- prefixOf_eqb_spec in Heqb by assumption.
+        rewrite Z.eqb_eq in Heqb.
+        rewrite Z.ltb_lt in Heqb0. subst.
+        assert (x <= i) by omega.
+        apply prefixOf_mono in H0. 
+        omega.
+    - (* s is Tip, x is part of it *)
+      assert ((bitmapOf x - 1)%N = (N.ones (Z.to_N (suffixOf x))%N)) as H6.
+      { rewrite N.ones_equiv.
+        rewrite N.pred_sub.
+        unfold bitmapOf.
+        remember (suffixOf x) as o.
+        unfold bitmapOfSuffix, shiftLL.
+        rewrite N.shiftl_1_l.
+        reflexivity.
+      }
+      rewrite H6.
+      eapply HX.
+      + eapply Desc0_Sem.
+        eapply tip_Desc0; try eassumption; try reflexivity.
+        apply isBitMask0_land; try isBitMask.
+        apply isBitMask0_ones.
+        pose proof (suffixOf_lt_WIDTH x).
+        apply N2Z.inj_le.
+        rewrite Z2N.id; [omega|].
+        clear -H H4.
+        unfold suffixOf.
+        simpl.
+        apply land_nonneg_proj_r2l.
+        omega.
+      + eapply Desc0_Sem.
+        eapply tip_Desc0; try eassumption; try reflexivity.
+        apply isBitMask0_land; try isBitMask.
+        apply isBitMask0_ldiff.
+        apply isBitMask0_ones.
+        Nomega.
+      + intro i.
+        rewrite H2.
+        rewrite bitmapInRange_land.
+        destruct (bitmapInRange r bm i) eqn:?; try reflexivity; simpl.
+        apply bitmapInRange_inside in Heqb.
+        subst.
+        assert (prefixOf x <= x) by Nomega.
+        assert (0 <= x) by Nomega.
+        unfold bitmapInRange.
+        rewrite Heqb.
+        destruct (i <? x) eqn:?. {
+          apply N.ones_spec_low.
+          apply Z.ltb_lt in Heqb0.
+          unfold suffixOf, suffixBitMask.
+          rewrite H1; simpl.
+          admit.
+        }
+        apply N.ones_spec_high.
+        apply Z.ltb_ge in Heqb0.
+        unfold suffixOf, suffixBitMask.
+        rewrite H1; simpl.
+        admit.
+      + intro i.
+        rewrite H2.
+        rewrite bitmapInRange_land.
+        destruct (bitmapInRange r bm i) eqn:?; try reflexivity; rewrite !andb_true_l.
+        apply bitmapInRange_inside in Heqb.
+        apply inRange_bounded in Heqb. 
+        (* As above, but also about bitmapInRange and ldiff. *)
+        admit.
+  * simpl. unfoldMethods.
+    subst.
+    rewrite match_nomatch.
+    rewrite if_negb.
+    apply nomatch_zero; try assumption; intros.
+    + (* s is bin, x is outside *)
+      apply inRange_false_bounded in H2.
+      clear IHHD1 IHHD2.
+      destruct (Z.ltb_spec x (rPrefix r)).
+      - (* s is bin, x is below *)
+        eapply HX.
+        ** constructor; intro; reflexivity.
+        ** eapply DescSem. econstructor; try eassumption; reflexivity.
+        ** intros i. simpl. rewrite H4.
+           destruct (Z.ltb_spec i x).
+           ++ destruct (inRange i r) eqn:Hir; only 1: (apply inRange_bounded in Hir; omega).
+              rewrite (Desc_outside HD1) by inRange_false.
+              rewrite (Desc_outside HD2) by inRange_false.
+              reflexivity.
+           ++ rewrite andb_false_r. reflexivity.
+        ** intros i. 
+           destruct (Z.ltb_spec x i).
+           ++ rewrite andb_true_r. reflexivity.
+           ++ destruct (inRange i r) eqn:Hir; only 1: (apply inRange_bounded in Hir; omega).
+              rewrite H4.
+              rewrite (Desc_outside HD1) by inRange_false.
+              rewrite (Desc_outside HD2) by inRange_false.
+              reflexivity.
+      - (* s is bin, x is above *)
+        eapply HX.
+        ** eapply DescSem. econstructor; try eassumption; reflexivity.
+        ** constructor; intro; reflexivity.
+        ** intros i. simpl. rewrite H4.
+           destruct (Z.ltb_spec i x).
+           ++ rewrite andb_true_r. reflexivity.
+           ++ destruct (inRange i r) eqn:Hir; only 1: (apply inRange_bounded in Hir; omega).
+              rewrite (Desc_outside HD1) by inRange_false.
+              rewrite (Desc_outside HD2) by inRange_false.
+              reflexivity.
+        ** intros i. simpl. rewrite H4.
+           destruct (Z.ltb_spec x i).
+           ++ destruct (inRange i r) eqn:Hir; only 1: (apply inRange_bounded in Hir; omega).
+              rewrite (Desc_outside HD1) by inRange_false.
+              rewrite (Desc_outside HD2) by inRange_false.
+              reflexivity.
+           ++ rewrite andb_false_r. reflexivity.
+    + eapply IHHD1. clear IHHD1 IHHD2.
+      intros sl fl sr fr b Hsl Hsr Hfl Hfr.
+      eapply HX; clear HX.
+      - eassumption.
+      - apply union_Sem; [ eassumption | eapply DescSem; eassumption].
+      - intro i.
+        rewrite H4, Hfl; clear H4 Hfl Hfr.
+        destruct (f2 i) eqn:?, (Z.ltb_spec i x);
+          rewrite ?andb_true_r, ?andb_false_r, ?orb_true_r, ?orb_false_r; try reflexivity; simpl.
+
+        apply (Desc_inside HD2) in Heqb0.
+        assert (inRange i (halfRange r true) = true) by inRange_true.
+        apply inRange_bounded in H5.
+        apply inRange_bounded in H2.
+        rewrite rPrefix_halfRange_otherhalf in * by assumption.
+        rewrite !rBits_halfRange in *.
+        omega.
+      - intro i.
+        rewrite H4, Hfr; clear H4 Hfl Hfr.
+        destruct (f2 i) eqn:?, (Z.ltb_spec x i);
+          rewrite ?andb_true_r, ?andb_false_r; try reflexivity; simpl.
+
+        apply (Desc_inside HD2) in Heqb0.
+        assert (inRange i (halfRange r true) = true) by inRange_true.
+        apply inRange_bounded in H5.
+        apply inRange_bounded in H2.
+        rewrite rPrefix_halfRange_otherhalf in * by assumption.
+        rewrite !rBits_halfRange in *.
+        omega.
+    + eapply IHHD2. clear IHHD1 IHHD2.
+      intros sl fl sr fr b Hsl Hsr Hfl Hfr.
+      eapply HX; clear HX.
+      - apply union_Sem; [ eassumption | eapply DescSem; eassumption].
+      - eassumption.
+      - intro i.
+        rewrite H4, Hfl; clear H4 Hfl Hfr.
+        destruct (f1 i) eqn:?, (Z.ltb_spec i x);
+          rewrite ?andb_true_r, ?andb_false_r, ?orb_true_r, ?orb_false_r; try reflexivity; simpl.
+
+        apply (Desc_inside HD1) in Heqb0.
+        assert (inRange i (halfRange r false) = true) by inRange_true.
+        apply inRange_bounded in H5.
+        apply inRange_bounded in H3.
+        rewrite rPrefix_halfRange_otherhalf in * by assumption.
+        rewrite !rBits_halfRange in *.
+        omega.
+      - intro i.
+        rewrite H4, Hfr; clear H4 Hfl Hfr.
+        destruct (f1 i) eqn:?, (Z.ltb_spec x i);
+          rewrite ?andb_true_r, ?andb_false_r, ?orb_true_r, ?orb_false_r; try reflexivity; simpl.
+        apply (Desc_inside HD1) in Heqb0.
+        assert (inRange i (halfRange r false) = true) by inRange_true.
+        apply inRange_bounded in H5.
+        apply inRange_bounded in H3.
+        rewrite rPrefix_halfRange_otherhalf in * by assumption.
+        rewrite !rBits_halfRange in *.
+        omega.
+Admitted.
+
+Lemma splitMember_Sem :
+  forall x s f,
+  Sem s f ->
+  forall (P : IntSet * bool * IntSet -> Prop),
+  (forall s1 f1 s2 f2 b,
+    Sem s1 f1 -> Sem s2 f2 ->
+    (forall i, f1 i = f i && (i <? x)%Z) ->
+    (forall i, f2 i = f i && (x <? i)%Z) ->
+    P (s1, b, s2)) ->
+  P (splitMemberGo x s) : Prop.
+Proof.
+  intros ??? HSem X HX.
+  unfold splitMember.
+  fold splitMemberGo.
+  destruct HSem.
+  * simpl. eapply HX; try constructor; try reflexivity; solve_f_eq.
+  * destruct HD eqn:?; unfoldMethods.
+    + eapply splitMemberGo_Sem;
+      only 1: eassumption;
+      intros sl fl sr fr Hsl Hsr Hfl Hfr.
+      eapply HX; eassumption.
+    + destruct (Z.ltb_spec msk 0).
+      - (* This branch is invalid since we only allow positive members. Otherwise, we
+           would have to do something here. *)
+        exfalso. pose proof (rMask_nonneg r).  omega.
+      - eapply splitMemberGo_Sem;
         only 1: eassumption;
         intros sl fl sr fr Hsl Hsr Hfl Hfr.
         eapply HX; eassumption.

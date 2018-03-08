@@ -1,8 +1,8 @@
 (******************************************************************************)
-
-Set Warnings "-notation-overridden".
-
 (** Imports **)
+
+(* Disable notation conflict warnings *)
+Set Warnings "-notation-overridden".
 
 (* SSReflect *)
 From mathcomp Require Import ssreflect ssrbool ssrnat ssrfun seq eqtype.
@@ -19,12 +19,17 @@ Require Import Data.Foldable Proofs.Data.Foldable.
 Require Import Data.OldList  Proofs.Data.OldList.
 Require Import Data.Bits.
 
-(* IntSet *)
+(* IntSet library *)
 Require Import Data.IntSet.Internal.
+Require Import Popcount.
+
+(* IntSet proofs *)
 Require Import IntSetProperties.
-Require Import BitUtils.
 Require Import DyadicIntervals.
 Require Import IntSetProofs.
+
+(* Bit manipulation *)
+Require Import BitUtils.
 
 (* Working with Haskell *)
 Require Import OrdTactic.

@@ -1,12 +1,15 @@
 (******************************************************************************)
-
-Set Warnings "-notation-overridden".
-
 (** Imports **)
+
+(* Disable notation conflict warnings *)
+Set Warnings "-notation-overridden".
 
 (* SSReflect *)
 From mathcomp Require Import ssreflect ssrbool ssrnat ssrfun seq eqtype.
 Set Bullet Behavior "Strict Subproofs".
+
+(* Permutations *)
+Require Import Coq.Sorting.Permutation.
 
 (* Basic Haskell libraries *)
 Require Import GHC.Base      Proofs.GHC.Base.
@@ -15,11 +18,8 @@ Require Import GHC.Enum.
 Require Import Data.Foldable Proofs.Data.Foldable.
 Require Import Data.OldList  Proofs.Data.OldList.
 
-(* Ord *)
-Require Import OrdTactic.
-
-(* IntSet for non-IntSet theorems *)
-Require IntSetProofs.
+(* Other utility libraries *)
+Require Import OrdTactic BitUtils.
 
 (******************************************************************************)
 (** Name dismabiguation -- MUST BE COPIED LOCALLY **)
@@ -179,6 +179,21 @@ Theorem elem_resp_eq {A} `{EqLaws A} (xs : list A) (a b : A) :
   elem b xs.
 Proof. rewrite !elem_elem_by; apply elem_by_resp_eq. Qed.
 
+Theorem elem_Permutation {A} `{Eq_ A} (xs ys : list A) :
+  Permutation xs ys ->
+  forall a, elem a xs = elem a ys.
+Proof.
+  elim=> {xs ys}
+         [
+         | x xs ys PERM IH
+         | x y xs
+         | xs ys zs PERM_xs_ys IH_xs_ys PERM_ys_zs IH_ys_zs ]
+         //= a.
+  - by rewrite !elemC IH.
+  - by rewrite !elemC !orbA (orbC (_ == _) (_ == _)).
+  - eapply etrans; [apply IH_xs_ys | apply IH_ys_zs].
+Qed.
+
 (* Non-Haskell theorems about In *)
 
 Theorem InP {A : eqType} (x : A) (xs : list A) :
@@ -211,9 +226,9 @@ Qed.
 (** Foldable and lists **)
 
 Theorem Foldable_list_all {A} :
-  Data.Foldable.all =2 @GHC.List.all A.
+  all =2 @GHC.List.all A.
 Proof.
-  rewrite /Data.Foldable.all /hash_compose /compose /foldMap /Foldable__list /=
+  rewrite /all /hash_compose /compose /foldMap /Foldable__list /=
           /Data.Foldable.Foldable__list_foldMap /Data.Foldable.Foldable__list_foldr /=.
   move=> p; elim=> [|x xs IH] //=.
   rewrite -IH.
@@ -221,11 +236,17 @@ Proof.
   case: (GHC.Base.foldr _ _ _) => //=.
 Qed.
 
-Theorem Foldable_and_all {F} `{Foldable F} : and (t := F) =1 all id.
+Theorem Foldable_and_all {F} `{Foldable F} :
+  and (t := F) =1 all id.
 Proof. done. Qed.
 
-Theorem Foldable_all_ssreflect {A} (p : A -> bool) (xs : list A) : all p xs = seq.all p xs.
-Proof. by rewrite IntSetProofs.Foldable_all_forallb. Qed.
+Lemma Foldable_all_forallb {A} :
+  all =2 forallb (A := A).
+Proof. by move=> p xs; rewrite Foldable_list_all; elim: xs => //= x xs <-. Qed.
+
+Theorem Foldable_all_ssreflect {A} :
+  all =2 seq.all (T := A).
+Proof. by move=> *; rewrite Foldable_all_forallb. Qed.
 
 Theorem Foldable_list_any {A} :
   Data.Foldable.any =2 @GHC.List.any A.
@@ -238,54 +259,51 @@ Proof.
   case: (GHC.Base.foldr _ _ _) => //=.
 Qed.
 
-Theorem Foldable_any_or {F} `{Foldable F} : or (t := F) =1 any id.
+Theorem Foldable_any_or {F} `{Foldable F} :
+  or (t := F) =1 any id.
 Proof. done. Qed.
 
-Theorem Foldable_any_existsb {A} (p : A -> bool) (xs : list A) : any p xs = existsb p xs.
-Proof. by rewrite Foldable_list_any; elim: xs => [|x xs IH] //=; rewrite IH. Qed.
+Theorem Foldable_any_existsb {A} :
+  any =2 existsb (A := A).
+Proof. by move=> p xs; rewrite Foldable_list_any; elim: xs => //= x xs <-. Qed.
 
-Theorem Foldable_any_ssreflect {A} (p : A -> bool) (xs : list A) : any p xs = seq.has p xs.
-Proof. by rewrite Foldable_any_existsb. Qed.
+Theorem Foldable_any_ssreflect {A} :
+  any =2 seq.has (T := A).
+Proof. by move=> *; rewrite Foldable_any_existsb. Qed.
 
-Theorem Foldable_list_null {A} (xs : list A) : null xs = GHC.List.null xs.
+Theorem Foldable_list_null {A} :
+  null =1 GHC.List.null (a := A). 
 Proof. done. Qed.
 
-Theorem List_null_none {A} (xs : list A) : GHC.List.null xs <-> forall x, ~ In x xs.
+Theorem List_null_none {A} (xs : list A) :
+  GHC.List.null xs <-> forall x, ~ In x xs.
 Proof.
   case: xs => [|x xs] /=; split; try by intuition.
   by move=> /(_ x (or_introl erefl)).
 Qed.
 
-Theorem List_null_no_elems {A} `{EqLaws A} (xs : list A) : GHC.List.null xs <-> forall x, ~~ elem x xs.
+Theorem List_null_no_elems {A} `{EqLaws A} (xs : list A) :
+  GHC.List.null xs <-> forall x, ~~ elem x xs.
 Proof.
   case: xs => [|x xs] /=; split; try by intuition.
   by move=> /(_ x); rewrite elemC Eq_refl.
 Qed.
 
-Theorem null_list_none {A} (xs : list A) : null xs <-> forall x, ~ In x xs.
+Theorem null_list_none {A} (xs : list A) :
+  null xs <-> forall x, ~ In x xs.
 Proof. apply List_null_none. Qed.
 
-Theorem null_list_no_elems {A} `{EqLaws A} (xs : list A) : null xs <-> forall x, ~~ elem x xs.
+Theorem null_list_no_elems {A} `{EqLaws A} (xs : list A) :
+  null xs <-> forall x, ~~ elem x xs.
 Proof. apply List_null_no_elems. Qed.
 
-Theorem hs_coq_reverse_rev {A} (xs : list A) : reverse xs = rev xs.
+Theorem hs_coq_reverse_rev {A} :
+  reverse =1 rev (A := A).
 Proof.
-  rewrite /reverse.
+  rewrite /reverse => xs.
   replace (rev xs) with (rev xs ++ [::]) by rewrite app_nil_r //.
   elim: xs [::] => [|x xs IH] //= acc.
   by rewrite IH -app_assoc.
-Qed.
-
-(******************************************************************************)
-(** Other Haskell/Coq interop **)
-
-Theorem reverse_rev {A} :
-  reverse =1 @rev A.
-Proof.
-  move=> xs; rewrite /reverse; match goal with |- context[?F _ [::]] => set hs_rev := F end.
-  rewrite -(cats0 (rev xs)); move: [::].
-  elim: xs => [|x xs IH] //= acc.
-  by rewrite IH -catA /=.
 Qed.
 
 (******************************************************************************)
@@ -302,7 +320,7 @@ Qed.
 
 Theorem reverse_elem {A} `{EqLaws A} (xs : list A) (a : A) :
   elem a (reverse xs) = elem a xs.
-Proof. rewrite reverse_rev; apply rev_elem. Qed.
+Proof. rewrite hs_coq_reverse_rev; apply rev_elem. Qed.
 
 (* nub *)
 
@@ -487,13 +505,13 @@ Theorem Z_negb_testbit_iff (m n : Z) :
   ~~ Z.testbit m n <-> (Z.land m (Z.shiftl 1 n) = 0)%Z.
 Proof.
   rewrite Z_eq_testbits_pos; split => [nbit ix POS_ix | bits].
-  - rewrite Z.bits_0 Z.land_spec Z.shiftl_spec // BitUtils.testbit_1.
+  - rewrite Z.bits_0 Z.land_spec Z.shiftl_spec // testbit_1.
     case SUB: (ix - n =? 0)%Z.
     + by move: SUB => /Z.eqb_spec/Z.sub_move_0_r ->; rewrite (negbTE nbit) andFb.
     + by rewrite andbF.
   - case: (Z_le_dec 0 n) => [POS | NEG].
     + move: bits => /(_ n POS).
-      by rewrite Z.bits_0 Z.land_spec Z.shiftl_spec // BitUtils.testbit_1 Z.sub_diag /= andbT => ->.
+      by rewrite Z.bits_0 Z.land_spec Z.shiftl_spec // testbit_1 Z.sub_diag /= andbT => ->.
     + rewrite Z.testbit_neg_r //; omega.
 Qed.
 

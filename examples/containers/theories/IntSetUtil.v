@@ -1,8 +1,8 @@
 (******************************************************************************)
-
-Set Warnings "-notation-overridden".
-
 (** Imports **)
+
+(* Disable notation conflict warnings *)
+Set Warnings "-notation-overridden".
 
 (* SSReflect *)
 From mathcomp Require Import ssreflect ssrbool ssrnat ssrfun seq eqtype.
@@ -16,15 +16,19 @@ Require Import GHC.Base      Proofs.GHC.Base.
 Require Import Data.Foldable Proofs.Data.Foldable.
 Require Import Data.Bits.
 
-(* IntSet *)
+(* IntSet library *)
 Require Import Data.IntSet.Internal.
 Require Import Utils.Containers.Internal.BitUtil.
 Require Import Popcount.
-Require Import BitUtils.
+
+(* IntSet proofs *)
 Require Import DyadicIntervals.
 Require Import IntSetProofs.
 
-(* Util *)
+(* Bit manipulation *)
+Require Import BitUtils.
+
+(* Working with Haskell *)
 Require Import HSUtil SortedUtil.
 
 (******************************************************************************)
@@ -169,17 +173,14 @@ Qed.
 (******************************************************************************)
 (** Low-level IntSet membership theorems **)
 
-(* Low-level *)
 Theorem Nil_member :
   forall k, member k Nil = false.
 Proof. done. Qed.
 
-(* Low-level *)
 Theorem Nil_member' :
   forall k, ~~ member k Nil.
 Proof. done. Qed.
 
-(* Low-level *)
 Theorem Tip_member (p : Prefix) (bm : BitMap) :
   WF (Tip p bm) ->
   forall k, member k (Tip p bm) = bitmapInRange (Z.shiftr p (Z.log2 (Z.of_N WIDTH)), N.log2 WIDTH) bm k.
@@ -193,6 +194,19 @@ Proof.
   f_equal => //; rewrite /rPrefix.
   rewrite Z.shiftr_shiftl_l; last apply N2Z.is_nonneg.
   by rewrite def_bits_r /=.
+Qed.
+
+Theorem Bin_member (p : Prefix) (msk : Mask) (l r : IntSet) :
+  WF (Bin p msk l r) ->
+  forall k, member k (Bin p msk l r) = member k l || member k r.
+Proof.
+  move=> [fs SEMs] k;
+    inversion SEMs  as [| s' rng fs' DESCs];
+    subst s' fs';
+    inversion DESCs as [| l' rng_l fl r' rng_r fr p' msk' rng' fs'
+                          DESCl DESCr POS_bits SUBRl SUBRr def_p def_msk def_fs];
+    subst l' r' p' msk' rng' fs' p msk.
+  erewrite !member_Desc, def_fs; eauto.
 Qed.
 
 Theorem Bin_left_lt_right {p msk : Z} {l r : IntSet} :
@@ -233,20 +247,6 @@ Proof.
     move: (KEYS (Z.to_N n)); cbv -[member Z.of_N Z.to_N eqb iff].
     rewrite Z2N.id //.
     by case: (member _ s1); case: (member _ s2); intuition.
-Qed.
-
-(* Low-level *)
-Theorem Bin_member (p : Prefix) (msk : Mask) (l r : IntSet) :
-  WF (Bin p msk l r) ->
-  forall k, member k (Bin p msk l r) = member k l || member k r.
-Proof.
-  move=> [fs SEMs] k;
-    inversion SEMs  as [| s' rng fs' DESCs];
-    subst s' fs';
-    inversion DESCs as [| l' rng_l fl r' rng_r fr p' msk' rng' fs'
-                          DESCl DESCr POS_bits SUBRl SUBRr def_p def_msk def_fs];
-    subst l' r' p' msk' rng' fs' p msk.
-  erewrite !member_Desc, def_fs; eauto.
 Qed.
 
 (* Prove the spec for `forall k, member k (F ... s ...) = ...` in terms of

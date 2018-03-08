@@ -29,6 +29,7 @@ library
   exposed-modules: Bool
   exposed-modules: Bvector
   exposed-modules: Char
+  exposed-modules: Classes
   exposed-modules: Const
   exposed-modules: CTZ
   exposed-modules: Datatypes
@@ -38,6 +39,7 @@ library
   exposed-modules: Fin
   exposed-modules: Foldable
   exposed-modules: Functor
+  exposed-modules: Identity
   exposed-modules: Internal
   exposed-modules: Internal0
   exposed-modules: List

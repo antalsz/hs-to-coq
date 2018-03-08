@@ -29,7 +29,7 @@ instance Show BinNums.Coq_positive where
     go (BinNums.Coq_xO bn) = 'O' : go bn
   
 
-toPositive :: Int -> BinNums.Coq_positive
+toPositive :: Integer -> BinNums.Coq_positive
 toPositive x | x <= 0 = error "must call with positive int"
 toPositive 1 = BinNums.Coq_xH
 toPositive x = let b1 = x `mod` 2
@@ -44,8 +44,8 @@ fromPositive (BinNums.Coq_xO bn) = fromPositive bn * 2
  
 toBinZ :: Int -> BinNums.Z
 toBinZ 0 = BinNums.Z0
-toBinZ x | x < 0 = BinNums.Zneg (toPositive (abs x))
-toBinZ x | x > 0 = BinNums.Zpos (toPositive x)
+toBinZ x | x < 0 = BinNums.Zneg (toPositive (abs (fromIntegral x:: Integer)))
+toBinZ x | x > 0 = BinNums.Zpos (toPositive (fromIntegral x))
 
 fromBinZ :: BinNums.Z -> Int
 fromBinZ BinNums.Z0 = 0

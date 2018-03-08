@@ -83,6 +83,7 @@ library
   build-depends:       QuickCheck >= 2.9.2,
                        base >=4.9 && <4.10
   build-depends:       deepseq
+  build-depends:      random
   hs-source-dirs:      .
   hs-source-dirs:      src
   default-language:    Haskell2010
@@ -97,6 +98,7 @@ benchmark bench
   build-depends:       deepseq
   build-depends:       criterion
   build-depends:       containers
+  build-depends:       random
   default-language:    Haskell2010
 
 test-suite tests-set
@@ -114,6 +116,7 @@ test-suite tests-set
   build-depends:       test-framework
   build-depends:       containers
   build-depends:       deepseq
+  build-depends:       random
   default-language:    Haskell2010
 
 test-suite tests-intset
@@ -131,4 +134,5 @@ test-suite tests-intset
   build-depends:       test-framework
   build-depends:       containers
   build-depends:       deepseq
+  build-depends:       random
   default-language:    Haskell2010

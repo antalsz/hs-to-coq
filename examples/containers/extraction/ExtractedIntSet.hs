@@ -10,6 +10,7 @@ module ExtractedIntSet where
 import qualified Base
 import qualified Datatypes
 import qualified BinNums
+import qualified Num
 
 import qualified Semigroup
 import qualified Monoid
@@ -24,6 +25,8 @@ import qualified Data.Bits
 import qualified Control.Arrow as A
 import Control.DeepSeq(NFData,rnf)
 
+import Test.QuickCheck(NonNegative(..))
+
 import ExtractedNumbers
 
 type IntSet = S2.IntSet
@@ -35,6 +38,12 @@ type Mask   = S2.Mask
 type BitMap = S2.BitMap
 type Prefix = S2.Prefix
 type Key    = S2.Key
+
+binZToNonNeg :: Num.Int -> NonNegative Int
+binZToNonNeg = NonNegative . fromBinZ
+
+nonNegToBinZ :: NonNegative Int -> Num.Int
+nonNegToBinZ = toBinZ . getNonNegative 
 
 ----------------------------------------------------
 
@@ -92,24 +101,24 @@ instance Data.Foldable.Foldable S2.IntSet where
   product = error "TODO, figure out Num shim"
 -}
 
-zero :: Int -> Mask -> Bool
-zero x m = S2.zero (toBinZ x) m
+zero :: (NonNegative Int) -> Mask -> Bool
+zero x m = S2.zero (nonNegToBinZ x) m
 
 ----------------------------------------------------------------
 -- for unit tests
 ----------------------------------------------------------------
 
-lookupLT :: Int  -> IntSet -> Maybe Int
-lookupLT x s = fromBinZ <$> S2.lookupLT (toBinZ x) s
+lookupLT :: (NonNegative Int)  -> IntSet -> Maybe (NonNegative Int)
+lookupLT x s = binZToNonNeg <$> S2.lookupLT (nonNegToBinZ x) s
 
-lookupGT :: Int -> IntSet -> Maybe Int
-lookupGT x s = fromBinZ <$> S2.lookupGT  (toBinZ x) s
+lookupGT :: (NonNegative Int) -> IntSet -> Maybe (NonNegative Int)
+lookupGT x s = binZToNonNeg <$> S2.lookupGT  (nonNegToBinZ x) s
 
-lookupLE :: Int -> IntSet -> Maybe Int
-lookupLE x s = fromBinZ <$> S2.lookupLE  (toBinZ x) s
+lookupLE :: (NonNegative Int) -> IntSet -> Maybe (NonNegative Int)
+lookupLE x s = binZToNonNeg <$> S2.lookupLE  (nonNegToBinZ x) s
 
-lookupGE :: Int -> IntSet -> Maybe Int
-lookupGE x s = fromBinZ <$> S2.lookupGE  (toBinZ x) s
+lookupGE :: (NonNegative Int) -> IntSet -> Maybe (NonNegative Int)
+lookupGE x s = binZToNonNeg <$> S2.lookupGE  (nonNegToBinZ x) s
 
 
 --------------------------------------------------
@@ -137,27 +146,27 @@ size x = fromBinZ (S2.size x)
 empty :: IntSet
 empty = S2.empty
 
-singleton :: Int -> IntSet
-singleton x = S2.singleton (toBinZ x)
+singleton :: NonNegative Int -> IntSet
+singleton x = S2.singleton (nonNegToBinZ x)
 
-member ::  Int -> IntSet -> Bool
-member x = S2.member (toBinZ x)
+member ::  (NonNegative Int) -> IntSet -> Bool
+member x = S2.member (nonNegToBinZ x)
 
-notMember ::  Int -> IntSet -> Bool
-notMember x = S2.notMember (toBinZ x)
+notMember ::  (NonNegative Int) -> IntSet -> Bool
+notMember x = S2.notMember (nonNegToBinZ x)
 
-insert ::  Int -> IntSet -> IntSet
-insert x = S2.insert (toBinZ x)
+insert ::  (NonNegative Int) -> IntSet -> IntSet
+insert x = S2.insert (nonNegToBinZ x)
 
-delete ::  Int -> IntSet -> IntSet
-delete x = S2.delete (toBinZ x)
+delete ::  (NonNegative Int) -> IntSet -> IntSet
+delete x = S2.delete (nonNegToBinZ x)
 
 {--------------------------------------------------------------------
   Balance
 --------------------------------------------------------------------}
 
-split ::  Int -> IntSet -> (IntSet, IntSet)
-split x = S2.split (toBinZ x)
+split :: NonNegative Int -> IntSet -> (IntSet, IntSet)
+split x = S2.split (nonNegToBinZ x)
 
 link = S2.link
 
@@ -184,25 +193,25 @@ null = S2.null
   Lists
 --------------------------------------------------------------------}
 
-fromAscList :: [Int] -> IntSet
+fromAscList :: [(NonNegative Int)] -> IntSet
 fromAscList xs = error "fromAscList: untranslated"
 
-fromDistinctAscList :: [Int] -> IntSet
+fromDistinctAscList :: [(NonNegative Int)] -> IntSet
 fromDistinctAscList xs = error "fromDistinctAscList: untranslated"
 
 
-fromList :: [Int] -> IntSet
-fromList xs = S2.fromList (Prelude.map toBinZ xs)
+fromList :: [(NonNegative Int)] -> IntSet
+fromList xs = S2.fromList (Prelude.map nonNegToBinZ xs)
 
 
-toDescList :: IntSet -> [Int]
-toDescList x = Prelude.map fromBinZ (S2.toDescList x)
+toDescList :: IntSet -> [(NonNegative Int)]
+toDescList x = Prelude.map binZToNonNeg (S2.toDescList x)
 
-toAscList :: IntSet -> [Int]
-toAscList x = Prelude.map fromBinZ (S2.toAscList x)
+toAscList :: IntSet -> [(NonNegative Int)]
+toAscList x = Prelude.map binZToNonNeg (S2.toAscList x)
 
-toList :: IntSet -> [Int]
-toList x = Prelude.map fromBinZ (S2.toList x)
+toList :: IntSet -> [(NonNegative Int)]
+toList x = Prelude.map binZToNonNeg (S2.toList x)
 
 
 {--------------------------------------------------------------------
@@ -210,25 +219,25 @@ toList x = Prelude.map fromBinZ (S2.toList x)
 --------------------------------------------------------------------}
 
 
-foldr :: (Int -> a -> a) -> a -> IntSet -> a
-foldr f b s = S2.foldr (f . fromBinZ) b s
+foldr :: ((NonNegative Int) -> a -> a) -> a -> IntSet -> a
+foldr f b s = S2.foldr (f . binZToNonNeg) b s
 
-foldr' :: (Int -> a -> a) -> a -> IntSet -> a
-foldr' f b s = S2.foldr' (f . fromBinZ) b s
+foldr' :: ((NonNegative Int) -> a -> a) -> a -> IntSet -> a
+foldr' f b s = S2.foldr' (f . binZToNonNeg) b s
 
-foldl' :: (a -> Int -> a) -> a -> IntSet -> a
-foldl' f b s = S2.foldl' (\ x y -> f x (fromBinZ y)) b s
+foldl' :: (a -> (NonNegative Int) -> a) -> a -> IntSet -> a
+foldl' f b s = S2.foldl' (\ x y -> f x (binZToNonNeg y)) b s
 
-foldl :: (a -> Int -> a) -> a -> IntSet -> a
-foldl f b s = S2.foldl (\x y -> f x (fromBinZ y)) b s
+foldl :: (a -> (NonNegative Int) -> a) -> a -> IntSet -> a
+foldl f b s = S2.foldl (\x y -> f x (binZToNonNeg y)) b s
 
 fold   = S2.fold
 filter = S2.filter
 map    = S2.map
 
 
-elems  :: IntSet -> [Int]
-elems x = Prelude.map fromBinZ (S2.elems x) 
+elems  :: IntSet -> [(NonNegative Int)]
+elems x = Prelude.map binZToNonNeg (S2.elems x) 
 
 isProperSubsetOf :: IntSet -> IntSet -> Bool
 isProperSubsetOf = S2.isProperSubsetOf 
@@ -236,22 +245,22 @@ isProperSubsetOf = S2.isProperSubsetOf
 isSubsetOf :: IntSet -> IntSet -> Bool
 isSubsetOf = S2.isSubsetOf 
 
-findMax :: IntSet -> Int
+findMax :: IntSet -> (NonNegative Int)
 findMax = error "partial"
 
-findMin :: IntSet -> Int
+findMin :: IntSet -> (NonNegative Int)
 findMin = error "partial"
 
 
-minView :: IntSet -> Maybe (Int,IntSet)
-minView s = (A.first fromBinZ) <$> S2.minView s
+minView :: IntSet -> Maybe (NonNegative Int,IntSet)
+minView s = (A.first binZToNonNeg) <$> S2.minView s
 
-maxView :: IntSet -> Maybe (Int,IntSet)
-maxView s = (A.first fromBinZ) <$> S2.maxView s
+maxView :: IntSet -> Maybe ((NonNegative Int),IntSet)
+maxView s = (A.first binZToNonNeg) <$> S2.maxView s
 
-splitMember :: Int -> IntSet -> (IntSet, Bool, IntSet)
+splitMember :: (NonNegative Int) -> IntSet -> (IntSet, Bool, IntSet)
 splitMember m s = (x,y,z) where
-  ((x,y),z) = S2.splitMember (toBinZ m) s
+  ((x,y),z) = S2.splitMember (nonNegToBinZ m) s
 
 
 unions :: [IntSet] -> IntSet
@@ -260,10 +269,10 @@ unions = S2.unions
 splitRoot :: IntSet -> [IntSet]
 splitRoot = S2.splitRoot
 
-partition :: (Int -> Bool) -> IntSet -> (IntSet, IntSet)
-partition f = S2.partition (f . fromBinZ)
+partition :: ((NonNegative Int) -> Bool) -> IntSet -> (IntSet, IntSet)
+partition f = S2.partition (f . binZToNonNeg)
 
-match :: Int -> S2.Prefix -> S2.Mask -> Prelude.Bool
-match x y z = S2.match_ (toBinZ x) y z
+match :: (NonNegative Int) -> S2.Prefix -> S2.Mask -> Prelude.Bool
+match x y z = S2.match_ (nonNegToBinZ x) y z
 
 

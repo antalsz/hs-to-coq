@@ -5,7 +5,7 @@ import ExtractedNumbers
 import ExtractedIntSet
 
 import Data.Bits (xor, (.&.))
-import Test.QuickCheck (Property, counterexample, property, (.&&.))
+import Test.QuickCheck (Property, counterexample, property, (.&&.), NonNegative(..))
 -- import Utils.Containers.Internal.BitUtil (bitcount)
 
 bitcount :: Int -> Word -> Int
@@ -58,8 +58,8 @@ commonPrefix t =
     Tip _ _ -> True
     b@(Bin p _ _ _) -> all (sharedPrefix p) (elems b)
   where
-    sharedPrefix :: Prefix -> Int -> Bool
-    sharedPrefix p a = 0 == ((fromBinZ p) `xor` (fromBinZ p .&. a))
+    sharedPrefix :: Prefix -> NonNegative Int -> Bool
+    sharedPrefix p a = 0 == ((binZToNonNeg p) `xor` (binZToNonNeg p .&. a))
 
 -- Invariant: In Bin prefix mask left right, left consists of the elements that
 --            don't have the mask bit set; right is all the elements that do.

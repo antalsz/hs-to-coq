@@ -45,11 +45,11 @@ main = defaultMain [ testCase "lookupLT" test_lookupLT
                    , testProperty "prop_UnionComm" prop_UnionComm
                    , testProperty "prop_Diff" prop_Diff
                    , testProperty "prop_Int" prop_Int
-                   , testProperty "prop_Ordered" prop_Ordered
+--                   , testProperty "prop_Ordered" prop_Ordered
                    , testProperty "prop_List" prop_List
                    , testProperty "prop_DescList" prop_DescList
                    , testProperty "prop_AscDescList" prop_AscDescList
-                   , testProperty "prop_fromList" prop_fromList
+--                   , testProperty "prop_fromList" prop_fromList
                    , testProperty "prop_MaskPow2" prop_MaskPow2
                    , testProperty "prop_Prefix" prop_Prefix
                    , testProperty "prop_LeftRight" prop_LeftRight
@@ -114,7 +114,7 @@ test_split = do
   Arbitrary, reasonably balanced trees
 --------------------------------------------------------------------}
 instance Arbitrary IntSet where
-  arbitrary = do{ xs <- arbitrary
+  arbitrary = do{ xs <- arbitrary  -- XXX only nonnegative
                 ; return (fromList xs)
                 }
 
@@ -142,32 +142,32 @@ prop_EmptyValid :: Property
 prop_EmptyValid =
     valid empty
 
-prop_SingletonValid :: Int -> Property
+prop_SingletonValid :: NonNegative Int -> Property
 prop_SingletonValid x =
     valid (singleton x)
 
-prop_InsertIntoEmptyValid :: Int -> Property
+prop_InsertIntoEmptyValid :: NonNegative Int -> Property
 prop_InsertIntoEmptyValid x =
     valid (insert x empty)
 
 {--------------------------------------------------------------------
   Single, Member, Insert, Delete, Member, FromList
 --------------------------------------------------------------------}
-prop_Single :: Int -> Bool
+prop_Single :: NonNegative Int -> Bool
 prop_Single x
   = (insert x empty == singleton x)
 
-prop_Member :: [Int] -> Int -> Bool
+prop_Member :: [NonNegative Int] -> NonNegative Int -> Bool
 prop_Member xs n =
   let m  = fromList xs
   in all (\k -> k `member` m == (k `elem` xs)) (n : xs)
 
-prop_NotMember :: [Int] -> Int -> Bool
+prop_NotMember :: [NonNegative Int] -> NonNegative Int -> Bool
 prop_NotMember xs n =
   let m  = fromList xs
   in all (\k -> k `notMember` m == (k `notElem` xs)) (n : xs)
 
-test_LookupSomething :: (Int -> IntSet -> Maybe Int) -> (Int -> Int -> Bool) -> [Int] -> Bool
+test_LookupSomething :: (NonNegative Int -> IntSet -> Maybe (NonNegative Int)) -> (NonNegative Int -> NonNegative Int -> Bool) -> [NonNegative Int] -> Bool
 test_LookupSomething lookup' cmp xs =
   let odd_sorted_xs = filter_odd $ nub $ sort xs
       t = fromList odd_sorted_xs
@@ -181,25 +181,25 @@ test_LookupSomething lookup' cmp xs =
         filter_odd [_] = []
         filter_odd (_ : o : xs) = o : filter_odd xs
 
-prop_LookupLT :: [Int] -> Bool
+prop_LookupLT :: [NonNegative Int] -> Bool
 prop_LookupLT = test_LookupSomething lookupLT (<)
 
-prop_LookupGT :: [Int] -> Bool
+prop_LookupGT :: [NonNegative Int] -> Bool
 prop_LookupGT = test_LookupSomething lookupGT (>)
 
-prop_LookupLE :: [Int] -> Bool
+prop_LookupLE :: [NonNegative Int] -> Bool
 prop_LookupLE = test_LookupSomething lookupLE (<=)
 
-prop_LookupGE :: [Int] -> Bool
+prop_LookupGE :: [NonNegative Int] -> Bool
 prop_LookupGE = test_LookupSomething lookupGE (>=)
 
-prop_InsertDelete :: Int -> IntSet -> Property
+prop_InsertDelete :: NonNegative Int -> IntSet -> Property
 prop_InsertDelete k t
   = not (member k t) ==>
       case delete k (insert k t) of
         t' -> valid t' .&&. t' === t
 
-prop_MemberFromList :: [Int] -> Bool
+prop_MemberFromList :: [NonNegative Int] -> Bool
 prop_MemberFromList xs
   = all (`member` t) abs_xs && all ((`notMember` t) . negate) abs_xs
   where abs_xs = [abs x | x <- xs, x /= 0]
@@ -208,7 +208,7 @@ prop_MemberFromList xs
 {--------------------------------------------------------------------
   Union, Difference and Intersection
 --------------------------------------------------------------------}
-prop_UnionInsert :: Int -> IntSet -> Property
+prop_UnionInsert :: NonNegative Int -> IntSet -> Property
 prop_UnionInsert x t =
   case union t (singleton x) of
     t' ->
@@ -223,14 +223,14 @@ prop_UnionComm :: IntSet -> IntSet -> Bool
 prop_UnionComm t1 t2
   = (union t1 t2 == union t2 t1)
 
-prop_Diff :: [Int] -> [Int] -> Property
+prop_Diff :: [NonNegative Int] -> [NonNegative Int] -> Property
 prop_Diff xs ys =
   case difference (fromList xs) (fromList ys) of
     t ->
       valid t .&&.
       toAscList t === List.sort ((List.\\) (nub xs)  (nub ys))
 
-prop_Int :: [Int] -> [Int] -> Property
+prop_Int :: [NonNegative Int] -> [NonNegative Int] -> Property
 prop_Int xs ys =
   case intersection (fromList xs) (fromList ys) of
     t ->
@@ -245,21 +245,21 @@ prop_disjoint a b = a `disjoint` b == null (a `intersection` b)
 --------------------------------------------------------------------}
 prop_Ordered
   = forAll (choose (5,100)) $ \n ->
-    let xs = concat [[i-n,i-n]|i<-[0..2*n :: Int]]
+    let xs = concat [[i-n,i-n]|i<-[0..2*n :: NonNegative Int]]
     in fromAscList xs == fromList xs
 
-prop_List :: [Int] -> Bool
+prop_List :: [NonNegative Int] -> Bool
 prop_List xs
   = (sort (nub xs) == toAscList (fromList xs))
 
-prop_DescList :: [Int] -> Bool
+prop_DescList :: [NonNegative Int] -> Bool
 prop_DescList xs = (reverse (sort (nub xs)) == toDescList (fromList xs))
 
-prop_AscDescList :: [Int] -> Bool
+prop_AscDescList :: [NonNegative Int] -> Bool
 prop_AscDescList xs = toAscList s == reverse (toDescList s)
   where s = fromList xs
 
-prop_fromList :: [Int] -> Property
+prop_fromList :: [NonNegative Int] -> Property
 prop_fromList xs
   = case fromList xs of
       t -> valid t .&&.
@@ -277,7 +277,7 @@ powersOf2 = fromList [2^i | i <- [0..63]]
 
 -- Check the invariant that the mask is a power of 2.
 prop_MaskPow2 :: IntSet -> Bool
-prop_MaskPow2 (Bin _ msk left right) = member (fromBinZ msk) powersOf2 && prop_MaskPow2 left && prop_MaskPow2 right
+prop_MaskPow2 (Bin _ msk left right) = member (binZToNonNeg msk) powersOf2 && prop_MaskPow2 left && prop_MaskPow2 right
 prop_MaskPow2 _ = True
 
 -- Check that the prefix satisfies its invariant.
@@ -288,13 +288,13 @@ prop_Prefix _ = True
 -- Check that the left elements don't have the mask bit set, and the right
 -- ones do.
 prop_LeftRight :: IntSet -> Bool
-prop_LeftRight (Bin _ msk left right) = and [x .&. fromBinZ msk == 0 | x <- toList left] && and [x .&. fromBinZ msk == fromBinZ msk | x <- toList right]
+prop_LeftRight (Bin _ msk left right) = and [x .&. binZToNonNeg msk == 0 | x <- toList left] && and [x .&. binZToNonNeg msk == binZToNonNeg msk | x <- toList right]
 prop_LeftRight _ = True
 
 {--------------------------------------------------------------------
   IntSet operations are like Set operations
 --------------------------------------------------------------------}
-toSet :: IntSet -> Set.Set Int
+toSet :: IntSet -> Set.Set (NonNegative Int)
 toSet = Set.fromList . toList
 
 -- Check that IntSet.isProperSubsetOf is the same as Set.isProperSubsetOf.
@@ -356,7 +356,7 @@ prop_minView s = case minView s of
     Nothing -> null s
     Just (m,s') -> m == minimum (toList s) && s == insert m s' && m `notMember` s'
 
-prop_split :: IntSet -> Int -> Property
+prop_split :: IntSet -> NonNegative Int -> Property
 prop_split s i = case split i s of
     (s1,s2) -> valid s1 .&&.
                valid s2 .&&.
@@ -364,7 +364,7 @@ prop_split s i = case split i s of
                all (>i) (toList s2) .&&.
                i `delete` s === union s1 s2
 
-prop_splitMember :: IntSet -> Int -> Property
+prop_splitMember :: IntSet -> NonNegative Int -> Property
 prop_splitMember s i = case splitMember i s of
     (s1,t,s2) -> valid s1 .&&.
                  valid s2 .&&.
@@ -383,7 +383,7 @@ prop_splitRoot s = loop ls && (s == unions ls)
                           , y <- toList (unions rst)
                           , x > y ]
 
-prop_partition :: IntSet -> Int -> Property
+prop_partition :: IntSet -> NonNegative Int -> Property
 prop_partition s i = case partition odd s of
     (s1,s2) -> valid s1 .&&.
                valid s2 .&&.
@@ -391,7 +391,7 @@ prop_partition s i = case partition odd s of
                all even (toList s2) .&&.
                s === s1 `union` s2
 
-prop_filter :: IntSet -> Int -> Property
+prop_filter :: IntSet -> NonNegative Int -> Property
 prop_filter s i =
   let parts = partition odd s
       odds = filter odd s

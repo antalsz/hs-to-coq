@@ -1,15 +1,15 @@
 (******************************************************************************)
-
-Set Warnings "-notation-overridden".
-
 (** Imports **)
+
+(* Disable notation conflict warnings *)
+Set Warnings "-notation-overridden".
 
 (* SSReflect *)
 From mathcomp Require Import ssreflect ssrbool ssrnat ssrfun seq eqtype.
 Set Bullet Behavior "Strict Subproofs".
 
 (* Sortedness *)
-Require Import Coq.Sorting.Sorted.
+Require Import Coq.Sorting.Sorted Coq.Sorting.Permutation.
 
 (* Basic Haskell libraries *)
 Require Import GHC.Base      Proofs.GHC.Base.
@@ -17,6 +17,7 @@ Require Import Data.Foldable Proofs.Data.Foldable.
 Require Import Data.OldList  Proofs.Data.OldList.
 
 (* Working with Haskell *)
+Require Import SortSorted.
 Require Import OrdTactic.
 Require Import HSUtil.
 
@@ -264,50 +265,34 @@ Proof.
 Qed.
 
 (******************************************************************************)
-(** Axioms about sort **)
-
-Axiom sort_StronglySorted : forall {A} `{OrdLaws A} (xs : list A), StronglySorted _<=_ (sort xs).
-Axiom sort_length         : forall {A} `{OrdLaws A} (xs : list A), length (sort xs) = length xs.
-Axiom sort_elem           : forall {A} `{OrdLaws A} (xs : list A), forall x, elem x (sort xs) <-> elem x xs.
-
-(* True because `sort` is stable.  Not provable because that's not a separate
-   axiom.  This is the axiom I'm most nervous about. *)
-Axiom sortC : forall {A} `{OrdLaws A} (x : A) (xs : list A),
-  exists pre, ex2 (fun post => sort (x :: xs) = pre ++ x :: post)
-                  (fun post => sort xs = pre ++ post).
-
-(******************************************************************************)
 (** Theorems about sort and nub **)
 
-Theorem sortN {A} `{OrdLaws A} : sort [::] = [::].
-Proof.
-  case S: (sort [::]) => [|x xs] //=.
-Qed.
+Theorem sortN {A} `{OrdLaws A} :
+  sort [::] = [::].
+Proof. done. Qed.
 
 Theorem sort1 {A} `{OrdLaws A} `{!EqExact A} (x : A) :
   sort [:: x] = [:: x].
+Proof. done. Qed.
+
+Theorem sort_StronglySorted {A} `{OrdLaws A} (xs : list A) :
+  StronglySorted _<=_ (sort xs).
 Proof.
-  case: (sortC x [::]) => [pre [post -> ]].
-  by rewrite sortN; case: pre; case: post.
+  eapply Sorted_StronglySorted, sort_sorted; try typeclasses eauto.
+  move => ? ? ?; apply Ord_trans_le.
 Qed.
+
+Theorem sort_elem {A} `{Ord A} (xs : list A) :
+  forall x, elem x (sort xs) = elem x xs.
+Proof. apply elem_Permutation, sort_permutation. Qed.
+
+Theorem sort_In {A} `{Ord A} (xs : list A) :
+  forall x, In x (sort xs) <-> In x xs.
+Proof. move=> ?; apply (Permutation_in' erefl), sort_permutation. Qed.
 
 Theorem sort_NoDup {A} `{OrdLaws A} `{!EqExact A} (xs : list A) :
   NoDup xs <-> NoDup (sort xs).
-Proof.
-  remember (Datatypes.length xs) as n eqn:LEN.
-  elim: n xs LEN => [|n IH] [|x xs] //= LEN.
-  move: LEN => [?]; subst.
-  case: (sortC x xs) => [pre [post -> sort_xs]].
-  rewrite NoDup_reorder.
-  move: IH => /(_ xs erefl); rewrite sort_xs => IH.
-  split; inversion 1; subst; constructor; try apply IH; auto.
-  - apply/elemP/negP.
-    change @cat with @app; rewrite -sort_xs sort_elem.
-    by apply/negP/elemP.
-  - apply/elemP/negP.
-    rewrite -sort_elem sort_xs.
-    by apply/negP/elemP.
-Qed.
+Proof. apply Permutation_NoDup', Permutation_sym, sort_permutation. Qed.
 
 Theorem nub_NoDup {A} `{EqExact A} (xs : list A) : NoDup (nub xs).
 Proof.

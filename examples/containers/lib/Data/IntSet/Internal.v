@@ -276,9 +276,6 @@ Program Instance Eq___IntSet : GHC.Base.Eq_ IntSet :=
     k {| GHC.Base.op_zeze____ := Eq___IntSet_op_zeze__ ;
          GHC.Base.op_zsze____ := Eq___IntSet_op_zsze__ |}.
 
-Definition node : GHC.Base.String :=
-  GHC.Base.hs_string__ "+--".
-
 Definition null : IntSet -> bool :=
   fun arg_0__ => match arg_0__ with | Nil => true | _ => false end.
 
@@ -1188,12 +1185,12 @@ End Notations.
      Coq.ZArith.BinInt.Z.pow Coq.ZArith.BinInt.Z.pred Data.Bits.complement
      Data.Bits.op_zizazi__ Data.Bits.op_zizbzi__ Data.Bits.xor Data.Foldable.foldl
      Data.Maybe.maybe Data.Semigroup.Semigroup Data.Semigroup.op_zlzg__
-     Data.Tuple.snd GHC.Base.Eq_ GHC.Base.Monoid GHC.Base.Ord GHC.Base.String
-     GHC.Base.compare GHC.Base.flip GHC.Base.map GHC.Base.op_z2218U__
-     GHC.Base.op_zd__ GHC.Base.op_zdzn__ GHC.Base.op_zeze__ GHC.Base.op_zg__
-     GHC.Base.op_zgze__ GHC.Base.op_zl__ GHC.Base.op_zsze__ GHC.Num.Int GHC.Num.Word
-     GHC.Num.fromInteger GHC.Num.op_zm__ GHC.Num.op_zp__ GHC.Real.fromIntegral
-     GHC.Wf.wfFix2 Utils.Containers.Internal.BitUtil.bitcount
+     Data.Tuple.snd GHC.Base.Eq_ GHC.Base.Monoid GHC.Base.Ord GHC.Base.compare
+     GHC.Base.flip GHC.Base.map GHC.Base.op_z2218U__ GHC.Base.op_zd__
+     GHC.Base.op_zdzn__ GHC.Base.op_zeze__ GHC.Base.op_zg__ GHC.Base.op_zgze__
+     GHC.Base.op_zl__ GHC.Base.op_zsze__ GHC.Num.Int GHC.Num.Word GHC.Num.fromInteger
+     GHC.Num.op_zm__ GHC.Num.op_zp__ GHC.Real.fromIntegral GHC.Wf.wfFix2
+     Utils.Containers.Internal.BitUtil.bitcount
      Utils.Containers.Internal.BitUtil.highestBitMask
      Utils.Containers.Internal.BitUtil.lowestBitMask
      Utils.Containers.Internal.BitUtil.shiftLL

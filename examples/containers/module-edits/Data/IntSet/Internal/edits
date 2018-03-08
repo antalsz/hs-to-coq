@@ -95,6 +95,7 @@ skip Data.IntSet.Internal.withBar
 skip Data.IntSet.Internal.withEmpty
 skip Data.IntSet.Internal.showsTree
 skip Data.IntSet.Internal.showTree
+skip Data.IntSet.Internal.node
 
 # Data stuff
 skip Data.IntSet.Internal.fromListConstr

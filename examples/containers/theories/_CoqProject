@@ -12,6 +12,7 @@ IntMapProofs.v
 RevNatSlowProofs.v
 OrdTactic.v
 ../hs-spec/IntSetProperties.v
+SortSorted.v
 HSUtil.v
 SortedUtil.v
 IntSetUtil.v

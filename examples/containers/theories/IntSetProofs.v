@@ -289,6 +289,35 @@ Proof.
   assumption.
 Qed.
 
+Lemma prefixOf_rPrefix: forall r, rBits r = N.log2 WIDTH ->
+  (prefixOf (rPrefix r) = rPrefix r).
+Proof.
+  intros.
+  destruct r as [p b]. simpl in *. subst.
+  rewrite <- rPrefix_shiftr.
+  unfold rPrefix, tip_widthZ, tip_width. simpl Z.of_N.
+  rewrite Z.shiftr_shiftl_l by omega.
+  replace (6 - 6) with 0 by omega.
+  reflexivity.
+Qed.  
+
+Lemma prefixOf_suffixOf:
+  forall i, prefixOf i + suffixOf i = i.
+Proof.
+  intros.
+  rewrite <- rPrefix_shiftr.
+  unfold rPrefix, tip_widthZ, tip_width. simpl Z.of_N.
+  rewrite Z.shiftr_div_pow2 by omega.
+  rewrite Z.shiftl_mul_pow2 by omega.
+  unfold prefixOf, prefixBitMask, suffixOf, suffixBitMask, WIDTH in *.
+  unfoldMethods.
+  rewrite Z.land_ones by omega.
+  symmetry.
+  rewrite Z.mul_comm.
+  apply Z.div_mod.
+  intro Htmp; inversion Htmp.
+Qed.
+
 (** *** Lemmas about [suffixOf] *)
 
 Lemma suffixOf_lt_WIDTH: forall e, suffixOf e < Z.of_N WIDTH.
@@ -311,7 +340,24 @@ Lemma suffixOf_noneg:  forall e, 0 <= suffixOf e.
   reflexivity.
   compute. congruence.
 Qed.
+Hint Resolve suffixOf_noneg : nonneg.
 
+Lemma suffixOf_plus_bitmapOf:
+  forall x,
+  (N.ones (Z.to_N (suffixOf x)) + bitmapOf x)%N = N.ones (Z.to_N (Z.succ (suffixOf x))).
+Proof.
+  intros.
+  unfold bitmapOf.
+  unfold bitmapOfSuffix.
+  unfoldMethods.
+  rewrite !N.ones_equiv.
+  rewrite Z2N.inj_succ by nonneg.
+  rewrite N.shiftl_mul_pow2.
+  simpl Z.to_N.
+  rewrite N.mul_1_l.
+  rewrite N.pow_succ_r by nonneg.
+  Nomega.
+Qed.
 
 (** *** Operation: [rMask]
 Calculates a mask in the sense of the IntSet implementation:
@@ -629,6 +675,27 @@ Proof.
     zify. rewrite -> N2Z.inj_pow in H. apply H.
 Qed.
 
+Lemma bitmapInRange_ones:
+  forall r n i,
+  rBits r = N.log2 WIDTH ->
+  inRange i r = true ->
+  bitmapInRange r (N.ones n) i = (suffixOf i <? Z.of_N n).
+Proof.
+  intros ?????.
+  unfold bitmapInRange; rewrite H0.
+  unfold suffixOf, suffixBitMask, WIDTH in *.
+  rewrite H; clear H.
+  unfoldMethods.
+  simpl.
+  rewrite eq_iff_eq_true.
+  rewrite Z.ltb_lt.
+  rewrite N.ones_spec_iff.
+  intros.
+  rewrite Z2N.inj_lt; try nonneg.
+  rewrite N2Z.id.
+  reflexivity.
+Qed.
+
 (** *** Operation: [intoRange]
 
 This is the inverse of bitmapInRange, in a way.
@@ -853,6 +920,23 @@ Proof.
   reflexivity.
 Qed.
 Hint Resolve isBitMask0_lor : isBitMask.
+
+Lemma isBitMask0_ones:
+  forall n, (n <= WIDTH)%N ->
+  isBitMask0 (N.ones n).
+Proof.
+  intros.
+  induction n using N.peano_ind; simpl.
+    constructor.
+  rewrite N.ones_equiv.
+  unfold isBitMask0.
+  apply N.pow_le_mono_r with (a:=2%N) in H; [|Nomega].
+  assert (0 < 2 ^ N.succ n)%N.
+    apply N_pow_pos_nonneg.
+    constructor.
+  Nomega.
+Qed.
+Hint Resolve isBitMask0_ones : isBitMask.
 
 
 Lemma isBitMask_bitmapOf: forall e, isBitMask (bitmapOf e).
@@ -3797,42 +3881,6 @@ Proof.
   match rhs with fun x s => match _ with Nil => match ?go _ _ with _ => _ end | _ => _ end => exact go end.
 Defined.
 
-Lemma isBitMask0_ones:
-  forall n, (n <= WIDTH)%N ->
-  isBitMask0 (N.ones n).
-Proof.
-  intros.
-  induction n using N.peano_ind; simpl.
-    constructor.
-  rewrite N.ones_equiv.
-  unfold isBitMask0.
-  apply N.pow_le_mono_r with (a:=2%N) in H; [|Nomega].
-  assert (0 < 2 ^ N.succ n)%N.
-    apply N_pow_pos_nonneg.
-    constructor.
-  Nomega.
-Qed.
-
-Lemma bitmapInRange_ones:
-  forall r x i,
-  rBits r = N.log2 WIDTH ->
-  inRange i r = true ->
-  bitmapInRange r (N.ones (Z.to_N (suffixOf x))) i = (i <? x).
-Proof.
-  intros.
-  unfold bitmapInRange; rewrite H0.
-  unfold suffixOf, suffixBitMask, WIDTH.
-  rewrite H; clear H.
-  unfoldMethods.
-  simpl.
-  destruct (Z.ltb_spec i x).
-  * rewrite N.ones_spec_iff.
-    apply Z2N.inj_lt; try nonneg.
-    
-  SearchAbout N.testbit N.ones.
-  SearchAbout N.ones Z.to_N.
-  SearchAbout Z.to_N Z.land.
-Admitted.
 
 Lemma splitGo_Sem :
   forall x s r f,
@@ -3884,7 +3932,7 @@ Proof.
         apply prefixOf_mono in H0. 
         omega.
     - (* s is Tip, x is part of it *)
-      assert ((bitmapOf x - 1)%N = (N.ones (Z.to_N (suffixOf x))%N)) as H6.
+      assert ((bitmapOf x - 1)%N = (N.ones (Z.to_N (suffixOf x))%N)) as Htmp.
       { rewrite N.ones_equiv.
         rewrite N.pred_sub.
         unfold bitmapOf.
@@ -3893,7 +3941,14 @@ Proof.
         rewrite N.shiftl_1_l.
         reflexivity.
       }
-      rewrite H6.
+      assert (prefixOf x = rPrefix r). {
+        subst.
+        unfold Prefix, Int in *.
+        apply prefixOf_mono in H4.
+        rewrite prefixOf_rPrefix in H4 by assumption.
+        omega.
+      }
+      rewrite Htmp; clear Htmp.
       eapply HX.
       + eapply Desc0_Sem.
         eapply tip_Desc0; try eassumption; try reflexivity.
@@ -3918,15 +3973,36 @@ Proof.
         rewrite bitmapInRange_land.
         destruct (bitmapInRange r bm i) eqn:?; try reflexivity; simpl.
         apply bitmapInRange_inside in Heqb.
-        apply bitmapInRange_ones; try assumption.
+        rewrite bitmapInRange_ones by assumption.
+        rewrite Z2N.id by nonneg.
+        rewrite <- prefixOf_eqb_spec in Heqb by assumption.
+        rewrite Z.eqb_eq in *.
+        unfold Prefix, Int in *.
+        pose proof (prefixOf_suffixOf i).
+        pose proof (prefixOf_suffixOf x).
+        apply eq_iff_eq_true.
+        rewrite !Z.ltb_lt.
+        omega.
       + intro i.
         rewrite H2.
         rewrite bitmapInRange_land.
         destruct (bitmapInRange r bm i) eqn:?; try reflexivity; rewrite !andb_true_l.
         apply bitmapInRange_inside in Heqb.
-        apply inRange_bounded in Heqb. 
-        (* As above, but also about bitmapInRange and ldiff. *)
-        admit.
+        rewrite bitmapInRange_ldiff.
+        rewrite bitmapInRange_ones by assumption.
+        rewrite suffixOf_plus_bitmapOf.
+        rewrite bitmapInRange_ones by assumption.
+        rewrite Z2N.id by nonneg.
+        rewrite <- prefixOf_eqb_spec in Heqb by assumption.
+        rewrite Z.eqb_eq in *.
+        unfold Prefix, Int in *.
+        pose proof (prefixOf_suffixOf i).
+        pose proof (prefixOf_suffixOf x).
+        apply eq_iff_eq_true.
+        rewrite andb_true_iff, negb_true_iff.
+        rewrite !Z.ltb_lt, Z.ltb_ge.
+        assert (suffixOf i < Z.of_N WIDTH) by apply suffixOf_lt_WIDTH.
+        omega.
   * simpl. unfoldMethods.
     subst.
     rewrite match_nomatch.
@@ -4030,7 +4106,7 @@ Proof.
         rewrite rPrefix_halfRange_otherhalf in * by assumption.
         rewrite !rBits_halfRange in *.
         omega.
-Admitted.
+Qed.
 
 Lemma split_Sem :
   forall x s f,

@@ -3813,6 +3813,27 @@ Proof.
   Nomega.
 Qed.
 
+Lemma bitmapInRange_ones:
+  forall r x i,
+  rBits r = N.log2 WIDTH ->
+  inRange i r = true ->
+  bitmapInRange r (N.ones (Z.to_N (suffixOf x))) i = (i <? x).
+Proof.
+  intros.
+  unfold bitmapInRange; rewrite H0.
+  unfold suffixOf, suffixBitMask, WIDTH.
+  rewrite H; clear H.
+  unfoldMethods.
+  simpl.
+  destruct (Z.ltb_spec i x).
+  * rewrite N.ones_spec_iff.
+    apply Z2N.inj_lt; try nonneg.
+    
+  SearchAbout N.testbit N.ones.
+  SearchAbout N.ones Z.to_N.
+  SearchAbout Z.to_N Z.land.
+Admitted.
+
 Lemma splitGo_Sem :
   forall x s r f,
   Desc s r f ->
@@ -3897,23 +3918,7 @@ Proof.
         rewrite bitmapInRange_land.
         destruct (bitmapInRange r bm i) eqn:?; try reflexivity; simpl.
         apply bitmapInRange_inside in Heqb.
-        subst.
-        assert (prefixOf x <= x) by Nomega.
-        assert (0 <= x) by Nomega.
-        unfold bitmapInRange.
-        rewrite Heqb.
-        destruct (i <? x) eqn:?. {
-          apply N.ones_spec_low.
-          apply Z.ltb_lt in Heqb0.
-          unfold suffixOf, suffixBitMask.
-          rewrite H1; simpl.
-          admit.
-        }
-        apply N.ones_spec_high.
-        apply Z.ltb_ge in Heqb0.
-        unfold suffixOf, suffixBitMask.
-        rewrite H1; simpl.
-        admit.
+        apply bitmapInRange_ones; try assumption.
       + intro i.
         rewrite H2.
         rewrite bitmapInRange_land.

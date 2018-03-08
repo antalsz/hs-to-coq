@@ -41,6 +41,7 @@ library
   exposed-modules: Fin
   exposed-modules: Foldable
   exposed-modules: Functor
+  exposed-modules: Identity
   exposed-modules: Internal
   exposed-modules: Internal0
   exposed-modules: List

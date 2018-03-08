@@ -44,6 +44,9 @@ rewrite forall x y, (x Data.Bits..&. (Data.Bits.complement y)) = (Data.Bits.xor 
 # More complement on N to worry about
 rewrite forall x y, Data.Bits.complement (x GHC.Num.+ y) = Coq.NArith.BinNat.N.ldiff (Coq.NArith.BinNat.N.ones (64%N)) (x GHC.Num.+ y)
 
+# More on negate on N to worry about
+rewrite forall x y, (GHC.Num.negate x) = Coq.NArith.BinNat.N.ldiff (Coq.NArith.BinNat.N.ones (64%N)) (Coq.NArith.BinNat.N.pred x)
+
 # Avoid the natFromInt
 redefine Definition Data.IntSet.Internal.mask : GHC.Num.Int -> (Mask -> Prefix) :=
   fun i m => Coq.ZArith.BinInt.Z.land i (Coq.ZArith.BinInt.Z.lxor (Coq.ZArith.BinInt.Z.lnot (Coq.ZArith.BinInt.Z.pred m)) m).

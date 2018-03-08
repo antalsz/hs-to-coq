@@ -253,7 +253,7 @@ mkArb step n
       let lower = (n + 2) `quot` 4
       ln <- liftGen $ choose (lower, upper)
       let rn = n - ln - 1
-      liftM3 (\lt x rt -> bin n x lt rt) (mkArb step ln) step (mkArb step rn)
+      liftM3 (\lt x rt -> bin (fromIntegral n) x lt rt) (mkArb step ln) step (mkArb step rn)
 
 -- | Given a strictly increasing list of elements, produce an arbitrarily
 -- shaped set with exactly those elements.

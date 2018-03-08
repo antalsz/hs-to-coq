@@ -4,6 +4,7 @@
 Require Import Coq.Sorting.Sorted.
 Require Import Coq.Sorting.Permutation.
 Require Import Coq.Logic.FunctionalExtensionality.
+Require Import Coq.Classes.Morphisms.
 
 Require Import Coq.Lists.List.
 Import ListNotations.
@@ -19,6 +20,33 @@ Require Import Tactics.
 Require Import OrdTactic.
 
 Set Bullet Behavior "Strict Subproofs".
+
+(** ** Unrolling lemmas *)
+
+
+Lemma mergeAll_singleton: forall a cmp (xs : list a),
+  mergeAll cmp [xs] = xs.
+Proof.
+  intros.
+  unfold mergeAll at 1. unfold mergeAll_func.
+  lazymatch goal with 
+    |- Wf.Fix_sub ?A ?R ?Rwf ?P ?F_sub ?x = ?rhs => 
+    apply (@Wf.WfExtensionality.fix_sub_eq_ext A R Rwf P F_sub x)
+  end.
+Qed.
+
+
+Lemma mergeAll_eq: forall a cmp (xs : list a) ys zss,
+  mergeAll cmp (xs :: ys :: zss) = mergeAll cmp (mergePairs cmp (xs :: ys :: zss)).
+Proof.
+  intros.
+  unfold mergeAll at 1. unfold mergeAll_func.
+  lazymatch goal with 
+    |- Wf.Fix_sub ?A ?R ?Rwf ?P ?F_sub ?x = ?rhs => 
+    apply (@Wf.WfExtensionality.fix_sub_eq_ext A R Rwf P F_sub x)
+  end.
+Qed.
+
 
 (** ** [sort] is a permutation of its input *)
 
@@ -84,29 +112,6 @@ Proof.
     apply descending_asscending_permutation.
 Qed.
 
-
-Lemma mergeAll_singleton: forall xs,
-  mergeAll cmp [xs] = xs.
-Proof.
-  intros.
-  unfold mergeAll at 1. unfold mergeAll_func.
-  lazymatch goal with 
-    |- Wf.Fix_sub ?A ?R ?Rwf ?P ?F_sub ?x = ?rhs => 
-    apply (@Wf.WfExtensionality.fix_sub_eq_ext A R Rwf P F_sub x)
-  end.
-Qed.
-
-
-Lemma mergeAll_eq: forall xs ys zss,
-  mergeAll cmp (xs :: ys :: zss) = mergeAll cmp (mergePairs cmp (xs :: ys :: zss)).
-Proof.
-  intros.
-  unfold mergeAll at 1. unfold mergeAll_func.
-  lazymatch goal with 
-    |- Wf.Fix_sub ?A ?R ?Rwf ?P ?F_sub ?x = ?rhs => 
-    apply (@Wf.WfExtensionality.fix_sub_eq_ext A R Rwf P F_sub x)
-  end.
-Qed.
 
 
 Lemma merge_permutation:
@@ -353,17 +358,30 @@ Next Obligation.
     assumption.
 Qed.
 
+Lemma Forall_Sorted_LocallySorted_iff:
+  forall a lt (xs : list (list a)),
+  Forall (Sorted lt) xs <-> Forall (LocallySorted lt) xs.
+Proof.
+  intros.
+  split; intro.
+  * rewrite Forall_forall in *.
+    intros x Hx. specialize (H x Hx).
+    rewrite Sorted_LocallySorted_iff in *.
+    assumption.
+  * rewrite Forall_forall in *.
+    intros x Hx. specialize (H x Hx).
+    rewrite Sorted_LocallySorted_iff in *.
+    assumption.
+Qed.
+
 Lemma sortBy_sorted:
   forall  (xs : list a), Sorted le (sortBy cmp xs).
 Proof.
   intros.
   unfold sortBy.
   apply mergeAll_sorted.
-  assert (Forall (LocallySorted le) (sequences cmp xs)) by (apply sequences_sorted).
-  rewrite Forall_forall in *.
-  intros x Hx. specialize (H x Hx).
-  rewrite Sorted_LocallySorted_iff.
-  assumption.
+  rewrite Forall_Sorted_LocallySorted_iff.
+  apply sequences_sorted.
 Qed.
 
 End Sorted.
@@ -376,4 +394,311 @@ Proof.
   apply sortBy_sorted.
   * intros x y ?. destruct (compare x y) eqn:?; simpl in *; try congruence; try solve [order a].
   * intros x y ?. destruct (compare x y) eqn:?; simpl in *; try congruence; try solve [order a].
+Qed.
+
+(** ** [sort] is stable *)
+
+(** Now I am lazy and I only prove it for when [cmp] is a lawful [compare] *)
+
+(** Also, this proof is not the most pretty in the world, but it was late, and it works.*)
+
+Section Stable.
+Context {a} `{Hord : OrdLaws a}.
+
+(** We define a sorte stable when it it does not change the all subsequence of 
+    equivalent elements, which we can conveniently describe using filter.
+ *)
+Definition Stable (xs ys : list a) :=
+  forall x, filter (fun y => x == y) xs = filter (fun y => x == y) ys.
+
+(** Some lemmas to work with [Stable] without going down to the level of [filter]. *)
+
+Lemma filter_app: forall a p (xs : list a) ys,
+  filter p (xs ++ ys) = filter p xs ++ filter p ys.
+Proof. intros. induction xs; simpl; try rewrite IHxs; try destruct_match; reflexivity. Qed.
+
+Lemma Stable_app : forall xs ys xs' ys',
+  Stable xs xs' -> Stable ys ys' -> Stable (xs ++ ys) (xs' ++ ys').
+Proof.
+  intros ???????.
+  specialize (H x).
+  specialize (H0 x).
+  rewrite !filter_app.
+  rewrite H, H0.
+  reflexivity.
+Qed.
+
+Lemma Stable_cons : forall x ys ys',
+  Stable ys ys' -> Stable (x :: ys) (x :: ys').
+Proof.
+  intros ?????.
+  specialize (H x0).
+  simpl.
+  rewrite H.
+  reflexivity.
+Qed.
+
+Lemma Stable_refl : forall xs, Stable xs xs.
+Proof. intros ??. reflexivity. Qed.
+
+Theorem Stable_sym : forall l l' : list a,
+ Stable l l' -> Stable l' l.
+Proof.
+  intros ????.
+  symmetry.
+  apply H.
+Qed.
+
+Theorem Stable_trans : forall l l' l'' : list a,
+ Stable l l' -> Stable l' l'' -> Stable l l''.
+Proof.
+  intros ??????.
+  etransitivity.
+  apply H.
+  apply H0.
+Qed.
+
+Instance Stable_Equivalence : Equivalence Stable | 10 := {
+  Equivalence_Reflexive := @Stable_refl ;
+  Equivalence_Symmetric := @Stable_sym ;
+  Equivalence_Transitive := @Stable_trans }.
+
+
+Definition le: a -> a -> Prop := fun x y => (x <= y = true).
+Definition lt : a -> a -> Prop := fun x y => (x < y = true).
+Definition gt : a -> a -> Prop := fun x y => (x > y = true).
+
+
+Lemma Stable_cons_app_lt:
+  forall x xs,
+  Forall (lt x) xs ->
+  Stable (x :: xs) (xs ++ [x]).
+Proof.
+  intros ??? y.
+  simpl.
+  rewrite filter_app. simpl.
+  destruct (y == x) eqn:?.
+  * enough (Htmp : filter (fun y0 : a => _GHC.Base.==_ y y0) xs = []) by (rewrite Htmp; reflexivity).
+    induction xs.
+    + reflexivity.
+    + simpl.
+      destruct_match.
+      - exfalso.
+        inversion H; subst; clear H.
+        unfold lt in *.
+        order a.
+      - apply IHxs.
+        inversion H; subst; clear H.
+        assumption.
+  * rewrite app_nil_r.
+    reflexivity.
+Qed.
+
+
+Lemma lt_sorted_stable_cons:
+  forall x xs,
+  LocallySorted lt (x :: xs) ->
+  Stable (x :: xs) (xs ++ [x]).
+Proof.
+  intros ???.
+  apply Stable_cons_app_lt.
+  induction xs.
+  * constructor.
+  * inversion H; subst; clear H.
+    inversion H2; subst; clear H2.
+    repeat (constructor || assumption).
+    repeat (constructor || assumption).
+    unfold lt in *; order a.
+    lapply IHxs.
+    intro. inversion H. assumption.
+    repeat (constructor || assumption).
+    unfold lt in *; order a.
+Qed.
+
+
+Program Fixpoint descending_ascending_stable
+  (ys : list a) { measure (length ys) } :
+  (forall x xs, LocallySorted lt (x :: xs) ->
+                Stable (List.concat (descending compare x xs ys))      (xs ++ x :: ys)) /\
+  (forall x xs, Stable (List.concat (ascending compare x (app xs) ys)) (xs ++ x :: ys)) := _.
+Next Obligation.
+  rename descending_ascending_stable into IH.
+  destruct ys.
+  * split; intros.
+    + simpl. rewrite app_nil_r. apply lt_sorted_stable_cons. assumption.
+    + simpl. rewrite app_nil_r. reflexivity.
+  * split; intros.
+    + simpl.
+      destruct_match.
+      - assert (a0 < x = true) by (destruct (compare x a0) eqn:?; simpl in Heq; try congruence; order a).
+        clear Heq.
+        assert (LocallySorted lt (a0 :: x :: xs)) by (constructor; assumption).
+        etransitivity.
+        ++ apply IH; only 1: (simpl; omega). assumption.
+        ++ replace (xs ++ x :: a0 :: ys) with ((xs ++ [x]) ++ a0 :: ys)
+             by (rewrite <- app_assoc; reflexivity).
+           apply Stable_app; try reflexivity.
+           apply lt_sorted_stable_cons. assumption.
+      - replace (xs ++ x :: a0 :: ys) with ((xs ++ [x]) ++ a0 :: ys)
+             by (rewrite <- app_assoc; reflexivity).
+        change (Stable ((x :: xs) ++ List.concat (match ys with
+           | [] => [a0 :: ys]
+           | b :: xs0 =>
+               if eq_comparison (compare a0 b) Gt
+               then descending compare b [a0] xs0
+               else ascending compare b (fun y : list a => a0 :: y) xs0
+           end)) ((xs ++ [x]) ++ a0 :: ys)).
+        apply Stable_app.
+        ++ apply lt_sorted_stable_cons. assumption.
+        ++ destruct_match.
+           ** reflexivity.
+           ** destruct_match.
+              -- assert (a1 < a0 = true) by (destruct (compare a0 a1) eqn:?; simpl in *; try congruence; order a).
+                 apply IH; only 1: (simpl; omega).
+                 repeat (assumption||constructor).
+              -- replace (fun y : list a => a0 :: y) with (app [a0]) by (simpl; reflexivity).
+                 apply IH; only 1: (simpl; omega).
+    + simpl.
+      destruct_match.
+      - replace ((fun arg_54__ : list a => xs ++ x :: arg_54__)) with (app (xs ++ [x]))
+          by (extensionality r; rewrite <- app_assoc; reflexivity).
+        etransitivity; only 1: (apply IH; simpl; omega).
+        rewrite <- app_assoc.
+        reflexivity.
+      - simpl.
+        rewrite <- app_assoc. simpl.
+        apply Stable_app; try reflexivity.
+        apply Stable_cons; try reflexivity.
+        destruct_match.
+        ** reflexivity.
+        ** destruct_match.
+           ++ assert (a1 < a0 = true) by (destruct (compare a0 a1) eqn:?; simpl in *; try congruence; order a).
+              apply IH; only 1: (simpl; omega).
+              repeat (assumption||constructor).
+           ++ replace (fun y : list a => a0 :: y) with (app [a0]) by (simpl; reflexivity).
+              apply IH; simpl; omega.
+Qed.
+
+Lemma sequences_stable:
+  forall  (xs : list a), Stable (List.concat (sequences compare xs)) xs.
+Proof.
+  intros.
+  unfold sequences.
+  repeat destruct_match.
+  * simpl. reflexivity.
+  * simpl. reflexivity.
+  * eapply descending_ascending_stable.
+    assert (a1 < a0 = true) by (destruct (compare a0 a1) eqn:?; simpl in *; try congruence; order a).
+    repeat (assumption||constructor).
+  * replace (fun y : list a => a0 :: y) with (app [a0]) by (simpl; reflexivity).
+    apply descending_ascending_stable.
+Qed.
+
+
+Lemma merge_stable:
+  forall xs ys,
+  LocallySorted le xs ->
+  Stable (merge compare xs ys) (xs ++ ys).
+Proof.
+  induction xs.
+  * destruct ys; reflexivity.
+  * simpl.
+    induction ys; intro.
+    + simpl. rewrite app_nil_r. reflexivity.
+    + simpl.
+      destruct_match.
+      - assert (a1 < a0 = true) by (destruct (compare a0 a1) eqn:?; simpl in *; try congruence; order a).
+        assert (Forall (lt a1) (a0 :: xs)). {
+          clear - Hord H H0.
+          induction xs.
+          * constructor. assumption. constructor.
+          * inversion H; subst; clear H.
+            repeat (constructor || assumption).
+            unfold lt, le in *. order a.
+            lapply IHxs.
+            intros. inversion H. assumption. clear IHxs.
+            destruct xs; constructor;
+            inversion H3; subst; clear H3.
+            assumption.
+            unfold le in *. order a.
+        } 
+        etransitivity.
+        ** apply Stable_cons.
+           apply IHys. assumption.
+        ** replace (a0 :: xs ++ a1 :: ys) with (((a0 :: xs) ++ [a1]) ++ ys) by (rewrite <- app_assoc; reflexivity).
+           replace (a1 :: a0 :: xs ++ ys) with ((a1 :: a0 :: xs) ++ ys) by reflexivity.
+           apply Stable_app; try reflexivity.
+           apply Stable_cons_app_lt.
+           assumption.
+      - apply Stable_cons.
+        apply IHxs.
+        destruct xs. constructor.
+        inversion H. assumption.
+Qed.
+
+Program Fixpoint mergePairs_stable
+  (xss : list (list a)) { measure (length xss) } :
+  Forall (LocallySorted le) xss ->
+  Stable (List.concat (mergePairs compare xss)) (List.concat xss) := _.
+Next Obligation.
+  intros.
+  destruct xss as [|xs[|ys zss]].
+  * reflexivity.
+  * reflexivity.
+  * simpl.
+    rewrite app_assoc.
+    apply Stable_app.
+    - apply merge_stable.
+      inversion H.
+      assumption.
+    - apply mergePairs_stable; only 1: (simpl; omega).
+      inversion H. inversion H3. assumption.
+Qed.
+
+Program Fixpoint mergeAll_stable
+  (xss : list (list a)) { measure (length xss) } :
+  Forall (Sorted le) xss ->
+  Stable (mergeAll compare xss) (List.concat xss) := _.
+Next Obligation.
+  destruct xss as [|xs[|ys zss]].
+  * reflexivity.
+  * simpl. rewrite app_nil_r. reflexivity.
+  * rewrite mergeAll_eq.
+    etransitivity; only 1: apply mergeAll_stable. {
+      pose proof (mergePairs_length (length zss) _ compare zss xs ys).
+      apply H0.
+      omega.
+    }
+    apply mergePairs_sorted.
+    + intros x y ?. destruct (compare x y) eqn:?; unfold le in *; simpl in *; try congruence; try solve [order a].
+    + intros x y ?. destruct (compare x y) eqn:?; unfold le in *; simpl in *; try congruence; try solve [order a].
+    + assumption.
+    + apply mergePairs_stable.
+      rewrite Forall_Sorted_LocallySorted_iff in *.
+      assumption.
+Qed.
+
+
+
+Lemma sortBy_stable:
+  forall  (xs : list a), Stable (sortBy compare xs) xs.
+Proof.
+  intros.
+  unfold sortBy.
+  etransitivity.
+  apply mergeAll_stable.
+  rewrite Forall_Sorted_LocallySorted_iff in *.
+  apply sequences_sorted.
+  + intros x y ?. destruct (compare x y) eqn:?; unfold le in *; simpl in *; try congruence; try solve [order a].
+  + intros x y ?. destruct (compare x y) eqn:?; unfold le in *; simpl in *; try congruence; try solve [order a].
+  + apply sequences_stable.
+Qed.
+
+End Stable.
+
+Theorem sort_stable:
+  forall a `(OrdLaws a) (xs : list a), Stable (sort xs) xs.
+Proof.
+  intros.
+  apply sortBy_stable.
 Qed.

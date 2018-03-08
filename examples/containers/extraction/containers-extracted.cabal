@@ -71,6 +71,12 @@ library
   exposed-modules:     PtrEquality
   exposed-modules:     Traversable
   exposed-modules:     Functor
+  exposed-modules:     Classes
+  exposed-modules:     BitUtil
+  exposed-modules:     CTZ
+  exposed-modules:     Popcount
+  exposed-modules:     Wf1
+
 
   build-depends:       QuickCheck >= 2.9.2,
                        base >=4.9 && <4.10

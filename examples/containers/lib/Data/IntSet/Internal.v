@@ -963,7 +963,10 @@ Definition split : Key -> IntSet -> (IntSet * IntSet)%type :=
                           else (pair t' Nil)
                  | x', (Tip kx' bm as t') =>
                      let lowerBitmap := bitmapOf x' GHC.Num.- #1 in
-                     let higherBitmap := Data.Bits.complement (lowerBitmap GHC.Num.+ bitmapOf x') in
+                     let higherBitmap :=
+                       Coq.NArith.BinNat.N.ldiff (Coq.NArith.BinNat.N.ones (64 % N)) (lowerBitmap
+                                                  GHC.Num.+
+                                                  bitmapOf x') in
                      if kx' GHC.Base.> x' : bool
                      then (pair Nil t')
                      else if kx' GHC.Base.< prefixOf x' : bool
@@ -1005,7 +1008,10 @@ Definition splitMember : Key -> IntSet -> (IntSet * bool * IntSet)%type :=
                  | x', (Tip kx' bm as t') =>
                      let bitmapOfx' := bitmapOf x' in
                      let lowerBitmap := bitmapOfx' GHC.Num.- #1 in
-                     let higherBitmap := Data.Bits.complement (lowerBitmap GHC.Num.+ bitmapOfx') in
+                     let higherBitmap :=
+                       Coq.NArith.BinNat.N.ldiff (Coq.NArith.BinNat.N.ones (64 % N)) (lowerBitmap
+                                                  GHC.Num.+
+                                                  bitmapOfx') in
                      if kx' GHC.Base.> x' : bool
                      then pair (pair Nil false) t'
                      else if kx' GHC.Base.< prefixOf x' : bool
@@ -1168,21 +1174,22 @@ Infix "Data.IntSet.Internal.\\" := (_\\_) (at level 99).
 End Notations.
 
 (* Unbound variables:
-     Bool.Sumbool.sumbool_of_bool Eq Gt Lt None Some Z andb bool comparison cons
+     Bool.Sumbool.sumbool_of_bool Eq Gt Lt N None Some Z andb bool comparison cons
      false id list negb nil op_zp__ op_zt__ op_zv__ option orb pair size_nat
-     suffixBitMask true Coq.Init.Peano.lt Coq.NArith.BinNat.N.log2
-     Coq.NArith.BinNat.N.modulo Coq.NArith.BinNat.N.pow Coq.NArith.BinNat.N.to_nat
-     Coq.ZArith.BinInt.Z.eqb Coq.ZArith.BinInt.Z.land Coq.ZArith.BinInt.Z.lnot
-     Coq.ZArith.BinInt.Z.log2 Coq.ZArith.BinInt.Z.lxor Coq.ZArith.BinInt.Z.of_N
-     Coq.ZArith.BinInt.Z.pow Coq.ZArith.BinInt.Z.pred Data.Bits.complement
-     Data.Bits.op_zizazi__ Data.Bits.op_zizbzi__ Data.Bits.xor Data.Foldable.foldl
-     Data.Maybe.maybe Data.Semigroup.Semigroup Data.Semigroup.op_zlzg__
-     Data.Tuple.snd GHC.Base.Eq_ GHC.Base.Monoid GHC.Base.Ord GHC.Base.String
-     GHC.Base.compare GHC.Base.flip GHC.Base.map GHC.Base.op_z2218U__
-     GHC.Base.op_zd__ GHC.Base.op_zdzn__ GHC.Base.op_zeze__ GHC.Base.op_zg__
-     GHC.Base.op_zgze__ GHC.Base.op_zl__ GHC.Base.op_zsze__ GHC.Num.Int GHC.Num.Word
-     GHC.Num.fromInteger GHC.Num.negate GHC.Num.op_zm__ GHC.Num.op_zp__
-     GHC.Real.fromIntegral GHC.Wf.wfFix2 Utils.Containers.Internal.BitUtil.bitcount
+     suffixBitMask true Coq.Init.Peano.lt Coq.NArith.BinNat.N.ldiff
+     Coq.NArith.BinNat.N.log2 Coq.NArith.BinNat.N.modulo Coq.NArith.BinNat.N.ones
+     Coq.NArith.BinNat.N.pow Coq.NArith.BinNat.N.to_nat Coq.ZArith.BinInt.Z.eqb
+     Coq.ZArith.BinInt.Z.land Coq.ZArith.BinInt.Z.lnot Coq.ZArith.BinInt.Z.log2
+     Coq.ZArith.BinInt.Z.lxor Coq.ZArith.BinInt.Z.of_N Coq.ZArith.BinInt.Z.pow
+     Coq.ZArith.BinInt.Z.pred Data.Bits.complement Data.Bits.op_zizazi__
+     Data.Bits.op_zizbzi__ Data.Bits.xor Data.Foldable.foldl Data.Maybe.maybe
+     Data.Semigroup.Semigroup Data.Semigroup.op_zlzg__ Data.Tuple.snd GHC.Base.Eq_
+     GHC.Base.Monoid GHC.Base.Ord GHC.Base.String GHC.Base.compare GHC.Base.flip
+     GHC.Base.map GHC.Base.op_z2218U__ GHC.Base.op_zd__ GHC.Base.op_zdzn__
+     GHC.Base.op_zeze__ GHC.Base.op_zg__ GHC.Base.op_zgze__ GHC.Base.op_zl__
+     GHC.Base.op_zsze__ GHC.Num.Int GHC.Num.Word GHC.Num.fromInteger GHC.Num.negate
+     GHC.Num.op_zm__ GHC.Num.op_zp__ GHC.Real.fromIntegral GHC.Wf.wfFix2
+     Utils.Containers.Internal.BitUtil.bitcount
      Utils.Containers.Internal.BitUtil.highestBitMask
      Utils.Containers.Internal.BitUtil.lowestBitMask
      Utils.Containers.Internal.BitUtil.shiftLL

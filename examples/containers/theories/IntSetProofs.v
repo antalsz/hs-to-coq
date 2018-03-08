@@ -3826,7 +3826,8 @@ Lemma splitGo_Sem :
 Proof.
   intros ???? HD.
   induction HD; intros X HX.
-  * cbn -[bitmapOf prefixOf complement].
+  * cbn -[bitmapOf prefixOf N.ones].
+    fold WIDTH.
     destruct (Z.ltb_spec x p); only 2: destruct (Z.ltb_spec p (prefixOf x)).
     - (* s is Tip, x is below *)
       eapply HX.
@@ -3872,14 +3873,6 @@ Proof.
         reflexivity.
       }
       rewrite H6.
-      assert ((@complement BitMap _ _
-                (N.add (N.ones (Z.to_N (suffixOf x))) (bitmapOf x))) =
-              N.ldiff (N.ones WIDTH) (N.ones (Z.to_N (suffixOf x)))%N) as H7.
-      {
-        admit.
-        (* complement does not work on N, need to rewrite this in hs-to-coq. *)
-      }
-      rewrite H7.
       eapply HX.
       + eapply Desc0_Sem.
         eapply tip_Desc0; try eassumption; try reflexivity.

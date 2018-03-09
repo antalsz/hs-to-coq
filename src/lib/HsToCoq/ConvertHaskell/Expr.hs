@@ -994,10 +994,10 @@ smartLet ident rhs (Qualid v) | ident == v = rhs
 smartLet ident rhs body = Let ident [] Nothing rhs body
 
 patternFailure :: Term
-patternFailure = Var "GHC.Err.patternFailure"
+patternFailure = "GHC.Err.patternFailure"
 
 missingValue :: Term
-missingValue = Var "missingValue"
+missingValue = "missingValue"
 
 -- | Program does not work nicely with if-then-else, so if we believe we are
 -- producing a term that ends up in a Program Fixpoint or Program Definition,

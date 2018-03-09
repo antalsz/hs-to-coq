@@ -49,13 +49,6 @@ Arguments Mk_MergeSet {_} _.
 Definition getMergeSet {a} (arg_0__ : MergeSet a) :=
   let 'Mk_MergeSet getMergeSet := arg_0__ in
   getMergeSet.
-
-(* The Haskell code containes partial or untranslateable code, which needs the
-   following *)
-
-Axiom patternFailure : forall {a}, a.
-
-Axiom unsafeFix : forall {a}, (a -> a) -> a.
 (* Midamble *)
 
 Require Omega.
@@ -100,7 +93,7 @@ Local Definition Foldable__Set__fold
                      then k
                      else match arg_0__ with
                           | Bin _ k l r => GHC.Base.mappend (go l) (GHC.Base.mappend k (go r))
-                          | _ => patternFailure
+                          | _ => GHC.Err.patternFailure
                           end
                  end in
     go.
@@ -117,7 +110,7 @@ Local Definition Foldable__Set__foldMap
                        then f k
                        else match arg_0__ with
                             | Bin _ k l r => GHC.Base.mappend (go l) (GHC.Base.mappend (f k) (go r))
-                            | _ => patternFailure
+                            | _ => GHC.Err.patternFailure
                             end
                    end in
       go t.
@@ -721,28 +714,28 @@ Definition fromDistinctAscList {a} : list a -> Set_ a :=
     | nil => Tip
     | cons x0 xs0 =>
         let create :=
-          unsafeFix (fun create arg_1__ arg_2__ =>
-                       match arg_1__, arg_2__ with
-                       | _, nil => (pair Tip nil)
-                       | s, (cons x xs' as xs) =>
-                           if s GHC.Base.== #1 : bool
-                           then (pair (Bin #1 x Tip Tip) xs')
-                           else match create (Data.Bits.shiftR s #1) xs with
-                                | (pair _ nil as res) => res
-                                | pair l (cons y ys) =>
-                                    let 'pair r zs := create (Data.Bits.shiftR s #1) ys in
-                                    (pair (link y l r) zs)
-                                end
-                       end) in
+          GHC.Err.deferredFix (fun create arg_1__ arg_2__ =>
+                                 match arg_1__, arg_2__ with
+                                 | _, nil => (pair Tip nil)
+                                 | s, (cons x xs' as xs) =>
+                                     if s GHC.Base.== #1 : bool
+                                     then (pair (Bin #1 x Tip Tip) xs')
+                                     else match create (Data.Bits.shiftR s #1) xs with
+                                          | (pair _ nil as res) => res
+                                          | pair l (cons y ys) =>
+                                              let 'pair r zs := create (Data.Bits.shiftR s #1) ys in
+                                              (pair (link y l r) zs)
+                                          end
+                                 end) in
         let go :=
-          unsafeFix (fun go arg_13__ arg_14__ arg_15__ =>
-                       match arg_13__, arg_14__, arg_15__ with
-                       | _, t, nil => t
-                       | s, l, cons x xs =>
-                           let 'pair r ys := create s xs in
-                           let 't' := link x l r in
-                           go (Data.Bits.shiftL s #1) t' ys
-                       end) in
+          GHC.Err.deferredFix (fun go arg_13__ arg_14__ arg_15__ =>
+                                 match arg_13__, arg_14__, arg_15__ with
+                                 | _, t, nil => t
+                                 | s, l, cons x xs =>
+                                     let 'pair r ys := create s xs in
+                                     let 't' := link x l r in
+                                     go (Data.Bits.shiftL s #1) t' ys
+                                 end) in
         go (#1 : GHC.Num.Int) (Bin #1 x0 Tip Tip) xs0
     end.
 
@@ -755,28 +748,28 @@ Definition fromDistinctDescList {a} : list a -> Set_ a :=
     | nil => Tip
     | cons x0 xs0 =>
         let create :=
-          unsafeFix (fun create arg_1__ arg_2__ =>
-                       match arg_1__, arg_2__ with
-                       | _, nil => (pair Tip nil)
-                       | s, (cons x xs' as xs) =>
-                           if s GHC.Base.== #1 : bool
-                           then (pair (Bin #1 x Tip Tip) xs')
-                           else match create (Data.Bits.shiftR s #1) xs with
-                                | (pair _ nil as res) => res
-                                | pair r (cons y ys) =>
-                                    let 'pair l zs := create (Data.Bits.shiftR s #1) ys in
-                                    (pair (link y l r) zs)
-                                end
-                       end) in
+          GHC.Err.deferredFix (fun create arg_1__ arg_2__ =>
+                                 match arg_1__, arg_2__ with
+                                 | _, nil => (pair Tip nil)
+                                 | s, (cons x xs' as xs) =>
+                                     if s GHC.Base.== #1 : bool
+                                     then (pair (Bin #1 x Tip Tip) xs')
+                                     else match create (Data.Bits.shiftR s #1) xs with
+                                          | (pair _ nil as res) => res
+                                          | pair r (cons y ys) =>
+                                              let 'pair l zs := create (Data.Bits.shiftR s #1) ys in
+                                              (pair (link y l r) zs)
+                                          end
+                                 end) in
         let go :=
-          unsafeFix (fun go arg_13__ arg_14__ arg_15__ =>
-                       match arg_13__, arg_14__, arg_15__ with
-                       | _, t, nil => t
-                       | s, r, cons x xs =>
-                           let 'pair l ys := create s xs in
-                           let 't' := link x l r in
-                           go (Data.Bits.shiftL s #1) t' ys
-                       end) in
+          GHC.Err.deferredFix (fun go arg_13__ arg_14__ arg_15__ =>
+                                 match arg_13__, arg_14__, arg_15__ with
+                                 | _, t, nil => t
+                                 | s, r, cons x xs =>
+                                     let 'pair l ys := create s xs in
+                                     let 't' := link x l r in
+                                     go (Data.Bits.shiftL s #1) t' ys
+                                 end) in
         go (#1 : GHC.Num.Int) (Bin #1 x0 Tip Tip) xs0
     end.
 
@@ -799,37 +792,37 @@ Definition fromList {a} `{GHC.Base.Ord a} : list a -> Set_ a :=
             | x, cons y _ => x GHC.Base.>= y
             end in
         let create :=
-          unsafeFix (fun create arg_8__ arg_9__ =>
-                       match arg_8__, arg_9__ with
-                       | _, nil => pair (pair Tip nil) nil
-                       | s, (cons x xss as xs) =>
-                           if s GHC.Base.== #1 : bool
-                           then if not_ordered x xss : bool
-                                then pair (pair (Bin #1 x Tip Tip) nil) xss
-                                else pair (pair (Bin #1 x Tip Tip) xss) nil
-                           else match create (Data.Bits.shiftR s #1) xs with
-                                | (pair (pair _ nil) _ as res) => res
-                                | pair (pair l (cons y nil)) zs => pair (pair (insertMax y l) nil) zs
-                                | pair (pair l (cons y yss as ys)) _ =>
-                                    if not_ordered y yss : bool
-                                    then pair (pair l nil) ys
-                                    else let 'pair (pair r zs) ws := create (Data.Bits.shiftR s #1) yss in
-                                         pair (pair (link y l r) zs) ws
-                                end
-                       end) in
+          GHC.Err.deferredFix (fun create arg_8__ arg_9__ =>
+                                 match arg_8__, arg_9__ with
+                                 | _, nil => pair (pair Tip nil) nil
+                                 | s, (cons x xss as xs) =>
+                                     if s GHC.Base.== #1 : bool
+                                     then if not_ordered x xss : bool
+                                          then pair (pair (Bin #1 x Tip Tip) nil) xss
+                                          else pair (pair (Bin #1 x Tip Tip) xss) nil
+                                     else match create (Data.Bits.shiftR s #1) xs with
+                                          | (pair (pair _ nil) _ as res) => res
+                                          | pair (pair l (cons y nil)) zs => pair (pair (insertMax y l) nil) zs
+                                          | pair (pair l (cons y yss as ys)) _ =>
+                                              if not_ordered y yss : bool
+                                              then pair (pair l nil) ys
+                                              else let 'pair (pair r zs) ws := create (Data.Bits.shiftR s #1) yss in
+                                                   pair (pair (link y l r) zs) ws
+                                          end
+                                 end) in
         let go :=
-          unsafeFix (fun go arg_22__ arg_23__ arg_24__ =>
-                       match arg_22__, arg_23__, arg_24__ with
-                       | _, t, nil => t
-                       | _, t, cons x nil => insertMax x t
-                       | s, l, (cons x xss as xs) =>
-                           if not_ordered x xss : bool
-                           then fromList' l xs
-                           else match create s xss with
-                                | pair (pair r ys) nil => go (Data.Bits.shiftL s #1) (link x l r) ys
-                                | pair (pair r _) ys => fromList' (link x l r) ys
-                                end
-                       end) in
+          GHC.Err.deferredFix (fun go arg_22__ arg_23__ arg_24__ =>
+                                 match arg_22__, arg_23__, arg_24__ with
+                                 | _, t, nil => t
+                                 | _, t, cons x nil => insertMax x t
+                                 | s, l, (cons x xss as xs) =>
+                                     if not_ordered x xss : bool
+                                     then fromList' l xs
+                                     else match create s xss with
+                                          | pair (pair r ys) nil => go (Data.Bits.shiftL s #1) (link x l r) ys
+                                          | pair (pair r _) ys => fromList' (link x l r) ys
+                                          end
+                                 end) in
         if not_ordered x0 xs0 : bool
         then fromList' (Bin #1 x0 Tip Tip) xs0
         else go (#1 : GHC.Num.Int) (Bin #1 x0 Tip Tip) xs0
@@ -1294,11 +1287,11 @@ Infix "Data.Set.Internal.\\" := (_\\_) (at level 99).
 End Notations.
 
 (* Unbound variables:
-     Bool.Sumbool.sumbool_of_bool Eq Gt Lt None Some andb bool comparison cons false
-     id list negb nil op_zt__ option orb pair prod set_size true Data.Bits.shiftL
-     Data.Bits.shiftR Data.Either.Either Data.Either.Left Data.Either.Right
-     Data.Foldable.Foldable Data.Foldable.foldMap Data.Foldable.foldl
-     Data.Functor.Classes.Eq1 Data.Functor.Classes.Ord1
+     Bool.Sumbool.sumbool_of_bool Eq GHC.Err.deferredFix GHC.Err.patternFailure Gt Lt
+     None Some andb bool comparison cons false id list negb nil op_zt__ option orb
+     pair prod set_size true Data.Bits.shiftL Data.Bits.shiftR Data.Either.Either
+     Data.Either.Left Data.Either.Right Data.Foldable.Foldable Data.Foldable.foldMap
+     Data.Foldable.foldl Data.Functor.Classes.Eq1 Data.Functor.Classes.Ord1
      Data.Functor.Classes.liftCompare Data.Functor.Classes.liftEq
      Data.Semigroup.Semigroup Data.Semigroup.op_zlzg__ GHC.Base.Eq_ GHC.Base.Monoid
      GHC.Base.Ord GHC.Base.String GHC.Base.compare GHC.Base.const GHC.Base.flip

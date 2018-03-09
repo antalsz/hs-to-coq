@@ -404,8 +404,8 @@ builtInDefaultMethods = fmap M.fromList $ M.fromList $
 
 builtInAxioms :: [(Qualid, Term)]
 builtInAxioms = map (first Bare)
-    [ "patternFailure" =: Forall [ Inferred Implicit (BName "a") ] a
-    , "missingValue"   =: Forall [ Inferred Implicit (BName "a") ] a
+    [ -- "patternFailure" =: Forall [ Inferred Implicit (BName "a"), Generalized Implicit (App1 "GHC.Err.Default" "a") ] a,
+       "missingValue"   =: Forall [ Inferred Implicit (BName "a") ] a
     , "unsafeFix"      =: Forall [ Inferred Implicit (BName "a") ] ((a `Arrow` a) `Arrow` a)
     ]
   where

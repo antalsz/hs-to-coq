@@ -857,7 +857,7 @@ convertTypedBinding toplvl convHsTy FunBind{..}   = runMaybeT $ do
 
 unsafeFix :: FixBody -> Term
 unsafeFix (FixBody ident argBinders Nothing Nothing rhs)
- = App1 (Qualid (Bare "unsafeFix"))
+ = App1 (Qualid (Qualified "GHC.Err"  "deferredFix"))
         (Fun (Inferred Explicit (Ident ident) NEL.<| argBinders) rhs)
 unsafeFix _ = error "unsafeFix: cannot handle annotations or types"
 
@@ -877,7 +877,7 @@ wfFix order (FixBody ident argBinders Nothing Nothing rhs)
         MeasureOrder measure Nothing    -> ("Coq.Init.Peano.lt", measure)
         MeasureOrder measure (Just rel) -> (rel, measure)
         WFOrder rel arg                 -> (rel, Qualid arg)
-wfFix _ _ = error "unsafeFix: cannot handle annotations or types"
+wfFix _ _ = error "wfFix: cannot handle annotations or types"
 
 --------------------------------------------------------------------------------
 
@@ -994,7 +994,7 @@ smartLet ident rhs (Qualid v) | ident == v = rhs
 smartLet ident rhs body = Let ident [] Nothing rhs body
 
 patternFailure :: Term
-patternFailure = Var "patternFailure"
+patternFailure = Var "GHC.Err.patternFailure"
 
 missingValue :: Term
 missingValue = Var "missingValue"

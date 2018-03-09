@@ -3951,10 +3951,30 @@ End TypeClassLaws.
 
 
 (** ** Verification of [Eq1] *)
-
-Global Instance Eq1Laws_Set : Eq1Laws Set_ (@Eq___Set_) := {}.
+Require Import Data.Functor.Classes.
+Require Import Proofs.Data.Functor.Classes.
+Global Instance Eq1Laws_list: Eq1Laws list (@Eq_list).
 Proof.
-Admitted.
+  constructor.
+  intros ? ? xs ys.
+  unfold liftEq, Eq1__list, liftEq__.
+  replace (xs == ys) with (eqlist xs ys) by reflexivity.
+  revert ys.
+  induction xs; intros ys.
+  * reflexivity.
+  * destruct ys.
+    - reflexivity.
+    - simpl. rewrite IHxs. reflexivity.
+Qed.
+
+Global Instance Eq1Laws_Set : Eq1Laws Set_ (@Eq___Set_).
+Proof.
+  split.
+  intros.
+  unfold liftEq, Eq1__Set_, liftEq__, Internal.Eq1__Set__liftEq.
+  rewrite Eq1_same.
+  reflexivity.
+Qed.
 
 (** * Rewrite rules *)
 

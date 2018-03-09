@@ -2,7 +2,7 @@ Require Import Prelude.
 Require Import RLE.
 
 Lemma group_by_not_nil:
-  forall A f (xs : list A),
+  forall f (xs : list E),
     ~ In nil (groupBy f xs).
 Proof.
   induction xs.
@@ -13,7 +13,7 @@ Proof.
       intuition congruence.
     - destruct l eqn:?.
       + intuition.
-      + destruct (f a a0).
+      + destruct (f a e).
         - contradict IHxs.
           destruct IHxs; try congruence.
           intuition.
@@ -23,7 +23,7 @@ Qed.
 
 
 Lemma concat_groupBy:
-  forall A f (xs : list A),
+  forall f (xs : list E),
     concat (groupBy f xs) = xs.
 Proof.
   intros.
@@ -34,10 +34,10 @@ Proof.
     - simpl in IHxs.  unfold concat in *. simpl in *. congruence.
     - destruct l eqn:?.
       - exfalso.
-        apply (group_by_not_nil _ f xs).
+        apply (group_by_not_nil f xs).
         rewrite Heql.
         intuition.
-        -  destruct (f a a0); unfold concat in *; simpl in *; congruence.
+      - destruct (f a e); unfold concat in *; simpl in *; congruence.
 Qed.
 
 Lemma map_map:
@@ -51,7 +51,7 @@ Proof.
 Qed.
 
 Lemma in_map_hd_in_concat:
-  forall A (x : A) xs,
+  forall (x : E) xs,
   ~ In nil xs -> 
   In x (map hd xs) ->
   In x (concat xs).
@@ -78,7 +78,7 @@ Qed.
    properties about it, simply because we
    never look at the axiom. *)
 Lemma rle_dom:
-  forall X `{Eq_ X} (x : X) xs,
+  forall `{Eq_ E} (x : E) xs,
     In x (map fst (rle xs)) -> In x xs.
 Proof.
   intros.

@@ -17,8 +17,6 @@ Require Name.
 Require Class.
 Require Var.
 
-Require Import GHC.Err.
-
 (* Record selectors *)
 Parameter tyConName    : TyCon -> Name.Name.
 Parameter tyConKind    : TyCon -> Kind.
@@ -49,6 +47,7 @@ Require DynFlags.
 Require FastStringEnv.
 Require FieldLabel.
 Require GHC.Base.
+Require GHC.Err.
 Require GHC.Num.
 Require GHC.Real.
 Require Maybes.

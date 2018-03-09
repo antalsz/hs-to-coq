@@ -3,8 +3,6 @@ Require Name.
 Require Class.
 Require Var.
 
-Require Import GHC.Err.
-
 (* Record selectors *)
 Parameter tyConName    : TyCon -> Name.Name.
 Parameter tyConKind    : TyCon -> Kind.

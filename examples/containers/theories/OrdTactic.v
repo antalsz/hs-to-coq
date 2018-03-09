@@ -136,6 +136,34 @@ Section Lemmas.
 End Lemmas.
 End Lemmas.
 
+(* Translate `bool` manipulation to `Prop` manipulation, and get rid of ssreflect *)
+
+Ltac not_bool_const b :=
+  match b with
+  | true  => fail 1
+  | false => fail 1
+  | _     => idtac
+  end.
+
+Ltac nonconst_bool_eq_to_iff :=
+  repeat match goal with
+  | H : context[?b1 = ?b2 :> bool] |- _ =>
+    not_bool_const b1; not_bool_const b2; rewrite ->eq_iff_eq_true in H
+  | |- context[?b1 = ?b2 :> bool] =>
+    not_bool_const b1; not_bool_const b2; rewrite ->eq_iff_eq_true
+  end.
+
+Hint Rewrite -> andb_true_iff : bool_to_prop.
+Hint Rewrite -> orb_true_iff  : bool_to_prop.
+Hint Rewrite -> negb_true_iff : bool_to_prop.
+
+Ltac bool_to_prop :=
+  nonconst_bool_eq_to_iff;
+  unfold is_true in *;
+  autorewrite with bool_to_prop in *.
+
+(* `order` tactic *)
+
 Ltac order_prepare t :=
  lazymatch goal with
  | H : ?A -> False |- _ => change (~A) in H; order_prepare t
@@ -162,9 +190,10 @@ Ltac order_prepare t :=
  | H : false = @op_zlze__ t _ _ ?x ?y |- _ => symmetry in H; order_prepare t
  | |-  true  = @op_zlze__ t _ _ ?x ?y      => symmetry;      order_prepare t
  | |-  false = @op_zlze__ t _ _ ?x ?y      => symmetry;      order_prepare t
- (* pulll things out of the conclusion *)
+ (* pull things out of the conclusion *)
  | |- _ = true  => apply not_false_is_true; intro; order_prepare t
  | |- _ = false => apply not_true_is_false; intro; order_prepare t
+ (* otherwise, hope it's contradictory *)
  | _ => exfalso
  end.
 
@@ -232,8 +261,13 @@ Ltac order_loop t :=
    end
 end.
 
+(* TODO: Can't handle disjunctions *)
 Ltac order t :=
- intros; order_prepare t; order_loop t.
+ solve [ repeat (intros; try red);
+         bool_to_prop;
+         intuition (solve [try subst; try easy;
+                           order_prepare t; order_loop t])
+       | fail 1 "order can't solve this system" ].
 
 (** Flipping comparisons **)
 
@@ -447,7 +481,7 @@ Goal forall x y z a: Z, x < y = true -> y <= z = true -> z < a = true -> a <= x 
 Proof. order Z. Qed.
 
 Goal forall x y : Z, compare x y = Eq <-> x == y = true.
-Proof. intuition; order Z. Qed.
+Proof. order Z. Qed.
 
 Goal forall x y z : Z, x < y = true -> y > x = true.
 Proof. order Z. Qed.

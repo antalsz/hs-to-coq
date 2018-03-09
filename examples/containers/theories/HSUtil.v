@@ -92,24 +92,76 @@ Canonical Int_eqType := Eval hnf in EqType Int Int_eqMixin.
 (******************************************************************************)
 (** Ordering **)
 
-Theorem Ord_le_ge {A} `{OrdLaws A} (x y : A) : (x <= y) = (y >= x).
-Proof. by rewrite Ord_ge_le. Qed.
+Theorem Ord_le_ge {A} `{OrdLaws A} (x y : A) :
+  (x <= y) = (y >= x).
+Proof. order A. Qed.
 
-Theorem Ord_lt_gt {A} `{OrdLaws A} (x y : A) : (x < y) = (y > x).
-Proof. by rewrite Ord_lt_le Ord_gt_le. Qed.
+Theorem Ord_lt_gt {A} `{OrdLaws A} (x y : A) :
+  (x < y) = (y > x).
+Proof. order A. Qed.
 
-Theorem Ord_gt_lt {A} `{OrdLaws A} (x y : A) : (x > y) = (y < x).
-Proof. by rewrite Ord_lt_gt. Qed.
+Theorem Ord_gt_lt {A} `{OrdLaws A} (x y : A) :
+  (x > y) = (y < x).
+Proof. order A. Qed.
 
-Theorem Ord_lt_not_gt {A} `{OrdLaws A} (x y : A) : (x < y) -> ~~ (x > y).
-Proof.
-  rewrite Ord_lt_le => /negbTE; rewrite -Ord_compare_Gt => GTyx.
-  rewrite Ord_gt_le; apply/negP => /negbTE; rewrite -Ord_compare_Lt.
-  congruence.
-Qed.
+Theorem Ord_lt_not_gt {A} `{OrdLaws A} (x y : A) :
+  (x < y) -> ~~ (x > y).
+Proof. order A. Qed.
+
+Theorem Ord_antisym_le_le {A} `{OrdLaws A} (x y : A) :
+  (x == y) = (x <= y) && (y <= x).
+Proof. order A. Qed.
 
 Theorem Ord_gt_not_lt {A} `{OrdLaws A} (x y : A) : (x > y) -> ~~ (x < y).
-Proof. rewrite Ord_gt_lt (Ord_lt_gt x y); apply Ord_lt_not_gt. Qed.
+Proof. order A. Qed.
+
+Theorem Ord_le_le_antisym {A} `{OrdLaws A} (x y : A) : (x == y) = (x <= y) && (y <= x).
+Proof. order A. Qed.
+
+Theorem Ord_le_ge_antisym {A} `{OrdLaws A} (x y : A) : (x == y) = (x <= y) && (x >= y).
+Proof. order A. Qed.
+
+Theorem Ord_ge_le_antisym {A} `{OrdLaws A} (x y : A) : (x == y) = (x >= y) && (x <= y).
+Proof. order A. Qed.
+
+Theorem Ord_ge_ge_antisym {A} `{OrdLaws A} (x y : A) : (x == y) = (x >= y) && (y >= x).
+Proof. order A. Qed.
+
+Theorem Ord_lt_lt_antisym {A} `{OrdLaws A} (x y : A) : (x /= y) = (x < y) || (y < x).
+Proof. case: (Ord_total x y); order A. Qed.
+
+Theorem Ord_lt_gt_antisym {A} `{OrdLaws A} (x y : A) : (x /= y) = (x < y) || (x > y).
+Proof. rewrite Ord_lt_lt_antisym; order A. Qed.
+
+Theorem Ord_gt_lt_antisym {A} `{OrdLaws A} (x y : A) : (x /= y) = (x > y) || (x < y).
+Proof. rewrite Ord_lt_lt_antisym; order A. Qed.
+
+Theorem Ord_gt_gt_antisym {A} `{OrdLaws A} (x y : A) : (x /= y) = (x > y) || (y > x).
+Proof. rewrite Ord_lt_lt_antisym; order A. Qed.
+
+Theorem Ord_le_le_antisym' {A} `{OrdLaws A} (x y : A) : (x == y) = (y <= x) && (x <= y).
+Proof. order A. Qed.
+
+Theorem Ord_le_ge_antisym' {A} `{OrdLaws A} (x y : A) : (x == y) = (y <= x) && (y >= x).
+Proof. order A. Qed.
+
+Theorem Ord_ge_le_antisym' {A} `{OrdLaws A} (x y : A) : (x == y) = (y >= x) && (y <= x).
+Proof. order A. Qed.
+
+Theorem Ord_ge_ge_antisym' {A} `{OrdLaws A} (x y : A) : (x == y) = (y >= x) && (x >= y).
+Proof. order A. Qed.
+
+Theorem Ord_lt_lt_antisym' {A} `{OrdLaws A} (x y : A) : (x /= y) = (y < x) || (x < y).
+Proof. rewrite Ord_lt_lt_antisym; order A. Qed.
+
+Theorem Ord_lt_gt_antisym' {A} `{OrdLaws A} (x y : A) : (x /= y) = (y < x) || (y > x).
+Proof. rewrite Ord_lt_lt_antisym; order A. Qed.
+
+Theorem Ord_gt_lt_antisym' {A} `{OrdLaws A} (x y : A) : (x /= y) = (y > x) || (y < x).
+Proof. rewrite Ord_lt_lt_antisym; order A. Qed.
+
+Theorem Ord_gt_gt_antisym' {A} `{OrdLaws A} (x y : A) : (x /= y) = (y > x) || (x > y).
+Proof. rewrite Ord_lt_lt_antisym; order A. Qed.
 
 (******************************************************************************)
 (** List membership (`elem`, `In`, `\in`) **)

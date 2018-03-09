@@ -39,41 +39,41 @@ Context {e : Type} {HEq : Eq_ e} {HOrd : Ord e} {HEqLaws : EqLaws e}  {HOrdLaws 
 
 Lemma compare_Eq : forall (x y : e),
   compare x y = Eq <-> x == y = true.
-Proof. intuition; order e. Qed.
+Proof. order e. Qed.
 Lemma compare_Lt : forall (x y : e),
   compare x y = Lt <-> x < y = true.
-Proof. intuition; order e. Qed.
+Proof. order e. Qed.
 Lemma compare_Gt : forall (x y : e),
   compare x y = Gt <-> x > y = true.
-Proof. intuition; order e. Qed.
+Proof. order e. Qed.
 
 Lemma lt_eq_r : forall x y z,
   x < y = true ->
   z == y = true ->
   x < z = true.
-Proof. intuition; order e. Qed.
+Proof. order e. Qed.
 
 Lemma lt_eq_l : forall x y z,
   x < y = true ->
   z == x = true ->
   z < y = true.
-Proof. intuition; order e. Qed.
+Proof. order e. Qed.
 
 Lemma lt_not_eq : forall (x y : e),
   x < y = true -> x == y = false.
-Proof. intuition; order e. Qed.
+Proof. order e. Qed.
 
 Lemma gt_not_eq : forall (x y : e),
  x > y = true -> x == y = false.
-Proof. intuition; order e. Qed.
+Proof. order e. Qed.
 
 
 Lemma lt_gt : forall (x y : e), (x > y) = (y < x).
-Proof. intros. rewrite eq_iff_eq_true. intuition; order e. Qed.
+Proof. order e. Qed.
 
 Lemma lt_trans : forall (x y z : e),
   x < y = true -> y < z = true -> x < z = true.
-Proof. intuition; order e. Qed.
+Proof. order e. Qed.
 
 (** * Well-formedness *)
 
@@ -154,7 +154,7 @@ Proof.
   induction s.
   * simpl.
     rewrite IHs1, IHs2.
-    replace (j == a) with (i == a) by (apply eq_true_iff_eq; split; order e).
+    replace (j == a) with (i == a) by order e.
     reflexivity.
   * reflexivity.
 Qed.
@@ -1382,6 +1382,34 @@ Proof.
      reflexivity.
 Qed.
 
+Import ListNotations.
+
+Lemma foldr_const_append:
+  forall xs (s : Set_ e),
+  foldr cons xs s = toList s ++ xs.
+Proof.
+  intros. revert xs. induction s; intros xs.
+  * unfold toList, toAscList.
+    simpl.
+    rewrite !IHs2, !IHs1.
+    rewrite app_nil_r.
+    rewrite <- !app_assoc.
+    reflexivity.
+  * reflexivity.
+Qed.
+
+Lemma deleteMin_spec n x (l r : Set_ e) :
+  toList (deleteMin (Bin n x l r)) = tl (toList (Bin n x l r)).
+Proof.
+  unfold toList, toAscList.
+  generalize dependent (@nil e).
+  generalize dependent r.
+  generalize dependent x.
+  generalize dependent n.
+  induction r; intros; auto.
+  simpl in *.
+  rewrite <- IHr1.
+Abort.
 
 (** ** Verification of [deleteMax] *)
 
@@ -1842,23 +1870,7 @@ Lemma foldr'_spec:
   foldr' k n s = foldr k n s.
 Proof. reflexivity. Qed.
 
-(** ** Verification of [toList] and [toAscList] *)
-
-Import ListNotations.
-
-Lemma foldr_const_append:
-  forall xs (s : Set_ e),
-  foldr cons xs s = toList s ++ xs.
-Proof.
-  intros. revert xs. induction s; intros xs.
-  * unfold toList, toAscList.
-    simpl.
-    rewrite !IHs2, !IHs1.
-    rewrite app_nil_r.
-    rewrite <- !app_assoc.
-    reflexivity.
-  * reflexivity.
-Qed.
+(** ** Verification of [toList], [toAscList] and [elems] *)
 
 Lemma elem_app:
   forall {a} `{Eq_ a} (i : a) xs ys,
@@ -2145,11 +2157,62 @@ Proof.
     - intros.
       simpl in H5.
       destruct H5.
-      + subst. order e.
+      + order e.
       + apply toList_lb in H0. simpl in H0.
         rewrite Forall_forall in H0.
         assert (x < y = true) by (apply H0; assumption).
         order e.
+Qed.
+
+(** ** Verification of [toDescList] *)
+
+Lemma rev_inj {A} (x y : list A) :
+  rev x = rev y -> x = y.
+Proof.
+  generalize dependent y.
+  induction x using rev_ind; simpl; intros;
+  destruct y using rev_ind; auto.
+  - rewrite rev_app_distr in H.
+    discriminate.
+  - rewrite rev_app_distr in H.
+    discriminate.
+  - rewrite !rev_app_distr in H.
+    inversion H; subst.
+    f_equal.
+    now apply IHx.
+Qed.
+
+Lemma foldl_acc_app {A : Type} (l : list A) (i : Set_ A) :
+  foldl (flip cons) l i = foldl (flip cons) [] i ++ l.
+Proof.
+  generalize dependent l.
+  induction i; simpl; intros; auto.
+  rewrite IHi2.
+  rewrite IHi1.
+  symmetry.
+  rewrite IHi2.
+  rewrite <- !app_assoc.
+  reflexivity.
+Qed.
+
+Lemma toDescList_spec (s : Set_ e) :
+  toDescList s = rev (toAscList s).
+Proof.
+  unfold toDescList, toAscList.
+  induction s; simpl; auto.
+  rewrite !foldr_const_append in *.
+  rewrite !app_nil_r in *.
+  rewrite <- (rev_involutive (foldl _ _ _)) in IHs1.
+  rewrite <- (rev_involutive (foldl _ _ _)) in IHs2.
+  apply rev_inj in IHs1.
+  apply rev_inj in IHs2.
+  rewrite <- !IHs1; clear IHs1.
+  rewrite <- !IHs2; clear IHs2.
+  rewrite rev_app_distr, rev_involutive.
+  simpl.
+  rewrite rev_involutive.
+  rewrite <- app_assoc.
+  now rewrite foldl_acc_app.
 Qed.
 
 (** ** Verification of [foldl] *)
@@ -2287,7 +2350,7 @@ Proof.
         destruct (List.elem i l) eqn:?, (List.elem i l0) eqn:?;
           rewrite ?orb_true_l, ?orb_true_r, ?orb_false_l, ?orb_false_r  in Helem;
           try reflexivity;
-          try solve [order e].
+          try order e.
         - pose proof (All_lt_elem _ _ _ H0 Heqb). order e.
         - pose proof (All_lt_elem _ _ _ H2 Heqb0). order e.
 Qed.
@@ -3744,16 +3807,16 @@ Proof.
     apply/andP; split=> //.
     rewrite !WFSet_eq_size_length; apply/Eq_eq.
     rewrite Nat2Z.inj_iff; apply eqlist_length, EQab.
-  - move=> a b c; rewrite !compare_neq_gt_iff_le; unfold is_true; order (list e).
+  - move=> a b c; rewrite !compare_neq_gt_iff_le; order (list e).
   - move=> a b; rewrite !compare_neq_gt_iff_le; apply Ord_total.
   - move=> a b; rewrite Ord_compare_Lt Neq_inv negb_false_iff.
-    split=> [? | /Eq_eq]; first apply/Eq_eq; rewrite Ord_compare_Gt; order (list e).
+    split=> [? | /Eq_eq]; first apply/Eq_eq; order (list e).
   - move=> a b; rewrite Ord_compare_Eq.
     split=> [EQ | /andP [LIST EQ]]; rewrite EQ => //=.
     rewrite andbT !WFSet_eq_size_length; apply/Eq_eq.
     rewrite Nat2Z.inj_iff; apply eqlist_length, EQ.
   - move=> a b; rewrite Ord_compare_Gt Neq_inv negb_false_iff.
-    split=> [? | /Eq_eq]; first apply/Eq_eq; rewrite Ord_compare_Gt; order (list e).
+    split=> [? | /Eq_eq]; first apply/Eq_eq; order (list e).
   - by move=> a b; rewrite Neq_inv negbK compare_flip; case: (compare _ _).
   - by move=> a b; rewrite !Neq_inv compare_flip; case: (compare _ _).
   - by move=> a b; rewrite Neq_inv negbK compare_flip; case: (compare _ _).
@@ -3885,6 +3948,13 @@ Proof.
 Qed.
 
 End TypeClassLaws.
+
+
+(** ** Verification of [Eq1] *)
+
+Global Instance Eq1Laws_Set : Eq1Laws Set_ (@Eq___Set_) := {}.
+Proof.
+Admitted.
 
 (** * Rewrite rules *)
 

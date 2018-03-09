@@ -447,11 +447,48 @@ Qed.
 
 Theorem thm_split : toProp prop_split.
 Proof.
-Abort.
+  rewrite /prop_split /= => s WF_ss x POS_x.
+  rewrite split_filter //.
+  
+  have WF_lt:  WF (filter (fun y => y < x) s) by apply filter_WF.
+  have WF_gt:  WF (filter (fun y => y > x) s) by apply filter_WF.
+  have WF_del: WF (delete x s)                by apply delete_WF.
+  move: (union_WF _ _ WF_lt WF_gt) => WF_union.
+
+  rewrite !Foldable_all_ssreflect.
+  repeat split=> /=; try by apply valid_correct.
+  - apply/allP=> /= k.
+    by rewrite in_elem toList_member // filter_member // => /andP [].
+  - apply/allP=> /= k.
+    by rewrite in_elem toList_member // filter_member // => /andP [].
+  - apply/eqIntSetMemberP => // k POS_k.
+    rewrite delete_member // union_member // !filter_member //.
+    rewrite -andb_orr andbC; f_equal.
+    apply Ord_lt_gt_antisym.
+Qed.
 
 Theorem thm_splitMember : toProp prop_splitMember.
 Proof.
-Abort.
+  rewrite /prop_splitMember /= => s WF_ss x POS_x.
+  rewrite splitMember_filter //.
+  
+  have WF_lt:  WF (filter (fun y => y < x) s) by apply filter_WF.
+  have WF_gt:  WF (filter (fun y => y > x) s) by apply filter_WF.
+  have WF_del: WF (delete x s)                by apply delete_WF.
+  move: (union_WF _ _ WF_lt WF_gt) => WF_union.
+
+  rewrite !Foldable_all_ssreflect.
+  repeat split=> //=; try by apply valid_correct.
+  - apply/allP=> /= k.
+    by rewrite in_elem toList_member // filter_member // => /andP [].
+  - apply/allP=> /= k.
+    by rewrite in_elem toList_member // filter_member // => /andP [].
+  - by apply Eq_refl.
+  - apply/eqIntSetMemberP => // k POS_k.
+    rewrite delete_member // union_member // !filter_member //.
+    rewrite -andb_orr andbC; f_equal.
+    apply Ord_lt_gt_antisym.
+Qed.
 
 Theorem thm_splitRoot : toProp prop_splitRoot.
 Proof.

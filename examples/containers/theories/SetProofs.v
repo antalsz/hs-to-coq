@@ -2151,6 +2151,57 @@ Proof.
         order e.
 Qed.
 
+(** ** Verification of [toDescList] *)
+
+Lemma rev_inj {A} (x y : list A) :
+  rev x = rev y -> x = y.
+Proof.
+  generalize dependent y.
+  induction x using rev_ind; simpl; intros;
+  destruct y using rev_ind; auto.
+  - rewrite rev_app_distr in H.
+    discriminate.
+  - rewrite rev_app_distr in H.
+    discriminate.
+  - rewrite !rev_app_distr in H.
+    inversion H; subst.
+    f_equal.
+    now apply IHx.
+Qed.
+
+Lemma foldl_acc_app {A : Type} (l : list A) (i : Set_ A) :
+  foldl (flip cons) l i = foldl (flip cons) [] i ++ l.
+Proof.
+  generalize dependent l.
+  induction i; simpl; intros; auto.
+  rewrite IHi2.
+  rewrite IHi1.
+  symmetry.
+  rewrite IHi2.
+  rewrite <- !app_assoc.
+  reflexivity.
+Qed.
+
+Lemma toDescList_spec (s : Set_ e) :
+  toDescList s = rev (toAscList s).
+Proof.
+  unfold toDescList, toAscList.
+  induction s; simpl; auto.
+  rewrite !foldr_const_append in *.
+  rewrite !app_nil_r in *.
+  rewrite <- (rev_involutive (foldl _ _ _)) in IHs1.
+  rewrite <- (rev_involutive (foldl _ _ _)) in IHs2.
+  apply rev_inj in IHs1.
+  apply rev_inj in IHs2.
+  rewrite <- !IHs1; clear IHs1.
+  rewrite <- !IHs2; clear IHs2.
+  rewrite rev_app_distr, rev_involutive.
+  simpl.
+  rewrite rev_involutive.
+  rewrite <- app_assoc.
+  now rewrite foldl_acc_app.
+Qed.
+
 (** ** Verification of [foldl] *)
 
 (** This relates [foldl] and [toList]. *)

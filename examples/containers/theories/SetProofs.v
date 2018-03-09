@@ -1381,6 +1381,34 @@ Proof.
      reflexivity.
 Qed.
 
+Import ListNotations.
+
+Lemma foldr_const_append:
+  forall xs (s : Set_ e),
+  foldr cons xs s = toList s ++ xs.
+Proof.
+  intros. revert xs. induction s; intros xs.
+  * unfold toList, toAscList.
+    simpl.
+    rewrite !IHs2, !IHs1.
+    rewrite app_nil_r.
+    rewrite <- !app_assoc.
+    reflexivity.
+  * reflexivity.
+Qed.
+
+Lemma deleteMin_spec n x (l r : Set_ e) :
+  toList (deleteMin (Bin n x l r)) = tl (toList (Bin n x l r)).
+Proof.
+  unfold toList, toAscList.
+  generalize dependent (@nil e).
+  generalize dependent r.
+  generalize dependent x.
+  generalize dependent n.
+  induction r; intros; auto.
+  simpl in *.
+  rewrite <- IHr1.
+Abort.
 
 (** ** Verification of [deleteMax] *)
 
@@ -1841,22 +1869,6 @@ Lemma foldr'_spec:
   foldr' k n s = foldr k n s.
 Proof. reflexivity. Qed.
 
-
-Import ListNotations.
-
-Lemma foldr_const_append:
-  forall xs (s : Set_ e),
-  foldr cons xs s = toList s ++ xs.
-Proof.
-  intros. revert xs. induction s; intros xs.
-  * unfold toList, toAscList.
-    simpl.
-    rewrite !IHs2, !IHs1.
-    rewrite app_nil_r.
-    rewrite <- !app_assoc.
-    reflexivity.
-  * reflexivity.
-Qed.
 (** ** Verification of [toList], [toAscList] and [elems] *)
 
 Lemma elem_app:

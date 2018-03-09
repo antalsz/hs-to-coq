@@ -492,7 +492,8 @@ Ltac solve_Precondition := lazymatch goal with
   | |- isLB _ _ = true        => solve_Bounds
   | |- isUB _ _ = true        => solve_Bounds
   | |- context [set_size]     => simpl; lia    (* in well-founded recursion *)
-  | |- _ = _                  => solve_size
+  | |- @eq _ ?x ?x            => reflexivity
+  | |- @eq Z _ _              => solve_size
   | |- context [balance_prop] => solve_size
   | |- ?H                     => fail "solve_Precondition does not recognize this goal: " H
   end.
@@ -2057,13 +2058,13 @@ Next Obligation.
   * destruct (Sumbool.sumbool_of_bool _);
     only 2: destruct (Sumbool.sumbool_of_bool _);
     rewrite ?Z.ltb_lt, ?Z.ltb_ge in *.
-    - erewrite toList_balanceL; try solve_Precondition.
-      erewrite toList_link; solve_Precondition.
+    - erewrite toList_balanceL; only 3: solve_Precondition.
+      erewrite toList_link by solve_Precondition.
       rewrite ?toList_Bin, <- ?app_assoc. reflexivity.
       applyDesc link_Desc; eassumption.
       applyDesc link_Desc; solve_size.
-    - erewrite toList_balanceR; try solve_Precondition.
-      erewrite toList_link; solve_Precondition.
+    - erewrite toList_balanceR; only 2: solve_Precondition.
+      erewrite toList_link by solve_Precondition.
       rewrite ?toList_Bin, <- ?app_assoc. reflexivity.
       applyDesc link_Desc; eassumption.
       applyDesc link_Desc; solve_size.

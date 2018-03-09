@@ -32,10 +32,10 @@ Extract Inductive Either.Either => "Prelude.Either" [ "Prelude.Left" "Prelude.Ri
 
 Require Import Data.Set.Internal.
 
-Extract Constant patternFailure => "GHC.Base.undefined".
 Extract Constant PtrEquality.ptrEq => "\ x y -> Prelude.False".
 Extract Constant PtrEquality.hetPtrEq => "\ x y -> Prelude.False".
 Extract Constant Base.errorWithoutStackTrace => "errorWithoutStackTrace".
+Extract Constant GHC.Err.patternFailure => "(\d -> Prelude.error ""patternFailure"")".
 Extract Constant GHC.Err.deferredFix => "(\d f -> let r = f r in r)".
 
 (*

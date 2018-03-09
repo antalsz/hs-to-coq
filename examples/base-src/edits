@@ -4,7 +4,6 @@ skip module GHC.Types
 skip module GHC.CString
 skip module GHC.Classes
 skip module GHC.Magic
-skip module GHC.Err
 skip module GHC.IO
 skip module GHC.Integer
 skip module GHC.Unicode

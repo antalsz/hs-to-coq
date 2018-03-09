@@ -30,6 +30,7 @@ Require Data.Semigroup.
 Require Data.Set.Internal.
 Require Data.Traversable.
 Require GHC.Base.
+Require GHC.Err.
 Require GHC.Num.
 Require GHC.Prim.
 Require Nat.
@@ -2572,21 +2573,21 @@ Infix "Data.Map.Internal.\\" := (_\\_) (at level 99).
 End Notations.
 
 (* Unbound variables:
-     Bool.Sumbool.sumbool_of_bool Eq GHC.Err.deferredFix GHC.Err.patternFailure Gt Lt
-     None Some Type andb bool comparison cons false functor__Map_op_zlzd__ id list
-     map_size negb nil op_zt__ option orb pair prod runIdentity true Data.Bits.shiftL
-     Data.Bits.shiftR Data.Either.Either Data.Either.Left Data.Either.Right
-     Data.Foldable.Foldable Data.Foldable.foldl Data.Functor.op_zlzdzg__
-     Data.Functor.Identity.Identity Data.Functor.Identity.Mk_Identity
-     Data.Maybe.maybe Data.Semigroup.Semigroup Data.Semigroup.op_zlzg__
-     Data.Set.Internal.Bin Data.Set.Internal.Set_ Data.Set.Internal.Tip
-     Data.Set.Internal.splitMember Data.Traversable.Traversable GHC.Base.Applicative
-     GHC.Base.Eq_ GHC.Base.Functor GHC.Base.Monad GHC.Base.Monoid GHC.Base.Ord
-     GHC.Base.compare GHC.Base.const GHC.Base.flip GHC.Base.fmap GHC.Base.id
-     GHC.Base.liftA3 GHC.Base.mappend GHC.Base.mempty GHC.Base.op_z2218U__
-     GHC.Base.op_zd__ GHC.Base.op_zdzn__ GHC.Base.op_zeze__ GHC.Base.op_zg__
-     GHC.Base.op_zgze__ GHC.Base.op_zl__ GHC.Base.op_zlze__ GHC.Base.op_zsze__
-     GHC.Base.pure GHC.Err.error GHC.Num.Int GHC.Num.Num GHC.Num.fromInteger
+     Bool.Sumbool.sumbool_of_bool Eq Gt Lt None Some Type andb bool comparison cons
+     false functor__Map_op_zlzd__ id list map_size negb nil op_zt__ option orb pair
+     prod runIdentity true Data.Bits.shiftL Data.Bits.shiftR Data.Either.Either
+     Data.Either.Left Data.Either.Right Data.Foldable.Foldable Data.Foldable.foldl
+     Data.Functor.op_zlzdzg__ Data.Functor.Identity.Identity
+     Data.Functor.Identity.Mk_Identity Data.Maybe.maybe Data.Semigroup.Semigroup
+     Data.Semigroup.op_zlzg__ Data.Set.Internal.Bin Data.Set.Internal.Set_
+     Data.Set.Internal.Tip Data.Set.Internal.splitMember Data.Traversable.Traversable
+     GHC.Base.Applicative GHC.Base.Eq_ GHC.Base.Functor GHC.Base.Monad
+     GHC.Base.Monoid GHC.Base.Ord GHC.Base.compare GHC.Base.const GHC.Base.flip
+     GHC.Base.fmap GHC.Base.id GHC.Base.liftA3 GHC.Base.mappend GHC.Base.mempty
+     GHC.Base.op_z2218U__ GHC.Base.op_zd__ GHC.Base.op_zdzn__ GHC.Base.op_zeze__
+     GHC.Base.op_zg__ GHC.Base.op_zgze__ GHC.Base.op_zl__ GHC.Base.op_zlze__
+     GHC.Base.op_zsze__ GHC.Base.pure GHC.Err.deferredFix GHC.Err.error
+     GHC.Err.patternFailure GHC.Num.Int GHC.Num.Num GHC.Num.fromInteger
      GHC.Num.op_zm__ GHC.Num.op_zp__ GHC.Num.op_zt__ GHC.Prim.coerce GHC.Prim.seq
      Nat.add Utils.Containers.Internal.BitQueue.BitQueue
      Utils.Containers.Internal.BitQueue.BitQueueB

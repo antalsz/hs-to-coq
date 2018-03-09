@@ -363,7 +363,7 @@ topoSortInstance (InstanceDefinition instanceName params ty members mp) = go sor
             Fun bnds t -> Fun bnds (unFix t)
             Fix (FixOne (FixBody _ bnds _ _ body'))
               -> Fun bnds body'
-            App1 (Qualid (Bare "unsafeFix"))
+            App1 "GHC.Err.deferredFix"
                  (Fun (Inferred Explicit (Ident _) NE.:| bnds) body')
               -> Fun (NE.fromList bnds) body'
             _ -> body

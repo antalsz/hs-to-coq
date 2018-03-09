@@ -26,6 +26,7 @@ Require Data.Maybe.
 Require Data.Semigroup.
 Require Data.Traversable.
 Require GHC.Base.
+Require GHC.Err.
 Require GHC.Num.
 Require GHC.Real.
 Require Utils.Containers.Internal.BitUtil.
@@ -1994,11 +1995,11 @@ Infix "Data.IntMap.Internal.\\" := (_\\_) (at level 99).
 End Notations.
 
 (* Unbound variables:
-     Eq GHC.Err.deferredFix GHC.Err.patternFailure Gt IntMap_op_zlzd__ Lt N None Some
-     andb bool comparison cons false id list negb nil op_zt__ op_zv__ option orb pair
-     true Coq.NArith.BinNat.N.lxor Coq.NArith.BinNat.N.ones Coq.ZArith.BinInt.Z.of_N
-     Data.Bits.op_zizazi__ Data.Bits.op_zizbzi__ Data.Bits.xor Data.Either.Either
-     Data.Either.Left Data.Either.Right Data.Foldable.Foldable Data.Foldable.foldl
+     Eq Gt IntMap_op_zlzd__ Lt N None Some andb bool comparison cons false id list
+     negb nil op_zt__ op_zv__ option orb pair true Coq.NArith.BinNat.N.lxor
+     Coq.NArith.BinNat.N.ones Coq.ZArith.BinInt.Z.of_N Data.Bits.op_zizazi__
+     Data.Bits.op_zizbzi__ Data.Bits.xor Data.Either.Either Data.Either.Left
+     Data.Either.Right Data.Foldable.Foldable Data.Foldable.foldl
      Data.Functor.op_zlzdzg__ Data.Functor.Identity.Identity Data.IntSet.Internal.Bin
      Data.IntSet.Internal.IntSet Data.IntSet.Internal.Key Data.IntSet.Internal.Nil
      Data.IntSet.Internal.Tip Data.IntSet.Internal.bitmapOf Data.IntSet.Internal.mask
@@ -2011,9 +2012,9 @@ End Notations.
      GHC.Base.liftA2 GHC.Base.mappend GHC.Base.mempty GHC.Base.op_z2218U__
      GHC.Base.op_zd__ GHC.Base.op_zeze__ GHC.Base.op_zg__ GHC.Base.op_zgze__
      GHC.Base.op_zl__ GHC.Base.op_zlze__ GHC.Base.op_zsze__ GHC.Base.pure
-     GHC.Err.error GHC.Num.Int GHC.Num.Num GHC.Num.Word GHC.Num.fromInteger
-     GHC.Num.op_zm__ GHC.Num.op_zp__ GHC.Num.op_zt__ GHC.Real.fromIntegral
-     Utils.Containers.Internal.BitUtil.highestBitMask
+     GHC.Err.deferredFix GHC.Err.error GHC.Err.patternFailure GHC.Num.Int GHC.Num.Num
+     GHC.Num.Word GHC.Num.fromInteger GHC.Num.op_zm__ GHC.Num.op_zp__ GHC.Num.op_zt__
+     GHC.Real.fromIntegral Utils.Containers.Internal.BitUtil.highestBitMask
      Utils.Containers.Internal.BitUtil.shiftLL
      Utils.Containers.Internal.BitUtil.shiftRL
 *)

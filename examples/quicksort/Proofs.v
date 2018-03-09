@@ -11,8 +11,8 @@ Inductive AlreadySorted {a} `{Ord a} : list a -> Prop :=
      Forall (fun y => (op_zl__ y x) = false) xs ->
      AlreadySorted (x::xs).
 
-Axiom unroll_unsafe_fix: forall a (f : a -> a),
-  unsafeFix f = f (unsafeFix f).
+Axiom unroll_deferred_fix: forall a `{Default a} (f : a -> a),
+  deferredFix f = f (deferredFix f).
 
 
 Lemma Forall_partition:
@@ -37,13 +37,13 @@ Proof.
   intros.
   induction H1.
   * unfold quicksort.
-    rewrite unroll_unsafe_fix. reflexivity.
+    rewrite unroll_deferred_fix. reflexivity.
   * change (quicksort (x :: xs) = [] ++ [x] ++ xs).
     unfold quicksort.
-    rewrite unroll_unsafe_fix.
+    rewrite unroll_deferred_fix.
     rewrite Forall_partition by assumption.
     f_equal;[|f_equal].
-    * rewrite unroll_unsafe_fix. reflexivity.
+    * rewrite unroll_deferred_fix. reflexivity.
     * apply IHAlreadySorted.
 Qed.
 
@@ -176,7 +176,7 @@ Proof.
   induction n using lt_wf_ind.
   intros.
   unfold quicksort.
-  rewrite unroll_unsafe_fix.
+  rewrite unroll_deferred_fix.
   destruct xs.
   * apply perm_nil.
   * destruct (OldList.partition (fun arg_1__ : a => _<_ arg_1__ a0) xs) eqn:?.
@@ -272,7 +272,7 @@ Proof.
   induction n using lt_wf_ind.
   intros.
   unfold quicksort.
-  rewrite unroll_unsafe_fix.
+  rewrite unroll_deferred_fix.
   destruct xs.
   * apply SSorted_nil.
   * destruct (OldList.partition (fun arg_1__ : a => _<_ arg_1__ a0) xs) eqn:?.

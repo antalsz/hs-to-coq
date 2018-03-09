@@ -13,7 +13,6 @@ Require Coq.Program.Wf.
 (* Preamble *)
 
 Require BitTerminationProofs.
-Require GHC.Err.
 
 (* Converted imports: *)
 

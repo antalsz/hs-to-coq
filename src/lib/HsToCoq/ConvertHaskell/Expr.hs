@@ -840,7 +840,7 @@ convertTypedBinding toplvl convHsTy FunBind{..}   = runMaybeT $ do
         whichFix <- use currentDefinition >>= \case
             Nothing -> pure $ Fix . FixOne
             Just n -> use (edits.nonterminating.contains n) >>= \case
-                True  -> pure $ unsafeFix
+                True  -> pure $ deferredFix
                 False ->  use (edits.local_termination.at n.non M.empty.at (qualidBase name)) >>= \case
                     Just order -> pure $ wfFix order
                     Nothing    -> pure $ Fix . FixOne
@@ -855,11 +855,11 @@ convertTypedBinding toplvl convHsTy FunBind{..}   = runMaybeT $ do
     pure . ConvertedDefinitionBinding $ ConvertedDefinition name tvs coqTy (addScope defn)
 
 
-unsafeFix :: FixBody -> Term
-unsafeFix (FixBody ident argBinders Nothing Nothing rhs)
+deferredFix :: FixBody -> Term
+deferredFix (FixBody ident argBinders Nothing Nothing rhs)
  = App1 (Qualid (Qualified "GHC.Err"  "deferredFix"))
         (Fun (Inferred Explicit (Ident ident) NEL.<| argBinders) rhs)
-unsafeFix _ = error "unsafeFix: cannot handle annotations or types"
+deferredFix _ = error "deferredFix: cannot handle annotations or types"
 
 wfFix :: Order -> FixBody -> Term
 wfFix order (FixBody ident argBinders Nothing Nothing rhs)

@@ -2,13 +2,14 @@
 This file verifies some of the logic of Interval.hs from
 bisect-binary. <https://github.com/nomeata/bisect-binary/>
 
-It is a variant of Proofs.v that uses the Function command to use [unsafeFix] in a safer ay and get a nice induction lemma. I stopped after the proof for [union].
+It is a variant of Proofs.v that uses the Function command to use [deferredFix] in a safer ay and get a nice induction lemma. I stopped after the proof for [union].
 *)
 
 
 Require Import Intervals.
 
 Require Import GHC.Base.
+Require Import GHC.Err.
 
 Require Import Coq.Sets.Ensembles.
 Require Import Coq.Sets.Powerset_facts.
@@ -201,10 +202,11 @@ Proof.
   destruct l; simpl; intuition; try congruence.
 Qed.
 
-(** unsafe fix *)
+(** deferred fix *)
 
 (* Variant of the axiom that is safe to use. *)
-Axiom unsafeFix_safe_eq: forall {a} (f : a -> a) x, f x = x -> unsafeFix f = f (unsafeFix f).
+Axiom deferredFix_safe_eq: forall {a} `{Default a} (f : a -> a) x,
+  f x = x -> deferredFix f = f (deferredFix f).
 
 (** induction principle *)
 
@@ -221,7 +223,7 @@ Definition size2 (is1_is2 : list Interval * list Interval) : nat := match is1_is
   to show that the axiomatized fixpoints in the code exist, and to
   get a nice termination principle.
   
-  The code was copied out of the argument to [unsafeFix], and case splits pulled out of function arguments.
+  The code was copied out of the argument to [deferredFix], and case splits pulled out of function arguments.
   *)
 
 Ltac solve_size2 :=
@@ -298,9 +300,9 @@ Definition union_go_f :=
              end.
 
 Lemma union_go_eq :
-  unsafeFix union_go_f = union_go_f (unsafeFix union_go_f).
+  deferredFix union_go_f = union_go_f (deferredFix union_go_f).
 Proof.
-  apply unsafeFix_safe_eq with (x := union_go_witness).
+  apply deferredFix_safe_eq with (x := union_go_witness).
   extensionality is1. extensionality is2.
   unfold union_go_f.
   unfold union_go_witness at 4.
@@ -329,7 +331,7 @@ Proof.
   generalize dependent (Z.min lb1 lb2). clear lb1 lb2.
   (* ready for induction *)
   refine (union_go_ind (fun is1 is2 => forall lb : Z,
-  goodLIs is1 lb -> goodLIs is2 lb -> goodLIs (unsafeFix union_go_f is1 is2) lb) _ _ _ _ _ _ (is1, is2)); clear is1 is2;
+  goodLIs is1 lb -> goodLIs is2 lb -> goodLIs (deferredFix union_go_f is1 is2) lb) _ _ _ _ _ _ (is1, is2)); clear is1 is2;
   intros is1_is2_ is1 is2.
   * intros ???;subst.
     intros lb H1 H2.
@@ -395,7 +397,7 @@ Proof.
     
   (* ready for induction *)
   refine (union_go_ind (fun is1 is2 => forall lb : Z,
-  goodLIs is1 lb -> goodLIs is2 lb -> semLIs (unsafeFix union_go_f is1 is2) = Union Z (semLIs is1) (semLIs is2)) _ _ _ _ _ _ (is1, is2)); clear is1 is2;
+  goodLIs is1 lb -> goodLIs is2 lb -> semLIs (deferredFix union_go_f is1 is2) = Union Z (semLIs is1) (semLIs is2)) _ _ _ _ _ _ (is1, is2)); clear is1 is2;
   intros is1_is2_ is1' is2'.
   * intros ??? lb H1 H2;subst.
     rewrite union_go_eq. unfold union_go_f at 1.

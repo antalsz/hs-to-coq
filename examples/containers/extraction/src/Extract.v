@@ -12,6 +12,7 @@ Require Coq.Program.Wf.
 
 Require GHC.Base.
 Require GHC.Enum.
+Require GHC.Err.
 Require Data.Either.
 Require Utils.Containers.Internal.PtrEquality.
 
@@ -35,7 +36,7 @@ Extract Constant patternFailure => "GHC.Base.undefined".
 Extract Constant PtrEquality.ptrEq => "\ x y -> Prelude.False".
 Extract Constant PtrEquality.hetPtrEq => "\ x y -> Prelude.False".
 Extract Constant Base.errorWithoutStackTrace => "errorWithoutStackTrace".
-Extract Constant unsafeFix => "(\f -> let r = f r in r)".
+Extract Constant GHC.Err.deferredFix => "(\d f -> let r = f r in r)".
 
 (*
 -- I'm trying to convert Z to Int, but this does not work. 

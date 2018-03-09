@@ -15,6 +15,7 @@ skip Data.Set.Internal.showWide
 skip Data.Set.Internal.showsBars
 skip Data.Set.Internal.withBar
 skip Data.Set.Internal.withEmpty
+skip Data.Set.Internal.node
 
 
 ## partial, bleh

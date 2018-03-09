@@ -275,9 +275,6 @@ Program Instance Eq___IntSet : GHC.Base.Eq_ IntSet :=
     k {| GHC.Base.op_zeze____ := Eq___IntSet_op_zeze__ ;
          GHC.Base.op_zsze____ := Eq___IntSet_op_zsze__ |}.
 
-Definition node : GHC.Base.String :=
-  GHC.Base.hs_string__ "+--".
-
 Definition null : IntSet -> bool :=
   fun arg_0__ => match arg_0__ with | Nil => true | _ => false end.
 
@@ -805,7 +802,10 @@ Definition lookupGE : Key -> IntSet -> option Key :=
                           then go r l
                           else go def r
                  | def, Tip kx bm =>
-                     let maskGE := (GHC.Num.negate (bitmapOf x)) Data.Bits..&.(**) bm in
+                     let maskGE :=
+                       (Coq.NArith.BinNat.N.ldiff (Coq.NArith.BinNat.N.ones (64 % N))
+                                                  (Coq.NArith.BinNat.N.pred (bitmapOf x))) Data.Bits..&.(**)
+                       bm in
                      if prefixOf x GHC.Base.< kx : bool
                      then Some GHC.Base.$ (kx GHC.Num.+ lowestBitSet bm)
                      else if andb (prefixOf x GHC.Base.== kx) (maskGE GHC.Base./= #0) : bool
@@ -838,8 +838,9 @@ Definition lookupGT : Key -> IntSet -> option Key :=
                           else go def r
                  | def, Tip kx bm =>
                      let maskGT :=
-                       (GHC.Num.negate (Utils.Containers.Internal.BitUtil.shiftLL (bitmapOf x) #1))
-                       Data.Bits..&.(**)
+                       (Coq.NArith.BinNat.N.ldiff (Coq.NArith.BinNat.N.ones (64 % N))
+                                                  (Coq.NArith.BinNat.N.pred (Utils.Containers.Internal.BitUtil.shiftLL
+                                                                             (bitmapOf x) #1))) Data.Bits..&.(**)
                        bm in
                      if prefixOf x GHC.Base.< kx : bool
                      then Some GHC.Base.$ (kx GHC.Num.+ lowestBitSet bm)
@@ -1177,16 +1178,16 @@ End Notations.
      false id list negb nil op_zp__ op_zt__ op_zv__ option orb pair size_nat
      suffixBitMask true Coq.Init.Peano.lt Coq.NArith.BinNat.N.ldiff
      Coq.NArith.BinNat.N.log2 Coq.NArith.BinNat.N.modulo Coq.NArith.BinNat.N.ones
-     Coq.NArith.BinNat.N.pow Coq.NArith.BinNat.N.to_nat Coq.ZArith.BinInt.Z.eqb
-     Coq.ZArith.BinInt.Z.land Coq.ZArith.BinInt.Z.lnot Coq.ZArith.BinInt.Z.log2
-     Coq.ZArith.BinInt.Z.lxor Coq.ZArith.BinInt.Z.of_N Coq.ZArith.BinInt.Z.pow
-     Coq.ZArith.BinInt.Z.pred Data.Bits.complement Data.Bits.op_zizazi__
-     Data.Bits.op_zizbzi__ Data.Bits.xor Data.Foldable.foldl Data.Maybe.maybe
-     Data.Semigroup.Semigroup Data.Semigroup.op_zlzg__ Data.Tuple.snd GHC.Base.Eq_
-     GHC.Base.Monoid GHC.Base.Ord GHC.Base.String GHC.Base.compare GHC.Base.flip
-     GHC.Base.map GHC.Base.op_z2218U__ GHC.Base.op_zd__ GHC.Base.op_zdzn__
-     GHC.Base.op_zeze__ GHC.Base.op_zg__ GHC.Base.op_zgze__ GHC.Base.op_zl__
-     GHC.Base.op_zsze__ GHC.Num.Int GHC.Num.Word GHC.Num.fromInteger GHC.Num.negate
+     Coq.NArith.BinNat.N.pow Coq.NArith.BinNat.N.pred Coq.NArith.BinNat.N.to_nat
+     Coq.ZArith.BinInt.Z.eqb Coq.ZArith.BinInt.Z.land Coq.ZArith.BinInt.Z.lnot
+     Coq.ZArith.BinInt.Z.log2 Coq.ZArith.BinInt.Z.lxor Coq.ZArith.BinInt.Z.of_N
+     Coq.ZArith.BinInt.Z.pow Coq.ZArith.BinInt.Z.pred Data.Bits.complement
+     Data.Bits.op_zizazi__ Data.Bits.op_zizbzi__ Data.Bits.xor Data.Foldable.foldl
+     Data.Maybe.maybe Data.Semigroup.Semigroup Data.Semigroup.op_zlzg__
+     Data.Tuple.snd GHC.Base.Eq_ GHC.Base.Monoid GHC.Base.Ord GHC.Base.compare
+     GHC.Base.flip GHC.Base.map GHC.Base.op_z2218U__ GHC.Base.op_zd__
+     GHC.Base.op_zdzn__ GHC.Base.op_zeze__ GHC.Base.op_zg__ GHC.Base.op_zgze__
+     GHC.Base.op_zl__ GHC.Base.op_zsze__ GHC.Num.Int GHC.Num.Word GHC.Num.fromInteger
      GHC.Num.op_zm__ GHC.Num.op_zp__ GHC.Real.fromIntegral GHC.Wf.wfFix2
      Utils.Containers.Internal.BitUtil.bitcount
      Utils.Containers.Internal.BitUtil.highestBitMask

@@ -29,7 +29,7 @@ instance Show BinNums.Coq_positive where
     go (BinNums.Coq_xO bn) = 'O' : go bn
   
 
-toPositive :: Int -> BinNums.Coq_positive
+toPositive :: Integer -> BinNums.Coq_positive
 toPositive x | x <= 0 = error "must call with positive int"
 toPositive 1 = BinNums.Coq_xH
 toPositive x = let b1 = x `mod` 2
@@ -37,17 +37,17 @@ toPositive x = let b1 = x `mod` 2
                if b1 == 1 then BinNums.Coq_xI (toPositive b2) else
                                BinNums.Coq_xO (toPositive b2)
 
-fromPositive :: BinNums.Coq_positive -> Int
+fromPositive :: BinNums.Coq_positive -> Integer
 fromPositive BinNums.Coq_xH = 1
 fromPositive (BinNums.Coq_xI bn) = fromPositive bn * 2 + 1
 fromPositive (BinNums.Coq_xO bn) = fromPositive bn * 2
  
-toBinZ :: Int -> BinNums.Z
+toBinZ :: Integer -> BinNums.Z
 toBinZ 0 = BinNums.Z0
 toBinZ x | x < 0 = BinNums.Zneg (toPositive (abs x))
 toBinZ x | x > 0 = BinNums.Zpos (toPositive x)
 
-fromBinZ :: BinNums.Z -> Int
+fromBinZ :: BinNums.Z -> Integer
 fromBinZ BinNums.Z0 = 0
 fromBinZ (BinNums.Zneg bn) = - (fromPositive bn)
 fromBinZ (BinNums.Zpos bn) = fromPositive bn
@@ -83,23 +83,23 @@ instance Ord Num.Int where
 instance Data.Bits.Bits Num.Int where
   (.&.)         = BinInt._Z__land
   (.|.)         = BinInt._Z__lor
-  bit           = Bits.bit_Int . toBinZ
+  bit           = Bits.bit_Int . toBinZ . fromIntegral
   bitSizeMaybe  = \_ -> Prelude.Nothing
-  clearBit      = \x i -> BinInt._Z__land x (Bits.complement_Int (Bits.bit_Int (toBinZ i)))
+  clearBit      = \x i -> BinInt._Z__land x (Bits.complement_Int (Bits.bit_Int (toBinZ (fromIntegral i))))
   complement    = Bits.complement_Int
-  complementBit = \ x i -> Bits.complementBit_Int x (toBinZ i)
+  complementBit = \ x i -> Bits.complementBit_Int x (toBinZ (fromIntegral i))
   isSigned      = \_ -> Prelude.True
-  popCount      = fromBinZ . Bits.popCount_Int
-  rotate        = \x i -> Bits.shiftL_Int x (toBinZ i)
-  rotateL       = \x i -> Bits.shiftL_Int x (toBinZ i)
-  rotateR       = \x i ->  BinInt._Z__shiftr x (toBinZ i)
-  setBit        = \x i -> BinInt._Z__lor x (Bits.bit_Int (toBinZ i))
-  shift         = \x i -> Bits.shift_Int x (toBinZ i)
-  shiftL        = \x i -> BinInt._Z__shiftl x (toBinZ i)
-  shiftR        = \x i -> BinInt._Z__shiftr x (toBinZ i)
-  testBit       = \x i -> BinInt._Z__testbit x (toBinZ i)
-  unsafeShiftL  = \x i ->  BinInt._Z__shiftl x (toBinZ i)
-  unsafeShiftR  = \x i -> BinInt._Z__shiftr x (toBinZ i)
+  popCount      = fromIntegral . fromBinZ . Bits.popCount_Int
+  rotate        = \x i -> Bits.shiftL_Int x (toBinZ (fromIntegral i))
+  rotateL       = \x i -> Bits.shiftL_Int x (toBinZ (fromIntegral i))
+  rotateR       = \x i ->  BinInt._Z__shiftr x (toBinZ (fromIntegral i))
+  setBit        = \x i -> BinInt._Z__lor x (Bits.bit_Int (toBinZ (fromIntegral i)))
+  shift         = \x i -> Bits.shift_Int x (toBinZ (fromIntegral i))
+  shiftL        = \x i -> BinInt._Z__shiftl x (toBinZ (fromIntegral i))
+  shiftR        = \x i -> BinInt._Z__shiftr x (toBinZ (fromIntegral i))
+  testBit       = \x i -> BinInt._Z__testbit x (toBinZ (fromIntegral i))
+  unsafeShiftL  = \x i ->  BinInt._Z__shiftl x (toBinZ (fromIntegral i))
+  unsafeShiftR  = \x i -> BinInt._Z__shiftr x (toBinZ (fromIntegral i))
   xor           = BinInt._Z__lxor 
   zeroBits      = (Num.fromInteger Num.coq_Num_Integer__ BinNums.Z0)
   bitSize       = error "untranslated"

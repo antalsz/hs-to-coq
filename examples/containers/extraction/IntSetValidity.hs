@@ -58,7 +58,7 @@ commonPrefix t =
     Tip _ _ -> True
     b@(Bin p _ _ _) -> all (sharedPrefix p) (elems b)
   where
-    sharedPrefix :: Prefix -> NonNegative Int -> Bool
+    sharedPrefix :: Prefix -> Nat -> Bool
     sharedPrefix p a = 0 == ((binZToNonNeg p) `xor` (binZToNonNeg p .&. a))
 
 -- Invariant: In Bin prefix mask left right, left consists of the elements that

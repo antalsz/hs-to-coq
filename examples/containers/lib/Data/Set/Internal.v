@@ -420,9 +420,6 @@ Definition member {a} `{GHC.Base.Ord a} : a -> Set_ a -> bool :=
 Definition notMember {a} `{GHC.Base.Ord a} : a -> Set_ a -> bool :=
   fun a t => negb GHC.Base.$ member a t.
 
-Definition node : GHC.Base.String :=
-  GHC.Base.hs_string__ "+--".
-
 Definition null {a} : Set_ a -> bool :=
   fun arg_0__ => match arg_0__ with | Tip => true | Bin _ _ _ _ => false end.
 
@@ -1294,11 +1291,11 @@ End Notations.
      Data.Foldable.foldl Data.Functor.Classes.Eq1 Data.Functor.Classes.Ord1
      Data.Functor.Classes.liftCompare Data.Functor.Classes.liftEq
      Data.Semigroup.Semigroup Data.Semigroup.op_zlzg__ GHC.Base.Eq_ GHC.Base.Monoid
-     GHC.Base.Ord GHC.Base.String GHC.Base.compare GHC.Base.const GHC.Base.flip
-     GHC.Base.foldr GHC.Base.map GHC.Base.mappend GHC.Base.mempty
-     GHC.Base.op_z2218U__ GHC.Base.op_zd__ GHC.Base.op_zdzn__ GHC.Base.op_zeze__
-     GHC.Base.op_zg__ GHC.Base.op_zgze__ GHC.Base.op_zl__ GHC.Base.op_zlze__
-     GHC.Base.op_zsze__ GHC.Err.error GHC.Num.Int GHC.Num.Num GHC.Num.fromInteger
-     GHC.Num.op_zm__ GHC.Num.op_zp__ GHC.Num.op_zt__ GHC.Tuple.pair2 Nat.add
+     GHC.Base.Ord GHC.Base.compare GHC.Base.const GHC.Base.flip GHC.Base.foldr
+     GHC.Base.map GHC.Base.mappend GHC.Base.mempty GHC.Base.op_z2218U__
+     GHC.Base.op_zd__ GHC.Base.op_zdzn__ GHC.Base.op_zeze__ GHC.Base.op_zg__
+     GHC.Base.op_zgze__ GHC.Base.op_zl__ GHC.Base.op_zlze__ GHC.Base.op_zsze__
+     GHC.Err.error GHC.Num.Int GHC.Num.Num GHC.Num.fromInteger GHC.Num.op_zm__
+     GHC.Num.op_zp__ GHC.Num.op_zt__ GHC.Tuple.pair2 Nat.add
      Utils.Containers.Internal.PtrEquality.ptrEq
 *)

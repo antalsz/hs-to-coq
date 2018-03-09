@@ -1841,7 +1841,6 @@ Lemma foldr'_spec:
   foldr' k n s = foldr k n s.
 Proof. reflexivity. Qed.
 
-(** ** Verification of [toList] and [toAscList] *)
 
 Import ListNotations.
 
@@ -1858,6 +1857,7 @@ Proof.
     reflexivity.
   * reflexivity.
 Qed.
+(** ** Verification of [toList], [toAscList] and [elems] *)
 
 Lemma elem_app:
   forall {a} `{Eq_ a} (i : a) xs ys,

@@ -3948,6 +3948,13 @@ Qed.
 
 End TypeClassLaws.
 
+
+(** ** Verification of [Eq1] *)
+
+Global Instance Eq1Laws_Set : Eq1Laws Set_ (@Eq___Set_) := {}.
+Proof.
+Admitted.
+
 (** * Rewrite rules *)
 
 (* 

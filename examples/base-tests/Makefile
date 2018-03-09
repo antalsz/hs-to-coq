@@ -17,7 +17,8 @@ PASS = \
   OpMeth \
   NestTup \
   Pair \
-  SplitAt
+  SplitAt \
+  PartialRecordSel \
 
 # tests that *should* pass but currently fail
 TODO_PASS  = \
@@ -25,7 +26,6 @@ TODO_PASS  = \
   EqList \
   TypeClient \
   PaperExamples \
-  PartialRecordSel \
 
 MODULES = $(PASS) $(TODO_PASS)
 

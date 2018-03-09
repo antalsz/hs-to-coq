@@ -135,6 +135,59 @@ Proof.
 Qed.
 
 (******************************************************************************)
+(** Functions in terms of other functions **)
+
+Theorem partition_filter (s : IntSet) (p : Int -> bool) :
+  WF s ->
+  partition p s = (filter p s, filter (fun k => ~~ p k) s).
+Proof. by move=> WF_s; rewrite -partition_fst -partition_snd //; case: (partition p s). Qed.
+
+Theorem split_splitMember (x : Int) (s : IntSet) :
+  WF s ->
+  let: (l,m,r) := splitMember x s in
+  split x s = (l, r) /\ member x s = m.
+Proof.
+  move=> [fs Sem_s].
+  apply splitMember_Sem with fs => //= l fl r fr m' Sem_l Sem_r <-{m'} def_fl def_fr.
+  split.
+  - apply split_Sem with fs => //= l' fl' r' fr' Sem_l' Sem_r' def_fl' def_fr'.
+    f_equal; eauto using Sem_unique.
+  - by apply member_Sem.
+Qed.  
+
+Theorem split_splitMember' (x : Int) (s : IntSet) :
+  WF s ->
+  split x s = ((splitMember x s).1.1, (splitMember x s).2) /\ member x s = (splitMember x s).1.2.
+Proof. by move=> /(split_splitMember x); case: (splitMember x s) => [[? ?] ?]. Qed.
+
+Theorem splitMember_split (x : Int) (s : IntSet) :
+  WF s ->
+  let: (l,r) := split x s in
+  splitMember x s = (l, member x s, r).
+Proof. by move=> /(split_splitMember x); case: (splitMember x s) => [[? ?] ?] [-> ->]. Qed.
+
+Theorem splitMember_split' (x : Int) (s : IntSet) :
+  WF s ->
+  splitMember x s = ((split x s).1, member x s, (split x s).2).
+Proof. by move=> /(splitMember_split x); case: (split x s) => [? ?]. Qed.
+
+Theorem split_filter (x : Int) (s : IntSet) :
+  WF s ->
+  split x s = (filter (fun y => y < x) s, filter (fun y => y > x) s).
+Proof.
+  move=> [fs Sem_s].
+  apply split_Sem with fs => //= l fl r fr Sem_l Sem_r def_fl def_fr.
+  f_equal; eauto using Sem_unique, filter_Sem.
+Qed.
+
+Theorem splitMember_filter (x : Int) (s : IntSet) :
+  WF s ->
+  splitMember x s = (filter (fun y => y < x) s, member x s, filter (fun y => y > x) s).
+Proof.
+  by move=> WFs; move: (WFs) (WFs) => /(splitMember_split' x) -> /(split_filter x) ->.
+Qed.
+
+(******************************************************************************)
 (** Basic properties of Sem **)
 
 Theorem Sem_Desc0 : forall s f, Sem s f -> exists r, Desc0 s r f.
@@ -333,7 +386,7 @@ Proof.
     case: (is_disjoint k) => -> /=; intuition.
   - move=> is_disjoint; apply disjoint_iff => k.
     erewrite <-!member_Sem; try eassumption.
-    move: (is_disjoint k) =>  [] /negbTE ->; tauto.
+    move: (is_disjoint k) => [] /negbTE ->; tauto.
 Qed.
 
 Theorem isSubsetOf_member (s1 s2 : IntSet) :
@@ -426,11 +479,6 @@ Theorem filter_member (s : IntSet) (p : Int -> bool) :
   forall k, member k (filter p s) = member k s && p k.
 Proof. member_by_Sem filter_Sem. Qed.
 
-Theorem partition_filter (s : IntSet) (p : Int -> bool) :
-  WF s ->
-  partition p s = (filter p s, filter (fun k => ~~ p k) s).
-Proof. by move=> WF_s; rewrite -partition_fst -partition_snd //; case: (partition p s). Qed.
-
 Theorem partition_member_1 (s : IntSet) (p : Int -> bool) :
   WF s ->
   forall k, member k (partition p s).1 = member k s && p k.
@@ -440,3 +488,28 @@ Theorem partition_member_2 (s : IntSet) (p : Int -> bool) :
   WF s ->
   forall k, member k (partition p s).2 = member k s && ~~ p k.
 Proof. by move=> *; rewrite partition_snd // filter_member. Qed.
+
+Theorem split_member_1 (x : Int) (s : IntSet) :
+  WF s ->
+  forall k, member k (split x s).1 = member k s && (k < x).
+Proof. by move=> WFs k; rewrite split_filter //= filter_member. Qed.
+
+Theorem split_member_2 (x : Int) (s : IntSet) :
+  WF s ->
+  forall k, member k (split x s).2 = member k s && (k > x).
+Proof. by move=> WFs k; rewrite split_filter //= filter_member. Qed.
+
+Theorem splitMember_member_1 (x : Int) (s : IntSet) :
+  WF s ->
+  forall k, member k (splitMember x s).1.1 = member k s && (k < x).
+Proof. by move=> WFs k; rewrite splitMember_filter //= filter_member. Qed.
+
+Theorem splitMember_member_bool (x : Int) (s : IntSet) :
+  WF s ->
+  (splitMember x s).1.2 = member x s.
+Proof. by move=> WFs; rewrite splitMember_filter. Qed.
+
+Theorem splitMember_member_2 (x : Int) (s : IntSet) :
+  WF s ->
+  forall k, member k (splitMember x s).2 = member k s && (k > x).
+Proof. by move=> WFs k; rewrite splitMember_filter //= filter_member. Qed.

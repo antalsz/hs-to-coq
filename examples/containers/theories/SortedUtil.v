@@ -194,9 +194,7 @@ Corollary StronglySorted_Ord_eq_In {A} `{OrdLaws A} (xs ys : list A) :
   StronglySorted _<_ ys ->
   (xs = ys) <-> (forall a, In a xs <-> In a ys).
 Proof.
-  apply StronglySorted_eq_In.
-  - by move=> a; rewrite Ord_lt_le Lemmas.Ord_le_refl.
-  - unfold is_true; order A.
+  apply StronglySorted_eq_In; order A.
 Qed.
 
 Corollary StronglySorted_NoDup_Ord {A} `{OrdLaws A} `{!EqExact A} (xs : list A) :
@@ -204,39 +202,13 @@ Corollary StronglySorted_NoDup_Ord {A} `{OrdLaws A} `{!EqExact A} (xs : list A) 
   NoDup xs ->
   StronglySorted _<_ xs.
 Proof.
-  apply StronglySorted_NoDup.
-  - apply OrdTactic.Lemmas.Ord_le_refl.
-  - move=> a.
-    rewrite Ord_lt_le.
-    apply/negP; rewrite negbK.
-    apply OrdTactic.Lemmas.Ord_le_refl.
-  - apply Ord_trans_le.
-  - move=> a b c.
-    rewrite !Ord_lt_le.
-    move=> /negbTE NLEba /negbTE NLEcb.
-    have: (c <= a) = false by eapply OrdTactic.Lemmas.Ord_trans_lt; eassumption.
-    by move=> ->.
-  - move=> x y; split=> [LExy | [-> | LTxy]].
-    + move: LExy; case Cxy: (compare x y).
-      * move: Cxy; rewrite Ord_compare_Eq.
-        by move=> /Eq_eq-> _; left.
-      * move: Cxy; rewrite Ord_compare_Lt.
-        by rewrite Ord_lt_le=> -> _; right.
-      * move: Cxy; rewrite Ord_compare_Gt.
-        by move=> ->.
-    + apply OrdTactic.Lemmas.Ord_le_refl.
-    + move: LTxy.
-      rewrite Ord_lt_le=> /negbTE; rewrite <-Ord_compare_Lt.
-      case NLExy: (x <= y) => //; move: NLExy.
-      by rewrite <-Ord_compare_Gt=> ->.
-  - move=> x y; split=> [LTxy | [Nxy LExy]].
-    + split=> [Exy|].
-      * by move: LTxy; rewrite Exy Ord_lt_le OrdTactic.Lemmas.Ord_le_refl.
-      * move: LTxy.
-        rewrite Ord_lt_le=> /negP.
-        by case: (Ord_total x y) => ->.
-    + rewrite Ord_lt_le; apply/negP; contradict Nxy.
-      by apply/Eq_eq; apply Ord_antisym.
+  apply StronglySorted_NoDup; try order A.
+  - move=> x y; split=> [LExy | [-> | LTxy]]; try order A.
+    move: LExy; case Cxy: (compare x y); try order A.
+    move: Cxy => /Ord_compare_Eq/Eq_eq; order A.
+  - move=> x y; split=> [LTxy | [Nxy LExy]]; try order A.
+    rewrite Ord_lt_le; apply/negP; contradict Nxy.
+    by apply/Eq_eq; order A.
 Qed.
 
 (******************************************************************************)
@@ -279,7 +251,7 @@ Theorem sort_StronglySorted {A} `{OrdLaws A} (xs : list A) :
   StronglySorted _<=_ (sort xs).
 Proof.
   eapply Sorted_StronglySorted, sort_sorted; try typeclasses eauto.
-  move => ? ? ?; apply Ord_trans_le.
+  order A.
 Qed.
 
 Theorem sort_elem {A} `{Ord A} (xs : list A) :

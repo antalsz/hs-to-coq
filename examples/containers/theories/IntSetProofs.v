@@ -4135,6 +4135,33 @@ Proof.
         eapply HX; eassumption.
 Qed.
 
+Theorem split_WF (x : Int) (s : IntSet) :
+  WF s ->
+  let '(l,r) := split x s in
+  WF l /\ WF r.
+Proof.
+  intros [fs Sem_s].
+  apply split_Sem with fs; [assumption|]; simpl; intros l fl r fr Sem_l Sem_r def_fl def_fr.
+  split; [exists fl | exists fr]; assumption.
+Qed.
+
+Theorem split_WF' (x : Int) (s : IntSet) :
+  WF s ->
+  WF (fst (split x s)) /\ WF (snd (split x s)).
+Proof.
+  generalize (split_WF x s); destruct (split x s); auto.
+Qed.
+
+Corollary split_1_WF (x : Int) (s : IntSet) :
+  WF s ->
+  WF (fst (split x s)).
+Proof. apply split_WF'. Qed.
+
+Corollary split_2_WF (x : Int) (s : IntSet) :
+  WF s ->
+  WF (snd (split x s)).
+Proof. apply split_WF'. Qed.
+
 (** ** Verification of [splitMember] *)
 
 Definition splitMemberGo : Key -> IntSet -> IntSet * bool * IntSet.
@@ -4417,7 +4444,7 @@ Lemma splitMember_Sem :
     (forall i, f1 i = f i && (i <? x)%Z) ->
     (forall i, f2 i = f i && (x <? i)%Z) ->
     P (s1, b, s2)) ->
-  P (splitMemberGo x s) : Prop.
+  P (splitMember x s) : Prop.
 Proof.
   intros ??? HSem X HX.
   unfold splitMember.
@@ -4439,6 +4466,33 @@ Proof.
         intros sl fl sr fr Hsl Hsr Hfl Hfr.
         eapply HX; eassumption.
 Qed.
+
+Theorem splitMember_WF (x : Int) (s : IntSet) :
+  WF s ->
+  let '(l,_,r) := splitMember x s in
+  WF l /\ WF r.
+Proof.
+  intros [fs Sem_s].
+  apply splitMember_Sem with fs; [assumption|]; simpl; intros l fl r fr b Sem_l Sem_r def_b def_fl def_fr.
+  split; [exists fl | exists fr]; assumption.
+Qed.
+
+Theorem splitMember_WF' (x : Int) (s : IntSet) :
+  WF s ->
+  WF (fst (fst (splitMember x s))) /\ WF (snd (splitMember x s)).
+Proof.
+  generalize (splitMember_WF x s); destruct (splitMember x s) as [[? ?] ?]; auto.
+Qed.
+
+Corollary splitMember_1_WF (x : Int) (s : IntSet) :
+  WF s ->
+  WF (fst (fst (splitMember x s))).
+Proof. apply splitMember_WF'. Qed.
+
+Corollary splitMember_2_WF (x : Int) (s : IntSet) :
+  WF s ->
+  WF (snd (splitMember x s)).
+Proof. apply splitMember_WF'. Qed.
 
 (** *** Verification of [foldr] *)
 
@@ -5428,6 +5482,33 @@ Proof.
       rewrite IHHD1, IHHD2.
       reflexivity.
 Qed.
+
+Theorem partition_WF (p : Int -> bool) (s : IntSet) :
+  WF s ->
+  let '(l,r) := partition p s in
+  WF l /\ WF r.
+Proof.
+  intros WFs;
+    rewrite (surjective_pairing (partition p s)), partition_fst, partition_snd;
+    auto using filter_WF.
+Qed.
+
+Theorem partition_WF' (p : Int -> bool) (s : IntSet) :
+  WF s ->
+  WF (fst (partition p s)) /\ WF (snd (partition p s)).
+Proof.
+  generalize (partition_WF p s); destruct (partition p s); auto.
+Qed.
+
+Corollary partition_1_WF (p : Int -> bool) (s : IntSet) :
+  WF s ->
+  WF (fst (partition p s)).
+Proof. apply partition_WF'. Qed.
+
+Corollary partition_2_WF (p : Int -> bool) (s : IntSet) :
+  WF s ->
+  WF (snd (partition p s)).
+Proof. apply partition_WF'. Qed.
 
 (** *** Constructiveness of inequality *)
 

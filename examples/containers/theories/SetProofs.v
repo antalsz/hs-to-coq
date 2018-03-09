@@ -3976,6 +3976,31 @@ Proof.
   reflexivity.
 Qed.
 
+
+(** ** Verification of [Ord1] *)
+
+Global Instance Ord1Laws_list: Ord1Laws list (@Eq_list) (@Ord_list).
+Proof.
+  constructor.
+  intros ??? xs ys.
+  unfold liftCompare, Ord1__list, liftCompare__.
+  revert ys.
+  induction xs; intros ys.
+  * reflexivity.
+  * destruct ys.
+    - reflexivity.
+    - simpl. rewrite IHxs. reflexivity.
+Qed.
+
+Global Instance Ord1Laws_Set : Ord1Laws Set_ (@Eq___Set_) (@Ord__Set_).
+Proof.
+  split.
+  intros.
+  unfold liftCompare, Ord1__Set_, liftCompare__, Internal.Ord1__Set__liftCompare.
+  rewrite Ord1_same.
+  reflexivity.
+Qed.
+
 (** * Rewrite rules *)
 
 (* 

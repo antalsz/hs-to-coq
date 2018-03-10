@@ -83,65 +83,76 @@ library
   build-depends:       QuickCheck >= 2.9.2,
                        base >=4.9 && <4.10
   build-depends:       deepseq
-  build-depends:      random
+  build-depends:       random
   hs-source-dirs:      .
   hs-source-dirs:      src
   default-language:    Haskell2010
 
 
+-----------------------------
+-- B E N C H M A R K I N G --
+-----------------------------
+
+
 benchmark bench-native-set
   type: exitcode-stdio-1.0
+  ghc-options: -O2
   main-is:             BenchNativeSet.hs
   hs-source-dirs:      .
-  build-depends:       QuickCheck >= 2.9.2,
-                       base >=4.9 && <4.10
-  build-depends:       containers-extracted
-  build-depends:       deepseq
-  build-depends:       criterion
-  build-depends:       containers
+  build-depends:       base >=4.9 && <4.10
+  build-depends:       deepseq  >= 1.1.0.0 && < 1.5
+  build-depends:       criterion >= 0.4.0 && < 1.3
+  build-depends:       containers == 0.5.11.0
+  build-depends:       QuickCheck >= 2.9.2
   build-depends:       random
   default-language:    Haskell2010
 
 benchmark bench-native-intset
   type: exitcode-stdio-1.0
+  ghc-options:         -O2
   main-is:             BenchNativeIntSet.hs
   hs-source-dirs:      .
-  build-depends:       QuickCheck >= 2.9.2,
-                       base >=4.9 && <4.10
+  build-depends:       base >=4.9 && <4.10
   build-depends:       containers-extracted
-  build-depends:       deepseq
-  build-depends:       criterion
-  build-depends:       containers
+  build-depends:       deepseq >= 1.1.0.0 && < 1.5
+  build-depends:       criterion  >= 0.4.0 && < 1.3
+  build-depends:       containers == 0.5.11.0
+  build-depends:       QuickCheck >= 2.9.2
   build-depends:       random
   default-language:    Haskell2010
 
 
 benchmark bench-extracted-set
   type: exitcode-stdio-1.0
+  ghc-options:         -O2
   main-is:             BenchSet.hs
   hs-source-dirs:      .
-  build-depends:       QuickCheck >= 2.9.2,
-                       base >=4.9 && <4.10
+  build-depends:       base >=4.9 && <4.10
   build-depends:       containers-extracted
-  build-depends:       deepseq
-  build-depends:       criterion
-  build-depends:       containers
+  build-depends:       deepseq  >= 1.1.0.0 && < 1.5
+  build-depends:       criterion >= 0.4.0 && < 1.3
+  build-depends:       containers == 0.5.11.0
+  build-depends:       QuickCheck >= 2.9.2
   build-depends:       random
   default-language:    Haskell2010
 
 benchmark bench-extracted-intset
   type: exitcode-stdio-1.0
+  ghc-options:         -O2
   main-is:             BenchIntSet.hs
   hs-source-dirs:      .
-  build-depends:       QuickCheck >= 2.9.2,
-                       base >=4.9 && <4.10
+  build-depends:       base >=4.9 && <4.10
   build-depends:       containers-extracted
-  build-depends:       deepseq
-  build-depends:       criterion
-  build-depends:       containers
+  build-depends:       deepseq  >= 1.1.0.0 && < 1.5
+  build-depends:       criterion >= 0.4.0 && < 1.3
+  build-depends:       containers  == 0.5.11.0
+  build-depends:       QuickCheck >= 2.9.2
   build-depends:       random
   default-language:    Haskell2010
 
+-------------------
+-- T E S T I N G --
+-------------------
 
 test-suite tests-set
   type: exitcode-stdio-1.0

@@ -195,11 +195,11 @@ null = S2.null
   Lists
 --------------------------------------------------------------------}
 
-fromAscList :: [Nat] -> IntSet
-fromAscList xs = error "fromAscList: untranslated"
+--fromAscList :: [Nat] -> IntSet
+--fromAscList xs = error "fromAscList: untranslated"
 
-fromDistinctAscList :: [Nat] -> IntSet
-fromDistinctAscList xs = error "fromDistinctAscList: untranslated"
+--fromDistinctAscList :: [Nat] -> IntSet
+--fromDistinctAscList xs = error "fromDistinctAscList: untranslated"
 
 
 fromList :: [Nat] -> IntSet

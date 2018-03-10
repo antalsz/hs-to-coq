@@ -21,6 +21,7 @@ Require Data.Foldable.
 Require Data.Functor.Classes.
 Require Data.Semigroup.
 Require GHC.Base.
+Require GHC.Err.
 Require GHC.Num.
 Require GHC.Tuple.
 Require Nat.
@@ -1284,18 +1285,18 @@ Infix "Data.Set.Internal.\\" := (_\\_) (at level 99).
 End Notations.
 
 (* Unbound variables:
-     Bool.Sumbool.sumbool_of_bool Eq GHC.Err.deferredFix GHC.Err.patternFailure Gt Lt
-     None Some andb bool comparison cons false id list negb nil op_zt__ option orb
-     pair prod set_size true Data.Bits.shiftL Data.Bits.shiftR Data.Either.Either
-     Data.Either.Left Data.Either.Right Data.Foldable.Foldable Data.Foldable.foldMap
-     Data.Foldable.foldl Data.Functor.Classes.Eq1 Data.Functor.Classes.Ord1
+     Bool.Sumbool.sumbool_of_bool Eq Gt Lt None Some andb bool comparison cons false
+     id list negb nil op_zt__ option orb pair prod set_size true Data.Bits.shiftL
+     Data.Bits.shiftR Data.Either.Either Data.Either.Left Data.Either.Right
+     Data.Foldable.Foldable Data.Foldable.foldMap Data.Foldable.foldl
+     Data.Functor.Classes.Eq1 Data.Functor.Classes.Ord1
      Data.Functor.Classes.liftCompare Data.Functor.Classes.liftEq
      Data.Semigroup.Semigroup Data.Semigroup.op_zlzg__ GHC.Base.Eq_ GHC.Base.Monoid
      GHC.Base.Ord GHC.Base.compare GHC.Base.const GHC.Base.flip GHC.Base.foldr
      GHC.Base.map GHC.Base.mappend GHC.Base.mempty GHC.Base.op_z2218U__
      GHC.Base.op_zd__ GHC.Base.op_zdzn__ GHC.Base.op_zeze__ GHC.Base.op_zg__
      GHC.Base.op_zgze__ GHC.Base.op_zl__ GHC.Base.op_zlze__ GHC.Base.op_zsze__
-     GHC.Err.error GHC.Num.Int GHC.Num.Num GHC.Num.fromInteger GHC.Num.op_zm__
-     GHC.Num.op_zp__ GHC.Num.op_zt__ GHC.Tuple.pair2 Nat.add
-     Utils.Containers.Internal.PtrEquality.ptrEq
+     GHC.Err.deferredFix GHC.Err.error GHC.Err.patternFailure GHC.Num.Int GHC.Num.Num
+     GHC.Num.fromInteger GHC.Num.op_zm__ GHC.Num.op_zp__ GHC.Num.op_zt__
+     GHC.Tuple.pair2 Nat.add Utils.Containers.Internal.PtrEquality.ptrEq
 *)

@@ -243,10 +243,10 @@ prop_disjoint a b = a `disjoint` b == null (a `intersection` b)
 {--------------------------------------------------------------------
   Lists
 --------------------------------------------------------------------}
-prop_Ordered
+{- prop_Ordered
   = forAll (choose (5,100)) $ \n ->
     let xs = concat [[i-n,i-n]|i<-[0..2*n :: Nat]]
-    in fromAscList xs == fromList xs
+    in fromAscList xs == fromList xs -}
 
 prop_List :: [Nat] -> Bool
 prop_List xs
@@ -259,6 +259,7 @@ prop_AscDescList :: [Nat] -> Bool
 prop_AscDescList xs = toAscList s == reverse (toDescList s)
   where s = fromList xs
 
+{-
 prop_fromList :: [Nat] -> Property
 prop_fromList xs
   = case fromList xs of
@@ -268,6 +269,7 @@ prop_fromList xs
            t === List.foldr insert empty xs
   where sort_xs = sort xs
         nub_sort_xs = List.map List.head $ List.group sort_xs
+-}
 
 {--------------------------------------------------------------------
   Bin invariants

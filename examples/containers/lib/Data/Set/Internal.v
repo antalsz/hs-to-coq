@@ -71,6 +71,7 @@ Instance Set_Default {a} : Default (Set_ a) :=
 Instance MergeSetDefault {a} : Default (MergeSet a) :=
   Build_Default _ (Mk_MergeSet default).
 
+
 (* Converted value declarations: *)
 
 Local Definition Foldable__Set__elem
@@ -1101,12 +1102,6 @@ Local Definition Monoid__MergeSet_mconcat {inst_a}
    : list (MergeSet inst_a) -> (MergeSet inst_a) :=
   GHC.Base.foldr Monoid__MergeSet_mappend Monoid__MergeSet_mempty.
 
-Program Instance Monoid__MergeSet {a} : GHC.Base.Monoid (MergeSet a) :=
-  fun _ k =>
-    k {| GHC.Base.mappend__ := Monoid__MergeSet_mappend ;
-         GHC.Base.mconcat__ := Monoid__MergeSet_mconcat ;
-         GHC.Base.mempty__ := Monoid__MergeSet_mempty |}.
-
 Definition drop {a} : GHC.Num.Int -> Set_ a -> Set_ a :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
@@ -1272,6 +1267,12 @@ Program Instance Foldable__Set_ : Data.Foldable.Foldable Set_ :=
          Data.Foldable.product__ := fun {a} `{GHC.Num.Num a} => Foldable__Set__product ;
          Data.Foldable.sum__ := fun {a} `{GHC.Num.Num a} => Foldable__Set__sum ;
          Data.Foldable.toList__ := fun {a} => Foldable__Set__toList |}.
+
+Program Instance Monoid__MergeSet {a} : GHC.Base.Monoid (MergeSet a) :=
+  fun _ k =>
+    k {| GHC.Base.mappend__ := Monoid__MergeSet_mappend ;
+         GHC.Base.mconcat__ := Monoid__MergeSet_mconcat ;
+         GHC.Base.mempty__ := Monoid__MergeSet_mempty |}.
 
 Definition cartesianProduct {a} {b} : Set_ a -> Set_ b -> Set_ (a * b)%type :=
   fun as_ bs =>

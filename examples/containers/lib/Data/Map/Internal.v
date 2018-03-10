@@ -34,7 +34,6 @@ Require GHC.Err.
 Require GHC.Num.
 Require GHC.Prim.
 Require Nat.
-Require Utils.Containers.Internal.BitQueue.
 Require Utils.Containers.Internal.PtrEquality.
 Import Data.Functor.Notations.
 Import Data.Semigroup.Notations.
@@ -47,8 +46,7 @@ Inductive WhenMatched f k x y z : Type
   := Mk_WhenMatched : (k -> x -> y -> f (option z)) -> WhenMatched f k x y z.
 
 Inductive TraceResult a : Type
-  := Mk_TraceResult
-   : (option a) -> Utils.Containers.Internal.BitQueue.BitQueue -> TraceResult a.
+  := Mk_TraceResult : (option a) -> unit -> TraceResult a.
 
 Inductive StrictTriple a b c : Type
   := Mk_StrictTriple : a -> b -> c -> StrictTriple a b c.
@@ -664,23 +662,6 @@ Definition lookupMin {k} {a} : Map k a -> option (k * a)%type :=
     | Bin _ k x l _ => Some GHC.Base.$! lookupMinSure k x l
     end.
 
-Definition lookupTrace {k} {a} `{GHC.Base.Ord k}
-   : k -> Map k a -> TraceResult a :=
-  let go {k} {a} `{GHC.Base.Ord k}
-   : Utils.Containers.Internal.BitQueue.BitQueueB ->
-     k -> Map k a -> TraceResult a :=
-    fix go arg_0__ arg_1__ arg_2__
-          := match arg_0__, arg_1__, arg_2__ with
-             | q, _, Tip => Mk_TraceResult None (Utils.Containers.Internal.BitQueue.buildQ q)
-             | q, k, Bin _ kx x l r =>
-                 match GHC.Base.compare k kx with
-                 | Lt => (go GHC.Base.$! Utils.Containers.Internal.BitQueue.snocQB q false) k l
-                 | Gt => (go GHC.Base.$! Utils.Containers.Internal.BitQueue.snocQB q true) k r
-                 | Eq => Mk_TraceResult (Some x) (Utils.Containers.Internal.BitQueue.buildQ q)
-                 end
-             end in
-  go Utils.Containers.Internal.BitQueue.emptyQB.
-
 Definition map {a} {b} {k} : (a -> b) -> Map k a -> Map k b :=
   fun f =>
     let fix go arg_0__
@@ -849,19 +830,6 @@ Definition preserveMissing {f} {k} {x} `{GHC.Base.Applicative f}
 
 Definition ratio : GHC.Num.Int :=
   #2.
-
-Definition replaceAlong {a} {k}
-   : Utils.Containers.Internal.BitQueue.BitQueue -> a -> Map k a -> Map k a :=
-  fix replaceAlong arg_0__ arg_1__ arg_2__
-        := match arg_0__, arg_1__, arg_2__ with
-           | _, _, Tip => Tip
-           | q, x, Bin sz ky y l r =>
-               match Utils.Containers.Internal.BitQueue.unconsQ q with
-               | Some (pair false tl) => Bin sz ky y (replaceAlong tl x l) r
-               | Some (pair true tl) => Bin sz ky y l (replaceAlong tl x r)
-               | None => Bin sz ky x l r
-               end
-           end.
 
 Definition runWhenMatched {f} {k} {x} {y} {z}
    : WhenMatched f k x y z -> k -> x -> y -> f (option z) :=
@@ -1109,20 +1077,6 @@ Definition insert {k} {a} `{GHC.Base.Ord k} : k -> a -> Map k a -> Map k a :=
                    end
                end in
     go kx0 kx0.
-
-Definition insertAlong {k} {a}
-   : Utils.Containers.Internal.BitQueue.BitQueue ->
-     k -> a -> Map k a -> Map k a :=
-  fix insertAlong arg_0__ arg_1__ arg_2__ arg_3__
-        := match arg_0__, arg_1__, arg_2__, arg_3__ with
-           | _, kx, x, Tip => singleton kx x
-           | q, kx, x, Bin sz ky y l r =>
-               match Utils.Containers.Internal.BitQueue.unconsQ q with
-               | Some (pair false tl) => balanceL ky y (insertAlong tl kx x l) r
-               | Some (pair true tl) => balanceR ky y l (insertAlong tl kx x r)
-               | None => Bin sz kx x l r
-               end
-           end.
 
 Definition insertLookupWithKey {k} {a} `{GHC.Base.Ord k}
    : (k -> a -> a -> a) -> k -> a -> Map k a -> (option a * Map k a)%type :=
@@ -2575,7 +2529,7 @@ End Notations.
 (* Unbound variables:
      Bool.Sumbool.sumbool_of_bool Eq Gt Lt None Some Type andb bool comparison cons
      false functor__Map_op_zlzd__ id list map_size negb nil op_zt__ option orb pair
-     prod runIdentity true Data.Bits.shiftL Data.Bits.shiftR Data.Either.Either
+     prod runIdentity true unit Data.Bits.shiftL Data.Bits.shiftR Data.Either.Either
      Data.Either.Left Data.Either.Right Data.Foldable.Foldable Data.Foldable.foldl
      Data.Functor.op_zlzdzg__ Data.Functor.Identity.Identity
      Data.Functor.Identity.Mk_Identity Data.Maybe.maybe Data.Semigroup.Semigroup
@@ -2589,11 +2543,5 @@ End Notations.
      GHC.Base.op_zsze__ GHC.Base.pure GHC.Err.deferredFix GHC.Err.error
      GHC.Err.patternFailure GHC.Num.Int GHC.Num.Num GHC.Num.fromInteger
      GHC.Num.op_zm__ GHC.Num.op_zp__ GHC.Num.op_zt__ GHC.Prim.coerce GHC.Prim.seq
-     Nat.add Utils.Containers.Internal.BitQueue.BitQueue
-     Utils.Containers.Internal.BitQueue.BitQueueB
-     Utils.Containers.Internal.BitQueue.buildQ
-     Utils.Containers.Internal.BitQueue.emptyQB
-     Utils.Containers.Internal.BitQueue.snocQB
-     Utils.Containers.Internal.BitQueue.unconsQ
-     Utils.Containers.Internal.PtrEquality.ptrEq
+     Nat.add Utils.Containers.Internal.PtrEquality.ptrEq
 *)

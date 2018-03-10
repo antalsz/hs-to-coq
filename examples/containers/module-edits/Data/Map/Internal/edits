@@ -69,3 +69,8 @@ skip Data.Map.Internal.elemAt
 skip Data.Map.Internal.deleteFindMin
 skip Data.Map.Internal.deleteFindMax
 
+# no BitQueue
+skip Data.Map.Internal.lookupTrace
+skip Data.Map.Internal.replaceAlong
+skip Data.Map.Internal.insertAlong
+rename type Utils.Containers.Internal.BitQueue.BitQueue = unit

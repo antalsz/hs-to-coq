@@ -1,7 +1,3 @@
-# Moved to another module
-rename value Data.IntSet.Internal.lowestBitMask = Utils.Containers.Internal.BitUtil.lowestBitMask
-skip Utils.Containers.Internal.BitUtil.lowestBitMask
-
 # These are TODOs:
 
 # mutual recursion
@@ -105,6 +101,7 @@ order Data.IntSet.Internal.Semigroup__IntSet Data.IntSet.Internal.Monoid__IntSet
 
 # We need Integral N to use GHC.Real.fromIntegral to go from N to Z
 rename value Data.IntSet.Internal.intFromNat = Coq.ZArith.BinInt.Z.of_N
+skip Utils.Containers.Internal.BitUtil.lowestBitMask
 
 skip Coq.ZArith.BinInt.Z.of_N
 

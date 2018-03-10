@@ -3,7 +3,6 @@ rename value Data.Set.Internal.MergeSet = Data.Set.Internal.Mk_MergeSet
 
 ## Don't translate material related to generic programming or 
 ## to serialization
-skip module Data.Data
 skip Data.Set.Internal.fromListConstr
 skip Data.Set.Internal.setDataType
 
@@ -43,7 +42,7 @@ nonterminating Data.Set.Internal.fromList
 nonterminating Data.Set.Internal.fromDistinctDescList
 
 # Boring
-order Data.Set.Internal.Foldable__Set_ Data.Set.Internal.cartesianProduct
+order Data.Set.Internal.Foldable__Set_ Data.Set.Internal.Monoid__MergeSet Data.Set.Internal.cartesianProduct
 order Data.Set.Internal.Eq___Set_ Data.Set.Internal.Ord__Set_
 order Data.Set.Internal.Semigroup__Set_ Data.Set.Internal.Monoid__Set__mappend
 order Data.Set.Internal.Semigroup__MergeSet Data.Set.Internal.Monoid__MergeSet_mappend Data.Set.Interal.combineEq

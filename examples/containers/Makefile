@@ -33,7 +33,6 @@ HANDMOD = \
 # generated directly from GHC/libraries/containers
 MODULES = \
   Data/Set/Internal \
-  Utils/Containers/Internal/BitQueue\
   Utils/Containers/Internal/BitUtil \
   Data/IntSet/Internal \
   Data/IntMap/Internal \

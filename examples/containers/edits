@@ -13,3 +13,6 @@ rename value Utils.Containers.Internal.StrictPair.toPair = id
 # Moved to another module
 rename value Data.IntSet.Internal.lowestBitMask = Utils.Containers.Internal.BitUtil.lowestBitMask
 
+# This should travel to wherever our Test.QuickCheck modules travel to
+rename type  Test.QuickCheck.Property.Property   = Prop
+

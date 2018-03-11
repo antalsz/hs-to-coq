@@ -3,23 +3,10 @@ skip module Test.Framework.Providers.QuickCheck2
 skip module Test.Framework.Runners.Console
 skip module Test.HUnit.Base
 skip module Test.HUnit.Lang
-skip module Test.QuickCheck.Arbitrary
-skip module Test.QuickCheck.Gen
-skip module Test.QuickCheck.Property
 skip module Text.Read
 
-rename type  Test.QuickCheck.Property.Property   = Prop
-rename value Test.QuickCheck.Property.==>        = .==>.
-rename value Test.QuickCheck.Property..&&.       = .&&.
-rename value Test.QuickCheck.Property..||.       = .||.
-rename value Test.QuickCheck.Property.===        = GHC.Base.==
-rename type  Test.QuickCheck.Property.Testable   = Propable
-rename value Test.QuickCheck.Property.classify   = skip_classify
-rename value Test.QuickCheck.Property.forAll     = forAll
-rename value Test.QuickCheck.Arbitrary.arbitrary = arbitrary
-rename value Test.QuickCheck.Gen.choose          = choose
-
-rename value GHC.Real.^ = Zpow
+skip module Coq.ZArith.BinInt.Z
+rename value GHC.Real.^ = Coq.ZArith.BinInt.Z.pow
 rename value enumFromTo = GHC.Enum.enumFromTo
 
 skip Main.prop_Ordered         # fromAscList

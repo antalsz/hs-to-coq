@@ -26,6 +26,9 @@ HANDMOD = \
   CTZ \
   Popcount \
   BitTerminationProofs \
+  Test/QuickCheck/Property \
+  Test/QuickCheck/Arbitrary \
+  Test/QuickCheck/Gen \
 
 #  Data/SequenceManual \
 
@@ -123,7 +126,7 @@ $(VFILES_GEN): $(OUT)/%.v : $$(wildcard module-edits/$$*/preamble.v) $$(wildcard
 
 # KEEP THIS IN SYNC WITH THE PREVIOUS RULE (there ought to be a better way)
 .SECONDEXPANSION:
-$(VFILES_HS_SPEC_GEN): $(HS_SPEC)/%.v : $$(wildcard module-edits/$$*/preamble.v) $$(wildcard module-edits/$$*/midamble.v)  $$(wildcard module-edits/$$*/edits) $(wildcard module-edits/$$*/flags) edits
+$(VFILES_HS_SPEC_GEN): $(HS_SPEC)/%.v : $$(wildcard module-edits/$$*/preamble.v) $$(wildcard module-edits/$$*/midamble.v)  $$(wildcard module-edits/$$*/edits) $$(wildcard module-edits/$$*/flags) edits
 	$(HS_TO_COQ) $(addprefix -e , $(wildcard module-edits/$*/edits)) \
 	             $(addprefix -p , $(wildcard module-edits/$*/preamble.v)) \
 	             $(addprefix --midamble , $(wildcard module-edits/$*/midamble.v)) \

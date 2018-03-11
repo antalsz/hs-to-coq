@@ -19,6 +19,10 @@ Require Import Data.Foldable Proofs.Data.Foldable.
 Require Import Data.OldList  Proofs.Data.OldList.
 Require Import Data.Bits.
 
+(* Quickcheck *)
+Require Import Test.QuickCheck.Property.
+
+
 (* IntSet library *)
 Require Import Data.IntSet.Internal.
 Require Import Popcount.

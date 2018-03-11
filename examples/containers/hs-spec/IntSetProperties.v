@@ -12,82 +12,17 @@ Require Coq.Program.Wf.
 
 (* Preamble *)
 
-From mathcomp Require Import ssreflect ssrbool.
-Set Bullet Behavior "Strict Subproofs".
+Require Data.IntSet.Internal.
+Require Test.QuickCheck.Property.
+Require IntSetProofs.
 
-Require Coq.ZArith.BinInt.
-Local Notation Zpow := Coq.ZArith.BinInt.Z.pow.
-Local Notation Zle  := Coq.ZArith.BinInt.Z.le.
+Instance Arbitrary_IntSet : Test.QuickCheck.Property.Arbitrary Data.IntSet.Internal.IntSet :=
+  { arbitrary := Test.QuickCheck.Property.MkGen IntSetProofs.WF }.
 
 Require GHC.Enum.
 Notation enumFromTo := GHC.Enum.enumFromTo.
 
-Require GHC.Base.
-Import GHC.Base.Notations.
-
-Require GHC.Num.
-
-Require IntSetProofs.
-
-Record Gen a := MkGen { unGen : a -> Prop }.
-Arguments MkGen {_} _.
-Arguments unGen {_} _ _.
-
-Class Arbitrary (a : Type) := { arbitrary : Gen a }.
-
-Class Propable (a : Type) := { toProp : a -> Prop }.
-
-
-Definition forAll {a prop} `{Propable prop} (g : Gen a) (p : a -> prop) : Prop :=
-  forall (x : a), unGen g x -> toProp (p x).
-Arguments forAll {_ _ _} / _ _.
-
-
-Instance Propable_Prop : Propable Prop :=
-  { toProp := id }.
-
-Instance Propable_bool : Propable bool :=
-  { toProp := is_true }.
-
-Instance Propable_unit : Propable unit :=
-  { toProp := fun _ => True }.
-
-Instance Propable_fn {a prop} `{Arbitrary a} `{Propable prop} : Propable (a -> prop) :=
-  { toProp := forAll arbitrary }.
-
-
-Definition implies {prop} `{Propable prop} (c : bool) (p : prop) : Prop :=
-  if c then toProp p else True.
-Infix ".==>." := implies (at level 99).
-
-Definition andp {prop1 prop2} `{Propable prop1} `{Propable prop2} (p1 : prop1) (p2 : prop2) : Prop :=
-  toProp p1 /\ toProp p2.
-Infix ".&&." := andp (at level 99).
-
-Definition orp {prop1 prop2} `{Propable prop1} `{Propable prop2} (p1 : prop1) (p2 : prop2) : Prop :=
-  toProp p1 \/ toProp p2.
-Infix ".||." := orp (at level 99).
-
-
-Definition choose {a} `{GHC.Base.Ord a} (range : a * a) : Gen a :=
-  MkGen (fun x => (fst range GHC.Base.<= x) && (x GHC.Base.<= snd range)).
-
-
-Definition skip_classify {prop} `{Propable prop} (_ : bool) (_ : GHC.Base.String) : prop -> Prop :=
-  toProp.
-
-
-Instance Arbitrary_bool : Arbitrary bool :=
-  { arbitrary := MkGen xpredT }.
-
-Instance Arbitrary_Int : Arbitrary GHC.Num.Int :=
-  { arbitrary := MkGen (fun x => Zle 0 x) }. (* For IntSet *)
-
-Instance Arbitrary_list {a} `{Arbitrary a} : Arbitrary (list a) :=
-  { arbitrary := MkGen (Coq.Lists.List.Forall (unGen arbitrary)) }.
-
-Instance Arbitrary_IntSet : Arbitrary Data.IntSet.Internal.IntSet :=
-  { arbitrary := MkGen IntSetProofs.WF }.
+Coercion is_true : bool >-> Sortclass.
 
 (* Converted imports: *)
 
@@ -102,10 +37,13 @@ Require GHC.List.
 Require GHC.Num.
 Require GHC.Real.
 Require IntSetValidity.
+Require Test.QuickCheck.Arbitrary.
+Require Test.QuickCheck.Property.
 Import Data.Bits.Notations.
 Import Data.OldList.Notations.
 Import GHC.Base.Notations.
 Import GHC.Num.Notations.
+Import Test.QuickCheck.Property.Notations.
 
 (* No type declarations to convert. *)
 (* Converted value declarations: *)
@@ -114,24 +52,24 @@ Import GHC.Num.Notations.
    Data.IntSet.Internal.IntSet' failed: OOPS! Cannot find information for class
    Qualified "Test.QuickCheck.Arbitrary" "Arbitrary" unsupported *)
 
-Definition forValid {a} `{Propable a}
+Definition forValid {a} `{Test.QuickCheck.Property.Testable a}
    : (Data.IntSet.Internal.IntSet -> a) -> Prop :=
   fun f =>
-    forAll arbitrary GHC.Base.$
+    Test.QuickCheck.Property.forAll Test.QuickCheck.Arbitrary.arbitrary GHC.Base.$
     (fun t =>
-       skip_classify (Data.IntSet.Internal.size t GHC.Base.== #0) (GHC.Base.hs_string__
-                                                                   "empty") GHC.Base.$
-       (skip_classify (andb (Data.IntSet.Internal.size t GHC.Base.> #0)
-                            (Data.IntSet.Internal.size t GHC.Base.<= #10)) (GHC.Base.hs_string__ "small")
-        GHC.Base.$
-        (skip_classify (andb (Data.IntSet.Internal.size t GHC.Base.> #10)
-                             (Data.IntSet.Internal.size t GHC.Base.<= #64)) (GHC.Base.hs_string__ "medium")
-         GHC.Base.$
-         (skip_classify (Data.IntSet.Internal.size t GHC.Base.> #64)
+       Test.QuickCheck.Property.classify (Data.IntSet.Internal.size t GHC.Base.== #0)
+       (GHC.Base.hs_string__ "empty") GHC.Base.$
+       (Test.QuickCheck.Property.classify (andb (Data.IntSet.Internal.size t GHC.Base.>
+                                                 #0) (Data.IntSet.Internal.size t GHC.Base.<= #10))
+        (GHC.Base.hs_string__ "small") GHC.Base.$
+        (Test.QuickCheck.Property.classify (andb (Data.IntSet.Internal.size t GHC.Base.>
+                                                  #10) (Data.IntSet.Internal.size t GHC.Base.<= #64))
+         (GHC.Base.hs_string__ "medium") GHC.Base.$
+         (Test.QuickCheck.Property.classify (Data.IntSet.Internal.size t GHC.Base.> #64)
           (GHC.Base.hs_string__ "large") GHC.Base.$
           f t)))).
 
-Definition forValidUnitTree {a} `{Propable a}
+Definition forValidUnitTree {a} `{Test.QuickCheck.Property.Testable a}
    : (Data.IntSet.Internal.IntSet -> a) -> Prop :=
   fun f => forValid f.
 
@@ -140,7 +78,8 @@ Definition prop_Valid : Prop :=
 
 Definition powersOf2 : Data.IntSet.Internal.IntSet :=
   Data.IntSet.Internal.fromList (Coq.Lists.List.flat_map (fun i =>
-                                                            cons (Zpow #2 i) nil) (enumFromTo #0 #63)).
+                                                            cons (Coq.ZArith.BinInt.Z.pow #2 i) nil) (enumFromTo #0
+                                                                                                                 #63)).
 
 Definition prop_MaskPow2 : Data.IntSet.Internal.IntSet -> bool :=
   fix prop_MaskPow2 arg_0__
@@ -166,8 +105,8 @@ Definition prop_Diff : list GHC.Num.Int -> list GHC.Num.Int -> Prop :=
   fun xs ys =>
     let 't := Data.IntSet.Internal.difference (Data.IntSet.Internal.fromList xs)
                 (Data.IntSet.Internal.fromList ys) in
-    IntSetValidity.valid t .&&.(**)
-    (Data.IntSet.Internal.toAscList t GHC.Base.==
+    IntSetValidity.valid t Test.QuickCheck.Property..&&.(**)
+    (Data.IntSet.Internal.toAscList t Test.QuickCheck.Property.===
      Data.OldList.sort (_Data.OldList.\\_ (Data.OldList.nub xs) (Data.OldList.nub
                                                                  ys))).
 
@@ -177,9 +116,10 @@ Definition prop_EmptyValid : Prop :=
 Definition prop_InsertDelete
    : GHC.Num.Int -> Data.IntSet.Internal.IntSet -> Prop :=
   fun k t =>
-    negb (Data.IntSet.Internal.member k t) .==>.(**)
+    negb (Data.IntSet.Internal.member k t) Test.QuickCheck.Property.==>
     (let 't' := Data.IntSet.Internal.delete k (Data.IntSet.Internal.insert k t) in
-     IntSetValidity.valid t' .&&.(**) (t' GHC.Base.== t)).
+     IntSetValidity.valid t' Test.QuickCheck.Property..&&.(**)
+     (t' Test.QuickCheck.Property.=== t)).
 
 Definition prop_InsertIntoEmptyValid : GHC.Num.Int -> Prop :=
   fun x =>
@@ -189,8 +129,8 @@ Definition prop_Int : list GHC.Num.Int -> list GHC.Num.Int -> Prop :=
   fun xs ys =>
     let 't := Data.IntSet.Internal.intersection (Data.IntSet.Internal.fromList xs)
                 (Data.IntSet.Internal.fromList ys) in
-    IntSetValidity.valid t .&&.(**)
-    (Data.IntSet.Internal.toAscList t GHC.Base.==
+    IntSetValidity.valid t Test.QuickCheck.Property..&&.(**)
+    (Data.IntSet.Internal.toAscList t Test.QuickCheck.Property.===
      Data.OldList.sort (Data.OldList.nub ((Data.OldList.intersect) (xs) (ys)))).
 
 Definition prop_LeftRight : Data.IntSet.Internal.IntSet -> bool :=
@@ -272,8 +212,8 @@ Definition prop_UnionInsert
    : GHC.Num.Int -> Data.IntSet.Internal.IntSet -> Prop :=
   fun x t =>
     let 't' := Data.IntSet.Internal.union t (Data.IntSet.Internal.singleton x) in
-    IntSetValidity.valid t' .&&.(**)
-    (t' GHC.Base.== Data.IntSet.Internal.insert x t).
+    IntSetValidity.valid t' Test.QuickCheck.Property..&&.(**)
+    (t' Test.QuickCheck.Property.=== Data.IntSet.Internal.insert x t).
 
 Definition prop_disjoint
    : Data.IntSet.Internal.IntSet -> Data.IntSet.Internal.IntSet -> bool :=
@@ -286,8 +226,9 @@ Definition prop_filter : Data.IntSet.Internal.IntSet -> GHC.Num.Int -> Prop :=
     let evens := Data.IntSet.Internal.filter GHC.Real.even s in
     let odds := Data.IntSet.Internal.filter GHC.Real.odd s in
     let parts := Data.IntSet.Internal.partition GHC.Real.odd s in
-    IntSetValidity.valid odds .&&.(**)
-    (IntSetValidity.valid evens .&&.(**) (parts GHC.Base.== pair odds evens)).
+    IntSetValidity.valid odds Test.QuickCheck.Property..&&.(**)
+    (IntSetValidity.valid evens Test.QuickCheck.Property..&&.(**)
+     (parts Test.QuickCheck.Property.=== pair odds evens)).
 
 Definition prop_foldL : Data.IntSet.Internal.IntSet -> bool :=
   fun s =>
@@ -332,46 +273,50 @@ Definition prop_partition
    : Data.IntSet.Internal.IntSet -> GHC.Num.Int -> Prop :=
   fun s i =>
     let 'pair s1 s2 := Data.IntSet.Internal.partition GHC.Real.odd s in
-    IntSetValidity.valid s1 .&&.(**)
-    (IntSetValidity.valid s2 .&&.(**)
-     (Data.Foldable.all GHC.Real.odd (Data.IntSet.Internal.toList s1) .&&.(**)
-      (Data.Foldable.all GHC.Real.even (Data.IntSet.Internal.toList s2) .&&.(**)
-       (s GHC.Base.== Data.IntSet.Internal.union s1 s2)))).
+    IntSetValidity.valid s1 Test.QuickCheck.Property..&&.(**)
+    (IntSetValidity.valid s2 Test.QuickCheck.Property..&&.(**)
+     (Data.Foldable.all GHC.Real.odd (Data.IntSet.Internal.toList s1)
+      Test.QuickCheck.Property..&&.(**)
+      (Data.Foldable.all GHC.Real.even (Data.IntSet.Internal.toList s2)
+       Test.QuickCheck.Property..&&.(**)
+       (s Test.QuickCheck.Property.=== Data.IntSet.Internal.union s1 s2)))).
 
 Definition prop_size : Data.IntSet.Internal.IntSet -> Prop :=
   fun s =>
     let sz := Data.IntSet.Internal.size s in
-    (sz GHC.Base.==
+    (sz Test.QuickCheck.Property.===
      Data.IntSet.Internal.foldl' (fun arg_1__ arg_2__ =>
                                     match arg_1__, arg_2__ with
                                     | i, _ => i GHC.Num.+ #1
-                                    end) (#0 : GHC.Num.Int) s) .&&.(**)
-    (sz GHC.Base.== Data.Foldable.length (Data.IntSet.Internal.toList s)).
+                                    end) (#0 : GHC.Num.Int) s) Test.QuickCheck.Property..&&.(**)
+    (sz Test.QuickCheck.Property.===
+     Data.Foldable.length (Data.IntSet.Internal.toList s)).
 
 Definition prop_split : Data.IntSet.Internal.IntSet -> GHC.Num.Int -> Prop :=
   fun s i =>
     let 'pair s1 s2 := Data.IntSet.Internal.split i s in
-    IntSetValidity.valid s1 .&&.(**)
-    (IntSetValidity.valid s2 .&&.(**)
+    IntSetValidity.valid s1 Test.QuickCheck.Property..&&.(**)
+    (IntSetValidity.valid s2 Test.QuickCheck.Property..&&.(**)
      (Data.Foldable.all (fun arg_1__ => arg_1__ GHC.Base.< i)
-      (Data.IntSet.Internal.toList s1) .&&.(**)
+      (Data.IntSet.Internal.toList s1) Test.QuickCheck.Property..&&.(**)
       (Data.Foldable.all (fun arg_2__ => arg_2__ GHC.Base.> i)
-       (Data.IntSet.Internal.toList s2) .&&.(**)
-       (Data.IntSet.Internal.delete i s GHC.Base.==
+       (Data.IntSet.Internal.toList s2) Test.QuickCheck.Property..&&.(**)
+       (Data.IntSet.Internal.delete i s Test.QuickCheck.Property.===
         Data.IntSet.Internal.union s1 s2)))).
 
 Definition prop_splitMember
    : Data.IntSet.Internal.IntSet -> GHC.Num.Int -> Prop :=
   fun s i =>
     let 'pair (pair s1 t) s2 := Data.IntSet.Internal.splitMember i s in
-    IntSetValidity.valid s1 .&&.(**)
-    (IntSetValidity.valid s2 .&&.(**)
+    IntSetValidity.valid s1 Test.QuickCheck.Property..&&.(**)
+    (IntSetValidity.valid s2 Test.QuickCheck.Property..&&.(**)
      (Data.Foldable.all (fun arg_1__ => arg_1__ GHC.Base.< i)
-      (Data.IntSet.Internal.toList s1) .&&.(**)
+      (Data.IntSet.Internal.toList s1) Test.QuickCheck.Property..&&.(**)
       (Data.Foldable.all (fun arg_2__ => arg_2__ GHC.Base.> i)
-       (Data.IntSet.Internal.toList s2) .&&.(**)
-       ((t GHC.Base.== Data.IntSet.Internal.member i s) .&&.(**)
-        (Data.IntSet.Internal.delete i s GHC.Base.==
+       (Data.IntSet.Internal.toList s2) Test.QuickCheck.Property..&&.(**)
+       ((t Test.QuickCheck.Property.=== Data.IntSet.Internal.member i s)
+        Test.QuickCheck.Property..&&.(**)
+        (Data.IntSet.Internal.delete i s Test.QuickCheck.Property.===
          Data.IntSet.Internal.union s1 s2))))).
 
 Definition prop_splitRoot : Data.IntSet.Internal.IntSet -> bool :=
@@ -410,12 +355,11 @@ Definition prop_isProperSubsetOf
     Data.Set.Internal.isProperSubsetOf (toSet a) (toSet b).
 
 (* Unbound variables:
-     Prop Propable Zpow andb arbitrary bool cons enumFromTo forAll list negb nil
-     op_zizazazi__ op_zizezezgzi__ pair skip_classify true Coq.Lists.List.flat_map
-     Data.Bits.op_zizazi__ Data.Foldable.all Data.Foldable.and Data.Foldable.elem
-     Data.Foldable.foldl Data.Foldable.foldl' Data.Foldable.length
-     Data.Foldable.notElem Data.Foldable.null Data.IntSet.Internal.Bin
-     Data.IntSet.Internal.IntSet Data.IntSet.Internal.delete
+     Prop andb bool cons enumFromTo list negb nil pair true Coq.Lists.List.flat_map
+     Coq.ZArith.BinInt.Z.pow Data.Bits.op_zizazi__ Data.Foldable.all
+     Data.Foldable.and Data.Foldable.elem Data.Foldable.foldl Data.Foldable.foldl'
+     Data.Foldable.length Data.Foldable.notElem Data.Foldable.null
+     Data.IntSet.Internal.Bin Data.IntSet.Internal.IntSet Data.IntSet.Internal.delete
      Data.IntSet.Internal.difference Data.IntSet.Internal.disjoint
      Data.IntSet.Internal.empty Data.IntSet.Internal.filter
      Data.IntSet.Internal.foldl Data.IntSet.Internal.foldl'
@@ -438,4 +382,8 @@ Definition prop_isProperSubsetOf
      GHC.Base.op_zl__ GHC.Base.op_zlze__ GHC.Base.op_zsze__ GHC.List.reverse
      GHC.Num.Int GHC.Num.abs GHC.Num.fromInteger GHC.Num.negate GHC.Num.op_zp__
      GHC.Real.even GHC.Real.odd IntSetValidity.valid
+     Test.QuickCheck.Arbitrary.arbitrary Test.QuickCheck.Property.Testable
+     Test.QuickCheck.Property.classify Test.QuickCheck.Property.forAll
+     Test.QuickCheck.Property.op_zezeze__ Test.QuickCheck.Property.op_zezezg__
+     Test.QuickCheck.Property.op_zizazazi__
 *)

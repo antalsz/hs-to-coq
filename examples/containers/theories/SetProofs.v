@@ -1,5 +1,5 @@
 Require Import GHC.Base.
-Require Import GHC.Err.
+Require Import GHC.DeferredFix.
 Require Import Data.Semigroup.
 Import GHC.Base.Notations.
 Require Import Proofs.GHC.Base.
@@ -2271,32 +2271,14 @@ Qed.
 
 (** Verification of [fromDistinctAscList] *)
 
-(* one argument variant *)
-Definition terminating_on {a b} (P : a -> Prop) (R : a -> a -> Prop) (f : (a -> b) -> (a -> b)) :=
-  forall g h x, P x -> (forall y, P y ->  R y x -> g y = h y) -> f g x = f h x.
-
-Axiom deferredFix_eq_on: forall {a b} `{Default b} (f : (a -> b) -> (a -> b)) (P : a -> Prop) (R : a -> a -> Prop),
-   well_founded R -> terminating_on P R f ->
-   forall x, P x -> deferredFix f x = f (deferredFix f) x.
-
-(* three argument variant, restricting the first, terminating on the third *)
-Definition terminating3_on {a b c d} (P : a -> Prop) (R : c -> c -> Prop) (f : (a -> b -> c -> d ) -> (a -> b -> c -> d)) :=
-  forall g h x y z, P x -> (forall x' y' z', P x' ->  R z' z -> g x' y' z' = h x' y' z') -> f g x y z= f h x y z.
-
-Axiom deferredFix_eq3_on: forall {a b c d} `{Default d}
-   (f : (a -> b -> c -> d) -> (a -> b -> c -> d)) (P : a -> Prop) (R : c -> c -> Prop),
-   well_founded R -> terminating3_on P R f ->
-   forall x y z, P x -> deferredFix f x y z = f (deferredFix f) x y z.
-
-
 Definition fromDistinctAscList_create_f : (Int -> list e -> Set_ e * list e) -> (Int -> list e -> Set_ e * list e).
 Proof.
   let rhs := eval unfold fromDistinctAscList in (@fromDistinctAscList e) in
-  multimatch rhs with context [deferredFix ?f] => exact f end.
+  lazymatch rhs with context [deferredFix2 ?f] => exact f end.
 Defined.
 
 Definition fromDistinctAscList_create : Int -> list e -> Set_ e * list e
-  := deferredFix (fromDistinctAscList_create_f).
+  := deferredFix2 (fromDistinctAscList_create_f).
 
 Lemma Z_shiftr_pos:
   forall x, (1 < x -> 1 <= Z.shiftr x 1)%Z.
@@ -2328,29 +2310,39 @@ Proof.
   apply Z_div_lt; lia.
 Qed.
 
+Require Import Coq.Wellfounded.Wellfounded.
+
+
 Lemma fromDistinctAscList_create_eq:
   forall i xs, (1 <= i)%Z ->
   fromDistinctAscList_create i xs = fromDistinctAscList_create_f fromDistinctAscList_create i xs.
 Proof.
   intros.
-  enough (fromDistinctAscList_create i = fromDistinctAscList_create_f fromDistinctAscList_create i) by congruence.
-  clear xs.
-  eapply deferredFix_eq_on with (P := fun i => (1 <= i)%Z).
-  * apply Z.lt_wf with (z := 1%Z).
-  * intros g h x Px Heq.
-    apply Logic.FunctionalExtensionality.functional_extensionality_dep_good.
-    intros xs.
+  change (uncurry fromDistinctAscList_create (i, xs) = uncurry (fromDistinctAscList_create_f fromDistinctAscList_create) (i, xs)).
+  apply deferredFix_eq_on with
+    (f := fun g => uncurry (fromDistinctAscList_create_f (curry g)))
+    (P := fun p => (1 <= fst p)%Z)
+    (R := fun x y => (1 <= fst x < fst y)%Z).
+  * eapply wf_inverse_image with (R := fun x y => (1 <= x < y)%Z).
+    apply Z.lt_wf with (z := 1%Z).
+  * clear i xs H.
+    intros g h x Px Heq.
+    destruct x as [i xs]. simpl in *.
     unfold fromDistinctAscList_create_f.
     destruct_match; try reflexivity.
     repeat replace (#1) with 1%Z by reflexivity.
     unfold op_zeze__, Eq_Integer___, op_zeze____.
-    destruct (Z.eqb_spec x 1); try reflexivity.
-    assert (1 < x)%Z by lia.
-    assert (1 <= Z.shiftr x 1)%Z by (apply Z_shiftr_pos; lia).
-    assert (Z.shiftr x 1 < x)%Z by (apply Z_shiftr_lt; lia).
+    destruct (Z.eqb_spec i 1); try reflexivity.
+    unfold curry.
+    assert (1 < i)%Z by lia.
+    assert (1 <= Z.shiftr i 1)%Z by (apply Z_shiftr_pos; lia).
+    assert (Z.shiftr i 1 < i)%Z by (apply Z_shiftr_lt; lia).
+    repeat expand_pairs. simpl.
+    rewrite Heq by eauto.
+    destruct_match; try reflexivity.
     rewrite Heq by eauto.
     reflexivity.
-  * lia.
+  * simpl; lia.
 Qed.
 
 (* We need to know that [create] returns no longer list than it receives. *)
@@ -2398,20 +2390,26 @@ Proof.
   let rhs := eval unfold fromDistinctAscList in (@fromDistinctAscList e) in
   let rhs := eval fold fromDistinctAscList_create_f in rhs in 
   let rhs := eval fold fromDistinctAscList_create in rhs in 
-  multimatch rhs with context [deferredFix ?f] => exact f end.
+  lazymatch rhs with context [deferredFix3 ?f] => exact f end.
 Defined.
 
 Definition fromDistinctAscList_go : Int -> Set_ e -> list e -> Set_ e
-  := deferredFix (fromDistinctAscList_go_f).
+  := deferredFix3 (fromDistinctAscList_go_f).
 
 Lemma fromDistinctAscList_go_eq:
   forall i s xs, (0 < i)%Z ->
   fromDistinctAscList_go i s xs = fromDistinctAscList_go_f fromDistinctAscList_go i s xs.
 Proof.
   intros.
-  eapply deferredFix_eq3_on with (P := fun i => (1 <= i)%Z).
-  * apply well_founded_ltof with (f := @length _).
-  * intros g h x y z Px Heq.
+  change (deferredFix (fun g => uncurry (uncurry (fromDistinctAscList_go_f (curry (curry g))))) (i, s, xs) =
+    uncurry (uncurry (fromDistinctAscList_go_f fromDistinctAscList_go)) (i, s, xs)).
+  rewrite deferredFix_eq_on with
+    (P := fun p => (1 <= fst (fst p))%Z)
+    (R := fun x y => (length (snd x) < length (snd y))%nat); only 1: reflexivity.
+  * apply well_founded_ltof with (f := fun x => length (snd x)).
+  * intros g h p Px Heq.
+    destruct p as [[x y] z].
+    simpl in *.
     unfold fromDistinctAscList_go_f.
     destruct_match; try reflexivity.
     eapply fromDistinctAscList_create_preserves_length; try lia.
@@ -2419,8 +2417,8 @@ Proof.
     apply Heq.
     + apply Z_shiftl_pos.
       lia.
-    + unfold ltof. simpl. lia.
-  * lia.
+    + simpl. lia.
+  * simpl. lia.
 Qed.
 
 Definition safeHd {a} : list a -> option a := fun xs =>

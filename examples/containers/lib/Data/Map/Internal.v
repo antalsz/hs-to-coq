@@ -30,6 +30,7 @@ Require Data.Semigroup.
 Require Data.Set.Internal.
 Require Data.Traversable.
 Require GHC.Base.
+Require GHC.DeferredFix.
 Require GHC.Err.
 Require GHC.Num.
 Require GHC.Prim.
@@ -1250,29 +1251,29 @@ Definition fromDistinctAscList {k} {a} : list (k * a)%type -> Map k a :=
     | nil => Tip
     | cons (pair kx0 x0) xs0 =>
         let create :=
-          GHC.Err.deferredFix (fun create arg_1__ arg_2__ =>
-                                 match arg_1__, arg_2__ with
-                                 | _, nil => (pair Tip nil)
-                                 | s, (cons x' xs' as xs) =>
-                                     if s GHC.Base.== #1 : bool
-                                     then let 'pair kx x := x' in
-                                          (pair (Bin #1 kx x Tip Tip) xs')
-                                     else match create (Data.Bits.shiftR s #1) xs with
-                                          | (pair _ nil as res) => res
-                                          | pair l (cons (pair ky y) ys) =>
-                                              let 'pair r zs := create (Data.Bits.shiftR s #1) ys in
-                                              (pair (link ky y l r) zs)
-                                          end
-                                 end) in
+          GHC.DeferredFix.deferredFix2 (fun create arg_1__ arg_2__ =>
+                                          match arg_1__, arg_2__ with
+                                          | _, nil => (pair Tip nil)
+                                          | s, (cons x' xs' as xs) =>
+                                              if s GHC.Base.== #1 : bool
+                                              then let 'pair kx x := x' in
+                                                   (pair (Bin #1 kx x Tip Tip) xs')
+                                              else match create (Data.Bits.shiftR s #1) xs with
+                                                   | (pair _ nil as res) => res
+                                                   | pair l (cons (pair ky y) ys) =>
+                                                       let 'pair r zs := create (Data.Bits.shiftR s #1) ys in
+                                                       (pair (link ky y l r) zs)
+                                                   end
+                                          end) in
         let go :=
-          GHC.Err.deferredFix (fun go arg_15__ arg_16__ arg_17__ =>
-                                 match arg_15__, arg_16__, arg_17__ with
-                                 | _, t, nil => t
-                                 | s, l, cons (pair kx x) xs =>
-                                     let 'pair r ys := create s xs in
-                                     let 't' := link kx x l r in
-                                     go (Data.Bits.shiftL s #1) t' ys
-                                 end) in
+          GHC.DeferredFix.deferredFix3 (fun go arg_15__ arg_16__ arg_17__ =>
+                                          match arg_15__, arg_16__, arg_17__ with
+                                          | _, t, nil => t
+                                          | s, l, cons (pair kx x) xs =>
+                                              let 'pair r ys := create s xs in
+                                              let 't' := link kx x l r in
+                                              go (Data.Bits.shiftL s #1) t' ys
+                                          end) in
         go (#1 : GHC.Num.Int) (Bin #1 kx0 x0 Tip Tip) xs0
     end.
 
@@ -1333,29 +1334,29 @@ Definition fromDistinctDescList {k} {a} : list (k * a)%type -> Map k a :=
     | nil => Tip
     | cons (pair kx0 x0) xs0 =>
         let create :=
-          GHC.Err.deferredFix (fun create arg_1__ arg_2__ =>
-                                 match arg_1__, arg_2__ with
-                                 | _, nil => (pair Tip nil)
-                                 | s, (cons x' xs' as xs) =>
-                                     if s GHC.Base.== #1 : bool
-                                     then let 'pair kx x := x' in
-                                          (pair (Bin #1 kx x Tip Tip) xs')
-                                     else match create (Data.Bits.shiftR s #1) xs with
-                                          | (pair _ nil as res) => res
-                                          | pair r (cons (pair ky y) ys) =>
-                                              let 'pair l zs := create (Data.Bits.shiftR s #1) ys in
-                                              (pair (link ky y l r) zs)
-                                          end
-                                 end) in
+          GHC.DeferredFix.deferredFix2 (fun create arg_1__ arg_2__ =>
+                                          match arg_1__, arg_2__ with
+                                          | _, nil => (pair Tip nil)
+                                          | s, (cons x' xs' as xs) =>
+                                              if s GHC.Base.== #1 : bool
+                                              then let 'pair kx x := x' in
+                                                   (pair (Bin #1 kx x Tip Tip) xs')
+                                              else match create (Data.Bits.shiftR s #1) xs with
+                                                   | (pair _ nil as res) => res
+                                                   | pair r (cons (pair ky y) ys) =>
+                                                       let 'pair l zs := create (Data.Bits.shiftR s #1) ys in
+                                                       (pair (link ky y l r) zs)
+                                                   end
+                                          end) in
         let go :=
-          GHC.Err.deferredFix (fun go arg_15__ arg_16__ arg_17__ =>
-                                 match arg_15__, arg_16__, arg_17__ with
-                                 | _, t, nil => t
-                                 | s, r, cons (pair kx x) xs =>
-                                     let 'pair l ys := create s xs in
-                                     let 't' := link kx x l r in
-                                     go (Data.Bits.shiftL s #1) t' ys
-                                 end) in
+          GHC.DeferredFix.deferredFix3 (fun go arg_15__ arg_16__ arg_17__ =>
+                                          match arg_15__, arg_16__, arg_17__ with
+                                          | _, t, nil => t
+                                          | s, r, cons (pair kx x) xs =>
+                                              let 'pair l ys := create s xs in
+                                              let 't' := link kx x l r in
+                                              go (Data.Bits.shiftL s #1) t' ys
+                                          end) in
         go (#1 : GHC.Num.Int) (Bin #1 kx0 x0 Tip Tip) xs0
     end.
 
@@ -1431,39 +1432,41 @@ Definition fromList {k} {a} `{GHC.Base.Ord k} : list (k * a)%type -> Map k a :=
             | kx, cons (pair ky _) _ => kx GHC.Base.>= ky
             end in
         let create :=
-          GHC.Err.deferredFix (fun create arg_11__ arg_12__ =>
-                                 match arg_11__, arg_12__ with
-                                 | _, nil => pair (pair Tip nil) nil
-                                 | s, (cons xp xss as xs) =>
-                                     if s GHC.Base.== #1 : bool
-                                     then let 'pair kx x := xp in
-                                          if not_ordered kx xss : bool
-                                          then pair (pair (Bin #1 kx x Tip Tip) nil) xss
-                                          else pair (pair (Bin #1 kx x Tip Tip) xss) nil
-                                     else match create (Data.Bits.shiftR s #1) xs with
-                                          | (pair (pair _ nil) _ as res) => res
-                                          | pair (pair l (cons (pair ky y) nil)) zs =>
-                                              pair (pair (insertMax ky y l) nil) zs
-                                          | pair (pair l (cons (pair ky y) yss as ys)) _ =>
-                                              if not_ordered ky yss : bool
-                                              then pair (pair l nil) ys
-                                              else let 'pair (pair r zs) ws := create (Data.Bits.shiftR s #1) yss in
-                                                   pair (pair (link ky y l r) zs) ws
-                                          end
-                                 end) in
+          GHC.DeferredFix.deferredFix2 (fun create arg_11__ arg_12__ =>
+                                          match arg_11__, arg_12__ with
+                                          | _, nil => pair (pair Tip nil) nil
+                                          | s, (cons xp xss as xs) =>
+                                              if s GHC.Base.== #1 : bool
+                                              then let 'pair kx x := xp in
+                                                   if not_ordered kx xss : bool
+                                                   then pair (pair (Bin #1 kx x Tip Tip) nil) xss
+                                                   else pair (pair (Bin #1 kx x Tip Tip) xss) nil
+                                              else match create (Data.Bits.shiftR s #1) xs with
+                                                   | (pair (pair _ nil) _ as res) => res
+                                                   | pair (pair l (cons (pair ky y) nil)) zs =>
+                                                       pair (pair (insertMax ky y l) nil) zs
+                                                   | pair (pair l (cons (pair ky y) yss as ys)) _ =>
+                                                       if not_ordered ky yss : bool
+                                                       then pair (pair l nil) ys
+                                                       else let 'pair (pair r zs) ws := create (Data.Bits.shiftR s #1)
+                                                                                          yss in
+                                                            pair (pair (link ky y l r) zs) ws
+                                                   end
+                                          end) in
         let go :=
-          GHC.Err.deferredFix (fun go arg_28__ arg_29__ arg_30__ =>
-                                 match arg_28__, arg_29__, arg_30__ with
-                                 | _, t, nil => t
-                                 | _, t, cons (pair kx x) nil => insertMax kx x t
-                                 | s, l, (cons (pair kx x) xss as xs) =>
-                                     if not_ordered kx xss : bool
-                                     then fromList' l xs
-                                     else match create s xss with
-                                          | pair (pair r ys) nil => go (Data.Bits.shiftL s #1) (link kx x l r) ys
-                                          | pair (pair r _) ys => fromList' (link kx x l r) ys
-                                          end
-                                 end) in
+          GHC.DeferredFix.deferredFix3 (fun go arg_28__ arg_29__ arg_30__ =>
+                                          match arg_28__, arg_29__, arg_30__ with
+                                          | _, t, nil => t
+                                          | _, t, cons (pair kx x) nil => insertMax kx x t
+                                          | s, l, (cons (pair kx x) xss as xs) =>
+                                              if not_ordered kx xss : bool
+                                              then fromList' l xs
+                                              else match create s xss with
+                                                   | pair (pair r ys) nil =>
+                                                       go (Data.Bits.shiftL s #1) (link kx x l r) ys
+                                                   | pair (pair r _) ys => fromList' (link kx x l r) ys
+                                                   end
+                                          end) in
         if not_ordered kx0 xs0 : bool
         then fromList' (Bin #1 kx0 x0 Tip Tip) xs0
         else go (#1 : GHC.Num.Int) (Bin #1 kx0 x0 Tip Tip) xs0
@@ -2540,8 +2543,8 @@ End Notations.
      GHC.Base.fmap GHC.Base.id GHC.Base.liftA3 GHC.Base.mappend GHC.Base.mempty
      GHC.Base.op_z2218U__ GHC.Base.op_zd__ GHC.Base.op_zdzn__ GHC.Base.op_zeze__
      GHC.Base.op_zg__ GHC.Base.op_zgze__ GHC.Base.op_zl__ GHC.Base.op_zlze__
-     GHC.Base.op_zsze__ GHC.Base.pure GHC.Err.deferredFix GHC.Err.error
-     GHC.Err.patternFailure GHC.Num.Int GHC.Num.Num GHC.Num.fromInteger
-     GHC.Num.op_zm__ GHC.Num.op_zp__ GHC.Num.op_zt__ GHC.Prim.coerce GHC.Prim.seq
-     Nat.add Utils.Containers.Internal.PtrEquality.ptrEq
+     GHC.Base.op_zsze__ GHC.Base.pure GHC.DeferredFix.deferredFix2
+     GHC.DeferredFix.deferredFix3 GHC.Err.error GHC.Err.patternFailure GHC.Num.Int
+     GHC.Num.Num GHC.Num.fromInteger GHC.Num.op_zm__ GHC.Num.op_zp__ GHC.Num.op_zt__
+     GHC.Prim.coerce GHC.Prim.seq Nat.add Utils.Containers.Internal.PtrEquality.ptrEq
 *)

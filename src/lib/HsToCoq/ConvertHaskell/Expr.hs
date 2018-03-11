@@ -839,11 +839,12 @@ convertTypedBinding toplvl convHsTy FunBind{..}   = runMaybeT $ do
       else do
         whichFix <- use currentDefinition >>= \case
             Nothing -> pure $ Fix . FixOne
-            Just n -> use (edits.nonterminating.contains n) >>= \case
-                True  -> pure $ deferredFix
-                False ->  use (edits.local_termination.at n.non M.empty.at (qualidBase name)) >>= \case
+            Just n -> do
+                use (edits.local_termination.at n.non M.empty.at (qualidBase name)) >>= \case
                     Just order -> pure $ wfFix order
-                    Nothing    -> pure $ Fix . FixOne
+                    Nothing    -> use (edits.termination.at n) >>= \case
+                        Just Deferred |  n == name -> pure $ wfFix Deferred
+                        _ -> pure $ Fix . FixOne
         (argBinders, match) <- convertFunction fun_matches
         pure $ let bodyVars = getFreeVars match
                in if name `S.member` bodyVars
@@ -854,15 +855,14 @@ convertTypedBinding toplvl convHsTy FunBind{..}   = runMaybeT $ do
 
     pure . ConvertedDefinitionBinding $ ConvertedDefinition name tvs coqTy (addScope defn)
 
+wfFix :: TerminationArgument -> FixBody -> Term
+wfFix Deferred (FixBody ident argBinders Nothing Nothing rhs)
+ = App1 (Qualid deferredFixN) $ Fun (Inferred Explicit (Ident ident) NEL.<| argBinders ) rhs
+  where
+    deferredFixN = qualidMapBase (<> T.pack (show (NEL.length argBinders)))
+        "GHC.DeferredFix.deferredFix"
 
-deferredFix :: FixBody -> Term
-deferredFix (FixBody ident argBinders Nothing Nothing rhs)
- = App1 (Qualid (Qualified "GHC.Err"  "deferredFix"))
-        (Fun (Inferred Explicit (Ident ident) NEL.<| argBinders) rhs)
-deferredFix _ = error "deferredFix: cannot handle annotations or types"
-
-wfFix :: Order -> FixBody -> Term
-wfFix order (FixBody ident argBinders Nothing Nothing rhs)
+wfFix (WellFounded order) (FixBody ident argBinders Nothing Nothing rhs)
  = appList (Qualid wfFixN) $ map PosArg
     [ rel
     , Fun argBinders measure

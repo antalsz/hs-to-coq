@@ -85,8 +85,10 @@ convertHsGroup mod HsGroup{..} = do
                        t  <- use (edits.termination.at name)
                        lt <- use (edits.local_termination.at name)
                        obl <- use (edits.obligations.at name)
-                       let useProgram = isJust t || isJust lt
-                       if | Just order <- t  -- turn into Program Fixpoint
+                       let isWellFounded (WellFounded {}) = True
+                           isWellFounded _ = False
+                       let useProgram = any isWellFounded t || any (any isWellFounded) lt
+                       if | Just (WellFounded order) <- t  -- turn into Program Fixpoint
                           ->  pure <$> toProgramFixpointSentence cdef order obl
                           | otherwise                   -- no edit
                           -> let def = DefinitionDef Global (convDefName cdef)

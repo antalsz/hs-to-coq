@@ -1,5 +1,6 @@
 Require Import QuickSort.
 Require Import Prelude.
+Require Import GHC.DeferredFix.
 
 Require Import Coq.Lists.List.
 Import ListNotations.
@@ -11,8 +12,8 @@ Inductive AlreadySorted {a} `{Ord a} : list a -> Prop :=
      Forall (fun y => (op_zl__ y x) = false) xs ->
      AlreadySorted (x::xs).
 
-Axiom unroll_deferred_fix: forall a `{Default a} (f : a -> a),
-  deferredFix f = f (deferredFix f).
+Axiom unroll_deferred_fix: forall a r `{Default r} (f : (a -> r) -> (a -> r)),
+  deferredFix1 f = f (deferredFix1 f).
 
 
 Lemma Forall_partition:

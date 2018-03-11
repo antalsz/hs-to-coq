@@ -1,1 +1,1 @@
-nonterminating Bits.popCountDefault
+termination Bits.popCountDefault deferred

@@ -11,13 +11,13 @@ Require Import Tactics.
 
 (** * The IntMap formalization *)
 
-Require Import GHC.Err.
+Require Import GHC.DeferredFix.
 Require Import IntSetProofs.
 Require Import Data.IntSet.Internal.
 Require Import Data.IntMap.Internal.
 
-Axiom deferredFix_eq : forall a `{Default a} (f : a -> a),
-  deferredFix f = f (deferredFix f).
+Axiom deferredFix2_eq : forall a b r `{Default r} (f : (a -> b -> r) -> (a -> b -> r)),
+  deferredFix2 f = f (deferredFix2 f).
 
 (** ** Well-formed IntMap.
 
@@ -92,7 +92,7 @@ Definition restrictKeys_f {a} :
   (IntMap a -> IntSet -> IntMap a) -> (IntMap a -> IntSet -> IntMap a).
 Proof.
   let rhs := eval unfold restrictKeys in (@restrictKeys a) in
-  match rhs with context[ deferredFix ?f ] => exact f end.
+  match rhs with context[ deferredFix2 ?f ] => exact f end.
 Defined.
 
 
@@ -102,7 +102,7 @@ Lemma restrictKeys_eq {a} (m : IntMap a) s :
   restrictKeys m s = restrictKeys_body m s.
 Proof.
   enough (@restrictKeys a = restrictKeys_body) by congruence.
-  apply deferredFix_eq.
+  apply deferredFix2_eq.
 Qed.
 
 Definition restrictBitMapToRange r bm :=

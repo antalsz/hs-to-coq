@@ -5,8 +5,8 @@ rename value Data.IntMap.Internal.View = Data.IntMap.Internal.Mk_View
 
 rename value Data.IntMap.Internal.bool = Data.IntMap.Internal.boolITE
 
-nonterminating Data.IntMap.Internal.fromSet
-nonterminating Data.IntMap.Internal.mergeWithKey'
+termination buildTree in Data.IntMap.Internal.fromSet deferred
+termination go in Data.IntMap.Internal.mergeWithKey' deferred
 
 ## get the type classes working
 order Data.IntMap.Internal.Eq___IntMap Data.IntMap.Internal.Ord__IntMap
@@ -63,12 +63,12 @@ skip Data.IntMap.Internal.deleteFindMin
 # Fixpoint here until we upgrade to Coq 8.7. Therefore use unsafeFix for now.
 #termination Data.IntMap.Internal.restrictKeys {measure ((size_nat arg_0__) + (Data.IntSet.Internal.size_nat arg_1__))}
 #obligations Data.IntMap.Internal.restrictKeys termination_by_omega
-nonterminating Data.IntMap.Internal.restrictKeys
-nonterminating Data.IntMap.Internal.withoutKeys
+termination Data.IntMap.Internal.restrictKeys deferred
+termination Data.IntMap.Internal.withoutKeys deferred
 
 # non-structural recursion
-nonterminating Data.IntMap.Internal.restrictBM
-nonterminating Data.IntMap.Internal.withoutBM
+termination Data.IntMap.Internal.restrictBM deferred
+termination Data.IntMap.Internal.withoutBM deferred
 
 # Show stuff
 skip Data.IntMap.Internal.showsBars

@@ -30,6 +30,3 @@ Definition errorWithoutStackTrace {a} `{Default a} :
 
 Definition patternFailure {a} `{Default a} : a.
 Proof. exact default. Qed.
-
-Definition deferredFix {a} `{Default a} : (a -> a) -> a.
-Proof. exact (fun _ => default). Qed.

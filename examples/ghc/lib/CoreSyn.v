@@ -25,6 +25,7 @@ Require DataCon.
 Require DynFlags.
 Require GHC.Base.
 Require GHC.Char.
+Require GHC.DeferredFix.
 Require GHC.Err.
 Require GHC.List.
 Require GHC.Num.
@@ -1007,30 +1008,30 @@ Definition collectAnnArgsTicks {b} {a}
      (AnnExpr b a * list (AnnExpr b a) * list (Tickish Core.Var))%type :=
   fun tickishOk expr =>
     let go :=
-      GHC.Err.deferredFix (fun go arg_0__ arg_1__ arg_2__ =>
-                             let j_4__ :=
-                               match arg_0__, arg_1__, arg_2__ with
-                               | e, as_, ts => pair (pair e as_) (GHC.List.reverse ts)
-                               end in
-                             match arg_0__, arg_1__, arg_2__ with
-                             | pair _ (AnnApp f a), as_, ts => go f (cons a as_) ts
-                             | pair _ (AnnTick t e), as_, ts =>
-                                 if tickishOk t : bool
-                                 then go e as_ (cons t ts)
-                                 else j_4__
-                             | _, _, _ => j_4__
-                             end) in
+      GHC.DeferredFix.deferredFix3 (fun go arg_0__ arg_1__ arg_2__ =>
+                                      let j_4__ :=
+                                        match arg_0__, arg_1__, arg_2__ with
+                                        | e, as_, ts => pair (pair e as_) (GHC.List.reverse ts)
+                                        end in
+                                      match arg_0__, arg_1__, arg_2__ with
+                                      | pair _ (AnnApp f a), as_, ts => go f (cons a as_) ts
+                                      | pair _ (AnnTick t e), as_, ts =>
+                                          if tickishOk t : bool
+                                          then go e as_ (cons t ts)
+                                          else j_4__
+                                      | _, _, _ => j_4__
+                                      end) in
     go expr nil nil.
 
 Definition collectAnnBndrs {bndr} {annot}
    : AnnExpr bndr annot -> (list bndr * AnnExpr bndr annot)%type :=
   fun e =>
     let collect :=
-      GHC.Err.deferredFix (fun collect arg_0__ arg_1__ =>
-                             match arg_0__, arg_1__ with
-                             | bs, pair _ (AnnLam b body) => collect (cons b bs) body
-                             | bs, body => pair (GHC.List.reverse bs) body
-                             end) in
+      GHC.DeferredFix.deferredFix2 (fun collect arg_0__ arg_1__ =>
+                                      match arg_0__, arg_1__ with
+                                      | bs, pair _ (AnnLam b body) => collect (cons b bs) body
+                                      | bs, body => pair (GHC.List.reverse bs) body
+                                      end) in
     collect nil e.
 
 Definition collectArgs {b} : Expr b -> (Expr b * list (Arg b))%type :=
@@ -1454,13 +1455,13 @@ Definition mkConApp2 {b}
      DynFlags.DynFlags GHC.Base.Eq_ GHC.Base.Ord GHC.Base.String GHC.Base.Synonym
      GHC.Base.compare GHC.Base.map GHC.Base.mappend GHC.Base.min GHC.Base.op_z2218U__
      GHC.Base.op_zd__ GHC.Base.op_zeze__ GHC.Base.op_zg__ GHC.Base.op_zgze__
-     GHC.Base.op_zl__ GHC.Base.op_zlze__ GHC.Char.Char GHC.Err.deferredFix
-     GHC.Err.error GHC.List.reverse GHC.Num.Int GHC.Num.fromInteger GHC.Real.Rational
-     Literal.Literal Literal.mkMachChar Literal.mkMachDouble Literal.mkMachFloat
-     Literal.mkMachString Module.Module Module.ModuleSet Module.emptyModuleSet
-     Module.mkModuleSet Name.Name Name.nameOccName NameEnv.NameEnv
-     NameEnv.emptyNameEnv OccName.OccName Panic.assertPanic Panic.noString
-     Panic.warnPprTrace TyCoRep.Type_isCoercionTy_maybe TyCoRep.mkCoVarCo
-     TyCoRep.mkTyVarTy Util.count Util.debugIsOn Var.Id Var.isCoVar Var.isId
-     Var.isTyVar VarEnv.InScopeSet
+     GHC.Base.op_zl__ GHC.Base.op_zlze__ GHC.Char.Char GHC.DeferredFix.deferredFix2
+     GHC.DeferredFix.deferredFix3 GHC.Err.error GHC.List.reverse GHC.Num.Int
+     GHC.Num.fromInteger GHC.Real.Rational Literal.Literal Literal.mkMachChar
+     Literal.mkMachDouble Literal.mkMachFloat Literal.mkMachString Module.Module
+     Module.ModuleSet Module.emptyModuleSet Module.mkModuleSet Name.Name
+     Name.nameOccName NameEnv.NameEnv NameEnv.emptyNameEnv OccName.OccName
+     Panic.assertPanic Panic.noString Panic.warnPprTrace
+     TyCoRep.Type_isCoercionTy_maybe TyCoRep.mkCoVarCo TyCoRep.mkTyVarTy Util.count
+     Util.debugIsOn Var.Id Var.isCoVar Var.isId Var.isTyVar VarEnv.InScopeSet
 *)

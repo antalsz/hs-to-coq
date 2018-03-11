@@ -9,7 +9,7 @@ It is a variant of Proofs.v that uses the Function command to use [deferredFix] 
 Require Import Intervals.
 
 Require Import GHC.Base.
-Require Import GHC.Err.
+Require Import GHC.DeferredFix.
 
 Require Import Coq.Sets.Ensembles.
 Require Import Coq.Sets.Powerset_facts.
@@ -205,8 +205,9 @@ Qed.
 (** deferred fix *)
 
 (* Variant of the axiom that is safe to use. *)
-Axiom deferredFix_safe_eq: forall {a} `{Default a} (f : a -> a) x,
-  f x = x -> deferredFix f = f (deferredFix f).
+Axiom deferredFix2_safe_eq: forall {a b r} `{Default r} (f : (a -> b -> r) -> (a -> b -> r)) x,
+  f x = x -> deferredFix2 f = f (deferredFix2 f).
+  
 
 (** induction principle *)
 
@@ -300,9 +301,9 @@ Definition union_go_f :=
              end.
 
 Lemma union_go_eq :
-  deferredFix union_go_f = union_go_f (deferredFix union_go_f).
+  deferredFix2 union_go_f = union_go_f (deferredFix2 union_go_f).
 Proof.
-  apply deferredFix_safe_eq with (x := union_go_witness).
+  apply deferredFix2_safe_eq with (x := union_go_witness).
   extensionality is1. extensionality is2.
   unfold union_go_f.
   unfold union_go_witness at 4.
@@ -331,7 +332,7 @@ Proof.
   generalize dependent (Z.min lb1 lb2). clear lb1 lb2.
   (* ready for induction *)
   refine (union_go_ind (fun is1 is2 => forall lb : Z,
-  goodLIs is1 lb -> goodLIs is2 lb -> goodLIs (deferredFix union_go_f is1 is2) lb) _ _ _ _ _ _ (is1, is2)); clear is1 is2;
+  goodLIs is1 lb -> goodLIs is2 lb -> goodLIs (deferredFix2 union_go_f is1 is2) lb) _ _ _ _ _ _ (is1, is2)); clear is1 is2;
   intros is1_is2_ is1 is2.
   * intros ???;subst.
     intros lb H1 H2.
@@ -397,7 +398,7 @@ Proof.
     
   (* ready for induction *)
   refine (union_go_ind (fun is1 is2 => forall lb : Z,
-  goodLIs is1 lb -> goodLIs is2 lb -> semLIs (deferredFix union_go_f is1 is2) = Union Z (semLIs is1) (semLIs is2)) _ _ _ _ _ _ (is1, is2)); clear is1 is2;
+  goodLIs is1 lb -> goodLIs is2 lb -> semLIs (deferredFix2 union_go_f is1 is2) = Union Z (semLIs is1) (semLIs is2)) _ _ _ _ _ _ (is1, is2)); clear is1 is2;
   intros is1_is2_ is1' is2'.
   * intros ??? lb H1 H2;subst.
     rewrite union_go_eq. unfold union_go_f at 1.

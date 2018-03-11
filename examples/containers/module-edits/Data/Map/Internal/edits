@@ -49,9 +49,12 @@ obligations Data.Map.Internal.link termination_by_omega
 termination Data.Map.Internal.link2 {measure (Nat.add (map_size arg_0__) (map_size arg_1__))}
 obligations Data.Map.Internal.link2 termination_by_omega
 
-nonterminating Data.Map.Internal.fromDistinctAscList
-nonterminating Data.Map.Internal.fromDistinctDescList
-nonterminating Data.Map.Internal.fromList
+termination create in Data.Map.Internal.fromDistinctAscList deferred
+termination go     in Data.Map.Internal.fromDistinctAscList deferred
+termination create in Data.Map.Internal.fromDistinctDescList deferred
+termination go     in Data.Map.Internal.fromDistinctDescList deferred
+termination create in Data.Map.Internal.fromList deferred
+termination go     in Data.Map.Internal.fromList deferred
 
 rename value Data.Map.Internal.WhenMatched = Data.Map.Internal.Mk_WhenMatched
 rename value Data.Map.Internal.TraceResult = Data.Map.Internal.Mk_TraceResult

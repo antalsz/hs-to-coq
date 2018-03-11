@@ -48,14 +48,16 @@ convertModuleValDecls mdecls = do
                    obl <- use (edits.obligations.at name)
                    t <- use (edits.termination.at name)
                    lt <- use (edits.local_termination.at name)
-                   let useProgram = isJust t || isJust lt
+                   let isWellFounded (WellFounded {}) = True
+                       isWellFounded _ = False
+                   let useProgram = any isWellFounded t || any (any isWellFounded) lt
                    if | Just def <- r               -- redefined
                       -> [definitionSentence def] <$ case def of
                           CoqInductiveDef        _ -> editFailure "cannot redefine a value definition into an Inductive"
                           CoqDefinitionDef       _ -> pure ()
                           CoqFixpointDef         _ -> pure ()
                           CoqInstanceDef         _ -> editFailure "cannot redefine a value definition into an Instance"
-                      | Just order <- t  -- turn into Program Fixpoint
+                      | Just (WellFounded order) <- t  -- turn into Program Fixpoint
                       ->  pure <$> toProgramFixpointSentence cdef order obl
                       | otherwise                   -- no edit
                       -> let def = DefinitionDef Global (convDefName cdef)

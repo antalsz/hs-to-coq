@@ -56,8 +56,8 @@ import HsToCoq.ConvertHaskell.Parameters.Parsers.Lexing
   class           { TokWord    "class"          }
   kinds           { TokWord    "kinds"          }
   axiomatize      { TokWord    "axiomatize"     }
-  nonterminating  { TokWord    "nonterminating" }
   termination     { TokWord    "termination"    }
+  'deferred'      { TokWord    "deferred"       }
   obligations     { TokWord    "obligations"    }
   method          { TokWord    "method"         }
   rename          { TokWord    "rename"         }
@@ -230,25 +230,24 @@ Scope :: { Ident }
   | type    { "type" } -- This is so common, we have to special-case it
 
 Edit :: { Edit }
-  : type synonym Word ':->' Word                 { TypeSynonymTypeEdit   $3 $5                            }
-  | data type arguments Qualid DataTypeArguments { DataTypeArgumentsEdit $4 $5                            }
-  | redefine CoqDefinition                       { RedefinitionEdit      $2                               }
-  | add Word CoqDefinition                       { AddEdit               (mkModuleName (T.unpack $2)) $3  }
-  | skip Qualid                                  { SkipEdit              $2                               }
-  | skip method Qualid Word                      { SkipMethodEdit        $3 $4                            }
-  | skip module Word                             { SkipModuleEdit        (mkModuleName (T.unpack $3))     }
-  | manual notation Word                         { HasManualNotationEdit (mkModuleName (T.unpack $3))     }
-  | nonterminating Qualid                        { NonterminatingEdit    $2                               }
-  | termination Qualid Order                     { TerminationEdit       $2 Nothing $3                    }
-  | termination Word 'in' Qualid Order           { TerminationEdit       $4 (Just $2) $5                  }
-  | obligations Qualid Word                      { ObligationsEdit       $2 $3 }
-  | rename Renaming                              { RenameEdit            (fst $2) (snd $2)                }
-  | axiomatize module Word                       { AxiomatizeModuleEdit  (mkModuleName (T.unpack $3))     }
-  | add scope Scope for ScopePlace Qualid        { AdditionalScopeEdit   $5 $6 $3                         }
-  | order Some(Qualid)                           { OrderEdit             $2                               }
-  | class kinds Qualid SepBy1(Term,',')          { ClassKindEdit         $3 $4                            }
-  | data  kinds Qualid SepBy1(Term,',')          { DataKindEdit          $3 $4                            }
-  | rewrite Rewrite                              { RewriteEdit           $2                               }
+  : type synonym Word ':->' Word                     { TypeSynonymTypeEdit   $3 $5                            }
+  | data type arguments Qualid DataTypeArguments     { DataTypeArgumentsEdit $4 $5                            }
+  | redefine CoqDefinition                           { RedefinitionEdit      $2                               }
+  | add Word CoqDefinition                           { AddEdit               (mkModuleName (T.unpack $2)) $3  }
+  | skip Qualid                                      { SkipEdit              $2                               }
+  | skip method Qualid Word                          { SkipMethodEdit        $3 $4                            }
+  | skip module Word                                 { SkipModuleEdit        (mkModuleName (T.unpack $3))     }
+  | manual notation Word                             { HasManualNotationEdit (mkModuleName (T.unpack $3))     }
+  | termination Qualid TerminationArgument           { TerminationEdit       $2 Nothing $3                    }
+  | termination Word 'in' Qualid TerminationArgument { TerminationEdit       $4 (Just $2) $5                  }
+  | obligations Qualid Word                          { ObligationsEdit       $2 $3 }
+  | rename Renaming                                  { RenameEdit            (fst $2) (snd $2)                }
+  | axiomatize module Word                           { AxiomatizeModuleEdit  (mkModuleName (T.unpack $3))     }
+  | add scope Scope for ScopePlace Qualid            { AdditionalScopeEdit   $5 $6 $3                         }
+  | order Some(Qualid)                               { OrderEdit             $2                               }
+  | class kinds Qualid SepBy1(Term,',')              { ClassKindEdit         $3 $4                            }
+  | data  kinds Qualid SepBy1(Term,',')              { DataKindEdit          $3 $4                            }
+  | rewrite Rewrite                                  { RewriteEdit           $2                               }
 
 Edits :: { [Edit] }
   : Lines(Edit)    { $1 }
@@ -450,6 +449,10 @@ Order :: { Order }
   : '{' struct Qualid '}'                          { StructOrder $3 }
   | '{' 'measure' Atom OptionalParens(Term) '}'    { MeasureOrder $3 $4 }
   | '{' 'wf' Atom Qualid '}'                       { WFOrder $3 $4 }
+
+TerminationArgument :: { TerminationArgument }
+  : 'deferred' { Deferred }
+  | Order      { WellFounded $1 }
 
 Instance :: { InstanceDefinition }
   : 'Instance' Qualid Many(Binder) TypeAnnotation ':=' '{' SepBy(FieldDefinition, ';')  '}'

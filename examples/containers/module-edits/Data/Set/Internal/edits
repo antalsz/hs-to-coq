@@ -36,10 +36,14 @@ termination Data.Set.Internal.merge {measure (Nat.add (set_size arg_0__) (set_si
 obligations Data.Set.Internal.merge termination_by_omega
 
 ## local functions. Proving this termination with program fixpoint looks very tricky.
-nonterminating Data.Set.Internal.fromDistinctAscList
-nonterminating Data.Set.Internal.fromAscList
-nonterminating Data.Set.Internal.fromList
-nonterminating Data.Set.Internal.fromDistinctDescList
+termination create in Data.Set.Internal.fromDistinctAscList deferred
+termination go     in Data.Set.Internal.fromDistinctAscList deferred
+termination create in Data.Set.Internal.fromAscList deferred
+termination go     in Data.Set.Internal.fromAscList deferred
+termination create in Data.Set.Internal.fromList deferred
+termination go     in Data.Set.Internal.fromList deferred
+termination create in Data.Set.Internal.fromDistinctDescList deferred
+termination go     in Data.Set.Internal.fromDistinctDescList deferred
 
 # Boring
 order Data.Set.Internal.Foldable__Set_ Data.Set.Internal.Monoid__MergeSet Data.Set.Internal.cartesianProduct

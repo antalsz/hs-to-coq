@@ -1,1 +1,1 @@
-nonterminating QuickSort.quicksort
+termination QuickSort.quicksort deferred

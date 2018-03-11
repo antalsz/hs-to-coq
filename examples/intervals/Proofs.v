@@ -7,7 +7,7 @@ bisect-binary. <https://github.com/nomeata/bisect-binary/>
 Require Import Intervals.
 
 Require Import GHC.Base.
-Require Import GHC.Err.
+Require Import GHC.DeferredFix.
 
 Require Import Coq.Sets.Ensembles.
 Require Import Coq.Sets.Powerset_facts.
@@ -200,7 +200,7 @@ Qed.
 
 (** deferred fix *)
 
-Axiom deferredFix_eq: forall {a} `{Default a} (f : a -> a), deferredFix f = f (deferredFix f).
+Axiom deferredFix2_eq: forall {a b r} `{Default r} (f : (a -> b -> r) -> (a -> b -> r)), deferredFix2 f = f (deferredFix2 f).
 
 (** induction principle *)
 
@@ -235,7 +235,7 @@ Proof.
   destruct is1 as [is1], is2 as [is2].
   destruct H as [lb1 H1] , H0 as [lb2 H2].
   exists (Z.min lb1 lb2).
-  match goal with [ |- goodLIs (deferredFix ?f _ _) _ ] => set (u := f) end.
+  match goal with [ |- goodLIs (deferredFix2 ?f _ _) _ ] => set (u := f) end.
   apply (goodLIs_mono _ _ _ (Z.le_min_l lb1 lb2)) in H1.
   apply (goodLIs_mono _ _ _ (Z.le_min_r lb1 lb2)) in H2.
   revert H1 H2.
@@ -243,7 +243,7 @@ Proof.
   revert is1 is2.
   refine (my_ind size2 _ _).
   intros is1 is2 IH lb H1 H2.
-  rewrite deferredFix_eq.
+  rewrite deferredFix2_eq.
   destruct is1 as [|i1 is1], is2 as [|i2 is2].
   * simpl. trivial.
   * destruct i2. simpl in *. intuition.
@@ -287,7 +287,7 @@ Proof.
   destruct is1 as [is1], is2 as [is2].
   destruct H as [lb1 H1] , H0 as [lb2 H2].
   unfold union.
-  match goal with [ |- context [deferredFix ?f _ _]  ] => set (u := f) end.
+  match goal with [ |- context [deferredFix2 ?f _ _]  ] => set (u := f) end.
   apply (goodLIs_mono _ _ _ (Z.le_min_l lb1 lb2)) in H1.
   apply (goodLIs_mono _ _ _ (Z.le_min_r lb1 lb2)) in H2.
   simpl.
@@ -296,7 +296,7 @@ Proof.
   revert is1 is2.
   refine (my_ind size2 _ _).
   intros is1 is2 IH lb H1 H2.
-  rewrite deferredFix_eq.
+  rewrite deferredFix2_eq.
   destruct is1 as [|i1 is1], is2 as [|i2 is2].
   * simpl. rewrite Empty_set_zero. reflexivity.
   * destruct i2. simpl in *. intuition.
@@ -375,7 +375,7 @@ Proof.
   destruct is1 as [is1], is2 as [is2].
   destruct H as [lb1 H1] , H0 as [lb2 H2].
   exists (Z.min lb1 lb2).
-  match goal with [ |- goodLIs (deferredFix ?f _ _) _ ] => set (u := f) end.
+  match goal with [ |- goodLIs (deferredFix2 ?f _ _) _ ] => set (u := f) end.
   apply (goodLIs_mono _ _ _ (Z.le_min_l lb1 lb2)) in H1.
   apply (goodLIs_mono _ _ _ (Z.le_min_r lb1 lb2)) in H2.
   revert H1 H2.
@@ -383,7 +383,7 @@ Proof.
   revert is1 is2.
   refine (my_ind size2 _ _).
   intros is1 is2 IH lb H1 H2.
-  rewrite deferredFix_eq.
+  rewrite deferredFix2_eq.
   destruct is1 as [|i1 is1], is2 as [|i2 is2].
   * simpl. trivial.
   * destruct i2. simpl in *. intuition.
@@ -446,7 +446,7 @@ Proof.
   destruct is1 as [is1], is2 as [is2].
   destruct H as [lb1 H1] , H0 as [lb2 H2].
   unfold intersect.
-  match goal with [ |- context [deferredFix ?f _ _]  ] => set (u := f) end.
+  match goal with [ |- context [deferredFix2 ?f _ _]  ] => set (u := f) end.
   apply (goodLIs_mono _ _ _ (Z.le_min_l lb1 lb2)) in H1.
   apply (goodLIs_mono _ _ _ (Z.le_min_r lb1 lb2)) in H2.
   simpl.
@@ -455,7 +455,7 @@ Proof.
   revert is1 is2.
   refine (my_ind size2 _ _).
   intros is1 is2 IH lb H1 H2.
-  rewrite deferredFix_eq.
+  rewrite deferredFix2_eq.
   destruct is1 as [|i1 is1], is2 as [|i2 is2].
   * simpl. clear dependent u. 
     apply Extensionality_Ensembles. split.
@@ -570,7 +570,7 @@ Proof.
   destruct is1 as [is1], is2 as [is2].
   destruct H as [lb1 H1] , H0 as [lb2 H2].
   exists (Z.min lb1 lb2).
-  match goal with [ |- goodLIs (deferredFix ?f _ _) _ ] => set (u := f) end.
+  match goal with [ |- goodLIs (deferredFix2 ?f _ _) _ ] => set (u := f) end.
   apply (goodLIs_mono _ _ _ (Z.le_min_l lb1 lb2)) in H1.
   apply (goodLIs_mono _ _ _ (Z.le_min_r lb1 lb2)) in H2.
   revert H1 H2.
@@ -578,7 +578,7 @@ Proof.
   revert is1 is2.
   refine (my_ind size2 _ _).
   intros is1 is2 IH lb H1 H2.
-  rewrite deferredFix_eq.
+  rewrite deferredFix2_eq.
   destruct is1 as [|i1 is1], is2 as [|i2 is2].
   * simpl. auto. 
   * destruct i2. simpl in *. intuition.
@@ -656,7 +656,7 @@ Proof.
   destruct is1 as [is1], is2 as [is2].
   destruct H as [lb1 H1] , H0 as [lb2 H2].
   unfold subtract.
-  match goal with [ |- context [deferredFix ?f _ _] ] => set (u := f) end.
+  match goal with [ |- context [deferredFix2 ?f _ _] ] => set (u := f) end.
   apply (goodLIs_mono _ _ _ (Z.le_min_l lb1 lb2)) in H1.
   apply (goodLIs_mono _ _ _ (Z.le_min_r lb1 lb2)) in H2.
   revert H1 H2.
@@ -665,7 +665,7 @@ Proof.
   revert is1 is2.
   refine (my_ind size2 _ _).
   intros is1 is2 IH lb H1 H2.
-  rewrite deferredFix_eq.
+  rewrite deferredFix2_eq.
   destruct is1 as [|i1 is1], is2 as [|i2 is2].
   * simpl. clear dependent u.
     rewrite Seminus_Empty_r.

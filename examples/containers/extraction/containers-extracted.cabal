@@ -13,7 +13,7 @@ cabal-version:       >=1.10
 
 library
   exposed-modules:     ExtractedSet
-  exposed-modules:     ExtractedIntSet
+--  exposed-modules:     ExtractedIntSet
   exposed-modules:     ExtractedNumbers
 
 -- the following are extracted and in src/, this list
@@ -35,6 +35,7 @@ library
   exposed-modules: Const
   exposed-modules: CTZ
   exposed-modules: Datatypes
+  exposed-modules: DeferredFix
   exposed-modules: Either
   exposed-modules: Enum
   exposed-modules: Err
@@ -43,7 +44,7 @@ library
   exposed-modules: Functor
   exposed-modules: Identity
   exposed-modules: Internal
-  exposed-modules: Internal0
+--  exposed-modules: Internal0
   exposed-modules: List
   exposed-modules: List0
   exposed-modules: Logic
@@ -61,7 +62,7 @@ library
   exposed-modules: Prim
   exposed-modules: PtrEquality
   exposed-modules: QArith_base
-  exposed-modules: Real
+--  exposed-modules: Real
   exposed-modules: Ring_theory
   exposed-modules: Semigroup
   exposed-modules: Specif
@@ -78,7 +79,7 @@ library
   exposed-modules: Wf_Z
   exposed-modules: ZArith_dec
   exposed-modules: Zbool
-  exposed-modules: Zeven
+  exposed-modules: Zeven 
 
   build-depends:       QuickCheck >= 2.9.2,
                        base >=4.9 && <4.10
@@ -172,20 +173,3 @@ test-suite tests-set
   build-depends:       random
   default-language:    Haskell2010
 
-test-suite tests-intset
-  type: exitcode-stdio-1.0
-  main-is:             IntSetProperties.hs
-  hs-source-dirs:      .
-  build-depends:       QuickCheck >= 2.9.2,
-                       base >=4.9 && <4.10
-  build-depends:       containers-extracted
-  build-depends:       transformers
-  build-depends:       HUnit
-  build-depends:       QuickCheck
-  build-depends:       test-framework-quickcheck2
-  build-depends:       test-framework-hunit
-  build-depends:       test-framework
-  build-depends:       containers
-  build-depends:       deepseq
-  build-depends:       random
-  default-language:    Haskell2010

@@ -4,11 +4,11 @@ module ExtractedNumbers where
 
 import qualified Base
 import qualified Datatypes
-import qualified BinNums
-import qualified BinInt
-import qualified BinNat
+--import qualified BinNums
+-- import qualified BinInt
+-- import qualified BinNat
 import qualified Num
-import qualified Real
+--import qualified Real
 import qualified Bits
 
 import qualified Data.Bits
@@ -20,8 +20,12 @@ deriving instance Data.Bits.Bits a => Data.Bits.Bits (NonNegative a)
 deriving instance Integral a => Integral (NonNegative a)
 deriving instance Real a => Real (NonNegative a)
 deriving instance System.Random.Random a => System.Random.Random (NonNegative a)
+
+fromBinZ = id
+toBinZ = id
 ----------------------------------------------------
 
+{-
 instance Show BinNums.Coq_positive where
   show bn = reverse (go bn) where
     go BinNums.Coq_xH = "1"
@@ -116,3 +120,4 @@ instance Enum Num.Int where
   toEnum = undefined
   fromEnum = undefined
   
+-}

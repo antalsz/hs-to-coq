@@ -6,10 +6,10 @@ module ExtractedSet where
 
 import qualified Base
 import qualified Datatypes
-import qualified BinNums
+-- import qualified BinNums
 
 import qualified Semigroup
-import qualified Monoid
+-- import qualified Monoid
 import qualified Internal as S2
 
 import qualified Data.Semigroup

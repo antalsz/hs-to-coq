@@ -2279,6 +2279,10 @@ Defined.
 Definition fromDistinctAscList_create : Int -> list e -> Set_ e * list e
   := GHC.Err.deferredFix (fromDistinctAscList_create_f).
 
+Lemma fromDistinctAscList_create_eq:
+  forall i xs, (0 < i)%Z ->
+  fromDistinctAscList_create i xs = fromDistinctAscList_create_f fromDistinctAscList_create i xs.
+Admitted.
 
 Definition fromDistinctAscList_go_f : (Int -> Set_ e -> list e -> Set_ e) -> (Int -> Set_ e -> list e -> Set_ e).
 Proof.
@@ -2290,6 +2294,11 @@ Defined.
 
 Definition fromDistinctAscList_go : Int -> Set_ e -> list e -> Set_ e
   := GHC.Err.deferredFix (fromDistinctAscList_go_f).
+
+Lemma fromDistinctAscList_go_eq:
+  forall i s xs, (0 < i)%Z ->
+  fromDistinctAscList_go i s xs = fromDistinctAscList_go_f fromDistinctAscList_go i s xs.
+Admitted.
 
 Definition safeHd {a} : list a -> option a := fun xs =>
   match xs with [] => None | (x::_) => Some x end.
@@ -2303,10 +2312,12 @@ Proof.
   lia.
 Qed.
 
+Require Import SortedUtil.
+
 Program Fixpoint fromDistinctAscList_create_Desc
   sz lb xs {measure (Z.to_nat sz)} :
   (0 <= sz)%Z ->
-  Sorted (fun x y => x < y = true) (lb :: xs) ->
+  StronglySorted (fun x y => x < y = true) (lb :: xs) ->
   forall (P : Set_ e * list e -> Prop),
   ( forall s ys,
     Bounded s (Some lb) (safeHd ys) ->
@@ -2318,7 +2329,7 @@ Program Fixpoint fromDistinctAscList_create_Desc
 Next Obligation.
   intros ???? Hnonneg HSorted.  
   rename fromDistinctAscList_create_Desc into IH.
-  replace fromDistinctAscList_create with (fromDistinctAscList_create_f fromDistinctAscList_create) by admit.
+  rewrite fromDistinctAscList_create_eq by (apply Z.pow_pos_nonneg; lia).
   unfold fromDistinctAscList_create_f.
   destruct xs.
   * intros X HX. apply HX. clear HX.
@@ -2332,8 +2343,10 @@ Next Obligation.
     inversion H2. subst. clear H2.
     inversion H1. subst.
     
-    assert (isUB (safeHd xs) e0 = true)
-      by (inversion H4; [reflexivity | assumption]).
+    assert (isUB (safeHd xs) e0 = true). {
+      destruct xs; try reflexivity.
+      inversion H5. assumption.
+    } 
     
     destruct (Z.eqb_spec (2^sz) 1).
     - intros X HX. apply HX. clear HX.
@@ -2374,14 +2387,32 @@ Next Obligation.
            ** assumption.
            ** lia.
            ** rewrite Hlist_l in H1.
-              assert (Sorted (fun x y : e => _GHC.Base.<_ x y = true) (e1 :: ys))
-                by admit. (* Sorted and append *)
+              apply StronglySorted_app in H1.
+              destruct H1.
               eassumption.
            ** intros r zs HBounded_r Hlist_r Hsize_r.
               rewrite Hlist_l in HSorted.
-              assert (isLB (Some lb) e1 = true) by admit. (* from HSorted *)
+              assert (isLB (Some lb) e1 = true). {
+                apply StronglySorted_inv in HSorted.
+                destruct HSorted.
+                simpl.
+                rewrite Forall_forall in H10.
+                apply H10.
+                apply in_or_app. right. left. reflexivity.
+              }
               rewrite Hlist_r in HSorted.
-              assert (isUB (safeHd zs) e1 = true) by admit.
+              assert (isUB (safeHd zs) e1 = true). {
+                destruct zs; try reflexivity.
+                apply StronglySorted_inv in HSorted.
+                destruct HSorted.
+                apply StronglySorted_app in H10.
+                destruct H10.
+                apply StronglySorted_inv in H12.
+                destruct H12.
+                rewrite Forall_forall in H13.
+                apply H13.
+                apply in_or_app. right. left. reflexivity.
+              }
               intros X HX. apply HX. clear HX.
               -- applyDesc link_Desc.
               -- erewrite toList_link by eassumption.
@@ -2392,13 +2423,12 @@ Next Obligation.
                  replace (size l). replace (size r).
                  rewrite mul_pow_sub in * by lia.
                  lia.
-Admitted.
-
+Qed.
 
 Program Fixpoint fromDistinctAscList_go_Desc
   sz s xs {measure (length xs)} :
   (0 <= sz)%Z ->
-  Sorted (fun x y => x < y = true) xs ->
+  StronglySorted (fun x y => x < y = true) xs ->
   Bounded s None (safeHd xs) ->
   xs = [] \/ size s = (2*2^sz-1)%Z ->
   Desc (fromDistinctAscList_go (2^sz)%Z s xs) None None (size s + List.length xs)
@@ -2406,7 +2436,7 @@ Program Fixpoint fromDistinctAscList_go_Desc
 Next Obligation.
   intros.
   rename fromDistinctAscList_go_Desc into IH.
-  replace fromDistinctAscList_go with (fromDistinctAscList_go_f fromDistinctAscList_go) by admit.
+  rewrite fromDistinctAscList_go_eq by (apply Z.pow_pos_nonneg; lia).
   unfold fromDistinctAscList_go_f.
   destruct xs.
   * replace (List.length []) with 0%Z by reflexivity.
@@ -2427,12 +2457,23 @@ Next Obligation.
     - intros.
       subst.
       simpl safeHd in *.
-      assert (isUB (safeHd ys) e0 = true) by admit. (* due to sortedness *)
+      assert (isUB (safeHd ys) e0 = true). {
+        destruct ys; try reflexivity.
+        apply StronglySorted_inv in H0.
+        destruct H0.
+        rewrite Forall_forall in H4.
+        apply H4.
+        apply in_or_app. right. left. reflexivity.
+      }      
       applyDesc link_Desc.
       eapply IH.
       + simpl. rewrite app_length. lia.
       + lia.
-      + admit. (* Need Sorted_app lemma *)
+      + apply StronglySorted_inv in H0.
+        destruct H0.
+        apply StronglySorted_app in H0.
+        destruct H0.
+        assumption.
       + assumption.
       + destruct H5; [left; assumption | right].
         replace (size s1). replace (size s).  replace (size s0).
@@ -2450,7 +2491,7 @@ Next Obligation.
            setoid_rewrite elem_app.
            setoid_rewrite <- toList_sem; only 2: eassumption.
            f_solver.
-Admitted.
+Qed.
 
 
 Lemma fromDistinctAscList_Desc:

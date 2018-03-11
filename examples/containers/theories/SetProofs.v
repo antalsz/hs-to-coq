@@ -2269,7 +2269,7 @@ Proof.
     lia.
 Qed.
 
-(** Verification of [fromDistinctAscList] *)
+(** ** Verification of [fromDistinctAscList] *)
 
 Definition fromDistinctAscList_create_f : (Int -> list e -> Set_ e * list e) -> (Int -> list e -> Set_ e * list e).
 Proof.

@@ -1882,6 +1882,13 @@ Proof.
   * simpl. rewrite IHxs. rewrite orb_assoc. reflexivity.
 Qed.
 
+Lemma elem_cons:
+  forall {a} `{Eq_ a} (i : a) x ys,
+  List.elem i (x :: ys) = (i == x)  || List.elem i ys.
+Proof.
+  intros.
+  reflexivity.
+Qed.
 
 Lemma toList_Bin:
   forall sz x (s1 s2 : Set_ e),
@@ -2258,6 +2265,221 @@ Proof.
     simpl.
     rewrite H3, IHBounded1, IHBounded2.
     lia.
+Qed.
+
+(** Verification of [fromDistinctAscList] *)
+
+
+Definition fromDistinctAscList_create_f : (Int -> list e -> Set_ e * list e) -> (Int -> list e -> Set_ e * list e).
+Proof.
+  let rhs := eval unfold fromDistinctAscList in (@fromDistinctAscList e) in
+  multimatch rhs with context [GHC.Err.deferredFix ?f] => exact f end.
+Defined.
+
+Definition fromDistinctAscList_create : Int -> list e -> Set_ e * list e
+  := GHC.Err.deferredFix (fromDistinctAscList_create_f).
+
+
+Definition fromDistinctAscList_go_f : (Int -> Set_ e -> list e -> Set_ e) -> (Int -> Set_ e -> list e -> Set_ e).
+Proof.
+  let rhs := eval unfold fromDistinctAscList in (@fromDistinctAscList e) in
+  let rhs := eval fold fromDistinctAscList_create_f in rhs in 
+  let rhs := eval fold fromDistinctAscList_create in rhs in 
+  multimatch rhs with context [GHC.Err.deferredFix ?f] => exact f end.
+Defined.
+
+Definition fromDistinctAscList_go : Int -> Set_ e -> list e -> Set_ e
+  := GHC.Err.deferredFix (fromDistinctAscList_go_f).
+
+Definition safeHd {a} : list a -> option a := fun xs =>
+  match xs with [] => None | (x::_) => Some x end.
+
+Lemma mul_pow_sub:
+  forall sz, (0 < sz)%Z -> (2 * 2 ^ (sz - 1) = 2^sz)%Z.
+Proof.
+  intros.
+  rewrite <- Z.pow_succ_r by lia.
+  f_equal.
+  lia.
+Qed.
+
+Program Fixpoint fromDistinctAscList_create_Desc
+  sz lb xs {measure (Z.to_nat sz)} :
+  (0 <= sz)%Z ->
+  Sorted (fun x y => x < y = true) (lb :: xs) ->
+  forall (P : Set_ e * list e -> Prop),
+  ( forall s ys,
+    Bounded s (Some lb) (safeHd ys) ->
+    xs = toList s ++ ys ->
+    ys = [] \/ size s = (2*2^sz-1)%Z ->
+    P (s, ys)
+  ) ->
+  P (fromDistinctAscList_create (2^sz)%Z xs) := _.
+Next Obligation.
+  intros ???? Hnonneg HSorted.  
+  rename fromDistinctAscList_create_Desc into IH.
+  replace fromDistinctAscList_create with (fromDistinctAscList_create_f fromDistinctAscList_create) by admit.
+  unfold fromDistinctAscList_create_f.
+  destruct xs.
+  * intros X HX. apply HX. clear HX.
+    - solve_Bounded.
+    - reflexivity.
+    - left. reflexivity.
+  * repeat replace (#1) with 1%Z by reflexivity.
+    unfold op_zeze__, Eq_Integer___, op_zeze____.
+
+    inversion HSorted. subst.
+    inversion H2. subst. clear H2.
+    inversion H1. subst.
+    
+    assert (isUB (safeHd xs) e0 = true)
+      by (inversion H4; [reflexivity | assumption]).
+    
+    destruct (Z.eqb_spec (2^sz) 1).
+    - intros X HX. apply HX. clear HX.
+      ++ solve_Bounded.
+      ++ rewrite toList_Bin, toList_Tip, app_nil_r. reflexivity.
+      ++ right. rewrite size_Bin. lia.
+    - assert (~ (sz = 0))%Z by (intro; subst; simpl in n; congruence).
+      assert (sz > 0)%Z by lia.
+      replace ((Bits.shiftR (2 ^ sz)%Z 1%Z)) with (2^(sz - 1))%Z.
+      Focus 2.
+        unfold Bits.shiftR, Bits.instance_Bits_Int.
+        rewrite Z.shiftr_div_pow2 by lia.
+        rewrite Z.pow_sub_r by lia.
+        reflexivity.
+      assert (Z.to_nat (sz - 1) < Z.to_nat sz)%nat.
+      { rewrite Z2Nat.inj_sub by lia. 
+        apply Nat.sub_lt.
+        apply Z2Nat.inj_le.
+        lia.
+        lia.
+        lia.
+        replace (Z.to_nat 1) with 1 by reflexivity.
+        lia.
+      }
+      eapply IH.
+      ++ assumption.
+      ++ lia.
+      ++ eassumption.
+      ++ intros l ys HBounded_l Hlist_l Hsize_l.
+         destruct ys.
+         + intros X HX. apply HX. clear HX.
+           ** solve_Bounded.
+           ** assumption.
+           ** left; reflexivity.
+         + simpl in HBounded_l.
+           destruct Hsize_l; try congruence.
+           eapply IH; clear IH.
+           ** assumption.
+           ** lia.
+           ** rewrite Hlist_l in H1.
+              assert (Sorted (fun x y : e => _GHC.Base.<_ x y = true) (e1 :: ys))
+                by admit. (* Sorted and append *)
+              eassumption.
+           ** intros r zs HBounded_r Hlist_r Hsize_r.
+              rewrite Hlist_l in HSorted.
+              assert (isLB (Some lb) e1 = true) by admit. (* from HSorted *)
+              rewrite Hlist_r in HSorted.
+              assert (isUB (safeHd zs) e1 = true) by admit.
+              intros X HX. apply HX. clear HX.
+              -- applyDesc link_Desc.
+              -- erewrite toList_link by eassumption.
+                 rewrite Hlist_l. rewrite Hlist_r.
+                 rewrite <- !app_assoc.  reflexivity.
+              -- destruct Hsize_r; [left; assumption| right].
+                 applyDesc link_Desc.
+                 replace (size l). replace (size r).
+                 rewrite mul_pow_sub in * by lia.
+                 lia.
+Admitted.
+
+
+Program Fixpoint fromDistinctAscList_go_Desc
+  sz s xs {measure (length xs)} :
+  (0 <= sz)%Z ->
+  Sorted (fun x y => x < y = true) xs ->
+  Bounded s None (safeHd xs) ->
+  xs = [] \/ size s = (2*2^sz-1)%Z ->
+  Desc (fromDistinctAscList_go (2^sz)%Z s xs) None None (size s + List.length xs)
+    (fun i => sem s i || List.elem i xs) := _.
+Next Obligation.
+  intros.
+  rename fromDistinctAscList_go_Desc into IH.
+  replace fromDistinctAscList_go with (fromDistinctAscList_go_f fromDistinctAscList_go) by admit.
+  unfold fromDistinctAscList_go_f.
+  destruct xs.
+  * replace (List.length []) with 0%Z by reflexivity.
+    rewrite Z.add_0_r.
+    solve_Desc.
+  * repeat replace (#1) with 1%Z by reflexivity.
+    replace ((Bits.shiftL (2 ^ sz)%Z 1))%Z with (2 ^ (1 + sz))%Z.
+    Focus 2.
+      unfold Bits.shiftL, Bits.instance_Bits_Int.
+      rewrite Z.shiftl_mul_pow2 by lia.
+      rewrite Z.pow_add_r by lia.
+      lia.
+
+    destruct H2; try congruence.
+    eapply fromDistinctAscList_create_Desc.
+    - lia.
+    - eassumption.
+    - intros.
+      subst.
+      simpl safeHd in *.
+      assert (isUB (safeHd ys) e0 = true) by admit. (* due to sortedness *)
+      applyDesc link_Desc.
+      eapply IH.
+      + simpl. rewrite app_length. lia.
+      + lia.
+      + admit. (* Need Sorted_app lemma *)
+      + assumption.
+      + destruct H5; [left; assumption | right].
+        replace (size s1). replace (size s).  replace (size s0).
+        rewrite Z.pow_add_r by lia.
+        lia.
+      + intros.
+        solve_Desc.
+        ** replace (size s2). replace (size s1). replace (size s).
+           rewrite !List.hs_coq_list_length, !Zlength_correct.
+           simpl length.
+           rewrite app_length, Nat2Z.inj_succ, Nat2Z.inj_add.
+           erewrite <- size_spec by eassumption.
+           lia.
+        ** setoid_rewrite elem_cons.
+           setoid_rewrite elem_app.
+           setoid_rewrite <- toList_sem; only 2: eassumption.
+           f_solver.
+Admitted.
+
+
+Lemma fromDistinctAscList_Desc:
+  forall xs,
+  Sorted (fun x y => x < y = true) xs ->
+  Desc (fromDistinctAscList xs) None None (List.length xs) (fun i => List.elem i xs).
+Proof.
+  intros.
+  unfold fromDistinctAscList.
+  fold fromDistinctAscList_create_f.
+  fold fromDistinctAscList_create.
+  fold fromDistinctAscList_go_f.
+  fold fromDistinctAscList_go.
+  destruct xs.
+  * solve_Desc.
+  * inversion H. subst. clear H.
+    replace (#1) with (2^0)%Z by reflexivity.
+    eapply fromDistinctAscList_go_Desc.
+    + lia.
+    + assumption.
+    + assert (isUB (safeHd xs) e0 = true) by (inversion H3; [reflexivity|assumption]).
+      solve_Bounded.
+    + right. reflexivity.
+    + intros.
+      rewrite List.hs_coq_list_length, Zlength_cons in *.
+      rewrite size_Bin in *.
+      solve_Desc.
+      setoid_rewrite elem_cons.
+      f_solver.
 Qed.
 
 (** ** Verification of [Eq] *)

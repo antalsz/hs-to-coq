@@ -1,3 +1,5 @@
+rename type GHC.Types.Int = Coq.Numbers.BinNums.N
+
 skip Utils.Containers.Internal.BitUtil.shiftLL
 skip Utils.Containers.Internal.BitUtil.shiftRL
 skip Utils.Containers.Internal.BitUtil.wordSize
@@ -11,3 +13,7 @@ skip Utils.Containers.Internal.BitUtil.highestBitMask
 # but it conceptually belongs here, so we put it in the preamble.v
 # of this module
 skip Utils.Containers.Internal.BitUtil.lowestBitMask
+
+# Need to change the type
+skip Utils.Containers.Internal.BitUtil.bitcount
+

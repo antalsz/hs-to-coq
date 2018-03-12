@@ -1,5 +1,12 @@
 # These are TODOs:
 
+redefine Definition Data.IntSet.Internal.Nat := Coq.Numbers.BinNums.N.
+redefine Definition Data.IntSet.Internal.Prefix := Coq.Numbers.BinNums.N.
+redefine Definition Data.IntSet.Internal.BitMap := Coq.Numbers.BinNums.N.
+redefine Definition Data.IntSet.Internal.Mask := Coq.Numbers.BinNums.N.
+
+rename type GHC.Types.Int = Coq.Numbers.BinNums.N
+
 # mutual recursion
 skip Data.IntSet.Internal.fromDistinctAscList
 skip Data.IntSet.Internal.fromAscList
@@ -24,8 +31,8 @@ skip Data.IntSet.Internal.deleteFindMin
 
 # This code is dead for well-formed input. Giving an explicit value
 # not only get rids of error, but also helps with type class resolution
-rewrite forall, GHC.Err.error "minView Nil"  = pair (0%Z) Nil
-rewrite forall, GHC.Err.error "maxView Nil"  = pair (0%Z) Nil
+rewrite forall, GHC.Err.error "minView Nil"  = pair (0%N) Nil
+rewrite forall, GHC.Err.error "maxView Nil"  = pair (0%N) Nil
 
 
 # The idiom `x .&. complement y` does not work at type `nat`, as the complement of
@@ -43,20 +50,14 @@ rewrite forall x y, Data.Bits.complement (x GHC.Num.+ y) = Coq.NArith.BinNat.N.l
 # More on negate on N to worry about
 rewrite forall x y, (GHC.Num.negate x) = Coq.NArith.BinNat.N.ldiff (Coq.NArith.BinNat.N.ones (64%N)) (Coq.NArith.BinNat.N.pred x)
 
-# Avoid the natFromInt
-redefine Definition Data.IntSet.Internal.mask : GHC.Num.Int -> (Mask -> Prefix) :=
-  fun i m => Coq.ZArith.BinInt.Z.land i (Coq.ZArith.BinInt.Z.lxor (Coq.ZArith.BinInt.Z.lnot (Coq.ZArith.BinInt.Z.pred m)) m).
-# Avoid the natFromInt
-redefine Definition Data.IntSet.Internal.zero : GHC.Num.Int -> (Mask -> bool) :=
-  fun i m => Coq.ZArith.BinInt.Z.eqb (Coq.ZArith.BinInt.Z.land i m) 0.
 # Avoid the natFromInt, and come up with a simpler definition
 # (correctness checked by hand for small values).
 redefine Definition Data.IntSet.Internal.branchMask : Prefix -> (Prefix -> Mask) :=
-  fun p1 p2 => Coq.ZArith.BinInt.Z.pow 2 (Coq.ZArith.BinInt.Z.log2 (Coq.ZArith.BinInt.Z.lxor p1 p2)).
+  fun p1 p2 => Coq.NArith.BinNat.N.pow 2 (Coq.NArith.BinNat.N.log2 (Coq.NArith.BinNat.N.lxor p1 p2)).
 
 # indexOfTheOnlyBit uses pointers and ugly stuff
 redefine Definition Data.IntSet.Internal.indexOfTheOnlyBit :=
- fun x => Coq.ZArith.BinInt.Z.of_N (Coq.NArith.BinNat.N.log2 x).
+ fun x => Coq.NArith.BinNat.N.log2 x.
 
 # the revNat function is only correct if its result is cropped to 64 bits.
 add Data.IntSet.Internal Definition Data.IntSet.Internal.revNatSafe n := Coq.NArith.BinNat.N.modulo (Data.IntSet.Internal.revNat n) (Coq.NArith.BinNat.N.pow 2 64).
@@ -99,11 +100,11 @@ skip Data.IntSet.Internal.intSetDataType
 
 order Data.IntSet.Internal.Semigroup__IntSet Data.IntSet.Internal.Monoid__IntSet_mappend
 
-# We need Integral N to use GHC.Real.fromIntegral to go from N to Z
-rename value Data.IntSet.Internal.intFromNat = Coq.ZArith.BinInt.Z.of_N
+skip Data.IntSet.Internal.intFromNat
+rewrite forall x, Data.IntSet.Internal.intFromNat x = x
+skip Data.IntSet.Internal.natFromInt
+rewrite forall x, Data.IntSet.Internal.natFromInt x = x
+
 skip Utils.Containers.Internal.BitUtil.lowestBitMask
 
-skip Coq.ZArith.BinInt.Z.of_N
-
-skip module Coq.ZArith.BinInt.Z
 skip module Coq.NArith.BinNat.N

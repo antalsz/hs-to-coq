@@ -12,6 +12,6 @@ Ltac termination_by_omega :=
   simpl;Omega.omega.
 
 
-Require Import Coq.ZArith.ZArith.
+Require Import Coq.NArith.NArith.
 (* Z.ones 6 = 64-1 *)
-Definition suffixBitMask : GHC.Num.Int := (Coq.ZArith.BinInt.Z.ones 6%Z).
+Definition suffixBitMask := Coq.NArith.BinNat.N.ones 6%N.

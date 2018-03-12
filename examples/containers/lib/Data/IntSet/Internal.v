@@ -17,6 +17,7 @@ Require BitTerminationProofs.
 (* Converted imports: *)
 
 Require Coq.Init.Peano.
+Require Coq.Numbers.BinNums.
 Require Data.Bits.
 Require Data.Foldable.
 Require Data.Maybe.
@@ -24,7 +25,6 @@ Require Data.Semigroup.
 Require Data.Tuple.
 Require GHC.Base.
 Require GHC.Num.
-Require GHC.Real.
 Require GHC.Wf.
 Require Utils.Containers.Internal.BitUtil.
 Import Data.Bits.Notations.
@@ -35,19 +35,19 @@ Import GHC.Num.Notations.
 (* Converted type declarations: *)
 
 Definition Prefix :=
-  GHC.Num.Int%type.
+  Coq.Numbers.BinNums.N.
 
 Definition Nat :=
-  GHC.Num.Word%type.
+  Coq.Numbers.BinNums.N.
 
 Definition Mask :=
-  GHC.Num.Int%type.
+  Coq.Numbers.BinNums.N.
 
 Definition Key :=
-  GHC.Num.Int%type.
+  Coq.Numbers.BinNums.N%type.
 
 Definition BitMap :=
-  GHC.Num.Word%type.
+  Coq.Numbers.BinNums.N.
 
 Inductive IntSet : Type
   := Bin : Prefix -> Mask -> IntSet -> IntSet -> IntSet
@@ -73,9 +73,9 @@ Ltac termination_by_omega :=
   simpl;Omega.omega.
 
 
-Require Import Coq.ZArith.ZArith.
+Require Import Coq.NArith.NArith.
 (* Z.ones 6 = 64-1 *)
-Definition suffixBitMask : GHC.Num.Int := (Coq.ZArith.BinInt.Z.ones 6%Z).
+Definition suffixBitMask := Coq.NArith.BinNat.N.ones 6%N.
 
 (* Converted value declarations: *)
 
@@ -107,12 +107,12 @@ Definition bin : Prefix -> Mask -> IntSet -> IntSet -> IntSet :=
     | p, m, l, r => Bin p m l r
     end.
 
-Definition bitmapOfSuffix : GHC.Num.Int -> BitMap :=
+Definition bitmapOfSuffix : Coq.Numbers.BinNums.N -> BitMap :=
   fun s => Utils.Containers.Internal.BitUtil.shiftLL #1 s.
 
 Definition branchMask : Prefix -> Prefix -> Mask :=
   fun p1 p2 =>
-    Coq.ZArith.BinInt.Z.pow 2 (Coq.ZArith.BinInt.Z.log2 (Coq.ZArith.BinInt.Z.lxor p1
+    Coq.NArith.BinNat.N.pow 2 (Coq.NArith.BinNat.N.log2 (Coq.NArith.BinNat.N.lxor p1
                                                                                   p2)).
 
 Definition empty : IntSet :=
@@ -136,9 +136,9 @@ Local Definition Eq___IntSet_op_zeze__ : IntSet -> IntSet -> bool :=
   fun t1 t2 => equal t1 t2.
 
 Definition indexOfTheOnlyBit :=
-  fun x => Coq.ZArith.BinInt.Z.of_N (Coq.NArith.BinNat.N.log2 x).
+  fun x => Coq.NArith.BinNat.N.log2 x.
 
-Definition lowestBitSet : Nat -> GHC.Num.Int :=
+Definition lowestBitSet : Nat -> Coq.Numbers.BinNums.N :=
   fun x => indexOfTheOnlyBit (Utils.Containers.Internal.BitUtil.lowestBitMask x).
 
 Definition unsafeFindMin : IntSet -> option Key :=
@@ -149,7 +149,7 @@ Definition unsafeFindMin : IntSet -> option Key :=
            | Bin _ _ l _ => unsafeFindMin l
            end.
 
-Definition highestBitSet : Nat -> GHC.Num.Int :=
+Definition highestBitSet : Nat -> Coq.Numbers.BinNums.N :=
   fun x => indexOfTheOnlyBit (Utils.Containers.Internal.BitUtil.highestBitMask x).
 
 Definition unsafeFindMax : IntSet -> option Key :=
@@ -161,7 +161,8 @@ Definition unsafeFindMax : IntSet -> option Key :=
            end.
 
 Program Definition foldlBits {a}
-           : GHC.Num.Int -> (a -> GHC.Num.Int -> a) -> a -> Nat -> a :=
+           : Coq.Numbers.BinNums.N ->
+             (a -> Coq.Numbers.BinNums.N -> a) -> a -> Nat -> a :=
           fun prefix f z bitmap =>
             let go :=
               GHC.Wf.wfFix2 Coq.Init.Peano.lt (fun arg_0__ arg_1__ =>
@@ -201,7 +202,8 @@ Definition toDescList : IntSet -> list Key :=
   foldl (GHC.Base.flip cons) nil.
 
 Program Definition foldl'Bits {a}
-           : GHC.Num.Int -> (a -> GHC.Num.Int -> a) -> a -> Nat -> a :=
+           : Coq.Numbers.BinNums.N ->
+             (a -> Coq.Numbers.BinNums.N -> a) -> a -> Nat -> a :=
           fun prefix f z bitmap =>
             let go :=
               GHC.Wf.wfFix2 Coq.Init.Peano.lt (fun arg_0__ arg_1__ =>
@@ -234,27 +236,18 @@ Definition foldl' {a} : (a -> Key -> a) -> a -> IntSet -> a :=
       | _ => go z t
       end.
 
-Definition mask : GHC.Num.Int -> Mask -> Prefix :=
-  fun i m =>
-    Coq.ZArith.BinInt.Z.land i (Coq.ZArith.BinInt.Z.lxor (Coq.ZArith.BinInt.Z.lnot
-                                                          (Coq.ZArith.BinInt.Z.pred m)) m).
-
-Definition match_ : GHC.Num.Int -> Prefix -> Mask -> bool :=
-  fun i p m => (mask i m) GHC.Base.== p.
-
-Definition nomatch : GHC.Num.Int -> Prefix -> Mask -> bool :=
-  fun i p m => (mask i m) GHC.Base./= p.
-
 Definition maskW : Nat -> Nat -> Prefix :=
   fun i m =>
-    Coq.ZArith.BinInt.Z.of_N (i Data.Bits..&.(**)
-                              (Data.Bits.xor (Data.Bits.complement (m GHC.Num.- #1)) m)).
+    _Data.Bits..&._ i (Data.Bits.xor (Data.Bits.complement (m GHC.Num.- #1)) m).
 
-Definition natFromInt : GHC.Num.Int -> Nat :=
-  fun i => GHC.Real.fromIntegral i.
+Definition mask : Coq.Numbers.BinNums.N -> Mask -> Prefix :=
+  fun i m => maskW (i) (m).
 
-Definition shorter : Mask -> Mask -> bool :=
-  fun m1 m2 => (natFromInt m1) GHC.Base.> (natFromInt m2).
+Definition match_ : Coq.Numbers.BinNums.N -> Prefix -> Mask -> bool :=
+  fun i p m => (mask i m) GHC.Base.== p.
+
+Definition nomatch : Coq.Numbers.BinNums.N -> Prefix -> Mask -> bool :=
+  fun i p m => (mask i m) GHC.Base./= p.
 
 Definition nequal : IntSet -> IntSet -> bool :=
   fix nequal arg_0__ arg_1__
@@ -278,10 +271,10 @@ Program Instance Eq___IntSet : GHC.Base.Eq_ IntSet :=
 Definition null : IntSet -> bool :=
   fun arg_0__ => match arg_0__ with | Nil => true | _ => false end.
 
-Definition prefixBitMask : GHC.Num.Int :=
+Definition prefixBitMask : Coq.Numbers.BinNums.N :=
   Data.Bits.complement suffixBitMask.
 
-Definition prefixOf : GHC.Num.Int -> Prefix :=
+Definition prefixOf : Coq.Numbers.BinNums.N -> Prefix :=
   fun x => x Data.Bits..&.(**) prefixBitMask.
 
 Definition revNat : Nat -> Nat :=
@@ -313,7 +306,8 @@ Definition revNatSafe n :=
   Coq.NArith.BinNat.N.modulo (revNat n) (Coq.NArith.BinNat.N.pow 2 64).
 
 Program Definition foldrBits {a}
-           : GHC.Num.Int -> (GHC.Num.Int -> a -> a) -> a -> Nat -> a :=
+           : Coq.Numbers.BinNums.N ->
+             (Coq.Numbers.BinNums.N -> a -> a) -> a -> Nat -> a :=
           fun prefix f z bitmap =>
             let go :=
               GHC.Wf.wfFix2 Coq.Init.Peano.lt (fun arg_0__ arg_1__ =>
@@ -396,7 +390,8 @@ Definition fold {b} : (Key -> b -> b) -> b -> IntSet -> b :=
   foldr.
 
 Program Definition foldr'Bits {a}
-           : GHC.Num.Int -> (GHC.Num.Int -> a -> a) -> a -> Nat -> a :=
+           : Coq.Numbers.BinNums.N ->
+             (Coq.Numbers.BinNums.N -> a -> a) -> a -> Nat -> a :=
           fun prefix f z bitmap =>
             let go :=
               GHC.Wf.wfFix2 Coq.Init.Peano.lt (fun arg_0__ arg_1__ =>
@@ -432,7 +427,10 @@ Definition foldr' {b} : (Key -> b -> b) -> b -> IntSet -> b :=
       | _ => go z t
       end.
 
-Definition size : IntSet -> GHC.Num.Int :=
+Definition shorter : Mask -> Mask -> bool :=
+  fun m1 m2 => (m1) GHC.Base.> (m2).
+
+Definition size : IntSet -> Coq.Numbers.BinNums.N :=
   let fix go arg_0__ arg_1__
             := match arg_0__, arg_1__ with
                | acc, Bin _ _ l r => go (go acc l) r
@@ -453,10 +451,10 @@ Definition splitRoot : IntSet -> list IntSet :=
         else cons l (cons r nil)
     end.
 
-Definition suffixOf : GHC.Num.Int -> GHC.Num.Int :=
+Definition suffixOf : Coq.Numbers.BinNums.N -> Coq.Numbers.BinNums.N :=
   fun x => x Data.Bits..&.(**) suffixBitMask.
 
-Definition bitmapOf : GHC.Num.Int -> BitMap :=
+Definition bitmapOf : Coq.Numbers.BinNums.N -> BitMap :=
   fun x => bitmapOfSuffix (suffixOf x).
 
 Definition singleton : Key -> IntSet :=
@@ -495,7 +493,7 @@ Definition maxView : IntSet -> option (Key * IntSet)%type :=
                      let 'bi := highestBitSet bm in
                      pair (kx GHC.Num.+ bi) (tip kx (Data.Bits.xor bm (bm Data.Bits..&.(**)
                                                                     bitmapOfSuffix bi)))
-                 | Nil => pair (0 % Z) Nil
+                 | Nil => pair (0 % N) Nil
                  end in
     let j_12__ := Some (go t) in
     match t with
@@ -520,7 +518,7 @@ Definition minView : IntSet -> option (Key * IntSet)%type :=
                      let 'bi := lowestBitSet bm in
                      pair (kx GHC.Num.+ bi) (tip kx (Data.Bits.xor bm (bm Data.Bits..&.(**)
                                                                     bitmapOfSuffix bi)))
-                 | Nil => pair (0 % Z) Nil
+                 | Nil => pair (0 % N) Nil
                  end in
     let j_12__ := Some (go t) in
     match t with
@@ -556,8 +554,8 @@ Definition partition : (Key -> bool) -> IntSet -> (IntSet * IntSet)%type :=
                  end in
     id GHC.Base.$ go predicate0 t0.
 
-Definition zero : GHC.Num.Int -> Mask -> bool :=
-  fun i m => Coq.ZArith.BinInt.Z.eqb (Coq.ZArith.BinInt.Z.land i m) 0.
+Definition zero : Coq.Numbers.BinNums.N -> Mask -> bool :=
+  fun i m => ((i) Data.Bits..&.(**) (m)) GHC.Base.== #0.
 
 Definition subsetCmp : IntSet -> IntSet -> comparison :=
   fix subsetCmp arg_0__ arg_1__
@@ -1174,22 +1172,19 @@ Infix "Data.IntSet.Internal.\\" := (_\\_) (at level 99).
 End Notations.
 
 (* Unbound variables:
-     Bool.Sumbool.sumbool_of_bool Eq Gt Lt N None Some Z andb bool comparison cons
+     Bool.Sumbool.sumbool_of_bool Eq Gt Lt N None Some andb bool comparison cons
      false id list negb nil op_zp__ op_zt__ op_zv__ option orb pair size_nat
      suffixBitMask true Coq.Init.Peano.lt Coq.NArith.BinNat.N.ldiff
-     Coq.NArith.BinNat.N.log2 Coq.NArith.BinNat.N.modulo Coq.NArith.BinNat.N.ones
-     Coq.NArith.BinNat.N.pow Coq.NArith.BinNat.N.pred Coq.NArith.BinNat.N.to_nat
-     Coq.ZArith.BinInt.Z.eqb Coq.ZArith.BinInt.Z.land Coq.ZArith.BinInt.Z.lnot
-     Coq.ZArith.BinInt.Z.log2 Coq.ZArith.BinInt.Z.lxor Coq.ZArith.BinInt.Z.of_N
-     Coq.ZArith.BinInt.Z.pow Coq.ZArith.BinInt.Z.pred Data.Bits.complement
+     Coq.NArith.BinNat.N.log2 Coq.NArith.BinNat.N.lxor Coq.NArith.BinNat.N.modulo
+     Coq.NArith.BinNat.N.ones Coq.NArith.BinNat.N.pow Coq.NArith.BinNat.N.pred
+     Coq.NArith.BinNat.N.to_nat Coq.Numbers.BinNums.N Data.Bits.complement
      Data.Bits.op_zizazi__ Data.Bits.op_zizbzi__ Data.Bits.xor Data.Foldable.foldl
      Data.Maybe.maybe Data.Semigroup.Semigroup Data.Semigroup.op_zlzg__
      Data.Tuple.snd GHC.Base.Eq_ GHC.Base.Monoid GHC.Base.Ord GHC.Base.compare
      GHC.Base.flip GHC.Base.map GHC.Base.op_z2218U__ GHC.Base.op_zd__
      GHC.Base.op_zdzn__ GHC.Base.op_zeze__ GHC.Base.op_zg__ GHC.Base.op_zgze__
-     GHC.Base.op_zl__ GHC.Base.op_zsze__ GHC.Num.Int GHC.Num.Word GHC.Num.fromInteger
-     GHC.Num.op_zm__ GHC.Num.op_zp__ GHC.Real.fromIntegral GHC.Wf.wfFix2
-     Utils.Containers.Internal.BitUtil.bitcount
+     GHC.Base.op_zl__ GHC.Base.op_zsze__ GHC.Num.fromInteger GHC.Num.op_zm__
+     GHC.Num.op_zp__ GHC.Wf.wfFix2 Utils.Containers.Internal.BitUtil.bitcount
      Utils.Containers.Internal.BitUtil.highestBitMask
      Utils.Containers.Internal.BitUtil.lowestBitMask
      Utils.Containers.Internal.BitUtil.shiftLL

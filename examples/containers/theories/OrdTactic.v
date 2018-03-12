@@ -283,6 +283,22 @@ Proof.
   destruct (compare x y) eqn:Cxy; destruct (compare y x) eqn:Cyx; simpl; auto; order t.
 Qed.
 
+Theorem flip_comparison_involutive :
+  ssrfun.involutive flip_comparison.
+Proof. now repeat red; destruct 0. Qed.
+
+Theorem flip_comparison_injective :
+  ssrfun.injective flip_comparison.
+Proof. now repeat red; repeat destruct 0. Qed.
+
+Theorem compare_flip_iff {A} `{OrdLaws A} (x y : A) (c : comparison) :
+  compare x y = c <-> compare y x = flip_comparison c.
+Proof.
+  split.
+  - now intro; subst; rewrite compare_flip.
+  - rewrite compare_flip; apply flip_comparison_injective.
+Qed.
+
 (** Lawfulness of [ord_default] *)
 
 Section GoodCompare.

@@ -117,10 +117,6 @@ Require Import Tactics.
 
 Require Import OrdTactic.
 
-(* Axioms we use implicitly, and now also explicitly *)
-Require Import Coq.Logic.FunctionalExtensionality Coq.Logic.ProofIrrelevance.
-
-
 (** ** Utilities about sorted (specialized to [Z.lt]) *)
 
 Require Import Coq.Lists.List.
@@ -5998,20 +5994,6 @@ Instance EqLaws_WFIntSet : EqLaws WFIntSet :=
    ; Eq_trans := fun s1 s2 s3 => Eq_trans (unpack s1) (unpack s2) (unpack s3)
    ; Eq_inv   := fun s1 s2    => Eq_inv   (unpack s1) (unpack s2)
   |}.
-
-(* Explicitly calls on functional extensionality and proof irrelevance *)
-Instance EqExact_WFIntSet : EqExact WFIntSet.
-Proof.
-  constructor. intros [s WFs] [s' WFs']; simpl.
-  unfold "==", Eq__WFIntSet; simpl.
-  apply iff_reflect; split; simpl.
-  - now inversion 1; subst s'; rewrite Eq_refl.
-  - intros H; apply (reflect_iff _ _ (Eq_eq _ _)) in H; subst s'.
-    destruct WFs as [f SEM]; destruct WFs' as [f' SEM'].
-    assert (f = f') by now apply functional_extensionality, Sem_extensional with s.
-    subst f'; repeat f_equal.
-    apply proof_irrelevance.
-Qed.    
 
 (** *** Verification of [Ord] *)
 

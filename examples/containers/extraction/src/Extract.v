@@ -55,13 +55,6 @@ Extract Constant DeferredFix.deferredFix => "(\d f -> let r = f r in r)".
 Extract Constant DeferredFix.deferredFix2 => "(\d f -> let r = f r in r)".
 Extract Constant DeferredFix.deferredFix3 => "(\d f -> let r = f r in r)".
 
-(*
-Extract Inductive Specif.sigT => "(,)" ["(,)"].
-Extract Constant Specif.projT1 => "Prelude.fst".
-Extract Constant Specif.projT2 => "Prelude.snd".
-*)
-
-
 Recursive Extraction Library Internal.
 
 Extraction Blacklist Internal.

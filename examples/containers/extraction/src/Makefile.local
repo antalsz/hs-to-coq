@@ -1,0 +1,9 @@
+clean::
+	rm -f *.hs
+	rm -f *.hi
+	rm -f *~
+
+post-all::
+	./fixcode.pl Ascii.hs > Ascii2.hs
+	mv Ascii2.hs Ascii.hs
+	@echo "All done!"

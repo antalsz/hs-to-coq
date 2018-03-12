@@ -137,20 +137,6 @@ benchmark bench-extracted-set
   build-depends:       random
   default-language:    Haskell2010
 
-benchmark bench-extracted-intset
-  type: exitcode-stdio-1.0
-  ghc-options:         -O2
-  main-is:             BenchIntSet.hs
-  hs-source-dirs:      .
-  build-depends:       base >=4.9 && <4.10
-  build-depends:       containers-extracted
-  build-depends:       deepseq  >= 1.1.0.0 && < 1.5
-  build-depends:       criterion >= 0.4.0 && < 1.3
-  build-depends:       containers  == 0.5.11.0
-  build-depends:       QuickCheck >= 2.9.2
-  build-depends:       random
-  default-language:    Haskell2010
-
 -------------------
 -- T E S T I N G --
 -------------------

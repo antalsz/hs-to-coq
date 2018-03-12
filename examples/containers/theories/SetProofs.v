@@ -3385,14 +3385,328 @@ Qed.
 End WF.
 
 
+(** ** [IntSet]s with [WF] *)
+
+Definition WFSet  (e : Type) `{Ord e} : Type := {s : Set_ e | WF s}.
+Definition pack   {e : Type} `{Ord e} : forall (s : Set_ e), WF s -> WFSet e := exist _.
+Definition unpack {e : Type} `{Ord e} : WFSet e                   -> Set_  e := @proj1_sig _ _.
+
+(** * Type classes *)
+
+(** Because a [Set_ e] is only useful if it well-formed, we instantiate
+the law classes with a subset type. *)
+
+Require Import Proofs.GHC.Base.
+
+Section TypeClassLaws.
+Context {e : Type} {HEq : Eq_ e} {HOrd : Ord e} {HEqLaws : EqLaws e}  {HOrdLaws : OrdLaws e}.
+
+(** ** Verification of [Eq] *)
+
+Global Program Instance Eq_Set_WF : Eq_ (WFSet e) := fun _ k => k
+  {| op_zeze____ := @op_zeze__ (Set_ e) _
+   ; op_zsze____ := @op_zsze__ (Set_ e) _
+  |}.
+
+Local Ltac unfold_WFSet_Eq :=
+  unfold "_==_", "_/=_", Eq_Set_WF; simpl;
+  unfold "_==_", "_/=_", Eq___Set_; simpl;
+  unfold Data.Set.Internal.Eq___Set__op_zsze__, Data.Set.Internal.Eq___Set__op_zeze__; simpl.
+
+Global Instance EqLaws_Set : EqLaws (WFSet e).
+Proof.
+  constructor.
+  - now intros x; unfold_WFSet_Eq; rewrite !Eq_refl.
+  - now intros x y; unfold_WFSet_Eq; f_equal; rewrite Eq_sym.
+  - intros x y z; unfold_WFSet_Eq; rewrite <-!(ssrbool.rwP ssrbool.andP);
+      intros [size_xy list_xy] [size_yz list_yz].
+    now split; eapply Eq_trans; eassumption.
+  - now intros x y; unfold_WFSet_Eq; rewrite negb_involutive.
+Qed.
+
+
+(** ** Verification of [Ord] *)
+
+Global Program Instance Ord_Set_WF : Ord (WFSet e) := fun _ k => k
+  {| op_zlze____ := @op_zlze__ (Set_ e) _ _
+   ; op_zgze____ := @op_zgze__ (Set_ e) _ _
+   ; op_zl____ := @op_zl__ (Set_ e) _ _
+   ; op_zg____ := @op_zg__ (Set_ e) _ _
+   ; compare__ := @compare (Set_ e) _ _
+   ; min__ := @min (Set_ e) _ _
+   ; max__ := @max (Set_ e) _ _
+  |}.
+Next Obligation.
+  destruct x as [s1 HB1], x0 as [s2 HB2]. simpl.
+  unfold max, Ord__Set_, max__, Internal.Ord__Set__max.
+  destruct (Internal.Ord__Set__op_zlze__ _ _); assumption.
+Qed.
+Next Obligation.
+  destruct x as [s1 HB1], x0 as [s2 HB2]. simpl.
+  unfold min, Ord__Set_, min__, Internal.Ord__Set__min.
+  destruct (Internal.Ord__Set__op_zlze__ _ _); assumption.
+Qed.
+
+Lemma compare_neq_gt_iff_le {t} `{OrdLaws t} (l1 l2 : t) :
+  (compare l1 l2 /= Gt = true) <-> (l1 <= l2) = true.
+Proof.
+  rewrite Neq_inv, negb_true_iff.
+  destruct (_ <= _) eqn:LE; simpl.
+  - split; trivial; intros _.
+    enough ((compare l1 l2 == Gt) = false <-> compare l1 l2 <> Gt) as OK.
+    + now apply OK; rewrite Ord_compare_Gt, LE.
+    + now rewrite (ssrbool.rwP (Eq_eq _ Gt)); unfold is_true; rewrite not_true_iff_false.
+  - now rewrite <-Ord_compare_Gt in LE; rewrite LE.
+Qed.
+
+Lemma WFSet_eq_size_length' (a : WFSet e) :
+  Data.Set.Internal.size (proj1_sig a) = Z.of_nat (Datatypes.length (toAscList (proj1_sig a))).
+Proof.
+  destruct a as [a WFa]; unfold "==", Eq_Set_WF; simpl.
+  rewrite size_size; erewrite size_spec; trivial; exact WFa.
+Qed.
+
+Lemma WFSet_eq_size_length (a : WFSet e) :
+  Data.Set.Internal.size (unpack a) = Z.of_nat (Datatypes.length (toAscList (unpack a))).
+Proof. apply WFSet_eq_size_length'. Qed.
+
+
+Local Ltac unfold_WFSet_Ord :=
+  unfold "_<=_", "_<_", "_>=_", "_>_", compare, Ord_Set_WF; simpl;
+  unfold "_<=_", "_<_", "_>=_", "_>_", compare, Ord__Set_; simpl;
+  unfold Data.Set.Internal.Ord__Set__op_zlze__, Data.Set.Internal.Ord__Set__op_zl__,
+         Data.Set.Internal.Ord__Set__op_zgze__, Data.Set.Internal.Ord__Set__op_zg__,
+         Data.Set.Internal.Ord__Set__compare; simpl.
+
+
+
+
+Local Ltac hideToAscList a :=
+  let la := fresh "l" a in
+  let EQ := fresh "EQ"  in
+  remember (toAscList (unpack a)) as la eqn:EQ; try clear a EQ.
+
+(* Hastily converted from an SSReflect proof -- could probably be cleaned up.
+   (This is not the only proof like that.) --ASZ *)
+Global Instance OrdLaws_Set : OrdLaws (WFSet e).
+Proof.
+  constructor; unfold_WFSet_Eq; unfold_WFSet_Ord.
+  - intros a b; rewrite !compare_neq_gt_iff_le => LEab LEba.
+    generalize (Ord_antisym _ _ LEab LEba) => EQab.
+    match goal with |- context[?b = true] => fold (is_true b) end.
+    rewrite <-(ssrbool.rwP ssrbool.andP); split; trivial.
+    rewrite !WFSet_eq_size_length'; rewrite <-(ssrbool.rwP (Eq_eq _ _)).
+    rewrite Nat2Z.inj_iff; apply eqlist_length, EQab.
+  - intros a b c; rewrite !compare_neq_gt_iff_le; order (list e).
+  - intros a b; rewrite !compare_neq_gt_iff_le; apply Ord_total.
+  - intros a b; rewrite Ord_compare_Lt,Neq_inv,negb_false_iff.
+    match goal with |- context[?b = true] => fold (is_true b) end.
+    rewrite <-(ssrbool.rwP (Eq_eq _ _)).
+    order (list e).
+  - intros a b; rewrite Ord_compare_Eq.
+    repeat match goal with |- context[?b = true] => fold (is_true b) end.
+    rewrite <-(ssrbool.rwP ssrbool.andP), <-(ssrbool.rwP (Eq_eq _ _)).
+    split; [intros EQ | intros [LIST EQ]]; rewrite EQ; trivial.
+    split; trivial; rewrite !WFSet_eq_size_length'.
+    rewrite Nat2Z.inj_iff; apply eqlist_length, EQ.
+  - intros a b; rewrite Ord_compare_Gt,Neq_inv,negb_false_iff.
+    match goal with |- context[?b = true] => fold (is_true b) end.
+    rewrite <-(ssrbool.rwP (Eq_eq _ _)).
+    order (list e).
+  - now intros a b; rewrite  Neq_inv, negb_involutive, compare_flip; destruct (compare _ _).
+  - now intros a b; rewrite !Neq_inv,                  compare_flip; destruct (compare _ _).
+  - now intros a b; rewrite  Neq_inv, negb_involutive, compare_flip; destruct (compare _ _).
+Qed.
+
+(** ** Verification of [Semigroup] *)
+
+Ltac unfold_Monoid_Set :=
+  unfold mappend, mconcat, mempty, Monoid__Set_, mappend__, mconcat__, mempty__,
+         Internal.Monoid__Set__mappend, Internal.Monoid__Set__mconcat, Internal.Monoid__Set__mempty,
+         Semigroup.op_zlzg__,  Semigroup__Set_, Semigroup.op_zlzg____,
+         Internal.Semigroup__Set__op_zlzg__
+    in *.
+
+Global Program Instance Semigroup_WF : Semigroup (WFSet e) := fun _ k => k
+  {| op_zlzg____  := @mappend (Set_ e) _ |}.
+Next Obligation.
+  destruct x as [s1 HB1], x0 as [s2 HB2]. simpl.
+  unfold_Monoid_Set.
+  eapply union_Desc; try eassumption. intuition.
+Qed.
+
+
+Global Instance SemigroupLaws_Set : SemigroupLaws (WFSet e).
+Proof.
+  constructor.
+  intros.
+  destruct x as [s1 HB1], y as [s2 HB2], z as [s3 HB3].
+  unfold op_zeze__, Eq_Set_WF, op_zeze____, proj1_sig.
+  unfold op_zlzg__, Semigroup_WF, op_zlzg____.
+  unfold mappend, Monoid__Set_, mappend__.
+  unfold Internal.Monoid__Set__mappend.
+  unfold proj1_sig.
+  unfold op_zlzg__, Semigroup__Set_, op_zlzg____.
+  unfold Internal.Semigroup__Set__op_zlzg__.
+  eapply (union_Desc s1 s2); try eassumption. intros s12 Hs12 _ Hsem12.
+  eapply (union_Desc s2 s3); try eassumption. intros s23 Hs23 _ Hsem23.
+  eapply (union_Desc s1 s23); try eassumption. intros s1_23 Hs1_23 _ Hsem1_23.
+  eapply (union_Desc s12 s3); try eassumption. intros s12_3 Hs12_3 _ Hsem12_3.
+  rewrite -> equals_spec by eassumption.
+  intro i. rewrite Hsem12_3,Hsem1_23,Hsem23,Hsem12.
+  rewrite orb_assoc. reflexivity.
+Qed.
+
+(** ** Verification of [Monoid] *)
+
+Global Program Instance Monoid_WF : Monoid (WFSet e) := fun _ k => k
+  {| mempty__   := @mempty (Set_ e) _
+   ; mappend__  := @mappend (Set_ e) _
+   ; mconcat__  xs := @mconcat (Set_ e) _ (List.map (fun x => unpack x) xs)
+  |}.
+Next Obligation.
+  destruct x as [s1 HB1], x0 as [s2 HB2]. simpl.
+  unfold_Monoid_Set.
+  eapply union_Desc; try eassumption. intuition.
+Qed.
+Next Obligation.
+  unfold_Monoid_Set.
+  eapply unions_Desc.
+  * induction xs.
+    + constructor.
+    + destruct a as [s HB]. simpl. constructor. apply HB. apply IHxs.
+  * intros. assumption.
+Qed.
+Next Obligation.
+  unfold_Monoid_Set.
+  eapply empty_Desc.
+  eauto.
+Qed.
+
+Lemma unions_foldr_union:
+  forall (ss : list (Set_ e)),
+  Forall WF ss -> (unions ss == Base.foldr union empty ss) = true.
+Proof.
+  intros.
+  assert (Desc' (Base.foldr union empty ss) None None (fun i => existsb (fun s => sem s i) ss)). {
+    induction H.
+    * simpl. eapply empty_Desc; intros. apply showDesc'. eauto.
+    * simpl.
+      apply IHForall. intros.
+      eapply union_Desc; try eassumption; intros.
+      apply showDesc'. intuition. rewrite H6,H3. reflexivity.
+  }
+  eapply H0. intros.
+  eapply unions_Desc; try eassumption; intros.
+  rewrite -> equals_spec by eassumption.
+  intro i. rewrite H6,H3. reflexivity.
+Qed.
+
+Global Instance MonoidLaws_Set : MonoidLaws (WFSet e).
+Proof.
+  constructor;
+    unfold op_zeze__, Eq_Set_WF, op_zeze____,  unpack;
+    repeat unfold mappend, mconcat, mempty, Monoid_WF, mappend__, mconcat__, mempty__,
+      Internal.Monoid__Set__mappend, Internal.Monoid__Set__mempty,
+      Semigroup.op_zlzg__,  Semigroup__Set_, Semigroup_WF, Semigroup.op_zlzg____,
+      Internal.Semigroup__Set__op_zlzg__,
+      mappend, mempty, Monoid__Set_, mappend__, mempty__,
+      Internal.Monoid__Set__mappend, Internal.Monoid__Set__mempty, Internal.Monoid__Set__mconcat.
+  * intros. destruct x as [s Hs]; unfold proj1_sig.
+    eapply empty_Desc. intros.
+    eapply union_Desc; try eassumption; intros.
+    rewrite -> equals_spec by eassumption.
+    intro i. rewrite H4,H1. reflexivity.
+  * intros. destruct x as [s Hs]; unfold proj1_sig.
+    eapply empty_Desc. intros.
+    eapply union_Desc; try eassumption; intros.
+    rewrite -> equals_spec by eassumption.
+    intro i. rewrite H4,H1. rewrite orb_false_r. reflexivity.
+  * intros. destruct x as [s1 Hs1], y as [s2 Hs2]; unfold proj1_sig.
+    eapply union_Desc; try eassumption; intros.
+    rewrite -> equals_spec by eassumption.
+    reflexivity.
+  * intros.
+    rename x into xs.
+    lazymatch goal with |- (_ == ?y) = true  =>
+      replace y with (Base.foldr union  empty (List.map (fun x => unpack x) xs))
+    end.
+    + apply unions_foldr_union.
+      induction xs.
+      - constructor.
+      - destruct a as [s Hs]; unfold unpack.
+        constructor; assumption.
+    + induction xs.
+      - reflexivity.
+      - simpl in *.
+        f_equal.
+        assumption.
+Qed.
+
+End TypeClassLaws.
+
+
+(** ** Verification of [Eq1] *)
+Require Import Data.Functor.Classes.
+Require Import Proofs.Data.Functor.Classes.
+Global Instance Eq1Laws_list: Eq1Laws list (@Eq_list).
+Proof.
+  constructor.
+  intros ? ? xs ys.
+  unfold liftEq, Eq1__list, liftEq__.
+  replace (xs == ys) with (eqlist xs ys) by reflexivity.
+  revert ys.
+  induction xs; intros ys.
+  * reflexivity.
+  * destruct ys.
+    - reflexivity.
+    - simpl. rewrite IHxs. reflexivity.
+Qed.
+
+Global Instance Eq1Laws_Set : Eq1Laws Set_ (@Eq___Set_).
+Proof.
+  split.
+  intros.
+  unfold liftEq, Eq1__Set_, liftEq__, Internal.Eq1__Set__liftEq.
+  rewrite Eq1_same.
+  reflexivity.
+Qed.
+
+
+(** ** Verification of [Ord1] *)
+
+Global Instance Ord1Laws_list: Ord1Laws list (@Eq_list) (@Ord_list).
+Proof.
+  constructor.
+  intros ??? xs ys.
+  unfold liftCompare, Ord1__list, liftCompare__.
+  revert ys.
+  induction xs; intros ys.
+  * reflexivity.
+  * destruct ys.
+    - reflexivity.
+    - simpl. rewrite IHxs. reflexivity.
+Qed.
+
+Global Instance Ord1Laws_Set : Ord1Laws Set_ (@Eq___Set_) (@Ord__Set_).
+Proof.
+  split.
+  intros.
+  unfold liftCompare, Ord1__Set_, liftCompare__, Internal.Ord1__Set__liftCompare.
+  rewrite Ord1_same.
+  reflexivity.
+Qed.
+
 (** * Instantiating the [FSetInterface] *)
 
 Require Import Coq.FSets.FSetInterface.
 Require OrdTheories.
 
-Module SetWSfun (E : OrderedType) <: WSfun(E).
+Module SetFSet (E : OrderedType) <: WSfun(E) <: WS <: Sfun(E) <: S.
+  Module E := E.
+  
   Include OrdTheories.OrdTheories E.
-
+  
   Lemma E_eq_zeze:
     forall x y : elt, E.eq x y <-> (x == y) = true.
   Proof. apply elt_eq. Qed.
@@ -3434,11 +3748,26 @@ Module SetWSfun (E : OrderedType) <: WSfun(E).
 
   Program Definition is_empty : t -> bool := null.
 
+  (* IntSet comparison predicate *)
+  
+  Definition lt (s s' : t) : Prop := (s < s') = true.
+  
+  (* More information later, after we've proved theorems *)
+
+  (* Minimal and maximal elements *)
+  
+  Definition min_elt : t -> option elt := fmap fst ∘ minView ∘ unpack.
+  
+  Definition max_elt : t -> option elt := fmap fst ∘ maxView ∘ unpack.
+  
+  (* Theorems *)
+  
   Lemma empty_1 : Empty empty.
   Proof. intros x H. inversion H. Qed.
 
-  Lemma Empty_tip : forall s, Empty s <-> proj1_sig s = Tip.
+  Lemma Empty_tip : forall s, Empty s <-> unpack s = Tip.
   Proof.
+    unfold unpack, WF. (* Get the implicit parameters right *)
     intros. split; intro.
     * destruct s as [[|]?].
       + exfalso. specialize (H e).
@@ -3452,7 +3781,7 @@ Module SetWSfun (E : OrderedType) <: WSfun(E).
   Proof.
     intros.
     rewrite Empty_tip in *.
-    unfold is_empty in *.
+    unfold is_empty, unpack, WF in *.
     rewrite H. reflexivity.
   Qed.
 
@@ -3460,7 +3789,7 @@ Module SetWSfun (E : OrderedType) <: WSfun(E).
   Proof.
     intros.
     rewrite Empty_tip in *.
-    unfold is_empty in *.
+    unfold is_empty, unpack, WF in *.
     destruct (proj1_sig s); [ inversion H | reflexivity].
   Qed.
   
@@ -3559,7 +3888,7 @@ Module SetWSfun (E : OrderedType) <: WSfun(E).
   Proof.
     intros [s?] x y Heq.
     rewrite E_eq_zeze in Heq.
-    unfold In, proj1_sig.
+    unfold In, unpack.
     rewrite (sem_resp_eq _ _ _ Heq).
     intuition.
   Qed.
@@ -3579,7 +3908,7 @@ Module SetWSfun (E : OrderedType) <: WSfun(E).
   Lemma equal_1 : forall s s' : t, Equal s s' -> equal s s' = true.
   Proof.
     intros [s1?] [s2?].
-    unfold Equal, equal, In, proj1_sig.
+    unfold Equal, equal, In, unpack.
     rewrite equals_spec by eassumption.
     intros. apply eq_iff_eq_true. apply H.
   Qed.
@@ -3587,7 +3916,7 @@ Module SetWSfun (E : OrderedType) <: WSfun(E).
   Lemma equal_2 : forall s s' : t, equal s s' = true -> Equal s s'.
   Proof.
     intros [s1?] [s2?].
-    unfold Equal, equal, In, proj1_sig.
+    unfold Equal, equal, In, unpack.
     rewrite equals_spec by eassumption.
     intros. apply eq_iff_eq_true. apply H.
   Qed.
@@ -3595,7 +3924,7 @@ Module SetWSfun (E : OrderedType) <: WSfun(E).
   Lemma subset_1 : forall s s' : t, Subset s s' -> subset s s' = true.
   Proof.
     intros [s1?] [s2?].
-    unfold Subset, subset, In, proj1_sig.
+    unfold Subset, subset, In, unpack.
     rewrite isSubsetOf_spec by eassumption.
     intuition.
   Qed.
@@ -3603,7 +3932,7 @@ Module SetWSfun (E : OrderedType) <: WSfun(E).
   Lemma subset_2 : forall s s' : t, subset s s' = true -> Subset s s'.
   Proof.
     intros [s1?] [s2?].
-    unfold Subset, subset, In, proj1_sig.
+    unfold Subset, subset, In, unpack.
     rewrite isSubsetOf_spec by eassumption.
     intuition.
   Qed.
@@ -3958,26 +4287,66 @@ Module SetWSfun (E : OrderedType) <: WSfun(E).
     erewrite toList_sem in * by eassumption.
     assumption.
   Qed.
-
-  Lemma elements_3w : forall s : t, NoDupA E.eq (elements s).
+  
+  Lemma elements_3 (s : t) : Sorted E.lt (elements s).
   Proof.
-    intros [s?].
-    unfold elements, proj1_sig.
-    apply OrdFacts.Sort_NoDup.
-    apply StronglySorted_Sorted.
-    assert (StronglySorted lt (toList s)) by (eapply to_List_sorted; eassumption).
-    (* Here we just replace E.lt with lt *)
-    induction H.
-    * apply SSorted_nil.    
-    * apply SSorted_cons; try assumption.
-      clear IHStronglySorted H.
-      induction H0.
-      - constructor.
-      - constructor; try assumption.
-        rewrite E_lt_zl. assumption.
+    destruct s as [s WFs]; unfold elements; simpl.
+    eapply StronglySorted_Sorted, StronglySorted_R_ext.
+    - apply E_lt_zl.
+    - eapply to_List_sorted; eassumption.
   Qed.
+  
+  Lemma elements_3w (s : t) : NoDupA E.eq (elements s).
+  Proof. apply OrdFacts.Sort_NoDup, elements_3. Qed.
+  
+  (* Ordering theorems *)
+  
+  Definition compare (s s' : t) : Compare lt eq s s'.
+  Proof.
+    destruct (compare s s') eqn:CMP.
+    - apply EQ. abstract now apply equal_2; destruct s, s'; generalize dependent CMP;
+                             rewrite Ord_compare_Eq; unfold "==", Eq_Set_WF; simpl.
+    - apply LT; abstract order t.
+    - apply GT; abstract order t.
+  Defined.
+  
+  Theorem lt_trans (s1 s2 s3 : t) :
+    lt s1 s2 -> lt s2 s3 -> lt s1 s3.
+  Proof. unfold lt; order t. Qed. 
+  
+  Theorem lt_not_eq (s1 s2 : t) :
+    lt s1 s2 -> ~ eq s1 s2.
+  Proof.
+    unfold lt; intros LT EQ; apply equal_1 in EQ; unfold equal in EQ.
+    assert (s1 == s2 = true) as EQ' by apply EQ.
+    order t.
+  Qed.
+  
+  Lemma min_elt_1 (s : t) (x   : elt) : min_elt s = Some x -> In x s.
+  Proof.
+  Admitted.
 
-(**
+  Lemma min_elt_2 (s : t) (x y : elt) : min_elt s = Some x -> In y s -> ~ E.lt y x.
+  Proof.
+  Admitted.
+  
+  Lemma min_elt_3 (s : t)             : min_elt s = None -> Empty s.
+  Proof.
+  Admitted.
+
+  Lemma max_elt_1 (s : t) (x   : elt) : max_elt s = Some x -> In x s.
+  Proof.
+  Admitted.
+
+  Lemma max_elt_2 (s : t) (x y : elt) : max_elt s = Some x -> In y s -> ~ E.lt x y.
+  Proof.
+  Admitted.
+
+  Lemma max_elt_3 (s : t)             : max_elt s = None -> Empty s.
+  Proof.
+  Admitted.
+
+  (**
   These portions of the [FMapInterface] have no counterpart in the [IntSet] interface.
   We implement them generically.
   *)
@@ -4093,304 +4462,25 @@ Module SetWSfun (E : OrderedType) <: WSfun(E).
     inversion H0.
   Qed.
 
+  Lemma choose_3 (s1 s2 : t) (x1 x2 : elt) :
+    choose s1 = Some x1 -> 
+    choose s2 = Some x2 ->
+    Equal s1 s2         ->
+    E.eq  x1 x2.
+  Proof.
+    destruct s1 as [s1 WF1], s2 as [s2 WF2]; unfold choose, elements, toList; simpl.
+    intros C1 C2 EQ.
+    apply equal_1 in EQ; generalize dependent EQ.
+    unfold equal, "==", Eq___Set_, Data.Set.Internal.Eq___Set__op_zeze__, "==", Eq_list; simpl.
+    match goal with |- context[?b = true] => fold (is_true b) end; rewrite <-(ssrbool.rwP ssrbool.andP).
+    intros [_ EQ].
+    destruct (toAscList s1) as [|e1 l1], (toAscList s2) as [|e2 l2]; try easy.
+    simpl in EQ; rewrite <-(ssrbool.rwP ssrbool.andP) in EQ.
+    apply E_eq_zeze.
+    destruct EQ; congruence.
+  Qed.
 
-End SetWSfun.
-
-(** * Type classes *)
-
-(** Because a [Set_ e] is only useful if it well-formed, we instantiate
-the law classes with a subset type. *)
-
-Require Import Proofs.GHC.Base.
-
-Section TypeClassLaws.
-Context {e : Type} {HEq : Eq_ e} {HOrd : Ord e} {HEqLaws : EqLaws e}  {HOrdLaws : OrdLaws e}.
-
-(** ** Verification of [Eq] *)
-
-Definition WFSet := {s: Set_ e | WF s }.
-
-Program Instance Eq_Set_WF : Eq_ WFSet := fun _ k => k
-  {| op_zeze____ := @op_zeze__ (Set_ e) _
-   ; op_zsze____ := @op_zsze__ (Set_ e) _
-  |}.
-
-From mathcomp Require Import ssreflect ssrbool.
-Set Bullet Behavior "Strict Subproofs".
-
-Local Ltac unfold_WFSet_Eq :=
-  unfold "_==_", "_/=_", Eq_Set_WF => /=;
-  unfold "_==_", "_/=_", Eq___Set_ => /=;
-  unfold Data.Set.Internal.Eq___Set__op_zsze__, Data.Set.Internal.Eq___Set__op_zeze__ => /=.
-
-Global Instance EqLaws_Set : EqLaws WFSet.
-Proof.
-  constructor.
-  - by move=> x; unfold_WFSet_Eq; rewrite !Eq_refl.
-  - by move=> x y; unfold_WFSet_Eq; f_equal; rewrite Eq_sym.
-  - move=> x y z; unfold_WFSet_Eq=> /andP [size_xy list_xy] /andP [size_yz list_yz].
-    by apply/andP; split; eapply Eq_trans; eassumption.
-  - by move=> x y; unfold_WFSet_Eq; rewrite negbK.
-Qed.
-
-
-(** ** Verification of [Ord] *)
-
-Program Instance Ord_Set_WF : Ord WFSet := fun _ k => k
-  {| op_zlze____ := @op_zlze__ (Set_ e) _ _
-   ; op_zgze____ := @op_zgze__ (Set_ e) _ _
-   ; op_zl____ := @op_zl__ (Set_ e) _ _
-   ; op_zg____ := @op_zg__ (Set_ e) _ _
-   ; compare__ := @compare (Set_ e) _ _
-   ; min__ := @min (Set_ e) _ _
-   ; max__ := @max (Set_ e) _ _
-  |}.
-Next Obligation.
-  destruct x as [s1 HB1], x0 as [s2 HB2]. simpl.
-  unfold max, Ord__Set_, max__, Internal.Ord__Set__max.
-  destruct (Internal.Ord__Set__op_zlze__ _ _); assumption.
-Qed.
-Next Obligation.
-  destruct x as [s1 HB1], x0 as [s2 HB2]. simpl.
-  unfold min, Ord__Set_, min__, Internal.Ord__Set__min.
-  destruct (Internal.Ord__Set__op_zlze__ _ _); assumption.
-Qed.
-
-Lemma compare_neq_gt_iff_le {t} `{OrdLaws t} (l1 l2 : t) :
-  (compare l1 l2 /= Gt = true) <-> l1 <= l2.
-Proof.
-  rewrite Neq_inv negb_true_iff.
-  case LE: (_ <= _) => //=.
-  - split=> [// | _].
-    by apply/Eq_eq; rewrite Ord_compare_Gt LE.
-  - by move: LE; rewrite -Ord_compare_Gt => ->.
-Qed.
-
-Lemma WFSet_eq_size_length (a : WFSet) :
-  Data.Set.Internal.size (proj1_sig a) = Z.of_nat (Datatypes.length (toAscList (proj1_sig a))).
-Proof.
-  move: a => [a WFa]; unfold "==", Eq_Set_WF => /=.
-  rewrite size_size; erewrite size_spec => //; exact WFa.
-Qed.
-
-
-
-Local Ltac unfold_WFSet_Ord :=
-  unfold "_<=_", "_<_", "_>=_", "_>_", compare, Ord_Set_WF => /=;
-  unfold "_<=_", "_<_", "_>=_", "_>_", compare, Ord__Set_ => /=;
-  unfold Data.Set.Internal.Ord__Set__op_zlze__, Data.Set.Internal.Ord__Set__op_zl__,
-         Data.Set.Internal.Ord__Set__op_zgze__, Data.Set.Internal.Ord__Set__op_zg__,
-         Data.Set.Internal.Ord__Set__compare => /=.
-
-
-
-
-Local Ltac hideToAscList a :=
-  let la := fresh "l" a in
-  let EQ := fresh "EQ"  in
-  remember (toAscList (proj1_sig a)) as la eqn:EQ; try clear a EQ.
-
-Global Instance OrdLaws_Set : OrdLaws WFSet.
-Proof.
-  constructor; unfold_WFSet_Eq; unfold_WFSet_Ord.
-  - move=> a b; rewrite !compare_neq_gt_iff_le => LEab LEba.
-    generalize (Ord_antisym _ _ LEab LEba) => EQab.
-    apply/andP; split=> //.
-    rewrite !WFSet_eq_size_length; apply/Eq_eq.
-    rewrite Nat2Z.inj_iff; apply eqlist_length, EQab.
-  - move=> a b c; rewrite !compare_neq_gt_iff_le; order (list e).
-  - move=> a b; rewrite !compare_neq_gt_iff_le; apply Ord_total.
-  - move=> a b; rewrite Ord_compare_Lt Neq_inv negb_false_iff.
-    split=> [? | /Eq_eq]; first apply/Eq_eq; order (list e).
-  - move=> a b; rewrite Ord_compare_Eq.
-    split=> [EQ | /andP [LIST EQ]]; rewrite EQ => //=.
-    rewrite andbT !WFSet_eq_size_length; apply/Eq_eq.
-    rewrite Nat2Z.inj_iff; apply eqlist_length, EQ.
-  - move=> a b; rewrite Ord_compare_Gt Neq_inv negb_false_iff.
-    split=> [? | /Eq_eq]; first apply/Eq_eq; order (list e).
-  - by move=> a b; rewrite Neq_inv negbK compare_flip; case: (compare _ _).
-  - by move=> a b; rewrite !Neq_inv compare_flip; case: (compare _ _).
-  - by move=> a b; rewrite Neq_inv negbK compare_flip; case: (compare _ _).
-Qed.
-
-(** ** Verification of [Semigroup] *)
-
-Ltac unfold_Monoid_Set :=
-  unfold mappend, mconcat, mempty, Monoid__Set_, mappend__, mconcat__, mempty__,
-         Internal.Monoid__Set__mappend, Internal.Monoid__Set__mconcat, Internal.Monoid__Set__mempty,
-         Semigroup.op_zlzg__,  Semigroup__Set_, Semigroup.op_zlzg____,
-         Internal.Semigroup__Set__op_zlzg__
-    in *.
-
-Program Instance Semigroup_WF : Semigroup WFSet := fun _ k => k
-  {| op_zlzg____  := @mappend (Set_ e) _ |}.
-Next Obligation.
-  destruct x as [s1 HB1], x0 as [s2 HB2]. simpl.
-  unfold_Monoid_Set.
-  eapply union_Desc; try eassumption. intuition.
-Qed.
-
-
-Global Instance SemigroupLaws_Set : SemigroupLaws WFSet.
-Proof.
-  constructor.
-  intros.
-  destruct x as [s1 HB1], y as [s2 HB2], z as [s3 HB3].
-  unfold op_zeze__, Eq_Set_WF, op_zeze____,  proj1_sig.
-  unfold op_zlzg__, Semigroup_WF, op_zlzg____.
-  unfold mappend, Monoid__Set_, mappend__.
-  unfold Internal.Monoid__Set__mappend.
-  unfold proj1_sig.
-  unfold op_zlzg__, Semigroup__Set_, op_zlzg____.
-  unfold Internal.Semigroup__Set__op_zlzg__.
-  eapply (union_Desc s1 s2); try eassumption. intros s12 Hs12 _ Hsem12.
-  eapply (union_Desc s2 s3); try eassumption. intros s23 Hs23 _ Hsem23.
-  eapply (union_Desc s1 s23); try eassumption. intros s1_23 Hs1_23 _ Hsem1_23.
-  eapply (union_Desc s12 s3); try eassumption. intros s12_3 Hs12_3 _ Hsem12_3.
-  rewrite -> equals_spec by eassumption.
-  intro i. rewrite Hsem12_3  Hsem1_23 Hsem23  Hsem12.
-  rewrite orb_assoc. reflexivity.
-Qed.
-
-(** ** Verification of [Monoid] *)
-
-Program Instance Monoid_WF : Monoid WFSet := fun _ k => k
-  {| mempty__   := @mempty (Set_ e) _
-   ; mappend__  := @mappend (Set_ e) _
-   ; mconcat__  xs := @mconcat (Set_ e) _ (List.map (fun x => proj1_sig x) xs)
-  |}.
-Next Obligation.
-  destruct x as [s1 HB1], x0 as [s2 HB2]. simpl.
-  unfold_Monoid_Set.
-  eapply union_Desc; try eassumption. intuition.
-Qed.
-Next Obligation.
-  unfold_Monoid_Set.
-  eapply unions_Desc.
-  * induction xs.
-    + constructor.
-    + destruct a as [s HB]. simpl. constructor. apply HB. apply IHxs.
-  * intros. assumption.
-Qed.
-Next Obligation.
-  unfold_Monoid_Set.
-  eapply empty_Desc.
-  eauto.
-Qed.
-
-Lemma unions_foldr_union:
-  forall (ss : list (Set_ e)),
-  Forall WF ss -> (unions ss == Base.foldr union empty ss) = true.
-Proof.
-  intros.
-  assert (Desc' (Base.foldr union empty ss) None None (fun i => existsb (fun s => sem s i) ss)). {
-    induction H.
-    * simpl. eapply empty_Desc; intros. apply showDesc'. eauto.
-    * simpl.
-      apply IHForall. intros.
-      eapply union_Desc; try eassumption; intros.
-      apply showDesc'. intuition. rewrite H6 H3. reflexivity.
-  }
-  eapply H0. intros.
-  eapply unions_Desc; try eassumption; intros.
-  rewrite -> equals_spec by eassumption.
-  intro i. rewrite H6 H3. reflexivity.
-Qed.
-
-Global Instance MonoidLaws_Set : MonoidLaws WFSet.
-Proof.
-  constructor;
-    unfold op_zeze__, Eq_Set_WF, op_zeze____,  proj1_sig;
-    repeat unfold mappend, mconcat, mempty, Monoid_WF, mappend__, mconcat__, mempty__,
-      Internal.Monoid__Set__mappend, Internal.Monoid__Set__mempty,
-      Semigroup.op_zlzg__,  Semigroup__Set_, Semigroup_WF, Semigroup.op_zlzg____,
-      Internal.Semigroup__Set__op_zlzg__,
-      mappend, mempty, Monoid__Set_, mappend__, mempty__,
-      Internal.Monoid__Set__mappend, Internal.Monoid__Set__mempty, Internal.Monoid__Set__mconcat.
-  * intros. destruct x as [s Hs]; unfold proj1_sig.
-    eapply empty_Desc. intros.
-    eapply union_Desc; try eassumption; intros.
-    rewrite -> equals_spec by eassumption.
-    intro i. rewrite H4 H1. reflexivity.
-  * intros. destruct x as [s Hs]; unfold proj1_sig.
-    eapply empty_Desc. intros.
-    eapply union_Desc; try eassumption; intros.
-    rewrite -> equals_spec by eassumption.
-    intro i. rewrite H4 H1. rewrite orb_false_r. reflexivity.
-  * intros. destruct x as [s1 Hs1], y as [s2 Hs2]; unfold proj1_sig.
-    eapply union_Desc; try eassumption; intros.
-    rewrite -> equals_spec by eassumption.
-    reflexivity.
-  * intros.
-    rename x into xs.
-    lazymatch goal with |- (_ == ?y) = true  =>
-      replace y with (Base.foldr union  empty (List.map (fun x => proj1_sig x) xs))
-    end.
-    + apply unions_foldr_union.
-      induction xs.
-      - constructor.
-      - destruct a as [s Hs]; unfold proj1_sig.
-        constructor; assumption.
-    + induction xs.
-      - reflexivity.
-      - simpl in *.
-        f_equal.
-        assumption.
-Qed.
-
-End TypeClassLaws.
-
-
-(** ** Verification of [Eq1] *)
-Require Import Data.Functor.Classes.
-Require Import Proofs.Data.Functor.Classes.
-Global Instance Eq1Laws_list: Eq1Laws list (@Eq_list).
-Proof.
-  constructor.
-  intros ? ? xs ys.
-  unfold liftEq, Eq1__list, liftEq__.
-  replace (xs == ys) with (eqlist xs ys) by reflexivity.
-  revert ys.
-  induction xs; intros ys.
-  * reflexivity.
-  * destruct ys.
-    - reflexivity.
-    - simpl. rewrite IHxs. reflexivity.
-Qed.
-
-Global Instance Eq1Laws_Set : Eq1Laws Set_ (@Eq___Set_).
-Proof.
-  split.
-  intros.
-  unfold liftEq, Eq1__Set_, liftEq__, Internal.Eq1__Set__liftEq.
-  rewrite Eq1_same.
-  reflexivity.
-Qed.
-
-
-(** ** Verification of [Ord1] *)
-
-Global Instance Ord1Laws_list: Ord1Laws list (@Eq_list) (@Ord_list).
-Proof.
-  constructor.
-  intros ??? xs ys.
-  unfold liftCompare, Ord1__list, liftCompare__.
-  revert ys.
-  induction xs; intros ys.
-  * reflexivity.
-  * destruct ys.
-    - reflexivity.
-    - simpl. rewrite IHxs. reflexivity.
-Qed.
-
-Global Instance Ord1Laws_Set : Ord1Laws Set_ (@Eq___Set_) (@Ord__Set_).
-Proof.
-  split.
-  intros.
-  unfold liftCompare, Ord1__Set_, liftCompare__, Internal.Ord1__Set__liftCompare.
-  rewrite Ord1_same.
-  reflexivity.
-Qed.
+End SetFSet.
 
 (** * Rewrite rules *)
 

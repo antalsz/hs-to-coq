@@ -6978,4 +6978,5 @@ Module IntSetFSet <: WSfun(N_as_OT) <: WS <: Sfun(N_as_OT) <: S.
     enough (Some x1 = Some x2) as E by now inversion E.
     etransitivity; first symmetry; eassumption.
   Qed.
+
 End IntSetFSet.

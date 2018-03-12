@@ -20,6 +20,7 @@ Require Core.
 Require Data.Foldable.
 Require Data.Tuple.
 Require GHC.Base.
+Require GHC.Err.
 Require GHC.Num.
 Require Maybes.
 Require OccName.

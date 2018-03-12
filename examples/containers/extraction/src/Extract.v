@@ -38,7 +38,7 @@ Extract Inductive Either.Either => "Prelude.Either" [ "Prelude.Left" "Prelude.Ri
 Require Import Data.Set.Internal.
 
 Require Import Coq.extraction.ExtrHaskellBasic.
-Require Import Coq.extraction.ExtrHaskellZInt.
+Require Import Coq.extraction.ExtrHaskellZInteger.
 Require Import Coq.extraction.ExtrHaskellNatInt.
 Require Import Coq.extraction.ExtrHaskellString. 
 

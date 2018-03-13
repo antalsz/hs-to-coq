@@ -3809,9 +3809,9 @@ Module SetFSet (E : OrderedType) <: WSfun(E) <: WS <: Sfun(E) <: S.
 
   (* Minimal and maximal elements *)
   
-  Definition min_elt : t -> option elt := fmap fst ∘ minView ∘ unpack.
+  Definition min_elt : t -> option elt := lookupMin ∘ unpack.
   
-  Definition max_elt : t -> option elt := fmap fst ∘ maxView ∘ unpack.
+  Definition max_elt : t -> option elt := lookupMax ∘ unpack.
   
   (* Theorems *)
   
@@ -4375,29 +4375,47 @@ Module SetFSet (E : OrderedType) <: WSfun(E) <: WS <: Sfun(E) <: S.
     order t.
   Qed.
   
-  Lemma min_elt_1 (s : t) (x   : elt) : min_elt s = Some x -> In x s.
+  Lemma min_elt_1 (s : t) (x : elt) : min_elt s = Some x -> In x s.
   Proof.
-  Admitted.
+    destruct s as [s WFs]; unfold min_elt, In; simpl; intros def_x.
+    now specialize (lookupMin_Desc s _ _ WFs); rewrite def_x.
+  Qed.
 
   Lemma min_elt_2 (s : t) (x y : elt) : min_elt s = Some x -> In y s -> ~ E.lt y x.
   Proof.
-  Admitted.
+    destruct s as [s WFs]; unfold min_elt, In; simpl; intros def_x.
+    specialize (lookupMin_Desc s _ _ WFs); rewrite def_x; intros [sem_x x_min] sem_y.
+    specialize (x_min y sem_y).
+    rewrite E_lt_zl; order elt.
+  Qed.
   
-  Lemma min_elt_3 (s : t)             : min_elt s = None -> Empty s.
+  Lemma min_elt_3 (s : t) : min_elt s = None -> Empty s.
   Proof.
-  Admitted.
+    destruct s as [s WFs]; unfold min_elt, Empty, In; simpl; intros def_x.
+    specialize (lookupMin_Desc s _ _ WFs); rewrite def_x; intros def_sem x.
+    now rewrite def_sem.
+  Qed.
 
-  Lemma max_elt_1 (s : t) (x   : elt) : max_elt s = Some x -> In x s.
+  Lemma max_elt_1 (s : t) (x : elt) : max_elt s = Some x -> In x s.
   Proof.
-  Admitted.
+    destruct s as [s WFs]; unfold max_elt, In; simpl; intros def_x.
+    now specialize (lookupMax_Desc s _ _ WFs); rewrite def_x.
+  Qed.
 
   Lemma max_elt_2 (s : t) (x y : elt) : max_elt s = Some x -> In y s -> ~ E.lt x y.
   Proof.
-  Admitted.
+    destruct s as [s WFs]; unfold max_elt, In; simpl; intros def_x.
+    specialize (lookupMax_Desc s _ _ WFs); rewrite def_x; intros [sem_x x_max] sem_y.
+    specialize (x_max y sem_y).
+    rewrite E_lt_zl; order elt.
+  Qed.
 
-  Lemma max_elt_3 (s : t)             : max_elt s = None -> Empty s.
+  Lemma max_elt_3 (s : t) : max_elt s = None -> Empty s.
   Proof.
-  Admitted.
+    destruct s as [s WFs]; unfold max_elt, Empty, In; simpl; intros def_x.
+    specialize (lookupMax_Desc s _ _ WFs); rewrite def_x; intros def_sem x.
+    now rewrite def_sem.
+  Qed.
 
   (**
   These portions of the [FMapInterface] have no counterpart in the [IntSet] interface.

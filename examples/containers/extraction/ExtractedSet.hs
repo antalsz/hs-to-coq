@@ -2,14 +2,72 @@
 
 {-# LANGUAGE PatternSynonyms, ViewPatterns #-}
 
-module ExtractedSet where
+module ExtractedSet (Set_(Bin,Tip),
+                    lookupLT,
+                    lookupGT,
+                    lookupLE,
+                    lookupGE,
+                    lookupIndex,
+                    valid,
+                    size,
+                    empty,
+                    singleton,
+                    member,
+                    notMember,
+                    insert,
+                    delete,
+                    mapMonotonic,
+                    split,
+                    link,
+                    merge,
+                    union,
+                    difference,
+                    intersection,
+                    disjoint,
+                    ExtractedSet.null,
+                    fromAscList,
+                    fromDescList,
+                    fromList,
+                    fromDistinctAscList,
+                    fromDistinctDescList,
+                    toDescList,
+                    toAscList,
+                    toList,
+                    ExtractedSet.foldl,
+                    ExtractedSet.foldr,
+                    ExtractedSet.foldl',
+                    ExtractedSet.foldr',
+                    ExtractedSet.fold,
+                    ExtractedSet.map,
+                    ExtractedSet.filter,
+                    ExtractedSet.take,
+                    ExtractedSet.drop,
+                    ExtractedSet.splitAt,
+                    isProperSubsetOf,
+                    isSubsetOf,
+                    lookupMax,
+                    lookupMin,
+                    minView,
+                    maxView,
+                    splitMember,
+                    unions,
+                    splitRoot,
+                    partition,
+                    cartesianProduct,
+                    powerSet,
+                    disjointUnion,
+                    dropWhileAntitone,
+                    takeWhileAntitone,
+                    spanAntitone
+                    ) where
 
 import qualified Base
 import qualified Datatypes
-import qualified BinNums
+-- import qualified BinNums
 
 import qualified Semigroup
-import qualified Monoid
+-- import qualified Monoid
+import Internal (Set_(Bin,Tip))
 import qualified Internal as S2
 
 import qualified Data.Semigroup
@@ -123,10 +181,10 @@ deleteAt    = error "deleteAt: partial function"
 valid :: Prelude.Ord a => Set a -> Bool
 valid = S2.valid eq_a ord_a
 
-pattern Tip = S2.Tip
+--pattern Tip = S2.Tip
 
 -- I dunno how to get pattern synonyms to do this
-bin s = S2.Bin (toBinZ s)
+--bin s = S2.Bin (toBinZ s)
 
 -- need to translate BinNums.Z -> Int
 size :: Set a -> Int

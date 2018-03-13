@@ -38,25 +38,14 @@ Extract Constant Base.errorWithoutStackTrace => "errorWithoutStackTrace".
 Extract Constant GHC.Err.patternFailure => "(\d -> Prelude.error ""patternFailure"")".
 Extract Constant GHC.DeferredFix.deferredFix => "(\d f -> let r = f r in r)".
 
-(*
--- I'm trying to convert Z to Int, but this does not work. 
-Require Import GHC.Num.
-Extract Constant Num.Int => "Prelude.Int".
-Extract Constant Num.Num_Int__ => "Prelude.undefined".
-Require GHC.Char.
-Extract Constant Char.Char => "Prelude.Char".
-Extract Constant Char.hs_char__ => "Prelude.undefined".
-Extract Constant Char.chr => "Prelude.undefined".
-Extract Constant Char.ord => "Prelude.undefined".
-Require Import GHC.Base.
-Extract Constant Base.Eq_Int___ => "Prelude.undefined".
-Extract Constant Base.Ord_Int___ => "Prelude.undefined".
-Extract Constant Base.Eq_Char___ => "Prelude.undefined".
-Extract Constant Base.Ord_Char___ => "Prelude.undefined". *)
-
 Recursive Extraction Library Internal.
 
 Extraction Blacklist Internal.
 
 Require Import Data.IntSet.Internal.
 Recursive Extraction Library Internal.
+
+
+
+
+

@@ -8,7 +8,6 @@ OrdTheories.v
 SetProofs.v
 MapProofs.v
 IntSetProofs.v
-IntMapProofs.v
 RevNatSlowProofs.v
 OrdTactic.v
 ../hs-spec/IntSetProperties.v

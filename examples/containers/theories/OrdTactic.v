@@ -283,6 +283,22 @@ Proof.
   destruct (compare x y) eqn:Cxy; destruct (compare y x) eqn:Cyx; simpl; auto; order t.
 Qed.
 
+Theorem flip_comparison_involutive :
+  ssrfun.involutive flip_comparison.
+Proof. now repeat red; destruct 0. Qed.
+
+Theorem flip_comparison_injective :
+  ssrfun.injective flip_comparison.
+Proof. now repeat red; repeat destruct 0. Qed.
+
+Theorem compare_flip_iff {A} `{OrdLaws A} (x y : A) (c : comparison) :
+  compare x y = c <-> compare y x = flip_comparison c.
+Proof.
+  split.
+  - now intro; subst; rewrite compare_flip.
+  - rewrite compare_flip; apply flip_comparison_injective.
+Qed.
+
 (** Lawfulness of [ord_default] *)
 
 Section GoodCompare.
@@ -423,7 +439,22 @@ Global Instance OrdLaws_list  : OrdLaws (list a)
   := OrdLaws_ord_default _ GoodCompare_compare_list.
 End ListOrd.
 
-Module Tests.
+
+Ltac unfoldN := unfold
+  op_zeze__, op_zgze__, op_zlze__, op_zl__, op_zg__, compare,
+  Eq_Integer___, Ord_Char___,
+  op_zeze____, op_zgze____, op_zlze____, op_zl____, op_zg____, compare__
+  in *.
+
+Instance OrdLaws_N : OrdLaws N := {}.
+Proof.
+  all: intros; unfoldN;
+    rewrite ?N.eqb_eq, ?N.leb_le in *;
+    try apply eq_iff_eq_true; 
+    rewrite ?negb_true_iff, ?N.eqb_eq, ?N.eqb_neq, ?N.leb_le,  ?N.leb_gt, ?N.ltb_lt,
+            ?N.compare_eq_iff, ?N.compare_lt_iff, ?N.compare_gt_iff in *;
+    try (zify;omega).
+Qed.
 
 Ltac unfoldZ := unfold
   op_zeze__, op_zgze__, op_zlze__, op_zl__, op_zg__, compare,
@@ -441,6 +472,7 @@ Proof.
     try omega.
 Qed.
 
+Module Tests.
 Goal forall x : Z, x == x = true.
 Proof. order Z. Qed.
 

@@ -67,12 +67,12 @@ This is the annotated export list of IntSet. The first column says:
     -- * Min\/Max
  P  , findMin
  P  , findMax
- P  , deleteMin
- P  , deleteMax
+    , deleteMin
+    , deleteMax
  P  , deleteFindMin
  P  , deleteFindMax
- P  , maxView
- P  , minView
+    , maxView
+    , minView
 
     -- * Conversion
 
@@ -115,6 +115,7 @@ Local Open Scope Z_scope.
 Require Import BitUtils.
 Require Import DyadicIntervals.
 Require Import Tactics.
+Require Import OrdTactic.
 
 (** ** Utilities about sorted (specialized to [N.lt]) *)
 
@@ -2068,6 +2069,23 @@ Proof.
     rewrite H in Hi.
     congruence.
   * eapply Desc_unique; eassumption.
+Qed.
+
+Theorem Sem_extensional (s : IntSet) (f1 f2 : N -> bool) :
+  Sem s f1 ->
+  Sem s f2 ->
+  forall i, f1 i = f2 i.
+Proof.
+  intros S1 S2 k;
+    inversion S1 as [f1' E1 | s1 r1 f1' D1];
+    subst f1' s;
+    inversion S2 as [f2' E2 | s2 r2 f2' D2];
+    subst f2';
+    try subst s1; try subst s2.
+  - now rewrite E1,E2.
+  - inversion D2.
+  - inversion D1.
+  - eauto using Desc_unique_f.
 Qed.
 
 (** *** Verification of [equal] *)
@@ -4421,7 +4439,7 @@ Definition foldr_go {a} k :=
      end).
 
 
-(** *** Verification of [toList] *)
+(** *** Verification of [toList] (and [toAscList], a synonym) *)
 
 Lemma In_cons_iff:
   forall {a} (y x : a) xs, In y (x :: xs) <-> x = y \/ In y xs.
@@ -4546,6 +4564,31 @@ Proof.
     rewrite app_assoc.
     reflexivity.
 Qed.
+
+Theorem toAscList_exact (s1 s2 : IntSet) :
+  WF s1 ->
+  WF s2 ->
+  s1 = s2 <-> toAscList s1 = toAscList s2.
+Proof.
+  intros [f1 Sem1] [f2 Sem2]; split; [now intros; subst | intros EQ].
+  eapply Sem_unique; try eassumption.
+  generalize (toList_In _ _ Sem1), (toList_In _ _ Sem2).
+  unfold toList; rewrite EQ; intros def_f1 def_f2.
+  intros i; generalize (def_f1 i), (def_f2 i).
+  destruct (f1 i), (f2 i); intuition.
+Qed.
+
+Theorem toList_exact (s1 s2 : IntSet) :
+  WF s1 ->
+  WF s2 ->
+  s1 = s2 <-> toList s1 = toList s2.
+Proof. apply toAscList_exact. Qed.
+
+Theorem toList_toAscList : toList = toAscList.
+Proof. reflexivity. Qed.
+
+Theorem toAscList_toList : toAscList = toList.
+Proof. reflexivity. Qed.
 
 (** *** Sortedness of [toList] *)
 
@@ -5726,27 +5769,174 @@ Proof.
   reflexivity.
 Qed.
 
+(** ** [IntSet]s with [WF] *)
 
+Definition WFIntSet : Type := {s : IntSet | WF s}.
+Definition pack   : forall s : IntSet, WF s -> WFIntSet := exist _.
+Definition unpack : WFIntSet                -> IntSet   := @proj1_sig _ _.
+
+(** ** Type classes *)
+
+(** *** Verification of [Eq] *)
+
+Require Import Proofs.GHC.Base.
+
+Theorem Eq_eq_IntSet (x y : IntSet) : reflect (x = y) (x == y).
+Proof.
+  change (reflect (x = y) (equal x y)).
+  apply iff_reflect.
+  rewrite equal_spec.
+  reflexivity.
+Qed.
+
+Instance EqLaws_IntSet : EqLaws IntSet.
+Proof.
+  EqLaws_from_reflect Eq_eq_IntSet.
+  intros x y; unfoldMethods; unfold Internal.Eq___IntSet_op_zsze__.
+  rewrite nequal_spec, negb_involutive.
+  reflexivity.
+Qed.
+
+Instance EqExact_IntSet : EqExact IntSet.
+Proof.  constructor; apply Eq_eq_IntSet. Qed.
+
+Instance Eq__WFIntSet : Eq_ WFIntSet := fun _ k => k
+  {| op_zeze____ := fun s1 s2 => unpack s1 == unpack s2
+   ; op_zsze____ := fun s1 s2 => unpack s1 /= unpack s2
+  |}.
+
+Instance EqLaws_WFIntSet : EqLaws WFIntSet :=
+  {| Eq_refl  := fun s        => Eq_refl  (unpack s)
+   ; Eq_sym   := fun s1 s2    => Eq_sym   (unpack s1) (unpack s2)
+   ; Eq_trans := fun s1 s2 s3 => Eq_trans (unpack s1) (unpack s2) (unpack s3)
+   ; Eq_inv   := fun s1 s2    => Eq_inv   (unpack s1) (unpack s2)
+  |}.
+
+(** *** Verification of [Ord] *)
+
+Local Close Scope N_scope.
+
+Instance Ord_WFIntSet : Ord WFIntSet := fun _ k => k
+  {| op_zlze____ := fun s1 s2 => unpack s1 <= unpack s2
+   ; op_zgze____ := fun s1 s2 => unpack s1 >= unpack s2
+   ; op_zl____   := fun s1 s2 => unpack s1 <  unpack s2
+   ; op_zg____   := fun s1 s2 => unpack s1 >  unpack s2
+   ; compare__   := fun s1 s2 => compare (unpack s1) (unpack s2)
+   ; min__       := fun s1 s2 => if unpack s1 > unpack s2 then s2 else s1
+   ; max__       := fun s1 s2 => if unpack s1 < unpack s2 then s1 else s2
+  |}.
+
+Ltac unfold_applied t :=
+  let rec hd t' := match t' with
+                   | ?f _ => hd f
+                   | ?x   => x 
+                   end in
+  let f := hd t      in
+  let x := fresh "x" in
+  let E := fresh "E" in
+  (remember t as x eqn:E; unfold f in E; subst x) || fail "nothing to unfold".
+
+Ltac fold_is_true :=
+  repeat match goal with
+  | |- context[?x = true] => let H := fresh in
+                             assert ((x = true) <-> is_true x) as H by reflexivity;
+                             rewrite H; clear H
+  end.
+
+Local Ltac unfold_WFIntSet_Eq :=
+  repeat first [ progress simpl
+               | unfold_applied (@op_zeze__ WFIntSet)
+               | unfold_applied (@op_zsze__ WFIntSet)
+               | unfold_applied Eq__WFIntSet ].
+
+Local Ltac unfold_WFIntSet_Ord :=
+  unfold_WFIntSet_Eq;
+  repeat first [ progress simpl
+               | unfold_applied (@op_zl__   WFIntSet) | unfold_applied (@op_zl__   IntSet)
+               | unfold_applied (@op_zlze__ WFIntSet) | unfold_applied (@op_zlze__ IntSet)
+               | unfold_applied (@op_zg__   WFIntSet) | unfold_applied (@op_zg__   IntSet)
+               | unfold_applied (@op_zgze__ WFIntSet) | unfold_applied (@op_zgze__ IntSet)
+               | unfold_applied (@compare   WFIntSet) | unfold_applied (@compare   IntSet)
+               | unfold_applied (@max       WFIntSet) | unfold_applied (@max       IntSet)
+               | unfold_applied (@min       WFIntSet) | unfold_applied (@min       IntSet)
+               | unfold_applied Ord_WFIntSet          | unfold_applied Ord__IntSet
+               | unfold_applied Data.IntSet.Internal.Ord__IntSet_op_zl__
+               | unfold_applied Data.IntSet.Internal.Ord__IntSet_op_zlze__
+               | unfold_applied Data.IntSet.Internal.Ord__IntSet_op_zg__
+               | unfold_applied Data.IntSet.Internal.Ord__IntSet_op_zgze__
+               | unfold_applied Data.IntSet.Internal.Ord__IntSet_compare
+               | unfold_applied Data.IntSet.Internal.Ord__IntSet_max
+               | unfold_applied Data.IntSet.Internal.Ord__IntSet_min ].
+
+Lemma compare_not_Gt_le {A} `{OrdLaws A} (x y : A) :
+  (compare x y /= Gt) = (x <= y).
+Proof. destruct (compare x y) eqn:C; order A. Qed.
+
+Local Ltac to_Ord_list :=
+  repeat match goal with
+  | |- forall s : WFIntSet, _ => intros [? ?]; simpl
+  end;
+  rewrite ?compare_not_Gt_le;
+  repeat match goal with
+  | |- context[toAscList ?s]  => let x := fresh in
+                                 let E := fresh in
+                                 (remember (toAscList s) as x eqn:E; clear E)
+  end;
+  unfold Key in *.
+
+Instance OrdLaws_WFIntSet : OrdLaws WFIntSet.
+Proof.
+  constructor; unfold_WFIntSet_Ord; try now to_Ord_list; order (list N).
+  
+  - intros [s1 WF1] [s2 WF2]; simpl.
+    rewrite !compare_not_Gt_le => LE1 LE2.
+    apply equal_spec, toAscList_exact; trivial.
+    apply (reflect_iff _ _ (Eq_eq _ _)); generalize dependent LE1; generalize dependent LE2;
+      to_Ord_list; order (list N).
+  
+  - intros [s1 WF1] [s2 WF2]; simpl.
+    destruct (Ord_total (toAscList s1) (toAscList s2)); to_Ord_list; order (list N).
+  
+  - intros [s1 WF1] [s2 WF2]; simpl.
+    unfold "==", Eq___IntSet, Data.IntSet.Internal.Eq___IntSet_op_zeze__; simpl.
+    rewrite equal_spec, toAscList_exact, Ord_compare_Eq; trivial.
+    symmetry; apply (ssrbool.rwP (Eq_eq _ _)).
+  
+  - intros [s1 WF1] [s2 WF2]; simpl.
+    apply eq_iff_eq_true;
+      rewrite !compare_not_Gt_le; fold_is_true;
+      rewrite <-(ssrbool.rwP (Eq_eq _ _)), Ord_compare_Lt;
+      order (list N).
+  
+  - intros [s1 WF1] [s2 WF2]; simpl.
+    apply eq_iff_eq_true;
+      rewrite !compare_not_Gt_le; fold_is_true;
+      rewrite <-(ssrbool.rwP (Eq_eq _ _)), Ord_compare_Gt;
+      order (list N).
+Qed.
 
 (** ** Instantiating the [FSetInterface] *)
 
 Require Import Coq.FSets.FSetInterface.
 Require Import Coq.Structures.OrderedTypeEx.
 
-Module IntSetWSfun <: WSfun(N_as_OT).
+Module IntSetFSet <: WSfun(N_as_OT) <: WS <: Sfun(N_as_OT) <: S.
+  Module E := N_as_OT.
+  
   Module OrdFacts := OrderedTypeFacts(N_as_OT).
 
   Definition elt := N.
 
   (* Well-formedness *)
   
-  Definition t := {s : IntSet | WF s}.
-  Definition pack (s : IntSet) (H : WF s): t := exist _ s H.
-
+  Definition t := WFIntSet.
+  
   Notation "x <-- f ;; P" :=
     (match f with
      | exist x _ => P
      end) (at level 99, f at next level, right associativity).
+
+  (* Membership, equality, etc. *)
 
   Definition In_set x (s : IntSet) :=
     member x s = true.
@@ -5757,6 +5947,9 @@ Module IntSetWSfun <: WSfun(N_as_OT).
 
   Definition Equal_set s s' := forall a : N, In_set a s <-> In_set a s'.
   Definition Equal s s' := forall a : elt, In a s <-> In a s'.
+
+  Definition eq : t -> t -> Prop := Equal.
+  
   Definition Subset s s' := forall a : elt, In a s -> In a s'.
   Definition Empty s := forall a : elt, ~ In a s.
 
@@ -5766,6 +5959,20 @@ Module IntSetWSfun <: WSfun(N_as_OT).
   
   Definition is_empty : t -> bool := fun s' => 
     s <-- s' ;; null s.
+
+  (* IntSet comparison predicate *)
+  
+  Definition lt (s s' : t) : Prop := (s < s') = true.
+  
+  (* More information later, after we've proved theorems *)
+
+  (* Minimal and maximal elements *)
+  
+  Definition min_elt : t -> option elt := fmap fst ∘ minView ∘ unpack.
+  
+  Definition max_elt : t -> option elt := fmap fst ∘ maxView ∘ unpack.
+  
+  (* Theorems *)
 
   Lemma empty_1 : Empty empty.
   Proof. unfold Empty; intros a H. inversion H. Qed.
@@ -5837,8 +6044,6 @@ Module IntSetWSfun <: WSfun(N_as_OT).
     fun ws ws' => s <-- ws ;;
                s' <-- ws' ;;
                isSubsetOf s s'.
-
-  Definition eq : t -> t -> Prop := Equal.
 
   Definition eq_dec : forall s s' : t, {eq s s'} + {~ eq s s'}.
   Proof.
@@ -6370,19 +6575,69 @@ Module IntSetWSfun <: WSfun(N_as_OT).
     rewrite <- toList_In in H by eassumption.
     assumption.
   Qed.
-
-  Lemma elements_3w : forall s : t, NoDupA N.eq (elements s).
+  
+  Lemma elements_3 (s : t) : Sorted E.lt (elements s).
   Proof.
-    intros.
-    destruct s as [s Hwf].
-    simpl.
-    apply OrdFacts.Sort_NoDup.
+    unfold E.lt; destruct s as [s WFs]; simpl.
     apply StronglySorted_Sorted.
-    apply to_List_sorted; assumption.
+    now apply to_List_sorted.
   Qed.
+  
+  Lemma elements_3w (s : t) : NoDupA N.eq (elements s).
+  Proof. apply OrdFacts.Sort_NoDup, elements_3. Qed.
+  
+  (* Ordering theorems *)
+  
+  Definition compare (s s' : t) : Compare lt eq s s'.
+  Proof.
+    destruct (compare s s') eqn:CMP.
+    - apply EQ; abstract now apply equal_2; destruct s, s'; generalize dependent CMP;
+                             rewrite Ord_compare_Eq; unfold "==", Eq__WFIntSet; simpl.
+    - apply LT; abstract order t.
+    - apply GT; abstract order t.
+  Defined.
+  
+  Theorem lt_trans (s1 s2 s3 : t) :
+    lt s1 s2 -> lt s2 s3 -> lt s1 s3.
+  Proof. unfold lt; order t. Qed. 
+  
+  Theorem lt_not_eq (s1 s2 : t) :
+    lt s1 s2 -> ~ eq s1 s2.
+  Proof.
+    destruct s1 as [s1 WF1], s2 as [s2 WF2].
+    unfold lt, "<", Ord_WFIntSet; simpl.
+    intros LT EQ; apply equal_1, (reflect_iff _ _ (Eq_eq _ _)) in EQ.
+    subst s2; clear WF2.
+    assert (pack s1 WF1 < pack s1 WF1 = true) by now unfold "<", Ord_WFIntSet; simpl.
+    order WFIntSet.
+  Qed.
+  
+  Lemma min_elt_1 (s : t) (x   : elt) : min_elt s = Some x -> In x s.
+  Proof.
+  Admitted.
 
-(**
-  These portions of the [FMapInterface] have no counterpart in the [IntSet] interface.
+  Lemma min_elt_2 (s : t) (x y : elt) : min_elt s = Some x -> In y s -> ~ E.lt y x.
+  Proof.
+  Admitted.
+  
+  Lemma min_elt_3 (s : t)             : min_elt s = None -> Empty s.
+  Proof.
+  Admitted.
+
+  Lemma max_elt_1 (s : t) (x   : elt) : max_elt s = Some x -> In x s.
+  Proof.
+  Admitted.
+
+  Lemma max_elt_2 (s : t) (x y : elt) : max_elt s = Some x -> In y s -> ~ E.lt x y.
+  Proof.
+  Admitted.
+
+  Lemma max_elt_3 (s : t)             : max_elt s = None -> Empty s.
+  Proof.
+  Admitted.
+  
+  (**
+  These (non-ordering) portions of the [FSetInterface]s have no counterpart in the [IntSet] interface.
   We implement them generically.
   *)
 
@@ -6492,29 +6747,17 @@ Module IntSetWSfun <: WSfun(N_as_OT).
     inversion H0.
   Qed.
 
-End IntSetWSfun.
+  Lemma choose_3 (s1 s2 : t) (x1 x2 : elt) :
+    choose s1 = Some x1 -> 
+    choose s2 = Some x2 ->
+    Equal s1 s2         ->
+    E.eq  x1 x2.
+  Proof.
+    destruct s1 as [s1 WF1], s2 as [s2 WF2].
+    intros C1 C2 EQ.
+    apply equal_1 in EQ; unfold equal in EQ; eapply reflect_iff in EQ; [|apply Eq_eq]; subst s2.
+    enough (Some x1 = Some x2) as E by now inversion E.
+    etransitivity; first symmetry; eassumption.
+  Qed.
 
-(** ** Type classes *)
-
-(** *** Verification of [Eq] *)
-
-Require Import Proofs.GHC.Base.
-
-Theorem Eq_eq_IntSet (x y : IntSet) : reflect (x = y) (x == y).
-Proof.
-  change (reflect (x = y) (equal x y)).
-  apply iff_reflect.
-  rewrite equal_spec.
-  reflexivity.
-Qed.
-
-Instance EqLaws_IntSet : EqLaws IntSet.
-Proof.
-  EqLaws_from_reflect Eq_eq_IntSet.
-  intros x y; unfoldMethods; unfold Internal.Eq___IntSet_op_zsze__.
-  rewrite nequal_spec, negb_involutive.
-  reflexivity.
-Qed.
-
-Instance EqExact_IntSet : EqExact IntSet.
-Proof.  constructor; apply Eq_eq_IntSet. Qed.
+End IntSetFSet.

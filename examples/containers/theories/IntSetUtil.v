@@ -197,23 +197,6 @@ Proof.
   - by exists r; apply (Desc0NotNil s r f r f); rewrite // isSubrange_refl.
 Qed.
 
-Theorem Sem_extensional (s : IntSet) (f1 f2 : Z -> bool) :
-  Sem s f1 ->
-  Sem s f2 ->
-  f1 =1 f2.
-Proof.
-  move=> S1 S2 k;
-    inversion S1 as [f1' E1 | s1 r1 f1' D1];
-    subst f1' s;
-    inversion S2 as [f2' E2 | s2 r2 f2' D2];
-    subst f2';
-    try subst s1; try subst s2.
-  - by rewrite E1 E2.
-  - inversion D2.
-  - inversion D1.
-  - by eauto using Desc_unique_f.
-Qed.
-
 Theorem Sem_member (s : IntSet) :
   WF s ->
   Sem s (member ^~ s).
@@ -290,8 +273,8 @@ Theorem eqIntSetMemberP {s1 s2 : IntSet} :
 Proof.
   move=> WF1 WF2.
   set s1' := exist _ _ WF1; set s2' := exist _ _ WF2.
-  move: (IntSetWSfun.equal_1 s1' s2') (IntSetWSfun.equal_2 s1' s2').
-  rewrite /= /IntSetWSfun.Equal /= /IntSetWSfun.In_set => Equal_eq eq_Equal.
+  move: (IntSetFSet.equal_1 s1' s2') (IntSetFSet.equal_2 s1' s2').
+  rewrite /= /IntSetFSet.Equal /= /IntSetFSet.In_set => Equal_eq eq_Equal.
   apply iff_reflect; split.
   - move=> KEYS; apply Equal_eq=> /= n; apply eq_iff_eq_true.
     move: KEYS; cbv -[member Z.of_N "<="%Z eqb is_true].

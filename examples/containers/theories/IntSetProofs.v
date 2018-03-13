@@ -198,7 +198,7 @@ Require Import Data.IntSet.Internal.
 Require Import Utils.Containers.Internal.BitUtil.
 Require Import CTZ.
 Require Import Popcount.
-Local Open Scope Z_scope.
+Local Open Scope N_scope.
 Set Bullet Behavior "Strict Subproofs".
 
 (** A tactic to remove all relevant Haskell type class methods, and
@@ -227,19 +227,9 @@ Definition tip_widthZ := Z.of_N tip_width.
 
 (** *** Lemmas about [prefixOf] *)
 
-Lemma prefixOf_nonneg: forall p,
-  0 <= p -> 0 <= prefixOf p.
-Proof.
-  intros.
-  unfold prefixOf, prefixBitMask, suffixBitMask.
-  unfoldMethods.
-  rewrite Z.land_nonneg; intuition.
-Qed.
-Hint Resolve prefixOf_nonneg : nonneg.
-
 Lemma rPrefix_shiftr:
   forall e,
-  rPrefix (Z.shiftr e tip_widthZ, tip_width) = prefixOf e.
+  rPrefix (N.shiftr e tip_width, tip_width) = prefixOf e.
 Proof.
   intros.
   unfold rPrefix, prefixOf, prefixBitMask, suffixBitMask.

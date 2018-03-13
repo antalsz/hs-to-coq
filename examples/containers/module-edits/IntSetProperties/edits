@@ -1,3 +1,12 @@
+redefine Definition Data.IntSet.Internal.Nat := Coq.Numbers.BinNums.N.
+redefine Definition Data.IntSet.Internal.Prefix := Coq.Numbers.BinNums.N.
+redefine Definition Data.IntSet.Internal.BitMap := Coq.Numbers.BinNums.N.
+redefine Definition Data.IntSet.Internal.Mask := Coq.Numbers.BinNums.N.
+
+rename type GHC.Types.Int = Coq.Numbers.BinNums.N
+
+rewrite forall xs, Data.Foldable.length xs = Coq.NArith.BinNat.N.of_nat (Coq.Init.Datatypes.length xs)
+
 skip module Test.Framework.Providers.HUnit
 skip module Test.Framework.Providers.QuickCheck2
 skip module Test.Framework.Runners.Console
@@ -5,8 +14,8 @@ skip module Test.HUnit.Base
 skip module Test.HUnit.Lang
 skip module Text.Read
 
-skip module Coq.ZArith.BinInt.Z
-rename value GHC.Real.^ = Coq.ZArith.BinInt.Z.pow
+skip module Coq.NArith.BinNat.N
+rename value GHC.Real.^ = Coq.NArith.BinNat.N.pow
 rename value enumFromTo = GHC.Enum.enumFromTo
 
 skip Main.prop_Ordered         # fromAscList

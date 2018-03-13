@@ -4497,41 +4497,14 @@ Module SetFSet (E : OrderedType) <: WSfun(E) <: WS <: Sfun(E) <: S.
     assumption.
   Qed.
   
- (** One could implement [choose] with [minView]. We currenlty do not
-  translate [minView], because of a call to [error] in a branch that is inaccessible
-  in well-formed trees. Stretch goal: translate that and use it here.
-  *)
-
-  Definition choose : t -> option elt :=
-    fun s => match elements s with
-                | nil => None
-                | x :: _ => Some x
-              end.
-
+  Definition choose : t -> option elt := min_elt.
 
   Lemma choose_1 :
     forall (s : t) (x : elt), choose s = Some x -> In x s.
-  Proof.
-    intros.
-    unfold choose in *.
-    destruct (elements s) eqn:?; try congruence.
-    inversion H; subst.
-    apply elements_2.
-    rewrite Heql.
-    left.
-    reflexivity.
-  Qed.
+  Proof. apply min_elt_1. Qed.
 
   Lemma choose_2 : forall s : t, choose s = None -> Empty s.
-  Proof.
-    intros.
-    unfold choose in *.
-    destruct (elements s) eqn:?; try congruence.
-    intros x ?.
-    apply elements_1 in H0.
-    rewrite Heql in H0.
-    inversion H0.
-  Qed.
+  Proof. apply min_elt_3. Qed.
 
   Lemma choose_3 (s1 s2 : t) (x1 x2 : elt) :
     choose s1 = Some x1 -> 
@@ -4539,18 +4512,16 @@ Module SetFSet (E : OrderedType) <: WSfun(E) <: WS <: Sfun(E) <: S.
     Equal s1 s2         ->
     E.eq  x1 x2.
   Proof.
-    destruct s1 as [s1 WF1], s2 as [s2 WF2]; unfold choose, elements, toList; simpl.
-    intros C1 C2 EQ.
-    apply equal_1 in EQ; generalize dependent EQ.
-    unfold equal, "==", Eq___Set_, Data.Set.Internal.Eq___Set__op_zeze__, "==", Eq_list; simpl.
-    match goal with |- context[?b = true] => fold (is_true b) end; rewrite <-(ssrbool.rwP ssrbool.andP).
-    intros [_ EQ].
-    destruct (toAscList s1) as [|e1 l1], (toAscList s2) as [|e2 l2]; try easy.
-    simpl in EQ; rewrite <-(ssrbool.rwP ssrbool.andP) in EQ.
-    apply E_eq_zeze.
-    destruct EQ; congruence.
+    destruct s1 as [s1 WF1], s2 as [s2 WF2]; unfold choose, min_elt, Equal, In; simpl.
+    intros def_x1 def_x2 EQ.
+    specialize (lookupMin_Desc s1 _ _ WF1); specialize (lookupMin_Desc s2 _ _ WF2);
+      rewrite def_x1, def_x2.
+    intros [sem_x2 min_x2] [sem_x1 min_x1].
+    generalize (min_x1 x2); generalize (min_x2 x1).
+    rewrite <-EQ, sem_x1, EQ, sem_x2.
+    intros LE21 LE12; specialize (LE21 Logic.eq_refl); specialize (LE12 Logic.eq_refl).
+    apply E_eq_zeze; order elt.
   Qed.
-
 End SetFSet.
 
 (** * Rewrite rules *)

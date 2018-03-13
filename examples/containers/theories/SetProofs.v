@@ -1288,7 +1288,7 @@ Qed.
 
 (** ** Verification of [maxView] *)
 
-Lemma minView_Desc:
+Lemma maxView_Desc:
   forall s lb ub,
     Bounded s lb ub ->
     forall (P : option (e * Set_ e) -> Prop),

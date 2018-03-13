@@ -1286,6 +1286,59 @@ Proof.
     split; [left; reflexivity | solve_Desc].
 Qed.
 
+(** ** Verification of [maxView] *)
+
+Lemma minView_Desc:
+  forall s lb ub,
+    Bounded s lb ub ->
+    forall (P : option (e * Set_ e) -> Prop),
+    (forall y r,
+      (sem s y = true) /\
+      Desc r lb (Some y) (size s - 1) (fun i => sem s i && negb (i == y)) ->
+      P (Some (y, r))) ->
+    ((forall i, sem s i = false) -> P None) ->
+    P (maxView s).
+Proof.
+  intros ??? HB P HSome HNone.
+  unfold maxView.
+  inversion HB; subst.
+  * apply HNone. intro; reflexivity.
+  * unfold op_zdzn__, Datatypes.id, op_zd__.
+    eapply maxViewSure_Desc; only 1: eassumption.
+    intros y r [??].
+    apply HSome.
+    split.
+    - simpl. rewrite !orb_true_iff. intuition.
+    - applyDesc H5. solve_Desc.
+Qed.
+
+(** ** Verification of [minView] *)
+
+Lemma minView_Desc:
+  forall s lb ub,
+    Bounded s lb ub ->
+    forall (P : option (e * Set_ e) -> Prop),
+    (forall y r,
+      (sem s y = true) /\
+      Desc r (Some y) ub (size s - 1) (fun i => sem s i && negb (i == y)) ->
+      P (Some (y, r))) ->
+    ((forall i, sem s i = false) -> P None) ->
+    P (minView s).
+Proof.
+  intros ??? HB P HSome HNone.
+  unfold minView.
+  inversion HB; subst.
+  * apply HNone. intro; reflexivity.
+  * unfold op_zdzn__, Datatypes.id, op_zd__.
+    eapply minViewSure_Desc; only 1: eassumption.
+    intros y r [??].
+    apply HSome.
+    split.
+    - simpl. rewrite !orb_true_iff. intuition.
+    - applyDesc H5. solve_Desc.
+Qed.
+
+
 (** ** Verification of [glue] *)
 
 Lemma glue_Desc:

@@ -4537,11 +4537,23 @@ End SetFSet.
 
 (** * Rewrite rules *)
 
-(* 
+(**
 @
 {-# RULES "Set.toAscList" [~1] forall s . toAscList s = build (\c n -> foldrFB c n s) #-}
+{-# RULES "Set.toAscListBack" [1] foldrFB (:) [] = toAscList #-}
+{-# RULES "Set.toDescList" [~1] forall s . toDescList s = build (\c n -> foldlFB (\xs x -> c x xs) n s) #-}
+{-# RULES "Set.toDescListBack" [1] foldlFB (\xs x -> x : xs) [] = toDescList #-}
 @
 *)
 
 Lemma rule_toAscList: forall e (s : Set_ e), toAscList s = build (fun _ c n => foldrFB c n s).
+Proof. intros.  reflexivity. Qed.
+
+Lemma rule_toAscListBack: forall e, @foldrFB e _ cons nil = toAscList.
+Proof. intros.  reflexivity. Qed.
+
+Lemma rule_toDescList: forall e (s : Set_ e), toDescList s = build (fun _ c n => foldlFB (fun xs x => c x xs) n s).
+Proof. intros.  reflexivity. Qed.
+
+Lemma rule_toDescListBack: forall e, foldlFB (fun xs x => x :: xs) nil = @toDescList e.
 Proof. intros.  reflexivity. Qed.

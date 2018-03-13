@@ -6761,3 +6761,27 @@ Module IntSetFSet <: WSfun(N_as_OT) <: WS <: Sfun(N_as_OT) <: S.
   Qed.
 
 End IntSetFSet.
+
+(** * Rewrite rules *)
+
+
+(**
+@
+{-# RULES "IntSet.toAscList" [~1] forall s . toAscList s = build (\c n -> foldrFB c n s) #-}
+{-# RULES "IntSet.toAscListBack" [1] foldrFB (:) [] = toAscList #-}
+{-# RULES "IntSet.toDescList" [~1] forall s . toDescList s = build (\c n -> foldlFB (\xs x -> c x xs) n s) #-}
+{-# RULES "IntSet.toDescListBack" [1] foldlFB (\xs x -> x : xs) [] = toDescList #-}
+@
+*)
+
+Lemma rule_toAscList: forall (s : IntSet), toAscList s = build (fun _ c n => foldrFB c n s).
+Proof. intros.  reflexivity. Qed.
+
+Lemma rule_toAscListBack: foldrFB cons nil = toAscList.
+Proof. intros.  reflexivity. Qed.
+
+Lemma rule_toDescList: forall (s : IntSet), toDescList s = build (fun _ c n => foldlFB (fun xs x => c x xs) n s).
+Proof. intros.  reflexivity. Qed.
+
+Lemma rule_toDescListBack: forall (s : IntSet), foldlFB (fun xs x => x :: xs) nil = toDescList.
+Proof. intros.  reflexivity. Qed.

@@ -59,6 +59,14 @@ redefine Definition Data.IntSet.Internal.branchMask : Prefix -> (Prefix -> Mask)
 redefine Definition Data.IntSet.Internal.indexOfTheOnlyBit :=
  fun x => Coq.NArith.BinNat.N.log2 x.
 
+# avoid complement
+skip Data.IntSet.Internal.prefixBitMask
+rewrite forall x, (x Data.Bits..&. Data.IntSet.Internal.prefixBitMask) = Coq.NArith.BinNat.N.ldiff x Data.IntSet.Internal.suffixBitMask
+
+redefine Definition Data.IntSet.Internal.maskW : Nat -> (Nat -> Prefix) :=
+  fun i m => Coq.NArith.BinNat.N.ldiff i (((2*m) - 1)%N).
+
+
 # the revNat function is only correct if its result is cropped to 64 bits.
 add Data.IntSet.Internal Definition Data.IntSet.Internal.revNatSafe n := Coq.NArith.BinNat.N.modulo (Data.IntSet.Internal.revNat n) (Coq.NArith.BinNat.N.pow 2 64).
 # Use rewrite, not rename, to not change the name of the actual definition

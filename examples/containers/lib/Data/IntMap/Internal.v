@@ -383,9 +383,9 @@ Definition restrictBM {a} : IntSetBitMap -> IntMap a -> IntMap a :=
                                                let bmR := Data.Bits.xor bm bmL in
                                                bin p m (restrictBM bmL l) (restrictBM bmR r)
                                            | bm, (Tip k _ as t) =>
-                                               if Data.IntSet.Internal.member k (Data.IntSet.Internal.Tip (k
-                                                                                                           Data.Bits..&.(**)
-                                                                                                           Data.IntSet.Internal.prefixBitMask)
+                                               if Data.IntSet.Internal.member k (Data.IntSet.Internal.Tip
+                                                                               (Coq.NArith.BinNat.N.ldiff k
+                                                                                                          Data.IntSet.Internal.suffixBitMask)
                                                                                bm) : bool
                                                then t
                                                else Nil
@@ -406,9 +406,9 @@ Definition withoutBM {a} : IntSetBitMap -> IntMap a -> IntMap a :=
                                                let bmR := Data.Bits.xor bm bmL in
                                                bin p m (withoutBM bmL l) (withoutBM bmR r)
                                            | bm, (Tip k _ as t) =>
-                                               if Data.IntSet.Internal.member k (Data.IntSet.Internal.Tip (k
-                                                                                                           Data.Bits..&.(**)
-                                                                                                           Data.IntSet.Internal.prefixBitMask)
+                                               if Data.IntSet.Internal.member k (Data.IntSet.Internal.Tip
+                                                                               (Coq.NArith.BinNat.N.ldiff k
+                                                                                                          Data.IntSet.Internal.suffixBitMask)
                                                                                bm) : bool
                                                then Nil
                                                else t
@@ -731,8 +731,10 @@ Definition keysSet {a} : IntMap a -> Data.IntSet.Internal.IntSet :=
                if (m Data.Bits..&.(**) Data.IntSet.Internal.suffixBitMask) GHC.Base.==
                   #0 : bool
                then Data.IntSet.Internal.Bin p m (keysSet l) (keysSet r)
-               else Data.IntSet.Internal.Tip (p Data.Bits..&.(**)
-                                              Data.IntSet.Internal.prefixBitMask) (computeBm (computeBm #0 l) r)
+               else Data.IntSet.Internal.Tip (Coq.NArith.BinNat.N.ldiff p
+                                                                        Data.IntSet.Internal.suffixBitMask) (computeBm
+                                                                                                             (computeBm
+                                                                                                              #0 l) r)
            end.
 
 Definition lmapWhenMissing {b} {a} {f} {x}
@@ -950,7 +952,8 @@ Definition lookupPrefix {a} : IntSetPrefix -> IntMap a -> IntMap a :=
            | kp, (Bin p m l r as t) =>
                if (m Data.Bits..&.(**) Data.IntSet.Internal.suffixBitMask) GHC.Base./=
                   #0 : bool
-               then if (p Data.Bits..&.(**) Data.IntSet.Internal.prefixBitMask) GHC.Base.==
+               then if Coq.NArith.BinNat.N.ldiff p Data.IntSet.Internal.suffixBitMask
+                       GHC.Base.==
                        kp : bool
                     then t
                     else Nil
@@ -960,7 +963,7 @@ Definition lookupPrefix {a} : IntSetPrefix -> IntMap a -> IntMap a :=
                          then lookupPrefix kp l
                          else lookupPrefix kp r
            | kp, (Tip kx _ as t) =>
-               if (kx Data.Bits..&.(**) Data.IntSet.Internal.prefixBitMask) GHC.Base.==
+               if (Coq.NArith.BinNat.N.ldiff kx Data.IntSet.Internal.suffixBitMask) GHC.Base.==
                   kp : bool
                then t
                else Nil
@@ -1165,7 +1168,8 @@ Definition updatePrefix {a}
            | kp, (Bin p m l r as t), f =>
                if (m Data.Bits..&.(**) Data.IntSet.Internal.suffixBitMask) GHC.Base./=
                   #0 : bool
-               then if (p Data.Bits..&.(**) Data.IntSet.Internal.prefixBitMask) GHC.Base.==
+               then if Coq.NArith.BinNat.N.ldiff p Data.IntSet.Internal.suffixBitMask
+                       GHC.Base.==
                        kp : bool
                     then f t
                     else t
@@ -1175,7 +1179,7 @@ Definition updatePrefix {a}
                          then binCheckLeft p m (updatePrefix kp l f) r
                          else binCheckRight p m l (updatePrefix kp r f)
            | kp, (Tip kx _ as t), f =>
-               if (kx Data.Bits..&.(**) Data.IntSet.Internal.prefixBitMask) GHC.Base.==
+               if Coq.NArith.BinNat.N.ldiff kx Data.IntSet.Internal.suffixBitMask GHC.Base.==
                   kp : bool
                then f t
                else t
@@ -1989,25 +1993,25 @@ End Notations.
 
 (* Unbound variables:
      Eq Gt IntMap_op_zlzd__ Lt N None Some andb bool comparison cons false id list
-     negb nil op_zt__ op_zv__ option orb pair true Coq.NArith.BinNat.N.lxor
-     Coq.NArith.BinNat.N.ones Coq.Numbers.BinNums.N Coq.ZArith.BinInt.Z.of_N
-     Data.Bits.op_zizazi__ Data.Bits.op_zizbzi__ Data.Bits.xor Data.Either.Either
-     Data.Either.Left Data.Either.Right Data.Foldable.Foldable Data.Foldable.foldl
-     Data.Functor.op_zlzdzg__ Data.Functor.Identity.Identity Data.IntSet.Internal.Bin
+     negb nil op_zt__ op_zv__ option orb pair true Coq.NArith.BinNat.N.ldiff
+     Coq.NArith.BinNat.N.lxor Coq.NArith.BinNat.N.ones Coq.Numbers.BinNums.N
+     Coq.ZArith.BinInt.Z.of_N Data.Bits.op_zizazi__ Data.Bits.op_zizbzi__
+     Data.Bits.xor Data.Either.Either Data.Either.Left Data.Either.Right
+     Data.Foldable.Foldable Data.Foldable.foldl Data.Functor.op_zlzdzg__
+     Data.Functor.Identity.Identity Data.IntSet.Internal.Bin
      Data.IntSet.Internal.IntSet Data.IntSet.Internal.Key Data.IntSet.Internal.Nil
      Data.IntSet.Internal.Tip Data.IntSet.Internal.bitmapOf Data.IntSet.Internal.mask
-     Data.IntSet.Internal.member Data.IntSet.Internal.prefixBitMask
-     Data.IntSet.Internal.singleton Data.IntSet.Internal.suffixBitMask
-     Data.IntSet.Internal.zero Data.Maybe.maybe Data.Semigroup.Semigroup
-     Data.Semigroup.op_zlzg__ Data.Traversable.Traversable GHC.Base.Applicative
-     GHC.Base.Eq_ GHC.Base.Functor GHC.Base.Monad GHC.Base.Monoid GHC.Base.Ord
-     GHC.Base.String GHC.Base.compare GHC.Base.const GHC.Base.fmap GHC.Base.id
-     GHC.Base.liftA2 GHC.Base.mappend GHC.Base.mempty GHC.Base.op_z2218U__
-     GHC.Base.op_zd__ GHC.Base.op_zeze__ GHC.Base.op_zg__ GHC.Base.op_zgze__
-     GHC.Base.op_zl__ GHC.Base.op_zlze__ GHC.Base.op_zsze__ GHC.Base.pure
-     GHC.DeferredFix.deferredFix2 GHC.DeferredFix.deferredFix4 GHC.Err.error
-     GHC.Err.patternFailure GHC.Num.Int GHC.Num.Num GHC.Num.Word GHC.Num.fromInteger
-     GHC.Num.op_zm__ GHC.Num.op_zp__ GHC.Num.op_zt__
+     Data.IntSet.Internal.member Data.IntSet.Internal.singleton
+     Data.IntSet.Internal.suffixBitMask Data.IntSet.Internal.zero Data.Maybe.maybe
+     Data.Semigroup.Semigroup Data.Semigroup.op_zlzg__ Data.Traversable.Traversable
+     GHC.Base.Applicative GHC.Base.Eq_ GHC.Base.Functor GHC.Base.Monad
+     GHC.Base.Monoid GHC.Base.Ord GHC.Base.String GHC.Base.compare GHC.Base.const
+     GHC.Base.fmap GHC.Base.id GHC.Base.liftA2 GHC.Base.mappend GHC.Base.mempty
+     GHC.Base.op_z2218U__ GHC.Base.op_zd__ GHC.Base.op_zeze__ GHC.Base.op_zg__
+     GHC.Base.op_zgze__ GHC.Base.op_zl__ GHC.Base.op_zlze__ GHC.Base.op_zsze__
+     GHC.Base.pure GHC.DeferredFix.deferredFix2 GHC.DeferredFix.deferredFix4
+     GHC.Err.error GHC.Err.patternFailure GHC.Num.Int GHC.Num.Num GHC.Num.Word
+     GHC.Num.fromInteger GHC.Num.op_zm__ GHC.Num.op_zp__ GHC.Num.op_zt__
      Utils.Containers.Internal.BitUtil.highestBitMask
      Utils.Containers.Internal.BitUtil.shiftLL
      Utils.Containers.Internal.BitUtil.shiftRL

@@ -237,8 +237,7 @@ Definition foldl' {a} : (a -> Key -> a) -> a -> IntSet -> a :=
       end.
 
 Definition maskW : Nat -> Nat -> Prefix :=
-  fun i m =>
-    _Data.Bits..&._ i (Data.Bits.xor (Data.Bits.complement (m GHC.Num.- #1)) m).
+  fun i m => Coq.NArith.BinNat.N.ldiff i (2 * m - 1 % N).
 
 Definition mask : Coq.Numbers.BinNums.N -> Mask -> Prefix :=
   fun i m => maskW (i) (m).
@@ -271,11 +270,8 @@ Program Instance Eq___IntSet : GHC.Base.Eq_ IntSet :=
 Definition null : IntSet -> bool :=
   fun arg_0__ => match arg_0__ with | Nil => true | _ => false end.
 
-Definition prefixBitMask : Coq.Numbers.BinNums.N :=
-  Data.Bits.complement suffixBitMask.
-
 Definition prefixOf : Coq.Numbers.BinNums.N -> Prefix :=
-  fun x => x Data.Bits..&.(**) prefixBitMask.
+  fun x => Coq.NArith.BinNat.N.ldiff x suffixBitMask.
 
 Definition revNat : Nat -> Nat :=
   fun x1 =>
@@ -1173,18 +1169,18 @@ End Notations.
 
 (* Unbound variables:
      Bool.Sumbool.sumbool_of_bool Eq Gt Lt N None Some andb bool comparison cons
-     false id list negb nil op_zp__ op_zt__ op_zv__ option orb pair size_nat
+     false id list negb nil op_zm__ op_zp__ op_zt__ op_zv__ option orb pair size_nat
      suffixBitMask true Coq.Init.Peano.lt Coq.NArith.BinNat.N.ldiff
      Coq.NArith.BinNat.N.log2 Coq.NArith.BinNat.N.lxor Coq.NArith.BinNat.N.modulo
      Coq.NArith.BinNat.N.ones Coq.NArith.BinNat.N.pow Coq.NArith.BinNat.N.pred
-     Coq.NArith.BinNat.N.to_nat Coq.Numbers.BinNums.N Data.Bits.complement
-     Data.Bits.op_zizazi__ Data.Bits.op_zizbzi__ Data.Bits.xor Data.Foldable.foldl
-     Data.Maybe.maybe Data.Semigroup.Semigroup Data.Semigroup.op_zlzg__
-     Data.Tuple.snd GHC.Base.Eq_ GHC.Base.Monoid GHC.Base.Ord GHC.Base.compare
-     GHC.Base.flip GHC.Base.map GHC.Base.op_z2218U__ GHC.Base.op_zd__
-     GHC.Base.op_zdzn__ GHC.Base.op_zeze__ GHC.Base.op_zg__ GHC.Base.op_zgze__
-     GHC.Base.op_zl__ GHC.Base.op_zsze__ GHC.Num.fromInteger GHC.Num.op_zm__
-     GHC.Num.op_zp__ GHC.Wf.wfFix2 Utils.Containers.Internal.BitUtil.bitcount
+     Coq.NArith.BinNat.N.to_nat Coq.Numbers.BinNums.N Data.Bits.op_zizazi__
+     Data.Bits.op_zizbzi__ Data.Bits.xor Data.Foldable.foldl Data.Maybe.maybe
+     Data.Semigroup.Semigroup Data.Semigroup.op_zlzg__ Data.Tuple.snd GHC.Base.Eq_
+     GHC.Base.Monoid GHC.Base.Ord GHC.Base.compare GHC.Base.flip GHC.Base.map
+     GHC.Base.op_z2218U__ GHC.Base.op_zd__ GHC.Base.op_zdzn__ GHC.Base.op_zeze__
+     GHC.Base.op_zg__ GHC.Base.op_zgze__ GHC.Base.op_zl__ GHC.Base.op_zsze__
+     GHC.Num.fromInteger GHC.Num.op_zm__ GHC.Num.op_zp__ GHC.Wf.wfFix2
+     Utils.Containers.Internal.BitUtil.bitcount
      Utils.Containers.Internal.BitUtil.highestBitMask
      Utils.Containers.Internal.BitUtil.lowestBitMask
      Utils.Containers.Internal.BitUtil.shiftLL

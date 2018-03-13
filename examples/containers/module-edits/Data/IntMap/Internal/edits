@@ -110,6 +110,7 @@ skip module Coq.NArith.BinNat.N
 # 64bit numbers anyways, so we can complement just these bits.
 rewrite forall x, (Data.Bits.complement x) = (Coq.NArith.BinNat.N.lxor x (Coq.NArith.BinNat.N.ones (64%N)))
 
+rewrite forall x, (x Data.Bits..&. Data.IntSet.Internal.prefixBitMask) = Coq.NArith.BinNat.N.ldiff x Data.IntSet.Internal.suffixBitMask
 
 # Share bit stuff with IntSet
 rename value Data.IntMap.Internal.mask = Data.IntSet.Internal.mask

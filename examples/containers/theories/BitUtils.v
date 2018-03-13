@@ -216,6 +216,29 @@ Proof.
     + nonneg.
 Qed.
 
+Lemma N_land_pow2_eq:
+  forall i b, (N.land i (2 ^ b) =? 0)%N = negb (N.testbit i b).
+Proof.
+  intros ??.
+  destruct (N.testbit i b) eqn:Htb; simpl.
+  * rewrite N.eqb_neq.
+    contradict Htb.
+    assert (N.testbit (N.land i (2^b)) b = false)
+     by (rewrite Htb; apply N.bits_0).
+    rewrite N.land_spec in H. rewrite N.pow2_bits_true in H.
+    rewrite andb_true_r in H.
+    simpl in H. congruence.
+  * rewrite N.eqb_eq.
+    apply N.bits_inj.
+    intros j.
+    rewrite N.bits_0.
+    rewrite N.land_spec.
+    rewrite N.pow2_bits_eqb.
+    destruct (N.eqb_spec b j).
+    + subst. rewrite Htb. reflexivity.
+    + rewrite andb_false_r.  reflexivity.
+Qed.
+
 Lemma shiftr_eq_ldiff :
 forall n m b,
     0 <= b ->
@@ -271,28 +294,32 @@ Proof.
   * subst. reflexivity.
 Qed.
 
-Lemma Z_shiftl_injb:
-  forall x y n, 0 <= n -> (Z.shiftl x n =? Z.shiftl y n) = (x =? y).
+Lemma land_shiftl_ones:
+  forall i n, 0 <= n -> Z.land (Z.shiftl i n) (Z.ones n) = 0.
 Proof.
   intros.
-  destruct (Z.eqb_spec (Z.shiftl x n) (Z.shiftl y n)),
-           (Z.eqb_spec x y); auto; try congruence; exfalso.
-  apply Z_shiftl_inj in e; auto.
+  apply Z.bits_inj'.
+  intros j ?.
+  rewrite Z.land_spec.
+  rewrite -> Z.shiftl_spec by nonneg.
+  rewrite Z.bits_0. rewrite andb_false_iff.
+  destruct (Z.ltb_spec j n).
+  * left. apply Z.testbit_neg_r. omega.
+  * right. apply Z.ones_spec_high. omega.
 Qed.
 
- Lemma land_shiftl_ones:
-   forall i n, 0 <= n -> Z.land (Z.shiftl i n) (Z.ones n) = 0.
- Proof.
-   intros.
-   apply Z.bits_inj'.
-   intros j ?.
-   rewrite Z.land_spec.
-   rewrite -> Z.shiftl_spec by nonneg.
-   rewrite Z.bits_0. rewrite andb_false_iff.
-   destruct (Z.ltb_spec j n).
-   * left. apply Z.testbit_neg_r. omega.
-   * right. apply Z.ones_spec_high. omega.
- Qed.
+Lemma N_land_shiftl_ones:
+  forall i n, N.land (N.shiftl i n) (N.ones n) = 0%N.
+Proof.
+  intros.
+  apply N.bits_inj.
+  intros j.
+  rewrite N.land_spec.
+  rewrite N.bits_0. rewrite andb_false_iff.
+  destruct (N.ltb_spec j n).
+  * left. rewrite -> N.shiftl_spec_low by assumption. reflexivity.
+  * right. apply N.ones_spec_high. assumption.
+Qed.
 
 Lemma N_shiftl_spec_eq:
   forall n i j,
@@ -366,6 +393,7 @@ Proof.
     simpl; try congruence; omega.
 Qed.
 
+
 Lemma of_N_shiftl:
   forall n i, Z.of_N (N.shiftl n i) = Z.shiftl (Z.of_N n) (Z.of_N i).
 Proof.
@@ -414,6 +442,38 @@ Proof.
       specialize (H (j - b)).
       do 2 rewrite -> Z.shiftr_spec in H by omega.
       replace (j - b + b) with j in H by omega.
+      assumption.
+Qed.
+
+
+Lemma N_eq_shiftr_land_ones:
+  forall i1 i2 b,
+  (i1 =? i2)%N = (N.shiftr i1 b =? N.shiftr i2 b)%N && (N.land i1 (N.ones b) =? N.land i2 (N.ones b))%N.
+Proof.
+  intros.
+  match goal with [ |- ?b1 = ?b2 ] => destruct b1 eqn:?, b2 eqn:? end; try congruence.
+  * contradict Heqb1.
+    rewrite not_false_iff_true.
+    rewrite andb_true_iff.
+    repeat rewrite -> N.eqb_eq in *; subst.
+    auto.
+  * contradict Heqb0.
+    rewrite not_false_iff_true.
+    rewrite -> andb_true_iff in Heqb1.
+    destruct Heqb1.
+    repeat rewrite -> N.eqb_eq in *; subst.
+    apply N.bits_inj_iff. intros j.
+    destruct (N.ltb_spec j b).
+    + apply N.bits_inj_iff in H0.
+      specialize (H0 j).
+      repeat rewrite -> N.land_spec in H0.
+      rewrite -> N.ones_spec_low in H0 by assumption.
+      do 2 rewrite andb_true_r in H0.
+      assumption.
+    + apply N.bits_inj_iff in H.
+      specialize (H (j - b)%N).
+      do 2 rewrite -> N.shiftr_spec in H by Nomega.
+      replace (j - b + b)%N with j in H by Nomega.
       assumption.
 Qed.
 

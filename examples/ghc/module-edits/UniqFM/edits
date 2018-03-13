@@ -17,3 +17,8 @@ skip UniqFM.Traversable__UniqFM
 
 add UniqFM Instance Unpeel_UniqFM ele : GHC.Prim.Unpeel (UniqFM ele) (Data.IntMap.Internal.IntMap ele) :=
   GHC.Prim.Build_Unpeel _ _ (fun x => match x with | UFM y => y end) UFM.
+
+rename value Unique.getKey = Unique.getWordKey
+
+skip module Coq.ZArith.BinInt.Z
+redefine Definition UniqFM.sizeUFM {elt} : (UniqFM.UniqFM elt) -> GHC.Num.Int := fun um => match um with | UFM m => Coq.ZArith.BinInt.Z.of_N (Data.IntMap.Internal.size m) end.

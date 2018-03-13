@@ -94,8 +94,8 @@ Definition completeBipartiteGraph : UnVarSet -> UnVarSet -> UnVarGraph :=
   fun s1 s2 =>
     prune GHC.Base.$ (Mk_UnVarGraph GHC.Base.$ (Bag.unitBag GHC.Base.$ CBPG s1 s2)).
 
-Definition k : Core.Var -> GHC.Num.Int :=
-  fun v => Unique.getKey (Unique.getUnique v).
+Definition k : Core.Var -> GHC.Num.Word :=
+  fun v => Unique.getWordKey (Unique.getUnique v).
 
 Definition mkUnVarSet : list Core.Var -> UnVarSet :=
   fun vs =>
@@ -176,6 +176,6 @@ Definition varEnvDom {a} : VarEnv.VarEnv a -> UnVarSet :=
      Data.IntSet.Internal.empty Data.IntSet.Internal.fromList
      Data.IntSet.Internal.member Data.IntSet.Internal.null Data.IntSet.Internal.union
      GHC.Base.Eq_ GHC.Base.map GHC.Base.op_zd__ GHC.Base.op_zeze__ GHC.Base.op_zsze__
-     GHC.Num.Int GHC.Prim.coerce UniqFM.ufmToSet_Directly Unique.getKey
-     Unique.getUnique VarEnv.VarEnv
+     GHC.Num.Word GHC.Prim.coerce UniqFM.ufmToSet_Directly Unique.getUnique
+     Unique.getWordKey VarEnv.VarEnv
 *)

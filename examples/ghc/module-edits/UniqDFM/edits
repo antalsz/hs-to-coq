@@ -15,3 +15,8 @@ redefine Local Definition UniqDFM.Functor__UniqDFM_fmap : forall {a} {b},
           UDFM (@GHC.Base.fmap Data.IntMap.Internal.IntMap _ _ _ (GHC.Base.fmap f) a1)
                ((fun b1 => b1) a2)
       end.
+
+rename value Unique.getKey = Unique.getWordKey
+
+skip module Coq.ZArith.BinInt.Z
+redefine Definition UniqDFM.sizeUDFM {elt} : (UniqDFM.UniqDFM elt) -> GHC.Num.Int := fun um => match um with | UDFM m _ => Coq.ZArith.BinInt.Z.of_N (Data.IntMap.Internal.size m) end.

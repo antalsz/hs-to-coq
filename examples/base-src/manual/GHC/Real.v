@@ -95,7 +95,6 @@ Instance instance__Real_Int__72__ : (Real Int) := {
   toRational := (fun x => QArith_base.Qmake x 1)
 }.
 
-
 Instance instance__Integral_Int__74__ : (Integral Int) := {
   toInteger := id ;
   quot := Z.quot ;
@@ -104,6 +103,20 @@ Instance instance__Integral_Int__74__ : (Integral Int) := {
   mod_ := Z.modulo ;
   quotRem := Z.quotrem ;
   divMod := fun x y => (Z.div x y, Z.modulo x y) }.
+
+Instance instance__Real_Word : (Real Word) := {
+  toRational := (fun x => QArith_base.Qmake (Z.of_N x) 1)
+}.
+
+Instance instance__Integral_Word : (Integral Word) := {
+  toInteger := Z.of_N ;
+  quot := N.div ;
+  rem := N.modulo ;
+  div := N.div ;
+  mod_ := N.modulo ;
+  quotRem := fun x y => (N.div x y, N.modulo x y) ;
+  divMod := fun x y => (N.div x y, N.modulo x y) }.
+
 
 Definition even {a} `{Integral a} : a -> bool :=
   fun a => (rem a (fromInteger 2) GHC.Base.== fromInteger 0).

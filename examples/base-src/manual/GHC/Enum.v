@@ -452,7 +452,7 @@ enumFromTo := (fix enumFromTo_comparison arg_4__ arg_5__ :=
 
 
 Instance instance__Bounded_Char__181__ : (Bounded Char) := {
-  minBound := &#" " ;
+  minBound := 0%N;
   maxBound := &#"255" ;
 }.
 
@@ -464,18 +464,11 @@ Definition toEnumChar (i : Integer) : Char :=
 Definition fromEnumChar (c : Char) : Integer :=
   Z.of_N c.
 
-(*
-TODO: finish enum instance for Char.
-
-Definitio enumFromToChar (c1 : Char) (c2:Char) : list Char.
-Admitte
-
-Instanc instance__Enum_Char__182__ : (Enum Char) := {
-  succ :=  fun c => if c == maxBound then maxBound else (c + 1)%N;
-  pred := fun c => if c == minBound then minBound else (c - 1)%N;
-  toEnum := toEnumChar;
-  fromEnum := fromEnumChar;
-  enumFrom := boundedEnumFrom fromEnumChar toEnumChar;
-  enumFromTo := enumFromToChar
+Instance instance__Enum_N : (Enum N) := {
+  succ := N.succ ;
+  pred := N.pred ;
+  toEnum := Z.to_N ;
+  fromEnum := Z.of_N ;
+  enumFrom := fun _ => nil; (* we do not support infinite lists *)
+  enumFromTo := fun x y => map N.of_nat (seq (N.to_nat x) (N.to_nat y));
 }.
-*)

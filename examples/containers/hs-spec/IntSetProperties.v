@@ -26,7 +26,9 @@ Coercion is_true : bool >-> Sortclass.
 
 (* Converted imports: *)
 
+Require Coq.Init.Datatypes.
 Require Coq.Lists.List.
+Require Coq.Numbers.BinNums.
 Require Data.Bits.
 Require Data.Foldable.
 Require Data.IntSet.Internal.
@@ -78,7 +80,7 @@ Definition prop_Valid : Prop :=
 
 Definition powersOf2 : Data.IntSet.Internal.IntSet :=
   Data.IntSet.Internal.fromList (Coq.Lists.List.flat_map (fun i =>
-                                                            cons (Coq.ZArith.BinInt.Z.pow #2 i) nil) (enumFromTo #0
+                                                            cons (Coq.NArith.BinNat.N.pow #2 i) nil) (enumFromTo #0
                                                                                                                  #63)).
 
 Definition prop_MaskPow2 : Data.IntSet.Internal.IntSet -> bool :=
@@ -90,18 +92,19 @@ Definition prop_MaskPow2 : Data.IntSet.Internal.IntSet -> bool :=
            | _ => true
            end.
 
-Definition prop_AscDescList : list GHC.Num.Int -> bool :=
+Definition prop_AscDescList : list Coq.Numbers.BinNums.N -> bool :=
   fun xs =>
     let s := Data.IntSet.Internal.fromList xs in
     Data.IntSet.Internal.toAscList s GHC.Base.==
     GHC.List.reverse (Data.IntSet.Internal.toDescList s).
 
-Definition prop_DescList : list GHC.Num.Int -> bool :=
+Definition prop_DescList : list Coq.Numbers.BinNums.N -> bool :=
   fun xs =>
     (GHC.List.reverse (Data.OldList.sort (Data.OldList.nub xs)) GHC.Base.==
      Data.IntSet.Internal.toDescList (Data.IntSet.Internal.fromList xs)).
 
-Definition prop_Diff : list GHC.Num.Int -> list GHC.Num.Int -> Prop :=
+Definition prop_Diff
+   : list Coq.Numbers.BinNums.N -> list Coq.Numbers.BinNums.N -> Prop :=
   fun xs ys =>
     let 't := Data.IntSet.Internal.difference (Data.IntSet.Internal.fromList xs)
                 (Data.IntSet.Internal.fromList ys) in
@@ -114,18 +117,19 @@ Definition prop_EmptyValid : Prop :=
   IntSetValidity.valid Data.IntSet.Internal.empty.
 
 Definition prop_InsertDelete
-   : GHC.Num.Int -> Data.IntSet.Internal.IntSet -> Prop :=
+   : Coq.Numbers.BinNums.N -> Data.IntSet.Internal.IntSet -> Prop :=
   fun k t =>
     negb (Data.IntSet.Internal.member k t) Test.QuickCheck.Property.==>
     (let 't' := Data.IntSet.Internal.delete k (Data.IntSet.Internal.insert k t) in
      IntSetValidity.valid t' Test.QuickCheck.Property..&&.(**)
      (t' Test.QuickCheck.Property.=== t)).
 
-Definition prop_InsertIntoEmptyValid : GHC.Num.Int -> Prop :=
+Definition prop_InsertIntoEmptyValid : Coq.Numbers.BinNums.N -> Prop :=
   fun x =>
     IntSetValidity.valid (Data.IntSet.Internal.insert x Data.IntSet.Internal.empty).
 
-Definition prop_Int : list GHC.Num.Int -> list GHC.Num.Int -> Prop :=
+Definition prop_Int
+   : list Coq.Numbers.BinNums.N -> list Coq.Numbers.BinNums.N -> Prop :=
   fun xs ys =>
     let 't := Data.IntSet.Internal.intersection (Data.IntSet.Internal.fromList xs)
                 (Data.IntSet.Internal.fromList ys) in
@@ -146,19 +150,20 @@ Definition prop_LeftRight : Data.IntSet.Internal.IntSet -> bool :=
     | _ => true
     end.
 
-Definition prop_List : list GHC.Num.Int -> bool :=
+Definition prop_List : list Coq.Numbers.BinNums.N -> bool :=
   fun xs =>
     (Data.OldList.sort (Data.OldList.nub xs) GHC.Base.==
      Data.IntSet.Internal.toAscList (Data.IntSet.Internal.fromList xs)).
 
-Definition prop_Member : list GHC.Num.Int -> GHC.Num.Int -> bool :=
+Definition prop_Member
+   : list Coq.Numbers.BinNums.N -> Coq.Numbers.BinNums.N -> bool :=
   fun xs n =>
     let m := Data.IntSet.Internal.fromList xs in
     Data.Foldable.all (fun k =>
                          Data.IntSet.Internal.member k m GHC.Base.== (Data.Foldable.elem k xs)) (cons n
                                                                                                       xs).
 
-Definition prop_MemberFromList : list GHC.Num.Int -> bool :=
+Definition prop_MemberFromList : list Coq.Numbers.BinNums.N -> bool :=
   fun xs =>
     let abs_xs :=
       Coq.Lists.List.flat_map (fun x =>
@@ -171,7 +176,8 @@ Definition prop_MemberFromList : list GHC.Num.Int -> bool :=
                                          Data.IntSet.Internal.notMember arg_3__ t) GHC.Base.∘
                                       GHC.Num.negate) abs_xs).
 
-Definition prop_NotMember : list GHC.Num.Int -> GHC.Num.Int -> bool :=
+Definition prop_NotMember
+   : list Coq.Numbers.BinNums.N -> Coq.Numbers.BinNums.N -> bool :=
   fun xs n =>
     let m := Data.IntSet.Internal.fromList xs in
     Data.Foldable.all (fun k =>
@@ -188,12 +194,12 @@ Definition prop_Prefix : Data.IntSet.Internal.IntSet -> bool :=
            | _ => true
            end.
 
-Definition prop_Single : GHC.Num.Int -> bool :=
+Definition prop_Single : Coq.Numbers.BinNums.N -> bool :=
   fun x =>
     (Data.IntSet.Internal.insert x Data.IntSet.Internal.empty GHC.Base.==
      Data.IntSet.Internal.singleton x).
 
-Definition prop_SingletonValid : GHC.Num.Int -> Prop :=
+Definition prop_SingletonValid : Coq.Numbers.BinNums.N -> Prop :=
   fun x => IntSetValidity.valid (Data.IntSet.Internal.singleton x).
 
 Definition prop_UnionAssoc
@@ -209,7 +215,7 @@ Definition prop_UnionComm
     (Data.IntSet.Internal.union t1 t2 GHC.Base.== Data.IntSet.Internal.union t2 t1).
 
 Definition prop_UnionInsert
-   : GHC.Num.Int -> Data.IntSet.Internal.IntSet -> Prop :=
+   : Coq.Numbers.BinNums.N -> Data.IntSet.Internal.IntSet -> Prop :=
   fun x t =>
     let 't' := Data.IntSet.Internal.union t (Data.IntSet.Internal.singleton x) in
     IntSetValidity.valid t' Test.QuickCheck.Property..&&.(**)
@@ -221,7 +227,8 @@ Definition prop_disjoint
     Data.IntSet.Internal.disjoint a b GHC.Base.==
     Data.IntSet.Internal.null (Data.IntSet.Internal.intersection a b).
 
-Definition prop_filter : Data.IntSet.Internal.IntSet -> GHC.Num.Int -> Prop :=
+Definition prop_filter
+   : Data.IntSet.Internal.IntSet -> Coq.Numbers.BinNums.N -> Prop :=
   fun s i =>
     let evens := Data.IntSet.Internal.filter GHC.Real.even s in
     let odds := Data.IntSet.Internal.filter GHC.Real.odd s in
@@ -270,7 +277,7 @@ Definition prop_ord
                       s2).
 
 Definition prop_partition
-   : Data.IntSet.Internal.IntSet -> GHC.Num.Int -> Prop :=
+   : Data.IntSet.Internal.IntSet -> Coq.Numbers.BinNums.N -> Prop :=
   fun s i =>
     let 'pair s1 s2 := Data.IntSet.Internal.partition GHC.Real.odd s in
     IntSetValidity.valid s1 Test.QuickCheck.Property..&&.(**)
@@ -288,11 +295,13 @@ Definition prop_size : Data.IntSet.Internal.IntSet -> Prop :=
      Data.IntSet.Internal.foldl' (fun arg_1__ arg_2__ =>
                                     match arg_1__, arg_2__ with
                                     | i, _ => i GHC.Num.+ #1
-                                    end) (#0 : GHC.Num.Int) s) Test.QuickCheck.Property..&&.(**)
+                                    end) (#0 : Coq.Numbers.BinNums.N) s) Test.QuickCheck.Property..&&.(**)
     (sz Test.QuickCheck.Property.===
-     Data.Foldable.length (Data.IntSet.Internal.toList s)).
+     Coq.NArith.BinNat.N.of_nat (Coq.Init.Datatypes.length
+                                 (Data.IntSet.Internal.toList s))).
 
-Definition prop_split : Data.IntSet.Internal.IntSet -> GHC.Num.Int -> Prop :=
+Definition prop_split
+   : Data.IntSet.Internal.IntSet -> Coq.Numbers.BinNums.N -> Prop :=
   fun s i =>
     let 'pair s1 s2 := Data.IntSet.Internal.split i s in
     IntSetValidity.valid s1 Test.QuickCheck.Property..&&.(**)
@@ -305,7 +314,7 @@ Definition prop_split : Data.IntSet.Internal.IntSet -> GHC.Num.Int -> Prop :=
         Data.IntSet.Internal.union s1 s2)))).
 
 Definition prop_splitMember
-   : Data.IntSet.Internal.IntSet -> GHC.Num.Int -> Prop :=
+   : Data.IntSet.Internal.IntSet -> Coq.Numbers.BinNums.N -> Prop :=
   fun s i =>
     let 'pair (pair s1 t) s2 := Data.IntSet.Internal.splitMember i s in
     IntSetValidity.valid s1 Test.QuickCheck.Property..&&.(**)
@@ -339,7 +348,8 @@ Definition prop_splitRoot : Data.IntSet.Internal.IntSet -> bool :=
     andb (loop ls) (s GHC.Base.== Data.IntSet.Internal.unions ls).
 
 Definition toSet
-   : Data.IntSet.Internal.IntSet -> Data.Set.Internal.Set_ GHC.Num.Int :=
+   : Data.IntSet.Internal.IntSet ->
+     Data.Set.Internal.Set_ Coq.Numbers.BinNums.N :=
   Data.Set.Internal.fromList GHC.Base.∘ Data.IntSet.Internal.toList.
 
 Definition prop_isSubsetOf
@@ -355,11 +365,12 @@ Definition prop_isProperSubsetOf
     Data.Set.Internal.isProperSubsetOf (toSet a) (toSet b).
 
 (* Unbound variables:
-     Prop andb bool cons enumFromTo list negb nil pair true Coq.Lists.List.flat_map
-     Coq.ZArith.BinInt.Z.pow Data.Bits.op_zizazi__ Data.Foldable.all
-     Data.Foldable.and Data.Foldable.elem Data.Foldable.foldl Data.Foldable.foldl'
-     Data.Foldable.length Data.Foldable.notElem Data.Foldable.null
-     Data.IntSet.Internal.Bin Data.IntSet.Internal.IntSet Data.IntSet.Internal.delete
+     Prop andb bool cons enumFromTo list negb nil pair true Coq.Init.Datatypes.length
+     Coq.Lists.List.flat_map Coq.NArith.BinNat.N.of_nat Coq.NArith.BinNat.N.pow
+     Coq.Numbers.BinNums.N Data.Bits.op_zizazi__ Data.Foldable.all Data.Foldable.and
+     Data.Foldable.elem Data.Foldable.foldl Data.Foldable.foldl'
+     Data.Foldable.notElem Data.Foldable.null Data.IntSet.Internal.Bin
+     Data.IntSet.Internal.IntSet Data.IntSet.Internal.delete
      Data.IntSet.Internal.difference Data.IntSet.Internal.disjoint
      Data.IntSet.Internal.empty Data.IntSet.Internal.filter
      Data.IntSet.Internal.foldl Data.IntSet.Internal.foldl'
@@ -380,10 +391,9 @@ Definition prop_isProperSubsetOf
      Data.Set.Internal.isSubsetOf GHC.Base.compare GHC.Base.flip GHC.Base.id
      GHC.Base.op_z2218U__ GHC.Base.op_zd__ GHC.Base.op_zeze__ GHC.Base.op_zg__
      GHC.Base.op_zl__ GHC.Base.op_zlze__ GHC.Base.op_zsze__ GHC.List.reverse
-     GHC.Num.Int GHC.Num.abs GHC.Num.fromInteger GHC.Num.negate GHC.Num.op_zp__
-     GHC.Real.even GHC.Real.odd IntSetValidity.valid
-     Test.QuickCheck.Arbitrary.arbitrary Test.QuickCheck.Property.Testable
-     Test.QuickCheck.Property.classify Test.QuickCheck.Property.forAll
-     Test.QuickCheck.Property.op_zezeze__ Test.QuickCheck.Property.op_zezezg__
-     Test.QuickCheck.Property.op_zizazazi__
+     GHC.Num.abs GHC.Num.fromInteger GHC.Num.negate GHC.Num.op_zp__ GHC.Real.even
+     GHC.Real.odd IntSetValidity.valid Test.QuickCheck.Arbitrary.arbitrary
+     Test.QuickCheck.Property.Testable Test.QuickCheck.Property.classify
+     Test.QuickCheck.Property.forAll Test.QuickCheck.Property.op_zezeze__
+     Test.QuickCheck.Property.op_zezezg__ Test.QuickCheck.Property.op_zizazazi__
 *)

@@ -106,6 +106,7 @@ Additionall stuff:
 *)
 
 Require Import Omega.
+Require Import Psatz.
 Require Import Coq.ZArith.ZArith.
 Require Import Coq.NArith.NArith.
 Require Import Coq.Bool.Bool.
@@ -114,10 +115,9 @@ Local Open Scope Z_scope.
 Require Import BitUtils.
 Require Import DyadicIntervals.
 Require Import Tactics.
-
 Require Import OrdTactic.
 
-(** ** Utilities about sorted (specialized to [Z.lt]) *)
+(** ** Utilities about sorted (specialized to [N.lt]) *)
 
 Require Import Coq.Lists.List.
 
@@ -125,11 +125,11 @@ Require Import Coq.Sorting.Sorted.
 
 Lemma sorted_append:
   forall l1 l2 x,
-  StronglySorted Z.lt l1 ->
-  StronglySorted Z.lt l2 ->
-  (forall y, In y l1 -> y < x) ->
-  (forall y, In y l2 -> x <= y) ->
-  StronglySorted Z.lt (l1 ++ l2).
+  StronglySorted N.lt l1 ->
+  StronglySorted N.lt l2 ->
+  (forall y, In y l1 -> y < x)%N ->
+  (forall y, In y l2 -> x <= y)%N ->
+  StronglySorted N.lt (l1 ++ l2).
 Proof.
   intros ??? Hsorted1 Hsorted2 Hlt Hge.
   induction Hsorted1.
@@ -146,7 +146,7 @@ Proof.
       destruct Hz.
       - rewrite Forall_forall in H.
         apply H; auto.
-      - apply Z.lt_le_trans with (m := x).
+      - apply N.lt_le_trans with (m := x).
         apply Hlt. left. reflexivity.
         apply Hge. assumption.
 Qed.
@@ -200,7 +200,7 @@ Require Import Data.IntSet.Internal.
 Require Import Utils.Containers.Internal.BitUtil.
 Require Import CTZ.
 Require Import Popcount.
-Local Open Scope Z_scope.
+Local Open Scope N_scope.
 Set Bullet Behavior "Strict Subproofs".
 
 (** A tactic to remove all relevant Haskell type class methods, and
@@ -225,43 +225,32 @@ Ltac unfoldMethods :=
 
 Definition WIDTH := 64%N.
 Definition tip_width := N.log2 WIDTH.
-Definition tip_widthZ := Z.of_N tip_width.
 
 (** *** Lemmas about [prefixOf] *)
 
-Lemma prefixOf_nonneg: forall p,
-  0 <= p -> 0 <= prefixOf p.
-Proof.
-  intros.
-  unfold prefixOf, prefixBitMask, suffixBitMask.
-  unfoldMethods.
-  rewrite Z.land_nonneg; intuition.
-Qed.
-Hint Resolve prefixOf_nonneg : nonneg.
-
 Lemma rPrefix_shiftr:
   forall e,
-  rPrefix (Z.shiftr e tip_widthZ, tip_width) = prefixOf e.
+  rPrefix (N.shiftr e tip_width, tip_width) = prefixOf e.
 Proof.
   intros.
-  unfold rPrefix, prefixOf, prefixBitMask, suffixBitMask.
+  unfold rPrefix, prefixOf, suffixBitMask.
   unfoldMethods.
-  rewrite <- Z.ldiff_land.
-  rewrite -> Z.ldiff_ones_r by omega.
+  rewrite <- N.ldiff_ones_r.
   reflexivity.
 Qed.
 
 Lemma prefixOf_eq_shiftr:
   forall i p, 
-  (prefixOf i =? Z.shiftl p tip_widthZ) = ((Z.shiftr i tip_widthZ) =? p).
+  (prefixOf i =? N.shiftl p tip_width) = ((N.shiftr i tip_width) =? p).
 Proof.
   intros.
-  unfold prefixOf, prefixBitMask, suffixBitMask.
+  unfold prefixOf, suffixBitMask.
   unfoldMethods.
-  rewrite <- Z.ldiff_land.
-  rewrite -> Z.ldiff_ones_r by omega.
-  replace tip_widthZ with 6 by reflexivity.
-  rewrite -> Z_shiftl_injb by omega.
+  rewrite -> N.ldiff_ones_r.
+  replace tip_width with 6 by reflexivity.
+  rewrite eq_iff_eq_true.
+  rewrite !N.eqb_eq.
+  rewrite -> N_shiftl_inj by omega.
   reflexivity.
 Qed.
 
@@ -284,10 +273,10 @@ Proof.
   intros.
   rewrite <- !rPrefix_shiftr.
   unfold rPrefix.
-  rewrite !Z.shiftl_mul_pow2 by (intro Htmp; inversion Htmp).
-  rewrite !Z.shiftr_div_pow2 by (intro Htmp; inversion Htmp).
-  apply Z.mul_le_mono_nonneg_r. nonneg.
-  apply Z.div_le_mono. reflexivity.
+  rewrite !N.shiftl_mul_pow2 by (intro Htmp; inversion Htmp).
+  rewrite !N.shiftr_div_pow2 by (intro Htmp; inversion Htmp).
+  apply N.mul_le_mono_nonneg_r. nonneg.
+  apply N.div_le_mono. apply N.pow_nonzero; Nomega.
   assumption.
 Qed.
 
@@ -297,9 +286,10 @@ Proof.
   intros.
   destruct r as [p b]. simpl in *. subst.
   rewrite <- rPrefix_shiftr.
-  unfold rPrefix, tip_widthZ, tip_width. simpl Z.of_N.
-  rewrite Z.shiftr_shiftl_l by omega.
-  replace (6 - 6) with 0 by omega.
+  unfold rPrefix, tip_width, tip_width. simpl N.log2.
+  rewrite N.shiftr_shiftl_l by reflexivity.
+  replace (6 - 6) with 0 by Nomega.
+  rewrite N.shiftl_0_r.
   reflexivity.
 Qed.  
 
@@ -308,54 +298,42 @@ Lemma prefixOf_suffixOf:
 Proof.
   intros.
   rewrite <- rPrefix_shiftr.
-  unfold rPrefix, tip_widthZ, tip_width. simpl Z.of_N.
-  rewrite Z.shiftr_div_pow2 by omega.
-  rewrite Z.shiftl_mul_pow2 by omega.
-  unfold prefixOf, prefixBitMask, suffixOf, suffixBitMask, WIDTH in *.
+  unfold rPrefix, tip_width, tip_width. simpl id.
+  rewrite N.shiftr_div_pow2 by omega.
+  rewrite N.shiftl_mul_pow2 by omega.
+  unfold prefixOf, suffixOf, suffixBitMask, WIDTH in *.
   unfoldMethods.
-  rewrite Z.land_ones by omega.
+  simpl N.log2.
+  rewrite N.land_ones by omega.
   symmetry.
-  rewrite Z.mul_comm.
-  apply Z.div_mod.
+  rewrite N.mul_comm.
+  apply N.div_mod.
   intro Htmp; inversion Htmp.
 Qed.
 
 (** *** Lemmas about [suffixOf] *)
 
-Lemma suffixOf_lt_WIDTH: forall e, suffixOf e < Z.of_N WIDTH.
+Lemma suffixOf_lt_WIDTH: forall e, suffixOf e < WIDTH.
   intros.
   unfold suffixOf, suffixBitMask.
   unfoldMethods.
-  rewrite Z.land_ones.
+  rewrite N.land_ones.
   change (e mod 64 < 64).
-  apply Z.mod_pos_bound.
-  reflexivity.
-  compute. congruence.
+  apply N.mod_upper_bound.
+  Nomega.
 Qed.
-  
-Lemma suffixOf_noneg:  forall e, 0 <= suffixOf e.
-  intros.
-  unfold suffixOf, suffixBitMask.
-  unfoldMethods.
-  rewrite Z.land_ones.
-  apply Z_mod_lt.
-  reflexivity.
-  compute. congruence.
-Qed.
-Hint Resolve suffixOf_noneg : nonneg.
 
-Lemma bitmapOfSuffix_pow : forall x, bitmapOfSuffix x = (2^(Z.to_N x))%N.
+Lemma bitmapOfSuffix_pow : forall x, bitmapOfSuffix x = 2^x.
 Proof. intros. apply N.shiftl_1_l. Qed.
 
 Lemma suffixOf_plus_bitmapOf:
   forall x,
-  (N.ones (Z.to_N (suffixOf x)) + bitmapOf x)%N = N.ones (Z.to_N (Z.succ (suffixOf x))).
+  (N.ones (suffixOf x) + bitmapOf x)%N = N.ones (N.succ (suffixOf x)).
 Proof.
   intros.
   unfold bitmapOf.
   rewrite bitmapOfSuffix_pow.
   rewrite !N.ones_equiv.
-  rewrite Z2N.inj_succ by nonneg.
   rewrite N.pow_succ_r by nonneg.
   Nomega.
 Qed.
@@ -366,17 +344,8 @@ A single bit set just to the right of the prefix.
 (Somewhat illdefined for singleton ranges).
 *)
 
-Definition rMask   : range -> Z :=
-   fun '(p,b) => 2^(Z.pred (Z.of_N b)).
-
-Lemma rMask_nonneg:
-  forall r, 0 <= rMask r.
-Proof.
-  intros.
-  destruct r as [p b]. simpl in *.
-  nonneg.
-Qed.
-Hint Resolve rMask_nonneg : nonneg.
+Definition rMask   : range -> N :=
+   fun '(p,b) => 2^(b - 1).
 
 (** *** Verification of [nomatch] *)
 
@@ -390,17 +359,20 @@ Proof.
   destruct r as [p b]. simpl in *.
   unfold nomatch, zero, inRange.
   unfoldMethods.
-  unfold mask.
-  rewrite -> mask_to_upper_bits by Nomega.
+  unfold mask, maskW.
+  unfoldMethods.
   f_equal.
-  rewrite <- Z.ldiff_land.
-  rewrite -> Z.ldiff_ones_r by nonneg.
-  rewrite Z.succ_pred.
-  rewrite -> Z_shiftl_injb by nonneg.
+  rewrite eq_iff_eq_true.
+  rewrite !N.eqb_eq.
+  rewrite <- N.pow_succ_r  by Nomega.
+  replace (N.succ (b - 1)) with b by Nomega.
+  rewrite N.sub_1_r.
+  rewrite <- N.ones_equiv.
+  rewrite -> N.ldiff_ones_r by nonneg.
+  rewrite -> N_shiftl_inj by nonneg.
   reflexivity.
 Qed.
 
-(* Move this to the right place *)
 Lemma match_nomatch: forall x p ms,
   match_ x p ms = negb (nomatch x p ms).
 Proof.
@@ -415,13 +387,12 @@ Qed.
 Lemma zero_spec:
   forall i r,
   (0 < rBits r)%N ->
-  zero i (rMask r) = negb (Z.testbit i (Z.pred (Z.of_N (rBits r)))).
+  zero i (rMask r) = negb (N.testbit i (rBits r - 1)).
 Proof.
   intros.
   destruct r as [p b]. simpl in *.
-  unfold zero.
-  apply land_pow2_eq.
-  Nomega.
+  unfold zero. unfoldMethods.
+  apply N_land_pow2_eq.
 Qed.
 
 (**
@@ -444,7 +415,7 @@ Proof.
   destruct (inRange i r) eqn:?.
   * rewrite zero_spec by auto. 
     rewrite if_negb.
-    destruct (Z.testbit i (Z.pred (Z.of_N (rBits r)))) eqn:Hbit.
+    destruct (N.testbit i (rBits r - 1)) eqn:Hbit.
     + apply H2.
       rewrite halfRange_inRange_testbit by auto. rewrite Hbit. reflexivity.
       rewrite halfRange_inRange_testbit by auto. rewrite Hbit. reflexivity.
@@ -482,7 +453,7 @@ Lemma same_size_compare:
   P (if rPrefix r1 =? rPrefix r2 then same else different).
 Proof.
   intros.
-  destruct (Z.eqb_spec (rPrefix r1) (rPrefix r2)).
+  destruct (N.eqb_spec (rPrefix r1) (rPrefix r2)).
   * apply H0.
     apply rPrefix_rBits_range_eq; auto.
   * apply H1.
@@ -501,8 +472,7 @@ Proof.
   simpl.
   unfold branchMask.
   unfold msDiffBit.
-  rewrite -> Z2N.id by nonneg.
-  rewrite Z.pred_succ.
+  rewrite N.add_sub.
   reflexivity.
 Qed.
 
@@ -515,17 +485,15 @@ Proof.
   intros.
   assert (0 < msDiffBit (rPrefix r1) (rPrefix r2))%N by apply msDiffBit_pos.
   destruct r1 as [p1 b1], r2 as [p2 b2].
-  unfold mask.
-  simpl.
-  rewrite <- Z.ldiff_ones_r by nonneg.
-  rewrite -> mask_to_upper_bits.
-  rewrite <- Z.ldiff_land.
-  rewrite Z.succ_pred.
+  unfold mask, maskW.
+  cbn -[N.mul] in *.
+  rewrite <- N.ldiff_ones_r by nonneg.
+  rewrite <- N.pow_succ_r'.
+  rewrite <- N.add_1_r.
+  rewrite N.sub_add by lia.
+  rewrite N.sub_1_r.
+  rewrite <- N.ones_equiv.
   reflexivity.
-  apply Zlt_0_le_0_pred.
-  replace 0 with (Z.of_N 0%N) by reflexivity.
-  apply N2Z.inj_lt.
-  assumption.
 Qed.
 
 (** *** Verification of [shorter] *)
@@ -538,11 +506,10 @@ Lemma shorter_spec:
 Proof.
   intros.
   destruct r1 as [p1 b1], r2 as [p2 b2]. simpl in *.
-  change ((Z.to_N (2 ^ Z.pred (Z.of_N b2))%Z <? Z.to_N (2 ^ Z.pred (Z.of_N b1))%Z)%N = (b2 <? b1)%N).
+  change ((2 ^ (b2 - 1)) <? (2 ^ (b1 - 1)) = (b2 <? b1)).
   apply eq_true_iff_eq.
   rewrite !N.ltb_lt.
-  rewrite <- Z2N.inj_lt by (apply Z.pow_nonneg; omega).
-  rewrite <- Z.pow_lt_mono_r_iff by Nomega.
+  rewrite <- N.pow_lt_mono_r_iff by Nomega.
   Nomega.
 Qed.
 
@@ -552,7 +519,7 @@ Looks up values, which are in the given range, as bits in the given bitmap.
 *)
 
 Definition bitmapInRange r bm i :=
-  if inRange i r then N.testbit bm (Z.to_N (Z.land i (Z.ones (Z.of_N (rBits r)))))
+  if inRange i r then N.testbit bm (N.land i (N.ones (rBits r)))
                  else false.
 
 Lemma bitmapInRange_outside:
@@ -619,67 +586,61 @@ Qed.
 
 Lemma bitmapInRange_bitmapOf:
   forall e i,
-  bitmapInRange (Z.shiftr e 6, N.log2 WIDTH) (bitmapOf e) i = (i =? e).
+  bitmapInRange (N.shiftr e 6, N.log2 WIDTH) (bitmapOf e) i = (i =? e).
 Proof.
   intros.
-  unfold bitmapInRange, inRange. simpl Z.of_N.
+  unfold bitmapInRange, inRange. simpl id.
   rewrite <- andb_lazy_alt.
   unfold bitmapOf, suffixOf, suffixBitMask.
   unfoldMethods.
   rewrite bitmapOfSuffix_pow.
-  rewrite <- Z.testbit_of_N' by nonneg.
-  rewrite N2Z.inj_pow.
-  rewrite -> Z2N.id by nonneg.
-  rewrite -> Z.pow2_bits_eqb by nonneg.
-  rewrite -> Z.eqb_sym.
-  rewrite <- Z_eq_shiftr_land_ones.
-  apply Z.eqb_sym.
+  rewrite -> N.pow2_bits_eqb by nonneg.
+  rewrite -> N.eqb_sym.
+  rewrite <- N_eq_shiftr_land_ones.
+  apply N.eqb_sym.
 Qed.
 
 Lemma bitmapInRange_pow:
   forall r e i,
   (e < 2^rBits r)%N ->
-  bitmapInRange r (2 ^ e)%N i = (rPrefix r + Z.of_N e =? i).
+  bitmapInRange r (2 ^ e)%N i = (rPrefix r + e =? i).
 Proof.
   intros.
   destruct r as [p b].
   unfold bitmapInRange.
   simpl in *.
-  destruct (Z.eqb_spec (Z.shiftr i (Z.of_N b)) p).
+  destruct (N.eqb_spec (N.shiftr i b) p).
   * rewrite N.pow2_bits_eqb.
-    transitivity (Z.of_N e =? Z.land i (Z.ones (Z.of_N b))).
+    transitivity (e =? N.land i (N.ones b)).
     - rewrite eq_iff_eq_true.
-      rewrite N.eqb_eq, Z.eqb_eq.
+      rewrite !N.eqb_eq.
       intuition.
-      subst. rewrite Z2N.id by nonneg. reflexivity.
-      rewrite <- H0. rewrite N2Z.id. reflexivity.
     - rewrite eq_iff_eq_true.
-      rewrite !Z.eqb_eq.
-      rewrite Z.land_ones by nonneg.
-      rewrite Z.shiftr_div_pow2 in e0 by nonneg.
-      rewrite Z.div_mod with (a := i) (b := 2^Z.of_N b) at 2
-        by (apply Z.pow_nonzero; Nomega).
-      rewrite Z.shiftl_mul_pow2 by nonneg.
-      rewrite Z.mul_comm.
-      subst; omega.
+      rewrite !N.eqb_eq.
+      rewrite N.land_ones by nonneg.
+      rewrite N.shiftr_div_pow2 in e0 by nonneg.
+      rewrite N.div_mod with (a := i) (b := 2^b) at 2
+        by (apply N.pow_nonzero; Nomega).
+      rewrite N.shiftl_mul_pow2 by nonneg.
+      rewrite N.mul_comm.
+      subst; Nomega.
   * symmetry.
-    rewrite Z.eqb_neq.
+    rewrite N.eqb_neq.
     contradict n.
     subst.
-    rewrite Z.shiftr_div_pow2 by nonneg.
-    rewrite Z.shiftl_mul_pow2 by nonneg.
-    rewrite Z_div_plus_full_l by (apply Z.pow_nonzero; Nomega).
-    enough (Z.of_N e / 2 ^ Z.of_N b = 0) by omega.
-    apply Z.div_small.
-    split; try nonneg.
-    zify. rewrite -> N2Z.inj_pow in H. apply H.
+    rewrite N.shiftr_div_pow2 by nonneg.
+    rewrite N.shiftl_mul_pow2 by nonneg.
+    rewrite N.div_add_l by (apply N.pow_nonzero; Nomega).
+    enough (e/2^b = 0) by lia.
+    apply N.div_small.
+    assumption.
 Qed.
 
 Lemma bitmapInRange_ones:
   forall r n i,
   rBits r = N.log2 WIDTH ->
   inRange i r = true ->
-  bitmapInRange r (N.ones n) i = (suffixOf i <? Z.of_N n).
+  bitmapInRange r (N.ones n) i = (suffixOf i <? n).
 Proof.
   intros ?????.
   unfold bitmapInRange; rewrite H0.
@@ -688,11 +649,9 @@ Proof.
   unfoldMethods.
   simpl.
   rewrite eq_iff_eq_true.
-  rewrite Z.ltb_lt.
+  rewrite N.ltb_lt.
   rewrite N.ones_spec_iff.
   intros.
-  rewrite Z2N.inj_lt; try nonneg.
-  rewrite N2Z.id.
   reflexivity.
 Qed.
 
@@ -701,7 +660,7 @@ Qed.
 This is the inverse of bitmapInRange, in a way.
 *)
 
-Definition intoRange r i := Z.lor (rPrefix r) (Z.of_N i).
+Definition intoRange r i := N.lor (rPrefix r) i.
 
 Definition inRange_intoRange:
   forall r i,
@@ -710,16 +669,12 @@ Definition inRange_intoRange:
 Proof.
   intros.
   destruct r as [p b]; unfold intoRange, inRange, rPrefix, rBits, snd in *; subst.
-  rewrite Z.shiftr_lor.
-  rewrite Z.shiftr_shiftl_l by nonneg.
-  replace (_ - _) with 0 by omega.
-  rewrite Z.shiftr_div_pow2 by nonneg.
-  rewrite Z.div_small.
-  rewrite Z.lor_0_r. apply Z.eqb_refl.
-  split; try nonneg.
-  change (Z.of_N i < Z.of_N 2%N ^ Z.of_N b).
-  rewrite <- N2Z.inj_pow.
-  apply N2Z.inj_lt.
+  rewrite N.shiftr_lor.
+  rewrite N.shiftr_shiftl_l by lia.
+  replace (_ - _) with 0 by lia.
+  rewrite N.shiftr_div_pow2 by nonneg.
+  rewrite N.div_small.
+  rewrite N.lor_0_r, N.shiftl_0_r. apply N.eqb_refl.
   assumption.
 Qed.
 
@@ -733,17 +688,12 @@ Proof.
   rewrite inRange_intoRange by assumption.
   f_equal.
   destruct r as [p b]; unfold intoRange, inRange, rPrefix, rBits, snd in *; subst.
-  rewrite Z.land_lor_distr_l.
-  rewrite land_shiftl_ones by nonneg.
-  rewrite Z.lor_0_l.
-  rewrite !Z.land_ones by nonneg.
-  rewrite Z.mod_small.
-  rewrite N2Z.id. reflexivity.
-  split; try nonneg.
-  change (Z.of_N i < Z.of_N 2%N ^ Z.of_N b).
-  rewrite <- N2Z.inj_pow.
-  apply N2Z.inj_lt.
-  assumption.
+  rewrite N.land_lor_distr_l.
+  rewrite N_land_shiftl_ones.
+  rewrite N.lor_0_l.
+  rewrite !N.land_ones by nonneg.
+  rewrite N.mod_small by assumption.
+  reflexivity.
 Qed.
 
 (** *** Operation: [isTipPrefix]
@@ -751,45 +701,38 @@ Qed.
 A Tip prefix is a number with [N.log2 WIDTH] zeros at the end.
 *)
 
-Definition isTipPrefix (p : Z) := Z.land p suffixBitMask = 0.
+Definition isTipPrefix (p : N) := N.land p suffixBitMask = 0.
 
-Lemma isTipPrefix_suffixMask: forall p, isTipPrefix p -> Z.land p suffixBitMask = 0.
+Lemma isTipPrefix_suffixMask: forall p, isTipPrefix p -> N.land p suffixBitMask = 0.
 Proof. intros.  apply H. Qed.
 
-Lemma isTipPrefix_prefixMask: forall p, isTipPrefix p -> Z.land p prefixBitMask = p.
-Proof.
-  intros.
-  unfold isTipPrefix, prefixBitMask in *.
-  unfoldMethods.
-  enough (Z.lor (Z.land p suffixBitMask)  (Z.land p (Z.lnot suffixBitMask)) = p).
-  + rewrite H, Z.lor_0_l in H0. assumption.
-  + rewrite <- Z.land_lor_distr_r.
-    rewrite Z.lor_lnot_diag, Z.land_m1_r. reflexivity.
-Qed.
 
 Lemma isTipPrefix_prefixOf: forall e, isTipPrefix (prefixOf e).
 Proof.
   intros.
-  unfold isTipPrefix, prefixOf, prefixBitMask, suffixBitMask.
+  unfold isTipPrefix, prefixOf, suffixBitMask.
   unfoldMethods.
-  rewrite Z.land_ones. rewrite <- Z.ldiff_land.
-  rewrite Z.ldiff_ones_r.
-  rewrite Z.shiftl_mul_pow2.
-  apply Z_mod_mult.
-  all: compute; congruence.
+  rewrite N.land_ones.
+  rewrite N.ldiff_ones_r.
+  rewrite N.shiftl_mul_pow2.
+  apply N.mod_mul.
+  intro Htmp; inversion Htmp.
 Qed.
 
 Lemma isTipPrefix_shiftl_shiftr:
-   forall p, isTipPrefix p -> p = Z.shiftl (Z.shiftr p 6) 6.
+   forall p, isTipPrefix p -> p = N.shiftl (N.shiftr p 6) 6.
 Proof.
   intros.
-  rewrite <- Z.ldiff_ones_r.
-  rewrite Z.ldiff_land.
+  rewrite <- N.ldiff_ones_r.
   symmetry.
-  apply isTipPrefix_prefixMask. assumption.
-  omega.
+  etransitivity.
+  Focus 2. apply  N.lor_ldiff_and.
+  pose proof (isTipPrefix_suffixMask p H).
+  unfold suffixBitMask in H0.
+  rewrite H0.
+  rewrite N.lor_0_r.
+  reflexivity.
 Qed.
-
 
 
 (** *** Operation: [isBitMask]
@@ -946,15 +889,11 @@ Proof.
   unfold op_zizazi__, Bits.complement, Bits__N, instance_Bits_Int, complement_Int.
   unfold fromInteger, Num_Word__.
   rewrite bitmapOfSuffix_pow.
-  rewrite Z.land_ones; [|compute; congruence].
+  rewrite N.land_ones.
   constructor.
   * apply N_pow_pos_nonneg. reflexivity.
   * apply N.pow_lt_mono_r. reflexivity.
-    change (Z.to_N (e mod 64) < Z.to_N 64)%N.
-    apply Z2N.inj_lt.
-    apply Z.mod_pos_bound; compute; congruence.
-    compute;congruence.
-    apply Z.mod_pos_bound; compute; congruence.
+    apply N.mod_upper_bound; compute; congruence.
 Qed.
 Hint Resolve isBitMask_bitmapOf : isBitMask.
 
@@ -1515,9 +1454,8 @@ and a function that carries it denotation. This way, invariant preservation
 and functional correctness of an operation can be expressed in one go.
 *)
 
-Inductive Desc : IntSet -> range -> (Z -> bool) -> Prop :=
+Inductive Desc : IntSet -> range -> (N -> bool) -> Prop :=
   | DescTip : forall p bm r f,
-    0 <= p ->
     p = rPrefix r ->
     rBits r = N.log2 WIDTH ->
     (forall i, f i = bitmapInRange r bm i) ->
@@ -1540,7 +1478,7 @@ Inductive Desc : IntSet -> range -> (Z -> bool) -> Prop :=
     This is used to describe operations that may delete elements.
  *)
 
-Inductive Desc0 : IntSet -> range -> (Z -> bool) -> Prop :=
+Inductive Desc0 : IntSet -> range -> (N -> bool) -> Prop :=
   | Desc0Nil : forall r f, (forall i, f i = false) -> Desc0 Nil r f
   | Desc0NotNil :
       forall s r f r' f',
@@ -1553,7 +1491,7 @@ Inductive Desc0 : IntSet -> range -> (Z -> bool) -> Prop :=
     for the top-level specification.
  *)
 
-Inductive Sem : IntSet -> (Z -> bool) -> Prop :=
+Inductive Sem : IntSet -> (N -> bool) -> Prop :=
   | SemNil : forall f, (forall i, f i = false) -> Sem Nil f
   | DescSem : forall s r f (HD : Desc s r f), Sem s f.
 
@@ -1575,7 +1513,7 @@ Proof.
   intros.
   induction H.
   * eapply DescTip; try eassumption.
-    intro i. rewrite H0, H3. reflexivity.
+    intro i. rewrite H0, H2. reflexivity.
   * eapply DescBin; try eassumption.
     intro i. rewrite H0, H7. reflexivity.
 Qed.
@@ -1617,20 +1555,6 @@ Proof.
   intros. eexists. eapply Desc0_Sem. eassumption.
 Qed.
 
-Lemma Desc_rNonneg:
-  forall {s r f}, Desc s r f -> rNonneg r.
-Proof.
-  intros ??? HD.
-  induction HD; subst.
-  * destruct r. simpl in *. apply Z.shiftl_nonneg in H. assumption.
-  * erewrite <- rNonneg_subrange.
-    erewrite <- rNonneg_subrange.
-    apply IHHD1.
-    eassumption.
-    apply isSubrange_halfRange.
-    assumption.
-Qed.
-
 Lemma Desc_larger_WIDTH:
   forall {s r f}, Desc s r f -> (N.log2 WIDTH <= rBits r)%N.
 Proof.
@@ -1648,7 +1572,7 @@ Lemma Desc_outside:
 Proof.
  intros ???? HD Houtside.
  induction HD;subst.
- * rewrite H2.
+ * rewrite H1.
    apply bitmapInRange_outside; auto.
  * rewrite H4; clear H4.
    rewrite IHHD1 by inRange_false.
@@ -1673,58 +1597,6 @@ Proof.
   rewrite Hf.
   rewrite (Desc_outside HD) by inRange_false.
   reflexivity.
-Qed.
-
-Lemma Desc_neg_false:
- forall {s r f i}, Desc s r f -> ~ (0 <= i) -> f i = false.
-Proof.
-  intros.
-  assert (rNonneg r) by apply (Desc_rNonneg H).
-  apply (Desc_outside H).
-  destruct r as [p b]; simpl in *.
-  unfold inRange.
-  rewrite Z.eqb_neq.
-  contradict H0.
-  rewrite <- (Z.shiftr_nonneg i (Z.of_N b)).
-  rewrite H0.
-  nonneg.
-Qed.
-
-Lemma Desc_nonneg:
-  forall {s r f i}, Desc s r f -> f i = true -> 0 <= i.
-Proof.
-  intros.
-  destruct (Z.leb_spec 0 i); try auto.
-  assert (~ (0 <= i)) by omega.
-  erewrite Desc_neg_false in H0 by eassumption.
-  congruence.
-Qed.
-
-Lemma Sem_nonneg:
-  forall {s f i}, Sem s f -> f i = true -> 0 <= i.
-Proof.
-  intros.
-  destruct H.
-  * rewrite H in H0. congruence.
-  * eapply Desc_nonneg; eassumption.
-Qed.
-
-Lemma Desc0_neg_false:
- forall {s r f i}, Desc0 s r f -> ~ (0 <= i) -> f i = false.
-Proof.
-  intros.
-  destruct H; auto.
-  rewrite Hf.
-  eapply Desc_neg_false; eauto.
-Qed.
-
-Lemma Sem_neg_false:
- forall {s f i}, Sem s  f -> i < 0 -> f i = false.
-Proof.
-  intros.
-  destruct (f i) eqn:?; try auto; exfalso.
-  enough (0 <= i) by omega.
-  apply (Sem_nonneg H Heqb).
 Qed.
 
 Lemma Desc0_subRange:
@@ -1755,9 +1627,9 @@ Lemma Desc_some_f:
 Proof.
   intros ??? HD.
   induction HD; subst.
-  + destruct (isBitMask_bitmapInRange _ _ H1 H3) as [j ?].
+  + destruct (isBitMask_bitmapInRange _ _ H0 H2) as [j ?].
     exists j.
-    rewrite H2.
+    rewrite H1.
     assumption.
   + destruct IHHD1  as [j?].
     exists j.
@@ -1776,7 +1648,7 @@ Proof.
   + intros r2 f2 HD2 i.
     inversion_clear HD2.
       assert (r = r2) by (apply rPrefix_rBits_range_eq; congruence); subst.
-    rewrite H2, H6.
+    rewrite H1, H4.
     reflexivity.
   + intros r3 f3 HD3 i.
     inversion_clear HD3.
@@ -1817,7 +1689,7 @@ Proof.
     + assert (Hir2 : inRange i (halfRange r true) = true).
       { rewrite halfRange_inRange_testbit in Hir1 by auto.
         rewrite halfRange_inRange_testbit by auto.
-        destruct (Z.testbit _ _); simpl in *; congruence.
+        destruct (N.testbit _ _); simpl in *; congruence.
       }
       rewrite H7 by assumption.
       rewrite (Desc_outside H) by inRange_false.
@@ -1870,7 +1742,7 @@ Ltac solve_f_eq :=
     + rewrite bitmapInRange_land
     + rewrite bitmapInRange_lor
     + match goal with 
-      | [ H : forall i : Z, ?f i = _ |- context [?f i] ] => rewrite H
+      | [ H : forall i : N, ?f i = _ |- context [?f i] ] => rewrite H
       end);
   repeat split_bool;
   try reflexivity.
@@ -1980,7 +1852,7 @@ Lemma larger_f_imp:
   forall s1 r1 f1 s2 r2 f2,
   (rBits r2 < rBits r1)%N ->
   Desc s1 r1 f1 -> Desc s2 r2 f2 ->
-  (forall i : Z, f1 i = true -> f2 i = true) ->
+  (forall i : N, f1 i = true -> f2 i = true) ->
   False.
 Proof.
   intros ??? ??? Hsmaller HD1 HD2 Hf.
@@ -2033,14 +1905,14 @@ Proof.
     destruct HD2.
     + subst.
       assert (r = r0).
-      { destruct (isBitMask_bitmapInRange r bm H1 H3) as [i Hbit].
+      { destruct (isBitMask_bitmapInRange r bm H0 H2) as [i Hbit].
         assert (Hir : inRange i r = true)
           by (eapply bitmapInRange_inside; eassumption).
         specialize (Hf i).
-        specialize (H2 i).
-        specialize (H7 i).
-        rewrite H2 in Hf; clear H2.
-        rewrite H7 in Hf; clear H7.
+        specialize (H1 i).
+        specialize (H5 i).
+        rewrite H1 in Hf; clear H1.
+        rewrite H5 in Hf; clear H5.
         rewrite Hbit in Hf; symmetry in Hf.
         apply bitmapInRange_inside in Hf.
         apply inRange_both_same with (i := i); try assumption; Nomega.
@@ -2050,13 +1922,13 @@ Proof.
       apply N.bits_inj; intro j.
       destruct (N.ltb_spec j WIDTH).
       - set (i := intoRange r0 j).
-        specialize (H2 i).
-        specialize (H7 i).
+        specialize (H1 i).
+        specialize (H5 i).
         specialize (Hf i).
-        rewrite Hf in H2 by assumption; clear Hf.
-        rewrite H2 in H7; clear H2.
+        rewrite Hf in H1 by assumption; clear Hf.
+        rewrite H1 in H5; clear H1.
         subst i.
-        rewrite !bitmapInRange_intoRange in H7
+        rewrite !bitmapInRange_intoRange in H5
           by (replace (rBits r0); assumption).
         assumption.
       - rewrite !isBitMask0_outside by isBitMask.
@@ -2064,7 +1936,7 @@ Proof.
     + exfalso. subst.
       eapply larger_f_imp with (r1 := r0) (r2 := r).
       - assert (N.log2 WIDTH <= rBits r1)%N by (eapply Desc_larger_WIDTH; eauto).
-        apply subRange_smaller in H5. rewrite rBits_halfRange in H5.
+        apply subRange_smaller in H4. rewrite rBits_halfRange in H4.
         Nomega.
       - eapply DescBin with (s1 := s1) (s2 := s2); try eassumption; reflexivity.
       - eapply DescTip; try eassumption; reflexivity.
@@ -2136,7 +2008,7 @@ Proof.
             isSubrange_true.
       }
       subst.
-      assert (IH_prem_1 : (forall i : Z, f1 i = f0 i)). {
+      assert (IH_prem_1 : (forall i : N, f1 i = f0 i)). {
         intro i.
         specialize (H4 i). specialize (H10 i). specialize (Hf i).
         destruct (inRange i (halfRange r false)) eqn:?.
@@ -2153,7 +2025,7 @@ Proof.
            rewrite (Desc_outside HD3_1) by inRange_false.
            reflexivity.
       }
-      assert (IH_prem_2 : (forall i : Z, f2 i = f3 i)). {
+      assert (IH_prem_2 : (forall i : N, f2 i = f3 i)). {
         intro i.
         specialize (H4 i). specialize (H10 i). specialize (Hf i).
         destruct (inRange i (halfRange r true)) eqn:?.
@@ -2199,7 +2071,7 @@ Proof.
   * eapply Desc_unique; eassumption.
 Qed.
 
-Theorem Sem_extensional (s : IntSet) (f1 f2 : Z -> bool) :
+Theorem Sem_extensional (s : IntSet) (f1 f2 : N -> bool) :
   Sem s f1 ->
   Sem s f2 ->
   forall i, f1 i = f2 i.
@@ -2225,13 +2097,12 @@ Proof.
     try solve [simpl; intuition congruence].
   * simpl. unfoldMethods.
     rewrite !andb_true_iff.
-    rewrite !Z.eqb_eq.
+    rewrite !N.eqb_eq.
     rewrite IHs1_1.
     rewrite IHs1_2.
     intuition congruence.
   * simpl. unfoldMethods.
     rewrite !andb_true_iff.
-    rewrite !Z.eqb_eq.
     rewrite !N.eqb_eq.
     intuition congruence.
 Qed.
@@ -2259,7 +2130,7 @@ Lemma isSubsetOf_disjoint:
   forall s1 r1 f1 s2 r2 f2,
   rangeDisjoint r1 r2 = true ->
   Desc s1 r1 f1 -> Desc s2 r2 f2 ->
-  (forall i : Z, f1 i = true -> f2 i = true) <-> False.
+  (forall i : N, f1 i = true -> f2 i = true) <-> False.
 Proof.
   intros ??? ??? Hdis HD1 HD2.
   intuition.
@@ -2291,18 +2162,18 @@ Next Obligation.
   * (* Both are tips *)
     simpl; subst. unfoldMethods.
     rewrite andb_true_iff.
-    rewrite N.eqb_eq.
-    destruct (Z.eqb_spec (rPrefix r) (rPrefix r0)).
+    rewrite !N.eqb_eq.
+    destruct (N.eqb_spec (rPrefix r) (rPrefix r0)).
     - replace r0 with r in * by (apply rPrefix_rBits_range_eq; congruence). clear r0.
       intuition.
-      ** rewrite H2 in H0.
-         rewrite H7.
-         unfold bitmapInRange. unfold bitmapInRange in H0.
+      ** rewrite H1 in H.
+         rewrite H5.
+         unfold bitmapInRange. unfold bitmapInRange in H.
          destruct (inRange i r); try congruence.
-         set (j := Z.to_N _) in *.
-         apply N.bits_inj_iff in H9; specialize (H9 j).
-         rewrite N.lxor_spec, N.land_spec, N.bits_0 in H9.
-         destruct (N.testbit bm j), (N.testbit bm0 j); simpl in *; congruence.
+         set (j := N.land i  _) in *.
+         apply N.bits_inj_iff in H7. specialize (H7 j).
+         rewrite N.lxor_spec, N.land_spec, N.bits_0 in H7.
+         destruct (N.testbit bm j), (N.testbit bm0 j); simpl in *; try congruence.
       ** apply N.bits_inj_iff; intro j.
          rewrite N.bits_0.
          destruct (N.ltb_spec j WIDTH).
@@ -2314,9 +2185,9 @@ Next Obligation.
             assert (Hbmir : bitmapInRange r bm0 i = N.testbit bm0 j)
               by (apply bitmapInRange_intoRange; replace (rBits r); assumption).
             rewrite <- Hbmir; clear Hbmir.
-            rewrite <- H7.
-            apply H0.
-            rewrite H2.
+            rewrite <- H5.
+            apply H.
+            rewrite H1.
             assert (Hbmir : bitmapInRange r bm i = N.testbit bm j)
               by (apply bitmapInRange_intoRange; replace (rBits r); assumption).
             rewrite Hbmir.
@@ -2332,8 +2203,8 @@ Next Obligation.
     simpl; subst.
     apply nomatch_zero_smaller.
     - assert (N.log2 WIDTH <= rBits r1)%N by (eapply Desc_larger_WIDTH; eauto).
-      apply subRange_smaller in H5. rewrite rBits_halfRange in H5.
-      Nomega.
+      apply subRange_smaller in H4. rewrite rBits_halfRange in H4.
+      lia.
     - intros Hdisj.
       rewrite isSubsetOf_disjoint.
       ** intuition.
@@ -2347,11 +2218,11 @@ Next Obligation.
        + eassumption.
        + apply pointwise_iff. intros i Hi. 
          assert (inRange i r = true). {
-           rewrite H2 in Hi.
+           rewrite H1 in Hi.
            apply bitmapInRange_inside in Hi.
            assumption.
          }
-         rewrite H9.
+         rewrite H8.
          rewrite (Desc_outside HD2_2) by inRange_false.
          rewrite orb_false_r. reflexivity.
     - intros.
@@ -2361,11 +2232,11 @@ Next Obligation.
        + eassumption.
        + apply pointwise_iff. intros i Hi. 
          assert (inRange i r = true). {
-           rewrite H2 in Hi.
+           rewrite H1 in Hi.
            apply bitmapInRange_inside in Hi.
            assumption.
          }
-         rewrite H9.
+         rewrite H8.
          rewrite (Desc_outside HD2_1) by inRange_false.
          rewrite orb_false_l. reflexivity.
 
@@ -2377,7 +2248,7 @@ Next Obligation.
       Nomega.
     - eapply DescBin with (s1 := s1) (s2 := s0); try eassumption; reflexivity.
     - eapply DescTip; try eassumption; reflexivity.
-    - intros i Hi. apply H10. assumption.
+    - intros i Hi. apply H9. assumption.
   * (* Bin both sides *)
     simpl; subst.
     rewrite shorter_spec by assumption.
@@ -2439,7 +2310,7 @@ Next Obligation.
            rewrite orb_false_l. reflexivity.
     - (* same sized bins *)
       unfoldMethods.
-      destruct (Z.eqb_spec (rPrefix r) (rPrefix r4)).
+      destruct (N.eqb_spec (rPrefix r) (rPrefix r4)).
       + replace r4 with r in * by (apply rPrefix_rBits_range_eq; Nomega). clear r4.
         simpl.
         rewrite andb_true_iff.
@@ -2539,14 +2410,14 @@ Proof.
    change (((prefixOf i == rPrefix r) && ((bitmapOf i .&.bm) /= #0)) = f i).
    unfoldMethods.
    rewrite -> prefixOf_eqb_spec by assumption.
-   rewrite H2.
+   rewrite H1.
 
    unfold bitmapOf, suffixOf, suffixBitMask, bitmapInRange.
    unfoldMethods.
    rewrite bitmapOfSuffix_pow.
    rewrite N_land_pow2_testbit.
 
-   rewrite H1.
+   rewrite H0.
    reflexivity.
  * rewrite H4. clear H4.
    simpl member.
@@ -2581,16 +2452,12 @@ Proof.
 Qed.
 
 Lemma Desc_has_member: 
-  forall {s r f}, Desc s r f -> exists i, 0 <= i /\ member i s = true.
+  forall {s r f}, Desc s r f -> exists i, member i s = true.
 Proof.
   intros ??? HD.
   destruct (Desc_some_f HD) as [j?].
   exists j.
   rewrite (member_Desc HD). intuition.
-  destruct (Z.leb_spec 0 j); auto.
-  contradict H.
-  rewrite  (Desc_neg_false HD); try congruence.
-  apply Zlt_not_le. assumption.
 Qed.
 
 (** *** Verification of [notMember] *)
@@ -2625,8 +2492,7 @@ Qed.
 
 Lemma singleton_Desc:
   forall e,
-   0 <= e ->
-   Desc (singleton e) (Z.shiftr e 6, N.log2 WIDTH) (fun x => x =? e).
+   Desc (singleton e) (N.shiftr e 6, N.log2 WIDTH) (fun x => x =? e).
 Proof.
   intros.
   apply DescTip; try nonneg; try isBitMask.
@@ -2636,7 +2502,7 @@ Proof.
 Qed.
 
 Lemma singleton_Sem:
-  forall e, 0 <= e -> Sem (singleton e) (fun x => x =? e).
+  forall e, Sem (singleton e) (fun x => x =? e).
 Proof.
   intros.
   eapply DescSem.
@@ -2644,7 +2510,7 @@ Proof.
 Qed.
 
 Lemma singleton_WF:
-  forall e, 0 <= e -> WF (singleton e).
+  forall e, WF (singleton e).
 Proof. intros. eexists. apply singleton_Sem; auto. Qed.
 
 (** *** Verification of [insert] *)
@@ -2666,8 +2532,8 @@ Proof.
   rewrite mask_spec.
   rewrite -> zero_spec by (apply commonRangeDisj_rBits_pos; eapply Desc_rNonneg; eassumption).
   rewrite if_negb.
-  match goal with [ |- context [Z.testbit ?i ?b] ]  => destruct (Z.testbit i b) eqn:Hbit end.
-  * assert (Hbit2 : Z.testbit (rPrefix r2) (Z.pred (Z.of_N (rBits (commonRangeDisj r1 r2)))) = false).
+  match goal with [ |- context [N.testbit ?i ?b] ]  => destruct (N.testbit i b) eqn:Hbit end.
+  * assert (Hbit2 : N.testbit (rPrefix r2) (rBits (commonRangeDisj r1 r2) - 1) = false).
     { apply not_true_is_false.
       rewrite <- Hbit.
       apply not_eq_sym.
@@ -2686,7 +2552,7 @@ Proof.
       apply isSubrange_halfRange_commonRangeDisj;
         try (eapply Desc_rNonneg; eassumption); auto.
     + solve_f_eq.
-  * assert (Hbit2 : Z.testbit (rPrefix r2) (Z.pred (Z.of_N (rBits (commonRangeDisj r1 r2)))) = true).
+  * assert (Hbit2 : N.testbit (rPrefix r2) (rBits (commonRangeDisj r1 r2) - 1) = true).
     { apply not_false_iff_true.
       rewrite <- Hbit.
       apply not_eq_sym.
@@ -2757,9 +2623,8 @@ Lemma insert_Desc:
   forall e r1,
   forall s2 r2 f2,
   forall r f, 
-  0 <= e ->
   Desc s2 r2 f2 ->
-  r1 = (Z.shiftr e tip_widthZ, tip_width) ->
+  r1 = (N.shiftr e tip_width, tip_width) ->
   r = commonRange r1 r2 ->
   (forall i, f i = (i =? e) || f2 i) ->
   Desc (insert e s2) r f.
@@ -2772,40 +2637,38 @@ Proof.
   * isBitMask.
   * eassumption.
   * congruence.
-  * intros j. rewrite H3. f_equal.
+  * intros j. rewrite H2. f_equal.
     symmetry. apply bitmapInRange_bitmapOf.
 Qed.
 
 Lemma insert_Nil_Desc:
   forall e r f,
-  0 <= e ->
-  r = (Z.shiftr e tip_widthZ, tip_width) ->
+  r = (N.shiftr e tip_width, tip_width) ->
   (forall i, f i = (i =? e)) ->
   Desc (insert e Nil) r f.
 Proof.
   intros; subst.
   apply DescTip; try nonneg.
   * symmetry. apply rPrefix_shiftr.
-  * intros j. rewrite H1. symmetry. apply bitmapInRange_bitmapOf.
+  * intros j. rewrite H0. symmetry. apply bitmapInRange_bitmapOf.
   * isBitMask.
 Qed.
 
 Lemma insert_Sem:
   forall e s2 f2 f,
-  0 <= e ->
   Sem s2 f2 ->
   (forall i, f i = (i =? e) || f2 i) ->
   Sem (insert e s2) f.
 Proof.
   intros.
-  destruct H0.
+  destruct H.
   * eapply DescSem. apply insert_Nil_Desc; auto.
     solve_f_eq.
   * eapply DescSem. eapply insert_Desc; eauto.
 Qed.
 
 Lemma insert_WF:
-  forall n s, WF s -> 0 <= n -> WF (insert n s).
+  forall n s, WF s -> WF (insert n s).
 Proof.
   intros.
   destruct H.
@@ -2818,7 +2681,6 @@ Qed.
 
 Lemma tip_Desc0:
   forall p bm r f,
-    0 <= p ->
     p = rPrefix r ->
     rBits r = N.log2 WIDTH ->
     (forall i, f i = bitmapInRange r bm i) ->
@@ -2829,14 +2691,14 @@ Proof.
   unfold tip.
   unfoldMethods.
   simpl (Z.to_N 0).
-  rewrite isBitMask0_zero_or_isBitMask in H3.
-  destruct H3; subst.
+  rewrite isBitMask0_zero_or_isBitMask in H2.
+  destruct H2; subst.
   * rewrite N.eqb_refl.
     apply Desc0Nil.
-    intro j. rewrite H2.
+    intro j. rewrite H1.
     apply bitmapInRange_0.
   * replace (bm =? 0)%N with false
-      by (symmetry; apply N.eqb_neq; intro; subst; inversion H3; inversion H0).
+      by (symmetry; apply N.eqb_neq; intro; subst; inversion H2; inversion H).
     apply Desc_Desc0.
     apply DescTip; auto.
 Qed.
@@ -2910,7 +2772,7 @@ Proof.
       apply Desc_Desc0.
       eapply DescBin; try eassumption; try reflexivity.
       intro.
-        rewrite Hf'. rewrite H4. rewrite H6.
+        rewrite Hf'. rewrite H4. rewrite H5.
         destruct (inRange i r) eqn:Hir.
         - rewrite bitmapInRange_outside by inRange_false.
           reflexivity.
@@ -2941,7 +2803,6 @@ Qed.
 
 Lemma delete_Desc:
   forall e s r f f',
-  0 <= e ->
   Desc s r f ->
   (forall i, f' i = negb (i =? e) && f i) ->
   Desc0 (delete e s) r f'.
@@ -2959,13 +2820,12 @@ Qed.
 
 Lemma delete_Sem:
   forall e s f f',
-  0 <= e ->
   Sem s f ->
   (forall i, f' i = negb (i =? e) && f i) ->
   Sem (delete e s) f'.
 Proof.
   intros.
-  destruct H0.
+  destruct H.
   * apply SemNil.
     solve_f_eq.
   * eapply Desc0_Sem.
@@ -2974,8 +2834,7 @@ Qed.
 
 Lemma delete_WF:
   forall n s,
-  WF s -> 0 <= n ->
-  WF (delete n s).
+  WF s -> WF (delete n s).
 Proof.
   intros.
   destruct H.
@@ -3722,19 +3581,19 @@ Next Obligation.
          unfold N.eqf.
          setoid_rewrite N.land_spec.
          setoid_rewrite N.bits_0.
-         setoid_rewrite H6. setoid_rewrite H2.
+         setoid_rewrite H4. setoid_rewrite H1.
          split; intro.
          ** intro i.
             unfold bitmapInRange.
             destruct (inRange i r).
-            ++ apply H4.
+            ++ apply H.
             ++ reflexivity.
          ** intro n.
             destruct (N.ltb_spec n (2 ^ rBits r))%N.
-            ++ specialize (H4 (intoRange r n)).
-               rewrite !bitmapInRange_intoRange in H4 by assumption.
+            ++ specialize (H (intoRange r n)).
+               rewrite !bitmapInRange_intoRange in H by assumption.
                assumption.
-            ++ replace (rBits r) in H8. change (WIDTH <= n)%N in H8.
+            ++ replace (rBits r) in H6. change (WIDTH <= n)%N in H6.
                rewrite isBitMask0_outside by isBitMask.
                reflexivity.
       -- split; intro; try reflexivity.
@@ -3749,10 +3608,10 @@ Next Obligation.
         split; intro; try reflexivity.
         solve_f_eq_disjoint.
       - rewrite IHHD0_1; clear IHHD0_1 IHHD0_2.
-        setoid_rewrite H8. setoid_rewrite H2.
+        setoid_rewrite H7. setoid_rewrite H1.
         split; intro; solve_eq_disjoint_specialize.
       - rewrite IHHD0_2; clear IHHD0_1 IHHD0_2.
-        setoid_rewrite H8. setoid_rewrite H2.
+        setoid_rewrite H7. setoid_rewrite H1.
         split; intro; solve_eq_disjoint_specialize.
 
   * (* s1 is a Bin *)
@@ -3766,7 +3625,7 @@ Next Obligation.
           if nomatch p0 p1 m1 then true else if zero p0 m1 then disjointBM l1 else disjointBM r5
       | Tip kx1 bm1 => if kx1 =? p0 then (N.land bm1 bm =? Z.to_N 0)%N else true
       | Nil => true
-      end) (Bin p msk s0 s3) = true <->  (forall i : Z, f1 i && f2 i = false)).
+      end) (Bin p msk s0 s3) = true <->  (forall i : N, f1 i && f2 i = false)).
       rewrite H7.
       clear dependent s0. clear dependent s3. clear dependent r0. clear dependent r3. clear dependent f0. clear dependent f3.
       clear dependent p. clear dependent msk.
@@ -3787,19 +3646,19 @@ Next Obligation.
            unfold N.eqf.
            setoid_rewrite N.land_spec.
            setoid_rewrite N.bits_0.
-           setoid_rewrite H13. setoid_rewrite H2.
+           setoid_rewrite H12. setoid_rewrite H1.
            split; intro.
            ** intro i.
               unfold bitmapInRange.
               destruct (inRange i r).
-              +++ apply H0.
+              +++ apply H.
               +++ reflexivity.
            ** intro n.
               destruct (N.ltb_spec n (2 ^ rBits r))%N.
-              +++ specialize (H0 (intoRange r n)).
-                  rewrite !bitmapInRange_intoRange in H0 by assumption.
+              +++ specialize (H (intoRange r n)).
+                  rewrite !bitmapInRange_intoRange in H by assumption.
                   assumption.
-              +++ replace (rBits r) in H4. change (WIDTH <= n)%N in H4.
+              +++ replace (rBits r) in H3. change (WIDTH <= n)%N in H3.
                   rewrite isBitMask0_outside by isBitMask.
                   reflexivity.
         -- split; intro; try reflexivity.
@@ -3814,10 +3673,10 @@ Next Obligation.
           split; intro; try reflexivity.
           solve_f_eq_disjoint.
         - rewrite IHHD1_1; clear IHHD1_1 IHHD1_2.
-          setoid_rewrite H13. setoid_rewrite H4.
+          setoid_rewrite H12. setoid_rewrite H4.
           split; intro; solve_eq_disjoint_specialize.
         - rewrite IHHD1_2; clear IHHD1_1 IHHD1_2.
-          setoid_rewrite H13. setoid_rewrite H4.
+          setoid_rewrite H12. setoid_rewrite H4.
           split; intro; solve_eq_disjoint_specialize.
 
     + subst.
@@ -3905,8 +3764,8 @@ Lemma splitGo_Sem :
   forall (P : IntSet * IntSet -> Prop),
   (forall s1 f1 s2 f2,
     Sem s1 f1 -> Sem s2 f2 ->
-    (forall i, f1 i = f i && (i <? x)%Z) ->
-    (forall i, f2 i = f i && (x <? i)%Z) ->
+    (forall i, f1 i = f i && (i <? x)) ->
+    (forall i, f2 i = f i && (x <? i)) ->
     P (s1, s2)) ->
   P (splitGo x s) : Prop.
 Proof.
@@ -3914,7 +3773,7 @@ Proof.
   induction HD; intros X HX.
   * cbn -[bitmapOf prefixOf N.ones].
     fold WIDTH.
-    destruct (Z.ltb_spec x p); only 2: destruct (Z.ltb_spec p (prefixOf x)).
+    destruct (N.ltb_spec x p); only 2: destruct (N.ltb_spec p (prefixOf x)).
     - (* s is Tip, x is below *)
       eapply HX.
       + constructor; intro; reflexivity.
@@ -3922,13 +3781,13 @@ Proof.
       + solve_f_eq.
         apply bitmapInRange_inside in Heqb.
         apply inRange_bounded in Heqb.
-        rewrite Z.ltb_lt in Heqb0.
-        omega.
+        rewrite N.ltb_lt in Heqb0.
+        lia.
       + solve_f_eq.
         apply bitmapInRange_inside in Heqb.
         apply inRange_bounded in Heqb.
-        rewrite Z.ltb_ge in Heqb0.
-        omega.
+        rewrite N.ltb_ge in Heqb0.
+        lia.
     - (* s is Tip, x is above *)
       eapply HX.
       + eapply DescSem. constructor; try eassumption.
@@ -3936,20 +3795,20 @@ Proof.
       + solve_f_eq.
         apply bitmapInRange_inside in Heqb.
         rewrite <- prefixOf_eqb_spec in Heqb by assumption.
-        rewrite Z.eqb_eq in Heqb.
-        rewrite Z.ltb_ge in Heqb0. subst.
+        rewrite N.eqb_eq in Heqb.
+        rewrite N.ltb_ge in Heqb0. subst.
         apply prefixOf_mono in Heqb0. 
-        omega.
+        lia.
       + solve_f_eq.
         apply bitmapInRange_inside in Heqb.
         rewrite <- prefixOf_eqb_spec in Heqb by assumption.
-        rewrite Z.eqb_eq in Heqb.
-        rewrite Z.ltb_lt in Heqb0. subst.
-        assert (x <= i) by omega.
-        apply prefixOf_mono in H0. 
-        omega.
+        rewrite N.eqb_eq in Heqb.
+        rewrite N.ltb_lt in Heqb0. subst.
+        assert (x <= i) by lia.
+        apply prefixOf_mono in H. 
+        lia.
     - (* s is Tip, x is part of it *)
-      assert ((bitmapOf x - 1)%N = (N.ones (Z.to_N (suffixOf x))%N)) as Htmp.
+      assert ((bitmapOf x - 1)%N = (N.ones (suffixOf x)%N)) as Htmp.
       { rewrite N.ones_equiv.
         rewrite N.pred_sub.
         unfold bitmapOf.
@@ -3958,10 +3817,10 @@ Proof.
       }
       assert (prefixOf x = rPrefix r). {
         subst.
-        unfold Prefix, Int in *.
-        apply prefixOf_mono in H4.
-        rewrite prefixOf_rPrefix in H4 by assumption.
-        omega.
+        unfold Prefix, Nat in *.
+        apply prefixOf_mono in H3.
+        rewrite prefixOf_rPrefix in H3 by assumption.
+        lia.
       }
       rewrite Htmp; clear Htmp.
       eapply HX.
@@ -3970,13 +3829,7 @@ Proof.
         apply isBitMask0_land; try isBitMask.
         apply isBitMask0_ones.
         pose proof (suffixOf_lt_WIDTH x).
-        apply N2Z.inj_le.
-        rewrite Z2N.id; [omega|].
-        clear -H H4.
-        unfold suffixOf.
-        simpl.
-        apply land_nonneg_proj_r2l.
-        omega.
+        lia.
       + eapply Desc0_Sem.
         eapply tip_Desc0; try eassumption; try reflexivity.
         apply isBitMask0_land; try isBitMask.
@@ -3984,22 +3837,21 @@ Proof.
         apply isBitMask0_ones.
         Nomega.
       + intro i.
-        rewrite H2.
+        rewrite H1.
         rewrite bitmapInRange_land.
         destruct (bitmapInRange r bm i) eqn:?; try reflexivity; simpl.
         apply bitmapInRange_inside in Heqb.
         rewrite bitmapInRange_ones by assumption.
-        rewrite Z2N.id by nonneg.
         rewrite <- prefixOf_eqb_spec in Heqb by assumption.
-        rewrite Z.eqb_eq in *.
-        unfold Prefix, Int in *.
+        rewrite N.eqb_eq in *.
+        unfold Prefix, Nat in *.
         pose proof (prefixOf_suffixOf i).
         pose proof (prefixOf_suffixOf x).
         apply eq_iff_eq_true.
-        rewrite !Z.ltb_lt.
-        omega.
+        rewrite !N.ltb_lt.
+        lia.
       + intro i.
-        rewrite H2.
+        rewrite H1.
         rewrite bitmapInRange_land.
         destruct (bitmapInRange r bm i) eqn:?; try reflexivity; rewrite !andb_true_l.
         apply bitmapInRange_inside in Heqb.
@@ -4007,17 +3859,16 @@ Proof.
         rewrite bitmapInRange_ones by assumption.
         rewrite suffixOf_plus_bitmapOf.
         rewrite bitmapInRange_ones by assumption.
-        rewrite Z2N.id by nonneg.
         rewrite <- prefixOf_eqb_spec in Heqb by assumption.
-        rewrite Z.eqb_eq in *.
-        unfold Prefix, Int in *.
+        rewrite N.eqb_eq in *.
+        unfold Prefix, Nat in *.
         pose proof (prefixOf_suffixOf i).
         pose proof (prefixOf_suffixOf x).
         apply eq_iff_eq_true.
         rewrite andb_true_iff, negb_true_iff.
-        rewrite !Z.ltb_lt, Z.ltb_ge.
-        assert (suffixOf i < Z.of_N WIDTH) by apply suffixOf_lt_WIDTH.
-        omega.
+        rewrite !N.ltb_lt, N.ltb_ge.
+        assert (suffixOf i < WIDTH) by apply suffixOf_lt_WIDTH.
+        lia.
   * simpl. unfoldMethods.
     subst.
     rewrite match_nomatch.
@@ -4026,22 +3877,22 @@ Proof.
     + (* s is bin, x is outside *)
       apply inRange_false_bounded in H2.
       clear IHHD1 IHHD2.
-      destruct (Z.ltb_spec x (rPrefix r)).
+      destruct (N.ltb_spec x (rPrefix r)).
       - (* s is bin, x is below *)
         eapply HX.
         ** constructor; intro; reflexivity.
         ** eapply DescSem. econstructor; try eassumption; reflexivity.
         ** intros i. simpl. rewrite H4.
-           destruct (Z.ltb_spec i x).
-           ++ destruct (inRange i r) eqn:Hir; only 1: (apply inRange_bounded in Hir; omega).
+           destruct (N.ltb_spec i x).
+           ++ destruct (inRange i r) eqn:Hir; only 1: (apply inRange_bounded in Hir; lia).
               rewrite (Desc_outside HD1) by inRange_false.
               rewrite (Desc_outside HD2) by inRange_false.
               reflexivity.
            ++ rewrite andb_false_r. reflexivity.
         ** intros i. 
-           destruct (Z.ltb_spec x i).
+           destruct (N.ltb_spec x i).
            ++ rewrite andb_true_r. reflexivity.
-           ++ destruct (inRange i r) eqn:Hir; only 1: (apply inRange_bounded in Hir; omega).
+           ++ destruct (inRange i r) eqn:Hir; only 1: (apply inRange_bounded in Hir; lia).
               rewrite H4.
               rewrite (Desc_outside HD1) by inRange_false.
               rewrite (Desc_outside HD2) by inRange_false.
@@ -4051,15 +3902,15 @@ Proof.
         ** eapply DescSem. econstructor; try eassumption; reflexivity.
         ** constructor; intro; reflexivity.
         ** intros i. simpl. rewrite H4.
-           destruct (Z.ltb_spec i x).
+           destruct (N.ltb_spec i x).
            ++ rewrite andb_true_r. reflexivity.
-           ++ destruct (inRange i r) eqn:Hir; only 1: (apply inRange_bounded in Hir; omega).
+           ++ destruct (inRange i r) eqn:Hir; only 1: (apply inRange_bounded in Hir; lia).
               rewrite (Desc_outside HD1) by inRange_false.
               rewrite (Desc_outside HD2) by inRange_false.
               reflexivity.
         ** intros i. simpl. rewrite H4.
-           destruct (Z.ltb_spec x i).
-           ++ destruct (inRange i r) eqn:Hir; only 1: (apply inRange_bounded in Hir; omega).
+           destruct (N.ltb_spec x i).
+           ++ destruct (inRange i r) eqn:Hir; only 1: (apply inRange_bounded in Hir; lia).
               rewrite (Desc_outside HD1) by inRange_false.
               rewrite (Desc_outside HD2) by inRange_false.
               reflexivity.
@@ -4071,7 +3922,7 @@ Proof.
       - apply union_Sem; [ eassumption | eapply DescSem; eassumption].
       - intro i.
         rewrite H4, Hfl; clear H4 Hfl Hfr.
-        destruct (f2 i) eqn:?, (Z.ltb_spec i x);
+        destruct (f2 i) eqn:?, (N.ltb_spec i x);
           rewrite ?andb_true_r, ?andb_false_r, ?orb_true_r, ?orb_false_r; try reflexivity; simpl.
 
         apply (Desc_inside HD2) in Heqb.
@@ -4080,10 +3931,10 @@ Proof.
         apply inRange_bounded in H2.
         rewrite rPrefix_halfRange_otherhalf in * by assumption.
         rewrite !rBits_halfRange in *.
-        omega.
+        lia.
       - intro i.
         rewrite H4, Hfr; clear H4 Hfl Hfr.
-        destruct (f2 i) eqn:?, (Z.ltb_spec x i);
+        destruct (f2 i) eqn:?, (N.ltb_spec x i);
           rewrite ?andb_true_r, ?andb_false_r; try reflexivity; simpl.
 
         apply (Desc_inside HD2) in Heqb.
@@ -4092,7 +3943,7 @@ Proof.
         apply inRange_bounded in H2.
         rewrite rPrefix_halfRange_otherhalf in * by assumption.
         rewrite !rBits_halfRange in *.
-        omega.
+        lia.
     + eapply IHHD2. clear IHHD1 IHHD2.
       intros sl fl sr fr Hsl Hsr Hfl Hfr.
       eapply HX; clear HX.
@@ -4100,7 +3951,7 @@ Proof.
       - eassumption.
       - intro i.
         rewrite H4, Hfl; clear H4 Hfl Hfr.
-        destruct (f1 i) eqn:?, (Z.ltb_spec i x);
+        destruct (f1 i) eqn:?, (N.ltb_spec i x);
           rewrite ?andb_true_r, ?andb_false_r, ?orb_true_r, ?orb_false_r; try reflexivity; simpl.
 
         apply (Desc_inside HD1) in Heqb.
@@ -4109,10 +3960,10 @@ Proof.
         apply inRange_bounded in H3.
         rewrite rPrefix_halfRange_otherhalf in * by assumption.
         rewrite !rBits_halfRange in *.
-        omega.
+        lia.
       - intro i.
         rewrite H4, Hfr; clear H4 Hfl Hfr.
-        destruct (f1 i) eqn:?, (Z.ltb_spec x i);
+        destruct (f1 i) eqn:?, (N.ltb_spec x i);
           rewrite ?andb_true_r, ?andb_false_r, ?orb_true_r, ?orb_false_r; try reflexivity; simpl.
         apply (Desc_inside HD1) in Heqb.
         assert (inRange i (halfRange r false) = true) by inRange_true.
@@ -4120,7 +3971,7 @@ Proof.
         apply inRange_bounded in H3.
         rewrite rPrefix_halfRange_otherhalf in * by assumption.
         rewrite !rBits_halfRange in *.
-        omega.
+        lia.
 Qed.
 
 Lemma split_Sem :
@@ -4129,8 +3980,8 @@ Lemma split_Sem :
   forall (P : IntSet * IntSet -> Prop),
   (forall s1 f1 s2 f2,
     Sem s1 f1 -> Sem s2 f2 ->
-    (forall i, f1 i = f i && (i <? x)%Z) ->
-    (forall i, f2 i = f i && (x <? i)%Z) ->
+    (forall i, f1 i = f i && (i <? x)) ->
+    (forall i, f2 i = f i && (x <? i)) ->
     P (s1, s2)) ->
   P (split x s) : Prop.
 Proof.
@@ -4144,17 +3995,19 @@ Proof.
       only 1: eassumption;
       intros sl fl sr fr Hsl Hsr Hfl Hfr.
       eapply HX; eassumption.
-    + destruct (Z.ltb_spec msk 0).
+    + simpl Z.to_N.
+      destruct (N.ltb_spec msk 0).
       - (* This branch is invalid since we only allow positive members. Otherwise, we
            would have to do something here. *)
-        exfalso. pose proof (rMask_nonneg r).  omega.
+        exfalso.
+        lia.
       - eapply splitGo_Sem;
         only 1: eassumption;
         intros sl fl sr fr Hsl Hsr Hfl Hfr.
         eapply HX; eassumption.
 Qed.
 
-Theorem split_WF (x : Int) (s : IntSet) :
+Theorem split_WF (x : N) (s : IntSet) :
   WF s ->
   let '(l,r) := split x s in
   WF l /\ WF r.
@@ -4164,19 +4017,19 @@ Proof.
   split; [exists fl | exists fr]; assumption.
 Qed.
 
-Theorem split_WF' (x : Int) (s : IntSet) :
+Theorem split_WF' (x : N) (s : IntSet) :
   WF s ->
   WF (fst (split x s)) /\ WF (snd (split x s)).
 Proof.
   generalize (split_WF x s); destruct (split x s); auto.
 Qed.
 
-Corollary split_1_WF (x : Int) (s : IntSet) :
+Corollary split_1_WF (x : N) (s : IntSet) :
   WF s ->
   WF (fst (split x s)).
 Proof. apply split_WF'. Qed.
 
-Corollary split_2_WF (x : Int) (s : IntSet) :
+Corollary split_2_WF (x : N) (s : IntSet) :
   WF s ->
   WF (snd (split x s)).
 Proof. apply split_WF'. Qed.
@@ -4196,8 +4049,8 @@ Lemma splitMemberGo_Sem :
   (forall s1 f1 s2 f2 b,
     Sem s1 f1 -> Sem s2 f2 ->
     f x = b ->
-    (forall i, f1 i = f i && (i <? x)%Z) ->
-    (forall i, f2 i = f i && (x <? i)%Z) ->
+    (forall i, f1 i = f i && (i <? x)) ->
+    (forall i, f2 i = f i && (x <? i)) ->
     P (s1, b, s2)) ->
   P (splitMemberGo x s) : Prop.
 Proof.
@@ -4205,51 +4058,51 @@ Proof.
   induction HD; intros X HX.
   * cbn -[bitmapOf prefixOf N.ones].
     fold WIDTH.
-    destruct (Z.ltb_spec x p); only 2: destruct (Z.ltb_spec p (prefixOf x)).
+    destruct (N.ltb_spec x p); only 2: destruct (N.ltb_spec p (prefixOf x)).
     - (* s is Tip, x is below *)
       eapply HX.
       + constructor; intro; reflexivity.
       + eapply DescSem. constructor; try eassumption.
-      + rewrite H2.
+      + rewrite H1.
         apply bitmapInRange_outside.
         rewrite inRange_false_bounded_iff.
-        omega.
+        lia.
       + solve_f_eq.
         apply bitmapInRange_inside in Heqb.
         apply inRange_bounded in Heqb.
-        rewrite Z.ltb_lt in Heqb0.
-        omega.
+        rewrite N.ltb_lt in Heqb0.
+        lia.
       + solve_f_eq.
         apply bitmapInRange_inside in Heqb.
         apply inRange_bounded in Heqb.
-        rewrite Z.ltb_ge in Heqb0.
-        omega.
+        rewrite N.ltb_ge in Heqb0.
+        lia.
     - (* s is Tip, x is above *)
       eapply HX.
       + eapply DescSem. constructor; try eassumption.
       + constructor; intro; reflexivity.
-      + rewrite H2.
+      + rewrite H1.
         apply bitmapInRange_outside.
         rewrite <- prefixOf_eqb_spec by assumption.
-        rewrite Z.eqb_neq.
-        omega.
+        rewrite N.eqb_neq.
+        lia.
       + solve_f_eq.
         apply bitmapInRange_inside in Heqb.
         rewrite <- prefixOf_eqb_spec in Heqb by assumption.
-        rewrite Z.eqb_eq in Heqb.
-        rewrite Z.ltb_ge in Heqb0. subst.
+        rewrite N.eqb_eq in Heqb.
+        rewrite N.ltb_ge in Heqb0. subst.
         apply prefixOf_mono in Heqb0. 
-        omega.
+        lia.
       + solve_f_eq.
         apply bitmapInRange_inside in Heqb.
         rewrite <- prefixOf_eqb_spec in Heqb by assumption.
-        rewrite Z.eqb_eq in Heqb.
-        rewrite Z.ltb_lt in Heqb0. subst.
-        assert (x <= i) by omega.
-        apply prefixOf_mono in H0. 
-        omega.
+        rewrite N.eqb_eq in Heqb.
+        rewrite N.ltb_lt in Heqb0. subst.
+        assert (x <= i) by lia.
+        apply prefixOf_mono in H. 
+        lia.
     - (* s is Tip, x is part of it *)
-      assert ((bitmapOf x - 1)%N = (N.ones (Z.to_N (suffixOf x))%N)) as Htmp.
+      assert ((bitmapOf x - 1)%N = (N.ones (suffixOf x)%N)) as Htmp.
       { rewrite N.ones_equiv.
         rewrite N.pred_sub.
         unfold bitmapOf.
@@ -4259,14 +4112,14 @@ Proof.
       rewrite Htmp.
       assert (prefixOf x = rPrefix r). {
         subst.
-        unfold Prefix, Int in *.
-        apply prefixOf_mono in H4.
-        rewrite prefixOf_rPrefix in H4 by assumption.
-        omega.
+        unfold Prefix, Nat in *.
+        apply prefixOf_mono in H3.
+        rewrite prefixOf_rPrefix in H3 by assumption.
+        lia.
       }
       assert (inRange x r = true). {
         rewrite <- prefixOf_eqb_spec by assumption.
-        rewrite Z.eqb_eq.
+        rewrite N.eqb_eq.
         assumption.
       }
       eapply HX.
@@ -4275,45 +4128,38 @@ Proof.
         apply isBitMask0_land; try isBitMask.
         apply isBitMask0_ones.
         pose proof (suffixOf_lt_WIDTH x).
-        apply N2Z.inj_le.
-        rewrite Z2N.id; [omega|].
-        clear -H H4.
-        unfold suffixOf.
-        simpl.
-        apply land_nonneg_proj_r2l.
-        omega.
+        lia.
       + eapply Desc0_Sem.
         eapply tip_Desc0; try eassumption; try reflexivity.
         apply isBitMask0_land; try isBitMask.
         apply isBitMask0_ldiff.
         apply isBitMask0_ones.
         Nomega.
-      + rewrite H2.
+      + rewrite H1.
         unfold bitmapOf.
         rewrite bitmapOfSuffix_pow.
         rewrite N.land_comm.
         rewrite N_land_pow2_testbit.
         unfold bitmapInRange.
         replace (inRange x r).
-        rewrite H1.
+        rewrite H0.
         reflexivity.
       + intro i.
-        rewrite H2.
+        rewrite H1.
         rewrite bitmapInRange_land.
         destruct (bitmapInRange r bm i) eqn:?; try reflexivity; simpl.
         apply bitmapInRange_inside in Heqb.
         rewrite bitmapInRange_ones by assumption.
-        rewrite Z2N.id by nonneg.
         rewrite <- prefixOf_eqb_spec in Heqb by assumption.
-        rewrite Z.eqb_eq in *.
+        rewrite N.eqb_eq in *.
         unfold Prefix, Int in *.
         pose proof (prefixOf_suffixOf i).
         pose proof (prefixOf_suffixOf x).
         apply eq_iff_eq_true.
-        rewrite !Z.ltb_lt.
-        omega.
+        rewrite !N.ltb_lt.
+        lia.
       + intro i.
-        rewrite H2.
+        rewrite H1.
         rewrite bitmapInRange_land.
         destruct (bitmapInRange r bm i) eqn:?; try reflexivity; rewrite !andb_true_l.
         apply bitmapInRange_inside in Heqb.
@@ -4321,17 +4167,16 @@ Proof.
         rewrite bitmapInRange_ones by assumption.
         rewrite suffixOf_plus_bitmapOf.
         rewrite bitmapInRange_ones by assumption.
-        rewrite Z2N.id by nonneg.
         rewrite <- prefixOf_eqb_spec in Heqb by assumption.
-        rewrite Z.eqb_eq in *.
+        rewrite N.eqb_eq in *.
         unfold Prefix, Int in *.
         pose proof (prefixOf_suffixOf i).
         pose proof (prefixOf_suffixOf x).
         apply eq_iff_eq_true.
         rewrite andb_true_iff, negb_true_iff.
-        rewrite !Z.ltb_lt, Z.ltb_ge.
-        assert (suffixOf i < Z.of_N WIDTH) by apply suffixOf_lt_WIDTH.
-        omega.
+        rewrite !N.ltb_lt, N.ltb_ge.
+        assert (suffixOf i < WIDTH) by apply suffixOf_lt_WIDTH.
+        lia.
   * simpl. unfoldMethods.
     subst.
     rewrite match_nomatch.
@@ -4340,7 +4185,7 @@ Proof.
     + (* s is bin, x is outside *)
       pose proof (inRange_false_bounded _ _ H2).
       clear IHHD1 IHHD2.
-      destruct (Z.ltb_spec x (rPrefix r)).
+      destruct (N.ltb_spec x (rPrefix r)).
       - (* s is bin, x is below *)
         eapply HX; clear HX.
         ** constructor; intro; reflexivity.
@@ -4350,16 +4195,16 @@ Proof.
            rewrite (Desc_outside HD2) by inRange_false.
            reflexivity.
         ** intros i. simpl. rewrite H4.
-           destruct (Z.ltb_spec i x).
-           ++ destruct (inRange i r) eqn:Hir; only 1: (apply inRange_bounded in Hir; omega).
+           destruct (N.ltb_spec i x).
+           ++ destruct (inRange i r) eqn:Hir; only 1: (apply inRange_bounded in Hir; lia).
               rewrite (Desc_outside HD1) by inRange_false.
               rewrite (Desc_outside HD2) by inRange_false.
               reflexivity.
            ++ rewrite andb_false_r. reflexivity.
         ** intros i. 
-           destruct (Z.ltb_spec x i).
+           destruct (N.ltb_spec x i).
            ++ rewrite andb_true_r. reflexivity.
-           ++ destruct (inRange i r) eqn:Hir; only 1: (apply inRange_bounded in Hir; omega).
+           ++ destruct (inRange i r) eqn:Hir; only 1: (apply inRange_bounded in Hir; lia).
               rewrite H4.
               rewrite (Desc_outside HD1) by inRange_false.
               rewrite (Desc_outside HD2) by inRange_false.
@@ -4373,15 +4218,15 @@ Proof.
            rewrite (Desc_outside HD2) by inRange_false.
            reflexivity.
         ** intros i. simpl. rewrite H4.
-           destruct (Z.ltb_spec i x).
+           destruct (N.ltb_spec i x).
            ++ rewrite andb_true_r. reflexivity.
-           ++ destruct (inRange i r) eqn:Hir; only 1: (apply inRange_bounded in Hir; omega).
+           ++ destruct (inRange i r) eqn:Hir; only 1: (apply inRange_bounded in Hir; lia).
               rewrite (Desc_outside HD1) by inRange_false.
               rewrite (Desc_outside HD2) by inRange_false.
               reflexivity.
         ** intros i. simpl. rewrite H4.
-           destruct (Z.ltb_spec x i).
-           ++ destruct (inRange i r) eqn:Hir; only 1: (apply inRange_bounded in Hir; omega).
+           destruct (N.ltb_spec x i).
+           ++ destruct (inRange i r) eqn:Hir; only 1: (apply inRange_bounded in Hir; lia).
               rewrite (Desc_outside HD1) by inRange_false.
               rewrite (Desc_outside HD2) by inRange_false.
               reflexivity.
@@ -4397,7 +4242,7 @@ Proof.
         inRange_false.
       - intro i.
         rewrite H4, Hfl; clear H4 Hfl Hfr.
-        destruct (f2 i) eqn:?, (Z.ltb_spec i x);
+        destruct (f2 i) eqn:?, (N.ltb_spec i x);
           rewrite ?andb_true_r, ?andb_false_r, ?orb_true_r, ?orb_false_r; try reflexivity; simpl.
 
         apply (Desc_inside HD2) in Heqb0.
@@ -4406,10 +4251,10 @@ Proof.
         apply inRange_bounded in H2.
         rewrite rPrefix_halfRange_otherhalf in * by assumption.
         rewrite !rBits_halfRange in *.
-        omega.
+        lia.
       - intro i.
         rewrite H4, Hfr; clear H4 Hfl Hfr.
-        destruct (f2 i) eqn:?, (Z.ltb_spec x i);
+        destruct (f2 i) eqn:?, (N.ltb_spec x i);
           rewrite ?andb_true_r, ?andb_false_r; try reflexivity; simpl.
 
         apply (Desc_inside HD2) in Heqb0.
@@ -4418,7 +4263,7 @@ Proof.
         apply inRange_bounded in H2.
         rewrite rPrefix_halfRange_otherhalf in * by assumption.
         rewrite !rBits_halfRange in *.
-        omega.
+        lia.
     + eapply IHHD2. clear IHHD1 IHHD2.
       intros sl fl sr fr b Hsl Hsr Hb Hfl Hfr.
       eapply HX; clear HX.
@@ -4430,7 +4275,7 @@ Proof.
         inRange_false.
       - intro i.
         rewrite H4, Hfl; clear H4 Hfl Hfr.
-        destruct (f1 i) eqn:?, (Z.ltb_spec i x);
+        destruct (f1 i) eqn:?, (N.ltb_spec i x);
           rewrite ?andb_true_r, ?andb_false_r, ?orb_true_r, ?orb_false_r; try reflexivity; simpl.
 
         apply (Desc_inside HD1) in Heqb0.
@@ -4439,10 +4284,10 @@ Proof.
         apply inRange_bounded in H3.
         rewrite rPrefix_halfRange_otherhalf in * by assumption.
         rewrite !rBits_halfRange in *.
-        omega.
+        lia.
       - intro i.
         rewrite H4, Hfr; clear H4 Hfl Hfr.
-        destruct (f1 i) eqn:?, (Z.ltb_spec x i);
+        destruct (f1 i) eqn:?, (N.ltb_spec x i);
           rewrite ?andb_true_r, ?andb_false_r, ?orb_true_r, ?orb_false_r; try reflexivity; simpl.
         apply (Desc_inside HD1) in Heqb0.
         assert (inRange i (halfRange r false) = true) by inRange_true.
@@ -4450,7 +4295,7 @@ Proof.
         apply inRange_bounded in H3.
         rewrite rPrefix_halfRange_otherhalf in * by assumption.
         rewrite !rBits_halfRange in *.
-        omega.
+        lia.
 Qed.
 
 Lemma splitMember_Sem :
@@ -4460,8 +4305,8 @@ Lemma splitMember_Sem :
   (forall s1 f1 s2 f2 b,
     Sem s1 f1 -> Sem s2 f2 ->
     f x = b ->
-    (forall i, f1 i = f i && (i <? x)%Z) ->
-    (forall i, f2 i = f i && (x <? i)%Z) ->
+    (forall i, f1 i = f i && (i <? x)) ->
+    (forall i, f2 i = f i && (x <? i)) ->
     P (s1, b, s2)) ->
   P (splitMember x s) : Prop.
 Proof.
@@ -4476,17 +4321,18 @@ Proof.
       only 1: eassumption;
       intros sl fl sr fr Hsl Hsr Hfl Hfr.
       eapply HX; eassumption.
-    + destruct (Z.ltb_spec msk 0).
+    + simpl Z.to_N.
+      destruct (N.ltb_spec msk 0).
       - (* This branch is invalid since we only allow positive members. Otherwise, we
            would have to do something here. *)
-        exfalso. pose proof (rMask_nonneg r).  omega.
+        lia.
       - eapply splitMemberGo_Sem;
         only 1: eassumption;
         intros sl fl sr fr Hsl Hsr Hfl Hfr.
         eapply HX; eassumption.
 Qed.
 
-Theorem splitMember_WF (x : Int) (s : IntSet) :
+Theorem splitMember_WF (x : N) (s : IntSet) :
   WF s ->
   let '(l,_,r) := splitMember x s in
   WF l /\ WF r.
@@ -4496,19 +4342,19 @@ Proof.
   split; [exists fl | exists fr]; assumption.
 Qed.
 
-Theorem splitMember_WF' (x : Int) (s : IntSet) :
+Theorem splitMember_WF' (x : N) (s : IntSet) :
   WF s ->
   WF (fst (fst (splitMember x s))) /\ WF (snd (splitMember x s)).
 Proof.
   generalize (splitMember_WF x s); destruct (splitMember x s) as [[? ?] ?]; auto.
 Qed.
 
-Corollary splitMember_1_WF (x : Int) (s : IntSet) :
+Corollary splitMember_1_WF (x : N) (s : IntSet) :
   WF s ->
   WF (fst (fst (splitMember x s))).
 Proof. apply splitMember_WF'. Qed.
 
-Corollary splitMember_2_WF (x : Int) (s : IntSet) :
+Corollary splitMember_2_WF (x : N) (s : IntSet) :
   WF s ->
   WF (snd (splitMember x s)).
 Proof. apply splitMember_WF'. Qed.
@@ -4516,16 +4362,15 @@ Proof. apply splitMember_WF'. Qed.
 (** *** Verification of [foldr] *)
 
 (* We can extract the argument to [wfFix2] from the definition of [foldrBits]. *)
-Definition foldrBits_go {a} (p : Int) (f : Int -> a -> a) (x : a) (bm : Nat)
+Definition foldrBits_go {a} (p : Nat) (f : Nat -> a -> a) (x : a) (bm : Nat)
   : (forall (bm : Nat), a -> (forall x' : N, {_ : a | (N.to_nat x' < N.to_nat bm)%nat} -> a) -> a).
 Proof.
   let rhs := eval unfold foldrBits in (foldrBits p f x bm) in
   match rhs with context[ GHC.Wf.wfFix2 _ _ _ ?f ] => exact f end.
 Defined.
 
-
 Lemma foldrBits_eq:
-  forall {a} p (f : Int -> a -> a) x bm,
+  forall {a} p (f : Nat -> a -> a) x bm,
   isBitMask0 bm ->
   foldrBits p f x bm = @foldrBits_go a p f x bm (revNatSafe bm) x (fun x y => foldrBits p f (proj1_sig y) (revNatSafe x)).
 Proof.
@@ -4542,7 +4387,7 @@ Qed.
 
 
 Lemma foldrBits_0:
-  forall {a} p (f : Int -> a -> a) x,
+  forall {a} p (f : Nat -> a -> a) x,
   foldrBits p f x 0%N = x.
 Proof.
   intros.
@@ -4551,10 +4396,10 @@ Proof.
 Qed.
 
 Lemma foldrBits_bm:
-  forall {a} p (f : Int -> a -> a) bm x,
+  forall {a} p (f : Nat -> a -> a) bm x,
   isBitMask bm ->
   foldrBits p f x bm =
-    foldrBits p f (f (p + Z.of_N (N.log2 bm)) x) 
+    foldrBits p f (f (p + N.log2 bm) x) 
         (N.clearbit bm (N.log2 bm)).
 Proof.
   intros.
@@ -4571,11 +4416,11 @@ Proof.
     rewrite N.log2_pow2 by Nomega.
     rewrite N_log2_ctz by isBitMask.
     unfold WIDTH.
-    rewrite !N2Z.inj_sub.
-    rewrite !Z.add_sub_assoc. reflexivity.
+    rewrite !N.add_sub_assoc. reflexivity.
     unfold WIDTH; Nomega.
     assert (N_ctz (revNatSafe bm) < WIDTH)%N by isBitMask.
-    unfold WIDTH in *; Nomega.
+    unfold WIDTH in *; lia.
+    simpl. lia.
   * rewrite lxor_lowestBitMask by isBitMask.
     rewrite clearbit_revNat by isBitMask.
     rewrite revNat_revNat by isBitMask.
@@ -4622,7 +4467,7 @@ Proof.
     rewrite orb_true_iff.
     rewrite In_cons_iff.
     rewrite bitmapInRange_pow by (replace (rBits r); isBitMask).
-    rewrite Z.eqb_eq.
+    rewrite N.eqb_eq.
     solve [tauto].
 Qed.
 
@@ -4637,7 +4482,7 @@ Proof.
   * intuition. rewrite H in H1. congruence.
   * induction HD; intros; simpl; subst.
     + rewrite In_foldrBits_cons by isBitMask.
-      rewrite H2; reflexivity.
+      rewrite H1; reflexivity.
     + unfold op_zl__, Ord_Integer___, op_zl____.
       rewrite <- IHHD1.
       rewrite <- IHHD2.
@@ -4666,8 +4511,8 @@ Proof.
   * destruct HD.
     + apply Hgo.
     + subst. simpl.
-      unfold op_zl__, Ord_Integer___, op_zl____.
-      destruct (Z.ltb_spec (rMask r) 0).
+      unfold op_zl__, Ord_Char___, op_zl____.
+      destruct (N.ltb_spec (rMask r) 0).
       - rewrite <- toList_go_In by (eapply DescSem; eassumption).
         rewrite <- toList_go_In by (eapply DescSem; eassumption).
         rewrite H4.
@@ -4680,16 +4525,6 @@ Proof.
         intuition.
 Qed.
 
-Lemma toList_In_nonneg:
-  forall s, WF s ->
-  forall i, In i (toList s) ->
-  0 <= i.
-Proof.
-   intros.
-   destruct H as [f HSem].
-   rewrite <- toList_In in H0 by eassumption.
-   eapply Sem_nonneg; eassumption.
-Qed.
 
 Lemma toList_Bits_append:
   forall p l bm,
@@ -4762,7 +4597,7 @@ Lemma to_List_Bits_below:
   forall p bm,
   isBitMask0 bm ->
   forall y, In y (foldrBits p cons nil bm) ->
-  y <= p + Z.of_N (N.log2 bm).
+  y <= p + N.log2 bm.
 Proof.
   intros p bm H.
   apply bits_ind with (bm := bm).
@@ -4776,9 +4611,8 @@ Proof.
     apply in_app_iff in H2.
     destruct H2.
     + apply H1 in H2.
-      transitivity (p + Z.of_N (N.log2 (N.clearbit bm0 (N.log2 bm0)))); try assumption.
-      apply Z.add_le_mono; try reflexivity.
-      apply N2Z.inj_le.
+      transitivity (p + N.log2 (N.clearbit bm0 (N.log2 bm0))); try assumption.
+      apply N.add_le_mono; try reflexivity.
       apply N.log2_le_mono.
       apply ldiff_le.
     + destruct H2 as [?|[]]. subst.
@@ -4788,7 +4622,7 @@ Qed.
 Lemma to_List_Bits_sorted:
   forall p bm,
   isBitMask0 bm ->
-  StronglySorted Z.lt (foldrBits p cons nil bm).
+  StronglySorted N.lt (foldrBits p cons nil bm).
 Proof.
   intros.
   apply bits_ind with (bm := bm).
@@ -4799,11 +4633,11 @@ Proof.
     intros.
     rewrite foldrBits_bm by isBitMask.
     rewrite toList_Bits_append by isBitMask.
-    apply sorted_append with (x := p + Z.of_N (N.log2 bm)).
+    apply sorted_append with (x := p + N.log2 bm).
     + assumption.
     + apply SSorted_cons; constructor.
     + intros.
-      eapply Z.le_lt_trans.
+      eapply N.le_lt_trans.
       eapply to_List_Bits_below; try eassumption; try isBitMask.
       enough (N.log2 (N.clearbit bm (N.log2 bm)) < N.log2 bm)%N by Nomega.
       assert (N.clearbit bm (N.log2 bm) <> 0)%N. {
@@ -4821,7 +4655,7 @@ Proof.
 Qed.
 
 Lemma to_List_go_Desc_sorted:
-  forall s r f, Desc s r f -> StronglySorted Z.lt (toList_go nil s).
+  forall s r f, Desc s r f -> StronglySorted N.lt (toList_go nil s).
 Proof.
   intros ??? HD.
   induction HD.
@@ -4848,25 +4682,21 @@ Proof.
 Qed.
 
 Lemma to_List_Desc_sorted:
-  forall s r f, Desc s r f -> StronglySorted Z.lt (toList s).
+  forall s r f, Desc s r f -> StronglySorted N.lt (toList s).
 Proof.
   intros ??? HD.
   destruct HD.
   * simpl. apply to_List_Bits_sorted. isBitMask.
   * simpl. subst.
     unfoldMethods.
-    destruct (Z.ltb_spec (rMask r) 0).
+    destruct (N.ltb_spec (rMask r) 0).
     - (* This branch is inaccessible becase we only store non-negative numbers.
          This would chnage if we would switch to bounded numbers. *)
       exfalso.
-      contradict H2.
-      apply Zle_not_lt.
-      destruct r as [p b].
-      unfold rMask.
-      nonneg.
+      lia.
     - fold (foldr_go (@cons Key)).
       erewrite toList_go_append by (apply HD1).
-      change (StronglySorted Z.lt (toList_go nil s1 ++ toList_go nil s2)).
+      change (StronglySorted N.lt (toList_go nil s1 ++ toList_go nil s2)).
       apply sorted_append with (x := rPrefix (halfRange r true)).
       + eapply to_List_go_Desc_sorted; eassumption.
       + eapply to_List_go_Desc_sorted; eassumption.
@@ -4886,7 +4716,7 @@ Proof.
 Qed.
 
 Lemma to_List_sorted:
-  forall s, WF s -> StronglySorted Z.lt (toList s).
+  forall s, WF s -> StronglySorted N.lt (toList s).
 Proof.
   intros.
   destruct H as [f HSem].
@@ -4905,7 +4735,7 @@ Definition foldl_go {a} k :=
    | Nil => arg_0__
    end.
 
-Definition foldlBits_go {a} (p : Int) (f : a -> Int -> a) (x : a) (bm : Nat)
+Definition foldlBits_go {a} (p : Nat) (f : a -> Nat -> a) (x : a) (bm : Nat)
   : ((forall x' : N, {_ : a | (N.to_nat x' < N.to_nat bm)%nat} -> a) -> a).
 Proof.
   let rhs := eval unfold foldlBits in (foldlBits p f x bm) in
@@ -4913,7 +4743,7 @@ Proof.
 Defined.
 
 Lemma foldlBits_eq:
-  forall {a} p (f : a -> Int -> a) x bm,
+  forall {a} p (f : a -> Nat -> a) x bm,
   foldlBits p f x bm = @foldlBits_go a p f x bm (fun x y => foldlBits p f (proj1_sig y) x).
 Proof.
   intros.
@@ -4922,7 +4752,7 @@ Qed.
 
 
 Lemma foldlBits_0:
-  forall {a} p (f : a -> Int -> a) x,
+  forall {a} p (f : a -> Nat -> a) x,
   foldlBits p f x 0%N = x.
 Proof.
   intros.
@@ -4930,11 +4760,11 @@ Proof.
 Qed.
 
 Lemma foldlBits_bm:
-  forall {a} p (f : a -> Int -> a) bm x,
+  forall {a} p (f : a -> Nat -> a) bm x,
   isBitMask bm ->
   foldlBits p f x bm =
     foldlBits p f 
-       (f x (p + Z.of_N (N_ctz bm)))
+       (f x (p + N_ctz bm))
        (N.clearbit bm (N_ctz bm)).
 Proof.
   intros.
@@ -4960,11 +4790,11 @@ Proof.
 Qed.
 
 Lemma foldlBits_high_bm_aux:
-  forall {a} p (f : a -> Int -> a) bm,
+  forall {a} p (f : a -> Nat -> a) bm,
   isBitMask0 bm ->
   (bm <> 0)%N ->
   (forall x, foldlBits p f x bm =
-    f (foldlBits p f x (N.clearbit bm (N.log2 bm))) (p + Z.of_N (N.log2 bm))).
+    f (foldlBits p f x (N.clearbit bm (N.log2 bm))) (p + N.log2 bm)).
 Proof.
   intros.
   pose proof H.
@@ -5004,10 +4834,10 @@ Qed.
 
 
 Lemma foldlBits_high_bm:
-  forall {a} p (f : a -> Int -> a) bm x,
+  forall {a} p (f : a -> Nat -> a) bm x,
   isBitMask bm ->
   foldlBits p f x bm =
-    f (foldlBits p f x (N.clearbit bm (N.log2 bm))) (p + Z.of_N (N.log2 bm)).
+    f (foldlBits p f x (N.clearbit bm (N.log2 bm))) (p + N.log2 bm).
 Proof.
   intros.
   unfold isBitMask in H.
@@ -5064,7 +4894,7 @@ Proof.
      fold (foldl_go k).
      fold (foldr_go (fun (x0 : Key) (g : a -> a) (a0 : a) => g (k a0 x0))).
      unfoldMethods.
-     destruct (Z.ltb_spec msk 0).
+     destruct (N.ltb_spec msk 0).
      - erewrite foldl_go_foldr_go with (k' := fun x => x) by eassumption.
        eapply foldl_go_foldr_go; eassumption.
      - erewrite foldl_go_foldr_go with (k' := fun x => x) by eassumption.
@@ -5115,7 +4945,7 @@ Proof.
       unfoldMethods.
       fold (foldr_go (@cons Key)). 
       fold (foldr_go f).
-      destruct (Z.ltb_spec msk 0).
+      destruct (N.ltb_spec msk 0).
       - do 2 erewrite fold_right_toList_go by eassumption. reflexivity.
       - do 2 erewrite fold_right_toList_go by eassumption. reflexivity.
 Qed.
@@ -5144,7 +4974,7 @@ Qed.
 
 (** *** Verification of [size] *)
 
-Definition sizeGo : Int -> IntSet -> Int.
+Definition sizeGo : Nat -> IntSet -> Nat.
 Proof.
   let size_rhs := eval unfold size in size in
   match size_rhs with ?f #0 => exact f end.
@@ -5153,7 +4983,7 @@ Defined.
 Lemma popCount_N_length_toList_go:
   forall bm p l,
   isBitMask0 bm ->
-  Z.of_N (N_popcount bm) + Z.of_nat (length l) = Z.of_nat (length (foldrBits p cons l bm)).
+  N_popcount bm + N.of_nat (length l) = N.of_nat (length (foldrBits p cons l bm)).
 Proof.
   intros.
   revert l.
@@ -5172,7 +5002,7 @@ Qed.
 
 Lemma sizeGo_spec':
   forall x s r f, Desc s r f ->
-  sizeGo x s = x + Z.of_nat (length (toList_go nil s)).
+  sizeGo x s = x + N.of_nat (length (toList_go nil s)).
 Proof.
   intros.
   intros.
@@ -5181,7 +5011,7 @@ Proof.
     unfold bitcount.
     rewrite <- popCount_N_length_toList_go by isBitMask.
     simpl.
-    rewrite Z.add_0_r.
+    rewrite N.add_0_r.
     reflexivity.
   + simpl.
     erewrite toList_go_append with (s := s1) by eassumption.
@@ -5190,34 +5020,34 @@ Proof.
     rewrite IHDesc2.
     rewrite !app_length.
     simpl length.
-    unfold Int in *.
+    unfold Nat in *.
     Nomega.
 Qed.
 
 Lemma sizeGo_spec:
   forall x s, WF s ->
-  sizeGo x s = x + Z.of_nat (length (toList s)).
+  sizeGo x s = x + N.of_nat (length (toList s)).
 Proof.
   intros.
   destruct H as [f HSem].
   destruct HSem.
-  * simpl. rewrite Z.add_0_r. reflexivity.
+  * simpl. rewrite N.add_0_r. reflexivity.
   * destruct HD.
     + simpl.
       unfold bitcount.
       rewrite <- popCount_N_length_toList_go by isBitMask.
-      simpl. rewrite Z.add_0_r.
+      simpl. rewrite N.add_0_r.
       reflexivity.
     + subst. simpl.
       unfoldMethods.
-      destruct (Z.ltb_spec (rMask r) 0).
+      destruct (N.ltb_spec (rMask r) 0).
       -- erewrite toList_go_append with (s := s1) by eassumption.
          erewrite toList_go_append with (s := s2) by eassumption.
          erewrite sizeGo_spec' by eassumption.
          erewrite sizeGo_spec' by eassumption.
          rewrite !app_length.
          simpl length.
-         unfold Int in *.
+         unfold Nat in *.
          Nomega.
       -- erewrite toList_go_append with (s := s1) by eassumption.
          erewrite toList_go_append with (s := s2) by eassumption.
@@ -5225,13 +5055,13 @@ Proof.
          erewrite sizeGo_spec' by eassumption.
          rewrite !app_length.
          simpl length.
-         unfold Int in *.
+         unfold Nat in *.
          Nomega.
 Qed.
 
 Lemma size_spec:
   forall s, WF s ->
-  size s = Z.of_nat (length (toList s)).
+  size s = N.of_nat (length (toList s)).
 Proof.
   intros.
   unfold size.
@@ -5259,7 +5089,7 @@ Qed.
 
 (** *** Verification of [fromList] *)
 
-Require Import Proofs.Data.Foldable.
+Require Import Proofs.Data.Foldable. 
 
 Lemma Forall_rev:
   forall A P (l : list A), Forall P (rev l) <-> Forall P l.
@@ -5272,7 +5102,6 @@ Qed.
 
 Lemma fromList_Sem:
   forall l,
-  Forall (fun i => 0 <= i) l ->
   exists f,
   Sem (fromList l) f /\ (forall i, f i = true <-> In i l).
 Proof.
@@ -5281,40 +5110,38 @@ Proof.
   rewrite hs_coq_foldl_list.
   (* Rewrite to use fold_right instead of fold_left *)
   enough (forall l,
-    Forall (fun i => 0 <= i) l ->
-    exists f : Z -> bool,
+    exists f : N -> bool,
     Sem (fold_right (fun (x : Key) (t : IntSet) => insert x t) empty l) f /\
-    (forall i : Z, f i = true <-> In i l)).
+    (forall i : N, f i = true <-> In i l)).
   {  specialize (H (rev l)).
      rewrite fold_left_rev_right in H.
      setoid_rewrite <- in_rev in H.
-     rewrite Forall_rev in H.
      assumption.
   }
   (* Now induction *)
   clear l.
-  intros l H.
-  induction H; intros.
+  intros l.
+  induction l; intros.
   * exists (fun _ => false).
     split.
     + constructor. auto.
     + intuition. congruence.
-  * destruct IHForall as [?[??]].
+  * destruct IHl as [?[??]].
     eexists.
     split.
     + simpl.
       eapply insert_Sem; try eassumption.
       intro; reflexivity.
-    + intro i. specialize (H2 i).
+    + intro i. specialize (H0 i).
       simpl.
-      destruct (Z.eqb_spec i x); intuition.
+      destruct (N.eqb_spec i a); intuition.
 Qed.
 
 Lemma fromList_WF:
-  forall l, Forall (fun i => 0 <= i) l -> WF (fromList l).
+  forall l, WF (fromList l).
 Proof.
   intros.
-  destruct (fromList_Sem l H) as [?[??]].
+  destruct (fromList_Sem l) as [?[??]].
   econstructor.
   eassumption.
 Qed.
@@ -5332,14 +5159,17 @@ Lemma testbit_filterBits:
   forall p o bm i,
   isBitMask0 bm ->
   N.testbit (filterBits p o bm) i =
-  (N.testbit bm i && p (o + Z.of_N i)).
+  (N.testbit bm i && p (o + i)).
 Proof.
   intros.
 
   unfold filterBits.
-  transitivity ((N.testbit bm i && p (o + Z.of_N i)) || N.testbit 0%N i);
+  transitivity ((N.testbit bm i && p (o + i)) || N.testbit 0%N i);
     try (rewrite N.bits_0; rewrite orb_false_r; reflexivity).
-  generalize (0%N) as a.
+  enough (forall a, N.testbit
+  (foldlBits 0
+     (fun (bm0 : BitMap) (bi : Key) => if p (o + bi) then N.lor bm0 (bitmapOfSuffix bi) else bm0) a bm) i =
+N.testbit bm i && p (o + i) || N.testbit a i) by intuition.
   apply bits_ind with (bm := bm).
   * assumption.
   * intros a.
@@ -5364,10 +5194,9 @@ Proof.
          with (x && N.testbit y i)
            by (destruct x; try rewrite N.bits_0; repeat split_bool; reflexivity)
     end.
-    rewrite Z.add_0_l.
+    rewrite N.add_0_l.
     rewrite bitmapOfSuffix_pow.
     rewrite !N.pow2_bits_eqb.
-    rewrite N2Z.id.
 
     destruct (N.eqb_spec (N.log2 bm0) i).
     + subst; repeat split_bool; try reflexivity; exfalso.
@@ -5406,26 +5235,25 @@ Proof.
     fold (filterBits p (rPrefix r) bm).
     eapply tip_Desc0; try assumption; try reflexivity.
     + intro i.
-      rewrite H4.
-      rewrite H2.
+      rewrite H3.
+      rewrite H1.
       unfold bitmapInRange.
       destruct (inRange i r) eqn:Hir.
       - rewrite testbit_filterBits by isBitMask.
         f_equal. f_equal.
-        clear p H4.
-        rewrite Z.div_mod with (a := i) (b := Z.of_N WIDTH) at 1
+        clear p H3.
+        rewrite N.div_mod with (a := i) (b := id WIDTH) at 1
           by (intro Htmp; inversion Htmp).
         f_equal.
         ** destruct r as [p b]. unfold inRange, rPrefix, rBits, snd in *.
-           rewrite Z.eqb_eq in Hir.
+           rewrite N.eqb_eq in Hir.
            subst.
-           rewrite Z.shiftl_mul_pow2 by nonneg.
-           rewrite Z.shiftr_div_pow2 by nonneg.
-           rewrite Z.mul_comm.
+           rewrite N.shiftl_mul_pow2 by nonneg.
+           rewrite N.shiftr_div_pow2 by nonneg.
+           rewrite N.mul_comm.
            reflexivity.
-        ** rewrite Z2N.id by nonneg.
-           rewrite Z.land_ones by nonneg.
-           rewrite H1.
+        ** rewrite N.land_ones by nonneg.
+           rewrite H0.
            reflexivity.
       - rewrite andb_false_l. reflexivity.
     + isBitMask.
@@ -5527,7 +5355,7 @@ Proof.
       reflexivity.
 Qed.
 
-Theorem partition_WF (p : Int -> bool) (s : IntSet) :
+Theorem partition_WF (p : Nat -> bool) (s : IntSet) :
   WF s ->
   let '(l,r) := partition p s in
   WF l /\ WF r.
@@ -5537,19 +5365,19 @@ Proof.
     auto using filter_WF.
 Qed.
 
-Theorem partition_WF' (p : Int -> bool) (s : IntSet) :
+Theorem partition_WF' (p : Nat -> bool) (s : IntSet) :
   WF s ->
   WF (fst (partition p s)) /\ WF (snd (partition p s)).
 Proof.
   generalize (partition_WF p s); destruct (partition p s); auto.
 Qed.
 
-Corollary partition_1_WF (p : Int -> bool) (s : IntSet) :
+Corollary partition_1_WF (p : Nat -> bool) (s : IntSet) :
   WF s ->
   WF (fst (partition p s)).
 Proof. apply partition_WF'. Qed.
 
-Corollary partition_2_WF (p : Int -> bool) (s : IntSet) :
+Corollary partition_2_WF (p : Nat -> bool) (s : IntSet) :
   WF s ->
   WF (snd (partition p s)).
 Proof. apply partition_WF'. Qed.
@@ -5634,7 +5462,7 @@ Next Obligation.
   * (* Both are tips *)
     simpl; subst. unfoldMethods.
     rewrite if_negb.
-    destruct (Z.eqb_spec (rPrefix r) (rPrefix r0)).
+    destruct (N.eqb_spec (rPrefix r) (rPrefix r0)).
     - destruct (N.eqb_spec bm bm0); try intuition congruence.
       destruct (N.lxor bm (N.land bm bm0) =? 0)%N;
       intuition; rewrite ?andb_false_r in *; try congruence.
@@ -5647,29 +5475,25 @@ Next Obligation.
     simpl; subst.
     intuition congruence.
   * (* Bin both sides *)
-    simpl; subst; unfold shorter, natFromInt; unfoldMethods.
+    simpl; subst; unfold shorter; unfoldMethods.
     repeat rewrite andb_true_iff.
     repeat rewrite !N.eqb_eq.
-    repeat rewrite !Z.eqb_eq.
+    repeat rewrite !N.eqb_eq.
     unfold op_zg__, Ord_Char___, op_zg____.
-    destruct (N.ltb_spec (Z.to_N (rMask r4)) (Z.to_N (rMask r)));
-      only 2: destruct (N.ltb_spec (Z.to_N (rMask r)) (Z.to_N (rMask r4))).
+    destruct (N.ltb_spec (rMask r4) (rMask r));
+      only 2: destruct (N.ltb_spec (rMask r) (rMask r4)).
     - (* left is bigger than right *)
-      rewrite <- Z2N.inj_lt in H2 by nonneg.
-      intuition try (congruence||omega).
+      intuition try (congruence||lia).
     - (* right is bigger than left *)
-      rewrite <- Z2N.inj_lt in H3 by nonneg.
       repeat (match goal with [ |- (match ?scrut with _ => _ end) = Eq <-> _ ] => destruct scrut end);
-      intuition try (congruence||omega).
+      intuition try (congruence||lia).
     - (* same sized bins *)
-      rewrite <- Z2N.inj_le in H2 by nonneg.
-      rewrite <- Z2N.inj_le in H3 by nonneg.
       unfoldMethods.
-      rewrite <- IH by ((simpl; omega) || eassumption).
-      rewrite <- IH by ((simpl; omega) || eassumption).
-      destruct (Z.eqb_spec (rPrefix r) (rPrefix r4));
+      rewrite <- IH by ((simpl; lia) || eassumption).
+      rewrite <- IH by ((simpl; lia) || eassumption).
+      destruct (N.eqb_spec (rPrefix r) (rPrefix r4));
       repeat (match goal with [ |- (match ?scrut with _ => _ end) = Eq <-> _ ] => destruct scrut eqn:? end);
-        intuition try (congruence || omega).
+        intuition try (congruence || lia).
 Qed.
 
 Program Fixpoint subsetCmp_isSubsetOf
@@ -5685,7 +5509,7 @@ Next Obligation.
   * (* Both are tips *)
     simpl; subst. unfoldMethods.
     rewrite if_negb.
-    destruct (Z.eqb_spec (rPrefix r) (rPrefix r0)).
+    destruct (N.eqb_spec (rPrefix r) (rPrefix r0)).
     - destruct (N.eqb_spec bm bm0); try intuition congruence.
       + subst. rewrite N.land_diag, N.lxor_nilpotent, N.eqb_refl. intuition congruence.
       + destruct (N.lxor bm (N.land bm bm0) =? 0)%N;
@@ -5703,12 +5527,12 @@ Next Obligation.
     simpl; subst.
     intuition congruence.
   * (* Bin both sides *)
-    simpl; subst; unfold shorter, natFromInt; unfoldMethods.
+    simpl; subst; unfold shorter; unfoldMethods.
     repeat rewrite andb_true_iff.
     repeat rewrite !N.eqb_eq.
-    repeat rewrite !Z.eqb_eq.
-    destruct (N.ltb_spec (Z.to_N (rMask r4)) (Z.to_N (rMask r)));
-      only 2: destruct (N.ltb_spec (Z.to_N (rMask r)) (Z.to_N (rMask r4))).
+    repeat rewrite !N.eqb_eq.
+    destruct (N.ltb_spec (rMask r4) (rMask r));
+      only 2: destruct (N.ltb_spec (rMask r) (rMask r4)).
     - (* left is bigger than right *)
       reflexivity.
     - (* right is bigger than left *)
@@ -5724,7 +5548,7 @@ Next Obligation.
       do 2 erewrite <- IH by (first [ simpl; omega
                                     | eapply DescBin; try beassumption; reflexivity
                                     | eassumption ]).
-      destruct (Z.eqb_spec (rPrefix r) (rPrefix r4));
+      destruct (N.eqb_spec (rPrefix r) (rPrefix r4));
         repeat (match goal with [ |- context [match ?scrut with _ => _ end] ] => destruct scrut eqn:? end); intuition.
 Qed.
 
@@ -5804,14 +5628,10 @@ Lemma valid_maskPowerOfTwo: forall s, WF s -> maskPowerOfTwo s = true.
       rewrite IHHD1, IHHD2.
       subst. simpl.
       rewrite andb_true_r.
-      rewrite Z.eqb_eq.
+      rewrite N.eqb_eq.
       destruct r as [p b].
       unfold rMask, rBits, snd in *.
       unfold id.
-      rewrite Z2N.inj_pow; try nonneg; try Nomega.
-      simpl Z.to_N.
-      rewrite Z2N.inj_pred.
-      rewrite N2Z.id.
       rewrite N_popcount_pow2.
       reflexivity.
 Qed.
@@ -5851,25 +5671,24 @@ Proof.
       intros i Hi.
       rewrite <- toList_In in Hi by (eapply DescSem; eassumption).
       eapply Desc_inside in Hi; try eassumption.
-      rewrite Z.eqb_eq.
+      rewrite N.eqb_eq.
       symmetry.
-      apply Z.lxor_eq_0_iff.
+      apply N.lxor_eq_0_iff.
       subst p.
       clear - Hi.
       destruct r as [p b].
       unfold inRange, rPrefix in *.
-      rewrite Z.eqb_eq in Hi.
+      rewrite N.eqb_eq in Hi.
       subst.
-      apply Z.bits_inj_iff'.
-      intros j Hi.
-      rewrite Z.land_spec.
-      rewrite !Z.shiftl_spec by assumption.
-      destruct (Z.ltb_spec j (Z.of_N b)).
-      + rewrite Z.testbit_neg_r by Nomega.
-        rewrite andb_false_l.
+      apply N.bits_inj_iff.
+      intros j.
+      rewrite N.land_spec.
+      destruct (N.ltb_spec j b).
+      + rewrite N.shiftl_spec_low by assumption.
         reflexivity.
-      + rewrite !Z.shiftr_spec by Nomega.
-        replace (j - Z.of_N b + Z.of_N b) with j by Nomega.
+      + rewrite N.shiftl_spec_high' by assumption.
+        rewrite !N.shiftr_spec by Nomega.
+        replace (j - b + b) with j by Nomega.
         rewrite andb_diag.
         reflexivity.
 Qed.
@@ -5920,21 +5739,19 @@ Proof.
       unfold validTipPrefix.
       unfoldMethods.
       destruct r as [p' b]. unfold rPrefix, rBits, snd in *. subst.
-      rewrite Z.eqb_eq.
-      apply Z.bits_inj_iff'. intros i?.
-      rewrite Z.bits_0.
-      rewrite Z.land_spec.
-      rewrite Z.shiftl_spec by assumption.
-      destruct (Z.ltb_spec i (Z.of_N (N.log2 WIDTH))).
-      - rewrite Z.testbit_neg_r with (a := p') by omega.
+      rewrite N.eqb_eq.
+      apply N.bits_inj_iff. intros i.
+      rewrite N.bits_0.
+      rewrite N.land_spec.
+      destruct (N.ltb_spec i (N.log2 WIDTH)).
+      - rewrite N.shiftl_spec_low by assumption.
         apply andb_false_r.
-      - rewrite Z.bits_above_log2.
+      - rewrite N.shiftl_spec_high' by assumption.
+        rewrite N.bits_above_log2.
         apply andb_false_l.
-        omega.
         unfold WIDTH in *.
-        simpl Z.log2 in *.
-        simpl Z.of_N in H1.
-        omega.
+        simpl N.log2 in *.
+        lia.
     + simpl.
       rewrite IHHD1, IHHD2.
       reflexivity.
@@ -5997,7 +5814,7 @@ Instance EqLaws_WFIntSet : EqLaws WFIntSet :=
 
 (** *** Verification of [Ord] *)
 
-Local Close Scope Z_scope.
+Local Close Scope N_scope.
 
 Instance Ord_WFIntSet : Ord WFIntSet := fun _ k => k
   {| op_zlze____ := fun s1 s2 => unpack s1 <= unpack s2
@@ -6069,16 +5886,16 @@ Local Ltac to_Ord_list :=
 
 Instance OrdLaws_WFIntSet : OrdLaws WFIntSet.
 Proof.
-  constructor; unfold_WFIntSet_Ord; try now to_Ord_list; order (list Int).
+  constructor; unfold_WFIntSet_Ord; try now to_Ord_list; order (list N).
   
   - intros [s1 WF1] [s2 WF2]; simpl.
     rewrite !compare_not_Gt_le => LE1 LE2.
     apply equal_spec, toAscList_exact; trivial.
     apply (reflect_iff _ _ (Eq_eq _ _)); generalize dependent LE1; generalize dependent LE2;
-      to_Ord_list; order (list Int).
+      to_Ord_list; order (list N).
   
   - intros [s1 WF1] [s2 WF2]; simpl.
-    destruct (Ord_total (toAscList s1) (toAscList s2)); to_Ord_list; order (list Int).
+    destruct (Ord_total (toAscList s1) (toAscList s2)); to_Ord_list; order (list N).
   
   - intros [s1 WF1] [s2 WF2]; simpl.
     unfold "==", Eq___IntSet, Data.IntSet.Internal.Eq___IntSet_op_zeze__; simpl.
@@ -6089,13 +5906,13 @@ Proof.
     apply eq_iff_eq_true;
       rewrite !compare_not_Gt_le; fold_is_true;
       rewrite <-(ssrbool.rwP (Eq_eq _ _)), Ord_compare_Lt;
-      order (list Int).
+      order (list N).
   
   - intros [s1 WF1] [s2 WF2]; simpl.
     apply eq_iff_eq_true;
       rewrite !compare_not_Gt_le; fold_is_true;
       rewrite <-(ssrbool.rwP (Eq_eq _ _)), Ord_compare_Gt;
-      order (list Int).
+      order (list N).
 Qed.
 
 (** ** Instantiating the [FSetInterface] *)
@@ -6108,9 +5925,6 @@ Module IntSetFSet <: WSfun(N_as_OT) <: WS <: Sfun(N_as_OT) <: S.
   
   Module OrdFacts := OrderedTypeFacts(N_as_OT).
 
-  (* We are saying [N] instead of [Z] to force the invariant that
-     all elements have a finite number of bits. The code actually
-     works with [Z]. *)
   Definition elt := N.
 
   (* Well-formedness *)
@@ -6129,9 +5943,9 @@ Module IntSetFSet <: WSfun(N_as_OT) <: WS <: Sfun(N_as_OT) <: S.
   
   Definition In x (s' : t) :=
     s <-- s' ;;
-    In_set (Z.of_N x) s.
+    In_set x s.
 
-  Definition Equal_set s s' := forall a : Z, In_set a s <-> In_set a s'.
+  Definition Equal_set s s' := forall a : N, In_set a s <-> In_set a s'.
   Definition Equal s s' := forall a : elt, In a s <-> In a s'.
 
   Definition eq : t -> t -> Prop := Equal.
@@ -6154,9 +5968,9 @@ Module IntSetFSet <: WSfun(N_as_OT) <: WS <: Sfun(N_as_OT) <: S.
 
   (* Minimal and maximal elements *)
   
-  Definition min_elt : t -> option elt := fmap (Z.to_N ∘ fst) ∘ minView ∘ unpack.
+  Definition min_elt : t -> option elt := fmap fst ∘ minView ∘ unpack.
   
-  Definition max_elt : t -> option elt := fmap (Z.to_N ∘ fst) ∘ maxView ∘ unpack.
+  Definition max_elt : t -> option elt := fmap fst ∘ maxView ∘ unpack.
   
   (* Theorems *)
 
@@ -6169,13 +5983,10 @@ Module IntSetFSet <: WSfun(N_as_OT) <: WS <: Sfun(N_as_OT) <: S.
     destruct w as [s HSem].
     erewrite null_Sem by eassumption.
     intro i.
-    destruct (Z.ltb_spec i 0).
-    * eapply Sem_neg_false; eassumption.
-    * specialize (H (Z.to_N i)).
-      rewrite not_true_iff_false in H.
-      erewrite member_Sem in H by eassumption.
-      rewrite Z2N.id in H by assumption.
-      assumption.
+    specialize (H i).
+    rewrite not_true_iff_false in H.
+    erewrite member_Sem in H by eassumption.
+    assumption.
   Qed.
 
   Lemma is_empty_2 : forall s : t, is_empty s = true -> Empty s.
@@ -6186,19 +5997,19 @@ Module IntSetFSet <: WSfun(N_as_OT) <: WS <: Sfun(N_as_OT) <: S.
   Qed.
 
   Definition singleton : elt -> t.
-    refine (fun e => pack (singleton (Z.of_N e)) _).
+    refine (fun e => pack (singleton e) _).
     apply singleton_WF; nonneg.
   Defined.
 
   Definition add (e: elt) (s': t) : t.
     refine (s <-- s' ;;
-            pack (insert (Z.of_N e) s) _).
+            pack (insert e s) _).
     apply insert_WF; nonneg.
   Defined.
 
   Definition remove  (e: elt) (s': t) : t.
     refine (s <-- s' ;;
-            pack (delete (Z.of_N e) s) _).
+            pack (delete e s) _).
     apply delete_WF; nonneg.
   Defined.
 
@@ -6253,16 +6064,11 @@ Module IntSetFSet <: WSfun(N_as_OT) <: WS <: Sfun(N_as_OT) <: S.
       eapply Sem_unique; try eassumption.
       intro i.
       apply eq_iff_eq_true.
-      destruct (Z.leb_spec 0 i).
-      + specialize (Heqb (Z.to_N i)).
-        unfold eq, In, In_set in Heqb.
-        erewrite (member_Sem HSem1) in Heqb.
-        erewrite (member_Sem HSem2) in Heqb.
-        rewrite Z2N.id in Heqb by assumption.
-        assumption.
-      + rewrite (Sem_neg_false HSem1) by assumption.
-        rewrite (Sem_neg_false HSem2) by assumption.
-        intuition.
+      specialize (Heqb i).
+      unfold eq, In, In_set in Heqb.
+      erewrite (member_Sem HSem1) in Heqb.
+      erewrite (member_Sem HSem2) in Heqb.
+      assumption.
   Defined.
 
   Lemma eq_refl : forall s : t, eq s s.
@@ -6281,18 +6087,18 @@ Module IntSetFSet <: WSfun(N_as_OT) <: WS <: Sfun(N_as_OT) <: S.
 
   Definition fold (A : Type) (f : elt -> A -> A) (ws : t) (x : A) : A :=
     s <-- ws;;
-    foldl (fun x a => f (Z.to_N a) x) x s.
+    foldl (fun x a => f a x) x s.
 
   Definition filter : (elt -> bool) -> t -> t.
     refine (fun p ws =>
        s <-- ws;;
-       pack (filter (fun x => p (Z.to_N x)) s) _).
+       pack (filter p s) _).
     apply filter_WF; assumption.
   Defined.
   
   
   Program Definition partition : (elt -> bool) -> t -> t * t :=
-     (fun p ws => Data.IntSet.Internal.partition (fun x => p (Z.to_N x)) ws).
+     (fun p ws => Data.IntSet.Internal.partition p ws).
   Next Obligation.
     rewrite partition_snd.
     apply filter_WF.
@@ -6307,19 +6113,18 @@ Module IntSetFSet <: WSfun(N_as_OT) <: WS <: Sfun(N_as_OT) <: S.
 
   Definition cardinal : t -> nat :=
     fun ws => s <-- ws;;
-              Z.to_nat (size s).
+              N.to_nat (size s).
 
   Definition elements (ws : t) : list elt :=
     s <-- ws;;
-    List.map Z.to_N (toList s).
-
+    toList s.
 
   Lemma In_1 :
     forall (s : t) (x y : elt), N.eq x y -> In x s -> In y s.
   Proof. intros. destruct H. assumption. Qed.
   
   Definition mem : elt -> t -> bool := fun e s' =>
-   s <-- s' ;; member (Z.of_N e) s.
+   s <-- s' ;; member e s.
 
 
   Lemma mem_1 : forall (s : t) (x : elt), In x s -> mem x s = true.
@@ -6337,16 +6142,11 @@ Module IntSetFSet <: WSfun(N_as_OT) <: WS <: Sfun(N_as_OT) <: S.
     eapply Sem_unique; try eassumption.
     intro i.
     apply eq_iff_eq_true.
-    destruct (Z.leb_spec 0 i).
-    + specialize (H (Z.to_N i)).
-      unfold eq, In, In_set in H.
-      erewrite (member_Sem HSem1) in H.
-      erewrite (member_Sem HSem2) in H.
-      rewrite Z2N.id in H by assumption.
-      assumption.
-    + rewrite (Sem_neg_false HSem1) by assumption.
-      rewrite (Sem_neg_false HSem2) by assumption.
-      intuition.
+    specialize (H i).
+    unfold eq, In, In_set in H.
+    erewrite (member_Sem HSem1) in H.
+    erewrite (member_Sem HSem2) in H.
+    assumption.
   Qed.
 
   Lemma equal_2 : forall s s' : t, equal s s' = true -> Equal s s'.
@@ -6366,14 +6166,9 @@ Module IntSetFSet <: WSfun(N_as_OT) <: WS <: Sfun(N_as_OT) <: S.
     destruct s' as [s2 [f2 HSem2]].
     unfold Subset, subset, In, In_set in *.
     rewrite isSubsetOf_Sem by eassumption.
-    intro i. specialize (H (Z.to_N i)).
-    destruct (Z.ltb_spec i 0).
-    * intros.
-      erewrite Sem_neg_false in H1 by eassumption.
-      congruence.
-    * rewrite Z2N.id in H by nonneg.
-      do 2 erewrite member_Sem in H by eassumption.
-      assumption.
+    intro i. specialize (H i).
+    do 2 erewrite member_Sem in H by eassumption.
+    assumption.
   Qed.
 
   Lemma subset_2 : forall s s' : t, subset s s' = true -> Subset s s'.
@@ -6383,7 +6178,7 @@ Module IntSetFSet <: WSfun(N_as_OT) <: WS <: Sfun(N_as_OT) <: S.
     destruct s' as [s2 [f2 HSem2]].
     unfold Subset, subset, In, In_set in *.
     rewrite isSubsetOf_Sem in H by eassumption.
-    intro i. specialize (H (Z.of_N i)).
+    intro i. specialize (H i).
     do 2 erewrite member_Sem by eassumption.
     assumption.
   Qed.
@@ -6399,7 +6194,7 @@ Module IntSetFSet <: WSfun(N_as_OT) <: WS <: Sfun(N_as_OT) <: S.
       Focus 2.
       eapply insert_Sem; try nonneg; try eassumption.
       intro. reflexivity.
-    simpl. rewrite Z.eqb_refl. reflexivity.
+    simpl. rewrite N.eqb_refl. reflexivity.
   Qed.
 
   Lemma add_2 : forall (s : t) (x y : elt), In y s -> In y (add x s).
@@ -6426,8 +6221,7 @@ Module IntSetFSet <: WSfun(N_as_OT) <: WS <: Sfun(N_as_OT) <: S.
       eapply insert_Sem; try nonneg; try eassumption.
       intro. reflexivity. simpl in *.
     rewrite -> orb_true_iff in H0.
-    rewrite -> Z.eqb_eq in H0.
-    rewrite -> N2Z.inj_iff in H0.
+    rewrite -> N.eqb_eq in H0.
     destruct H0. congruence.
 
     erewrite member_Sem.
@@ -6449,7 +6243,7 @@ Module IntSetFSet <: WSfun(N_as_OT) <: WS <: Sfun(N_as_OT) <: S.
       eassumption.
       intro i. reflexivity.
     simpl.
-    rewrite Z.eqb_refl; simpl.
+    rewrite N.eqb_refl; simpl.
     congruence.
   Qed.
 
@@ -6468,8 +6262,7 @@ Module IntSetFSet <: WSfun(N_as_OT) <: WS <: Sfun(N_as_OT) <: S.
       intro i. reflexivity.
     erewrite member_Sem in H0 by eassumption.
     simpl in *.
-    destruct (Z.eqb_spec (Z.of_N y) (Z.of_N x)); simpl in *; try congruence.
-    apply N2Z.inj in e. subst. reflexivity.
+    destruct (N.eqb_spec y x); simpl in *; try congruence.
   Qed.
 
   Lemma remove_3 :
@@ -6496,8 +6289,7 @@ Module IntSetFSet <: WSfun(N_as_OT) <: WS <: Sfun(N_as_OT) <: S.
     erewrite member_Sem in H.
     Focus 2. apply singleton_Sem; nonneg.
     simpl in H.
-    rewrite -> Z.eqb_eq in H.
-    apply N2Z.inj.
+    rewrite -> N.eqb_eq in H.
     symmetry.
     assumption.
   Qed.
@@ -6510,7 +6302,7 @@ Module IntSetFSet <: WSfun(N_as_OT) <: WS <: Sfun(N_as_OT) <: S.
     erewrite member_Sem.
     Focus 2. apply singleton_Sem; nonneg.
     simpl.
-    rewrite -> Z.eqb_eq.
+    rewrite -> N.eqb_eq.
     congruence.
   Qed.
 
@@ -6672,7 +6464,6 @@ Module IntSetFSet <: WSfun(N_as_OT) <: WS <: Sfun(N_as_OT) <: S.
     intros.
     destruct s as [s Hwf].
     simpl.
-    rewrite fold_left_map.
     apply foldl_spec; assumption.
   Qed.
 
@@ -6681,9 +6472,9 @@ Module IntSetFSet <: WSfun(N_as_OT) <: WS <: Sfun(N_as_OT) <: S.
     intros.
     destruct s as [s Hwf].
     simpl.
-    rewrite map_length.
     rewrite size_spec by assumption.
-    apply Nat2Z.id.
+    rewrite Nat2N.id.
+    reflexivity.
   Qed.
 
   Lemma filter_1 :
@@ -6698,7 +6489,6 @@ Module IntSetFSet <: WSfun(N_as_OT) <: WS <: Sfun(N_as_OT) <: S.
     erewrite member_Sem in Hin
       by (eapply filter_Sem; try eassumption; intro i; reflexivity).
     simpl in *.
-    rewrite N2Z.id in *.
     rewrite andb_true_iff in Hin.
     intuition.
   Qed.
@@ -6714,7 +6504,6 @@ Module IntSetFSet <: WSfun(N_as_OT) <: WS <: Sfun(N_as_OT) <: S.
     erewrite member_Sem in Hin
       by (eapply filter_Sem; try eassumption; intro i; reflexivity).
     simpl in *.
-    rewrite N2Z.id in *.
     rewrite andb_true_iff in Hin.
     intuition.
   Qed.
@@ -6731,7 +6520,6 @@ Module IntSetFSet <: WSfun(N_as_OT) <: WS <: Sfun(N_as_OT) <: S.
     erewrite member_Sem
       by (eapply filter_Sem; try eassumption; intro i; reflexivity).
     simpl in *.
-    rewrite N2Z.id in *.
     rewrite andb_true_iff.
     intuition.
   Qed.
@@ -6769,8 +6557,6 @@ Module IntSetFSet <: WSfun(N_as_OT) <: WS <: Sfun(N_as_OT) <: S.
     unfold In_set in *.
     erewrite member_Sem in H by eassumption.
     apply OrdFacts.ListIn_In.
-    replace x with (Z.to_N (Z.of_N x)) by (rewrite N2Z.id; reflexivity).
-    apply in_map.
     rewrite <- toList_In by eassumption.
     assumption.
   Qed.
@@ -6786,20 +6572,15 @@ Module IntSetFSet <: WSfun(N_as_OT) <: WS <: Sfun(N_as_OT) <: S.
     erewrite member_Sem by eassumption.
     rewrite InA_alt in H.
     destruct H as [_[[]?]].
-    rewrite in_map_iff in H.
-    destruct H as [?[[]?]].
     rewrite <- toList_In in H by eassumption.
-    rewrite Z2N.id by (eapply Sem_nonneg; eassumption).
     assumption.
   Qed.
   
   Lemma elements_3 (s : t) : Sorted E.lt (elements s).
   Proof.
     unfold E.lt; destruct s as [s WFs]; simpl.
-    apply StronglySorted_Sorted, StronglySorted_map with Z.lt.
-    - now apply to_List_sorted.
-    - intros x y In_x In_y LT; apply Z2N.inj_lt; trivial.
-      all: now apply toList_In_nonneg with s.
+    apply StronglySorted_Sorted.
+    now apply to_List_sorted.
   Qed.
   
   Lemma elements_3w (s : t) : NoDupA N.eq (elements s).
@@ -6980,3 +6761,27 @@ Module IntSetFSet <: WSfun(N_as_OT) <: WS <: Sfun(N_as_OT) <: S.
   Qed.
 
 End IntSetFSet.
+
+(** * Rewrite rules *)
+
+
+(**
+@
+{-# RULES "IntSet.toAscList" [~1] forall s . toAscList s = build (\c n -> foldrFB c n s) #-}
+{-# RULES "IntSet.toAscListBack" [1] foldrFB (:) [] = toAscList #-}
+{-# RULES "IntSet.toDescList" [~1] forall s . toDescList s = build (\c n -> foldlFB (\xs x -> c x xs) n s) #-}
+{-# RULES "IntSet.toDescListBack" [1] foldlFB (\xs x -> x : xs) [] = toDescList #-}
+@
+*)
+
+Lemma rule_toAscList: forall (s : IntSet), toAscList s = build (fun _ c n => foldrFB c n s).
+Proof. intros.  reflexivity. Qed.
+
+Lemma rule_toAscListBack: foldrFB cons nil = toAscList.
+Proof. intros.  reflexivity. Qed.
+
+Lemma rule_toDescList: forall (s : IntSet), toDescList s = build (fun _ c n => foldlFB (fun xs x => c x xs) n s).
+Proof. intros.  reflexivity. Qed.
+
+Lemma rule_toDescListBack: forall (s : IntSet), foldlFB (fun xs x => x :: xs) nil = toDescList.
+Proof. intros.  reflexivity. Qed.

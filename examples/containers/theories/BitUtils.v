@@ -216,6 +216,29 @@ Proof.
     + nonneg.
 Qed.
 
+Lemma N_land_pow2_eq:
+  forall i b, (N.land i (2 ^ b) =? 0)%N = negb (N.testbit i b).
+Proof.
+  intros ??.
+  destruct (N.testbit i b) eqn:Htb; simpl.
+  * rewrite N.eqb_neq.
+    contradict Htb.
+    assert (N.testbit (N.land i (2^b)) b = false)
+     by (rewrite Htb; apply N.bits_0).
+    rewrite N.land_spec in H. rewrite N.pow2_bits_true in H.
+    rewrite andb_true_r in H.
+    simpl in H. congruence.
+  * rewrite N.eqb_eq.
+    apply N.bits_inj.
+    intros j.
+    rewrite N.bits_0.
+    rewrite N.land_spec.
+    rewrite N.pow2_bits_eqb.
+    destruct (N.eqb_spec b j).
+    + subst. rewrite Htb. reflexivity.
+    + rewrite andb_false_r.  reflexivity.
+Qed.
+
 Lemma shiftr_eq_ldiff :
 forall n m b,
     0 <= b ->
@@ -236,7 +259,6 @@ Proof.
       omega.
 Qed.
 
-
 Lemma Z_shiftl_inj:
   forall x y n,
     0 <= n ->
@@ -256,30 +278,48 @@ Proof.
     specialize (H0 (i - n)).
     do 2 rewrite -> Z.shiftl_spec by omega.
     assumption.
- Qed.
- 
-Lemma Z_shiftl_injb:
-  forall x y n, 0 <= n -> (Z.shiftl x n =? Z.shiftl y n) = (x =? y).
-Proof.
-  intros.
-  destruct (Z.eqb_spec (Z.shiftl x n) (Z.shiftl y n)),
-           (Z.eqb_spec x y); auto; try congruence; exfalso.
-  apply Z_shiftl_inj in e; auto.
 Qed.
 
- Lemma land_shiftl_ones:
-   forall i n, 0 <= n -> Z.land (Z.shiftl i n) (Z.ones n) = 0.
- Proof.
-   intros.
-   apply Z.bits_inj'.
-   intros j ?.
-   rewrite Z.land_spec.
-   rewrite -> Z.shiftl_spec by nonneg.
-   rewrite Z.bits_0. rewrite andb_false_iff.
-   destruct (Z.ltb_spec j n).
-   * left. apply Z.testbit_neg_r. omega.
-   * right. apply Z.ones_spec_high. omega.
- Qed.
+Lemma N_shiftl_inj:
+  forall x y n,
+    N.shiftl x n = N.shiftl y n <-> x = y.
+Proof.
+  intros; split; intro.
+  * apply N.bits_inj.
+    intros i.
+    apply N.bits_inj_iff in H.
+    specialize (H (i + n)%N).
+    do 2 rewrite -> N.shiftl_spec_alt in H by omega.
+    assumption.
+  * subst. reflexivity.
+Qed.
+
+Lemma land_shiftl_ones:
+  forall i n, 0 <= n -> Z.land (Z.shiftl i n) (Z.ones n) = 0.
+Proof.
+  intros.
+  apply Z.bits_inj'.
+  intros j ?.
+  rewrite Z.land_spec.
+  rewrite -> Z.shiftl_spec by nonneg.
+  rewrite Z.bits_0. rewrite andb_false_iff.
+  destruct (Z.ltb_spec j n).
+  * left. apply Z.testbit_neg_r. omega.
+  * right. apply Z.ones_spec_high. omega.
+Qed.
+
+Lemma N_land_shiftl_ones:
+  forall i n, N.land (N.shiftl i n) (N.ones n) = 0%N.
+Proof.
+  intros.
+  apply N.bits_inj.
+  intros j.
+  rewrite N.land_spec.
+  rewrite N.bits_0. rewrite andb_false_iff.
+  destruct (N.ltb_spec j n).
+  * left. rewrite -> N.shiftl_spec_low by assumption. reflexivity.
+  * right. apply N.ones_spec_high. assumption.
+Qed.
 
 Lemma N_shiftl_spec_eq:
   forall n i j,
@@ -303,6 +343,15 @@ Proof.
   reflexivity.
 Qed.
 
+Lemma N_shiftl_add:
+  forall x y i,
+  N.shiftl (x + y)%N i = (N.shiftl x i + N.shiftl y i)%N.
+Proof.
+  intros.
+  rewrite !N.shiftl_mul_pow2 by assumption.
+  rewrite N.mul_add_distr_r.
+  reflexivity.
+Qed.
 
 Lemma testbit_1:
   forall i, Z.testbit 1 i = (i =? 0).
@@ -311,6 +360,15 @@ Proof.
   replace 1 with (2^0) by reflexivity.
   rewrite -> Z.pow2_bits_eqb by reflexivity.
   apply Z.eqb_sym.
+Qed.
+
+Lemma N_testbit_1:
+  forall i, N.testbit 1 i = (i =? 0)%N.
+Proof.
+  intros.
+  replace 1%N with (2^0)%N by reflexivity.
+  rewrite -> N.pow2_bits_eqb by reflexivity.
+  apply N.eqb_sym.
 Qed.
 
 (* This lemma shows that the way the code gets the upper bits above a one-bit-mask
@@ -334,6 +392,7 @@ Proof.
   destruct (Z.leb_spec 0 j), (Z.ltb_spec j b), (Z.ltb_spec j (Z.succ b)), (Z.eqb_spec b j);
     simpl; try congruence; omega.
 Qed.
+
 
 Lemma of_N_shiftl:
   forall n i, Z.of_N (N.shiftl n i) = Z.shiftl (Z.of_N n) (Z.of_N i).
@@ -383,6 +442,38 @@ Proof.
       specialize (H (j - b)).
       do 2 rewrite -> Z.shiftr_spec in H by omega.
       replace (j - b + b) with j in H by omega.
+      assumption.
+Qed.
+
+
+Lemma N_eq_shiftr_land_ones:
+  forall i1 i2 b,
+  (i1 =? i2)%N = (N.shiftr i1 b =? N.shiftr i2 b)%N && (N.land i1 (N.ones b) =? N.land i2 (N.ones b))%N.
+Proof.
+  intros.
+  match goal with [ |- ?b1 = ?b2 ] => destruct b1 eqn:?, b2 eqn:? end; try congruence.
+  * contradict Heqb1.
+    rewrite not_false_iff_true.
+    rewrite andb_true_iff.
+    repeat rewrite -> N.eqb_eq in *; subst.
+    auto.
+  * contradict Heqb0.
+    rewrite not_false_iff_true.
+    rewrite -> andb_true_iff in Heqb1.
+    destruct Heqb1.
+    repeat rewrite -> N.eqb_eq in *; subst.
+    apply N.bits_inj_iff. intros j.
+    destruct (N.ltb_spec j b).
+    + apply N.bits_inj_iff in H0.
+      specialize (H0 j).
+      repeat rewrite -> N.land_spec in H0.
+      rewrite -> N.ones_spec_low in H0 by assumption.
+      do 2 rewrite andb_true_r in H0.
+      assumption.
+    + apply N.bits_inj_iff in H.
+      specialize (H (j - b)%N).
+      do 2 rewrite -> N.shiftr_spec in H by Nomega.
+      replace (j - b + b)%N with j in H by Nomega.
       assumption.
 Qed.
 
@@ -571,86 +662,84 @@ Qed.
 Only properly defined if both arguments are non-negative.
 *)
 
-Definition msDiffBit : Z -> Z -> N :=
-  fun n m => Z.to_N (Z.succ (Z.log2 (Z.lxor n m))).
+Definition msDiffBit : N -> N -> N :=
+  fun n m => (N.log2 (N.lxor n m) + 1)%N.
 
 Lemma msDiffBit_sym: forall p1 p2,
   msDiffBit p1 p2 = msDiffBit p2 p1.
 Proof.
   intros.
   unfold msDiffBit.
-  rewrite Z.lxor_comm.
+  rewrite N.lxor_comm.
   reflexivity.
 Qed.
 
 
 Section msDiffBit.
-  Variable p1 p2 : Z.
-  Variable (Hnonneg1 : 0 <= p1).
-  Variable (Hnonneg2 : 0 <= p2).
+  Variable p1 p2 : N.
   Variable (Hne : p1 <> p2).
   
-  Local Lemma lxor_pos: 0 < Z.lxor p1 p2.
+  Local Lemma lxor_pos: (0 < N.lxor p1 p2)%N.
   Proof.
-    assert (0 <= Z.lxor p1 p2) by nonneg.
-    enough (Z.lxor p1 p2 <> 0) by omega.
-    rewrite Z.lxor_eq_0_iff.
+    assert (0 <= N.lxor p1 p2)%N by nonneg.
+    enough (N.lxor p1 p2 <> 0)%N by Nomega.
+    rewrite N.lxor_eq_0_iff.
     assumption.
   Qed.
   
   Lemma msDiffBit_Different:
-        Z.testbit p1 (Z.pred (Z.of_N (msDiffBit p1 p2)))
-     <> Z.testbit p2 (Z.pred (Z.of_N (msDiffBit p1 p2))).
+        N.testbit p1 (msDiffBit p1 p2 - 1)
+     <> N.testbit p2 (msDiffBit p1 p2 - 1).
   Proof.
-    match goal with [ |- Z.testbit ?x ?b <> Z.testbit ?y ?b] =>
-      enough (xorb (Z.testbit x b) (Z.testbit y b) = true)
-      by (destruct (Z.testbit x b), (Z.testbit y b); simpl in *; congruence) end.
-    rewrite <- Z.lxor_spec.
+    match goal with [ |- N.testbit ?x ?b <> N.testbit ?y ?b] =>
+      enough (xorb (N.testbit x b) (N.testbit y b) = true)
+      by (destruct (N.testbit x b), (N.testbit y b); simpl in *; congruence) end.
+    rewrite <- N.lxor_spec.
     unfold msDiffBit.
-    rewrite -> Z2N.id by nonneg.
-    rewrite -> Z.pred_succ.
-    apply Z.bit_log2.
-    apply lxor_pos.
+    rewrite N.add_sub.
+    apply N.bit_log2.
+    rewrite N.lxor_eq_0_iff.
+    assumption.
   Qed.
 
   Lemma msDiffBit_Same:
-    forall j,  Z.of_N (msDiffBit p1 p2) <= j ->
-    Z.testbit p1 j = Z.testbit p2 j.
+    forall j, (msDiffBit p1 p2 <= j)%N ->
+    N.testbit p1 j = N.testbit p2 j.
   Proof.
     intros.
-    match goal with [ |- Z.testbit ?x ?b = Z.testbit ?y ?b] =>
-      enough (xorb (Z.testbit x b) (Z.testbit y b) = false)
-      by (destruct (Z.testbit x b), (Z.testbit y b); simpl in *; congruence) end.
-    rewrite <- Z.lxor_spec.
+    match goal with [ |- N.testbit ?x ?b = N.testbit ?y ?b] =>
+      enough (xorb (N.testbit x b) (N.testbit y b) = false)
+      by (destruct (N.testbit x b), (N.testbit y b); simpl in *; congruence) end.
+    rewrite <- N.lxor_spec.
     unfold msDiffBit in H.
-    rewrite -> Z2N.id in H by nonneg.
-    apply Z.bits_above_log2; try nonneg.
+    apply N.bits_above_log2.
+    Nomega.
   Qed.
 
   Lemma msDiffBit_shiftr_same:
-        Z.shiftr p1 (Z.of_N (msDiffBit p1 p2))
-     =  Z.shiftr p2 (Z.of_N (msDiffBit p1 p2)).
+        N.shiftr p1 (msDiffBit p1 p2)
+     =  N.shiftr p2 (msDiffBit p1 p2).
   Proof.
-    apply Z.bits_inj_iff'. intros j ?.
-    rewrite -> !Z.shiftr_spec by nonneg.
+    apply N.bits_inj_iff. intros j.
+    rewrite -> !N.shiftr_spec by nonneg.
     apply msDiffBit_Same.
-    omega.
+    Nomega.
   Qed.
 End msDiffBit.
 
 Lemma msDiffBit_less:
   forall z1 z2 b,
     z1 <> z2 ->
-    Z.shiftr z1 (Z.of_N b) = Z.shiftr z2 (Z.of_N b) ->
+    N.shiftr z1 b = N.shiftr z2 b ->
     (msDiffBit z1 z2 <= b)%N.
 Proof.
   intros.
   unfold msDiffBit.
-  enough (Z.log2 (Z.lxor z1 z2) < Z.of_N b)
-    by (apply N2Z.inj_le; rewrite -> Z2N.id by nonneg; omega).
-  rewrite <- Z.lxor_eq_0_iff in H0.
-  rewrite <- Z.shiftr_lxor in H0.
-  apply Z.shiftr_eq_0_iff in H0.
-  rewrite -> Z.lxor_eq_0_iff in H0.
+  enough (N.log2 (N.lxor z1 z2) < b)%N
+    by (apply N2Z.inj_le; Nomega).
+  rewrite <- N.lxor_eq_0_iff in H0.
+  rewrite <- N.shiftr_lxor in H0.
+  apply N.shiftr_eq_0_iff in H0.
+  rewrite -> N.lxor_eq_0_iff in H0.
   intuition.
 Qed.

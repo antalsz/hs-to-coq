@@ -10,6 +10,8 @@ import qualified BinNat
 import qualified Num
 import qualified Real
 import qualified Bits
+import qualified BitUtil
+import qualified Popcount
 
 import qualified Data.Bits
 import Test.QuickCheck(NonNegative(..))
@@ -47,10 +49,18 @@ toBinZ 0 = BinNums.Z0
 toBinZ x | x < 0 = BinNums.Zneg (toPositive (abs x))
 toBinZ x | x > 0 = BinNums.Zpos (toPositive x)
 
+toBinN :: Integer -> BinNums.N
+toBinN 0 = BinNums.N0
+toBinN x = BinNums.Npos (toPositive x)
+
 fromBinZ :: BinNums.Z -> Integer
 fromBinZ BinNums.Z0 = 0
 fromBinZ (BinNums.Zneg bn) = - (fromPositive bn)
 fromBinZ (BinNums.Zpos bn) = fromPositive bn
+
+fromBinN :: BinNums.N -> Integer
+fromBinN BinNums.N0 = 0
+fromBinN (BinNums.Npos bn) = fromPositive bn
 
 ----------------------------------------------------
 
@@ -88,7 +98,7 @@ instance Data.Bits.Bits Num.Int where
   clearBit      = \x i -> BinInt._Z__land x (Bits.complement_Int (Bits.bit_Int (toBinZ (fromIntegral i))))
   complement    = Bits.complement_Int
   complementBit = \ x i -> Bits.complementBit_Int x (toBinZ (fromIntegral i))
-  isSigned      = \_ -> Prelude.True
+  isSigned      = \_ -> Prelude.False
   popCount      = fromIntegral . fromBinZ . Bits.popCount_Int
   rotate        = \x i -> Bits.shiftL_Int x (toBinZ (fromIntegral i))
   rotateL       = \x i -> Bits.shiftL_Int x (toBinZ (fromIntegral i))
@@ -105,6 +115,55 @@ instance Data.Bits.Bits Num.Int where
   bitSize       = error "untranslated"
 
 
+instance Integral Num.Word where
+  quot      = BinNat._N__div
+  rem       = BinNat._N__modulo
+  div       = BinNat._N__div
+  mod       = BinNat._N__modulo
+  quotRem   = (\x y -> (,) (BinNat._N__div x y) (BinNat._N__modulo x y))
+  divMod    = (\x y -> (,) (BinNat._N__div x y) (BinNat._N__modulo x y))
+  toInteger = toInteger . fromBinN
+
+instance Eq Num.Word where
+  (==) = BinNat._N__eqb
+
+instance Num Num.Word where
+  (+)         = BinNat._N__add
+  (-)         = BinNat._N__sub
+  (*)         = BinNat._N__mul
+  negate      = error "negate on Word does not make sense"
+  abs         = (\ x -> x)
+  signum      = (\x -> if x == 0 then 0 else 1)
+  fromInteger = toBinN . fromInteger
+
+instance Ord Num.Word where
+  compare = BinNat._N__compare
+
+
+instance Data.Bits.Bits Num.Word where
+  (.&.)         = BinNat._N__land
+  (.|.)         = BinNat._N__lor
+  bit           = (BitUtil.shiftLL (BinNums.Npos BinNums.Coq_xH)) . toBinN . fromIntegral
+  bitSizeMaybe  = \_ -> Prelude.Nothing
+  clearBit      = \x i -> BinNat._N__clearbit x (toBinN (fromIntegral i))
+  complement    = error "complement on Word undefined"
+  complementBit = error "complementBit on Word undefined"
+  isSigned      = \_ -> Prelude.True
+  popCount      = fromIntegral . fromBinN . Popcount.coq_N_popcount
+  rotate        = \x i -> BinNat._N__shiftl x (toBinN (fromIntegral i))
+  rotateL       = \x i -> BinNat._N__shiftl x (toBinN (fromIntegral i))
+  rotateR       = \x i -> BinNat._N__shiftr x (toBinN (fromIntegral i))
+  setBit        = \x i -> BinNat._N__setbit x (toBinN (fromIntegral i))
+  shift         = \x i -> BinNat._N__shiftl x (toBinN (fromIntegral i))
+  shiftL        = \x i -> BinNat._N__shiftl x (toBinN (fromIntegral i))
+  shiftR        = \x i -> BinNat._N__shiftr x (toBinN (fromIntegral i))
+  testBit       = \x i -> BinNat._N__testbit x (toBinN (fromIntegral i))
+  unsafeShiftL  = \x i -> BinNat._N__shiftl x (toBinN (fromIntegral i))
+  unsafeShiftR  = \x i -> BinNat._N__shiftr x (toBinN (fromIntegral i))
+  xor           = BinNat._N__lxor 
+  zeroBits      = 0
+  bitSize       = error "untranslated"
+
 
 
 ----------------------------------------------------
@@ -116,3 +175,9 @@ instance Enum Num.Int where
   toEnum = undefined
   fromEnum = undefined
   
+instance Real Num.Word where
+  toRational = error "TODO" 
+
+instance Enum Num.Word where
+  toEnum = undefined
+  fromEnum = undefined

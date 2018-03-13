@@ -60,7 +60,10 @@ Instance Arbitrary_bool : Arbitrary bool :=
   { arbitrary := MkGen xpredT }.
 
 Instance Arbitrary_Int : Arbitrary GHC.Num.Int :=
-  { arbitrary := MkGen (fun x => Zle 0 x) }. (* For IntSet *)
+  { arbitrary := MkGen xpredT }.
+
+Instance Arbitrary_N : Arbitrary GHC.Num.Word :=
+  { arbitrary := MkGen xpredT }.
 
 Instance Arbitrary_list {a} `{Arbitrary a} : Arbitrary (list a) :=
   { arbitrary := MkGen (Coq.Lists.List.Forall (unGen arbitrary)) }.

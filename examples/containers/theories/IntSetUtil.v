@@ -44,37 +44,18 @@ Notation reflect := ssrbool.reflect.
 Theorem bitcount_0_1_power (n : Word) :
   bitcount #0 n = #1 <-> exists i, n = (2^i)%N.
 Proof.
-  rewrite /bitcount /popCount /=; change 1%Z with (Z.of_N 1%N); rewrite N2Z.inj_iff.
+  rewrite /bitcount /popCount /=.
   split=> [/N_popcount_1_pow2 [i def_n] | [i ->{n}]].
   - by exists i.
   - apply N_popcount_pow2.
 Qed.
 
-Theorem bitcount_0_1_power_Z_N (n : Int) :
-  bitcount #0 (Z.to_N n) = #1 <-> exists i, n = (2 ^ Z.of_N i)%Z.
-Proof.
-  change 2%Z with (Z.of_N 2%N); rewrite bitcount_0_1_power; split=> -[i def_n]; exists i.
-  - rewrite -N2Z.inj_pow -def_n Z2N.id //.
-    case: n def_n => [|n|n] //=.
-    have: (0 < 2^i)%N by apply N_pow_pos_nonneg.
-    by case: (2^i)%N.
-  - by rewrite def_n -N2Z.inj_pow N2Z.id.
-Qed.
-
-Theorem bitcount_0_1_power_Z_Z (n : Int) :
-  bitcount #0 (Z.to_N n) = #1 <-> ex2 (fun i => n = 2^i)%Z (fun i => 0 <= i)%Z.
-Proof.
-  rewrite bitcount_0_1_power_Z_N; split=> [[i def_n] | [i def_n POS_i]].
-  - exists (Z.of_N i) => //; apply N2Z.is_nonneg.
-  - exists (Z.to_N i); rewrite def_n Z2N.id //.
-Qed.
-
-Theorem WF_Bin_mask_power_Z_Z {p : Prefix} {m : Mask} {l r : IntSet} :
+Theorem WF_Bin_mask_power_N {p : Prefix} {m : Mask} {l r : IntSet} :
   WF (Bin p m l r) ->
-  ex2 (fun i => m = 2^i)%Z (fun i => 0 <= i)%Z.
+  ex (fun i => m = 2^i)%N.
 Proof.
   move=> /valid_maskPowerOfTwo /= /and3P [/Eq_eq BITS _ _].
-  by apply bitcount_0_1_power_Z_Z.
+  by apply bitcount_0_1_power.
 Qed.
 
 (******************************************************************************)
@@ -112,10 +93,10 @@ Theorem toList_sorted (s : IntSet) :
   WF s ->
   StronglySorted _<_ (toList s).
 Proof.
-  move=> WF_s; apply StronglySorted_R_ext with Z.lt; last by apply to_List_sorted.
+  move=> WF_s; apply StronglySorted_R_ext with N.lt; last by apply to_List_sorted.
   move=> a b; unfold "<", Ord_Integer___ => /=.
   symmetry; apply rwP.
-  apply/Z.ltb_spec0.
+  apply/N.ltb_spec0.
 Qed.
 
 Theorem toAscList_sorted (s : IntSet) :
@@ -137,12 +118,12 @@ Qed.
 (******************************************************************************)
 (** Functions in terms of other functions **)
 
-Theorem partition_filter (s : IntSet) (p : Int -> bool) :
+Theorem partition_filter (s : IntSet) (p : Word -> bool) :
   WF s ->
   partition p s = (filter p s, filter (fun k => ~~ p k) s).
 Proof. by move=> WF_s; rewrite -partition_fst -partition_snd //; case: (partition p s). Qed.
 
-Theorem split_splitMember (x : Int) (s : IntSet) :
+Theorem split_splitMember (x : Word) (s : IntSet) :
   WF s ->
   let: (l,m,r) := splitMember x s in
   split x s = (l, r) /\ member x s = m.
@@ -155,23 +136,23 @@ Proof.
   - by apply member_Sem.
 Qed.  
 
-Theorem split_splitMember' (x : Int) (s : IntSet) :
+Theorem split_splitMember' (x : Word) (s : IntSet) :
   WF s ->
   split x s = ((splitMember x s).1.1, (splitMember x s).2) /\ member x s = (splitMember x s).1.2.
 Proof. by move=> /(split_splitMember x); case: (splitMember x s) => [[? ?] ?]. Qed.
 
-Theorem splitMember_split (x : Int) (s : IntSet) :
+Theorem splitMember_split (x : Word) (s : IntSet) :
   WF s ->
   let: (l,r) := split x s in
   splitMember x s = (l, member x s, r).
 Proof. by move=> /(split_splitMember x); case: (splitMember x s) => [[? ?] ?] [-> ->]. Qed.
 
-Theorem splitMember_split' (x : Int) (s : IntSet) :
+Theorem splitMember_split' (x : Word) (s : IntSet) :
   WF s ->
   splitMember x s = ((split x s).1, member x s, (split x s).2).
 Proof. by move=> /(splitMember_split x); case: (split x s) => [? ?]. Qed.
 
-Theorem split_filter (x : Int) (s : IntSet) :
+Theorem split_filter (x : Word) (s : IntSet) :
   WF s ->
   split x s = (filter (fun y => y < x) s, filter (fun y => y > x) s).
 Proof.
@@ -180,7 +161,7 @@ Proof.
   f_equal; eauto using Sem_unique, filter_Sem.
 Qed.
 
-Theorem splitMember_filter (x : Int) (s : IntSet) :
+Theorem splitMember_filter (x : Word) (s : IntSet) :
   WF s ->
   splitMember x s = (filter (fun y => y < x) s, member x s, filter (fun y => y > x) s).
 Proof.
@@ -193,7 +174,7 @@ Qed.
 Theorem Sem_Desc0 : forall s f, Sem s f -> exists r, Desc0 s r f.
 Proof.
   apply Sem_ind => [f false_f | s r f Desc_srf].
-  - by exists (0%Z,0%N); apply Desc0Nil.
+  - by exists (0%N,0%N); apply Desc0Nil.
   - by exists r; apply (Desc0NotNil s r f r f); rewrite // isSubrange_refl.
 Qed.
 
@@ -219,17 +200,17 @@ Proof. done. Qed.
 
 Theorem Tip_member (p : Prefix) (bm : BitMap) :
   WF (Tip p bm) ->
-  forall k, member k (Tip p bm) = bitmapInRange (Z.shiftr p (Z.log2 (Z.of_N WIDTH)), N.log2 WIDTH) bm k.
+  forall k, member k (Tip p bm) = bitmapInRange (N.shiftr p (N.log2  WIDTH), N.log2 WIDTH) bm k.
 Proof.
   move=> [fs SEMs] k;
     inversion SEMs  as [| s' rng fs' DESCs]; subst s' fs';
-    inversion DESCs as [p' bm' rng' fs' NN_p def_p def_bits_r def_fs isbm_bm |]; subst p' bm' rng' fs' p.
+    inversion DESCs as [p' bm' rng' fs' def_p def_bits_r def_fs isbm_bm |]; subst p' bm' rng' fs' p.
   erewrite member_Desc, def_fs; last eassumption.
   f_equal.
   replace rng with (fst rng, rBits rng) by rewrite -surjective_pairing //.
   f_equal => //; rewrite /rPrefix.
-  rewrite Z.shiftr_shiftl_l; last apply N2Z.is_nonneg.
-  by rewrite def_bits_r /=.
+  rewrite N.shiftr_shiftl_l; last Nomega.
+  by rewrite def_bits_r N.shiftl_0_r /=.
 Qed.
 
 Theorem Bin_member (p : Prefix) (msk : Mask) (l r : IntSet) :
@@ -245,7 +226,7 @@ Proof.
   erewrite !member_Desc, def_fs; eauto.
 Qed.
 
-Theorem Bin_left_lt_right {p msk : Z} {l r : IntSet} :
+Theorem Bin_left_lt_right {p msk : N} {l r : IntSet} :
   WF (Bin p msk l r) ->
   forall kl, member kl l -> forall kr, member kr r -> kl < kr.
 Proof.
@@ -261,7 +242,7 @@ Proof.
   move=> /(Desc_inside DESCl)/(inRange_isSubrange_true _ _ _ subrange_l)/inRange_bounded IN_kl
          /(Desc_inside DESCr)/(inRange_isSubrange_true _ _ _ subrange_r)/inRange_bounded IN_kr.
   move: IN_kl IN_kr; rewrite rPrefix_halfRange_otherhalf // => IN_kl IN_kr.
-  apply/Z.ltb_spec0; omega.
+  apply/N.ltb_spec0; Nomega.
 Qed.
 
 (******************************************************************************)
@@ -269,7 +250,7 @@ Qed.
 
 Theorem eqIntSetMemberP {s1 s2 : IntSet} :
   WF s1 -> WF s2 ->
-  reflect (forall x, (0 <= x)%Z -> member x s1 = member x s2) (s1 == s2).
+  reflect (forall x, member x s1 = member x s2) (s1 == s2).
 Proof.
   move=> WF1 WF2.
   set s1' := exist _ _ WF1; set s2' := exist _ _ WF2.
@@ -277,11 +258,10 @@ Proof.
   rewrite /= /IntSetFSet.Equal /= /IntSetFSet.In_set => Equal_eq eq_Equal.
   apply iff_reflect; split.
   - move=> KEYS; apply Equal_eq=> /= n; apply eq_iff_eq_true.
-    move: KEYS; cbv -[member Z.of_N "<="%Z eqb is_true].
-    apply; apply N2Z.is_nonneg.
-  - move=> /eq_Equal KEYS n POS_n.
-    move: (KEYS (Z.to_N n)); cbv -[member Z.of_N Z.to_N eqb iff].
-    rewrite Z2N.id //.
+    move: KEYS; cbv -[member Z.of_N "<="%N eqb is_true].
+    apply.
+  - move=> /eq_Equal KEYS n.
+    move: (KEYS n); cbv -[member eqb iff].
     by case: (member _ s1); case: (member _ s2); intuition.
 Qed.
 
@@ -294,13 +274,13 @@ Ltac member_by_Sem SEM :=
     last (eapply SEM; try eassumption; reflexivity);
     reflexivity.
 
-Theorem insert_member (x : Int) (s : IntSet) :
-  (0 <= x)%Z -> WF s ->
+Theorem insert_member (x : Nat) (s : IntSet) :
+  WF s ->
   forall k, member k (insert x s) = (k == x) || member k s.
 Proof. member_by_Sem insert_Sem. Qed.
 
-Theorem delete_member (x : Int) (s : IntSet) :
-  (0 <= x)%Z -> WF s ->
+Theorem delete_member (x : Nat) (s : IntSet) :
+  WF s ->
   forall k, member k (delete x s) = (k /= x) && member k s.
 Proof. member_by_Sem delete_Sem. Qed.
 
@@ -340,8 +320,7 @@ Theorem empty_member' :
   forall k, ~~ member k empty.
 Proof. done. Qed.
 
-Theorem singleton_member (x : Int) :
-  (0 <= x)%Z ->
+Theorem singleton_member (x : Nat) :
   forall k, member k (singleton x) = (k == x).
 Proof. member_by_Sem singleton_Sem. Qed.
 
@@ -405,12 +384,11 @@ Proof.
       eapply Sem_differ_witness; eassumption.
 Qed.
 
-Theorem fromList_member (xs : list Int) :
-  Forall (fun x => 0 <= x)%Z xs ->
+Theorem fromList_member (xs : list Nat) :
   forall k, member k (fromList xs) = elem k xs.
 Proof.
-  move=> POS_xs k.
-  move: (fromList_Sem xs POS_xs) => [f [SEM DEF]].
+  move=> k.
+  move: (fromList_Sem xs) => [f [SEM DEF]].
   erewrite member_Sem; last by eapply SEM.
   move: (DEF k); case: (f k) => DEF_k.
   all: by symmetry; apply/elemP/DEF_k.
@@ -437,62 +415,57 @@ Proof.
   by rewrite rev_elem toList_member.
 Qed.
 
-Theorem map_member (s : IntSet) (f : Int -> Int) :
-  WF s -> (forall k, member k s -> (0 <= f k)%Z) ->
+Theorem map_member (s : IntSet) (f : Nat -> Nat) :
+  WF s ->
   forall k, member k (map f s) <-> ex2 (fun k' => member k' s) (fun k' => k = f k').
 Proof.
-  move=> WF_s POS_f k.
+  move=> WF_s k.
   rewrite /map /=; change @GHC.Base.map with @seq.map; rewrite fromList_member.
-  - rewrite elem_in; eapply iff_trans.
-    + split; first by move=> /mapP/=; apply.
-      move=> [k' k'_in ->].
-      by apply map_f.
-    + split; move=> [k' IN ?]; subst; exists k'=> //.
-      * by rewrite -toList_member // elem_in.
-      * rewrite in_elem toList_member //.
-  - rewrite Forall_forall=> x; rewrite Zle_is_le_bool; move: x.
-    rewrite -forallb_forall -Foldable_all_forallb Foldable_all_ssreflect all_map.
-    apply/allP=> /= k'.
-    rewrite in_elem toList_member // => /POS_f.
-    by rewrite Zle_is_le_bool.
+  rewrite elem_in; eapply iff_trans.
+  + split; first by move=> /mapP/=; apply.
+    move=> [k' k'_in ->].
+    by apply map_f.
+  + split; move=> [k' IN ?]; subst; exists k'=> //.
+    * by rewrite -toList_member // elem_in.
+    * rewrite in_elem toList_member //.
 Qed.
 
-Theorem filter_member (s : IntSet) (p : Int -> bool) :
+Theorem filter_member (s : IntSet) (p : Nat -> bool) :
   WF s ->
   forall k, member k (filter p s) = member k s && p k.
 Proof. member_by_Sem filter_Sem. Qed.
 
-Theorem partition_member_1 (s : IntSet) (p : Int -> bool) :
+Theorem partition_member_1 (s : IntSet) (p : Nat -> bool) :
   WF s ->
   forall k, member k (partition p s).1 = member k s && p k.
 Proof. by move=> *; rewrite partition_fst filter_member. Qed.
 
-Theorem partition_member_2 (s : IntSet) (p : Int -> bool) :
+Theorem partition_member_2 (s : IntSet) (p : Nat -> bool) :
   WF s ->
   forall k, member k (partition p s).2 = member k s && ~~ p k.
 Proof. by move=> *; rewrite partition_snd // filter_member. Qed.
 
-Theorem split_member_1 (x : Int) (s : IntSet) :
+Theorem split_member_1 (x : Nat) (s : IntSet) :
   WF s ->
   forall k, member k (split x s).1 = member k s && (k < x).
 Proof. by move=> WFs k; rewrite split_filter //= filter_member. Qed.
 
-Theorem split_member_2 (x : Int) (s : IntSet) :
+Theorem split_member_2 (x : Nat) (s : IntSet) :
   WF s ->
   forall k, member k (split x s).2 = member k s && (k > x).
 Proof. by move=> WFs k; rewrite split_filter //= filter_member. Qed.
 
-Theorem splitMember_member_1 (x : Int) (s : IntSet) :
+Theorem splitMember_member_1 (x : Nat) (s : IntSet) :
   WF s ->
   forall k, member k (splitMember x s).1.1 = member k s && (k < x).
 Proof. by move=> WFs k; rewrite splitMember_filter //= filter_member. Qed.
 
-Theorem splitMember_member_bool (x : Int) (s : IntSet) :
+Theorem splitMember_member_bool (x : Nat) (s : IntSet) :
   WF s ->
   (splitMember x s).1.2 = member x s.
 Proof. by move=> WFs; rewrite splitMember_filter. Qed.
 
-Theorem splitMember_member_2 (x : Int) (s : IntSet) :
+Theorem splitMember_member_2 (x : Nat) (s : IntSet) :
   WF s ->
   forall k, member k (splitMember x s).2 = member k s && (k > x).
 Proof. by move=> WFs k; rewrite splitMember_filter //= filter_member. Qed.

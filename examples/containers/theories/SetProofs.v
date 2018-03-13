@@ -1286,6 +1286,59 @@ Proof.
     split; [left; reflexivity | solve_Desc].
 Qed.
 
+(** ** Verification of [maxView] *)
+
+Lemma maxView_Desc:
+  forall s lb ub,
+    Bounded s lb ub ->
+    forall (P : option (e * Set_ e) -> Prop),
+    (forall y r,
+      (sem s y = true) /\
+      Desc r lb (Some y) (size s - 1) (fun i => sem s i && negb (i == y)) ->
+      P (Some (y, r))) ->
+    ((forall i, sem s i = false) -> P None) ->
+    P (maxView s).
+Proof.
+  intros ??? HB P HSome HNone.
+  unfold maxView.
+  inversion HB; subst.
+  * apply HNone. intro; reflexivity.
+  * unfold op_zdzn__, Datatypes.id, op_zd__.
+    eapply maxViewSure_Desc; only 1: eassumption.
+    intros y r [??].
+    apply HSome.
+    split.
+    - simpl. rewrite !orb_true_iff. intuition.
+    - applyDesc H5. solve_Desc.
+Qed.
+
+(** ** Verification of [minView] *)
+
+Lemma minView_Desc:
+  forall s lb ub,
+    Bounded s lb ub ->
+    forall (P : option (e * Set_ e) -> Prop),
+    (forall y r,
+      (sem s y = true) /\
+      Desc r (Some y) ub (size s - 1) (fun i => sem s i && negb (i == y)) ->
+      P (Some (y, r))) ->
+    ((forall i, sem s i = false) -> P None) ->
+    P (minView s).
+Proof.
+  intros ??? HB P HSome HNone.
+  unfold minView.
+  inversion HB; subst.
+  * apply HNone. intro; reflexivity.
+  * unfold op_zdzn__, Datatypes.id, op_zd__.
+    eapply minViewSure_Desc; only 1: eassumption.
+    intros y r [??].
+    apply HSome.
+    split.
+    - simpl. rewrite !orb_true_iff. intuition.
+    - applyDesc H5. solve_Desc.
+Qed.
+
+
 (** ** Verification of [glue] *)
 
 Lemma glue_Desc:
@@ -4484,11 +4537,23 @@ End SetFSet.
 
 (** * Rewrite rules *)
 
-(* 
+(**
 @
 {-# RULES "Set.toAscList" [~1] forall s . toAscList s = build (\c n -> foldrFB c n s) #-}
+{-# RULES "Set.toAscListBack" [1] foldrFB (:) [] = toAscList #-}
+{-# RULES "Set.toDescList" [~1] forall s . toDescList s = build (\c n -> foldlFB (\xs x -> c x xs) n s) #-}
+{-# RULES "Set.toDescListBack" [1] foldlFB (\xs x -> x : xs) [] = toDescList #-}
 @
 *)
 
 Lemma rule_toAscList: forall e (s : Set_ e), toAscList s = build (fun _ c n => foldrFB c n s).
+Proof. intros.  reflexivity. Qed.
+
+Lemma rule_toAscListBack: forall e, @foldrFB e _ cons nil = toAscList.
+Proof. intros.  reflexivity. Qed.
+
+Lemma rule_toDescList: forall e (s : Set_ e), toDescList s = build (fun _ c n => foldlFB (fun xs x => c x xs) n s).
+Proof. intros.  reflexivity. Qed.
+
+Lemma rule_toDescListBack: forall e, foldlFB (fun xs x => x :: xs) nil = @toDescList e.
 Proof. intros.  reflexivity. Qed.

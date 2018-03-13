@@ -41,11 +41,11 @@ type Key    = S2.Key
 
 type Nat = NonNegative Integer
 
-binZToNonNeg :: Num.Int -> Nat
-binZToNonNeg = NonNegative . fromBinZ
+binZToNonNeg :: Num.Word -> Nat
+binZToNonNeg = NonNegative . fromBinN
 
-nonNegToBinZ :: Nat -> Num.Int
-nonNegToBinZ = toBinZ . getNonNegative 
+nonNegToBinZ :: Nat -> Num.Word
+nonNegToBinZ = toBinN . getNonNegative 
 
 ----------------------------------------------------
 
@@ -136,11 +136,11 @@ deleteAt    = error "deleteAt: partial function"
 --------------------------------------------------
 
 -- I dunno how to get pattern synonyms to do this
-bin s = S2.Bin (toBinZ s)
+bin s = S2.Bin (toBinN s)
 
 -- need to translate BinNums.Z -> Int
 size :: IntSet -> Int
-size x = fromIntegral $ fromBinZ (S2.size x)
+size x = fromIntegral $ fromBinN (S2.size x)
 
 --------------------------------------------------
 -- Single, Member, Insert, Delete

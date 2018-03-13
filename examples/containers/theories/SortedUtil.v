@@ -189,6 +189,13 @@ Corollary StronglySorted_Zlt_eq_In (xs ys : list Int) :
   (xs = ys) <-> (forall a, In a xs <-> In a ys).
 Proof. apply StronglySorted_eq_In; [exact Z.lt_irrefl | exact Z.lt_trans]. Qed.
 
+Corollary StronglySorted_Nlt_eq_In (xs ys : list N) :
+  StronglySorted N.lt xs ->
+  StronglySorted N.lt ys ->
+  (xs = ys) <-> (forall a, In a xs <-> In a ys).
+Proof. apply StronglySorted_eq_In; [exact N.lt_irrefl | exact N.lt_trans]. Qed.
+
+
 Corollary StronglySorted_Ord_eq_In {A} `{OrdLaws A} (xs ys : list A) :
   StronglySorted _<_ xs ->
   StronglySorted _<_ ys ->
@@ -303,4 +310,11 @@ Corollary StronglySorted_sort_nub_Zlt (xs : list Int) :
 Proof.
   eapply StronglySorted_R_ext; last by apply StronglySorted_sort_nub.
   by unfold "<", Ord_Integer___ => /= a b; rewrite -Z.ltb_lt.
+Qed.
+
+Corollary StronglySorted_sort_nub_Nlt (xs : list N) :
+  StronglySorted N.lt (sort (nub xs)).
+Proof.
+  eapply StronglySorted_R_ext; last by apply StronglySorted_sort_nub.
+  by unfold "<", Ord_Char___ => /= a b; rewrite -N.ltb_lt.
 Qed.

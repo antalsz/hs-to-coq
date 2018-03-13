@@ -1,3 +1,11 @@
+redefine Definition Data.IntSet.Internal.Nat := Coq.Numbers.BinNums.N.
+redefine Definition Data.IntSet.Internal.Prefix := Coq.Numbers.BinNums.N.
+redefine Definition Data.IntSet.Internal.BitMap := Coq.Numbers.BinNums.N.
+redefine Definition Data.IntSet.Internal.Mask := Coq.Numbers.BinNums.N.
+
+rename type GHC.Types.Int = Coq.Numbers.BinNums.N
+
+
 rename value Data.IntMap.Internal.WhenMatched = Data.IntMap.Internal.Mk_WhenMatched
 rename value Data.IntMap.Internal.WhenMissing = Data.IntMap.Internal.Mk_WhenMissing
 rename value Data.IntMap.Internal.SplitLookup = Data.IntMap.Internal.Mk_SplitLookup
@@ -89,10 +97,10 @@ skip Data.IntMap.Internal.intMapDataType
 
 order Data.IntMap.Internal.Semigroup__IntMap Data.IntMap.Internal.Monoid__IntMap_mappend
 
-
-# We need Integral N to use GHC.Real.fromIntegral to go from N to Z
-rename value Data.IntMap.Internal.intFromNat = Coq.ZArith.BinInt.Z.of_N
-skip Coq.ZArith.BinInt.Z.of_N
+skip Data.IntMap.Internal.intFromNat
+rewrite forall x, Data.IntMap.Internal.intFromNat x = x
+skip Data.IntMap.Internal.natFromInt
+rewrite forall x, Data.IntMap.Internal.natFromInt x = x
 
 skip module Coq.ZArith.BinInt.Z
 skip module Coq.NArith.BinNat.N
@@ -102,9 +110,13 @@ skip module Coq.NArith.BinNat.N
 # 64bit numbers anyways, so we can complement just these bits.
 rewrite forall x, (Data.Bits.complement x) = (Coq.NArith.BinNat.N.lxor x (Coq.NArith.BinNat.N.ones (64%N)))
 
+rewrite forall x, (x Data.Bits..&. Data.IntSet.Internal.prefixBitMask) = Coq.NArith.BinNat.N.ldiff x Data.IntSet.Internal.suffixBitMask
 
 # Share bit stuff with IntSet
 rename value Data.IntMap.Internal.mask = Data.IntSet.Internal.mask
 skip Data.IntSet.Internal.mask
 rename value Data.IntMap.Internal.zero = Data.IntSet.Internal.zero
 skip Data.IntSet.Internal.zero
+
+redefine Definition Data.IntMap.Internal.Foldable__IntMap_length : forall {a}, (Data.IntMap.Internal.IntMap a) -> GHC.Num.Int :=
+  fun {a} x => Coq.ZArith.BinInt.Z.of_N (Data.IntMap.Internal.size x).

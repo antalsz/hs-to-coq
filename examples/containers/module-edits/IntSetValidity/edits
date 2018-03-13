@@ -1,3 +1,10 @@
+redefine Definition Data.IntSet.Internal.Nat := Coq.Numbers.BinNums.N.
+redefine Definition Data.IntSet.Internal.Prefix := Coq.Numbers.BinNums.N.
+redefine Definition Data.IntSet.Internal.BitMap := Coq.Numbers.BinNums.N.
+redefine Definition Data.IntSet.Internal.Mask := Coq.Numbers.BinNums.N.
+
+rename type GHC.Types.Int = Coq.Numbers.BinNums.N
+
 skip module Test.QuickCheck
 skip module Test.QuickCheck.Property
 skip module Utils.Containers.Internal.BitUtil
@@ -6,3 +13,5 @@ rename type Test.QuickCheck.Property.Property = bool
 rename value Test.QuickCheck.Property..&&. = andb
 
 rewrite forall s x, Test.QuickCheck.Property.counterexample s x = x
+
+rewrite forall x, GHC.Real.fromIntegral x = x

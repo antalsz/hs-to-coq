@@ -66,7 +66,7 @@ Instance Num_Word__ : Num Word := {
   op_zt__   := N.mul %N;
   abs         := fun x => x;
   fromInteger := Z.to_N;
-  negate      := fun x => x;
+  negate      := fun _ => 0%N;
   signum      := fun x => match x with | N0 => N0 | _ => 1%N  end }.
 
 Module Notations.

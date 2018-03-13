@@ -106,11 +106,11 @@ Theorem thm_InsertDelete : toProp prop_InsertDelete.
 Proof.
   rewrite /prop_InsertDelete /= => x POS s WF_s.
 
-  move: (insert_WF x _ WF_s   POS) => WF_ins.
-  move: (delete_WF x _ WF_ins POS) => WF_res.
+  move: (insert_WF x _ WF_s  ) => WF_ins.
+  move: (delete_WF x _ WF_ins) => WF_res.
   case x_nin_s: (~~ member x s) => //=; split=> /=; first by apply valid_correct.
 
-  apply/eqIntSetMemberP => // k POS_k.
+  apply/eqIntSetMemberP => // k.
   rewrite delete_member // insert_member //.
   rewrite Eq_inv andb_orr andbN orFb.
   
@@ -122,29 +122,18 @@ Qed.
 (* Cheating: manually forgetting POS constraint *)
 Theorem thm_MemberFromList : toProp prop_MemberFromList.
 Proof.
-  rewrite /prop_MemberFromList /= => xs _(* POS_xs *).
+  rewrite /prop_MemberFromList /= => xs _.
   set abs_xs := flat_map _ xs.
   apply/andP; split.
   all: rewrite Foldable_all_ssreflect; apply/allP => /= k; rewrite in_elem.
   - rewrite fromList_member //.
-    subst abs_xs; elim: xs => [|x xs IH] //=.
-    case: (x /= #0) => //=.
-    constructor; last assumption.
-    apply Z.abs_nonneg.
   - rewrite /notMember /notElem /= fromList_member //.
-    + move=> k_abs; have k_pos: (0 <= k)%Z. {
-        subst abs_xs; elim: xs k_abs => [|x xs IH] //=.
-        rewrite elem_app=> /orP[] //.
-        case NZ: (x /= #0)=> //=.
-        rewrite elemC elemN orbF => /Eq_eq ->.
-        apply Z.abs_nonneg.
+    + move=> k_abs; have k_pos: (0 <= k)%N. {
+        Nomega.
       }
       clear k_abs; subst abs_xs; elim: xs => [|x xs IH] //=.
       rewrite elem_app negb_orb IH andbT.
       by case: k k_pos {IH}; case: x.
-    + apply Forall_forall=> {k} k; rewrite in_flat_map => -[x [_]].
-      case CMP: (x /= #0) => //= -[] //= <-.
-      apply Z.abs_nonneg.
 Qed.      
 
 (********************************************************************
@@ -155,13 +144,13 @@ Theorem thm_UnionInsert : toProp prop_UnionInsert.
 Proof.
   rewrite /prop_UnionInsert /= => x POS_x s WF_s.
 
-  move: (singleton_WF x POS_x)          => WF_sing.
+  move: (singleton_WF x)                => WF_sing.
   move: (union_WF     _ _ WF_s WF_sing) => WF_union.
-  move: (insert_WF    x _ WF_s POS_x)   => WF_ins.
+  move: (insert_WF    x _ WF_s)         => WF_ins.
 
   split=> /=; first by apply valid_correct.
   
-  apply/eqIntSetMemberP => // k POS_k.
+  apply/eqIntSetMemberP => // k.
   by rewrite union_member // singleton_member // insert_member // orbC.
 Qed.
 
@@ -174,7 +163,7 @@ Proof.
   move: (union_WF _ _ WF12 WF3)  => WF123.
   move: (union_WF _ _ WF1  WF23) => WF123'.
   
-  apply/eqIntSetMemberP => // k POS_k.
+  apply/eqIntSetMemberP => // k.
   by rewrite !union_member // orbA.
 Qed.
 
@@ -186,7 +175,7 @@ Proof.
   move: (union_WF _ _ WF1 WF2) => WF12.
   move: (union_WF _ _ WF2 WF1) => WF21.
   
-  apply/eqIntSetMemberP => // k POS_k.
+  apply/eqIntSetMemberP => // k.
   by rewrite !union_member // orbC.
 Qed.
 
@@ -194,8 +183,8 @@ Theorem thm_Diff : toProp prop_Diff.
 Proof.
   rewrite /prop_Diff /= => xs POS_xs ys POS_ys.
   
-  move: (fromList_WF   xs POS_xs)       => WF_xs.
-  move: (fromList_WF   ys POS_ys)       => WF_ys.
+  move: (fromList_WF   xs)              => WF_xs.
+  move: (fromList_WF   ys)              => WF_ys.
   move: (difference_WF _ _ WF_xs WF_ys) => WF_diff.
   
   split=> /=; first by apply valid_correct.
@@ -214,16 +203,16 @@ Qed.
 
 Theorem thm_Int : toProp prop_Int.
 Proof.
-  rewrite /prop_Int /= => xs POS_xs ys POS_ys.
+  rewrite /prop_Int /= => xs _ ys _.
 
-  move: (fromList_WF     xs POS_xs)       => WF_xs.
-  move: (fromList_WF     ys POS_ys)       => WF_ys.
+  move: (fromList_WF     xs)              => WF_xs.
+  move: (fromList_WF     ys)              => WF_ys.
   move: (intersection_WF _ _ WF_xs WF_ys) => WF_both.
 
   split=> /=; first by apply valid_correct.
   apply/Eq_eq; fold toList.
-  apply StronglySorted_Zlt_eq_In;
-    [by apply to_List_sorted | apply StronglySorted_sort_nub_Zlt | ].
+  apply StronglySorted_Nlt_eq_In;
+    [by apply to_List_sorted | apply StronglySorted_sort_nub_Nlt | ].
   move=> a.
   by rewrite !(rwP (elemP _ _))
              toList_member // intersection_member // !fromList_member //
@@ -300,14 +289,11 @@ Proof.
   apply/and3P; split; [| apply IHl, WFl | apply IHr, WFr].
   rewrite /powersOf2 flat_map_cons_f; change @GHC.Base.map with @Coq.Lists.List.map.
   rewrite fromList_member.
-  - rewrite (lock enumFromTo).
-    apply/elemP; rewrite in_map_iff.
-    move: (valid_maskPowerOfTwo _ WFs) => /= /and3P [/Eq_eq/bitcount_0_1_power_Z_N [i ->] _ _].
-    exists (Z.of_N i); split => //.
-    rewrite -(lock eftInt) eftInt_In.
-    admit. (* Unprovable *)
-  - apply Forall_forall => m' /in_map_iff [i [<-{m'} _]].
-    by apply Z.pow_nonneg.
+  rewrite (lock enumFromTo).
+  apply/elemP; rewrite in_map_iff.
+  move: (valid_maskPowerOfTwo _ WFs) => /= /and3P [/Eq_eq/bitcount_0_1_power [i ->] _ _].
+  exists i; split => //.
+  admit. (* Unprovable *)
 Abort.
 
 (* "Check that the prefix satisfies its invariant." *)
@@ -323,15 +309,17 @@ Proof.
     subst p' m' l' r' rng_s' fs' p m.
   apply/and3P; split; try by (apply IHl || apply IHr).
   
-  rewrite !Foldable_all_ssreflect; apply/allP => /= x.
+  rewrite !Foldable_all_ssreflect. apply/allP => x MEM_x.
+  rewrite match_nomatch.
+  rewrite nomatch_spec.
+  move: MEM_x.
   rewrite -(lock toAscList) in_elem toAscList_member // (member_Sem SEMs) => MEM_x.
-  
-  rewrite /match_ /mask; apply/Eq_eq.
-  case: (WF_Bin_mask_power_Z_Z WFs) => [i def_mask_s POS_i].
-  rewrite mask_to_upper_bits //; last by apply Z.lt_le_pred; move: POSrng => /N2Z.inj_lt.
-  rewrite Z.succ_pred -Z.ldiff_land Z.ldiff_ones_r; last apply N2Z.is_nonneg.
-  by move: (Desc_inside DESCs MEM_x); rewrite /inRange => /Z.eqb_spec ->.
-Qed.
+  rewrite negb_involutive.
+  rewrite def_fs in MEM_x. apply orb_true_iff in MEM_x. destruct MEM_x.
+  eapply inRange_isSubrange_true; only 2: eapply (Desc_inside DESCl); only 1: isSubrange_true; assumption.
+  eapply inRange_isSubrange_true; only 2: eapply (Desc_inside DESCr); only 1: isSubrange_true; assumption.
+  assumption.
+Qed.  
 
 (* "Check that the left elements don't have the mask bit set, and the right ones
    do." *)
@@ -342,17 +330,21 @@ Proof.
   rewrite !Foldable_and_all !Foldable_all_ssreflect !flat_map_cons_f /zero /elems /toList.
   move=> /allP /= mask_l /allP /= mask_r.
   apply/andP; split; apply/allP => /= b /mapP [] /= x x_in {b}->; apply/Eq_eq.
-  - by move: (mask_l _ x_in) => /Z.eqb_spec ->.
-  - move: (mask_r _ x_in) => /Z.eqb_spec.
-    case: (WF_Bin_mask_power_Z_Z WFs) => [i ? POS_i]; subst m.
-    rewrite -Z.shiftl_1_l => NEQ_bits.
-    apply Z_eq_testbits_pos => ix POS_ix.
-    rewrite Z.land_spec Z.shiftl_spec // testbit_1.
-    case: (Z.eq_dec ix i) => [? | NEQ]; first subst.
-    + rewrite Z.sub_diag /= andbT Z_testbit_eq; apply/negP.
-      by contradict NEQ_bits; apply/Z.eqb_spec.
-    + suff: ~~ (ix - i =? 0)%Z by move=> /negbTE ->; rewrite andbF.
-      apply/negP => /Z.eqb_spec ?; omega.
+  - by move: (mask_l _ x_in) => /N.eqb_spec ->.
+  - move: (mask_r _ x_in) => /N.eqb_spec.
+    case: (WF_Bin_mask_power_N WFs) => [i ?]; subst m.
+    rewrite -N.shiftl_1_l => NEQ_bits.
+    apply N.bits_inj_iff => ix.
+    rewrite N.shiftl_1_l N.land_spec N.pow2_bits_eqb.
+    rewrite -> N.shiftl_1_l in NEQ_bits.
+    case: (N.eqb_spec i ix) => [? | NEQ]; first subst.
+    + rewrite andb_true_r.
+      rewrite <- N_land_pow2_testbit.
+      rewrite negb_true_iff.
+      rewrite N.eqb_neq.
+      rewrite N.land_comm.
+      assumption.
+    + apply andb_false_r.
 Qed.
 
 (********************************************************************
@@ -396,12 +388,19 @@ Proof.
   rewrite /prop_size /= => s WF_s.
   rewrite size_spec //.
   split=> /=.
-  - change @foldl' with @foldl; rewrite foldl_spec // -Zlength_correct.
+  - change @foldl' with @foldl; rewrite foldl_spec //.
     apply/Eq_eq.
-    replace (Zlength (toList s)) with (Zlength (toList s) + 0%Z) by rewrite /= Z.add_0_r //.
-    move: 0%Z => /=; elim: (toList s) => [|x xs IH] //= z.
-    by rewrite Zlength_cons -IH Z.add_succ_comm.
-  - by rewrite hs_coq_length_list Zlength_correct Eq_refl.
+    generalize (toList s). intro xs.
+    rewrite <- fold_left_length.
+    replace (0%N) with (N.of_nat 0) by reflexivity.
+    generalize 0.
+    induction xs.
+    * reflexivity.
+    * intros. rewrite IHxs. cbn - [N.of_nat].
+      f_equal.
+      rewrite Nat2N.inj_succ.
+      Nomega.
+  - apply Eq_refl.
 Qed.
 
 (* SKIPPED: prop_findMax, prop_findMin *)
@@ -441,9 +440,8 @@ Theorem thm_map : toProp prop_map.
 Proof.
   rewrite /prop_map /map /= => s WF_s.
   rewrite map_id.
-  have POS_s: Forall [eta Z.le 0] (toList s) by apply/Forall_forall; apply toList_In_nonneg.
   apply/eqIntSetMemberP=> //; first by apply fromList_WF.
-  move=> k POS_k.
+  move=> k.
   by rewrite fromList_member // toList_member // Eq_refl.
 Qed.
 
@@ -465,7 +463,7 @@ Proof.
     by rewrite in_elem toList_member // filter_member // => /andP [].
   - apply/allP=> /= k.
     by rewrite in_elem toList_member // filter_member // => /andP [].
-  - apply/eqIntSetMemberP => // k POS_k.
+  - apply/eqIntSetMemberP => // k.
     rewrite delete_member // union_member // !filter_member //.
     rewrite -andb_orr andbC; f_equal.
     apply Ord_lt_gt_antisym.
@@ -488,7 +486,7 @@ Proof.
   - apply/allP=> /= k.
     by rewrite in_elem toList_member // filter_member // => /andP [].
   - by apply Eq_refl.
-  - apply/eqIntSetMemberP => // k POS_k.
+  - apply/eqIntSetMemberP => // k.
     rewrite delete_member // union_member // !filter_member //.
     rewrite -andb_orr andbC; f_equal.
     apply Ord_lt_gt_antisym.
@@ -501,16 +499,16 @@ Proof.
     have WFlr: WF (union l r) by apply union_WF.
     have WFrl: WF (union r l) by apply union_WF.
     
-    have: (m > 0%Z). {
+    have: (m > 0%N). {
       move: (WFs) => [fs SEMs];
         inversion SEMs as [|s' [ps ms] fs' DESCs];
         subst s' fs';
         inversion DESCs as [|l' rng_l fl r' rng_r fr p' m' rng_s' fs'
                              DESCl DESCr POSrng subrange_l subrange_r def_p def_m def_fs];
         subst p' m' l' r' rng_s' fs' p m.
-      unfold ">", Ord_Integer___ => /=.
-      apply/Z.ltb_spec0; apply Z.pow_pos_nonneg => //.
-      zify; simpl in *; omega.
+      unfold ">", Ord_Char___ => /=.
+      apply/N.ltb_spec0.
+       apply N_pow_pos_nonneg => //.
     }
     move=> /(Ord_gt_not_lt _ _)/negbTE ->.
     
@@ -520,7 +518,7 @@ Proof.
       move: IN_kl IN_kr; rewrite !toList_member // => IN_kl IN_kr.
       move: (Bin_left_lt_right WFs _ IN_kl _ IN_kr) IN_xy.
       by move=> /(Ord_lt_not_gt _ _)/negbTE ->.
-    + by apply/eqIntSetMemberP => // k POS_k; rewrite Bin_member // union_member //.
+    + by apply/eqIntSetMemberP => // k; rewrite Bin_member // union_member //.
   - apply/andP; split; by [elim: (foldrBits _ _ _ _) | apply/Eq_eq].
 Qed.
 
@@ -540,7 +538,7 @@ Proof.
   - apply/allP=> /= k.
     rewrite in_elem toList_member // filter_member // => /andP[].
     by rewrite /GHC.Real.odd negb_involutive.
-  - apply/eqIntSetMemberP=> // k POS_k.
+  - apply/eqIntSetMemberP=> // k.
     rewrite union_member // !filter_member //.
     by case: (member k s)=> //=; rewrite orb_negb_r.
 Qed.
@@ -557,7 +555,7 @@ Proof.
   repeat (split=> /=); try by apply valid_correct.
   rewrite partition_filter //.
   apply/andP; split; first by apply Eq_refl.
-  apply/eqIntSetMemberP=> // k POS_k.
+  apply/eqIntSetMemberP=> // k.
   rewrite !filter_member //.
   by rewrite /GHC.Real.odd negb_involutive.
 Qed.

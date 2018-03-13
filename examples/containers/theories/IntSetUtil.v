@@ -250,7 +250,7 @@ Qed.
 
 Theorem eqIntSetMemberP {s1 s2 : IntSet} :
   WF s1 -> WF s2 ->
-  reflect (forall x, (0 <= x)%N -> member x s1 = member x s2) (s1 == s2).
+  reflect (forall x, member x s1 = member x s2) (s1 == s2).
 Proof.
   move=> WF1 WF2.
   set s1' := exist _ _ WF1; set s2' := exist _ _ WF2.
@@ -259,8 +259,8 @@ Proof.
   apply iff_reflect; split.
   - move=> KEYS; apply Equal_eq=> /= n; apply eq_iff_eq_true.
     move: KEYS; cbv -[member Z.of_N "<="%N eqb is_true].
-    apply. Nomega.
-  - move=> /eq_Equal KEYS n POS_n.
+    apply.
+  - move=> /eq_Equal KEYS n.
     move: (KEYS n); cbv -[member eqb iff].
     by case: (member _ s1); case: (member _ s2); intuition.
 Qed.
@@ -275,12 +275,12 @@ Ltac member_by_Sem SEM :=
     reflexivity.
 
 Theorem insert_member (x : Nat) (s : IntSet) :
-  (0 <= x)%N -> WF s ->
+  WF s ->
   forall k, member k (insert x s) = (k == x) || member k s.
 Proof. member_by_Sem insert_Sem. Qed.
 
 Theorem delete_member (x : Nat) (s : IntSet) :
-  (0 <= x)%N -> WF s ->
+  WF s ->
   forall k, member k (delete x s) = (k /= x) && member k s.
 Proof. member_by_Sem delete_Sem. Qed.
 

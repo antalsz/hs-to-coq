@@ -33,9 +33,9 @@ Definition deferredFix4 {a b c d r} `{Default r} : ((a -> b -> c -> d -> r) -> (
 (** The fixpoint unrolling axiom *)
 
 
-Definition terminating_on {a b} (P : a -> Prop) (R : a -> a -> Prop) (f : (a -> b) -> (a -> b)) :=
+Definition recurses_on {a b} (P : a -> Prop) (R : a -> a -> Prop) (f : (a -> b) -> (a -> b)) :=
   forall g h x, P x -> (forall y, P y ->  R y x -> g y = h y) -> f g x = f h x.
 
 Axiom deferredFix_eq_on: forall {a b} `{Default b} (f : (a -> b) -> (a -> b)) (P : a -> Prop) (R : a -> a -> Prop),
-   well_founded R -> terminating_on P R f ->
+   well_founded R -> recurses_on P R f ->
    forall x, P x -> deferredFix f x = f (deferredFix f) x.

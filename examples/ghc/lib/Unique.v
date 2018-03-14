@@ -36,6 +36,12 @@ Existing Class Uniquable.
 
 Definition getUnique `{g : Uniquable a} : a -> Unique :=
   g _ (getUnique__ a).
+(* Midamble *)
+
+Program Instance Uniquable__Word : Uniquable GHC.Num.Word :=
+  fun _ k => k {| getUnique__ x := MkUnique (Coq.ZArith.BinInt.Z.of_N x) |}.
+
+
 (* Converted value declarations: *)
 
 Local Definition Uniquable__Unique_getUnique : Unique -> Unique :=
@@ -70,6 +76,9 @@ Program Instance Eq___Unique : GHC.Base.Eq_ Unique :=
 
 Definition getKey : Unique -> GHC.Num.Int :=
   fun arg_0__ => let 'MkUnique x := arg_0__ in x.
+
+Definition getWordKey : Unique -> GHC.Num.Word :=
+  fun u => Coq.ZArith.BinInt.Z.to_N (getKey u).
 
 Definition hasKey {a} `{Uniquable a} : a -> Unique -> bool :=
   fun x k => getUnique x GHC.Base.== k.
@@ -273,9 +282,10 @@ Definition deriveUnique : Unique -> GHC.Num.Int -> Unique :=
 
 (* Unbound variables:
      Eq Gt Lt bool comparison negb op_zt__ pair BasicTypes.Arity BasicTypes.Boxed
-     BasicTypes.Boxity BasicTypes.Unboxed Data.Bits.op_zizazi__ Data.Bits.op_zizbzi__
-     Data.Bits.shiftL Data.Bits.shiftR FastString.FastString FastString.uniqueOfFS
-     GHC.Base.Eq_ GHC.Base.Ord GHC.Base.op_zeze__ GHC.Base.op_zl__ GHC.Base.op_zlze__
-     GHC.Char.Char GHC.Char.chr GHC.Char.ord GHC.Num.Int GHC.Num.fromInteger
+     BasicTypes.Boxity BasicTypes.Unboxed Coq.ZArith.BinInt.Z.to_N
+     Data.Bits.op_zizazi__ Data.Bits.op_zizbzi__ Data.Bits.shiftL Data.Bits.shiftR
+     FastString.FastString FastString.uniqueOfFS GHC.Base.Eq_ GHC.Base.Ord
+     GHC.Base.op_zeze__ GHC.Base.op_zl__ GHC.Base.op_zlze__ GHC.Char.Char
+     GHC.Char.chr GHC.Char.ord GHC.Num.Int GHC.Num.Word GHC.Num.fromInteger
      GHC.Num.op_zm__ GHC.Num.op_zp__ GHC.Num.op_zt__
 *)

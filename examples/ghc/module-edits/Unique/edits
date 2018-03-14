@@ -7,3 +7,10 @@ skip Unique.showUnique
 skip Unique.pprUnique
 
 order Unique.Eq___Unique Unique.hasKey Ord__Unique
+
+# We need to store Ns in IntMap
+skip module Coq.ZArith.BinInt.Z
+
+add Unique Definition Unique.getWordKey : Unique.Unique -> GHC.Num.Word := fun u => Coq.ZArith.BinInt.Z.to_N (Unique.getKey u).
+
+

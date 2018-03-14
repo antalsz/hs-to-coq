@@ -1918,6 +1918,7 @@ Proof.
   reflexivity.
 Qed.
 
+
 (** ** Verification of [foldr'] *)
 
 Lemma foldr'_spec:
@@ -1925,7 +1926,7 @@ Lemma foldr'_spec:
   foldr' k n s = foldr k n s.
 Proof. reflexivity. Qed.
 
-(** ** Verification of [toList], [toAscList] and [elems] *)
+(** ** Verification of [toList] *)
 
 Lemma elem_app:
   forall {a} `{Eq_ a} (i : a) xs ys,
@@ -2225,6 +2226,14 @@ Proof.
         assert (x < y = true) by (apply H0; assumption).
         order e.
 Qed.
+
+(** ** Verification of [toAscList] *)
+
+Lemma toAscList_spec: @toAscList = @toList. Proof. reflexivity. Qed.
+
+(** ** Verification of [elems] *)
+
+Lemma elems_spec: @elems = @toList. Proof. reflexivity. Qed.
 
 (** ** Verification of [toDescList] *)
 
@@ -3438,6 +3447,48 @@ Qed.
 End WF.
 
 
+(** ** Verification of [mapMonotonic] *)
+
+Lemma mapMonotonic_Desc:
+  forall e `{Ord e} f (s : Set_ e) lb ub,
+  (forall x y, (f x < f y) = (x < y)) ->
+  (forall x y, (f x == f y) = (x == y)) ->
+  Bounded s lb ub ->
+  forall (P : Set_ e -> Prop),
+  (forall s',
+    Bounded s' (option_map f lb) (option_map f ub) ->
+    size s' = size s ->
+    (forall i, sem s' (f i) = sem s i) ->
+    P s'
+  ) ->
+  P (mapMonotonic f s).
+Proof.
+  intros ? HEq HOrd f s lb ub Hcompatlt Hcompateq H.
+  induction H.
+  * intros X HX. simpl. apply HX.
+    - constructor.
+    - reflexivity.
+    - intro. reflexivity.
+  * simpl. simpl option_map in *.
+    eapply IHBounded1. intros s'l H'l Hsizel Hfl. clear IHBounded1.
+    eapply IHBounded2. intros s'r H'r Hsizer Hfr. clear IHBounded2.
+    intros X HX. simpl. apply HX.
+    - constructor.
+      + assumption.
+      + assumption.
+      + destruct lb; try reflexivity; simpl. rewrite Hcompatlt. assumption.
+      + destruct ub; try reflexivity; simpl. rewrite Hcompatlt. assumption.
+      + lia.
+      + rewrite Hsizel, Hsizer. assumption.
+    - reflexivity.
+    - intro j.
+      simpl.
+      rewrite Hfl, Hfr, Hcompateq.
+      reflexivity.
+Qed.
+
+
+
 (** ** [IntSet]s with [WF] *)
 
 Definition WFSet  (e : Type) `{Ord e} : Type := {s : Set_ e | WF s}.
@@ -3809,9 +3860,9 @@ Module SetFSet (E : OrderedType) <: WSfun(E) <: WS <: Sfun(E) <: S.
 
   (* Minimal and maximal elements *)
   
-  Definition min_elt : t -> option elt := fmap fst ∘ minView ∘ unpack.
+  Definition min_elt : t -> option elt := lookupMin ∘ unpack.
   
-  Definition max_elt : t -> option elt := fmap fst ∘ maxView ∘ unpack.
+  Definition max_elt : t -> option elt := lookupMax ∘ unpack.
   
   (* Theorems *)
   
@@ -4375,29 +4426,47 @@ Module SetFSet (E : OrderedType) <: WSfun(E) <: WS <: Sfun(E) <: S.
     order t.
   Qed.
   
-  Lemma min_elt_1 (s : t) (x   : elt) : min_elt s = Some x -> In x s.
+  Lemma min_elt_1 (s : t) (x : elt) : min_elt s = Some x -> In x s.
   Proof.
-  Admitted.
+    destruct s as [s WFs]; unfold min_elt, In; simpl; intros def_x.
+    now specialize (lookupMin_Desc s _ _ WFs); rewrite def_x.
+  Qed.
 
   Lemma min_elt_2 (s : t) (x y : elt) : min_elt s = Some x -> In y s -> ~ E.lt y x.
   Proof.
-  Admitted.
+    destruct s as [s WFs]; unfold min_elt, In; simpl; intros def_x.
+    specialize (lookupMin_Desc s _ _ WFs); rewrite def_x; intros [sem_x x_min] sem_y.
+    specialize (x_min y sem_y).
+    rewrite E_lt_zl; order elt.
+  Qed.
   
-  Lemma min_elt_3 (s : t)             : min_elt s = None -> Empty s.
+  Lemma min_elt_3 (s : t) : min_elt s = None -> Empty s.
   Proof.
-  Admitted.
+    destruct s as [s WFs]; unfold min_elt, Empty, In; simpl; intros def_x.
+    specialize (lookupMin_Desc s _ _ WFs); rewrite def_x; intros def_sem x.
+    now rewrite def_sem.
+  Qed.
 
-  Lemma max_elt_1 (s : t) (x   : elt) : max_elt s = Some x -> In x s.
+  Lemma max_elt_1 (s : t) (x : elt) : max_elt s = Some x -> In x s.
   Proof.
-  Admitted.
+    destruct s as [s WFs]; unfold max_elt, In; simpl; intros def_x.
+    now specialize (lookupMax_Desc s _ _ WFs); rewrite def_x.
+  Qed.
 
   Lemma max_elt_2 (s : t) (x y : elt) : max_elt s = Some x -> In y s -> ~ E.lt x y.
   Proof.
-  Admitted.
+    destruct s as [s WFs]; unfold max_elt, In; simpl; intros def_x.
+    specialize (lookupMax_Desc s _ _ WFs); rewrite def_x; intros [sem_x x_max] sem_y.
+    specialize (x_max y sem_y).
+    rewrite E_lt_zl; order elt.
+  Qed.
 
-  Lemma max_elt_3 (s : t)             : max_elt s = None -> Empty s.
+  Lemma max_elt_3 (s : t) : max_elt s = None -> Empty s.
   Proof.
-  Admitted.
+    destruct s as [s WFs]; unfold max_elt, Empty, In; simpl; intros def_x.
+    specialize (lookupMax_Desc s _ _ WFs); rewrite def_x; intros def_sem x.
+    now rewrite def_sem.
+  Qed.
 
   (**
   These portions of the [FMapInterface] have no counterpart in the [IntSet] interface.
@@ -4479,41 +4548,14 @@ Module SetFSet (E : OrderedType) <: WSfun(E) <: WS <: Sfun(E) <: S.
     assumption.
   Qed.
   
- (** One could implement [choose] with [minView]. We currenlty do not
-  translate [minView], because of a call to [error] in a branch that is inaccessible
-  in well-formed trees. Stretch goal: translate that and use it here.
-  *)
-
-  Definition choose : t -> option elt :=
-    fun s => match elements s with
-                | nil => None
-                | x :: _ => Some x
-              end.
-
+  Definition choose : t -> option elt := min_elt.
 
   Lemma choose_1 :
     forall (s : t) (x : elt), choose s = Some x -> In x s.
-  Proof.
-    intros.
-    unfold choose in *.
-    destruct (elements s) eqn:?; try congruence.
-    inversion H; subst.
-    apply elements_2.
-    rewrite Heql.
-    left.
-    reflexivity.
-  Qed.
+  Proof. apply min_elt_1. Qed.
 
   Lemma choose_2 : forall s : t, choose s = None -> Empty s.
-  Proof.
-    intros.
-    unfold choose in *.
-    destruct (elements s) eqn:?; try congruence.
-    intros x ?.
-    apply elements_1 in H0.
-    rewrite Heql in H0.
-    inversion H0.
-  Qed.
+  Proof. apply min_elt_3. Qed.
 
   Lemma choose_3 (s1 s2 : t) (x1 x2 : elt) :
     choose s1 = Some x1 -> 
@@ -4521,18 +4563,16 @@ Module SetFSet (E : OrderedType) <: WSfun(E) <: WS <: Sfun(E) <: S.
     Equal s1 s2         ->
     E.eq  x1 x2.
   Proof.
-    destruct s1 as [s1 WF1], s2 as [s2 WF2]; unfold choose, elements, toList; simpl.
-    intros C1 C2 EQ.
-    apply equal_1 in EQ; generalize dependent EQ.
-    unfold equal, "==", Eq___Set_, Data.Set.Internal.Eq___Set__op_zeze__, "==", Eq_list; simpl.
-    match goal with |- context[?b = true] => fold (is_true b) end; rewrite <-(ssrbool.rwP ssrbool.andP).
-    intros [_ EQ].
-    destruct (toAscList s1) as [|e1 l1], (toAscList s2) as [|e2 l2]; try easy.
-    simpl in EQ; rewrite <-(ssrbool.rwP ssrbool.andP) in EQ.
-    apply E_eq_zeze.
-    destruct EQ; congruence.
+    destruct s1 as [s1 WF1], s2 as [s2 WF2]; unfold choose, min_elt, Equal, In; simpl.
+    intros def_x1 def_x2 EQ.
+    specialize (lookupMin_Desc s1 _ _ WF1); specialize (lookupMin_Desc s2 _ _ WF2);
+      rewrite def_x1, def_x2.
+    intros [sem_x2 min_x2] [sem_x1 min_x1].
+    generalize (min_x1 x2); generalize (min_x2 x1).
+    rewrite <-EQ, sem_x1, EQ, sem_x2.
+    intros LE21 LE12; specialize (LE21 Logic.eq_refl); specialize (LE12 Logic.eq_refl).
+    apply E_eq_zeze; order elt.
   Qed.
-
 End SetFSet.
 
 (** * Rewrite rules *)

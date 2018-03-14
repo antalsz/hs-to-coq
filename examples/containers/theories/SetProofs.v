@@ -1917,6 +1917,7 @@ Proof.
   erewrite fold_right_toList_go by eassumption.
   reflexivity.
 Qed.
+ 
 
 (** ** Verification of [foldr'] *)
 
@@ -3478,6 +3479,51 @@ Proof.
       reflexivity.
 Qed.
 
+
+(** ** Verification of [powerSet] *)
+
+Lemma foldrInduction:
+  forall e `{Ord e} a (k : e -> a -> a) (n : a) (s : Set_ e) lb ub,
+  Bounded s lb ub ->
+  forall P,
+  P n -> 
+  (forall x s r, Bounded s (Some x) ub -> P r -> P (k x r)) ->
+  P (foldr k n s).
+Admitted.
+
+
+Lemma powerSet_Bounded:
+  forall e `{OrdLaws e} (s : Set_ e) lb ub,
+  Bounded s lb ub ->
+  Bounded (powerSet s) None None.
+Proof.
+  intros e HEq HOrd HEqLaws HOrdLaws s lb ub HB.
+  unfold powerSet.
+  replace @foldr' with @foldr by reflexivity.
+  
+  assert (Bounded
+    (foldr (fun x pxs =>  glue (insertMin (singleton x) (mapMonotonic (insertMin x) pxs)) pxs) Tip s) (Some empty) None).
+  { eapply foldrInduction; only 1: apply HB.
+    * constructor.
+    * intros min s' ps Hs' IH.
+      eapply mapMonotonic_Desc.
+      + admit.
+      + admit.
+      + eassumption.
+      + intros s2 Hs2 Hsz2 Hf2.
+        simpl option_map in *.
+        eapply insertMin_Desc with (lb0 := Some empty).
+        - apply Hs2.
+        - simpl. reflexivity.
+        - reflexivity.
+        - intros s3 Hs3 Hsz3 Hf3.
+          (* Here we are stuck: the preconditions for [glue] are too strict,
+             they require an element in between the sets.
+             We might need a variant of [Bounded] that has an inclusive
+             upper bound.
+             *)
+          eapply glue_Desc.
+Admitted.
 
 
 (** ** [IntSet]s with [WF] *)

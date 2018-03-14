@@ -1918,6 +1918,7 @@ Proof.
   reflexivity.
 Qed.
 
+
 (** ** Verification of [foldr'] *)
 
 Lemma foldr'_spec:
@@ -1925,7 +1926,7 @@ Lemma foldr'_spec:
   foldr' k n s = foldr k n s.
 Proof. reflexivity. Qed.
 
-(** ** Verification of [toList], [toAscList] and [elems] *)
+(** ** Verification of [toList] *)
 
 Lemma elem_app:
   forall {a} `{Eq_ a} (i : a) xs ys,
@@ -2225,6 +2226,14 @@ Proof.
         assert (x < y = true) by (apply H0; assumption).
         order e.
 Qed.
+
+(** ** Verification of [toAscList] *)
+
+Lemma toAscList_spec: @toAscList = @toList. Proof. reflexivity. Qed.
+
+(** ** Verification of [elems] *)
+
+Lemma elems_spec: @elems = @toList. Proof. reflexivity. Qed.
 
 (** ** Verification of [toDescList] *)
 

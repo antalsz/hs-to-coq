@@ -4439,7 +4439,7 @@ Definition foldr_go {a} k :=
      end).
 
 
-(** *** Verification of [toList] (and [toAscList], a synonym) *)
+(** *** Verification of [toList] *)
 
 Lemma In_cons_iff:
   forall {a} (y x : a) xs, In y (x :: xs) <-> x = y \/ In y xs.
@@ -4724,6 +4724,15 @@ Proof.
   * apply SSorted_nil.
   * eapply to_List_Desc_sorted; eassumption.
 Qed.
+
+(** ** Verification of [toAscList] *)
+
+Lemma toAscList_spec: @toAscList = @toList. Proof. reflexivity. Qed.
+
+(** ** Verification of [elems] *)
+
+Lemma elems_spec: @elems = @toList. Proof. reflexivity. Qed.
+
 
 (** *** Verification of [foldl] *)
 

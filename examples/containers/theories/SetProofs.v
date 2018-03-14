@@ -3438,6 +3438,48 @@ Qed.
 End WF.
 
 
+(** ** Verification of [mapMonotonic] *)
+
+Lemma mapMonotonic_Desc:
+  forall e `{Ord e} f (s : Set_ e) lb ub,
+  (forall x y, (f x < f y) = (x < y)) ->
+  (forall x y, (f x == f y) = (x == y)) ->
+  Bounded s lb ub ->
+  forall (P : Set_ e -> Prop),
+  (forall s',
+    Bounded s' (option_map f lb) (option_map f ub) ->
+    size s' = size s ->
+    (forall i, sem s' (f i) = sem s i) ->
+    P s'
+  ) ->
+  P (mapMonotonic f s).
+Proof.
+  intros ? HEq HOrd f s lb ub Hcompatlt Hcompateq H.
+  induction H.
+  * intros X HX. simpl. apply HX.
+    - constructor.
+    - reflexivity.
+    - intro. reflexivity.
+  * simpl. simpl option_map in *.
+    eapply IHBounded1. intros s'l H'l Hsizel Hfl. clear IHBounded1.
+    eapply IHBounded2. intros s'r H'r Hsizer Hfr. clear IHBounded2.
+    intros X HX. simpl. apply HX.
+    - constructor.
+      + assumption.
+      + assumption.
+      + destruct lb; try reflexivity; simpl. rewrite Hcompatlt. assumption.
+      + destruct ub; try reflexivity; simpl. rewrite Hcompatlt. assumption.
+      + lia.
+      + rewrite Hsizel, Hsizer. assumption.
+    - reflexivity.
+    - intro j.
+      simpl.
+      rewrite Hfl, Hfr, Hcompateq.
+      reflexivity.
+Qed.
+
+
+
 (** ** [IntSet]s with [WF] *)
 
 Definition WFSet  (e : Type) `{Ord e} : Type := {s : Set_ e | WF s}.

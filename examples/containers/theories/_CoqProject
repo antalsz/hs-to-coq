@@ -18,3 +18,4 @@ IntSetUtil.v
 IntSetPropertyProofs.v
 BitUtils.v
 DyadicIntervals.v
+Set.v

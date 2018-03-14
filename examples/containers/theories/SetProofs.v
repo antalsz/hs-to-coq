@@ -621,6 +621,25 @@ Proof.
 Qed.
 
 
+Lemma Desc_WF':
+  forall s sz f lb ub,
+  Desc s lb ub sz f -> WF s.
+Proof.
+  intros s sz f lb ub HD.
+  unfold WF.
+  (* Unfortunately, [apply HD] does not work unless we have [size s] and [sem s]
+     in the context. *)
+  assert (Bounded s lb ub /\ size s = size s /\ sem s = sem s) by (apply HD; auto).
+  intuition.
+  destruct ub; destruct lb.
+  - eapply Bounded_relax_lb; eauto;
+      eapply Bounded_relax_ub; eauto.
+  - eapply Bounded_relax_ub; eauto.
+  - eapply Bounded_relax_lb; eauto.
+  - auto.
+Qed.
+
+
 Require Import Coq.Program.Tactics.
 
 Open Scope Z_scope.
@@ -3450,11 +3469,11 @@ End WF.
 (** ** Verification of [mapMonotonic] *)
 
 Lemma mapMonotonic_Desc:
-  forall e `{Ord e} f (s : Set_ e) lb ub,
+  forall e ee `{Ord e}`{Ord ee} (f : e -> ee) (s : Set_ e) lb ub,
   (forall x y, (f x < f y) = (x < y)) ->
   (forall x y, (f x == f y) = (x == y)) ->
   Bounded s lb ub ->
-  forall (P : Set_ e -> Prop),
+  forall (P : Set_ ee -> Prop),
   (forall s',
     Bounded s' (option_map f lb) (option_map f ub) ->
     size s' = size s ->
@@ -3463,7 +3482,7 @@ Lemma mapMonotonic_Desc:
   ) ->
   P (mapMonotonic f s).
 Proof.
-  intros ? HEq HOrd f s lb ub Hcompatlt Hcompateq H.
+  intros ? ? HEq HOrd HHEq HHOrd f s lb ub Hcompatlt Hcompateq H.
   induction H.
   * intros X HX. simpl. apply HX.
     - constructor.

@@ -5968,9 +5968,16 @@ Module IntSetFSet <: WSfun(N_as_OT) <: WS <: Sfun(N_as_OT) <: S.
 
   (* Minimal and maximal elements *)
   
-  Definition min_elt : t -> option elt := fmap fst ∘ minView ∘ unpack.
+  (* Definition min_elt : t -> option elt := fmap fst ∘ minView ∘ unpack. *)
   
-  Definition max_elt : t -> option elt := fmap fst ∘ maxView ∘ unpack.
+  (* Definition max_elt : t -> option elt := fmap fst ∘ maxView ∘ unpack. *)
+  
+  (* The bit-twiddling to prove `minView` and `maxView` correct is quite
+     difficult.  In the meantime: *)
+  
+  Definition min_elt : t -> option elt := @hd_error _ ∘ toAscList ∘ unpack.
+  
+  Definition max_elt : t -> option elt := @hd_error _ ∘ toDescList ∘ unpack.
   
   (* Theorems *)
 
@@ -6612,29 +6619,76 @@ Module IntSetFSet <: WSfun(N_as_OT) <: WS <: Sfun(N_as_OT) <: S.
     order WFIntSet.
   Qed.
   
-  Lemma min_elt_1 (s : t) (x   : elt) : min_elt s = Some x -> In x s.
+  Lemma min_elt_1 (s : t) (x : elt) : min_elt s = Some x -> In x s.
   Proof.
-  Admitted.
-
+    destruct s as [s [fs SEM_s]]; unfold min_elt, "∘"; simpl; unfold In_set.
+    destruct (toAscList s) as [|e xs] eqn:ASC; simpl; [easy | intros EQ; inversion EQ; subst e; clear EQ].
+    erewrite member_Sem by eassumption.
+    eapply toList_In; [eassumption|].
+    now unfold toList; rewrite ASC; left.
+  Qed.
+  
   Lemma min_elt_2 (s : t) (x y : elt) : min_elt s = Some x -> In y s -> ~ E.lt y x.
   Proof.
-  Admitted.
+    destruct s as [s WFs]; destruct (WFs) as [fs SEM_s]; unfold min_elt, "∘", E.lt; simpl; unfold In_set.
+    destruct (toAscList s) as [|e xs] eqn:ASC; simpl; [easy | intros EQ; inversion EQ; subst e; clear EQ].
+    erewrite member_Sem, toList_In by eassumption.
+    specialize (to_List_sorted s WFs); unfold toList; rewrite ASC; simpl.
+    intros SS' IN_y LT.
+    inversion SS' as [|x_ xs_ SS min_x]; subst x_ xs_.
+    rewrite Forall_forall in min_x.
+    destruct IN_y as [|IN_y]; [subst y|].
+    - now apply N.lt_irrefl in LT.
+    - specialize (min_x _ IN_y).
+      specialize (N.lt_trans _ _ _ LT min_x); apply N.lt_irrefl.
+  Qed.
   
-  Lemma min_elt_3 (s : t)             : min_elt s = None -> Empty s.
+  Lemma min_elt_3 (s : t) : min_elt s = None -> Empty s.
   Proof.
-  Admitted.
+    destruct s as [s [fs SEM_s]]; unfold min_elt, "∘", Empty; simpl; unfold In_set.
+    destruct (toAscList s) as [|e xs] eqn:ASC; simpl; [intros _ | easy].
+    intros x.
+    erewrite member_Sem, toList_In by eassumption.
+    now unfold toList; rewrite ASC.
+  Qed.
 
-  Lemma max_elt_1 (s : t) (x   : elt) : max_elt s = Some x -> In x s.
+  Lemma max_elt_1 (s : t) (x : elt) : max_elt s = Some x -> In x s.
   Proof.
-  Admitted.
-
+    destruct s as [s WFs]; destruct (WFs) as [fs SEM_s]; unfold max_elt, "∘"; simpl; unfold In_set.
+    rewrite toDescList_spec by easy.
+    destruct (rev (toList s)) as [|e xs] eqn:DESC; simpl; [easy | intros EQ; inversion EQ; subst e; clear EQ].
+    erewrite member_Sem by eassumption.
+    eapply toList_In, in_rev; [eassumption|].
+    now fold Key; rewrite DESC; left.
+  Qed.
+  
+  Require Import SortedUtil.
+  
   Lemma max_elt_2 (s : t) (x y : elt) : max_elt s = Some x -> In y s -> ~ E.lt x y.
   Proof.
-  Admitted.
-
-  Lemma max_elt_3 (s : t)             : max_elt s = None -> Empty s.
+    destruct s as [s WFs]; destruct (WFs) as [fs SEM_s]; unfold max_elt, "∘", E.lt; simpl; unfold In_set.
+    rewrite toDescList_spec by easy.
+    destruct (rev (toList s)) as [|e xs] eqn:DESC; simpl; [easy | intros EQ; inversion EQ; subst e; clear EQ].
+    erewrite member_Sem, toList_In, in_rev by eassumption.
+    specialize (to_List_sorted s WFs); fold Key; rewrite StronglySorted_rev, DESC; simpl.
+    intros SS' IN_y LT.
+    inversion SS' as [|x_ xs_ SS max_x]; subst x_ xs_.
+    rewrite Forall_forall in max_x.
+    destruct IN_y as [|IN_y]; [subst y|].
+    - now apply N.lt_irrefl in LT.
+    - specialize (max_x _ IN_y).
+      specialize (N.lt_trans _ _ _ LT max_x); apply N.lt_irrefl.
+  Qed.
+  
+  Lemma max_elt_3 (s : t) : max_elt s = None -> Empty s.
   Proof.
-  Admitted.
+    destruct s as [s WFs]; destruct (WFs) as [fs SEM_s]; unfold max_elt, "∘", Empty; simpl; unfold In_set.
+    rewrite toDescList_spec by easy.
+    destruct (rev (toList s)) as [|e xs] eqn:DESC; simpl; [intros _ | easy].
+    intros x.
+    erewrite member_Sem, toList_In, in_rev by eassumption.
+    now fold Key; rewrite DESC.
+  Qed.
   
   (**
   These (non-ordering) portions of the [FSetInterface]s have no counterpart in the [IntSet] interface.

@@ -1,8 +1,11 @@
--- This module is a wrapper (shim) for the extracted version of Data.Set.Internal
+-- This module is a wrapper (shim) for the extracted version of
+-- Data.Set.Internal
 
 {-# LANGUAGE PatternSynonyms, ViewPatterns #-}
 
-module ExtractedSet (Set_(Bin,Tip),
+module ExtractedSet
+{-
+  (Set,ExtractedSet.Tip,bin,
                     lookupLT,
                     lookupGT,
                     lookupLE,
@@ -59,7 +62,7 @@ module ExtractedSet (Set_(Bin,Tip),
                     dropWhileAntitone,
                     takeWhileAntitone,
                     spanAntitone
-                    ) where
+                    ) -}  where
 
 import qualified Base
 import qualified Datatypes
@@ -181,10 +184,10 @@ deleteAt    = error "deleteAt: partial function"
 valid :: Prelude.Ord a => Set a -> Bool
 valid = S2.valid eq_a ord_a
 
---pattern Tip = S2.Tip
+pattern Tip = S2.Tip
 
 -- I dunno how to get pattern synonyms to do this
---bin s = S2.Bin (toBinZ s)
+bin s = S2.Bin (toBinZ s)
 
 -- need to translate BinNums.Z -> Int
 size :: Set a -> Int

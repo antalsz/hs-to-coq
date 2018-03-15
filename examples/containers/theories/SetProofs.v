@@ -2732,6 +2732,133 @@ Proof.
       f_solver.
 Qed.
 
+(** ** Verification of [combineEq] *)
+
+Definition combineEqGo : e -> list e -> list e.
+Proof.
+  let rhs := eval unfold combineEq in (@combineEq e _) in
+  match rhs with fun _ => match _ with [] => [] | cons _ _ => ?go _ _ end => exact go end.
+Defined.
+
+Lemma Forall_le_elem:
+  forall x xs,
+  Forall (fun y => x <= y = true) xs <-> (forall i, List.elem i xs = true -> x <= i = true).
+Proof.
+  intros.
+  induction xs.
+  * split; intro H.
+    - intros i Hi; simpl in Hi; congruence.
+    - constructor.
+  * split; intro H.
+    - inversion H; subst; clear H.
+      rewrite IHxs in H3; clear IHxs.
+      intros i Hi; simpl in Hi.
+      rewrite orb_true_iff in Hi. destruct Hi.
+      + order e.
+      + apply H3; assumption.
+    - constructor.
+      + apply H. simpl. rewrite Eq_refl. reflexivity.
+      + rewrite IHxs; clear IHxs.
+        intros i Hi. apply H. simpl. rewrite Hi. apply orb_true_r.
+Qed.
+
+Lemma Forall_lt_elem:
+  forall x xs,
+  Forall (fun y => x < y = true) xs <-> (forall i, List.elem i xs = true -> x < i = true).
+Proof.
+  intros.
+  induction xs.
+  * split; intro H.
+    - intros i Hi; simpl in Hi; congruence.
+    - constructor.
+  * split; intro H.
+    - inversion H; subst; clear H.
+      rewrite IHxs in H3; clear IHxs.
+      intros i Hi; simpl in Hi.
+      rewrite orb_true_iff in Hi. destruct Hi.
+      + order e.
+      + apply H3; assumption.
+    - constructor.
+      + apply H. simpl. rewrite Eq_refl. reflexivity.
+      + rewrite IHxs; clear IHxs.
+        intros i Hi. apply H. simpl. rewrite Hi. apply orb_true_r.
+Qed.
+
+
+Lemma combineEqGo_spec:
+  forall x xs,
+  StronglySorted (fun x y => x <= y = true) (x :: xs) ->
+  forall P : list e -> Prop,
+  (forall ys,
+     StronglySorted (fun x y => x < y = true) ys ->
+     (forall i, List.elem i ys = List.elem i (x :: xs)) ->
+     P ys) ->
+  P (combineEqGo x xs).
+Proof.
+  intros x xs Hsorted.
+  inversion Hsorted; subst; clear Hsorted.
+  revert x H2.
+  induction H1; intros x Hlt.
+  * intros X HX; apply HX; clear X HX.
+    + constructor; constructor.
+    + intro. reflexivity.
+  * inversion Hlt; subst; clear Hlt.  
+    simpl.
+    destruct_match.
+    + eapply IHStronglySorted; only 1: assumption; intros ys Hsortedys Hiys.
+      intros X HX; apply HX; clear X HX.
+      - assumption.
+      - intro i. rewrite Hiys. simpl.
+        destruct (i == x) eqn:?, (i == a) eqn:?; order e.
+    + assert (Hlt : x < a = true) by order e. clear H3 Heq.
+      eapply IHStronglySorted; only 1: assumption; intros ys Hsortedys Hiys.
+      intros X HX; apply HX; clear X HX.
+      - constructor.
+        ** eapply StronglySorted_R_ext; only 2: apply Hsortedys.
+           intros. simpl. order e.
+        ** apply Forall_lt_elem.
+           rewrite Forall_le_elem in H.
+           intros i Hi. rewrite Hiys in Hi. simpl in Hi. rewrite orb_true_iff in Hi. destruct Hi.
+           ++ order e.
+           ++ apply H in H0. order e.
+      - intro i. simpl. rewrite Hiys. simpl. reflexivity.
+Qed.
+
+Lemma combineEq_spec:
+  forall xs,
+  StronglySorted (fun x y => x <= y = true) xs ->
+  forall P : list e -> Prop,
+  (forall ys,
+     StronglySorted (fun x y => x < y = true) ys ->
+     (forall i, List.elem i ys = List.elem i xs) ->
+     P ys) ->
+  P (combineEq xs).
+Proof.
+  intros xs Hsorted.
+  inversion Hsorted.
+  * intros X HX. apply HX. clear X HX.
+    - constructor.
+    - intro. reflexivity.
+  * rewrite <- H1 in Hsorted. clear xs H0 H1.
+    unfold combineEq. fold combineEqGo.
+    apply combineEqGo_spec. assumption.
+Qed.
+
+(** ** Verification of [fromAscList] *)
+
+Lemma fromAscList_Desc:
+  forall xs,
+  StronglySorted (fun x y => x <= y = true) xs ->
+  Desc' (fromAscList xs) None None (fun i => List.elem i xs).
+Proof.
+  intros.
+  unfold fromAscList.
+  eapply combineEq_spec; only 1: assumption; intros ys HSorted Helem.
+  apply fromDistinctAscList_Desc; only 1: assumption.
+  intros s HB Hsz Hf.
+  solve_Desc.
+Qed.
+
 (** ** Verification of [Eq] *)
 
 Lemma eqlist_sym:

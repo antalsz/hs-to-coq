@@ -3316,6 +3316,24 @@ Proof.
     intros. assumption.
 Qed.
 
+(** ** Verification of [splitAt] *)
+
+Definition splitAtGo : Int -> Set_ e -> (Set_ e * Set_ e).
+Proof.
+  let rhs := eval unfold splitAt in (@splitAt e) in
+  match rhs with fun n s => if _ then _ else Datatypes.id GHC.Base.$ (?go _ _)  => exact go end.
+Defined.
+
+Lemma splitAtGo_spec :
+  forall n s, splitAtGo n s = (takeGo n s, dropGo n s).
+Proof.
+  intros ??.
+  revert n.
+  induction s; intros n.
+  * simpl.
+    repeat destruct_match; try congruence.
+  * simpl. repeat destruct_match; reflexivity.
+Qed.
 
 (** ** Verification of [valid] *)
 

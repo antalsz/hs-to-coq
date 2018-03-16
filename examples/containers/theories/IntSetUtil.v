@@ -61,10 +61,6 @@ Qed.
 (******************************************************************************)
 (** Well-formedness (WF) theorems **)
 
-Theorem empty_WF : WF empty.
-Proof. by exists xpred0; constructor. Qed.
-Hint Resolve empty_WF.
-
 Theorem WF_Bin_children (p : Prefix) (m : Mask) (l r : IntSet) :
   WF (Bin p m l r) -> WF l /\ WF r.
 Proof.

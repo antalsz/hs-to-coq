@@ -41,7 +41,7 @@ This is the annotated export list of IntSet. The first column says:
 
     -- * Combine
  F  , union
-    , unions
+ F  , unions
  F  , difference
  F  , intersection
 
@@ -2487,6 +2487,18 @@ Proof.
     congruence.
 Qed.
 
+(** *** Verification of [empty] *)
+
+Lemma empty_Sem (f : N -> bool) : Sem empty f <-> forall i, f i = false.
+Proof.
+  split.
+  - now inversion 1; intros; subst.
+  - now constructor.
+Qed.
+
+Lemma empty_WF : WF empty.
+Proof. now exists (fun _ => false); constructor. Qed.
+Hint Resolve empty_WF.
 
 (** *** Verification of [singleton] *)
 
@@ -2991,6 +3003,69 @@ Proof.
   destruct H, H0.
   eexists. apply union_Sem; eassumption.
 Qed.
+
+Local Ltac union_Sem_reasoning :=
+  repeat intros [? ?];
+  repeat match goal with
+         | SEMs : Sem ?s ?fs, SEMt : Sem ?t ?ft |- context[union ?s ?t] =>
+           match goal with
+           | _ : Sem (union s t) _ |- _ => fail 1
+           |                          _ => specialize (union_Sem s fs t ft SEMs SEMt) as ?
+           end
+         end;
+  eapply Sem_unique; try eassumption;
+  intros; simpl.
+
+Lemma union_assoc (s1 s2 s3 : IntSet) :
+  WF s1 ->
+  WF s2 ->
+  WF s3 ->
+  union s1 (union s2 s3) = union (union s1 s2) s3.
+Proof. now union_Sem_reasoning; rewrite orb_assoc. Qed.
+
+Lemma union_comm (s1 s2 : IntSet) :
+  WF s1 ->
+  WF s2 ->
+  union s1 s2 = union s2 s1.
+Proof. now union_Sem_reasoning; rewrite orb_comm. Qed.
+
+(** *** Verification of [unions] *)
+
+Require Import Proofs.Data.Foldable. 
+
+Lemma Forall_rev:
+  forall A P (l : list A), Forall P (rev l) <-> Forall P l.
+Proof.
+  intros.
+  rewrite !Forall_forall.
+  setoid_rewrite <- in_rev.
+  reflexivity.
+Qed.
+
+Lemma unions_Sem (ss : list IntSet) :
+  Forall WF ss ->
+  Sem (unions ss) (fun i => existsb (member i) ss).
+Proof.
+  unfold unions; rewrite hs_coq_foldl_list, <-fold_left_rev_right.
+  remember (rev ss) as rss eqn:def_rss.
+  replace ss with (rev rss) by now subst; apply rev_involutive.
+  clear def_rss.
+  rewrite Forall_rev.
+  induction rss as [|s rss IH]; simpl; intros WFrss'.
+  - now constructor.
+  - inversion WFrss' as [|s_ rss_ WFs WFrss]; subst s_ rss_.
+    eapply Sem_change_f; [|intros; rewrite existsb_app; simpl; rewrite orb_false_r; reflexivity].
+    apply union_Sem.
+    + now apply IH.
+    + destruct WFs as [f SEM].
+      apply Sem_change_f with f; trivial.
+      now intros; apply member_Sem.
+Qed.
+
+Lemma unions_WF (ss : list IntSet) :
+  Forall WF ss ->
+  WF (unions ss).
+Proof. now eexists; apply unions_Sem. Qed.
 
 (** *** Verification of [intersection] *)
 
@@ -5098,17 +5173,6 @@ Qed.
 
 (** *** Verification of [fromList] *)
 
-Require Import Proofs.Data.Foldable. 
-
-Lemma Forall_rev:
-  forall A P (l : list A), Forall P (rev l) <-> Forall P l.
-Proof.
-  intros.
-  rewrite !Forall_forall.
-  setoid_rewrite <- in_rev.
-  reflexivity.
-Qed.
-
 Lemma fromList_Sem:
   forall l,
   exists f,
@@ -5781,8 +5845,9 @@ Qed.
 (** ** [IntSet]s with [WF] *)
 
 Definition WFIntSet : Type := {s : IntSet | WF s}.
-Definition pack   : forall s : IntSet, WF s -> WFIntSet := exist _.
-Definition unpack : WFIntSet                -> IntSet   := @proj1_sig _ _.
+Definition pack      : forall s : IntSet, WF s -> WFIntSet      := exist _.
+Definition unpack    : WFIntSet                -> IntSet        := @proj1_sig _ _.
+Definition unpack_WF : forall s : WFIntSet,       WF (unpack s) := @proj2_sig _ _.
 
 (** ** Type classes *)
 
@@ -5924,10 +5989,91 @@ Proof.
       order (list N).
 Qed.
 
+(** *** Verification of [Semigroup] *)
+
+Require Import Data.Semigroup.
+Import Data.Semigroup.Notations.
+
+Instance Semigroup_WFIntSet : Semigroup WFIntSet := fun _ k => k
+  {| op_zlzg____ := fun s1 s2 => pack (unpack s1 <> unpack s2)
+                                      (union_WF _ _ (unpack_WF s1) (unpack_WF s2)) |}.
+
+Instance SemigroupLaws_WFIntSet : SemigroupLaws WFIntSet.
+Proof.
+  constructor; intros [s1 [f1 SEM1]] [s2 [f2 SEM2]] [s3 [f3 SEM3]].
+  unfold_WFIntSet_Eq; fold_is_true; rewrite <-(ssrbool.rwP (Eq_eq _ _)).
+  repeat match goal with
+         | SEMs : Sem ?s ?fs, SEMt : Sem ?t ?ft |- context[?s <> ?t] =>
+           match goal with
+           | _ : Sem (s <> t)    _ |- _ => fail 1
+           | _ : Sem (union s t) _ |- _ => fail 1
+           |                          _ => specialize (union_Sem s fs t ft SEMs SEMt) as ?
+           end
+         end.
+  eapply Sem_unique; try eassumption.
+  now intros i; simpl; rewrite orb_assoc.
+Qed.
+
+(** *** Verification of [Monoid] *)
+
+Require Import Data.Monoid.
+
+Lemma WFIntSet_unpack_mconcat_WF (ss : list WFIntSet) :
+  WF (mconcat (GHC.Base.map unpack ss)).
+Proof.
+  apply unions_WF, Forall_forall; intros s; rewrite in_map_iff.
+  intros [? [? ?]]; subst; apply unpack_WF.
+Qed.
+
+Instance Monoid_WFIntSet : Monoid WFIntSet := fun _ k => k
+  {| mempty__  := pack mempty empty_WF
+   ; mappend__ := _Data.Semigroup.<>_
+   ; mconcat__ := fun ss => pack (mconcat (GHC.Base.map unpack ss)) (WFIntSet_unpack_mconcat_WF ss) |}.
+
+Local Ltac WFIntSet_Eq_eq := unfold_WFIntSet_Eq; fold_is_true; rewrite <-(ssrbool.rwP (Eq_eq _ _)).
+
+Lemma MonoidLaws_WFIntSet_mconcat_swing (ss : list WFIntSet) (s' z : IntSet) :
+  WF s' ->
+  WF z  ->
+  fold_left union (List.map unpack ss) (union z s') = union s' (fold_left union (List.map unpack ss) z).
+Proof.
+  generalize dependent z; generalize dependent s'; induction ss as [|s ss IH]; simpl; intros s' z WFs' WFz.
+  - now rewrite union_comm.
+  - assert (WF (unpack s))                               as WFs by apply unpack_WF.
+    assert (WF (union z s'))                             as WFzs' by now apply union_WF.
+    assert (WF (fold_left union (List.map unpack ss) z)) as WFssz. {
+      clear - WFz.
+      rewrite <-fold_left_rev_right, <-hs_coq_map, <-map_rev.
+      induction (rev ss) as [|s rss IH]; simpl; trivial.
+      apply union_WF; [apply IH | apply unpack_WF].
+    }
+    rewrite !IH, !union_assoc; trivial.
+    now rewrite (union_comm s').
+    (* TODO: This Qed takes 40 seconds on my machine for some reason?! —ASZ *)
+Qed.
+
+Instance MonoidLaws_WFIntSet : MonoidLaws WFIntSet.
+Proof.
+  constructor.
+  - intros [s WFs]; WFIntSet_Eq_eq. 
+    now destruct s.
+  - intros [s WFs]; WFIntSet_Eq_eq. 
+    now destruct s.
+  - intros [s1 WF1] [s2 WF2]; WFIntSet_Eq_eq. 
+    reflexivity.
+  - intros ss; WFIntSet_Eq_eq. 
+    unfold mconcat, Monoid__IntSet, Data.IntSet.Internal.Monoid__IntSet_mconcat; simpl.
+    unfold unions; rewrite hs_coq_foldl_list, hs_coq_foldr_base, hs_coq_map.
+    induction ss as [|s ss IH]; simpl.
+    + reflexivity.
+    + rewrite MonoidLaws_WFIntSet_mcocnat_swing, IH; auto using unpack_WF.
+Qed.
+
 (** ** Instantiating the [FSetInterface] *)
 
 Require Import Coq.FSets.FSetInterface.
 Require Import Coq.Structures.OrderedTypeEx.
+Require Import SortedUtil.
 
 Module IntSetFSet <: WSfun(N_as_OT) <: WS <: Sfun(N_as_OT) <: S.
   Module E := N_as_OT.
@@ -6670,8 +6816,6 @@ Module IntSetFSet <: WSfun(N_as_OT) <: WS <: Sfun(N_as_OT) <: S.
     eapply toList_In, in_rev; [eassumption|].
     now fold Key; rewrite DESC; left.
   Qed.
-  
-  Require Import SortedUtil.
   
   Lemma max_elt_2 (s : t) (x y : elt) : max_elt s = Some x -> In y s -> ~ E.lt x y.
   Proof.

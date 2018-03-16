@@ -115,14 +115,17 @@ remame value Foo.SomeType = Foo.MkSomeType
 * The `examples/` directories contains a number of example translation and
   verification projects, including
 
+  * [containers](examples/containers) Modules from the `containers` library, 
+	including `Data.Set` and `Data.IntSet`
+  * [bag](examples/bag) Multiset implementation from GHC's implemention
   * [successors](examples/successors) Successors Monad
   * [compiler](examples/compiler) Hutton's razor
-  * [bag](examples/bag) Multiset implementation
   * [quicksort](examples/quicksort) Quicksort
   * [rle](examples/rle) Run-length encoding
-  * [tests](examples/tests) Simple unit-tests
   * [base-src](examples/base-src) The sources of the `base/` directory
-
+  * [tests](examples/tests) Simple unit-tests
+  * [base-tests](examples/base-tests) Unit-tests that require `base/` 
+  
 * `structural-isomorphism-plugin`: (In progress.)  A GHC plugin that connects
    the re-extracted converted code back into GHC, allowing us to run Haskell
    programs against verified/verifiable code.  Currently does not work.

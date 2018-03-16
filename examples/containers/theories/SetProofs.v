@@ -2732,6 +2732,619 @@ Proof.
       f_solver.
 Qed.
 
+(** ** Verification of [fromDistinctDescList] *)
+
+(** Copy’n’paste from [fromDistinctAscList] *)
+
+Definition fromDistinctDescList_create_f : (Int -> list e -> Set_ e * list e) -> (Int -> list e -> Set_ e * list e).
+Proof.
+  let rhs := eval unfold fromDistinctDescList in (@fromDistinctDescList e) in
+  lazymatch rhs with context [deferredFix2 ?f] => exact f end.
+Defined.
+
+Definition fromDistinctDescList_create : Int -> list e -> Set_ e * list e
+  := deferredFix2 (fromDistinctDescList_create_f).
+
+Lemma fromDistinctDescList_create_eq:
+  forall i xs, (1 <= i)%Z ->
+  fromDistinctDescList_create i xs = fromDistinctDescList_create_f fromDistinctDescList_create i xs.
+Proof.
+  intros.
+  change (uncurry fromDistinctDescList_create (i, xs) = uncurry (fromDistinctDescList_create_f fromDistinctDescList_create) (i, xs)).
+  apply deferredFix_eq_on with
+    (f := fun g => uncurry (fromDistinctDescList_create_f (curry g)))
+    (P := fun p => (1 <= fst p)%Z)
+    (R := fun x y => (1 <= fst x < fst y)%Z).
+  * eapply wf_inverse_image with (R := fun x y => (1 <= x < y)%Z).
+    apply Z.lt_wf with (z := 1%Z).
+  * clear i xs H.
+    intros g h x Px Heq.
+    destruct x as [i xs]. simpl in *.
+    unfold fromDistinctDescList_create_f.
+    destruct_match; try reflexivity.
+    repeat replace (#1) with 1%Z by reflexivity.
+    unfold op_zeze__, Eq_Integer___, op_zeze____.
+    destruct (Z.eqb_spec i 1); try reflexivity.
+    unfold curry.
+    assert (1 < i)%Z by lia.
+    assert (1 <= Z.shiftr i 1)%Z by (apply Z_shiftr_pos; lia).
+    assert (Z.shiftr i 1 < i)%Z by (apply Z_shiftr_lt; lia).
+    repeat expand_pairs. simpl.
+    rewrite Heq by eauto.
+    destruct_match; try reflexivity.
+    rewrite Heq by eauto.
+    reflexivity.
+  * simpl; lia.
+Qed.
+
+(* We need to know that [create] returns no longer list than it receives. *)
+Program Fixpoint fromDistinctDescList_create_preserves_length
+  i xs {measure (Z.to_nat i)} :
+  (1 <= i)%Z ->
+  forall (P : Set_ e * list e -> Prop),
+  ( forall s ys,
+    (length ys <= length xs)%nat ->
+    P (s, ys)
+  ) ->
+  P (fromDistinctDescList_create i xs) := _.
+Next Obligation.
+  intros.
+  rename fromDistinctDescList_create_preserves_length into IH.
+  rewrite fromDistinctDescList_create_eq by assumption.
+  unfold fromDistinctDescList_create_f.
+  destruct xs.
+  * apply H0. reflexivity.
+  * repeat replace (#1) with 1%Z by reflexivity.
+    unfold op_zeze__, Eq_Integer___, op_zeze____.
+    destruct (Z.eqb_spec i 1).
+    + apply H0. simpl. lia.
+    + assert (Z.to_nat (Bits.shiftR i #1) < Z.to_nat i)%nat. {
+        apply Z2Nat.inj_lt.
+        apply Z.shiftr_nonneg. lia.
+        lia.
+        apply Z_shiftr_lt; lia.
+      }
+      apply IH.
+      - assumption. 
+      - apply Z_shiftr_pos; lia.
+      - intros.
+        destruct_match.
+        ** apply H0. simpl in *. lia.
+        ** apply IH.
+           -- assumption.
+           -- apply Z_shiftr_pos; lia.
+           -- intros.
+              apply H0. simpl in *. lia.
+Qed.
+
+Definition fromDistinctDescList_go_f : (Int -> Set_ e -> list e -> Set_ e) -> (Int -> Set_ e -> list e -> Set_ e).
+Proof.
+  let rhs := eval unfold fromDistinctDescList in (@fromDistinctDescList e) in
+  let rhs := eval fold fromDistinctDescList_create_f in rhs in 
+  let rhs := eval fold fromDistinctDescList_create in rhs in 
+  lazymatch rhs with context [deferredFix3 ?f] => exact f end.
+Defined.
+
+Definition fromDistinctDescList_go : Int -> Set_ e -> list e -> Set_ e
+  := deferredFix3 (fromDistinctDescList_go_f).
+
+Lemma fromDistinctDescList_go_eq:
+  forall i s xs, (0 < i)%Z ->
+  fromDistinctDescList_go i s xs = fromDistinctDescList_go_f fromDistinctDescList_go i s xs.
+Proof.
+  intros.
+  change (deferredFix (fun g => uncurry (uncurry (fromDistinctDescList_go_f (curry (curry g))))) (i, s, xs) =
+    uncurry (uncurry (fromDistinctDescList_go_f fromDistinctDescList_go)) (i, s, xs)).
+  rewrite deferredFix_eq_on with
+    (P := fun p => (1 <= fst (fst p))%Z)
+    (R := fun x y => (length (snd x) < length (snd y))%nat); only 1: reflexivity.
+  * apply well_founded_ltof with (f := fun x => length (snd x)).
+  * intros g h p Px Heq.
+    destruct p as [[x y] z].
+    simpl in *.
+    unfold fromDistinctDescList_go_f.
+    destruct_match; try reflexivity.
+    eapply fromDistinctDescList_create_preserves_length; try lia.
+    intros s' ys Hlength.
+    apply Heq.
+    + apply Z_shiftl_pos.
+      lia.
+    + simpl. lia.
+  * simpl. lia.
+Qed.
+
+
+Program Fixpoint fromDistinctDescList_create_Desc
+  sz ub xs {measure (Z.to_nat sz)} :
+  (0 <= sz)%Z ->
+  StronglySorted (fun x y => x > y = true) (ub :: xs) ->
+  forall (P : Set_ e * list e -> Prop),
+  ( forall s ys,
+    Bounded s (safeHd ys) (Some ub)   ->
+    xs = rev (toList s) ++ ys ->
+    ys = [] \/ size s = (2*2^sz-1)%Z ->
+    P (s, ys)
+  ) ->
+  P (fromDistinctDescList_create (2^sz)%Z xs) := _.
+Next Obligation.
+  intros ???? Hnonneg HSorted.  
+  rename fromDistinctDescList_create_Desc into IH.
+  rewrite fromDistinctDescList_create_eq
+    by (enough (0 < 2^sz)%Z by lia; apply Z.pow_pos_nonneg; lia).
+  unfold fromDistinctDescList_create_f.
+  destruct xs.
+  * intros X HX. apply HX. clear HX.
+    - solve_Bounded.
+    - reflexivity.
+    - left. reflexivity.
+  * repeat replace (#1) with 1%Z by reflexivity.
+    unfold op_zeze__, Eq_Integer___, op_zeze____.
+
+    inversion HSorted. subst.
+    inversion H2. subst. clear H2.
+    inversion H1. subst.
+    
+    assert (isLB (safeHd xs) e0 = true). {
+      destruct xs; try reflexivity.
+      inversion H5. simpl. order e.
+    } 
+    
+    destruct (Z.eqb_spec (2^sz) 1).
+    - intros X HX. apply HX. clear HX.
+      ++ solve_Bounded.
+      ++ rewrite toList_Bin, toList_Tip, app_nil_r. reflexivity.
+      ++ right. rewrite size_Bin. lia.
+    - assert (~ (sz = 0))%Z by (intro; subst; simpl in n; congruence).
+      assert (sz > 0)%Z by lia.
+      replace ((Bits.shiftR (2 ^ sz)%Z 1%Z)) with (2^(sz - 1))%Z.
+      Focus 2.
+        unfold Bits.shiftR, Bits.instance_Bits_Int.
+        rewrite Z.shiftr_div_pow2 by lia.
+        rewrite Z.pow_sub_r by lia.
+        reflexivity.
+      assert (Z.to_nat (sz - 1) < Z.to_nat sz)%nat.
+      { rewrite Z2Nat.inj_sub by lia. 
+        apply Nat.sub_lt.
+        apply Z2Nat.inj_le.
+        lia.
+        lia.
+        lia.
+        replace (Z.to_nat 1) with 1 by reflexivity.
+        lia.
+      }
+      eapply IH.
+      ++ assumption.
+      ++ lia.
+      ++ eassumption.
+      ++ intros l ys HBounded_l Hlist_l Hsize_l.
+         destruct ys.
+         + intros X HX. apply HX. clear HX.
+           ** solve_Bounded.
+           ** assumption.
+           ** left; reflexivity.
+         + simpl in HBounded_l.
+           destruct Hsize_l; try congruence.
+           eapply IH; clear IH.
+           ** assumption.
+           ** lia.
+           ** rewrite Hlist_l in H1.
+              apply StronglySorted_app in H1.
+              destruct H1.
+              eassumption.
+           ** intros r zs HBounded_r Hlist_r Hsize_r.
+              rewrite Hlist_l in HSorted.
+              assert (isUB (Some ub) e1 = true). {
+                apply StronglySorted_inv in HSorted.
+                destruct HSorted.
+                simpl.
+                rewrite Forall_forall in H10.
+                enough (ub > e1 = true) by (order e).
+                apply H10.
+                apply in_or_app. right. left. reflexivity.
+              }
+              rewrite Hlist_r in HSorted.
+              assert (isLB (safeHd zs) e1 = true). {
+                destruct zs; try reflexivity.
+                apply StronglySorted_inv in HSorted.
+                destruct HSorted.
+                apply StronglySorted_app in H10.
+                destruct H10.
+                apply StronglySorted_inv in H12.
+                destruct H12.
+                rewrite Forall_forall in H13.
+                simpl.
+                enough (e1 > e2 = true) by (order e).
+                apply H13.
+                apply in_or_app. right. left. reflexivity.
+              }
+              intros X HX. apply HX. clear HX.
+              -- applyDesc link_Desc.
+              -- erewrite toList_link by eassumption.
+                 rewrite Hlist_l. rewrite Hlist_r.
+                 rewrite !rev_app_distr; simpl.
+                 rewrite <- !app_assoc.  simpl. reflexivity.
+              -- destruct Hsize_r; [left; assumption| right].
+                 applyDesc link_Desc.
+                 replace (size l). replace (size r).
+                 rewrite mul_pow_sub in * by lia.
+                 lia.
+Qed.
+
+Lemma elem_rev:
+  forall x xs, List.elem x (rev xs) = List.elem x xs.
+Proof.
+  intros.
+  induction xs.
+  * reflexivity.
+  * simpl. rewrite elem_app. rewrite orb_comm.
+    simpl. rewrite orb_false_r. rewrite IHxs. reflexivity.
+Qed.
+
+Program Fixpoint fromDistinctDescList_go_Desc
+  sz s xs {measure (length xs)} :
+  (0 <= sz)%Z ->
+  StronglySorted (fun x y => x > y = true) xs ->
+  Bounded s (safeHd xs) None ->
+  xs = [] \/ size s = (2*2^sz-1)%Z ->
+  Desc (fromDistinctDescList_go (2^sz)%Z s xs) None None (size s + List.length xs)
+    (fun i => sem s i || List.elem i xs) := _.
+Next Obligation.
+  intros.
+  rename fromDistinctDescList_go_Desc into IH.
+  rewrite fromDistinctDescList_go_eq by (apply Z.pow_pos_nonneg; lia).
+  unfold fromDistinctDescList_go_f.
+  destruct xs.
+  * replace (List.length []) with 0%Z by reflexivity.
+    rewrite Z.add_0_r.
+    solve_Desc.
+  * repeat replace (#1) with 1%Z by reflexivity.
+    replace ((Bits.shiftL (2 ^ sz)%Z 1))%Z with (2 ^ (1 + sz))%Z.
+    Focus 2.
+      unfold Bits.shiftL, Bits.instance_Bits_Int.
+      rewrite Z.shiftl_mul_pow2 by lia.
+      rewrite Z.pow_add_r by lia.
+      lia.
+
+    destruct H2; try congruence.
+    eapply fromDistinctDescList_create_Desc.
+    - lia.
+    - eassumption.
+    - intros.
+      subst.
+      simpl safeHd in *.
+      assert (isLB (safeHd ys) e0 = true). {
+        destruct ys; try reflexivity.
+        apply StronglySorted_inv in H0.
+        destruct H0.
+        rewrite Forall_forall in H4.
+        simpl.
+        enough (e0 > e1 = true) by order e.
+        apply H4.
+        apply in_or_app. right. left. reflexivity.
+      }
+      applyDesc link_Desc.
+      eapply IH.
+      + simpl. rewrite app_length. lia.
+      + lia.
+      + apply StronglySorted_inv in H0.
+        destruct H0.
+        apply StronglySorted_app in H0.
+        destruct H0.
+        assumption.
+      + assumption.
+      + destruct H5; [left; assumption | right].
+        replace (size s1). replace (size s).  replace (size s0).
+        rewrite Z.pow_add_r by lia.
+        lia.
+      + intros.
+        solve_Desc.
+        ** replace (size s2). replace (size s1). replace (size s).
+           rewrite !List.hs_coq_list_length, !Zlength_correct.
+           simpl length.
+           rewrite app_length, Nat2Z.inj_succ, Nat2Z.inj_add, rev_length.
+           erewrite <- size_spec by eassumption.
+           lia.
+        ** setoid_rewrite elem_cons.
+           setoid_rewrite elem_app.
+           setoid_rewrite elem_rev.
+           setoid_rewrite <- toList_sem; only 2: eassumption.
+           f_solver.
+Qed.
+
+
+Lemma fromDistinctDescList_Desc:
+  forall xs,
+  StronglySorted (fun x y => x > y = true) xs ->
+  Desc (fromDistinctDescList xs) None None (List.length xs) (fun i => List.elem i xs).
+Proof.
+  intros.
+  unfold fromDistinctDescList.
+  fold fromDistinctDescList_create_f.
+  fold fromDistinctDescList_create.
+  fold fromDistinctDescList_go_f.
+  fold fromDistinctDescList_go.
+  destruct xs.
+  * solve_Desc.
+  * replace (#1) with (2^0)%Z by reflexivity.
+    eapply fromDistinctDescList_go_Desc.
+    + lia.
+    + apply StronglySorted_inv in H.
+      destruct H.
+      assumption.
+    + assert (isLB (safeHd xs) e0 = true). {
+        destruct xs; try reflexivity.
+        apply StronglySorted_inv in H.
+        destruct H.
+        rewrite Forall_forall in H0.
+        simpl.
+        enough (e0 > e1 = true) by order e.
+        apply H0.
+        left. reflexivity.
+      }
+      solve_Bounded.
+    + right. reflexivity.
+    + intros.
+      rewrite List.hs_coq_list_length, Zlength_cons in *.
+      rewrite size_Bin in *.
+      solve_Desc.
+      setoid_rewrite elem_cons.
+      f_solver.
+Qed.
+
+
+(** ** Verification of [combineEq] *)
+
+Definition combineEqGo : e -> list e -> list e.
+Proof.
+  let rhs := eval unfold combineEq in (@combineEq e _) in
+  match rhs with fun _ => match _ with [] => [] | cons _ _ => ?go _ _ end => exact go end.
+Defined.
+
+(* Too much duplication here *)
+
+Lemma Forall_le_elem:
+  forall x xs,
+  Forall (fun y => x <= y = true) xs <-> (forall i, List.elem i xs = true -> x <= i = true).
+Proof.
+  intros.
+  induction xs.
+  * split; intro H.
+    - intros i Hi; simpl in Hi; congruence.
+    - constructor.
+  * split; intro H.
+    - inversion H; subst; clear H.
+      rewrite IHxs in H3; clear IHxs.
+      intros i Hi; simpl in Hi.
+      rewrite orb_true_iff in Hi. destruct Hi.
+      + order e.
+      + apply H3; assumption.
+    - constructor.
+      + apply H. simpl. rewrite Eq_refl. reflexivity.
+      + rewrite IHxs; clear IHxs.
+        intros i Hi. apply H. simpl. rewrite Hi. apply orb_true_r.
+Qed.
+
+Lemma Forall_ge_elem:
+  forall x xs,
+  Forall (fun y => x >= y = true) xs <-> (forall i, List.elem i xs = true -> x >= i = true).
+Proof.
+  intros.
+  induction xs.
+  * split; intro H.
+    - intros i Hi; simpl in Hi; congruence.
+    - constructor.
+  * split; intro H.
+    - inversion H; subst; clear H.
+      rewrite IHxs in H3; clear IHxs.
+      intros i Hi; simpl in Hi.
+      rewrite orb_true_iff in Hi. destruct Hi.
+      + order e.
+      + apply H3; assumption.
+    - constructor.
+      + apply H. simpl. rewrite Eq_refl. reflexivity.
+      + rewrite IHxs; clear IHxs.
+        intros i Hi. apply H. simpl. rewrite Hi. apply orb_true_r.
+Qed.
+
+Lemma Forall_lt_elem:
+  forall x xs,
+  Forall (fun y => x < y = true) xs <-> (forall i, List.elem i xs = true -> x < i = true).
+Proof.
+  intros.
+  induction xs.
+  * split; intro H.
+    - intros i Hi; simpl in Hi; congruence.
+    - constructor.
+  * split; intro H.
+    - inversion H; subst; clear H.
+      rewrite IHxs in H3; clear IHxs.
+      intros i Hi; simpl in Hi.
+      rewrite orb_true_iff in Hi. destruct Hi.
+      + order e.
+      + apply H3; assumption.
+    - constructor.
+      + apply H. simpl. rewrite Eq_refl. reflexivity.
+      + rewrite IHxs; clear IHxs.
+        intros i Hi. apply H. simpl. rewrite Hi. apply orb_true_r.
+Qed.
+
+
+Lemma Forall_gt_elem:
+  forall x xs,
+  Forall (fun y => x > y = true) xs <-> (forall i, List.elem i xs = true -> x > i = true).
+Proof.
+  intros.
+  induction xs.
+  * split; intro H.
+    - intros i Hi; simpl in Hi; congruence.
+    - constructor.
+  * split; intro H.
+    - inversion H; subst; clear H.
+      rewrite IHxs in H3; clear IHxs.
+      intros i Hi; simpl in Hi.
+      rewrite orb_true_iff in Hi. destruct Hi.
+      + order e.
+      + apply H3; assumption.
+    - constructor.
+      + apply H. simpl. rewrite Eq_refl. reflexivity.
+      + rewrite IHxs; clear IHxs.
+        intros i Hi. apply H. simpl. rewrite Hi. apply orb_true_r.
+Qed.
+
+
+Lemma combineEqGo_spec:
+  forall x xs,
+  StronglySorted (fun x y => x <= y = true) (x :: xs) ->
+  forall P : list e -> Prop,
+  (forall ys,
+     StronglySorted (fun x y => x < y = true) ys ->
+     (forall i, List.elem i ys = List.elem i (x :: xs)) ->
+     P ys) ->
+  P (combineEqGo x xs).
+Proof.
+  intros x xs Hsorted.
+  inversion Hsorted; subst; clear Hsorted.
+  revert x H2.
+  induction H1; intros x Hlt.
+  * intros X HX; apply HX; clear X HX.
+    + constructor; constructor.
+    + intro. reflexivity.
+  * inversion Hlt; subst; clear Hlt.  
+    simpl.
+    destruct_match.
+    + eapply IHStronglySorted; only 1: assumption; intros ys Hsortedys Hiys.
+      intros X HX; apply HX; clear X HX.
+      - assumption.
+      - intro i. rewrite Hiys. simpl.
+        destruct (i == x) eqn:?, (i == a) eqn:?; order e.
+    + assert (Hlt : x < a = true) by order e. clear H3 Heq.
+      eapply IHStronglySorted; only 1: assumption; intros ys Hsortedys Hiys.
+      intros X HX; apply HX; clear X HX.
+      - constructor.
+        ** eapply StronglySorted_R_ext; only 2: apply Hsortedys.
+           intros. simpl. order e.
+        ** apply Forall_lt_elem.
+           rewrite Forall_le_elem in H.
+           intros i Hi. rewrite Hiys in Hi. simpl in Hi. rewrite orb_true_iff in Hi. destruct Hi.
+           ++ order e.
+           ++ apply H in H0. order e.
+      - intro i. simpl. rewrite Hiys. simpl. reflexivity.
+Qed.
+
+
+Lemma combineEqGo_spec2:
+  forall x xs,
+  StronglySorted (fun x y => x >= y = true) (x :: xs) ->
+  forall P : list e -> Prop,
+  (forall ys,
+     StronglySorted (fun x y => x > y = true) ys ->
+     (forall i, List.elem i ys = List.elem i (x :: xs)) ->
+     P ys) ->
+  P (combineEqGo x xs).
+Proof.
+  intros x xs Hsorted.
+  inversion Hsorted; subst; clear Hsorted.
+  revert x H2.
+  induction H1; intros x Hlt.
+  * intros X HX; apply HX; clear X HX.
+    + constructor; constructor.
+    + intro. reflexivity.
+  * inversion Hlt; subst; clear Hlt.  
+    simpl.
+    destruct_match.
+    + eapply IHStronglySorted; only 1: assumption; intros ys Hsortedys Hiys.
+      intros X HX; apply HX; clear X HX.
+      - assumption.
+      - intro i. rewrite Hiys. simpl.
+        destruct (i == x) eqn:?, (i == a) eqn:?; order e.
+    + assert (Hlt : x > a = true) by order e. clear H3 Heq.
+      eapply IHStronglySorted; only 1: assumption; intros ys Hsortedys Hiys.
+      intros X HX; apply HX; clear X HX.
+      - constructor.
+        ** eapply StronglySorted_R_ext; only 2: apply Hsortedys.
+           intros. simpl. order e.
+        ** apply Forall_gt_elem.
+           rewrite Forall_ge_elem in H.
+           intros i Hi. rewrite Hiys in Hi. simpl in Hi. rewrite orb_true_iff in Hi. destruct Hi.
+           ++ order e.
+           ++ apply H in H0. order e.
+      - intro i. simpl. rewrite Hiys. simpl. reflexivity.
+Qed.
+
+
+Lemma combineEq_spec:
+  forall xs,
+  StronglySorted (fun x y => x <= y = true) xs ->
+  forall P : list e -> Prop,
+  (forall ys,
+     StronglySorted (fun x y => x < y = true) ys ->
+     (forall i, List.elem i ys = List.elem i xs) ->
+     P ys) ->
+  P (combineEq xs).
+Proof.
+  intros xs Hsorted.
+  inversion Hsorted.
+  * intros X HX. apply HX. clear X HX.
+    - constructor.
+    - intro. reflexivity.
+  * rewrite <- H1 in Hsorted. clear xs H0 H1.
+    unfold combineEq. fold combineEqGo.
+    apply combineEqGo_spec. assumption.
+Qed.
+
+
+Lemma combineEq_spec2:
+  forall xs,
+  StronglySorted (fun x y => x >= y = true) xs ->
+  forall P : list e -> Prop,
+  (forall ys,
+     StronglySorted (fun x y => x > y = true) ys ->
+     (forall i, List.elem i ys = List.elem i xs) ->
+     P ys) ->
+  P (combineEq xs).
+Proof.
+  intros xs Hsorted.
+  inversion Hsorted.
+  * intros X HX. apply HX. clear X HX.
+    - constructor.
+    - intro. reflexivity.
+  * rewrite <- H1 in Hsorted. clear xs H0 H1.
+    unfold combineEq. fold combineEqGo.
+    apply combineEqGo_spec2. assumption.
+Qed.
+
+
+(** ** Verification of [fromAscList] *)
+
+Lemma fromAscList_Desc:
+  forall xs,
+  StronglySorted (fun x y => x <= y = true) xs ->
+  Desc' (fromAscList xs) None None (fun i => List.elem i xs).
+Proof.
+  intros.
+  unfold fromAscList.
+  eapply combineEq_spec; only 1: assumption; intros ys HSorted Helem.
+  apply fromDistinctAscList_Desc; only 1: assumption.
+  intros s HB Hsz Hf.
+  solve_Desc.
+Qed.
+
+
+(** ** Verification of [fromDescList] *)
+
+Lemma fromDescList_Desc:
+  forall xs,
+  StronglySorted (fun x y => x >= y = true) xs ->
+  Desc' (fromDescList xs) None None (fun i => List.elem i xs).
+Proof.
+  intros.
+  unfold fromDescList.
+  eapply combineEq_spec2; only 1: assumption; intros ys HSorted Helem.
+  apply fromDistinctDescList_Desc; only 1: assumption.
+  intros s HB Hsz Hf.
+  solve_Desc.
+Qed.
+
 (** ** Verification of [Eq] *)
 
 Lemma eqlist_sym:
@@ -3316,6 +3929,24 @@ Proof.
     intros. assumption.
 Qed.
 
+(** ** Verification of [splitAt] *)
+
+Definition splitAtGo : Int -> Set_ e -> (Set_ e * Set_ e).
+Proof.
+  let rhs := eval unfold splitAt in (@splitAt e) in
+  match rhs with fun n s => if _ then _ else Datatypes.id GHC.Base.$ (?go _ _)  => exact go end.
+Defined.
+
+Lemma splitAtGo_spec :
+  forall n s, splitAtGo n s = (takeGo n s, dropGo n s).
+Proof.
+  intros ??.
+  revert n.
+  induction s; intros n.
+  * simpl.
+    repeat destruct_match; try congruence.
+  * simpl. repeat destruct_match; reflexivity.
+Qed.
 
 (** ** Verification of [valid] *)
 

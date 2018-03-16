@@ -20,6 +20,7 @@ OUT=../../base
 HANDMOD = \
   GHC/Wf \
   GHC/DeferredFix \
+  GHC/DeferredFixImpl \
   GHC/Num \
   GHC/Char \
   GHC/Real \

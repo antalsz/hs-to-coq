@@ -5653,6 +5653,23 @@ Proof.
     intuition try congruence.
 Qed.
 
+(** *** Verification of [map] *)
+
+Lemma map_Sem: forall g s f1,
+  Sem s f1 -> Sem (map g s) (fun i => existsb (fun j => g j =? i) (toList s)).
+Proof.
+  intros.
+  unfold map.
+  change (Sem (fromList (List.map g (toList s))) (fun i : N => existsb (fun j : Key => g j =? i) (toList s))).
+  destruct (fromList_Sem (List.map g (toList s))) as [f [HSem Hf]].
+  eapply Sem_change_f; only 1: eassumption.
+  intro i.
+  apply eq_iff_eq_true.
+  rewrite Hf.
+  rewrite existsb_exists, in_map_iff.
+  split; intros [x Hx]; exists x; try rewrite N.eqb_eq in *; intuition.
+Qed.
+
 (** *** Verification of [valid] *)
 
 (** The [valid] function is used in the test suite to detect whether

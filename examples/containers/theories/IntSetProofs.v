@@ -6066,7 +6066,7 @@ Proof.
     unfold unions; rewrite hs_coq_foldl_list, hs_coq_foldr_base, hs_coq_map.
     induction ss as [|s ss IH]; simpl.
     + reflexivity.
-    + rewrite MonoidLaws_WFIntSet_mcocnat_swing, IH; auto using unpack_WF.
+    + rewrite MonoidLaws_WFIntSet_mconcat_swing, IH; auto using unpack_WF.
 Qed.
 
 (** ** Instantiating the [FSetInterface] *)

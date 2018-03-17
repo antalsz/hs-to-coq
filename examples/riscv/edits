@@ -1,0 +1,13 @@
+skip module Data.Word
+skip module Utility
+
+rename type Utility.MachineInt = Coq.ZArith.BinInt.Z
+
+skip Decode.Eq___InstructionI
+skip Decode.Eq___InstructionM
+skip Decode.Eq___InstructionM64
+skip Decode.Eq___InstructionI64
+skip Decode.Eq___InstructionCSR
+skip Decode.Eq___Instruction
+
+# order Decode.Eq___InstructionI Decode.Eq___InstructionM Decode.Eq___InstructionI64 Decode.Eq___InstructionM64 Decode.Eq___InstructionCSR Decode.Eq___Instruction_op_zeze__

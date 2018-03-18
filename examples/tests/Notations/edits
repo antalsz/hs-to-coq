@@ -1,0 +1,10 @@
+rename type GHC.Types.Int          = Z
+
+rename value GHC.Classes.op_zeze__ = eqb
+rename value GHC.Classes.op_zaza__ = andb
+rename value GHC.Real.quot         = quot 
+rename value GHC.Num.*             = mul
+rename value GHC.Num.negate        = opp
+
+rewrite forall x, GHC.Num.fromInteger x = x
+

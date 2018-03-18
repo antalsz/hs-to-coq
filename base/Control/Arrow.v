@@ -21,7 +21,6 @@ Require Data.Either.
 Require GHC.Base.
 Require GHC.Prim.
 Import Control.Category.Notations.
-Import GHC.Base.Notations.
 
 (* Converted type declarations: *)
 
@@ -241,7 +240,7 @@ Local Definition Functor__ArrowMonad_fmap {inst_a} `{Arrow inst_a}
   fun {a} {b} =>
     fun arg_0__ arg_1__ =>
       match arg_0__, arg_1__ with
-      | f, Mk_ArrowMonad m => Mk_ArrowMonad GHC.Base.$ (m Control.Category.>>> arr f)
+      | f, Mk_ArrowMonad m => Mk_ArrowMonad (_Control.Category.>>>_ m (arr f))
       end.
 
 Local Definition Functor__ArrowMonad_op_zlzd__ {inst_a} `{Arrow inst_a}
@@ -325,5 +324,5 @@ End Notations.
 (* Unbound variables:
      Type op_zt__ pair unit Control.Category.Category Control.Category.id
      Control.Category.op_zgzgzg__ Control.Category.op_zlzlzl__ Data.Either.Either
-     GHC.Base.Functor GHC.Base.const GHC.Base.op_zd__ GHC.Prim.arrow
+     GHC.Base.Functor GHC.Base.const GHC.Prim.arrow
 *)

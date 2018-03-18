@@ -145,7 +145,7 @@ Definition unsafeFindMin : IntSet -> option Key :=
   fix unsafeFindMin arg_0__
         := match arg_0__ with
            | Nil => None
-           | Tip kx bm => Some GHC.Base.$ (kx GHC.Num.+ lowestBitSet bm)
+           | Tip kx bm => Some (_GHC.Num.+_ kx (lowestBitSet bm))
            | Bin _ _ l _ => unsafeFindMin l
            end.
 
@@ -156,7 +156,7 @@ Definition unsafeFindMax : IntSet -> option Key :=
   fix unsafeFindMax arg_0__
         := match arg_0__ with
            | Nil => None
-           | Tip kx bm => Some GHC.Base.$ (kx GHC.Num.+ highestBitSet bm)
+           | Tip kx bm => Some (_GHC.Num.+_ kx (highestBitSet bm))
            | Bin _ _ _ r => unsafeFindMax r
            end.
 
@@ -175,7 +175,7 @@ Program Definition foldlBits {a}
                                         | bm, acc =>
                                             let 'bitmask := Utils.Containers.Internal.BitUtil.lowestBitMask bm in
                                             let 'bi := indexOfTheOnlyBit bitmask in
-                                            go (Data.Bits.xor bm bitmask) ((f acc) GHC.Base.$! (prefix GHC.Num.+ bi))
+                                            go (Data.Bits.xor bm bitmask) (f acc (_GHC.Num.+_ prefix bi))
                                         end
                                end) in
             go bitmap z.
@@ -216,7 +216,7 @@ Program Definition foldl'Bits {a}
                                         | bm, acc =>
                                             let 'bitmask := Utils.Containers.Internal.BitUtil.lowestBitMask bm in
                                             let 'bi := indexOfTheOnlyBit bitmask in
-                                            go (Data.Bits.xor bm bitmask) ((f acc) GHC.Base.$! (prefix GHC.Num.+ bi))
+                                            go (Data.Bits.xor bm bitmask) (f acc (_GHC.Num.+_ prefix bi))
                                         end
                                end) in
             go bitmap z.
@@ -316,10 +316,9 @@ Program Definition foldrBits {a}
                                         | bm, acc =>
                                             let 'bitmask := Utils.Containers.Internal.BitUtil.lowestBitMask bm in
                                             let 'bi := indexOfTheOnlyBit bitmask in
-                                            go (Data.Bits.xor bm bitmask) ((f GHC.Base.$!
-                                                                            ((prefix GHC.Num.+ (#64 GHC.Num.- #1))
-                                                                             GHC.Num.-
-                                                                             bi)) acc)
+                                            go (Data.Bits.xor bm bitmask) ((f (_GHC.Num.-_ (prefix GHC.Num.+
+                                                                                            (#64 GHC.Num.- #1)) bi))
+                                                                           acc)
                                         end
                                end) in
             go (revNatSafe bitmap) z.
@@ -400,10 +399,9 @@ Program Definition foldr'Bits {a}
                                         | bm, acc =>
                                             let 'bitmask := Utils.Containers.Internal.BitUtil.lowestBitMask bm in
                                             let 'bi := indexOfTheOnlyBit bitmask in
-                                            go (Data.Bits.xor bm bitmask) ((f GHC.Base.$!
-                                                                            ((prefix GHC.Num.+ (#64 GHC.Num.- #1))
-                                                                             GHC.Num.-
-                                                                             bi)) acc)
+                                            go (Data.Bits.xor bm bitmask) ((f (_GHC.Num.-_ (prefix GHC.Num.+
+                                                                                            (#64 GHC.Num.- #1)) bi))
+                                                                           acc)
                                         end
                                end) in
             go (revNatSafe bitmap) z.
@@ -548,7 +546,7 @@ Definition partition : (Key -> bool) -> IntSet -> (IntSet * IntSet)%type :=
                      pair (tip kx bm1) (tip kx (Data.Bits.xor bm bm1))
                  | Nil => (pair Nil Nil)
                  end in
-    id GHC.Base.$ go predicate0 t0.
+    id (go predicate0 t0).
 
 Definition zero : Coq.Numbers.BinNums.N -> Mask -> bool :=
   fun i m => ((i) Data.Bits..&.(**) (m)) GHC.Base.== #0.
@@ -801,9 +799,9 @@ Definition lookupGE : Key -> IntSet -> option Key :=
                                                   (Coq.NArith.BinNat.N.pred (bitmapOf x))) Data.Bits..&.(**)
                        bm in
                      if prefixOf x GHC.Base.< kx : bool
-                     then Some GHC.Base.$ (kx GHC.Num.+ lowestBitSet bm)
+                     then Some (_GHC.Num.+_ kx (lowestBitSet bm))
                      else if andb (prefixOf x GHC.Base.== kx) (maskGE GHC.Base./= #0) : bool
-                          then Some GHC.Base.$ (kx GHC.Num.+ lowestBitSet maskGE)
+                          then Some (_GHC.Num.+_ kx (lowestBitSet maskGE))
                           else unsafeFindMin def
                  | def, Nil => unsafeFindMin def
                  end in
@@ -837,9 +835,9 @@ Definition lookupGT : Key -> IntSet -> option Key :=
                                                                              (bitmapOf x) #1))) Data.Bits..&.(**)
                        bm in
                      if prefixOf x GHC.Base.< kx : bool
-                     then Some GHC.Base.$ (kx GHC.Num.+ lowestBitSet bm)
+                     then Some (_GHC.Num.+_ kx (lowestBitSet bm))
                      else if andb (prefixOf x GHC.Base.== kx) (maskGT GHC.Base./= #0) : bool
-                          then Some GHC.Base.$ (kx GHC.Num.+ lowestBitSet maskGT)
+                          then Some (_GHC.Num.+_ kx (lowestBitSet maskGT))
                           else unsafeFindMin def
                  | def, Nil => unsafeFindMin def
                  end in
@@ -872,9 +870,9 @@ Definition lookupLE : Key -> IntSet -> option Key :=
                        Data.Bits..&.(**)
                        bm in
                      if prefixOf x GHC.Base.> kx : bool
-                     then Some GHC.Base.$ (kx GHC.Num.+ highestBitSet bm)
+                     then Some (_GHC.Num.+_ kx (highestBitSet bm))
                      else if andb (prefixOf x GHC.Base.== kx) (maskLE GHC.Base./= #0) : bool
-                          then Some GHC.Base.$ (kx GHC.Num.+ highestBitSet maskLE)
+                          then Some (_GHC.Num.+_ kx (highestBitSet maskLE))
                           else unsafeFindMax def
                  | def, Nil => unsafeFindMax def
                  end in
@@ -904,9 +902,9 @@ Definition lookupLT : Key -> IntSet -> option Key :=
                  | def, Tip kx bm =>
                      let maskLT := (bitmapOf x GHC.Num.- #1) Data.Bits..&.(**) bm in
                      if prefixOf x GHC.Base.> kx : bool
-                     then Some GHC.Base.$ (kx GHC.Num.+ highestBitSet bm)
+                     then Some (_GHC.Num.+_ kx (highestBitSet bm))
                      else if andb (prefixOf x GHC.Base.== kx) (maskLT GHC.Base./= #0) : bool
-                          then Some GHC.Base.$ (kx GHC.Num.+ highestBitSet maskLT)
+                          then Some (_GHC.Num.+_ kx (highestBitSet maskLT))
                           else unsafeFindMax def
                  | def, Nil => unsafeFindMax def
                  end in
@@ -1177,10 +1175,9 @@ End Notations.
      Data.Bits.op_zizbzi__ Data.Bits.xor Data.Foldable.foldl Data.Maybe.maybe
      Data.Semigroup.Semigroup Data.Semigroup.op_zlzg__ Data.Tuple.snd GHC.Base.Eq_
      GHC.Base.Monoid GHC.Base.Ord GHC.Base.compare GHC.Base.flip GHC.Base.map
-     GHC.Base.op_z2218U__ GHC.Base.op_zd__ GHC.Base.op_zdzn__ GHC.Base.op_zeze__
-     GHC.Base.op_zg__ GHC.Base.op_zgze__ GHC.Base.op_zl__ GHC.Base.op_zsze__
-     GHC.Num.fromInteger GHC.Num.op_zm__ GHC.Num.op_zp__ GHC.Wf.wfFix2
-     Utils.Containers.Internal.BitUtil.bitcount
+     GHC.Base.op_z2218U__ GHC.Base.op_zeze__ GHC.Base.op_zg__ GHC.Base.op_zgze__
+     GHC.Base.op_zl__ GHC.Base.op_zsze__ GHC.Num.fromInteger GHC.Num.op_zm__
+     GHC.Num.op_zp__ GHC.Wf.wfFix2 Utils.Containers.Internal.BitUtil.bitcount
      Utils.Containers.Internal.BitUtil.highestBitMask
      Utils.Containers.Internal.BitUtil.lowestBitMask
      Utils.Containers.Internal.BitUtil.shiftLL

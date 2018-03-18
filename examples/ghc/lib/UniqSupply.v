@@ -75,11 +75,10 @@ Local Definition Applicative__UniqSM_op_zlztzg__
     fun arg_0__ arg_1__ =>
       match arg_0__, arg_1__ with
       | USM f, USM x =>
-          USM GHC.Base.$
-          (fun us =>
-             let 'pair ff us' := f us in
-             let 'pair xx us'' := x us' in
-             pair (ff xx) us'')
+          USM (fun us =>
+                 let 'pair ff us' := f us in
+                 let 'pair xx us'' := x us' in
+                 pair (ff xx) us'')
       end.
 
 (* Translating `instance Control.Monad.Fix.MonadFix UniqSupply.UniqSM' failed:
@@ -237,7 +236,6 @@ Program Instance MonadUnique__UniqSM : MonadUnique UniqSM :=
 (* Unbound variables:
      cons list nil op_zt__ pair GHC.Base.Applicative GHC.Base.Functor GHC.Base.Monad
      GHC.Base.const GHC.Base.flip GHC.Base.liftM3 GHC.Base.op_z2218U__
-     GHC.Base.op_zd__ GHC.Base.op_zgzgze__ GHC.Base.op_ztzg__ GHC.Base.pure
-     GHC.Base.return_ GHC.Num.Int GHC.Tuple.pair3 Unique.Unique
-     Unique.mkUniqueGrimily
+     GHC.Base.op_zgzgze__ GHC.Base.op_ztzg__ GHC.Base.pure GHC.Base.return_
+     GHC.Num.Int GHC.Tuple.pair3 Unique.Unique Unique.mkUniqueGrimily
 *)

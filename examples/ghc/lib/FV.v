@@ -71,8 +71,7 @@ Definition mapUnionFV {a} : (a -> FV) -> list a -> FV :=
         := match arg_0__, arg_1__, arg_2__, arg_3__, arg_4__ with
            | _f, nil, _fv_cand, _in_scope, acc => acc
            | f, cons a as_, fv_cand, in_scope, acc =>
-               mapUnionFV f as_ fv_cand in_scope GHC.Base.$!
-               (f a fv_cand in_scope GHC.Base.$! acc)
+               mapUnionFV f as_ fv_cand in_scope (f a fv_cand in_scope acc)
            end.
 
 Definition unionsFV : list FV -> FV :=
@@ -80,7 +79,7 @@ Definition unionsFV : list FV -> FV :=
 
 Definition unionFV : FV -> FV -> FV :=
   fun fv1 fv2 fv_cand in_scope acc =>
-    fv1 fv_cand in_scope GHC.Base.$! (fv2 fv_cand in_scope GHC.Base.$! acc).
+    fv1 fv_cand in_scope (fv2 fv_cand in_scope acc).
 
 Definition unitFV : Var.Id -> FV :=
   fun arg_0__ arg_1__ arg_2__ arg_3__ =>
@@ -100,7 +99,7 @@ Definition mkFVs : list Core.Var -> FV :=
 
 (* Unbound variables:
      andb bool cons list nil op_zt__ pair true Core.Var Data.Tuple.fst Data.Tuple.snd
-     GHC.Base.const GHC.Base.id GHC.Base.op_z2218U__ GHC.Base.op_zdzn__ Var.Id
-     VarSet.DVarSet VarSet.VarSet VarSet.elemVarSet VarSet.emptyVarSet
-     VarSet.extendVarSet VarSet.mkDVarSet VarSet.unionVarSet
+     GHC.Base.const GHC.Base.id GHC.Base.op_z2218U__ Var.Id VarSet.DVarSet
+     VarSet.VarSet VarSet.elemVarSet VarSet.emptyVarSet VarSet.extendVarSet
+     VarSet.mkDVarSet VarSet.unionVarSet
 *)

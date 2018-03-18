@@ -278,7 +278,7 @@ Local Definition Traversable__Const_traverse {inst_m}
     fun arg_0__ arg_1__ =>
       match arg_0__, arg_1__ with
       | _, Data.Functor.Const.Mk_Const m =>
-          GHC.Base.pure GHC.Base.$ Data.Functor.Const.Mk_Const m
+          GHC.Base.pure (Data.Functor.Const.Mk_Const m)
       end.
 
 Local Definition Traversable__Const_sequenceA {inst_m}
@@ -438,8 +438,7 @@ Local Definition Functor__StateL_fmap {inst_s}
   fun {a} {b} =>
     fun arg_0__ arg_1__ =>
       match arg_0__, arg_1__ with
-      | f, Mk_StateL k =>
-          Mk_StateL GHC.Base.$ (fun s => let 'pair s' v := k s in pair s' (f v))
+      | f, Mk_StateL k => Mk_StateL (fun s => let 'pair s' v := k s in pair s' (f v))
       end.
 
 Local Definition Functor__StateL_op_zlzd__ {inst_s}
@@ -458,8 +457,10 @@ Local Definition Applicative__StateL_op_zlztzg__ {inst_s}
     fun arg_0__ arg_1__ =>
       match arg_0__, arg_1__ with
       | Mk_StateL kf, Mk_StateL kv =>
-          Mk_StateL GHC.Base.$
-          (fun s => let 'pair s' f := kf s in let 'pair s'' v := kv s' in pair s'' (f v))
+          Mk_StateL (fun s =>
+                       let 'pair s' f := kf s in
+                       let 'pair s'' v := kv s' in
+                       pair s'' (f v))
       end.
 
 Local Definition Applicative__StateL_op_ztzg__ {inst_s}
@@ -485,8 +486,7 @@ Local Definition Functor__StateR_fmap {inst_s}
   fun {a} {b} =>
     fun arg_0__ arg_1__ =>
       match arg_0__, arg_1__ with
-      | f, Mk_StateR k =>
-          Mk_StateR GHC.Base.$ (fun s => let 'pair s' v := k s in pair s' (f v))
+      | f, Mk_StateR k => Mk_StateR (fun s => let 'pair s' v := k s in pair s' (f v))
       end.
 
 Local Definition Functor__StateR_op_zlzd__ {inst_s}
@@ -505,8 +505,10 @@ Local Definition Applicative__StateR_op_zlztzg__ {inst_s}
     fun arg_0__ arg_1__ =>
       match arg_0__, arg_1__ with
       | Mk_StateR kf, Mk_StateR kv =>
-          Mk_StateR GHC.Base.$
-          (fun s => let 'pair s' v := kv s in let 'pair s'' f := kf s' in pair s'' (f v))
+          Mk_StateR (fun s =>
+                       let 'pair s' v := kv s in
+                       let 'pair s'' f := kf s' in
+                       pair s'' (f v))
       end.
 
 Local Definition Applicative__StateR_op_ztzg__ {inst_s}
@@ -620,6 +622,5 @@ Definition mapAccumR {t} {a} {b} {c} `{Traversable t}
      Data.Monoid.Product Data.Monoid.Sum Data.Proxy.Mk_Proxy Data.Proxy.Proxy
      GHC.Base.Applicative GHC.Base.Functor GHC.Base.Monad GHC.Base.const
      GHC.Base.flip GHC.Base.fmap GHC.Base.foldr GHC.Base.id GHC.Base.op_z2218U__
-     GHC.Base.op_zd__ GHC.Base.op_zlztzg__ GHC.Base.pure GHC.Tuple.pair2
-     GHC.Tuple.pair_type
+     GHC.Base.op_zlztzg__ GHC.Base.pure GHC.Tuple.pair2 GHC.Tuple.pair_type
 *)

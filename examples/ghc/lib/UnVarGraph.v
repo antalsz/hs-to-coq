@@ -84,23 +84,19 @@ Definition prune : UnVarGraph -> UnVarGraph :=
         | CG s => negb (isEmptyUnVarSet s)
         | CBPG s1 s2 => andb (negb (isEmptyUnVarSet s1)) (negb (isEmptyUnVarSet s2))
         end in
-    Mk_UnVarGraph GHC.Base.$ Bag.filterBag go g.
+    Mk_UnVarGraph (Bag.filterBag go g).
 
 Definition completeGraph : UnVarSet -> UnVarGraph :=
-  fun s =>
-    prune GHC.Base.$ (Mk_UnVarGraph GHC.Base.$ (Bag.unitBag GHC.Base.$ CG s)).
+  fun s => prune (Mk_UnVarGraph (Bag.unitBag (CG s))).
 
 Definition completeBipartiteGraph : UnVarSet -> UnVarSet -> UnVarGraph :=
-  fun s1 s2 =>
-    prune GHC.Base.$ (Mk_UnVarGraph GHC.Base.$ (Bag.unitBag GHC.Base.$ CBPG s1 s2)).
+  fun s1 s2 => prune (Mk_UnVarGraph (Bag.unitBag (CBPG s1 s2))).
 
 Definition k : Core.Var -> GHC.Num.Word :=
   fun v => Unique.getWordKey (Unique.getUnique v).
 
 Definition mkUnVarSet : list Core.Var -> UnVarSet :=
-  fun vs =>
-    Mk_UnVarSet GHC.Base.$
-    (Data.IntSet.Internal.fromList GHC.Base.$ GHC.Base.map k vs).
+  fun vs => Mk_UnVarSet (Data.IntSet.Internal.fromList (GHC.Base.map k vs)).
 
 Definition elemUnVarSet : Core.Var -> UnVarSet -> bool :=
   fun arg_0__ arg_1__ =>
@@ -111,7 +107,7 @@ Definition elemUnVarSet : Core.Var -> UnVarSet -> bool :=
 Definition delUnVarSet : UnVarSet -> Core.Var -> UnVarSet :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
-    | Mk_UnVarSet s, v => Mk_UnVarSet GHC.Base.$ Data.IntSet.Internal.delete (k v) s
+    | Mk_UnVarSet s, v => Mk_UnVarSet (Data.IntSet.Internal.delete (k v) s)
     end.
 
 Definition delNode : UnVarGraph -> Core.Var -> UnVarGraph :=
@@ -124,7 +120,7 @@ Definition delNode : UnVarGraph -> Core.Var -> UnVarGraph :=
             | CG s => CG (delUnVarSet s v)
             | CBPG s1 s2 => CBPG (delUnVarSet s1 v) (delUnVarSet s2 v)
             end in
-        prune GHC.Base.$ (Mk_UnVarGraph GHC.Base.$ Bag.mapBag go g)
+        prune (Mk_UnVarGraph (Bag.mapBag go g))
     end.
 
 Definition unionUnVarGraph : UnVarGraph -> UnVarGraph -> UnVarGraph :=
@@ -161,12 +157,11 @@ Definition neighbors : UnVarGraph -> Core.Var -> UnVarSet :=
                                         then cons s1 nil
                                         else nil)
             end in
-        unionUnVarSets GHC.Base.$
-        (Data.Foldable.concatMap go GHC.Base.$ Bag.bagToList g)
+        unionUnVarSets (Data.Foldable.concatMap go (Bag.bagToList g))
     end.
 
 Definition varEnvDom {a} : VarEnv.VarEnv a -> UnVarSet :=
-  fun ae => Mk_UnVarSet GHC.Base.$ UniqFM.ufmToSet_Directly ae.
+  fun ae => Mk_UnVarSet (UniqFM.ufmToSet_Directly ae).
 
 (* Unbound variables:
      andb bool cons list negb nil Bag.Bag Bag.bagToList Bag.emptyBag Bag.filterBag
@@ -175,7 +170,7 @@ Definition varEnvDom {a} : VarEnv.VarEnv a -> UnVarSet :=
      Data.IntSet.Internal.IntSet Data.IntSet.Internal.delete
      Data.IntSet.Internal.empty Data.IntSet.Internal.fromList
      Data.IntSet.Internal.member Data.IntSet.Internal.null Data.IntSet.Internal.union
-     GHC.Base.Eq_ GHC.Base.map GHC.Base.op_zd__ GHC.Base.op_zeze__ GHC.Base.op_zsze__
-     GHC.Num.Word GHC.Prim.coerce UniqFM.ufmToSet_Directly Unique.getUnique
-     Unique.getWordKey VarEnv.VarEnv
+     GHC.Base.Eq_ GHC.Base.map GHC.Base.op_zeze__ GHC.Base.op_zsze__ GHC.Num.Word
+     GHC.Prim.coerce UniqFM.ufmToSet_Directly Unique.getUnique Unique.getWordKey
+     VarEnv.VarEnv
 *)

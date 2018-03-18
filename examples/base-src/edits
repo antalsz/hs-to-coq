@@ -29,6 +29,10 @@ skip module Data.Data
 # expects a non-implicit type argument.
 rewrite forall g, (GHC.Base.build g) = GHC.Base.build' (fun _ => g)
 
+# Much prettier
+rewrite forall f x, (f GHC.Base.$ x) = f x
+rewrite forall f x, (f GHC.Base.$! x) = f x
+
 rename type  GHC.Tuple.() = unit
 rename value GHC.Tuple.() = tt
 

@@ -115,8 +115,7 @@ Definition nameSetElems : NameSet -> list Name.Name :=
   UniqSet.uniqSetToList.
 
 Definition nameSetElemsStable : NameSet -> list Name.Name :=
-  fun ns =>
-    Data.OldList.sortBy Name.stableNameCmp GHC.Base.$ UniqFM.nonDetEltsUFM ns.
+  fun ns => Data.OldList.sortBy Name.stableNameCmp (UniqFM.nonDetEltsUFM ns).
 
 Definition plusDU : DefUses -> DefUses -> DefUses :=
   Coq.Init.Datatypes.app.
@@ -190,8 +189,8 @@ Definition usesOnly : Uses -> DefUses :=
 (* Unbound variables:
      None Some bool cons list negb nil op_zt__ option orb pair Coq.Init.Datatypes.app
      Coq.Lists.List.flat_map Data.Foldable.any Data.Foldable.foldl
-     Data.Foldable.foldr Data.OldList.sortBy GHC.Base.op_z2218U__ GHC.Base.op_zd__
-     Name.Name Name.nameOccName Name.stableNameCmp OccName.startsWithUnderscore
+     Data.Foldable.foldr Data.OldList.sortBy GHC.Base.op_z2218U__ Name.Name
+     Name.nameOccName Name.stableNameCmp OccName.startsWithUnderscore
      UniqFM.nonDetEltsUFM UniqSet.UniqSet UniqSet.addListToUniqSet
      UniqSet.addOneToUniqSet UniqSet.delOneFromUniqSet UniqSet.elementOfUniqSet
      UniqSet.emptyUniqSet UniqSet.filterUniqSet UniqSet.foldUniqSet

@@ -598,8 +598,7 @@ Definition mkModuleSet : list Module -> ModuleSet :=
 Definition moduleEnvKeys {a} : ModuleEnv a -> list Module :=
   fun arg_0__ =>
     let 'Mk_ModuleEnv e := arg_0__ in
-    Data.OldList.sort GHC.Base.$
-    (GHC.Base.map unNDModule GHC.Base.$ Data.Map.Internal.keys e).
+    Data.OldList.sort (GHC.Base.map unNDModule (Data.Map.Internal.keys e)).
 
 Definition moduleEnvToList {a} : ModuleEnv a -> list (Module * a)%type :=
   fun arg_0__ =>
@@ -611,7 +610,7 @@ Definition moduleEnvToList {a} : ModuleEnv a -> list (Module * a)%type :=
                                                                                       e)).
 
 Definition moduleEnvElts {a} : ModuleEnv a -> list a :=
-  fun e => GHC.Base.map Data.Tuple.snd GHC.Base.$ moduleEnvToList e.
+  fun e => GHC.Base.map Data.Tuple.snd (moduleEnvToList e).
 
 Definition moduleNameFS : ModuleName -> FastString.FastString :=
   fun arg_0__ => let 'Mk_ModuleName mod_ := arg_0__ in mod_.
@@ -691,7 +690,7 @@ Definition unitModuleEnv {a} : Module -> a -> ModuleEnv a :=
      FastString.unpackFS FiniteMap.deleteList FiniteMap.foldRightWithKey
      FiniteMap.insertList FiniteMap.insertListWith GHC.Base.Eq_ GHC.Base.Ord
      GHC.Base.String GHC.Base.compare GHC.Base.map GHC.Base.op_z2218U__
-     GHC.Base.op_zd__ GHC.Base.op_zeze__ GHC.Base.op_zg__ GHC.Base.op_zgze__
-     GHC.Base.op_zl__ GHC.Base.op_zlze__ GHC.Base.op_zsze__ GHC.Prim.coerce
-     UniqFM.UniqFM Unique.getUnique Util.thenCmp
+     GHC.Base.op_zeze__ GHC.Base.op_zg__ GHC.Base.op_zgze__ GHC.Base.op_zl__
+     GHC.Base.op_zlze__ GHC.Base.op_zsze__ GHC.Prim.coerce UniqFM.UniqFM
+     Unique.getUnique Util.thenCmp
 *)

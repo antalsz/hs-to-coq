@@ -609,7 +609,7 @@ Definition srcSpanFirstCharacter : SrcSpan -> SrcSpan :=
     | ARealSrcSpan span =>
         let '(ASrcLoc f l c as loc1) := realSrcSpanStart span in
         let loc2 := ASrcLoc f l (c GHC.Num.+ #1) in
-        ARealSrcSpan GHC.Base.$ mkRealSrcSpan loc1 loc2
+        ARealSrcSpan (mkRealSrcSpan loc1 loc2)
     end.
 
 Definition srcSpanStart : SrcSpan -> SrcLoc :=
@@ -798,8 +798,8 @@ Definition wiredInSrcSpan : SrcSpan :=
      Data.Traversable.Traversable FastString.FastString FastString.fsLit
      GHC.Base.Applicative GHC.Base.Eq_ GHC.Base.Functor GHC.Base.Monad
      GHC.Base.Monoid GHC.Base.Ord GHC.Base.String GHC.Base.build GHC.Base.compare
-     GHC.Base.const GHC.Base.flip GHC.Base.fmap GHC.Base.id GHC.Base.op_zd__
-     GHC.Base.op_zdzn__ GHC.Base.op_zeze__ GHC.Base.op_zg__ GHC.Base.op_zgze__
-     GHC.Base.op_zl__ GHC.Base.op_zlze__ GHC.Base.op_zsze__ GHC.Num.Int GHC.Num.Num
+     GHC.Base.const GHC.Base.flip GHC.Base.fmap GHC.Base.id GHC.Base.op_zdzn__
+     GHC.Base.op_zeze__ GHC.Base.op_zg__ GHC.Base.op_zgze__ GHC.Base.op_zl__
+     GHC.Base.op_zlze__ GHC.Base.op_zsze__ GHC.Num.Int GHC.Num.Num
      GHC.Num.fromInteger GHC.Num.op_zp__ Util.thenCmp
 *)

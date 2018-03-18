@@ -178,10 +178,9 @@ Definition dropLengthMaybe {a} {b} : list a -> list b -> option (list b) :=
 
 Definition isSuffixOf {a} `{(GHC.Base.Eq_ a)} : list a -> list a -> bool :=
   fun ns hs =>
-    Data.Maybe.maybe false GHC.Base.id GHC.Base.$
-    (dropLengthMaybe ns hs GHC.Base.>>=
-     (fun delta =>
-        GHC.Base.return_ GHC.Base.$ (ns GHC.Base.== dropLength delta hs))).
+    Data.Maybe.maybe false GHC.Base.id (_GHC.Base.>>=_ (dropLengthMaybe ns hs)
+                                                       (fun delta =>
+                                                          GHC.Base.return_ (_GHC.Base.==_ ns (dropLength delta hs)))).
 
 Definition dropWhileEnd {a} : (a -> bool) -> list a -> list a :=
   fun p =>
@@ -553,10 +552,10 @@ End Notations.
      Data.Maybe.listToMaybe Data.Maybe.maybe Data.Ord.comparing Data.Tuple.fst
      Data.Tuple.snd GHC.Base.Eq_ GHC.Base.Ord GHC.Base.String GHC.Base.build'
      GHC.Base.compare GHC.Base.flip GHC.Base.foldl GHC.Base.foldr GHC.Base.id
-     GHC.Base.map GHC.Base.oneShot GHC.Base.op_z2218U__ GHC.Base.op_zd__
-     GHC.Base.op_zeze__ GHC.Base.op_zgzgze__ GHC.Base.op_zlze__ GHC.Base.return_
-     GHC.List.any GHC.List.filter GHC.List.null GHC.List.reverse GHC.Num.Num
-     GHC.Num.Word GHC.Num.fromInteger GHC.Num.op_zm__ GHC.Num.op_zp__ GHC.Prim.seq
+     GHC.Base.map GHC.Base.oneShot GHC.Base.op_z2218U__ GHC.Base.op_zeze__
+     GHC.Base.op_zgzgze__ GHC.Base.op_zlze__ GHC.Base.return_ GHC.List.any
+     GHC.List.filter GHC.List.null GHC.List.reverse GHC.Num.Num GHC.Num.Word
+     GHC.Num.fromInteger GHC.Num.op_zm__ GHC.Num.op_zp__ GHC.Prim.seq
      GHC.Real.Integral GHC.Tuple.pair4 GHC.Tuple.pair5 GHC.Tuple.pair6
      GHC.Tuple.pair7
 *)

@@ -208,8 +208,7 @@ Local Definition Foldable__option_foldr'
    : forall {a} {b}, (a -> b -> b) -> b -> option a -> b :=
   fun {a} {b} =>
     fun f z0 xs =>
-      let f' := fun k x z => k GHC.Base.$! f x z in
-      Foldable__option_foldl f' GHC.Base.id xs z0.
+      let f' := fun k x z => k (f x z) in Foldable__option_foldl f' GHC.Base.id xs z0.
 
 Local Definition Foldable__option_foldr
    : forall {a} {b}, (a -> b -> b) -> b -> option a -> b :=
@@ -231,8 +230,7 @@ Local Definition Foldable__option_foldl'
    : forall {b} {a}, (b -> a -> b) -> b -> option a -> b :=
   fun {b} {a} =>
     fun f z0 xs =>
-      let f' := fun x k z => k GHC.Base.$! f z x in
-      Foldable__option_foldr f' GHC.Base.id xs z0.
+      let f' := fun x k z => k (f z x) in Foldable__option_foldr f' GHC.Base.id xs z0.
 
 Local Definition Foldable__option_length
    : forall {a}, option a -> GHC.Num.Int :=
@@ -267,8 +265,7 @@ Local Definition Foldable__list_foldr'
    : forall {a} {b}, (a -> b -> b) -> b -> list a -> b :=
   fun {a} {b} =>
     fun f z0 xs =>
-      let f' := fun k x z => k GHC.Base.$! f x z in
-      Foldable__list_foldl f' GHC.Base.id xs z0.
+      let f' := fun k x z => k (f x z) in Foldable__list_foldl f' GHC.Base.id xs z0.
 
 Local Definition Foldable__list_foldl'
    : forall {b} {a}, (b -> a -> b) -> b -> list a -> b :=
@@ -340,8 +337,7 @@ Local Definition Foldable__Either_foldr' {inst_a}
    : forall {a} {b}, (a -> b -> b) -> b -> (Data.Either.Either inst_a) a -> b :=
   fun {a} {b} =>
     fun f z0 xs =>
-      let f' := fun k x z => k GHC.Base.$! f x z in
-      Foldable__Either_foldl f' GHC.Base.id xs z0.
+      let f' := fun k x z => k (f x z) in Foldable__Either_foldl f' GHC.Base.id xs z0.
 
 Local Definition Foldable__Either_fold {inst_a}
    : forall {m},
@@ -370,8 +366,7 @@ Local Definition Foldable__Either_foldl' {inst_a}
    : forall {b} {a}, (b -> a -> b) -> b -> (Data.Either.Either inst_a) a -> b :=
   fun {b} {a} =>
     fun f z0 xs =>
-      let f' := fun x k z => k GHC.Base.$! f z x in
-      Foldable__Either_foldr f' GHC.Base.id xs z0.
+      let f' := fun x k z => k (f z x) in Foldable__Either_foldr f' GHC.Base.id xs z0.
 
 Local Definition Foldable__Either_length {inst_a}
    : forall {a}, (Data.Either.Either inst_a) a -> GHC.Num.Int :=
@@ -403,7 +398,7 @@ Local Definition Foldable__pair_type_foldr' {inst_a}
    : forall {a} {b}, (a -> b -> b) -> b -> (GHC.Tuple.pair_type inst_a) a -> b :=
   fun {a} {b} =>
     fun f z0 xs =>
-      let f' := fun k x z => k GHC.Base.$! f x z in
+      let f' := fun k x z => k (f x z) in
       Foldable__pair_type_foldl f' GHC.Base.id xs z0.
 
 Local Definition Foldable__pair_type_fold {inst_a}
@@ -437,7 +432,7 @@ Local Definition Foldable__pair_type_foldl' {inst_a}
    : forall {b} {a}, (b -> a -> b) -> b -> (GHC.Tuple.pair_type inst_a) a -> b :=
   fun {b} {a} =>
     fun f z0 xs =>
-      let f' := fun x k z => k GHC.Base.$! f z x in
+      let f' := fun x k z => k (f z x) in
       Foldable__pair_type_foldr f' GHC.Base.id xs z0.
 
 Local Definition Foldable__pair_type_length {inst_a}
@@ -475,8 +470,7 @@ Local Definition Foldable__Proxy_foldr'
    : forall {a} {b}, (a -> b -> b) -> b -> Data.Proxy.Proxy a -> b :=
   fun {a} {b} =>
     fun f z0 xs =>
-      let f' := fun k x z => k GHC.Base.$! f x z in
-      Foldable__Proxy_foldl f' GHC.Base.id xs z0.
+      let f' := fun k x z => k (f x z) in Foldable__Proxy_foldl f' GHC.Base.id xs z0.
 
 Local Definition Foldable__Proxy_foldr
    : forall {a} {b}, (a -> b -> b) -> b -> Data.Proxy.Proxy a -> b :=
@@ -495,8 +489,7 @@ Local Definition Foldable__Proxy_foldl'
    : forall {b} {a}, (b -> a -> b) -> b -> Data.Proxy.Proxy a -> b :=
   fun {b} {a} =>
     fun f z0 xs =>
-      let f' := fun x k z => k GHC.Base.$! f z x in
-      Foldable__Proxy_foldr f' GHC.Base.id xs z0.
+      let f' := fun x k z => k (f z x) in Foldable__Proxy_foldr f' GHC.Base.id xs z0.
 
 Local Definition Foldable__Proxy_length
    : forall {a}, Data.Proxy.Proxy a -> GHC.Num.Int :=
@@ -981,9 +974,9 @@ Definition for__ {t} {f} {a} {b} `{Foldable t} `{GHC.Base.Applicative f}
      GHC.Base.Monad GHC.Base.MonadPlus GHC.Base.Monoid GHC.Base.Ord GHC.Base.build'
      GHC.Base.empty GHC.Base.flip GHC.Base.foldl GHC.Base.foldl' GHC.Base.foldr
      GHC.Base.id GHC.Base.mappend GHC.Base.mempty GHC.Base.op_z2218U__
-     GHC.Base.op_zdzn__ GHC.Base.op_zeze__ GHC.Base.op_zgze__ GHC.Base.op_zgzg__
-     GHC.Base.op_zgzgze__ GHC.Base.op_zlzbzg__ GHC.Base.op_zlze__ GHC.Base.op_ztzg__
-     GHC.Base.pure GHC.Base.return_ GHC.List.elem GHC.List.length GHC.List.null
-     GHC.List.product GHC.List.sum GHC.Num.Int GHC.Num.Num GHC.Num.fromInteger
-     GHC.Num.op_zp__ GHC.Prim.coerce GHC.Tuple.pair_type
+     GHC.Base.op_zeze__ GHC.Base.op_zgze__ GHC.Base.op_zgzg__ GHC.Base.op_zgzgze__
+     GHC.Base.op_zlzbzg__ GHC.Base.op_zlze__ GHC.Base.op_ztzg__ GHC.Base.pure
+     GHC.Base.return_ GHC.List.elem GHC.List.length GHC.List.null GHC.List.product
+     GHC.List.sum GHC.Num.Int GHC.Num.Num GHC.Num.fromInteger GHC.Num.op_zp__
+     GHC.Prim.coerce GHC.Tuple.pair_type
 *)

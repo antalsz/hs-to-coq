@@ -3934,7 +3934,7 @@ Qed.
 Definition splitAtGo : Int -> Set_ e -> (Set_ e * Set_ e).
 Proof.
   let rhs := eval unfold splitAt in (@splitAt e) in
-  match rhs with fun n s => if _ then _ else Datatypes.id GHC.Base.$ (?go _ _)  => exact go end.
+  match rhs with fun n s => if _ then _ else Datatypes.id (?go _ _)  => exact go end.
 Defined.
 
 Lemma splitAtGo_spec :

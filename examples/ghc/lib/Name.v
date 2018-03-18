@@ -325,9 +325,8 @@ Definition mkLocalisedOccName
     let origin :=
       if nameIsLocalOrFrom this_mod name : bool
       then None
-      else Some ((Module.moduleNameColons GHC.Base.∘
-                  (moduleName GHC.Base.∘ nameModule)) GHC.Base.$
-                 name) in
+      else Some (_GHC.Base.∘_ Module.moduleNameColons (moduleName GHC.Base.∘
+                               nameModule) name) in
     mk_occ origin (nameOccName name).
 
 Definition isVarName : Name -> bool :=
@@ -430,8 +429,8 @@ Definition tidyNameOcc : Name -> OccName.OccName -> Name :=
      Eq Gt Lt None Some andb bool comparison default false moduleName moduleUnitId
      negb occNameFS option orb true unit Coq.Init.Datatypes.app FastString.FastString
      GHC.Base.Eq_ GHC.Base.Ord GHC.Base.String GHC.Base.compare GHC.Base.op_z2218U__
-     GHC.Base.op_zd__ GHC.Base.op_zeze__ GHC.Base.op_zsze__ GHC.Num.Int Maybes.orElse
-     Module.Module Module.UnitId Module.isInteractiveModule Module.moduleNameColons
+     GHC.Base.op_zeze__ GHC.Base.op_zsze__ GHC.Num.Int Maybes.orElse Module.Module
+     Module.UnitId Module.isInteractiveModule Module.moduleNameColons
      Module.moduleStableString Module.stableModuleCmp OccName.OccName
      OccName.isDataOcc OccName.isTcOcc OccName.isTvOcc OccName.isValOcc
      OccName.isVarOcc OccName.mkOccNameFS OccName.mkVarOcc OccName.mkVarOccFS

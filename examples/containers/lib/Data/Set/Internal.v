@@ -382,7 +382,7 @@ Definition lookupMax {a} : Set_ a -> option a :=
   fun arg_0__ =>
     match arg_0__ with
     | Tip => None
-    | Bin _ x _ r => Some GHC.Base.$! lookupMaxSure x r
+    | Bin _ x _ r => Some (lookupMaxSure x r)
     end.
 
 Definition lookupMinSure {a} : a -> Set_ a -> a :=
@@ -396,7 +396,7 @@ Definition lookupMin {a} : Set_ a -> option a :=
   fun arg_0__ =>
     match arg_0__ with
     | Tip => None
-    | Bin _ x l _ => Some GHC.Base.$! lookupMinSure x l
+    | Bin _ x l _ => Some (lookupMinSure x l)
     end.
 
 Definition mapMonotonic {a} {b} : (a -> b) -> Set_ a -> Set_ b :=
@@ -420,7 +420,7 @@ Definition member {a} `{GHC.Base.Ord a} : a -> Set_ a -> bool :=
   go.
 
 Definition notMember {a} `{GHC.Base.Ord a} : a -> Set_ a -> bool :=
-  fun a t => negb GHC.Base.$ member a t.
+  fun a t => negb (member a t).
 
 Definition null {a} : Set_ a -> bool :=
   fun arg_0__ => match arg_0__ with | Tip => true | Bin _ _ _ _ => false end.
@@ -482,7 +482,7 @@ Definition lookupIndex {a} `{GHC.Base.Ord a}
                  match GHC.Base.compare x kx with
                  | Lt => go idx x l
                  | Gt => go ((idx GHC.Num.+ size l) GHC.Num.+ #1) x r
-                 | Eq => Some GHC.Base.$! (idx GHC.Num.+ size l)
+                 | Eq => Some (_GHC.Num.+_ idx (size l))
                  end
              end in
   go #0.
@@ -576,7 +576,7 @@ Definition minView {a} : Set_ a -> option (a * Set_ a)%type :=
   fun arg_0__ =>
     match arg_0__ with
     | Tip => None
-    | Bin _ x l r => Some GHC.Base.$! (id GHC.Base.$ minViewSure x l r)
+    | Bin _ x l r => Some (id (minViewSure x l r))
     end.
 
 Definition balanceL {a} : a -> Set_ a -> Set_ a -> Set_ a :=
@@ -899,7 +899,7 @@ Definition splitS {a} `{GHC.Base.Ord a}
 
 Definition split {a} `{GHC.Base.Ord a}
    : a -> Set_ a -> (Set_ a * Set_ a)%type :=
-  fun x t => id GHC.Base.$ splitS x t.
+  fun x t => id (splitS x t).
 
 Definition takeWhileAntitone {a} : (a -> bool) -> Set_ a -> Set_ a :=
   fix takeWhileAntitone arg_0__ arg_1__
@@ -968,7 +968,7 @@ Definition maxView {a} : Set_ a -> option (a * Set_ a)%type :=
   fun arg_0__ =>
     match arg_0__ with
     | Tip => None
-    | Bin _ x l r => Some GHC.Base.$! (id GHC.Base.$ maxViewSure x l r)
+    | Bin _ x l r => Some (id (maxViewSure x l r))
     end.
 
 Definition glue {a} : Set_ a -> Set_ a -> Set_ a :=
@@ -1082,7 +1082,7 @@ Definition partition {a} : (a -> bool) -> Set_ a -> (Set_ a * Set_ a)%type :=
                                 then t
                                 else link x l2 r2)
                  end in
-    id GHC.Base.$ go p0 t0.
+    id (go p0 t0).
 
 Local Definition Semigroup__MergeSet_op_zlzg__ {inst_a}
    : (MergeSet inst_a) -> (MergeSet inst_a) -> (MergeSet inst_a) :=
@@ -1153,7 +1153,7 @@ Definition splitAt {a} : GHC.Num.Int -> Set_ a -> (Set_ a * Set_ a)%type :=
                  end in
     if i0 GHC.Base.>= size m0 : bool
     then pair m0 Tip
-    else id GHC.Base.$ go i0 m0.
+    else id (go i0 m0).
 
 Definition isSubsetOf {a} `{GHC.Base.Ord a} : Set_ a -> Set_ a -> bool :=
   fun t1 t2 => andb (size t1 GHC.Base.<= size t2) (isSubsetOfX t1 t2).
@@ -1277,9 +1277,8 @@ Program Instance Monoid__MergeSet {a} : GHC.Base.Monoid (MergeSet a) :=
 
 Definition cartesianProduct {a} {b} : Set_ a -> Set_ b -> Set_ (a * b)%type :=
   fun as_ bs =>
-    getMergeSet GHC.Base.$
-    Data.Foldable.foldMap (fun a =>
-                             Mk_MergeSet GHC.Base.$ mapMonotonic (GHC.Tuple.pair2 a) bs) as_.
+    getMergeSet (Data.Foldable.foldMap (fun a =>
+                                          Mk_MergeSet (mapMonotonic (GHC.Tuple.pair2 a) bs)) as_).
 
 Module Notations.
 Notation "'_Data.Set.Internal.\\_'" := (op_zrzr__).
@@ -1296,10 +1295,9 @@ End Notations.
      Data.Semigroup.Semigroup Data.Semigroup.op_zlzg__ GHC.Base.Eq_ GHC.Base.Monoid
      GHC.Base.Ord GHC.Base.compare GHC.Base.const GHC.Base.flip GHC.Base.foldr
      GHC.Base.map GHC.Base.mappend GHC.Base.mempty GHC.Base.op_z2218U__
-     GHC.Base.op_zd__ GHC.Base.op_zdzn__ GHC.Base.op_zeze__ GHC.Base.op_zg__
-     GHC.Base.op_zgze__ GHC.Base.op_zl__ GHC.Base.op_zlze__ GHC.Base.op_zsze__
-     GHC.DeferredFix.deferredFix2 GHC.DeferredFix.deferredFix3 GHC.Err.error
-     GHC.Err.patternFailure GHC.Num.Int GHC.Num.Num GHC.Num.fromInteger
-     GHC.Num.op_zm__ GHC.Num.op_zp__ GHC.Num.op_zt__ GHC.Tuple.pair2 Nat.add
-     Utils.Containers.Internal.PtrEquality.ptrEq
+     GHC.Base.op_zeze__ GHC.Base.op_zg__ GHC.Base.op_zgze__ GHC.Base.op_zl__
+     GHC.Base.op_zlze__ GHC.Base.op_zsze__ GHC.DeferredFix.deferredFix2
+     GHC.DeferredFix.deferredFix3 GHC.Err.error GHC.Err.patternFailure GHC.Num.Int
+     GHC.Num.Num GHC.Num.fromInteger GHC.Num.op_zm__ GHC.Num.op_zp__ GHC.Num.op_zt__
+     GHC.Tuple.pair2 Nat.add Utils.Containers.Internal.PtrEquality.ptrEq
 *)

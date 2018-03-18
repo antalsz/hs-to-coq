@@ -410,7 +410,7 @@ Definition tyConFieldLabelEnv : Core.TyCon -> FieldLabel.FieldLabelEnv :=
     else FastStringEnv.emptyFsEnv.
 
 Definition tyConFieldLabels : Core.TyCon -> list FieldLabel.FieldLabel :=
-  fun tc => FastStringEnv.fsEnvElts GHC.Base.$ tyConFieldLabelEnv tc.
+  fun tc => FastStringEnv.fsEnvElts (tyConFieldLabelEnv tc).
 
 (* Translating `isAlgTyCon' failed: using a record pattern for the unknown
    constructor `AlgTyCon' unsupported *)
@@ -849,8 +849,7 @@ Definition mkPrelTyConRepName : Name.Name -> Core.TyConRepName :=
 Definition mkPrimTyCon
    : Name.Name -> list Core.TyBinder -> Kind -> list Core.Role -> Core.TyCon :=
   fun name binders res_kind roles =>
-    mkPrimTyCon' name binders res_kind roles true (Some GHC.Base.$
-                                                   mkPrelTyConRepName name).
+    mkPrimTyCon' name binders res_kind roles true (Some (mkPrelTyConRepName name)).
 
 Definition mkLiftedPrimTyCon
    : Name.Name -> list Core.TyBinder -> Kind -> list Core.Role -> Core.TyCon :=
@@ -929,7 +928,7 @@ Definition visibleDataCons : AlgTyConRhs -> list DataCon.DataCon :=
      DynFlags.dOUBLE_SIZE DynFlags.wORD_SIZE FastStringEnv.emptyFsEnv
      FastStringEnv.fsEnvElts FieldLabel.FieldLabel FieldLabel.FieldLabelEnv
      GHC.Base.Eq_ GHC.Base.Ord GHC.Base.compare GHC.Base.map GHC.Base.op_z2218U__
-     GHC.Base.op_zd__ GHC.Base.op_zeze__ GHC.Base.op_zgze__ GHC.Err.error GHC.Num.Int
+     GHC.Base.op_zeze__ GHC.Base.op_zgze__ GHC.Err.error GHC.Num.Int
      GHC.Num.fromInteger GHC.Num.op_zp__ GHC.Num.op_zt__ GHC.Real.quot Maybes.orElse
      Module.Module Name.Name Name.mkExternalName Name.nameModule Name.nameOccName
      Name.nameSrcSpan Name.nameUnique NameEnv.NameEnv NameEnv.emptyNameEnv

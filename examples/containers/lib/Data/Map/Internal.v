@@ -646,7 +646,7 @@ Definition lookupMax {k} {a} : Map k a -> option (k * a)%type :=
   fun arg_0__ =>
     match arg_0__ with
     | Tip => None
-    | Bin _ k x _ r => Some GHC.Base.$! lookupMaxSure k x r
+    | Bin _ k x _ r => Some (lookupMaxSure k x r)
     end.
 
 Definition lookupMinSure {k} {a} : k -> a -> Map k a -> (k * a)%type :=
@@ -660,7 +660,7 @@ Definition lookupMin {k} {a} : Map k a -> option (k * a)%type :=
   fun arg_0__ =>
     match arg_0__ with
     | Tip => None
-    | Bin _ k x l _ => Some GHC.Base.$! lookupMinSure k x l
+    | Bin _ k x l _ => Some (lookupMinSure k x l)
     end.
 
 Definition map {a} {b} {k} : (a -> b) -> Map k a -> Map k b :=
@@ -743,8 +743,7 @@ Definition mapWhenMatched {f} {a} {b} {k} {x} {y} `{GHC.Base.Functor f}
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
     | f, Mk_WhenMatched g =>
-        Mk_WhenMatched GHC.Base.$
-        (fun k x y => GHC.Base.fmap (GHC.Base.fmap f) (g k x y))
+        Mk_WhenMatched (fun k x y => GHC.Base.fmap (GHC.Base.fmap f) (g k x y))
     end.
 
 Local Definition Functor__WhenMatched_fmap {inst_f} {inst_k} {inst_x} {inst_y}
@@ -816,7 +815,7 @@ Definition member {k} {a} `{GHC.Base.Ord k} : k -> Map k a -> bool :=
   go.
 
 Definition notMember {k} {a} `{GHC.Base.Ord k} : k -> Map k a -> bool :=
-  fun k m => negb GHC.Base.$ member k m.
+  fun k m => negb (member k m).
 
 Definition null {k} {a} : Map k a -> bool :=
   fun arg_0__ => match arg_0__ with | Tip => true | Bin _ _ _ _ _ => false end.
@@ -838,11 +837,11 @@ Definition runWhenMatched {f} {k} {x} {y} {z}
 
 Definition contramapSecondWhenMatched {b} {a} {f} {k} {x} {z}
    : (b -> a) -> WhenMatched f k x a z -> WhenMatched f k x b z :=
-  fun f t => Mk_WhenMatched GHC.Base.$ (fun k x y => runWhenMatched t k x (f y)).
+  fun f t => Mk_WhenMatched (fun k x y => runWhenMatched t k x (f y)).
 
 Definition contramapFirstWhenMatched {b} {a} {f} {k} {y} {z}
    : (b -> a) -> WhenMatched f k a y z -> WhenMatched f k b y z :=
-  fun f t => Mk_WhenMatched GHC.Base.$ (fun k x y => runWhenMatched t k (f x) y).
+  fun f t => Mk_WhenMatched (fun k x y => runWhenMatched t k (f x) y).
 
 Definition runWhenMissing {f} {k} {x} {y}
    : WhenMissing f k x y -> k -> x -> f (option y) :=
@@ -872,7 +871,7 @@ Definition lookupIndex {k} {a} `{GHC.Base.Ord k}
                  match GHC.Base.compare k kx with
                  | Lt => go idx k l
                  | Gt => go ((idx GHC.Num.+ size l) GHC.Num.+ #1) k r
-                 | Eq => Some GHC.Base.$! (idx GHC.Num.+ size l)
+                 | Eq => Some (_GHC.Num.+_ idx (size l))
                  end
              end in
   go #0.
@@ -968,9 +967,7 @@ Definition minViewWithKey {k} {a}
     match arg_0__ with
     | Tip => None
     | Bin _ k x l r =>
-        Some GHC.Base.$
-        (let 'Mk_MinView km xm t := minViewSure k x l r in
-         pair (pair km xm) t)
+        Some (let 'Mk_MinView km xm t := minViewSure k x l r in pair (pair km xm) t)
     end.
 
 Definition minView {k} {a} : Map k a -> option (a * Map k a)%type :=
@@ -1505,7 +1502,7 @@ Definition split {k} {a} `{GHC.Base.Ord k}
                      | Eq => (pair l r)
                      end
                  end in
-    id GHC.Base.$ go k0 t0.
+    id (go k0 t0).
 
 Definition splitLookup {k} {a} `{GHC.Base.Ord k}
    : k -> Map k a -> (Map k a * option a * Map k a)%type :=
@@ -1679,9 +1676,7 @@ Definition maxViewWithKey {k} {a}
     match arg_0__ with
     | Tip => None
     | Bin _ k x l r =>
-        Some GHC.Base.$
-        (let 'Mk_MaxView km xm t := maxViewSure k x l r in
-         pair (pair km xm) t)
+        Some (let 'Mk_MaxView km xm t := maxViewSure k x l r in pair (pair km xm) t)
     end.
 
 Definition maxView {k} {a} : Map k a -> option (a * Map k a)%type :=
@@ -1845,7 +1840,7 @@ Definition mapEitherWithKey {k} {a} {b} {c}
                      | Data.Either.Right z => pair (link2 l1 r1) (link kx z l2 r2)
                      end
                  end in
-    id GHC.Base.$ go f0 t0.
+    id (go f0 t0).
 
 Definition mapEither {a} {b} {c} {k}
    : (a -> Data.Either.Either b c) -> Map k a -> (Map k b * Map k c)%type :=
@@ -1906,7 +1901,7 @@ Definition merge {k} {a} {c} {b} `{GHC.Base.Ord k}
    : SimpleWhenMissing k a c ->
      SimpleWhenMissing k b c ->
      SimpleWhenMatched k a b c -> Map k a -> Map k b -> Map k c :=
-  fun g1 g2 f m1 m2 => runIdentity GHC.Base.$ mergeA g1 g2 f m1 m2.
+  fun g1 g2 f m1 m2 => runIdentity (mergeA g1 g2 f m1 m2).
 
 Definition mergeWithKey {k} {a} {b} {c} `{GHC.Base.Ord k}
    : (k -> a -> b -> option c) ->
@@ -1958,7 +1953,7 @@ Definition partitionWithKey {k} {a}
                                 then t
                                 else link kx x l2 r2)
                  end in
-    id GHC.Base.$ go p0 t0.
+    id (go p0 t0).
 
 Definition partition {a} {k}
    : (a -> bool) -> Map k a -> (Map k a * Map k a)%type :=
@@ -2103,34 +2098,34 @@ Definition atKeyPlain {k} {a} `{GHC.Base.Ord k}
                    | None => AltSame
                    | Some x =>
                        match strict with
-                       | Lazy => AltBigger GHC.Base.$ singleton k x
-                       | Strict => GHC.Prim.seq x (AltBigger GHC.Base.$ singleton k x)
+                       | Lazy => AltBigger (singleton k x)
+                       | Strict => GHC.Prim.seq x (AltBigger (singleton k x))
                        end
                    end
                | k, f, Bin sx kx x l r =>
                    match GHC.Base.compare k kx with
                    | Lt =>
                        match go k f l with
-                       | AltSmaller l' => AltSmaller GHC.Base.$ balanceR kx x l' r
-                       | AltBigger l' => AltBigger GHC.Base.$ balanceL kx x l' r
-                       | AltAdj l' => AltAdj GHC.Base.$ Bin sx kx x l' r
+                       | AltSmaller l' => AltSmaller (balanceR kx x l' r)
+                       | AltBigger l' => AltBigger (balanceL kx x l' r)
+                       | AltAdj l' => AltAdj (Bin sx kx x l' r)
                        | AltSame => AltSame
                        end
                    | Gt =>
                        match go k f r with
-                       | AltSmaller r' => AltSmaller GHC.Base.$ balanceL kx x l r'
-                       | AltBigger r' => AltBigger GHC.Base.$ balanceR kx x l r'
-                       | AltAdj r' => AltAdj GHC.Base.$ Bin sx kx x l r'
+                       | AltSmaller r' => AltSmaller (balanceL kx x l r')
+                       | AltBigger r' => AltBigger (balanceR kx x l r')
+                       | AltAdj r' => AltAdj (Bin sx kx x l r')
                        | AltSame => AltSame
                        end
                    | Eq =>
                        match f (Some x) with
                        | Some x' =>
                            match strict with
-                           | Lazy => AltAdj GHC.Base.$ Bin sx kx x' l r
-                           | Strict => GHC.Prim.seq x' (AltAdj GHC.Base.$ Bin sx kx x' l r)
+                           | Lazy => AltAdj (Bin sx kx x' l r)
+                           | Strict => GHC.Prim.seq x' (AltAdj (Bin sx kx x' l r))
                            end
-                       | None => AltSmaller GHC.Base.$ glue l r
+                       | None => AltSmaller (glue l r)
                        end
                    end
                end in
@@ -2146,8 +2141,7 @@ Definition atKeyIdentity {k} {a} `{GHC.Base.Ord k}
      (option a -> Data.Functor.Identity.Identity (option a)) ->
      Map k a -> Data.Functor.Identity.Identity (Map k a) :=
   fun k f t =>
-    Data.Functor.Identity.Mk_Identity GHC.Base.$
-    atKeyPlain Lazy k (GHC.Prim.coerce f) t.
+    Data.Functor.Identity.Mk_Identity (atKeyPlain Lazy k (GHC.Prim.coerce f) t).
 
 Definition drop {k} {a} : GHC.Num.Int -> Map k a -> Map k a :=
   fun arg_0__ arg_1__ =>
@@ -2200,7 +2194,7 @@ Definition splitAt {k} {a}
                  end in
     if i0 GHC.Base.>= size m0 : bool
     then pair m0 Tip
-    else id GHC.Base.$ go i0 m0.
+    else id (go i0 m0).
 
 Definition isProperSubmapOfBy {k} {a} {b} `{GHC.Base.Ord k}
    : (a -> b -> bool) -> Map k a -> Map k b -> bool :=
@@ -2499,28 +2493,26 @@ Program Instance Traversable__Map {k} : Data.Traversable.Traversable (Map k) :=
 
 Definition zipWithAMatched {f} {k} {x} {y} {z} `{GHC.Base.Applicative f}
    : (k -> x -> y -> f z) -> WhenMatched f k x y z :=
-  fun f => Mk_WhenMatched GHC.Base.$ (fun k x y => Some Data.Functor.<$> f k x y).
+  fun f => Mk_WhenMatched (fun k x y => Some Data.Functor.<$> f k x y).
 
 Definition zipWithMatched {f} {k} {x} {y} {z} `{GHC.Base.Applicative f}
    : (k -> x -> y -> z) -> WhenMatched f k x y z :=
   fun f =>
-    Mk_WhenMatched GHC.Base.$
-    (fun k x y => (GHC.Base.pure GHC.Base.∘ Some) GHC.Base.$ f k x y).
+    Mk_WhenMatched (fun k x y => _GHC.Base.∘_ GHC.Base.pure Some (f k x y)).
 
 Definition zipWithMaybeAMatched {k} {x} {y} {f} {z}
    : (k -> x -> y -> f (option z)) -> WhenMatched f k x y z :=
-  fun f => Mk_WhenMatched GHC.Base.$ (fun k x y => f k x y).
+  fun f => Mk_WhenMatched (fun k x y => f k x y).
 
 Definition mapGentlyWhenMatched {f} {a} {b} {k} {x} {y} `{GHC.Base.Functor f}
    : (a -> b) -> WhenMatched f k x y a -> WhenMatched f k x y b :=
   fun f t =>
-    zipWithMaybeAMatched GHC.Base.$
-    (fun k x y => GHC.Base.fmap f Data.Functor.<$> runWhenMatched t k x y).
+    zipWithMaybeAMatched (fun k x y =>
+                            GHC.Base.fmap f Data.Functor.<$> runWhenMatched t k x y).
 
 Definition zipWithMaybeMatched {f} {k} {x} {y} {z} `{GHC.Base.Applicative f}
    : (k -> x -> y -> option z) -> WhenMatched f k x y z :=
-  fun f =>
-    Mk_WhenMatched GHC.Base.$ (fun k x y => GHC.Base.pure GHC.Base.$ f k x y).
+  fun f => Mk_WhenMatched (fun k x y => GHC.Base.pure (f k x y)).
 
 Module Notations.
 Notation "'_Data.Map.Internal.!?_'" := (op_znz3fU__).
@@ -2541,10 +2533,10 @@ End Notations.
      GHC.Base.Applicative GHC.Base.Eq_ GHC.Base.Functor GHC.Base.Monad
      GHC.Base.Monoid GHC.Base.Ord GHC.Base.compare GHC.Base.const GHC.Base.flip
      GHC.Base.fmap GHC.Base.id GHC.Base.liftA3 GHC.Base.mappend GHC.Base.mempty
-     GHC.Base.op_z2218U__ GHC.Base.op_zd__ GHC.Base.op_zdzn__ GHC.Base.op_zeze__
-     GHC.Base.op_zg__ GHC.Base.op_zgze__ GHC.Base.op_zl__ GHC.Base.op_zlze__
-     GHC.Base.op_zsze__ GHC.Base.pure GHC.DeferredFix.deferredFix2
-     GHC.DeferredFix.deferredFix3 GHC.Err.error GHC.Err.patternFailure GHC.Num.Int
-     GHC.Num.Num GHC.Num.fromInteger GHC.Num.op_zm__ GHC.Num.op_zp__ GHC.Num.op_zt__
-     GHC.Prim.coerce GHC.Prim.seq Nat.add Utils.Containers.Internal.PtrEquality.ptrEq
+     GHC.Base.op_z2218U__ GHC.Base.op_zeze__ GHC.Base.op_zg__ GHC.Base.op_zgze__
+     GHC.Base.op_zl__ GHC.Base.op_zlze__ GHC.Base.op_zsze__ GHC.Base.pure
+     GHC.DeferredFix.deferredFix2 GHC.DeferredFix.deferredFix3 GHC.Err.error
+     GHC.Err.patternFailure GHC.Num.Int GHC.Num.Num GHC.Num.fromInteger
+     GHC.Num.op_zm__ GHC.Num.op_zp__ GHC.Num.op_zt__ GHC.Prim.coerce GHC.Prim.seq
+     Nat.add Utils.Containers.Internal.PtrEquality.ptrEq
 *)

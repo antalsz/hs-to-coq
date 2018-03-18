@@ -655,10 +655,10 @@ Definition countOnce : Count :=
   One.
 
 Definition cprProdRes : list DmdType -> DmdResult :=
-  fun _arg_tys => Dunno GHC.Base.$ RetProd.
+  fun _arg_tys => Dunno RetProd.
 
 Definition cprSumRes : BasicTypes.ConTag -> DmdResult :=
-  fun tag => Dunno GHC.Base.$ RetSum tag.
+  fun tag => Dunno (RetSum tag).
 
 Definition emptyDmdEnv : VarEnv.VarEnv Demand :=
   VarEnv.emptyVarEnv.
@@ -702,7 +702,7 @@ Definition appIsBottom : StrictSig -> GHC.Num.Int -> bool :=
     match arg_0__, arg_1__ with
     | Mk_StrictSig (Mk_DmdType _ ds res), n =>
         if isBotRes res : bool
-        then negb GHC.Base.$ Util.lengthExceeds ds n
+        then negb (Util.lengthExceeds ds n)
         else false
     end.
 
@@ -1250,7 +1250,7 @@ Definition splitProdDmd_maybe : Demand -> option (list Demand) :=
     end.
 
 Definition vanillaCprProdRes : BasicTypes.Arity -> DmdResult :=
-  fun _arity => Dunno GHC.Base.$ RetProd.
+  fun _arity => Dunno RetProd.
 
 Definition cprProdDmdType : BasicTypes.Arity -> DmdType :=
   fun arity => Mk_DmdType emptyDmdEnv nil (vanillaCprProdRes arity).
@@ -1279,7 +1279,7 @@ Definition zap_musg : KillFlags -> ArgUse -> ArgUse :=
      BasicTypes.ProbOneShot BasicTypes.fIRST_TAG Coq.Init.Datatypes.app Core.Var
      Data.Foldable.all Data.Foldable.any Data.Foldable.length DynFlags.DynFlags
      DynFlags.Opt_KillAbsence DynFlags.Opt_KillOneShot DynFlags.gopt GHC.Base.Eq_
-     GHC.Base.Synonym GHC.Base.eq_default GHC.Base.map GHC.Base.max GHC.Base.op_zd__
+     GHC.Base.Synonym GHC.Base.eq_default GHC.Base.map GHC.Base.max
      GHC.Base.op_zeze__ GHC.Base.op_zsze__ GHC.List.replicate GHC.List.take
      GHC.Num.Int GHC.Num.fromInteger GHC.Prim.coerce Maybes.orElse Panic.assertPanic
      UniqFM.ufmToList Util.debugIsOn Util.lengthExceeds Util.lengthIs

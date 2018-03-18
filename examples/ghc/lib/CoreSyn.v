@@ -980,15 +980,13 @@ Definition cmpAltCon : AltCon -> AltCon -> comparison :=
     | LitAlt l1, LitAlt l2 => GHC.Base.compare l1 l2
     | LitAlt _, DEFAULT => Gt
     | con1, con2 =>
-        (Panic.warnPprTrace (true) (GHC.Base.hs_string__
-                                    "ghc/compiler/coreSyn/CoreSyn.hs") #1339 (GHC.Base.mappend (GHC.Base.mappend (id
-                                                                                                                  (GHC.Base.hs_string__
-                                                                                                                   "Comparing incomparable AltCons"))
-                                                                                                                 (Panic.noString
-                                                                                                                  con1))
-                                                                                               (Panic.noString con2)))
-        GHC.Base.$
-        Lt
+        Panic.warnPprTrace (true) (GHC.Base.hs_string__
+                            "ghc/compiler/coreSyn/CoreSyn.hs") #1339 (GHC.Base.mappend (GHC.Base.mappend (id
+                                                                                                          (GHC.Base.hs_string__
+                                                                                                           "Comparing incomparable AltCons"))
+                                                                                                         (Panic.noString
+                                                                                                          con1))
+                                                                                       (Panic.noString con2)) Lt
     end.
 
 Definition cmpAlt {a} {b}
@@ -1454,8 +1452,8 @@ Definition mkConApp2 {b}
      Data.Foldable.foldr Data.Foldable.length DataCon.DataCon DataCon.dataConTag
      DynFlags.DynFlags GHC.Base.Eq_ GHC.Base.Ord GHC.Base.String GHC.Base.Synonym
      GHC.Base.compare GHC.Base.map GHC.Base.mappend GHC.Base.min GHC.Base.op_z2218U__
-     GHC.Base.op_zd__ GHC.Base.op_zeze__ GHC.Base.op_zg__ GHC.Base.op_zgze__
-     GHC.Base.op_zl__ GHC.Base.op_zlze__ GHC.Char.Char GHC.DeferredFix.deferredFix2
+     GHC.Base.op_zeze__ GHC.Base.op_zg__ GHC.Base.op_zgze__ GHC.Base.op_zl__
+     GHC.Base.op_zlze__ GHC.Char.Char GHC.DeferredFix.deferredFix2
      GHC.DeferredFix.deferredFix3 GHC.Err.error GHC.List.reverse GHC.Num.Int
      GHC.Num.fromInteger GHC.Real.Rational Literal.Literal Literal.mkMachChar
      Literal.mkMachDouble Literal.mkMachFloat Literal.mkMachString Module.Module

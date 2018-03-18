@@ -300,7 +300,7 @@ Program Instance Ord__Literal : GHC.Base.Ord Literal :=
 Definition litValue : Literal -> GHC.Num.Integer :=
   fun arg_0__ =>
     match arg_0__ with
-    | MachChar c => GHC.Real.toInteger GHC.Base.$ GHC.Char.ord c
+    | MachChar c => GHC.Real.toInteger (GHC.Char.ord c)
     | MachInt i => i
     | MachInt64 i => i
     | MachWord i => i
@@ -342,8 +342,7 @@ Definition mkMachInt64 : GHC.Num.Integer -> Literal :=
 
 Definition mkMachString : GHC.Base.String -> Literal :=
   fun s =>
-    MachStr (FastString.fastStringToByteString GHC.Base.$
-             FastString.mkFastString s).
+    MachStr (FastString.fastStringToByteString (FastString.mkFastString s)).
 
 Definition mkMachWord64 : GHC.Num.Integer -> Literal :=
   fun x => MachWord64 x.
@@ -372,10 +371,10 @@ Definition word2IntLit : DynFlags.DynFlags -> Literal -> Literal :=
      DynFlags.tARGET_MAX_WORD DynFlags.tARGET_MIN_INT FastString.FastString
      FastString.fastStringToByteString FastString.hashByteString
      FastString.mkFastString FastString.uniqueOfFS GHC.Base.Eq_ GHC.Base.Ord
-     GHC.Base.String GHC.Base.compare GHC.Base.op_zd__ GHC.Base.op_zeze__
-     GHC.Base.op_zg__ GHC.Base.op_zgze__ GHC.Base.op_zl__ GHC.Base.op_zlze__
-     GHC.Char.Char GHC.Char.chr GHC.Char.ord GHC.Enum.maxBound GHC.Enum.minBound
-     GHC.Num.Int GHC.Num.Integer GHC.Num.abs GHC.Num.fromInteger GHC.Num.op_zm__
-     GHC.Num.op_zp__ GHC.Real.Rational GHC.Real.numerator GHC.Real.rem
-     GHC.Real.toInteger Panic.noString Panic.panicStr UniqFM.lookupUFM
+     GHC.Base.String GHC.Base.compare GHC.Base.op_zeze__ GHC.Base.op_zg__
+     GHC.Base.op_zgze__ GHC.Base.op_zl__ GHC.Base.op_zlze__ GHC.Char.Char
+     GHC.Char.chr GHC.Char.ord GHC.Enum.maxBound GHC.Enum.minBound GHC.Num.Int
+     GHC.Num.Integer GHC.Num.abs GHC.Num.fromInteger GHC.Num.op_zm__ GHC.Num.op_zp__
+     GHC.Real.Rational GHC.Real.numerator GHC.Real.rem GHC.Real.toInteger
+     Panic.noString Panic.panicStr UniqFM.lookupUFM
 *)

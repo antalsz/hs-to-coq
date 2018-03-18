@@ -288,7 +288,7 @@ Definition mapEitherWithKey {a} {b} {c}
                      end
                  | _, Nil => (pair Nil Nil)
                  end in
-    id GHC.Base.$ go f0 t0.
+    id (go f0 t0).
 
 Definition mapEither {a} {b} {c}
    : (a -> Data.Either.Either b c) -> IntMap a -> (IntMap b * IntMap c)%type :=
@@ -327,7 +327,7 @@ Definition partitionWithKey {a}
                  | Tip k x => if predicate k x : bool then (pair t Nil) else (pair Nil t)
                  | Nil => (pair Nil Nil)
                  end in
-    id GHC.Base.$ go predicate0 t0.
+    id (go predicate0 t0).
 
 Definition partition {a}
    : (a -> bool) -> IntMap a -> (IntMap a * IntMap a)%type :=
@@ -866,8 +866,7 @@ Definition mapWhenMatched {f} {a} {b} {x} {y} `{GHC.Base.Functor f}
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
     | f, Mk_WhenMatched g =>
-        Mk_WhenMatched GHC.Base.$
-        (fun k x y => GHC.Base.fmap (GHC.Base.fmap f) (g k x y))
+        Mk_WhenMatched (fun k x y => GHC.Base.fmap (GHC.Base.fmap f) (g k x y))
     end.
 
 Definition mapWhenMissing {f} {a} {b} {x} `{GHC.Base.Applicative f}
@@ -944,7 +943,7 @@ Definition member {a} : Data.IntSet.Internal.Key -> IntMap a -> bool :=
     go.
 
 Definition notMember {a} : Data.IntSet.Internal.Key -> IntMap a -> bool :=
-  fun k m => negb GHC.Base.$ member k m.
+  fun k m => negb (member k m).
 
 Definition lookupPrefix {a} : IntSetPrefix -> IntMap a -> IntMap a :=
   fix lookupPrefix arg_0__ arg_1__
@@ -1131,12 +1130,11 @@ Definition alterF {f} {a} `{GHC.Base.Functor f}
      Data.IntSet.Internal.Key -> IntMap a -> f (IntMap a) :=
   fun f k m =>
     let mv := lookup k m in
-    (fun arg_1__ => arg_1__ Data.Functor.<$> f mv) GHC.Base.$
-    (fun fres =>
-       match fres with
-       | None => Data.Maybe.maybe m (GHC.Base.const (delete k m)) mv
-       | Some v' => insert k v' m
-       end).
+    (fun arg_1__ => arg_1__ Data.Functor.<$> f mv) (fun fres =>
+                                                      match fres with
+                                                      | None => Data.Maybe.maybe m (GHC.Base.const (delete k m)) mv
+                                                      | Some v' => insert k v' m
+                                                      end).
 
 Definition updateLookupWithKey {a}
    : (Data.IntSet.Internal.Key -> a -> option a) ->
@@ -1280,11 +1278,11 @@ Definition runWhenMatched {f} {x} {y} {z}
 
 Definition contramapSecondWhenMatched {b} {a} {f} {x} {z}
    : (b -> a) -> WhenMatched f x a z -> WhenMatched f x b z :=
-  fun f t => Mk_WhenMatched GHC.Base.$ (fun k x y => runWhenMatched t k x (f y)).
+  fun f t => Mk_WhenMatched (fun k x y => runWhenMatched t k x (f y)).
 
 Definition contramapFirstWhenMatched {b} {a} {f} {y} {z}
    : (b -> a) -> WhenMatched f a y z -> WhenMatched f b y z :=
-  fun f t => Mk_WhenMatched GHC.Base.$ (fun k x y => runWhenMatched t k (f x) y).
+  fun f t => Mk_WhenMatched (fun k x y => runWhenMatched t k (f x) y).
 
 Definition runWhenMissing {f} {x} {y}
    : WhenMissing f x y -> Data.IntSet.Internal.Key -> x -> f (option y) :=
@@ -1711,8 +1709,9 @@ Definition withoutKeys {a}
                                                                                                                   N))) in
                                       let minbit := bitmapOf p1 in
                                       let lt_minbit := minbit GHC.Num.- #1 in
-                                      updatePrefix p2 t1 GHC.Base.$
-                                      withoutBM ((bm2 Data.Bits..|.(**) lt_minbit) Data.Bits..|.(**) gt_maxbit)
+                                      updatePrefix p2 t1 (withoutBM ((bm2 Data.Bits..|.(**) lt_minbit)
+                                                                     Data.Bits..|.(**)
+                                                                     gt_maxbit))
                                   | (Bin _ _ _ _ as t1), Data.IntSet.Internal.Nil => t1
                                   | (Tip k1 _ as t1), t2 =>
                                       if Data.IntSet.Internal.member k1 t2 : bool
@@ -1960,29 +1959,27 @@ Definition lookupGE {a}
 
 Definition zipWithAMatched {f} {x} {y} {z} `{GHC.Base.Applicative f}
    : (Data.IntSet.Internal.Key -> x -> y -> f z) -> WhenMatched f x y z :=
-  fun f => Mk_WhenMatched GHC.Base.$ (fun k x y => Some Data.Functor.<$> f k x y).
+  fun f => Mk_WhenMatched (fun k x y => Some Data.Functor.<$> f k x y).
 
 Definition zipWithMatched {f} {x} {y} {z} `{GHC.Base.Applicative f}
    : (Data.IntSet.Internal.Key -> x -> y -> z) -> WhenMatched f x y z :=
   fun f =>
-    Mk_WhenMatched GHC.Base.$
-    (fun k x y => (GHC.Base.pure GHC.Base.∘ Some) GHC.Base.$ f k x y).
+    Mk_WhenMatched (fun k x y => _GHC.Base.∘_ GHC.Base.pure Some (f k x y)).
 
 Definition zipWithMaybeAMatched {x} {y} {f} {z}
    : (Data.IntSet.Internal.Key -> x -> y -> f (option z)) ->
      WhenMatched f x y z :=
-  fun f => Mk_WhenMatched GHC.Base.$ (fun k x y => f k x y).
+  fun f => Mk_WhenMatched (fun k x y => f k x y).
 
 Definition mapGentlyWhenMatched {f} {a} {b} {x} {y} `{GHC.Base.Functor f}
    : (a -> b) -> WhenMatched f x y a -> WhenMatched f x y b :=
   fun f t =>
-    zipWithMaybeAMatched GHC.Base.$
-    (fun k x y => GHC.Base.fmap f Data.Functor.<$> runWhenMatched t k x y).
+    zipWithMaybeAMatched (fun k x y =>
+                            GHC.Base.fmap f Data.Functor.<$> runWhenMatched t k x y).
 
 Definition zipWithMaybeMatched {f} {x} {y} {z} `{GHC.Base.Applicative f}
    : (Data.IntSet.Internal.Key -> x -> y -> option z) -> WhenMatched f x y z :=
-  fun f =>
-    Mk_WhenMatched GHC.Base.$ (fun k x y => GHC.Base.pure GHC.Base.$ f k x y).
+  fun f => Mk_WhenMatched (fun k x y => GHC.Base.pure (f k x y)).
 
 Module Notations.
 Notation "'_Data.IntMap.Internal.!?_'" := (op_znz3fU__).
@@ -2007,11 +2004,11 @@ End Notations.
      GHC.Base.Applicative GHC.Base.Eq_ GHC.Base.Functor GHC.Base.Monad
      GHC.Base.Monoid GHC.Base.Ord GHC.Base.String GHC.Base.compare GHC.Base.const
      GHC.Base.fmap GHC.Base.id GHC.Base.liftA2 GHC.Base.mappend GHC.Base.mempty
-     GHC.Base.op_z2218U__ GHC.Base.op_zd__ GHC.Base.op_zeze__ GHC.Base.op_zg__
-     GHC.Base.op_zgze__ GHC.Base.op_zl__ GHC.Base.op_zlze__ GHC.Base.op_zsze__
-     GHC.Base.pure GHC.DeferredFix.deferredFix2 GHC.DeferredFix.deferredFix4
-     GHC.Err.error GHC.Err.patternFailure GHC.Num.Int GHC.Num.Num GHC.Num.Word
-     GHC.Num.fromInteger GHC.Num.op_zm__ GHC.Num.op_zp__ GHC.Num.op_zt__
+     GHC.Base.op_z2218U__ GHC.Base.op_zeze__ GHC.Base.op_zg__ GHC.Base.op_zgze__
+     GHC.Base.op_zl__ GHC.Base.op_zlze__ GHC.Base.op_zsze__ GHC.Base.pure
+     GHC.DeferredFix.deferredFix2 GHC.DeferredFix.deferredFix4 GHC.Err.error
+     GHC.Err.patternFailure GHC.Num.Int GHC.Num.Num GHC.Num.Word GHC.Num.fromInteger
+     GHC.Num.op_zm__ GHC.Num.op_zp__ GHC.Num.op_zt__
      Utils.Containers.Internal.BitUtil.highestBitMask
      Utils.Containers.Internal.BitUtil.shiftLL
      Utils.Containers.Internal.BitUtil.shiftRL

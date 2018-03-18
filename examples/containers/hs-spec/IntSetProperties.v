@@ -57,26 +57,49 @@ Import Test.QuickCheck.Property.Notations.
 Definition forValid {a} `{Test.QuickCheck.Property.Testable a}
    : (Data.IntSet.Internal.IntSet -> a) -> Prop :=
   fun f =>
-    Test.QuickCheck.Property.forAll Test.QuickCheck.Arbitrary.arbitrary GHC.Base.$
-    (fun t =>
-       Test.QuickCheck.Property.classify (Data.IntSet.Internal.size t GHC.Base.== #0)
-       (GHC.Base.hs_string__ "empty") GHC.Base.$
-       (Test.QuickCheck.Property.classify (andb (Data.IntSet.Internal.size t GHC.Base.>
-                                                 #0) (Data.IntSet.Internal.size t GHC.Base.<= #10))
-        (GHC.Base.hs_string__ "small") GHC.Base.$
-        (Test.QuickCheck.Property.classify (andb (Data.IntSet.Internal.size t GHC.Base.>
-                                                  #10) (Data.IntSet.Internal.size t GHC.Base.<= #64))
-         (GHC.Base.hs_string__ "medium") GHC.Base.$
-         (Test.QuickCheck.Property.classify (Data.IntSet.Internal.size t GHC.Base.> #64)
-          (GHC.Base.hs_string__ "large") GHC.Base.$
-          f t)))).
+    Test.QuickCheck.Property.forAll Test.QuickCheck.Arbitrary.arbitrary (fun t =>
+                                                                           Test.QuickCheck.Property.classify
+                                                                           (Data.IntSet.Internal.size t GHC.Base.== #0)
+                                                                           (GHC.Base.hs_string__ "empty")
+                                                                           (Test.QuickCheck.Property.classify (andb
+                                                                                                               (Data.IntSet.Internal.size
+                                                                                                                t
+                                                                                                                GHC.Base.>
+                                                                                                                #0)
+                                                                                                               (Data.IntSet.Internal.size
+                                                                                                                t
+                                                                                                                GHC.Base.<=
+                                                                                                                #10))
+                                                                                                              (GHC.Base.hs_string__
+                                                                                                               "small")
+                                                                                                              (Test.QuickCheck.Property.classify
+                                                                                                               (andb
+                                                                                                                (Data.IntSet.Internal.size
+                                                                                                                 t
+                                                                                                                 GHC.Base.>
+                                                                                                                 #10)
+                                                                                                                (Data.IntSet.Internal.size
+                                                                                                                 t
+                                                                                                                 GHC.Base.<=
+                                                                                                                 #64))
+                                                                                                               (GHC.Base.hs_string__
+                                                                                                                "medium")
+                                                                                                               (Test.QuickCheck.Property.classify
+                                                                                                                (Data.IntSet.Internal.size
+                                                                                                                 t
+                                                                                                                 GHC.Base.>
+                                                                                                                 #64)
+                                                                                                                (GHC.Base.hs_string__
+                                                                                                                 "large")
+                                                                                                                (f
+                                                                                                                 t))))).
 
 Definition forValidUnitTree {a} `{Test.QuickCheck.Property.Testable a}
    : (Data.IntSet.Internal.IntSet -> a) -> Prop :=
   fun f => forValid f.
 
 Definition prop_Valid : Prop :=
-  forValidUnitTree GHC.Base.$ (fun t => IntSetValidity.valid t).
+  forValidUnitTree (fun t => IntSetValidity.valid t).
 
 Definition powersOf2 : Data.IntSet.Internal.IntSet :=
   Data.IntSet.Internal.fromList (Coq.Lists.List.flat_map (fun i =>
@@ -389,10 +412,10 @@ Definition prop_isProperSubsetOf
      Data.OldList.op_zrzr__ Data.OldList.sort Data.Set.Internal.Set_
      Data.Set.Internal.fromList Data.Set.Internal.isProperSubsetOf
      Data.Set.Internal.isSubsetOf GHC.Base.compare GHC.Base.flip GHC.Base.id
-     GHC.Base.op_z2218U__ GHC.Base.op_zd__ GHC.Base.op_zeze__ GHC.Base.op_zg__
-     GHC.Base.op_zl__ GHC.Base.op_zlze__ GHC.Base.op_zsze__ GHC.List.reverse
-     GHC.Num.abs GHC.Num.fromInteger GHC.Num.negate GHC.Num.op_zp__ GHC.Real.even
-     GHC.Real.odd IntSetValidity.valid Test.QuickCheck.Arbitrary.arbitrary
+     GHC.Base.op_z2218U__ GHC.Base.op_zeze__ GHC.Base.op_zg__ GHC.Base.op_zl__
+     GHC.Base.op_zlze__ GHC.Base.op_zsze__ GHC.List.reverse GHC.Num.abs
+     GHC.Num.fromInteger GHC.Num.negate GHC.Num.op_zp__ GHC.Real.even GHC.Real.odd
+     IntSetValidity.valid Test.QuickCheck.Arbitrary.arbitrary
      Test.QuickCheck.Property.Testable Test.QuickCheck.Property.classify
      Test.QuickCheck.Property.forAll Test.QuickCheck.Property.op_zezeze__
      Test.QuickCheck.Property.op_zezezg__ Test.QuickCheck.Property.op_zizazazi__

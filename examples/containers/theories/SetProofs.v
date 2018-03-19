@@ -183,6 +183,7 @@ Inductive Bounded : Set_ e -> bound -> bound -> Prop :=
 
 (** ** Lemmas related to well-formedness *)
 
+
 (** There are no values outside the bounds *)
 Lemma sem_outside_below:
   forall {s lb ub i},
@@ -239,7 +240,6 @@ Proof.
   * simpl. lia.
 Qed.
 
-
 Ltac postive_sizes :=
   repeat match goal with [ H : Bounded ?s _ _ |- _ ] => pose_new (size_nonneg H) end.
 
@@ -252,6 +252,148 @@ Proof.
   * postive_sizes;
     rewrite ?size_Bin in *.
     intuition try (congruence || lia).
+Qed.
+
+(** The main point of the balancing condition: Logarithmic height *)
+
+Fixpoint height (s : Set_ e) : Z := match s with
+  | Tip => 0%Z
+  | Bin _ _ s1 s2 => (1 + max (height s1) (height s2))%Z
+  end.
+
+Lemma height_nonneg:
+  forall s, (0 <= height s)%Z.
+Proof. induction s; cbn -[Z.add]; lia. Qed.
+
+Ltac postive_heights :=
+  repeat match goal with [ s : Set_ e |- _ ] => pose_new (height_nonneg s) end.
+
+Lemma size_height_1:
+  forall {s lb ub},
+  Bounded s lb ub -> (size s = 1)%Z -> height s = 1%Z.
+Proof.
+  intros.
+  destruct H.
+  + inversion H0.
+  + destruct H, H1; cbn -[Z.add] in *; postive_sizes; try lia; try reflexivity.
+Qed.
+
+Lemma Bounded_size_bound : forall s lb ub,
+  Bounded s lb ub -> (4^(height s - 1) <= size s*3^(height s - 1))%Z.
+Proof.
+  intros ??? HB. induction HB.
+  * simpl. reflexivity.
+  * cbn -[Z.add].
+    postive_sizes.
+    postive_heights.
+    + unfold balance_prop, delta, fromInteger, Num_Integer__ in H2.
+      apply Z.max_case_strong; intro Hle.
+      - destruct (Z.leb_spec (size s1 + size s2) 1).
+         ** assert (size s1 = 0 \/ size s1 = 1)%Z as Hsmall by lia.
+            destruct Hsmall.
+            ++ rewrite (size_0_iff_tip HB1) in *. subst. cbn -[N.add Z.add Z.mul] in *.
+               simpl Z.sub.
+               lia.
+            ++ assert (size s2 = 0)%Z by lia. 
+               rewrite (size_0_iff_tip HB2) in *. subst. cbn -[N.add Z.add Z.mul] in *.
+               replace (height s1) with 1%Z in *
+                 by (symmetry; eapply size_height_1; eassumption).
+               simpl Z.sub.
+               lia.
+         ** destruct H2; only 1: lia.
+            assert (height s1 <> 0%Z)
+              by (destruct s1; cbn -[Z.add]; postive_heights; simpl size in *; try lia).
+            replace (((1 + height s1) - 1))%Z with (Z.succ (height s1 - 1)) by lia.
+            rewrite !Z.pow_succ_r by lia.
+            etransitivity; only 1: (apply Z.mul_le_mono_nonneg_l; [lia | eassumption]).
+            rewrite !Z.mul_assoc.
+            apply Z.mul_le_mono_nonneg_r; only 1: (apply Z.pow_nonneg; lia).
+            lia.
+      - destruct (Z.leb_spec (size s1 + size s2) 1).
+         ** assert (size s2 = 0 \/ size s2 = 1)%Z as Hsmall by lia.
+            destruct Hsmall.
+            ++ rewrite (size_0_iff_tip HB2) in *. subst. cbn -[N.add Z.add Z.mul] in *.
+               simpl Z.sub.
+               lia.
+            ++ assert (size s1 = 0)%Z by lia. 
+               rewrite (size_0_iff_tip HB1) in *. subst. cbn -[N.add Z.add Z.mul] in *.
+               replace (height s2) with 1%Z in *
+                 by (symmetry; eapply size_height_1; eassumption).
+               simpl Z.sub.
+               lia.
+         ** destruct H2; only 1: lia.
+            assert (height s1 <> 0%Z)
+              by (destruct s1; cbn -[Z.add]; postive_heights; simpl size in *; try lia).
+            replace (((1 + height s2) - 1))%Z with (Z.succ (height s2 - 1)) by lia.
+            rewrite !Z.pow_succ_r by lia.
+            etransitivity; only 1: (apply Z.mul_le_mono_nonneg_l; [lia | eassumption]).
+            rewrite !Z.mul_assoc.
+            apply Z.mul_le_mono_nonneg_r; only 1: (apply Z.pow_nonneg; lia).
+            lia.
+Qed.
+
+Lemma Z_log2_pow2:
+  forall y,
+  (0 <= y)%Z ->
+  (Z.log2 (y ^ 2) <= 2 * Z.log2 y + 1)%Z.
+Proof.
+  intros.
+  replace (y ^ 2)%Z with (y * y)%Z by lia.
+  etransitivity; only 1: (apply Z.log2_mul_above; assumption).
+  lia.
+Qed.
+
+Lemma Z_log2_pow3:
+  forall y,
+  (0 <= y)%Z ->
+  (Z.log2 (y ^ 3) <= 3 * Z.log2 y + 2)%Z.
+Proof.
+  intros.
+  replace (y ^ 3)%Z with (y^2 * y)%Z by lia.
+  assert (0 <= y^2)%Z by (apply Z.pow_nonneg; assumption).
+  etransitivity; only 1: (apply Z.log2_mul_above; assumption).
+  enough ((Z.log2 (y^2) <= 2 * Z.log2 y + 1)%Z) by lia.
+  apply Z_log2_pow2.
+  assumption.
+Qed.
+
+(* Frustratingly, concluding this lemma from the one above took more time
+   than proving that. *)
+Lemma Bounded_logarithmic_height : forall s lb ub,
+  Bounded s lb ub -> (height s <= 3 * Z.log2 (size s) + 3)%Z.
+Proof.
+  intros ??? HB.
+  pose proof (Bounded_size_bound s lb ub HB).
+  postive_heights.
+  postive_sizes.
+  assert (size s = 0 \/ 0 < size s)%Z by lia. destruct H2.
+  * apply (size_0_iff_tip HB) in H2.
+    subst. simpl. intro Htmp. inversion Htmp.
+  * clear H1.
+    enough (height s - 1 <= 3 * Z.log2 (size s) + 2)%Z by lia.
+    assert (0 < height s)%Z by (induction HB; cbn -[Z.add] in *; postive_heights; try lia).
+    assert (0 <= height s - 1)%Z by lia.
+    generalize  dependent (height s - 1)%Z; intros h ??.
+    generalize dependent (size s); intros sz ??.
+    clear dependent s. clear lb ub. clear dependent e.
+    assert (0 < 3 ^ h)%Z by (apply Z.pow_pos_nonneg; lia).
+    assert (0 < 4 ^ h)%Z by (apply Z.pow_pos_nonneg; lia).
+    assert (0 < sz ^ 3)%Z by (apply Z.pow_pos_nonneg; lia).
+
+    etransitivity; only 2: (apply Z_log2_pow3; lia).
+    apply Z.log2_le_pow2; only 1: assumption.
+
+    eapply Zmult_lt_0_le_reg_r. apply H0.
+    eapply Zmult_lt_0_le_reg_r. apply H0.
+    eapply Zmult_lt_0_le_reg_r. apply H0.
+    rewrite <- !Z.pow_mul_l.
+    simpl (2 * 3 * 3 * 3)%Z.
+    etransitivity. apply Z.pow_le_mono_l with (b := (4^3)%Z). lia.
+    rewrite <- Z.pow_mul_r by lia.
+    rewrite Z.mul_comm.
+    rewrite -> Z.pow_mul_r by lia.
+    etransitivity. apply Z.pow_le_mono_l. split. lia. eapply H.
+    lia.
 Qed.
 
 Lemma Bounded_change_ub:

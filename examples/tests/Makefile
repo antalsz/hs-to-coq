@@ -33,10 +33,10 @@ PASS = \
   RecordConstruction \
   PatternGuard \
   Guard2 \
+  Notations \
 
 # tests that *should* pass but currently fail
 TODO_PASS  = \
-  Notations \
   InstVar \
   Mutrec \
   Existential \

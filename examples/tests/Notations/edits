@@ -1,10 +1,11 @@
 rename type GHC.Types.Int          = Z
 
-rename value GHC.Classes.op_zeze__ = eqb
+rename value GHC.Classes.op_zeze__ = Z.eqb
 rename value GHC.Classes.op_zaza__ = andb
-rename value GHC.Real.quot         = quot 
-rename value GHC.Num.*             = mul
-rename value GHC.Num.negate        = opp
+rename value GHC.Real.quot         = Z.quot
+rename value GHC.Num.*             = *
 
 rewrite forall x, GHC.Num.fromInteger x = x
+rewrite forall x, GHC.Num.negate x = Z.opp x
 
+skip module Z

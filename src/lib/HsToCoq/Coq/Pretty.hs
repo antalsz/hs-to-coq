@@ -294,6 +294,10 @@ instance Gallina Term where
   renderGallina' p (Arrow ty1 ty2) = maybeParen (p > arrowPrec) $ group $
     renderGallina' (arrowPrec + 1) ty1 <+> "->" <!> renderGallina' arrowPrec ty2
 
+  -- Special notation for GHC.Num.fromInteger
+  renderGallina' _ (App1 "GHC.Num.fromInteger" (Num num)) =
+    char '#' <> renderNum num
+
   renderGallina' p (App f args) =  maybeParen (p > appPrec) $
     renderGallina' appPrec f </> align (render_args' (appPrec + 1) H args)
 
@@ -345,9 +349,6 @@ instance Gallina Term where
 
   renderGallina' _ (Num num) =
     renderNum num
-
-  renderGallina' _ (PolyNum num) =
-    char '#' <> renderNum num
 
   renderGallina' _ (String str) =
     renderString str

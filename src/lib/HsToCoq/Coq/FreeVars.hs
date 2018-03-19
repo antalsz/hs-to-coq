@@ -331,9 +331,6 @@ instance FreeVars Term where
   freeVars (Num _num) =
     pure () -- There are none.
 
-  freeVars (PolyNum _num) =
-    freeVars (Qualified "GHC.Num" "fromInteger")
-
   freeVars (String _str) =
     pure () -- There are none.
 

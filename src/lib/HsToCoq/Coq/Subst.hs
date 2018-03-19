@@ -228,8 +228,6 @@ instance Subst Term where
 
   subst _f x@(Num _num) = x
 
-  subst _f x@(PolyNum _num) = x
-
   subst _f x@(String _str) = x
 
   subst _f x@(HsString _str) = x

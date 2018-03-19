@@ -149,7 +149,6 @@ data Term = Forall Binders Term                                                 
           | RawQualid Qualid                                                                   -- ^@/qualid/@ like Qualid, but never printed with notation
           | Sort Sort                                                                          -- ^@/sort/@
           | Num Num                                                                            -- ^@/num/@
-          | PolyNum Num                                                                        -- ^@# /num/@ – extra (for polymorphic number literals)
           | String Text                                                                        -- ^@/string/@ – extra (holds the value, not the source text)
           | HsString Text                                                                      -- ^@& /string/@ – extra (for Haskell string literals)
           | HsChar Char                                                                        -- ^@&# /string/@ – extra (for Haskell character literals; /string/ is a single ASCII character)

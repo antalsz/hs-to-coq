@@ -1,10 +1,10 @@
 (* Test file for Certicoq by Olivier Belanger *)
 (* UNCOMMENT THESE FOR INTERACTIVE *)
-(* Add LoadPath "base".
- Add LoadPath "lib".  *)
+Add LoadPath "base".
+ Add LoadPath "lib". 
 Require Import Data.IntSet.Internal.
-Require Import  BinInt.
 Require Import  Coq.Numbers.BinNums.
+Require Import BinNat.
 Import Coq.Lists.List.
 Open Scope list_scope. 
 
@@ -45,9 +45,12 @@ with apply' {A B} (n:nat) (f:A -> B) (a:A) :=
 
 Definition size := 4096.
 
-Definition elems := generateList Z.succ BinInt.Z.geb 0%Z (BinInt.Z.of_nat size) size.
-Definition elems_even := generateList (fun x => Z.succ (Z.succ x))  BinInt.Z.geb 0%Z (BinInt.Z.of_nat size) size.
-Definition elems_odd := generateList (fun x => Z.succ (Z.succ x))  BinInt.Z.geb 1%Z (BinInt.Z.of_nat size) size.
+
+Definition geb (x: N) (y:N): bool := BinNat.N.ltb x y.
+
+Definition elems := generateList BinNat.N.succ geb 0%N (BinNat.N.of_nat size) size.
+Definition elems_even := generateList (fun x => N.succ (N.succ x))  geb 0%N (BinNat.N.of_nat size) size.
+Definition elems_odd := generateList (fun x => N.succ (N.succ x))  geb 1%N (BinNat.N.of_nat size) size.
 
 
 Definition s := fromList elems.
@@ -65,17 +68,17 @@ Definition b_member (_:unit) := apply 0 (bench_bool member elems) s.
 
 
 
-Definition b_filter (_:unit) := negb (equal (Internal.empty) (apply 0 (Internal.filter Z.even) s)).
+Definition b_filter (_:unit) := negb (equal (Internal.empty) (apply 0 (Internal.filter N.even) s)).
 
 Definition b_insert (_:unit) :=
   negb (equal (Internal.empty) (apply 0 (fold_left (fun s a => Internal.insert a s) elems) Internal.empty)).
 
 Definition b_partition (_:unit) :=
-  negb (equal (fst (apply 0 (Internal.partition (fun k => Z.eqb (Z.modulo k 2) 0)%Z) s)) empty).
+  negb (equal (fst (apply 0 (Internal.partition (fun k => N.eqb (N.modulo k 2) 0)%N) s)) empty).
   
 
 Definition b_map (_:unit) :=
-  negb (equal (apply 0 (Internal.map (fun k => k + 1)%Z) s) empty).
+  negb (equal (apply 0 (Internal.map (fun k => k + 1)%N) s) empty).
 
 
 Definition b_fold (_:unit) :=
@@ -99,11 +102,13 @@ Definition b_difference (_ : unit) :=
 Definition b_fromList (_: unit) :=
   negb (equal (apply 0 (Internal.fromList) elems) empty).
 
+SearchAbout bool.
+
 Definition b_disjoint_false (_:unit) :=
-  bool_eq (apply 0 (Internal.disjoint s) s_even) false.
+  Bool.eqb (apply 0 (Internal.disjoint s) s_even) false.
 
 Definition b_disjoint_true (_:unit) :=
-  bool_eq (apply 0 (Internal.disjoint s_odd) s_even) true.
+  Bool.eqb (apply 0 (Internal.disjoint s_odd) s_even) true.
 
 
 Definition b_intersection_false (_:unit) :=

@@ -11,6 +11,11 @@ Arguments "∘" {_} _ _ _ /.
 
 (** Well-formed [DList]s *)
 
+Import GHC.Base.Notations.
+
+Definition fromList {a} : list a -> DList a :=
+  MkDList GHC.Base.∘ Coq.Init.Datatypes.app.
+
 Definition equiv {A} (dxs dys : DList A) : Prop := fromDList dxs =1 fromDList dys.
 Arguments equiv {_} !_ / _.
 Infix "=dl" := equiv (at level 70).

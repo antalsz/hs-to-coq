@@ -210,6 +210,7 @@ convert_module_with_requires_via convGroup convModName (group, _imports, _export
                      . mapMaybe qualidModule $ freeVars
     let needsNotation qualid
             = qualidIsOp qualid || qualid == "GHC.Num.fromInteger"
+
     let notationModules
                      = filter (/= convModName)
                      . map (mkModuleName . T.unpack)
@@ -218,12 +219,18 @@ convert_module_with_requires_via convGroup convModName (group, _imports, _export
 
     modules         <- skipModules $ S.toList $ S.fromList modules
     notationModules <- skipModules $ S.toList $ S.fromList notationModules
+    imported_modules <- use $ edits.importedModules
 
     let convModImports =
-            [ ModuleSentence (Require Nothing Nothing [moduleNameText mn])
-            | mn <- modules] ++
+            [ ModuleSentence (Require Nothing imp [moduleNameText mn])
+            | mn <- modules
+            , let imp | mn `S.member` imported_modules = Just Import
+                      | otherwise                      = Nothing
+            ] ++
             [ ModuleSentence (ModuleImport Import [moduleNameText mn <> ".Notations"])
-            | mn <- notationModules ]
+            | mn <- notationModules
+            , mn `S.notMember` imported_modules
+            ]
     pure (ConvertedModule{..}, modules)
 
 -- Module-local
@@ -262,17 +269,19 @@ moduleDeclarations ConvertedModule{..} = do
         convModValDecls ++ convModClsInstDecls ++ convModAddedDecls
   ax_decls <- usedAxioms sorted
   not_decls <- qualifiedNotations convModName (convModTyClDecls ++ sorted)
-  return $ deQualifyLocalNames convModName $ (convModTyClDecls ++ ax_decls, sorted ++ not_decls)
+  imported_modules <- use $ edits.importedModules
+  return $ deQualifyLocalNames (convModName `S.insert` imported_modules)
+         $ (convModTyClDecls ++ ax_decls, sorted ++ not_decls)
 
 -- | This un-qualifies all variable names in the current module.
 -- It should be called very late, just before pretty-printing.
-deQualifyLocalNames :: Data a => ModuleName -> a -> a
-deQualifyLocalNames modName = everywhere (mkT localize)
+deQualifyLocalNames :: Data a => S.Set ModuleName -> a -> a
+deQualifyLocalNames modNames = everywhere (mkT localize)
   where
-    m' = moduleNameText modName
+    modNameTexts = S.map moduleNameText modNames
 
     localize :: Qualid -> Qualid
-    localize (Qualified m b) | m == m' = Bare b
+    localize (Qualified m b) | m `S.member` modNameTexts = Bare b
     localize qid = qid
 
 usedAxioms :: forall m. ConversionMonad m => [Sentence] -> m [Sentence]

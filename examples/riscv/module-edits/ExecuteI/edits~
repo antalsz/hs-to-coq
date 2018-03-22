@@ -1,0 +1,2 @@
+rewrite forall x y, x GHC.Base.== y = Coq.ZArith.BinInt.Z.eqb x y
+

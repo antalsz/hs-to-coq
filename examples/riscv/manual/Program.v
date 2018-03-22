@@ -1,25 +1,14 @@
 Require Import riscv.util.NameWithEq.
 Require Import riscv.util.Monads.
 Require Import riscv.Utility.
-Require Import riscv.Decode.
 Require Import Coq.ZArith.BinInt.
 Require Import bbv.Word.
 
 Inductive AccessType: Set := Instr | Load | Store.
 
-Section Riscv.
+Definition Register := Z.
 
-  (* monad (will be instantiated with some kind of state monad) *)
-  Context {M: Type -> Type}.
-  Context {MM: Monad M}.
-
-  (* type of register values *)
-  Context {t: Set}.
-
-  (* provides operations on t *)
-  Context {MW: MachineWidth t}.
-
-  Class RiscvProgram := mkRiscvProgram {
+  Class RiscvProgram{M}{t}`{Monad M}`{MachineWidth t} := mkRiscvProgram {
     getRegister: Register -> M t;
     setRegister: Register -> t -> M unit;
 
@@ -47,7 +36,7 @@ Section Riscv.
 
   (* The Haskell spec defines concrete implementations for raiseException and translate,
      but we prefer to leave them abstract, so that we can prove more general theorems *)
-  Class RiscvState{MP: RiscvProgram} := mkRiscvState {
+  Class RiscvState`{MP: RiscvProgram} := mkRiscvState {
     (* ends current cycle, sets exception flag, and sets PC to exception handler address *)
     raiseException{A: Type}(isInterrupt: t)(exceptionCode: t): M A;
 
@@ -55,6 +44,18 @@ Section Riscv.
        address, raising an exception if the address is invalid *)
     translate(accessType: AccessType)(alignment: t)(addr: t): M t;
   }.
+
+
+Section Riscv.
+  (* monad (will be instantiated with some kind of state monad) *)
+  Context {M: Type -> Type}.
+  Context {MM: Monad M}.
+
+  (* type of register values *)
+  Context {t: Set}.
+
+  (* provides operations on t *)
+  Context {MW: MachineWidth t}.
 
   Definition default_raiseException{A: Type}{MP: RiscvProgram}
     (isInterrupt: t)(exceptionCode: t): M A :=
@@ -82,5 +83,7 @@ Section Riscv.
 
 End Riscv.
 
-Arguments RiscvProgram (M) (t).
-Arguments RiscvState (M) (t) {MP}.
+Arguments RiscvProgram: clear implicits.
+Arguments RiscvProgram (M) (t) {_} {_}.
+Arguments RiscvState: clear implicits.
+Arguments RiscvState (M) (t) {_} {_} {_}.

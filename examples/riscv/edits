@@ -60,7 +60,7 @@ rewrite forall x y, x GHC.Num.- y = x - y
 rewrite forall x y, x GHC.Num.+ y = x + y
 # rewrite forall x y, x GHC.Num.op_zm__
 # rewrite forall x y, x GHC.Num.op_zp__
-rewrite forall x y, x GHC.Real.mod_ y = Utility.rem x y
+rewrite forall x y, GHC.Real.mod_ x y = Utility.rem x y
 
 rewrite forall, GHC.Err.error "ambiguous decoding result" = InvalidInstruction
 rewrite forall, GHC.Err.error GHC.Base.$ "dispatch bug: " = Monads.Return tt
@@ -69,7 +69,8 @@ rewrite forall, GHC.Err.error "dispatch bug: " = Monads.Return tt
 # implemented in the preamble.v
 rename value Utility.bitSlice = Decode.bitSlice
 
-rewrite forall x, GHC.Num.fromInteger x = x
+# only put into Decode, but in Execute, we want letter constants
+# rewrite forall x, GHC.Num.fromInteger x = x
 rewrite forall x y, (x GHC.Real.^ y) = Coq.ZArith.BinInt.Z.pow x y
 
 # order Decode.Eq___InstructionI Decode.Eq___InstructionM Decode.Eq___InstructionI64 Decode.Eq___InstructionM64 Decode.Eq___InstructionCSR Decode.Eq___Instruction_op_zeze__

@@ -47,10 +47,17 @@ rename value Data.Bits.complement = Coq.ZArith.BinInt.Z.lnot
 
 rename value GHC.Base.when = Utility.when
 
-rewrite forall x y, x GHC.Base.== y = Coq.ZArith.BinInt.Z.eqb x y
-rewrite forall x y, x GHC.Base./= y = negb (Coq.ZArith.BinInt.Z.eqb x y)
-rewrite forall x y, x GHC.Base.>= y = Coq.ZArith.BinInt.Z.geb x y
-rewrite forall x y, x GHC.Base.<  y = Coq.ZArith.BinInt.Z.ltb x y
+rewrite forall x y, x GHC.Base.< y = x < y
+rewrite forall x y, x GHC.Base.>= y = x >= y
+rewrite forall x y, x GHC.Base./= y = x /= y
+# rewrite forall x y, x GHC.Base.op_zgze__
+# rewrite forall x y, x GHC.Base.op_zl__
+# rewrite forall x y, x GHC.Base.op_zsze__
+rewrite forall x y, x GHC.Num.- y = x - y
+rewrite forall x y, x GHC.Num.+ y = x + y
+# rewrite forall x y, x GHC.Num.op_zm__
+# rewrite forall x y, x GHC.Num.op_zp__
+rewrite forall x y, x GHC.Real.mod_ y = Utility.rem x y
 
 rewrite forall, GHC.Err.error "ambiguous decoding result" = InvalidInstruction
 rewrite forall, GHC.Err.error GHC.Base.$ "dispatch bug: " = Monads.Return tt

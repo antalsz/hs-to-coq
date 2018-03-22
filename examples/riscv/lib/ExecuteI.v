@@ -10,6 +10,11 @@ Unset Printing Implicit Defensive.
 Require Coq.Program.Tactics.
 Require Coq.Program.Wf.
 
+(* Preamble *)
+
+Require Import Utility.
+Local Open Scope alu_scope.
+
 (* Converted imports: *)
 
 Require Decode.
@@ -30,8 +35,7 @@ Definition execute {p} {t} `{(Program.RiscvProgram p t)}
     | Decode.Jal rd jimm20 =>
         Monads.Bind Program.getPC (fun pc =>
                        let newPC := Coq.ZArith.BinInt.Z.add pc (Utility.fromImm jimm20) in
-                       if (negb (Coq.ZArith.BinInt.Z.eqb (Coq.ZArith.BinInt.Z.modulo newPC 4)
-                                                         0)) : bool
+                       if (Coq.ZArith.BinInt.Z.modulo newPC 4 /= 0) : bool
                        then Program.raiseException 0 0
                        else (Monads.Bind (Program.setRegister rd (Coq.ZArith.BinInt.Z.add pc 4))
                                          (fun _ => Program.setPC newPC)))
@@ -41,8 +45,7 @@ Definition execute {p} {t} `{(Program.RiscvProgram p t)}
                                       let newPC :=
                                         Coq.ZArith.BinInt.Z.land (Coq.ZArith.BinInt.Z.add x (Utility.fromImm oimm12))
                                                                  (Coq.ZArith.BinInt.Z.lnot 1) in
-                                      if (negb (Coq.ZArith.BinInt.Z.eqb (Coq.ZArith.BinInt.Z.modulo newPC 4)
-                                                                        0)) : bool
+                                      if (Coq.ZArith.BinInt.Z.modulo newPC 4 /= 0) : bool
                                       then Program.raiseException 0 0
                                       else (Monads.Bind (Program.setRegister rd (Coq.ZArith.BinInt.Z.add pc 4))
                                                         (fun _ => Program.setPC newPC))))
@@ -50,71 +53,52 @@ Definition execute {p} {t} `{(Program.RiscvProgram p t)}
         Monads.Bind (Program.getRegister rs1) (fun x =>
                        Monads.Bind (Program.getRegister rs2) (fun y =>
                                       Monads.Bind Program.getPC (fun pc =>
-                                                     Utility.when (Coq.ZArith.BinInt.Z.eqb x y) (let newPC :=
-                                                                                                   (Coq.ZArith.BinInt.Z.add
-                                                                                                    pc (Utility.fromImm
-                                                                                                     sbimm12)) in
-                                                                                                 if (negb
-                                                                                                     (Coq.ZArith.BinInt.Z.eqb
-                                                                                                      (Coq.ZArith.BinInt.Z.modulo
-                                                                                                       newPC 4)
-                                                                                                      0)) : bool
-                                                                                                 then Program.raiseException
-                                                                                                      0 0
-                                                                                                 else Program.setPC
-                                                                                                      newPC))))
+                                                     Utility.when (Utility.signed_eqb x y) (let newPC :=
+                                                                                              (Coq.ZArith.BinInt.Z.add
+                                                                                               pc (Utility.fromImm
+                                                                                                sbimm12)) in
+                                                                                            if (Coq.ZArith.BinInt.Z.modulo
+                                                                                                newPC 4 /=
+                                                                                                0) : bool
+                                                                                            then Program.raiseException
+                                                                                                 0 0
+                                                                                            else Program.setPC newPC))))
     | Decode.Bne rs1 rs2 sbimm12 =>
         Monads.Bind (Program.getRegister rs1) (fun x =>
                        Monads.Bind (Program.getRegister rs2) (fun y =>
                                       Monads.Bind Program.getPC (fun pc =>
-                                                     Utility.when (negb (Coq.ZArith.BinInt.Z.eqb x y)) (let addr :=
-                                                                                                          (Coq.ZArith.BinInt.Z.add
-                                                                                                           pc
-                                                                                                           (Utility.fromImm
-                                                                                                            sbimm12)) in
-                                                                                                        if (negb
-                                                                                                            (Coq.ZArith.BinInt.Z.eqb
-                                                                                                             (Coq.ZArith.BinInt.Z.modulo
-                                                                                                              addr 4)
-                                                                                                             0)) : bool
-                                                                                                        then Program.raiseException
-                                                                                                             0 0
-                                                                                                        else Program.setPC
-                                                                                                             addr))))
+                                                     Utility.when (x /= y) (let addr :=
+                                                                              (Coq.ZArith.BinInt.Z.add pc
+                                                                                                       (Utility.fromImm
+                                                                                                        sbimm12)) in
+                                                                            if (Coq.ZArith.BinInt.Z.modulo addr 4 /=
+                                                                                0) : bool
+                                                                            then Program.raiseException 0 0
+                                                                            else Program.setPC addr))))
     | Decode.Blt rs1 rs2 sbimm12 =>
         Monads.Bind (Program.getRegister rs1) (fun x =>
                        Monads.Bind (Program.getRegister rs2) (fun y =>
                                       Monads.Bind Program.getPC (fun pc =>
-                                                     Utility.when (Coq.ZArith.BinInt.Z.ltb x y) (let addr :=
-                                                                                                   (Coq.ZArith.BinInt.Z.add
-                                                                                                    pc (Utility.fromImm
-                                                                                                     sbimm12)) in
-                                                                                                 if (negb
-                                                                                                     (Coq.ZArith.BinInt.Z.eqb
-                                                                                                      (Coq.ZArith.BinInt.Z.modulo
-                                                                                                       addr 4)
-                                                                                                      0)) : bool
-                                                                                                 then Program.raiseException
-                                                                                                      0 0
-                                                                                                 else Program.setPC
-                                                                                                      addr))))
+                                                     Utility.when (x < y) (let addr :=
+                                                                             (Coq.ZArith.BinInt.Z.add pc
+                                                                                                      (Utility.fromImm
+                                                                                                       sbimm12)) in
+                                                                           if (Coq.ZArith.BinInt.Z.modulo addr 4 /=
+                                                                               0) : bool
+                                                                           then Program.raiseException 0 0
+                                                                           else Program.setPC addr))))
     | Decode.Bge rs1 rs2 sbimm12 =>
         Monads.Bind (Program.getRegister rs1) (fun x =>
                        Monads.Bind (Program.getRegister rs2) (fun y =>
                                       Monads.Bind Program.getPC (fun pc =>
-                                                     Utility.when (Coq.ZArith.BinInt.Z.geb x y) (let addr :=
-                                                                                                   (Coq.ZArith.BinInt.Z.add
-                                                                                                    pc (Utility.fromImm
-                                                                                                     sbimm12)) in
-                                                                                                 if (negb
-                                                                                                     (Coq.ZArith.BinInt.Z.eqb
-                                                                                                      (Coq.ZArith.BinInt.Z.modulo
-                                                                                                       addr 4)
-                                                                                                      0)) : bool
-                                                                                                 then Program.raiseException
-                                                                                                      0 0
-                                                                                                 else Program.setPC
-                                                                                                      addr))))
+                                                     Utility.when (x >= y) (let addr :=
+                                                                              (Coq.ZArith.BinInt.Z.add pc
+                                                                                                       (Utility.fromImm
+                                                                                                        sbimm12)) in
+                                                                            if (Coq.ZArith.BinInt.Z.modulo addr 4 /=
+                                                                                0) : bool
+                                                                            then Program.raiseException 0 0
+                                                                            else Program.setPC addr))))
     | Decode.Bltu rs1 rs2 sbimm12 =>
         Monads.Bind (Program.getRegister rs1) (fun x =>
                        Monads.Bind (Program.getRegister rs2) (fun y =>
@@ -123,9 +107,9 @@ Definition execute {p} {t} `{(Program.RiscvProgram p t)}
                                                                                          (Coq.ZArith.BinInt.Z.add pc
                                                                                                                   (Utility.fromImm
                                                                                                                    sbimm12)) in
-                                                                                       if (negb (Coq.ZArith.BinInt.Z.eqb
-                                                                                                 (Coq.ZArith.BinInt.Z.modulo
-                                                                                                  addr 4) 0)) : bool
+                                                                                       if (Coq.ZArith.BinInt.Z.modulo
+                                                                                           addr 4 /=
+                                                                                           0) : bool
                                                                                        then Program.raiseException 0 0
                                                                                        else Program.setPC addr))))
     | Decode.Bgeu rs1 rs2 sbimm12 =>
@@ -136,10 +120,9 @@ Definition execute {p} {t} `{(Program.RiscvProgram p t)}
                                                                                               (Coq.ZArith.BinInt.Z.add
                                                                                                pc (Utility.fromImm
                                                                                                 sbimm12)) in
-                                                                                            if (negb
-                                                                                                (Coq.ZArith.BinInt.Z.eqb
-                                                                                                 (Coq.ZArith.BinInt.Z.modulo
-                                                                                                  addr 4) 0)) : bool
+                                                                                            if (Coq.ZArith.BinInt.Z.modulo
+                                                                                                addr 4 /=
+                                                                                                0) : bool
                                                                                             then Program.raiseException
                                                                                                  0 0
                                                                                             else Program.setPC addr))))
@@ -204,10 +187,7 @@ Definition execute {p} {t} `{(Program.RiscvProgram p t)}
                        Program.setRegister rd (Coq.ZArith.BinInt.Z.add x (Utility.fromImm imm12)))
     | Decode.Slti rd rs1 imm12 =>
         Monads.Bind (Program.getRegister rs1) (fun x =>
-                       Program.setRegister rd (if Coq.ZArith.BinInt.Z.ltb x (Utility.fromImm
-                                                                           imm12) : bool
-                                               then 1
-                                               else 0))
+                       Program.setRegister rd (if x < Utility.fromImm imm12 : bool then 1 else 0))
     | Decode.Sltiu rd rs1 imm12 =>
         Monads.Bind (Program.getRegister rs1) (fun x =>
                        Program.setRegister rd (if (Utility.ltu x (Utility.fromImm imm12)) : bool
@@ -246,7 +226,7 @@ Definition execute {p} {t} `{(Program.RiscvProgram p t)}
     | Decode.Slt rd rs1 rs2 =>
         Monads.Bind (Program.getRegister rs1) (fun x =>
                        Monads.Bind (Program.getRegister rs2) (fun y =>
-                                      Program.setRegister rd (if Coq.ZArith.BinInt.Z.ltb x y : bool then 1 else 0)))
+                                      Program.setRegister rd (if x < y : bool then 1 else 0)))
     | Decode.Sltu rd rs1 rs2 =>
         Monads.Bind (Program.getRegister rs1) (fun x =>
                        Monads.Bind (Program.getRegister rs2) (fun y =>
@@ -275,21 +255,21 @@ Definition execute {p} {t} `{(Program.RiscvProgram p t)}
     end.
 
 (* Unbound variables:
-     bool negb tt unit Coq.ZArith.BinInt.Z.add Coq.ZArith.BinInt.Z.eqb
-     Coq.ZArith.BinInt.Z.geb Coq.ZArith.BinInt.Z.land Coq.ZArith.BinInt.Z.lnot
-     Coq.ZArith.BinInt.Z.lor Coq.ZArith.BinInt.Z.ltb Coq.ZArith.BinInt.Z.lxor
-     Coq.ZArith.BinInt.Z.modulo Coq.ZArith.BinInt.Z.sub Decode.Add Decode.Addi
-     Decode.And Decode.Andi Decode.Auipc Decode.Beq Decode.Bge Decode.Bgeu Decode.Blt
-     Decode.Bltu Decode.Bne Decode.InstructionI Decode.Jal Decode.Jalr Decode.Lb
-     Decode.Lbu Decode.Lh Decode.Lhu Decode.Lui Decode.Lw Decode.Or Decode.Ori
-     Decode.Sb Decode.Sh Decode.Sll Decode.Slli Decode.Slt Decode.Slti Decode.Sltiu
-     Decode.Sltu Decode.Sra Decode.Srai Decode.Srl Decode.Srli Decode.Sub Decode.Sw
-     Decode.Xor Decode.Xori Monads.Bind Monads.Return Program.Load
-     Program.RiscvProgram Program.Store Program.getPC Program.getRegister
-     Program.loadByte Program.loadHalf Program.loadWord Program.raiseException
-     Program.setPC Program.setRegister Program.storeByte Program.storeHalf
-     Program.storeWord Program.translate Utility.fromImm Utility.int16ToReg
-     Utility.int32ToReg Utility.int8ToReg Utility.ltu Utility.regToInt16
-     Utility.regToInt32 Utility.regToInt8 Utility.regToShamt Utility.sll Utility.sra
-     Utility.srl Utility.uInt16ToReg Utility.uInt8ToReg Utility.when
+     bool negb op_zgze__ op_zl__ op_zsze__ tt unit Coq.ZArith.BinInt.Z.add
+     Coq.ZArith.BinInt.Z.land Coq.ZArith.BinInt.Z.lnot Coq.ZArith.BinInt.Z.lor
+     Coq.ZArith.BinInt.Z.lxor Coq.ZArith.BinInt.Z.modulo Coq.ZArith.BinInt.Z.sub
+     Decode.Add Decode.Addi Decode.And Decode.Andi Decode.Auipc Decode.Beq Decode.Bge
+     Decode.Bgeu Decode.Blt Decode.Bltu Decode.Bne Decode.InstructionI Decode.Jal
+     Decode.Jalr Decode.Lb Decode.Lbu Decode.Lh Decode.Lhu Decode.Lui Decode.Lw
+     Decode.Or Decode.Ori Decode.Sb Decode.Sh Decode.Sll Decode.Slli Decode.Slt
+     Decode.Slti Decode.Sltiu Decode.Sltu Decode.Sra Decode.Srai Decode.Srl
+     Decode.Srli Decode.Sub Decode.Sw Decode.Xor Decode.Xori Monads.Bind
+     Monads.Return Program.Load Program.RiscvProgram Program.Store Program.getPC
+     Program.getRegister Program.loadByte Program.loadHalf Program.loadWord
+     Program.raiseException Program.setPC Program.setRegister Program.storeByte
+     Program.storeHalf Program.storeWord Program.translate Utility.fromImm
+     Utility.int16ToReg Utility.int32ToReg Utility.int8ToReg Utility.ltu
+     Utility.regToInt16 Utility.regToInt32 Utility.regToInt8 Utility.regToShamt
+     Utility.signed_eqb Utility.sll Utility.sra Utility.srl Utility.uInt16ToReg
+     Utility.uInt8ToReg Utility.when
 *)

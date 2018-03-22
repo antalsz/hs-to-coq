@@ -1,0 +1,1 @@
+rewrite forall x y, x GHC.Base.== y = Utility.signed_eqb x y

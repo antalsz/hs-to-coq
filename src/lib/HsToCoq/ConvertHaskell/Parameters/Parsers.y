@@ -52,6 +52,7 @@ import HsToCoq.ConvertHaskell.Parameters.Parsers.Lexing
   redefine        { TokWord    "redefine"       }
   skip            { TokWord    "skip"           }
   manual          { TokWord    "manual"         }
+  import          { TokWord    "import"         }
   notation        { TokWord    "notation"       }
   class           { TokWord    "class"          }
   kinds           { TokWord    "kinds"          }
@@ -237,6 +238,7 @@ Edit :: { Edit }
   | skip Qualid                                      { SkipEdit              $2                               }
   | skip method Qualid Word                          { SkipMethodEdit        $3 $4                            }
   | skip module Word                                 { SkipModuleEdit        (mkModuleName (T.unpack $3))     }
+  | import module Word                               { ImportModuleEdit      (mkModuleName (T.unpack $3))     }
   | manual notation Word                             { HasManualNotationEdit (mkModuleName (T.unpack $3))     }
   | termination Qualid TerminationArgument           { TerminationEdit       $2 Nothing $3                    }
   | termination Word 'in' Qualid TerminationArgument { TerminationEdit       $4 (Just $2) $5                  }

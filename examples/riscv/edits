@@ -3,6 +3,11 @@ skip module Utility
 skip module VirtualMemory
 
 rename type Utility.MachineInt = Coq.ZArith.BinInt.Z
+rename type GHC.Types.Int = Coq.ZArith.BinInt.Z
+rename value GHC.Num.- = Coq.ZArith.BinInt.Z.sub
+rename value GHC.Num.+ = Coq.ZArith.BinInt.Z.add
+rename value GHC.Real.fromIntegral = id
+rename value GHC.Real.mod_ = Coq.ZArith.BinInt.Z.modulo
 
 skip Decode.Eq___InstructionI
 skip Decode.Eq___InstructionM
@@ -15,7 +20,10 @@ skip Decode.rd
 skip Decode.rs1
 skip Decode.rs2
 skip Decode.oimm12
+skip Decode.oimm20
 skip Decode.imm12
+skip Decode.imm20
+skip Decode.jimm20
 skip Decode.sbimm12
 skip Decode.simm12
 skip Decode.shamt5
@@ -37,9 +45,15 @@ rename value Data.Bits.xor        = Coq.ZArith.BinInt.Z.lxor
 rename value Data.Bits.testBit    = Coq.ZArith.BinInt.Z.testbit
 rename value Data.Bits.complement = Coq.ZArith.BinInt.Z.lnot
 
+rename value GHC.Base.when = Utility.when
+
 rewrite forall x y, x GHC.Base.== y = Coq.ZArith.BinInt.Z.eqb x y
+rewrite forall x y, x GHC.Base./= y = negb (Coq.ZArith.BinInt.Z.eqb x y)
+rewrite forall x y, x GHC.Base.>= y = Coq.ZArith.BinInt.Z.geb x y
+rewrite forall x y, x GHC.Base.<  y = Coq.ZArith.BinInt.Z.ltb x y
 
 rewrite forall, GHC.Err.error "ambiguous decoding result" = InvalidInstruction
+rewrite forall, GHC.Err.error GHC.Base.$ "dispatch bug: " = Monads.Return tt
 rewrite forall, GHC.Err.error "dispatch bug: " = Monads.Return tt
 
 # implemented in the preamble.v

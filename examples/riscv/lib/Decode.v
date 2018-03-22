@@ -22,10 +22,6 @@ Admitted.
 
 Require Coq.Init.Datatypes.
 Require Coq.ZArith.BinInt.
-Require GHC.Err.
-Require GHC.Num.
-Require GHC.Real.
-Import GHC.Num.Notations.
 
 (* Converted type declarations: *)
 
@@ -64,9 +60,9 @@ Inductive InstructionI64 : Type
   := Ld : Register -> Register -> Coq.ZArith.BinInt.Z -> InstructionI64
   |  Lwu : Register -> Register -> Coq.ZArith.BinInt.Z -> InstructionI64
   |  Addiw : Register -> Register -> Coq.ZArith.BinInt.Z -> InstructionI64
-  |  Slliw : Register -> Register -> GHC.Num.Int -> InstructionI64
-  |  Srliw : Register -> Register -> GHC.Num.Int -> InstructionI64
-  |  Sraiw : Register -> Register -> GHC.Num.Int -> InstructionI64
+  |  Slliw : Register -> Register -> Coq.ZArith.BinInt.Z -> InstructionI64
+  |  Srliw : Register -> Register -> Coq.ZArith.BinInt.Z -> InstructionI64
+  |  Sraiw : Register -> Register -> Coq.ZArith.BinInt.Z -> InstructionI64
   |  Sd : Register -> Register -> Coq.ZArith.BinInt.Z -> InstructionI64
   |  Addw : Register -> Register -> Register -> InstructionI64
   |  Subw : Register -> Register -> Register -> InstructionI64
@@ -84,14 +80,14 @@ Inductive InstructionI : Type
   |  Fence : Coq.ZArith.BinInt.Z -> Coq.ZArith.BinInt.Z -> InstructionI
   |  Fence_i : InstructionI
   |  Addi : Register -> Register -> Coq.ZArith.BinInt.Z -> InstructionI
-  |  Slli : Register -> Register -> GHC.Num.Int -> InstructionI
+  |  Slli : Register -> Register -> Coq.ZArith.BinInt.Z -> InstructionI
   |  Slti : Register -> Register -> Coq.ZArith.BinInt.Z -> InstructionI
   |  Sltiu : Register -> Register -> Coq.ZArith.BinInt.Z -> InstructionI
   |  Xori : Register -> Register -> Coq.ZArith.BinInt.Z -> InstructionI
   |  Ori : Register -> Register -> Coq.ZArith.BinInt.Z -> InstructionI
   |  Andi : Register -> Register -> Coq.ZArith.BinInt.Z -> InstructionI
-  |  Srli : Register -> Register -> GHC.Num.Int -> InstructionI
-  |  Srai : Register -> Register -> GHC.Num.Int -> InstructionI
+  |  Srli : Register -> Register -> Coq.ZArith.BinInt.Z -> InstructionI
+  |  Srai : Register -> Register -> Coq.ZArith.BinInt.Z -> InstructionI
   |  Auipc : Register -> Coq.ZArith.BinInt.Z -> InstructionI
   |  Sb : Register -> Register -> Coq.ZArith.BinInt.Z -> InstructionI
   |  Sh : Register -> Register -> Coq.ZArith.BinInt.Z -> InstructionI
@@ -143,375 +139,9 @@ Inductive Instruction : Type
   |  M64Instruction : InstructionM64 -> Instruction
   |  CSRInstruction : InstructionCSR -> Instruction
   |  InvalidInstruction : Instruction.
-
-Definition oimm20 (arg_0__ : InstructionI) :=
-  match arg_0__ with
-  | Lb _ _ _ =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `oimm20' has no match in constructor `Lb' of type `InstructionI'")
-  | Lh _ _ _ =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `oimm20' has no match in constructor `Lh' of type `InstructionI'")
-  | Lw _ _ _ =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `oimm20' has no match in constructor `Lw' of type `InstructionI'")
-  | Lbu _ _ _ =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `oimm20' has no match in constructor `Lbu' of type `InstructionI'")
-  | Lhu _ _ _ =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `oimm20' has no match in constructor `Lhu' of type `InstructionI'")
-  | Fence _ _ =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `oimm20' has no match in constructor `Fence' of type `InstructionI'")
-  | Fence_i =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `oimm20' has no match in constructor `Fence_i' of type `InstructionI'")
-  | Addi _ _ _ =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `oimm20' has no match in constructor `Addi' of type `InstructionI'")
-  | Slli _ _ _ =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `oimm20' has no match in constructor `Slli' of type `InstructionI'")
-  | Slti _ _ _ =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `oimm20' has no match in constructor `Slti' of type `InstructionI'")
-  | Sltiu _ _ _ =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `oimm20' has no match in constructor `Sltiu' of type `InstructionI'")
-  | Xori _ _ _ =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `oimm20' has no match in constructor `Xori' of type `InstructionI'")
-  | Ori _ _ _ =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `oimm20' has no match in constructor `Ori' of type `InstructionI'")
-  | Andi _ _ _ =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `oimm20' has no match in constructor `Andi' of type `InstructionI'")
-  | Srli _ _ _ =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `oimm20' has no match in constructor `Srli' of type `InstructionI'")
-  | Srai _ _ _ =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `oimm20' has no match in constructor `Srai' of type `InstructionI'")
-  | Auipc _ oimm20 => oimm20
-  | Sb _ _ _ =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `oimm20' has no match in constructor `Sb' of type `InstructionI'")
-  | Sh _ _ _ =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `oimm20' has no match in constructor `Sh' of type `InstructionI'")
-  | Sw _ _ _ =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `oimm20' has no match in constructor `Sw' of type `InstructionI'")
-  | Add _ _ _ =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `oimm20' has no match in constructor `Add' of type `InstructionI'")
-  | Sub _ _ _ =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `oimm20' has no match in constructor `Sub' of type `InstructionI'")
-  | Sll _ _ _ =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `oimm20' has no match in constructor `Sll' of type `InstructionI'")
-  | Slt _ _ _ =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `oimm20' has no match in constructor `Slt' of type `InstructionI'")
-  | Sltu _ _ _ =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `oimm20' has no match in constructor `Sltu' of type `InstructionI'")
-  | Xor _ _ _ =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `oimm20' has no match in constructor `Xor' of type `InstructionI'")
-  | Srl _ _ _ =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `oimm20' has no match in constructor `Srl' of type `InstructionI'")
-  | Sra _ _ _ =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `oimm20' has no match in constructor `Sra' of type `InstructionI'")
-  | Or _ _ _ =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `oimm20' has no match in constructor `Or' of type `InstructionI'")
-  | And _ _ _ =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `oimm20' has no match in constructor `And' of type `InstructionI'")
-  | Lui _ _ =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `oimm20' has no match in constructor `Lui' of type `InstructionI'")
-  | Beq _ _ _ =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `oimm20' has no match in constructor `Beq' of type `InstructionI'")
-  | Bne _ _ _ =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `oimm20' has no match in constructor `Bne' of type `InstructionI'")
-  | Blt _ _ _ =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `oimm20' has no match in constructor `Blt' of type `InstructionI'")
-  | Bge _ _ _ =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `oimm20' has no match in constructor `Bge' of type `InstructionI'")
-  | Bltu _ _ _ =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `oimm20' has no match in constructor `Bltu' of type `InstructionI'")
-  | Bgeu _ _ _ =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `oimm20' has no match in constructor `Bgeu' of type `InstructionI'")
-  | Jalr _ _ _ =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `oimm20' has no match in constructor `Jalr' of type `InstructionI'")
-  | Jal _ _ =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `oimm20' has no match in constructor `Jal' of type `InstructionI'")
-  | InvalidI =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `oimm20' has no match in constructor `InvalidI' of type `InstructionI'")
-  end.
-
-Definition jimm20 (arg_1__ : InstructionI) :=
-  match arg_1__ with
-  | Lb _ _ _ =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `jimm20' has no match in constructor `Lb' of type `InstructionI'")
-  | Lh _ _ _ =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `jimm20' has no match in constructor `Lh' of type `InstructionI'")
-  | Lw _ _ _ =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `jimm20' has no match in constructor `Lw' of type `InstructionI'")
-  | Lbu _ _ _ =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `jimm20' has no match in constructor `Lbu' of type `InstructionI'")
-  | Lhu _ _ _ =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `jimm20' has no match in constructor `Lhu' of type `InstructionI'")
-  | Fence _ _ =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `jimm20' has no match in constructor `Fence' of type `InstructionI'")
-  | Fence_i =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `jimm20' has no match in constructor `Fence_i' of type `InstructionI'")
-  | Addi _ _ _ =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `jimm20' has no match in constructor `Addi' of type `InstructionI'")
-  | Slli _ _ _ =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `jimm20' has no match in constructor `Slli' of type `InstructionI'")
-  | Slti _ _ _ =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `jimm20' has no match in constructor `Slti' of type `InstructionI'")
-  | Sltiu _ _ _ =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `jimm20' has no match in constructor `Sltiu' of type `InstructionI'")
-  | Xori _ _ _ =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `jimm20' has no match in constructor `Xori' of type `InstructionI'")
-  | Ori _ _ _ =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `jimm20' has no match in constructor `Ori' of type `InstructionI'")
-  | Andi _ _ _ =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `jimm20' has no match in constructor `Andi' of type `InstructionI'")
-  | Srli _ _ _ =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `jimm20' has no match in constructor `Srli' of type `InstructionI'")
-  | Srai _ _ _ =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `jimm20' has no match in constructor `Srai' of type `InstructionI'")
-  | Auipc _ _ =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `jimm20' has no match in constructor `Auipc' of type `InstructionI'")
-  | Sb _ _ _ =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `jimm20' has no match in constructor `Sb' of type `InstructionI'")
-  | Sh _ _ _ =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `jimm20' has no match in constructor `Sh' of type `InstructionI'")
-  | Sw _ _ _ =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `jimm20' has no match in constructor `Sw' of type `InstructionI'")
-  | Add _ _ _ =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `jimm20' has no match in constructor `Add' of type `InstructionI'")
-  | Sub _ _ _ =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `jimm20' has no match in constructor `Sub' of type `InstructionI'")
-  | Sll _ _ _ =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `jimm20' has no match in constructor `Sll' of type `InstructionI'")
-  | Slt _ _ _ =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `jimm20' has no match in constructor `Slt' of type `InstructionI'")
-  | Sltu _ _ _ =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `jimm20' has no match in constructor `Sltu' of type `InstructionI'")
-  | Xor _ _ _ =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `jimm20' has no match in constructor `Xor' of type `InstructionI'")
-  | Srl _ _ _ =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `jimm20' has no match in constructor `Srl' of type `InstructionI'")
-  | Sra _ _ _ =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `jimm20' has no match in constructor `Sra' of type `InstructionI'")
-  | Or _ _ _ =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `jimm20' has no match in constructor `Or' of type `InstructionI'")
-  | And _ _ _ =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `jimm20' has no match in constructor `And' of type `InstructionI'")
-  | Lui _ _ =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `jimm20' has no match in constructor `Lui' of type `InstructionI'")
-  | Beq _ _ _ =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `jimm20' has no match in constructor `Beq' of type `InstructionI'")
-  | Bne _ _ _ =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `jimm20' has no match in constructor `Bne' of type `InstructionI'")
-  | Blt _ _ _ =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `jimm20' has no match in constructor `Blt' of type `InstructionI'")
-  | Bge _ _ _ =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `jimm20' has no match in constructor `Bge' of type `InstructionI'")
-  | Bltu _ _ _ =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `jimm20' has no match in constructor `Bltu' of type `InstructionI'")
-  | Bgeu _ _ _ =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `jimm20' has no match in constructor `Bgeu' of type `InstructionI'")
-  | Jalr _ _ _ =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `jimm20' has no match in constructor `Jalr' of type `InstructionI'")
-  | Jal _ jimm20 => jimm20
-  | InvalidI =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `jimm20' has no match in constructor `InvalidI' of type `InstructionI'")
-  end.
-
-Definition imm20 (arg_2__ : InstructionI) :=
-  match arg_2__ with
-  | Lb _ _ _ =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `imm20' has no match in constructor `Lb' of type `InstructionI'")
-  | Lh _ _ _ =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `imm20' has no match in constructor `Lh' of type `InstructionI'")
-  | Lw _ _ _ =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `imm20' has no match in constructor `Lw' of type `InstructionI'")
-  | Lbu _ _ _ =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `imm20' has no match in constructor `Lbu' of type `InstructionI'")
-  | Lhu _ _ _ =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `imm20' has no match in constructor `Lhu' of type `InstructionI'")
-  | Fence _ _ =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `imm20' has no match in constructor `Fence' of type `InstructionI'")
-  | Fence_i =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `imm20' has no match in constructor `Fence_i' of type `InstructionI'")
-  | Addi _ _ _ =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `imm20' has no match in constructor `Addi' of type `InstructionI'")
-  | Slli _ _ _ =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `imm20' has no match in constructor `Slli' of type `InstructionI'")
-  | Slti _ _ _ =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `imm20' has no match in constructor `Slti' of type `InstructionI'")
-  | Sltiu _ _ _ =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `imm20' has no match in constructor `Sltiu' of type `InstructionI'")
-  | Xori _ _ _ =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `imm20' has no match in constructor `Xori' of type `InstructionI'")
-  | Ori _ _ _ =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `imm20' has no match in constructor `Ori' of type `InstructionI'")
-  | Andi _ _ _ =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `imm20' has no match in constructor `Andi' of type `InstructionI'")
-  | Srli _ _ _ =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `imm20' has no match in constructor `Srli' of type `InstructionI'")
-  | Srai _ _ _ =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `imm20' has no match in constructor `Srai' of type `InstructionI'")
-  | Auipc _ _ =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `imm20' has no match in constructor `Auipc' of type `InstructionI'")
-  | Sb _ _ _ =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `imm20' has no match in constructor `Sb' of type `InstructionI'")
-  | Sh _ _ _ =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `imm20' has no match in constructor `Sh' of type `InstructionI'")
-  | Sw _ _ _ =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `imm20' has no match in constructor `Sw' of type `InstructionI'")
-  | Add _ _ _ =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `imm20' has no match in constructor `Add' of type `InstructionI'")
-  | Sub _ _ _ =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `imm20' has no match in constructor `Sub' of type `InstructionI'")
-  | Sll _ _ _ =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `imm20' has no match in constructor `Sll' of type `InstructionI'")
-  | Slt _ _ _ =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `imm20' has no match in constructor `Slt' of type `InstructionI'")
-  | Sltu _ _ _ =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `imm20' has no match in constructor `Sltu' of type `InstructionI'")
-  | Xor _ _ _ =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `imm20' has no match in constructor `Xor' of type `InstructionI'")
-  | Srl _ _ _ =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `imm20' has no match in constructor `Srl' of type `InstructionI'")
-  | Sra _ _ _ =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `imm20' has no match in constructor `Sra' of type `InstructionI'")
-  | Or _ _ _ =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `imm20' has no match in constructor `Or' of type `InstructionI'")
-  | And _ _ _ =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `imm20' has no match in constructor `And' of type `InstructionI'")
-  | Lui _ imm20 => imm20
-  | Beq _ _ _ =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `imm20' has no match in constructor `Beq' of type `InstructionI'")
-  | Bne _ _ _ =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `imm20' has no match in constructor `Bne' of type `InstructionI'")
-  | Blt _ _ _ =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `imm20' has no match in constructor `Blt' of type `InstructionI'")
-  | Bge _ _ _ =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `imm20' has no match in constructor `Bge' of type `InstructionI'")
-  | Bltu _ _ _ =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `imm20' has no match in constructor `Bltu' of type `InstructionI'")
-  | Bgeu _ _ _ =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `imm20' has no match in constructor `Bgeu' of type `InstructionI'")
-  | Jalr _ _ _ =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `imm20' has no match in constructor `Jalr' of type `InstructionI'")
-  | Jal _ _ =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `imm20' has no match in constructor `Jal' of type `InstructionI'")
-  | InvalidI =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `imm20' has no match in constructor `InvalidI' of type `InstructionI'")
-  end.
 (* Converted value declarations: *)
 
-Definition bitwidth : InstructionSet -> GHC.Num.Int :=
+Definition bitwidth : InstructionSet -> Coq.ZArith.BinInt.Z :=
   fun arg_0__ =>
     match arg_0__ with
     | RV32I => 32
@@ -844,8 +474,8 @@ Definition funct7_SUBW : Coq.ZArith.BinInt.Z :=
 Definition funct7_XOR : Coq.ZArith.BinInt.Z :=
   0.
 
-Definition machineIntToShamt : Coq.ZArith.BinInt.Z -> GHC.Num.Int :=
-  GHC.Real.fromIntegral.
+Definition machineIntToShamt : Coq.ZArith.BinInt.Z -> Coq.ZArith.BinInt.Z :=
+  id.
 
 Definition opcode_AMO : Opcode :=
   47.
@@ -911,10 +541,10 @@ Definition opcode_SYSTEM : Opcode :=
   115.
 
 Definition signExtend
-   : GHC.Num.Int -> Coq.ZArith.BinInt.Z -> Coq.ZArith.BinInt.Z :=
+   : Coq.ZArith.BinInt.Z -> Coq.ZArith.BinInt.Z -> Coq.ZArith.BinInt.Z :=
   fun l n =>
-    if Coq.ZArith.BinInt.Z.testbit n (l GHC.Num.- 1) : bool
-    then n GHC.Num.- Coq.ZArith.BinInt.Z.pow 2 l
+    if Coq.ZArith.BinInt.Z.testbit n (Coq.ZArith.BinInt.Z.sub l 1) : bool
+    then Coq.ZArith.BinInt.Z.sub n (Coq.ZArith.BinInt.Z.pow 2 l)
     else n.
 
 Definition supportsM : InstructionSet -> bool :=
@@ -1518,8 +1148,8 @@ Definition decode : InstructionSet -> Coq.ZArith.BinInt.Z -> Instruction :=
     end.
 
 (* Unbound variables:
-     andb bitSlice bool cons false list nil orb true Coq.Init.Datatypes.app
+     andb bitSlice bool cons false id list nil orb true Coq.Init.Datatypes.app
      Coq.ZArith.BinInt.Z Coq.ZArith.BinInt.Z.eqb Coq.ZArith.BinInt.Z.lor
-     Coq.ZArith.BinInt.Z.pow Coq.ZArith.BinInt.Z.shiftl Coq.ZArith.BinInt.Z.testbit
-     GHC.Err.error GHC.Num.Int GHC.Num.op_zm__ GHC.Real.fromIntegral
+     Coq.ZArith.BinInt.Z.pow Coq.ZArith.BinInt.Z.shiftl Coq.ZArith.BinInt.Z.sub
+     Coq.ZArith.BinInt.Z.testbit
 *)

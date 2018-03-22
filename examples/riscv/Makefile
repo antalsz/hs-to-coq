@@ -69,8 +69,8 @@ $(VFILES_GEN): $(OUT)/%.v : $$(wildcard $$(SRC)/$$*.hs) $$(wildcard module-edits
 	$(HS_TO_COQ) $(addprefix -e , $(wildcard module-edits/$*/edits)) \
 	             $(addprefix -p , $(wildcard module-edits/$*/preamble.v)) \
 	             $(addprefix --midamble , $(wildcard module-edits/$*/midamble.v)) \
-	             -e ../base-src/edits \
 	             -e edits \
+	             -e ../../base/edits \
 	             -N \
 	             -i $(SRC) \
 	             $(addprefix `cat , $(addsuffix ` , $(wildcard module-edits/$*/flags))) \

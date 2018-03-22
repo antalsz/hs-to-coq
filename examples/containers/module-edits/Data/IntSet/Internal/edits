@@ -114,5 +114,3 @@ skip Data.IntSet.Internal.natFromInt
 rewrite forall x, Data.IntSet.Internal.natFromInt x = x
 
 skip Utils.Containers.Internal.BitUtil.lowestBitMask
-
-skip module Coq.NArith.BinNat.N

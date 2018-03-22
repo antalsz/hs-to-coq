@@ -28,6 +28,7 @@ Coercion is_true : bool >-> Sortclass.
 
 Require Coq.Init.Datatypes.
 Require Coq.Lists.List.
+Require Coq.NArith.BinNat.
 Require Coq.Numbers.BinNums.
 Require Data.Bits.
 Require Data.Foldable.

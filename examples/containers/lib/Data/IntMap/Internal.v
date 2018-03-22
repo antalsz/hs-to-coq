@@ -16,7 +16,9 @@ Require BitTerminationProofs.
 
 (* Converted imports: *)
 
+Require Coq.NArith.BinNat.
 Require Coq.Numbers.BinNums.
+Require Coq.ZArith.BinInt.
 Require Data.Bits.
 Require Data.Either.
 Require Data.Foldable.

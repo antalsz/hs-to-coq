@@ -17,6 +17,7 @@ Require BitTerminationProofs.
 (* Converted imports: *)
 
 Require Coq.Init.Peano.
+Require Coq.NArith.BinNat.
 Require Coq.Numbers.BinNums.
 Require Data.Bits.
 Require Data.Foldable.

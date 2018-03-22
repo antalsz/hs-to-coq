@@ -1,5 +1,6 @@
 skip module Data.Word
 skip module Utility
+skip module VirtualMemory
 
 rename type Utility.MachineInt = Coq.ZArith.BinInt.Z
 
@@ -45,3 +46,8 @@ rewrite forall x y, (x GHC.Real.^ y) = Coq.ZArith.BinInt.Z.pow x y
 skip module Coq.ZArith.BinInt.Z
 
 # order Decode.Eq___InstructionI Decode.Eq___InstructionM Decode.Eq___InstructionI64 Decode.Eq___InstructionM64 Decode.Eq___InstructionCSR Decode.Eq___Instruction_op_zeze__
+
+rewrite forall x y, x GHC.Base.>>= y = x >>= y
+rewrite forall x y, x GHC.Base.>> y = x >> y
+
+

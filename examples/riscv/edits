@@ -15,8 +15,10 @@ skip Decode.rs1
 skip Decode.rs2
 skip Decode.oimm12
 skip Decode.imm12
+skip Decode.sbimm12
 skip Decode.simm12
 skip Decode.shamt5
+skip Decode.shamt6
 skip Decode.pred
 skip Decode.succ
 skip Decode.csr12
@@ -29,9 +31,12 @@ skip Decode.mInstruction
 
 rename value Data.Bits.shift = Coq.ZArith.BinInt.Z.shiftl
 rename value Data.Bits..|. = Coq.ZArith.BinInt.Z.lor
+rewrite forall x y, x GHC.Base.== y = Coq.ZArith.BinInt.Z.eqb x y
 
 rewrite forall x, GHC.Num.fromInteger x = x
 rewrite forall x y, (x GHC.Real.^ y) = Coq.ZArith.BinInt.Z.pow x y
+
+rewrite forall, Utility.bitSlice = GHC.Err.undefined
 
 # A work-around (Z is used like a module, but cannot be Require Import’ed)
 skip module Coq.ZArith.BinInt.Z

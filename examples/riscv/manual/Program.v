@@ -1,15 +1,13 @@
 Require Import riscv.util.NameWithEq.
 Require Import riscv.util.Monads.
 Require Import riscv.Utility.
+Require Import riscv.Decode.
 Require Import Coq.ZArith.BinInt.
 Require Import bbv.Word.
 
 Inductive AccessType: Set := Instr | Load | Store.
 
 Section Riscv.
-
-  Context {Name: NameWithEq}. (* register name *)
-  Let Register := @name Name.
 
   (* monad (will be instantiated with some kind of state monad) *)
   Context {M: Type -> Type}.
@@ -84,5 +82,5 @@ Section Riscv.
 
 End Riscv.
 
-Arguments RiscvProgram {Name} (M) (t).
-Arguments RiscvState {Name} (M) (t) {MP}.
+Arguments RiscvProgram (M) (t).
+Arguments RiscvState (M) (t) {MP}.

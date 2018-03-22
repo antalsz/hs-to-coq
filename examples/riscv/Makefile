@@ -22,6 +22,7 @@ OUT=lib
 HANDMOD = \
   Program \
   Utility \
+  RiscvBitWidths \
   util/Decidable \
   util/Monads \
   util/NameWithEq \

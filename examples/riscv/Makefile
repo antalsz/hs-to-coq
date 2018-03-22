@@ -51,7 +51,7 @@ $(OUT)/_CoqProject : Makefile
 	> $@
 	echo '-R . riscv' >> $@
 	echo '-R ../../../base ""' >> $@
-	echo '-R ../../../../bbv bbv' >> $@
+	echo '-R ../../../vendor/bbv bbv' >> $@
 	echo $(addsuffix .v,$(HANDMOD)) >> $@
 	echo $(addsuffix .v,$(MODULES)) >> $@
 

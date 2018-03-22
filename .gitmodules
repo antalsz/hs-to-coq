@@ -1,0 +1,3 @@
+[submodule "vendor/bbv"]
+	path = vendor/bbv
+	url = https://github.com/mit-plv/bbv

@@ -21,15 +21,15 @@ Admitted.
 (* Converted imports: *)
 
 Require Coq.Init.Datatypes.
-Require Coq.ZArith.BinInt.
+Require Import Coq.ZArith.BinInt.
 
 (* Converted type declarations: *)
 
 Definition Register :=
-  Coq.ZArith.BinInt.Z%type.
+  Z%type.
 
 Definition Opcode :=
-  Coq.ZArith.BinInt.Z%type.
+  Z%type.
 
 Inductive InstructionSet : Type
   := RV32I : InstructionSet
@@ -57,13 +57,13 @@ Inductive InstructionM : Type
   |  InvalidM : InstructionM.
 
 Inductive InstructionI64 : Type
-  := Ld : Register -> Register -> Coq.ZArith.BinInt.Z -> InstructionI64
-  |  Lwu : Register -> Register -> Coq.ZArith.BinInt.Z -> InstructionI64
-  |  Addiw : Register -> Register -> Coq.ZArith.BinInt.Z -> InstructionI64
-  |  Slliw : Register -> Register -> Coq.ZArith.BinInt.Z -> InstructionI64
-  |  Srliw : Register -> Register -> Coq.ZArith.BinInt.Z -> InstructionI64
-  |  Sraiw : Register -> Register -> Coq.ZArith.BinInt.Z -> InstructionI64
-  |  Sd : Register -> Register -> Coq.ZArith.BinInt.Z -> InstructionI64
+  := Ld : Register -> Register -> Z -> InstructionI64
+  |  Lwu : Register -> Register -> Z -> InstructionI64
+  |  Addiw : Register -> Register -> Z -> InstructionI64
+  |  Slliw : Register -> Register -> Z -> InstructionI64
+  |  Srliw : Register -> Register -> Z -> InstructionI64
+  |  Sraiw : Register -> Register -> Z -> InstructionI64
+  |  Sd : Register -> Register -> Z -> InstructionI64
   |  Addw : Register -> Register -> Register -> InstructionI64
   |  Subw : Register -> Register -> Register -> InstructionI64
   |  Sllw : Register -> Register -> Register -> InstructionI64
@@ -72,26 +72,26 @@ Inductive InstructionI64 : Type
   |  InvalidI64 : InstructionI64.
 
 Inductive InstructionI : Type
-  := Lb : Register -> Register -> Coq.ZArith.BinInt.Z -> InstructionI
-  |  Lh : Register -> Register -> Coq.ZArith.BinInt.Z -> InstructionI
-  |  Lw : Register -> Register -> Coq.ZArith.BinInt.Z -> InstructionI
-  |  Lbu : Register -> Register -> Coq.ZArith.BinInt.Z -> InstructionI
-  |  Lhu : Register -> Register -> Coq.ZArith.BinInt.Z -> InstructionI
-  |  Fence : Coq.ZArith.BinInt.Z -> Coq.ZArith.BinInt.Z -> InstructionI
+  := Lb : Register -> Register -> Z -> InstructionI
+  |  Lh : Register -> Register -> Z -> InstructionI
+  |  Lw : Register -> Register -> Z -> InstructionI
+  |  Lbu : Register -> Register -> Z -> InstructionI
+  |  Lhu : Register -> Register -> Z -> InstructionI
+  |  Fence : Z -> Z -> InstructionI
   |  Fence_i : InstructionI
-  |  Addi : Register -> Register -> Coq.ZArith.BinInt.Z -> InstructionI
-  |  Slli : Register -> Register -> Coq.ZArith.BinInt.Z -> InstructionI
-  |  Slti : Register -> Register -> Coq.ZArith.BinInt.Z -> InstructionI
-  |  Sltiu : Register -> Register -> Coq.ZArith.BinInt.Z -> InstructionI
-  |  Xori : Register -> Register -> Coq.ZArith.BinInt.Z -> InstructionI
-  |  Ori : Register -> Register -> Coq.ZArith.BinInt.Z -> InstructionI
-  |  Andi : Register -> Register -> Coq.ZArith.BinInt.Z -> InstructionI
-  |  Srli : Register -> Register -> Coq.ZArith.BinInt.Z -> InstructionI
-  |  Srai : Register -> Register -> Coq.ZArith.BinInt.Z -> InstructionI
-  |  Auipc : Register -> Coq.ZArith.BinInt.Z -> InstructionI
-  |  Sb : Register -> Register -> Coq.ZArith.BinInt.Z -> InstructionI
-  |  Sh : Register -> Register -> Coq.ZArith.BinInt.Z -> InstructionI
-  |  Sw : Register -> Register -> Coq.ZArith.BinInt.Z -> InstructionI
+  |  Addi : Register -> Register -> Z -> InstructionI
+  |  Slli : Register -> Register -> Z -> InstructionI
+  |  Slti : Register -> Register -> Z -> InstructionI
+  |  Sltiu : Register -> Register -> Z -> InstructionI
+  |  Xori : Register -> Register -> Z -> InstructionI
+  |  Ori : Register -> Register -> Z -> InstructionI
+  |  Andi : Register -> Register -> Z -> InstructionI
+  |  Srli : Register -> Register -> Z -> InstructionI
+  |  Srai : Register -> Register -> Z -> InstructionI
+  |  Auipc : Register -> Z -> InstructionI
+  |  Sb : Register -> Register -> Z -> InstructionI
+  |  Sh : Register -> Register -> Z -> InstructionI
+  |  Sw : Register -> Register -> Z -> InstructionI
   |  Add : Register -> Register -> Register -> InstructionI
   |  Sub : Register -> Register -> Register -> InstructionI
   |  Sll : Register -> Register -> Register -> InstructionI
@@ -102,15 +102,15 @@ Inductive InstructionI : Type
   |  Sra : Register -> Register -> Register -> InstructionI
   |  Or : Register -> Register -> Register -> InstructionI
   |  And : Register -> Register -> Register -> InstructionI
-  |  Lui : Register -> Coq.ZArith.BinInt.Z -> InstructionI
-  |  Beq : Register -> Register -> Coq.ZArith.BinInt.Z -> InstructionI
-  |  Bne : Register -> Register -> Coq.ZArith.BinInt.Z -> InstructionI
-  |  Blt : Register -> Register -> Coq.ZArith.BinInt.Z -> InstructionI
-  |  Bge : Register -> Register -> Coq.ZArith.BinInt.Z -> InstructionI
-  |  Bltu : Register -> Register -> Coq.ZArith.BinInt.Z -> InstructionI
-  |  Bgeu : Register -> Register -> Coq.ZArith.BinInt.Z -> InstructionI
-  |  Jalr : Register -> Register -> Coq.ZArith.BinInt.Z -> InstructionI
-  |  Jal : Register -> Coq.ZArith.BinInt.Z -> InstructionI
+  |  Lui : Register -> Z -> InstructionI
+  |  Beq : Register -> Register -> Z -> InstructionI
+  |  Bne : Register -> Register -> Z -> InstructionI
+  |  Blt : Register -> Register -> Z -> InstructionI
+  |  Bge : Register -> Register -> Z -> InstructionI
+  |  Bltu : Register -> Register -> Z -> InstructionI
+  |  Bgeu : Register -> Register -> Z -> InstructionI
+  |  Jalr : Register -> Register -> Z -> InstructionI
+  |  Jal : Register -> Z -> InstructionI
   |  InvalidI : InstructionI.
 
 Inductive InstructionCSR : Type
@@ -121,15 +121,12 @@ Inductive InstructionCSR : Type
   |  Mret : InstructionCSR
   |  Wfi : InstructionCSR
   |  Sfence_vm : Register -> Register -> InstructionCSR
-  |  Csrrw : Register -> Register -> Coq.ZArith.BinInt.Z -> InstructionCSR
-  |  Csrrs : Register -> Register -> Coq.ZArith.BinInt.Z -> InstructionCSR
-  |  Csrrc : Register -> Register -> Coq.ZArith.BinInt.Z -> InstructionCSR
-  |  Csrrwi
-   : Register -> Coq.ZArith.BinInt.Z -> Coq.ZArith.BinInt.Z -> InstructionCSR
-  |  Csrrsi
-   : Register -> Coq.ZArith.BinInt.Z -> Coq.ZArith.BinInt.Z -> InstructionCSR
-  |  Csrrci
-   : Register -> Coq.ZArith.BinInt.Z -> Coq.ZArith.BinInt.Z -> InstructionCSR
+  |  Csrrw : Register -> Register -> Z -> InstructionCSR
+  |  Csrrs : Register -> Register -> Z -> InstructionCSR
+  |  Csrrc : Register -> Register -> Z -> InstructionCSR
+  |  Csrrwi : Register -> Z -> Z -> InstructionCSR
+  |  Csrrsi : Register -> Z -> Z -> InstructionCSR
+  |  Csrrci : Register -> Z -> Z -> InstructionCSR
   |  InvalidCSR : InstructionCSR.
 
 Inductive Instruction : Type
@@ -141,7 +138,7 @@ Inductive Instruction : Type
   |  InvalidInstruction : Instruction.
 (* Converted value declarations: *)
 
-Definition bitwidth : InstructionSet -> Coq.ZArith.BinInt.Z :=
+Definition bitwidth : InstructionSet -> Z :=
   fun arg_0__ =>
     match arg_0__ with
     | RV32I => 32
@@ -150,331 +147,331 @@ Definition bitwidth : InstructionSet -> Coq.ZArith.BinInt.Z :=
     | RV64IM => 64
     end.
 
-Definition funct12_EBREAK : Coq.ZArith.BinInt.Z :=
+Definition funct12_EBREAK : Z :=
   1.
 
-Definition funct12_ECALL : Coq.ZArith.BinInt.Z :=
+Definition funct12_ECALL : Z :=
   0.
 
-Definition funct12_MRET : Coq.ZArith.BinInt.Z :=
+Definition funct12_MRET : Z :=
   770.
 
-Definition funct12_SRET : Coq.ZArith.BinInt.Z :=
+Definition funct12_SRET : Z :=
   258.
 
-Definition funct12_URET : Coq.ZArith.BinInt.Z :=
+Definition funct12_URET : Z :=
   2.
 
-Definition funct12_WFI : Coq.ZArith.BinInt.Z :=
+Definition funct12_WFI : Z :=
   261.
 
-Definition funct3_ADD : Coq.ZArith.BinInt.Z :=
+Definition funct3_ADD : Z :=
   0.
 
-Definition funct3_ADDI : Coq.ZArith.BinInt.Z :=
+Definition funct3_ADDI : Z :=
   0.
 
-Definition funct3_ADDIW : Coq.ZArith.BinInt.Z :=
+Definition funct3_ADDIW : Z :=
   0.
 
-Definition funct3_ADDW : Coq.ZArith.BinInt.Z :=
+Definition funct3_ADDW : Z :=
   0.
 
-Definition funct3_AND : Coq.ZArith.BinInt.Z :=
+Definition funct3_AND : Z :=
   7.
 
-Definition funct3_ANDI : Coq.ZArith.BinInt.Z :=
+Definition funct3_ANDI : Z :=
   7.
 
-Definition funct3_BEQ : Coq.ZArith.BinInt.Z :=
+Definition funct3_BEQ : Z :=
   0.
 
-Definition funct3_BGE : Coq.ZArith.BinInt.Z :=
+Definition funct3_BGE : Z :=
   5.
 
-Definition funct3_BGEU : Coq.ZArith.BinInt.Z :=
+Definition funct3_BGEU : Z :=
   7.
 
-Definition funct3_BLT : Coq.ZArith.BinInt.Z :=
+Definition funct3_BLT : Z :=
   4.
 
-Definition funct3_BLTU : Coq.ZArith.BinInt.Z :=
+Definition funct3_BLTU : Z :=
   6.
 
-Definition funct3_BNE : Coq.ZArith.BinInt.Z :=
+Definition funct3_BNE : Z :=
   1.
 
-Definition funct3_CSRRC : Coq.ZArith.BinInt.Z :=
+Definition funct3_CSRRC : Z :=
   3.
 
-Definition funct3_CSRRCI : Coq.ZArith.BinInt.Z :=
+Definition funct3_CSRRCI : Z :=
   7.
 
-Definition funct3_CSRRS : Coq.ZArith.BinInt.Z :=
+Definition funct3_CSRRS : Z :=
   2.
 
-Definition funct3_CSRRSI : Coq.ZArith.BinInt.Z :=
+Definition funct3_CSRRSI : Z :=
   6.
 
-Definition funct3_CSRRW : Coq.ZArith.BinInt.Z :=
+Definition funct3_CSRRW : Z :=
   1.
 
-Definition funct3_CSRRWI : Coq.ZArith.BinInt.Z :=
+Definition funct3_CSRRWI : Z :=
   5.
 
-Definition funct3_DIV : Coq.ZArith.BinInt.Z :=
+Definition funct3_DIV : Z :=
   4.
 
-Definition funct3_DIVU : Coq.ZArith.BinInt.Z :=
+Definition funct3_DIVU : Z :=
   5.
 
-Definition funct3_DIVUW : Coq.ZArith.BinInt.Z :=
+Definition funct3_DIVUW : Z :=
   5.
 
-Definition funct3_DIVW : Coq.ZArith.BinInt.Z :=
+Definition funct3_DIVW : Z :=
   4.
 
-Definition funct3_FENCE : Coq.ZArith.BinInt.Z :=
+Definition funct3_FENCE : Z :=
   0.
 
-Definition funct3_FENCE_I : Coq.ZArith.BinInt.Z :=
+Definition funct3_FENCE_I : Z :=
   1.
 
-Definition funct3_LB : Coq.ZArith.BinInt.Z :=
+Definition funct3_LB : Z :=
   0.
 
-Definition funct3_LBU : Coq.ZArith.BinInt.Z :=
+Definition funct3_LBU : Z :=
   4.
 
-Definition funct3_LD : Coq.ZArith.BinInt.Z :=
+Definition funct3_LD : Z :=
   3.
 
-Definition funct3_LH : Coq.ZArith.BinInt.Z :=
+Definition funct3_LH : Z :=
   1.
 
-Definition funct3_LHU : Coq.ZArith.BinInt.Z :=
+Definition funct3_LHU : Z :=
   5.
 
-Definition funct3_LW : Coq.ZArith.BinInt.Z :=
+Definition funct3_LW : Z :=
   2.
 
-Definition funct3_LWU : Coq.ZArith.BinInt.Z :=
+Definition funct3_LWU : Z :=
   6.
 
-Definition funct3_MUL : Coq.ZArith.BinInt.Z :=
+Definition funct3_MUL : Z :=
   0.
 
-Definition funct3_MULH : Coq.ZArith.BinInt.Z :=
+Definition funct3_MULH : Z :=
   1.
 
-Definition funct3_MULHSU : Coq.ZArith.BinInt.Z :=
+Definition funct3_MULHSU : Z :=
   2.
 
-Definition funct3_MULHU : Coq.ZArith.BinInt.Z :=
+Definition funct3_MULHU : Z :=
   3.
 
-Definition funct3_MULW : Coq.ZArith.BinInt.Z :=
+Definition funct3_MULW : Z :=
   0.
 
-Definition funct3_OR : Coq.ZArith.BinInt.Z :=
+Definition funct3_OR : Z :=
   6.
 
-Definition funct3_ORI : Coq.ZArith.BinInt.Z :=
+Definition funct3_ORI : Z :=
   6.
 
-Definition funct3_PRIV : Coq.ZArith.BinInt.Z :=
+Definition funct3_PRIV : Z :=
   0.
 
-Definition funct3_REM : Coq.ZArith.BinInt.Z :=
+Definition funct3_REM : Z :=
   6.
 
-Definition funct3_REMU : Coq.ZArith.BinInt.Z :=
+Definition funct3_REMU : Z :=
   7.
 
-Definition funct3_REMUW : Coq.ZArith.BinInt.Z :=
+Definition funct3_REMUW : Z :=
   7.
 
-Definition funct3_REMW : Coq.ZArith.BinInt.Z :=
+Definition funct3_REMW : Z :=
   6.
 
-Definition funct3_SB : Coq.ZArith.BinInt.Z :=
+Definition funct3_SB : Z :=
   0.
 
-Definition funct3_SD : Coq.ZArith.BinInt.Z :=
+Definition funct3_SD : Z :=
   3.
 
-Definition funct3_SH : Coq.ZArith.BinInt.Z :=
+Definition funct3_SH : Z :=
   1.
 
-Definition funct3_SLL : Coq.ZArith.BinInt.Z :=
+Definition funct3_SLL : Z :=
   1.
 
-Definition funct3_SLLI : Coq.ZArith.BinInt.Z :=
+Definition funct3_SLLI : Z :=
   1.
 
-Definition funct3_SLLIW : Coq.ZArith.BinInt.Z :=
+Definition funct3_SLLIW : Z :=
   1.
 
-Definition funct3_SLLW : Coq.ZArith.BinInt.Z :=
+Definition funct3_SLLW : Z :=
   1.
 
-Definition funct3_SLT : Coq.ZArith.BinInt.Z :=
+Definition funct3_SLT : Z :=
   2.
 
-Definition funct3_SLTI : Coq.ZArith.BinInt.Z :=
+Definition funct3_SLTI : Z :=
   2.
 
-Definition funct3_SLTIU : Coq.ZArith.BinInt.Z :=
+Definition funct3_SLTIU : Z :=
   3.
 
-Definition funct3_SLTU : Coq.ZArith.BinInt.Z :=
+Definition funct3_SLTU : Z :=
   3.
 
-Definition funct3_SRA : Coq.ZArith.BinInt.Z :=
+Definition funct3_SRA : Z :=
   5.
 
-Definition funct3_SRAI : Coq.ZArith.BinInt.Z :=
+Definition funct3_SRAI : Z :=
   5.
 
-Definition funct3_SRAIW : Coq.ZArith.BinInt.Z :=
+Definition funct3_SRAIW : Z :=
   5.
 
-Definition funct3_SRAW : Coq.ZArith.BinInt.Z :=
+Definition funct3_SRAW : Z :=
   5.
 
-Definition funct3_SRL : Coq.ZArith.BinInt.Z :=
+Definition funct3_SRL : Z :=
   5.
 
-Definition funct3_SRLI : Coq.ZArith.BinInt.Z :=
+Definition funct3_SRLI : Z :=
   5.
 
-Definition funct3_SRLIW : Coq.ZArith.BinInt.Z :=
+Definition funct3_SRLIW : Z :=
   5.
 
-Definition funct3_SRLW : Coq.ZArith.BinInt.Z :=
+Definition funct3_SRLW : Z :=
   5.
 
-Definition funct3_SUB : Coq.ZArith.BinInt.Z :=
+Definition funct3_SUB : Z :=
   0.
 
-Definition funct3_SUBW : Coq.ZArith.BinInt.Z :=
+Definition funct3_SUBW : Z :=
   0.
 
-Definition funct3_SW : Coq.ZArith.BinInt.Z :=
+Definition funct3_SW : Z :=
   2.
 
-Definition funct3_XOR : Coq.ZArith.BinInt.Z :=
+Definition funct3_XOR : Z :=
   4.
 
-Definition funct3_XORI : Coq.ZArith.BinInt.Z :=
+Definition funct3_XORI : Z :=
   4.
 
-Definition funct6_SLLI : Coq.ZArith.BinInt.Z :=
+Definition funct6_SLLI : Z :=
   0.
 
-Definition funct6_SRAI : Coq.ZArith.BinInt.Z :=
+Definition funct6_SRAI : Z :=
   16.
 
-Definition funct6_SRLI : Coq.ZArith.BinInt.Z :=
+Definition funct6_SRLI : Z :=
   0.
 
-Definition funct7_ADD : Coq.ZArith.BinInt.Z :=
+Definition funct7_ADD : Z :=
   0.
 
-Definition funct7_ADDW : Coq.ZArith.BinInt.Z :=
+Definition funct7_ADDW : Z :=
   0.
 
-Definition funct7_AND : Coq.ZArith.BinInt.Z :=
+Definition funct7_AND : Z :=
   0.
 
-Definition funct7_DIV : Coq.ZArith.BinInt.Z :=
+Definition funct7_DIV : Z :=
   1.
 
-Definition funct7_DIVU : Coq.ZArith.BinInt.Z :=
+Definition funct7_DIVU : Z :=
   1.
 
-Definition funct7_DIVUW : Coq.ZArith.BinInt.Z :=
+Definition funct7_DIVUW : Z :=
   1.
 
-Definition funct7_DIVW : Coq.ZArith.BinInt.Z :=
+Definition funct7_DIVW : Z :=
   1.
 
-Definition funct7_MUL : Coq.ZArith.BinInt.Z :=
+Definition funct7_MUL : Z :=
   1.
 
-Definition funct7_MULH : Coq.ZArith.BinInt.Z :=
+Definition funct7_MULH : Z :=
   1.
 
-Definition funct7_MULHSU : Coq.ZArith.BinInt.Z :=
+Definition funct7_MULHSU : Z :=
   1.
 
-Definition funct7_MULHU : Coq.ZArith.BinInt.Z :=
+Definition funct7_MULHU : Z :=
   1.
 
-Definition funct7_MULW : Coq.ZArith.BinInt.Z :=
+Definition funct7_MULW : Z :=
   1.
 
-Definition funct7_OR : Coq.ZArith.BinInt.Z :=
+Definition funct7_OR : Z :=
   0.
 
-Definition funct7_REM : Coq.ZArith.BinInt.Z :=
+Definition funct7_REM : Z :=
   1.
 
-Definition funct7_REMU : Coq.ZArith.BinInt.Z :=
+Definition funct7_REMU : Z :=
   1.
 
-Definition funct7_REMUW : Coq.ZArith.BinInt.Z :=
+Definition funct7_REMUW : Z :=
   1.
 
-Definition funct7_REMW : Coq.ZArith.BinInt.Z :=
+Definition funct7_REMW : Z :=
   1.
 
-Definition funct7_SFENCE_VM : Coq.ZArith.BinInt.Z :=
+Definition funct7_SFENCE_VM : Z :=
   9.
 
-Definition funct7_SLL : Coq.ZArith.BinInt.Z :=
+Definition funct7_SLL : Z :=
   0.
 
-Definition funct7_SLLIW : Coq.ZArith.BinInt.Z :=
+Definition funct7_SLLIW : Z :=
   0.
 
-Definition funct7_SLLW : Coq.ZArith.BinInt.Z :=
+Definition funct7_SLLW : Z :=
   0.
 
-Definition funct7_SLT : Coq.ZArith.BinInt.Z :=
+Definition funct7_SLT : Z :=
   0.
 
-Definition funct7_SLTU : Coq.ZArith.BinInt.Z :=
+Definition funct7_SLTU : Z :=
   0.
 
-Definition funct7_SRA : Coq.ZArith.BinInt.Z :=
+Definition funct7_SRA : Z :=
   32.
 
-Definition funct7_SRAIW : Coq.ZArith.BinInt.Z :=
+Definition funct7_SRAIW : Z :=
   32.
 
-Definition funct7_SRAW : Coq.ZArith.BinInt.Z :=
+Definition funct7_SRAW : Z :=
   32.
 
-Definition funct7_SRL : Coq.ZArith.BinInt.Z :=
+Definition funct7_SRL : Z :=
   0.
 
-Definition funct7_SRLIW : Coq.ZArith.BinInt.Z :=
+Definition funct7_SRLIW : Z :=
   0.
 
-Definition funct7_SRLW : Coq.ZArith.BinInt.Z :=
+Definition funct7_SRLW : Z :=
   0.
 
-Definition funct7_SUB : Coq.ZArith.BinInt.Z :=
+Definition funct7_SUB : Z :=
   32.
 
-Definition funct7_SUBW : Coq.ZArith.BinInt.Z :=
+Definition funct7_SUBW : Z :=
   32.
 
-Definition funct7_XOR : Coq.ZArith.BinInt.Z :=
+Definition funct7_XOR : Z :=
   0.
 
-Definition machineIntToShamt : Coq.ZArith.BinInt.Z -> Coq.ZArith.BinInt.Z :=
+Definition machineIntToShamt : Z -> Z :=
   id.
 
 Definition opcode_AMO : Opcode :=
@@ -540,12 +537,8 @@ Definition opcode_STORE_FP : Opcode :=
 Definition opcode_SYSTEM : Opcode :=
   115.
 
-Definition signExtend
-   : Coq.ZArith.BinInt.Z -> Coq.ZArith.BinInt.Z -> Coq.ZArith.BinInt.Z :=
-  fun l n =>
-    if Coq.ZArith.BinInt.Z.testbit n (Coq.ZArith.BinInt.Z.sub l 1) : bool
-    then Coq.ZArith.BinInt.Z.sub n (Coq.ZArith.BinInt.Z.pow 2 l)
-    else n.
+Definition signExtend : Z -> Z -> Z :=
+  fun l n => if Z.testbit n (Z.sub l 1) : bool then Z.sub n (Z.pow 2 l) else n.
 
 Definition supportsM : InstructionSet -> bool :=
   fun arg_0__ =>
@@ -556,40 +549,29 @@ Definition supportsM : InstructionSet -> bool :=
     | RV64IM => true
     end.
 
-Definition decode : InstructionSet -> Coq.ZArith.BinInt.Z -> Instruction :=
+Definition decode : InstructionSet -> Z -> Instruction :=
   fun iset inst =>
     let zimm := bitSlice inst 15 20 in
     let funct6 := bitSlice inst 26 32 in
     let shamtHi := bitSlice inst 25 26 in
-    let shamtHiTest :=
-      orb (Coq.ZArith.BinInt.Z.eqb shamtHi 0) (Coq.ZArith.BinInt.Z.eqb (bitwidth iset)
-                                                                       64) in
+    let shamtHiTest := orb (Z.eqb shamtHi 0) (Z.eqb (bitwidth iset) 64) in
     let shamt6 := machineIntToShamt (bitSlice inst 20 26) in
     let shamt5 := machineIntToShamt (bitSlice inst 20 25) in
     let sbimm12 :=
-      signExtend 13 (Coq.ZArith.BinInt.Z.lor (Coq.ZArith.BinInt.Z.lor
-                                              (Coq.ZArith.BinInt.Z.lor (Coq.ZArith.BinInt.Z.shiftl (bitSlice inst 31 32)
-                                                                        12) (Coq.ZArith.BinInt.Z.shiftl (bitSlice inst
-                                                                                                         25 31) 5))
-                                              (Coq.ZArith.BinInt.Z.shiftl (bitSlice inst 8 12) 1))
-                                             (Coq.ZArith.BinInt.Z.shiftl (bitSlice inst 7 8) 11)) in
+      signExtend 13 (Z.lor (Z.lor (Z.lor (Z.shiftl (bitSlice inst 31 32) 12) (Z.shiftl
+                                          (bitSlice inst 25 31) 5)) (Z.shiftl (bitSlice inst 8 12) 1)) (Z.shiftl
+                            (bitSlice inst 7 8) 11)) in
     let simm12 :=
-      signExtend 12 (Coq.ZArith.BinInt.Z.lor (Coq.ZArith.BinInt.Z.shiftl (bitSlice
-                                                                          inst 25 32) 5) (bitSlice inst 7 12)) in
+      signExtend 12 (Z.lor (Z.shiftl (bitSlice inst 25 32) 5) (bitSlice inst 7 12)) in
     let csr12 := bitSlice inst 20 32 in
     let oimm12 := signExtend 12 (bitSlice inst 20 32) in
     let imm12 := signExtend 12 (bitSlice inst 20 32) in
     let jimm20 :=
-      signExtend 21 (Coq.ZArith.BinInt.Z.lor (Coq.ZArith.BinInt.Z.lor
-                                              (Coq.ZArith.BinInt.Z.lor (Coq.ZArith.BinInt.Z.shiftl (bitSlice inst 31 32)
-                                                                        20) (Coq.ZArith.BinInt.Z.shiftl (bitSlice inst
-                                                                                                         21 31) 1))
-                                              (Coq.ZArith.BinInt.Z.shiftl (bitSlice inst 20 21) 11))
-                                             (Coq.ZArith.BinInt.Z.shiftl (bitSlice inst 12 20) 12)) in
-    let oimm20 :=
-      signExtend 32 (Coq.ZArith.BinInt.Z.shiftl (bitSlice inst 12 32) 12) in
-    let imm20 :=
-      signExtend 32 (Coq.ZArith.BinInt.Z.shiftl (bitSlice inst 12 32) 12) in
+      signExtend 21 (Z.lor (Z.lor (Z.lor (Z.shiftl (bitSlice inst 31 32) 20) (Z.shiftl
+                                          (bitSlice inst 21 31) 1)) (Z.shiftl (bitSlice inst 20 21) 11)) (Z.shiftl
+                            (bitSlice inst 12 20) 12)) in
+    let oimm20 := signExtend 32 (Z.shiftl (bitSlice inst 12 32) 12) in
+    let imm20 := signExtend 32 (Z.shiftl (bitSlice inst 12 32) 12) in
     let msb4 := bitSlice inst 28 32 in
     let pred := bitSlice inst 24 28 in
     let succ := bitSlice inst 20 24 in
@@ -598,133 +580,113 @@ Definition decode : InstructionSet -> Coq.ZArith.BinInt.Z -> Instruction :=
     let rs1 := bitSlice inst 15 20 in
     let rd := bitSlice inst 7 12 in
     let funct12 := bitSlice inst 20 32 in
-    let funct10 :=
-      Coq.ZArith.BinInt.Z.lor (Coq.ZArith.BinInt.Z.shiftl (bitSlice inst 25 32) 3)
-                              (bitSlice inst 12 15) in
+    let funct10 := Z.lor (Z.shiftl (bitSlice inst 25 32) 3) (bitSlice inst 12 15) in
     let funct7 := bitSlice inst 25 32 in
     let funct3 := bitSlice inst 12 15 in
     let opcode := bitSlice inst 0 7 in
     let decodeI :=
-      if andb (Coq.ZArith.BinInt.Z.eqb opcode opcode_LOAD) (Coq.ZArith.BinInt.Z.eqb
-               funct3 funct3_LB) : bool
+      if andb (Z.eqb opcode opcode_LOAD) (Z.eqb funct3 funct3_LB) : bool
       then Lb rd rs1 oimm12
-      else if andb (Coq.ZArith.BinInt.Z.eqb opcode opcode_LOAD)
-                   (Coq.ZArith.BinInt.Z.eqb funct3 funct3_LH) : bool
+      else if andb (Z.eqb opcode opcode_LOAD) (Z.eqb funct3 funct3_LH) : bool
            then Lh rd rs1 oimm12
-           else if andb (Coq.ZArith.BinInt.Z.eqb opcode opcode_LOAD)
-                        (Coq.ZArith.BinInt.Z.eqb funct3 funct3_LW) : bool
+           else if andb (Z.eqb opcode opcode_LOAD) (Z.eqb funct3 funct3_LW) : bool
                 then Lw rd rs1 oimm12
-                else if andb (Coq.ZArith.BinInt.Z.eqb opcode opcode_LOAD)
-                             (Coq.ZArith.BinInt.Z.eqb funct3 funct3_LBU) : bool
+                else if andb (Z.eqb opcode opcode_LOAD) (Z.eqb funct3 funct3_LBU) : bool
                      then Lbu rd rs1 oimm12
-                     else if andb (Coq.ZArith.BinInt.Z.eqb opcode opcode_LOAD)
-                                  (Coq.ZArith.BinInt.Z.eqb funct3 funct3_LHU) : bool
+                     else if andb (Z.eqb opcode opcode_LOAD) (Z.eqb funct3 funct3_LHU) : bool
                           then Lhu rd rs1 oimm12
-                          else if andb (Coq.ZArith.BinInt.Z.eqb opcode opcode_MISC_MEM) (andb
-                                        (Coq.ZArith.BinInt.Z.eqb rd 0) (andb (Coq.ZArith.BinInt.Z.eqb funct3
-                                                                                                      funct3_FENCE)
-                                                                             (andb (Coq.ZArith.BinInt.Z.eqb rs1 0)
-                                                                                   (Coq.ZArith.BinInt.Z.eqb msb4
+                          else if andb (Z.eqb opcode opcode_MISC_MEM) (andb (Z.eqb rd 0) (andb (Z.eqb
+                                                                                                funct3 funct3_FENCE)
+                                                                                               (andb (Z.eqb rs1 0)
+                                                                                                     (Z.eqb msb4
                                                                                                             0)))) : bool
                                then Fence pred succ
-                               else if andb (Coq.ZArith.BinInt.Z.eqb opcode opcode_MISC_MEM) (andb
-                                             (Coq.ZArith.BinInt.Z.eqb rd 0) (andb (Coq.ZArith.BinInt.Z.eqb funct3
-                                                                                                           funct3_FENCE_I)
-                                                                                  (andb (Coq.ZArith.BinInt.Z.eqb rs1 0)
-                                                                                        (Coq.ZArith.BinInt.Z.eqb imm12
+                               else if andb (Z.eqb opcode opcode_MISC_MEM) (andb (Z.eqb rd 0) (andb (Z.eqb
+                                                                                                     funct3
+                                                                                                     funct3_FENCE_I)
+                                                                                                    (andb (Z.eqb rs1 0)
+                                                                                                          (Z.eqb imm12
                                                                                                                  0)))) : bool
                                     then Fence_i
-                                    else if andb (Coq.ZArith.BinInt.Z.eqb opcode opcode_OP_IMM)
-                                                 (Coq.ZArith.BinInt.Z.eqb funct3 funct3_ADDI) : bool
+                                    else if andb (Z.eqb opcode opcode_OP_IMM) (Z.eqb funct3 funct3_ADDI) : bool
                                          then Addi rd rs1 imm12
-                                         else if andb (Coq.ZArith.BinInt.Z.eqb opcode opcode_OP_IMM)
-                                                      (Coq.ZArith.BinInt.Z.eqb funct3 funct3_SLTI) : bool
+                                         else if andb (Z.eqb opcode opcode_OP_IMM) (Z.eqb funct3 funct3_SLTI) : bool
                                               then Slti rd rs1 imm12
-                                              else if andb (Coq.ZArith.BinInt.Z.eqb opcode opcode_OP_IMM)
-                                                           (Coq.ZArith.BinInt.Z.eqb funct3 funct3_SLTIU) : bool
+                                              else if andb (Z.eqb opcode opcode_OP_IMM) (Z.eqb funct3
+                                                                                               funct3_SLTIU) : bool
                                                    then Sltiu rd rs1 imm12
-                                                   else if andb (Coq.ZArith.BinInt.Z.eqb opcode opcode_OP_IMM)
-                                                                (Coq.ZArith.BinInt.Z.eqb funct3 funct3_XORI) : bool
+                                                   else if andb (Z.eqb opcode opcode_OP_IMM) (Z.eqb funct3
+                                                                                                    funct3_XORI) : bool
                                                         then Xori rd rs1 imm12
-                                                        else if andb (Coq.ZArith.BinInt.Z.eqb opcode opcode_OP_IMM)
-                                                                     (Coq.ZArith.BinInt.Z.eqb funct3 funct3_ORI) : bool
+                                                        else if andb (Z.eqb opcode opcode_OP_IMM) (Z.eqb funct3
+                                                                                                         funct3_ORI) : bool
                                                              then Ori rd rs1 imm12
-                                                             else if andb (Coq.ZArith.BinInt.Z.eqb opcode opcode_OP_IMM)
-                                                                          (Coq.ZArith.BinInt.Z.eqb funct3
-                                                                                                   funct3_ANDI) : bool
+                                                             else if andb (Z.eqb opcode opcode_OP_IMM) (Z.eqb funct3
+                                                                                                              funct3_ANDI) : bool
                                                                   then Andi rd rs1 imm12
-                                                                  else if andb (Coq.ZArith.BinInt.Z.eqb opcode
-                                                                                                        opcode_OP_IMM)
-                                                                               (andb (Coq.ZArith.BinInt.Z.eqb funct3
-                                                                                                              funct3_SLLI)
-                                                                                     (andb (Coq.ZArith.BinInt.Z.eqb
-                                                                                            funct6 funct6_SLLI)
-                                                                                           shamtHiTest)) : bool
+                                                                  else if andb (Z.eqb opcode opcode_OP_IMM) (andb (Z.eqb
+                                                                                                                   funct3
+                                                                                                                   funct3_SLLI)
+                                                                                                                  (andb
+                                                                                                                   (Z.eqb
+                                                                                                                    funct6
+                                                                                                                    funct6_SLLI)
+                                                                                                                   shamtHiTest)) : bool
                                                                        then Slli rd rs1 shamt6
-                                                                       else if andb (Coq.ZArith.BinInt.Z.eqb opcode
-                                                                                                             opcode_OP_IMM)
-                                                                                    (andb (Coq.ZArith.BinInt.Z.eqb
-                                                                                           funct3 funct3_SRLI) (andb
-                                                                                           (Coq.ZArith.BinInt.Z.eqb
-                                                                                            funct6 funct6_SRLI)
-                                                                                           shamtHiTest)) : bool
+                                                                       else if andb (Z.eqb opcode opcode_OP_IMM) (andb
+                                                                                     (Z.eqb funct3 funct3_SRLI) (andb
+                                                                                      (Z.eqb funct6 funct6_SRLI)
+                                                                                      shamtHiTest)) : bool
                                                                             then Srli rd rs1 shamt6
-                                                                            else if andb (Coq.ZArith.BinInt.Z.eqb opcode
-                                                                                                                  opcode_OP_IMM)
-                                                                                         (andb (Coq.ZArith.BinInt.Z.eqb
-                                                                                                funct3 funct3_SRAI)
-                                                                                               (andb
-                                                                                                (Coq.ZArith.BinInt.Z.eqb
-                                                                                                 funct6 funct6_SRAI)
+                                                                            else if andb (Z.eqb opcode opcode_OP_IMM)
+                                                                                         (andb (Z.eqb funct3
+                                                                                                      funct3_SRAI) (andb
+                                                                                                (Z.eqb funct6
+                                                                                                       funct6_SRAI)
                                                                                                 shamtHiTest)) : bool
                                                                                  then Srai rd rs1 shamt6
-                                                                                 else if Coq.ZArith.BinInt.Z.eqb opcode
-                                                                                                                 opcode_AUIPC : bool
+                                                                                 else if Z.eqb opcode
+                                                                                               opcode_AUIPC : bool
                                                                                       then Auipc rd oimm20
-                                                                                      else if andb
-                                                                                              (Coq.ZArith.BinInt.Z.eqb
-                                                                                               opcode opcode_STORE)
-                                                                                              (Coq.ZArith.BinInt.Z.eqb
-                                                                                               funct3 funct3_SB) : bool
+                                                                                      else if andb (Z.eqb opcode
+                                                                                                          opcode_STORE)
+                                                                                                   (Z.eqb funct3
+                                                                                                          funct3_SB) : bool
                                                                                            then Sb rs1 rs2 simm12
-                                                                                           else if andb
-                                                                                                   (Coq.ZArith.BinInt.Z.eqb
-                                                                                                    opcode opcode_STORE)
-                                                                                                   (Coq.ZArith.BinInt.Z.eqb
-                                                                                                    funct3
-                                                                                                    funct3_SH) : bool
+                                                                                           else if andb (Z.eqb opcode
+                                                                                                               opcode_STORE)
+                                                                                                        (Z.eqb funct3
+                                                                                                               funct3_SH) : bool
                                                                                                 then Sh rs1 rs2 simm12
-                                                                                                else if andb
-                                                                                                        (Coq.ZArith.BinInt.Z.eqb
-                                                                                                         opcode
-                                                                                                         opcode_STORE)
-                                                                                                        (Coq.ZArith.BinInt.Z.eqb
-                                                                                                         funct3
-                                                                                                         funct3_SW) : bool
+                                                                                                else if andb (Z.eqb
+                                                                                                              opcode
+                                                                                                              opcode_STORE)
+                                                                                                             (Z.eqb
+                                                                                                              funct3
+                                                                                                              funct3_SW) : bool
                                                                                                      then Sw rs1 rs2
                                                                                                           simm12
-                                                                                                     else if andb
-                                                                                                             (Coq.ZArith.BinInt.Z.eqb
-                                                                                                              opcode
-                                                                                                              opcode_OP)
-                                                                                                             (andb
-                                                                                                              (Coq.ZArith.BinInt.Z.eqb
-                                                                                                               funct3
-                                                                                                               funct3_ADD)
-                                                                                                              (Coq.ZArith.BinInt.Z.eqb
-                                                                                                               funct7
-                                                                                                               funct7_ADD)) : bool
-                                                                                                          then Add rd
-                                                                                                               rs1 rs2
-                                                                                                          else if andb
-                                                                                                                  (Coq.ZArith.BinInt.Z.eqb
+                                                                                                     else if andb (Z.eqb
                                                                                                                    opcode
                                                                                                                    opcode_OP)
                                                                                                                   (andb
-                                                                                                                   (Coq.ZArith.BinInt.Z.eqb
+                                                                                                                   (Z.eqb
+                                                                                                                    funct3
+                                                                                                                    funct3_ADD)
+                                                                                                                   (Z.eqb
+                                                                                                                    funct7
+                                                                                                                    funct7_ADD)) : bool
+                                                                                                          then Add rd
+                                                                                                               rs1 rs2
+                                                                                                          else if andb
+                                                                                                                  (Z.eqb
+                                                                                                                   opcode
+                                                                                                                   opcode_OP)
+                                                                                                                  (andb
+                                                                                                                   (Z.eqb
                                                                                                                     funct3
                                                                                                                     funct3_SUB)
-                                                                                                                   (Coq.ZArith.BinInt.Z.eqb
+                                                                                                                   (Z.eqb
                                                                                                                     funct7
                                                                                                                     funct7_SUB)) : bool
                                                                                                                then Sub
@@ -732,14 +694,14 @@ Definition decode : InstructionSet -> Coq.ZArith.BinInt.Z -> Instruction :=
                                                                                                                     rs1
                                                                                                                     rs2
                                                                                                                else if andb
-                                                                                                                       (Coq.ZArith.BinInt.Z.eqb
+                                                                                                                       (Z.eqb
                                                                                                                         opcode
                                                                                                                         opcode_OP)
                                                                                                                        (andb
-                                                                                                                        (Coq.ZArith.BinInt.Z.eqb
+                                                                                                                        (Z.eqb
                                                                                                                          funct3
                                                                                                                          funct3_SLL)
-                                                                                                                        (Coq.ZArith.BinInt.Z.eqb
+                                                                                                                        (Z.eqb
                                                                                                                          funct7
                                                                                                                          funct7_SLL)) : bool
                                                                                                                     then Sll
@@ -747,14 +709,14 @@ Definition decode : InstructionSet -> Coq.ZArith.BinInt.Z -> Instruction :=
                                                                                                                          rs1
                                                                                                                          rs2
                                                                                                                     else if andb
-                                                                                                                            (Coq.ZArith.BinInt.Z.eqb
+                                                                                                                            (Z.eqb
                                                                                                                              opcode
                                                                                                                              opcode_OP)
                                                                                                                             (andb
-                                                                                                                             (Coq.ZArith.BinInt.Z.eqb
+                                                                                                                             (Z.eqb
                                                                                                                               funct3
                                                                                                                               funct3_SLT)
-                                                                                                                             (Coq.ZArith.BinInt.Z.eqb
+                                                                                                                             (Z.eqb
                                                                                                                               funct7
                                                                                                                               funct7_SLT)) : bool
                                                                                                                          then Slt
@@ -762,14 +724,14 @@ Definition decode : InstructionSet -> Coq.ZArith.BinInt.Z -> Instruction :=
                                                                                                                               rs1
                                                                                                                               rs2
                                                                                                                          else if andb
-                                                                                                                                 (Coq.ZArith.BinInt.Z.eqb
+                                                                                                                                 (Z.eqb
                                                                                                                                   opcode
                                                                                                                                   opcode_OP)
                                                                                                                                  (andb
-                                                                                                                                  (Coq.ZArith.BinInt.Z.eqb
+                                                                                                                                  (Z.eqb
                                                                                                                                    funct3
                                                                                                                                    funct3_SLTU)
-                                                                                                                                  (Coq.ZArith.BinInt.Z.eqb
+                                                                                                                                  (Z.eqb
                                                                                                                                    funct7
                                                                                                                                    funct7_SLTU)) : bool
                                                                                                                               then Sltu
@@ -777,14 +739,14 @@ Definition decode : InstructionSet -> Coq.ZArith.BinInt.Z -> Instruction :=
                                                                                                                                    rs1
                                                                                                                                    rs2
                                                                                                                               else if andb
-                                                                                                                                      (Coq.ZArith.BinInt.Z.eqb
+                                                                                                                                      (Z.eqb
                                                                                                                                        opcode
                                                                                                                                        opcode_OP)
                                                                                                                                       (andb
-                                                                                                                                       (Coq.ZArith.BinInt.Z.eqb
+                                                                                                                                       (Z.eqb
                                                                                                                                         funct3
                                                                                                                                         funct3_XOR)
-                                                                                                                                       (Coq.ZArith.BinInt.Z.eqb
+                                                                                                                                       (Z.eqb
                                                                                                                                         funct7
                                                                                                                                         funct7_XOR)) : bool
                                                                                                                                    then Xor
@@ -792,14 +754,14 @@ Definition decode : InstructionSet -> Coq.ZArith.BinInt.Z -> Instruction :=
                                                                                                                                         rs1
                                                                                                                                         rs2
                                                                                                                                    else if andb
-                                                                                                                                           (Coq.ZArith.BinInt.Z.eqb
+                                                                                                                                           (Z.eqb
                                                                                                                                             opcode
                                                                                                                                             opcode_OP)
                                                                                                                                            (andb
-                                                                                                                                            (Coq.ZArith.BinInt.Z.eqb
+                                                                                                                                            (Z.eqb
                                                                                                                                              funct3
                                                                                                                                              funct3_SRL)
-                                                                                                                                            (Coq.ZArith.BinInt.Z.eqb
+                                                                                                                                            (Z.eqb
                                                                                                                                              funct7
                                                                                                                                              funct7_SRL)) : bool
                                                                                                                                         then Srl
@@ -807,14 +769,14 @@ Definition decode : InstructionSet -> Coq.ZArith.BinInt.Z -> Instruction :=
                                                                                                                                              rs1
                                                                                                                                              rs2
                                                                                                                                         else if andb
-                                                                                                                                                (Coq.ZArith.BinInt.Z.eqb
+                                                                                                                                                (Z.eqb
                                                                                                                                                  opcode
                                                                                                                                                  opcode_OP)
                                                                                                                                                 (andb
-                                                                                                                                                 (Coq.ZArith.BinInt.Z.eqb
+                                                                                                                                                 (Z.eqb
                                                                                                                                                   funct3
                                                                                                                                                   funct3_SRA)
-                                                                                                                                                 (Coq.ZArith.BinInt.Z.eqb
+                                                                                                                                                 (Z.eqb
                                                                                                                                                   funct7
                                                                                                                                                   funct7_SRA)) : bool
                                                                                                                                              then Sra
@@ -822,14 +784,14 @@ Definition decode : InstructionSet -> Coq.ZArith.BinInt.Z -> Instruction :=
                                                                                                                                                   rs1
                                                                                                                                                   rs2
                                                                                                                                              else if andb
-                                                                                                                                                     (Coq.ZArith.BinInt.Z.eqb
+                                                                                                                                                     (Z.eqb
                                                                                                                                                       opcode
                                                                                                                                                       opcode_OP)
                                                                                                                                                      (andb
-                                                                                                                                                      (Coq.ZArith.BinInt.Z.eqb
+                                                                                                                                                      (Z.eqb
                                                                                                                                                        funct3
                                                                                                                                                        funct3_OR)
-                                                                                                                                                      (Coq.ZArith.BinInt.Z.eqb
+                                                                                                                                                      (Z.eqb
                                                                                                                                                        funct7
                                                                                                                                                        funct7_OR)) : bool
                                                                                                                                                   then Or
@@ -837,31 +799,31 @@ Definition decode : InstructionSet -> Coq.ZArith.BinInt.Z -> Instruction :=
                                                                                                                                                        rs1
                                                                                                                                                        rs2
                                                                                                                                                   else if andb
-                                                                                                                                                          (Coq.ZArith.BinInt.Z.eqb
+                                                                                                                                                          (Z.eqb
                                                                                                                                                            opcode
                                                                                                                                                            opcode_OP)
                                                                                                                                                           (andb
-                                                                                                                                                           (Coq.ZArith.BinInt.Z.eqb
+                                                                                                                                                           (Z.eqb
                                                                                                                                                             funct3
                                                                                                                                                             funct3_AND)
-                                                                                                                                                           (Coq.ZArith.BinInt.Z.eqb
+                                                                                                                                                           (Z.eqb
                                                                                                                                                             funct7
                                                                                                                                                             funct7_AND)) : bool
                                                                                                                                                        then And
                                                                                                                                                             rd
                                                                                                                                                             rs1
                                                                                                                                                             rs2
-                                                                                                                                                       else if Coq.ZArith.BinInt.Z.eqb
+                                                                                                                                                       else if Z.eqb
                                                                                                                                                                opcode
                                                                                                                                                                opcode_LUI : bool
                                                                                                                                                             then Lui
                                                                                                                                                                  rd
                                                                                                                                                                  imm20
                                                                                                                                                             else if andb
-                                                                                                                                                                    (Coq.ZArith.BinInt.Z.eqb
+                                                                                                                                                                    (Z.eqb
                                                                                                                                                                      opcode
                                                                                                                                                                      opcode_BRANCH)
-                                                                                                                                                                    (Coq.ZArith.BinInt.Z.eqb
+                                                                                                                                                                    (Z.eqb
                                                                                                                                                                      funct3
                                                                                                                                                                      funct3_BEQ) : bool
                                                                                                                                                                  then Beq
@@ -869,10 +831,10 @@ Definition decode : InstructionSet -> Coq.ZArith.BinInt.Z -> Instruction :=
                                                                                                                                                                       rs2
                                                                                                                                                                       sbimm12
                                                                                                                                                                  else if andb
-                                                                                                                                                                         (Coq.ZArith.BinInt.Z.eqb
+                                                                                                                                                                         (Z.eqb
                                                                                                                                                                           opcode
                                                                                                                                                                           opcode_BRANCH)
-                                                                                                                                                                         (Coq.ZArith.BinInt.Z.eqb
+                                                                                                                                                                         (Z.eqb
                                                                                                                                                                           funct3
                                                                                                                                                                           funct3_BNE) : bool
                                                                                                                                                                       then Bne
@@ -880,10 +842,10 @@ Definition decode : InstructionSet -> Coq.ZArith.BinInt.Z -> Instruction :=
                                                                                                                                                                            rs2
                                                                                                                                                                            sbimm12
                                                                                                                                                                       else if andb
-                                                                                                                                                                              (Coq.ZArith.BinInt.Z.eqb
+                                                                                                                                                                              (Z.eqb
                                                                                                                                                                                opcode
                                                                                                                                                                                opcode_BRANCH)
-                                                                                                                                                                              (Coq.ZArith.BinInt.Z.eqb
+                                                                                                                                                                              (Z.eqb
                                                                                                                                                                                funct3
                                                                                                                                                                                funct3_BLT) : bool
                                                                                                                                                                            then Blt
@@ -891,10 +853,10 @@ Definition decode : InstructionSet -> Coq.ZArith.BinInt.Z -> Instruction :=
                                                                                                                                                                                 rs2
                                                                                                                                                                                 sbimm12
                                                                                                                                                                            else if andb
-                                                                                                                                                                                   (Coq.ZArith.BinInt.Z.eqb
+                                                                                                                                                                                   (Z.eqb
                                                                                                                                                                                     opcode
                                                                                                                                                                                     opcode_BRANCH)
-                                                                                                                                                                                   (Coq.ZArith.BinInt.Z.eqb
+                                                                                                                                                                                   (Z.eqb
                                                                                                                                                                                     funct3
                                                                                                                                                                                     funct3_BGE) : bool
                                                                                                                                                                                 then Bge
@@ -902,10 +864,10 @@ Definition decode : InstructionSet -> Coq.ZArith.BinInt.Z -> Instruction :=
                                                                                                                                                                                      rs2
                                                                                                                                                                                      sbimm12
                                                                                                                                                                                 else if andb
-                                                                                                                                                                                        (Coq.ZArith.BinInt.Z.eqb
+                                                                                                                                                                                        (Z.eqb
                                                                                                                                                                                          opcode
                                                                                                                                                                                          opcode_BRANCH)
-                                                                                                                                                                                        (Coq.ZArith.BinInt.Z.eqb
+                                                                                                                                                                                        (Z.eqb
                                                                                                                                                                                          funct3
                                                                                                                                                                                          funct3_BLTU) : bool
                                                                                                                                                                                      then Bltu
@@ -913,24 +875,24 @@ Definition decode : InstructionSet -> Coq.ZArith.BinInt.Z -> Instruction :=
                                                                                                                                                                                           rs2
                                                                                                                                                                                           sbimm12
                                                                                                                                                                                      else if andb
-                                                                                                                                                                                             (Coq.ZArith.BinInt.Z.eqb
+                                                                                                                                                                                             (Z.eqb
                                                                                                                                                                                               opcode
                                                                                                                                                                                               opcode_BRANCH)
-                                                                                                                                                                                             (Coq.ZArith.BinInt.Z.eqb
+                                                                                                                                                                                             (Z.eqb
                                                                                                                                                                                               funct3
                                                                                                                                                                                               funct3_BGEU) : bool
                                                                                                                                                                                           then Bgeu
                                                                                                                                                                                                rs1
                                                                                                                                                                                                rs2
                                                                                                                                                                                                sbimm12
-                                                                                                                                                                                          else if Coq.ZArith.BinInt.Z.eqb
+                                                                                                                                                                                          else if Z.eqb
                                                                                                                                                                                                   opcode
                                                                                                                                                                                                   opcode_JALR : bool
                                                                                                                                                                                                then Jalr
                                                                                                                                                                                                     rd
                                                                                                                                                                                                     rs1
                                                                                                                                                                                                     oimm12
-                                                                                                                                                                                               else if Coq.ZArith.BinInt.Z.eqb
+                                                                                                                                                                                               else if Z.eqb
                                                                                                                                                                                                        opcode
                                                                                                                                                                                                        opcode_JAL : bool
                                                                                                                                                                                                     then Jal
@@ -938,168 +900,139 @@ Definition decode : InstructionSet -> Coq.ZArith.BinInt.Z -> Instruction :=
                                                                                                                                                                                                          jimm20
                                                                                                                                                                                                     else InvalidI in
     let decodeM :=
-      if andb (Coq.ZArith.BinInt.Z.eqb opcode opcode_OP) (andb
-               (Coq.ZArith.BinInt.Z.eqb funct3 funct3_MUL) (Coq.ZArith.BinInt.Z.eqb funct7
-                                                                                    funct7_MUL)) : bool
+      if andb (Z.eqb opcode opcode_OP) (andb (Z.eqb funct3 funct3_MUL) (Z.eqb funct7
+                                                                              funct7_MUL)) : bool
       then Mul rd rs1 rs2
-      else if andb (Coq.ZArith.BinInt.Z.eqb opcode opcode_OP) (andb
-                    (Coq.ZArith.BinInt.Z.eqb funct3 funct3_MULH) (Coq.ZArith.BinInt.Z.eqb funct7
-                                                                                          funct7_MULH)) : bool
+      else if andb (Z.eqb opcode opcode_OP) (andb (Z.eqb funct3 funct3_MULH) (Z.eqb
+                                                   funct7 funct7_MULH)) : bool
            then Mulh rd rs1 rs2
-           else if andb (Coq.ZArith.BinInt.Z.eqb opcode opcode_OP) (andb
-                         (Coq.ZArith.BinInt.Z.eqb funct3 funct3_MULHSU) (Coq.ZArith.BinInt.Z.eqb funct7
-                                                                                                 funct7_MULHSU)) : bool
+           else if andb (Z.eqb opcode opcode_OP) (andb (Z.eqb funct3 funct3_MULHSU) (Z.eqb
+                                                        funct7 funct7_MULHSU)) : bool
                 then Mulhsu rd rs1 rs2
-                else if andb (Coq.ZArith.BinInt.Z.eqb opcode opcode_OP) (andb
-                              (Coq.ZArith.BinInt.Z.eqb funct3 funct3_MULHU) (Coq.ZArith.BinInt.Z.eqb funct7
-                                                                                                     funct7_MULHU)) : bool
+                else if andb (Z.eqb opcode opcode_OP) (andb (Z.eqb funct3 funct3_MULHU) (Z.eqb
+                                                             funct7 funct7_MULHU)) : bool
                      then Mulhu rd rs1 rs2
-                     else if andb (Coq.ZArith.BinInt.Z.eqb opcode opcode_OP) (andb
-                                   (Coq.ZArith.BinInt.Z.eqb funct3 funct3_DIV) (Coq.ZArith.BinInt.Z.eqb funct7
-                                                                                                        funct7_DIV)) : bool
+                     else if andb (Z.eqb opcode opcode_OP) (andb (Z.eqb funct3 funct3_DIV) (Z.eqb
+                                                                  funct7 funct7_DIV)) : bool
                           then Div rd rs1 rs2
-                          else if andb (Coq.ZArith.BinInt.Z.eqb opcode opcode_OP) (andb
-                                        (Coq.ZArith.BinInt.Z.eqb funct3 funct3_DIVU) (Coq.ZArith.BinInt.Z.eqb funct7
-                                                                                                              funct7_DIVU)) : bool
+                          else if andb (Z.eqb opcode opcode_OP) (andb (Z.eqb funct3 funct3_DIVU) (Z.eqb
+                                                                       funct7 funct7_DIVU)) : bool
                                then Divu rd rs1 rs2
-                               else if andb (Coq.ZArith.BinInt.Z.eqb opcode opcode_OP) (andb
-                                             (Coq.ZArith.BinInt.Z.eqb funct3 funct3_REM) (Coq.ZArith.BinInt.Z.eqb funct7
-                                                                                                                  funct7_REM)) : bool
+                               else if andb (Z.eqb opcode opcode_OP) (andb (Z.eqb funct3 funct3_REM) (Z.eqb
+                                                                            funct7 funct7_REM)) : bool
                                     then Rem rd rs1 rs2
-                                    else if andb (Coq.ZArith.BinInt.Z.eqb opcode opcode_OP) (andb
-                                                  (Coq.ZArith.BinInt.Z.eqb funct3 funct3_REMU) (Coq.ZArith.BinInt.Z.eqb
-                                                   funct7 funct7_REMU)) : bool
+                                    else if andb (Z.eqb opcode opcode_OP) (andb (Z.eqb funct3 funct3_REMU) (Z.eqb
+                                                                                 funct7 funct7_REMU)) : bool
                                          then Remu rd rs1 rs2
                                          else InvalidM in
     let decodeI64 :=
-      if andb (Coq.ZArith.BinInt.Z.eqb opcode opcode_LOAD) (Coq.ZArith.BinInt.Z.eqb
-               funct3 funct3_LD) : bool
+      if andb (Z.eqb opcode opcode_LOAD) (Z.eqb funct3 funct3_LD) : bool
       then Ld rd rs1 oimm12
-      else if andb (Coq.ZArith.BinInt.Z.eqb opcode opcode_LOAD)
-                   (Coq.ZArith.BinInt.Z.eqb funct3 funct3_LWU) : bool
+      else if andb (Z.eqb opcode opcode_LOAD) (Z.eqb funct3 funct3_LWU) : bool
            then Lwu rd rs1 oimm12
-           else if andb (Coq.ZArith.BinInt.Z.eqb opcode opcode_OP_IMM_32)
-                        (Coq.ZArith.BinInt.Z.eqb funct3 funct3_ADDIW) : bool
+           else if andb (Z.eqb opcode opcode_OP_IMM_32) (Z.eqb funct3 funct3_ADDIW) : bool
                 then Addiw rd rs1 imm12
-                else if andb (Coq.ZArith.BinInt.Z.eqb opcode opcode_OP_IMM_32) (andb
-                              (Coq.ZArith.BinInt.Z.eqb funct3 funct3_SLLIW) (Coq.ZArith.BinInt.Z.eqb funct7
-                                                                                                     funct7_SLLIW)) : bool
+                else if andb (Z.eqb opcode opcode_OP_IMM_32) (andb (Z.eqb funct3 funct3_SLLIW)
+                                                                   (Z.eqb funct7 funct7_SLLIW)) : bool
                      then Slliw rd rs1 shamt5
-                     else if andb (Coq.ZArith.BinInt.Z.eqb opcode opcode_OP_IMM_32) (andb
-                                   (Coq.ZArith.BinInt.Z.eqb funct3 funct3_SRLIW) (Coq.ZArith.BinInt.Z.eqb funct7
-                                                                                                          funct7_SRLIW)) : bool
+                     else if andb (Z.eqb opcode opcode_OP_IMM_32) (andb (Z.eqb funct3 funct3_SRLIW)
+                                                                        (Z.eqb funct7 funct7_SRLIW)) : bool
                           then Srliw rd rs1 shamt5
-                          else if andb (Coq.ZArith.BinInt.Z.eqb opcode opcode_OP_IMM_32) (andb
-                                        (Coq.ZArith.BinInt.Z.eqb funct3 funct3_SRAIW) (Coq.ZArith.BinInt.Z.eqb funct7
-                                                                                                               funct7_SRAIW)) : bool
+                          else if andb (Z.eqb opcode opcode_OP_IMM_32) (andb (Z.eqb funct3 funct3_SRAIW)
+                                                                             (Z.eqb funct7 funct7_SRAIW)) : bool
                                then Sraiw rd rs1 shamt5
-                               else if andb (Coq.ZArith.BinInt.Z.eqb opcode opcode_STORE)
-                                            (Coq.ZArith.BinInt.Z.eqb funct3 funct3_SD) : bool
+                               else if andb (Z.eqb opcode opcode_STORE) (Z.eqb funct3 funct3_SD) : bool
                                     then Sd rs1 rs2 simm12
-                                    else if andb (Coq.ZArith.BinInt.Z.eqb opcode opcode_OP_32) (andb
-                                                  (Coq.ZArith.BinInt.Z.eqb funct3 funct3_ADDW) (Coq.ZArith.BinInt.Z.eqb
-                                                   funct7 funct7_ADDW)) : bool
+                                    else if andb (Z.eqb opcode opcode_OP_32) (andb (Z.eqb funct3 funct3_ADDW) (Z.eqb
+                                                                                    funct7 funct7_ADDW)) : bool
                                          then Addw rd rs1 rs2
-                                         else if andb (Coq.ZArith.BinInt.Z.eqb opcode opcode_OP_32) (andb
-                                                       (Coq.ZArith.BinInt.Z.eqb funct3 funct3_SUBW)
-                                                       (Coq.ZArith.BinInt.Z.eqb funct7 funct7_SUBW)) : bool
+                                         else if andb (Z.eqb opcode opcode_OP_32) (andb (Z.eqb funct3 funct3_SUBW)
+                                                                                        (Z.eqb funct7
+                                                                                               funct7_SUBW)) : bool
                                               then Subw rd rs1 rs2
-                                              else if andb (Coq.ZArith.BinInt.Z.eqb opcode opcode_OP_32) (andb
-                                                            (Coq.ZArith.BinInt.Z.eqb funct3 funct3_SLLW)
-                                                            (Coq.ZArith.BinInt.Z.eqb funct7 funct7_SLLW)) : bool
+                                              else if andb (Z.eqb opcode opcode_OP_32) (andb (Z.eqb funct3 funct3_SLLW)
+                                                                                             (Z.eqb funct7
+                                                                                                    funct7_SLLW)) : bool
                                                    then Sllw rd rs1 rs2
-                                                   else if andb (Coq.ZArith.BinInt.Z.eqb opcode opcode_OP_32) (andb
-                                                                 (Coq.ZArith.BinInt.Z.eqb funct3 funct3_SRLW)
-                                                                 (Coq.ZArith.BinInt.Z.eqb funct7 funct7_SRLW)) : bool
+                                                   else if andb (Z.eqb opcode opcode_OP_32) (andb (Z.eqb funct3
+                                                                                                         funct3_SRLW)
+                                                                                                  (Z.eqb funct7
+                                                                                                         funct7_SRLW)) : bool
                                                         then Srlw rd rs1 rs2
-                                                        else if andb (Coq.ZArith.BinInt.Z.eqb opcode opcode_OP_32) (andb
-                                                                      (Coq.ZArith.BinInt.Z.eqb funct3 funct3_SRAW)
-                                                                      (Coq.ZArith.BinInt.Z.eqb funct7
-                                                                                               funct7_SRAW)) : bool
+                                                        else if andb (Z.eqb opcode opcode_OP_32) (andb (Z.eqb funct3
+                                                                                                              funct3_SRAW)
+                                                                                                       (Z.eqb funct7
+                                                                                                              funct7_SRAW)) : bool
                                                              then Sraw rd rs1 rs2
                                                              else InvalidI64 in
     let decodeM64 :=
-      if andb (Coq.ZArith.BinInt.Z.eqb opcode opcode_OP_32) (andb
-               (Coq.ZArith.BinInt.Z.eqb funct3 funct3_MULW) (Coq.ZArith.BinInt.Z.eqb funct7
-                                                                                     funct7_MULW)) : bool
+      if andb (Z.eqb opcode opcode_OP_32) (andb (Z.eqb funct3 funct3_MULW) (Z.eqb
+                                                 funct7 funct7_MULW)) : bool
       then Mulw rd rs1 rs2
-      else if andb (Coq.ZArith.BinInt.Z.eqb opcode opcode_OP_32) (andb
-                    (Coq.ZArith.BinInt.Z.eqb funct3 funct3_DIVW) (Coq.ZArith.BinInt.Z.eqb funct7
-                                                                                          funct7_DIVW)) : bool
+      else if andb (Z.eqb opcode opcode_OP_32) (andb (Z.eqb funct3 funct3_DIVW) (Z.eqb
+                                                      funct7 funct7_DIVW)) : bool
            then Divw rd rs1 rs2
-           else if andb (Coq.ZArith.BinInt.Z.eqb opcode opcode_OP_32) (andb
-                         (Coq.ZArith.BinInt.Z.eqb funct3 funct3_DIVUW) (Coq.ZArith.BinInt.Z.eqb funct7
-                                                                                                funct7_DIVUW)) : bool
+           else if andb (Z.eqb opcode opcode_OP_32) (andb (Z.eqb funct3 funct3_DIVUW)
+                                                          (Z.eqb funct7 funct7_DIVUW)) : bool
                 then Divuw rd rs1 rs2
-                else if andb (Coq.ZArith.BinInt.Z.eqb opcode opcode_OP_32) (andb
-                              (Coq.ZArith.BinInt.Z.eqb funct3 funct3_REMW) (Coq.ZArith.BinInt.Z.eqb funct7
-                                                                                                    funct7_REMW)) : bool
+                else if andb (Z.eqb opcode opcode_OP_32) (andb (Z.eqb funct3 funct3_REMW) (Z.eqb
+                                                                funct7 funct7_REMW)) : bool
                      then Remw rd rs1 rs2
-                     else if andb (Coq.ZArith.BinInt.Z.eqb opcode opcode_OP_32) (andb
-                                   (Coq.ZArith.BinInt.Z.eqb funct3 funct3_REMUW) (Coq.ZArith.BinInt.Z.eqb funct7
-                                                                                                          funct7_REMUW)) : bool
+                     else if andb (Z.eqb opcode opcode_OP_32) (andb (Z.eqb funct3 funct3_REMUW)
+                                                                    (Z.eqb funct7 funct7_REMUW)) : bool
                           then Remuw rd rs1 rs2
                           else InvalidM64 in
     let decodeCSR :=
-      if andb (Coq.ZArith.BinInt.Z.eqb opcode opcode_SYSTEM) (andb
-               (Coq.ZArith.BinInt.Z.eqb rd 0) (andb (Coq.ZArith.BinInt.Z.eqb funct3
-                                                                             funct3_PRIV) (andb (Coq.ZArith.BinInt.Z.eqb
-                                                                                                 rs1 0)
-                                                                                                (Coq.ZArith.BinInt.Z.eqb
-                                                                                                 funct12
-                                                                                                 funct12_ECALL)))) : bool
+      if andb (Z.eqb opcode opcode_SYSTEM) (andb (Z.eqb rd 0) (andb (Z.eqb funct3
+                                                                           funct3_PRIV) (andb (Z.eqb rs1 0) (Z.eqb
+                                                                                               funct12
+                                                                                               funct12_ECALL)))) : bool
       then Ecall
-      else if andb (Coq.ZArith.BinInt.Z.eqb opcode opcode_SYSTEM) (andb
-                    (Coq.ZArith.BinInt.Z.eqb rd 0) (andb (Coq.ZArith.BinInt.Z.eqb funct3
-                                                                                  funct3_PRIV) (andb
-                                                          (Coq.ZArith.BinInt.Z.eqb rs1 0) (Coq.ZArith.BinInt.Z.eqb
-                                                           funct12 funct12_EBREAK)))) : bool
+      else if andb (Z.eqb opcode opcode_SYSTEM) (andb (Z.eqb rd 0) (andb (Z.eqb funct3
+                                                                                funct3_PRIV) (andb (Z.eqb rs1 0) (Z.eqb
+                                                                                                    funct12
+                                                                                                    funct12_EBREAK)))) : bool
            then Ebreak
-           else if andb (Coq.ZArith.BinInt.Z.eqb opcode opcode_SYSTEM) (andb
-                         (Coq.ZArith.BinInt.Z.eqb rd 0) (andb (Coq.ZArith.BinInt.Z.eqb funct3
-                                                                                       funct3_PRIV) (andb
-                                                               (Coq.ZArith.BinInt.Z.eqb rs1 0) (Coq.ZArith.BinInt.Z.eqb
-                                                                funct12 funct12_URET)))) : bool
+           else if andb (Z.eqb opcode opcode_SYSTEM) (andb (Z.eqb rd 0) (andb (Z.eqb funct3
+                                                                                     funct3_PRIV) (andb (Z.eqb rs1 0)
+                                                                                                        (Z.eqb funct12
+                                                                                                               funct12_URET)))) : bool
                 then Uret
-                else if andb (Coq.ZArith.BinInt.Z.eqb opcode opcode_SYSTEM) (andb
-                              (Coq.ZArith.BinInt.Z.eqb rd 0) (andb (Coq.ZArith.BinInt.Z.eqb funct3
-                                                                                            funct3_PRIV) (andb
-                                                                    (Coq.ZArith.BinInt.Z.eqb rs1 0)
-                                                                    (Coq.ZArith.BinInt.Z.eqb funct12
-                                                                                             funct12_SRET)))) : bool
+                else if andb (Z.eqb opcode opcode_SYSTEM) (andb (Z.eqb rd 0) (andb (Z.eqb funct3
+                                                                                          funct3_PRIV) (andb (Z.eqb rs1
+                                                                                                                    0)
+                                                                                                             (Z.eqb
+                                                                                                              funct12
+                                                                                                              funct12_SRET)))) : bool
                      then Sret
-                     else if andb (Coq.ZArith.BinInt.Z.eqb opcode opcode_SYSTEM) (andb
-                                   (Coq.ZArith.BinInt.Z.eqb rd 0) (andb (Coq.ZArith.BinInt.Z.eqb funct3
-                                                                                                 funct3_PRIV) (andb
-                                                                         (Coq.ZArith.BinInt.Z.eqb rs1 0)
-                                                                         (Coq.ZArith.BinInt.Z.eqb funct12
-                                                                                                  funct12_MRET)))) : bool
+                     else if andb (Z.eqb opcode opcode_SYSTEM) (andb (Z.eqb rd 0) (andb (Z.eqb funct3
+                                                                                               funct3_PRIV) (andb (Z.eqb
+                                                                                                                   rs1
+                                                                                                                   0)
+                                                                                                                  (Z.eqb
+                                                                                                                   funct12
+                                                                                                                   funct12_MRET)))) : bool
                           then Mret
-                          else if andb (Coq.ZArith.BinInt.Z.eqb opcode opcode_SYSTEM) (andb
-                                        (Coq.ZArith.BinInt.Z.eqb rd 0) (andb (Coq.ZArith.BinInt.Z.eqb funct3
-                                                                                                      funct3_PRIV) (andb
-                                                                              (Coq.ZArith.BinInt.Z.eqb rs1 0)
-                                                                              (Coq.ZArith.BinInt.Z.eqb funct12
-                                                                                                       funct12_WFI)))) : bool
+                          else if andb (Z.eqb opcode opcode_SYSTEM) (andb (Z.eqb rd 0) (andb (Z.eqb funct3
+                                                                                                    funct3_PRIV) (andb
+                                                                                              (Z.eqb rs1 0) (Z.eqb
+                                                                                               funct12
+                                                                                               funct12_WFI)))) : bool
                                then Wfi
-                               else if andb (Coq.ZArith.BinInt.Z.eqb opcode opcode_SYSTEM)
-                                            (Coq.ZArith.BinInt.Z.eqb funct3 funct3_CSRRW) : bool
+                               else if andb (Z.eqb opcode opcode_SYSTEM) (Z.eqb funct3 funct3_CSRRW) : bool
                                     then Csrrw rd rs1 csr12
-                                    else if andb (Coq.ZArith.BinInt.Z.eqb opcode opcode_SYSTEM)
-                                                 (Coq.ZArith.BinInt.Z.eqb funct3 funct3_CSRRS) : bool
+                                    else if andb (Z.eqb opcode opcode_SYSTEM) (Z.eqb funct3 funct3_CSRRS) : bool
                                          then Csrrs rd rs1 csr12
-                                         else if andb (Coq.ZArith.BinInt.Z.eqb opcode opcode_SYSTEM)
-                                                      (Coq.ZArith.BinInt.Z.eqb funct3 funct3_CSRRC) : bool
+                                         else if andb (Z.eqb opcode opcode_SYSTEM) (Z.eqb funct3 funct3_CSRRC) : bool
                                               then Csrrc rd rs1 csr12
-                                              else if andb (Coq.ZArith.BinInt.Z.eqb opcode opcode_SYSTEM)
-                                                           (Coq.ZArith.BinInt.Z.eqb funct3 funct3_CSRRWI) : bool
+                                              else if andb (Z.eqb opcode opcode_SYSTEM) (Z.eqb funct3
+                                                                                               funct3_CSRRWI) : bool
                                                    then Csrrwi rd zimm csr12
-                                                   else if andb (Coq.ZArith.BinInt.Z.eqb opcode opcode_SYSTEM)
-                                                                (Coq.ZArith.BinInt.Z.eqb funct3 funct3_CSRRSI) : bool
+                                                   else if andb (Z.eqb opcode opcode_SYSTEM) (Z.eqb funct3
+                                                                                                    funct3_CSRRSI) : bool
                                                         then Csrrsi rd zimm csr12
-                                                        else if andb (Coq.ZArith.BinInt.Z.eqb opcode opcode_SYSTEM)
-                                                                     (Coq.ZArith.BinInt.Z.eqb funct3
-                                                                                              funct3_CSRRCI) : bool
+                                                        else if andb (Z.eqb opcode opcode_SYSTEM) (Z.eqb funct3
+                                                                                                         funct3_CSRRCI) : bool
                                                              then Csrrci rd zimm csr12
                                                              else InvalidCSR in
     let resultCSR :=
@@ -1130,14 +1063,17 @@ Definition decode : InstructionSet -> Coq.ZArith.BinInt.Z -> Instruction :=
     let results : list Instruction :=
       Coq.Init.Datatypes.app resultI (Coq.Init.Datatypes.app (if supportsM iset : bool
                                                               then resultM
-                                                              else nil) (Coq.Init.Datatypes.app
-                                                              (if Coq.ZArith.BinInt.Z.eqb (bitwidth iset) 64 : bool
-                                                               then resultI64
-                                                               else nil) (Coq.Init.Datatypes.app (if andb
-                                                                                                     (Coq.ZArith.BinInt.Z.eqb
-                                                                                                      (bitwidth iset)
-                                                                                                      64) (supportsM
-                                                                                                      iset) : bool
+                                                              else nil) (Coq.Init.Datatypes.app (if Z.eqb (bitwidth
+                                                                                                           iset)
+                                                                                                          64 : bool
+                                                                                                 then resultI64
+                                                                                                 else nil)
+                                                                                                (Coq.Init.Datatypes.app
+                                                                                                 (if andb (Z.eqb
+                                                                                                           (bitwidth
+                                                                                                            iset) 64)
+                                                                                                          (supportsM
+                                                                                                           iset) : bool
                                                                                                   then resultM64
                                                                                                   else nil)
                                                                                                  resultCSR))) in
@@ -1148,8 +1084,6 @@ Definition decode : InstructionSet -> Coq.ZArith.BinInt.Z -> Instruction :=
     end.
 
 (* Unbound variables:
-     andb bitSlice bool cons false id list nil orb true Coq.Init.Datatypes.app
-     Coq.ZArith.BinInt.Z Coq.ZArith.BinInt.Z.eqb Coq.ZArith.BinInt.Z.lor
-     Coq.ZArith.BinInt.Z.pow Coq.ZArith.BinInt.Z.shiftl Coq.ZArith.BinInt.Z.sub
-     Coq.ZArith.BinInt.Z.testbit
+     Z Z.eqb Z.lor Z.pow Z.shiftl Z.sub Z.testbit andb bitSlice bool cons false id
+     list nil orb true Coq.Init.Datatypes.app
 *)

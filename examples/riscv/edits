@@ -6,6 +6,7 @@ import module Utility
 import module Program
 import module GHC.Real
 import module Monads
+import module Coq.ZArith.BinInt
 
 rename type Utility.MachineInt = Coq.ZArith.BinInt.Z
 rename type GHC.Types.Int = Coq.ZArith.BinInt.Z
@@ -70,9 +71,6 @@ rename value Utility.bitSlice = Decode.bitSlice
 
 rewrite forall x, GHC.Num.fromInteger x = x
 rewrite forall x y, (x GHC.Real.^ y) = Coq.ZArith.BinInt.Z.pow x y
-
-# A work-around (Z is used like a module, but cannot be Require Import’ed)
-skip module Coq.ZArith.BinInt.Z
 
 # order Decode.Eq___InstructionI Decode.Eq___InstructionM Decode.Eq___InstructionI64 Decode.Eq___InstructionM64 Decode.Eq___InstructionCSR Decode.Eq___Instruction_op_zeze__
 

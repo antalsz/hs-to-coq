@@ -17,6 +17,7 @@ Local Open Scope alu_scope.
 
 (* Converted imports: *)
 
+Require Import Coq.ZArith.BinInt.
 Require Decode.
 Require Import GHC.Real.
 Require Import Monads.
@@ -41,8 +42,7 @@ Definition execute {p} {t} `{(RiscvProgram p t)}
     | Decode.Jalr rd rs1 oimm12 =>
         Bind (getRegister rs1) (fun x =>
                 Bind getPC (fun pc =>
-                        let newPC :=
-                          Coq.ZArith.BinInt.Z.land (x + fromImm oimm12) (Coq.ZArith.BinInt.Z.lnot 1) in
+                        let newPC := Z.land (x + fromImm oimm12) (Z.lnot 1) in
                         if (mod_ newPC 4 /= 0) : bool
                         then raiseException 0 0
                         else (Bind (setRegister rd (pc + 4)) (fun _ => setPC newPC))))
@@ -135,14 +135,11 @@ Definition execute {p} {t} `{(RiscvProgram p t)}
         Bind (getRegister rs1) (fun x =>
                 setRegister rd (if (ltu x (fromImm imm12)) : bool then 1 else 0))
     | Decode.Xori rd rs1 imm12 =>
-        Bind (getRegister rs1) (fun x =>
-                setRegister rd (Coq.ZArith.BinInt.Z.lxor x (fromImm imm12)))
+        Bind (getRegister rs1) (fun x => setRegister rd (Z.lxor x (fromImm imm12)))
     | Decode.Ori rd rs1 imm12 =>
-        Bind (getRegister rs1) (fun x =>
-                setRegister rd (Coq.ZArith.BinInt.Z.lor x (fromImm imm12)))
+        Bind (getRegister rs1) (fun x => setRegister rd (Z.lor x (fromImm imm12)))
     | Decode.Andi rd rs1 imm12 =>
-        Bind (getRegister rs1) (fun x =>
-                setRegister rd (Coq.ZArith.BinInt.Z.land x (fromImm imm12)))
+        Bind (getRegister rs1) (fun x => setRegister rd (Z.land x (fromImm imm12)))
     | Decode.Slli rd rs1 shamt6 =>
         Bind (getRegister rs1) (fun x => setRegister rd (sll x shamt6))
     | Decode.Srli rd rs1 shamt6 =>
@@ -168,10 +165,10 @@ Definition execute {p} {t} `{(RiscvProgram p t)}
                         setRegister rd (if (ltu x y) : bool then 1 else 0)))
     | Decode.Xor rd rs1 rs2 =>
         Bind (getRegister rs1) (fun x =>
-                Bind (getRegister rs2) (fun y => setRegister rd (Coq.ZArith.BinInt.Z.lxor x y)))
+                Bind (getRegister rs2) (fun y => setRegister rd (Z.lxor x y)))
     | Decode.Or rd rs1 rs2 =>
         Bind (getRegister rs1) (fun x =>
-                Bind (getRegister rs2) (fun y => setRegister rd (Coq.ZArith.BinInt.Z.lor x y)))
+                Bind (getRegister rs2) (fun y => setRegister rd (Z.lor x y)))
     | Decode.Srl rd rs1 rs2 =>
         Bind (getRegister rs1) (fun x =>
                 Bind (getRegister rs2) (fun y => setRegister rd (srl x (regToShamt y))))
@@ -180,17 +177,16 @@ Definition execute {p} {t} `{(RiscvProgram p t)}
                 Bind (getRegister rs2) (fun y => setRegister rd (sra x (regToShamt y))))
     | Decode.And rd rs1 rs2 =>
         Bind (getRegister rs1) (fun x =>
-                Bind (getRegister rs2) (fun y => setRegister rd (Coq.ZArith.BinInt.Z.land x y)))
+                Bind (getRegister rs2) (fun y => setRegister rd (Z.land x y)))
     | inst => Return tt
     end.
 
 (* Unbound variables:
-     Bind Load Return RiscvProgram Store bool fromImm getPC getRegister int16ToReg
-     int32ToReg int8ToReg loadByte loadHalf loadWord ltu mod_ negb op_zgze__ op_zl__
-     op_zm__ op_zp__ op_zsze__ raiseException regToInt16 regToInt32 regToInt8
-     regToShamt setPC setRegister signed_eqb sll sra srl storeByte storeHalf
-     storeWord translate tt uInt16ToReg uInt8ToReg unit when Coq.ZArith.BinInt.Z.land
-     Coq.ZArith.BinInt.Z.lnot Coq.ZArith.BinInt.Z.lor Coq.ZArith.BinInt.Z.lxor
+     Bind Load Return RiscvProgram Store Z.land Z.lnot Z.lor Z.lxor bool fromImm
+     getPC getRegister int16ToReg int32ToReg int8ToReg loadByte loadHalf loadWord ltu
+     mod_ negb op_zgze__ op_zl__ op_zm__ op_zp__ op_zsze__ raiseException regToInt16
+     regToInt32 regToInt8 regToShamt setPC setRegister signed_eqb sll sra srl
+     storeByte storeHalf storeWord translate tt uInt16ToReg uInt8ToReg unit when
      Decode.Add Decode.Addi Decode.And Decode.Andi Decode.Auipc Decode.Beq Decode.Bge
      Decode.Bgeu Decode.Blt Decode.Bltu Decode.Bne Decode.InstructionI Decode.Jal
      Decode.Jalr Decode.Lb Decode.Lbu Decode.Lh Decode.Lhu Decode.Lui Decode.Lw

@@ -277,10 +277,15 @@ instance Gallina Term where
                                                 <>  render_rtype  rty))
     <+> "in" <!> align (renderGallina body)
 
-  renderGallina' p (If c odrty t f) = maybeParen (p > ifPrec) $
+  renderGallina' p (If SymmetricIf c odrty t f) = maybeParen (p > ifPrec) $
         "if"   <+> align (renderGallina c <> render_opt_rtype odrty)
     <!> "then" <+> align (renderGallina t)
     <!> "else" <+> align (renderGallina f)
+
+  renderGallina' p (If LinearIf c odrty t f) = maybeParen (p > ifPrec) $ align $
+    group ( "if"   <+> align (renderGallina c <> render_opt_rtype odrty)
+        <!> "then" <+> align (renderGallina t) <+> "else")
+    <!> align (renderGallina f)
 
   renderGallina' p (HasType tm ty) = maybeParen (p > castPrec) $
     renderGallina' (castPrec + 1) tm <+> ":" <+> renderGallina' castPrec ty

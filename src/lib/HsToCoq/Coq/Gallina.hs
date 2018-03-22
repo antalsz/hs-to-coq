@@ -24,6 +24,7 @@ module HsToCoq.Coq.Gallina (
   -- $Terms
   Term(..),
   Arg(..),
+  IfStyle(..),
   Binders,
   Generalizability(..),
   Explicitness(..),
@@ -135,7 +136,7 @@ data Term = Forall Binders Term                                                 
           | LetTuple [Name] (Maybe DepRetType) Term Term                                       -- ^@let ( [/name/ , … , /name/] ) [/dep_ret_type/] := /term/ in /term/@
           | LetTick Pattern Term Term                                                          -- ^@let ' /pattern/ := /term/ in /term/@
           | LetTickDep Pattern (Maybe (Qualid, [Pattern])) Term ReturnType Term                -- ^@let ' /pattern/ [in /qualid/ [/pattern/ … /pattern/]] := /term/ /return_type/ in /term/@
-          | If Term (Maybe DepRetType) Term Term                                               -- ^@if /term/ [/dep_ret_type/] then /term/ else /term/@
+          | If IfStyle Term (Maybe DepRetType) Term Term                                       -- ^@if /term/ [/dep_ret_type/] then /term/ else /term/@
           | HasType Term Term                                                                  -- ^@/term/ : /term/@
           | CheckType Term Term                                                                -- ^@/term/ <: /term/@
           | ToSupportType Term                                                                 -- ^@/term/ :>@
@@ -160,6 +161,9 @@ data Term = Forall Binders Term                                                 
 
 infixr 7 `Arrow`
 infixl 8 `App`
+
+data IfStyle = SymmetricIf | LinearIf -- LinearIf is used for guards, to avoid adding indentation
+          deriving (Eq, Ord, Show, Read, Typeable, Data)
 
 -- |@/arg/ ::=@
 data Arg = PosArg Term                                                                         -- ^@/term/@

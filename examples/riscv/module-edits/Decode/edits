@@ -1,2 +1,4 @@
+rename value GHC.Num.- = Coq.ZArith.BinInt.Z.sub
+rename value GHC.Num.+ = Coq.ZArith.BinInt.Z.add
 rewrite forall x y, x GHC.Base.== y = Coq.ZArith.BinInt.Z.eqb x y
 

@@ -89,7 +89,7 @@ Notation "a == b" := (signed_eqb a b)               (at level 38, no associativi
 Notation "a < b"  := (signed_less_than a b)         (at level 70, no associativity) : alu_scope.
 Notation "a >= b" := (negb (signed_less_than a b))  (at level 70, no associativity) : alu_scope.
 
-Definition when {S} (a : bool)  (b : OState S unit) := (if a then b else Return tt).
+Definition when {M} `{Monad M} (a : bool)  (b : M unit) := (if a then b else Return tt).
 
 
 Section Constants.

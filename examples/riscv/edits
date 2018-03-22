@@ -2,6 +2,11 @@ skip module Data.Word
 skip module Utility
 skip module VirtualMemory
 
+import module Utility
+import module Program
+import module GHC.Real
+import module Monads
+
 rename type Utility.MachineInt = Coq.ZArith.BinInt.Z
 rename type GHC.Types.Int = Coq.ZArith.BinInt.Z
 rename value GHC.Real.fromIntegral = id

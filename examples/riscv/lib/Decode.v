@@ -1073,7 +1073,7 @@ Definition decode : InstructionSet -> Coq.ZArith.BinInt.Z -> Instruction :=
                                                                                                          funct3
                                                                                                          funct3_SW) : bool
                                                                                                      then Sw rs1 rs2
-                                                                                                             simm12
+                                                                                                          simm12
                                                                                                      else if andb
                                                                                                              (Coq.ZArith.BinInt.Z.eqb
                                                                                                               opcode
@@ -1086,8 +1086,7 @@ Definition decode : InstructionSet -> Coq.ZArith.BinInt.Z -> Instruction :=
                                                                                                                funct7
                                                                                                                funct7_ADD)) : bool
                                                                                                           then Add rd
-                                                                                                                   rs1
-                                                                                                                   rs2
+                                                                                                               rs1 rs2
                                                                                                           else if andb
                                                                                                                   (Coq.ZArith.BinInt.Z.eqb
                                                                                                                    opcode

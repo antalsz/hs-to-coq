@@ -20,7 +20,13 @@ OUT=lib
 
 # Handwritten modules (usually by modification of generated version)
 HANDMOD = \
-  Program
+  Program \
+  Utility \
+  util/Decidable \
+  util/Monads \
+  util/NameWithEq \
+  util/PowerFunc
+
 
 MODULES = \
   Decode \
@@ -43,8 +49,9 @@ all:  $(VFILES) coq
 $(OUT)/_CoqProject : Makefile
 	mkdir -p $(OUT)
 	> $@
-	echo '-Q . ""' >> $@
+	echo '-R . riscv' >> $@
 	echo '-R ../../../base ""' >> $@
+	echo '-R ../../../../bbv bbv' >> $@
 	echo $(addsuffix .v,$(HANDMOD)) >> $@
 	echo $(addsuffix .v,$(MODULES)) >> $@
 

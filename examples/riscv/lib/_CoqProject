@@ -1,4 +1,5 @@
--Q . ""
+-R . riscv
 -R ../../../base ""
-Program.v
+-R ../../../../bbv bbv
+Program.v Utility.v util/Decidable.v util/Monads.v util/NameWithEq.v util/PowerFunc.v
 Decode.v ExecuteI.v

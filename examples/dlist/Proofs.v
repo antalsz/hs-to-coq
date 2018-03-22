@@ -157,3 +157,26 @@ Proof.
              !hs_coq_list_length !Zlength_correct
              !app_length /= !Nat.add_0_r Nat.add_comm.
 Qed.
+
+(** Some theorems from [Coq.Lists.List]. *)
+Section ListTheorems.
+  Variable A : Type.
+  Variable x : A.
+  Variable l : DList A.
+  Context {WFl : WF l}.
+  
+  Theorem nil_cons : ~ empty =dl cons_ x l.
+  Proof.
+    destruct l. rewrite /= /eqfun. move=>H.
+    specialize (H nil). inversion H.
+  Qed.
+
+  Theorem destruct_list :
+    (exists x : A, exists tl : DList A, l =dl cons_ x tl) \/ (l =dl empty).
+  Proof.
+    destruct l. inversion WFl. destruct x0.
+    - right. assumption.
+    - left. exists a. exists (fromList x0). move: H.
+      by rewrite /= /eqfun.
+  Qed.
+End ListTheorems.

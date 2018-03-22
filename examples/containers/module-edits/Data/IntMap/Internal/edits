@@ -20,6 +20,9 @@ termination go in Data.IntMap.Internal.mergeWithKey' deferred
 order Data.IntMap.Internal.Eq___IntMap Data.IntMap.Internal.Ord__IntMap
 redefine Definition Data.IntMap.Internal.Functor__IntMap_op_zlzd__ {a}{b}:= @Data.IntMap.Internal.IntMap_op_zlzd__ a b.
 
+order Data.IntMap.Internal.Functor__IntMap Data.IntMap.Internal.lmapWhenMissing
+
+
 #### These are TODOs:
 
 skip Data.IntMap.Internal.Eq1__IntMap 

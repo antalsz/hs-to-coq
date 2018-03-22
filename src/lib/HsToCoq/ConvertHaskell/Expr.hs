@@ -68,10 +68,13 @@ import HsToCoq.ConvertHaskell.Sigs
 
 --------------------------------------------------------------------------------
 
-convertExpr :: ConversionMonad m => HsExpr GHC.Name -> m Term
-convertExpr hsExpr = do
+rewriteExpr :: ConversionMonad m => Term -> m Term
+rewriteExpr tm = do
   rws <- use (edits.rewrites)
-  Coq.rewrite rws <$> convertExpr' hsExpr
+  return $ Coq.rewrite rws tm
+
+convertExpr :: ConversionMonad m => HsExpr GHC.Name -> m Term
+convertExpr hsExpr = convertExpr' hsExpr >>= rewriteExpr
 
 convertExpr' :: ConversionMonad m => HsExpr GHC.Name -> m Term
 convertExpr' (HsVar (L _ x)) =
@@ -520,23 +523,25 @@ convertDoBlock allStmts = do
     lastStmt (LastStmt e _ _)   = Just e
     lastStmt _                  = Nothing
 
-    toExpr (BodyStmt e _bind _guard _PlaceHolder) rest =
+    toExpr x rest = toExpr' x rest >>= rewriteExpr
+
+    toExpr' (BodyStmt e _bind _guard _PlaceHolder) rest =
       monThen <$> convertLExpr e <*> rest
 
-    toExpr (BindStmt pat exp _bind _fail PlaceHolder) rest =
+    toExpr' (BindStmt pat exp _bind _fail PlaceHolder) rest =
       convertPatternBinding
         pat exp
         (\exp' fun          -> monBind exp' . fun <$> rest)
         (\exp' cont letCont -> letCont (monBind exp' (Qualid cont)) <$> rest)
         (missingValue `App1` HsString "Partial pattern match in `do' notation")
 
-    toExpr (LetStmt (L _ binds)) rest =
+    toExpr' (LetStmt (L _ binds)) rest =
       convertLocalBinds binds rest
 
-    toExpr (RecStmt{}) _ =
+    toExpr' (RecStmt{}) _ =
       convUnsupported "`rec' statements in `do` blocks"
 
-    toExpr _ _ =
+    toExpr' _ _ =
       convUnsupported "impossibly fancy `do' block statements"
 
     monBind e1 e2 = Infix e1 "GHC.Base.>>=" e2

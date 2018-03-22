@@ -12,14 +12,12 @@ Require Coq.Program.Wf.
 
 (* Converted imports: *)
 
-Require Data.Bits.
 Require Decode.
 Require GHC.Base.
 Require GHC.Num.
 Require GHC.Real.
 Require Monads.
 Require Program.
-Import Data.Bits.Notations.
 Import GHC.Base.Notations.
 Import GHC.Num.Notations.
 
@@ -45,8 +43,8 @@ Definition execute {p} {t} `{(Program.RiscvProgram p t)}
         Monads.Bind (Program.getRegister rs1) (fun x =>
                        Monads.Bind Program.getPC (fun pc =>
                                       let newPC :=
-                                        (x GHC.Num.+ Utility.fromImm oimm12) Data.Bits..&.(**)
-                                        (Data.Bits.complement 1) in
+                                        Coq.ZArith.BinInt.Z.land (x GHC.Num.+ Utility.fromImm oimm12)
+                                                                 (Coq.ZArith.BinInt.Z.lnot 1) in
                                       if (GHC.Real.mod_ newPC 4 GHC.Base./= 0) : bool
                                       then Program.raiseException 0 0
                                       else (Monads.Bind (Program.setRegister rd (pc GHC.Num.+ 4)) (fun _ =>
@@ -192,13 +190,13 @@ Definition execute {p} {t} `{(Program.RiscvProgram p t)}
                                                else 0))
     | Decode.Xori rd rs1 imm12 =>
         Monads.Bind (Program.getRegister rs1) (fun x =>
-                       Program.setRegister rd (Data.Bits.xor x (Utility.fromImm imm12)))
+                       Program.setRegister rd (Coq.ZArith.BinInt.Z.lxor x (Utility.fromImm imm12)))
     | Decode.Ori rd rs1 imm12 =>
         Monads.Bind (Program.getRegister rs1) (fun x =>
                        Program.setRegister rd (Coq.ZArith.BinInt.Z.lor x (Utility.fromImm imm12)))
     | Decode.Andi rd rs1 imm12 =>
         Monads.Bind (Program.getRegister rs1) (fun x =>
-                       Program.setRegister rd (x Data.Bits..&.(**) (Utility.fromImm imm12)))
+                       Program.setRegister rd (Coq.ZArith.BinInt.Z.land x (Utility.fromImm imm12)))
     | Decode.Slli rd rs1 shamt6 =>
         Monads.Bind (Program.getRegister rs1) (fun x =>
                        Program.setRegister rd (Utility.sll x shamt6))
@@ -231,7 +229,7 @@ Definition execute {p} {t} `{(Program.RiscvProgram p t)}
     | Decode.Xor rd rs1 rs2 =>
         Monads.Bind (Program.getRegister rs1) (fun x =>
                        Monads.Bind (Program.getRegister rs2) (fun y =>
-                                      Program.setRegister rd (Data.Bits.xor x y)))
+                                      Program.setRegister rd (Coq.ZArith.BinInt.Z.lxor x y)))
     | Decode.Or rd rs1 rs2 =>
         Monads.Bind (Program.getRegister rs1) (fun x =>
                        Monads.Bind (Program.getRegister rs2) (fun y =>
@@ -247,25 +245,26 @@ Definition execute {p} {t} `{(Program.RiscvProgram p t)}
     | Decode.And rd rs1 rs2 =>
         Monads.Bind (Program.getRegister rs1) (fun x =>
                        Monads.Bind (Program.getRegister rs2) (fun y =>
-                                      Program.setRegister rd (x Data.Bits..&.(**) y)))
+                                      Program.setRegister rd (Coq.ZArith.BinInt.Z.land x y)))
     | inst => Monads.Return tt
     end.
 
 (* Unbound variables:
-     bool negb tt unit Coq.ZArith.BinInt.Z.eqb Coq.ZArith.BinInt.Z.lor
-     Data.Bits.complement Data.Bits.op_zizazi__ Data.Bits.xor Decode.Add Decode.Addi
-     Decode.And Decode.Andi Decode.Auipc Decode.Beq Decode.Bge Decode.Bgeu Decode.Blt
-     Decode.Bltu Decode.Bne Decode.InstructionI Decode.Jal Decode.Jalr Decode.Lb
-     Decode.Lbu Decode.Lh Decode.Lhu Decode.Lui Decode.Lw Decode.Or Decode.Ori
-     Decode.Sb Decode.Sh Decode.Sll Decode.Slli Decode.Slt Decode.Slti Decode.Sltiu
-     Decode.Sltu Decode.Sra Decode.Srai Decode.Srl Decode.Srli Decode.Sub Decode.Sw
-     Decode.Xor Decode.Xori GHC.Base.op_zgze__ GHC.Base.op_zl__ GHC.Base.op_zsze__
-     GHC.Base.when GHC.Num.op_zm__ GHC.Num.op_zp__ GHC.Real.mod_ Monads.Bind
-     Monads.Return Program.Load Program.RiscvProgram Program.Store Program.getPC
-     Program.getRegister Program.loadByte Program.loadHalf Program.loadWord
-     Program.raiseException Program.setPC Program.setRegister Program.storeByte
-     Program.storeHalf Program.storeWord Program.translate Utility.fromImm
-     Utility.int16ToReg Utility.int32ToReg Utility.int8ToReg Utility.ltu
-     Utility.regToInt16 Utility.regToInt32 Utility.regToInt8 Utility.regToShamt
-     Utility.sll Utility.sra Utility.srl Utility.uInt16ToReg Utility.uInt8ToReg
+     bool negb tt unit Coq.ZArith.BinInt.Z.eqb Coq.ZArith.BinInt.Z.land
+     Coq.ZArith.BinInt.Z.lnot Coq.ZArith.BinInt.Z.lor Coq.ZArith.BinInt.Z.lxor
+     Decode.Add Decode.Addi Decode.And Decode.Andi Decode.Auipc Decode.Beq Decode.Bge
+     Decode.Bgeu Decode.Blt Decode.Bltu Decode.Bne Decode.InstructionI Decode.Jal
+     Decode.Jalr Decode.Lb Decode.Lbu Decode.Lh Decode.Lhu Decode.Lui Decode.Lw
+     Decode.Or Decode.Ori Decode.Sb Decode.Sh Decode.Sll Decode.Slli Decode.Slt
+     Decode.Slti Decode.Sltiu Decode.Sltu Decode.Sra Decode.Srai Decode.Srl
+     Decode.Srli Decode.Sub Decode.Sw Decode.Xor Decode.Xori GHC.Base.op_zgze__
+     GHC.Base.op_zl__ GHC.Base.op_zsze__ GHC.Base.when GHC.Num.op_zm__
+     GHC.Num.op_zp__ GHC.Real.mod_ Monads.Bind Monads.Return Program.Load
+     Program.RiscvProgram Program.Store Program.getPC Program.getRegister
+     Program.loadByte Program.loadHalf Program.loadWord Program.raiseException
+     Program.setPC Program.setRegister Program.storeByte Program.storeHalf
+     Program.storeWord Program.translate Utility.fromImm Utility.int16ToReg
+     Utility.int32ToReg Utility.int8ToReg Utility.ltu Utility.regToInt16
+     Utility.regToInt32 Utility.regToInt8 Utility.regToShamt Utility.sll Utility.sra
+     Utility.srl Utility.uInt16ToReg Utility.uInt8ToReg
 *)

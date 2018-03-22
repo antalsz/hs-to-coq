@@ -22,7 +22,6 @@ Admitted.
 
 Require Coq.Init.Datatypes.
 Require Coq.ZArith.BinInt.
-Require Data.Bits.
 Require GHC.Err.
 Require GHC.Num.
 Require GHC.Real.
@@ -914,7 +913,7 @@ Definition opcode_SYSTEM : Opcode :=
 Definition signExtend
    : GHC.Num.Int -> Coq.ZArith.BinInt.Z -> Coq.ZArith.BinInt.Z :=
   fun l n =>
-    if Data.Bits.testBit n (l GHC.Num.- 1) : bool
+    if Coq.ZArith.BinInt.Z.testbit n (l GHC.Num.- 1) : bool
     then n GHC.Num.- Coq.ZArith.BinInt.Z.pow 2 l
     else n.
 
@@ -1521,6 +1520,6 @@ Definition decode : InstructionSet -> Coq.ZArith.BinInt.Z -> Instruction :=
 (* Unbound variables:
      andb bitSlice bool cons false list nil orb true Coq.Init.Datatypes.app
      Coq.ZArith.BinInt.Z Coq.ZArith.BinInt.Z.eqb Coq.ZArith.BinInt.Z.lor
-     Coq.ZArith.BinInt.Z.pow Coq.ZArith.BinInt.Z.shiftl Data.Bits.testBit
+     Coq.ZArith.BinInt.Z.pow Coq.ZArith.BinInt.Z.shiftl Coq.ZArith.BinInt.Z.testbit
      GHC.Err.error GHC.Num.Int GHC.Num.op_zm__ GHC.Real.fromIntegral
 *)

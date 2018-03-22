@@ -9,7 +9,7 @@ SHELL = bash
 SRC=riscv-semantics/src
 
 ifeq (,$(wildcard $(SRC)))
-$(error Please create a symlink to input source location (see README.md))
+$(error Please create a symlink to input source location)
 endif
 
 OUT=lib
@@ -38,7 +38,7 @@ VFILES_MAN = $(addprefix $(OUT)/,$(addsuffix .v,$(HANDMOD)))
 
 VFILES = $(VFILES_GEN) $(VFILES_MAN)
 
-all:  $(VFILES) coq $(OUT)/edits $(OUT)/README.md
+all:  $(VFILES) coq
 
 $(OUT)/_CoqProject : Makefile
 	mkdir -p $(OUT)
@@ -50,14 +50,6 @@ $(OUT)/_CoqProject : Makefile
 
 $(OUT)/Makefile: $(OUT)/_CoqProject $(VFILES)
 	cd $(OUT); coq_makefile -f _CoqProject -o Makefile
-
-$(OUT)/edits:
-	ln -fs ../edits $(OUT)/edits
-
-$(OUT)/README.md:
-	> $@
-	echo 'This directory contains a Coq’ified version of the Haskell containers library' >> $@
-	echo 'Do not edit files here! Instead, look in `examples/containers`.' >> $@
 
 
 coq: $(OUT)/Makefile $(VFILES)

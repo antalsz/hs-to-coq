@@ -100,5 +100,7 @@ var ns name = do
 
     qid | Just m <- nameModM = Qualified m (bareName name)
         | otherwise          = Bare        (localName name)
-recordField :: (ConversionMonad m, HasOccName name, OutputableBndr name) => name -> m Qualid
-recordField = var' ExprNS <=< ghcPpr -- TODO Check module part?
+
+recordField :: (ConversionMonad m) => AmbiguousFieldOcc GHC.Name -> m Qualid
+recordField (Unambiguous _ sel) = var ExprNS sel
+recordField (Ambiguous _ _)     = error "Cannot handle ambiguous record field names"

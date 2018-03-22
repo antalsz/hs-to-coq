@@ -3,7 +3,6 @@
 module HsToCoq.ConvertHaskell.Variables (
   -- * Generate variable names
   var', var,
-  unQualifyLocal,
   recordField, bareName,
   freeVar', freeVar,
   -- * Avoiding reserved words/names
@@ -80,16 +79,6 @@ specialForms name | "$sel:" `T.isPrefixOf` name = T.takeWhile (/= ':') $ T.drop 
 
 var' :: ConversionMonad m => HsNamespace -> Ident -> m Qualid
 var' ns x = use $ renamed ns (Bare x) . non (Bare (escapeReservedNames x))
-
-unQualifyLocal :: ConversionMonad m => Qualid -> m Qualid
-unQualifyLocal qi = do
-  thisModM <- fmap moduleNameText <$> use currentModule
-  case qi of
-    -- Something in this module
-    (Qualified m b) | Just m == thisModM -> pure (Bare b)
-    -- Something bare (built-in or local) or external
-    _                                    -> pure qi
-
 
 var :: ConversionMonad m => HsNamespace -> GHC.Name -> m Qualid
 var ns name = do

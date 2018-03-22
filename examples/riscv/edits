@@ -4,10 +4,7 @@ skip module VirtualMemory
 
 rename type Utility.MachineInt = Coq.ZArith.BinInt.Z
 rename type GHC.Types.Int = Coq.ZArith.BinInt.Z
-rename value GHC.Num.- = Coq.ZArith.BinInt.Z.sub
-rename value GHC.Num.+ = Coq.ZArith.BinInt.Z.add
 rename value GHC.Real.fromIntegral = id
-rename value GHC.Real.mod_ = Coq.ZArith.BinInt.Z.modulo
 
 skip Decode.Eq___InstructionI
 skip Decode.Eq___InstructionM

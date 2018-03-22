@@ -70,8 +70,6 @@ $(VFILES_GEN): $(OUT)/%.v : $$(wildcard $$(SRC)/$$*.hs) $$(wildcard module-edits
 	             -e edits \
 	             -N \
 	             -i $(SRC) \
-	             --ghc -package --ghc QuickCheck \
-	             --ghc -this-unit-id --ghc $(SRC) \
 	             $(addprefix `cat , $(addsuffix ` , $(wildcard module-edits/$*/flags))) \
 	             -o $(OUT) \
 	             $(wildcard $(SRC)/$*.hs)

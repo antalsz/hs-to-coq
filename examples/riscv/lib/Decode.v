@@ -15,6 +15,9 @@ Require Coq.Program.Wf.
 Require Coq.ZArith.BinInt.
 Local Open Scope Z_scope.
 
+Definition bitSlice : Coq.ZArith.BinInt.Z -> Coq.ZArith.BinInt.Z -> Coq.ZArith.BinInt.Z ->  Coq.ZArith.BinInt.Z.
+Admitted.
+
 (* Converted imports: *)
 
 Require Coq.Init.Datatypes.
@@ -926,54 +929,52 @@ Definition supportsM : InstructionSet -> bool :=
 
 Definition decode : InstructionSet -> Coq.ZArith.BinInt.Z -> Instruction :=
   fun iset inst =>
-    let zimm := GHC.Err.undefined inst 15 20 in
-    let funct6 := GHC.Err.undefined inst 26 32 in
-    let shamtHi := GHC.Err.undefined inst 25 26 in
+    let zimm := bitSlice inst 15 20 in
+    let funct6 := bitSlice inst 26 32 in
+    let shamtHi := bitSlice inst 25 26 in
     let shamtHiTest :=
       orb (Coq.ZArith.BinInt.Z.eqb shamtHi 0) (Coq.ZArith.BinInt.Z.eqb (bitwidth iset)
                                                                        64) in
-    let shamt6 := machineIntToShamt (GHC.Err.undefined inst 20 26) in
-    let shamt5 := machineIntToShamt (GHC.Err.undefined inst 20 25) in
+    let shamt6 := machineIntToShamt (bitSlice inst 20 26) in
+    let shamt5 := machineIntToShamt (bitSlice inst 20 25) in
     let sbimm12 :=
       signExtend 13 (Coq.ZArith.BinInt.Z.lor (Coq.ZArith.BinInt.Z.lor
-                                              (Coq.ZArith.BinInt.Z.lor (Coq.ZArith.BinInt.Z.shiftl (GHC.Err.undefined
-                                                                                                    inst 31 32) 12)
-                                                                       (Coq.ZArith.BinInt.Z.shiftl (GHC.Err.undefined
-                                                                                                    inst 25 31) 5))
-                                              (Coq.ZArith.BinInt.Z.shiftl (GHC.Err.undefined inst 8 12) 1))
-                                             (Coq.ZArith.BinInt.Z.shiftl (GHC.Err.undefined inst 7 8) 11)) in
+                                              (Coq.ZArith.BinInt.Z.lor (Coq.ZArith.BinInt.Z.shiftl (bitSlice inst 31 32)
+                                                                        12) (Coq.ZArith.BinInt.Z.shiftl (bitSlice inst
+                                                                                                         25 31) 5))
+                                              (Coq.ZArith.BinInt.Z.shiftl (bitSlice inst 8 12) 1))
+                                             (Coq.ZArith.BinInt.Z.shiftl (bitSlice inst 7 8) 11)) in
     let simm12 :=
-      signExtend 12 (Coq.ZArith.BinInt.Z.lor (Coq.ZArith.BinInt.Z.shiftl
-                                              (GHC.Err.undefined inst 25 32) 5) (GHC.Err.undefined inst 7 12)) in
-    let csr12 := GHC.Err.undefined inst 20 32 in
-    let oimm12 := signExtend 12 (GHC.Err.undefined inst 20 32) in
-    let imm12 := signExtend 12 (GHC.Err.undefined inst 20 32) in
+      signExtend 12 (Coq.ZArith.BinInt.Z.lor (Coq.ZArith.BinInt.Z.shiftl (bitSlice
+                                                                          inst 25 32) 5) (bitSlice inst 7 12)) in
+    let csr12 := bitSlice inst 20 32 in
+    let oimm12 := signExtend 12 (bitSlice inst 20 32) in
+    let imm12 := signExtend 12 (bitSlice inst 20 32) in
     let jimm20 :=
       signExtend 21 (Coq.ZArith.BinInt.Z.lor (Coq.ZArith.BinInt.Z.lor
-                                              (Coq.ZArith.BinInt.Z.lor (Coq.ZArith.BinInt.Z.shiftl (GHC.Err.undefined
-                                                                                                    inst 31 32) 20)
-                                                                       (Coq.ZArith.BinInt.Z.shiftl (GHC.Err.undefined
-                                                                                                    inst 21 31) 1))
-                                              (Coq.ZArith.BinInt.Z.shiftl (GHC.Err.undefined inst 20 21) 11))
-                                             (Coq.ZArith.BinInt.Z.shiftl (GHC.Err.undefined inst 12 20) 12)) in
+                                              (Coq.ZArith.BinInt.Z.lor (Coq.ZArith.BinInt.Z.shiftl (bitSlice inst 31 32)
+                                                                        20) (Coq.ZArith.BinInt.Z.shiftl (bitSlice inst
+                                                                                                         21 31) 1))
+                                              (Coq.ZArith.BinInt.Z.shiftl (bitSlice inst 20 21) 11))
+                                             (Coq.ZArith.BinInt.Z.shiftl (bitSlice inst 12 20) 12)) in
     let oimm20 :=
-      signExtend 32 (Coq.ZArith.BinInt.Z.shiftl (GHC.Err.undefined inst 12 32) 12) in
+      signExtend 32 (Coq.ZArith.BinInt.Z.shiftl (bitSlice inst 12 32) 12) in
     let imm20 :=
-      signExtend 32 (Coq.ZArith.BinInt.Z.shiftl (GHC.Err.undefined inst 12 32) 12) in
-    let msb4 := GHC.Err.undefined inst 28 32 in
-    let pred := GHC.Err.undefined inst 24 28 in
-    let succ := GHC.Err.undefined inst 20 24 in
-    let rs3 := GHC.Err.undefined inst 27 32 in
-    let rs2 := GHC.Err.undefined inst 20 25 in
-    let rs1 := GHC.Err.undefined inst 15 20 in
-    let rd := GHC.Err.undefined inst 7 12 in
-    let funct12 := GHC.Err.undefined inst 20 32 in
+      signExtend 32 (Coq.ZArith.BinInt.Z.shiftl (bitSlice inst 12 32) 12) in
+    let msb4 := bitSlice inst 28 32 in
+    let pred := bitSlice inst 24 28 in
+    let succ := bitSlice inst 20 24 in
+    let rs3 := bitSlice inst 27 32 in
+    let rs2 := bitSlice inst 20 25 in
+    let rs1 := bitSlice inst 15 20 in
+    let rd := bitSlice inst 7 12 in
+    let funct12 := bitSlice inst 20 32 in
     let funct10 :=
-      Coq.ZArith.BinInt.Z.lor (Coq.ZArith.BinInt.Z.shiftl (GHC.Err.undefined inst 25
-                                                           32) 3) (GHC.Err.undefined inst 12 15) in
-    let funct7 := GHC.Err.undefined inst 25 32 in
-    let funct3 := GHC.Err.undefined inst 12 15 in
-    let opcode := GHC.Err.undefined inst 0 7 in
+      Coq.ZArith.BinInt.Z.lor (Coq.ZArith.BinInt.Z.shiftl (bitSlice inst 25 32) 3)
+                              (bitSlice inst 12 15) in
+    let funct7 := bitSlice inst 25 32 in
+    let funct3 := bitSlice inst 12 15 in
+    let opcode := bitSlice inst 0 7 in
     let decodeI :=
       if andb (Coq.ZArith.BinInt.Z.eqb opcode opcode_LOAD) (Coq.ZArith.BinInt.Z.eqb
                funct3 funct3_LB) : bool
@@ -1514,13 +1515,12 @@ Definition decode : InstructionSet -> Coq.ZArith.BinInt.Z -> Instruction :=
     match results with
     | cons singleResult nil => singleResult
     | nil => InvalidInstruction
-    | _ => GHC.Err.error (GHC.Base.hs_string__ "ambiguous decoding result")
+    | _ => InvalidInstruction
     end.
 
 (* Unbound variables:
-     andb bool cons false list nil orb true Coq.Init.Datatypes.app
+     andb bitSlice bool cons false list nil orb true Coq.Init.Datatypes.app
      Coq.ZArith.BinInt.Z Coq.ZArith.BinInt.Z.eqb Coq.ZArith.BinInt.Z.lor
      Coq.ZArith.BinInt.Z.pow Coq.ZArith.BinInt.Z.shiftl Data.Bits.testBit
-     GHC.Err.error GHC.Err.undefined GHC.Num.Int GHC.Num.op_zm__
-     GHC.Real.fromIntegral
+     GHC.Err.error GHC.Num.Int GHC.Num.op_zm__ GHC.Real.fromIntegral
 *)

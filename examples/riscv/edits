@@ -33,10 +33,13 @@ rename value Data.Bits.shift = Coq.ZArith.BinInt.Z.shiftl
 rename value Data.Bits..|. = Coq.ZArith.BinInt.Z.lor
 rewrite forall x y, x GHC.Base.== y = Coq.ZArith.BinInt.Z.eqb x y
 
+rewrite forall, GHC.Err.error "ambiguous decoding result" = InvalidInstruction
+
+# implemented in the preamble.v
+rename value Utility.bitSlice = Decode.bitSlice
+
 rewrite forall x, GHC.Num.fromInteger x = x
 rewrite forall x y, (x GHC.Real.^ y) = Coq.ZArith.BinInt.Z.pow x y
-
-rewrite forall, Utility.bitSlice = GHC.Err.undefined
 
 # A work-around (Z is used like a module, but cannot be Require Import’ed)
 skip module Coq.ZArith.BinInt.Z

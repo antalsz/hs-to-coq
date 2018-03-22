@@ -47,7 +47,7 @@ skip module Coq.ZArith.BinInt.Z
 
 # order Decode.Eq___InstructionI Decode.Eq___InstructionM Decode.Eq___InstructionI64 Decode.Eq___InstructionM64 Decode.Eq___InstructionCSR Decode.Eq___Instruction_op_zeze__
 
-rewrite forall x y, x GHC.Base.>>= y = x >>= y
-rewrite forall x y, x GHC.Base.>> y = x >> y
+rewrite forall x y, x GHC.Base.>>= y = Monads.Bind x y
+rewrite forall x y, x GHC.Base.>> y = Monads.Bind x (fun _ => y)
 
 

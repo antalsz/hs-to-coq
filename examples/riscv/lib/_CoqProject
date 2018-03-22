@@ -1,5 +1,5 @@
 -R . riscv
 -R ../../../base ""
--R ../../../../bbv bbv
+-R ../../../vendor/bbv bbv
 Program.v Utility.v util/Decidable.v util/Monads.v util/NameWithEq.v util/PowerFunc.v
 Decode.v ExecuteI.v

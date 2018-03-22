@@ -20,9 +20,12 @@ OUT=lib
 
 # Handwritten modules (usually by modification of generated version)
 HANDMOD = \
+  Program
 
 MODULES = \
-  Decode
+  Decode \
+  ExecuteI
+
 
 
 # Generated modules

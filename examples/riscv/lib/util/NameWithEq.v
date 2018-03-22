@@ -1,0 +1,1 @@
+../../manual/util/NameWithEq.v

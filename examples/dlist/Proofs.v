@@ -224,26 +224,33 @@ Proof.
     + rewrite !app_length. apply Nat.add_comm.
 Qed.
 
+Hint Resolve empty_Denotes.
+Hint Resolve empty_WF.
+
+Hint Resolve singleton_Denotes.
+Hint Resolve singleton_WF.
+
+Hint Resolve cons__Denotes.
+Hint Resolve cons__WF.
+
+Hint Resolve append_Denotes.
+Hint Resolve append_WF.
+
+Hint Resolve reify_Denotes.
+
+Notation "[ ]" := empty.
+Notation "[ x ]" := (singleton x).
+Notation "x ::: y" := (cons_ x y) (at level 60).
+Notation "x +++ y" := (append x y) (at level 61).
+Notation "x 'in' y" := (In x (reify y)) (at level 61).
+Notation "x =l y" := (reify x = reify y) (at level 62).
+
 (** Some theorems from [Coq.Lists.List]. *)
 Section ListTheorems.
   Variable A : Type.
   Variable x : A.
   Variable l r : DList A.
   Context {WFl : WF l} {WFr : WF r}.
-
-  Hint Resolve empty_Denotes.
-  Hint Resolve empty_WF.
-  
-  Hint Resolve singleton_Denotes.
-  Hint Resolve singleton_WF.
-  
-  Hint Resolve cons__Denotes.
-  Hint Resolve cons__WF.
-
-  Hint Resolve append_Denotes.
-  Hint Resolve append_WF.
-
-  Hint Resolve reify_Denotes.
 
   Ltac apply_reify :=
     match goal with
@@ -254,6 +261,8 @@ Section ListTheorems.
          apply H
        | [ |- Denotes empty _ ] =>
          by apply emptyD
+       | [ |- Denotes (singleton ?x) _ ] =>
+         by apply (singletonD _ x); try done
        | [ H: Denotes ?l ?x |- Denotes (cons_ ?a ?l) _] =>
          eapply (consD _ x a); [apply H | try done ]
        | [ |- Denotes (cons_ ?a ?l) _] =>
@@ -267,20 +276,26 @@ Section ListTheorems.
 
   Ltac solve_by_reify := repeat apply_reify.
   
-  Theorem nil_cons : reify empty <> reify (cons_ x l).
+  Theorem nil_cons : ~ ([] =l x ::: l).
   Proof. inversion WFl. solve_by_reify. Qed.
   
-  Theorem in_eq : In x (reify (cons_ x l)).
+  Theorem in_eq : x in (x ::: l).
   Proof. inversion WFl. solve_by_reify. apply List.in_eq. Qed.
 
-  Theorem app_comm_cons : reify (cons_ x (append l r)) = reify (append (cons_ x l) r).
+  Theorem app_comm_cons : x ::: (l +++ r) =l x ::: l +++ r.
   Proof. inversion WFl. inversion WFr. solve_by_reify. Qed.
 
-  Theorem in_app_iff : In x (reify (append l r)) <-> In x (reify l) \/ In x (reify r).
+  Theorem in_app_iff : x in (l +++ r) <-> x in l \/ x in r.
   Proof. inversion WFl; inversion WFr. solve_by_reify. apply List.in_app_iff. Qed.
+
+  Theorem app_eq_unit :
+    l +++ r =l [x] ->
+    l =l [] /\ r =l [x] \/
+    l =l [x] /\ r =l [].
+  Proof. inversion WFl; inversion WFr. solve_by_reify. apply List.app_eq_unit. Qed.
     
   Theorem destruct_list :
-    (exists x : A, exists tl : DList A, reify l = reify (cons_ x tl)) \/ (reify l = reify empty).
+    (exists x : A, exists tl : DList A, l =l x ::: tl) \/ (l =l []).
   Proof.
     inversion WFl.
     solve_by_reify.

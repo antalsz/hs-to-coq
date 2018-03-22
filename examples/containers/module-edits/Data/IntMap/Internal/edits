@@ -105,9 +105,6 @@ rewrite forall x, Data.IntMap.Internal.intFromNat x = x
 skip Data.IntMap.Internal.natFromInt
 rewrite forall x, Data.IntMap.Internal.natFromInt x = x
 
-skip module Coq.ZArith.BinInt.Z
-skip module Coq.NArith.BinNat.N
-
 # `complement x` does not work at type `N`, as the complement of a natural
 # number is negative. But in this module, all uses of `complement` are meant to be
 # 64bit numbers anyways, so we can complement just these bits.

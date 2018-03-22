@@ -14,7 +14,6 @@ skip module Test.HUnit.Base
 skip module Test.HUnit.Lang
 skip module Text.Read
 
-skip module Coq.NArith.BinNat.N
 rename value GHC.Real.^ = Coq.NArith.BinNat.N.pow
 rename value enumFromTo = GHC.Enum.enumFromTo
 

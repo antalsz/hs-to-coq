@@ -172,7 +172,7 @@ convertExpr' (HsCase e mg) = do
 
 convertExpr' (HsIf overloaded c t f) =
   if maybe True isNoSyntaxExpr overloaded
-  then ifThenElse <*> convertLExpr c <*> convertLExpr t <*> convertLExpr f
+  then ifThenElse <*> pure SymmetricIf <*> convertLExpr c <*> convertLExpr t <*> convertLExpr f
   else convUnsupported "overloaded if-then-else"
 
 convertExpr' (HsMultiIf PlaceHolder lgrhsList) =
@@ -504,7 +504,7 @@ convertPatternBinding hsPat hsExp buildTrivial buildNontrivial fallback = do
             | SoleConstructor <- nontrivial = []
             | otherwise                     = [ Equation [MultPattern [UnderscorePat]] fallback ]
           guarded tm | null guards = tm
-                     | otherwise   = ib (foldr1 (App2 "andb") guards) tm fallback
+                     | otherwise   = ib LinearIf (foldr1 (App2 "andb") guards) tm fallback
 
       buildNontrivial exp cont $ \body rest ->
         Let cont [Inferred Coq.Explicit $ Ident arg] Nothing
@@ -560,7 +560,8 @@ convertListComprehension allStmts = case fmap unLoc <$> unsnoc allStmts of
     toExpr (BodyStmt e _bind _guard _PlaceHolder) rest =
       isTrueLExpr e >>= \case
         True  -> rest
-        False -> ifThenElse <*> convertLExpr e
+        False -> ifThenElse <*> pure LinearIf
+                            <*> convertLExpr e
                             <*> rest
                             <*> pure (Var "nil")
 
@@ -791,7 +792,7 @@ guardTerm gs rhs failure = go gs where
   go (BoolGuard "false" : _) = pure failure
 
   go (BoolGuard cond : gs) =
-    ifThenElse <*> pure cond <*> go gs <*> pure failure
+    ifThenElse <*> pure LinearIf <*> pure cond <*> go gs <*> pure failure
   -- if the pattern is exhaustive, don't include an otherwise case
   go (PatternGuard pat exp : gs) | isWildCoq pat = do
     guarded' <- go gs
@@ -964,15 +965,10 @@ bindIn tmpl rhs genBody = do
 -- Let’s cross our fingers that we calculate all free variables properly.
 smartLet :: Qualid -> Term -> Term -> Term
 -- Move into the else branch
-smartLet ident rhs (IfBool c t e)
+smartLet ident rhs (If is c Nothing t e)
     | ident `S.notMember` getFreeVars c
     , ident `S.notMember` getFreeVars t
-    = IfBool c t (smartLet ident rhs e)
--- Move into the else branch
-smartLet ident rhs (IfCase c t e)
-    | ident `S.notMember` getFreeVars c
-    , ident `S.notMember` getFreeVars t
-    = IfCase c t (smartLet ident rhs e)
+    = If is c Nothing t (smartLet ident rhs e)
 -- Move into the scrutinee
 smartLet ident rhs
     (Coq.Match [MatchItem t Nothing Nothing] Nothing eqns)
@@ -1007,7 +1003,7 @@ missingValue = "missingValue"
 -- | Program does not work nicely with if-then-else, so if we believe we are
 -- producing a term that ends up in a Program Fixpoint or Program Definition,
 -- then desguar if-then-else using case statements.
-ifThenElse :: ConversionMonad m => m (Term -> Term -> Term -> Term)
+ifThenElse :: ConversionMonad m => m (IfStyle -> Term -> Term -> Term -> Term)
 ifThenElse =
     use useProgramHere >>= \case
         False -> pure $ IfBool

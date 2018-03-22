@@ -35,6 +35,7 @@ rename value Data.Bits..|. = Coq.ZArith.BinInt.Z.lor
 rewrite forall x y, x GHC.Base.== y = Coq.ZArith.BinInt.Z.eqb x y
 
 rewrite forall, GHC.Err.error "ambiguous decoding result" = InvalidInstruction
+rewrite forall, GHC.Err.error "dispatch bug: " = Monads.Return tt
 
 # implemented in the preamble.v
 rename value Utility.bitSlice = Decode.bitSlice
@@ -50,4 +51,7 @@ skip module Coq.ZArith.BinInt.Z
 rewrite forall x y, x GHC.Base.>>= y = Monads.Bind x y
 rewrite forall x y, x GHC.Base.>> y = Monads.Bind x (fun _ => y)
 
-
+rename value VirtualMemory.translate = Program.translate
+rename value VirtualMemory.Load = Program.Load
+rename value VirtualMemory.Instr = Program.Instr
+rename value VirtualMemory.Store = Program.Store

@@ -81,7 +81,7 @@ convertExpr' (HsUnboundVar x) =
   Var <$> freeVar (unboundVarOcc x)
 
 convertExpr' (HsRecFld fld) =
-  Qualid <$> recordField (rdrNameAmbiguousFieldOcc fld)
+  Qualid <$> recordField fld
 
 convertExpr' (HsOverLabel _) =
   convUnsupported "overloaded labels"
@@ -238,7 +238,7 @@ convertExpr' (RecordCon (L _ hsCon) PlaceHolder conExpr HsRecFields{..}) = do
 
 convertExpr' (RecordUpd recVal fields PlaceHolder PlaceHolder PlaceHolder PlaceHolder) = do
   updates <- fmap M.fromList . for fields $ \(L _ HsRecField{..}) -> do
-               field <- recordField . rdrNameAmbiguousFieldOcc $ unLoc hsRecFieldLbl
+               field <- recordField $ unLoc hsRecFieldLbl
                pure (field, if hsRecPun then Nothing else Just hsRecFieldArg)
 
   let updFields       = M.keys updates
@@ -251,7 +251,7 @@ convertExpr' (RecordUpd recVal fields PlaceHolder PlaceHolder PlaceHolder PlaceH
 
   recType <- S.minView . S.fromList <$> traverse (\field -> use $ recordFieldTypes . at field) updFields >>= \case
                Just (Just recType, []) -> pure recType
-               Just (Nothing,      []) -> convUnsupported $ "invalid record upate with " ++ prettyUpdFields "non-record-field"
+               Just (Nothing,      []) -> convUnsupported $ "invalid record update with " ++ prettyUpdFields "non-record-field"
                _                       -> convUnsupported $ "invalid mixed-data-type record updates with " ++ prettyUpdFields "the given field"
 
   ctors :: [Qualid]  <- maybe (convUnsupported "invalid unknown record type") pure =<< use (constructors . at recType)

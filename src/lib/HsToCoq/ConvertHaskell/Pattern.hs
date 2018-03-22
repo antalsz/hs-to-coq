@@ -92,8 +92,8 @@ convertPat (ConPatIn (L _ hsCon) conVariety) = do
              let defaultPat field | isJust rec_dotdot = QualidPat field
                                   | otherwise         = UnderscorePat
 
-             patterns <- fmap M.fromList . for rec_flds $ \(L _ (HsRecField (L _ (FieldOcc (L _ hsField) _)) hsPat pun)) -> do
-                           field <- recordField hsField
+             patterns <- fmap M.fromList . for rec_flds $ \(L _ (HsRecField (L _ (FieldOcc _ hsField)) hsPat pun)) -> do
+                           field <- var ExprNS hsField
                            pat   <- if pun
                                     then pure $ Coq.VarPat (qualidBase field)
                                     else convertLPat hsPat

@@ -127,11 +127,11 @@ library
 
   hs-source-dirs:      src/lib
   default-language:    Haskell2010
-  ghc-options:         -Wall -fno-warn-name-shadowing -O2
+  ghc-options:         -Wall -fno-warn-name-shadowing
 
 executable hs-to-coq
   main-is:             Main.hs
   build-depends:       base == 4.9.*, hs-to-coq
   hs-source-dirs:      src/exe
   default-language:    Haskell2010
-  ghc-options:         -Wall -fno-warn-name-shadowing -O2
+  ghc-options:         -Wall -fno-warn-name-shadowing

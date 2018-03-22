@@ -116,11 +116,6 @@ Definition missingKey {f} {k} {x} {y} (arg_1__ : WhenMissing f k x y) :=
 Definition missingSubtree {f} {k} {x} {y} (arg_2__ : WhenMissing f k x y) :=
   let 'Mk_WhenMissing missingSubtree _ := arg_2__ in
   missingSubtree.
-
-(* The Haskell code containes partial or untranslateable code, which needs the
-   following *)
-
-Axiom missingValue : forall {a}, a.
 (* Midamble *)
 
 Require Omega.
@@ -298,7 +293,8 @@ Definition delta : GHC.Num.Int :=
 
 Definition dropMissing {f} {k} {x} {y} `{GHC.Base.Applicative f}
    : WhenMissing f k x y :=
-  Mk_WhenMissing missingValue missingValue.
+  Mk_WhenMissing (GHC.Base.const (GHC.Base.pure Tip)) (fun arg_0__ arg_1__ =>
+                    GHC.Base.pure None).
 
 Definition empty {k} {a} : Map k a :=
   Tip.
@@ -306,14 +302,6 @@ Definition empty {k} {a} : Map k a :=
 Local Definition Monoid__Map_mempty {inst_k} {inst_v} `{(GHC.Base.Ord inst_k)}
    : (Map inst_k inst_v) :=
   empty.
-
-Definition filterAMissing {f} {k} {x} `{GHC.Base.Applicative f}
-   : (k -> x -> f bool) -> WhenMissing f k x x :=
-  fun f => Mk_WhenMissing missingValue missingValue.
-
-Definition filterMissing {f} {k} {x} `{GHC.Base.Applicative f}
-   : (k -> x -> bool) -> WhenMissing f k x x :=
-  fun f => Mk_WhenMissing missingValue missingValue.
 
 Definition findWithDefault {k} {a} `{GHC.Base.Ord k} : a -> k -> Map k a -> a :=
   let fix go arg_0__ arg_1__ arg_2__
@@ -523,10 +511,6 @@ Definition keysSet {k} {a} : Map k a -> Data.Set.Internal.Set_ k :=
            | Bin sz kx _ l r => Data.Set.Internal.Bin sz kx (keysSet l) (keysSet r)
            end.
 
-Definition lmapWhenMissing {b} {a} {f} {k} {x}
-   : (b -> a) -> WhenMissing f k a x -> WhenMissing f k b x :=
-  fun f t => Mk_WhenMissing missingValue missingValue.
-
 Definition lookup {k} {a} `{GHC.Base.Ord k} : k -> Map k a -> option a :=
   let fix go arg_0__ arg_1__
             := match arg_0__, arg_1__ with
@@ -681,6 +665,12 @@ Program Instance Functor__Map {k} : GHC.Base.Functor (Map k) :=
     k {| GHC.Base.op_zlzd____ := fun {a} {b} => Functor__Map_op_zlzd__ ;
          GHC.Base.fmap__ := fun {a} {b} => Functor__Map_fmap |}.
 
+Definition lmapWhenMissing {b} {a} {f} {k} {x}
+   : (b -> a) -> WhenMissing f k a x -> WhenMissing f k b x :=
+  fun f t =>
+    Mk_WhenMissing (fun m => missingSubtree t (GHC.Base.fmap f m)) (fun k x =>
+                      missingKey t k (f x)).
+
 Definition mapAccumL {a} {k} {b} {c}
    : (a -> k -> b -> (a * c)%type) -> a -> Map k b -> (a * Map k c)%type :=
   fix mapAccumL arg_0__ arg_1__ arg_2__
@@ -719,7 +709,9 @@ Definition mapAccumRWithKey {a} {k} {b} {c}
 
 Definition mapGentlyWhenMissing {f} {a} {b} {k} {x} `{GHC.Base.Functor f}
    : (a -> b) -> WhenMissing f k x a -> WhenMissing f k x b :=
-  fun f t => Mk_WhenMissing missingValue missingValue.
+  fun f t =>
+    Mk_WhenMissing (fun m => GHC.Base.fmap f Data.Functor.<$> missingSubtree t m)
+                   (fun k x => GHC.Base.fmap f Data.Functor.<$> missingKey t k x).
 
 Definition mapKeysMonotonic {k1} {k2} {a}
    : (k1 -> k2) -> Map k1 a -> Map k2 a :=
@@ -729,14 +721,6 @@ Definition mapKeysMonotonic {k1} {k2} {a}
            | f, Bin sz k x l r =>
                Bin sz (f k) x (mapKeysMonotonic f l) (mapKeysMonotonic f r)
            end.
-
-Definition mapMaybeMissing {f} {k} {x} {y} `{GHC.Base.Applicative f}
-   : (k -> x -> option y) -> WhenMissing f k x y :=
-  fun f => Mk_WhenMissing missingValue missingValue.
-
-Definition mapMissing {f} {k} {x} {y} `{GHC.Base.Applicative f}
-   : (k -> x -> y) -> WhenMissing f k x y :=
-  fun f => Mk_WhenMissing missingValue missingValue.
 
 Definition mapWhenMatched {f} {a} {b} {k} {x} {y} `{GHC.Base.Functor f}
    : (a -> b) -> WhenMatched f k x y a -> WhenMatched f k x y b :=
@@ -771,7 +755,11 @@ Program Instance Functor__WhenMatched {f} {k} {x} {y} `{GHC.Base.Functor f}
 Definition mapWhenMissing {f} {a} {b} {k} {x} `{GHC.Base.Applicative f}
   `{GHC.Base.Monad f}
    : (a -> b) -> WhenMissing f k x a -> WhenMissing f k x b :=
-  fun f t => Mk_WhenMissing missingValue missingValue.
+  fun f t =>
+    Mk_WhenMissing (fun m =>
+                      missingSubtree t m GHC.Base.>>= (fun m' => GHC.Base.pure (GHC.Base.fmap f m')))
+                   (fun k x =>
+                      missingKey t k x GHC.Base.>>= (fun q => (GHC.Base.pure (GHC.Base.fmap f q)))).
 
 Local Definition Functor__WhenMissing_fmap {inst_f} {inst_k} {inst_x}
   `{GHC.Base.Applicative inst_f} `{GHC.Base.Monad inst_f}
@@ -801,6 +789,12 @@ Definition mapWithKey {k} {a} {b} : (k -> a -> b) -> Map k a -> Map k b :=
            | f, Bin sx kx x l r => Bin sx kx (f kx x) (mapWithKey f l) (mapWithKey f r)
            end.
 
+Definition mapMissing {f} {k} {x} {y} `{GHC.Base.Applicative f}
+   : (k -> x -> y) -> WhenMissing f k x y :=
+  fun f =>
+    Mk_WhenMissing (fun m => GHC.Base.pure (mapWithKey f m)) (fun k x =>
+                      GHC.Base.pure (Some (f k x))).
+
 Definition member {k} {a} `{GHC.Base.Ord k} : k -> Map k a -> bool :=
   let fix go arg_0__ arg_1__
             := match arg_0__, arg_1__ with
@@ -826,7 +820,10 @@ Local Definition Foldable__Map_null {inst_k}
 
 Definition preserveMissing {f} {k} {x} `{GHC.Base.Applicative f}
    : WhenMissing f k x x :=
-  Mk_WhenMissing missingValue missingValue.
+  Mk_WhenMissing GHC.Base.pure (fun arg_0__ arg_1__ =>
+                    match arg_0__, arg_1__ with
+                    | _, v => GHC.Base.pure (Some v)
+                    end).
 
 Definition ratio : GHC.Num.Int :=
   #2.
@@ -1757,6 +1754,12 @@ Definition filter {a} {k} : (a -> bool) -> Map k a -> Map k a :=
                      | _, x => p x
                      end) m.
 
+Definition filterMissing {f} {k} {x} `{GHC.Base.Applicative f}
+   : (k -> x -> bool) -> WhenMissing f k x x :=
+  fun f =>
+    Mk_WhenMissing (fun m => GHC.Base.pure (filterWithKey f m)) (fun k x =>
+                      GHC.Base.pure (if f k x : bool then Some x else None)).
+
 Definition filterWithKeyA {f} {k} {a} `{GHC.Base.Applicative f}
    : (k -> a -> f bool) -> Map k a -> f (Map k a) :=
   fix filterWithKeyA arg_0__ arg_1__
@@ -1775,6 +1778,12 @@ Definition filterWithKeyA {f} {k} {a} `{GHC.Base.Applicative f}
                    end in
                GHC.Base.liftA3 combine (p kx x) (filterWithKeyA p l) (filterWithKeyA p r)
            end.
+
+Definition filterAMissing {f} {k} {x} `{GHC.Base.Applicative f}
+   : (k -> x -> f bool) -> WhenMissing f k x x :=
+  fun f =>
+    Mk_WhenMissing (fun m => filterWithKeyA f m) (fun k x =>
+                      boolITE None (Some x) Data.Functor.<$> f k x).
 
 Definition intersection {k} {a} {b} `{GHC.Base.Ord k}
    : Map k a -> Map k b -> Map k a :=
@@ -1869,6 +1878,12 @@ Definition mapMaybe {a} {b} {k} : (a -> option b) -> Map k a -> Map k b :=
                        | _, x => f x
                        end).
 
+Definition mapMaybeMissing {f} {k} {x} {y} `{GHC.Base.Applicative f}
+   : (k -> x -> option y) -> WhenMissing f k x y :=
+  fun f =>
+    Mk_WhenMissing (fun m => GHC.Base.pure (mapMaybeWithKey f m)) (fun k x =>
+                      GHC.Base.pure (f k x)).
+
 Definition mergeA {f} {k} {a} {c} {b} `{GHC.Base.Applicative f} `{GHC.Base.Ord
   k}
    : WhenMissing f k a c ->
@@ -1901,7 +1916,7 @@ Definition merge {k} {a} {c} {b} `{GHC.Base.Ord k}
    : SimpleWhenMissing k a c ->
      SimpleWhenMissing k b c ->
      SimpleWhenMatched k a b c -> Map k a -> Map k b -> Map k c :=
-  fun g1 g2 f m1 m2 => runIdentity (mergeA g1 g2 f m1 m2).
+  fun g1 g2 f m1 m2 => Data.Functor.Identity.runIdentity (mergeA g1 g2 f m1 m2).
 
 Definition mergeWithKey {k} {a} {b} {c} `{GHC.Base.Ord k}
    : (k -> a -> b -> option c) ->
@@ -1998,6 +2013,10 @@ Definition traverseMaybeWithKey {f} {k} {a} {b} `{GHC.Base.Applicative f}
                    GHC.Base.liftA3 combine (go f l) (f kx x) (go f r)
                end in
   go.
+
+Definition traverseMaybeMissing {f} {k} {x} {y} `{GHC.Base.Applicative f}
+   : (k -> x -> f (option y)) -> WhenMissing f k x y :=
+  fun f => Mk_WhenMissing (traverseMaybeWithKey f) f.
 
 Definition withoutKeys {k} {a} `{GHC.Base.Ord k}
    : Map k a -> Data.Set.Internal.Set_ k -> Map k a :=
@@ -2432,14 +2451,6 @@ Program Instance Ord__Map {k} {v} `{GHC.Base.Ord k} `{GHC.Base.Ord v}
          GHC.Base.max__ := Ord__Map_max ;
          GHC.Base.min__ := Ord__Map_min |}.
 
-Definition traverseMaybeMissing {f} {k} {x} {y} `{GHC.Base.Applicative f}
-   : (k -> x -> f (option y)) -> WhenMissing f k x y :=
-  fun f => Mk_WhenMissing missingValue missingValue.
-
-Definition traverseMissing {f} {k} {x} {y} `{GHC.Base.Applicative f}
-   : (k -> x -> f y) -> WhenMissing f k x y :=
-  fun f => Mk_WhenMissing missingValue missingValue.
-
 Definition traverseWithKey {t} {k} {a} {b} `{GHC.Base.Applicative t}
    : (k -> a -> t b) -> Map k a -> t (Map k b) :=
   fun f =>
@@ -2456,6 +2467,11 @@ Definition traverseWithKey {t} {k} {a} {b} `{GHC.Base.Applicative t}
                           end
                  end in
     go.
+
+Definition traverseMissing {f} {k} {x} {y} `{GHC.Base.Applicative f}
+   : (k -> x -> f y) -> WhenMissing f k x y :=
+  fun f =>
+    Mk_WhenMissing (traverseWithKey f) (fun k x => Some Data.Functor.<$> f k x).
 
 Local Definition Traversable__Map_traverse {inst_k}
    : forall {f} {a} {b},
@@ -2524,16 +2540,17 @@ End Notations.
 (* Unbound variables:
      Bool.Sumbool.sumbool_of_bool Eq Gt Lt None Some Type andb bool comparison cons
      false functor__Map_op_zlzd__ id list map_size negb nil op_zt__ option orb pair
-     prod runIdentity true unit Data.Bits.shiftL Data.Bits.shiftR Data.Either.Either
+     prod true unit Data.Bits.shiftL Data.Bits.shiftR Data.Either.Either
      Data.Either.Left Data.Either.Right Data.Foldable.Foldable Data.Foldable.foldl
      Data.Functor.op_zlzdzg__ Data.Functor.Identity.Identity
-     Data.Functor.Identity.Mk_Identity Data.Maybe.maybe Data.Semigroup.Semigroup
-     Data.Semigroup.op_zlzg__ Data.Set.Internal.Bin Data.Set.Internal.Set_
-     Data.Set.Internal.Tip Data.Set.Internal.splitMember Data.Traversable.Traversable
-     GHC.Base.Applicative GHC.Base.Eq_ GHC.Base.Functor GHC.Base.Monad
-     GHC.Base.Monoid GHC.Base.Ord GHC.Base.compare GHC.Base.const GHC.Base.flip
-     GHC.Base.fmap GHC.Base.id GHC.Base.liftA3 GHC.Base.mappend GHC.Base.mempty
-     GHC.Base.op_z2218U__ GHC.Base.op_zeze__ GHC.Base.op_zg__ GHC.Base.op_zgze__
+     Data.Functor.Identity.Mk_Identity Data.Functor.Identity.runIdentity
+     Data.Maybe.maybe Data.Semigroup.Semigroup Data.Semigroup.op_zlzg__
+     Data.Set.Internal.Bin Data.Set.Internal.Set_ Data.Set.Internal.Tip
+     Data.Set.Internal.splitMember Data.Traversable.Traversable GHC.Base.Applicative
+     GHC.Base.Eq_ GHC.Base.Functor GHC.Base.Monad GHC.Base.Monoid GHC.Base.Ord
+     GHC.Base.compare GHC.Base.const GHC.Base.flip GHC.Base.fmap GHC.Base.id
+     GHC.Base.liftA3 GHC.Base.mappend GHC.Base.mempty GHC.Base.op_z2218U__
+     GHC.Base.op_zeze__ GHC.Base.op_zg__ GHC.Base.op_zgze__ GHC.Base.op_zgzgze__
      GHC.Base.op_zl__ GHC.Base.op_zlze__ GHC.Base.op_zsze__ GHC.Base.pure
      GHC.DeferredFix.deferredFix2 GHC.DeferredFix.deferredFix3 GHC.Err.error
      GHC.Err.patternFailure GHC.Num.Int GHC.Num.Num GHC.Num.fromInteger

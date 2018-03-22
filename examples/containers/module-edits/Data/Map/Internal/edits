@@ -20,6 +20,8 @@ order Data.Map.Internal.Semigroup__Map Data.Map.Internal.Monoid__Map_mappend
 order Data.Map.Internal.Functor__WhenMissing  Data.Map.Internal.Applicative__WhenMissing Data.Map.Internal.Monad__WhenMissing_op_zgzg__ Data.Map.Internal.Monad__WhenMissing_return_
 order Data.Map.Internal.Functor__WhenMatched  Data.Map.Internal.Applicative__WhenMatched Data.Map.Internal.Monad__WhenMatched_op_zgzg__ Data.Map.Internal.Monad__WhenMatched_return_
 
+order Data.Map.Internal.Functor__Map Data.Map.Internal.lmapWhenMissing
+
 # TODOs
 skip Data.Map.Internal.Eq1__Map
 skip Data.Map.Internal.Ord1__Map

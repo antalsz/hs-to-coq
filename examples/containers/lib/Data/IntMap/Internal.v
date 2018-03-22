@@ -113,11 +113,6 @@ Definition missingKey {f} {x} {y} (arg_1__ : WhenMissing f x y) :=
 Definition missingSubtree {f} {x} {y} (arg_2__ : WhenMissing f x y) :=
   let 'Mk_WhenMissing missingSubtree _ := arg_2__ in
   missingSubtree.
-
-(* The Haskell code containes partial or untranslateable code, which needs the
-   following *)
-
-Axiom missingValue : forall {a}, a.
 (* Midamble *)
 
 Require GHC.Err.
@@ -260,6 +255,12 @@ Definition filter {a} : (a -> bool) -> IntMap a -> IntMap a :=
                      | _, x => p x
                      end) m.
 
+Definition filterMissing {f} {x} `{GHC.Base.Applicative f}
+   : (Data.IntSet.Internal.Key -> x -> bool) -> WhenMissing f x x :=
+  fun f =>
+    Mk_WhenMissing (fun m => GHC.Base.pure (filterWithKey f m)) (fun k x =>
+                      GHC.Base.pure (if f k x : bool then Some x else None)).
+
 Definition filterWithKeyA {f} {a} `{GHC.Base.Applicative f}
    : (Data.IntSet.Internal.Key -> a -> f bool) -> IntMap a -> f (IntMap a) :=
   fix filterWithKeyA arg_0__ arg_1__
@@ -314,6 +315,12 @@ Definition mapMaybe {a} {b} : (a -> option b) -> IntMap a -> IntMap b :=
                        | _, x => f x
                        end).
 
+Definition mapMaybeMissing {f} {x} {y} `{GHC.Base.Applicative f}
+   : (Data.IntSet.Internal.Key -> x -> option y) -> WhenMissing f x y :=
+  fun f =>
+    Mk_WhenMissing (fun m => GHC.Base.pure (mapMaybeWithKey f m)) (fun k x =>
+                      GHC.Base.pure (f k x)).
+
 Definition partitionWithKey {a}
    : (Data.IntSet.Internal.Key -> a -> bool) ->
      IntMap a -> (IntMap a * IntMap a)%type :=
@@ -348,6 +355,10 @@ Definition traverseMaybeWithKey {f} {a} {b} `{GHC.Base.Applicative f}
                  | Bin p m l r => GHC.Base.liftA2 (bin p m) (go l) (go r)
                  end in
     go.
+
+Definition traverseMaybeMissing {f} {x} {y} `{GHC.Base.Applicative f}
+   : (Data.IntSet.Internal.Key -> x -> f (option y)) -> WhenMissing f x y :=
+  fun f => Mk_WhenMissing (traverseMaybeWithKey f) f.
 
 Definition binCheckLeft {a}
    : Prefix -> Mask -> IntMap a -> IntMap a -> IntMap a :=
@@ -423,6 +434,12 @@ Definition boolITE {a} : a -> a -> bool -> a :=
     | _, t, true => t
     end.
 
+Definition filterAMissing {f} {x} `{GHC.Base.Applicative f}
+   : (Data.IntSet.Internal.Key -> x -> f bool) -> WhenMissing f x x :=
+  fun f =>
+    Mk_WhenMissing (fun m => filterWithKeyA f m) (fun k x =>
+                      boolITE None (Some x) Data.Functor.<$> f k x).
+
 Definition branchMask : Prefix -> Prefix -> Mask :=
   fun p1 p2 =>
     Utils.Containers.Internal.BitUtil.highestBitMask (Data.Bits.xor p1 p2).
@@ -437,7 +454,8 @@ Definition link {a} : Prefix -> IntMap a -> Prefix -> IntMap a -> IntMap a :=
 
 Definition dropMissing {f} {x} {y} `{GHC.Base.Applicative f}
    : WhenMissing f x y :=
-  Mk_WhenMissing missingValue missingValue.
+  Mk_WhenMissing (GHC.Base.const (GHC.Base.pure Nil)) (fun arg_0__ arg_1__ =>
+                    GHC.Base.pure None).
 
 Definition empty {a} : IntMap a :=
   Nil.
@@ -459,14 +477,6 @@ Definition equal {a} `{GHC.Base.Eq_ a} : IntMap a -> IntMap a -> bool :=
 Local Definition Eq___IntMap_op_zeze__ {inst_a} `{GHC.Base.Eq_ inst_a}
    : (IntMap inst_a) -> (IntMap inst_a) -> bool :=
   fun t1 t2 => equal t1 t2.
-
-Definition filterAMissing {f} {x} `{GHC.Base.Applicative f}
-   : (Data.IntSet.Internal.Key -> x -> f bool) -> WhenMissing f x x :=
-  fun f => Mk_WhenMissing missingValue missingValue.
-
-Definition filterMissing {f} {x} `{GHC.Base.Applicative f}
-   : (Data.IntSet.Internal.Key -> x -> bool) -> WhenMissing f x x :=
-  fun f => Mk_WhenMissing missingValue missingValue.
 
 Definition foldMapWithKey {m} {a} `{GHC.Base.Monoid m}
    : (Data.IntSet.Internal.Key -> a -> m) -> IntMap a -> m :=
@@ -737,10 +747,6 @@ Definition keysSet {a} : IntMap a -> Data.IntSet.Internal.IntSet :=
                                                                                                               #0 l) r)
            end.
 
-Definition lmapWhenMissing {b} {a} {f} {x}
-   : (b -> a) -> WhenMissing f a x -> WhenMissing f b x :=
-  fun f t => Mk_WhenMissing missingValue missingValue.
-
 Definition lookupMax {a}
    : IntMap a -> option (Data.IntSet.Internal.Key * a)%type :=
   fun arg_0__ =>
@@ -796,6 +802,12 @@ Program Instance Functor__IntMap : GHC.Base.Functor IntMap :=
     k {| GHC.Base.op_zlzd____ := fun {a} {b} => Functor__IntMap_op_zlzd__ ;
          GHC.Base.fmap__ := fun {a} {b} => Functor__IntMap_fmap |}.
 
+Definition lmapWhenMissing {b} {a} {f} {x}
+   : (b -> a) -> WhenMissing f a x -> WhenMissing f b x :=
+  fun f t =>
+    Mk_WhenMissing (fun m => missingSubtree t (GHC.Base.fmap f m)) (fun k x =>
+                      missingKey t k (f x)).
+
 Definition mapAccumL {a} {b} {c}
    : (a -> Data.IntSet.Internal.Key -> b -> (a * c)%type) ->
      a -> IntMap b -> (a * IntMap c)%type :=
@@ -844,7 +856,9 @@ Definition mapGT {a}
 
 Definition mapGentlyWhenMissing {f} {a} {b} {x} `{GHC.Base.Functor f}
    : (a -> b) -> WhenMissing f x a -> WhenMissing f x b :=
-  fun f t => Mk_WhenMissing missingValue missingValue.
+  fun f t =>
+    Mk_WhenMissing (fun m => GHC.Base.fmap f Data.Functor.<$> missingSubtree t m)
+                   (fun k x => GHC.Base.fmap f Data.Functor.<$> missingKey t k x).
 
 Definition mapLT {a}
    : (IntMap a -> IntMap a) -> SplitLookup a -> SplitLookup a :=
@@ -852,14 +866,6 @@ Definition mapLT {a}
     match arg_0__, arg_1__ with
     | f, Mk_SplitLookup lt fnd gt => Mk_SplitLookup (f lt) fnd gt
     end.
-
-Definition mapMaybeMissing {f} {x} {y} `{GHC.Base.Applicative f}
-   : (Data.IntSet.Internal.Key -> x -> option y) -> WhenMissing f x y :=
-  fun f => Mk_WhenMissing missingValue missingValue.
-
-Definition mapMissing {f} {x} {y} `{GHC.Base.Applicative f}
-   : (Data.IntSet.Internal.Key -> x -> y) -> WhenMissing f x y :=
-  fun f => Mk_WhenMissing missingValue missingValue.
 
 Definition mapWhenMatched {f} {a} {b} {x} {y} `{GHC.Base.Functor f}
    : (a -> b) -> WhenMatched f x y a -> WhenMatched f x y b :=
@@ -872,7 +878,11 @@ Definition mapWhenMatched {f} {a} {b} {x} {y} `{GHC.Base.Functor f}
 Definition mapWhenMissing {f} {a} {b} {x} `{GHC.Base.Applicative f}
   `{GHC.Base.Monad f}
    : (a -> b) -> WhenMissing f x a -> WhenMissing f x b :=
-  fun f t => Mk_WhenMissing missingValue missingValue.
+  fun f t =>
+    Mk_WhenMissing (fun m =>
+                      missingSubtree t m GHC.Base.>>= (fun m' => GHC.Base.pure (GHC.Base.fmap f m')))
+                   (fun k x =>
+                      missingKey t k x GHC.Base.>>= (fun q => (GHC.Base.pure (GHC.Base.fmap f q)))).
 
 Definition mapWithKey {a} {b}
    : (Data.IntSet.Internal.Key -> a -> b) -> IntMap a -> IntMap b :=
@@ -882,6 +892,12 @@ Definition mapWithKey {a} {b}
            | Tip k x => Tip k (f k x)
            | Nil => Nil
            end.
+
+Definition mapMissing {f} {x} {y} `{GHC.Base.Applicative f}
+   : (Data.IntSet.Internal.Key -> x -> y) -> WhenMissing f x y :=
+  fun f =>
+    Mk_WhenMissing (fun m => GHC.Base.pure (mapWithKey f m)) (fun k x =>
+                      GHC.Base.pure (Some (f k x))).
 
 Definition maskW : Nat -> Nat -> Prefix :=
   fun i m =>
@@ -1270,7 +1286,10 @@ Local Definition Foldable__IntMap_null : forall {a}, IntMap a -> bool :=
 
 Definition preserveMissing {f} {x} `{GHC.Base.Applicative f}
    : WhenMissing f x x :=
-  Mk_WhenMissing missingValue missingValue.
+  Mk_WhenMissing GHC.Base.pure (fun arg_0__ arg_1__ =>
+                    match arg_0__, arg_1__ with
+                    | _, v => GHC.Base.pure (Some v)
+                    end).
 
 Definition runWhenMatched {f} {x} {y} {z}
    : WhenMatched f x y z -> Data.IntSet.Internal.Key -> x -> y -> f (option z) :=
@@ -1764,14 +1783,6 @@ Definition splitRoot {a} : IntMap a -> list (IntMap a) :=
         else cons l (cons r nil)
     end.
 
-Definition traverseMaybeMissing {f} {x} {y} `{GHC.Base.Applicative f}
-   : (Data.IntSet.Internal.Key -> x -> f (option y)) -> WhenMissing f x y :=
-  fun f => Mk_WhenMissing missingValue missingValue.
-
-Definition traverseMissing {f} {x} {y} `{GHC.Base.Applicative f}
-   : (Data.IntSet.Internal.Key -> x -> f y) -> WhenMissing f x y :=
-  fun f => Mk_WhenMissing missingValue missingValue.
-
 Definition traverseWithKey {t} {a} {b} `{GHC.Base.Applicative t}
    : (Data.IntSet.Internal.Key -> a -> t b) -> IntMap a -> t (IntMap b) :=
   fun f =>
@@ -1782,6 +1793,11 @@ Definition traverseWithKey {t} {a} {b} `{GHC.Base.Applicative t}
                  | Bin p m l r => GHC.Base.liftA2 (Bin p m) (go l) (go r)
                  end in
     go.
+
+Definition traverseMissing {f} {x} {y} `{GHC.Base.Applicative f}
+   : (Data.IntSet.Internal.Key -> x -> f y) -> WhenMissing f x y :=
+  fun f =>
+    Mk_WhenMissing (traverseWithKey f) (fun k x => Some Data.Functor.<$> f k x).
 
 Local Definition Traversable__IntMap_traverse
    : forall {f} {a} {b},
@@ -2005,10 +2021,10 @@ End Notations.
      GHC.Base.Monoid GHC.Base.Ord GHC.Base.String GHC.Base.compare GHC.Base.const
      GHC.Base.fmap GHC.Base.id GHC.Base.liftA2 GHC.Base.mappend GHC.Base.mempty
      GHC.Base.op_z2218U__ GHC.Base.op_zeze__ GHC.Base.op_zg__ GHC.Base.op_zgze__
-     GHC.Base.op_zl__ GHC.Base.op_zlze__ GHC.Base.op_zsze__ GHC.Base.pure
-     GHC.DeferredFix.deferredFix2 GHC.DeferredFix.deferredFix4 GHC.Err.error
-     GHC.Err.patternFailure GHC.Num.Int GHC.Num.Num GHC.Num.Word GHC.Num.fromInteger
-     GHC.Num.op_zm__ GHC.Num.op_zp__ GHC.Num.op_zt__
+     GHC.Base.op_zgzgze__ GHC.Base.op_zl__ GHC.Base.op_zlze__ GHC.Base.op_zsze__
+     GHC.Base.pure GHC.DeferredFix.deferredFix2 GHC.DeferredFix.deferredFix4
+     GHC.Err.error GHC.Err.patternFailure GHC.Num.Int GHC.Num.Num GHC.Num.Word
+     GHC.Num.fromInteger GHC.Num.op_zm__ GHC.Num.op_zp__ GHC.Num.op_zt__
      Utils.Containers.Internal.BitUtil.highestBitMask
      Utils.Containers.Internal.BitUtil.shiftLL
      Utils.Containers.Internal.BitUtil.shiftRL

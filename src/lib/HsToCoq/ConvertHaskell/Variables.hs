@@ -68,10 +68,15 @@ freeVar = fmap freeVar' . ghcPpr
 -- Does not qualify with the module, does not look it up in renamings
 -- (useful for locally bound names)
 bareName :: GHC.Name -> Ident
-bareName = toPrefix . escapeReservedNames . T.pack . occNameString . nameOccName
+bareName = toPrefix . escapeReservedNames . specialForms .  T.pack . occNameString . nameOccName
 
 localName :: GHC.Name -> Ident
-localName = toLocalPrefix . escapeReservedNames . T.pack . occNameString . nameOccName
+localName = toLocalPrefix . escapeReservedNames . specialForms . T.pack . occNameString . nameOccName
+
+specialForms :: Ident -> Ident
+-- "$sel:rd:Mulw" to "rd"
+specialForms name | "$sel:" `T.isPrefixOf` name = T.takeWhile (/= ':') $ T.drop 5 name
+                  | otherwise                   = name
 
 var' :: ConversionMonad m => HsNamespace -> Ident -> m Qualid
 var' ns x = use $ renamed ns (Bare x) . non (Bare (escapeReservedNames x))

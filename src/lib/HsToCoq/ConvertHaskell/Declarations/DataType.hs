@@ -66,8 +66,10 @@ convertConDecl curType extraArgs (ConDeclH98 lname mlqvs mlcxt details _doc) = d
 
   fieldInfo <- case details of
     RecCon (L _ fields) ->
-      fmap (RecordFields . map Bare) . traverse freeVar
-        $ concatMap (map (unLoc . rdrNameFieldOcc . unLoc) . cd_fld_names . unLoc) fields
+      fmap RecordFields $
+      traverse (var ExprNS) $
+      map (selectorFieldOcc . unLoc) $
+      concatMap (cd_fld_names . unLoc) fields
     _ ->
       pure . NonRecordFields $ length args
   constructorFields . at con ?= fieldInfo

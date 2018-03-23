@@ -17,6 +17,7 @@ skip Decode.Eq___InstructionM
 skip Decode.Eq___InstructionM64
 skip Decode.Eq___InstructionI64
 skip Decode.Eq___InstructionCSR
+skip Decode.Eq___InstructionSet
 skip Decode.Eq___Instruction
 
 skip Decode.rd
@@ -63,8 +64,7 @@ rewrite forall x y, x GHC.Num.+ y = x + y
 rewrite forall x y, GHC.Real.mod_ x y = Utility.rem x y
 
 rewrite forall, GHC.Err.error "ambiguous decoding result" = InvalidInstruction
-rewrite forall, GHC.Err.error GHC.Base.$ "dispatch bug: " = Monads.Return tt
-rewrite forall, GHC.Err.error "dispatch bug: " = Monads.Return tt
+rewrite forall x, GHC.Err.error GHC.Base.$ (Coq.Init.Datatypes.app "dispatch bug: " (GHC.Show.show x)) = Monads.Return tt
 
 # implemented in the preamble.v
 rename value Utility.bitSlice = Decode.bitSlice

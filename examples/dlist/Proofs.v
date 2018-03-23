@@ -182,6 +182,7 @@ Qed.
 
 Notation "x 'in' y" := (In x (reify y)) (at level 61).
 Notation "x =l y" := (reify x = reify y) (at level 62).
+Notation "'len' x" := (Datatypes.length (reify x)) (at level 61).
 
 (** Tests *)
 
@@ -197,25 +198,36 @@ Theorem appendA {A} :
   associative (@append A).
 Proof. by move=> [fxs] [fys] [fzs] /=. Qed.
 
-Theorem length_append_comm {A} (dxs dys : DList A) :
-  WF dxs ->
-  WF dys ->
-  Datatypes.length (reify (append dxs dys)) = Datatypes.length (reify (append dys dxs)).
-Proof.
-  intros. inversion H; inversion H0.
-  eapply reify_P.
-  - eapply appendD with (dxs0:=dxs)(dys0:=dys); eauto. done.
-  - eapply reify_P.
-    + eapply appendD with (dxs0:=dys)(dys0:=dxs); eauto. done.
-    + rewrite !app_length. apply Nat.add_comm.
-Qed.
-
 Hint Resolve empty_WF.
 Hint Resolve singleton_WF.
 Hint Resolve cons__WF.
 Hint Resolve append_WF.
 
 Hint Resolve reify_Denotes.
+
+Ltac apply_reify :=
+  match goal with
+  | [ |- context[reify _]] =>
+    eapply reify_P;
+    [match goal with
+     | [ H: Denotes ?x _ |- Denotes ?x _ ] =>
+       apply H
+     | [ |- Denotes empty _ ] =>
+         by apply emptyD
+     | [ |- Denotes (singleton ?x) _ ] =>
+         by apply (singletonD _ x); try done
+     | [ H: Denotes ?l ?x |- Denotes (cons_ ?a ?l) _] =>
+       eapply (consD _ x a); [apply H | try done ]
+     | [ |- Denotes (cons_ ?a ?l) _] =>
+       eapply (consD _ (reify l) a); eauto
+     | [ H1: Denotes ?x _, H2: Denotes ?y _ |- Denotes (append ?x ?y) _] =>
+       eapply (appendD x _ y _); [apply H1 | apply H2 | try done]
+     | [ |- Denotes (append ?x ?y) _] =>
+       eapply (appendD x (reify x) y (reify y)); [auto | auto | try done]
+     end | idtac]
+  end; try solve [auto]; try done.
+
+Ltac solve_by_reify := repeat apply_reify.
 
 (** Some theorems from [Coq.Lists.List]. *)
 Section ListTheorems.
@@ -224,30 +236,6 @@ Section ListTheorems.
   Variable l r : DList A.
   Context {WFl : WF l} {WFr : WF r}.
 
-  Ltac apply_reify :=
-    match goal with
-    | [ |- context[reify _]] =>
-      eapply reify_P;
-      [match goal with
-       | [ H: Denotes ?x _ |- Denotes ?x _ ] =>
-         apply H
-       | [ |- Denotes empty _ ] =>
-         by apply emptyD
-       | [ |- Denotes (singleton ?x) _ ] =>
-         by apply (singletonD _ x); try done
-       | [ H: Denotes ?l ?x |- Denotes (cons_ ?a ?l) _] =>
-         eapply (consD _ x a); [apply H | try done ]
-       | [ |- Denotes (cons_ ?a ?l) _] =>
-         eapply (consD _ (reify l) a); eauto
-       | [ H1: Denotes ?x _, H2: Denotes ?y _ |- Denotes (append ?x ?y) _] =>
-         eapply (appendD x _ y _); [apply H1 | apply H2 | try done]
-       | [ |- Denotes (append ?x ?y) _] =>
-         eapply (appendD x (reify x) y (reify y)); [auto | auto | try done]
-       end | idtac]
-    end; try solve [auto]; try done.
-
-  Ltac solve_by_reify := repeat apply_reify.
-  
   Theorem nil_cons : ~ ([] =l x ::: l).
   Proof. inversion WFl. solve_by_reify. Qed.
   
@@ -265,6 +253,13 @@ Section ListTheorems.
     l =l [] /\ r =l [x] \/
     l =l [x] /\ r =l [].
   Proof. inversion WFl; inversion WFr. solve_by_reify. apply List.app_eq_unit. Qed.
+
+  Theorem length_append_comm :
+    len (l +++ r) = len (r +++ l).
+  Proof.
+    inversion WFl; inversion WFr.
+    solve_by_reify. by rewrite !app_length Nat.add_comm.
+  Qed.
     
   Theorem destruct_list :
     (exists x : A, exists tl : DList A, l =l x ::: tl) \/ (l =l []).

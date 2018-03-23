@@ -56,6 +56,8 @@ rewrite forall x y, x GHC.Num.+ y = x + y
 # rewrite forall x y, x GHC.Num.op_zp__
 rewrite forall x y, GHC.Real.mod_ x y = Utility.rem x y
 
+rename value GHC.Base.map = Coq.Lists.List.map
+
 rewrite forall, GHC.Err.error "ambiguous decoding result" = InvalidInstruction
 rewrite forall x, GHC.Err.error GHC.Base.$ (Coq.Init.Datatypes.app "dispatch bug: " (GHC.Show.show x)) = Monads.Return tt
 

@@ -65,25 +65,23 @@ Program Instance Ord__Void : GHC.Base.Ord Void :=
          GHC.Base.max__ := Ord__Void_max ;
          GHC.Base.min__ := Ord__Void_min |}.
 
-(* Translating `instance GHC.Read.Read Data.Void.Void' failed: OOPS! Cannot find
-   information for class Qualified "GHC.Read" "Read" unsupported *)
+(* Translating `instance Read__Void' failed: OOPS! Cannot find information for
+   class Qualified "GHC.Read" "Read" unsupported *)
 
-(* Translating `instance GHC.Show.Show Data.Void.Void' failed: OOPS! Cannot find
-   information for class Qualified "GHC.Show" "Show" unsupported *)
+(* Translating `instance Show__Void' failed: OOPS! Cannot find information for
+   class Qualified "GHC.Show" "Show" unsupported *)
 
-(* Translating `instance GHC.Arr.Ix Data.Void.Void' failed: OOPS! Cannot find
-   information for class Qualified "GHC.Arr" "Ix" unsupported *)
+(* Translating `instance Ix__Void' failed: OOPS! Cannot find information for
+   class Qualified "GHC.Arr" "Ix" unsupported *)
 
-(* Translating `instance GHC.Exception.Exception Data.Void.Void' failed: OOPS!
-   Cannot find information for class Qualified "GHC.Exception" "Exception"
-   unsupported *)
+(* Translating `instance Exception__Void' failed: OOPS! Cannot find information
+   for class Qualified "GHC.Exception" "Exception" unsupported *)
 
-(* Translating `instance GHC.Generics.Generic Data.Void.Void' failed: OOPS!
-   Cannot find information for class Qualified "GHC.Generics" "Generic"
-   unsupported *)
+(* Translating `instance Generic__Void' failed: OOPS! Cannot find information
+   for class Qualified "GHC.Generics" "Generic" unsupported *)
 
-(* Translating `instance Data.Data.Data Data.Void.Void' failed: OOPS! Cannot
-   find information for class Qualified "Data.Data" "Data" unsupported *)
+(* Translating `instance Data__Void' failed: OOPS! Cannot find information for
+   class Qualified "Data.Data" "Data" unsupported *)
 
 Definition absurd {a} : Void -> a :=
   fun a => match a with end.

@@ -80,25 +80,20 @@ Definition suffixBitMask := Coq.NArith.BinNat.N.ones 6%N.
 
 (* Converted value declarations: *)
 
-(* Translating `instance Data.Data.Data Data.IntSet.Internal.IntSet' failed:
-   OOPS! Cannot find information for class Qualified "Data.Data" "Data"
-   unsupported *)
+(* Translating `instance Data__IntSet' failed: OOPS! Cannot find information for
+   class Qualified "Data.Data" "Data" unsupported *)
 
-(* Translating `instance GHC.Exts.IsList Data.IntSet.Internal.IntSet' failed:
-   OOPS! Cannot find information for class Qualified "GHC.Exts" "IsList"
-   unsupported *)
+(* Translating `instance IsList__IntSet' failed: OOPS! Cannot find information
+   for class Qualified "GHC.Exts" "IsList" unsupported *)
 
-(* Translating `instance GHC.Show.Show Data.IntSet.Internal.IntSet' failed:
-   OOPS! Cannot find information for class Qualified "GHC.Show" "Show"
-   unsupported *)
+(* Translating `instance Show__IntSet' failed: OOPS! Cannot find information for
+   class Qualified "GHC.Show" "Show" unsupported *)
 
-(* Translating `instance GHC.Read.Read Data.IntSet.Internal.IntSet' failed:
-   OOPS! Cannot find information for class Qualified "GHC.Read" "Read"
-   unsupported *)
+(* Translating `instance Read__IntSet' failed: OOPS! Cannot find information for
+   class Qualified "GHC.Read" "Read" unsupported *)
 
-(* Translating `instance Control.DeepSeq.NFData Data.IntSet.Internal.IntSet'
-   failed: OOPS! Cannot find information for class Qualified "Control.DeepSeq"
-   "NFData" unsupported *)
+(* Translating `instance NFData__IntSet' failed: OOPS! Cannot find information
+   for class Qualified "Control.DeepSeq" "NFData" unsupported *)
 
 Definition bin : Prefix -> Mask -> IntSet -> IntSet -> IntSet :=
   fun arg_0__ arg_1__ arg_2__ arg_3__ =>
@@ -170,14 +165,13 @@ Program Definition foldlBits {a}
                                Coq.NArith.BinNat.N.to_nat arg_0__) _ (fun arg_0__ arg_1__ go =>
                                match arg_0__, arg_1__ with
                                | num_2__, acc =>
-                                   if Bool.Sumbool.sumbool_of_bool (num_2__ GHC.Base.== #0)
-                                   then acc
-                                   else match arg_0__, arg_1__ with
-                                        | bm, acc =>
-                                            let 'bitmask := Utils.Containers.Internal.BitUtil.lowestBitMask bm in
-                                            let 'bi := indexOfTheOnlyBit bitmask in
-                                            go (Data.Bits.xor bm bitmask) (f acc (_GHC.Num.+_ prefix bi))
-                                        end
+                                   if Bool.Sumbool.sumbool_of_bool (num_2__ GHC.Base.== #0) then acc else
+                                   match arg_0__, arg_1__ with
+                                   | bm, acc =>
+                                       let 'bitmask := Utils.Containers.Internal.BitUtil.lowestBitMask bm in
+                                       let 'bi := indexOfTheOnlyBit bitmask in
+                                       go (Data.Bits.xor bm bitmask) (f acc (_GHC.Num.+_ prefix bi))
+                                   end
                                end) in
             go bitmap z.
 Solve Obligations with (BitTerminationProofs.termination_foldl).
@@ -211,14 +205,13 @@ Program Definition foldl'Bits {a}
                                Coq.NArith.BinNat.N.to_nat arg_0__) _ (fun arg_0__ arg_1__ go =>
                                match arg_0__, arg_1__ with
                                | num_2__, acc =>
-                                   if Bool.Sumbool.sumbool_of_bool (num_2__ GHC.Base.== #0)
-                                   then acc
-                                   else match arg_0__, arg_1__ with
-                                        | bm, acc =>
-                                            let 'bitmask := Utils.Containers.Internal.BitUtil.lowestBitMask bm in
-                                            let 'bi := indexOfTheOnlyBit bitmask in
-                                            go (Data.Bits.xor bm bitmask) (f acc (_GHC.Num.+_ prefix bi))
-                                        end
+                                   if Bool.Sumbool.sumbool_of_bool (num_2__ GHC.Base.== #0) then acc else
+                                   match arg_0__, arg_1__ with
+                                   | bm, acc =>
+                                       let 'bitmask := Utils.Containers.Internal.BitUtil.lowestBitMask bm in
+                                       let 'bi := indexOfTheOnlyBit bitmask in
+                                       go (Data.Bits.xor bm bitmask) (f acc (_GHC.Num.+_ prefix bi))
+                                   end
                                end) in
             go bitmap z.
 Solve Obligations with (BitTerminationProofs.termination_foldl).
@@ -311,16 +304,14 @@ Program Definition foldrBits {a}
                                Coq.NArith.BinNat.N.to_nat arg_0__) _ (fun arg_0__ arg_1__ go =>
                                match arg_0__, arg_1__ with
                                | num_2__, acc =>
-                                   if Bool.Sumbool.sumbool_of_bool (num_2__ GHC.Base.== #0)
-                                   then acc
-                                   else match arg_0__, arg_1__ with
-                                        | bm, acc =>
-                                            let 'bitmask := Utils.Containers.Internal.BitUtil.lowestBitMask bm in
-                                            let 'bi := indexOfTheOnlyBit bitmask in
-                                            go (Data.Bits.xor bm bitmask) ((f (_GHC.Num.-_ (prefix GHC.Num.+
-                                                                                            (#64 GHC.Num.- #1)) bi))
-                                                                           acc)
-                                        end
+                                   if Bool.Sumbool.sumbool_of_bool (num_2__ GHC.Base.== #0) then acc else
+                                   match arg_0__, arg_1__ with
+                                   | bm, acc =>
+                                       let 'bitmask := Utils.Containers.Internal.BitUtil.lowestBitMask bm in
+                                       let 'bi := indexOfTheOnlyBit bitmask in
+                                       go (Data.Bits.xor bm bitmask) ((f (_GHC.Num.-_ (prefix GHC.Num.+
+                                                                                       (#64 GHC.Num.- #1)) bi)) acc)
+                                   end
                                end) in
             go (revNatSafe bitmap) z.
 Solve Obligations with (BitTerminationProofs.termination_foldl).
@@ -394,16 +385,14 @@ Program Definition foldr'Bits {a}
                                Coq.NArith.BinNat.N.to_nat arg_0__) _ (fun arg_0__ arg_1__ go =>
                                match arg_0__, arg_1__ with
                                | num_2__, acc =>
-                                   if Bool.Sumbool.sumbool_of_bool (num_2__ GHC.Base.== #0)
-                                   then acc
-                                   else match arg_0__, arg_1__ with
-                                        | bm, acc =>
-                                            let 'bitmask := Utils.Containers.Internal.BitUtil.lowestBitMask bm in
-                                            let 'bi := indexOfTheOnlyBit bitmask in
-                                            go (Data.Bits.xor bm bitmask) ((f (_GHC.Num.-_ (prefix GHC.Num.+
-                                                                                            (#64 GHC.Num.- #1)) bi))
-                                                                           acc)
-                                        end
+                                   if Bool.Sumbool.sumbool_of_bool (num_2__ GHC.Base.== #0) then acc else
+                                   match arg_0__, arg_1__ with
+                                   | bm, acc =>
+                                       let 'bitmask := Utils.Containers.Internal.BitUtil.lowestBitMask bm in
+                                       let 'bi := indexOfTheOnlyBit bitmask in
+                                       go (Data.Bits.xor bm bitmask) ((f (_GHC.Num.-_ (prefix GHC.Num.+
+                                                                                       (#64 GHC.Num.- #1)) bi)) acc)
+                                   end
                                end) in
             go (revNatSafe bitmap) z.
 Solve Obligations with (BitTerminationProofs.termination_foldl).
@@ -441,9 +430,8 @@ Definition splitRoot : IntSet -> list IntSet :=
     | Nil => nil
     | (Tip _ _ as x) => cons x nil
     | Bin _ m l r =>
-        if m GHC.Base.< #0 : bool
-        then cons r (cons l nil)
-        else cons l (cons r nil)
+        if m GHC.Base.< #0 : bool then cons r (cons l nil) else
+        cons l (cons r nil)
     end.
 
 Definition suffixOf : Coq.Numbers.BinNums.N -> Coq.Numbers.BinNums.N :=
@@ -459,11 +447,10 @@ Definition tip : Prefix -> BitMap -> IntSet :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
     | _, num_2__ =>
-        if num_2__ GHC.Base.== #0 : bool
-        then Nil
-        else match arg_0__, arg_1__ with
-             | kx, bm => Tip kx bm
-             end
+        if num_2__ GHC.Base.== #0 : bool then Nil else
+        match arg_0__, arg_1__ with
+        | kx, bm => Tip kx bm
+        end
     end.
 
 Definition filter : (Key -> bool) -> IntSet -> IntSet :=
@@ -471,8 +458,8 @@ Definition filter : (Key -> bool) -> IntSet -> IntSet :=
         := let bitPred :=
              fun kx bm bi =>
                if predicate (kx GHC.Num.+ bi) : bool
-               then bm Data.Bits..|.(**) bitmapOfSuffix bi
-               else bm in
+               then bm Data.Bits..|.(**) bitmapOfSuffix bi else
+               bm in
            match t with
            | Bin p m l r => bin p m (filter predicate l) (filter predicate r)
            | Tip kx bm => tip kx (foldl'Bits #0 (bitPred kx) #0 bm)
@@ -496,8 +483,8 @@ Definition maxView : IntSet -> option (Key * IntSet)%type :=
     | Bin p m l r =>
         if m GHC.Base.< #0 : bool
         then let 'pair result l' := go l in
-             Some (pair result (bin p m l' r))
-        else j_12__
+             Some (pair result (bin p m l' r)) else
+        j_12__
     | _ => j_12__
     end.
 
@@ -521,8 +508,8 @@ Definition minView : IntSet -> option (Key * IntSet)%type :=
     | Bin p m l r =>
         if m GHC.Base.< #0 : bool
         then let 'pair result r' := go r in
-             Some (pair result (bin p m l r'))
-        else j_12__
+             Some (pair result (bin p m l r')) else
+        j_12__
     | _ => j_12__
     end.
 
@@ -535,8 +522,8 @@ Definition partition : (Key -> bool) -> IntSet -> (IntSet * IntSet)%type :=
               := let bitPred :=
                    fun kx bm bi =>
                      if predicate (kx GHC.Num.+ bi) : bool
-                     then bm Data.Bits..|.(**) bitmapOfSuffix bi
-                     else bm in
+                     then bm Data.Bits..|.(**) bitmapOfSuffix bi else
+                     bm in
                  match t with
                  | Bin p m l r =>
                      let 'pair r1 r2 := go predicate r in
@@ -564,44 +551,33 @@ Definition subsetCmp : IntSet -> IntSet -> comparison :=
                  | _ => Lt
                  end in
                let subsetCmpLt :=
-                 if nomatch p1 p2 m2 : bool
-                 then Gt
-                 else if zero p1 m2 : bool
-                      then subsetCmp t1 l2
-                      else subsetCmp t1 r2 in
-               if shorter m1 m2 : bool
-               then Gt
-               else if shorter m2 m1 : bool
-                    then match subsetCmpLt with
-                         | Gt => Gt
-                         | _ => Lt
-                         end
-                    else if p1 GHC.Base.== p2 : bool
-                         then subsetCmpEq
-                         else Gt
+                 if nomatch p1 p2 m2 : bool then Gt else
+                 if zero p1 m2 : bool then subsetCmp t1 l2 else
+                 subsetCmp t1 r2 in
+               if shorter m1 m2 : bool then Gt else
+               if shorter m2 m1 : bool
+               then match subsetCmpLt with
+                    | Gt => Gt
+                    | _ => Lt
+                    end else
+               if p1 GHC.Base.== p2 : bool then subsetCmpEq else
+               Gt
            | _, _ =>
                match arg_0__, arg_1__ with
                | Bin _ _ _ _, _ => Gt
                | Tip kx1 bm1, Tip kx2 bm2 =>
-                   if kx1 GHC.Base./= kx2 : bool
-                   then Gt
-                   else if bm1 GHC.Base.== bm2 : bool
-                        then Eq
-                        else if Data.Bits.xor bm1 (bm1 Data.Bits..&.(**) bm2) GHC.Base.== #0 : bool
-                             then Lt
-                             else Gt
+                   if kx1 GHC.Base./= kx2 : bool then Gt else
+                   if bm1 GHC.Base.== bm2 : bool then Eq else
+                   if Data.Bits.xor bm1 (bm1 Data.Bits..&.(**) bm2) GHC.Base.== #0 : bool
+                   then Lt else
+                   Gt
                | (Tip kx _ as t1), Bin p m l r =>
-                   if nomatch kx p m : bool
-                   then Gt
-                   else if zero kx m : bool
-                        then match subsetCmp t1 l with
-                             | Gt => Gt
-                             | _ => Lt
-                             end
-                        else match subsetCmp t1 r with
-                             | Gt => Gt
-                             | _ => Lt
-                             end
+                   if nomatch kx p m : bool then Gt else
+                   if zero kx m : bool then match subsetCmp t1 l with | Gt => Gt | _ => Lt end else
+                   match subsetCmp t1 r with
+                   | Gt => Gt
+                   | _ => Lt
+                   end
                | Tip _ _, Nil => Gt
                | Nil, Nil => Eq
                | Nil, _ => Lt
@@ -615,13 +591,12 @@ Definition isSubsetOf : IntSet -> IntSet -> bool :=
   fix isSubsetOf arg_0__ arg_1__
         := match arg_0__, arg_1__ with
            | (Bin p1 m1 l1 r1 as t1), Bin p2 m2 l2 r2 =>
-               if shorter m1 m2 : bool
-               then false
-               else if shorter m2 m1 : bool
-                    then andb (match_ p1 p2 m2) (if zero p1 m2 : bool
-                               then isSubsetOf t1 l2
-                               else isSubsetOf t1 r2)
-                    else andb (p1 GHC.Base.== p2) (andb (isSubsetOf l1 l2) (isSubsetOf r1 r2))
+               if shorter m1 m2 : bool then false else
+               if shorter m2 m1 : bool
+               then andb (match_ p1 p2 m2) (if zero p1 m2 : bool
+                          then isSubsetOf t1 l2
+                          else isSubsetOf t1 r2) else
+               andb (p1 GHC.Base.== p2) (andb (isSubsetOf l1 l2) (isSubsetOf r1 r2))
            | _, _ =>
                match arg_0__, arg_1__ with
                | Bin _ _ _ _, _ => false
@@ -630,11 +605,9 @@ Definition isSubsetOf : IntSet -> IntSet -> bool :=
                          GHC.Base.==
                          #0)
                | (Tip kx _ as t1), Bin p m l r =>
-                   if nomatch kx p m : bool
-                   then false
-                   else if zero kx m : bool
-                        then isSubsetOf t1 l
-                        else isSubsetOf t1 r
+                   if nomatch kx p m : bool then false else
+                   if zero kx m : bool then isSubsetOf t1 l else
+                   isSubsetOf t1 r
                | Tip _ _, Nil => false
                | Nil, _ => true
                end
@@ -645,37 +618,29 @@ Program Fixpoint disjoint (arg_0__ : IntSet) (arg_1__ : IntSet)
                    := match arg_0__, arg_1__ with
                       | (Bin p1 m1 l1 r1 as t1), (Bin p2 m2 l2 r2 as t2) =>
                           let disjoint2 :=
-                            if Bool.Sumbool.sumbool_of_bool (nomatch p1 p2 m2)
-                            then true
-                            else if Bool.Sumbool.sumbool_of_bool (zero p1 m2)
-                                 then disjoint t1 l2
-                                 else disjoint t1 r2 in
+                            if Bool.Sumbool.sumbool_of_bool (nomatch p1 p2 m2) then true else
+                            if Bool.Sumbool.sumbool_of_bool (zero p1 m2) then disjoint t1 l2 else
+                            disjoint t1 r2 in
                           let disjoint1 :=
-                            if Bool.Sumbool.sumbool_of_bool (nomatch p2 p1 m1)
-                            then true
-                            else if Bool.Sumbool.sumbool_of_bool (zero p2 m1)
-                                 then disjoint l1 t2
-                                 else disjoint r1 t2 in
-                          if Bool.Sumbool.sumbool_of_bool (shorter m1 m2)
-                          then disjoint1
-                          else if Bool.Sumbool.sumbool_of_bool (shorter m2 m1)
-                               then disjoint2
-                               else if Bool.Sumbool.sumbool_of_bool (p1 GHC.Base.== p2)
-                                    then andb (disjoint l1 l2) (disjoint r1 r2)
-                                    else true
+                            if Bool.Sumbool.sumbool_of_bool (nomatch p2 p1 m1) then true else
+                            if Bool.Sumbool.sumbool_of_bool (zero p2 m1) then disjoint l1 t2 else
+                            disjoint r1 t2 in
+                          if Bool.Sumbool.sumbool_of_bool (shorter m1 m2) then disjoint1 else
+                          if Bool.Sumbool.sumbool_of_bool (shorter m2 m1) then disjoint2 else
+                          if Bool.Sumbool.sumbool_of_bool (p1 GHC.Base.== p2)
+                          then andb (disjoint l1 l2) (disjoint r1 r2) else
+                          true
                       | (Bin _ _ _ _ as t1), Tip kx2 bm2 =>
                           let fix disjointBM arg_11__
                                     := match arg_11__ with
                                        | Bin p1 m1 l1 r1 =>
-                                           if Bool.Sumbool.sumbool_of_bool (nomatch kx2 p1 m1)
-                                           then true
-                                           else if Bool.Sumbool.sumbool_of_bool (zero kx2 m1)
-                                                then disjointBM l1
-                                                else disjointBM r1
+                                           if Bool.Sumbool.sumbool_of_bool (nomatch kx2 p1 m1) then true else
+                                           if Bool.Sumbool.sumbool_of_bool (zero kx2 m1) then disjointBM l1 else
+                                           disjointBM r1
                                        | Tip kx1 bm1 =>
                                            if Bool.Sumbool.sumbool_of_bool (kx1 GHC.Base.== kx2)
-                                           then (bm1 Data.Bits..&.(**) bm2) GHC.Base.== #0
-                                           else true
+                                           then (bm1 Data.Bits..&.(**) bm2) GHC.Base.== #0 else
+                                           true
                                        | Nil => true
                                        end in
                           disjointBM t1
@@ -684,15 +649,13 @@ Program Fixpoint disjoint (arg_0__ : IntSet) (arg_1__ : IntSet)
                           let fix disjointBM arg_18__
                                     := match arg_18__ with
                                        | Bin p2 m2 l2 r2 =>
-                                           if Bool.Sumbool.sumbool_of_bool (nomatch kx1 p2 m2)
-                                           then true
-                                           else if Bool.Sumbool.sumbool_of_bool (zero kx1 m2)
-                                                then disjointBM l2
-                                                else disjointBM r2
+                                           if Bool.Sumbool.sumbool_of_bool (nomatch kx1 p2 m2) then true else
+                                           if Bool.Sumbool.sumbool_of_bool (zero kx1 m2) then disjointBM l2 else
+                                           disjointBM r2
                                        | Tip kx2 bm2 =>
                                            if Bool.Sumbool.sumbool_of_bool (kx1 GHC.Base.== kx2)
-                                           then (bm1 Data.Bits..&.(**) bm2) GHC.Base.== #0
-                                           else true
+                                           then (bm1 Data.Bits..&.(**) bm2) GHC.Base.== #0 else
+                                           true
                                        | Nil => true
                                        end in
                           disjointBM t2
@@ -709,15 +672,12 @@ Definition insertBM : Prefix -> BitMap -> IntSet -> IntSet :=
   fix insertBM arg_0__ arg_1__ arg_2__
         := match arg_0__, arg_1__, arg_2__ with
            | kx, bm, (Bin p m l r as t) =>
-               if nomatch kx p m : bool
-               then link kx (Tip kx bm) p t
-               else if zero kx m : bool
-                    then Bin p m (insertBM kx bm l) r
-                    else Bin p m l (insertBM kx bm r)
+               if nomatch kx p m : bool then link kx (Tip kx bm) p t else
+               if zero kx m : bool then Bin p m (insertBM kx bm l) r else
+               Bin p m l (insertBM kx bm r)
            | kx, bm, (Tip kx' bm' as t) =>
-               if kx' GHC.Base.== kx : bool
-               then Tip kx' (bm Data.Bits..|.(**) bm')
-               else link kx (Tip kx bm) kx' t
+               if kx' GHC.Base.== kx : bool then Tip kx' (bm Data.Bits..|.(**) bm') else
+               link kx (Tip kx bm) kx' t
            | kx, bm, Nil => Tip kx bm
            end.
 
@@ -736,24 +696,20 @@ Program Fixpoint union (arg_0__ : IntSet) (arg_1__ : IntSet) {measure (size_nat
                    := match arg_0__, arg_1__ with
                       | (Bin p1 m1 l1 r1 as t1), (Bin p2 m2 l2 r2 as t2) =>
                           let union2 :=
-                            if Bool.Sumbool.sumbool_of_bool (nomatch p1 p2 m2)
-                            then link p1 t1 p2 t2
-                            else if Bool.Sumbool.sumbool_of_bool (zero p1 m2)
-                                 then Bin p2 m2 (union t1 l2) r2
-                                 else Bin p2 m2 l2 (union t1 r2) in
+                            if Bool.Sumbool.sumbool_of_bool (nomatch p1 p2 m2) then link p1 t1 p2 t2 else
+                            if Bool.Sumbool.sumbool_of_bool (zero p1 m2)
+                            then Bin p2 m2 (union t1 l2) r2 else
+                            Bin p2 m2 l2 (union t1 r2) in
                           let union1 :=
-                            if Bool.Sumbool.sumbool_of_bool (nomatch p2 p1 m1)
-                            then link p1 t1 p2 t2
-                            else if Bool.Sumbool.sumbool_of_bool (zero p2 m1)
-                                 then Bin p1 m1 (union l1 t2) r1
-                                 else Bin p1 m1 l1 (union r1 t2) in
-                          if Bool.Sumbool.sumbool_of_bool (shorter m1 m2)
-                          then union1
-                          else if Bool.Sumbool.sumbool_of_bool (shorter m2 m1)
-                               then union2
-                               else if Bool.Sumbool.sumbool_of_bool (p1 GHC.Base.== p2)
-                                    then Bin p1 m1 (union l1 l2) (union r1 r2)
-                                    else link p1 t1 p2 t2
+                            if Bool.Sumbool.sumbool_of_bool (nomatch p2 p1 m1) then link p1 t1 p2 t2 else
+                            if Bool.Sumbool.sumbool_of_bool (zero p2 m1)
+                            then Bin p1 m1 (union l1 t2) r1 else
+                            Bin p1 m1 l1 (union r1 t2) in
+                          if Bool.Sumbool.sumbool_of_bool (shorter m1 m2) then union1 else
+                          if Bool.Sumbool.sumbool_of_bool (shorter m2 m1) then union2 else
+                          if Bool.Sumbool.sumbool_of_bool (p1 GHC.Base.== p2)
+                          then Bin p1 m1 (union l1 l2) (union r1 r2) else
+                          link p1 t1 p2 t2
                       | (Bin _ _ _ _ as t), Tip kx bm => insertBM kx bm t
                       | (Bin _ _ _ _ as t), Nil => t
                       | Tip kx bm, t => insertBM kx bm t
@@ -790,20 +746,19 @@ Definition lookupGE : Key -> IntSet -> option Key :=
                      if nomatch x p m : bool
                      then if x GHC.Base.< p : bool
                           then unsafeFindMin l
-                          else unsafeFindMin def
-                     else if zero x m : bool
-                          then go r l
-                          else go def r
+                          else unsafeFindMin def else
+                     if zero x m : bool then go r l else
+                     go def r
                  | def, Tip kx bm =>
                      let maskGE :=
                        (Coq.NArith.BinNat.N.ldiff (Coq.NArith.BinNat.N.ones (64 % N))
                                                   (Coq.NArith.BinNat.N.pred (bitmapOf x))) Data.Bits..&.(**)
                        bm in
                      if prefixOf x GHC.Base.< kx : bool
-                     then Some (_GHC.Num.+_ kx (lowestBitSet bm))
-                     else if andb (prefixOf x GHC.Base.== kx) (maskGE GHC.Base./= #0) : bool
-                          then Some (_GHC.Num.+_ kx (lowestBitSet maskGE))
-                          else unsafeFindMin def
+                     then Some (_GHC.Num.+_ kx (lowestBitSet bm)) else
+                     if andb (prefixOf x GHC.Base.== kx) (maskGE GHC.Base./= #0) : bool
+                     then Some (_GHC.Num.+_ kx (lowestBitSet maskGE)) else
+                     unsafeFindMin def
                  | def, Nil => unsafeFindMin def
                  end in
     let j_12__ := go Nil t in
@@ -812,8 +767,8 @@ Definition lookupGE : Key -> IntSet -> option Key :=
         if m GHC.Base.< #0 : bool
         then if x GHC.Base.>= #0 : bool
              then go Nil l
-             else go l r
-        else j_12__
+             else go l r else
+        j_12__
     | _ => j_12__
     end.
 
@@ -825,10 +780,9 @@ Definition lookupGT : Key -> IntSet -> option Key :=
                      if nomatch x p m : bool
                      then if x GHC.Base.< p : bool
                           then unsafeFindMin l
-                          else unsafeFindMin def
-                     else if zero x m : bool
-                          then go r l
-                          else go def r
+                          else unsafeFindMin def else
+                     if zero x m : bool then go r l else
+                     go def r
                  | def, Tip kx bm =>
                      let maskGT :=
                        (Coq.NArith.BinNat.N.ldiff (Coq.NArith.BinNat.N.ones (64 % N))
@@ -836,10 +790,10 @@ Definition lookupGT : Key -> IntSet -> option Key :=
                                                                              (bitmapOf x) #1))) Data.Bits..&.(**)
                        bm in
                      if prefixOf x GHC.Base.< kx : bool
-                     then Some (_GHC.Num.+_ kx (lowestBitSet bm))
-                     else if andb (prefixOf x GHC.Base.== kx) (maskGT GHC.Base./= #0) : bool
-                          then Some (_GHC.Num.+_ kx (lowestBitSet maskGT))
-                          else unsafeFindMin def
+                     then Some (_GHC.Num.+_ kx (lowestBitSet bm)) else
+                     if andb (prefixOf x GHC.Base.== kx) (maskGT GHC.Base./= #0) : bool
+                     then Some (_GHC.Num.+_ kx (lowestBitSet maskGT)) else
+                     unsafeFindMin def
                  | def, Nil => unsafeFindMin def
                  end in
     let j_12__ := go Nil t in
@@ -848,8 +802,8 @@ Definition lookupGT : Key -> IntSet -> option Key :=
         if m GHC.Base.< #0 : bool
         then if x GHC.Base.>= #0 : bool
              then go Nil l
-             else go l r
-        else j_12__
+             else go l r else
+        j_12__
     | _ => j_12__
     end.
 
@@ -861,20 +815,19 @@ Definition lookupLE : Key -> IntSet -> option Key :=
                      if nomatch x p m : bool
                      then if x GHC.Base.< p : bool
                           then unsafeFindMax def
-                          else unsafeFindMax r
-                     else if zero x m : bool
-                          then go def l
-                          else go l r
+                          else unsafeFindMax r else
+                     if zero x m : bool then go def l else
+                     go l r
                  | def, Tip kx bm =>
                      let maskLE :=
                        ((Utils.Containers.Internal.BitUtil.shiftLL (bitmapOf x) #1) GHC.Num.- #1)
                        Data.Bits..&.(**)
                        bm in
                      if prefixOf x GHC.Base.> kx : bool
-                     then Some (_GHC.Num.+_ kx (highestBitSet bm))
-                     else if andb (prefixOf x GHC.Base.== kx) (maskLE GHC.Base./= #0) : bool
-                          then Some (_GHC.Num.+_ kx (highestBitSet maskLE))
-                          else unsafeFindMax def
+                     then Some (_GHC.Num.+_ kx (highestBitSet bm)) else
+                     if andb (prefixOf x GHC.Base.== kx) (maskLE GHC.Base./= #0) : bool
+                     then Some (_GHC.Num.+_ kx (highestBitSet maskLE)) else
+                     unsafeFindMax def
                  | def, Nil => unsafeFindMax def
                  end in
     let j_12__ := go Nil t in
@@ -883,8 +836,8 @@ Definition lookupLE : Key -> IntSet -> option Key :=
         if m GHC.Base.< #0 : bool
         then if x GHC.Base.>= #0 : bool
              then go r l
-             else go Nil r
-        else j_12__
+             else go Nil r else
+        j_12__
     | _ => j_12__
     end.
 
@@ -896,17 +849,16 @@ Definition lookupLT : Key -> IntSet -> option Key :=
                      if nomatch x p m : bool
                      then if x GHC.Base.< p : bool
                           then unsafeFindMax def
-                          else unsafeFindMax r
-                     else if zero x m : bool
-                          then go def l
-                          else go l r
+                          else unsafeFindMax r else
+                     if zero x m : bool then go def l else
+                     go l r
                  | def, Tip kx bm =>
                      let maskLT := (bitmapOf x GHC.Num.- #1) Data.Bits..&.(**) bm in
                      if prefixOf x GHC.Base.> kx : bool
-                     then Some (_GHC.Num.+_ kx (highestBitSet bm))
-                     else if andb (prefixOf x GHC.Base.== kx) (maskLT GHC.Base./= #0) : bool
-                          then Some (_GHC.Num.+_ kx (highestBitSet maskLT))
-                          else unsafeFindMax def
+                     then Some (_GHC.Num.+_ kx (highestBitSet bm)) else
+                     if andb (prefixOf x GHC.Base.== kx) (maskLT GHC.Base./= #0) : bool
+                     then Some (_GHC.Num.+_ kx (highestBitSet maskLT)) else
+                     unsafeFindMax def
                  | def, Nil => unsafeFindMax def
                  end in
     let j_12__ := go Nil t in
@@ -915,8 +867,8 @@ Definition lookupLT : Key -> IntSet -> option Key :=
         if m GHC.Base.< #0 : bool
         then if x GHC.Base.>= #0 : bool
              then go r l
-             else go Nil r
-        else j_12__
+             else go Nil r else
+        j_12__
     | _ => j_12__
     end.
 
@@ -925,11 +877,9 @@ Definition member : Key -> IntSet -> bool :=
     let fix go arg_0__
               := match arg_0__ with
                  | Bin p m l r =>
-                     if nomatch x p m : bool
-                     then false
-                     else if zero x m : bool
-                          then go l
-                          else go r
+                     if nomatch x p m : bool then false else
+                     if zero x m : bool then go l else
+                     go r
                  | Tip y bm =>
                      andb (prefixOf x GHC.Base.== y) ((bitmapOf x Data.Bits..&.(**) bm) GHC.Base./=
                            #0)
@@ -950,23 +900,20 @@ Definition split : Key -> IntSet -> (IntSet * IntSet)%type :=
                           then let 'pair lt gt := go x' l in
                                pair lt (union gt r)
                           else let 'pair lt gt := go x' r in
-                               pair (union lt l) gt
-                     else if x' GHC.Base.< p : bool
-                          then (pair Nil t')
-                          else (pair t' Nil)
+                               pair (union lt l) gt else
+                     if x' GHC.Base.< p : bool
+                     then (pair Nil t')
+                     else (pair t' Nil)
                  | x', (Tip kx' bm as t') =>
                      let lowerBitmap := bitmapOf x' GHC.Num.- #1 in
                      let higherBitmap :=
                        Coq.NArith.BinNat.N.ldiff (Coq.NArith.BinNat.N.ones (64 % N)) (lowerBitmap
                                                   GHC.Num.+
                                                   bitmapOf x') in
-                     if kx' GHC.Base.> x' : bool
-                     then (pair Nil t')
-                     else if kx' GHC.Base.< prefixOf x' : bool
-                          then (pair t' Nil)
-                          else pair (tip kx' (bm Data.Bits..&.(**) lowerBitmap)) (tip kx' (bm
-                                                                                           Data.Bits..&.(**)
-                                                                                           higherBitmap))
+                     if kx' GHC.Base.> x' : bool then (pair Nil t') else
+                     if kx' GHC.Base.< prefixOf x' : bool then (pair t' Nil) else
+                     pair (tip kx' (bm Data.Bits..&.(**) lowerBitmap)) (tip kx' (bm Data.Bits..&.(**)
+                                                                                 higherBitmap))
                  | _, Nil => (pair Nil Nil)
                  end in
     let j_21__ := let 'pair lt gt := go x t in pair lt gt in
@@ -979,8 +926,8 @@ Definition split : Key -> IntSet -> (IntSet * IntSet)%type :=
                   pair lt' gt
              else let 'pair lt gt := go x r in
                   let 'gt' := union gt l in
-                  pair lt gt'
-        else j_21__
+                  pair lt gt' else
+        j_21__
     | _ => j_21__
     end.
 
@@ -994,10 +941,10 @@ Definition splitMember : Key -> IntSet -> (IntSet * bool * IntSet)%type :=
                           then let 'pair (pair lt fnd) gt := go x' l in
                                pair (pair lt fnd) (union gt r)
                           else let 'pair (pair lt fnd) gt := go x' r in
-                               pair (pair (union lt l) fnd) gt
-                     else if x' GHC.Base.< p : bool
-                          then pair (pair Nil false) t'
-                          else pair (pair t' false) Nil
+                               pair (pair (union lt l) fnd) gt else
+                     if x' GHC.Base.< p : bool
+                     then pair (pair Nil false) t'
+                     else pair (pair t' false) Nil
                  | x', (Tip kx' bm as t') =>
                      let bitmapOfx' := bitmapOf x' in
                      let lowerBitmap := bitmapOfx' GHC.Num.- #1 in
@@ -1005,14 +952,12 @@ Definition splitMember : Key -> IntSet -> (IntSet * bool * IntSet)%type :=
                        Coq.NArith.BinNat.N.ldiff (Coq.NArith.BinNat.N.ones (64 % N)) (lowerBitmap
                                                   GHC.Num.+
                                                   bitmapOfx') in
-                     if kx' GHC.Base.> x' : bool
-                     then pair (pair Nil false) t'
-                     else if kx' GHC.Base.< prefixOf x' : bool
-                          then pair (pair t' false) Nil
-                          else let 'gt := tip kx' (bm Data.Bits..&.(**) higherBitmap) in
-                               let 'found := (bm Data.Bits..&.(**) bitmapOfx') GHC.Base./= #0 in
-                               let 'lt := tip kx' (bm Data.Bits..&.(**) lowerBitmap) in
-                               pair (pair lt found) gt
+                     if kx' GHC.Base.> x' : bool then pair (pair Nil false) t' else
+                     if kx' GHC.Base.< prefixOf x' : bool then pair (pair t' false) Nil else
+                     let 'gt := tip kx' (bm Data.Bits..&.(**) higherBitmap) in
+                     let 'found := (bm Data.Bits..&.(**) bitmapOfx') GHC.Base./= #0 in
+                     let 'lt := tip kx' (bm Data.Bits..&.(**) lowerBitmap) in
+                     pair (pair lt found) gt
                  | _, Nil => pair (pair Nil false) Nil
                  end in
     let j_22__ := go x t in
@@ -1025,8 +970,8 @@ Definition splitMember : Key -> IntSet -> (IntSet * bool * IntSet)%type :=
                   pair (pair lt' fnd) gt
              else let 'pair (pair lt fnd) gt := go x r in
                   let 'gt' := union gt l in
-                  pair (pair lt fnd) gt'
-        else j_22__
+                  pair (pair lt fnd) gt' else
+        j_22__
     | _ => j_22__
     end.
 
@@ -1034,15 +979,13 @@ Definition deleteBM : Prefix -> BitMap -> IntSet -> IntSet :=
   fix deleteBM arg_0__ arg_1__ arg_2__
         := match arg_0__, arg_1__, arg_2__ with
            | kx, bm, (Bin p m l r as t) =>
-               if nomatch kx p m : bool
-               then t
-               else if zero kx m : bool
-                    then bin p m (deleteBM kx bm l) r
-                    else bin p m l (deleteBM kx bm r)
+               if nomatch kx p m : bool then t else
+               if zero kx m : bool then bin p m (deleteBM kx bm l) r else
+               bin p m l (deleteBM kx bm r)
            | kx, bm, (Tip kx' bm' as t) =>
                if kx' GHC.Base.== kx : bool
-               then tip kx (Data.Bits.xor bm' (bm' Data.Bits..&.(**) bm))
-               else t
+               then tip kx (Data.Bits.xor bm' (bm' Data.Bits..&.(**) bm)) else
+               t
            | _, _, Nil => Nil
            end.
 
@@ -1054,39 +997,32 @@ Program Fixpoint difference (arg_0__ : IntSet) (arg_1__ : IntSet)
                    := match arg_0__, arg_1__ with
                       | (Bin p1 m1 l1 r1 as t1), (Bin p2 m2 l2 r2 as t2) =>
                           let difference2 :=
-                            if Bool.Sumbool.sumbool_of_bool (nomatch p1 p2 m2)
-                            then t1
-                            else if Bool.Sumbool.sumbool_of_bool (zero p1 m2)
-                                 then difference t1 l2
-                                 else difference t1 r2 in
+                            if Bool.Sumbool.sumbool_of_bool (nomatch p1 p2 m2) then t1 else
+                            if Bool.Sumbool.sumbool_of_bool (zero p1 m2) then difference t1 l2 else
+                            difference t1 r2 in
                           let difference1 :=
-                            if Bool.Sumbool.sumbool_of_bool (nomatch p2 p1 m1)
-                            then t1
-                            else if Bool.Sumbool.sumbool_of_bool (zero p2 m1)
-                                 then bin p1 m1 (difference l1 t2) r1
-                                 else bin p1 m1 l1 (difference r1 t2) in
-                          if Bool.Sumbool.sumbool_of_bool (shorter m1 m2)
-                          then difference1
-                          else if Bool.Sumbool.sumbool_of_bool (shorter m2 m1)
-                               then difference2
-                               else if Bool.Sumbool.sumbool_of_bool (p1 GHC.Base.== p2)
-                                    then bin p1 m1 (difference l1 l2) (difference r1 r2)
-                                    else t1
+                            if Bool.Sumbool.sumbool_of_bool (nomatch p2 p1 m1) then t1 else
+                            if Bool.Sumbool.sumbool_of_bool (zero p2 m1)
+                            then bin p1 m1 (difference l1 t2) r1 else
+                            bin p1 m1 l1 (difference r1 t2) in
+                          if Bool.Sumbool.sumbool_of_bool (shorter m1 m2) then difference1 else
+                          if Bool.Sumbool.sumbool_of_bool (shorter m2 m1) then difference2 else
+                          if Bool.Sumbool.sumbool_of_bool (p1 GHC.Base.== p2)
+                          then bin p1 m1 (difference l1 l2) (difference r1 r2) else
+                          t1
                       | (Bin _ _ _ _ as t), Tip kx bm => deleteBM kx bm t
                       | (Bin _ _ _ _ as t), Nil => t
                       | (Tip kx bm as t1), t2 =>
                           let fix differenceTip arg_12__
                                     := match arg_12__ with
                                        | Bin p2 m2 l2 r2 =>
-                                           if Bool.Sumbool.sumbool_of_bool (nomatch kx p2 m2)
-                                           then t1
-                                           else if Bool.Sumbool.sumbool_of_bool (zero kx m2)
-                                                then differenceTip l2
-                                                else differenceTip r2
+                                           if Bool.Sumbool.sumbool_of_bool (nomatch kx p2 m2) then t1 else
+                                           if Bool.Sumbool.sumbool_of_bool (zero kx m2) then differenceTip l2 else
+                                           differenceTip r2
                                        | Tip kx2 bm2 =>
                                            if Bool.Sumbool.sumbool_of_bool (kx GHC.Base.== kx2)
-                                           then tip kx (Data.Bits.xor bm (bm Data.Bits..&.(**) bm2))
-                                           else t1
+                                           then tip kx (Data.Bits.xor bm (bm Data.Bits..&.(**) bm2)) else
+                                           t1
                                        | Nil => t1
                                        end in
                           differenceTip t2
@@ -1106,37 +1042,29 @@ Program Fixpoint intersection (arg_0__ : IntSet) (arg_1__ : IntSet)
                    := match arg_0__, arg_1__ with
                       | (Bin p1 m1 l1 r1 as t1), (Bin p2 m2 l2 r2 as t2) =>
                           let intersection2 :=
-                            if Bool.Sumbool.sumbool_of_bool (nomatch p1 p2 m2)
-                            then Nil
-                            else if Bool.Sumbool.sumbool_of_bool (zero p1 m2)
-                                 then intersection t1 l2
-                                 else intersection t1 r2 in
+                            if Bool.Sumbool.sumbool_of_bool (nomatch p1 p2 m2) then Nil else
+                            if Bool.Sumbool.sumbool_of_bool (zero p1 m2) then intersection t1 l2 else
+                            intersection t1 r2 in
                           let intersection1 :=
-                            if Bool.Sumbool.sumbool_of_bool (nomatch p2 p1 m1)
-                            then Nil
-                            else if Bool.Sumbool.sumbool_of_bool (zero p2 m1)
-                                 then intersection l1 t2
-                                 else intersection r1 t2 in
-                          if Bool.Sumbool.sumbool_of_bool (shorter m1 m2)
-                          then intersection1
-                          else if Bool.Sumbool.sumbool_of_bool (shorter m2 m1)
-                               then intersection2
-                               else if Bool.Sumbool.sumbool_of_bool (p1 GHC.Base.== p2)
-                                    then bin p1 m1 (intersection l1 l2) (intersection r1 r2)
-                                    else Nil
+                            if Bool.Sumbool.sumbool_of_bool (nomatch p2 p1 m1) then Nil else
+                            if Bool.Sumbool.sumbool_of_bool (zero p2 m1) then intersection l1 t2 else
+                            intersection r1 t2 in
+                          if Bool.Sumbool.sumbool_of_bool (shorter m1 m2) then intersection1 else
+                          if Bool.Sumbool.sumbool_of_bool (shorter m2 m1) then intersection2 else
+                          if Bool.Sumbool.sumbool_of_bool (p1 GHC.Base.== p2)
+                          then bin p1 m1 (intersection l1 l2) (intersection r1 r2) else
+                          Nil
                       | (Bin _ _ _ _ as t1), Tip kx2 bm2 =>
                           let fix intersectBM arg_11__
                                     := match arg_11__ with
                                        | Bin p1 m1 l1 r1 =>
-                                           if Bool.Sumbool.sumbool_of_bool (nomatch kx2 p1 m1)
-                                           then Nil
-                                           else if Bool.Sumbool.sumbool_of_bool (zero kx2 m1)
-                                                then intersectBM l1
-                                                else intersectBM r1
+                                           if Bool.Sumbool.sumbool_of_bool (nomatch kx2 p1 m1) then Nil else
+                                           if Bool.Sumbool.sumbool_of_bool (zero kx2 m1) then intersectBM l1 else
+                                           intersectBM r1
                                        | Tip kx1 bm1 =>
                                            if Bool.Sumbool.sumbool_of_bool (kx1 GHC.Base.== kx2)
-                                           then tip kx1 (bm1 Data.Bits..&.(**) bm2)
-                                           else Nil
+                                           then tip kx1 (bm1 Data.Bits..&.(**) bm2) else
+                                           Nil
                                        | Nil => Nil
                                        end in
                           intersectBM t1
@@ -1145,15 +1073,13 @@ Program Fixpoint intersection (arg_0__ : IntSet) (arg_1__ : IntSet)
                           let fix intersectBM arg_18__
                                     := match arg_18__ with
                                        | Bin p2 m2 l2 r2 =>
-                                           if Bool.Sumbool.sumbool_of_bool (nomatch kx1 p2 m2)
-                                           then Nil
-                                           else if Bool.Sumbool.sumbool_of_bool (zero kx1 m2)
-                                                then intersectBM l2
-                                                else intersectBM r2
+                                           if Bool.Sumbool.sumbool_of_bool (nomatch kx1 p2 m2) then Nil else
+                                           if Bool.Sumbool.sumbool_of_bool (zero kx1 m2) then intersectBM l2 else
+                                           intersectBM r2
                                        | Tip kx2 bm2 =>
                                            if Bool.Sumbool.sumbool_of_bool (kx1 GHC.Base.== kx2)
-                                           then tip kx1 (bm1 Data.Bits..&.(**) bm2)
-                                           else Nil
+                                           then tip kx1 (bm1 Data.Bits..&.(**) bm2) else
+                                           Nil
                                        | Nil => Nil
                                        end in
                           intersectBM t2

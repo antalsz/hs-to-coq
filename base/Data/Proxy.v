@@ -81,24 +81,20 @@ Program Instance Ord__Proxy {s} : GHC.Base.Ord (Proxy s) :=
          GHC.Base.max__ := Ord__Proxy_max ;
          GHC.Base.min__ := Ord__Proxy_min |}.
 
-(* Translating `instance forall {s}, GHC.Show.Show (Data.Proxy.Proxy s)' failed:
-   OOPS! Cannot find information for class Qualified "GHC.Show" "Show"
-   unsupported *)
+(* Translating `instance Show__Proxy' failed: OOPS! Cannot find information for
+   class Qualified "GHC.Show" "Show" unsupported *)
 
-(* Translating `instance forall {s}, GHC.Read.Read (Data.Proxy.Proxy s)' failed:
-   OOPS! Cannot find information for class Qualified "GHC.Read" "Read"
-   unsupported *)
+(* Translating `instance Read__Proxy' failed: OOPS! Cannot find information for
+   class Qualified "GHC.Read" "Read" unsupported *)
 
-(* Translating `instance forall {s}, GHC.Enum.Enum (Data.Proxy.Proxy s)' failed:
-   OOPS! Cannot find information for class Qualified "GHC.Enum" "Enum"
-   unsupported *)
+(* Translating `instance Enum__Proxy' failed: OOPS! Cannot find information for
+   class Qualified "GHC.Enum" "Enum" unsupported *)
 
-(* Translating `instance forall {s}, GHC.Arr.Ix (Data.Proxy.Proxy s)' failed:
-   OOPS! Cannot find information for class Qualified "GHC.Arr" "Ix" unsupported *)
+(* Translating `instance Ix__Proxy' failed: OOPS! Cannot find information for
+   class Qualified "GHC.Arr" "Ix" unsupported *)
 
-(* Translating `instance forall {s}, GHC.Enum.Bounded (Data.Proxy.Proxy s)'
-   failed: OOPS! Cannot find information for class Qualified "GHC.Enum" "Bounded"
-   unsupported *)
+(* Translating `instance Bounded__Proxy' failed: OOPS! Cannot find information
+   for class Qualified "GHC.Enum" "Bounded" unsupported *)
 
 Local Definition Monoid__Proxy_mappend {inst_s}
    : (Proxy inst_s) -> (Proxy inst_s) -> (Proxy inst_s) :=
@@ -149,9 +145,8 @@ Program Instance Applicative__Proxy : GHC.Base.Applicative Proxy :=
          GHC.Base.op_zlztzg____ := fun {a} {b} => Applicative__Proxy_op_zlztzg__ ;
          GHC.Base.pure__ := fun {a} => Applicative__Proxy_pure |}.
 
-(* Translating `instance GHC.Base.Alternative Data.Proxy.Proxy' failed: OOPS!
-   Cannot find information for class Qualified "GHC.Base" "Alternative"
-   unsupported *)
+(* Translating `instance Alternative__Proxy' failed: OOPS! Cannot find
+   information for class Qualified "GHC.Base" "Alternative" unsupported *)
 
 Local Definition Monad__Proxy_op_zgzg__
    : forall {a} {b}, Proxy a -> Proxy b -> Proxy b :=
@@ -170,9 +165,8 @@ Program Instance Monad__Proxy : GHC.Base.Monad Proxy :=
          GHC.Base.op_zgzgze____ := fun {a} {b} => Monad__Proxy_op_zgzgze__ ;
          GHC.Base.return___ := fun {a} => Monad__Proxy_return_ |}.
 
-(* Translating `instance GHC.Base.MonadPlus Data.Proxy.Proxy' failed: OOPS!
-   Cannot find information for class Qualified "GHC.Base" "MonadPlus"
-   unsupported *)
+(* Translating `instance MonadPlus__Proxy' failed: OOPS! Cannot find information
+   for class Qualified "GHC.Base" "MonadPlus" unsupported *)
 
 Definition asProxyTypeOf {a} : a -> Proxy a -> a :=
   GHC.Base.const.

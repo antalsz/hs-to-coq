@@ -17,21 +17,26 @@ Definition equiv {A} (dxs dys : DList A) : Prop := fromDList dxs =1 fromDList dy
 Arguments equiv {_} !_ / _.
 Infix "=dl" := equiv (at level 70).
 
+Notation "[ ]" := empty.
+Notation "[ x ]" := (singleton x).
+Notation "x ::: y" := (cons_ x y) (at level 60).
+Notation "x +++ y" := (append x y) (at level 61).
+
 Inductive Denotes {A} : DList A -> list A -> Prop :=
 | emptyD : forall dxs,
-    dxs =dl empty ->
+    dxs =dl [] ->
     Denotes dxs []
 | singletonD : forall dxs x,
-    dxs =dl singleton x ->
+    dxs =dl [x] ->
     Denotes dxs [x]
 | consD : forall dxs lxs x dys,
     Denotes dxs lxs ->
-    dys =dl cons_ x dxs ->
+    dys =dl x ::: dxs ->
     Denotes dys (x :: lxs)
 | appendD : forall dxs lxs dys lys dzs,
     Denotes dxs lxs ->
     Denotes dys lys ->
-    dzs =dl append dxs dys ->
+    dzs =dl dxs +++ dys ->
     Denotes dzs (lxs ++ lys).
 
 Hint Constructors Denotes.
@@ -41,55 +46,33 @@ Definition WF {A} (dxs: DList A) : Prop :=
 
 (** Proving that [DList] functions preserve [Denotes]/[WF] *)
 
-Ltac Denotes_to_WF f_Denotes :=
-  repeat intros [? ?]; eexists; apply f_Denotes; eassumption.
-
-(** [empty] *)
-
-Theorem empty_Denotes {A} :
-  Denotes (@empty A) [].
-Proof. by constructor. Qed.
+Ltac prove_WF fdenotes:=
+  rewrite /WF; repeat move=>[? ?]; eexists; eapply fdenotes; last done; eauto.
 
 Theorem empty_WF {A} :
   WF (@empty A).
-Proof. Denotes_to_WF @empty_Denotes. Qed.
+Proof. prove_WF (@emptyD A). Qed.
 
 (** [singleton] *)
 
-Theorem singleton_Denotes {A} (x : A) :
-  Denotes (singleton x) [x].
-Proof. by constructor. Qed.
-
 Theorem singleton_WF {A} (x : A) :
   WF (singleton x).
-Proof. Denotes_to_WF @singleton_Denotes. Qed.
+Proof. prove_WF (@singletonD A). Qed.
 
 (** [cons] *)
-
-Theorem cons__Denotes {A} (x : A) (dxs : DList A) (lxs : list A) :
-  Denotes dxs lxs ->
-  Denotes (cons_ x dxs) (x :: lxs).
-Proof. econstructor; eauto. done. Qed.
 
 Theorem cons__WF {A} (x : A) (dxs : DList A) :
   WF dxs ->
   WF (cons_ x dxs).
-Proof. Denotes_to_WF @cons__Denotes. Qed.
+Proof. prove_WF (@consD A). Qed.
 
 (** [append] *)
-
-Theorem append_Denotes {A} (dxs : DList A) (lxs : list A)
-                           (dys : DList A) (lys : list A) :
-  Denotes dxs lxs ->
-  Denotes dys lys ->
-  Denotes (append dxs dys) (lxs ++ lys).
-Proof. econstructor; eauto. done. Qed.
 
 Theorem append_WF {A} (dxs dys : DList A) :
   WF dxs ->
   WF dys ->
-  WF (append dxs dys).
-Proof. Denotes_to_WF @append_Denotes. Qed.
+  WF (dxs +++ dys).
+Proof. prove_WF (@appendD A). Qed.
 
 (** [fromDList] *)
 
@@ -197,6 +180,9 @@ Proof.
   by rewrite /= app_nil_r.
 Qed.
 
+Notation "x 'in' y" := (In x (reify y)) (at level 61).
+Notation "x =l y" := (reify x = reify y) (at level 62).
+
 (** Tests *)
 
 Theorem append_singletons {A} (x y : A) :
@@ -224,26 +210,12 @@ Proof.
     + rewrite !app_length. apply Nat.add_comm.
 Qed.
 
-Hint Resolve empty_Denotes.
 Hint Resolve empty_WF.
-
-Hint Resolve singleton_Denotes.
 Hint Resolve singleton_WF.
-
-Hint Resolve cons__Denotes.
 Hint Resolve cons__WF.
-
-Hint Resolve append_Denotes.
 Hint Resolve append_WF.
 
 Hint Resolve reify_Denotes.
-
-Notation "[ ]" := empty.
-Notation "[ x ]" := (singleton x).
-Notation "x ::: y" := (cons_ x y) (at level 60).
-Notation "x +++ y" := (append x y) (at level 61).
-Notation "x 'in' y" := (In x (reify y)) (at level 61).
-Notation "x =l y" := (reify x = reify y) (at level 62).
 
 (** Some theorems from [Coq.Lists.List]. *)
 Section ListTheorems.

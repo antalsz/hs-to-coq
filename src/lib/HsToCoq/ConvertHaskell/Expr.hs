@@ -144,7 +144,7 @@ convertExpr' (OpApp el eop _fixity er) =
       convUnsupported "non-variable infix operators"
 
 convertExpr' (NegApp e1 _) =
-  App1 <$> pure "GHC.Num.negate" <*> convertLExpr e1
+  App1 <$> (pure "GHC.Num.negate" >>= rewriteExpr) <*> convertLExpr e1
 
 convertExpr' (HsPar e) =
   Parens <$> convertLExpr e

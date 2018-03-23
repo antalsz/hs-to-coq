@@ -82,13 +82,11 @@ Program Instance Ord__Down {a} `{GHC.Base.Ord a} : GHC.Base.Ord (Down a) :=
          GHC.Base.max__ := Ord__Down_max ;
          GHC.Base.min__ := Ord__Down_min |}.
 
-(* Translating `instance forall {a}, forall `{GHC.Read.Read a}, GHC.Read.Read
-   (Data.Ord.Down a)' failed: OOPS! Cannot find information for class Qualified
-   "GHC.Read" "Read" unsupported *)
+(* Translating `instance Read__Down' failed: OOPS! Cannot find information for
+   class Qualified "GHC.Read" "Read" unsupported *)
 
-(* Translating `instance forall {a}, forall `{GHC.Show.Show a}, GHC.Show.Show
-   (Data.Ord.Down a)' failed: OOPS! Cannot find information for class Qualified
-   "GHC.Show" "Show" unsupported *)
+(* Translating `instance Show__Down' failed: OOPS! Cannot find information for
+   class Qualified "GHC.Show" "Show" unsupported *)
 
 Local Definition Eq___Down_op_zeze__ {inst_a} `{GHC.Base.Eq_ inst_a}
    : Down inst_a -> Down inst_a -> bool :=

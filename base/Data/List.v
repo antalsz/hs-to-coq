@@ -24,9 +24,8 @@ Definition isSubsequenceOf {a} `{(GHC.Base.Eq_ a)} : list a -> list a -> bool :=
            | nil, _ => true
            | _, nil => false
            | (cons x a' as a), cons y b =>
-               if x GHC.Base.== y : bool
-               then isSubsequenceOf a' b
-               else isSubsequenceOf a b
+               if x GHC.Base.== y : bool then isSubsequenceOf a' b else
+               isSubsequenceOf a b
            end.
 
 (* Unbound variables:

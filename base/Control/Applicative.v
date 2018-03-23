@@ -106,9 +106,8 @@ Program Instance Applicative__WrappedMonad {m} `{GHC.Base.Monad m}
          GHC.Base.op_zlztzg____ := fun {a} {b} => Applicative__WrappedMonad_op_zlztzg__ ;
          GHC.Base.pure__ := fun {a} => Applicative__WrappedMonad_pure |}.
 
-(* Translating `instance forall {m}, forall `{GHC.Base.MonadPlus m},
-   GHC.Base.Alternative (Control.Applicative.WrappedMonad m)' failed: OOPS! Cannot
-   find information for class Qualified "GHC.Base" "Alternative" unsupported *)
+(* Translating `instance Alternative__WrappedMonad' failed: OOPS! Cannot find
+   information for class Qualified "GHC.Base" "Alternative" unsupported *)
 
 Local Definition Functor__WrappedArrow_fmap {inst_a} {inst_b}
   `{Control.Arrow.Arrow inst_a}
@@ -168,44 +167,36 @@ Program Instance Applicative__WrappedArrow {a} {b} `{Control.Arrow.Arrow a}
          GHC.Base.op_zlztzg____ := fun {a} {b} => Applicative__WrappedArrow_op_zlztzg__ ;
          GHC.Base.pure__ := fun {a} => Applicative__WrappedArrow_pure |}.
 
-(* Translating `instance forall {a} {b}, forall `{Control.Arrow.ArrowZero a}
-   `{Control.Arrow.ArrowPlus a}, GHC.Base.Alternative
-   (Control.Applicative.WrappedArrow a b)' failed: OOPS! Cannot find information
-   for class Qualified "GHC.Base" "Alternative" unsupported *)
+(* Translating `instance Alternative__WrappedArrow' failed: OOPS! Cannot find
+   information for class Qualified "GHC.Base" "Alternative" unsupported *)
 
 (* Skipping instance Applicative__ZipList *)
 
-(* Translating `instance GHC.Generics.Generic1 Control.Applicative.ZipList'
-   failed: OOPS! Cannot find information for class Qualified "GHC.Generics"
-   "Generic1" unsupported *)
+(* Translating `instance Generic1__ZipList' failed: OOPS! Cannot find
+   information for class Qualified "GHC.Generics" "Generic1" unsupported *)
 
-(* Translating `instance forall {a}, GHC.Generics.Generic
-   (Control.Applicative.ZipList a)' failed: OOPS! Cannot find information for class
-   Qualified "GHC.Generics" "Generic" unsupported *)
+(* Translating `instance Generic__ZipList' failed: OOPS! Cannot find information
+   for class Qualified "GHC.Generics" "Generic" unsupported *)
 
 (* Skipping instance Foldable__ZipList *)
 
 (* Skipping instance Functor__ZipList *)
 
-(* Translating `instance forall {a}, forall `{GHC.Read.Read a}, GHC.Read.Read
-   (Control.Applicative.ZipList a)' failed: OOPS! Cannot find information for class
-   Qualified "GHC.Read" "Read" unsupported *)
+(* Translating `instance Read__ZipList' failed: OOPS! Cannot find information
+   for class Qualified "GHC.Read" "Read" unsupported *)
 
 (* Skipping instance Ord__ZipList *)
 
 (* Skipping instance Eq___ZipList *)
 
-(* Translating `instance forall {a}, forall `{GHC.Show.Show a}, GHC.Show.Show
-   (Control.Applicative.ZipList a)' failed: OOPS! Cannot find information for class
-   Qualified "GHC.Show" "Show" unsupported *)
+(* Translating `instance Show__ZipList' failed: OOPS! Cannot find information
+   for class Qualified "GHC.Show" "Show" unsupported *)
 
-(* Translating `instance forall {a} {b}, GHC.Generics.Generic1
-   (Control.Applicative.WrappedArrow a b)' failed: OOPS! Cannot find information
-   for class Qualified "GHC.Generics" "Generic1" unsupported *)
+(* Translating `instance Generic1__WrappedArrow' failed: OOPS! Cannot find
+   information for class Qualified "GHC.Generics" "Generic1" unsupported *)
 
-(* Translating `instance forall {a} {b} {c}, GHC.Generics.Generic
-   (Control.Applicative.WrappedArrow a b c)' failed: OOPS! Cannot find information
-   for class Qualified "GHC.Generics" "Generic" unsupported *)
+(* Translating `instance Generic__WrappedArrow' failed: OOPS! Cannot find
+   information for class Qualified "GHC.Generics" "Generic" unsupported *)
 
 Local Definition Monad__WrappedMonad_op_zgzg__ {inst_m} `{GHC.Base.Monad inst_m}
    : forall {a} {b},
@@ -230,13 +221,11 @@ Program Instance Monad__WrappedMonad {m} `{GHC.Base.Monad m}
          GHC.Base.op_zgzgze____ := fun {a} {b} => Monad__WrappedMonad_op_zgzgze__ ;
          GHC.Base.return___ := fun {a} => Monad__WrappedMonad_return_ |}.
 
-(* Translating `instance forall {m}, GHC.Generics.Generic1
-   (Control.Applicative.WrappedMonad m)' failed: OOPS! Cannot find information for
-   class Qualified "GHC.Generics" "Generic1" unsupported *)
+(* Translating `instance Generic1__WrappedMonad' failed: OOPS! Cannot find
+   information for class Qualified "GHC.Generics" "Generic1" unsupported *)
 
-(* Translating `instance forall {m} {a}, GHC.Generics.Generic
-   (Control.Applicative.WrappedMonad m a)' failed: OOPS! Cannot find information
-   for class Qualified "GHC.Generics" "Generic" unsupported *)
+(* Translating `instance Generic__WrappedMonad' failed: OOPS! Cannot find
+   information for class Qualified "GHC.Generics" "Generic" unsupported *)
 
 Definition optional {f} {a} `{GHC.Base.Alternative f} : f a -> f (option a) :=
   fun v => (Some Data.Functor.<$> v) GHC.Base.<|> GHC.Base.pure None.

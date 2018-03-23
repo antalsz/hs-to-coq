@@ -97,10 +97,9 @@ Definition break {a} : (a -> bool) -> list a -> (list a * list a)%type :=
         := match arg_0__, arg_1__ with
            | _, (nil as xs) => pair xs xs
            | p, (cons x xs' as xs) =>
-               if p x : bool
-               then pair nil xs
-               else let 'pair ys zs := break p xs' in
-                    pair (cons x ys) zs
+               if p x : bool then pair nil xs else
+               let 'pair ys zs := break p xs' in
+               pair (cons x ys) zs
            end.
 
 Definition concat {a} : list (list a) -> list a :=
@@ -128,9 +127,8 @@ Definition filter {a} : (a -> bool) -> list a -> list a :=
         := match arg_0__, arg_1__ with
            | _pred, nil => nil
            | pred, cons x xs =>
-               if pred x : bool
-               then cons x (filter pred xs)
-               else filter pred xs
+               if pred x : bool then cons x (filter pred xs) else
+               filter pred xs
            end.
 
 Definition filterFB {a} {b} : (a -> b -> b) -> (a -> bool) -> a -> b -> b :=
@@ -187,9 +185,8 @@ Definition lookup {a} {b} `{(GHC.Base.Eq_ a)}
         := match arg_0__, arg_1__ with
            | _key, nil => None
            | key, cons (pair x y) xys =>
-               if key GHC.Base.== x : bool
-               then Some y
-               else lookup key xys
+               if key GHC.Base.== x : bool then Some y else
+               lookup key xys
            end.
 
 Definition notElem {a} `{(GHC.Base.Eq_ a)} : a -> list a -> bool :=
@@ -272,10 +269,8 @@ Definition span {a} : (a -> bool) -> list a -> (list a * list a)%type :=
         := match arg_0__, arg_1__ with
            | _, (nil as xs) => pair xs xs
            | p, (cons x xs' as xs) =>
-               if p x : bool
-               then let 'pair ys zs := span p xs' in
-                    pair (cons x ys) zs
-               else pair nil xs
+               if p x : bool then let 'pair ys zs := span p xs' in pair (cons x ys) zs else
+               pair nil xs
            end.
 
 Definition strictUncurryScanr {a} {b} {c}
@@ -290,9 +285,8 @@ Definition takeFB {a} {b}
   fun c n x xs =>
     fun m =>
       let 'num_0__ := m in
-      if num_0__ GHC.Base.== #1 : bool
-      then c x n
-      else c x (xs (m GHC.Num.- #1)).
+      if num_0__ GHC.Base.== #1 : bool then c x n else
+      c x (xs (m GHC.Num.- #1)).
 
 Definition takeWhile {a} : (a -> bool) -> list a -> list a :=
   fix takeWhile arg_0__ arg_1__

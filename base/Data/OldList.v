@@ -202,9 +202,8 @@ Definition nubBy {a} : (a -> a -> bool) -> list a -> list a :=
               := match arg_0__, arg_1__ with
                  | nil, _ => nil
                  | cons y ys, xs =>
-                     if elem_by eq y xs : bool
-                     then nubBy' ys xs
-                     else cons y (nubBy' ys (cons y xs))
+                     if elem_by eq y xs : bool then nubBy' ys xs else
+                     cons y (nubBy' ys (cons y xs))
                  end in
     nubBy' l nil.
 
@@ -230,12 +229,11 @@ Definition genericDrop {i} {a} `{(GHC.Real.Integral i)}
   fix genericDrop arg_0__ arg_1__
         := match arg_0__, arg_1__ with
            | n, xs =>
-               if n GHC.Base.<= #0 : bool
-               then xs
-               else match arg_0__, arg_1__ with
-                    | _, nil => nil
-                    | n, cons _ xs => genericDrop (n GHC.Num.- #1) xs
-                    end
+               if n GHC.Base.<= #0 : bool then xs else
+               match arg_0__, arg_1__ with
+               | _, nil => nil
+               | n, cons _ xs => genericDrop (n GHC.Num.- #1) xs
+               end
            end.
 
 Definition genericLength {i} {a} `{(GHC.Num.Num i)} : list a -> i :=
@@ -250,14 +248,13 @@ Definition genericSplitAt {i} {a} `{(GHC.Real.Integral i)}
   fix genericSplitAt arg_0__ arg_1__
         := match arg_0__, arg_1__ with
            | n, xs =>
-               if n GHC.Base.<= #0 : bool
-               then pair nil xs
-               else match arg_0__, arg_1__ with
-                    | _, nil => pair nil nil
-                    | n, cons x xs =>
-                        let 'pair xs' xs'' := genericSplitAt (n GHC.Num.- #1) xs in
-                        pair (cons x xs') xs''
-                    end
+               if n GHC.Base.<= #0 : bool then pair nil xs else
+               match arg_0__, arg_1__ with
+               | _, nil => pair nil nil
+               | n, cons x xs =>
+                   let 'pair xs' xs'' := genericSplitAt (n GHC.Num.- #1) xs in
+                   pair (cons x xs') xs''
+               end
            end.
 
 Definition genericTake {i} {a} `{(GHC.Real.Integral i)}
@@ -265,12 +262,11 @@ Definition genericTake {i} {a} `{(GHC.Real.Integral i)}
   fix genericTake arg_0__ arg_1__
         := match arg_0__, arg_1__ with
            | n, _ =>
-               if n GHC.Base.<= #0 : bool
-               then nil
-               else match arg_0__, arg_1__ with
-                    | _, nil => nil
-                    | n, cons x xs => cons x (genericTake (n GHC.Num.- #1) xs)
-                    end
+               if n GHC.Base.<= #0 : bool then nil else
+               match arg_0__, arg_1__ with
+               | _, nil => nil
+               | n, cons x xs => cons x (genericTake (n GHC.Num.- #1) xs)
+               end
            end.
 
 Definition insertBy {a} : (a -> a -> comparison) -> a -> list a -> list a :=
@@ -294,9 +290,8 @@ Definition intersectBy {a} : (a -> a -> bool) -> list a -> list a -> list a :=
     | _, _, nil => nil
     | eq, xs, ys =>
         Coq.Lists.List.flat_map (fun x =>
-                                   if GHC.List.any (eq x) ys : bool
-                                   then cons x nil
-                                   else nil) xs
+                                   if GHC.List.any (eq x) ys : bool then cons x nil else
+                                   nil) xs
     end.
 
 Definition intersect {a} `{(GHC.Base.Eq_ a)} : list a -> list a -> list a :=
@@ -355,9 +350,8 @@ Definition select {a}
   fun arg_0__ arg_1__ arg_2__ =>
     match arg_0__, arg_1__, arg_2__ with
     | p, x, pair ts fs =>
-        if p x : bool
-        then pair (cons x ts) fs
-        else pair ts (cons x fs)
+        if p x : bool then pair (cons x ts) fs else
+        pair ts (cons x fs)
     end.
 
 Definition partition {a} : (a -> bool) -> list a -> (list a * list a)%type :=
@@ -387,9 +381,8 @@ Definition stripPrefix {a} `{GHC.Base.Eq_ a}
         := match arg_0__, arg_1__ with
            | nil, ys => Some ys
            | cons x xs, cons y ys =>
-               if x GHC.Base.== y : bool
-               then stripPrefix xs ys
-               else None
+               if x GHC.Base.== y : bool then stripPrefix xs ys else
+               None
            | _, _ => None
            end.
 

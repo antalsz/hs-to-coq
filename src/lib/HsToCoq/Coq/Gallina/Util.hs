@@ -74,11 +74,11 @@ maybeForall = maybe id Forall . nonEmpty . toList
 {-# SPECIALIZE maybeForall :: NonEmpty Binder -> Term -> Term #-}
 
 -- Two possible desugarings of if-then-else
-pattern IfBool :: Term -> Term -> Term -> Term
-pattern IfBool c t e = If (HasType c (Var "bool")) Nothing t e
+pattern IfBool :: IfStyle -> Term -> Term -> Term -> Term
+pattern IfBool is c t e = If is (HasType c (Var "bool")) Nothing t e
 
-pattern IfCase :: Term -> Term -> Term -> Term
-pattern IfCase c t e = If (App1 (Var "Bool.Sumbool.sumbool_of_bool") c) Nothing t e
+pattern IfCase :: IfStyle -> Term -> Term -> Term -> Term
+pattern IfCase is c t e = If is (App1 (Var "Bool.Sumbool.sumbool_of_bool") c) Nothing t e
 
 isLetFix :: Term -> Maybe (FixBody, Term)
 isLetFix (Let f [] Nothing (Fix (FixOne fb@(FixBody f' _ _ _ _))) body)

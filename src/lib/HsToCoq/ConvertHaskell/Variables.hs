@@ -3,7 +3,6 @@
 module HsToCoq.ConvertHaskell.Variables (
   -- * Generate variable names
   var', var,
-  unQualifyLocal,
   recordField, bareName,
   freeVar', freeVar,
   -- * Avoiding reserved words/names
@@ -68,23 +67,18 @@ freeVar = fmap freeVar' . ghcPpr
 -- Does not qualify with the module, does not look it up in renamings
 -- (useful for locally bound names)
 bareName :: GHC.Name -> Ident
-bareName = toPrefix . escapeReservedNames . T.pack . occNameString . nameOccName
+bareName = toPrefix . escapeReservedNames . specialForms .  T.pack . occNameString . nameOccName
 
 localName :: GHC.Name -> Ident
-localName = toLocalPrefix . escapeReservedNames . T.pack . occNameString . nameOccName
+localName = toLocalPrefix . escapeReservedNames . specialForms . T.pack . occNameString . nameOccName
+
+specialForms :: Ident -> Ident
+-- "$sel:rd:Mulw" to "rd"
+specialForms name | "$sel:" `T.isPrefixOf` name = T.takeWhile (/= ':') $ T.drop 5 name
+                  | otherwise                   = name
 
 var' :: ConversionMonad m => HsNamespace -> Ident -> m Qualid
 var' ns x = use $ renamed ns (Bare x) . non (Bare (escapeReservedNames x))
-
-unQualifyLocal :: ConversionMonad m => Qualid -> m Qualid
-unQualifyLocal qi = do
-  thisModM <- fmap moduleNameText <$> use currentModule
-  case qi of
-    -- Something in this module
-    (Qualified m b) | Just m == thisModM -> pure (Bare b)
-    -- Something bare (built-in or local) or external
-    _                                    -> pure qi
-
 
 var :: ConversionMonad m => HsNamespace -> GHC.Name -> m Qualid
 var ns name = do
@@ -95,5 +89,7 @@ var ns name = do
 
     qid | Just m <- nameModM = Qualified m (bareName name)
         | otherwise          = Bare        (localName name)
-recordField :: (ConversionMonad m, HasOccName name, OutputableBndr name) => name -> m Qualid
-recordField = var' ExprNS <=< ghcPpr -- TODO Check module part?
+
+recordField :: (ConversionMonad m) => AmbiguousFieldOcc GHC.Name -> m Qualid
+recordField (Unambiguous _ sel) = var ExprNS sel
+recordField (Ambiguous _ _)     = error "Cannot handle ambiguous record field names"

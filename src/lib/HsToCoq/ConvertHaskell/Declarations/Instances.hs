@@ -7,12 +7,8 @@
 module HsToCoq.ConvertHaskell.Declarations.Instances (
   -- * Top-level entry point
   convertModuleClsInstDecls,
-  -- * Conversion building blocks
-  convertClsInstDecl, convertClsInstDeclInfo, convertInstanceName,
   -- * Axiomatizing equivalents
   axiomatizeModuleClsInstDecls, axiomatizeClsInstDecl,
-  -- ** Utility functions
-  findHsClass, topoSortInstance,
   -- * Alternative entry points (you probably don't want to use these)
   convertClsInstDecls
 ) where
@@ -40,9 +36,7 @@ import Bag
 import HsToCoq.Util.GHC.Exception
 import HsToCoq.Util.GHC.Module
 
-import HsToCoq.PrettyPrint (renderOneLineT)
 import HsToCoq.Coq.Gallina
-import HsToCoq.Coq.Pretty
 import HsToCoq.Coq.FreeVars
 import HsToCoq.Coq.Subst
 import HsToCoq.Coq.Gallina.Util
@@ -158,88 +152,64 @@ convertClsInstDeclInfo ClsInstDecl{..} = do
 
 --------------------------------------------------------------------------------
 
-convertClsInstDecl :: ConversionMonad m
-                   => ClsInstDecl GHC.Name        -- Haskell instance we are converting
-                   -> (InstanceDefinition -> m a) -- Final "rebuilding" pass
-                   -> Maybe (InstanceInfo -> GhcException -> m a) -- error handling argument
-                   -> m a
-convertClsInstDecl cid@ClsInstDecl{..} rebuild mhandler = do
-  info@InstanceInfo{..} <- convertClsInstDeclInfo cid
+convertClsInstDecl :: ConversionMonad m => ClsInstDecl GHC.Name -> m [Sentence]
+convertClsInstDecl cid@ClsInstDecl{..} = do
+  InstanceInfo{..} <- convertClsInstDeclInfo cid
 
-  -- TODO: Do we need the 'HsForAllTy' trick here to handle instance
-  -- superclasses?  Or is the generalization backtick enough?
-  maybe id (ghandle . ($ info)) mhandler $ do
+  let err_handler exn = pure [ translationFailedComment ("instance " <> qualidBase instanceName) exn ]
+  use (edits.skipped.contains instanceName) >>= \case
+    True -> pure [ CommentSentence (Comment ("Skipping instance " <> qualidBase instanceName)) ]
+    False -> ghandle err_handler $ do
+        cbinds   <- convertTypedBindings TopLevel (map unLoc $ bagToList cid_binds) M.empty -- the type signatures (note: no InstanceSigs)
+                                       (\case ConvertedDefinitionBinding cdef -> pure cdef
+                                              ConvertedPatternBinding    _ _  -> convUnsupported "pattern bindings in instances")
+                                       Nothing -- error handler
 
-    cbinds   <- convertTypedBindings TopLevel (map unLoc $ bagToList cid_binds) M.empty -- the type signatures (note: no InstanceSigs)
-                                   (\case ConvertedDefinitionBinding cdef -> pure cdef
-                                          ConvertedPatternBinding    _ _  -> convUnsupported "pattern bindings in instances")
-                                   Nothing -- error handler
+        cdefs <-  mapM (\ConvertedDefinition{..} -> do
+                           return (convDefName, maybe id Fun (NE.nonEmpty (convDefArgs)) $ convDefBody)) cbinds
 
-    cdefs <-  mapM (\ConvertedDefinition{..} -> do
-                       return (convDefName, maybe id Fun (NE.nonEmpty (convDefArgs)) $ convDefBody)) cbinds
+        defaults <-  use (defaultMethods.at instanceClass.non M.empty)
+                     -- lookup default methods in the global state, using the empty map if the class name is not found
+                     -- otherwise gives you a map
+                     -- <&> is flip fmap
+                 <&> filter (\(meth, _) -> isNothing $ lookup meth cdefs) . M.toList
 
-    defaults <-  use (defaultMethods.at instanceClass.non M.empty)
-                 -- lookup default methods in the global state, using the empty map if the class name is not found
-                 -- otherwise gives you a map
-                 -- <&> is flip fmap
-             <&> filter (\(meth, _) -> isNothing $ lookup meth cdefs) . M.toList
+        -- implement the instance part of "skip method"
+        skippedMethodsS <- use (edits.skippedMethods)
 
-    -- implement the instance part of "skip method"
-    skippedMethodsS <- use (edits.skippedMethods)
+        let methods = filter (\(m,_) -> (instanceClass,qualidBase m) `S.notMember` skippedMethodsS) (cdefs ++ defaults)
 
-    let methods = filter (\(m,_) -> (instanceClass,qualidBase m) `S.notMember` skippedMethodsS) (cdefs ++ defaults)
+        let (binds, classTy) = decomposeForall instanceHead
 
-    let (binds, classTy) = decomposeForall instanceHead
-
-    rebuild $ InstanceDefinition instanceName binds classTy methods Nothing
-
+        topoSortInstance $ InstanceDefinition instanceName binds classTy methods Nothing
 
 decomposeForall :: Term -> ([Binder], Term)
-decomposeForall (Forall bnds ty) = first (NE.toList bnds ++) (decomposeForall ty) 
+decomposeForall (Forall bnds ty) = first (NE.toList bnds ++) (decomposeForall ty)
 decomposeForall t = ([], t)
 
 axiomatizeClsInstDecl :: ConversionMonad m
                       => ClsInstDecl GHC.Name        -- Haskell instance we are converting
                       -> m (Maybe InstanceDefinition)
 axiomatizeClsInstDecl cid@ClsInstDecl{..} = do
-  InstanceInfo{..} <- convertClsInstDeclInfo cid
-  use (classDefns.at instanceClass) >>= \case
-    Just _ -> use (edits.skipped.contains instanceName) >>= \case
-      True -> pure  Nothing
-      False -> pure . Just . InstanceDefinition instanceName [] instanceHead []
-         $ if null $ classMethods instanceHsClass
-           then Nothing
-           else Just $ ProofAdmitted ""
-    Nothing ->
-      -- convUnsupported ("OOPS! Cannot find information for class " ++ show instanceClass)
-      pure Nothing
+  instanceName <- convertInstanceName $ hsib_body cid_poly_ty
+  use (edits.skipped.contains instanceName) >>= \case
+    True -> pure Nothing
+    False -> do
+      InstanceInfo{..} <- convertClsInstDeclInfo cid
+      use (classDefns.at instanceClass) >>= \case
+        Just _ -> pure . Just . InstanceDefinition instanceName [] instanceHead []
+             $ if null $ classMethods instanceHsClass
+               then Nothing
+               else Just $ ProofAdmitted ""
+        Nothing ->
+          -- convUnsupported ("OOPS! Cannot find information for class " ++ show instanceClass)
+          pure Nothing
 
 --------------------------------------------------------------------------------
 
 convertModuleClsInstDecls :: forall m. ConversionMonad m
                           => [(Maybe ModuleName, ClsInstDecl GHC.Name)] -> m [Sentence]
-convertModuleClsInstDecls = foldTraverse $ maybeWithCurrentModule .*^ \cid ->
-                               convertClsInstDecl cid rebuild (Just axiomatizeInstance)
-  where rebuild :: InstanceDefinition -> m [Sentence]
-        rebuild instdef = do
-            let coq_name = case instdef of
-                    InstanceDefinition coq_name _ _ _ _ -> coq_name
-                    InstanceTerm       coq_name _ _ _ _ -> coq_name
-            use (edits.skipped.contains coq_name) >>= \case
-                True -> do
-                    let t = "Skipping instance " <> qualidBase coq_name
-                    return [CommentSentence (Comment t)]
-                False -> topoSortInstance instdef
-        -- rebuild = pure . pure . InstanceSentence
-
-        -- what to do if instance conversion fails
-        -- make an axiom that admits the instance declaration
-        axiomatizeInstance InstanceInfo{..} exn = pure
-          [ translationFailedComment ("instance " <> renderOneLineT (renderGallina instanceHead)) exn ]
-          {-
-          [, InstanceSentence $ InstanceDefinition
-              instanceName [] instanceHead [] (Just $ ProofAdmitted "") ]
-          -}
+convertModuleClsInstDecls = foldTraverse $ maybeWithCurrentModule .*^ convertClsInstDecl
 
 axiomatizeModuleClsInstDecls :: forall m. ConversionMonad m
                              => [(Maybe ModuleName, ClsInstDecl GHC.Name)] -> m [Sentence]
@@ -329,7 +299,7 @@ topoSortInstance (InstanceDefinition instanceName params ty members mp) = go sor
                   -- the per-instance variables (here, @a₁@) or the type class
                   -- method variables (here, @a₂@ and @b@).  We pick the
                   -- per-instance variables, and rename @a₁@ to @inst_a₁@.
-                  -- 
+                  --
                   -- ASSUMPTION: type variables don't show up in terms.  Broken
                   -- by ScopedTypeVariables.
                   let renameInst UnderscoreName =
@@ -337,9 +307,9 @@ topoSortInstance (InstanceDefinition instanceName params ty members mp) = go sor
                       renameInst (Ident x) =
                         let inst_x = qualidMapBase ("inst_" <>) x
                         in Ident inst_x <$ modify' (M.insert x (Qualid inst_x))
-                      
+
                       sub ty = ($ ty) <$> gets subst
-                      
+
                       (instBnds, instSubst) = (runState ?? M.empty) $ for params $ \case
                         Inferred      ei x     -> Inferred      ei <$> renameInst x
                         Typed       g ei xs ty -> Typed       g ei <$> traverse renameInst xs <*> sub ty

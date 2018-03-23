@@ -251,8 +251,9 @@ generateRecordAccessors (IndBody tyName params resTy cons) = do
   let conNames = view _1 <$> cons
 
   let restrict = M.filterWithKey $ \k _ -> k `elem` conNames
-  allFields <- uses (constructorFields.to restrict.folded._RecordFields) S.fromList
-  for (S.toAscList allFields) $ \(field :: Qualid) -> do
+  allFields <- uses (constructorFields.to restrict.folded._RecordFields) (S.toAscList . S.fromList)
+  filteredFields <- filterM (\field -> not <$> use (edits.skipped.contains field)) allFields
+  for filteredFields $ \(field :: Qualid) -> do
     equations <- for conNames $ \con -> do
       (args, hasField) <- use (constructorFields.at con) >>= \case
         Just (NonRecordFields count) ->

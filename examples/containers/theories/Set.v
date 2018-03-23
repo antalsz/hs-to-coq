@@ -165,29 +165,39 @@ Program Definition empty {a}`{Base.Ord a} : Set_ a :=
 Definition singleton {a} `{Base.Ord a} (x:a) : Set_ a := 
   exist _ (Internal.singleton x) (SetProofs.singleton_WF x).
 
+Ltac applyWF lem :=
+  eapply lem with (lb:=None)(ub:=None); intuition.
+
+Ltac destruct_Set_ :=
+  repeat match goal with
+         | [x: _ |- WF _] =>
+           match type of x with
+           | Set_ _ => destruct x
+           end
+         end.
+
+Ltac solveWF lem := destruct_Set_; applyWF lem.
+
 Program Definition insert {a}`{OrdLaws a} : a -> Set_ a -> Set_ a := 
   Internal.insert.
 Next Obligation.
-  destruct x0. simpl.
-  eapply SetProofs.insert_Desc with (ub := None) (lb := None); intuition.
+  solveWF SetProofs.insert_Desc.
 Defined.
 
 Program Definition delete {a}`{OrdLaws a} : a -> Set_ a -> Set_ a := Internal.delete.
 Next Obligation.
-  destruct x0.
-  eapply SetProofs.delete_Desc with (ub := None)(lb:= None); intuition.
+  solveWF SetProofs.delete_Desc.
 Defined.
 
 Program Definition union {a}`{OrdLaws a} : Set_ a -> Set_ a -> Set_ a := Internal.union.
 Next Obligation.
-  destruct x, x0. simpl.
-  eapply SetProofs.union_Desc with (ub := None) (lb := None); intuition.
+  solveWF SetProofs.union_Desc.
 Defined.
 
 Program Definition unions {a}`{OrdLaws a} (xs : list (Set_ a)) : Set_ a := 
   Internal.unions (List.map unpack xs).
 Next Obligation.
-  eapply SetProofs.unions_Desc with  (ub := None) (lb := None); intuition.
+  applyWF SetProofs.unions_Desc.
   unfold unpack.
   apply List.Forall_forall.
   intros.
@@ -196,60 +206,46 @@ Next Obligation.
   destruct x0. 
   simpl in *.
   destruct H1. subst.
-  unfold SetProofs.WF in w.
-  auto.
-Qed.
+  assumption.
+Defined.
 
 Program Definition difference {a}`{OrdLaws a} : Set_ a -> Set_ a -> Set_ a := 
   Internal.difference.
 Next Obligation.
-  destruct x, x0. simpl.
-  eapply SetProofs.difference_Desc with (ub := None) (lb := None); intuition.
+  solveWF SetProofs.difference_Desc.
 Defined.
 
 Program Definition intersection {a}`{OrdLaws a} : Set_ a -> Set_ a -> Set_ a := 
   Internal.intersection.
 Next Obligation.
-  destruct x, x0. simpl.
-  eapply SetProofs.intersection_Desc with (ub := None) (lb := None); intuition.
+  solveWF SetProofs.intersection_Desc.
 Defined.
-
-
 
 Program Definition filter  {a}`{OrdLaws a} : (a -> bool) -> Set_ a -> Set_ a := 
   Internal.filter.
 Next Obligation.
-  destruct x0. simpl.
-  eapply SetProofs.filter_Bounded with (ub := None) (lb := None); assumption.
+  solveWF SetProofs.filter_Bounded.
 Qed.
 
 Program Definition partition  {a}`{OrdLaws a} : (a -> bool) -> Set_ a -> Set_ a * Set_ a 
   := Internal.partition.
 Next Obligation.
-  destruct x0. simpl.
-  eapply SetProofs.partition_Bounded with (ub := None) (lb := None); intuition.
+  solveWF SetProofs.partition_Bounded.
 Qed.
-Next Obligation.
-  destruct x0. simpl.
-  eapply SetProofs.partition_Bounded with (ub := None) (lb := None); intuition.
+Next Obligation. 
+  solveWF SetProofs.partition_Bounded.
 Qed.
 
 Program Definition splitMember {a} `{OrdLaws a}
    : a -> Set_ a -> (Set_ a * bool * Set_ a)%type :=  Internal.splitMember.
 Next Obligation.
-  destruct x0. simpl.
-  eapply SetProofs.splitMember_Desc with (ub := None) (lb := None); intuition.
-  simpl.
-  eapply Bounded_relax_ub_None.
+  solveWF SetProofs.splitMember_Desc.
   eapply Bounded_relax_lb_None.
   eassumption.
 Defined.
 Next Obligation.
-  destruct x0. simpl.
-  eapply SetProofs.splitMember_Desc with (ub := None) (lb := None); intuition.
-  simpl.
+  solveWF SetProofs.splitMember_Desc.
   eapply Bounded_relax_ub_None.
-  eapply Bounded_relax_lb_None.
   eassumption.
 Defined.
 
@@ -263,23 +259,19 @@ Program Definition mapMonotonic {a} `{OrdLaws a} {b}`{OrdLaws b} :
   forall (f: a -> b), Monotonic f -> Set_ a -> Set_ b :=
   fun f _ s => Internal.mapMonotonic f s.
 Next Obligation.
-  destruct s. simpl.
   unfold Monotonic in *.
-  eapply SetProofs.mapMonotonic_Desc with (f:=f)(ub := None) (lb := None);
-    intuition.
+  solveWF SetProofs.mapMonotonic_Desc.
 Defined.
   
 Program Definition take {a}`{OrdLaws a} : Int -> Set_ a -> Set_ a := Internal.take.
 Next Obligation.
-  destruct x0. simpl.
-  eapply toList_take with (ub := None) (lb := None); intuition.
-Qed.
+  solveWF toList_take.
+Defined.
 
 Program Definition drop {a}`{OrdLaws a} : Int -> Set_ a -> Set_ a := Internal.drop.
 Next Obligation.
-  destruct x0. simpl.
-  eapply toList_drop with (ub := None) (lb := None); intuition.
-Qed.
+  solveWF toList_drop.
+Defined.
 
  Program Definition foldl {a}`{OrdLaws a}: forall A : Type, (a -> A -> A) -> Set_ a -> A -> A
     := fun a k s n => Internal.foldl (fun x e => k e x) n s.
@@ -307,7 +299,7 @@ Next Obligation.
   destruct Internal.lookupMin; auto.
   destruct HLookup.
   eapply SetProofs.delete_Desc with (lb:=None)(ub:=None); intuition.
-Qed.  
+Defined.
 
 
 Program Definition deleteMax {a}`{OrdLaws a} : Set_ a -> Set_ a := 
@@ -319,7 +311,7 @@ Next Obligation.
   destruct Internal.lookupMax; auto.
   destruct HLookup.
   eapply SetProofs.delete_Desc with (lb:=None)(ub:=None); intuition.
-Qed.  
+Defined.
 
 
 
@@ -369,6 +361,3 @@ Program Definition fromDistinctAscList {a} `{OrdLaws a} : forall x
 Next Obligation.
   eapply SetProofs.fromDistinctAscList_Desc; intuition.
 Defined.
-
-
-

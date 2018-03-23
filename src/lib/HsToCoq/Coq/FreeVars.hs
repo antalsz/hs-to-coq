@@ -287,7 +287,7 @@ instance FreeVars Term where
     binding' oin $ freeVars ret
     binding' pat $ freeVars body
 
-  freeVars (If c oret t f) =
+  freeVars (If _ c oret t f) =
     freeVars c *> freeVars oret *> freeVars [t,f]
 
   freeVars (HasType tm ty) =

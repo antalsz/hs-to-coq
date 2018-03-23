@@ -316,8 +316,8 @@ builtInDefaultMethods = fmap M.fromList $ M.fromList $
         , "GHC.Base./=" ~> Fun ["x", "y"] (App1 "negb" $ App2 "GHC.Base.==" "x" "y")
         ]
     , "GHC.Base.Ord" =:
-        [ "GHC.Base.max" ~> Fun ["x", "y"] (IfBool (App2 "GHC.Base.op_zlze__" "x" "y") "y" "x")
-        , "GHC.Base.min" ~> Fun ["x", "y"] (IfBool (App2 "GHC.Base.op_zlze__" "x" "y") "x" "y")
+        [ "GHC.Base.max" ~> Fun ["x", "y"] (IfBool SymmetricIf (App2 "GHC.Base.op_zlze__" "x" "y") "y" "x")
+        , "GHC.Base.min" ~> Fun ["x", "y"] (IfBool SymmetricIf (App2 "GHC.Base.op_zlze__" "x" "y") "x" "y")
 
 {-  x <= y  = compare x y /= GT
     x <  y  = compare x y == LT

@@ -16,7 +16,9 @@ Require BitTerminationProofs.
 
 (* Converted imports: *)
 
+Require Coq.NArith.BinNat.
 Require Coq.Numbers.BinNums.
+Require Coq.ZArith.BinInt.
 Require Data.Bits.
 Require Data.Either.
 Require Data.Foldable.
@@ -113,11 +115,6 @@ Definition missingKey {f} {x} {y} (arg_1__ : WhenMissing f x y) :=
 Definition missingSubtree {f} {x} {y} (arg_2__ : WhenMissing f x y) :=
   let 'Mk_WhenMissing missingSubtree _ := arg_2__ in
   missingSubtree.
-
-(* The Haskell code containes partial or untranslateable code, which needs the
-   following *)
-
-Axiom missingValue : forall {a}, a.
 (* Midamble *)
 
 Require GHC.Err.
@@ -183,13 +180,11 @@ Local Definition Foldable__IntMap_foldMap
                    end in
       go t.
 
-(* Translating `instance forall {a}, forall `{Control.DeepSeq.NFData a},
-   Control.DeepSeq.NFData (Data.IntMap.Internal.IntMap a)' failed: OOPS! Cannot
-   find information for class Qualified "Control.DeepSeq" "NFData" unsupported *)
+(* Translating `instance NFData__IntMap' failed: OOPS! Cannot find information
+   for class Qualified "Control.DeepSeq" "NFData" unsupported *)
 
-(* Translating `instance forall {a}, forall `{Data.Data.Data a}, Data.Data.Data
-   (Data.IntMap.Internal.IntMap a)' failed: OOPS! Cannot find information for class
-   Qualified "Data.Data" "Data" unsupported *)
+(* Translating `instance Data__IntMap' failed: OOPS! Cannot find information for
+   class Qualified "Data.Data" "Data" unsupported *)
 
 (* Skipping instance Functor__WhenMissing *)
 
@@ -207,9 +202,8 @@ Local Definition Foldable__IntMap_foldMap
 
 (* Skipping instance Monad__WhenMatched *)
 
-(* Translating `instance forall {a}, GHC.Exts.IsList
-   (Data.IntMap.Internal.IntMap a)' failed: OOPS! Cannot find information for class
-   Qualified "GHC.Exts" "IsList" unsupported *)
+(* Translating `instance IsList__IntMap' failed: OOPS! Cannot find information
+   for class Qualified "GHC.Exts" "IsList" unsupported *)
 
 (* Skipping instance Eq1__IntMap *)
 
@@ -218,21 +212,17 @@ Local Definition Foldable__IntMap_foldMap
 Definition Functor__IntMap_op_zlzd__ {a} {b} :=
   (@IntMap_op_zlzd__ a b).
 
-(* Translating `instance forall {a}, forall `{GHC.Show.Show a}, GHC.Show.Show
-   (Data.IntMap.Internal.IntMap a)' failed: OOPS! Cannot find information for class
-   Qualified "GHC.Show" "Show" unsupported *)
+(* Translating `instance Show__IntMap' failed: OOPS! Cannot find information for
+   class Qualified "GHC.Show" "Show" unsupported *)
 
-(* Translating `instance Data.Functor.Classes.Show1 Data.IntMap.Internal.IntMap'
-   failed: OOPS! Cannot find information for class Qualified "Data.Functor.Classes"
-   "Show1" unsupported *)
+(* Translating `instance Show1__IntMap' failed: OOPS! Cannot find information
+   for class Qualified "Data.Functor.Classes" "Show1" unsupported *)
 
-(* Translating `instance forall {e}, forall `{(GHC.Read.Read e)}, GHC.Read.Read
-   (Data.IntMap.Internal.IntMap e)' failed: OOPS! Cannot find information for class
-   Qualified "GHC.Read" "Read" unsupported *)
+(* Translating `instance Read__IntMap' failed: OOPS! Cannot find information for
+   class Qualified "GHC.Read" "Read" unsupported *)
 
-(* Translating `instance Data.Functor.Classes.Read1 Data.IntMap.Internal.IntMap'
-   failed: OOPS! Cannot find information for class Qualified "Data.Functor.Classes"
-   "Read1" unsupported *)
+(* Translating `instance Read1__IntMap' failed: OOPS! Cannot find information
+   for class Qualified "Data.Functor.Classes" "Read1" unsupported *)
 
 Definition bin {a} : Prefix -> Mask -> IntMap a -> IntMap a -> IntMap a :=
   fun arg_0__ arg_1__ arg_2__ arg_3__ =>
@@ -259,6 +249,12 @@ Definition filter {a} : (a -> bool) -> IntMap a -> IntMap a :=
                      match arg_0__, arg_1__ with
                      | _, x => p x
                      end) m.
+
+Definition filterMissing {f} {x} `{GHC.Base.Applicative f}
+   : (Data.IntSet.Internal.Key -> x -> bool) -> WhenMissing f x x :=
+  fun f =>
+    Mk_WhenMissing (fun m => GHC.Base.pure (filterWithKey f m)) (fun k x =>
+                      GHC.Base.pure (if f k x : bool then Some x else None)).
 
 Definition filterWithKeyA {f} {a} `{GHC.Base.Applicative f}
    : (Data.IntSet.Internal.Key -> a -> f bool) -> IntMap a -> f (IntMap a) :=
@@ -314,6 +310,12 @@ Definition mapMaybe {a} {b} : (a -> option b) -> IntMap a -> IntMap b :=
                        | _, x => f x
                        end).
 
+Definition mapMaybeMissing {f} {x} {y} `{GHC.Base.Applicative f}
+   : (Data.IntSet.Internal.Key -> x -> option y) -> WhenMissing f x y :=
+  fun f =>
+    Mk_WhenMissing (fun m => GHC.Base.pure (mapMaybeWithKey f m)) (fun k x =>
+                      GHC.Base.pure (f k x)).
+
 Definition partitionWithKey {a}
    : (Data.IntSet.Internal.Key -> a -> bool) ->
      IntMap a -> (IntMap a * IntMap a)%type :=
@@ -349,6 +351,10 @@ Definition traverseMaybeWithKey {f} {a} {b} `{GHC.Base.Applicative f}
                  end in
     go.
 
+Definition traverseMaybeMissing {f} {x} {y} `{GHC.Base.Applicative f}
+   : (Data.IntSet.Internal.Key -> x -> f (option y)) -> WhenMissing f x y :=
+  fun f => Mk_WhenMissing (traverseMaybeWithKey f) f.
+
 Definition binCheckLeft {a}
    : Prefix -> Mask -> IntMap a -> IntMap a -> IntMap a :=
   fun arg_0__ arg_1__ arg_2__ arg_3__ =>
@@ -374,46 +380,43 @@ Definition restrictBM {a} : IntSetBitMap -> IntMap a -> IntMap a :=
   GHC.DeferredFix.deferredFix2 (fun restrictBM arg_0__ arg_1__ =>
                                   match arg_0__, arg_1__ with
                                   | num_2__, _ =>
-                                      if num_2__ GHC.Base.== #0 : bool
-                                      then Nil
-                                      else match arg_0__, arg_1__ with
-                                           | bm, Bin p m l r =>
-                                               let leftBits := bitmapOf (p Data.Bits..|.(**) m) GHC.Num.- #1 in
-                                               let bmL := bm Data.Bits..&.(**) leftBits in
-                                               let bmR := Data.Bits.xor bm bmL in
-                                               bin p m (restrictBM bmL l) (restrictBM bmR r)
-                                           | bm, (Tip k _ as t) =>
-                                               if Data.IntSet.Internal.member k (Data.IntSet.Internal.Tip
-                                                                               (Coq.NArith.BinNat.N.ldiff k
-                                                                                                          Data.IntSet.Internal.suffixBitMask)
-                                                                               bm) : bool
-                                               then t
-                                               else Nil
-                                           | _, Nil => Nil
-                                           end
+                                      if num_2__ GHC.Base.== #0 : bool then Nil else
+                                      match arg_0__, arg_1__ with
+                                      | bm, Bin p m l r =>
+                                          let leftBits := bitmapOf (p Data.Bits..|.(**) m) GHC.Num.- #1 in
+                                          let bmL := bm Data.Bits..&.(**) leftBits in
+                                          let bmR := Data.Bits.xor bm bmL in
+                                          bin p m (restrictBM bmL l) (restrictBM bmR r)
+                                      | bm, (Tip k _ as t) =>
+                                          if Data.IntSet.Internal.member k (Data.IntSet.Internal.Tip
+                                                                          (Coq.NArith.BinNat.N.ldiff k
+                                                                                                     Data.IntSet.Internal.suffixBitMask)
+                                                                          bm) : bool
+                                          then t else
+                                          Nil
+                                      | _, Nil => Nil
+                                      end
                                   end).
 
 Definition withoutBM {a} : IntSetBitMap -> IntMap a -> IntMap a :=
   GHC.DeferredFix.deferredFix2 (fun withoutBM arg_0__ arg_1__ =>
                                   match arg_0__, arg_1__ with
                                   | num_2__, t =>
-                                      if num_2__ GHC.Base.== #0 : bool
-                                      then t
-                                      else match arg_0__, arg_1__ with
-                                           | bm, Bin p m l r =>
-                                               let leftBits := bitmapOf (p Data.Bits..|.(**) m) GHC.Num.- #1 in
-                                               let bmL := bm Data.Bits..&.(**) leftBits in
-                                               let bmR := Data.Bits.xor bm bmL in
-                                               bin p m (withoutBM bmL l) (withoutBM bmR r)
-                                           | bm, (Tip k _ as t) =>
-                                               if Data.IntSet.Internal.member k (Data.IntSet.Internal.Tip
-                                                                               (Coq.NArith.BinNat.N.ldiff k
-                                                                                                          Data.IntSet.Internal.suffixBitMask)
-                                                                               bm) : bool
-                                               then Nil
-                                               else t
-                                           | _, Nil => Nil
-                                           end
+                                      if num_2__ GHC.Base.== #0 : bool then t else
+                                      match arg_0__, arg_1__ with
+                                      | bm, Bin p m l r =>
+                                          let leftBits := bitmapOf (p Data.Bits..|.(**) m) GHC.Num.- #1 in
+                                          let bmL := bm Data.Bits..&.(**) leftBits in
+                                          let bmR := Data.Bits.xor bm bmL in bin p m (withoutBM bmL l) (withoutBM bmR r)
+                                      | bm, (Tip k _ as t) =>
+                                          if Data.IntSet.Internal.member k (Data.IntSet.Internal.Tip
+                                                                          (Coq.NArith.BinNat.N.ldiff k
+                                                                                                     Data.IntSet.Internal.suffixBitMask)
+                                                                          bm) : bool
+                                          then Nil else
+                                          t
+                                      | _, Nil => Nil
+                                      end
                                   end).
 
 Definition boolITE {a} : a -> a -> bool -> a :=
@@ -423,6 +426,12 @@ Definition boolITE {a} : a -> a -> bool -> a :=
     | _, t, true => t
     end.
 
+Definition filterAMissing {f} {x} `{GHC.Base.Applicative f}
+   : (Data.IntSet.Internal.Key -> x -> f bool) -> WhenMissing f x x :=
+  fun f =>
+    Mk_WhenMissing (fun m => filterWithKeyA f m) (fun k x =>
+                      boolITE None (Some x) Data.Functor.<$> f k x).
+
 Definition branchMask : Prefix -> Prefix -> Mask :=
   fun p1 p2 =>
     Utils.Containers.Internal.BitUtil.highestBitMask (Data.Bits.xor p1 p2).
@@ -431,13 +440,13 @@ Definition link {a} : Prefix -> IntMap a -> Prefix -> IntMap a -> IntMap a :=
   fun p1 t1 p2 t2 =>
     let m := branchMask p1 p2 in
     let p := Data.IntSet.Internal.mask p1 m in
-    if Data.IntSet.Internal.zero p1 m : bool
-    then Bin p m t1 t2
-    else Bin p m t2 t1.
+    if Data.IntSet.Internal.zero p1 m : bool then Bin p m t1 t2 else
+    Bin p m t2 t1.
 
 Definition dropMissing {f} {x} {y} `{GHC.Base.Applicative f}
    : WhenMissing f x y :=
-  Mk_WhenMissing missingValue missingValue.
+  Mk_WhenMissing (GHC.Base.const (GHC.Base.pure Nil)) (fun arg_0__ arg_1__ =>
+                    GHC.Base.pure None).
 
 Definition empty {a} : IntMap a :=
   Nil.
@@ -459,14 +468,6 @@ Definition equal {a} `{GHC.Base.Eq_ a} : IntMap a -> IntMap a -> bool :=
 Local Definition Eq___IntMap_op_zeze__ {inst_a} `{GHC.Base.Eq_ inst_a}
    : (IntMap inst_a) -> (IntMap inst_a) -> bool :=
   fun t1 t2 => equal t1 t2.
-
-Definition filterAMissing {f} {x} `{GHC.Base.Applicative f}
-   : (Data.IntSet.Internal.Key -> x -> f bool) -> WhenMissing f x x :=
-  fun f => Mk_WhenMissing missingValue missingValue.
-
-Definition filterMissing {f} {x} `{GHC.Base.Applicative f}
-   : (Data.IntSet.Internal.Key -> x -> bool) -> WhenMissing f x x :=
-  fun f => Mk_WhenMissing missingValue missingValue.
 
 Definition foldMapWithKey {m} {a} `{GHC.Base.Monoid m}
    : (Data.IntSet.Internal.Key -> a -> m) -> IntMap a -> m :=
@@ -691,28 +692,26 @@ Definition fromSet {a}
                let buildTree :=
                  GHC.DeferredFix.deferredFix4 (fun buildTree g prefix bmask bits =>
                                                  let 'num_3__ := bits in
-                                                 if num_3__ GHC.Base.== #0 : bool
-                                                 then Tip prefix (g prefix)
-                                                 else let 'bits2 := Utils.Containers.Internal.BitUtil.shiftRL (bits)
-                                                                                                              #1 in
-                                                      if (bmask Data.Bits..&.(**)
-                                                          ((Utils.Containers.Internal.BitUtil.shiftLL #1 bits2)
-                                                           GHC.Num.-
-                                                           #1)) GHC.Base.==
-                                                         #0 : bool
-                                                      then buildTree g (prefix GHC.Num.+ bits2)
-                                                           (Utils.Containers.Internal.BitUtil.shiftRL bmask bits2) bits2
-                                                      else if ((Utils.Containers.Internal.BitUtil.shiftRL bmask bits2)
-                                                               Data.Bits..&.(**)
-                                                               ((Utils.Containers.Internal.BitUtil.shiftLL #1 bits2)
-                                                                GHC.Num.-
-                                                                #1)) GHC.Base.==
-                                                              #0 : bool
-                                                           then buildTree g prefix bmask bits2
-                                                           else Bin prefix bits2 (buildTree g prefix bmask bits2)
-                                                                (buildTree g (prefix GHC.Num.+ bits2)
-                                                                 (Utils.Containers.Internal.BitUtil.shiftRL bmask bits2)
-                                                                 bits2)) in
+                                                 if num_3__ GHC.Base.== #0 : bool then Tip prefix (g prefix) else
+                                                 let 'bits2 := Utils.Containers.Internal.BitUtil.shiftRL (bits) #1 in
+                                                 if (bmask Data.Bits..&.(**)
+                                                     ((Utils.Containers.Internal.BitUtil.shiftLL #1 bits2) GHC.Num.-
+                                                      #1)) GHC.Base.==
+                                                    #0 : bool
+                                                 then buildTree g (prefix GHC.Num.+ bits2)
+                                                      (Utils.Containers.Internal.BitUtil.shiftRL bmask bits2) bits2 else
+                                                 if ((Utils.Containers.Internal.BitUtil.shiftRL bmask bits2)
+                                                     Data.Bits..&.(**)
+                                                     ((Utils.Containers.Internal.BitUtil.shiftLL #1 bits2) GHC.Num.-
+                                                      #1)) GHC.Base.==
+                                                    #0 : bool
+                                                 then buildTree g prefix bmask bits2 else
+                                                 Bin prefix bits2 (buildTree g prefix bmask bits2) (buildTree g (prefix
+                                                                                                                 GHC.Num.+
+                                                                                                                 bits2)
+                                                                                                    (Utils.Containers.Internal.BitUtil.shiftRL
+                                                                                                     bmask bits2)
+                                                                                                    bits2)) in
                buildTree f kx bm (Data.IntSet.Internal.suffixBitMask GHC.Num.+ #1)
            end.
 
@@ -730,16 +729,12 @@ Definition keysSet {a} : IntMap a -> Data.IntSet.Internal.IntSet :=
                             end in
                if (m Data.Bits..&.(**) Data.IntSet.Internal.suffixBitMask) GHC.Base.==
                   #0 : bool
-               then Data.IntSet.Internal.Bin p m (keysSet l) (keysSet r)
-               else Data.IntSet.Internal.Tip (Coq.NArith.BinNat.N.ldiff p
-                                                                        Data.IntSet.Internal.suffixBitMask) (computeBm
-                                                                                                             (computeBm
-                                                                                                              #0 l) r)
+               then Data.IntSet.Internal.Bin p m (keysSet l) (keysSet r) else
+               Data.IntSet.Internal.Tip (Coq.NArith.BinNat.N.ldiff p
+                                                                   Data.IntSet.Internal.suffixBitMask) (computeBm
+                                                                                                        (computeBm #0 l)
+                                                                                                        r)
            end.
-
-Definition lmapWhenMissing {b} {a} {f} {x}
-   : (b -> a) -> WhenMissing f a x -> WhenMissing f b x :=
-  fun f t => Mk_WhenMissing missingValue missingValue.
 
 Definition lookupMax {a}
    : IntMap a -> option (Data.IntSet.Internal.Key * a)%type :=
@@ -754,9 +749,8 @@ Definition lookupMax {a}
                      | Bin _ _ _ r' => go r'
                      | Nil => None
                      end in
-        if m GHC.Base.< #0 : bool
-        then go l
-        else go r
+        if m GHC.Base.< #0 : bool then go l else
+        go r
     end.
 
 Definition lookupMin {a}
@@ -772,9 +766,8 @@ Definition lookupMin {a}
                      | Bin _ _ l' _ => go l'
                      | Nil => None
                      end in
-        if m GHC.Base.< #0 : bool
-        then go r
-        else go l
+        if m GHC.Base.< #0 : bool then go r else
+        go l
     end.
 
 Definition map {a} {b} : (a -> b) -> IntMap a -> IntMap b :=
@@ -795,6 +788,12 @@ Program Instance Functor__IntMap : GHC.Base.Functor IntMap :=
   fun _ k =>
     k {| GHC.Base.op_zlzd____ := fun {a} {b} => Functor__IntMap_op_zlzd__ ;
          GHC.Base.fmap__ := fun {a} {b} => Functor__IntMap_fmap |}.
+
+Definition lmapWhenMissing {b} {a} {f} {x}
+   : (b -> a) -> WhenMissing f a x -> WhenMissing f b x :=
+  fun f t =>
+    Mk_WhenMissing (fun m => missingSubtree t (GHC.Base.fmap f m)) (fun k x =>
+                      missingKey t k (f x)).
 
 Definition mapAccumL {a} {b} {c}
    : (a -> Data.IntSet.Internal.Key -> b -> (a * c)%type) ->
@@ -844,7 +843,9 @@ Definition mapGT {a}
 
 Definition mapGentlyWhenMissing {f} {a} {b} {x} `{GHC.Base.Functor f}
    : (a -> b) -> WhenMissing f x a -> WhenMissing f x b :=
-  fun f t => Mk_WhenMissing missingValue missingValue.
+  fun f t =>
+    Mk_WhenMissing (fun m => GHC.Base.fmap f Data.Functor.<$> missingSubtree t m)
+                   (fun k x => GHC.Base.fmap f Data.Functor.<$> missingKey t k x).
 
 Definition mapLT {a}
    : (IntMap a -> IntMap a) -> SplitLookup a -> SplitLookup a :=
@@ -852,14 +853,6 @@ Definition mapLT {a}
     match arg_0__, arg_1__ with
     | f, Mk_SplitLookup lt fnd gt => Mk_SplitLookup (f lt) fnd gt
     end.
-
-Definition mapMaybeMissing {f} {x} {y} `{GHC.Base.Applicative f}
-   : (Data.IntSet.Internal.Key -> x -> option y) -> WhenMissing f x y :=
-  fun f => Mk_WhenMissing missingValue missingValue.
-
-Definition mapMissing {f} {x} {y} `{GHC.Base.Applicative f}
-   : (Data.IntSet.Internal.Key -> x -> y) -> WhenMissing f x y :=
-  fun f => Mk_WhenMissing missingValue missingValue.
 
 Definition mapWhenMatched {f} {a} {b} {x} {y} `{GHC.Base.Functor f}
    : (a -> b) -> WhenMatched f x y a -> WhenMatched f x y b :=
@@ -872,7 +865,11 @@ Definition mapWhenMatched {f} {a} {b} {x} {y} `{GHC.Base.Functor f}
 Definition mapWhenMissing {f} {a} {b} {x} `{GHC.Base.Applicative f}
   `{GHC.Base.Monad f}
    : (a -> b) -> WhenMissing f x a -> WhenMissing f x b :=
-  fun f t => Mk_WhenMissing missingValue missingValue.
+  fun f t =>
+    Mk_WhenMissing (fun m =>
+                      missingSubtree t m GHC.Base.>>= (fun m' => GHC.Base.pure (GHC.Base.fmap f m')))
+                   (fun k x =>
+                      missingKey t k x GHC.Base.>>= (fun q => (GHC.Base.pure (GHC.Base.fmap f q)))).
 
 Definition mapWithKey {a} {b}
    : (Data.IntSet.Internal.Key -> a -> b) -> IntMap a -> IntMap b :=
@@ -882,6 +879,12 @@ Definition mapWithKey {a} {b}
            | Tip k x => Tip k (f k x)
            | Nil => Nil
            end.
+
+Definition mapMissing {f} {x} {y} `{GHC.Base.Applicative f}
+   : (Data.IntSet.Internal.Key -> x -> y) -> WhenMissing f x y :=
+  fun f =>
+    Mk_WhenMissing (fun m => GHC.Base.pure (mapWithKey f m)) (fun k x =>
+                      GHC.Base.pure (Some (f k x))).
 
 Definition maskW : Nat -> Nat -> Prefix :=
   fun i m =>
@@ -932,11 +935,9 @@ Definition member {a} : Data.IntSet.Internal.Key -> IntMap a -> bool :=
     let fix go arg_0__
               := match arg_0__ with
                  | Bin p m l r =>
-                     if nomatch k p m : bool
-                     then false
-                     else if Data.IntSet.Internal.zero k m : bool
-                          then go l
-                          else go r
+                     if nomatch k p m : bool then false else
+                     if Data.IntSet.Internal.zero k m : bool then go l else
+                     go r
                  | Tip kx _ => k GHC.Base.== kx
                  | Nil => false
                  end in
@@ -955,17 +956,15 @@ Definition lookupPrefix {a} : IntSetPrefix -> IntMap a -> IntMap a :=
                        GHC.Base.==
                        kp : bool
                     then t
-                    else Nil
-               else if nomatch kp p m : bool
-                    then Nil
-                    else if Data.IntSet.Internal.zero kp m : bool
-                         then lookupPrefix kp l
-                         else lookupPrefix kp r
+                    else Nil else
+               if nomatch kp p m : bool then Nil else
+               if Data.IntSet.Internal.zero kp m : bool then lookupPrefix kp l else
+               lookupPrefix kp r
            | kp, (Tip kx _ as t) =>
                if (Coq.NArith.BinNat.N.ldiff kx Data.IntSet.Internal.suffixBitMask) GHC.Base.==
                   kp : bool
-               then t
-               else Nil
+               then t else
+               Nil
            | _, Nil => Nil
            end.
 
@@ -974,11 +973,9 @@ Definition lookup {a} : Data.IntSet.Internal.Key -> IntMap a -> option a :=
     let fix go arg_0__
               := match arg_0__ with
                  | Bin p m l r =>
-                     if nomatch k p m : bool
-                     then None
-                     else if Data.IntSet.Internal.zero k m : bool
-                          then go l
-                          else go r
+                     if nomatch k p m : bool then None else
+                     if Data.IntSet.Internal.zero k m : bool then go l else
+                     go r
                  | Tip kx x => if k GHC.Base.== kx : bool then Some x else None
                  | Nil => None
                  end in
@@ -997,11 +994,9 @@ Definition findWithDefault {a}
     let fix go arg_0__
               := match arg_0__ with
                  | Bin p m l r =>
-                     if nomatch k p m : bool
-                     then def
-                     else if Data.IntSet.Internal.zero k m : bool
-                          then go l
-                          else go r
+                     if nomatch k p m : bool then def else
+                     if Data.IntSet.Internal.zero k m : bool then go l else
+                     go r
                  | Tip kx x => if k GHC.Base.== kx : bool then x else def
                  | Nil => def
                  end in
@@ -1011,15 +1006,12 @@ Definition insert {a} : Data.IntSet.Internal.Key -> a -> IntMap a -> IntMap a :=
   fix insert arg_0__ arg_1__ arg_2__
         := match arg_0__, arg_1__, arg_2__ with
            | k, x, (Bin p m l r as t) =>
-               if nomatch k p m : bool
-               then link k (Tip k x) p t
-               else if Data.IntSet.Internal.zero k m : bool
-                    then Bin p m (insert k x l) r
-                    else Bin p m l (insert k x r)
+               if nomatch k p m : bool then link k (Tip k x) p t else
+               if Data.IntSet.Internal.zero k m : bool then Bin p m (insert k x l) r else
+               Bin p m l (insert k x r)
            | k, x, (Tip ky _ as t) =>
-               if k GHC.Base.== ky : bool
-               then Tip k x
-               else link k (Tip k x) ky t
+               if k GHC.Base.== ky : bool then Tip k x else
+               link k (Tip k x) ky t
            | k, x, Nil => Tip k x
            end.
 
@@ -1045,17 +1037,15 @@ Definition insertLookupWithKey {a}
   fix insertLookupWithKey arg_0__ arg_1__ arg_2__ arg_3__
         := match arg_0__, arg_1__, arg_2__, arg_3__ with
            | f, k, x, (Bin p m l r as t) =>
-               if nomatch k p m : bool
-               then pair None (link k (Tip k x) p t)
-               else if Data.IntSet.Internal.zero k m : bool
-                    then let 'pair found l' := insertLookupWithKey f k x l in
-                         pair found (Bin p m l' r)
-                    else let 'pair found r' := insertLookupWithKey f k x r in
-                         pair found (Bin p m l r')
+               if nomatch k p m : bool then pair None (link k (Tip k x) p t) else
+               if Data.IntSet.Internal.zero k m : bool
+               then let 'pair found l' := insertLookupWithKey f k x l in
+                    pair found (Bin p m l' r) else
+               let 'pair found r' := insertLookupWithKey f k x r in
+               pair found (Bin p m l r')
            | f, k, x, (Tip ky y as t) =>
-               if k GHC.Base.== ky : bool
-               then pair (Some y) (Tip k (f k x y))
-               else pair None (link k (Tip k x) ky t)
+               if k GHC.Base.== ky : bool then pair (Some y) (Tip k (f k x y)) else
+               pair None (link k (Tip k x) ky t)
            | _, k, x, Nil => pair None (Tip k x)
            end.
 
@@ -1065,15 +1055,13 @@ Definition insertWithKey {a}
   fix insertWithKey arg_0__ arg_1__ arg_2__ arg_3__
         := match arg_0__, arg_1__, arg_2__, arg_3__ with
            | f, k, x, (Bin p m l r as t) =>
-               if nomatch k p m : bool
-               then link k (Tip k x) p t
-               else if Data.IntSet.Internal.zero k m : bool
-                    then Bin p m (insertWithKey f k x l) r
-                    else Bin p m l (insertWithKey f k x r)
+               if nomatch k p m : bool then link k (Tip k x) p t else
+               if Data.IntSet.Internal.zero k m : bool
+               then Bin p m (insertWithKey f k x l) r else
+               Bin p m l (insertWithKey f k x r)
            | f, k, x, (Tip ky y as t) =>
-               if k GHC.Base.== ky : bool
-               then Tip k (f k x y)
-               else link k (Tip k x) ky t
+               if k GHC.Base.== ky : bool then Tip k (f k x y) else
+               link k (Tip k x) ky t
            | _, k, x, Nil => Tip k x
            end.
 
@@ -1116,11 +1104,10 @@ Definition delete {a} : Data.IntSet.Internal.Key -> IntMap a -> IntMap a :=
   fix delete arg_0__ arg_1__
         := match arg_0__, arg_1__ with
            | k, (Bin p m l r as t) =>
-               if nomatch k p m : bool
-               then t
-               else if Data.IntSet.Internal.zero k m : bool
-                    then binCheckLeft p m (delete k l) r
-                    else binCheckRight p m l (delete k r)
+               if nomatch k p m : bool then t else
+               if Data.IntSet.Internal.zero k m : bool
+               then binCheckLeft p m (delete k l) r else
+               binCheckRight p m l (delete k r)
            | k, (Tip ky _ as t) => if k GHC.Base.== ky : bool then Nil else t
            | _k, Nil => Nil
            end.
@@ -1142,20 +1129,19 @@ Definition updateLookupWithKey {a}
   fix updateLookupWithKey arg_0__ arg_1__ arg_2__
         := match arg_0__, arg_1__, arg_2__ with
            | f, k, (Bin p m l r as t) =>
-               if nomatch k p m : bool
-               then pair None t
-               else if Data.IntSet.Internal.zero k m : bool
-                    then let 'pair found l' := updateLookupWithKey f k l in
-                         pair found (binCheckLeft p m l' r)
-                    else let 'pair found r' := updateLookupWithKey f k r in
-                         pair found (binCheckRight p m l r')
+               if nomatch k p m : bool then pair None t else
+               if Data.IntSet.Internal.zero k m : bool
+               then let 'pair found l' := updateLookupWithKey f k l in
+                    pair found (binCheckLeft p m l' r) else
+               let 'pair found r' := updateLookupWithKey f k r in
+               pair found (binCheckRight p m l r')
            | f, k, (Tip ky y as t) =>
                if k GHC.Base.== ky : bool
                then match (f k y) with
                     | Some y' => pair (Some y) (Tip ky y')
                     | None => pair (Some y) Nil
-                    end
-               else pair None t
+                    end else
+               pair None t
            | _, _, Nil => pair None Nil
            end.
 
@@ -1170,17 +1156,16 @@ Definition updatePrefix {a}
                        GHC.Base.==
                        kp : bool
                     then f t
-                    else t
-               else if nomatch kp p m : bool
-                    then t
-                    else if Data.IntSet.Internal.zero kp m : bool
-                         then binCheckLeft p m (updatePrefix kp l f) r
-                         else binCheckRight p m l (updatePrefix kp r f)
+                    else t else
+               if nomatch kp p m : bool then t else
+               if Data.IntSet.Internal.zero kp m : bool
+               then binCheckLeft p m (updatePrefix kp l f) r else
+               binCheckRight p m l (updatePrefix kp r f)
            | kp, (Tip kx _ as t), f =>
                if Coq.NArith.BinNat.N.ldiff kx Data.IntSet.Internal.suffixBitMask GHC.Base.==
                   kp : bool
-               then f t
-               else t
+               then f t else
+               t
            | _, Nil, _ => Nil
            end.
 
@@ -1190,18 +1175,17 @@ Definition updateWithKey {a}
   fix updateWithKey arg_0__ arg_1__ arg_2__
         := match arg_0__, arg_1__, arg_2__ with
            | f, k, (Bin p m l r as t) =>
-               if nomatch k p m : bool
-               then t
-               else if Data.IntSet.Internal.zero k m : bool
-                    then binCheckLeft p m (updateWithKey f k l) r
-                    else binCheckRight p m l (updateWithKey f k r)
+               if nomatch k p m : bool then t else
+               if Data.IntSet.Internal.zero k m : bool
+               then binCheckLeft p m (updateWithKey f k l) r else
+               binCheckRight p m l (updateWithKey f k r)
            | f, k, (Tip ky y as t) =>
                if k GHC.Base.== ky : bool
                then match (f k y) with
                     | Some y' => Tip ky y'
                     | None => Nil
-                    end
-               else t
+                    end else
+               t
            | _, _, Nil => Nil
            end.
 
@@ -1222,20 +1206,20 @@ Definition alter {a}
                then match f None with
                     | None => t
                     | Some x => link k (Tip k x) p t
-                    end
-               else if Data.IntSet.Internal.zero k m : bool
-                    then binCheckLeft p m (alter f k l) r
-                    else binCheckRight p m l (alter f k r)
+                    end else
+               if Data.IntSet.Internal.zero k m : bool
+               then binCheckLeft p m (alter f k l) r else
+               binCheckRight p m l (alter f k r)
            | f, k, (Tip ky y as t) =>
                if k GHC.Base.== ky : bool
                then match f (Some y) with
                     | Some x => Tip ky x
                     | None => Nil
-                    end
-               else match f None with
-                    | Some x => link k (Tip k x) ky t
-                    | None => Tip ky y
-                    end
+                    end else
+               match f None with
+               | Some x => link k (Tip k x) ky t
+               | None => Tip ky y
+               end
            | f, k, Nil => match f None with | Some x => Tip k x | None => Nil end
            end.
 
@@ -1245,11 +1229,10 @@ Definition adjustWithKey {a}
   fix adjustWithKey arg_0__ arg_1__ arg_2__
         := match arg_0__, arg_1__, arg_2__ with
            | f, k, (Bin p m l r as t) =>
-               if nomatch k p m : bool
-               then t
-               else if Data.IntSet.Internal.zero k m : bool
-                    then Bin p m (adjustWithKey f k l) r
-                    else Bin p m l (adjustWithKey f k r)
+               if nomatch k p m : bool then t else
+               if Data.IntSet.Internal.zero k m : bool
+               then Bin p m (adjustWithKey f k l) r else
+               Bin p m l (adjustWithKey f k r)
            | f, k, (Tip ky y as t) => if k GHC.Base.== ky : bool then Tip ky (f k y) else t
            | _, _, Nil => Nil
            end.
@@ -1270,7 +1253,10 @@ Local Definition Foldable__IntMap_null : forall {a}, IntMap a -> bool :=
 
 Definition preserveMissing {f} {x} `{GHC.Base.Applicative f}
    : WhenMissing f x x :=
-  Mk_WhenMissing missingValue missingValue.
+  Mk_WhenMissing GHC.Base.pure (fun arg_0__ arg_1__ =>
+                    match arg_0__, arg_1__ with
+                    | _, v => GHC.Base.pure (Some v)
+                    end).
 
 Definition runWhenMatched {f} {x} {y} {z}
    : WhenMatched f x y z -> Data.IntSet.Internal.Key -> x -> y -> f (option z) :=
@@ -1304,25 +1290,19 @@ Definition submapCmp {a} {b}
                  | _ => Lt
                  end in
                let submapCmpLt :=
-                 if nomatch p1 p2 m2 : bool
-                 then Gt
-                 else if Data.IntSet.Internal.zero p1 m2 : bool
-                      then submapCmp predicate t1 l2
-                      else submapCmp predicate t1 r2 in
-               if shorter m1 m2 : bool
-               then Gt
-               else if shorter m2 m1 : bool
-                    then submapCmpLt
-                    else if p1 GHC.Base.== p2 : bool
-                         then submapCmpEq
-                         else Gt
+                 if nomatch p1 p2 m2 : bool then Gt else
+                 if Data.IntSet.Internal.zero p1 m2 : bool then submapCmp predicate t1 l2 else
+                 submapCmp predicate t1 r2 in
+               if shorter m1 m2 : bool then Gt else
+               if shorter m2 m1 : bool then submapCmpLt else
+               if p1 GHC.Base.== p2 : bool then submapCmpEq else
+               Gt
            | _, _, _ =>
                match arg_0__, arg_1__, arg_2__ with
                | _, Bin _ _ _ _, _ => Gt
                | predicate, Tip kx x, Tip ky y =>
-                   if andb (kx GHC.Base.== ky) (predicate x y) : bool
-                   then Eq
-                   else Gt
+                   if andb (kx GHC.Base.== ky) (predicate x y) : bool then Eq else
+                   Gt
                | _, _, _ =>
                    match arg_0__, arg_1__, arg_2__ with
                    | predicate, Tip k x, t =>
@@ -1354,14 +1334,13 @@ Definition isSubmapOfBy {a} {b}
   fix isSubmapOfBy arg_0__ arg_1__ arg_2__
         := match arg_0__, arg_1__, arg_2__ with
            | predicate, (Bin p1 m1 l1 r1 as t1), Bin p2 m2 l2 r2 =>
-               if shorter m1 m2 : bool
-               then false
-               else if shorter m2 m1 : bool
-                    then andb (match_ p1 p2 m2) (if Data.IntSet.Internal.zero p1 m2 : bool
-                               then isSubmapOfBy predicate t1 l2
-                               else isSubmapOfBy predicate t1 r2)
-                    else andb (p1 GHC.Base.== p2) (andb (isSubmapOfBy predicate l1 l2) (isSubmapOfBy
-                                                         predicate r1 r2))
+               if shorter m1 m2 : bool then false else
+               if shorter m2 m1 : bool
+               then andb (match_ p1 p2 m2) (if Data.IntSet.Internal.zero p1 m2 : bool
+                          then isSubmapOfBy predicate t1 l2
+                          else isSubmapOfBy predicate t1 r2) else
+               andb (p1 GHC.Base.== p2) (andb (isSubmapOfBy predicate l1 l2) (isSubmapOfBy
+                                               predicate r1 r2))
            | _, _, _ =>
                match arg_0__, arg_1__, arg_2__ with
                | _, Bin _ _ _ _, _ => false
@@ -1395,37 +1374,31 @@ Definition mergeWithKey' {c} {a} {b}
                                       match arg_6__, arg_7__ with
                                       | (Bin p1 m1 l1 r1 as t1), (Bin p2 m2 l2 r2 as t2) =>
                                           let merge2 :=
-                                            if nomatch p1 p2 m2 : bool
-                                            then maybe_link p1 (g1 t1) p2 (g2 t2)
-                                            else if Data.IntSet.Internal.zero p1 m2 : bool
-                                                 then bin' p2 m2 (go t1 l2) (g2 r2)
-                                                 else bin' p2 m2 (g2 l2) (go t1 r2) in
+                                            if nomatch p1 p2 m2 : bool then maybe_link p1 (g1 t1) p2 (g2 t2) else
+                                            if Data.IntSet.Internal.zero p1 m2 : bool
+                                            then bin' p2 m2 (go t1 l2) (g2 r2) else
+                                            bin' p2 m2 (g2 l2) (go t1 r2) in
                                           let merge1 :=
-                                            if nomatch p2 p1 m1 : bool
-                                            then maybe_link p1 (g1 t1) p2 (g2 t2)
-                                            else if Data.IntSet.Internal.zero p2 m1 : bool
-                                                 then bin' p1 m1 (go l1 t2) (g1 r1)
-                                                 else bin' p1 m1 (g1 l1) (go r1 t2) in
-                                          if shorter m1 m2 : bool
-                                          then merge1
-                                          else if shorter m2 m1 : bool
-                                               then merge2
-                                               else if p1 GHC.Base.== p2 : bool
-                                                    then bin' p1 m1 (go l1 l2) (go r1 r2)
-                                                    else maybe_link p1 (g1 t1) p2 (g2 t2)
+                                            if nomatch p2 p1 m1 : bool then maybe_link p1 (g1 t1) p2 (g2 t2) else
+                                            if Data.IntSet.Internal.zero p2 m1 : bool
+                                            then bin' p1 m1 (go l1 t2) (g1 r1) else
+                                            bin' p1 m1 (g1 l1) (go r1 t2) in
+                                          if shorter m1 m2 : bool then merge1 else
+                                          if shorter m2 m1 : bool then merge2 else
+                                          if p1 GHC.Base.== p2 : bool then bin' p1 m1 (go l1 l2) (go r1 r2) else
+                                          maybe_link p1 (g1 t1) p2 (g2 t2)
                                       | (Bin _ _ _ _ as t1'), (Tip k2' _ as t2') =>
                                           let fix merge0 arg_18__ arg_19__ arg_20__
                                                     := match arg_18__, arg_19__, arg_20__ with
                                                        | t2, k2, (Bin p1 m1 l1 r1 as t1) =>
                                                            if nomatch k2 p1 m1 : bool
-                                                           then maybe_link p1 (g1 t1) k2 (g2 t2)
-                                                           else if Data.IntSet.Internal.zero k2 m1 : bool
-                                                                then bin' p1 m1 (merge0 t2 k2 l1) (g1 r1)
-                                                                else bin' p1 m1 (g1 l1) (merge0 t2 k2 r1)
+                                                           then maybe_link p1 (g1 t1) k2 (g2 t2) else
+                                                           if Data.IntSet.Internal.zero k2 m1 : bool
+                                                           then bin' p1 m1 (merge0 t2 k2 l1) (g1 r1) else
+                                                           bin' p1 m1 (g1 l1) (merge0 t2 k2 r1)
                                                        | t2, k2, (Tip k1 _ as t1) =>
-                                                           if k1 GHC.Base.== k2 : bool
-                                                           then f t1 t2
-                                                           else maybe_link k1 (g1 t1) k2 (g2 t2)
+                                                           if k1 GHC.Base.== k2 : bool then f t1 t2 else
+                                                           maybe_link k1 (g1 t1) k2 (g2 t2)
                                                        | t2, _, Nil => g2 t2
                                                        end in
                                           merge0 t2' k2' t1'
@@ -1435,14 +1408,13 @@ Definition mergeWithKey' {c} {a} {b}
                                                     := match arg_30__, arg_31__, arg_32__ with
                                                        | t1, k1, (Bin p2 m2 l2 r2 as t2) =>
                                                            if nomatch k1 p2 m2 : bool
-                                                           then maybe_link k1 (g1 t1) p2 (g2 t2)
-                                                           else if Data.IntSet.Internal.zero k1 m2 : bool
-                                                                then bin' p2 m2 (merge0 t1 k1 l2) (g2 r2)
-                                                                else bin' p2 m2 (g2 l2) (merge0 t1 k1 r2)
+                                                           then maybe_link k1 (g1 t1) p2 (g2 t2) else
+                                                           if Data.IntSet.Internal.zero k1 m2 : bool
+                                                           then bin' p2 m2 (merge0 t1 k1 l2) (g2 r2) else
+                                                           bin' p2 m2 (g2 l2) (merge0 t1 k1 r2)
                                                        | t1, k1, (Tip k2 _ as t2) =>
-                                                           if k1 GHC.Base.== k2 : bool
-                                                           then f t1 t2
-                                                           else maybe_link k1 (g1 t1) k2 (g2 t2)
+                                                           if k1 GHC.Base.== k2 : bool then f t1 t2 else
+                                                           maybe_link k1 (g1 t1) k2 (g2 t2)
                                                        | t1, _, Nil => g1 t1
                                                        end in
                                           merge0 t1' k1' t2'
@@ -1462,18 +1434,16 @@ Definition split {a}
                      if nomatch k' p m : bool
                      then if k' GHC.Base.> p : bool
                           then pair t' Nil
-                          else pair Nil t'
-                     else if Data.IntSet.Internal.zero k' m : bool
-                          then let 'pair lt gt := go k' l in
-                               pair lt (union gt r)
-                          else let 'pair lt gt := go k' r in
-                               pair (union l lt) gt
+                          else pair Nil t' else
+                     if Data.IntSet.Internal.zero k' m : bool
+                     then let 'pair lt gt := go k' l in
+                          pair lt (union gt r) else
+                     let 'pair lt gt := go k' r in
+                     pair (union l lt) gt
                  | k', (Tip ky _ as t') =>
-                     if k' GHC.Base.> ky : bool
-                     then (pair t' Nil)
-                     else if k' GHC.Base.< ky : bool
-                          then (pair Nil t')
-                          else (pair Nil Nil)
+                     if k' GHC.Base.> ky : bool then (pair t' Nil) else
+                     if k' GHC.Base.< ky : bool then (pair Nil t') else
+                     (pair Nil Nil)
                  | _, Nil => (pair Nil Nil)
                  end in
     let j_20__ := let 'pair lt gt := go k t in pair lt gt in
@@ -1486,8 +1456,8 @@ Definition split {a}
                   pair lt' gt
              else let 'pair lt gt := go k r in
                   let 'gt' := union gt l in
-                  pair lt gt'
-        else j_20__
+                  pair lt gt' else
+        j_20__
     | _ => j_20__
     end.
 
@@ -1501,16 +1471,14 @@ Definition splitLookup {a}
                      if nomatch k' p m : bool
                      then if k' GHC.Base.> p : bool
                           then Mk_SplitLookup t' None Nil
-                          else Mk_SplitLookup Nil None t'
-                     else if Data.IntSet.Internal.zero k' m : bool
-                          then mapGT (fun arg_3__ => union arg_3__ r) (go k' l)
-                          else mapLT (union l) (go k' r)
+                          else Mk_SplitLookup Nil None t' else
+                     if Data.IntSet.Internal.zero k' m : bool
+                     then mapGT (fun arg_3__ => union arg_3__ r) (go k' l) else
+                     mapLT (union l) (go k' r)
                  | k', (Tip ky y as t') =>
-                     if k' GHC.Base.> ky : bool
-                     then Mk_SplitLookup t' None Nil
-                     else if k' GHC.Base.< ky : bool
-                          then Mk_SplitLookup Nil None t'
-                          else Mk_SplitLookup Nil (Some y) Nil
+                     if k' GHC.Base.> ky : bool then Mk_SplitLookup t' None Nil else
+                     if k' GHC.Base.< ky : bool then Mk_SplitLookup Nil None t' else
+                     Mk_SplitLookup Nil (Some y) Nil
                  | _, Nil => Mk_SplitLookup Nil None Nil
                  end in
     let 'Mk_SplitLookup lt fnd gt := (let j_12__ := go k t in
@@ -1519,8 +1487,8 @@ Definition splitLookup {a}
                                             if m GHC.Base.< #0 : bool
                                             then if k GHC.Base.>= #0 : bool
                                                  then mapLT (union r) (go k l)
-                                                 else mapGT (fun arg_13__ => union arg_13__ l) (go k r)
-                                            else j_12__
+                                                 else mapGT (fun arg_13__ => union arg_13__ l) (go k r) else
+                                            j_12__
                                         | _ => j_12__
                                         end) in
     pair (pair lt fnd) gt.
@@ -1640,24 +1608,18 @@ Definition restrictKeys {a}
                                   match arg_0__, arg_1__ with
                                   | (Bin p1 m1 l1 r1 as t1), (Data.IntSet.Internal.Bin p2 m2 l2 r2 as t2) =>
                                       let intersection2 :=
-                                        if nomatch p1 p2 m2 : bool
-                                        then Nil
-                                        else if Data.IntSet.Internal.zero p1 m2 : bool
-                                             then restrictKeys t1 l2
-                                             else restrictKeys t1 r2 in
+                                        if nomatch p1 p2 m2 : bool then Nil else
+                                        if Data.IntSet.Internal.zero p1 m2 : bool then restrictKeys t1 l2 else
+                                        restrictKeys t1 r2 in
                                       let intersection1 :=
-                                        if nomatch p2 p1 m1 : bool
-                                        then Nil
-                                        else if Data.IntSet.Internal.zero p2 m1 : bool
-                                             then restrictKeys l1 t2
-                                             else restrictKeys r1 t2 in
-                                      if shorter m1 m2 : bool
-                                      then intersection1
-                                      else if shorter m2 m1 : bool
-                                           then intersection2
-                                           else if p1 GHC.Base.== p2 : bool
-                                                then bin p1 m1 (restrictKeys l1 l2) (restrictKeys r1 r2)
-                                                else Nil
+                                        if nomatch p2 p1 m1 : bool then Nil else
+                                        if Data.IntSet.Internal.zero p2 m1 : bool then restrictKeys l1 t2 else
+                                        restrictKeys r1 t2 in
+                                      if shorter m1 m2 : bool then intersection1 else
+                                      if shorter m2 m1 : bool then intersection2 else
+                                      if p1 GHC.Base.== p2 : bool
+                                      then bin p1 m1 (restrictKeys l1 l2) (restrictKeys r1 r2) else
+                                      Nil
                                   | (Bin p1 m1 _ _ as t1), Data.IntSet.Internal.Tip p2 bm2 =>
                                       let maxbit :=
                                         bitmapOf (p1 Data.Bits..|.(**) (m1 Data.Bits..|.(**) (m1 GHC.Num.- #1))) in
@@ -1670,9 +1632,8 @@ Definition restrictKeys {a}
                                       (lookupPrefix p2 t1)
                                   | Bin _ _ _ _, Data.IntSet.Internal.Nil => Nil
                                   | (Tip k1 _ as t1), t2 =>
-                                      if Data.IntSet.Internal.member k1 t2 : bool
-                                      then t1
-                                      else Nil
+                                      if Data.IntSet.Internal.member k1 t2 : bool then t1 else
+                                      Nil
                                   | Nil, _ => Nil
                                   end).
 
@@ -1682,24 +1643,19 @@ Definition withoutKeys {a}
                                   match arg_0__, arg_1__ with
                                   | (Bin p1 m1 l1 r1 as t1), (Data.IntSet.Internal.Bin p2 m2 l2 r2 as t2) =>
                                       let difference2 :=
-                                        if nomatch p1 p2 m2 : bool
-                                        then t1
-                                        else if Data.IntSet.Internal.zero p1 m2 : bool
-                                             then withoutKeys t1 l2
-                                             else withoutKeys t1 r2 in
+                                        if nomatch p1 p2 m2 : bool then t1 else
+                                        if Data.IntSet.Internal.zero p1 m2 : bool then withoutKeys t1 l2 else
+                                        withoutKeys t1 r2 in
                                       let difference1 :=
-                                        if nomatch p2 p1 m1 : bool
-                                        then t1
-                                        else if Data.IntSet.Internal.zero p2 m1 : bool
-                                             then binCheckLeft p1 m1 (withoutKeys l1 t2) r1
-                                             else binCheckRight p1 m1 l1 (withoutKeys r1 t2) in
-                                      if shorter m1 m2 : bool
-                                      then difference1
-                                      else if shorter m2 m1 : bool
-                                           then difference2
-                                           else if p1 GHC.Base.== p2 : bool
-                                                then bin p1 m1 (withoutKeys l1 l2) (withoutKeys r1 r2)
-                                                else t1
+                                        if nomatch p2 p1 m1 : bool then t1 else
+                                        if Data.IntSet.Internal.zero p2 m1 : bool
+                                        then binCheckLeft p1 m1 (withoutKeys l1 t2) r1 else
+                                        binCheckRight p1 m1 l1 (withoutKeys r1 t2) in
+                                      if shorter m1 m2 : bool then difference1 else
+                                      if shorter m2 m1 : bool then difference2 else
+                                      if p1 GHC.Base.== p2 : bool
+                                      then bin p1 m1 (withoutKeys l1 l2) (withoutKeys r1 r2) else
+                                      t1
                                   | (Bin p1 m1 _ _ as t1), Data.IntSet.Internal.Tip p2 bm2 =>
                                       let maxbit :=
                                         bitmapOf (p1 Data.Bits..|.(**) (m1 Data.Bits..|.(**) (m1 GHC.Num.- #1))) in
@@ -1714,9 +1670,8 @@ Definition withoutKeys {a}
                                                                      gt_maxbit))
                                   | (Bin _ _ _ _ as t1), Data.IntSet.Internal.Nil => t1
                                   | (Tip k1 _ as t1), t2 =>
-                                      if Data.IntSet.Internal.member k1 t2 : bool
-                                      then Nil
-                                      else t1
+                                      if Data.IntSet.Internal.member k1 t2 : bool then Nil else
+                                      t1
                                   | Nil, _ => Nil
                                   end).
 
@@ -1759,18 +1714,9 @@ Definition splitRoot {a} : IntMap a -> list (IntMap a) :=
     | Nil => nil
     | (Tip _ _ as x) => cons x nil
     | Bin _ m l r =>
-        if m GHC.Base.< #0 : bool
-        then cons r (cons l nil)
-        else cons l (cons r nil)
+        if m GHC.Base.< #0 : bool then cons r (cons l nil) else
+        cons l (cons r nil)
     end.
-
-Definition traverseMaybeMissing {f} {x} {y} `{GHC.Base.Applicative f}
-   : (Data.IntSet.Internal.Key -> x -> f (option y)) -> WhenMissing f x y :=
-  fun f => Mk_WhenMissing missingValue missingValue.
-
-Definition traverseMissing {f} {x} {y} `{GHC.Base.Applicative f}
-   : (Data.IntSet.Internal.Key -> x -> f y) -> WhenMissing f x y :=
-  fun f => Mk_WhenMissing missingValue missingValue.
 
 Definition traverseWithKey {t} {a} {b} `{GHC.Base.Applicative t}
    : (Data.IntSet.Internal.Key -> a -> t b) -> IntMap a -> t (IntMap b) :=
@@ -1782,6 +1728,11 @@ Definition traverseWithKey {t} {a} {b} `{GHC.Base.Applicative t}
                  | Bin p m l r => GHC.Base.liftA2 (Bin p m) (go l) (go r)
                  end in
     go.
+
+Definition traverseMissing {f} {x} {y} `{GHC.Base.Applicative f}
+   : (Data.IntSet.Internal.Key -> x -> f y) -> WhenMissing f x y :=
+  fun f =>
+    Mk_WhenMissing (traverseWithKey f) (fun k x => Some Data.Functor.<$> f k x).
 
 Local Definition Traversable__IntMap_traverse
    : forall {f} {a} {b},
@@ -1834,14 +1785,12 @@ Definition lookupLT {a}
                      if nomatch k p m : bool
                      then if k GHC.Base.< p : bool
                           then unsafeFindMax def
-                          else unsafeFindMax r
-                     else if Data.IntSet.Internal.zero k m : bool
-                          then go def l
-                          else go l r
+                          else unsafeFindMax r else
+                     if Data.IntSet.Internal.zero k m : bool then go def l else
+                     go l r
                  | def, Tip ky y =>
-                     if k GHC.Base.<= ky : bool
-                     then unsafeFindMax def
-                     else Some (pair ky y)
+                     if k GHC.Base.<= ky : bool then unsafeFindMax def else
+                     Some (pair ky y)
                  | def, Nil => unsafeFindMax def
                  end in
     let j_10__ := go Nil t in
@@ -1850,8 +1799,8 @@ Definition lookupLT {a}
         if m GHC.Base.< #0 : bool
         then if k GHC.Base.>= #0 : bool
              then go r l
-             else go Nil r
-        else j_10__
+             else go Nil r else
+        j_10__
     | _ => j_10__
     end.
 
@@ -1865,14 +1814,12 @@ Definition lookupLE {a}
                      if nomatch k p m : bool
                      then if k GHC.Base.< p : bool
                           then unsafeFindMax def
-                          else unsafeFindMax r
-                     else if Data.IntSet.Internal.zero k m : bool
-                          then go def l
-                          else go l r
+                          else unsafeFindMax r else
+                     if Data.IntSet.Internal.zero k m : bool then go def l else
+                     go l r
                  | def, Tip ky y =>
-                     if k GHC.Base.< ky : bool
-                     then unsafeFindMax def
-                     else Some (pair ky y)
+                     if k GHC.Base.< ky : bool then unsafeFindMax def else
+                     Some (pair ky y)
                  | def, Nil => unsafeFindMax def
                  end in
     let j_10__ := go Nil t in
@@ -1881,8 +1828,8 @@ Definition lookupLE {a}
         if m GHC.Base.< #0 : bool
         then if k GHC.Base.>= #0 : bool
              then go r l
-             else go Nil r
-        else j_10__
+             else go Nil r else
+        j_10__
     | _ => j_10__
     end.
 
@@ -1905,14 +1852,12 @@ Definition lookupGT {a}
                      if nomatch k p m : bool
                      then if k GHC.Base.< p : bool
                           then unsafeFindMin l
-                          else unsafeFindMin def
-                     else if Data.IntSet.Internal.zero k m : bool
-                          then go r l
-                          else go def r
+                          else unsafeFindMin def else
+                     if Data.IntSet.Internal.zero k m : bool then go r l else
+                     go def r
                  | def, Tip ky y =>
-                     if k GHC.Base.>= ky : bool
-                     then unsafeFindMin def
-                     else Some (pair ky y)
+                     if k GHC.Base.>= ky : bool then unsafeFindMin def else
+                     Some (pair ky y)
                  | def, Nil => unsafeFindMin def
                  end in
     let j_10__ := go Nil t in
@@ -1921,8 +1866,8 @@ Definition lookupGT {a}
         if m GHC.Base.< #0 : bool
         then if k GHC.Base.>= #0 : bool
              then go Nil l
-             else go l r
-        else j_10__
+             else go l r else
+        j_10__
     | _ => j_10__
     end.
 
@@ -1936,14 +1881,12 @@ Definition lookupGE {a}
                      if nomatch k p m : bool
                      then if k GHC.Base.< p : bool
                           then unsafeFindMin l
-                          else unsafeFindMin def
-                     else if Data.IntSet.Internal.zero k m : bool
-                          then go r l
-                          else go def r
+                          else unsafeFindMin def else
+                     if Data.IntSet.Internal.zero k m : bool then go r l else
+                     go def r
                  | def, Tip ky y =>
-                     if k GHC.Base.> ky : bool
-                     then unsafeFindMin def
-                     else Some (pair ky y)
+                     if k GHC.Base.> ky : bool then unsafeFindMin def else
+                     Some (pair ky y)
                  | def, Nil => unsafeFindMin def
                  end in
     let j_10__ := go Nil t in
@@ -1952,8 +1895,8 @@ Definition lookupGE {a}
         if m GHC.Base.< #0 : bool
         then if k GHC.Base.>= #0 : bool
              then go Nil l
-             else go l r
-        else j_10__
+             else go l r else
+        j_10__
     | _ => j_10__
     end.
 
@@ -2005,10 +1948,10 @@ End Notations.
      GHC.Base.Monoid GHC.Base.Ord GHC.Base.String GHC.Base.compare GHC.Base.const
      GHC.Base.fmap GHC.Base.id GHC.Base.liftA2 GHC.Base.mappend GHC.Base.mempty
      GHC.Base.op_z2218U__ GHC.Base.op_zeze__ GHC.Base.op_zg__ GHC.Base.op_zgze__
-     GHC.Base.op_zl__ GHC.Base.op_zlze__ GHC.Base.op_zsze__ GHC.Base.pure
-     GHC.DeferredFix.deferredFix2 GHC.DeferredFix.deferredFix4 GHC.Err.error
-     GHC.Err.patternFailure GHC.Num.Int GHC.Num.Num GHC.Num.Word GHC.Num.fromInteger
-     GHC.Num.op_zm__ GHC.Num.op_zp__ GHC.Num.op_zt__
+     GHC.Base.op_zgzgze__ GHC.Base.op_zl__ GHC.Base.op_zlze__ GHC.Base.op_zsze__
+     GHC.Base.pure GHC.DeferredFix.deferredFix2 GHC.DeferredFix.deferredFix4
+     GHC.Err.error GHC.Err.patternFailure GHC.Num.Int GHC.Num.Num GHC.Num.Word
+     GHC.Num.fromInteger GHC.Num.op_zm__ GHC.Num.op_zp__ GHC.Num.op_zt__
      Utils.Containers.Internal.BitUtil.highestBitMask
      Utils.Containers.Internal.BitUtil.shiftLL
      Utils.Containers.Internal.BitUtil.shiftRL

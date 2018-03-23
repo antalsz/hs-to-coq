@@ -125,3 +125,5 @@ skip Data.IntSet.Internal.fromAscList
 ### Type class ordering information ###
 
 order Data.IntSet.Internal.Semigroup__IntSet Data.IntSet.Internal.Monoid__IntSet_mappend
+
+

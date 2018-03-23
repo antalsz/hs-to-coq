@@ -28,6 +28,7 @@ Coercion is_true : bool >-> Sortclass.
 
 Require Coq.Init.Datatypes.
 Require Coq.Lists.List.
+Require Coq.NArith.BinNat.
 Require Coq.Numbers.BinNums.
 Require Data.Bits.
 Require Data.Foldable.
@@ -50,9 +51,9 @@ Import Test.QuickCheck.Property.Notations.
 (* No type declarations to convert. *)
 (* Converted value declarations: *)
 
-(* Translating `instance Test.QuickCheck.Arbitrary.Arbitrary
-   Data.IntSet.Internal.IntSet' failed: OOPS! Cannot find information for class
-   Qualified "Test.QuickCheck.Arbitrary" "Arbitrary" unsupported *)
+(* Translating `instance Arbitrary__IntSet' failed: OOPS! Cannot find
+   information for class Qualified "Test.QuickCheck.Arbitrary" "Arbitrary"
+   unsupported *)
 
 Definition forValid {a} `{Test.QuickCheck.Property.Testable a}
    : (Data.IntSet.Internal.IntSet -> a) -> Prop :=
@@ -190,9 +191,8 @@ Definition prop_MemberFromList : list Coq.Numbers.BinNums.N -> bool :=
   fun xs =>
     let abs_xs :=
       Coq.Lists.List.flat_map (fun x =>
-                                 if x GHC.Base./= #0 : bool
-                                 then cons (GHC.Num.abs x) nil
-                                 else nil) xs in
+                                 if x GHC.Base./= #0 : bool then cons (GHC.Num.abs x) nil else
+                                 nil) xs in
     let t := Data.IntSet.Internal.fromList abs_xs in
     andb (Data.Foldable.all (fun arg_2__ => Data.IntSet.Internal.member arg_2__ t)
           abs_xs) (Data.Foldable.all ((fun arg_3__ =>
@@ -361,9 +361,8 @@ Definition prop_splitRoot : Data.IntSet.Internal.IntSet -> bool :=
             Data.Foldable.null (Coq.Lists.List.flat_map (fun x =>
                                                            Coq.Lists.List.flat_map (fun y =>
                                                                                       if x GHC.Base.> y : bool
-                                                                                      then cons (pair x y) nil
-                                                                                      else nil)
-                                                                                   (Data.IntSet.Internal.toList
+                                                                                      then cons (pair x y) nil else
+                                                                                      nil) (Data.IntSet.Internal.toList
                                                                                     (Data.IntSet.Internal.unions rst)))
                                                         (Data.IntSet.Internal.toList s1))
         end in

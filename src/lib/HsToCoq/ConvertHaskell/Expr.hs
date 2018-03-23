@@ -68,10 +68,13 @@ import HsToCoq.ConvertHaskell.Sigs
 
 --------------------------------------------------------------------------------
 
-convertExpr :: ConversionMonad m => HsExpr GHC.Name -> m Term
-convertExpr hsExpr = do
+rewriteExpr :: ConversionMonad m => Term -> m Term
+rewriteExpr tm = do
   rws <- use (edits.rewrites)
-  Coq.rewrite rws <$> convertExpr' hsExpr
+  return $ Coq.rewrite rws tm
+
+convertExpr :: ConversionMonad m => HsExpr GHC.Name -> m Term
+convertExpr hsExpr = convertExpr' hsExpr >>= rewriteExpr
 
 convertExpr' :: ConversionMonad m => HsExpr GHC.Name -> m Term
 convertExpr' (HsVar (L _ x)) =
@@ -81,7 +84,7 @@ convertExpr' (HsUnboundVar x) =
   Var <$> freeVar (unboundVarOcc x)
 
 convertExpr' (HsRecFld fld) =
-  Qualid <$> recordField (rdrNameAmbiguousFieldOcc fld)
+  Qualid <$> recordField fld
 
 convertExpr' (HsOverLabel _) =
   convUnsupported "overloaded labels"
@@ -169,7 +172,7 @@ convertExpr' (HsCase e mg) = do
 
 convertExpr' (HsIf overloaded c t f) =
   if maybe True isNoSyntaxExpr overloaded
-  then ifThenElse <*> convertLExpr c <*> convertLExpr t <*> convertLExpr f
+  then ifThenElse <*> pure SymmetricIf <*> convertLExpr c <*> convertLExpr t <*> convertLExpr f
   else convUnsupported "overloaded if-then-else"
 
 convertExpr' (HsMultiIf PlaceHolder lgrhsList) =
@@ -238,7 +241,7 @@ convertExpr' (RecordCon (L _ hsCon) PlaceHolder conExpr HsRecFields{..}) = do
 
 convertExpr' (RecordUpd recVal fields PlaceHolder PlaceHolder PlaceHolder PlaceHolder) = do
   updates <- fmap M.fromList . for fields $ \(L _ HsRecField{..}) -> do
-               field <- recordField . rdrNameAmbiguousFieldOcc $ unLoc hsRecFieldLbl
+               field <- recordField $ unLoc hsRecFieldLbl
                pure (field, if hsRecPun then Nothing else Just hsRecFieldArg)
 
   let updFields       = M.keys updates
@@ -251,7 +254,7 @@ convertExpr' (RecordUpd recVal fields PlaceHolder PlaceHolder PlaceHolder PlaceH
 
   recType <- S.minView . S.fromList <$> traverse (\field -> use $ recordFieldTypes . at field) updFields >>= \case
                Just (Just recType, []) -> pure recType
-               Just (Nothing,      []) -> convUnsupported $ "invalid record upate with " ++ prettyUpdFields "non-record-field"
+               Just (Nothing,      []) -> convUnsupported $ "invalid record update with " ++ prettyUpdFields "non-record-field"
                _                       -> convUnsupported $ "invalid mixed-data-type record updates with " ++ prettyUpdFields "the given field"
 
   ctors :: [Qualid]  <- maybe (convUnsupported "invalid unknown record type") pure =<< use (constructors . at recType)
@@ -501,7 +504,7 @@ convertPatternBinding hsPat hsExp buildTrivial buildNontrivial fallback = do
             | SoleConstructor <- nontrivial = []
             | otherwise                     = [ Equation [MultPattern [UnderscorePat]] fallback ]
           guarded tm | null guards = tm
-                     | otherwise   = ib (foldr1 (App2 "andb") guards) tm fallback
+                     | otherwise   = ib LinearIf (foldr1 (App2 "andb") guards) tm fallback
 
       buildNontrivial exp cont $ \body rest ->
         Let cont [Inferred Coq.Explicit $ Ident arg] Nothing
@@ -520,23 +523,25 @@ convertDoBlock allStmts = do
     lastStmt (LastStmt e _ _)   = Just e
     lastStmt _                  = Nothing
 
-    toExpr (BodyStmt e _bind _guard _PlaceHolder) rest =
+    toExpr x rest = toExpr' x rest >>= rewriteExpr
+
+    toExpr' (BodyStmt e _bind _guard _PlaceHolder) rest =
       monThen <$> convertLExpr e <*> rest
 
-    toExpr (BindStmt pat exp _bind _fail PlaceHolder) rest =
+    toExpr' (BindStmt pat exp _bind _fail PlaceHolder) rest =
       convertPatternBinding
         pat exp
         (\exp' fun          -> monBind exp' . fun <$> rest)
         (\exp' cont letCont -> letCont (monBind exp' (Qualid cont)) <$> rest)
         (missingValue `App1` HsString "Partial pattern match in `do' notation")
 
-    toExpr (LetStmt (L _ binds)) rest =
+    toExpr' (LetStmt (L _ binds)) rest =
       convertLocalBinds binds rest
 
-    toExpr (RecStmt{}) _ =
+    toExpr' (RecStmt{}) _ =
       convUnsupported "`rec' statements in `do` blocks"
 
-    toExpr _ _ =
+    toExpr' _ _ =
       convUnsupported "impossibly fancy `do' block statements"
 
     monBind e1 e2 = Infix e1 "GHC.Base.>>=" e2
@@ -555,7 +560,8 @@ convertListComprehension allStmts = case fmap unLoc <$> unsnoc allStmts of
     toExpr (BodyStmt e _bind _guard _PlaceHolder) rest =
       isTrueLExpr e >>= \case
         True  -> rest
-        False -> ifThenElse <*> convertLExpr e
+        False -> ifThenElse <*> pure LinearIf
+                            <*> convertLExpr e
                             <*> rest
                             <*> pure (Var "nil")
 
@@ -786,7 +792,7 @@ guardTerm gs rhs failure = go gs where
   go (BoolGuard "false" : _) = pure failure
 
   go (BoolGuard cond : gs) =
-    ifThenElse <*> pure cond <*> go gs <*> pure failure
+    ifThenElse <*> pure LinearIf <*> pure cond <*> go gs <*> pure failure
   -- if the pattern is exhaustive, don't include an otherwise case
   go (PatternGuard pat exp : gs) | isWildCoq pat = do
     guarded' <- go gs
@@ -959,15 +965,10 @@ bindIn tmpl rhs genBody = do
 -- Let’s cross our fingers that we calculate all free variables properly.
 smartLet :: Qualid -> Term -> Term -> Term
 -- Move into the else branch
-smartLet ident rhs (IfBool c t e)
+smartLet ident rhs (If is c Nothing t e)
     | ident `S.notMember` getFreeVars c
     , ident `S.notMember` getFreeVars t
-    = IfBool c t (smartLet ident rhs e)
--- Move into the else branch
-smartLet ident rhs (IfCase c t e)
-    | ident `S.notMember` getFreeVars c
-    , ident `S.notMember` getFreeVars t
-    = IfCase c t (smartLet ident rhs e)
+    = If is c Nothing t (smartLet ident rhs e)
 -- Move into the scrutinee
 smartLet ident rhs
     (Coq.Match [MatchItem t Nothing Nothing] Nothing eqns)
@@ -1002,7 +1003,7 @@ missingValue = "missingValue"
 -- | Program does not work nicely with if-then-else, so if we believe we are
 -- producing a term that ends up in a Program Fixpoint or Program Definition,
 -- then desguar if-then-else using case statements.
-ifThenElse :: ConversionMonad m => m (Term -> Term -> Term -> Term)
+ifThenElse :: ConversionMonad m => m (IfStyle -> Term -> Term -> Term -> Term)
 ifThenElse =
     use useProgramHere >>= \case
         False -> pure $ IfBool

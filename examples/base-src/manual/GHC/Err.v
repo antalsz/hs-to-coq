@@ -25,6 +25,11 @@ Instance default_list {a} : Default (list a) := { default := nil } .
 Definition error {a} `{Default a} : String -> a.
 Proof. exact (fun _ => default). Qed.
 
+(* The use of [Qed] is crucial, this way we cannot look through [error] in our proofs. *)
+Definition undefined {a} `{Default a} : a.
+Proof. exact default. Qed.
+
+
 Definition errorWithoutStackTrace {a} `{Default a} :
   String -> a := error.
 

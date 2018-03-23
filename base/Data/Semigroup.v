@@ -371,13 +371,11 @@ Program Instance Semigroup__NonEmpty {a}
    : Semigroup (Data.List.NonEmpty.NonEmpty a) :=
   fun _ k => k {| op_zlzg____ := Semigroup__NonEmpty_op_zlzg__ |}.
 
-(* Translating `instance forall {a}, forall `{GHC.Enum.Bounded a},
-   GHC.Enum.Bounded (Data.Semigroup.Min a)' failed: OOPS! Cannot find information
-   for class Qualified "GHC.Enum" "Bounded" unsupported *)
+(* Translating `instance Bounded__Min' failed: OOPS! Cannot find information for
+   class Qualified "GHC.Enum" "Bounded" unsupported *)
 
-(* Translating `instance forall {a}, forall `{GHC.Enum.Enum a}, GHC.Enum.Enum
-   (Data.Semigroup.Min a)' failed: OOPS! Cannot find information for class
-   Qualified "GHC.Enum" "Enum" unsupported *)
+(* Translating `instance Enum__Min' failed: OOPS! Cannot find information for
+   class Qualified "GHC.Enum" "Enum" unsupported *)
 
 Local Definition Semigroup__Min_op_zlzg__ {inst_a} `{_ : GHC.Base.Ord inst_a}
    : Min inst_a -> Min inst_a -> Min inst_a :=
@@ -593,21 +591,17 @@ Program Instance Monad__Min : GHC.Base.Monad Min :=
          GHC.Base.op_zgzgze____ := fun {a} {b} => Monad__Min_op_zgzgze__ ;
          GHC.Base.return___ := fun {a} => Monad__Min_return_ |}.
 
-(* Translating `instance Control.Monad.Fix.MonadFix Data.Semigroup.Min' failed:
-   OOPS! Cannot find information for class Qualified "Control.Monad.Fix" "MonadFix"
-   unsupported *)
+(* Translating `instance MonadFix__Min' failed: OOPS! Cannot find information
+   for class Qualified "Control.Monad.Fix" "MonadFix" unsupported *)
 
-(* Translating `instance forall {a}, forall `{GHC.Num.Num a}, GHC.Num.Num
-   (Data.Semigroup.Min a)' failed: OOPS! Cannot find information for class
-   Qualified "GHC.Num" "Num" unsupported *)
+(* Translating `instance Num__Min' failed: OOPS! Cannot find information for
+   class Qualified "GHC.Num" "Num" unsupported *)
 
-(* Translating `instance forall {a}, forall `{GHC.Enum.Bounded a},
-   GHC.Enum.Bounded (Data.Semigroup.Max a)' failed: OOPS! Cannot find information
-   for class Qualified "GHC.Enum" "Bounded" unsupported *)
+(* Translating `instance Bounded__Max' failed: OOPS! Cannot find information for
+   class Qualified "GHC.Enum" "Bounded" unsupported *)
 
-(* Translating `instance forall {a}, forall `{GHC.Enum.Enum a}, GHC.Enum.Enum
-   (Data.Semigroup.Max a)' failed: OOPS! Cannot find information for class
-   Qualified "GHC.Enum" "Enum" unsupported *)
+(* Translating `instance Enum__Max' failed: OOPS! Cannot find information for
+   class Qualified "GHC.Enum" "Enum" unsupported *)
 
 Local Definition Semigroup__Max_op_zlzg__ {inst_a} `{_ : GHC.Base.Ord inst_a}
    : Max inst_a -> Max inst_a -> Max inst_a :=
@@ -823,13 +817,11 @@ Program Instance Monad__Max : GHC.Base.Monad Max :=
          GHC.Base.op_zgzgze____ := fun {a} {b} => Monad__Max_op_zgzgze__ ;
          GHC.Base.return___ := fun {a} => Monad__Max_return_ |}.
 
-(* Translating `instance Control.Monad.Fix.MonadFix Data.Semigroup.Max' failed:
-   OOPS! Cannot find information for class Qualified "Control.Monad.Fix" "MonadFix"
-   unsupported *)
+(* Translating `instance MonadFix__Max' failed: OOPS! Cannot find information
+   for class Qualified "Control.Monad.Fix" "MonadFix" unsupported *)
 
-(* Translating `instance forall {a}, forall `{GHC.Num.Num a}, GHC.Num.Num
-   (Data.Semigroup.Max a)' failed: OOPS! Cannot find information for class
-   Qualified "GHC.Num" "Num" unsupported *)
+(* Translating `instance Num__Max' failed: OOPS! Cannot find information for
+   class Qualified "GHC.Num" "Num" unsupported *)
 
 Local Definition Functor__Arg_fmap {inst_a}
    : forall {a} {b}, (a -> b) -> (Arg inst_a) a -> (Arg inst_a) b :=
@@ -1023,18 +1015,15 @@ Program Instance Eq___Arg {a} {b} `{GHC.Base.Eq_ a} : GHC.Base.Eq_ (Arg a b) :=
 
 (* Skipping instance Ord__Arg *)
 
-(* Translating `instance Data.Bifunctor.Bifunctor Data.Semigroup.Arg' failed:
-   missing Qualified "Data.Bifunctor" "first" in fromList [(Qualified
-   "Data.Bifunctor" "bimap",Qualified "Data.Semigroup" "Bifunctor__Arg_bimap")]
-   unsupported *)
+(* Translating `instance Bifunctor__Arg' failed: missing Qualified
+   "Data.Bifunctor" "first" in fromList [(Qualified "Data.Bifunctor"
+   "bimap",Qualified "Data.Semigroup" "Bifunctor__Arg_bimap")] unsupported *)
 
-(* Translating `instance forall {a}, forall `{GHC.Enum.Bounded a},
-   GHC.Enum.Bounded (Data.Semigroup.First a)' failed: OOPS! Cannot find information
+(* Translating `instance Bounded__First' failed: OOPS! Cannot find information
    for class Qualified "GHC.Enum" "Bounded" unsupported *)
 
-(* Translating `instance forall {a}, forall `{GHC.Enum.Enum a}, GHC.Enum.Enum
-   (Data.Semigroup.First a)' failed: OOPS! Cannot find information for class
-   Qualified "GHC.Enum" "Enum" unsupported *)
+(* Translating `instance Enum__First' failed: OOPS! Cannot find information for
+   class Qualified "GHC.Enum" "Enum" unsupported *)
 
 (* Skipping instance Semigroup__First *)
 
@@ -1246,17 +1235,14 @@ Program Instance Monad__First : GHC.Base.Monad First :=
          GHC.Base.op_zgzgze____ := fun {a} {b} => Monad__First_op_zgzgze__ ;
          GHC.Base.return___ := fun {a} => Monad__First_return_ |}.
 
-(* Translating `instance Control.Monad.Fix.MonadFix Data.Semigroup.First'
-   failed: OOPS! Cannot find information for class Qualified "Control.Monad.Fix"
-   "MonadFix" unsupported *)
+(* Translating `instance MonadFix__First' failed: OOPS! Cannot find information
+   for class Qualified "Control.Monad.Fix" "MonadFix" unsupported *)
 
-(* Translating `instance forall {a}, forall `{GHC.Enum.Bounded a},
-   GHC.Enum.Bounded (Data.Semigroup.Last a)' failed: OOPS! Cannot find information
+(* Translating `instance Bounded__Last' failed: OOPS! Cannot find information
    for class Qualified "GHC.Enum" "Bounded" unsupported *)
 
-(* Translating `instance forall {a}, forall `{GHC.Enum.Enum a}, GHC.Enum.Enum
-   (Data.Semigroup.Last a)' failed: OOPS! Cannot find information for class
-   Qualified "GHC.Enum" "Enum" unsupported *)
+(* Translating `instance Enum__Last' failed: OOPS! Cannot find information for
+   class Qualified "GHC.Enum" "Enum" unsupported *)
 
 (* Skipping instance Semigroup__Last *)
 
@@ -1467,9 +1453,8 @@ Program Instance Monad__Last : GHC.Base.Monad Last :=
          GHC.Base.op_zgzgze____ := fun {a} {b} => Monad__Last_op_zgzgze__ ;
          GHC.Base.return___ := fun {a} => Monad__Last_return_ |}.
 
-(* Translating `instance Control.Monad.Fix.MonadFix Data.Semigroup.Last' failed:
-   OOPS! Cannot find information for class Qualified "Control.Monad.Fix" "MonadFix"
-   unsupported *)
+(* Translating `instance MonadFix__Last' failed: OOPS! Cannot find information
+   for class Qualified "Control.Monad.Fix" "MonadFix" unsupported *)
 
 Local Definition Semigroup__WrappedMonoid_op_zlzg__ {inst_m} `{_
    : GHC.Base.Monoid inst_m}
@@ -1501,13 +1486,11 @@ Program Instance Monoid__WrappedMonoid {m} `{GHC.Base.Monoid m}
          GHC.Base.mconcat__ := Monoid__WrappedMonoid_mconcat ;
          GHC.Base.mempty__ := Monoid__WrappedMonoid_mempty |}.
 
-(* Translating `instance forall {a}, forall `{GHC.Enum.Bounded a},
-   GHC.Enum.Bounded (Data.Semigroup.WrappedMonoid a)' failed: OOPS! Cannot find
+(* Translating `instance Bounded__WrappedMonoid' failed: OOPS! Cannot find
    information for class Qualified "GHC.Enum" "Bounded" unsupported *)
 
-(* Translating `instance forall {a}, forall `{GHC.Enum.Enum a}, GHC.Enum.Enum
-   (Data.Semigroup.WrappedMonoid a)' failed: OOPS! Cannot find information for
-   class Qualified "GHC.Enum" "Enum" unsupported *)
+(* Translating `instance Enum__WrappedMonoid' failed: OOPS! Cannot find
+   information for class Qualified "GHC.Enum" "Enum" unsupported *)
 
 Local Definition Functor__Option_fmap
    : forall {a} {b}, (a -> b) -> Option a -> Option b :=
@@ -1574,17 +1557,14 @@ Program Instance Monad__Option : GHC.Base.Monad Option :=
          GHC.Base.op_zgzgze____ := fun {a} {b} => Monad__Option_op_zgzgze__ ;
          GHC.Base.return___ := fun {a} => Monad__Option_return_ |}.
 
-(* Translating `instance GHC.Base.Alternative Data.Semigroup.Option' failed:
-   OOPS! Cannot find information for class Qualified "GHC.Base" "Alternative"
-   unsupported *)
+(* Translating `instance Alternative__Option' failed: OOPS! Cannot find
+   information for class Qualified "GHC.Base" "Alternative" unsupported *)
 
-(* Translating `instance GHC.Base.MonadPlus Data.Semigroup.Option' failed: OOPS!
-   Cannot find information for class Qualified "GHC.Base" "MonadPlus"
-   unsupported *)
+(* Translating `instance MonadPlus__Option' failed: OOPS! Cannot find
+   information for class Qualified "GHC.Base" "MonadPlus" unsupported *)
 
-(* Translating `instance Control.Monad.Fix.MonadFix Data.Semigroup.Option'
-   failed: OOPS! Cannot find information for class Qualified "Control.Monad.Fix"
-   "MonadFix" unsupported *)
+(* Translating `instance MonadFix__Option' failed: OOPS! Cannot find information
+   for class Qualified "Control.Monad.Fix" "MonadFix" unsupported *)
 
 Local Definition Foldable__Option_foldMap
    : forall {m} {a}, forall `{GHC.Base.Monoid m}, (a -> m) -> Option a -> m :=
@@ -1779,25 +1759,20 @@ Local Definition Semigroup__Proxy_op_zlzg__ {inst_s}
 Program Instance Semigroup__Proxy {s} : Semigroup (Data.Proxy.Proxy s) :=
   fun _ k => k {| op_zlzg____ := Semigroup__Proxy_op_zlzg__ |}.
 
-(* Translating `instance GHC.Generics.Generic1 Data.Semigroup.Option' failed:
-   OOPS! Cannot find information for class Qualified "GHC.Generics" "Generic1"
-   unsupported *)
+(* Translating `instance Generic1__Option' failed: OOPS! Cannot find information
+   for class Qualified "GHC.Generics" "Generic1" unsupported *)
 
-(* Translating `instance forall {a}, GHC.Generics.Generic (Data.Semigroup.Option
-   a)' failed: OOPS! Cannot find information for class Qualified "GHC.Generics"
-   "Generic" unsupported *)
+(* Translating `instance Generic__Option' failed: OOPS! Cannot find information
+   for class Qualified "GHC.Generics" "Generic" unsupported *)
 
-(* Translating `instance forall {a}, forall `{Data.Data.Data a}, Data.Data.Data
-   (Data.Semigroup.Option a)' failed: OOPS! Cannot find information for class
-   Qualified "Data.Data" "Data" unsupported *)
+(* Translating `instance Data__Option' failed: OOPS! Cannot find information for
+   class Qualified "Data.Data" "Data" unsupported *)
 
-(* Translating `instance forall {a}, forall `{GHC.Read.Read a}, GHC.Read.Read
-   (Data.Semigroup.Option a)' failed: OOPS! Cannot find information for class
-   Qualified "GHC.Read" "Read" unsupported *)
+(* Translating `instance Read__Option' failed: OOPS! Cannot find information for
+   class Qualified "GHC.Read" "Read" unsupported *)
 
-(* Translating `instance forall {a}, forall `{GHC.Show.Show a}, GHC.Show.Show
-   (Data.Semigroup.Option a)' failed: OOPS! Cannot find information for class
-   Qualified "GHC.Show" "Show" unsupported *)
+(* Translating `instance Show__Option' failed: OOPS! Cannot find information for
+   class Qualified "GHC.Show" "Show" unsupported *)
 
 Local Definition Ord__Option_compare {inst_a} `{GHC.Base.Ord inst_a}
    : Option inst_a -> Option inst_a -> comparison :=
@@ -1850,25 +1825,20 @@ Program Instance Ord__Option {a} `{GHC.Base.Ord a} : GHC.Base.Ord (Option a) :=
          GHC.Base.max__ := Ord__Option_max ;
          GHC.Base.min__ := Ord__Option_min |}.
 
-(* Translating `instance GHC.Generics.Generic1 Data.Semigroup.WrappedMonoid'
-   failed: OOPS! Cannot find information for class Qualified "GHC.Generics"
-   "Generic1" unsupported *)
+(* Translating `instance Generic1__WrappedMonoid' failed: OOPS! Cannot find
+   information for class Qualified "GHC.Generics" "Generic1" unsupported *)
 
-(* Translating `instance forall {m}, GHC.Generics.Generic
-   (Data.Semigroup.WrappedMonoid m)' failed: OOPS! Cannot find information for
-   class Qualified "GHC.Generics" "Generic" unsupported *)
+(* Translating `instance Generic__WrappedMonoid' failed: OOPS! Cannot find
+   information for class Qualified "GHC.Generics" "Generic" unsupported *)
 
-(* Translating `instance forall {m}, forall `{Data.Data.Data m}, Data.Data.Data
-   (Data.Semigroup.WrappedMonoid m)' failed: OOPS! Cannot find information for
-   class Qualified "Data.Data" "Data" unsupported *)
+(* Translating `instance Data__WrappedMonoid' failed: OOPS! Cannot find
+   information for class Qualified "Data.Data" "Data" unsupported *)
 
-(* Translating `instance forall {m}, forall `{GHC.Read.Read m}, GHC.Read.Read
-   (Data.Semigroup.WrappedMonoid m)' failed: OOPS! Cannot find information for
-   class Qualified "GHC.Read" "Read" unsupported *)
+(* Translating `instance Read__WrappedMonoid' failed: OOPS! Cannot find
+   information for class Qualified "GHC.Read" "Read" unsupported *)
 
-(* Translating `instance forall {m}, forall `{GHC.Show.Show m}, GHC.Show.Show
-   (Data.Semigroup.WrappedMonoid m)' failed: OOPS! Cannot find information for
-   class Qualified "GHC.Show" "Show" unsupported *)
+(* Translating `instance Show__WrappedMonoid' failed: OOPS! Cannot find
+   information for class Qualified "GHC.Show" "Show" unsupported *)
 
 Local Definition Ord__WrappedMonoid_compare {inst_m} `{GHC.Base.Ord inst_m}
    : WrappedMonoid inst_m -> WrappedMonoid inst_m -> comparison :=
@@ -1923,25 +1893,20 @@ Program Instance Ord__WrappedMonoid {m} `{GHC.Base.Ord m}
          GHC.Base.max__ := Ord__WrappedMonoid_max ;
          GHC.Base.min__ := Ord__WrappedMonoid_min |}.
 
-(* Translating `instance GHC.Generics.Generic1 Data.Semigroup.Last' failed:
-   OOPS! Cannot find information for class Qualified "GHC.Generics" "Generic1"
-   unsupported *)
+(* Translating `instance Generic1__Last' failed: OOPS! Cannot find information
+   for class Qualified "GHC.Generics" "Generic1" unsupported *)
 
-(* Translating `instance forall {a}, GHC.Generics.Generic (Data.Semigroup.Last
-   a)' failed: OOPS! Cannot find information for class Qualified "GHC.Generics"
-   "Generic" unsupported *)
+(* Translating `instance Generic__Last' failed: OOPS! Cannot find information
+   for class Qualified "GHC.Generics" "Generic" unsupported *)
 
-(* Translating `instance forall {a}, forall `{Data.Data.Data a}, Data.Data.Data
-   (Data.Semigroup.Last a)' failed: OOPS! Cannot find information for class
-   Qualified "Data.Data" "Data" unsupported *)
+(* Translating `instance Data__Last' failed: OOPS! Cannot find information for
+   class Qualified "Data.Data" "Data" unsupported *)
 
-(* Translating `instance forall {a}, forall `{GHC.Read.Read a}, GHC.Read.Read
-   (Data.Semigroup.Last a)' failed: OOPS! Cannot find information for class
-   Qualified "GHC.Read" "Read" unsupported *)
+(* Translating `instance Read__Last' failed: OOPS! Cannot find information for
+   class Qualified "GHC.Read" "Read" unsupported *)
 
-(* Translating `instance forall {a}, forall `{GHC.Show.Show a}, GHC.Show.Show
-   (Data.Semigroup.Last a)' failed: OOPS! Cannot find information for class
-   Qualified "GHC.Show" "Show" unsupported *)
+(* Translating `instance Show__Last' failed: OOPS! Cannot find information for
+   class Qualified "GHC.Show" "Show" unsupported *)
 
 Local Definition Ord__Last_compare {inst_a} `{GHC.Base.Ord inst_a}
    : Last inst_a -> Last inst_a -> comparison :=
@@ -1994,25 +1959,20 @@ Program Instance Ord__Last {a} `{GHC.Base.Ord a} : GHC.Base.Ord (Last a) :=
          GHC.Base.max__ := Ord__Last_max ;
          GHC.Base.min__ := Ord__Last_min |}.
 
-(* Translating `instance GHC.Generics.Generic1 Data.Semigroup.First' failed:
-   OOPS! Cannot find information for class Qualified "GHC.Generics" "Generic1"
-   unsupported *)
+(* Translating `instance Generic1__First' failed: OOPS! Cannot find information
+   for class Qualified "GHC.Generics" "Generic1" unsupported *)
 
-(* Translating `instance forall {a}, GHC.Generics.Generic (Data.Semigroup.First
-   a)' failed: OOPS! Cannot find information for class Qualified "GHC.Generics"
-   "Generic" unsupported *)
+(* Translating `instance Generic__First' failed: OOPS! Cannot find information
+   for class Qualified "GHC.Generics" "Generic" unsupported *)
 
-(* Translating `instance forall {a}, forall `{Data.Data.Data a}, Data.Data.Data
-   (Data.Semigroup.First a)' failed: OOPS! Cannot find information for class
-   Qualified "Data.Data" "Data" unsupported *)
+(* Translating `instance Data__First' failed: OOPS! Cannot find information for
+   class Qualified "Data.Data" "Data" unsupported *)
 
-(* Translating `instance forall {a}, forall `{GHC.Read.Read a}, GHC.Read.Read
-   (Data.Semigroup.First a)' failed: OOPS! Cannot find information for class
-   Qualified "GHC.Read" "Read" unsupported *)
+(* Translating `instance Read__First' failed: OOPS! Cannot find information for
+   class Qualified "GHC.Read" "Read" unsupported *)
 
-(* Translating `instance forall {a}, forall `{GHC.Show.Show a}, GHC.Show.Show
-   (Data.Semigroup.First a)' failed: OOPS! Cannot find information for class
-   Qualified "GHC.Show" "Show" unsupported *)
+(* Translating `instance Show__First' failed: OOPS! Cannot find information for
+   class Qualified "GHC.Show" "Show" unsupported *)
 
 Local Definition Ord__First_compare {inst_a} `{GHC.Base.Ord inst_a}
    : First inst_a -> First inst_a -> comparison :=
@@ -2065,45 +2025,35 @@ Program Instance Ord__First {a} `{GHC.Base.Ord a} : GHC.Base.Ord (First a) :=
          GHC.Base.max__ := Ord__First_max ;
          GHC.Base.min__ := Ord__First_min |}.
 
-(* Translating `instance forall {a}, GHC.Generics.Generic1 (Data.Semigroup.Arg
-   a)' failed: OOPS! Cannot find information for class Qualified "GHC.Generics"
-   "Generic1" unsupported *)
+(* Translating `instance Generic1__Arg' failed: OOPS! Cannot find information
+   for class Qualified "GHC.Generics" "Generic1" unsupported *)
 
-(* Translating `instance forall {a} {b}, GHC.Generics.Generic
-   (Data.Semigroup.Arg a b)' failed: OOPS! Cannot find information for class
-   Qualified "GHC.Generics" "Generic" unsupported *)
+(* Translating `instance Generic__Arg' failed: OOPS! Cannot find information for
+   class Qualified "GHC.Generics" "Generic" unsupported *)
 
-(* Translating `instance forall {a} {b}, forall `{Data.Data.Data b}
-   `{Data.Data.Data a}, Data.Data.Data (Data.Semigroup.Arg a b)' failed: OOPS!
-   Cannot find information for class Qualified "Data.Data" "Data" unsupported *)
+(* Translating `instance Data__Arg' failed: OOPS! Cannot find information for
+   class Qualified "Data.Data" "Data" unsupported *)
 
-(* Translating `instance forall {a} {b}, forall `{GHC.Read.Read b}
-   `{GHC.Read.Read a}, GHC.Read.Read (Data.Semigroup.Arg a b)' failed: OOPS! Cannot
-   find information for class Qualified "GHC.Read" "Read" unsupported *)
+(* Translating `instance Read__Arg' failed: OOPS! Cannot find information for
+   class Qualified "GHC.Read" "Read" unsupported *)
 
-(* Translating `instance forall {a} {b}, forall `{GHC.Show.Show b}
-   `{GHC.Show.Show a}, GHC.Show.Show (Data.Semigroup.Arg a b)' failed: OOPS! Cannot
-   find information for class Qualified "GHC.Show" "Show" unsupported *)
+(* Translating `instance Show__Arg' failed: OOPS! Cannot find information for
+   class Qualified "GHC.Show" "Show" unsupported *)
 
-(* Translating `instance GHC.Generics.Generic1 Data.Semigroup.Max' failed: OOPS!
-   Cannot find information for class Qualified "GHC.Generics" "Generic1"
-   unsupported *)
+(* Translating `instance Generic1__Max' failed: OOPS! Cannot find information
+   for class Qualified "GHC.Generics" "Generic1" unsupported *)
 
-(* Translating `instance forall {a}, GHC.Generics.Generic (Data.Semigroup.Max
-   a)' failed: OOPS! Cannot find information for class Qualified "GHC.Generics"
-   "Generic" unsupported *)
+(* Translating `instance Generic__Max' failed: OOPS! Cannot find information for
+   class Qualified "GHC.Generics" "Generic" unsupported *)
 
-(* Translating `instance forall {a}, forall `{Data.Data.Data a}, Data.Data.Data
-   (Data.Semigroup.Max a)' failed: OOPS! Cannot find information for class
-   Qualified "Data.Data" "Data" unsupported *)
+(* Translating `instance Data__Max' failed: OOPS! Cannot find information for
+   class Qualified "Data.Data" "Data" unsupported *)
 
-(* Translating `instance forall {a}, forall `{GHC.Read.Read a}, GHC.Read.Read
-   (Data.Semigroup.Max a)' failed: OOPS! Cannot find information for class
-   Qualified "GHC.Read" "Read" unsupported *)
+(* Translating `instance Read__Max' failed: OOPS! Cannot find information for
+   class Qualified "GHC.Read" "Read" unsupported *)
 
-(* Translating `instance forall {a}, forall `{GHC.Show.Show a}, GHC.Show.Show
-   (Data.Semigroup.Max a)' failed: OOPS! Cannot find information for class
-   Qualified "GHC.Show" "Show" unsupported *)
+(* Translating `instance Show__Max' failed: OOPS! Cannot find information for
+   class Qualified "GHC.Show" "Show" unsupported *)
 
 Local Definition Ord__Max_compare {inst_a} `{GHC.Base.Ord inst_a}
    : Max inst_a -> Max inst_a -> comparison :=
@@ -2156,25 +2106,20 @@ Program Instance Ord__Max {a} `{GHC.Base.Ord a} : GHC.Base.Ord (Max a) :=
          GHC.Base.max__ := Ord__Max_max ;
          GHC.Base.min__ := Ord__Max_min |}.
 
-(* Translating `instance GHC.Generics.Generic1 Data.Semigroup.Min' failed: OOPS!
-   Cannot find information for class Qualified "GHC.Generics" "Generic1"
-   unsupported *)
+(* Translating `instance Generic1__Min' failed: OOPS! Cannot find information
+   for class Qualified "GHC.Generics" "Generic1" unsupported *)
 
-(* Translating `instance forall {a}, GHC.Generics.Generic (Data.Semigroup.Min
-   a)' failed: OOPS! Cannot find information for class Qualified "GHC.Generics"
-   "Generic" unsupported *)
+(* Translating `instance Generic__Min' failed: OOPS! Cannot find information for
+   class Qualified "GHC.Generics" "Generic" unsupported *)
 
-(* Translating `instance forall {a}, forall `{Data.Data.Data a}, Data.Data.Data
-   (Data.Semigroup.Min a)' failed: OOPS! Cannot find information for class
-   Qualified "Data.Data" "Data" unsupported *)
+(* Translating `instance Data__Min' failed: OOPS! Cannot find information for
+   class Qualified "Data.Data" "Data" unsupported *)
 
-(* Translating `instance forall {a}, forall `{GHC.Read.Read a}, GHC.Read.Read
-   (Data.Semigroup.Min a)' failed: OOPS! Cannot find information for class
-   Qualified "GHC.Read" "Read" unsupported *)
+(* Translating `instance Read__Min' failed: OOPS! Cannot find information for
+   class Qualified "GHC.Read" "Read" unsupported *)
 
-(* Translating `instance forall {a}, forall `{GHC.Show.Show a}, GHC.Show.Show
-   (Data.Semigroup.Min a)' failed: OOPS! Cannot find information for class
-   Qualified "GHC.Show" "Show" unsupported *)
+(* Translating `instance Show__Min' failed: OOPS! Cannot find information for
+   class Qualified "GHC.Show" "Show" unsupported *)
 
 Local Definition Ord__Min_compare {inst_a} `{GHC.Base.Ord inst_a}
    : Min inst_a -> Min inst_a -> comparison :=

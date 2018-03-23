@@ -191,7 +191,7 @@ instance Subst Term where
 
   subst f  (LetTickDep pat oin def ret body) = LetTickDep (subst f pat) (subst f oin) (subst f def) (subst f ret) (subst f body)
 
-  subst f  (If c oret t fa) = If (subst f c) (subst f oret) (subst f t) (subst f fa)
+  subst f  (If is c oret t fa) = If is (subst f c) (subst f oret) (subst f t) (subst f fa)
 
   subst f  (HasType tm ty) = HasType (subst f tm) (subst f ty)
 

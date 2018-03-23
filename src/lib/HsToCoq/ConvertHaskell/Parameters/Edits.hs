@@ -1,7 +1,7 @@
 {-# LANGUAGE LambdaCase, TemplateHaskell, RecordWildCards, OverloadedStrings, FlexibleContexts, RankNTypes #-}
 
 module HsToCoq.ConvertHaskell.Parameters.Edits (
-  Edits(..), typeSynonymTypes, dataTypeArguments, termination,  local_termination, redefinitions, additions, skipped, hasManualNotation, skippedMethods, skippedModules, axiomatizedModules, additionalScopes, orders, renamings, classKinds, dataKinds, rewrites, obligations,
+  Edits(..), typeSynonymTypes, dataTypeArguments, termination,  local_termination, redefinitions, additions, skipped, hasManualNotation, skippedMethods, skippedModules, importedModules, axiomatizedModules, additionalScopes, orders, renamings, classKinds, dataKinds, rewrites, obligations,
   HsNamespace(..), NamespacedIdent(..), Renamings,
   DataTypeArguments(..), dtParameters, dtIndices,
   CoqDefinition(..), definitionSentence,
@@ -67,6 +67,7 @@ data Edit = TypeSynonymTypeEdit     Ident Ident
           | SkipEdit                Qualid
           | SkipMethodEdit          Qualid Ident
           | SkipModuleEdit          ModuleName
+          | ImportModuleEdit        ModuleName
           | AxiomatizeModuleEdit    ModuleName
           | HasManualNotationEdit   ModuleName
           | AdditionalScopeEdit     ScopePlace Qualid Ident
@@ -100,6 +101,7 @@ data Edits = Edits { _typeSynonymTypes    :: !(Map Ident Ident)
                    , _skipped             :: !(Set Qualid)
                    , _skippedMethods      :: !(Set (Qualid,Ident))
                    , _skippedModules      :: !(Set ModuleName)
+                   , _importedModules     :: !(Set ModuleName)
                    , _axiomatizedModules  :: !(Set ModuleName)
                    , _hasManualNotation   :: !(Set ModuleName)
                    , _additionalScopes    :: !(Map (ScopePlace, Qualid) Ident)
@@ -126,12 +128,12 @@ useProgram name edits = or
 
 
 instance Semigroup Edits where
-  (<>) (Edits tst1 dta1 trm1 ltm1 rdf1 add1 skp1 smth1 smod1 axm1 hmn1 ads1 ord1 rnm1 clk1 dk1 rws1 obl1)
-       (Edits tst2 dta2 trm2 ltm2 rdf2 add2 skp2 smth2 smod2 axm2 hmn2 ads2 ord2 rnm2 clk2 dk2 rws2 obl2) =
-    Edits (tst1 <> tst2) (dta1 <> dta2) (trm1 <> trm2) (ltm1 <> ltm2) (rdf1 <> rdf2) (add1 <> add2) (skp1 <> skp2) (smth1 <> smth2) (smod1 <> smod2) (axm1 <> axm2) (hmn1 <> hmn2) (ads1 <> ads2) (ord1 <> ord2) (rnm1 <> rnm2) (clk1 <> clk2) (dk1 <> dk2) (rws1 <> rws2) (obl1 <> obl2)
+  (<>) (Edits tst1 dta1 trm1 ltm1 rdf1 add1 skp1 smth1 smod1 imod1 axm1 hmn1 ads1 ord1 rnm1 clk1 dk1 rws1 obl1)
+       (Edits tst2 dta2 trm2 ltm2 rdf2 add2 skp2 smth2 smod2 imod2  axm2 hmn2 ads2 ord2 rnm2 clk2 dk2 rws2 obl2) =
+    Edits (tst1 <> tst2) (dta1 <> dta2) (trm1 <> trm2) (ltm1 <> ltm2) (rdf1 <> rdf2) (add1 <> add2) (skp1 <> skp2) (smth1 <> smth2) (smod1 <> smod2) (imod1 <> imod2) (axm1 <> axm2) (hmn1 <> hmn2) (ads1 <> ads2) (ord1 <> ord2) (rnm1 <> rnm2) (clk1 <> clk2) (dk1 <> dk2) (rws1 <> rws2) (obl1 <> obl2)
 
 instance Monoid Edits where
-  mempty  = Edits mempty mempty mempty mempty mempty mempty mempty mempty mempty mempty mempty mempty mempty mempty mempty mempty mempty mempty
+  mempty  = Edits mempty mempty mempty mempty mempty mempty mempty mempty mempty mempty mempty mempty mempty mempty mempty mempty mempty mempty mempty
   mappend = (<>)
 
 -- Module-local'
@@ -161,6 +163,7 @@ descDuplEdit = \case
   SkipEdit              what               -> duplicateQ_for  "skips"                                what
   SkipMethodEdit        cls meth           -> duplicate_for   "skipped method requests"              (prettyClsMth cls meth)
   SkipModuleEdit        mod                -> duplicate_for   "skipped module requests"              (moduleNameString mod)
+  ImportModuleEdit      mod                -> duplicate_for   "imported module requests"             (moduleNameString mod)
   HasManualNotationEdit what               -> duplicate_for   "has manual notation"                  (moduleNameString what)
   AxiomatizeModuleEdit  mod                -> duplicate_for   "module axiomatizations"               (moduleNameString mod)
   AdditionalScopeEdit   place name _       -> duplicate_for   "additions of a scope"                 (prettyScoped place name)
@@ -189,6 +192,7 @@ addEdit e = case e of
   SkipEdit                what               -> addFresh e skipped                                what         ()
   SkipMethodEdit          cls meth           -> addFresh e skippedMethods                         (cls,meth)   ()
   SkipModuleEdit          mod                -> addFresh e skippedModules                         mod          ()
+  ImportModuleEdit        mod                -> addFresh e importedModules                        mod          ()
   HasManualNotationEdit   what               -> addFresh e hasManualNotation                      what         ()
   AxiomatizeModuleEdit    mod                -> addFresh e axiomatizedModules                     mod          ()
   AdditionalScopeEdit     place name scope   -> addFresh e additionalScopes                       (place,name) scope

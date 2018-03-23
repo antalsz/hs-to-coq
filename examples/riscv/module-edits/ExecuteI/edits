@@ -1,6 +1,11 @@
 rewrite forall x y, x GHC.Base.== y = Utility.signed_eqb x y
-rewrite forall, GHC.Base.fromInteger 0 = zero
+rewrite forall, GHC.Num.fromInteger 0 = zero
 rewrite forall, GHC.Num.fromInteger 1 = one
 rewrite forall, GHC.Num.fromInteger 2 = two
 rewrite forall, GHC.Num.fromInteger 4 = four
 rewrite forall, GHC.Num.fromInteger 8 = eight
+rename value Data.Bits..&. = Utility.and
+rename value Data.Bits.complement = Utility.lnot
+rename value Data.Bits.xor = Utility.xor
+rename value Data.Bits..|. = Utility.or
+rename type Program.RiscvProgram = Program.RiscvState

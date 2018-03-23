@@ -586,455 +586,218 @@ Definition decode : InstructionSet -> Z -> Instruction :=
     let opcode := bitSlice inst 0 7 in
     let decodeI :=
       if andb (Z.eqb opcode opcode_LOAD) (Z.eqb funct3 funct3_LB) : bool
-      then Lb rd rs1 oimm12
-      else if andb (Z.eqb opcode opcode_LOAD) (Z.eqb funct3 funct3_LH) : bool
-           then Lh rd rs1 oimm12
-           else if andb (Z.eqb opcode opcode_LOAD) (Z.eqb funct3 funct3_LW) : bool
-                then Lw rd rs1 oimm12
-                else if andb (Z.eqb opcode opcode_LOAD) (Z.eqb funct3 funct3_LBU) : bool
-                     then Lbu rd rs1 oimm12
-                     else if andb (Z.eqb opcode opcode_LOAD) (Z.eqb funct3 funct3_LHU) : bool
-                          then Lhu rd rs1 oimm12
-                          else if andb (Z.eqb opcode opcode_MISC_MEM) (andb (Z.eqb rd 0) (andb (Z.eqb
-                                                                                                funct3 funct3_FENCE)
-                                                                                               (andb (Z.eqb rs1 0)
-                                                                                                     (Z.eqb msb4
-                                                                                                            0)))) : bool
-                               then Fence pred succ
-                               else if andb (Z.eqb opcode opcode_MISC_MEM) (andb (Z.eqb rd 0) (andb (Z.eqb
-                                                                                                     funct3
-                                                                                                     funct3_FENCE_I)
-                                                                                                    (andb (Z.eqb rs1 0)
-                                                                                                          (Z.eqb imm12
-                                                                                                                 0)))) : bool
-                                    then Fence_i
-                                    else if andb (Z.eqb opcode opcode_OP_IMM) (Z.eqb funct3 funct3_ADDI) : bool
-                                         then Addi rd rs1 imm12
-                                         else if andb (Z.eqb opcode opcode_OP_IMM) (Z.eqb funct3 funct3_SLTI) : bool
-                                              then Slti rd rs1 imm12
-                                              else if andb (Z.eqb opcode opcode_OP_IMM) (Z.eqb funct3
-                                                                                               funct3_SLTIU) : bool
-                                                   then Sltiu rd rs1 imm12
-                                                   else if andb (Z.eqb opcode opcode_OP_IMM) (Z.eqb funct3
-                                                                                                    funct3_XORI) : bool
-                                                        then Xori rd rs1 imm12
-                                                        else if andb (Z.eqb opcode opcode_OP_IMM) (Z.eqb funct3
-                                                                                                         funct3_ORI) : bool
-                                                             then Ori rd rs1 imm12
-                                                             else if andb (Z.eqb opcode opcode_OP_IMM) (Z.eqb funct3
-                                                                                                              funct3_ANDI) : bool
-                                                                  then Andi rd rs1 imm12
-                                                                  else if andb (Z.eqb opcode opcode_OP_IMM) (andb (Z.eqb
-                                                                                                                   funct3
-                                                                                                                   funct3_SLLI)
-                                                                                                                  (andb
-                                                                                                                   (Z.eqb
-                                                                                                                    funct6
-                                                                                                                    funct6_SLLI)
-                                                                                                                   shamtHiTest)) : bool
-                                                                       then Slli rd rs1 shamt6
-                                                                       else if andb (Z.eqb opcode opcode_OP_IMM) (andb
-                                                                                     (Z.eqb funct3 funct3_SRLI) (andb
-                                                                                      (Z.eqb funct6 funct6_SRLI)
-                                                                                      shamtHiTest)) : bool
-                                                                            then Srli rd rs1 shamt6
-                                                                            else if andb (Z.eqb opcode opcode_OP_IMM)
-                                                                                         (andb (Z.eqb funct3
-                                                                                                      funct3_SRAI) (andb
-                                                                                                (Z.eqb funct6
-                                                                                                       funct6_SRAI)
-                                                                                                shamtHiTest)) : bool
-                                                                                 then Srai rd rs1 shamt6
-                                                                                 else if Z.eqb opcode
-                                                                                               opcode_AUIPC : bool
-                                                                                      then Auipc rd oimm20
-                                                                                      else if andb (Z.eqb opcode
-                                                                                                          opcode_STORE)
-                                                                                                   (Z.eqb funct3
-                                                                                                          funct3_SB) : bool
-                                                                                           then Sb rs1 rs2 simm12
-                                                                                           else if andb (Z.eqb opcode
-                                                                                                               opcode_STORE)
-                                                                                                        (Z.eqb funct3
-                                                                                                               funct3_SH) : bool
-                                                                                                then Sh rs1 rs2 simm12
-                                                                                                else if andb (Z.eqb
-                                                                                                              opcode
-                                                                                                              opcode_STORE)
-                                                                                                             (Z.eqb
-                                                                                                              funct3
-                                                                                                              funct3_SW) : bool
-                                                                                                     then Sw rs1 rs2
-                                                                                                          simm12
-                                                                                                     else if andb (Z.eqb
-                                                                                                                   opcode
-                                                                                                                   opcode_OP)
-                                                                                                                  (andb
-                                                                                                                   (Z.eqb
-                                                                                                                    funct3
-                                                                                                                    funct3_ADD)
-                                                                                                                   (Z.eqb
-                                                                                                                    funct7
-                                                                                                                    funct7_ADD)) : bool
-                                                                                                          then Add rd
-                                                                                                               rs1 rs2
-                                                                                                          else if andb
-                                                                                                                  (Z.eqb
-                                                                                                                   opcode
-                                                                                                                   opcode_OP)
-                                                                                                                  (andb
-                                                                                                                   (Z.eqb
-                                                                                                                    funct3
-                                                                                                                    funct3_SUB)
-                                                                                                                   (Z.eqb
-                                                                                                                    funct7
-                                                                                                                    funct7_SUB)) : bool
-                                                                                                               then Sub
-                                                                                                                    rd
-                                                                                                                    rs1
-                                                                                                                    rs2
-                                                                                                               else if andb
-                                                                                                                       (Z.eqb
-                                                                                                                        opcode
-                                                                                                                        opcode_OP)
-                                                                                                                       (andb
-                                                                                                                        (Z.eqb
-                                                                                                                         funct3
-                                                                                                                         funct3_SLL)
-                                                                                                                        (Z.eqb
-                                                                                                                         funct7
-                                                                                                                         funct7_SLL)) : bool
-                                                                                                                    then Sll
-                                                                                                                         rd
-                                                                                                                         rs1
-                                                                                                                         rs2
-                                                                                                                    else if andb
-                                                                                                                            (Z.eqb
-                                                                                                                             opcode
-                                                                                                                             opcode_OP)
-                                                                                                                            (andb
-                                                                                                                             (Z.eqb
-                                                                                                                              funct3
-                                                                                                                              funct3_SLT)
-                                                                                                                             (Z.eqb
-                                                                                                                              funct7
-                                                                                                                              funct7_SLT)) : bool
-                                                                                                                         then Slt
-                                                                                                                              rd
-                                                                                                                              rs1
-                                                                                                                              rs2
-                                                                                                                         else if andb
-                                                                                                                                 (Z.eqb
-                                                                                                                                  opcode
-                                                                                                                                  opcode_OP)
-                                                                                                                                 (andb
-                                                                                                                                  (Z.eqb
-                                                                                                                                   funct3
-                                                                                                                                   funct3_SLTU)
-                                                                                                                                  (Z.eqb
-                                                                                                                                   funct7
-                                                                                                                                   funct7_SLTU)) : bool
-                                                                                                                              then Sltu
-                                                                                                                                   rd
-                                                                                                                                   rs1
-                                                                                                                                   rs2
-                                                                                                                              else if andb
-                                                                                                                                      (Z.eqb
-                                                                                                                                       opcode
-                                                                                                                                       opcode_OP)
-                                                                                                                                      (andb
-                                                                                                                                       (Z.eqb
-                                                                                                                                        funct3
-                                                                                                                                        funct3_XOR)
-                                                                                                                                       (Z.eqb
-                                                                                                                                        funct7
-                                                                                                                                        funct7_XOR)) : bool
-                                                                                                                                   then Xor
-                                                                                                                                        rd
-                                                                                                                                        rs1
-                                                                                                                                        rs2
-                                                                                                                                   else if andb
-                                                                                                                                           (Z.eqb
-                                                                                                                                            opcode
-                                                                                                                                            opcode_OP)
-                                                                                                                                           (andb
-                                                                                                                                            (Z.eqb
-                                                                                                                                             funct3
-                                                                                                                                             funct3_SRL)
-                                                                                                                                            (Z.eqb
-                                                                                                                                             funct7
-                                                                                                                                             funct7_SRL)) : bool
-                                                                                                                                        then Srl
-                                                                                                                                             rd
-                                                                                                                                             rs1
-                                                                                                                                             rs2
-                                                                                                                                        else if andb
-                                                                                                                                                (Z.eqb
-                                                                                                                                                 opcode
-                                                                                                                                                 opcode_OP)
-                                                                                                                                                (andb
-                                                                                                                                                 (Z.eqb
-                                                                                                                                                  funct3
-                                                                                                                                                  funct3_SRA)
-                                                                                                                                                 (Z.eqb
-                                                                                                                                                  funct7
-                                                                                                                                                  funct7_SRA)) : bool
-                                                                                                                                             then Sra
-                                                                                                                                                  rd
-                                                                                                                                                  rs1
-                                                                                                                                                  rs2
-                                                                                                                                             else if andb
-                                                                                                                                                     (Z.eqb
-                                                                                                                                                      opcode
-                                                                                                                                                      opcode_OP)
-                                                                                                                                                     (andb
-                                                                                                                                                      (Z.eqb
-                                                                                                                                                       funct3
-                                                                                                                                                       funct3_OR)
-                                                                                                                                                      (Z.eqb
-                                                                                                                                                       funct7
-                                                                                                                                                       funct7_OR)) : bool
-                                                                                                                                                  then Or
-                                                                                                                                                       rd
-                                                                                                                                                       rs1
-                                                                                                                                                       rs2
-                                                                                                                                                  else if andb
-                                                                                                                                                          (Z.eqb
-                                                                                                                                                           opcode
-                                                                                                                                                           opcode_OP)
-                                                                                                                                                          (andb
-                                                                                                                                                           (Z.eqb
-                                                                                                                                                            funct3
-                                                                                                                                                            funct3_AND)
-                                                                                                                                                           (Z.eqb
-                                                                                                                                                            funct7
-                                                                                                                                                            funct7_AND)) : bool
-                                                                                                                                                       then And
-                                                                                                                                                            rd
-                                                                                                                                                            rs1
-                                                                                                                                                            rs2
-                                                                                                                                                       else if Z.eqb
-                                                                                                                                                               opcode
-                                                                                                                                                               opcode_LUI : bool
-                                                                                                                                                            then Lui
-                                                                                                                                                                 rd
-                                                                                                                                                                 imm20
-                                                                                                                                                            else if andb
-                                                                                                                                                                    (Z.eqb
-                                                                                                                                                                     opcode
-                                                                                                                                                                     opcode_BRANCH)
-                                                                                                                                                                    (Z.eqb
-                                                                                                                                                                     funct3
-                                                                                                                                                                     funct3_BEQ) : bool
-                                                                                                                                                                 then Beq
-                                                                                                                                                                      rs1
-                                                                                                                                                                      rs2
-                                                                                                                                                                      sbimm12
-                                                                                                                                                                 else if andb
-                                                                                                                                                                         (Z.eqb
-                                                                                                                                                                          opcode
-                                                                                                                                                                          opcode_BRANCH)
-                                                                                                                                                                         (Z.eqb
-                                                                                                                                                                          funct3
-                                                                                                                                                                          funct3_BNE) : bool
-                                                                                                                                                                      then Bne
-                                                                                                                                                                           rs1
-                                                                                                                                                                           rs2
-                                                                                                                                                                           sbimm12
-                                                                                                                                                                      else if andb
-                                                                                                                                                                              (Z.eqb
-                                                                                                                                                                               opcode
-                                                                                                                                                                               opcode_BRANCH)
-                                                                                                                                                                              (Z.eqb
-                                                                                                                                                                               funct3
-                                                                                                                                                                               funct3_BLT) : bool
-                                                                                                                                                                           then Blt
-                                                                                                                                                                                rs1
-                                                                                                                                                                                rs2
-                                                                                                                                                                                sbimm12
-                                                                                                                                                                           else if andb
-                                                                                                                                                                                   (Z.eqb
-                                                                                                                                                                                    opcode
-                                                                                                                                                                                    opcode_BRANCH)
-                                                                                                                                                                                   (Z.eqb
-                                                                                                                                                                                    funct3
-                                                                                                                                                                                    funct3_BGE) : bool
-                                                                                                                                                                                then Bge
-                                                                                                                                                                                     rs1
-                                                                                                                                                                                     rs2
-                                                                                                                                                                                     sbimm12
-                                                                                                                                                                                else if andb
-                                                                                                                                                                                        (Z.eqb
-                                                                                                                                                                                         opcode
-                                                                                                                                                                                         opcode_BRANCH)
-                                                                                                                                                                                        (Z.eqb
-                                                                                                                                                                                         funct3
-                                                                                                                                                                                         funct3_BLTU) : bool
-                                                                                                                                                                                     then Bltu
-                                                                                                                                                                                          rs1
-                                                                                                                                                                                          rs2
-                                                                                                                                                                                          sbimm12
-                                                                                                                                                                                     else if andb
-                                                                                                                                                                                             (Z.eqb
-                                                                                                                                                                                              opcode
-                                                                                                                                                                                              opcode_BRANCH)
-                                                                                                                                                                                             (Z.eqb
-                                                                                                                                                                                              funct3
-                                                                                                                                                                                              funct3_BGEU) : bool
-                                                                                                                                                                                          then Bgeu
-                                                                                                                                                                                               rs1
-                                                                                                                                                                                               rs2
-                                                                                                                                                                                               sbimm12
-                                                                                                                                                                                          else if Z.eqb
-                                                                                                                                                                                                  opcode
-                                                                                                                                                                                                  opcode_JALR : bool
-                                                                                                                                                                                               then Jalr
-                                                                                                                                                                                                    rd
-                                                                                                                                                                                                    rs1
-                                                                                                                                                                                                    oimm12
-                                                                                                                                                                                               else if Z.eqb
-                                                                                                                                                                                                       opcode
-                                                                                                                                                                                                       opcode_JAL : bool
-                                                                                                                                                                                                    then Jal
-                                                                                                                                                                                                         rd
-                                                                                                                                                                                                         jimm20
-                                                                                                                                                                                                    else InvalidI in
+      then Lb rd rs1 oimm12 else
+      if andb (Z.eqb opcode opcode_LOAD) (Z.eqb funct3 funct3_LH) : bool
+      then Lh rd rs1 oimm12 else
+      if andb (Z.eqb opcode opcode_LOAD) (Z.eqb funct3 funct3_LW) : bool
+      then Lw rd rs1 oimm12 else
+      if andb (Z.eqb opcode opcode_LOAD) (Z.eqb funct3 funct3_LBU) : bool
+      then Lbu rd rs1 oimm12 else
+      if andb (Z.eqb opcode opcode_LOAD) (Z.eqb funct3 funct3_LHU) : bool
+      then Lhu rd rs1 oimm12 else
+      if andb (Z.eqb opcode opcode_MISC_MEM) (andb (Z.eqb rd 0) (andb (Z.eqb funct3
+                                                                             funct3_FENCE) (andb (Z.eqb rs1 0) (Z.eqb
+                                                                                                  msb4 0)))) : bool
+      then Fence pred succ else
+      if andb (Z.eqb opcode opcode_MISC_MEM) (andb (Z.eqb rd 0) (andb (Z.eqb funct3
+                                                                             funct3_FENCE_I) (andb (Z.eqb rs1 0) (Z.eqb
+                                                                                                    imm12 0)))) : bool
+      then Fence_i else
+      if andb (Z.eqb opcode opcode_OP_IMM) (Z.eqb funct3 funct3_ADDI) : bool
+      then Addi rd rs1 imm12 else
+      if andb (Z.eqb opcode opcode_OP_IMM) (Z.eqb funct3 funct3_SLTI) : bool
+      then Slti rd rs1 imm12 else
+      if andb (Z.eqb opcode opcode_OP_IMM) (Z.eqb funct3 funct3_SLTIU) : bool
+      then Sltiu rd rs1 imm12 else
+      if andb (Z.eqb opcode opcode_OP_IMM) (Z.eqb funct3 funct3_XORI) : bool
+      then Xori rd rs1 imm12 else
+      if andb (Z.eqb opcode opcode_OP_IMM) (Z.eqb funct3 funct3_ORI) : bool
+      then Ori rd rs1 imm12 else
+      if andb (Z.eqb opcode opcode_OP_IMM) (Z.eqb funct3 funct3_ANDI) : bool
+      then Andi rd rs1 imm12 else
+      if andb (Z.eqb opcode opcode_OP_IMM) (andb (Z.eqb funct3 funct3_SLLI) (andb
+                                                  (Z.eqb funct6 funct6_SLLI) shamtHiTest)) : bool
+      then Slli rd rs1 shamt6 else
+      if andb (Z.eqb opcode opcode_OP_IMM) (andb (Z.eqb funct3 funct3_SRLI) (andb
+                                                  (Z.eqb funct6 funct6_SRLI) shamtHiTest)) : bool
+      then Srli rd rs1 shamt6 else
+      if andb (Z.eqb opcode opcode_OP_IMM) (andb (Z.eqb funct3 funct3_SRAI) (andb
+                                                  (Z.eqb funct6 funct6_SRAI) shamtHiTest)) : bool
+      then Srai rd rs1 shamt6 else
+      if Z.eqb opcode opcode_AUIPC : bool then Auipc rd oimm20 else
+      if andb (Z.eqb opcode opcode_STORE) (Z.eqb funct3 funct3_SB) : bool
+      then Sb rs1 rs2 simm12 else
+      if andb (Z.eqb opcode opcode_STORE) (Z.eqb funct3 funct3_SH) : bool
+      then Sh rs1 rs2 simm12 else
+      if andb (Z.eqb opcode opcode_STORE) (Z.eqb funct3 funct3_SW) : bool
+      then Sw rs1 rs2 simm12 else
+      if andb (Z.eqb opcode opcode_OP) (andb (Z.eqb funct3 funct3_ADD) (Z.eqb funct7
+                                                                              funct7_ADD)) : bool
+      then Add rd rs1 rs2 else
+      if andb (Z.eqb opcode opcode_OP) (andb (Z.eqb funct3 funct3_SUB) (Z.eqb funct7
+                                                                              funct7_SUB)) : bool
+      then Sub rd rs1 rs2 else
+      if andb (Z.eqb opcode opcode_OP) (andb (Z.eqb funct3 funct3_SLL) (Z.eqb funct7
+                                                                              funct7_SLL)) : bool
+      then Sll rd rs1 rs2 else
+      if andb (Z.eqb opcode opcode_OP) (andb (Z.eqb funct3 funct3_SLT) (Z.eqb funct7
+                                                                              funct7_SLT)) : bool
+      then Slt rd rs1 rs2 else
+      if andb (Z.eqb opcode opcode_OP) (andb (Z.eqb funct3 funct3_SLTU) (Z.eqb funct7
+                                                                               funct7_SLTU)) : bool
+      then Sltu rd rs1 rs2 else
+      if andb (Z.eqb opcode opcode_OP) (andb (Z.eqb funct3 funct3_XOR) (Z.eqb funct7
+                                                                              funct7_XOR)) : bool
+      then Xor rd rs1 rs2 else
+      if andb (Z.eqb opcode opcode_OP) (andb (Z.eqb funct3 funct3_SRL) (Z.eqb funct7
+                                                                              funct7_SRL)) : bool
+      then Srl rd rs1 rs2 else
+      if andb (Z.eqb opcode opcode_OP) (andb (Z.eqb funct3 funct3_SRA) (Z.eqb funct7
+                                                                              funct7_SRA)) : bool
+      then Sra rd rs1 rs2 else
+      if andb (Z.eqb opcode opcode_OP) (andb (Z.eqb funct3 funct3_OR) (Z.eqb funct7
+                                                                             funct7_OR)) : bool
+      then Or rd rs1 rs2 else
+      if andb (Z.eqb opcode opcode_OP) (andb (Z.eqb funct3 funct3_AND) (Z.eqb funct7
+                                                                              funct7_AND)) : bool
+      then And rd rs1 rs2 else
+      if Z.eqb opcode opcode_LUI : bool then Lui rd imm20 else
+      if andb (Z.eqb opcode opcode_BRANCH) (Z.eqb funct3 funct3_BEQ) : bool
+      then Beq rs1 rs2 sbimm12 else
+      if andb (Z.eqb opcode opcode_BRANCH) (Z.eqb funct3 funct3_BNE) : bool
+      then Bne rs1 rs2 sbimm12 else
+      if andb (Z.eqb opcode opcode_BRANCH) (Z.eqb funct3 funct3_BLT) : bool
+      then Blt rs1 rs2 sbimm12 else
+      if andb (Z.eqb opcode opcode_BRANCH) (Z.eqb funct3 funct3_BGE) : bool
+      then Bge rs1 rs2 sbimm12 else
+      if andb (Z.eqb opcode opcode_BRANCH) (Z.eqb funct3 funct3_BLTU) : bool
+      then Bltu rs1 rs2 sbimm12 else
+      if andb (Z.eqb opcode opcode_BRANCH) (Z.eqb funct3 funct3_BGEU) : bool
+      then Bgeu rs1 rs2 sbimm12 else
+      if Z.eqb opcode opcode_JALR : bool then Jalr rd rs1 oimm12 else
+      if Z.eqb opcode opcode_JAL : bool then Jal rd jimm20 else
+      InvalidI in
     let decodeM :=
       if andb (Z.eqb opcode opcode_OP) (andb (Z.eqb funct3 funct3_MUL) (Z.eqb funct7
                                                                               funct7_MUL)) : bool
-      then Mul rd rs1 rs2
-      else if andb (Z.eqb opcode opcode_OP) (andb (Z.eqb funct3 funct3_MULH) (Z.eqb
-                                                   funct7 funct7_MULH)) : bool
-           then Mulh rd rs1 rs2
-           else if andb (Z.eqb opcode opcode_OP) (andb (Z.eqb funct3 funct3_MULHSU) (Z.eqb
-                                                        funct7 funct7_MULHSU)) : bool
-                then Mulhsu rd rs1 rs2
-                else if andb (Z.eqb opcode opcode_OP) (andb (Z.eqb funct3 funct3_MULHU) (Z.eqb
-                                                             funct7 funct7_MULHU)) : bool
-                     then Mulhu rd rs1 rs2
-                     else if andb (Z.eqb opcode opcode_OP) (andb (Z.eqb funct3 funct3_DIV) (Z.eqb
-                                                                  funct7 funct7_DIV)) : bool
-                          then Div rd rs1 rs2
-                          else if andb (Z.eqb opcode opcode_OP) (andb (Z.eqb funct3 funct3_DIVU) (Z.eqb
-                                                                       funct7 funct7_DIVU)) : bool
-                               then Divu rd rs1 rs2
-                               else if andb (Z.eqb opcode opcode_OP) (andb (Z.eqb funct3 funct3_REM) (Z.eqb
-                                                                            funct7 funct7_REM)) : bool
-                                    then Rem rd rs1 rs2
-                                    else if andb (Z.eqb opcode opcode_OP) (andb (Z.eqb funct3 funct3_REMU) (Z.eqb
-                                                                                 funct7 funct7_REMU)) : bool
-                                         then Remu rd rs1 rs2
-                                         else InvalidM in
+      then Mul rd rs1 rs2 else
+      if andb (Z.eqb opcode opcode_OP) (andb (Z.eqb funct3 funct3_MULH) (Z.eqb funct7
+                                                                               funct7_MULH)) : bool
+      then Mulh rd rs1 rs2 else
+      if andb (Z.eqb opcode opcode_OP) (andb (Z.eqb funct3 funct3_MULHSU) (Z.eqb
+                                              funct7 funct7_MULHSU)) : bool
+      then Mulhsu rd rs1 rs2 else
+      if andb (Z.eqb opcode opcode_OP) (andb (Z.eqb funct3 funct3_MULHU) (Z.eqb funct7
+                                                                                funct7_MULHU)) : bool
+      then Mulhu rd rs1 rs2 else
+      if andb (Z.eqb opcode opcode_OP) (andb (Z.eqb funct3 funct3_DIV) (Z.eqb funct7
+                                                                              funct7_DIV)) : bool
+      then Div rd rs1 rs2 else
+      if andb (Z.eqb opcode opcode_OP) (andb (Z.eqb funct3 funct3_DIVU) (Z.eqb funct7
+                                                                               funct7_DIVU)) : bool
+      then Divu rd rs1 rs2 else
+      if andb (Z.eqb opcode opcode_OP) (andb (Z.eqb funct3 funct3_REM) (Z.eqb funct7
+                                                                              funct7_REM)) : bool
+      then Rem rd rs1 rs2 else
+      if andb (Z.eqb opcode opcode_OP) (andb (Z.eqb funct3 funct3_REMU) (Z.eqb funct7
+                                                                               funct7_REMU)) : bool
+      then Remu rd rs1 rs2 else
+      InvalidM in
     let decodeI64 :=
       if andb (Z.eqb opcode opcode_LOAD) (Z.eqb funct3 funct3_LD) : bool
-      then Ld rd rs1 oimm12
-      else if andb (Z.eqb opcode opcode_LOAD) (Z.eqb funct3 funct3_LWU) : bool
-           then Lwu rd rs1 oimm12
-           else if andb (Z.eqb opcode opcode_OP_IMM_32) (Z.eqb funct3 funct3_ADDIW) : bool
-                then Addiw rd rs1 imm12
-                else if andb (Z.eqb opcode opcode_OP_IMM_32) (andb (Z.eqb funct3 funct3_SLLIW)
-                                                                   (Z.eqb funct7 funct7_SLLIW)) : bool
-                     then Slliw rd rs1 shamt5
-                     else if andb (Z.eqb opcode opcode_OP_IMM_32) (andb (Z.eqb funct3 funct3_SRLIW)
-                                                                        (Z.eqb funct7 funct7_SRLIW)) : bool
-                          then Srliw rd rs1 shamt5
-                          else if andb (Z.eqb opcode opcode_OP_IMM_32) (andb (Z.eqb funct3 funct3_SRAIW)
-                                                                             (Z.eqb funct7 funct7_SRAIW)) : bool
-                               then Sraiw rd rs1 shamt5
-                               else if andb (Z.eqb opcode opcode_STORE) (Z.eqb funct3 funct3_SD) : bool
-                                    then Sd rs1 rs2 simm12
-                                    else if andb (Z.eqb opcode opcode_OP_32) (andb (Z.eqb funct3 funct3_ADDW) (Z.eqb
-                                                                                    funct7 funct7_ADDW)) : bool
-                                         then Addw rd rs1 rs2
-                                         else if andb (Z.eqb opcode opcode_OP_32) (andb (Z.eqb funct3 funct3_SUBW)
-                                                                                        (Z.eqb funct7
-                                                                                               funct7_SUBW)) : bool
-                                              then Subw rd rs1 rs2
-                                              else if andb (Z.eqb opcode opcode_OP_32) (andb (Z.eqb funct3 funct3_SLLW)
-                                                                                             (Z.eqb funct7
-                                                                                                    funct7_SLLW)) : bool
-                                                   then Sllw rd rs1 rs2
-                                                   else if andb (Z.eqb opcode opcode_OP_32) (andb (Z.eqb funct3
-                                                                                                         funct3_SRLW)
-                                                                                                  (Z.eqb funct7
-                                                                                                         funct7_SRLW)) : bool
-                                                        then Srlw rd rs1 rs2
-                                                        else if andb (Z.eqb opcode opcode_OP_32) (andb (Z.eqb funct3
-                                                                                                              funct3_SRAW)
-                                                                                                       (Z.eqb funct7
-                                                                                                              funct7_SRAW)) : bool
-                                                             then Sraw rd rs1 rs2
-                                                             else InvalidI64 in
+      then Ld rd rs1 oimm12 else
+      if andb (Z.eqb opcode opcode_LOAD) (Z.eqb funct3 funct3_LWU) : bool
+      then Lwu rd rs1 oimm12 else
+      if andb (Z.eqb opcode opcode_OP_IMM_32) (Z.eqb funct3 funct3_ADDIW) : bool
+      then Addiw rd rs1 imm12 else
+      if andb (Z.eqb opcode opcode_OP_IMM_32) (andb (Z.eqb funct3 funct3_SLLIW) (Z.eqb
+                                                     funct7 funct7_SLLIW)) : bool
+      then Slliw rd rs1 shamt5 else
+      if andb (Z.eqb opcode opcode_OP_IMM_32) (andb (Z.eqb funct3 funct3_SRLIW) (Z.eqb
+                                                     funct7 funct7_SRLIW)) : bool
+      then Srliw rd rs1 shamt5 else
+      if andb (Z.eqb opcode opcode_OP_IMM_32) (andb (Z.eqb funct3 funct3_SRAIW) (Z.eqb
+                                                     funct7 funct7_SRAIW)) : bool
+      then Sraiw rd rs1 shamt5 else
+      if andb (Z.eqb opcode opcode_STORE) (Z.eqb funct3 funct3_SD) : bool
+      then Sd rs1 rs2 simm12 else
+      if andb (Z.eqb opcode opcode_OP_32) (andb (Z.eqb funct3 funct3_ADDW) (Z.eqb
+                                                 funct7 funct7_ADDW)) : bool
+      then Addw rd rs1 rs2 else
+      if andb (Z.eqb opcode opcode_OP_32) (andb (Z.eqb funct3 funct3_SUBW) (Z.eqb
+                                                 funct7 funct7_SUBW)) : bool
+      then Subw rd rs1 rs2 else
+      if andb (Z.eqb opcode opcode_OP_32) (andb (Z.eqb funct3 funct3_SLLW) (Z.eqb
+                                                 funct7 funct7_SLLW)) : bool
+      then Sllw rd rs1 rs2 else
+      if andb (Z.eqb opcode opcode_OP_32) (andb (Z.eqb funct3 funct3_SRLW) (Z.eqb
+                                                 funct7 funct7_SRLW)) : bool
+      then Srlw rd rs1 rs2 else
+      if andb (Z.eqb opcode opcode_OP_32) (andb (Z.eqb funct3 funct3_SRAW) (Z.eqb
+                                                 funct7 funct7_SRAW)) : bool
+      then Sraw rd rs1 rs2 else
+      InvalidI64 in
     let decodeM64 :=
       if andb (Z.eqb opcode opcode_OP_32) (andb (Z.eqb funct3 funct3_MULW) (Z.eqb
                                                  funct7 funct7_MULW)) : bool
-      then Mulw rd rs1 rs2
-      else if andb (Z.eqb opcode opcode_OP_32) (andb (Z.eqb funct3 funct3_DIVW) (Z.eqb
-                                                      funct7 funct7_DIVW)) : bool
-           then Divw rd rs1 rs2
-           else if andb (Z.eqb opcode opcode_OP_32) (andb (Z.eqb funct3 funct3_DIVUW)
-                                                          (Z.eqb funct7 funct7_DIVUW)) : bool
-                then Divuw rd rs1 rs2
-                else if andb (Z.eqb opcode opcode_OP_32) (andb (Z.eqb funct3 funct3_REMW) (Z.eqb
-                                                                funct7 funct7_REMW)) : bool
-                     then Remw rd rs1 rs2
-                     else if andb (Z.eqb opcode opcode_OP_32) (andb (Z.eqb funct3 funct3_REMUW)
-                                                                    (Z.eqb funct7 funct7_REMUW)) : bool
-                          then Remuw rd rs1 rs2
-                          else InvalidM64 in
+      then Mulw rd rs1 rs2 else
+      if andb (Z.eqb opcode opcode_OP_32) (andb (Z.eqb funct3 funct3_DIVW) (Z.eqb
+                                                 funct7 funct7_DIVW)) : bool
+      then Divw rd rs1 rs2 else
+      if andb (Z.eqb opcode opcode_OP_32) (andb (Z.eqb funct3 funct3_DIVUW) (Z.eqb
+                                                 funct7 funct7_DIVUW)) : bool
+      then Divuw rd rs1 rs2 else
+      if andb (Z.eqb opcode opcode_OP_32) (andb (Z.eqb funct3 funct3_REMW) (Z.eqb
+                                                 funct7 funct7_REMW)) : bool
+      then Remw rd rs1 rs2 else
+      if andb (Z.eqb opcode opcode_OP_32) (andb (Z.eqb funct3 funct3_REMUW) (Z.eqb
+                                                 funct7 funct7_REMUW)) : bool
+      then Remuw rd rs1 rs2 else
+      InvalidM64 in
     let decodeCSR :=
       if andb (Z.eqb opcode opcode_SYSTEM) (andb (Z.eqb rd 0) (andb (Z.eqb funct3
                                                                            funct3_PRIV) (andb (Z.eqb rs1 0) (Z.eqb
                                                                                                funct12
                                                                                                funct12_ECALL)))) : bool
-      then Ecall
-      else if andb (Z.eqb opcode opcode_SYSTEM) (andb (Z.eqb rd 0) (andb (Z.eqb funct3
-                                                                                funct3_PRIV) (andb (Z.eqb rs1 0) (Z.eqb
-                                                                                                    funct12
-                                                                                                    funct12_EBREAK)))) : bool
-           then Ebreak
-           else if andb (Z.eqb opcode opcode_SYSTEM) (andb (Z.eqb rd 0) (andb (Z.eqb funct3
-                                                                                     funct3_PRIV) (andb (Z.eqb rs1 0)
-                                                                                                        (Z.eqb funct12
-                                                                                                               funct12_URET)))) : bool
-                then Uret
-                else if andb (Z.eqb opcode opcode_SYSTEM) (andb (Z.eqb rd 0) (andb (Z.eqb funct3
-                                                                                          funct3_PRIV) (andb (Z.eqb rs1
-                                                                                                                    0)
-                                                                                                             (Z.eqb
-                                                                                                              funct12
-                                                                                                              funct12_SRET)))) : bool
-                     then Sret
-                     else if andb (Z.eqb opcode opcode_SYSTEM) (andb (Z.eqb rd 0) (andb (Z.eqb funct3
-                                                                                               funct3_PRIV) (andb (Z.eqb
-                                                                                                                   rs1
-                                                                                                                   0)
-                                                                                                                  (Z.eqb
-                                                                                                                   funct12
-                                                                                                                   funct12_MRET)))) : bool
-                          then Mret
-                          else if andb (Z.eqb opcode opcode_SYSTEM) (andb (Z.eqb rd 0) (andb (Z.eqb funct3
-                                                                                                    funct3_PRIV) (andb
-                                                                                              (Z.eqb rs1 0) (Z.eqb
+      then Ecall else
+      if andb (Z.eqb opcode opcode_SYSTEM) (andb (Z.eqb rd 0) (andb (Z.eqb funct3
+                                                                           funct3_PRIV) (andb (Z.eqb rs1 0) (Z.eqb
+                                                                                               funct12
+                                                                                               funct12_EBREAK)))) : bool
+      then Ebreak else
+      if andb (Z.eqb opcode opcode_SYSTEM) (andb (Z.eqb rd 0) (andb (Z.eqb funct3
+                                                                           funct3_PRIV) (andb (Z.eqb rs1 0) (Z.eqb
+                                                                                               funct12
+                                                                                               funct12_URET)))) : bool
+      then Uret else
+      if andb (Z.eqb opcode opcode_SYSTEM) (andb (Z.eqb rd 0) (andb (Z.eqb funct3
+                                                                           funct3_PRIV) (andb (Z.eqb rs1 0) (Z.eqb
+                                                                                               funct12
+                                                                                               funct12_SRET)))) : bool
+      then Sret else
+      if andb (Z.eqb opcode opcode_SYSTEM) (andb (Z.eqb rd 0) (andb (Z.eqb funct3
+                                                                           funct3_PRIV) (andb (Z.eqb rs1 0) (Z.eqb
+                                                                                               funct12
+                                                                                               funct12_MRET)))) : bool
+      then Mret else
+      if andb (Z.eqb opcode opcode_SYSTEM) (andb (Z.eqb rd 0) (andb (Z.eqb funct3
+                                                                           funct3_PRIV) (andb (Z.eqb rs1 0) (Z.eqb
                                                                                                funct12
                                                                                                funct12_WFI)))) : bool
-                               then Wfi
-                               else if andb (Z.eqb opcode opcode_SYSTEM) (Z.eqb funct3 funct3_CSRRW) : bool
-                                    then Csrrw rd rs1 csr12
-                                    else if andb (Z.eqb opcode opcode_SYSTEM) (Z.eqb funct3 funct3_CSRRS) : bool
-                                         then Csrrs rd rs1 csr12
-                                         else if andb (Z.eqb opcode opcode_SYSTEM) (Z.eqb funct3 funct3_CSRRC) : bool
-                                              then Csrrc rd rs1 csr12
-                                              else if andb (Z.eqb opcode opcode_SYSTEM) (Z.eqb funct3
-                                                                                               funct3_CSRRWI) : bool
-                                                   then Csrrwi rd zimm csr12
-                                                   else if andb (Z.eqb opcode opcode_SYSTEM) (Z.eqb funct3
-                                                                                                    funct3_CSRRSI) : bool
-                                                        then Csrrsi rd zimm csr12
-                                                        else if andb (Z.eqb opcode opcode_SYSTEM) (Z.eqb funct3
-                                                                                                         funct3_CSRRCI) : bool
-                                                             then Csrrci rd zimm csr12
-                                                             else InvalidCSR in
+      then Wfi else
+      if andb (Z.eqb opcode opcode_SYSTEM) (Z.eqb funct3 funct3_CSRRW) : bool
+      then Csrrw rd rs1 csr12 else
+      if andb (Z.eqb opcode opcode_SYSTEM) (Z.eqb funct3 funct3_CSRRS) : bool
+      then Csrrs rd rs1 csr12 else
+      if andb (Z.eqb opcode opcode_SYSTEM) (Z.eqb funct3 funct3_CSRRC) : bool
+      then Csrrc rd rs1 csr12 else
+      if andb (Z.eqb opcode opcode_SYSTEM) (Z.eqb funct3 funct3_CSRRWI) : bool
+      then Csrrwi rd zimm csr12 else
+      if andb (Z.eqb opcode opcode_SYSTEM) (Z.eqb funct3 funct3_CSRRSI) : bool
+      then Csrrsi rd zimm csr12 else
+      if andb (Z.eqb opcode opcode_SYSTEM) (Z.eqb funct3 funct3_CSRRCI) : bool
+      then Csrrci rd zimm csr12 else
+      InvalidCSR in
     let resultCSR :=
       match decodeCSR with
       | InvalidCSR => nil

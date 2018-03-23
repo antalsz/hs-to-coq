@@ -2,4 +2,10 @@ rename value GHC.Num.- = Coq.ZArith.BinInt.Z.sub
 rename value GHC.Num.+ = Coq.ZArith.BinInt.Z.add
 rewrite forall x, GHC.Num.fromInteger x = x
 rewrite forall x y, x GHC.Base.== y = Coq.ZArith.BinInt.Z.eqb x y
+rename value Data.Bits..&.        = Coq.ZArith.BinInt.Z.land
+rename value Data.Bits.shift      = Coq.ZArith.BinInt.Z.shiftl
+rename value Data.Bits..|.        = Coq.ZArith.BinInt.Z.lor
+rename value Data.Bits.xor        = Coq.ZArith.BinInt.Z.lxor
+rename value Data.Bits.testBit    = Coq.ZArith.BinInt.Z.testbit
+rename value Data.Bits.complement = Coq.ZArith.BinInt.Z.lnot
 

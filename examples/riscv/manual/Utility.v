@@ -88,8 +88,8 @@ Notation "a /= b" := (negb (signed_eqb a b))        (at level 38, no associativi
 Notation "a == b" := (signed_eqb a b)               (at level 38, no associativity) : alu_scope.
 Notation "a < b"  := (signed_less_than a b)         (at level 70, no associativity) : alu_scope.
 Notation "a >= b" := (negb (signed_less_than a b))  (at level 70, no associativity) : alu_scope.
-
-Definition when {M} `{Monad M} (a : bool)  (b : M unit) := (if a then b else Return tt).
+Notation "'when' a b" := (if a then b else Return tt)
+  (at level 60, a at level 0, b at level 0) : alu_scope.
 
 
 Section Constants.
@@ -107,6 +107,7 @@ Section Constants.
 
   Definition minusone: t := zero - one.
 
+  Definition lnot(x: t): t := xor x maxUnsigned.
 End Constants.
 
 

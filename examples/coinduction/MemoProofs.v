@@ -66,3 +66,11 @@ Qed.
 Lemma cachedFib_slowFib:
   forall n, cachedFib n = slowFib n.
 Proof. apply memo_spec. Qed.
+
+Time Eval vm_compute in slowFib 25. (* Finished transaction in 2.248 secs *)
+Time Eval vm_compute in slowFib 25. (* Finished transaction in 2.233 secs *)
+Time Eval vm_compute in cachedFib 25. (* Finished transaction in 2.203 secs *)
+Time Eval vm_compute in cachedFib 25. (* Finished transaction in 0. secs *)
+Time Eval vm_compute in cachedFib 26. (* Finished transaction in 3.579 secs *)
+Time Eval vm_compute in cachedFib 26. (* Finished transaction in 0. secs *)
+

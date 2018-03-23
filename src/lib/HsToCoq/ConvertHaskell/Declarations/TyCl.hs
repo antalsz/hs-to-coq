@@ -56,22 +56,22 @@ import Exception
 
 --------------------------------------------------------------------------------
 
-data ConvertedDeclaration = ConvData  IndBody
+data ConvertedDeclaration = ConvData  Bool IndBody
                           | ConvSyn   SynBody
                           | ConvClass ClassBody
                           | ConvFailure Qualid Sentence
                           deriving (Eq, Ord, Show, Read)
 
 instance FreeVars ConvertedDeclaration where
-  freeVars (ConvData    ind)   = freeVars ind
+  freeVars (ConvData  _ ind)   = freeVars ind
   freeVars (ConvSyn     syn)   = freeVars syn
   freeVars (ConvClass   cls)   = freeVars cls
   freeVars (ConvFailure _ sen) = freeVars (NoBinding sen)
 
 convDeclName :: ConvertedDeclaration -> Qualid
-convDeclName (ConvData  (IndBody                    tyName  _ _ _))    = tyName
-convDeclName (ConvSyn   (SynBody                    synName _ _ _))    = synName
-convDeclName (ConvClass (ClassBody (ClassDefinition clsName _ _ _) _)) = clsName
+convDeclName (ConvData _ (IndBody                    tyName  _ _ _))    = tyName
+convDeclName (ConvSyn    (SynBody                    synName _ _ _))    = synName
+convDeclName (ConvClass  (ClassBody (ClassDefinition clsName _ _ _) _)) = clsName
 convDeclName (ConvFailure n _)                                         = n
 
 failTyClDecl :: ConversionMonad m => Qualid -> GhcException -> m (Maybe ConvertedDeclaration)
@@ -81,15 +81,16 @@ failTyClDecl name e = pure $ Just $
 convertTyClDecl :: ConversionMonad m => TyClDecl GHC.Name -> m (Maybe ConvertedDeclaration)
 convertTyClDecl decl = do
   coqName <- var TypeNS . unLoc $ tyClDeclLName decl
+  let isCoind = use (edits.coinductiveTypes.contains coqName)
   ghandle (failTyClDecl coqName) $ do
     use (edits.skipped.contains coqName) >>= \case
       True  -> pure Nothing
       False -> use (edits.redefinitions.at coqName) >>= fmap Just . \case
         Nothing -> case decl of
           FamDecl{}     -> convUnsupported "type/data families"
-          SynDecl{..}   -> ConvSyn   <$> convertSynDecl   tcdLName (hsq_explicit tcdTyVars) tcdRhs
-          DataDecl{..}  -> ConvData  <$> convertDataDecl  tcdLName (hsq_explicit tcdTyVars) tcdDataDefn
-          ClassDecl{..} -> ConvClass <$> convertClassDecl tcdCtxt  tcdLName (hsq_explicit tcdTyVars) tcdFDs tcdSigs tcdMeths tcdATs tcdATDefs
+          SynDecl{..}   -> ConvSyn              <$> convertSynDecl   tcdLName (hsq_explicit tcdTyVars) tcdRhs
+          DataDecl{..}  -> ConvData <$> isCoind <*> convertDataDecl  tcdLName (hsq_explicit tcdTyVars) tcdDataDefn
+          ClassDecl{..} -> ConvClass            <$> convertClassDecl tcdCtxt  tcdLName (hsq_explicit tcdTyVars) tcdFDs tcdSigs tcdMeths tcdATs tcdATDefs
 
         Just redef -> do
           case (decl, redef) of
@@ -100,7 +101,8 @@ convertTyClDecl decl = do
 
             (DataDecl{}, CoqInductiveDef ind) ->
               case ind of
-                Inductive   (body :| [])  []    -> pure $ ConvData body
+                Inductive   (body :| [])  []    -> pure $ ConvData False body
+                CoInductive (body :| [])  []    -> pure $ ConvData True body
                 Inductive   (_    :| _:_) _     -> editFailure $ "cannot redefine data type to mutually-recursive types"
                 Inductive   _             (_:_) -> editFailure $ "cannot redefine data type to include notations"
                 CoInductive _             _     -> editFailure $ "cannot redefine data type to be coinductive"
@@ -126,51 +128,53 @@ convertTyClDecl decl = do
 
 --------------------------------------------------------------------------------
 
-data DeclarationGroup = DeclarationGroup { dgInductives :: [IndBody]
-                                         , dgSynonyms   :: [SynBody]
-                                         , dgClasses    :: [ClassBody]
-                                         , dgFailures   :: [Sentence]}
+data DeclarationGroup = DeclarationGroup { dgInductives   :: [IndBody]
+                                         , dgCoInductives :: [IndBody]
+                                         , dgSynonyms     :: [SynBody]
+                                         , dgClasses      :: [ClassBody]
+                                         , dgFailures     :: [Sentence]}
                       deriving (Eq, Ord, Show, Read)
 
 instance Semigroup DeclarationGroup where
-  DeclarationGroup ind1 syn1 cls1 fail1 <> DeclarationGroup ind2 syn2 cls2 fail2 =
-    DeclarationGroup (ind1 <> ind2) (syn1 <> syn2) (cls1 <> cls2) (fail1 <> fail2)
+  DeclarationGroup ind1 coi1 syn1 cls1 fail1 <>
+   DeclarationGroup ind2 coi2 syn2 cls2 fail2 =
+    DeclarationGroup (ind1 <> ind2) (coi1 <> coi2) (syn1 <> syn2) (cls1 <> cls2) (fail1 <> fail2)
 
 instance Monoid DeclarationGroup where
-  mempty  = DeclarationGroup [] [] [] []
+  mempty  = DeclarationGroup [] [] [] [] []
   mappend = (<>)
 
 singletonDeclarationGroup :: ConvertedDeclaration -> DeclarationGroup
-singletonDeclarationGroup (ConvData  ind)     = DeclarationGroup [ind] []    []    []
-singletonDeclarationGroup (ConvSyn   syn)     = DeclarationGroup []    [syn] []    []
-singletonDeclarationGroup (ConvClass cls)     = DeclarationGroup []    []    [cls] []
-singletonDeclarationGroup (ConvFailure _ sen) = DeclarationGroup []    []    []    [sen]
+singletonDeclarationGroup (ConvData False ind)     = DeclarationGroup [ind] []    []    []    []
+singletonDeclarationGroup (ConvData True  coi)     = DeclarationGroup []    [coi] []    []    []
+singletonDeclarationGroup (ConvSyn   syn)          = DeclarationGroup []    []    [syn] []    []
+singletonDeclarationGroup (ConvClass cls)          = DeclarationGroup []    []    []    [cls] []
+singletonDeclarationGroup (ConvFailure _ sen)      = DeclarationGroup []    []    []    []    [sen]
 
 --------------------------------------------------------------------------------
 
 convertDeclarationGroup :: DeclarationGroup -> Either String [Sentence]
 convertDeclarationGroup DeclarationGroup{..} =
     (dgFailures ++) <$>
-    case (nonEmpty dgInductives, nonEmpty dgSynonyms, nonEmpty dgClasses) of
-  (Just inds, Nothing, Nothing) ->
+    case (nonEmpty dgInductives, nonEmpty dgCoInductives, nonEmpty dgSynonyms, nonEmpty dgClasses) of
+  (Just inds, Nothing, Nothing, Nothing) ->
     Right [InductiveSentence $ Inductive inds []]
 
-  (Nothing, Just (SynBody name args oty def :| []), Nothing) ->
+  (Nothing, Just coinds, Nothing, Nothing) ->
+    Right [InductiveSentence $ CoInductive coinds []]
+
+  (Nothing, Nothing, Just (SynBody name args oty def :| []), Nothing) ->
     Right [DefinitionSentence $ DefinitionDef Global name args oty def]
 
-  (Just inds, Just syns, Nothing) ->
+  (Just inds, Nothing, Just syns, Nothing) ->
     Right $  foldMap recSynType syns
           ++ [InductiveSentence $ Inductive inds (orderRecSynDefs $ recSynDefs inds syns)]
 
-  (Nothing, Nothing, Just (classDef :| [])) ->
+  (Nothing, Nothing, Nothing, Just (classDef :| [])) ->
     Right $ classSentences classDef
 
-  (Nothing, Just (_ :| _ : _), Nothing)           -> Left "mutually-recursive type synonyms"
-  (Nothing, Nothing,           Just (_ :| _ : _)) -> Left "mutually-recursive type classes"
-  (Just _,  Nothing,           Just _)            -> Left "mutually-recursive type classes and data types"
-  (Nothing, Just _,            Just _)            -> Left "mutually-recursive type classes and type synonyms"
-  (Just _,  Just _,            Just _)            -> Left "mutually-recursive type classes, data types, and type synonyms"
-  (Nothing, Nothing,           Nothing)           -> Right []
+  (_, _, _, _) ->
+    Left "too much mutual recursion"
 
   where
     synName = qualidExtendBase "__raw"
@@ -242,7 +246,7 @@ generateArgumentSpecifiers (IndBody _ params _resTy cons)
 generateGroupArgumentSpecifiers :: ConversionMonad m => DeclarationGroup -> m [Sentence]
 generateGroupArgumentSpecifiers = fmap (fmap ArgumentsSentence)
                                 . foldTraverse generateArgumentSpecifiers
-                                . dgInductives
+                                . (\x -> dgInductives x ++ dgCoInductives x)
 
 --------------------------------------------------------------------------------
 

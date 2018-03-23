@@ -83,6 +83,7 @@ script:
  - make -C examples/containers clean
  - make -C examples/containers
  - make -C examples/containers/theories
+ - make -C examples/coninduction
 
 # Test extraction
  - make -C examples/containers/extraction/src

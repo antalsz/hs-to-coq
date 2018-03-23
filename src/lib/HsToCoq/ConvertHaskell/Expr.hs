@@ -849,7 +849,8 @@ convertTypedBinding toplvl convHsTy FunBind{..}   = runMaybeT $ do
                 use (edits.local_termination.at n.non M.empty.at (qualidBase name)) >>= \case
                     Just order -> pure $ wfFix order
                     Nothing    -> use (edits.termination.at n) >>= \case
-                        Just Deferred |  n == name -> pure $ wfFix Deferred
+                        Just Deferred    |  n == name -> pure $ wfFix Deferred
+                        Just Corecursive |  n == name -> pure $ wfFix Corecursive
                         _ -> pure $ Fix . FixOne
         (argBinders, match) <- convertFunction fun_matches
         pure $ let bodyVars = getFreeVars match
@@ -883,6 +884,8 @@ wfFix (WellFounded order) (FixBody ident argBinders Nothing Nothing rhs)
         MeasureOrder measure Nothing    -> ("Coq.Init.Peano.lt", measure)
         MeasureOrder measure (Just rel) -> (rel, measure)
         WFOrder rel arg                 -> (rel, Qualid arg)
+
+wfFix Corecursive fb = Cofix $ FixOne fb
 wfFix _ _ = error "wfFix: cannot handle annotations or types"
 
 --------------------------------------------------------------------------------

@@ -89,14 +89,14 @@ pattern LetFix :: FixBody -> Term -> Term
 pattern LetFix fb body <- (isLetFix -> Just (fb, body))
   where LetFix fb@(FixBody f _ _ _ _) body = Let f [] Nothing (Fix (FixOne fb)) body
 
-isLetCofix :: Term -> Maybe (CofixBody, Term)
-isLetCofix (Let f [] Nothing (Cofix (CofixOne fb@(CofixBody f' _ _ _))) body)
+isLetCofix :: Term -> Maybe (FixBody, Term)
+isLetCofix (Let f [] Nothing (Cofix (FixOne fb@(FixBody f' _ _ _ _))) body)
     | f == f'   = Just (fb, body)
 isLetCofix _ = Nothing
 
-pattern LetCofix :: CofixBody -> Term -> Term
+pattern LetCofix :: FixBody -> Term -> Term
 pattern LetCofix fb body <- (isLetCofix -> Just (fb, body))
-  where LetCofix fb@(CofixBody f _ _ _) body = Let f [] Nothing (Cofix (CofixOne fb)) body
+  where LetCofix fb@(FixBody f _ _ _ _) body = Let f [] Nothing (Cofix (FixOne fb)) body
 
 termHead :: Term -> Maybe Qualid
 termHead (Forall _ t)         = termHead t

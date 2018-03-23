@@ -1,15 +1,22 @@
-# These are TODOs:
-
+# Represent element type using Coq's infinite-bit N type
+#
+rename type GHC.Types.Int = Coq.Numbers.BinNums.N
 redefine Definition Data.IntSet.Internal.Nat := Coq.Numbers.BinNums.N.
 redefine Definition Data.IntSet.Internal.Prefix := Coq.Numbers.BinNums.N.
 redefine Definition Data.IntSet.Internal.BitMap := Coq.Numbers.BinNums.N.
 redefine Definition Data.IntSet.Internal.Mask := Coq.Numbers.BinNums.N.
 
-rename type GHC.Types.Int = Coq.Numbers.BinNums.N
+### Termination hints ###
 
-# mutual recursion
-skip Data.IntSet.Internal.fromDistinctAscList
-skip Data.IntSet.Internal.fromAscList
+# These are typical that they recurse left or right
+termination Data.IntSet.Internal.union        {measure ((size_nat arg_0__) + (size_nat arg_1__))}
+obligations Data.IntSet.Internal.union        termination_by_omega
+termination Data.IntSet.Internal.difference   {measure ((size_nat arg_0__) + (size_nat arg_1__))}
+obligations Data.IntSet.Internal.difference   termination_by_omega
+termination Data.IntSet.Internal.intersection {measure ((size_nat arg_0__) + (size_nat arg_1__))}
+obligations Data.IntSet.Internal.intersection termination_by_omega
+termination Data.IntSet.Internal.disjoint     {measure ((size_nat arg_0__) + (size_nat arg_1__))}
+obligations Data.IntSet.Internal.disjoint     termination_by_omega
 
 # local termination via the bit mask
 termination go in Data.IntSet.Internal.foldlBits {measure (Coq.NArith.BinNat.N.to_nat arg_0__)}
@@ -21,19 +28,16 @@ obligations Data.IntSet.Internal.foldrBits BitTerminationProofs.termination_fold
 termination go in Data.IntSet.Internal.foldr'Bits {measure (Coq.NArith.BinNat.N.to_nat arg_0__)}
 obligations Data.IntSet.Internal.foldr'Bits BitTerminationProofs.termination_foldl
 
-# partial
-# no lookupMax,lookupMin replacement
-# have minView & maxView, but we are not translating them
-skip Data.IntSet.Internal.findMax
-skip Data.IntSet.Internal.findMin
-skip Data.IntSet.Internal.deleteFindMax
-skip Data.IntSet.Internal.deleteFindMin
 
-# This code is dead for well-formed input. Giving an explicit value
-# not only get rids of error, but also helps with type class resolution
-rewrite forall, GHC.Err.error "minView Nil"  = pair (0%N) Nil
-rewrite forall, GHC.Err.error "maxView Nil"  = pair (0%N) Nil
+### Rewrites and replacements ###
 
+# Eliminate some type conversions that are not needed due to number representation
+#
+skip module Coq.NArith.BinNat.N
+skip Data.IntSet.Internal.intFromNat
+rewrite forall x, Data.IntSet.Internal.intFromNat x = x
+skip Data.IntSet.Internal.natFromInt
+rewrite forall x, Data.IntSet.Internal.natFromInt x = x
 
 # The idiom `x .&. complement y` does not work at type `nat`, as the complement of
 # a natural number is negative. But the expression [x `xor` (x .&. y)] is equivalent:
@@ -66,27 +70,34 @@ rewrite forall x, (x Data.Bits..&. Data.IntSet.Internal.prefixBitMask) = Coq.NAr
 redefine Definition Data.IntSet.Internal.maskW : Nat -> (Nat -> Prefix) :=
   fun i m => Coq.NArith.BinNat.N.ldiff i (((2*m) - 1)%N).
 
-
 # the revNat function is only correct if its result is cropped to 64 bits.
 add Data.IntSet.Internal Definition Data.IntSet.Internal.revNatSafe n := Coq.NArith.BinNat.N.modulo (Data.IntSet.Internal.revNat n) (Coq.NArith.BinNat.N.pow 2 64).
+
 # Use rewrite, not rename, to not change the name of the actual definition
 rewrite forall, Data.IntSet.Internal.revNat = Data.IntSet.Internal.revNatSafe
 
 
+# This code is dead for well-formed input. Giving an explicit value
+# not only get rids of error, but also helps with type class resolution
+rewrite forall, GHC.Err.error "minView Nil"  = pair (0%N) Nil
+rewrite forall, GHC.Err.error "maxView Nil"  = pair (0%N) Nil
+
 
 # A bitmask adressing the last 6 bits of an int.
 # This is the only place where otherwise the FiniteBits class is used
-skip Data.IntSet.Internal.suffixBitMask
+redefine Definition Data.IntSet.Internal.suffixBitMask := Coq.NArith.BinNat.N.ones 6.
 
-# These are typical that they recurse left or right
-termination Data.IntSet.Internal.union        {measure ((size_nat arg_0__) + (size_nat arg_1__))}
-obligations Data.IntSet.Internal.union        termination_by_omega
-termination Data.IntSet.Internal.difference   {measure ((size_nat arg_0__) + (size_nat arg_1__))}
-obligations Data.IntSet.Internal.difference   termination_by_omega
-termination Data.IntSet.Internal.intersection {measure ((size_nat arg_0__) + (size_nat arg_1__))}
-obligations Data.IntSet.Internal.intersection termination_by_omega
-termination Data.IntSet.Internal.disjoint     {measure ((size_nat arg_0__) + (size_nat arg_1__))}
-obligations Data.IntSet.Internal.disjoint     termination_by_omega
+# moved to another module (Utils)
+skip Utils.Containers.Internal.BitUtil.lowestBitMask
+
+
+### SKIPPED ###
+
+# partial functions that we don't want to translate
+skip Data.IntSet.Internal.findMax
+skip Data.IntSet.Internal.findMin
+skip Data.IntSet.Internal.deleteFindMax
+skip Data.IntSet.Internal.deleteFindMin
 
 # Show stuff
 skip Data.IntSet.Internal.showsBars
@@ -106,13 +117,11 @@ skip Data.IntSet.Internal.node
 skip Data.IntSet.Internal.fromListConstr
 skip Data.IntSet.Internal.intSetDataType
 
+# mutual recursion 
+skip Data.IntSet.Internal.fromDistinctAscList
+skip Data.IntSet.Internal.fromAscList
+
+
+### Type class ordering information ###
+
 order Data.IntSet.Internal.Semigroup__IntSet Data.IntSet.Internal.Monoid__IntSet_mappend
-
-skip Data.IntSet.Internal.intFromNat
-rewrite forall x, Data.IntSet.Internal.intFromNat x = x
-skip Data.IntSet.Internal.natFromInt
-rewrite forall x, Data.IntSet.Internal.natFromInt x = x
-
-skip Utils.Containers.Internal.BitUtil.lowestBitMask
-
-skip module Coq.NArith.BinNat.N

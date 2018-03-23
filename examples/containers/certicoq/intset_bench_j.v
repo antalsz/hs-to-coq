@@ -48,11 +48,6 @@ Definition size := 4096.
 
 Definition geb (x: N) (y:N): bool := BinNat.N.leb y x.
 
-Eval cbv in geb 0 1.
-Eval cbv in geb 1 1.
-Eval cbv in geb 1 0.
-
-
 Definition elems := generateList N.succ geb 0%N (N.of_nat size) size.
 Definition elems_even := generateList (fun x => N.succ (N.succ x))  geb 0%N (N.of_nat size) size.
 Definition elems_odd := generateList (fun x => N.succ (N.succ x))  geb 1%N (N.of_nat size) size.

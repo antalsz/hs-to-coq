@@ -59,6 +59,7 @@ Inductive Stack : Type
   |  Nada : Stack.
 (* Midamble *)
 
+(** Additional definitions for termination proof *)
 
 Fixpoint size_nat (t : IntSet) : nat :=
   match t with
@@ -75,7 +76,7 @@ Ltac termination_by_omega :=
 
 Require Import Coq.NArith.NArith.
 (* Z.ones 6 = 64-1 *)
-Definition suffixBitMask := Coq.NArith.BinNat.N.ones 6%N.
+(* Definition suffixBitMask := Coq.NArith.BinNat.N.ones 6%N. *)
 
 (* Converted value declarations: *)
 
@@ -270,9 +271,6 @@ Program Instance Eq___IntSet : GHC.Base.Eq_ IntSet :=
 Definition null : IntSet -> bool :=
   fun arg_0__ => match arg_0__ with | Nil => true | _ => false end.
 
-Definition prefixOf : Coq.Numbers.BinNums.N -> Prefix :=
-  fun x => Coq.NArith.BinNat.N.ldiff x suffixBitMask.
-
 Definition revNat : Nat -> Nat :=
   fun x1 =>
     let 'x2 := ((Utils.Containers.Internal.BitUtil.shiftRL x1 #1) Data.Bits..&.(**)
@@ -445,11 +443,17 @@ Definition splitRoot : IntSet -> list IntSet :=
         else cons l (cons r nil)
     end.
 
+Definition suffixBitMask :=
+  Coq.NArith.BinNat.N.ones 6.
+
 Definition suffixOf : Coq.Numbers.BinNums.N -> Coq.Numbers.BinNums.N :=
   fun x => x Data.Bits..&.(**) suffixBitMask.
 
 Definition bitmapOf : Coq.Numbers.BinNums.N -> BitMap :=
   fun x => bitmapOfSuffix (suffixOf x).
+
+Definition prefixOf : Coq.Numbers.BinNums.N -> Prefix :=
+  fun x => Coq.NArith.BinNat.N.ldiff x suffixBitMask.
 
 Definition singleton : Key -> IntSet :=
   fun x => Tip (prefixOf x) (bitmapOf x).
@@ -1168,16 +1172,16 @@ End Notations.
 (* Unbound variables:
      Bool.Sumbool.sumbool_of_bool Eq Gt Lt N None Some andb bool comparison cons
      false id list negb nil op_zm__ op_zp__ op_zt__ op_zv__ option orb pair size_nat
-     suffixBitMask true Coq.Init.Peano.lt Coq.NArith.BinNat.N.ldiff
-     Coq.NArith.BinNat.N.log2 Coq.NArith.BinNat.N.lxor Coq.NArith.BinNat.N.modulo
-     Coq.NArith.BinNat.N.ones Coq.NArith.BinNat.N.pow Coq.NArith.BinNat.N.pred
-     Coq.NArith.BinNat.N.to_nat Coq.Numbers.BinNums.N Data.Bits.op_zizazi__
-     Data.Bits.op_zizbzi__ Data.Bits.xor Data.Foldable.foldl Data.Maybe.maybe
-     Data.Semigroup.Semigroup Data.Semigroup.op_zlzg__ Data.Tuple.snd GHC.Base.Eq_
-     GHC.Base.Monoid GHC.Base.Ord GHC.Base.compare GHC.Base.flip GHC.Base.map
-     GHC.Base.op_z2218U__ GHC.Base.op_zeze__ GHC.Base.op_zg__ GHC.Base.op_zgze__
-     GHC.Base.op_zl__ GHC.Base.op_zsze__ GHC.Num.fromInteger GHC.Num.op_zm__
-     GHC.Num.op_zp__ GHC.Wf.wfFix2 Utils.Containers.Internal.BitUtil.bitcount
+     true Coq.Init.Peano.lt Coq.NArith.BinNat.N.ldiff Coq.NArith.BinNat.N.log2
+     Coq.NArith.BinNat.N.lxor Coq.NArith.BinNat.N.modulo Coq.NArith.BinNat.N.ones
+     Coq.NArith.BinNat.N.pow Coq.NArith.BinNat.N.pred Coq.NArith.BinNat.N.to_nat
+     Coq.Numbers.BinNums.N Data.Bits.op_zizazi__ Data.Bits.op_zizbzi__ Data.Bits.xor
+     Data.Foldable.foldl Data.Maybe.maybe Data.Semigroup.Semigroup
+     Data.Semigroup.op_zlzg__ Data.Tuple.snd GHC.Base.Eq_ GHC.Base.Monoid
+     GHC.Base.Ord GHC.Base.compare GHC.Base.flip GHC.Base.map GHC.Base.op_z2218U__
+     GHC.Base.op_zeze__ GHC.Base.op_zg__ GHC.Base.op_zgze__ GHC.Base.op_zl__
+     GHC.Base.op_zsze__ GHC.Num.fromInteger GHC.Num.op_zm__ GHC.Num.op_zp__
+     GHC.Wf.wfFix2 Utils.Containers.Internal.BitUtil.bitcount
      Utils.Containers.Internal.BitUtil.highestBitMask
      Utils.Containers.Internal.BitUtil.lowestBitMask
      Utils.Containers.Internal.BitUtil.shiftLL

@@ -1,3 +1,4 @@
+(** Additional definitions for termination proof *)
 
 Fixpoint size_nat (t : IntSet) : nat :=
   match t with
@@ -14,4 +15,4 @@ Ltac termination_by_omega :=
 
 Require Import Coq.NArith.NArith.
 (* Z.ones 6 = 64-1 *)
-Definition suffixBitMask := Coq.NArith.BinNat.N.ones 6%N.
+(* Definition suffixBitMask := Coq.NArith.BinNat.N.ones 6%N. *)

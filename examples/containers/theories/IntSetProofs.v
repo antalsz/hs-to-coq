@@ -48,12 +48,12 @@ This is the annotated export list of IntSet. The first column says:
     -- * Filter
  F  , filter
  F  , partition
-    , split
-    , splitMember
+ V  , split
+ V  , splitMember
     , splitRoot
 
     -- * Map
-    , map
+ V  , map
 
     -- * Folds
  V  , foldr

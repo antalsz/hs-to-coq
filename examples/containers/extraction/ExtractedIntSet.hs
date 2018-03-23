@@ -7,11 +7,11 @@
 
 module ExtractedIntSet where
 
+-- import other extracted modules
 import qualified Base
 import qualified Datatypes
 import qualified BinNums
 import qualified Num
-
 import qualified Semigroup
 import qualified Monoid
 
@@ -21,12 +21,12 @@ import qualified Data.Semigroup
 import qualified Data.Monoid
 import qualified Data.Foldable
 import qualified Data.Bits
-
 import qualified Control.Arrow as A
 import Control.DeepSeq(NFData,rnf)
 
 import Test.QuickCheck(NonNegative(..))
 
+-- Shim for number types
 import ExtractedNumbers
 
 type IntSet = S2.IntSet
@@ -83,26 +83,6 @@ instance Show (S2.IntSet) where
   showsPrec p xs = showParen (p > 10) $
     showString "fromList " . shows (toList xs)
 
-{-
-instance Data.Foldable.Foldable S2.IntSet where
-  fold    = fold
-  foldMap = S2.coq_Foldable__IntSet_foldMap monoid_a
-  foldr   = S2.foldr
-  foldr'  = S2.foldr'
-  foldl   = S2.foldl
-  foldl'  = S2.foldl'
-  foldr1  = error "foldr1: partial"
-  foldl1  = error "foldl1: partial"
-  toList  = S2.toList
-  null    = S2.null
-  length  = error "fix int problem" -- S2.length
-  elem    = S2.coq_Foldable__IntSet_elem eq_a
-  maximum = error "maximum: partial"
-  minimum = error "minimum: partial"
-  sum     = error "TODO, figure out Num shim"
-  product = error "TODO, figure out Num shim"
--}
-
 zero :: Nat -> Mask -> Bool
 zero x m = S2.zero (nonNegToBinZ x) m
 
@@ -127,9 +107,9 @@ lookupGE x s = binZToNonNeg <$> S2.lookupGE  (nonNegToBinZ x) s
 -- Indexed
 --------------------------------------------------
 
-findIndex   = error "findIndex: partial function"
-elemAt      = error "elemAt: partial function"
-deleteAt    = error "deleteAt: partial function"
+-- findIndex   = error "findIndex: partial function"
+-- elemAt      = error "elemAt: partial function"
+-- deleteAt    = error "deleteAt: partial function"
 
 --------------------------------------------------
 -- Valid Trees

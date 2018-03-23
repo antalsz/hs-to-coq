@@ -100,13 +100,11 @@ Program Instance Monad__Either {e} : GHC.Base.Monad (Either e) :=
          GHC.Base.op_zgzgze____ := fun {a} {b} => Monad__Either_op_zgzgze__ ;
          GHC.Base.return___ := fun {a} => Monad__Either_return_ |}.
 
-(* Translating `instance forall {a} {b}, forall `{GHC.Show.Show b}
-   `{GHC.Show.Show a}, GHC.Show.Show (Data.Either.Either a b)' failed: OOPS! Cannot
-   find information for class Qualified "GHC.Show" "Show" unsupported *)
+(* Translating `instance Show__Either' failed: OOPS! Cannot find information for
+   class Qualified "GHC.Show" "Show" unsupported *)
 
-(* Translating `instance forall {a} {b}, forall `{GHC.Read.Read b}
-   `{GHC.Read.Read a}, GHC.Read.Read (Data.Either.Either a b)' failed: OOPS! Cannot
-   find information for class Qualified "GHC.Read" "Read" unsupported *)
+(* Translating `instance Read__Either' failed: OOPS! Cannot find information for
+   class Qualified "GHC.Read" "Read" unsupported *)
 
 Local Definition Ord__Either_compare {inst_a} {inst_b} `{GHC.Base.Ord inst_b}
   `{GHC.Base.Ord inst_a}

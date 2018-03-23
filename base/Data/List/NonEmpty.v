@@ -101,17 +101,14 @@ Definition sort {a} `{GHC.Base.Ord a} : NonEmpty a -> NonEmpty a :=
 
 (* Converted value declarations: *)
 
-(* Translating `instance forall {a}, GHC.Exts.IsList
-   (Data.List.NonEmpty.NonEmpty a)' failed: OOPS! Cannot find information for class
-   Qualified "GHC.Exts" "IsList" unsupported *)
+(* Translating `instance IsList__NonEmpty' failed: OOPS! Cannot find information
+   for class Qualified "GHC.Exts" "IsList" unsupported *)
 
-(* Translating `instance Control.Monad.Fix.MonadFix Data.List.NonEmpty.NonEmpty'
-   failed: OOPS! Cannot find information for class Qualified "Control.Monad.Fix"
-   "MonadFix" unsupported *)
+(* Translating `instance MonadFix__NonEmpty' failed: OOPS! Cannot find
+   information for class Qualified "Control.Monad.Fix" "MonadFix" unsupported *)
 
-(* Translating `instance Control.Monad.Zip.MonadZip Data.List.NonEmpty.NonEmpty'
-   failed: OOPS! Cannot find information for class Qualified "Control.Monad.Zip"
-   "MonadZip" unsupported *)
+(* Translating `instance MonadZip__NonEmpty' failed: OOPS! Cannot find
+   information for class Qualified "Control.Monad.Zip" "MonadZip" unsupported *)
 
 Local Definition Functor__NonEmpty_fmap
    : forall {a} {b}, (a -> b) -> NonEmpty a -> NonEmpty b :=
@@ -300,25 +297,20 @@ Program Instance Traversable__NonEmpty
          Data.Traversable.traverse__ := fun {f} {a} {b} `{GHC.Base.Applicative f} =>
            Traversable__NonEmpty_traverse |}.
 
-(* Translating `instance GHC.Generics.Generic1 Data.List.NonEmpty.NonEmpty'
-   failed: OOPS! Cannot find information for class Qualified "GHC.Generics"
-   "Generic1" unsupported *)
+(* Translating `instance Generic1__NonEmpty' failed: OOPS! Cannot find
+   information for class Qualified "GHC.Generics" "Generic1" unsupported *)
 
-(* Translating `instance forall {a}, GHC.Generics.Generic
-   (Data.List.NonEmpty.NonEmpty a)' failed: OOPS! Cannot find information for class
-   Qualified "GHC.Generics" "Generic" unsupported *)
+(* Translating `instance Generic__NonEmpty' failed: OOPS! Cannot find
+   information for class Qualified "GHC.Generics" "Generic" unsupported *)
 
-(* Translating `instance forall {a}, forall `{Data.Data.Data a}, Data.Data.Data
-   (Data.List.NonEmpty.NonEmpty a)' failed: OOPS! Cannot find information for class
-   Qualified "Data.Data" "Data" unsupported *)
+(* Translating `instance Data__NonEmpty' failed: OOPS! Cannot find information
+   for class Qualified "Data.Data" "Data" unsupported *)
 
-(* Translating `instance forall {a}, forall `{GHC.Read.Read a}, GHC.Read.Read
-   (Data.List.NonEmpty.NonEmpty a)' failed: OOPS! Cannot find information for class
-   Qualified "GHC.Read" "Read" unsupported *)
+(* Translating `instance Read__NonEmpty' failed: OOPS! Cannot find information
+   for class Qualified "GHC.Read" "Read" unsupported *)
 
-(* Translating `instance forall {a}, forall `{GHC.Show.Show a}, GHC.Show.Show
-   (Data.List.NonEmpty.NonEmpty a)' failed: OOPS! Cannot find information for class
-   Qualified "GHC.Show" "Show" unsupported *)
+(* Translating `instance Show__NonEmpty' failed: OOPS! Cannot find information
+   for class Qualified "GHC.Show" "Show" unsupported *)
 
 (* Skipping instance Ord__NonEmpty *)
 

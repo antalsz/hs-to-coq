@@ -13,31 +13,23 @@ Arguments "∘" {_} _ _ _ /.
 
 Import GHC.Base.Notations.
 
-Definition equiv {A} (dxs dys : DList A) : Prop := fromDList dxs =1 fromDList dys.
-Arguments equiv {_} !_ / _.
-Infix "=dl" := equiv (at level 70).
-
 Notation "[ ]" := empty.
 Notation "[ x ]" := (singleton x).
 Notation "x ::: y" := (cons_ x y) (at level 60).
 Notation "x +++ y" := (append x y) (at level 61).
 
 Inductive Denotes {A} : DList A -> list A -> Prop :=
-| emptyD : forall dxs,
-    dxs =dl [] ->
-    Denotes dxs []
-| singletonD : forall dxs x,
-    dxs =dl [x] ->
-    Denotes dxs [x]
-| consD : forall dxs lxs x dys,
+| emptyD :
+    Denotes [] []
+| singletonD : forall x,
+    Denotes [x] [x]
+| consD : forall dxs lxs x,
     Denotes dxs lxs ->
-    dys =dl x ::: dxs ->
-    Denotes dys (x :: lxs)
-| appendD : forall dxs lxs dys lys dzs,
+    Denotes (x ::: dxs) (x :: lxs)
+| appendD : forall dxs lxs dys lys,
     Denotes dxs lxs ->
     Denotes dys lys ->
-    dzs =dl dxs +++ dys ->
-    Denotes dzs (lxs ++ lys).
+    Denotes (dxs +++ dys) (lxs ++ lys).
 
 Hint Constructors Denotes.
 
@@ -47,7 +39,7 @@ Definition WF {A} (dxs: DList A) : Prop :=
 (** Proving that [DList] functions preserve [Denotes]/[WF] *)
 
 Ltac prove_WF fdenotes:=
-  rewrite /WF; repeat move=>[? ?]; eexists; eapply fdenotes; last done; eauto.
+  rewrite /WF; repeat move=>[? ?]; eexists; eapply fdenotes; eauto.
 
 Theorem empty_WF {A} :
   WF (@empty A).
@@ -81,50 +73,21 @@ Theorem fromDList_Denotes {A} (dxs : DList A) (lxs lys : list A) :
   fromDList dxs lys = lxs ++ lys.
 Proof.
   intro H. generalize dependent lys. induction H; intros.
-  all: repeat match goal with
-              | [ds: DList _ |- _] =>
-                destruct ds
-              end.
-  Focus 4.
-  - rewrite /= /eqfun in H1.
-    specialize (H1 lys0).
-    simpl. rewrite H1 -app_assoc.
-    simpl in IHDenotes1. simpl in IHDenotes2.
-    specialize (IHDenotes2 lys0). rewrite IHDenotes2.
-    apply IHDenotes1.
-  all: repeat match goal with
-              | [H: _ =dl _ |- _] =>
-                rewrite /= /eqfun in H;
-                  specialize (H lys)
-              end.
-  - done.
-  - done.
-  - simpl. rewrite H0. f_equal. apply IHDenotes.
+  - reflexivity.
+  - reflexivity.
+  - destruct dxs. simpl in *. f_equal. apply IHDenotes.
+  - destruct dxs; destruct dys. simpl in *.
+    rewrite -app_assoc. specialize (IHDenotes1 (lys ++ lys0)).
+    rewrite -IHDenotes1. f_equal. apply IHDenotes2.
 Qed.
 
-(** [reflect] *)
-
-Definition reflect {A} : list A -> DList A :=
-  MkDList GHC.Base.∘ Coq.Init.Datatypes.app.
-
-Theorem reflect_Denotes {A} (dxs : DList A) (lxs : list A) :
-  dxs =dl reflect lxs <-> Denotes dxs lxs.
+Theorem reflection {A} : forall lxs : list A,
+    exists dxs, Denotes dxs lxs.
 Proof.
-  split.
-  - generalize dependent dxs.
-    induction lxs.
-    + by constructor.
-    + intros. apply consD with (dxs0:=reflect lxs).
-      * apply IHlxs. done.
-      * done.
-  - destruct dxs. rewrite /= /eqfun. intros. 
-    eapply fromDList_Denotes with (lys:=x) in H.
-    done.
+  induction lxs.
+  - exists []. constructor.
+  - destruct IHlxs. exists (a ::: x). constructor; auto.
 Qed.
-
-Theorem reflect_WF {A} (lxs : list A) :
-  WF (reflect lxs).
-Proof. rewrite /WF. exists lxs. eapply reflect_Denotes. done. Qed.
 
 (** [reify] *)
 
@@ -154,30 +117,6 @@ Theorem reify_Denotes {A} (dxs : DList A) (lxs : list A) :
 Proof.
   intros. rewrite -H0. inversion H.
   eapply reify_P. apply H1. done.
-Qed.
-
-(** Compositional theorems *)
-
-Theorem reflect_cons__empty {A} (lxs : list A) :
-  reflect lxs = foldr cons_ empty lxs.
-Proof.
-  rewrite /reflect /=; elim: lxs => [|x lxs IH] //=.
-  by rewrite -IH /=.
-Qed.
-
-Theorem reflect_reify {A} (dxs : DList A) :
-  WF dxs ->
-  reflect (reify dxs) =dl dxs.
-Proof.
-  inversion 1.
-  eapply reify_P; eauto.
-  apply fsym.
-  by apply reflect_Denotes.
-Qed. 
-Theorem reify_reflect {A} (lxs : list A) :
-  reify (reflect lxs) = lxs.
-Proof.
-  by rewrite /= app_nil_r.
 Qed.
 
 Notation "x 'in' y" := (In x (reify y)) (at level 61).
@@ -215,15 +154,15 @@ Ltac apply_reify :=
      | [ |- Denotes empty _ ] =>
          by apply emptyD
      | [ |- Denotes (singleton ?x) _ ] =>
-         by apply (singletonD _ x); try done
+         by apply singletonD
      | [ H: Denotes ?l ?x |- Denotes (cons_ ?a ?l) _] =>
-       eapply (consD _ x a); [apply H | try done ]
+       eapply (consD _ x a); apply H 
      | [ |- Denotes (cons_ ?a ?l) _] =>
        eapply (consD _ (reify l) a); eauto
      | [ H1: Denotes ?x _, H2: Denotes ?y _ |- Denotes (append ?x ?y) _] =>
-       eapply (appendD x _ y _); [apply H1 | apply H2 | try done]
+       eapply (appendD x _ y _); [apply H1 | apply H2 ]
      | [ |- Denotes (append ?x ?y) _] =>
-       eapply (appendD x (reify x) y (reify y)); [auto | auto | try done]
+       eapply (appendD x (reify x) y (reify y)); [auto | auto ]
      end | idtac]
   end; try solve [auto]; try done.
 
@@ -267,10 +206,7 @@ Section ListTheorems.
     inversion WFl.
     solve_by_reify.
     destruct x0; auto.
-    left. exists a. exists (reflect x0).
-    eapply reify_P with (lxs:=a :: x0); [| done].
-    eapply consD with (dxs:=reflect x0).
-    - apply reflect_Denotes. done.
-    - done.
+    left. exists a. pose proof (reflection x0). destruct H0. exists x1.
+    solve_by_reify.
   Qed.
 End ListTheorems.

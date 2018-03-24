@@ -79,6 +79,7 @@ script:
  - make -C examples/rle
  - make -C examples/bag
  - make -C examples/quicksort
+ - make -C examples/dlist
  - make -C examples/intervals
  - make -C examples/containers clean
  - make -C examples/containers

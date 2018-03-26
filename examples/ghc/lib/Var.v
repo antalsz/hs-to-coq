@@ -105,14 +105,14 @@ Definition varName (arg_8__ : Var) :=
 
 (* Converted value declarations: *)
 
-(* Translating `instance Outputable.Outputable Core.Var' failed: OOPS! Cannot
-   find information for class Qualified "Outputable" "Outputable" unsupported *)
+(* Translating `instance Outputable__Var' failed: OOPS! Cannot find information
+   for class Qualified "Outputable" "Outputable" unsupported *)
 
-(* Translating `instance Name.NamedThing Core.Var' failed: OOPS! Cannot find
-   information for class Qualified "Name" "NamedThing" unsupported *)
+(* Translating `instance NamedThing__Var' failed: OOPS! Cannot find information
+   for class Qualified "Name" "NamedThing" unsupported *)
 
-(* Translating `instance Unique.Uniquable Core.Var' failed: OOPS! Cannot find
-   information for class Qualified "Unique" "Uniquable" unsupported *)
+(* Translating `instance Uniquable__Var' failed: OOPS! Cannot find information
+   for class Qualified "Unique" "Uniquable" unsupported *)
 
 Local Definition Eq___Var_op_zeze__ : Core.Var -> Core.Var -> bool :=
   fun a b => realUnique a GHC.Base.== realUnique b.
@@ -143,13 +143,13 @@ Local Definition Ord__Var_min : Core.Var -> Core.Var -> Core.Var :=
 Local Definition Ord__Var_max : Core.Var -> Core.Var -> Core.Var :=
   fun x y => if Ord__Var_op_zlze__ x y : bool then y else x.
 
-(* Translating `instance Data.Data.Data Core.Var' failed: OOPS! Cannot find
-   information for class Qualified "Data.Data" "Data" unsupported *)
+(* Translating `instance Data__Var' failed: OOPS! Cannot find information for
+   class Qualified "Data.Data" "Data" unsupported *)
 
 Axiom globaliseId : forall {A : Type}, A.
 
-(* Translating `globaliseId' failed: invalid record upate with non-record-field
-   `idScope' unsupported *)
+(* Translating `globaliseId' failed: invalid record update with non-record-field
+   `Var.idScope' unsupported *)
 
 Axiom idDetails : forall {A : Type}, A.
 
@@ -215,8 +215,8 @@ Axiom isTcTyVar : forall {A : Type}, A.
 
 Axiom lazySetIdInfo : forall {A : Type}, A.
 
-(* Translating `lazySetIdInfo' failed: invalid record upate with
-   non-record-field `id_info' unsupported *)
+(* Translating `lazySetIdInfo' failed: invalid record update with
+   non-record-field `Var.id_info' unsupported *)
 
 Axiom mkTcTyVar : forall {A : Type}, A.
 
@@ -253,8 +253,8 @@ Definition mkCoVar : Name.Name -> Core.Type_ -> CoVar :=
 
 Axiom setIdDetails : forall {A : Type}, A.
 
-(* Translating `setIdDetails' failed: invalid record upate with non-record-field
-   `id_details' unsupported *)
+(* Translating `setIdDetails' failed: invalid record update with
+   non-record-field `Var.id_details' unsupported *)
 
 Axiom setIdExported : forall {A : Type}, A.
 
@@ -263,39 +263,39 @@ Axiom setIdExported : forall {A : Type}, A.
 
 Axiom setIdNotExported : forall {A : Type}, A.
 
-(* Translating `setIdNotExported' failed: invalid record upate with
-   non-record-field `idScope' unsupported *)
+(* Translating `setIdNotExported' failed: invalid record update with
+   non-record-field `Var.idScope' unsupported *)
 
 Axiom setTcTyVarDetails : forall {A : Type}, A.
 
-(* Translating `setTcTyVarDetails' failed: invalid record upate with
-   non-record-field `tc_tv_details' unsupported *)
+(* Translating `setTcTyVarDetails' failed: invalid record update with
+   non-record-field `Var.tc_tv_details' unsupported *)
 
 Axiom setTyVarKind : forall {A : Type}, A.
 
-(* Translating `setTyVarKind' failed: invalid record upate with non-record-field
-   `varType' unsupported *)
+(* Translating `setTyVarKind' failed: invalid record update with
+   non-record-field `Var.varType' unsupported *)
 
 Axiom setVarName : forall {A : Type}, A.
 
 Definition setTyVarName : TyVar -> Name.Name -> TyVar :=
   setVarName.
 
-(* Translating `setVarName' failed: invalid record upate with non-record-fields
-   `realUnique' and `varName' unsupported *)
+(* Translating `setVarName' failed: invalid record update with non-record-fields
+   `Var.realUnique' and `Var.varName' unsupported *)
 
 Axiom setVarType : forall {A : Type}, A.
 
-(* Translating `setVarType' failed: invalid record upate with non-record-field
-   `varType' unsupported *)
+(* Translating `setVarType' failed: invalid record update with non-record-field
+   `Var.varType' unsupported *)
 
 Axiom setVarUnique : forall {A : Type}, A.
 
 Definition setTyVarUnique : TyVar -> Unique.Unique -> TyVar :=
   setVarUnique.
 
-(* Translating `setVarUnique' failed: invalid record upate with
-   non-record-fields `realUnique' and `varName' unsupported *)
+(* Translating `setVarUnique' failed: invalid record update with
+   non-record-fields `Var.realUnique' and `Var.varName' unsupported *)
 
 Definition tcTyVarDetails : TyVar -> unit :=
   fun x => tt.
@@ -308,23 +308,23 @@ Definition tyVarName : TyVar -> Name.Name :=
 
 Axiom updateTyVarKind : forall {A : Type}, A.
 
-(* Translating `updateTyVarKind' failed: invalid record upate with
-   non-record-field `varType' unsupported *)
+(* Translating `updateTyVarKind' failed: invalid record update with
+   non-record-field `Var.varType' unsupported *)
 
 Axiom updateTyVarKindM : forall {A : Type}, A.
 
-(* Translating `updateTyVarKindM' failed: invalid record upate with
-   non-record-field `varType' unsupported *)
+(* Translating `updateTyVarKindM' failed: invalid record update with
+   non-record-field `Var.varType' unsupported *)
 
 Axiom updateVarType : forall {A : Type}, A.
 
-(* Translating `updateVarType' failed: invalid record upate with
-   non-record-field `varType' unsupported *)
+(* Translating `updateVarType' failed: invalid record update with
+   non-record-field `Var.varType' unsupported *)
 
 Axiom updateVarTypeM : forall {A : Type}, A.
 
-(* Translating `updateVarTypeM' failed: invalid record upate with
-   non-record-field `varType' unsupported *)
+(* Translating `updateVarTypeM' failed: invalid record update with
+   non-record-field `Var.varType' unsupported *)
 
 Definition varUnique : Core.Var -> Unique.Unique :=
   fun var => Unique.mkUniqueGrimily (realUnique var).

@@ -154,13 +154,11 @@ Local Definition BooleanFormula_foldr
 
 (* Converted value declarations: *)
 
-(* Translating `instance forall {a}, forall `{Outputable.Outputable a},
-   Outputable.Outputable (BooleanFormula.BooleanFormula a)' failed: OOPS! Cannot
-   find information for class Qualified "Outputable" "Outputable" unsupported *)
+(* Translating `instance Outputable__BooleanFormula' failed: OOPS! Cannot find
+   information for class Qualified "Outputable" "Outputable" unsupported *)
 
-(* Translating `instance forall {a}, forall `{Binary.Binary a}, Binary.Binary
-   (BooleanFormula.BooleanFormula a)' failed: OOPS! Cannot find information for
-   class Qualified "Binary" "Binary" unsupported *)
+(* Translating `instance Binary__BooleanFormula' failed: OOPS! Cannot find
+   information for class Qualified "Binary" "Binary" unsupported *)
 
 Local Definition Traversable__BooleanFormula_traverse {f} {a} {b} `{_
    : GHC.Base.Applicative f}
@@ -328,9 +326,8 @@ Program Instance Traversable__BooleanFormula
          Data.Traversable.traverse__ := fun {f} {a} {b} `{GHC.Base.Applicative f} =>
            Traversable__BooleanFormula_traverse |}.
 
-(* Translating `instance forall {a}, forall `{Data.Data.Data a}, Data.Data.Data
-   (BooleanFormula.BooleanFormula a)' failed: OOPS! Cannot find information for
-   class Qualified "Data.Data" "Data" unsupported *)
+(* Translating `instance Data__BooleanFormula' failed: OOPS! Cannot find
+   information for class Qualified "Data.Data" "Data" unsupported *)
 
 Local Definition Eq___BooleanFormula_op_zeze__ {inst_a} `{GHC.Base.Eq_ inst_a}
    : BooleanFormula inst_a -> BooleanFormula inst_a -> bool :=

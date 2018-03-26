@@ -81,9 +81,8 @@ Local Definition Applicative__UniqSM_op_zlztzg__
                  pair (ff xx) us'')
       end.
 
-(* Translating `instance Control.Monad.Fix.MonadFix UniqSupply.UniqSM' failed:
-   OOPS! Cannot find information for class Qualified "Control.Monad.Fix" "MonadFix"
-   unsupported *)
+(* Translating `instance MonadFix__UniqSM' failed: OOPS! Cannot find information
+   for class Qualified "Control.Monad.Fix" "MonadFix" unsupported *)
 
 Definition getUniqueSupplyM3 {m} `{MonadUnique m}
    : m (UniqSupply * UniqSupply * UniqSupply)%type :=

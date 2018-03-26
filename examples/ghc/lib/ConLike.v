@@ -80,22 +80,20 @@ Program Instance Ord__ConLike : GHC.Base.Ord ConLike :=
          GHC.Base.max__ := Ord__ConLike_max ;
          GHC.Base.min__ := Ord__ConLike_min |}.
 
-(* Translating `instance Unique.Uniquable ConLike.ConLike' failed: OOPS! Cannot
-   find information for class Qualified "Unique" "Uniquable" unsupported *)
+(* Translating `instance Uniquable__ConLike' failed: OOPS! Cannot find
+   information for class Qualified "Unique" "Uniquable" unsupported *)
 
-(* Translating `instance Name.NamedThing ConLike.ConLike' failed: OOPS! Cannot
-   find information for class Qualified "Name" "NamedThing" unsupported *)
+(* Translating `instance NamedThing__ConLike' failed: OOPS! Cannot find
+   information for class Qualified "Name" "NamedThing" unsupported *)
 
-(* Translating `instance Outputable.Outputable ConLike.ConLike' failed: OOPS!
-   Cannot find information for class Qualified "Outputable" "Outputable"
-   unsupported *)
+(* Translating `instance Outputable__ConLike' failed: OOPS! Cannot find
+   information for class Qualified "Outputable" "Outputable" unsupported *)
 
-(* Translating `instance Outputable.OutputableBndr ConLike.ConLike' failed:
-   OOPS! Cannot find information for class Qualified "Outputable" "OutputableBndr"
-   unsupported *)
+(* Translating `instance OutputableBndr__ConLike' failed: OOPS! Cannot find
+   information for class Qualified "Outputable" "OutputableBndr" unsupported *)
 
-(* Translating `instance Data.Data.Data ConLike.ConLike' failed: OOPS! Cannot
-   find information for class Qualified "Data.Data" "Data" unsupported *)
+(* Translating `instance Data__ConLike' failed: OOPS! Cannot find information
+   for class Qualified "Data.Data" "Data" unsupported *)
 
 Definition conLikeArity : ConLike -> BasicTypes.Arity :=
   fun arg_0__ =>
@@ -116,8 +114,8 @@ Definition conLikesWithFields
   fun con_likes lbls =>
     let has_fld :=
       fun dc lbl =>
-        Data.Foldable.any (fun fl => flLabel fl GHC.Base.== lbl) (conLikeFieldLabels
-                                                                  dc) in
+        Data.Foldable.any (fun fl => FieldLabel.flLabel fl GHC.Base.== lbl)
+        (conLikeFieldLabels dc) in
     let has_flds := fun dc => Data.Foldable.all (has_fld dc) lbls in
     GHC.List.filter has_flds con_likes.
 
@@ -129,11 +127,11 @@ Definition conLikeName : ConLike -> Name.Name :=
     end.
 
 (* Unbound variables:
-     bool comparison flLabel list BasicTypes.Arity Data.Foldable.all
-     Data.Foldable.any Data.Function.on DataCon.DataCon DataCon.dataConFieldLabels
-     DataCon.dataConName DataCon.dataConSourceArity FieldLabel.FieldLabel
-     FieldLabel.FieldLabelString GHC.Base.Eq_ GHC.Base.Ord GHC.Base.compare
-     GHC.Base.op_zeze__ GHC.Base.op_zg__ GHC.Base.op_zgze__ GHC.Base.op_zl__
-     GHC.Base.op_zlze__ GHC.Base.op_zsze__ GHC.List.filter Name.Name PatSyn.PatSyn
-     PatSyn.patSynArity PatSyn.patSynFieldLabels PatSyn.patSynName Unique.getUnique
+     bool comparison list BasicTypes.Arity Data.Foldable.all Data.Foldable.any
+     Data.Function.on DataCon.DataCon DataCon.dataConFieldLabels DataCon.dataConName
+     DataCon.dataConSourceArity FieldLabel.FieldLabel FieldLabel.FieldLabelString
+     FieldLabel.flLabel GHC.Base.Eq_ GHC.Base.Ord GHC.Base.compare GHC.Base.op_zeze__
+     GHC.Base.op_zg__ GHC.Base.op_zgze__ GHC.Base.op_zl__ GHC.Base.op_zlze__
+     GHC.Base.op_zsze__ GHC.List.filter Name.Name PatSyn.PatSyn PatSyn.patSynArity
+     PatSyn.patSynFieldLabels PatSyn.patSynName Unique.getUnique
 *)

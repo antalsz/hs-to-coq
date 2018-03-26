@@ -728,19 +728,16 @@ Admitted.
 
 (* Converted value declarations: *)
 
-(* Translating `instance Binary.Binary CoreSyn.IsOrphan' failed: OOPS! Cannot
-   find information for class Qualified "Binary" "Binary" unsupported *)
+(* Translating `instance Binary__IsOrphan' failed: OOPS! Cannot find information
+   for class Qualified "Binary" "Binary" unsupported *)
 
-(* Translating `instance Outputable.Outputable CoreSyn.AltCon' failed: OOPS!
-   Cannot find information for class Qualified "Outputable" "Outputable"
-   unsupported *)
-
-(* Translating `instance forall {b}, forall `{Outputable.Outputable b},
-   Outputable.Outputable (CoreSyn.TaggedBndr b)' failed: OOPS! Cannot find
+(* Translating `instance Outputable__AltCon' failed: OOPS! Cannot find
    information for class Qualified "Outputable" "Outputable" unsupported *)
 
-(* Translating `instance forall {b}, forall `{Outputable.Outputable b},
-   Outputable.OutputableBndr (CoreSyn.TaggedBndr b)' failed: OOPS! Cannot find
+(* Translating `instance Outputable__TaggedBndr' failed: OOPS! Cannot find
+   information for class Qualified "Outputable" "Outputable" unsupported *)
+
+(* Translating `instance OutputableBndr__TaggedBndr' failed: OOPS! Cannot find
    information for class Qualified "Outputable" "OutputableBndr" unsupported *)
 
 Local Definition Eq___UnfoldingGuidance_op_zeze__
@@ -764,8 +761,8 @@ Program Instance Eq___UnfoldingGuidance : GHC.Base.Eq_ UnfoldingGuidance :=
     k {| GHC.Base.op_zeze____ := Eq___UnfoldingGuidance_op_zeze__ ;
          GHC.Base.op_zsze____ := Eq___UnfoldingGuidance_op_zsze__ |}.
 
-(* Translating `instance Data.Data.Data CoreSyn.IsOrphan' failed: OOPS! Cannot
-   find information for class Qualified "Data.Data" "Data" unsupported *)
+(* Translating `instance Data__IsOrphan' failed: OOPS! Cannot find information
+   for class Qualified "Data.Data" "Data" unsupported *)
 
 Local Definition Eq___TickishPlacement_op_zeze__
    : TickishPlacement -> TickishPlacement -> bool :=
@@ -805,21 +802,17 @@ Program Instance Eq___TickishScoping : GHC.Base.Eq_ TickishScoping :=
     k {| GHC.Base.op_zeze____ := Eq___TickishScoping_op_zeze__ ;
          GHC.Base.op_zsze____ := Eq___TickishScoping_op_zsze__ |}.
 
-(* Translating `instance forall {b}, forall `{Data.Data.Data b}, Data.Data.Data
-   (CoreSyn.Bind b)' failed: OOPS! Cannot find information for class Qualified
-   "Data.Data" "Data" unsupported *)
-
-(* Translating `instance forall {b}, forall `{Data.Data.Data b}, Data.Data.Data
-   (CoreSyn.Expr b)' failed: OOPS! Cannot find information for class Qualified
-   "Data.Data" "Data" unsupported *)
-
-(* Translating `instance forall {id}, forall `{Data.Data.Data id},
-   Data.Data.Data (CoreSyn.Tickish id)' failed: OOPS! Cannot find information for
+(* Translating `instance Data__Bind' failed: OOPS! Cannot find information for
    class Qualified "Data.Data" "Data" unsupported *)
 
-(* Translating `instance forall {id}, forall `{GHC.Base.Ord id}, GHC.Base.Ord
-   (CoreSyn.Tickish id)' failed: using a record pattern for the unknown constructor
-   `ProfNote' unsupported *)
+(* Translating `instance Data__Expr' failed: OOPS! Cannot find information for
+   class Qualified "Data.Data" "Data" unsupported *)
+
+(* Translating `instance Data__Tickish' failed: OOPS! Cannot find information
+   for class Qualified "Data.Data" "Data" unsupported *)
+
+(* Translating `instance Ord__Tickish' failed: using a record pattern for the
+   unknown constructor `ProfNote' unsupported *)
 
 Local Definition Eq___Tickish_op_zsze__ {inst_id} `{_ : GHC.Base.Eq_ inst_id}
    : Tickish inst_id -> Tickish inst_id -> bool :=
@@ -835,8 +828,8 @@ Program Instance Eq___Tickish {id} `{GHC.Base.Eq_ id}
     k {| GHC.Base.op_zeze____ := Eq___Tickish_op_zeze__ ;
          GHC.Base.op_zsze____ := Eq___Tickish_op_zsze__ |}.
 
-(* Translating `instance Data.Data.Data CoreSyn.AltCon' failed: OOPS! Cannot
-   find information for class Qualified "Data.Data" "Data" unsupported *)
+(* Translating `instance Data__AltCon' failed: OOPS! Cannot find information for
+   class Qualified "Data.Data" "Data" unsupported *)
 
 Local Definition Ord__AltCon_compare : AltCon -> AltCon -> comparison :=
   fun a b =>
@@ -1014,9 +1007,8 @@ Definition collectAnnArgsTicks {b} {a}
                                       match arg_0__, arg_1__, arg_2__ with
                                       | pair _ (AnnApp f a), as_, ts => go f (cons a as_) ts
                                       | pair _ (AnnTick t e), as_, ts =>
-                                          if tickishOk t : bool
-                                          then go e as_ (cons t ts)
-                                          else j_4__
+                                          if tickishOk t : bool then go e as_ (cons t ts) else
+                                          j_4__
                                       | _, _, _ => j_4__
                                       end) in
     go expr nil nil.
@@ -1244,8 +1236,8 @@ Definition hasStableCoreUnfolding_maybe : Unfolding -> option bool :=
              | UnfWhen _ _ _ => Some true
              | UnfIfGoodArgs _ _ _ => Some false
              | UnfNever => None
-             end
-        else None
+             end else
+        None
     | _ => None
     end.
 
@@ -1422,14 +1414,12 @@ Definition valBndrCount : list CoreBndr -> GHC.Num.Int :=
 
 Definition varToCoreExpr {b} : CoreBndr -> Expr b :=
   fun v =>
-    if Var.isTyVar v : bool
-    then Type_ (TyCoRep.mkTyVarTy v)
-    else if Var.isCoVar v : bool
-         then Coercion (TyCoRep.mkCoVarCo v)
-         else if andb Util.debugIsOn (negb (Var.isId v)) : bool
-              then (Panic.assertPanic (GHC.Base.hs_string__ "ghc/compiler/coreSyn/CoreSyn.hs")
-                    #1549)
-              else Var v.
+    if Var.isTyVar v : bool then Type_ (TyCoRep.mkTyVarTy v) else
+    if Var.isCoVar v : bool then Coercion (TyCoRep.mkCoVarCo v) else
+    if andb Util.debugIsOn (negb (Var.isId v)) : bool
+    then (Panic.assertPanic (GHC.Base.hs_string__ "ghc/compiler/coreSyn/CoreSyn.hs")
+          #1549)
+    else Var v.
 
 Definition varsToCoreExprs {b} : list CoreBndr -> list (Expr b) :=
   fun vs => GHC.Base.map varToCoreExpr vs.

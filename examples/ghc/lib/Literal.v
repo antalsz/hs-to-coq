@@ -26,6 +26,7 @@ Require GHC.Enum.
 Require GHC.Num.
 Require GHC.Real.
 Require Panic.
+Require TyCon.
 Require UniqFM.
 Import GHC.Base.Notations.
 Import GHC.Num.Notations.
@@ -57,18 +58,17 @@ Parameter inCharRange : GHC.Char.Char -> bool.
 
 (* Converted value declarations: *)
 
-(* Translating `instance Binary.Binary Literal.Literal' failed: OOPS! Cannot
-   find information for class Qualified "Binary" "Binary" unsupported *)
+(* Translating `instance Binary__Literal' failed: OOPS! Cannot find information
+   for class Qualified "Binary" "Binary" unsupported *)
 
-(* Translating `instance Outputable.Outputable Literal.Literal' failed: OOPS!
-   Cannot find information for class Qualified "Outputable" "Outputable"
-   unsupported *)
+(* Translating `instance Outputable__Literal' failed: OOPS! Cannot find
+   information for class Qualified "Outputable" "Outputable" unsupported *)
 
-(* Translating `instance Data.Data.Data Literal.Literal' failed: OOPS! Cannot
-   find information for class Qualified "Data.Data" "Data" unsupported *)
+(* Translating `instance Data__Literal' failed: OOPS! Cannot find information
+   for class Qualified "Data.Data" "Data" unsupported *)
 
 Definition absentLiteralOf : Core.TyCon -> option Literal :=
-  fun tc => UniqFM.lookupUFM absent_lits (tyConName tc).
+  fun tc => UniqFM.lookupUFM absent_lits (TyCon.tyConName tc).
 
 Definition char2IntLit : Literal -> Literal :=
   fun arg_0__ =>
@@ -161,8 +161,8 @@ Definition int2WordLit : DynFlags.DynFlags -> Literal -> Literal :=
     match arg_0__, arg_1__ with
     | dflags, MachInt i =>
         if i GHC.Base.< #0 : bool
-        then MachWord ((#1 GHC.Num.+ DynFlags.tARGET_MAX_WORD dflags) GHC.Num.+ i)
-        else MachWord i
+        then MachWord ((#1 GHC.Num.+ DynFlags.tARGET_MAX_WORD dflags) GHC.Num.+ i) else
+        MachWord i
     | _, _ =>
         match arg_0__, arg_1__ with
         | _, l => Panic.panicStr (GHC.Base.hs_string__ "int2WordLit") (Panic.noString l)
@@ -355,8 +355,8 @@ Definition word2IntLit : DynFlags.DynFlags -> Literal -> Literal :=
     match arg_0__, arg_1__ with
     | dflags, MachWord w =>
         if w GHC.Base.> DynFlags.tARGET_MAX_INT dflags : bool
-        then MachInt ((w GHC.Num.- DynFlags.tARGET_MAX_WORD dflags) GHC.Num.- #1)
-        else MachInt w
+        then MachInt ((w GHC.Num.- DynFlags.tARGET_MAX_WORD dflags) GHC.Num.- #1) else
+        MachInt w
     | _, _ =>
         match arg_0__, arg_1__ with
         | _, l => Panic.panicStr (GHC.Base.hs_string__ "word2IntLit") (Panic.noString l)
@@ -364,7 +364,7 @@ Definition word2IntLit : DynFlags.DynFlags -> Literal -> Literal :=
     end.
 
 (* Unbound variables:
-     Eq Gt Lt absent_lits andb bool comparison false option true tyConName
+     Eq Gt Lt absent_lits andb bool comparison false option true
      BasicTypes.FunctionOrData Core.TyCon Core.Type_ Core.addrPrimTy Core.charPrimTy
      Core.doublePrimTy Core.floatPrimTy Core.int64PrimTy Core.intPrimTy
      Core.word64PrimTy Core.wordPrimTy DynFlags.DynFlags DynFlags.tARGET_MAX_INT
@@ -376,5 +376,5 @@ Definition word2IntLit : DynFlags.DynFlags -> Literal -> Literal :=
      GHC.Char.chr GHC.Char.ord GHC.Enum.maxBound GHC.Enum.minBound GHC.Num.Int
      GHC.Num.Integer GHC.Num.abs GHC.Num.fromInteger GHC.Num.op_zm__ GHC.Num.op_zp__
      GHC.Real.Rational GHC.Real.numerator GHC.Real.rem GHC.Real.toInteger
-     Panic.noString Panic.panicStr UniqFM.lookupUFM
+     Panic.noString Panic.panicStr TyCon.tyConName UniqFM.lookupUFM
 *)

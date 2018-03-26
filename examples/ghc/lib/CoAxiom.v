@@ -278,36 +278,32 @@ Program Instance Ord__CoAxiom {br} : GHC.Base.Ord (Core.CoAxiom br) :=
          GHC.Base.max__ := Ord__CoAxiom_max ;
          GHC.Base.min__ := Ord__CoAxiom_min |}.
 
-(* Translating `instance forall {br}, Unique.Uniquable (Core.CoAxiom br)'
-   failed: OOPS! Cannot find information for class Qualified "Unique" "Uniquable"
-   unsupported *)
+(* Translating `instance Uniquable__CoAxiom' failed: OOPS! Cannot find
+   information for class Qualified "Unique" "Uniquable" unsupported *)
 
-(* Translating `instance forall {br}, Outputable.Outputable (Core.CoAxiom br)'
-   failed: OOPS! Cannot find information for class Qualified "Outputable"
-   "Outputable" unsupported *)
+(* Translating `instance Outputable__CoAxiom' failed: OOPS! Cannot find
+   information for class Qualified "Outputable" "Outputable" unsupported *)
 
-(* Translating `instance forall {br}, Name.NamedThing (Core.CoAxiom br)' failed:
-   OOPS! Cannot find information for class Qualified "Name" "NamedThing"
-   unsupported *)
+(* Translating `instance NamedThing__CoAxiom' failed: OOPS! Cannot find
+   information for class Qualified "Name" "NamedThing" unsupported *)
 
-(* Translating `instance forall {br}, forall `{Data.Typeable.Internal.Typeable
-   br}, Data.Data.Data (Core.CoAxiom br)' failed: OOPS! Cannot find information for
-   class Qualified "Data.Data" "Data" unsupported *)
+(* Translating `instance Data__CoAxiom' failed: OOPS! Cannot find information
+   for class Qualified "Data.Data" "Data" unsupported *)
 
-(* Translating `instance Outputable.Outputable Core.CoAxBranch' failed: using a
-   record pattern for the unknown constructor `CoAxBranch' unsupported *)
+(* Translating `instance Outputable__CoAxBranch' failed: using a record pattern
+   for the unknown constructor `CoAxBranch' unsupported *)
 
-(* Translating `instance Outputable.Outputable Core.Role' failed: OOPS! Cannot
-   find information for class Qualified "Outputable" "Outputable" unsupported *)
+(* Translating `instance Outputable__Role' failed: OOPS! Cannot find information
+   for class Qualified "Outputable" "Outputable" unsupported *)
 
-(* Translating `instance Binary.Binary Core.Role' failed: OOPS! Cannot find
-   information for class Qualified "Binary" "Binary" unsupported *)
+(* Translating `instance Binary__Role' failed: OOPS! Cannot find information for
+   class Qualified "Binary" "Binary" unsupported *)
 
-(* Translating `instance Data.Data.Data Core.CoAxiomRule' failed: OOPS! Cannot
-   find information for class Qualified "Data.Data" "Data" unsupported *)
+(* Translating `instance Data__CoAxiomRule' failed: OOPS! Cannot find
+   information for class Qualified "Data.Data" "Data" unsupported *)
 
-(* Translating `instance Unique.Uniquable Core.CoAxiomRule' failed: OOPS! Cannot
-   find information for class Qualified "Unique" "Uniquable" unsupported *)
+(* Translating `instance Uniquable__CoAxiomRule' failed: OOPS! Cannot find
+   information for class Qualified "Unique" "Uniquable" unsupported *)
 
 Local Definition Eq___CoAxiomRule_op_zeze__
    : Core.CoAxiomRule -> Core.CoAxiomRule -> bool :=
@@ -360,15 +356,14 @@ Program Instance Ord__CoAxiomRule : GHC.Base.Ord Core.CoAxiomRule :=
          GHC.Base.max__ := Ord__CoAxiomRule_max ;
          GHC.Base.min__ := Ord__CoAxiomRule_min |}.
 
-(* Translating `instance Outputable.Outputable Core.CoAxiomRule' failed: OOPS!
-   Cannot find information for class Qualified "Outputable" "Outputable"
-   unsupported *)
+(* Translating `instance Outputable__CoAxiomRule' failed: OOPS! Cannot find
+   information for class Qualified "Outputable" "Outputable" unsupported *)
 
-(* Translating `instance Data.Data.Data Core.CoAxBranch' failed: OOPS! Cannot
-   find information for class Qualified "Data.Data" "Data" unsupported *)
+(* Translating `instance Data__CoAxBranch' failed: OOPS! Cannot find information
+   for class Qualified "Data.Data" "Data" unsupported *)
 
-(* Translating `instance Data.Data.Data Core.Role' failed: OOPS! Cannot find
-   information for class Qualified "Data.Data" "Data" unsupported *)
+(* Translating `instance Data__Role' failed: OOPS! Cannot find information for
+   class Qualified "Data.Data" "Data" unsupported *)
 
 (* Skipping instance Ord__Role *)
 

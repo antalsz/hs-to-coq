@@ -40,9 +40,8 @@ Arguments Snoc {_} _ _.
 Arguments Two {_} _ _.
 (* Converted value declarations: *)
 
-(* Translating `instance forall {a}, forall `{Outputable.Outputable a},
-   Outputable.Outputable (OrdList.OrdList a)' failed: OOPS! Cannot find information
-   for class Qualified "Outputable" "Outputable" unsupported *)
+(* Translating `instance Outputable__OrdList' failed: OOPS! Cannot find
+   information for class Qualified "Outputable" "Outputable" unsupported *)
 
 Definition appOL {a} : OrdList a -> OrdList a -> OrdList a :=
   fun arg_0__ arg_1__ =>

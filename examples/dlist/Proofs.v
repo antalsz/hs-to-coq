@@ -11,122 +11,117 @@ Arguments "∘" {_} _ _ _ /.
 
 (** Well-formed [DList]s *)
 
-Definition equiv {A} (dxs dys : DList A) : Prop := fromDList dxs =1 fromDList dys.
-Arguments equiv {_} !_ / _.
-Infix "=dl" := equiv (at level 70).
-  
-Definition Denotes {A} (dxs : DList A) (lxs : list A) : Prop :=
-  dxs =dl fromList lxs.
-Arguments Denotes {_} !_ / _.
+Import GHC.Base.Notations.
 
-Definition WF {A} (dxs : DList A) : Prop :=
-  exists lxs : list A, Denotes dxs lxs.
+Notation "[ ]" := empty.
+Notation "[ x ]" := (singleton x).
+Notation "x ::: y" := (cons_ x y) (at level 60).
+Notation "x +++ y" := (append x y) (at level 61).
+
+Inductive Denotes {A} : DList A -> list A -> Prop :=
+| emptyD :
+    Denotes [] []
+| singletonD : forall x,
+    Denotes [x] [x]
+| consD : forall dxs lxs x,
+    Denotes dxs lxs ->
+    Denotes (x ::: dxs) (x :: lxs)
+| appendD : forall dxs lxs dys lys,
+    Denotes dxs lxs ->
+    Denotes dys lys ->
+    Denotes (dxs +++ dys) (lxs ++ lys).
+
+Hint Constructors Denotes.
+
+Definition WF {A} (dxs: DList A) : Prop :=
+  exists lxs, Denotes dxs lxs.
 
 (** Proving that [DList] functions preserve [Denotes]/[WF] *)
 
-Ltac Denotes_to_WF f_Denotes :=
-  repeat intros [? ?]; eexists; apply f_Denotes; eassumption.
-
-(** [fromList] *)
-
-Theorem fromList_Denotes {A} (lxs : list A) :
-  Denotes (fromList lxs) lxs.
-Proof. done. Qed.
-
-Theorem fromList_WF {A} (lxs : list A) :
-  WF (fromList lxs).
-Proof. Denotes_to_WF @fromList_Denotes. Qed.
-
-(** [empty] *)
-
-Theorem empty_Denotes {A} :
-  Denotes (@empty A) [].
-Proof. done. Qed.
+Ltac prove_WF fdenotes:=
+  rewrite /WF; repeat move=>[? ?]; eexists; eapply fdenotes; eauto.
 
 Theorem empty_WF {A} :
   WF (@empty A).
-Proof. Denotes_to_WF @empty_Denotes. Qed.
+Proof. prove_WF (@emptyD A). Qed.
 
 (** [singleton] *)
 
-Theorem singleton_Denotes {A} (x : A) :
-  Denotes (singleton x) [x].
-Proof. done. Qed.
-
 Theorem singleton_WF {A} (x : A) :
   WF (singleton x).
-Proof. Denotes_to_WF @singleton_Denotes. Qed.
+Proof. prove_WF (@singletonD A). Qed.
 
 (** [cons] *)
-
-Theorem cons__Denotes {A} (x : A) (dxs : DList A) (lxs : list A) :
-  Denotes dxs lxs ->
-  Denotes (cons_ x dxs) (x :: lxs).
-Proof.
-  move: dxs => [fxs] /= den_xs ys.
-  by rewrite den_xs.
-Qed.
 
 Theorem cons__WF {A} (x : A) (dxs : DList A) :
   WF dxs ->
   WF (cons_ x dxs).
-Proof. Denotes_to_WF @cons__Denotes. Qed.
+Proof. prove_WF (@consD A). Qed.
 
 (** [append] *)
-
-Theorem append_Denotes {A} (dxs : DList A) (lxs : list A)
-                           (dys : DList A) (lys : list A) :
-  Denotes dxs lxs ->
-  Denotes dys lys ->
-  Denotes (append dxs dys) (lxs ++ lys).
-Proof.
-  move: dxs dys => [fxs] [fys] /= den_xs den_ys zs.
-  by rewrite den_xs den_ys app_assoc.
-Qed.
 
 Theorem append_WF {A} (dxs dys : DList A) :
   WF dxs ->
   WF dys ->
-  WF (append dxs dys).
-Proof. Denotes_to_WF @append_Denotes. Qed.
+  WF (dxs +++ dys).
+Proof. prove_WF (@appendD A). Qed.
 
-(** [toList] *)
+(** [fromDList] *)
 
-Theorem Denotes_toList {A} (dxs : DList A) (lxs : list A) :
+Theorem fromDList_Denotes {A} (dxs : DList A) (lxs lys : list A) :
   Denotes dxs lxs ->
-  toList dxs = lxs.
+  fromDList dxs lys = lxs ++ lys.
 Proof.
-  move: dxs => [fxs] /= den_xs.
-  by rewrite den_xs app_nil_r.
+  intro H. generalize dependent lys. induction H; intros.
+  - reflexivity.
+  - reflexivity.
+  - destruct dxs. simpl in *. f_equal. apply IHDenotes.
+  - destruct dxs; destruct dys. simpl in *.
+    rewrite -app_assoc. specialize (IHDenotes1 (lys ++ lys0)).
+    rewrite -IHDenotes1. f_equal. apply IHDenotes2.
 Qed.
 
-Theorem WF_toList {A} (dxs : DList A) :
+Theorem reflection {A} : forall lxs : list A,
+    exists dxs, Denotes dxs lxs.
+Proof.
+  induction lxs.
+  - exists []. constructor.
+  - destruct IHlxs. exists (a ::: x). constructor; auto.
+Qed.
+
+(** [reify] *)
+
+Definition reify {A} := @toList A.
+
+Theorem Denotes_reify {A} (dxs : DList A) (lxs : list A) :
+  Denotes dxs lxs -> reify dxs = lxs.
+Proof.
+  move=>H. destruct dxs. rewrite /reify /=.
+  replace l with (fromDList (MkDList l)).
+  replace lxs with (lxs ++ []).
+  by apply fromDList_Denotes.
+  by rewrite app_nil_r.
+  done.
+Qed.
+
+Theorem reify_P {A} (dxs : DList A) (lxs : list A) (P : list A -> Prop) :
+  Denotes dxs lxs -> P lxs -> P (reify dxs).
+Proof.
+  intros. apply Denotes_reify in H. by rewrite H.
+Qed.
+
+Theorem reify_Denotes {A} (dxs : DList A) (lxs : list A) :
   WF dxs ->
-  Denotes dxs (toList dxs).
-Proof. by intros [lxs den_xs]; rewrite (Denotes_toList _ lxs). Qed.
-
-(** Compositional theorems *)
-
-Theorem fromList_cons__empty {A} (lxs : list A) :
-  fromList lxs = foldr cons_ empty lxs.
+  reify dxs = lxs ->
+  Denotes dxs lxs.
 Proof.
-  rewrite /fromList /=; elim: lxs => [|x lxs IH] //=.
-  by rewrite -IH /=.
+  intros. rewrite -H0. inversion H.
+  eapply reify_P. apply H1. done.
 Qed.
 
-Theorem fromList_toList {A} (dxs : DList A) :
-  WF dxs ->
-  fromList (toList dxs) =dl dxs.
-Proof.
-  case: dxs => [fxs] /= [/= lxs den_xs] ys /=.
-  by rewrite !den_xs app_nil_r.
-Qed.
-
-Theorem toList_fromList {A} (lxs : list A) :
-  toList (fromList lxs) = lxs.
-Proof.
-  by rewrite /= app_nil_r.
-Qed.
+Notation "x 'in' y" := (In x (reify y)) (at level 61).
+Notation "x =l y" := (reify x = reify y) (at level 62).
+Notation "'len' x" := (Datatypes.length (reify x)) (at level 61).
 
 (** Tests *)
 
@@ -142,13 +137,76 @@ Theorem appendA {A} :
   associative (@append A).
 Proof. by move=> [fxs] [fys] [fzs] /=. Qed.
 
-Theorem length_append_comm {A} (dxs dys : DList A) :
-  WF dxs ->
-  WF dys ->
-  length (toList (append dxs dys)) = length (toList (append dys dxs)).
-Proof.
-  move: dxs dys => [fxs] [fys] /= [/= lxs den_xs] [/= lys den_ys].
-  by rewrite !den_xs !den_ys
-             !hs_coq_list_length !Zlength_correct
-             !app_length /= !Nat.add_0_r Nat.add_comm.
-Qed.
+Hint Resolve empty_WF.
+Hint Resolve singleton_WF.
+Hint Resolve cons__WF.
+Hint Resolve append_WF.
+
+Hint Resolve reify_Denotes.
+
+Ltac apply_reify :=
+  match goal with
+  | [ |- context[reify _]] =>
+    eapply reify_P;
+    [match goal with
+     | [ H: Denotes ?x _ |- Denotes ?x _ ] =>
+       apply H
+     | [ |- Denotes empty _ ] =>
+         by apply emptyD
+     | [ |- Denotes (singleton ?x) _ ] =>
+         by apply singletonD
+     | [ H: Denotes ?l ?x |- Denotes (cons_ ?a ?l) _] =>
+       eapply (consD _ x a); apply H 
+     | [ |- Denotes (cons_ ?a ?l) _] =>
+       eapply (consD _ (reify l) a); eauto
+     | [ H1: Denotes ?x _, H2: Denotes ?y _ |- Denotes (append ?x ?y) _] =>
+       eapply (appendD x _ y _); [apply H1 | apply H2 ]
+     | [ |- Denotes (append ?x ?y) _] =>
+       eapply (appendD x (reify x) y (reify y)); [auto | auto ]
+     end | idtac]
+  end; try solve [auto]; try done.
+
+Ltac solve_by_reify := repeat apply_reify.
+
+(** Some theorems from [Coq.Lists.List]. *)
+Section ListTheorems.
+  Variable A : Type.
+  Variable x : A.
+  Variable l r : DList A.
+  Context {WFl : WF l} {WFr : WF r}.
+
+  Theorem nil_cons : ~ ([] =l x ::: l).
+  Proof. inversion WFl. solve_by_reify. Qed.
+  
+  Theorem in_eq : x in (x ::: l).
+  Proof. inversion WFl. solve_by_reify. apply List.in_eq. Qed.
+
+  Theorem app_comm_cons : x ::: (l +++ r) =l x ::: l +++ r.
+  Proof. inversion WFl. inversion WFr. solve_by_reify. Qed.
+
+  Theorem in_app_iff : x in (l +++ r) <-> x in l \/ x in r.
+  Proof. inversion WFl; inversion WFr. solve_by_reify. apply List.in_app_iff. Qed.
+
+  Theorem app_eq_unit :
+    l +++ r =l [x] ->
+    l =l [] /\ r =l [x] \/
+    l =l [x] /\ r =l [].
+  Proof. inversion WFl; inversion WFr. solve_by_reify. apply List.app_eq_unit. Qed.
+
+  Theorem length_append_comm :
+    len (l +++ r) = len (r +++ l).
+  Proof.
+    inversion WFl; inversion WFr.
+    solve_by_reify. by rewrite !app_length Nat.add_comm.
+  Qed.
+    
+  Theorem destruct_list :
+    (exists x : A, exists tl : DList A, l =l x ::: tl) \/ (l =l []).
+  Proof.
+    inversion WFl.
+    solve_by_reify.
+    destruct x0; auto.
+    left. exists a. pose proof (reflection x0). destruct H0. exists x1.
+    solve_by_reify.
+  Qed.
+End ListTheorems.

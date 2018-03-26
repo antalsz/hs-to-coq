@@ -242,8 +242,8 @@ instance Gallina Term where
   renderGallina' p (Fix fbs) = group $ maybeParen (p > fixPrec) $
     "fix" <+> renderGallina fbs
 
-  renderGallina' p (Cofix cbs) = group $ maybeParen (p > fixPrec) $
-    "cofix" <+> renderGallina cbs
+  renderGallina' p (Cofix fbs) = group $ maybeParen (p > fixPrec) $
+    "cofix" <+> renderGallina fbs
 
   -- the following are pattern synonyms and need to preceed the general Let case.
   renderGallina' p (LetFix def body) = group $ maybeParen (p > letPrec) $
@@ -429,23 +429,12 @@ instance Gallina FixBodies where
   renderGallina' p (FixMany fb fbs var) =
     spacedSepPre "with" (align . renderGallina' p <$> fb <| fbs) </> "for" <+> renderGallina var
 
-instance Gallina CofixBodies where
-  renderGallina' p (CofixOne cb) =
-    renderGallina' p cb
-  renderGallina' p (CofixMany cb cbs var) =
-    spacedSepPre "with" (align . renderGallina' p <$> cb <| cbs) </> "for" <+> renderGallina var
-
 instance Gallina FixBody where
   renderGallina' _ (FixBody f args oannot oty def) =
     hang 2 $
       renderGallina f </> align (    fillSep (renderGallina <$> args)
                                 </?> (renderGallina <$> oannot))
                       <>  render_opt_type oty <!> ":=" <+> align (renderGallina def)
-
-instance Gallina CofixBody where
-  renderGallina' _ (CofixBody f args oty def) =
-    renderGallina f </> render_args_oty H args oty
-                    </> ":=" <+> align (renderGallina def)
 
 instance Gallina MatchItem where
   renderGallina' _ (MatchItem scrutinee oas oin) =

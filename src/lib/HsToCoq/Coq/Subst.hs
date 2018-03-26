@@ -151,15 +151,8 @@ instance Subst FixBodies where
     subst f (FixOne b)        = FixOne  (subst f b)
     subst f (FixMany b neb x) = FixMany (subst f b) (subst f neb) x
 
-instance Subst CofixBodies where
-    subst f (CofixOne b)        = CofixOne  (subst f b)
-    subst f (CofixMany b neb x) = CofixMany (subst f b) (subst f neb) x
-
 instance Subst FixBody where
     subst f (FixBody n bs ma mt t) = FixBody n (subst f bs) (subst f ma) (subst f mt) (subst f t)
-
-instance Subst CofixBody where
-    subst f (CofixBody n bs mt t) = CofixBody n (subst f bs) (subst f mt) (subst f t)
 
 instance Subst Arg where
    subst f (PosArg t) = PosArg (subst f t)

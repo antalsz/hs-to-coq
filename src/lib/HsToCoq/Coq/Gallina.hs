@@ -33,9 +33,7 @@ module HsToCoq.Coq.Gallina (
   Qualid(..),
   Sort(..),
   FixBodies(..),
-  CofixBodies(..),
   FixBody(..),
-  CofixBody(..),
   Order(..),
   MatchItem(..),
   DepRetType(..),
@@ -131,8 +129,8 @@ type Op          = Text
 data Term = Forall Binders Term                                                                -- ^@forall /binders/, /term/@
           | Fun Binders Term                                                                   -- ^@fun /binders/ => /term/@
           | Fix FixBodies                                                                      -- ^@fix /fix_bodies/@
-          | Cofix CofixBodies                                                                  -- ^@cofix /cofix_bodies/@
-          | Let Qualid [Binder] (Maybe Term) Term Term                                          -- ^@let /ident/ [/binders/] [: /term/] := /term/ in /term/@
+          | Cofix FixBodies                                                                    -- ^@cofix /cofix_bodies/@
+          | Let Qualid [Binder] (Maybe Term) Term Term                                         -- ^@let /ident/ [/binders/] [: /term/] := /term/ in /term/@
           | LetTuple [Name] (Maybe DepRetType) Term Term                                       -- ^@let ( [/name/ , … , /name/] ) [/dep_ret_type/] := /term/ in /term/@
           | LetTick Pattern Term Term                                                          -- ^@let ' /pattern/ := /term/ in /term/@
           | LetTickDep Pattern (Maybe (Qualid, [Pattern])) Term ReturnType Term                -- ^@let ' /pattern/ [in /qualid/ [/pattern/ … /pattern/]] := /term/ /return_type/ in /term/@
@@ -211,18 +209,9 @@ data FixBodies = FixOne FixBody                                                 
                | FixMany FixBody (NonEmpty FixBody) Qualid                                     -- ^@/fix_body/ with /fix_body/ with … with /fix_body/ for /ident/@
                deriving (Eq, Ord, Show, Read, Typeable, Data)
 
--- |@/cofix_bodies/ ::=@
-data CofixBodies = CofixOne CofixBody                                                          -- ^@/cofix_body/@
-                 | CofixMany CofixBody (NonEmpty CofixBody) Qualid                             -- ^@/cofix_body/ with /cofix_body/ with … with /cofix_body/ for /ident/@
-                 deriving (Eq, Ord, Show, Read, Typeable, Data)
-
 -- |@/fix_body/ ::=@
 data FixBody = FixBody Qualid Binders (Maybe Order) (Maybe Term) Term                     -- ^@/ident/ /binders/ [/order/] [: /term/] := /term/@
              deriving (Eq, Ord, Show, Read, Typeable, Data)
-
--- |@/cofix_body/ ::=@
-data CofixBody = CofixBody Qualid Binders (Maybe Term) Term                                    -- ^@/ident/ /binders/ [: /term/] := /term/@
-               deriving (Eq, Ord, Show, Read, Typeable, Data)
 
 -- |@/annotation/ ::=@
 data Order = StructOrder Qualid                                                                -- ^@{ struct /ident/ }@
@@ -338,7 +327,7 @@ data IndBody = IndBody Qualid [Binder] Term [(Qualid, [Binder], Maybe Term)]    
 
 -- |@/fixpoint/ ::=@
 data Fixpoint = Fixpoint   (NonEmpty FixBody)   [NotationBinding]                              -- ^@Fixpoint /fix_body/ with … with /fix_body/ [where /notation_binding/ and … and /notation_binding/] .@
-              | CoFixpoint (NonEmpty CofixBody) [NotationBinding]                              -- ^@CoFixpoint /fix_body/ with … with /fix_body/ [where /notation_binding/ and … and /notation_binding/] .@
+              | CoFixpoint (NonEmpty FixBody) [NotationBinding]                                -- ^@CoFixpoint /fix_body/ with … with /fix_body/ [where /notation_binding/ and … and /notation_binding/] .@
               deriving (Eq, Ord, Show, Read, Typeable, Data)
 
 -- |@/assertion/ ::=@

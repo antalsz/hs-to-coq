@@ -44,9 +44,6 @@ class Names t where
 instance Names FixBody where
   names (FixBody f _ _ _ _) = S.singleton f
 
-instance Names CofixBody where
-  names (CofixBody f _ _ _) = S.singleton f
-
 instance Names IndBody where
   names (IndBody tyName _ _ cons) =
     S.insert tyName $ S.fromList [conName | (conName, _, _) <- cons]
@@ -386,23 +383,10 @@ instance FreeVars FixBodies where
     let fbs = fb' <| fbs'
     in binding' (x `S.insert` foldMap names fbs) $ freeVars fbs
 
-instance FreeVars CofixBodies where
-  freeVars (CofixOne cb) =
-    freeVars cb
-  freeVars (CofixMany cb' cbs' x) =
-    let cbs = cb' <| cbs'
-    in binding' (x `S.insert` foldMap names cbs) $ freeVars cbs
-
 instance FreeVars FixBody where
   freeVars (FixBody f args order oty def) =
     binding' f . binding' args $ do
       freeVars order
-      freeVars oty
-      freeVars def
-
-instance FreeVars CofixBody where
-  freeVars (CofixBody f args oty def) =
-    binding' f . binding' args $ do
       freeVars oty
       freeVars def
 

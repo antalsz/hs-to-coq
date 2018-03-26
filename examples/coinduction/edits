@@ -1,0 +1,7 @@
+rename type GHC.Natural.Natural = Coq.Numbers.BinNums.N
+termination Memo.mkTrie corecursive
+termination Memo.lookupTrie { measure arg_1__ (Coq.NArith.BinNat.N.lt) }
+obligations Memo.lookupTrie solve_lookupTrie
+termination Memo.slowFib { measure arg_0__  (Coq.NArith.BinNat.N.lt)}
+obligations Memo.slowFib solve_fib
+coinductive Memo.NatTrie

@@ -59,6 +59,7 @@ import HsToCoq.ConvertHaskell.Parameters.Parsers.Lexing
   axiomatize      { TokWord    "axiomatize"     }
   termination     { TokWord    "termination"    }
   'deferred'      { TokWord    "deferred"       }
+  'corecursive'   { TokWord    "corecursive"    }
   obligations     { TokWord    "obligations"    }
   method          { TokWord    "method"         }
   rename          { TokWord    "rename"         }
@@ -79,6 +80,7 @@ import HsToCoq.ConvertHaskell.Parameters.Parsers.Lexing
   for             { TokWord    "for"            }
   where           { TokWord    "where"          }
   and             { TokWord    "and"            }
+  coinductive     { TokWord    "coinductive"    }
   'measure'       { TokWord    "measure"        }
   'wf'            { TokWord    "wf"             }
   'Inductive'     { TokWord    "Inductive"      }
@@ -249,6 +251,7 @@ Edit :: { Edit }
   | order Some(Qualid)                               { OrderEdit             $2                               }
   | class kinds Qualid SepBy1(Term,',')              { ClassKindEdit         $3 $4                            }
   | data  kinds Qualid SepBy1(Term,',')              { DataKindEdit          $3 $4                            }
+  | coinductive Qualid                               { CoinductiveEdit       $2                               }
   | rewrite Rewrite                                  { RewriteEdit           $2                               }
 
 Edits :: { [Edit] }
@@ -289,7 +292,7 @@ Term :: { Term }
 LargeTerm :: { Term }
   : fun   Binders '=>' Term    { Fun $2 $4 }
   | fix   FixBodies            { Fix   $2 }
-  | cofix CofixBodies          { Cofix $2 }
+  | cofix FixBodies            { Cofix $2 }
   | forall Binders ',' Term    { Forall $2 $4 }
   | 'let' Qualid Many(Binder) Optional(TypeAnnotation) ':=' Term 'in' Term
 	 { Let $2 $3  $4 $6 $8 }
@@ -332,14 +335,8 @@ GenFixBodies(body)
 FixBodies :: { FixBodies }
   : GenFixBodies(FixBody)    { either FixOne (uncurry3 FixMany) $1 }
 
-CofixBodies :: { CofixBodies }
-  : GenFixBodies(CofixBody)    { either CofixOne (uncurry3 CofixMany) $1 }
-
 FixBody :: { FixBody }
   : Qualid FixBinders Optional(TypeAnnotation) ':=' Term    { uncurry (FixBody $1) $2 $3 $5 }
-
-CofixBody :: { CofixBody }
-  : Qualid Binders Optional(TypeAnnotation) ':=' Term    { CofixBody $1 $2 $3 $5 }
 
 -- There is an ambiguity between @{implicitVar : ty}@ and @{struct x}@.  Our
 -- options are either (a) use right-recursion and incur stack space blowup, or
@@ -444,8 +441,8 @@ Definition :: { Definition }
   |          'Let'        Qualid Many(Binder) Optional(TypeAnnotation) ':=' Term    { LetDef           $2 $3 $4 $6 }
 
 Fixpoint :: { Fixpoint }
-  : 'Fixpoint'   MutualDefinitions(FixBody)      { uncurry Fixpoint   $2 }
-  | 'CoFixpoint' MutualDefinitions(CofixBody)    { uncurry CoFixpoint $2 }
+  : 'Fixpoint'   MutualDefinitions(FixBody)    { uncurry Fixpoint   $2 }
+  | 'CoFixpoint' MutualDefinitions(FixBody)    { uncurry CoFixpoint $2 }
 
 Order :: { Order }
   : '{' struct Qualid '}'                          { StructOrder $3 }
@@ -453,8 +450,9 @@ Order :: { Order }
   | '{' 'wf' Atom Qualid '}'                       { WFOrder $3 $4 }
 
 TerminationArgument :: { TerminationArgument }
-  : 'deferred' { Deferred }
-  | Order      { WellFounded $1 }
+  : 'deferred'    { Deferred }
+  | 'corecursive' { Corecursive }
+  | Order         { WellFounded $1 }
 
 Instance :: { InstanceDefinition }
   : 'Instance' Qualid Many(Binder) TypeAnnotation ':=' '{' SepBy(FieldDefinition, ';')  '}'

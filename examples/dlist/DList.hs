@@ -7,10 +7,7 @@ module DList
   )
 where
 
-data DList a = DList { fromDList :: [a] -> [a] }
-
-fromList :: [a] -> DList a
-fromList = DList . (++)
+newtype DList a = DList { fromDList :: [a] -> [a] }
 
 toList :: DList a -> [a]
 toList (DList f) = f []
